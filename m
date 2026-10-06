@@ -1,202 +1,196 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4362B3DDDDD
-	for <linux-scsi@vger.kernel.org>; Tue,  6 Oct 2026 13:02:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0BCD83E9C2B;
+	Tue,  6 Oct 2026 13:12:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791291780; cv=none; b=bMyOAISIAWFowUmcs0NbedohLJaOmjCFgOeFP2cfyLK7xX8Kr7Bm+GlybDzFL9/ovLJhpB+QLd6lLId8Cb2QKsCfUlzXwS9w2tcHD0zS/A12yzCLbThVbTrYIvBTitKu9BENbntSviubsPBpTvaoPwobuncJ4AlcRoqhLMnmLus=
+	t=1791292352; cv=none; b=eTtC0BTiko90sf7YF8Jk1E2p8O6yNAcIFlhc7NJ+qaoy/Gd4HZQ0Ysbj0Dn68wFxzWUoJjqVpuKpeAs7J7kEkDvIS+IPJr0+hGNpe7Avcxpt2BHuJVs4IfZtEEoA2imAFMa7UIYxaQvFfiOLcsB7IT5r1VucOY+p94BKecZ/Go4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791291780; c=relaxed/simple;
-	bh=rqtYQ8ZwZh7FIPFk/leczIKALu8A9eM83jJdcELlIXE=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=dzE3gUHIJJCVu3H8HRF+abz8NiZzJCVtCdoAOAe03KFVCdR2P+2oP5xhlWge9CWKzlcw/l5wYR2ce/GHiH+MVBLy2v/4mNxOWoM1cx/4w2fA9gJAEZ1eSfXCtH1gB8dN3/n28P2GCW4w5wXiqNFPm/uFsxokHpsLqaPDBK9HFPc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RZ5quJZR; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791292352; c=relaxed/simple;
+	bh=ZCVYTUZnTXZyTrRVjphJvOYu/pMx9KdBpM4QUck0toA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=IqMii0Z5dRnqgP57Ml4WnkDUYk1vp6szEwyoIZ1UdjToeWOnunD+0M3jhdSX6WyW8T2+6QSSw9CHgYOjFRSC58Fzb9vXqGWDra4/g7D1CXX4qMSlGkY9JOnfX+M9WF+EcR1hqkdBs+touOFJee1prLwuzh7tYDDuzsNL2IYQ69s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SYTWQ01h; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RZ5quJZR"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A84261F000FF;
-	Tue,  6 Oct 2026 13:02:58 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SYTWQ01h"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3BC911F000FF;
+	Tue,  6 Oct 2026 13:12:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791291778;
-	bh=cxB3AYVG3Wcf6K3uUcT6BgjSD1i6yGRqmG2kUD6GN7U=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=RZ5quJZROW/O8unv0gNHYEafS6snaD0MX6zfit63n7z7GFM9IEtfHFVMua/9lO2BM
-	 OUuS8CKMD+XgAoFCpZsPzQ8ddHI9uivtvEQshwwYYrMh/Sl614icANfJxGyRlTAuV+
-	 +cWpgV4OPB1MqnUvOfsmOZ92EDbRdu5l3A/+KMVc6zd0hIvRkqrgCb2/0MKbaOcVfM
-	 oOx3rXlM8M31CzfmDWJxbvcB7+YkDsyJwPlcfijR3WT0pC3MRjk4A2ZiA34BtFGzPz
-	 GjYN+pBGVpheFk2MWFcPq+rP12bumPQK+KPMm/NGEj5XkODmHMTRoh4UO/vibW1cDN
-	 ZlpyTSqn3rGYA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 3/7] block: add storage element management ioctls
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Damien Le Moal" <dlemoal@kernel.org>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20261006124510.882017-4-dlemoal@kernel.org>
-References: <20261006124510.882017-1-dlemoal@kernel.org>
- <20261006124510.882017-4-dlemoal@kernel.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 06 Oct 2026 13:02:58 +0000
-Message-Id: <20261006130258.A84261F000FF@smtp.kernel.org>
+	s=k20260515; t=1791292350;
+	bh=4LvfoqhtHgWbDEgayj3ZprDs3tmO35VoOivMkzGAMAE=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=SYTWQ01hxci9COZZPeaJMyU7ds8x+Ml/VT9Iy2Vq7EUyxPKq26gGYkkzb6/N7j3Ip
+	 SZr5C3cLe0253lqhrez/ABSMmcAC4+k+wtoeD9tKAIGgW3RHZPgKopCCbq6a/dr2ZE
+	 SJ7K2QnQERM87lSmT4thIgqSxHUNgx82FoBIfA9GccKjLWS+PHQYSGRDKgc1BBENCc
+	 oqsWMaG2yuQPD/Zwn38hz/PxUu2QlLSJl4+fhlEZRxALQZHCGoed/I163cePIC47y5
+	 vCmRjKq8The2J2A2ra9M4ySW4IUnaIcb3YxhnTMKBVFYjtBt9lyZGBuHMypkUBajiz
+	 /JNFaK8JZYboQ==
+Message-ID: <0254e559-b9d2-4563-9864-0aef85b9b5a3@kernel.org>
+Date: Tue, 6 Oct 2026 15:12:28 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 5/7] zloop: add degrade_element control command
+To: sashiko-reviews@lists.linux.dev
+Cc: linux-scsi@vger.kernel.org
+References: <20261006124510.882017-1-dlemoal@kernel.org>
+ <20261006124510.882017-6-dlemoal@kernel.org>
+ <20261006125600.7F72C1F000FF@smtp.kernel.org>
+From: Damien Le Moal <dlemoal@kernel.org>
+Content-Language: en-US
+Organization: Western Digital Research
+In-Reply-To: <20261006125600.7F72C1F000FF@smtp.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [Critical] block: silent data loss via full truncation without writeback
-- [High] block: unkillable task and VFS deadlock in disk_wait_for_se_mgmt_c=
-ompletion()
---
+On 2026/10/06 14:56, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 3 potential issue(s) to consider:
+> - [Medium] block/zloop: removing degraded element re-enables I/O during transition
+> - [Low] block/zloop: format string arguments swapped in degrade_element
+> - [Low] block/zloop: missing validation for ZLOOP_OPT_ELEMENT_ID
+> --
+> 
+> commit a9552af0fb1bf978fc86a4c32f3c9541477e5165
+> Author: Damien Le Moal <dlemoal@kernel.org>
+> Subject: zloop: add degrade_element control command
+> 
+> This commit introduces a new degrade_element control command for zloop 
+> devices to simulate degraded storage elements. Read and write operations 
+> to zones served by a degraded element are failed based on element type. 
+> The patch also updates storage element status accesses to use READ_ONCE() 
+> and WRITE_ONCE() for safe lockless checks in the I/O path.
+> 
+>> diff --git a/drivers/block/zloop.c b/drivers/block/zloop.c
+>> index d6a45f2148576..3913bd2299108 100644
+>> --- a/drivers/block/zloop.c
+>> +++ b/drivers/block/zloop.c
+> 
+> [ ... ]
+> 
+>> @@ -982,11 +986,26 @@ static bool zloop_prep_rq(struct zloop_device *zlo, struct request *rq)
+>>  	spin_lock(&zone->wp_lock);
+>>  
+>>  	if (zlo->nr_elements) {
+>> +		struct blk_storage_element *se;
+>> +
+>>  		if (zone->cond == BLK_ZONE_COND_OFFLINE ||
+>>  		    (zone->cond == BLK_ZONE_COND_READONLY && is_write)) {
+>>  			ret = false;
+>>  			goto unlock;
+>>  		}
+>> +
+>> +		/*
+>> +		 * Check the health state of the storage element serving the
+>> +		 * zone.
+>> +		 */
+>> +		if (is_write)
+>> +			se = &zlo->elements[zone->wr_se_id - 1];
+>> +		else
+>> +			se = &zlo->elements[zone->rd_se_id - 1];
+>> +		if (READ_ONCE(se->status) == BLK_SE_STS_DEGRADED) {
+>> +			ret = false;
+>> +			goto unlock;
+>> +		}
+>>  	}
+> 
+> [ ... ]
+> 
+>> @@ -1249,9 +1293,9 @@ static int zloop_remove_element(struct gendisk *disk, unsigned int element_id)
+>>  	 * modify the zones.
+>>  	 */
+>>  	zlo->remove_element_id = element_id;
+>> -	se->status = BLK_SE_STS_REMOVE_IN_PROGRESS;
+>> -	if (paired_se && paired_se->status != BLK_SE_STS_REMOVED)
+>> -		paired_se->status = BLK_SE_STS_REMOVE_IN_PROGRESS;
+>> +	WRITE_ONCE(se->status, BLK_SE_STS_REMOVE_IN_PROGRESS);
+>> +	if (paired_se && READ_ONCE(paired_se->status) != BLK_SE_STS_REMOVED)
+>> +		WRITE_ONCE(paired_se->status, BLK_SE_STS_REMOVE_IN_PROGRESS);
+> 
+> [Severity: Medium]
+> When zloop_remove_element() is called on an element that was previously marked
+> as degraded, won't this unconditionally overwrite the status to
+> BLK_SE_STS_REMOVE_IN_PROGRESS?
+> 
+> If the status changes to BLK_SE_STS_REMOVE_IN_PROGRESS, the check in
+> zloop_prep_rq() for BLK_SE_STS_DEGRADED will no longer match. Does this
+> mean that I/O will unexpectedly succeed on the degraded element until the
+> 2-second delayed removal work actually offlines the zones?
 
-commit 9851d611abe8fdc4d981018f157a08dd381fede2
-Author: Damien Le Moal <dlemoal@kernel.org>
-block: add storage element management ioctls
+Yes. The remove in progress condition needs to be checked too.
 
-This commit introduces four new ioctls (BLKGETNRSTORELEMS, BLKREPORTSTORELE=
-MS,
-BLKREMOVESTORELEM, and BLKRESTORESTORELEMS) for managing storage elements on
-zoned block devices. It allows querying, removing, and restoring degraded
-storage elements from userspace.
+> 
+> [ ... ]
+> 
+>> @@ -1944,6 +1988,42 @@ static int zloop_ctl_remove(struct zloop_options *opts)
+>>  	return 0;
+>>  }
+>>  
+>> +static int zloop_ctl_degrade_element(struct zloop_options *opts)
+>> +{
+>> +	struct zloop_device *zlo;
+>> +	int ret = 0;
+>> +
+>> +	if (!(opts->mask & ZLOOP_OPT_ID)) {
+>> +		pr_err("No ID specified for degrade_element\n");
+>> +		return -EINVAL;
+>> +	}
+>> +
+>> +	if (opts->mask & ~(ZLOOP_OPT_ID | ZLOOP_OPT_ELEMENT_ID)) {
+>> +		pr_err("Invalid option specified for degrade_element\n");
+>> +		return -EINVAL;
+>> +	}
+> 
+> [Severity: Low]
+> Does this code silently fail if the user omits the element_id option?
 
-> diff --git a/block/blk-zoned.c b/block/blk-zoned.c
-> index be57644ee2663..6ebb04e0a1593 100644
-> --- a/block/blk-zoned.c
-> +++ b/block/blk-zoned.c
+No. The missing element_id option is checked before this if.
 
-[ ... ]
+> 
+> The check above ensures no invalid options are provided, but it lacks a
+> validation to ensure ZLOOP_OPT_ELEMENT_ID is actually present in opts->mask.
+> If omitted, opts->element_id defaults to 0, which gets rejected silently inside
+> zloop_degrade_element() without any error message to the user.
+> 
+>> +
+>> +	mutex_lock(&zloop_ctl_mutex);
+>> +
+>> +	zlo = idr_find(&zloop_index_idr, opts->id);
+>> +	if (!zlo || zlo->state == Zlo_creating)
+>> +		ret = -ENODEV;
+>> +	else if (zlo->state == Zlo_deleting)
+>> +		ret = -EINVAL;
+>> +	if (ret)
+>> +		goto unlock;
+>> +
+>> +	ret = zloop_degrade_element(zlo, opts->element_id);
+>> +	if (!ret)
+>> +		pr_info("Degraded element %u of device %u\n",
+>> +			opts->id, opts->element_id);
+> 
+> [Severity: Low]
+> Are the arguments to pr_info() swapped here?
 
-> +static int blkdev_remove_storage_element_ioctl(struct block_device *bdev,
-> +					blk_mode_t mode, void __user *argp)
-> +{
-> +	unsigned int element_id;
-> +	int ret;
-> +
-> +	if (!(mode & BLK_OPEN_WRITE))
-> +		return -EBADF;
-> +	if (bdev_read_only(bdev))
-> +		return -EPERM;
-> +
-> +	if (get_user(element_id, (unsigned int __user *)argp))
-> +		return -EFAULT;
-> +
-> +	/*
-> +	 * Flush the device volatile write cache and invalidate all cached data
-> +	 * so that reads do not return old data for zones that went offline.
-> +	 */
-> +	inode_lock(bdev->bd_mapping->host);
-> +	filemap_invalidate_lock(bdev->bd_mapping);
-> +
-> +	ret =3D blkdev_issue_flush(bdev->bd_disk->part0);
-> +	if (ret)
-> +		goto out_unlock;
-> +
-> +	ret =3D truncate_bdev_range(bdev, mode, 0,
-> +			(get_capacity(bdev->bd_disk) << SECTOR_SHIFT) - 1);
+Yes they are.
 
-[Severity: Critical]
-Does this truncate the full block device page cache without prior writeback?
+> 
+> The format string specifies "element %u of device %u", but the variables are
+> passed as opts->id (the device ID) followed by opts->element_id (the element
+> ID). This will display the values in the reverse order of the text.
+> 
+>> +
+>> +unlock:
+>> +	mutex_unlock(&zloop_ctl_mutex);
+>> +
+>> +	return ret;
+>> +}
+> 
 
-The code issues a hardware cache flush via blkdev_issue_flush() but appears
-to completely skip writing back dirty pages in the OS page cache (e.g., via
-sync_blockdev()). The subsequent truncate_bdev_range() call unconditionally
-drops all page cache entries, which could discard dirty data even for zones
-that are completely unaffected by the storage element operation.
 
-> +	if (ret)
-> +		goto out_unlock;
-> +
-> +	ret =3D bdev_remove_storage_element(bdev, element_id);
-
-[Severity: High]
-Could this lead to a VFS deadlock and an unkillable task if the device hang=
-s?
-
-VFS locks (inode_lock and filemap_invalidate_lock) are acquired earlier in
-this function before calling bdev_remove_storage_element(). Inside that
-function, it delegates to the driver and waits for completion. Looking at
-disk_wait_for_se_mgmt_completion(), it uses an infinite loop:
-
-    while (1) {
-        ...
-        /* Not done yet: wait and retry. */
-        msleep(500);
-    }
-
-If the device takes an extended time to complete or stops responding, the
-polling task can become unkillable because it lacks a timeout, max retry
-bound, or fatal_signal_pending() check. Because the ioctl caller holds the
-block device's i_rwsem and invalidate_lock during this wait, a hung device
-could permanently lock out all other processes attempting to access the blo=
-ck
-device.
-
-> +
-> +out_unlock:
-> +	filemap_invalidate_unlock(bdev->bd_mapping);
-> +	inode_unlock(bdev->bd_mapping->host);
-> +
-> +	return ret;
-> +}
-
-[ ... ]
-
-> +static int blkdev_restore_storage_elements_ioctl(struct block_device *bd=
-ev,
-> +						 blk_mode_t mode)
-> +{
-> +	int ret;
-> +
-> +	if (!(mode & BLK_OPEN_WRITE))
-> +		return -EBADF;
-> +	if (bdev_read_only(bdev))
-> +		return -EPERM;
-> +
-> +	/*
-> +	 * Flush the device volatile write cache and invalidate all cached data
-> +	 * so that reads do not return old data for zones that went offline.
-> +	 */
-> +	inode_lock(bdev->bd_mapping->host);
-> +	filemap_invalidate_lock(bdev->bd_mapping);
-> +
-> +	ret =3D blkdev_issue_flush(bdev->bd_disk->part0);
-> +	if (ret)
-> +		goto out_unlock;
-> +
-> +	ret =3D truncate_bdev_range(bdev, mode, 0,
-> +			(get_capacity(bdev->bd_disk) << SECTOR_SHIFT) - 1);
-
-[Severity: Critical]
-Does this also drop dirty pages without prior writeback?
-
-Similar to blkdev_remove_storage_element_ioctl(), this appears to truncate
-the entire device's page cache unconditionally after issuing a hardware flu=
-sh,
-which skips writing back dirty pages in the OS page cache first.
-
-> +	if (ret)
-> +		goto out_unlock;
-> +
-> +	ret =3D bdev_restore_storage_elements(bdev);
-
-[Severity: High]
-Does this code also suffer from the same VFS deadlock risk?
-
-Similar to the issue above, bdev_restore_storage_elements() invokes
-disk_wait_for_se_mgmt_completion() while holding both inode_lock and
-filemap_invalidate_lock, which could permanently stall other processes
-accessing the block device if the device becomes unresponsive.
-
-> +
-> +out_unlock:
-> +	filemap_invalidate_unlock(bdev->bd_mapping);
-> +	inode_unlock(bdev->bd_mapping->host);
-> +
-> +	return ret;
-> +}
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261006124510.8820=
-17-1-dlemoal@kernel.org?part=3D3
+-- 
+Damien Le Moal
+Western Digital Research
