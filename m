@@ -1,210 +1,383 @@
-Received: from mo4-p01-ob.smtp.rzone.de (mo4-p01-ob.smtp.rzone.de [85.215.255.54])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3BC4C375AC4;
-	Tue,  6 Oct 2026 11:10:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=85.215.255.54
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791285055; cv=pass; b=ozbX+KwdkLMhtXTtckv3z939ePbxY+gqRhdfuaAvNto1I1FjiBK9vbBYjDIjFIsvPVOmAleXn7hCQEF7PcoXCI9kRQ+uxTidr70kCllZHKZxSar7wxiqu3H28t+D+SUxyNMOByR04XrPLQll+df3roya5HXmujygZNZvNLYBkxk=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791285055; c=relaxed/simple;
-	bh=ANftsOVmqaZrOreCeDPKC1Hc/N9LZSRlGAcKVOmBucM=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=QSiTEFlzbRIG8y4uV/ni03OWWxCngVffFRRTkU7FF1OsuHrFsgUc2oWdgpzTORSMw6vrWwQVTM2b2VG9EOHNVqp/L8eNDiRwrzCDwYxyTI2D3Squp/1Sb11wBM5KreVZoKBm3Q4Ms1sqTVtmAIpF9NbJVfnem1nWjScI3ijZhqs=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de; spf=none smtp.mailfrom=iokpp.de; dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=UIzD7sas; dkim=permerror (0-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=PFiEa/7E; arc=pass smtp.client-ip=85.215.255.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=iokpp.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 369B14195C8;
+	Tue,  6 Oct 2026 12:45:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1791290725; cv=none; b=da+/im7Qo1L+SQLkfs7wRof6Qmm4NMV34QSFqAksvkfV+QHGhLHtYLjhzDemzSPPNcWwN/kqNzfkuHRPTR9IHZUObNIiMQNLSYCm8qzRC3fkXS5FSNKBjd49q6doUK5VJrK0ytjqPNHlzaqpDdAPIA7VLeigOtBbyXzfei2XTlk=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1791290725; c=relaxed/simple;
+	bh=uiqc7HquSo53Nw2piSkuuuY99A0WL1nFoGz9P5MoKb4=;
+	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=thBi8+6y68D9mwHeqfPTlRVvkXUkDYuF8+MqvG7BRm4fYs0TsynhC5k+jhUiCZwqsuAe+ppeQyp4iV7gWPwO6+HjQR5QabbS6HQRwoRRz0iziiDf8IL0zGYWyRdFIWwvMj0aBg/u+h2+p/hSO4L501D2i6RFE/ru6BFPp+DDG+I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=A0KRoIn9; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="UIzD7sas";
-	dkim=permerror (0-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="PFiEa/7E"
-ARC-Seal: i=1; a=rsa-sha256; t=1791284863; cv=none;
-    d=strato.com; s=strato-dkim-0002;
-    b=BLTfIalHgTLMPF3y7NapsXjLLchi2NK1ZHSnYgqEknMf0atlC8xNotYxFDdqQYM2ip
-    tE7BMx1641H8l5I59IBsfFovgeEwFrkC7ZYZANuRyDvE1uimjdL1zOIYP4QUk4M4c8+0
-    715QF9wpjQJZp4hMnQ62FPea2QbTRgI0kG9Yqe++TZO0ZvglDRNRRf3rbPrrb2/ezqbY
-    lxgSKxl9xVEn7tawgGHmVvAJA3K/bAbpnQQ3Py4l0kg6b9I2VbErJdeBtGwAYhJhVR83
-    CrmVKxg7KWV8lndXaDhdmIPgSFbDEfUWpNYp3pqDZboCm7GBw6Z2WuLNW5c4uyQ+Ju6j
-    5aGQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1791284863;
-    s=strato-dkim-0002; d=strato.com;
-    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
-    From:Subject:Sender;
-    bh=ANftsOVmqaZrOreCeDPKC1Hc/N9LZSRlGAcKVOmBucM=;
-    b=SZzAaLXblUbnoouLqD5cefdg/p2fZu2cxAF0pqTL4DDLMO3F+kDyJ+VW18ZLFmK7+T
-    ssmwxiqjDaUbw1j0HwmCEUcfxGth34r42/UXOWFdWYhPUQYGgvLjb4erzbbbFqndX3PP
-    jXoJxyLuL4kpfrf3lCYURDc8bPbiTTOTa2Y+zBTt2biYUDPI/7b8+q2FmN6Iv/MjQith
-    bWIa3mWXgJ3wM+JudtMnFrTmXVYiUX0uKdf2yn2gOpUq5PqgH2OWOgSeOj2ilOJvKMUH
-    xP8Wvlgs+6dkuFaNBVjuhBaSsI/r+X5R84D0/n3b6cwiO/SCx9tbm1iw0mgExTfv/wdW
-    AALg==
-ARC-Authentication-Results: i=1; strato.com;
-    arc=none;
-    dkim=none
-X-RZG-CLASS-ID: mo01
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1791284863;
-    s=strato-dkim-0002; d=iokpp.de;
-    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
-    From:Subject:Sender;
-    bh=ANftsOVmqaZrOreCeDPKC1Hc/N9LZSRlGAcKVOmBucM=;
-    b=UIzD7saszgRqqgRNPDcajJoGLozrxzSKwblgta3WkRPTsi+WA/tK1YMY+UMDBc8ZqN
-    pDpQMp/NAwS/LfEVjvL/yDFPjOBckWvU/3gBuJ8IX0qYliX6jjjVeABWyNdmU/xR9Lyi
-    VuguACqw1NXQk2RZYLzHvC1FMrL//xvlnl5oqHpigRygg6jY5PynTzWA4OyO0i3Lp9Y1
-    VfA11OEo9EUCvvVko1+tYXFZUTIBqNUIIreY9xkRw1Jq1PpfMu4rh02F4oOaOG0fk8Yx
-    u5bUpJE5fnL6vb3J0xrElgbSU1IPW5U1/GR14Dy5BzAmuWSAJBWQ0qguXf22i0YmoIQF
-    fVYA==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; t=1791284863;
-    s=strato-dkim-0003; d=iokpp.de;
-    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
-    From:Subject:Sender;
-    bh=ANftsOVmqaZrOreCeDPKC1Hc/N9LZSRlGAcKVOmBucM=;
-    b=PFiEa/7EDviAWlPiXyaeReXT8FpMIge+M7LXP12wu/oxdAk27SciiG8NI3atxeIfUl
-    0f4bM49fNhT4A1OfBpDQ==
-X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSe9tgBDSDt0V0DBslXBtZUxPOub3IZuk"
-Received: from [10.176.237.163]
-    by smtp.strato.de (RZmta 55.6.2 AUTH)
-    with ESMTPSA id z04e1c296B7gVMl
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
-	(Client did not present a certificate);
-    Tue, 6 Oct 2026 13:07:42 +0200 (CEST)
-Message-ID: <5377501a53a50bc8162cea277a2ce597ffdaf180.camel@iokpp.de>
-Subject: Re: [PATCH v2 0/4] devfreq: check the get_cur_freq() return value
- and use it in ufshcd
-From: Bean Huo <beanhuo@iokpp.de>
-To: linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org,
- cw00.choi@samsung.com,  zhanjie9@hisilicon.com
-Cc: linux-kernel@vger.kernel.org, MyungJoo Ham <myungjoo.ham@samsung.com>, 
- Kyungmin Park <kyungmin.park@samsung.com>, "Martin K . Petersen"
- <mkp@kernel.org>, "James E . J . Bottomley"
- <James.Bottomley@HansenPartnership.com>, Avri Altman
- <avri.altman@sandisk.com>,  Bart Van Assche <bvanassche@acm.org>, Alim
- Akhtar <alim.akhtar@samsung.com>, Stanley Jhu <stanleyjhu@google.com>, 
- linux-kernel@vger.kernel.org
-Date: Tue, 06 Oct 2026 13:07:40 +0200
-In-Reply-To: <48814f547eeb8a5c575cd143a2569291de890c2a.camel@iokpp.de>
-References: <20260907192140.2701755-1-beanhuo@iokpp.de>
-	 <48814f547eeb8a5c575cd143a2569291de890c2a.camel@iokpp.de>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.4-0ubuntu2.1 
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="A0KRoIn9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 642641F00898;
+	Tue,  6 Oct 2026 12:45:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1791290714;
+	bh=PrA/mzFRXAdmg83JQ4SDV6iZyN98NtuRuOG6A+dpQi4=;
+	h=From:To:Subject:Date:In-Reply-To:References;
+	b=A0KRoIn9Zk7YP3R8NPzGnFqXlHznbNDVRyfuCKkG7meYcm59l4aHgllBvpp+rxD3u
+	 IdHVd8qXTswEn3TTUL1SifSF3aJmAprSALAIjMnKktCdhwdCsW3Mfw/iq7GZZ5df8a
+	 nUqyL/W6S+CEai8+OuzFDH+KbdrEvWYSj2zROZpWurtmZZa04BwrXVa3v9G/8fTpjY
+	 h1OssdJiCmxUJWNUu0F1iYY9FTPW+PDEInpAzoR6u9TqKbriMFIbberrK7tX9L0N9V
+	 CSjwc1H/2ot5eDDTriW6XVUbxZaRtnJPY1G7klN3Gej66BiIvJUc4QnvbxNw/txGYn
+	 xq85PjsN/p8MQ==
+From: Damien Le Moal <dlemoal@kernel.org>
+To: Jens Axboe <axboe@kernel.dk>,
+	linux-block@vger.kernel.org,
+	Christoph Hellwig <hch@lst.de>,
+	linux-scsi@vger.kernel.org,
+	"Martin K . Petersen" <martin.petersen@oracle.com>
+Subject: [PATCH v2 2/7] block: introduce storage element management
+Date: Tue,  6 Oct 2026 21:45:05 +0900
+Message-ID: <20261006124510.882017-3-dlemoal@kernel.org>
+X-Mailer: git-send-email 2.55.0
+In-Reply-To: <20261006124510.882017-1-dlemoal@kernel.org>
+References: <20261006124510.882017-1-dlemoal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
+Recent SCSI (SBC) and ATA (ACS) standards define the storage element
+depopulation feature. This feature is intended for managing hard-disks
+heads, either combined read-write heads or pairs of read and write heads,
+allowing to keep disks with defective heads longer in production by
+allowing "depopulating" (removing) defective heads.
 
-Chanwoo, MyungJoo Ham, Kyungmin Park, who else maintains this,=20
+This feature comes in two different flavors:
+ - A destructive version which removes a head and reformats the disk at a
+   lower capacity point, restoaring a fully functional contiguous LBA
+   address space.
+ - A data preserving version restricted to host-managed zoned disks, which
+   marks the zones served by a removed head as offline or read-only.
 
-Patches 3/4 and 4/4 of this series have been picked up by the SCSI tree.
+In preparation for using the data-preserving flavor of the depopulation
+feature in file systems natively supporting zoned block devices, introduce
+a set of storage element management operations and functions to define
+generic calls into block device drivers for managing storage elements.
 
-Patches 1/4 and 2/4 are the devfreq ones and do not depend on them.
+The set of operations is defined with struct blk_storage_elements_ops and
+includes three operations:
+ - report_elements: get information on a device storage elements state
+ - remove_element: depopulate a defective storage element
+ - restore_elements: restore depopulated storage elements
 
-Would you like to take them, or should I resend the two on their own agains=
-t
-your devfreq-next branch?
+Each operation is called from the functions
+bdev_report_storage_elements(), bdev_remove_storage_element() and
+bdev_restore_storage_elements().
 
-Kind regards,
-Bean
+Removing a healthy storage element from a device is possible and useful
+for testing. The storage element restoration operation restore_elements
+allows repopulating such healthy element. Repopulating defective storage
+elements is generally not allowed by devices.
 
+The device drivers of zoned block devices can indicate support for the
+storage element depopulation feature by specifying the storage element
+management operations with the se_ops field of struct
+block_device_operations.
 
-On Mon, 2026-09-14 at 15:12 +0200, Bean Huo wrote:
-> Hi Chanwoo,
->=20
-> A quick check. the patch 1/4, and patch 2/4 in this series would be queue=
-ing
-> up
-> for your pull requst?
->=20
-> Regards,
-> Bean
->=20
->=20
-> On Mon, 2026-09-07 at 21:21 +0200, Bean Huo wrote:
-> > The devfreq core has three users of the optional ->get_cur_freq()
-> > callback. Two of them check the return value, the third one does not an=
-d
-> > passes an uninitialized frequency to the transition notifiers when the
-> > callback fails. Patch 1 fixes that.
-> >=20
-> > Patch 2 writes down what a driver is expected to return from the
-> > callback. Today this has to be found by reading the devfreq core.
-> >=20
-> > Patch 3 records the frequency the controller starts at.
-> > ufshcd_init_clocks() puts the controller at its highest frequency, but
-> > nothing writes that down, so clk_scaling.target_freq stays 0 and devfre=
-q
-> > starts with previous_freq at 0 as well. With use_pm_opp this makes
-> > ufshcd_devfreq_get_dev_status() report 0 Hz, the ondemand governor then
-> > asks for the maximum frequency, and ufshcd_devfreq_target() runs a full
-> > ufshcd_devfreq_scale() that holds up the queue for up to a second only =
-to
-> > set the same OPP and the same gear again.
-> >=20
-> > Patch 4 adds the ->get_cur_freq() callback to ufshcd. Without it the
-> > cur_freq attribute shows the last frequency the governor selected, whic=
-h
-> > is wrong whenever the controller is scaled outside the governor, for
-> > example after writing 0 to clkscale_enable.
-> >=20
-> > The patches touch two subsystems. Patches 1 and 2 are for the devfreq
-> > tree, patches 3 and 4 are for the SCSI tree. The two halves are
-> > independent, at build time and at run time, and can be applied in eithe=
-r
-> > order.
-> >=20
-> > Patch was tested on a Radxa Dragon Q6A (1d84000.ufshc):
-> >=20
-> > =C2=A0 before "echo 0 > clkscale_enable":=C2=A0 cur_freq 75000000, targ=
-et_freq
-> > 75000000
-> > =C2=A0 after=C2=A0 "echo 0 > clkscale_enable":=C2=A0 cur_freq 300000000=
-, target_freq
-> > 75000000
-> >=20
-> > Without it both files report 75000000 and keep doing so for as long as
-> > clock scaling stays disabled. A 4 GiB direct read after enabling clock
-> > scaling again counted the transitions in trans_stat and attributed time
-> > to the 300000000 state, so the frequency the callback returns is one th=
-at
-> > devfreq recognises.
-> >=20
-> > One thing to be aware of: devfreq_monitor_resume() copies previous_freq
-> > from the callback, but it does not call devfreq_update_status(). A
-> > frequency change made while the governor was suspended therefore does n=
-ot
-> > show up as a transition. That is how devfreq behaves today and this
-> > series does not change it.
-> >=20
-> > Changes since v1:
-> > - New patch 3, so that target_freq and devfreq's previous_freq are not =
-0
-> > =C2=A0 at boot (suggested by Stanley Jhu).
-> > - Patch 4: drop the !cur_freq check, it cannot happen any more.
-> > - Drop the now stale comment in ufshcd_devfreq_get_dev_status().
-> > - Patches 1 and 2 are unchanged.
-> > - The devfreq and the ufshcd patches no longer depend on each other.
-> > - Avri's Reviewed-by is on patches 1, 2 and 4. Patch 3 is new, so it do=
-es
-> > =C2=A0 not carry it. Avri, please note that patch 4 changed since you r=
-eviewed
-> > =C2=A0 it, the !cur_freq check is gone. Tell me if you want the tag dro=
-pped.
-> >=20
-> >=20
-> > Bean Huo (4):
-> > =C2=A0 PM / devfreq: Fall back to previous_freq when get_cur_freq() fai=
-ls
-> > =C2=A0 PM / devfreq: Add more details to the get_cur_freq() comment
-> > =C2=A0 scsi: ufs: core: Record the frequency the controller starts at
-> > =C2=A0 scsi: ufs: core: Report the current clock frequency to devfreq
-> >=20
-> > =C2=A0drivers/devfreq/devfreq.c |=C2=A0 5 ++---
-> > =C2=A0drivers/ufs/core/ufshcd.c | 37 +++++++++++++++++++++++++++++++---=
+Co-developed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 ---
-> > =C2=A0include/linux/devfreq.h=C2=A0=C2=A0 |=C2=A0 7 +++++--
-> > =C2=A03 files changed, 38 insertions(+), 11 deletions(-)
-> >=20
-> >=20
-> > base-commit: e30626823a406725ce29bc75cb8ec467d3e1e326
->=20
+ block/blk-zoned.c             | 160 +++++++++++++++++++++++++++++++++-
+ include/linux/blkdev.h        |  16 ++++
+ include/uapi/linux/blkzoned.h |  67 ++++++++++++++
+ 3 files changed, 242 insertions(+), 1 deletion(-)
+
+diff --git a/block/blk-zoned.c b/block/blk-zoned.c
+index 131c9f50b3da..be57644ee266 100644
+--- a/block/blk-zoned.c
++++ b/block/blk-zoned.c
+@@ -18,6 +18,7 @@
+ #include <linux/mempool.h>
+ #include <linux/kthread.h>
+ #include <linux/freezer.h>
++#include <linux/delay.h>
+ 
+ #include <trace/events/block.h>
+ 
+@@ -2718,5 +2719,162 @@ int queue_zone_wplugs_show(void *data, struct seq_file *m)
+ 
+ 	return 0;
+ }
+-
+ #endif
++
++static int disk_wait_for_se_mgmt_completion(struct gendisk *disk)
++{
++	struct blk_storage_element *elements, *e;
++	unsigned int i, nr_se, nr_elements = 0;
++	int ret;
++
++	ret = disk->fops->se_ops->report_elements(disk, NULL, &nr_elements);
++	if (ret) {
++		pr_err("Failed to get number of storage elements\n");
++		return ret;
++	}
++
++	elements = kzalloc_objs(struct blk_storage_element, nr_elements);
++	if (!elements)
++		return -ENOMEM;
++
++	while (1) {
++		/*
++		 * Check if we have storage elements being removed or restored.
++		 */
++		nr_se = nr_elements;
++		ret = disk->fops->se_ops->report_elements(disk, elements,
++							  &nr_se);
++		if (ret) {
++			pr_err("Failed to get storage elements\n");
++			break;
++		}
++
++		e = elements;
++		for (i = 0; i < nr_se; i++, e++) {
++			if (e->status == BLK_SE_STS_REMOVE_IN_PROGRESS ||
++			    e->status == BLK_SE_STS_RESTORE_IN_PROGRESS)
++				break;
++		}
++		if (i >= nr_se)
++			break;
++
++		/* Not done yet: wait and retry. */
++		msleep(500);
++	}
++
++	kfree(elements);
++
++	return ret;
++}
++
++/**
++ * bdev_report_storage_elements - report the storage elements of a block device
++ *
++ * Fill at most @nr_elements storage element descriptors in the array @elements.
++ * The number of storage elements filled in the array is returned using
++ * @nr_elements. If @elements is NULL, only @nr_elements is returned.
++ *
++ * Returns 0 on success and a negative error code on failure.
++ */
++int bdev_report_storage_elements(struct block_device *bdev,
++				 struct blk_storage_element *elements,
++				 unsigned int *nr_elements)
++{
++	struct gendisk *disk = bdev->bd_disk;
++
++	if (!bdev_is_zoned(bdev) || !disk->fops->se_ops)
++		return -EOPNOTSUPP;
++
++	if (!nr_elements)
++		return -EINVAL;
++
++	if (*nr_elements && !elements)
++		return -EINVAL;
++
++	return disk->fops->se_ops->report_elements(disk, elements, nr_elements);
++}
++EXPORT_SYMBOL_GPL(bdev_report_storage_elements);
++
++/**
++ * bdev_remove_storage_element - Remove (depopulate) a storage element of a
++ *				 block device
++ *
++ * Remove (depopulate) the storage element identified by @element_id from the
++ * block device @bdev. The caller is responsible for taking care of any
++ * necessary device write cache flush and invalidation of cached data for the
++ * zones that will be offlined.
++ *
++ * Returns 0 on success and a negative error code on failure.
++ */
++int bdev_remove_storage_element(struct block_device *bdev,
++				unsigned int element_id)
++{
++	struct gendisk *disk = bdev->bd_disk;
++	unsigned int memflags;
++	int ret;
++
++	if (!bdev_is_zoned(bdev) || !disk->fops->se_ops)
++		return -EOPNOTSUPP;
++
++	/* Zero is not a valid storage element ID. */
++	if (!element_id)
++		return -EINVAL;
++
++	/*
++	 * Freeze and unfreeze the queue to flush any outstanding command.
++	 * The caller is responsible for not queuing up more I/Os by higher
++	 * level means.
++	 */
++	memflags = blk_mq_freeze_queue(disk->queue);
++	blk_mq_unfreeze_queue(disk->queue, memflags);
++
++	ret = disk->fops->se_ops->remove_element(disk, element_id);
++	if (ret)
++		return ret;
++
++	/* Revalidate the device zones once the opration completes. */
++	ret = disk_wait_for_se_mgmt_completion(disk);
++	if (ret)
++		return ret;
++
++	return blk_revalidate_disk_zones(disk);
++}
++EXPORT_SYMBOL_GPL(bdev_remove_storage_element);
++
++/**
++ * bdev_restore_storage_elements - Restore all depopulated storage elements of a
++ *				   block device
++ *
++ * Restore all storage elements of @bdev that have been depopulated. Not all
++ * elements may be restored by this operation.
++ *
++ * Returns 0 on success and a negative error code on failure.
++ */
++int bdev_restore_storage_elements(struct block_device *bdev)
++{
++	struct gendisk *disk = bdev->bd_disk;
++	unsigned int memflags;
++	int ret;
++
++	if (!bdev_is_zoned(bdev) || !disk->fops->se_ops)
++		return -EOPNOTSUPP;
++
++	/*
++	 * Freeze and unfreeze the queue to flush any outstanding commands.
++	 * The caller is responsible for not queuing up more I/O by higher
++	 * level means.
++	 */
++	memflags = blk_mq_freeze_queue(disk->queue);
++	blk_mq_unfreeze_queue(disk->queue, memflags);
++
++	ret = disk->fops->se_ops->restore_elements(disk);
++	if (ret)
++		return ret;
++
++	ret = disk_wait_for_se_mgmt_completion(disk);
++	if (ret)
++		return ret;
++
++	return blk_revalidate_disk_zones(disk);
++}
++EXPORT_SYMBOL_GPL(bdev_restore_storage_elements);
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index d003a9d2d1f6..859917b3b256 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -1574,6 +1574,21 @@ enum blk_unique_id {
+ 	BLK_UID_NAA	= 3,
+ };
+ 
++struct blk_storage_elements_ops {
++	int (*report_elements)(struct gendisk *disk,
++			       struct blk_storage_element *elements,
++			       unsigned int *nr_elements);
++	int (*remove_element)(struct gendisk *disk, unsigned int element_id);
++	int (*restore_elements)(struct gendisk *disk);
++};
++
++int bdev_report_storage_elements(struct block_device *bdev,
++				 struct blk_storage_element *elements,
++				 unsigned int *nr_elements);
++int bdev_remove_storage_element(struct block_device *bdev,
++				unsigned int element_id);
++int bdev_restore_storage_elements(struct block_device *bdev);
++
+ struct block_device_operations {
+ 	void (*submit_bio)(struct bio *bio);
+ 	int (*poll_bio)(struct bio *bio, struct io_comp_batch *iob,
+@@ -1601,6 +1616,7 @@ struct block_device_operations {
+ 			enum blk_unique_id id_type);
+ 	struct module *owner;
+ 	const struct pr_ops *pr_ops;
++	const struct blk_storage_elements_ops	*se_ops;
+ 
+ 	/*
+ 	 * Special callback for probing GPT entry at a given sector.
+diff --git a/include/uapi/linux/blkzoned.h b/include/uapi/linux/blkzoned.h
+index 663836120966..f8f2c2651dff 100644
+--- a/include/uapi/linux/blkzoned.h
++++ b/include/uapi/linux/blkzoned.h
+@@ -208,4 +208,71 @@ struct blk_zone_range {
+ #define BLKFINISHZONE	_IOW(0x12, 136, struct blk_zone_range)
+ #define BLKREPORTZONEV2	_IOWR(0x12, 142, struct blk_zone_report)
+ 
++/**
++ * enum blk_storage_element_status - Status of a zoned device storage elements.
++ *
++ * @BLK_SE_TYPE_RDWR: The storage element handles both reads and writes.
++ * @BLK_SE_TYPE_READ: The storage element handles reads only.
++ * @BLK_SE_TYPE_WRITE: The storage element handles writes only.
++ * @BLK_SE_TYPE_UNKNOWN: The storage element type is not known.
++ */
++enum blk_storage_element_type {
++	BLK_SE_TYPE_RDWR		= 0x01,
++	BLK_SE_TYPE_READ		= 0x02,
++	BLK_SE_TYPE_WRITE		= 0x03,
++	BLK_SE_TYPE_UNKNOWN		= 0xFF,
++};
++
++/**
++ * enum blk_storage_element_status - Status of a zoned device storage elements.
++ *
++ * @BLK_SE_STS_OK: The storage element is operating normally.
++ * @BLK_SE_STS_DEGRADED: The storage element has degraded and is not operating
++ *			 normally.
++ * @BLK_SE_STS_REMOVE_IN_PROGRESS: The storage element is being removed.
++ * @BLK_SE_STS_REMOVE_ERROR: The storage element removal failed.
++ * @BLK_SE_STS_RESTORE_IN_PROGRESS: The storage element is being restored.
++ * @BLK_SE_STS_RESTORE_ERROR: The storage element restoration failed.
++ * @BLK_SE_STS_REMOVED: The storage element was removed.
++ * @BLK_SE_STS_UNKNOWN: The storage element status is unknown.
++ */
++enum blk_storage_element_status {
++	BLK_SE_STS_OK			= 0x01,
++	BLK_SE_STS_DEGRADED		= 0x02,
++	BLK_SE_STS_REMOVE_IN_PROGRESS	= 0x03,
++	BLK_SE_STS_REMOVE_ERROR		= 0x04,
++	BLK_SE_STS_RESTORE_IN_PROGRESS	= 0x05,
++	BLK_SE_STS_RESTORE_ERROR	= 0x06,
++	BLK_SE_STS_REMOVED		= 0x07,
++	BLK_SE_STS_UNKNOWN		= 0xFF,
++};
++
++/**
++ * struct blk_storage_element - Zoned device storage element descriptor.
++ *
++ * @id: The ID of the element (cannot be 0).
++ * @paired_id: The ID of the paired element for an element that is not
++ *	       of type BLK_SE_TYPE_RDWR.
++ * @type: The type of the storage element (enum blk_storage_element_type).
++ * @status: The health status of the storage element
++ *	    (enum blk_storage_element_status).
++ * @restore_allowed: Indicate if the storage element can be restored.
++ * @nr_zones: The number of zones that the storage element handles.
++ */
++struct blk_storage_element {
++	__u32	id;
++	__u32	paired_id;
++	__u64	nr_zones;
++	__u8	type;
++	__u8	status;
++	__u8	restore_allowed;
++	__u8	reserved[5];
++};
++
++struct blk_storage_elements_report {
++	__u32				nr_elements;
++	__u32				reserved;
++	struct blk_storage_element	elements[];
++};
++
+ #endif /* _UAPI_BLKZONED_H */
+-- 
+2.55.0
 
