@@ -1,114 +1,76 @@
-Received: from mo4-p01-ob.smtp.rzone.de (mo4-p01-ob.smtp.rzone.de [85.215.255.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f197.google.com (mail-pf1-f197.google.com [209.85.210.197])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CEDF63DEAFA;
-	Tue,  6 Oct 2026 08:29:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=85.215.255.51
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791275381; cv=pass; b=ChoSXKRVYwzFaRj8oz5bqkinlwkrrzTB23CZQDIoTW3JRXyiMGC2ENznHoSJCYWw4RUa4832Idy1CaHBibiFbNtsqGxGZgj7PdNkklxS8fw938myj0SfC0lW5jm47o3QCW5zwDqnID3kyUlH55NklKKwynXWahimhYHa5A+anBs=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791275381; c=relaxed/simple;
-	bh=4ok4CNjLLt7YE2aQITRKh1c1uP2M1Efp4tUE95JfGrM=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type; b=HNbkiuYueKeberKRFOSoRJRBd2pAjXFKYKyzo72dJDub35ZzHIDnRahF9NcwNaEirNMxOWD14t4COqMVl6Cqs1K9Zr+RFY66vMSSzvSnqF1KmPmDByzVHSCQPlnQQRhVd3LxRJGodNbVB5rZLVu06yoQkyU2tryq70PTTK/yMDQ=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de; spf=none smtp.mailfrom=iokpp.de; dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=oY9YUV9+; dkim=permerror (0-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=Mse+vnxw; arc=pass smtp.client-ip=85.215.255.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=iokpp.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB0B93E3141
+	for <linux-scsi@vger.kernel.org>; Tue,  6 Oct 2026 08:35:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.197
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1791275758; cv=none; b=APjMGu5eEu29nlFj4JW0xvFRic1uGqRJBEgQokbqBkKqHxeg9jQew/DJKeYey7KlkQZG2KCPLSot6KZNO48br30JK269WpbCGld2WvfJK1EaWbpy78e9hGerVgbQx4LDRekqRt7eGp4wf07MmESgTpiA2epRhp6FtkMOKVLrZtY=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1791275758; c=relaxed/simple;
+	bh=jCGxsWDhCeD7oFUcGBe4JD4pOKhnWG5kWSE0uGdSQXg=;
+	h=MIME-Version:In-Reply-To:References:Message-ID:Date:Subject:From:
+	 To:Cc:Content-Type; b=FSK179DjGCcjzn+CnowMoeA94w0NpRHteWtmLL4XlYgONZSAHPHUTD4YtFJjwdluQTNZw4bbsCGrG37mEMNSvdngqYPps2rcxACikGhEAujoIN9+FEkOwsOuvofCDzp6Qh/uACdmmA4g02LFiCiGGmaQ4nLsNpbdz8mJpFeSzLU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=D2G6Ha2V; arc=none smtp.client-ip=209.85.210.197
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="oY9YUV9+";
-	dkim=permerror (0-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="Mse+vnxw"
-ARC-Seal: i=1; a=rsa-sha256; t=1791275355; cv=none;
-    d=strato.com; s=strato-dkim-0002;
-    b=OKKeVjpwU/Ckbq/6dddXKjou7HHpp5K/DAjPD9rPcQ2bIsN5ol5mfOGTULPvVgiQZD
-    sC46ctr1dd0f75x0PQx74QZN8fpTYvnd2xeT5pV/KZxcuQ+Uk5rshkTwAgnnkgJX0tQW
-    nQFG8aOwDLibPHWz4MbaGadMQ6FzeT0vNcc8NQNZ9QKOV/Y+ztcDbqvKPmLl1ZFYUelr
-    OejwQ47M9i6yXyYkIn3IPuADkEi6v2CdxPzAVJLIx74uQNFwfPWdSrjOPPuuHEqEWVXQ
-    KJf81xZnjLq1kRlI8reEjHfbHMC68ssFo4yZcfXRK6H9imY+OjHMKxCpy/wwK1LriOcW
-    Mrtg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1791275355;
-    s=strato-dkim-0002; d=strato.com;
-    h=Message-Id:Date:Subject:Cc:To:From:Cc:Date:From:Subject:Sender;
-    bh=DE3fGC9qOKrA9fymSxeZ/Uqcz2Iv3Xz/JK0nunuDjEU=;
-    b=SwPtgXeWczpINL8/2IAwZzXEpHR++JDV0vsRe7sxvYrGrARPKnpDKAGe7TjkLDlh8t
-    PjjuAJWLLnG5nbTAzDV6lBsYjc4n3wkuDLM2EQz+X0OTueXJYqlMHK/IyRMkvj9f79Eb
-    QtFGd2dhfycEsLO/ZcmbXcJzqLC9YolVD9tLLBjuCIe0lSbzxn23H+VW97lKcIBDo4k4
-    V235ib1QvNTjisj+F1xL+LjBxVGOIEcYENzscb8QAUC60l8/HYT9Dd/XjhW86Lg8z7y7
-    AjuNS0uss6lihhYN1TQHfKAIrI6i2vWVSMY0wDP5Ue9XLSqPGvvzCJY/60dQWtLSqVU8
-    cL4A==
-ARC-Authentication-Results: i=1; strato.com;
-    arc=none;
-    dkim=none
-X-RZG-CLASS-ID: mo01
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1791275355;
-    s=strato-dkim-0002; d=iokpp.de;
-    h=Message-Id:Date:Subject:Cc:To:From:Cc:Date:From:Subject:Sender;
-    bh=DE3fGC9qOKrA9fymSxeZ/Uqcz2Iv3Xz/JK0nunuDjEU=;
-    b=oY9YUV9+p5yVsq5Fe+R0+mLGmiNPOdV2UiGPL06lLftVfanVbTHNYL9jlOgBl7pSUt
-    QQT67+5hOCE4jh9EmNsDmlD/qheIFFe2+hDohaVgruAQozBpXE1XoxpMtn1++hTBokzA
-    eHLQ/eD0ZcpUfH1uyS245bpZb2SwnU1JUAjaAtRL4HGVQ7tKtLtgHNWabu88Nv4RaFyF
-    edR20DMgm/K9APqtfTqscWm/yV/bBVtgS6rYUGZIr6UIlm9DVIH38kwwEI7DkHahAt0/
-    seCiAlOTAdp+68AeKQuFogPnkZXTg4DP1pcVxThjkiOXFQkTq8Ti9o88bBUYTpxHr9Ce
-    ITVQ==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; t=1791275355;
-    s=strato-dkim-0003; d=iokpp.de;
-    h=Message-Id:Date:Subject:Cc:To:From:Cc:Date:From:Subject:Sender;
-    bh=DE3fGC9qOKrA9fymSxeZ/Uqcz2Iv3Xz/JK0nunuDjEU=;
-    b=Mse+vnxwhaecVrMvNx/VAUUBw1l8mYKZvEjtv0lUQnlsPqeIRWOc37RIMt7GbcDauA
-    xxZggH55QCSzPlhJKvAA==
-X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSfNuhhDSDt3O2J2YOom0XQaPis+nU/9K"
-Received: from Munilab01-lab.micron.com
-    by smtp.strato.de (RZmta 55.6.2 AUTH)
-    with ESMTPSA id z04e1c2968TFU4o
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
-	(Client did not present a certificate);
-    Tue, 6 Oct 2026 10:29:15 +0200 (CEST)
-From: Bean Huo <beanhuo@iokpp.de>
-To: "Martin K . Petersen" <mkp@kernel.org>,
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Stanley Jhu <stanleyjhu@google.com>,
-	Alim Akhtar <alim.akhtar@samsung.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	Bean Huo <beanhuo@micron.com>
-Subject: [PATCH] scsi: MAINTAINERS: Add Bean Huo and Stanley Jhu as UFS reviewers
-Date: Tue,  6 Oct 2026 10:29:07 +0200
-Message-Id: <20261006082907.3405554-1-beanhuo@iokpp.de>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="D2G6Ha2V"
+Received: by mail-pf1-f197.google.com with SMTP id d2e1a72fcca58-886129276ccso1900861b3a.2
+        for <linux-scsi@vger.kernel.org>; Tue, 06 Oct 2026 01:35:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1791275756; x=1791880556; darn=vger.kernel.org;
+        h=content-type:cc:to:from:subject:date:message-id:references
+         :in-reply-to:mime-version:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=jCGxsWDhCeD7oFUcGBe4JD4pOKhnWG5kWSE0uGdSQXg=;
+        b=D2G6Ha2VCF6fCE2sjMqRFg9ZjBa5F9ifBxtW2Xt1P5v6DYKQeZFe01VqUaaTaTplV5
+         CKUxvsEB/kfX6oYQ8fwMg8lmCiXFz9WSOCxkKFNQ7scBu51CmQk2D+Lyj537KamjFMn9
+         uVIbGG21/rGTioLD7qXytqe6r3LZkt2aGQDXHPBapb6KrDiqqTpipo+8aAUIL9nqucX8
+         Mee0wHOo6q9eRmF7SZTLh9GjbTVLGk4DyoFoCaPohMeRbWoXrp1nYdhqsW0eUVbpYAc1
+         3eAUeN/J9BnoExEV69x+OgDSAOflkdm6cBdl+gDd9OB0CW4SnNMBfJoqTN7eN51HjGen
+         ktfA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791275756; x=1791880556;
+        h=content-type:cc:to:from:subject:date:message-id:references
+         :in-reply-to:mime-version:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=jCGxsWDhCeD7oFUcGBe4JD4pOKhnWG5kWSE0uGdSQXg=;
+        b=Wd5zZgF/foaJqkeIfP0gLWBxJJQZlQC35Nq/pQ+Sl8ykjrLZHtVUf1Ece8sGLZOrq9
+         Fv2RLOmgM/tuRzRVT4IBaD1IhjJv0WKfP6lIvPzrrpzxrsibc7XsjStT4Khrrz4Y/gUQ
+         Gdks2bBkMllyLZo7Xf7eRKiPOjdt6p+TemJu8/QUbLSanuCSS3v+rEJjUhykEPQZChNb
+         q3yx4QnV2ux9oLSD5W2mkv/GUrBIv4orcFMnnssrTn4rfocoPauDrvBbaA3GToKXtx8V
+         ReM217wE55ouIb1yfIWbGQ4xrR0cM5d/f9xQPOYA8vv2G/jdJmtmd6nMWiY+s3/VDGBE
+         AwZQ==
+X-Forwarded-Encrypted: i=1; AKwUvBzkOX+1k7/G7k0bUJHZu9rKlusbAQp1LG9dT3IqWOJr5HGW5nQYBi5xTrU9gMsOkxj+VQKRsBr5SSHR@vger.kernel.org
+X-Gm-Message-State: AFuF++kei5+PG58VSm2fI83nHCkoRQTMiRGAj4fQOwfcWwOwOlmYfaHH
+	xs5AVFdBrM/p5kGcZ/K1PZlqI9u2+Cmop9IR0iIzAc1TuzWRxZXjGA7utqxIDgCwbQFogdgk7Xn
+	i2Bn1AmIGqvXKUUBMpndxKg==
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain; charset="us-ascii"
+X-Received: from pfbgj14.prod.google.com ([2002:a05:6a00:840e:b0:886:fe91:dda4])
+ (user=stanleyjhu job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a05:6a00:2990:b0:88b:7278:ebed with SMTP id d2e1a72fcca58-890ddb0d82bmr609566b3a.20.1791275755834;
+ Tue, 06 Oct 2026 01:35:55 -0700 (PDT)
+In-Reply-To: <20261006082907.3405554-1-beanhuo@iokpp.de>
+References: <20261006082907.3405554-1-beanhuo@iokpp.de>
+Message-ID: <18dbe3cf2d3e54ce.3137322e31362e3131332e313435.357c9.0000sendgmr@google.com>
+Date: Tue, 06 Oct 2026 08:35:55 +0000
+Subject: Re: [PATCH] scsi: MAINTAINERS: Add Bean Huo and Stanley Jhu as UFS reviewers
+From: Stanley Jhu <stanleyjhu@google.com>
+To: Bean Huo <beanhuo@iokpp.de>
+Cc: "Martin K. Petersen" <mkp@kernel.org>, 
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+	Alim Akhtar <alim.akhtar@samsung.com>, Bart Van Assche <bvanassche@acm.org>, 
+	Bean Huo <beanhuo@micron.com>, linux-scsi@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"; format=flowed; delsp=yes
 
-From: Bean Huo <beanhuo@micron.com>
+On Tue, Oct 06, 2026 at 10:29:07AM +0200, Bean Huo wrote:
+> Add both as reviewers (R:) for the UFS subsystem.
 
-Bean Huo and Stanley Jhu have been contributing to and reviewing
-changes in the UFS subsystem for a number of years, and would like
-to help share the review load going forward.
-
-Add both as reviewers (R:) for the UFS subsystem.
-
-Signed-off-by: Bean Huo <beanhuo@micron.com>
----
- MAINTAINERS | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 7b5c27c68e5d..4ad924aeaf16 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -28042,6 +28042,8 @@ F:	lib/union_find.c
- UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER
- R:	Alim Akhtar <alim.akhtar@samsung.com>
- R:	Bart Van Assche <bvanassche@acm.org>
-+R:	Bean Huo <beanhuo@micron.com>
-+R:	Stanley Jhu <stanleyjhu@google.com>
- L:	linux-scsi@vger.kernel.org
- S:	Supported
- F:	Documentation/devicetree/bindings/ufs/
--- 
-2.34.1
-
+Acked-by: Stanley Jhu <stanleyjhu@google.com>
