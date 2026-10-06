@@ -1,45 +1,46 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC74430C179;
-	Tue,  6 Oct 2026 02:44:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6EA230C177;
+	Tue,  6 Oct 2026 02:44:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791254691; cv=none; b=PuZOqRtzeoebUFeNk0QyVvaF9bdtk+231gQItmod9KPpJ7UlMKyN/UvMZsnS0hv8i6Q1Fo7oPygBezDVArfigGgRIMF8sxK4wh4USsKsl7N/8XqTJI/rlJq2lzP/Z6J+6kXCqxQOmiN+APG2AhyZFmfj9mNSrQA2EOl2GaQh+XE=
+	t=1791254692; cv=none; b=U1AYsV20VZRW7iC+kDmkkg46c6yRAXkFdVWLBfC1v57NjDpYY1jDHizzxcOGsDfI55HyW2twNbrREBrucjfzuSRdA6FB7AHXehgGo79yYcKLqk9j/WQveoR3JVVKyZWC/83hyZ8bzqGhZOjMMz5jp5ZQHV2vOzGFr9oBsAMc8fg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791254691; c=relaxed/simple;
-	bh=w28mzMK3TJ+8TiiTFZce0C6G3Rqi2NvyGijcQ9Mi67k=;
+	s=arc-20240116; t=1791254692; c=relaxed/simple;
+	bh=5rPDoDxAuhepOCMF96ilzM9EqQGLOxqt2hYo9CMP7J0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=IpaOCIT7WdGH9LK69QNqJtCP/vzatQ9i5s23CkbKGmWvtEWkQp9YeIBaZqfM3NR/ZuBcOLg/viW0pkcgFJCegU/M7FnUYhBmhSh9TJNvGKoU/nZYIN/HpyD/atJcrY7TRcUjNSXCb/dJnFt0WuDE3pDWeejLB+Z/cRPEdAnUETE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TJ9hobpS; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=KGklDHfxbLiNpfuNMWR9n86aZqqznNx4qCL1Y7uI2HHdokymdcj9f39dxyOd4VHdBMJPtkodoTH07enKoyk9WByrF6Si8fw27krw8BBR2lQpj25D8OACVFPFhiwz7g1UYWhQSQInfuwicAnxCKM59YSyG3cKe4nz0IdNZDC51JM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fZiAqMm4; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TJ9hobpS"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DB4EB1F000FF;
-	Tue,  6 Oct 2026 02:44:46 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fZiAqMm4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EC9C81F00898;
+	Tue,  6 Oct 2026 02:44:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791254687;
-	bh=AXt0D4G5Kz+Mx5MsjDSOtVyEHV8+gWXuqPzvituC/jQ=;
+	s=k20260515; t=1791254688;
+	bh=x2bvWSh2KszDgI5OWMXVd/n1XLTrHunok5k+khSRlF8=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=TJ9hobpSyznYvY9pgmQMMY25pK1RWdN1LAp/wAhDZ6TRtxSt5YuG6kW07XjMHv4Bt
-	 Qw3/maVeUTszVhuqDRNv6bMNbWd5nuYyJ3k1kXM8rO+DBL4pc+4FTeeT44zsuXcKiT
-	 9sFOnsVh5vkxv2i7opqb1UzVZskJBtvRLIgGyAVn3/8iXVpUNBpcR6HA87vxZBpqzI
-	 R3mPAt8lmPrhpEXhnDeD6Z1LVdFDxR7AP/G5a0oNKPSs31gRIxWL7K4iYvS6L0sFxI
-	 BF1+j0boPM6mTF+XQx9+72GTR9ITuUWddHtXdKzG2LRQoHvYN5RLJfAqqrt8R2TvaQ
-	 MTaU8vUTDtOZw==
+	b=fZiAqMm4myxTtCoqtoZHuaAhip+PnB0p+QsBmAfdSXPPA1K7afbRNNnRVJ7Zt0nf8
+	 llLVqOQFtHzwMBunCkCf8k/EKhIk6pLsflmjhE48Mx1S7CBDZ7AE/uL6H3ldp0MFKJ
+	 vuhSHVHyPx3JoWFifBMJRtYD2Pj0+88NrChJL/uWYMZPparmJjTeUF/M1T7JoeBANj
+	 SUa1LXUlbwmvUmA0onwFqDpmw/YOV2SJD1Ch6FuJPZaQO7aOmz6xAFoZkN8JrETC6g
+	 5SuFVkjBwGpLYiWewdLkQv4DBDISrGNviiLIZdwxc7KxFUzhILKxzOGVnBMvsNB/8O
+	 aJkHKPKvyjVnw==
 From: "Martin K. Petersen (Oracle)" <mkp@kernel.org>
-To: "Martin K. Petersen" <mkp@kernel.org>,
-	Shawn Guo <shengchao.guo@oss.qualcomm.com>
-Cc: Manivannan Sadhasivam <mani@kernel.org>,
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	linux-arm-msm@vger.kernel.org,
+To: James.Bottomley@HansenPartnership.com,
+	Stanley Jhu <stanleyjhu@google.com>
+Cc: "Martin K . Petersen" <mkp@kernel.org>,
 	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] ufs: host: qcom: Enable MCQ support for sa8255p
-Date: Mon,  5 Oct 2026 22:44:38 -0400
-Message-ID: <179103513137.923653.15717912117243215223.b4-ty@b4>
+	linux-kernel@vger.kernel.org,
+	bvanassche@acm.org,
+	avri.altman@sandisk.com,
+	alim.akhtar@samsung.com
+Subject: Re: [PATCH 0/2] scsi: ufs: core: Handle devices declining optional Query IDNs
+Date: Mon,  5 Oct 2026 22:44:39 -0400
+Message-ID: <179103513129.923653.17451486318686411265.b4-ty@b4>
 X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20260728051104.675088-1-shengchao.guo@oss.qualcomm.com>
-References: <20260728051104.675088-1-shengchao.guo@oss.qualcomm.com>
+In-Reply-To: <20260911024319.1346706-1-stanleyjhu@google.com>
+References: <20260911024319.1346706-1-stanleyjhu@google.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -49,17 +50,27 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 
-On Tue, 28 Jul 2026 13:11:04 +0800, Shawn Guo wrote:
+On Fri, 11 Sep 2026 10:43:17 +0800, Stanley Jhu wrote:
 
-> The sa8255p vops (fw-managed variant) was missing the MCQ hooks, causing
-> the driver to silently fall back to SDB mode even when MCQ resource is
-> available. Wire up the same MCQ ops used by the standard qcom vops,
-> so that MCQ mode works on sa8255p.
+> JEDEC JESD220F specifies that a device which does not support an
+> optional Query IDN returns QUERY_RESULT_INVALID_IDN (0xFD) in the
+> Query Response UPIU.
+> 
+> The driver maps every non-zero Query response to -EINVAL and logs
+> dev_err(). A device declining an optional IDN is spec-compliant, so
+> this reports a failure that did not happen and keeps the retry loops
+> resending a request the device will never accept. On UFS 4.0 parts
+> that omit the Timestamp attribute it repeats on every boot and every
+> resume.
+> 
+> [...]
 
 Applied to 7.4/scsi-queue, thanks!
 
-[1/1] ufs: host: qcom: Enable MCQ support for sa8255p
-      https://git.kernel.org/mkp/scsi/c/55b6593276c8
+[1/2] scsi: ufs: core: Fast-abort unsupported Query IDNs
+      https://git.kernel.org/mkp/scsi/c/d1fa5cea5dcd
+[2/2] scsi: ufs: core: Dynamically disable timestamp on unsupported devices
+      https://git.kernel.org/mkp/scsi/c/00eec343c730
 
 -- 
 Martin K. Petersen
