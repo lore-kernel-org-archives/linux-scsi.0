@@ -1,254 +1,297 @@
-Received: from mail-wm1-f53.google.com (mail-wm1-f53.google.com [209.85.128.53])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-0064b401.pphosted.com (mx0a-0064b401.pphosted.com [205.220.166.238])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6CC9F43F4C5
-	for <linux-scsi@vger.kernel.org>; Tue,  6 Oct 2026 13:56:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.53
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791294971; cv=none; b=AnIaHtNSyEN3aPgg6z1UTYBvIzQEStOoLhOBFkdH4XLZJDzmGyJT+YIl5djzoZwESZmBxnbblqTW9sdFMG7nypDk9kE1X2TJk3i560CglHcONPS6WvJA1m9x5XsKoyH3Z9O4JiVwINXKMAIFyA/bFaH6mvtYRIHYrDD5ovjviqM=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791294971; c=relaxed/simple;
-	bh=/Dhuh/wtI0yX/Les8bDjamHrz/rhROiQMQkvk8Zx65o=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=N1tzgaDAHDSD6wROyOvy2tpHnX6FjT4LqyRtEXffHjFlobz3JCUrSG2i6nlmK5nqeS5HtEZU0HpcrYHfRr0zXTLx4BKOf20NU7UDCqSLaWXAfd34Ivv30Mt0ClG/h9MtnxtGgRuDOvZw5o/YkqiaU14j2cq2/7dR9sZ+VFMWb/s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=gDOgNTbV; arc=none smtp.client-ip=209.85.128.53
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4EB03E5EF1;
+	Tue,  6 Oct 2026 13:59:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.166.238
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1791295164; cv=fail; b=c0/2kSfZ2mnJsu2iPIU/yDWmxaXCS18nzxKPvBDRtK87kY4bcGCnQbEhRS1TFe3DQLsW/ccWvepfEfoyW82Szz9UhYQha/tQRSYhjCbja3tAAi2u5AYIKFTl3geIfu6/qImvSHjxmFQEm+M0cawgb5gnpD2Oh7MbgPwEcglleX4=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1791295164; c=relaxed/simple;
+	bh=fVfnyvni5uaFsiCqVKj81r5BedN1R95fOKAPeRSiHTg=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=e2ZLkf6Dq47mIHG8WaVYq9XqG/eobCpBPt/nLpoiYgI4cuOF0nwBCiRNZlgxuuGxgY5X9Uxu4kgFIfYKiG7eEv0ekrIk1o4obrYCzMVRcbSIbTL+nPdoAA20NOzNqVNay/QmVi1K20ICU6Az2qcJJPVpX3DFZZtWHvFvKIq9JmA=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=windriver.com; spf=pass smtp.mailfrom=windriver.com; dkim=pass (2048-bit key) header.d=windriver.com header.i=@windriver.com header.b=HxEnMipI; arc=fail smtp.client-ip=205.220.166.238
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=windriver.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=windriver.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="gDOgNTbV"
-Received: by mail-wm1-f53.google.com with SMTP id 5b1f17b1804b1-4a018792ab3so8155385e9.0
-        for <linux-scsi@vger.kernel.org>; Tue, 06 Oct 2026 06:56:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1791294967; x=1791899767; darn=vger.kernel.org;
-        h=content-type:in-reply-to:autocrypt:from:content-language:references
-         :cc:to:subject:user-agent:mime-version:date:message-id:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=/Dhuh/wtI0yX/Les8bDjamHrz/rhROiQMQkvk8Zx65o=;
-        b=gDOgNTbVxzxJR0Asl3ay6a5Kf8rfl9ha0LABhQZaEHgid/0Hjp/mt911TErgMnV7MW
-         Y45hd+3g9/ziRwZC2X2PadKiFj7iJY1rxtn8IjUAR7Bah25lf55s1tOuNl1SfbJmayB5
-         YgkTwdHrYCpWrRrBBByG29qiAptb6HpDE3NvxoctqwRtmSHIHhdqdwRsH78oKejodLm6
-         6binDxw0QJpvhwS7BdQeHfO5EppkUMp3msx3kSYf+a0yJOEoMEBFZdChFZLZZ4gPvwLE
-         4+MToniGd6HF/BPTv+SolJ5cpYM9L9x4jJZQpNu5H1r3jsJ+8vT0eVqGsUIUh9MCZcal
-         t9wQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791294967; x=1791899767;
-        h=content-type:in-reply-to:autocrypt:from:content-language:references
-         :cc:to:subject:user-agent:mime-version:date:message-id:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=/Dhuh/wtI0yX/Les8bDjamHrz/rhROiQMQkvk8Zx65o=;
-        b=rthdeftVcIbVcYiG9t/57B9YJzIqM8aCPAwSe6Mxi8afij+sQjiixDTdFEnFqON8pP
-         WiBl+dO1t/AAK3mqrva/PzsX3dNpXqBH7gXTGBRfBBqiI01OYmkvgMjGvVAKjv4VUedX
-         27DO1BLVxTPX/dlJ+9VBAVDhdcqsHzYKMCu9OZ2FNsE3dN92w4cBc0w3qSBAWcALlJvg
-         w0ckK5wUW/WrcvfKvOesnDtKFcLI1CxRHGFopdgWqgCvOhF9j7gE4QZANcFDYqYp7SZp
-         sTQHE/IcbbSyfYIZwUuOH0s7EHXmimC8rSgwhNKxD35U/toxAtqRHGRrbjYn0OBiTdY6
-         Qmdw==
-X-Forwarded-Encrypted: i=1; AKwUvBwOg6s2hizAAtugToqU0CEaINS197RlKhK7bUtU7zWLcFwLK4NPpB/JpYeJigAeD/O/zfRcHQOydQBl@vger.kernel.org
-X-Gm-Message-State: AFuF++l1MZI479hwWQY4UutGOW/iik82HGHLl9r2Jm2i1c0/06JDqZ6M
-	c1Lft8bj0TYMDwitdzEv3RMG9sj/7Soae3h+5vYhxrpfIuoysgP3rS7ud9XTMgjAXVBm+0ZxFzw
-	54FU1PDQ=
-X-Gm-Gg: AYBFou2hlq47CjxYUniqLNBrxNYRD3bKX/nl8gK38aRdfCTHzcPWx57IaMydlWlEUZx
-	VXE0HlWQeDO8G50q9eMCIzRIr+TJkf8xrSRg9vAN249rvQSe4Tb4Hsy/ZjAclL5JZAzs722eu+A
-	cD2pzAxUyCw9siPLUjAuyPnAovnQAherLjz8mwHww74Q9Jt9optZbW5PjUlmpXCVyNcqJBPebzs
-	Bm6j6j8q0AJQ6s2gckF4mF+iCYFkgAZIC9jp3RiBagLkGYr1hrR7dd9zD9Rr2OejIpiFsyUZeK3
-	LiBCDAFDV+vjlT1xbiP68HdPaOkoMiCU+zM1n7R4B0TPiTVfcmHpsNID9D9sKvtYtj9/I3ZD19B
-	9WnMCCnT3y8mBlC/PZK0pYXiseUXi9gOUOcwwm2NSbihhybPV6d/weGc8ehHZOjr91CpkrNBwpb
-	5uXAFFiezIxhV+h7AVMMsSyjLqvu8s1mMRiAgsy2z8XyvqAGDWPEQ6gwPmr6CSAcc9A+G89c2FP
-	XgUDamrp5s5AfrA1eBcXjSTxnMaQE5KXCu/8N45WrLWisd9WReXNqXrGMGS0lCp+dkNxF8UrAmo
-	/l2COaFkWh5H74XHOZHocvp4
-X-Received: by 2002:a05:600c:5492:b0:4a1:6d35:779a with SMTP id 5b1f17b1804b1-4a17b4f297bmr27971755e9.3.1791294967343;
-        Tue, 06 Oct 2026 06:56:07 -0700 (PDT)
-Received: from ?IPV6:2a00:12d0:af5d:ad01:5d3f:14e6:9bcb:5112? (2a00-12d0-af5d-ad01-5d3f-14e6-9bcb-5112.ip.tng.de. [2a00:12d0:af5d:ad01:5d3f:14e6:9bcb:5112])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a17a0fc2e4sm68582055e9.3.2026.10.06.06.56.06
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 06 Oct 2026 06:56:07 -0700 (PDT)
-Message-ID: <f073f438-7335-4d9f-9bba-c6df5ee1fa40@suse.com>
-Date: Tue, 6 Oct 2026 15:56:06 +0200
+	dkim=pass (2048-bit key) header.d=windriver.com header.i=@windriver.com header.b="HxEnMipI"
+Received: from pps.filterd (m0250810.ppops.net [127.0.0.1])
+	by mx0a-0064b401.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 696DVif9675698;
+	Tue, 6 Oct 2026 06:58:15 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=windriver.com;
+	 h=cc:content-transfer-encoding:content-type:date:from
+	:in-reply-to:message-id:mime-version:references:subject:to; s=
+	PPS06212021; bh=8XwUySrKGdMC7hzT8M9e3v6V3n4V0VASVF4JmX+VHVE=; b=
+	HxEnMipI6IAuz+M2qxZyyFIGKmhWE8s85ffCohORuAYtVfeIXUaqyTK5bQEPom0a
+	Z42MPq2Q6o1LI4okBz9mVdLyfwDy+uduhQ/EjcrqAMa7bteISymdAPgpzwHbIab+
+	+XEBh8y1B7yL/sEA5Nt/xvFvz92e7LAY0ls+g0rCdI7ifqCliBOvaGf0XJ7jbm8q
+	reYVy0vXXnep7srVWv7kXxgUoUO8Kh7NhEax2bMxTFmte784EkUzL5wVez1Bn9xH
+	hBx3289oKyZMXYircTefMZcvEerw4El2BiiHDzlaPqcbZ0feT/BgOiVgtne8fvwD
+	O4eDtIBkHI/1uurF/z9EvA==
+Received: from ch1pr05cu001.outbound.protection.outlook.com (mail-northcentralusazon11020140.outbound.protection.outlook.com [52.101.193.140])
+	by mx0a-0064b401.pphosted.com (PPS) with ESMTPS id 4h2w013w84-1
+	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
+	Tue, 06 Oct 2026 06:58:14 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=D2EdYkkzSuGqdyPLvg5wBrBYerxNAfPY5kWD99UJqtxYw/ClLsrXsBCr8h9tvkIUzPYhnWiYmc/Q1y3Fz9vm6/xV158NFIyzqnm4+jC9mjOQPaOLxYEbDjgcrKx2bLWXiuL3YuwOpDWwx7WNJfaQt9BPCLH0r+5GE8ZmfzvouwMpKOEeBTZPWDLactC3p0BciMbb4zCnyisiH+F0MbXEzqCdgd8PIHUauDIv7e135vzJH6lY+0OHa2ZwUCuHMEs7p9FYeBnsXJlJTfsqKUJ//oKABqEcwVTrCC4zqp478W1Z6JfQDl4cxyxupNriZ8ClddUjKQ/91HWh/QdfR3dc6w==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=8XwUySrKGdMC7hzT8M9e3v6V3n4V0VASVF4JmX+VHVE=;
+ b=ltNveTL+UIEQgjCPbOUFYlnKmPR3U34lDgyqmgWsMwLiMxNHq1VLtrBtJy+ukygiCRg6cR2e0XO79Bhy+e8qF9b5uhWn2kP0PjZ84N5WNimKLfnX8McEQfo6tr2/09SwDfTuss4Vz29z/T7GjQDIODuuFiBMLmOcLCCa99u6dFZ53o/69sJO1utcy1WSUjHKJzS55JnXnyR7ADTYwQ//svvUhP0MiqI/l5SLF7+wlYcni7JO84FaOh6BZ7FfvAdS+3hKMYpW1UTO534agxbLhsCaUNgWjMsIDNyM+2jTSwc/p3copBgtykUTb5srbW12SdWwjm1OBL/MiuMsR9QeSQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=windriver.com; dmarc=pass action=none
+ header.from=windriver.com; dkim=pass header.d=windriver.com; arc=none
+Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=windriver.com;
+Received: from SJ2PR11MB7546.namprd11.prod.outlook.com (2603:10b6:a03:4cc::8)
+ by MN6PR11MB8217.namprd11.prod.outlook.com (2603:10b6:208:47d::18) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.472.16; Tue, 6 Oct
+ 2026 13:58:09 +0000
+Received: from SJ2PR11MB7546.namprd11.prod.outlook.com
+ ([fe80::ca9b:dcf:8881:bced]) by SJ2PR11MB7546.namprd11.prod.outlook.com
+ ([fe80::ca9b:dcf:8881:bced%4]) with mapi id 15.21.0472.016; Tue, 6 Oct 2026
+ 13:58:08 +0000
+From: "Ionut Nechita (Wind River)" <ionut.nechita@windriver.com>
+To: atomlin@atomlin.com
+Cc: axboe@kernel.dk, bigeasy@linutronix.de, corbet@lwn.net,
+        frederic@kernel.org, ionut.nechita@windriver.com,
+        linux-block@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        marco.crivellari@suse.com, mingo@redhat.com, mkp@kernel.org,
+        neelx@suse.com, peterz@infradead.org, tglx@kernel.org,
+        vincent.guittot@linaro.org
+Subject: Re: [PATCH v16 0/9] blk: honor isolcpus configuration
+Date: Tue,  6 Oct 2026 16:57:44 +0300
+Message-ID: <20261006135749.348637-1-ionut.nechita@windriver.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20261005152449.468696-1-ionut.nechita@windriver.com>
+References: <ul7xqsblqnrzx67s7urmtc34qpemuf3jeduxmsuwxwlnky7eli@mzdpwwgug3hg> <20261005152449.468696-1-ionut.nechita@windriver.com>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: FR0P281CA0170.DEUP281.PROD.OUTLOOK.COM
+ (2603:10a6:d10:b4::8) To SJ2PR11MB7546.namprd11.prod.outlook.com
+ (2603:10b6:a03:4cc::8)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] xen/scsifront: check for a NULL shadow entry on a backend
- response
-To: Yehyeong Lee <yhlee@isslab.korea.ac.kr>,
- Stefano Stabellini <sstabellini@kernel.org>,
- Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Boris Ostrovsky <boris.ostrovsky@oracle.com>,
- xen-devel@lists.xenproject.org, linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org
-Cc: stable@vger.kernel.org
-References: <20261005123555.253995-1-yhlee@isslab.korea.ac.kr>
-Content-Language: en-US
-From: =?UTF-8?B?SsO8cmdlbiBHcm/Dnw==?= <jgross@suse.com>
-Autocrypt: addr=jgross@suse.com; keydata=
- xsBNBFOMcBYBCACgGjqjoGvbEouQZw/ToiBg9W98AlM2QHV+iNHsEs7kxWhKMjrioyspZKOB
- ycWxw3ie3j9uvg9EOB3aN4xiTv4qbnGiTr3oJhkB1gsb6ToJQZ8uxGq2kaV2KL9650I1SJve
- dYm8Of8Zd621lSmoKOwlNClALZNew72NjJLEzTalU1OdT7/i1TXkH09XSSI8mEQ/ouNcMvIJ
- NwQpd369y9bfIhWUiVXEK7MlRgUG6MvIj6Y3Am/BBLUVbDa4+gmzDC9ezlZkTZG2t14zWPvx
- XP3FAp2pkW0xqG7/377qptDmrk42GlSKN4z76ELnLxussxc7I2hx18NUcbP8+uty4bMxABEB
- AAHNH0p1ZXJnZW4gR3Jvc3MgPGpncm9zc0BzdXNlLmNvbT7CwHkEEwECACMFAlOMcK8CGwMH
- CwkIBwMCAQYVCAIJCgsEFgIDAQIeAQIXgAAKCRCw3p3WKL8TL8eZB/9G0juS/kDY9LhEXseh
- mE9U+iA1VsLhgDqVbsOtZ/S14LRFHczNd/Lqkn7souCSoyWsBs3/wO+OjPvxf7m+Ef+sMtr0
- G5lCWEWa9wa0IXx5HRPW/ScL+e4AVUbL7rurYMfwCzco+7TfjhMEOkC+va5gzi1KrErgNRHH
- kg3PhlnRY0Udyqx++UYkAsN4TQuEhNN32MvN0Np3WlBJOgKcuXpIElmMM5f1BBzJSKBkW0Jc
- Wy3h2Wy912vHKpPV/Xv7ZwVJ27v7KcuZcErtptDevAljxJtE7aJG6WiBzm+v9EswyWxwMCIO
- RoVBYuiocc51872tRGywc03xaQydB+9R7BHPzsBNBFOMcBYBCADLMfoA44MwGOB9YT1V4KCy
- vAfd7E0BTfaAurbG+Olacciz3yd09QOmejFZC6AnoykydyvTFLAWYcSCdISMr88COmmCbJzn
- sHAogjexXiif6ANUUlHpjxlHCCcELmZUzomNDnEOTxZFeWMTFF9Rf2k2F0Tl4E5kmsNGgtSa
- aMO0rNZoOEiD/7UfPP3dfh8JCQ1VtUUsQtT1sxos8Eb/HmriJhnaTZ7Hp3jtgTVkV0ybpgFg
- w6WMaRkrBh17mV0z2ajjmabB7SJxcouSkR0hcpNl4oM74d2/VqoW4BxxxOD1FcNCObCELfIS
- auZx+XT6s+CE7Qi/c44ibBMR7hyjdzWbABEBAAHCwF8EGAECAAkFAlOMcBYCGwwACgkQsN6d
- 1ii/Ey9D+Af/WFr3q+bg/8v5tCknCtn92d5lyYTBNt7xgWzDZX8G6/pngzKyWfedArllp0Pn
- fgIXtMNV+3t8Li1Tg843EXkP7+2+CQ98MB8XvvPLYAfW8nNDV85TyVgWlldNcgdv7nn1Sq8g
- HwB2BHdIAkYce3hEoDQXt/mKlgEGsLpzJcnLKimtPXQQy9TxUaLBe9PInPd+Ohix0XOlY+Uk
- QFEx50Ki3rSDl2Zt2tnkNYKUCvTJq7jvOlaPd6d/W0tZqpyy7KVay+K4aMobDsodB3dvEAs6
- ScCnh03dDAFgIq5nsB11j3KPKdVoPlfucX2c7kGNH+LUMbzqV6beIENfNexkOfxHfw==
-In-Reply-To: <20261005123555.253995-1-yhlee@isslab.korea.ac.kr>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="------------nnH7S5YuLqUH0yIqtmqXntAT"
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: SJ2PR11MB7546:EE_|MN6PR11MB8217:EE_
+X-MS-Office365-Filtering-Correlation-Id: bbd74f63-cb97-4a87-d781-08df23b1d9a4
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|52116014|376014|366016|7416014|23010399003|11063799006|4143699003|10067099003|38350700014|56012099006|18002099003|22082099003|6133799003;
+X-Microsoft-Antispam-Message-Info:
+	lnjyi5FpKsx6bsi0YwSCWjUlew3xoknUv0IYhPUjHFUXWitY3CZXWEY13XN8Vogj4vonEAn3petxNvXHlyVVYm3JAeTiUidELBKOXdDqn1X+hv4m9yzwqMjwuX2GK3NINdrF/44/SyXqwCULVxupTSuP4DERL9AKCfDoAR5Ni4kihgOwFQzqWBiM9DPn9WXO3Lb7qNd+i5GXN8T7EBmWFnMDPXkFiQHkFif0LSwfw9rnTGjfsS0Pfy5l/RXiZ0nfO7r2CbG1aiSIasoYZnvGY5e7YvNInaurB6it5N250Ev9ohLUernb8aMm7k54pUhmmMpjFDESGoTgx3ZsjwgV7bUSHkNAXDiST8/wz6q08uXWPQ2btqE4FH8qDSyCxYSaaZXKiW87Sp7rAmnK1UkebPs4lfVCysQNM+ILbElKzvrmQ/i+x6zfodtIVpI76TwT9/2oJ9bPL4BJuA54ZdJo2uj5F1/fns9DlLzmJnS1IvY9mU8/nmGs0dHu/u7VGQyCKa8uW7/Sjt8qdhFksnUCRc5OMorzwKeU4lrEt22b2X1JSMiBDDJKpCgqNKNOn9DxvqI2l9DVKNuVOQfLxvTAMDMclFjszEeGskERl8ndcbU8dVDdwVCzM9b9FEvtUJDxrYkzztK+g6Ne3PD9Y76U2YenZBGJ+jHTUhOvf+Fciz8=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SJ2PR11MB7546.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(52116014)(376014)(366016)(7416014)(23010399003)(11063799006)(4143699003)(10067099003)(38350700014)(56012099006)(18002099003)(22082099003)(6133799003);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?XWZAEzbm55kSzp87e123h4jbafoXvBre0J8lO4I/WyCdlPAqZy19gfC6lREr?=
+ =?us-ascii?Q?GHOX7fEEB3QCpSlglL5w4e/61Bu2uGEtvPOsi9NvpaQd9UM3dvJeVfyNGjSX?=
+ =?us-ascii?Q?cLFwB3O8Gnp6SpXMb2WDNrWF9W3opiEVLqV4vFnxjMb7koqBXqc2p+QGrw2d?=
+ =?us-ascii?Q?bL14tNBlBR4sbxYX9BJVLYEIeL2nDvnRI7jSQfQP7VbsBffvvW6EJHGT9U3Z?=
+ =?us-ascii?Q?nsEX08DG73ieg3qwn1k63tWRqasMubXB/ul/UOtePznc3uStqfTFgpklkq7Z?=
+ =?us-ascii?Q?qeuXTnxSe14Gp+ckWehongxyx7TC4eXNW8V7GxTUp1I9dDJTHY0MX88u7Xef?=
+ =?us-ascii?Q?fQbI3x9MmZBJXHhh+rZPEsyK8ILZHw+m/StPWNnEt9o+9I2eeXcGu8i9x+Ck?=
+ =?us-ascii?Q?d9/TZTuHTzN4h2+S76JgZFNQLlXQfxtIvgIFuYc9GkXIiyT20JDGe5dyv1vH?=
+ =?us-ascii?Q?qHBwiZWE1CEnSmFDn8E9hJeR65IvcxD73c4BDNBhu8ipLMLirdkjJw5Lm2tY?=
+ =?us-ascii?Q?yGInhIiE2H7sq3zTztZWo4IimaJmS2hgz42A9yLeW4956rRwrDByHGGIAiXd?=
+ =?us-ascii?Q?5L/LPUPLrbdKRVqP6FjgXAXd2NTeFjWjEq7Oqy5o03wMKZPKMoZ4dU6Zn0GF?=
+ =?us-ascii?Q?yA9r5GNjRj5/fowh0mKy15fM0Nn+BRJrbty3E+yInffHd+VPyPoeW5iNJWyI?=
+ =?us-ascii?Q?XJH0VdW1DCxZaCgcdoir6IQ60fFMJPgmPvRS/FZEPIUArH6nQGlEbTSbeOGs?=
+ =?us-ascii?Q?seoF1FXEZgLwCpK6aLDqik7m7MympxajCzX9dUowqo8BRfXwRpB9NNgcSzyH?=
+ =?us-ascii?Q?c7rVG8OKC/jYdFM/06nMIZ2MRgm4loyYBeENAtDcXkCqvCQad6hTruMhxbB7?=
+ =?us-ascii?Q?uQcgasRKYvg1in7EKO8g2E4zglGoSj9Kz77AMEHVC14ESoWbV28WychZrxmt?=
+ =?us-ascii?Q?sSM0e9fCaGzjPd6UoKOf7mDte/OJfVo5x1C54sNBDWRGB59JeYhkGNdCgM3w?=
+ =?us-ascii?Q?S4yfTHR9SozHTxzdw/v6p9V5uiTbxBaQ2xFavSaDQjiF+ljVXNrWfd5IzsBe?=
+ =?us-ascii?Q?sujO4BmDNDw4OsR+/Rdh5XlwQyDHa/NNJnV4TZwbDfeZ7RNBxDEMDOTjfFUF?=
+ =?us-ascii?Q?0UtVqVirUMRkrugw6zd9bnWAjtVROBTAVaIA44xVpqQcLh+Sib+JSet0EWX4?=
+ =?us-ascii?Q?Lp1qG+8bqjLd+8k6RNyPa5bE6UNJ0//C8BCL3AqFCdECT2O770g6HwcB1J0U?=
+ =?us-ascii?Q?zpyvinPfTvSdkLyva0BAra4UYNTpGB/8oB3pbx7K7S2CyhDVrkL4osp4r4l1?=
+ =?us-ascii?Q?n1grxfeRGBrksQKU2HJWfk2dwv/I3lfL7C97n5FhLXLetsLom3gEzNtATnzm?=
+ =?us-ascii?Q?qRTIqCsK0v6aFkbkBABno2LFHpsowVw3czVKgQ9VkfdO65O+BCfe/eUdsXnM?=
+ =?us-ascii?Q?FjgwAVc1vLIgCR1knW+7/XU3q7sIO6KDbt18x6JhBCevw9BpmwCRzopGhQmT?=
+ =?us-ascii?Q?zGyx2ZVUN614YUnyVFtcv9GZM3fd12WIryn9sK2nYIC8ldjA9+wK/UNEUJEf?=
+ =?us-ascii?Q?xdlKxysict/qi2jtwHL8nQPzcFExLGnG997W0CMRRSLoj/JZq2T7pFAI8t+4?=
+ =?us-ascii?Q?Vwdlb/6ViA9gLqwNV9Y/UMcDJxNYsYxZoNV1UGqbIoZ62n6quZTyro4OyF5y?=
+ =?us-ascii?Q?HTgZ8EEHfMNBQXbCRMO6yIDq45QWM0han7XM8wgCBZeTagAKNhduJpgciuDp?=
+ =?us-ascii?Q?cKKEcO8AjZTpAkOXoXTQWkgrFM1WtWU=3D?=
+X-Exchange-RoutingPolicyChecked:
+	CrP+qbyEOl1+IVzL7VqamNWc5SmiJoiRgS5VX0pJlCIpf7189PJVroAdOvpFJjWxyYwvUuXJPD8kbaOMt6AChO99Ki7u9dRKbOwx5pCFfPchzhboDadAByKjfBzS+SOV4QbFfqs7W6gAGfVZ5KMS+TyXfrybnbGP3RPbXMB+AqgQS5selfyS6DP9AoabZfI1ZbSzogpe85y15Lez74uJan77zKgm4VBVEO0WpEbwMUspgcpB3othSyh4mQwVwNfwIqSjOVCyrDfgn4EnP3mg91GEwkhnSD15yVy9NzvfZ2A0KOdgWPh1BfkuLMfc0oyIuIHwwAJ59RlVriGvnGKvXw==
+X-OriginatorOrg: windriver.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: bbd74f63-cb97-4a87-d781-08df23b1d9a4
+X-MS-Exchange-CrossTenant-AuthSource: SJ2PR11MB7546.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Oct 2026 13:58:08.1024
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 8ddb2873-a1ad-4a18-ae4e-4644631433be
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: fCumIvkFMhNdZibm+Rpf9PaiEbcwmVFdx6JlK/YjyD/NjWYEcfdESslqhqracuWp3/5FZTGtnPHVbMz7hqLlNC2RkYv7qm4rqDyZJPorEdI=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN6PR11MB8217
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMDA2MDA1NSBTYWx0ZWRfXxoKC9gSelYZV
+ ceXDUfVEW2shP50z29eIYBo+Z6Lye2QX/JCQ4Ooc+xGa3/7ZKn0cf1idE8uc7d/vXK50RcJMLy5
+ LQXj5m2UdaQpmlKlbABgynxRRUHJxUcR+K34xW56ceGq4vxFWvvp
+X-Authority-Analysis: v=2.4 cv=fKesTpae c=1 sm=1 tr=0 ts=6ac4fe76 cx=c_pps
+ a=Wk45V16OzwFZ9uDPeOR8rw==:117 a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19
+ a=z/mQ4Ysz8XfWz/Q5cLBRGdckG28=:19 a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19
+ a=xqWC_Br6kY4A:10 a=660iZSQnnn4A:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=bi6dqmuHe4P4UrxVR6um:22 a=HK-ge7EqtdluswH-FwHe:22 a=xV5-xVNmMFwFGRjQoTcA:9
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDA2MDA1NSBTYWx0ZWRfX6nzeEOSFMLqN
+ HukXHgtMvESZBN3ERpctu/GZYAI9Xe9mSocq5q9zTZqfIbYAmgxHPCqEVKhrvur0KZLhfPuX2V2
+ rsv04p3z7prrqHHORDKPgpQHLouo+kzwv7GRszAE14mM0gXDJOoGHemw+512M1uniYb4yEg3H8M
+ v1tqp3Ma03IBV57vupmJxfLxq5av8mD4uAuSuhD3xCKBHiIBexwpybrIfozHm7FcwNziB5BLVJV
+ 6CaJ9I4860blenE20wtKCtBMPD7FD4uTQBpKEd6fFvc+tUF6kVQSGXI3SY1u91V38kUUUHs8I60
+ gzawPrvGBZseLakqbNDvdsBg8iitzJil6RsrFU6xP+nufpxluP+avPATSgHHLZnYIP1vueOH3Vj
+ cZLAx9D2a3plXQUyooL/ybLb5+NPDAueg8VCI6pbFsRok6pwzQPiwc7YIxOsIZL1m3FIjlEASR1
+ OxTRFXgIj0ayj/xrbpg==
+X-Proofpoint-ORIG-GUID: Orh3Wb6e7FFuHH-aSlsdScKa1u6jx_Vj
+X-Proofpoint-GUID: Orh3Wb6e7FFuHH-aSlsdScKa1u6jx_Vj
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-10-06_04,2026-10-06_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ bulkscore=0 suspectscore=0 malwarescore=0 impostorscore=0 priorityscore=1501
+ phishscore=0 lowpriorityscore=0 clxscore=1015 adultscore=0 spamscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2609040000 definitions=main-2610060055
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---------------nnH7S5YuLqUH0yIqtmqXntAT
-Content-Type: multipart/mixed; boundary="------------0I6v6BijZSEvEjvGrfeccWKG";
- protected-headers="v1"
-From: =?UTF-8?B?SsO8cmdlbiBHcm/Dnw==?= <jgross@suse.com>
-To: Yehyeong Lee <yhlee@isslab.korea.ac.kr>,
- Stefano Stabellini <sstabellini@kernel.org>,
- Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Boris Ostrovsky <boris.ostrovsky@oracle.com>,
- xen-devel@lists.xenproject.org, linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org
-Cc: stable@vger.kernel.org
-Message-ID: <f073f438-7335-4d9f-9bba-c6df5ee1fa40@suse.com>
-Subject: Re: [PATCH] xen/scsifront: check for a NULL shadow entry on a backend
- response
-References: <20261005123555.253995-1-yhlee@isslab.korea.ac.kr>
-In-Reply-To: <20261005123555.253995-1-yhlee@isslab.korea.ac.kr>
+Hi Aaron,
 
---------------0I6v6BijZSEvEjvGrfeccWKG
-Content-Type: multipart/mixed; boundary="------------HscB0pQhO6alWtKX55NS0MMB"
+Follow-up with the controlled data I promised, and a correction. I was
+wrong to point at your series in my first mail. After a clean A/B the
+control-plane stall is a shared blk-mq queue-contention problem on a
+shared disk, reproducible on *plain* managed_irq. Your series does not
+introduce it -- but it does remove the per-CPU-queue separation that
+otherwise keeps it from happening, so I think there is still a real
+I/O-QoS question for you. Details below, each claim backed by a debugfs
+capture.
 
---------------HscB0pQhO6alWtKX55NS0MMB
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: base64
+Setup
+-----
+  Kernel:   6.18.15-rt (PREEMPT_RT), v16 applied
+  CPU:      2x Intel Xeon Gold 6338N, 128 CPUs, 2 NUMA nodes
+            112 isolated, 16 housekeeping (8 carrying managed IRQs)
+  Storage:  Dell PERC / MegaRAID (megaraid_sas) fronting a SATA SSD
+            (Samsung PM893), passthrough. etcd and the fio target share
+            the SAME physical disk (sda4 / cgts-vg).
+  Workload: one fio pod, libaio iodepth=256 numjobs=4 direct=1,
+            SCHED_OTHER (NOT RT -- RT is not required to reproduce),
+            pinned to one isolated CPU (CPU 2) via the StarlingX
+            isolcpus device-plugin label (verified with ps -eLo psr).
+  Method:   per-hctx in-flight snapshot from
+            /sys/kernel/debug/block/sda/hctx*/busy during the run,
+            cross-referenced with each queue's mq/*/cpu_list and with
+            etcd's CPU set (ps psr).
 
-T24gMDUuMTAuMjYgMTQ6MzUsIFllaHllb25nIExlZSB3cm90ZToNCj4gc2NzaWZyb250X2Rv
-X3Jlc3BvbnNlKCkgdmFsaWRhdGVzIHRoZSBycWlkIGluIGEgYmFja2VuZCByZXNwb25zZSBh
-Z2FpbnN0DQo+IFZTQ1NJSUZfTUFYX1JFUVMgYmVmb3JlIHVzaW5nIGl0IHRvIGluZGV4IGlu
-Zm8tPnNoYWRvd1tdLCBidXQgdGhlbg0KPiBkZXJlZmVyZW5jZXMgdGhlIGVudHJ5IHRvIHRl
-c3QgLT5pbmZsaWdodCB3aXRob3V0IGNoZWNraW5nIHRoYXQgdGhlIHNsb3QNCj4gaXMgcG9w
-dWxhdGVkLiAgU2hhZG93IHNsb3RzIGFyZSBOVUxMIGJlZm9yZSBhIGNvbW1hbmQgaXMgc3Vi
-bWl0dGVkICh0aGUNCj4gaG9zdCBwcml2YXRlIGFyZWEgaXMgemVyb2VkIGF0IGFsbG9jYXRp
-b24pIGFuZCBhcmUgcmVzZXQgdG8gTlVMTCBpbg0KPiBfc2NzaWZyb250X3B1dF9ycWlkKCkg
-b25jZSBhIHJlcXVlc3QgY29tcGxldGVzLCBzbyBhbiBpbi1yYW5nZSBycWlkIHRoYXQNCj4g
-ZG9lcyBub3QgY29ycmVzcG9uZCB0byBhbiBvdXRzdGFuZGluZyByZXF1ZXN0IG1ha2VzIHRo
-ZSBmcm9udGVuZA0KPiBkZXJlZmVyZW5jZSBhIE5VTEwgcG9pbnRlci4NCj4gDQo+IEEgbWFs
-aWNpb3VzIG9yIGJ1Z2d5IGJhY2tlbmQgY2FuIHRodXMgY3Jhc2ggdGhlIGd1ZXN0IGJ5IHJl
-dHVybmluZyBhDQo+IHJlc3BvbnNlIHdob3NlIHJxaWQgaXMgaW4gcmFuZ2UgYnV0IG5vdCBp
-biBmbGlnaHQgLS0gZm9yIGV4YW1wbGUgYQ0KPiBzcHVyaW91cyByZXNwb25zZSBiZWZvcmUg
-YW55IGNvbW1hbmQgaGFzIGJlZW4gaXNzdWVkLCBvciBhIGR1cGxpY2F0ZSBvZg0KPiBvbmUg
-YWxyZWFkeSBjb21wbGV0ZWQuICBUaGUgcmluZyBoYXMgb25seSBWU0NTSUlGX01BWF9SRVFT
-ICgxNikgc2xvdHMsIHNvDQo+IGJlZm9yZSB0aGUgZmlyc3QgY29tbWFuZCBldmVyeSBpbi1y
-YW5nZSBycWlkIHNlbGVjdHMgYSBOVUxMIHNsb3QuDQo+IA0KPiBSZWplY3QgYSByZXNwb25z
-ZSB3aG9zZSBzaGFkb3cgc2xvdCBpcyBub3QgcG9wdWxhdGVkLg0KPiANCj4gRml4ZXM6IDZk
-MWMyZjQ4ZjNmYyAoInhlbi9zY3NpZnJvbnQ6IGhhcmRlbiBkcml2ZXIgYWdhaW5zdCBtYWxp
-Y2lvdXMgYmFja2VuZCIpDQo+IENjOiBzdGFibGVAdmdlci5rZXJuZWwub3JnDQo+IFNpZ25l
-ZC1vZmYtYnk6IFllaHllb25nIExlZSA8eWhsZWVAaXNzbGFiLmtvcmVhLmFjLmtyPg0KDQpS
-ZXZpZXdlZC1ieTogSnVlcmdlbiBHcm9zcyA8amdyb3NzQHN1c2UuY29tPg0KDQoNCkp1ZXJn
-ZW4NCg==
---------------HscB0pQhO6alWtKX55NS0MMB
-Content-Type: application/pgp-keys; name="OpenPGP_0xB0DE9DD628BF132F.asc"
-Content-Disposition: attachment; filename="OpenPGP_0xB0DE9DD628BF132F.asc"
-Content-Description: OpenPGP public key
-Content-Transfer-Encoding: quoted-printable
+The decisive observable is not "etcd alive/dead" but which single
+blk-mq queue the isolated pod's I/O lands on, and whether one of etcd's
+CPUs is mapped to that same queue.
 
------BEGIN PGP PUBLIC KEY BLOCK-----
+The clean A/B (identical kernel = plain managed_irq, identical fio 4k
+randread, identical nr_requests=5089, fio always on isolated CPU 2;
+only the device's blk-mq queue count differs)
+----------------------------------------------------------------------
 
-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
-kt+z4drzFUyEjLM1vVvIMjkUoJs=3D
-=3DeeAB
------END PGP PUBLIC KEY BLOCK-----
+  (B) default MSI-X -> 120 blk-mq queues, ~1 CPU per queue
+      All ~35 in-flight land on hctx61, a queue mapped to the isolated
+      submitter and NOT used by any etcd CPU.
+      -> no collision. etcd healthy. Device load ~82k IOPS 4k,
+         sda aqu-sz ~1020, r_await ~12.3 ms.
 
---------------HscB0pQhO6alWtKX55NS0MMB--
+  (C) megaraid_sas.msix_vectors=16 -> 15 blk-mq queues, ~8 CPUs each
+      All ~33 in-flight land on hctx7, mapped to CPUs {0,4,64,68}.
+      etcd runs on CPU0 and CPU68 -> same queue.
+      -> collision. etcd apply 2-7 s, "request timed out",
+         "context deadline exceeded", /registry/health failing.
+         Control plane down -- on plain managed_irq, WITHOUT your series.
 
---------------0I6v6BijZSEvEjvGrfeccWKG--
+Same kernel, same disk, same fio, same depth; the only thing that
+changed is whether there were enough hardware queues for the isolated
+CPU to get one that etcd does not also use. That is the whole bug.
 
---------------nnH7S5YuLqUH0yIqtmqXntAT
-Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="OpenPGP_signature.asc"
+Supporting data point on the strict kernel
+------------------------------------------
+I also have one capture on the managed_irq_strict image (earlier run,
+so not parameter-matched to B/C: it was a 64 KB read profile, and
+/sys/block/sda/queue/nr_requests was already capped to 64 -- that cap
+was my doing, the only way I could keep etcd / kube-apiserver alive
+enough for the node to stay up and for me to collect the capture at
+all; the default 5089 took the control plane down hard). It is still
+informative directionally: with 0006 active, sda is confined to 16
+blk-mq queues on the HK CPUs, fio on isolated CPU 2 funnels all ~30
+in-flight onto hctx0 == CPU1, and CPU1 is an etcd CPU -> even with that
+nr_requests=64 cap in place, etcd apply still blows out to multi-second
+with context-deadline / health-probe failures. So strict reproduces the
+same collision by construction, and the nr_requests knob only partially
+masks it there.
 
------BEGIN PGP SIGNATURE-----
+Conclusion
+----------
+The failure is not strict-vs-non-strict. It is whether the isolated
+pod's submission queue coincides with a queue an etcd CPU also uses:
 
-wsB5BAABCAAjFiEEhRJncuj2BJSl0Jf3sN6d1ii/Ey8FAmrE/fYFAwAAAAAACgkQsN6d1ii/Ey8M
-DQgAn67Our2fo1bMCOV5O+3w37AmRu4L3TTxvToURAAHydJz7TJ3hqBD5FlZhLmX6LdxqaLWYwMO
-MS3mwgAUtulFRhkwVDuMs63dXLlRNgw0m9426pAPQ3lMva/tjoFsdST2KP0LXwIFspRvsX4dCVHy
-DlCGLpEeC40ybm7reCHJJBQshsVra+9Jxyer73TGy0vJgVs6qnrjQ1VnzbufezWmAK3Ovzy3Tj3v
-egMCT2rqTVWsBqXH+2GdbtR+XttYuxwnsYTnDSw5XMMAKECUC9ULqx+K3/Gexxl0lZFNCp9gG8vu
-xUl/Xqi6SXmtsnr03S4XoWbeHAnhlFgFiBiPkKcNlg==
-=UJPI
------END PGP SIGNATURE-----
+  - On a device with enough hardware queues, plain managed_irq gives
+    the isolated CPU its own blk-mq queue, disjoint from etcd's, and
+    the heavy pod I/O does not head-of-line-block etcd (B).
+  - Shrink the queue count until CPUs must share a queue -- via a low
+    MSI-X count (C), or via your 0006 "use HK CPUs only" confinement
+    (strict) -- and the isolated pod's deep queue lands on a queue etcd
+    uses, and etcd starves.
 
---------------nnH7S5YuLqUH0yIqtmqXntAT--
+So this is pre-existing shared-queue contention on a shared slow disk,
+not a bug your series introduces. I retract the implication in my
+previous mail. (It is also device-level, not CPU: during the stall 7 of
+8 IRQ-HK cores are idle and the backlog is pure block-layer queueing,
+aqu-sz ~1020 at ~70% util.)
+
+Where I think the series is still relevant
+------------------------------------------
+0006 confines blk-mq to the HK CPUs unconditionally. On a
+well-provisioned device (B, 120 queues) that is exactly the config that
+*removes* the per-CPU-queue separation which was keeping isolated bulk
+I/O off etcd's queues. In other words, strict turns a
+"only on queue-starved devices" problem into "always, because every
+isolated submission is forced onto the HK queue set the control plane
+also lives on." That is a deliberate and correct part of the design --
+isolated CPUs must not host the queues -- but it makes an I/O-QoS gap
+unavoidable rather than incidental.
+
+Mitigation
+----------
+Capping /sys/block/sda/queue/nr_requests on this device (megaraid_sas
+with the SATA SSD exposed transparently / passthrough, e.g. 5089 -> a
+small value in the 32-64 range -- lower for a slower disk) shortens the
+head-of-line backlog and helps, but note it is weaker under strict/low-
+queue configs: when all submissions pile on one etcd-shared queue, even
+a depth of 32-64 on that single queue still hurts etcd. For production I'd
+prefer cgroup v2 io.max / io.latency to protect control-plane I/O, or a
+dedicated device for etcd.
+
+Questions
+---------
+  1. When 0006 forces all isolated-pod block I/O onto the HK queue set,
+     do you consider protecting co-located latency-critical services
+     (etcd/kube-apiserver) from that I/O an operator concern
+     (io.latency/io.weight, dedicated device), or is there a case for
+     the series to leave a per-CPU submission path / reserved HK queue
+     so bulk isolated I/O cannot head-of-line-block them?
+  2. Is there an assumed minimum HK queue count relative to the
+     aggregate block I/O of isolated pods? 8 IRQ-HK vs 112 isolated on
+     one shared disk makes the HK queue set trivial to saturate on
+     depth even while it is CPU-idle.
+
+Raw debugfs hctx snapshots + iostat/etcd logs available on request.
+Net: not a v16 regression; a shared-disk I/O-QoS gap that v16 makes
+unavoidable by design, which may or may not be something you want to
+address in the series rather than leave to operators.
+
+Thanks, and sorry for the premature pointer in the first mail,
+Ionut
