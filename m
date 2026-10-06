@@ -1,49 +1,47 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 179D13264D1;
-	Tue,  6 Oct 2026 02:44:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D26BC2E738B;
+	Tue,  6 Oct 2026 02:44:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791254645; cv=none; b=DMPXPbLQ7Ge0f1x5hL9PxDouRqP691m12II4zv5A7Y78ZZp6zIvg+mI980UyPYVS4orSvJ1aRG0P6safAhF4MOW3fH/hQGHxGz+VXC7RY8cOIEZ2Sc6HlR7hvc67pgo0zzfu+h9Iih3/omswNggxS3HUxgGejbb5HsoPI8ZqaL0=
+	t=1791254684; cv=none; b=b6EMaSOMvxZomhrxX3PNjvBuHrsRQGauAbT0IonyCIREPZonZmkk9noI9kG+lcOKQ+NQixLcaLicdJyLxYhFuU1fZ8G4GXxNwcwUD8jjipYxs5bAAFHLBEq455Oo10fIDC524CfHYUBxL/v0fOnRuq6tOarwhgPy1kbJxXFwlyc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791254645; c=relaxed/simple;
-	bh=LqXQ8FiQ32sq0pqMmEuynOLwkn2RaZmotylQm59n33o=;
+	s=arc-20240116; t=1791254684; c=relaxed/simple;
+	bh=bEXmDZMK/oS14WYfbRyqYg2z+D69YwITy3ckG7ic9gQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=K3MpiHI5C2B5vXAnnNez2y8B0YGmB6EKaLyNt8LEgxAeewpz3WlNfe5y31K+/FkGTxa6m5d/G0CfIiERIFcH7a0ZAz9DLRoHiy46sZq229G7uXxlJHhiqdV0elwKFOT3ljalw0FKlBSkYbAJIGnVrTcIAMZX1BXf8Q4Qy7mawhc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=brEG2Y09; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=BbBE19gJQEHryjQ58Ig24o8XfLrOklF51ALLzHHkMnWc2m1511mubXKowFfY+FbhrosZQx96HxPyoznfpGyLGQHfY4tp1xpIXjb+uaitM8RHQ8gPBGGIn0Z7dtODQqzvr1gi8fN0UDJw8z+2XmncOiKHS2+PwzcS3HVm9tl17xk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FJXuEUcf; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="brEG2Y09"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CCDE51F00898;
-	Tue,  6 Oct 2026 02:44:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FJXuEUcf"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 593EA1F000FF;
+	Tue,  6 Oct 2026 02:44:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791254644;
-	bh=ADnkhVu7hPz3BJysYPkRDJkA4Wh5m1Yw/C2ijRshtJQ=;
+	s=k20260515; t=1791254683;
+	bh=RKjbqufc5djRheEJf1fwVOMblBRNUPLqDwO4cRJjC/4=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=brEG2Y09lyalfMmzx/+LMJjIFrL11BEtebLsoLzaM2R66hC1/fxk6bcfslFeJ0T9P
-	 0D1uqwqE2dcXm6R+G3CeFLbsWa5IWHeBNzy692QeBqODihde71S0Czhdqd1c57j5KZ
-	 Dr4ou4d/U3vUNRoOyQyX/OzMVRcqc0sXmoIidB51nLnSXxb+T+kY7YoC8kf1u5dPfa
-	 dDSL46CnhLjgYr0e3FVJ+zyr4DuV30TiiS9Kl1UUV7x7f3f77yijposVTvJB5ZkdLO
-	 +UnX6GC0vSsG1LytHlid7RGJ5gmvxw3ZIK2p47XNn3cvKUQnCGCPUqG+J16zdCQkXV
-	 1oGMPBD5JRFZg==
+	b=FJXuEUcfEcrDbxggK8JpIw1KLpS+/2c0+moS4fZXsUfk1T9EPj1OJPfnmwjAKxpl8
+	 jfvM0CXpsgP9NzMy0e31r6xJYU8YS+RCIZ8/RW1meX01chxshrOHRvVAa2idAq3EfR
+	 CZwdPXW9FIF3g8eZF/pw9lpQOm77vHVFzdSpB0YsQNRMexcSpHz3fyC3MlOi1GciZq
+	 GZSPhJf9Hpd/Vt/2yzRsxN+R743biJgbh1gubnQxsHeQv/W/er74ZE2SvCTguakdQe
+	 PC0Py1oZsaJpsVFn4A/o3nODfHhId4AWRH/nIeXHxduJdG2SEwc+Z2EmlGiVyz0XYi
+	 sIlyXNq/tomww==
 From: "Martin K. Petersen (Oracle)" <mkp@kernel.org>
-To: Bean Huo <beanhuo@micron.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	"Martin K. Petersen" <mkp@kernel.org>,
-	Stanley Jhu <stanleyjhu@google.com>
-Cc: Alim Akhtar <alim.akhtar@samsung.com>,
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Peter Wang <peter.wang@mediatek.com>,
+To: oliver@neukum.org,
+	aliakc@web.de,
+	lenehan@twibble.org,
+	Fan Wu <fanwu01@zju.edu.cn>
+Cc: "Martin K . Petersen" <mkp@kernel.org>,
+	James.Bottomley@HansenPartnership.com,
 	linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	Avri Altman <avri.altman@sandisk.com>
-Subject: Re: [PATCH v3 0/2] scsi: ufs: core: Fix unsafe MMIO reads and redundant CQ sweeps in MCQ reset
-Date: Mon,  5 Oct 2026 22:43:54 -0400
-Message-ID: <179125457808.2089616.15797685655668816357.b4-ty@b4>
+	stable@vger.kernel.org
+Subject: Re: [PATCH v2] scsi: dc395x: sync the waiting_timer before freeing the host
+Date: Mon,  5 Oct 2026 22:44:35 -0400
+Message-ID: <179103513126.923653.2100454327544429280.b4-ty@b4>
 X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20260928035816.1294326-1-stanleyjhu@google.com>
-References: <20260928035816.1294326-1-stanleyjhu@google.com>
+In-Reply-To: <20260911020544.42966-1-fanwu01@zju.edu.cn>
+References: <20260911020544.42966-1-fanwu01@zju.edu.cn>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -53,30 +51,22 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 
-On Mon, 28 Sep 2026 11:58:14 +0800, Stanley Jhu wrote:
+On Fri, 11 Sep 2026 02:05:44 +0000, Fan Wu wrote:
 
-> During Multi-Circular Queue (MCQ) error recovery and host reset,
-> ufshcd_mcq_compl_pending_transfer() sweeps or polls completion queues to
-> reap pending transfers. Two bugs exist in this path:
-> 
-> 1. Unsafe MMIO read and spurious errors while HCE = 0 (Patch 1/2):
->    ufshcd_host_reset_and_restore() stops the controller (HCE = 0) before
->    calling ufshcd_mcq_compl_all_cqes_lock(). Calling
->    ufshcd_mcq_update_cq_tail_slot() at the end of the sweep reads CQTPy
->    over MMIO while HCE = 0, directly contradicting the function's own
->    documented contract that reading host controller registers may not be
->    safe when the controller is disabled. In addition, passing expected
->    empty slots during a full-ring sweep into ufshcd_mcq_process_cqe()
->    prints spurious "Abnormal CQ entry!" errors.
+> The waiting_timer callback re-arms itself and takes the host lock.
+> adapter_uninit() currently stops it with timer_delete(), which does not
+> wait for a callback already running on another CPU. The final
+> scsi_host_put() that frees the host (and the host lock the callback
+> dereferences) runs right after adapter_uninit(), so a concurrent or just
+> re-armed callback can fire after the free, leaving a potential
+> use-after-free window.
 > 
 > [...]
 
-Applied to 7.3/scsi-fixes, thanks!
+Applied to 7.4/scsi-queue, thanks!
 
-[1/2] scsi: ufs: core: Avoid unsafe MMIO reads in ufshcd_mcq_compl_all_cqes_lock()
-      https://git.kernel.org/mkp/scsi/c/375f3a5691dd
-[2/2] scsi: ufs: core: Decouple CQ sweep from request iterator in MCQ
-      https://git.kernel.org/mkp/scsi/c/469fa055664b
+[1/1] scsi: dc395x: sync the waiting_timer before freeing the host
+      https://git.kernel.org/mkp/scsi/c/0b1a79f2791a
 
 -- 
 Martin K. Petersen
