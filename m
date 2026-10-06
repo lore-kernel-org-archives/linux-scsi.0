@@ -1,63 +1,64 @@
-Received: from mail-pg1-f181.google.com (mail-pg1-f181.google.com [209.85.215.181])
+Received: from mail-pj1-f49.google.com (mail-pj1-f49.google.com [209.85.216.49])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 24A633D9665
-	for <linux-scsi@vger.kernel.org>; Tue,  6 Oct 2026 09:34:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 905AF3DB320
+	for <linux-scsi@vger.kernel.org>; Tue,  6 Oct 2026 09:34:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791279281; cv=none; b=VKwHCMhd7fqqd43Lmw36pdnr4RtQVMS1oZ6J+sqlTfcX82HvI7naPIxo0wkN717R8+bEw2ZYLsj5MnMdVV5RVpMQJK6uMVxNCXUmA0KZcSYm+vnovNPnm8ab4yk7YRdKjzd34PtN/H3ZUGwFx6mSQYgGJaKvp54mjtBxvGsMc3c=
+	t=1791279289; cv=none; b=YYyZGubriLKRuoaue1KDicIHfC5CxgXdNfBsicjadshXZZx8SgXKFwxScnNhYpBIiDtV5IWHTMXtb/4EFhxInnYSeUfaob3Ubpg4kQin3jRBtMz5Y/LXB9oTJrx+C46Cx9NULVxymkTWMH+06TcSDCoJDPRr4Jy2rglFHraPK6c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791279281; c=relaxed/simple;
-	bh=47mvSsNpNg+ZUpTtA1w32TuEcUfLQ7Pkxvdyz5/ll2c=;
+	s=arc-20240116; t=1791279289; c=relaxed/simple;
+	bh=v2LleU7DjwKjyo5byw/PeaE+ykCm1p6AnsUT0DG35ug=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=tuU1PNoHmQdfwrFYsrafZnc0FmFWgmXQjqoHGxLFsx1QYvG82iW4cjzfvUd3X4XBOlrPNk2o10zpDQBALsRfON1w5ypGj3yFDmV8jC+4/oY7W5sEv5Op6rlzvmIiJun8pKVqRzmoPSji0iSTiz/dJ7caP+iRkYCZIKKFIRaOp/8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=nNjbQM3B; arc=none smtp.client-ip=209.85.215.181
+	 MIME-Version; b=tDSShxUG8jJRTGBcXMRPicM/guJzJ8zTzkBUYdkDSgz9FsI4ucIIEgCSm1I3cSL7RhwwZhm1eaCDuIsyppg4hJsOYsZ8/LEbCD1X+s/uYaBewUkmLNTKyTmQcHifwaZEM/BcYASP4chWKyrhp3KLOJwK0etajwCK66Oar1/gb50=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Xma5nqY0; arc=none smtp.client-ip=209.85.216.49
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nNjbQM3B"
-Received: by mail-pg1-f181.google.com with SMTP id 41be03b00d2f7-ca12086c06eso206717a12.0
-        for <linux-scsi@vger.kernel.org>; Tue, 06 Oct 2026 02:34:35 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Xma5nqY0"
+Received: by mail-pj1-f49.google.com with SMTP id 98e67ed59e1d1-3964dfb5b9aso845073a91.1
+        for <linux-scsi@vger.kernel.org>; Tue, 06 Oct 2026 02:34:43 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1791279272; x=1791884072; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1791279281; x=1791884081; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=qY0yv79M9ElE8fm/ELF5xq7iGxut3qQ2nfq4dYz2/7I=;
-        b=nNjbQM3Bi3UXY1uqcUNZFy6k4XyHXltvZZzwPBDIP/D6Zp2GnwPZTELphKDLyYij1v
-         GfxqZtOO0W9meXWURWr4QBtk+XkmloaMwm7gGI2saDeQUOjDZkW4z8nieb42ldxn+fBp
-         ViaFASdCZTqEYFDpBb7PmlquyN9xVDOstAg28WGv/DbXmliS0E67ZB2/B+1/xf3S/Ox7
-         jfMQpAT1k7Xzm+1iqp0AIjqhW0b9+IAR1pWp7xylU3yw1YC2Jm5W8/7+E2Esrxsgf54k
-         ySdUcS0XgKV2jxlIAUds8Da/Y5BuVobCvIBjZEWBGxWvnnd79yWDeMM3JQvqa9e/1ra5
-         ZS7g==
+        bh=OiH8I2vivbUrNosTf6kMbDPyLsej137IHvnAUOusej4=;
+        b=Xma5nqY0pynAzbViNIbPat6cJO99vODJZn1Mta03msl0n95hdeViM1BuTVZC/NDfo9
+         JENZbkM+b3G/jrIaDOc8RpFvFrmRXxMYB2aF7lCi6D6fH4TnVZCp0Hti8jWQ9d4jd1x9
+         LYZtcRFrP8gKwBtu79IA8WO58O4NtUWwDwpOOeGXv/B5xo4YWBrkdkk0QXtN6DSiCd6E
+         EnujXyUE4hyvb0OpfvkyQ4bLSRT5bHRZJBnUpgDxrmY3Q2lNOD8SyFclG2meuO9wGtAq
+         gOebO4eZD1HJ8zoijJI3Phy9M8EW8lOwZBwd3ntPUrhfxzG3s1E6FJ0OJHSOvCB4IlPH
+         tIZA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791279272; x=1791884072;
+        d=1e100.net; s=20260707; t=1791279281; x=1791884081;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=qY0yv79M9ElE8fm/ELF5xq7iGxut3qQ2nfq4dYz2/7I=;
-        b=nBSjQemFqjpqawqpb0TxFlyCPmD0GiqN6aOY4WCx4iwDR053x9jKb211IJn0qZxOBm
-         6BJdm9JIanAr6UMMKkT9yq9EjYw/nqv3Wsd0Q7AwSJ3MbVeqfR4JNqx35XZC+R1/+4Qs
-         EPj+BRmvOg3FTGWAyOdTN6QA9VylXAxK5gYazy8VwV6W/L+is6y+xjjsV6vmoppOumAc
-         D5M8L/XYPNiOTtC2m4jnxcTqqwP/VAtllTcxlF3VyJhcivs/wEIeIXK1PE6Z27oyRYsK
-         keqKtX0+jfMrBYe9XZDg2H09vtB9KRjrt9UV9q22NOJbWMajREYT4pJByta/Il3EafTS
-         hxmQ==
-X-Forwarded-Encrypted: i=1; AKwUvByuMesVxYALdrgFQhCslHIiIbBE1fVYb14/8s8jeJnXbunF2txJAxkPEBOsrhSgbThxZ+HENIwGSWzG@vger.kernel.org
-X-Gm-Message-State: AFq9FYL14b00F4VGps9qXA7ZdjcAwzGHSAKxbxF+4tTV4lVytfBSnRcE
-	Ibh28gCrEZlCil8s4+3ajkgR0i1TRNRGTpX06mDOrktPwdUMBWd2oBCA
-X-Gm-Gg: AYBFou3ua9qsxDLQkz5EJ0yMRIGdk00h04pkm/c/FKcJOpdO/Go0nSokQIxyIywahh0
-	r/wF8fM2PEIFE5WeT0hQ7wDWl9k8T37XWg12dO7r6f/2y0TFcvIhzCCtKFEOsXtuLveG7yjN8QS
-	9jUW/B95fJ9b9TCKmP54JaPm6wwxh5CZ10fsUsQViFzHSE8ZNFHjHvXsA4D6/+4U7oTwCnkIqf0
-	zmFV6pDYd0ySlGAQI5fBhQzWLVXi5BGMwf64GQ5zor52WmPdJQJxz8Rc667wc8+jsUq5sN2QOD4
-	J0RRiw7RY6RShNTZVxLw58VhBdKuQKFw4WvLIyFQ3/MmljWgmvUj8a8+A6qJOrOrtbfHeS6+b9y
-	2wn3aik3UjpzvZcnAEGqHPtys++z8ldnTBFBBymDYOhxw3eSqUKViihI/BvFzpfpXBgKj3bYl0f
-	62nWI1SteZ0ipzYlRbZmjUY8I+2+ZmfadjprIcVnRmal1m4WfJF2437q/nyivF/G4pgdNhTQ==
-X-Received: by 2002:a17:90b:4a0d:b0:39e:6ec6:f4d0 with SMTP id 98e67ed59e1d1-3a87267ea3cmr712031a91.8.1791279272186;
-        Tue, 06 Oct 2026 02:34:32 -0700 (PDT)
+        bh=OiH8I2vivbUrNosTf6kMbDPyLsej137IHvnAUOusej4=;
+        b=nOOjWUdF0g/kYYtyoA/prWsk7dpt0QtP7qdh/1tBHZ+u7SZfJ9G/Eow7spmGQFVouB
+         0J9ncuBVwcIXHNKSJySQhkUXqRPqA8vK27zSN31MInucFcqDLUXS/yROwV5GdRhvhNig
+         +b6tRUu/PKrW3/SMhNp0Gt36NdipgqtJPGrf3f0BTzMcVcXVWrI7zEgPxey6SXdY1LYJ
+         jmIc74VPrq6vq+TYXFF6ZwhpxevihowG3bUTLKxstCAo2C65Sxa38C9Aquw+GDR4wKDA
+         dtPEeGFX2kBbYzgoiAtOAwl4LqygETSB/OiYcmymvg8ZFhKWf2mG6q+XQ4RN4eJ/in1U
+         lQNw==
+X-Forwarded-Encrypted: i=1; AKwUvByE1dU7fFemmUFoeCrM0k85kfy8GfquZbjn4MkfeVWbmAmIQd6G2k+DVGrphTCCfI32sbjtgmuSNOJ+@vger.kernel.org
+X-Gm-Message-State: AFq9FYKX/yl/qQ5BHPDPtkEKgWPfhTJvwcxj+Auw3vD2RBD/kEPvtqeq
+	WW6hZQSzCCHJhPdyruh2w/WoTCs9YFSLGXQc+yEkpdVjJhCSMlK+LFBH
+X-Gm-Gg: AYBFou1xzthRwyX0OIOJpzNwtf5O1Z7IO5wdWkFM/29gszl3pJgIDRVF01xmRjfyl6M
+	15A2Cx+JKA5IioKr629/nsuZFdBNCuEVIZef9u07c7O/7bB2wa+3mOv1qWjGc1xPq0rP3SpUSyy
+	wAfWESJJNYYCSvcQ7gBshOIY5STOwUm3N3MdShQZ5MXooR9RYIVm+g6KGTmpdcpZUpOc1t/qjHC
+	HkZiEkC9Xln0r9TSTifHmcWfhNEILhf7EzRR+tkQR9lmd6bAvRjS1o2r6JI5nX4GB8G3n+bKUcy
+	uImbF6JZfVA7Wvbj+A+kczn3h4A/xUffiYT10Y5xNlNgM6Vi6imbOXdaR2R2m9LBcVxT0vR/emp
+	8fECX+AoXBVpbngEiSL1Tq2/8cWNJ926/ioPWfuVpvCOsFnHN/5leVM1gyzYDZYk5l1Ztimfvv/
+	Qz96v/oABCT9UokjL8iSsWMKAKuCBImEAwK5byDv+ORAa7iJXcrp9RfowjU9+cuZSQ/zR58F+te
+	d5rm+SE
+X-Received: by 2002:a17:90b:4d02:b0:39d:f247:bab with SMTP id 98e67ed59e1d1-3a87267ea23mr746760a91.6.1791279280466;
+        Tue, 06 Oct 2026 02:34:40 -0700 (PDT)
 Received: from gmail.com ([188.253.12.30])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3a8543ab76bsm3905277a91.13.2026.10.06.02.34.28
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3a8543ab76bsm3905277a91.13.2026.10.06.02.34.36
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 06 Oct 2026 02:34:31 -0700 (PDT)
+        Tue, 06 Oct 2026 02:34:40 -0700 (PDT)
 From: Jia Jia <physicalmtea@gmail.com>
 To: "Martin K . Petersen" <mkp@kernel.org>
 Cc: Jan Engelhardt <jengelh@inai.de>,
@@ -69,9 +70,9 @@ Cc: Jan Engelhardt <jengelh@inai.de>,
 	target-devel@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Jia Jia <physicalmtea@gmail.com>
-Subject: [PATCH 3/8] scsi: target: reject a short SET TARGET PORT GROUPS list
-Date: Tue,  6 Oct 2026 17:33:33 +0800
-Message-Id: <20261006093338.27342-4-physicalmtea@gmail.com>
+Subject: [PATCH 5/8] scsi: target: copy a DIF verify tuple across prot sgs
+Date: Tue,  6 Oct 2026 17:33:35 +0800
+Message-Id: <20261006093338.27342-6-physicalmtea@gmail.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20261006093338.27342-1-physicalmtea@gmail.com>
 References: <20261006093338.27342-1-physicalmtea@gmail.com>
@@ -83,26 +84,29 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-target_emulate_set_target_port_groups() accepts any parameter list of
-4 bytes or more. The walk then reads a 4-byte descriptor whenever any
-byte remains. A 5-byte list reads ptr[0] and get_unaligned_be16(ptr + 2),
-which is buf[6] and buf[7].
+sbc_dif_verify() loads an 8 byte t10_pi_tuple while i < psg->length.
+A protection sg shorter than 8 bytes still enters the loop.
 
-Explicit ALUA is enabled on a new target port group. Access state 0 is
-Active/Optimized, so that read is reached. vhost-scsi keeps one sg
-inside a page. Five bytes at page offset 4091 end on the page boundary,
-and the port-group id is the next physical page.
+vhost-scsi keeps each sg inside one page. Eight PI bytes that start
+at page offset 4092 are mapped as 4 bytes at that offset and 4 bytes
+on the next guest page. The first sg still satisfies i < length, and
+the tuple read continues into the next physical page.
 
-A legal list is a 4-byte header plus 4-byte descriptors. Reject a
-length that is not a multiple of 4 before any port-group state changes.
+Software verify runs when the fabric does not advertise DOUT_STRIP.
+vhost-scsi advertises only DIN_PASS and DOUT_PASS. With
+fabric_prot_type 1, a WRITE is TARGET_PROT_DOUT_STRIP and
+sbc_dif_verify() reads the guest PI buffer.
+
+Copy the 8 byte tuple across protection sg entries before the check.
+Four bytes at the end of one entry and four at the start of the next
+stay one tuple.  A tail with no following entry fails the command.
 
 KASAN reports:
 
-  BUG: KASAN: use-after-free in target_emulate_set_target_port_groups+0x1dc/0x540 [target_core_mod]
-  Read of size 2
+  BUG: KASAN: use-after-free in sbc_dif_verify+0x5ab/0x790 [target_core_mod]
+  Read of size 4
 
-  target_emulate_set_target_port_groups
-  __target_execute_cmd
+  sbc_dif_verify
   target_execute_cmd
   vhost_scsi_write_pending
   transport_generic_new_cmd
@@ -114,26 +118,158 @@ KASAN reports:
   ret_from_fork
   ret_from_fork_asm
 
-Fixes: 0d7f1299ca55 ("target: report too-small parameter lists everywhere")
+Fixes: 18213afbd8ce ("target: handle odd SG mapping for data transfer memory")
 Signed-off-by: Jia Jia <physicalmtea@gmail.com>
 ---
- drivers/target/target_core_alua.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/target/target_core_sbc.c | 117 ++++++++++++++++---------------
+ 1 file changed, 60 insertions(+), 57 deletions(-)
 
-diff --git a/drivers/target/target_core_alua.c b/drivers/target/target_core_alua.c
-index 140154d93c43..e2439f2e468a 100644
---- a/drivers/target/target_core_alua.c
-+++ b/drivers/target/target_core_alua.c
-@@ -283,9 +283,9 @@ target_emulate_set_target_port_groups(struct se_cmd *cmd)
- 	int alua_access_state, primary = 0, valid_states;
- 	u16 tg_pt_id, rtpi;
+diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
+index 12275ebad95c..c0aeb8886743 100644
+--- a/drivers/target/target_core_sbc.c
++++ b/drivers/target/target_core_sbc.c
+@@ -1492,81 +1492,84 @@ sbc_dif_verify(struct se_cmd *cmd, sector_t start, unsigned int sectors,
+ 	       unsigned int ei_lba, struct scatterlist *psg, int psg_off)
+ {
+ 	struct se_device *dev = cmd->se_dev;
+-	struct t10_pi_tuple *sdt;
+ 	struct scatterlist *dsg = cmd->t_data_sg;
+ 	sector_t sector = start;
+ 	void *daddr, *paddr;
+-	int i;
+ 	sense_reason_t rc;
++	unsigned int poff = psg_off;
+ 	int dsg_off = 0;
+ 	unsigned int block_size = dev->dev_attrib.block_size;
  
--	if (cmd->data_length < 4) {
-+	if (cmd->data_length < 4 || (cmd->data_length & 3)) {
--		pr_warn("SET TARGET PORT GROUPS parameter list length %u too"
--			" small\n", cmd->data_length);
-+		pr_warn("SET TARGET PORT GROUPS list length %u too small or not a multiple of 4\n",
-+			cmd->data_length);
- 		return TCM_INVALID_PARAMETER_LIST;
+-	for (; psg && sector < start + sectors; psg = sg_next(psg)) {
+-		paddr = kmap_atomic(sg_page(psg)) + psg->offset;
+-		daddr = kmap_atomic(sg_page(dsg)) + dsg->offset;
+-
+-		for (i = psg_off; i < psg->length &&
+-				sector < start + sectors;
+-				i += sizeof(*sdt)) {
+-			__u16 crc;
+-			unsigned int avail;
+-
+-			if (dsg_off >= dsg->length) {
+-				dsg_off -= dsg->length;
+-				kunmap_atomic(daddr - dsg->offset);
+-				dsg = sg_next(dsg);
+-				if (!dsg) {
+-					kunmap_atomic(paddr - psg->offset);
+-					return 0;
+-				}
+-				daddr = kmap_atomic(sg_page(dsg)) + dsg->offset;
+-			}
++	if (!psg || !dsg)
++		return 0;
+ 
+-			sdt = paddr + i;
++	paddr = kmap_local_page(sg_page(psg)) + psg->offset;
++	daddr = kmap_local_page(sg_page(dsg)) + dsg->offset;
+ 
+-			pr_debug("DIF READ sector: %llu guard_tag: 0x%04x"
+-				 " app_tag: 0x%04x ref_tag: %u\n",
+-				 (unsigned long long)sector, sdt->guard_tag,
+-				 sdt->app_tag, be32_to_cpu(sdt->ref_tag));
++	while (sector < start + sectors) {
++		struct t10_pi_tuple sdt;
++		__u16 crc;
++		unsigned int avail;
+ 
+-			if (sdt->app_tag == T10_PI_APP_ESCAPE) {
+-				dsg_off += block_size;
+-				goto next;
+-			}
++		if (poff >= psg->length && !sg_next(psg))
++			break;
++
++		if (!sbc_dif_prot_copy(&psg, &paddr, &poff, &dsg, &daddr,
++				       &sdt, false)) {
++			cmd->sense_info = sector;
++			return TCM_LOGICAL_BLOCK_GUARD_CHECK_FAILED;
++		}
+ 
+-			avail = min(block_size, dsg->length - dsg_off);
+-			crc = crc_t10dif(daddr + dsg_off, avail);
+-			if (avail < block_size) {
+-				kunmap_atomic(daddr - dsg->offset);
+-				dsg = sg_next(dsg);
+-				if (!dsg) {
+-					kunmap_atomic(paddr - psg->offset);
+-					return 0;
+-				}
+-				daddr = kmap_atomic(sg_page(dsg)) + dsg->offset;
+-				dsg_off = block_size - avail;
+-				crc = crc_t10dif_update(crc, daddr, dsg_off);
+-			} else {
+-				dsg_off += block_size;
++		pr_debug("DIF READ sector: %llu guard_tag: 0x%04x app_tag: 0x%04x ref_tag: %u\n",
++			 (unsigned long long)sector, sdt.guard_tag,
++			 sdt.app_tag, be32_to_cpu(sdt.ref_tag));
++
++		if (sdt.app_tag == T10_PI_APP_ESCAPE) {
++			dsg_off += block_size;
++			goto next;
++		}
++
++		if (dsg_off >= dsg->length) {
++			dsg_off -= dsg->length;
++			kunmap_local(daddr - dsg->offset);
++			dsg = sg_next(dsg);
++			if (!dsg) {
++				kunmap_local(paddr - psg->offset);
++				return 0;
+ 			}
++			daddr = kmap_local_page(sg_page(dsg)) + dsg->offset;
++		}
+ 
+-			rc = sbc_dif_v1_verify(cmd, sdt, crc, sector, ei_lba);
+-			if (rc) {
+-				kunmap_atomic(daddr - dsg->offset);
+-				kunmap_atomic(paddr - psg->offset);
+-				cmd->sense_info = sector;
+-				return rc;
++		avail = min(block_size, dsg->length - dsg_off);
++		crc = crc_t10dif(daddr + dsg_off, avail);
++		if (avail < block_size) {
++			kunmap_local(daddr - dsg->offset);
++			dsg = sg_next(dsg);
++			if (!dsg) {
++				kunmap_local(paddr - psg->offset);
++				return 0;
+ 			}
+-next:
+-			sector++;
+-			ei_lba++;
++			daddr = kmap_local_page(sg_page(dsg)) + dsg->offset;
++			dsg_off = block_size - avail;
++			crc = crc_t10dif_update(crc, daddr, dsg_off);
++		} else {
++			dsg_off += block_size;
+ 		}
+ 
+-		psg_off = 0;
+-		kunmap_atomic(daddr - dsg->offset);
+-		kunmap_atomic(paddr - psg->offset);
++		rc = sbc_dif_v1_verify(cmd, &sdt, crc, sector, ei_lba);
++		if (rc) {
++			kunmap_local(daddr - dsg->offset);
++			kunmap_local(paddr - psg->offset);
++			cmd->sense_info = sector;
++			return rc;
++		}
++next:
++		sector++;
++		ei_lba++;
  	}
  
++	kunmap_local(daddr - dsg->offset);
++	kunmap_local(paddr - psg->offset);
+ 	return 0;
+ }
+ EXPORT_SYMBOL(sbc_dif_verify);
+-- 
+2.34.1
+
