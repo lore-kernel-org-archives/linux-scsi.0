@@ -1,129 +1,83 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from nick.sneptech.io (nick.sneptech.io [178.62.38.78])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EAA1E3515FE
-	for <linux-scsi@vger.kernel.org>; Wed,  7 Oct 2026 02:15:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DEDC8379C57;
+	Wed,  7 Oct 2026 02:39:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.62.38.78
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791339320; cv=none; b=mm7cFtyJgGUUePRmxryk/ka4kR/jsPmUG3fHQWz9uHU7rNdw5gVCosBwbnDHKEhG2iUtoXZKHA5j0Pt0RUXAp3IkWPwLxPRnAjIH4nWKJqY+HA3CXO0IHViWUebf1bn29GmBpuGRCY1KOpS5Vk22nTue03vz2arS7vDcRlL0ND4=
+	t=1791340744; cv=none; b=cXcUtOu1mF7U4YMxpcTioE5TpHJqdnd+zxN3O0/9USGBtAQkOZw4wI81WhidRz44ocuI5qLjwrfkzpR7Mu9HN6kNZTY73t9eXXbUC8mYCXsFX55wE8v5PLoCJEzvXlU9GZVkh4C8Q1sOS4XzaZI/r1rA4urxiHwjjiXeVowlPYo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791339320; c=relaxed/simple;
-	bh=IO1jFC166ytUNxfT4pt83eXuVMwr3dm18c1aUaPN+mM=;
-	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
-	 Date; b=SeMoiRIaEsMH7Xz2dcbWfQsYD9+sEtQNq2vtBM7L0/91Aj7JjFOV2gDozK8B6efJENJBjUJ6MSjR5l4MagJKiHm2TqnrfkHOkMWD/DK4Y0f0YLoDtngHSbrC0v0pSdjCyZrBSpRLhiZjqdEb9D/IyFUV0T2gpv2kAQNGJrlS4JY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fbp56qBw; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791340744; c=relaxed/simple;
+	bh=i4UhY2qc9M17skJLr2fYEhO7HgzEu4FqpkX+EObdfv8=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=c8yhbCr8GuPG5LY63M1TX/i8TKsEpwd3gOl6nk8gH/dHNmuuKoKKmO+7VnTNPGA3txKNunKwaaEZWh/IUhnClFEBAV1/DJ7hpgvFWO1tkfJhZ/YFj5IP2pfLo3b9Vxafm6yd9pqGLR29WjYTN8gRInpBK3E0WW0hSg8VTUaYAJM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=philpem.me.uk; spf=pass smtp.mailfrom=philpem.me.uk; dkim=pass (1024-bit key) header.d=philpem.me.uk header.i=@philpem.me.uk header.b=YgHsxKna; arc=none smtp.client-ip=178.62.38.78
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=philpem.me.uk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=philpem.me.uk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fbp56qBw"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 82C451F0089B;
-	Wed,  7 Oct 2026 02:15:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791339318;
-	bh=yPcf2Hw5pUhLoEe7nnyxDdOTsVHRIaaJOOSYe0vrJVQ=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=fbp56qBwMCpLcxlBp+jrksp9we0efbt6yfbjX6T12vE7x6M/yn3IGF8gNW9oJtGhB
-	 2v5kpvE7uIiymn11eHYKlIw0wrj9Vge2/NDRtfmC+9b56c8NCgARha+XQSsLSVHVt7
-	 BnFEr+NI7r39bEItX0RC58VV0Gs1owqyrRBXEO0h0Hm444UtvjChiPCG5smwxzXQV+
-	 UJT0nehTkRPca0f3WLkoh/MFi8fdZHndOwyjimHQHijMfJH1HJnu1OASgBUEA68QEX
-	 lti5iv+/D97dBpCTXWGqvjFqlOGkm/S57ZvvVdLK307HY/GilcyhNv2tjWUEq39coc
-	 LEqyGPAvZp2Rw==
-Message-ID: <sashiko-outbox-162588@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 3/3] scsi: libiscsi: validate the task named by a
- management response
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Yehyeong Lee" <yhlee@isslab.korea.ac.kr>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20261007015842.634893-4-yhlee@isslab.korea.ac.kr>
-References: <20261007015842.634893-1-yhlee@isslab.korea.ac.kr>
- <20261007015842.634893-4-yhlee@isslab.korea.ac.kr>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 07 Oct 2026 02:15:18 +0000
+	dkim=pass (1024-bit key) header.d=philpem.me.uk header.i=@philpem.me.uk header.b="YgHsxKna"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=philpem.me.uk;
+	s=mail; t=1791340739;
+	bh=i4UhY2qc9M17skJLr2fYEhO7HgzEu4FqpkX+EObdfv8=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=YgHsxKnasRd7H0CpqYyXJ2t2JsxMaAbLGaNBbj1kT/tPqv0fLoPlSmaRUAMPIjQSv
+	 7uSVD8CPhGvoSZL8LI7EA6qhXqQlZJXfE2Jv2totHyfrlbVyQBYo7J/wHwq4CsFh5q
+	 ejMNELudOhGYu/vewT4pGwG5bkrgiBzZGc0iR/Qw=
+Received: from wolf.philpem.me.uk (81-187-163-148.ip4.reverse-dns.uk [81.187.163.148])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: mailrelay_wolf@philpem.me.uk)
+	by nick.sneptech.io (Postfix) with ESMTPSA id F0CC0BD05A;
+	Wed,  7 Oct 2026 02:38:58 +0000 (UTC)
+Received: from [10.0.0.32] (cheetah.homenet.philpem.me.uk [10.0.0.32])
+	by wolf.philpem.me.uk (Postfix) with ESMTPSA id 52C8F5FBAF;
+	Wed,  7 Oct 2026 03:38:58 +0100 (BST)
+Message-ID: <d9b7bfbe-d0d3-4513-a1ff-330a6b660093@philpem.me.uk>
+Date: Wed, 7 Oct 2026 03:38:57 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v9 07/11] ata: libata-scsi: convert dev->sdev to per-LUN
+ array
+To: sashiko-reviews@lists.linux.dev
+Cc: cassel@kernel.org, linux-scsi@vger.kernel.org, dlemoal@kernel.org,
+ linux-ide@vger.kernel.org
+References: <20261006234202.1139018-1-philpem@philpem.me.uk>
+ <20261006234202.1139018-8-philpem@philpem.me.uk>
+ <sashiko-outbox-162543@kernel.org>
+Content-Language: en-GB
+From: Phil Pemberton <philpem@philpem.me.uk>
+In-Reply-To: <sashiko-outbox-162543@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] scsi: libiscsi: early completion of pending task causes UAF on tra=
-nsmit queue
---
+On 07/10/2026 00:58, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 4 potential issue(s) to consider:
+> - [High] ata: UAF in ata_acpi_uevent() accessing freed scsi_device kobject
 
-commit b24b8599f28cfc6b3085efa4f6f74df1f0a7f232
-Author: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+This is pre-existing. I've prepared a separate fix which should resolve 
+this issue and will submit it separately.
 
-scsi: libiscsi: validate the task named by a management response
+> - [Medium] of: memory leak in ata_scsi_assign_ofnode() due to missing of_node_put()
 
-__iscsi_complete_pdu() fetches the task for five response types from one
-place and checks only that the index resolved. This commit requires the
-task to be in flight and not a SCSI command.
+Pre-existing again. I think this is also best handled as a separate 
+independent fix.
 
-> diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-> index ffd6446d07b28..4329967b54260 100644
-> --- a/drivers/scsi/libiscsi.c
-> +++ b/drivers/scsi/libiscsi.c
-> @@ -1286,7 +1286,7 @@ int __iscsi_complete_pdu(struct iscsi_conn *conn, s=
-truct iscsi_hdr *hdr,
->  	case ISCSI_OP_SCSI_TMFUNC_RSP:
->  	case ISCSI_OP_NOOP_IN:
->  		task =3D iscsi_itt_to_task(conn, hdr->itt);
-> -		if (!task)
-> +		if (!task || task->state =3D=3D ISCSI_TASK_FREE || task->sc)
+> - [Medium] ata: libata-zpodd: stale from_notify flag in zpodd_wake_dev() causes unintended tray ejection
 
-[Severity: High]
-Does this allow an early completion of a pending task? By checking explicit=
-ly
-for ISCSI_TASK_FREE, tasks in the ISCSI_TASK_PENDING state are accepted. If=
- a
-target sends an early management response matching an ITT that was just
-allocated, the task gets completed.
+Noted, fixed in my local v10, will wait for other reviewers' comments.
 
-If the task is completed while pending, iscsi_complete_task() will drop its
-refcount to 0, returning it to the pool:
+> - [Medium] ata: redundant scsi_resume_device() calls on already-resumed LUNs due to shared device flag
 
-iscsi_complete_task() {
-    ...
-	/* release get from queueing */
-	__iscsi_put_task(task);
-}
+Noted and fixed as above
 
-But it hasn't been unlinked from the transmit queue. When the transmit thre=
-ad
-attempts to process it, couldn't this result in a use-after-free or list
-corruption?
 
-iscsi_data_xmit() {
-    ...
-	/* process pending command queue */
-	while (!list_empty(&conn->cmdqueue)) {
-		task =3D list_entry(conn->cmdqueue.next, struct iscsi_task,
-				  running);
-		list_del_init(&task->running);
-    ...
-}
-
-Additionally, is there a race condition here? iscsi_alloc_task() updates the
-task state and sc pointer sequentially under frwd_lock:
-
-iscsi_alloc_task() {
-    ...
-	task->state =3D ISCSI_TASK_PENDING;
-	task->conn =3D conn;
-	task->sc =3D sc;
-    ...
-}
-
-Since __iscsi_complete_pdu() performs its validation under back_lock, could
-the RX thread observe an intermediate state where task->state is
-ISCSI_TASK_PENDING but task->sc is still NULL, thus bypassing the validation
-check even for SCSI tasks?
-
->  			return ISCSI_ERR_BAD_ITT;
->  		break;
->  	default:
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261007015842.6348=
-93-1-yhlee@isslab.korea.ac.kr?part=3D3
+-- 
+Phil.
+philpem@philpem.me.uk
+https://www.philpem.me.uk/
