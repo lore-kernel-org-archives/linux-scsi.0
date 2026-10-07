@@ -1,42 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44B8D48E0D3
-	for <linux-scsi@vger.kernel.org>; Wed,  7 Oct 2026 14:28:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 567714AD4AF
+	for <linux-scsi@vger.kernel.org>; Wed,  7 Oct 2026 14:29:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791383300; cv=none; b=m3a8476TooLcTbH+GVP8HPw3XzXJD0fiDTjHVDbWJFBK/bbNYR8/03y0DCZe791L/tPqv2JmhKdOnsoWINlbIHknvjFuwX2sMdifRt2PJMhbGGz1jg2dOIz60apx1Klspyb7eVUVo6LfwRDs4MXFawC1gJ00iTWtZR129bqzvvY=
+	t=1791383353; cv=none; b=No0WwXANA0kcBiKx4jZd96EfcIqfxECEQEM5bv3Ob6862GvNJ4Q9o4oZdJc/L8NCGzPLLM6E7CP0tgf0VPXFf58i4NWEWVp2eQ7Q5FGrXqfsbLNeSGZNpgP81hZC02mzsNyWBdejv677FWBnuSGWIcsQhQJ1PMwykKIdqqSPHlM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791383300; c=relaxed/simple;
-	bh=Ip8b3uc+3E/zrlsxAlKaXFd6n4IWBSVmZBOoxbzix4Q=;
+	s=arc-20240116; t=1791383353; c=relaxed/simple;
+	bh=3ocP6B/OTKPihddXM6SKJjQ42ZIsz5wpD3XfWvNGzXQ=;
 	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
-	 Date; b=kwhjgqr+0YMm4QIhcSQyIg7u53oJkihf/OcEhhgwKpaJUC8YDjafTBXH4UpTKpYtxZU1r+xCIq+oQezKsY4L3akJCx4TE22ATPGvo5jkfYTB0RKX8ULmfTghyNjo4kQQrrCMiY5ltmdVJhpkEBY867sjooees+X/aYJLcxxzBeM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jANdlHm6; arc=none smtp.client-ip=100.103.45.18
+	 Date; b=ce6ExStrUIIu+p2TM72WxEO1NQutJywL52a4LW5D1ScgrHOjJIu+fZc1G+7qpwtYuWZp240Zw1Kf5HZwzsSiTlc9748wao5nTjSB43sYR6XypJEJ1y/7S+ifHIc5bOPFbKUDk6ANnHWN3BwrM3YkWOPs3g4f8rUjjg2UN86RZo4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=F0WthQ8u; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jANdlHm6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E47911F0089B;
-	Wed,  7 Oct 2026 14:28:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="F0WthQ8u"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 926FA1F0089B;
+	Wed,  7 Oct 2026 14:29:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791383297;
-	bh=dcFhi5e5+fSwvlJQnqMenlvutDUmh0njUVTIgKyl2yQ=;
+	s=k20260515; t=1791383347;
+	bh=Ws5BwYpZJU6CU1xAtwGXnELyIzgtz4kRJkYi1x7KoYo=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=jANdlHm6elYjCGsPAU/y7pda9FuohDifoBsYiW2YeDH1LTy6D7uy3KvZXg1B+LUQ+
-	 gL8ovsZyjFFGznJfAv1JrmtDDYWY4OKITW9dgcHexK515qOKp+nqynLGJuWiVYbAyd
-	 Nr4070WWvEq7xZ+0EoLVslWGCbRwUxRo0y0vKxQbYUoikPHNc1Jj9RWsxOeMYpnSKL
-	 l8+uPTnulz6350sB53NiIbTQ2oHPwy3Sw+NAEaHRAEJQ0AbNpbokLlVeE+IL8PLp2Y
-	 yyqOW+HXp9HvvdHlhUXsUxEpqHiN2OL/01B4VrLRRvpE/5JSpZiPPvrLPXDlZXNPOE
-	 GVCvaQa+DSlHw==
-Message-ID: <sashiko-outbox-163098@kernel.org>
+	b=F0WthQ8uoKHiQO5AAokLdbfRzawg6h5Sv+vg5Xg/gEtMYxqaa8f5+JV80AStYP9bA
+	 EkY82b9iNDMSYmyR5cdWJigMoJ2IQViCbTqQDYlbtBpyvkk6ZLXZtc1iJ6qiLAl2Ei
+	 zXa/5ycz1pbMeRUD6RB+msnKtRFACsW34FsSZ4CtpeBUs/YGWGdoGBEnfgqu2O6JDF
+	 c1rXjD2gxjCPNfSGkahT4IYvfb7di5r41v2i6TeuO65Gse48XQFiuSbeDya52JGgkR
+	 Wg0qUieDj9+nN2WP5j/U95ucqC/TzuN3sOg2jYr/+zWip7RWkmz7GxsGaZ5VjmLV8o
+	 4JUPO7DIEiMGA==
+Message-ID: <sashiko-outbox-163100@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] scsi: megaraid_sas: Fix debugfs setup error handling
+Subject: Re: [PATCH] scsi: mpt3sas: Fix debugfs setup error handling
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Lei Chen" <lei.chen@smartx.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20261007141753.416672-1-lei.chen@smartx.com>
-References: <20261007141753.416672-1-lei.chen@smartx.com>
+In-Reply-To: <20261007141951.417155-1-lei.chen@smartx.com>
+References: <20261007141951.417155-1-lei.chen@smartx.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 07 Oct 2026 14:28:16 +0000
+Date: Wed, 07 Oct 2026 14:29:07 +0000
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -45,74 +45,75 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [Low] scsi: megaraid_sas: debugfs API violation by checking return values=
- and logging errors
+- [Low] scsi: mpt3sas: anti-pattern of checking debugfs return values
 --
 
-commit 3a04787b7089e752e49721091a64cf2824d3811c
+commit eaeb8348b8dd28fc3959554ee1eef029613c7292
 Author: Lei Chen <lei.chen@smartx.com>
+scsi: mpt3sas: Fix debugfs setup error handling
 
-scsi: megaraid_sas: Fix debugfs setup error handling
+This commit modifies mpt3sas_setup_debugfs() to check for error pointers
+using IS_ERR_OR_NULL() instead of just checking for NULL when creating
+debugfs entries, and ensures the parent directory is cleared if file
+creation fails.
 
-This commit updates the debugfs setup in megaraid_sas to handle error
-pointers by adding IS_ERR_OR_NULL checks. It also ensures that the
-per-adapter directory is cleaned up and its pointer cleared if the raidmap
-file creation fails.
-
-> diff --git a/drivers/scsi/megaraid/megaraid_sas_debugfs.c b/drivers/scsi/=
-megaraid/megaraid_sas_debugfs.c
-> index 81698cd83f5ae..556e01fc25e8e 100644
-> --- a/drivers/scsi/megaraid/megaraid_sas_debugfs.c
-> +++ b/drivers/scsi/megaraid/megaraid_sas_debugfs.c
-> @@ -126,13 +126,16 @@ megasas_setup_debugfs(struct megasas_instance *inst=
-ance)
-
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_debugfs.c b/drivers/scsi/mpt3sa=
+s/mpt3sas_debugfs.c
+> index 183391f6b8d19..edaeccf538f40 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_debugfs.c
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_debugfs.c
 [ ... ]
-
->  		if (!instance->debugfs_root) {
->  			instance->debugfs_root =3D
->  				debugfs_create_dir(name, megasas_debugfs_root);
-> -			if (!instance->debugfs_root) {
-> +			if (IS_ERR_OR_NULL(instance->debugfs_root)) {
->  				dev_err(&instance->pdev->dev,
->  					"Cannot create per adapter debugfs directory\n");
-
-[Severity: Low]
-Does this violate the debugfs API guidelines?
-
-The debugfs guidelines recommend that drivers should not check the return
-values of debugfs_create_*() functions.
-
-If debugfs fails, such as due to memory constraints or runtime parameters,
-these IS_ERR_OR_NULL() checks in megasas_setup_debugfs() will evaluate to
-true and print a dev_err to the kernel log, creating spurious error logs
-and adding unnecessary error-handling complexity.
-
->  				return;
-> @@ -144,10 +147,11 @@ megasas_setup_debugfs(struct megasas_instance *inst=
-ance)
->  			debugfs_create_file(name, S_IRUGO,
->  					    instance->debugfs_root, instance,
->  					    &megasas_debugfs_raidmap_fops);
-> -		if (!instance->raidmap_dump) {
-> +		if (IS_ERR_OR_NULL(instance->raidmap_dump)) {
->  			dev_err(&instance->pdev->dev,
->  				"Cannot create raidmap debugfs file\n");
+> @@ -120,11 +120,14 @@ mpt3sas_setup_debugfs(struct MPT3SAS_ADAPTER *ioc)
+>  {
+>  	char name[64];
+> =20
+> +	if (IS_ERR_OR_NULL(mpt3sas_debugfs_root))
+> +		return;
+> +
+>  	snprintf(name, sizeof(name), "scsi_host%d", ioc->shost->host_no);
+>  	if (!ioc->debugfs_root) {
+>  		ioc->debugfs_root =3D
+>  		    debugfs_create_dir(name, mpt3sas_debugfs_root);
+> -		if (!ioc->debugfs_root) {
+> +		if (IS_ERR_OR_NULL(ioc->debugfs_root)) {
 
 [Severity: Low]
-Could this be simplified by removing the error check entirely?
+Is it necessary to check the return value of debugfs_create_dir() in
+mpt3sas_setup_debugfs() here?=20
 
-Similar to the directory creation above, checking the return value of
-debugfs_create_file() here in megasas_setup_debugfs() is generally
-discouraged. Removing these checks completely might align better with the
-subsystem guidelines.
+The kernel's established policy is that drivers should never check the
+return values of debugfs creation functions. Since debugfs safely handles
+its own failures and downstream calls accept error pointers seamlessly,
+would it be better to remove these checks entirely instead of updating them?
 
->  			debugfs_remove(instance->debugfs_root);
-> +			instance->debugfs_root =3D NULL;
+>  			dev_err(&ioc->pdev->dev,
+>  			    "Cannot create per adapter debugfs directory\n");
 >  			return;
 >  		}
 >  	}
+> =20
+>  	snprintf(name, sizeof(name), "ioc_dump");
+>  	ioc->ioc_dump =3D	debugfs_create_file(name, 0444,
+>  	    ioc->debugfs_root, ioc, &mpt3sas_debugfs_iocdump_fops);
+> -	if (!ioc->ioc_dump) {
+> +	if (IS_ERR_OR_NULL(ioc->ioc_dump)) {
+
+[Severity: Low]
+Does mpt3sas_setup_debugfs() need to manually handle the error and roll
+back the parent directory when debugfs_create_file() fails?
+
+Expanding this manual error path appears to conflict with the intended
+fire-and-forget design of debugfs. The appropriate fix for flawed pointer
+checks in debugfs setup is usually to remove them entirely, rather than
+updating them to use IS_ERR_OR_NULL() and adding manual cleanup.
+
+>  		dev_err(&ioc->pdev->dev,
+>  		    "Cannot create ioc_dump debugfs file\n");
+>  		debugfs_remove(ioc->debugfs_root);
+> +		ioc->debugfs_root =3D NULL;
+>  		return;
+>  	}
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261007141753.4166=
-72-1-lei.chen@smartx.com?part=3D1
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261007141951.4171=
+55-1-lei.chen@smartx.com?part=3D1
