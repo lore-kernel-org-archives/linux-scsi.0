@@ -1,75 +1,52 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A96BB4B4897;
-	Wed,  7 Oct 2026 15:24:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05FDD4B95D2;
+	Wed,  7 Oct 2026 15:28:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791386706; cv=none; b=lT5zy+sMgglMFg2vGCGlCkk6WwiI+bmiAMWUo7u1Fd2lEVn4OfkjkuZS1wgEITrRbJ6ZbYBMbRo7XucB6IlFW+ByjXfn1gAckfusw6Duw2BQJ5RYLtd5gHokL8X7zESlYOEyqoszdKXsZuEjlGLXRBOtONVxvPpH96tdquYSyVU=
+	t=1791386900; cv=none; b=BjBDE/ZuRWhtTtvYXYwDArq7OhNS3R8isfTebzr3Wd03OxbmSkhSKyRN0NHkjXFWAiRKeRUvT27JvJK/6OxmxlH+WCa1uD+vgSTpNqnfTR3aSfhEHo6KxRZBWukc2V5m7MFkWEKpoY9JcMpgFb1Yu4u3wX4hTu4LSfpyULdtjWM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791386706; c=relaxed/simple;
-	bh=x5XnwiJBjJuut/uvusPsQzAPxb2u4hiaGmfomOi8i9g=;
+	s=arc-20240116; t=1791386900; c=relaxed/simple;
+	bh=Z0X/5MuDO4O6Ru409BZr22KTPo7lPVJOcbmclQN/eQI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=iyOQ59mxRbdfnvIgzH/s7AKgJ5NscsMCyVJdPgGZ1M8sElZb5UAnbF1IJB73rc8UrCpQB4Z+W6b8GhNmrID+QkzkmeRn8o2meirLTFD3rIyNmclcsMCcp2/quDInBKeKIQpq88oDQ2SF8suwaAn71LlLWWfBIFJVxF7SCaLM4f4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TqWmrQ4D; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TqWmrQ4D"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 02E2B1F00893;
-	Wed,  7 Oct 2026 15:24:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791386696;
-	bh=GHllO92g1vA1pv14+lQkMeSzcxTrttTJ0MK9bMISjS0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=TqWmrQ4Dn5Vq6CnlziApxUMqEO4zhFe34TG5UeJsq7MI8o9V27RlofEEofV64fLZY
-	 HwsjkMntw6uPPetd/SwL0ZWh9WE+OADo5+U24rmD7Zw9OpCVdphwWMjPNBfkx2JDEf
-	 U96DNhnWlpIj1+xQeJe78nklJ4LN272jWO3xMynhdTzELkipBnJ9mERD4nBoWIk6bq
-	 MLNfpBut0Zb5KvPZJMzjBMoT3zurUiDA86LYJzvDLUKancO0JSyYaJxtyU+v17x18j
-	 v03bikJdwIn0siyZCSh6+DX7JWXdOT80G/NXCS53AxQ0V1Guopr0M8MYfqz/tMrV5A
-	 QcqTmCzP3+Q+A==
-Date: Wed, 7 Oct 2026 17:24:48 +0200
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Pradeep P V K <pradeep.pragallapati@oss.qualcomm.com>
-Cc: Vinod Koul <vkoul@kernel.org>, 
-	Neil Armstrong <neil.armstrong@linaro.org>, Rob Herring <robh@kernel.org>, 
-	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@sandisk.com>, 
-	Bart Van Assche <bvanassche@acm.org>, Bjorn Andersson <andersson@kernel.org>, 
-	Konrad Dybcio <konradybcio@kernel.org>, Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>, 
-	gopikrishna.garmidi@oss.qualcomm.com, jagadeesh.kona@oss.qualcomm.com, 
-	Abel Vesa <abel.vesa@oss.qualcomm.com>, Abel Vesa <abelvesa@kernel.org>, linux-arm-msm@vger.kernel.org, 
-	linux-phy@lists.infradead.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-scsi@vger.kernel.org, nitin.rawat@oss.qualcomm.com, sibi.sankar@oss.qualcomm.com, 
-	Taniya Das <taniya.das@oss.qualcomm.com>, "Martin K. Petersen" <mkp@kernel.org>
-Subject: Re: [PATCH v3 2/5] scsi: ufs: qcom: dt-bindings: Document Glymur UFS
- controller
-Message-ID: <c2b6taguiyyeteizf5ohdsvmeyaybbs5pm5cuv5vqkklswmxv5@5ekurkmzdhjt>
-References: <20261007-glymur_ufs_qcb_enablement-v3-0-84cf4f861415@oss.qualcomm.com>
- <20261007-glymur_ufs_qcb_enablement-v3-2-84cf4f861415@oss.qualcomm.com>
+	 Content-Type:Content-Disposition:In-Reply-To; b=WK/c9dYFF6D99D6zdk4HghOn+4mcBOUXavMfD+0unn0HZQTCr+tjcKl5BiO49oJjLpaSADyeU6Km9d3SJsy22hERLpi+b7Hf+Wc5xCgOZzjYXuKCDCZAmT4ujseqjCGkK95poWjWBIWmWUZTOb/qRYD5b8Yz9g18/v0JH/VjvXg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 95D7268AFE; Wed,  7 Oct 2026 17:28:11 +0200 (CEST)
+Date: Wed, 7 Oct 2026 17:28:11 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+	linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+	"Martin K . Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH v3 3/7] block: add storage element management ioctls
+Message-ID: <20261007152811.GA8435@lst.de>
+References: <20261007082344.1049179-1-dlemoal@kernel.org> <20261007082344.1049179-4-dlemoal@kernel.org> <20261007133922.GC31906@lst.de> <e11de48b-e719-4cfc-a08d-916a8603782d@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20261007-glymur_ufs_qcb_enablement-v3-2-84cf4f861415@oss.qualcomm.com>
+In-Reply-To: <e11de48b-e719-4cfc-a08d-916a8603782d@kernel.org>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Wed, Oct 07, 2026 at 11:59:35AM +0530, Pradeep P V K wrote:
-> Document UFS Host Controller on Glymur SoC. Glymur UFSHC has a
-> multi-queue command (MCQ) register range in addition to the standard
-> one. So, both reg entries are required.
+On Wed, Oct 07, 2026 at 04:37:49PM +0200, Damien Le Moal wrote:
+> >> +	elements = kzalloc_objs(struct blk_storage_element, nr_elements);
+> > 
+> > This doesn't work as it could race.  We'll always need to allocate
+> > the space for all the elements the user asked for?
 > 
-> Acked-by: Martin K. Petersen <mkp@kernel.org>
+> I am not following... The number of elements of a drive never changes, and that
+> is what nr_elements indicates. So getting the min with the user indicated value
+> still gives all elements, and that also creates a bound in case we get a crazy
+> large value from the user.
 
-This was a mistake. You clubbed both UFS controller and PHY patches in a single
-series and the UFS maintainer ended up acking the patch assuming dependency
-instead of merging the patch.
+The explicitly pass the bound in.  Or have it struct gendisk as a
+fixed value.
 
-Please send the PHY and controller patches separately.
-
-- Mani
-
--- 
-மணிவண்ணன் சதாசிவம்
