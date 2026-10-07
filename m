@@ -1,157 +1,129 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A02E6269D18
-	for <linux-scsi@vger.kernel.org>; Wed,  7 Oct 2026 04:53:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8BF8536B909
+	for <linux-scsi@vger.kernel.org>; Wed,  7 Oct 2026 05:07:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791348834; cv=none; b=XOOElxVOlMZEinE7M1VLsrfLlQvHhto3WLPdPa/MG4j11SzvTdx/RGyjuDtGYpVwP2hOGGNQp3d5sC+pFjnFIJIdq9+GHidw3oSgwgQgv0o8XBuWSlx8Oa7csFELZT/iRaZB5kFC59lK5AIj/KtfAZediu4nn9qKWsa9i1fCbvQ=
+	t=1791349670; cv=none; b=lgrmKnuMXm2n5ufSXZFt2AUqIzDfE6dUKvabqrCwkr/MySaC40WUtw/BbmcweKBuvmpwMVaXr9z+hA/aYPcSGVi5MlZZL+NMW9Db4r1G1XycpVfhrlW+akUiOEd8JiWv2qMxvfE7KmfNAWZebgGoMjM02fckYGY7U+YsoNlX2zo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791348834; c=relaxed/simple;
-	bh=lzHeGDgkRrOZY7iEnV33tV34OXd09T7tcaG11N6Yujw=;
-	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
-	 Date; b=messo3UGiL/k/fVDd9RGpQNc0zl26uI7q06he8mgfWR/Tnqs1V6HRgQKmrJ9LOMQsHntsOLayj/U3hJ+YNPxonq3p2PE6cyki60CxZxMzesYRvNkvm3jS2XGYNfonWR+TY7/5j9+XWVR+79vYYzLIeRuYq/gQN0e3LadtWLMnd8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=a32qbsg4; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791349670; c=relaxed/simple;
+	bh=NSVVw442doY8DFVllBxY+r2B9imVqDQGCu18dO7gR+E=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Za7EzPXllfJKsPDWkyYTMharwrN/WqcXqWbllHe7vz9qti8XN7mN0yoQeShucKuUNmo2e7m/kPNgGW262P0Q+CisOIwKsl0OepxXsi0mfy1PamgCU7xM7w2QBfD8K3NsJgpf8+CiNXKF3RJl1EHbsZNAw91unW6bp0KRqBtuX30=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=H2NmMTm4; arc=none smtp.client-ip=199.89.1.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="a32qbsg4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0E4701F0089B;
-	Wed,  7 Oct 2026 04:53:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791348833;
-	bh=uLQBZZZL7dCXyaXNgjKOLq0DyP2Gdj6PC/BJsN4fVE0=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=a32qbsg4w2Q7/PPxndy6LuhPghxa5fNA/+3BeantwC+tOBwlrZ6FSoyMdZUSr6Anv
-	 M+aGyGxkw2R4uMhA4MsXiVjzg0QtbdTYgtvllzLGOdsoqA5LSaeHDql6oil32ut1Ar
-	 9F9pJTARzqkjHH+xyGfNY8dWPVrezcEK6WgV111HxgoT1zEaLXe615bGCcwYX09FrG
-	 zS4BY+MPCog+wizE8cpypCgHnA1/9JJ+XHQrnecFTB1ovUf+tQwSUefKlsI/29zQ/6
-	 j/znV3RL7RNiK83AwDiOO13DHLSyt9NpWzrTQpI3Bh4Dqv3Y/i20iqo4nR5ov3kxbF
-	 JlzMmxAhCOZnQ==
-Message-ID: <sashiko-outbox-162623@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3] scsi: libiscsi_tcp: check that a read got the data
- the target claimed
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Yehyeong Lee" <yhlee@isslab.korea.ac.kr>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20261007044204.650687-1-yhlee@isslab.korea.ac.kr>
-References: <20261007044204.650687-1-yhlee@isslab.korea.ac.kr>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 07 Oct 2026 04:53:52 +0000
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="H2NmMTm4"
+Received: from localhost (localhost [127.0.0.1])
+	by 013.lax.mailroute.net (Postfix) with ESMTP id 4j01N46zd1zlfl5T;
+	Wed,  7 Oct 2026 05:07:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:mime-version:x-mailer:message-id:date
+	:date:subject:subject:from:from:received:received; s=mr01; t=
+	1791349665; x=1793941666; bh=GvbiFgtFYsuJnBs3AODdaQUq9SoBZejZOBE
+	Z+dcOGLA=; b=H2NmMTm4APC72D3fedC8lH9wu2RxR4K71CivSK9AZE2I7dJKzYj
+	adI0lxEedGWWEnzmDsRDb3lALzXW6ZrOqPpT+eyY3skvznBWw5p3E85cZbr5e0RG
+	2myvj1CPLoo6DH0KfDuT7ZJBpKqF3szLW4MjDlCnRgeT9sAqB9hCfo1u0/RQMBdw
+	V9xzdYyzLRV8l87Qe9nHZ4O2FgbD8Pijm8lZRMRznQZKkA8G/r0+EBCyunXWjzWI
+	3U20zphrfzJFELteas62SQ42rPSXBJRLD+3H8IajUKXKenQiURRyWctjZXI7gU8H
+	K2r4ObWB7ue2yAKBkVZDKYrAvG5nhAGNAGg==
+X-Virus-Scanned: by MailRoute
+Received: from 013.lax.mailroute.net ([127.0.0.1])
+ by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id CrGQUDRGwkUD; Wed,  7 Oct 2026 05:07:45 +0000 (UTC)
+Received: from bvanassche.c.googlers.com.com (245.199.118.34.bc.googleusercontent.com [34.118.199.245])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4j01N02JZNzlfvpH;
+	Wed,  7 Oct 2026 05:07:43 +0000 (UTC)
+From: Bart Van Assche <bvanassche@acm.org>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+	John Garry <john.g.garry@oracle.com>,
+	Christoph Hellwig <hch@lst.de>,
+	Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH v4 0/8] scsi_debug: Enable lock context analysis
+Date: Tue,  6 Oct 2026 22:07:22 -0700
+Message-ID: <cover.1791349129.git.bvanassche@acm.org>
+X-Mailer: git-send-email 2.56.0.rc1.315.gc6ed9934b7-goog
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [High] iscsi: libiscsi_tcp: bypass of short-read validation via CHECK_CON=
-DITION
-- [Medium] iscsi: libiscsi_tcp: strict offset enforcement breaks out-of-ord=
-er Data-In sequences
---
+Hi Martin,
 
-commit c98a9b76c4a9e3b246d783ea606f33c9c6d70d07
-Author: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+This patch series enables compiler-based lock context analysis for the
+scsi_debug driver. Conditional locking is eliminated across command respo=
+nse
+and error injection functions so that static analysis can verify lock
+acquisitions and releases. Internal locking helper functions are annotate=
+d
+with __acquires(),__releases(), __acquires_shared() and __releases_shared=
+()
+attributes. An error-path lock leak in resp_write_same() is fixed. Finall=
+y,
+lock context analysis is enabled in drivers/scsi/Makefile.
 
-scsi: libiscsi_tcp: check that a read got the data the target claimed
+Changes compared to v3:
+- Add a new patch to split resp_atomic_write() and eliminate conditional
+  locking in atomic write handling.
+- Pass the LBP state boolean down into __resp_write_same(),
+  __corrupt_lbas(), and __resp_write_dt0() to avoid repeated calls to
+  scsi_debug_lbp().
+- Drop unused function arguments from __resp_read_dt0_dix() and
+  __resp_write_dt0_dix().
+- Correct the return value descriptions in the header comments of
+  __resp_read_dt0_dix() and __resp_write_dt0_dix().
 
-A target can finish a read without sending the data.  iscsi_tcp_data_in()
-bounds each Data-In PDU against the command buffer but never adds them up,
-so a completion that declares no underflow is believed and the command
-ends with DID_OK.  The pages keep whatever they held.
+Changes compared to v2:
+ - Moved DIX/DIF verification into a helper function (__resp_read_dt0_dix=
+())
+   to reduce indentation.
+ - Removed unnecessary 'else' branches after 'return'.
+ - Set the SCSI status code only if do_device_access() fails instead of
+   unconditionally setting it to DID_ERROR << 16 beforehand.
 
-> diff --git a/drivers/scsi/libiscsi_tcp.c b/drivers/scsi/libiscsi_tcp.c
-> --- a/drivers/scsi/libiscsi_tcp.c
-> +++ b/drivers/scsi/libiscsi_tcp.c
-> @@ -467,6 +467,45 @@ void iscsi_tcp_cleanup_task(struct iscsi_task *task)
+Changes compared to v1:
+ - Fixed an issue where the error code was clobbered in resp_write_same()=
+ and
+   __resp_write_same() when fetch_to_dev_buffer() fails (John Garry and
+   sashiko-bot).
+ - Fixed return value handling in resp_read_dt0() and resp_write_dt0():
+   previously a positive byte count returned by do_device_access() was
+   incorrectly treated as a SCSI status code and returned to the caller. =
+Now,
+   the SCSI status is passed via an output pointer and only negative retu=
+rn
+   values trigger an error return (sashiko-bot).
+ - Improved lock context annotations:
+   * Annotated existing rwlock_t members (&sip->macc_data_lck,
+     &sip->macc_sector_lck, &sip->macc_meta_lck) directly with __acquires=
+ /
+     __releases instead of defining and embedding dummy context lock stru=
+cts
+     in struct sdeb_store_info.
+   * Dropped the unwarranted __context_unsafe() annotation from
+     sdeb_data_read_lock().
+   * Updated the commit descriptions to match the code changes.
 
-[ ... ]
+Bart Van Assche (8):
+  scsi: scsi_debug: Fix a locking bug in resp_write_same()
+  scsi: scsi_debug: Split resp_write_same()
+  scsi: scsi_debug: Split corrupt_lbas()
+  scsi: scsi_debug: Split resp_read_dt0()
+  scsi: scsi_debug: Split resp_write_dt0()
+  scsi: scsi_debug: Split resp_atomic_write()
+  scsi: scsi_debug: Improve lock context annotations
+  scsi: core: Enable lock context analysis for the scsi_debug driver
 
-> +static int iscsi_tcp_check_data_in(struct iscsi_task *task, u8 status,
-> +				   u32 flags, u32 residual)
-> +{
-> +	struct iscsi_tcp_task *tcp_task =3D task->dd_data;
-> +	struct scsi_cmnd *sc =3D task->sc;
-> +	unsigned int expected;
-> +
-> +	if (!sc || sc->sc_data_direction =3D=3D DMA_TO_DEVICE)
-> +		return 0;
-> +
-> +	/*
-> +	 * Only a successful completion promises the whole buffer.  Any other
-> +	 * status is handled by the normal status and sense path.
-> +	 */
-> +	if (status !=3D SAM_STAT_GOOD)
-> +		return 0;
+ drivers/scsi/Makefile     |   1 +
+ drivers/scsi/scsi_debug.c | 418 +++++++++++++++++++++++---------------
+ 2 files changed, 254 insertions(+), 165 deletions(-)
 
-[Severity: High]
-Does this early return allow a malicious target to bypass the new validatio=
-n?
-
-If a target returns a short payload followed by a SCSI Command Response
-containing SAM_STAT_CHECK_CONDITION and a RECOVERED_ERROR sense key, the le=
-ngth
-validation is skipped here.
-
-The SCSI midlayer (such as sd_done() in drivers/scsi/sd.c) explicitly handl=
-es
-RECOVERED_ERROR by setting:
-
-	good_bytes =3D scsi_bufflen(SCpnt);
-
-treating the entire buffer as successfully read despite the short payload.
-
-Could this leave the short-read vulnerability fully exploitable through this
-error path?
-
-> +
-> +	expected =3D sc->sdb.length;
-> +	if (flags & ISCSI_FLAG_DATA_UNDERFLOW) {
-> +		if (residual > expected)
-> +			return 0;
-> +		expected -=3D residual;
-> +	}
-> +	if (tcp_task->data_in_bytes =3D=3D expected)
-> +		return 0;
-> +
-> +	return ISCSI_ERR_DATALEN;
-> +}
-
-[ ... ]
-
-> @@ -509,7 +548,18 @@ static int iscsi_tcp_data_in(struct iscsi_conn *conn=
-, struct iscsi_task *task)
->  		return ISCSI_ERR_DATA_OFFSET;
->  	}
-> =20
-> +	if (tcp_task->data_offset !=3D tcp_task->data_in_bytes)
-> +		return ISCSI_ERR_DATA_OFFSET;
-
-[Severity: Medium]
-Does this strict monotonic offset check break iSCSI protocol compliance?
-
-The iSCSI protocol (RFC 7143) explicitly permits targets to send Data-In
-sequences out of order if negotiated (DataSequenceInOrder=3DNo). Within such
-sequences, DataSN strictly increments, but the byte offsets can jump
-arbitrarily.
-
-Prior to this patch, out-of-order sequences were correctly handled by relyi=
-ng
-on iscsi_segment_seek_sg() to seek the scatterlist and write data at the ex=
-act
-tcp_task->data_offset specified by the PDU header.
-
-Could mandating data_offset =3D=3D data_in_bytes trigger a fatal protocol e=
-rror
-on perfectly valid out-of-order sequences, terminating the connection?
-
-> +
-> +	tcp_task->data_in_bytes +=3D tcp_conn->in.datalen;
-> +
->  	conn->datain_pdus_cnt++;
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261007044204.6506=
-87-1-yhlee@isslab.korea.ac.kr?part=3D1
