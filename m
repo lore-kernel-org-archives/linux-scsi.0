@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54B2342885F;
-	Wed,  7 Oct 2026 14:35:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48FB347606F;
+	Wed,  7 Oct 2026 14:37:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791383713; cv=none; b=WF3pcbmXpZG7Gi+LQ8zQ0lWQva0Ts8xuZvJMaQrr3aY6ZFip6FmiiuIbpUb7hAkYp3ZtLyZiogUCyErkq94UZd2q9UVhCmGE01rqeWPdFk7h4ZXhKUSJ13aHNLDX+RC5M5eSs+Vn9rqTdSFGxy+2C7EkxdomBtwW3ybGrM26SvQ=
+	t=1791383876; cv=none; b=Qwc4h2FpEuGxpc7DEiZG79CKem3oXmHdRt00YAxxsmK8E4ZJRz1onruzKkQ1dIAK5hGx/X9oKtZPLMBsZT6irYDpd4oTf77bwOd8j7vYaw6nKPonSsWpfzWpzNZl6M9VXwt2uOrwHxMWCktZsuBecnLT8nSOO/gH5kmisOJPKfY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791383713; c=relaxed/simple;
-	bh=4FEGiK/4wexZFM4ksoXoTuVkaVoope+UGq5Cdfb6M+8=;
+	s=arc-20240116; t=1791383876; c=relaxed/simple;
+	bh=dzJ8hxFggwU6pJ2zCOph7qZdH888jnzXK7GIJ3OY9Nc=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=hkX+MAI0JslxDvEivUk3ynK89+fB2ydweK2dSFbAiWao4Gew09MuKwy1pqPt7JkT6Ss14Gc63Kqc0fztS1tN+rC8qtfwC0NuztLb9RlKWOp+6BdC5bBE9fSC9vDeHzR7UdjhWo8Di/feseRU1DbGUcgZ5mUIE/II9ZKcAOwD1IA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jFD8V5mm; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:Content-Type; b=Y/H2SSoxUCskKRPdW0b4BuVkqT1wILP3iwWSfZVPBEHbXVqfxES9KVKhlSuEoLjJMRG1xaQ6UxrZKH2jKp/jF/ILH5e9RVd9Tz+CsmK9i77njC+kA/TC4tbBW78t3nWEIh8Lvp3anCZmR6yF+B57RLxhViN7RHwXps37Bj+aK28=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Iibbs16m; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jFD8V5mm"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D559A1F0089B;
-	Wed,  7 Oct 2026 14:35:06 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Iibbs16m"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E28E51F0089B;
+	Wed,  7 Oct 2026 14:37:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791383707;
-	bh=IHKDwp7mBNQlRDXgIIPfIF3HyFXf8P6BMalBkdyw5RU=;
+	s=k20260515; t=1791383871;
+	bh=GG5jwSXwFZSPrkPAWhdwXn9rWMgKeHr3/fZis9XEEZM=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=jFD8V5mmIP8FtbKd29J88LPq9Dyt4a9nRfyuLrW+eNBpt3XZhWZQ2fXB0606aXc18
-	 l1LazzZoX+8cK24b26qJWcmPDSNIwMKb1uABe1q/++79rG9QSONEk/N4Jcezsaq+Dg
-	 kleMf7zo8Lmal2CgTAlPVqL8BTp1miQ+1qOP6CyLM7YPmBOCSyD34y5005iA4PVMzI
-	 O8wj8EylUzvzA8OpSx4StQArnSfhz9htfq181BzgajKprsl3lb5tZadOezzC3jTZKP
-	 ucWVM18RtLEZPloTXqt/Z8PePVuTpgHNSBnUqU7rOG1b9KmqsPLh613h1+8hWPhnHd
-	 ptS7g+UtsV1yA==
-Message-ID: <c718e8cd-a395-49cf-ba78-4b746b01f563@kernel.org>
-Date: Wed, 7 Oct 2026 16:35:05 +0200
+	b=Iibbs16mQ8Ecy6bBjomx/ySbkrIrG4jRD5UBboCRm5AHjhgGNVZMAe7QqqRv5I511
+	 U5200g9QdVTp2DRfanzUhrTGzNzVnaRo/oIgIrWrws2bbqnqYqwi/huoxhEaJu3bm2
+	 IXIq8oLietHNgdT+QTMHj6sNxFRpz04UHyPdZYWXdpFYW6RDbkGfxc8eyt1ULpbfAx
+	 9YnkMG2eDhSV37gT2myctxoH+E5MJfnHxNm12t7KFG2dzKgxpJLVeTJuneLXfnoJFg
+	 Fi/Oa+faJgOm6/tu/dLNvaXBS6+qHvs9amTW5MTv07icVmMFz7afov22J44mNrs3wm
+	 zR8jUKGC2pvSw==
+Message-ID: <e11de48b-e719-4cfc-a08d-916a8603782d@kernel.org>
+Date: Wed, 7 Oct 2026 16:37:49 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,83 +35,86 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 2/7] block: introduce storage element management
+Subject: Re: [PATCH v3 3/7] block: add storage element management ioctls
 To: Christoph Hellwig <hch@lst.de>
 Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
  linux-scsi@vger.kernel.org, "Martin K . Petersen"
  <martin.petersen@oracle.com>
 References: <20261007082344.1049179-1-dlemoal@kernel.org>
- <20261007082344.1049179-3-dlemoal@kernel.org> <20261007133537.GB31906@lst.de>
+ <20261007082344.1049179-4-dlemoal@kernel.org> <20261007133922.GC31906@lst.de>
 From: Damien Le Moal <dlemoal@kernel.org>
 Content-Language: en-US
 Organization: Western Digital Research
-In-Reply-To: <20261007133537.GB31906@lst.de>
+In-Reply-To: <20261007133922.GC31906@lst.de>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 2026/10/07 15:35, Christoph Hellwig wrote:
-> On Wed, Oct 07, 2026 at 05:23:39PM +0900, Damien Le Moal wrote:
->> Co-developed-by: Christoph Hellwig <hch@lst.de>
->> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+On 2026/10/07 15:39, Christoph Hellwig wrote:
+>> +	if (copy_from_user(&rep, argp,
+>> +			   sizeof(struct blk_storage_elements_report)))
 > 
-> That's a lot of credit for the two or three trivial fixes that got
-> folded in, I'd drop that line.
+> Can we shorten the name of the struct a bit?  blk_se_report?
+> Similar for other identifiers?
+
+Sure.
+
 > 
->> +static int disk_wait_for_se_mgmt_completion(struct gendisk *disk)
->> +{
->> +	struct blk_storage_element *elements, *e;
->> +	unsigned int i, nr_se, nr_elements = 0;
->> +	unsigned int noio_flag;
->> +	int ret;
+>> +		return -EFAULT;
 >> +
->> +	/* The callers already checked that disk->fops->se_ops is set. */
->> +	ret = disk->fops->se_ops->report_elements(disk, NULL, &nr_elements);
-> 
-> Sashikoa thing report_elements could be zero.  Which is of course
-> a bit stupid, but maybe we can protect against that by checking that
-> all members are set at registration time for the bdops?
-
-Yes, I thought about the same.
-
->> +		ret = disk->fops->se_ops->report_elements(disk, elements,
->> +							  &nr_se);
->> +		if (ret) {
->> +			pr_err("Failed to get storage elements\n");
->> +			break;
->> +		}
+>> +	ret = bdev_report_storage_elements(bdev, NULL, &nr_elements);
+>> +	if (ret)
+>> +		return ret;
 >> +
->> +		e = elements;
+>> +	nr_elements = min(rep.nr_elements, nr_elements);
+>> +	if (!nr_elements)
+>> +		return -EINVAL;
+>> +
+>> +	elements = kzalloc_objs(struct blk_storage_element, nr_elements);
 > 
-> Same for e?  And maybe factor this entire loop into a helper to make
-> sure nothing leaks out.
+> This doesn't work as it could race.  We'll always need to allocate
+> the space for all the elements the user asked for?
 
-Yes, that will be cleaner.
+I am not following... The number of elements of a drive never changes, and that
+is what nr_elements indicates. So getting the min with the user indicated value
+still gives all elements, and that also creates a bound in case we get a crazy
+large value from the user.
 
 > 
->> +		for (i = 0; i < nr_se; i++, e++) {
->> +			if (e->status == BLK_SE_STS_REMOVE_IN_PROGRESS ||
->> +			    e->status == BLK_SE_STS_RESTORE_IN_PROGRESS)
->> +				break;
+>> +	retc = copy_to_user(argp + sizeof(struct blk_storage_elements_report),
+>> +			    elements,
+>> +			    sizeof(struct blk_storage_element) * nr_elements);
+>> +	if (retc) {
+>> +		ret = -EFAULT;
+>> +		goto free_elements;
+>> +	}
+>> +
+>> +	rep.nr_elements = nr_elements;
+>> +	retc = copy_to_user(argp, &rep,
+>> +			    sizeof(struct blk_storage_elements_report));
 > 
-> Switch?  And yeah, the Sashiko comment on the error handling here
-> looks correct to me.
-> 
->> +		if (i >= nr_se)
->> +			break;
-> 
-> And this looks a bit odd.  Why not use a goto to get out instead of
-> this nesting (splitting it into a separate helper would take care
-> of that with a direct return as well).
-> 
->> +		/* Not done yet: wait and retry. */
->> +		msleep(1000);
-> 
-> It would be nice to have a UA for this in future spec versions
-> instead of he busy wait.
+> Why not copy back the entire struct in one go?
 
-Yes it would be, but that would be supported by SAS drives only. SATA does not
-have UA, and that means that HBAs would need to emulate it... Not
-straightforward and probably will lead to lots of differences between adapters.
+Indeed.
+
+>> +		ret = truncate_bdev_range(bdev, mode, 0,
+>> +			(get_capacity(bdev->bd_disk) << SECTOR_SHIFT) - 1);
+> 
+> Use bdev_nr_bytes() here?
+> 
+>> +	/*
+>> +	 * Storage element restoration is a destructive operation that will
+>> +	 * reset all zones. So fflush the device volatile write cache and
+>> +	 * invalidate all cached data that we may have.
+>> +	 */
+>> +	filemap_invalidate_lock(bdev->bd_mapping);
+>> +	ret = blkdev_issue_flush(bdev->bd_disk->part0);
+>> +	if (!ret)
+>> +		ret = truncate_bdev_range(bdev, mode, 0,
+>> +			(get_capacity(bdev->bd_disk) << SECTOR_SHIFT) - 1);
+> 
+> Same.  Also what about factoring the duplicate code block into a helper?
+
+Yes.
 
 
 -- 
