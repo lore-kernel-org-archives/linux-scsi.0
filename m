@@ -1,154 +1,121 @@
-Received: from mail-wm2-f10.google.com (mail-wm2-f10.google.com [74.125.225.138])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBFA73955D0
-	for <linux-scsi@vger.kernel.org>; Wed,  7 Oct 2026 10:26:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.225.138
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5635E480336
+	for <linux-scsi@vger.kernel.org>; Wed,  7 Oct 2026 10:42:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791368821; cv=none; b=pwWz8Aa7gaNtPCV7LB+EJxggZf8fwc/7hbCyDyA+E8XzHlds1CjUchq0pibg0aUHz7GmBCR0QD6dlSHyc4RqycyNfaw28eo65bQP8fhs2RWY/nSjLz2eYN/hFm7ALrnCgu0bbksIHaY2giLim8Yfrh/JKSBqe+YFFSByFVt9HpM=
+	t=1791369788; cv=none; b=LeucWo+EoP5K0xyryrbmH1s8wSjP+bWdxF9F26+06BFdlgfm+bXOwnh1NFJA6Gu3p8LBXI2SchpZ3bGjp5ssDRjEfbMRGQEChM5DNf5Ae84rXERJ1Epbif2QoIJ5+530tR/avB/LTvgP31LeFiedtksMYu3LXL4F6AqJn61DHfQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791368821; c=relaxed/simple;
-	bh=zuZBrHMl/2EhgqEOtENaeZynhYUC3YcD95kEgbgVQFI=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=G48pKzXHKqN+VUz6K+2x2qTgAt3Ql2lcwrlY9jkxXOnB6ce1jR+656BBwDah+rCNeOHbbv+SunL0Nh0a5Cm3D1pr60lII5qJ7cyvSRbembIhmIQyL0Jk/gneD8FrvznxP//QutpZIni3qDjM1bdewEIJQ/uuY4/rMSTQu7//iNU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=LogLUfhb; arc=none smtp.client-ip=74.125.225.138
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1791369788; c=relaxed/simple;
+	bh=leHmwwu/qk8JaQwEKjPV7nCY0AT4BICVm5iUBP3+q/E=;
+	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
+	 Date; b=KI9ZNCcvf5733pGQY00bIDLnRzjTfkAsHfuq1KPwRbQOIixYbpPWtZAqKqF7hFfBomgFm4XL2cRZitOnI204lnTNnPDAgBM1BbEP5kQBxGdH9tITyVMa0xFDSroX+g+Xzl3ZcogWQ7Zkd+ME5N197gtzrc2/kYPwN+yIBJOV7uk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ayc/OO50; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="LogLUfhb"
-Received: by mail-wm2-f10.google.com with SMTP id 5b1f17b1804b1-49ff9833fedso8526455e9.0
-        for <linux-scsi@vger.kernel.org>; Wed, 07 Oct 2026 03:26:51 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1791368810; x=1791973610; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=HumvXknLbwxIHtnR1xskfJjNHpMlUAF4ybfL0BilI/o=;
-        b=LogLUfhbObFTrKprGKL2uXKkNynTvUoHeukaUqytlsoiHEjp2CXAeMn2WdL0wrWyRs
-         ReGAWprCW4ySIk/hoJhZOunwBYmLpVzIOncRsqbeo/ufEiqOSfFMlX9p1DNm/RoF0phP
-         ezD2HewCcAv/6xYSQWmRAF5VjEjDSpM3snzf5Q8s2BINLltQ/Y7jdqWnrcUsa5ijDnlz
-         VfdH+lwPVnj55H8wlH/OtwOUeWUVN3gENxS+eFu0myMv3Yn0tQlnDOWyjc2qse/eMONA
-         +4MgU/lMOUfyJCJ0lUNoTFbQN2R6qBzSPQXVG9/OjWIbpMu7GUI9ZuKA7jZE/nklfl0f
-         wJMw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791368810; x=1791973610;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=HumvXknLbwxIHtnR1xskfJjNHpMlUAF4ybfL0BilI/o=;
-        b=IApB2jr4x6YjzVc/LTcjaXP8aHwX8esix+bBipfNPkLk6VRoyGqDsGyCi8v2rfPfaC
-         H5+UeGXqSBas/UAbH+D5fwkajXX6g75v8w6dZtqic2d9RBJyeLrLGX5fTm+itdt/o0cA
-         QOADHllcy/7Flnt8OjWQspOPNXY1w1fP8HqlAHLu6bufgJlhZQ3rdN93iqVxhbx2sHlE
-         Q6vw+iTScD5Er72W6kXTZc3ybFNzN1KJ6QNbMKSgUuNwUWGBw05Ko+oUOPZgUdrXf8BD
-         NXzubUnkRHS8FlHy3+z3Zd3C0g21GdsO0tnHx5oEgRY/c1itt48qCRNn7p0Ncq9J1ee9
-         dXfw==
-X-Forwarded-Encrypted: i=1; AKwUvBxcM5BkjDWN4pS9heH+UhL8gLbLYAdRv0Age8+wZNVcpWJCPfLbOFdhKwjoZ0nrNbn22TAwEJyOW0ZI@vger.kernel.org
-X-Gm-Message-State: AFuF++kA7FRm1itTPvpBg7zlWZm2r/Wv33EbHjCbXK5VfBdDr365XDCV
-	o/4M2x52nJ/2galc1FRO0IOEIcZK6bTaracDcNPluFioGGKKJKoKr1pn
-X-Gm-Gg: AYBFou0cdDnkf4f2m3s4m0wshZ1Nw0nQaDT0ovTDzKhQfcOf1hFVeEWMcLmpTBr9JJt
-	iqt7bI8G8OcAoi09Ca8qjgA/c5rrv840+LbtjYBhPW2omPcRbmGlbJ9bHuTX+3W4PtW4SPww+Iv
-	ShvHX+g+XFk3foQ5Nk84p9yndpGGZLx+b3eu+xxj5bNpFYJuNYPm/PxSbs9eQdzNPjxn98yS6FT
-	meHNu9rliGGRrWshMHqLfhzQ2bSplbJ7M5Q3LXAPWbI23R4sGq4H2iSXvjfoZ20suCL6IvAeZ5V
-	/2rL5U3ceIzAsLfqjOgGdKBa4XVCPddp1fwsGailrpSc+DAHxg0TWhlffq7R6XnQbzf+9k1R/z/
-	uMTDIx19VdRph3p2g7VshsJYrqSnae8p+3XABtqixduiA71tMxwPKcsQ/Nq9OF2hkyWA7dM4kVX
-	8aVEDNFaJqO8P1Hviq/2t9CDFlvYXCOmADtnl5mQBLHJjSI0vNQ9J+Xr8HTeSKcQr35cUuOo6jN
-	l3SORHZyWoTxg==
-X-Received: by 2002:a05:600c:a30c:b0:4a1:80d8:aed0 with SMTP id 5b1f17b1804b1-4a180d8b180mr18101365e9.15.1791368809492;
-        Wed, 07 Oct 2026 03:26:49 -0700 (PDT)
-Received: from serhat-ubuntu.home ([212.253.205.12])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a1787e7792sm133976735e9.0.2026.10.07.03.26.47
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 07 Oct 2026 03:26:48 -0700 (PDT)
-From: Serhat Kumral <serhatkumral1@gmail.com>
-To: njavali@marvell.com,
-	GR-QLogic-Storage-Upstream@marvell.com
-Cc: James.Bottomley@HansenPartnership.com,
-	mkp@kernel.org,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Serhat Kumral <serhatkumral1@gmail.com>
-Subject: [PATCH] scsi: qla2xxx: Fix fcport handling in session creation race
-Date: Wed,  7 Oct 2026 13:26:32 +0300
-Message-ID: <20261007102632.11971-1-serhatkumral1@gmail.com>
-X-Mailer: git-send-email 2.53.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ayc/OO50"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 921421F0089B;
+	Wed,  7 Oct 2026 10:42:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1791369765;
+	bh=x78NUI/I2LsVmxVw+BYZfrrLHR89TOXcX+qyMbyVJ5k=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=ayc/OO50GlZPK1xSyuSOfbY9Ls0BLlEu+JfjHvm+DSzLdFNMoF6PKDTvwvmoJrAv0
+	 T8poPwiObheUIvfOlgSGOkT2A2oyIw2b2XWJqaAJfO07AFKh9kb9m3uS0jsr4g4VIs
+	 zzOBvO6Qtlhj0BFCrcpJXvZofEzNZYE7IYNaHm9w6rVqIyZyGT9nyn1/TmWY/zIqVY
+	 cDbhVbWLrNs2GWWZOqymHS2h/mUZwdQnvzxDtscroYxdQb6Wln8pziM8fqm3ix/dR+
+	 JBvMYTxB6L9srxfRGNrkBAzJerVufoRKjJTEt8FuxP8UC1wT9YAUZ5xs9RxxgaN6jl
+	 YeCq3CtDO7D6Q==
+Message-ID: <sashiko-outbox-162870@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] scsi: qla2xxx: Fix fcport handling in session creation
+ race
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Serhat Kumral" <serhatkumral1@gmail.com>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20261007102632.11971-1-serhatkumral1@gmail.com>
+References: <20261007102632.11971-1-serhatkumral1@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 07 Oct 2026 10:42:45 +0000
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-When a second WWPN lookup finds an existing fcport due to a race, the
-driver continues using the newly allocated fcport instead of the existing
-one, then frees it at the end of qla24xx_create_new_sess().
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [Medium] scsi: qla2xxx: Unlocked state modifications to live fcport
+- [Medium] scsi: qla2xxx: missing d_id update on session swap risks stale N=
+_Port ID
+--
 
-Smatch reports a use-after-free of pla in the trailing cleanup.
-qlt_plogi_ack_unref() may have already freed pla, making the subsequent
-list_del() and kmem_cache_free() invalid.
+commit 677908d94136f8ead1918acb926dd5f120568a2d
+Author: Serhat Kumral <serhatkumral1@gmail.com>
 
-Fix this by switching to the existing fcport, freeing the
-redundant newly allocated one, and removing the trailing cleanup.
+scsi: qla2xxx: Fix fcport handling in session creation race
 
-Fixes: b5d1531260b9 ("scsi: qla2xxx: Fix slow mem alloc behind lock")
-Assisted-by: LLM
-Signed-off-by: Serhat Kumral <serhatkumral1@gmail.com>
----
-smatch output:
-- drivers/scsi/qla2xxx/qla_os.c:5627 qla24xx_create_new_sess() error: dereferencing freed memory 'pla' (line 5573)
+This commit addresses a session creation race condition by swapping to
+the existing fcport when a second WWPN lookup finds one. It then frees
+the newly allocated fcport to avoid a use-after-free in the trailing cleanu=
+p.
 
- drivers/scsi/qla2xxx/qla_os.c | 17 +++++++----------
- 1 file changed, 7 insertions(+), 10 deletions(-)
+> diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+> index 3c412c7fb6fe7..1231265365afd 100644
+> --- a/drivers/scsi/qla2xxx/qla_os.c
+> +++ b/drivers/scsi/qla2xxx/qla_os.c
+[ ... ]
+> @@ -5529,7 +5529,9 @@ void qla24xx_create_new_sess(struct scsi_qla_host *=
+vha, struct qla_work_evt *e)
+>  			    __func__, tfcp->port_name, tfcp->disc_state,
+>  			    tfcp->fw_login_state);
+> =20
+> -			free_fcport =3D 1;
+> +			conflict_fcport =3D fcport;
+> +			fcport =3D tfcp;
 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 3c412c7fb6fe..1231265365af 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -5456,9 +5456,9 @@ void qla24xx_create_new_sess(struct scsi_qla_host *vha, struct qla_work_evt *e)
- {
- 	unsigned long flags;
- 	fc_port_t *fcport =  NULL, *tfcp;
-+	fc_port_t *conflict_fcport = NULL;
- 	struct qlt_plogi_ack_t *pla =
- 	    (struct qlt_plogi_ack_t *)e->u.new_sess.pla;
--	uint8_t free_fcport = 0;
- 
- 	ql_dbg(ql_dbg_disc, vha, 0xffff,
- 	    "%s %d %8phC enter\n",
-@@ -5529,7 +5529,9 @@ void qla24xx_create_new_sess(struct scsi_qla_host *vha, struct qla_work_evt *e)
- 			    __func__, tfcp->port_name, tfcp->disc_state,
- 			    tfcp->fw_login_state);
- 
--			free_fcport = 1;
-+			conflict_fcport = fcport;
-+			fcport = tfcp;
-+
- 		} else {
- 			list_add_tail(&fcport->list, &vha->vp_fcports);
- 
-@@ -5542,6 +5544,9 @@ void qla24xx_create_new_sess(struct scsi_qla_host *vha, struct qla_work_evt *e)
- 	}
- 	spin_unlock_irqrestore(&vha->hw->tgt.sess_lock, flags);
- 
-+	if (conflict_fcport)
-+		qla2x00_free_fcport(conflict_fcport);
-+
- 	if (fcport) {
- 		fcport->id_changed = 1;
- 		fcport->scan_state = QLA_FCPORT_FOUND;
-@@ -5620,14 +5625,6 @@ void qla24xx_create_new_sess(struct scsi_qla_host *vha, struct qla_work_evt *e)
- 			}
- 		}
- 	}
--
--	if (free_fcport) {
--		qla2x00_free_fcport(fcport);
--		if (pla) {
--			list_del(&pla->list);
--			kmem_cache_free(qla_tgt_plogi_cachep, pla);
--		}
--	}
- }
- 
- static void qla_sp_retry(struct scsi_qla_host *vha, struct qla_work_evt *e)
--- 
-2.53.0
+[Severity: Medium]
+When swapping to the existing session, is there a missing update for the
+N_Port ID?
 
+Unlike the first lookup block in qla24xx_create_new_sess(), the N_Port ID of
+the session is not updated here. If pla is NULL (e.g., from GPN_FT or mailb=
+ox
+events rather than target PLOGI), the d_id is never updated.
+
+Could this cause the subsequent qla2x00_find_fcport_by_nportid() check to
+fail or incorrectly identify a conflict, leading to the driver logging into
+the stale N_Port ID?
+
+> +
+>  		} else {
+>  			list_add_tail(&fcport->list, &vha->vp_fcports);
+> =20
+> @@ -5542,6 +5544,9 @@ void qla24xx_create_new_sess(struct scsi_qla_host *=
+vha, struct qla_work_evt *e)
+>  	}
+>  	spin_unlock_irqrestore(&vha->hw->tgt.sess_lock, flags);
+> =20
+> +	if (conflict_fcport)
+> +		qla2x00_free_fcport(conflict_fcport);
+> +
+>  	if (fcport) {
+>  		fcport->id_changed =3D 1;
+>  		fcport->scan_state =3D QLA_FCPORT_FOUND;
+>  		fcport->chip_reset =3D vha->hw->base_qpair->chip_reset;
+>  		memcpy(fcport->node_name, e->u.new_sess.node_name, WWN_SIZE);
+
+[Severity: Medium]
+Does modifying these state fields on the now-live fcport outside of the
+sess_lock introduce data races?
+
+Because fcport was swapped to the existing session (tfcp) inside the lock, =
+it
+points to a live session object. Setting fields like id_changed and scan_st=
+ate
+after dropping sess_lock may race with other threads accessing this session.
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261007102632.1197=
+1-1-serhatkumral1@gmail.com?part=3D1
