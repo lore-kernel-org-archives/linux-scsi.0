@@ -1,40 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31700450402
-	for <linux-scsi@vger.kernel.org>; Wed,  7 Oct 2026 08:35:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9BFB143991C
+	for <linux-scsi@vger.kernel.org>; Wed,  7 Oct 2026 08:35:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791362161; cv=none; b=Lir8E8ia/fi/66Vr6gpNf8Zejg1gENxA+1JKRo839Qw5m1So1JwjQUOLxh3p95fJIKmjwyrbfsOlDN1Ewz/srzKva/9Nv5FHQjVyEmYOSqlQ/Ost7cFG+9bC7UToN+U5HlpDrlTIuLfdE7rQ0X/E3qFNOo8p2eEu7VhQU9AR5ZA=
+	t=1791362161; cv=none; b=tn3sbtV6j0BlISmLgIWX9rV7gotqb3eJF8dAQgDJLKLGhaCpPqypoo7j+SBShjSf4mZEXJnO8358JT4yDGQVRBeb27D0lwg57OKK+ZETNTA+YQ2BTgmA8OtLHrGeBtePXXtM8jwqV+AimCXv1YuVvEOycxYWm1r5AwlNnJ6sBFU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1791362161; c=relaxed/simple;
-	bh=R5pOmldq+wnH9VPpgXmxCh53rL1nr3xcvhCqNHUdQJc=;
+	bh=ORaCBiAhY+bMBWViN6bfzHx9HjRJkKCVTaGHuIVpKCI=;
 	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
-	 Date; b=N4ZYpO4yF7w9Bs0IxiyIKArwEMa3pjKc9INB1jBsgA8yDQ93WwL8wMS/NA3+U1r2ubBTT2mjhNoF4cUc9WihlyMSUK4vonXxFoAcv1Fn/Ruev2ckkz+sxTikSWXTd8EeE19VB7JPt8CVJEPOSm9ZFhmeCRNt2i4hzp1JddU8UI4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KUXpv0C/; arc=none smtp.client-ip=100.103.45.18
+	 Date; b=N5kasu3niOJ6U0WxYgbGmGg1Af34WJivEB1OYtdBoj+ASZOPinfth9MFBOIMenWa83P5ORORxGYqcFvlG2zsc5Nf69t7oHGl7DffKxDR7l/Eaff/+s9b0uWye4pqk+OoJVwQIsM4oZak3ce5s0ruReZFLiROKIzpprOLPc+gs5E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=E24NAgA1; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KUXpv0C/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9143C1F0089B;
-	Wed,  7 Oct 2026 08:35:58 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="E24NAgA1"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 299161F0089D;
+	Wed,  7 Oct 2026 08:35:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791362158;
-	bh=AKwDRj9wZGVOs5OfBxChAmZzPSbVyZMhFStZ9wKdDwI=;
+	s=k20260515; t=1791362159;
+	bh=9rZTTedJBdOy6WHP1HHofsxl34lGGmZmjLfAhFMvn1A=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=KUXpv0C/SurrkPIBEqjFziNXkp9BYFwtyk7GbJ0337rAnJsoxuC+SUUufsH+a2yuj
-	 N3gIZtXiMjmF0YCXHGDYlOASCMlV5B9N9iKPFc+ckvGzngKqHz65ccEwaHTjNMuu1+
-	 7FABwhjFOuXlddEZGq4ZL5i/XqGr1NwAWXEIYK5OW0SiSU2PyJlv1QkIjeQjjXhdXA
-	 Fa5pKzdK4vv9tMgIQ99TlWN2tq0lvsHzpr30DgdcORl9hhn3kJz4kbYL/JmFtpci6d
-	 CY7cqenkzv2z/yuL0yT7wO0GcvuRHtJiodCLDwv/aadi7y01Bvw6hm56ZEOTfxHu/j
-	 xP2aekpHj1bAQ==
-Message-ID: <sashiko-outbox-162750@kernel.org>
+	b=E24NAgA1bqL+TZDJCjyI9GvumJKWkfyLI197TiSpF6HZYMjCFDQOMxl10G1PG+b5P
+	 R3l6vLjCm7qsfxIlJXin3A5P+/de7IxnHQkF5fZPqPWhmx8vInNzlKYQYSYNDT68IA
+	 a/FKP/hURLYZ/VmNXaJAkB/bVJ7dNXJFgXiOqZiypgLQmDBlEXV0JX4zu+iODBIK9l
+	 pVfB3ZsrpHiUAJR3vsQrDXcGAWXGxLTWPWawD5D8RPx8Z/v919zjYZNL7R26G3e7Uw
+	 IC62LHmPoYVRSEikrISS+Vr+5AFyhtr0x2IsbSmltCSAgOUI5K9itUUTQcS/yNsIGb
+	 sJna7BXgHEevQ==
+Message-ID: <sashiko-outbox-162751@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 4/7] zloop: add storage element emulation
+Subject: Re: [PATCH v3 6/7] scsi: sd_zbc: always revalidate zones for disks
+ supporting head depopulation
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Damien Le Moal" <dlemoal@kernel.org>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20261007082344.1049179-5-dlemoal@kernel.org>
+In-Reply-To: <20261007082344.1049179-7-dlemoal@kernel.org>
 References: <20261007082344.1049179-1-dlemoal@kernel.org>
- <20261007082344.1049179-5-dlemoal@kernel.org>
+ <20261007082344.1049179-7-dlemoal@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 Date: Wed, 07 Oct 2026 08:35:58 +0000
@@ -44,129 +45,82 @@ List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] block: permanent device bricking due to uncleared restore_in_progr=
-ess flag
-- [High] block: restored storage elements' zones are permanently left offli=
-ne or read-only
-- [Medium] block: TOCTOU race allows I/O on OFFLINE/READONLY zones during r=
-emoval
+- [High] scsi: sd: Data race on struct scsi_disk bitfields including modify=
+_zones_supported
 --
 
-commit 20ddc2153af7f05d1115bfa8b2509e5c9f65e4f8
+commit 38d051c5f929d7e01fbe804c20673174398bee9b
 Author: Damien Le Moal <dlemoal@kernel.org>
-Subject: zloop: add storage element emulation
 
-This commit adds storage element emulation to the zloop driver,
-allowing simulation of SMR disk fractional access storage elements.
+scsi: sd_zbc: always revalidate zones for disks supporting head depopulation
 
-> diff --git a/drivers/block/zloop.c b/drivers/block/zloop.c
-> index 394dc2408ed73..e113ecd63c0b2 100644
-> --- a/drivers/block/zloop.c
-> +++ b/drivers/block/zloop.c
+This commit ensures that zone revalidation is always performed for ZBC disks
+that support head depopulation, even if the zone size and number of zones
+have not changed. It adds a new bitfield to track the disk's support for
+the REMOVE ELEMENT AND MODIFY ZONES command.
 
-[ ... ]
-
-> @@ -430,20 +511,19 @@ static int zloop_reset_zone(struct zloop_device *zl=
-o, unsigned int zone_no)
-> =20
->  	mutex_lock(&zone->lock);
-> =20
-> +	if (zloop_zone_is_offline_or_readonly(zlo, zone)) {
-> +		if (!all_zones)
-> +			ret =3D -EIO;
-> +		goto unlock;
-> +	}
-> +
->  	if (!test_bit(ZLOOP_ZONE_SEQ_ERROR, &zone->flags) &&
->  	    zone->cond =3D=3D BLK_ZONE_COND_EMPTY)
->  		goto unlock;
+> diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
+> index 574af82430169..6a72371fee786 100644
+> --- a/drivers/scsi/sd.h
+> +++ b/drivers/scsi/sd.h
+> @@ -156,6 +156,7 @@ struct scsi_disk {
+>  	unsigned	ignore_medium_access_errors : 1;
+>  	unsigned	rscs : 1; /* reduced stream control support */
+>  	unsigned	use_atomic_write_boundary : 1;
+> +	unsigned	modify_zones_supported : 1;
 
 [Severity: High]
-In zloop_restore_elements_work(), the code calls zloop_reset_all_zones()
-to reset the zones of restored elements, which in turn calls this function
-as zloop_reset_zone(..., all_zones=3Dtrue).=20
+Does adding this bitfield here introduce a data race with other concurrently
+accessed bitfields?
 
-Since zloop_zone_is_offline_or_readonly() evaluates to true for these
-removed elements' zones, the function jumps to unlock and skips=20
-zloop_do_reset_zone().=20
+C compilers implement bitfield assignments as non-atomic read-modify-write
+(RMW) operations on the underlying memory word. This bitfield shares a
+memory word with WCE, cache_override, and ignore_medium_access_errors.
 
-Does this permanently leave the restored elements' zones offline or
-read-only, preventing the restoration from completing successfully?
-
-[ ... ]
-
-> +static bool zloop_prep_rq(struct zloop_device *zlo, struct request *rq)
-> +{
-> +	struct zloop_zone *zone =3D &zlo->zones[rq_zone_no(rq)];
-> +	bool is_write =3D op_is_write(req_op(rq));
-> +	bool ret =3D true;
-> +
-> +	spin_lock(&zone->wp_lock);
-> +
-> +	if (zlo->nr_elements) {
-> +		if (zone->cond =3D=3D BLK_ZONE_COND_OFFLINE ||
-> +		    (zone->cond =3D=3D BLK_ZONE_COND_READONLY && is_write)) {
-> +			ret =3D false;
-> +			goto unlock;
-> +		}
-> +	}
-
-[Severity: Medium]
-Is there a time-of-check to time-of-use race condition here?
-
-This validates the zone condition against offline and read-only states
-before adding the I/O request to the workqueue. If a concurrently
-executing zloop_remove_element_work() transitions the zone condition to
-offline while the request is pending in the queue, the request could still
-be processed.
-
-Once popped from the queue, zloop_handle_cmd() calls zloop_rw(), which
-executes reads and conventional zone writes without re-acquiring the zone
-lock or re-validating the zone condition. Could this allow reads and writes
-to execute against offlined zones?
+>  };
+>  #define to_scsi_disk(obj) container_of(obj, struct scsi_disk, disk_dev)
+> =20
 
 [ ... ]
 
-> +static void zloop_restore_elements_work(struct work_struct *work)
-> +{
-> +	struct zloop_device *zlo =3D container_of(work, struct zloop_device,
-> +						restore_elements_work.work);
-> +	struct blk_storage_element *se;
-> +	unsigned int i;
-> +	int ret;
-> +
-> +	mutex_lock(&zlo->stor_elements_lock);
-> +
-> +	/* Reset all zones. */
-> +	ret =3D zloop_reset_all_zones(zlo);
-> +	if (ret)
-> +		goto out_unlock;
-> +
-> +	/* Restore all removed elements. */
-> +	for (i =3D 0, se =3D zlo->elements; i < zlo->nr_elements; i++, se++) {
-> +		if (se->status =3D=3D BLK_SE_STS_RESTORE_IN_PROGRESS)
-> +			se->status =3D BLK_SE_STS_OK;
-> +	}
-> +
-> +	zlo->nr_removed_elements =3D 0;
-> +	WRITE_ONCE(zlo->restore_in_progress, false);
-> +
-> +out_unlock:
-> +	mutex_unlock(&zlo->stor_elements_lock);
-> +}
+> diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
+> index 8cbf171e6fabf..1bf5f7ea0d9c5 100644
+> --- a/drivers/scsi/sd_zbc.c
+> +++ b/drivers/scsi/sd_zbc.c
+
+[ ... ]
+
+> @@ -620,6 +641,9 @@ int sd_zbc_read_zones(struct scsi_disk *sdkp, struct =
+queue_limits *lim,
+>  	if (ret !=3D 0)
+>  		goto err;
+> =20
+> +	/* Check if REMOVE ELEMENT AND MODIFY ZONES is supported. */
+> +	sdkp->modify_zones_supported =3D sd_zbc_check_modify_zones(sdkp, buf);
 
 [Severity: High]
-If zloop_reset_all_zones() fails (for example, if vfs_truncate encounters
-an I/O error), this code branches to out_unlock and skips clearing the
-restore_in_progress flag.=20
+Can this assignment silently overwrite concurrent updates to other bitfield=
+s?
 
-Since zlo->restore_in_progress would remain true, zloop_queue_rq() appears
-to unconditionally reject all incoming block I/O with BLK_STS_IOERR
-afterward. Does this leave the device permanently bricked on a reset
-failure?
+This assignment is executed in sd_zbc_read_zones() during disk revalidation.
+Concurrently, a sysfs store via cache_type_store() can modify cache_overrid=
+e,
+WCE, and RCD before acquiring queue_limits_start_update(), meaning it does
+not synchronize with disk revalidation. Additionally, sd_eh_action() can
+modify ignore_medium_access_errors from the asynchronous SCSI error handler.
+
+If sd_revalidate_disk() runs concurrently with the sysfs cache updates or
+SCSI EH, their non-atomic RMW operations on the shared bitfield word will
+race.
+
+Losing the WCE bit update could result in skipped cache flushes and
+subsequent data corruption on power loss. Losing the modify_zones_supported
+update could cause the block layer to skip necessary zone revalidation on Z=
+BC
+disks.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261007082344.1049=
-179-1-dlemoal@kernel.org?part=3D4
+179-1-dlemoal@kernel.org?part=3D6
