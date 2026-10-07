@@ -1,40 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C13C4349A7;
-	Wed,  7 Oct 2026 08:23:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A62138656C;
+	Wed,  7 Oct 2026 08:23:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791361429; cv=none; b=Bqu9bW6mYsedCVKxICrh6hYVOAyar7l6/Pz/i0Lctzswc3wMCm3IjrfVg3tKSsZSU7GkeLGoGM4wZyJEVJogRDsAQ//IYu94O1aNa3twrrnNU3Pzn6YrMj6QmYGU639zRg+0nNXRMP0v8qZBSz2AsKwtr1PmetNzUtNS+5eT9+M=
+	t=1791361430; cv=none; b=EwXiSX+pgoDvnuy2CrveLBca0ngLygqVAmozyvSnHdLvM7S9xk1XKzQBTv7zOGYNkpYiaoh6i8PsGO+UwX3VmkHXrD4tqnV3dRtgaa8oI/6nxu57U4si5m3fZAC6tg9V663IN6o6XtAF8B9wOGnqx/YlsFjFdKtVt/2kIP+tdMA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791361429; c=relaxed/simple;
-	bh=koOoHfQDZcEIx4WvekhR9X8Q0eh66NYUeTC8a72hSSY=;
+	s=arc-20240116; t=1791361430; c=relaxed/simple;
+	bh=cAXL8phq3Y6YSQ0nR7KRa3SxbNeMk3Yp8QXLQ+BgPpE=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=WLpqJOGuMAWrogMSxSOHhFAqi9oDXUJW4KkEsb7P+8d2vPBoU7Wn65HpJolcYsE0T4pL7KlTTOmhPOfbFdl20oQgc3B3x70+mIXeI7wzvpWYyby+5GYIsY9HxbAqJbQpU94m3Drwn6MbCFLAWH9PErl/sb6xcEsjLYv4fCkeriM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=imHjVdaH; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=hbrZisWKqqaUXncMd60n5CjYU/nc4mgqzvxiXlHcRpfop3QyeODVLIC+dpXjnJwMwvKlHY/rHZTqEIpukPf3PXFGyxxt6CcsZWTuADl5b8F73qZ5DWpt8GIgvgAdk6h+y/5dvmxebuoyUVgcWqXwiSUEV5JqP0bhUAlDbNBNlzM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=on5XeTZm; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="imHjVdaH"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 73FA71F0089C;
-	Wed,  7 Oct 2026 08:23:47 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="on5XeTZm"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8B18B1F0089B;
+	Wed,  7 Oct 2026 08:23:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791361428;
-	bh=yHDROnBjd1ynNnW7MzmMCKXs4l5uSHYT9QWtZJ0TEzc=;
+	s=k20260515; t=1791361429;
+	bh=K1ZJalQyy61IUS8JnmpVE2hJvuIlVOtia7RKDOxXlq4=;
 	h=From:To:Subject:Date:In-Reply-To:References;
-	b=imHjVdaHqjgpq4HnRpRP4dvGG2bNzxCW/bt1NLHytDMN9puZ9KlSH94/LXYIZFXK+
-	 +DdCHd06C+Hc4zQHOLT+Yw6TxCMq3TXalkaOXNyvHrw7hYjMeT4XwJRqx4Oy1KWwyG
-	 PIW6Tkki0jnjC2kiWEE2hwVdOjYq+tGACEynOoZ/aWQ4qy/+/fhiivvwBbawDt1IVF
-	 M4aQiUfxAmgaX1ALrnQwMbk+Dx247NOfJde2bAqlss7KBKMg48zWhbIiUjAC/dgngD
-	 zn59qlCCsQKynUQyC4tKdvoOlziyPQM1hj7nSIxBBvI70Fd0qAJnLdBNjxrAAJn2G7
-	 a6ai0Btg7rcmg==
+	b=on5XeTZmzF8DuSGv2UlOlFHbtjlNSktOpwEMpEA57ehqCFtINjf525Y+z680TGB+3
+	 UQ3cs1n/AkZ+LNQ9TWxT1wPZqAMltKa5hHdaxn6W/mGfjFsLpDvx4on29sjKyOmw/C
+	 z3tQYs57nWN2u8/6s+4SkTP1JIiHG+Hc1bCVQGypyNokdOmXIgV82LazzL3GYYHu+l
+	 mceyfkvr5ZG6YJZRwmAOVNDYGxNpUIsL2G+9cGhCmADt1pSazgEUtceQ6cP0QCth83
+	 o7+jJWwdbvEmRUA75zHBD5yvGSGEqsUZjir1ySaAucYzkJL7X48Lgrra7QuUtuoPmY
+	 hlSvyRR++H9sg==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: Jens Axboe <axboe@kernel.dk>,
 	linux-block@vger.kernel.org,
 	Christoph Hellwig <hch@lst.de>,
 	linux-scsi@vger.kernel.org,
 	"Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH v3 1/7] block: fail reads to offline zones early
-Date: Wed,  7 Oct 2026 17:23:38 +0900
-Message-ID: <20261007082344.1049179-2-dlemoal@kernel.org>
+Subject: [PATCH v3 2/7] block: introduce storage element management
+Date: Wed,  7 Oct 2026 17:23:39 +0900
+Message-ID: <20261007082344.1049179-3-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20261007082344.1049179-1-dlemoal@kernel.org>
 References: <20261007082344.1049179-1-dlemoal@kernel.org>
@@ -46,84 +46,359 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Any BIO targeting an offline zone of a zoned block device will fail,
-including read commands. So there is no point in issuing read BIOs.
-Fail these read operations early if we ever see one.
+Recent SCSI (SBC) and ATA (ACS) standards define the storage element
+depopulation feature. This feature is intended for managing hard-disks
+heads, either combined read-write heads or pairs of read and write heads,
+allowing to keep disks with defective heads longer in production by
+allowing "depopulating" (removing) defective heads.
 
+This feature comes in two different flavors:
+ - A destructive version which removes a head and reformats the disk at a
+   lower capacity point, restoaring a fully functional contiguous LBA
+   address space.
+ - A data preserving version restricted to host-managed zoned disks, which
+   marks the zones served by a removed head as offline or read-only.
+
+In preparation for using the data-preserving flavor of the depopulation
+feature in file systems natively supporting zoned block devices, introduce
+a set of storage element management operations and functions to define
+generic calls into block device drivers for managing storage elements.
+
+The set of operations is defined with struct blk_storage_elements_ops and
+includes three operations:
+ - report_elements: get information on a device storage elements state
+ - remove_element: depopulate a defective storage element
+ - restore_elements: restore depopulated storage elements
+
+Each operation is called from the functions
+bdev_report_storage_elements(), bdev_remove_storage_element() and
+bdev_restore_storage_elements().
+
+Removing a healthy storage element from a device is possible and useful
+for testing. The storage element restoration operation restore_elements
+allows repopulating such healthy element. Repopulating defective storage
+elements is generally not allowed by devices.
+
+The device drivers of zoned block devices can indicate support for the
+storage element depopulation feature by specifying the storage element
+management operations with the se_ops field of struct
+block_device_operations.
+
+Co-developed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 ---
- block/blk-core.c  |  3 +++
- block/blk-zoned.c | 18 ++++++++++++++++++
- block/blk.h       |  6 ++++++
- 3 files changed, 27 insertions(+)
+ block/blk-zoned.c             | 181 +++++++++++++++++++++++++++++++++-
+ include/linux/blkdev.h        |  16 +++
+ include/uapi/linux/blkzoned.h |  67 +++++++++++++
+ 3 files changed, 263 insertions(+), 1 deletion(-)
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 13dc70e8f55d..d420c80d2d93 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -866,6 +866,9 @@ void submit_bio_noacct(struct bio *bio)
- 
- 	switch (bio_op(bio)) {
- 	case REQ_OP_READ:
-+		if (bdev_is_zoned(bdev) &&
-+		    bdev_zone_is_offline(bdev, bio->bi_iter.bi_sector))
-+			goto end_io;
- 		break;
- 	case REQ_OP_WRITE:
- 		if (bio->bi_opf & REQ_ATOMIC) {
 diff --git a/block/blk-zoned.c b/block/blk-zoned.c
-index 19268afb8752..131c9f50b3da 100644
+index 131c9f50b3da..6a4c6a3f2060 100644
 --- a/block/blk-zoned.c
 +++ b/block/blk-zoned.c
-@@ -308,6 +308,24 @@ bool bdev_zone_is_seq(struct block_device *bdev, sector_t sector)
+@@ -18,6 +18,7 @@
+ #include <linux/mempool.h>
+ #include <linux/kthread.h>
+ #include <linux/freezer.h>
++#include <linux/delay.h>
+ 
+ #include <trace/events/block.h>
+ 
+@@ -2718,5 +2719,183 @@ int queue_zone_wplugs_show(void *data, struct seq_file *m)
+ 
+ 	return 0;
  }
- EXPORT_SYMBOL_GPL(bdev_zone_is_seq);
+-
+ #endif
++
++static int disk_wait_for_se_mgmt_completion(struct gendisk *disk)
++{
++	struct blk_storage_element *elements, *e;
++	unsigned int i, nr_se, nr_elements = 0;
++	unsigned int noio_flag;
++	int ret;
++
++	/* The callers already checked that disk->fops->se_ops is set. */
++	ret = disk->fops->se_ops->report_elements(disk, NULL, &nr_elements);
++	if (ret) {
++		pr_err("Failed to get number of storage elements\n");
++		return ret;
++	}
++
++	noio_flag = memalloc_noio_save();
++	elements = kzalloc_objs(struct blk_storage_element, nr_elements);
++	memalloc_noio_restore(noio_flag);
++	if (!elements)
++		return -ENOMEM;
++
++	/*
++	 * Poll the storage elements heath state to detect the end of a removal
++	 * or restoration operation. Since we do not know how long the operation
++	 * may take, we cannot have a timeout on this loop. So make it
++	 * interruptible by a fatal signal so that the user can terminate this
++	 * retry loop if the device misbehaves.
++	 */
++	while (!fatal_signal_pending(current)) {
++		/*
++		 * Check if we have storage elements being removed or restored.
++		 */
++		nr_se = nr_elements;
++		ret = disk->fops->se_ops->report_elements(disk, elements,
++							  &nr_se);
++		if (ret) {
++			pr_err("Failed to get storage elements\n");
++			break;
++		}
++
++		e = elements;
++		for (i = 0; i < nr_se; i++, e++) {
++			if (e->status == BLK_SE_STS_REMOVE_IN_PROGRESS ||
++			    e->status == BLK_SE_STS_RESTORE_IN_PROGRESS)
++				break;
++		}
++		if (i >= nr_se)
++			break;
++
++		/* Not done yet: wait and retry. */
++		msleep(1000);
++	}
++
++	if (!ret && fatal_signal_pending(current))
++		ret = -EINTR;
++
++	kfree(elements);
++
++	return ret;
++}
++
++/**
++ * bdev_report_storage_elements - report the storage elements of a block device
++ * @bdev:	block device to check
++ * @elements:	array of storage element descriptors to fill
++ * @nr_elements: maximum size of @elements
++ *
++ * Fill at most @nr_elements storage element descriptors in the array @elements.
++ * The number of storage elements filled in the array is returned using
++ * @nr_elements. If @elements is NULL, only @nr_elements is returned to indicate
++ * the maximum nuber of storage elements of @bdev.
++ *
++ * Returns 0 on success and a negative error code on failure.
++ */
++int bdev_report_storage_elements(struct block_device *bdev,
++				 struct blk_storage_element *elements,
++				 unsigned int *nr_elements)
++{
++	struct gendisk *disk = bdev->bd_disk;
++
++	if (!bdev_is_zoned(bdev) || !disk->fops->se_ops)
++		return -EOPNOTSUPP;
++
++	if (!nr_elements)
++		return -EINVAL;
++
++	if (*nr_elements && !elements)
++		return -EINVAL;
++
++	return disk->fops->se_ops->report_elements(disk, elements, nr_elements);
++}
++EXPORT_SYMBOL_GPL(bdev_report_storage_elements);
++
++/**
++ * bdev_remove_storage_element - Remove (depopulate) a storage element of a
++ *				 block device
++ * @bdev:	block device to operate on
++ * @element_id:	ID of the storage element to remove
++ *
++ * Remove (depopulate) the storage element identified by @element_id from the
++ * block device @bdev. The caller is responsible for taking care of any
++ * necessary device write cache flush and invalidation of cached data for the
++ * zones that will be offlined.
++ *
++ * Returns 0 on success and a negative error code on failure.
++ */
++int bdev_remove_storage_element(struct block_device *bdev,
++				unsigned int element_id)
++{
++	struct gendisk *disk = bdev->bd_disk;
++	unsigned int memflags;
++	int ret;
++
++	if (!bdev_is_zoned(bdev) || !disk->fops->se_ops)
++		return -EOPNOTSUPP;
++
++	/* Zero is not a valid storage element ID. */
++	if (!element_id)
++		return -EINVAL;
++
++	/*
++	 * Freeze and unfreeze the queue to flush any outstanding command.
++	 * The caller is responsible for not queuing up more I/Os by higher
++	 * level means.
++	 */
++	memflags = blk_mq_freeze_queue(disk->queue);
++	blk_mq_unfreeze_queue(disk->queue, memflags);
++
++	ret = disk->fops->se_ops->remove_element(disk, element_id);
++	if (ret)
++		return ret;
++
++	/* Revalidate the device zones once the opration completes. */
++	ret = disk_wait_for_se_mgmt_completion(disk);
++	if (ret)
++		return ret;
++
++	return blk_revalidate_disk_zones(disk);
++}
++EXPORT_SYMBOL_GPL(bdev_remove_storage_element);
++
++/**
++ * bdev_restore_storage_elements - Restore all depopulated storage elements of a
++ *				   block device
++ * @bdev:	block device to operate on
++ *
++ * Restore all storage elements of @bdev that have been depopulated. Not all
++ * elements may be restored by this operation.
++ *
++ * Returns 0 on success and a negative error code on failure.
++ */
++int bdev_restore_storage_elements(struct block_device *bdev)
++{
++	struct gendisk *disk = bdev->bd_disk;
++	unsigned int memflags;
++	int ret;
++
++	if (!bdev_is_zoned(bdev) || !disk->fops->se_ops)
++		return -EOPNOTSUPP;
++
++	/*
++	 * Freeze and unfreeze the queue to flush any outstanding commands.
++	 * The caller is responsible for not queuing up more I/O by higher
++	 * level means.
++	 */
++	memflags = blk_mq_freeze_queue(disk->queue);
++	blk_mq_unfreeze_queue(disk->queue, memflags);
++
++	ret = disk->fops->se_ops->restore_elements(disk);
++	if (ret)
++		return ret;
++
++	ret = disk_wait_for_se_mgmt_completion(disk);
++	if (ret)
++		return ret;
++
++	return blk_revalidate_disk_zones(disk);
++}
++EXPORT_SYMBOL_GPL(bdev_restore_storage_elements);
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index d003a9d2d1f6..859917b3b256 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -1574,6 +1574,21 @@ enum blk_unique_id {
+ 	BLK_UID_NAA	= 3,
+ };
+ 
++struct blk_storage_elements_ops {
++	int (*report_elements)(struct gendisk *disk,
++			       struct blk_storage_element *elements,
++			       unsigned int *nr_elements);
++	int (*remove_element)(struct gendisk *disk, unsigned int element_id);
++	int (*restore_elements)(struct gendisk *disk);
++};
++
++int bdev_report_storage_elements(struct block_device *bdev,
++				 struct blk_storage_element *elements,
++				 unsigned int *nr_elements);
++int bdev_remove_storage_element(struct block_device *bdev,
++				unsigned int element_id);
++int bdev_restore_storage_elements(struct block_device *bdev);
++
+ struct block_device_operations {
+ 	void (*submit_bio)(struct bio *bio);
+ 	int (*poll_bio)(struct bio *bio, struct io_comp_batch *iob,
+@@ -1601,6 +1616,7 @@ struct block_device_operations {
+ 			enum blk_unique_id id_type);
+ 	struct module *owner;
+ 	const struct pr_ops *pr_ops;
++	const struct blk_storage_elements_ops	*se_ops;
+ 
+ 	/*
+ 	 * Special callback for probing GPT entry at a given sector.
+diff --git a/include/uapi/linux/blkzoned.h b/include/uapi/linux/blkzoned.h
+index 663836120966..4160ab5f232c 100644
+--- a/include/uapi/linux/blkzoned.h
++++ b/include/uapi/linux/blkzoned.h
+@@ -208,4 +208,71 @@ struct blk_zone_range {
+ #define BLKFINISHZONE	_IOW(0x12, 136, struct blk_zone_range)
+ #define BLKREPORTZONEV2	_IOWR(0x12, 142, struct blk_zone_report)
  
 +/**
-+ * bdev_zone_is_offline - check if a sector belongs to an offline zone
-+ * @bdev:       block device to check
-+ * @sector:     sector number
++ * enum blk_storage_element_type - Type of a zoned device storage elements.
 + *
-+ * Check if @sector on @bdev is contained in an offline zone.
++ * @BLK_SE_TYPE_RDWR: The storage element handles both reads and writes.
++ * @BLK_SE_TYPE_READ: The storage element handles reads only.
++ * @BLK_SE_TYPE_WRITE: The storage element handles writes only.
++ * @BLK_SE_TYPE_UNKNOWN: The storage element type is not known.
 + */
-+bool bdev_zone_is_offline(struct block_device *bdev, sector_t sector)
-+{
-+	enum blk_zone_cond cond;
++enum blk_storage_element_type {
++	BLK_SE_TYPE_RDWR		= 0x01,
++	BLK_SE_TYPE_READ		= 0x02,
++	BLK_SE_TYPE_WRITE		= 0x03,
++	BLK_SE_TYPE_UNKNOWN		= 0xFF,
++};
 +
-+	if (!bdev_is_zoned(bdev))
-+		return false;
++/**
++ * enum blk_storage_element_status - Status of a zoned device storage elements.
++ *
++ * @BLK_SE_STS_OK: The storage element is operating normally.
++ * @BLK_SE_STS_DEGRADED: The storage element has degraded and is not operating
++ *			 normally.
++ * @BLK_SE_STS_REMOVE_IN_PROGRESS: The storage element is being removed.
++ * @BLK_SE_STS_REMOVE_ERROR: The storage element removal failed.
++ * @BLK_SE_STS_RESTORE_IN_PROGRESS: The storage element is being restored.
++ * @BLK_SE_STS_RESTORE_ERROR: The storage element restoration failed.
++ * @BLK_SE_STS_REMOVED: The storage element was removed.
++ * @BLK_SE_STS_UNKNOWN: The storage element status is unknown.
++ */
++enum blk_storage_element_status {
++	BLK_SE_STS_OK			= 0x01,
++	BLK_SE_STS_DEGRADED		= 0x02,
++	BLK_SE_STS_REMOVE_IN_PROGRESS	= 0x03,
++	BLK_SE_STS_REMOVE_ERROR		= 0x04,
++	BLK_SE_STS_RESTORE_IN_PROGRESS	= 0x05,
++	BLK_SE_STS_RESTORE_ERROR	= 0x06,
++	BLK_SE_STS_REMOVED		= 0x07,
++	BLK_SE_STS_UNKNOWN		= 0xFF,
++};
 +
-+	cond = disk_zone_get_cond(bdev->bd_disk, sector);
-+	return cond == BLK_ZONE_COND_OFFLINE;
-+}
++/**
++ * struct blk_storage_element - Zoned device storage element descriptor.
++ *
++ * @id: The ID of the element (cannot be 0).
++ * @paired_id: The ID of the paired element for an element that is not
++ *	       of type BLK_SE_TYPE_RDWR.
++ * @type: The type of the storage element (enum blk_storage_element_type).
++ * @status: The health status of the storage element
++ *	    (enum blk_storage_element_status).
++ * @restore_allowed: Indicate if the storage element can be restored.
++ * @nr_zones: The number of zones that the storage element handles.
++ */
++struct blk_storage_element {
++	__u32	id;
++	__u32	paired_id;
++	__u64	nr_zones;
++	__u8	type;
++	__u8	status;
++	__u8	restore_allowed;
++	__u8	reserved[5];
++};
 +
- /**
-  * bdev_zone_mgmt_allowed - check if management operations are allowed on a zone
-  * @bdev:       block device to check
-diff --git a/block/blk.h b/block/blk.h
-index 2cc03aa54c53..c2d07347a3ad 100644
---- a/block/blk.h
-+++ b/block/blk.h
-@@ -578,6 +578,7 @@ int blkdev_report_zones_ioctl(struct block_device *bdev, unsigned int cmd,
- int blkdev_zone_mgmt_ioctl(struct block_device *bdev, blk_mode_t mode,
- 		unsigned int cmd, unsigned long arg);
- bool bdev_zone_mgmt_allowed(struct block_device *bdev, sector_t sector);
-+bool bdev_zone_is_offline(struct block_device *bdev, sector_t sector);
- #else /* CONFIG_BLK_DEV_ZONED */
- static inline void disk_init_zone_resources(struct gendisk *disk)
- {
-@@ -625,6 +626,11 @@ static inline bool bdev_zone_mgmt_allowed(struct block_device *bdev,
- {
- 	return false;
- }
-+static inline bool bdev_zone_is_offline(struct block_device *bdev,
-+					sector_t sector)
-+{
-+	return false;
-+}
- #endif /* CONFIG_BLK_DEV_ZONED */
- 
- struct block_device *bdev_alloc(struct gendisk *disk, u8 partno);
++struct blk_storage_elements_report {
++	__u32				nr_elements;
++	__u32				reserved;
++	struct blk_storage_element	elements[];
++};
++
+ #endif /* _UAPI_BLKZONED_H */
 -- 
 2.55.0
 
