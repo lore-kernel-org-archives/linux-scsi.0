@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B1C174E2F22;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E5A9D4E4315;
 	Wed,  7 Oct 2026 19:25:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791401147; cv=none; b=s8uGUbqCJEzUHfQeT1add769P2uhzXnV45A7QtFdO4IhSykpo0NnNSaPqPRJKzWhHwXaaU52M4qc1sJhPXvMkPFjlp70yzEjW+Fq5xAJ/5vYufaJpWCUuUf00L9URf3O/0j0+2O9qhquuMW7244vbOOPJMVeyS082PpQA81PPIc=
+	t=1791401148; cv=none; b=hfqwBEJOySwerV/3cdfkTQGlenXZgXxeCr2G2eGO8mLjTavz7iczdkyI31ZRk4TcAdu+Sx8BZvHym9We756vEknj1vXa7q4O1C4DHpV2IofGLAEbGhV/7JFOMht8kBLANvK/u9VU/xvULlJlYeL3dvsNdlowXp7hcB9R023jkH4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791401147; c=relaxed/simple;
-	bh=ZyJf78hC/Cj23Umog/FT5PwsBfYYkk/FQUAsVJq89GA=;
+	s=arc-20240116; t=1791401148; c=relaxed/simple;
+	bh=3dR3bQhbVFD6CaK4nkwyg+M1MY6kVwlo9U5P9pkztfE=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=eaVyhwcjvq3iHZ2dgQ3e6DMc4whFYIARsH0E7BLmk4GiA7ta77fUq/4QHhl6snC+6O07HPL8VOSZFcfaS/cu+V12JsAiOTO447MgQeBvWkLd50ygMKIrwbKOComIoK8N6M/KxIl4urtNIdskxsdHMR+pMsN85hlUMnqp95B9AOY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oFFC3BcG; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=ClYu+nOocE3kPabKzDwDNl0ASQS0OcMKDjgVH6wlNojnZDkfhcMMXep5B6wzsy4ifKeD6ONlx1tFLnNzfveRdUfyXddHo59dI9s+JJXfiFRGvsFN84rC/pWtpILf0lMfsssVGTTVW6dpiXPytehmkVGR2PBRCb40yobOe4dG+IU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YR00aolP; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oFFC3BcG"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 686B9C2BCFB;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YR00aolP"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id A5A13C2BD04;
 	Wed,  7 Oct 2026 19:25:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1791401147;
-	bh=ZyJf78hC/Cj23Umog/FT5PwsBfYYkk/FQUAsVJq89GA=;
+	bh=3dR3bQhbVFD6CaK4nkwyg+M1MY6kVwlo9U5P9pkztfE=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=oFFC3BcGTEAQLTdgqbMAbLSrmIucZyQ2ONXDdbadhKVDULespDr3eBeiz9rNXGwFF
-	 RoWgYx9JCgNVslI79N1ULAP/de7SE2J1T0XIPdXnNtvYshAoIiuUNm85LCspODrIY+
-	 yST/yb8qW4ZEH9DTsMRK1ygDVQ9dSkUy19NTcdS6zflRsqmT76Gag4VtY6Hn32sm5K
-	 eLo7moce79d/WXQndDt+MkEt9c9sq0cRAa0lDBk/9V1+68rNOCJpGxB0u1gG2+2FNu
-	 krUgtrm1M+v+jLqyvpq8kQ+w160BHs5VGZ9Qmq03kWCYzWAwUn3LNCJW+IjqP28A/m
-	 Yfx1qsRAFEupA==
+	b=YR00aolP1Uk2vneHP0954RTVQP6HxiqzrHIXlcSwcQEc9EvWkn7fZs33dkm1B2m/O
+	 G7t+iovsWRanfnJ/7BRZK+JDqdTowxrO9ydsMPe3B/auyYwZkt9mBEAWFa6eCyQB7M
+	 tdT+dIdcHz+LhzQpXjLO2Q40xE03gO/rfI0vbhhzyPyGYQ3CBCpdec9C9ql4Htnqrg
+	 a/Whd6RBiPOYBrYKLNJew5Se8IrQfikKk6tpOW8tWJdOZeFx9i87r+0RIVMdUn7Cu8
+	 jIcxQX3HfBzrmHDiZCa464MAPatxa0TBfsYQ4Di4CEVfMoTo4qNh1lLZIDtCEI69rG
+	 gGR/pczwEnvqw==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 44B77CA6004;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 933A9CA5FFC;
 	Wed,  7 Oct 2026 19:25:47 +0000 (UTC)
 From: Dave Marquardt via B4 Relay <devnull+davemarq.linux.ibm.com@kernel.org>
-Date: Wed, 07 Oct 2026 14:25:46 -0500
-Subject: [PATCH v13 02/11] scsi: ibmvfc: fix potential clobbering of rc
- after failed irq setup
+Date: Wed, 07 Oct 2026 14:25:50 -0500
+Subject: [PATCH v13 06/11] scsi: ibmvfc: add FPIN extended flag and async
+ sub-CRQ queue handle
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -41,7 +41,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261007-ibmvfc-fpin-support-v13-2-b816abfa4fcc@linux.ibm.com>
+Message-Id: <20261007-ibmvfc-fpin-support-v13-6-b816abfa4fcc@linux.ibm.com>
 References: <20261007-ibmvfc-fpin-support-v13-0-b816abfa4fcc@linux.ibm.com>
 In-Reply-To: <20261007-ibmvfc-fpin-support-v13-0-b816abfa4fcc@linux.ibm.com>
 To: Madhavan Srinivasan <maddy@linux.ibm.com>, 
@@ -53,11 +53,11 @@ To: Madhavan Srinivasan <maddy@linux.ibm.com>,
 Cc: linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, 
  linux-kernel@vger.kernel.org, Dave Marquardt <davemarq@linux.ibm.com>
 X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1791401146; l=1351;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1791401146; l=1878;
  i=davemarq@linux.ibm.com; s=20260216; h=from:subject:message-id;
- bh=w2CDvNH7dM6OhRhnXDK5aEwQCEM6J20otVjA78cYJrg=;
- b=BknT+Z7VOTIYGhCYMXf6HrykWlfizo6dMI0uCbyz9uLxrDHURfC2uHUoCOyE5+SPcUDIr8/fi
- fJqK6vQ31PMDv5QNRpVc+4R+XNuS+26dhssOA56juLMi3SzcyvAh8zz
+ bh=4tDRYGPOdalcjrcQxoWbj2Q6l6Bvzp5u1GG4s8VoVCQ=;
+ b=8hINjiuBnCZR6asQbTBcWjQQPNRAPzpvlTKbA8ZjPMycfw70obT4ovtaf63uV+gCk2cDtgyOr
+ p1AnFEQ7yBKBZC3LJ7dQ1diZSCYjRRuVgX2vQ5gt2wf00UgYiMAm8IV
 X-Developer-Key: i=davemarq@linux.ibm.com; a=ed25519;
  pk=vy0/nfobrje6EqZxuyw6a3ZstytG8WK2vf5Y3xtGrEg=
 X-Endpoint-Received: by B4 Relay for davemarq@linux.ibm.com/20260216 with
@@ -65,43 +65,62 @@ X-Endpoint-Received: by B4 Relay for davemarq@linux.ibm.com/20260216 with
 X-Original-From: Dave Marquardt <davemarq@linux.ibm.com>
 Reply-To: davemarq@linux.ibm.com
 
-From: Tyrel Datwyler <tyreld@linux.ibm.com>
+From: Dave Marquardt <davemarq@linux.ibm.com>
 
-Fix a variable-shadowing bug in ibmvfc_register_channel() where the
-irq_failed cleanup loop reused rc for the H_FREE_SUB_CRQ hcall result,
-clobbering the error code returned to the caller.
+Add IBMVFC_ASYNC_IS_FPIN_EXT flag bit (0x02) to ibmvfc_async_sub_crq.flags
+to distinguish extended FPIN events from standard ones.
 
-Introduce hcall_rc for the cleanup loop instead.
+Add async_scrqs field of type ibmvfc_channels to ibmvfc_host to hold the
+channel set for the asynchronous sub-CRQ, alongside the existing scsi_scrqs
+and nvme_scrqs channels. This uses the same ibmvfc_channels infrastructure
+as the SCSI and NVMe channel queues.
+
+Add IBMVFC_ASYNC_SUB_CRQ_FMT to enum ibmvfc_msg_fmt and a corresponding
+async_scrq pointer to union ibmvfc_msgs to support the new async sub-CRQ
+message format.
 
 Signed-off-by: Dave Marquardt <davemarq@linux.ibm.com>
 Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
 ---
- drivers/scsi/ibmvscsi/ibmvfc-core.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/scsi/ibmvscsi/ibmvfc.h | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/ibmvfc-core.c
-index 7818838669ae..145d559041f1 100644
---- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
-+++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
-@@ -6391,6 +6391,7 @@ static int ibmvfc_register_channel(struct ibmvfc_host *vhost,
- 	struct vio_dev *vdev = to_vio_dev(dev);
- 	struct ibmvfc_queue *scrq = &channels->scrqs[index];
- 	int rc = -ENOMEM;
-+	int hcall_rc;
+diff --git a/drivers/scsi/ibmvscsi/ibmvfc.h b/drivers/scsi/ibmvscsi/ibmvfc.h
+index d7a30e7a4a28..df2f312fd7b9 100644
+--- a/drivers/scsi/ibmvscsi/ibmvfc.h
++++ b/drivers/scsi/ibmvscsi/ibmvfc.h
+@@ -773,6 +773,7 @@ struct ibmvfc_async_sub_crq {
+ 	volatile u8 valid;
+ 	u8 flags;
+ #define IBMVFC_ASYNC_ID_IS_ASSOC_ID	0x01
++#define IBMVFC_ASYNC_IS_FPIN_EXT	0x02
+ 	u8 link_state;
+ 	u8 fpin_status;
+ 	__be16 event;
+@@ -893,6 +894,7 @@ enum ibmvfc_msg_fmt {
+ 	IBMVFC_CRQ_FMT = 0,
+ 	IBMVFC_ASYNC_FMT,
+ 	IBMVFC_SUB_CRQ_FMT,
++	IBMVFC_ASYNC_SUB_CRQ_FMT,
+ };
  
- 	ENTER;
+ union ibmvfc_msgs {
+@@ -900,6 +902,7 @@ union ibmvfc_msgs {
+ 	struct ibmvfc_crq *crq;
+ 	struct ibmvfc_async_crq *async;
+ 	struct ibmvfc_sub_crq *scrq;
++	struct ibmvfc_async_sub_crq *async_scrq;
+ };
  
-@@ -6446,8 +6447,8 @@ static int ibmvfc_register_channel(struct ibmvfc_host *vhost,
- 
- irq_failed:
- 	do {
--		rc = plpar_hcall_norets(H_FREE_SUB_CRQ, vdev->unit_address, scrq->cookie);
--	} while (rc == H_BUSY || H_IS_LONG_BUSY(rc));
-+		hcall_rc = plpar_hcall_norets(H_FREE_SUB_CRQ, vdev->unit_address, scrq->cookie);
-+	} while (hcall_rc == H_BUSY || H_IS_LONG_BUSY(hcall_rc));
- reg_failed:
- 	LEAVE;
- 	return rc;
+ struct ibmvfc_queue {
+@@ -992,6 +995,7 @@ struct ibmvfc_host {
+ 	struct ibmvfc_queue async_crq;
+ 	struct ibmvfc_channels scsi_scrqs;
+ 	struct ibmvfc_channels nvme_scrqs;
++	struct ibmvfc_channels async_scrqs;
+ 	struct ibmvfc_npiv_login login_info;
+ 	union ibmvfc_npiv_login_data *login_buf;
+ 	dma_addr_t login_buf_dma;
 
 -- 
 2.55.0
