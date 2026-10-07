@@ -1,144 +1,103 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46D3D1D89EF
-	for <linux-scsi@vger.kernel.org>; Wed,  7 Oct 2026 17:08:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B1A754DE721;
+	Wed,  7 Oct 2026 19:25:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791392916; cv=none; b=oPGKX1tG7Zi2DsUJMzzrvpsmbwdTWK2I3sUSo6QszmTGUJiIvlMHjJlAAznfSqEuvzquxUkYNew68+uHBSBfaGjmwfzPFB4rfSd40encrYi3be9DT6lTjeE5jQB64fOdkpmSXam6NAmPM3V2CG9p/u5Ef2jPX/auFOBzcau7108=
+	t=1791401147; cv=none; b=mKigALZxnQTqm887Xa7WS4K8WzZ3Iij/1NtkPkO31pL1ZvUzBYgvxZKYfp3wxXk3IeImsDesQmMc+SjHW4AFgy+h1HcimxdW3qtj9F+nEcv7YzTEBckETGGiONZ40LumL2hE9i5nU6LUxLN37GygqakD3pwcdhYLMwqe9oLgBNM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791392916; c=relaxed/simple;
-	bh=n5uXmCT40sJiRGfdIO5maw54st53pmyAMG20Pb14vx8=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=Fim4VRuo9b5j/XfrPW5f3Vq9zdb3JWL6m40djhKclQLqFNIPEsQqFsugC2qdzF4xV2dk+2f3HorRLl4SosCBgfB6LZOf4ULhFiUeIrDzp+7X+/jlvZJjGW+00xZSBe1rdwUkpNVoNCbfieukbRRMYOL+Ly76ZtaIxa656gG3jPs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=RrpVvwhS; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=H5l3Kr8+; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1791401147; c=relaxed/simple;
+	bh=pxTCB+8r4h9iLO+9EiB4XXAQcmK8WExkDzMIEXKqWQM=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=kXJZHELqxnrnuaG0GowLD/o50u2swe8YQGoUc1E2i+7jOyC+WLeZN4saanMJS/aSXLXeW2nQQAEdLokOFcBBzWyl+5oPd+gNK75KHAeYI5OFHsghPUAcx7vEWFjvp63uPHvnlGJy51U+H2Y569cChdywoKIhrtOCy2raS4VSrZ8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=t6wrf7PT; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="RrpVvwhS";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="H5l3Kr8+"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1791392914;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=/VEUCnzfsVjtvK9gQou76yPnW0VpuzqTXSNX5pVtmXU=;
-	b=RrpVvwhS7ejGNE+C3sLi8pq1l68n7Z5AWIHj46X7TVpa0ZbP8t5SM10K+iRY1+8J99iRWJ
-	tGDOjPQxLZckpgDyLeUWfz1qOAncbACFvtpls3j92uUEEltezLjgQBR8K9YPYKxLxZq7e9
-	bmUwpKdLtSiUvyaM6DjAtAoE+VWgyNE=
-Received: from mail-qv1-f70.google.com (mail-qv1-f70.google.com
- [209.85.219.70]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-618-vVQDBBJaOP6FYj7iYWOKMg-1; Wed, 07 Oct 2026 13:08:30 -0400
-X-MC-Unique: vVQDBBJaOP6FYj7iYWOKMg-1
-X-Mimecast-MFC-AGG-ID: vVQDBBJaOP6FYj7iYWOKMg_1791392910
-Received: by mail-qv1-f70.google.com with SMTP id 6a1803df08f44-91786abb5abso74964256d6.3
-        for <linux-scsi@vger.kernel.org>; Wed, 07 Oct 2026 10:08:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1791392910; x=1791997710; darn=vger.kernel.org;
-        h=mime-version:user-agent:content-transfer-encoding:content-type
-         :references:in-reply-to:date:cc:to:from:subject:message-id:from:to
-         :cc:subject:date:message-id:reply-to:content-type;
-        bh=/VEUCnzfsVjtvK9gQou76yPnW0VpuzqTXSNX5pVtmXU=;
-        b=H5l3Kr8+pYO19YPw6xAfQwBisN+DO9h3JumURdSZVnI3mYsMdO7HyoGsBU1Lie8IV2
-         PElDkql8DNiv3w/tgP2BL5m1R6uCGii9Q7r2za14iPQLEBiqvyCj7I22oLCJRxZn6hiC
-         e1nV/e3WJNEnGNsBazeb5tF5hjAjQwMfbk6HJlLioJk89pAU7IWFE/agalMaLoHIMmeP
-         mxvjUUYVuAu7q0BYdFPjKPuaHTC+BE2TgomfABl2zHgcLLS34Owwv5UWpPzReiKD+WXi
-         O8gZj1383QOnq8H0IF9oslqUgsJiNCCq+3xqKya4PZgxOdJ+2NPcBYudScNTTYeAWrXl
-         lrPg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791392910; x=1791997710;
-        h=mime-version:user-agent:content-transfer-encoding:content-type
-         :references:in-reply-to:date:cc:to:from:subject:message-id:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=/VEUCnzfsVjtvK9gQou76yPnW0VpuzqTXSNX5pVtmXU=;
-        b=hixpes/nLK9SsMVw3j2gaUjFBBN/fmv3Lj8c1+b3LFaMzQXtuiuadqVL0xOyglUqVC
-         SamRwJFvGGMv40++NbuTPaIfBCbi/L4Eqx+DJMaYdWEvGGyEjHBT4v1mzq56rCNs4TBS
-         PZ9fK+EPAL2XNZmJ+sKMG95u3Bk05fQUpGu3e3+YpncMpxkPLxl4B3uPaxSwGXM3v860
-         aUJMg8Y20tG+lHBycynrbjVlv/e40qB5YJwl3TMcLzwoAL7ynZNg7MfIrgJVbc5e0k2+
-         2tT/c35R7WObefUM2WpBLM9FVU0n4cHCtjlIKpVahHmrTfzWvzH+YjYfSgW2mw4qf5ea
-         XBow==
-X-Forwarded-Encrypted: i=1; AKwUvBxXsdBsol2ZBF76BV2gmXmBWUelbQQRwVJ84uRP6NQqFv7Uz+uAJJmuUqQxmQoDqn0nIBQhhQHiBH7C@vger.kernel.org
-X-Gm-Message-State: AFq9FYLxjTs/b0wze+AO7icLyigBcCtlZXuPvcf/oc44xLSvgkLo5PUg
-	OZAs9Hlqv9uGJP4i7KlmRGRLv7q/rpiFMRXwKN1dw6iQmBLBs1QTsaSVTvL+DGRnF4KjYMtSwz1
-	tzcbYBLGhSp3BQdhKV5nU+8h0gxbkTajb3GEZ7+EEsuJsbnPxqe+4UEVfN4uoJDs=
-X-Gm-Gg: AYBFou3O0YN2u5WpddEjn+Nuvf6kH0vcNR6ro0lxolWzq0lEYtx6hfxPFksh3gry1xx
-	G1R6x7SeOusKD4H27TBZ1zW3yFT37wZy6NsqqH2jyYuo+uoSCg6SWZ+ycuwA2gwzPl3xTJsHtw8
-	g3dXwVEfiMv3y+jIrVgokGStL5fBdAp1caoqEP+MG7k2hXwuRueBJb1UKPmGK91lC9Y+aweNU/P
-	k1/LDEVpUFd876Sz6xjV60pHidS/1FwOStyGrtArJcCaZc51gKiIM8qEs4yNw24cs1Kc4LBAHRk
-	LYy3dw6yTjzke9I5i0LI9U9uVggv7LzvfhrcSiObpthRm98tM2vMavrf2z5gTsfw6hhosr21mFD
-	sYik8MQzxsIALrLaoKQDnAXwNpAfg/PsVG+3n
-X-Received: by 2002:a05:6214:c27:b0:919:8962:5400 with SMTP id 6a1803df08f44-91997873d7dmr54049566d6.36.1791392910126;
-        Wed, 07 Oct 2026 10:08:30 -0700 (PDT)
-X-Received: by 2002:a05:6214:c27:b0:919:8962:5400 with SMTP id 6a1803df08f44-91997873d7dmr54048966d6.36.1791392909554;
-        Wed, 07 Oct 2026 10:08:29 -0700 (PDT)
-Received: from loberman-thinkpadp16gen3.rmtusma.csb ([2600:6c65:2440:d8c:aa2b:ddff:fe88:da74])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-91996ba7b7csm25090416d6.5.2026.10.07.10.08.28
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 07 Oct 2026 10:08:28 -0700 (PDT)
-Message-ID: <c9f5d7c62a0af6a5532ff5bcdff6cc3be0548c84.camel@redhat.com>
-Subject: Re: [PATCH] scsi: aha1542: Remove unneeded scsi_dma_unmap() call
-From: Laurence Oberman <loberman@redhat.com>
-To: Matthew Whitehead <tedheadster@gmail.com>, linux-scsi@vger.kernel.org
-Cc: mkp@kernel.org, James.Bottomley@hansenpartnership.com, emilne@redhat.com
-Date: Wed, 07 Oct 2026 13:08:27 -0400
-In-Reply-To: <20260929144528.7061-1-tedheadster@gmail.com>
-References: <20260929144528.7061-1-tedheadster@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.60.2 (3.60.2-2.fc44) 
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="t6wrf7PT"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 78016C4AF09;
+	Wed,  7 Oct 2026 19:25:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1791401147;
+	bh=pxTCB+8r4h9iLO+9EiB4XXAQcmK8WExkDzMIEXKqWQM=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
+	b=t6wrf7PTbHhEzOIhjTs6wjgnHrPK3xAaCdq3hlQDD8zzs0YpoDmD4xpETqUsJHHv+
+	 k8+Oa38hmCNNx8PVceRjuRcmdmGTP33Toy4jA1YnGmSWXvPS0nPR+6xQp0OP1YmfmN
+	 n7RKIHO//RaYTXKWzYeVA+/QMb2DOwwOkq9Cfml7N119snRloFD5mBQkTvuGZp6/f3
+	 IM9jZ2OsAda3Vv69ZNisi03YiE6NL3RgOAD2naqlxqB4WH7+VBOPwfZwXOj6Pw3nGL
+	 GlMXBzgCu523yvw7XU3wY3sib/sA2R2Bq4QxOQRlb5xngtTYfDatzTvEAAtMzRTPa4
+	 faNYAwvP+AOnw==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 566E9CA6002;
+	Wed,  7 Oct 2026 19:25:47 +0000 (UTC)
+From: Dave Marquardt via B4 Relay <devnull+davemarq.linux.ibm.com@kernel.org>
+Date: Wed, 07 Oct 2026 14:25:47 -0500
+Subject: [PATCH v13 03/11] scsi: ibmvfc: fix potential NULL pointer
+ dereference on failed queue allocation
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20261007-ibmvfc-fpin-support-v13-3-b816abfa4fcc@linux.ibm.com>
+References: <20261007-ibmvfc-fpin-support-v13-0-b816abfa4fcc@linux.ibm.com>
+In-Reply-To: <20261007-ibmvfc-fpin-support-v13-0-b816abfa4fcc@linux.ibm.com>
+To: Madhavan Srinivasan <maddy@linux.ibm.com>, 
+ Michael Ellerman <mpe@ellerman.id.au>, Nicholas Piggin <npiggin@gmail.com>, 
+ "Christophe Leroy (CS GROUP)" <chleroy@kernel.org>, 
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+ "Martin K. Petersen" <mkp@kernel.org>, 
+ Tyrel Datwyler <tyreld@linux.ibm.com>
+Cc: linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, 
+ linux-kernel@vger.kernel.org, Dave Marquardt <davemarq@linux.ibm.com>
+X-Mailer: b4 0.16.0
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1791401146; l=1111;
+ i=davemarq@linux.ibm.com; s=20260216; h=from:subject:message-id;
+ bh=5MabxL8K2rBUNQC1NT9ZFM4Bgb2QgZQZyrHF4zEwrIs=;
+ b=8vOF60GIEts5umotur9o5bMuyMkkPWWmDft62QDPpRfaZRXQqLzN2Wj9BukQACoS3Qu5g3ulo
+ XXR7EPp6NBCC5cRd8WBOERIHNQHCE+e3Ld7ZLfCF1r9CsqfonaFk+ii
+X-Developer-Key: i=davemarq@linux.ibm.com; a=ed25519;
+ pk=vy0/nfobrje6EqZxuyw6a3ZstytG8WK2vf5Y3xtGrEg=
+X-Endpoint-Received: by B4 Relay for davemarq@linux.ibm.com/20260216 with
+ auth_id=689
+X-Original-From: Dave Marquardt <davemarq@linux.ibm.com>
+Reply-To: davemarq@linux.ibm.com
 
-On Tue, 2026-09-29 at 10:45 -0400, Matthew Whitehead wrote:
-> aha1542 never DMA maps the command's scatterlist. Data is bounced
-> through a per-command buffer allocated with dma_alloc_coherent() in
-> aha1542_init_cmd_priv(), the adapter is programmed with
-> acmd->data_buffer_handle, and the payload is copied to and from the
-> request segments in aha1542_queuecommand() and aha1542_free_cmd().
->=20
-> The scsi_dma_unmap() call left in aha1542_free_cmd() therefore unmaps
-> a scatterlist that was never mapped. With CONFIG_DMA_API_DEBUG
-> enabled
-> this results in:
->=20
-> =C2=A0 device driver tries to free DMA memory it has not allocated
-> =C2=A0=C2=A0=C2=A0 [device address=3D0x0000000000000000] [size=3D0 bytes]
->=20
-> Remove the call.
->=20
-> Verified by testing on real hardware.
->=20
-> Fixes: 2f2fef022c3e ("aha1542: use a local bounce buffer")
-> Suggested-by: Laurence Oberman <loberman@redhat.com>
-> Assisted-by: LLM
-> Signed-off-by: Matthew Whitehead <tedheadster@gmail.com>
-> ---
-> =C2=A0drivers/scsi/aha1542.c | 2 --
-> =C2=A01 file changed, 2 deletions(-)
->=20
-> diff --git a/drivers/scsi/aha1542.c b/drivers/scsi/aha1542.c
-> index fd766282d4a4..a197b3d0b26b 100644
-> --- a/drivers/scsi/aha1542.c
-> +++ b/drivers/scsi/aha1542.c
-> @@ -271,8 +271,6 @@ static void aha1542_free_cmd(struct scsi_cmnd
-> *cmd)
-> =C2=A0			buf +=3D bv.bv_len;
-> =C2=A0		}
-> =C2=A0	}
-> -
-> -	scsi_dma_unmap(cmd);
-> =C2=A0}
-> =C2=A0
-> =C2=A0static irqreturn_t aha1542_interrupt(int irq, void *dev_id)
+From: Tyrel Datwyler <tyreld@linux.ibm.com>
 
-Looks correct to me, and was tested at Red Hat.
+Guard the memset() in ibmvfc_deregister_channel() behind a check of
+scrq->msgs.handle to prevent a NULL dereference when the function is
+called on a queue that was never allocated, such as async_sub_crq when
+multi-queue is disabled or initialization failed before
+ibmvfc_alloc_queue() was reached.
 
-Reviewed-by: Laurence Oberman <loberman@redhat.com>
+Signed-off-by: Dave Marquardt <davemarq@linux.ibm.com>
+Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
+---
+ drivers/scsi/ibmvscsi/ibmvfc-core.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/ibmvfc-core.c
+index 145d559041f1..6a42d15db9ec 100644
+--- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
++++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
+@@ -6480,8 +6480,10 @@ static void ibmvfc_deregister_channel(struct ibmvfc_host *vhost,
+ 		dev_err(dev, "Failed to free sub-crq[%d]: rc=%ld\n", index, rc);
+ 
+ 	/* Clean out the queue */
+-	memset(scrq->msgs.crq, 0, PAGE_SIZE);
+-	scrq->cur = 0;
++	if (scrq->msgs.handle) {
++		memset(scrq->msgs.crq, 0, PAGE_SIZE);
++		scrq->cur = 0;
++	}
+ 
+ 	LEAVE;
+ }
+
+-- 
+2.55.0
+
 
