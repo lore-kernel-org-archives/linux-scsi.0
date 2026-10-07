@@ -1,40 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39E733FE344;
-	Wed,  7 Oct 2026 08:23:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C13C4349A7;
+	Wed,  7 Oct 2026 08:23:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791361428; cv=none; b=Jp3Y+Vilv5HBmcZwIniiXr5FL+/bnjfux1xkkTNjBaZj4Zn1SHUKoUgONA/oVWq2GYPsFSUxkqpcyBAoOypzRCzkzHKAtikN0L4owuU0C5wgPL/TJm5DzAsIIjibMg06L2JfYEXI/bdi2desQQjVvlM27FvAIM5k2zL467uAcr0=
+	t=1791361429; cv=none; b=Bqu9bW6mYsedCVKxICrh6hYVOAyar7l6/Pz/i0Lctzswc3wMCm3IjrfVg3tKSsZSU7GkeLGoGM4wZyJEVJogRDsAQ//IYu94O1aNa3twrrnNU3Pzn6YrMj6QmYGU639zRg+0nNXRMP0v8qZBSz2AsKwtr1PmetNzUtNS+5eT9+M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791361428; c=relaxed/simple;
-	bh=yxzTlp9rIzXXOWaSt399imdtjZSBV+ofgAc2uaxChkk=;
-	h=From:To:Subject:Date:Message-ID:MIME-Version; b=aFK8HW3kKocX/T1v+eLz1O1ZKgGWY9lXek5H+MJqpm4w5fErGb3UAHMwVx3nCKceklx48Ju/gq1/DFiyFMyLYm51DrdncsG9BJabf4YEND8tMDNK6ODjIHCfRjsX9v15FukP24ONg5XtNksgEY5kr6oNNt605DfcxAeOXxmdV2s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NX3x+SRF; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791361429; c=relaxed/simple;
+	bh=koOoHfQDZcEIx4WvekhR9X8Q0eh66NYUeTC8a72hSSY=;
+	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=WLpqJOGuMAWrogMSxSOHhFAqi9oDXUJW4KkEsb7P+8d2vPBoU7Wn65HpJolcYsE0T4pL7KlTTOmhPOfbFdl20oQgc3B3x70+mIXeI7wzvpWYyby+5GYIsY9HxbAqJbQpU94m3Drwn6MbCFLAWH9PErl/sb6xcEsjLYv4fCkeriM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=imHjVdaH; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NX3x+SRF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 656401F0089B;
-	Wed,  7 Oct 2026 08:23:46 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="imHjVdaH"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 73FA71F0089C;
+	Wed,  7 Oct 2026 08:23:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791361427;
-	bh=kEVs4+7dcEMLml6lxTHvpUZIzoiNZWd6ewaNVc8E6OY=;
-	h=From:To:Subject:Date;
-	b=NX3x+SRFw9NY9y7UCvU7ENve49F9bk3oaID7BVlU2jGs+oPyJsAX4bm8p3U9TfGbF
-	 uNpbE31Kuzd/2zqdb0wnWLW8eAkpmTMoBBfsyLiU7mZrJDsuHJOHf3eSRoiM3hG9+r
-	 wFMudO4Hggi+oQyBVGO6D+AqHnZkDEwWom2TlPkGg6/EgzYGtYaXO84mRZ4W9lon8f
-	 hhhYE+PbZN95P/xv/CZG3E0fhuLbps6R1vj45hr2nWsV8YGeOmj0lg9bix9qioe/ze
-	 3GQwsN9FA0O2YC7ixcrcvTtwcpNmn4zx4crXys5Q7FP36VHzaIzPmOlym4QB9mmL0f
-	 SknR6MGCchZaA==
+	s=k20260515; t=1791361428;
+	bh=yHDROnBjd1ynNnW7MzmMCKXs4l5uSHYT9QWtZJ0TEzc=;
+	h=From:To:Subject:Date:In-Reply-To:References;
+	b=imHjVdaHqjgpq4HnRpRP4dvGG2bNzxCW/bt1NLHytDMN9puZ9KlSH94/LXYIZFXK+
+	 +DdCHd06C+Hc4zQHOLT+Yw6TxCMq3TXalkaOXNyvHrw7hYjMeT4XwJRqx4Oy1KWwyG
+	 PIW6Tkki0jnjC2kiWEE2hwVdOjYq+tGACEynOoZ/aWQ4qy/+/fhiivvwBbawDt1IVF
+	 M4aQiUfxAmgaX1ALrnQwMbk+Dx247NOfJde2bAqlss7KBKMg48zWhbIiUjAC/dgngD
+	 zn59qlCCsQKynUQyC4tKdvoOlziyPQM1hj7nSIxBBvI70Fd0qAJnLdBNjxrAAJn2G7
+	 a6ai0Btg7rcmg==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: Jens Axboe <axboe@kernel.dk>,
 	linux-block@vger.kernel.org,
 	Christoph Hellwig <hch@lst.de>,
 	linux-scsi@vger.kernel.org,
 	"Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH v3 0/7] Add support for storage element depopulation
-Date: Wed,  7 Oct 2026 17:23:37 +0900
-Message-ID: <20261007082344.1049179-1-dlemoal@kernel.org>
+Subject: [PATCH v3 1/7] block: fail reads to offline zones early
+Date: Wed,  7 Oct 2026 17:23:38 +0900
+Message-ID: <20261007082344.1049179-2-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.55.0
+In-Reply-To: <20261007082344.1049179-1-dlemoal@kernel.org>
+References: <20261007082344.1049179-1-dlemoal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -43,50 +46,84 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Jens,
+Any BIO targeting an offline zone of a zoned block device will fail,
+including read commands. So there is no point in issuing read BIOs.
+Fail these read operations early if we ever see one.
 
-These patches define a new set of block device operations for generically
-using from the block layer the storage element depopulation feature of
-zoned block devices. Support for this feature is added to the SCSI disk
-driver and an emulation of this feature added to the zloop driver.
+Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+---
+ block/blk-core.c  |  3 +++
+ block/blk-zoned.c | 18 ++++++++++++++++++
+ block/blk.h       |  6 ++++++
+ 3 files changed, 27 insertions(+)
 
-The management operations can be accessed using block layer API, which is
-intended for file systems (e.g. zonefs and XFS), as well as using ioctls
-for users using zoned disks directly from user space.
-
-Changes from v2:
- - Addressed further valid comments from Sashiko
-   (https://sashiko.dev/#/patchset/20261006124510.882017-1-dlemoal%40kernel.org)
- - Rebased on latest block/for-next
-
-Changes from v1:
- - Addressed the many valid comments that Sashiko had
-   (https://sashiko.dev/#/patchset/20261005094632.580753-1-dlemoal%40kernel.org)
- - Rebased on latest block/for-next
-
-Damien Le Moal (7):
-  block: fail reads to offline zones early
-  block: introduce storage element management
-  block: add storage element management ioctls
-  zloop: add storage element emulation
-  zloop: add degrade_element control command
-  scsi: sd_zbc: always revalidate zones for disks supporting head depopulation
-  scsi: sd_zbc: define storage element management operations
-
- .../admin-guide/blockdev/zoned_loop.rst       |   8 +-
- block/blk-core.c                              |   3 +
- block/blk-zoned.c                             | 361 +++++++++-
- block/blk.h                                   |  15 +
- block/ioctl.c                                 |   5 +
- drivers/block/zloop.c                         | 669 ++++++++++++++++--
- drivers/scsi/sd.c                             |   3 +
- drivers/scsi/sd.h                             |   3 +
- drivers/scsi/sd_zbc.c                         | 259 ++++++-
- include/linux/blkdev.h                        |  16 +
- include/uapi/linux/blkzoned.h                 |  81 +++
- include/uapi/linux/fs.h                       |   1 +
- 12 files changed, 1377 insertions(+), 47 deletions(-)
-
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 13dc70e8f55d..d420c80d2d93 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -866,6 +866,9 @@ void submit_bio_noacct(struct bio *bio)
+ 
+ 	switch (bio_op(bio)) {
+ 	case REQ_OP_READ:
++		if (bdev_is_zoned(bdev) &&
++		    bdev_zone_is_offline(bdev, bio->bi_iter.bi_sector))
++			goto end_io;
+ 		break;
+ 	case REQ_OP_WRITE:
+ 		if (bio->bi_opf & REQ_ATOMIC) {
+diff --git a/block/blk-zoned.c b/block/blk-zoned.c
+index 19268afb8752..131c9f50b3da 100644
+--- a/block/blk-zoned.c
++++ b/block/blk-zoned.c
+@@ -308,6 +308,24 @@ bool bdev_zone_is_seq(struct block_device *bdev, sector_t sector)
+ }
+ EXPORT_SYMBOL_GPL(bdev_zone_is_seq);
+ 
++/**
++ * bdev_zone_is_offline - check if a sector belongs to an offline zone
++ * @bdev:       block device to check
++ * @sector:     sector number
++ *
++ * Check if @sector on @bdev is contained in an offline zone.
++ */
++bool bdev_zone_is_offline(struct block_device *bdev, sector_t sector)
++{
++	enum blk_zone_cond cond;
++
++	if (!bdev_is_zoned(bdev))
++		return false;
++
++	cond = disk_zone_get_cond(bdev->bd_disk, sector);
++	return cond == BLK_ZONE_COND_OFFLINE;
++}
++
+ /**
+  * bdev_zone_mgmt_allowed - check if management operations are allowed on a zone
+  * @bdev:       block device to check
+diff --git a/block/blk.h b/block/blk.h
+index 2cc03aa54c53..c2d07347a3ad 100644
+--- a/block/blk.h
++++ b/block/blk.h
+@@ -578,6 +578,7 @@ int blkdev_report_zones_ioctl(struct block_device *bdev, unsigned int cmd,
+ int blkdev_zone_mgmt_ioctl(struct block_device *bdev, blk_mode_t mode,
+ 		unsigned int cmd, unsigned long arg);
+ bool bdev_zone_mgmt_allowed(struct block_device *bdev, sector_t sector);
++bool bdev_zone_is_offline(struct block_device *bdev, sector_t sector);
+ #else /* CONFIG_BLK_DEV_ZONED */
+ static inline void disk_init_zone_resources(struct gendisk *disk)
+ {
+@@ -625,6 +626,11 @@ static inline bool bdev_zone_mgmt_allowed(struct block_device *bdev,
+ {
+ 	return false;
+ }
++static inline bool bdev_zone_is_offline(struct block_device *bdev,
++					sector_t sector)
++{
++	return false;
++}
+ #endif /* CONFIG_BLK_DEV_ZONED */
+ 
+ struct block_device *bdev_alloc(struct gendisk *disk, u8 partno);
 -- 
 2.55.0
 
