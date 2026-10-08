@@ -1,160 +1,174 @@
-Received: from mail-dy1-f172.google.com (mail-dy1-f172.google.com [74.125.82.172])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from canpmsgout10.his.huawei.com (canpmsgout10.his.huawei.com [113.46.200.225])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9816639769B
-	for <linux-scsi@vger.kernel.org>; Thu,  8 Oct 2026 02:34:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54E711BD9D0;
+	Thu,  8 Oct 2026 03:11:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.225
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791426895; cv=none; b=VYCvwIBrIRkomzfWBjzNAtELKjNLV5yhahJVTb+A8HQCW4fj2oBgt7PReLeiOgruDUSUAoTRSdPPy56l3Y2BY+1uN0WzV9bIa2zxd7nnK/4W8tCTfnUtI2wgWTfRbbEmzuBv7g42xUaCaqcR9COooTz8o5WDxlpF8qg1KIST+ug=
+	t=1791429098; cv=none; b=ZPRMcEQB4Hdz/BpQ6l5Wjis8Tcy807WGAYmjwQWPN2sP7Tag0vgrgqbszN4Ek5qwWidjUhTD1iL9mMI22xAh2DS9XlxxKfjRwdbo2EGJ26haML902vO9yWBkQzqZuhrK+D/JV1WAwhnlNSO63QhWcasOV0yVffIrTm4Vh0QqHoc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791426895; c=relaxed/simple;
-	bh=ipFidcXxbVizbNu+kgmGjmrJAORqhj4oJeJtvJTCpuY=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=fFc4Rz6UThv9PNafh19yaw/8yF+cd2MGSxXAioeAuVlNlUOErDa1GsjEjI0dbDs399Fk0uKGFGA603n44ufTjCycw3zrJN5bVU68nJxtnHX6W4KJfu3u5/2Rwpd4IPq1ueBkWivE9agZ8y2wEZswPx+G33QS2Vf0H1Gd86isBYw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=smartx.com; spf=none smtp.mailfrom=smartx.com; dkim=pass (2048-bit key) header.d=smartx-com.20251104.gappssmtp.com header.i=@smartx-com.20251104.gappssmtp.com header.b=MhBBCfT0; arc=none smtp.client-ip=74.125.82.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=smartx.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=smartx.com
+	s=arc-20240116; t=1791429098; c=relaxed/simple;
+	bh=3lFjYCxe8XVsB1lwh0y7mBlYEnrUXDiZXtAHT+AMPIA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=Gd7nxKfwQzGql5m1129dwn0faIjNP+nr5mxUrW/s0PUIKJqoYZWLykTrfy3hNn9c6f+PB0aFWmg+BP4VkhDiXX4SChZqyNfvr8vsIupUJUeodnFqcopqM30m6oaNo8v7k5e2PyUcsH81mYvynacEpLcVQG8AiHee2vcv0f9bK38=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=pMEQFdBl; arc=none smtp.client-ip=113.46.200.225
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=smartx-com.20251104.gappssmtp.com header.i=@smartx-com.20251104.gappssmtp.com header.b="MhBBCfT0"
-Received: by mail-dy1-f172.google.com with SMTP id 5a478bee46e88-30b6dad2382so5679551eec.0
-        for <linux-scsi@vger.kernel.org>; Wed, 07 Oct 2026 19:34:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=smartx-com.20251104.gappssmtp.com; s=20251104; t=1791426894; x=1792031694; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=Sfh2HSMnCjXwgYeAujbI+vl7unaGjCR05Oxxe16EwFw=;
-        b=MhBBCfT0Ve7Mq8Ler+7nOy7KefPP/A/rt7IcbZ2xZhjvDpI4OKCyXIIf1KL2E+0rIP
-         H5alxfSbo3tz4lzK/avqnETlQtAfWhST6XBhBUTZ/GltrGyTXN2Q1nQsc8SuZ2LhoUcH
-         VJc+Talr+D5zh4b4CKRn0XJsCGRLD1zbmAuj0dEC9OXYN1NEvjqVxGuqKYBJVdF47Oyk
-         mCOhuu7Nl4aR5+A3h9OJPtrnxd/G4+ZyhWqWm0loMqliMXUveAxeTm/A4ROppiuIrjVb
-         Tfvp1lFAPRAIu5oKsTz0yNnrPls5h5+l7v3vlUHfkKFw0yTAa7vQQp42W33cfbtF4+iZ
-         EMXQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791426894; x=1792031694;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=Sfh2HSMnCjXwgYeAujbI+vl7unaGjCR05Oxxe16EwFw=;
-        b=vqN7Uyj1v9YGw0QJBYpkUPjzGa5TFiDeEX0G5SYtnfAjOkIBhk62Oov3E64YzjEP0o
-         v4YW+yLOVuZIKDvIKcWTg1BW2XM39BbxCGoCddTOVbEwLFNiP1oYopPS/4Hff+NRKn+6
-         +4oBBcJl8E7hkyou22dXGNZ3lD1v6NBvOO3n4nRa7jr5FLRkynEhcV9cmSK01w2xnCSs
-         A2W3XO2e93oXwluE13iWYItopC9Y4wEby2lWXbUWI4DdZKizO6/2W/uOiUp5MppzLQji
-         JH4qG2tKa3RqsaPZtrsiWiiXlq2KxzAhDoLM4nhHujksYm0zOUSKZg99ErPW50KAuOSJ
-         xsBg==
-X-Forwarded-Encrypted: i=1; AKwUvBwpzUempiu/tMs1VbCatG33JVSXGHJHTvJV+qiuhIfWDwjamcBGdoTiRHVQAXyIm2eFrmp+8ZsF+GGN@vger.kernel.org
-X-Gm-Message-State: AFuF++lhUDeU+d0JwrLx9XzAj8IbC0noG8eS2+jci9WgIEWmw5SqP6TO
-	Tgfu+VgMEcJ0NldoXRq5A1Xsk6lxyzWDpMjOLbuZM3ebFj/JkdOlIWdqO49BgtxIFYNw18ZZX5P
-	BsDNOUYxR28n5iNyFG2+HFzRFFAp4FW2B0Foob2xheW4dBGjvNecgYuaY
-X-Gm-Gg: AYBFou1Z7E5FQfTBxWC59wMKPpXNAE738NtXaiX7GZGz06SFO4892MPmZ+Qa2Tvc9J6
-	vNsBIgSZ+uMxBMVAaxvyjzM+NrrME7ETa5F1vtm84YTq3Vgb5TcuTcyQfR79I509Iy4X95sNqsu
-	NlZhm+QA/HJJRFqgHqiJR2FZL2RVj0XdTqawnCo633GxtVPl10iqGRLYLSVWNApm2wvbaqGHar8
-	EGVGi/nAZKZ/lAYPlslScx7cXdNkdXKhgIaB8ecDoJIVNY6nee1LaSxl2t1UDtVZg8NzbN8Z3WJ
-	xk2yH/JpNAvPbiW//MyYPheDhhtF7+gvRsA8DA/Q7aQgVhjXh/5+PKlfc1TXgwqPBR1MQwqDxlf
-	hycGbogbughKvyUdQoRnv92AdIHTfPE0U6Ug/kBzdtENUVk9cqY+nfwt42ySqBZGF2slKvx+THG
-	8blvzmk1OOJfSi0ZhqeMJ4n2U3G0tSmkyJY79mcyJRG8MLo4tAhVwAIrmM5HxIgxX9/uUgGOprY
-	DQjf2vMjysR5svBK8NY
-X-Received: by 2002:a05:7301:b06:b0:351:515b:4e85 with SMTP id 5a478bee46e88-3515dd78cacmr4684940eec.16.1791426893578;
-        Wed, 07 Oct 2026 19:34:53 -0700 (PDT)
-Received: from localhost.localdomain ([23.148.204.240])
-        by smtp.googlemail.com with ESMTPSA id 5a478bee46e88-3515aff5dd6sm11859009eec.26.2026.10.07.19.34.50
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 07 Oct 2026 19:34:53 -0700 (PDT)
-From: Lei Chen <lei.chen@smartx.com>
-To: sathya.prakash@broadcom.com,
-	sreekanth.reddy@broadcom.com,
-	suganath-prabu.subramani@broadcom.com,
-	ranjan.kumar@broadcom.com
-Cc: MPT-FusionLinux.pdl@broadcom.com,
-	James.Bottomley@HansenPartnership.com,
-	mkp@kernel.org,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	lei.chen@smartx.com
-Subject: [PATCH v2] scsi: mpt3sas: Simplify debugfs setup
-Date: Thu,  8 Oct 2026 10:34:40 +0800
-Message-ID: <20261008023440.468919-1-lei.chen@smartx.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20261007141951.417155-1-lei.chen@smartx.com>
-References: <20261007141951.417155-1-lei.chen@smartx.com>
+	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="pMEQFdBl"
+dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=EnAilI4OKlZkOu1J/21Tk8Yja2DTm5YBtKfiECaMkEY=;
+	b=pMEQFdBlcL4rvGZvtimghz+ug5SD7NvSyTViLXt22VlA4n3OZ1HAWLombKm/ZvEiRagt5DFLN
+	sneokgFD1Qd6N5Cn4SmL0N/TZ5mtH8Y/kmHKdfmh4YG92k4htm7dcKaTG3zLao/hIAAFXwyX5Ux
+	vU6XSZFNbMeJ/WdhM2Nkgk0=
+Received: from mail.maildlp.com (unknown [172.19.163.214])
+	by canpmsgout10.his.huawei.com (SkyGuard) with ESMTPS id 4j0ZTD2Zf6z1K9d4;
+	Thu,  8 Oct 2026 10:59:12 +0800 (CST)
+Received: from kwepemp500001.china.huawei.com (unknown [7.202.195.40])
+	by mail.maildlp.com (Postfix) with ESMTPS id F33734056C;
+	Thu,  8 Oct 2026 11:11:26 +0800 (CST)
+Received: from kwepemp500015.china.huawei.com (7.202.195.9) by
+ kwepemp500001.china.huawei.com (7.202.195.40) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.45; Thu, 8 Oct 2026 11:11:26 +0800
+Received: from [10.67.120.108] (10.67.120.108) by
+ kwepemp500015.china.huawei.com (7.202.195.9) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.45; Thu, 8 Oct 2026 11:11:26 +0800
+Message-ID: <ba5d9188-937c-237c-e104-9b66e7c3be3e@huawei.com>
+Date: Thu, 8 Oct 2026 11:11:25 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.3.1
+Subject: Re: [PATCH v4] scsi: libsas: Fix SMP IO deadlock during HA resume
+Content-Language: en-CA
+To: John Garry <john.garry@linux.dev>, <yanaijie@huawei.com>,
+	<jejb@linux.ibm.com>, <mkp@kernel.org>
+CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linuxarm@huawei.com>, <liuyonglong@huawei.com>, <kangfenglong@huawei.com>
+References: <20260928040234.992912-1-yangxingui@huawei.com>
+ <820657c2-1cbd-47d8-92f2-477531692135@linux.dev>
+From: yangxingui <yangxingui@huawei.com>
+In-Reply-To: <820657c2-1cbd-47d8-92f2-477531692135@linux.dev>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: kwepems500002.china.huawei.com (7.221.188.17) To
+ kwepemp500015.china.huawei.com (7.202.195.9)
 
-The debugfs creation helpers return error pointers on failure, so the
-existing NULL checks do not handle creation failures. There is no need
-to add error handling here: debugfs accepts error pointers as parents
-and debugfs_remove_recursive() safely handles error pointers and NULL.
+Hi, John
 
-Remove the ineffective checks, error messages and file-creation rollback.
-Allow host_recovery creation to proceed independently of ioc_dump, and
-leave any successfully created entries for the existing teardown path
-to remove.
+On 2026/9/30 18:40, John Garry wrote:
+> On 9/28/26 05:02, Xingui Yang wrote:
+>> smp_execute_task_sg() calls pm_runtime_get_sync() on the host before
+>> issuing an SMP command. When that command is itself issued from the
+>> HA resume path, the get_sync() deadlocks: it waits for the ongoing
+>> resume (the device is RPM_RESUMING), while the resume is blocked in
+>> sas_drain_work() waiting for that same SMP IO to complete.
+>>
+>> The deadlock needs an expander-attached SATA disk. 
+> 
+> What do you mean by "deadlock needs an expander-attached SATA disk?
+Yes, that is the only configuration whose resume-time hard reset is
+implemented as an SMP command. The disk's phy belongs to the
+expander, so the ATA EH hard reset is an SMP PHY CONTROL sent to the
+expander (sas_ata_hard_reset() -> sas_phy_reset() ->
+sas_smp_phy_control() -> smp_execute_task_sg()), a directly attached
+SATA disk resets the HBA's own phy through lldd_control_phy(), and
+SSP devices are reset through TMFs, so neither issues SMP on resume.
+An SMP request from outside the resume path cannot construct the
+cycle either: a BSG request arriving while a resume is in progress
+blocks waiting for that resume (get_sync() before this patch,
+resume_and_get() at the new call site) before it takes the expander
+cmd_mutex, and the resume waits for nothing in the BSG context - it
+can only be a victim of the deadlock, never a participant.
 
-The setup function is called only once per adapter from probe, so create
-the per-adapter directory without checking whether it already exists.
+> 
+>> During
+>> sas_resume_ha() -> sas_drain_work(), DISCE_RESUME ->
+>> sas_resume_sata() -> ata_sas_port_resume() requests ATA_EH_RESET,
+>> and the hard reset for such a disk is done via SMP PHY CONTROL
+>> (sas_ata_hard_reset() -> sas_phy_reset() -> sas_smp_phy_control() ->
+>> smp_execute_task_sg()). Direct-attached SATA resets through
+>> lldd_control_phy() and SSP devices use TMFs, so neither hits this.
+>>
+>> Replace the get_sync()/put_sync() pair with
+>> pm_runtime_get_noresume()/pm_runtime_put(). smp_execute_task_sg()
+>> only needs to hold off autosuspend while the SMP is in flight, and it
+>> must not try to resume the host: a sync resume issued from the HA
+>> resume path itself is what deadlocks, and by the time sas_resume_ha()
+>> runs, hw_init has already reinitialized the hardware, so the device
+>> is accessible without one.
+>>
+>> The usage reference is still required. 
+> 
+> Do you mean that usage reference from pm_runtime_get_noresume() is still 
+> required?
 
-Signed-off-by: Lei Chen <lei.chen@smartx.com>
----
-Changes in v2:
-- Remove debugfs error checks and logging instead of adding
-  IS_ERR_OR_NULL() checks.
-- Leave debugfs cleanup to the existing teardown path.
-- Allow host_recovery creation to proceed independently of ioc_dump.
-- Remove the redundant directory existence check, since setup is called
-  only once per adapter from probe.
-- Reframe the patch as a cleanup and drop the Fixes tag.
+Yes, the reference taken by the pm_runtime_get_noresume() which
+replaces the get_sync(). It is not an artefact of the conversion:
+the chained revalidation described in the next paragraph runs
+outside the event workers' PM references, so without it its SMP
+could race autosuspend.
 
-Link to v1:
-https://lore.kernel.org/all/20261007141951.417155-1-lei.chen@smartx.com/
+>> Discovery work normally runs
+>> inside an event worker's PM reference, taken at
+>> sas_notify_port_event() notify time and held until the handler has
+>> flushed the disco queue. sas_rediscover_ex_phy() however requeues
+>> DISCE_REVALIDATE_DOMAIN from within the revalidation worker itself,
+>> and flush_workqueue() does not wait for work items queued during
+>> execution, so that chained revalidation runs with no outer PM
+>> reference - without the get_noresume(), its SMP could race
+>> autosuspend.
+>>
+>> For the BSG path, sas_smp_handler() is the only caller which may
+>> find the host autosuspended: expander SMP requests do not go through
+>> any SCSI device request queue, so nothing else in that path holds
+>> the host awake. Resume it there with pm_runtime_resume_and_get()
+>> and check the result.
+>>
+>> Fixes: 3dbbbf656b850 ("scsi: libsas: Fix HA resume deadlock and 
+>> hisi_sas disk-wake race")
+>> Signed-off-by: Xingui Yang <yangxingui@huawei.com>
+> 
+> Question: do you have a (non-hisi_sas) SAS HBA card whose driver uses 
+> libsas? pm8001 would be such an example. It would be nice to verify that 
+> all these and other non-rpm libsas changes does cause regression there.
 
- drivers/scsi/mpt3sas/mpt3sas_debugfs.c | 19 ++-----------------
- 1 file changed, 2 insertions(+), 17 deletions(-)
+We don't have a pm8001 card at hand. From analysis the patch is a
+no-op for the LLDDs without runtime PM support: pm8001 and isci
+only register system suspend/resume through SIMPLE_DEV_PM_OPS(), and
+aic94xx and mvsas register no PM ops at all. For every PCI device
+the PCI core forbids runtime PM by default and marks the device
+runtime-active (pci_pm_init()), and enables runtime PM later
+(pci_bus_add_device()), those devices are thus permanently RPM_ACTIVE
+with the usage counter held, and can never runtime-suspend. In that
+state get_noresume()/put() only moves the usage counter - exactly
+what the get_sync()/put_sync() they replace did - and
+pm_runtime_resume_and_get() in sas_smp_handler() succeeds (runtime
+PM is enabled and the device is already active), so the new error
+check never rejects a request on them.
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_debugfs.c b/drivers/scsi/mpt3sas/mpt3sas_debugfs.c
-index 183391f6b8d1..0e37473abbf6 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_debugfs.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_debugfs.c
-@@ -99,8 +99,6 @@ static const struct file_operations mpt3sas_debugfs_iocdump_fops = {
- void mpt3sas_init_debugfs(void)
- {
- 	mpt3sas_debugfs_root = debugfs_create_dir("mpt3sas", NULL);
--	if (!mpt3sas_debugfs_root)
--		pr_info("mpt3sas: Cannot create debugfs root\n");
- }
- 
- /*
-@@ -121,25 +119,12 @@ mpt3sas_setup_debugfs(struct MPT3SAS_ADAPTER *ioc)
- 	char name[64];
- 
- 	snprintf(name, sizeof(name), "scsi_host%d", ioc->shost->host_no);
--	if (!ioc->debugfs_root) {
--		ioc->debugfs_root =
--		    debugfs_create_dir(name, mpt3sas_debugfs_root);
--		if (!ioc->debugfs_root) {
--			dev_err(&ioc->pdev->dev,
--			    "Cannot create per adapter debugfs directory\n");
--			return;
--		}
--	}
-+	ioc->debugfs_root =
-+		debugfs_create_dir(name, mpt3sas_debugfs_root);
- 
- 	snprintf(name, sizeof(name), "ioc_dump");
- 	ioc->ioc_dump =	debugfs_create_file(name, 0444,
- 	    ioc->debugfs_root, ioc, &mpt3sas_debugfs_iocdump_fops);
--	if (!ioc->ioc_dump) {
--		dev_err(&ioc->pdev->dev,
--		    "Cannot create ioc_dump debugfs file\n");
--		debugfs_remove(ioc->debugfs_root);
--		return;
--	}
- 
- 	snprintf(name, sizeof(name), "host_recovery");
- 	debugfs_create_u8(name, 0444, ioc->debugfs_root, &ioc->shost_recovery);
--- 
-2.43.0
+The only observable difference would be userspace enabling runtime
+PM (power/control = auto) on a driver which does not support it, and
+that configuration is broken independently of this patch.
+
+Conversely, should an LLDD gain runtime PM support later, it would
+need this patch: the deadlock is in the shared resume path - any
+runtime-resuming LLDD with an expander-attached SATA disk in the
+domain hits it identically - and the reference/resume split
+completes the generic protection model, while the LLDD-side
+obligations (device links, hw reinit before sas_resume_ha()) are
+unchanged.
+
+
+Thanks,
+Xingui
+
+
