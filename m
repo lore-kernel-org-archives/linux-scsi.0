@@ -1,108 +1,186 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f48.google.com (mail-wr1-f48.google.com [209.85.221.48])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1AE6242124D
-	for <linux-scsi@vger.kernel.org>; Thu,  8 Oct 2026 12:04:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E997497B90
+	for <linux-scsi@vger.kernel.org>; Thu,  8 Oct 2026 12:26:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791461052; cv=none; b=uXJQFdaotqLjZ21mRpIsW7+Sq+Ror/nRbFK4+FCllrUVhh297N6FsA2xmVwKnc16PBg1MK/WYDOs2n2nbGciNLSGdIco34YAme2AnZs4cUk+D87n2i1pIxynvry0mEwdpyUG0b9caJXn8oebjl5/fe4K1dVgbQMjl7b/GjBWHiY=
+	t=1791462371; cv=none; b=WVGMn2vTMVGOh2eZuWf2KYPgSx6XGj0Fq+JsINYyNwWR6jlfJ42V2CAH32KhtYwx7yuIMsz5nU9fp6Sm16wqmzdqJn5amwQE9IRBDIWRBoebK+hZ3T7EDev+QFXU635sJYvn23W0kZg1Lpo17rH+c80KNpADXRz0TPugn/w1Ndg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791461052; c=relaxed/simple;
-	bh=i5n/nFAAZhYKfvUxaKmomdE3vdizfU5Wkoqu6Ne/Q2w=;
-	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
-	 Date; b=aM8/a59k8A4zoZBAeuHYTrL8kq9n56Lz+bIkVtIqVFrlFEdT5rMmY+C5Z5Cl+xpB+WNg6Egrq2r8GcTJ4QwJ+HoZieTEYMfCY+YMOdGD/KVQMrazmjdcKv414E5ALm+5kFeH/DelUAgCPeML9Fq8u95tK8/Svq9LVFqisXSk/eY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oShrIZvG; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791462371; c=relaxed/simple;
+	bh=iymJ7fmG6cm/wUDWqpQm4azkLBxslQzmfVj4k11ryLc=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=g8KEoWEcFRzNJDadzec3/KYJIbqArOILUG6oMJcOb3JdjiH3MHDeLP0plxX2WMGfe598tizhs9tvXnpq7BYCBTtlMfCj9qzdSRDjz1oGA1XKCNMitQuii5qr/zfX2QcET+vBijRSjyUZAd/tdB8agCS2nCxc/FxbdQxqd8AXeao=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=K25O18KF; arc=none smtp.client-ip=209.85.221.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oShrIZvG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8CB401F000FF;
-	Thu,  8 Oct 2026 12:04:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791461050;
-	bh=0SBzFFPxjP/iFUPj2hlztfDi1HCd+jVXE57FxqQ3JJc=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=oShrIZvGL9ddwt0R7Z42z1e834EXb3cvBb6u+zG6qx8tqy6vJaL/e7zokP8IDp2Wv
-	 Oa0ANd/jgJwfWXRJST9FpZVAyk5ejMpnKq3FSbu9/hYg7cbKs1MKc7sNfLIEFnlFhd
-	 6+sUiXx6JxpPVr/gkzD6cm9TwsYGtRPOMH9EouJDbC/C7+r+FxZQUErje9uT0iHXcX
-	 C3fRL8p9VAgAtSpQ9mPwT7uMSuBb65u8oVrZGNY8tJCXRj9QbrwYymikZsLSTYZpS1
-	 2AtDdAeCElfvZJEAA6gZlewnLV+Bpc+tE9LjJAwihf+8IEiK6HfVggI4/61zZ6/YHO
-	 BwJiMjqLmZ+0Q==
-Message-ID: <sashiko-outbox-164131@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4] scsi: sd: mark disk dead on surprise host removal to
- avoid I/O hang
-Reply-To: sashiko-reviews@lists.linux.dev
-To: =?utf-8?b?77+977+977+977+977+977+9?= <hulianqin@vivo.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <TYUPR06MB6217570B9AFA4B5980FCCED0D2932@TYUPR06MB6217.apcprd06.prod.outlook.com>
-References: <TYUPR06MB6217570B9AFA4B5980FCCED0D2932@TYUPR06MB6217.apcprd06.prod.outlook.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 08 Oct 2026 12:04:10 +0000
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="K25O18KF"
+Received: by mail-wr1-f48.google.com with SMTP id ffacd0b85a97d-48c4d870d54so1938758f8f.2
+        for <linux-scsi@vger.kernel.org>; Thu, 08 Oct 2026 05:26:09 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1791462368; x=1792067168; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=8VnfXbi4ES2gslS6Ax6dbIr4fzItWbunDisXmuez8GY=;
+        b=K25O18KFbbs/YrL1ie8ql+OSEFFopI14aHArEoPVJTqYF+9Bjv+367eQ6zPyb1qEKD
+         a1xtH9tZE+v2VzVRMtUjdGZsv76avSJokPVF2eZdebRyLQ5dFeS5ArOfOCzO1ETFebrO
+         ugkCfy/LDIF4ERRRQ0pHF+n5jwuHoF+I6SSYdiaMlad199URYpIVBMMI0l51VbKzBsiL
+         h4T0U01B+DSlRPs/UaQ1sCL9nmkwhOV9ZyKrtZg9CZSP1dkbspeIljbTE4Lmg9hXzUmd
+         /CprgqHNB/58Gh0UIBg9N0XCDKfyxfVj9dsdwSf0GTAflBRVFaQEHZSbswje9dHLCLzh
+         TsIQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791462368; x=1792067168;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=8VnfXbi4ES2gslS6Ax6dbIr4fzItWbunDisXmuez8GY=;
+        b=fgQ2cuFH1fFSM8IZV2JAJL0IijQ44PjCQK4UwHVDMDbiB497HsglMt8uiwbTrQHVVE
+         HSDx5JH+Ni/iE/49Xtn0G8K9ngzGg5o8eRWfEkLxufD1jirkUGe6n5Y+CaSnNt+Uh2mH
+         iwS45Ze1RJG6YdNjmO1Jakljy3yEQFqQasKqs0IQHJsbVZD9JlvfQh0GOZ9ScIotd9Hv
+         fXWlaUnqgUzj6vp37nJDz8+OZNkr1wkPMHPsyZYwBx3CuwxhHwHmIfCEs/BJMcUbezW5
+         ScJCq2dMc46SW1OUoGPedOkoaoKzTL7sv14DCWoW1oUxkLF+jt4Ol3lhXTlhTIO/WvUs
+         91iQ==
+X-Gm-Message-State: AFq9FYKN/Gtdlc9um9z0e98zySNKj37sJ2yg7Px9zzLmCVfmWa0DtPTN
+	ihIglDz/5iM/fJzT/pBAZZhvaPIUEokrHPhP+EUa3u34Rts7STbrduSl
+X-Gm-Gg: AYBFou0jeazax0XFiIE1ajEYO/cGfVpKQVo9qb2FMYhjYOFF4auOvQQ0bmamDr8iA8E
+	Yr9uBqK9fFGVYHtMAurrTgjfVs+tFanY3mJkcpPYtKo5S3y8vr/rJcV+QuwJndAqX8eThKw8SPX
+	vDs2knnEIchWlRwKPPnAxNEj5Uwm+0nSqQkd2SKseLS3/kdgNYU12jxNoMDkaHYt9SyhHZ4hKh5
+	4bQ+CX8+JFbN0qBhBQIFkRUxSE2xL1aDdXgyfxX6zADtv2Gqk++3cOAPG8BdL+3GP4QOIE4x6G+
+	KhC0XElGoVL1jXEmLxuIhiGdVSyve+zf7A3EvMWDsUlshPcOLtb2BCzOk7f4BblbNPoPQyn4LN9
+	p8iK/UX8OAohY6fIiEaATAoIiyMetRHXqShXSQSkaso2mNTYu5qDarH3JsmLxhTcr7i0xDkWqol
+	46UFl1b6K7kjl9ldkLoqEybM1kT2ykA7XtYP1svbULjoJTvdlZ2p2lJQNv8EYQC+WSlRq1pVhs2
+	kL6Io9/NDeLQXFBwIUrQT/YKIQ=
+X-Received: by 2002:a05:6000:4814:b0:48a:fb55:416c with SMTP id ffacd0b85a97d-48c72767815mr9749245f8f.21.1791462367431;
+        Thu, 08 Oct 2026 05:26:07 -0700 (PDT)
+Received: from darkstar.tail74c586.ts.net ([217.201.94.121])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48c71d2e2dcsm12348992f8f.42.2026.10.08.05.26.05
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 08 Oct 2026 05:26:07 -0700 (PDT)
+From: Luca Cecchi <luca.cecchi.info@gmail.com>
+To: linux-usb@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org,
+	oneukum@suse.com,
+	Luca Cecchi <luca.cecchi.info@gmail.com>
+Subject: [PATCH v2 1/2] usb: uas: implement .change_queue_depth to allow per-device queue depth override
+Date: Thu,  8 Oct 2026 14:26:03 +0200
+Message-ID: <20261008122604.1862534-1-luca.cecchi.info@gmail.com>
+X-Mailer: git-send-email 2.55.0
+In-Reply-To: <20261008112645.1820678-1-luca.cecchi.info@gmail.com>
+References: <20261008112645.1820678-1-luca.cecchi.info@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] scsi: Data loss on orderly host teardown due to misidentified surp=
-rise removal
---
+uas_host_template does not implement .change_queue_depth. Because of
+that, the standard sysfs queue_depth attribute stays read-only for
+every UAS device, not just mine: scsi_sysfs.c:sdev_store_queue_depth()
+requires sht->change_queue_depth to be non-NULL before it allows a
+write.
 
-commit 9a3b48997b6a95bc55f9d45d1fe71786ff63438c
-Author:  <hulianqin@vivo.com>
+uas_probe() already defaults can_queue to qdepth - 2, with a comment
+acknowledging that "some bridge firmwares" need extra margin. That
+margin isn't enough for every bridge. Right now the only way to work
+around a bridge that needs more headroom is the IGNORE_UAS quirk,
+which disables UAS entirely and falls back to BOT/usb-storage - a
+large performance cost for a queue-depth problem.
 
-scsi: sd: mark disk dead on surprise host removal to avoid I/O hang
+This patch wires up .change_queue_depth so affected users can lower
+the depth for just their device (e.g. via a udev rule matching
+idVendor/idProduct), without disabling UAS altogether. Default
+behaviour (qdepth - 2) is unchanged unless userspace asks for less.
 
-This commit adds a scsi_host_in_cancel() check in sd_remove() to mark the
-disk dead before del_gendisk(). This is intended to skip sync_filesystem()
-during surprise removals where the device can no longer handle I/O.
+Tested against a Lexar ES3 external SSD enclosure (VID:PID 21c4:0003)
+that locks up under sustained heavy concurrent random writes at the
+default queue depth. Capping the depth to 24 via this interface
+eliminated the lockup across 6 consecutive test runs, including a
+continuous 1-hour soak test (1.36TB written, ~822MB/s, no
+uas_eh_abort_handler events).
 
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index b0d2542fd3172..00cf408513ce4 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -4270,6 +4270,16 @@ static void sd_remove(struct scsi_device *sdp)
-> =20
->  	scsi_autopm_get_device(sdkp->device);
-> =20
-> +	/*
-> +	 * If the host is being torn down (e.g. USB surprise removal),
-> +	 * the device cannot handle I/O anymore.
-> +	 * Mark the disk dead before del_gendisk() so that new I/O is
-> +	 * rejected immediately and sync_filesystem() in del_gendisk()
-> +	 * is skipped, avoiding a hang waiting for I/O that can never
-> +	 * complete.
-> +	 */
-> +	if (scsi_host_in_cancel(sdkp->device->host))
-> +		blk_mark_disk_dead(sdkp->disk);
+v2: guard against devinfo->qdepth holding a negative error code left
+    over from a failed uas_configure_endpoints() call in
+    uas_post_reset()/uas_reset_resume() (the device stays live after
+    such a failure); without the guard a negative depth would reach
+    scsi_change_queue_depth() and underflow the unsigned queue_depth
+    in the block layer (found by Sashiko AI review)
 
-[Severity: High]
-Will this logic conflate all host removals with surprise removals?
+    Re-tested on the same Lexar ES3 hardware: writing 0 or a negative
+    value to the sysfs queue_depth attribute is now rejected cleanly
+    (queue_depth stays at the previously set 24, no error in dmesg),
+    confirming the "depth < 1" guard behaves correctly against real
+    userspace input. I was not able to reproduce the specific failure
+    path itself (devinfo->qdepth left negative by a failed
+    usb_alloc_streams() during reset) on this machine - the running
+    kernel has CONFIG_FAULT_INJECTION disabled, so I could not force
+    that call to fail on demand. That half of the fix is verified by
+    code inspection only, not by a live reproduction.
 
-The patch aims to skip sync_filesystem() only during surprise removals by
-checking if the host is in SHOST_CANCEL. However, scsi_remove_host() in
-drivers/scsi/hosts.c unconditionally transitions the host state to
-SHOST_CANCEL for all host teardowns:
+    Also switched devinfo's lookup to sdev->hostdata (same pattern
+    already used by uas_sdev_configure() and the other scsi_device-
+    level callbacks in this file) instead of casting
+    sdev->host->hostdata, which was pushing the line past 80 columns.
 
-drivers/scsi/hosts.c:scsi_remove_host() {
-    ...
-    if (scsi_host_set_state(shost, SHOST_CANCEL))
-    ...
-}
+Signed-off-by: Luca Cecchi <luca.cecchi.info@gmail.com>
+---
+ drivers/usb/storage/uas.c | 33 +++++++++++++++++++++++++++++++++
+ 1 file changed, 33 insertions(+)
 
-Because SHOST_CANCEL is the standard teardown state for all removals,
-including orderly ones like rmmod usb-storage or sysfs driver unbinding,
-blk_mark_disk_dead() will set GD_DEAD for every host removal.
+diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
+index 2651629..971a47f 100644
+--- a/drivers/usb/storage/uas.c
++++ b/drivers/usb/storage/uas.c
+@@ -910,6 +910,38 @@ static int uas_sdev_configure(struct scsi_device *sdev,
+ 	return 0;
+ }
+ 
++/*
++ * uas does not implement .change_queue_depth, so the standard sysfs
++ * queue_depth attribute stays read-only for every UAS device (see
++ * scsi_sysfs.c:sdev_store_queue_depth(), which requires
++ * sht->change_queue_depth != NULL). Some bridge chips become
++ * unstable under deep command queueing; wiring this up lets affected
++ * users lower the depth for just their device (e.g. via a udev rule
++ * matching idVendor/idProduct), without disabling UAS altogether.
++ * Default behaviour (qdepth - 2) is unchanged unless userspace asks
++ * for less.
++ */
++static int uas_change_queue_depth(struct scsi_device *sdev, int depth)
++{
++	struct uas_dev_info *devinfo = sdev->hostdata;
++	int max_depth = devinfo->qdepth - 2;
++
++	/*
++	 * devinfo->qdepth can be left holding a negative error code (e.g.
++	 * -ENOMEM from usb_alloc_streams()) if a reset via uas_post_reset()
++	 * or uas_reset_resume() fails to reconfigure the endpoints; the
++	 * device stays live in that case. Refuse rather than let a
++	 * negative depth reach scsi_change_queue_depth() and underflow
++	 * the unsigned queue_depth in the block layer.
++	 */
++	if (depth < 1 || max_depth < 1)
++		return -EINVAL;
++
++	if (depth > max_depth)
++		depth = max_depth;
++	return scsi_change_queue_depth(sdev, depth);
++}
++
+ static const struct scsi_host_template uas_host_template = {
+ 	.module = THIS_MODULE,
+ 	.name = "uas",
+@@ -917,6 +949,7 @@ static const struct scsi_host_template uas_host_template = {
+ 	.target_alloc = uas_target_alloc,
+ 	.sdev_init = uas_sdev_init,
+ 	.sdev_configure = uas_sdev_configure,
++	.change_queue_depth = uas_change_queue_depth,
+ 	.eh_abort_handler = uas_eh_abort_handler,
+ 	.eh_host_reset_handler = uas_eh_host_reset_handler,
+ 	.this_id = -1,
+-- 
+2.55.0
 
-When del_gendisk() executes, it will bypass its own
-blk_report_disk_dead(disk, false) because GD_DEAD is already set.
-
-Could this skip sync_filesystem() entirely, causing all pending dirty page
-cache data to be discarded instead of written back during an orderly unbind
-or unload, resulting in data loss?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/TYUPR06MB6217570B9A=
-FA4B5980FCCED0D2932@TYUPR06MB6217.apcprd06.prod.outlook.com?part=3D1
