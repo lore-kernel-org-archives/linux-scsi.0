@@ -1,119 +1,143 @@
-Received: from mail-qt1-f173.google.com (mail-qt1-f173.google.com [209.85.160.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6CFEA324B33
-	for <linux-scsi@vger.kernel.org>; Thu,  8 Oct 2026 23:54:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E2E53CB2FD
+	for <linux-scsi@vger.kernel.org>; Thu,  8 Oct 2026 23:59:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791503663; cv=none; b=a/mXOGasxeza+lDpBdjG2ChQmBYjsrX7nDH1ckLntLp5J4rljFa5F+eo9OeX7yLwIDkujfCptaJxmyIfnNIAeD1JkZNmqNsV/UctYpL1PljB4uspBjHzMzD/wTYj17jHA646EXfmC7wdicRBHXfoNSHUgG7sbRIXVcXw1u59er4=
+	t=1791503946; cv=none; b=Y/q8YEaMBnxKx10yNbcpBKBhZWkNOMZgSvWwjsiD51R/+sGp/nQ0kyAyLG31P7Hz9uKzKz70WKIdVVZhG7Wav0A9gF3O3m8w91feV50i0mfkGMybJ0k0lfM5uK62Uiim6cgXXmXWlkj0RE74BEYGukCUR6frFGsM+Bv5bAFYVeg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791503663; c=relaxed/simple;
-	bh=u3mdpHm63NMciZUxyZb2tyyjBHYBnsglAuR31W/GzJk=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=l6Rgo0DfujSgV94XZwGLhQPixcNEsqU9BpjU/rhu0S/Ug8gDmyg8HcdBWcxmgjtZmKaBDUBbXJ1jn4qTAwMzivYe019N3hGQId2YPP0ahEtgnzWcMqZhszVOkvH5Q+DxXkaFvOebiomrjF7Ztf4W+G/SCoQOjCLm45VmR6htSs0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=VngPppVk; arc=none smtp.client-ip=209.85.160.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1791503946; c=relaxed/simple;
+	bh=CwOY/ilH6/PBsDIiONCrMpm+Js3VgSAoxqzmANFC4f0=;
+	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
+	 Date; b=rIixYusM/ZxBWV0trwCOZgamoMxGzjsyP7A2BMuEVl0h8Zq58EiDLdSLWsVoPGjtPqzHApN3zu3099+xkIp5snfA9Vsdz+mQTOUmHpT4bVkrG6FA6mvHncmGBzrGvd+qvabZr0P3yyyKD2LWoQwV6v1e0AO8o8MA//DyIHExnvg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XdAME+fw; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="VngPppVk"
-Received: by mail-qt1-f173.google.com with SMTP id d75a77b69052e-5350e757063so3140841cf.1
-        for <linux-scsi@vger.kernel.org>; Thu, 08 Oct 2026 16:54:22 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1791503661; x=1792108461; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=Wogysuar2t6CIwSyb2S0JLKktNfZleR32/9OzbUkzlE=;
-        b=VngPppVkXb2mu5RKY4vYhCsw6dDqNb728+i98WsmGyE5Zeemvaa4dRJZObWBjWru6O
-         jhrInJu9iMOGjcyeXdGOukwXMnBONeaJf8JYIgFIblfg3JeiCtLZG6tUPrfqfJVaht1W
-         BsDf8t+NBCpfFphT5rDmDkTdSwkGsuHRi5u3AN5EIsbdjrdMZCRTWdsbTCPgnXnNw3l/
-         nrS88FBYiBchVWrZsNid1tEim+qudTANn0QyUbYMuRX1nVYiCC0vY6tLNfgqHQGkij1U
-         OiDUBl+aqTQiS+uU5JcmzDeD8kIXRg/yMT1dnFV+DX2i14PN2rqIQ1moQSJjjgzq8sDD
-         +UIQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791503661; x=1792108461;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=Wogysuar2t6CIwSyb2S0JLKktNfZleR32/9OzbUkzlE=;
-        b=sADdWe5/+pf1MprxaZ2748Qd5TvJj+v/ka9TNjU4zGcv8851DfD3OlMtKff9Vf3ZTE
-         rIdxJ+7slz8NnMuu2BBGIVOfavexa4eFndQL2XATbcf5jw+eaasOE4o+GxZQfqNWGksx
-         MqEsGYi1wNaNdwEHmK93YUxVEgxcNoDrqQXc/iTBjYJ6fSRaztSpXjg/UkeoLE2D/Aaz
-         lYHMiDxV7+Uj0TQavbBTzKNFdQ3V0/nhnfq8zUJMXEmml/yBIQdve1RDNi/T8PxE1cY4
-         eaoxRTL7VfveokbvuVaQFXOr01/+db6pK48aKtYcRXuMx4gNqfIIIO5TB++o4CGzeAE7
-         KQQQ==
-X-Forwarded-Encrypted: i=1; AKwUvBycdxXNyXV04vcC2WHcCP5DjU1GZkqyKUyuahZ/lknehXalOn00kusqXvHrJWwCgzI6gKm1AtH+S9gb@vger.kernel.org
-X-Gm-Message-State: AFq9FYI/c5KdW8+zHlF89MNDAlRYIHzOuLWdQwKN6CfeDfMJXH4PyPSk
-	ryTCwf/xLIwuJScgPfK2gVKeDD4PVqLjo0XfrTJrZKT/AjZ9MZaVRVdP
-X-Gm-Gg: AYBFou3RkT3iWDxrBhH5ssaWvbm9X6iqK9lP8UV9YmrjYBCwDlOToIQY2cM1Tu8jJg2
-	LWEtaUNi5QJOmMhVdAeIfI8ShbEWqhlVuwJm6SCeb2jCg/07K01K/v+2Gvy5TBObRItf2+h9T/d
-	EtdeAGOw4d7S596rR0N/bV8us6Bz4WtWxo0E+724+yOloVGJlqqzoPSr7KRD1Kglj17hzajWHGC
-	ilxIsDbzhLOaYDSnCQ3//4PBeB3FyhAWRGomxG4fepZMhkNbux3Ef7jJ+8HHsgkzpgv/1e8k72l
-	E0EIZ1igclYZwLZ0CFopzAov+BauG7+cxleUD/UUrPMl7N9gun7dvvA3SvMxtWtAt8ah1xF/OTC
-	vGhrxKG2QmyZBqab3ejZASQTp5rXupLmfU3yZb+qwbxIleQNoRQKn5UL//3S68+HhLmBGzZKIl4
-	f6/+29PU02F6M4X7fbcDmhhYOMXJhuYj1Vud9BnV01UUBhcS32RAVwROkt3kOPyX95w9rp54PAC
-	O6EfT0ZhD2q8I46Vv4T0gBgq7RVKt2anq7JlWW99kA/v/jIFj8f/tKMuGyRyKI1BDPSilQv3jE7
-	OuJOvOh2lOuskmiVWvo=
-X-Received: by 2002:a05:6214:4118:b0:919:847e:ccb8 with SMTP id 6a1803df08f44-91b55345787mr7524496d6.1.1791503661318;
-        Thu, 08 Oct 2026 16:54:21 -0700 (PDT)
-Received: from localhost.localdomain ([132.170.205.109])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-91b550e6609sm3451586d6.43.2026.10.08.16.54.20
-        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Thu, 08 Oct 2026 16:54:20 -0700 (PDT)
-From: Sanan Hasanov <sanan.hasanou@gmail.com>
-To: "Martin K. Petersen" <mkp@kernel.org>
-Cc: Sanan Hasanov <sanan.hasanov@ucf.edu>,
-	linux-scsi@vger.kernel.org,
-	target-devel@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	syzbot+fa495e1497c48a6ed885@syzkaller.appspotmail.com
-Subject: [PATCH v3 3/3] scsi: target: rd: Don't invoke the OOM killer for ramdisk pages
-Date: Thu,  8 Oct 2026 19:54:09 -0400
-Message-ID: <20261008235411.56641-4-sanan.hasanou@gmail.com>
-X-Mailer: git-send-email 2.48.1
-In-Reply-To: <20261008235411.56641-1-sanan.hasanou@gmail.com>
-References: <20261008235411.56641-1-sanan.hasanou@gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XdAME+fw"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 931091F000FF;
+	Thu,  8 Oct 2026 23:59:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1791503944;
+	bh=cEsYhdXfrB+AZUDKFjcE+fEKOyBn7b2LWMjv12O6ZWs=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=XdAME+fweKojyNcRZaGM7SwWCAQvh+iU4YTZ7uc4U3mOOYD3/ADXYP3pZFp4kJ+0y
+	 CrZR16BPnCxHuxKVQGsqo5MNoEoeRn4CuD0g2KWtnF1sePjcGMOvMatvTNHbJsnPqw
+	 gSjGSlf86bbXa4WDeWpd7v6cz8aT4VGs9b8MXh8dTc6ak+eT0a2jL2RDAZoMHC3g28
+	 nZIvP78B1H1SLOwzsd7Cx2o6Ozk30TT2oAWtYUwOSQWzJz0MCGx8liIbkUCspbqFN1
+	 YyJwQ9UT1vyb6D4k2d5KnZ8UScW29FK3im1rINiatXME3/tjnryDFqu4d3lAK4Mvl2
+	 dXp1/DiRvvvig==
+Message-ID: <sashiko-outbox-164665@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] scsi: qla2xxx: Rework BUILD_BUG_ON() assertion
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Finn Thain" <fthain@linux-m68k.org>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <4808a5dc1a71528ffa3360868561009744277450.1791502886.git.fthain@linux-m68k.org>
+References: <4808a5dc1a71528ffa3360868561009744277450.1791502886.git.fthain@linux-m68k.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 08 Oct 2026 23:59:03 +0000
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-From: Sanan Hasanov <sanan.hasanov@ucf.edu>
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [High] scsi: qla2xxx: FORTIFY_SOURCE field-spanning write warning in qlt_=
+queue_unknown_atio
+- [High] scsi: qla2xxx: UBSAN/FORTIFY overflow in add_cdb array accesses
+--
 
-rd_allocate_sgl_table() allocates the ramdisk's backing memory one page
-at a time with GFP_KERNEL. When the requested ramdisk is larger than the
-memory that can be freed, these allocations do not fail but invoke the
-OOM killer instead. The pages are not charged to any task, so the OOM
-killer keeps killing unrelated processes, and may panic the system once
-nothing is left to kill, while the configfs write continues allocating.
+commit 4d96d5f0f41af34ce19bfbd80ce5e059ab28cd98
+Author: Finn Thain <fthain@linux-m68k.org>
 
-Use __GFP_RETRY_MAYFAIL so that the allocation fails once reclaim can
-make no more progress. rd_allocate_sgl_table() already handles failure
-by returning -ENOMEM, and the caller then releases the pages allocated
-so far. Add __GFP_NOWARN since the driver logs its own error.
+scsi: qla2xxx: Rework BUILD_BUG_ON() assertion
 
-Signed-off-by: Sanan Hasanov <sanan.hasanov@ucf.edu>
----
- drivers/target/target_core_rd.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+The LKP bot reported a build failure with CONFIG_COLDFIRE=3Dy together with
+CONFIG_SCSI_QLA_FC=3Dy. The failure is caused by an incorrect BUILD_BUG_ON()
+assertion in qlt_queue_unknown_atio(). To resolve this, a flex array is
+placed at the end of struct qla_tgt_sess_op.
 
-diff --git a/drivers/target/target_core_rd.c b/drivers/target/target_core_rd.c
-index b73bdd733..7c53d8a72 100644
---- a/drivers/target/target_core_rd.c
-+++ b/drivers/target/target_core_rd.c
-@@ -150,7 +150,8 @@ static int rd_allocate_sgl_table(struct rd_dev *rd_dev, struct rd_dev_sg_table *
- 						- 1;
- 
- 		for (j = 0; j < sg_per_table; j++) {
--			pg = alloc_pages(GFP_KERNEL, 0);
-+			pg = alloc_pages(GFP_KERNEL | __GFP_RETRY_MAYFAIL |
-+					 __GFP_NOWARN, 0);
- 			if (!pg) {
- 				pr_err("Unable to allocate scatterlist"
- 					" pages for struct rd_dev_sg_table\n");
--- 
-2.48.1
+Closes: https://lore.kernel.org/oe-kbuild-all/202603030747.VX0v4otS-lkp@int=
+el.com/
+Closes: https://lore.kernel.org/oe-kbuild-all/202609301230.CauIUXCF-lkp@int=
+el.com/
 
+> diff --git a/drivers/scsi/qla2xxx/qla_target.h b/drivers/scsi/qla2xxx/qla=
+_target.h
+> index 71bc1affb1bc9..b27bd3aecbf8e 100644
+> --- a/drivers/scsi/qla2xxx/qla_target.h
+> +++ b/drivers/scsi/qla2xxx/qla_target.h
+> @@ -309,7 +309,8 @@ struct atio7_fcp_cmnd {
+>  	/*
+>  	 * add_cdb is optional and can absent from struct atio7_fcp_cmnd. Size 4
+>  	 * only to make sizeof(struct atio7_fcp_cmnd) be as expected by
+> -	 * BUILD_BUG_ON in qlt_init().
+> +	 * BUILD_BUG_ON in tcm_qla2xxx_init(). See also, BUILD_BUG_ON in
+> +	 * qlt_queue_unknown_atio().
+>  	 */
+>  	uint8_t  add_cdb[4];
+
+[Severity: High]
+Since add_cdb is explicitly declared as a fixed-size 4-byte array here, does
+the current code cause UBSAN array bounds violations and FORTIFY_SOURCE read
+overflow panics when accessing elements beyond these bounds?
+
+For instance, in memcpy_atio() when len > 0, it accesses
+&src->u.isp24.fcp_cmnd.add_cdb[len * 4] which is out-of-bounds, and reading
+4 bytes triggers the overflow panic:
+
+drivers/scsi/qla2xxx/qla_target.c:memcpy_atio() {
+...
+    memcpy(&dst->u.isp24.fcp_cmnd.add_cdb[0],
+           &src->u.isp24.fcp_cmnd.add_cdb[len * 4],
+           4);
+...
+}
+
+Similarly, get_datalen_for_atio() accesses the array out-of-bounds when
+len > 0:
+
+drivers/scsi/qla2xxx/qla_target.h:get_datalen_for_atio() {
+...
+    return get_unaligned_be32(&atio->u.isp24.fcp_cmnd.add_cdb[len * 4]);
+...
+}
+
+[ ... ]
+
+> @@ -845,7 +846,11 @@ struct qla_tgt_sess_op {
+>  	struct rsp_que *rsp;
+> =20
+>  	struct atio_from_isp atio;
+> -	/* DO NOT ADD ANYTHING ELSE HERE - atio must be last member */
+> +	/*
+> +	 * DO NOT ADD ANYTHING ELSE HERE.
+> +	 * atio.u.isp24.fcp_cmnd.add_cdb may extend past end of atio.
+> +	 */
+> +	uint8_t atio_u_isp24_fcp_cmnd_add_cdb[];
+>  };
+
+[Severity: High]
+Since this patch introduces the flexible array atio_u_isp24_fcp_cmnd_add_cd=
+b[]
+to legally hold the trailing data, shouldn't the memcpy() in
+qlt_queue_unknown_atio() be updated to target it?
+
+drivers/scsi/qla2xxx/qla_target.c:qlt_queue_unknown_atio() {
+...
+    u =3D kzalloc(sizeof(*u) + add_cdb_len, GFP_ATOMIC);
+    ...
+    memcpy(&u->atio, atio, sizeof(*atio) + add_cdb_len);
+...
+}
+
+Because the destination is typed strictly as &u->atio, copying more than
+64 bytes (sizeof(*atio)) when add_cdb_len > 0 causes a FORTIFY_SOURCE
+intra-object write overflow panic.
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/4808a5dc1a71528ffa3=
+360868561009744277450.1791502886.git.fthain@linux-m68k.org?part=3D1
