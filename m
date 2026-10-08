@@ -1,107 +1,73 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0AB1133122A
-	for <linux-scsi@vger.kernel.org>; Thu,  8 Oct 2026 22:52:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75BFF3D5259
+	for <linux-scsi@vger.kernel.org>; Thu,  8 Oct 2026 23:27:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791499969; cv=none; b=XgjSPRyftjVu4q1Dq2GmUBUGvAe0D7KuP3lcyq6XYkkVRhiqHTjHSX0XcRukTxBuAnHKlDz1sgIjorOj6095GMFZd2RvZZsjq/oVGLDtJd9VdODQOddPIBALKnKLNbZ/4Uj0e1c+Wvc9PGEf7EWEl3BQ6fhq4QD/hMtrBqSxXGM=
+	t=1791502041; cv=none; b=Y6z7kUFMxX9icGtFDn2LlH9TJbNBFN9tPGHWyDvcsx2sMH2pkSBzmFf0e/5lWh0ZBHFm6ccMQ52KRH9PIw2lRsBS/A1AQdeGBmwlD7293DAhGA8nr7fCeY74Icsfkx1YkDfxXJnpSzXNjCGb3kYrgKK6jkzCN9I6YeNMq+Sl9T0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791499969; c=relaxed/simple;
-	bh=O4NP3IswViPI57f0Zg64mpm+5VtdtSsTH9Vng0WbPuI=;
-	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
-	 Date; b=myZCsDwZS1tL5/DEZmHhnVcte3saXf3LoWI4hvK9jcw/9mwHJVhYuD+W+0+nrTDTGP9iWQF1mT9YGsup738J9j3yDl/Z4KRNr4cgns5uGaXvp+P/reXg617mPZZCIiO3IOpfRBEjkp9kzcXdLEOY8FyPrLJYn8IRUYG0ax+mjJM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DKE4zglA; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791502041; c=relaxed/simple;
+	bh=7/lUnei2N7JKunFbL0jSOJCWLeZ5DdBaDpW66Qg5G/I=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=XXBgTWhDVNq77wGXt+owSQv7Dai3z7JL0VLUY4Ov2fa9cZYAYDiU+U8hmgTonjSMfzTS7UuRgQNnXNAgzZmajUsjqoIyn6YiLrKTDcpl+CJOH9v6f/hO4GRdPq6mZ5+wZINslbdP5sI4VhhnhUlzhsRpagogUeY6s1UQLzDott0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=3HEwS2xA; arc=none smtp.client-ip=199.89.1.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DKE4zglA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8F2CC1F000FF;
-	Thu,  8 Oct 2026 22:52:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791499967;
-	bh=G0gZviXcqjF6uKDGUNx5jLluxq298JvNUCylCp6e9g0=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=DKE4zglAYSwkbwqpSPQ3wApbLFFSqo26ElXtQR5oNMklPKIwY8V4gh7pfQrjCtPTT
-	 DEx7o3Du6dGFx7RC7aSy9A1Jvsw34Zl20wJ6/p14oY8L9TKd8ovQKJSnvEfG/jVYbc
-	 ZSUGMF74J4Ls6lt5m+5hWWL2o7R/bNXSMAR11lo1CrdR+f4gQzgScweQdG7zWTRiK7
-	 IQzNkB+DBZ5Bj4b4VlbB1DJ6os4Q0MYexYU7caOwnCismEY/Os5f/xn+U1v5jbp97y
-	 4Qr1DvShPJY9juG+mEXFaze/0YeRxbNfSWWGWs/0qciHmG64g6hUpQ+Mz+ZsuOXw8T
-	 adVAWh9xLMMiQ==
-Message-ID: <sashiko-outbox-164650@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 2/8] scsi: scsi_debug: Split resp_write_same()
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Bart Van Assche" <bvanassche@acm.org>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <1127ce1be450f0c4503845b41eaa24c27aba373a.1791499174.git.bvanassche@acm.org>
-References: <cover.1791499174.git.bvanassche@acm.org>
- <1127ce1be450f0c4503845b41eaa24c27aba373a.1791499174.git.bvanassche@acm.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 08 Oct 2026 22:52:47 +0000
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="3HEwS2xA"
+Received: from localhost (localhost [127.0.0.1])
+	by 013.lax.mailroute.net (Postfix) with ESMTP id 4j15kH6LbczlfvpM;
+	Thu,  8 Oct 2026 23:27:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1791502038; x=1794094039; bh=7/lUnei2N7JKunFbL0jSOJCW
+	LeZ5DdBaDpW66Qg5G/I=; b=3HEwS2xAwobf1LR7EP9iYdltyynAg3hmR4Zv+bbQ
+	q4O2u1FBNRAVgaIjTVlB+cgtLglIX3piMu19567N98MdUtRzqcSaiuZ/TuSaok25
+	m3Kp5Zf8+1TI4yTCopTd5OLV1LWCe96hdKxwbrRcZYazIsa+l7GZa9T67ic0bijZ
+	Up1cRsFJLcm74rzqa/hU1zrAOqnsr3A18k9RZ4brf6503+v7GzYb280uer0A1M69
+	RAlVy487i5/cpX7DQYmFFgMKBkBIyKGDEYEfJ4sA6E07tyt8jIQBTsyXoVmIax5w
+	g54Uy6sEMsRQ+mueoSxu9kOJhL5A7GaZ+ditCnoKe1wCvg==
+X-Virus-Scanned: by MailRoute
+Received: from 013.lax.mailroute.net ([127.0.0.1])
+ by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id kBSeSqFy7DwG; Thu,  8 Oct 2026 23:27:18 +0000 (UTC)
+Received: from [IPV6:2a00:79e0:2ed2:d:6825:e545:ab06:fef5] (unknown [104.135.182.41])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4j15kG1pWNzlfvpH;
+	Thu,  8 Oct 2026 23:27:17 +0000 (UTC)
+Message-ID: <ef54993d-7a72-456e-80e9-2daaaefef7a1@acm.org>
+Date: Thu, 8 Oct 2026 16:27:16 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v5 2/8] scsi: scsi_debug: Split resp_write_same()
+To: sashiko-reviews@lists.linux.dev
+Cc: linux-scsi@vger.kernel.org
+References: <cover.1791499174.git.bvanassche@acm.org>
+ <1127ce1be450f0c4503845b41eaa24c27aba373a.1791499174.git.bvanassche@acm.org>
+ <sashiko-outbox-164650@kernel.org>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <sashiko-outbox-164650@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [Medium] scsi_debug: data race on sip->storep between unmap_region() and =
-do_device_access()
---
 
-commit b0d6230062e0df8cfca0c47695724e008bd7da04
-Author: Bart Van Assche <bvanassche@acm.org>
+On 10/8/26 3:52 PM, sashiko-bot@kernel.org wrote:
+> [Severity: Medium]
+> Does this early return result in a data race on the sip->storep buffer?
 
-scsi: scsi_debug: Split resp_write_same()
+I think this counts as a preexisting issue that has not been introduced
+by this patch series.
 
-This commit splits resp_write_same() into two functions to ensure all locki=
-ng
-statements end up in the same branch of an if-statement. This change is
-intended to support the Clang thread-safety analyzer.
-
-> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-> index 44b4587b53c66..cadd94e17109a 100644
-> --- a/drivers/scsi/scsi_debug.c
-> +++ b/drivers/scsi/scsi_debug.c
-[ ... ]
-> -static int resp_write_same(struct scsi_cmnd *scp, u64 lba, u32 num,
-> -			   u32 ei_lba, bool unmap, bool ndob)
-> +static int __resp_write_same(struct scsi_cmnd *scp, u64 lba, u32 num,
-> +			     u32 ei_lba, bool unmap, bool ndob, bool lbp)
->  {
->  	struct scsi_device *sdp =3D scp->device;
-[ ... ]
->  	ret =3D check_device_access_params(scp, lba, num, true);
->  	if (ret)
-> -		goto out;
-> +		return ret;
-> =20
->  	if (unmap && lbp) {
->  		unmap_region(sip, lba, num);
-> -		goto out;
-> +		return ret;
-
-[Severity: Medium]
-Does this early return result in a data race on the sip->storep buffer?
-
-When a SCSI UNMAP command (or WRITE SAME with the unmap bit set) and a READ
-command execute concurrently on the same LBA range of an LBP-enabled device,
-unmap_region() modifies the data store via memset().
-
-By returning early here, __resp_write_same() only holds the
-sdeb_meta_write_lock (acquired in the resp_write_same() caller) and bypasses
-acquiring the sdeb_data_write_lock.
-
-Concurrently, read operations like resp_read_dt0() -> do_device_access()
-acquire only the sdeb_data_read_lock and skip the sdeb_meta_read_lock entir=
-ely
-when running on non-zoned/non-DIX devices.=20
-
-Could this concurrent access to sip->storep result in torn or mixed reads?
-
-[ ... ]
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1791499174.gi=
-t.bvanassche@acm.org?part=3D2
+Bart.
