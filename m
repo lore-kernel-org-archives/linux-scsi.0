@@ -1,65 +1,65 @@
-Received: from mail-ua1-f41.google.com (mail-ua1-f41.google.com [209.85.222.41])
+Received: from mail-vk1-f180.google.com (mail-vk1-f180.google.com [209.85.221.180])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E72947F3B7
-	for <linux-scsi@vger.kernel.org>; Thu,  8 Oct 2026 22:37:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7DD713B0AE4
+	for <linux-scsi@vger.kernel.org>; Thu,  8 Oct 2026 22:37:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791499042; cv=none; b=Tn+Dq3OxJrIuhhF4O4hNuhVssLrTo0wvu3i3UT924Q11jbMjee2ZeDwqLIgn3ih2wW5CmQ6YcLz9qrTKByGbxP1JcZeliJQjrQNFdbIwBNUozj30t18Yqp/DbHA7NNw07Nol9pkshytRehqyD65ktMlmtNps4Rxms9ztcZi5NwU=
+	t=1791499044; cv=none; b=D1BIxV8sq7niOfjRJQB85hiPFAs/ILSSss+3qbMSvroGveYTB2yMUtJGRJAM8cHYXFF3++bhMNeumWo3Kq9QTfQeu3I1qQY0zcZB8/S1z934/afezuhVWft/2XwEgcmWzJOZD9KORzFRvCTnnhPXCaCUbgfOcox+t+foq9KO0DE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791499042; c=relaxed/simple;
-	bh=l+t8v9WxXW8yj45kL2UgUyKv0ERAXtt5Qf7uOcu7xTc=;
+	s=arc-20240116; t=1791499044; c=relaxed/simple;
+	bh=lJ6AYpHjGOkimMExUHB9UOtA234mEYMud8tyoTmPLRc=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=BOV4kwOvlV8iToqiBs0VAvnbVDeO4hm1JTcJ/M/nqyJqYkNbi6hDpkI2qVTeUcWtuWG3MwQ3gcVZAIrPcWOOfVDxTz1ZZwLAyVAVCY63goxT1zlQKDsi+jH30guab2fizk6d6gqf3Octw9dZ4TsdqiMXPfWCLJC53/qp8gc5ehI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=J1PO/RLR; arc=none smtp.client-ip=209.85.222.41
+	 MIME-Version; b=NlXEWWDR3Ilk1T/rkudv0csW+rrYwpgRIov1wIim+CEOFWY9GsexVWPACpumppRSemOP2HqsQ09Zsn7XiyzEvcNdpN+mSPx44XpFv4ez5BjPBltqxDzMaKion+NRuM+E9S6gbkiN8RwiH3j1Rk7f9YmWQdsrLjMYakyooQ1YCZs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Nmt0FaTo; arc=none smtp.client-ip=209.85.221.180
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="J1PO/RLR"
-Received: by mail-ua1-f41.google.com with SMTP id a1e0cc1a2514c-988d3ad6432so30555241.0
-        for <linux-scsi@vger.kernel.org>; Thu, 08 Oct 2026 15:37:21 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Nmt0FaTo"
+Received: by mail-vk1-f180.google.com with SMTP id 71dfb90a1353d-5c7d1fc8f9dso76248e0c.1
+        for <linux-scsi@vger.kernel.org>; Thu, 08 Oct 2026 15:37:23 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1791499040; x=1792103840; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1791499042; x=1792103842; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=WdEsEyWM4pdqoDh+trBH24Lt+yVX+eIUgpA4t+jtMFA=;
-        b=J1PO/RLRhIxUMC6MPZpcMUiLhYe9hfzpGXcJTipiyJdIwWkaeNm0kK/FseXZvRenS0
-         Xl8wJ7oHdOGq16ciaeeP3mzfmWJrf2D03Jq8eZ3ktnIBkhdUOFNUHeNIDdnNYsn3tCeE
-         YMVLuyNlUThYlFssDv0+8KyWRasAX04NyYnVjpPDP4su6Je0B3kM4D6Q699W/t/S3LrV
-         WxoNO0UOthJqfd1NvDsavCB7d0BqBqvxr5ktfJ9wjZqidyLYx7DwEaIioEXqwYIdQxdy
-         PTbIQ0ysb2Q6GE2OMddzjkKDKuCqSVdDTaNd4vaXUZ5k6g0RYViKhLmcJfVdJgan6lAu
-         QJIA==
+        bh=nOpeyuGCRMACRp8m9ibObWPSIPWBOuQMlxgdPx+TYS8=;
+        b=Nmt0FaToi/KWZq4wJ6LAgSt5oog2cBkOZ7xFgMILhDfY6pyURVMrYFF3iN55TFlYXR
+         yNRtC60uD93YmFuVl+BadJpHyUDO7luvaqtpBcadB6QXaFGjf8yVGtSYZKFKwJX9yMWy
+         SEtY6CHcHlbQVHH0ByjXH7XWU9OJNSxJxFrtFmEd3wKeDnXGqRcHtSkynK30qaheHRU0
+         fmxtV75GEEN6wZJ12c8DJrN/6DAjXujMc6knKaBEkzjzZyTAOMkO832f2b7TJpVp5Qhm
+         oSU42jc9YsfIVCjTmsKPdKGjJ1bPyqjJaLGmF5LhZIhKimQd4VjKfWY+h6xFoU0RZaQR
+         3tvg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791499040; x=1792103840;
+        d=1e100.net; s=20260707; t=1791499042; x=1792103842;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=WdEsEyWM4pdqoDh+trBH24Lt+yVX+eIUgpA4t+jtMFA=;
-        b=UhCUVWePcPrR5ET2dcj7lkFWPQfe/oRK3Z840wSNpl7MP2VEftHApHTmUcwZoR+8QW
-         ZxJqgpQtV3vFzWSHmZKlCAFj6EOjevr/BhjT30X43ihORo7Vyg4TLw+UDCdpzvsjP4c9
-         MB3kWm1TwRUciksvioeSw4uiraeN91FN5bwyWvW3NMOkNTWFVskyCUELBhbmSEs7ZQpy
-         7lb+KGXxISseudbQ2iryH5a4cdgHQfs5S75pLHAfM8G0sTeoK5tjGIT7V/VftSvPTwWl
-         62t3gKMcLSQ4n3qcQoGJbATYC+V9VzEnjXcgUevhobNrgT0s15iuZCLrayxd/qLL9J/U
-         rQnQ==
-X-Forwarded-Encrypted: i=1; AKwUvBwdZW1je5oSkDOy4Sx0kMkLzfwq5uD4/xBGJmRu5za3gEZpfA/N3ybvqap152bTI7i4zABnLqZqlrWo@vger.kernel.org
-X-Gm-Message-State: AFq9FYK9tg3KCjgKZ3IfYaZrg6tDupvyU5bp2KlVpxhJZUGN8VgJl5Te
-	17zwdyyFf60G7wexfhiN7FcyCMXfgeTwZzC6nJMPe9GDdUMsqj/GW6ghh0h8OZLOO1A=
-X-Gm-Gg: AYBFou0tXHU5A3I4dk8tn+4Q2sSZHIipzdKNsMWePs1MyRee2S+cFNqCWRmUfUYIXX8
-	e/BSDU056/rflxb7OzjMGxh9//0x1fSrTMxi8hIOpSwNDm7bIDPhhqrxjUKpWDvga11WqV1B+i5
-	gSJKneqwxuJO8XvnRAoceDGZsOwJuPAkFx/m2Qud3XBu+BDumBE0Gi5Z8aXKsOaM3T6KKcDEyjc
-	u3PzQOaFFdoP8A37vPelLVicOs+er6IAm3HZf52FPAErPUFPbxKGe+C0nPPWU08DiGsjrmlb1TA
-	tEsEv+kHiYdo65U/B8xzFW2Kc36mXOidviI8cGkebjtSE/y7c3N+Lmtb8QIykLy7LH8T7XN7C0M
-	Y4OtoeHXQEHA/mLavKear765Ec9yAqTeBh3tAYZcMmgzbZb3313aIThfnAu07HlCZsZhMJWQ1qT
-	oMmz6x8efX+BgUUUoNgvz2wP8w2o1BtZLBiUqI7348idHegfXV0n3DehU5uYIUjOCpH3efYGd+9
-	dOMRlE960H2MDuYU+HeJo1fYH3G6m2TffPeOiJwo8DztFPjBRlnjisBedYdRhU2oXwrrhesw+60
-	fIoKo+qfoMd01OnBmfA=
-X-Received: by 2002:a05:6122:a5c2:10b0:5c9:fe51:53d5 with SMTP id 71dfb90a1353d-5e91f242088mr18051e0c.1.1791499040144;
-        Thu, 08 Oct 2026 15:37:20 -0700 (PDT)
+        bh=nOpeyuGCRMACRp8m9ibObWPSIPWBOuQMlxgdPx+TYS8=;
+        b=edNdUW1sLuHH65Nn/Yz7TYHW01bAN+CPMlN4kezc5aLHL3myOtUtir68rSHGYRu8Tc
+         tGLSYzyUDbHQdbPsUXcy0+Y/pth98E9vX0e1DqvcSw+/PlmeOpuGYODaEo1OVd0ib4te
+         ecYcZM9HGkQI79q3hMHbWlyxFlk/niOILC2UQknqcOahgwNciHxWkvwsRQmayKvEcubX
+         AQhut7TYHgyYTDH4+cHwPsHT7Hm6oZJWL8jrMh1RjhBeHmX5pbi4XMcg5oJlch+Exo62
+         tOHTy9xhCgYImsOVHd0wgD10pagi9jLYnkwpMIicfji2kh/Ga2rJmRBU5LKDGJcMZuzM
+         aChg==
+X-Forwarded-Encrypted: i=1; AKwUvBxfG9cH/LhVD+Esi1zgB1H8j6dp331GcxmXjeiu+RYK87M5sSz9GNFsZRxp7WNXx3n6t7yk6PVp/1ea@vger.kernel.org
+X-Gm-Message-State: AFq9FYKFquUhn/rrBDvFcBePo12bU1+/5G5cC6mp/mCQ4OWbE3Py7QmM
+	zZccQq/Qw1WsLaYCBnweRSWMNAiEkb/b514mOL+9FNOnwOOZTj6B09B5QRocmQ/SCtk=
+X-Gm-Gg: AYBFou0F6cnGCNfeWtpCoFvL4JDNGgK2sLSFb63dF91kC00XsHuvEG6QOTbBE24owUI
+	RWACVI0MQM4tYvZQNtMnCAPK0HHpVtDv7tvxwpWhP+Jya5rKfgUJYO3bFYDUObTSOZkXqq2Ea83
+	ssyyM1daHFgwO1oWC5wYgFeRx/UrZ/Nzv4a3lodkoGS3U904h9cEiLYPHHOIfLzcyTYk9yzCAFi
+	PGTfqtt0BNOrK6IlzbzZSLOdsupj3YpJWXbpDr9jmfnOZI57kTq46VBZWv8SSgPHWsOz+MEMBxB
+	poORSE8D87EUMIhNtvyaqaLrgYOE4WKePKudybUDtxTcE0Kxa4KDOHzsYr+ngRk1WwK81MaJjjU
+	lWzT/E1zpTZAE5T6Kb/eL+tvPUuQlKz7JkY5Ot48JJjysFs4QRDAjwyYNdYi+xBpYQaXGAIPOMD
+	tHI9s2Or020QDf+nnnpPLtCVrm0lrKR4CHJQQqEGfYn3FEHtz7bRjemn936VvdldRImC0vlh7Xm
+	e7khpxgQGEXaIW+3uvBCaJVg3jC2Y16DZUKpUc+aEzRmyz31efroff73WFFiovizlaoOnrlnmaL
+	95Hx3vaSJVrUm3KHsdc=
+X-Received: by 2002:a05:6122:14a:b0:5cf:ad27:3a67 with SMTP id 71dfb90a1353d-5e91f58265emr4623e0c.5.1791499042370;
+        Thu, 08 Oct 2026 15:37:22 -0700 (PDT)
 Received: from localhost.localdomain ([132.170.205.109])
-        by smtp.gmail.com with ESMTPSA id 71dfb90a1353d-5e91cab8c40sm393284e0c.3.2026.10.08.15.37.18
+        by smtp.gmail.com with ESMTPSA id 71dfb90a1353d-5e91cab8c40sm393284e0c.3.2026.10.08.15.37.20
         (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Thu, 08 Oct 2026 15:37:19 -0700 (PDT)
+        Thu, 08 Oct 2026 15:37:21 -0700 (PDT)
 From: Sanan Hasanov <sanan.hasanou@gmail.com>
 To: "Martin K. Petersen" <mkp@kernel.org>
 Cc: Sanan Hasanov <sanan.hasanov@ucf.edu>,
@@ -67,9 +67,9 @@ Cc: Sanan Hasanov <sanan.hasanov@ucf.edu>,
 	target-devel@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	syzbot+fa495e1497c48a6ed885@syzkaller.appspotmail.com
-Subject: [PATCH v2 1/2] scsi: target: rd: Fix oversized sg table array allocation
-Date: Thu,  8 Oct 2026 18:37:09 -0400
-Message-ID: <20261008223712.49827-2-sanan.hasanou@gmail.com>
+Subject: [PATCH v2 2/2] scsi: target: rd: Don't invoke the OOM killer for ramdisk pages
+Date: Thu,  8 Oct 2026 18:37:10 -0400
+Message-ID: <20261008223712.49827-3-sanan.hasanou@gmail.com>
 X-Mailer: git-send-email 2.48.1
 In-Reply-To: <20261008223712.49827-1-sanan.hasanou@gmail.com>
 References: <20261008223712.49827-1-sanan.hasanou@gmail.com>
@@ -83,87 +83,37 @@ Content-Transfer-Encoding: 8bit
 
 From: Sanan Hasanov <sanan.hasanov@ucf.edu>
 
-The rd_pages= device parameter is taken from configfs without an upper
-bound. rd_build_device_space() uses it to size the sg table array, so a
-large value such as INT_MAX makes it attempt a kzalloc() of roughly
-64 MiB, which is above the page allocator's maximum order and triggers:
+rd_allocate_sgl_table() allocates the ramdisk's backing memory one page
+at a time with GFP_KERNEL. When the requested ramdisk is larger than the
+memory that can be freed, these allocations do not fail but invoke the
+OOM killer instead. The pages are not charged to any task, so the OOM
+killer keeps killing unrelated processes, and may panic the system once
+nothing is left to kill, while the configfs write continues allocating.
 
-  WARNING: mm/page_alloc.c:5340 at __alloc_frozen_pages_noprof+0x294/0x874
-  Call trace:
-   __alloc_frozen_pages_noprof+0x294/0x874 (P)
-   ___kmalloc_large_node+0x64/0xd0
-   __kmalloc_noprof+0x24/0x54
-   rd_configure_device+0x74/0xdc
-   target_configure_device+0xa0/0x1c4
-   target_dev_enable_store+0x4c/0x5c
-   configfs_write_iter+0xec/0x124
+Use __GFP_RETRY_MAYFAIL so that the allocation fails once reclaim can
+make no more progress. rd_allocate_sgl_table() already handles failure
+by returning -ENOMEM, and the caller then releases the pages allocated
+so far. Add __GFP_NOWARN since the driver logs its own error.
 
-A ramdisk is backed page-by-page by system memory, so a page count
-larger than totalram_pages() can never be satisfied. Reject it with
--EINVAL before allocating anything. NULLIO devices allocate no backing
-pages and are not affected.
-
-The array needs 64 bytes per 2048 pages, so even a valid page count
-exceeds the 4 MiB maximum order once the ramdisk is larger than 512 GiB.
-Allocate the sg table arrays with kvzalloc_objs() so that large arrays
-fall back to vmalloc.
-
-Fixes: c66ac9db8d4a ("[SCSI] target: Add LIO target core v4.0.0-rc6")
-Reported-by: syzbot+fa495e1497c48a6ed885@syzkaller.appspotmail.com
-Closes: https://syzkaller.appspot.com/bug?extid=fa495e1497c48a6ed885
 Signed-off-by: Sanan Hasanov <sanan.hasanov@ucf.edu>
 ---
- drivers/target/target_core_rd.c | 13 ++++++++++---
- 1 file changed, 10 insertions(+), 3 deletions(-)
+ drivers/target/target_core_rd.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/target/target_core_rd.c b/drivers/target/target_core_rd.c
-index 092d9fe0d..97c63b122 100644
+index 97c63b122..46698300e 100644
 --- a/drivers/target/target_core_rd.c
 +++ b/drivers/target/target_core_rd.c
-@@ -14,6 +14,7 @@
- #include <linux/string.h>
- #include <linux/parser.h>
- #include <linux/highmem.h>
-+#include <linux/mm.h>
- #include <linux/timer.h>
- #include <linux/scatterlist.h>
- #include <linux/slab.h>
-@@ -81,7 +82,7 @@ static u32 rd_release_sgl_table(struct rd_dev *rd_dev, struct rd_dev_sg_table *s
- 		kfree(sg);
- 	}
+@@ -150,7 +150,8 @@ static int rd_allocate_sgl_table(struct rd_dev *rd_dev, struct rd_dev_sg_table *
+ 						- 1;
  
--	kfree(sg_table);
-+	kvfree(sg_table);
- 	return page_count;
- }
- 
-@@ -188,10 +189,16 @@ static int rd_build_device_space(struct rd_dev *rd_dev)
- 	if (rd_dev->rd_flags & RDF_NULLIO)
- 		return 0;
- 
-+	if (rd_dev->rd_page_count > totalram_pages()) {
-+		pr_err("Page count: %u exceeds total RAM pages: %lu for Ramdisk device\n",
-+		       rd_dev->rd_page_count, totalram_pages());
-+		return -EINVAL;
-+	}
-+
- 	total_sg_needed = rd_dev->rd_page_count;
- 
- 	sg_tables = (total_sg_needed / max_sg_per_table) + 1;
--	sg_table = kzalloc_objs(*sg_table, sg_tables);
-+	sg_table = kvzalloc_objs(*sg_table, sg_tables);
- 	if (!sg_table)
- 		return -ENOMEM;
- 
-@@ -248,7 +255,7 @@ static int rd_build_prot_space(struct rd_dev *rd_dev, int prot_length, int block
- 	total_sg_needed = (rd_dev->rd_page_count * prot_length / block_size) + 1;
- 
- 	sg_tables = (total_sg_needed / max_sg_per_table) + 1;
--	sg_table = kzalloc_objs(*sg_table, sg_tables);
-+	sg_table = kvzalloc_objs(*sg_table, sg_tables);
- 	if (!sg_table)
- 		return -ENOMEM;
- 
+ 		for (j = 0; j < sg_per_table; j++) {
+-			pg = alloc_pages(GFP_KERNEL, 0);
++			pg = alloc_pages(GFP_KERNEL | __GFP_RETRY_MAYFAIL |
++					 __GFP_NOWARN, 0);
+ 			if (!pg) {
+ 				pr_err("Unable to allocate scatterlist"
+ 					" pages for struct rd_dev_sg_table\n");
 -- 
 2.48.1
 
