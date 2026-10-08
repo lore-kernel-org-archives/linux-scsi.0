@@ -1,320 +1,121 @@
-Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40EE33BFE4C
-	for <linux-scsi@vger.kernel.org>; Thu,  8 Oct 2026 22:42:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 558333CA487
+	for <linux-scsi@vger.kernel.org>; Thu,  8 Oct 2026 22:47:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791499372; cv=none; b=PP0MJsduF8/Q/cVmCi6ASFaOgG3Oj+/n/zrZE9MRTOnAG1h1+cM5o2HxYHYi68hbIk/GS1AD45zQDHTOtz9wiKQOj9w/zn0hQ287D9fGpRRRYDQdvDD9XQg4n+idlE/Ywr5TUT/4tBoSAihtnrGO16pa5uyOmA0duP8ZMDScT4k=
+	t=1791499640; cv=none; b=XGLhqtCViNH4TtVOBoy3IudjD8RKF6FvNovCtuP3Wme0W1n2Qt3hfYvmQfwmz1UAEcT8KWOqiCizCMf2gxZiyXfAZMiVo6pK/IJP3U3+DcBD6ITg3sapBnSMuqSFj0KIEAgpYzymfgaIrWwyyhzzFjP4q8UCpjmcRbTiN+aXXxU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791499372; c=relaxed/simple;
-	bh=a+80bmAFHhF1A7dej3O2pC3IJMCGdhRplJVAfEMUrqk=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=hMF5vRV0c0OknCtH5xA1uxXubypKPnCwQL2e9jd53VKE7i+DJ2t1p8D5isN5FnxCr2kSkP4eL2kSgay2r5xJpSigfLTxRygVQlEmRQCBODFUGhcNhUskamNQa8AtQptW23UiByrnlA9PbrlbTGLaTWpCLJMPkcuBWGI+CG/Rb64=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=NOAuNGes; arc=none smtp.client-ip=199.89.1.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1791499640; c=relaxed/simple;
+	bh=CsbC/kaxTLWiiTDP8e8E6nlohwEfpVp98WEaLI37meY=;
+	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
+	 Date; b=NSc1u5RSfFpCVht5MO+F1PFmKv55L9j6rmmk60RSoAQ/bynr8jFfOKhP8WDcmawayh9nBKLyky9myo4sKrqPvlAV781oOBQLrXN507ydtSE1y4LOaVYyuLD8BYe6rz/FaYrF2+yFtMBxC9614zeiOXNM5bzhZgUGj9wsBlo+jpQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iyIkgFc+; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="NOAuNGes"
-Received: from localhost (localhost [127.0.0.1])
-	by 011.lax.mailroute.net (Postfix) with ESMTP id 4j14ky5vZhz1XM30g;
-	Thu,  8 Oct 2026 22:42:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:mime-version:references:in-reply-to
-	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1791499365; x=1794091366; bh=5xTDz
-	srkqxl/RwmOWwh9YsoMqEfgaMqeql42khqs+oM=; b=NOAuNGes5Pvwh/onT091C
-	rZdoF48YaEvHd6MxqFQNWozrsk+TrJbjWPD06WbYHrvBDu7yOmrdITwa5gfsHOwT
-	6zBO8N4m0o5SmzKo0CpPH5xYHMOEMFGSbQVzbw6z7V2jrd37MIGtv5QkVp9xAvKy
-	HNgczDtAV/gxph8ZozkkI1sXvMin2Cq1Hsx+rTWG5+tMQoM9G/kAlImOMaobHmaH
-	qBjpnaHZNQvjzjL7sCx5Y1S37mzj+tEbceRerGclE1AzXn/0mh8zDWdjCzC1OkZ2
-	NtBFgaVMHZpwru7C1AQyghKlzAzTVww8KiztIQGc7qfwkrqH5fZ5k81dubd5aql4
-	w==
-X-Virus-Scanned: by MailRoute
-Received: from 011.lax.mailroute.net ([127.0.0.1])
- by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 1b6YNNvNewBZ; Thu,  8 Oct 2026 22:42:45 +0000 (UTC)
-Received: from bvanassche.c.googlers.com.com (245.199.118.34.bc.googleusercontent.com [34.118.199.245])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4j14kq5jCvz1XM5kD;
-	Thu,  8 Oct 2026 22:42:43 +0000 (UTC)
-From: Bart Van Assche <bvanassche@acm.org>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
-	John Garry <john.garry@linux.dev>,
-	Christoph Hellwig <hch@lst.de>,
-	Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH v5 7/8] scsi: scsi_debug: Improve lock context annotations
-Date: Thu,  8 Oct 2026 15:42:18 -0700
-Message-ID: <e2ddd0bc90e0b5eb0b7eb72c0013d7e2e10be8fe.1791499174.git.bvanassche@acm.org>
-X-Mailer: git-send-email 2.56.0.170.g584c36229d-goog
-In-Reply-To: <cover.1791499174.git.bvanassche@acm.org>
-References: <cover.1791499174.git.bvanassche@acm.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iyIkgFc+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CD8F91F000FF;
+	Thu,  8 Oct 2026 22:47:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1791499639;
+	bh=bYfjfprAdI2gKn1CXQ01k7tl2uzxqVu9Uf/PobuHyyc=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=iyIkgFc+Mk5QfZBuYJCxwuuPsF25GHpF/Wc8yXoamGCKp4tFPBjDHgl9tBMFX2bkU
+	 GkeobaBPLep3frGNSXZWj915U/x9aDCSRfV6XMk0/H7ipeOhcMKZ1THjXy5KezgyK8
+	 OtGuG+8yoyCfoDojcFUoYd5CgDqlRYxEtwIAfEdLN32hFVZz5P+PUa234p6XZR7LXI
+	 /JIUsnIqtLcQ7GrTBGUc/eCryD0uXe069TNjNJN30tH+lh0LeTIsqjb42MOEpD4AMZ
+	 U6oWX96YLWpc5jYt1q2wxdzBtELpAu6EfDI4L0ckPw/GVYOkN9sWHXX7zRki/V3Dtp
+	 qT7WvBTLOEJBw==
+Message-ID: <sashiko-outbox-164639@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v2 2/2] scsi: target: rd: Don't invoke the OOM killer
+ for ramdisk pages
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Sanan Hasanov" <sanan.hasanou@gmail.com>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20261008223712.49827-3-sanan.hasanou@gmail.com>
+References: <20261008223712.49827-1-sanan.hasanou@gmail.com>
+ <20261008223712.49827-3-sanan.hasanou@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 08 Oct 2026 22:47:18 +0000
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
 
-Prepare the scsi_debug driver for enabling compiler-based lock context
-analysis:
-- Annotate the lock and unlock helper functions with __acquires,
-  __releases, __acquires_shared, and __releases_shared.
-- Add __acquire() and __release() calls in the paths that do not match
-  the __acquires() / __releases() annotations.
-- Annotate sdeb_meta_{read,write}_{,un}lock() with __context_unsafe()
-  because adding __acquire() and __release() calls in these functions is
-  not possible without triggering undefined behavior (taking the address
-  of a member of a structure with a NULL pointer as base address).
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [Medium] target: rd: memory leak in rd_build_prot_space() on allocation f=
+ailure
+--
 
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/scsi/scsi_debug.c | 84 +++++++++++++++++++++++----------------
- 1 file changed, 50 insertions(+), 34 deletions(-)
+commit 08e2848928f98cb3a6b575947cf8d271014c318f
+Author: Sanan Hasanov <sanan.hasanov@ucf.edu>
+Subject: scsi: target: rd: Don't invoke the OOM killer for ramdisk pages
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 244250ba460b..1ca3a2dc7358 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -4052,24 +4052,27 @@ static inline struct sdeb_store_info *devip2sip(s=
-truct sdebug_dev_info *devip,
-=20
- static inline void
- sdeb_read_lock(rwlock_t *lock)
-+	__acquires_shared(lock)
- {
- 	if (sdebug_no_rwlock)
--		__acquire(lock);
-+		__acquire_shared(lock);
- 	else
- 		read_lock(lock);
- }
-=20
- static inline void
- sdeb_read_unlock(rwlock_t *lock)
-+	__releases_shared(lock)
- {
- 	if (sdebug_no_rwlock)
--		__release(lock);
-+		__release_shared(lock);
- 	else
- 		read_unlock(lock);
- }
-=20
- static inline void
- sdeb_write_lock(rwlock_t *lock)
-+	__acquires(lock)
- {
- 	if (sdebug_no_rwlock)
- 		__acquire(lock);
-@@ -4079,6 +4082,7 @@ sdeb_write_lock(rwlock_t *lock)
-=20
- static inline void
- sdeb_write_unlock(rwlock_t *lock)
-+	__releases(lock)
- {
- 	if (sdebug_no_rwlock)
- 		__release(lock);
-@@ -4088,6 +4092,7 @@ sdeb_write_unlock(rwlock_t *lock)
-=20
- static inline void
- sdeb_data_read_lock(struct sdeb_store_info *sip)
-+	__acquires_shared(&sip->macc_data_lck)
- {
- 	BUG_ON(!sip);
-=20
-@@ -4096,6 +4101,7 @@ sdeb_data_read_lock(struct sdeb_store_info *sip)
-=20
- static inline void
- sdeb_data_read_unlock(struct sdeb_store_info *sip)
-+	__releases_shared(&sip->macc_data_lck)
- {
- 	BUG_ON(!sip);
-=20
-@@ -4104,6 +4110,7 @@ sdeb_data_read_unlock(struct sdeb_store_info *sip)
-=20
- static inline void
- sdeb_data_write_lock(struct sdeb_store_info *sip)
-+	__acquires(&sip->macc_data_lck)
- {
- 	BUG_ON(!sip);
-=20
-@@ -4112,6 +4119,7 @@ sdeb_data_write_lock(struct sdeb_store_info *sip)
-=20
- static inline void
- sdeb_data_write_unlock(struct sdeb_store_info *sip)
-+	__releases(&sip->macc_data_lck)
- {
- 	BUG_ON(!sip);
-=20
-@@ -4120,6 +4128,7 @@ sdeb_data_write_unlock(struct sdeb_store_info *sip)
-=20
- static inline void
- sdeb_data_sector_read_lock(struct sdeb_store_info *sip)
-+	__acquires_shared(&sip->macc_sector_lck)
- {
- 	BUG_ON(!sip);
-=20
-@@ -4128,6 +4137,7 @@ sdeb_data_sector_read_lock(struct sdeb_store_info *=
-sip)
-=20
- static inline void
- sdeb_data_sector_read_unlock(struct sdeb_store_info *sip)
-+	__releases_shared(&sip->macc_sector_lck)
- {
- 	BUG_ON(!sip);
-=20
-@@ -4136,6 +4146,7 @@ sdeb_data_sector_read_unlock(struct sdeb_store_info=
- *sip)
-=20
- static inline void
- sdeb_data_sector_write_lock(struct sdeb_store_info *sip)
-+	__acquires(&sip->macc_sector_lck)
- {
- 	BUG_ON(!sip);
-=20
-@@ -4144,6 +4155,7 @@ sdeb_data_sector_write_lock(struct sdeb_store_info =
-*sip)
-=20
- static inline void
- sdeb_data_sector_write_unlock(struct sdeb_store_info *sip)
-+	__releases(&sip->macc_sector_lck)
- {
- 	BUG_ON(!sip);
-=20
-@@ -4165,50 +4177,63 @@ sdeb_data_sector_write_unlock(struct sdeb_store_i=
-nfo *sip)
-=20
- static inline void
- sdeb_data_lock(struct sdeb_store_info *sip, bool atomic)
-+	__acquires(&sip->macc_data_lck)
- {
--	if (atomic)
-+	if (atomic) {
- 		sdeb_data_write_lock(sip);
--	else
-+	} else {
- 		sdeb_data_read_lock(sip);
-+		__release_shared(&sip->macc_data_lck);
-+		__acquire(&sip->macc_data_lck);
-+	}
- }
-=20
- static inline void
- sdeb_data_unlock(struct sdeb_store_info *sip, bool atomic)
-+	__releases(&sip->macc_data_lck)
- {
--	if (atomic)
-+	if (atomic) {
- 		sdeb_data_write_unlock(sip);
--	else
-+	} else {
-+		__release(&sip->macc_data_lck);
-+		__acquire_shared(&sip->macc_data_lck);
- 		sdeb_data_read_unlock(sip);
-+	}
- }
-=20
- /* Allow many reads but only 1x write per sector */
- static inline void
- sdeb_data_sector_lock(struct sdeb_store_info *sip, bool do_write)
-+	__acquires(&sip->macc_sector_lck)
- {
--	if (do_write)
-+	if (do_write) {
- 		sdeb_data_sector_write_lock(sip);
--	else
-+	} else {
- 		sdeb_data_sector_read_lock(sip);
-+		__release_shared(&sip->macc_sector_lck);
-+		__acquire(&sip->macc_sector_lck);
-+	}
- }
-=20
- static inline void
- sdeb_data_sector_unlock(struct sdeb_store_info *sip, bool do_write)
-+	__releases(&sip->macc_sector_lck)
- {
--	if (do_write)
-+	if (do_write) {
- 		sdeb_data_sector_write_unlock(sip);
--	else
-+	} else {
-+		__release(&sip->macc_sector_lck);
-+		__acquire_shared(&sip->macc_sector_lck);
- 		sdeb_data_sector_read_unlock(sip);
-+	}
- }
-=20
- static inline void
- sdeb_meta_read_lock(struct sdeb_store_info *sip)
-+	__acquires_shared(&sip->macc_meta_lck)
-+	__context_unsafe(/*conditional locking*/)
- {
--	if (sdebug_no_rwlock) {
--		if (sip)
--			__acquire(&sip->macc_meta_lck);
--		else
--			__acquire(&sdeb_fake_rw_lck);
--	} else {
-+	if (!sdebug_no_rwlock) {
- 		if (sip)
- 			read_lock(&sip->macc_meta_lck);
- 		else
-@@ -4218,13 +4243,10 @@ sdeb_meta_read_lock(struct sdeb_store_info *sip)
-=20
- static inline void
- sdeb_meta_read_unlock(struct sdeb_store_info *sip)
-+	__releases_shared(&sip->macc_meta_lck)
-+	__context_unsafe(/*conditional locking*/)
- {
--	if (sdebug_no_rwlock) {
--		if (sip)
--			__release(&sip->macc_meta_lck);
--		else
--			__release(&sdeb_fake_rw_lck);
--	} else {
-+	if (!sdebug_no_rwlock) {
- 		if (sip)
- 			read_unlock(&sip->macc_meta_lck);
- 		else
-@@ -4234,13 +4256,10 @@ sdeb_meta_read_unlock(struct sdeb_store_info *sip=
-)
-=20
- static inline void
- sdeb_meta_write_lock(struct sdeb_store_info *sip)
-+	__acquires(&sip->macc_meta_lck)
-+	__context_unsafe(/*conditional locking*/)
- {
--	if (sdebug_no_rwlock) {
--		if (sip)
--			__acquire(&sip->macc_meta_lck);
--		else
--			__acquire(&sdeb_fake_rw_lck);
--	} else {
-+	if (!sdebug_no_rwlock) {
- 		if (sip)
- 			write_lock(&sip->macc_meta_lck);
- 		else
-@@ -4250,13 +4269,10 @@ sdeb_meta_write_lock(struct sdeb_store_info *sip)
-=20
- static inline void
- sdeb_meta_write_unlock(struct sdeb_store_info *sip)
-+	__releases(&sip->macc_meta_lck)
-+	__context_unsafe(/*conditional locking*/)
- {
--	if (sdebug_no_rwlock) {
--		if (sip)
--			__release(&sip->macc_meta_lck);
--		else
--			__release(&sdeb_fake_rw_lck);
--	} else {
-+	if (!sdebug_no_rwlock) {
- 		if (sip)
- 			write_unlock(&sip->macc_meta_lck);
- 		else
+This commit replaces the default memory allocation flags for ramdisk backing
+pages with GFP_KERNEL | __GFP_RETRY_MAYFAIL | __GFP_NOWARN to avoid invoking
+the OOM killer. The pages are requested via alloc_pages() in
+rd_allocate_sgl_table().
+
+> diff --git a/drivers/target/target_core_rd.c b/drivers/target/target_core=
+_rd.c
+> index 97c63b12266fb..46698300e2063 100644
+> --- a/drivers/target/target_core_rd.c
+> +++ b/drivers/target/target_core_rd.c
+> @@ -150,7 +150,8 @@ static int rd_allocate_sgl_table(struct rd_dev *rd_de=
+v, struct rd_dev_sg_table *
+>  						- 1;
+> =20
+>  		for (j =3D 0; j < sg_per_table; j++) {
+> -			pg =3D alloc_pages(GFP_KERNEL, 0);
+> +			pg =3D alloc_pages(GFP_KERNEL | __GFP_RETRY_MAYFAIL |
+> +					 __GFP_NOWARN, 0);
+>  			if (!pg) {
+
+[Severity: Medium]
+Can this new failure path cause a regression by leaking memory in
+rd_build_prot_space()?
+
+Since this allocation uses __GFP_RETRY_MAYFAIL, it can now fail and return
+-ENOMEM. When this occurs, rd_build_prot_space() propagates the error
+without cleaning up the partially populated array:
+
+drivers/target/target_core_rd.c:rd_build_prot_space() {
+    ...
+	rd_dev->sg_prot_array =3D sg_table;
+	rd_dev->sg_prot_count =3D sg_tables;
+
+	rc =3D rd_allocate_sgl_table(rd_dev, sg_table, total_sg_needed, 0xff);
+	if (rc)
+		return rc;
+    ...
+}
+
+This propagates the error up to the configfs handler:
+
+drivers/target/target_core_configfs.c:pi_prot_type_store() {
+    ...
+		ret =3D dev->transport->init_prot(dev);
+		if (ret) {
+			da->pi_prot_type =3D old_prot;
+			da->pi_prot_verify =3D (bool) da->pi_prot_type;
+			return ret;
+		}
+    ...
+}
+
+The configfs handler restores state and returns without explicitly calling
+dev->transport->free_prot(dev) to clean up the backend.
+
+This leaves the partially populated scatterlists and pages permanently
+dangling in rd_dev->sg_prot_array. If the user retries enabling the
+protection type, rd_build_prot_space() unconditionally overwrites the
+rd_dev->sg_prot_array pointer with a new allocation, permanently leaking
+the previously allocated memory resources.
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261008223712.4982=
+7-1-sanan.hasanou@gmail.com?part=3D2
