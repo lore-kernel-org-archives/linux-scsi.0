@@ -1,133 +1,98 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f52.google.com (mail-wr1-f52.google.com [209.85.221.52])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6CCA049B1ED;
-	Thu,  8 Oct 2026 12:33:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F38544A8A29
+	for <linux-scsi@vger.kernel.org>; Thu,  8 Oct 2026 13:32:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791462811; cv=none; b=o9KURercBQW3aqp+R3mCjhOGc+2H2NzSaOTAQg9ns+jm+mb4gTtO6XHKP9J3e7keogyxqQCZ4ruLVjKeos28MiaHiktJBA8MzR3jrYsV+DzuW6oaG9BFNBX3DzNJgqowgbECyrgXNeFvDYJx2rMlov7K++ZzAHc/rrRntdE334s=
+	t=1791466325; cv=none; b=toLi4uOuBgAFJ+Pp/fCozY+5y6b54nIcbyKvuQQV5fslzL6Qpawf/6WE9KaFCr4dNbwDHHjF6kbRIkdvN3YKH3yCM0K/dMim7sQH2QuX8XMXwuDbxxbN+sOOp+OZE3WfZJQ3xLKlOsfyw8J2nFFgJjzg9uI/ptw7tVlKfKba59M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791462811; c=relaxed/simple;
-	bh=sE+cMTy7XLi5UV7qJ+PSse8SMYnq6RnWKcy/OO7hkD8=;
-	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
-	 Date; b=jR5VxCQAN4XYIhVdPe1PYLlluS+41j6D4wpWD5Fmslf38D07k2IXJuFOcnqjRT3j9qT1Y1Z5Kzg0QR2Ua3rY0A0X/7C8B0cEO0CJEc6eQyDtK6ueQPqJ7cvkccMJ1r6V/+8IOs8LBIsTZV5mXjXDtdYNFBgo73q+ltZ3IY1lbN0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HHeH5TiR; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791466325; c=relaxed/simple;
+	bh=Q4bWILpty64faa4Itg++N7wqOYZAwlwGZPLJbsqOCU8=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=hu/nKv/eRer814mpwm2xhoshSHaGsbW7Uz3g837Sb4xOgITOb7usP4r9lQuluIEBlvfHkcSreAssJLOpyb4lre4QdnryJDTzarR6QQQ34/bh09ljp6U3XkFCua8/VmI7MD9xaTEwj1XxyWLEY7wYpKCJPQJW0EujyF1FH9VgrhU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=LuJOTTFZ; arc=none smtp.client-ip=209.85.221.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HHeH5TiR"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D141A1F000FF;
-	Thu,  8 Oct 2026 12:33:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791462810;
-	bh=J0Pn77Z2UcCmoVLfwKKAmRiSIknvTwMXt4Z4sX3YnhE=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=HHeH5TiR8M+XGrsCqfV80hVku40CJUx6xbKcr/aalCYT4CuhMpj+NEHYF0E+FsJZD
-	 I+L7uu3kjCJ8iTd4sTk3RcyahXyWRN8lmaH6pRY5ybwskLxeQyhuhAY4D85ho0r1OY
-	 RbJMcIK07Y1okynmBErUYQbVewgEt/mxHL0bnE5ihNnHMp5Jq8tcK+qdMZ9IIsDh+x
-	 W43LOrEXK7XLKRaRVTx3Qq5ohqGLRb3ZW5JVLQmNgxpxGzc6aGu0PEWf4TV3pxd6Wu
-	 CMYA67qtlRkXl0kp6QXkzLtA5wrJsLmK6ViKdmAJUitqJD+fM7Wr7dPIBSZotuo7OF
-	 s5xYqXkllOksg==
-Message-ID: <sashiko-outbox-164150@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 2/2] usb: uas: add US_FL_QDEPTH_075 quirk to cap
- queue depth at probe time
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Luca Cecchi" <luca.cecchi.info@gmail.com>
-Cc: linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org
-In-Reply-To: <20261008122604.1862534-2-luca.cecchi.info@gmail.com>
-References: <20261008112645.1820678-1-luca.cecchi.info@gmail.com>
- <20261008122604.1862534-1-luca.cecchi.info@gmail.com>
- <20261008122604.1862534-2-luca.cecchi.info@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 08 Oct 2026 12:33:29 +0000
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="LuJOTTFZ"
+Received: by mail-wr1-f52.google.com with SMTP id ffacd0b85a97d-48b0584ad71so2039650f8f.0
+        for <linux-scsi@vger.kernel.org>; Thu, 08 Oct 2026 06:32:03 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1791466322; x=1792071122; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=EF0ORxL9xRoD8kTXGFBu2omdDiiROF2S9Nk6IzMT2Xs=;
+        b=LuJOTTFZsqidX0nbStyM9iRdRhHlv4YXvTfjxkPt8Zwo6ETbE1LapW9svivhat3xcT
+         t00q5dxRW6+ASmrDz5mAWfF1yerAgDFIaJrup8JXKdlVkusLvVaFlhoT1dUPjK07wIHq
+         lSO1O4WebEUDdfpFJVShYsqMIJQmPhft3rvAjsRpIchXHZ+zn6auWlZz4XHPVODsXFXP
+         hV7zm7QYrOyQFo4UsRsJbba/njnEEhstIIjtu0CaqsxiA08kvGLvoVZ/nJymmHFiGHYZ
+         juOvm+COeUlFuZdWUVeReMvdJynLJc5xI0+EL92EwrwEu/biry/LcGU9jgcJWnq/IpzW
+         dbRg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791466322; x=1792071122;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=EF0ORxL9xRoD8kTXGFBu2omdDiiROF2S9Nk6IzMT2Xs=;
+        b=iAUCrrYoxUN/xZa6q+yCopldUowDMarmCsZdl7vtax7jVapbDAtmSWOnFtzdkoVBtC
+         KXC8Ij5AyJc1cp3LdtMCUF8xvXBaXegEU+31GT5mYec6cS6qVLHuV+Bn7Am/24TqHKeE
+         2mqqylepbPDjwr1vnTJqvrx48U2mIqPXzrlf71m1xsoHw3pX9TaiEdXcLDrofizX5x0Q
+         1FWlSwgDh5ZuwgYuLSCN4lmYK2QWaTZOuYWfqOeo/u9Fuj1s9WDG7AGHm0DllcldpG/Q
+         c3eiM8nlxo6JZhlZ+sYFLYEL/M2K6vhRQFlz86AHG77nj28ZrTyGNlGe7xHAIgE3vjH7
+         qCTA==
+X-Gm-Message-State: AFq9FYJ4WkIjzVw6IaJFGU/zOmAIwxqyOvYIs016JWGZDuEnlZnZk+yM
+	wlorJ+kCxRWvYDZD/mJ1W4QL25wc8XZVyXfy8WNAkQSehQ4iZJDKTT8h8iSqadURDd8=
+X-Gm-Gg: AYBFou2qhI+Y1/I+1XrzQa1HgBpxjpDrwf3rHClXLTHW5AmWuiwx+OpMoeGelZrYdPe
+	QgOttCSQEhFP8neSp0U+XL/Mi224M2nUnxDk9oFID/9ShctFjgbaYc4z8Z+KSwj/pUonMdr2Zgm
+	5aoQ5pKtloaWHAUAA9vHOzPwyH0UCkmknhw7djebLDfOnDGTyotQZoTwak5pTpC6uoD92z7Speo
+	K+qqv7+KKTN+axkztXSQcterz+JK57AstUqnp2AWBZfWAH10Jsd+6/hLBFJANrLfuPuBRk1QYCp
+	h3YZH37KriC8HhHJoKfCrHgB5oxcLAtEEl/EQiD1aY/LZwcfJZRy2MCxQMDpaY9/eclxz/aEd1f
+	J+xTCYLJR9LR3vktZ92Xk3J7aHlCP5Ue44+HAvOQdjUoZfm4avvW4GnRmWR/ckVJiYo0VUaN9gD
+	bgU1uMZeRq0jDe1/gHyId9lDdJHBpGp9tg2qlbOnblTbPEcAmsyt0rhPXS74F+elvNAPOrfWrIi
+	8QSAS60SuW5/aYoagWrRlbSBjpWjcdDD9Ods9wKqA==
+X-Received: by 2002:adf:e19b:0:b0:48b:ff5:d297 with SMTP id ffacd0b85a97d-48c727823c4mr10620890f8f.25.1791466322023;
+        Thu, 08 Oct 2026 06:32:02 -0700 (PDT)
+Received: from ?IPV6:2001:a61:13be:f901:8903:c5f1:e7c8:72f0? ([2001:a61:13be:f901:8903:c5f1:e7c8:72f0])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48c75b53fb7sm8309301f8f.58.2026.10.08.06.32.01
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 08 Oct 2026 06:32:01 -0700 (PDT)
+Message-ID: <c2fd2fb5-0fe9-4788-bcd0-bf7d09c1b5d4@suse.com>
+Date: Thu, 8 Oct 2026 15:32:00 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 1/2] usb: uas: implement .change_queue_depth to allow
+ per-device queue depth override
+To: Luca Cecchi <luca.cecchi.info@gmail.com>, linux-usb@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, oneukum@suse.com
+References: <20261008112645.1820678-1-luca.cecchi.info@gmail.com>
+ <20261008122604.1862534-1-luca.cecchi.info@gmail.com>
+Content-Language: en-US
+From: Oliver Neukum <oneukum@suse.com>
+In-Reply-To: <20261008122604.1862534-1-luca.cecchi.info@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [High] usb-storage: truncation of US_FL_QDEPTH_075 on 32-bit architectures
-- [Medium] usb-storage: UAS queue depth cap overrides and violates 2-tag re=
-serve for small qdepths
---
+On 08.10.26 14:26, Luca Cecchi wrote:
 
-commit e6046cf877ab5ed09e6d0dc6b5f9a570cdfb3bd0
-Author: Luca Cecchi <luca.cecchi.info@gmail.com>
+> 
+> v2: guard against devinfo->qdepth holding a negative error code left
+>      over from a failed uas_configure_endpoints() call in
 
-usb: uas: add US_FL_QDEPTH_075 quirk to cap queue depth at probe time
+Sorry, overlapping mails.
+Please drop this part. Sashiko was too nice about this issue.
+It is a general bug. qdepth must never be negative. It is
+a general issue. I've submitted a patch. Your patch
+just hit the issue.
 
-This patch introduces the US_FL_QDEPTH_075 quirk to cap the queue depth of
-specific USB attached SCSI devices at 3/4 of their reported maximum during
-probe time. It applies this quirk to the Lexar ES3 enclosure to prevent
-firmware lockups under sustained deep command queueing.
+	Sorry
+		Oliver
 
-> diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
-> index f745c9ee02d35..975598c6a6613 100644
-> --- a/drivers/usb/storage/uas.c
-> +++ b/drivers/usb/storage/uas.c
-> @@ -1085,6 +1085,16 @@ static int uas_probe(struct usb_interface *intf, c=
-onst struct usb_device_id *id)
->  	 */
->  	shost->can_queue =3D devinfo->qdepth - 2;
-> =20
-> +	/*
-> +	 * Some bridge chips lock up under sustained deep command queueing
-> +	 * even within the margin above. For those, US_FL_QDEPTH_075 caps
-> +	 * the depth to 3/4 of the device's reported maximum at probe time,
-> +	 * closing the window a udev-triggered .change_queue_depth write
-> +	 * would otherwise leave open between probe and udev acting.
-> +	 */
-> +	if (devinfo->flags & US_FL_QDEPTH_075)
-> +		shost->can_queue =3D (devinfo->qdepth * 3) / 4;
-
-[Severity: Medium]
-Does this unconditionally override the previously calculated safe queue dep=
-th,
-violating the 2-tag reserve for devices with small queue depths?
-
-If a device or host controller limits qdepth to a small value, for example =
-4,
-the original logic safely restricts can_queue to 2 to reserve 1 tag for
-untagged commands and 1 tag for firmware off-by-one errors.
-
-With this change, (4 * 3) / 4 evaluates to 3, which accidentally inflates
-can_queue instead of capping it, leaving only 1 tag reserved.
-
-Could this use min_t(int, shost->can_queue, (devinfo->qdepth * 3) / 4) to
-ensure the baseline reservations are always respected?
-
-> diff --git a/drivers/usb/storage/unusual_uas.h b/drivers/usb/storage/unus=
-ual_uas.h
-> index d6f86d5db3bf2..d41f206faea13 100644
-> --- a/drivers/usb/storage/unusual_uas.h
-> +++ b/drivers/usb/storage/unusual_uas.h
-[ ... ]
-> +/* Reported-by: Luca Cecchi <luca.cecchi.info@gmail.com> */
-> +UNUSUAL_DEV(0x21c4, 0x0003, 0x0000, 0x9999,
-> +		"Lexar",
-> +		"ES3",
-> +		USB_SC_DEVICE, USB_PR_DEVICE, NULL,
-> +		US_FL_QDEPTH_075),
-
-[Severity: High]
-Will the US_FL_QDEPTH_075 quirk be silently discarded on 32-bit architectur=
-es?
-
-The usb_device_id struct uses kernel_ulong_t for the driver_info field,
-which is a 32-bit unsigned long on 32-bit platforms.
-
-Because US_FL_QDEPTH_075 is defined as a 33-bit value:
-
-include/linux/usb_usual.h:
-    US_FLAG(QDEPTH_075, 0x100000000ULL)
-
-When UNUSUAL_DEV sets this flag in the table here, casting the 64-bit value
-to kernel_ulong_t will silently truncate the upper bits to 0 on 32-bit
-platforms. This leaves affected devices exposed to the firmware lockups this
-patch intends to fix.
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261008122604.1862=
-534-1-luca.cecchi.info@gmail.com?part=3D2
