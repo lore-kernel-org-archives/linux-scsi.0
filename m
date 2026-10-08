@@ -1,55 +1,55 @@
 Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 254E947C100
-	for <linux-scsi@vger.kernel.org>; Thu,  8 Oct 2026 22:42:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4E75453A59
+	for <linux-scsi@vger.kernel.org>; Thu,  8 Oct 2026 22:42:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791499366; cv=none; b=fbYMOLSzqVWXIqbpNzoeSEvn5QOKwE8L/hok/41cRw5ocvuhBZ15F91ntnNn53EXK20Ywunc2jzmqsi4KbaYj2gkvpGUPoFYKet96RHIuuPsgB8Hf17d8OlL5m4R3q9hiq3TYoEOBTVl46LQHyI9KRC71dPSKCcC6DysZsycsxA=
+	t=1791499367; cv=none; b=Cpgc7pI08KyxYnprS6BhHcRsgP+KUQmjf5yfUeHRrmuGf21k1djv9YcwLvO50wDwIhs9Vgu8SmjM8ZrAwrCbotHtJ50r3pue/mxJt4TNoCh4ZX0BOf//H4z8WiZ1skNImYnOD0wNxJeeHsrnSug9Rf34FPmBSRacOd1G/u57pD4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791499366; c=relaxed/simple;
-	bh=IG3+EczdlkdGMUf+J2u8OxNOe51/4CDkNyGrEYRYaXs=;
+	s=arc-20240116; t=1791499367; c=relaxed/simple;
+	bh=0oOTdpTyuzdkzn5IbgFzTZN5i+9ErzKpLpsOldLdYic=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Djc3oNgDMO+q981eYUYqpPYyL9lMqqQiuC6Sfdw1NWapQJeI83QjH70C5hQ5WbSlCpaKA1PsjOilLBaM0Uy2YoUQIbmGbYj+3nMO4DRd5rrsd3UI5M1keYRM3ZNFo9t5xk/IHphO+2WaI5BhShZ8c3k4IBhU10vNZ5Apy4jC5mk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=GCtgc316; arc=none smtp.client-ip=199.89.1.14
+	 MIME-Version; b=H4ELff0Rs2i38Sf/rcFuc/BxMsZ3fXqQWtQ83HestAytZMH/ybUoVOUUnYYnfI3rIYYS49efGW5t5pRIayryez98qvkmdPYDgdGHpFYl6PBmW/DFi/tgSDfLmhfnGDbTrrNyOdnavLR6s+s/CIQg7Rlz/NjS4Wuum2Ua9HezzXo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=HiKOVhcY; arc=none smtp.client-ip=199.89.1.14
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="GCtgc316"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="HiKOVhcY"
 Received: from localhost (localhost [127.0.0.1])
-	by 011.lax.mailroute.net (Postfix) with ESMTP id 4j14kl5gfFz1XM30n;
-	Thu,  8 Oct 2026 22:42:39 +0000 (UTC)
+	by 011.lax.mailroute.net (Postfix) with ESMTP id 4j14kr3L2Wz1XM30k;
+	Thu,  8 Oct 2026 22:42:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:mime-version:references:in-reply-to
 	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1791499356; x=1794091357; bh=1fIlY
-	C4aOeGa49nJDKJisVYBGR/0rATwxkMZCXgVu+4=; b=GCtgc316rXAMlyZL0ZD0j
-	QAQ+02qBj1Wy7AWjBC9JOvP5nk3kPnwYJwh0xY8iZVqylR1xhZI12oi2b5qE51Vh
-	v25aDPiqwFNSvnpqQUGwx9F+pD77nQ7auhA/vRVOztQVLSz2JoaOuXSi2KVoA7p1
-	+/MubkLsdEpIPdzaqHtrBeWF+v2jQQBIi0/p/b83g05n24vaGKfjlwEPrdttSkN9
-	8uIWT6Ej4zFPuo4kExy+3UK9FwS5/xLAVgOEWJTBchUy4I+IcL1RFj1sAAHyJMwP
-	fSikpfrDomS9X6XYR+nRFXHlkrnl3lXHHb33vTspYqMkGCINrImWJeigUibWlaWA
-	g==
+	:received:received; s=mr01; t=1791499359; x=1794091360; bh=ikYF2
+	x65eRGgsbSmY45WvR3OIFrJ8VetcqvkLdaNSDY=; b=HiKOVhcY3vbOHZ2kVM8NE
+	ambay3qGuDxbTiMxqvu9Vw4Vbi6mS9DbOqt7eIQdR+kRNgxXvnCli0LE/LzBJLwj
+	Os39YZBbvslmdRX8G8LjKP/3P008RBVM6M8Zz88lNO1WMVjpVDLFgUaUaY7bpRnI
+	JYRQCo3R2AhwyEzmgt7BUSTMIg4jP+OPecPp2UTmfEj7yzl2yKAguXI8QPwVjTFV
+	H12Qw6WfgRuv7h0f3MRnBJrV7sgZmLqyo0MiFY+dYRHZR3jPc2um9YKlYnAkC5SC
+	SFQAXHx7KfO9TOcQGgEuKloLk9c1HxqWPvpWqPinfhGKEs12mJIUuy8sDaC2vU0p
+	A==
 X-Virus-Scanned: by MailRoute
 Received: from 011.lax.mailroute.net ([127.0.0.1])
  by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id d_ECSNcr4VnG; Thu,  8 Oct 2026 22:42:36 +0000 (UTC)
+ id ly5BZuxowjnp; Thu,  8 Oct 2026 22:42:39 +0000 (UTC)
 Received: from bvanassche.c.googlers.com.com (245.199.118.34.bc.googleusercontent.com [34.118.199.245])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4j14kd5dwwz1XM30h;
-	Thu,  8 Oct 2026 22:42:33 +0000 (UTC)
+	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4j14kj5cBQz1XM30g;
+	Thu,  8 Oct 2026 22:42:37 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
 	John Garry <john.garry@linux.dev>,
 	Christoph Hellwig <hch@lst.de>,
 	Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH v5 2/8] scsi: scsi_debug: Split resp_write_same()
-Date: Thu,  8 Oct 2026 15:42:13 -0700
-Message-ID: <1127ce1be450f0c4503845b41eaa24c27aba373a.1791499174.git.bvanassche@acm.org>
+Subject: [PATCH v5 4/8] scsi: scsi_debug: Split resp_read_dt0()
+Date: Thu,  8 Oct 2026 15:42:15 -0700
+Message-ID: <5336162520371fc22ebde7bd4080a9465908dd2a.1791499174.git.bvanassche@acm.org>
 X-Mailer: git-send-email 2.56.0.170.g584c36229d-goog
 In-Reply-To: <cover.1791499174.git.bvanassche@acm.org>
 References: <cover.1791499174.git.bvanassche@acm.org>
@@ -61,88 +61,157 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-Since the Clang thread-safety analyzer does not support conditional
-locking, split the function resp_write_same() such that all locking
-statements end up in the same branch of an if-statement.
+Split this function to remove conditional locking. This patch prepares
+for enabling context analysis.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: John Garry <john.garry@linux.dev>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/scsi_debug.c | 38 +++++++++++++++++++++++++-------------
- 1 file changed, 25 insertions(+), 13 deletions(-)
+ drivers/scsi/scsi_debug.c | 110 ++++++++++++++++++++++++--------------
+ 1 file changed, 71 insertions(+), 39 deletions(-)
 
 diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 44b4587b53c6..cadd94e17109 100644
+index eafcadc6ef07..c66f8556896d 100644
 --- a/drivers/scsi/scsi_debug.c
 +++ b/drivers/scsi/scsi_debug.c
-@@ -5412,8 +5412,8 @@ static int resp_write_scat(struct scsi_cmnd *scp,
- 	return ret;
+@@ -4608,6 +4608,70 @@ static int resp_read_tape(struct scsi_cmnd *scp, s=
+truct sdebug_dev_info *devip)
+ 	return 0;
  }
 =20
--static int resp_write_same(struct scsi_cmnd *scp, u64 lba, u32 num,
--			   u32 ei_lba, bool unmap, bool ndob)
-+static int __resp_write_same(struct scsi_cmnd *scp, u64 lba, u32 num,
-+			     u32 ei_lba, bool unmap, bool ndob, bool lbp)
- {
- 	struct scsi_device *sdp =3D scp->device;
- 	struct sdebug_dev_info *devip =3D (struct sdebug_dev_info *)sdp->hostda=
-ta;
-@@ -5425,21 +5425,14 @@ static int resp_write_same(struct scsi_cmnd *scp,=
- u64 lba, u32 num,
- 						scp->device->hostdata, true);
- 	u8 *fs1p;
- 	u8 *fsp;
--	bool meta_data_locked =3D false;
--	bool lbp =3D scsi_debug_lbp();
--
--	if (sdebug_dev_is_zoned(devip) || lbp) {
--		sdeb_meta_write_lock(sip);
--		meta_data_locked =3D true;
--	}
-=20
- 	ret =3D check_device_access_params(scp, lba, num, true);
- 	if (ret)
--		goto out;
-+		return ret;
-=20
- 	if (unmap && lbp) {
- 		unmap_region(sip, lba, num);
--		goto out;
-+		return ret;
- 	}
- 	lbaa =3D lba;
- 	block =3D do_div(lbaa, sdebug_store_sectors);
-@@ -5475,9 +5468,28 @@ static int resp_write_same(struct scsi_cmnd *scp, =
-u64 lba, u32 num,
- 	ret =3D 0;
- unlock:
- 	sdeb_data_write_unlock(sip);
--out:
--	if (meta_data_locked)
++/*
++ * Returns 0 upon success or -1 with *scsi_status set to a SCSI status c=
+ode upon
++ * failure.
++ */
++static int __resp_read_dt0_dix(struct scsi_cmnd *scp, u64 lba, u32 num,
++			       u32 ei_lba, int *scsi_status)
++{
++	const u8 *const cmd =3D scp->cmnd;
++
++	switch (prot_verify_read(scp, lba, num, ei_lba)) {
++	case 1: /* Guard tag error */
++		if (cmd[1] >> 5 !=3D 3) { /* RDPROTECT !=3D 3 */
++			mk_sense_buffer(scp, ABORTED_COMMAND,
++					LOGICAL_BLOCK_GUARD_CHECK_FAILED);
++			*scsi_status =3D check_condition_result;
++			return -1;
++		}
++		if (scp->prot_flags & SCSI_PROT_GUARD_CHECK) {
++			mk_sense_buffer(scp, ILLEGAL_REQUEST,
++					LOGICAL_BLOCK_GUARD_CHECK_FAILED);
++			*scsi_status =3D illegal_condition_result;
++			return -1;
++		}
++		break;
++	case 3: /* Reference tag error */
++		if (cmd[1] >> 5 !=3D 3) { /* RDPROTECT !=3D 3 */
++			mk_sense_buffer(scp, ABORTED_COMMAND,
++				LOGICAL_BLOCK_REFERENCE_TAG_CHECK_FAILED);
++			*scsi_status =3D check_condition_result;
++			return -1;
++		}
++		if (scp->prot_flags & SCSI_PROT_REF_CHECK) {
++			mk_sense_buffer(scp, ILLEGAL_REQUEST,
++				LOGICAL_BLOCK_REFERENCE_TAG_CHECK_FAILED);
++			*scsi_status =3D illegal_condition_result;
++			return -1;
++		}
++		break;
++	}
++	return 0;
++}
++
++/*
++ * Returns the number of bytes transferred, or -1 with *scsi_status set =
+to a
++ * SCSI status code on failure.
++ */
++static int __resp_read_dt0(struct scsi_cmnd *scp, struct sdeb_store_info=
+ *sip,
++			   u64 lba, u32 num, u32 ei_lba, int *scsi_status)
++{
++	int ret;
++
++	/* DIX + T10 DIF */
++	if (unlikely(sdebug_dix && scsi_prot_sg_count(scp))) {
++		ret =3D __resp_read_dt0_dix(scp, lba, num, ei_lba, scsi_status);
++		if (ret < 0)
++			return ret;
++	}
++
++	ret =3D do_device_access(sip, scp, 0, lba, num, 0, false, false);
++	if (ret < 0)
++		*scsi_status =3D DID_ERROR << 16;
 +	return ret;
 +}
 +
-+static int resp_write_same(struct scsi_cmnd *scp, u64 lba, u32 num, u32 =
-ei_lba,
-+			   bool unmap, bool ndob)
-+{
-+	struct scsi_device *sdp =3D scp->device;
-+	struct sdebug_dev_info *devip =3D sdp->hostdata;
-+	struct sdeb_store_info *sip =3D devip2sip(devip, true);
-+	const bool lbp =3D scsi_debug_lbp();
-+	int ret;
-+
-+	if (sdebug_dev_is_zoned(devip) || lbp) {
-+		sdeb_meta_write_lock(sip);
-+		ret =3D __resp_write_same(scp, lba, num, ei_lba, unmap, ndob,
-+					lbp);
- 		sdeb_meta_write_unlock(sip);
+ static int resp_read_dt0(struct scsi_cmnd *scp, struct sdebug_dev_info *=
+devip)
+ {
+ 	bool check_prot;
+@@ -4617,7 +4681,7 @@ static int resp_read_dt0(struct scsi_cmnd *scp, str=
+uct sdebug_dev_info *devip)
+ 	u64 lba;
+ 	struct sdeb_store_info *sip =3D devip2sip(devip, true);
+ 	u8 *cmd =3D scp->cmnd;
+-	bool meta_data_locked =3D false;
++	int scsi_status;
+=20
+ 	switch (cmd[0]) {
+ 	case READ_16:
+@@ -4699,48 +4763,16 @@ static int resp_read_dt0(struct scsi_cmnd *scp, s=
+truct sdebug_dev_info *devip)
+ 	}
+=20
+ 	if (sdebug_dev_is_zoned(devip) ||
+-	    (sdebug_dix && scsi_prot_sg_count(scp)))  {
++	    (sdebug_dix && scsi_prot_sg_count(scp))) {
+ 		sdeb_meta_read_lock(sip);
+-		meta_data_locked =3D true;
+-	}
+-
+-	/* DIX + T10 DIF */
+-	if (unlikely(sdebug_dix && scsi_prot_sg_count(scp))) {
+-		switch (prot_verify_read(scp, lba, num, ei_lba)) {
+-		case 1: /* Guard tag error */
+-			if (cmd[1] >> 5 !=3D 3) { /* RDPROTECT !=3D 3 */
+-				sdeb_meta_read_unlock(sip);
+-				mk_sense_buffer(scp, ABORTED_COMMAND,
+-					LOGICAL_BLOCK_GUARD_CHECK_FAILED);
+-				return check_condition_result;
+-			} else if (scp->prot_flags & SCSI_PROT_GUARD_CHECK) {
+-				sdeb_meta_read_unlock(sip);
+-				mk_sense_buffer(scp, ILLEGAL_REQUEST,
+-					LOGICAL_BLOCK_GUARD_CHECK_FAILED);
+-				return illegal_condition_result;
+-			}
+-			break;
+-		case 3: /* Reference tag error */
+-			if (cmd[1] >> 5 !=3D 3) { /* RDPROTECT !=3D 3 */
+-				sdeb_meta_read_unlock(sip);
+-				mk_sense_buffer(scp, ABORTED_COMMAND,
+-				      LOGICAL_BLOCK_REFERENCE_TAG_CHECK_FAILED);
+-				return check_condition_result;
+-			} else if (scp->prot_flags & SCSI_PROT_REF_CHECK) {
+-				sdeb_meta_read_unlock(sip);
+-				mk_sense_buffer(scp, ILLEGAL_REQUEST,
+-				      LOGICAL_BLOCK_REFERENCE_TAG_CHECK_FAILED);
+-				return illegal_condition_result;
+-			}
+-			break;
+-		}
++		ret =3D __resp_read_dt0(scp, sip, lba, num, ei_lba, &scsi_status);
++		sdeb_meta_read_unlock(sip);
 +	} else {
-+		ret =3D __resp_write_same(scp, lba, num, ei_lba, unmap, ndob,
-+					lbp);
-+	}
-+
- 	return ret;
- }
++		ret =3D __resp_read_dt0(scp, sip, lba, num, ei_lba, &scsi_status);
+ 	}
+=20
+-	ret =3D do_device_access(sip, scp, 0, lba, num, 0, false, false);
+-	if (meta_data_locked)
+-		sdeb_meta_read_unlock(sip);
+ 	if (unlikely(ret =3D=3D -1))
+-		return DID_ERROR << 16;
++		return scsi_status;
+=20
+ 	scsi_set_resid(scp, scsi_bufflen(scp) - ret);
 =20
