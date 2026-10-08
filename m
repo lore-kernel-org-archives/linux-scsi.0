@@ -1,44 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9FE6446AF2C
-	for <linux-scsi@vger.kernel.org>; Thu,  8 Oct 2026 22:50:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0AB1133122A
+	for <linux-scsi@vger.kernel.org>; Thu,  8 Oct 2026 22:52:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791499852; cv=none; b=pkvPDMcxbdGOTnhJSLiLxfV99FXnu+zgjfB+xETLT1rD8KoqS0Qm12o5Uqz6qpjGl5tqdeQBZXN6spsYQDAbXNQeQYERN3g4Xp9I2jBaLI3Y5zZiT2YyNa58QQzmXKLHTiQUc7rEoItggcfuVzPu6UBHJrpTKOh5vHuZa+bE/lI=
+	t=1791499969; cv=none; b=XgjSPRyftjVu4q1Dq2GmUBUGvAe0D7KuP3lcyq6XYkkVRhiqHTjHSX0XcRukTxBuAnHKlDz1sgIjorOj6095GMFZd2RvZZsjq/oVGLDtJd9VdODQOddPIBALKnKLNbZ/4Uj0e1c+Wvc9PGEf7EWEl3BQ6fhq4QD/hMtrBqSxXGM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791499852; c=relaxed/simple;
-	bh=99IsG/vc/0Xq01Bghge+JU1FVzHQxq01YUiOMKRbguQ=;
+	s=arc-20240116; t=1791499969; c=relaxed/simple;
+	bh=O4NP3IswViPI57f0Zg64mpm+5VtdtSsTH9Vng0WbPuI=;
 	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
-	 Date; b=C8WbJYP3qErWUPYk+Zd8RNRFmVaeuV8CftFkq1g7nVa8Jx9sRe0aJ5xNl9g7+x/YihLLTt+FT0SYh/aCzAOOP/rTjaBdQ9HqaC2HpTOcWniagPdg9wlT1iagDGbrquAL+v1Zw+3F1WXQFfdP3CbrzkI6Mf8Hxq5Vx7owFS+ZWko=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RgtSubPB; arc=none smtp.client-ip=100.103.45.18
+	 Date; b=myZCsDwZS1tL5/DEZmHhnVcte3saXf3LoWI4hvK9jcw/9mwHJVhYuD+W+0+nrTDTGP9iWQF1mT9YGsup738J9j3yDl/Z4KRNr4cgns5uGaXvp+P/reXg617mPZZCIiO3IOpfRBEjkp9kzcXdLEOY8FyPrLJYn8IRUYG0ax+mjJM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DKE4zglA; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RgtSubPB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 286B21F000FF;
-	Thu,  8 Oct 2026 22:50:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DKE4zglA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8F2CC1F000FF;
+	Thu,  8 Oct 2026 22:52:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791499851;
-	bh=1QvP7XfihigVihLtiR+qI2TcTS3yPdVuXMY+ZH8Kky8=;
+	s=k20260515; t=1791499967;
+	bh=G0gZviXcqjF6uKDGUNx5jLluxq298JvNUCylCp6e9g0=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=RgtSubPBXYjfiF1mRoqZgYVwLUMdsaTv1VNUPBgFKBiDZyAP2gqsuR/jx6w5UyjlN
-	 KzhFzrRB6fXvzgS0XfbXdNvEz7n8lweejRUzrT3fc3igaDabL3KGCeQm35KSpdJcLX
-	 aCdDBIO1kSM0oXHqabwMMrTqAaPwsd86b0xGvg5B440GGPSgQbbBSygYQyMdCo3CGN
-	 sKDxvA1AuErm1DuC649InjEjV4FHqcWyHCW8fj2NM9dF5XPAA4qk8226iHFfBrCWo3
-	 qqbNjYod/oYO7icKuGKf0re1gn7mXO+WH2Btr2AExnAd1Mo2vQFWQFIRY3VsRDCMpB
-	 8CoMRiPK86K7A==
-Message-ID: <sashiko-outbox-164646@kernel.org>
+	b=DKE4zglAYSwkbwqpSPQ3wApbLFFSqo26ElXtQR5oNMklPKIwY8V4gh7pfQrjCtPTT
+	 DEx7o3Du6dGFx7RC7aSy9A1Jvsw34Zl20wJ6/p14oY8L9TKd8ovQKJSnvEfG/jVYbc
+	 ZSUGMF74J4Ls6lt5m+5hWWL2o7R/bNXSMAR11lo1CrdR+f4gQzgScweQdG7zWTRiK7
+	 IQzNkB+DBZ5Bj4b4VlbB1DJ6os4Q0MYexYU7caOwnCismEY/Os5f/xn+U1v5jbp97y
+	 4Qr1DvShPJY9juG+mEXFaze/0YeRxbNfSWWGWs/0qciHmG64g6hUpQ+Mz+ZsuOXw8T
+	 adVAWh9xLMMiQ==
+Message-ID: <sashiko-outbox-164650@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 1/2] scsi: target: rd: Fix oversized sg table array
- allocation
+Subject: Re: [PATCH v5 2/8] scsi: scsi_debug: Split resp_write_same()
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Sanan Hasanov" <sanan.hasanou@gmail.com>
+To: "Bart Van Assche" <bvanassche@acm.org>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20261008223712.49827-2-sanan.hasanou@gmail.com>
-References: <20261008223712.49827-1-sanan.hasanou@gmail.com>
- <20261008223712.49827-2-sanan.hasanou@gmail.com>
+In-Reply-To: <1127ce1be450f0c4503845b41eaa24c27aba373a.1791499174.git.bvanassche@acm.org>
+References: <cover.1791499174.git.bvanassche@acm.org>
+ <1127ce1be450f0c4503845b41eaa24c27aba373a.1791499174.git.bvanassche@acm.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 08 Oct 2026 22:50:50 +0000
+Date: Thu, 08 Oct 2026 22:52:47 +0000
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -47,93 +46,62 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] target: bypass of totalram_pages limit via configfs causes unbound=
-ed allocation and leak
+- [Medium] scsi_debug: data race on sip->storep between unmap_region() and =
+do_device_access()
 --
 
-commit 080421786d44f31a44c204db4deacf32fd54462e
-Author: Sanan Hasanov <sanan.hasanov@ucf.edu>
-scsi: target: rd: Fix oversized sg table array allocation
+commit b0d6230062e0df8cfca0c47695724e008bd7da04
+Author: Bart Van Assche <bvanassche@acm.org>
 
-This commit adds a limit check to ensure the ramdisk page count does not
-exceed totalram_pages() during device configuration, avoiding large
-out-of-bounds allocations. It also changes kzalloc_objs to kvzalloc_objs to
-fallback to vmalloc for large valid page counts.
+scsi: scsi_debug: Split resp_write_same()
 
-Closes: https://syzkaller.appspot.com/bug?extid=3Dfa495e1497c48a6ed885
+This commit splits resp_write_same() into two functions to ensure all locki=
+ng
+statements end up in the same branch of an if-statement. This change is
+intended to support the Clang thread-safety analyzer.
 
-> diff --git a/drivers/target/target_core_rd.c b/drivers/target/target_core=
-_rd.c
-> index 092d9fe0d4e31..97c63b12266fb 100644
-> --- a/drivers/target/target_core_rd.c
-> +++ b/drivers/target/target_core_rd.c
+> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+> index 44b4587b53c66..cadd94e17109a 100644
+> --- a/drivers/scsi/scsi_debug.c
+> +++ b/drivers/scsi/scsi_debug.c
+[ ... ]
+> -static int resp_write_same(struct scsi_cmnd *scp, u64 lba, u32 num,
+> -			   u32 ei_lba, bool unmap, bool ndob)
+> +static int __resp_write_same(struct scsi_cmnd *scp, u64 lba, u32 num,
+> +			     u32 ei_lba, bool unmap, bool ndob, bool lbp)
+>  {
+>  	struct scsi_device *sdp =3D scp->device;
+[ ... ]
+>  	ret =3D check_device_access_params(scp, lba, num, true);
+>  	if (ret)
+> -		goto out;
+> +		return ret;
+> =20
+>  	if (unmap && lbp) {
+>  		unmap_region(sip, lba, num);
+> -		goto out;
+> +		return ret;
+
+[Severity: Medium]
+Does this early return result in a data race on the sip->storep buffer?
+
+When a SCSI UNMAP command (or WRITE SAME with the unmap bit set) and a READ
+command execute concurrently on the same LBA range of an LBP-enabled device,
+unmap_region() modifies the data store via memset().
+
+By returning early here, __resp_write_same() only holds the
+sdeb_meta_write_lock (acquired in the resp_write_same() caller) and bypasses
+acquiring the sdeb_data_write_lock.
+
+Concurrently, read operations like resp_read_dt0() -> do_device_access()
+acquire only the sdeb_data_read_lock and skip the sdeb_meta_read_lock entir=
+ely
+when running on non-zoned/non-DIX devices.=20
+
+Could this concurrent access to sip->storep result in torn or mixed reads?
 
 [ ... ]
-
-> @@ -188,10 +189,16 @@ static int rd_build_device_space(struct rd_dev *rd_=
-dev)
->  	if (rd_dev->rd_flags & RDF_NULLIO)
->  		return 0;
-> =20
-> +	if (rd_dev->rd_page_count > totalram_pages()) {
-> +		pr_err("Page count: %u exceeds total RAM pages: %lu for Ramdisk device=
-\n",
-> +		       rd_dev->rd_page_count, totalram_pages());
-> +		return -EINVAL;
-> +	}
-> +
->  	total_sg_needed =3D rd_dev->rd_page_count;
-> =20
->  	sg_tables =3D (total_sg_needed / max_sg_per_table) + 1;
-> -	sg_table =3D kzalloc_objs(*sg_table, sg_tables);
-> +	sg_table =3D kvzalloc_objs(*sg_table, sg_tables);
->  	if (!sg_table)
->  		return -ENOMEM;
-> =20
-
-[ ... ]
-
-> @@ -248,7 +255,7 @@ static int rd_build_prot_space(struct rd_dev *rd_dev,=
- int prot_length, int block
->  	total_sg_needed =3D (rd_dev->rd_page_count * prot_length / block_size) =
-+ 1;
-> =20
->  	sg_tables =3D (total_sg_needed / max_sg_per_table) + 1;
-> -	sg_table =3D kzalloc_objs(*sg_table, sg_tables);
-> +	sg_table =3D kvzalloc_objs(*sg_table, sg_tables);
-
-[Severity: High]
-Does this code still allow an unbounded memory allocation bypass and a
-resource leak?
-
-While a totalram_pages() limit check was added to rd_build_device_space()
-above, the configfs control attribute can dynamically update
-rd_dev->rd_page_count via rd_set_configfs_dev_params() after the device
-is already configured:
-
-drivers/target/target_core_rd.c:rd_set_configfs_dev_params() {
-    ...
-    rd_dev->rd_page_count =3D arg;
-    ...
-}
-
-If a massive page count is set dynamically and then PI protection is enabled
-by writing to the pi_prot_type attribute, rd_init_prot() calls
-rd_build_prot_space(). The bypassed rd_page_count is used to calculate
-total_sg_needed here, potentially re-triggering the memory exhaustion
-without any limit checks.
-
-Additionally, if the large allocation fails downstream in
-rd_allocate_sgl_table(), rd_build_prot_space() returns the error but leaves
-rd_dev->sg_prot_array pointing to the partially populated table without
-freeing it. Since pi_prot_type transitions back to 0 on failure, can the us=
-er
-repeatedly trigger this path to leak system memory?
-
->  	if (!sg_table)
->  		return -ENOMEM;
->
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261008223712.4982=
-7-1-sanan.hasanou@gmail.com?part=3D1
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1791499174.gi=
+t.bvanassche@acm.org?part=3D2
