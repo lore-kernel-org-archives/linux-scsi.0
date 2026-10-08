@@ -1,159 +1,300 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14F9525B08D
-	for <linux-scsi@vger.kernel.org>; Thu,  8 Oct 2026 03:46:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A4C63783C6
+	for <linux-scsi@vger.kernel.org>; Thu,  8 Oct 2026 04:01:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791431220; cv=none; b=KT3e1+bcP5Jdv06vZTbRkFOw6siUWJYyk1mMxnVvPxwBx29GE3DsxwhMpCzYuzPGkColB6H5X9B8MUw+alby7qmx2nLMxy0inGbvDt9IMHy9NfXSyjDF4c7bmpfNQRzCOq8CbGdL29WuojY+Cv9POd4MPr0zhpkAF+sCBM4sCR0=
+	t=1791432122; cv=none; b=GU4fsuLfTHEWNljVP3waNSUVvghWNPEvL17anuuHqQLq8VHg7XVW5qMmNTFPsudXpBCaUTdn9PqAG2ZADcOu7qm1Znb9EUo8bWOFq08SF9EooQCJfkQe9xrReSq74STQbecwSKn1vYAYEcJGY+7xlasHHVsHFBDiLUY9GGk2mdI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791431220; c=relaxed/simple;
-	bh=bLKhDNBsx2JsuZSiJ3f/1EmKD/pycfDcvmpwC+LYG5I=;
-	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
-	 Date; b=k8gdh34ge4xMYLEhZeG1KAqlpx4CxD3ZhN0Oz/hdlRpam2TnIxmdtbgHb0df8nyuE6NNTvhE7+KTJNy9MEWabzQz74SksrsozG+cy8GjeesJxDpCESam2od2nfmRKXfpbIRnHRkDlNs+LHDFJEAp55lJN5oBdSlVJzv/SftOgQw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cDjz64Ck; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791432122; c=relaxed/simple;
+	bh=S2HX0NxKa03U27J+jIphYK1NDRJiLWnKVLa3qhkVVGI=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=VUSuBBNgQ8vgMxefeh5Q5FgMFtCvZQ3dDISuibYvu3C5aTnY2tWJcG6RMkKTH5d1evkFvBQe4zvVMtT6c/dO9JWsuIR/pguGt7gTuyqSwQlbcQzqrprTInMRAAAJ17n0XstG+CvJ2I+nZRIsxt/0shQfl2V630lawGBZdWVyBek=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr; spf=none smtp.mailfrom=isslab.korea.ac.kr; dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b=LNRe18Kk; arc=none smtp.client-ip=209.85.214.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cDjz64Ck"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 89BD61F000FF;
-	Thu,  8 Oct 2026 03:46:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791431218;
-	bh=Q1ZdFofrbgKap7sGz5UdiFRAqt/xmhDtupoO5/f+DJY=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=cDjz64CkB/6GLxsp/JtGhJh2NtKx5pzndNMOpk3IeInHODlm0PfSP22hTXl1U/8JK
-	 gyTULjQONBdADXy6ixf/TVyh7sz29Eu3Bmv/l13DVWyPMwTP/MlEav0/EO9NoE19F+
-	 e0UmYXBZN5nfim/EqH70R3x6cuMgS7UaD2Ju4eqXcJVZ9eTPI02gdDIhI6fGKwT/0x
-	 6WQn57UgnRGr1Zo8xoaFETU8uICkNa88Pdr9ktYT0WrLhKRXCXPe9YyRK59ANDdZ1l
-	 u/ylmDh7ValUCDUuAc1mXE67GuuFQW1khn/caI6lyluNP5Qm/3/qjfWbdgwlrHzDHG
-	 hCCCewn8rxW8Q==
-Message-ID: <sashiko-outbox-163581@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 4/4] scsi: hisi_sas: Fix spinup failure for SAS SSP
- devices in Active_Wait state
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Xingui Yang" <yangxingui@huawei.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20261008032605.2853026-5-yangxingui@huawei.com>
-References: <20261008032605.2853026-1-yangxingui@huawei.com>
- <20261008032605.2853026-5-yangxingui@huawei.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 08 Oct 2026 03:46:58 +0000
+	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b="LNRe18Kk"
+Received: by mail-pl1-f173.google.com with SMTP id d9443c01a7336-2dfa54c8ccfso1786485ad.0
+        for <linux-scsi@vger.kernel.org>; Wed, 07 Oct 2026 21:01:58 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=isslab-korea-ac-kr.20251104.gappssmtp.com; s=20251104; t=1791432118; x=1792036918; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=eo0Mxm2U7pH93nJD67q7zSOE038zz8DvuAtE9yTrVy8=;
+        b=LNRe18KkAxka7eVkrty7ZugRh7Sk8Gl8khPeQHboYbDsx/p44rUYGlslW1IO2HFCer
+         x9HgwIm0X/9X5scMMamVYh8iQ52m1sGmJA93dJVUzXs/Kw30PvTi6h0yDz7+ZaKH7sM0
+         6Ql4KOUrJ2AdI5EjZ8uOs568ePhz43tKtIqqSGgGY3vl9woUYLPZWwX3QcTzR2m6Aqj/
+         H1MdZOdpn4513pg8nwnDl4ri51SjsKOrtSuTX474wLLkEvZVkyLzsL6iyP/OOTXkYPYD
+         T0PGH3a3MVEGnJNDbAS/q4tZPhAKLN82aYzTazejzDegDpR91Jvx44+/o/8UTQHpnOxR
+         llNg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791432118; x=1792036918;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=eo0Mxm2U7pH93nJD67q7zSOE038zz8DvuAtE9yTrVy8=;
+        b=lhnvP1EBwRhxg5Xyls2YmxTf6qjUA/BhWRiA0cHtKadE2+0X4be4SkUibmrjcH5hgx
+         XVRJMJ15AQ7tX4rDlKjpKp/kSnxz0k045nQh9KtHDFjG3pqdtj3VrEjDTd3bZdmrTYPj
+         xBjiBbHAqkfocki6fP2cKkBWhYXsZ1dBhBaPTSnXSjYPjfnct6jXF9I6ZTIUh/DxxX82
+         JYOXQG8dm39+is4VBHekx87LQrDJD728ip5MoA0wLlr3A4iM4ONl3AB/TeyDTMJPK1Ga
+         2oQuIrB4T8L/LFyu+xBlBo5Dvt9m/3+J5tOjAVYKhAP9H5WNtVwBABgXEzRptFuGaPYk
+         pRUA==
+X-Gm-Message-State: AFq9FYKXPAKlm3dW3WcOW2/ZgxqXA6ucP2h7eo+wfWIimTlh1Y7Oph5j
+	EmQKRxV012+pkMmTPueL9j3QrCcBh3+t1JKJm3jgqEtzLXX6TcuynV9lXKxMp+pKZRA=
+X-Gm-Gg: AYBFou0XDYCvP626otfLnEhrxEdVrepgHAdgXjDz+1MHW9YLNHACG73AqOfejTpyr6w
+	8T+ZHIhqBXFavGm2oUNwBXBrjyHnd8jf4Jf1dIj4q87NpKuwzy8xhKKhAH9PkT/Xn2BUgKbw5GL
+	+hZxrToZ+cuLWaC7YRpMTKQTlt357BFAHeyMThcd5iz2cndC5yvcny9lDCSM9e51tjoCi3qvL6y
+	EtRAbUzJnSbaqxh8LqX1pg85sEcjdv9ymCrjiXuR0JYg8JXWWbV0DdqWYP2uPqtS/FE5awrEzra
+	/b9BnDO3HjWx3TJ55T5kj8DwURGa0LAFaEZ9IC5q+m5CJUaAFaQMRHEI/o3EqdHHDMUaLpo1S0O
+	+uePO2IPWwJki7FrTsFLhXl8lyc9SF3vjTvUlAS/XGStVIiMnqgxfqJ3pSBmgVwPsqH6Vg0hrbO
+	qf7EcwIDR9p1UoFX/6XLqENVsNmonP+4VXJHNqZKC1upJHqnezMDWtHBnGC+WsUSW+R1apZxR2M
+	9v6Sw==
+X-Received: by 2002:a17:90b:2d4c:b0:3a0:c31d:80c with SMTP id 98e67ed59e1d1-3aadff4891amr663631a91.9.1791432117993;
+        Wed, 07 Oct 2026 21:01:57 -0700 (PDT)
+Received: from yhlee-960QFG.. ([125.131.91.97])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3a9ff5cd5c3sm2505994a91.17.2026.10.07.21.01.54
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 07 Oct 2026 21:01:57 -0700 (PDT)
+From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+To: michael.christie@oracle.com,
+	martin.petersen@oracle.com,
+	lduncan@suse.com,
+	cleech@redhat.com,
+	James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org,
+	yhlee@isslab.korea.ac.kr
+Subject: [PATCH v6] scsi: libiscsi_tcp: zero the unsent part of a short read
+Date: Thu,  8 Oct 2026 13:01:29 +0900
+Message-ID: <20261008040129.747538-1-yhlee@isslab.korea.ac.kr>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [High] scsi: hisi_sas: hardware access on suspended device via late CQ in=
-terrupt
-- [Medium] pm: pm_runtime_get_noresume() used in IRQ handler instead of pm_=
-runtime_get_if_active()
---
+A target can finish a read without sending the data.  iscsi_tcp_data_in()
+bounds each Data-In PDU against the command buffer but never adds them up,
+so a completion that declares no underflow is believed and the command
+ends with DID_OK.  The pages keep whatever they held.
 
-commit 8d6af7e7596b04b1c535c9ae957073a4a940e9cc
-Author: Xingui Yang <yangxingui@huawei.com>
+Over a 1 MiB pread of a file that had never been read, 999424 bytes came
+back as the contents of an unrelated file the same process had written
+earlier.  pread() returned 1048576 and errno was 0.
 
-scsi: hisi_sas: Fix spinup failure for SAS SSP devices in Active_Wait state
+Count the Data-In payload per task and, when the command completes, zero
+the tail of the read buffer that was never received.  Whatever the
+midlayer reports as transferred the caller then sees zeroes instead of
+stale page contents, so no completion status has to be special-cased.
+Writes are untouched.
 
-This commit fixes a spinup failure for SAS SSP devices by parsing the sense
-data in the slot completion path. When LU_NOT_READY_NOTIFY_REQUIRED is
-returned, it queues a work item to send a spinup notify primitive while
-taking a runtime PM reference.
+Fixes: a081c13e39b5 ("[SCSI] iscsi_tcp: split module into lib and lld")
+Cc: stable@vger.kernel.org
+Signed-off-by: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+---
+v6: change approach.  Instead of deciding from the status, the sense, the
+    service response and the residual whether the target promised the whole
+    buffer, zero the bytes that did not arrive.  The previous versions kept
+    growing because every completion shape that reports a full transfer has
+    to be enumerated - SAM_STAT_GOOD, CHECK_CONDITION with RECOVERED_ERROR,
+    and whatever a future upper-level driver decides - and missing one hands
+    the caller the previous contents of those pages.  Zeroing the tail is
+    independent of all of it: whatever the midlayer reports as transferred,
+    the caller sees zeroes.  That also removes the need to fail the command,
+    so a legitimate error reply no longer costs the connection.  The
+    predictor and its three call sites go away; the per-task counter, its
+    reset and the continuity check stay.
+v5: do not check a response that did not complete at the target
+    (ISCSI_STATUS_CMD_COMPLETED), since iscsi_scsi_cmd_rsp() already fails
+    it with DID_ERROR, and treat a residual larger than the command buffer
+    as a protocol error rather than a reason to skip the check (noted by
+    Sashiko AI review).  The remaining case it raised, CHECK_CONDITION with
+    a data segment shorter than two bytes, needs no change: libiscsi fails
+    that with DID_BAD_TARGET, so the data is never handed to the caller.
+v4: also validate coverage when the status is CHECK_CONDITION with a sense
+    key of RECOVERED_ERROR.  sd_done() counts RECOVERED_ERROR as the whole
+    buffer transferred, so v3's "skip every non-GOOD status" left a target
+    able to short a read and still have it reported as a full success
+    (noted by Sashiko AI review).
+    The Data-In continuity check requires in-order Data-In and so does not
+    interoperate with a target that negotiates DataPDUInOrder=No; that is
+    deliberate, as making a safety check conditional on a peer-negotiated
+    value would let the peer turn it off.
+v3: only validate coverage for SAM_STAT_GOOD completions; a non-GOOD reply
+    such as CHECK_CONDITION that omits the underflow flag must not be
+    treated as a short read (noted by Sashiko AI review).
+v2: take back_lock once on the SCSI Response path and make the counter
+    uint32_t, both per Mike Christie's review.
 
-> diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sa=
-s/hisi_sas_main.c
-> index 944ce19ae2fc1..f3b6bb510a71e 100644
-> --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-> +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-> @@ -996,10 +996,25 @@ static void hisi_sas_phyup_pm_work(struct work_stru=
-ct *work)
->  	pm_runtime_put_sync(dev);
->  }
-> =20
-> +static void hisi_sas_spinup_notify_work(struct work_struct *work)
-> +{
-> +	struct hisi_sas_phy *phy =3D
-> +		container_of(work, typeof(*phy), works[HISI_PHYE_SPINUP_NOTIFY]);
-> +	struct hisi_hba *hisi_hba =3D phy->hisi_hba;
-> +	struct device *dev =3D hisi_hba->dev;
-> +	int phy_no =3D phy->sas_phy.id;
-> +
-> +	hisi_hba->hw->sl_notify_ssp(hisi_hba, phy_no);
+On "was it built over another patch?" - no, v1 was generated against
+v7.2-rc5 directly.  It stopped applying because c1dea15f819cd ("scsi:
+libiscsi_tcp: Bound SCSI Response data segment to the connection
+buffer") folded ISCSI_OP_SCSI_CMD_RSP into the shared response case,
+which is the block v1's last hunk patched.
 
-[Severity: High]
-Could this work item execute after the hardware is suspended?=20
+v1: https://lore.kernel.org/all/20260814121428.359541-1-yhlee@isslab.korea.ac.kr/
 
-If a completion queue interrupt fires during suspend, it could happen in the
-window between the workqueue flush and disabling interrupts:
+ drivers/scsi/libiscsi_tcp.c | 85 +++++++++++++++++++++++++++++++++++--
+ include/scsi/libiscsi_tcp.h |  1 +
+ 2 files changed, 83 insertions(+), 3 deletions(-)
 
-_suspend_v3_hw()
-    flush_workqueue(hisi_hba->wq);
-    // interrupt fires -> hisi_sas_spinup_notify() queues this work
-    interrupt_disable_v3_hw(hisi_hba);
+diff --git a/drivers/scsi/libiscsi_tcp.c b/drivers/scsi/libiscsi_tcp.c
+index d35f93451ee9b..00bdbcc6e27e3 100644
+--- a/drivers/scsi/libiscsi_tcp.c
++++ b/drivers/scsi/libiscsi_tcp.c
+@@ -397,6 +397,61 @@ void iscsi_tcp_hdr_recv_prep(struct iscsi_tcp_conn *tcp_conn)
+ }
+ EXPORT_SYMBOL_GPL(iscsi_tcp_hdr_recv_prep);
+ 
++/**
++ * iscsi_tcp_zero_unread - zero the part of a read buffer the target never sent
++ * @task: scsi command task
++ *
++ * A target can end a read without sending all of the data, in any of the ways
++ * a completion can be reported.  Rather than predict from the status, the
++ * sense and the residual whether the buffer was promised in full, zero the
++ * bytes that did not arrive.  Whatever the midlayer then reports as
++ * transferred, the caller sees zeroes and not the previous contents of those
++ * pages.
++ *
++ * The continuity check in iscsi_tcp_data_in() means the bytes that did not
++ * arrive are exactly the tail, so one range covers them.
++ */
++static void iscsi_tcp_zero_unread(struct iscsi_task *task)
++{
++	struct iscsi_tcp_task *tcp_task = task->dd_data;
++	struct scsi_cmnd *sc = task->sc;
++
++	if (!sc || sc->sc_data_direction != DMA_FROM_DEVICE ||
++	    tcp_task->data_in_bytes >= sc->sdb.length)
++		return;
++
++	sg_zero_buffer(sc->sdb.table.sgl, sc->sdb.table.nents,
++		       sc->sdb.length - tcp_task->data_in_bytes,
++		       tcp_task->data_in_bytes);
++}
++
++/**
++ * iscsi_tcp_complete_cmd - zero any unread tail, then complete the command
++ * @conn: iscsi connection
++ * @hdr: the PDU carrying the status
++ * @data: data segment of that PDU, if it has one
++ * @datalen: length of @data
++ *
++ * back_lock is taken once for the lookup, the fill and the completion.
++ */
++static int iscsi_tcp_complete_cmd(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
++				  char *data, int datalen)
++{
++	struct iscsi_task *task;
++	int rc;
++
++	spin_lock(&conn->session->back_lock);
++	task = iscsi_itt_to_ctask(conn, hdr->itt);
++	if (!task) {
++		spin_unlock(&conn->session->back_lock);
++		return ISCSI_ERR_BAD_ITT;
++	}
++	iscsi_tcp_zero_unread(task);
++	rc = __iscsi_complete_pdu(conn, hdr, data, datalen);
++	spin_unlock(&conn->session->back_lock);
++	return rc;
++}
++
+ /*
+  * Handle incoming reply to any other type of command
+  */
+@@ -410,8 +465,13 @@ iscsi_tcp_data_recv_done(struct iscsi_tcp_conn *tcp_conn,
+ 	if (!iscsi_tcp_dgst_verify(tcp_conn, segment))
+ 		return ISCSI_ERR_DATA_DGST;
+ 
+-	rc = iscsi_complete_pdu(conn, tcp_conn->in.hdr,
+-			conn->data, tcp_conn->in.datalen);
++	if ((tcp_conn->in.hdr->opcode & ISCSI_OPCODE_MASK) ==
++	    ISCSI_OP_SCSI_CMD_RSP)
++		rc = iscsi_tcp_complete_cmd(conn, tcp_conn->in.hdr, conn->data,
++					    tcp_conn->in.datalen);
++	else
++		rc = iscsi_complete_pdu(conn, tcp_conn->in.hdr, conn->data,
++					tcp_conn->in.datalen);
+ 	if (rc)
+ 		return rc;
+ 
+@@ -509,6 +569,11 @@ static int iscsi_tcp_data_in(struct iscsi_conn *conn, struct iscsi_task *task)
+ 		return ISCSI_ERR_DATA_OFFSET;
+ 	}
+ 
++	if (tcp_task->data_offset != tcp_task->data_in_bytes)
++		return ISCSI_ERR_DATA_OFFSET;
++
++	tcp_task->data_in_bytes += tcp_conn->in.datalen;
++
+ 	conn->datain_pdus_cnt++;
+ 	return 0;
+ }
+@@ -658,7 +723,7 @@ iscsi_tcp_process_data_in(struct iscsi_tcp_conn *tcp_conn,
+ 
+ 	/* check for non-exceptional status */
+ 	if (hdr->flags & ISCSI_FLAG_DATA_STATUS) {
+-		rc = iscsi_complete_pdu(conn, tcp_conn->in.hdr, NULL, 0);
++		rc = iscsi_tcp_complete_cmd(conn, tcp_conn->in.hdr, NULL, 0);
+ 		if (rc)
+ 			return rc;
+ 	}
+@@ -752,6 +817,14 @@ iscsi_tcp_hdr_dissect(struct iscsi_conn *conn, struct iscsi_hdr *hdr)
+ 			spin_unlock(&conn->session->back_lock);
+ 			return rc;
+ 		}
++		/*
++		 * A Data-In with no data segment can still carry the status,
++		 * and it completes the command here rather than from
++		 * iscsi_tcp_process_data_in(), so fill the tail on this path
++		 * too.
++		 */
++		if (hdr->flags & ISCSI_FLAG_DATA_STATUS)
++			iscsi_tcp_zero_unread(task);
+ 		rc = __iscsi_complete_pdu(conn, hdr, NULL, 0);
+ 		spin_unlock(&conn->session->back_lock);
+ 		break;
+@@ -783,6 +856,11 @@ iscsi_tcp_hdr_dissect(struct iscsi_conn *conn, struct iscsi_hdr *hdr)
+ 			break;
+ 		}
+ 
++		if (opcode == ISCSI_OP_SCSI_CMD_RSP && !tcp_conn->in.datalen) {
++			rc = iscsi_tcp_complete_cmd(conn, hdr, NULL, 0);
++			break;
++		}
++
+ 		/* If there's data coming in with the response,
+ 		 * receive it to the connection's buffer.
+ 		 */
+@@ -995,6 +1073,7 @@ int iscsi_tcp_task_init(struct iscsi_task *task)
+ 
+ 	BUG_ON(kfifo_len(&tcp_task->r2tqueue));
+ 	tcp_task->exp_datasn = 0;
++	tcp_task->data_in_bytes = 0;
+ 
+ 	/* Prepare PDU, optionally w/ immediate data */
+ 	ISCSI_DBG_TCP(conn, "task deq [itt 0x%x imm %d unsol %d]\n",
+diff --git a/include/scsi/libiscsi_tcp.h b/include/scsi/libiscsi_tcp.h
+index ef53d4bea28a0..a6e63db75d674 100644
+--- a/include/scsi/libiscsi_tcp.h
++++ b/include/scsi/libiscsi_tcp.h
+@@ -66,6 +66,7 @@ struct iscsi_tcp_conn {
+ 
+ struct iscsi_tcp_task {
+ 	uint32_t		exp_datasn;	/* expected target's R2TSN/DataSN */
++	uint32_t		data_in_bytes;	/* Data-In payload received */
+ 	int			data_offset;
+ 	struct iscsi_r2t_info	*r2t;		/* in progress solict R2T */
+ 	struct iscsi_pool	r2tpool;
 
-Because the interrupt handler queues this work to a non-freezable workqueue=
-,=20
-it can execute concurrently with or after the host is disabled. If the=20
-controller's bus is shut down by the time sl_notify_ssp() accesses MMIO=20
-registers, will this cause a system freeze or panic?
+base-commit: 2c3418fffa9d037b2038a6db48be63f9e2291806
+-- 
+2.43.0
 
-> +	dev_info(dev, "spinup notify primitive on phy%d\n", phy_no);
-> +
-> +	pm_runtime_put_sync(dev);
-> +}
-
-[ ... ]
-
-> @@ -1639,6 +1654,33 @@ void hisi_sas_controller_reset_done(struct hisi_hb=
-a *hisi_hba)
->  }
->  EXPORT_SYMBOL_GPL(hisi_sas_controller_reset_done);
-> =20
-> +void hisi_sas_spinup_notify(struct hisi_hba *hisi_hba,
-> +			    struct sas_task *task)
-> +{
-> +	struct task_status_struct *ts =3D &task->task_status;
-> +	struct domain_device *dev =3D task->dev;
-> +	struct scsi_sense_hdr sshdr;
-> +	struct sas_phy *local_phy;
-> +	struct hisi_sas_phy *phy;
-> +
-> +	if (!scsi_normalize_sense(ts->buf, ts->buf_valid_size, &sshdr))
-> +		return;
-> +
-> +	if (sshdr.sense_key !=3D NOT_READY ||
-> +	    sshdr.sense_code !=3D LU_NOT_READY_NOTIFY_REQUIRED)
-> +		return;
-> +
-> +	local_phy =3D sas_get_local_phy(dev);
-> +	phy =3D &hisi_hba->phy[local_phy->number];
-> +
-> +	pm_runtime_get_noresume(hisi_hba->dev);
-
-[Severity: Medium]
-The PM subsystem guidelines state that IRQ handlers should use=20
-pm_runtime_get_if_active() rather than pm_runtime_get_noresume().=20
-
-Since hisi_sas_spinup_notify() is called directly from hardware completion=
-=20
-interrupt handlers, could this blindly increment the usage counter on a=20
-device that is already suspended or transitioning to suspend?=20
-
-Using pm_runtime_get_if_active() would verify the device is actually active=
-=20
-and prevent queuing the spinup notify work when the controller is powering
-down.
-
-> +	if (!hisi_sas_notify_phy_event(phy, HISI_PHYE_SPINUP_NOTIFY))
-> +		pm_runtime_put(hisi_hba->dev);
-> +
-> +	sas_put_local_phy(local_phy);
-> +}
-> +EXPORT_SYMBOL_GPL(hisi_sas_spinup_notify);
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261008032605.2853=
-026-1-yangxingui@huawei.com?part=3D4
