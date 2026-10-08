@@ -1,54 +1,58 @@
 Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B09C33122A
-	for <linux-scsi@vger.kernel.org>; Thu,  8 Oct 2026 22:42:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2544847884C
+	for <linux-scsi@vger.kernel.org>; Thu,  8 Oct 2026 22:42:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791499363; cv=none; b=CX9V35vsTx/u5fKMXZD94smyfIlpNa8iBCw0QJTtAKG3V51IVQOk68R8bCTxAG79U9IeDEhRrThsRsEOSI0B8KZK/6nzUT818zksKZplSb6+F276koO7h7pnhpsBP2vg5qQwyWQUrV4FsBpkv2j3yXd+StSMp9Wr4GcB2BlfUms=
+	t=1791499365; cv=none; b=CqrjuiTbcZaPD0VfmnWqRr77YbpwX2zQfeWWYuvt4qc604fGleh0HGtvrCgXkR4Yqxy+if8Q0e4GqWQOt5tKfcKTTOTTIV9SUYpW+cXB/1BjX4427v98/2XsUUEZTZPykr1PKoZNn3reppptwsJoUhiRUINKlxv0xkAWyEN/mVA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791499363; c=relaxed/simple;
-	bh=vs/Ge2/aUWR+Qcr2+DXoOybmqoewYAMR1qjTUccL9Z0=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=AWTFel/2yar7RLpD1nL4ziO+/O05CukgalDFpqDmX8DRtahFQwKyN1dndQPF8EKP6csdLicMan/gimOnEw3O9T6tnVxi/gOe/b4ZgDg2eW4b3Byjsc7bCbqUR3/EkEPP5wLiryAGbQzAXSU35a9LMJf7IqSOLSNIxatHLgAqi2I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=CmZF2blN; arc=none smtp.client-ip=199.89.1.14
+	s=arc-20240116; t=1791499365; c=relaxed/simple;
+	bh=t1zpA4WImOAAxgjeaKqPtCejyeZvBBT/600fkuzeQ74=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=qbPFaTHOc9aadz8XetpDtCTbTZ05T9xNcTFibxcqLQZRcM6gFQlqPkEgNtavw5Uuy5/63pwbHy+eVn6C2bIHCS17R24mvnXaCwqNt/Zs768/A4tF8c3uDj8UwBdW0I6xDtK910/ICUKiI8mly3KbhOq3QG9AFC3t3GYkcWfLpfY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=Cdc+ZC3Z; arc=none smtp.client-ip=199.89.1.14
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="CmZF2blN"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="Cdc+ZC3Z"
 Received: from localhost (localhost [127.0.0.1])
-	by 011.lax.mailroute.net (Postfix) with ESMTP id 4j14kh018Tz1XM30k;
-	Thu,  8 Oct 2026 22:42:35 +0000 (UTC)
+	by 011.lax.mailroute.net (Postfix) with ESMTP id 4j14km6GZsz1XM30w;
+	Thu,  8 Oct 2026 22:42:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:mime-version:x-mailer:message-id:date
-	:date:subject:subject:from:from:received:received; s=mr01; t=
-	1791499351; x=1794091352; bh=4ilLAK1ha7QVYNc2DfZ6211yGfcD+jvoqL2
-	U57Fpebw=; b=CmZF2blNtmFFLAyksU1PdgaeWt/a32LtRf5XvOFfAibSTVWqADO
-	pQenMC3T6fHMf+pSJKhbb4QSW5qxiBHA05sohj6kCxxvzvKSbj1/zNvfT1uFZbOG
-	e3oqRZAv/tMDe6ss+LJbNnE4kMSPu3V0DvXdNfGy6B9t0g6FmoLZSRQyXWAAsBjY
-	iEBL/hOgNaZaGR9TKiabAfAolsGauPCspWAX17Gc3CrhOmCVTAmTVh6dDoLOTdTT
-	Vcgp2zNinfGE1sPbtm9Vz45Nr7uudCEXofD9NFayJZRztGTJHSRH7ctlci0LhF/U
-	Cvol3TLVRJiQydzaJCvJKnjVsUyMwLSoOdw==
+	content-transfer-encoding:mime-version:references:in-reply-to
+	:x-mailer:message-id:date:date:subject:subject:from:from
+	:received:received; s=mr01; t=1791499357; x=1794091358; bh=JDw9G
+	pgNyr8q40iz/3bABpdw3HtBSBBoVVCkR+fZMao=; b=Cdc+ZC3ZK4MUr5ajYAsIy
+	nZm0Mw13tIq+VlBVRlGu2sKkhkhh8UoywJxImiVzz+4JBuAuL7sf1TwadqpvklG3
+	aQ1HSUu8D0DHJwvNSAZfjRktLDMweY0bBIo9mp6Ik9agJXUY9gr2Jd1yHDF44ZyY
+	wFx1O2gH4nzT/B+FFDPlNBfE/f2MFJx+w3oD5TpdbLVCX1NNBGJd7VHguSOSivj8
+	pbXOstHlUbnQ25Z2Cuv36Dq8P3rtZM1S7JSQe8HmxCA18EZqITrivhT3seCOCmhR
+	ImO5sWVLuY+JE3HuFk6roCModEGJOQNWR+48rYZ9j9q7JDXRqmufDhvZeHzYNCc4
+	A==
 X-Virus-Scanned: by MailRoute
 Received: from 011.lax.mailroute.net ([127.0.0.1])
  by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id dV-PAPBzZBkm; Thu,  8 Oct 2026 22:42:31 +0000 (UTC)
+ id qXm6HtNv967l; Thu,  8 Oct 2026 22:42:37 +0000 (UTC)
 Received: from bvanassche.c.googlers.com.com (245.199.118.34.bc.googleusercontent.com [34.118.199.245])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4j14kY6CqJz1XM5kD;
-	Thu,  8 Oct 2026 22:42:29 +0000 (UTC)
+	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4j14kg5bQtz1XM30j;
+	Thu,  8 Oct 2026 22:42:35 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
 	John Garry <john.garry@linux.dev>,
 	Christoph Hellwig <hch@lst.de>,
 	Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH v5 0/8] scsi_debug: Enable lock context analysis
-Date: Thu,  8 Oct 2026 15:42:11 -0700
-Message-ID: <cover.1791499174.git.bvanassche@acm.org>
+Subject: [PATCH v5 3/8] scsi: scsi_debug: Split corrupt_lbas()
+Date: Thu,  8 Oct 2026 15:42:14 -0700
+Message-ID: <fe8629d9d7d0a54e8c5c14539953b40c09a6855a.1791499174.git.bvanassche@acm.org>
 X-Mailer: git-send-email 2.56.0.170.g584c36229d-goog
+In-Reply-To: <cover.1791499174.git.bvanassche@acm.org>
+References: <cover.1791499174.git.bvanassche@acm.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -57,92 +61,91 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-Hi Martin,
+Move the inner logic of corrupt_lbas() into a new helper function
+__corrupt_lbas() and call it from separate locked and unlocked branches
+in corrupt_lbas(). This patch prepares for enabling context analysis.
 
-This patch series enables compiler-based lock context analysis for the
-scsi_debug driver. Conditional locking is eliminated across command respo=
-nse
-and error injection functions so that static analysis can verify lock
-acquisitions and releases. Internal locking helper functions are annotate=
-d
-with __acquires(),__releases(), __acquires_shared() and __releases_shared=
-()
-attributes. An error-path lock leak in resp_write_same() is fixed. Finall=
-y,
-lock context analysis is enabled in drivers/scsi/Makefile.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: John Garry <john.garry@linux.dev>
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+---
+ drivers/scsi/scsi_debug.c | 42 +++++++++++++++++++++------------------
+ 1 file changed, 23 insertions(+), 19 deletions(-)
 
-Please consider this patch series for the next merge window.
-
-Thanks,
-
-Bart.
-
-Changes compared to v4:
-- Add a Reviewed-by tag from Christoph Hellwig to patch 6/8.
-- Drop __context_unsafe() from sdeb_read_lock(), sdeb_read_unlock(),
-  sdeb_write_lock(), and sdeb_write_unlock() in patch 7/8. Preserve the
-  original if (sdebug_no_rwlock) conditional structure and annotate with
-  __acquire_shared(), __release_shared(), __acquire(), and __release().
-- Drop __context_unsafe() from sdeb_data_lock(), sdeb_data_unlock(),
-  sdeb_data_sector_lock(), and sdeb_data_sector_unlock() in patch 7/8,
-  and add explicit context capability transitions on the read paths.
-- Retain __context_unsafe() exclusively for
-  sdeb_meta_{read,write}_{,un}lock() to prevent undefined pointer
-  arithmetic when sip is NULL under fake_rw.
-- Update the commit description of patch 7/8 to reflect these changes.
-
-Changes compared to v3:
-- Add a new patch to split resp_atomic_write() and eliminate conditional
-  locking in atomic write handling.
-- Pass the LBP state boolean down into __resp_write_same(),
-  __corrupt_lbas(), and __resp_write_dt0() to avoid repeated calls to
-  scsi_debug_lbp().
-- Drop unused function arguments from __resp_read_dt0_dix() and
-  __resp_write_dt0_dix().
-- Correct the return value descriptions in the header comments of
-  __resp_read_dt0_dix() and __resp_write_dt0_dix().
-
-Changes compared to v2:
-- Move DIX/DIF verification into a helper function (__resp_read_dt0_dix()=
-)
-  to reduce indentation.
-- Remove unnecessary "else" branches after "return".
-- Set the SCSI status code only if do_device_access() fails instead of
-  unconditionally setting it to DID_ERROR << 16 beforehand.
-
-Changes compared to v1:
-- Fix an issue where the error code was clobbered in resp_write_same() an=
-d
-  __resp_write_same() when fetch_to_dev_buffer() fails (John Garry and
-  sashiko-bot).
-- Fix return value handling in resp_read_dt0() and resp_write_dt0():
-  previously a positive byte count returned by do_device_access() was
-  incorrectly treated as a SCSI status code and returned to the caller.
-  Now, pass the SCSI status via an output pointer and only trigger an err=
-or
-  return on negative return values (sashiko-bot).
-- Improve lock context annotations:
-  * Annotate existing rwlock_t members (&sip->macc_data_lck,
-    &sip->macc_sector_lck, &sip->macc_meta_lck) directly with __acquires =
-/
-    __releases instead of defining and embedding dummy context lock struc=
-ts
-    in struct sdeb_store_info.
-  * Drop the unwarranted __context_unsafe() annotation from
-    sdeb_data_read_lock().
-  * Update the commit descriptions to match the code changes.
-
-Bart Van Assche (8):
-  scsi: scsi_debug: Fix a locking bug in resp_write_same()
-  scsi: scsi_debug: Split resp_write_same()
-  scsi: scsi_debug: Split corrupt_lbas()
-  scsi: scsi_debug: Split resp_read_dt0()
-  scsi: scsi_debug: Split resp_write_dt0()
-  scsi: scsi_debug: Split resp_atomic_write()
-  scsi: scsi_debug: Improve lock context annotations
-  scsi: core: Enable lock context analysis for the scsi_debug driver
-
- drivers/scsi/Makefile     |   1 +
- drivers/scsi/scsi_debug.c | 426 +++++++++++++++++++++++---------------
- 2 files changed, 264 insertions(+), 163 deletions(-)
-
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index cadd94e17109..eafcadc6ef07 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -4984,37 +4984,25 @@ static int resp_write_tape(struct scsi_cmnd *scp,=
+ struct sdebug_dev_info *devip)
+ 	return 0;
+ }
+=20
+-static int corrupt_lbas(struct sdebug_dev_info *devip, u64 lba, u32 num,
+-		u32 nr_bit_errors, s32 reftag_adjust)
++static int __corrupt_lbas(struct sdeb_store_info *sip, u64 lba, u32 num,
++			  u32 nr_bit_errors, s32 reftag_adjust, bool lbp)
+ {
+-	struct sdeb_store_info *sip =3D devip2sip(devip, false);
+-	bool meta_data_locked =3D false;
+-	bool lbp =3D scsi_debug_lbp();
+ 	u32 block, num_mapped, b, i;
+-	int error =3D 0;
+-
+-	if (sdebug_dev_is_zoned(devip) || sdebug_dix || lbp) {
+-		sdeb_meta_write_lock(sip);
+-		meta_data_locked =3D true;
+-	}
+=20
+ 	if (!sip) {
+ 		pr_err("can't corrupt with fake_rw\n");
+-		error =3D -EINVAL;
+-		goto out_unlock;
++		return -EINVAL;
+ 	}
+=20
+ 	if (num > sdebug_capacity || lba > sdebug_capacity - num) {
+ 		pr_err("logical blocks out of bounds: %llu:%u", lba, num);
+-		error =3D -EINVAL;
+-		goto out_unlock;
++		return -EINVAL;
+ 	}
+=20
+ 	if (lbp && (!map_state(sip, lba, &num_mapped) || num > num_mapped)) {
+ 		pr_err("can't modify unmapped logical blocks: %llu:%u",
+ 			lba, num);
+-		error =3D -EINVAL;
+-		goto out_unlock;
++		return -EINVAL;
+ 	}
+=20
+ 	/*
+@@ -5052,9 +5040,25 @@ static int corrupt_lbas(struct sdebug_dev_info *de=
+vip, u64 lba, u32 num,
+ 	}
+ 	sdeb_data_unlock(sip, false);
+=20
+-out_unlock:
+-	if (meta_data_locked)
++	return 0;
++}
++
++static int corrupt_lbas(struct sdebug_dev_info *devip, u64 lba, u32 num,
++			u32 nr_bit_errors, s32 reftag_adjust)
++{
++	struct sdeb_store_info *sip =3D devip2sip(devip, false);
++	const bool lbp =3D scsi_debug_lbp();
++	int error =3D 0;
++
++	if (sdebug_dev_is_zoned(devip) || sdebug_dix || lbp) {
++		sdeb_meta_write_lock(sip);
++		error =3D __corrupt_lbas(sip, lba, num, nr_bit_errors,
++				       reftag_adjust, lbp);
+ 		sdeb_meta_write_unlock(sip);
++	} else {
++		error =3D __corrupt_lbas(sip, lba, num, nr_bit_errors,
++				       reftag_adjust, lbp);
++	}
+ 	return error;
+ }
+=20
