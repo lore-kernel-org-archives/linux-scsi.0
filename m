@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 558333CA487
-	for <linux-scsi@vger.kernel.org>; Thu,  8 Oct 2026 22:47:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9FE6446AF2C
+	for <linux-scsi@vger.kernel.org>; Thu,  8 Oct 2026 22:50:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791499640; cv=none; b=XGLhqtCViNH4TtVOBoy3IudjD8RKF6FvNovCtuP3Wme0W1n2Qt3hfYvmQfwmz1UAEcT8KWOqiCizCMf2gxZiyXfAZMiVo6pK/IJP3U3+DcBD6ITg3sapBnSMuqSFj0KIEAgpYzymfgaIrWwyyhzzFjP4q8UCpjmcRbTiN+aXXxU=
+	t=1791499852; cv=none; b=pkvPDMcxbdGOTnhJSLiLxfV99FXnu+zgjfB+xETLT1rD8KoqS0Qm12o5Uqz6qpjGl5tqdeQBZXN6spsYQDAbXNQeQYERN3g4Xp9I2jBaLI3Y5zZiT2YyNa58QQzmXKLHTiQUc7rEoItggcfuVzPu6UBHJrpTKOh5vHuZa+bE/lI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791499640; c=relaxed/simple;
-	bh=CsbC/kaxTLWiiTDP8e8E6nlohwEfpVp98WEaLI37meY=;
+	s=arc-20240116; t=1791499852; c=relaxed/simple;
+	bh=99IsG/vc/0Xq01Bghge+JU1FVzHQxq01YUiOMKRbguQ=;
 	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
-	 Date; b=NSc1u5RSfFpCVht5MO+F1PFmKv55L9j6rmmk60RSoAQ/bynr8jFfOKhP8WDcmawayh9nBKLyky9myo4sKrqPvlAV781oOBQLrXN507ydtSE1y4LOaVYyuLD8BYe6rz/FaYrF2+yFtMBxC9614zeiOXNM5bzhZgUGj9wsBlo+jpQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iyIkgFc+; arc=none smtp.client-ip=100.103.45.18
+	 Date; b=C8WbJYP3qErWUPYk+Zd8RNRFmVaeuV8CftFkq1g7nVa8Jx9sRe0aJ5xNl9g7+x/YihLLTt+FT0SYh/aCzAOOP/rTjaBdQ9HqaC2HpTOcWniagPdg9wlT1iagDGbrquAL+v1Zw+3F1WXQFfdP3CbrzkI6Mf8Hxq5Vx7owFS+ZWko=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RgtSubPB; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iyIkgFc+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CD8F91F000FF;
-	Thu,  8 Oct 2026 22:47:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RgtSubPB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 286B21F000FF;
+	Thu,  8 Oct 2026 22:50:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791499639;
-	bh=bYfjfprAdI2gKn1CXQ01k7tl2uzxqVu9Uf/PobuHyyc=;
+	s=k20260515; t=1791499851;
+	bh=1QvP7XfihigVihLtiR+qI2TcTS3yPdVuXMY+ZH8Kky8=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=iyIkgFc+Mk5QfZBuYJCxwuuPsF25GHpF/Wc8yXoamGCKp4tFPBjDHgl9tBMFX2bkU
-	 GkeobaBPLep3frGNSXZWj915U/x9aDCSRfV6XMk0/H7ipeOhcMKZ1THjXy5KezgyK8
-	 OtGuG+8yoyCfoDojcFUoYd5CgDqlRYxEtwIAfEdLN32hFVZz5P+PUa234p6XZR7LXI
-	 /JIUsnIqtLcQ7GrTBGUc/eCryD0uXe069TNjNJN30tH+lh0LeTIsqjb42MOEpD4AMZ
-	 U6oWX96YLWpc5jYt1q2wxdzBtELpAu6EfDI4L0ckPw/GVYOkN9sWHXX7zRki/V3Dtp
-	 qT7WvBTLOEJBw==
-Message-ID: <sashiko-outbox-164639@kernel.org>
+	b=RgtSubPBXYjfiF1mRoqZgYVwLUMdsaTv1VNUPBgFKBiDZyAP2gqsuR/jx6w5UyjlN
+	 KzhFzrRB6fXvzgS0XfbXdNvEz7n8lweejRUzrT3fc3igaDabL3KGCeQm35KSpdJcLX
+	 aCdDBIO1kSM0oXHqabwMMrTqAaPwsd86b0xGvg5B440GGPSgQbbBSygYQyMdCo3CGN
+	 sKDxvA1AuErm1DuC649InjEjV4FHqcWyHCW8fj2NM9dF5XPAA4qk8226iHFfBrCWo3
+	 qqbNjYod/oYO7icKuGKf0re1gn7mXO+WH2Btr2AExnAd1Mo2vQFWQFIRY3VsRDCMpB
+	 8CoMRiPK86K7A==
+Message-ID: <sashiko-outbox-164646@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 2/2] scsi: target: rd: Don't invoke the OOM killer
- for ramdisk pages
+Subject: Re: [PATCH v2 1/2] scsi: target: rd: Fix oversized sg table array
+ allocation
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Sanan Hasanov" <sanan.hasanou@gmail.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20261008223712.49827-3-sanan.hasanou@gmail.com>
+In-Reply-To: <20261008223712.49827-2-sanan.hasanou@gmail.com>
 References: <20261008223712.49827-1-sanan.hasanou@gmail.com>
- <20261008223712.49827-3-sanan.hasanou@gmail.com>
+ <20261008223712.49827-2-sanan.hasanou@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 08 Oct 2026 22:47:18 +0000
+Date: Thu, 08 Oct 2026 22:50:50 +0000
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -47,75 +47,93 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [Medium] target: rd: memory leak in rd_build_prot_space() on allocation f=
-ailure
+- [High] target: bypass of totalram_pages limit via configfs causes unbound=
+ed allocation and leak
 --
 
-commit 08e2848928f98cb3a6b575947cf8d271014c318f
+commit 080421786d44f31a44c204db4deacf32fd54462e
 Author: Sanan Hasanov <sanan.hasanov@ucf.edu>
-Subject: scsi: target: rd: Don't invoke the OOM killer for ramdisk pages
+scsi: target: rd: Fix oversized sg table array allocation
 
-This commit replaces the default memory allocation flags for ramdisk backing
-pages with GFP_KERNEL | __GFP_RETRY_MAYFAIL | __GFP_NOWARN to avoid invoking
-the OOM killer. The pages are requested via alloc_pages() in
-rd_allocate_sgl_table().
+This commit adds a limit check to ensure the ramdisk page count does not
+exceed totalram_pages() during device configuration, avoiding large
+out-of-bounds allocations. It also changes kzalloc_objs to kvzalloc_objs to
+fallback to vmalloc for large valid page counts.
+
+Closes: https://syzkaller.appspot.com/bug?extid=3Dfa495e1497c48a6ed885
 
 > diff --git a/drivers/target/target_core_rd.c b/drivers/target/target_core=
 _rd.c
-> index 97c63b12266fb..46698300e2063 100644
+> index 092d9fe0d4e31..97c63b12266fb 100644
 > --- a/drivers/target/target_core_rd.c
 > +++ b/drivers/target/target_core_rd.c
-> @@ -150,7 +150,8 @@ static int rd_allocate_sgl_table(struct rd_dev *rd_de=
-v, struct rd_dev_sg_table *
->  						- 1;
+
+[ ... ]
+
+> @@ -188,10 +189,16 @@ static int rd_build_device_space(struct rd_dev *rd_=
+dev)
+>  	if (rd_dev->rd_flags & RDF_NULLIO)
+>  		return 0;
 > =20
->  		for (j =3D 0; j < sg_per_table; j++) {
-> -			pg =3D alloc_pages(GFP_KERNEL, 0);
-> +			pg =3D alloc_pages(GFP_KERNEL | __GFP_RETRY_MAYFAIL |
-> +					 __GFP_NOWARN, 0);
->  			if (!pg) {
+> +	if (rd_dev->rd_page_count > totalram_pages()) {
+> +		pr_err("Page count: %u exceeds total RAM pages: %lu for Ramdisk device=
+\n",
+> +		       rd_dev->rd_page_count, totalram_pages());
+> +		return -EINVAL;
+> +	}
+> +
+>  	total_sg_needed =3D rd_dev->rd_page_count;
+> =20
+>  	sg_tables =3D (total_sg_needed / max_sg_per_table) + 1;
+> -	sg_table =3D kzalloc_objs(*sg_table, sg_tables);
+> +	sg_table =3D kvzalloc_objs(*sg_table, sg_tables);
+>  	if (!sg_table)
+>  		return -ENOMEM;
+> =20
 
-[Severity: Medium]
-Can this new failure path cause a regression by leaking memory in
-rd_build_prot_space()?
+[ ... ]
 
-Since this allocation uses __GFP_RETRY_MAYFAIL, it can now fail and return
--ENOMEM. When this occurs, rd_build_prot_space() propagates the error
-without cleaning up the partially populated array:
+> @@ -248,7 +255,7 @@ static int rd_build_prot_space(struct rd_dev *rd_dev,=
+ int prot_length, int block
+>  	total_sg_needed =3D (rd_dev->rd_page_count * prot_length / block_size) =
++ 1;
+> =20
+>  	sg_tables =3D (total_sg_needed / max_sg_per_table) + 1;
+> -	sg_table =3D kzalloc_objs(*sg_table, sg_tables);
+> +	sg_table =3D kvzalloc_objs(*sg_table, sg_tables);
 
-drivers/target/target_core_rd.c:rd_build_prot_space() {
+[Severity: High]
+Does this code still allow an unbounded memory allocation bypass and a
+resource leak?
+
+While a totalram_pages() limit check was added to rd_build_device_space()
+above, the configfs control attribute can dynamically update
+rd_dev->rd_page_count via rd_set_configfs_dev_params() after the device
+is already configured:
+
+drivers/target/target_core_rd.c:rd_set_configfs_dev_params() {
     ...
-	rd_dev->sg_prot_array =3D sg_table;
-	rd_dev->sg_prot_count =3D sg_tables;
-
-	rc =3D rd_allocate_sgl_table(rd_dev, sg_table, total_sg_needed, 0xff);
-	if (rc)
-		return rc;
+    rd_dev->rd_page_count =3D arg;
     ...
 }
 
-This propagates the error up to the configfs handler:
+If a massive page count is set dynamically and then PI protection is enabled
+by writing to the pi_prot_type attribute, rd_init_prot() calls
+rd_build_prot_space(). The bypassed rd_page_count is used to calculate
+total_sg_needed here, potentially re-triggering the memory exhaustion
+without any limit checks.
 
-drivers/target/target_core_configfs.c:pi_prot_type_store() {
-    ...
-		ret =3D dev->transport->init_prot(dev);
-		if (ret) {
-			da->pi_prot_type =3D old_prot;
-			da->pi_prot_verify =3D (bool) da->pi_prot_type;
-			return ret;
-		}
-    ...
-}
+Additionally, if the large allocation fails downstream in
+rd_allocate_sgl_table(), rd_build_prot_space() returns the error but leaves
+rd_dev->sg_prot_array pointing to the partially populated table without
+freeing it. Since pi_prot_type transitions back to 0 on failure, can the us=
+er
+repeatedly trigger this path to leak system memory?
 
-The configfs handler restores state and returns without explicitly calling
-dev->transport->free_prot(dev) to clean up the backend.
-
-This leaves the partially populated scatterlists and pages permanently
-dangling in rd_dev->sg_prot_array. If the user retries enabling the
-protection type, rd_build_prot_space() unconditionally overwrites the
-rd_dev->sg_prot_array pointer with a new allocation, permanently leaking
-the previously allocated memory resources.
+>  	if (!sg_table)
+>  		return -ENOMEM;
+>
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261008223712.4982=
-7-1-sanan.hasanou@gmail.com?part=3D2
+7-1-sanan.hasanou@gmail.com?part=3D1
