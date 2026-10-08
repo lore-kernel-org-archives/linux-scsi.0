@@ -1,102 +1,131 @@
-Received: from fgw21-4.mail.saunalahti.fi (fgw21-4.mail.saunalahti.fi [62.142.5.108])
+Received: from cvsmtppost18.nm.naver.com (cvsmtppost18.nm.naver.com [114.111.35.107])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D6E94D957E
-	for <linux-scsi@vger.kernel.org>; Thu,  8 Oct 2026 14:52:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.142.5.108
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4B0B4F4746
+	for <linux-scsi@vger.kernel.org>; Thu,  8 Oct 2026 18:38:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=114.111.35.107
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791471176; cv=none; b=tcAI7E81X+jpYgnhWLVIZz/M5GXesHgzdmWk7/7xggq69K0I3EMCBR/Oi1fvCTqHZ5BlX1PMX8ezeQ3w5ApeGcojxiTBu/pAdh6SDpZmxAJdPZnGRMHUEj1uMYRzUELFuenfaXtM7tZLXE840Rf1dRyYw/7Moqnpfn4tB+3xvnY=
+	t=1791484701; cv=none; b=jfndz4P4UG3qc1eHsC2VUDho50lzsXcQC1w7gs6PUmv4corDKmpEJfq9LCeG8x0vOKqiNe4VQschR4adelwe8VowdZC1D3rV4QbP7C0yeYMoGRqM3Brgp+1d1TIqsEhrVfITlSoS2Rcb/72Pbpfy1qKWFgqL5LppuSEV9g0oJxQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791471176; c=relaxed/simple;
-	bh=wVRqlgGyVwEHd6Wz1ViqTNx07Jsht456Uy7wWKDXDPQ=;
-	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
-	 Message-Id:References:To; b=pdCtJ/JMs4iSapq8gbZWIj9N5XJDAcXlB079jXXXUNcja8fU7zcpGzlJHp505cutm/RC2TYgqRH3t2TkMQa7R+7X+eRnEzXPEacO7Lj+814VqMsiJDVUTITf6G2/dyzNsby6Tww4g8arTfaU5ioXzp6YABCYWR/JdJYQahMXSao=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=kolumbus.fi; spf=pass smtp.mailfrom=kolumbus.fi; dkim=pass (2048-bit key) header.d=kolumbus.fi header.i=@kolumbus.fi header.b=FE35haOX; arc=none smtp.client-ip=62.142.5.108
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=kolumbus.fi
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kolumbus.fi
+	s=arc-20240116; t=1791484701; c=relaxed/simple;
+	bh=LCz+FnJ0aSqGVuP2eLKj82yEwf1gq2ITe2ISeVjVxXs=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=aX8ciEPL8ZrDhZXzvvMC7WkhjLrn+sJG4et4gAGbbFYIllnrPi8Z7LGk7jyCEfxXBDy27eHPWye9KjFqYDIBs7MkXBq3NiBv8SoPgc5pRS2C3DX3/PETxk3Taeg5ikc0rsBH9eUSydVy1A1q65/VmV5ol53QpzFxN8XjDzdKmmM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=naver.com; spf=pass smtp.mailfrom=naver.com; dkim=pass (2048-bit key) header.d=naver.com header.i=@naver.com header.b=kBQjvMqw; arc=none smtp.client-ip=114.111.35.107
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=naver.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=naver.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kolumbus.fi header.i=@kolumbus.fi header.b="FE35haOX"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=kolumbus.fi; s=elisa1;
-	h=to:references:message-id:content-transfer-encoding:cc:date:in-reply-to:from:
-	 subject:mime-version:content-type:from:to:cc:reply-to:subject:date:in-reply-to:
-	 references:list-archive:list-subscribe:list-unsubscribe:content-type:
-	 content-transfer-encoding:message-id;
-	bh=wVRqlgGyVwEHd6Wz1ViqTNx07Jsht456Uy7wWKDXDPQ=;
-	b=FE35haOX37Nzxd2HAWuypH4VrFVVv1xhc/nJxKLbEjX0troiUHwXx82o4jv/ICwz+OetFNt5iin5L
-	 k7WkBBaPW50HpbxakdU7uWIm/v+nTAlmnVzX/SDmWEomp99lWy8u76RjXHcvjTRjKNIG2Fug3D/+7a
-	 xfj+LGBIjiZSUXGk7KnKwdDdcC15tLNfo4wY1947NMM40+ocNvCQsBjfPZKR19NNS1cPjGaUtNo3d6
-	 prqba0SaiezxzsZCKP8Q2XR8vesU5fBK+lvXf8988IOUFD8whbF2229WDEknpYm2unettSquSBRdIo
-	 dhZgNdwkIQH1ipTCXGI+KrYhhboitig==
-Received: from smtpclient.apple (91-158-174-119.elisa-laajakaista.fi [91.158.174.119])
-	by fgw22.mail.saunalahti.fi (Halon) with ESMTPSA
-	id c01d29a5-c327-11f1-8eb4-005056bdf889;
-	Thu, 08 Oct 2026 17:51:32 +0300 (EEST)
-Content-Type: text/plain;
-	charset=utf-8
+	dkim=pass (2048-bit key) header.d=naver.com header.i=@naver.com header.b="kBQjvMqw"
+Received: from cvsendbo016.nm ([10.112.24.39])
+  by cvsmtppost18.nm.naver.com with ESMTP id vMJmTYhoRdm8xtynlolPjg
+  for <linux-scsi@vger.kernel.org>;
+  Thu, 08 Oct 2026 18:38:10 -0000
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=naver.com; s=s20171208;
+	t=1791484690; bh=LCz+FnJ0aSqGVuP2eLKj82yEwf1gq2ITe2ISeVjVxXs=;
+	h=From:To:Subject:Date:Message-ID:From:Subject:Feedback-ID:
+	 X-Works-Security;
+	b=kBQjvMqwnHx9qIjD2RyHc2T9KQtq34HXFvE0EA34/LXQxS/+mZD8xm8NjvrXKNL5I
+	 sFHTGradHXBgE0MI9EStAiUZ8uea8W7L0wMOC4bIrRLEEG+KwwUi1joC/N9ZKyPi80
+	 9YYBJWtjREap6TSM1uUuKdIllhkVGDS5PGEo6bEgeTSe+sySWM4RCjT9zSwAgQ+Ik0
+	 0aYEKerrLDkyTTVLZe5vQyZa9o8aTDOHv9Ol5knBGxpSPWTEXV7klgUGAenTvJdpoq
+	 E5mwR4QF8LUsLaQ1c6Q5NDBaTQBFCBtrv2H1/F/ZC/2xn2rHVRjvmto0hPq/3hflgW
+	 NMU0Wwx3tfe/A==
+X-Session-ID: NrWKyFuFS3mM1Uc0OkcW1g
+X-Works-Send-Opt: OPFwpzGdjHmdKHFOMr39Ko3YKBmqjAudFqM9KqMqFxIYkEljxBmwjAg=
+X-Works-Smtp-Source: sdb9FAulFqJZ+HmlaAUZ+6E=
+Received: from localhost.localdomain ([115.136.205.4])
+  by mvnsmtp03.nm.naver.com with ESMTP id NrWKyFuFS3mM1Uc0OkcW1g
+  for <multiple recipients>
+  (version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384);
+  Thu, 08 Oct 2026 18:38:09 -0000
+From: tjdqudcks0424@naver.com
+To: "Martin K . Petersen" <mkp@kernel.org>
+Cc: linux-scsi@vger.kernel.org,
+	target-devel@vger.kernel.org,
+	Sung Byeongchan <tjdqudcks0424@naver.com>
+Subject: [PATCH] scsi: target: iscsi: reject ImmediateData on non-WRITE commands
+Date: Fri,  9 Oct 2026 03:38:03 +0900
+Message-ID: <20261008183804.10356-1-tjdqudcks0424@naver.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3901.100.1.1.12\))
-Subject: Re: [PATCH] scsi: st: Save the visited block for the partition the
- drive is in
-From: =?utf-8?B?IkthaSBNw6RraXNhcmEgKEtvbHVtYnVzKSI=?= <kai.makisara@kolumbus.fi>
-In-Reply-To: <20261006164250.773840-1-loberman@redhat.com>
-Date: Thu, 8 Oct 2026 17:51:21 +0300
-Cc: linux-scsi@vger.kernel.org,
- "Martin K . Petersen" <mkp@kernel.org>,
- "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
- John Meneghini <jmeneghi@redhat.com>,
- emilne@redhat.com,
- bgurney@redhat.com
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <5EC8096D-D4C7-42C7-B76C-D60003FA571E@kolumbus.fi>
-References: <20261006164250.773840-1-loberman@redhat.com>
-To: Laurence Oberman <loberman@redhat.com>
-X-Mailer: Apple Mail (2.3901.100.1.1.12)
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
+From: Sung Byeongchan <tjdqudcks0424@naver.com>
 
-> On 6. Oct 2026, at 19.42, Laurence Oberman <loberman@redhat.com> =
-wrote:
->=20
-> set_location() saves the current tape location before switching
-> partitions, so that switch_partition() can return to it later. It =
-reads
-> the location with READ POSITION but stores it in the st_partstat of
-> STp->partition, ignoring the partition the drive reports.
->=20
-> The two differ after a device reset. When the reset is recovered with
-> MTREW, MTSEEK or MTEOM, st_ioctl() sets STp->partition =3D 0 and calls
-> switch_partition() to return to STp->new_partition. A drive that was =
-in
-> partition 1 is still there, so set_location() files the partition 1
-> position under partition 0. The next switch to partition 0 locates to
-> that block: if partition 0 holds less data, MTSETPART fails with EIO
-> (BLANK CHECK), otherwise the tape is silently positioned at the wrong
-> block.
+ImmediateData is write data and is not valid on a non-WRITE SCSI Command.
+The target nevertheless accepts it on READ commands.  An authenticated
+remote initiator can make one se_cmd execute twice or make DataDigest
+calculation walk beyond the command's SG list, crashing the target kernel.
 
-The analysis is correct. The elegant fix makes sure that the saved =
-position
-is a real position and does not cause an error in future.
+Reject non-WRITE commands carrying ImmediateData.  A setup rejection is
+queued before the data segment has been consumed, so also fail the
+connection when that rejected command advertises a payload.  This selects
+the bounded ERL=0 close policy and prevents payload, padding, digest, or
+follow-up bytes from being interpreted as a new BHS.
 
-Whether it makes sense to the user is another thing. The behaviour after
-depends on the drive, its firmware, some mode settings and maybe on what
-commands have been sent to the drive before reset. For instance,
-the IBM LTO SCSI Reference says enigmatically:
+The two parent crashes reproduced twice each in a local production LIO TCP
+fixture.  A reject-only repair desynchronized the stream in three fresh
+boots.  The final patch closed all ten rejected variants in three fresh
+boots without unknown-opcode parsing, while normal READ without
+ImmediateData and normal WRITE with ImmediateData passed in every boot.
+The touched source is unchanged at
+0c2669a9f4a1d607e7591ae50ccf3c432a0aff08, where the patch applies and
+builds cleanly.
 
-"A logical position is established that may or may not be the same as
-the position prior to the reset. Where possible, the logical position =
-prior
-to reset is maintained."
+The demonstrated impact is authenticated remote target-kernel denial of
+service.  No controlled write, information disclosure, RCE, or LPE was
+demonstrated.  The source reproducer and complete logs are available on
+request and are not included in this public report.
 
-But this is one of the problems with resets that the driver can't solve
-(at least not with reasonable amount of work).
+OpenAI Codex assisted source inspection, test design, patch drafting, and
+evidence organization.
 
-Reviewed-by: Kai M=C3=A4kisara <kai.makisara@kolumbus.f =
-<mailto:kai.makisara@kolumbus.f>>
+Fixes: e48354ce078c ("iscsi-target: Add iSCSI fabric support for target v4.1")
+Assisted-by: LLM
+Signed-off-by: Sung Byeongchan <tjdqudcks0424@naver.com>
+---
+ drivers/target/iscsi/iscsi_target.c | 16 +++++++++++++++-
+ 1 file changed, 15 insertions(+), 1 deletion(-)
 
-Thanks,
-Kai
+diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
+index 124ff269b8e75..a80bed0999ba3 100644
+--- a/drivers/target/iscsi/iscsi_target.c
++++ b/drivers/target/iscsi/iscsi_target.c
+@@ -1098,6 +1098,12 @@ int iscsit_setup_scsi_cmd(struct iscsit_conn *conn, struct iscsit_cmd *cmd,
+ 					     ISCSI_REASON_BOOKMARK_INVALID, buf);
+ 	}
+ 
++	if (payload_length && !(hdr->flags & ISCSI_FLAG_CMD_WRITE)) {
++		pr_err("Immediate data for non-WRITE command\n");
++		return iscsit_add_reject_cmd(cmd,
++					     ISCSI_REASON_PROTOCOL_ERROR, buf);
++	}
++
+ 	cdb = hdr->cdb;
+ 
+ 	if (hdr->hlength) {
+@@ -1384,8 +1390,16 @@ iscsit_handle_scsi_cmd(struct iscsit_conn *conn, struct iscsit_cmd *cmd,
+ 	bool dump_payload = false;
+ 
+ 	rc = iscsit_setup_scsi_cmd(conn, cmd, buf);
+-	if (rc < 0)
++	if (rc < 0) {
++		/*
++		 * setup may queue a Reject before the data segment has been
++		 * consumed.  Do not let the receive loop treat those bytes as a
++		 * new BHS.  Closing is the bounded ERL=0 recovery policy.
++		 */
++		if (ntoh24(hdr->dlength))
++			return -1;
+ 		return 0;
++	}
+ 	/*
+ 	 * Allocation iovecs needed for struct socket operations for
+ 	 * traditional iSCSI block I/O.
+-- 
+2.43.0
 
