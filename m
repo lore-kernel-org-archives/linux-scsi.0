@@ -1,133 +1,119 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-vk1-f172.google.com (mail-vk1-f172.google.com [209.85.221.172])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 308B4448B8A
-	for <linux-scsi@vger.kernel.org>; Thu,  8 Oct 2026 22:09:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 722B9380FCA
+	for <linux-scsi@vger.kernel.org>; Thu,  8 Oct 2026 22:37:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791497378; cv=none; b=U/y6XCprZ1BezaASXdJri+DqNuvBtmHyAMZfgCEU3WKgfS1fA2pkHsm02JwaEIuIYRQtXpPKtwwioO5JmufFCJE7DKvfjzsNBlEtaaYXe0JkMUFl+cyVz+YcXsEwW3JJ4y4yzusLSCqjECzeHfzfcBcos3+9f5n2up3z7Sdin4w=
+	t=1791499039; cv=none; b=D9Ht/GNGJz/2WilxAvqRk3n5jOjDvUkNcnRorHB1SCzN+Uuma3o/elO8rvV3mntXf1WHPbdkLHxETZcgI3SXLk7qFnBKTZSp6cWOBNrsr/3y+t+XW8G8tD+Fm+DnlrMOlsfADsq+7st7VEk9pUiHJrcypt3Cj9WlDbPuOKUaWw8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791497378; c=relaxed/simple;
-	bh=jsOrp5RQX4u23pZFuSzRegHeUdypRaE4QHAxOhc1lMs=;
-	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
-	 Date; b=Bfa+6aaCSfqA0oITsAcww1rw6vv4LC0h6oAw/XvTW1A5LLOpENAjonYEr+8h3olesLPwR5ravfjdF3JY26hIKyWuFDuFlIrMWVelOrxfmmqTiXUNrgUUhqxEL9hCNkwg0+kmqXU2cHzr7Xyk2rirWi6rDJhOwgBIdQUxktPf/vw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=amjmGGEs; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791499039; c=relaxed/simple;
+	bh=56Ig+iq1BKCTYcSM9xnOgOFWggZbgL06r7h/vH08FI0=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=giLrvcjeKZIQfI2UXe2E52X7BY+mhCTodsK5Kx4XuEpzqO/akTZk5nb/206pRmrwmqTM7EFETTyiTUDMJ2uxrg/aWthTFAKBcVJEp6+SmX9PojbNEROP4V/11Bl6gb80yJ5CWrnsKtGeEqUWo6sICh4vYaxLHZqjrnreWITzFIU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=l5Vz8d+6; arc=none smtp.client-ip=209.85.221.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="amjmGGEs"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5F1651F000FF;
-	Thu,  8 Oct 2026 22:09:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791497375;
-	bh=WkJNhlKuvJGmwyda5VUNL7XBlC+cT5JYtRRAmc28DGo=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=amjmGGEsRgTdGObJVd6gwfRZtEEGTOt4WnThRZ0R3UT1A0DngsPKI1mGtU37N8ucu
-	 hRPwocEb2dSGtD641Uo8yvWefYhpMe5Ba43a891wnRvWfYIX1uMmYikHVSwNBEnKFr
-	 G/v+9os/YHoAmLKWoH4qg2CXFIqkxxsvjyfEvCr5xwrWiy16hptiQVyoG4VtNzq94r
-	 tBdvIlHGJgYUKoOuLAE+/nuyTBztj99y7JFY03zebsHUBAomvaiQ854zjZS6RZFsab
-	 /gtzkR7skl+JuR6jNXtgMloKxR7dJIh1ctCyDMDIPE4halkbXeuqFaYmYCtYi6EY6C
-	 76awrbBhJ0IRw==
-Message-ID: <sashiko-outbox-164622@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] scsi: target: rd: Reject page counts larger than total
- RAM
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Sanan Hasanov" <sanan.hasanou@gmail.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20261008215709.46014-1-sanan.hasanou@gmail.com>
-References: <20261008215709.46014-1-sanan.hasanou@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 08 Oct 2026 22:09:35 +0000
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="l5Vz8d+6"
+Received: by mail-vk1-f172.google.com with SMTP id 71dfb90a1353d-5e8e8227be3so24351e0c.3
+        for <linux-scsi@vger.kernel.org>; Thu, 08 Oct 2026 15:37:18 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1791499037; x=1792103837; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=PZACjmCS1oASftukGbD2aJ9Y7h6BQoT9c3bmi5RvtCg=;
+        b=l5Vz8d+6dOSkOlTVyGxGLaf1zfyQJWFowWGtpWIIzOg99KOGFDYoA0ZEy9/bcpynt3
+         S7ZD9UnPSFZwo6Ayo28MV45+xfCRV8n2iYcdIfK0498VkpACQJfbKLqlLQX3dQOx/0Im
+         xWJe4ug/PR0wx8a4d1N3C5OsVSwu46QychpJkcIcvxqYB0iBVjf1g+QbKpE6j4fN1J8R
+         qPX1joZM9Y18incYa5OUXZ9F2hfHgLF25PScTN93O6Ih9NWVNhu/1GOP6qv3jjkxZZmo
+         elDDoTDrY5hn6Pc8FhJlnHKFRdPs8BDtCatey9b55TL671gAQ6DWIXasfl8OqObxbFMb
+         20Dg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791499037; x=1792103837;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=PZACjmCS1oASftukGbD2aJ9Y7h6BQoT9c3bmi5RvtCg=;
+        b=W2FzQHqIdqmqnxrr4bDPBxq0XlWoJB5GnQ3qdYubooGSSdMD/ipyqE2m7pJy7ziQ5q
+         MwlffVzS7bYXr8TOZnFDdP5CwaVVK3NBOnWk/d45oORc/0zBdQd2b2K0n29ICyeVK4uO
+         uchIRp6hUB2uE0TdC6QFyxXejvXrn6TSTAFTVep9xopO5Jerl+jwBJ1m3pU7A69LwVbh
+         kyh6yqVjDggs8J1U0m3uC3IuTyejPw+t0rHXhbtZ7OSthO4MV1ClJFylflHLfPfjNQ2s
+         Pj6Ie/cIACkDcPYjX4dNIuk11n/Q8m0WRFvKT1tMEJsX6RS2Jd1aXozWWV5gOtnljsbV
+         XuVg==
+X-Forwarded-Encrypted: i=1; AKwUvBwwZBnHhnE6QhYgEo+ffBFhNujsHjG1gjYctXqvlhFxRaIQZp+eHzWVp2HwA7zyZR3VfMU2FGTkxD4w@vger.kernel.org
+X-Gm-Message-State: AFq9FYJU9cfnJZwrsdXm637uiCgERGIFXQsZGrT+/4pIWVPhJd35+w5V
+	bF+3nH9Erd8DQ+GfbM/Ml/VPIHljq/CGDr1OtOZO38fPkb5Eo4XZ7IF7
+X-Gm-Gg: AYBFou3OcxkCTgaZMZBuUzALPYZgbI49agl1BLQXEyTV0Z2VoIkafYV49uPXro2pAMs
+	3yaA8Z7QJ8+iCPkZhX/O5S5KrQ/k5Gq3Od1pr1s6u5zM9Q3LtTWn9BYrCvC+XJoobmwP/W2wF3F
+	hNAbgtnb7lMMH/c89ySECSykaQESj9werKO7lQuKQHBVuNgtl35Mq6IQAJvvsf+dDSPauXlYw1i
+	qn2O5jMXSeIlSBdB5ufVxyRs5sL13H9sKyEpHmopm3H3ASAqifSYt/dsiG5cZT8ZLFGi53mKzOZ
+	Z2JHfgBmHLN3UPJn4AtUYzWmgOqJkgRvkPuw5HwEpQdpeXfx2qz030Lzp4tHTP679e78LIGe4rM
+	alEVGX5/oYbMtlsf0Qa4/TQg1YxgXUHmeT5zBzKVzjJc0PbV+twTZKUXBNGsYJbzeIFjypxbG77
+	TgHo2s/I24/LKKdnHwcqhYPrzDxiGus99Ioxcz5ejz/q/dhiyrR+Cc4l1QUvD4cJbMgtQcjbE4M
+	tsJ9zQGvt+tI1m/4nBVowiRg2Tl+geSa2iae6l1M4wg5WXejX3xK8nvvg18ULbxpmMOJ6IFigk9
+	xdrLGE5dNRXeKvIAQGfUKUxQi0Tbxw==
+X-Received: by 2002:a05:6122:8711:b0:5e6:6546:84c7 with SMTP id 71dfb90a1353d-5e91f339ea0mr24904e0c.2.1791499037319;
+        Thu, 08 Oct 2026 15:37:17 -0700 (PDT)
+Received: from localhost.localdomain ([132.170.205.109])
+        by smtp.gmail.com with ESMTPSA id 71dfb90a1353d-5e91cab8c40sm393284e0c.3.2026.10.08.15.37.16
+        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
+        Thu, 08 Oct 2026 15:37:16 -0700 (PDT)
+From: Sanan Hasanov <sanan.hasanou@gmail.com>
+To: "Martin K. Petersen" <mkp@kernel.org>
+Cc: Sanan Hasanov <sanan.hasanov@ucf.edu>,
+	linux-scsi@vger.kernel.org,
+	target-devel@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	syzbot+fa495e1497c48a6ed885@syzkaller.appspotmail.com
+Subject: [PATCH v2 0/2] scsi: target: rd: Fix oversized ramdisk allocations
+Date: Thu,  8 Oct 2026 18:37:08 -0400
+Message-ID: <20261008223712.49827-1-sanan.hasanou@gmail.com>
+X-Mailer: git-send-email 2.48.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [High] mm: OOM killer storm from unbounded ramdisk allocation
-- [Medium] target: incomplete fix for MAX_PAGE_ORDER warning on large RAM s=
-ystems
---
+From: Sanan Hasanov <sanan.hasanov@ucf.edu>
 
-commit 12a2dad36a98577f1d3e561b02b29fc0a3802314
-Author: Sanan Hasanov <sanan.hasanov@ucf.edu>
+A ramdisk page count set through configfs (rd_pages=) has no upper bound.
+syzbot found that a large value makes rd_build_device_space() attempt a
+single sg table array allocation above the page allocator's maximum
+order, which triggers a WARNING. Patch 1 rejects page counts that
+exceed system RAM and allocates the array with kvzalloc so that valid
+large ramdisks also work.
 
-scsi: target: rd: Reject page counts larger than total RAM
+A page count close to system RAM still passes that check, and the
+backing pages are allocated with GFP_KERNEL, which invokes the OOM
+killer instead of failing. On a 1 GiB VM, rd_pages=250000 panics the
+system with "System is deadlocked on memory". Patch 2 allocates the
+backing pages with __GFP_RETRY_MAYFAIL so that enabling such a device
+fails with -ENOMEM instead.
 
-The rd_pages=3D device parameter is taken from configfs without an upper
-bound. rd_build_device_space() uses it to size the sg table array, so a
-large value such as INT_MAX makes it attempt a kzalloc() of roughly
-64 MiB, which is above the page allocator's maximum order and triggers:
-[ ... ]
+Tested on an arm64 QEMU VM with 1 GiB RAM, with the syzbot reproducer,
+normal and NULLIO ramdisks, DIF protection space, device removal, and
+rd_pages=250000.
 
-> diff --git a/drivers/target/target_core_rd.c b/drivers/target/target_core=
-_rd.c
-> index 092d9fe0d4e31..3700cc1b5d67c 100644
-> --- a/drivers/target/target_core_rd.c
-> +++ b/drivers/target/target_core_rd.c
-[ ... ]
-> @@ -188,6 +189,12 @@ static int rd_build_device_space(struct rd_dev *rd_d=
-ev)
->  	if (rd_dev->rd_flags & RDF_NULLIO)
->  		return 0;
-> =20
-> +	if (rd_dev->rd_page_count > totalram_pages()) {
+Changes in v2:
+- Allocate the sg table arrays with kvzalloc_objs() so that ramdisks
+  larger than 512 GiB do not hit the same WARNING (Sashiko AI review).
+- New patch 2 to avoid the OOM killer when the backing pages cannot be
+  allocated (Sashiko AI review).
 
-[Severity: High]
-Does this limit still allow a privileged user to request up to 100% of
-physical memory, potentially triggering an OOM killer storm?
+v1: https://lore.kernel.org/all/20261008215709.46014-1-sanan.hasanou@gmail.com/
 
-In drivers/target/target_core_rd.c:rd_allocate_sgl_table(), this translates
-to looping totalram_pages() times and calling:
+Sanan Hasanov (2):
+  scsi: target: rd: Fix oversized sg table array allocation
+  scsi: target: rd: Don't invoke the OOM killer for ramdisk pages
 
-    pg =3D alloc_pages(GFP_KERNEL, 0);
+ drivers/target/target_core_rd.c | 16 ++++++++++++----
+ 1 file changed, 12 insertions(+), 4 deletions(-)
 
-Because GFP_KERNEL lacks __GFP_RETRY_MAYFAIL or __GFP_NORETRY, the page
-allocator will aggressively retry by invoking the OOM killer when free memo=
-ry
-is exhausted.
 
-Furthermore, because these allocations are not accounted to the caller's
-memcg (no __GFP_ACCOUNT), the calling process maintains a low badness score,
-which might cause the OOM killer to systemically terminate innocent
-user-space processes.
+base-commit: 6c377d19d4a5116d9bec5203aa3c6c11523e7898
+-- 
+2.48.1
 
-[Severity: Medium]
-Will this still exceed the page allocator's maximum order on systems with a
-large amount of RAM (e.g., >=3D 512 GB)?
-
-The size of the sg_table array is calculated in rd_build_device_space() as:
-
-    sg_tables =3D (total_sg_needed / max_sg_per_table) + 1;
-
-On a system with 1 TB of RAM, totalram_pages() is ~268 million pages. The
-required sg_table array allocation size would be
-(268,435,456 / 2048) * 64 =3D ~8 MiB.
-
-An 8 MiB allocation exceeds the typical 4 MiB KMALLOC_MAX_SIZE
-(MAX_PAGE_ORDER) limit of the page allocator, which means the subsequent
-contiguous allocation in rd_build_device_space():
-
-    sg_table =3D kzalloc_objs(*sg_table, sg_tables);
-
-will still trigger the exact same kernel WARNING and -ENOMEM failure on
-systems with high memory capacity.
-
-Could kvcalloc() (and kvfree()) be used here to safely fall back to vmalloc
-for large array sizes?
-
-> +		pr_err("Page count: %u exceeds total RAM pages: %lu for Ramdisk device=
-\n",
-> +		       rd_dev->rd_page_count, totalram_pages());
-> +		return -EINVAL;
-> +	}
-> +
->  	total_sg_needed =3D rd_dev->rd_page_count;
-> =20
->  	sg_tables =3D (total_sg_needed / max_sg_per_table) + 1;
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261008215709.4601=
-4-1-sanan.hasanou@gmail.com?part=3D1
