@@ -1,29 +1,30 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.5])
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D254347FC0;
-	Fri,  9 Oct 2026 10:24:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80B804399E5;
+	Fri,  9 Oct 2026 10:24:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791541447; cv=none; b=TcyjUH9d44sqoEqzY22AEoOH8vFUG6GMsONT3A8H4m0lLAyUfa19TIXSNQMl8FLyrqn2VnSF9inyGwZGrHemTbBxTnOwoBmTNRMcd+zLiS3CuORF/PspgkDCHkdY4nOH2oKorPqEw/NLluYG7VWyOEkbQSPbN7LAAFS6DZNlRGY=
+	t=1791541449; cv=none; b=W3eE4JAlOoMP7uEWVjzPuSkQSPqlTCXI28IwfeAl30rf5hjo48swJ8Hf5EMCAbr2jZmzEHEEQiLfPTn0NAVWCpFQM5vPbwtFayeKu7+JFkG24oebBT1nBSy8CFBtnv8rsrpPYvv41WdQi4SsB+drNrCFwiS2CLShMcbFCEpaSqE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791541447; c=relaxed/simple;
-	bh=GP1lUcEwADCxU5EZrjt4kV96nOI30AAZhnSJQXXALpE=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=dpm262mPNWZQG1PWJe7zT9dqErJoE3Dq7bE9Cq9dfNTaGSm0yXTeefUiaYQNQ8PMufQ6aW4OF38SSoRjWTTD9fNmXx+bIQmTOVgzja4qNkiTkc8yi7eF12x2ltXJAObIcpIEycQw4OpaNzCT9hC21/L/AEbJN+mYVMh1p9b7bJI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=jN0sB4x9; arc=none smtp.client-ip=220.197.31.5
+	s=arc-20240116; t=1791541449; c=relaxed/simple;
+	bh=BJDzcGy4JIU913P6t8mqPRNnnyEvnW+/IXceoboin18=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=NVhj9w2fMJSJAGzHzjW+hCr0d16E3kw/mnd5UHZ1HxfIap81bsvOJtWFvTzvQUrzRKzgXgm6uOoMBkAxcD85+76Bng6l4fUO315N3D8LFxAzVBjcNYB8O5oMsBH3Kif/R9roGsKlVxgh4ODX2GLYwqopUxQYoPgK91ak6ElnmbA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=VqUoN0j7; arc=none smtp.client-ip=117.135.210.5
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="jN0sB4x9"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="VqUoN0j7"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-ID:MIME-Version; bh=8b
-	0qVGruCYX88mJhl0Y4rhQRLeI6Yh8hL+4KKjvTBxk=; b=jN0sB4x9pIHz0/QjZi
-	bmk/qYfbtl2aLfMNjFWb4D0bGqjxKX6V6RP4ieY2GFyrN2NgDE77Kiw/j2qqth4j
-	9M/psnHMgfAw1r8MXnermzExuEn4FunDiQVP5R6Rqr+wWYALXyLhIJng3ZT5Z4xr
-	mNmdQwY8cLvWOdPR8rPfY4hrs=
+	s=s110527; h=From:To:Subject:Date:Message-ID:MIME-Version; bh=Id
+	9mTCz2OGtDEmVRucMr/9oLM0Kr8EE4L7PHILKArH8=; b=VqUoN0j7m3jBwm9uw7
+	Vs1MjHBrMcs67nBcKjpH6yZQ9zx1SWbPPM6Nt2ogwm6cOdSa3PToA0wk0+4tBz2T
+	4VPjnHufDq3ATQHIO06Q8jSr8XPC6A7Gfwi44uOgzoRhXd9yUu79ef3g73e3gxfJ
+	uRxjRLSgPLgPf2GKcYs1AIPKI=
 Received: from WIN-TOG0NDEIICD.localdomain (unknown [])
-	by gzga-smtp-mtada-g0-2 (Coremail) with SMTP id _____wBnjvSRwMhqk4VBDQ--.5655S2;
-	Fri, 09 Oct 2026 18:23:14 +0800 (CST)
+	by gzga-smtp-mtada-g0-2 (Coremail) with SMTP id _____wBnjvSRwMhqk4VBDQ--.5655S5;
+	Fri, 09 Oct 2026 18:23:17 +0800 (CST)
 From: Shirong Zhao <shxzhaosr@163.com>
 To: "Martin K . Petersen" <mkp@kernel.org>,
 	Sathya Prakash <sathya.prakash@broadcom.com>,
@@ -38,10 +39,12 @@ Cc: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
 	mpi3mr-linuxdrv.pdl@broadcom.com,
 	linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH 0/3] scsi: check set_identify result in update_links
-Date: Fri,  9 Oct 2026 18:23:09 +0800
-Message-ID: <20261009102313.18-1-shxzhaosr@163.com>
+Subject: [PATCH 3/3] scsi: leapraid: check set_identify result in update_links
+Date: Fri,  9 Oct 2026 18:23:12 +0800
+Message-ID: <20261009102313.18-4-shxzhaosr@163.com>
 X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20261009102313.18-1-shxzhaosr@163.com>
+References: <20261009102313.18-1-shxzhaosr@163.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -49,34 +52,47 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wBnjvSRwMhqk4VBDQ--.5655S2
-X-Coremail-Antispam: 1Uf129KBjvdXoWruw45Gw1xGw48uFy7tF4ruFg_yoWkCFb_u3
-	9Yq34aq3y09r1fAayUCFs0qrZ0yay2qrnru3sFq39rGryfur4DWF1DJ3sxurn7GayYyFZY
-	kFykX34fCrsxZjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUvcSsGvfC2KfnxnUUI43ZEXa7IU8MKZJUUUUU==
-X-CM-SenderInfo: hvk06xhdrv2qqrwthudrp/xtbC7hIhX2rIwJKdNAAA3b
+X-CM-TRANSID:_____wBnjvSRwMhqk4VBDQ--.5655S5
+X-Coremail-Antispam: 1Uf129KBjvJXoW7uFWUKry3WFWxAw47Ar4xWFg_yoW8Ar43pa
+	1kW3sIk348XF9Y9rs5JF4IqryFkFZYv34Iy393ZwnYkFs8KrW3KwsrKr12qa48Krs7XFnY
+	9r4jqryDGFWIya7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jpq2tUUUUU=
+X-CM-SenderInfo: hvk06xhdrv2qqrwthudrp/xtbC7hUiYGrIwJWddwAA3k
 
-update_links() in mpt3sas, mpi3mr and leapraid all ignore the return
-value of their set_identify helper.  On firmware query failure the
-identify struct is left untouched, and the phy is then attached using
-a stale sas_address from before the failed query.
+leapraid_transport_update_links() ignores the return value of
+leapraid_transport_set_identify(), which leaves the identify struct
+untouched on FW query failure (recovery in progress, config page
+error).  The phy is then attached using a stale
+card_phy->remote_identify.sas_address from before the failed query.
 
-This series fixes all three the same way: fold the call into the if
-condition so a failed query takes the existing zeroing else path, the
-same "no valid identify" state as an invalid handle or link rate.
-The next successful link event re-fills the identify.
+Fold the call into the if condition so a failed query takes the
+existing zeroing else path (same "no valid identify" state as an
+invalid handle/rate) instead of attaching with stale data.  The next
+successful link event re-fills the identify.
 
-All three were verified against scsi.git fixes (469fa055664b): each
-applies cleanly, passes checkpatch --strict with no warnings, and
-its transport object builds warning-free before and after the change.
+Verified against scsi.git fixes (469fa055664b), the current SCSI
+fixes tree.
 
-Shirong Zhao (3):
-  scsi: mpt3sas: check set_identify result in update_links
-  scsi: mpi3mr: check set_identify result in update_links
-  scsi: leapraid: check set_identify result in update_links
-
+Signed-off-by: Shirong Zhao <shxzhaosr@163.com>
+---
  drivers/scsi/leapraid/leapraid_transport.c | 6 +++---
- drivers/scsi/mpi3mr/mpi3mr_transport.c     | 6 +++---
- drivers/scsi/mpt3sas/mpt3sas_transport.c   | 6 +++---
- 3 files changed, 9 insertions(+), 9 deletions(-)
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/leapraid/leapraid_transport.c b/drivers/scsi/leapraid/leapraid_transport.c
+index 77ffbd6dd..38e63327d 100644
+--- a/drivers/scsi/leapraid/leapraid_transport.c
++++ b/drivers/scsi/leapraid/leapraid_transport.c
+@@ -1150,9 +1150,9 @@ void leapraid_transport_update_links(
+ 	card_phy->attached_hdl = hdl;
+ 	spin_unlock_irqrestore(&adapter->dev_topo.topo_node_lock, flags);
+ 
+-	if (hdl && link_rate >= LEAPRAID_SAS_NEG_LINK_RATE_1_5) {
+-		leapraid_transport_set_identify(adapter, hdl,
+-						&card_phy->remote_identify);
++	if (hdl && link_rate >= LEAPRAID_SAS_NEG_LINK_RATE_1_5 &&
++	    !leapraid_transport_set_identify(adapter, hdl,
++					     &card_phy->remote_identify)) {
+ 		if (topo_node->hdl <= adapter->dev_topo.card.phys_num &&
+ 		    adapter->adapter_attr.enable_mp) {
+ 			list_for_each_entry(card_port,
 
