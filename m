@@ -1,71 +1,112 @@
-Received: from canpmsgout06.his.huawei.com (canpmsgout06.his.huawei.com [113.46.200.221])
+Received: from canpmsgout11.his.huawei.com (canpmsgout11.his.huawei.com [113.46.200.226])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BD6C136672
-	for <linux-scsi@vger.kernel.org>; Fri,  9 Oct 2026 01:01:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.221
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 81F7D3A7F6B;
+	Fri,  9 Oct 2026 03:32:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.226
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791507674; cv=none; b=WiBrt21SDMr0YKY/aLJyUs3cxnSQXVPXT5Fxg4VfhCB42hKnisBU1FJW7pZIOE7KlNqYttPA2guIVc+cpYDvoRx77xF3jIb3grAKTQ/uXWbr16OvFzygkzRb3pD6RFCw4GQodIw0+/oQ3/PfpCBJMfVP+I/B0X3DvYvTPGvzJB0=
+	t=1791516774; cv=none; b=QHPo5fVn7I/Boz4LIvJFp4DMIzm91XxP0bvXvwVghHhxNEFcug2sRoh4L5afPnPGYqRnZufIEd9K/stDReLzMMJrE6nhcCF1ywuLD9sKuvN0j8DXOXCA8DnSNL2MckplaIqhu9oTACcES8LMF+bcmvP8sF3g5V6PCJlWKYjouKc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791507674; c=relaxed/simple;
-	bh=bj0m0c1iSFU7Thu/rm144aRLD29y5aSW4d3R4TQ5Qns=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=I2NuQnvR9E6ja8980iNsJgPbrR6d1Nopa6jPZ4YR/CudYLStENpUFRtBnz0Z0k9fuM2LnhTdbyleV70TPka6/6GIs0MZfsWks5GTmvmC5V5aZFVmOeRFR/mTIZB+yirpc2akU10+Mybkj11HRqs9E0uqvhRgbLbU9XhecU9Gsc0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=ppjLpn3B; arc=none smtp.client-ip=113.46.200.221
+	s=arc-20240116; t=1791516774; c=relaxed/simple;
+	bh=gSwkV4b53L40ypx3JkErNkZxQfpLr4GSByF/hmwq64c=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=kU6Sa9zWVIDAGvxxJAvHOmg+R5pcIiFwffq+Wla7ivPQCu+SFf6WgrQ49NILhjn5HpxZHc2gz1oDaQsD6UJt3IRKeLkim7hF4Icppo1kxuyfngCumNz+nNGt/QInPnw1752yB3KogrsmcHfycoqSmZc58tATqx377CO46w/Mgp8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=Z8CUqN4S; arc=none smtp.client-ip=113.46.200.226
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="ppjLpn3B"
+	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="Z8CUqN4S"
 dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
 	c=relaxed/relaxed; q=dns/txt;
 	h=From;
-	bh=bj0m0c1iSFU7Thu/rm144aRLD29y5aSW4d3R4TQ5Qns=;
-	b=ppjLpn3ByUXhJkilnxqX+9BZmTP/1/HxcMLyce7Kq7A8YdiRJWM8p7hwr9J93SnDVt8Bqyeng
-	V3US7YO1/wmmW16HDBDoZN/j0eYeT+QkwdW/as2rxU24H/jCPov92Tf/K6AwlUxigWz5I1ulZYy
-	4e+HyUExuKjQoR4GuR2iMXc=
-Received: from mail.maildlp.com (unknown [172.19.162.223])
-	by canpmsgout06.his.huawei.com (SkyGuard) with ESMTPS id 4j17XR0FhqzRhjW;
-	Fri,  9 Oct 2026 08:48:55 +0800 (CST)
-Received: from kwepemp100008.china.huawei.com (unknown [7.202.194.221])
-	by mail.maildlp.com (Postfix) with ESMTPS id 43E0F40561;
-	Fri,  9 Oct 2026 09:01:06 +0800 (CST)
+	bh=NGDGLCD/chSarszJV+EI+gUhMYajjJ2Kz79no2W+6nA=;
+	b=Z8CUqN4S5AU6MKIZLPFbxlRxM3Kj21mfPdqVkW9tWlhIich+3PrjCeIIQGuHvYN5MaqMMaY78
+	Ve1gRKnWDR5nPzsZRFhmb+YjCjaUv3qGxI+Tqfzxxdo4RhLWnFQOVQnT/CMpLY5x1axKm6PSi0x
+	261jY1OsQGJ3LJS4/zt+k0w=
+Received: from mail.maildlp.com (unknown [172.19.163.163])
+	by canpmsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4j1BvC5B1YzKm4b;
+	Fri,  9 Oct 2026 11:20:23 +0800 (CST)
+Received: from kwepemp500007.china.huawei.com (unknown [7.202.195.151])
+	by mail.maildlp.com (Postfix) with ESMTPS id 2D73F40588;
+	Fri,  9 Oct 2026 11:32:42 +0800 (CST)
 Received: from kwepemp500015.china.huawei.com (7.202.195.9) by
- kwepemp100008.china.huawei.com (7.202.194.221) with Microsoft SMTP Server
+ kwepemp500007.china.huawei.com (7.202.195.151) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.45; Fri, 9 Oct 2026 09:01:05 +0800
-Received: from [10.67.120.108] (10.67.120.108) by
+ 15.2.2562.45; Fri, 9 Oct 2026 11:32:41 +0800
+Received: from localhost.localdomain (10.50.163.32) by
  kwepemp500015.china.huawei.com (7.202.195.9) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.45; Fri, 9 Oct 2026 09:01:05 +0800
-Message-ID: <3eb013eb-800d-468b-b2a8-2a9fb7db121b@huawei.com>
-Date: Fri, 9 Oct 2026 09:01:05 +0800
+ 15.2.2562.45; Fri, 9 Oct 2026 11:32:41 +0800
+From: Xingui Yang <yangxingui@huawei.com>
+To: <mkp@kernel.org>, <jejb@linux.ibm.com>, <john.garry@linux.dev>,
+	<yanaijie@huawei.com>
+CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linuxarm@huawei.com>, <yangxingui@huawei.com>, <liuyonglong@huawei.com>,
+	<kangfenglong@huawei.com>
+Subject: [PATCH v3 0/4] scsi: hisi_sas: Some misc fixes
+Date: Fri, 9 Oct 2026 11:32:34 +0800
+Message-ID: <20261009033238.1076098-1-yangxingui@huawei.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.3.1
-Subject: Re: [PATCH v2 3/4] scsi: hisi_sas: Clear PHY error counts on phyup
-Content-Language: en-CA
-To: <sashiko-reviews@lists.linux.dev>
-CC: <linux-scsi@vger.kernel.org>
-References: <20261008032605.2853026-1-yangxingui@huawei.com>
- <20261008032605.2853026-4-yangxingui@huawei.com>
- <sashiko-outbox-163572@kernel.org>
-From: yangxingui <yangxingui@huawei.com>
-In-Reply-To: <sashiko-outbox-163572@kernel.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: kwepems100001.china.huawei.com (7.221.188.238) To
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: kwepems200001.china.huawei.com (7.221.188.67) To
  kwepemp500015.china.huawei.com (7.202.195.9)
 
+This series contains three independent fixes for the hisi_sas driver,
+plus a libsas fix found during review.
 
+Patch 1 fixes an out-of-bounds memcpy in sas_ssp_task_response(): a
+device-provided sense_data_len >= 0x80000000 turns negative in the
+min_t(int, ...) clamp and becomes a huge memcpy length.
 
-On 2026/10/8 11:41, sashiko-bot@kernel.org wrote:
-> Thank you for your contribution! Sashiko AI review found 2 potential issue(s) to consider:
-> - [Medium] scsi: hisi_sas: incomplete error clearance on phyup leaves software counters stale
-> - [Low] scsi: hisi_sas: missing clear of DWS_LOST and RESET_PROB error counts
+Patch 2 fixes incorrect delay values introduced by a previous
+magic-number cleanup commit. Three delay sites were changed to use
+a single macro (value 100) which did not match their original values,
+causing increased boot and shutdown time.
 
-The suggestion from Sashiko is appropriate, update it in the next version.
+Patch 3 clears stale PHY error counts on phyup so that error detection
+is not misled by intermediate errors generated during link
+establishment.
+
+Patch 4 fixes spinup failures of directly-attached SAS HDDs that power
+up in the Active_Wait state and wait for a NOTIFY(ENABLE SPINUP)
+primitive before becoming ready: parse the sense data in the slot
+completion path and send the primitive from deferred work.
+
+Changes from v2:
+Addresses the Sashiko AI review of v2.
+- Clear all five error counter registers.
+- Use pm_runtime_get_if_active().
+
+Changes from v1:
+Addresses the Sashiko AI review of v1.
+- Add Patch 1, found in review of the sense parsing of patch 4.
+- Clear the counters under phy->lock.
+- Take a runtime PM reference for the deferred work
+
+The remaining review findings are pre-existing issues, left for
+separate fixes in the future.
+
+Xingui Yang (4):
+  scsi: libsas: Fix out-of-bounds memcpy in sas_ssp_task_response()
+  scsi: hisi_sas: Fix incorrect delay values from magic-number cleanup
+  scsi: hisi_sas: Clear PHY error counts on phyup
+  scsi: hisi_sas: Fix spinup failure for SAS SSP devices in Active_Wait
+    state
+
+ drivers/scsi/hisi_sas/hisi_sas.h       |  3 ++
+ drivers/scsi/hisi_sas/hisi_sas_main.c  | 43 ++++++++++++++++++++++
+ drivers/scsi/hisi_sas/hisi_sas_v1_hw.c |  4 ++
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c |  4 ++
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 51 ++++++++++++++++++--------
+ drivers/scsi/libsas/sas_task.c         |  2 +-
+ 6 files changed, 90 insertions(+), 17 deletions(-)
+
+-- 
+2.43.0
+
