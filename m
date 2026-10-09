@@ -1,178 +1,197 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41DAB48F85E
-	for <linux-scsi@vger.kernel.org>; Fri,  9 Oct 2026 09:21:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C3C448E0D5
+	for <linux-scsi@vger.kernel.org>; Fri,  9 Oct 2026 09:24:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791537718; cv=none; b=axN4kwiWuEHamV8rTBBrhR5fZRQvhaUnVIA37ALwsbgt4tZ69oXKXMWuLI3zEADgiPy+txe6AR8TKshTJmYPl5DuemQFGKHLNhJPgXN4azIcKF12ccfQLboNxJWL7tWLwjkkMdUPsh+OQJyRMZjr3fDFIGwEdr4dt+ldG/R8BIA=
+	t=1791537864; cv=none; b=OWhCwsmUQvnd9G3kurCCOkt+5UU1yXQZ/FCLSMDPTYyYaQGYoO63hVIeoSmG836G/533bqhyiWIFz1NyktMqAD+lajSpJyzySnotBOdRHXrcXaSLrrVjmYdqfTvFqvgmOv2nqhH2qchh5yAazfQ71sxy4mOzXHCivfLQO/DtV/k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791537718; c=relaxed/simple;
-	bh=418CLMXWGnN2DvCbZUhk9EaY9eNQMbnSPupQBzLTYdY=;
+	s=arc-20240116; t=1791537864; c=relaxed/simple;
+	bh=+Kevdm3M+E1J4DGLLyJv6EwBqDVzgGZb3AiF58tgNlU=;
 	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
-	 Date; b=RVVR6dyMQL6EkKywgj0c9ZZdhKEAA5xrORSurgv/iHXU3JqWU7DMR/hzr7NYeNB/N3u64jItp0LexlUVxM3XaziS1lGyEEBBWNvMtb6QRQ/dNnM3xR8s8aRIY/d8mQtCumyDOqnbdB4X3s4suooTSKKYbiJHR6/u3T7njudtAQ4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JdryXkyW; arc=none smtp.client-ip=100.103.45.18
+	 Date; b=BpmqAITrwT6+K07x3i7AH36B4PQ/xmcAdV9kZ2FSyqA6gNPZSttvlfQLzSKCT5YGqv57CfVfz0wRCsEtG0vpkOwAP11AV+QXZb5+ELFE05Y9AvjE6Lr3BVDSu98a9RtYSDVo2hnK2powcncBD7dUic1t5UzFJPccQ06PMUsdvrk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GgSojUIz; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JdryXkyW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A4A191F000FF;
-	Fri,  9 Oct 2026 09:21:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GgSojUIz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7B7FE1F000FF;
+	Fri,  9 Oct 2026 09:24:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791537716;
-	bh=rDXVjGoOdUaGxHbmLxjZWVzaos0ww2cj1H6pS7s014k=;
+	s=k20260515; t=1791537858;
+	bh=SfnU3Mqx24Xww/KltPPu381ZRvYFCqDjWFM6gD0AEjE=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=JdryXkyWfZcHByJR41r7akR4o1yQz5WfTnelReY/mwdcpALRgxQwqaJj3Gzp7Umy9
-	 DntvYSMwxQIda4iJ+zv5Fp+uWqFMQXEteij3SB69QQoJRJ8wphXJ2ulsIn+DE6oubj
-	 Z0ecp+e+myUNAr8kNPCfaeUU0HUdmz/DgTOKVsPnmRIKujtBej/tnfRZX1p8qCJJ5F
-	 D4teOIYwfMYaHogSfMGk9bTv5jh0iia2B29/s/m9luHC8T6lKW+CcBdUNC341kC1kJ
-	 pEYjNLq+0M0EtiVTMf2LkrKDbGeTehh6+ocfZSqqRF4Vi6FzoBTpupYziddj/mjPN/
-	 tY+wqJjReqP+g==
-Message-ID: <sashiko-outbox-165156@kernel.org>
+	b=GgSojUIzBRJhgpPJm5tNdUmnE9O35ff4nabig8nKAFgs1/ti6K+sn0R5+v5vjstQM
+	 xugnaDfIHajTaTyoVVHEzu420rwElPVnEyv7E/6al/cPH2v4Ob+lgw1dlygDrtYZHd
+	 jMC13XmSn/OOgFhxYtRYZD1HQnROAWG11CPsHcU3EqvasT8T6bYSB+XXz8w0kZUrFq
+	 8YFGpyX7sfoBJ2qTgdPdVAAXZvu4FiiX2TIH0H+N8c3vdKcpGT2ymPEyZBcr7sX6JA
+	 UYYjxLxBvdc0CNe8Mkmjssd/xTKQV11vJSEAHuFG0q3khjWI06ZAQHRiJH9bApwT3l
+	 BMf5b1bsgwoCg==
+Message-ID: <sashiko-outbox-165159@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 5/9] zloop: add storage element emulation
+Subject: Re: [PATCH v4 3/9] block: introduce storage element management
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Damien Le Moal" <dlemoal@kernel.org>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20261009090945.1504194-6-dlemoal@kernel.org>
+In-Reply-To: <20261009090945.1504194-4-dlemoal@kernel.org>
 References: <20261009090945.1504194-1-dlemoal@kernel.org>
- <20261009090945.1504194-6-dlemoal@kernel.org>
+ <20261009090945.1504194-4-dlemoal@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 09 Oct 2026 09:21:56 +0000
+Date: Fri, 09 Oct 2026 09:24:18 +0000
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [High] block: IDR and module leak on zloop_ctl_add error path
-- [High] block: zone reset vfs_truncate races with in-flight IO
-- [Medium] block/zloop: elements left in RESTORE_IN_PROGRESS on error
+- [High] block: permanent zone state desync on signal or memory allocation =
+failure
+- [Medium] block: ignored storage element management error status
 --
 
-commit 2aa446d71ddca7634ded310055adccb68fd83788
+commit 47105e9f6e8f70ce8710089fec4d093f5ff51fde
 Author: Damien Le Moal <dlemoal@kernel.org>
-Subject: zloop: add storage element emulation
+Subject: block: introduce storage element management
 
-Emulate the storage element depopulation feature of SMR disks in the
-zloop driver. This emulation is controlled using the new stor_elements
-option.
+This commit introduces storage element management for zoned block devices. =
+It
+defines generic operations to report, remove, and restore storage elements
+so that disks with defective heads can remain in production by depopulating
+the defective elements.
 
-> diff --git a/drivers/block/zloop.c b/drivers/block/zloop.c
-> --- a/drivers/block/zloop.c
-> +++ b/drivers/block/zloop.c
-> @@ -420,7 +486,22 @@ static int zloop_close_zone(struct zloop_device *zlo=
-, unsigned int zone_no)
->  	return ret;
->  }
-> =20
-> -static int zloop_reset_zone(struct zloop_device *zlo, unsigned int zone_=
-no)
-> +static int zloop_do_reset_zone(struct zloop_device *zlo,
-> +			       struct zloop_zone *zone)
-> +{
-> +	if (vfs_truncate(&zone->file->f_path, 0))
-> +		return -EIO;
-> +
-
-[Severity: High]
-Is there a potential race between this background truncation and active I/O?
-
-When zloop_restore_elements() sets zlo->restore_in_progress =3D true and
-schedules the background restore work, it rejects new I/O but doesn't
-appear to drain in-flight I/O (for example, by using blk_mq_freeze_queue()).
-
-If an in-flight REQ_OP_WRITE in zloop_cmd_workfn() executes
-zloop_seq_write_prep() (which acquires zone->wp_lock, but not zone->lock)
-at the same time this worker calls vfs_truncate(), could the worker
-truncate the file to 0 just before the write completes at the old write
-pointer? This might desync zone->wp and create a massive sparse file.
-
+> diff --git a/block/blk-zoned.c b/block/blk-zoned.c
+> --- a/block/blk-zoned.c
+> +++ b/block/blk-zoned.c
 [ ... ]
-
-> +static void zloop_restore_elements_work(struct work_struct *work)
+> +static int disk_se_mgmt_in_progress(struct gendisk *disk,
+> +				     struct blk_se *elements,
+> +				     bool *in_progress)
 > +{
-> +	struct zloop_device *zlo =3D container_of(work, struct zloop_device,
-> +						restore_elements_work.work);
-> +	struct zloop_zone *zone;
-> +	struct blk_se *se;
-> +	unsigned int i;
-> +	int ret;
-> +
-> +	mutex_lock(&zlo->stor_elements_lock);
-> +
-> +	/* Reset all zones. */
-> +	for (i =3D 0, zone =3D zlo->zones; i < zlo->nr_zones; i++, zone++) {
-> +		if (test_bit(ZLOOP_ZONE_CONV, &zone->flags)) {
-> +			zloop_restore_conv_zone(zlo, zone);
-> +			continue;
-> +		}
-> +		ret =3D zloop_restore_seq_zone(zlo, zone);
-> +		if (ret)
-> +			goto out_unlock;
+[ ... ]
+> +	for (i =3D 0; i < nr_se; i++) {
+> +		switch (elements[i].status) {
+> +		case BLK_SE_STS_REMOVE_IN_PROGRESS:
+> +		case BLK_SE_STS_RESTORE_IN_PROGRESS:
+> +			*in_progress =3D true;
+> +			return 0;
+> +		default:
+> +			break;
 
 [Severity: Medium]
-If a zone file truncation fails here, are the storage elements left
-indefinitely in the BLK_SE_STS_RESTORE_IN_PROGRESS state?
+Do error statuses like BLK_SE_STS_REMOVE_ERROR fall through to the default=
+=20
+case here?
 
-The error path jumps to out_unlock, which clears zlo->restore_in_progress
-but skips updating the se->status for individual elements. Should this error
-path transition the elements to BLK_SE_STS_RESTORE_ERROR instead, so that
-userspace queries (like zloop_report_elements()) return an accurate status?
+If the device encounters an error during the removal, it changes the elemen=
+t's=20
+status to an error state. The polling loop then sees no elements are in=20
+progress, sets in_progress to false, and returns 0 instead of bubbling up=20
+the error.
 
+> +		}
 > +	}
 > +
-> +	/* Restore all removed elements. */
-> +	for (i =3D 0, se =3D zlo->elements; i < zlo->nr_elements; i++, se++) {
-> +		if (READ_ONCE(se->status) =3D=3D BLK_SE_STS_RESTORE_IN_PROGRESS)
-> +			WRITE_ONCE(se->status, BLK_SE_STS_OK);
-> +	}
+> +	*in_progress =3D false;
 > +
-> +	zlo->nr_removed_elements =3D 0;
-> +
-> +out_unlock:
-> +	WRITE_ONCE(zlo->restore_in_progress, false);
-> +	mutex_unlock(&zlo->stor_elements_lock);
+> +	return 0;
 > +}
-
-[ ... ]
-
-> @@ -1361,6 +1870,10 @@ static int zloop_ctl_add(struct zloop_options *opt=
-s)
->  		zlo->id, zlo->nr_zones,
->  		((sector_t)zlo->zone_size << SECTOR_SHIFT) >> 20,
->  		zlo->block_size);
-> +	if (zlo->nr_elements)
-> +		pr_info("zloop%d: %d storage elements\n",
-> +			zlo->id, zlo->nr_elements);
 > +
->  	pr_info("zloop%d: using %s%s zone append\n",
->  		zlo->id,
->  		zlo->ordered_zone_append ? "ordered " : "",
-> @@ -1370,6 +1883,8 @@ static int zloop_ctl_add(struct zloop_options *opts)
-> =20
->  out_cleanup_disk:
->  	put_disk(zlo->disk);
-> +	return ret;
+> +static int disk_wait_for_se_mgmt_completion(struct gendisk *disk)
+> +{
+> +	struct blk_se *elements;
+> +	unsigned int noio_flag;
+> +	bool in_progress;
+> +	int ret;
 > +
+> +	noio_flag =3D memalloc_noio_save();
+> +	elements =3D kzalloc_objs(struct blk_se, disk->nr_storage_elements);
+> +	memalloc_noio_restore(noio_flag);
+> +	if (!elements)
+> +		return -ENOMEM;
 
 [Severity: High]
-Does this early return bypass the IDR removal and module reference put?
+Does attempting to allocate the polling buffer after the hardware operation=
+=20
+has already been initiated introduce a memory failure path that aborts=20
+synchronization?
 
-If we return here, the out_free_idr label (which calls idr_remove()) and
-the final out label (which calls module_put(THIS_MODULE)) are completely
-skipped.
+If kzalloc_objs fails and returns -ENOMEM, the wait loop is skipped, which=
+=20
+later bypasses the critical disk_revalidate_zones step in=20
+bdev_remove_storage_element. Could this leave the kernel's zone state=20
+permanently out of sync with the physical device conditions?
 
-Since put_disk() ultimately triggers zloop_free_disk() which frees the
-zlo structure via kvfree(zlo), does leaving the freed pointer in
-zloop_index_idr create a dangling pointer for subsequent lookups? It also
-appears the module reference would be leaked permanently.
+> +
+> +	/*
+> +	 * Poll the storage elements heath state to detect the end of a
+> +	 * removal or restoration operation. Since we do not know how long the
+> +	 * operation may take, we cannot have a timeout on this loop. So check
+> +	 * for fatal signals so that the user can terminate this retry loop if
+> +	 * the device misbehaves.
+> +	 */
+> +	while (1) {
+> +		ret =3D disk_se_mgmt_in_progress(disk, elements, &in_progress);
+> +		if (ret || !in_progress)
+> +			break;
+> +
+> +		if (fatal_signal_pending(current)) {
+> +			ret =3D -EINTR;
+> +			break;
 
->  out_cleanup_tags:
->  	blk_mq_free_tag_set(&zlo->tag_set);
->  out_close_files:
+[Severity: High]
+Does permitting fatal signals to abandon the wait loop leave the hardware=20
+executing in the background with no mechanism to trigger a revalidation=20
+upon actual completion?
+
+This error path propagates the aborted wait and also skips the vital zone=20
+revalidation step that keeps the kernel's view consistent with the device.
+
+> +		}
+> +
+> +		/* Not done yet: wait and retry. */
+> +		msleep(1000);
+> +	}
+> +
+> +	kfree(elements);
+> +
+> +	return ret;
+> +}
+[ ... ]
+> +int bdev_remove_storage_element(struct block_device *bdev,
+> +				unsigned int element_id)
+> +{
+[ ... ]
+> +	ret =3D disk->fops->se_ops->remove_element(disk, element_id);
+> +	if (ret)
+> +		goto unlock;
+> +
+> +	/* Revalidate the device zones once the opration completes. */
+> +	ret =3D disk_wait_for_se_mgmt_completion(disk);
+> +	if (ret)
+> +		goto unlock;
+> +
+> +	ret =3D disk_revalidate_zones(disk);
+> +
+> +unlock:
+> +	mutex_unlock(&disk->zone_revalidate_mutex);
+> +
+> +	return ret;
+
+[Severity: Medium]
+Because disk_se_mgmt_in_progress returns 0 on error states, does this=20
+unconditionally return 0 without verifying if the target element actually=20
+achieved the BLK_SE_STS_REMOVED status?
+
+The caller might be incorrectly informed that the removal succeeded when it=
+=20
+actually failed. Should the status of the specific element_id be explicitly=
+=20
+verified for success after the polling wait completes?
+
+> +}
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261009090945.1504=
-194-1-dlemoal@kernel.org?part=3D5
+194-1-dlemoal@kernel.org?part=3D3
