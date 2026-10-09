@@ -1,43 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C3C448E0D5
-	for <linux-scsi@vger.kernel.org>; Fri,  9 Oct 2026 09:24:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B773F498930
+	for <linux-scsi@vger.kernel.org>; Fri,  9 Oct 2026 09:28:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791537864; cv=none; b=OWhCwsmUQvnd9G3kurCCOkt+5UU1yXQZ/FCLSMDPTYyYaQGYoO63hVIeoSmG836G/533bqhyiWIFz1NyktMqAD+lajSpJyzySnotBOdRHXrcXaSLrrVjmYdqfTvFqvgmOv2nqhH2qchh5yAazfQ71sxy4mOzXHCivfLQO/DtV/k=
+	t=1791538132; cv=none; b=k4O4Bc0zW7hU9WHr+JYiDcpgkAdumKvQ91JK/k2qOmOvvAcR/4rE2mU6WJJZ91YiaC8m2YBVzpYHL+7fgKz16IU/scTrgfxUXzKcqMMMcQEv9m650aUNCodM0qSnuGJw2EQ8HshYMAFmckqJxY4mpFumFz9MvwImLgm33dz/Xto=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791537864; c=relaxed/simple;
-	bh=+Kevdm3M+E1J4DGLLyJv6EwBqDVzgGZb3AiF58tgNlU=;
+	s=arc-20240116; t=1791538132; c=relaxed/simple;
+	bh=mOpew8gPgXA6RbIZd1Pt4OgVSQEZ75KNyCMBRoE+0KU=;
 	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
-	 Date; b=BpmqAITrwT6+K07x3i7AH36B4PQ/xmcAdV9kZ2FSyqA6gNPZSttvlfQLzSKCT5YGqv57CfVfz0wRCsEtG0vpkOwAP11AV+QXZb5+ELFE05Y9AvjE6Lr3BVDSu98a9RtYSDVo2hnK2powcncBD7dUic1t5UzFJPccQ06PMUsdvrk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GgSojUIz; arc=none smtp.client-ip=100.103.45.18
+	 Date; b=GRBVrqMOzuaj3nbc0f3gDWMCJcbZapGgA8gLikln9SPOjCDpVAIz5VLKr/Q/OxA0oum54IOj7wUtGm943yzIARX0Um96fPhA1+obP//xJ6d01iuYoWZn/IxYpKYhatSaRjh+Wwm+rqAJGmlWwccKNtdQiFCQP9HYjW1U4Rt6Eno=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZsiyZJcm; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GgSojUIz"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7B7FE1F000FF;
-	Fri,  9 Oct 2026 09:24:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZsiyZJcm"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 348D41F000FF;
+	Fri,  9 Oct 2026 09:28:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791537858;
-	bh=SfnU3Mqx24Xww/KltPPu381ZRvYFCqDjWFM6gD0AEjE=;
+	s=k20260515; t=1791538130;
+	bh=EQIXgmhS7vlC86rBttszklhCGac32R5bVqIAsmOUH5s=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=GgSojUIzBRJhgpPJm5tNdUmnE9O35ff4nabig8nKAFgs1/ti6K+sn0R5+v5vjstQM
-	 xugnaDfIHajTaTyoVVHEzu420rwElPVnEyv7E/6al/cPH2v4Ob+lgw1dlygDrtYZHd
-	 jMC13XmSn/OOgFhxYtRYZD1HQnROAWG11CPsHcU3EqvasT8T6bYSB+XXz8w0kZUrFq
-	 8YFGpyX7sfoBJ2qTgdPdVAAXZvu4FiiX2TIH0H+N8c3vdKcpGT2ymPEyZBcr7sX6JA
-	 UYYjxLxBvdc0CNe8Mkmjssd/xTKQV11vJSEAHuFG0q3khjWI06ZAQHRiJH9bApwT3l
-	 BMf5b1bsgwoCg==
-Message-ID: <sashiko-outbox-165159@kernel.org>
+	b=ZsiyZJcm/OsP4gU+Sy//oxHHAH3Wuq0KDwqjVMOJOoooQivzL6XLHVpvn4x9adu+V
+	 Tcv0QIBxwP6ubXcZQtH9qSoW6ZqPC6rcCfcLccYRfGfCiZCjgrcv6ArqGUq021nFKa
+	 AbNTM83pX8m5QZ7U4VDdR6WtIquvT7SbqBiHb6oeqlGjUlYHFMTMDT8db0bNT2LQL8
+	 UPq/Uwhtb4gKN5bXhQauhWab707fwdBYSp8FAwy20xOSuz5vfRvRHIMIsc6RBA37qg
+	 pPaN3twvQeCpcxBRf/YSY07BzbVz5Cg6Hrf2ny+MuN9LnWs/lyCeHx0bTr2qALs2CY
+	 wUGnkMs8WxLlw==
+Message-ID: <sashiko-outbox-165166@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 3/9] block: introduce storage element management
+Subject: Re: [PATCH v4 9/9] scsi: sd_zbc: define storage element management
+ operations
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Damien Le Moal" <dlemoal@kernel.org>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20261009090945.1504194-4-dlemoal@kernel.org>
+In-Reply-To: <20261009090945.1504194-10-dlemoal@kernel.org>
 References: <20261009090945.1504194-1-dlemoal@kernel.org>
- <20261009090945.1504194-4-dlemoal@kernel.org>
+ <20261009090945.1504194-10-dlemoal@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 09 Oct 2026 09:24:18 +0000
+Date: Fri, 09 Oct 2026 09:28:49 +0000
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -46,152 +47,109 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [High] block: permanent zone state desync on signal or memory allocation =
-failure
-- [Medium] block: ignored storage element management error status
+- [High] scsi: sd_zbc: concurrent I/O races with storage element modificati=
+on due to unfrozen queue
+- [Medium] scsi: sd_zbc: nr_zones calculation for ALL_ACCESS_STORAGE omits =
+runt zone
 --
 
-commit 47105e9f6e8f70ce8710089fec4d093f5ff51fde
+commit f862e7a8a5445f6170e01d1055958c0159fb3b36
 Author: Damien Le Moal <dlemoal@kernel.org>
-Subject: block: introduce storage element management
 
-This commit introduces storage element management for zoned block devices. =
-It
-defines generic operations to report, remove, and restore storage elements
-so that disks with defective heads can remain in production by depopulating
-the defective elements.
+scsi: sd_zbc: define storage element management operations
 
-> diff --git a/block/blk-zoned.c b/block/blk-zoned.c
-> --- a/block/blk-zoned.c
-> +++ b/block/blk-zoned.c
+This commit defines storage element management operations (report, remove,
+restore) via struct blk_se_ops. These operations are intended for SMR disks
+supporting the storage element depopulation feature.
+
+> diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
+> index 1bf5f7ea0d9c5..2f79a8d7b9d93 100644
+> --- a/drivers/scsi/sd_zbc.c
+> +++ b/drivers/scsi/sd_zbc.c
 [ ... ]
-> +static int disk_se_mgmt_in_progress(struct gendisk *disk,
-> +				     struct blk_se *elements,
-> +				     bool *in_progress)
+> @@ -548,6 +548,239 @@ static void sd_zbc_print_zones(struct scsi_disk *sd=
+kp)
+>  			  sdkp->zone_info.zone_blocks);
+>  }
+> =20
+> +static void sd_zbc_parse_storage_element(struct scsi_disk *sdkp, u8 *des=
+c,
+> +					 struct blk_se *element)
 > +{
-[ ... ]
-> +	for (i =3D 0; i < nr_se; i++) {
-> +		switch (elements[i].status) {
-> +		case BLK_SE_STS_REMOVE_IN_PROGRESS:
-> +		case BLK_SE_STS_RESTORE_IN_PROGRESS:
-> +			*in_progress =3D true;
-> +			return 0;
-> +		default:
-> +			break;
+> +	struct scsi_device *sdp =3D sdkp->device;
+> +	sector_t zone_sectors =3D sd_zbc_zone_sectors(sdkp);
+> +	u64 capacity;
+> +
+> +	memset(element, 0, sizeof(*element));
+> +
+> +	element->id =3D get_unaligned_be32(&desc[4]);
+> +
+> +	switch (desc[14]) {
+> +	case SCSI_PHYS_ELEM_TYPE_ALL_ACCESS_STORAGE:
+> +		element->type =3D BLK_SE_TYPE_RDWR;
+> +		capacity =3D get_unaligned_be64(&desc[16]);
+> +		if (!zone_sectors || capacity =3D=3D ULLONG_MAX)
+> +			element->nr_zones =3D 0;
+> +		else
+> +			element->nr_zones =3D
+> +				logical_to_sectors(sdp, capacity) >>
+> +					ilog2(zone_sectors);
 
 [Severity: Medium]
-Do error statuses like BLK_SE_STS_REMOVE_ERROR fall through to the default=
-=20
-case here?
+For devices with a "runt" zone at the end, the total capacity is not a
+perfect multiple of the zone size. Since the bitwise right shift performs
+integer division that rounds down, could this silently truncate the
+remainder blocks?
 
-If the device encounters an error during the removal, it changes the elemen=
-t's=20
-status to an error state. The polling loop then sees no elements are in=20
-progress, sets in_progress to false, and returns 0 instead of bubbling up=20
-the error.
+If so, does this cause the element to under-report the total number of zones
+by one, creating a mismatch with the core block layer's zone count (which
+properly rounds up)?
 
-> +		}
-> +	}
-> +
-> +	*in_progress =3D false;
-> +
-> +	return 0;
-> +}
-> +
-> +static int disk_wait_for_se_mgmt_completion(struct gendisk *disk)
+> +		break;
+> +	case SCSI_PHYS_ELEM_TYPE_FRAC_ACCESS_STORAGE:
+[ ... ]
+> +static int sd_zbc_remove_storage_element(struct gendisk *disk,
+> +					 unsigned int element_id)
 > +{
-> +	struct blk_se *elements;
-> +	unsigned int noio_flag;
-> +	bool in_progress;
-> +	int ret;
+> +	struct scsi_disk *sdkp =3D scsi_disk(disk);
+> +	struct scsi_device *sdp =3D sdkp->device;
+> +	const int timeout =3D sdp->request_queue->rq_timeout;
+> +	struct scsi_sense_hdr sshdr;
+> +	const struct scsi_exec_args exec_args =3D {
+> +		.sshdr =3D &sshdr,
+> +	};
+> +	unsigned char cmd[16];
+> +	int result;
 > +
-> +	noio_flag =3D memalloc_noio_save();
-> +	elements =3D kzalloc_objs(struct blk_se, disk->nr_storage_elements);
-> +	memalloc_noio_restore(noio_flag);
-> +	if (!elements)
-> +		return -ENOMEM;
+> +	if (!sdkp->modify_zones_supported)
+> +		return -EOPNOTSUPP;
+> +
+> +	memset(cmd, 0, 16);
+> +	cmd[0] =3D SERVICE_ACTION_IN_16;
+> +	cmd[1] =3D SAI_REMOVE_ELEMENT_AND_MODIFY_ZONES;
+> +	put_unaligned_be32(element_id, &cmd[10]);
+> +
+> +	result =3D scsi_execute_cmd(sdp, cmd, REQ_OP_DRV_IN, NULL, 0,
+> +				  timeout, 1, &exec_args);
 
 [Severity: High]
-Does attempting to allocate the polling buffer after the hardware operation=
-=20
-has already been initiated introduce a memory failure path that aborts=20
-synchronization?
+The block layer explicitly unfreezes the queue before invoking the se_ops
+callback. For example, in bdev_remove_storage_element():
 
-If kzalloc_objs fails and returns -ENOMEM, the wait loop is skipped, which=
-=20
-later bypasses the critical disk_revalidate_zones step in=20
-bdev_remove_storage_element. Could this leave the kernel's zone state=20
-permanently out of sync with the physical device conditions?
+    memflags =3D blk_mq_freeze_queue(disk->queue);
+    blk_mq_unfreeze_queue(disk->queue, memflags);
+    ret =3D disk->fops->se_ops->remove_element(disk, element_id);
 
-> +
-> +	/*
-> +	 * Poll the storage elements heath state to detect the end of a
-> +	 * removal or restoration operation. Since we do not know how long the
-> +	 * operation may take, we cannot have a timeout on this loop. So check
-> +	 * for fatal signals so that the user can terminate this retry loop if
-> +	 * the device misbehaves.
-> +	 */
-> +	while (1) {
-> +		ret =3D disk_se_mgmt_in_progress(disk, elements, &in_progress);
-> +		if (ret || !in_progress)
-> +			break;
-> +
-> +		if (fatal_signal_pending(current)) {
-> +			ret =3D -EINTR;
-> +			break;
+Because the queue is unfrozen when sd_zbc_remove_storage_element() is
+called, another process could issue direct I/Os (e.g. via io_uring) to the
+queue. Can the hardware zone topology modification sent via this SCSI
+command race with concurrent I/O operations and lead to I/O failures or
+data corruption?
 
-[Severity: High]
-Does permitting fatal signals to abandon the wait loop leave the hardware=20
-executing in the background with no mechanism to trigger a revalidation=20
-upon actual completion?
-
-This error path propagates the aborted wait and also skips the vital zone=20
-revalidation step that keeps the kernel's view consistent with the device.
-
-> +		}
-> +
-> +		/* Not done yet: wait and retry. */
-> +		msleep(1000);
-> +	}
-> +
-> +	kfree(elements);
-> +
-> +	return ret;
-> +}
-[ ... ]
-> +int bdev_remove_storage_element(struct block_device *bdev,
-> +				unsigned int element_id)
-> +{
-[ ... ]
-> +	ret =3D disk->fops->se_ops->remove_element(disk, element_id);
-> +	if (ret)
-> +		goto unlock;
-> +
-> +	/* Revalidate the device zones once the opration completes. */
-> +	ret =3D disk_wait_for_se_mgmt_completion(disk);
-> +	if (ret)
-> +		goto unlock;
-> +
-> +	ret =3D disk_revalidate_zones(disk);
-> +
-> +unlock:
-> +	mutex_unlock(&disk->zone_revalidate_mutex);
-> +
-> +	return ret;
-
-[Severity: Medium]
-Because disk_se_mgmt_in_progress returns 0 on error states, does this=20
-unconditionally return 0 without verifying if the target element actually=20
-achieved the BLK_SE_STS_REMOVED status?
-
-The caller might be incorrectly informed that the removal succeeded when it=
-=20
-actually failed. Should the status of the specific element_id be explicitly=
-=20
-verified for success after the polling wait completes?
-
-> +}
+> +	if (result) {
+> +		sd_printk(KERN_ERR, sdkp,
+> +			  "REMOVE ELEMENT AND MODIFY ZONES failed\n");
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261009090945.1504=
-194-1-dlemoal@kernel.org?part=3D3
+194-1-dlemoal@kernel.org?part=3D9
