@@ -1,80 +1,81 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C49F3E5A08;
-	Fri,  9 Oct 2026 18:30:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF76C396B70;
+	Fri,  9 Oct 2026 18:30:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791570654; cv=none; b=ShiJT0td/sBkzRJdH733h2dCvR54a95EGTvXGy9/9kDFhmCm8HP4Q7ar/r2whVrAyUxFRsdARBUlvT3gNcSTImZJ//Fv2nZkRB0SBJ0R4TJOMdYE7AZIiQ5hOU5P9qWOREZBGQ5qtRUuRSCWhiLJtt1ZMCJEHTERAC2WyUsxWpA=
+	t=1791570655; cv=none; b=DxHFjM2fEvn+mIHPoQdk9EPPfnZP/MnjOKf8TnbP0RjTBPR1e1nWCzv09JXoOhqub2+A0gHScSWyLGroDzxuXBPObYPg/OvxT9xzUOYLWoqgAmBua5D81F6SZRqlh6SvntaQ7S2xbvJ6wBQyl7Edws8K+S34Me0SM9vAvy2XIjs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791570654; c=relaxed/simple;
-	bh=cpHIMphgw62XFR7fvZZkJ920KR9jdrtpSZVH5YIU8XE=;
+	s=arc-20240116; t=1791570655; c=relaxed/simple;
+	bh=ragqmZy1lTdfRRXyYL4oyabZhQWrFuqNRc66/eF209w=;
 	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
-	 Date; b=lTEPHkEeRCN3mmhO6RVqq9vp7X+4/kHmTWoixRN6LJWUM8Vj5r+cr/+FKsXHoKO/zXfXwT2R0qzbAkZTCrept4rVJ+spVeSBDTaiSKCmDA44cARqZ1lKfmKU+DgqyUIIu6Ekaix8OeQXAjExrhYymKXUpJoSe148ulL9kiB+xA0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DPi2tokp; arc=none smtp.client-ip=100.103.45.18
+	 Date; b=bPK45pY5KaS/hV04i1CvbO8clGmwucISXhJ+yIOSCcgWcjpcTARWpVHQN9YJxkOEiZY0pZ8qse9/ArSwAsKPyI9pvIuqh8R/aE6utluctque8VbqskHDZZxZIpIgPyiD7kRJ8tyXzblrgrJRs0zQpUzi/A+1WnA1MmLirfopf6M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=f2/FWM0x; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DPi2tokp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F04381F00893;
-	Fri,  9 Oct 2026 18:30:50 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="f2/FWM0x"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8EB331F000FF;
+	Fri,  9 Oct 2026 18:30:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791570651;
-	bh=cpHIMphgw62XFR7fvZZkJ920KR9jdrtpSZVH5YIU8XE=;
+	s=k20260515; t=1791570650;
+	bh=ragqmZy1lTdfRRXyYL4oyabZhQWrFuqNRc66/eF209w=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=DPi2tokpdYsbPOLJoVW1SuN1eU3QNA+exL2AxM2HV35PBVj3cY0H+Fb2oIGJ2dxBL
-	 FgOFz8BT1nFJIQaduPwRoKbNxibYcTBOHIEyjKogiizmlLHlWhW6O3NmLeSiLn8SOL
-	 CsUoAS5XnX/kDZICsh8NFtJhmHvU5VeFwfrpPdLhZ9uhspdKDOaCdIIDrAWopvCUJs
-	 D+iCWogbtChHs1u4dS9DfXhC5rHDrz5Td9Id3dad+1AzEaingK5opKNGgx4hJK5/ko
-	 ox+tZTp7LziRZlm4IVwXIH1cJOzLXmEz9+igkKuZo+DPZ8VtYzL2vgQR1AVcv8Te0N
-	 cx345Dx4MxZRQ==
-Message-ID: <sashiko-outbox-165950@kernel.org>
+	b=f2/FWM0xQpYl/078U73bA1nv4M+lo+SUnBFC9mpDB/lgDQnRAJFifjNJ5X8zsV4QX
+	 6MnZZCi1SIt/RuCJpZLDdbL/8E8mIGiLf2weDmHZ4m9KusO27AR5lNbsj5QGBOJBHu
+	 ezRuaY04ZzA1Y3tU1pT8IWYSrPLSg359EfgGhNRqLXBkMaxhkuqnv1U0MZ6WcyF1+7
+	 9jFGwxe7EWAOAAvCJen+IcX8MuX/m/AfRQjKshMQX8oW0applhb/e6fCNSMs4+a3Z4
+	 3UEzk7ZodUCYb8w+yidhCppZFevfAMRf9ipuuL0QUdMsBrFdaaxc00KIr+iC7M5XJl
+	 7KjdLrxaqae3Q==
+Message-ID: <sashiko-outbox-165949@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 10/38] infiniband: update hfi1 to use
- remap_vmalloc_range()
+Subject: Re: [PATCH v5 13/38] bpf: arena: mark arena_map_mmap() mappings
+ VM_MIXEDMAP
 Reply-To: sashiko-reviews@lists.linux.dev
 To: =?utf-8?b?TG9yZW56byBTdG9ha2VzIChBUk0p?= <ljs@kernel.org>
-Cc: dri-devel@lists.freedesktop.org, bpf@vger.kernel.org, "Marc Zyngier" <maz@kernel.org>, linux-scsi@vger.kernel.org, kvmarm@lists.linux.dev, kvm@vger.kernel.org, "Heiko
- Carstens" <hca@linux.ibm.com>, linux-rdma@vger.kernel.org, "Christian
- Borntraeger" <borntraeger@linux.ibm.com>, "Alexander Gordeev" <agordeev@linux.ibm.com>, linux-perf-users@vger.kernel.org, linux-usb@vger.kernel.org, "Vasily
- Gorbik" <gor@linux.ibm.com>, linux-trace-kernel@vger.kernel.org, linux-s390@vger.kernel.org, selinux@vger.kernel.org, "Oliver
+Cc: "Heiko Carstens" <hca@linux.ibm.com>, linux-s390@vger.kernel.org, selinux@vger.kernel.org, linux-trace-kernel@vger.kernel.org, "Marc
+ Zyngier" <maz@kernel.org>, dri-devel@lists.freedesktop.org, linux-scsi@vger.kernel.org, bpf@vger.kernel.org, "Alexander
+ Gordeev" <agordeev@linux.ibm.com>, "Vasily Gorbik" <gor@linux.ibm.com>, "Christian
+ Borntraeger" <borntraeger@linux.ibm.com>, kvmarm@lists.linux.dev, linux-perf-users@vger.kernel.org, linux-rdma@vger.kernel.org, kvm@vger.kernel.org, linux-usb@vger.kernel.org, "Oliver
  Upton" <oupton@kernel.org>
-In-Reply-To: <20261009-b4-mmap-prepare-vma-flag-sanify-v5-10-923b70125b1e@kernel.org>
+In-Reply-To: <20261009-b4-mmap-prepare-vma-flag-sanify-v5-13-923b70125b1e@kernel.org>
 References: <20261009-b4-mmap-prepare-vma-flag-sanify-v5-0-923b70125b1e@kernel.org>
- <20261009-b4-mmap-prepare-vma-flag-sanify-v5-10-923b70125b1e@kernel.org>
+ <20261009-b4-mmap-prepare-vma-flag-sanify-v5-13-923b70125b1e@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 09 Oct 2026 18:30:50 +0000
+Date: Fri, 09 Oct 2026 18:30:49 +0000
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-> In cases which map chip memory from vmalloc()'d ranges, the hfi1 infiniba=
-nd
-> drivers currently installs a fault handler, and then smuggles the kernel
-> virtual address of this range in vma->vm_pgoff.
+> The bpf_map->ops->map_mmap callback invoked by bpf_map_mmap() can be set =
+to
+> one of ringbuf_map_mmap_kern(), ringbuf_map_mmap_user(), array_map_mmap()
+> or arena_map_mmap().
 >=20
-> This is exposing KASLR-sensitive internal kernel state in the VMA, and is
-> entirely unnecessary.
+> It is convention in mm to mark mappings whose pages the kernel manages
+> itself with VM_MIXEDMAP, so core mm knows not to treat them as ordinary
+> page cache or anonymous memory.
 >=20
-> Instead, use remap_vmalloc_range() to remap the VMA to the span, and
-> eliminate the fault handler altogether.
+> The map_mmap callbacks ringbuf_map_mmap_kern() and ringbuf_map_mmap_user()
+> use remap_vmalloc_range(), which ultimately invokes vm_insert_page() and =
+so
+> marks the ranges VM_MIXEDMAP, and array_map_mmap() sets VM_MIXEDMAP
+> explicitly.
 >=20
-> remap_vmalloc_range() checks that the VMA does not extend beyond the
-> vmalloc area, and the driver already requires the VMA to exactly match the
-> span of the memory being mapped, so this has no impact.
->=20
-> The memory is all preallocated so not having a fault handler has no impact
+> However, the exception to this is arena_map_mmap(), which doesn't set the
+> flag.
 > [ ... ]
-> There is a change in behaviour in that pages mapped using
-> remap_vmalloc_range() will now have normal GUP-able pages, however this
-> should have no impact as there is no reason not to allow this.
+> in bpf_map_mmap().
 >=20
+> Reviewed-by: Emil Tsalapatis <emil@etsalapatis.com>
+> Reviewed-by: Suren Baghdasaryan <surenb@google.com>
 > Signed-off-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
 
 Sashiko has reviewed this patch and found no issues. It looks great!
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261009-b4-mmap-pr=
-epare-vma-flag-sanify-v5-0-923b70125b1e@kernel.org?part=3D10
+epare-vma-flag-sanify-v5-0-923b70125b1e@kernel.org?part=3D13
 
