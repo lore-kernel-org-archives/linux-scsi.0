@@ -1,176 +1,126 @@
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B5EF63A257C;
-	Fri,  9 Oct 2026 03:51:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.187
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 16F3B3612ED
+	for <linux-scsi@vger.kernel.org>; Fri,  9 Oct 2026 03:58:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791517912; cv=none; b=Guij+11VQbhlvB9AlYmFBtEseVWBPykAtqQiFB+DPKC8zuvqK906GVNLJI8mcE+h71QDqmBmPjB4yiqF47M+XqaobzT87Pc7RwbMr3IWDSt1h+GzYpGkFhg8OyBOPvq27h9c/DvdftmmYwglN0bpf5x3Mxu5MhVcpEujtI0PWVk=
+	t=1791518346; cv=none; b=q5Qod5+Gk7cqZNosF3xTYSqZaT/ZdIlFvkSUYQBoK0Ki3LjAVJ4L5/M759TvvoX1kTl2IsCd/wO1CvfTGWw9Ov3pm8H80J4NRTuO/vN3iknBrWPFaMsJZFgH4KJWm++sJPDfcXMODWWVZ5GJUZnPrqpGC2/gsuOdBYR+G2qVAI4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791517912; c=relaxed/simple;
-	bh=6lR7Fe8j7ZJqwgSdEaqt4wE1JuE3HtF6O2bh/oqRu+k=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=edeXLTNmIlb5aag13+CJJSuZvEvh82ie3MMggOBXcJKe4dfdaoNfvw3XN1P6wojSxdQ6shmwqIuZXl/b8S3bD5puWtHF76UYWddIEmlqga94gX0+ZDF841zj5GDUt7IfXqHyZPy1/hB9Z93Bn0pGHeNE6FGIBvCvjrEG8xXAxsg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=EzL/mU2f; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=EzL/mU2f; arc=none smtp.client-ip=45.249.212.187
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
+	s=arc-20240116; t=1791518346; c=relaxed/simple;
+	bh=Nd0zxlTkptaH+M9DFNp3yuyLWmduEjhpxo8YldUQBLg=;
+	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
+	 Date; b=pGqSlgy/vs0wzbhKRgJJX85+AxyzQv/itTbe6V5WMPo4h1oFPEALN27/1IjHn/oWRdstXvCvzVl8ybm7K0XnHORUAa9bhXRAAsxQn7a9s6P1/PgrKtOHUsv/UN1jWibkg/iMcGahialsxzK12zBDVSL9aVFrCPAmb34vxQROknQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GA1hpGDX; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="EzL/mU2f";
-	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="EzL/mU2f"
-dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=m1QWpC5GKYRSRxzyMic5aSse29101qlmEtiZmN91j/0=;
-	b=EzL/mU2fBaB92YELKt7rTdtQK6B5fLf6llQy9gnMSoYM9iacimd68ImLn0Ho9tgr+gclgwlsW
-	Oz4FAZXZA5Kaq+owb33EJGkv8HQX1I9BkWWO7x+TPU1WF7XJEYoqF+Xok+bgW8nPnPu3UgQaBll
-	EOP87hqfFLWgfatooU4VQdg=
-Received: from canpmsgout09.his.huawei.com (unknown [172.19.92.135])
-	by szxga01-in.huawei.com (SkyGuard) with ESMTPS id 4j1C8p5pdlz1BGMv;
-	Fri,  9 Oct 2026 11:32:10 +0800 (CST)
-dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=m1QWpC5GKYRSRxzyMic5aSse29101qlmEtiZmN91j/0=;
-	b=EzL/mU2fBaB92YELKt7rTdtQK6B5fLf6llQy9gnMSoYM9iacimd68ImLn0Ho9tgr+gclgwlsW
-	Oz4FAZXZA5Kaq+owb33EJGkv8HQX1I9BkWWO7x+TPU1WF7XJEYoqF+Xok+bgW8nPnPu3UgQaBll
-	EOP87hqfFLWgfatooU4VQdg=
-Received: from mail.maildlp.com (unknown [172.19.163.214])
-	by canpmsgout09.his.huawei.com (SkyGuard) with ESMTPS id 4j1BwW2FTTz1cyQh;
-	Fri,  9 Oct 2026 11:21:31 +0800 (CST)
-Received: from kwepemp500006.china.huawei.com (unknown [7.202.194.207])
-	by mail.maildlp.com (Postfix) with ESMTPS id 622B04056C;
-	Fri,  9 Oct 2026 11:32:43 +0800 (CST)
-Received: from kwepemp500015.china.huawei.com (7.202.195.9) by
- kwepemp500006.china.huawei.com (7.202.194.207) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.45; Fri, 9 Oct 2026 11:32:43 +0800
-Received: from localhost.localdomain (10.50.163.32) by
- kwepemp500015.china.huawei.com (7.202.195.9) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.45; Fri, 9 Oct 2026 11:32:42 +0800
-From: Xingui Yang <yangxingui@huawei.com>
-To: <mkp@kernel.org>, <jejb@linux.ibm.com>, <john.garry@linux.dev>,
-	<yanaijie@huawei.com>
-CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linuxarm@huawei.com>, <yangxingui@huawei.com>, <liuyonglong@huawei.com>,
-	<kangfenglong@huawei.com>
-Subject: [PATCH v3 3/4] scsi: hisi_sas: Clear PHY error counts on phyup
-Date: Fri, 9 Oct 2026 11:32:37 +0800
-Message-ID: <20261009033238.1076098-4-yangxingui@huawei.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20261009033238.1076098-1-yangxingui@huawei.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GA1hpGDX"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C492A1F000FF;
+	Fri,  9 Oct 2026 03:58:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1791518333;
+	bh=jG4NG1ysbwJG71pRifutltvre+Z9r8E1jx0RRomcRMA=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=GA1hpGDXcb/hLEvBlENxrjo88daZTxIj7kzohqBbRrZOIOEalQGQlblMNJqcPHo9l
+	 77PksguJe98c0aTGM9THADJIDFG7R6ioA5sxoTBpjIp5PAF404KGMSlX8um5jADpyE
+	 ejcV4GW/5oWD+UuErC12osf965V+R1SO0akCxKVrKhVzD+chsjiaLYdW8FEPA0rFIU
+	 HhT/jb2TmHxVdt6JFDH9d2JjBuzueF/gDgsAp0tpPINsuWuzajcmbP5RsoxRdDjXO4
+	 b6YBP43CpsA/AwoJeIHSIJ75UWeJC1GF2kVfChsJRc30fJjI8UWuznpYidZJSK20Ty
+	 tRCkjzGRj7ggg==
+Message-ID: <sashiko-outbox-164806@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v3 4/4] scsi: hisi_sas: Fix spinup failure for SAS SSP
+ devices in Active_Wait state
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Xingui Yang" <yangxingui@huawei.com>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20261009033238.1076098-5-yangxingui@huawei.com>
 References: <20261009033238.1076098-1-yangxingui@huawei.com>
+ <20261009033238.1076098-5-yangxingui@huawei.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Fri, 09 Oct 2026 03:58:53 +0000
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: kwepems200001.china.huawei.com (7.221.188.67) To
- kwepemp500015.china.huawei.com (7.202.195.9)
 
-Some disks generate link errors during link establishment but still
-phy up successfully. These intermediate error counts are not cleared
-after phyup, leaving stale data for error detection. Clear them on
-phyup.
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [Medium] pm: usage count underflow due to incorrect pm_runtime_get_if_act=
+ive() check in hisi_sas_spinup_notify()
+--
 
-Signed-off-by: Xingui Yang <yangxingui@huawei.com>
----
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 38 +++++++++++++++++---------
- 1 file changed, 25 insertions(+), 13 deletions(-)
+commit 255dba6c6286916d717929164fd02a77f83d3168
+Author: Xingui Yang <yangxingui@huawei.com>
+Subject: scsi: hisi_sas: Fix spinup failure for SAS SSP devices in Active_W=
+ait state
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index 9c363e237353..030f050731ba 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -280,6 +280,9 @@
- #define CHL_INT2_RX_CODE_ERR_OFF	29
- #define CHL_INT2_RX_INVLD_DW_OFF	30
- #define CHL_INT2_STP_LINK_TIMEOUT_OFF	31
-+#define CHL_INT2_RX_ERR_MSK	(BIT(CHL_INT2_RX_DISP_ERR_OFF) | \
-+				 BIT(CHL_INT2_RX_CODE_ERR_OFF) | \
-+				 BIT(CHL_INT2_RX_INVLD_DW_OFF))
- #define CHL_INT0_MSK			(PORT_BASE + 0x1c0)
- #define CHL_INT1_MSK			(PORT_BASE + 0x1c4)
- #define CHL_INT2_MSK			(PORT_BASE + 0x1c8)
-@@ -1061,16 +1064,31 @@ static void enable_phy_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
- 	hisi_sas_phy_write32(hisi_hba, phy_no, PHY_CFG, cfg);
- }
- 
-+static void clear_phy_err_cnt_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
-+{
-+	u32 irq_msk = hisi_sas_phy_read32(hisi_hba, phy_no, CHL_INT2_MSK);
-+
-+	hisi_sas_phy_write32(hisi_hba, phy_no, CHL_INT2_MSK,
-+			     CHL_INT2_RX_ERR_MSK | irq_msk);
-+
-+	hisi_sas_phy_read32(hisi_hba, phy_no, ERR_CNT_DWS_LOST);
-+	hisi_sas_phy_read32(hisi_hba, phy_no, ERR_CNT_RESET_PROB);
-+	hisi_sas_phy_read32(hisi_hba, phy_no, ERR_CNT_INVLD_DW);
-+	hisi_sas_phy_read32(hisi_hba, phy_no, ERR_CNT_DISP_ERR);
-+	hisi_sas_phy_read32(hisi_hba, phy_no, ERR_CNT_CODE_ERR);
-+
-+	hisi_sas_phy_write32(hisi_hba, phy_no, CHL_INT2, CHL_INT2_RX_ERR_MSK);
-+	hisi_sas_phy_write32(hisi_hba, phy_no, CHL_INT2_MSK, irq_msk);
-+}
-+
- static void disable_phy_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
- {
- 	u32 cfg = hisi_sas_phy_read32(hisi_hba, phy_no, PHY_CFG);
- 	u32 irq_msk = hisi_sas_phy_read32(hisi_hba, phy_no, CHL_INT2_MSK);
--	static const u32 msk = BIT(CHL_INT2_RX_DISP_ERR_OFF) |
--			       BIT(CHL_INT2_RX_CODE_ERR_OFF) |
--			       BIT(CHL_INT2_RX_INVLD_DW_OFF);
- 	u32 state;
- 
--	hisi_sas_phy_write32(hisi_hba, phy_no, CHL_INT2_MSK, msk | irq_msk);
-+	hisi_sas_phy_write32(hisi_hba, phy_no, CHL_INT2_MSK,
-+			     CHL_INT2_RX_ERR_MSK | irq_msk);
- 
- 	cfg &= ~PHY_CFG_ENA_MSK;
- 	hisi_sas_phy_write32(hisi_hba, phy_no, PHY_CFG, cfg);
-@@ -1085,11 +1103,7 @@ static void disable_phy_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
- 
- 	udelay(1);
- 
--	hisi_sas_phy_read32(hisi_hba, phy_no, ERR_CNT_INVLD_DW);
--	hisi_sas_phy_read32(hisi_hba, phy_no, ERR_CNT_DISP_ERR);
--	hisi_sas_phy_read32(hisi_hba, phy_no, ERR_CNT_CODE_ERR);
--
--	hisi_sas_phy_write32(hisi_hba, phy_no, CHL_INT2, msk);
-+	clear_phy_err_cnt_v3_hw(hisi_hba, phy_no);
- 	hisi_sas_phy_write32(hisi_hba, phy_no, CHL_INT2_MSK, irq_msk);
- }
- 
-@@ -1671,6 +1685,7 @@ static irqreturn_t phy_up_v3_hw(int phy_no, struct hisi_hba *hisi_hba)
- 	/* Delete timer and set phy_attached atomically */
- 	timer_delete(&phy->timer);
- 	phy->phy_attached = 1;
-+	clear_phy_err_cnt_v3_hw(hisi_hba, phy_no);
- 	spin_unlock(&phy->lock);
- 
- 	/*
-@@ -1894,9 +1909,6 @@ static void handle_chl_int2_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
- 	struct hisi_sas_phy *phy = &hisi_hba->phy[phy_no];
- 	struct pci_dev *pci_dev = hisi_hba->pci_dev;
- 	struct device *dev = hisi_hba->dev;
--	static const u32 msk = BIT(CHL_INT2_RX_DISP_ERR_OFF) |
--			BIT(CHL_INT2_RX_CODE_ERR_OFF) |
--			BIT(CHL_INT2_RX_INVLD_DW_OFF);
- 
- 	irq_value &= ~irq_msk;
- 	if (!irq_value) {
-@@ -1920,7 +1932,7 @@ static void handle_chl_int2_v3_hw(struct hisi_hba *hisi_hba, int phy_no)
- 			hisi_sas_notify_phy_event(phy, HISI_PHYE_LINK_RESET);
- 	}
- 
--	if (pci_dev->revision > 0x20 && (irq_value & msk)) {
-+	if (pci_dev->revision > 0x20 && (irq_value & CHL_INT2_RX_ERR_MSK)) {
- 		struct asd_sas_phy *sas_phy = &phy->sas_phy;
- 		struct sas_phy *sphy = sas_phy->phy;
- 
--- 
-2.43.0
+This commit addresses spinup failures for directly-attached SSP devices=20
+waiting in the Active_Wait state. It parses sense data during slot=20
+completion and queues work to send a NOTIFY(ENABLE SPINUP) primitive while=
+=20
+managing the runtime PM state of the controller.
 
+> diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sa=
+s/hisi_sas_main.c
+> index 944ce19ae2fc1..cf7aa0a699cde 100644
+> --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
+> +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+> @@ -996,10 +996,25 @@ static void hisi_sas_phyup_pm_work(struct work_stru=
+ct *work)
+[ ... ]
+> +static void hisi_sas_spinup_notify_work(struct work_struct *work)
+> +{
+[ ... ]
+> +	hisi_hba->hw->sl_notify_ssp(hisi_hba, phy_no);
+> +	dev_info(dev, "spinup notify primitive on phy%d\n", phy_no);
+> +
+> +	pm_runtime_put_sync(dev);
+
+[Severity: Medium]
+If the earlier pm_runtime_get_if_active() check bypassed a negative error
+code, will this cause a runtime PM usage count underflow since the reference
+was never successfully incremented?
+
+> +}
+[ ... ]
+> @@ -1639,6 +1654,34 @@ void hisi_sas_controller_reset_done(struct hisi_hb=
+a *hisi_hba)
+[ ... ]
+> +void hisi_sas_spinup_notify(struct hisi_hba *hisi_hba,
+> +			    struct sas_task *task)
+> +{
+[ ... ]
+> +	if (!pm_runtime_get_if_active(hisi_hba->dev))
+> +		return;
+
+[Severity: Medium]
+Does this check properly handle negative error codes?
+
+pm_runtime_get_if_active() returns 1 if the device is active, 0 if inactive,
+and a negative error code (like -EINVAL) if runtime PM is disabled. If it
+returns -EINVAL, !(-EINVAL) evaluates to false, causing execution to proceed
+without actually acquiring a PM reference.
+
+Should this check be `if (pm_runtime_get_if_active(...) <=3D 0)` instead?
+
+> +
+> +	local_phy =3D sas_get_local_phy(dev);
+> +	phy =3D &hisi_hba->phy[local_phy->number];
+> +	if (!hisi_sas_notify_phy_event(phy, HISI_PHYE_SPINUP_NOTIFY))
+> +		pm_runtime_put(hisi_hba->dev);
+
+[Severity: Medium]
+Similarly, if queueing fails here, but the initial pm_runtime_get_if_active=
+()
+returned a negative error code, does this cause an immediate usage count
+underflow?
+
+> +
+> +	sas_put_local_phy(local_phy);
+> +}
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261009033238.1076=
+098-1-yangxingui@huawei.com?part=3D4
