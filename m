@@ -1,30 +1,30 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.5])
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.3])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80B804399E5;
-	Fri,  9 Oct 2026 10:24:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B72247607C;
+	Fri,  9 Oct 2026 10:24:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.3
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791541449; cv=none; b=W3eE4JAlOoMP7uEWVjzPuSkQSPqlTCXI28IwfeAl30rf5hjo48swJ8Hf5EMCAbr2jZmzEHEEQiLfPTn0NAVWCpFQM5vPbwtFayeKu7+JFkG24oebBT1nBSy8CFBtnv8rsrpPYvv41WdQi4SsB+drNrCFwiS2CLShMcbFCEpaSqE=
+	t=1791541451; cv=none; b=GqbucRdizygvEn+Xcpd7uCw2mmR9iIEWDeDPIMystH4ZWBUk5DCpQAu9n4K0X9K+W8HMx15MZ/dj/Jx0yudQNbGo5hFO4/C6vqWnWsscGX/qWYjFsT1PsO+csMaSwoePOP49F2iagVq/tbGepmu5xR7zFQ6Yv89gdTOnmgzcAN8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791541449; c=relaxed/simple;
-	bh=BJDzcGy4JIU913P6t8mqPRNnnyEvnW+/IXceoboin18=;
+	s=arc-20240116; t=1791541451; c=relaxed/simple;
+	bh=YQhyyWfE7Q5RyxXQcP2KbdJbzPKfluIB/CXArj3LoDM=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=NVhj9w2fMJSJAGzHzjW+hCr0d16E3kw/mnd5UHZ1HxfIap81bsvOJtWFvTzvQUrzRKzgXgm6uOoMBkAxcD85+76Bng6l4fUO315N3D8LFxAzVBjcNYB8O5oMsBH3Kif/R9roGsKlVxgh4ODX2GLYwqopUxQYoPgK91ak6ElnmbA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=VqUoN0j7; arc=none smtp.client-ip=117.135.210.5
+	 MIME-Version; b=fMnAOqF4m8FvTzYse7cm1TXlqrTkkECX7WuYrL5JT+gGmim6+17PIy6iyOoaylhfNppTj0vmzRKKM2f41M2BNFHL0ONwKD0uY+QKSNcm3Gpsp1R+WmfwsbDkW8b+HYgcODzKS8VJkePaNjNXEbs1j2UfpYhQxzOacOxVTE5X/Jg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=M58Z1KrG; arc=none smtp.client-ip=220.197.31.3
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="VqUoN0j7"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="M58Z1KrG"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-ID:MIME-Version; bh=Id
-	9mTCz2OGtDEmVRucMr/9oLM0Kr8EE4L7PHILKArH8=; b=VqUoN0j7m3jBwm9uw7
-	Vs1MjHBrMcs67nBcKjpH6yZQ9zx1SWbPPM6Nt2ogwm6cOdSa3PToA0wk0+4tBz2T
-	4VPjnHufDq3ATQHIO06Q8jSr8XPC6A7Gfwi44uOgzoRhXd9yUu79ef3g73e3gxfJ
-	uRxjRLSgPLgPf2GKcYs1AIPKI=
+	s=s110527; h=From:To:Subject:Date:Message-ID:MIME-Version; bh=31
+	fx0uSseVyNQSl00NLL5iN/tVXytomohfmqZXo8rdE=; b=M58Z1KrGHJuUIb7vim
+	vc46lqH9cfxstzIsWHtEE9O9RenZIPZfqAvsAYG8iQOI8oOpTsL2dmJm5BkKgF6x
+	UoxphM4esoiU2D9IKXjBKIn82t141rbUjNgvRprLQXzWbky56eocDkZM01+k8G/Z
+	DpkKwNJg9yl6ozGqwMWBw7p30=
 Received: from WIN-TOG0NDEIICD.localdomain (unknown [])
-	by gzga-smtp-mtada-g0-2 (Coremail) with SMTP id _____wBnjvSRwMhqk4VBDQ--.5655S5;
-	Fri, 09 Oct 2026 18:23:17 +0800 (CST)
+	by gzga-smtp-mtada-g0-2 (Coremail) with SMTP id _____wBnjvSRwMhqk4VBDQ--.5655S3;
+	Fri, 09 Oct 2026 18:23:15 +0800 (CST)
 From: Shirong Zhao <shxzhaosr@163.com>
 To: "Martin K . Petersen" <mkp@kernel.org>,
 	Sathya Prakash <sathya.prakash@broadcom.com>,
@@ -39,9 +39,9 @@ Cc: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
 	mpi3mr-linuxdrv.pdl@broadcom.com,
 	linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH 3/3] scsi: leapraid: check set_identify result in update_links
-Date: Fri,  9 Oct 2026 18:23:12 +0800
-Message-ID: <20261009102313.18-4-shxzhaosr@163.com>
+Subject: [PATCH 1/3] scsi: mpt3sas: check set_identify result in update_links
+Date: Fri,  9 Oct 2026 18:23:10 +0800
+Message-ID: <20261009102313.18-2-shxzhaosr@163.com>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20261009102313.18-1-shxzhaosr@163.com>
 References: <20261009102313.18-1-shxzhaosr@163.com>
@@ -52,18 +52,18 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wBnjvSRwMhqk4VBDQ--.5655S5
-X-Coremail-Antispam: 1Uf129KBjvJXoW7uFWUKry3WFWxAw47Ar4xWFg_yoW8Ar43pa
-	1kW3sIk348XF9Y9rs5JF4IqryFkFZYv34Iy393ZwnYkFs8KrW3KwsrKr12qa48Krs7XFnY
-	9r4jqryDGFWIya7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jpq2tUUUUU=
-X-CM-SenderInfo: hvk06xhdrv2qqrwthudrp/xtbC7hUiYGrIwJWddwAA3k
+X-CM-TRANSID:_____wBnjvSRwMhqk4VBDQ--.5655S3
+X-Coremail-Antispam: 1Uf129KBjvJXoW7tr43ZFWrXw1rCw18Aw13Jwb_yoW8Ary3pa
+	yDur98Cr95GF4I9Fn7Gr40qFyUG3WfWwnrtF4vgas5AF4Yqryftr4Ikwn0qayUJFs3Xa1v
+	qw4Utrn0kFWUJwUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07ja89tUUUUU=
+X-CM-SenderInfo: hvk06xhdrv2qqrwthudrp/xtbCxRMhX2rIwJPSAQAA3K
 
-leapraid_transport_update_links() ignores the return value of
-leapraid_transport_set_identify(), which leaves the identify struct
-untouched on FW query failure (recovery in progress, config page
-error).  The phy is then attached using a stale
-card_phy->remote_identify.sas_address from before the failed query.
+mpt3sas_transport_update_links() ignores the return value of
+_transport_set_identify(), which leaves the identify struct untouched
+on FW query failure (host/PCI recovery, config page error, bad IOC
+status).  The phy is then attached using a stale
+remote_identify.sas_address from before the failed query.
 
 Fold the call into the if condition so a failed query takes the
 existing zeroing else path (same "no valid identify" state as an
@@ -75,24 +75,24 @@ fixes tree.
 
 Signed-off-by: Shirong Zhao <shxzhaosr@163.com>
 ---
- drivers/scsi/leapraid/leapraid_transport.c | 6 +++---
+ drivers/scsi/mpt3sas/mpt3sas_transport.c | 6 +++---
  1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/leapraid/leapraid_transport.c b/drivers/scsi/leapraid/leapraid_transport.c
-index 77ffbd6dd..38e63327d 100644
---- a/drivers/scsi/leapraid/leapraid_transport.c
-+++ b/drivers/scsi/leapraid/leapraid_transport.c
-@@ -1150,9 +1150,9 @@ void leapraid_transport_update_links(
- 	card_phy->attached_hdl = hdl;
- 	spin_unlock_irqrestore(&adapter->dev_topo.topo_node_lock, flags);
- 
--	if (hdl && link_rate >= LEAPRAID_SAS_NEG_LINK_RATE_1_5) {
--		leapraid_transport_set_identify(adapter, hdl,
--						&card_phy->remote_identify);
-+	if (hdl && link_rate >= LEAPRAID_SAS_NEG_LINK_RATE_1_5 &&
-+	    !leapraid_transport_set_identify(adapter, hdl,
-+					     &card_phy->remote_identify)) {
- 		if (topo_node->hdl <= adapter->dev_topo.card.phys_num &&
- 		    adapter->adapter_attr.enable_mp) {
- 			list_for_each_entry(card_port,
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_transport.c b/drivers/scsi/mpt3sas/mpt3sas_transport.c
+index e74a526ef..ffd1d37d2 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_transport.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_transport.c
+@@ -1179,9 +1179,9 @@ mpt3sas_transport_update_links(struct MPT3SAS_ADAPTER *ioc,
+ 	mpt3sas_phy = &sas_node->phy[phy_number];
+ 	mpt3sas_phy->attached_handle = handle;
+ 	spin_unlock_irqrestore(&ioc->sas_node_lock, flags);
+-	if (handle && (link_rate >= MPI2_SAS_NEG_LINK_RATE_1_5)) {
+-		_transport_set_identify(ioc, handle,
+-		    &mpt3sas_phy->remote_identify);
++	if (handle && link_rate >= MPI2_SAS_NEG_LINK_RATE_1_5 &&
++	    !_transport_set_identify(ioc, handle,
++				    &mpt3sas_phy->remote_identify)) {
+ 		if ((sas_node->handle <= ioc->sas_hba.num_phys) &&
+ 		    (ioc->multipath_on_hba)) {
+ 			list_for_each_entry(hba_port,
 
