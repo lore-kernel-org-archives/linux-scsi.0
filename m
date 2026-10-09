@@ -1,127 +1,69 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.16])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from out-2uec-a113.jellyfish.systems (out-2uec-a113.jellyfish.systems [63.250.43.113])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A51E33BBD9;
-	Fri,  9 Oct 2026 20:29:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35E343D1A9A
+	for <linux-scsi@vger.kernel.org>; Fri,  9 Oct 2026 20:35:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=63.250.43.113
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791577766; cv=none; b=ivBa5lhjA7uxURQG/JyCAGbO7TKDbLgSXV0z6eOJfsQUqi943LfAAiiw4C7GXi1DWKx4VxTid3VdJZ41pl34JBZD0wgCmNsT58mNHW9izMGEUNC9qEK7+X0P+CAKhJUwcSrI6TuZksxoIH0ggeBRekq3ffcrjLN8t0ZH9AH/5lE=
+	t=1791578157; cv=none; b=rNYZZl3x2Bdpn14Xmt59fDOZ7c+U0Yub1hd9fAJxIKrujI6gp/ARqswWEmSrDSunjF6877ooHn1JE/imwNoxeV/ulPEBn5QPKa685UXXChql4BXZNJ6RCMgXxPgKEVGoE/nmEL6eUWc/ZC3dj7lNXgc9sA4h3p/KwuHqkRF1BZ0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791577766; c=relaxed/simple;
-	bh=N6GWgE6fmvtl3ic4OGMSelBMSe140c+Yw//7o6UYAaE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=fS7o3UliPiKnUl90Yw265KhVekTrPS3FePh9ZUUHahOS13e2TtPEA/6NlN1lRzLE9ZRnVQ1Q0ZLAmEQ1pDXpOyaOdLy4GtZeQmrhDIL+hU3R7TaGfBeVd0S3FzdfgcLa3PxQc6e/Lkrtik6SaNq//alYZGUDyfYLGYU3mCAX1+s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=d+y+lKml; arc=none smtp.client-ip=198.175.65.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="d+y+lKml"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1791577765; x=1823113765;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=N6GWgE6fmvtl3ic4OGMSelBMSe140c+Yw//7o6UYAaE=;
-  b=d+y+lKmla3tqVFo09AkeEMPXo+cJa074guva35ssP+fOCkQLWTBIZXte
-   kE5XQ6uoURJDENqJAoglUZBjkfJjj7BdypqtXSaVV4pBP9Llp3wz4WqNa
-   6BY+LDGIWi3esjkr/mXl9F+zm3yGjltQenLAifMdPC8qloaXR6xJPDoTx
-   ripfXL1I4Ki69JM1Dn1p7G1fRPSipOX0mSGnimhqt7LQObeNixyP8eBGs
-   klZzpTw2XdGBWfNwbxa4Q6fWaB41ZLRaE+zNW+B6N/2EsDT6UJLBUNva1
-   VuoW/Cy486woRMnRI3IHZErJtpLEXTHEKQMsJA2B8TcWh/Lr/FIVlBPNq
-   g==;
-X-CSE-ConnectionGUID: hb3A2bWyRPe6lb2D4dX6/Q==
-X-CSE-MsgGUID: pw8i1K7PSz280lEnX10k5A==
-X-IronPort-AV: E=McAfee;i="6800,10657,11930"; a="377339"
-X-IronPort-AV: E=Sophos;i="6.27,149,1787036400"; 
-   d="scan'208";a="377339"
-Received: from fmviesa010.fm.intel.com ([10.60.135.150])
-  by orvoesa108.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Oct 2026 13:29:24 -0700
-X-CSE-ConnectionGUID: dcbKz97PR2KL6gNmUxWfzw==
-X-CSE-MsgGUID: 1lMqbYAlQqKHnURBp6y0/w==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,149,1787036400"; 
-   d="scan'208";a="846926"
-Received: from lkp-server01.sh.intel.com (HELO 0caa9d2d175c) ([10.239.97.150])
-  by fmviesa010.fm.intel.com with ESMTP; 09 Oct 2026 13:29:20 -0700
-Received: from kbuild by 0caa9d2d175c with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1xFHDS-000000006Ae-098j;
-	Fri, 09 Oct 2026 20:29:18 +0000
-Date: Sat, 10 Oct 2026 04:29:11 +0800
-From: kernel test robot <lkp@intel.com>
-To: Dave Marquardt via B4 Relay <devnull+davemarq.linux.ibm.com@kernel.org>,
-	Madhavan Srinivasan <maddy@linux.ibm.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Nicholas Piggin <npiggin@gmail.com>,
-	"Christophe Leroy (CS GROUP)" <chleroy@kernel.org>,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	s=arc-20240116; t=1791578157; c=relaxed/simple;
+	bh=g1FgcabXUwjvQAtoSiunHmHSXXnBckrY4xA79nisWq4=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=mHUHMpdyVgJv3rD7nhNyyANpjn0U1yhlHnX6Uc67OlHDbmrNiXv35dJgecJFZTpFr/UnMl6XRLJvLPXaGGtasB6VOpj3llHsSr/RJxOebBOxLrEHligRtZsLmW3LBvusy9SiMV1eZaheI6T2h7FsHFJ2MtMK/SIQyCqh3N50QYk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=reject dis=none) header.from=catcrafts.net; spf=fail smtp.mailfrom=catcrafts.net; arc=none smtp.client-ip=63.250.43.113
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=reject dis=none) header.from=catcrafts.net
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=catcrafts.net
+Received: from mail.privateemail.com (unknown [87.215.145.39])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mail.privateemail.com (Postfix) with ESMTPSA id 4j1dlP2PHKz8sXC;
+	Fri, 09 Oct 2026 20:30:09 +0000 (UTC)
+From: Jorijn van der Graaf <jorijnvdgraaf@catcrafts.net>
+To: Alexander Koskovich <akoskovich@pm.me>
+Cc: Jorijn van der Graaf <jorijnvdgraaf@catcrafts.net>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
 	"Martin K. Petersen" <mkp@kernel.org>,
-	Tyrel Datwyler <tyreld@linux.ibm.com>
-Cc: oe-kbuild-all@lists.linux.dev, linux-scsi@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
-	Dave Marquardt <davemarq@linux.ibm.com>
-Subject: Re: [PATCH v13 11/11] scsi: ibmvfc: handle extended FPIN events
-Message-ID: <202610100443.UCrGdTXp-lkp@intel.com>
-References: <20261007-ibmvfc-fpin-support-v13-11-b816abfa4fcc@linux.ibm.com>
+	Abel Vesa <abel.vesa@oss.qualcomm.com>,
+	Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>,
+	Luca Weiss <luca.weiss@fairphone.com>,
+	Bjorn Andersson <andersson@kernel.org>,
+	Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>,
+	linux-arm-msm@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] scsi: ufs: qcom: Power down UFS during system suspend on Milos
+Date: Fri,  9 Oct 2026 22:30:06 +0200
+Message-ID: <20261009203006.452335-1-jorijnvdgraaf@catcrafts.net>
+X-Mailer: git-send-email 2.55.0
+In-Reply-To: <20261005-milos-ufs-suspend-v1-1-a6f8b89d5b63@pm.me>
+References: <20261005-milos-ufs-suspend-v1-1-a6f8b89d5b63@pm.me>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261007-ibmvfc-fpin-support-v13-11-b816abfa4fcc@linux.ibm.com>
+Content-Transfer-Encoding: 8bit
+X-Envelope-From: jorijnvdgraaf@catcrafts.net
 
-Hi Dave,
+On Mon, Oct 05, 2026 at 05:02:06PM +0000, Alexander Koskovich wrote:
+> On Milos the UFS PHY GDSC is turned off on every system suspend and the
+> PHY loses its register state, so exiting hibern8 on resume fails:
+> 
+> ufshcd-qcom 1d84000.ufshc: pwr ctrl cmd 0x18 with (MIBattribute 0x0, mode 0x0) failed, host upmcrs:0x5
+> ufshcd-qcom 1d84000.ufshc: ufshcd_uic_hibern8_exit: hibern8 exit failed. ret = 5
+> ufshcd-qcom 1d84000.ufshc: __ufshcd_wl_resume: hibern8 exit failed 5
+> 
+> Set no_phy_retention so the controller and device are powered down
+> during system suspend and the link is brought up again on resume.
 
-kernel test robot noticed the following build warnings:
+On the Fairphone (Gen. 6) which is also milos using 7.3/scsi-fixes (469fa055664b)
+3 of 3 s2idle resumes fail hibern8 exit with the quoted lines above.
 
-[auto build test WARNING on c3cff7fac01638ab58e85fe7df41a04fa25c5bae]
+With the patch 5 s2idle and 10 deep suspend/resume cycles: no hibern8 exit failure
+ufshcd_wl_resume 32-35 ms each, a 4 MiB fsync write succeeds after every resume.
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Dave-Marquardt-via-B4-Relay/scsi-ibmvfc-fix-IRQ-leak-and-guard-deregister-on-channel-reg-failure/20261007-142545
-base:   c3cff7fac01638ab58e85fe7df41a04fa25c5bae
-patch link:    https://lore.kernel.org/r/20261007-ibmvfc-fpin-support-v13-11-b816abfa4fcc%40linux.ibm.com
-patch subject: [PATCH v13 11/11] scsi: ibmvfc: handle extended FPIN events
-config: powerpc-allmodconfig (https://download.01.org/0day-ci/archive/20261010/202610100443.UCrGdTXp-lkp@intel.com/config)
-compiler: powerpc64-linux-gcc (GCC) 16.1.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20261010/202610100443.UCrGdTXp-lkp@intel.com/reproduce)
-
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202610100443.UCrGdTXp-lkp@intel.com/
-
-All warnings (new ones prefixed by >>):
-
-   Warning: drivers/scsi/ibmvscsi/ibmvfc-core.c:1914 expecting prototype for ibmvfc_relogin(). Prototype was for ibmvfc_scsi_relogin() instead
-   Warning: drivers/scsi/ibmvscsi/ibmvfc-core.c:3328 function parameter 'fpin_status' not described in 'ibmvfc_common_fpin_to_desc'
-   Warning: drivers/scsi/ibmvscsi/ibmvfc-core.c:3328 function parameter 'wwpn' not described in 'ibmvfc_common_fpin_to_desc'
-   Warning: drivers/scsi/ibmvscsi/ibmvfc-core.c:3328 function parameter 'type' not described in 'ibmvfc_common_fpin_to_desc'
-   Warning: drivers/scsi/ibmvscsi/ibmvfc-core.c:3328 function parameter 'modifier' not described in 'ibmvfc_common_fpin_to_desc'
-   Warning: drivers/scsi/ibmvscsi/ibmvfc-core.c:3328 function parameter 'threshold' not described in 'ibmvfc_common_fpin_to_desc'
-   Warning: drivers/scsi/ibmvscsi/ibmvfc-core.c:3328 function parameter 'event_count' not described in 'ibmvfc_common_fpin_to_desc'
->> Warning: drivers/scsi/ibmvscsi/ibmvfc-core.c:3328 function parameter 'severity' not described in 'ibmvfc_common_fpin_to_desc'
-   Warning: drivers/scsi/ibmvscsi/ibmvfc-core.c:3410 function parameter 'crq' not described in 'ibmvfc_basic_fpin_to_desc'
-   Warning: drivers/scsi/ibmvscsi/ibmvfc-core.c:3410 function parameter 'wwpn' not described in 'ibmvfc_basic_fpin_to_desc'
-   Warning: drivers/scsi/ibmvscsi/ibmvfc-core.c:3410 Excess function parameter 'ibmvfc_fpin' description in 'ibmvfc_basic_fpin_to_desc'
-   Warning: drivers/scsi/ibmvscsi/ibmvfc-core.c:3449 function parameter 'wwpn' not described in 'ibmvfc_full_fpin_to_desc'
->> Warning: drivers/scsi/ibmvscsi/ibmvfc-core.c:3488 function parameter 'wwpn' not described in 'ibmvfc_ext_fpin_to_desc'
-   Warning: drivers/scsi/ibmvscsi/ibmvfc-core.c:5505 function parameter 'protocol' not described in 'ibmvfc_alloc_target'
-   Warning: drivers/scsi/ibmvscsi/ibmvfc-core.c:3328 function parameter 'fpin_status' not described in 'ibmvfc_common_fpin_to_desc'
-   Warning: drivers/scsi/ibmvscsi/ibmvfc-core.c:3328 function parameter 'wwpn' not described in 'ibmvfc_common_fpin_to_desc'
-   Warning: drivers/scsi/ibmvscsi/ibmvfc-core.c:3328 function parameter 'type' not described in 'ibmvfc_common_fpin_to_desc'
-   Warning: drivers/scsi/ibmvscsi/ibmvfc-core.c:3328 function parameter 'modifier' not described in 'ibmvfc_common_fpin_to_desc'
-   Warning: drivers/scsi/ibmvscsi/ibmvfc-core.c:3328 function parameter 'threshold' not described in 'ibmvfc_common_fpin_to_desc'
-   Warning: drivers/scsi/ibmvscsi/ibmvfc-core.c:3328 function parameter 'event_count' not described in 'ibmvfc_common_fpin_to_desc'
->> Warning: drivers/scsi/ibmvscsi/ibmvfc-core.c:3328 function parameter 'severity' not described in 'ibmvfc_common_fpin_to_desc'
-   Warning: drivers/scsi/ibmvscsi/ibmvfc-core.c:3410 function parameter 'crq' not described in 'ibmvfc_basic_fpin_to_desc'
-   Warning: drivers/scsi/ibmvscsi/ibmvfc-core.c:3410 function parameter 'wwpn' not described in 'ibmvfc_basic_fpin_to_desc'
-   Warning: drivers/scsi/ibmvscsi/ibmvfc-core.c:3410 Excess function parameter 'ibmvfc_fpin' description in 'ibmvfc_basic_fpin_to_desc'
-   Warning: drivers/scsi/ibmvscsi/ibmvfc-core.c:3449 function parameter 'wwpn' not described in 'ibmvfc_full_fpin_to_desc'
->> Warning: drivers/scsi/ibmvscsi/ibmvfc-core.c:3488 function parameter 'wwpn' not described in 'ibmvfc_ext_fpin_to_desc'
-   Warning: drivers/scsi/ibmvscsi/ibmvfc-core.c:5505 function parameter 'protocol' not described in 'ibmvfc_alloc_target'
-
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+Tested-by: Jorijn van der Graaf <jorijnvdgraaf@catcrafts.net>
