@@ -1,108 +1,126 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from canpmsgout12.his.huawei.com (canpmsgout12.his.huawei.com [113.46.200.227])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 667FF427FBF;
-	Fri,  9 Oct 2026 06:10:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3FE5471D16
+	for <linux-scsi@vger.kernel.org>; Fri,  9 Oct 2026 07:13:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.227
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791526244; cv=none; b=C3B0Ol2rwqeNhjg7QdJiav/QClH88FODaJcMxLrkVRLbSNBByx4x8VbQjSQYQKmHi0I/yl8U9iuZvY97EwLgtobnHoa5iE2IaJfBC/BUlYaXk/83J5AQaMSlYytu2Ywiahl8wEypmvGkH3d2VLFHTwel6UQYTOs2sIdlmbTnXK0=
+	t=1791530006; cv=none; b=TJb1F7h9ptqWSmirfqCmR3L04+VyWdKxT6rOO1xNvLantqNQVvR/YcYVRIEbhWwFCOzxR2hmENtxdKqaZWUImEUp3rAvIX5d+wr4Ntqe2HTGY64knsTjossWMv9T3RotquppA2p+EoVSNHjWAf30i2zS2u3sGJw9Q7IGDwRV/f0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791526244; c=relaxed/simple;
-	bh=qWVCUMv+05dbMHEs9hy+pYj8kfk37TJfd0nuNcp0x8w=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=VtR3xUOkdFZ8j5BOXdOVRhnEz9WJaAAp2g2DVUTz4m17syLZg098De6vU6yLu6Y+NgivX2jsiEpKmX9xjmw3jYatZd2ed/LOnCkWgM1XE/+vXv7mZgML1WcmCtviFbpQYoAGFtXF/LDlALOkUP0VH4cc8FDcZOfAlTgnIPDNpS8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IG8AWHmx; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791530006; c=relaxed/simple;
+	bh=PDTiPlAY3rbxSw5smnBQsj1cJqsQLPi9cn4AwxUoIpA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=u9WF4IHmkOCHjkOeZO90SVX/AFhQOQEikzuGxT8MJbmGlvW52BYOv1THkwtS54CXbl7p+0QF1N0Hir/3aFebax+peTfdRbfpTmGjH04o2xswN8JMjd99CdYlJDXp4THgl51SrALJQ8Dv67Xn+ZJLlmIBANCA5dJDxiAbkc7IjWo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=MrV0+wUD; arc=none smtp.client-ip=113.46.200.227
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IG8AWHmx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6A91F1F00893;
-	Fri,  9 Oct 2026 06:10:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791526242;
-	bh=QwHFVPuXBquPEGMyUZnxzJnxgW+4GMWcshWyvzeLTeA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=IG8AWHmxgcgfeQJDzx8TznUhmmfIR9iQsxELHM1DJ9iLm+tG0Qx5Ft2AeeShvR7rG
-	 +MhwNOWOC6otnzznLRXqQa8de9w92/vGkLmpPIh4gTZgCUa6+aa46rZeOfm4GeW8yt
-	 5YXSJ8hYmmCGKYX7tzG5pbeDX1x9niwjsJ81aKtkQnxoVn1EyE7AwoUxGgPqmvzdR5
-	 jAugDxKHTq8/476p43ZNzwL5Qqquu29UMneLEzxgaLrA+lW03HDWQYIFrwRQn0cSb3
-	 wZH+6OiYtyxMlbtJJO3grVRzqOcwL94XqIqXNhxuQZLwZTzxdgVR6lyAIwrBzpY3tq
-	 XeAV88PEwIBSg==
-Date: Fri, 9 Oct 2026 08:10:39 +0200
-From: Krzysztof Kozlowski <krzk@kernel.org>
-To: Haotian Zhang <vulab@iscas.ac.cn>
-Cc: James Smart <jsmart2021@gmail.com>, 
-	"Martin K. Petersen" <mkp@kernel.org>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, 
-	Daniel Wagner <dwagner@suse.de>, Ram Vegesna <ram.vegesna@broadcom.com>, 
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] scsi: elx: libefc: fix resources leak in efcport_init()
- error path
-Message-ID: <20261009-muscular-dazzling-bullfinch-fdb28c@quoll>
-References: <20261008185403.2791781-1-vulab@iscas.ac.cn>
+	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="MrV0+wUD"
+dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=bs/USAvwO4TVtK6TLifr4cGsQsC1h8UgHimCuc7fbNc=;
+	b=MrV0+wUDXchOxCrmFnPfUMyoe3CPOqmtgIf1SYUKRRF0AW65roILwjthl628mvA4J97Pfswq0
+	c3Mv2PTSS7RRkwAzGJGX3z6qCrIsKN9UFzGTwDnhFUcWmTUzVNnj+UpwlT46MZQuA1NLhaI0U4C
+	y95UUlkiojg1TS1/j0Rfl9g=
+Received: from mail.maildlp.com (unknown [172.19.163.200])
+	by canpmsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4j1HpG5ZHwznTy7;
+	Fri,  9 Oct 2026 15:01:26 +0800 (CST)
+Received: from kwepemp200002.china.huawei.com (unknown [7.202.194.160])
+	by mail.maildlp.com (Postfix) with ESMTPS id 067DF4055B;
+	Fri,  9 Oct 2026 15:13:22 +0800 (CST)
+Received: from kwepemp500015.china.huawei.com (7.202.195.9) by
+ kwepemp200002.china.huawei.com (7.202.194.160) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.45; Fri, 9 Oct 2026 15:13:21 +0800
+Received: from [10.67.120.108] (10.67.120.108) by
+ kwepemp500015.china.huawei.com (7.202.195.9) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.45; Fri, 9 Oct 2026 15:13:21 +0800
+Message-ID: <c46780b6-2956-241b-a0c8-0d4fc930db3c@huawei.com>
+Date: Fri, 9 Oct 2026 15:13:20 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20261008185403.2791781-1-vulab@iscas.ac.cn>
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.3.1
+Subject: Re: [PATCH v3 4/4] scsi: hisi_sas: Fix spinup failure for SAS SSP
+ devices in Active_Wait state
+Content-Language: en-CA
+To: <sashiko-reviews@lists.linux.dev>
+CC: <linux-scsi@vger.kernel.org>
+References: <20261009033238.1076098-1-yangxingui@huawei.com>
+ <20261009033238.1076098-5-yangxingui@huawei.com>
+ <sashiko-outbox-164806@kernel.org>
+From: yangxingui <yangxingui@huawei.com>
+In-Reply-To: <sashiko-outbox-164806@kernel.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: kwepems500001.china.huawei.com (7.221.188.70) To
+ kwepemp500015.china.huawei.com (7.202.195.9)
 
 
-On Fri, 09 Oct 2026 02:54:03 +0800, Haotian Zhang wrote:
-> efcport_init() creates efc->node_pool and efc->node_dma_pool before
-> allocating efc->els_io_pool. When the latter allocation fails it returns
-> -ENOMEM without releasing the node dma pool or the node pool, leaking
-> both. The caller efct_efclib_config() only logs the error and
-> efct_device_attach() failure path never calls efcport_destroy(), so the
-> resources are never freed.
+
+On 2026/10/9 11:58, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
+> - [Medium] pm: usage count underflow due to incorrect pm_runtime_get_if_active() check in hisi_sas_spinup_notify()
+> --
 > 
-> Destroy node_dma_pool and node_pool before returning from the
-> els_io_pool allocation failure path.
+> commit 255dba6c6286916d717929164fd02a77f83d3168
+> Author: Xingui Yang <yangxingui@huawei.com>
+> Subject: scsi: hisi_sas: Fix spinup failure for SAS SSP devices in Active_Wait state
 > 
-> Fixes: d7b71fd2195e ("scsi: elx: libefc: Emulex FC discovery library APIs and definitions")
-> Assisted-by: DeepSeek-V4.1-Flash
-> Signed-off-by: Haotian Zhang <vulab@iscas.ac.cn>
-> ---
->  drivers/scsi/elx/libefc/efclib.c | 2 ++
->  1 file changed, 2 insertions(+)
+> This commit addresses spinup failures for directly-attached SSP devices
+> waiting in the Active_Wait state. It parses sense data during slot
+> completion and queues work to send a NOTIFY(ENABLE SPINUP) primitive while
+> managing the runtime PM state of the controller.
 > 
+>> diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+>> index 944ce19ae2fc1..cf7aa0a699cde 100644
+>> --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
+>> +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+>> @@ -996,10 +996,25 @@ static void hisi_sas_phyup_pm_work(struct work_struct *work)
+> [ ... ]
+>> +static void hisi_sas_spinup_notify_work(struct work_struct *work)
+>> +{
+> [ ... ]
+>> +	hisi_hba->hw->sl_notify_ssp(hisi_hba, phy_no);
+>> +	dev_info(dev, "spinup notify primitive on phy%d\n", phy_no);
+>> +
+>> +	pm_runtime_put_sync(dev);
+> 
+> [Severity: Medium]
+> If the earlier pm_runtime_get_if_active() check bypassed a negative error
+> code, will this cause a runtime PM usage count underflow since the reference
+> was never successfully incremented?
+> 
+>> +}
+> [ ... ]
+>> @@ -1639,6 +1654,34 @@ void hisi_sas_controller_reset_done(struct hisi_hba *hisi_hba)
+> [ ... ]
+>> +void hisi_sas_spinup_notify(struct hisi_hba *hisi_hba,
+>> +			    struct sas_task *task)
+>> +{
+> [ ... ]
+>> +	if (!pm_runtime_get_if_active(hisi_hba->dev))
+>> +		return;
+> 
+> [Severity: Medium]
+> Does this check properly handle negative error codes?
+> 
+> pm_runtime_get_if_active() returns 1 if the device is active, 0 if inactive,
+> and a negative error code (like -EINVAL) if runtime PM is disabled. If it
+> returns -EINVAL, !(-EINVAL) evaluates to false, causing execution to proceed
+> without actually acquiring a PM reference.
+> 
+> Should this check be `if (pm_runtime_get_if_active(...) <= 0)` instead?
 
-
-
-Multiple things here:
-1. Your team ignored completely previous feedback.
-
-2. You use multiple identities with this email, thus I actually doubt we speak
-   with actual person.
-
-3. Finally, same feedback:
-You sent multiple independent patches, to multiple independent
-subsystems. The amount of these patches clearly suggest this was
-AI generated and most likely not tested.
-
-More importantly, you sent all this work without properly organizing
-relevant patches into patchsets. This makes reviewing difficult
-and might cause multiple reviewers to address the same issue.
-Replying to the entire set is impossible and requires handling each
-patch independently, instead of applying or discarding the set.
-Maintainers also won't see the bigger picture of your work. Quite
-worrying.
-
-This is on the verge of hostile patch: bomb us with so many
-contributions, we won't be able to handle them in efficient manner,
-like responding ONCE to ask you to slow down.  Considering all this
-is untested and LLM generated, I have even more doubts whether this
-should be considered for review.
-
-Please read kernel documentation BEFORE posting more work. It will
-explain you how to identify subsystems, how to organize your work per
-subsystem (so a patchset grouping multiple patches with a short cover
-letter), how to document usage of LLM and how what you should not do
-if this was posted in a good faith.
-
-Best regards,
-Krzysztof
-
-
-
-
+-EINVAL only occurs while runtime PM is
+disabled, which never overlaps with CQ completions on this driver, so
+the check only ever sees 0 or 1 and every put stays paired with a taken
+reference. '<= 0' would disable the notify entirely on !CONFIG_PM
+builds (the stub always returns -EINVAL), so I'd like to keep the
+current check.
