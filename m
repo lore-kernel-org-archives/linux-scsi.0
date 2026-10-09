@@ -1,115 +1,137 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1CF23612DB
-	for <linux-scsi@vger.kernel.org>; Fri,  9 Oct 2026 04:04:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7EE6339DBCF
+	for <linux-scsi@vger.kernel.org>; Fri,  9 Oct 2026 04:05:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791518694; cv=none; b=Wz2oIaNG2oJmtfdOC4SzWhznfShTFiyNYgCCXf6PtizJt18tdaqO2fOtb9qaoXFxNS9LgLVr79Di6ebQ2wbIeaHKm/lNkOOhLVVw944RCfLsNVb02KF9wPzjLyYGfREhXAhZIo6pvHAGcxvzVgokpEhNe/VDH5vk+Hr4QF3gGgM=
+	t=1791518741; cv=none; b=GKZ+5JBkwbJChZf/bVe7/72UpgPG9gQsi/FSc+huiC7imxKZwzjmRPP8hjZGaB7tg+ofAHP0kB6QNrRAIYIf7PBRgn46l0HNtj4GieDtb8vLtbpHmWiT6Ufce/bXcTSHtU8FEH3ITwQ7LNzcY8pZMNlDwz/Dj8iSkXxwfTHsg0Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791518694; c=relaxed/simple;
-	bh=lZRL8Hm9ro1r2R1v89QElaLMMW1NjbMx+v55zZxmssA=;
+	s=arc-20240116; t=1791518741; c=relaxed/simple;
+	bh=ajWcB/USzDv6O28svNw3EMJrRl8FU0/fF1stsDafDqc=;
 	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
-	 Date; b=qeZIV5bSvl3Z2F5neHgrNNCXdtuW5U8m+G7JWCcISgz7ff+OMaoybyBDG1gJ9j6YluXwz7fxKOYzuQQxuG2uO2TKCimFTvvfVJKgomC3vIILzqUYlEUS9CLho0mpuvumNIGcVQX4LSxw6LKX/Dhc+CDh+5EVqHY6BXEo+rworU8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=f55U+lgB; arc=none smtp.client-ip=100.103.45.18
+	 Date; b=ffZUCGo+IhtogtEC3S08yq+TW5SqUyTZQlwOdbPSDjDwKw644zO8hzUQZw3iE+l9oofaMyp5zRGgypv0spwKCuq3Ef6idOKQbH8V6/3OMFDuKsX3NAMEWEXSmzaE9oGYHYXhKbnJ43RJLLiNabd8fdq5gzzixMONK60DNQUuHd0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bQfrSGFT; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="f55U+lgB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D60681F000FF;
-	Fri,  9 Oct 2026 04:04:47 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bQfrSGFT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AE1441F000FF;
+	Fri,  9 Oct 2026 04:05:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791518688;
-	bh=Qy0+EKwczbbD1mat875rt4xgdzZT9ICFZj+AiUu+JoI=;
+	s=k20260515; t=1791518728;
+	bh=Yw3SRfVkuLCkpwMOCDZzfyBenrcYGdW0XxTG2fV2Ul8=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=f55U+lgB5KFdM3T0V3/Z+yBW3PINYlW7I36Ud/egAp6r2YNy6EGY6IP61buS9jVED
-	 KypQ6cLAIydmUNdvEGkVE20QuDFkGfuQ3jA35/LnAgX1zEbbsfvA0vddSD8MklQEIq
-	 dHBlq+b9tkRCbalg2YG90WgRRv4B7e4vR+++iAvlYd6VMo+gkdCKtxxd/B3tQtcSlr
-	 d/3UlTAdN4lbabzegS9VKRlwSkb4KRqnYVEw8G36SwKkyBvKaVl87ivGG8sGxaRGAW
-	 2+KS2RHO2gq3TjLyjvXR1ojTb1yvd6FNMNvBhf1pw4P5LAS05NmI4mK7Uz2AK7C03r
-	 rJZ7W4MCs7koA==
-Message-ID: <sashiko-outbox-164809@kernel.org>
+	b=bQfrSGFTYwRn6LbE0aIp8bTmQydBxxvxWN2sKi+nzrsWIwdzKxn/IHBpek3ezrzhu
+	 icRL4FyID0RarkMUBmZVe6XbXoWmYlJkd1dAxwPYrbGka8nAYbwIYwmc4vcIdCbf3w
+	 L6QgeSkPPoEw1aDJgYQuTOu7ho6OKxI7cKuPzP00Wozs4nXh9AwOMmQV1FP5Qc/gGq
+	 YA4WGizQLlSfXIuA5Qvg0hXNgUCoeccZr7XNw5uDrIAJR45bBiLphDmLPQFkVFB2qa
+	 tanwy5Buv5V7BIjRtry9GjfmmlbfKmJLBeOYq1U21MmkPbSGyFSQtWS2lD5VewBYRa
+	 BVn9xA8a0yCrA==
+Message-ID: <sashiko-outbox-164810@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 3/4] scsi: hisi_sas: Clear PHY error counts on phyup
+Subject: Re: [PATCH v3 1/4] scsi: libsas: Fix out-of-bounds memcpy in
+ sas_ssp_task_response()
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Xingui Yang" <yangxingui@huawei.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20261009033238.1076098-4-yangxingui@huawei.com>
+In-Reply-To: <20261009033238.1076098-2-yangxingui@huawei.com>
 References: <20261009033238.1076098-1-yangxingui@huawei.com>
- <20261009033238.1076098-4-yangxingui@huawei.com>
+ <20261009033238.1076098-2-yangxingui@huawei.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 09 Oct 2026 04:04:47 +0000
+Date: Fri, 09 Oct 2026 04:05:28 +0000
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [Low] scsi: hisi_sas: Race condition in clear_phy_err_cnt_v3_hw loses int=
-errupts
+- [High] scsi: libsas: OOB read in sas_ssp_task_response due to LLDD buffer=
+ sizing
+- [Medium] scsi: mvsas: info leak in mvs_fill_ssp_resp_iu() due to missing =
+cpu_to_be32
 --
 
-commit fc6fb794eb6c362e576f814fd8ef3aeacd812117
+commit ff340fa9f4f2ad2be27ec82fd5912bea06443c68
 Author: Xingui Yang <yangxingui@huawei.com>
 
-scsi: hisi_sas: Clear PHY error counts on phyup
+scsi: libsas: Fix out-of-bounds memcpy in sas_ssp_task_response()
 
-Some disks generate link errors during link establishment but still
-phy up successfully. This commit clears these intermediate error
-counts on phyup to prevent leaving stale data for error detection.
+This commit changes the min_t clamp of sense_data_len in
+sas_ssp_task_response() from int to u32. This prevents negative lengths
+from causing out-of-bounds reads and writes during memcpy when the
+device provides a value greater than or equal to 0x80000000.
 
-> diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_s=
-as/hisi_sas_v3_hw.c
-> index 9c363e2373538..030f050731ba1 100644
-> --- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-> +++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+> diff --git a/drivers/scsi/libsas/sas_task.c b/drivers/scsi/libsas/sas_tas=
+k.c
+> index e9d291007817b..2080e5836179b 100644
+> --- a/drivers/scsi/libsas/sas_task.c
+> +++ b/drivers/scsi/libsas/sas_task.c
+> @@ -25,7 +25,7 @@ void sas_ssp_task_response(struct device *dev, struct s=
+as_task *task,
+>  	case SAS_DATAPRES_SENSE_DATA:
+>  		tstat->stat =3D SAS_SAM_STAT_CHECK_CONDITION;
+>  		tstat->buf_valid_size =3D
+> -			min_t(int, SAS_STATUS_BUF_SIZE,
+> +			min_t(u32, SAS_STATUS_BUF_SIZE,
+>  			      be32_to_cpu(iu->sense_data_len));
 
-[ ... ]
+[Severity: Medium]
+Does this change inadvertently expose an information leak on little-endian
+architectures?
 
-> @@ -1061,16 +1064,31 @@ static void enable_phy_v3_hw(struct hisi_hba *his=
-i_hba, int phy_no)
->  	hisi_sas_phy_write32(hisi_hba, phy_no, PHY_CFG, cfg);
->  }
-> =20
-> +static void clear_phy_err_cnt_v3_hw(struct hisi_hba *hisi_hba, int phy_n=
-o)
-> +{
-> +	u32 irq_msk =3D hisi_sas_phy_read32(hisi_hba, phy_no, CHL_INT2_MSK);
-> +
-> +	hisi_sas_phy_write32(hisi_hba, phy_no, CHL_INT2_MSK,
-> +			     CHL_INT2_RX_ERR_MSK | irq_msk);
-> +
-> +	hisi_sas_phy_read32(hisi_hba, phy_no, ERR_CNT_DWS_LOST);
-> +	hisi_sas_phy_read32(hisi_hba, phy_no, ERR_CNT_RESET_PROB);
-> +	hisi_sas_phy_read32(hisi_hba, phy_no, ERR_CNT_INVLD_DW);
-> +	hisi_sas_phy_read32(hisi_hba, phy_no, ERR_CNT_DISP_ERR);
-> +	hisi_sas_phy_read32(hisi_hba, phy_no, ERR_CNT_CODE_ERR);
-> +
-> +	hisi_sas_phy_write32(hisi_hba, phy_no, CHL_INT2, CHL_INT2_RX_ERR_MSK);
+In drivers/scsi/mvsas/mv_sas.c:mvs_fill_ssp_resp_iu(), the driver assigns
+the native integer 17 to the __be32 field iu->sense_data_len:
 
-[Severity: Low]
-Does this sequence create a race window where an error interrupt can be los=
-t?
+mvs_fill_ssp_resp_iu() {
+	...
+	iu->sense_data_len =3D 17;
+	...
+}
 
-Because the error counters are clear-on-read, reading them before clearing =
-the
-Write-1-to-Clear interrupt status register CHL_INT2 could lead to a race.
-If a new PHY error occurs in the window after the counter is read but before
-CHL_INT2 is written, the hardware will increment the error counter and set =
-the
-corresponding interrupt status bit.
+On little-endian architectures, be32_to_cpu() evaluates this as 285212672.
+The min_t clamp then evaluates to 96 bytes. Because mvs_set_sense() only
+initializes the first 17 bytes, the subsequent memcpy() copies an
+additional 79 bytes of uninitialized DMA memory into the task status
+buffer.
 
-The subsequent write to CHL_INT2 will then clear this newly set interrupt
-status bit, causing the interrupt for the new error to be permanently lost
-until another independent error occurs.
+This uninitialized memory is then copied into the SCSI sense buffer in
+drivers/scsi/libsas/sas_scsi_host.c:sas_end_task():
 
-Could the CHL_INT2 register be cleared before reading the clear-on-read
-counters to prevent this race?
+sas_end_task() {
+	...
+	memcpy(sc->sense_buffer, ts->buf,
+	       min(SCSI_SENSE_BUFFERSIZE, ts->buf_valid_size));
+	...
+}
 
-> +	hisi_sas_phy_write32(hisi_hba, phy_no, CHL_INT2_MSK, irq_msk);
-> +}
+Could this expose the leaked DMA memory to upper layers and potentially
+userspace via the SG_IO ioctl?
+
+>  		memcpy(tstat->buf, iu->sense_data, tstat->buf_valid_size);
+
+[Severity: High]
+Can this memcpy read out-of-bounds from the underlying LLDD DMA buffer?
+
+The function clamps the copy length to SAS_STATUS_BUF_SIZE (96 bytes),
+but it does not verify if the LLDD actually provided 96 bytes of
+physically backed space for iu->sense_data.
+
+For example, in drivers/scsi/pm8001/pm8001_hwi.c:mpi_ssp_completion(),
+the ssp_response_iu is embedded in an iomb queue element which is
+physically only 64 bytes (or 128 bytes for SPCV). Inside the 64-byte
+iomb, the sense_data field starts at offset 44, leaving only 20 bytes
+of available space.
+
+If a malicious or malfunctioning SAS target provides a sense_data_len
+of 96 or greater, reading 96 bytes here forces an out-of-bounds read
+past the end of the iomb queue element.
+
+Could this copy sensitive data from adjacent DMA completion ring
+elements (like command tags, statuses, and memory addresses) into the
+task status buffer, leading to a kernel memory information leak?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261009033238.1076=
-098-1-yangxingui@huawei.com?part=3D3
+098-1-yangxingui@huawei.com?part=3D1
