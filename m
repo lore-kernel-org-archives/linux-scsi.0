@@ -1,69 +1,99 @@
-Received: from out-2uec-a113.jellyfish.systems (out-2uec-a113.jellyfish.systems [63.250.43.113])
+Received: from mail-dy1-f169.google.com (mail-dy1-f169.google.com [74.125.82.169])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35E343D1A9A
-	for <linux-scsi@vger.kernel.org>; Fri,  9 Oct 2026 20:35:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=63.250.43.113
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 312F4346AF1
+	for <linux-scsi@vger.kernel.org>; Sat, 10 Oct 2026 05:49:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791578157; cv=none; b=rNYZZl3x2Bdpn14Xmt59fDOZ7c+U0Yub1hd9fAJxIKrujI6gp/ARqswWEmSrDSunjF6877ooHn1JE/imwNoxeV/ulPEBn5QPKa685UXXChql4BXZNJ6RCMgXxPgKEVGoE/nmEL6eUWc/ZC3dj7lNXgc9sA4h3p/KwuHqkRF1BZ0=
+	t=1791611386; cv=none; b=oii1MEsK2afKsj3xCYVRrOxNKDV1nEQLMlMS+StUNTDFXsBGdmTSnF5Iz9pldlTA5IEI4XvqMgCLeBBo5sYtGQUPjnvO1VSLzuOwtYRfAwpowUqvteeHEy/DgfSjWDPbpvyzGtwGYTJL04FD1MY+jpVHaEDi1nAGsnqqQvtbPCE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791578157; c=relaxed/simple;
-	bh=g1FgcabXUwjvQAtoSiunHmHSXXnBckrY4xA79nisWq4=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=mHUHMpdyVgJv3rD7nhNyyANpjn0U1yhlHnX6Uc67OlHDbmrNiXv35dJgecJFZTpFr/UnMl6XRLJvLPXaGGtasB6VOpj3llHsSr/RJxOebBOxLrEHligRtZsLmW3LBvusy9SiMV1eZaheI6T2h7FsHFJ2MtMK/SIQyCqh3N50QYk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=reject dis=none) header.from=catcrafts.net; spf=fail smtp.mailfrom=catcrafts.net; arc=none smtp.client-ip=63.250.43.113
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=reject dis=none) header.from=catcrafts.net
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=catcrafts.net
-Received: from mail.privateemail.com (unknown [87.215.145.39])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mail.privateemail.com (Postfix) with ESMTPSA id 4j1dlP2PHKz8sXC;
-	Fri, 09 Oct 2026 20:30:09 +0000 (UTC)
-From: Jorijn van der Graaf <jorijnvdgraaf@catcrafts.net>
-To: Alexander Koskovich <akoskovich@pm.me>
-Cc: Jorijn van der Graaf <jorijnvdgraaf@catcrafts.net>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <mkp@kernel.org>,
-	Abel Vesa <abel.vesa@oss.qualcomm.com>,
-	Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>,
-	Luca Weiss <luca.weiss@fairphone.com>,
-	Bjorn Andersson <andersson@kernel.org>,
-	Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>,
-	linux-arm-msm@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] scsi: ufs: qcom: Power down UFS during system suspend on Milos
-Date: Fri,  9 Oct 2026 22:30:06 +0200
-Message-ID: <20261009203006.452335-1-jorijnvdgraaf@catcrafts.net>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20261005-milos-ufs-suspend-v1-1-a6f8b89d5b63@pm.me>
-References: <20261005-milos-ufs-suspend-v1-1-a6f8b89d5b63@pm.me>
+	s=arc-20240116; t=1791611386; c=relaxed/simple;
+	bh=11YjS3aBQimnsp80x8+0ECW648rUHy8AMz8fIwiS0xQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=CcZ78YyPxW9eLw+ud5ZsK6IlXrj0PvakFP99JuFDFOy9OlEqpGcjTq19Y6MM8aWh/Tk6Vr+Yqd8ODbnfDgO4jLnIQLr/0xSMaSxkrnT3oGkk7Jcdbd2zlL1wpnieoq0UFf6Qo4pxnDdbalrzkFCKlCKC0B3/yTl4vza7HOo14eE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cse.iitm.ac.in; spf=pass smtp.mailfrom=cse.iitm.ac.in; dkim=pass (2048-bit key) header.d=cse-iitm-ac-in.20251104.gappssmtp.com header.i=@cse-iitm-ac-in.20251104.gappssmtp.com header.b=pl+IFFWo; arc=none smtp.client-ip=74.125.82.169
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cse.iitm.ac.in
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cse.iitm.ac.in
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=cse-iitm-ac-in.20251104.gappssmtp.com header.i=@cse-iitm-ac-in.20251104.gappssmtp.com header.b="pl+IFFWo"
+Received: by mail-dy1-f169.google.com with SMTP id 5a478bee46e88-3535a54bed9so471127eec.1
+        for <linux-scsi@vger.kernel.org>; Fri, 09 Oct 2026 22:49:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cse-iitm-ac-in.20251104.gappssmtp.com; s=20251104; t=1791611382; x=1792216182; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=1xpuBGBuv4heJCbpRtk090DDHZAYZZjZ3SWsUL8DCKM=;
+        b=pl+IFFWoNV//H/Wigd9ew0Cuh2psCfiBzkUe8xP+z5yLskQZH+wlgupMt/0WrE5d77
+         5Ikgnxh8y2bOXfK6QOWqmDhFB1q2vLzykJQGG2IB1DE5haNYubkoKQWs9zjPU2VAUICE
+         iTWlQcFl12He6eJ842F9K0lIUwptedXDN+qt5yfYu6AAXO45z1GSeAi+wq0dygC506yS
+         3nQfzPFxA1rmhI80kzEfJWTgC3eflXu7re5Xr9EQBKZwTwKMDfyQe/VKLhYsX43kXwY5
+         NFZBMXckYCzp1J4hAgJfcloUtEDFfLkH+oCGVeM3NmuwbZlrvi8tcVPfuHuPwjaVXgel
+         uL1Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791611382; x=1792216182;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=1xpuBGBuv4heJCbpRtk090DDHZAYZZjZ3SWsUL8DCKM=;
+        b=W1KA8AcSLgLt1Arn3uSxj+lLIaDQ11PQ3fmC4Mr/0/ge8e2/syQ9mWn1U4urr3SWQF
+         gd8kPcTjOW6sl5+hX7awZjiIZ5Y0u7TfmxmdNbwb3L4IsYV026soGAYaCo2Ypvk34FJd
+         s+C6NtZvjy1i+iniL9Un3JWuxz/dOHrL3/CxnNK7FsHThQc+F3/qhumC/PJUqGo+NNpL
+         euYsApuOudfJfjBCRrsCTxweIUkwL3gGc0SiTHynFi36vW1Cyy+4rpDODQC/Ymv5myok
+         qK8aV3FHj6CQ5UO6fsiH6KO+uY1+W9qKoLtqDh5KQk7L3e4e+W1YMh/gADTCahhjAacI
+         ersg==
+X-Forwarded-Encrypted: i=1; AKwUvBw+6+M5o3Aa0mbWlTwZ8dKp6tXrG+ke6O/3smADlq68wE5t1e3/qSBMkEToSEXs7sA2m3Lt2+715WMD@vger.kernel.org
+X-Gm-Message-State: AFq9FYIVTPyJrHGRliATcOHkkAQDGxlwlFAqz1B0YZuT3whdoeo+U0RU
+	K5OnBVvyfHc2TPzithWNDQxV0dZodSIMcSfW6rCaZS/TlzxlNd+YQ71PSlwBmxjJnjo=
+X-Gm-Gg: AYBFou2+TLhLE/zvqdxqtdxluBEwI+H4Le0mmiXmyWAEhbx5tKtt5DHizHI+JidP0mI
+	dioN4nREtgOwTHqP0SXWHUeoO/zTtpDpFWnIs5ggu+CeERoTT0rXXx5GKfxnRTFCgYthKYWPkSW
+	MHTQ/73WNtnqQ7cWqatdRhN0GoODubpsejTL3f4EwfDkeQpipxBKl+gbc3DVmcovF4SmKWBBRqg
+	DfKrBy3fw8s+jx2QPPYi6AAr8YyTERrjn6vfgHZc5HUP0zD/fPHMU0IGmOwuW9ljA59vDRpafC8
+	2VTyuQjEYksBpPZagMJz3nyDoXo6q/Mt9DVmb2heYHNA/nxO5bTHn48g5Uvhg1QwJCamk0pDndh
+	MKHNIeE1Gcfag0/ZuLQHBISi5I2YzuOXgH0tRMngK7uo1psDPCEacqjywa/ynDAskgjfZ4qozy7
+	+zNwFlIB9CIdUBLpd1TkGalamht5TzvbUGcfQpH8kyZ/gsVBLUS1t23vIbmX0AvzJ5YtIV+E2Gq
+	lhvIQ3APDksantKJXcLRdf4DCTXQtSOLAV1+5EqcFWMhCDptIXWOfq5Slg5m714yNNGoPzfZcdU
+	pZyeM+98RA==
+X-Received: by 2002:a05:693c:2289:b0:34b:5ab2:e200 with SMTP id 5a478bee46e88-3537e0788bemr7193296eec.14.1791611381889;
+        Fri, 09 Oct 2026 22:49:41 -0700 (PDT)
+Received: from Metius ([103.158.43.44])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3537ca1cc25sm13543066eec.8.2026.10.09.22.49.38
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 09 Oct 2026 22:49:41 -0700 (PDT)
+Date: Sat, 10 Oct 2026 11:19:35 +0530
+From: Abdun Nihaal <nihaal@cse.iitm.ac.in>
+To: Andrey Misiurov <andrey.misyrov@gmail.com>
+Cc: stable@vger.kernel.org, gregkh@linuxfoundation.org, sashal@kernel.org, 
+	justin.tee@broadcom.com, paul.ely@broadcom.com, martin.petersen@oracle.com, 
+	linux-scsi@vger.kernel.org
+Subject: Re: [PATCH 6.1.y] scsi: lpfc: Fix use-after-free of mboxq in
+ lpfc_sli4_driver_resource_setup()
+Message-ID: <irfspelsns7bao36eh5i5gebv2ktqguoinjsvmeebmwpbet34h@kuteiore4fx6>
+References: <20261008184328.2857037-1-andrey.misyrov@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Envelope-From: jorijnvdgraaf@catcrafts.net
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261008184328.2857037-1-andrey.misyrov@gmail.com>
 
-On Mon, Oct 05, 2026 at 05:02:06PM +0000, Alexander Koskovich wrote:
-> On Milos the UFS PHY GDSC is turned off on every system suspend and the
-> PHY loses its register state, so exiting hibern8 on resume fails:
+On Thu, Oct 08, 2026 at 08:43:28PM +0200, Andrey Misiurov wrote:
+> Move the mempool_free() to where upstream and the other stable trees
+> have it.
 > 
-> ufshcd-qcom 1d84000.ufshc: pwr ctrl cmd 0x18 with (MIBattribute 0x0, mode 0x0) failed, host upmcrs:0x5
-> ufshcd-qcom 1d84000.ufshc: ufshcd_uic_hibern8_exit: hibern8 exit failed. ret = 5
-> ufshcd-qcom 1d84000.ufshc: __ufshcd_wl_resume: hibern8 exit failed 5
-> 
-> Set no_phy_retention so the controller and device are powered down
-> during system suspend and the link is brought up again on resume.
+> Fixes: 299f5baa1321 ("scsi: lpfc: Fix memory leak in lpfc_sli4_driver_resource_setup()")
+> Signed-off-by: Andrey Misiurov <andrey.misyrov@gmail.com>
 
-On the Fairphone (Gen. 6) which is also milos using 7.3/scsi-fixes (469fa055664b)
-3 of 3 s2idle resumes fail hibern8 exit with the quoted lines above.
+I'm the author of the upstream patch (not a maintainer). 
+The fix looks good to me. Thanks for catching this.
 
-With the patch 5 s2idle and 10 deep suspend/resume cycles: no hibern8 exit failure
-ufshcd_wl_resume 32-35 ms each, a 4 MiB fsync write succeeds after every resume.
+Acked-by: Abdun Nihaal <nihaal@cse.iitm.ac.in>
 
-Tested-by: Jorijn van der Graaf <jorijnvdgraaf@catcrafts.net>
+How did you detect this? Just curious.
+
+Regards,
+Nihaal
