@@ -1,99 +1,160 @@
-Received: from mail-dy1-f169.google.com (mail-dy1-f169.google.com [74.125.82.169])
+Received: from mail-dy1-f179.google.com (mail-dy1-f179.google.com [74.125.82.179])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 312F4346AF1
-	for <linux-scsi@vger.kernel.org>; Sat, 10 Oct 2026 05:49:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C0E9439909
+	for <linux-scsi@vger.kernel.org>; Sat, 10 Oct 2026 09:14:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791611386; cv=none; b=oii1MEsK2afKsj3xCYVRrOxNKDV1nEQLMlMS+StUNTDFXsBGdmTSnF5Iz9pldlTA5IEI4XvqMgCLeBBo5sYtGQUPjnvO1VSLzuOwtYRfAwpowUqvteeHEy/DgfSjWDPbpvyzGtwGYTJL04FD1MY+jpVHaEDi1nAGsnqqQvtbPCE=
+	t=1791623696; cv=none; b=ieC7kZrdePD+OLZOj8w+um2k3r57HIJtroMBhNrS36r9DtgN0tCNTfRvBYd/Z6M3IJxOGMkt0xaCpKQY9lKq/9VWXlteIssDJU/ixNX/e7IfhRoBGso3a241j41cGi0ZG3kzfgsFb6h12C2hjsXjCp8mtwC/1UZzuFNFSiFj2ik=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791611386; c=relaxed/simple;
-	bh=11YjS3aBQimnsp80x8+0ECW648rUHy8AMz8fIwiS0xQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=CcZ78YyPxW9eLw+ud5ZsK6IlXrj0PvakFP99JuFDFOy9OlEqpGcjTq19Y6MM8aWh/Tk6Vr+Yqd8ODbnfDgO4jLnIQLr/0xSMaSxkrnT3oGkk7Jcdbd2zlL1wpnieoq0UFf6Qo4pxnDdbalrzkFCKlCKC0B3/yTl4vza7HOo14eE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cse.iitm.ac.in; spf=pass smtp.mailfrom=cse.iitm.ac.in; dkim=pass (2048-bit key) header.d=cse-iitm-ac-in.20251104.gappssmtp.com header.i=@cse-iitm-ac-in.20251104.gappssmtp.com header.b=pl+IFFWo; arc=none smtp.client-ip=74.125.82.169
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cse.iitm.ac.in
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cse.iitm.ac.in
+	s=arc-20240116; t=1791623696; c=relaxed/simple;
+	bh=lAM5b6+OIjaOvHNXh0hpCmmkd4xeYGS8UjTaFjairtI=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=eMBPxTVICgm161HkOdSwrY2W2VKSAxOZ/MJGA+19KYHnFrxtGG8GHHD9Nb3oGObBFoxO+lWbFYqrQVuViG8u9ynZXv0L+rFod4nTU8toGf+ZY5Z1DQFlwXUJRZ87E73RDrFtJbwiA8BUwcs1McD3vXGFQh7Q3rUkcuyORQ/O56M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr; spf=none smtp.mailfrom=isslab.korea.ac.kr; dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b=ucwiudbi; arc=none smtp.client-ip=74.125.82.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=cse-iitm-ac-in.20251104.gappssmtp.com header.i=@cse-iitm-ac-in.20251104.gappssmtp.com header.b="pl+IFFWo"
-Received: by mail-dy1-f169.google.com with SMTP id 5a478bee46e88-3535a54bed9so471127eec.1
-        for <linux-scsi@vger.kernel.org>; Fri, 09 Oct 2026 22:49:42 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b="ucwiudbi"
+Received: by mail-dy1-f179.google.com with SMTP id 5a478bee46e88-35834f72d94so685457eec.0
+        for <linux-scsi@vger.kernel.org>; Sat, 10 Oct 2026 02:14:52 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cse-iitm-ac-in.20251104.gappssmtp.com; s=20251104; t=1791611382; x=1792216182; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=1xpuBGBuv4heJCbpRtk090DDHZAYZZjZ3SWsUL8DCKM=;
-        b=pl+IFFWoNV//H/Wigd9ew0Cuh2psCfiBzkUe8xP+z5yLskQZH+wlgupMt/0WrE5d77
-         5Ikgnxh8y2bOXfK6QOWqmDhFB1q2vLzykJQGG2IB1DE5haNYubkoKQWs9zjPU2VAUICE
-         iTWlQcFl12He6eJ842F9K0lIUwptedXDN+qt5yfYu6AAXO45z1GSeAi+wq0dygC506yS
-         3nQfzPFxA1rmhI80kzEfJWTgC3eflXu7re5Xr9EQBKZwTwKMDfyQe/VKLhYsX43kXwY5
-         NFZBMXckYCzp1J4hAgJfcloUtEDFfLkH+oCGVeM3NmuwbZlrvi8tcVPfuHuPwjaVXgel
-         uL1Q==
+        d=isslab-korea-ac-kr.20251104.gappssmtp.com; s=20251104; t=1791623691; x=1792228491; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=2EcMVNGvoUCyg4a+/GXdBm3s3zoBcyX1bcILDBo8ZBg=;
+        b=ucwiudbiuFPxoRgwOxXDuOEodDaDRSx0nyKbvf8B1qyGkgprdWK+hLbdTf3ZBKZTbm
+         cYrMjHYIZnKEFk0gRt8cIpzI42i7hpxDEn8fky8NCfuQYaVIS6/CWyvn60uRXZ+kkbx/
+         U5hteBAdhzeUt8bZrDfRZCi190f2PYWeAJhLI+IAEyxfCZVv8TUH0tGVGplVCA/KIrz8
+         of/lGMGM0cziFRJ5Ah+ZgDOtr9V3xkOmXlWa8Y4isn3VoXg/RRpPivbHAta4hcUV0YYO
+         jol9yIF7cepBduV2u6WtzxXeNOfjIGZVInXYB1xbU4jgWlXYkwIZwISOIrH8B8VbUJHE
+         YU8w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791611382; x=1792216182;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=1xpuBGBuv4heJCbpRtk090DDHZAYZZjZ3SWsUL8DCKM=;
-        b=W1KA8AcSLgLt1Arn3uSxj+lLIaDQ11PQ3fmC4Mr/0/ge8e2/syQ9mWn1U4urr3SWQF
-         gd8kPcTjOW6sl5+hX7awZjiIZ5Y0u7TfmxmdNbwb3L4IsYV026soGAYaCo2Ypvk34FJd
-         s+C6NtZvjy1i+iniL9Un3JWuxz/dOHrL3/CxnNK7FsHThQc+F3/qhumC/PJUqGo+NNpL
-         euYsApuOudfJfjBCRrsCTxweIUkwL3gGc0SiTHynFi36vW1Cyy+4rpDODQC/Ymv5myok
-         qK8aV3FHj6CQ5UO6fsiH6KO+uY1+W9qKoLtqDh5KQk7L3e4e+W1YMh/gADTCahhjAacI
-         ersg==
-X-Forwarded-Encrypted: i=1; AKwUvBw+6+M5o3Aa0mbWlTwZ8dKp6tXrG+ke6O/3smADlq68wE5t1e3/qSBMkEToSEXs7sA2m3Lt2+715WMD@vger.kernel.org
-X-Gm-Message-State: AFq9FYIVTPyJrHGRliATcOHkkAQDGxlwlFAqz1B0YZuT3whdoeo+U0RU
-	K5OnBVvyfHc2TPzithWNDQxV0dZodSIMcSfW6rCaZS/TlzxlNd+YQ71PSlwBmxjJnjo=
-X-Gm-Gg: AYBFou2+TLhLE/zvqdxqtdxluBEwI+H4Le0mmiXmyWAEhbx5tKtt5DHizHI+JidP0mI
-	dioN4nREtgOwTHqP0SXWHUeoO/zTtpDpFWnIs5ggu+CeERoTT0rXXx5GKfxnRTFCgYthKYWPkSW
-	MHTQ/73WNtnqQ7cWqatdRhN0GoODubpsejTL3f4EwfDkeQpipxBKl+gbc3DVmcovF4SmKWBBRqg
-	DfKrBy3fw8s+jx2QPPYi6AAr8YyTERrjn6vfgHZc5HUP0zD/fPHMU0IGmOwuW9ljA59vDRpafC8
-	2VTyuQjEYksBpPZagMJz3nyDoXo6q/Mt9DVmb2heYHNA/nxO5bTHn48g5Uvhg1QwJCamk0pDndh
-	MKHNIeE1Gcfag0/ZuLQHBISi5I2YzuOXgH0tRMngK7uo1psDPCEacqjywa/ynDAskgjfZ4qozy7
-	+zNwFlIB9CIdUBLpd1TkGalamht5TzvbUGcfQpH8kyZ/gsVBLUS1t23vIbmX0AvzJ5YtIV+E2Gq
-	lhvIQ3APDksantKJXcLRdf4DCTXQtSOLAV1+5EqcFWMhCDptIXWOfq5Slg5m714yNNGoPzfZcdU
-	pZyeM+98RA==
-X-Received: by 2002:a05:693c:2289:b0:34b:5ab2:e200 with SMTP id 5a478bee46e88-3537e0788bemr7193296eec.14.1791611381889;
-        Fri, 09 Oct 2026 22:49:41 -0700 (PDT)
-Received: from Metius ([103.158.43.44])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3537ca1cc25sm13543066eec.8.2026.10.09.22.49.38
+        d=1e100.net; s=20260707; t=1791623691; x=1792228491;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=2EcMVNGvoUCyg4a+/GXdBm3s3zoBcyX1bcILDBo8ZBg=;
+        b=2yFf09vX8QnaTOMynoENl6ZvBjVpdWD9lDG8GFuzyEknuPWoj7wM+Q66kdnQvtmOA7
+         wlEQvxtQrDO4lGudmg5iK94W2k206VnzOEuPZOU6YziTzKbgkuS2bDlPGA19Jc75aFDU
+         OZtPyfQ7Kvti+MTiBbooimrl2ZTNNhuE4luMFYtIqrO0ysqgqdB1lkASxo6xZFo49PcO
+         9zBcgTw4ehm6QWkfDdWWAdN4yI7tHUGWE1dQxPOKUwAr+lI2cL0ykgt9pY6Jq3QC0cHe
+         H9Fm2g8T2xKbNt48Uh7B67/bWIAtK7DwbSOECxjE5sCTn9F24Zmw7mjrIYtWIXHrMyTX
+         LMfA==
+X-Forwarded-Encrypted: i=1; AKwUvByL+D/wN0BzRvcsAK+wZ1JkYTcLXluH+yeGnB0yp5d9uvX8bMUMpdlXCrLuBTp8TNABonzp4R3fxjoK@vger.kernel.org
+X-Gm-Message-State: AFq9FYIEa7gO8qUtHcqX6x1zKMkPcptVpzXiTdKh001o2RMvvT9g5GYg
+	nYKC33EYcZtkE0BX+qqFBKYBpInTE+mAOMk/EnBle/2e5Ys4GJvoYpcJWEXVuBlCHgk=
+X-Gm-Gg: AYBFou1HSI9iFnOpj2pz99S6HMCOC5ZmpR14sGTDfn3cIbcw1rszYSvX9IGrnUZVD4B
+	V8JOoSER6V3ur/NMlnhdo4G+H5WBjnePmuebVN6J2xOUH1xb70Jbaxx+0V/zlB2AV9ujlQJcuiN
+	iRsnx4rzmkwcgTYf280HuN3J7BPysCzrQChsowX7RuQOThdpqzHmq1lfibjbZs98Nlujm07yvnf
+	JtilzRTkUgrp1HD/kdGVB0IcGIoxkJBRDoHGFss/ASrwtGQX4XZ/+WzZcNKPgVezr4HvtTHdVN1
+	Olna50tUmHJcLuRFJW9Rt8hkyuCtpyzS1L0CKdfoNsH1U+Sz3G7+HVnofMr0mCUcP9jMNwXoQKp
+	cTtbLJY4c8ZKklyfEaBTSuk0WO0sFcSPz3ZKKrkPH5GwecQX+PGQ2MwPvQsbiRlN/QdZYUZkYhf
+	H5PMLPu4YO+w46FKagkVK++uCTiuCQNM63vRn2TF+YuovQYR2sM4ewFRg99eN1gW5cogYSAfmUk
+	aNdaflNSGI7/FounLK1zQ==
+X-Received: by 2002:a05:7300:8803:b0:351:735e:2ef8 with SMTP id 5a478bee46e88-3537df50e9dmr6407629eec.7.1791623691332;
+        Sat, 10 Oct 2026 02:14:51 -0700 (PDT)
+Received: from localhost.localdomain ([2406:5900:1044:110c:c95f:28ac:324a:cdc3])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3537ca1b53dsm12287561eec.6.2026.10.10.02.14.48
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 09 Oct 2026 22:49:41 -0700 (PDT)
-Date: Sat, 10 Oct 2026 11:19:35 +0530
-From: Abdun Nihaal <nihaal@cse.iitm.ac.in>
-To: Andrey Misiurov <andrey.misyrov@gmail.com>
-Cc: stable@vger.kernel.org, gregkh@linuxfoundation.org, sashal@kernel.org, 
-	justin.tee@broadcom.com, paul.ely@broadcom.com, martin.petersen@oracle.com, 
+        Sat, 10 Oct 2026 02:14:50 -0700 (PDT)
+From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+To: Sathya Prakash <sathya.prakash@broadcom.com>,
+	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
+	Ranjan Kumar <ranjan.kumar@broadcom.com>,
+	MPT-FusionLinux.pdl@broadcom.com,
 	linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 6.1.y] scsi: lpfc: Fix use-after-free of mboxq in
- lpfc_sli4_driver_resource_setup()
-Message-ID: <irfspelsns7bao36eh5i5gebv2ktqguoinjsvmeebmwpbet34h@kuteiore4fx6>
-References: <20261008184328.2857037-1-andrey.misyrov@gmail.com>
+Cc: linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org,
+	Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+Subject: [PATCH] scsi: mptfusion: reject events with a MsgLength outside the reply frame
+Date: Sat, 10 Oct 2026 18:14:32 +0900
+Message-ID: <20261010091432.1788497-1-yhlee@isslab.korea.ac.kr>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261008184328.2857037-1-andrey.misyrov@gmail.com>
+Content-Transfer-Encoding: 8bit
 
-On Thu, Oct 08, 2026 at 08:43:28PM +0200, Andrey Misiurov wrote:
-> Move the mempool_free() to where upstream and the other stable trees
-> have it.
-> 
-> Fixes: 299f5baa1321 ("scsi: lpfc: Fix memory leak in lpfc_sli4_driver_resource_setup()")
-> Signed-off-by: Andrey Misiurov <andrey.misyrov@gmail.com>
+mptsas_event_process() sizes the event payload from the reply header:
 
-I'm the author of the upstream patch (not a maintainer). 
-The fix looks good to me. Thanks for catching this.
+      event_data_sz = ((reply->MsgLength * 4) -
+          offsetof(EventNotificationReply_t, Data));
 
-Acked-by: Abdun Nihaal <nihaal@cse.iitm.ac.in>
+MsgLength is an 8-bit field chosen by the controller firmware and is not
+validated on the way in; ProcessEventNotification() only looks at
+EventDataLength. event_data_sz is a signed int but is then used as a
+size_t in both the kzalloc() and the memcpy() that follow:
 
-How did you detect this? Just curious.
+      fw_event = kzalloc(sizeof(*fw_event) + event_data_sz, GFP_ATOMIC);
+      ...
+      memcpy(fw_event->event_data, reply->Data, event_data_sz);
 
-Regards,
-Nihaal
+A MsgLength too small to cover the 28-byte reply header (MsgLength <= 6)
+makes event_data_sz negative; it sign-extends to a huge size_t, so the
+kzalloc() under-allocates and the memcpy() runs for ~2^64 bytes. A
+MsgLength larger than the reply frame makes the memcpy() read past the
+frame and leak up to ~940 bytes of the adjacent reply.
+
+Reproduced under KASAN with a crafted EventNotificationReply (reply_sz
+0x50); MsgLength 255 over-reads the frame, MsgLength 4 wraps the length:
+
+  BUG: KASAN: slab-out-of-bounds in mptsas_event_process [mptsas]
+  Read of size 992
+   which belongs to the cache kmalloc-96 of size 96
+
+  BUG: KASAN: out-of-bounds in mptsas_event_process [mptsas]
+  Read of size 18446744073709551604
+
+reply points at a fixed MPT_REPLY_FRAME_SIZE frame, so a valid event has
+7 <= MsgLength <= ioc->reply_sz / 4. Compute event_data_sz before the
+switch and drop the event when MsgLength is outside that range, as
+mptsas_mgmt_done() and mptctl_reply() already bound it to ioc->reply_sz.
+Doing it before the switch also keeps a dropped BROADCAST_PRIMITIVE from
+leaving ioc->broadcast_aen_busy set.
+
+Fixes: 3eb0822c6740 ("[SCSI] mpt fusion: Firmware event implementation using seperate WorkQueue")
+Cc: stable@vger.kernel.org
+Signed-off-by: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+---
+ drivers/message/fusion/mptsas.c | 14 ++++++++++++--
+ 1 file changed, 12 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
+index c362f09a8c555..1812b871c47ef 100644
+--- a/drivers/message/fusion/mptsas.c
++++ b/drivers/message/fusion/mptsas.c
+@@ -5009,6 +5009,18 @@ mptsas_event_process(MPT_ADAPTER *ioc, EventNotificationReply_t *reply)
+ 		return 0;
+ 
+ 	delay = msecs_to_jiffies(1);
++
++	/* Bound the firmware-chosen MsgLength to the reply frame: too small
++	 * underflows event_data_sz, too large over-reads the copy.
++	 */
++	event_data_sz = ((reply->MsgLength * 4) -
++	    offsetof(EventNotificationReply_t, Data));
++	if (event_data_sz < 0 || reply->MsgLength * 4 > ioc->reply_sz) {
++		printk(MYIOC_s_WARN_FMT "%s: bad MsgLength %u\n",
++		       ioc->name, __func__, reply->MsgLength);
++		return 0;
++	}
++
+ 	switch (event) {
+ 	case MPI_EVENT_SAS_BROADCAST_PRIMITIVE:
+ 	{
+@@ -5105,8 +5117,6 @@ mptsas_event_process(MPT_ADAPTER *ioc, EventNotificationReply_t *reply)
+ 		return 0;
+ 	}
+ 
+-	event_data_sz = ((reply->MsgLength * 4) -
+-	    offsetof(EventNotificationReply_t, Data));
+ 	fw_event = kzalloc(sizeof(*fw_event) + event_data_sz, GFP_ATOMIC);
+ 	if (!fw_event) {
+ 		printk(MYIOC_s_WARN_FMT "%s: failed at (line=%d)\n", ioc->name,
+-- 
+2.43.0
+
