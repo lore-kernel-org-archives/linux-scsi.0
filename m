@@ -1,209 +1,269 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 10DDC3603DD
-	for <linux-scsi@vger.kernel.org>; Sat, 10 Oct 2026 18:25:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B5DD91A683D;
+	Sat, 10 Oct 2026 22:00:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791656740; cv=none; b=En2zR3CnsKHp+Azh3L8rnbFdZkcTRFmnzQsBzKIPkBlMWNHzsUvnSoEhqCbD4u2fNmli0ZwjRmu1jI+pwDTnKZM3wRfESc1xq/29JlJKpvxAahXHX3AwqZJffS0ZE3jx4GL0nr3Nju/XivbXzNcoCT4nmiWtkYjlDRW9C/iulLQ=
+	t=1791669627; cv=none; b=pvoSx4+58RJt/pZ3LW/aDh8aVfcXnvuIsCVf4SMHeUqU03UIF60qOlHr2fBnANy53S5xaYPwrwCaK9vVXDrbYfWO5AZ3riFu3LwKYe/ymIgpa8AJsQtPAcajJPMkUj30jqmLPhKLkSP4AthoXZGWHZoifKuhq5mOzXwjoAht/Q8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791656740; c=relaxed/simple;
-	bh=7wmGEXbHZJ/YJZMaJZCwjzFrMsKLE8Y3mxft2lFSqP8=;
-	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
-	 Date; b=syO4MVclDEnbSprn00dzYox8pegzO76mV/fyme8zUMrjJH0EzCxxteLtrSYlYdmZYWCD220HMPdivexwJnsJrO0SfrPT/D3moxpJNhCh3WNsZnPphy8aoDisZsuUgTleSzSvMJ1HvZMJWEeclehlv9kHviLjo7YctCDulL4h0Ns=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=A6kdjMve; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791669627; c=relaxed/simple;
+	bh=uTIIgXvNGRKidYtT9y9d/j9O/uWBWM1pGuwQpiO4cmw=;
+	h=Date:From:To:Cc:Subject:Message-Id:In-Reply-To:References:
+	 Mime-Version:Content-Type; b=LxMbN4FMd8LTIFjiPea+nzZKCbl9pWue4MSjHuNEHXw8edbBTn5aa++6NGrRpEtSCEfwX13SoWeZ2wNQ3RrWp5xUIhhJ+2XPHi7ITvpMZa1z5TZgNagyttUk0wpBrTgKFuexBZfsUQWi2ziBmDZ6ZWxse3V+cxAJqVpfdWWVHLc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=ffP+TPLt; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="A6kdjMve"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 65B421F000FF;
-	Sat, 10 Oct 2026 18:25:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791656738;
-	bh=4WuvxhOJ0aD7OnRIdqmKREuoEvwYNXfsSeD/e3vEamk=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=A6kdjMveGnkXye3peoAm9dgT0oOP05jwBzXpWtAHMEC0ycYy4RHQGbKIGhxGv2qRh
-	 5lRnkXydccsKPjJ9Qzapibg8Lwpa2foqn8Qp2f9tSh82RmmB3t9EeYccldMPdB1JtL
-	 0ulz9wMg5b+MklkrUjfYKTQ535+QveXqZhPR1FcecZ4thCWrxvUWmkbdz1A0phI4tI
-	 9YJRBuOApq/WSTndsb/VnM8PN+CsXg46FLtDNlnDP3oRB2xQMcYAqpJWzzv5bnabx5
-	 iWVJQUIAVoD7oOfWoiNXp7ahLKUai4Rmn4iy52iD8j6hFK/BG+RVuUc6a3QmP23wvZ
-	 MPkHRas36kB8g==
-Message-ID: <sashiko-outbox-166801@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] scsi: qla4xxx: bound the ISP83xx reset template to its
- buffer
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Yehyeong Lee" <yhlee@isslab.korea.ac.kr>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20261010181139.1911817-1-yhlee@isslab.korea.ac.kr>
-References: <20261010181139.1911817-1-yhlee@isslab.korea.ac.kr>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Sat, 10 Oct 2026 18:25:37 +0000
+	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="ffP+TPLt"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4AADC1F000FF;
+	Sat, 10 Oct 2026 22:00:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux-foundation.org; s=korg; t=1791669625;
+	bh=N2jYfqmPt2es1xuCkTol8NOahRHgRnTcTOUiwhGzkTU=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References;
+	b=ffP+TPLt1hBG2zdntJGpA4a6eo1Kktyl63gUdmTPWoDV5PB8j6QZDH7O5pu6DND18
+	 83jrFOWryJ2h63yrCPBw+Uh9wavAQ633twrY1q8Eu4fcsINr1B1dFygd9ev9/B+B/N
+	 PiED0VbjIV4o5yPrrgsINTWJg6/2ZfXlko4ls4sM=
+Date: Sat, 10 Oct 2026 15:00:20 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
+Cc: "Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka
+ <vbabka@kernel.org>, Jann Horn <jannh@google.com>, Pedro Falcato
+ <pfalcato@suse.de>, David Hildenbrand <david@kernel.org>, Mike Rapoport
+ <rppt@kernel.org>, Suren Baghdasaryan <surenb@google.com>, Michal Hocko
+ <mhocko@suse.com>, Jonathan Corbet <corbet@lwn.net>, Greg Kroah-Hartman
+ <gregkh@linuxfoundation.org>, Dennis Dalessandro
+ <dennis.dalessandro@cornelisnetworks.com>, Jason Gunthorpe <jgg@ziepe.ca>,
+ Leon Romanovsky <leon@kernel.org>, Paul Moore <paul@paul-moore.com>,
+ Stephen Smalley <stephen.smalley.work@gmail.com>, Jaroslav Kysela
+ <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, Alexei Starovoitov
+ <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko
+ <andrii@kernel.org>, Eduard Zingerman <eddyz87@gmail.com>, Kumar Kartikeya
+ Dwivedi <memxor@gmail.com>, Zi Yan <ziy@nvidia.com>, Baolin Wang
+ <baolin.wang@linux.alibaba.com>, Nico Pache <nico.pache@linux.dev>, Ryan
+ Roberts <ryan.roberts@arm.com>, Dev Jain <dev.jain@arm.com>, Barry Song
+ <baohua@kernel.org>, Lance Yang <lance.yang@linux.dev>, Usama Arif
+ <usama.arif@linux.dev>, Kiryl Shutsemau <kas@kernel.org>, Doug Gilbert
+ <dgilbert@interlog.com>, "James E.J. Bottomley"
+ <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen"
+ <mkp@kernel.org>, Simona Vetter <simona@ffwll.ch>, Helge Deller
+ <deller@gmx.de>, Sebastian Reichel <sre@kernel.org>, John Hubbard
+ <jhubbard@nvidia.com>, Peter Xu <peterx@redhat.com>, Masami Hiramatsu
+ <mhiramat@kernel.org>, Oleg Nesterov <oleg@redhat.com>, Peter Zijlstra
+ <peterz@infradead.org>, Thomas Gleixner <tglx@kernel.org>, Ingo Molnar
+ <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, Dave Hansen
+ <dave.hansen@linux.intel.com>, x86@kernel.org, Arnaldo Carvalho de Melo
+ <acme@kernel.org>, Namhyung Kim <namhyung@kernel.org>, Mark Rutland
+ <mark.rutland@arm.com>, Rik van Riel <riel@surriel.com>, Harry Yoo
+ <harry@kernel.org>, Juri Lelli <juri.lelli@redhat.com>, Vincent Guittot
+ <vincent.guittot@linaro.org>, Maarten Lankhorst
+ <maarten.lankhorst@linux.intel.com>, Maxime Ripard <mripard@kernel.org>,
+ Thomas Zimmermann <tzimmermann@suse.de>, David Airlie <airlied@gmail.com>,
+ Will Deacon <will@kernel.org>, "Aneesh Kumar K.V"
+ <aneesh.kumar@kernel.org>, Nick Piggin <npiggin@gmail.com>, Arnd Bergmann
+ <arnd@arndb.de>, Muchun Song <muchun.song@linux.dev>, Oscar Salvador
+ <osalvador@suse.de>, "Matthew Wilcox (Oracle)" <willy@infradead.org>, Jan
+ Kara <jack@suse.cz>, Marc Zyngier <maz@kernel.org>, Oliver Upton
+ <oupton@kernel.org>, Catalin Marinas <catalin.marinas@arm.com>, Madhavan
+ Srinivasan <maddy@linux.ibm.com>, Anup Patel <anup@brainfault.org>, Paul
+ Walmsley <pjw@kernel.org>, Palmer Dabbelt <palmer@dabbelt.com>, Albert Ou
+ <aou@eecs.berkeley.edu>, Christian Borntraeger <borntraeger@linux.ibm.com>,
+ Janosch Frank <frankja@linux.ibm.com>, Claudio Imbrenda
+ <imbrenda@linux.ibm.com>, Alexander Gordeev <agordeev@linux.ibm.com>,
+ Gerald Schaefer <gerald.schaefer@linux.ibm.com>, Heiko Carstens
+ <hca@linux.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>, "David S. Miller"
+ <davem@davemloft.net>, Andreas Larsson <andreas@gaisler.com>, Alexander
+ Viro <viro@zeniv.linux.org.uk>, Christian Brauner <brauner@kernel.org>,
+ Matthew Brost <matthew.brost@intel.com>, Joshua Hahn
+ <joshua.hahnjy@gmail.com>, Rakie Kim <rakie.kim@sk.com>, Byungchul Park
+ <byungchul@sk.com>, Gregory Price <gourry@gourry.net>, Ying Huang
+ <ying.huang@linux.alibaba.com>, Alistair Popple <apopple@nvidia.com>, Chris
+ Li <chrisl@kernel.org>, Kairui Song <kasong@tencent.com>, Kemeng Shi
+ <shikemeng@huaweicloud.com>, Nhat Pham <nphamcs@gmail.com>, Baoquan He
+ <baoquan.he@linux.dev>, Youngjun Park <youngjun.park@lge.com>, Johannes
+ Weiner <hannes@cmpxchg.org>, Qi Zheng <qi.zheng@linux.dev>, Shakeel Butt
+ <shakeel.butt@linux.dev>, Axel Rasmussen <axelrasmussen@google.com>,
+ Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, Chengming
+ Zhou <chengming.zhou@linux.dev>, Michal Hocko <mhocko@kernel.org>, Miklos
+ Szeredi <miklos@szeredi.hu>, Xu Xin <xu.xin@linux.dev>, linux-mm@kvack.org,
+ linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
+ linux-usb@vger.kernel.org, linux-rdma@vger.kernel.org,
+ selinux@vger.kernel.org, linux-sound@vger.kernel.org, bpf@vger.kernel.org,
+ linux-scsi@vger.kernel.org, linux-fbdev@vger.kernel.org,
+ dri-devel@lists.freedesktop.org, linux-trace-kernel@vger.kernel.org,
+ linux-perf-users@vger.kernel.org, linux-arch@vger.kernel.org,
+ linux-fsdevel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ kvmarm@lists.linux.dev, linuxppc-dev@lists.ozlabs.org, kvm@vger.kernel.org,
+ kvm-riscv@lists.infradead.org, linux-riscv@lists.infradead.org,
+ linux-s390@vger.kernel.org, sparclinux@vger.kernel.org,
+ fuse-devel@lists.linux.dev, Ihor Solodrai <ihor.solodrai@linux.dev>, Bert
+ Karwatzki <spasswolf@web.de>, Takashi Iwai <tiwai@suse.de>, Emil Tsalapatis
+ <emil@etsalapatis.com>
+Subject: Re: [PATCH v5 00/38] mm: make VMA flag semantics explicit,
+ eliminate VM_SPECIAL
+Message-Id: <20261010150020.cbd6ce3038e3b6d72e2c92c9@linux-foundation.org>
+In-Reply-To: <20261009-b4-mmap-prepare-vma-flag-sanify-v5-0-923b70125b1e@kernel.org>
+References: <20261009-b4-mmap-prepare-vma-flag-sanify-v5-0-923b70125b1e@kernel.org>
+X-Mailer: Sylpheed 3.8.0beta1 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [High] scsi: qla4xxx: inconsistent endianness bypasses bounds check on BE
-- [High] scsi: qla4xxx: reset template array_index is never incremented
---
+On Fri, 09 Oct 2026 19:03:54 +0100 "Lorenzo Stoakes (ARM)" <ljs@kernel.org> wrote:
 
-commit e655f165fac597f0102c0474809c6d569ca19038
-Author: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+> The VM_SPECIAL / VMA_SPECIAL_FLAGS mask conflates several unrelated
+> properties:
+> 
+> * Is this managed by core mm, or by a driver mapping MMIO, kernel-allocated
+>   pages, or even ordinary pages itself?
+> * Can it be expanded or merged?
+> * Is this a 'weird' case like mlock where migration might race and we
+>   'have' to set invalid flags to notify?
+> * Is it another 'weird' case where we just want to stop GUP from touching
+>   it?
+> 
+> Driver writers have often been confused about this, and who can blame them?
+> 
+> It also interacts badly with the eternal edgecase known as hugetlb - which
+> sets VMA_DONTEXPAND_BIT but doesn't also want to be treated like a
+> 'special' flag.
+> 
+> Another issue is that we cannot make sensible assumptions about flag
+> use. It's not possible to assume VMA_IO_BIT means iommu because drivers
+> abuse it and mlock abuses it.
+> 
+> Special is also an overloaded term in mm. VDSO and VVAR mappings are also
+> called 'special' but they're special in a... special way.
+> 
+> Sometimes things are called special that are a subset of
+> VMA_SPECIAL_FLAGS (VMA_PFNMAP_BIT and VMA_MIXEDMAP_BIT for instance when it
+> comes to zapping or vm_normal_folio()).
+> 
+> There's a specific kind of special for THP too, which considers
+> PFN map, mixed map 'special' but DAX not.
+> 
+> It's all rather a mess.
+> 
+> This series brings some order to things by both limiting what drivers can
+> do with VMA flags and switching to using predicates that describe
+> behaviour, not arbitrary flags.
 
-scsi: qla4xxx: bound the ISP83xx reset template to its buffer
+Thanks, I've updated mm-unstable to this version.
 
-This commit bounds the size of the ISP83xx reset template during adapter
-initialization to prevent buffer overruns when reading from flash. It also
-ensures bounds are respected during template execution and handles error
-cleanup properly.
+For some reason, new versions of this series aren't applying when I
+drop the new series in place of the old.  I made the same old bunch of
+reject-fixups, so the below interdiff will show if I messed any of them up.
 
-Cc: stable@vger.kernel.org
+> v5:
+> * Applied tags (thanks everybody!)
+> * Updated 3/38 to fix a bug in __mmap_new_file_vma() by zapping + closing
+>   the VMA before setting vma->vm_file NULL to avoid an i_mmap_writable
+>   imbalance. A repro was tested before/after and confirmed fixed.
+> * Updated 7/38 to make __map_kernel_pages_prepare() use
+>   mmap_assert_write_locked() rather than the weird
+>   assert-on-mmap_read_trylock() pattern, as per Suren.
+> * Also update vm_insert_page(), vm_insert_pages() to fix the same pattern
+>   and to use the new VMA API, and converted a BUG_ON to a
+>   VM_WARN_ON_ONCE().
 
-> diff --git a/drivers/scsi/qla4xxx/ql4_83xx.c b/drivers/scsi/qla4xxx/ql4_8=
-3xx.c
-> index db41d90a5b6e9..7fbcc4e85b26a 100644
-> --- a/drivers/scsi/qla4xxx/ql4_83xx.c
-> +++ b/drivers/scsi/qla4xxx/ql4_83xx.c
-> @@ -815,6 +815,19 @@ void qla4_83xx_read_reset_template(struct scsi_qla_h=
-ost *ha)
->  		goto exit_read_template_error;
->  	}
-> =20
-> +	/* The template size is chosen by the flash contents and nothing has
-> +	 * bounded it yet, so a template claiming to be larger than the buffer
-> +	 * would make the read below store past the end of it.  The integrity
-> +	 * check runs after the copy and cannot prevent that.
-> +	 */
-> +	tmplt_size =3D le16_to_cpu(ha->reset_tmplt.hdr->size);
-> +	if (tmplt_size > QLA83XX_RESTART_TEMPLATE_SIZE ||
-> +	    tmplt_size < le16_to_cpu(ha->reset_tmplt.hdr->hdr_size)) {
-> +		ql4_printk(KERN_ERR, ha, "%s: Template size %u is invalid\n",
-> +			   __func__, tmplt_size);
-> +		goto exit_read_template_error;
-> +	}
-> +
->  	addr =3D QLA83XX_RESET_TEMPLATE_ADDR + ha->reset_tmplt.hdr->hdr_size;
->  	p_buff =3D ha->reset_tmplt.buff + ha->reset_tmplt.hdr->hdr_size;
->  	tmplt_hdr_def_size =3D (ha->reset_tmplt.hdr->size -
->  			      ha->reset_tmplt.hdr->hdr_size) / sizeof(uint32_t);
+Here's how v5 altered mm.git:
 
-[Severity: High]
-Does this calculation use the raw unswapped __le16 values?
+ mm/memory.c                       |   20 +++++++++++---------
+ mm/vma.c                          |   16 ++++++++--------
+ tools/testing/vma/include/stubs.h |    4 ++++
+ 3 files changed, 23 insertions(+), 17 deletions(-)
 
-On Big-Endian architectures, the new le16_to_cpu() check above validates
-the swapped size. However, an attacker could provide flash values that
-pass the swapped bounds check, but become massive when read directly
-without swapping.
+--- a/mm/memory.c~b
++++ a/mm/memory.c
+@@ -2611,10 +2611,11 @@ int vm_insert_pages(struct vm_area_struc
+ 
+ 	if (!range_in_vma(vma, addr, end))
+ 		return -EFAULT;
+-	if (!(vma->vm_flags & VM_MIXEDMAP)) {
+-		VM_WARN_ON_ONCE(mmap_read_trylock(vma->vm_mm));
+-		VM_WARN_ON_ONCE(vma->vm_flags & VM_PFNMAP);
+-		vm_flags_set(vma, VM_MIXEDMAP);
++	if (!vma_test(vma, VMA_MIXEDMAP_BIT)) {
++		mmap_assert_write_locked(vma->vm_mm);
++		VM_WARN_ON_ONCE(vma_test(vma, VMA_PFNMAP_BIT));
++		vma_start_write(vma);
++		vma_set_flags(vma, VMA_MIXEDMAP_BIT);
+ 	}
+ 	/* Defer page refcount checking till we're about to map that page. */
+ 	return insert_pages(vma, addr, pages, num, vma->vm_page_prot);
+@@ -2626,7 +2627,7 @@ static void __map_kernel_pages_prepare(s
+ 	if (vma_desc_test(desc, VMA_MIXEDMAP_BIT))
+ 		return;
+ 
+-	VM_WARN_ON_ONCE(mmap_read_trylock(desc->mm));
++	mmap_assert_write_locked(desc->mm);
+ 	VM_WARN_ON_ONCE(vma_desc_test(desc, VMA_PFNMAP_BIT));
+ 	vma_desc_set_flags(desc, VMA_MIXEDMAP_BIT);
+ }
+@@ -2785,10 +2786,11 @@ int vm_insert_page(struct vm_area_struct
+ {
+ 	if (addr < vma->vm_start || addr >= vma->vm_end)
+ 		return -EFAULT;
+-	if (!(vma->vm_flags & VM_MIXEDMAP)) {
+-		BUG_ON(mmap_read_trylock(vma->vm_mm));
+-		BUG_ON(vma->vm_flags & VM_PFNMAP);
+-		vm_flags_set(vma, VM_MIXEDMAP);
++	if (!vma_test(vma, VMA_MIXEDMAP_BIT)) {
++		mmap_assert_write_locked(vma->vm_mm);
++		VM_WARN_ON_ONCE(vma_test(vma, VMA_PFNMAP_BIT));
++		vma_start_write(vma);
++		vma_set_flags(vma, VMA_MIXEDMAP_BIT);
+ 	}
+ 	return insert_page(vma, addr, page, vma->vm_page_prot, false);
+ }
+--- a/mm/vma.c~b
++++ a/mm/vma.c
+@@ -2631,21 +2631,21 @@ static int __mmap_new_file_vma(struct mm
+ 	map->vm_file = vma->vm_file;
+ 
+ 	if (error) {
+-		struct file *file = vma->vm_file;
+ 		UNMAP_STATE(unmap, vmi, vma, vma->vm_start, vma->vm_end,
+ 			    map->prev, map->next);
+ 
++		if (vma->vm_ops->close) {
++			zap_vma(vma);
++			/* Safe, because VMA zapped. */
++			vma_close(vma);
++		}
++		if (map_same_file(map))
++			fput(map->vm_file);
++
+ 		vma->vm_file = NULL;
+ 		vma_iter_set(vmi, vma->vm_end);
+ 		/* Undo any partial mapping done by a device driver. */
+ 		unmap_region(&unmap);
+-		vma->vm_file = file;
+-		/* Only safe once unmapped. */
+-		vma_close(vma);
+-
+-		if (map_same_file(map))
+-			fput(map->vm_file);
+-		vma->vm_file = NULL;
+ 		return error;
+ 	}
+ 
+--- a/tools/testing/vma/include/stubs.h~b
++++ a/tools/testing/vma/include/stubs.h
+@@ -329,6 +329,10 @@ static inline void vma_close(struct vm_a
+ {
+ }
+ 
++static inline void zap_vma(struct vm_area_struct *vma)
++{
++}
++
+ static inline int mmap_file(struct file *file, struct vm_area_struct *vma)
+ {
+ 	return 0;
+_
 
-Could this bypass the bounds check and lead to the vmalloc-out-of-bounds
-write this patch intends to fix?
-
-[ ... ]
-
-> @@ -1046,6 +1082,7 @@ static void qla4_83xx_poll_read_list(struct scsi_ql=
-a_host *ha,
->  	int index;
->  	struct qla4_83xx_quad_entry *p_entry;
->  	struct qla4_83xx_poll *p_poll;
-> +	char *p_end =3D (char *)p_hdr + le16_to_cpu(p_hdr->size);
->  	uint32_t i;
->  	uint32_t value;
-> =20
-> @@ -1055,7 +1092,8 @@ static void qla4_83xx_poll_read_list(struct scsi_ql=
-a_host *ha,
->  		  ((char *)p_poll + sizeof(struct qla4_83xx_poll));
->  	delay =3D (long)p_hdr->delay;
-> =20
-> -	for (i =3D 0; i < p_hdr->count; i++, p_entry++) {
-> +	for (i =3D 0; i < le16_to_cpu(p_hdr->count) &&
-> +	     (char *)(p_entry + 1) <=3D p_end; i++, p_entry++) {
->  		qla4_83xx_wr_reg_indirect(ha, p_entry->ar_addr,
->  					  p_entry->ar_value);
-
-[Severity: High]
-Is the array_index properly updated during this loop in
-qla4_83xx_poll_read_list()?
-
-Looking at the loop body:
-
-			} else {
-				index =3D ha->reset_tmplt.array_index;
-				qla4_83xx_rd_reg_indirect(ha, p_entry->dr_addr,
-							  &value);
-				ha->reset_tmplt.array[index++] =3D value;
-
-				if (index =3D=3D QLA83XX_MAX_RESET_SEQ_ENTRIES)
-					ha->reset_tmplt.array_index =3D 1;
-			}
-
-The local index is incremented, but is it ever written back to
-ha->reset_tmplt.array_index when it is less than the max? It appears
-subsequent loop iterations will fetch the same stale index and overwrite
-the same array element, breaking the read-modify-write reset operations.
-
-[ ... ]
-
-> @@ -1117,15 +1155,43 @@ static void qla4_83xx_process_reset_template(stru=
-ct scsi_qla_host *ha,
->  	int index, entries;
->  	struct qla4_83xx_reset_entry_hdr *p_hdr;
->  	char *p_entry =3D p_buff;
-> +	char *p_end;
-> +
-> +	if (!ha->reset_tmplt.buff || !ha->reset_tmplt.hdr || !p_buff) {
-> +		ql4_printk(KERN_ERR, ha, "%s: No valid reset template\n",
-> +			   __func__);
-> +		return;
-> +	}
-> =20
->  	ha->reset_tmplt.seq_end =3D 0;
->  	ha->reset_tmplt.template_end =3D 0;
->  	entries =3D ha->reset_tmplt.hdr->entries;
->  	index =3D ha->reset_tmplt.seq_index;
-> +	p_end =3D (char *)ha->reset_tmplt.buff +
-> +		le16_to_cpu(ha->reset_tmplt.hdr->size);
-> =20
->  	for (; (!ha->reset_tmplt.seq_end) && (index  < entries); index++) {
-> =20
-> +		/* Both the entry count and each entry size come from flash,
-> +		 * so stop rather than walk past the end of the template.
-> +		 */
-> +		if (p_entry < (char *)ha->reset_tmplt.buff ||
-> +		    p_entry + sizeof(*p_hdr) > p_end) {
-> +			ql4_printk(KERN_ERR, ha, "%s: Entry %d is outside the template\n",
-> +				   __func__, index);
-> +			ha->reset_tmplt.seq_error++;
-> +			break;
-> +		}
-> +
->  		p_hdr =3D (struct qla4_83xx_reset_entry_hdr *)p_entry;
-> +		if (le16_to_cpu(p_hdr->size) < sizeof(*p_hdr) ||
-> +		    p_entry + le16_to_cpu(p_hdr->size) > p_end) {
-> +			ql4_printk(KERN_ERR, ha, "%s: Entry %d size %u is outside the templat=
-e\n",
-> +				   __func__, index, le16_to_cpu(p_hdr->size));
-> +			ha->reset_tmplt.seq_error++;
-> +			break;
-> +		}
-> +
->  		switch (p_hdr->cmd) {
-
-[Severity: High]
-Should the pointer increment at the end of this loop also use
-le16_to_cpu(p_hdr->size)?
-
-Looking at the end of qla4_83xx_process_reset_template():
-
-		/* Set pointer to next entry in the sequence. */
-		p_entry +=3D p_hdr->size;
-
-Because the new bounds check correctly uses the swapped value, advancing
-the pointer by the unswapped value on Big-Endian systems could still jump
-out of bounds and read past the buffer.
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261010181139.1911=
-817-1-yhlee@isslab.korea.ac.kr?part=3D1
