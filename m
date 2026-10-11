@@ -1,63 +1,61 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29180348C77;
-	Sun, 11 Oct 2026 18:18:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 294F03603DF;
+	Sun, 11 Oct 2026 19:12:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791742685; cv=none; b=rVH4/AXVHROhZNj6mGty8OulqfZqeLx45l18hBqh5Gw12cpX73FPswjdMud34M/Epx76i1EjoLaneaOCmrrU8dUvs0MdASVh4ifyAA3DJfa0CzJscWWQ1AN5/dgYBL6A4hrbv4CKqWJlMqdfd2XpyTaQC/gpbIgFZ/R0KlOGl7g=
+	t=1791745967; cv=none; b=FfhSbeHQJQbMtf5MMMyRf9YDlUUXteGAz2I3nQgHlVrHn7uvBnGOVNmqj+DHfQ/Ld203EPlq/5gRX3TDyGpp28P/2+bMCHceUIWoujyIaqO8NuO+vD2TPmNAgxtY6aSnI1fjODFCJKUsC3ei8rOOHWBveikYQfX/dcOzFx/ovsg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791742685; c=relaxed/simple;
-	bh=DiRA+nzZGYXa3rDgfwac2EfgZS/6zvHSUOAR60DEF+k=;
-	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=OZuxEqORTrnK4gl0ix1NNGmjMsSXVMbNKvbMLEfFrxknDdXiu7YrcyiGXZQj2LDgGTqqKFGLpCFE1SnP88ZEeMQhWVg3jzbrjWELrbCDs2t4AK41dVevuiT/3mhS/5Np9LFHcNSRuzZo+KPX+ht6Uu3xb25Vxu2kMXvmdEIbbRc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=T8eLueUL; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791745967; c=relaxed/simple;
+	bh=OQ3Ons5C4nXRejjkrqjlX03EQybliEVrD2V7Jur59GI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=dag0DGx0GDGDKqa7tZriVF2kTiVF/j/uoTmSii0cPxsms+PT9E8s40CuhvG2U2hE4mIU28VZnzwFaUvc5wYH+vxzFn5+LFfjs1P8pMPtc1IlXUO0qDcadMxCoyNhNHuFYJeHy+DvKVTaJMwOF8phzNGChvgx5pQomWyBdpQzOKQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hBZOLXeV; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="T8eLueUL"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C093D1F0089B;
-	Sun, 11 Oct 2026 18:18:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hBZOLXeV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2F5621F0089B;
+	Sun, 11 Oct 2026 19:12:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791742683;
-	bh=+vEDMzDToXhzEbBrLIrl//foeA1hvJb2rYAAwa0/Yg4=;
-	h=Subject:From:In-Reply-To:References:Date:To:Cc;
-	b=T8eLueULy4M9j1w/VoPIQPaJoQ/AE5Ja4o6Qg65TR7DlMcJvgqyPY5j0KcsuokDFa
-	 z87mZoKzWUf50Ur/YWGyxFsP8wBSaBCjowcMdS7UYVV/6BKrjNp90g9FM5RoOLTUva
-	 lsipRy9SRQvelST+AQymV0LA7oqnL2En3vvOfy6XHDjWHNEWQDbapwkonrb33Yqd14
-	 JeOYe0549Yp69GIMiESplboin1737HaNiiy8m/2ok3/ldugsuxzxB1qQ9slklJf19c
-	 nZRLW2BLgHwhcG9cCjRqwiDt4+EM7eCLnX6oyRWH44UMDFP6NBiUg5+vR3hC7tdV5M
-	 AxafiTTHeiV9g==
-Received: from [10.30.226.235] (localhost [IPv6:::1])
-	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id B453338119D3;
-	Sun, 11 Oct 2026 18:18:03 +0000 (UTC)
-Subject: Re: [GIT PULL] SCSI fixes for 7.3-rc6+
-From: pr-tracker-bot@kernel.org
-In-Reply-To: <eab58e05da0087c70f5473874a549572a9ab0230.camel@HansenPartnership.com>
-References: <eab58e05da0087c70f5473874a549572a9ab0230.camel@HansenPartnership.com>
-X-PR-Tracked-List-Id: <linux-scsi.vger.kernel.org>
-X-PR-Tracked-Message-Id: <eab58e05da0087c70f5473874a549572a9ab0230.camel@HansenPartnership.com>
-X-PR-Tracked-Remote: https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git/ tags/scsi-fixes
-X-PR-Tracked-Commit-Id: 469fa055664bfd8717b087a80d59c03055789c17
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: d5b6dc381db93ff2d1888f7d99c06e0bd85f4083
-Message-Id: <179174268245.2129915.5953531512027094879.pr-tracker-bot@kernel.org>
-Date: Sun, 11 Oct 2026 18:18:02 +0000
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+	s=k20260515; t=1791745966;
+	bh=OQ3Ons5C4nXRejjkrqjlX03EQybliEVrD2V7Jur59GI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=hBZOLXeV2GPe3X4p/lGyLnfgdaxytnYqKN756Ccb4ePXzTA4To2qJ4OM2Fspt3G5o
+	 sWF9rxxkE5sTSJ/A0wvYAAhQX54ftchJfJVV5uuPmCzIroN+R0Pbu6c+ZzykPGTMH3
+	 JcioYzSnc6SbibeVR9tZxsCLQ4+ylo/2QnkLq4sa+qAfOO7dPeBzd9uYazZXT32KvF
+	 GaDhGE2styLQc5WbJdERsCvqT0dSwtpgVOGddvoYcLKZbux5CPCu5AlUIdOicBGumv
+	 aIatsM3/AM186A4lLH5G5Sg8bCD1XZDDnDJfT9sTSk8zlCNnz063J8RZUpHGn1mFCh
+	 qgw1XwGKYg76g==
+Date: Sun, 11 Oct 2026 21:12:35 +0200
+From: Eric Biggers <ebiggers@kernel.org>
+To: David Disseldorp <ddiss@suse.de>
+Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+	"Martin K . Petersen" <mkp@kernel.org>,
+	linux-crypto@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Lee Duncan <lduncan@suse.com>,
+	Alexandru Hossu <hossu.alexandru@gmail.com>
+Subject: Re: [PATCH] scsi: target: iscsi: Use crypto library API
+Message-ID: <20261011191235.GA22483@quark>
+References: <20261001044857.169487-1-ebiggers@kernel.org>
+ <20261011233600.5bb5d6c9.ddiss@suse.de>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261011233600.5bb5d6c9.ddiss@suse.de>
 
-The pull request you sent on Sun, 11 Oct 2026 08:18:55 +0200:
+On Sun, Oct 11, 2026 at 11:36:00PM +1100, David Disseldorp wrote:
+> Could e.g. SHA1 also require fips filtering here in future?
 
-> https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git/ tags/scsi-fixes
+It might.
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/d5b6dc381db93ff2d1888f7d99c06e0bd85f4083
+> If so, would it make sense to track the fips compat status (preferably
+> at build time) in chap_digest_algs?
 
-Thank you!
+Let's wait until there's actually more than one before generalizing it.
 
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+- Eric
