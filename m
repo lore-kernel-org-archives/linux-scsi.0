@@ -1,130 +1,119 @@
-Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F1143955C7
-	for <linux-scsi@vger.kernel.org>; Sun, 11 Oct 2026 04:03:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E39E42AA9
+	for <linux-scsi@vger.kernel.org>; Sun, 11 Oct 2026 04:12:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791691397; cv=none; b=OPDsYHm5VCotkOosST8vAsGYeXcjTFG1odqRdBlWdzauGE+bVt6HagWoGE6yHYf9CUJ1bp05JT3pbewSfJK0VYMG5qv9esykt9H8S8DYlV90s3TtZIrbLgsaxZpeKfnX3beN1K3GFAQkjUFontwgurUlAka1l3qF/A7mPiwAPmE=
+	t=1791691947; cv=none; b=hUc0VCjqufOIrKucz9oFZkyv2kKwdW4UlNDLjHYsnNY5EKbhznRZzDWCj1fxJICbZrq20XagXZ/tB2Yt6lUMW5J7LAkJZOwqIvsSqYKE1bYjbaldXhRD+4+XAfTo7QeyrE/PXzWRccozJvXLOE1UJUjwByxdslUOE9m97q3tqno=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791691397; c=relaxed/simple;
-	bh=AVILD4NIFiaHIKZF3dObJ7wQt2O+e8whBy0FyrWCgMQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=PcwWSo19OaHQuZFRbKczR+YFM4C5Q1odHcpYeCpo7YjkoO/mmoyQwI8GlEQtpwdrvBZMjshiWg2FyHHKL6xyjNf/co734gdR8skNxQRq6gs2wBvSxUsN6e6S+7zo2La1z5m4adU5ngGjQt/C7mxL8AQMRmHgoydBH8AHN8yZlqk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr; spf=none smtp.mailfrom=isslab.korea.ac.kr; dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b=vffFsQBk; arc=none smtp.client-ip=209.85.214.176
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
+	s=arc-20240116; t=1791691947; c=relaxed/simple;
+	bh=V9Qin+eO8afUIoV/Bg7PqB7Svl0JGgp+z+yw6P1Hq9Y=;
+	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
+	 Date; b=rA2mx+8u8adXObUaJ0Iybm55St/HsWT2lkauP/gtzyEprDT+3wjuiH51CTL469s4a4021llAwSBZutiFDIhRr2dACHSEY0utfYk7QOjzRgBv9UT8u8CLJiJ8mQzOX99Er5oj2f3TwKSxXGVpMcL+ljT4B/MxOPm8nk8ThfQYgGw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WWaPFhAB; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b="vffFsQBk"
-Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-2df982e04c1so4281335ad.2
-        for <linux-scsi@vger.kernel.org>; Sat, 10 Oct 2026 21:03:16 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=isslab-korea-ac-kr.20251104.gappssmtp.com; s=20251104; t=1791691396; x=1792296196; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=uexou8z/rPlM4ERJgzJ952D7p4Fry0pcqVESxFyRPsw=;
-        b=vffFsQBkJtUEqrNvbfhoKtWoRTqeYYMBTIpSLDgrSZVAkGt1QHgR51nlzXoYbOxVSc
-         YSIwjMY2E6Vgod40cTE8RoIHoiP0idMWyaS9MZCw+P3dP+hsxGIkxJ445vsTOYq0euEB
-         g6UbGhbSmEMpdpvX1dzYnEqlUMikQaZVD8OwlOxoq6OjXGZm+h1VEyirEP2D2TevlWn1
-         Cd/LPQWuxxPDktUGroQOkU7uDDLQaKDlKlu/3mWOUCfqLxQstkQAx+c8onLc/JpM72BN
-         PFK5QaY7GfD4y90/SIf7J1ergzWY7TAB0LbU7seCbesa9nEUFwg77XRuI1FaeBfnxnVI
-         +Sew==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791691396; x=1792296196;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=uexou8z/rPlM4ERJgzJ952D7p4Fry0pcqVESxFyRPsw=;
-        b=jx1fCdCBYqHCTRXAlQvar+YZsjlZUx4Z73mYb7nuI0q8kRMMNQx1xWr5uCxowR5e2T
-         oGC8EC8F0/4VmHaFbvPnFYfyAnBPndey5B2QC+PjHZzF8qyVN3y23uges1PNhMB7BGcD
-         HH3RSSISAHVCqFxldefqM69HZNixji/h0xorBPF8KO3wb6myVjLqIqvnMBkTF2iK0F4G
-         jG+wkfWcwjOq4KR9Ckg5I4JPStwV9FSVRk9OqqPWncPpH8SKkqdVQLZUXvdx81fWv9do
-         65qjG/jb7WokpjFwxHy+OO2ifk4uxKXOAxBFHBrF3A/TX1f1EagSlHy9RNI4MvrsHifd
-         JKfA==
-X-Forwarded-Encrypted: i=1; AKwUvBxEtDinCLjf6xrKZMns0MCnhQ5gtBQny5iVfhd82mKY5COiAC24V5V3lMPVEPqxtc2U5HPXnkzXsGlX@vger.kernel.org
-X-Gm-Message-State: AFq9FYK3VjKHVDn3GD9QmjTe3xW9fxbiyF32FL3UBJRuD8TXfdW+3Fzo
-	q1QlDMhPuDjl42B9Zfe6mjh1ntcGuZDye5rzhmEoiiaDVHEkpOShTY1sskDOV/gdMXg=
-X-Gm-Gg: AYBFou0wzy+//K+iylK4SPKPLtyoL8R0aNh8qG+RVcXCKqFWMxis+wtPvaDi2TB2S29
-	duEfexIyZIzE1Mkw9L+TrSfSF8+vMCDWALpnCgaFe8wIMq2TGsJf1hNxgMILnXsMplDdRIy1Tsj
-	2Ewxf5kKdzYntoTORVo3g0ki44ORDrPgexhkFgKyhthSsvkO+mk8EX7fPDzX91f8D78qFY4XIox
-	V1SQYBRF4oxrD215Qn+ixJx5svVkYAsh1QPxBBl0PBGu4kKZgEcd72rgM2HnXQeGfij5ulymLoa
-	lzHwjGk8qkj+ICDO9SdCTngiZtNEMlJa5lkmfafTVp0Cmvqygh5I1YD+UVoo5kcccreQTlcXMcK
-	Q0iHxLYNpWNrFcCOmCRfGvUdt/Tjo7TawPskycwpVedJCOhSwUD3EK6Wbpe3xjRgBilN0y5rui4
-	UOGyRGk/vCam45XFJ5t/Mx9/y+PLKQll+nWsPD9EYtbQPtnWGtk1eHuv5SsNA36lmIC/wl5wsUu
-	VzlX9sj5KMmMvq5iyHAvw==
-X-Received: by 2002:a17:90b:2e4b:b0:3a8:195f:186 with SMTP id 98e67ed59e1d1-3ab3a9fc457mr4519518a91.42.1791691395711;
-        Sat, 10 Oct 2026 21:03:15 -0700 (PDT)
-Received: from localhost.localdomain ([2406:5900:1044:110c:9657:9541:a576:7d2f])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3ab38b981b9sm10519758a91.5.2026.10.10.21.03.12
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 10 Oct 2026 21:03:15 -0700 (PDT)
-From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
-To: Nilesh Javali <njavali@marvell.com>,
-	Manish Rangankar <mrangankar@marvell.com>,
-	GR-QLogic-Storage-Upstream@marvell.com,
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K . Petersen" <mkp@kernel.org>,
-	linux-scsi@vger.kernel.org
-Cc: Mike Christie <michael.christie@oracle.com>,
-	linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org,
-	Yehyeong Lee <yhlee@isslab.korea.ac.kr>
-Subject: [PATCH v2 2/2] scsi: qla4xxx: advance the reset-sequence array cursor in poll_read_list
-Date: Sun, 11 Oct 2026 13:02:57 +0900
-Message-ID: <20261011040257.2017421-3-yhlee@isslab.korea.ac.kr>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20261011040257.2017421-1-yhlee@isslab.korea.ac.kr>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WWaPFhAB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 57E5D1F000FF;
+	Sun, 11 Oct 2026 04:12:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1791691945;
+	bh=+Rf1obhm4IdEzAU/KsPT2aieecdD8Xgoux7ioLw6DxA=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=WWaPFhABrGmKxljpGqKg+9itRcKRgIquN0/d6WyeG5oGol+Usg61eAmgOr+eQuzAl
+	 63gT3WvqrMmcra3RpLAXb5OgOqnCb4uNPoR1JOdSBsf/YPfzNcNmwA9Rjog9XjlOA5
+	 zw+9JqXS2TPtXCuHrqkhQlGCN5TJnNvvoppZPrvldu+ohWy+ZCTF1iKAOlO1/pwpmL
+	 Qtw+7dTpxOvHVvqcPmeQCw5ndhSqo5f7cde66h+O6cVFpAkNWQEtTAOIeN097kqP8B
+	 k/Au3hONLJwIwWympDwgzBD12QTVTb0nGo10IDAfXaUMUEP8lB9ad8a+JcAWvotfDL
+	 v+4QfgmmGqO6w==
+Message-ID: <sashiko-outbox-167004@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v2 2/2] scsi: qla4xxx: advance the reset-sequence array
+ cursor in poll_read_list
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Yehyeong Lee" <yhlee@isslab.korea.ac.kr>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20261011040257.2017421-3-yhlee@isslab.korea.ac.kr>
 References: <20261011040257.2017421-1-yhlee@isslab.korea.ac.kr>
+ <20261011040257.2017421-3-yhlee@isslab.korea.ac.kr>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Sun, 11 Oct 2026 04:12:24 +0000
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-qla4_83xx_poll_read_list() stashes each value it reads into
-ha->reset_tmplt.array[] and is meant to advance the cursor so the next
-read lands in the next slot, which a later read-modify-write entry then
-picks up by index:
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [High] scsi: qla4xxx: missing initialization of reset template array_inde=
+x corrupts firmware restart
+--
 
-	index = ha->reset_tmplt.array_index;
-	qla4_83xx_rd_reg_indirect(ha, p_entry->dr_addr, &value);
-	ha->reset_tmplt.array[index++] = value;
-	if (index == QLA83XX_MAX_RESET_SEQ_ENTRIES)
-		ha->reset_tmplt.array_index = 1;
+commit f2bbbc943d62eae5bbd2ca3ef4c8394aabc05ad4
+Author: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
 
-index is a local copy and is only written back to array_index when it
-reaches the end of the array. Every other read reloads the same cursor
-and overwrites the same slot, so the array is never filled past its
-first entry and a read-modify-write entry referring to a later index
-gets a stale or zero value and programs the wrong word into the
-hardware during reset recovery.
+scsi: qla4xxx: advance the reset-sequence array cursor in poll_read_list
 
-Write the cursor back on every read so the slots fill in order.
+This commit fixes qla4_83xx_poll_read_list() to ensure the array_index
+cursor is saved back to ha->reset_tmplt on every read. This prevents
+multiple reads from overwriting the same slot during the hardware reset
+sequence.
 
-Fixes: 6e7b429259fc0 ("[SCSI] qla4xxx: Added support for ISP83XX")
-Cc: stable@vger.kernel.org
-Signed-off-by: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
----
- drivers/scsi/qla4xxx/ql4_83xx.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+> diff --git a/drivers/scsi/qla4xxx/ql4_83xx.c b/drivers/scsi/qla4xxx/ql4_8=
+3xx.c
+> index 44d285af22727..2ac833c5b1400 100644
+> --- a/drivers/scsi/qla4xxx/ql4_83xx.c
+> +++ b/drivers/scsi/qla4xxx/ql4_83xx.c
+> @@ -1117,7 +1117,8 @@ static void qla4_83xx_poll_read_list(struct scsi_ql=
+a_host *ha,
+>  				ha->reset_tmplt.array[index++] =3D value;
+> =20
+>  				if (index =3D=3D QLA83XX_MAX_RESET_SEQ_ENTRIES)
+> -					ha->reset_tmplt.array_index =3D 1;
+> +					index =3D 1;
+> +				ha->reset_tmplt.array_index =3D index;
 
-diff --git a/drivers/scsi/qla4xxx/ql4_83xx.c b/drivers/scsi/qla4xxx/ql4_83xx.c
-index 44d285af22727..2ac833c5b1400 100644
---- a/drivers/scsi/qla4xxx/ql4_83xx.c
-+++ b/drivers/scsi/qla4xxx/ql4_83xx.c
-@@ -1117,7 +1117,8 @@ static void qla4_83xx_poll_read_list(struct scsi_qla_host *ha,
- 				ha->reset_tmplt.array[index++] = value;
- 
- 				if (index == QLA83XX_MAX_RESET_SEQ_ENTRIES)
--					ha->reset_tmplt.array_index = 1;
-+					index = 1;
-+				ha->reset_tmplt.array_index = index;
- 			}
- 		}
- 	}
--- 
-2.43.0
+[Severity: High]
+Since struct scsi_qla_host is zero-initialized, ha->reset_tmplt.array_index
+starts at 0. During the first execution of qla4_83xx_poll_read_list(), the
+polled value will be placed at array[0].
 
+However, looking at qla4_83xx_rmw_crb_reg(), an index of 0 is treated as a
+hardware bypass flag to read the register directly instead of the array:
+
+qla4_83xx_rmw_crb_reg() {
+	...
+	if (p_rmw_hdr->index_a)
+		value =3D ha->reset_tmplt.array[p_rmw_hdr->index_a];
+	else
+		qla4_83xx_rd_reg_indirect(ha, raddr, &value);
+	...
+}
+
+Does this make array[0] completely inaccessible to the template? The wrap
+around check setting index =3D 1 suggests the template logic assumes 1-based
+indexing. If the first polled value is written to array[0], won't all later
+read-modify-write operations read from the wrong array slot?
+
+Additionally, when attempting firmware recovery via qla4_83xx_restart(),
+qla4_83xx_process_stop_seq() resets ha->reset_tmplt.seq_index to 0:
+
+qla4_83xx_process_stop_seq() {
+	ha->reset_tmplt.seq_index =3D 0;
+	qla4_83xx_process_reset_template(ha, ha->reset_tmplt.stop_offset);
+}
+
+But it appears to omit resetting ha->reset_tmplt.array_index to 1. On
+subsequent reset attempts, does this cause the cursor to drift continually
+rather than starting fresh, completely desynchronizing the polled values
+from the template execution?
+
+>  			}
+>  		}
+>  	}
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261011040257.2017=
+421-1-yhlee@isslab.korea.ac.kr?part=3D2
