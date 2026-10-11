@@ -1,169 +1,118 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+Received: from mail-pj1-f52.google.com (mail-pj1-f52.google.com [209.85.216.52])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A568743B3C0;
-	Sun, 11 Oct 2026 12:36:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 267CC45DF47
+	for <linux-scsi@vger.kernel.org>; Sun, 11 Oct 2026 14:48:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791722188; cv=none; b=Wpi/9zB2Ec3iDmQQRG1fuuRlPvYwunAbYoTWweet23jNT7BeWUyh2yH81v1L/HbRllqbhvFajxjHmP0rxWGdEmu2rgTQKiPy8jXr3RbfybsHMo1kfl47ojZeshQ4sv7L5tF+eYVTIS5bqdC9/fOCGX5XodiCqMtF6f4g0+vH7pQ=
+	t=1791730095; cv=none; b=HZ8QhkfxDCPXvNGlPe1gQ83Czs8I0cmn8780PwIgZxiRhJgh5Gk3G0vwvh2Fm26LejbDQUmzIMWWR/RM7rnDmA0r+OmLTGCPN742xUJOHZxxUDMUbHQ5Il/9JBi4tCAjajJRuNwfynOD5wnZKKd4ZQ+lwb3IpGE78HzylVUZnDM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791722188; c=relaxed/simple;
-	bh=R10yOSvD0fqRg4qqb0k38A3uupIsJ0VGiUVxAS7FerY=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=BRmRLxFfWNyYUouBBUySTH8W8W9rN6Ehar5P6GNzJKru2r9xusl9eQNVXuX93BpjIG+cKXFmi4TP+JpmSZonnoAFty0MgJvTpUI8G8i6jCtt92vHiW2xQix+hQqlTpn4Ku8lYB/hqN3IIMLdG6zu9m39PeB06t9ITo/kKJ2vMbc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=vuPnk4ND; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=1CIaHC/k; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=vuPnk4ND; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=1CIaHC/k; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	s=arc-20240116; t=1791730095; c=relaxed/simple;
+	bh=7aWGWnb73NSU7Z0y3MRjEulSdwR/21cbwE2MaVzY7pk=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=fDQsNiGnQDkDrqXcAkyYCIvdqCn6W891eCllAUwhAZDAhFPM9P/MdYdqEXrp+vPqn1vCc++bcnx2DlaN2viH/yQZQL1JtLIutSg1shOdlBgURS5XA4S2gmUNE0u+kJ7cNBFOfZmIUQgsnUp8b/9lHZIrE1SVGfMxikkHCTwexEA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr; spf=none smtp.mailfrom=isslab.korea.ac.kr; dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b=d6X5L/PD; arc=none smtp.client-ip=209.85.216.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="vuPnk4ND";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="1CIaHC/k";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="vuPnk4ND";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="1CIaHC/k"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 440A51F394;
-	Sun, 11 Oct 2026 12:36:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1791722181; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=olaofrwGl8T9NhHp9VCEFIBcwErQS3PK86N+qFcRHGw=;
-	b=vuPnk4NDtXzs+WsmrEIxGhbUR6kYNunS0UM0sgvDYIS8JUw7oahxpMttwuwdM7pQNhvLNY
-	UMRrR1yYjuXtAEAadsoS1ipYzGk7tuebFRkUUKc588xVcRd9RRzJJVNWNwkCNNnONQEMfy
-	e8e+yLzfQDtOMb3ifhcV6bI/6KeCte4=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1791722181;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=olaofrwGl8T9NhHp9VCEFIBcwErQS3PK86N+qFcRHGw=;
-	b=1CIaHC/kkRdbNaKNluyGMJyssl3unh9cC1n6juD0fP5KMPtLPzRUW7sLOupDgR3hpyXpiB
-	Eax54VxwF3FB+uDQ==
-Authentication-Results: smtp-out2.suse.de;
-	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=vuPnk4ND;
-	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b="1CIaHC/k"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1791722181; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=olaofrwGl8T9NhHp9VCEFIBcwErQS3PK86N+qFcRHGw=;
-	b=vuPnk4NDtXzs+WsmrEIxGhbUR6kYNunS0UM0sgvDYIS8JUw7oahxpMttwuwdM7pQNhvLNY
-	UMRrR1yYjuXtAEAadsoS1ipYzGk7tuebFRkUUKc588xVcRd9RRzJJVNWNwkCNNnONQEMfy
-	e8e+yLzfQDtOMb3ifhcV6bI/6KeCte4=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1791722181;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=olaofrwGl8T9NhHp9VCEFIBcwErQS3PK86N+qFcRHGw=;
-	b=1CIaHC/kkRdbNaKNluyGMJyssl3unh9cC1n6juD0fP5KMPtLPzRUW7sLOupDgR3hpyXpiB
-	Eax54VxwF3FB+uDQ==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 4D93013408;
-	Sun, 11 Oct 2026 12:36:17 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id eFhFKcCCy2qAcgAAD6G6ig
-	(envelope-from <ddiss@suse.de>); Sun, 11 Oct 2026 12:36:16 +0000
-Date: Sun, 11 Oct 2026 23:36:00 +1100
-From: David Disseldorp <ddiss@suse.de>
-To: Eric Biggers <ebiggers@kernel.org>
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, "Martin K .
- Petersen" <mkp@kernel.org>, linux-crypto@vger.kernel.org,
- linux-kernel@vger.kernel.org, Lee Duncan <lduncan@suse.com>, Alexandru
- Hossu <hossu.alexandru@gmail.com>
-Subject: Re: [PATCH] scsi: target: iscsi: Use crypto library API
-Message-ID: <20261011233600.5bb5d6c9.ddiss@suse.de>
-In-Reply-To: <20261001044857.169487-1-ebiggers@kernel.org>
-References: <20261001044857.169487-1-ebiggers@kernel.org>
+	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b="d6X5L/PD"
+Received: by mail-pj1-f52.google.com with SMTP id 98e67ed59e1d1-381b831d535so1333541a91.0
+        for <linux-scsi@vger.kernel.org>; Sun, 11 Oct 2026 07:48:11 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=isslab-korea-ac-kr.20251104.gappssmtp.com; s=20251104; t=1791730091; x=1792334891; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=BbKfn/xhPzUGiDzldQhVozJf+7TM7w8YDGYVF538SOs=;
+        b=d6X5L/PDd1GgtNfG8bJzNfgpvkDsuIQQvXR2C6b8gqDtJF5TbWWkkcy0c4o8W7YiC3
+         zPcyjUksPmyD/GvBj/Ar7uVQdlXBhFN0XHtuvBdMMOEiK2kOOrQzUEpt2lF6/6i2ufRI
+         tUb8FRahtL2bNpFF6ZoWWGC5vWCfVB0TRSypTdGp+x82eI86OOGWK6Xl/BRoUPNTrWF1
+         0V7UTT0CLcN3o9qGLGY1b0DCVbmxbJroKniGeHaeT6xXEtJnjtlDrzM0V8euVyJsJmyB
+         l5Fxfht83tE1qTHaWLFSgXTv5tQUVRcMolC2pGvYhrBoHXneTlpr8TMndc8cMyutSoqp
+         sEyw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791730091; x=1792334891;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=BbKfn/xhPzUGiDzldQhVozJf+7TM7w8YDGYVF538SOs=;
+        b=Op5o2R5WtpW0F4Cj+Wue55lHayDbZVVUBPW0FW/eVabngHUfd647Cd+a9/V8qATZs+
+         XaoKg0ak/P+BewostZcH5gCgDKFp7/ubvs+AbQKi5O1CpV8Bc0T+9LoCLsr6uQBd/TrQ
+         K9GsBMtzuVkFcQQ6lcuq/hW3ZSJH8c2wRO7vrgwsUW0f+rFC8h7hzNBX0REYMPSsRn9v
+         2uBA3uQiuTLXsprCl7+qpkRTIOtlCmR4xlQPQEktrFQauZuDuoG08PcMXiE6RQthtGQx
+         ILBanoDNTzyVcIJ+DF5cbo26KhFMXudEOECgcv84Vl2Bs3sulwSBDOll8dWVUwMHx78f
+         GzHA==
+X-Forwarded-Encrypted: i=1; AKwUvByRuyDz0dCot40ePBIWIrgaMd15FCaKgFZzVbDRPMg82qvmGm96NusvmJdan0NyjoEILQ+wnFZoRSGL@vger.kernel.org
+X-Gm-Message-State: AFq9FYJi+fg+nhavSovMH9CgbsvZLUK92gxEVrgW1ZkuQMHUqkzFV5cS
+	U6Nxr1SqWpDtmndO7eo5R7YmEACpT9kVv/wpYWRm4gzXvv7k00iPC3p72QP4PdFo7DM=
+X-Gm-Gg: AYBFou1WpbIeiIcT+h78/AlQ9WZhO45chuxwZiqL9ZcbuHRuikxcadIwuwsEIo3tIwX
+	5H6PFPL7IMzu+DTdbybD/zZdUGG2NnpEdu/cdBdl6TAXw5ArK1oO5MyYzuzxvx4rCg8dwg58Ita
+	QUOvp2cGsmuRc0B3xi21mdRnyHlgcGMjJYUvhdBaaAb9KCZWXsvY7nG6qG173Ft5v4YvxgYOT17
+	d98aLbZbvpWN/eP3qd1yNI0/PW+MxjfSL+eeYLjp5cj93rb+XvO66VlorH2zVpR9DlBybTf/jUQ
+	OCpQNoskKyAAT1/IiAEe5IVslz4lDXj9ADclmbajx+raoKe/mo+j4SF7yO2Xr19lUJPJTtNyaMT
+	OjnPXmgzA1HVMMDViYBXi5+UB0/oJpMCBMoc0nf7CxuHpkDmBRZvwPuII9mOmwbJKHkWB7fh4Nl
+	zqmQMic375Ze7udgH28FMx40TUZAHb1eJx5mm0szdVwnA9lrJgyaCqa7jgF2G3+KZOFF4c3Gp9S
+	G4BgPXvCxkDMpQe/MQsnriQ71G/0ZJ5
+X-Received: by 2002:a17:90a:a96:b0:3ab:9c73:12a with SMTP id 98e67ed59e1d1-3ab9c730944mr1926196a91.2.1791730090947;
+        Sun, 11 Oct 2026 07:48:10 -0700 (PDT)
+Received: from localhost.localdomain ([2406:5900:1044:110c:97fe:d421:a74a:1d6e])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3ab38ddac6dsm11729048a91.7.2026.10.11.07.48.07
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 11 Oct 2026 07:48:10 -0700 (PDT)
+From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+To: Nilesh Javali <njavali@marvell.com>,
+	Manish Rangankar <mrangankar@marvell.com>,
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K . Petersen" <mkp@kernel.org>
+Cc: Mike Christie <michael.christie@oracle.com>,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+Subject: [PATCH v3 0/2] scsi: qla4xxx: bound and correct the ISP83xx reset template
+Date: Sun, 11 Oct 2026 23:47:49 +0900
+Message-ID: <20261011144752.2063334-1-yhlee@isslab.korea.ac.kr>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
-X-Rspamd-Queue-Id: 440A51F394
-X-Rspamd-Action: no action
-X-Spam-Level: 
-X-Spamd-Result: default: False [-2.01 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	SUSPICIOUS_RECIPS(1.50)[];
-	MID_CONTAINS_FROM(1.00)[];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	FREEMAIL_ENVRCPT(0.00)[gmail.com];
-	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	MIME_TRACE(0.00)[0:+];
-	ARC_NA(0.00)[];
-	FREEMAIL_CC(0.00)[vger.kernel.org,kernel.org,suse.com,gmail.com];
-	DKIM_TRACE(0.00)[suse.de:+];
-	TO_DN_SOME(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	DWL_DNSWL_BLOCKED(0.00)[suse.de:dkim];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	RCPT_COUNT_SEVEN(0.00)[8];
-	TAGGED_RCPT(0.00)[];
-	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
-	MISSING_XM_UA(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns,suse.de:email,suse.de:dkim]
-X-Spam-Flag: NO
-X-Spam-Score: -2.01
+Content-Transfer-Encoding: 8bit
 
-This looks like a worthwhile clean-up and doesn't trigger any libiscsi
-chap test regressions.
-Reviewed-by: David Disseldorp <ddiss@suse.de>
+The ISP83xx reset template is read from the adapter flash and executed
+without checking its sizes against the buffer it is read into, and the
+array cursor used by read-modify-write entries never advances. This
+series bounds the template to its buffer and makes the cursor fill the
+array as the template format intends.
 
-I do have one minor concern: 
+Patch 1 is the memory-safety fix and is marked for stable; patch 2 is a
+reset-path correctness fix.
 
-On Wed, 30 Sep 2026 21:48:57 -0700, Eric Biggers wrote:
+v3:
+  - 1/2: also read the remaining little-endian entry fields (register
+    addresses, values, masks and delays) through le32_to_cpu(), and
+    allocate the template buffer with vzalloc() so the checksum does not
+    sum uninitialised tail bytes.
+  - 2/2: reworked per review. The cursor starts at one so the first
+    polled value lands in array[1] instead of the array[0] sentinel, is
+    written back after every read, and is reset in
+    qla4_83xx_process_stop_seq() so each reset refills the array from the
+    start.
+  - The qla4_83xx_reset_seq_checksum_test() "if (~sum)" test is always
+    true, but that is pre-existing logic this series does not modify;
+    correcting it needs the template's intended checksum value, which is
+    not in the source, so it is left out of scope.
 
-> Make iscsi_target_auth.c call into the crypto library directly instead
-> of going through crypto_shash.  This is simpler and much more efficient,
-> as it avoids overhead of the crypto_shash layer.  The hash computation
-> itself also no longer has error codes that need to be checked.
-> 
-> For simplicity, still do a memory allocation per operation to buffer the
-> data (which is typically less than 50 bytes here) so that the one-shot
-> digest functions can be used.  It's still much more efficient than doing
-> the super slow crypto_alloc_shash().
-> 
-> Signed-off-by: Eric Biggers <ebiggers@kernel.org>
-> ---
->  drivers/target/iscsi/Kconfig             |   7 +-
->  drivers/target/iscsi/iscsi_target_auth.c | 192 +++++++++--------------
->  drivers/target/iscsi/iscsi_target_auth.h |   8 +-
->  3 files changed, 78 insertions(+), 129 deletions(-)
-...
-> @@ -113,17 +143,17 @@ static int chap_check_algorithm(const char *a_str)
->  		if (kstrtol(token, 10, &digest_type))
->  			continue;
->  
-> -		digest_name = chap_get_digest_name(digest_type);
-> -		if (!digest_name)
-> +		if (fips_enabled && digest_type == CHAP_DIGEST_MD5)
->  			continue;
+v2: https://lore.kernel.org/r/20261011040257.2017421-1-yhlee@isslab.korea.ac.kr
+v1: https://lore.kernel.org/r/20261010181139.1911817-1-yhlee@isslab.korea.ac.kr
 
-Could e.g. SHA1 also require fips filtering here in future? If so, would
-it make sense to track the fips compat status (preferably at build time)
-in chap_digest_algs?
+Yehyeong Lee (2):
+  scsi: qla4xxx: bound the ISP83xx reset template to its buffer
+  scsi: qla4xxx: advance the reset-sequence array cursor in
+    poll_read_list
+
+ drivers/scsi/qla4xxx/ql4_83xx.c | 207 +++++++++++++++++++++++---------
+ 1 file changed, 148 insertions(+), 59 deletions(-)
+
+-- 
+2.43.0
 
