@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A1C5363086;
-	Mon, 12 Oct 2026 18:26:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B963D3E4506;
+	Mon, 12 Oct 2026 18:32:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791829591; cv=none; b=a8RarjykRFYcNRGzxXy605fy1aOX61ybj4ANxHNgOOltugrDB5ooOhdATyzGWZRQuETLkvoc69DJ5owgnr0rT/eBQuIztbxcV6qvYWPJGFoOfqrZOQvW6JCnLlsWMihJfqIzt8k1RpJgRjkNI5I8PYBHK+AaMz+QIoM5s8FuxrU=
+	t=1791829958; cv=none; b=BWnqRMRggTLAJLi1KMSG3JyctcOUP3EbOi6YtgXSHVwmI5MXy3Bv3ITJ5Ock8/hAgm1DOs6wcii5+ki35hnqXafNHA/S2b6FnH/PEcGmY03owbUEZup+KZZXQamF6x1Ba5lghPvVES3haYVFMIwKmA0nUZx1bO1wKtbqXXknb/U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791829591; c=relaxed/simple;
-	bh=+xt0ycOf4IXHEC7H9b/e3QOOG+aguac7qeyvrDj7208=;
+	s=arc-20240116; t=1791829958; c=relaxed/simple;
+	bh=w0iecN0UZB9ExkzpFC+uMsR8e4pi8NKpQ6uqsdGNCEs=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=DMPCxGw2TqiV7rbPiXcejctAKntoHaf1Vo1QQlW52GI7OQAg+zKWKtGPZl4u7AWySUB+PoJCEH6CHb/HphecpfTeO4CIF3a2Ocbxi5V4mso0d2fVfhOFR3gLMmWbS3svB9NXwWbeZeKyTLU8TM+ZD/ZrTrebYw1OPU7ysECUVQ4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Adqk8751; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:Content-Type; b=kShVzWTprF/iPYU2PVMyHISWycbRN3w+ClPwUUtBsIRY8t1YNxtb6Uu/QY/yH58NbYSLqsA95Z5x1GE5oeF/lgXg4IgFmilrG7trRE3nsMHIAn2WzUAubMouXdnY5Vv58jjdyswSRrsf1GDHFjADsVcpXm8YvgyW6V5q+zFP4Oc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LJrxmNyf; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Adqk8751"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 201381F008A1;
-	Mon, 12 Oct 2026 18:25:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LJrxmNyf"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 320051F0089B;
+	Mon, 12 Oct 2026 18:32:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791829589;
-	bh=rRzk+a0cD7nR4Ew+1fSPNdzcKqVkC4K+w54CTbZN/Ik=;
+	s=k20260515; t=1791829956;
+	bh=MR3QSDnJDSPQxchGzKX8rD0iI2DqeBRHMbI1BZ7pOVs=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=Adqk8751wa9UQtQQt/iIJK7EtFXxEt2A0HNLnPnGczCoRpgyLCvq8fvnyBveAryL6
-	 j9ReEDeytDnObYN9Bt97kB0walwqAuIcEaD53BEvjwML86lDcrAXY2K+Z7xwQKkxGp
-	 wzpG9o9NsyoU/fxmF6ca+gbe4z1bnBBeghUipJNrtV5POLFFuvnnXCOrF7c+Du2a4D
-	 QZRefuO2RXpJLPaHfiac1ocAqOpRROoWnzK8HvgBobS6YtQ+J2yF9x5lONhJX9vwQU
-	 HZ2bzzd59OsE5eXCwtIvflqno6gdE1Xb7aC/mVKgTuCnIy+va2tnX0h8oyCEjUi61I
-	 johOZsrvf6F0Q==
-Message-ID: <5d51b6b3-ad58-4827-bedf-f1a79ebd5c86@kernel.org>
-Date: Mon, 12 Oct 2026 20:25:54 +0200
+	b=LJrxmNyfv4doXTKsvMR8Iw9B51t5c5xFJDtYRKmU1dHUtf+9U90XD86OtNFb0w1Zj
+	 6d0laWdCJCGOqGdcF/w/H7Kut9bsHxub56BAKK2evbqD1Htp8Y5RdUPMWan4gJgCy5
+	 cWmt6/DIUTBPO30ptvLUTNgAPExQ3TR6z6mtRmDYcHDEaS7V+PXMJkXy84x5sGAAeD
+	 dZBmxs+SqaGZnr/oBLA9Yj04OzVM0x9cCZlzoPkp72RccEb0UoxksX/kkQlTpc+5U+
+	 YmF88SRh4WZXNh2ZgsPVTykyA2nSPdEzfba5mQGgWRtjShzglmPaDCDbqeVrCZb2XD
+	 jE7Tz7jOtPk6A==
+Message-ID: <c43caa45-6a4a-47ab-bfa8-c9875491a9e6@kernel.org>
+Date: Mon, 12 Oct 2026 20:31:59 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,8 +35,8 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 24/38] mm/vma: enforce that mm-managed mappings may not
- set VMA_IO_BIT
+Subject: Re: [PATCH v5 25/38] mm: remove VMA_IO_BIT check in
+ vma[_flags]_is_mm_managed()
 To: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>,
  Andrew Morton <akpm@linux-foundation.org>,
  "Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>,
@@ -119,7 +119,7 @@ Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org,
  fuse-devel@lists.linux.dev, Ihor Solodrai <ihor.solodrai@linux.dev>,
  Bert Karwatzki <spasswolf@web.de>
 References: <20261009-b4-mmap-prepare-vma-flag-sanify-v5-0-923b70125b1e@kernel.org>
- <20261009-b4-mmap-prepare-vma-flag-sanify-v5-24-923b70125b1e@kernel.org>
+ <20261009-b4-mmap-prepare-vma-flag-sanify-v5-25-923b70125b1e@kernel.org>
 From: "David Hildenbrand (Arm)" <david@kernel.org>
 Content-Language: en-US
 Autocrypt: addr=david@kernel.org; keydata=
@@ -166,50 +166,154 @@ Autocrypt: addr=david@kernel.org; keydata=
  3iyY2Nsd7JxfKu1PRhCGwXzRw5TlfEsoRI7V9A8isUCoqE2Dzh3FvYHVeX4Us+bRL/oqareJ
  CIFqgYMyvHj7Q06kTKmauOe4Nf0l0qEkIuIzfoLJ3qr5UyXc2hLtWyT9Ir+lYlX9efqh7mOY
  qIws/H2t
-In-Reply-To: <20261009-b4-mmap-prepare-vma-flag-sanify-v5-24-923b70125b1e@kernel.org>
+In-Reply-To: <20261009-b4-mmap-prepare-vma-flag-sanify-v5-25-923b70125b1e@kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 10/9/26 20:04, Lorenzo Stoakes (ARM) wrote:
-> It makes no sense for a mapping whose contents the kernel does not own to
-> specify that the range is MMIO.
+> We have now made it such that every driver which sets VMA_IO_BIT marks it
+> as not mm-managed.
+
+Confusing given that mm-managed check tests VMA_IO_BIT.
+
+Maybe combining this with the next paragraph could make this easier to grasp
+
+"vma_flags_is_mm_managed() still checks for VMA_IO_BIT, and if set, treats it as
+non-mm-managed. This was previously required to handle driver that would set
+VMA_IO_BIT but none of the other flags that would indicate a VMA as non-mm-managed.
+
+We already established now that a driver that sets VMA_IO_BIT must set one of
+the other VMA flags that allow for identifying it as non-mm-managed.
+
+...
+"
+
 > 
-> Prior to this patch, all in-tree drivers which did so have been updated
-> such that they are marked as not being mm-managed. The check WARNs and
-> fails the mmap for any out-of-tree driver that still sets VMA_IO_BIT
-> without a kernel mapping.
+> However, vma_flags_is_mm_managed() currently treats VMA_IO_BIT as
+> disqualifying. This was a product of drivers previously marking a range as
+> not mm-managed by
+> setting VMA_IO_BIT alone.
 > 
-> No functional change intended for in-tree code.
+> Fix this by removing the VMA_IO_BIT check in vma_flags_is_mm_managed(),
+> and update mmap_validate_vma_flags() to use vma_flags_is_mm_managed()
+> rather than open-coding the VMA_PFNMAP_BIT, VMA_MIXEDMAP_BIT check.
 > 
-> Reviewed-by: Zi Yan <ziy@nvidia.com>
+> This change means that vma[_flags]_can_merge() doesn't check VMA_IO_BIT any
+> longer (which is now redundant) as it calls vma_flags_is_mm_managed().
+> 
+> Now that the predicate means precisely VMA_PFNMAP_BIT or VMA_MIXEDMAP_BIT,
+> also use it at the other sites which open-code that pair, so the intent is
+> stated rather than the flags, with no functional change:
+> 
+> zap_special_vma_range() only zaps mappings which are not mm-managed, as
+> drivers use it
+> to tear down ranges they established themselves.
+> 
+> The mprotect() arch PFN modification check applies to mappings not managed
+> by core mm, which may map PFNs without struct pages.
+> 
+> NUMA balancing skips VM_MIXEDMAP mappings having already excluded VM_IO
+> and VM_PFNMAP mappings via vma_migratable(), so it skips exactly the
+> mappings not managed by core mm - say so.
+> 
+> Finally, update the VMA userland merge 'special' flag tests to no longer
+> assert that VMA_IO_BIT prevents merge as VMA_PFNMAP_BIT, VMA_MIXEDMAP_BIT
+> now suffices.
+> 
 > Signed-off-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
 > ---
->  mm/vma.c | 6 ++++++
->  1 file changed, 6 insertions(+)
+>  include/linux/mm.h              |  3 +--
+>  kernel/sched/fair.c             |  2 +-
+>  mm/memory.c                     |  7 ++++---
+>  mm/mprotect.c                   |  3 +--
+>  mm/vma.c                        |  2 +-
+>  tools/testing/vma/include/dup.h |  3 +--
+>  tools/testing/vma/tests/merge.c | 10 ++--------
+>  7 files changed, 11 insertions(+), 19 deletions(-)
 > 
+> diff --git a/include/linux/mm.h b/include/linux/mm.h
+> index 6b5f06cd174a..3ddb463db895 100644
+> --- a/include/linux/mm.h
+> +++ b/include/linux/mm.h
+> @@ -1627,8 +1627,7 @@ static inline bool vma_is_shared_maywrite(const struct vm_area_struct *vma)
+>   */
+>  static inline bool vma_flags_is_mm_managed(const vma_flags_t *flags)
+>  {
+> -	return !vma_flags_test_any(flags, VMA_PFNMAP_BIT, VMA_MIXEDMAP_BIT,
+> -				   VMA_IO_BIT);
+> +	return !vma_flags_test_any(flags, VMA_PFNMAP_BIT, VMA_MIXEDMAP_BIT);
+>  }
+>  
+>  /**
+> diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
+> index 8dff37059faf..a07a658cd99f 100644
+> --- a/kernel/sched/fair.c
+> +++ b/kernel/sched/fair.c
+> @@ -4212,7 +4212,7 @@ static void task_numa_work(struct callback_head *work)
+>  
+>  	for (; vma; vma = vma_next(&vmi)) {
+>  		if (!vma_migratable(vma) || !vma_policy_mof(vma) ||
+> -			is_vm_hugetlb_page(vma) || (vma->vm_flags & VM_MIXEDMAP)) {
+> +			is_vm_hugetlb_page(vma) || !vma_is_mm_managed(vma)) {
+>  			trace_sched_skip_vma_numa(mm, vma, NUMAB_SKIP_UNSUITABLE);
+>  			continue;
+>  		}
+> diff --git a/mm/memory.c b/mm/memory.c
+> index e5c1d1c35bc7..094983683f24 100644
+> --- a/mm/memory.c
+> +++ b/mm/memory.c
+> @@ -2343,19 +2343,20 @@ void zap_vma_range(struct vm_area_struct *vma, unsigned long address,
+>  }
+>  
+>  /**
+> - * zap_special_vma_range - zap all page table entries in a special vma range
+> + * zap_special_vma_range - zap all page table entries in a VMA which is not
+> + * mm-managed
+>   * @vma: the vma covering the range to zap
+>   * @address: starting address of the range to zap
+>   * @size: number of bytes to zap
+>   *
+>   * This function does nothing when the provided address range is not fully
+> - * contained in @vma, or when the @vma is not VM_PFNMAP or VM_MIXEDMAP.
+> + * contained in @vma, or when @vma is mm-managed.
+>   */
+>  void zap_special_vma_range(struct vm_area_struct *vma, unsigned long address,
+>  		unsigned long size)
+>  {
+>  	if (!range_in_vma(vma, address, address + size) ||
+> -	   !(vma->vm_flags & (VM_PFNMAP | VM_MIXEDMAP)))
+> +	   vma_is_mm_managed(vma))
+>  		return;
+>  
+>  	zap_vma_range(vma, address, size);
+> diff --git a/mm/mprotect.c b/mm/mprotect.c
+> index 2888ee638d87..706c679d4281 100644
+> --- a/mm/mprotect.c
+> +++ b/mm/mprotect.c
+> @@ -783,8 +783,7 @@ mprotect_fixup(struct vma_iterator *vmi, struct mmu_gather *tlb,
+>  	 * uncommon case, so doesn't need to be very optimized.
+>  	 */
+>  	if (arch_has_pfn_modify_check() &&
+> -	    vma_flags_test_any(&old_vma_flags, VMA_PFNMAP_BIT,
+> -			       VMA_MIXEDMAP_BIT) &&
+> +	    !vma_flags_is_mm_managed(&old_vma_flags) &&
+>  	    !vma_flags_test_any_mask(&new_vma_flags, VMA_ACCESS_FLAGS)) {
+>  		pgprot_t new_pgprot = vm_get_page_prot(newflags);
+>  
 > diff --git a/mm/vma.c b/mm/vma.c
-> index 4f09fb98a2fd..51bdbe08bb02 100644
+> index 51bdbe08bb02..cb8729b195ea 100644
 > --- a/mm/vma.c
 > +++ b/mm/vma.c
-> @@ -2796,6 +2796,12 @@ static int mmap_validate_vma_flags(const vma_flags_t *flags)
+> @@ -2796,7 +2796,7 @@ static int mmap_validate_vma_flags(const vma_flags_t *flags)
 >  		return -EINVAL;
 >  #endif
 >  
-> +	if (!vma_flags_test_any(flags, VMA_PFNMAP_BIT, VMA_MIXEDMAP_BIT)) {
-> +		/* mm-managed mappings may not set VMA_IO_BIT. */
-> +		if (WARN_ON_ONCE(vma_flags_test(flags, VMA_IO_BIT)))
-> +			return -EINVAL;
+> -	if (!vma_flags_test_any(flags, VMA_PFNMAP_BIT, VMA_MIXEDMAP_BIT)) {
+> +	if (vma_flags_is_mm_managed(flags)) {
 
-We do have a helper (vma_flags_is_mm_managed()) but we're not using it because
-of the VM_IO situation ...
+Ah, there is the change.
 
-That's confusing ...
-
-Could we do something like testing vma_flags_is_mm_managed(), but removing the
-VM_IO flag from the checked flags?
-
-Then we can add a comment about VM_IO in the future getting remove from
-vma_flags_is_mm_managed() ...
+Acked-by: David Hildenbrand (Arm) <david@kernel.org>
 
 -- 
 Cheers,
