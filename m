@@ -1,64 +1,64 @@
-Received: from mail-pj1-f49.google.com (mail-pj1-f49.google.com [209.85.216.49])
+Received: from mail-pj1-f54.google.com (mail-pj1-f54.google.com [209.85.216.54])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7CC2642AF8A
-	for <linux-scsi@vger.kernel.org>; Mon, 12 Oct 2026 12:16:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DDFB647887B
+	for <linux-scsi@vger.kernel.org>; Mon, 12 Oct 2026 12:16:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.54
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791807377; cv=none; b=cKOJz8Lx+KR4ZZQA+8aikwfeM3C4ErOYaY8968A7AsL8CyvRNQcSTYi+uQHwg7P4UhpzFAPrndEBfcUVpGNmaiBTeTJUQ7toemszfQG5f7zpJTZyzYsVqPRawwBOT3jV04lfzDB0xFU3F9P0rr7Zv464O5ANAPYssIKt8qU/jkA=
+	t=1791807380; cv=none; b=SS9csy/MYoX7whf2qCMxOE85eGmXWfxvwgt7NmsEVDbqEveTzgeTve3d5PoN0slTYfpow0k9WVpeFi7sUnqxMvISvhU6Sq5i8ZqoLl8tSFv8bGBYqe5hwhczEz+Wg5dFXtZxoIPcxp4y2WRT+yzPfy+tdHTe0qyJnrYFQzgEbVs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791807377; c=relaxed/simple;
-	bh=ug2SZVPl89ENEQR7M1tByPrxlFqHv5XwrZnkPgJJuQw=;
+	s=arc-20240116; t=1791807380; c=relaxed/simple;
+	bh=jR668KmHveWhKfzwm/VRHu50O+jFQBt154c4fksmz2Y=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=hgUAfG/7xOYO+c1NO6ydlLktmHSHMtFBSanU2CfJ1iWrA3X2W6Id9ziEht5zQAGDNTtQro708uKaez4mOJ3Xdp931km2tLUzA3b+2m24AYaSiAMIrxr/KwEgVv9HLErO6QMv8r80vgsxkyfCnywb/9dDiXAFe8vc35I65/kkYWs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr; spf=none smtp.mailfrom=isslab.korea.ac.kr; dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b=G+zOpt5e; arc=none smtp.client-ip=209.85.216.49
+	 MIME-Version; b=LsyrD7gJmft66PLE5OmTCG5ZBhksp1AzDNpbfarcPEM3o4bUMpBVt4Pv96u0Uibp2URMo4M0XFmfO4zhT0y8pG/jKt6KjZ5Ea5XfIMN0OQxciB6mxWGoNtafBCtAC4UTLxsPSKhRWvi4Jf48MVVY/xlo1HfpMYkJbQF+VxTD/Ts=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr; spf=none smtp.mailfrom=isslab.korea.ac.kr; dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b=rWy1GuCJ; arc=none smtp.client-ip=209.85.216.54
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b="G+zOpt5e"
-Received: by mail-pj1-f49.google.com with SMTP id 98e67ed59e1d1-3a7fecf8440so851971a91.1
-        for <linux-scsi@vger.kernel.org>; Mon, 12 Oct 2026 05:16:16 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b="rWy1GuCJ"
+Received: by mail-pj1-f54.google.com with SMTP id 98e67ed59e1d1-3856d6fbcb3so931436a91.2
+        for <linux-scsi@vger.kernel.org>; Mon, 12 Oct 2026 05:16:18 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=isslab-korea-ac-kr.20251104.gappssmtp.com; s=20251104; t=1791807375; x=1792412175; darn=vger.kernel.org;
+        d=isslab-korea-ac-kr.20251104.gappssmtp.com; s=20251104; t=1791807378; x=1792412178; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=ug2SZVPl89ENEQR7M1tByPrxlFqHv5XwrZnkPgJJuQw=;
-        b=G+zOpt5edgc3wQ+KBedQNRN8GXFUukTMSSSUdekB8uMIxES0gzSYGzWDHGMwK8VZRn
-         vjA7PEmZZt35JTS3AwoLT6KUBn+3LPVvexOMJSN7QHIO205LjRZ+7aakpfCX5ZF4TmtF
-         Lqqh5npD1MUvCKT56OnESNpa8EmINFvbsNYaZJULELCdz0cOinC4SdUsYFF3mTzFYWuc
-         MWcGyDuiOP94xTTuy/cGGyI+qYPXVEj1ITIX8Cdbmq3gfu0VAGD7Hz1vqjOu6YkH0nXI
-         CDblkHTZaprFQdHDHcOrBcieiLFcuUW2PmGzThB2b9+PPokGch5zAj6cpQpfz+tpvqIk
-         J4Yw==
+        bh=jR668KmHveWhKfzwm/VRHu50O+jFQBt154c4fksmz2Y=;
+        b=rWy1GuCJQvH3ZGLkXj1Th3rfsuN8x1m4sNnZLKBasWjsepZlPpcR7TFHVYQD71xNtr
+         UfzQ8dru2hNhsslG6ZzFpxdFLRhDq/e+OjxjMjhnP6arOm33QPZ3a0Y7eq4hw9gZj3dC
+         JaEYUsp+UeCE52oKdYn89JerL54R/ODgWaW48CsRumJjaEyVn5Bx0enkLOTeMd2tXE2C
+         yNnqvcrlADqHe5Q4XHlojJc4yWlof+EGM+nNiG4tIkKnw1YnAzzYcZLnQutACgrE3rz9
+         U7zsilqmlUv5mkwM21+AgNQLKA8EMyXHGWngq6batSYXyH0eYmbDs7syKbrC9UlugTru
+         gN2g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791807375; x=1792412175;
+        d=1e100.net; s=20260707; t=1791807378; x=1792412178;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=ug2SZVPl89ENEQR7M1tByPrxlFqHv5XwrZnkPgJJuQw=;
-        b=AJiHoIcoMD2Wjp0yzKQAFr9otC2D6ZJubDR7SM4uJBkofUS6SGQ1wM/XgtWBZzk3ny
-         7fShUp5JdzyDRJx5a3Wmp2fEVetz92pdlcXl1Z8gfVcpXORdKDtfSx/oBH8nMOALjZne
-         dxI15pi5Ts4fQMzSFQhDeIdcZWg2Divy9MTy/ibuLnht4jOaCD7JAUy44q7ai5Bk/3Ut
-         SWLg+zsBbTvtEs3TelkSthJTrI3mhbjX0jd9mKNiTGWVD3NyKpyT+s8oFrjig37BKGsO
-         PDMTEwQs81HIqXGno5PlEj1udImC5hVWPFRWtfAzs26i1Gq8WV+boBLCSEm2mi2Cr8jJ
-         tT2Q==
-X-Gm-Message-State: AFq9FYITFX9XIbDO1w5uS2f9G3v+nPqEvoKzufKdqkjKciAsQDLOB6D3
-	QTsAB5vZOMHsTRWm3fF5jfgF4sin/FnAl4uXB/5TTtbh0qwBzdUF0D/IrSDvHKx6oqDv0VsE67U
-	WAUw2qeQ=
-X-Gm-Gg: AYBFou0Ne9gD8XZb4sEu0ROFgjzFe1Sn0a9Cw/fpyekMpXXQtlnyWVV/ZfvfRjVoL8x
-	YXtk+I9FDFsdSPKxb4PxObzplIwdHk2mnM6rQbeWMtKrDBgyYIx5jFXv9kQmqMCnhb3Wxpdd+OB
-	BTYUUCSJ0TI5vTHrztkO16pGjtF3h1MqzMahHLOD1DCOFQNcdzCk1YgRBhepoB86//ab6RgrbR0
-	kRdOw44srZxQKwlRoVbhGiy67exhlahIwH3XtR+e80JfrqE16kPR//ZGH1U+4D+OuV+55nGopYU
-	UgNc40ZLSt851abqyCGSPZd+jynNx97waRh8TkXb6vpXn+v1IU3auYMSSDDMoLz1gZqxA/YZU5Z
-	wW9MyXkZUkd97PsXvsebtTWAZdN+9agHDBypHmUIlO8R/T+tqg6mhwcIiU4zuyCHvOVmGv4pA/f
-	ZWCVNL53yiedFU81JFYJ8VgoQXFBzND+nOTkt7yep1W15Ay0zGZlUH1VHCzoC1nZppQzDijvozo
-	xsAeiMsZA6YGNUJqg38VA==
-X-Received: by 2002:a17:90a:c88b:b0:3a5:1b:34a5 with SMTP id 98e67ed59e1d1-3ab3af73a91mr7437909a91.49.1791807375539;
-        Mon, 12 Oct 2026 05:16:15 -0700 (PDT)
+        bh=jR668KmHveWhKfzwm/VRHu50O+jFQBt154c4fksmz2Y=;
+        b=Ib+KEL4IjFGMbEgwPqpy7D0wMg66Cwo2+W8YQRttdVmbsYOuXfglU2zNsVuPed+c60
+         6AZVX/EZ0yPKNvlmFAIAQsOXQxTQqNmuwf1Ifrtp+WHfqNQusZh7AffOQ+iHBPTFVA3W
+         057+VhdLCwco9M5sKaycjrD895/cLRYYpROc4NZQK8VpBvBvBjDM5I84f8j6m3lDilZd
+         iOWk+E7brsicrHyEkizdIIYpuGmAS+kE18hRksl8x2JUWZ4gyZCCeEmXq79RkxNYbR8B
+         BgO6t7dBxNW5652+r/JsUfestRhsY737QfyQCC+Q7GdZAceTZbqkrbkJhWZpUoRCTqFV
+         ZTAQ==
+X-Gm-Message-State: AFq9FYI05C9+TOCmD7Ic/sdzV4Mui0YnF2+xZaDnZqvDCQD7zfepyMz9
+	u2aQP/oyNMt3au7wTyRgfLo5xpD3OVXkCYLR3fgTXSqqwx3eBDj0CHpANXZwWQZHMTzamIgj0m6
+	N5QuC7eo=
+X-Gm-Gg: AYBFou2x4TUifh1oTQdIF4eCecbmnQsHJK+shMR4S5FHSzypLITmg2puM7sFIInaNmD
+	nY3Z9VS8gb4vSUN/yFFb+mnx1q4RTFNPK0MYUMIHKgO49bj4o4QvcJ/mIyiCvaqV6wifcBkVLkM
+	T5Ov5iRFjh0JOEjs8z42D17Cm3J4GcNBamjw/Guh9yZGBCVF/Cgc3lnjb3a/3+TISBXeChsIBe2
+	6RKEVseE78UbSzNaY1p2oPYKWzQRJXMoRFkKsTM3M1ySFfKSARYS8mE8aqIxwWugXNXWp1n5wgm
+	evKVaW5xICdpdvaTKSA2a6cnFXp9qd8a9roob3wTu1gchXY1yRO/+i5Vub5h6iji/aOd4KxaYbN
+	1belq0Hy1B33gbcWUMWiDkHRvrccHOE7TY3HkLvJ9dyH5vQIVjmkfMlEVBSDmEE7gqA5o7N5eKI
+	7GLkgwwzJgPt8PKBO3yfmIWng/qZyd5qiQobQuR7DrWq8u+fyTDyzOuWZJIdANJCvynUh8qYlQh
+	Xemh3Mz3YQvcVj/wC6u9Q==
+X-Received: by 2002:a17:90b:2d0b:b0:3a7:e11c:4e6e with SMTP id 98e67ed59e1d1-3ab3a97a71dmr7873463a91.59.1791807378165;
+        Mon, 12 Oct 2026 05:16:18 -0700 (PDT)
 Received: from yhlee-960QFG.Davolink ([2406:5900:1044:110c:7bd2:1202:246d:44ce])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3ab38ff0ce7sm17212536a91.15.2026.10.12.05.16.13
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3ab38ff0ce7sm17212536a91.15.2026.10.12.05.16.15
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 12 Oct 2026 05:16:15 -0700 (PDT)
+        Mon, 12 Oct 2026 05:16:17 -0700 (PDT)
 From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
 To: linux-scsi@vger.kernel.org
 Cc: ching2048@areca.com.tw,
@@ -66,12 +66,12 @@ Cc: ching2048@areca.com.tw,
 	James.Bottomley@HansenPartnership.com,
 	thenzl@redhat.com,
 	sashiko-reviews@lists.linux.dev
-Subject: Re: [PATCH v3 1/3] scsi: arcmsr: bound the firmware-supplied message length
-Date: Mon, 12 Oct 2026 21:16:02 +0900
-Message-ID: <20261012121603.2335651-1-yhlee@isslab.korea.ac.kr>
+Subject: Re: [PATCH v3 3/3] scsi: arcmsr: wrap the type B completion index before using it
+Date: Mon, 12 Oct 2026 21:16:03 +0900
+Message-ID: <20261012121603.2335651-2-yhlee@isslab.korea.ac.kr>
 X-Mailer: git-send-email 2.43.0
-In-Reply-To: <sashiko-outbox-168035@kernel.org>
-References: <cover.1791803953.git.yhlee@isslab.korea.ac.kr> <adc1e1512a87ff16e99d066c2e96e18a1d28e610.1791803953.git.yhlee@isslab.korea.ac.kr> <sashiko-outbox-168035@kernel.org>
+In-Reply-To: <sashiko-outbox-168041@kernel.org>
+References: <cover.1791803953.git.yhlee@isslab.korea.ac.kr> <459990a0367f7268c0056098f6e2631700e20327.1791803953.git.yhlee@isslab.korea.ac.kr> <sashiko-outbox-168041@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -80,18 +80,17 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Agreed, and as you note this predates the patch. The clamp here only stops
-the out-of-bounds write into the 128-byte staging buffer and deliberately
-leaves the rqbuffer accounting alone.
+This is pre-existing: the patch only wraps the index so the first access
+stays in bounds, and leaves the loop and its termination unchanged.
 
-The double fetch is a separate issue: the free-space check in
-arcmsr_iop2drv_data_wrote_handle() and the reader each read data_len on
-their own, so the firmware can grow it in between and advance rqbuf_putIndex
-past the unread data. rqbuf_putIndex is masked with ARCMSR_MAX_QBUFFER, so
-this corrupts the message stream to userspace rather than stepping outside
-rqbuffer. I would rather fix that on its own by reading the length once and
-passing it down, so this series stays a pure bounds fix; I can send that
-separately.
+Both type B loops clear each slot they process (done_qbuffer[index] = 0) and
+advance, so the loop only keeps going if the adapter keeps writing fresh
+non-zero entries into the ring - a faulty or malicious device forging an
+endless stream of completions, which is a weaker and different threat than
+the out-of-bounds read this patch closes. The same drain-until-empty
+structure is used by every adapter type, and only the type C isr carries an
+iteration budget today, so adding one is better done as its own change across
+the board rather than folded into this one-line fix.
 
 Thanks,
 Yehyeong
