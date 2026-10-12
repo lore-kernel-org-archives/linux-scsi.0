@@ -1,114 +1,146 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f198.google.com (mail-pg1-f198.google.com [209.85.215.198])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3A673D0BED
-	for <linux-scsi@vger.kernel.org>; Mon, 12 Oct 2026 11:59:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2BA4418348
+	for <linux-scsi@vger.kernel.org>; Mon, 12 Oct 2026 12:01:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.198
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791806365; cv=none; b=bcu80/n9pYyR27z2Y7Pot9yJj9dT96Fvln5DHvnQWRo1dO9H70yebrj26bYPoPS/6JIFE97If+DZqAf4gc+qZ7YTl7HZulU2qQop+d5F7SKbqSBnBfm48csAe+ttnzAtgiEzRS4TDwJlOW+mJQ0NsmwZjF3PwfdgH9FlJSlKeuA=
+	t=1791806464; cv=none; b=rM0u/KpiQQKhnSAhxM/36MY0rTjNwiKpvqHt1azrhn7R3WbMWHiiZlknoHljUkr9h7W5H3LhguScRu6OwYeZequxkz6DVQbu1hAadXK57/U4njGaMF7p1jG0teyfZn7CxyCcyTs8iGQi0LlF2DRoxExpXS/GMlc99ZGJ+ohAZGQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791806365; c=relaxed/simple;
-	bh=OLE/byhcY9Swb80yvwPNa6cRO89Bt61WmL8INLn9Ly4=;
-	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
-	 Date; b=rbKb4t6JgPqRqO20tSBYPVFFH4BULcsTnyrUJg1ayzbn5zZ+UezmLvRUhWGEuh8KkQWtNEHlpXIs7c5TKcP6rjY4x/4/NUi+u0yGnOgqvmvCHw7Z1Ir9dFFSsqwFB+YyDHQnoXsfy+tXDACa3hfsnNmh9qRR/CXMZDHMwfbIXpA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Al08JzTi; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791806464; c=relaxed/simple;
+	bh=bpKLm+RbzFiB+bE/8I3pbOaOeaDV6hPfYhyAv5Hqq1I=;
+	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=rQ0GI1h+1LN0DEtcmedab2fQJ+tamAemjQ54oUAFuy9Vmy8wbg+oWyWPtU+p9YSGFu9JaieKaTh0MPdY8D1OFi3J2M8q67UfhEFOJs0k41uGpW/6AVgsu3Xw9a+N5w+Oa0ieCo6C1mNidU6YB1mm3QRDArfT/UECi50IE3H28c8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=OSjMYYBe; arc=none smtp.client-ip=209.85.215.198
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Al08JzTi"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1AB801F0089C;
-	Mon, 12 Oct 2026 11:59:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791806364;
-	bh=u/b0jgRlXummApz7eRlpkCcksLVZ/rqvHSVAyzVG468=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Al08JzTiR3WdCqXhzeiX7BRC9z/66Rzz/QTrqR+2wf5wbzclgXwJ1ToX4tWObLCzR
-	 +Z54jtKjZVEJkwrbaC1ncBFE85ZAja+/kInJMNaHwE5+3kTGNc0ZIisxFo19ASzhNz
-	 MCn9752sLk38DpmOfOJVlxSq4gBWUdF1OSC8uJ7JYAROeyTRQ02q14iKWwcEpmaHaq
-	 Sr3Skb7WYxvhF5t3GIzADJ4f8DVBFIwXgvoO93aCt/AQ3g1MqBisdGD4/keOvQI8GL
-	 bHCMOw9YBJgBLJlieHkKYWy3aJDjyaZe1X+XO8PNcBZ43AgEz65J/QuQKMZmuSxhvn
-	 hBLhECHA+pTjw==
-Message-ID: <sashiko-outbox-168041@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 3/3] scsi: arcmsr: wrap the type B completion index
- before using it
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Yehyeong Lee" <yhlee@isslab.korea.ac.kr>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <459990a0367f7268c0056098f6e2631700e20327.1791803953.git.yhlee@isslab.korea.ac.kr>
-References: <cover.1791803953.git.yhlee@isslab.korea.ac.kr>
- <459990a0367f7268c0056098f6e2631700e20327.1791803953.git.yhlee@isslab.korea.ac.kr>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 12 Oct 2026 11:59:23 +0000
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="OSjMYYBe"
+Received: by mail-pg1-f198.google.com with SMTP id 41be03b00d2f7-cb11535e6a1so929148a12.0
+        for <linux-scsi@vger.kernel.org>; Mon, 12 Oct 2026 05:01:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1791806462; x=1792411262; darn=vger.kernel.org;
+        h=content-type:cc:to:from:subject:message-id:mime-version:date:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=xgmqd2G/3foFRFZCjELywxiq8w/o9QCKNyLCBypUvzE=;
+        b=OSjMYYBexOo3DYBUDlkyLyINC/AtnX+Z84vddtYdUh/l05GDLRkEmNKYOhv5sdzei1
+         NZFb3Dw2EnNZAZBw0qwDsJ+eIjBkPD/2L5EXrPU7H0BStAXWedKd4YHjq6gz5jbznpT8
+         6ZOK9qI3fmNgwVl9GGw6mWQOFqG3HfNhS+9HSgwWmW5TTuimS51nYphhsozc7cOMR5QN
+         XObMJwZ4nyrmlW9DLR6TPJZdUG8Fy5ljIon8+N5rQG/3MeAW0/59b7D1LSD0/0gkL7yf
+         Yykoe0yesHviawTiipDEETtMafGpCdwmPBhlFH0C5pml6ciagTCmieF3qZEDUSgWej6N
+         v/nw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791806462; x=1792411262;
+        h=content-type:cc:to:from:subject:message-id:mime-version:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=xgmqd2G/3foFRFZCjELywxiq8w/o9QCKNyLCBypUvzE=;
+        b=LRHP+shgQJ4lo+mzskiCgQvc6obcsfYaZOGN4R+Irk7F2OQtrxHllnm0seBknRSI/5
+         6T+xefHyQyD+ZAWd8bxoBaTqMyiWPCWgJHDz5VQtllkhWlsq97lfshtikjsciPAGDJJK
+         2fWhTsq2P68JFxAhVrtWigQbJcg1FtXdFTYEAhegj40fdh4EuixmWPYdlg1jJyLn8t3s
+         m9dPuTDZa+//IsjqEp+HZiezRAJakBv9vrERDkMnBK1sOdG9EhdSmsVV4ds12xAe4VFL
+         1c+mvUlUNyGMe2Wym+Ews1kY0Unh36xVjMVhK/sxDucF5QdfFDHsdhhvCBfjCuHvUP4E
+         U0Qw==
+X-Forwarded-Encrypted: i=1; AKwUvByl6YhfaLbRU+bccJCYnif38tHO42HTJmn/JZhAcoQ5U2DQCyVtj2ruk5RcGZJAng7XZMLZRJDHc2xs@vger.kernel.org
+X-Gm-Message-State: AFq9FYI0Y64vpI70THrpsnK5i9fOczpUjdv5XMuKpQLnYOpHS9XDs9x+
+	z/TMN/WJmKw3NKz4VYCfiJn5nHQJegnZAjJ5xsy8TEkRAO+7TUQceimYFWrzVjv9YFEWP21mre7
+	hyuozDoWnOu0AraShEYFWzQ==
+X-Received: from pglk23-n2.prod.google.com ([2002:a05:6a02:6b97:20b0:ccf:f961:1634])
+ (user=stanleyjhu job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a05:6a21:7d0b:b0:3d1:c99f:efbf with SMTP id adf61e73a8af0-3e16be892f4mr7988010637.14.1791806462062;
+ Mon, 12 Oct 2026 05:01:02 -0700 (PDT)
+Date: Mon, 12 Oct 2026 20:00:59 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.56.0.385.gd3acb90ef8-goog
+Message-ID: <20261012120059.1371653-1-stanleyjhu@google.com>
+Subject: [PATCH v2] scsi: ufs: docs: Describe how to test with QEMU
+From: Stanley Jhu <stanleyjhu@google.com>
+To: "Martin K. Petersen" <mkp@kernel.org>, 
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, Jonathan Corbet <corbet@lwn.net>
+Cc: Bart Van Assche <bvanassche@acm.org>, Alim Akhtar <alim.akhtar@samsung.com>, 
+	Shuah Khan <skhan@linuxfoundation.org>, Randy Dunlap <rdunlap@infradead.org>, 
+	Jeuk Kim <jeuk20.kim@samsung.com>, Bean Huo <beanhuo@iokpp.de>, linux-scsi@vger.kernel.org, 
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [Medium] scsi: arcmsr: infinite loop in ISR processing due to unbounded h=
-ardware DMA
---
+QEMU emulates a UFS host controller and logical units, but the kernel
+tree does not mention it, so developers without UFS hardware have no
+documented way to exercise the UFS core.
 
-commit 728fbf206bd1c95a2cfbe31aec39150fac1e1356
-Author: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+Add a short section with the required kernel options, an example QEMU
+command line, and what the emulation does not cover.
 
-scsi: arcmsr: wrap the type B completion index before using it
+Signed-off-by: Stanley Jhu <stanleyjhu@google.com>
+---
+Changes in v2:
+- State the minimum QEMU versions for ufs and mcq=on (Bean Huo)
+- Mark /dev/sda as an example (Bean Huo)
+- Say the emulation accepts but does not model the link startup,
+  hibernate, DME and power mode UIC commands, and that DME and power
+  mode need QEMU 11.1 (Bean Huo)
 
-This commit fixes a KASAN slab-out-of-bounds issue in arcmsr_hbaB_postqueue=
-_isr
-and arcmsr_hbaB_polling_ccbdone by wrapping the doneq_index with
-ARCMSR_MAX_HBB_POSTQUEUE before it is used to index into done_qbuffer[].
+v1: https://lore.kernel.org/all/20261011103319.820657-1-stanleyjhu@google.com/
 
-> diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcms=
-r_hba.c
-> index e635b76daae9a..d13bd0febb81a 100644
-> --- a/drivers/scsi/arcmsr/arcmsr_hba.c
-> +++ b/drivers/scsi/arcmsr/arcmsr_hba.c
-> @@ -2568,7 +2568,7 @@ static void arcmsr_hbaB_postqueue_isr(struct Adapte=
-rControlBlock *acb)
->  	bool error;
->  	unsigned long cdb_phy_addr;
-> =20
-> -	index =3D reg->doneq_index;
-> +	index =3D reg->doneq_index % ARCMSR_MAX_HBB_POSTQUEUE;
->  	while ((flag_ccb =3D reg->done_qbuffer[index]) !=3D 0) {
+ Documentation/scsi/ufs.rst | 38 ++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 38 insertions(+)
 
-[Severity: Medium]
-Could this loop spin infinitely? The loop condition depends entirely on
-hardware-controlled DMA memory without an iteration limit.
+diff --git a/Documentation/scsi/ufs.rst b/Documentation/scsi/ufs.rst
+index a7b2b2ed1c3a..06f1b9b4e8dd 100644
+--- a/Documentation/scsi/ufs.rst
++++ b/Documentation/scsi/ufs.rst
+@@ -19,6 +19,7 @@ Universal Flash Storage
+      3.4 SCSI Error handling
+    4. BSG Support
+    5. UFS Reference Clock Frequency configuration
++   6. Testing with QEMU
+ 
+ 
+ 1. Overview
+@@ -208,3 +209,40 @@ the UFS specification. UFS subsystem will attempt to read the value when
+ executing common controller initialization. If the value is available, UFS
+ subsystem will ensure the bRefClkFreq attribute of the UFS storage device is
+ set accordingly and will modify it if there is a mismatch.
++
++6. Testing with QEMU
++====================
++
++QEMU emulates a UFS host controller as a PCI device named "ufs" and
++logical units named "ufs-lu". This can be used to test changes to the
++UFS core and to ufshcd-pci without UFS hardware.
++
++The "ufs" and "ufs-lu" devices are available since QEMU 8.2, and the
++"mcq" property since QEMU 9.1.
++
++Enable the following kernel options on top of the architecture
++defconfig::
++
++	CONFIG_SCSI_UFSHCD=y
++	CONFIG_SCSI_UFSHCD_PCI=y
++	CONFIG_BLK_DEV_SD=y
++
++Example for an arm64 guest with one 1 GiB logical unit::
++
++	qemu-img create -f raw ufs.img 1G
++	qemu-system-aarch64 -M virt -cpu max -smp 4 -m 2G -nographic \
++		-kernel arch/arm64/boot/Image -initrd rootfs.cpio.gz \
++		-append "console=ttyAMA0" \
++		-drive file=ufs.img,if=none,id=lu0,format=raw \
++		-device ufs,id=ufs0,serial=0001,mcq=on \
++		-device ufs-lu,drive=lu0,bus=ufs0,lun=0
++
++The logical unit appears as a SCSI disk (for example /dev/sda). Drop
++"mcq=on" to test the single doorbell mode instead of MCQ. The same
++-device options work with qemu-system-x86_64.
++
++The emulation accepts the link startup and hibernate enter/exit UIC
++commands and, since QEMU 11.1, DME get/set and the power mode change
++sequence, but it does not model UniPro, M-PHY or the resulting link
++state. Clock gating hardware and vendor host drivers are not exercised
++either. Changes in those areas still need testing on real hardware.
+-- 
+2.56.0.385.gd3acb90ef8-goog
 
-If a faulty or malicious PCIe device continuously populates the DMA-mapped
-done_qbuffer faster than the CPU processes it, or supplies an endless stream
-of non-zero completions, can this lead to a CPU soft or hard lockup?
-
->  		cdb_phy_addr =3D (flag_ccb << 5) & 0xffffffff;
->  		if (acb->cdb_phyadd_hipart)
-
-[ ... ]
-
-> @@ -3671,7 +3671,7 @@ static int arcmsr_hbaB_polling_ccbdone(struct Adapt=
-erControlBlock *acb,
->  	/* clear doorbell interrupt */
->  	writel(ARCMSR_DOORBELL_INT_CLEAR_PATTERN, reg->iop2drv_doorbell);
->  	while(1){
-> -		index =3D reg->doneq_index;
-> +		index =3D reg->doneq_index % ARCMSR_MAX_HBB_POSTQUEUE;
->  		flag_ccb =3D reg->done_qbuffer[index];
->  		if (flag_ccb =3D=3D 0) {
-
-[Severity: Medium]
-Could this polling loop also lack a structural bound and spin infinitely?
-
-If the hardware continuously supplies non-zero completions, poll_count is o=
-nly
-evaluated when flag_ccb =3D=3D 0. Can this result in a denial of service if=
- the
-hardware never returns a zero completion?
-
->  			if (poll_ccb_done){
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1791803953.gi=
-t.yhlee@isslab.korea.ac.kr?part=3D3
