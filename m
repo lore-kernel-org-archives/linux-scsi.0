@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58E7C4C6EEE;
-	Mon, 12 Oct 2026 18:07:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E43D2339389;
+	Mon, 12 Oct 2026 18:11:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791828476; cv=none; b=J4+bA1Kt0WDqIZJgGwy/+fxsTbb/38vf821vuook5LLREADkT08DfyjKwWSPLquf59cqMOb1enE2FGn/9eCRgmVo0gKQMIAhqf+4HXYmmavyXFQ2E9IGlfOWDmUh74897mKsTHYmb3UaIWRNTEpAmkUjWR4/aV6ILotoXPYjihU=
+	t=1791828705; cv=none; b=AX5r9bk7ncTB+3c5QmPpd09L78irkwFuAn+dkm1Pq38nTx8Z0hK1ABGQbo8ZHQajkLXxksWAvI+Dhbd46PeTPCQEj+4sr4QalSupmvNEa5vLp76+s0maQ+StKWebSVj0QOnGI+8qA5XReozSXjikpdkRsrLI7yZz6koqXMOkdnw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791828476; c=relaxed/simple;
-	bh=QZ16+1BqTvxVlZnvetZ5guF0tnfS/81HjExGSkHLxxo=;
+	s=arc-20240116; t=1791828705; c=relaxed/simple;
+	bh=4iKkUxUsCCctPuNYL8VnvWpmeVCO2vOjS23lH4zw9iE=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=GpcwcvGFwdNbgAFyEl0MuRYya2iot4xtE/pmBG16py7gFVFSQYfMdnGfSj+Nn/lcSa1OX6ur2uHw5wt/FFQeZF+xG4051lrnOajqfxusLfoUCXJLTiZWg4pEBMUAqJwzh+y6fbCprjQBIiSRmXDfp8QblvD9ZvnU9TYX9piZP0U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jwx+5rDY; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:Content-Type; b=YBDD16M1soxOfVqqy8q2IeYDm3JN9VcEvNQRyr3c/0e6K0yCOy9a+2h+pGmsdAXGB/JBRfcELtZBBqHS+gyw8VH7930JTvwVD+HjSzCNwwv17Y4cR4t2bYntOIOdpw9/E/pQUXgsFnMs8m2E79vLfJZmZVynWH0Wq6rK6iEWEhU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TwUIwf9t; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jwx+5rDY"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 58BFE1F0089B;
-	Mon, 12 Oct 2026 18:07:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TwUIwf9t"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 62C6D1F0089B;
+	Mon, 12 Oct 2026 18:11:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791828474;
-	bh=5a6IsUlcXJHOADvAwqphif4IshvHpUsfPxJJpTYlkEY=;
+	s=k20260515; t=1791828703;
+	bh=Nru7h3Sv5JaI6aGGCMmFY9EP6czcY0tZ0pY72oIj5bk=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=jwx+5rDYQjOIUBj08GLlEX9Web1Y8AehnEyD+NKJ+6JGLiDzQ2ykGnZMGinpwVxEm
-	 t43H8LUI4C36o21aCrvggHyN9RyNzw2SGdD/OyPLFBA80sFmKNnm84NtWUvo2kYU8N
-	 cYNbAPpDSSO2uHexKXokGU+9jMdh9g5QSHt0uWmtCrNqLoFovjiA4CtdU2HJfp322U
-	 9aldNEnM+7h1H81AjZw6XqSBXIUYwZUU/Fk7ap4BPata9FLOdT63qFOxwbma7qOQ8U
-	 Nq/+WfROCztx3KWcWvYYP+Ey80vw0kj1tlhrwaXghvM9DOVKk2/vrEDswVQZvybKaC
-	 EY265kFEoC1fg==
-Message-ID: <5a7597e2-e4f6-46ef-a4b4-2f0746b5009a@kernel.org>
-Date: Mon, 12 Oct 2026 20:07:14 +0200
+	b=TwUIwf9tGNYwZIY3Fm1yPDU4MTzPQZvX2/h7JIxyzkfk5eXfDQbWbnfsSbPbHnFqb
+	 LjicSJy47COiVBFbpVCy6JFGXzEIJ0f/ZGnStnTNZvszexgrUMK9qHee5aJU9lSzek
+	 im/JebuesdGjd2pwP3NH3XGqwXAxyF2dk/mjybeu0HMAgajsmthZ0IAFYR/8XRbSax
+	 QYu4sPX7wYS1mmZJb0tI/WOLy9v5saXmqjpO8eIrfobNXWobyWDhWNgGpkmtg7xlXP
+	 +NmTupCHc6jCf3Ulym34CpsgHe//G15vZKq3Lq9hDEImDN8W4h/n/dFUGMg+zaM9J4
+	 XJEflFnpFAW0Q==
+Message-ID: <1fd21055-a301-4aad-ae7f-8aa633804048@kernel.org>
+Date: Mon, 12 Oct 2026 20:11:06 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,8 +35,7 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 15/38] mm/vma: only allow mmap to clear
- VMA_MAYWRITE_BIT if not mm-managed
+Subject: Re: [PATCH v5 16/38] mm/vma: add and use vma_[flags]_is_fixed_mapping
 To: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>,
  Andrew Morton <akpm@linux-foundation.org>,
  "Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>,
@@ -119,7 +118,7 @@ Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org,
  fuse-devel@lists.linux.dev, Ihor Solodrai <ihor.solodrai@linux.dev>,
  Bert Karwatzki <spasswolf@web.de>
 References: <20261009-b4-mmap-prepare-vma-flag-sanify-v5-0-923b70125b1e@kernel.org>
- <20261009-b4-mmap-prepare-vma-flag-sanify-v5-15-923b70125b1e@kernel.org>
+ <20261009-b4-mmap-prepare-vma-flag-sanify-v5-16-923b70125b1e@kernel.org>
 From: "David Hildenbrand (Arm)" <david@kernel.org>
 Content-Language: en-US
 Autocrypt: addr=david@kernel.org; keydata=
@@ -166,55 +165,32 @@ Autocrypt: addr=david@kernel.org; keydata=
  3iyY2Nsd7JxfKu1PRhCGwXzRw5TlfEsoRI7V9A8isUCoqE2Dzh3FvYHVeX4Us+bRL/oqareJ
  CIFqgYMyvHj7Q06kTKmauOe4Nf0l0qEkIuIzfoLJ3qr5UyXc2hLtWyT9Ir+lYlX9efqh7mOY
  qIws/H2t
-In-Reply-To: <20261009-b4-mmap-prepare-vma-flag-sanify-v5-15-923b70125b1e@kernel.org>
+In-Reply-To: <20261009-b4-mmap-prepare-vma-flag-sanify-v5-16-923b70125b1e@kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 10/9/26 20:04, Lorenzo Stoakes (ARM) wrote:
-> For ordinary files the only way the VMA_MAYWRITE_BIT flag is cleared is if
-> the underlying file is itself read-only.
+> This determines whether a VMA cannot be expanded or merged because what
+> they mapped was determined to be a set size at mmap time.
 > 
-> This means that mprotect() cannot mark a shared mapping of a read-only file
-> as read/write, as doing so would violate the read only attribute, and
-> permit writes.
+> This typically refers to mappings not managed by core mm, however
+> VMA_DONTEXPAND_BIT
+> is not reliably set alongside VMA_PFNMAP_BIT or VMA_MIXEDMAP_BIT, so we
+> must explicitly test for this for now.
 > 
-> In general, we do not want file systems to be able to do this for
-> read/write files.
+> We also explicitly test for VMA_PFNMAP_BIT as VMA_DONTEXPAND_BIT may not be
+> set for VMA_PFNMAP_BIT's despite the one implying the other.
 > 
-> Doing so would violate fundamental user expectation of file attributes and
-> likely break userspace.
+> Use this predicate in vma_flags_can_merge() and in check_prep_vma() in the
+> mremap logic testing to see if mremap() can expand the VMA. The criteria
+> for khugepaged and MADV_COLLAPSE eligibility in
+> __thp_vma_allowable_orders() are precisely those for mergeability, so use
+> vma_can_merge() there (with an expanded comment).
 > 
-> However, drivers pose a tricky problem here - the /dev/xxx file may be
-> read/write but provide access to a resource which is fundamentally
-> read-only.
+> This obviates the need for the VM_NO_KHUGEPAGED mask, so remove it.
 > 
-> Therefore we must allow drivers to be able to clear VMA_MAYWRITE_BIT.
-> 
-> To achieve both of these things, forbid this for mm-managed mappings as
-> identified by vma_flags_is_mm_managed().
-> 
-> This constrains this ability to drivers which own the mapping's contents,
-> whether memory-mapped I/O, kernel-allocated pages, or ordinary pages they
-> map themselves, and so define its semantics.
-> 
-> Every in-tree mmap hook which clears VMA_MAYWRITE_BIT, some twenty sites
-> across drivers, filesystems and bpf, establishes a mapping which is not
-> mm-managed,
-> with usbmon and the ALSA PCM status page converted earlier in this series
-> to do so.
-> 
-> Note that drivers may, if they do not gate on VMA_SHARED_BIT, be able to
-> disable MAP_PRIVATE-file-backed mapping CoW semantics.
-> 
-> This is perhaps not always intended, but we retain this capacity to
-> maintain existing behaviour.
-> 
-> As no driver which clears VMA_MAYWRITE_BIT establishes an mm-managed
-> mapping, no functional change is intended.
-> 
-> Acked-by: Zi Yan <ziy@nvidia.com>
-> Signed-off-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
-> ---
+> Hugetlb VMAs remain excluded from khugepaged as hugetlbfs always sets
+> VMA_DONTEXPAND_BIT.
 
 Acked-by: David Hildenbrand (Arm) <david@kernel.org>
 
