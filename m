@@ -1,63 +1,63 @@
-Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
+Received: from mail-pl1-f179.google.com (mail-pl1-f179.google.com [209.85.214.179])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D51C47043E
-	for <linux-scsi@vger.kernel.org>; Mon, 12 Oct 2026 09:02:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D06CC471262
+	for <linux-scsi@vger.kernel.org>; Mon, 12 Oct 2026 09:02:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791795732; cv=none; b=HJK/xe2CVTwdlP9XRmWvlStJnq8riIp2NYDMjykJgqt5lHyvk4ZwC7K4ieaPw44KBBXMA7IaREaiYQtpn6vkwD+EGXKlI4LFHgZtjubqXBZbtEvfrkh1oZzx/ZkeNfM2EI86IjqPokXlYb53BB2t9KvcMYkeOt+U4lx0tMMl/KI=
+	t=1791795734; cv=none; b=dAEmgoT256BmMNyZxkdZz2HMvydLITqalv/P8ujoMX29PiQc3VT17hndzKU0mrdcs8/DuK6c8bQV6Lgba3xQUEpiqKLM88iYWIWCLjAiSb6JSE/irrRQTv006n8hXgu7IOhW7VpsOTJdlmu2t0dN4rOlvseo1RY3OuEqqtjkYIE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791795732; c=relaxed/simple;
-	bh=gRy0tVmY36RuFINYba/yIa9FoyM7l7UXacFnKeSKODQ=;
+	s=arc-20240116; t=1791795734; c=relaxed/simple;
+	bh=1mryeQI47wEbsjOwSPFsxuqQGczGchnMTagE/QelKcw=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=XEADvXmLub23DrpSmKbkKrlaRcsMxI4FmvNAtTVFG9C97To2Qpkmn+svTfWSQA7fHUNQkxyZeQoo3MZtcABZj4xK7xpsOCK8Whm/rYRigIjFavFghonjyRiHZpmLPHH4MMVsvyyaokxXlFwVvz43yODxoppkRxCoiLGysynag58=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr; spf=none smtp.mailfrom=isslab.korea.ac.kr; dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b=VZ8cyRd6; arc=none smtp.client-ip=209.85.214.174
+	 MIME-Version; b=CqgZkFSncVOJzXyzQ5XwfMwcX8jfzNunDYfsqADLOEjYrHnoRS0cQZX1c9PhhUAkgdx4OaIGPKoJv3erAoAZmaWbGak9doHcBOuNWPUgIrUgj/td6ZbHTWDHJogBizHeubZcz6PVieSAlMOXBpUTs8hJQVfl3noEJlPFs+auKB0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr; spf=none smtp.mailfrom=isslab.korea.ac.kr; dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b=xvSMpfyQ; arc=none smtp.client-ip=209.85.214.179
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b="VZ8cyRd6"
-Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-2dd9ec41bc4so8726135ad.2
-        for <linux-scsi@vger.kernel.org>; Mon, 12 Oct 2026 02:02:09 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b="xvSMpfyQ"
+Received: by mail-pl1-f179.google.com with SMTP id d9443c01a7336-2e5378b281aso8318375ad.2
+        for <linux-scsi@vger.kernel.org>; Mon, 12 Oct 2026 02:02:12 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=isslab-korea-ac-kr.20251104.gappssmtp.com; s=20251104; t=1791795729; x=1792400529; darn=vger.kernel.org;
+        d=isslab-korea-ac-kr.20251104.gappssmtp.com; s=20251104; t=1791795732; x=1792400532; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=EnNE/hWpk3lnvRShne5vDHHiWuXq0SGuBMsNI2/H+N0=;
-        b=VZ8cyRd6poHvT1xgZgUydejHf43oP37Sphn61OipY0R8TL/Fxr3ZI9uDUE1KBPJYLE
-         zACXI/0TcJOqR8tkZorfaZ6/8nPP8TLg9/FIq9LSflV8N7Z8MI+xtUczAYfT/6PONCFQ
-         C01wilBkVFjXgdUFJoYyMXadV0z0f+3yChngE/CB9KeffnYEhC7pmpMJJuxvpeXQlYtR
-         DbnRIa3RRuQk/i4XcTU7NXRL8FzCtsaWPTVlU3GSxg8faSRTxq9BrnK+xT2xPJBgHkfx
-         /AAQfytDCjYvjdCynE0Sy1shgD+pSgD1fshfsTF0dukfRPLgzg1Kd0O//Ohg1I9m0JSY
-         +paQ==
+        bh=eeSDPQo+FqQoQRBVVkhRhWFGqoR5OOlMgwCNRH1vZa8=;
+        b=xvSMpfyQF353QUxniNO0i6Cw5HWC1hVV3e1NuFivTw9TibQrUxkNjITX/7NbTdbQn4
+         d/ziLWJJ0Lfvo0fu620/VvnMJyeD3aRd11XMBg/FpbYPta9fiwOKCp9mSf0mjgQaZJrT
+         sKYumJ8CZGV9QKW6BEtVRAhBkscHmiWRY/Tk4g8/S9bvHImNssoTZtNpNYSY4lL8+aLr
+         39Jcq07oUW7GmKbYdAtIqPErP3FgFcGLsIT6IrtBUIYOJ1qK38+DsWfjrBEkfWqH2ZrC
+         Vrelg/Z1CSK5z7pO8fQrSrFI0iDJ0FTeYbhVGhTXMbX6P+6qLOGiPPI3RG0tBXI4GF84
+         WxKQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791795729; x=1792400529;
+        d=1e100.net; s=20260707; t=1791795732; x=1792400532;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=EnNE/hWpk3lnvRShne5vDHHiWuXq0SGuBMsNI2/H+N0=;
-        b=WKIPzqm94ZgG/09R3L3DZ4Z8/d+eaiMDT7wzJ5FmSXI4kYjzUH312yV0alF9N+k7Tn
-         bgIccwr73jL0fbkgjGjBQktimBXQhAsCXQtZ9cMDJEKi7raH++fGpJGWAPifVW9WmkVc
-         W8DFCcX/Jq96zE0p+fUuSgLKYkbin1Oh9Kr43ZOX+2Jolp/af66IsTinfR2x5f3cdGeb
-         JQ3XcYdbT/O1w9Go11FiyHn8YnkqoQkov/cJblrETRFlGq5a4OxG3u/C1hd+SEaOrRB2
-         MT9r666Y6Bs22026Mig+XxCBFhfV07zcaH1278WQejKDmrKoYX1V/qJ8uF2F29ZdW2nO
-         VvCg==
-X-Gm-Message-State: AFq9FYIQvLD3BVsGZheqnTo7M0aMm360DUBkqgaUER7ShbE8wyo0wLK2
-	OqVmnsEuZS6uX5Ga7EQtdEbor3grSZnHcb0fJzCG8+Kr5A2QObd3CW0LYM1CdLBrlZ0=
-X-Gm-Gg: AYBFou178nmxq0Oj2Gf3KEKFaso6lAkgFnpMVXi2kzw65YeszresV8LKtgdXineLTDp
-	oHC1xPFfCanDH+jkl+NgvFGXQKog7LI7k3ZZ7HJCq3VNFUNlR31yK3jZjW5ChbrNIYMuXtrw2aI
-	tGz4xZKcxr73n9VWvK9FcMwV8nW8/rpKB5XWV2MfOlx7F7ro8j81gYSnj1iBJeU0lwYayXFVvkh
-	MrRTn/hzIgfrIy6exGpyH1WBSLWlQzIO2s7Jd1ZfOz6Lpt06RlZ3XFQjZj2HZJwgaetMoYeTBiK
-	UmROkdd1YABv8q742NOVTFWBZQG2dg7P0wlvf3BRVAdZDm/fvigMHWl21XdeWJ1dF3MRWofJyxw
-	3gxzAOPJmZu/Il9swWa9Qs0+ZIq255zKX/jeH1v0CQ0IyH9/dTnspIo/6YcgR96aCt8c/YLQlg2
-	IK4ANyACWiBxHVRC3QQgaQxVnNy5/M3t8QEaQxMHYoxIIcd2r1Ka/eZ22h/QCzJIdtP9jqooapB
-	/WvRg==
-X-Received: by 2002:a17:903:2ad0:b0:2e8:34f9:735f with SMTP id d9443c01a7336-2e8429a9f94mr67535575ad.16.1791795728658;
-        Mon, 12 Oct 2026 02:02:08 -0700 (PDT)
+        bh=eeSDPQo+FqQoQRBVVkhRhWFGqoR5OOlMgwCNRH1vZa8=;
+        b=ogDy+7WtpZUWBxkVcOQz9z6EHJpsa4ymGUkS+zGpLtF6QiIHm+qVcDSD46JTwbfgWt
+         X8AC9QbJNUCaKnokiKbXyjsNJFsH4j/PXvPey88Z2ZKrodo74+jqJ/Nlb5b2l78VJbJQ
+         iijFqjhhBrY/f4enVcV7IVDW21kYu41ox6xeXwkzjWVvF8hGzv0jkGGXROH06l2P/YJD
+         S9djw8Byn+CE8/DMhmxbsRLvKnV2/zJmebe2gXMLVPLw0Y7YUaRZgYWaxjRuCBJKu5WP
+         b0oUV3NM+peQ8GORZXZxQLo9U30wsKo/SFqHHsL3yCBRY764uhioCm2cBiu42RYpNlPV
+         s48A==
+X-Gm-Message-State: AFq9FYI1uzm4DcWRiJgAjwl8lqWHdyTr1hq7zSZOpTzMyBCixVNMApnr
+	6bvgRGOaYTelK251OLqml0n4uGp4boYGhyXm4k5G+tst0tBWloTF8m98zg91zjUJ09Q=
+X-Gm-Gg: AYBFou0NdPO2SYoMCW0nGrwXarfufFLMzk5MUGfNys6+Y0GWo09Qxc83PI0/dQKGzbW
+	jn+xFAtjyd/6hVSLwsR0vucSwRFlXoUWt+pgcf5hvLSbzHjfsrzH5hv6jqX2D5/O8HNjaTc+3PP
+	knWp/rhpsWl6e/kfkar4Yh4KNOWOVMhlyXYMwf7XYRgYoYtJ2GKUGoFTNTl4P5ncaK5O5dAqO+s
+	YPrLQIMbTgqSauaow/v/1E9cccMcsQR1v7lm3r4xv3nTDsy2tBcUracGgVFtQ49kJXyob7t4G0F
+	fzx4ja3liL663nQWtnJsQIJMq5notxXJz0icW5Dsn4APHtKsy0k1fuyOtuDQnt0RZa/Pox79o1r
+	RtefAsEv6SgSFI3AyWroDMYP6JiOsfEEjTii2lur5lObJ14wrs6vajktj2xFsHWbRItYAM+IXwt
+	zRb5AHr5aX+CHmKN+tWunjVsA/h1l+PTOOMQjvN0Qp66NKQRww9qLm7l4I64o4yvLwF+amfjKOD
+	K1LqA==
+X-Received: by 2002:a17:903:1585:b0:2e4:901b:9dc1 with SMTP id d9443c01a7336-2e842d030b7mr73824645ad.50.1791795732048;
+        Mon, 12 Oct 2026 02:02:12 -0700 (PDT)
 Received: from yhlee-960QFG.. ([125.131.91.97])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2e8422e4ebfsm41638795ad.78.2026.10.12.02.02.04
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2e8422e4ebfsm41638795ad.78.2026.10.12.02.02.09
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 12 Oct 2026 02:02:07 -0700 (PDT)
+        Mon, 12 Oct 2026 02:02:11 -0700 (PDT)
 From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
 To: ching2048@areca.com.tw,
 	mkp@kernel.org,
@@ -67,9 +67,9 @@ Cc: linux-scsi@vger.kernel.org,
 	stable@vger.kernel.org,
 	thenzl@redhat.com,
 	Yehyeong Lee <yhlee@isslab.korea.ac.kr>
-Subject: [PATCH v2 1/3] scsi: arcmsr: bound the firmware-supplied message length
-Date: Mon, 12 Oct 2026 18:01:46 +0900
-Message-ID: <adc1e1512a87ff16e99d066c2e96e18a1d28e610.1791792888.git.yhlee@isslab.korea.ac.kr>
+Subject: [PATCH v2 2/3] scsi: arcmsr: check the completion index the adapter reports
+Date: Mon, 12 Oct 2026 18:01:47 +0900
+Message-ID: <a9c7e18a8f392d216301a3e08b69a47d7981e1c9.1791792888.git.yhlee@isslab.korea.ac.kr>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <cover.1791792888.git.yhlee@isslab.korea.ac.kr>
 References: <cover.1791792888.git.yhlee@isslab.korea.ac.kr>
@@ -81,102 +81,119 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The adapter hands the driver an inbound message through a fixed
-128-byte window:
+On adapter types E and F the adapter reports a completed command by
+writing its slot number into the completion queue, and the driver turns
+that number straight into an array subscript:
 
-	struct QBUFFER {
-		uint32_t	data_len;
-		uint8_t		data[124];
-	};
+	cmdSMID = acb->pCompletionQ[doneq_index].cmdSMID;
+	ccb = acb->pccb_pool[cmdSMID];
 
-arcmsr_Read_iop_rqbuffer_in_DWORD() takes data_len from that window and
-uses it as the copy length without comparing it against the window:
+cmdSMID is a uint16_t taken from DMA memory the adapter writes, so it
+can be anything up to 65535, while acb->pccb_pool[] has
+ARCMSR_MAX_FREECCB_NUM (1024) entries.  Nothing compares the two.
 
-	iop_len = readl(&prbuffer->data_len);
-	if (iop_len > 0) {
-		buf1 = kmalloc(128, GFP_ATOMIC);
-		...
-		data_len = iop_len;
-		while (data_len >= 4) {
-			*buf2++ = readl(iop_data);
-			iop_data++;
-			data_len -= 4;
-		}
+arcmsr_drain_donequeue() cannot stand in for the missing check: it
+starts by reading pCCB->acb and pCCB->startdone, so by the time it can
+notice anything the bad pointer has already been loaded and
+dereferenced.  arcmsr_hbaF_postqueue_isr() rejects the single value
+0xffff because that is its queue-empty sentinel, which leaves
+1024..65534 accepted.
 
-A data_len above 128 therefore walks the 128-byte allocation, writing
-firmware-supplied data past its end, and the loop that follows reads the
-same overrun back out of buf1.  arcmsr_Read_iop_rqbuffer_data() has the
-same unchecked loop for adapter types A and B; there the destination is
-wrapped to ARCMSR_MAX_QBUFFER so nothing is written out of bounds, but
-the loop still spins up to 2^32 times with rqbuffer_lock held.
+Reject an index the driver never handed out, in the two interrupt
+handlers and in the polling path.
 
-Two of the three callers place no bound on the value at all:
-arcmsr_iop_message_xfer() for ARCMSR_MESSAGE_READ_RQBUFFER and
-arcmsr_sysfs_iop_message_read() both call straight into the reader on
-ACB_F_IOPDATA_OVERFLOW.  The third, arcmsr_iop2drv_data_wrote_handle(),
-compares data_len against the free space in acb->rqbuffer, which is up
-to ARCMSR_MAX_QBUFFER - 1 and so still far larger than the 128-byte
-staging buffer; it also reads data_len separately from the reader, so
-the adapter can change it between the two reads.
+Bound against ARCMSR_MAX_FREECCB_NUM rather than acb->maxFreeCCB, which
+is what actually guards the array: maxFreeCCB is derived from the
+host_can_queue module parameter and gets 64 added to it when it is below
+ARCMSR_MAX_FREECCB_NUM, so it can be larger than the array and would let
+a slot number past the end through.
 
-Clamp the length to the size of the window in both readers.  A
-conforming adapter never reports more than sizeof(prbuffer->data), so
-this does not drop any data it sends.
+In the interrupt handlers, release the entry and step the queue index
+before continuing, the same way the accepted path does.  Stopping at the
+bad entry instead would leave the consumer index behind the producer,
+so the adapter would re-raise the interrupt on an entry the driver has
+already refused and the completions queued behind it would never be
+reaped.
 
-With a KASAN build and a crafted window, data_len = 4096 produces 992
-out-of-bounds 4-byte writes (1024 dwords less the 32 that fit) in
-arcmsr_Read_iop_rqbuffer_in_DWORD():
+Measured with a KASAN build and a crafted completion queue.  struct
+AdapterControlBlock is 17504 bytes with pccb_pool at offset 496, so a
+reported slot of 60000 reads 480496 bytes in, past the end of the
+controller block entirely:
 
-  BUG: KASAN: slab-out-of-bounds in arcmsr_Read_iop_rqbuffer_in_DWORD+0x240/0x2a0 [arcmsr]
-  Write of size 4 at addr ffff88800b5baf80 by task init/1
-  Call Trace:
-   <TASK>
-   dump_stack_lvl+0x66/0xa0
-   print_report+0xd0/0x630
-   kasan_report+0xe4/0x120
-   arcmsr_Read_iop_rqbuffer_in_DWORD+0x240/0x2a0 [arcmsr]
-   </TASK>
-  Allocated by task 1:
-   __kasan_kmalloc+0x8f/0xa0
-   __kmalloc_cache_noprof+0x22c/0x570
-   arcmsr_Read_iop_rqbuffer_in_DWORD+0x7b/0x2a0 [arcmsr]
-  The buggy address belongs to the object at ffff88800b5baf00
-   which belongs to the cache kmalloc-128 of size 128
-  The buggy address is located 0 bytes to the right of
+  BUG: KASAN: use-after-free in arcmsr_hbaE_postqueue_isr+0x242/0x2d0 [arcmsr]
+  Read of size 8 at addr ffff88800bf354f0 by task init/1
 
-The first value that overruns is data_len = 129; 128 and below are
-reported clean, and 124 (the window) and 120 copy byte-for-byte
-identically with and without the clamp.
+and the pointer it picked up then faults in arcmsr_drain_donequeue:
 
-Fixes: bb263c4ecbb1 ("arcmsr: fix ioctl data read/write error for adapter type C")
+  RIP: 0010:arcmsr_drain_donequeue+0x27/0x360 [arcmsr]
+  Kernel panic - not syncing: Attempted to kill init! exitcode=0x0000000b
+
+A smaller out-of-range slot such as 2000 still lands inside the
+controller block (offset 16496), so there is nothing for KASAN to
+report; the driver simply reads an unrelated field of its own
+AdapterControlBlock as a command pointer and faults on it in the same
+place.  With host_can_queue raised so that maxFreeCCB becomes 1087, a
+reported slot of 1050 faults the same way while comparing below
+maxFreeCCB.
+
+A queue holding a rejected entry followed by a good one drains to the
+producer index and the good completion is reaped; valid slot numbers are
+accepted unchanged.
+
+Fixes: 235090241c55 ("scsi: arcmsr: Add code for ACB_ADAPTER_TYPE_E")
 Cc: stable@vger.kernel.org
 Signed-off-by: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
 ---
- drivers/scsi/arcmsr/arcmsr_hba.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/scsi/arcmsr/arcmsr_hba.c | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
 
 diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
-index 8aa948f06cacf..255f1d898079f 100644
+index 255f1d898079f..9519715883b5a 100644
 --- a/drivers/scsi/arcmsr/arcmsr_hba.c
 +++ b/drivers/scsi/arcmsr/arcmsr_hba.c
-@@ -2277,6 +2277,8 @@ arcmsr_Read_iop_rqbuffer_in_DWORD(struct AdapterControlBlock *acb,
- 
- 	iop_data = (uint32_t __iomem *)prbuffer->data;
- 	iop_len = readl(&prbuffer->data_len);
-+	if (iop_len > sizeof(prbuffer->data))
-+		iop_len = sizeof(prbuffer->data);
- 	if (iop_len > 0) {
- 		buf1 = kmalloc(128, GFP_ATOMIC);
- 		buf2 = (uint32_t *)buf1;
-@@ -2319,6 +2321,8 @@ arcmsr_Read_iop_rqbuffer_data(struct AdapterControlBlock *acb,
- 		return arcmsr_Read_iop_rqbuffer_in_DWORD(acb, prbuffer);
- 	iop_data = (uint8_t __iomem *)prbuffer->data;
- 	iop_len = readl(&prbuffer->data_len);
-+	if (iop_len > sizeof(prbuffer->data))
-+		iop_len = sizeof(prbuffer->data);
- 	while (iop_len > 0) {
- 		pQbuffer = &acb->rqbuffer[acb->rqbuf_putIndex];
- 		*pQbuffer = readb(iop_data);
+@@ -2677,6 +2677,14 @@ static void arcmsr_hbaE_postqueue_isr(struct AdapterControlBlock *acb)
+ 	pmu = acb->pmuE;
+ 	while ((readl(&pmu->reply_post_producer_index) & 0xFFFF) != doneq_index) {
+ 		cmdSMID = acb->pCompletionQ[doneq_index].cmdSMID;
++		if (cmdSMID >= ARCMSR_MAX_FREECCB_NUM) {
++			pr_err_ratelimited("arcmsr%d: bad cmdSMID %u from iop\n",
++					   acb->host->host_no, cmdSMID);
++			doneq_index++;
++			if (doneq_index >= acb->completionQ_entry)
++				doneq_index = 0;
++			continue;
++		}
+ 		ccb = acb->pccb_pool[cmdSMID];
+ 		error = (acb->pCompletionQ[doneq_index].cmdFlag
+ 			& ARCMSR_CCBREPLY_FLAG_ERROR_MODE1) ? true : false;
+@@ -2706,6 +2714,15 @@ static void arcmsr_hbaF_postqueue_isr(struct AdapterControlBlock *acb)
+ 		cmdSMID = acb->pCompletionQ[doneq_index].cmdSMID;
+ 		if (cmdSMID == 0xffff)
+ 			break;
++		if (cmdSMID >= ARCMSR_MAX_FREECCB_NUM) {
++			pr_err_ratelimited("arcmsr%d: bad cmdSMID %u from iop\n",
++					   acb->host->host_no, cmdSMID);
++			acb->pCompletionQ[doneq_index].cmdSMID = 0xffff;
++			doneq_index++;
++			if (doneq_index >= acb->completionQ_entry)
++				doneq_index = 0;
++			continue;
++		}
+ 		ccb = acb->pccb_pool[cmdSMID];
+ 		error = (acb->pCompletionQ[doneq_index].cmdFlag &
+ 			ARCMSR_CCBREPLY_FLAG_ERROR_MODE1) ? true : false;
+@@ -3880,6 +3897,11 @@ static int arcmsr_hbaE_polling_ccbdone(struct AdapterControlBlock *acb,
+ 			doneq_index = 0;
+ 		acb->doneq_index = doneq_index;
+ 		spin_unlock_irqrestore(&acb->doneq_lock, flags);
++		if (cmdSMID >= ARCMSR_MAX_FREECCB_NUM) {
++			pr_err_ratelimited("arcmsr%d: bad cmdSMID %u from iop\n",
++					   acb->host->host_no, cmdSMID);
++			continue;
++		}
+ 		pCCB = acb->pccb_pool[cmdSMID];
+ 		poll_ccb_done |= (pCCB == poll_ccb) ? 1 : 0;
+ 		/* check if command done with no error*/
 -- 
 2.43.0
 
