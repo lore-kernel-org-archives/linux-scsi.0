@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 063D73B4EBC;
-	Mon, 12 Oct 2026 18:52:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C83953B895A;
+	Mon, 12 Oct 2026 18:54:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791831166; cv=none; b=DV1o7GmvwoU809ABw2aiDfdlzuD8HhbGekCsg0el+ZeEK8/OIwMJI3O1mYzUL01+gquYpSUZ2a8MgXGN2ycMz0Ixk261j+ftZ9nez9Os8ZmwbrYRWTfFHLxbUgcn2j4nwlqB8wR25SSCczwuJ/N4D5wSBreYi6goRIPAnXYY0tw=
+	t=1791831250; cv=none; b=iWbDD0stVaqznhGGt9CBrURNeTFg7CQf6YE2/t8qn+y+vG+O2KBHwvKsvCNIkOOXEsSf8uAulyPuU4Z+UF1LKuPs7FH1Hk84/iq7adjuM/xDXpanSyh7GXoIAH/jr/pfbGINP/+QhXVWi7GHQ+KIum6/e6RE43vVs2Hg/sD9QWE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791831166; c=relaxed/simple;
-	bh=b4h3yvXXHOgNrBcgO3uqN0z/gdCLhzp+fQGx4Nj9+Rc=;
+	s=arc-20240116; t=1791831250; c=relaxed/simple;
+	bh=kSNSYChi3N66hJUB+nRqCrrFL8THRcREUCcDVDsoecY=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Scqy5c80mnOmJTewzAPjQvES7f+98ddLjwmpSX0khfGvasjhZf6x5/kQ2p0s0bGjjwMy84wbsXQau2WeZJDV1oqcfBD2a8Vtr0ML5slaI3F47BywTKMGTDNcjRQL+tlIWQkSVNjkgc7ShFGlDA6AU4Bji3WMIy3dEnyY+zxCObE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=m0WRXH/l; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:Content-Type; b=U2o0xv7engiE66LmaCXFZja0dWv3+WkZTAVQ2+SXMhVyMyaxFFULQj4d4wib902HAuULRIIZo2FaOLSfhyAgjzFfn6GpzwMEMJUX1glRprjAAmxcHhXh2zNmpJ7u/oU/A3ffOCKhDN+4Y+IVeqvDck8mhYO5znU64YowQTNzUWk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Cdad94l3; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="m0WRXH/l"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 741911F0089B;
-	Mon, 12 Oct 2026 18:52:09 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Cdad94l3"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5128E1F0089B;
+	Mon, 12 Oct 2026 18:53:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791831164;
-	bh=JS5rAlbNo22qwtsGvE+A/Ou5uLAn4LHEBxkEtLv9fm4=;
+	s=k20260515; t=1791831243;
+	bh=/LzN6QFYSsA+fcmS211ot+Qp65prbM+0x7Y3py3WXwI=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=m0WRXH/lGiOPjKVxGePwu9PM4DBxUfPf8mpW/r+t73nEB4ofC+jExqVxZuSSyCuxU
-	 PD3XbbzWWtvD7+lTvQ6xsNEcjU9fooei2o1PVRT0U5yaGF3LE4miOE2lcxGpGnS+f3
-	 dTiNe4ZHjWjMKBQ/83QDlAZaU1CiGGcPnwTZqi2Z1/GXnkE3taxcckXkF7h0u220Fr
-	 NScxBsv/ieFyXlvqOLGLpBLzqpR4+YkZ9hncI4napESKOdnb5dEDI4RfDa2EZt3h7I
-	 ySovDqvGx82lYI5mP1iagKu+WVxk0qJBOPBG7o0UK7QoI0vOVrh2fHUYlAdE7Ma9Kz
-	 TLgk090yWcxhA==
-Message-ID: <214514be-a935-485b-8925-07d84c1063f9@kernel.org>
-Date: Mon, 12 Oct 2026 20:52:07 +0200
+	b=Cdad94l3/djhic99Bhd0ObG6C9U/C2CLrUE1lnyVHNjSsnckIVbfbC8gITgmKnRX1
+	 Ng0cl01itPkjwqWZ8HXQOhijaLgVbwHhhfx0wpkrF4VjvbQv9wj7oIG0uhuwb2MieL
+	 nFrM6c3TFAC31S2511GqSuww8ft/27QVjBhLuGUN0OMyF1qHmN4o2bKkSkr8PsmEse
+	 xKKxIbkYoBm+BrvdRQO/8Asb/AXtmVx0Fkv0c2DWvv8y0lmRL9Qdg2cfSOlXLrrds/
+	 g/VuG4q2KvwqvUKiuRTRsV6x7w5z6/xHOWetfu/xkcZvo7EFPXfnYKr9gOVnLL05of
+	 nQSHFxLN66GKg==
+Message-ID: <ebd7f324-c426-43c6-9a6f-d55a9fffddac@kernel.org>
+Date: Mon, 12 Oct 2026 20:53:26 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,8 +35,7 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 35/38] mm: avoid use of VMA_SPECIAL_FLAGS in
- migrate_vma_setup()
+Subject: Re: [PATCH v5 38/38] mm/huge_memory: remove vma_is_special_huge()
 To: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>,
  Andrew Morton <akpm@linux-foundation.org>,
  "Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>,
@@ -119,7 +118,7 @@ Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org,
  fuse-devel@lists.linux.dev, Ihor Solodrai <ihor.solodrai@linux.dev>,
  Bert Karwatzki <spasswolf@web.de>
 References: <20261009-b4-mmap-prepare-vma-flag-sanify-v5-0-923b70125b1e@kernel.org>
- <20261009-b4-mmap-prepare-vma-flag-sanify-v5-35-923b70125b1e@kernel.org>
+ <20261009-b4-mmap-prepare-vma-flag-sanify-v5-38-923b70125b1e@kernel.org>
 From: "David Hildenbrand (Arm)" <david@kernel.org>
 Content-Language: en-US
 Autocrypt: addr=david@kernel.org; keydata=
@@ -166,52 +165,29 @@ Autocrypt: addr=david@kernel.org; keydata=
  3iyY2Nsd7JxfKu1PRhCGwXzRw5TlfEsoRI7V9A8isUCoqE2Dzh3FvYHVeX4Us+bRL/oqareJ
  CIFqgYMyvHj7Q06kTKmauOe4Nf0l0qEkIuIzfoLJ3qr5UyXc2hLtWyT9Ir+lYlX9efqh7mOY
  qIws/H2t
-In-Reply-To: <20261009-b4-mmap-prepare-vma-flag-sanify-v5-35-923b70125b1e@kernel.org>
+In-Reply-To: <20261009-b4-mmap-prepare-vma-flag-sanify-v5-38-923b70125b1e@kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 10/9/26 20:04, Lorenzo Stoakes (ARM) wrote:
-> Now we have the expressive vma_is_mm_managed() and vma_is_fixed_mapping()
-> predicates, use them to determine whether to proceed with migration. This
-> drops the VMA_IO_BIT test, which is safe as mm-managed mappings may not set
-> it.
+> vma_is_special_huge() tests whether either the VMA_PFNMAP_BIT or
+> VMA_MIXEDMAP_BIT is set (i.e. whether the VMA is not mm-managed),
+> but with a DAX carve-out.
 > 
-> hugetlb mappings remain excluded, as they are fixed mappings.
+> DAX however no longer sets VMA_MIXEDMAP_BIT, so this carve-out is no longer
+> required.
+> 
+> Therefore test for !vma_is_mm_managed() instead and also drop the
+> VMA_IO_BIT check, as it is now redundant since it is enforced that
+> mm-managed mappings may not set VMA_IO_BIT.
+> 
+> This also eliminates another overloaded use of 'special' within mm.
 > 
 > No functional change intended.
 > 
-> Reviewed-by: Zi Yan <ziy@nvidia.com>
-> Acked-by: David Hildenbrand (Arm) <david@kernel.org>
+> Acked-by: Zi Yan <ziy@nvidia.com>
 > Signed-off-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
 > ---
->  mm/migrate_device.c | 12 +++++++-----
->  1 file changed, 7 insertions(+), 5 deletions(-)
-> 
-> diff --git a/mm/migrate_device.c b/mm/migrate_device.c
-> index b9c453c28795..289d7b08ace4 100644
-> --- a/mm/migrate_device.c
-> +++ b/mm/migrate_device.c
-> @@ -739,19 +739,21 @@ static void migrate_vma_unmap(struct migrate_vma *migrate)
->   */
->  int migrate_vma_setup(struct migrate_vma *args)
->  {
-> +	const struct vm_area_struct *vma = args->vma;
->  	long nr_pages = (args->end - args->start) >> PAGE_SHIFT;
->  
->  	args->start &= PAGE_MASK;
->  	args->end &= PAGE_MASK;
-> -	if (!args->vma || vma_test_any_mask(args->vma, VMA_SPECIAL_FLAGS) ||
-> -	    vma_is_dax(args->vma))
-> +	if (!vma)
-> +		return -EINVAL;
-> +	if (!vma_is_mm_managed(vma) || vma_is_fixed_mapping(vma) ||
-> +	    vma_is_dax(vma))
-
-Same here, with the droppable thing changed this would be
-
-!vma_is_mm_backed() || vma_is_dax(vma)
-
-I guess.
 
 Acked-by: David Hildenbrand (Arm) <david@kernel.org>
 
