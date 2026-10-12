@@ -1,217 +1,308 @@
-Received: from mail-pf1-f171.google.com (mail-pf1-f171.google.com [209.85.210.171])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0C3D489FDF
-	for <linux-scsi@vger.kernel.org>; Mon, 12 Oct 2026 13:52:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1EB034F24E
+	for <linux-scsi@vger.kernel.org>; Mon, 12 Oct 2026 13:52:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791813141; cv=none; b=aWY1fTORssreJ7JwNEbpZUvUxa4qCqBzjXFHls5oyabkZWE6eY4XuXGAn1iOFtVJZmd1EXj3GDvle+h0IsVIdiinmsatJW3LU2gsmn1jqufGUyDrn/89bDKJk5lmiIAPT6rT8DrR8YwrVFKo9+EOZdDJg+smKtO/coxqV44rIE0=
+	t=1791813161; cv=none; b=o47NBDeGLjBZbQVSS7UlOnK7qPFc2wze4qq32vgQLFxNmG6O7CiIdt4aHmqF4gVdqSapbrU9WCPUoOnHI4eMJZ5amLwIkpfsJESnS/OiC+MdYkdwRNEZ2NxnRBeQVHF+/1Akmk3wyiP/cFZG6yx4f0/p3Oxc8q9v0iyfuu685zk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791813141; c=relaxed/simple;
-	bh=TmrDgwIsBwwzPv80GnSL6PFlsZHILn4PMmXvaiqLLF0=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=kddc+2WZJ7c53m7c2StqwwcfY+z8Ct9suudJV4v4pyCxykiQyj6W96MTqrrBU69s4qmAiZ1PnF6csi7danfVC9m0PnZW8CzVdYDvWIEJzZU0iM8SHU1LyOujyTxyZoh+96y69Q38b3ZSoEc06tLx2T2w5WTAD2vjNN8wmumHcD4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr; spf=none smtp.mailfrom=isslab.korea.ac.kr; dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b=a58vcaqc; arc=none smtp.client-ip=209.85.210.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
+	s=arc-20240116; t=1791813161; c=relaxed/simple;
+	bh=jM3657Xt6iZn0PGjEX+7EjwK3RdDBY+7QTU5JF8HN3M=;
+	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
+	 Date; b=DzalE8gpEeO148CrS0rqKdHEwchNscbg3UN2COhH+YMJfLavSST3MnA+WQTyhmPpiTwVUJvF9zHnzo0edJSpK6Rij/BzntmHo/pLkwmWiSJXhuM1ol7FMoYn6XCHzbEZzLKT+FtoHKdRiharJPNBKTHNeLUCYZzfi7Z+RBj3j64=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OFX2J5l1; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b="a58vcaqc"
-Received: by mail-pf1-f171.google.com with SMTP id d2e1a72fcca58-88cfa501c5cso558929b3a.3
-        for <linux-scsi@vger.kernel.org>; Mon, 12 Oct 2026 06:52:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=isslab-korea-ac-kr.20251104.gappssmtp.com; s=20251104; t=1791813137; x=1792417937; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=VUNiGziCUNl+CT1ZqXgl34E50ZrFvZEoRDfOve+S9JE=;
-        b=a58vcaqcqb31nvvheENTQc3TJZJ3c8qP6d9NiFVlddOPyg5hTQjOM0ID1aNoW/YFg/
-         1mLesTY29GGjN9B3iwgZqthZdxADBJJtL5aQGtFudXTIdG1DT0w/NmCybyMxiZWgw0zZ
-         oNHteQdf0o3PQG8W9OLgcRbvDgWpYiM+tCUyt1mxrMryxU9MHdgi9b8lyxoO+bzwXv2K
-         2o7sg+s5h2wDQpbloc+RDqafUg9f5oafvJRDIMm7F22GHVU4DsLdr/S5H1AIJ+EXEmQE
-         pmD3lkDhFLAed0O+YRA0LOru1czE6dxKdMIBO0XajXdhZOehjtmzYpQu7+q6quYiTuKA
-         wCGQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791813137; x=1792417937;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=VUNiGziCUNl+CT1ZqXgl34E50ZrFvZEoRDfOve+S9JE=;
-        b=nHysI5Aan19+QYQcXNBX5UxoRZ1gb6S0T6/7eZ1ZYpRx5muqvx1JHC32Kvg+nrB8zn
-         JSlqOlJWpypFdBsXyzqvX1h2TJRaTBwNUq+OEVQJqfMxXOjOCak92idkNjFo8E6JwW9L
-         gUAzdORYgMcOlq1ITvYIuGWYjagQxlHAyFDzLqwaUOzonMCcVurcT6ibMuz6CjF/Ppl7
-         G7teTkeNkWQCr/0xeZEFa67rnsBs/uhVa6rXfoN2WUdQA14qycnGUtIpRKrTyuvtPSdR
-         szDgVtvIxiBBP9YGJ0fnZ4aNO5MpcOy9ObTuAC5HON0jMV8hFGEaOqkILkAAdj+NhubU
-         hrHA==
-X-Forwarded-Encrypted: i=1; AKwUvBz23YB5ARCNo0fjAXpcLW7uQQ4HdQq0xISoTsJKvIG+V//wUV+x6dq0H9Mo6bgy3wJlT9Fyip4QZcCH@vger.kernel.org
-X-Gm-Message-State: AFq9FYKTtCSGt9bD7nsgFv+VpnHwGtEmLiL88GnZ+1PfMrsVm4/64umg
-	5xLNovxOKKN/L+dmZSRJ3b+ExWjrjLvqgtQyvdvzv0hesDzGipGPKhoQtj0KiLCRswwleBFpuqI
-	I5plZa3o=
-X-Gm-Gg: AYBFou2/pKpPiHfxVXwcuGJc2j1Z2uX4V1hsAftRGJ7vGUGq3bvybc6gXzhnDSL1WHL
-	9Hv3ndEttsyvEnIkUCqTtpS4MXAw6sZ3k8TEkyZ//AXHItepztkvbCq6tgVtwOie+qbIC69xout
-	NKnHeNn5X54wzJbVruJDGqdELyaY7fvggFxFtpzutarFJpfrLeianbtIFf/KxS4X866wOKYaTF4
-	RFqMcCacT3x3WrzprN5DQsZD6mrSg4BHS9d6aF73JLZEBc91p47ZZ+2izfNozb5A67vkbTpuDAY
-	DoNIlkuZw8JxJivaBucPTnScLBQAaZgcDrSOxLejxUiWBftYNxTj2nBqPIClkMnbGiS6f4ga/GH
-	QN1OsSposFvKeAvdQweCiEcaRYJAtNZlMOLK35B1/hPd9Q/ly5JywkQV1qUmEd0I4/VOrkHZWoX
-	R8ppwEfI/+tHe5j0fTtJiZYy6lxs1eE1Ce5fAXqDYBE8n5OzICy85sPsnHID1aRo55S7y6ZDP+o
-	eqPTJuLjAQXKPuRLI0sAw==
-X-Received: by 2002:a05:6a20:5493:b0:3dd:a00a:c5be with SMTP id adf61e73a8af0-3e16c03cd8emr10688105637.49.1791813136750;
-        Mon, 12 Oct 2026 06:52:16 -0700 (PDT)
-Received: from yhlee-960QFG.Davolink ([2406:5900:1044:110c:7bd2:1202:246d:44ce])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-cd3d9e08c89sm4298333a12.8.2026.10.12.06.52.13
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 12 Oct 2026 06:52:16 -0700 (PDT)
-From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
-To: mkp@kernel.org,
-	target-devel@vger.kernel.org,
-	linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org,
-	Hannes Reinecke <hare@suse.de>,
-	Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH] scsi: target: tcm_fc: reject overlapping write-data frames
-Date: Mon, 12 Oct 2026 22:51:59 +0900
-Message-ID: <506886f3051941899c26b3dd4d2a32a3c0cf9846.1791812937.git.yhlee@isslab.korea.ac.kr>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OFX2J5l1"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8AC471F0089B;
+	Mon, 12 Oct 2026 13:52:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1791813159;
+	bh=lJWLY2C6khpaI2PxuUnRdHoV2G/maB9xNQ0O1qriVyQ=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=OFX2J5l1LYjY3KKtw0fO0MEos8n1GVkoG582wU9i1N6+s8+9OykUzOYVaJLZSKFML
+	 WHS5l9mD/Ce9iSFQFypAjVuxEH5myj5CFNHmnuIhPcMdMV471cks7YkY5Oe1cDDB+6
+	 uzvpkxFR/frnSkdeG8S2BYM5MB0bN7syCCvjZHgymPacy7+24xh/soSLBNu+isFKMc
+	 7TGkZn9cckKZyXW9iqB/DA9hp5JgmShGGvEeJHQDY7FIA7lQW4HO9jez2NKnbm1Hs7
+	 07doL4zy3/5ZjmBXLUtzrFKhifCuQ0O8FDyqHT+yiLGdwy6cT3Ehtu3sXX7zOGJVTA
+	 cPySkaE+maXlA==
+Message-ID: <sashiko-outbox-168219@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v5 5/9] zloop: add storage element emulation
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Damien Le Moal" <dlemoal@kernel.org>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20261012130121.1902634-6-dlemoal@kernel.org>
+References: <20261012130121.1902634-1-dlemoal@kernel.org>
+ <20261012130121.1902634-6-dlemoal@kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 12 Oct 2026 13:52:39 +0000
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-ft_recv_write_data() executes a WRITE once the received byte count reaches
-se_cmd->data_length.  Frames are placed by their FCP relative offset but
-nothing tracks which offsets were filled, so an initiator that sends two
-frames at the same offset reaches data_length with part of the buffer never
-written: two 4096-byte frames at offset 0 of an 8192-byte write get the
-count to 8192 and leave the second half untouched.
+Thank you for your contribution! Sashiko AI review found 6 potential issue(=
+s) to consider:
+- [High] block: array underflow in zloop_remove_element() via element_id =
+=3D=3D 0
+- [High] block: UAF of disk->queue in delayed works during zloop_free_disk()
+- [High] block: double-free of elements and other structures in zloop_ctl_a=
+dd() error path
+- [High] block/zloop: softirq deadlock on wp_lock in process context
+- [Medium] block: emulation state inconsistency on partial restore failure
+- [Medium] block: zone management commands bypass element removal lock-out
+--
 
-The buffer is not zeroed (transport_generic_new_cmd() clears zero_flag for
-a data CDB), so that gap keeps the previous page contents, which the
-backend then writes to the device for the initiator to read back.  There is
-no oops; poisoning the buffer and sending such a pair leaves 4096 bytes of
-it committed unchanged, and the patched driver refuses the overlapping
-frame.
+commit 1027b8e5f9403129fc0dca5c5db75877129cfc64
+Author: Damien Le Moal <dlemoal@kernel.org>
 
-Track the range received and drop a frame that falls inside it.  With no
-overlapping frame accepted, the byte count reaches data_length only when
-the whole buffer has been written, so it stays a valid completion test;
-in-order and out-of-order complete writes are unaffected.
+    zloop: add storage element emulation
 
-Fixes: 3699d92a4d7b ("[SCSI] tcm_fc: Adding FC_FC4 provider (tcm_fc) for FCoE target (TCM - target core) support")
-Cc: stable@vger.kernel.org
-Signed-off-by: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
----
- drivers/target/tcm_fc/tcm_fc.h |  8 +++++
- drivers/target/tcm_fc/tfc_io.c | 57 ++++++++++++++++++++++++++++++++++
- 2 files changed, 65 insertions(+)
+This commit adds storage element emulation to the zloop driver, simulating
+the depopulation feature of SMR disks. It allows mapping zones to specific
+storage elements to test offline behaviors and transitions.
 
-diff --git a/drivers/target/tcm_fc/tcm_fc.h b/drivers/target/tcm_fc/tcm_fc.h
-index 00e5573c62966..b75b1373a49c9 100644
---- a/drivers/target/tcm_fc/tcm_fc.h
-+++ b/drivers/target/tcm_fc/tcm_fc.h
-@@ -103,12 +103,20 @@ struct ft_lport_wwn {
- /*
-  * Commands
-  */
-+#define FT_WRITE_SEGS	4	/* out-of-order write ranges tracked per cmd */
-+
- struct ft_cmd {
- 	struct ft_sess *sess;		/* session held for cmd */
- 	struct fc_seq *seq;		/* sequence in exchange mgr */
- 	struct se_cmd se_cmd;		/* Local TCM I/O descriptor */
- 	struct fc_frame *req_frame;
- 	u32 write_data_len;		/* data received on writes */
-+	u32 write_contig_end;		/* end of the contiguous data received */
-+	u8 write_nseg;			/* out-of-order ranges held below */
-+	struct ft_write_seg {
-+		u32 off;
-+		u32 end;
-+	} write_seg[FT_WRITE_SEGS];
- 	struct work_struct work;
- 	/* Local sense buffer */
- 	unsigned char ft_sense_buffer[TRANSPORT_SENSE_BUFFER];
-diff --git a/drivers/target/tcm_fc/tfc_io.c b/drivers/target/tcm_fc/tfc_io.c
-index 45329284f52f5..53d7c7268865d 100644
---- a/drivers/target/tcm_fc/tfc_io.c
-+++ b/drivers/target/tcm_fc/tfc_io.c
-@@ -189,6 +189,56 @@ static void ft_execute_work(struct work_struct *work)
- 	target_execute_cmd(&cmd->se_cmd);
- }
- 
-+/* Record a frame's range; refuse one that repeats data already received. */
-+static bool ft_add_write_range(struct ft_cmd *cmd, u32 off, u32 len)
-+{
-+	u32 end = off + len;
-+	unsigned int i, j;
-+	bool absorbed;
-+
-+	if (off < cmd->write_contig_end)
-+		return false;
-+	for (i = 0; i < cmd->write_nseg; i++)
-+		if (off < cmd->write_seg[i].end && cmd->write_seg[i].off < end)
-+			return false;
-+
-+	if (off != cmd->write_contig_end) {
-+		for (i = 0; i < cmd->write_nseg; i++) {
-+			if (cmd->write_seg[i].end == off) {
-+				cmd->write_seg[i].end = end;
-+				return true;
-+			}
-+			if (cmd->write_seg[i].off == end) {
-+				cmd->write_seg[i].off = off;
-+				return true;
-+			}
-+		}
-+		if (cmd->write_nseg >= FT_WRITE_SEGS)
-+			return false;
-+		cmd->write_seg[cmd->write_nseg].off = off;
-+		cmd->write_seg[cmd->write_nseg].end = end;
-+		cmd->write_nseg++;
-+		return true;
-+	}
-+
-+	cmd->write_contig_end = end;
-+	do {
-+		absorbed = false;
-+		for (i = 0; i < cmd->write_nseg; i++) {
-+			if (cmd->write_seg[i].off != cmd->write_contig_end)
-+				continue;
-+			cmd->write_contig_end = cmd->write_seg[i].end;
-+			for (j = i; j + 1 < cmd->write_nseg; j++)
-+				cmd->write_seg[j] = cmd->write_seg[j + 1];
-+			cmd->write_nseg--;
-+			absorbed = true;
-+			break;
-+		}
-+	} while (absorbed);
-+
-+	return true;
-+}
-+
- /*
-  * Receive write data frame.
-  */
-@@ -267,6 +317,11 @@ void ft_recv_write_data(struct ft_cmd *cmd, struct fc_frame *fp)
- 		goto drop;
- 	if (frame_len + rel_off > se_cmd->data_length)
- 		frame_len = se_cmd->data_length - rel_off;
-+	if (!ft_add_write_range(cmd, rel_off, frame_len)) {
-+		pr_err_ratelimited("%s: xid 0x%x: offset %u len %zu repeats data\n",
-+				   __func__, ep->xid, rel_off, frame_len);
-+		goto drop;
-+	}
- 
- 	/*
- 	 * Setup to use first mem list entry, unless no data.
-@@ -345,6 +400,8 @@ void ft_invl_hw_context(struct ft_cmd *cmd)
- 				 */
- 				cmd->write_data_len = lport->tt.ddp_done(lport,
- 								      ep->xid);
-+				cmd->write_contig_end = cmd->write_data_len;
-+				cmd->write_nseg = 0;
- 
- 				/*
- 				 * Resetting same variable to indicate HW's
--- 
-2.43.0
+> diff --git a/drivers/block/zloop.c b/drivers/block/zloop.c
+> index 394dc2408ed73..11481577b9cb2 100644
+> --- a/drivers/block/zloop.c
+> +++ b/drivers/block/zloop.c
+> @@ -985,6 +1011,41 @@ static bool zloop_prep_rq(struct zloop_device *zlo,=
+ struct request *rq)
+>  {
+>  	struct zloop_zone *zone =3D &zlo->zones[rq_zone_no(rq)];
+>  	bool is_write =3D op_is_write(req_op(rq));
+>  	bool ret =3D true;
+> =20
+>  	spin_lock(&zone->wp_lock);
 
+[Severity: High]
+Can this cause a softirq deadlock? The zloop_prep_rq() function is called f=
+rom
+zloop_queue_rq(), which runs in softirq context. It acquires zone->wp_lock
+using a plain spin_lock(). Later in this file, several new process-context
+functions (such as zloop_remove_element_work and zloop_restore_conv_zone) a=
+lso
+acquire zone->wp_lock without disabling softirqs. If a process holding the
+lock is preempted by a softirq attempting to queue I/O to the same zone, it
+could result in a deadlock.
+
+> =20
+> +	if (zlo->nr_elements) {
+> +		struct blk_se *se;
+> +
+> +		/*
+> +		 * Check the zone condition and the health state of the storage
+> +		 * element serving the zone: do not allow any operation to
+> +		 * offline zones or if the storage element serving the zone is
+> +		 * being removed, and allow only reads to read-only zones.
+> +		 */
+> +		if (is_write)
+> +			se =3D &zlo->elements[zone->wr_se_id - 1];
+> +		else
+> +			se =3D &zlo->elements[zone->rd_se_id - 1];
+> +		if (READ_ONCE(se->status) =3D=3D BLK_SE_STS_REMOVE_IN_PROGRESS) {
+> +			ret =3D false;
+> +			goto unlock;
+> +		}
+> +
+> +		if (zone->cond =3D=3D BLK_ZONE_COND_OFFLINE ||
+> +		    (zone->cond =3D=3D BLK_ZONE_COND_READONLY && is_write)) {
+> +			ret =3D false;
+> +			goto unlock;
+> +		}
+> +	}
+> +
+[ ... ]
+> @@ -1040,11 +1188,19 @@ static blk_status_t zloop_queue_rq(struct blk_mq_=
+hw_ctx *hctx,
+>  	}
+> =20
+>  	/*
+> -	 * If we need to strongly order zone append operations, set the request
+> -	 * sector to the zone write pointer location now instead of when the
+> -	 * command work runs.
+> +	 * Do not allow commands while the restoration of storage elements is
+> +	 * in progress.
+>  	 */
+> -	if (zlo->ordered_zone_append && req_op(rq) =3D=3D REQ_OP_ZONE_APPEND) {
+> -		if (!zloop_set_zone_append_sector(rq))
+> +	if (READ_ONCE(zlo->restore_in_progress))
+> +		return BLK_STS_IOERR;
+> +
+> +	switch (req_op(rq)) {
+> +	case REQ_OP_READ:
+> +	case REQ_OP_WRITE:
+> +	case REQ_OP_ZONE_APPEND:
+> +		if (!zloop_prep_rq(zlo, rq))
+>  			return BLK_STS_IOERR;
+> +		break;
+> +	default:
+> +		break;
+>  	}
+
+[Severity: Medium]
+Do zone management commands bypass the element removal lock-out? Operations
+like REQ_OP_ZONE_RESET are not handled by zloop_prep_rq() here, meaning they
+do not check if the storage element is in the BLK_SE_STS_REMOVE_IN_PROGRESS
+state. Could this allow them to proceed on zones belonging to a storage
+element that is actively undergoing depopulation?
+
+[ ... ]
+> +static void zloop_remove_element_work(struct work_struct *work)
+> +{
+> +	struct zloop_device *zlo =3D container_of(work, struct zloop_device,
+> +						remove_element_work.work);
+> +	struct blk_se *se, *paired_se =3D NULL;
+> +	enum blk_zone_cond cond;
+> +	struct zloop_zone *zone;
+> +	unsigned int memflags, i;
+> +
+> +	mutex_lock(&zlo->stor_elements_lock);
+> +
+> +	/* Wait for all IOs to complete. */
+> +	memflags =3D blk_mq_freeze_queue(zlo->disk->queue);
+> +	blk_mq_unfreeze_queue(zlo->disk->queue, memflags);
+
+[Severity: High]
+Does this worker access the queue after it may have been freed? When the di=
+sk
+is removed, disk_release() drops the queue reference and schedules it for R=
+CU
+free, followed by a call to zloop_free_disk() which calls
+cancel_delayed_work_sync(). If this worker executes during that time, could=
+ it
+result in a use-after-free on zlo->disk->queue here?
+
+[ ... ]
+> +static int zloop_remove_element(struct gendisk *disk, unsigned int eleme=
+nt_id)
+> +{
+> +	struct zloop_device *zlo =3D disk->private_data;
+> +	struct blk_se *se, *paired_se =3D NULL;
+> +	unsigned int nr_remove =3D 1;
+> +	int ret =3D 0;
+> +
+> +	if (zlo->stor_elements =3D=3D ZLOOP_STOR_ELEMENTS_NONE)
+> +		return -EOPNOTSUPP;
+> +
+> +	if (element_id > zlo->nr_elements)
+> +		return -EINVAL;
+> +
+> +	mutex_lock(&zlo->stor_elements_lock);
+> +
+> +	if (zlo->remove_element_id || READ_ONCE(zlo->restore_in_progress)) {
+> +		ret =3D -EBUSY;
+> +		goto unlock;
+> +	}
+> +
+> +	/*
+> +	 * Get the element to remove. If it is already removed, we have nothing
+> +	 * to do.
+> +	 */
+> +	se =3D &zlo->elements[element_id - 1];
+
+[Severity: High]
+Is it possible for element_id to be 0 here? The bounds check above prevents
+element_id > zlo->nr_elements, but does not check for element_id =3D=3D 0.
+If element_id is 0, element_id - 1 could underflow and result in an
+out-of-bounds array access on zlo->elements.
+
+[ ... ]
+> +static void zloop_restore_elements_work(struct work_struct *work)
+> +{
+> +	struct zloop_device *zlo =3D container_of(work, struct zloop_device,
+> +						restore_elements_work.work);
+> +	struct zloop_zone *zone;
+> +	struct blk_se *se;
+> +	unsigned int memflags, i;
+> +	enum blk_se_status sts;
+> +	int ret =3D 0;
+> +
+> +	mutex_lock(&zlo->stor_elements_lock);
+> +
+> +	/* Wait for all IOs to complete. */
+> +	memflags =3D blk_mq_freeze_queue(zlo->disk->queue);
+> +	blk_mq_unfreeze_queue(zlo->disk->queue, memflags);
+> +
+> +	/* Reset all zones. */
+> +	for (i =3D 0, zone =3D zlo->zones; i < zlo->nr_zones; i++, zone++) {
+> +		if (test_bit(ZLOOP_ZONE_CONV, &zone->flags)) {
+> +			zloop_restore_conv_zone(zlo, zone);
+> +			continue;
+> +		}
+> +		ret =3D zloop_restore_seq_zone(zlo, zone);
+> +		if (ret)
+> +			break;
+> +	}
+> +
+> +	/*
+> +	 * If we had an error, maintain all elements as removed instead of
+> +	 * using the restore error status.
+> +	 */
+> +	if (ret)
+> +		sts =3D BLK_SE_STS_REMOVED;
+> +	else
+> +		sts =3D BLK_SE_STS_OK;
+> +
+> +	/* Restore all removed elements. */
+> +	for (i =3D 0, se =3D zlo->elements; i < zlo->nr_elements; i++, se++) {
+> +		if (READ_ONCE(se->status) =3D=3D BLK_SE_STS_RESTORE_IN_PROGRESS)
+> +			WRITE_ONCE(se->status, sts);
+> +	}
+
+[Severity: Medium]
+If zloop_restore_seq_zone() fails and breaks the loop, does this leave the
+already-processed zones in the BLK_ZONE_COND_EMPTY state? Since the element
+status reverts to BLK_SE_STS_REMOVED on failure, this mismatch might trick
+zloop_prep_rq() into allowing I/O to those EMPTY zones, even though their
+storage element is officially removed.
+
+[ ... ]
+>  static void zloop_free_disk(struct gendisk *disk)
+>  {
+>  	struct zloop_device *zlo =3D disk->private_data;
+>  	unsigned int i;
+> =20
+> +	cancel_delayed_work_sync(&zlo->remove_element_work);
+> +	cancel_delayed_work_sync(&zlo->restore_elements_work);
+> +
+>  	blk_mq_free_tag_set(&zlo->tag_set);
+> =20
+>  	for (i =3D 0; i < zlo->nr_zones; i++) {
+> @@ -1019,15 +1434,24 @@ static void zloop_free_disk(struct gendisk *disk)
+> =20
+>  	fput(zlo->data_dir);
+>  	destroy_workqueue(zlo->workqueue);
+> +	kfree(zlo->elements);
+>  	kfree(zlo->base_dir);
+>  	kvfree(zlo);
+>  }
+[ ... ]
+> @@ -1384,6 +1915,8 @@ static int zloop_ctl_add(struct zloop_options *opts)
+>  	kfree(zlo->base_dir);
+>  out_destroy_workqueue:
+>  	destroy_workqueue(zlo->workqueue);
+> +out_destroy_storage_elements:
+> +	kfree(zlo->elements);
+>  out_free_idr:
+>  	mutex_lock(&zloop_ctl_mutex);
+>  	idr_remove(&zloop_index_idr, zlo->id);
+>  	mutex_unlock(&zloop_ctl_mutex);
+>  out_free_dev:
+>  	kvfree(zlo);
+
+[Severity: High]
+Does this error path cause a double-free? If add_disk() fails, the code jum=
+ps
+to out_cleanup_disk, which calls put_disk(zlo->disk). This drops the final
+reference and invokes zloop_free_disk(), successfully freeing zlo->elements,
+the workqueue, and zlo itself. Continuing the fall-through then explicitly
+calls kfree(zlo->elements) and kvfree(zlo) again on the already-freed memor=
+y.
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261012130121.1902=
+634-1-dlemoal@kernel.org?part=3D5
