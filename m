@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 312CE37187B;
-	Mon, 12 Oct 2026 18:47:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5DE9F37AA7A;
+	Mon, 12 Oct 2026 18:48:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791830834; cv=none; b=ksxLIIBAXzGMes3gXUfFwMcpDXBGzFZyKqNwOS4c8p/5KIzbBiTAoQeuy9PRaWVuSBfpabPxV8jPIFyX445xuM3OwNdedJ/S44EasLpkHx2Ztu9xyQAPA2qwm44IjHIqe5xciJu2zm9Dd4wZ9x0+ObKOA3nxz3ed3U8A/7IvpFE=
+	t=1791830923; cv=none; b=jdyPqe8AYEBTAlVYqdC1Yc1lkDJKH3+72oennWz702yOP13u2LsYXrDByEFIzOtrfnzRVJs1iK9V8HqN6OLCttO4OKAU2UTfQLmCDA+V9Us7Hb8qZkQ0y4RmE7Zg8s2c/Za9Njct7A/AIEzDFTLAYzQ2EhscTLnw/ufmGMp3LUM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791830834; c=relaxed/simple;
-	bh=aRj4EEl8MKLcbQzbaAYwVEy0vwz9GsNK1w8JUB3z5zM=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
-	 In-Reply-To:Content-Type; b=bVlBB9Ok3XGgWrCyNqkvvjF7zC/+Nj4vC+LJEIQSq6RRaaSVONVhTsAgq9UuwE0pMT+7DcICTRGnZn73O0O5BZli6RK5TFef+HTyL0zwQUaWV3RbWMCEUoS7n2oHg851YoLC7pcfYa6+J3e4pB3tGv5AXKa5SLMo9rT6OXl/vyg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ifoy46Di; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791830923; c=relaxed/simple;
+	bh=DqmPdX85fLMkuZm0r9RhRPsWGYkwWaN4hT3oAicB3Bs=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=sXw5tcF0le5Hww3XRRbgNARgqt+wfptCJwwtRViCf9JgbcLRzXW7fhhw59D9Bd4uU+DVqcaXqH2bZ/NaUrRK37/6yInIboYu+UOFFCtXpdJa5xytY8S5xhqeqvBMATFF8/veQKehDXwdXhdBErTxOCS5lMNw3Sg2OT+RXSFBgnI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VAsqz4f3; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ifoy46Di"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8956B1F008A1;
-	Mon, 12 Oct 2026 18:46:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VAsqz4f3"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 005E71F0089B;
+	Mon, 12 Oct 2026 18:48:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791830827;
-	bh=qSlbvrIHwU3Y3EaiCo+j8HqkUnlq3n6fYvrvq7B0imw=;
-	h=Date:Subject:From:To:Cc:References:In-Reply-To;
-	b=ifoy46DiXGWrvn9hHlC9sWpEOIJfnolR01lkmYmzMt8oZMHwULKUu405XHQyvJvcd
-	 specWDspHy4xMW8bFKyZ8rpWjPIMeUNqSVWgVGRDTn907gomOPrB4hpaV/MLQBUx2M
-	 8VIFQ806d0QftmuijbNPIH////VvTEwrO1SHh8+NpG+s7sRK1rsSEUt1INVLlwjZxt
-	 1QIZU7Bw3nRpNkkvYBJS0tGBVjoOR8H8l0vwpksiXTvLIzHxaRPkznNHaA4C38A3Zs
-	 mBuQbebXHvgoFrYLsANA2bsPxTBg5880xj3MQZLIL8NXEYnBg06LwVEG1x0EDcqIUu
-	 3KRtQ3mdnAWNg==
-Message-ID: <8819f458-894a-429a-8038-cd9bc0617bd2@kernel.org>
-Date: Mon, 12 Oct 2026 20:46:31 +0200
+	s=k20260515; t=1791830922;
+	bh=ijruh+t9dzYY6Mr1fVs8kL4G0u+bj6+pBN+DbXhWvj4=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=VAsqz4f3FQayrttLKzdN4ho5Htk2cDvUUzMpalm1X8JKw56c86EO+42U/YkJHXChl
+	 Xk8ELZsh/F8GOx9Di8xSJsibbLFl9NfGM4NBg+sagDMH8lJ6Baavuf3Ai80/cqbRP4
+	 xxbScNu9ZoyrJ4s++pvjVu6bcwXMKVw0ESPz1NAyQoEujN0FosplAeUhdHDjzWs737
+	 6XP3BdPpBTLCtt5wpxYLWXsff1hrIBhUDjXVehMUl90LZh+/AJ00aqHMdwqmHOXHJX
+	 ut+dLIWa2z/7tlRotSRzD0ebbzlbIsJv57v6/ntj0AWJfaXTTI+vNkf6yDkIW7RGVW
+	 tINF/sb5DiRbQ==
+Message-ID: <b8a6a344-ad2c-4355-adbe-be7325e7371d@kernel.org>
+Date: Mon, 12 Oct 2026 20:48:04 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,8 +35,7 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 30/38] mm/vma: introduce vma[_flags]_is_mm_backed()
-From: "David Hildenbrand (Arm)" <david@kernel.org>
+Subject: Re: [PATCH v5 31/38] mm/uffd: use predicates for userfaultfd checks
 To: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>,
  Andrew Morton <akpm@linux-foundation.org>,
  "Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>,
@@ -119,8 +118,8 @@ Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org,
  fuse-devel@lists.linux.dev, Ihor Solodrai <ihor.solodrai@linux.dev>,
  Bert Karwatzki <spasswolf@web.de>
 References: <20261009-b4-mmap-prepare-vma-flag-sanify-v5-0-923b70125b1e@kernel.org>
- <20261009-b4-mmap-prepare-vma-flag-sanify-v5-30-923b70125b1e@kernel.org>
- <c79d2d40-0f1c-43ec-bc25-b75ce975f27e@kernel.org>
+ <20261009-b4-mmap-prepare-vma-flag-sanify-v5-31-923b70125b1e@kernel.org>
+From: "David Hildenbrand (Arm)" <david@kernel.org>
 Content-Language: en-US
 Autocrypt: addr=david@kernel.org; keydata=
  xsFNBFXLn5EBEAC+zYvAFJxCBY9Tr1xZgcESmxVNI/0ffzE/ZQOiHJl6mGkmA1R7/uUpiCjJ
@@ -166,91 +165,67 @@ Autocrypt: addr=david@kernel.org; keydata=
  3iyY2Nsd7JxfKu1PRhCGwXzRw5TlfEsoRI7V9A8isUCoqE2Dzh3FvYHVeX4Us+bRL/oqareJ
  CIFqgYMyvHj7Q06kTKmauOe4Nf0l0qEkIuIzfoLJ3qr5UyXc2hLtWyT9Ir+lYlX9efqh7mOY
  qIws/H2t
-In-Reply-To: <c79d2d40-0f1c-43ec-bc25-b75ce975f27e@kernel.org>
+In-Reply-To: <20261009-b4-mmap-prepare-vma-flag-sanify-v5-31-923b70125b1e@kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 10/12/26 20:45, David Hildenbrand (Arm) wrote:
-> On 10/9/26 20:04, Lorenzo Stoakes (ARM) wrote:
->> Introduce vma[_flags]_is_mm_backed() for the purposes of identifying
->> mappings which are mm-managed and whose contents were placed there by core
->> mm's own fault path - rather than a custom ->fault handler - and which core
->> mm has not reserved the right to discard.
->>
->> Mappings not managed by core mm do not fall into this category, as they are
->> populated by their owner, and nor of course does memory-mapped I/O.
->>
->> We exclude fixed mappings as these have a layout core mm cannot assume
->> ordinary fault semantics over.
->>
->> hugetlb mappings are fixed mappings, but core mm owns them entirely, so
->> they are explicitly carved out as mm-backed, as the MADV_DODUMP check
->> already does.
->>
->> Droppable mappings are excluded as core mm has promised it may discard them
->> at any time.
->>
->> Use this functionality to update the madvise MADV_DODUMP check to test for
->> this rather than open-coding it.
->>
->> This replaces the VM_SPECIAL check which means it no longer checks for
->> VMA_IO_BIT, however this is safe as we have established the invariant that
->> mm-managed mappings may not set VMA_IO_BIT, so we implicitly include
->> these.
->>
->> No functional change intended.
->>
->> Acked-by: Zi Yan <ziy@nvidia.com>
->> Signed-off-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
->> ---
->>  include/linux/mm.h | 50 ++++++++++++++++++++++++++++++++++++++++++++++++++
->>  mm/madvise.c       |  4 ++--
->>  2 files changed, 52 insertions(+), 2 deletions(-)
->>
->> diff --git a/include/linux/mm.h b/include/linux/mm.h
->> index 2ce68713e4c3..55320cf2c525 100644
->> --- a/include/linux/mm.h
->> +++ b/include/linux/mm.h
->> @@ -1738,6 +1738,56 @@ static inline bool vma_can_merge(const struct vm_area_struct *vma)
->>  	return vma_flags_can_merge(&vma->flags);
->>  }
->>  
->> +/**
->> + * vma_flags_is_mm_backed() - Do the specified VMA flags imply the mapping is
->> + * backed by core mm?
->> + * @flags: The VMA flags to test.
->> + *
->> + * An mm-backed mapping is one managed by core mm (see
->> + * vma_flags_is_mm_managed()) for which two further things are true:
->> + *
->> + * 1. Everything mapped was placed there by core mm's fault path (no custom
->> + *    ->fault).
->> + * 2. What is mapped stays there until it is zapped or unmapped by the user.
+On 10/9/26 20:04, Lorenzo Stoakes (ARM) wrote:
+> Rather than directly checking VMA flags, use the newly introduced
+> vma_is_mm_managed() and vma_is_mm_backed() helpers in userfaultfd
+> when assessing VMA suitability for userfaultfd and UFFDIO_MOVE.
 > 
-> I still dislike squeezing the VMA_DROPPABLE check in here.
+> Update vma_move_compatible() so it's expressed in terms of VMA
+> characteristics rather than arbitrary flags.
 > 
-> It's just weird semantics to squeeze pages that are *managed* by core MM (#1)
-> but are simply always lazyfree into this check.
+> Additionally, update the use of the deprecated VMA flag API when checking
+> VMA_SHADOW_STACK_BIT.
 > 
-> In fact, core-mm manages (zaps) these pages, they are really just just
-> permanently lazyfree.
+> A VMA_IO_BIT check is no longer required but that is fine as a hard
+> invariant has been established that mm-managed mappings may not set
+> VMA_IO_BIT so the check is now redundant.
 > 
-> Open-coding "this (DUMP, UFFD, MLOCK) does not make sense for droppable
-> mappings" is IMHO the right decision, because there you could say
+> Acked-by: Zi Yan <ziy@nvidia.com>
+> Signed-off-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
+> ---
+>  mm/userfaultfd.c | 19 +++++++++++++------
+>  1 file changed, 13 insertions(+), 6 deletions(-)
 > 
-> "dumping something that can get zapped every second does not make any sense"
-> 
-> "placing pages through uffd does not make any sense if it can get zapped any second"
-> 
-> "mlock'ing (and thereby allocating!) droppable mapping does not make any sense
-> and could actually break droppable semantics"
-> 
-> Not a hill I will die on, but I much rather have the droppable mapping be
-> outside or  have it called something nasty like
-> 
-> vma[_flags]_is_mm_backed_or_droppable()
+> diff --git a/mm/userfaultfd.c b/mm/userfaultfd.c
+> index 949017e60608..f33b04700838 100644
+> --- a/mm/userfaultfd.c
+> +++ b/mm/userfaultfd.c
+> @@ -1754,10 +1754,16 @@ static inline bool move_splits_huge_pmd(unsigned long dst_addr,
+>  }
+>  #endif
+>  
+> -static inline bool vma_move_compatible(struct vm_area_struct *vma)
+> +static inline bool vma_move_compatible(const struct vm_area_struct *vma)
+>  {
+> -	return !(vma->vm_flags & (VM_PFNMAP | VM_IO |  VM_HUGETLB |
+> -				  VM_MIXEDMAP | VM_SHADOW_STACK));
+> +	/* uffd is generally incompatible with mappings not managed by core mm. */
+> +	if (!vma_is_mm_managed(vma))
+> +		return false;
+> +	/* The shadow stack should not be written to by userspace. */
+> +	if (vma_test_single_mask(vma, VMA_SHADOW_STACK))
+> +		return false;
+> +	/* hugetlb mappings cannot be safely moved. */
+> +	return !vma_is_hugetlb(vma);
+>  }
+>  
+>  static int validate_move_areas(struct userfaultfd_ctx *ctx,
+> @@ -2146,10 +2152,11 @@ static bool vma_can_userfault(struct vm_area_struct *vma, vm_flags_t vm_flags,
+>  {
+>  	const struct vm_uffd_ops *ops = vma_uffd_ops(vma);
+>  
+> -	if (vma->vm_flags & (VM_DROPPABLE | VM_SHADOW_STACK))
+> +	/* Only mm-backed memory can have its faults handled by userspace. */
+> +	if (!vma_is_mm_backed(vma))
+>  		return false;
 
-Noting that that does not make sense, as we would have to reve
+Again, for both I would prefer keeping the droppable check separate.
+
+Acked-by: David Hildenbrand (Arm) <david@kernel.org>
 
 -- 
 Cheers,
