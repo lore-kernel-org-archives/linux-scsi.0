@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCF4D39D6F6;
-	Mon, 12 Oct 2026 18:51:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 063D73B4EBC;
+	Mon, 12 Oct 2026 18:52:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791831107; cv=none; b=duGgKIyy5VQssYV3WaxG9eiy4nRXXzVFmr6oiDG72Z86basDSa1frr65RpVDQSFBzuBieY242Qan44kQXQn+68B/3SKKZpg3a3Mb49KJqdT/O9IMPz5pz+L16sNzcw9GaxGu87KD6ddbGjLbbGEnaBIoLj7aAfUKWehFxeBMnls=
+	t=1791831166; cv=none; b=DV1o7GmvwoU809ABw2aiDfdlzuD8HhbGekCsg0el+ZeEK8/OIwMJI3O1mYzUL01+gquYpSUZ2a8MgXGN2ycMz0Ixk261j+ftZ9nez9Os8ZmwbrYRWTfFHLxbUgcn2j4nwlqB8wR25SSCczwuJ/N4D5wSBreYi6goRIPAnXYY0tw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791831107; c=relaxed/simple;
-	bh=QCnpJH5f8lu3PrV035XpKhHnzaJvELgtmH4U8hPjKbQ=;
+	s=arc-20240116; t=1791831166; c=relaxed/simple;
+	bh=b4h3yvXXHOgNrBcgO3uqN0z/gdCLhzp+fQGx4Nj9+Rc=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=CjnCAdgF6YIbGsV2+0fpM9VweikrSKHMCV9ySSEX9h0tkh0D+LBpA5/pinscPL1XPkS4oGy+HX8qcX29NQvMkqP3MZ2NkHSDeno2KSPudMR7T/4uY5d3rH2x+Z5fFhEJoG6PMDSA6d4FMw2WM9sPkHS1vRrgk274zOI79Pc/R00=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZoZu3bp6; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:Content-Type; b=Scqy5c80mnOmJTewzAPjQvES7f+98ddLjwmpSX0khfGvasjhZf6x5/kQ2p0s0bGjjwMy84wbsXQau2WeZJDV1oqcfBD2a8Vtr0ML5slaI3F47BywTKMGTDNcjRQL+tlIWQkSVNjkgc7ShFGlDA6AU4Bji3WMIy3dEnyY+zxCObE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=m0WRXH/l; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZoZu3bp6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D16201F0089B;
-	Mon, 12 Oct 2026 18:51:12 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="m0WRXH/l"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 741911F0089B;
+	Mon, 12 Oct 2026 18:52:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791831106;
-	bh=IfS5bZnp3kiEU2OLFY4TMOd4BSBodNHnOtZDFG77b4A=;
+	s=k20260515; t=1791831164;
+	bh=JS5rAlbNo22qwtsGvE+A/Ou5uLAn4LHEBxkEtLv9fm4=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=ZoZu3bp63JjlJ+BE2fP11usqRbOLKhKp+QHgNU3bq3lKD+TzaIYy1URiYq8BQlU5h
-	 QlZBWLS3TVgVfkISPY8Z/ZyroRYG7XFVcYSbaINeHtQC3WAb39j/IXWe0+Nn0ccFGw
-	 cPGvXRawYbwnzDo3gAZ3YgnPLRupAKesaBNyPBt8cSe6a9cPHySSs3ql0b0tcXsmE6
-	 n8pqVsAtPYRZvIKDZD9bheajkb7z1JKVo5Wek0LiS+l8v2nJO+z9TugP5eNhXYYCmz
-	 NYfjiWXssYI+2dvN0hO/5Xq09pcA1vXA12Upl5I7Do3cv66C48Lsc4fbr5VTqtqWs7
-	 KQI0SQM7pbr8Q==
-Message-ID: <c0b212bb-da62-476b-a16d-2ce78e1e2639@kernel.org>
-Date: Mon, 12 Oct 2026 20:51:10 +0200
+	b=m0WRXH/lGiOPjKVxGePwu9PM4DBxUfPf8mpW/r+t73nEB4ofC+jExqVxZuSSyCuxU
+	 PD3XbbzWWtvD7+lTvQ6xsNEcjU9fooei2o1PVRT0U5yaGF3LE4miOE2lcxGpGnS+f3
+	 dTiNe4ZHjWjMKBQ/83QDlAZaU1CiGGcPnwTZqi2Z1/GXnkE3taxcckXkF7h0u220Fr
+	 NScxBsv/ieFyXlvqOLGLpBLzqpR4+YkZ9hncI4napESKOdnb5dEDI4RfDa2EZt3h7I
+	 ySovDqvGx82lYI5mP1iagKu+WVxk0qJBOPBG7o0UK7QoI0vOVrh2fHUYlAdE7Ma9Kz
+	 TLgk090yWcxhA==
+Message-ID: <214514be-a935-485b-8925-07d84c1063f9@kernel.org>
+Date: Mon, 12 Oct 2026 20:52:07 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,10 +35,10 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 24/38] mm/vma: enforce that mm-managed mappings may not
- set VMA_IO_BIT
-To: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
+Subject: Re: [PATCH v5 35/38] mm: avoid use of VMA_SPECIAL_FLAGS in
+ migrate_vma_setup()
+To: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>,
+ Andrew Morton <akpm@linux-foundation.org>,
  "Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>,
  Jann Horn <jannh@google.com>, Pedro Falcato <pfalcato@suse.de>,
  Mike Rapoport <rppt@kernel.org>, Suren Baghdasaryan <surenb@google.com>,
@@ -57,7 +57,7 @@ Cc: Andrew Morton <akpm@linux-foundation.org>,
  Dev Jain <dev.jain@arm.com>, Barry Song <baohua@kernel.org>,
  Lance Yang <lance.yang@linux.dev>, Usama Arif <usama.arif@linux.dev>,
  Kiryl Shutsemau <kas@kernel.org>, Doug Gilbert <dgilbert@interlog.com>,
- "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
  "Martin K. Petersen" <mkp@kernel.org>, Simona Vetter <simona@ffwll.ch>,
  Helge Deller <deller@gmx.de>, Sebastian Reichel <sre@kernel.org>,
  John Hubbard <jhubbard@nvidia.com>, Peter Xu <peterx@redhat.com>,
@@ -104,7 +104,8 @@ Cc: Andrew Morton <akpm@linux-foundation.org>,
  Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>,
  Wei Xu <weixugc@google.com>, Chengming Zhou <chengming.zhou@linux.dev>,
  Michal Hocko <mhocko@kernel.org>, Miklos Szeredi <miklos@szeredi.hu>,
- Xu Xin <xu.xin@linux.dev>, linux-mm@kvack.org, linux-kernel@vger.kernel.org,
+ Xu Xin <xu.xin@linux.dev>
+Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org,
  linux-doc@vger.kernel.org, linux-usb@vger.kernel.org,
  linux-rdma@vger.kernel.org, selinux@vger.kernel.org,
  linux-sound@vger.kernel.org, bpf@vger.kernel.org,
@@ -118,9 +119,7 @@ Cc: Andrew Morton <akpm@linux-foundation.org>,
  fuse-devel@lists.linux.dev, Ihor Solodrai <ihor.solodrai@linux.dev>,
  Bert Karwatzki <spasswolf@web.de>
 References: <20261009-b4-mmap-prepare-vma-flag-sanify-v5-0-923b70125b1e@kernel.org>
- <20261009-b4-mmap-prepare-vma-flag-sanify-v5-24-923b70125b1e@kernel.org>
- <5d51b6b3-ad58-4827-bedf-f1a79ebd5c86@kernel.org> <as0nF53W7dug-Fem@gremlin>
- <5ba7305f-0ad1-44ee-be0b-36752684cdb9@kernel.org> <as0qUOfS-FQgRnm4@gremlin>
+ <20261009-b4-mmap-prepare-vma-flag-sanify-v5-35-923b70125b1e@kernel.org>
 From: "David Hildenbrand (Arm)" <david@kernel.org>
 Content-Language: en-US
 Autocrypt: addr=david@kernel.org; keydata=
@@ -167,75 +166,54 @@ Autocrypt: addr=david@kernel.org; keydata=
  3iyY2Nsd7JxfKu1PRhCGwXzRw5TlfEsoRI7V9A8isUCoqE2Dzh3FvYHVeX4Us+bRL/oqareJ
  CIFqgYMyvHj7Q06kTKmauOe4Nf0l0qEkIuIzfoLJ3qr5UyXc2hLtWyT9Ir+lYlX9efqh7mOY
  qIws/H2t
-In-Reply-To: <as0qUOfS-FQgRnm4@gremlin>
+In-Reply-To: <20261009-b4-mmap-prepare-vma-flag-sanify-v5-35-923b70125b1e@kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 10/12/26 20:48, Lorenzo Stoakes (ARM) wrote:
-> On Mon, Oct 12, 2026 at 08:39:35PM +0200, David Hildenbrand (Arm) wrote:
->> On 10/12/26 20:35, Lorenzo Stoakes (ARM) wrote:
->>>
->>> That gets removed.
->>>
->>>
->>> I mean we do that in a subsequent commit, I think even the next one?
->>>
->>>
->>>
->>> Yeah, but to do that the code would now be something like:
->>>
->>> 	vma_flags_t masked = flags;
->>>
->>> 	/*
->>> 	  * vma_flags_is_mm_managed() tests VMA_IO_BIT, which will be removed
->>> 	 * in the next commit.
->>> 	 */
->>> 	vma_flags_clear(&flags, VMA_IO_BIT);
->>> 	if (!vma_flags_is_mm_managed(masked)) {
->>> 		...
->>> 	}
->>>
->>> Is that really worth it?
->>>
->>> I don't think there's really too much confusion intra-patch about that is there?
->>
->> I would do it as above (- the comment, as that is the next patch indeed) and
->> only remove the vma_flags_clear() in the next patch.
->>
->> But in any case, you should spell out that this is only temporary in the patch
->> description :)
+On 10/9/26 20:04, Lorenzo Stoakes (ARM) wrote:
+> Now we have the expressive vma_is_mm_managed() and vma_is_fixed_mapping()
+> predicates, use them to determine whether to proceed with migration. This
+> drops the VMA_IO_BIT test, which is safe as mm-managed mappings may not set
+> it.
 > 
-> And then there's a 'masked' variable that is unused?
+> hugetlb mappings remain excluded, as they are fixed mappings.
 > 
-> You need to have two vma_flags_t variables to be able both clear VMA_IO_BIT
-> and use vma_flags_is_mm_managed().
+> No functional change intended.
 > 
-> So the change would have to be
+> Reviewed-by: Zi Yan <ziy@nvidia.com>
+> Acked-by: David Hildenbrand (Arm) <david@kernel.org>
+> Signed-off-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
+> ---
+>  mm/migrate_device.c | 12 +++++++-----
+>  1 file changed, 7 insertions(+), 5 deletions(-)
 > 
-> + 	vma_flags_t masked = *flags;
-> +
-> + 	vma_flags_clear(&flags, VMA_IO_BIT);
-> + 	if (!vma_flags_is_mm_managed(&masked)) {
-> + 		...
-> + 	}
-> 
-> Then:
-> 
-> - 	vma_flags_t masked = *flags;
-> -
-> - 	vma_flags_clear(&flags, VMA_IO_BIT);
-> - 	if (!vma_flags_is_mm_managed(&masked)) {
-> + 	if (!vma_flags_is_mm_managed(flags)) {
->  		...
->  	}
-> 
-> Which doesn't really seem worth it for somebody who is confused between two
-> patches mid-series.
-> 
-> But if you feel strongly I can make the change like that?
+> diff --git a/mm/migrate_device.c b/mm/migrate_device.c
+> index b9c453c28795..289d7b08ace4 100644
+> --- a/mm/migrate_device.c
+> +++ b/mm/migrate_device.c
+> @@ -739,19 +739,21 @@ static void migrate_vma_unmap(struct migrate_vma *migrate)
+>   */
+>  int migrate_vma_setup(struct migrate_vma *args)
+>  {
+> +	const struct vm_area_struct *vma = args->vma;
+>  	long nr_pages = (args->end - args->start) >> PAGE_SHIFT;
+>  
+>  	args->start &= PAGE_MASK;
+>  	args->end &= PAGE_MASK;
+> -	if (!args->vma || vma_test_any_mask(args->vma, VMA_SPECIAL_FLAGS) ||
+> -	    vma_is_dax(args->vma))
+> +	if (!vma)
+> +		return -EINVAL;
+> +	if (!vma_is_mm_managed(vma) || vma_is_fixed_mapping(vma) ||
+> +	    vma_is_dax(vma))
 
-Whatever you prefer. Most important thing for me was finding it in the next
-patch and being pleasantly surprised ;)
+Same here, with the droppable thing changed this would be
+
+!vma_is_mm_backed() || vma_is_dax(vma)
+
+I guess.
+
+Acked-by: David Hildenbrand (Arm) <david@kernel.org>
 
 -- 
 Cheers,
