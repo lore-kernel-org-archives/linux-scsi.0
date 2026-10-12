@@ -1,69 +1,80 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A32AE4D0CD0;
-	Mon, 12 Oct 2026 19:45:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49C7A3D1709;
+	Mon, 12 Oct 2026 19:51:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791834301; cv=none; b=VgimLS2W8qWmpTMaT9HBBThfu5C8poChS7PgrfakJYH86U+cOS7/psXaPzwRP+7Myox9a+jVzZGnM2rm+lCw6kol7ZyVjqSFn7ocZSeF/KbMF/agUD6J50r5NxoMBW1CfEQnX/82FMNLLkb6R/ub237fuEtrXmtk8WFWHeOtjwU=
+	t=1791834662; cv=none; b=IGRFvQGk0xW0e8/5rCgdL3yVHyajsjqyR4VAFv5QnSDiwXPEucNyii/vvakT7pe0TyTsuaHInwLiMlqr1JXjcndB8ERLRd5S5vmJmuNywRgMJJZRCDtiXAFymm0B3yh12sG5w25ZMfCLCfS8MF3HGc28CQQKW4U70q+lMZ2khGU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791834301; c=relaxed/simple;
-	bh=1wVs4F5ciF8VSOAjs0XYmXKN6i1GpfW5Cso5tHzGzyU=;
+	s=arc-20240116; t=1791834662; c=relaxed/simple;
+	bh=euZArWPCxXX0NM64FAHlBzPtv86UhVFRwSCEZUr3cn0=;
 	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=rpRq+9H38+BDaXlH0jQXZ6eFJXO+fQzc372QKQZID21pJGEahnzTPLd1RPOzCUIgW5rXGLr0BbrH59a0qZd8/vP7Uqy6gW3+9broXr+PPdk1v/pKy2BgEhak9uu19ibLr1S0LIeFeXeQMdkItICU7wCuNXeG3Wxmnw3RJ/XzqME=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=bw/duoUi; arc=none smtp.client-ip=148.163.156.1
+	 MIME-Version:Content-Type; b=NLNECd4luzgbv2YmY78rZFkcCGEkXriMQeFj4ntjoD4OBm9gTjcHPCbNC2T8V1Z9TYnhjAGxEelm1fZI8zi76br/aPBlfJ5rZfdCf/qjIzlBFfcEgcpZxAVZZK74wiUxDhodHG779BQCE631VzjEciXovFVeBtsWwgQyLYc5hb4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=YzBR/JXx; arc=none smtp.client-ip=148.163.158.5
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="bw/duoUi"
-Received: from pps.filterd (m0353729.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69CJiP4W3560170;
-	Mon, 12 Oct 2026 19:44:58 GMT
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="YzBR/JXx"
+Received: from pps.filterd (m0356516.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69CJiHps992347;
+	Mon, 12 Oct 2026 19:50:42 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
 	:content-type:date:from:in-reply-to:message-id:mime-version
-	:references:subject:to; s=pp1; bh=zjS/aBFPPn2mAPT94SI3dE6M3aEDjq
-	3ZP24JaOBqrEk=; b=bw/duoUi/GimlXjOuEgVAiHNkPqjpBEf4t6CmsI0PQPY3f
-	baSDn/3Bu1NwwaE7OH/Dnu0H/zfFIsX27EG4nVs88Tt1A2YorT8CvCt83JIxrqY2
-	uQnJ/SH4K/B1IwMNZVxQHS2ZLlyjsVgmfrATtjNZ+t2yF5eGfwEDZkgy2KJq00r+
-	P7mqIlcKLkDOTKfRYG12S11ljFngCh2cjklxPjhnWIJQakCYnZdfdJjmOKHI8y7Q
-	Fc2uiGQ02zdO9FVj8KyXmpgTusjiF9+yjGTsI1GblU9z8TTfO1++pMQ2k2S+OKNm
-	yt5ZIYXkxs2ryO2/oaLgJtv9CeD9asJXCWfyXM6g==
+	:references:subject:to; s=pp1; bh=J+O3fVyOO2ZbFKIlKlHMfnu+b7bqqO
+	98EcUBEWl2d28=; b=YzBR/JXxLZrlOQ3JW26c7OuLMB/TLb9OHSvVpV1F9bCpck
+	A0Rje676Zm7NzN8utwneLBdhlKuZ+wEVHmo7Te22JsTN5C/eojXdUd1OjZ6XBI5Q
+	ICUjNeXLkLBVtBj5lYpOy2RwKGdb12H1aT882pH+4WUw1OJISCZB/RvHZeOeilZy
+	Az9PcLCIk6z9MwMVU36Gy6oubsk9kJMQMyCwqIuev3lrmzSH2zu7Xn/El6Y2O4to
+	LSWBN+/Nz9ICYrC4fJUU1vlS1IhKvIKk0CKdpCwyAyuS2hnEsMf6Q4dF1OaKj3le
+	mVOx1OuetJ+77774hvCkXA3kXbTHchSuanJtPiPw==
 Received: from ppma22.wdc07v.mail.ibm.com (5c.69.3da9.ip4.static.sl-reverse.com [169.61.105.92])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4h7dwhak6a-1
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4h7dwhtanx-1
 	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-	Mon, 12 Oct 2026 19:44:58 +0000 (GMT)
+	Mon, 12 Oct 2026 19:50:42 +0000 (GMT)
 Received: from pps.filterd (ppma22.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma22.wdc07v.mail.ibm.com (8.18.1.11/8.18.1.11) with ESMTP id 69CJdLLd1828949;
-	Mon, 12 Oct 2026 19:44:57 GMT
-Received: from smtprelay01.wdc07v.mail.ibm.com ([172.16.1.68])
-	by ppma22.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4h802vpspx-1
+	by ppma22.wdc07v.mail.ibm.com (8.18.1.11/8.18.1.11) with ESMTP id 69CJdLMm1828949;
+	Mon, 12 Oct 2026 19:50:41 GMT
+Received: from smtprelay02.wdc07v.mail.ibm.com ([172.16.1.69])
+	by ppma22.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4h802vpt72-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 12 Oct 2026 19:44:57 +0000 (GMT)
-Received: from smtpav05.wdc07v.mail.ibm.com (smtpav05.wdc07v.mail.ibm.com [10.39.53.232])
-	by smtprelay01.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 69CJiv2d60883222
+	Mon, 12 Oct 2026 19:50:41 +0000 (GMT)
+Received: from smtpav02.dal12v.mail.ibm.com (smtpav02.dal12v.mail.ibm.com [10.241.53.101])
+	by smtprelay02.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 69CJoeSb2359936
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Mon, 12 Oct 2026 19:44:57 GMT
-Received: from smtpav05.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 10AE55805D;
-	Mon, 12 Oct 2026 19:44:57 +0000 (GMT)
-Received: from smtpav05.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id C9E1658053;
-	Mon, 12 Oct 2026 19:44:56 +0000 (GMT)
+	Mon, 12 Oct 2026 19:50:40 GMT
+Received: from smtpav02.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 2873158060;
+	Mon, 12 Oct 2026 19:50:40 +0000 (GMT)
+Received: from smtpav02.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id D216A5805E;
+	Mon, 12 Oct 2026 19:50:39 +0000 (GMT)
 Received: from d (unknown [9.61.18.84])
-	by smtpav05.wdc07v.mail.ibm.com (Postfix) with ESMTPS;
-	Mon, 12 Oct 2026 19:44:56 +0000 (GMT)
+	by smtpav02.dal12v.mail.ibm.com (Postfix) with ESMTPS;
+	Mon, 12 Oct 2026 19:50:39 +0000 (GMT)
 From: Dave Marquardt <davemarq@linux.ibm.com>
-To: sashiko-bot@kernel.org
-Cc: sashiko-reviews@lists.linux.dev, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH v13 08/11] scsi: ibmvfc: add interrupt routine for
- asynchronous sub CRQ
-In-Reply-To: <sashiko-outbox-163322@kernel.org> (sashiko-bot@kernel.org's
-	message of "Wed, 07 Oct 2026 19:44:57 +0000")
-References: <20261007-ibmvfc-fpin-support-v13-0-b816abfa4fcc@linux.ibm.com>
-	<20261007-ibmvfc-fpin-support-v13-8-b816abfa4fcc@linux.ibm.com>
-	<sashiko-outbox-163322@kernel.org>
-Date: Mon, 12 Oct 2026 14:44:56 -0500
-Message-ID: <87mrsivh3b.fsf@linux.ibm.com>
+To: kernel test robot <lkp@intel.com>
+Cc: Dave Marquardt via B4 Relay <devnull+davemarq.linux.ibm.com@kernel.org>,
+        Madhavan Srinivasan <maddy@linux.ibm.com>,
+        Michael Ellerman
+ <mpe@ellerman.id.au>,
+        Nicholas Piggin <npiggin@gmail.com>,
+        "Christophe
+ Leroy (CS GROUP)" <chleroy@kernel.org>,
+        "James E.J. Bottomley"
+ <James.Bottomley@hansenpartnership.com>,
+        "Martin K. Petersen"
+ <mkp@kernel.org>,
+        Tyrel Datwyler <tyreld@linux.ibm.com>, oe-kbuild-all@lists.linux.dev,
+        linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v13 11/11] scsi: ibmvfc: handle extended FPIN events
+In-Reply-To: <202610100443.UCrGdTXp-lkp@intel.com> (kernel test robot's
+	message of "Sat, 10 Oct 2026 04:29:11 +0800")
+References: <20261007-ibmvfc-fpin-support-v13-11-b816abfa4fcc@linux.ibm.com>
+	<202610100443.UCrGdTXp-lkp@intel.com>
+Date: Mon, 12 Oct 2026 14:50:39 -0500
+Message-ID: <87ik36vgts.fsf@linux.ibm.com>
 User-Agent: Gnus/5.13 (Gnus v5.13)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -73,124 +84,83 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-TM-AS-GCONF: 00
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMDEyMDA3OCBTYWx0ZWRfX25evwNUfcuJE
- kJwtxVnDM5Bj4fdF676ERWjBP/KjkErUlO00DYVKLsQkSsqUk81lWni0dNChbHJp+b2VS5Yt93S
- f+e3VYcR37Ae+ny+bGp2r9Lu1rn9fCY=
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDEyMDA3OCBTYWx0ZWRfXxBGLfn77mcqh
- UYrJVNy+bWh1g+39FVyhp7G9nam1VAdf+Tq6PHgntRdRP7BW+pCORBaupObIK9ZJTPi/hZlezI9
- hUn0kzi1pEtNkDHbVm9KvW4QpS5yuK6nXWtl2gHKPh12VhJ0EYJQ+Wl0X+xuwXNRvfrWdjcWjnu
- A4Mkm7Ei+/Qn7Rb1e70MbcP6QKjnWbe79oAzp1UOodNraX1qI3ePWbnai6NHVrDrMXsayintIo+
- cKWGyIx55d/7bUOilYCejWy6Toccd9ax4fsubQS/g4EYir7Wbb8xf6OwmfzitWE/9DuG49/ELJe
- MnK+2IPS1AMV8ocrz5BC1QPkeziA6x0RQna3LV5smH4ETF/ye+SvHwBjWpqQbwEayD9kF6y+eE3
- 9cdIKNvlqVu902QQ5bn3KFFmnv9O0myJ1EhSzgFtTJTJ26RyVqB/VtPhAje4D1xEuNMafWHFbvU
- 7GAKcrA8/XLzSCBiWAg==
-X-Proofpoint-GUID: k2gTqRdWCAb4nkCDATJHqFizpiC_muL7
-X-Authority-Analysis: v=2.4 cv=RoFQvymK c=1 sm=1 tr=0 ts=6acd38ba cx=c_pps
+X-Proofpoint-Reinject: loops=2 maxloops=12
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDEyMDA3OCBTYWx0ZWRfX1808nKSq3ova
+ cGnqJkKDalWn3VLqoK8CfbVvwXLYKrKogkmmck9azYq+Nf+HuqG6q4AOcX/lj1lUQsifZiuMYKt
+ Kk7J4Au/rbTeHEJalU8plNadoSpZZ+8Yq5oR/4JwiHagDp9eretaoy6zWZhUXt6+7LSkQsEsGaw
+ R6xIFdTGXeQg+XJ/FA0zdeh1+8/SDZag6YsD92uOv3SS6wE2CqZDR2soIyKEYOvsXDFMKtB131W
+ /N2wbjIbv7REuJeTNEVTuSdT8bdLdlJsEoJ9lS79XeKcJGnm1lyhOOmHp+AysENz/3txnx28VXC
+ 72+XnX3XkiVTJR6oxD+LhHSTa7/niyhWR/S3WPyks8W6avpXA87ZKQhipr4LqfmN6C14869Jvtc
+ rw5cNHyK9sGm9pOARaVRMT7OKS2Cie9QV+fKwUQvwV4lHb/C3ybySMG/Foot/KanARql10Urrxd
+ f0hLP39yw+2fNcQwK2Q==
+X-Proofpoint-GUID: prRqJ9MVp5KbEE0uwBEzkzMsS4JRZ-B6
+X-Proofpoint-ORIG-GUID: 0tsrNUyzzcmw0gUPB74Vd-PPPZZ881fP
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMDEyMDA3OCBTYWx0ZWRfXzgEnpH3Nk94X
+ 5aI4p+wwnDzV1t2Yh/VWp6oSZIpE9z9NHbbKitTRkEFruwhOPJgvBwx/xOrYC5jHuMzX3kVmEZA
+ uR1ukJw9q89Jb2KPZA4IkGroPAFW698=
+X-Authority-Analysis: v=2.4 cv=btHZl0ai c=1 sm=1 tr=0 ts=6acd3a12 cx=c_pps
  a=5BHTudwdYE3Te8bg5FgnPg==:117 a=5BHTudwdYE3Te8bg5FgnPg==:17
  a=660iZSQnnn4A:10 a=VkNPw1HP01LnGYTKEx00:22 a=RnoormkPH1_aCDwRdu11:22
- a=uAbxVGIbfxUO_5tXvNgY:22 a=VwQbUJbxAAAA:8 a=VnNF1IyMAAAA:8
- a=WBn1sSDi7QvAjcg4snAA:9
-X-Proofpoint-ORIG-GUID: k2gTqRdWCAb4nkCDATJHqFizpiC_muL7
+ a=Y2IxJ9c9Rs8Kov3niI8_:22 a=NEAV23lmAAAA:8 a=VwQbUJbxAAAA:8 a=VnNF1IyMAAAA:8
+ a=i3X5FwGiAAAA:8 a=QyXUC8HyAAAA:8 a=rGKbgntH6m_7XyyKOiwA:9
+ a=mmqRlSCDY2ywfjPLJ4af:22
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
  definitions=2026-10-12_06,2026-10-09_01,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- priorityscore=1501 spamscore=0 phishscore=0 adultscore=0 bulkscore=0
- impostorscore=0 suspectscore=0 malwarescore=0 clxscore=1015
- lowpriorityscore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ bulkscore=0 malwarescore=0 phishscore=0 impostorscore=0 adultscore=0
+ lowpriorityscore=0 priorityscore=1501 clxscore=1015 spamscore=0
+ suspectscore=0 classifier=typeunknown authscore=0 authtc= authcc=
  route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2610080000
  definitions=main-2610120078
 
-sashiko-bot@kernel.org writes:
+kernel test robot <lkp@intel.com> writes:
 
-> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
-> - [High] scsi/ibmvfc: missing load-store memory barrier allows DMA ring data corruption
-> --
+> kernel test robot noticed the following build warnings:
 >
-> commit 69de3faf2b9168cb1feb3f85a48430596c1d9283
-> Author: Dave Marquardt <davemarq@linux.ibm.com>
+> [auto build test WARNING on c3cff7fac01638ab58e85fe7df41a04fa25c5bae]
 >
-> scsi: ibmvfc: add interrupt routine for asynchronous sub CRQ
+> url:    https://github.com/intel-lab-lkp/linux/commits/Dave-Marquardt-via-B4-Relay/scsi-ibmvfc-fix-IRQ-leak-and-guard-deregister-on-channel-reg-failure/20261007-142545
+> base:   c3cff7fac01638ab58e85fe7df41a04fa25c5bae
+> patch link:    https://lore.kernel.org/r/20261007-ibmvfc-fpin-support-v13-11-b816abfa4fcc%40linux.ibm.com
+> patch subject: [PATCH v13 11/11] scsi: ibmvfc: handle extended FPIN events
+> config: powerpc-allmodconfig (https://download.01.org/0day-ci/archive/20261010/202610100443.UCrGdTXp-lkp@intel.com/config)
+> compiler: powerpc64-linux-gcc (GCC) 16.1.0
+> reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20261010/202610100443.UCrGdTXp-lkp@intel.com/reproduce)
 >
-> This commit introduces an interrupt handler and a drain routine for
-> asynchronous sub-CRQ events. It adds direct traversal of the async
-> sub-CRQ ring and processes available entries while managing the queue lock
-> and hardware interrupts.
+> If you fix the issue in a separate patch/commit (i.e. not just a new version of
+> the same patch/commit), kindly add following tags
+> | Reported-by: kernel test robot <lkp@intel.com>
+> | Closes: https://lore.kernel.org/oe-kbuild-all/202610100443.UCrGdTXp-lkp@intel.com/
 >
->> diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/ibmvfc-core.c
->> index 6db9df91e9e68..32bc00a4be7ec 100644
->> --- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
->> +++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
+> All warnings (new ones prefixed by >>):
 >
-> [ ... ]
->
->> +static void ibmvfc_drain_async_subq(struct ibmvfc_queue *scrq)
->> +{
->> +	struct ibmvfc_host *vhost = scrq->vhost;
->> +	struct ibmvfc_async_crq_event ae = {
->> +		.type = IBMVFC_ASYNC_CRQ_SUB,
->> +	};
->> +	struct ibmvfc_async_sub_crq *crq;
->> +	unsigned long flags;
->> +	int done = 0;
->> +
->> +	spin_lock_irqsave(&vhost->host->host_lock, flags);
->> +	spin_lock(scrq->q_lock);
->> +	while (!done) {
->> +		while ((crq = ibmvfc_next_async_scrq(scrq)) != NULL) {
->> +			ae.subq = *crq;
->> +			ibmvfc_handle_async(&ae, scrq->vhost);
->> +			crq->valid = 0;
->
-> [Severity: High]
-> Could the store to crq->valid be reordered before the reads from the payload
-> complete?
->
-> On weakly-ordered architectures like PowerPC, a load from memory can be
-> delayed and executed after a subsequent store unless separated by a memory
-> barrier.
->
-> While ibmvfc_handle_async() takes spinlocks in some paths, it does not
-> execute any spinlock or hardware barrier before returning in others
-> (such as IBMVFC_AE_LINK_UP or IBMVFC_AE_SCN_FABRIC).
->
-> If the hardware observes valid == 0 early, it might overwrite the new event
-> while the CPU is still reading it, causing the CPU to ingest corrupted data.
-> Does this require an smp_mb() or smp_store_release() before clearing the
-> valid bit?
+>    Warning: drivers/scsi/ibmvscsi/ibmvfc-core.c:1914 expecting prototype for ibmvfc_relogin(). Prototype was for ibmvfc_scsi_relogin() instead
+>    Warning: drivers/scsi/ibmvscsi/ibmvfc-core.c:3328 function parameter 'fpin_status' not described in 'ibmvfc_common_fpin_to_desc'
+>    Warning: drivers/scsi/ibmvscsi/ibmvfc-core.c:3328 function parameter 'wwpn' not described in 'ibmvfc_common_fpin_to_desc'
+>    Warning: drivers/scsi/ibmvscsi/ibmvfc-core.c:3328 function parameter 'type' not described in 'ibmvfc_common_fpin_to_desc'
+>    Warning: drivers/scsi/ibmvscsi/ibmvfc-core.c:3328 function parameter 'modifier' not described in 'ibmvfc_common_fpin_to_desc'
+>    Warning: drivers/scsi/ibmvscsi/ibmvfc-core.c:3328 function parameter 'threshold' not described in 'ibmvfc_common_fpin_to_desc'
+>    Warning: drivers/scsi/ibmvscsi/ibmvfc-core.c:3328 function parameter 'event_count' not described in 'ibmvfc_common_fpin_to_desc'
+>>> Warning: drivers/scsi/ibmvscsi/ibmvfc-core.c:3328 function parameter 'severity' not described in 'ibmvfc_common_fpin_to_desc'
+>    Warning: drivers/scsi/ibmvscsi/ibmvfc-core.c:3410 function parameter 'crq' not described in 'ibmvfc_basic_fpin_to_desc'
+>    Warning: drivers/scsi/ibmvscsi/ibmvfc-core.c:3410 function parameter 'wwpn' not described in 'ibmvfc_basic_fpin_to_desc'
+>    Warning: drivers/scsi/ibmvscsi/ibmvfc-core.c:3410 Excess function parameter 'ibmvfc_fpin' description in 'ibmvfc_basic_fpin_to_desc'
+>    Warning: drivers/scsi/ibmvscsi/ibmvfc-core.c:3449 function parameter 'wwpn' not described in 'ibmvfc_full_fpin_to_desc'
+>>> Warning: drivers/scsi/ibmvscsi/ibmvfc-core.c:3488 function parameter 'wwpn' not described in 'ibmvfc_ext_fpin_to_desc'
+>    Warning: drivers/scsi/ibmvscsi/ibmvfc-core.c:5505 function parameter 'protocol' not described in 'ibmvfc_alloc_target'
+>    Warning: drivers/scsi/ibmvscsi/ibmvfc-core.c:3328 function parameter 'fpin_status' not described in 'ibmvfc_common_fpin_to_desc'
+>    Warning: drivers/scsi/ibmvscsi/ibmvfc-core.c:3328 function parameter 'wwpn' not described in 'ibmvfc_common_fpin_to_desc'
+>    Warning: drivers/scsi/ibmvscsi/ibmvfc-core.c:3328 function parameter 'type' not described in 'ibmvfc_common_fpin_to_desc'
+>    Warning: drivers/scsi/ibmvscsi/ibmvfc-core.c:3328 function parameter 'modifier' not described in 'ibmvfc_common_fpin_to_desc'
+>    Warning: drivers/scsi/ibmvscsi/ibmvfc-core.c:3328 function parameter 'threshold' not described in 'ibmvfc_common_fpin_to_desc'
+>    Warning: drivers/scsi/ibmvscsi/ibmvfc-core.c:3328 function parameter 'event_count' not described in 'ibmvfc_common_fpin_to_desc'
+>>> Warning: drivers/scsi/ibmvscsi/ibmvfc-core.c:3328 function parameter 'severity' not described in 'ibmvfc_common_fpin_to_desc'
+>    Warning: drivers/scsi/ibmvscsi/ibmvfc-core.c:3410 function parameter 'crq' not described in 'ibmvfc_basic_fpin_to_desc'
+>    Warning: drivers/scsi/ibmvscsi/ibmvfc-core.c:3410 function parameter 'wwpn' not described in 'ibmvfc_basic_fpin_to_desc'
+>    Warning: drivers/scsi/ibmvscsi/ibmvfc-core.c:3410 Excess function parameter 'ibmvfc_fpin' description in 'ibmvfc_basic_fpin_to_desc'
+>    Warning: drivers/scsi/ibmvscsi/ibmvfc-core.c:3449 function parameter 'wwpn' not described in 'ibmvfc_full_fpin_to_desc'
+>>> Warning: drivers/scsi/ibmvscsi/ibmvfc-core.c:3488 function parameter 'wwpn' not described in 'ibmvfc_ext_fpin_to_desc'
+>    Warning: drivers/scsi/ibmvscsi/ibmvfc-core.c:5505 function parameter 'protocol' not described in 'ibmvfc_alloc_target'
 
-Note that the IRQ is disabled in ibmvfc_interrupt_async_subq() before
-calling ibmvfc_drain_async_subq():
-
-	ibmvfc_toggle_scrq_irq(scrq, 0);
-	ibmvfc_drain_async_subq(scrq);
-
-So I'm unclear how the hardware would be writing to *crq. Certainly not
-through an interrupt.
-
-I don't think this is a valid concern.
-
->> +			wmb();	/* complete write */
->> +		}
->> +
->> +		ibmvfc_toggle_scrq_irq(scrq, 1);
->> +		crq = ibmvfc_next_async_scrq(scrq);
->> +		if (crq != NULL) {
->> +			ae.subq = *crq;
->> +			ibmvfc_toggle_scrq_irq(scrq, 0);
->> +			ibmvfc_handle_async(&ae, scrq->vhost);
->> +			crq->valid = 0;
->
-> [Severity: High]
-> Does this race-closure check also suffer from the same missing load-store
-> barrier before clearing the valid bit?
-
-Same issue here: interrupts are disabled.
-
->> +			wmb();	/* complete write */
->> +		} else
->> +			done = 1;
->> +	}
->> +	spin_unlock(scrq->q_lock);
->> +	spin_unlock_irqrestore(&vhost->host->host_lock, flags);
->> +}
+These will be fixed in v14 of the series.
