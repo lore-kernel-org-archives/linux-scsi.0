@@ -1,108 +1,109 @@
-Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f176.google.com (mail-pf1-f176.google.com [209.85.210.176])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E30573955CD
-	for <linux-scsi@vger.kernel.org>; Mon, 12 Oct 2026 05:04:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1A0C36D9EB
+	for <linux-scsi@vger.kernel.org>; Mon, 12 Oct 2026 07:38:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791781487; cv=none; b=XloHeig5Jp+pdzcM0C3j2lUNNiGHRNF9UhEoR2D7LZKSfedIfLfiWl9M6xlOg+wZjoPr9TcqZlg6Hv4kDYDcOpCs4mBdkuAy3Ix5PFizlPzp7weMk52XDJGa+6yS7GH6rnAAfneP59lssEIRS7/50wQNko8LqoWCalM8ckoX1oQ=
+	t=1791790722; cv=none; b=VYcEZcJP5FffyRKgIiKQOiJvCnvOlUk7G9tZCiNjZkxMuf6Zt63/9AK90dsekbArOyhaBSE7lzXyg6TVZxAjPDNa0chzCCmX+iPnusDdlo5uGBiToMC9hpiAS7SMtD2oTR9boWmTcrSmv1RD0k7I6RCif9Vtp0Evx4sPY9Hbkas=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791781487; c=relaxed/simple;
-	bh=hM0kcQ0Bc9evwWdypFNCcRX0uxxLlGvOfY77UoX8Jik=;
-	h=From:To:Cc:In-Reply-To:Subject:Date:Message-ID:MIME-Version:
-	 Content-Type:References; b=rXwpiGhiHA65Lhp94yk6mLKODl2o3plIIgNbdVnJ00eExXMSYCpPrg7zTe8g2t4VO0HFbM7YTsl74TISIkXfwtk0mZdZxq5MtDrPuDWFpDiaYcoHUhqt9Hai5wdURtxYCwYqjPrL4G1pKhO2dUl8EdX5mwhnTcew0dIEiHOOLL8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=qT+hvZv5; arc=none smtp.client-ip=203.254.224.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1791790722; c=relaxed/simple;
+	bh=k/Ste6K7riK4U4H/eng95jFc4SxOT/Gqt0qm28BCbg8=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=oQhuCJ5qtL9e72KvZ8ZnezU3VOvhVJ1s3X2SuWsxxAj/3pL9f1fZZIyv6sfx8Juc4gLF1+nHMgaWJIJa3TW1cFSfdaPyHt79Dczqe+VwavQqrlPZ+PVZxtt5Fzpa6eOLrOOibH+uFj1J6NlZacXGQ0DlQdPOQ0qY5cJTocQkz5Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr; spf=none smtp.mailfrom=isslab.korea.ac.kr; dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b=T+wbXCxG; arc=none smtp.client-ip=209.85.210.176
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="qT+hvZv5"
-Received: from epcas5p1.samsung.com (unknown [182.195.41.39])
-	by mailout4.samsung.com (KnoxPortal) with ESMTP id 20261012050442epoutp0439dc8189b1aebd5f2f149154fded5cf7~dr8PnvO8B1172411724epoutp04J
-	for <linux-scsi@vger.kernel.org>; Mon, 12 Oct 2026 05:04:42 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20261012050442epoutp0439dc8189b1aebd5f2f149154fded5cf7~dr8PnvO8B1172411724epoutp04J
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1791781482;
-	bh=ALLXBF2fii6mp0sYwu704G5nVrutLfZ10mu+goZbHCw=;
-	h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
-	b=qT+hvZv5Sw/oFlQYZveAMhMOjvuKPmmYW45u/MTxSR1XXAAxisxD6vM0fO+i/7n4+
-	 o2j+AJBKPivY7V7rCjO0GyzPwbOwPlf9++ZnoyMOWBNPG5C+pyts9whfCgaBgGzXGr
-	 Bf3qqPgBJxWWvtRkRIfU4dAlciPo8itOGjjjiAF0=
-Received: from epsnrtp01.localdomain (unknown [182.195.42.153]) by
-	epcas5p3.samsung.com (KnoxPortal) with ESMTPS id
-	20261012050442epcas5p357194c275463fc6da707b7ba117a5694~dr8PP7B0n0435004350epcas5p3l;
-	Mon, 12 Oct 2026 05:04:42 +0000 (GMT)
-Received: from epcas5p1.samsung.com (unknown [182.195.38.94]) by
-	epsnrtp01.localdomain (Postfix) with ESMTP id 4j35493vK9z6B9mV; Mon, 12 Oct
-	2026 05:04:41 +0000 (GMT)
-Received: from epsmtip1.samsung.com (unknown [182.195.34.30]) by
-	epcas5p4.samsung.com (KnoxPortal) with ESMTPA id
-	20261012050440epcas5p4bc98c046573d77f938d1b1dc0cf55283~dr8NnsvyP2093520935epcas5p4n;
-	Mon, 12 Oct 2026 05:04:40 +0000 (GMT)
-Received: from INBRO002756 (unknown [107.122.3.168]) by epsmtip1.samsung.com
-	(KnoxPortal) with ESMTPA id
-	20261012050438epsmtip1e0cc5a2939cc28011ce7569fb967f3b6~dr8MFWnIG2662026620epsmtip1B;
-	Mon, 12 Oct 2026 05:04:38 +0000 (GMT)
-From: "Alim Akhtar" <alim.akhtar@samsung.com>
-To: "'Stanley Jhu'" <stanleyjhu@google.com>, "'Martin K. Petersen'"
-	<mkp@kernel.org>, "'James E.J. Bottomley'"
-	<James.Bottomley@HansenPartnership.com>, "'Jonathan Corbet'"
-	<corbet@lwn.net>
-Cc: "'Bart Van Assche'" <bvanassche@acm.org>, "'Shuah Khan'"
-	<skhan@linuxfoundation.org>, "'Randy	Dunlap'" <rdunlap@infradead.org>,
-	"'Jeuk Kim'" <jeuk20.kim@samsung.com>, "'Bean Huo'" <beanhuo@iokpp.de>,
-	<linux-scsi@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
-In-Reply-To: <20261011103319.820657-1-stanleyjhu@google.com>
-Subject: RE: [PATCH] scsi: ufs: docs: Describe how to test with QEMU
-Date: Mon, 12 Oct 2026 10:34:37 +0530
-Message-ID: <000001dd5a07$2fb3b400$8f1b1c00$@samsung.com>
+	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b="T+wbXCxG"
+Received: by mail-pf1-f176.google.com with SMTP id d2e1a72fcca58-8875d220446so689400b3a.3
+        for <linux-scsi@vger.kernel.org>; Mon, 12 Oct 2026 00:38:39 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=isslab-korea-ac-kr.20251104.gappssmtp.com; s=20251104; t=1791790719; x=1792395519; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=vZUQvIk4esipOPh6JhqFb4csORQpQ+ynl//reiEHu0Y=;
+        b=T+wbXCxGgTnhphpkonj48h6xs/SlKTARDJ10qxiN8638nCpw67LWa+ufKrcYric90e
+         /8wHA14wcNI024sOrpaOM7x4Pqg50paB9TabW0TBkbNjKtDGnPVSwXYuM2bfZp7IFSAc
+         tF2hkKFKxnprZQAh2Q5EZWd/fUtRgBAvEItrbXuULtGAwpG0oX7O3ePZeWAUZhrs9C4u
+         agyFFcoWMr8UBzMXgajbDG778uYizcTZ4g7vz5Td9NqwdxV3/9MfpEM5imHl9HLdN6EK
+         J45O9By9FHSLCB53WWTZd0GF2ruoVUTdGcd81WDcMIRe0OwRzwaJQlJFXYkBN8xCPoqH
+         msSg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791790719; x=1792395519;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=vZUQvIk4esipOPh6JhqFb4csORQpQ+ynl//reiEHu0Y=;
+        b=Ghr+Myb3zBfEGUqfMaF2Ot7a+84zwRdSZUt18skPGkaptRHLMd5mfhNtR6Hyl0mOAX
+         zjX9IpWb3Jn8NcSp44kbdx1nWjM43Y8BKJjfMT5Nsmg7ipeAu7uYpfNRfCxQoC+A5yLa
+         oWuq2XIquj0xobFJzavUv268UxF69IMJ+DgFGLvU0tAPcfoxUuYZeg0iC0G55ahMvt5K
+         ytZL+UYz4tqFXgx+SYLuoILyy9ps04ovrqeQ+/McmgtL5r/DfC1OuVdMVJU3RNK8yf6P
+         nS2DxoSRn3Dn6kTy9oAbbTrfNt6K778hLaWgOeW1dCnueiMV0CeqhFkRGMNObk7DvsVp
+         f16w==
+X-Gm-Message-State: AFq9FYIbeUnx2laM8maAOvNNkncePCe+5Kg9+yvuhTRH/x0KfcFHJOys
+	Ap0NPapbiDfnB9ZOAv81d4cu1lWmM9gRYck2XsEXVgoFi4DCtl7V/brvKRTijeQIcTc=
+X-Gm-Gg: AYBFou04ojCKPrwzsTxRKnOTcLTu9CUilaUcC32M37lE6YmhOkrVExMU4+TAv8UXxBd
+	5N4tINGa1hdaCIjolm4v700kLmbi+JasqbmHTvVrFGu+tw7HdBkQR5NCeGfWCNEV2AAEMkkRSpk
+	mR6YQlbolR6ro0IzuAJy9fVLixaQeOubY7fTz9bFJGZRlTDw3THDGmzE/tCwy33n9S60+HRF/od
+	L7M020H2a4Y4ZKMIDmzRk6YMcGcD86VzQKcww7BTpVre7H1m+N12l/ycUzwnvxwXnjILbxq1NeP
+	KoA/JvcYKce9Q5U1It13yr6KzQ2EXiWlBmjyZznJ839o0ZBUxeHZ4OjmebL2G5oWbyFGPUq/IOS
+	js9BG8MnhY5ge3FpC9y50teuCFxXPwHIk0kCZkugO52ZaRA3HH4HvScQ1ZEGyRPgqyi1qmEC2nx
+	UsV0CkduHV+TsM85D2WM6lXO593CpCuYttorNdGq3TQKoBYlCS0ssJMuZUCWYLLkhTgCKckmA1s
+	9sJLQ==
+X-Received: by 2002:a05:6a20:430c:b0:3e0:c961:b5b1 with SMTP id adf61e73a8af0-3e16be576acmr6010134637.45.1791790719022;
+        Mon, 12 Oct 2026 00:38:39 -0700 (PDT)
+Received: from yhlee-960QFG.. ([125.131.91.97])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-898c9ee8bc5sm2148780b3a.60.2026.10.12.00.38.36
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 12 Oct 2026 00:38:38 -0700 (PDT)
+From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+To: ching2048@areca.com.tw,
+	mkp@kernel.org,
+	James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org,
+	thenzl@redhat.com,
+	Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+Subject: [PATCH 0/3] scsi: arcmsr: bound adapter-supplied completion indices and message lengths
+Date: Mon, 12 Oct 2026 16:38:25 +0900
+Message-ID: <cover.1791789900.git.yhlee@isslab.korea.ac.kr>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-Mailer: Microsoft Outlook 16.0
-Thread-Index: AQD8jgR9uCSeo84oHFaWDTAnHIriAAHNcAceuKxxLYA=
-Content-Language: en-us
-X-CMS-MailID: 20261012050440epcas5p4bc98c046573d77f938d1b1dc0cf55283
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-CMS-TYPE: 105P
-cpgsPolicy: CPGSC10-543,Y
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20261011103324epcas5p3005f6e64695166fb2d5fd2f788f7f47c
-References: <CGME20261011103324epcas5p3005f6e64695166fb2d5fd2f788f7f47c@epcas5p3.samsung.com>
-	<20261011103319.820657-1-stanleyjhu@google.com>
+Content-Transfer-Encoding: 8bit
 
+The arcmsr completion and message paths take several values straight
+from the DMA area the adapter writes -- a completion slot number, a
+type B completion-ring index, and an inbound message length -- and use
+them as array subscripts or copy lengths without checking them against
+the array or buffer they index.  A malfunctioning or malicious adapter
+can therefore drive an out-of-bounds access from the completion
+interrupt or an ioctl.
 
+Patch 1 clamps the firmware-supplied message length to the staging
+window (heap out-of-bounds write).  Patch 2 rejects a completion slot
+the driver never handed out (wild pointer load and dereference on types
+E and F).  Patch 3 wraps the type B completion index before it is used
+(out-of-bounds read, and an out-of-bounds store when the word read is
+non-zero).
 
-> -----Original Message-----
-> From: Stanley Jhu <stanleyjhu@google.com>
-> Sent: Sunday, October 11, 2026 4:03 PM
-> To: Martin K. Petersen <mkp@kernel.org>; James E.J. Bottomley
-> <James.Bottomley@HansenPartnership.com>; Jonathan Corbet
-> <corbet@lwn.net>
-> Cc: Bart Van Assche <bvanassche@acm.org>; Alim Akhtar
-> <alim.akhtar@samsung.com>; Shuah Khan <skhan@linuxfoundation.org>;
-> Randy Dunlap <rdunlap@infradead.org>; Jeuk Kim
-> <jeuk20.kim@samsung.com>; Bean Huo <beanhuo@iokpp.de>; linux-
-> scsi@vger.kernel.org; linux-doc@vger.kernel.org; linux-
-> kernel@vger.kernel.org
-> Subject: [PATCH] scsi: ufs: docs: Describe how to test with QEMU
-> 
-> QEMU emulates a UFS host controller and logical units, but the kernel tree
-> does not mention it, so developers without UFS hardware have no
-> documented way to exercise the UFS core.
-> 
-> Add a short section with the required kernel options, an example QEMU
-> command line, and what the emulation does not cover.
-> 
-> Signed-off-by: Stanley Jhu <stanleyjhu@google.com>
-> ---
-Thanks Stanley!
-This helps
+Each was reproduced on a KASAN build with a crafted DMA area; the
+per-patch changelogs have the reports.  The three are independent and
+carry separate Fixes tags.
 
-Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
+Yehyeong Lee (3):
+  scsi: arcmsr: bound the firmware-supplied message length
+  scsi: arcmsr: check the completion index the adapter reports
+  scsi: arcmsr: wrap the type B completion index before using it
+
+ drivers/scsi/arcmsr/arcmsr_hba.c | 23 +++++++++++++++++++++--
+ 1 file changed, 21 insertions(+), 2 deletions(-)
+
+-- 
+2.43.0
 
