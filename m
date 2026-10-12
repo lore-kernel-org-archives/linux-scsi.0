@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F24C230C37C;
-	Mon, 12 Oct 2026 18:16:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66E684AA1EB;
+	Mon, 12 Oct 2026 18:17:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791828965; cv=none; b=ilwuSxhP0OM7Dv1Z44QGE89PLr/O9sdZu6MGVL7Df9MkpP3EUvw9lJ4oCOkRtnBA89rne/gTvHThjKQ7OBiIrf6pHfa6GZrD+vAjkJz3hdNZtuNJUKoi+9lRzrChLMmXkzjiuk/H5K72FZi2iyeelndXP4B2t6Kc5t8vLQp7oX8=
+	t=1791829052; cv=none; b=iAqm1ut8emC1YhEdW3DjrCUg/vma97NewowYGcQr195bxdu9EGzoWZ9azV62GGUybAz5tSujBaHInGqL7ix7h4erXqRSwCSnjEHZHXuejFVN9mdeNzd5b6BSQuj9ZegpETdH1W44AisrXb1ms87ZBJLRZAMTUkYZb3zQ83FsvsI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791828965; c=relaxed/simple;
-	bh=sY5aL6g274cySpjqiNj8LmkZKJPueZFV/NFyx6gXGWA=;
+	s=arc-20240116; t=1791829052; c=relaxed/simple;
+	bh=8osF56c0dVbaKhzXH6Jv4wGPRqcY1CiGAIgYSilbBII=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=VigXoUdClmXuS5Kw8Heosj8w9QYtQSTgnIsFwLOpVbJwBDAZrwpLkkKzx3xPj6FtC0I9QnO4PwbeZLdsfPQO/fTl2BV19ZkW2+NjVnUrKIDBOkQaCULIkvjtG2+6e8IzRSTSsR8sEN2NW0CwpIcD/dgrnFm/VClhBYQIyYpj8MY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jKb1KDAJ; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:Content-Type; b=tTLL5NLXy1ee3bsqouTcTWwyvf4VY9bE2667TM2tP6XPoZdgvVYQpNQR9OgavPF1IjGz4aQZW0FnUJPLPYwwnmZyc9MLXHYSqoCMzkWskx5pOHs3ASWUYIVyJJpUmoA13Fa/tgIhV/Fl9MXmBY4qsHMuXShtgJIsoE+Er2HG7VY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MFU2oEAL; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jKb1KDAJ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 992E11F0089B;
-	Mon, 12 Oct 2026 18:15:29 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MFU2oEAL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6432F1F0089B;
+	Mon, 12 Oct 2026 18:16:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791828963;
-	bh=QYTLULj50w8cGz2VrDdtiT3+k08nrjopgP7hF7y/knY=;
+	s=k20260515; t=1791829051;
+	bh=fIhKjnB303AJDSu1eIXXYJZgJIHaSHsA3CPWC2z5itQ=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=jKb1KDAJ3AFav06sCyLj8UCjIoWRIlRCFdFfQ5zT9BeRC2sxgPNBxw6BbyYoWnU/f
-	 tCdXrUW0n0dwFo32dUZ49pZL8p1NPDoE5mJy50/Yp7zqrshPLFad2VvFvE+Q++XYG1
-	 ArL6vPewLSC8itjPCy8DcgYxztVngtqaCpUx4V2PsZ2AoMuvrmyo+WPFGE09ZU7tV5
-	 pPtIyF0ur2rrwANNOiExG/1JN/dbg/8GA/bftwSsMYuUlXrXRo4y72l21Mo948fwu8
-	 1Eq/rGQf7emejheXqvBWawSe4WtPFf1Myhk48p1iYQVNdqbN7/o7xm1K0t4/5MKb1G
-	 PgVkbNUkAJI6A==
-Message-ID: <da6cda23-da5d-453c-8b19-8fb35e60c4b5@kernel.org>
-Date: Mon, 12 Oct 2026 20:15:27 +0200
+	b=MFU2oEALqe68FF6gv/IQ1ExN06JDurMLB/UDkcBzexCi23KlFERMznGkImuxgser+
+	 B3C9Sm9ZtwuolFJUxsZfmbTsJuz4ZJioHuaunxnSBY2uvGQPLe3kae72P+SGHNwU7P
+	 ZsNPdbP7A/yxv66dphePeYp7FmJtGOdqhuVSHN/uVwUd8ZRulltoNVHKVdd+biAqvE
+	 PS9ihJvgx3ZYNKK8qanxlXfCLGI/cwbV9rdIPx0f6o/UHrjfT0kRU5bjgnlfFZs5CR
+	 fmT+Lr9PAze01/3DWcVs4hBlWuWmp0XPyw+vQaWPShS4Sw9m0GmsvZtwllxIZRnUV8
+	 5p2H6pPX4mfHQ==
+Message-ID: <6f71b1b0-8988-4e19-9d4a-ce8a2de8fc63@kernel.org>
+Date: Mon, 12 Oct 2026 20:16:56 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,7 +35,8 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 20/38] mm/gup: error out early on !VMA_MAYREAD_BIT VMAs
+Subject: Re: [PATCH v5 21/38] uprobes: remove VM_IO, set VM_MIXEDMAP for
+ mapped kernel pages
 To: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>,
  Andrew Morton <akpm@linux-foundation.org>,
  "Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>,
@@ -118,7 +119,7 @@ Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org,
  fuse-devel@lists.linux.dev, Ihor Solodrai <ihor.solodrai@linux.dev>,
  Bert Karwatzki <spasswolf@web.de>
 References: <20261009-b4-mmap-prepare-vma-flag-sanify-v5-0-923b70125b1e@kernel.org>
- <20261009-b4-mmap-prepare-vma-flag-sanify-v5-20-923b70125b1e@kernel.org>
+ <20261009-b4-mmap-prepare-vma-flag-sanify-v5-21-923b70125b1e@kernel.org>
 From: "David Hildenbrand (Arm)" <david@kernel.org>
 Content-Language: en-US
 Autocrypt: addr=david@kernel.org; keydata=
@@ -165,33 +166,53 @@ Autocrypt: addr=david@kernel.org; keydata=
  3iyY2Nsd7JxfKu1PRhCGwXzRw5TlfEsoRI7V9A8isUCoqE2Dzh3FvYHVeX4Us+bRL/oqareJ
  CIFqgYMyvHj7Q06kTKmauOe4Nf0l0qEkIuIzfoLJ3qr5UyXc2hLtWyT9Ir+lYlX9efqh7mOY
  qIws/H2t
-In-Reply-To: <20261009-b4-mmap-prepare-vma-flag-sanify-v5-20-923b70125b1e@kernel.org>
+In-Reply-To: <20261009-b4-mmap-prepare-vma-flag-sanify-v5-21-923b70125b1e@kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 10/9/26 20:04, Lorenzo Stoakes (ARM) wrote:
-> When populating a VMA range via the aptly named populate_vma_page_range()
-> an unreadable VMA will always eventually fail with -EFAULT.
+> These are not MMIO pages so VMA_IO_BIT is an inappropriate flag to set.
 > 
-> That a VMA is accessible is always checked, however VMA_MAYREAD_BIT is not.
+> Instead, set them VMA_MIXEDMAP_BIT as they are kernel mappings and this is
+> the appropriate flag to set for those.
 > 
-> All user mappings always have VMA_MAYREAD_BIT set, so this check only
-> impacts kernel mappings.
+> This provides the semantics required - no VMA merging is permitted, but
+> does not prevent GUP.
 > 
-> It is implemented specifically to disallow population of uprobes XOL
-> mappings which are exec-only.
+> However this has no meaningful impact as these are refcounted and thus can
+> be GUPed.
 > 
-> A nasty interaction with these mappings may occur if they are mlocked, so
-> actively disallow this early.
+> A previous commit already prevented __mm_populate() from being invoked on
+> XOL areas, which VMA_IO_BIT was previously relied upon to do, so that is no
+> longer required.
 > 
-> This allows a subsequent commit to remove the VM_IO check in
-> __mm_populate() which otherwise requires non-MMIO mappings to be wrongly
-> flagged simply as a workaround.
+> Both VMAs set a VMA name, so always_dump_vma() returns true before
+> vma_dump_size() reaches its VMA_IO_BIT check, and thus there is no change
+> in core dump behaviour.
 > 
-> Acked-by: Zi Yan <ziy@nvidia.com>
+> Change this for both the core xol_add_vma() function and the x86-specific
+> get_uprobe_trampoline() function.
+> 
 > Reviewed-by: Suren Baghdasaryan <surenb@google.com>
 > Signed-off-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
 > ---
+>  arch/x86/kernel/uprobes.c | 2 +-
+>  kernel/events/uprobes.c   | 4 ++--
+>  2 files changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/arch/x86/kernel/uprobes.c b/arch/x86/kernel/uprobes.c
+> index 65a2de82ecd2..0f60c0d076b6 100644
+> --- a/arch/x86/kernel/uprobes.c
+> +++ b/arch/x86/kernel/uprobes.c
+> @@ -715,7 +715,7 @@ static struct vm_area_struct *get_uprobe_trampoline(struct mm_struct *mm, unsign
+>  
+>  	*new_mapping = true;
+>  	return _install_special_mapping(mm, vaddr, PAGE_SIZE,
+> -				VM_READ|VM_EXEC|VM_MAYEXEC|VM_MAYREAD|VM_IO,
+> +				VM_READ|VM_EXEC|VM_MAYEXEC|VM_MAYREAD|VM_MIXEDMAP,
+>  				&tramp_mapping);
+
+So these can now be GUP'ed. Let's hope that's fine ;)
 
 Acked-by: David Hildenbrand (Arm) <david@kernel.org>
 
