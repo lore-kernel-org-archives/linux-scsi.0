@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E43D2339389;
-	Mon, 12 Oct 2026 18:11:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04C704CC26B;
+	Mon, 12 Oct 2026 18:12:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791828705; cv=none; b=AX5r9bk7ncTB+3c5QmPpd09L78irkwFuAn+dkm1Pq38nTx8Z0hK1ABGQbo8ZHQajkLXxksWAvI+Dhbd46PeTPCQEj+4sr4QalSupmvNEa5vLp76+s0maQ+StKWebSVj0QOnGI+8qA5XReozSXjikpdkRsrLI7yZz6koqXMOkdnw=
+	t=1791828772; cv=none; b=Hz9O8HYVjvFfVy7vHWNVHdaqln+DPo7dk5+bO6Ho35q/wTYkQCtoTeN+yqjHYvcLllx3F9AKahQ8jxw3ndbyP5emjYJUOf0oX4xSj3N00cvTBVhdHB0xg8SLonZdTyW+K+hLISfAOjWwByGOzYGtkCS5+GKIQ5OHepaov5g60Jo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791828705; c=relaxed/simple;
-	bh=4iKkUxUsCCctPuNYL8VnvWpmeVCO2vOjS23lH4zw9iE=;
+	s=arc-20240116; t=1791828772; c=relaxed/simple;
+	bh=0XA6LJJVwnEA53uWNOvZPv5K+SN5s63VQM5Ia/jD9/4=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=YBDD16M1soxOfVqqy8q2IeYDm3JN9VcEvNQRyr3c/0e6K0yCOy9a+2h+pGmsdAXGB/JBRfcELtZBBqHS+gyw8VH7930JTvwVD+HjSzCNwwv17Y4cR4t2bYntOIOdpw9/E/pQUXgsFnMs8m2E79vLfJZmZVynWH0Wq6rK6iEWEhU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TwUIwf9t; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:Content-Type; b=l6CnJr9YOZGGGtRMpXEFrZKs3MrbwiWpGeTaaLm9PqnnXzrVyQeyJSaY3fV4I/u0PlR/ZSuukh1OziDzOWzLzKHV6Fi6tTwN3bzVEOskrmczVDUuLfVK89x40Xyab1/WjJNzj7rXqvobPnWlE5iU8sGrWDPCMCNDmMYtgtfbd2w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DgQYzth/; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TwUIwf9t"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 62C6D1F0089B;
-	Mon, 12 Oct 2026 18:11:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DgQYzth/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 999391F0089B;
+	Mon, 12 Oct 2026 18:12:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791828703;
-	bh=Nru7h3Sv5JaI6aGGCMmFY9EP6czcY0tZ0pY72oIj5bk=;
+	s=k20260515; t=1791828770;
+	bh=cE3bSEEMTqHWrj1tS3Q/lf/i5N1uRPRLGcz8J6sy2y4=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=TwUIwf9tGNYwZIY3Fm1yPDU4MTzPQZvX2/h7JIxyzkfk5eXfDQbWbnfsSbPbHnFqb
-	 LjicSJy47COiVBFbpVCy6JFGXzEIJ0f/ZGnStnTNZvszexgrUMK9qHee5aJU9lSzek
-	 im/JebuesdGjd2pwP3NH3XGqwXAxyF2dk/mjybeu0HMAgajsmthZ0IAFYR/8XRbSax
-	 QYu4sPX7wYS1mmZJb0tI/WOLy9v5saXmqjpO8eIrfobNXWobyWDhWNgGpkmtg7xlXP
-	 +NmTupCHc6jCf3Ulym34CpsgHe//G15vZKq3Lq9hDEImDN8W4h/n/dFUGMg+zaM9J4
-	 XJEflFnpFAW0Q==
-Message-ID: <1fd21055-a301-4aad-ae7f-8aa633804048@kernel.org>
-Date: Mon, 12 Oct 2026 20:11:06 +0200
+	b=DgQYzth/MmZoWmiNzeqXMo3pL3++4NPcxPJzPON5+Iq1S5su3srfSsiLs/CRoSsV+
+	 y5o+xBW5wDB2UDULZVXK4Z+375t1dzbNUtt0abqzfCef5+wNE0F8zkc23m9IRRJQki
+	 E4j3lVFrh5llmtdqL8iYb+O84Q1sd17qdYFd9Kh1re0RHi4Rwnj76YbarFlQjfDBco
+	 wT37cp3+XRmGwpGtSGF5SPeOgjXQRjICCX4Lqd0pIe+Q1BeY5jWG2zzffSTDcLJPzR
+	 WjJK0Vf5kjqk84P6RDfdYSn6uJUn28TopIgTD9wsdxKgdymGRHK6Hy3nSvR1UmFnzT
+	 enZNuzoKkUK8A==
+Message-ID: <4c3e6350-b647-482d-a81a-89ba2431519e@kernel.org>
+Date: Mon, 12 Oct 2026 20:12:15 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,7 +35,8 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 16/38] mm/vma: add and use vma_[flags]_is_fixed_mapping
+Subject: Re: [PATCH v5 18/38] fbdev: defio: assert FBINFO_VIRTFB, drop VM_IO,
+ add VM_MIXEDMAP
 To: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>,
  Andrew Morton <akpm@linux-foundation.org>,
  "Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>,
@@ -118,7 +119,7 @@ Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org,
  fuse-devel@lists.linux.dev, Ihor Solodrai <ihor.solodrai@linux.dev>,
  Bert Karwatzki <spasswolf@web.de>
 References: <20261009-b4-mmap-prepare-vma-flag-sanify-v5-0-923b70125b1e@kernel.org>
- <20261009-b4-mmap-prepare-vma-flag-sanify-v5-16-923b70125b1e@kernel.org>
+ <20261009-b4-mmap-prepare-vma-flag-sanify-v5-18-923b70125b1e@kernel.org>
 From: "David Hildenbrand (Arm)" <david@kernel.org>
 Content-Language: en-US
 Autocrypt: addr=david@kernel.org; keydata=
@@ -165,32 +166,31 @@ Autocrypt: addr=david@kernel.org; keydata=
  3iyY2Nsd7JxfKu1PRhCGwXzRw5TlfEsoRI7V9A8isUCoqE2Dzh3FvYHVeX4Us+bRL/oqareJ
  CIFqgYMyvHj7Q06kTKmauOe4Nf0l0qEkIuIzfoLJ3qr5UyXc2hLtWyT9Ir+lYlX9efqh7mOY
  qIws/H2t
-In-Reply-To: <20261009-b4-mmap-prepare-vma-flag-sanify-v5-16-923b70125b1e@kernel.org>
+In-Reply-To: <20261009-b4-mmap-prepare-vma-flag-sanify-v5-18-923b70125b1e@kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 10/9/26 20:04, Lorenzo Stoakes (ARM) wrote:
-> This determines whether a VMA cannot be expanded or merged because what
-> they mapped was determined to be a set size at mmap time.
+> Currently all drivers which use defio allocate system memory. All of them
+> also set FBINFO_VIRTFB, other than ssd1307fb, however this driver allocates
+> system RAM, so simply failed to set this flag when it ought to.
 > 
-> This typically refers to mappings not managed by core mm, however
-> VMA_DONTEXPAND_BIT
-> is not reliably set alongside VMA_PFNMAP_BIT or VMA_MIXEDMAP_BIT, so we
-> must explicitly test for this for now.
+> This patch sets FBINFO_VIRTFB on ssd1307fb probe, then drops setting VM_IO
+> in fb_deferred_io_mmap() and instead requires FBINFO_VIRTFB to be set,
+> erroring out with a kernel warning if not.
 > 
-> We also explicitly test for VMA_PFNMAP_BIT as VMA_DONTEXPAND_BIT may not be
-> set for VMA_PFNMAP_BIT's despite the one implying the other.
+> The logic requires a page from the driver and since commit 1ecbc7dd2902
+> ("fbdev/deferred-io: Always call get_page() for framebuffer pages") has
+> always required it to be refcounted, so this was implicitly already the
+> case.
 > 
-> Use this predicate in vma_flags_can_merge() and in check_prep_vma() in the
-> mremap logic testing to see if mremap() can expand the VMA. The criteria
-> for khugepaged and MADV_COLLAPSE eligibility in
-> __thp_vma_allowable_orders() are precisely those for mergeability, so use
-> vma_can_merge() there (with an expanded comment).
+> Finally this patch sets VM_MIXEDMAP, as the logic is mapping
+> kernel-allocated memory so this is appropriate.
 > 
-> This obviates the need for the VM_NO_KHUGEPAGED mask, so remove it.
-> 
-> Hugetlb VMAs remain excluded from khugepaged as hugetlbfs always sets
-> VMA_DONTEXPAND_BIT.
+> Reviewed-by: Thomas Zimmermann <tzimmermann@suse.de>
+> Reviewed-by: Suren Baghdasaryan <surenb@google.com>
+> Signed-off-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
+> ---
 
 Acked-by: David Hildenbrand (Arm) <david@kernel.org>
 
