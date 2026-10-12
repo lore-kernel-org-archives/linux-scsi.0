@@ -1,145 +1,108 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EFB8A38B7D4;
-	Mon, 12 Oct 2026 01:46:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E30573955CD
+	for <linux-scsi@vger.kernel.org>; Mon, 12 Oct 2026 05:04:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791769619; cv=none; b=apCfxpN/C/j+wVBrsJS7UHAPtNMr+aUAtiO/euS0S7KlK7wZCW+cZ5HsJfUI5910pg4dw8MfIZyBv4RrSAqLMRcJoITx0VpKh+6AKDaTcxASKDfiwWcU1NvQ0qsqLhiX3b8zQ117g0x1CMA0Q0Gfn1iXy2NYliZ6cYdso1aQEhw=
+	t=1791781487; cv=none; b=XloHeig5Jp+pdzcM0C3j2lUNNiGHRNF9UhEoR2D7LZKSfedIfLfiWl9M6xlOg+wZjoPr9TcqZlg6Hv4kDYDcOpCs4mBdkuAy3Ix5PFizlPzp7weMk52XDJGa+6yS7GH6rnAAfneP59lssEIRS7/50wQNko8LqoWCalM8ckoX1oQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791769619; c=relaxed/simple;
-	bh=HkWvjSBUmkpg1WnpgKmCYMiraDBRvp9vc4M6E4vr0rs=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=TwdfOC44f2b2ZgH/pH9o+qLoPkRGnmy1/NXjwQTJUpNo297i4kfDmeLMFIizSXvb/rPrLarFd1Z0ZP70gVU4HAeyTtkUak95xboeDxWsWTP5M0UVic7yhKNUg9L3/SQs6px6BjzBa8kCpe4eVsZYSJ0Xqj7meiwSHOxOacpakBc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=kf3NW9+D; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=yXwCmq+W; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=zCwosnfl; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=9lykVzk7; arc=none smtp.client-ip=195.135.223.130
+	s=arc-20240116; t=1791781487; c=relaxed/simple;
+	bh=hM0kcQ0Bc9evwWdypFNCcRX0uxxLlGvOfY77UoX8Jik=;
+	h=From:To:Cc:In-Reply-To:Subject:Date:Message-ID:MIME-Version:
+	 Content-Type:References; b=rXwpiGhiHA65Lhp94yk6mLKODl2o3plIIgNbdVnJ00eExXMSYCpPrg7zTe8g2t4VO0HFbM7YTsl74TISIkXfwtk0mZdZxq5MtDrPuDWFpDiaYcoHUhqt9Hai5wdURtxYCwYqjPrL4G1pKhO2dUl8EdX5mwhnTcew0dIEiHOOLL8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=qT+hvZv5; arc=none smtp.client-ip=203.254.224.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="kf3NW9+D";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="yXwCmq+W";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="zCwosnfl";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="9lykVzk7"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id BFDC521CA9;
-	Mon, 12 Oct 2026 01:46:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1791769615; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=kc9yCYeEKHP3L6f+TK7ubvJD270BUetSVj9NKQRjQeM=;
-	b=kf3NW9+DuPjZXb9OdkjYwqdT/LWXBjC7+Zq/R0vRj36tTkMehJQXoi0mOQ0/hpNo0GOm4y
-	vca8AffU0DPcOnfg9lkCziyyVgQfplZA9j1E0V7qqRA7IQIhQuyD2P2jExsQIilzGCBQNL
-	tnvjUGL9f+otfFVvs3vwyqonu+0Npl4=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1791769615;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=kc9yCYeEKHP3L6f+TK7ubvJD270BUetSVj9NKQRjQeM=;
-	b=yXwCmq+WWZFAfBd/dtJAEkzCzDGGG+XjQIhrmJZcdBi9B9goLBYzLHhdP6el1VLWKoDbg7
-	JSDQprfeMN++KKBw==
-Authentication-Results: smtp-out1.suse.de;
-	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=zCwosnfl;
-	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=9lykVzk7
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1791769614; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=kc9yCYeEKHP3L6f+TK7ubvJD270BUetSVj9NKQRjQeM=;
-	b=zCwosnflmdGeyvupd4rUfSLo3IiOlezhHAmoldfhysiD6JloAat3lFXZ+gM/gKZH+5SoEk
-	+hKQST0tt32cWzFka3F6U5aryloFjrG9z2rYcNV/VMw3CXkn8hy5/0LTPSGj4a8tbAacdT
-	MuPyuIjmGBV71pY/EusXSJs3ReIPdoY=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1791769614;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=kc9yCYeEKHP3L6f+TK7ubvJD270BUetSVj9NKQRjQeM=;
-	b=9lykVzk7GmY0h9XbFjV0lZkAcufmloycU565K01NrO8Sfg0rs5pZgNRwIFnB0MrLRBV8CI
-	QL7dW/4Ikoek89AQ==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 9916C13314;
-	Mon, 12 Oct 2026 01:46:51 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id ZHfuAgs8zGrdCAAAD6G6ig
-	(envelope-from <ddiss@suse.de>); Mon, 12 Oct 2026 01:46:51 +0000
-Date: Mon, 12 Oct 2026 12:46:26 +1100
-From: David Disseldorp <ddiss@suse.de>
-To: Eric Biggers <ebiggers@kernel.org>
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, "Martin K .
- Petersen" <mkp@kernel.org>, linux-crypto@vger.kernel.org,
- linux-kernel@vger.kernel.org, Lee Duncan <lduncan@suse.com>, Alexandru
- Hossu <hossu.alexandru@gmail.com>
-Subject: Re: [PATCH] scsi: target: iscsi: Use crypto library API
-Message-ID: <20261012124626.6416100b.ddiss@suse.de>
-In-Reply-To: <20261011191235.GA22483@quark>
-References: <20261001044857.169487-1-ebiggers@kernel.org>
-	<20261011233600.5bb5d6c9.ddiss@suse.de>
-	<20261011191235.GA22483@quark>
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="qT+hvZv5"
+Received: from epcas5p1.samsung.com (unknown [182.195.41.39])
+	by mailout4.samsung.com (KnoxPortal) with ESMTP id 20261012050442epoutp0439dc8189b1aebd5f2f149154fded5cf7~dr8PnvO8B1172411724epoutp04J
+	for <linux-scsi@vger.kernel.org>; Mon, 12 Oct 2026 05:04:42 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20261012050442epoutp0439dc8189b1aebd5f2f149154fded5cf7~dr8PnvO8B1172411724epoutp04J
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1791781482;
+	bh=ALLXBF2fii6mp0sYwu704G5nVrutLfZ10mu+goZbHCw=;
+	h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
+	b=qT+hvZv5Sw/oFlQYZveAMhMOjvuKPmmYW45u/MTxSR1XXAAxisxD6vM0fO+i/7n4+
+	 o2j+AJBKPivY7V7rCjO0GyzPwbOwPlf9++ZnoyMOWBNPG5C+pyts9whfCgaBgGzXGr
+	 Bf3qqPgBJxWWvtRkRIfU4dAlciPo8itOGjjjiAF0=
+Received: from epsnrtp01.localdomain (unknown [182.195.42.153]) by
+	epcas5p3.samsung.com (KnoxPortal) with ESMTPS id
+	20261012050442epcas5p357194c275463fc6da707b7ba117a5694~dr8PP7B0n0435004350epcas5p3l;
+	Mon, 12 Oct 2026 05:04:42 +0000 (GMT)
+Received: from epcas5p1.samsung.com (unknown [182.195.38.94]) by
+	epsnrtp01.localdomain (Postfix) with ESMTP id 4j35493vK9z6B9mV; Mon, 12 Oct
+	2026 05:04:41 +0000 (GMT)
+Received: from epsmtip1.samsung.com (unknown [182.195.34.30]) by
+	epcas5p4.samsung.com (KnoxPortal) with ESMTPA id
+	20261012050440epcas5p4bc98c046573d77f938d1b1dc0cf55283~dr8NnsvyP2093520935epcas5p4n;
+	Mon, 12 Oct 2026 05:04:40 +0000 (GMT)
+Received: from INBRO002756 (unknown [107.122.3.168]) by epsmtip1.samsung.com
+	(KnoxPortal) with ESMTPA id
+	20261012050438epsmtip1e0cc5a2939cc28011ce7569fb967f3b6~dr8MFWnIG2662026620epsmtip1B;
+	Mon, 12 Oct 2026 05:04:38 +0000 (GMT)
+From: "Alim Akhtar" <alim.akhtar@samsung.com>
+To: "'Stanley Jhu'" <stanleyjhu@google.com>, "'Martin K. Petersen'"
+	<mkp@kernel.org>, "'James E.J. Bottomley'"
+	<James.Bottomley@HansenPartnership.com>, "'Jonathan Corbet'"
+	<corbet@lwn.net>
+Cc: "'Bart Van Assche'" <bvanassche@acm.org>, "'Shuah Khan'"
+	<skhan@linuxfoundation.org>, "'Randy	Dunlap'" <rdunlap@infradead.org>,
+	"'Jeuk Kim'" <jeuk20.kim@samsung.com>, "'Bean Huo'" <beanhuo@iokpp.de>,
+	<linux-scsi@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+In-Reply-To: <20261011103319.820657-1-stanleyjhu@google.com>
+Subject: RE: [PATCH] scsi: ufs: docs: Describe how to test with QEMU
+Date: Mon, 12 Oct 2026 10:34:37 +0530
+Message-ID: <000001dd5a07$2fb3b400$8f1b1c00$@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
-X-Rspamd-Queue-Id: BFDC521CA9
-X-Rspamd-Action: no action
-X-Spam-Level: 
-X-Spamd-Result: default: False [-2.01 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	SUSPICIOUS_RECIPS(1.50)[];
-	MID_CONTAINS_FROM(1.00)[];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	FREEMAIL_ENVRCPT(0.00)[gmail.com];
-	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	MIME_TRACE(0.00)[0:+];
-	ARC_NA(0.00)[];
-	FREEMAIL_CC(0.00)[vger.kernel.org,kernel.org,suse.com,gmail.com];
-	RCVD_TLS_ALL(0.00)[];
-	DKIM_TRACE(0.00)[suse.de:+];
-	RCVD_COUNT_TWO(0.00)[2];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	TO_DN_SOME(0.00)[];
-	RCPT_COUNT_SEVEN(0.00)[8];
-	TAGGED_RCPT(0.00)[];
-	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
-	MISSING_XM_UA(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns,suse.de:dkim]
-X-Spam-Flag: NO
-X-Spam-Score: -2.01
+X-Mailer: Microsoft Outlook 16.0
+Thread-Index: AQD8jgR9uCSeo84oHFaWDTAnHIriAAHNcAceuKxxLYA=
+Content-Language: en-us
+X-CMS-MailID: 20261012050440epcas5p4bc98c046573d77f938d1b1dc0cf55283
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+CMS-TYPE: 105P
+cpgsPolicy: CPGSC10-543,Y
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20261011103324epcas5p3005f6e64695166fb2d5fd2f788f7f47c
+References: <CGME20261011103324epcas5p3005f6e64695166fb2d5fd2f788f7f47c@epcas5p3.samsung.com>
+	<20261011103319.820657-1-stanleyjhu@google.com>
 
-On Sun, 11 Oct 2026 21:12:35 +0200, Eric Biggers wrote:
 
-> On Sun, Oct 11, 2026 at 11:36:00PM +1100, David Disseldorp wrote:
-> > Could e.g. SHA1 also require fips filtering here in future?  
-> 
-> It might.
-> 
-> > If so, would it make sense to track the fips compat status (preferably
-> > at build time) in chap_digest_algs?  
-> 
-> Let's wait until there's actually more than one before generalizing it.
 
-Fair enough. If you're okay with having the extra caller to update /
-audit following any fips compliance changes then I think it makes sense
-to merge this as-is.
+> -----Original Message-----
+> From: Stanley Jhu <stanleyjhu@google.com>
+> Sent: Sunday, October 11, 2026 4:03 PM
+> To: Martin K. Petersen <mkp@kernel.org>; James E.J. Bottomley
+> <James.Bottomley@HansenPartnership.com>; Jonathan Corbet
+> <corbet@lwn.net>
+> Cc: Bart Van Assche <bvanassche@acm.org>; Alim Akhtar
+> <alim.akhtar@samsung.com>; Shuah Khan <skhan@linuxfoundation.org>;
+> Randy Dunlap <rdunlap@infradead.org>; Jeuk Kim
+> <jeuk20.kim@samsung.com>; Bean Huo <beanhuo@iokpp.de>; linux-
+> scsi@vger.kernel.org; linux-doc@vger.kernel.org; linux-
+> kernel@vger.kernel.org
+> Subject: [PATCH] scsi: ufs: docs: Describe how to test with QEMU
+> 
+> QEMU emulates a UFS host controller and logical units, but the kernel tree
+> does not mention it, so developers without UFS hardware have no
+> documented way to exercise the UFS core.
+> 
+> Add a short section with the required kernel options, an example QEMU
+> command line, and what the emulation does not cover.
+> 
+> Signed-off-by: Stanley Jhu <stanleyjhu@google.com>
+> ---
+Thanks Stanley!
+This helps
+
+Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
+
