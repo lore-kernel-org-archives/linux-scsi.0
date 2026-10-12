@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88A6C496D5F;
-	Mon, 12 Oct 2026 15:06:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2426A352017;
+	Mon, 12 Oct 2026 15:08:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791817599; cv=none; b=hjRMN6Dyd+2JYZTRTZERo+AGbosofM5zknV91UBwxF+meqMEWF1kQHSzOfb8J7vhNB+UMeFmDqDSxSpmRGqh8V+4+50mzgHh6ty7i9jaol+a3i8zJvTpPL/xTw+wkukKvy+9LqQPJwE+FfU42tSxb2B1RLhjNjfN9NTnQrXyXaA=
+	t=1791817726; cv=none; b=MSpWe/ZyL2t5wfgsqVkeIZo6oK8j/nvfjLLgzFPiFtkazOhoPFhRgC86IRKb84ehks7QUuY+vDyTF7ao104WxmUtl01PkUKzmxkVpfkmcG6AsXZBjtmUU7ldbAyYkCsB2/Of4a1dW2+CBNkX9WRRiSRM6VabL+Kk+B9yWAwwdxc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791817599; c=relaxed/simple;
-	bh=q/waPypAMDgXGF3cDU1bVJYeyLZi6CefWvFab/SBJM4=;
+	s=arc-20240116; t=1791817726; c=relaxed/simple;
+	bh=4NEtmThl+VFSWkjXTQVzrAKV7h5HVwcDaXAAeRhYzvw=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=qycibrkVOB57yh1hW2Nliue8pfFS8LzvIudTp2OBrqyBCErahk54gnJUJx4tbb+6bAf5usYxsKLS2ntRSf/Lfs84lqszpatDWPDo6omsSKNropMAoKpHLU0v+CuE1swzRcl+Ln2xVhjl5EZEriZiwpJR4vCZ4w3Ic0tzTYkoqoI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=e5RGRP0n; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:Content-Type; b=RxZcQov6UrsVeDXk2vV5AlCL2SvmDuZi+ItJRhwrXXV9qDqPtRCTZlCR6pQ3MpRRsj0GwcWhsZt3YwY3KENPA1v+zr6mA64fiYu8lkCWl80Y+KPFsbC4mBr3+NI0XQYD9QeomdfYk/Xv+fJd6rcqHql3nAPHD0cKGTfzOw1Xkkk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=moBBKhZ1; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="e5RGRP0n"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 05D391F0089D;
-	Mon, 12 Oct 2026 15:06:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="moBBKhZ1"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 954511F0089B;
+	Mon, 12 Oct 2026 15:08:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791817598;
-	bh=+fwk8Fzg9As63QxslE7FFTAR8w3HhELt7wLLL/Vq43E=;
+	s=k20260515; t=1791817724;
+	bh=5Lqz7Co/6WmIoZTvSUyXdeYqdXkwprOlXMUykscbViU=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=e5RGRP0nwBgCPjhy9NB/ds3xyGnyicrGAHf+JIIXqPvb8xcIe3yPzo0f/SDZ0nQck
-	 5LadVxqyRrVSJewB7Y13xf8imY+HiKWl35Li2dG5MeEodaw0ZhX2awp/szISHE0yZh
-	 zwD8hS8dQu1UPTS1zTh7//vnMz26H5e8L9DZLUZegDZ0PQfA1TNwG4sE53llBGlgEh
-	 uvVblq3VsJRFftCZRllEyQdaQYht0l4PW98viZbump8TDubyttPFim9TR1Bz5DZ9tt
-	 ouWdJgcGMrdwgnAwv/j+WQpa6hdpTB7VoUiUqAmKtkL111nem7AxiJmpcCoq3hUMCm
-	 7WED4cTbH+GdA==
-Message-ID: <6eb2b306-b386-4955-9469-5cd5bf05a315@kernel.org>
-Date: Mon, 12 Oct 2026 17:06:01 +0200
+	b=moBBKhZ10bYCqL5QecW09xYvPbQHaZDR7WGJEDODITEshC7evVHvSpjAoH6glmxjB
+	 j5qq25frOQf1OQOUgMeuWBpPgH0xTZwNZhIl/cdfqON2DmOOhDyCWAnxv9HUxAb58G
+	 UBAe3u4J3Eg+8VQMPcD/kAaKX2xWIbQvxTSwSTSaw41wCpUZshy3Kz47BxbJeOuQQ/
+	 z7yDOIhsT6JrN+4uYpMlUxNCd9n9ubBCEvCaje5nabNyNDYdrRQ6UDAB6LOpwN6fdy
+	 Xwo+Ef8jUxCUhzu0fTriVqllspREkaMJXtHSPrTfLXJJ5VKOU2B/63imbqYcy1tbaW
+	 C6iTd0iiF0+vA==
+Message-ID: <5b8ef0ce-7429-4d74-b4da-a0561c59b1e2@kernel.org>
+Date: Mon, 12 Oct 2026 17:08:09 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,8 +35,8 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 11/38] selinux: reject writable opens of policy file,
- drop mmap shared/write check
+Subject: Re: [PATCH v5 13/38] bpf: arena: mark arena_map_mmap() mappings
+ VM_MIXEDMAP
 To: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>,
  Andrew Morton <akpm@linux-foundation.org>,
  "Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>,
@@ -117,9 +117,9 @@ Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org,
  kvm-riscv@lists.infradead.org, linux-riscv@lists.infradead.org,
  linux-s390@vger.kernel.org, sparclinux@vger.kernel.org,
  fuse-devel@lists.linux.dev, Ihor Solodrai <ihor.solodrai@linux.dev>,
- Bert Karwatzki <spasswolf@web.de>
+ Bert Karwatzki <spasswolf@web.de>, Emil Tsalapatis <emil@etsalapatis.com>
 References: <20261009-b4-mmap-prepare-vma-flag-sanify-v5-0-923b70125b1e@kernel.org>
- <20261009-b4-mmap-prepare-vma-flag-sanify-v5-11-923b70125b1e@kernel.org>
+ <20261009-b4-mmap-prepare-vma-flag-sanify-v5-13-923b70125b1e@kernel.org>
 From: "David Hildenbrand (Arm)" <david@kernel.org>
 Content-Language: en-US
 Autocrypt: addr=david@kernel.org; keydata=
@@ -166,30 +166,69 @@ Autocrypt: addr=david@kernel.org; keydata=
  3iyY2Nsd7JxfKu1PRhCGwXzRw5TlfEsoRI7V9A8isUCoqE2Dzh3FvYHVeX4Us+bRL/oqareJ
  CIFqgYMyvHj7Q06kTKmauOe4Nf0l0qEkIuIzfoLJ3qr5UyXc2hLtWyT9Ir+lYlX9efqh7mOY
  qIws/H2t
-In-Reply-To: <20261009-b4-mmap-prepare-vma-flag-sanify-v5-11-923b70125b1e@kernel.org>
+In-Reply-To: <20261009-b4-mmap-prepare-vma-flag-sanify-v5-13-923b70125b1e@kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 10/9/26 20:04, Lorenzo Stoakes (ARM) wrote:
-> The policy file has no write method and is exposed read-only (S_IRUGO in
-> selinux_files[]), yet sel_open_policy() performs no open mode check, so a
-> CAP_DAC_OVERRIDE caller can open it O_RDWR. Reject FMODE_WRITE at open, as
-> kernfs does.
+> The bpf_map->ops->map_mmap callback invoked by bpf_map_mmap() can be set to
+> one of ringbuf_map_mmap_kern(), ringbuf_map_mmap_user(), array_map_mmap()
+> or arena_map_mmap().
 > 
-> The file can then never be mapped with FMODE_WRITE, so do_mmap() always
-> clears VM_MAYWRITE and VM_SHARED for MAP_SHARED mappings and the VM_SHARED
-> check in sel_mmap_policy() cannot be reached. Remove it.
+> It is convention in mm to mark mappings whose pages the kernel manages
+> itself with VM_MIXEDMAP, so core mm knows not to treat them as ordinary
+> page cache or anonymous memory.
 > 
-> This also stops sel_mmap_policy() clearing VM_MAYWRITE on a mapping that is
-> neither a PFN map nor a mixed map, ahead of the core enforcing that only
-> such mappings may do so.
+> The map_mmap callbacks ringbuf_map_mmap_kern() and ringbuf_map_mmap_user()
+> use remap_vmalloc_range(), which ultimately invokes vm_insert_page() and so
+> marks the ranges VM_MIXEDMAP, and array_map_mmap() sets VM_MIXEDMAP
+> explicitly.
 > 
-> Acked-by: Stephen Smalley <stephen.smalley.work@gmail.com>
-> Reviewed-by: Jann Horn <jannh@google.com>
-> Acked-by: Paul Moore <paul@paul-moore.com>
+> However, the exception to this is arena_map_mmap(), which doesn't set the
+> flag.
+> 
+> This patch corrects this and updates the comment to reflect it.
+> 
+> The pages are refcounted and vm_normal_page() finds them regardless of the
+> flag, and VM_DONTEXPAND remains set (marking the memory as VM_SPECIAL and
+> thus unmergeable). The one effect is that NUMA balancing now skips these
+> VMAs, as it already does for the other bpf map mappings, which is the
+> reason array_map_mmap() gives for setting the flag.
+> 
+> The intent of this patch is to be able to establish the invariant that only
+> PFN-mapped or mixed map ranges may clear the VM_MAYWRITE flag, as is done
+> in bpf_map_mmap().
+> 
+> Reviewed-by: Emil Tsalapatis <emil@etsalapatis.com>
 > Reviewed-by: Suren Baghdasaryan <surenb@google.com>
 > Signed-off-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
 > ---
+>  kernel/bpf/arena.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/kernel/bpf/arena.c b/kernel/bpf/arena.c
+> index 7b6847200b43..b69fe5e34339 100644
+> --- a/kernel/bpf/arena.c
+> +++ b/kernel/bpf/arena.c
+> @@ -620,8 +620,9 @@ static int arena_map_mmap(struct bpf_map *map, struct vm_area_struct *vma)
+>  	 * clears VM_MAYEXEC. Set VM_DONTEXPAND to avoid potential change
+>  	 * of user_vm_start. Set VM_DONTCOPY to prevent arena VMA from
+>  	 * being copied into the child process on fork.
+> +	 * This is a kernel page so set VM_MIXEDMAP.
+>  	 */
+> -	vm_flags_set(vma, VM_DONTEXPAND | VM_DONTCOPY);
+> +	vm_flags_set(vma, VM_MIXEDMAP | VM_DONTEXPAND | VM_DONTCOPY);
+>  	vma->vm_ops = &arena_vm_ops;
+>  	return 0;
+>  }
+> 
+
+Historically, VM_MIXEDMAP really just means: can contain refcounted and
+non-refcounted things. Everything with a struct page is refcounted.
+
+I think we are now changing the semantics to mean "maps kernel pages". I think
+this is fine, but we really have to update the documentation (and possibly
+rename this thing to something more expressive?)
 
 Acked-by: David Hildenbrand (Arm) <david@kernel.org>
 
