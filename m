@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B22383B4EB2;
-	Mon, 12 Oct 2026 18:49:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A9EF3AFD07;
+	Mon, 12 Oct 2026 18:50:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791830996; cv=none; b=nb9WZ746+U3rLLbQz5HS7K/caNGAfk3ItJo+y6DoTbrbpVkuEQPXHp3fli1D/CDvjHZxcN+cwJhMyUx6w+gLwaoqcWCvGHhQMC2hoqshKp/vMWtuUc0ZsMQwnP/4JXAo92+RAd21gCAC1Q1rYsX3V6u489t2wK+ILLfs3EHf3js=
+	t=1791831048; cv=none; b=hVA/cybqpSyALYPfPnZdjoSe8CFFvMLR8O9z5MwNI69plN87twtenI8JC6RmNKZEemNBbyryZtwZq1d7x6Aiq2B3lvu0C0aFi8m7pdrKJgYjiVxL115eO7pcrJStzncGYwnrsUSd90SyvieSr50rz+NWG/0PUPluOaYdFVqQV/M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791830996; c=relaxed/simple;
-	bh=lMTD0TNM0GOp1G6RDx0eNVBwblu9+pvIiIMoIPZC1/M=;
+	s=arc-20240116; t=1791831048; c=relaxed/simple;
+	bh=z93k7XV5MV0AQCL4WT1G5z+36N5W0WOBl0UNLGz1iro=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=fn+EbftK8tgSFN7oX79/8aS9YIIULgZ8V/NuKBw19Tg3vw8XM1Al418lcgO3pdBWw6isfkAW6e2NgARnRbnDG92NCf2dnGxRubed+LM5uQrSMepnYnCV+zPbK9P7ts+nwUbSGr1rbpz8Y77RO5/e7SP6mTjhx80MA6fkBHDXvcc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eKSb/v+c; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:Content-Type; b=OQiY1DTOx6N3c2Ue5Dyp/VTBbRqbO3lKLCno8x0T/+CVijWYjxZ0ZzQ74tgNkYybxHuu4V3iyQdLMkulQSkk5DZp/uE0iaMBSCyV9iABxi96+zuBvScjEKBq7uzKSEQypC+/n6PvI9vMjX+WCj9umgandg400bcGvPtRnVdGCiQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=X995GYif; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eKSb/v+c"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0F1141F0089B;
-	Mon, 12 Oct 2026 18:49:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="X995GYif"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3AC3E1F0089B;
+	Mon, 12 Oct 2026 18:50:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791830995;
-	bh=+ETkvxcX6k2lKVqNOx/pl7biUrWa9FssL3e7zxjhnIo=;
+	s=k20260515; t=1791831046;
+	bh=38uWEgDKI5eF78uuznuaCjVsoYczQiXE9MFjqO5oCvg=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=eKSb/v+cPDwsjsY5yYdu8Jy6kfWxKxwtv3s5xYcCMTxJountc+db2DwElGZpDBmN2
-	 HHJgmACoQpAy1Aw4bqeJvNPzc0XTvPnxWo0hUel2k/dJB/DfEIj/alnwWXF8KT4Csw
-	 1Ip3KLDH8WRPkmBpeM22t0QT7jx5jampAZYH1OtP2tFm8Bs9XNkiXFc+yZ9Qgr7/SB
-	 X8dCADJA8VeY2qPSD424HmU6c1zGUh+T8gCwDodM3+EBfLReu0yQ+DpHnxDbVi4Nj3
-	 eRZgA6GqDae4XATWyIjDV1Lv8S0bR3honk/e13w3bHEFEuzwbqgbVsEyaTfEhPrrCx
-	 q6NTZ4oLWf8Nw==
-Message-ID: <e65264f1-52dd-4ed4-a647-87e7a1778b6b@kernel.org>
-Date: Mon, 12 Oct 2026 20:49:11 +0200
+	b=X995GYifw7PrMKKJ1NpvxcWBaCAfqXTD5h3RO3nQXpyfK88CyU0oN+qCYuVNQoBfD
+	 Et5yOHn0bPhyCs9Jo50EXVQeNDA6fO1ffpVJmOa8Em3ujV0bhTB11mmU1otlP3c0ot
+	 JM2+sq4kPT0Hbw3bBDjmIr1uHp4GzqqX4oYOcHOTIMS3qd+6tN3lZAF8J214OWEKuY
+	 r/nHBqo4YxpRZK2UypT3YwkJtL6SbjE2Pbe+lcFHHYIOSn4ksFr6ttzt6/ja3zVUR2
+	 vDzF0jHc3Hyp4Fo4fyKKKVxhZcQlrrywc0fpPDd6ZNxltI1QoZzCxQKl3aTu5Hguxh
+	 7HbTWgLExma8A==
+Message-ID: <22dc04ac-c046-4baa-9bdf-a5ba07c0c0ca@kernel.org>
+Date: Mon, 12 Oct 2026 20:50:09 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,8 +35,8 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 33/38] mm: eliminate VMA_SPECIAL_FLAGS usage when
- hugetlb explicitly tested
+Subject: Re: [PATCH v5 34/38] mm: eliminate VMA_SPECIAL_FLAGS check in
+ lru_gen_look_around()
 To: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>,
  Andrew Morton <akpm@linux-foundation.org>,
  "Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>,
@@ -119,7 +119,7 @@ Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org,
  fuse-devel@lists.linux.dev, Ihor Solodrai <ihor.solodrai@linux.dev>,
  Bert Karwatzki <spasswolf@web.de>
 References: <20261009-b4-mmap-prepare-vma-flag-sanify-v5-0-923b70125b1e@kernel.org>
- <20261009-b4-mmap-prepare-vma-flag-sanify-v5-33-923b70125b1e@kernel.org>
+ <20261009-b4-mmap-prepare-vma-flag-sanify-v5-34-923b70125b1e@kernel.org>
 From: "David Hildenbrand (Arm)" <david@kernel.org>
 Content-Language: en-US
 Autocrypt: addr=david@kernel.org; keydata=
@@ -166,68 +166,45 @@ Autocrypt: addr=david@kernel.org; keydata=
  3iyY2Nsd7JxfKu1PRhCGwXzRw5TlfEsoRI7V9A8isUCoqE2Dzh3FvYHVeX4Us+bRL/oqareJ
  CIFqgYMyvHj7Q06kTKmauOe4Nf0l0qEkIuIzfoLJ3qr5UyXc2hLtWyT9Ir+lYlX9efqh7mOY
  qIws/H2t
-In-Reply-To: <20261009-b4-mmap-prepare-vma-flag-sanify-v5-33-923b70125b1e@kernel.org>
+In-Reply-To: <20261009-b4-mmap-prepare-vma-flag-sanify-v5-34-923b70125b1e@kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 10/9/26 20:04, Lorenzo Stoakes (ARM) wrote:
-> It is now an invariant that VMA_IO_BIT is not set by mm-managed mappings,
-> so each existing VMA_SPECIAL_FLAGS test need only test for
-> VMA_DONTEXPAND_BIT, VMA_PFNMAP_BIT and VMA_MIXEDMAP_BIT.
+> A fixed or non-mm-managed mapping is one which sets VMA_PFNMAP_BIT,
+> VMA_MIXEDMAP_BIT or VMA_DONTEXPAND_BIT, which is precisely what
+> VMA_SPECIAL_FLAGS tests for other than VMA_IO_BIT, which is safe to drop as
+> mm-managed mappings may not set it.
 > 
-> This is precisely a test for a fixed or non-mm-managed mapping.
-> 
-> Update a number of callsites which already explicitly handle hugetlb
-> mappings.
-> 
-> vma_supports_mlock() and ksm_compatible() also explicitly bail on droppable
-> mappings - excluding non-mm-managed, fixed or droppable mappings is exactly
-> what vma_is_mm_backed() tests for, so in these cases use this predicate.
-> 
-> should_skip_vma() tests for locked, fixed or non-mm-managed memory (having
-> already excluded hugetlb mappings) so simply test for those there.
+> Using these predicates rather than VMA_SPECIAL_FLAGS makes the check
+> self-documenting and helps eliminate the confusion around 'special' flags.
 > 
 > No functional change intended.
 > 
 > Reviewed-by: Zi Yan <ziy@nvidia.com>
+> Acked-by: David Hildenbrand (Arm) <david@kernel.org>
 > Signed-off-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
 > ---
->  mm/internal.h | 4 +---
->  mm/ksm.c      | 4 +---
->  mm/vmscan.c   | 3 ++-
->  3 files changed, 4 insertions(+), 7 deletions(-)
+>  mm/vmscan.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 > 
-> diff --git a/mm/internal.h b/mm/internal.h
-> index b5f7be8f65d8..e57c35e5f90b 100644
-> --- a/mm/internal.h
-> +++ b/mm/internal.h
-> @@ -1112,9 +1112,7 @@ static inline struct file *maybe_unlock_mmap_for_io(struct vm_fault *vmf,
+> diff --git a/mm/vmscan.c b/mm/vmscan.c
+> index 3b318efa2916..7adffe8182b3 100644
+> --- a/mm/vmscan.c
+> +++ b/mm/vmscan.c
+> @@ -4418,8 +4418,8 @@ bool lru_gen_look_around(struct page_vma_mapped_walk *pvmw, unsigned int nr)
+>  	if (spin_is_contended(pvmw->ptl))
+>  		return true;
 >  
->  static inline bool vma_supports_mlock(const struct vm_area_struct *vma)
->  {
-> -	if (vma_test_any_mask(vma, VMA_SPECIAL_FLAGS))
-> -		return false;
-> -	if (vma_test_single_mask(vma, VMA_DROPPABLE))
-> +	if (!vma_is_mm_backed(vma))
->  		return false;
->  	if (vma_is_dax(vma) || vma_is_hugetlb(vma))
->  		return false;
-> diff --git a/mm/ksm.c b/mm/ksm.c
-> index 624f37975e12..ed66a90e0031 100644
-> --- a/mm/ksm.c
-> +++ b/mm/ksm.c
-> @@ -747,9 +747,7 @@ static bool ksm_compatible(const struct file *file, vma_flags_t vma_flags)
->  	if (vma_flags_test_any(&vma_flags, VMA_SHARED_BIT, VMA_MAYSHARE_BIT,
->  			       VMA_HUGETLB_BIT))
->  		return false;
-> -	if (vma_flags_test_single_mask(&vma_flags, VMA_DROPPABLE))
-> -		return false;
-> -	if (vma_flags_test_any_mask(&vma_flags, VMA_SPECIAL_FLAGS))
-> +	if (!vma_flags_is_mm_backed(&vma_flags))
->  		return false;
+> -	/* exclude special VMAs containing anon pages from COW */
+> -	if (vma->vm_flags & VM_SPECIAL)
+> +	/* exclude fixed and non-mm-managed VMAs containing anon pages from COW */
+> +	if (!vma_is_mm_managed(vma) || vma_is_fixed_mapping(vma))
+>  		return true;
 
-Same here, it's hard for me to tell my brain that "permanently lazyfree pages
-are not backed by core-mm".
+If you keep the droppable thing out there you can just use
+
+vma_is_mm_backed() here I think.
 
 Acked-by: David Hildenbrand (Arm) <david@kernel.org>
 
