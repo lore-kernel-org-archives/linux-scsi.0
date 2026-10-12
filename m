@@ -1,177 +1,177 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 905904D37B3;
-	Mon, 12 Oct 2026 19:12:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0FDD42586B;
+	Mon, 12 Oct 2026 19:24:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791832324; cv=none; b=SmJ4/klyXVJvnXRNACJv51OPrSHbPxyo7xhvDCPIUcO2n+CJbw/hEWpgAGm2xzkk+UtFFVcEggOh+JfjVW0kxbFFi0ANADDJi4Hvu80Wht6C6fc2wqJD8cFJr4t8pHSJn5GPxZcd0h1jopEa/h7BHOhISv0PYM+vAW34dhFkk0s=
+	t=1791833071; cv=none; b=FYvc64QSTwQteDhxdVE9JJ3ZnriD9j9TWUkqz8umwzbX48VTdChyVlPbsQQZy4Hs/ZtRIYDTnmKeIErtxXZJmaUsN9dN+0ajydloRSk5FOF19GVhV4DjQt9sQlHTCnomWrAjuVlx4cXJaSdwrCcR4dpSVZtdBMFckF3zoLB2mF8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791832324; c=relaxed/simple;
-	bh=FdkP+D43EN+xQd/ndnjr780pUFvJoTrEDYoQqVAKW9Q=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=l0UQiJo/+lDQDa5CJ9dKoqj/m51mCTrh3Sx6jpn1CoJKCwTk1aBgCJTTPutRND9ZIt/o43Oc4InVsPyeofAztQJZD8ih39/qeGtvXFKngLN2FM19E10q0DeZ4N/KuJegboSEoC0SZnFkvlhTGVPQ7ZqQ19zsS8yKEjO5T9yEnv0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BEu0ArYB; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791833071; c=relaxed/simple;
+	bh=ynW/ZPRNAQHZw8d3BWPO4gqbzsy3woPT8XNzSC/UZ7U=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=Aho8evjWgJPRU+lC5b5L7KeZ0vpY/vxBVoqC5aFFDL8CBCsQed2hn6c9GbfHEpowEHkTYi+q9OzvshGJNkB9yTu5Z7PBm/AEs+Bm6OWARQwuNXdfWxDEJWPJNhOjF7ANFqXghCkubH5hbFhO/61ViA6dypmiNg/LPYb+vIKJtYc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=jrlzppV3; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BEu0ArYB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 58B361F0089B;
-	Mon, 12 Oct 2026 19:11:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791832322;
-	bh=t5mO4SpyqVviWjSaaEv8n4NUJ8+LaAHDu09XG7kSbFs=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=BEu0ArYB5XZKL/22X+idpyNhILy00Ml5Fj2jTZ7Fk/4tKlvNrtbcuHyIbatS1i6+H
-	 EgraXbynE/kQHml4oxd8zg6gA+C0hu9dN4/bgco2QE++oQB5bH8DxThhNACrQfpLo5
-	 XjczelQ46llI8hh5qdyeZlOGyGOojXJ0MYtBFM6yqvzpX+4jdT2meUTVQWDtflbCXM
-	 6iF5pmWBFtkh91Se1FhzLeFVS17tfaVz+ddcjoVeEnKq4qW/b4a4Az4vnWO1vg7GEy
-	 PxJnHj6TKtLcX2c2xZZNIY6SbIQi0/ch6peXKK7YGg1Kjv6Q5wlicS2sXtSXi+SohG
-	 UEkXkdb5KImtQ==
-Date: Mon, 12 Oct 2026 20:11:27 +0100
-From: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
-To: "David Hildenbrand (Arm)" <david@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, 
-	"Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>, 
-	Jann Horn <jannh@google.com>, Pedro Falcato <pfalcato@suse.de>, 
-	Mike Rapoport <rppt@kernel.org>, Suren Baghdasaryan <surenb@google.com>, 
-	Michal Hocko <mhocko@suse.com>, Jonathan Corbet <corbet@lwn.net>, 
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Dennis Dalessandro <dennis.dalessandro@cornelisnetworks.com>, 
-	Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>, 
-	Paul Moore <paul@paul-moore.com>, Stephen Smalley <stephen.smalley.work@gmail.com>, 
-	Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, 
-	Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, 
-	Andrii Nakryiko <andrii@kernel.org>, Eduard Zingerman <eddyz87@gmail.com>, 
-	Kumar Kartikeya Dwivedi <memxor@gmail.com>, Zi Yan <ziy@nvidia.com>, 
-	Baolin Wang <baolin.wang@linux.alibaba.com>, Nico Pache <nico.pache@linux.dev>, 
-	Ryan Roberts <ryan.roberts@arm.com>, Dev Jain <dev.jain@arm.com>, Barry Song <baohua@kernel.org>, 
-	Lance Yang <lance.yang@linux.dev>, Usama Arif <usama.arif@linux.dev>, 
-	Kiryl Shutsemau <kas@kernel.org>, Doug Gilbert <dgilbert@interlog.com>, 
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, "Martin K. Petersen" <mkp@kernel.org>, 
-	Simona Vetter <simona@ffwll.ch>, Helge Deller <deller@gmx.de>, Sebastian Reichel <sre@kernel.org>, 
-	John Hubbard <jhubbard@nvidia.com>, Peter Xu <peterx@redhat.com>, 
-	Masami Hiramatsu <mhiramat@kernel.org>, Oleg Nesterov <oleg@redhat.com>, 
-	Peter Zijlstra <peterz@infradead.org>, Thomas Gleixner <tglx@kernel.org>, 
-	Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, 
-	Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org, Arnaldo Carvalho de Melo <acme@kernel.org>, 
-	Namhyung Kim <namhyung@kernel.org>, Mark Rutland <mark.rutland@arm.com>, 
-	Rik van Riel <riel@surriel.com>, Harry Yoo <harry@kernel.org>, Juri Lelli <juri.lelli@redhat.com>, 
-	Vincent Guittot <vincent.guittot@linaro.org>, Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, 
-	Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>, 
-	David Airlie <airlied@gmail.com>, Will Deacon <will@kernel.org>, 
-	"Aneesh Kumar K.V" <aneesh.kumar@kernel.org>, Nick Piggin <npiggin@gmail.com>, Arnd Bergmann <arnd@arndb.de>, 
-	Muchun Song <muchun.song@linux.dev>, Oscar Salvador <osalvador@suse.de>, 
-	"Matthew Wilcox (Oracle)" <willy@infradead.org>, Jan Kara <jack@suse.cz>, Marc Zyngier <maz@kernel.org>, 
-	Oliver Upton <oupton@kernel.org>, Catalin Marinas <catalin.marinas@arm.com>, 
-	Madhavan Srinivasan <maddy@linux.ibm.com>, Anup Patel <anup@brainfault.org>, Paul Walmsley <pjw@kernel.org>, 
-	Palmer Dabbelt <palmer@dabbelt.com>, Albert Ou <aou@eecs.berkeley.edu>, 
-	Christian Borntraeger <borntraeger@linux.ibm.com>, Janosch Frank <frankja@linux.ibm.com>, 
-	Claudio Imbrenda <imbrenda@linux.ibm.com>, Alexander Gordeev <agordeev@linux.ibm.com>, 
-	Gerald Schaefer <gerald.schaefer@linux.ibm.com>, Heiko Carstens <hca@linux.ibm.com>, 
-	Vasily Gorbik <gor@linux.ibm.com>, "David S. Miller" <davem@davemloft.net>, 
-	Andreas Larsson <andreas@gaisler.com>, Alexander Viro <viro@zeniv.linux.org.uk>, 
-	Christian Brauner <brauner@kernel.org>, Matthew Brost <matthew.brost@intel.com>, 
-	Joshua Hahn <joshua.hahnjy@gmail.com>, Rakie Kim <rakie.kim@sk.com>, Byungchul Park <byungchul@sk.com>, 
-	Gregory Price <gourry@gourry.net>, Ying Huang <ying.huang@linux.alibaba.com>, 
-	Alistair Popple <apopple@nvidia.com>, Chris Li <chrisl@kernel.org>, Kairui Song <kasong@tencent.com>, 
-	Kemeng Shi <shikemeng@huaweicloud.com>, Nhat Pham <nphamcs@gmail.com>, Baoquan He <baoquan.he@linux.dev>, 
-	Youngjun Park <youngjun.park@lge.com>, Johannes Weiner <hannes@cmpxchg.org>, 
-	Qi Zheng <qi.zheng@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
-	Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, 
-	Chengming Zhou <chengming.zhou@linux.dev>, Michal Hocko <mhocko@kernel.org>, 
-	Miklos Szeredi <miklos@szeredi.hu>, Xu Xin <xu.xin@linux.dev>, linux-mm@kvack.org, 
-	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-usb@vger.kernel.org, 
-	linux-rdma@vger.kernel.org, selinux@vger.kernel.org, linux-sound@vger.kernel.org, 
-	bpf@vger.kernel.org, linux-scsi@vger.kernel.org, linux-fbdev@vger.kernel.org, 
-	dri-devel@lists.freedesktop.org, linux-trace-kernel@vger.kernel.org, 
-	linux-perf-users@vger.kernel.org, linux-arch@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
-	linux-arm-kernel@lists.infradead.org, kvmarm@lists.linux.dev, linuxppc-dev@lists.ozlabs.org, 
-	kvm@vger.kernel.org, kvm-riscv@lists.infradead.org, linux-riscv@lists.infradead.org, 
-	linux-s390@vger.kernel.org, sparclinux@vger.kernel.org, fuse-devel@lists.linux.dev, 
-	Ihor Solodrai <ihor.solodrai@linux.dev>, Bert Karwatzki <spasswolf@web.de>, 
-	Emil Tsalapatis <emil@etsalapatis.com>
-Subject: Re: [PATCH v5 13/38] bpf: arena: mark arena_map_mmap() mappings
- VM_MIXEDMAP
-Message-ID: <as0uGOcxjg74Xw7_@gremlin>
-References: <20261009-b4-mmap-prepare-vma-flag-sanify-v5-0-923b70125b1e@kernel.org>
- <20261009-b4-mmap-prepare-vma-flag-sanify-v5-13-923b70125b1e@kernel.org>
- <5b8ef0ce-7429-4d74-b4da-a0561c59b1e2@kernel.org>
- <as0Buhi_-VCC7xLZ@gremlin>
- <4124106e-c51e-4476-bd67-63e4641bf14a@kernel.org>
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="jrlzppV3"
+Received: from pps.filterd (m0356516.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69CFic6G508599;
+	Mon, 12 Oct 2026 19:24:22 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-type:date:from:in-reply-to:message-id:mime-version
+	:references:subject:to; s=pp1; bh=suFbHXyrCeLqmqNFvZRn5V9qs5YaAd
+	ubENHg4XGX7YA=; b=jrlzppV3dUVSkygj42q2gStc2nx7Ft8qA7pXkJ5mfdJD1y
+	QFT5a4zVlN4Z8PDjj8XWnWh2VYC+Zph4168LenlyjpLMXqckgdnqfIQ4saa+z4IN
+	qLQczqzghRsngdUtMvQrvkWy/CjI+WpoTCV7/LSU4Y6lhLoUBgDHz2C1MaKVj8cd
+	nvFCVY2X/gaC0r1TBlV4hQM7pbCAbwJhqUbGeN+bgW0s2d8dQiD3Vqkd9KVRkxyz
+	xu68Potn67qUDm4uP1/YQBGDDLXRil46XYSZyx9hHsQ8rullZ/ioX+Dzm+M56Heo
+	Tcp7OC14yxHseZPjVF0wEyWrFHujGD6b8pyNKKmw==
+Received: from ppma23.wdc07v.mail.ibm.com (5d.69.3da9.ip4.static.sl-reverse.com [169.61.105.93])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4h7dwht81x-1
+	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
+	Mon, 12 Oct 2026 19:24:21 +0000 (GMT)
+Received: from pps.filterd (ppma23.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma23.wdc07v.mail.ibm.com (8.18.1.11/8.18.1.11) with ESMTP id 69CFo0o41594695;
+	Mon, 12 Oct 2026 19:24:21 GMT
+Received: from smtprelay03.dal12v.mail.ibm.com ([172.16.1.5])
+	by ppma23.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4h816gxhn7-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 12 Oct 2026 19:24:21 +0000 (GMT)
+Received: from smtpav01.wdc07v.mail.ibm.com (smtpav01.wdc07v.mail.ibm.com [10.39.53.228])
+	by smtprelay03.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 69CJOKeC33554958
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Mon, 12 Oct 2026 19:24:20 GMT
+Received: from smtpav01.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 829D558063;
+	Mon, 12 Oct 2026 19:24:20 +0000 (GMT)
+Received: from smtpav01.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 418495804B;
+	Mon, 12 Oct 2026 19:24:20 +0000 (GMT)
+Received: from d (unknown [9.61.18.84])
+	by smtpav01.wdc07v.mail.ibm.com (Postfix) with ESMTPS;
+	Mon, 12 Oct 2026 19:24:20 +0000 (GMT)
+From: Dave Marquardt <davemarq@linux.ibm.com>
+To: sashiko-bot@kernel.org
+Cc: sashiko-reviews@lists.linux.dev, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH v13 05/11] scsi: ibmvfc: add NOOP command support
+In-Reply-To: <sashiko-outbox-163312@kernel.org> (sashiko-bot@kernel.org's
+	message of "Wed, 07 Oct 2026 19:36:26 +0000")
+References: <20261007-ibmvfc-fpin-support-v13-0-b816abfa4fcc@linux.ibm.com>
+	<20261007-ibmvfc-fpin-support-v13-5-b816abfa4fcc@linux.ibm.com>
+	<sashiko-outbox-163312@kernel.org>
+Date: Mon, 12 Oct 2026 14:24:19 -0500
+Message-ID: <87qzhuvi1o.fsf@linux.ibm.com>
+User-Agent: Gnus/5.13 (Gnus v5.13)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <4124106e-c51e-4476-bd67-63e4641bf14a@kernel.org>
+Content-Type: text/plain
+X-TM-AS-GCONF: 00
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDEyMDA3NiBTYWx0ZWRfXxzg++utp/YUf
+ VL+AoCML+OH1eenpRn5YEpBK455kGEPpZWnYmycNRTHGsS/wzfXyi9jCWd8GjMcfY0TqT3MOK9P
+ rWslHV1IDVXyPNVr+oBQHRmhfRpAOgmljHNqHFseDe5Xi+FiP7gLAh3CsjbBlI6B4q4J46LyYtF
+ wYhBw5NaWsuCOaYLZv41qIrtIIx3tQynZ4uSIpPoMlX7XweeVqu7v75nVzTseBhUnyxanFSstsI
+ ujyBVzkh88SboPLE6BsbJC6YUjhEYKUsJPX/1aQuXFCjY9xAjBlsFv+CdAVCGUxFjrcyRrSn+oJ
+ xh6OUwv3Ic/40hlGtA/em95f4l88OAYcyT04qF85cRxj5eegyz2FixWWIMzC2k54qnerhP+Mz0k
+ e+u+XIYCoHZtFpHQNNMPdUjKgrhG3u2PyVCdqTOowXGYjQEa/+chuRjHOZOcP+6MZSgwc4eG+Qp
+ 2XMHtjCKk9fZTB7I2MQ==
+X-Proofpoint-GUID: HAyC78vHVNO_UY4yAmOJlG8eQWHPI6LG
+X-Proofpoint-ORIG-GUID: HAyC78vHVNO_UY4yAmOJlG8eQWHPI6LG
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMDEyMDA3NiBTYWx0ZWRfX3cVajVoMGXML
+ nalEkFmFPpTULx70PTvNMb0dff7mwiIPaAogr/2zTD6Vy44Mxt3GJeU7pfupg/B7BzfHCqMv7KA
+ mwT/viul0U985iznpCNhZDl+OeCdfsA=
+X-Authority-Analysis: v=2.4 cv=btHZl0ai c=1 sm=1 tr=0 ts=6acd33e6 cx=c_pps
+ a=3Bg1Hr4SwmMryq2xdFQyZA==:117 a=3Bg1Hr4SwmMryq2xdFQyZA==:17
+ a=660iZSQnnn4A:10 a=VkNPw1HP01LnGYTKEx00:22 a=RnoormkPH1_aCDwRdu11:22
+ a=Y2IxJ9c9Rs8Kov3niI8_:22 a=VwQbUJbxAAAA:8 a=VnNF1IyMAAAA:8
+ a=uN6AuqMkTzWAaZc8BfUA:9
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-10-12_05,2026-10-09_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ bulkscore=0 malwarescore=0 phishscore=0 impostorscore=0 adultscore=0
+ lowpriorityscore=0 priorityscore=1501 clxscore=1015 spamscore=0
+ suspectscore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2610080000
+ definitions=main-2610120076
 
-On Mon, Oct 12, 2026 at 08:56:23PM +0200, David Hildenbrand (Arm) wrote:
-> On 10/12/26 17:55, Lorenzo Stoakes (ARM) wrote:
-> > On Mon, Oct 12, 2026 at 05:08:09PM +0200, David Hildenbrand (Arm) wrote:
-> >> On 10/9/26 20:04, Lorenzo Stoakes (ARM) wrote:
-> >
-> >>> diff --git a/kernel/bpf/arena.c b/kernel/bpf/arena.c
-> >>> index 7b6847200b43..b69fe5e34339 100644
-> >>> --- a/kernel/bpf/arena.c
-> >>> +++ b/kernel/bpf/arena.c
-> >>> @@ -620,8 +620,9 @@ static int arena_map_mmap(struct bpf_map *map, struct vm_area_struct *vma)
-> >>>  	 * clears VM_MAYEXEC. Set VM_DONTEXPAND to avoid potential change
-> >>>  	 * of user_vm_start. Set VM_DONTCOPY to prevent arena VMA from
-> >>>  	 * being copied into the child process on fork.
-> >>> +	 * This is a kernel page so set VM_MIXEDMAP.
-> >>>  	 */
-> >>> -	vm_flags_set(vma, VM_DONTEXPAND | VM_DONTCOPY);
-> >>> +	vm_flags_set(vma, VM_MIXEDMAP | VM_DONTEXPAND | VM_DONTCOPY);
-> >>>  	vma->vm_ops = &arena_vm_ops;
-> >>>  	return 0;
-> >>>  }
-> >>>
-> >>
-> >> Historically, VM_MIXEDMAP really just means: can contain refcounted and
-> >> non-refcounted things. Everything with a struct page is refcounted.
-> >>
-> >> I think we are now changing the semantics to mean "maps kernel pages". I think
-> >
-> > Yes.
-> >
-> > It was sort of implicit before given insert_page() etc. but still really meaning
-> > that it _might_ be both.
+sashiko-bot@kernel.org writes:
+
+> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
+> - [High] scsi: ibmvfc: wild pointer dereference in ibmvfc_handle_scrq() during evt validation
+> --
 >
-> Yeah, it's in the name. Mixed: pfn and/or ordinary.
-
-Well the name is confusing as a great many users never mix anything, and it's
-far from obvious you need to set one.
-
-Anyway, one for later. Maybe a mask like VMA_NON_MM_MANAGED_MASK or something
-better than that...
-
+> commit 3a880d56c6f97510d8dc3b25b1c3b9b6711c3a6d
+> Author: Dave Marquardt <davemarq@linux.ibm.com>
 >
-> >
-> >> this is fine, but we really have to update the documentation (and possibly
-> >> rename this thing to something more expressive?)
-> >
-> > Yeah I completely agree.
-> >
-> > I will rename it, but I think that's best for 7.5 obviously! :)
+> scsi: ibmvfc: add NOOP command support
 >
-> Yes.
+> Add support for handling IBMVFC_NOOP format CRQ messages from the
+> VIOS partner. Advertise the client's ability to handle NOOP commands
+> by setting the IBMVFC_CAN_USE_NOOP_CMD capability in ibmvfc_set_login_info().
+> Handle and ignore IBMVFC_NOOP format messages in both ibmvfc_handle_crq()
+> and ibmvfc_handle_scrq().
 >
-> VM_PFNMAP / VM_MIXEDMAP - These contain kernel-mapped data which cannot be
-> 			  reasonably reconstructed on page fault.
+>> diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/ibmvfc-core.c
+>> index ac2571e9e1eb9..161d4679d7026 100644
+>> --- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
+>> +++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
 >
-> the description is already pretty clear. just not that kernel-mapped pages
-> *must* use one of these.
-
-I think mixed map could do with a rename because it implies it _is_ mixed rather
-than could be.
-
-But again one for the future!
-
+> [ ... ]
 >
-> (again, the ->fault thing returning allcoated kernel memory is nasty)
+>> @@ -4225,7 +4235,20 @@ static void ibmvfc_handle_scrq(struct ibmvfc_crq *crq, struct ibmvfc_host *vhost
+>>  	case IBMVFC_CRQ_XPORT_EVENT:
+>>  		return;
+>>  	default:
+>> -		dev_err(vhost->dev, "Got and invalid message type 0x%02x\n", crq->valid);
+>> +		dev_err(vhost->dev, "Got an invalid message type 0x%02x\n", crq->valid);
+>> +		return;
+>> +	}
+>> +
+>> +	if (crq->format == IBMVFC_NOOP) {
+>> +		if (vhost->state == IBMVFC_ACTIVE &&
+>> +		    !ibmvfc_check_caps(vhost, IBMVFC_SUPPORT_NOOP_CMD))
+>> +			dev_err_ratelimited(vhost->dev,
+>> +					    "Received unexpected NOOP command from partner\n");
+>> +		return;
+>> +	}
+>> +
+>> +	if (unlikely(!evt)) {
+>> +		dev_err(vhost->dev, "Received null event\n");
+>>  		return;
+>>  	}
+>>  
+>>  	/* The only kind of payload CRQs we should get are responses to
+>>  	 * things we send. Make sure this response is to something we
+>>  	 * actually sent
+>>  	 */
+>>  	if (unlikely(!ibmvfc_valid_event(&evt->queue->evt_pool, evt))) {
+>
+> [Severity: High]
+> Can this code dereference a wild pointer if the VIOS partner or hypervisor 
+> sends an arbitrary, non-zero garbage token in crq->ioba?
+>
+> At the top of ibmvfc_handle_scrq(), crq->ioba is cast to the evt pointer.
+> While this patch adds a check to prevent a NULL pointer dereference, if
+> crq->ioba is non-zero garbage, wouldn't evaluating evt->queue dereference
+> that untrusted pointer before ibmvfc_valid_event() has a chance to safely 
+> validate it?
+>
+> Looking at ibmvfc_handle_crq(), it avoids dereferencing the event entirely 
+> during validation by checking against the host pool:
+>
+> 	if (unlikely(!ibmvfc_valid_event(&vhost->crq.evt_pool, evt))) {
+>
+> Could we do something similar here by passing the valid scrq directly into 
+> ibmvfc_handle_scrq() so it can safely use &scrq->evt_pool?
 
-Yeah added to my todo to fix that. Hateful.
+Okay, good idea. I'm removing the vhost parameter of
+ibmvfc_handle_scrq() and adding a struct ibmvfc_queue *scrq
+parameter, and updating the ibmvfc_valid_event call as suggested.
 
---
-Cheers, Lorenzo
+-Dave
