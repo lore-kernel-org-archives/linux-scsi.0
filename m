@@ -1,192 +1,122 @@
-Received: from mo4-p01-ob.smtp.rzone.de (mo4-p01-ob.smtp.rzone.de [85.215.255.50])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-dy1-f179.google.com (mail-dy1-f179.google.com [74.125.82.179])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C6D23D5C07;
-	Mon, 12 Oct 2026 11:09:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=85.215.255.50
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791803368; cv=pass; b=crSN6FUQfD8Q0fvgWE/fYpp7FkUgOi3h1SS78U1di+AbXiCUkglYyITA2cPYL0Vz6y6VBSw8lKOuzFnnhA0sRFCwlVX3vi/Ka2+gQB4RIhD0wNA5sSN/85J92UqLT6AkwdhlBve60QAxAHzszCys7EexSR3KlIpVf1OPYOFyHQ4=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791803368; c=relaxed/simple;
-	bh=P2ClapjNuEAhaLeTQUhvTA2jI4GtQfghK6bt/c/RFbU=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=gMdQjyQwEQHX1BRegGMJJstum11bBLtYR60WavgV/ygJ44I81ZiEYlRRgzV4CTwPhtdiXXNnlDeu9flcB3qvFKGgUaNtGkTjTHmJmaNsLU5szn4LWMRNkY39uvrDkzDYzf918UNOJPYJuysMtuQbHaoMVhmfDrerdmf0N8qsdKY=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de; spf=none smtp.mailfrom=iokpp.de; dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=LCcqgPpB; dkim=permerror (0-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=OfaCEm3N; arc=pass smtp.client-ip=85.215.255.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=iokpp.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D18E0419305
+	for <linux-scsi@vger.kernel.org>; Mon, 12 Oct 2026 11:41:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.179
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1791805282; cv=none; b=uuu8dRV66dRRaVeRQ1QGTlyijpvzOuCeguxzdkgYjZJXUtDWgJsnbIFqmvy4Ghaf+UrRy7eBeA1Fso8/8fE5Gw2coq+bdjDsmAPWyDvHf6/Dltg2crCko4djeCnYth1pNLL9OwzQqhfpoJfeMZkBODuCm3ZkMkTT/YihEiNl1l0=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1791805282; c=relaxed/simple;
+	bh=9f1qP22E7ACqG8t1APh1XFdIVpv9e3uZVhIP8YPFdKw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=OpECrz71bqlRuMVtTkLnI+BUJFAaJgOrLi0bwpfRToaORMJR3vG1WRWoI7135Js6ftrHSNnWXdJ8uDcn1HaOzolQKPAnheDTcsxgtsDbXDbv82DFu8f/A0vbG9UI/I3QZrgB6AvOcduHyeYWLfoKkXjNwrddnGuGT3/PMhFfQY4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr; spf=none smtp.mailfrom=isslab.korea.ac.kr; dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b=zO+WFfWh; arc=none smtp.client-ip=74.125.82.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="LCcqgPpB";
-	dkim=permerror (0-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="OfaCEm3N"
-ARC-Seal: i=1; a=rsa-sha256; t=1791803357; cv=none;
-    d=strato.com; s=strato-dkim-0002;
-    b=qOkaKGXC4HiCHe2i9KEmZiXMk/3rgQIcV9QIZPgLce0vQNEHaAytJ7dB4l9UUzsh4m
-    JmCchpz2i+Y1Na5OUDHNzis/SXd2VLi91c+SPAD0mbzjMKn++RLqpvhqY4RkkN900scz
-    PW+uL7ixdtR5uR3sAr0nVbx1WteAKNV8uu4qJ+oo14Sy3Mq9u5OeXnvDdXL+5xlgFYdi
-    VioBvMbrYpXn0sSxHNalqriyfVakiSXtP6uSmqAzFwQXi8LY97bpbRI1Oh6iD0+nMh7l
-    dNwOq2R4BN+8Sm0HMmjR4cCs7AskJ/UKhYqzW9lXYHUP5TlSKDyUKRdRwUZCFzw0TtYJ
-    j9cA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1791803357;
-    s=strato-dkim-0002; d=strato.com;
-    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
-    From:Subject:Sender;
-    bh=KA+pgc8ZZ48UwvpuWYp5dT31mq3skmDPd70xJMP+Sh4=;
-    b=Z6pzfFAVzkrFkaZjCV0KREqpeQxjAzqBkT4a6qVGIBWhEK1b0Wsz1rre++yRC3Zj08
-    kL0zlijnXcRc5VXNq9ti8a67xejFkS2GD8ctZAnrh6dvEirKNk+LFmqmOKiine1EJ17t
-    MsHQznP/nhHoLc9aAUMKRJDCLzLfA2MZkOjKKz4KZxh9VELgyLGImqoISkMSqxWJ4Y5r
-    2+9bHJ3sARt7Yv7xzct4tuVr+4sJiVIZ3fgCpytn0dq5ZrFYMnuwWuZYQnyRo3PrAl6n
-    jwB7vgCodfRqPElkujm53zdkOtUAcGFjL0kmmVTwKc+lk7wLZAUM/k3PhfNmfxD+Oc/J
-    zc6Q==
-ARC-Authentication-Results: i=1; strato.com;
-    arc=none;
-    dkim=none
-X-RZG-CLASS-ID: mo01
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1791803357;
-    s=strato-dkim-0002; d=iokpp.de;
-    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
-    From:Subject:Sender;
-    bh=KA+pgc8ZZ48UwvpuWYp5dT31mq3skmDPd70xJMP+Sh4=;
-    b=LCcqgPpBVzq0L8OpgJ0KkpPaf2PXFqy4biXQH54ej3d3jjwZsg+cBiHn5iy/PNgcMH
-    zOAsJkCnAEFQQWPUpfquM4gsrODc7kQ4xIeqjq3Q39sNG5wV52ChB8Lkt7V2hf2K8xfv
-    4atDvwQVIJMs9X7ldBn049Qgh/tP2b/0RbUkoBUnukC7qlwnm0ogF6GhMVgyjBk/ZRFs
-    wXX3JYJFhdR3U5g0LVtCd7MEBfJOTMfjGmqZECOsJCmnYEfczCrpWii2waZzvMtoPRua
-    1NqDjzBaSABgnkPFrfovt+Kl5z1EMuQuGl+xWHXOzid4mLeIrS3OPIkzdz/1lOqH/SBE
-    DKeg==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; t=1791803357;
-    s=strato-dkim-0003; d=iokpp.de;
-    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
-    From:Subject:Sender;
-    bh=KA+pgc8ZZ48UwvpuWYp5dT31mq3skmDPd70xJMP+Sh4=;
-    b=OfaCEm3NV1tjpibiGzwLo+YtuNbqemGwSXORN79JaN+z/chkyZllFd6CnPok4bCRWB
-    F8+uHGuhZ+/RfPpkD+AQ==
-X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSe9tgBDSDt0V0DBslXBtZUxPOub3IZuk"
-Received: from [10.176.237.108]
-    by smtp.strato.de (RZmta 55.6.2 AUTH)
-    with ESMTPSA id z04e1c29CB9G6G4
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
-	(Client did not present a certificate);
-    Mon, 12 Oct 2026 13:09:16 +0200 (CEST)
-Message-ID: <91cc71e731252e372d6cbfddf6a9f6ebbdf7bcca.camel@iokpp.de>
-Subject: Re: [PATCH] scsi: ufs: docs: Describe how to test with QEMU
-From: Bean Huo <beanhuo@iokpp.de>
-To: Stanley Jhu <stanleyjhu@google.com>, "Martin K. Petersen"
- <mkp@kernel.org>,  "James E.J. Bottomley"
- <James.Bottomley@HansenPartnership.com>, Jonathan Corbet <corbet@lwn.net>
-Cc: Bart Van Assche <bvanassche@acm.org>, Alim Akhtar
- <alim.akhtar@samsung.com>,  Shuah Khan <skhan@linuxfoundation.org>, Randy
- Dunlap <rdunlap@infradead.org>, Jeuk Kim <jeuk20.kim@samsung.com>,
- linux-scsi@vger.kernel.org, linux-doc@vger.kernel.org, 
- linux-kernel@vger.kernel.org
-Date: Mon, 12 Oct 2026 13:09:14 +0200
-In-Reply-To: <20261011103319.820657-1-stanleyjhu@google.com>
-References: <20261011103319.820657-1-stanleyjhu@google.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.4-0ubuntu2.1 
+	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b="zO+WFfWh"
+Received: by mail-dy1-f179.google.com with SMTP id 5a478bee46e88-33bf40b0c8bso6080306eec.0
+        for <linux-scsi@vger.kernel.org>; Mon, 12 Oct 2026 04:41:18 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=isslab-korea-ac-kr.20251104.gappssmtp.com; s=20251104; t=1791805278; x=1792410078; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=aa4X8EZIe6RRJuWAcoODb4Shn92a/60HzOzQllDMN1g=;
+        b=zO+WFfWhDdnmruaoe1lkfDrhV/Qm9cyhgfimNCJdksBOKXdztg6CEQ0reZHIsbcITs
+         EXhzq4hLSz0+/JIDUdb9PHtlxHUaOrtkMbvQJdeTpcKMfDmF4V7D7wMc+f/g+on23n9K
+         bBtt/M+19nSVdXka5/pJYZLsUkQ/gRln20nRUmt1iw0pRyLYrE/3KO98jA/4DfXrWch2
+         +Lwm3A44EW3mthVNglpjSh/bIU4hGhUIQ39txQ+glrUrwiB+3Ij6lK2tPNml0BiTyWRx
+         HUNy2jFoqu5bBn5sOHI0FxQOce4IP2VrLY8prRJpOrw6jEy7f/eRwWcrW84uGhrm2HvT
+         i8vg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791805278; x=1792410078;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=aa4X8EZIe6RRJuWAcoODb4Shn92a/60HzOzQllDMN1g=;
+        b=W76ySV7a0dTZSffmBVBF2+6LvjvXIkt7C8+JkjZG3J6I7U0X8eAIuo+aR2ulnBeLyc
+         l6KxJc4FbEzhwrvhUer7QWksyTb2RsLI+2ltAGO2shUjQmH37HYW+Ki3dbRo3HF3rkhe
+         q3qVihFxN5zHR3wtLntrJBmNM3idyc4VL1DDHF+eMQ6E1BJTYsy9fSXRMsNOc/0yI4XT
+         bRxoGkjHegEgYIO7vIpGvSwAniVhJOYEnFeJm5KksZgVD45d/Y4B87ULKj9Y9Iw7ftCx
+         Xf3UGoRGKXrA6xjZ0eQ+0jy5+oxuwyeGPI0wB17oHB1PTXm7aHb3veXML3jeWzdaLJOU
+         czjQ==
+X-Gm-Message-State: AFq9FYLiuOUaqdZJn86gixqInxtAF/OJtBEKsJy7TqsRwj+lriDOCBPt
+	aMbmpBEwp5o7cH1fy8gJagOlDXe7fe3c7JkTOyt3JyO6EtuWZTA0ZDvW++NNffl03Jk=
+X-Gm-Gg: AYBFou0dI34dPFe4wVuqAOGpt8g6lN9nxlrTsGSNO6wICVElhfHmne2xK2XQqrw7386
+	yRRX5atNXaxd3NhlFH3Y30cnr2DqChxpeIPbJOQkYb47ClCr/njIQnLOcjXgGzeZsT4680a+WGE
+	HtdZafCtuvRnx7dO99iyUzltbDtFBaFoRmiKAM6Peb98b4FnEnDYPKcd3NrEguJvi5mBArE8+XT
+	+N4MNMug4FDP0ZEVM1C2Z7S/rKuQ4Vuc2jqfh5e2OgJnN2pTWgc+LNj+sqVLf3/i1gknWauCiLr
+	FBt57f6QW1FIznH0tLRCRV88jMAwTE1WCixx2i961ZerHkSY45bIg9xt1KaW1dJ/0zODhOG9eZu
+	otVNtCeGRK7Y2j9ScMmf5CrBionN2hR+4ILaVqBrnWQvbVg5G40Aez5tflWpOjgCqdQjatwj02y
+	VlTUrN4tQDq6CBNQBqbOxVt5T0e1DEp+ISdwqeL0U1LWMHeSF0WrsIBvBgGfD8GKH39/IeSWVYZ
+	84kmaFBh+kfFdSBaR2oRQ==
+X-Received: by 2002:a05:7022:7f07:b0:152:91d0:dfc3 with SMTP id a92af1059eb24-16a62eaa220mr14745427c88.23.1791805277782;
+        Mon, 12 Oct 2026 04:41:17 -0700 (PDT)
+Received: from yhlee-960QFG.Davolink ([2406:5900:1044:110c:7bd2:1202:246d:44ce])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1746482c978sm8725533c88.13.2026.10.12.04.41.15
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 12 Oct 2026 04:41:17 -0700 (PDT)
+From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+To: ching2048@areca.com.tw,
+	mkp@kernel.org,
+	James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org,
+	thenzl@redhat.com,
+	Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+Subject: [PATCH v3 0/3] scsi: arcmsr: bound adapter-supplied completion indices and message lengths
+Date: Mon, 12 Oct 2026 20:41:00 +0900
+Message-ID: <cover.1791803953.git.yhlee@isslab.korea.ac.kr>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Stanley,=20
+The arcmsr completion and message paths take several values straight
+from the DMA area the adapter writes -- a completion slot number, a
+type B completion-ring index, and an inbound message length -- and use
+them as array subscripts or copy lengths without checking them against
+the array or buffer they index.  A malfunctioning or malicious adapter
+can therefore drive an out-of-bounds access from the completion
+interrupt or an ioctl.
 
-Thanks, this is very useful, a few comments as below:
+Patch 1 clamps the firmware-supplied message length to the staging
+window (heap out-of-bounds write).  Patch 2 rejects a completion slot
+the driver never handed out (wild pointer load and dereference on types
+E and F).  Patch 3 wraps the type B completion index before it is used
+(out-of-bounds read, and an out-of-bounds store when the word read is
+non-zero).
 
-On Sun, 2026-10-11 at 18:33 +0800, Stanley Jhu wrote:
-> QEMU emulates a UFS host controller and logical units, but the kernel
-> tree does not mention it, so developers without UFS hardware have no
-> documented way to exercise the UFS core.
->=20
-> Add a short section with the required kernel options, an example QEMU
-> command line, and what the emulation does not cover.
->=20
-> Signed-off-by: Stanley Jhu <stanleyjhu@google.com>
-> ---
-> =C2=A0Documentation/scsi/ufs.rst | 33 +++++++++++++++++++++++++++++++++
-> =C2=A01 file changed, 33 insertions(+)
->=20
-> diff --git a/Documentation/scsi/ufs.rst b/Documentation/scsi/ufs.rst
-> index a7b2b2ed1c3a..1ff1c8218bf1 100644
-> --- a/Documentation/scsi/ufs.rst
-> +++ b/Documentation/scsi/ufs.rst
-> @@ -19,6 +19,7 @@ Universal Flash Storage
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 3.4 SCSI Error handling
-> =C2=A0=C2=A0=C2=A0 4. BSG Support
-> =C2=A0=C2=A0=C2=A0 5. UFS Reference Clock Frequency configuration
-> +=C2=A0=C2=A0 6. Testing with QEMU
-> =C2=A0
-> =C2=A0
-> =C2=A01. Overview
-> @@ -208,3 +209,35 @@ the UFS specification. UFS subsystem will attempt to=
- read
-> the value when
-> =C2=A0executing common controller initialization. If the value is availab=
-le, UFS
-> =C2=A0subsystem will ensure the bRefClkFreq attribute of the UFS storage =
-device is
-> =C2=A0set accordingly and will modify it if there is a mismatch.
-> +
-> +6. Testing with QEMU
-> +=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> +
-> +QEMU emulates a UFS host controller as a PCI device named "ufs" and
-> +logical units named "ufs-lu". This can be used to test changes to the
-> +UFS core and to ufshcd-pci without UFS hardware.
-> +
+Each was reproduced on a KASAN build with a crafted DMA area; the
+per-patch changelogs have the reports.  The three are independent and
+carry separate Fixes tags.
 
-should here state the minimum QEMU version for the ufs device, and for mcq=
-=3Don,
-since the older version QEMU may not have them or one of them.
+v1: https://lore.kernel.org/linux-scsi/cover.1791789900.git.yhlee@isslab.korea.ac.kr/
+v2: https://lore.kernel.org/linux-scsi/cover.1791792888.git.yhlee@isslab.korea.ac.kr/
 
-> +Enable the following kernel options on top of the architecture
-> +defconfig::
-> +
-> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0CONFIG_SCSI_UFSHCD=3Dy
-> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0CONFIG_SCSI_UFSHCD_PCI=3Dy
-> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0CONFIG_BLK_DEV_SD=3Dy
-> +
-> +Example for an arm64 guest with one 1 GiB logical unit::
-> +
-> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0qemu-img create -f raw ufs.img=
- 1G
-> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0qemu-system-aarch64 -M virt -c=
-pu max -smp 4 -m 2G -nographic \
-> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0-kernel arch/arm64/boot/Image -initrd rootfs.cpio.gz \
-> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0-append "console=3DttyAMA0" \
-> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0-drive file=3Dufs.img,if=3Dnone,id=3Dlu0,format=3Draw \
-> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0-device ufs,id=3Dufs0,serial=3D0001,mcq=3Don \
-> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0-device ufs-lu,drive=3Dlu0,bus=3Dufs0,lun=3D0
-> +
-> +The logical unit appears as a SCSI disk (/dev/sda).
+v3: patch 2 -- bound against maxFreeCCB (not the pool size) and clamp
+    maxFreeCCB to the pool at init, so the index cannot hit an
+    unpopulated (NULL) slot; v2's ARCMSR_MAX_FREECCB_NUM bound could.
+    patches 1, 3 unchanged.
 
-maybe here adds "for example"-> The logical unit appears as a SCSI disk (fo=
-r
-example /dev/sda)
+v2: patch 2 -- bound against ARCMSR_MAX_FREECCB_NUM rather than
+    acb->maxFreeCCB, and on a reject release the entry and step the
+    queue index instead of stopping, so the consumer index does not fall
+    behind the producer.  patches 1, 3 unchanged.
 
-> Drop "mcq=3Don" to
-> +test the single doorbell mode instead of MCQ. The same -device options
-> +work with qemu-system-x86_64.
-> +
-> +The emulation does not model UniPro, M-PHY, power mode changes,
+Yehyeong Lee (3):
+  scsi: arcmsr: bound the firmware-supplied message length
+  scsi: arcmsr: check the completion index the adapter reports
+  scsi: arcmsr: wrap the type B completion index before using it
 
-I am cconfused by this statement, since I checked QEMU, the latest QEMU acc=
-epts
-some UIC commands such as hibern8 enter/exit, if I am correct, here "accept=
-s but
-does not model" would be more precise, you can check  hw/ufs/ufs.c:
+ drivers/scsi/arcmsr/arcmsr_hba.c | 32 ++++++++++++++++++++++++++++++--
+ 1 file changed, 30 insertions(+), 2 deletions(-)
 
-static void ufs_process_uiccmd(UfsHc *u, uint32_t val)
-
-> +hibernation or clock gating hardware, and vendor host drivers are not
-> +exercised. Changes in those areas still need testing on real hardware.
-
-
-Kind regards,
-Bean
+-- 
+2.43.0
 
