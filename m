@@ -1,209 +1,217 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f171.google.com (mail-pf1-f171.google.com [209.85.210.171])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 034BA3B27DB;
-	Mon, 12 Oct 2026 13:49:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0C3D489FDF
+	for <linux-scsi@vger.kernel.org>; Mon, 12 Oct 2026 13:52:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791812992; cv=none; b=mYD2H9KOFbHa3xViTUYGGXLXli0h5hhlRsyqRRCBe1yZhstOcCyJuny8dh4nSWAnaoVVuqMvBBbALaBsJJQy0Wm+m24ZGGJBvjQWJ71kWv5iShICG4sEbl3JoRprRykWl0D/qG5nZnA+mKXjX2xeDhfTIUGOsM591uzJrX8WOpE=
+	t=1791813141; cv=none; b=aWY1fTORssreJ7JwNEbpZUvUxa4qCqBzjXFHls5oyabkZWE6eY4XuXGAn1iOFtVJZmd1EXj3GDvle+h0IsVIdiinmsatJW3LU2gsmn1jqufGUyDrn/89bDKJk5lmiIAPT6rT8DrR8YwrVFKo9+EOZdDJg+smKtO/coxqV44rIE0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791812992; c=relaxed/simple;
-	bh=zbmY81G7qjIp1Hij4V9u/gQWsmvfoGZlkzKvvc6Lcec=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=WlyN2RBv2YiMoV+wxEYvRN7az6kzoRFJ+uieCklQPstEQz/W5FD3irKa8OvFmEgcfdgnMSfBOfCw/JiG12D4cojRdtGKW/vIaEY/c0PD5V+pe4g86DUIsD1Sryw4oxONST7T3WgOEPuX2nEY0BsMVBSnRiyfZ3dzL38MWhsDpt8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mhfPBtsx; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791813141; c=relaxed/simple;
+	bh=TmrDgwIsBwwzPv80GnSL6PFlsZHILn4PMmXvaiqLLF0=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=kddc+2WZJ7c53m7c2StqwwcfY+z8Ct9suudJV4v4pyCxykiQyj6W96MTqrrBU69s4qmAiZ1PnF6csi7danfVC9m0PnZW8CzVdYDvWIEJzZU0iM8SHU1LyOujyTxyZoh+96y69Q38b3ZSoEc06tLx2T2w5WTAD2vjNN8wmumHcD4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr; spf=none smtp.mailfrom=isslab.korea.ac.kr; dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b=a58vcaqc; arc=none smtp.client-ip=209.85.210.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mhfPBtsx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 213DD1F0089B;
-	Mon, 12 Oct 2026 13:49:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791812990;
-	bh=RZWTsyA2oBn/SGBI3f+VKt/e1OXYXKmRQQoU2yOitUk=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=mhfPBtsxTN5zL0iqWfBZjFjLNuu5+znSxjR2+JCsYFN6grEGX4kzLSORf3sxXOf0G
-	 CsD1Q/PxLkAP9yXlluRFTdezAIXO7PazRvZ/3+al5Snb/CPkk2VwMdAdRNOkHc9/yQ
-	 2uId/ZjmZCFqCqwKAo3ls62kebSNIWLWDiuFYzs7eqy398Fs/U57MtMxpWUOLVCnjA
-	 FkvkHhf4Dpdhb8z7wu/xz0uaGAmewrnlQXRbVvnVyxjoRtYxzXTAwzf+jhRWTzxZoC
-	 ALNnBYRcUWRUKmpGX6xgJfwXZiTNvr7K/NBkbW0useWD/O+M3D3H4UcFRsaeUHoZPB
-	 fLuCw59qXC4IQ==
-Message-ID: <61c9bd96-2d9f-4fc3-ac09-6c5b51f5bd97@kernel.org>
-Date: Mon, 12 Oct 2026 15:49:48 +0200
+	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b="a58vcaqc"
+Received: by mail-pf1-f171.google.com with SMTP id d2e1a72fcca58-88cfa501c5cso558929b3a.3
+        for <linux-scsi@vger.kernel.org>; Mon, 12 Oct 2026 06:52:17 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=isslab-korea-ac-kr.20251104.gappssmtp.com; s=20251104; t=1791813137; x=1792417937; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=VUNiGziCUNl+CT1ZqXgl34E50ZrFvZEoRDfOve+S9JE=;
+        b=a58vcaqcqb31nvvheENTQc3TJZJ3c8qP6d9NiFVlddOPyg5hTQjOM0ID1aNoW/YFg/
+         1mLesTY29GGjN9B3iwgZqthZdxADBJJtL5aQGtFudXTIdG1DT0w/NmCybyMxiZWgw0zZ
+         oNHteQdf0o3PQG8W9OLgcRbvDgWpYiM+tCUyt1mxrMryxU9MHdgi9b8lyxoO+bzwXv2K
+         2o7sg+s5h2wDQpbloc+RDqafUg9f5oafvJRDIMm7F22GHVU4DsLdr/S5H1AIJ+EXEmQE
+         pmD3lkDhFLAed0O+YRA0LOru1czE6dxKdMIBO0XajXdhZOehjtmzYpQu7+q6quYiTuKA
+         wCGQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791813137; x=1792417937;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=VUNiGziCUNl+CT1ZqXgl34E50ZrFvZEoRDfOve+S9JE=;
+        b=nHysI5Aan19+QYQcXNBX5UxoRZ1gb6S0T6/7eZ1ZYpRx5muqvx1JHC32Kvg+nrB8zn
+         JSlqOlJWpypFdBsXyzqvX1h2TJRaTBwNUq+OEVQJqfMxXOjOCak92idkNjFo8E6JwW9L
+         gUAzdORYgMcOlq1ITvYIuGWYjagQxlHAyFDzLqwaUOzonMCcVurcT6ibMuz6CjF/Ppl7
+         G7teTkeNkWQCr/0xeZEFa67rnsBs/uhVa6rXfoN2WUdQA14qycnGUtIpRKrTyuvtPSdR
+         szDgVtvIxiBBP9YGJ0fnZ4aNO5MpcOy9ObTuAC5HON0jMV8hFGEaOqkILkAAdj+NhubU
+         hrHA==
+X-Forwarded-Encrypted: i=1; AKwUvBz23YB5ARCNo0fjAXpcLW7uQQ4HdQq0xISoTsJKvIG+V//wUV+x6dq0H9Mo6bgy3wJlT9Fyip4QZcCH@vger.kernel.org
+X-Gm-Message-State: AFq9FYKTtCSGt9bD7nsgFv+VpnHwGtEmLiL88GnZ+1PfMrsVm4/64umg
+	5xLNovxOKKN/L+dmZSRJ3b+ExWjrjLvqgtQyvdvzv0hesDzGipGPKhoQtj0KiLCRswwleBFpuqI
+	I5plZa3o=
+X-Gm-Gg: AYBFou2/pKpPiHfxVXwcuGJc2j1Z2uX4V1hsAftRGJ7vGUGq3bvybc6gXzhnDSL1WHL
+	9Hv3ndEttsyvEnIkUCqTtpS4MXAw6sZ3k8TEkyZ//AXHItepztkvbCq6tgVtwOie+qbIC69xout
+	NKnHeNn5X54wzJbVruJDGqdELyaY7fvggFxFtpzutarFJpfrLeianbtIFf/KxS4X866wOKYaTF4
+	RFqMcCacT3x3WrzprN5DQsZD6mrSg4BHS9d6aF73JLZEBc91p47ZZ+2izfNozb5A67vkbTpuDAY
+	DoNIlkuZw8JxJivaBucPTnScLBQAaZgcDrSOxLejxUiWBftYNxTj2nBqPIClkMnbGiS6f4ga/GH
+	QN1OsSposFvKeAvdQweCiEcaRYJAtNZlMOLK35B1/hPd9Q/ly5JywkQV1qUmEd0I4/VOrkHZWoX
+	R8ppwEfI/+tHe5j0fTtJiZYy6lxs1eE1Ce5fAXqDYBE8n5OzICy85sPsnHID1aRo55S7y6ZDP+o
+	eqPTJuLjAQXKPuRLI0sAw==
+X-Received: by 2002:a05:6a20:5493:b0:3dd:a00a:c5be with SMTP id adf61e73a8af0-3e16c03cd8emr10688105637.49.1791813136750;
+        Mon, 12 Oct 2026 06:52:16 -0700 (PDT)
+Received: from yhlee-960QFG.Davolink ([2406:5900:1044:110c:7bd2:1202:246d:44ce])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-cd3d9e08c89sm4298333a12.8.2026.10.12.06.52.13
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 12 Oct 2026 06:52:16 -0700 (PDT)
+From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+To: mkp@kernel.org,
+	target-devel@vger.kernel.org,
+	linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org,
+	Hannes Reinecke <hare@suse.de>,
+	Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH] scsi: target: tcm_fc: reject overlapping write-data frames
+Date: Mon, 12 Oct 2026 22:51:59 +0900
+Message-ID: <506886f3051941899c26b3dd4d2a32a3c0cf9846.1791812937.git.yhlee@isslab.korea.ac.kr>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 4/9] block: add storage element management ioctls
-To: sashiko-reviews@lists.linux.dev
-Cc: linux-scsi@vger.kernel.org
-References: <20261012130121.1902634-1-dlemoal@kernel.org>
- <20261012130121.1902634-5-dlemoal@kernel.org>
- <sashiko-outbox-168194@kernel.org>
-From: Damien Le Moal <dlemoal@kernel.org>
-Content-Language: en-US
-Organization: Western Digital Research
-In-Reply-To: <sashiko-outbox-168194@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 2026/10/12 15:40, sashiko-bot@kernel.org wrote:
-> Thank you for your contribution! Sashiko AI review found 4 potential issue(s) to consider:
-> - [High] block: concurrent I/O race in storage element removal/restoration
-> - [High] block: silent data loss in conventional zones on storage element ioctls
-> - [High] block: cross-partition data destruction via storage element ioctls
-> - [Medium] block: zone state permanently desynchronized if SE ioctl is interrupted
-> --
-> 
-> commit 8f33e7baabedb5d2ad1cccf418448851e57fed71
-> Author: Damien Le Moal <dlemoal@kernel.org>
-> 
-> block: add storage element management ioctls
-> 
-> This commit introduces new ioctl commands for storage element management on
-> zoned block devices. The new commands allow userspace to query, report,
-> remove, and restore storage elements.
-> 
->> diff --git a/block/blk-zoned.c b/block/blk-zoned.c
->> index 46822c7a05ecc..8736e80b4080d 100644
->> --- a/block/blk-zoned.c
->> +++ b/block/blk-zoned.c
-> 
-> [ ... ]
-> 
->> @@ -2917,6 +2968,52 @@ int bdev_remove_storage_element(struct block_device *bdev,
->>  }
->>  EXPORT_SYMBOL_GPL(bdev_remove_storage_element);
->>  
->> +static int blkdev_flush_and_truncate(struct block_device *bdev,
->> +				     blk_mode_t mode)
->> +{
->> +	int ret;
->> +
->> +	inode_lock(bdev->bd_mapping->host);
->> +	filemap_invalidate_lock(bdev->bd_mapping);
->> +	ret = blkdev_issue_flush(bdev->bd_disk->part0);
->> +	if (!ret)
->> +		ret = truncate_bdev_range(bdev, mode, 0,
->> +					  bdev_nr_bytes(bdev) - 1);
-> 
-> [Severity: High]
-> Will this discard unwritten buffered data in conventional zones?
-> 
-> While users might typically use direct I/O for zoned devices, zoned devices
-> can contain conventional zones which fully support and commonly use buffered
-> I/O. truncate_bdev_range() delegates to truncate_inode_pages_range() which
-> forcefully drops all pages in the mapping. Could dirty pages be silently
-> destroyed here? Should this code call filemap_write_and_wait() before
-> truncating the cache?
+ft_recv_write_data() executes a WRITE once the received byte count reaches
+se_cmd->data_length.  Frames are placed by their FCP relative offset but
+nothing tracks which offsets were filled, so an initiator that sends two
+frames at the same offset reaches data_length with part of the buffer never
+written: two 4096-byte frames at offset 0 of an 8192-byte write get the
+count to 8192 and leave the second half untouched.
 
-Yes. It is the responsibility of the user to sync its dirty data before
-initiating a depop.
+The buffer is not zeroed (transport_generic_new_cmd() clears zero_flag for
+a data CDB), so that gap keeps the previous page contents, which the
+backend then writes to the device for the initiator to read back.  There is
+no oops; poisoning the buffer and sending such a pair leaves 4096 bytes of
+it committed unchanged, and the patched driver refuses the overlapping
+frame.
 
-> 
-> [Severity: High]
-> Does this only invalidate the page cache for the opened partition?
-> 
-> When a user invokes these ioctls on a partition (e.g., /dev/sda1),
-> bdev->bd_mapping is the page cache for that partition. Since the underlying
-> hardware operation modifies the entire physical device, the page caches for
-> the whole disk and other partitions are not invalidated, which could lead to
-> stale reads and silent data corruption across the system.
-> 
->> +	filemap_invalidate_unlock(bdev->bd_mapping);
->> +	inode_unlock(bdev->bd_mapping->host);
->> +
->> +	return ret;
->> +}
-> 
-> [Severity: High]
-> Are we safely dropping the VFS locks before the storage element removal
-> starts?
-> 
-> The locks preventing concurrent I/O and page cache repopulation are released
-> here. When the ioctl handler later delegates to
-> bdev_remove_storage_element(), there is no barrier preventing concurrent
-> processes from opening the device and issuing buffered or direct I/Os during
-> a destructive hardware operation.
+Track the range received and drop a frame that falls inside it.  With no
+overlapping frame accepted, the byte count reaches data_length only when
+the whole buffer has been written, so it stays a valid completion test;
+in-order and out-of-order complete writes are unaffected.
 
-Yes. It is the reponsibility of the user to not issue IOs while depop in on-going.
+Fixes: 3699d92a4d7b ("[SCSI] tcm_fc: Adding FC_FC4 provider (tcm_fc) for FCoE target (TCM - target core) support")
+Cc: stable@vger.kernel.org
+Signed-off-by: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+---
+ drivers/target/tcm_fc/tcm_fc.h |  8 +++++
+ drivers/target/tcm_fc/tfc_io.c | 57 ++++++++++++++++++++++++++++++++++
+ 2 files changed, 65 insertions(+)
 
-> 
->> +
->> +static int blkdev_remove_storage_element_ioctl(struct block_device *bdev,
->> +					blk_mode_t mode, void __user *argp)
->> +{
->> +	unsigned int element_id;
->> +	int ret;
->> +
->> +	if (!(mode & BLK_OPEN_WRITE))
->> +		return -EBADF;
->> +	if (bdev_read_only(bdev))
->> +		return -EPERM;
-> 
-> [Severity: High]
-> Is a user with write access to a single partition able to destroy data on
-> other partitions?
-
-Partitions on zoned block devices are *not* supported. There are no partitions,
-only the entire bdev.
-
-> The storage element ioctls issue a disk-wide destructive hardware command
-> that can alter the physical geometry of the drive. Without checking if the
-> block device is a partition (e.g., via bdev_is_partition()) or requiring
-> capable(CAP_SYS_ADMIN), these operations might destroy zones belonging to
-> other partitions.
-> 
-> [ ... ]
-> 
->> +	/*
->> +	 * Flush the device volatile write cache and invalidate all cached data
->> +	 * so that reads do not return old data for zones that went offline.
->> +	 * Since a user can only write to zoned devices using direct IOs, we
->> +	 * should never have any dirty page invalidated and so no data loss as
->> +	 * long as the device cache flush succeeds, that is, as long as the
->> +	 * flush does not use degraded storage elements.
->> +	 */
->> +	ret = blkdev_flush_and_truncate(bdev, mode);
->> +	if (ret)
->> +		return ret;
->> +
->> +	return bdev_remove_storage_element(bdev, element_id);
->> +}
-> 
-> [Severity: High]
-> Is it safe to rely on the caller to prevent new I/Os here?
-> 
-> bdev_remove_storage_element() freezes the queue but immediately unfreezes
-> it before executing the long-running remove_element callback. Since the VFS
-> locks were already dropped in blkdev_flush_and_truncate(), the device is
-> left unprotected from concurrent I/Os during a destructive hardware
-> operation.
-
-Yes it is safe. If the user still issues IOs while depop or restore is in
-progress, IOs may/will fail and the zone write plugging code will handle that,
-so will the final zone revalidation.
-
-> 
-> [Severity: Medium]
-> Could the zone state become permanently desynchronized if this ioctl is
-> interrupted?
-> 
-> When this ioctl is interrupted by a fatal signal, the underlying loop in
-> disk_wait_for_se_mgmt_completion() returns -EINTR and
-> bdev_remove_storage_element() immediately revalidates the zones while the
-> hardware operation is still in progress.
-> 
-> Because the polling loop was the only tracking mechanism, the kernel's
-> zones_state array is never updated to reflect the final state of the
-> depopulated zones once the hardware finishes. This leaves the kernel
-> permanently desynchronized, potentially leading to unexpected I/O errors.
-
-Yes it will potentially desynchronize the state, but the user can initiate a
-revalidation to re-synchronize everything. If the poll loop was interrupted, a
-problem happened anyway.
-
+diff --git a/drivers/target/tcm_fc/tcm_fc.h b/drivers/target/tcm_fc/tcm_fc.h
+index 00e5573c62966..b75b1373a49c9 100644
+--- a/drivers/target/tcm_fc/tcm_fc.h
++++ b/drivers/target/tcm_fc/tcm_fc.h
+@@ -103,12 +103,20 @@ struct ft_lport_wwn {
+ /*
+  * Commands
+  */
++#define FT_WRITE_SEGS	4	/* out-of-order write ranges tracked per cmd */
++
+ struct ft_cmd {
+ 	struct ft_sess *sess;		/* session held for cmd */
+ 	struct fc_seq *seq;		/* sequence in exchange mgr */
+ 	struct se_cmd se_cmd;		/* Local TCM I/O descriptor */
+ 	struct fc_frame *req_frame;
+ 	u32 write_data_len;		/* data received on writes */
++	u32 write_contig_end;		/* end of the contiguous data received */
++	u8 write_nseg;			/* out-of-order ranges held below */
++	struct ft_write_seg {
++		u32 off;
++		u32 end;
++	} write_seg[FT_WRITE_SEGS];
+ 	struct work_struct work;
+ 	/* Local sense buffer */
+ 	unsigned char ft_sense_buffer[TRANSPORT_SENSE_BUFFER];
+diff --git a/drivers/target/tcm_fc/tfc_io.c b/drivers/target/tcm_fc/tfc_io.c
+index 45329284f52f5..53d7c7268865d 100644
+--- a/drivers/target/tcm_fc/tfc_io.c
++++ b/drivers/target/tcm_fc/tfc_io.c
+@@ -189,6 +189,56 @@ static void ft_execute_work(struct work_struct *work)
+ 	target_execute_cmd(&cmd->se_cmd);
+ }
+ 
++/* Record a frame's range; refuse one that repeats data already received. */
++static bool ft_add_write_range(struct ft_cmd *cmd, u32 off, u32 len)
++{
++	u32 end = off + len;
++	unsigned int i, j;
++	bool absorbed;
++
++	if (off < cmd->write_contig_end)
++		return false;
++	for (i = 0; i < cmd->write_nseg; i++)
++		if (off < cmd->write_seg[i].end && cmd->write_seg[i].off < end)
++			return false;
++
++	if (off != cmd->write_contig_end) {
++		for (i = 0; i < cmd->write_nseg; i++) {
++			if (cmd->write_seg[i].end == off) {
++				cmd->write_seg[i].end = end;
++				return true;
++			}
++			if (cmd->write_seg[i].off == end) {
++				cmd->write_seg[i].off = off;
++				return true;
++			}
++		}
++		if (cmd->write_nseg >= FT_WRITE_SEGS)
++			return false;
++		cmd->write_seg[cmd->write_nseg].off = off;
++		cmd->write_seg[cmd->write_nseg].end = end;
++		cmd->write_nseg++;
++		return true;
++	}
++
++	cmd->write_contig_end = end;
++	do {
++		absorbed = false;
++		for (i = 0; i < cmd->write_nseg; i++) {
++			if (cmd->write_seg[i].off != cmd->write_contig_end)
++				continue;
++			cmd->write_contig_end = cmd->write_seg[i].end;
++			for (j = i; j + 1 < cmd->write_nseg; j++)
++				cmd->write_seg[j] = cmd->write_seg[j + 1];
++			cmd->write_nseg--;
++			absorbed = true;
++			break;
++		}
++	} while (absorbed);
++
++	return true;
++}
++
+ /*
+  * Receive write data frame.
+  */
+@@ -267,6 +317,11 @@ void ft_recv_write_data(struct ft_cmd *cmd, struct fc_frame *fp)
+ 		goto drop;
+ 	if (frame_len + rel_off > se_cmd->data_length)
+ 		frame_len = se_cmd->data_length - rel_off;
++	if (!ft_add_write_range(cmd, rel_off, frame_len)) {
++		pr_err_ratelimited("%s: xid 0x%x: offset %u len %zu repeats data\n",
++				   __func__, ep->xid, rel_off, frame_len);
++		goto drop;
++	}
+ 
+ 	/*
+ 	 * Setup to use first mem list entry, unless no data.
+@@ -345,6 +400,8 @@ void ft_invl_hw_context(struct ft_cmd *cmd)
+ 				 */
+ 				cmd->write_data_len = lport->tt.ddp_done(lport,
+ 								      ep->xid);
++				cmd->write_contig_end = cmd->write_data_len;
++				cmd->write_nseg = 0;
+ 
+ 				/*
+ 				 * Resetting same variable to indicate HW's
 -- 
-Damien Le Moal
-Western Digital Research
+2.43.0
+
