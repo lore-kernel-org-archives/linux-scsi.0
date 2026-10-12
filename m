@@ -1,152 +1,131 @@
-Received: from mail-dl1-f44.google.com (mail-dl1-f44.google.com [74.125.82.44])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D3C9344F549
-	for <linux-scsi@vger.kernel.org>; Mon, 12 Oct 2026 11:41:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5DAE938D3F2
+	for <linux-scsi@vger.kernel.org>; Mon, 12 Oct 2026 11:54:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791805292; cv=none; b=hLjnChTAovqcAv/SQzovrsJLTIz1xAra2ckTSqAmWNau7pRfSqL9YCND3HFBaJe6jSJFC3tZUAmGDVufBiiCJdIe54Reow8qD1nTI9x7bZvbLgsUKXYleWjCL5+EIdUyY3rfw/LPTTLLtipHvXrkaP1V85RLBtV/F2t+FY+mifE=
+	t=1791806092; cv=none; b=QmWmHOR2niDMb9CwzOurd6ELNK1Z5yfmOjeKeF0zgOYK69YHyzY/15f8hVpEImdV2iJRTevQmseWbZ2C9vVtedVjyTjBD44ZcgorETni9+Zxxglh1WhfAbyfqmfuqZm7Xh5ceJstTCCHiBCUBpTU9A/KQHQl53kFO7DWL8RIZxM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791805292; c=relaxed/simple;
-	bh=95jCYiJWQiCrs/vInDlMxb9wHLPwGaoq+Y3wOL6bs/s=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Dib5/wiNE+bl6hORsnGSHAAJ+IdUeRHV2Sn5DgdNH4CGRKSMTtJtyJP0NMRfAWDqyLCf9WeUhzosMbWY+3qnRNwY17aBztQ1hS4giwEJdFUoii6rJ7GZlCNZe8vpZpSPOl5W1ecTPdQ3BbW8e5r32M6yICuwOhLtneyAV1VTarA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr; spf=none smtp.mailfrom=isslab.korea.ac.kr; dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b=Kra58w4S; arc=none smtp.client-ip=74.125.82.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
+	s=arc-20240116; t=1791806092; c=relaxed/simple;
+	bh=3fpyikwiivvpInFwuximPiqiRO+8TKnP0/gvgHnaH8A=;
+	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
+	 Date; b=bQLO6zaXk5YKtpzFyfbBGeIDR4AHd97u6ZMfn9zj5OnlmubIIGW18haGfTgIOMe/n5cfAxckbL+MlXskWJb4Tr+b/UmwPPM87tuULH1VkVZH+afWj3R1B6KBi5x5do07fRkVrmgJF95PUCCb4PDGY/q8riT+qRXt3F4xI7PZ2LA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Kl58Wqpr; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b="Kra58w4S"
-Received: by mail-dl1-f44.google.com with SMTP id a92af1059eb24-141395927feso3017125c88.0
-        for <linux-scsi@vger.kernel.org>; Mon, 12 Oct 2026 04:41:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=isslab-korea-ac-kr.20251104.gappssmtp.com; s=20251104; t=1791805290; x=1792410090; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=qCV9uGPk0pzpjywYVsVOm5n8J7lulX2bkipjkVr5CFQ=;
-        b=Kra58w4SuUQJDRCsqBuQjrF3OLPuHY/ogD+pCUUVRmXJ/TuvtT4KZ/chkMtnJ0n+4f
-         KedKA1zKwJUPg0hygIi/XeOXzT/PjZfRLgebRXDuu35oc4ZWX6VQd42kcxAFjQNcVn92
-         RK0NLxYkgf3tez9MNZowsvXNGd3S4VbnqDITV+4uK6Rf/959TWflkN4lw2g3HiofnmJo
-         Wjv1ZNr2JB5g0+v5H60/BZXXpqFtEUJSumEuS6Ts9PBo7TevCxg/NmO6Ing5KjgOGlML
-         xhzp6JGIQZznA/9sbHAXF7487vIWkr7lDsOrEtfCTGV1SRV81AjMNOG66rlSLW8Eyqgy
-         EQ8A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791805290; x=1792410090;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=qCV9uGPk0pzpjywYVsVOm5n8J7lulX2bkipjkVr5CFQ=;
-        b=TCmy7hMn0pMGKif76Ac+FLqBsJxoXA4h0C6ExYQelh5qT5OnRJRShG7mzkFnn++Mas
-         umb0MNZYN2oF/Y1Dx7HYurc1epwv7B6HX/06rAY3aUMIRYy0GdIw3hsJqlcAQ4yutMOH
-         AINLRswyfz3zoB12VaDcq1I6nkFfVOrkIiqtfaLjyQN+pfy7BdrutzGOLnYA8gj6YaDF
-         IPfvLQbZ5VdsL02+8GPyID7l40dT5wYRYXSMgtQtagfd/2h8uTvvQ/TlbWdIeZQPgZK0
-         i4UCnx+83dGbhS5dGAl29bgW9jaOtwfGJJ0WUB5aXApTC8vdHLFrbfH8AmuvMVK41iqH
-         FJSw==
-X-Gm-Message-State: AFq9FYKUSUrzGLBAbz/DZ39AhCW+1kYFru1giF5F/OvfY43kZY3ZhyPq
-	KDmZd20h1Cc8NA+VdN9NddGneMLxxhqh16PsJWlCCON+LQHhPLUHYLB3mlJODyxuY88=
-X-Gm-Gg: AYBFou3KNcbhZjj78uxCKgpl55B7y5FUF9LYNAArrEkY3Mt9FDabQZDIMGTsByQZJxl
-	JDcxtdhabE4GlL3c5vmD/8OqwxxvzUIfXX7USWtaAPvDQDPO2mp+q5Ye2z+tCTK6lFJhc383di/
-	jvkdb9+bZEfcm4Yi8HyrFNfoM8jE3AzohyfFEFVoWurKZHTzYMZeLIhElefnXtUcW8z1rNGdXzx
-	1J9crotx4K58f5+u49OqiLHISc9eVWXKzXCHC7abptgpaNjmQ5q2DLEpbsCXysEBMDYbFeTCx2v
-	xcYT9shg8xD7ldVnZ2TkIo4WT8rSBaR5BLoSMTFJ1dSMhWCGfagb2ZTigDn9MeViOStVSxtdnnv
-	HHUSSo7jI/M2mDFQ3f3xBXxq4x8Ro4lDW2dG4YESSNp/75+RY7NH8V/zKkNphWIc57+TIBJTcMA
-	ElVp90piPf0uktJecTgmnTnh8JubNKEkv4/zkWD2D6xtw8hhCUHscNDxIMn2yMHxSUEdlYqVPtc
-	jTPZXBIyztijmRTr9rKew==
-X-Received: by 2002:a05:7022:b057:10b0:160:a80f:3ed2 with SMTP id a92af1059eb24-16a5dbfecb9mr12854417c88.10.1791805289820;
-        Mon, 12 Oct 2026 04:41:29 -0700 (PDT)
-Received: from yhlee-960QFG.Davolink ([2406:5900:1044:110c:7bd2:1202:246d:44ce])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1746482c978sm8725533c88.13.2026.10.12.04.41.26
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 12 Oct 2026 04:41:29 -0700 (PDT)
-From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
-To: ching2048@areca.com.tw,
-	mkp@kernel.org,
-	James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org,
-	thenzl@redhat.com,
-	Yehyeong Lee <yhlee@isslab.korea.ac.kr>
-Subject: [PATCH v3 3/3] scsi: arcmsr: wrap the type B completion index before using it
-Date: Mon, 12 Oct 2026 20:41:03 +0900
-Message-ID: <459990a0367f7268c0056098f6e2631700e20327.1791803953.git.yhlee@isslab.korea.ac.kr>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <cover.1791803953.git.yhlee@isslab.korea.ac.kr>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Kl58Wqpr"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D4FD01F0089B;
+	Mon, 12 Oct 2026 11:54:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1791806091;
+	bh=G4AI4cFFuQ2+V63g8BabCtAGeNoDeYAKrqJUkniHuUA=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=Kl58WqprP2l5HfsfATVB0x4bsz/5BhEeDivzFY77ptjklbjDmQhVRkn4NoVy0f4r+
+	 5TTG6TTp9PHpmQIprCiQjGfDRSjKfEnCiPfchXsKIas/x+A59m2WgG32prx+UmyCFX
+	 OKJ+7jcLT3hdJH/2OuuCqLPBbZYmn2UH9dGl+jJSjQOEnhv4fmIo0ExUekyaizLUdu
+	 mmmJ81tmsiDPprCoVQ8aiCngydxdsx1lDRTpyV0YAAdLb97xTKcm8/emSVg8r0s1BU
+	 aNxwgyu3j8HafgrtuKxVSKIklqdA/HWObaRnxQlJO1w1050bQi9v0jIHSIa9TmDMWV
+	 XsvoPbhiFcImw==
+Message-ID: <sashiko-outbox-168035@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v3 1/3] scsi: arcmsr: bound the firmware-supplied
+ message length
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Yehyeong Lee" <yhlee@isslab.korea.ac.kr>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <adc1e1512a87ff16e99d066c2e96e18a1d28e610.1791803953.git.yhlee@isslab.korea.ac.kr>
 References: <cover.1791803953.git.yhlee@isslab.korea.ac.kr>
+ <adc1e1512a87ff16e99d066c2e96e18a1d28e610.1791803953.git.yhlee@isslab.korea.ac.kr>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 12 Oct 2026 11:54:50 +0000
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-struct MessageUnit_B lives in the dma_alloc_coherent() area shared with
-the adapter, and holds the completion ring next to the index into it:
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [Medium] scsi: arcmsr: TOCTOU double fetch causes circular buffer corrupt=
+ion
+--
 
-	uint32_t	done_qbuffer[ARCMSR_MAX_HBB_POSTQUEUE];
-	uint32_t	postq_index;
-	uint32_t	doneq_index;
+commit c1b87442346f4c23552402e5fce0db15b1252056
+Author: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
 
-arcmsr_hbaB_postqueue_isr() takes doneq_index from there and subscripts
-done_qbuffer[] with it, and only afterwards reduces it:
+scsi: arcmsr: bound the firmware-supplied message length
 
-	index = reg->doneq_index;
-	while ((flag_ccb = reg->done_qbuffer[index]) != 0) {
-		...
-		reg->done_qbuffer[index] = 0;
-		index++;
-		index %= ARCMSR_MAX_HBB_POSTQUEUE;
-		reg->doneq_index = index;
-	}
+This commit addresses an out-of-bounds write where an unbounded data_len
+from the MMIO register could walk past the 128-byte staging buffer. It
+clamps the length to the size of the window (124 bytes) in both reader
+functions.
 
-So the first iteration uses the value as it was found, unmasked.  An
-index beyond ARCMSR_MAX_HBB_POSTQUEUE (264) reads past done_qbuffer[]
-and, should the word it finds be non-zero, stores a zero there as well.
-arcmsr_hbaB_polling_ccbdone() has the same ordering.
+> diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcms=
+r_hba.c
+> index 8aa948f06cacf..255f1d898079f 100644
+> --- a/drivers/scsi/arcmsr/arcmsr_hba.c
+> +++ b/drivers/scsi/arcmsr/arcmsr_hba.c
+> @@ -2277,6 +2277,8 @@ arcmsr_Read_iop_rqbuffer_in_DWORD(struct AdapterCon=
+trolBlock *acb,
+> =20
+>  	iop_data =3D (uint32_t __iomem *)prbuffer->data;
+>  	iop_len =3D readl(&prbuffer->data_len);
+> +	if (iop_len > sizeof(prbuffer->data))
+> +		iop_len =3D sizeof(prbuffer->data);
 
-Reduce the index where it is read instead, which leaves the rest of the
-loop unchanged.
+[Severity: Medium]
+The commit message notes that the adapter can change data_len between the t=
+wo
+reads. While clamping iop_len to sizeof(prbuffer->data) prevents the staging
+buffer overflow, does this still leave a TOCTOU (time-of-check to time-of-u=
+se)
+vulnerability that can corrupt the circular buffer?
 
-Measured with a KASAN build.  struct MessageUnit_B is 2176 bytes with
-done_qbuffer at offset 1056, so a reported index of 600 reads 3456 bytes
-in:
+arcmsr_iop2drv_data_wrote_handle() validates the first fetch against
+buf_empty_len:
 
-  BUG: KASAN: slab-out-of-bounds in arcmsr_hbaB_postqueue_isr+0x1f5/0x270 [arcmsr]
-  Read of size 4 at addr ffff88800c08cd80 by task init/1
-  ...
-   which belongs to the cache kmalloc-4k of size 4096
-  The buggy address is located 1280 bytes to the right of
+drivers/scsi/arcmsr/arcmsr_hba.c:arcmsr_iop2drv_data_wrote_handle() {
+	...
+	if (buf_empty_len >=3D readl(&prbuffer->data_len)) {
+		if (arcmsr_Read_iop_rqbuffer_data(acb, prbuffer) =3D=3D 0)
+			...
+}
 
-Fixes: 1c57e86d75cf ("[SCSI] arcmsr: initial driver, version 1.20.00.13")
-Cc: stable@vger.kernel.org
-Signed-off-by: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
----
- drivers/scsi/arcmsr/arcmsr_hba.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+If buf_empty_len is small (e.g., 10 bytes), the first fetch could be 10, pa=
+ssing
+the check. If the second fetch here sees an increased data_len from the MMIO
+register (e.g., 124 bytes), the while loop below will write more bytes than
+buf_empty_len.
 
-diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
-index e635b76daae9a..d13bd0febb81a 100644
---- a/drivers/scsi/arcmsr/arcmsr_hba.c
-+++ b/drivers/scsi/arcmsr/arcmsr_hba.c
-@@ -2568,7 +2568,7 @@ static void arcmsr_hbaB_postqueue_isr(struct AdapterControlBlock *acb)
- 	bool error;
- 	unsigned long cdb_phy_addr;
- 
--	index = reg->doneq_index;
-+	index = reg->doneq_index % ARCMSR_MAX_HBB_POSTQUEUE;
- 	while ((flag_ccb = reg->done_qbuffer[index]) != 0) {
- 		cdb_phy_addr = (flag_ccb << 5) & 0xffffffff;
- 		if (acb->cdb_phyadd_hipart)
-@@ -3671,7 +3671,7 @@ static int arcmsr_hbaB_polling_ccbdone(struct AdapterControlBlock *acb,
- 	/* clear doorbell interrupt */
- 	writel(ARCMSR_DOORBELL_INT_CLEAR_PATTERN, reg->iop2drv_doorbell);
- 	while(1){
--		index = reg->doneq_index;
-+		index = reg->doneq_index % ARCMSR_MAX_HBB_POSTQUEUE;
- 		flag_ccb = reg->done_qbuffer[index];
- 		if (flag_ccb == 0) {
- 			if (poll_ccb_done){
--- 
-2.43.0
+Could this cause rqbuf_putIndex to overtake rqbuf_getIndex and corrupt the
+driver's internal ring buffer state?
 
+>  	if (iop_len > 0) {
+>  		buf1 =3D kmalloc(128, GFP_ATOMIC);
+>  		buf2 =3D (uint32_t *)buf1;
+
+[ ... ]
+
+> @@ -2319,6 +2321,8 @@ arcmsr_Read_iop_rqbuffer_data(struct AdapterControl=
+Block *acb,
+>  		return arcmsr_Read_iop_rqbuffer_in_DWORD(acb, prbuffer);
+>  	iop_data =3D (uint8_t __iomem *)prbuffer->data;
+>  	iop_len =3D readl(&prbuffer->data_len);
+> +	if (iop_len > sizeof(prbuffer->data))
+> +		iop_len =3D sizeof(prbuffer->data);
+
+[Severity: Medium]
+This second fetch in the byte-wise reader shares the same vulnerability when
+called from arcmsr_iop2drv_data_wrote_handle().
+
+Would passing the validated length down from the caller prevent the hardware
+from bypassing the buf_empty_len check entirely?
+
+>  	while (iop_len > 0) {
+>  		pQbuffer =3D &acb->rqbuffer[acb->rqbuf_putIndex];
+>  		*pQbuffer =3D readb(iop_data);
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1791803953.gi=
+t.yhlee@isslab.korea.ac.kr?part=3D1
