@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C83953B895A;
-	Mon, 12 Oct 2026 18:54:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB1DD3B8BD4;
+	Mon, 12 Oct 2026 18:56:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791831250; cv=none; b=iWbDD0stVaqznhGGt9CBrURNeTFg7CQf6YE2/t8qn+y+vG+O2KBHwvKsvCNIkOOXEsSf8uAulyPuU4Z+UF1LKuPs7FH1Hk84/iq7adjuM/xDXpanSyh7GXoIAH/jr/pfbGINP/+QhXVWi7GHQ+KIum6/e6RE43vVs2Hg/sD9QWE=
+	t=1791831421; cv=none; b=puTLtYRkmmisIR4SjMQ47ZMXZdasrvqLgU77EoUn31wvQyfz5zxKaurfBmJ3gD53+gST2j9AujJxaQaQB0XBr3bE0eioYgrp9oW0tHuIQx3CGoOQbxAJPCNulNotmaPnOV7TUC/qaezONdhvAdgxl82aqj+igVRL7jBBsY5cL/M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791831250; c=relaxed/simple;
-	bh=kSNSYChi3N66hJUB+nRqCrrFL8THRcREUCcDVDsoecY=;
+	s=arc-20240116; t=1791831421; c=relaxed/simple;
+	bh=ik4LHcW6sEjfwQU1cHLwqQGAWffS0de5zV8j0cwRfE8=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=U2o0xv7engiE66LmaCXFZja0dWv3+WkZTAVQ2+SXMhVyMyaxFFULQj4d4wib902HAuULRIIZo2FaOLSfhyAgjzFfn6GpzwMEMJUX1glRprjAAmxcHhXh2zNmpJ7u/oU/A3ffOCKhDN+4Y+IVeqvDck8mhYO5znU64YowQTNzUWk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Cdad94l3; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:Content-Type; b=jv3hepXcGXeYNr3ZltxDpkebfJmynQEnhbdXMS5k/+6o3426zZvCM6W5OYtPiHEm5S0J87Jw0gCHVtpuZsvfP6EKkB3KRHaJaPMOZzv0EhDiVM9wwvKYFtCLxIbRnuG+SavJRgGvrfWjUgb1MHFsO37DKPKjrLP9iK1Fowo04DY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Bm8mYN7N; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Cdad94l3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5128E1F0089B;
-	Mon, 12 Oct 2026 18:53:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Bm8mYN7N"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 31EC21F0089B;
+	Mon, 12 Oct 2026 18:56:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791831243;
-	bh=/LzN6QFYSsA+fcmS211ot+Qp65prbM+0x7Y3py3WXwI=;
+	s=k20260515; t=1791831419;
+	bh=PTP8jRLZqHJYYCJdjNKIR4gbRyey/kI+sfcrw+3IbSA=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=Cdad94l3/djhic99Bhd0ObG6C9U/C2CLrUE1lnyVHNjSsnckIVbfbC8gITgmKnRX1
-	 Ng0cl01itPkjwqWZ8HXQOhijaLgVbwHhhfx0wpkrF4VjvbQv9wj7oIG0uhuwb2MieL
-	 nFrM6c3TFAC31S2511GqSuww8ft/27QVjBhLuGUN0OMyF1qHmN4o2bKkSkr8PsmEse
-	 xKKxIbkYoBm+BrvdRQO/8Asb/AXtmVx0Fkv0c2DWvv8y0lmRL9Qdg2cfSOlXLrrds/
-	 g/VuG4q2KvwqvUKiuRTRsV6x7w5z6/xHOWetfu/xkcZvo7EFPXfnYKr9gOVnLL05of
-	 nQSHFxLN66GKg==
-Message-ID: <ebd7f324-c426-43c6-9a6f-d55a9fffddac@kernel.org>
-Date: Mon, 12 Oct 2026 20:53:26 +0200
+	b=Bm8mYN7NCuVqJWvDQ6HeMDQgHW56vGjF8/wxqiemm+bd4XmiznESMJg7H6sinCrPZ
+	 GZV7rPVLL4c96uF233hGQASQqEN2lktuU7TPySarXIcDirkjehuR9NEWkWwAEoWNkE
+	 3RkmfTFQ3M+rQGQn1ltRovDD8fexILp4RameZqID6330p5FofggyKxZKeFhdRVSn0v
+	 Cz0eHSlFKc21spb7cHAfXKwwUgbarEpbRn2T9NuuxmjpZZNP4MxauxEdyEed/b9hrO
+	 GJqMnk1VIxCocs/eQrIixEL23q/oEUQNt41MRBaq/vsTI3LF5rjyg6hCs2s3qeSIOT
+	 uC2OpBp+V/Fbw==
+Message-ID: <4124106e-c51e-4476-bd67-63e4641bf14a@kernel.org>
+Date: Mon, 12 Oct 2026 20:56:23 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,9 +35,10 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 38/38] mm/huge_memory: remove vma_is_special_huge()
-To: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>,
- Andrew Morton <akpm@linux-foundation.org>,
+Subject: Re: [PATCH v5 13/38] bpf: arena: mark arena_map_mmap() mappings
+ VM_MIXEDMAP
+To: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
  "Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>,
  Jann Horn <jannh@google.com>, Pedro Falcato <pfalcato@suse.de>,
  Mike Rapoport <rppt@kernel.org>, Suren Baghdasaryan <surenb@google.com>,
@@ -56,7 +57,7 @@ To: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>,
  Dev Jain <dev.jain@arm.com>, Barry Song <baohua@kernel.org>,
  Lance Yang <lance.yang@linux.dev>, Usama Arif <usama.arif@linux.dev>,
  Kiryl Shutsemau <kas@kernel.org>, Doug Gilbert <dgilbert@interlog.com>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
  "Martin K. Petersen" <mkp@kernel.org>, Simona Vetter <simona@ffwll.ch>,
  Helge Deller <deller@gmx.de>, Sebastian Reichel <sre@kernel.org>,
  John Hubbard <jhubbard@nvidia.com>, Peter Xu <peterx@redhat.com>,
@@ -103,8 +104,7 @@ To: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>,
  Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>,
  Wei Xu <weixugc@google.com>, Chengming Zhou <chengming.zhou@linux.dev>,
  Michal Hocko <mhocko@kernel.org>, Miklos Szeredi <miklos@szeredi.hu>,
- Xu Xin <xu.xin@linux.dev>
-Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org,
+ Xu Xin <xu.xin@linux.dev>, linux-mm@kvack.org, linux-kernel@vger.kernel.org,
  linux-doc@vger.kernel.org, linux-usb@vger.kernel.org,
  linux-rdma@vger.kernel.org, selinux@vger.kernel.org,
  linux-sound@vger.kernel.org, bpf@vger.kernel.org,
@@ -116,9 +116,10 @@ Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org,
  kvm-riscv@lists.infradead.org, linux-riscv@lists.infradead.org,
  linux-s390@vger.kernel.org, sparclinux@vger.kernel.org,
  fuse-devel@lists.linux.dev, Ihor Solodrai <ihor.solodrai@linux.dev>,
- Bert Karwatzki <spasswolf@web.de>
+ Bert Karwatzki <spasswolf@web.de>, Emil Tsalapatis <emil@etsalapatis.com>
 References: <20261009-b4-mmap-prepare-vma-flag-sanify-v5-0-923b70125b1e@kernel.org>
- <20261009-b4-mmap-prepare-vma-flag-sanify-v5-38-923b70125b1e@kernel.org>
+ <20261009-b4-mmap-prepare-vma-flag-sanify-v5-13-923b70125b1e@kernel.org>
+ <5b8ef0ce-7429-4d74-b4da-a0561c59b1e2@kernel.org> <as0Buhi_-VCC7xLZ@gremlin>
 From: "David Hildenbrand (Arm)" <david@kernel.org>
 Content-Language: en-US
 Autocrypt: addr=david@kernel.org; keydata=
@@ -165,31 +166,62 @@ Autocrypt: addr=david@kernel.org; keydata=
  3iyY2Nsd7JxfKu1PRhCGwXzRw5TlfEsoRI7V9A8isUCoqE2Dzh3FvYHVeX4Us+bRL/oqareJ
  CIFqgYMyvHj7Q06kTKmauOe4Nf0l0qEkIuIzfoLJ3qr5UyXc2hLtWyT9Ir+lYlX9efqh7mOY
  qIws/H2t
-In-Reply-To: <20261009-b4-mmap-prepare-vma-flag-sanify-v5-38-923b70125b1e@kernel.org>
+In-Reply-To: <as0Buhi_-VCC7xLZ@gremlin>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 10/9/26 20:04, Lorenzo Stoakes (ARM) wrote:
-> vma_is_special_huge() tests whether either the VMA_PFNMAP_BIT or
-> VMA_MIXEDMAP_BIT is set (i.e. whether the VMA is not mm-managed),
-> but with a DAX carve-out.
+On 10/12/26 17:55, Lorenzo Stoakes (ARM) wrote:
+> On Mon, Oct 12, 2026 at 05:08:09PM +0200, David Hildenbrand (Arm) wrote:
+>> On 10/9/26 20:04, Lorenzo Stoakes (ARM) wrote:
 > 
-> DAX however no longer sets VMA_MIXEDMAP_BIT, so this carve-out is no longer
-> required.
+>>> diff --git a/kernel/bpf/arena.c b/kernel/bpf/arena.c
+>>> index 7b6847200b43..b69fe5e34339 100644
+>>> --- a/kernel/bpf/arena.c
+>>> +++ b/kernel/bpf/arena.c
+>>> @@ -620,8 +620,9 @@ static int arena_map_mmap(struct bpf_map *map, struct vm_area_struct *vma)
+>>>  	 * clears VM_MAYEXEC. Set VM_DONTEXPAND to avoid potential change
+>>>  	 * of user_vm_start. Set VM_DONTCOPY to prevent arena VMA from
+>>>  	 * being copied into the child process on fork.
+>>> +	 * This is a kernel page so set VM_MIXEDMAP.
+>>>  	 */
+>>> -	vm_flags_set(vma, VM_DONTEXPAND | VM_DONTCOPY);
+>>> +	vm_flags_set(vma, VM_MIXEDMAP | VM_DONTEXPAND | VM_DONTCOPY);
+>>>  	vma->vm_ops = &arena_vm_ops;
+>>>  	return 0;
+>>>  }
+>>>
+>>
+>> Historically, VM_MIXEDMAP really just means: can contain refcounted and
+>> non-refcounted things. Everything with a struct page is refcounted.
+>>
+>> I think we are now changing the semantics to mean "maps kernel pages". I think
 > 
-> Therefore test for !vma_is_mm_managed() instead and also drop the
-> VMA_IO_BIT check, as it is now redundant since it is enforced that
-> mm-managed mappings may not set VMA_IO_BIT.
+> Yes.
 > 
-> This also eliminates another overloaded use of 'special' within mm.
-> 
-> No functional change intended.
-> 
-> Acked-by: Zi Yan <ziy@nvidia.com>
-> Signed-off-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
-> ---
+> It was sort of implicit before given insert_page() etc. but still really meaning
+> that it _might_ be both.
 
-Acked-by: David Hildenbrand (Arm) <david@kernel.org>
+Yeah, it's in the name. Mixed: pfn and/or ordinary.
+
+> 
+>> this is fine, but we really have to update the documentation (and possibly
+>> rename this thing to something more expressive?)
+> 
+> Yeah I completely agree.
+> 
+> I will rename it, but I think that's best for 7.5 obviously! :)
+
+Yes.
+
+VM_PFNMAP / VM_MIXEDMAP - These contain kernel-mapped data which cannot be
+			  reasonably reconstructed on page fault.
+
+the description is already pretty clear. just not that kernel-mapped pages
+*must* use one of these.
+
+(again, the ->fault thing returning allcoated kernel memory is nasty)
+
+
 
 -- 
 Cheers,
