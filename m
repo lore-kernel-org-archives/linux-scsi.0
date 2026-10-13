@@ -1,35 +1,34 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E9FC4FDA73;
-	Tue, 13 Oct 2026 15:06:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22EC150AC3A;
+	Tue, 13 Oct 2026 15:07:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791904015; cv=none; b=ARQfnCymH6KX+clfN17/FzH8+mjf+sfBq1PBJPCQpr7F45Mk7HWPpmToUu352wQ1eSaUNcxOt+UDEBT1QbsVdIR/p58XFLIyERnY98Z6znXSmtpQcDEZzDN9VHP8VtrhWxXJDB19PUSweHLhPezw+w21hKc3mWj6lnL+dfaJUYM=
+	t=1791904045; cv=none; b=YNQWwposrE1pKHDobp+wmqq/LRsTp4esGTohMZbiDepC2E1HX/TW+dnGlic9K3Fok/QiakGgaUtzBmWqBpbd4k3ST2t6WSSglguptiY9B597ZE9PU1RvYxYMFHvsi/0VlbjGw4wGJqBnl4Qob3M2bsMwY+fRJWYiCOYMevzG/FY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791904015; c=relaxed/simple;
-	bh=NCrL2U2bu3SYoKSTzL7YMvnG9Zxk7Z8SDtyXYUu7I1g=;
+	s=arc-20240116; t=1791904045; c=relaxed/simple;
+	bh=EYqw+AtDKpEde3pCckMQkm9HGGlkplYL0cvv0S5EwV8=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=IFJKqTVqTajsI1/wCj5lunpPvipQVwVSHpyV1x565j5nb5G1qnJ3GBjuxTmiUN6waWZ5IoeBZAbkSNiQsbxpKFLllPmCgCc0ai2i3/XibIMVJYVobqcvsZbgXfkG7CtTxz94d9hf9R5i9tbfC2ToPhfAUgTprjf7U8Nt7QWT3Zo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ca6wqZAQ; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:To:Cc; b=fIKmgiZ7GM2hnJpxViZvn5+jj02jAxYhmiydNVwc3fQV1IIFLOWRlfk/6JRIKBI/xZj8C4jipAe1izrSc3l/3Sh0DgR3rNgnjUcqA4N1fTlU5IrYSgpeizhupBw6pzjlmxRZYWb2WprV6bZTQowDI0nIeuu2Lqld7j8E6o1f1e0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=W0CJyDQe; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ca6wqZAQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C52901F00893;
-	Tue, 13 Oct 2026 15:06:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="W0CJyDQe"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B17E71F000FF;
+	Tue, 13 Oct 2026 15:06:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791904013;
-	bh=7Fqy5CealUldTwU/LGJC2dIT3AOdk0HYZp0RuL8SmXU=;
+	s=k20260515; t=1791904043;
+	bh=XQQXLmuz/mYy2m0DRCE2BDh2jZAsmGDyji4q3SA7eeo=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=ca6wqZAQ3FgwTCt1wupEQILx/bvIItkEo1KkArKHXypknD0GHVJCku3FPtTBRJhUG
-	 xsDctZrNAYxHVC9CMtaaCtwOjOkUoKBLU8YoyLDbYkd6VxM+H5VLGQ84hleXhi8Jej
-	 OtQR1gBbLptTw7TpC/PD0szrNaMAUb9UzUsyRurq3wkYLzVOtHNs+/Lf++ZG+R4kY+
-	 WKfDk6m6flwfixTeUWlwAEvMA8/STAnedRt8WSlq69YkVE22AEAWc16mzS97wUfsnZ
-	 AOcxKzWfNqAYb7HQjGWsxaQGfqGn63wtOgI4BT+SUWF5EmE5YeBaOmtbXfH0pDiM/J
-	 kpbc3Z11dZW8g==
+	b=W0CJyDQetBRxIuAkvUzo9XSWPFP2uj49nmF5Ola6oDkax5fLOw4htdgKdsytOaX5D
+	 fKB/AqLxOYHFOHmAjt8ojXPCgCA78WqENnldOw0as4l4mcCFFYyBHAyH7TsB63TSr8
+	 5h6dyJ6dR5KmSY3dMcYRX2XLk+RphbYhT3pyBjr6eNFn4SarroRPDThxbNL29Q3xJ9
+	 lVXkpNZnmVdJfWIqYlVnErwk2NwZNrj/UnmG0wshn07J1ICxsMnOLpUqb4+uJZr9sn
+	 MbIqT+7Tz99hZmqryEVpBVBnwG1IqyInMH98GC0PV7qV1CHNet8nfbYk/cY1ufQyBm
+	 XE6okl5ntOaow==
 From: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
-Date: Tue, 13 Oct 2026 16:04:41 +0100
-Subject: [PATCH v6 01/39] mm/vma: fix mmap_prepare file handling, remove
- file_doesnt_need_get
+Date: Tue, 13 Oct 2026 16:04:42 +0100
+Subject: [PATCH v6 02/39] mm/vma: introduce and use vma_[flags_]can_merge()
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -38,7 +37,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261013-b4-mmap-prepare-vma-flag-sanify-v6-1-1aa3c9b139f9@kernel.org>
+Message-Id: <20261013-b4-mmap-prepare-vma-flag-sanify-v6-2-1aa3c9b139f9@kernel.org>
 References: <20261013-b4-mmap-prepare-vma-flag-sanify-v6-0-1aa3c9b139f9@kernel.org>
 In-Reply-To: <20261013-b4-mmap-prepare-vma-flag-sanify-v6-0-1aa3c9b139f9@kernel.org>
 To: Andrew Morton <akpm@linux-foundation.org>, 
@@ -123,351 +122,124 @@ Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org,
  fuse-devel@lists.linux.dev, Ihor Solodrai <ihor.solodrai@linux.dev>, 
  Bert Karwatzki <spasswolf@web.de>, "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=openpgp-sha256; l=11336; i=ljs@kernel.org;
- h=from:subject:message-id; bh=NCrL2U2bu3SYoKSTzL7YMvnG9Zxk7Z8SDtyXYUu7I1g=;
- b=owGbwMvMwCV2fu7ZrsZH9SKMp9WSGLLOeRwPuiEdIGaydV1U9WzXI8vXr770f5vbic7mFffkk
- ora232sOkpZGMS4GGTFFFmefxHfHyQSNq/zgr8bzBxWJpAhDFycAjCRxlRGhjPHrhZ4MjRZXFxz
- Z0/EgW2XTyW8v3rq46PXOx7s9mG5uDiM4b9P6hm2HUWfBL0/mL/abbs241mhYW58+R7BGK+ZDCf
- u3ecCAA==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3865; i=ljs@kernel.org;
+ h=from:subject:message-id; bh=EYqw+AtDKpEde3pCckMQkm9HGGlkplYL0cvv0S5EwV8=;
+ b=owGbwMvMwCV2fu7ZrsZH9SKMp9WSGLLOeRxvNhVoP3Z94qSsOTNyr06esJ1D4lZRjFPX1NurP
+ rp0qphs7ShlYRDjYpAVU2R5/kV8f5BI2LzOC/5uMHNYmUCGMHBxCsBELr9k+Cu0JUL1uEbhkaO7
+ YgPmbmHhObXOcNvNOTEZ3NJSb6u+PbvIyLDkrPhkFo5anxrGB92nAo5K7TKVOrbk3qT7yqYyfLZ
+ qHzgA
 X-Developer-Key: i=ljs@kernel.org; a=openpgp;
  fpr=E7F417BF5214569E89D04F46CF9DCD8A81E27F14
 
-The map->file_doesnt_need_get flag is confusing and the existing
-implementation has holes.
+Replace the open-coded VMA_SPECIAL_FLAGS check in the VMA merge logic with
+two new functions vma_flags_can_merge() and vma_can_merge() and update the
+merge logic to use the former.
 
-Drivers are permitted to change the owning file of a mapping. If they do
-so, they are required to take a reference on that file.
+This abstracts the check and expresses it in terms of the desired behaviour
+rather than an arbitrary and confusing VMA flag.
 
-The mmap() operation which ultimately invokes __mmap_region() is guaranteed
-to drop the refcount for the original file the mapping was made under, but
-this is not true for the replaced file.
+This also lays the groundwork for making further improvements in VMA flag
+usage.
 
-This has been addressed so far by tracking map->file_doesnt_need_get, which
-is rather poorly named and unfortunately fails to correctly track whether
-or not an additional put were needed in a number of cases.
+Also update the userland VMA tests to reflect the change.
 
-Make life easier by removing this flag, and instead drop the reference for
-both mmap_prepare and the deprecated mmap callback in a new function
-map_put_vm_file().
+No functional change intended.
 
-Track whether this needs to be done by aligning mmap_state with
-vm_area_desc and store the original file in the map->file field, keeping
-the updated file in map->vm_file.
-
-In order to have the same behaviour for both types of hooks, only drop the
-reference __mmap_new_file_vma() itself took in its error path, deferring
-the replaced file's reference to map_put_vm_file().
-
-To make this work correctly, map->vm_file has to be updated before any
-error handling, so update __mmap_new_file_vma() and call_mmap_prepare() to
-set this field first.
-
-Also when mmap_prepare() changes the file and is then merged, the reference
-count also must be decremented, so update the logic to call
-map_put_vm_file() in this case too.
-
-Also update __compat_vma_mmap() to manually perform this step for stacked
-file systems using the compatibility layer, and update
-compat_set_vma_from_desc() to replace vma_set_file() with a correct
-refcount/file update.
-
-No in-tree driver is impacted by the incorrect implementation of this
-currently (no driver that does this is mergeable for one), so this does not
-need to be a fix.
-
+Reviewed-by: Gregory Price (Meta) <gourry@gourry.net>
+Reviewed-by: Zi Yan <ziy@nvidia.com>
 Reviewed-by: Suren Baghdasaryan <surenb@google.com>
+Acked-by: David Hildenbrand (Arm) <david@kernel.org>
 Signed-off-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
 ---
- mm/internal.h |  1 +
- mm/util.c     |  5 +++-
- mm/vma.c      | 83 +++++++++++++++++++++++++++++++++++------------------------
- mm/vma.h      |  6 +++--
- 4 files changed, 59 insertions(+), 36 deletions(-)
+ include/linux/mm.h              | 21 +++++++++++++++++++++
+ mm/vma.c                        | 19 +++++++++++--------
+ tools/testing/vma/include/dup.h |  5 +++++
+ 3 files changed, 37 insertions(+), 8 deletions(-)
 
-diff --git a/mm/internal.h b/mm/internal.h
-index 0dca33db068f..fe576d468af4 100644
---- a/mm/internal.h
-+++ b/mm/internal.h
-@@ -7,6 +7,7 @@
- #ifndef __MM_INTERNAL_H
- #define __MM_INTERNAL_H
+diff --git a/include/linux/mm.h b/include/linux/mm.h
+index 969594074fd2..68250ece4219 100644
+--- a/include/linux/mm.h
++++ b/include/linux/mm.h
+@@ -1612,6 +1612,27 @@ static inline bool vma_is_shared_maywrite(const struct vm_area_struct *vma)
+ 	return is_shared_maywrite(&vma->flags);
+ }
  
-+#include <linux/file.h>
- #include <linux/fs.h>
- #include <linux/khugepaged.h>
- #include <linux/mm.h>
-diff --git a/mm/util.c b/mm/util.c
-index bf0513d1d3d0..016932780925 100644
---- a/mm/util.c
-+++ b/mm/util.c
-@@ -1228,8 +1228,11 @@ int __compat_vma_mmap(struct vm_area_desc *desc,
- 
- 	/* Perform any preparatory tasks for mmap action. */
- 	err = mmap_action_prepare(desc);
--	if (err)
-+	if (err) {
-+		if (desc->vm_file != vma->vm_file)
-+			fput(desc->vm_file);
- 		return err;
-+	}
- 	/* Update the VMA from the descriptor. */
- 	compat_set_vma_from_desc(vma, desc);
- 	/* Complete any specified mmap actions. */
++/**
++ * vma_flags_can_merge() - Do the specified VMA flags permit the VMA to be
++ * merged with another?
++ * @flags: The VMA flags to test.
++ * Returns: true if the flags permit merging, false otherwise.
++ */
++static inline bool vma_flags_can_merge(const vma_flags_t *flags)
++{
++	return !vma_flags_test_any_mask(flags, VMA_SPECIAL_FLAGS);
++}
++
++/**
++ * vma_can_merge() - Do @vma's flags permit it to be merged with another VMA?
++ * @vma: The VMA to test.
++ * Returns: true if the flags permit merging, otherwise false.
++ */
++static inline bool vma_can_merge(const struct vm_area_struct *vma)
++{
++	return vma_flags_can_merge(&vma->flags);
++}
++
+ /**
+  * vma_kernel_pagesize - Default page size granularity for this VMA.
+  * @vma: The user mapping.
 diff --git a/mm/vma.c b/mm/vma.c
-index 55917d097933..c27aea6d58d9 100644
+index c27aea6d58d9..8f8c554d5c07 100644
 --- a/mm/vma.c
 +++ b/mm/vma.c
-@@ -24,7 +24,8 @@ struct mmap_state {
- 		vm_flags_t vm_flags;
- 		vma_flags_t vma_flags;
- 	};
--	struct file *file;
-+	struct file *file;	/* mmap()-specified file. */
-+	struct file *vm_file;	/* May be updated by mmap_prepare. */
- 	pgprot_t page_prot;
+@@ -924,13 +924,14 @@ static __must_check struct vm_area_struct *vma_merge_existing_range(
  
- 	/* User-defined fields, perhaps updated by .mmap_prepare(). */
-@@ -43,8 +44,6 @@ struct mmap_state {
+ 	vmg->state = VMA_MERGE_NOMERGE;
  
- 	/* Determine if we can check KSM flags early in mmap() logic. */
- 	bool check_ksm_early :1;
--	/* If .mmap_prepare changed the file, we don't need to pin. */
--	bool file_doesnt_need_get :1;
- };
- 
- #define MMAP_STATE(name, mm_, vmi_, addr_, len_, pgoff_, anon_pgoff_, vma_flags_, file_) \
-@@ -58,6 +57,7 @@ struct mmap_state {
- 		.pglen = PHYS_PFN(len_),				\
- 		.vma_flags = vma_flags_,				\
- 		.file = file_,						\
-+		.vm_file = file_,					\
- 		.page_prot = vma_flags_to_page_prot(vma_flags_),	\
- 	}
- 
-@@ -70,7 +70,7 @@ struct mmap_state {
- 		.vma_flags = (map_)->vma_flags,				\
- 		.pgoff = (map_)->pgoff,					\
- 		.anon_pgoff = (map_)->anon_pgoff,			\
--		.file = (map_)->file,					\
-+		.file = (map_)->vm_file,				\
- 		.prev = (map_)->prev,					\
- 		.middle = vma_,						\
- 		.next = (vma_) ? NULL : (map_)->next,			\
-@@ -2447,7 +2447,7 @@ void mm_drop_all_locks(struct mm_struct *mm)
-  */
- static bool accountable_mapping(struct mmap_state *map)
- {
--	const struct file *file = map->file;
-+	const struct file *file = map->vm_file;
- 
++	if (!vma_flags_can_merge(&vmg->vma_flags))
++		return NULL;
  	/*
- 	 * hugetlb has its own accounting separate from the core VM
-@@ -2496,7 +2496,7 @@ static void vms_abort_munmap_vmas(struct vma_munmap_struct *vms,
- 
- static void update_ksm_flags(struct mmap_state *map)
- {
--	map->vma_flags = ksm_vma_flags(map->mm, map->file, map->vma_flags);
-+	map->vma_flags = ksm_vma_flags(map->mm, map->vm_file, map->vma_flags);
- }
- 
- static void set_desc_from_map(struct vm_area_desc *desc,
-@@ -2506,7 +2506,7 @@ static void set_desc_from_map(struct vm_area_desc *desc,
- 	desc->end = map->end;
- 
- 	desc->pgoff = map->pgoff;
--	desc->vm_file = map->file;
-+	desc->vm_file = map->vm_file;
- 	desc->vma_flags = map->vma_flags;
- 	desc->page_prot = map->page_prot;
- }
-@@ -2586,6 +2586,10 @@ static int __mmap_setup(struct mmap_state *map, struct vm_area_desc *desc,
- 	return 0;
- }
- 
-+static bool map_same_file(struct mmap_state *map)
-+{
-+	return map->vm_file == map->file;
-+}
- 
- static int __mmap_new_file_vma(struct mmap_state *map,
- 			       struct vm_area_struct *vma)
-@@ -2593,20 +2597,23 @@ static int __mmap_new_file_vma(struct mmap_state *map,
- 	struct vma_iterator *vmi = map->vmi;
- 	int error;
- 
--	vma->vm_file = map->file;
--	if (!map->file_doesnt_need_get)
--		get_file(map->file);
-+	vma->vm_file = map->vm_file;
-+	if (map_same_file(map))
-+		get_file(map->vm_file);
- 
--	if (!map->file->f_op->mmap)
-+	if (!map->vm_file->f_op->mmap)
- 		return 0;
- 
- 	error = mmap_file(vma->vm_file, vma);
-+	map->vm_file = vma->vm_file;
-+
- 	if (error) {
- 		UNMAP_STATE(unmap, vmi, vma, vma->vm_start, vma->vm_end,
- 			    map->prev, map->next);
--		fput(vma->vm_file);
--		vma->vm_file = NULL;
-+		if (map_same_file(map))
-+			fput(map->vm_file);
- 
-+		vma->vm_file = NULL;
- 		vma_iter_set(vmi, vma->vm_end);
- 		/* Undo any partial mapping done by a device driver. */
- 		unmap_region(&unmap);
-@@ -2623,7 +2630,6 @@ static int __mmap_new_file_vma(struct mmap_state *map,
- 			!vma_flags_test(&map->vma_flags, VMA_MAYWRITE_BIT) &&
- 			vma_test(vma, VMA_MAYWRITE_BIT));
- 
--	map->file = vma->vm_file;
- 	map->vma_flags = vma->flags;
- 
- 	return 0;
-@@ -2631,7 +2637,7 @@ static int __mmap_new_file_vma(struct mmap_state *map,
- 
- static void map_set_anon(struct mmap_state *map)
- {
--	map->file = NULL;
-+	map->vm_file = NULL;
- 	map->vm_ops = NULL;
- 	map->pgoff = map->addr >> PAGE_SHIFT;
- }
-@@ -2643,7 +2649,7 @@ static bool map_is_private(const struct mmap_state *map)
- 
- static bool map_is_anon(const struct mmap_state *map)
- {
--	return map_is_private(map) && !map->file;
-+	return map_is_private(map) && !map->vm_file;
- }
- 
- /*
-@@ -2688,7 +2694,7 @@ static int __mmap_new_vma(struct mmap_state *map, struct vm_area_struct **vmap,
- 	}
- 
- 	/* Invoke callbacks. */
--	if (map->file)
-+	if (map->vm_file)
- 		error = __mmap_new_file_vma(map, vma);
- 	else if (!is_anon)
- 		error = shmem_zero_setup(vma);
-@@ -2797,11 +2803,15 @@ static int call_mmap_prepare(struct mmap_state *map,
- 	int err;
- 
- 	/* Invoke the hook. */
--	err = vfs_mmap_prepare(map->file, desc);
-+	err = vfs_mmap_prepare(map->vm_file, desc);
- 	if (err)
- 		return err;
- 
--	/* It's invalid for mmap_preprare hooks to clear vm_ops. */
-+	/* Update first so file refcount tracked correctly. */
-+	if (desc->vm_file != map->vm_file)
-+		map->vm_file = desc->vm_file;
-+
-+	/* It's invalid for mmap_prepare hooks to clear vm_ops. */
- 	if (!desc->vm_ops)
- 		return -EINVAL;
- 
-@@ -2811,10 +2821,6 @@ static int call_mmap_prepare(struct mmap_state *map,
- 
- 	/* Update fields permitted to be changed. */
- 	map->pgoff = desc->pgoff;
--	if (desc->vm_file != map->file) {
--		map->file_doesnt_need_get = true;
--		map->file = desc->vm_file;
--	}
- 	map->vma_flags = desc->vma_flags;
- 	map->page_prot = desc->page_prot;
- 	/* User-defined fields. */
-@@ -2826,7 +2832,7 @@ static int call_mmap_prepare(struct mmap_state *map,
- 	 * anonymous mappings. Rather than allowing these mappings to be odd
- 	 * outliers, simply make them truly anonymous.
+-	 * If a special mapping or if the range being modified is neither at the
+-	 * furthermost left or right side of the VMA, then we have no chance of
+-	 * merging and should abort.
++	 * If the range being modified is neither at the furthermost left or
++	 * right side of the VMA, then we have no chance of merging and should
++	 * abort.
  	 */
--	if (map_is_private(map) && file_is_dev_zero(map->file))
-+	if (map_is_private(map) && file_is_dev_zero(map->vm_file))
- 		map_set_anon(map);
+-	if (vma_flags_test_any_mask(&vmg->vma_flags, VMA_SPECIAL_FLAGS) ||
+-	    (!left_side && !right_side))
++	if (!left_side && !right_side)
+ 		return NULL;
  
- 	return 0;
-@@ -2845,7 +2851,7 @@ static void set_vma_user_defined_fields(struct vm_area_struct *vma,
-  */
- static bool can_set_ksm_flags_early(struct mmap_state *map)
- {
--	struct file *file = map->file;
-+	struct file *file = map->vm_file;
+ 	if (left_side)
+@@ -1152,9 +1153,11 @@ struct vm_area_struct *vma_merge_new_range(struct vma_merge_struct *vmg)
  
- 	/* Anonymous mappings have no driver which can change them. */
- 	if (!file)
-@@ -2868,6 +2874,20 @@ static bool can_set_ksm_flags_early(struct mmap_state *map)
- 	return false;
- }
+ 	vmg->state = VMA_MERGE_NOMERGE;
  
-+static void map_put_vm_file(struct mmap_state *map)
-+{
-+	/*
-+	 * An error occurred or the VMA was merged.
-+	 *
-+	 * If the file was changed by the driver (which is required to increment
-+	 * the replacement file's reference count), drop its reference count.
-+	 *
-+	 * On error, the caller always drops the original file regardless.
-+	 */
-+	if (map->vm_file && !map_same_file(map))
-+		fput(map->vm_file);
-+}
+-	/* Special VMAs are unmergeable, also if no prev/next. */
+-	if (vma_flags_test_any_mask(&vmg->vma_flags, VMA_SPECIAL_FLAGS) ||
+-	    (!prev && !next))
++	if (!vma_flags_can_merge(&vmg->vma_flags))
++		return NULL;
 +
- static unsigned long __mmap_region(struct file *file, unsigned long addr,
- 		unsigned long len, vma_flags_t vma_flags,
- 		unsigned long pgoff, struct list_head *uf)
-@@ -2922,7 +2942,10 @@ static unsigned long __mmap_region(struct file *file, unsigned long addr,
++	/* VMAs with no prev/next are unmergeable. */
++	if (!prev && !next)
+ 		return NULL;
  
- 	__mmap_complete(&map, vma);
- 
--	if (have_mmap_prepare && allocated_new) {
-+	if (!allocated_new) {
-+		/* Merged, so need to drop refcount. */
-+		map_put_vm_file(&map);
-+	} else if (have_mmap_prepare) {
- 		error = mmap_action_complete(vma, &desc.action,
- 					     /*is_compat=*/false);
- 		if (error)
-@@ -2936,13 +2959,7 @@ static unsigned long __mmap_region(struct file *file, unsigned long addr,
- 	if (map.charged)
- 		vm_unacct_memory(map.charged);
- abort_munmap:
--	/*
--	 * This indicates that .mmap_prepare has set a new file, differing from
--	 * desc->vm_file. But since we're aborting the operation, only the
--	 * original file will be cleaned up. Ensure we clean up both.
--	 */
--	if (map.file_doesnt_need_get)
--		fput(map.file);
-+	map_put_vm_file(&map);
- 	vms_abort_munmap_vmas(&map.vms, &map.mas_detach);
- 	return error;
+ 	can_merge_left = can_vma_merge_left(vmg);
+diff --git a/tools/testing/vma/include/dup.h b/tools/testing/vma/include/dup.h
+index 16c09dac59d9..2fd422789717 100644
+--- a/tools/testing/vma/include/dup.h
++++ b/tools/testing/vma/include/dup.h
+@@ -1647,3 +1647,8 @@ static inline bool file_is_dev_zero(const struct file *file)
+ {
+ 	return file && file->f_op == &zero_fops;
  }
-diff --git a/mm/vma.h b/mm/vma.h
-index e97bd2dfa786..f15faa83f3d6 100644
---- a/mm/vma.h
-+++ b/mm/vma.h
-@@ -394,8 +394,10 @@ static inline void compat_set_vma_from_desc(struct vm_area_struct *vma,
- 
- 	/* Mutable fields. Populated with initial state. */
- 	vma_set_pgoff(vma, desc->pgoff);
--	if (desc->vm_file != vma->vm_file)
--		vma_set_file(vma, desc->vm_file);
-+	if (desc->vm_file != vma->vm_file) {
-+		fput(vma->vm_file);
-+		vma->vm_file = desc->vm_file;
-+	}
- 	vma->flags = desc->vma_flags;
- 	vma->vm_page_prot = desc->page_prot;
- 
++
++static inline bool vma_flags_can_merge(const vma_flags_t *flags)
++{
++	return !vma_flags_test_any_mask(flags, VMA_SPECIAL_FLAGS);
++}
 
 -- 
 2.55.0
