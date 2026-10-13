@@ -1,35 +1,34 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E87451AEE0;
-	Tue, 13 Oct 2026 15:16:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C008D5187F5;
+	Tue, 13 Oct 2026 15:17:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791904595; cv=none; b=jaryEB/SYeYwzOBn/wGi5kGB1UElYTyMre/SoKa7zJm6LpRqGGm/MG0K8sb9BKS153cwPoxtXeI+YipJ7jQ9YZ/q+YeAiLg0f+3qz3NXDOK1nH21IVyk/0RlDCB3xrP727eNHwnDR8bp+sFhZO7Vb7etf9y5NBXrRM0PckoEfuM=
+	t=1791904626; cv=none; b=EGsUFvVHoLq8ZvWpAq0z18WgC4cgxq3SXOjmZRGxsDDID4cve93MVpc5Wu9LGYOg/M/vBk3TdSejK/TcS0Q/hf2X7yBH58SReBr6G2+691em66jxLNRZsit88SVOk8gxA+IErP6e6kVhUmOue2HXh2KetdwQMGJV+8f+HKZaZdI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791904595; c=relaxed/simple;
-	bh=MY9UuAl0nfMrM4GSY6SwItqCUTxM/pJjBHtqUqIj4oQ=;
+	s=arc-20240116; t=1791904626; c=relaxed/simple;
+	bh=0md27Wyz/h5BdZQhHemsaPOn7ZTCaX/gxM29oSjEsUg=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=INNPxDmBdlG0fU2bdkF0tFljDLWjODty+uTOwzl8KoaPzXa8Lj1pC/cXplAWSzlK5BpnqeQt80D1mJXTJrg014hWmunVHDVU28Uhnt5gjRBsPQG+Pvi+MWw5bQN6WiTcahSsnZs7hAIUFd/0jqzgBVKn//SI06D5FDigp6PNDaA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PV5aBdva; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:To:Cc; b=kklmlorlCTY9Xf1WHmZitziS7drRtdjEVplb1M1s/6h/ZJCHtMpCMk1UqYI224AwaU5GDPenAgRm7ECCKRX34KK3J7PoPAvS2f3ctL/6easrf2bFrrwkIWB4KxcaB/xfXrGn7d86xJ/TcR7Sak23STN51+c5If3XPUWzrDWoWOM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iibnrfTR; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PV5aBdva"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B3CEB1F000FF;
-	Tue, 13 Oct 2026 15:16:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iibnrfTR"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 834FD1F00893;
+	Tue, 13 Oct 2026 15:16:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791904594;
-	bh=i4y1sz7ZVghomqASsiy9XjZk1iqHWnAgN1nUm45xiCg=;
+	s=k20260515; t=1791904625;
+	bh=FS0+hVaAs1leiq/YTrMeyQe/03tIpKfjtoNv7HK1mBc=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=PV5aBdvadH0SfHvKhSrJFwpI31/6TLnUPl2tF4inkGRjH2ijS95fbUwXttmLzcpNF
-	 5YVTNWNyE258rCi9csqPX0Vj3cl9jaUDTYbMJFqgtmVLV19Z7aozriIyOun6cOX4CA
-	 Uqu8rE7sCZr4z3nz4Kzn2wrrCdQCFfiLVbmodNsFAGB1+jJbDNaURDMI061vbNIp7A
-	 9SZegYRQAPKdv3I+JM3iXh765idzGneUCjN998P+vvPrKb4ofuLC3QTcRU0UWm0cTM
-	 2Aj3jBmQzN+qkgGPCcVlhU/BclKU4af39C0cIrIexLOcaqP3dxowDtNAZxqEI9H8iS
-	 yN5UVLyQAcdhA==
+	b=iibnrfTRgId/HSv8NGAIWzkVXt0M+QgU6ki93Fl+1MsM9iumr0D7YPWQRosECMtuT
+	 43Lc01ci6ifVs6GKljeO4OfChmKOCA7KxZEGTzCWsIpYXX7PNfs0ff7Uf2oYnxsVaF
+	 rQ1Cl21vi6GHx72+cRZQJ8chk7nK02H1fMmutx2XIXfhN4vESypf1ueV2rUMQbP7IK
+	 unK137QJewwACWG9pqkRmEcPNcuvyYkNTMK31E+Pjm7LSTIJT+EsAPWPk+VqgzdS2s
+	 K/bo6+wYJUz6T8Mxf1jq5TqvRiOMuaIKitHs63G63K2AD2+zcyIORFh38oS3Z+uajN
+	 LfT4byun/OrAA==
 From: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
-Date: Tue, 13 Oct 2026 16:05:00 +0100
-Subject: [PATCH v6 20/39] HSI: cmt_speech: convert mmap hook to
- mmap_prepare, refactor
+Date: Tue, 13 Oct 2026 16:05:01 +0100
+Subject: [PATCH v6 21/39] mm/gup: error out early on !VMA_MAYREAD_BIT VMAs
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -38,7 +37,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261013-b4-mmap-prepare-vma-flag-sanify-v6-20-1aa3c9b139f9@kernel.org>
+Message-Id: <20261013-b4-mmap-prepare-vma-flag-sanify-v6-21-1aa3c9b139f9@kernel.org>
 References: <20261013-b4-mmap-prepare-vma-flag-sanify-v6-0-1aa3c9b139f9@kernel.org>
 In-Reply-To: <20261013-b4-mmap-prepare-vma-flag-sanify-v6-0-1aa3c9b139f9@kernel.org>
 To: Andrew Morton <akpm@linux-foundation.org>, 
@@ -123,95 +122,56 @@ Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org,
  fuse-devel@lists.linux.dev, Ihor Solodrai <ihor.solodrai@linux.dev>, 
  Bert Karwatzki <spasswolf@web.de>, "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2685; i=ljs@kernel.org;
- h=from:subject:message-id; bh=MY9UuAl0nfMrM4GSY6SwItqCUTxM/pJjBHtqUqIj4oQ=;
- b=owGbwMvMwCV2fu7ZrsZH9SKMp9WSGLLOeZy6kXSgTuanGnvKJJENNyOu/UwUsd+bw7y5x6TbY
- u5UgX2fO0pZGMS4GGTFFFmefxHfHyQSNq/zgr8bzBxWJpAhDFycAjCR+zUM/zQvH7vAej3kqe3+
- bfVvFVQDI1RbnR7ofOBZnLM9W+V/pB8jw0Nhvv3x24xm9HZqz/rgs192a1lrRdjTt8lfVzDsibP
- dwwAA
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1431; i=ljs@kernel.org;
+ h=from:subject:message-id; bh=0md27Wyz/h5BdZQhHemsaPOn7ZTCaX/gxM29oSjEsUg=;
+ b=owGbwMvMwCV2fu7ZrsZH9SKMp9WSGLLOeZySXqetzeuxf/1j2853HCai9x52m02XuWR77Uofz
+ 7v9f53udJSyMIhxMciKKbI8/yK+P0gkbF7nBX83mDmsTCBDGLg4BWAizfsZGd6feMqTOO/U6e2P
+ PkbEXD5/qHxW/P613P7PnXuLTwZv6v3D8D+8+eDCC+asFQeuKVncEp5+ftJOjj3F9dvbbvLvZtD
+ 1d2cHAA==
 X-Developer-Key: i=ljs@kernel.org; a=openpgp;
  fpr=E7F417BF5214569E89D04F46CF9DCD8A81E27F14
 
-Use the mmap_prepare in favour of the deprecated mmap hook as part of the
-work to convert one to another.
+When populating a VMA range via the aptly named populate_vma_page_range()
+an unreadable VMA will always eventually fail with -EFAULT.
 
-Since this is simply a refcounted kernel page that has been allocated, it
-should not be marked VM_IO and should be inserted using the kernel page
-insertion mechanism, so convert it to do this instead.
+That a VMA is accessible is always checked, however VMA_MAYREAD_BIT is not.
 
-Use the VMA descriptor's private data field as a scratch buffer to store
-the page in - this stays valid throughout the kernel page mapping
-operation.
+All user mappings always have VMA_MAYREAD_BIT set, so this check only
+impacts kernel mappings.
 
+It is implemented specifically to disallow population of uprobes XOL
+mappings which are exec-only.
+
+A nasty interaction with these mappings may occur if they are mlocked, so
+actively disallow this early.
+
+This allows a subsequent commit to remove the VM_IO check in
+__mm_populate() which otherwise requires non-MMIO mappings to be wrongly
+flagged simply as a workaround.
+
+Acked-by: Zi Yan <ziy@nvidia.com>
 Reviewed-by: Suren Baghdasaryan <surenb@google.com>
+Acked-by: David Hildenbrand (Arm) <david@kernel.org>
 Signed-off-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
 ---
- drivers/hsi/clients/cmt_speech.c | 33 +++++++++------------------------
- 1 file changed, 9 insertions(+), 24 deletions(-)
+ mm/gup.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/hsi/clients/cmt_speech.c b/drivers/hsi/clients/cmt_speech.c
-index 7226677ebde7..801697b74d4f 100644
---- a/drivers/hsi/clients/cmt_speech.c
-+++ b/drivers/hsi/clients/cmt_speech.c
-@@ -1084,22 +1084,6 @@ static void cs_hsi_stop(struct cs_hsi_iface *hi)
- 	kfree(hi);
- }
+diff --git a/mm/gup.c b/mm/gup.c
+index c2dfcb4744bc..e6310a7cc05b 100644
+--- a/mm/gup.c
++++ b/mm/gup.c
+@@ -1836,6 +1836,10 @@ long populate_vma_page_range(struct vm_area_struct *vma,
+ 	if (!vma_is_accessible(vma))
+ 		return -EFAULT;
  
--static vm_fault_t cs_char_vma_fault(struct vm_fault *vmf)
--{
--	struct cs_char *csdata = vmf->vma->vm_private_data;
--	struct page *page;
--
--	page = virt_to_page((void *)csdata->mmap_base);
--	get_page(page);
--	vmf->page = page;
--
--	return 0;
--}
--
--static const struct vm_operations_struct cs_char_vm_ops = {
--	.fault	= cs_char_vma_fault,
--};
--
- static int cs_char_fasync(int fd, struct file *file, int on)
- {
- 	struct cs_char *csdata = file->private_data;
-@@ -1256,18 +1240,19 @@ static long cs_char_ioctl(struct file *file, unsigned int cmd,
- 	return r;
- }
- 
--static int cs_char_mmap(struct file *file, struct vm_area_struct *vma)
-+static int cs_char_mmap_prepare(struct vm_area_desc *desc)
- {
--	if (vma->vm_end < vma->vm_start)
--		return -EINVAL;
-+	struct file *file = desc->file;
-+	struct cs_char *csdata = file->private_data;
-+	struct page **pages = (struct page **)&desc->private_data;
- 
--	if (vma_pages(vma) != 1)
-+	if (vma_desc_pages(desc) != 1)
- 		return -EINVAL;
- 
--	vm_flags_set(vma, VM_IO | VM_DONTDUMP | VM_DONTEXPAND);
--	vma->vm_ops = &cs_char_vm_ops;
--	vma->vm_private_data = file->private_data;
-+	vma_desc_set_flags(desc, VMA_DONTDUMP_BIT, VMA_DONTEXPAND_BIT);
- 
-+	*pages = virt_to_page((void *)csdata->mmap_base);
-+	mmap_action_map_kernel_pages_full(desc, pages);
- 	return 0;
- }
- 
-@@ -1353,7 +1338,7 @@ static const struct file_operations cs_char_fops = {
- 	.write		= cs_char_write,
- 	.poll		= cs_char_poll,
- 	.unlocked_ioctl	= cs_char_ioctl,
--	.mmap		= cs_char_mmap,
-+	.mmap_prepare	= cs_char_mmap_prepare,
- 	.open		= cs_char_open,
- 	.release	= cs_char_release,
- 	.fasync		= cs_char_fasync,
++	/* Unreadable VMAs also cannot be faulted in. */
++	if (!vma_test(vma, VMA_MAYREAD_BIT))
++		return -EFAULT;
++
+ 	gup_flags = FOLL_TOUCH;
+ 	/*
+ 	 * We want to touch writable mappings with a write fault in order
 
 -- 
 2.55.0
