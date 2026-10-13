@@ -1,176 +1,139 @@
-Received: from OSPPR02CU001.outbound.protection.outlook.com (mail-norwayeastazon11013004.outbound.protection.outlook.com [40.107.159.4])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0A6D4FECC6;
-	Tue, 13 Oct 2026 14:28:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.159.4
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791901727; cv=fail; b=uCBhq4mK9n84IXQejaDh8BMItfC/qQY+GLdajRu+4Ucchyu2i7fkQg9g6sKKTDYO2+PiNbs0oUEhSB9eR3fYyUSrvIW9WbxZjIX9cFGtZvYJTqoPnqbRCJ9Z1MwBNDihdEGUq5l3bePcPOZvWoZKiFiC35qrr18B3e5OKjGmpL8=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791901727; c=relaxed/simple;
-	bh=NzbPvfko9mJHlR6MloBEG4ttJmFfB0gmHH63UWo9klA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=CDZTCClNRNZZ8PMSRU8jnlIDN0pw5vH02VNtd1S2t50LLkiXOyxV4I2rXDttBfaecEwHSi1DT/4Pxu7sL3o/IQS8KO6SjE1KHC5HU0WqRsmpCJcijR5sg3G7Svz9QDbVa4E9s4CBQZvltT5dF0o6AJTll6kQ5Tz2pRayAJokKoo=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com; spf=pass smtp.mailfrom=oss.nxp.com; dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b=FiBAWxYs; arc=fail smtp.client-ip=40.107.159.4
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B8CE50B8B9
+	for <linux-scsi@vger.kernel.org>; Tue, 13 Oct 2026 15:04:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.180
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1791903888; cv=none; b=rRgZ5p1ZrX1EznICv9mYhiYMeGcfuX21Bd5LpNqI1h14q2mHR2zvRmO2oXLhkLuuMoSLGW7PJfe0qdOJWP4LZyy2VBTNJZGKFZD4EIJw8a7RrAK3j+lk4RrRHeaHBelE3F0kQzTMIFbfbncU0wU2iXo04V15mf1OkrPSQ7vPSSw=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1791903888; c=relaxed/simple;
+	bh=bi8oRlfrRBEJaVuletyP366v4gz/FKhCZMXrwV4xcfQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Q1nMjBrnnYVZo5SQTPASwyJvRi/R5PtlaQqs/EB3zuoYXnzZ+Mo3xjpf/2eVeJ+1n0zyMVB+jCpZBYMs738XyXHB11ZilxaRDfYYR5FWEKGg8F1zy9rPlwRK6zK6q5CKDO0HIkRQyHeQWiUkURvnsJbGT7JCxWGSnZRXfNuQjRs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr; spf=none smtp.mailfrom=isslab.korea.ac.kr; dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b=rbuo6Zff; arc=none smtp.client-ip=209.85.214.180
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b="FiBAWxYs"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=JIbNuozZ8/HsN0Td2/jzG4zDTOggDIr7OIvNS83hjwaisiJSDMc52pfzxtOzkkLFhheTwCZf7mUuQY8M6tm80uKr3gfNko2PjuvQjtY3eo6qMVZYpW9ENCFfu2bbRM2vFk+w0UqyI4zZpgJt8ZXhR2y+wPdqZWFVfJ435tD1MILsIXIPkjXDZTCS3s+EewR16YCZFHnyyUbAih32VN/3bN6Y/EHmNBEKSIIl83eV+VlGP6GZG/04otVrAx4KyEGyT1cKwiTsUA9YonOaws/IaXcTVccl/nHLRA4lHbVXl6OHQGXinuKyjyPaybEB6qG/dBwn821WfQ15Gnoy4kQNkQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=3pLo9lY+u75xnHcjIomzvUwdQblmUnS1Jvrgunj3Jzg=;
- b=KlH8mv5vcHCNk60TqtD4+wxIFSl9o1m9J7DZJvXOwFCsvaZPOHR3EN6hGNAUAtycTMPIcSjAPb0q5ZbQBHN6/bv5kvr/yxP+sbjf5EJdHWoX95mMv5k25ooO/PuXKfTvgXwtYomOHZAdTgTwHFhssiuhpDnyO5iSFWLZAO1w3sVuzAf1kpLOVH6PFWCCeBIF7nwfxLoyAHmjuSd+rjkQk+oeqSNTcP3iewfx7H+qjz21o/F/vGgPP1v1qRrfDql5p6LIPUGl1+S4gGUgXvdnUg3I5H6BMKubuSa43oWER8LpsP+RU3DnF3bFRT3d0i2Ze8yuMto6Kt7jFIqidwzU0w==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
- dkim=pass header.d=oss.nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
- s=selector1-NXP1-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=3pLo9lY+u75xnHcjIomzvUwdQblmUnS1Jvrgunj3Jzg=;
- b=FiBAWxYsb1N56FsLF4qAExkbLO1IK9IkkPEYu/vJ4/b+rDsAPIAKNsLk4cbFfBLW7IrNo1o0lpEi9fpy5smHL+dTmuswMD1i5rLpKXtJ+5pfyegCTEIzjvdg7xlIFV2B7aJ+o2fmkkcuT/iGqNPyOxgj5Cr+vdFcY2Gg5z7yxCY/lTCgm837rzANOc9djtU+IqarJtqUdbS/vcdZGmOJ7nJ7y0unZrSfApo9W1t+0Gc3DQbEsjytX5RDnyO2oywk079H6c5noFe+16W74OQTIjXH81QDfIaSsI3MsjY6eklJQg2pTaAx//OfSToor5OBKFiXluwHFo88fmTqs99xug==
-Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=oss.nxp.com;
-Received: from GV2PR04MB11799.eurprd04.prod.outlook.com (2603:10a6:150:2cf::9)
- by VI1PR04MB6863.eurprd04.prod.outlook.com (2603:10a6:803:12f::9) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.496.23; Tue, 13 Oct
- 2026 14:28:40 +0000
-Received: from GV2PR04MB11799.eurprd04.prod.outlook.com
- ([fe80::2146:83a2:5329:b7c]) by GV2PR04MB11799.eurprd04.prod.outlook.com
- ([fe80::2146:83a2:5329:b7c%7]) with mapi id 15.21.0522.011; Tue, 13 Oct 2026
- 14:28:39 +0000
-Date: Tue, 13 Oct 2026 09:28:20 -0500
-From: Frank Li <Frank.li@oss.nxp.com>
-To: Larisa Grigore <larisa.grigore@oss.nxp.com>
-Cc: NXP S32 Linux Team <s32@nxp.com>, Alim Akhtar <alim.akhtar@samsung.com>,
-	Avri Altman <avri.altman@sandisk.com>,
-	Bart Van Assche <bvanassche@acm.org>, Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>, Frank Li <Frank.Li@nxp.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Pengutronix Kernel Team <kernel@pengutronix.de>,
-	Fabio Estevam <festevam@gmail.com>,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K. Petersen" <mkp@kernel.org>,
-	Sai Krishna Potthuri <sai.krishna.potthuri@amd.com>,
-	Ajay Neeli <ajay.neeli@amd.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Pedro Sousa <pedrom.sousa@synopsys.com>,
-	Hannes Reinicke <hare@suse.de>,
-	Joao Pinto <Joao.Pinto@synopsys.com>, linux-scsi@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	imx@lists.linux.dev, linux-arm-kernel@lists.infradead.org,
-	linux-arm-msm@vger.kernel.org, clizzi@redhat.com,
-	aruizrui@redhat.com, eballetb@redhat.com, echanude@redhat.com
-Subject: Re: [PATCH v8 12/12] MAINTAINERS: Add NXP S32N7 UFS host controller
- entry
-Message-ID: <as5ABOqo2MTgQBs3@SMW015318>
-References: <20261013103003.373156-1-larisa.grigore@oss.nxp.com>
- <20261013103003.373156-13-larisa.grigore@oss.nxp.com>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261013103003.373156-13-larisa.grigore@oss.nxp.com>
-X-ClientProxiedBy: PH0PR07CA0120.namprd07.prod.outlook.com
- (2603:10b6:510:4::35) To GV2PR04MB11799.eurprd04.prod.outlook.com
- (2603:10a6:150:2cf::9)
+	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b="rbuo6Zff"
+Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-2e623eda81cso18725605ad.0
+        for <linux-scsi@vger.kernel.org>; Tue, 13 Oct 2026 08:04:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=isslab-korea-ac-kr.20251104.gappssmtp.com; s=20251104; t=1791903885; x=1792508685; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=1t4kFfs6QniDgJn2gFawB3EB0+cBfYe4gG9Y5fNmRL4=;
+        b=rbuo6ZffI5hm9aeWJO1aldLH5YyotCW+z+ePKyL6YBUsPKB4eSZ0bl0LbhdI4TDdRX
+         TBKFi716wvdQydQ4Ep372RJ8y3j2XmWpJTbkVnicGMvneA8ZR8HEJT6NFJqFEceMGkEs
+         qZvBRVFaweIA5lsrlSW2oZ3h35qxn0MZjuubdLQ+vASV5ctkqVFCBSBzFL0OimurbQ0n
+         pKBHlcjQoWTr6cS6yFIrhuLmuymuZGmvo+GC34FfjvYq5Ie1kpk8uWYn0EHZU48ibZF7
+         5Hr0v/kWeLj3su0ALINzITYo+ldDNB2qTFRE+Ini5mbMIc7CHjfrfIaafsUX/kKXpx7I
+         LNOA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791903885; x=1792508685;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=1t4kFfs6QniDgJn2gFawB3EB0+cBfYe4gG9Y5fNmRL4=;
+        b=WYqDt1vAyUu4LjuFShTtFoVTclPsZBr8U9cHLcPLfx/JWK+ZiV6GI/CbHky2Hcb+kS
+         FcR0UT3djPys2E2rGYZ0XtaRoezxi4TRJ5guLa7fqkLG4uOHfRiYkGJ/s/ohNn+MDxrG
+         +lVcLEqIj+cGX1u0iMZ5OqWRC2Tc/VDeYTGStD92vn9Fu0PFIWC+DCMEZn/BK4Eu1ehQ
+         maCFawLvFbjWpe2z3z1SdJFFeUBwTNwbE0PC5pq5rgfK/KNt+Uxl+bCKO/kgQoZJNYt3
+         rMw/pgCcEIDZAzIV0d4h0JQg9eBtNLLT07mb/N/ERKBbIfmD+pBTZ0Fl/pJEMS2Wooni
+         7OEQ==
+X-Gm-Message-State: AFq9FYJf8Cq2T8k0afKt0MqPqCoBrlqF8z28KPkSqenGCW+G3tdjyxw3
+	hWSWBvBErnfHQu3zRcsBzfgyw2PS+2nm9WabU64+PWTU9+jRVcnoEYYtAnnCbnbcxLE=
+X-Gm-Gg: AYBFou07Qup9uLZm8pjIPg5g58/GkBBQCb65JWMc2tD5dvvHiabYAvlBCH8W4FDAKM3
+	Uk5YyT1fKckYMAzWpee2OcIGn7m+j3BOWNcwb1tsIOPXmOqA9i7EzJl+pOJecc9oelXQNLpVIcP
+	+MSoYgF0PFcQ0vAjQo/9lnknfP6hDtJeg9fIXN4Xx+lv/o+lfusrOCFIzOWnRDZg37JWwhga+l+
+	lZ+tfyvidIVqYom1U6ztg/vSSrRkqUFpHoQjMkDzRUWVEWONrj0LtJpwapuN/l3RYhnym+zRlrE
+	JgW+qACdtYy9qvIpj5afXXrGNB//E0laBC0iFYUZjvBwwTWFFIm2NdGZcnyuI1/ISB1sj+iJZ/y
+	z8GnobV9ZLrutKXpjaQk6jFpju49QSpVDbHbBy0beUiiFchrLxTW0Wa0c8BO4iGbNGzXF01fOYy
+	Wmwbzjb443bXykmwW7DV78eYVmKmLBBBqHczh63h57HV3jPbQ+PeQDHCMFirz34TeHEZEcG7eYO
+	H5UCNfuhr7XIk17f8rs
+X-Received: by 2002:a17:903:19cf:b0:2e2:d834:a40f with SMTP id d9443c01a7336-2e842837a49mr114138425ad.9.1791903884642;
+        Tue, 13 Oct 2026 08:04:44 -0700 (PDT)
+Received: from localhost.localdomain ([2406:5900:1044:110c:c51c:be8a:c517:276])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2e8422b8c57sm60302265ad.53.2026.10.13.08.04.41
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 13 Oct 2026 08:04:43 -0700 (PDT)
+From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+To: "Martin K . Petersen" <mkp@kernel.org>,
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+	Adaptec OEM Raid Solutions <aacraid@microsemi.com>
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org,
+	yhlee@isslab.korea.ac.kr
+Subject: [PATCH v2] scsi: aacraid: bound the SRB sense data copy to the source buffer
+Date: Wed, 14 Oct 2026 00:04:20 +0900
+Message-ID: <20261013150420.3168223-1-yhlee@isslab.korea.ac.kr>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: GV2PR04MB11799:EE_|VI1PR04MB6863:EE_
-X-MS-Office365-Filtering-Correlation-Id: 15557135-2374-4eba-a70a-08df2936462b
-X-LD-Processed: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635,ExtAddr
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
- BCL:0;ARA:13230040|23010399003|1800799024|19092799006|7416014|376014|366016|10067099003|261009223027099003|4143699003|11063799006|56012099006|22082099003|18002099003;
-X-Microsoft-Antispam-Message-Info:
- ZWJ5c10TcZrduaEG3g+j0dDoz7YkU11GluaxpQ1bqEssNKHvZ65OhPUH3/C6xxhsEv8mDJEQ8CotdgbYlonnHPtVDZ8S9PFt/srgrZkCgrCVrCw1T5Zlizx4Y08EPkEozBXml6jaZXbp04P0pOv1TxW6rGD1OtgsL9HlNfL3cOm17FFQbB4mT9b2mWsPXJh4EQceSS0d6TJ7PUpISyl9j/eICv1zNBFmoTEgSDg+SXIgD+9E+5OQyEvUKfLUkA5RF3UcGWQr4h/ihrtdqOE8mgn36oU/HSjkpQGaTi5S+GTKOgRrkrzG8Gb6Hd5jF5QXl/JqRD/9eTMLqd0jeL0u0gWTwoZuRAaybcPTvY9TjjXogqgW1CW4vPV3L0XCkmODfI5+pqjhfrG4v3RklIknHONph1E9nrumA10/Gri0E5m+qNu5j0qQSc7cYbmiXt6/8lwrDJIDo9qoh7/rbS9nCl/d3e9MTwTDaHRJ8Pxkc0Jy49BuDotB6g7QP6mRwUDhAYY9y4BorE0LrUtAMGwvWo2S6tNCKa8qyBm0t4sajjqpo+kF+Xq1aNF4INAsGiWV1hyjgOvBqRulVldt74QsKA7Mdw02qeizNcWBiW5Go/Eorbt46LpWNWdfrPMYKeBGXI1ZBkIZNTdXkIrzEvn0L8KaImTkU1+iLKB0Pg7iR+o=
-X-Forefront-Antispam-Report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:GV2PR04MB11799.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(1800799024)(19092799006)(7416014)(376014)(366016)(10067099003)(261009223027099003)(4143699003)(11063799006)(56012099006)(22082099003)(18002099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
- =?us-ascii?Q?bODZqI6lWaUeW2hph4HbaUEs7kFd9zRQnwuvL1E4YsAq7NnGf4J85uOPwiCa?=
- =?us-ascii?Q?CwkMcotRNgZGYNsYUnZ5VaQDB6UtU6WEjSA6dln3npoTGpAjxIWinaPyiq9s?=
- =?us-ascii?Q?oGUrj35vgZPiecDHGxuijfQomrZ8fzfi23uT9fPC4wBwmWAjz+reGwMZH0wO?=
- =?us-ascii?Q?YakbraskMolJXwPHwkj4IrrFm/hDWOJDquKXRYf9hzspgU6EFk+Qdh2HGPIV?=
- =?us-ascii?Q?vU/At8WtgnONkwZiTCi5Vd6D9InFiJXkZSBfOuf5X+z5JYu9X8Jlo6T5rj0b?=
- =?us-ascii?Q?3VIwiRGMNxwjA3RlHG0akEVSxddPT7DmoElwBDeh8E2pU2kR1ioT3H5d96cQ?=
- =?us-ascii?Q?AibMa9oddym0QjlBYQprLCcFURVyRr1bFBRh07C/VrgdIoTuYPAD8IzsJ7dB?=
- =?us-ascii?Q?uCkiQmMD3z4oE5vyvPqyC8cPCeLDswC1QfvEIjBb4mHVX0Z16Yz3zBf6yNEf?=
- =?us-ascii?Q?6RI3oiyr4KLYloRsN9D4/JsU0mODybEJf/0mb+YzOneFF0frn5EmnQiRPs0N?=
- =?us-ascii?Q?F1qaomCXevlZMtglES8hxJZd9ZXRcmeCtMOJ7PKxx8wTmVyZMgoH9vOvAsJ7?=
- =?us-ascii?Q?/LuCIOOFd6Q2GvYhNspQgOfJJmVVFjCKuof2dzrCXnDYzZwgfh3i6M3HJf7f?=
- =?us-ascii?Q?1LPZf7+/xQL3sjpPQp+eSkB0ONI2S+y59CtuJOpjU4dG3GIOxTpVgfD10PAJ?=
- =?us-ascii?Q?HOrbOC57KlZ8m0tN6WKSifc096l33TCivAe065uMtu28KtGFIHnRwJOF4Q1U?=
- =?us-ascii?Q?fUF02p9oHnn0Tdax8gKxk9cDNe+gbEwFsc43cTR/n/fOtzYS9Q6Sg2zXybTp?=
- =?us-ascii?Q?KoOt45nsx+KK6/tv/6elOnQQWnxvTIdsRrG2kiqK1DlOyUchqXyVvpVEvN7+?=
- =?us-ascii?Q?+KnKExyEW2eD/isih9VRr/lsHmy+2RL0XCgYQ7OWj7nfSTi9vSxxI+1ivMu+?=
- =?us-ascii?Q?v4JCr7TFbXuv97eB7GkU6aKUhA1f8xYZgO3viPNGP7s87W6vjjC/Tp3kdfIu?=
- =?us-ascii?Q?jjfOr5gTzQVL/CVYYLQbDbjpPTiCnGMaS0AuiNtKll+aInw6Z0kV8+p2Fvnw?=
- =?us-ascii?Q?7dNd+Eon98eqbHJU7p3M0MtPZcjRRHDocuHu7e5XShz8FDAslbxH/jVqIOsv?=
- =?us-ascii?Q?AJFAov1Qe90CFkImlNvMSxajnBVzpfooywV67qgmB2XBXFD43uozr9r6XLmr?=
- =?us-ascii?Q?FdWcKiI+B/9GEASyblnUNyRyBB8MIL+Ru+GXkno2HLTTzueteL71yI9KhPWe?=
- =?us-ascii?Q?67Zp4EEN7QoAdpLiiI3QPbY0if8jjcCdo8Jti7qOK/cA0iTXVyRnANRrLYRa?=
- =?us-ascii?Q?BG4XBsQnfxjPvKgIV02ehJoDYYXkoBN2TNlnCe8dXDT+92WGQiYF/G77f2Mq?=
- =?us-ascii?Q?Z4BVePcZrzn1snXrBWCxLoMAW2qfRcbWCbnrb+X7QllU1h91+rl0yXzWFXBF?=
- =?us-ascii?Q?6xZc96q7EaCzDWzoZF5Ld241OBPu1CMMOS3Fv+K2hmsKAMqAGXAi48Mdogdc?=
- =?us-ascii?Q?vr/X51zF/phV+zg1/wD1bXHxRrfEQ3KcpfCL+ssmEzmf+n8OIMKsxhJHa9+I?=
- =?us-ascii?Q?0v3cxC/m3k8qKgJsxAAQCgArKtsYe55wsF6m8Uipo7hFyeIVdGfVRDjvVmc0?=
- =?us-ascii?Q?9q3ewVgwztQTn5q3hIOZtOCGNNyStSI2kZnONM24leTOntrBjnXmPso1ao62?=
- =?us-ascii?Q?481RadHJVmnUex/f2RLIGWT58D4GYjNxc1WRYlhxUSoEPZ/RpZaScT/Mkior?=
- =?us-ascii?Q?tqYGD+pPfWTm7wtgSrbdxXc7BN/sGN7kAUgBzyhGWhKlhWom6d3U?=
-X-OriginatorOrg: oss.nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 15557135-2374-4eba-a70a-08df2936462b
-X-MS-Exchange-CrossTenant-AuthSource: GV2PR04MB11799.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Oct 2026 14:28:39.8063
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: k3AP3EX9c6Ciq11Mg30GIjO6/vU0bAN94cWVDXPE4JeiCuH5GGwG2hPlQnc+cOC4Elatdb22c7ffJGroDhmA8YnMDxfWgI5Gl8C9FgpsStPu2/jW9K3LmXHONtQPDa4q
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: VI1PR04MB6863
+Content-Transfer-Encoding: 8bit
 
-On Tue, Oct 13, 2026 at 12:30:03PM +0200, Larisa Grigore wrote:
-> Add maintainer for S32N7 UFS host controller driver.
->
-> Signed-off-by: Larisa Grigore <larisa.grigore@oss.nxp.com>
-> ---
->  MAINTAINERS | 8 ++++++++
->  1 file changed, 8 insertions(+)
->
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index f53047aa8d3c..16f1dbb763cd 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -28119,6 +28119,14 @@ L:	linux-scsi@vger.kernel.org
->  S:	Maintained
->  F:	drivers/ufs/host/ufs-renesas.c
->
-> +UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER S32N7 HOOKS
-> +M:	Larisa Grigore <larisa.grigore@oss.nxp.com>
-> +R:	NXP S32 Linux Team <s32@nxp.com>
-> +L:	linux-scsi@vger.kernel.org
+aac_srb_callback() copies the sense data from an adapter SRB reply into
+the command's sense buffer, using a length that is only capped at
+SCSI_SENSE_BUFFERSIZE (96 bytes).  The source, srbreply->sense_data, is
+AAC_SENSE_BUFFERSIZE (30 bytes), so an adapter that reports a larger
+sense_data_size makes the copy read up to 66 bytes past the sense array.
 
-Please add imx@lists.linux.dev
+The reply is placed in the FIB data area that the outgoing SRB request
+was built in, and that area is not cleared between uses, so the bytes
+past the sense array are the previous request's scatter-gather list --
+DMA addresses and lengths -- which are then handed to user space in the
+sense buffer of a pass-through command.
 
-Frank
+Cap the copy at the size of the source array, matching the container
+sense paths in this driver.
 
-> +S:	Maintained
-> +F:	Documentation/devicetree/bindings/ufs/nxp,s32n79-ufshc.yaml
-> +F:	drivers/ufs/host/ufs-nxp-s32n7.c
-> +
->  UNIWILL LAPTOP DRIVER
->  M:	Armin Wolf <W_Armin@gmx.de>
->  L:	platform-driver-x86@vger.kernel.org
-> --
-> 2.43.0
->
->
+Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+Cc: stable@vger.kernel.org
+Signed-off-by: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+---
+v2:
+- Drop the second patch from v1 (the HBA sense-response copy).  As the
+  review pointed out, struct aac_native_hba backs that response with a
+  512-byte union, so the copy was already within bounds and capping it to
+  the 32-byte sense_response_buf would have truncated valid sense data;
+  only this SRB bound remains.
+- The review also flagged that aac_srb_callback() overwrites, in the
+  srb_status switch that follows, the DID_ERROR it sets on a FIB-level
+  failure.  That is pre-existing and independent of this length change,
+  so it is left untouched here.
+v1: https://lore.kernel.org/linux-scsi/20261013140214.3156938-1-yhlee@isslab.korea.ac.kr/
+
+ drivers/scsi/aacraid/aachba.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
+index df9492247631f..89d8e33517584 100644
+--- a/drivers/scsi/aacraid/aachba.c
++++ b/drivers/scsi/aacraid/aachba.c
+@@ -3418,7 +3418,7 @@ static void aac_srb_callback(void *context, struct fib * fibptr)
+ 		pr_warn("aac_srb_callback: srb failed, status = %d\n",
+ 				le32_to_cpu(srbreply->status));
+ 		len = min_t(u32, le32_to_cpu(srbreply->sense_data_size),
+-			    SCSI_SENSE_BUFFERSIZE);
++			    sizeof(srbreply->sense_data));
+ 		scsicmd->result = DID_ERROR << 16 | SAM_STAT_CHECK_CONDITION;
+ 		memcpy(scsicmd->sense_buffer,
+ 				srbreply->sense_data, len);
+@@ -3544,7 +3544,7 @@ static void aac_srb_callback(void *context, struct fib * fibptr)
+ 
+ 		scsicmd->result |= SAM_STAT_CHECK_CONDITION;
+ 		len = min_t(u32, le32_to_cpu(srbreply->sense_data_size),
+-			    SCSI_SENSE_BUFFERSIZE);
++			    sizeof(srbreply->sense_data));
+ #ifdef AAC_DETAILED_STATUS_INFO
+ 		pr_warn("aac_srb_callback: check condition, status = %d len=%d\n",
+ 					le32_to_cpu(srbreply->status), len);
+
+base-commit: 24a19b953e2a3d0ea5a8c4951a0ab8f32720c907
+-- 
+2.43.0
+
