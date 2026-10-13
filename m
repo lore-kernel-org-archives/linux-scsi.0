@@ -1,111 +1,101 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f177.google.com (mail-pl1-f177.google.com [209.85.214.177])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA388501F55
-	for <linux-scsi@vger.kernel.org>; Tue, 13 Oct 2026 13:39:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 93D7E3C13EE
+	for <linux-scsi@vger.kernel.org>; Tue, 13 Oct 2026 14:02:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791898782; cv=none; b=Ti8jPKuBeE6Tufu1ggeKlYzbLdwL+pPLC93qiD1999wjFw1MOO32wSFF0JXfFxPvutZlS+nYxwLk0NcvNRF19z6/WKkMyZuzsUzQFJUjyEH7iR39VbW9j9C7etmjwIEo8mmnx2MW4mIGYsifPb27nC6Dj9X/9Wmz3wWErkriXCM=
+	t=1791900155; cv=none; b=Quqtmob8kJ+vljP9jk8O38vNrbTEFshbEIj9Xqgz2HRlUbHePlqZgD2K3StAwoIr9eQ8myGOmBUjtXY1iq7hxTGO2abeMUEThooWbrvSy/IsicuBjDzjdsXaPtUR+AM6odtr9gonF2e8aBID4mI7swwckfbSZgKIh4C9ayP+JOY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791898782; c=relaxed/simple;
-	bh=iSlbNbInN2yWdjZ8oUC6DTl96hlZtRJbFDaxMksL+bg=;
-	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
-	 Date; b=jNcdFjI3VRzhDzqybKOvMt6Kx1jrx557ocvhE6fKHUeLwujYAsKRTnlZPYGo7za9tDLwzs/ksynSIYegvIx898A3kkm/R1iJZR5otw966yRMQ8h03ll5gXvt+RbBG1969B4lmg/YFc3yQx8r6PeGmN3JmixlfZO0Yo9aDSUETeU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RB4WyIe6; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791900155; c=relaxed/simple;
+	bh=Tawb0P4WHQbChCm0POAm0vP/OT0i3bQuplGTDM9ziFs=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=B7V2tbfscKSx73STiasd7UGQXQcDxJRl5tsOlXRQiXymp02KCij3aH23XgRWMCjzMMzR7JKCkDy4xgEyUhrQ15KcUerD875JKwgTQAQGthT7YuvXJACiCz7QUWS4IVdE8VZjCa6gvZODtvrLvQfv4woA1HFh+podgeeYVNAVfrA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr; spf=none smtp.mailfrom=isslab.korea.ac.kr; dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b=0wacYjbs; arc=none smtp.client-ip=209.85.214.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RB4WyIe6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 352841F000FF;
-	Tue, 13 Oct 2026 13:39:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791898781;
-	bh=FkMdkNc4FPtDrel0iOM8K6I2Xfehw+ATa2h2uBT4oFc=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=RB4WyIe6D2NC9ypOamqPj27aChOcIsWZQyahyX+JFv2aPP1tqx/sPgkoVM2YDdUYx
-	 HL1NfGpSH3JQIzGFdRxuX4Pju+4LAmnD2SmdsQoiRFp0P6/KoC3DLpSvFlzVc3ZH5y
-	 Ojc4JeWGSUDvGZhkqxovFyWBBG61bIcljK2e2obPNLPG49e1JRJuZVd9CHQacBVbeV
-	 ZWFXeUc0w7I00hGwUzrzb4H+fwlpUQNYYqFbIwjzLA80B78OIvB1UDFFlRp7BJKf0S
-	 2DY133aZqPvJbkscceWEtMzgL6UPewrzrJGRsL5rlojbGwI8uuBOv1fvub91WwZi6t
-	 X85AssuobU5ng==
-Message-ID: <sashiko-outbox-169843@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] scsi: bsg: Pass reply_len to bsg_setup_queue() to fit
- UFS ARPMB replies
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Stanley Jhu" <stanleyjhu@google.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20261013132708.1669415-1-stanleyjhu@google.com>
-References: <20261013132708.1669415-1-stanleyjhu@google.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 13 Oct 2026 13:39:40 +0000
+	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b="0wacYjbs"
+Received: by mail-pl1-f177.google.com with SMTP id d9443c01a7336-2e8b20a899fso10878845ad.1
+        for <linux-scsi@vger.kernel.org>; Tue, 13 Oct 2026 07:02:32 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=isslab-korea-ac-kr.20251104.gappssmtp.com; s=20251104; t=1791900152; x=1792504952; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=gpvwGadULPDGCwDez0VhWNS62rM8BYPtekPhIicjGOU=;
+        b=0wacYjbslPFBJHaRaCfeH3+kGmnMbBD+0IrKW+MwkiZz50vz+AZN43toDt7RdsEBMK
+         RSnkfpVfGYRnBxfodvjknMclg+yeYQYwtHaz82FEUgZw9getGYePqMIJOSD+dUCCtqUu
+         rDgX6HeaPyYr+ZH+fhpEa/4y7t1U8OfJFlchcpSnoLcXeIguXdtVjjJpLXdlTjY3as+6
+         0aL9KBQ5nsbazSH7MZ25NeG3VRp+0ayFUVVWL5YQdSHIxLicBj/RuTEmJW84Es8Giftr
+         q3grA9SL8+QEjS7qthbX4U7eDMor1PTNT9T4n4E4Q4GolQ0t68+4i+T3o7lwYc7NfuTJ
+         EHlQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791900152; x=1792504952;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=gpvwGadULPDGCwDez0VhWNS62rM8BYPtekPhIicjGOU=;
+        b=dB8c1mzTWnIqomR5oUWtz8e3rcROd5fZ58iffgA0XU+ZWtBbz1KPu/xVpAAxXTwtUC
+         lztcswQEgnKCRJriSJB4OLZvoWPYLnTx+ILZLWDSB5SinGSJzX/fzNahfv3NybQ8LOYJ
+         zCVxD5HfLDRQtaKzWFkmg2sbg/EocobnYpybvGhhkerwDhKmVBs+XN/Ba2zrn7YCqoEz
+         QAnUhWxJdVvlElfjYslIFfWt5oYv2YzdPuTPXkP8wuYhrY5BJE6rgL0KX1IO1aerp5AV
+         Wa6mv4HNL9p94dwFBt5JXbTbaUOqtRvCMAmY/gC2JAQ73cCyCMEIaMdHHvcEUf5/m4uj
+         CghQ==
+X-Gm-Message-State: AFq9FYLieAakCjAwfHEu374X21FBDPaMM7yRXAPlB2yhZhH4/oGP1xzG
+	fGr+iQg6NBKnTjr50/XoBNd+SN+awgRi0HQOcN9S2TDCjNXLjseWy0GKX+giUODyU8g=
+X-Gm-Gg: AYBFou1P/Ej4C7iL+6VPsW5D0Rj2tdlaBREjv3lzbgpcc35vmXilnAkQerp3GI2LbaU
+	s79ppN4OvHn9Dpm6gdx3w6RtPjRPcfF0O5V2bwTig+tTbdM+gJvsLM7fj7Sbw1WzN2PL8n+ZPG/
+	+RlFbEQnnq28DuGekIpe4fOuxSLDpzUhIiYmoY072p4hohILFGqrjSgYT5DW45JCRv28Cu8R2Ne
+	tIW0EK57mhtN8YEPLk540m19srJ+KQvokdENADLwmPQfNzlPwC2Qom3svAJ948Kn2p37E0hdSre
+	LJR8bFmPEvR6aX79wWXzqOPpsxzbImHfLKnecU2APtNyzgBYa/eku0dQ/JKMmH6JVuaJvvtfyxH
+	d+6u2Mu2q/eiwQm8f2BQgaczyikD9yr0XaP7Kdo30rbmgowGUKgORfuJGETy9Mjq6DBI1UXO5rL
+	4wPAoQRAddbt2+5Lo2srYNxZ5uGW1rKrkG7YzCFyGaApRhCaoZ+TIPoTHQRu6KFFGaf522+SsoU
+	/1qB0f3JslhNMw7VVBi
+X-Received: by 2002:a17:902:f54f:b0:2dd:c100:b2c3 with SMTP id d9443c01a7336-2e842ce0ad9mr102000625ad.46.1791900151506;
+        Tue, 13 Oct 2026 07:02:31 -0700 (PDT)
+Received: from localhost.localdomain ([2406:5900:1044:110c:c51c:be8a:c517:276])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2e841a02f85sm56433065ad.10.2026.10.13.07.02.24
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 13 Oct 2026 07:02:27 -0700 (PDT)
+From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+To: Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
+	"Martin K . Petersen" <mkp@kernel.org>,
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org,
+	yhlee@isslab.korea.ac.kr
+Subject: [PATCH 0/2] scsi: aacraid: bound adapter-declared sense lengths
+Date: Tue, 13 Oct 2026 23:02:12 +0900
+Message-ID: <20261013140214.3156938-1-yhlee@isslab.korea.ac.kr>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [Medium] block/bsg: infoleak of recycled reply buffer on synchronous LLD =
-error
---
+Two spots in aacraid size a sense-data copy by the destination buffer
+(SCSI_SENSE_BUFFERSIZE) rather than the source array, so an adapter that
+over-reports its sense length makes the copy read past the source and
+hand the trailing bytes -- the previous request's scatter-gather list
+in the shared FIB area -- to user space.  Bound each copy at the source
+array size, as the container sense paths already do.
 
-commit 52ec043e68f598e70d8f2fbea510e68eefe133cc
-Author: Stanley Jhu <stanleyjhu@google.com>
+The two sites have different origins (one is as old as the driver, the
+other came with the native HBA path), so they are split for independent
+backporting.
 
-scsi: bsg: Pass reply_len to bsg_setup_queue() to fit UFS ARPMB replies
+Yehyeong Lee (2):
+  scsi: aacraid: bound the SRB sense data copy to the source buffer
+  scsi: aacraid: bound the HBA sense response copy to the source buffer
 
-This commit updates bsg_setup_queue() to accept a reply_len parameter,
-allowing BSG transports like UFS to specify custom reply buffer sizes.
-It modifies bsg-lib to use this dynamic length for memory allocation
-and reply copying.
+ drivers/scsi/aacraid/aachba.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-> diff --git a/block/bsg-lib.c b/block/bsg-lib.c
-> index 895db30a7033d..536cee4430a76 100644
-> --- a/block/bsg-lib.c
-> +++ b/block/bsg-lib.c
-> @@ -50,7 +53,7 @@ static int bsg_transport_sg_io_fn(struct request_queue =
-*q, struct sg_io_v4 *hdr,
->  	reply =3D job->reply;
->  	memset(job, 0, sizeof(*job));
->  	job->reply =3D reply;
-> -	job->reply_len =3D SCSI_SENSE_BUFFERSIZE;
-> +	job->reply_len =3D bset->reply_len;
 
-[Severity: Medium]
-Does this code leak the contents of the recycled reply buffer to user space
-on a synchronous low level driver error?
+base-commit: 24a19b953e2a3d0ea5a8c4951a0ab8f32720c907
+-- 
+2.43.0
 
-The job->reply buffer is allocated once per tag during queue setup and is
-reused across requests. While the job struct itself is cleared with memset()
-here, the job->reply buffer is not zeroed per-request.
-
-If the transport's job handler fails synchronously, the request is completed
-with an error, but job->result might not be updated and remains 0.
-
-Later in bsg_transport_sg_io_fn(), the code relies on job->result to restri=
-ct
-the copy length:
-
-    if (job->result < 0) {
-        /* we're only returning the result field in the reply */
-        job->reply_len =3D sizeof(u32);
-        ret =3D job->result;
-    }
-
-    if (job->reply_len && hdr->response) {
-        int len =3D min(hdr->max_response_len, job->reply_len);
-
-        if (copy_to_user(uptr64(hdr->response), job->reply, len))
-
-Since job->result is 0, this check is bypassed and the full bset->reply_len
-bytes of the uninitialized or recycled job->reply buffer will be copied to
-user space. For UFS Advanced RPMB, this could leak up to 104 bytes of the
-previous request's data.
-
-Should the reply buffer be cleared when initializing the job, or should
-job->result be explicitly set on all error paths?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261013132708.1669=
-415-1-stanleyjhu@google.com?part=3D1
