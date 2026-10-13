@@ -1,34 +1,35 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DEE1A518138;
-	Tue, 13 Oct 2026 15:21:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44731518148;
+	Tue, 13 Oct 2026 15:22:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791904914; cv=none; b=EfJKLvcoJkSW4N5QIZQ3AcB6tQnEsMTBojUih+TxSXlCEUvTMkNe83S8CYctG6Wm1+ptLbSvKteDcJRMAZHHEoPBfuUYV/OvxFYLt5HjMg7sf8zySfEOzEX7IP7dETTo6AuoUubFV6Y/bUp2auy4+cv+pyC8b22rogS52HjO0Jk=
+	t=1791904945; cv=none; b=ImTV0WgQDJzBGwthezpfQHdDycAhQOGbWp6go6ltNEjGxFvZGAeJtE1uFbp6zgyWeBfJjEByiYGWSa30u4IiPRpzhbG5gyJYsNmhvjJo5Jne/ERF1Wd0kQ0jxZZ5hH0jP98rKQWQN8QPvQ1oXmAEp8sFHKlSd9Li155nNCtzaEo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791904914; c=relaxed/simple;
-	bh=ZRR/0F24vpRi5Th6FPXXsoGKuQJZg1XNC+W03wHt7vE=;
+	s=arc-20240116; t=1791904945; c=relaxed/simple;
+	bh=6dMykbuVKPHDM4xFoe98lOwVyjcSXwfICmdhz8DaKPA=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=I12h9zb4KjpHWXnGNx12eLcLlCTEn9yNDWvUS0yBFozi9ukx+adijf0hCcr2rvcyyBkN2eQ/QlWDQQrP6yiN/fX/O5hw0B/1n3N4Qd6q1MHgwtFrZJBuBC+ZN9WzOWEoUG821higt+vvsmGnfSi5wkGtJAimLaf2Lrg4+mGZ9DM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UlakyKZP; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:To:Cc; b=HHJ0xpcOQ1QUia6dnFcDQCvYF9InZ2bS/Uc0EZrY/BHqjvVELmlMV/+DWYoxgzsrjTyRQKMKk01/5XC1QFs4S0gnf4uIPmVlz+Fz4drzrC2lB+j/2HfncLeaTeucQvA2D+vQ924/g63n20M3dXHD/ZA+t+Bok2zwwkmUVHCXmJ4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FwI8xuFk; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UlakyKZP"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1DDC51F00893;
-	Tue, 13 Oct 2026 15:21:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FwI8xuFk"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 085131F00898;
+	Tue, 13 Oct 2026 15:21:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791904912;
-	bh=zvi0f/x9fmZYE6ONmTuS2JnO4xSTKNre7RTsDSWIiF8=;
+	s=k20260515; t=1791904943;
+	bh=CzLkglerZHaeqdqXBcJqI1OUUZn9McyDsaXMwmatEzY=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=UlakyKZP5ISfZXp7qxWAW6UwPPJY6vMtdls5FLmHPfV1g6cWwL+zoSOA6ZblSTX7b
-	 85K2Kx9yx0/gPnHg++Jmxd/1mdXHg6jCGVVPwSwfT4fxKW0NteAiL0cmfP8sII0f5b
-	 m1Knxz4XemEkrn3BvrKZyfFSf84Ls9R8fG2W8lCOSpXz41C0CXG5M35XoZALhuu8Lb
-	 MZUBMpF2S8IApgYDddYys68Qum/rloYo5tqYJCYBA87W6dgFlpfWzEouFeEvSoPleS
-	 hN0pWgvcnVWOqjww0QQe5VEPBQxeUq5GLSM/ykd5YFqm7KiVDzEtsENuvwdqBBcFU1
-	 +mYNbwMtoJcZw==
+	b=FwI8xuFkcWZh7OyfP4kiO5TnL8x0H+GyT2/juwXjWPgG2q3jlzUlITXSsEf92nt4A
+	 U0XQ4si39pZo1N5LDpHXtJEAi/rXzQDoxp239dc9upMoQm0OIgMO4kwEoa6Nnjmgcy
+	 sdurdRML4tf7jFo06dlM7+za+GVcYLxVI8PGy9muqNSjV/nOauqRVxuqt2lTHdh1b7
+	 7956953cxQr45TOjCYP5S/v0UHz0e/WN7pOzDLwUrEHL4ZWVRs9nHLznaOt/hC2f6g
+	 WsDeiesyvxwB6pgmGTt+KtyRCQZe2Yth0b0GKXf9/GUXIlnTy/KdUjvQYGcfK9fx/i
+	 3Mzeuebipk/jQ==
 From: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
-Date: Tue, 13 Oct 2026 16:05:10 +0100
-Subject: [PATCH v6 30/39] mm/vma: introduce vma[_flags]_is_mm_backed()
+Date: Tue, 13 Oct 2026 16:05:11 +0100
+Subject: [PATCH v6 31/39] mm/madvise: update is_valid_guard_vma() to use
+ vma_is_mm_backed()
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -37,7 +38,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261013-b4-mmap-prepare-vma-flag-sanify-v6-30-1aa3c9b139f9@kernel.org>
+Message-Id: <20261013-b4-mmap-prepare-vma-flag-sanify-v6-31-1aa3c9b139f9@kernel.org>
 References: <20261013-b4-mmap-prepare-vma-flag-sanify-v6-0-1aa3c9b139f9@kernel.org>
 In-Reply-To: <20261013-b4-mmap-prepare-vma-flag-sanify-v6-0-1aa3c9b139f9@kernel.org>
 To: Andrew Morton <akpm@linux-foundation.org>, 
@@ -122,245 +123,75 @@ Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org,
  fuse-devel@lists.linux.dev, Ihor Solodrai <ihor.solodrai@linux.dev>, 
  Bert Karwatzki <spasswolf@web.de>, "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=openpgp-sha256; l=8850; i=ljs@kernel.org;
- h=from:subject:message-id; bh=ZRR/0F24vpRi5Th6FPXXsoGKuQJZg1XNC+W03wHt7vE=;
- b=owGbwMvMwCV2fu7ZrsZH9SKMp9WSGLLOeZyZJNlynuuFP+eWv8or3v+bclzNqdzqrPnZt7tOK
- RbozAwO6yhlYRDjYpAVU2R5/kV8f5BI2LzOC/5uMHNYmUCGMHBxCsBEbMsZGZ6JWis/9T3z8EhJ
- 6c4L71e0rNRuk/p0Uf++X1vs/VzeJWKMDLtjTtxxW5W++cSp1w/aXOtDuC9mXu2PvaEwf4742Zi
- QubwA
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2135; i=ljs@kernel.org;
+ h=from:subject:message-id; bh=6dMykbuVKPHDM4xFoe98lOwVyjcSXwfICmdhz8DaKPA=;
+ b=owGbwMvMwCV2fu7ZrsZH9SKMp9WSGLLOeZxhWeI/k1t/+0bj2V5v9vMW7pEtb9Y77P/q/98og
+ StpV1LyO0pZGMS4GGTFFFmefxHfHyQSNq/zgr8bzBxWJpAhDFycAjCR/qcM//1Yl/R9mrfruMzR
+ zNWKb38qF4lP7y/8pROyX+TS7/XeX2Yx/I/cevmz66tHxnHB7a3/WD95Gko+9pSSE1ryNvD89eL
+ S66wA
 X-Developer-Key: i=ljs@kernel.org; a=openpgp;
  fpr=E7F417BF5214569E89D04F46CF9DCD8A81E27F14
 
-Introduce vma[_flags]_is_mm_backed() for the purposes of identifying
-mappings which are mm-managed and whose contents were placed there by core
-mm's own fault path - rather than a custom ->fault handler.
+We currently disallow the installation of lightweight guard regions in VMAs
+whose flags intersect VMA_SPECIAL_FLAGS or VMA_HUGETLB_BIT, or
+VMA_LOCKED_BIT unless allow_locked is set.
 
-Mappings not managed by core mm do not fall into this category, as they are
-populated by their owner, and nor of course does memory-mapped I/O.
+hugetlb VMAs set VMA_DONTEXPAND_BIT so this was already redundant,
+VMA_SPECIAL_FLAGS already sufficed.
 
-We exclude fixed mappings as these have a layout core mm cannot assume
-ordinary fault semantics over.
+However, now that VMA_IO_BIT is only set if VMA_PFNMAP or VMA_MIXEDMAP_BIT
+is set, this check collapses to being the equivalent of
+!vma_is_mm_backed(), excluding hugetlb mappings in which guard markers
+cannot be installed.
 
-hugetlb mappings are fixed mappings, but core mm owns them entirely, so
-they are explicitly carved out as mm-backed, as the MADV_DODUMP check
-already does.
-
-Use this functionality to update the madvise MADV_DODUMP check to test for
-this rather than open-coding it.
-
-Also update vma_flags_can_merge() so it is written in terms of
-vma_flags_is_mm_backed() - all mm-backed mappings can be merged except
-hugetlb mappings, whose flags and fields do not completely describe them.
-
-Also update __thp_vma_allowable_orders() to use vma_is_mm_backed() rather
-than testing for mergeability, which is irrelevant to this function.
-
-This replaces the VM_SPECIAL check which means it no longer checks for
-VMA_IO_BIT, however this is safe as we have established the invariant that
-mm-managed mappings may not set VMA_IO_BIT, so we implicitly include
-these.
+Update is_valid_guard_vma() to reflect this.
 
 No functional change intended.
 
 Acked-by: Zi Yan <ziy@nvidia.com>
+Acked-by: David Hildenbrand (Arm) <david@kernel.org>
 Signed-off-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
 ---
- include/linux/mm.h              | 66 +++++++++++++++++++++++++++++++++++------
- mm/huge_memory.c                |  7 ++---
- mm/madvise.c                    |  7 +++--
- tools/testing/vma/include/dup.h | 44 +++++++++++++++++++++------
- 4 files changed, 100 insertions(+), 24 deletions(-)
+ mm/madvise.c | 20 +++++++++++++-------
+ 1 file changed, 13 insertions(+), 7 deletions(-)
 
-diff --git a/include/linux/mm.h b/include/linux/mm.h
-index 70fcb7e18b50..e8d2b0e847b3 100644
---- a/include/linux/mm.h
-+++ b/include/linux/mm.h
-@@ -1701,6 +1701,54 @@ static inline bool vma_is_fixed_mapping(const struct vm_area_struct *vma)
- 	return vma_flags_is_fixed_mapping(&vma->flags);
- }
- 
-+/**
-+ * vma_flags_is_mm_backed() - Do the specified VMA flags imply the mapping is
-+ * backed by core mm?
-+ * @flags: The VMA flags to test.
-+ *
-+ * An mm-backed mapping is one managed by core mm (see
-+ * vma_flags_is_mm_managed()) whose contents are established by core mm's own
-+ * fault path rather than a custom ->fault handler.
-+ *
-+ * Mappings not managed by core mm are populated by their owner, and fixed
-+ * mappings may be mm-managed but have their contents established by a custom
-+ * ->fault handler, so neither are mm-backed. hugetlb mappings are fixed, but
-+ * core mm owns them entirely, so they are.
-+ *
-+ * These are the only mappings which can sensibly be merged, locked, dumped or
-+ * be subject to uffd faulting, as all of these assume core mm and core mm
-+ * alone manages their contents.
-+ *
-+ * Returns: true if the flags imply an mm-backed mapping, otherwise false.
-+ */
-+static inline bool vma_flags_is_mm_backed(const vma_flags_t *flags)
-+{
-+	/* hugetlb is a fixed mapping, but core mm owns it entirely. */
-+	if (vma_flags_is_hugetlb(flags))
-+		return true;
-+	/*
-+	 * Mappings not managed by core mm are populated by their owner.
-+	 *
-+	 * Fixed mappings may be mm-managed, but their contents are established
-+	 * by a custom ->fault handler, so core mm cannot assume ordinary fault
-+	 * semantics over them.
-+	 */
-+	return vma_flags_is_mm_managed(flags) && !vma_flags_is_fixed_mapping(flags);
-+}
-+
-+/**
-+ * vma_is_mm_backed() - Is @vma backed by core mm?
-+ * @vma: The VMA to test.
-+ *
-+ * See vma_flags_is_mm_backed() for details.
-+ *
-+ * Returns: true if the VMA is mm-backed, otherwise false.
-+ */
-+static inline bool vma_is_mm_backed(const struct vm_area_struct *vma)
-+{
-+	return vma_flags_is_mm_backed(&vma->flags);
-+}
-+
- /**
-  * vma_flags_can_merge() - Do the specified VMA flags permit the VMA to be
-  * merged with another?
-@@ -1711,21 +1759,21 @@ static inline bool vma_flags_can_merge(const vma_flags_t *flags)
- {
- 	/*
- 	 * VMA merging assumes that a VMA's flags and fields completely describe
--	 * its state.
-+	 * its state, which is only the case for mm-backed mappings.
- 	 *
--	 * However, mappings which are not mm-managed may have established state
--	 * upon mapping not embodied in any attribute of the VMA.
-+	 * Mappings which are not mm-managed may have established state upon
-+	 * mapping not embodied in any attribute of the VMA.
- 	 *
- 	 * Additionally, private (CoW) PFN maps encode the source PFN of the
- 	 * range in vma->vm_pgoff, which may otherwise cause spurious merges.
- 	 */
--	if (!vma_flags_is_mm_managed(flags))
--		return false;
--	/* VMA explicitly marked as being unmergeable. */
--	if (vma_flags_is_fixed_mapping(flags))
-+	if (!vma_flags_is_mm_backed(flags))
- 		return false;
--
--	return true;
-+	/*
-+	 * hugetlb mappings contain per-VMA state, so their flags and fields do
-+	 * not completely describe them.
-+	 */
-+	return !vma_flags_is_hugetlb(flags);
- }
- 
- /**
-diff --git a/mm/huge_memory.c b/mm/huge_memory.c
-index 83dd63b04568..5b295a7979cd 100644
---- a/mm/huge_memory.c
-+++ b/mm/huge_memory.c
-@@ -215,11 +215,10 @@ unsigned long __thp_vma_allowable_orders(struct vm_area_struct *vma,
- 	 * khugepaged moves data from VMAs once collapsed, after they have been
- 	 * faulted in, relying on refaulting for file-backed memory.
- 	 *
--	 * Mappings not managed by core mm cannot be reliably reconstructed from
--	 * page faults, and fixed mappings (including hugetlb) may well be
--	 * mm-managed - precisely the mappings which cannot be merged.
-+	 * Only mm-backed mappings can be reliably reconstructed from page
-+	 * faults, and hugetlb mappings cannot be collapsed.
- 	 */
--	if (!in_pf && !smaps && !vma_can_merge(vma))
-+	if (!in_pf && !smaps && (!vma_is_mm_backed(vma) || vma_is_hugetlb(vma)))
- 		return 0;
- 
- 	/*
 diff --git a/mm/madvise.c b/mm/madvise.c
-index 467601a8525b..3d25202db5cc 100644
+index 3d25202db5cc..7e14b3fd92f6 100644
 --- a/mm/madvise.c
 +++ b/mm/madvise.c
-@@ -1578,8 +1578,11 @@ static int madvise_vma_behavior(struct madvise_behavior *madv_behavior)
- 		new_flags |= VM_DONTDUMP;
- 		break;
- 	case MADV_DODUMP:
--		if ((!vma_is_hugetlb(vma) && (new_flags & VM_SPECIAL)) ||
--		    (new_flags & VM_DROPPABLE))
-+		/* Only mm-backed memory can be meaningfully dumped. */
-+		if (!vma_is_mm_backed(vma))
-+			return -EINVAL;
-+		/* Core mm may discard droppable memory at any time. */
-+		if (new_flags & VM_DROPPABLE)
- 			return -EINVAL;
- 		new_flags &= ~VM_DONTDUMP;
- 		break;
-diff --git a/tools/testing/vma/include/dup.h b/tools/testing/vma/include/dup.h
-index 94bf818ad0e1..19ce10faa9f3 100644
---- a/tools/testing/vma/include/dup.h
-+++ b/tools/testing/vma/include/dup.h
-@@ -1689,23 +1689,49 @@ static inline bool vma_is_fixed_mapping(const struct vm_area_struct *vma)
- 	return vma_flags_is_fixed_mapping(&vma->flags);
+@@ -1221,19 +1221,25 @@ static long madvise_remove(struct madvise_behavior *madv_behavior)
+ 	return error;
  }
  
-+static inline bool vma_flags_is_hugetlb(const vma_flags_t *flags)
-+{
-+	return IS_ENABLED(CONFIG_HUGETLB_PAGE) &&
-+	       vma_flags_test(flags, VMA_HUGETLB_BIT);
-+}
-+
-+static inline bool vma_flags_is_mm_backed(const vma_flags_t *flags)
-+{
-+	/* hugetlb is a fixed mapping, but core mm owns it entirely. */
-+	if (vma_flags_is_hugetlb(flags))
-+		return true;
-+	/*
-+	 * Mappings not managed by core mm are populated by their owner.
-+	 *
-+	 * Fixed mappings may be mm-managed, but their contents are established
-+	 * by a custom ->fault handler, so core mm cannot assume ordinary fault
-+	 * semantics over them.
-+	 */
-+	return vma_flags_is_mm_managed(flags) && !vma_flags_is_fixed_mapping(flags);
-+}
-+
-+static inline bool vma_is_mm_backed(const struct vm_area_struct *vma)
-+{
-+	return vma_flags_is_mm_backed(&vma->flags);
-+}
-+
- static inline bool vma_flags_can_merge(const vma_flags_t *flags)
+-static bool is_valid_guard_vma(struct vm_area_struct *vma, bool allow_locked)
++static bool is_valid_guard_vma(const struct vm_area_struct *vma,
++			       bool allow_locked)
  {
- 	/*
- 	 * VMA merging assumes that a VMA's flags and fields completely describe
--	 * its state.
-+	 * its state, which is only the case for mm-backed mappings.
- 	 *
--	 * However, mappings which are not mm-managed may have established state
--	 * upon mapping not embodied in any attribute of the VMA.
-+	 * Mappings which are not mm-managed may have established state upon
-+	 * mapping not embodied in any attribute of the VMA.
- 	 *
- 	 * Additionally, private (CoW) PFN maps encode the source PFN of the
- 	 * range in vma->vm_pgoff, which may otherwise cause spurious merges.
- 	 */
--	if (!vma_flags_is_mm_managed(flags))
--		return false;
--	/* VMA explicitly marked as being unmergeable. */
--	if (vma_flags_is_fixed_mapping(flags))
-+	if (!vma_flags_is_mm_backed(flags))
- 		return false;
+-	vm_flags_t disallowed = VM_SPECIAL | VM_HUGETLB;
 -
--	return true;
+ 	/*
+-	 * A user could lock after setting a guard range but that's fine, as
++	 * A user could lock after setting a guard range but that's fine as
+ 	 * they'd not be able to fault in. The issue arises when we try to zap
+ 	 * existing locked VMAs. We don't want to do that.
+ 	 */
+-	if (!allow_locked)
+-		disallowed |= VM_LOCKED;
++	if (!allow_locked && vma_test(vma, VMA_LOCKED_BIT))
++		return false;
 +	/*
-+	 * hugetlb mappings contain per-VMA state, so their flags and fields do
-+	 * not completely describe them.
++	 * Guard regions require a VMA whose page tables are managed solely by
++	 * core mm, so the VMA must be mm-backed (excluding hugetlb, in which
++	 * guard markers cannot be installed).
 +	 */
-+	return !vma_flags_is_hugetlb(flags);
++	if (!vma_is_mm_backed(vma) || vma_is_hugetlb(vma))
++		return false;
+ 
+-	return !(vma->vm_flags & disallowed);
++	return true;
  }
+ 
+ static bool is_guard_pte_marker(pte_t ptent)
 
 -- 
 2.55.0
