@@ -1,72 +1,72 @@
-Received: from mail-dy1-f177.google.com (mail-dy1-f177.google.com [74.125.82.177])
+Received: from mail-dy1-f175.google.com (mail-dy1-f175.google.com [74.125.82.175])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2FA3B39768F
-	for <linux-scsi@vger.kernel.org>; Mon, 12 Oct 2026 23:53:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B1D533ECBE4
+	for <linux-scsi@vger.kernel.org>; Mon, 12 Oct 2026 23:53:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791849195; cv=none; b=MpGLeBmUStbTD9QeZii45KEEdz5RJs95GZnGGbOeskBzxKOBluJOfY7O7J2w4nRN91UADRewzTY6KCBBSelNzVdTpnnYdocZ5Hr0cD4BocHwREQh86cYQ8CSg9Huec2zqWQue2563vJh/BnkvRDHGp1kpqCFG843iItKkVL2yRc=
+	t=1791849199; cv=none; b=P0R68hKvDD96oUCVtXdL/OZbVjpR3BrNc0XKzcs7KsEKxXnscTB/ky7IMyXF3A5w43Y4btkyaDg7TKyNQHU0RWtRHvxyZyUeDbxyut0VsrBpQ+NnVx6pwmJhsjXTZ+Sisrz20pJ0OeWH2UQhx1+dzyi6CYW14lj3QxsTAnyKmMY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791849195; c=relaxed/simple;
-	bh=cMRph1P0KO0ziPFs/jSruQOR20trRKNMeButZN10cxs=;
+	s=arc-20240116; t=1791849199; c=relaxed/simple;
+	bh=tER6xlnK90r8Qab1VZSZ1fLyySMbxeBEh1Ay11tOetw=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=CUJIU3iVZtTt4/hrVgli4kuV13NcV8UtdwHYx3Pph7Pw+u4X6cgBfcqTlQY1coLp4yYCJ4viFwHmmY6pGTEXjP4mNLFDyS4vb3J8xjsqlJ/ORZUkxd2I6erLkPFddeacf52J0ZJ33MIgk5c/tcIwxk0TF/y7MJsZ0J8o7nyCobM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=YhvDj1Sa; arc=none smtp.client-ip=74.125.82.177
+	 MIME-Version; b=RMD2GJuxsNEsrEjukRj0Nlw/j1HS6fLtbfQZq6fjtvow1fdYdh5c7cFuZef7JrqSKAWepTYeW2H2+YPzg8X5OgxtW4KdFgo+nnrHoq9wvjcj+ie5nf9nryURFdzPHvCZQ+yuqhRQ1sDG95MYSFHgGLtAgnSqTnPp3Cz3qKq9p34=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=s0ullyEW; arc=none smtp.client-ip=74.125.82.175
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="YhvDj1Sa"
-Received: by mail-dy1-f177.google.com with SMTP id 5a478bee46e88-354ba08cfd1so4172569eec.1
-        for <linux-scsi@vger.kernel.org>; Mon, 12 Oct 2026 16:53:13 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="s0ullyEW"
+Received: by mail-dy1-f175.google.com with SMTP id 5a478bee46e88-35a31bb9fb6so781552eec.1
+        for <linux-scsi@vger.kernel.org>; Mon, 12 Oct 2026 16:53:15 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1791849192; x=1792453992; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1791849194; x=1792453994; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=QeIMTi5unTP6BgCn44aISc0k6OzQAHaPaIl3/rghCo8=;
-        b=YhvDj1SaQmoTYpCZ+/3dmAYOqNWtK3IpR8k7XBkEsIvUO9BFSbPyZxnYEK7PAsfLEg
-         piq5ibY03F8dkvYi/zD6YerJmaaKpMq0Ntssm3+5USBo7ZGyrAGEUPMFlddctbeInx13
-         ysDa8Lb9l3ctcskyGLDW7ueDuITPalk03jW2y9WR2TvLEutOPjnkQPbKJnhYB4a3zS5c
-         h0Df0nRa3yoLowdVlni/bnwu86UP0BctiOozofiE7IUeiOMm40GxBEA7oiZ50MJ2niA8
-         GSqv8623rPE7bSCVLaL1rvfKbrsY4jNnEiXq1OyEkvLY5mUutTedWgB5ImzZxkZnDs/n
-         Rq1Q==
+        bh=WwBaVdVJ59R0rXXR591zjvN6CoT6wXS7+liHv+BZRLY=;
+        b=s0ullyEWal9/wDStdNvrdPXPOQCGqUjDWA+WdxL4KKKADohR07RuGo0X4UBkUO4yv9
+         ulfr7jgfYwwv+k8EUk2h9qxJ8O/jGAmsTPayTlSu4jIog6liXVFvDGkkGY5QOYtuFut+
+         QiumhPH4fHfYXRBuQH75IrK4zYkz/bxZkC99FEPRq6W0rEwT5pvUzasdmuQ+A7mH0vCC
+         fhNylNtiNgMlB2RnvG0SHBimLlD/ANg7L4JfMHcRIpYTtlWgSNYH+XurIYz5/eLIX6Ud
+         Im39WpLOEiO4PbrfcTRJ1Spv6fN68QGQv7HRI/5dYxx2I4qKtGcw4BpzjB7Zkq3+MZ4Q
+         CflQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791849192; x=1792453992;
+        d=1e100.net; s=20260707; t=1791849194; x=1792453994;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=QeIMTi5unTP6BgCn44aISc0k6OzQAHaPaIl3/rghCo8=;
-        b=tDFpUnTyUWlPaCp6kAafHY8g+M2uAG15ddB84C2UQv73SE08aP/YBgDlNZnaEHKYYb
-         u+dY3FsumVPoTxIVDrv6FdLhtt7sSN0Tw0QtmTzPO4nJcaYF2XeFvxJxoYVZPlWeaEnV
-         xysq+0jjBGDkoBZGjXD4JFOxRcsjAE5VDJqVz6wg9T9wNUjUTXk38Hpj4cMH8h2X5U0Z
-         TBUC9DNuNUN2eDEFvnWFvQyYbEYgb3Er684gIgGPu65UWrit5UwzY1HE61uIxAdriH+6
-         BmQ0z2IrSuuNOoUNO8VteywAhZEYmpjlwNmsCULuqs9Il8km7+j6ujzI2XrPNpulr/yO
-         8YqQ==
-X-Gm-Message-State: AFq9FYLurIez0Oz4+rbt1Xhonjwm0rPC6nP70YXbOuTp7dUNfUIIrLww
-	ob+iRNTY/UogErbEuSZ5POpNlpuy4sdCrVz9qF0mj1hXCVUqn94cJ+AcEuRaiRh8
-X-Gm-Gg: AYBFou0fVo8CauJlV5fyJMbJiDZGE52i+UeekV9n3jCvI1saqoZ0HuP0jLBjR3x9YOv
-	Er5cGZ0Ntcu5gecYeZW3rX94zbMNhEd4yx/M9/HREItYXNCijUT5j2kvWc7EFmKHYFQneEUNxBP
-	VaF4Fj1wjF8LcGoft1h6hmhWhFxzHnxAk3kb0l9Ogq43WBF/95eo7E9BbEQRusUPdG27fEzhZTC
-	Iu83adAt5IXHq6E0ACC+ZieZqlrsyFNUZX+nrS8UxEgZTPjPwC8LAo+M6l3cCSiXpV+fNfkORNH
-	4wC/YEqy0EyLE1vQH2RrY2CI9SGO228EUFwJX4kY+eZmhB/HZL02G33FzvmOfiGXMncCxex/llf
-	CdeOQi9km1eqADs0/An8pEhEsWUuMxgnZSS9HBsm51iBX/BhLORNx7nn9eEJNVQYfjoyjWzqqD+
-	ArIyBHdkWyJDjO3mSgkjr8I3s6l7T/iAuKzMsVnePYyHxU97MMulRhU5Z2OIs7aj93PhhT2FeTX
-	hzk3RvkTl8Br2Svhzb55INT1+IwbKR3swrUHrwjVIWn+X2V+MWynJVWkQ==
-X-Received: by 2002:a05:7301:5f0b:b0:351:4648:3611 with SMTP id 5a478bee46e88-3537e1118bcmr14003949eec.26.1791849192196;
-        Mon, 12 Oct 2026 16:53:12 -0700 (PDT)
+        bh=WwBaVdVJ59R0rXXR591zjvN6CoT6wXS7+liHv+BZRLY=;
+        b=cqo2X6HkS3bI95eFSNI2EYCYduZz2ZPl4Vv3CYJFrBLOtgznkCCYAL2BIrxA8vkTOR
+         pxY11pgmf33ru94EhuyEd37EFoAEuqw8HioWm/q3xhStP5UJd7AAHgysrcXufSLSWSEf
+         G9PQGQf7APxGNIOMohaP1inxH/RhtoDnjZAK0NiGAeCt1t/BNFs2MZbKnqHybHOTuku0
+         OLDGQhvSaX1mgr0nfnAP9eJs27/OubcHMhSaAsBkLUkDbPfrtFGuJUeafJJrZyO96wk7
+         PKxqiSG8WcqgPgrLDFS00eQVrGA3SEFslp6mL5aiyPlcS1mkIgl27noX1eHblSyTvaXU
+         4OMA==
+X-Gm-Message-State: AFq9FYLotfvfsaP+KTOzQbZ8fRaaL/f9sB8toV5vWkhAQv+HGbCviwqz
+	66kcX51dQyPGcWoJKsnciySoAZ+kpjlMcmvRHWTobOc720h++yiFqt1z+VfFXoTI
+X-Gm-Gg: AYBFou3KXPusN1mHeU8FKDAzjLSYaOAWbR86h+NRVoJrAjJzD97/iZUbZe6s806vOd7
+	apYX9Iq06kckrJHeq7Tw68mnssTarPqsrSmRstd+LDXKwAGJ5ADACr5t8yvOIpkMHpnqjFfEMD8
+	nd7K82cF73nmlQePMG5E9hzSDxd+aEX4MoomalVGHFQZizfW/n4bzxGnHQ4/K9D0ERgwhDI0TWx
+	ZS8VZs+vw0w3mxGlFrYzFQO5sb+7PDuRJ/i9rUkPO7g9FPYL06TVJcEdS3JyHy21wrF3+1qLJhL
+	9H+2BUeRauRogwmxEAFddsaeKzrK4yGAgJwaRR3oPIl36keODyKNPkhyovcu+9RRLFbxqDRu1YQ
+	3N+k74qhgYhL0klVx0oOsaDIZ70v5GlG/B+frRD1jrZyANW+7KrQwye1Py190GTN5hY8bYSJUQc
+	+U+lyXLwloQ+O5vaCshTmZJe7cHZSov6+Yq16bapYg4gkK0P1km1xMRdmLQ4BlmkBZLZUYso+ye
+	niCfaZVzjPcqPA0GSMXKMYOtA11S3+LJpYVdWCU8ymoRjO7O7Lb2WYkdw==
+X-Received: by 2002:a05:7300:e9d4:20b0:35b:20d6:8eae with SMTP id 5a478bee46e88-35b20e5d33bmr4870086eec.3.1791849194438;
+        Mon, 12 Oct 2026 16:53:14 -0700 (PDT)
 Received: from dhcp-10-231-55-133.dhcp.broadcom.net ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-35b29c2f861sm15137264eec.11.2026.10.12.16.53.11
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-35b29c2f861sm15137264eec.11.2026.10.12.16.53.13
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 12 Oct 2026 16:53:11 -0700 (PDT)
+        Mon, 12 Oct 2026 16:53:13 -0700 (PDT)
 From: Nigel Kirkland <nkirkland2304@gmail.com>
 To: linux-scsi@vger.kernel.org,
 	nigel.kirkland@broadcom.com
 Cc: jsmart833426@gmail.com,
 	paul.ely@broadcom.com,
 	nkirkland2304@gmail.com
-Subject: [PATCH v6 6/8] lpfc: Refactor calls on fc_disctmo to lpfc_set_disctmo in RSCN handler
-Date: Mon, 12 Oct 2026 17:16:46 -0700
-Message-Id: <20261013001648.62289-7-nkirkland2304@gmail.com>
+Subject: [PATCH v6 8/8] lpfc: Update lpfc version to 15.0.0.1
+Date: Mon, 12 Oct 2026 17:16:48 -0700
+Message-Id: <20261013001648.62289-9-nkirkland2304@gmail.com>
 X-Mailer: git-send-email 2.38.0
 In-Reply-To: <20261013001648.62289-1-nkirkland2304@gmail.com>
 References: <20261013001648.62289-1-nkirkland2304@gmail.com>
@@ -78,60 +78,26 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The lpfc_set_disctmo routine is not used for all cases when the driver
-needs to restart discovery on the fc_disctmo timer.  Not doing so, makes
-discovery timer actions invisible in some cases as they do not get logged.
-This patch substitutes calls on fc_disctmo to use lpfc_set_disctmo in
-lpfc_els_rcv_rscn.
+Update lpfc version to 15.0.0.1
 
 Signed-off-by: Nigel Kirkland <nkirkland2304@gmail.com>
-
 ---
- drivers/scsi/lpfc/lpfc_els.c | 17 ++++++-----------
- 1 file changed, 6 insertions(+), 11 deletions(-)
+ drivers/scsi/lpfc/lpfc_version.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index 4918d71ebfe4..5691af515b43 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -8146,7 +8146,7 @@ lpfc_els_rcv_rscn(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
- 	uint32_t payload_len, length, nportid, *cmd;
- 	int rscn_cnt;
- 	int rscn_id = 0, hba_id = 0;
--	int i, tmo;
-+	int i;
+diff --git a/drivers/scsi/lpfc/lpfc_version.h b/drivers/scsi/lpfc/lpfc_version.h
+index d6e6e436fbfc..7df63d118234 100644
+--- a/drivers/scsi/lpfc/lpfc_version.h
++++ b/drivers/scsi/lpfc/lpfc_version.h
+@@ -20,7 +20,7 @@
+  * included with this package.                                     *
+  *******************************************************************/
  
- 	pcmd = cmdiocb->cmd_dmabuf;
- 	lp = (uint32_t *) pcmd->virt;
-@@ -8225,11 +8225,8 @@ lpfc_els_rcv_rscn(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
- 			lpfc_els_rsp_acc(vport, ELS_CMD_ACC, cmdiocb,
- 				ndlp, NULL);
- 			/* Restart disctmo if its already running */
--			if (test_bit(FC_DISC_TMO, &vport->fc_flag)) {
--				tmo = ((phba->fc_ratov * 3) + 3);
--				mod_timer(&vport->fc_disctmo,
--					  jiffies + secs_to_jiffies(tmo));
--			}
-+			if (test_bit(FC_DISC_TMO, &vport->fc_flag))
-+				lpfc_set_disctmo(vport);
- 			return 0;
- 		}
- 	}
-@@ -8260,11 +8257,9 @@ lpfc_els_rcv_rscn(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
- 		set_bit(FC_RSCN_DEFERRED, &vport->fc_flag);
+-#define LPFC_DRIVER_VERSION "15.0.0.0"
++#define LPFC_DRIVER_VERSION "15.0.0.1"
+ #define LPFC_DRIVER_NAME		"lpfc"
  
- 		/* Restart disctmo if its already running */
--		if (test_bit(FC_DISC_TMO, &vport->fc_flag)) {
--			tmo = ((phba->fc_ratov * 3) + 3);
--			mod_timer(&vport->fc_disctmo,
--				  jiffies + secs_to_jiffies(tmo));
--		}
-+		if (test_bit(FC_DISC_TMO, &vport->fc_flag))
-+			lpfc_set_disctmo(vport);
-+
- 		if ((rscn_cnt < FC_MAX_HOLD_RSCN) &&
- 		    !test_bit(FC_RSCN_DISCOVERY, &vport->fc_flag)) {
- 			set_bit(FC_RSCN_MODE, &vport->fc_flag);
+ /* Used for SLI 2/3 */
 -- 
 2.38.0
 
