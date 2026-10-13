@@ -1,340 +1,130 @@
-Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f43.google.com (mail-wm1-f43.google.com [209.85.128.43])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4CB23560AB3
-	for <linux-scsi@vger.kernel.org>; Tue, 13 Oct 2026 22:10:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C871E52CCC2
+	for <linux-scsi@vger.kernel.org>; Tue, 13 Oct 2026 22:19:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791929437; cv=none; b=M/WzPEc8xiQGbL1CfJXoumc8y5W0rFEzyDwWUx4Xjd67X2a3vOl7JIohKl4KX85voJwnejRidSRROQymks4XcIxwmjnJ8I2x1ERIVe2h+WNBMFV1D6TeEo7ScX/YGjcnm2fLQgdEdaqD4fog/7ETLU9baw+MegyDu14zZddMAJ8=
+	t=1791929982; cv=none; b=ZzZSTWZVXCqW/W2QIiNGo25meYUnX5xzNIih+89ZLZh1IHo24XM37q1r1OijmJladnT4exr+GVbN6Mw9szy2+1IiI1yfXnbS3F/T9knuwOmrNHkCREQW/c575Ut7EHqyhoWaLKxK8dspy41RYV52Exn1A2qxXhlh0wEZwuL5ucc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791929437; c=relaxed/simple;
-	bh=Qm27qbJdZflw7ppu2nZoqw2j3rVeqe+0ibEeLZpt1Iw=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=iO4q4+HemrHttWMUw04+JnSIQNrs/m74krVVxU87jYqEmfET8Ykl01bKZNEylEyUbbowGqhBtnnLrbkT//JlO4IumIhRivrUO+4hzxBy0sBm85OF/ZKaAUhaTutVX2NvpfqR1Fc2YIyxI/OZ5b1bbafOYS1pXVfNbtFt1RGGmgQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=Rm7+ps3E; arc=none smtp.client-ip=199.89.1.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1791929982; c=relaxed/simple;
+	bh=A+I/86KdVa8jIDGYt6ApDmQiXDBusJSa5kMa1fb0xTQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=ZOiKE+kwb01yrVATCLKYDxQ6T2clA9tJnAQe0XJSCSVxEA3gxHw5l7rMZLFMJVd13xPDhFHwOTgrwc54/DJ2ICRg+kJKYV8mUiRx17tUQNLvlJg4xpbMeGku2WfeoAzDtsS9YljDMstSE3OQvHewn9Co8CCrzm7tJOTghRs2pFk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=T9ivcEh2; arc=none smtp.client-ip=209.85.128.43
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="Rm7+ps3E"
-Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4j47nQ5p1qzlfvq1;
-	Tue, 13 Oct 2026 22:10:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:mime-version:references:in-reply-to
-	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1791929429; x=1794521430; bh=GyVV8
-	RGpaexBqnF9eCz7YIhuYw86ztQP0cHfE6MO0EI=; b=Rm7+ps3ESkKUAa/6F6ADY
-	KphLNl0q+w9+oNJtj1kmJ0Q7uzKDcTbt3dx68JM9v2rZ2xoKdwslVid2tUDR/1wz
-	Y9yPyx5OCP/teybmY+sLIMdTegfbI3INMJfeWfmmicj+9NN59gPg7MN0dwArJu70
-	8wfhUeL0FUa/TbN9AU6zI+qOEACtuf8enxQS3zYy6fygszU5n5wpyVrF1D+MDZXC
-	svEbkrx+oV8GvifvrvZw3qDDY9XqnjrwHhtdqCXhdFNIDjDoLkoMMup1vTvuEz15
-	zNvDwwHq2vFccFC5Wnaw7tgbYdyjchXSwM085YGs4jxXS5TkCRIug02PVZAUyGSL
-	g==
-X-Virus-Scanned: by MailRoute
-Received: from 013.lax.mailroute.net ([127.0.0.1])
- by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id veoT84Z_Dh1r; Tue, 13 Oct 2026 22:10:29 +0000 (UTC)
-Received: from bvanassche.c.googlers.com.com (245.199.118.34.bc.googleusercontent.com [34.118.199.245])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4j47nG02rgzlfvq6;
-	Tue, 13 Oct 2026 22:10:25 +0000 (UTC)
-From: Bart Van Assche <bvanassche@acm.org>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
-	John Garry <john.garry@linux.dev>,
-	Christoph Hellwig <hch@lst.de>,
-	Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH v6 7/8] scsi: scsi_debug: Improve lock context annotations
-Date: Tue, 13 Oct 2026 15:10:08 -0700
-Message-ID: <1775809e31b535cc42f3f79e75f28666e74a98f7.1791924924.git.bvanassche@acm.org>
-X-Mailer: git-send-email 2.56.0.176.g3575e65682-goog
-In-Reply-To: <cover.1791924924.git.bvanassche@acm.org>
-References: <cover.1791924924.git.bvanassche@acm.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="T9ivcEh2"
+Received: by mail-wm1-f43.google.com with SMTP id 5b1f17b1804b1-4a0286c981dso3027125e9.2
+        for <linux-scsi@vger.kernel.org>; Tue, 13 Oct 2026 15:19:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1791929979; x=1792534779; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:message-id:date
+         :subject:cc:to:from:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=SfkApeXinHFIr0p8vXlFlLyypuKINDLCCxfSgft0shY=;
+        b=T9ivcEh20L2Gnf55fpi7DhP2HKShJOGeeTBrs3mIni6QHZp0ttdbtyyKpxc/m9Vce8
+         06mrG4FlYTMFm7pK4KNdp14OM3toRYmxvEltNOFm6CdqSKmJH9wYrgNhzFL0ghGbiRLK
+         HZdBJz1KcH9dup7ZCLkndjoFeAnmT5BuQGBYW0ipohtIy1mhKFvifFngR45FbEB0EMYh
+         jhGgdXYmyQqe1X1d+jTdxoKjFDzskAakrug5B3aBOVNYioYtDaWRVI2sDYDxWE+5E0Qe
+         k2+5HsHdT7D0Mq8Nf7IYBc6Gv8Cthsb1oUwt/RCpiHkaxdqHfezmgxOixLbW4Napo6z2
+         FJTA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791929979; x=1792534779;
+        h=content-transfer-encoding:content-type:mime-version:message-id:date
+         :subject:cc:to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=SfkApeXinHFIr0p8vXlFlLyypuKINDLCCxfSgft0shY=;
+        b=CRYys0htgriFEBi9tX41WExp1dslbXi0brA0iG7bPSoUAEQq/JonO1Qn2BOUNQ3xEw
+         stdGOxZectLJaVhg8ar0T58S5wxlNBAGvb0w3QhvBP5R8hzzyPvPGVS6tzbDw9q9Pa/e
+         dqdBi/bTlmP9H/d/R3GdGR2I754mK1HarQalT60fpzmJvTwc6f/NIKUDKrsIMQadQOWt
+         ZS8KzlZ1j9Tq9GQKMPMjd9y3bzk6VJNehYvGhXFX4wlxQKdl7VtdoYxcrxCcrPF2ih+p
+         wWJLSBiHetW0UDi/7QFlMdxXYgdVk5Riab4/byqOmh031+cAASFsTD9gmx45KXu2+qrI
+         b3iw==
+X-Forwarded-Encrypted: i=1; AKwUvByEriS/09CPtGMKqeloirBQuMWhhajvKe3VS4K83EV4tNhwLD4JcGy9tN60NU9qChURX6DGJ7ZzQEpJ@vger.kernel.org
+X-Gm-Message-State: AFq9FYKCuKUOE3CTM9/U8tCNtaizI08PQpCw119+9Exv335RSrMFR/RJ
+	S7DfmY3/o1LVteX0TZ5N+o6vAgO7olztRRrKaM6xQsD5c9dLiFHxO2PhGicOqzoB
+X-Gm-Gg: AYBFou2KFbDx2oMWlM7xQGuSSIzOKydooXcKCUdRwmlOfneMBuVpFyFal6qRZoxGlGO
+	r6eXTYtv33hv/P+tIjmzsHKiiAQfqr+nAt0/Zc1G4MWOBRHcMAXH0QJ1t4cPXOSEq/cn0NtQz79
+	//+Buia2gXDU+e+sEkEPKsSXlVEH8EeT9PwT31SzQ3jKGpmha3j2CcWVxtxokXQGQEY6K4C6QjD
+	VEL4DWMtEFpCFB7Yeziptl5CjRgruhMU4FlXQMCprGyNEsNB3epsQTzPIh20fI9MKXgQtuKc1gQ
+	q/xjbZyZ0iY+54xS5gPn0MB2SPZWEIJyc/eLrmCo8KJ7eQnxL9fnjo2Ock90Z67EKfUqokf/5o5
+	lPeqWBFj0NMm23bmjM9rwqifwhT4jDBUl7HbNB68XWh7E6Dgtxq76EysZBJI74yrKdbQaHQ2LjW
+	4uKfX5EopNx1Hi29doMRYl09Zo25/6hORI6sj8v7FbIVxx0VAkVzL19KjcdAkiJsieDTptyVoJA
+	NXw98nw6jEu50sYXXMqHfW/39C1CyzEmmFncXa40ulWXriLSE7bGm/e7MkwhM0yAha1H2cHxkD/
+	9ObM3u5pPkMyw1zGg/C8axgwo9uWqKil9gAm5B/udOYb7pXwZ4kyyz4i48cqk55/rMLrEXi6yMs
+	AkYDwQOzVRJRily0WqFmBGL68mdp4GupL69h6GfnOJ4zutDSD/UNti41Lpat9W4bL5PvxW9rMx7
+	3pfyGeP65GEbLq32g=
+X-Received: by 2002:a05:600c:8b06:b0:4a1:7ce1:2eaf with SMTP id 5b1f17b1804b1-4a18e4e0963mr279668475e9.34.1791929978906;
+        Tue, 13 Oct 2026 15:19:38 -0700 (PDT)
+Received: from localhost.localdomain ([2a0d:e487:412d:e9fb:680d:a947:4b50:d9e])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a18beacd2csm428992205e9.14.2026.10.13.15.19.38
+        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
+        Tue, 13 Oct 2026 15:19:38 -0700 (PDT)
+From: Olivier Kaloudoff <olivier.kaloudoff@gmail.com>
+To: linux-usb@vger.kernel.org
+Cc: oneukum@suse.com,
+	stern@rowland.harvard.edu,
+	gregkh@linuxfoundation.org,
+	linux-scsi@vger.kernel.org,
+	usb-storage@lists.one-eyed-alien.net,
+	Olivier Kaloudoff <olivier.kaloudoff@gmail.com>,
+	stable@vger.kernel.org
+Subject: [PATCH] usb: uas: validate status URB length before parsing the IU
+Date: Wed, 14 Oct 2026 00:19:37 +0200
+Message-ID: <20261013221937.41490-1-olivier.kaloudoff@gmail.com>
+X-Mailer: git-send-email 2.54.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-Prepare the scsi_debug driver for enabling compiler-based lock context
-analysis:
-- Annotate the lock and unlock helper functions with __acquires,
-  __releases, __acquires_shared, and __releases_shared.
-- Add __acquire() and __release() calls in the paths that do not match
-  the __acquires() / __releases() annotations.
-- Annotate sdeb_meta_{read,write}_{,un}lock() with __context_unsafe()
-  because adding __acquire() and __release() calls in these functions is
-  not possible without triggering undefined behavior (taking the address
-  of a member of a structure with a NULL pointer as base address).
+uas_stat_cmplt() dereferences iu->tag without verifying that the
+status URB actually carried a full IU header.  The transfer buffer is
+a freshly-zeroed sense_iu, so a status URB that completes
+successfully but with a short or empty actual_length — observed in
+the wild during link-level upsets (Thunderbolt-chain xhci blips) and
+on a wedging bridge — reads back as iu_id=0/tag=0 and produces the
+misleading
 
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+  stat urb: no pending cmd for uas-tag 0
+
+log spam seen e.g. on an ASMT135x enclosure and a Samsung T7, right
+before the affected commands time out into the error handler.
+
+Beyond the noise, a short packet that happens to carry a
+plausible-looking header could be matched to an inflight command and
+drive the state machine off garbage.  Bail out on anything shorter
+than a full struct iu.
+
+Cc: stable@vger.kernel.org
+Signed-off-by: Olivier Kaloudoff <olivier.kaloudoff@gmail.com>
 ---
- drivers/scsi/scsi_debug.c | 108 ++++++++++++++++++++++++--------------
- 1 file changed, 70 insertions(+), 38 deletions(-)
+ drivers/usb/storage/uas.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index cfe6bd154e8d..a922c8318a2f 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -4052,24 +4052,27 @@ static inline struct sdeb_store_info *devip2sip(s=
-truct sdebug_dev_info *devip,
-=20
- static inline void
- sdeb_read_lock(rwlock_t *lock)
-+	__acquires_shared(lock)
- {
- 	if (sdebug_no_rwlock)
--		__acquire(lock);
-+		__acquire_shared(lock);
- 	else
- 		read_lock(lock);
- }
-=20
- static inline void
- sdeb_read_unlock(rwlock_t *lock)
-+	__releases_shared(lock)
- {
- 	if (sdebug_no_rwlock)
--		__release(lock);
-+		__release_shared(lock);
- 	else
- 		read_unlock(lock);
- }
-=20
- static inline void
- sdeb_write_lock(rwlock_t *lock)
-+	__acquires(lock)
- {
- 	if (sdebug_no_rwlock)
- 		__acquire(lock);
-@@ -4079,6 +4082,7 @@ sdeb_write_lock(rwlock_t *lock)
-=20
- static inline void
- sdeb_write_unlock(rwlock_t *lock)
-+	__releases(lock)
- {
- 	if (sdebug_no_rwlock)
- 		__release(lock);
-@@ -4088,6 +4092,7 @@ sdeb_write_unlock(rwlock_t *lock)
-=20
- static inline void
- sdeb_data_read_lock(struct sdeb_store_info *sip)
-+	__acquires_shared(&sip->macc_data_lck)
- {
- 	BUG_ON(!sip);
-=20
-@@ -4096,6 +4101,7 @@ sdeb_data_read_lock(struct sdeb_store_info *sip)
-=20
- static inline void
- sdeb_data_read_unlock(struct sdeb_store_info *sip)
-+	__releases_shared(&sip->macc_data_lck)
- {
- 	BUG_ON(!sip);
-=20
-@@ -4104,6 +4110,7 @@ sdeb_data_read_unlock(struct sdeb_store_info *sip)
-=20
- static inline void
- sdeb_data_write_lock(struct sdeb_store_info *sip)
-+	__acquires(&sip->macc_data_lck)
- {
- 	BUG_ON(!sip);
-=20
-@@ -4112,6 +4119,7 @@ sdeb_data_write_lock(struct sdeb_store_info *sip)
-=20
- static inline void
- sdeb_data_write_unlock(struct sdeb_store_info *sip)
-+	__releases(&sip->macc_data_lck)
- {
- 	BUG_ON(!sip);
-=20
-@@ -4120,6 +4128,7 @@ sdeb_data_write_unlock(struct sdeb_store_info *sip)
-=20
- static inline void
- sdeb_data_sector_read_lock(struct sdeb_store_info *sip)
-+	__acquires_shared(&sip->macc_sector_lck)
- {
- 	BUG_ON(!sip);
-=20
-@@ -4128,6 +4137,7 @@ sdeb_data_sector_read_lock(struct sdeb_store_info *=
-sip)
-=20
- static inline void
- sdeb_data_sector_read_unlock(struct sdeb_store_info *sip)
-+	__releases_shared(&sip->macc_sector_lck)
- {
- 	BUG_ON(!sip);
-=20
-@@ -4136,6 +4146,7 @@ sdeb_data_sector_read_unlock(struct sdeb_store_info=
- *sip)
-=20
- static inline void
- sdeb_data_sector_write_lock(struct sdeb_store_info *sip)
-+	__acquires(&sip->macc_sector_lck)
- {
- 	BUG_ON(!sip);
-=20
-@@ -4144,6 +4155,7 @@ sdeb_data_sector_write_lock(struct sdeb_store_info =
-*sip)
-=20
- static inline void
- sdeb_data_sector_write_unlock(struct sdeb_store_info *sip)
-+	__releases(&sip->macc_sector_lck)
- {
- 	BUG_ON(!sip);
-=20
-@@ -4165,50 +4177,67 @@ sdeb_data_sector_write_unlock(struct sdeb_store_i=
-nfo *sip)
-=20
- static inline void
- sdeb_data_lock(struct sdeb_store_info *sip, bool atomic)
-+	__acquires(&sip->macc_data_lck)
- {
--	if (atomic)
-+	if (atomic) {
- 		sdeb_data_write_lock(sip);
--	else
-+	} else {
- 		sdeb_data_read_lock(sip);
-+		__release_shared(&sip->macc_data_lck);
-+		__acquire(&sip->macc_data_lck);
+diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
+index 265162981269..88fed50c262b 100644
+--- a/drivers/usb/storage/uas.c
++++ b/drivers/usb/storage/uas.c
+@@ -315,6 +315,13 @@ static void uas_stat_cmplt(struct urb *urb)
+ 		goto bail;
+ 	}
+ 
++	if (urb->actual_length < sizeof(struct iu)) {
++		dev_err(&urb->dev->dev,
++			"stat urb: short transfer (%u bytes)\n",
++			urb->actual_length);
++		goto bail;
 +	}
- }
-=20
- static inline void
- sdeb_data_unlock(struct sdeb_store_info *sip, bool atomic)
-+	__releases(&sip->macc_data_lck)
- {
--	if (atomic)
-+	if (atomic) {
- 		sdeb_data_write_unlock(sip);
--	else
-+	} else {
-+		__release(&sip->macc_data_lck);
-+		__acquire_shared(&sip->macc_data_lck);
- 		sdeb_data_read_unlock(sip);
-+	}
- }
-=20
- /* Allow many reads but only 1x write per sector */
- static inline void
- sdeb_data_sector_lock(struct sdeb_store_info *sip, bool do_write)
-+	__acquires(&sip->macc_sector_lck)
- {
--	if (do_write)
-+	if (do_write) {
- 		sdeb_data_sector_write_lock(sip);
--	else
-+	} else {
- 		sdeb_data_sector_read_lock(sip);
-+		__release_shared(&sip->macc_sector_lck);
-+		__acquire(&sip->macc_sector_lck);
-+	}
- }
-=20
- static inline void
- sdeb_data_sector_unlock(struct sdeb_store_info *sip, bool do_write)
-+	__releases(&sip->macc_sector_lck)
- {
--	if (do_write)
-+	if (do_write) {
- 		sdeb_data_sector_write_unlock(sip);
--	else
-+	} else {
-+		__release(&sip->macc_sector_lck);
-+		__acquire_shared(&sip->macc_sector_lck);
- 		sdeb_data_sector_read_unlock(sip);
-+	}
- }
-=20
- static inline void
- sdeb_meta_read_lock(struct sdeb_store_info *sip)
--{
--	if (sdebug_no_rwlock) {
--		if (sip)
--			__acquire(&sip->macc_meta_lck);
--		else
--			__acquire(&sdeb_fake_rw_lck);
--	} else {
-+	__acquires_shared(&sip->macc_meta_lck)
-+	__context_unsafe(/*
-+			  * Can't be annotated with
-+			  * __{acquire,release}(,_shared}() without triggering
-+			  * undefined behavior.
-+			  */)
-+{
-+	if (!sdebug_no_rwlock) {
- 		if (sip)
- 			read_lock(&sip->macc_meta_lck);
- 		else
-@@ -4218,13 +4247,14 @@ sdeb_meta_read_lock(struct sdeb_store_info *sip)
-=20
- static inline void
- sdeb_meta_read_unlock(struct sdeb_store_info *sip)
--{
--	if (sdebug_no_rwlock) {
--		if (sip)
--			__release(&sip->macc_meta_lck);
--		else
--			__release(&sdeb_fake_rw_lck);
--	} else {
-+	__releases_shared(&sip->macc_meta_lck)
-+	__context_unsafe(/*
-+			  * Can't be annotated with
-+			  * __{acquire,release}(,_shared}() without triggering
-+			  * undefined behavior.
-+			  */)
-+{
-+	if (!sdebug_no_rwlock) {
- 		if (sip)
- 			read_unlock(&sip->macc_meta_lck);
- 		else
-@@ -4234,13 +4264,14 @@ sdeb_meta_read_unlock(struct sdeb_store_info *sip=
-)
-=20
- static inline void
- sdeb_meta_write_lock(struct sdeb_store_info *sip)
--{
--	if (sdebug_no_rwlock) {
--		if (sip)
--			__acquire(&sip->macc_meta_lck);
--		else
--			__acquire(&sdeb_fake_rw_lck);
--	} else {
-+	__acquires(&sip->macc_meta_lck)
-+	__context_unsafe(/*
-+			  * Can't be annotated with
-+			  * __{acquire,release}(,_shared}() without triggering
-+			  * undefined behavior.
-+			  */)
-+{
-+	if (!sdebug_no_rwlock) {
- 		if (sip)
- 			write_lock(&sip->macc_meta_lck);
- 		else
-@@ -4250,13 +4281,14 @@ sdeb_meta_write_lock(struct sdeb_store_info *sip)
-=20
- static inline void
- sdeb_meta_write_unlock(struct sdeb_store_info *sip)
--{
--	if (sdebug_no_rwlock) {
--		if (sip)
--			__release(&sip->macc_meta_lck);
--		else
--			__release(&sdeb_fake_rw_lck);
--	} else {
-+	__releases(&sip->macc_meta_lck)
-+	__context_unsafe(/*
-+			  * Can't be annotated with
-+			  * __{acquire,release}(,_shared}() without triggering
-+			  * undefined behavior.
-+			  */)
-+{
-+	if (!sdebug_no_rwlock) {
- 		if (sip)
- 			write_unlock(&sip->macc_meta_lck);
- 		else
++
+ 	idx = be16_to_cpup(&iu->tag) - 1;
+ 
+ 	spin_lock_irqsave(&devinfo->lock, flags);
+-- 
+2.47.3
+
