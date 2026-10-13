@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC4923B841B;
-	Tue, 13 Oct 2026 11:43:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 855BC377553;
+	Tue, 13 Oct 2026 11:45:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791891833; cv=none; b=GQEzbMzM0IMP3Iwug4fXxOfzKBJr00hXPl+5ouMnjbsMHcge+gQ7M6tgjz0eQSGCV5FnDumF1aipsYbZ6mu9hfrgG+rW1710hzVZu1KnP2aWoPb/Q38Pfpmvl02xMucpT2gH5uUnrDLIpRcXPoj3GNN8WMcOk29Ks7l4z5i8GoU=
+	t=1791891953; cv=none; b=BWvtIzu+PQamfUWSa1Td2D/gv5QZh6SI0gPgu8gb/0J8CzNuTiKy+a+y+0Md/RLLNOuqb/KbQ9gkwDG3RbbHLopcpifQVIOKSYdOApv00APRPcIzLsz1O2pxeYZVptoesh7+qzsnY3crefOcek1L2nqIk+97/f0HRCcWj3X+Pdk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791891833; c=relaxed/simple;
-	bh=TaJk7ZnGYmGrARoPE87abyFf7X7nIEAc2yxpu5uWHoQ=;
+	s=arc-20240116; t=1791891953; c=relaxed/simple;
+	bh=EQI3ax4FBRLoqCiDF4JESV7uFzf4P4788d0hYDsvBfM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=nKjphG+wx8xaBJB4oZwvtMGgcVYFBGTz9BYwkzON8tT2loZiUZMct7oZlcHJEWgo+2k+9ZQnUe/3M8FRYuJ+PXuti37WlqH2ktd9wm+jLaBVUeXP2yxuqOBdVanwa1jWs7Qhkwv6y9bs3i6keVH+jOnsYpoND2+cS8l2auQShF8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JvOEi1vy; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=syk/eV/mC8Ox3H1ek9RTe8I6d++7NW4X2VeBunDqMuVuuTo2lVW5TkenM6vFFLvmLg50wR/VzwIRXv7BVZNavcO9lduegOHrVNLBQwrr5R17LH9Ov4qAv4MyK0kzE/SALaHgdUVAdCc9e9xyUjZ6zqDYrGdAXT6d38sIJq5S34I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WcbsB3jt; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JvOEi1vy"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E2ACB1F000FF;
-	Tue, 13 Oct 2026 11:43:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WcbsB3jt"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A7DD31F00893;
+	Tue, 13 Oct 2026 11:45:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791891831;
-	bh=S3kwk859qFodmpxj3OxHRi9StcyZ/IRrGX/kgBYEpD4=;
+	s=k20260515; t=1791891952;
+	bh=zuSfDICaEiGsOUsuUUs/M8PT2xH5gVwuhSNYHaltNBM=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=JvOEi1vyoPSPHIK+3e1cFSGk5Nq5aIKf+aPMRBqWK+jdkr+GJ34ZVhlK6KFh95ok4
-	 LFLkrLVzES/VjnqmInEE0Ue+CxRK2fSBE6/QrhXBRNAYjd1RCgj1C7FcX3LsnkXKK/
-	 FcPKD5CYRd5utm0PX1a/JlzYfAu81YBwmUTmdu2jSQfZJQIWOLsgxo2IqY17WGdyK/
-	 VwX9jgqE+oS/qTJ+U+MBVqNS1wFKQ3L5PC8a3V+m0KpECoP3Lv5uQdi+xwTGUWhyVU
-	 JXNNX9WvbPCWhJAa1Kpla3Kp/XCy1sGiLGPzH2fxY+k3JRj8YHefM/4npCF3FyIv1o
-	 RUlJ/KsSCGPhA==
-Date: Tue, 13 Oct 2026 12:43:19 +0100
+	b=WcbsB3jt6ggnUvGzUReaKgzEI8mDtTInytfY/4L0UY2EorEe9hphgicKzItvTX39t
+	 Nkvy8qOh6DKVrPbR5TjupziSaZgBvlcvCG2RK2XVAR40JpMRWs5Fnw3WxwN8wSQcSm
+	 e4Pa/CbDfrSNggneSmDwlGAvBdaa5OpY2Eb28vX1tjG+241iKbITOTrqylwnvqPLJf
+	 v4RTtDmN5pnh9VqNzHooU8Qhyjm3hlSSYraGaunuKyYvgkLudVqglMi2nhQG7J7WTg
+	 aJaagzot2j4wk7DRAQoe19+N65hUjPHU95de4mavPa6fMUPk9Di3NymEkazMnwOysp
+	 y3A1k4Y5PuPrw==
+Date: Tue, 13 Oct 2026 12:45:19 +0100
 From: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
 To: "David Hildenbrand (Arm)" <david@kernel.org>
 Cc: Andrew Morton <akpm@linux-foundation.org>, 
@@ -87,12 +87,12 @@ Cc: Andrew Morton <akpm@linux-foundation.org>,
 	kvm@vger.kernel.org, kvm-riscv@lists.infradead.org, linux-riscv@lists.infradead.org, 
 	linux-s390@vger.kernel.org, sparclinux@vger.kernel.org, fuse-devel@lists.linux.dev, 
 	Ihor Solodrai <ihor.solodrai@linux.dev>, Bert Karwatzki <spasswolf@web.de>
-Subject: Re: [PATCH v5 33/38] mm: eliminate VMA_SPECIAL_FLAGS usage when
- hugetlb explicitly tested
-Message-ID: <as4ZGTa7tHwVwv-1@gremlin>
+Subject: Re: [PATCH v5 34/38] mm: eliminate VMA_SPECIAL_FLAGS check in
+ lru_gen_look_around()
+Message-ID: <as4ZgBbVflWECfxW@gremlin>
 References: <20261009-b4-mmap-prepare-vma-flag-sanify-v5-0-923b70125b1e@kernel.org>
- <20261009-b4-mmap-prepare-vma-flag-sanify-v5-33-923b70125b1e@kernel.org>
- <e65264f1-52dd-4ed4-a647-87e7a1778b6b@kernel.org>
+ <20261009-b4-mmap-prepare-vma-flag-sanify-v5-34-923b70125b1e@kernel.org>
+ <22dc04ac-c046-4baa-9bdf-a5ba07c0c0ca@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -101,31 +101,30 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <e65264f1-52dd-4ed4-a647-87e7a1778b6b@kernel.org>
+In-Reply-To: <22dc04ac-c046-4baa-9bdf-a5ba07c0c0ca@kernel.org>
 
-On Mon, Oct 12, 2026 at 08:49:11PM +0200, David Hildenbrand (Arm) wrote:
+On Mon, Oct 12, 2026 at 08:50:09PM +0200, David Hildenbrand (Arm) wrote:
 > On 10/9/26 20:04, Lorenzo Stoakes (ARM) wrote:
 
-> > diff --git a/mm/ksm.c b/mm/ksm.c
-> > index 624f37975e12..ed66a90e0031 100644
-> > --- a/mm/ksm.c
-> > +++ b/mm/ksm.c
-> > @@ -747,9 +747,7 @@ static bool ksm_compatible(const struct file *file, vma_flags_t vma_flags)
-> >  	if (vma_flags_test_any(&vma_flags, VMA_SHARED_BIT, VMA_MAYSHARE_BIT,
-> >  			       VMA_HUGETLB_BIT))
-> >  		return false;
-> > -	if (vma_flags_test_single_mask(&vma_flags, VMA_DROPPABLE))
-> > -		return false;
-> > -	if (vma_flags_test_any_mask(&vma_flags, VMA_SPECIAL_FLAGS))
-> > +	if (!vma_flags_is_mm_backed(&vma_flags))
-> >  		return false;
+> > diff --git a/mm/vmscan.c b/mm/vmscan.c
+> > index 3b318efa2916..7adffe8182b3 100644
+> > --- a/mm/vmscan.c
+> > +++ b/mm/vmscan.c
+> > @@ -4418,8 +4418,8 @@ bool lru_gen_look_around(struct page_vma_mapped_walk *pvmw, unsigned int nr)
+> >  	if (spin_is_contended(pvmw->ptl))
+> >  		return true;
+> >
+> > -	/* exclude special VMAs containing anon pages from COW */
+> > -	if (vma->vm_flags & VM_SPECIAL)
+> > +	/* exclude fixed and non-mm-managed VMAs containing anon pages from COW */
+> > +	if (!vma_is_mm_managed(vma) || vma_is_fixed_mapping(vma))
+> >  		return true;
 >
-> Same here, it's hard for me to tell my brain that "permanently lazyfree pages
-> are not backed by core-mm".
+> If you keep the droppable thing out there you can just use
+>
+> vma_is_mm_backed() here I think.
 
-Yeah :) 'mm backed' is definitely too broad for this.
-
-Will reinstate the explicit droppable check in v6.
+Yeah I think you're right, will update for v6!
 
 >
 > Acked-by: David Hildenbrand (Arm) <david@kernel.org>
