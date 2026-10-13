@@ -1,220 +1,90 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f171.google.com (mail-pg1-f171.google.com [209.85.215.171])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A8C151A14A;
-	Tue, 13 Oct 2026 15:13:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B6484518154
+	for <linux-scsi@vger.kernel.org>; Tue, 13 Oct 2026 15:13:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791904382; cv=none; b=FZRZapjEMjwLiIZdKAD8letWSQAbq1NfAcTeRIHl5lvXPzB+m4xvF5DrKmc0OrKTCHyIkHYAKabs7yOuRp7gBqDA/fy/c1LwP3RhiM+73RzfxR+KoLO2hUyP56z+5j1ZF05cVKFWdRx3vaKjY8xpEPCTj0enFwsv+0RWZ+Efj38=
+	t=1791904406; cv=none; b=fWbp/h/LA6RL1PRR4K185RgHH1hfTLS7svEgTzWNlZhj9XfA30Sj6iluYN4bKUiPJNq9KdTZXt5ZLILxaSWPw0BYGhkJ4efkZvfdZPX7rljXIb3ruo27/1J2zBax9BlseuvoRt+aUHZ0ZGtJD5QLNDdgDDjuelLNDLCyUf2x3AQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791904382; c=relaxed/simple;
-	bh=9ugH4FT9/gtznAktS44gGpUEq4pOXZMJ2VeeFOF3Z44=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=fmIqVG51ZQjaq1m1J4Yl4Ky58dr5D/Ouvw+prhd3H4s9yTQ0z2tnd8mQ/NjGSNIRs/hY0KCSVYjpCTM6BQNbrKUXMhgXjJNGOQX6we/Z7eybJTkbk/7CVPVlTW2KT+5H97f+OJidOqDCYJnBfNCTIqcqCHQX6PFBQDJTLWPk6EA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ixcsJGDv; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791904406; c=relaxed/simple;
+	bh=v1oMUlr0j+OWLBDHKzTtuO91b3I1/3rK/UpKQ22TafQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=Mmvv98BIpy4b81CofZpWuezsxnRu3uQs617Zw2kiE2sJtT1waDqPpvPaZU+OHopYg2h7gQeqHciO5jcnkZiFR3XfzyALMoBWS0pOIrc3SSlwJ6K2JO2Z8/e2p3VQetrGFrRjB3kjZXEdF5beHR4SonCvY5MP55f232gB0bMVFZE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr; spf=none smtp.mailfrom=isslab.korea.ac.kr; dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b=BO/JMK64; arc=none smtp.client-ip=209.85.215.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ixcsJGDv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1A7581F00893;
-	Tue, 13 Oct 2026 15:12:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791904381;
-	bh=GMtIN+4F9Qb+gUfI9aB/QG5XlGE+8TEC3chxVq3fBvM=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=ixcsJGDv2gXgIS4jGBI7EAE4DlkrwlHt1eLiJ8ovFfYoa22s7vr2T9kSCoCv1qRmf
-	 q2qeZ/wXO3QSzD70TNeJBCNbUC65BF2IbQ0jqJ2xw/4bNhW2xT7Ukokz5cjfRWQQBF
-	 ahhuyGrMne9PTkLZYKUSEc2XZCt6S9Aw5tw0X1hvj0gqloiiqNcRNUbKxk4pQuJusx
-	 hw4oi+etGB9cMNxuy1wKs5uBu41NeNQyCLp8UIzPzR0uapTC9giu+yld870QQnFUL3
-	 U3wJlvLQqwI7VWVD+b9OxalSEZy8StvliGgPnRTT5iB9tauY0KoMXbDnMh9LOK1EXQ
-	 zfBE1M6H6iRdQ==
-From: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
-Date: Tue, 13 Oct 2026 16:04:53 +0100
-Subject: [PATCH v6 13/39] ALSA: pcm: use vm_insert_page() to map PCM status
- page
+	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b="BO/JMK64"
+Received: by mail-pg1-f171.google.com with SMTP id 41be03b00d2f7-cd6028ff33fso1045906a12.0
+        for <linux-scsi@vger.kernel.org>; Tue, 13 Oct 2026 08:13:25 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=isslab-korea-ac-kr.20251104.gappssmtp.com; s=20251104; t=1791904405; x=1792509205; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=2xsC6RbLkcpl6vUO8QFll7KRyQolqiQv4TDUNdnm1Dc=;
+        b=BO/JMK64Z74MaNO+q7zVPWzD7WKKGsiQ3vTyCGp/RfLfZPfZ/T//OhVTs3ONKwg2FX
+         A8WaCm1M01iu8gS+88iYKgL38CsDLs20272kd8u+I3+z+9OCcXYA0PUA1MzPs652aZIj
+         2yPupmVDDRExiLYvxY9NdG9TzmYXEm3+qxGhCJokC68LTVnmb34z0JQ50/gbDhkpwZ0a
+         2mOYpfTqH/qjQBjvR0i5TtsyJG8Nq5YwlF9ymrjPwRfrFpV99sPD+gPmBVMLpLERkoEZ
+         HYuC55kzisFI4KWky9V5Msgl9H4EseUS/78eUwTA0r4IZBrakLh4BCgO9Sg+AX1pYkPN
+         YUVA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791904405; x=1792509205;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=2xsC6RbLkcpl6vUO8QFll7KRyQolqiQv4TDUNdnm1Dc=;
+        b=Lcmyj4pFxRMlnR1Gra2vunA1Xj5CcyaNulDDbQD2cIB61llDWaMRtL0ygJL3dLStJE
+         X00DgbGfmGFhAdwbBUE1q9Ei5GPWQDn0+ZQb4liuXHv8RwRvt8wEM/nz72VcT11Z2VMn
+         rEuqs7XfXYCEtlnM5ZIhGulqCgDVONqbLTQZ60wM55V1hVblSdNDtGF7M+0wkyPmKVvp
+         67m67/CpCQNZqQ3XG7gjSS6jx/qqpmAo1+QR5zMpVrCOsHuY+NBk2qajGahEzbKgqdAf
+         U0sPxInp4+G+iQfYf7trFQ4i9UJpQn62ihowDCePOlBcKAPDAjmzFhGmJ71bMojXVgPm
+         5BDw==
+X-Gm-Message-State: AFq9FYIzYQyFzaFpYgNVp2uZ2/vUllzXeN5pb2NnqJAXCXgYQDiXn/Kv
+	3UWELHEm7+Rait1bDzLjGdBe+4QfpLlcTgPncXJAiJd7+49X+XJV7CDqCJhMPJFfpfI=
+X-Gm-Gg: AYBFou2k7vu1MFYGh6yaJAPMo8ETwnqFB/rJuheV7TKcdVmE9aGkcvTOOKUhv3WebyI
+	BbXvpBGcRIyKEVsBgQD3zJD0Nam01ifPAnFjeODLbjCOUd9PFktB054Jmt6p7+L/LHxZpCx4G3f
+	kct/c3dLBIq1fKm998jpOiMIFgq1kIG1z5l3qS0i4KDTJISqo4343B3Fof1yADLFCixU9PAHerB
+	Q9P5Jmc6C7xwxB/kLiWqrhviadirGXuxMBWmTMgohtYtOcvr19Nz9w69oPdFeqsO6k1PuBu4O4d
+	m/PXx2bjzzP29f5KSxFjM7yUJtyXNVZOTesvMH89FOhIB56jfHRoo/WcQ7NZU3QP91XR29apwKq
+	T3ZHnuMHnMBCmaWOojSC43Nw4aYppjLVvwqwThnY46cRK9SdruOZgMCQSmLpSCwDj7RjYc1/z9z
+	jhGdz3hi9q6TxIKFxJu4oMMdP9UkBlY9JCSOIMACPa9O1+fK4rWhHBlk4zFAf2O0h/oZVnbfIsP
+	1DHAAt/W6sL9OiJbpxc
+X-Received: by 2002:a05:6a21:8217:b0:3dd:85a9:55b7 with SMTP id adf61e73a8af0-3e16be2b1e4mr12853348637.34.1791904404981;
+        Tue, 13 Oct 2026 08:13:24 -0700 (PDT)
+Received: from localhost.localdomain ([2406:5900:1044:110c:c51c:be8a:c517:276])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-cd614dfa382sm1462434a12.26.2026.10.13.08.13.22
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 13 Oct 2026 08:13:24 -0700 (PDT)
+From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+To: sashiko-bot@kernel.org,
+	mkp@kernel.org,
+	James.Bottomley@HansenPartnership.com,
+	aacraid@microsemi.com
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org,
+	yhlee@isslab.korea.ac.kr
+Subject: Re: [PATCH 1/2] scsi: aacraid: bound the SRB sense data copy to the source buffer
+Date: Wed, 14 Oct 2026 00:13:03 +0900
+Message-ID: <20261013151303.3169745-1-yhlee@isslab.korea.ac.kr>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <sashiko-outbox-169890@kernel.org>
+References: <20261013140214.3156938-1-yhlee@isslab.korea.ac.kr> <20261013140214.3156938-2-yhlee@isslab.korea.ac.kr> <sashiko-outbox-169890@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20261013-b4-mmap-prepare-vma-flag-sanify-v6-13-1aa3c9b139f9@kernel.org>
-References: <20261013-b4-mmap-prepare-vma-flag-sanify-v6-0-1aa3c9b139f9@kernel.org>
-In-Reply-To: <20261013-b4-mmap-prepare-vma-flag-sanify-v6-0-1aa3c9b139f9@kernel.org>
-To: Andrew Morton <akpm@linux-foundation.org>, 
- "Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>, 
- Jann Horn <jannh@google.com>, Pedro Falcato <pfalcato@suse.de>, 
- David Hildenbrand <david@kernel.org>, Mike Rapoport <rppt@kernel.org>, 
- Suren Baghdasaryan <surenb@google.com>, Michal Hocko <mhocko@suse.com>, 
- Jonathan Corbet <corbet@lwn.net>, 
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
- Dennis Dalessandro <dennis.dalessandro@cornelisnetworks.com>, 
- Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>, 
- Paul Moore <paul@paul-moore.com>, 
- Stephen Smalley <stephen.smalley.work@gmail.com>, 
- Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, 
- Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, 
- Andrii Nakryiko <andrii@kernel.org>, Eduard Zingerman <eddyz87@gmail.com>, 
- Kumar Kartikeya Dwivedi <memxor@gmail.com>, Zi Yan <ziy@nvidia.com>, 
- Baolin Wang <baolin.wang@linux.alibaba.com>, 
- Nico Pache <nico.pache@linux.dev>, Ryan Roberts <ryan.roberts@arm.com>, 
- Dev Jain <dev.jain@arm.com>, Barry Song <baohua@kernel.org>, 
- Lance Yang <lance.yang@linux.dev>, Usama Arif <usama.arif@linux.dev>, 
- Kiryl Shutsemau <kas@kernel.org>, Doug Gilbert <dgilbert@interlog.com>, 
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
- "Martin K. Petersen" <mkp@kernel.org>, Simona Vetter <simona@ffwll.ch>, 
- Helge Deller <deller@gmx.de>, Sebastian Reichel <sre@kernel.org>, 
- John Hubbard <jhubbard@nvidia.com>, Peter Xu <peterx@redhat.com>, 
- Masami Hiramatsu <mhiramat@kernel.org>, Oleg Nesterov <oleg@redhat.com>, 
- Peter Zijlstra <peterz@infradead.org>, Thomas Gleixner <tglx@kernel.org>, 
- Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, 
- Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org, 
- Arnaldo Carvalho de Melo <acme@kernel.org>, 
- Namhyung Kim <namhyung@kernel.org>, Mark Rutland <mark.rutland@arm.com>, 
- Rik van Riel <riel@surriel.com>, Harry Yoo <harry@kernel.org>, 
- Juri Lelli <juri.lelli@redhat.com>, 
- Vincent Guittot <vincent.guittot@linaro.org>, 
- Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, 
- Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>, 
- David Airlie <airlied@gmail.com>, Will Deacon <will@kernel.org>, 
- "Aneesh Kumar K.V" <aneesh.kumar@kernel.org>, 
- Nick Piggin <npiggin@gmail.com>, Arnd Bergmann <arnd@arndb.de>, 
- Muchun Song <muchun.song@linux.dev>, Oscar Salvador <osalvador@suse.de>, 
- "Matthew Wilcox (Oracle)" <willy@infradead.org>, Jan Kara <jack@suse.cz>, 
- Marc Zyngier <maz@kernel.org>, Oliver Upton <oupton@kernel.org>, 
- Catalin Marinas <catalin.marinas@arm.com>, 
- Madhavan Srinivasan <maddy@linux.ibm.com>, Anup Patel <anup@brainfault.org>, 
- Paul Walmsley <pjw@kernel.org>, Palmer Dabbelt <palmer@dabbelt.com>, 
- Albert Ou <aou@eecs.berkeley.edu>, 
- Christian Borntraeger <borntraeger@linux.ibm.com>, 
- Janosch Frank <frankja@linux.ibm.com>, 
- Claudio Imbrenda <imbrenda@linux.ibm.com>, 
- Alexander Gordeev <agordeev@linux.ibm.com>, 
- Gerald Schaefer <gerald.schaefer@linux.ibm.com>, 
- Heiko Carstens <hca@linux.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>, 
- "David S. Miller" <davem@davemloft.net>, 
- Andreas Larsson <andreas@gaisler.com>, 
- Alexander Viro <viro@zeniv.linux.org.uk>, 
- Christian Brauner <brauner@kernel.org>, 
- Matthew Brost <matthew.brost@intel.com>, 
- Joshua Hahn <joshua.hahnjy@gmail.com>, Rakie Kim <rakie.kim@sk.com>, 
- Byungchul Park <byungchul@sk.com>, Gregory Price <gourry@gourry.net>, 
- Ying Huang <ying.huang@linux.alibaba.com>, 
- Alistair Popple <apopple@nvidia.com>, Chris Li <chrisl@kernel.org>, 
- Kairui Song <kasong@tencent.com>, Kemeng Shi <shikemeng@huaweicloud.com>, 
- Nhat Pham <nphamcs@gmail.com>, Baoquan He <baoquan.he@linux.dev>, 
- Youngjun Park <youngjun.park@lge.com>, Johannes Weiner <hannes@cmpxchg.org>, 
- Qi Zheng <qi.zheng@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
- Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>, 
- Wei Xu <weixugc@google.com>, Chengming Zhou <chengming.zhou@linux.dev>, 
- Michal Hocko <mhocko@kernel.org>, Miklos Szeredi <miklos@szeredi.hu>, 
- Xu Xin <xu.xin@linux.dev>
-Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, 
- linux-doc@vger.kernel.org, linux-usb@vger.kernel.org, 
- linux-rdma@vger.kernel.org, selinux@vger.kernel.org, 
- linux-sound@vger.kernel.org, bpf@vger.kernel.org, 
- linux-scsi@vger.kernel.org, linux-fbdev@vger.kernel.org, 
- dri-devel@lists.freedesktop.org, linux-trace-kernel@vger.kernel.org, 
- linux-perf-users@vger.kernel.org, linux-arch@vger.kernel.org, 
- linux-fsdevel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
- kvmarm@lists.linux.dev, linuxppc-dev@lists.ozlabs.org, kvm@vger.kernel.org, 
- kvm-riscv@lists.infradead.org, linux-riscv@lists.infradead.org, 
- linux-s390@vger.kernel.org, sparclinux@vger.kernel.org, 
- fuse-devel@lists.linux.dev, Ihor Solodrai <ihor.solodrai@linux.dev>, 
- Bert Karwatzki <spasswolf@web.de>, "Lorenzo Stoakes (ARM)" <ljs@kernel.org>, 
- Takashi Iwai <tiwai@suse.de>
-X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2824; i=ljs@kernel.org;
- h=from:subject:message-id; bh=9ugH4FT9/gtznAktS44gGpUEq4pOXZMJ2VeeFOF3Z44=;
- b=owGbwMvMwCV2fu7ZrsZH9SKMp9WSGLLOeZzUYFE18/JTq3IT5lgYd0l6kcipCwzfdp0PUWX8u
- ej+SaXEjlIWBjEuBlkxRZbnX8T3B4mEzeu84O8GM4eVCWQIAxenAExkkS0jw9GNStN2+eculLc4
- J/Uy7cK+1C0e1Zdc84TqdrLdtT0wcxbDP6s1izVucIj7pt3InPRBrZQ9MmzjUs/o4JtMN1KN5nA
- 5cAAA
-X-Developer-Key: i=ljs@kernel.org; a=openpgp;
- fpr=E7F417BF5214569E89D04F46CF9DCD8A81E27F14
+Content-Transfer-Encoding: 8bit
 
-There's no need to keep a fault handler around for this, instead map on
-mmap.
-
-While we're here, rename area to vma to be consistent.
-
-This correctly makes the mapping a mixed map mapping.
-
-This works towards establishing the invariant that only PFN mapped or mixed
-map mappings may clear the VM_MAYWRITE flag. The status page mapping clears
-VM_MAYWRITE, so it must not be mm-managed; the control page mapping remains
-writable and is left fault-based.
-
-The assumption is made that the struct pcm_mmap_status structure is at most
-a page in size, which is asserted as a build bug.
-
-This is safe to assume, as the size of the structure is 56 bytes at most.
-
-Acked-by: Takashi Iwai <tiwai@suse.de>
-Reviewed-by: Suren Baghdasaryan <surenb@google.com>
-Signed-off-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
----
- sound/core/pcm_native.c | 38 +++++++++++++-------------------------
- 1 file changed, 13 insertions(+), 25 deletions(-)
-
-diff --git a/sound/core/pcm_native.c b/sound/core/pcm_native.c
-index 62324282fcae..c98fb3df14f3 100644
---- a/sound/core/pcm_native.c
-+++ b/sound/core/pcm_native.c
-@@ -3760,39 +3760,27 @@ static __poll_t snd_pcm_poll(struct file *file, poll_table *wait)
- /*
-  * mmap status record
-  */
--static vm_fault_t snd_pcm_mmap_status_fault(struct vm_fault *vmf)
-+static int snd_pcm_mmap_status(struct snd_pcm_substream *substream, struct file *file,
-+			       struct vm_area_struct *vma)
- {
--	struct snd_pcm_substream *substream = vmf->vma->vm_private_data;
-+	const unsigned long size = vma->vm_end - vma->vm_start;
- 	struct snd_pcm_runtime *runtime;
--	
--	if (substream == NULL)
--		return VM_FAULT_SIGBUS;
--	runtime = substream->runtime;
--	vmf->page = virt_to_page(runtime->status);
--	get_page(vmf->page);
--	return 0;
--}
-+	struct page *page;
- 
--static const struct vm_operations_struct snd_pcm_vm_ops_status =
--{
--	.fault =	snd_pcm_mmap_status_fault,
--};
-+	BUILD_BUG_ON(sizeof(struct snd_pcm_mmap_status) > PAGE_SIZE);
- 
--static int snd_pcm_mmap_status(struct snd_pcm_substream *substream, struct file *file,
--			       struct vm_area_struct *area)
--{
--	long size;
--	if (!(area->vm_flags & VM_READ))
-+	if (!(vma->vm_flags & VM_READ))
- 		return -EINVAL;
--	size = area->vm_end - area->vm_start;
--	if (size != PAGE_ALIGN(sizeof(struct snd_pcm_mmap_status)))
-+	if (size != PAGE_SIZE)
- 		return -EINVAL;
--	area->vm_ops = &snd_pcm_vm_ops_status;
--	area->vm_private_data = substream;
--	vm_flags_mod(area, VM_DONTEXPAND | VM_DONTDUMP,
-+
-+	vm_flags_mod(vma, VM_DONTEXPAND | VM_DONTDUMP,
- 		     VM_WRITE | VM_MAYWRITE);
-+	vma->vm_page_prot = vm_get_page_prot(vma->vm_flags);
- 
--	return 0;
-+	runtime = substream->runtime;
-+	page = virt_to_page(runtime->status);
-+	return vm_insert_page(vma, vma->vm_start, page);
- }
- 
- /*
-
--- 
-2.55.0
-
+This patch only bounds the sense-data copy; it does not touch
+scsicmd->result or the srb_status switch.  The result set in the
+status != ST_OK block is in fact overwritten unconditionally by that
+switch (every case assigns scsicmd->result with '='), so it is
+pre-existing and independent of this length change; I have left it alone.
+Resent as v2 (with the HBA patch dropped):
+https://lore.kernel.org/linux-scsi/20261013150420.3168223-1-yhlee@isslab.korea.ac.kr/
