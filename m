@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B40661862
-	for <linux-scsi@vger.kernel.org>; Tue, 13 Oct 2026 00:03:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 700A870830
+	for <linux-scsi@vger.kernel.org>; Tue, 13 Oct 2026 00:05:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791849803; cv=none; b=a46r81bmFjDwfQUw97zuVTB9H5LuaTxpDBoW46gCnf09uuWnFPya/kTNOHtE8HpYMWomPgmHzDR5+NfmUfM9pxzrgT7LoSZnM4whQWq75fJdvT3KHYUIuPwGy8YpZMMSjjI33zHbNqtWEeBH8nJnyHF1tLsPNSrspVvZFNU0DJ8=
+	t=1791849929; cv=none; b=n4kJ48Tv4jCvCJoV2mtsWXLX/8qPJmh1Ic0U2u5TSrN0vIYH6lLOzS5ogFfiVrXkeHSRYsnPlrtpNDaWattfG+aVO09mqmYQWMwXrCcZNHPQWt1uaH92/P5glmzBmrwH7FpSMgodIxSJMvYF1aBeu5057R5wU7EIJnkwcYaEX+U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791849803; c=relaxed/simple;
-	bh=nKVlVRgUt6fR95hPt1EgdK+0QiT3Bodca6pScSnhZyg=;
+	s=arc-20240116; t=1791849929; c=relaxed/simple;
+	bh=XK+nxc52pDLq2hPiw9JSTmuwYv0Jea/6vyXrbW098W4=;
 	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
-	 Date; b=O0qQHNoLSNUe/vSn/A9P7Y8gQiLtY0wgtXIOjR/BqifKglFt0CpWS8sNHTdtjATr6GHgvnwxgXAMxKqlcmJ2hzeXZALZC07m9lJtJj91stEwiXygLHaHrchF8gvGf4gqfncpGBUqmJN8/3bKBz4Kv51lqxO7V3LBqRT63oA76t4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YF+wUo2i; arc=none smtp.client-ip=100.103.45.18
+	 Date; b=ieo5cBExAx4z9mbrL2TWtH4T2oloCo+gNvZP6ikVcOV1xVjkQFEqfQ+3vlyV0QVkuM9zE4DgZpyRatzpE5Nw8arNkhv6CKpf59hD6KcCszJRn6Yitx6+kAw9WmKLkdXgEzhrhc/gvsMOylktQmVW2fRhj/pvoGtMWTqxqpPD9aA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Kkckdpbh; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YF+wUo2i"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6AA2B1F0089B;
-	Tue, 13 Oct 2026 00:03:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Kkckdpbh"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 308091F0089B;
+	Tue, 13 Oct 2026 00:05:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791849802;
-	bh=bp2FpOUtagmCImK4XdtntTIrq08znyx6Kh7Jwta/QP4=;
+	s=k20260515; t=1791849926;
+	bh=G3Y8FmW5OBzUeDJzNGxtiWz6DM56hhTr3R3djpDAdQg=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=YF+wUo2iFbbQcG3vuLcpjWXIA3Ju074flBDObV+cNIlYgGlgNdgnJef50h/6seiSb
-	 jZEyplITG0ne8us9MgJsOiq2GTRUdBpCQ4m9vFBXPuHZpy6nel/boBRKKqllOZbElu
-	 EzMglQl6vC1fP7PKeVAmHXay7fnLowg20oHVze5UQQ1jsdeQM9FtbxyelWV1Ay8WN6
-	 2BhqJkpnK1qMi+WDUFQuk/FVA1DgZUZNGr3iOG2qFSIOj/uQpW4478E/UNtOrkJH6w
-	 So//YoYG9fxuPgcYLpK6ZnugOcgoR/nzcIwNIh21qKJEySo3RIQ4GXkQ0SrfzmfeDp
-	 gmLaUTOiO9UgQ==
-Message-ID: <sashiko-outbox-168765@kernel.org>
+	b=KkckdpbhlceummQCVbA0LNlZO11M1uOeaP6phRMI3ZEHQwx6BE9By8SN2u6NteuP5
+	 HzzO2CGbdEuv33jjPbBXnGATqU6MPvvTerWbvbdnnySO3eJ2Ri8N9ktwZWS29C4j48
+	 CiNXS+IoJPdAdaLPbQKf0J2OExvk1djkg2kGlm0Y0rjwgoyVbSYVpZ5GbwRxsLKMBs
+	 Rivs/y0DK8D5jz0i10V1UOkPAvhOWU9DF4iGs6NqazIRewaawiiy73gEXnlqtehyIT
+	 7tctahYfHZcFvGkEC9z+VGJS2MGjuhJpCrBOo+jPnC23/xkQun3caqkc7rOWgBWa9t
+	 o4fAn64eOs7NQ==
+Message-ID: <sashiko-outbox-168769@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v6 1/8] lpfc: Fix use-after-free in
- lpfc_cmpl_ct_cmd_vmid
+Subject: Re: [PATCH v6 2/8] lpfc: Early return out of lpfc_els_abort when
+ HBA_SETUP flag is not set
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nigel Kirkland" <nkirkland2304@gmail.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20261013001648.62289-2-nkirkland2304@gmail.com>
+In-Reply-To: <20261013001648.62289-3-nkirkland2304@gmail.com>
 References: <20261013001648.62289-1-nkirkland2304@gmail.com>
- <20261013001648.62289-2-nkirkland2304@gmail.com>
+ <20261013001648.62289-3-nkirkland2304@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 13 Oct 2026 00:03:21 +0000
+Date: Tue, 13 Oct 2026 00:05:25 +0000
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -47,66 +47,64 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [Medium] scsi: lpfc: evaluation of uninitialized response payload on tran=
-sport error
+- [High] scsi: lpfc: lockless HBA_SETUP check leaves TOCTOU Use-After-Free =
+race on pring
 --
 
-commit c46419e38a4d473126adc74a9b8003eb31bdd1e9
+commit b6474390ac6cffa345174f9e11e10a15b8a091a7
 Author: Nigel Kirkland <nkirkland2304@gmail.com>
 
-lpfc: Fix use-after-free in lpfc_cmpl_ct_cmd_vmid
+lpfc: Early return out of lpfc_els_abort when HBA_SETUP flag is not set
 
-This commit resolves a use-after-free issue in lpfc_cmpl_ct_cmd_vmid by
-removing an early call to lpfc_ct_free_iocb for SLI_CTAS_DALLAPP_ID command=
-s.
-The previous code freed the IOCB and then continued to access the response
-buffer.
+This commit adds an early check on the HBA_SETUP flag in lpfc_els_abort()
+to avoid using a stale ELS pring pointer during an HBA reset.
 
-> diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
-> index 0734ab3be3e30..f709e50875770 100644
-> --- a/drivers/scsi/lpfc/lpfc_ct.c
-> +++ b/drivers/scsi/lpfc/lpfc_ct.c
-> @@ -3576,8 +3576,6 @@ lpfc_cmpl_ct_cmd_vmid(struct lpfc_hba *phba, struct=
- lpfc_iocbq *cmdiocb,
->  	int i;
+> diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_=
+nportdisc.c
+> index 9c449055a55e6..2c8d995a45bf8 100644
+> --- a/drivers/scsi/lpfc/lpfc_nportdisc.c
+> +++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
+> @@ -227,6 +227,11 @@ lpfc_els_abort(struct lpfc_hba *phba, struct lpfc_no=
+delist *ndlp)
+>  	struct lpfc_iocbq *iocb, *next_iocb;
+>  	int retval =3D 0;
 > =20
->  	cmd =3D be16_to_cpu(ctcmd->CommandResponse.bits.CmdRsp);
-> -	if (cmd =3D=3D SLI_CTAS_DALLAPP_ID)
-> -		lpfc_ct_free_iocb(phba, cmdiocb);
+> +	/* Exit early to prevent race with queue teardown. */
+> +	if (unlikely(phba->sli_rev =3D=3D LPFC_SLI_REV4 &&
+> +		     !test_bit(HBA_SETUP, &phba->hba_flag)))
+> +		return;
+> +
+
+[Severity: High]
+Does this lockless check leave a time-of-check to time-of-use race window
+that can still result in a use-after-free on the pring pointer?
+
+If a dev_loss_tmo callback executing lpfc_els_abort() is running
+concurrently with an HBA reset, could this sequence occur:
+
+CPU1 (dev_loss_tmo)
+lpfc_els_abort()
+  test_bit(HBA_SETUP, &phba->hba_flag) // returns true
+  pring =3D lpfc_phba_elsring(phba);
+
+CPU2 (HBA reset)
+lpfc_sli_brdrestart_s4()
+  clear_bit(HBA_SETUP, &phba->hba_flag);
+  lpfc_sli4_queue_unset(phba);
+    lpfc_wq_destroy(wq);
+      kfree(wq->pring);
+
+CPU1
+  spin_lock_irq(&phba->hbalock);
+  spin_lock(&pring->ring_lock); // use-after-free on stale pring pointer
+
+Should the check and the subsequent usage of pring be synchronized against
+the queue teardown path?
+
+>  	pring =3D lpfc_phba_elsring(phba);
 > =20
->  	if (lpfc_els_chk_latt(vport) || get_job_ulpstatus(phba, rspiocb)) {
->  		if (cmd !=3D SLI_CTAS_DALLAPP_ID)
-
-[Severity: Medium]
-Does this code evaluate uninitialized memory if there is a transport error?
-
-If get_job_ulpstatus() indicates a transport error, the device did not popu=
-late
-the response buffer. Since the error handler is intentionally bypassed for
-SLI_CTAS_DALLAPP_ID:
-
-drivers/scsi/lpfc/lpfc_ct.c:lpfc_cmpl_ct_cmd_vmid() {
-	if (lpfc_els_chk_latt(vport) || get_job_ulpstatus(phba, rspiocb)) {
-		if (cmd !=3D SLI_CTAS_DALLAPP_ID)
-			goto free_res;
-	}
-	...
-
-The code will then fall through to the next check:
-
-	if (be16_to_cpu(rsp) =3D=3D SLI_CT_RESPONSE_FS_RJT) {
-	...
-
-And evaluate rsp, ctrsp->ReasonCode, and ctrsp->Explanation from the outp->=
-virt
-buffer. Since lpfc_alloc_ct_rsp() allocates this buffer via lpfc_mbuf_alloc=
-()
-without zero-initialization, this reads uninitialized memory.
-
-Could this lead to non-deterministic behavior, such as spuriously retrying =
-the
-command or incorrectly assuming success and deregistering all VMID app IDs?
+>  	/* In case of error recovery path, we might have a NULL pring here */
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261013001648.6228=
-9-1-nkirkland2304@gmail.com?part=3D1
+9-1-nkirkland2304@gmail.com?part=3D2
