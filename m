@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D757C51FCA1;
-	Tue, 13 Oct 2026 15:27:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C8CA75172CA;
+	Tue, 13 Oct 2026 15:31:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791905226; cv=none; b=KD18dmpH/V+s9cz5GbRo/eHXM0SPU0Xt+iIbfH4Ux0qsP//+N1KD7SHdfT1aaVML+Dk7Yv7Asg5fLfXbkLKGqiARAkyTn2HKcXbrj9BfHjrcMyc7mWhNO/82W6behJ3snZkh4BSaRShFHQLXpt+n6vLCSM2LYBgE26RLAujIYjU=
+	t=1791905510; cv=none; b=FItMZ/STMXJ6HGi0usZx3hI2jG4Fuvwg6lh99YqymXnOgnvszGUcY0OiS/mfpGk+DNhFXq525xzfwFJXeYK5Fr4v93Ury0UZqtfQoPoTfOGFHNBWEjcAftFQzb4F1AzRFzua3Y29zbSyL4oB4fYuDtbbU1uhZF0EfU4nTvT6Me8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791905226; c=relaxed/simple;
-	bh=zzReCbBzL/j0x9mlYl7vU8wSR6ej7IG4iF62Ad98E74=;
+	s=arc-20240116; t=1791905510; c=relaxed/simple;
+	bh=gsmrp0uRtNEEBvwP4Q0pKgs8lFscoCBmjiamKhm7z9Q=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=GtTHm63iavUM5oILWltWb5OtFKCzkdfGY0cg1MrnHInC2oRS5CCLWjcazrsNRuzMT6fgbkkTDEPFjJONuLXUPhPbtdu+Al9fEgU+yFw25c7sCHh8alp5DjmxSwW+jTcQTVNVjeN+jlZuA/up2QQqhggVnOhdFQiK64nLYejLNSY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=C07bGAwT; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:Content-Type; b=ld0+EU1tPi9dmooxaYAPuh3lcqDt2mNRsH6i5omaPNKLlWb8MFq9+D4+QngBtNJYLf4yjWzRQyDjwRwgoQhiSU44OH2iFNlAKZG39cfSvUZvB3ZauxOA1dt3StT2+YX3xZ0q0DsSJ9O9UOpYnlgdcm3ohxF+0d0QjK486RuBFWM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=D5BClKMk; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="C07bGAwT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E24491F00893;
-	Tue, 13 Oct 2026 15:26:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="D5BClKMk"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0ABA81F000FF;
+	Tue, 13 Oct 2026 15:31:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791905224;
-	bh=JFRmswrWQ2n04rYSnKT8D1jfOItHBdqj8eE5N7elmN8=;
+	s=k20260515; t=1791905508;
+	bh=ABcU0W+nIwCqZSTy0PPdZy1uyj317pAS/O9WDDdnQZw=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=C07bGAwThgZOGMqZm00i73ln3bSOOWcywnwLS4jB4SWUfvtudnbQo92JkbSYqpXl3
-	 +vQOBwMrVTtSCIfl2ZFeqghmkQVGEsnbujJzairialXRUFRuou0T2HzWkSMX1GWAL/
-	 ZwMvFrpzptQlNZOidqs8RDCirQjwS3pKQH19PI6nvZCX/vLrERr7d36qE/4FKIkb5f
-	 wnd+AjHe3lTCYybtNyKRVjOoyXfdRDx9MAVWirQcMvfbynVBov0rHtryZph4ryzBTE
-	 opdSFbvoEiAqKSvM9eBxqg0oY35BYx1LbjQsgqwdsfxjM0Fyjtwi2gGzkJfWZ1rIzt
-	 SGb+3hlZdSHQA==
-Message-ID: <fbd47b50-ce30-42ed-8b05-85ee07c43efe@kernel.org>
-Date: Tue, 13 Oct 2026 17:26:30 +0200
+	b=D5BClKMkyjHNOoeNuUKWF6HwQ8es4HwocZa/1vk5hPJxYK0OE2MtOdN0S2gmcH6lC
+	 h2bS5ASLQ2jbvKrWro4RUW2U8G5muKxncrLmF+Jou2z0+IhaAxzQhCEY/LrmDDFWT6
+	 M6xKr2R3fPo+unNvnMZSc2FKExJxWD5IMaBvhhbtafRSFGB4ueb89jIBT5sOdDSJZN
+	 GDOdloqs53ZQ9vDKS7F/ry5KwOabJqSqdFue4yGsWFChcPdcnrWzVPTjRyPqdUgvoo
+	 j9GhCWKrZ4bFEjuUrlQ3XmGuaXcGd+p+mRRvlVf6aiAfRoUGE+Fx6LYN+MBnX0qWdK
+	 WFMXQD15T+n7w==
+Message-ID: <7bf5a2dc-f7be-425b-99e3-75b4546c8e19@kernel.org>
+Date: Tue, 13 Oct 2026 17:31:13 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,8 +35,7 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v6 25/39] mm/vma: enforce that mm-managed mappings may not
- set VMA_IO_BIT
+Subject: Re: [PATCH v6 30/39] mm/vma: introduce vma[_flags]_is_mm_backed()
 To: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>,
  Andrew Morton <akpm@linux-foundation.org>,
  "Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>,
@@ -119,7 +118,7 @@ Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org,
  fuse-devel@lists.linux.dev, Ihor Solodrai <ihor.solodrai@linux.dev>,
  Bert Karwatzki <spasswolf@web.de>
 References: <20261013-b4-mmap-prepare-vma-flag-sanify-v6-0-1aa3c9b139f9@kernel.org>
- <20261013-b4-mmap-prepare-vma-flag-sanify-v6-25-1aa3c9b139f9@kernel.org>
+ <20261013-b4-mmap-prepare-vma-flag-sanify-v6-30-1aa3c9b139f9@kernel.org>
 From: "David Hildenbrand (Arm)" <david@kernel.org>
 Content-Language: en-US
 Autocrypt: addr=david@kernel.org; keydata=
@@ -166,31 +165,45 @@ Autocrypt: addr=david@kernel.org; keydata=
  3iyY2Nsd7JxfKu1PRhCGwXzRw5TlfEsoRI7V9A8isUCoqE2Dzh3FvYHVeX4Us+bRL/oqareJ
  CIFqgYMyvHj7Q06kTKmauOe4Nf0l0qEkIuIzfoLJ3qr5UyXc2hLtWyT9Ir+lYlX9efqh7mOY
  qIws/H2t
-In-Reply-To: <20261013-b4-mmap-prepare-vma-flag-sanify-v6-25-1aa3c9b139f9@kernel.org>
+In-Reply-To: <20261013-b4-mmap-prepare-vma-flag-sanify-v6-30-1aa3c9b139f9@kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 10/13/26 17:05, Lorenzo Stoakes (ARM) wrote:
-> It makes no sense for a mapping whose contents the kernel does not own to
-> specify that the range is MMIO.
+> Introduce vma[_flags]_is_mm_backed() for the purposes of identifying
+> mappings which are mm-managed and whose contents were placed there by core
+> mm's own fault path - rather than a custom ->fault handler.
 > 
-> Prior to this patch, all in-tree drivers which did so have been updated
-> such that they are marked as not being mm-managed. The check WARNs and
-> fails the mmap for any out-of-tree driver that still sets VMA_IO_BIT
-> without a kernel mapping.
+> Mappings not managed by core mm do not fall into this category, as they are
+> populated by their owner, and nor of course does memory-mapped I/O.
 > 
-> Here VMA_PFNMAP_BIT, VMA_MIXEDMAP are tested individually rather than using
-> vma_flags_is_mm_managed().
+> We exclude fixed mappings as these have a layout core mm cannot assume
+> ordinary fault semantics over.
 > 
-> This is because vma_flags_is_mm_managed() still checks for VMA_IO_BIT.
+> hugetlb mappings are fixed mappings, but core mm owns them entirely, so
+> they are explicitly carved out as mm-backed, as the MADV_DODUMP check
+> already does.
 > 
-> The very next commit in this series removes this, and the check is then
-> converted to use vma_flags_is_mm_managed().
+> Use this functionality to update the madvise MADV_DODUMP check to test for
+> this rather than open-coding it.
 > 
-> No functional change intended for in-tree code.
+> Also update vma_flags_can_merge() so it is written in terms of
+> vma_flags_is_mm_backed() - all mm-backed mappings can be merged except
+> hugetlb mappings, whose flags and fields do not completely describe them.
 > 
-> Reviewed-by: Zi Yan <ziy@nvidia.com>
+> Also update __thp_vma_allowable_orders() to use vma_is_mm_backed() rather
+> than testing for mergeability, which is irrelevant to this function.
+> 
+> This replaces the VM_SPECIAL check which means it no longer checks for
+> VMA_IO_BIT, however this is safe as we have established the invariant that
+> mm-managed mappings may not set VMA_IO_BIT, so we implicitly include
+> these.
+> 
+> No functional change intended.
+> 
+> Acked-by: Zi Yan <ziy@nvidia.com>
 > Signed-off-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
+> ---
 
 Acked-by: David Hildenbrand (Arm) <david@kernel.org>
 
