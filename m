@@ -1,35 +1,35 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4EB950C2B5;
-	Tue, 13 Oct 2026 15:08:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8E283EC83D;
+	Tue, 13 Oct 2026 15:08:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791904106; cv=none; b=l+qE92tfLABWwLspDOOeF6uAUTI88ilNO74qVj/rerxUsa9GNVoWLGKVHSS+dSrFs4fnHPjf22w8pyWVCljCNZKznunAEbITTyIwDRdHZaQBGOuycx2mTXS3o9/fkuKnOg4epI29W9i1b127s4vXz36Qy+6AaSobhM/USj3YoTo=
+	t=1791904137; cv=none; b=nQddmOUd2L7M0PJ2eoYV8rVD/cpRI7WJh7amHJk7Q+ASz59/oUAKC4MKfPad1E4MdEmZ7g5T1BsEhJxafPG1V5PwXkdLCGs25TMJa+nwp3qc81961ZjIkLabRawgTq7bEI1xzyDR98sMvo/YY9VMsfGNmnZVVN/51UQSjs6i5Bk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791904106; c=relaxed/simple;
-	bh=c0okmVqdd7ip0u4PvV3oDEa2CETwat0gzMSLDhHRBRg=;
+	s=arc-20240116; t=1791904137; c=relaxed/simple;
+	bh=W5EJA/cmsVT7jDTw6eYY8+j+S742rFhYZzwOfLirwec=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=W8Uf1r8T0/9GO3A/e2jXxCiFOoWuHbrt2lNvEz744nOFWX2peaLGEdvHb5NfcLO1ALdQ+K6WmT7IT1QXreQItiLiPU60wINZN/c4uscSPzoGWTBgKdTNXdNjlFIQDqPiB4vBFjxsaXkTBpdzMvuC2uLUeSSv7ET0yd0Aj5CnQBc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FtXxcSi5; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:To:Cc; b=YqW7IOiN7pM4C/26e+ZU+Xh6v8bYXy8NW+fHHateN6rLkTeR7zZ3ju+hmVvqvcKUUirVeBTRPRhUSyekdhP685qVcPrYOSQA2TRXnZs8gcTEZRpZ7hIcpDWTJSWyCDK06tqO5HQ47SZWHYApYbltWZPoHh4LIq65NwPmavTzPhU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FHOPEcU7; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FtXxcSi5"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DB9081F000FF;
-	Tue, 13 Oct 2026 15:07:55 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FHOPEcU7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0219F1F00893;
+	Tue, 13 Oct 2026 15:08:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791904105;
-	bh=rm+C7Ys434hUmEU+Xa4zb6DLDJf/YI3CeF+AWIPMT3w=;
+	s=k20260515; t=1791904135;
+	bh=SAzG9Wth1XJ2c0bU3DI60XqRT1mNgvn5WEld38uFlsY=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=FtXxcSi58gS3uZ0vS44Aou+kW6lvIPxlA7zTYy04S2BLjSQ9x1Rdw5K2VD7fjm5Cr
-	 knPhdM3bKcTZ/nUqqKn0fe/lm3x2wgVIFsqQ8qLXwUlgxXsgcE18/cKJbVcWCwYrJo
-	 Ixy77/AT3epQrcKWrWpXjz1mrznFtf0xiKEuB5hNzmj+gkWrN6BLNlLqos9izVokhw
-	 os4stsgykj0J1ATFRYf05iw8uKz8K0NeXzD2wKU2+W2L9D1OuswmcAOQ5vKjjkLYFJ
-	 fm0Tk8YFuOzl/5bcm7k6rPRZuSLYWjbhWyBnSWTxNyW87nNxtiv+p7b1WXOGjb5hsq
-	 WPV3/ee2ispHQ==
+	b=FHOPEcU7MXinlxgbwWxCoeD5kIf5P/lIzM7XJGaKv4AAf09FeVis+fbDl6q2+pPY+
+	 spXkLO3MXzogC821f/XTwMp8SAwmiQqxtIPsVfoO9L9d7FbFRHRvf8YuD09fA7bxjE
+	 SlSItJH1h0l+ilsQVXHmxvfBluDOi7boaCOmN+9yXJzSYS08qphyqDae7oBnwVLRWM
+	 Q4mnxEr5QgHO4tSaRiaIzPzhg4mfAdemvg+5lSiBikE0l3VKSI6JE3qTC+2nWQZDlU
+	 8WL81pMWCJrlgZ1vKDANjXQZbh+xFIMGOYgT0zOqRkrmZa0k5cnEINgwkJKg8p3cRD
+	 /j9W4+enKtBkg==
 From: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
-Date: Tue, 13 Oct 2026 16:04:44 +0100
-Subject: [PATCH v6 04/39] mm/vma: ensure mmap_prepare doesn't set actions
- on a mergeable vma
+Date: Tue, 13 Oct 2026 16:04:45 +0100
+Subject: [PATCH v6 05/39] mm: make map_kernel_pages_[prepare,complete]
+ internal and unexported
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -38,7 +38,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261013-b4-mmap-prepare-vma-flag-sanify-v6-4-1aa3c9b139f9@kernel.org>
+Message-Id: <20261013-b4-mmap-prepare-vma-flag-sanify-v6-5-1aa3c9b139f9@kernel.org>
 References: <20261013-b4-mmap-prepare-vma-flag-sanify-v6-0-1aa3c9b139f9@kernel.org>
 In-Reply-To: <20261013-b4-mmap-prepare-vma-flag-sanify-v6-0-1aa3c9b139f9@kernel.org>
 To: Andrew Morton <akpm@linux-foundation.org>, 
@@ -123,26 +123,23 @@ Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org,
  fuse-devel@lists.linux.dev, Ihor Solodrai <ihor.solodrai@linux.dev>, 
  Bert Karwatzki <spasswolf@web.de>, "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1712; i=ljs@kernel.org;
- h=from:subject:message-id; bh=c0okmVqdd7ip0u4PvV3oDEa2CETwat0gzMSLDhHRBRg=;
- b=owGbwMvMwCV2fu7ZrsZH9SKMp9WSGLLOeRyvyMypKfLbU7hhlVb/osVCmnKzOkzKucp/C/LGc
- XHGHW/vKGVhEONikBVTZHn+RXx/kEjYvM4L/m4wc1iZQIYwcHEKwERmNTIy/GD13C5en1vzwu7N
- 4S0HTq31rbzyxDVo/dJ5HBXZU6fMqmH4H39tTuXZpzNWCc05fS9/sov6DAa1//ZnUn4nLhRiXKd
- UxQUA
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2708; i=ljs@kernel.org;
+ h=from:subject:message-id; bh=W5EJA/cmsVT7jDTw6eYY8+j+S742rFhYZzwOfLirwec=;
+ b=owGbwMvMwCV2fu7ZrsZH9SKMp9WSGLLOeRxfEfJ/U3brQdO/Ntp7ihlnc+maHFNKPJS4a0rdC
+ ZH9vE6rOkpZGMS4GGTFFFmefxHfHyQSNq/zgr8bzBxWJpAhDFycAjARe3dGhq+yJTeWZkcfY/rk
+ e29+2g0dL8npjWfn31io99DKqea3wGyG/7EH5LU+HM49IFuqE23eHJLcZ7DixoMtVb/Pix2SKel
+ i4AMA
 X-Developer-Key: i=ljs@kernel.org; a=openpgp;
  fpr=E7F417BF5214569E89D04F46CF9DCD8A81E27F14
 
-When a user requests an mmap_action be performed in mmap_prepare, this
-involves populating the VMA range with data.
+There's no reason to export the symbols for these functions which are only
+called from internal mm logic, additionally there's no reason for them to
+be declared in mm.h.
 
-However, if the VMA is mergeable, it might then mistakenly be merged with
-another VMA without having populated the range.
+This patch therefore removes the exports and moves the declarations to
+mm/internal.h.
 
-Every mmap action currently available sets VMA flags such that the VMA
-cannot be merged.
-
-However, to ensure that no future mmap action falls foul of this, assert
-that this is the case upon mmap_prepare validation.
+No functional change intended.
 
 Reviewed-by: Suren Baghdasaryan <surenb@google.com>
 Reviewed-by: Zi Yan <ziy@nvidia.com>
@@ -150,32 +147,59 @@ Reviewed-by: Gregory Price (Meta) <gourry@gourry.net>
 Acked-by: David Hildenbrand (Arm) <david@kernel.org>
 Signed-off-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
 ---
- mm/vma.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+ include/linux/mm.h | 3 ---
+ mm/internal.h      | 3 +++
+ mm/memory.c        | 2 --
+ 3 files changed, 3 insertions(+), 5 deletions(-)
 
-diff --git a/mm/vma.c b/mm/vma.c
-index cedc24dcdf3c..c067d6a4c826 100644
---- a/mm/vma.c
-+++ b/mm/vma.c
-@@ -2815,6 +2815,18 @@ static int mmap_validate(unsigned long orig_start, unsigned long orig_end,
- int mmap_prepare_validate(const struct vm_area_desc *orig_desc,
- 			  const struct vm_area_desc *desc)
+diff --git a/include/linux/mm.h b/include/linux/mm.h
+index 68250ece4219..0c17f0932b76 100644
+--- a/include/linux/mm.h
++++ b/include/linux/mm.h
+@@ -4768,9 +4768,6 @@ int remap_pfn_range(struct vm_area_struct *vma, unsigned long addr,
+ int vm_insert_page(struct vm_area_struct *, unsigned long addr, struct page *);
+ int vm_insert_pages(struct vm_area_struct *vma, unsigned long addr,
+ 			struct page **pages, unsigned long *num);
+-int map_kernel_pages_prepare(struct vm_area_desc *desc);
+-int map_kernel_pages_complete(struct vm_area_struct *vma,
+-			      struct mmap_action *action);
+ int vm_map_pages(struct vm_area_struct *vma, struct page **pages,
+ 				unsigned long num);
+ int vm_map_pages_zero(struct vm_area_struct *vma, struct page **pages,
+diff --git a/mm/internal.h b/mm/internal.h
+index 061a87f9c3fb..fc4e249e2343 100644
+--- a/mm/internal.h
++++ b/mm/internal.h
+@@ -1512,6 +1512,9 @@ int remap_pfn_range_prepare(struct vm_area_desc *desc);
+ int remap_pfn_range_complete(struct vm_area_struct *vma,
+ 			     struct mmap_action *action);
+ int simple_ioremap_prepare(struct vm_area_desc *desc);
++int map_kernel_pages_prepare(struct vm_area_desc *desc);
++int map_kernel_pages_complete(struct vm_area_struct *vma,
++			      struct mmap_action *action);
+ 
+ static inline int io_remap_pfn_range_prepare(struct vm_area_desc *desc)
  {
-+	/*
-+	 * It is not valid to execute mmap actions for VMAs which can be merged,
-+	 * as any such merge would leave portions of the mapping incorrectly
-+	 * unmapped.
-+	 *
-+	 * This is checked after mmap_action_prepare(), as it may update the VMA
-+	 * flags and therefore whether the VMA can be merged.
-+	 */
-+	if (vma_flags_can_merge(&desc->vma_flags) &&
-+	    WARN_ON_ONCE(desc->action.type != MMAP_NOTHING))
-+		return -EINVAL;
-+
- 	return mmap_validate(orig_desc->start, orig_desc->end,
- 			     desc->start, desc->end,
- 			     &orig_desc->vma_flags, &desc->vma_flags);
+diff --git a/mm/memory.c b/mm/memory.c
+index 926276d41920..448342883e9d 100644
+--- a/mm/memory.c
++++ b/mm/memory.c
+@@ -2628,7 +2628,6 @@ int map_kernel_pages_prepare(struct vm_area_desc *desc)
+ 
+ 	return 0;
+ }
+-EXPORT_SYMBOL(map_kernel_pages_prepare);
+ 
+ int map_kernel_pages_complete(struct vm_area_struct *vma,
+ 			      struct mmap_action *action)
+@@ -2640,7 +2639,6 @@ int map_kernel_pages_complete(struct vm_area_struct *vma,
+ 			    action->map_kernel.pages,
+ 			    &nr_pages, vma->vm_page_prot);
+ }
+-EXPORT_SYMBOL(map_kernel_pages_complete);
+ 
+ /**
+  * vm_insert_page - insert single page into user vma
 
 -- 
 2.55.0
