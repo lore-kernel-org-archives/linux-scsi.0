@@ -1,35 +1,35 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04FCD51AFF2;
-	Tue, 13 Oct 2026 15:23:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4BE64EBAD9;
+	Tue, 13 Oct 2026 15:23:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791905006; cv=none; b=DDhMlAX58jVtRTViQ/KKc+CNnYA93/iKyGwTnEqdh+0G+6lpxB+AEUvjLrAflByPRPvPIPWpI1oDp/PPNb2s+1GLmfj2Ta3fQfO/5Ge2bIp+NlMjYTXvOFRyEUMSt9zWMpsj+Jmbv3MFp+VbW+o92Yf1uBhkgCY2AiQqeNieuoA=
+	t=1791905037; cv=none; b=K5+Dz+7uqD18WQkuspuIS0mClHP1K44ZxDFWUI/P2BAoywwjqENEaB43414A6U6dKzq/KfdzgLwcHdqMMTFyUhC4G777CETYEZI2WXEgAzyr7eqo1dyJRmTZxuWkwpbIelGkIV5ysyp1pUFI9hLBTzNEbqvfaoYzuM8QYstzMX0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791905006; c=relaxed/simple;
-	bh=gjthDvZqFXHZuZFdwHubOhomh77PBTrGmxDvpVKzPR0=;
+	s=arc-20240116; t=1791905037; c=relaxed/simple;
+	bh=SFuIDIpM5G6bOlnOpFKwrzHC45i8Mw6xqs+xYU2jMdQ=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=eK3YmsB5yiTLpl+XIaOwY6jCCQLd7C/hwc05p7x0Hsc1lMMi4tWoTUg2WVQOYCx5BFkhpohkUuG3602uVDNWi6Akn4zcjf3HBDppZlNaSaMiTABBnLWmsBt52/yk2pLg+lxcGX61AQaU7lXRGDuSkZwR/+QiqdHZQiZIyawlolU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SI6nKVl2; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:To:Cc; b=XBFytuUweK7rS6EHKjV44pwMQl5AliHAEQnjTLyWDpvjqUnzG7eVxiFh7SUENMmH7JQ7ovY+8n2prbXd0jT4LSBV+UKjF5I3luRQGHo+n8lGq3NKVJQYMjJT0khIoW2xd5ZzaCsU+OU7x5i7NqPiCxTRailB3+t/R0BjiKNbMrM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UpS+mpVY; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SI6nKVl2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 597701F000FF;
-	Tue, 13 Oct 2026 15:22:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UpS+mpVY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 10B4B1F00893;
+	Tue, 13 Oct 2026 15:23:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791905004;
-	bh=7cT+sAoBoDYEP7l2gJz8zJ3nNAI7H4A6WsbIM/2PMHw=;
+	s=k20260515; t=1791905035;
+	bh=7y2wIWqJCiD1mq+s6TBxosGhEbO2v5L2eCG6r27DMpU=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=SI6nKVl2y9xyjOw4xsAdCsG3OU+DC/viH2V7mID8rkM7Ru02HPw2WTFy+T8UY4pRV
-	 LlKZ1VKOtRlx7uOgkhUWPl8p19KbialuIR13iV7LWW7aw/dAE/vCeshFlNJ0caySo7
-	 khtBZ6WOjnPcwjqZjAFDDcSVbHWpJBwMUSJLP/LtT/JPicCIQOtWPhee8gYAmLB8wC
-	 PN/yqx2AaiB27UAuKYlAqUz7dd1mDeM1ou7+sjX/fjDR2I3VqEOxykJoJJz4yN59Vs
-	 Q/2JQqmKSOhK/XJHTOtJ6nfuFQxfOPwGNzyVIe14PCmyiXvaqU8zel5ObkXrA3enbv
-	 ZA+3bvYIGlyyg==
+	b=UpS+mpVYglZ2uQ8Y0gUiTHbNS/0eEDd7Gwfv+wRB2nSEO2XMk3VHu0lLw8WX5Nzau
+	 rLTnwY4XWigTuG7uotEX9nfLCoVecmAmu3InghlgD1rBuvoo2GWVr8v6sOadsS5IEr
+	 iz0nCPzqzFnmvZiXcUtWBPrBzw1GbZoG8AoPxB8U46gn+d/1CwYNZX6YKYwguINq2e
+	 8THu+sXxGFvDc+V+vMk1SBQ2uFpYRcozBmBOSMEGQVekjATeQmAcTO0vLzpzFrTegE
+	 iOcGaxq+DpKTc1omcRjjergbjo5HioQ7nc2otLkmw8DVLA1xY5Uu99wxOdWjD6cx/d
+	 EHXf+2qQegEUA==
 From: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
-Date: Tue, 13 Oct 2026 16:05:13 +0100
-Subject: [PATCH v6 33/39] mm/madvise: use predicates for madvise(...,
- MADV_DOFORK)
+Date: Tue, 13 Oct 2026 16:05:14 +0100
+Subject: [PATCH v6 34/39] mm: eliminate VMA_SPECIAL_FLAGS usage when
+ hugetlb explicitly tested
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -38,7 +38,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261013-b4-mmap-prepare-vma-flag-sanify-v6-33-1aa3c9b139f9@kernel.org>
+Message-Id: <20261013-b4-mmap-prepare-vma-flag-sanify-v6-34-1aa3c9b139f9@kernel.org>
 References: <20261013-b4-mmap-prepare-vma-flag-sanify-v6-0-1aa3c9b139f9@kernel.org>
 In-Reply-To: <20261013-b4-mmap-prepare-vma-flag-sanify-v6-0-1aa3c9b139f9@kernel.org>
 To: Andrew Morton <akpm@linux-foundation.org>, 
@@ -123,56 +123,87 @@ Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org,
  fuse-devel@lists.linux.dev, Ihor Solodrai <ihor.solodrai@linux.dev>, 
  Bert Karwatzki <spasswolf@web.de>, "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1489; i=ljs@kernel.org;
- h=from:subject:message-id; bh=gjthDvZqFXHZuZFdwHubOhomh77PBTrGmxDvpVKzPR0=;
- b=owGbwMvMwCV2fu7ZrsZH9SKMp9WSGLLOeZwJMGoxqvgw18zVxyA33e5ZfXDP3j0edZsuWW1qq
- 36tX6TcUcrCIMbFICumyPL8i/j+IJGweZ0X/N1g5rAygQxh4OIUgIkwhDAy3ChrLqvbbFLydS/3
- tAv5E35Y8B8OZnzmZJ1j/HNrek/xK0aGX1c2JLHP/Gni/5vnpv3sG8ECfYuWPdDtSbu09EvcdY+
- 3zAA=
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2691; i=ljs@kernel.org;
+ h=from:subject:message-id; bh=SFuIDIpM5G6bOlnOpFKwrzHC45i8Mw6xqs+xYU2jMdQ=;
+ b=owGbwMvMwCV2fu7ZrsZH9SKMp9WSGLLOeZwpSmyXEo3qYn7jXSnc+221yfFkrkVeqhFvf9/KP
+ 8kcEt/cUcrCIMbFICumyPL8i/j+IJGweZ0X/N1g5rAygQxh4OIUgIloL2P4n8c95VPXF85Lfmtz
+ +85f22G9407naxYuA+Uv3Ulrvr4/EMXI0Co43W1lDcNj3cuF7bnm3SsuOVzWWLd0NoP8F13+oGJ
+ +LgA=
 X-Developer-Key: i=ljs@kernel.org; a=openpgp;
  fpr=E7F417BF5214569E89D04F46CF9DCD8A81E27F14
 
-Make it clear what we're blocking in MADV_DOFORK. Previously we simply
-disallowed VM_SPECIAL i.e. mappings not managed by core mm, fixed mappings
-and VMA_IO_BIT.
+It is now an invariant that VMA_IO_BIT is not set by mm-managed mappings,
+so each existing VMA_SPECIAL_FLAGS test need only test for
+VMA_DONTEXPAND_BIT, VMA_PFNMAP_BIT and VMA_MIXEDMAP_BIT.
 
-Now the invariant is established that mm-managed mappings may not set
-VMA_IO_BIT, the VMA_IO_BIT check is redundant.
+This is precisely a test for a fixed or non-mm-managed mapping.
 
-The rest is equivalent to testing for a fixed or non-mm-managed mapping,
-i.e. a mapping which is not mm-backed, or hugetlb, which is specifically
-excluded.
+Update a number of callsites which already explicitly handle hugetlb
+mappings.
 
-This was established by commit 0b2758f48f22 ("Require (reasonably) normal
-mappings for MADV_DOFORK") containing my hands-down favourite call out of
-all time.
+vma_supports_mlock(), ksm_compatible() and should_skip_vma() explicitly
+check for non-mm-managed or fixed mappings, i.e. for !vma_is_mm_backed(),
+with hugetlb having already been excluded separately.
 
-Express the same thing using the predicates - only mm-backed mappings may
-have their copy-on-fork behaviour changed, retaining the eternal exception
-to all rules, hugetlb.
+So update those to check for mm-backed (and add comments for the retained
+droppable checks).
 
 No functional change intended.
 
-Acked-by: Zi Yan <ziy@nvidia.com>
+Reviewed-by: Zi Yan <ziy@nvidia.com>
 Acked-by: David Hildenbrand (Arm) <david@kernel.org>
 Signed-off-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
 ---
- mm/madvise.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ mm/internal.h | 3 ++-
+ mm/ksm.c      | 5 +++--
+ mm/vmscan.c   | 2 +-
+ 3 files changed, 6 insertions(+), 4 deletions(-)
 
-diff --git a/mm/madvise.c b/mm/madvise.c
-index 7e14b3fd92f6..e050a21e4db1 100644
---- a/mm/madvise.c
-+++ b/mm/madvise.c
-@@ -1565,7 +1565,7 @@ static int madvise_vma_behavior(struct madvise_behavior *madv_behavior)
- 		new_flags |= VM_DONTCOPY;
- 		break;
- 	case MADV_DOFORK:
--		if (new_flags & VM_SPECIAL)
-+		if (!vma_is_mm_backed(vma) || vma_is_hugetlb(vma))
- 			return -EINVAL;
- 		new_flags &= ~VM_DONTCOPY;
- 		break;
+diff --git a/mm/internal.h b/mm/internal.h
+index b5f7be8f65d8..03f2bb4c30b7 100644
+--- a/mm/internal.h
++++ b/mm/internal.h
+@@ -1112,8 +1112,9 @@ static inline struct file *maybe_unlock_mmap_for_io(struct vm_fault *vmf,
+ 
+ static inline bool vma_supports_mlock(const struct vm_area_struct *vma)
+ {
+-	if (vma_test_any_mask(vma, VMA_SPECIAL_FLAGS))
++	if (!vma_is_mm_backed(vma))
+ 		return false;
++	/* Core mm may discard droppable memory at any time. */
+ 	if (vma_test_single_mask(vma, VMA_DROPPABLE))
+ 		return false;
+ 	if (vma_is_dax(vma) || vma_is_hugetlb(vma))
+diff --git a/mm/ksm.c b/mm/ksm.c
+index 624f37975e12..df4c5199f625 100644
+--- a/mm/ksm.c
++++ b/mm/ksm.c
+@@ -747,9 +747,10 @@ static bool ksm_compatible(const struct file *file, vma_flags_t vma_flags)
+ 	if (vma_flags_test_any(&vma_flags, VMA_SHARED_BIT, VMA_MAYSHARE_BIT,
+ 			       VMA_HUGETLB_BIT))
+ 		return false;
+-	if (vma_flags_test_single_mask(&vma_flags, VMA_DROPPABLE))
++	if (!vma_flags_is_mm_backed(&vma_flags))
+ 		return false;
+-	if (vma_flags_test_any_mask(&vma_flags, VMA_SPECIAL_FLAGS))
++	/* Core mm may discard droppable memory at any time. */
++	if (vma_flags_test_single_mask(&vma_flags, VMA_DROPPABLE))
+ 		return false;
+ 	if (file_is_dax(file))
+ 		return false;
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index 12ed3388ee41..aecb157bc379 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -3477,7 +3477,7 @@ static int should_skip_vma(unsigned long start, unsigned long end, struct mm_wal
+ 	if (!vma_has_recency(vma))
+ 		return true;
+ 
+-	if (vma->vm_flags & (VM_LOCKED | VM_SPECIAL))
++	if (vma_test(vma, VMA_LOCKED_BIT) || !vma_is_mm_backed(vma))
+ 		return true;
+ 
+ 	if (vma == get_gate_vma(vma->vm_mm))
 
 -- 
 2.55.0
