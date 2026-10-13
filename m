@@ -1,334 +1,133 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 10ADA4CB8A8;
-	Tue, 13 Oct 2026 12:28:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D7A227D786;
+	Tue, 13 Oct 2026 12:30:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791894485; cv=none; b=GzNZePu8NyX8pfUylccBJClTAels2bag54vBelZ8+Z3XJVZydG+F3fSYiZTSedfgKR+g+bHE5EEqZZr3h3w6sdkRDxjpMD497GyDKaNMT36y33kL7M8PuxYmOoRuXImc1cN/K8ihcGN0wBfidkBcAg+iOn+NGOZhUvTSc33OMeY=
+	t=1791894612; cv=none; b=CiEwQl6HlQcOvH+TXbw65l+1w9ZarYAhTiD+KHi/SqotzRLPH8EQqOCJSdvjA6diRO3fsGi+ANF7IdYDpayC76Wd+gAleFj3VeLwu0mKOR9AqGSlv7rV/sUcnFlLJ34XR9ZL2p9QUcE0Pc8mJU+9xijeph0iaS1Xc12BR3BygNg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791894485; c=relaxed/simple;
-	bh=gLDkhLBvEQe2BjaUhqjboPl1tPz211nOzKnVbMSSWYo=;
-	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Bc8ovPLmWcvHkofNQJ7Znmnk287mlnfhCVlZXdCovQgmOH1bhezc0XARZtjDhBPNGF9KRQx7lMCH1RI2OO14xe2mPPHvCudNwr/ELeo6+B+8Qj36rI062yobI3wY55GR2hdCn8IrVQUVZNS6wvSQUHqpOBfqN3LLYsvHBW5Ads4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=i3ph7wFC; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791894612; c=relaxed/simple;
+	bh=3VHdSX9CFC5pbuHL1NK4NY19DJOav+fJ7o1JTCmjrxc=;
+	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
+	 Date; b=CasM4dFEgTSUcg9c+Re1T6BgLv63YpKcISdhsyct7vvODnJS8/HXv5KnYdh3jNLrzeECj3D0BUWYu/8xvxLWtGU+J1XjfBu+pmnG7JiGVs93hWKvLPmq52aLQEnJVh15M7mHEriKrvQVMw2wUlv4JGjMp+07MRO3w2dJj6BvhHA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=obykmp7N; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="i3ph7wFC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 37F8F1F000FF;
-	Tue, 13 Oct 2026 12:28:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="obykmp7N"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 368A01F000FF;
+	Tue, 13 Oct 2026 12:30:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791894484;
-	bh=4z/FZ99t8In8a/pReIwN4iTvcvj4HfARz97cWJPafa4=;
-	h=From:To:Subject:Date:In-Reply-To:References;
-	b=i3ph7wFCpnZtlwTdTKAvlPcTmB/gNJLWxRN7LF30WLtRP3toVOh9h+32so8qP/J3W
-	 HTl5SJIJnet0T4DmeFksaMpEf5XLCsjYLFkMweXN4I2qePMa6z+pFB+DKnZynHZ8u+
-	 rYUU+5yPl2sRH/5vVHP//UXh5P6x9gq42xiqdZTmLb0nYTXFiGMRFwcshHdld1uaj8
-	 L2+egyCM4F9tBsZtrAEEJi+EnEDGd1c22/JcWEGIMYSeG63u+A+eUsA40sMxkJRcuF
-	 zHWu6izw3Vrss7TBMaitY1R11p6uVKnU3IwL7/IHYYo71+MyzXqyrmOPfQ7HEwq2eu
-	 Fv8EYMZ9m6pZg==
-From: Damien Le Moal <dlemoal@kernel.org>
-To: Jens Axboe <axboe@kernel.dk>,
-	linux-block@vger.kernel.org,
-	Christoph Hellwig <hch@lst.de>,
-	linux-scsi@vger.kernel.org,
-	"Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH v6 10/10] scsi: sd_zbc: define storage element management operations
-Date: Tue, 13 Oct 2026 21:27:50 +0900
-Message-ID: <20261013122750.2237843-11-dlemoal@kernel.org>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20261013122750.2237843-1-dlemoal@kernel.org>
-References: <20261013122750.2237843-1-dlemoal@kernel.org>
+	s=k20260515; t=1791894611;
+	bh=Kl5WJUbsR/YqzZwK0EGbYgzX++AkWzSQo7aydTnoxoc=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=obykmp7NzZoasItnVQ3iD8DKgeJ1WY5iF8YitWaRLk7QhAGhH4Edwo3T7Hv1Oz+Aj
+	 c1dCPqquLjTrS7jsjliCQbKKeIOVKdzywp4PhOjpw4QCPv/vFvr7sbMmBKN7kRhgbp
+	 vZSu6tvjvhsQJXwcMswPs6vhQ3q+4THkuimEbjsuMNKiKbo5p6Ss7KfiM00Hrx3d/6
+	 BpSyXWQHk/Yk5Y70nOY4F4zJqAvRfj5XHpwKlcRigXmHortZdP3mQAxdRFVD/oX6an
+	 uXWYugZIbq0om+Yw8vf9wCAflKJDU+dfne48yytUspVj407GwJ3bZ0knIXBFxxAi4p
+	 M2TXJB9K/advw==
+Message-ID: <sashiko-outbox-169711@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] scsi: target: fix demo-mode dynamic ACL dev-entry UAF
+ vs LUN teardown
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Yu Zhang" <yuz08559@gmail.com>
+Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+In-Reply-To: <20261013120528.37749-1-yuz08559@gmail.com>
+References: <20261013120528.37749-1-yuz08559@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 13 Oct 2026 12:30:10 +0000
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-Define the storage element management operations using struct
-blk_storage_elements_ops. These operations are valid only on SMR disks
-supporting the storage element depopulation feature.
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [High] scsi: target: TOCTOU race in core_enable_device_list_for_node caus=
+es UAF
+--
 
-Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- drivers/scsi/sd.c     |   3 +
- drivers/scsi/sd.h     |   2 +
- drivers/scsi/sd_zbc.c | 233 ++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 238 insertions(+)
+commit fe6f881325b9fa3f70c9e7a80a2d042d342f070d
+Author: Yu Zhang <yuz08559@gmail.com>
+scsi: target: fix demo-mode dynamic ACL dev-entry UAF vs LUN teardown
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index db7c19d1c2ff..48c46f4a1ace 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -3943,6 +3943,9 @@ static const struct block_device_operations sd_fops = {
- 	.get_unique_id		= sd_get_unique_id,
- 	.free_disk		= scsi_disk_free_disk,
- 	.pr_ops			= &sd_pr_ops,
-+#ifdef CONFIG_BLK_DEV_ZONED
-+	.se_ops			= &sd_zbc_se_ops,
-+#endif
- };
- 
- /**
-diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
-index 6a72371fee78..fc8c49903811 100644
---- a/drivers/scsi/sd.h
-+++ b/drivers/scsi/sd.h
-@@ -243,6 +243,8 @@ unsigned int sd_zbc_complete(struct scsi_cmnd *cmd, unsigned int good_bytes,
- int sd_zbc_report_zones(struct gendisk *disk, sector_t sector,
- 		unsigned int nr_zones, struct blk_report_zones_args *args);
- 
-+extern const struct blk_se_ops sd_zbc_se_ops;
-+
- #else /* CONFIG_BLK_DEV_ZONED */
- 
- static inline int sd_zbc_read_zones(struct scsi_disk *sdkp,
-diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
-index 2c77f878ab3f..39cd4f9fcce5 100644
---- a/drivers/scsi/sd_zbc.c
-+++ b/drivers/scsi/sd_zbc.c
-@@ -548,6 +548,239 @@ static void sd_zbc_print_zones(struct scsi_disk *sdkp)
- 			  sdkp->zone_info.zone_blocks);
- }
- 
-+static void sd_zbc_parse_storage_element(struct scsi_disk *sdkp, u8 *desc,
-+					 struct blk_se *element)
-+{
-+	struct scsi_device *sdp = sdkp->device;
-+	sector_t zone_sectors = sd_zbc_zone_sectors(sdkp);
-+	u64 capacity;
-+
-+	memset(element, 0, sizeof(*element));
-+
-+	element->id = get_unaligned_be32(&desc[4]);
-+
-+	switch (desc[14]) {
-+	case SCSI_PHYS_ELEM_TYPE_ALL_ACCESS_STORAGE:
-+		element->type = BLK_SE_TYPE_RDWR;
-+		capacity = get_unaligned_be64(&desc[16]);
-+		if (!zone_sectors || capacity == ULLONG_MAX)
-+			element->nr_zones = 0;
-+		else
-+			element->nr_zones =
-+				logical_to_sectors(sdp, capacity) >>
-+					ilog2(zone_sectors);
-+		break;
-+	case SCSI_PHYS_ELEM_TYPE_FRAC_ACCESS_STORAGE:
-+		element->paired_id = get_unaligned_be32(&desc[16]);
-+		if (desc[20] & 0x01)
-+			element->type = BLK_SE_TYPE_READ;
-+		else
-+			element->type = BLK_SE_TYPE_WRITE;
-+		element->nr_zones = get_unaligned_be64(&desc[24]);
-+		break;
-+	default:
-+		element->type = BLK_SE_TYPE_UNKNOWN;
-+	}
-+
-+	switch (desc[15]) {
-+	case SCSI_PHYS_ELEM_HEALTH_WITHIN_SPEC_LIMITS:
-+	case SCSI_PHYS_ELEM_HEALTH_AT_SPEC_LIMITS:
-+		element->status = BLK_SE_STS_OK;
-+		break;
-+	case SCSI_PHYS_ELEM_HEALTH_OUTSIDE_SPEC_LIMITS:
-+		element->status = BLK_SE_STS_DEGRADED;
-+		break;
-+	case SCSI_PHYS_ELEM_HEALTH_DEPOP_REVOKE_ERR:
-+		element->status = BLK_SE_STS_RESTORE_ERROR;
-+		break;
-+	case SCSI_PHYS_ELEM_HEALTH_DEPOP_REVOKE_IN_PROGRESS:
-+		element->status = BLK_SE_STS_RESTORE_IN_PROGRESS;
-+		break;
-+	case SCSI_PHYS_ELEM_HEALTH_DEPOP_ERR:
-+		element->status = BLK_SE_STS_REMOVE_ERROR;
-+		break;
-+	case SCSI_PHYS_ELEM_HEALTH_DEPOP_IN_PROGRESS:
-+		element->status = BLK_SE_STS_REMOVE_IN_PROGRESS;
-+		break;
-+	case SCSI_PHYS_ELEM_HEALTH_DEPOP_OK:
-+		element->status = BLK_SE_STS_REMOVED;
-+		element->restore_allowed = desc[13] & 0x01;
-+		break;
-+	case SCSI_PHYS_ELEM_HEALTH_NOT_REPORTED:
-+	default:
-+		element->status = BLK_SE_STS_UNKNOWN;
-+		break;
-+	}
-+}
-+
-+/*
-+ * Large hard limit on the number of storage elements. This accommodates all
-+ * known devices today and likely forever :)
-+ */
-+#define SD_ZBC_MAX_STORAGE_ELEMENTS	255
-+
-+static int sd_zbc_report_storage_elements(struct gendisk *disk,
-+					  struct blk_se *elements,
-+					  unsigned int *nr_elements)
-+{
-+	struct scsi_disk *sdkp = scsi_disk(disk);
-+	struct scsi_device *sdp = sdkp->device;
-+	const int timeout = sdp->request_queue->rq_timeout;
-+	struct scsi_sense_hdr sshdr;
-+	const struct scsi_exec_args exec_args = {
-+		.sshdr = &sshdr,
-+	};
-+	unsigned char cmd[16];
-+	unsigned int nr_descs, nr_se;
-+	unsigned int buf_size;
-+	int i, ret = 0, result;
-+	u8 *desc, *buf;
-+
-+	if (!sdkp->modify_zones_supported)
-+		return -EOPNOTSUPP;
-+
-+	/*
-+	 * We need at least 32B for the report header and 32B for each
-+	 * descriptor.
-+	 */
-+	nr_se = min(SD_ZBC_MAX_STORAGE_ELEMENTS, *nr_elements);
-+	buf_size = ALIGN((nr_se + 1) * 32, SECTOR_SIZE);
-+
-+	buf = kzalloc(buf_size, GFP_NOIO);
-+	if (!buf)
-+		return -ENOMEM;
-+
-+	memset(cmd, 0, 16);
-+	cmd[0] = SERVICE_ACTION_IN_16;
-+	cmd[1] = SAI_GET_PHYSICAL_ELEMENT_STATUS;
-+	put_unaligned_be32(buf_size, &cmd[10]);
-+
-+	result = scsi_execute_cmd(sdp, cmd, REQ_OP_DRV_IN, buf, buf_size,
-+				  timeout, 1, &exec_args);
-+	if (result) {
-+		sd_printk(KERN_ERR, sdkp,
-+			  "GET PHYSICAL ELEMENT STATUS failed\n");
-+		sd_print_result(sdkp, "GET PHYSICAL ELEMENT STATUS", result);
-+		if (result > 0 && scsi_sense_valid(&sshdr))
-+			sd_print_sense_hdr(sdkp, &sshdr);
-+		ret = -EIO;
-+		goto free_buf;
-+	}
-+
-+	nr_descs = get_unaligned_be32(&buf[0]);
-+	if (!nr_descs) {
-+		sd_printk(KERN_ERR, sdkp,
-+			  "Invalid number of phys element descriptors\n");
-+		ret = -EIO;
-+		goto free_buf;
-+	}
-+	if (nr_descs > SD_ZBC_MAX_STORAGE_ELEMENTS) {
-+		sd_printk(KERN_ERR, sdkp,
-+			  "Too many phys element descriptors\n");
-+		ret = -EIO;
-+		goto free_buf;
-+	}
-+
-+	if (!elements) {
-+		*nr_elements = nr_descs;
-+		goto free_buf;
-+	}
-+
-+	nr_descs = get_unaligned_be32(&buf[4]);
-+	if (!nr_descs) {
-+		sd_printk(KERN_ERR, sdkp,
-+			"Invalid number of reported phys element descriptors\n");
-+		ret = -EIO;
-+		goto free_buf;
-+	}
-+
-+	desc = &buf[32];
-+	for (i = 0; i < min(nr_se, nr_descs); i++, desc += 32)
-+		sd_zbc_parse_storage_element(sdkp, desc, &elements[i]);
-+	*nr_elements = i;
-+
-+free_buf:
-+	kfree(buf);
-+
-+	return ret;
-+}
-+
-+static int sd_zbc_remove_storage_element(struct gendisk *disk,
-+					 unsigned int element_id)
-+{
-+	struct scsi_disk *sdkp = scsi_disk(disk);
-+	struct scsi_device *sdp = sdkp->device;
-+	const int timeout = sdp->request_queue->rq_timeout;
-+	struct scsi_sense_hdr sshdr;
-+	const struct scsi_exec_args exec_args = {
-+		.sshdr = &sshdr,
-+	};
-+	unsigned char cmd[16];
-+	int result;
-+
-+	if (!sdkp->modify_zones_supported)
-+		return -EOPNOTSUPP;
-+
-+	memset(cmd, 0, 16);
-+	cmd[0] = SERVICE_ACTION_IN_16;
-+	cmd[1] = SAI_REMOVE_ELEMENT_AND_MODIFY_ZONES;
-+	put_unaligned_be32(element_id, &cmd[10]);
-+
-+	result = scsi_execute_cmd(sdp, cmd, REQ_OP_DRV_IN, NULL, 0,
-+				  timeout, 1, &exec_args);
-+	if (result) {
-+		sd_printk(KERN_ERR, sdkp,
-+			  "REMOVE ELEMENT AND MODIFY ZONES failed\n");
-+		sd_print_result(sdkp,
-+				"REMOVE ELEMENT AND MODIFY ZONES", result);
-+		if (result > 0 && scsi_sense_valid(&sshdr))
-+			sd_print_sense_hdr(sdkp, &sshdr);
-+		return -EIO;
-+	}
-+
-+	return 0;
-+}
-+
-+static int sd_zbc_restore_storage_elements(struct gendisk *disk)
-+{
-+	struct scsi_disk *sdkp = scsi_disk(disk);
-+	struct scsi_device *sdp = sdkp->device;
-+	const int timeout = sdp->request_queue->rq_timeout;
-+	struct scsi_sense_hdr sshdr;
-+	const struct scsi_exec_args exec_args = {
-+		.sshdr = &sshdr,
-+	};
-+	unsigned char cmd[16];
-+	int result;
-+
-+	if (!sdkp->modify_zones_supported)
-+		return -EOPNOTSUPP;
-+
-+	memset(cmd, 0, 16);
-+	cmd[0] = SERVICE_ACTION_IN_16;
-+	cmd[1] = SAI_RESTORE_ELEMENTS_AND_REBUILD;
-+
-+	result = scsi_execute_cmd(sdp, cmd, REQ_OP_DRV_IN, NULL, 0,
-+				  timeout, 1, &exec_args);
-+	if (result) {
-+		sd_printk(KERN_ERR, sdkp,
-+			  "RESTORE ELEMENTS AND REBUILD failed\n");
-+		sd_print_result(sdkp,
-+				"RESTORE ELEMENTS AND REBUILD", result);
-+		if (result > 0 && scsi_sense_valid(&sshdr))
-+			sd_print_sense_hdr(sdkp, &sshdr);
-+		return -EIO;
-+	}
-+
-+	return 0;
-+}
-+
-+const struct blk_se_ops sd_zbc_se_ops = {
-+	.report_elements	= sd_zbc_report_storage_elements,
-+	.remove_element		= sd_zbc_remove_storage_element,
-+	.restore_elements	= sd_zbc_restore_storage_elements,
-+};
-+
- /*
-  * Call blk_revalidate_disk_zones() if any of the zoned disk properties have
-  * changed that make it necessary to call that function. Called by
--- 
-2.55.0
+This commit addresses a use-after-free triggered by a race between a demo-m=
+ode
+login creating dynamic node acls and a concurrent lun teardown. It attempts=
+ to
+fix the issue by publishing the node acl before populating its dev entries,=
+ and
+refusing to attach new dev entries to a shutting down se_lun.
 
+> diff --git a/drivers/target/target_core_device.c b/drivers/target/target_=
+core_device.c
+> index 9db2201aa553f..5eef87aa3b674 100644
+> --- a/drivers/target/target_core_device.c
+> +++ b/drivers/target/target_core_device.c
+> @@ -349,6 +349,19 @@ int core_enable_device_list_for_node(
+>  	new->attach_count++;
+> =20
+>  	mutex_lock(&nacl->lun_entry_mutex);
+> +	/*
+> +	 * Do not attach a new dev entry to an se_lun that is being torn down.
+> +	 * lun_shutdown is set by core_tpg_remove_lun() before its
+> +	 * core_clear_lun_from_tpg() sweep; checking it here under the same
+> +	 * nacl->lun_entry_mutex the sweep takes guarantees that once the sweep
+> +	 * has passed this ACL no dev entry can be left dangling on the
+> +	 * se_lun->lun_deve_list that is about to be freed.
+> +	 */
+> +	if (lun->lun_shutdown) {
+> +		mutex_unlock(&nacl->lun_entry_mutex);
+> +		ret =3D -ENODEV;
+> +		goto free_stats;
+> +	}
+
+[Severity: High]
+Can a time-of-check to time-of-use race condition regression occur here?
+
+Because the target_core_tpg.c portion of this patch publishes the dynamic
+node acl before creating its dev entries, a concurrent lun teardown sweep c=
+an
+now observe the dev entry while it is being added in
+core_enable_device_list_for_node().
+
+If the teardown sweep sets lun->lun_shutdown =3D true right after we check =
+it
+here, the sweep can run and wait on nacl->lun_entry_mutex.
+
+When core_enable_device_list_for_node() later drops that mutex:
+
+drivers/target/target_core_device.c:core_enable_device_list_for_node() {
+    ...
+    hlist_add_head_rcu(&new->link, &nacl->lun_entry_hlist);
+    mutex_unlock(&nacl->lun_entry_mutex);
+
+    spin_lock(&lun->lun_deve_lock);
+    list_add_tail(&new->lun_link, &lun->lun_deve_list);
+    spin_unlock(&lun->lun_deve_lock);
+    ...
+}
+
+The teardown sweep takes the mutex and calls
+core_disable_device_list_for_node(), which performs:
+
+    list_del(&orig->lun_link);
+
+Because new->lun_link is merely INIT_LIST_HEAD'ed at this point, list_del()
+silently succeeds and sets list poisoning rather than preventing the
+concurrent thread from linking it.
+
+Then, the original thread resumes, takes lun->lun_deve_lock, and calls
+list_add_tail(&new->lun_link, &lun->lun_deve_list), overwriting the poison
+and successfully linking the doomed entry.
+
+When the rcu grace period expires, the entry is freed, leaving a dangling
+pointer in lun->lun_deve_list. Iterating lun->lun_deve_list subsequently can
+trigger a use-after-free.
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261013120528.3774=
+9-1-yuz08559@gmail.com?part=3D1
