@@ -1,153 +1,112 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A4BE251D52D
-	for <linux-scsi@vger.kernel.org>; Tue, 13 Oct 2026 16:28:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B3EB502795;
+	Tue, 13 Oct 2026 16:29:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791908919; cv=none; b=PMkAB3TzerpdWI+Q9kHTEwEf2bJzJmSZd/W1H0KYwTzel6hsrfbXwWRUYeYFk/6tmHIZtNP4T0asZTULaZbGdema9UDyhC7+N07BirM+xqAQdIjjGgfJO6wmrHP5FCqWAwPTTnA4Xc+uHnMTzL2G4TBmzlvIOv5alT9u9fsmK1g=
+	t=1791908964; cv=none; b=SYRhPt1U73TT4NfWmVaNppknIpQkAroEmTPC9fiE0Mf7wYtB1vcrzBR5pTsOadCp1tcLKUah+wCP7ogZ40TrrmA2cdNDT/Dfn1mblwJo1NSGT60mH7STZmhzqPQlwlF9kTDPJODj9qL1ZGMowNZJrv977eltrkXAG4R3OANG6O4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791908919; c=relaxed/simple;
-	bh=jnqOyDoXFdtnuADsTcJ5muEr2wVw63X4TLG3mtGhHyg=;
+	s=arc-20240116; t=1791908964; c=relaxed/simple;
+	bh=vM85zR2fOVurYBxjn8fT5iW4OxrI/h14uZrugbUdlkY=;
 	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
-	 Date; b=QhMs7BDJyKOPU2S8R9CuSWoKZmr0u0aTGzIyqx0CY33d/MnKqF9tDPf8EDdg8BYZI6uLvVe0/XK5q7/KA08+uktrs+Mjd/7MKaSsiQrjbHTyJs2u0aihkaz4Ga0nbzzBoNUJ5XpQG/FQBR7aNFB3rJolsOj27yMZQOhyubYtdDg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=b26OMEgd; arc=none smtp.client-ip=100.103.45.18
+	 Date; b=YaBD6puDEn9YMwQFSxgXyJxRF0GcRlydr7ODi2/Pn4eHVHUQUUoNXcTmWmpwB2d0FF0ePhUhuFh/3rO2XF3GoO3up2sAahRYbZqxGCC34a/UWDeWNm0NBkP/31C0SgxQX3B7JMyHNbX4y6UnFKGI+g7IIoLulbwC/5E1AY4xIP8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Nh5lZUsI; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="b26OMEgd"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0FAD11F000FF;
-	Tue, 13 Oct 2026 16:28:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Nh5lZUsI"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CFEF01F000FF;
+	Tue, 13 Oct 2026 16:29:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791908918;
-	bh=h7Fopv9JBZwIuRkBip4t1+yFP9WqVTDX8QKgYHT0VF0=;
+	s=k20260515; t=1791908962;
+	bh=2MSKGWi5sSTXPxshy0khHGQFOGEaARrsUzF69RTi9us=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=b26OMEgdTTp+jhKyNUa4ALePesCX3d+BGD+tUS6kW3Vdn4L2IH2x4q7scnNlWsY7O
-	 jLZw/rGw8eeOU84OhoWYds2fID8KNP1rzKyJpQMNKIfqPyW3brtGhGBFgEsquBL8ov
-	 S/MfnzII0uNmYMOLpkvx7whw6/zxxq1pcG3pGknuguQIA7jA00A7nxHqvWTRgfdJJm
-	 TOr4ytA9WbAF8q3ZjStf/TwcN4/xdtfHR2u9b3UX200DsZhCJ8kgTLUNihSycrykik
-	 NcHoRd4qnhOLyEnY4fGJ5gdA+SCpf0C3OOMnW5K5XHw9onOFclZxm2X37v71xfauLo
-	 /oXya7qmijSew==
-Message-ID: <sashiko-outbox-170111@kernel.org>
+	b=Nh5lZUsI00aE3cPEz2OT/FZEYPg4h6SI/G9fLd8I8GbBxvGn7Uy+G0t/Y5HnPvih5
+	 SD5sDhB85Itm65IyDanL2L6ix/6sThqZYZim+pOR7Tf8IZbsbKOQazjDnDHzZiZUu0
+	 Pb0JRbMPuunzrsBVAtuztHOBCcafuATGlv8iUze9mWAfF82adDnhQElQDj5FWrf59v
+	 Quwnc1vGch6JEZ3OSp2xEg7STFPr5ZsdAvcTM8aZ3OofM5bseGmWVBrqSgDxNbt1cD
+	 AjK4u117W1bn2hBBK9uXbKgxDektLa785Jnaywiz/gekeuhP4MAtvxX9YBQkbjoh30
+	 z1XaVUdGNVjSg==
+Message-ID: <sashiko-outbox-170114@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 2/2] scsi: mvumi: reject an out-of-range handshake frame
- length
+Subject: Re: [PATCH v6 08/39] mm: add mmap action for discontiguous kernel
+ page mapping
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Yehyeong Lee" <yhlee@isslab.korea.ac.kr>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20261013161620.3210533-3-yhlee@isslab.korea.ac.kr>
-References: <20261013161620.3210533-1-yhlee@isslab.korea.ac.kr>
- <20261013161620.3210533-3-yhlee@isslab.korea.ac.kr>
+To: =?utf-8?b?TG9yZW56byBTdG9ha2VzIChBUk0p?= <ljs@kernel.org>
+Cc: linux-usb@vger.kernel.org, linux-rdma@vger.kernel.org, selinux@vger.kernel.org, bpf@vger.kernel.org, linux-scsi@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-trace-kernel@vger.kernel.org, linux-perf-users@vger.kernel.org, kvmarm@lists.linux.dev, kvm@vger.kernel.org, linux-s390@vger.kernel.org, "Oliver
+ Upton" <oupton@kernel.org>, "Marc Zyngier" <maz@kernel.org>, "Heiko
+ Carstens" <hca@linux.ibm.com>, "Vasily Gorbik" <gor@linux.ibm.com>, "Alexander
+ Gordeev" <agordeev@linux.ibm.com>, "Christian Borntraeger" <borntraeger@linux.ibm.com>
+In-Reply-To: <20261013-b4-mmap-prepare-vma-flag-sanify-v6-8-1aa3c9b139f9@kernel.org>
+References: <20261013-b4-mmap-prepare-vma-flag-sanify-v6-0-1aa3c9b139f9@kernel.org>
+ <20261013-b4-mmap-prepare-vma-flag-sanify-v6-8-1aa3c9b139f9@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 13 Oct 2026 16:28:37 +0000
+Date: Tue, 13 Oct 2026 16:29:21 +0000
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] scsi: mvumi: double fetch of frame_length from DMA memory bypasses=
- check
-- [Medium] scsi: mvumi: handshake abort fails to notify hardware, causing 3=
-0s hang
-- [Medium] scsi: mvumi: missing endianness conversion for frame_length
+- [Medium] mm: mmap_action_finish bypasses error_override for compat tasks
 --
 
-commit dafccf0ec918c5690e69772bbc05185a6c69bf98
-Author: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+commit 21d3d0c977ac349611c733fc3c288ae67e5f71a1
+Author: Lorenzo Stoakes (ARM) <ljs@kernel.org>
 
-scsi: mvumi: reject an out-of-range handshake frame length
+mm: add mmap action for discontiguous kernel page mapping
 
-This patch adds a bounds check to mvumi_hs_process_page() to reject an
-out-of-range handshake frame_length. This prevents an infinite loop and out=
- of
-bounds read that occurs if the firmware fills in a value of 256 or more.
+This commit introduces discontig_kernel_page_ops and a new mmap action type
+to allow drivers to map discontiguous arrays of kernel pages into a VMA.
+It updates the compatibility layer via compat_mmap_action_abort() to proper=
+ly
+handle VMA teardown on mmap action failures.
 
-Cc: stable@vger.kernel.org
+> diff --git a/mm/util.c b/mm/util.c
+> --- a/mm/util.c
+> +++ b/mm/util.c
 
-> diff --git a/drivers/scsi/mvumi.c b/drivers/scsi/mvumi.c
-> index 38a92f8c25f5b..e85400291a141 100644
-> --- a/drivers/scsi/mvumi.c
-> +++ b/drivers/scsi/mvumi.c
-> @@ -1040,6 +1040,13 @@ static int mvumi_hs_process_page(struct mvumi_hba =
-*mhba,
->  	struct mvumi_hs_page1 *hs_page1;
->  	unsigned char page_checksum;
+[ ... ]
+
+> @@ -1412,12 +1421,13 @@ static int mmap_action_finish(struct vm_area_stru=
+ct *vma,
 > =20
-> +	if (hs_header->frame_length >
-> +	    HSP_MAX_SIZE - sizeof(struct mvumi_hs_header)) {
+>  	/* do_munmap() might take rmap lock, so release if held. */
+>  	maybe_rmap_unlock_action(vma, action);
+> -	/*
+> -	 * If this is invoked from the compatibility layer, post-mmap() hook
+> -	 * logic will handle cleanup for us.
+> -	 */
+> -	if (!err || is_compat)
+> +	if (!err)
+> +		return 0;
+> +
+> +	if (is_compat) {
+> +		compat_mmap_action_abort(vma);
+>  		return err;
 
 [Severity: Medium]
-Does hs_header->frame_length need an endianness conversion here?
+Does this bypass the error_override logic for compat tasks?
 
-If the device writes this data into DMA memory as little-endian, reading it=
- as
-a plain u16 without le16_to_cpu() could cause a valid small length to be
-interpreted as a massive value on big-endian architectures.
+When an mmap action fails, the mmap_action struct provides an error_override
+field to allow drivers to replace the internal error code with a user-facing
+one. Later in this function, non-compat tasks return=20
+action->error_override ?: err.
 
-Could this cause the initialization probe to fail on big-endian systems?
-
-> +		dev_err(&mhba->pdev->dev, "invalid handshake frame length %d\n",
-> +			hs_header->frame_length);
-> +		return -1;
-
-[Severity: Medium]
-Does returning an error here cause the driver to hang?
-
-When mvumi_hs_process_page() returns an error, the caller mvumi_handshake()
-sets its state to HS_S_ABORT and returns -1 immediately:
-
-drivers/scsi/mvumi.c:mvumi_handshake() {
-    ...
-    if (mvumi_hs_process_page(mhba, hs_header)) {
-        HS_SET_STATE(hs_fun, HS_S_ABORT);
-        return -1;
-    }
-    ...
-}
-
-By returning immediately, it skips the iowrite32 calls at the end of the bl=
-ock
-that notify the hardware of the state change.
-
-Furthermore, its caller mvumi_handshake_event() completely ignores the -1
-return value:
-
-drivers/scsi/mvumi.c:mvumi_handshake_event() {
-    ...
-    mvumi_handshake(mhba);
-    do {
-        isr_status =3D mhba->instancet->read_fw_status_reg(mhba);
-    ...
-}
-
-Will this cause the driver to fall through into the 30-second polling loop
-waiting for an interrupt that will never arrive?
+By returning err directly here when is_compat is true, it seems 32-bit comp=
+at
+tasks might receive different error codes than 64-bit tasks, potentially
+breaking ABI consistency.
 
 > +	}
-> +
->  	page_checksum =3D mvumi_calculate_checksum(hs_header,
->  						hs_header->frame_length);
+> =20
+>  	/*
+>  	 * If an error occurs, unmap the VMA altogether and return an error. We
 
-[Severity: High]
-Does this introduce a double fetch regression?
-
-The bounds check above evaluates hs_header->frame_length, but then the leng=
-th
-is read a second time from shared DMA memory to pass into
-mvumi_calculate_checksum().
-
-If the device firmware is untrusted, could it race the CPU and modify
-frame_length in memory to a value larger than 255 after the bounds check
-passes but before this second fetch?
-
-This would pass an out-of-bounds length into the checksum loop, causing the
-unsigned char loop counter to wrap around infinitely and re-triggering the
-exact hang this patch intended to fix.
-
->  	if (page_checksum !=3D hs_header->checksum) {
+[ ... ]
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261013161620.3210=
-533-1-yhlee@isslab.korea.ac.kr?part=3D2
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261013-b4-mmap-pr=
+epare-vma-flag-sanify-v6-0-1aa3c9b139f9@kernel.org?part=3D8
