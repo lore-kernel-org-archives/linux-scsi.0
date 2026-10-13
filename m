@@ -1,56 +1,56 @@
-Received: from mail-pg1-f199.google.com (mail-pg1-f199.google.com [209.85.215.199])
+Received: from mail-pl1-f198.google.com (mail-pl1-f198.google.com [209.85.214.198])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 533D73F4DE0
-	for <linux-scsi@vger.kernel.org>; Tue, 13 Oct 2026 10:29:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.199
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D5CA42A168
+	for <linux-scsi@vger.kernel.org>; Tue, 13 Oct 2026 10:29:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.198
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791887362; cv=none; b=eWxGBM7oSUKgdSbRhcailmZ7IpUdD8vr7Eq8jnWEbg6Umwp4qXNZHb6RGwXDg6ymBO0S0ZJtBvqwYpLEbllLYv6g9Y323z9Y/uNLoyanbW7IdPCsZ8PAV3ZdjrN0ch/AajpaXJLpXixFc6x7aABUXLfjcqCRRMVGYDLIu+6gbis=
+	t=1791887363; cv=none; b=Ddru5ZfQ1roWrU2PG1cob/tWrpzTR8ysdHaQBdM/1oGColkuyvx3Se2+srupD0XWFVvEDIFWj8QVvK6xY96Mga8NQgdOW/v7hOlH5bVJgBSuFc968cROt+RDZMdYgyDFUeMNah0H/agYY8/s4YwiQn5l9P/MtOsI4Qqe0Xh1m20=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791887362; c=relaxed/simple;
-	bh=yTZrpMhG7oYJAnjzCIzddDtAInyPWu7nypCHAAGvPo0=;
+	s=arc-20240116; t=1791887363; c=relaxed/simple;
+	bh=x6lJXlnw+7kScGp+KyssmQC0Hf4Uca7kpbxm6mYDoZw=;
 	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=Q0at6rK64g5KmZPN26I8J5Rieq/VCt5N+464xIA4+keuS4wpFdxulYnSSztprIHx+/ED6QZpRUJj+Ufoh5p6HGRUNSY2H+MkKKpZGnxE5b/yKJJ2GmcYlBmW75YEavaXIJPYubFEQdiZYdlEkaRJAjdDnzt6uvEY9sbBoK5xhos=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=wHBqbxBi; arc=none smtp.client-ip=209.85.215.199
+	 To:Cc:Content-Type; b=sNRqRNPj31Eh/ygCGGtTZpNYCA2DCB2d67CixiSJB3AfxYvVtWFoCS8trlyfvT8PKB25/xm6EHn95TGK0Vk/rZmfw5M5YQwrNvkztP6piSn0Y+I+ZM4RJL/5TVMzwJpqizSrgWEpVjGm6ezsJI60BZxV47sjbgOQl1ML9M3dZLI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=icUNwOJD; arc=none smtp.client-ip=209.85.214.198
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="wHBqbxBi"
-Received: by mail-pg1-f199.google.com with SMTP id 41be03b00d2f7-cc7361c62b9so2403481a12.3
-        for <linux-scsi@vger.kernel.org>; Tue, 13 Oct 2026 03:29:20 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="icUNwOJD"
+Received: by mail-pl1-f198.google.com with SMTP id d9443c01a7336-2e60bb65626so30451725ad.0
+        for <linux-scsi@vger.kernel.org>; Tue, 13 Oct 2026 03:29:22 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1791887360; x=1792492160; darn=vger.kernel.org;
+        d=google.com; s=20251104; t=1791887362; x=1792492162; darn=vger.kernel.org;
         h=content-type:cc:to:from:subject:message-id:references:mime-version
          :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=ZdaD079cI/p9+3qL8ikHF1wm2BIaNJ6noJDSD0TQRCk=;
-        b=wHBqbxBi0BtG1XObcGrnZDCqCJc6iHKeWUmKsmkGXIn9SLfdn2W0uZY9MjfCE31/o4
-         2WvvNNuWNDWf/Oj4Gbd+vU6v8BHk4hqtUmhJ1gvQeBmMraC+5+CWRa6PkK4i+8hpBSxZ
-         K/Whg/ZwVBLhH5+g7+SmcpkctZUZcz5vFSVDrVOPEp+0tYQOS+kanNRSlBjtsqlQwi+c
-         +8wR7OrpkLLFMbQFQ334MLQp+eW86EcK6ofPshw1DU82xfPx8PHs9LBdcqOvcQSDdBp1
-         JZy1OV099KMoOiTTU1NRAvm6RSDa229Qa3X+lViKBa5sXb8iE2wQ8/dYCpZjXP6WSx8s
-         89iQ==
+        bh=rjHP0ikJt34WZ/clkFc39YeDIx8IXxXSFzB3iNtX7ts=;
+        b=icUNwOJD7N8eie3CRf7qB2s49zgTClW++D4bV2Agy7y9ZHoiVsTtOSfRc3UOt0MhH1
+         JdRcvnt1PXbPqoQsZQIOZOqXpcjp4pv1OZ0M9pVfVC7R95cB4vHstnAUaYF/qf/FNLxD
+         NTF22CEYCLTus3164iJs+hQSDyXIkl/od4tu4B+SWA+Fwn/6Tl85giKX3EEDedBWohIq
+         fuGxpqm+BkkdY9bBg10EkmfPz3bzAIZrsKKF0LxV66GELJ0FdJtlt+6Da32eWQ/C37+n
+         wf55cahQ66pTGSHLQw1zsA1uMct/ZbnJlTIeHUUFXhDaFA/IYSKDJmqTd/ifH1UvSkBt
+         LbTA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791887360; x=1792492160;
+        d=1e100.net; s=20260707; t=1791887362; x=1792492162;
         h=content-type:cc:to:from:subject:message-id:references:mime-version
          :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=ZdaD079cI/p9+3qL8ikHF1wm2BIaNJ6noJDSD0TQRCk=;
-        b=DSDhyZ0+UXjx6OGscuGzXQnG5mWLC9ntoq6Nt9wMFyq9eyGH01jqbZXrpw3XY3d5Dy
-         k8E01ddgL6HLId4vnldCbL2cVrxNXOpb+Nb5JxQAB7miRylVXgrIzC4uED60hUYHpIe5
-         Ge022VxMcEPv/ileoRE1zCO3WgDkDuFGtd9C1raI8v+1fZq5vTB7JOMik8kYID40hqHS
-         WWMiP4CNR0yGVSUUFVHwBpCTyF6znQ3jdRmBWznXR6I7m3Ya4ixcR5QvZgeOS/VmAl7V
-         e9C+NSvC/dyWy0SpHs34JexW53r9gYEAaIQM6ecjGH0pjyTJ1proav14w5KozoqaMI/4
-         fAaA==
-X-Forwarded-Encrypted: i=1; AKwUvBzdAAa/DQJnbfETu3Na40iYhRMfPuXicPK8eZZr/IXrpoQnKbSLiRfewj2qgOvZy1BPG8GxDY82aoKR@vger.kernel.org
-X-Gm-Message-State: AFq9FYJOjroJAnEOb+ipxm8TJ7KDUnh46kbT1V60VIlXxZ9r+45OYqbv
-	wkGxoWDYGzqw8I2jeqx6zoFAqCA5C3l3xLo1kf016KfMPRJjlLo/NYVv4z/+Kf/8G8WCuMCuySG
-	ZSqR7Qemhsl9YRrHlY+DOlQ==
-X-Received: from pfbay11.prod.google.com ([2002:a05:6a00:300b:b0:886:fe91:dda4])
+        bh=rjHP0ikJt34WZ/clkFc39YeDIx8IXxXSFzB3iNtX7ts=;
+        b=ugw85gLH7p+24Nd4N0ZXmVn0wGomAhwFkW3uf1Rm1+e+/z56Rknfs9pnCCp82Mwpwx
+         D37jQzfOvwdWEGdZpC9Sfql+a4hCG0bM6pAPnZ6KEYYWXvp5VAwLRhfHuhv1nRhBNvvN
+         bmr0UBsPU5xxgCNmdrJM4eJbHM3G0BpjO34N5z1Dl3c4Z9hjS2FL2oK/H395XwbN8pKf
+         3jR+OU7EPKBI4cCdoVdsMr+jyVc2eD8PmBD2rQoxt1XFsjOM5Zj954n4uRmUlhMapw6v
+         3DdU6OOt7JGUtQFQnXzavZe//NZskIHM1gmHVkCrNQjeLhMagFlI29bfGJUnfK/b3N6y
+         9Tqw==
+X-Forwarded-Encrypted: i=1; AKwUvBzcQD5mUSMyAM6Pb/xBNuZZQsF2+faNammIJunz/ZVG2Jn8tygsoxlhd56FXf3ujNdWwMMku+wmz8Kq@vger.kernel.org
+X-Gm-Message-State: AFq9FYJItb248uaenDcnug0Q8Kwepb14M8fwx6Na9j4Bu1xOsT3V+cR3
+	yvVw5DW1WJEJyY2oTOgHetkG/pv9x9bEcGSAaHinvPw9NfOqAbEwNnkF2kFjFqaVVRlHA9Of3Ry
+	E4Uf7u6pLihd+kKxClhNe0A==
+X-Received: from plei20.prod.google.com ([2002:a17:902:e494:b0:2e2:cb09:d4a2])
  (user=stanleyjhu job=prod-delivery.src-stubby-dispatcher) by
- 2002:a05:6a00:985:b0:882:bf63:480 with SMTP id d2e1a72fcca58-897c7adfb77mr10543894b3a.49.1791887359346;
- Tue, 13 Oct 2026 03:29:19 -0700 (PDT)
-Date: Tue, 13 Oct 2026 18:29:12 +0800
+ 2002:a17:902:d4d1:b0:2e4:905f:5a3a with SMTP id d9443c01a7336-2e8428359eamr73415145ad.2.1791887361273;
+ Tue, 13 Oct 2026 03:29:21 -0700 (PDT)
+Date: Tue, 13 Oct 2026 18:29:13 +0800
 In-Reply-To: <20261013102913.948718-1-stanleyjhu@google.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -60,9 +60,9 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
 References: <20261013102913.948718-1-stanleyjhu@google.com>
 X-Mailer: git-send-email 2.56.0.385.gd3acb90ef8-goog
-Message-ID: <20261013102913.948718-3-stanleyjhu@google.com>
-Subject: [PATCH 2/3] scsi: ufs: bsg: Clear the UIC result byte before sending
- UIC commands
+Message-ID: <20261013102913.948718-4-stanleyjhu@google.com>
+Subject: [PATCH 3/3] scsi: ufs: core: Clear stale UIC result byte before peer
+ DME retries
 From: Stanley Jhu <stanleyjhu@google.com>
 To: "Martin K. Petersen" <mkp@kernel.org>, 
 	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
@@ -72,34 +72,43 @@ Cc: powenkao@google.com, Alim Akhtar <alim.akhtar@samsung.com>,
 	linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 
-ufs_bsg_request() passes the user-supplied UIC argument2 unchanged,
-including the result byte (bits 7:0) that only the host controller
-writes. A non-zero value triggers the WARN_ON_ONCE() in
-ufshcd_dispatch_uic_cmd() and corrupts the reported result. Found by
-syzkaller.
+Peer DME get and set retry a failed attempt with the same struct
+uic_command. UIC completion ORs the ConfigResultCode into
+argument2[7:0], and nothing clears it before the next attempt. Once an
+attempt fails, every retry keeps reporting that error code, even when
+the device returns success, so a transient failure becomes a hard
+failure after three retries. Each such retry also triggers the
+WARN_ON_ONCE() in ufshcd_dispatch_uic_cmd().
 
-Clear the result byte before sending the command.
+Clear the result byte before each attempt.
 
-Fixes: e77044c5a842 ("scsi: ufs-bsg: Add support for uic commands in ufs_bsg_request()")
-Fixes: 9fb4c793223b ("scsi: ufs: core: Complain if UIC argument 2 is invalid")
+Fixes: 64238fbd15ea ("scsi: ufs: add retries to dme_peer get and set attribute")
 Cc: stable@vger.kernel.org
 Signed-off-by: Stanley Jhu <stanleyjhu@google.com>
 ---
- drivers/ufs/core/ufs_bsg.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/ufs/core/ufshcd.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/ufs/core/ufs_bsg.c b/drivers/ufs/core/ufs_bsg.c
-index dab1f05aff38..331ead0403a1 100644
---- a/drivers/ufs/core/ufs_bsg.c
-+++ b/drivers/ufs/core/ufs_bsg.c
-@@ -179,6 +179,7 @@ static int ufs_bsg_request(struct bsg_job *job)
- 		break;
- 	case UPIU_TRANSACTION_UIC_CMD:
- 		memcpy(&uc, &bsg_request->upiu_req.uc, UIC_CMD_SIZE);
-+		uc.argument2 &= ~MASK_UIC_COMMAND_RESULT;
- 		ret = ufshcd_send_bsg_uic_cmd(hba, &uc);
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index bcc2512bf34b..9adb3b576e28 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -4398,6 +4398,7 @@ int ufshcd_dme_set_attr(struct ufs_hba *hba, u32 attr_sel,
+ 	int retries = UFS_UIC_COMMAND_RETRIES;
+ 
+ 	do {
++		uic_cmd.argument2 &= ~MASK_UIC_COMMAND_RESULT;
+ 		/* for peer attributes we retry upon failure */
+ 		ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
  		if (ret)
- 			dev_err(hba->dev, "send uic cmd: error code %d\n", ret);
+@@ -4465,6 +4466,7 @@ int ufshcd_dme_get_attr(struct ufs_hba *hba, u32 attr_sel,
+ 	}
+ 
+ 	do {
++		uic_cmd.argument2 &= ~MASK_UIC_COMMAND_RESULT;
+ 		/* for peer attributes we retry upon failure */
+ 		ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
+ 		if (ret)
 -- 
 2.56.0.385.gd3acb90ef8-goog
 
