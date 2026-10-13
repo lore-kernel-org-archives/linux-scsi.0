@@ -1,114 +1,103 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f42.google.com (mail-pj1-f42.google.com [209.85.216.42])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C74BE51B167;
-	Tue, 13 Oct 2026 17:04:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 07A6047D929
+	for <linux-scsi@vger.kernel.org>; Tue, 13 Oct 2026 17:31:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791911088; cv=none; b=Q7/V90y4LM4BlrCeCSwy5/xw4nvHVOO2CVaonduf3HbYSGzisSCgORRlXxbTQLCXPsDChWV6Kvw3ToPSzsp32StG/ObYBJHxLIXFbG3lVWcMgJjUXU4tphTSzsMIg7KyFWxgiBsRT/ozvOsWF6/poLdH5LHQSmHq8pJm2nZMDdU=
+	t=1791912719; cv=none; b=h7FNzl6hi0hGX9QADkFxPEkwf8ckRBaD7nPMgihF99z2ydjbO+3SUvCavih/iyXK60W+DyqHoO8yawhOvgn93GOLnErNj5qKNHsIGmxN9eKpMGD/8JpusR0D8z3Zx/hLgLwTTVNfdEVj/w4W1pex91qdL9To+tzUQ/HJ1RsJnkY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791911088; c=relaxed/simple;
-	bh=9dNcM9X5XKBcssjruktIrFoEkKYg65GWxWsBlvWUxao=;
-	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
-	 Date; b=iutp1eTAaLxKVFdQtQwCp/MMF1b3oEMQf2MhKV9B0ngHVu/R/tWcVhSkE2TgTE29iAi64miwPQK8FHv70oKNbLIYBcCEy+NW0e1mOnm9KgnGwU6kMtnd7qck3TtztujvqwAtva1h7LDL3AcF+cyGzEzCd/LU2X9FB6WpW6vrGmc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MHhpxNma; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791912719; c=relaxed/simple;
+	bh=UyzJg1CGrCT6l9BIn9xt70V+4ZaVLdHp7djXGtqNNi0=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=LCS393OMdcA2S2wbbplsZPHerAXh+zEVFDDKxQ6EB2+Y+w7f/CoxwjDao6QFaWWy91Q4Ev6Q0pGytjbDETnDyQA6LhaKm0aCMNvDiNxU/nR8NjEKI2yQuzDrhbPfYOG9l5/1/jinBZk0nNNXAyG+X47/o7tpRcEbovQNT6vz4uc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr; spf=none smtp.mailfrom=isslab.korea.ac.kr; dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b=EljJEzoC; arc=none smtp.client-ip=209.85.216.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MHhpxNma"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B1B671F000FF;
-	Tue, 13 Oct 2026 17:04:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791911087;
-	bh=trYYkzD1fUs2CPyc6avA9Aj89H9HqMjaP7lJEkleLw0=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=MHhpxNma2+XUsPMVZHnq8rTIQWBMavytXojW7y5vd4gUuugEqYGxdRuV8qU3XwwYP
-	 AZIcUXMjujc/YsJgY2YU2XxNRApLORzKbQf/yHrrteWGOgGShuuyE6iQIMpclWNS3w
-	 iBu8BkqypB5Qp8HrYKusRxuaM9ENB7F1tMjDaVI9D9tXByX9d20zvGote51RlW3ZIi
-	 puL/us9LlgbOPGp9XUjcvtSCKVw6sfSHlid6LvnpsM8NjjNsDZn5IcPWGiXUKAclZ6
-	 WZeLj0Pe2LX9+pKUcFKBE9SkSrg/kSXHF+dOQAhq42r5Jv3UV3/GL4QA4TIm7aopsI
-	 8Ju3bft2ogs+g==
-Message-ID: <sashiko-outbox-170187@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v6 11/39] infiniband: update hfi1 to use
- remap_vmalloc_range()
-Reply-To: sashiko-reviews@lists.linux.dev
-To: =?utf-8?b?TG9yZW56byBTdG9ha2VzIChBUk0p?= <ljs@kernel.org>
-Cc: linux-usb@vger.kernel.org, linux-rdma@vger.kernel.org, selinux@vger.kernel.org, bpf@vger.kernel.org, linux-scsi@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-trace-kernel@vger.kernel.org, linux-perf-users@vger.kernel.org, kvmarm@lists.linux.dev, kvm@vger.kernel.org, linux-s390@vger.kernel.org, "Oliver
- Upton" <oupton@kernel.org>, "Marc Zyngier" <maz@kernel.org>, "Heiko
- Carstens" <hca@linux.ibm.com>, "Vasily Gorbik" <gor@linux.ibm.com>, "Alexander
- Gordeev" <agordeev@linux.ibm.com>, "Christian Borntraeger" <borntraeger@linux.ibm.com>
-In-Reply-To: <20261013-b4-mmap-prepare-vma-flag-sanify-v6-11-1aa3c9b139f9@kernel.org>
-References: <20261013-b4-mmap-prepare-vma-flag-sanify-v6-0-1aa3c9b139f9@kernel.org>
- <20261013-b4-mmap-prepare-vma-flag-sanify-v6-11-1aa3c9b139f9@kernel.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 13 Oct 2026 17:04:45 +0000
+	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b="EljJEzoC"
+Received: by mail-pj1-f42.google.com with SMTP id 98e67ed59e1d1-3a706146559so1963516a91.2
+        for <linux-scsi@vger.kernel.org>; Tue, 13 Oct 2026 10:31:53 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=isslab-korea-ac-kr.20251104.gappssmtp.com; s=20251104; t=1791912713; x=1792517513; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=VlswUne+avJ8bwCltZgy3YunaA6SJPVFCYyJDSRlVeQ=;
+        b=EljJEzoCt96nWwC89w0iF8i7ACQQ+eGmbtAb00YZNq+44PtVj6C6fB0Z0ozedi3VWc
+         1dUxuwrFu4ztzD/d/cLZIYCfZBlvkFOqAjqbUwux+b4wh2XrWXGcMMMN9s8kDsPOTrNw
+         Y6hsTm5bwPELlwdm8UItaWzyr3zAXKns0YDcLCl8u6GVFuyIxEyVF4brshQk6yvrTo/D
+         K1lvCGnazOETlYPmA2XeVWOndaS6u2PVpw4c/R9kGPzg7ibFTDrru+ApdlRYB6TaU15a
+         7dQnqXbe1yrXTEt4DczX8RP6qimJ4UZubqTyK4nNCBWq36lxADFyHTSUaKYSoDlZesh/
+         bnSw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791912713; x=1792517513;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=VlswUne+avJ8bwCltZgy3YunaA6SJPVFCYyJDSRlVeQ=;
+        b=CxRJzD4+WRUdZxk5Vb37fGqvN6UXEmTmmuHpywHICM8WmHvT0rbRtZaboFcKG3U62a
+         RlCQJHNaXUQpAfhEjbun8JZIh3DRGr563f11HCvCnbRtjrHIBnT41Z7ql3+EUNUn4vWr
+         GMDo3WlelFrn6fVej3aIWcVqeDbw/aSUFijM0vkY3FgPzefYbHyu+dUPGVPnBuFZBNhy
+         F6r5UpNqRLgRTD/h5HMCThEvL1AesGCpXjDq5Jx8gh2y5QSYVwhZGu2DMiw+UMlh7Lhk
+         v3QWfL4beQwlZW1hxxmDmgs3eo626AYJ0nBNE97K3CqpWOCNFBoZmSwbcpdmE/i4Gm4j
+         v8ng==
+X-Gm-Message-State: AFq9FYKY2999uroXIGWG3yxAFgalpNPHnA+qTqZ/8U06bgdeixpOSdf4
+	LzhYvuQ+qbCWdPOt6XloiACP/6T2Q5WKN2Mvga3b5PQcXdmRmwyW/qTU8EUMJuE0PoskGM9oAdF
+	R+joF
+X-Gm-Gg: AYBFou3R6Z75hEJ+e2U6vv3Q+bw2aknzf6U2h8T6CI345mgckYGlTRY12rLOyLcGALm
+	7VSTar/4t2iZSBt/UWygYQDPXYW4TfVFKi7maZTMDq5nqDSY8IL+xvoplz5L6g21UnRWucY9hWA
+	fujIdHp34QuBgD2EIHBNlgiibx08L1GdNecKjuLAC2l3gd4vikcsNXRZzlMd3Bi/C8nDYQ0IH5P
+	4xODA+0y4EuqUUhiCTtilmUTRtPm0Yug7K4S35ztJ+cMtHO0EtWA8zgyV0LUDA1eSNQ61/k4PO1
+	h1y39XZ2jgZqLTg1kzhos2LIZgyZ/L8KY7l/aAUlTb/4+hksdYD9ee0dpGa1MATikI1SSQjlNpU
+	K7782/ek9B3ckHlDPwKueu8YmVZI52bNofuBE5H3TfOpDKKXQYVttc6m9JjthVTs4wrBDLVNemj
+	jA7uhd9NXKjAhol4JfYt/+rYYiDiM+IvoHUWvMSrUJ2Biv3UBhr7eWBOkxP/sinKz3mhf3csuXC
+	lEtGCD9GSi0rwf2SBUk
+X-Received: by 2002:a17:90b:5830:b0:39e:6c68:c787 with SMTP id 98e67ed59e1d1-3ab3acea00dmr11915708a91.61.1791912713219;
+        Tue, 13 Oct 2026 10:31:53 -0700 (PDT)
+Received: from localhost.localdomain ([2406:5900:1044:110c:c51c:be8a:c517:276])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3ac6019ca59sm607396a91.9.2026.10.13.10.31.50
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 13 Oct 2026 10:31:52 -0700 (PDT)
+From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+To: "Martin K . Petersen" <mkp@kernel.org>,
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org,
+	yhlee@isslab.korea.ac.kr
+Subject: [PATCH v2 0/2] scsi: mvumi: bound two firmware-supplied lengths
+Date: Wed, 14 Oct 2026 02:31:43 +0900
+Message-ID: <20261013173145.3412863-1-yhlee@isslab.korea.ac.kr>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [Medium] mm: VM_WARN_ON_ONCE triggered by vm_flags_reset() in mmap hook
---
+Two places in mvumi trust length/count fields the Marvell UMI firmware
+supplies and never check them against the buffers they index.  An event
+with the maximum param_count/sense_data_length makes mvumi_show_event()
+read past the 512-byte event buffer and into the log; a handshake page
+with frame_length >= 256 makes the checksum loop, which uses an unsigned
+char counter, spin forever during probe (shorter over-long values read
+past the page).  Both date to the driver's introduction.
 
-commit a356d47e4beede9d3e032c777130976d06dd5dd8
-Author: Lorenzo Stoakes (ARM) <ljs@kernel.org>
+v2: read the handshake frame_length once into a local and use it for both
+    the bound check and the checksum, so an untrusted device cannot change
+    it between the two (addresses the double-fetch noted in review);
+    1/2 unchanged.
 
-    infiniband: update hfi1 to use remap_vmalloc_range()
-   =20
-    In cases which map chip memory from vmalloc()'d ranges, the hfi1 infini=
-band
-    drivers currently installs a fault handler, and then smuggles the kernel
-    virtual address of this range in vma->vm_pgoff.
+Yehyeong Lee (2):
+  scsi: mvumi: bound the per-event parameter and sense dumps
+  scsi: mvumi: reject an out-of-range handshake frame length
 
-> diff --git a/drivers/infiniband/hw/hfi1/file_ops.c b/drivers/infiniband/h=
-w/hfi1/file_ops.c
-> index dc548e6802e24..b02d1f1dbb27b 100644
-> --- a/drivers/infiniband/hw/hfi1/file_ops.c
-> +++ b/drivers/infiniband/hw/hfi1/file_ops.c
-[ ... ]
-> @@ -422,7 +418,7 @@ static int hfi1_file_mmap(struct file *fp, struct vm_=
-area_struct *vma)
->  			ret =3D -EPERM;
->  			goto done;
->  		}
-> -		vm_flags_clear(vma, VM_MAYWRITE);
-> +		vm_flags_mod(vma, VM_DONTEXPAND, VM_MAYWRITE);
->  		/*
->  		 * Mmap multiple separate allocations into a single vma.  From
->  		 * here, dma_mmap_coherent() calls dma_direct_mmap(), which
-[ ... ]
-> @@ -559,12 +546,10 @@ static int hfi1_file_mmap(struct file *fp, struct v=
-m_area_struct *vma)
->  	}
-> =20
->  	vm_flags_reset(vma, flags);
-> -	mmap_cdbg(ctxt, subctxt, type, mapio, vmf, memaddr, memvirt, memdma,=20
-> +	mmap_cdbg(ctxt, subctxt, type, mapio, is_vmalloc, memaddr, memvirt, mem=
-dma,
->  		  memlen, vma);
-> -	if (vmf) {
-> -		vma->vm_pgoff =3D PFN_DOWN(memaddr);
-> -		vma->vm_ops =3D &vm_ops;
-> -		ret =3D 0;
-> +	if (is_vmalloc) {
-> +		ret =3D remap_vmalloc_range(vma, memvirt, 0);
+ drivers/scsi/mvumi.c | 16 ++++++++++++----
+ 1 file changed, 12 insertions(+), 4 deletions(-)
 
-[Severity: Medium]
-Will this trigger a lockdep warning due to the VMA not being write-locked?
 
-In hfi1_file_mmap(), modifying the VMA flags using vm_flags_reset() (and
-the newly introduced vm_flags_mod() earlier in this function) enforces=20
-write-lock assertions via vma_assert_write_locked().=20
+base-commit: 24a19b953e2a3d0ea5a8c4951a0ab8f32720c907
+-- 
+2.43.0
 
-Because the VMA is not yet inserted into the tree and is not write-locked=20
-during the mmap callback, its vm_lock_seq is uninitialized (UINT_MAX) and=20
-will not match the mm lock sequence. This triggers a VM_WARN_ON_ONCE_VMA.
-
-Should vm_flags_init() be used instead?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261013-b4-mmap-pr=
-epare-vma-flag-sanify-v6-0-1aa3c9b139f9@kernel.org?part=3D11
