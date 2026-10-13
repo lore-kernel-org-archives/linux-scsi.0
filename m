@@ -1,142 +1,227 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f173.google.com (mail-pg1-f173.google.com [209.85.215.173])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D9934D7D4D;
-	Tue, 13 Oct 2026 11:46:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF5AB4FDE56
+	for <linux-scsi@vger.kernel.org>; Tue, 13 Oct 2026 12:05:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791892015; cv=none; b=ZSlTsb2a4eWTRL0lOGXyAQLn5+BxjTCak8i7wB+RQTUnDU6XQBTpflXpHCcvTO7oB+Ydy6ydrAvnxre9BdpAze2X8yGRySyS1odVTCFenAWbxrA7BAXU6m6QQaJFjE9WKjClRb4GqsqwThF1J95esSXVBGD0sEGE82CD1mW6HSY=
+	t=1791893141; cv=none; b=szfh/dy1eEd/9Y6WpEUcvj488QdJNy5ARQRv2Cs76bTceL/kJj5xRdV3u3xPn1sB1mKYZ6ACuPQkfpjLf+FL/p5h325gn0m5OyuMwJ/TjaasXA4GBLNPhU02FtvGfPshNdCLFGpudB/3nfrCGUuP9GDHQG9uGKBmKEernpAyk80=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791892015; c=relaxed/simple;
-	bh=o5iE1cDO1gBt+uh4eIByivuwm67StlAGtlYV2hAA2DM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=cTh8O7ZwzavUmyWDSCmfn9pNhWdKnYBenj1z0Mmmhlu/OFqED3sDlKy2V0gPQ7DsOnbSdk6gtYjls1TZBhHUMkS6u8A0RZ8Yl5nMuJeXcQZs9DYJp+G5oyT+4Dv52LJe3EPuoF0gD+HWKj7GI2vv8NU//O/2ww2+7jzALhilBwQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JsNwWiGG; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791893141; c=relaxed/simple;
+	bh=WBpETlJAu4LzRE6306m7fvpnXID4MXuxdtI/fwrynjs=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=IyuDVExaqleqRgpxC2Ij5J6lHEPsMqKmcXca+diXVSGSqTknK30jEdmmaaGl62sbEhxgmxqzFX8NVQhUXFAa6NofRNd7DRM7DvYLYd8t7Mi/iVlH8Q3Y2Hxczzgfhtw20fE4rT1tXvUl10dw6g5tunePh1p/F8w282iYlLLte24=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=jxL1HhXI; arc=none smtp.client-ip=209.85.215.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JsNwWiGG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E65921F00898;
-	Tue, 13 Oct 2026 11:46:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791892013;
-	bh=1nnF4ZhcdJUlBWxekcjOronR2NcHp1dKz5EHoMfEfXk=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=JsNwWiGGPLpQBTVRJ0pxyv5sreFzDIh4DL9er2BIPqypmeADQ3+kGufnoG9MayGsG
-	 Ow2kvpxaWsj31kCiNI6YI1xtxB6jAuvoFeSUehIJRSSr8PvPf39/J2JL8+Q8gZNKpw
-	 hpaiLridC4NDmbtWtYCSXMnVcXUvRVpYaXF7fuyaM4cd4pfx2vv7Fp6hIZ2715U51o
-	 41ifwXQLKGxBc/H0/rQD53V5RTXy4cc2VVaIpPP3J14KY9KrW96ntrahOMVdTN4KO/
-	 TSAFtr+2bjHgQH5lauCoZ5P/rczb+ytBLkrNPZZt6Dfwz5bTKu9NMmntqhvn+1eShm
-	 h0kZ4EeW1vuHA==
-Date: Tue, 13 Oct 2026 12:46:21 +0100
-From: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
-To: "David Hildenbrand (Arm)" <david@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, 
-	"Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>, 
-	Jann Horn <jannh@google.com>, Pedro Falcato <pfalcato@suse.de>, 
-	Mike Rapoport <rppt@kernel.org>, Suren Baghdasaryan <surenb@google.com>, 
-	Michal Hocko <mhocko@suse.com>, Jonathan Corbet <corbet@lwn.net>, 
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Dennis Dalessandro <dennis.dalessandro@cornelisnetworks.com>, 
-	Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>, 
-	Paul Moore <paul@paul-moore.com>, Stephen Smalley <stephen.smalley.work@gmail.com>, 
-	Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, 
-	Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, 
-	Andrii Nakryiko <andrii@kernel.org>, Eduard Zingerman <eddyz87@gmail.com>, 
-	Kumar Kartikeya Dwivedi <memxor@gmail.com>, Zi Yan <ziy@nvidia.com>, 
-	Baolin Wang <baolin.wang@linux.alibaba.com>, Nico Pache <nico.pache@linux.dev>, 
-	Ryan Roberts <ryan.roberts@arm.com>, Dev Jain <dev.jain@arm.com>, Barry Song <baohua@kernel.org>, 
-	Lance Yang <lance.yang@linux.dev>, Usama Arif <usama.arif@linux.dev>, 
-	Kiryl Shutsemau <kas@kernel.org>, Doug Gilbert <dgilbert@interlog.com>, 
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, "Martin K. Petersen" <mkp@kernel.org>, 
-	Simona Vetter <simona@ffwll.ch>, Helge Deller <deller@gmx.de>, Sebastian Reichel <sre@kernel.org>, 
-	John Hubbard <jhubbard@nvidia.com>, Peter Xu <peterx@redhat.com>, 
-	Masami Hiramatsu <mhiramat@kernel.org>, Oleg Nesterov <oleg@redhat.com>, 
-	Peter Zijlstra <peterz@infradead.org>, Thomas Gleixner <tglx@kernel.org>, 
-	Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, 
-	Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org, Arnaldo Carvalho de Melo <acme@kernel.org>, 
-	Namhyung Kim <namhyung@kernel.org>, Mark Rutland <mark.rutland@arm.com>, 
-	Rik van Riel <riel@surriel.com>, Harry Yoo <harry@kernel.org>, Juri Lelli <juri.lelli@redhat.com>, 
-	Vincent Guittot <vincent.guittot@linaro.org>, Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, 
-	Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>, 
-	David Airlie <airlied@gmail.com>, Will Deacon <will@kernel.org>, 
-	"Aneesh Kumar K.V" <aneesh.kumar@kernel.org>, Nick Piggin <npiggin@gmail.com>, Arnd Bergmann <arnd@arndb.de>, 
-	Muchun Song <muchun.song@linux.dev>, Oscar Salvador <osalvador@suse.de>, 
-	"Matthew Wilcox (Oracle)" <willy@infradead.org>, Jan Kara <jack@suse.cz>, Marc Zyngier <maz@kernel.org>, 
-	Oliver Upton <oupton@kernel.org>, Catalin Marinas <catalin.marinas@arm.com>, 
-	Madhavan Srinivasan <maddy@linux.ibm.com>, Anup Patel <anup@brainfault.org>, Paul Walmsley <pjw@kernel.org>, 
-	Palmer Dabbelt <palmer@dabbelt.com>, Albert Ou <aou@eecs.berkeley.edu>, 
-	Christian Borntraeger <borntraeger@linux.ibm.com>, Janosch Frank <frankja@linux.ibm.com>, 
-	Claudio Imbrenda <imbrenda@linux.ibm.com>, Alexander Gordeev <agordeev@linux.ibm.com>, 
-	Gerald Schaefer <gerald.schaefer@linux.ibm.com>, Heiko Carstens <hca@linux.ibm.com>, 
-	Vasily Gorbik <gor@linux.ibm.com>, "David S. Miller" <davem@davemloft.net>, 
-	Andreas Larsson <andreas@gaisler.com>, Alexander Viro <viro@zeniv.linux.org.uk>, 
-	Christian Brauner <brauner@kernel.org>, Matthew Brost <matthew.brost@intel.com>, 
-	Joshua Hahn <joshua.hahnjy@gmail.com>, Rakie Kim <rakie.kim@sk.com>, Byungchul Park <byungchul@sk.com>, 
-	Gregory Price <gourry@gourry.net>, Ying Huang <ying.huang@linux.alibaba.com>, 
-	Alistair Popple <apopple@nvidia.com>, Chris Li <chrisl@kernel.org>, Kairui Song <kasong@tencent.com>, 
-	Kemeng Shi <shikemeng@huaweicloud.com>, Nhat Pham <nphamcs@gmail.com>, Baoquan He <baoquan.he@linux.dev>, 
-	Youngjun Park <youngjun.park@lge.com>, Johannes Weiner <hannes@cmpxchg.org>, 
-	Qi Zheng <qi.zheng@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
-	Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, 
-	Chengming Zhou <chengming.zhou@linux.dev>, Michal Hocko <mhocko@kernel.org>, 
-	Miklos Szeredi <miklos@szeredi.hu>, Xu Xin <xu.xin@linux.dev>, linux-mm@kvack.org, 
-	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-usb@vger.kernel.org, 
-	linux-rdma@vger.kernel.org, selinux@vger.kernel.org, linux-sound@vger.kernel.org, 
-	bpf@vger.kernel.org, linux-scsi@vger.kernel.org, linux-fbdev@vger.kernel.org, 
-	dri-devel@lists.freedesktop.org, linux-trace-kernel@vger.kernel.org, 
-	linux-perf-users@vger.kernel.org, linux-arch@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
-	linux-arm-kernel@lists.infradead.org, kvmarm@lists.linux.dev, linuxppc-dev@lists.ozlabs.org, 
-	kvm@vger.kernel.org, kvm-riscv@lists.infradead.org, linux-riscv@lists.infradead.org, 
-	linux-s390@vger.kernel.org, sparclinux@vger.kernel.org, fuse-devel@lists.linux.dev, 
-	Ihor Solodrai <ihor.solodrai@linux.dev>, Bert Karwatzki <spasswolf@web.de>
-Subject: Re: [PATCH v5 35/38] mm: avoid use of VMA_SPECIAL_FLAGS in
- migrate_vma_setup()
-Message-ID: <as4Z_ASrMbQ-eMTn@gremlin>
-References: <20261009-b4-mmap-prepare-vma-flag-sanify-v5-0-923b70125b1e@kernel.org>
- <20261009-b4-mmap-prepare-vma-flag-sanify-v5-35-923b70125b1e@kernel.org>
- <214514be-a935-485b-8925-07d84c1063f9@kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jxL1HhXI"
+Received: by mail-pg1-f173.google.com with SMTP id 41be03b00d2f7-cd6028ff33fso870443a12.0
+        for <linux-scsi@vger.kernel.org>; Tue, 13 Oct 2026 05:05:39 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1791893139; x=1792497939; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=yQe/2g1WG+euTajMh6TueRGLUyRtyPnNyRQAOr8Frkw=;
+        b=jxL1HhXIIz49ZqjqEALbx99yR+XfcwXIOnyflOrCwsW+tvezyXCsI9xEIzj9BrTjDG
+         Ahk2H7AUZ+aR78thse64xFnHFy9kFseKY6wi/MSWS7FFg8Dy15jeIfcV4hozRYFwX7go
+         lV4n8yEDIWzw1bccb8wp4LD8UZO3bYG5kOEmToRH0qxtp+vtdLjRSC7yXVceH2mtWy9W
+         lFiWI8BakbGqp5+Yzzx/l74aCE5TaisQe9CKmRVHx6ZRTVR90SiotUzhTzKU5nmPqnwC
+         qNcYnij+HwL6Q4dR5vCNxPFUbMbmh6rKdQXG2VCQ3vk1zoKVz5G5FRmunrpmV2779sb5
+         LDBA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1791893139; x=1792497939;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=yQe/2g1WG+euTajMh6TueRGLUyRtyPnNyRQAOr8Frkw=;
+        b=Kx5Ty1R5BTec6Cv4iZjELou/3dQ6K5ZdoiCpZfTdJKVQmHUxbHbAfe1N0UeQUyN9Bd
+         0eFIlyDqzYnGk2OYRyG7Zz1Y1T6mZ+XVtkau7BZcPHu1jB6cnOixyBFMsksEL50izOgL
+         fn4LMTvPwnKMinHwv07kFf6f3KjbYFJSid0NlsKvyGx2bjs0HcboWCAfg1KlpAfOtE4d
+         1Vw9NJWutnCDr7q8GkAspkyStah6mt4YJ/JLJ159x0uRTYCRe0V/tFom0MZormjZNfJz
+         TjPek/GBTD9NTSYl64WBZEVGFDp3T+nFaWYaGLa+7pVY9y+2obm0HYlBbqcxDmmYfzYX
+         y1DA==
+X-Gm-Message-State: AFq9FYLVuKU2hF9TJTsB4f8IUv8T91dY+drBeRbs+EPn7Oz5Tpo3o3u+
+	Oa5I/xOIiFmMWAWWpjHBLBMCTqHkpvkQwVWRsmEUWNxvUZcWADWQhNNs
+X-Gm-Gg: AYBFou1AmyPkOxyvv+V57LeUYqrtBptbH/gucxvJP9mfLs8KXlLA+bw27ZULfSUEOOi
+	XgT9bUJMoR/znxkap4gsrYBbm//rpEH3NoeIRukHfnQTFtrjY4s3TsjnbOaXPYNY9m5CsIrNk2g
+	9jux4H3ALKcY4PziLA59BTAsc3HYgjBgSDHLZBYMTEqQK83oPSn3ybBoE3xQaAHIL0Y7qwxrVYo
+	iv0y/tYpMXIw6r64Bocqr7iBhrMCjyUF+bkOwMZVvj2qroO53K0q39doLwzYEuZoc0Ov93deTae
+	cjBGpS9Uk985i83iW/W4EEiFtBC19dGKvKf8AU7l/k53ml+PR32t2xezDBS/oo/g5gKCUVYRwDP
+	TGt6Wa98ooPWEfQBdpBTWIpCEpdQvOFYpV3bOnHDH80fxQICXdw5cuM+BGw0bhfn6TySSUaVrBv
+	jUjREaICs5HlgrIjiBOJ6zjJdkn5U8T09ZTrYfa0m2S70tetiDnmdPZWQTPqbOW6ZBlJmxPN5pH
+	/U2+JSCtqv0cKIhJpidIRtVIyxzt0wStJ0JVpFSy1Yawh5gvwRYAULb4GWBhwF0fhbfLksJT/OX
+	9Xlzcwtg3C/pvcgOuiFtRfQXecoISC1rT/gMJ/Wmx+AfF3zL
+X-Received: by 2002:a17:902:e842:b0:2df:8733:f229 with SMTP id d9443c01a7336-2e84eef2b9emr101557105ad.24.1791893138781;
+        Tue, 13 Oct 2026 05:05:38 -0700 (PDT)
+Received: from EAIT-H54D9Q2FJQ.eait.uq.edu.au ([130.102.10.172])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2e841a04012sm55312855ad.1.2026.10.13.05.05.34
+        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
+        Tue, 13 Oct 2026 05:05:37 -0700 (PDT)
+From: Yu Zhang <yuz08559@gmail.com>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+	target-devel@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Mike Christie <michael.christie@oracle.com>,
+	Dmitry Bogdanov <d.bogdanov@yadro.com>,
+	Yu Zhang <yuz08559@gmail.com>
+Subject: [PATCH] scsi: target: fix demo-mode dynamic ACL dev-entry UAF vs LUN teardown
+Date: Tue, 13 Oct 2026 22:05:28 +1000
+Message-ID: <20261013120528.37749-1-yuz08559@gmail.com>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <214514be-a935-485b-8925-07d84c1063f9@kernel.org>
+Content-Transfer-Encoding: 8bit
 
-On Mon, Oct 12, 2026 at 08:52:07PM +0200, David Hildenbrand (Arm) wrote:
-> On 10/9/26 20:04, Lorenzo Stoakes (ARM) wrote:
+A demo-mode (generate_node_acls=1) login that allocates a dynamic
+NodeACL populates that ACL's per-LUN dev entries in
+core_tpg_add_node_to_devs() *before* the ACL is linked onto
+tpg->acl_node_list by target_add_node_acl():
 
-> > diff --git a/mm/migrate_device.c b/mm/migrate_device.c
-> > index b9c453c28795..289d7b08ace4 100644
-> > --- a/mm/migrate_device.c
-> > +++ b/mm/migrate_device.c
+	core_tpg_check_initiator_node_acl():
+		...
+		core_tpg_add_node_to_devs(acl, tpg, NULL); /* builds deves */
+		target_add_node_acl(acl);                  /* only now listed */
 
-> >  int migrate_vma_setup(struct migrate_vma *args)
-> >  {
-> > +	const struct vm_area_struct *vma = args->vma;
-> >  	long nr_pages = (args->end - args->start) >> PAGE_SHIFT;
-> >
-> >  	args->start &= PAGE_MASK;
-> >  	args->end &= PAGE_MASK;
-> > -	if (!args->vma || vma_test_any_mask(args->vma, VMA_SPECIAL_FLAGS) ||
-> > -	    vma_is_dax(args->vma))
-> > +	if (!vma)
-> > +		return -EINVAL;
-> > +	if (!vma_is_mm_managed(vma) || vma_is_fixed_mapping(vma) ||
-> > +	    vma_is_dax(vma))
->
-> Same here, with the droppable thing changed this would be
->
-> !vma_is_mm_backed() || vma_is_dax(vma)
->
-> I guess.
+The LUN teardown sweep, core_clear_lun_from_tpg(), enumerates only
+tpg->acl_node_list:
 
-I think we need a hugetlb carveout too (ugh), will update in v6!
+	list_for_each_entry(nacl, &tpg->acl_node_list, acl_list) {
+		mutex_lock(&nacl->lun_entry_mutex);
+		hlist_for_each_entry_rcu(deve, &nacl->lun_entry_hlist, link) {
+			if (lun != deve->se_lun)
+				continue;
+			core_disable_device_list_for_node(lun, deve, nacl, tpg);
+		}
+		...
+	}
 
->
-> Acked-by: David Hildenbrand (Arm) <david@kernel.org>
+so a dev entry whose ACL is still in the window above is invisible to
+the sweep and is never disabled.  It is left on the
+se_lun->lun_deve_list after core_tpg_remove_lun() frees the se_lun.
+When the same unpacked_lun is later re-added and the se_lun is
+reallocated at the same address, the stale dev entry is rediscovered by
+target_nacl_find_deve() (which matches on mapped_lun) and
+core_enable_device_list_for_node() takes the replace branch:
 
-Thanks!
+	spin_lock(&lun->lun_deve_lock);
+	list_del(&orig->lun_link);	/* corrupts lun_deve_list */
 
---
-Cheers, Lorenzo
+corrupting the freed/reused list.  With list hardening this fires as:
+
+  Oops: invalid opcode: 0000 [#1] SMP KASAN NOPTI
+  RIP: __list_del_entry_valid_or_report+0x105/0x140
+  Call Trace:
+   core_enable_device_list_for_node+0x5ce/0x880
+   core_tpg_add_node_to_devs+0x169/0x190
+   core_dev_add_lun+0x146/0x190
+   target_fabric_port_link+0xe9/0x1b0
+   configfs_symlink+0x381/0xae0
+   __x64_sys_symlink+0x55/0x80
+  list_del corruption. prev->next should be ffff888005d7ba80,
+    but was ffff88800249a580. (prev=ffff888006e23820)
+
+The demo-mode login path that drives the ACL/dev-entry creation is
+reachable by an unauthenticated initiator (the work runs during
+first-stage login negotiation, before authentication); the colliding
+LUN add/remove is a local configfs operation.
+
+Commit 49cb77e297dc ("target: Avoid mappedlun symlink creation during
+lun shutdown") introduced se_lun->lun_shutdown and guarded the
+*explicit* ACL MappedLUN path (target_fabric_mappedlun_link()), but the
+demo-mode automatic path, core_tpg_add_node_to_devs() ->
+core_enable_device_list_for_node(), was never given the equivalent
+guard, and the publish-after-populate ordering in
+core_tpg_check_initiator_node_acl() was left unchanged.
+
+Fix both halves, which are each necessary:
+
+ 1) Publish the dynamic NodeACL onto acl_node_list *before* creating
+    its dev entries, so the teardown sweep can observe them.  On its
+    own this still races: the sweep may pass the ACL before the dev
+    entry is added.
+
+ 2) Refuse to attach a dev entry to an se_lun that is shutting down,
+    checked under nacl->lun_entry_mutex -- the same lock the sweep
+    takes.  Because core_tpg_remove_lun() sets lun_shutdown before the
+    sweep, once the sweep has passed a given ACL any later enable for
+    that LUN observes lun_shutdown and skips it, so no dev entry can be
+    left dangling on the lun_deve_list of an se_lun about to be freed.
+
+core_tpg_add_node_to_devs() already ignores the return value of
+core_enable_device_list_for_node(), so a shutting-down LUN is simply
+skipped.
+
+Note: moving target_add_node_acl() earlier makes a concurrent lookup
+for the same InitiatorName observe the ACL slightly before its demo
+MappedLUNs are populated; this transient was already possible between
+the two original calls and is harmless, but flagging it for review.
+The precise lock chosen to publish/observe lun_shutdown is open to
+maintainer preference.
+
+Fixes: 49cb77e297dc ("target: Avoid mappedlun symlink creation during lun shutdown")
+Signed-off-by: Yu Zhang <yuz08559@gmail.com>
+Tested-by: Yu Zhang <yuz08559@gmail.com>
+---
+ drivers/target/target_core_device.c | 13 +++++++++++++
+ drivers/target/target_core_tpg.c    | 10 +++++++++-
+ 2 files changed, 22 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
+index 1111111..2222222 100644
+--- a/drivers/target/target_core_device.c
++++ b/drivers/target/target_core_device.c
+@@ -349,6 +349,19 @@
+ 	new->attach_count++;
+ 
+ 	mutex_lock(&nacl->lun_entry_mutex);
++	/*
++	 * Do not attach a new dev entry to an se_lun that is being torn down.
++	 * lun_shutdown is set by core_tpg_remove_lun() before its
++	 * core_clear_lun_from_tpg() sweep; checking it here under the same
++	 * nacl->lun_entry_mutex the sweep takes guarantees that once the sweep
++	 * has passed this ACL no dev entry can be left dangling on the
++	 * se_lun->lun_deve_list that is about to be freed.
++	 */
++	if (lun->lun_shutdown) {
++		mutex_unlock(&nacl->lun_entry_mutex);
++		ret = -ENODEV;
++		goto free_stats;
++	}
+ 	orig = target_nacl_find_deve(nacl, mapped_lun);
+ 	if (orig && orig->se_lun) {
+ 		struct se_lun *orig_lun = orig->se_lun;
+diff --git a/drivers/target/target_core_tpg.c b/drivers/target/target_core_tpg.c
+index 3333333..4444444 100644
+--- a/drivers/target/target_core_tpg.c
++++ b/drivers/target/target_core_tpg.c
+@@ -267,6 +267,15 @@
+ 	acl->dynamic_node_acl = 1;
+ 
+ 	/*
++	 * Publish the dynamic NodeACL on tpg->acl_node_list before creating
++	 * its demo-mode MappedLUN dev entries below, so that a concurrent LUN
++	 * teardown sweep (core_clear_lun_from_tpg(), which walks acl_node_list)
++	 * can observe and disable those dev entries.  Otherwise a dev entry can
++	 * be left on an se_lun->lun_deve_list that is about to be freed.
++	 */
++	target_add_node_acl(acl);
++
++	/*
+ 	 * Here we only create demo-mode MappedLUNs from the active
+ 	 * TPG LUNs if the fabric is not explicitly asking for
+ 	 * tpg_check_demo_mode_login_only() == 1.
+@@ -275,7 +284,6 @@
+ 	    (tpg->se_tpg_tfo->tpg_check_demo_mode_login_only(tpg) != 1))
+ 		core_tpg_add_node_to_devs(acl, tpg, NULL);
+ 
+-	target_add_node_acl(acl);
+ 	return acl;
+ }
+ EXPORT_SYMBOL(core_tpg_check_initiator_node_acl);
+-- 
+2.43.0
