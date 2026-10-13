@@ -1,35 +1,34 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44731518148;
-	Tue, 13 Oct 2026 15:22:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0677951AEF1;
+	Tue, 13 Oct 2026 15:22:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791904945; cv=none; b=ImTV0WgQDJzBGwthezpfQHdDycAhQOGbWp6go6ltNEjGxFvZGAeJtE1uFbp6zgyWeBfJjEByiYGWSa30u4IiPRpzhbG5gyJYsNmhvjJo5Jne/ERF1Wd0kQ0jxZZ5hH0jP98rKQWQN8QPvQ1oXmAEp8sFHKlSd9Li155nNCtzaEo=
+	t=1791904975; cv=none; b=UGhBxUV0HWNAeTQr1TZECOg4B/X6XUNCY+9MS0nX8sRoIARTnQ5h/GGS9cMh0bC48ffK++/5ZX8O/F8r7pwsJ4pnNdOFJcBnrgQMYDipHVMQqsTfcVoWIIM9FZ5SiHkC6XGlP0fHr0ZSP98PSHbK3pB6whIB5xCDsNjQe9mN8iA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791904945; c=relaxed/simple;
-	bh=6dMykbuVKPHDM4xFoe98lOwVyjcSXwfICmdhz8DaKPA=;
+	s=arc-20240116; t=1791904975; c=relaxed/simple;
+	bh=NirFpBJoMJIJty8FHlUeArK6s29xx2Rs0nVWGbo/eGI=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=HHJ0xpcOQ1QUia6dnFcDQCvYF9InZ2bS/Uc0EZrY/BHqjvVELmlMV/+DWYoxgzsrjTyRQKMKk01/5XC1QFs4S0gnf4uIPmVlz+Fz4drzrC2lB+j/2HfncLeaTeucQvA2D+vQ924/g63n20M3dXHD/ZA+t+Bok2zwwkmUVHCXmJ4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FwI8xuFk; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:To:Cc; b=MY3LxTZ/ShU3NVx/Xa0Vyz4boOdkhduy3304kGnzmL4ANV9ADJg385PQy1nLFJOsnZdiUAEoo6X90VIlOmEjSjW6XvMomQFNsdVMpkmVCx14maChOyzRYZTBTOBXJKBhOLUnAk7qHpz+1UNYiAMX72X71JmkhjMQUIBzdUT0LWk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=a7kG8VRD; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FwI8xuFk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 085131F00898;
-	Tue, 13 Oct 2026 15:21:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="a7kG8VRD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9AC8F1F0089C;
+	Tue, 13 Oct 2026 15:22:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791904943;
-	bh=CzLkglerZHaeqdqXBcJqI1OUUZn9McyDsaXMwmatEzY=;
+	s=k20260515; t=1791904973;
+	bh=Nu2lIlJoFPKLE+KDwHqBioHzBykS9j6g/3VfcAZiVdE=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=FwI8xuFkcWZh7OyfP4kiO5TnL8x0H+GyT2/juwXjWPgG2q3jlzUlITXSsEf92nt4A
-	 U0XQ4si39pZo1N5LDpHXtJEAi/rXzQDoxp239dc9upMoQm0OIgMO4kwEoa6Nnjmgcy
-	 sdurdRML4tf7jFo06dlM7+za+GVcYLxVI8PGy9muqNSjV/nOauqRVxuqt2lTHdh1b7
-	 7956953cxQr45TOjCYP5S/v0UHz0e/WN7pOzDLwUrEHL4ZWVRs9nHLznaOt/hC2f6g
-	 WsDeiesyvxwB6pgmGTt+KtyRCQZe2Yth0b0GKXf9/GUXIlnTy/KdUjvQYGcfK9fx/i
-	 3Mzeuebipk/jQ==
+	b=a7kG8VRDYlsv3h+0u94q5BK0Msy/mAEkVPHqxzuhpCg+ASw8Em4RgjrXRneGPhpKM
+	 i+UNxxaBtu/vPhzNc9Z35kL28wW4ApEmq5gcW2MtEpVT0jU82WmXaludhh/wUMJMmN
+	 ArVJ1Z4A2aHHWJmQ/HBxmvc7YGic/4Lw1LLrXGayYOmsmQGcslkGfY2Va/SDcJJSK7
+	 X6bBWMK51/CHLc30N3o6XZn/34pbf1IIAStJTSep+kAnORP/dcluCgRiG8eka0v4LG
+	 nV7lo+Uemo6ZUZvpIl5CaJWT+TRDZHXTfyCsHb8dF4MB/qmY0t23MUhlUQPckhf8Ui
+	 LHxhfAUBes1+g==
 From: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
-Date: Tue, 13 Oct 2026 16:05:11 +0100
-Subject: [PATCH v6 31/39] mm/madvise: update is_valid_guard_vma() to use
- vma_is_mm_backed()
+Date: Tue, 13 Oct 2026 16:05:12 +0100
+Subject: [PATCH v6 32/39] mm/uffd: use predicates for userfaultfd checks
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -38,7 +37,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261013-b4-mmap-prepare-vma-flag-sanify-v6-31-1aa3c9b139f9@kernel.org>
+Message-Id: <20261013-b4-mmap-prepare-vma-flag-sanify-v6-32-1aa3c9b139f9@kernel.org>
 References: <20261013-b4-mmap-prepare-vma-flag-sanify-v6-0-1aa3c9b139f9@kernel.org>
 In-Reply-To: <20261013-b4-mmap-prepare-vma-flag-sanify-v6-0-1aa3c9b139f9@kernel.org>
 To: Andrew Morton <akpm@linux-foundation.org>, 
@@ -123,75 +122,81 @@ Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org,
  fuse-devel@lists.linux.dev, Ihor Solodrai <ihor.solodrai@linux.dev>, 
  Bert Karwatzki <spasswolf@web.de>, "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2135; i=ljs@kernel.org;
- h=from:subject:message-id; bh=6dMykbuVKPHDM4xFoe98lOwVyjcSXwfICmdhz8DaKPA=;
- b=owGbwMvMwCV2fu7ZrsZH9SKMp9WSGLLOeZxhWeI/k1t/+0bj2V5v9vMW7pEtb9Y77P/q/98og
- StpV1LyO0pZGMS4GGTFFFmefxHfHyQSNq/zgr8bzBxWJpAhDFycAjCR/qcM//1Yl/R9mrfruMzR
- zNWKb38qF4lP7y/8pROyX+TS7/XeX2Yx/I/cevmz66tHxnHB7a3/WD95Gko+9pSSE1ryNvD89eL
- S66wA
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2582; i=ljs@kernel.org;
+ h=from:subject:message-id; bh=NirFpBJoMJIJty8FHlUeArK6s29xx2Rs0nVWGbo/eGI=;
+ b=owGbwMvMwCV2fu7ZrsZH9SKMp9WSGLLOeZxx/qY43VC48i6XuOKHXYkc7LKdlzgsQo41/Jhu2
+ eK1hb2yo5SFQYyLQVZMkeX5F/H9QSJh8zov+LvBzGFlAhnCwMUpABN59YaR4ZdAqVvUtuy+/89O
+ PrcJVufzNtu/+4PM/3mJYRf32P1OfcrwhzdAbMqKvOMFz3pcrVMOccdGRfQGdU0wU66R9lqdeje
+ HCQA=
 X-Developer-Key: i=ljs@kernel.org; a=openpgp;
  fpr=E7F417BF5214569E89D04F46CF9DCD8A81E27F14
 
-We currently disallow the installation of lightweight guard regions in VMAs
-whose flags intersect VMA_SPECIAL_FLAGS or VMA_HUGETLB_BIT, or
-VMA_LOCKED_BIT unless allow_locked is set.
+Rather than directly checking VMA flags, use the newly introduced
+vma_is_mm_managed() and vma_is_mm_backed() helpers in userfaultfd
+when assessing VMA suitability for userfaultfd and UFFDIO_MOVE.
 
-hugetlb VMAs set VMA_DONTEXPAND_BIT so this was already redundant,
-VMA_SPECIAL_FLAGS already sufficed.
+The droppable check is kept explicit, as userfaultfd cannot function
+correctly with droppable mappings.
 
-However, now that VMA_IO_BIT is only set if VMA_PFNMAP or VMA_MIXEDMAP_BIT
-is set, this check collapses to being the equivalent of
-!vma_is_mm_backed(), excluding hugetlb mappings in which guard markers
-cannot be installed.
+Update vma_move_compatible() so it's expressed in terms of VMA
+characteristics rather than arbitrary flags.
 
-Update is_valid_guard_vma() to reflect this.
+Additionally, update the use of the deprecated VMA flag API when checking
+VMA_SHADOW_STACK_BIT.
 
-No functional change intended.
+A VMA_IO_BIT check is no longer required but that is fine as a hard
+invariant has been established that mm-managed mappings may not set
+VMA_IO_BIT so the check is now redundant.
 
 Acked-by: Zi Yan <ziy@nvidia.com>
 Acked-by: David Hildenbrand (Arm) <david@kernel.org>
 Signed-off-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
 ---
- mm/madvise.c | 20 +++++++++++++-------
- 1 file changed, 13 insertions(+), 7 deletions(-)
+ mm/userfaultfd.c | 22 ++++++++++++++++------
+ 1 file changed, 16 insertions(+), 6 deletions(-)
 
-diff --git a/mm/madvise.c b/mm/madvise.c
-index 3d25202db5cc..7e14b3fd92f6 100644
---- a/mm/madvise.c
-+++ b/mm/madvise.c
-@@ -1221,19 +1221,25 @@ static long madvise_remove(struct madvise_behavior *madv_behavior)
- 	return error;
+diff --git a/mm/userfaultfd.c b/mm/userfaultfd.c
+index 949017e60608..b3076d4a622a 100644
+--- a/mm/userfaultfd.c
++++ b/mm/userfaultfd.c
+@@ -1754,10 +1754,16 @@ static inline bool move_splits_huge_pmd(unsigned long dst_addr,
  }
+ #endif
  
--static bool is_valid_guard_vma(struct vm_area_struct *vma, bool allow_locked)
-+static bool is_valid_guard_vma(const struct vm_area_struct *vma,
-+			       bool allow_locked)
+-static inline bool vma_move_compatible(struct vm_area_struct *vma)
++static inline bool vma_move_compatible(const struct vm_area_struct *vma)
  {
--	vm_flags_t disallowed = VM_SPECIAL | VM_HUGETLB;
--
- 	/*
--	 * A user could lock after setting a guard range but that's fine, as
-+	 * A user could lock after setting a guard range but that's fine as
- 	 * they'd not be able to fault in. The issue arises when we try to zap
- 	 * existing locked VMAs. We don't want to do that.
- 	 */
--	if (!allow_locked)
--		disallowed |= VM_LOCKED;
-+	if (!allow_locked && vma_test(vma, VMA_LOCKED_BIT))
+-	return !(vma->vm_flags & (VM_PFNMAP | VM_IO |  VM_HUGETLB |
+-				  VM_MIXEDMAP | VM_SHADOW_STACK));
++	/* uffd is generally incompatible with mappings not managed by core mm. */
++	if (!vma_is_mm_managed(vma))
 +		return false;
-+	/*
-+	 * Guard regions require a VMA whose page tables are managed solely by
-+	 * core mm, so the VMA must be mm-backed (excluding hugetlb, in which
-+	 * guard markers cannot be installed).
-+	 */
-+	if (!vma_is_mm_backed(vma) || vma_is_hugetlb(vma))
++	/* The shadow stack should not be written to by userspace. */
++	if (vma_test_single_mask(vma, VMA_SHADOW_STACK))
 +		return false;
- 
--	return !(vma->vm_flags & disallowed);
-+	return true;
++	/* hugetlb mappings cannot be safely moved. */
++	return !vma_is_hugetlb(vma);
  }
  
- static bool is_guard_pte_marker(pte_t ptent)
+ static int validate_move_areas(struct userfaultfd_ctx *ctx,
+@@ -2146,10 +2152,14 @@ static bool vma_can_userfault(struct vm_area_struct *vma, vm_flags_t vm_flags,
+ {
+ 	const struct vm_uffd_ops *ops = vma_uffd_ops(vma);
+ 
+-	if (vma->vm_flags & (VM_DROPPABLE | VM_SHADOW_STACK))
++	/* Only mm-backed memory can have its faults handled by userspace. */
++	if (!vma_is_mm_backed(vma))
+ 		return false;
+-
+-	if (!vma_is_hugetlb(vma) && (vma->vm_flags & VM_SPECIAL))
++	/* Core mm may discard droppable memory at any time. */
++	if (vma_test_single_mask(vma, VMA_DROPPABLE))
++		return false;
++	/* The shadow stack should not be written to by userspace. */
++	if (vma_test_single_mask(vma, VMA_SHADOW_STACK))
+ 		return false;
+ 
+ 	vm_flags &= __VM_UFFD_FLAGS;
 
 -- 
 2.55.0
