@@ -1,104 +1,196 @@
-Received: from mail-pg1-f172.google.com (mail-pg1-f172.google.com [209.85.215.172])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 06CE452B1F9
-	for <linux-scsi@vger.kernel.org>; Tue, 13 Oct 2026 17:35:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5776552BE5F
+	for <linux-scsi@vger.kernel.org>; Tue, 13 Oct 2026 17:50:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791912953; cv=none; b=UFj7Oi+oOEJyRvTp89e+Xb15lFbpgzNxNzWJw6jDtKJX3My/3QLqdcKLE0GbrjqO4ela0ryJspW4zhGghfqJwoS1MBwBDUG1s4ufu9yOqZMFBB4cyuOGVKK7kK7rIcpXLNduRmX4FZ4QUC8C8RvJ/gi5tGFtWz/2C26KS1ICNVo=
+	t=1791913860; cv=none; b=idAnnI2tLnjFVfBevsfbiV18crs1Tu1NvC/rVFh6N8z9MB93YnWSXCAFw6+p4V+dBJsjbyeG37S+nv1Y1qumbKtImVXu09YxLqHnQfEMRT4IQ8nI0d9/4vh4hC79gsk8KYNFDwOkjZeFdlVw/HCkQGRhcf9QLDMwUcOrAUAl7yE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791912953; c=relaxed/simple;
-	bh=lgDJ0JtWigmwOVnRmfUIilQcNGRXRE2L0/dPjGSB/6Y=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ch6hlpdAJ45BZOXrHrx74rrcRxdsZwcDbCIsx9aqOXbfrFluGm/GrxebmjG0Ulm+oFJjh5+tDtsyW8s+EUPqHHfLo7MLA3WtiVoEmSFJRoGIR+XITEJ1m71pr7sXoJtN03orL+8viP5TksvhvdoOk/BT8bkClbD/fS5HPmnneGA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr; spf=none smtp.mailfrom=isslab.korea.ac.kr; dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b=e/vdyxsS; arc=none smtp.client-ip=209.85.215.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
+	s=arc-20240116; t=1791913860; c=relaxed/simple;
+	bh=jOKv2iYrXFpVllzIfUGzRbAppcFg2RvraxvOIW63dP8=;
+	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
+	 Date; b=ak2GPueWr+jRBsh0XDsCPxzYFF0wqQnl0mSokVKACI0l/5C0DpNaVQResPwVXjIRlwMvwkRh9TdkvLXXla1JSQIHRrgrcRFY9as5FLp0mqklaTh8gjKgTAOLB50/XHwtvjl4uQ6HDQpcf/c6VDoJJN6xZz/uLTDZR1c4xAO05Yk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JdNTE1l3; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b="e/vdyxsS"
-Received: by mail-pg1-f172.google.com with SMTP id 41be03b00d2f7-cd61a2dfd7aso31805a12.1
-        for <linux-scsi@vger.kernel.org>; Tue, 13 Oct 2026 10:35:49 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=isslab-korea-ac-kr.20251104.gappssmtp.com; s=20251104; t=1791912949; x=1792517749; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=XvR/1ROxn6YzE4aqrudO/0g8Dfn5SQqN2g0aeRLqJ5I=;
-        b=e/vdyxsSAqay+ilYXvnwdyNbraHvM5qvSo05Pn342eqBME6naAIJxHsnGoVbWCSFtY
-         oZl6HTBU5EtJcw+PxCNK71K42J0pa2yoiJVbgs36HqlKKFyznoQcYc1Bl/TNnY6oREx6
-         YoMcYy1u5JI0MQQpNJbzpWlqmGiXpeBLm5G4O9/3UUFHw18GgGvkiK8pCkvsIOufthsH
-         ASUQWCedgRAtgv/egm1u1NZa3dY4wlNeoyiAjQA0m1ig6Scqdd+BmGlAYGL5YJ1m+5dq
-         /SyeUNAWZWF4MhDT1KIXfifZo8WAmjj/JYfWFaPpWoNYSvq7HfTcPB0+eC2gKvYRxCY5
-         t5Dg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791912949; x=1792517749;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=XvR/1ROxn6YzE4aqrudO/0g8Dfn5SQqN2g0aeRLqJ5I=;
-        b=vwvQVfd3WzVis1gij93sw9WCmDZ5RPPY5NQ7QdqiQ6VXnvv3k+wpJSge2Ly9C5jppZ
-         RdB9H8RCOPSSapKgjIgnA44Va874RHzCWhYe0dulK7jkKkfKURiESyZZhvYq8Ng30F+J
-         Q8RniBB94nDf/lvM3BI+F+fiewXyL6ObVLfsecGzI7Mgq0KOUvb47DL7DLSQ7/xUeUUt
-         Ujqb9dMtTg4AC+v4oxXyR748bYBLe2YaVicXITnf4T8TDFuCN6mP9ALiM4nzcVXwLWxK
-         siU6KHUl3ul5wdXbsW+bR35ivsoxDzuICku29rBTWdi+EGCE52mTruGaa6Mqut2NArHd
-         vpSw==
-X-Gm-Message-State: AFq9FYJJ91iP9nqTDzueK+S41N35g46l36BZGWPkf4j5AAv2NUMENZIr
-	fPoGhXqHgkGdOGX3BNqKqgqttFi+piKuC3vPzHYnjbzMc4m0yKo/2BfzTS2Td9r7pdpC07Eal1t
-	x0H2gk4k=
-X-Gm-Gg: AYBFou2+Z8XPTTLZsChCgIHpWxcBw2K+dut1mtOyOp+vW7cXKaJwcqQVVRER1Vkw22s
-	OKSjrsSX5Id3YRM2hkb7Jl0d2c8Yxg4b9+ENST97MJP21n8P1/18OIKiF7nFBzDZt4uk3lrxYX9
-	E8WrWhdWRY/9OCgtnkpTK2S/F1PuDaGKtLVN1Snv/mJOpChg00Qhi+Ak3w1fL+BhH6fGoLlI9RB
-	jxvoVxP/QmDGf2v4LZOpy8D7fHiIuNrtUtlx0yW7DgU/cFRCusEK/3CwnQg8iLr7omv63o/XBQC
-	TE85TeJgL3/tLfk7kQNu39PSVL0kNR9rG6lEUGG1dZBOwmgLz+4f9FplovmjY++WiHHMlJrAj/f
-	MWsLU6FAXl/fWgDHIjxhmUUlfcmlhl9vm4MkYpvibvEmLPX4IS0BROYBrzh/Ni28ohCgZEZv0hK
-	97oHqNSEDA583M6MVKBON07adzsr3EocQ2PSBSBcc+HvTegKJKYdLjnGjylOBaT85ZQIZb4/UuX
-	W4q9mAZ2KpBRN3Jaz3+
-X-Received: by 2002:a17:90b:5346:b0:3a8:1830:8b9f with SMTP id 98e67ed59e1d1-3ab3a9118aemr9797166a91.16.1791912949063;
-        Tue, 13 Oct 2026 10:35:49 -0700 (PDT)
-Received: from localhost.localdomain ([2406:5900:1044:110c:c51c:be8a:c517:276])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3ac6325e7afsm133859a91.3.2026.10.13.10.35.43
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 13 Oct 2026 10:35:46 -0700 (PDT)
-From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
-To: sashiko-bot@kernel.org,
-	"Martin K . Petersen" <mkp@kernel.org>,
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org,
-	yhlee@isslab.korea.ac.kr
-Subject: Re: [PATCH 2/2] scsi: mvumi: reject an out-of-range handshake frame length
-Date: Wed, 14 Oct 2026 02:35:36 +0900
-Message-ID: <20261013173536.3414059-1-yhlee@isslab.korea.ac.kr>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <sashiko-outbox-170111@kernel.org>
-References: <20261013161620.3210533-1-yhlee@isslab.korea.ac.kr> <20261013161620.3210533-3-yhlee@isslab.korea.ac.kr> <sashiko-outbox-170111@kernel.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JdNTE1l3"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B3D9C1F000FF;
+	Tue, 13 Oct 2026 17:50:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1791913857;
+	bh=nermlbpyf9Wcy9LbHS+Fib51/leRAHbexP7xNc+HCYU=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=JdNTE1l3Vpa6Cvogc1FPRQvKZHK26dSOdtUukZEraXlOqxu7XZY7fVFhRtjo2jHy1
+	 h3dsMEEsH+dwu7KCOdjCva0kJz2Fu6Cqe1t/+xUvFVlijpX/6dbrW4R1hlOlUk4hzt
+	 PrYlx5htXP8cN6JQHHzZmYQBMKHoHEQavpPaCqDqLt/XU7K3hncHHSAPJStcNmTVWp
+	 6sBxf85H9iopiNVX1YrYhRGa4v71SnF/rxZ+Z7gDMwvrDk6Jwo3IIooZNimPskIO2/
+	 OMqDF1aEoOGvCw/ZdKocaVGKJrBr2Ih0tawbePUjkHDAaVb+hC8otB8y2XKRTE72lo
+	 B5VdCU8cUX4iw==
+Message-ID: <sashiko-outbox-170275@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v2 2/2] scsi: mvumi: reject an out-of-range handshake
+ frame length
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Yehyeong Lee" <yhlee@isslab.korea.ac.kr>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20261013173145.3412863-3-yhlee@isslab.korea.ac.kr>
+References: <20261013173145.3412863-1-yhlee@isslab.korea.ac.kr>
+ <20261013173145.3412863-3-yhlee@isslab.korea.ac.kr>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 13 Oct 2026 17:50:57 +0000
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-Thanks for the review.
+Thank you for your contribution! Sashiko AI review found 4 potential issue(=
+s) to consider:
+- [High] scsi: mvumi: Missing READ_ONCE() leads to double-fetch TOCTOU
+- [High] scsi: mvumi: integer overflow in mvumi_init_data() allocation size
+- [Medium] scsi: mvumi: dead store in handshake abort leads to 30s timeout
+- [Medium] scsi: mvumi: missing endian conversion for DMA handshake fields
+--
 
-[High] double fetch: fixed in v2 -- the handshake frame_length is now read
-once into a local that feeds both the bound check and the checksum, so the
-device cannot change it in between:
-  https://lore.kernel.org/linux-scsi/20261013173145.3412863-1-yhlee@isslab.korea.ac.kr/
+commit 51de9cedc7499343b252f4ceb10b336fff0783a3
+Author: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
 
-[Medium] endianness: frame_length is a native u16; mvumi reads and writes it
-without byte-swapping everywhere -- the existing mvumi_calculate_checksum()
-calls and the driver's own frame_length stores -- and mvumi.h uses no __le
-types.  The bound check follows that convention; converting only here would
-disagree with how the field is used elsewhere.
+scsi: mvumi: reject an out-of-range handshake frame length
 
-[Medium] handshake abort: this patch already replaces the unbounded-length
-infinite loop with a bounded rejection.  The remaining behaviour -- the
-handshake timing out on an error return -- is the driver's existing recovery
-path, shared with the checksum and page-code errors.  Making
-mvumi_handshake_event() fail fast on that return would also abort the
-FW_STATE_STARTING restart that mvumi_handshake() performs when the firmware
-reports a non-OK status, so it is a separate change that needs the handshake
-protocol semantics, not something to fold in here.
+The patch attempts to fix a vulnerability in mvumi_hs_process_page() where
+frame_length from the page header is used without checking it against the
+HSP_MAX_SIZE buffer. It adds a bounds check to reject a frame_length that
+does not fit the handshake buffer before using it. It reads frame_length on=
+ce
+into a local variable and uses it for both the bound check and the checksum.
+
+Fixes: f0c568a478f0 ("[SCSI] mvumi: Add Marvell UMI driver")
+Cc: stable@vger.kernel.org
+Signed-off-by: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+
+> diff --git a/drivers/scsi/mvumi.c b/drivers/scsi/mvumi.c
+> index 38a92f8c25f5b..910505ef4f3ee 100644
+> --- a/drivers/scsi/mvumi.c
+> +++ b/drivers/scsi/mvumi.c
+> @@ -1039,9 +1039,15 @@ static int mvumi_hs_process_page(struct mvumi_hba =
+*mhba,
+>  {
+>  	struct mvumi_hs_page1 *hs_page1;
+>  	unsigned char page_checksum;
+> +	u16 frame_length =3D hs_header->frame_length;
+
+[Severity: High]
+Is a compiler barrier like READ_ONCE() required for this DMA memory read?
+
+Without it, the compiler is free to optimize away the local variable and em=
+it
+two distinct memory fetches directly from the DMA region (one for the bounds
+check, one for mvumi_calculate_checksum()).
+
+If a malicious or misbehaving device changes the memory value between the
+bounds check and the checksum calculation, the validation could be bypassed.
+
+Could the re-fetched value of >=3D 256 cause an infinite loop and kernel ha=
+ng
+inside mvumi_calculate_checksum() because its unsigned char loop counter wi=
+ll
+indefinitely wrap around?
+
+[Severity: Medium]
+Could the unconverted frame_length from DMA memory need to be byte-swapped?
+
+Since the firmware populates the handshake page in little-endian format, it
+seems this newly added bounds check uses a byte-swapped raw value. Might th=
+is
+break initialization entirely on big-endian architectures by triggering a
+false positive failure?
+
+This also appears to be an issue when the device capabilities are assigned:
+
+drivers/scsi/mvumi.c:mvumi_hs_process_page() {
+    ...
+		mhba->max_io =3D hs_page1->max_io_support;
+		mhba->list_num_io =3D hs_page1->cl_inout_list_depth;
+		mhba->max_transfer_size =3D hs_page1->max_transfer_size;
+    ...
+}
+
+[Severity: High]
+Are other device inputs from the handshake page validated along with
+frame_length?
+
+Device inputs are used in bitwise shifts without validation in
+mvumi_hs_process_page():
+
+    ...
+		mhba->ib_max_size_setting =3D hs_page1->cl_in_max_entry_size;
+		mhba->ib_max_size =3D (1 << hs_page1->cl_in_max_entry_size) << 2;
+
+		mhba->ob_max_size_setting =3D hs_page1->cl_out_max_entry_size;
+		mhba->ob_max_size =3D (1 << hs_page1->cl_out_max_entry_size) << 2;
+    ...
+
+These unvalidated values are later multiplied and summed, which can overflow
+the 32-bit tmp_size allocation parameter:
+
+drivers/scsi/mvumi.c:mvumi_init_data() {
+    ...
+	tmp_size =3D mhba->ib_max_size * mhba->max_io;
+	if (mhba->hba_capability & HS_CAPABILITY_SUPPORT_DYN_SRC)
+		tmp_size +=3D sizeof(struct mvumi_dyn_list_entry) * mhba->max_io;
+
+	tmp_size +=3D 128 + mhba->ob_max_size * mhba->max_io;
+    ...
+}
+
+This can cause out-of-bounds pointer usage when memory pointers are advanced
+far beyond the under-allocated tmp_size chunk:
+
+drivers/scsi/mvumi.c:mvumi_init_data() {
+    ...
+	v +=3D mhba->ib_max_size * mhba->max_io;
+	p +=3D mhba->ib_max_size * mhba->max_io;
+    ...
+}
+
+Would this lead to a heap buffer overflow and out-of-bounds DMA access?
+
+> =20
+> -	page_checksum =3D mvumi_calculate_checksum(hs_header,
+> -						hs_header->frame_length);
+> +	if (frame_length > HSP_MAX_SIZE - sizeof(struct mvumi_hs_header)) {
+> +		dev_err(&mhba->pdev->dev, "invalid handshake frame length %d\n",
+> +			frame_length);
+> +		return -1;
+
+[Severity: Medium]
+If we return -1 here upon detecting an invalid frame length, won't this
+trigger the error-handling path in mvumi_handshake():
+
+drivers/scsi/mvumi.c:mvumi_handshake() {
+		if (hs_state =3D=3D HS_S_QUERY_PAGE) {
+			if (mvumi_hs_process_page(mhba, hs_header)) {
+				HS_SET_STATE(hs_fun, HS_S_ABORT);
+				return -1;
+			}
+        ...
+}
+
+Does this modify the local state to signal an abort but return before
+propagating this state to the hardware via iowrite32(), resulting in a
+dead store?
+
+Since the hardware is never notified of the abort, the driver spins for 30
+seconds waiting for a handshake interrupt response that will never arrive.
+
+> +	}
+> +
+> +	page_checksum =3D mvumi_calculate_checksum(hs_header, frame_length);
+>  	if (page_checksum !=3D hs_header->checksum) {
+>  		dev_err(&mhba->pdev->dev, "checksum error\n");
+>  		return -1;
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261013173145.3412=
+863-1-yhlee@isslab.korea.ac.kr?part=3D2
