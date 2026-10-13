@@ -1,203 +1,1051 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 93AAF517BB8;
-	Tue, 13 Oct 2026 15:20:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94C5453D9EB;
+	Tue, 13 Oct 2026 15:20:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791904828; cv=none; b=C/Q75R0F6YwjsUK+b5dNx972ynAiR/IjqMUXwTC4DWapZZ/6cDDc81OC48s3cvlXUVmElVxAIDldfr/2me1TjPKZO+oBi1IXB1nEordtMKdkhQshQ0CZtwjaTWPDwjgIcJ8n8Hc6FAgG+ZH4Lm/SoFVVZdtus6uc2moo73rTOoA=
+	t=1791904855; cv=none; b=ohV6/mNYyXA5jYwG2v7OMyGBiMwUp3VTHDgYCce81WHoRubc4hSNhAJXSCGV+tzolCsaSR4ETRNv3bcTHtNsRXHqMjqtcJPY5903rEWMtpSBTAdqWHfidsHOTTWrVK9JeZ6+vKlmiHpN1RVQYh9GmfI+fjrEkI9+yUBI9lHOYHM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791904828; c=relaxed/simple;
-	bh=sNRaDmlchXJUC9GJwlZCrW8ggejSiLToD+HNvr9S5Ug=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=OAWwyGVeGUrp/RofKScHP2DR3IQu7Ds6K7StK4uHGZI1IFSZtH66+bKUbJ9J6lQhNifCS9wtWrkrQ1UaRoSNQqK5KJwUzfE+MRLx9HcvKyGHUp+v3qH+AyssVPoGj4exj7QQsaLKi4aJki5Q9uGVzq2XCpqjT/WDb3rinDII9as=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bcRoxfym; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791904855; c=relaxed/simple;
+	bh=dBpe2h1YCWnW7Kpn28O7Twifx0QXz2Lxpg0/gAF/fkw=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=UJA31ULfTMTzlBZMKiaKE4p964qKWx+JKMEGXn8evTScSt0oB4bMQsQeU6uJcWytIT8U3OgVDls6IvDVW+f8UqO2rtnva8PwfpKm4s9mh8jmAG+UF08o9z9zhU1qYfXEn7ZI0EWI4tBluRrGSgasPIYhDyBMR7pr6Inol2I/fjI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mXoW5Fy/; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bcRoxfym"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 683C91F0089A;
-	Tue, 13 Oct 2026 15:19:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mXoW5Fy/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 59E0A1F00893;
+	Tue, 13 Oct 2026 15:20:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791904827;
-	bh=2BUfFtYhAyallhL1ThGppaszMttiBxUZ9I5UKUNAaRs=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=bcRoxfymrmBNpdgT8qjjHuAWaInfVu8oPj9XnAGCoqKS6N5OS4EDQAeF68mT872V3
-	 BOjDyYFJjGwyuafSx6ZKaN37sQbT2o27R9MYK8WPMx/DhYXdoQ3nkeiEPa6HEm8o05
-	 R3CwbJjfjy1I4L1eZGRPCTsVjEtjyHO9ZCbFZOKpd9mvPeR6q6pu/z/FxWR3pJOaO5
-	 1NgqooDa6HNyPdwqc34xRYhhBtJHcid8SqU726MmK/QuSHYOAYaedMHPm122BpC9/0
-	 Q2DsRlYpFhNMrsRyBXWT3z/e9MAFZo6eh5AuCUytVTAbkYjm7RqpkofQqq6w6HOXs+
-	 K6Ipq7x6dkPJg==
-Message-ID: <4a900aaa-da64-4f8c-9177-a3b126f06c5d@kernel.org>
-Date: Tue, 13 Oct 2026 17:19:53 +0200
+	s=k20260515; t=1791904852;
+	bh=SZ3jFSBMo+G5ZkvYsmMYRf0RV1hDoYgXNrsXN7Q3Pcs=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc;
+	b=mXoW5Fy/uLHR7UKevkfLh9FnRpJVqZ4FiV+S9i/LRibXJRj0XDh/YvYB28v5ggHS8
+	 eBz7x7EhDwLw4A/+KisLWgoeLQT+BZdJ369wCSLRmI0QItnbBNUDAnXnUfE99250/3
+	 TnG2cBjvJrzAjlUXdDjZ7CEavDxX7C5GZWL+vS6KHk6r1limfsTcl4Kzc65lOwRSaD
+	 SwyipLKaeBvskn0YK8VgNXACNRcaHgXzHY95o82gYNgVU392Pcxnmygv7+/gviHW9a
+	 GlUXQGQiWgy8hbzJDPVnm0FjmFHe7tP4YbksevnrEjX4UFB8M6cQs+XoTKlH1DCLFF
+	 V8yJ0sDJpffwQ==
+From: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
+Date: Tue, 13 Oct 2026 16:05:08 +0100
+Subject: [PATCH v6 28/39] mm: rename is_vm_hugetlb_page() to
+ vma_is_hugetlb()
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v6 02/39] mm/vma: introduce and use
- vma_[flags_]can_merge()
-To: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>,
- Andrew Morton <akpm@linux-foundation.org>,
- "Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>,
- Jann Horn <jannh@google.com>, Pedro Falcato <pfalcato@suse.de>,
- Mike Rapoport <rppt@kernel.org>, Suren Baghdasaryan <surenb@google.com>,
- Michal Hocko <mhocko@suse.com>, Jonathan Corbet <corbet@lwn.net>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Dennis Dalessandro <dennis.dalessandro@cornelisnetworks.com>,
- Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>,
- Paul Moore <paul@paul-moore.com>,
- Stephen Smalley <stephen.smalley.work@gmail.com>,
- Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>,
- Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>,
- Andrii Nakryiko <andrii@kernel.org>, Eduard Zingerman <eddyz87@gmail.com>,
- Kumar Kartikeya Dwivedi <memxor@gmail.com>, Zi Yan <ziy@nvidia.com>,
- Baolin Wang <baolin.wang@linux.alibaba.com>,
- Nico Pache <nico.pache@linux.dev>, Ryan Roberts <ryan.roberts@arm.com>,
- Dev Jain <dev.jain@arm.com>, Barry Song <baohua@kernel.org>,
- Lance Yang <lance.yang@linux.dev>, Usama Arif <usama.arif@linux.dev>,
- Kiryl Shutsemau <kas@kernel.org>, Doug Gilbert <dgilbert@interlog.com>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <mkp@kernel.org>, Simona Vetter <simona@ffwll.ch>,
- Helge Deller <deller@gmx.de>, Sebastian Reichel <sre@kernel.org>,
- John Hubbard <jhubbard@nvidia.com>, Peter Xu <peterx@redhat.com>,
- Masami Hiramatsu <mhiramat@kernel.org>, Oleg Nesterov <oleg@redhat.com>,
- Peter Zijlstra <peterz@infradead.org>, Thomas Gleixner <tglx@kernel.org>,
- Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
- Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
- Arnaldo Carvalho de Melo <acme@kernel.org>,
- Namhyung Kim <namhyung@kernel.org>, Mark Rutland <mark.rutland@arm.com>,
- Rik van Riel <riel@surriel.com>, Harry Yoo <harry@kernel.org>,
- Juri Lelli <juri.lelli@redhat.com>,
- Vincent Guittot <vincent.guittot@linaro.org>,
- Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
- Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>,
- David Airlie <airlied@gmail.com>, Will Deacon <will@kernel.org>,
- "Aneesh Kumar K.V" <aneesh.kumar@kernel.org>, Nick Piggin
- <npiggin@gmail.com>, Arnd Bergmann <arnd@arndb.de>,
- Muchun Song <muchun.song@linux.dev>, Oscar Salvador <osalvador@suse.de>,
- "Matthew Wilcox (Oracle)" <willy@infradead.org>, Jan Kara <jack@suse.cz>,
- Marc Zyngier <maz@kernel.org>, Oliver Upton <oupton@kernel.org>,
- Catalin Marinas <catalin.marinas@arm.com>,
- Madhavan Srinivasan <maddy@linux.ibm.com>, Anup Patel <anup@brainfault.org>,
- Paul Walmsley <pjw@kernel.org>, Palmer Dabbelt <palmer@dabbelt.com>,
- Albert Ou <aou@eecs.berkeley.edu>,
- Christian Borntraeger <borntraeger@linux.ibm.com>,
- Janosch Frank <frankja@linux.ibm.com>,
- Claudio Imbrenda <imbrenda@linux.ibm.com>,
- Alexander Gordeev <agordeev@linux.ibm.com>,
- Gerald Schaefer <gerald.schaefer@linux.ibm.com>,
- Heiko Carstens <hca@linux.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>,
- "David S. Miller" <davem@davemloft.net>,
- Andreas Larsson <andreas@gaisler.com>,
- Alexander Viro <viro@zeniv.linux.org.uk>,
- Christian Brauner <brauner@kernel.org>,
- Matthew Brost <matthew.brost@intel.com>,
- Joshua Hahn <joshua.hahnjy@gmail.com>, Rakie Kim <rakie.kim@sk.com>,
- Byungchul Park <byungchul@sk.com>, Gregory Price <gourry@gourry.net>,
- Ying Huang <ying.huang@linux.alibaba.com>,
- Alistair Popple <apopple@nvidia.com>, Chris Li <chrisl@kernel.org>,
- Kairui Song <kasong@tencent.com>, Kemeng Shi <shikemeng@huaweicloud.com>,
- Nhat Pham <nphamcs@gmail.com>, Baoquan He <baoquan.he@linux.dev>,
- Youngjun Park <youngjun.park@lge.com>, Johannes Weiner <hannes@cmpxchg.org>,
- Qi Zheng <qi.zheng@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>,
- Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>,
- Wei Xu <weixugc@google.com>, Chengming Zhou <chengming.zhou@linux.dev>,
- Michal Hocko <mhocko@kernel.org>, Miklos Szeredi <miklos@szeredi.hu>,
- Xu Xin <xu.xin@linux.dev>
-Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org,
- linux-doc@vger.kernel.org, linux-usb@vger.kernel.org,
- linux-rdma@vger.kernel.org, selinux@vger.kernel.org,
- linux-sound@vger.kernel.org, bpf@vger.kernel.org,
- linux-scsi@vger.kernel.org, linux-fbdev@vger.kernel.org,
- dri-devel@lists.freedesktop.org, linux-trace-kernel@vger.kernel.org,
- linux-perf-users@vger.kernel.org, linux-arch@vger.kernel.org,
- linux-fsdevel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- kvmarm@lists.linux.dev, linuxppc-dev@lists.ozlabs.org, kvm@vger.kernel.org,
- kvm-riscv@lists.infradead.org, linux-riscv@lists.infradead.org,
- linux-s390@vger.kernel.org, sparclinux@vger.kernel.org,
- fuse-devel@lists.linux.dev, Ihor Solodrai <ihor.solodrai@linux.dev>,
- Bert Karwatzki <spasswolf@web.de>
-References: <20261013-b4-mmap-prepare-vma-flag-sanify-v6-0-1aa3c9b139f9@kernel.org>
- <20261013-b4-mmap-prepare-vma-flag-sanify-v6-2-1aa3c9b139f9@kernel.org>
-From: "David Hildenbrand (Arm)" <david@kernel.org>
-Content-Language: en-US
-Autocrypt: addr=david@kernel.org; keydata=
- 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
- qIws/H2t
-In-Reply-To: <20261013-b4-mmap-prepare-vma-flag-sanify-v6-2-1aa3c9b139f9@kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
+Message-Id: <20261013-b4-mmap-prepare-vma-flag-sanify-v6-28-1aa3c9b139f9@kernel.org>
+References: <20261013-b4-mmap-prepare-vma-flag-sanify-v6-0-1aa3c9b139f9@kernel.org>
+In-Reply-To: <20261013-b4-mmap-prepare-vma-flag-sanify-v6-0-1aa3c9b139f9@kernel.org>
+To: Andrew Morton <akpm@linux-foundation.org>, 
+ "Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>, 
+ Jann Horn <jannh@google.com>, Pedro Falcato <pfalcato@suse.de>, 
+ David Hildenbrand <david@kernel.org>, Mike Rapoport <rppt@kernel.org>, 
+ Suren Baghdasaryan <surenb@google.com>, Michal Hocko <mhocko@suse.com>, 
+ Jonathan Corbet <corbet@lwn.net>, 
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+ Dennis Dalessandro <dennis.dalessandro@cornelisnetworks.com>, 
+ Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>, 
+ Paul Moore <paul@paul-moore.com>, 
+ Stephen Smalley <stephen.smalley.work@gmail.com>, 
+ Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, 
+ Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, 
+ Andrii Nakryiko <andrii@kernel.org>, Eduard Zingerman <eddyz87@gmail.com>, 
+ Kumar Kartikeya Dwivedi <memxor@gmail.com>, Zi Yan <ziy@nvidia.com>, 
+ Baolin Wang <baolin.wang@linux.alibaba.com>, 
+ Nico Pache <nico.pache@linux.dev>, Ryan Roberts <ryan.roberts@arm.com>, 
+ Dev Jain <dev.jain@arm.com>, Barry Song <baohua@kernel.org>, 
+ Lance Yang <lance.yang@linux.dev>, Usama Arif <usama.arif@linux.dev>, 
+ Kiryl Shutsemau <kas@kernel.org>, Doug Gilbert <dgilbert@interlog.com>, 
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+ "Martin K. Petersen" <mkp@kernel.org>, Simona Vetter <simona@ffwll.ch>, 
+ Helge Deller <deller@gmx.de>, Sebastian Reichel <sre@kernel.org>, 
+ John Hubbard <jhubbard@nvidia.com>, Peter Xu <peterx@redhat.com>, 
+ Masami Hiramatsu <mhiramat@kernel.org>, Oleg Nesterov <oleg@redhat.com>, 
+ Peter Zijlstra <peterz@infradead.org>, Thomas Gleixner <tglx@kernel.org>, 
+ Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, 
+ Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org, 
+ Arnaldo Carvalho de Melo <acme@kernel.org>, 
+ Namhyung Kim <namhyung@kernel.org>, Mark Rutland <mark.rutland@arm.com>, 
+ Rik van Riel <riel@surriel.com>, Harry Yoo <harry@kernel.org>, 
+ Juri Lelli <juri.lelli@redhat.com>, 
+ Vincent Guittot <vincent.guittot@linaro.org>, 
+ Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, 
+ Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>, 
+ David Airlie <airlied@gmail.com>, Will Deacon <will@kernel.org>, 
+ "Aneesh Kumar K.V" <aneesh.kumar@kernel.org>, 
+ Nick Piggin <npiggin@gmail.com>, Arnd Bergmann <arnd@arndb.de>, 
+ Muchun Song <muchun.song@linux.dev>, Oscar Salvador <osalvador@suse.de>, 
+ "Matthew Wilcox (Oracle)" <willy@infradead.org>, Jan Kara <jack@suse.cz>, 
+ Marc Zyngier <maz@kernel.org>, Oliver Upton <oupton@kernel.org>, 
+ Catalin Marinas <catalin.marinas@arm.com>, 
+ Madhavan Srinivasan <maddy@linux.ibm.com>, Anup Patel <anup@brainfault.org>, 
+ Paul Walmsley <pjw@kernel.org>, Palmer Dabbelt <palmer@dabbelt.com>, 
+ Albert Ou <aou@eecs.berkeley.edu>, 
+ Christian Borntraeger <borntraeger@linux.ibm.com>, 
+ Janosch Frank <frankja@linux.ibm.com>, 
+ Claudio Imbrenda <imbrenda@linux.ibm.com>, 
+ Alexander Gordeev <agordeev@linux.ibm.com>, 
+ Gerald Schaefer <gerald.schaefer@linux.ibm.com>, 
+ Heiko Carstens <hca@linux.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>, 
+ "David S. Miller" <davem@davemloft.net>, 
+ Andreas Larsson <andreas@gaisler.com>, 
+ Alexander Viro <viro@zeniv.linux.org.uk>, 
+ Christian Brauner <brauner@kernel.org>, 
+ Matthew Brost <matthew.brost@intel.com>, 
+ Joshua Hahn <joshua.hahnjy@gmail.com>, Rakie Kim <rakie.kim@sk.com>, 
+ Byungchul Park <byungchul@sk.com>, Gregory Price <gourry@gourry.net>, 
+ Ying Huang <ying.huang@linux.alibaba.com>, 
+ Alistair Popple <apopple@nvidia.com>, Chris Li <chrisl@kernel.org>, 
+ Kairui Song <kasong@tencent.com>, Kemeng Shi <shikemeng@huaweicloud.com>, 
+ Nhat Pham <nphamcs@gmail.com>, Baoquan He <baoquan.he@linux.dev>, 
+ Youngjun Park <youngjun.park@lge.com>, Johannes Weiner <hannes@cmpxchg.org>, 
+ Qi Zheng <qi.zheng@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
+ Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>, 
+ Wei Xu <weixugc@google.com>, Chengming Zhou <chengming.zhou@linux.dev>, 
+ Michal Hocko <mhocko@kernel.org>, Miklos Szeredi <miklos@szeredi.hu>, 
+ Xu Xin <xu.xin@linux.dev>
+Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, 
+ linux-doc@vger.kernel.org, linux-usb@vger.kernel.org, 
+ linux-rdma@vger.kernel.org, selinux@vger.kernel.org, 
+ linux-sound@vger.kernel.org, bpf@vger.kernel.org, 
+ linux-scsi@vger.kernel.org, linux-fbdev@vger.kernel.org, 
+ dri-devel@lists.freedesktop.org, linux-trace-kernel@vger.kernel.org, 
+ linux-perf-users@vger.kernel.org, linux-arch@vger.kernel.org, 
+ linux-fsdevel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
+ kvmarm@lists.linux.dev, linuxppc-dev@lists.ozlabs.org, kvm@vger.kernel.org, 
+ kvm-riscv@lists.infradead.org, linux-riscv@lists.infradead.org, 
+ linux-s390@vger.kernel.org, sparclinux@vger.kernel.org, 
+ fuse-devel@lists.linux.dev, Ihor Solodrai <ihor.solodrai@linux.dev>, 
+ Bert Karwatzki <spasswolf@web.de>, "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
+X-Mailer: b4 0.14.3
+X-Developer-Signature: v=1; a=openpgp-sha256; l=34079; i=ljs@kernel.org;
+ h=from:subject:message-id; bh=dBpe2h1YCWnW7Kpn28O7Twifx0QXz2Lxpg0/gAF/fkw=;
+ b=owGbwMvMwCV2fu7ZrsZH9SKMp9WSGLLOeZx2OXraMvvy1NmWsVzThdLMPioYuZicXt9a77Ndy
+ WH/5tJXHaUsDGJcDLJiiizPv4jvDxIJm9d5wd8NZg4rE8gQBi5OAZhIeyDDPxVJj7cGLfNz+3hk
+ pggczT/aZbmX71PeocSCeVnKjJ+CdjP897wsO+35W9+GCd//3pIxLRIL6xBjlMm+56E8tcpo3cy
+ r3AA=
+X-Developer-Key: i=ljs@kernel.org; a=openpgp;
+ fpr=E7F417BF5214569E89D04F46CF9DCD8A81E27F14
 
-On 10/13/26 17:04, Lorenzo Stoakes (ARM) wrote:
-> Replace the open-coded VMA_SPECIAL_FLAGS check in the VMA merge logic with
-> two new functions vma_flags_can_merge() and vma_can_merge() and update the
-> merge logic to use the former.
-> 
-> This abstracts the check and expresses it in terms of the desired behaviour
-> rather than an arbitrary and confusing VMA flag.
-> 
-> This also lays the groundwork for making further improvements in VMA flag
-> usage.
-> 
-> Also update the userland VMA tests to reflect the change.
-> 
-> No functional change intended.
-> 
-> Reviewed-by: Gregory Price (Meta) <gourry@gourry.net>
-> Reviewed-by: Zi Yan <ziy@nvidia.com>
-> Reviewed-by: Suren Baghdasaryan <surenb@google.com>
-> Acked-by: David Hildenbrand (Arm) <david@kernel.org>
-> Signed-off-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
-> ---
+The is_vm_hugetlb_page() predicate is badly named - the mapping can span
+more than a page and it is inconsistent with other VMA predicates that
+typically are prefixed by vma_.
 
-I'd have called it "vma_mergable" etc, because "can_merge" makes me imply a
-"with what".
+Rename to vma_is_hugetlb() for consistency, and while we're here update
+some VM_BUG_ON_VMA() to VM_WARN_ON_ONCE_VMA() as to avoid unnecessary
+oopses.
 
+No functional change intended.
+
+Acked-by: Marc Zyngier <maz@kernel.org>
+Acked-by: Claudio Imbrenda <imbrenda@linux.ibm.com>
+Acked-by: Anup Patel <anup@brainfault.org>
+Acked-by: Zi Yan <ziy@nvidia.com>
 Acked-by: David Hildenbrand (Arm) <david@kernel.org>
+Signed-off-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
+---
+ arch/arm64/kvm/mmu.c                      |  4 ++--
+ arch/powerpc/mm/book3s64/radix_tlb.c      |  6 +++---
+ arch/powerpc/mm/nohash/e500_hugetlbpage.c |  2 +-
+ arch/powerpc/mm/nohash/tlb.c              |  2 +-
+ arch/riscv/kvm/mmu.c                      |  2 +-
+ arch/riscv/mm/tlbflush.c                  |  2 +-
+ arch/s390/mm/gmap_helpers.c               |  6 +++---
+ arch/sparc/mm/init_64.c                   |  2 +-
+ drivers/gpu/drm/drm_gpusvm.c              |  2 +-
+ fs/coredump.c                             |  2 +-
+ fs/hugetlbfs/inode.c                      |  2 +-
+ fs/proc/task_mmu.c                        |  8 ++++----
+ include/asm-generic/tlb.h                 |  2 +-
+ include/linux/hugetlb.h                   |  4 ++--
+ include/linux/mm.h                        | 19 ++++++++++++++++---
+ include/linux/rmap.h                      |  2 +-
+ kernel/events/core.c                      |  2 +-
+ kernel/sched/fair.c                       |  2 +-
+ mm/gup.c                                  |  4 ++--
+ mm/huge_memory.c                          |  2 +-
+ mm/hugetlb.c                              | 14 +++++++-------
+ mm/internal.h                             |  2 +-
+ mm/madvise.c                              |  4 ++--
+ mm/memory.c                               | 12 ++++++------
+ mm/mempolicy.c                            |  2 +-
+ mm/migrate_device.c                       |  2 +-
+ mm/mmap.c                                 |  2 +-
+ mm/mmu_gather.c                           |  2 +-
+ mm/mprotect.c                             |  2 +-
+ mm/mremap.c                               |  6 +++---
+ mm/page_vma_mapped.c                      |  4 ++--
+ mm/pagewalk.c                             |  2 +-
+ mm/swapfile.c                             |  2 +-
+ mm/userfaultfd.c                          | 26 +++++++++++++-------------
+ mm/vma.c                                  |  8 ++++----
+ mm/vmscan.c                               |  2 +-
+ tools/testing/vma/include/stubs.h         |  2 +-
+ 37 files changed, 92 insertions(+), 79 deletions(-)
+
+diff --git a/arch/arm64/kvm/mmu.c b/arch/arm64/kvm/mmu.c
+index 9ba86450fe4a..a7968f8d24bf 100644
+--- a/arch/arm64/kvm/mmu.c
++++ b/arch/arm64/kvm/mmu.c
+@@ -1463,13 +1463,13 @@ static int get_vma_page_shift(struct vm_area_struct *vma, unsigned long hva)
+ {
+ 	unsigned long pa;
+ 
+-	if (is_vm_hugetlb_page(vma) && !(vma->vm_flags & VM_PFNMAP))
++	if (vma_is_hugetlb(vma) && !(vma->vm_flags & VM_PFNMAP))
+ 		return huge_page_shift(hstate_vma(vma));
+ 
+ 	if (!(vma->vm_flags & VM_PFNMAP))
+ 		return PAGE_SHIFT;
+ 
+-	VM_BUG_ON(is_vm_hugetlb_page(vma));
++	VM_BUG_ON(vma_is_hugetlb(vma));
+ 
+ 	pa = (vma->vm_pgoff << PAGE_SHIFT) + (hva - vma->vm_start);
+ 
+diff --git a/arch/powerpc/mm/book3s64/radix_tlb.c b/arch/powerpc/mm/book3s64/radix_tlb.c
+index 7de5760164a9..b4603a98224b 100644
+--- a/arch/powerpc/mm/book3s64/radix_tlb.c
++++ b/arch/powerpc/mm/book3s64/radix_tlb.c
+@@ -627,7 +627,7 @@ void radix__local_flush_tlb_page(struct vm_area_struct *vma, unsigned long vmadd
+ {
+ #ifdef CONFIG_HUGETLB_PAGE
+ 	/* need the return fix for nohash.c */
+-	if (is_vm_hugetlb_page(vma))
++	if (vma_is_hugetlb(vma))
+ 		return radix__local_flush_hugetlb_page(vma, vmaddr);
+ #endif
+ 	radix__local_flush_tlb_page_psize(vma->vm_mm, vmaddr, mmu_virtual_psize);
+@@ -945,7 +945,7 @@ void radix__flush_tlb_page_psize(struct mm_struct *mm, unsigned long vmaddr,
+ void radix__flush_tlb_page(struct vm_area_struct *vma, unsigned long vmaddr)
+ {
+ #ifdef CONFIG_HUGETLB_PAGE
+-	if (is_vm_hugetlb_page(vma))
++	if (vma_is_hugetlb(vma))
+ 		return radix__flush_hugetlb_page(vma, vmaddr);
+ #endif
+ 	radix__flush_tlb_page_psize(vma->vm_mm, vmaddr, mmu_virtual_psize);
+@@ -1113,7 +1113,7 @@ void radix__flush_tlb_range(struct vm_area_struct *vma, unsigned long start,
+ 
+ {
+ #ifdef CONFIG_HUGETLB_PAGE
+-	if (is_vm_hugetlb_page(vma))
++	if (vma_is_hugetlb(vma))
+ 		return radix__flush_hugetlb_tlb_range(vma, start, end);
+ #endif
+ 
+diff --git a/arch/powerpc/mm/nohash/e500_hugetlbpage.c b/arch/powerpc/mm/nohash/e500_hugetlbpage.c
+index a134d28a0e4d..b87623f04be5 100644
+--- a/arch/powerpc/mm/nohash/e500_hugetlbpage.c
++++ b/arch/powerpc/mm/nohash/e500_hugetlbpage.c
+@@ -180,7 +180,7 @@ book3e_hugetlb_preload(struct vm_area_struct *vma, unsigned long ea, pte_t pte)
+  */
+ void __update_mmu_cache(struct vm_area_struct *vma, unsigned long address, pte_t *ptep)
+ {
+-	if (is_vm_hugetlb_page(vma))
++	if (vma_is_hugetlb(vma))
+ 		book3e_hugetlb_preload(vma, address, *ptep);
+ }
+ 
+diff --git a/arch/powerpc/mm/nohash/tlb.c b/arch/powerpc/mm/nohash/tlb.c
+index 0a650742f3a0..07a2db16c2b1 100644
+--- a/arch/powerpc/mm/nohash/tlb.c
++++ b/arch/powerpc/mm/nohash/tlb.c
+@@ -278,7 +278,7 @@ void __flush_tlb_page(struct mm_struct *mm, unsigned long vmaddr,
+ void flush_tlb_page(struct vm_area_struct *vma, unsigned long vmaddr)
+ {
+ #ifdef CONFIG_HUGETLB_PAGE
+-	if (vma && is_vm_hugetlb_page(vma))
++	if (vma && vma_is_hugetlb(vma))
+ 		flush_hugetlb_page(vma, vmaddr);
+ #endif
+ 
+diff --git a/arch/riscv/kvm/mmu.c b/arch/riscv/kvm/mmu.c
+index 6035b5ec9503..5c5c77f98bf0 100644
+--- a/arch/riscv/kvm/mmu.c
++++ b/arch/riscv/kvm/mmu.c
+@@ -664,7 +664,7 @@ int kvm_riscv_mmu_map(struct kvm_vcpu *vcpu, struct kvm_memory_slot *memslot,
+ 		return -EFAULT;
+ 	}
+ 
+-	is_hugetlb = is_vm_hugetlb_page(vma);
++	is_hugetlb = vma_is_hugetlb(vma);
+ 	if (is_hugetlb)
+ 		vma_pageshift = huge_page_shift(hstate_vma(vma));
+ 	else
+diff --git a/arch/riscv/mm/tlbflush.c b/arch/riscv/mm/tlbflush.c
+index 962db300a166..a74a7d5258aa 100644
+--- a/arch/riscv/mm/tlbflush.c
++++ b/arch/riscv/mm/tlbflush.c
+@@ -149,7 +149,7 @@ void flush_tlb_range(struct vm_area_struct *vma, unsigned long start,
+ {
+ 	unsigned long stride_size;
+ 
+-	if (!is_vm_hugetlb_page(vma)) {
++	if (!vma_is_hugetlb(vma)) {
+ 		stride_size = PAGE_SIZE;
+ 	} else {
+ 		stride_size = huge_page_size(hstate_vma(vma));
+diff --git a/arch/s390/mm/gmap_helpers.c b/arch/s390/mm/gmap_helpers.c
+index ff63ffb1dbd2..3f6783b93e67 100644
+--- a/arch/s390/mm/gmap_helpers.c
++++ b/arch/s390/mm/gmap_helpers.c
+@@ -102,7 +102,7 @@ __context_unsafe(/* pte_unmap_unlock() not instrumented */)
+ 
+ 	/* Find the vm address for the guest address */
+ 	vma = vma_lookup(mm, vmaddr);
+-	if (!vma || is_vm_hugetlb_page(vma))
++	if (!vma || vma_is_hugetlb(vma))
+ 		return;
+ 
+ 	/* Get pointer to the page table entry */
+@@ -139,7 +139,7 @@ void gmap_helper_discard(struct mm_struct *mm, unsigned long vmaddr, unsigned lo
+ 		vma = find_vma_intersection(mm, vmaddr, end);
+ 		if (!vma)
+ 			return;
+-		if (!is_vm_hugetlb_page(vma))
++		if (!vma_is_hugetlb(vma))
+ 			zap_vma_range(vma, vmaddr, min(end, vma->vm_end) - vmaddr);
+ 		vmaddr = vma->vm_end;
+ 	}
+@@ -247,7 +247,7 @@ static int __gmap_helper_unshare_zeropages(struct mm_struct *mm)
+ 		 * proof to catch unexpected zeropages in other mappings and
+ 		 * fail.
+ 		 */
+-		if ((vma->vm_flags & VM_PFNMAP) || is_vm_hugetlb_page(vma))
++		if ((vma->vm_flags & VM_PFNMAP) || vma_is_hugetlb(vma))
+ 			continue;
+ 		addr = vma->vm_start;
+ 
+diff --git a/arch/sparc/mm/init_64.c b/arch/sparc/mm/init_64.c
+index 103db4683b16..9bbccb5d23a8 100644
+--- a/arch/sparc/mm/init_64.c
++++ b/arch/sparc/mm/init_64.c
+@@ -413,7 +413,7 @@ void update_mmu_cache_range(struct vm_fault *vmf, struct vm_area_struct *vma,
+ 	if (mm->context.hugetlb_pte_count || mm->context.thp_pte_count) {
+ 		unsigned long hugepage_size = PAGE_SIZE;
+ 
+-		if (is_vm_hugetlb_page(vma))
++		if (vma_is_hugetlb(vma))
+ 			hugepage_size = huge_page_size(hstate_vma(vma));
+ 
+ 		if (hugepage_size >= PUD_SIZE) {
+diff --git a/drivers/gpu/drm/drm_gpusvm.c b/drivers/gpu/drm/drm_gpusvm.c
+index 793dacec2100..a1d4989b0b61 100644
+--- a/drivers/gpu/drm/drm_gpusvm.c
++++ b/drivers/gpu/drm/drm_gpusvm.c
+@@ -1142,7 +1142,7 @@ drm_gpusvm_range_find_or_insert(struct drm_gpusvm *gpusvm,
+ 	 * have to change.
+ 	 */
+ 	migrate_devmem = ctx->devmem_possible &&
+-		vma_is_anonymous(vas) && !is_vm_hugetlb_page(vas);
++		vma_is_anonymous(vas) && !vma_is_hugetlb(vas);
+ 
+ 	chunk_size = drm_gpusvm_range_chunk_size(gpusvm, notifier, vas,
+ 						 fault_addr, gpuva_start,
+diff --git a/fs/coredump.c b/fs/coredump.c
+index ac3cd74808c6..fb21fb6703dd 100644
+--- a/fs/coredump.c
++++ b/fs/coredump.c
+@@ -1608,7 +1608,7 @@ static unsigned long vma_dump_size(struct vm_area_struct *vma,
+ 	}
+ 
+ 	/* Hugetlb memory check */
+-	if (is_vm_hugetlb_page(vma)) {
++	if (vma_is_hugetlb(vma)) {
+ 		if ((vma->vm_flags & VM_SHARED) && FILTER(HUGETLB_SHARED))
+ 			goto whole;
+ 		if (!(vma->vm_flags & VM_SHARED) && FILTER(HUGETLB_PRIVATE))
+diff --git a/fs/hugetlbfs/inode.c b/fs/hugetlbfs/inode.c
+index 7611a8470ea2..ba7097d5720c 100644
+--- a/fs/hugetlbfs/inode.c
++++ b/fs/hugetlbfs/inode.c
+@@ -108,7 +108,7 @@ static int hugetlbfs_file_mmap(struct file *file, struct vm_area_struct *vma)
+ 	 * vma address alignment (but not the pgoff alignment) has
+ 	 * already been checked by prepare_hugepage_range.  If you add
+ 	 * any error returns here, do so after setting VM_HUGETLB, so
+-	 * is_vm_hugetlb_page tests below unmap_region go the right
++	 * vma_is_hugetlb tests below unmap_region go the right
+ 	 * way when do_mmap unwinds (may be important on powerpc
+ 	 * and ia64).
+ 	 */
+diff --git a/fs/proc/task_mmu.c b/fs/proc/task_mmu.c
+index e671b4fd8ded..565e6446bd31 100644
+--- a/fs/proc/task_mmu.c
++++ b/fs/proc/task_mmu.c
+@@ -3015,7 +3015,7 @@ static int pagemap_scan_pte_hole(unsigned long addr, unsigned long end,
+ 	 * hugetlb differs, see pagemap_hugetlb_category().
+ 	 */
+ 	categories = p->cur_vma_category;
+-	if (userfaultfd_wp(vma) && !is_vm_hugetlb_page(vma))
++	if (userfaultfd_wp(vma) && !vma_is_hugetlb(vma))
+ 		categories |= PAGE_IS_WRITTEN;
+ 
+ 	if (!pagemap_scan_is_interesting_page(categories, p))
+@@ -3028,7 +3028,7 @@ static int pagemap_scan_pte_hole(unsigned long addr, unsigned long end,
+ 	if (~p->arg.flags & PM_SCAN_WP_MATCHING)
+ 		return ret;
+ 
+-	if (is_vm_hugetlb_page(vma))
++	if (vma_is_hugetlb(vma))
+ 		err = pagemap_scan_hugetlb_hole_wp(vma, addr, end);
+ 	else
+ 		err = uffd_wp_range(vma, addr, end - addr, true);
+@@ -3470,7 +3470,7 @@ static int show_numa_map(struct seq_file *m, void *v)
+ 		seq_puts(m, " stack");
+ 	}
+ 
+-	if (is_vm_hugetlb_page(vma))
++	if (vma_is_hugetlb(vma))
+ 		seq_puts(m, " huge");
+ 
+ 	/* Skip walking pages if gate VMA */
+@@ -3499,7 +3499,7 @@ static int show_numa_map(struct seq_file *m, void *v)
+ 	if (md->swapcache)
+ 		seq_printf(m, " swapcache=%lu", md->swapcache);
+ 
+-	if (md->active < md->pages && !is_vm_hugetlb_page(vma))
++	if (md->active < md->pages && !vma_is_hugetlb(vma))
+ 		seq_printf(m, " active=%lu", md->active);
+ 
+ 	if (md->writeback)
+diff --git a/include/asm-generic/tlb.h b/include/asm-generic/tlb.h
+index 8b8123e5b7d7..48d47b34cc77 100644
+--- a/include/asm-generic/tlb.h
++++ b/include/asm-generic/tlb.h
+@@ -438,7 +438,7 @@ tlb_update_vma_flags(struct mmu_gather *tlb, struct vm_area_struct *vma)
+ 	 * We rely on tlb_end_vma() to issue a flush, such that when we reset
+ 	 * these values the batch is empty.
+ 	 */
+-	tlb->vma_huge = is_vm_hugetlb_page(vma);
++	tlb->vma_huge = vma_is_hugetlb(vma);
+ 	tlb->vma_exec = !!(vma->vm_flags & VM_EXEC);
+ 
+ 	/*
+diff --git a/include/linux/hugetlb.h b/include/linux/hugetlb.h
+index d7e6563cef75..24727ece20fe 100644
+--- a/include/linux/hugetlb.h
++++ b/include/linux/hugetlb.h
+@@ -251,14 +251,14 @@ extern void __hugetlb_zap_end(struct vm_area_struct *vma,
+ static inline void hugetlb_zap_begin(struct vm_area_struct *vma,
+ 				     unsigned long *start, unsigned long *end)
+ {
+-	if (is_vm_hugetlb_page(vma))
++	if (vma_is_hugetlb(vma))
+ 		__hugetlb_zap_begin(vma, start, end);
+ }
+ 
+ static inline void hugetlb_zap_end(struct vm_area_struct *vma,
+ 				   struct zap_details *details)
+ {
+-	if (is_vm_hugetlb_page(vma))
++	if (vma_is_hugetlb(vma))
+ 		__hugetlb_zap_end(vma, details);
+ }
+ 
+diff --git a/include/linux/mm.h b/include/linux/mm.h
+index 2c41974704a9..70fcb7e18b50 100644
+--- a/include/linux/mm.h
++++ b/include/linux/mm.h
+@@ -1609,15 +1609,28 @@ static inline bool vma_is_shared_maywrite(const struct vm_area_struct *vma)
+ 	return is_shared_maywrite(&vma->flags);
+ }
+ 
+-static inline bool is_vma_hugetlb_flags(const vma_flags_t *flags)
++/**
++ * vma_flags_is_hugetlb() - Do the specified VMA flags indicate that the
++ * VMA is a hugetlb mapping?
++ * @flags: The VMA flags to test.
++ *
++ * Returns: true if the flags indicate a hugetlb mapping, false otherwise.
++ */
++static inline bool vma_flags_is_hugetlb(const vma_flags_t *flags)
+ {
+ 	return IS_ENABLED(CONFIG_HUGETLB_PAGE) &&
+ 	       vma_flags_test(flags, VMA_HUGETLB_BIT);
+ }
+ 
+-static inline bool is_vm_hugetlb_page(const struct vm_area_struct *vma)
++/**
++ * vma_is_hugetlb() - Is @vma a hugetlb mapping?
++ * @vma: The VMA to test.
++ *
++ * Returns: true if @vma is a hugetlb mapping, false otherwise.
++ */
++static inline bool vma_is_hugetlb(const struct vm_area_struct *vma)
+ {
+-	return is_vma_hugetlb_flags(&vma->flags);
++	return vma_flags_is_hugetlb(&vma->flags);
+ }
+ 
+ /**
+diff --git a/include/linux/rmap.h b/include/linux/rmap.h
+index 0b332770abee..74cca0e3c726 100644
+--- a/include/linux/rmap.h
++++ b/include/linux/rmap.h
+@@ -888,7 +888,7 @@ struct page_vma_mapped_walk {
+ static inline void page_vma_mapped_walk_done(struct page_vma_mapped_walk *pvmw)
+ {
+ 	/* HugeTLB pte is set to the relevant page table entry without pte_mapped. */
+-	if (pvmw->pte && !is_vm_hugetlb_page(pvmw->vma))
++	if (pvmw->pte && !vma_is_hugetlb(pvmw->vma))
+ 		pte_unmap(pvmw->pte);
+ 	if (pvmw->ptl)
+ 		spin_unlock(pvmw->ptl);
+diff --git a/kernel/events/core.c b/kernel/events/core.c
+index a6c8e38a3110..8ca8a6842924 100644
+--- a/kernel/events/core.c
++++ b/kernel/events/core.c
+@@ -9808,7 +9808,7 @@ static void perf_event_mmap_event(struct perf_mmap_event *mmap_event)
+ 
+ 	if (vma->vm_flags & VM_LOCKED)
+ 		flags |= MAP_LOCKED;
+-	if (is_vm_hugetlb_page(vma))
++	if (vma_is_hugetlb(vma))
+ 		flags |= MAP_HUGETLB;
+ 
+ 	if (file) {
+diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
+index 9eb12d0b6f1b..72c057d78ebd 100644
+--- a/kernel/sched/fair.c
++++ b/kernel/sched/fair.c
+@@ -4211,7 +4211,7 @@ static void task_numa_work(struct callback_head *work)
+ 
+ 	for (; vma; vma = vma_next(&vmi)) {
+ 		if (!vma_migratable(vma) || !vma_policy_mof(vma) ||
+-			is_vm_hugetlb_page(vma) || !vma_is_mm_managed(vma)) {
++			vma_is_hugetlb(vma) || !vma_is_mm_managed(vma)) {
+ 			trace_sched_skip_vma_numa(mm, vma, NUMAB_SKIP_UNSUITABLE);
+ 			continue;
+ 		}
+diff --git a/mm/gup.c b/mm/gup.c
+index e6310a7cc05b..f166acf794e3 100644
+--- a/mm/gup.c
++++ b/mm/gup.c
+@@ -621,7 +621,7 @@ static struct page *no_page_table(struct vm_area_struct *vma,
+ 	 * But we can only make this optimization where a hole would surely
+ 	 * be zero-filled if handle_mm_fault() actually did handle it.
+ 	 */
+-	if (is_vm_hugetlb_page(vma)) {
++	if (vma_is_hugetlb(vma)) {
+ 		struct hstate *h = hstate_vma(vma);
+ 
+ 		if (!hugetlbfs_pagecache_present(h, vma, address))
+@@ -1213,7 +1213,7 @@ static int check_vma_flags(struct vm_area_struct *vma, unsigned long gup_flags)
+ 	if ((gup_flags & FOLL_LONGTERM) && vma_is_fsdax(vma))
+ 		return -EOPNOTSUPP;
+ 
+-	if ((gup_flags & FOLL_SPLIT_PMD) && is_vm_hugetlb_page(vma))
++	if ((gup_flags & FOLL_SPLIT_PMD) && vma_is_hugetlb(vma))
+ 		return -EOPNOTSUPP;
+ 
+ 	if (vma_is_secretmem(vma))
+diff --git a/mm/huge_memory.c b/mm/huge_memory.c
+index 87e8bf8029ab..83dd63b04568 100644
+--- a/mm/huge_memory.c
++++ b/mm/huge_memory.c
+@@ -4769,7 +4769,7 @@ static inline bool vma_not_suitable_for_thp_split(struct vm_area_struct *vma)
+ 		return true;
+ 	if (vma_test(vma, VMA_IO_BIT))
+ 		return true;
+-	if (is_vm_hugetlb_page(vma))
++	if (vma_is_hugetlb(vma))
+ 		return true;
+ 
+ 	return false;
+diff --git a/mm/hugetlb.c b/mm/hugetlb.c
+index d3a0650ff690..817f57f13b09 100644
+--- a/mm/hugetlb.c
++++ b/mm/hugetlb.c
+@@ -1147,7 +1147,7 @@ static inline struct resv_map *inode_resv_map(struct inode *inode)
+ 
+ static struct resv_map *vma_resv_map(struct vm_area_struct *vma)
+ {
+-	VM_BUG_ON_VMA(!is_vm_hugetlb_page(vma), vma);
++	VM_WARN_ON_ONCE_VMA(!vma_is_hugetlb(vma), vma);
+ 	if (vma->vm_flags & VM_MAYSHARE) {
+ 		struct address_space *mapping = vma->vm_file->f_mapping;
+ 		struct inode *inode = mapping->host;
+@@ -1162,7 +1162,7 @@ static struct resv_map *vma_resv_map(struct vm_area_struct *vma)
+ 
+ static void set_vma_resv_map(struct vm_area_struct *vma, struct resv_map *map)
+ {
+-	VM_WARN_ON_ONCE_VMA(!is_vm_hugetlb_page(vma), vma);
++	VM_WARN_ON_ONCE_VMA(!vma_is_hugetlb(vma), vma);
+ 	VM_WARN_ON_ONCE_VMA(vma_test(vma, VMA_MAYSHARE_BIT), vma);
+ 
+ 	set_vma_private_data(vma, (unsigned long)map);
+@@ -1170,7 +1170,7 @@ static void set_vma_resv_map(struct vm_area_struct *vma, struct resv_map *map)
+ 
+ static void set_vma_resv_flags(struct vm_area_struct *vma, unsigned long flags)
+ {
+-	VM_WARN_ON_ONCE_VMA(!is_vm_hugetlb_page(vma), vma);
++	VM_WARN_ON_ONCE_VMA(!vma_is_hugetlb(vma), vma);
+ 	VM_WARN_ON_ONCE_VMA(vma_test(vma, VMA_MAYSHARE_BIT), vma);
+ 
+ 	set_vma_private_data(vma, get_vma_private_data(vma) | flags);
+@@ -1178,7 +1178,7 @@ static void set_vma_resv_flags(struct vm_area_struct *vma, unsigned long flags)
+ 
+ static int is_vma_resv_set(struct vm_area_struct *vma, unsigned long flag)
+ {
+-	VM_BUG_ON_VMA(!is_vm_hugetlb_page(vma), vma);
++	VM_WARN_ON_ONCE_VMA(!vma_is_hugetlb(vma), vma);
+ 
+ 	return (get_vma_private_data(vma) & flag) != 0;
+ }
+@@ -1192,7 +1192,7 @@ bool __vma_private_lock(struct vm_area_struct *vma)
+ 
+ void hugetlb_dup_vma_private(struct vm_area_struct *vma)
+ {
+-	VM_BUG_ON_VMA(!is_vm_hugetlb_page(vma), vma);
++	VM_WARN_ON_ONCE_VMA(!vma_is_hugetlb(vma), vma);
+ 	/*
+ 	 * Clear vm_private_data
+ 	 * - For shared mappings this is a per-vma semaphore that may be
+@@ -5279,7 +5279,7 @@ void __unmap_hugepage_range(struct mmu_gather *tlb, struct vm_area_struct *vma,
+ 	unsigned long last_addr_mask;
+ 
+ 	i_mmap_assert_write_locked(vma->vm_file->f_mapping);
+-	WARN_ON(!is_vm_hugetlb_page(vma));
++	WARN_ON(!vma_is_hugetlb(vma));
+ 	BUG_ON(start & ~huge_page_mask(h));
+ 	BUG_ON(end & ~huge_page_mask(h));
+ 
+@@ -7505,6 +7505,6 @@ void hugetlb_unshare_all_pmds(struct vm_area_struct *vma)
+  */
+ void fixup_hugetlb_reservations(struct vm_area_struct *vma)
+ {
+-	if (is_vm_hugetlb_page(vma))
++	if (vma_is_hugetlb(vma))
+ 		clear_vma_resv_huge_pages(vma);
+ }
+diff --git a/mm/internal.h b/mm/internal.h
+index ea8fa94ebe1b..b5f7be8f65d8 100644
+--- a/mm/internal.h
++++ b/mm/internal.h
+@@ -1116,7 +1116,7 @@ static inline bool vma_supports_mlock(const struct vm_area_struct *vma)
+ 		return false;
+ 	if (vma_test_single_mask(vma, VMA_DROPPABLE))
+ 		return false;
+-	if (vma_is_dax(vma) || is_vm_hugetlb_page(vma))
++	if (vma_is_dax(vma) || vma_is_hugetlb(vma))
+ 		return false;
+ 	return vma != get_gate_vma(current->mm);
+ }
+diff --git a/mm/madvise.c b/mm/madvise.c
+index fbb72ab49aa6..467601a8525b 100644
+--- a/mm/madvise.c
++++ b/mm/madvise.c
+@@ -881,7 +881,7 @@ bool madvise_dontneed_free_valid_vma(struct madvise_behavior *madv_behavior)
+ 	int behavior = madv_behavior->behavior;
+ 	struct madvise_behavior_range *range = &madv_behavior->range;
+ 
+-	if (!is_vm_hugetlb_page(vma)) {
++	if (!vma_is_hugetlb(vma)) {
+ 		unsigned int forbidden = VM_PFNMAP;
+ 
+ 		if (behavior != MADV_DONTNEED_LOCKED)
+@@ -1578,7 +1578,7 @@ static int madvise_vma_behavior(struct madvise_behavior *madv_behavior)
+ 		new_flags |= VM_DONTDUMP;
+ 		break;
+ 	case MADV_DODUMP:
+-		if ((!is_vm_hugetlb_page(vma) && (new_flags & VM_SPECIAL)) ||
++		if ((!vma_is_hugetlb(vma) && (new_flags & VM_SPECIAL)) ||
+ 		    (new_flags & VM_DROPPABLE))
+ 			return -EINVAL;
+ 		new_flags &= ~VM_DONTDUMP;
+diff --git a/mm/memory.c b/mm/memory.c
+index 142a8ef13f6a..3290776bf2ca 100644
+--- a/mm/memory.c
++++ b/mm/memory.c
+@@ -1564,7 +1564,7 @@ copy_page_range(struct vm_area_struct *dst_vma, struct vm_area_struct *src_vma)
+ 	if (!vma_needs_copy(dst_vma, src_vma))
+ 		return 0;
+ 
+-	if (is_vm_hugetlb_page(src_vma))
++	if (vma_is_hugetlb(src_vma))
+ 		return copy_hugetlb_page_range(dst_mm, src_mm, dst_vma, src_vma);
+ 
+ 	/*
+@@ -2178,7 +2178,7 @@ static void __zap_vma_range(struct mmu_gather *tlb, struct vm_area_struct *vma,
+ 	if (vma->vm_file && !reaping)
+ 		uprobe_munmap(vma, start, end);
+ 
+-	if (unlikely(is_vm_hugetlb_page(vma))) {
++	if (unlikely(vma_is_hugetlb(vma))) {
+ 		zap_flags_t zap_flags = details ? details->zap_flags : 0;
+ 
+ 		VM_WARN_ON_ONCE(reaping);
+@@ -2313,7 +2313,7 @@ void zap_vma_range_batched(struct mmu_gather *tlb,
+ 	 */
+ 	__zap_vma_range(tlb, vma, address, end, details);
+ 	mmu_notifier_invalidate_range_end(&range);
+-	if (is_vm_hugetlb_page(vma)) {
++	if (vma_is_hugetlb(vma)) {
+ 		/*
+ 		 * flush tlb and free resources before hugetlb_zap_end(), to
+ 		 * avoid concurrent page faults' allocation failure.
+@@ -6934,7 +6934,7 @@ vm_fault_t handle_mm_fault(struct vm_area_struct *vma, unsigned long address,
+ 
+ 	lru_gen_enter_fault(vma);
+ 
+-	if (unlikely(is_vm_hugetlb_page(vma)))
++	if (unlikely(vma_is_hugetlb(vma)))
+ 		ret = hugetlb_fault(vma->vm_mm, vma, address, flags);
+ 	else
+ 		ret = __handle_mm_fault(vma, address, flags);
+@@ -7804,12 +7804,12 @@ void ptlock_free(struct ptdesc *ptdesc)
+ 
+ void vma_pgtable_walk_begin(struct vm_area_struct *vma)
+ {
+-	if (is_vm_hugetlb_page(vma))
++	if (vma_is_hugetlb(vma))
+ 		hugetlb_vma_lock_read(vma);
+ }
+ 
+ void vma_pgtable_walk_end(struct vm_area_struct *vma)
+ {
+-	if (is_vm_hugetlb_page(vma))
++	if (vma_is_hugetlb(vma))
+ 		hugetlb_vma_unlock_read(vma);
+ }
+diff --git a/mm/mempolicy.c b/mm/mempolicy.c
+index 8fc8a975657e..044ffb4f4128 100644
+--- a/mm/mempolicy.c
++++ b/mm/mempolicy.c
+@@ -2023,7 +2023,7 @@ bool vma_migratable(struct vm_area_struct *vma)
+ 	if (vma_is_dax(vma))
+ 		return false;
+ 
+-	if (is_vm_hugetlb_page(vma) &&
++	if (vma_is_hugetlb(vma) &&
+ 		!hugepage_migration_supported(hstate_vma(vma)))
+ 		return false;
+ 
+diff --git a/mm/migrate_device.c b/mm/migrate_device.c
+index 0c437004329d..c38cbaaef5a4 100644
+--- a/mm/migrate_device.c
++++ b/mm/migrate_device.c
+@@ -743,7 +743,7 @@ int migrate_vma_setup(struct migrate_vma *args)
+ 
+ 	args->start &= PAGE_MASK;
+ 	args->end &= PAGE_MASK;
+-	if (!args->vma || is_vm_hugetlb_page(args->vma) ||
++	if (!args->vma || vma_is_hugetlb(args->vma) ||
+ 	    (args->vma->vm_flags & VM_SPECIAL) || vma_is_dax(args->vma))
+ 		return -EINVAL;
+ 	if (nr_pages <= 0)
+diff --git a/mm/mmap.c b/mm/mmap.c
+index 4bf26b0f1e6e..98449f364af1 100644
+--- a/mm/mmap.c
++++ b/mm/mmap.c
+@@ -1786,7 +1786,7 @@ __latent_entropy int dup_mmap(struct mm_struct *mm, struct mm_struct *oldmm)
+ 		/*
+ 		 * Copy/update hugetlb private vma information.
+ 		 */
+-		if (is_vm_hugetlb_page(tmp))
++		if (vma_is_hugetlb(tmp))
+ 			hugetlb_dup_vma_private(tmp);
+ 
+ 		/*
+diff --git a/mm/mmu_gather.c b/mm/mmu_gather.c
+index 2a72a9686773..9f353f0e2ef4 100644
+--- a/mm/mmu_gather.c
++++ b/mm/mmu_gather.c
+@@ -480,7 +480,7 @@ void tlb_gather_mmu_vma(struct mmu_gather *tlb, struct vm_area_struct *vma)
+ {
+ 	tlb_gather_mmu(tlb, vma->vm_mm);
+ 	tlb_update_vma_flags(tlb, vma);
+-	if (is_vm_hugetlb_page(vma))
++	if (vma_is_hugetlb(vma))
+ 		/* All entries have the same size. */
+ 		tlb_change_page_size(tlb, huge_page_size(hstate_vma(vma)));
+ }
+diff --git a/mm/mprotect.c b/mm/mprotect.c
+index 706c679d4281..bef7b742d101 100644
+--- a/mm/mprotect.c
++++ b/mm/mprotect.c
+@@ -717,7 +717,7 @@ long change_protection(struct mmu_gather *tlb,
+ 	    (cp_flags & MM_CP_UFFD_RWP))
+ 		newprot = PAGE_NONE;
+ 
+-	if (is_vm_hugetlb_page(vma))
++	if (vma_is_hugetlb(vma))
+ 		pages = hugetlb_change_protection(vma, start, end, newprot,
+ 						  cp_flags);
+ 	else
+diff --git a/mm/mremap.c b/mm/mremap.c
+index ed19b47c2caf..1122282a1d6a 100644
+--- a/mm/mremap.c
++++ b/mm/mremap.c
+@@ -812,7 +812,7 @@ unsigned long move_page_tables(struct pagetable_move_control *pmc)
+ 	if (!pmc->len_in)
+ 		return 0;
+ 
+-	if (is_vm_hugetlb_page(pmc->old))
++	if (vma_is_hugetlb(pmc->old))
+ 		return move_hugetlb_page_tables(pmc->old, pmc->new, pmc->old_addr,
+ 						pmc->new_addr, pmc->len_in);
+ 
+@@ -1735,7 +1735,7 @@ static bool vma_multi_allowed(struct vm_area_struct *vma)
+ 	/* Known good. */
+ 	if (vma_is_shmem(vma))
+ 		return true;
+-	if (is_vm_hugetlb_page(vma))
++	if (vma_is_hugetlb(vma))
+ 		return true;
+ 	if (file->f_op->get_unmapped_area == thp_get_unmapped_area)
+ 		return true;
+@@ -1758,7 +1758,7 @@ static int check_prep_vma(struct vma_remap_struct *vrm)
+ 		return -EPERM;
+ 
+ 	/* Align to hugetlb page size, if required. */
+-	if (is_vm_hugetlb_page(vma) && !align_hugetlb(vrm))
++	if (vma_is_hugetlb(vma) && !align_hugetlb(vrm))
+ 		return -EINVAL;
+ 
+ 	vrm_set_delta(vrm);
+diff --git a/mm/page_vma_mapped.c b/mm/page_vma_mapped.c
+index 28e306fdb3a5..8408aee7571b 100644
+--- a/mm/page_vma_mapped.c
++++ b/mm/page_vma_mapped.c
+@@ -109,7 +109,7 @@ static bool check_pte(struct page_vma_mapped_walk *pvmw, unsigned long pte_nr)
+ 	unsigned long pfn;
+ 	pte_t ptent;
+ 
+-	if (is_vm_hugetlb_page(pvmw->vma))
++	if (vma_is_hugetlb(pvmw->vma))
+ 		ptent = huge_ptep_get(pvmw->vma->vm_mm, pvmw->address,
+ 				      pvmw->pte);
+ 	else
+@@ -206,7 +206,7 @@ bool page_vma_mapped_walk(struct page_vma_mapped_walk *pvmw)
+ 	if (pvmw->pmd && !pvmw->pte)
+ 		return not_found(pvmw);
+ 
+-	if (unlikely(is_vm_hugetlb_page(vma))) {
++	if (unlikely(vma_is_hugetlb(vma))) {
+ 		struct hstate *hstate = hstate_vma(vma);
+ 		unsigned long size = huge_page_size(hstate);
+ 		/* The only possible mapping was handled on last iteration */
+diff --git a/mm/pagewalk.c b/mm/pagewalk.c
+index 7411702a37f5..e6493bbe6919 100644
+--- a/mm/pagewalk.c
++++ b/mm/pagewalk.c
+@@ -408,7 +408,7 @@ static int __walk_page_range(unsigned long start, unsigned long end,
+ 	int err = 0;
+ 	struct vm_area_struct *vma = walk->vma;
+ 	const struct mm_walk_ops *ops = walk->ops;
+-	bool is_hugetlb = is_vm_hugetlb_page(vma);
++	bool is_hugetlb = vma_is_hugetlb(vma);
+ 
+ 	/* We do not support hugetlb PTE installation. */
+ 	if (ops->install_pte && is_hugetlb)
+diff --git a/mm/swapfile.c b/mm/swapfile.c
+index 2cd0d0ba966c..c1c5fbb3c909 100644
+--- a/mm/swapfile.c
++++ b/mm/swapfile.c
+@@ -2707,7 +2707,7 @@ static int unuse_mm(struct mm_struct *mm, unsigned int type)
+ 	if (check_stable_address_space(mm))
+ 		goto unlock;
+ 	for_each_vma(vmi, vma) {
+-		if (vma->anon_vma && !is_vm_hugetlb_page(vma)) {
++		if (vma->anon_vma && !vma_is_hugetlb(vma)) {
+ 			ret = unuse_vma(vma, type);
+ 			if (ret)
+ 				break;
+diff --git a/mm/userfaultfd.c b/mm/userfaultfd.c
+index 79cc7b546f13..949017e60608 100644
+--- a/mm/userfaultfd.c
++++ b/mm/userfaultfd.c
+@@ -237,7 +237,7 @@ static int mfill_get_vma(struct mfill_state *state)
+ 	if ((flags & MFILL_ATOMIC_WP) && !(dst_vma->vm_flags & VM_UFFD_WP))
+ 		goto out_unlock;
+ 
+-	if (is_vm_hugetlb_page(dst_vma))
++	if (vma_is_hugetlb(dst_vma))
+ 		return 0;
+ 
+ 	ops = vma_uffd_ops(dst_vma);
+@@ -804,7 +804,7 @@ static __always_inline ssize_t mfill_atomic_hugetlb(
+ 		}
+ 
+ 		err = -ENOENT;
+-		if (!is_vm_hugetlb_page(dst_vma))
++		if (!vma_is_hugetlb(dst_vma))
+ 			goto out_unlock_vma;
+ 
+ 		err = -EINVAL;
+@@ -967,7 +967,7 @@ static __always_inline ssize_t mfill_atomic(struct userfaultfd_ctx *ctx,
+ 	/*
+ 	 * If this is a HUGETLB vma, pass off to appropriate routine
+ 	 */
+-	if (is_vm_hugetlb_page(state.vma))
++	if (vma_is_hugetlb(state.vma))
+ 		return  mfill_atomic_hugetlb(ctx, state.vma, dst_start,
+ 					     src_start, len, flags);
+ 
+@@ -1114,7 +1114,7 @@ static int mwriteprotect_range(struct userfaultfd_ctx *ctx, unsigned long start,
+ 			break;
+ 		}
+ 
+-		if (is_vm_hugetlb_page(dst_vma)) {
++		if (vma_is_hugetlb(dst_vma)) {
+ 			err = -EINVAL;
+ 			page_mask = vma_kernel_pagesize(dst_vma) - 1;
+ 			if ((start & page_mask) || (len & page_mask))
+@@ -1172,7 +1172,7 @@ int mrwprotect_range(struct userfaultfd_ctx *ctx, unsigned long start,
+ 		if (!userfaultfd_rwp(dst_vma))
+ 			return -ENOENT;
+ 
+-		if (is_vm_hugetlb_page(dst_vma)) {
++		if (vma_is_hugetlb(dst_vma)) {
+ 			unsigned long page_mask;
+ 
+ 			page_mask = vma_kernel_pagesize(dst_vma) - 1;
+@@ -2149,7 +2149,7 @@ static bool vma_can_userfault(struct vm_area_struct *vma, vm_flags_t vm_flags,
+ 	if (vma->vm_flags & (VM_DROPPABLE | VM_SHADOW_STACK))
+ 		return false;
+ 
+-	if (!is_vm_hugetlb_page(vma) && (vma->vm_flags & VM_SPECIAL))
++	if (!vma_is_hugetlb(vma) && (vma->vm_flags & VM_SPECIAL))
+ 		return false;
+ 
+ 	vm_flags &= __VM_UFFD_FLAGS;
+@@ -2319,7 +2319,7 @@ static int userfaultfd_register_range(struct userfaultfd_ctx *ctx,
+ 		 */
+ 		userfaultfd_set_ctx(vma, ctx, vm_flags);
+ 
+-		if (is_vm_hugetlb_page(vma) && uffd_disable_huge_pmd_share(vma))
++		if (vma_is_hugetlb(vma) && uffd_disable_huge_pmd_share(vma))
+ 			hugetlb_unshare_all_pmds(vma);
+ 
+ skip:
+@@ -2895,7 +2895,7 @@ vm_fault_t handle_userfault(struct vm_fault *vmf, unsigned long reason)
+ 	 * (sleepable) vma lock can modify the current task state, that
+ 	 * must be before explicitly calling set_current_state().
+ 	 */
+-	if (is_vm_hugetlb_page(vma))
++	if (vma_is_hugetlb(vma))
+ 		hugetlb_vma_lock_read(vma);
+ 
+ 	spin_lock_irq(&ctx->fault_pending_wqh.lock);
+@@ -2912,7 +2912,7 @@ vm_fault_t handle_userfault(struct vm_fault *vmf, unsigned long reason)
+ 	set_current_state(blocking_state);
+ 	spin_unlock_irq(&ctx->fault_pending_wqh.lock);
+ 
+-	if (is_vm_hugetlb_page(vma)) {
++	if (vma_is_hugetlb(vma)) {
+ 		must_wait = userfaultfd_huge_must_wait(ctx, vmf, reason);
+ 		hugetlb_vma_unlock_read(vma);
+ 	} else {
+@@ -3744,7 +3744,7 @@ static int userfaultfd_register(struct userfaultfd_ctx *ctx,
+ 	 * If the first vma contains huge pages, make sure start address
+ 	 * is aligned to huge page size.
+ 	 */
+-	if (is_vm_hugetlb_page(vma)) {
++	if (vma_is_hugetlb(vma)) {
+ 		unsigned long vma_hpagesize = vma_kernel_pagesize(vma);
+ 
+ 		if (start & (vma_hpagesize - 1))
+@@ -3795,7 +3795,7 @@ static int userfaultfd_register(struct userfaultfd_ctx *ctx,
+ 		 * If this vma contains ending address, and huge pages
+ 		 * check alignment.
+ 		 */
+-		if (is_vm_hugetlb_page(cur) && end <= cur->vm_end &&
++		if (vma_is_hugetlb(cur) && end <= cur->vm_end &&
+ 		    end > cur->vm_start) {
+ 			unsigned long vma_hpagesize = vma_kernel_pagesize(cur);
+ 
+@@ -3831,7 +3831,7 @@ static int userfaultfd_register(struct userfaultfd_ctx *ctx,
+ 		/*
+ 		 * Note vmas containing huge pages
+ 		 */
+-		if (is_vm_hugetlb_page(cur))
++		if (vma_is_hugetlb(cur))
+ 			basic_ioctls = true;
+ 
+ 		found = true;
+@@ -3917,7 +3917,7 @@ static int userfaultfd_unregister(struct userfaultfd_ctx *ctx,
+ 	 * If the first vma contains huge pages, make sure start address
+ 	 * is aligned to huge page size.
+ 	 */
+-	if (is_vm_hugetlb_page(vma)) {
++	if (vma_is_hugetlb(vma)) {
+ 		unsigned long vma_hpagesize = vma_kernel_pagesize(vma);
+ 
+ 		if (start & (vma_hpagesize - 1))
+diff --git a/mm/vma.c b/mm/vma.c
+index 5df02665d1ed..b2bb444c43d7 100644
+--- a/mm/vma.c
++++ b/mm/vma.c
+@@ -599,7 +599,7 @@ __split_vma(struct vma_iterator *vmi, struct vm_area_struct *vma,
+ 	 * boundary.
+ 	 */
+ 	vma_adjust_trans_huge(vma, vma->vm_start, addr, NULL);
+-	if (is_vm_hugetlb_page(vma))
++	if (vma_is_hugetlb(vma))
+ 		hugetlb_split(vma, addr);
+ 
+ 	if (new_below) {
+@@ -2236,7 +2236,7 @@ bool vma_wants_writenotify(struct vm_area_struct *vma, pgprot_t vm_page_prot)
+ 	 * Do we need to track softdirty? hugetlb does not support softdirty
+ 	 * tracking yet.
+ 	 */
+-	if (vma_soft_dirty_enabled(vma) && !is_vm_hugetlb_page(vma))
++	if (vma_soft_dirty_enabled(vma) && !vma_is_hugetlb(vma))
+ 		return true;
+ 
+ 	/* Do we need write faults for uffd-wp tracking? */
+@@ -2355,7 +2355,7 @@ int mm_take_all_locks(struct mm_struct *mm)
+ 		if (signal_pending(current))
+ 			goto out_unlock;
+ 		if (vma->vm_file && vma->vm_file->f_mapping &&
+-				is_vm_hugetlb_page(vma))
++				vma_is_hugetlb(vma))
+ 			vm_lock_mapping(mm, vma->vm_file->f_mapping);
+ 	}
+ 
+@@ -2364,7 +2364,7 @@ int mm_take_all_locks(struct mm_struct *mm)
+ 		if (signal_pending(current))
+ 			goto out_unlock;
+ 		if (vma->vm_file && vma->vm_file->f_mapping &&
+-				!is_vm_hugetlb_page(vma))
++				!vma_is_hugetlb(vma))
+ 			vm_lock_mapping(mm, vma->vm_file->f_mapping);
+ 	}
+ 
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index aaceed4759ee..12ed3388ee41 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -3471,7 +3471,7 @@ static int should_skip_vma(unsigned long start, unsigned long end, struct mm_wal
+ 	if (!vma_is_accessible(vma))
+ 		return true;
+ 
+-	if (is_vm_hugetlb_page(vma))
++	if (vma_is_hugetlb(vma))
+ 		return true;
+ 
+ 	if (!vma_has_recency(vma))
+diff --git a/tools/testing/vma/include/stubs.h b/tools/testing/vma/include/stubs.h
+index b35279a0ec78..83ff23226ddf 100644
+--- a/tools/testing/vma/include/stubs.h
++++ b/tools/testing/vma/include/stubs.h
+@@ -193,7 +193,7 @@ static inline bool mapping_can_writeback(struct address_space *mapping)
+ 	return true;
+ }
+ 
+-static inline bool is_vm_hugetlb_page(struct vm_area_struct *vma)
++static inline bool vma_is_hugetlb(struct vm_area_struct *vma)
+ {
+ 	return false;
+ }
 
 -- 
-Cheers,
+2.55.0
 
-David
