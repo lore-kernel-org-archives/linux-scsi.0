@@ -1,72 +1,72 @@
-Received: from mail-dy1-f176.google.com (mail-dy1-f176.google.com [74.125.82.176])
+Received: from mail-dy1-f172.google.com (mail-dy1-f172.google.com [74.125.82.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA7693E5A32
-	for <linux-scsi@vger.kernel.org>; Mon, 12 Oct 2026 23:53:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D80E93A7582
+	for <linux-scsi@vger.kernel.org>; Mon, 12 Oct 2026 23:53:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791849189; cv=none; b=mOu2Urx1W9CKAd83edCkcicY3XXxo+DZmJjwJBFOexvF/VWMH1OAP+bZyBLk6JnMOmaoB0S4EEciZb37H+zNyUOTzoKipDL9aNEUALvggGaSkpLgRB8O8zSNd3dNE7u7aTdyjfB9HN9yoqbBu131uXVp7/ibd0PFmbZM03XklTM=
+	t=1791849190; cv=none; b=hFhGTvlecIBzg6Sx/rs5f1b4hA3epk/0SbWgsfvDYsRAs98hBqWZtFyFrUTw4+0rbo3hdAbdQfc/Ngb33AqgmWvm9DEkPlMqJ+Y9l3L95GSiVLLUmvI/ZwdxJfp3+R/Wj+2G/RMQ+jch9Qn03B9FiUN/tYPAFBaW0/QuG6AGws4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791849189; c=relaxed/simple;
-	bh=t76J3sqz2qJ+fPRoPE+QfAZhVmcccI7sNL95DAb3XLw=;
+	s=arc-20240116; t=1791849190; c=relaxed/simple;
+	bh=5wBdeGUnPAlm7PBZLEkjecF6ym2mtXkA8mkpgg0ky1Q=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=dfQkDUOK32MKZ4UINYy0mUk9C0uFIomCpVsMCLJyLFUrwtvlLKd1E2pZWhA1eWL1p2y6uOtdjiujBhowBZnUwkSJ7XcgVY7zmAINk89xqmM2ilN5w1dK7nIoqEo14u6A0X8a6KfcoZKJI1C4P/27hi5bOQRQl19Ddc081ksXCCY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=rLKIlmuC; arc=none smtp.client-ip=74.125.82.176
+	 MIME-Version; b=V0gAZuxwXB5OQsxT8rZw0wE57dEq+KbmUfDqb88Syg3c60GkUu0NHSmSZIK5+99JSq5XlNMSScMFGQfRcjF/i5nlyorjJITeqZW/1HEwyqxvejylLpjigSeUCNXmnyqiQSYA4PFYpB+Roc8ae/40WBSlFxWRf58dWTSp9uIWJp0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=I9hy/OsA; arc=none smtp.client-ip=74.125.82.172
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="rLKIlmuC"
-Received: by mail-dy1-f176.google.com with SMTP id 5a478bee46e88-3514e7cbbbaso6003310eec.1
-        for <linux-scsi@vger.kernel.org>; Mon, 12 Oct 2026 16:53:07 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="I9hy/OsA"
+Received: by mail-dy1-f172.google.com with SMTP id 5a478bee46e88-33e6279a1d7so1341787eec.1
+        for <linux-scsi@vger.kernel.org>; Mon, 12 Oct 2026 16:53:08 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1791849187; x=1792453987; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1791849188; x=1792453988; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=qCO5VIn7/AVovHGm5p+1CL9DNwCT8zaieYbXwRxck7w=;
-        b=rLKIlmuCeeLrGnid6NzGEf4DXJsMnxV5smuODVgTrivkWZ6UWtqYFLIUWYWbsgktnq
-         IXuL4ytqYGZ4pa9uYqvJhAu7tyJKJ8M5soTbixbjgeI8LMvJoOX+oMo5g2gGT0vGcwTm
-         7zSZoXJlU8yDK7gPRa0Xji1WszjRyq9YvbKEpcab8hT0zANiAV3+GZJXM74O5tl7oW9G
-         h0sJwebS/2Adua65EpT2dwqPghIiWxkLALRe8LVVi7+QSL6vZcMHiJP/zOaMHAQpbgWc
-         Z4ytedLMS5FhqR4QXO0kkuNPnvD1x5Bgche2lTfXzK8REyKFz7XqEw+0rja53/CMT19r
-         Dtbw==
+        bh=1I552Ew9/tzes0NUtZGCP4YdNjd/3XBkede6vP0o/Sk=;
+        b=I9hy/OsARx1EUp/wbowfCJNL+uQNT0t4V4PPK7IFdxi5mWqRGWUFahsW5TpnMFs1K6
+         qHlb5X/OyaSgItjCLBoQdxnFngEvo9NCAKcAT9KMQQwP09aC6mmnBax4LXHqcsLyIiJi
+         7PC5KhBU1dfLc69+Pl/5MW1O3yOGiCc6V3vSC4H5PnshldfFlWw4ZLcLHOt7zJ9U58LV
+         xxba/ps10SaNEduk1UN857oJWeIJMez1bCUyO+fW9vWl4LSVzN3z5K7OMjzPsjQSxP7F
+         iHzijic0adzSshTL34zN5RL67JmdwMQ1AxX8a1CiT0gwAZBVaA3MKiKO7Ok0eAZg7/bx
+         aF1A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791849187; x=1792453987;
+        d=1e100.net; s=20260707; t=1791849188; x=1792453988;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=qCO5VIn7/AVovHGm5p+1CL9DNwCT8zaieYbXwRxck7w=;
-        b=fpymmdvJMxcVfI/r4wGCHZis+EhKELdUEHcNXrylFl8h0mWhZzzbyWJexR59jctlEC
-         nGqqJG7MnUoz6/nzM4k44TX9pIcTlwKj1DgzwpzR0obmNHRtcO7acBlajdCCVmLsa1PD
-         oxtyjUCwfna06RLl4H0graV7qwRMnaL0atmEzrInwCBib0CZNjkEmUMxL6EOoBleM+E9
-         9Ia7t03GtbvU7Zz0+rvQVB3BcXV6icQeXfUdkF3NoJ30rmE3tEe3ju3QOpIrKpZpn0V7
-         TDSsDzbQQgSdGpcjNACwo5ML/5s8iZp3Bgm8K2YYwrgvWltz4DJsUGYLfjOasKNbjMg9
-         0QDw==
-X-Gm-Message-State: AFq9FYLCCWD5QdydJUY5uYt9vK5KwrqMZk4w37okuHGT5hoIozCKjOzD
-	obeYYXRpINZvDcGD3J3z7BiCZ+hi1p9ZKBBu/Ji/7GheL2EvLcjSzEvQvWJUxObv
-X-Gm-Gg: AYBFou3ieutb88F/H9MZpi62TXyvqFzuHVPO3eWrKA+D6goozq334s6q1QxQZXvzuTw
-	Uk20U1mrhx/YMsVJ1eSXfX+RIn4G/xX3BlyCXu9WdEVFTr8VwMyzthxP3COruSdQSYs5KNZMCtf
-	BL37YNtPz7Q/91wVt3W6KOHpwWoO3MUoGHRMMTRgANx/kZPWBI5l3hurADCA8tLSsXBhKXLFX1+
-	c5Hm47MjiLOoxOrH63ohSbViGGzPpeq/CGVWXzHqv0loy0wMjxqyftV2nnS7FnDJYTjju+UJhDb
-	NVFBrj1+RBFV1yW6l/jBO1kmTJaLj2rHYkP9c1d8nw0cTGzlV8mwU/LCpqw9y9SUpKKTH5sILC1
-	Tm3586W210+UCzC0E85jOd2HG3cAm1BiYNG0rS2gZFUXYDMS5O8EWw1lj/aZqmber/+67e3+SKJ
-	Wt6v6x+mfc9LMtWjTfQ5oad0j2wwYe4s8bO81K3wRi9o8KTNNP/oHcMvfi7jj3Dbt1zdYMPCG6A
-	DeJdlsQ7LvN14C1KahQQx7k/7ZuKIXhPnWz87dDcGNdQgHvYBO/KUoHHQ==
-X-Received: by 2002:a05:7300:3b09:b0:351:1aac:31c0 with SMTP id 5a478bee46e88-3537df974e0mr20434210eec.17.1791849186677;
-        Mon, 12 Oct 2026 16:53:06 -0700 (PDT)
+        bh=1I552Ew9/tzes0NUtZGCP4YdNjd/3XBkede6vP0o/Sk=;
+        b=qeE0j8uSa9dJNq5TkBLoIvD0+Z5sBytsqy7ptpOtnEsyQrpEKfadd/zjPAyIkiCYnx
+         yiytcSz0nAZzx3XHW1CbVZ/WpDUyRF7tCEa/tnTzfHxUVPKysmmjNdClPMHBp7LU6hWc
+         u42VhryfMTl+ViDXcnWtvq0tStXVk96OzY/EBSgsAS5n7tqTVArs4iRSp4+RlGNCQagj
+         rpPsIoOpBM8OR50Dsz6bmGtmj2oVNj0uuEYEHGDqt7ZFNtqiACXjvH1jcuTN9C7Cmg3+
+         fQrn2GWl1L44NsED8v3DjHhr+LIR8qqR54RmEGjvJcYtgh5rSH1K6wk5Ch9w2ay2op6/
+         JDQw==
+X-Gm-Message-State: AFq9FYIGPu7EQy5bI6o30U9gBilusgcX0PfQ1xVF1iqaD2srJDeIuEzb
+	Y7L2Rn9uT20GERX7+vFI2KqzMIRrzmvg0j+j6DjajvWgF7YEU/TmbYBCSpUDImdB
+X-Gm-Gg: AYBFou3I5/z7rKQ1tlvm7x0lO31prNaP2qPVwiwP7JUnXNN5BmQdH0nf1fOYxHVeLh7
+	ePnzKfXPEZFez0oiyTksAkSIaGC4uo9/31wqkhaG2OgBw4mhja3tXoiOnS2nXAovGUmxRKEMvY5
+	2wEvagBaVWEqAexZsgWesvkMsYDfa0PR8TJc/MdRSZzyM4uV2VlPKLCe/9AW6Fo9UofOEUZeiz8
+	40sNsOj9INk4O0ewIs5Yzu3/1+pJwuMvenjVUDBMxYdpCHHW8vKhLrJcmP1jwLMMsb6Ogu/RqTC
+	u4IlPW/LmZMhDGw5k3vc9OFloBDxUSj7Z+uratAm51V/cdWyprmUOcXC6q1h+iQLz0gljS0Ct+P
+	gC6lrPTFh54BHXTR5B2eYBqg4VK1Qe/2Rb/CCJCu+PeWwl4GvN3I929Ow1SQXRTVGKLL6pt/Afl
+	5bWOyAh2p8cR8HIXz4NmnMs0o4dQ11VpCF5+++5bkO4J/cgg5rnnvPuKv3Ysd91t4huS11jFLHq
+	ZfxaigGCWhy3BoDC/wbOiuPv5GveZcInXdFrTXEVVHuzJDtu/Zj64H5NB13csfUMMoV
+X-Received: by 2002:a05:693c:8959:10b0:35b:da8b:f88c with SMTP id 5a478bee46e88-35bda8c2195mr2276856eec.41.1791849187811;
+        Mon, 12 Oct 2026 16:53:07 -0700 (PDT)
 Received: from dhcp-10-231-55-133.dhcp.broadcom.net ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-35b29c2f861sm15137264eec.11.2026.10.12.16.53.05
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-35b29c2f861sm15137264eec.11.2026.10.12.16.53.06
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 12 Oct 2026 16:53:06 -0700 (PDT)
+        Mon, 12 Oct 2026 16:53:07 -0700 (PDT)
 From: Nigel Kirkland <nkirkland2304@gmail.com>
 To: linux-scsi@vger.kernel.org,
 	nigel.kirkland@broadcom.com
 Cc: jsmart833426@gmail.com,
 	paul.ely@broadcom.com,
 	nkirkland2304@gmail.com
-Subject: [PATCH v6 1/8] lpfc: Fix use-after-free in lpfc_cmpl_ct_cmd_vmid
-Date: Mon, 12 Oct 2026 17:16:41 -0700
-Message-Id: <20261013001648.62289-2-nkirkland2304@gmail.com>
+Subject: [PATCH v6 2/8] lpfc: Early return out of lpfc_els_abort when HBA_SETUP flag is not set
+Date: Mon, 12 Oct 2026 17:16:42 -0700
+Message-Id: <20261013001648.62289-3-nkirkland2304@gmail.com>
 X-Mailer: git-send-email 2.38.0
 In-Reply-To: <20261013001648.62289-1-nkirkland2304@gmail.com>
 References: <20261013001648.62289-1-nkirkland2304@gmail.com>
@@ -78,37 +78,35 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-In lpfc_cmpl_ct_cmd_vmid, there is an early call to lpfc_ct_free_iocb
-when cmd is SLI_CTAS_DALLAPP_ID.  Within lpfc_ct_free_iocb the
-cmdiocb->rsp_dmabuf will be freed.  This means any ctrsp ptr
-dereference for SLI_CT_RESPONSE_FS_RJT or even ctrsp->ReasonCode and
-ctrsp->Explanation when handling a CT LS_RJT response is a
-use-after-free.
-
-Remove the early lpfc_ct_free_iocb call for SLI_CTAS_DALLAPP_ID.
-There already is a free_res label that calls lpfc_ct_free_iocb so
-there doesn't need to be an early lpfc_ct_free_iocb at the start of
-lpfc_cmpl_ct_cmd_vmid.
+It is possible that a dev_loss_tmo callback fires during an hba reset.
+The ELS pring structure is cleared by the hba reset path and the
+dev_loss_tmo callback executing lpfc_els_abort could be using a stale ELS
+pring pointer. To significantly reduce exposure, check if HBA_SETUP flag is set
+before proceeding to use the ELS pring pointer in lpfc_els_abort. There is
+no point to issue aborts when the sli port is not setup anyways.
 
 Signed-off-by: Nigel Kirkland <nkirkland2304@gmail.com>
 
 ---
- drivers/scsi/lpfc/lpfc_ct.c | 2 --
- 1 file changed, 2 deletions(-)
+ drivers/scsi/lpfc/lpfc_nportdisc.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
-index 0734ab3be3e3..f709e5087577 100644
---- a/drivers/scsi/lpfc/lpfc_ct.c
-+++ b/drivers/scsi/lpfc/lpfc_ct.c
-@@ -3576,8 +3576,6 @@ lpfc_cmpl_ct_cmd_vmid(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 	int i;
+diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
+index 9c449055a55e..2c8d995a45bf 100644
+--- a/drivers/scsi/lpfc/lpfc_nportdisc.c
++++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
+@@ -227,6 +227,11 @@ lpfc_els_abort(struct lpfc_hba *phba, struct lpfc_nodelist *ndlp)
+ 	struct lpfc_iocbq *iocb, *next_iocb;
+ 	int retval = 0;
  
- 	cmd = be16_to_cpu(ctcmd->CommandResponse.bits.CmdRsp);
--	if (cmd == SLI_CTAS_DALLAPP_ID)
--		lpfc_ct_free_iocb(phba, cmdiocb);
++	/* Exit early to prevent race with queue teardown. */
++	if (unlikely(phba->sli_rev == LPFC_SLI_REV4 &&
++		     !test_bit(HBA_SETUP, &phba->hba_flag)))
++		return;
++
+ 	pring = lpfc_phba_elsring(phba);
  
- 	if (lpfc_els_chk_latt(vport) || get_job_ulpstatus(phba, rspiocb)) {
- 		if (cmd != SLI_CTAS_DALLAPP_ID)
+ 	/* In case of error recovery path, we might have a NULL pring here */
 -- 
 2.38.0
 
