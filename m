@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 855BC377553;
-	Tue, 13 Oct 2026 11:45:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D9934D7D4D;
+	Tue, 13 Oct 2026 11:46:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791891953; cv=none; b=BWvtIzu+PQamfUWSa1Td2D/gv5QZh6SI0gPgu8gb/0J8CzNuTiKy+a+y+0Md/RLLNOuqb/KbQ9gkwDG3RbbHLopcpifQVIOKSYdOApv00APRPcIzLsz1O2pxeYZVptoesh7+qzsnY3crefOcek1L2nqIk+97/f0HRCcWj3X+Pdk=
+	t=1791892015; cv=none; b=ZSlTsb2a4eWTRL0lOGXyAQLn5+BxjTCak8i7wB+RQTUnDU6XQBTpflXpHCcvTO7oB+Ydy6ydrAvnxre9BdpAze2X8yGRySyS1odVTCFenAWbxrA7BAXU6m6QQaJFjE9WKjClRb4GqsqwThF1J95esSXVBGD0sEGE82CD1mW6HSY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791891953; c=relaxed/simple;
-	bh=EQI3ax4FBRLoqCiDF4JESV7uFzf4P4788d0hYDsvBfM=;
+	s=arc-20240116; t=1791892015; c=relaxed/simple;
+	bh=o5iE1cDO1gBt+uh4eIByivuwm67StlAGtlYV2hAA2DM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=syk/eV/mC8Ox3H1ek9RTe8I6d++7NW4X2VeBunDqMuVuuTo2lVW5TkenM6vFFLvmLg50wR/VzwIRXv7BVZNavcO9lduegOHrVNLBQwrr5R17LH9Ov4qAv4MyK0kzE/SALaHgdUVAdCc9e9xyUjZ6zqDYrGdAXT6d38sIJq5S34I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WcbsB3jt; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=cTh8O7ZwzavUmyWDSCmfn9pNhWdKnYBenj1z0Mmmhlu/OFqED3sDlKy2V0gPQ7DsOnbSdk6gtYjls1TZBhHUMkS6u8A0RZ8Yl5nMuJeXcQZs9DYJp+G5oyT+4Dv52LJe3EPuoF0gD+HWKj7GI2vv8NU//O/2ww2+7jzALhilBwQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JsNwWiGG; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WcbsB3jt"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A7DD31F00893;
-	Tue, 13 Oct 2026 11:45:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JsNwWiGG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E65921F00898;
+	Tue, 13 Oct 2026 11:46:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791891952;
-	bh=zuSfDICaEiGsOUsuUUs/M8PT2xH5gVwuhSNYHaltNBM=;
+	s=k20260515; t=1791892013;
+	bh=1nnF4ZhcdJUlBWxekcjOronR2NcHp1dKz5EHoMfEfXk=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=WcbsB3jt6ggnUvGzUReaKgzEI8mDtTInytfY/4L0UY2EorEe9hphgicKzItvTX39t
-	 Nkvy8qOh6DKVrPbR5TjupziSaZgBvlcvCG2RK2XVAR40JpMRWs5Fnw3WxwN8wSQcSm
-	 e4Pa/CbDfrSNggneSmDwlGAvBdaa5OpY2Eb28vX1tjG+241iKbITOTrqylwnvqPLJf
-	 v4RTtDmN5pnh9VqNzHooU8Qhyjm3hlSSYraGaunuKyYvgkLudVqglMi2nhQG7J7WTg
-	 aJaagzot2j4wk7DRAQoe19+N65hUjPHU95de4mavPa6fMUPk9Di3NymEkazMnwOysp
-	 y3A1k4Y5PuPrw==
-Date: Tue, 13 Oct 2026 12:45:19 +0100
+	b=JsNwWiGGPLpQBTVRJ0pxyv5sreFzDIh4DL9er2BIPqypmeADQ3+kGufnoG9MayGsG
+	 Ow2kvpxaWsj31kCiNI6YI1xtxB6jAuvoFeSUehIJRSSr8PvPf39/J2JL8+Q8gZNKpw
+	 hpaiLridC4NDmbtWtYCSXMnVcXUvRVpYaXF7fuyaM4cd4pfx2vv7Fp6hIZ2715U51o
+	 41ifwXQLKGxBc/H0/rQD53V5RTXy4cc2VVaIpPP3J14KY9KrW96ntrahOMVdTN4KO/
+	 TSAFtr+2bjHgQH5lauCoZ5P/rczb+ytBLkrNPZZt6Dfwz5bTKu9NMmntqhvn+1eShm
+	 h0kZ4EeW1vuHA==
+Date: Tue, 13 Oct 2026 12:46:21 +0100
 From: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
 To: "David Hildenbrand (Arm)" <david@kernel.org>
 Cc: Andrew Morton <akpm@linux-foundation.org>, 
@@ -87,12 +87,12 @@ Cc: Andrew Morton <akpm@linux-foundation.org>,
 	kvm@vger.kernel.org, kvm-riscv@lists.infradead.org, linux-riscv@lists.infradead.org, 
 	linux-s390@vger.kernel.org, sparclinux@vger.kernel.org, fuse-devel@lists.linux.dev, 
 	Ihor Solodrai <ihor.solodrai@linux.dev>, Bert Karwatzki <spasswolf@web.de>
-Subject: Re: [PATCH v5 34/38] mm: eliminate VMA_SPECIAL_FLAGS check in
- lru_gen_look_around()
-Message-ID: <as4ZgBbVflWECfxW@gremlin>
+Subject: Re: [PATCH v5 35/38] mm: avoid use of VMA_SPECIAL_FLAGS in
+ migrate_vma_setup()
+Message-ID: <as4Z_ASrMbQ-eMTn@gremlin>
 References: <20261009-b4-mmap-prepare-vma-flag-sanify-v5-0-923b70125b1e@kernel.org>
- <20261009-b4-mmap-prepare-vma-flag-sanify-v5-34-923b70125b1e@kernel.org>
- <22dc04ac-c046-4baa-9bdf-a5ba07c0c0ca@kernel.org>
+ <20261009-b4-mmap-prepare-vma-flag-sanify-v5-35-923b70125b1e@kernel.org>
+ <214514be-a935-485b-8925-07d84c1063f9@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -101,30 +101,37 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <22dc04ac-c046-4baa-9bdf-a5ba07c0c0ca@kernel.org>
+In-Reply-To: <214514be-a935-485b-8925-07d84c1063f9@kernel.org>
 
-On Mon, Oct 12, 2026 at 08:50:09PM +0200, David Hildenbrand (Arm) wrote:
+On Mon, Oct 12, 2026 at 08:52:07PM +0200, David Hildenbrand (Arm) wrote:
 > On 10/9/26 20:04, Lorenzo Stoakes (ARM) wrote:
 
-> > diff --git a/mm/vmscan.c b/mm/vmscan.c
-> > index 3b318efa2916..7adffe8182b3 100644
-> > --- a/mm/vmscan.c
-> > +++ b/mm/vmscan.c
-> > @@ -4418,8 +4418,8 @@ bool lru_gen_look_around(struct page_vma_mapped_walk *pvmw, unsigned int nr)
-> >  	if (spin_is_contended(pvmw->ptl))
-> >  		return true;
-> >
-> > -	/* exclude special VMAs containing anon pages from COW */
-> > -	if (vma->vm_flags & VM_SPECIAL)
-> > +	/* exclude fixed and non-mm-managed VMAs containing anon pages from COW */
-> > +	if (!vma_is_mm_managed(vma) || vma_is_fixed_mapping(vma))
-> >  		return true;
->
-> If you keep the droppable thing out there you can just use
->
-> vma_is_mm_backed() here I think.
+> > diff --git a/mm/migrate_device.c b/mm/migrate_device.c
+> > index b9c453c28795..289d7b08ace4 100644
+> > --- a/mm/migrate_device.c
+> > +++ b/mm/migrate_device.c
 
-Yeah I think you're right, will update for v6!
+> >  int migrate_vma_setup(struct migrate_vma *args)
+> >  {
+> > +	const struct vm_area_struct *vma = args->vma;
+> >  	long nr_pages = (args->end - args->start) >> PAGE_SHIFT;
+> >
+> >  	args->start &= PAGE_MASK;
+> >  	args->end &= PAGE_MASK;
+> > -	if (!args->vma || vma_test_any_mask(args->vma, VMA_SPECIAL_FLAGS) ||
+> > -	    vma_is_dax(args->vma))
+> > +	if (!vma)
+> > +		return -EINVAL;
+> > +	if (!vma_is_mm_managed(vma) || vma_is_fixed_mapping(vma) ||
+> > +	    vma_is_dax(vma))
+>
+> Same here, with the droppable thing changed this would be
+>
+> !vma_is_mm_backed() || vma_is_dax(vma)
+>
+> I guess.
+
+I think we need a hugetlb carveout too (ugh), will update in v6!
 
 >
 > Acked-by: David Hildenbrand (Arm) <david@kernel.org>
