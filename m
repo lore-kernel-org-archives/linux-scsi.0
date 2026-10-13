@@ -1,72 +1,72 @@
-Received: from mail-dy1-f170.google.com (mail-dy1-f170.google.com [74.125.82.170])
+Received: from mail-dl1-f53.google.com (mail-dl1-f53.google.com [74.125.82.53])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 062743DB994
-	for <linux-scsi@vger.kernel.org>; Mon, 12 Oct 2026 23:53:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 529083AA4F2
+	for <linux-scsi@vger.kernel.org>; Mon, 12 Oct 2026 23:53:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791849192; cv=none; b=K2vbzOpeYEIj3+8qO80NGCxzQSKPXd+bb5mm3OuU4ksxB3oG9qhTw18tRme8TAfxotksLGL+8k52G2qeXzCMGZQZ9uHP96NqqyJxBXWW1ZUxJLBVS7O2CN7Bb1uv5i6SLlpj/yu0lrE7F7LSRJQ/FNkwl6yUypLgGdOiCnCEzuk=
+	t=1791849193; cv=none; b=HMVxhoGfzepbLiSl3+UNQ+BQvDfxrM7v4kH+edJ+GEnqFmQtVVehptuNlR57VlxD+2pgKB6iPhiSNCUHjMi6Z1NEEMtq+j9hr6wtxXCpq9f9niYTLxrHB6ESbK1B9Yg4mSBVtmqki90fyv+lXKFgI5JDOhMFXNdZfZOoMgeTgkc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791849192; c=relaxed/simple;
-	bh=U+DwUE0uurjjDte0NsN6cmtF9j4nWywD15pkrJetPVM=;
+	s=arc-20240116; t=1791849193; c=relaxed/simple;
+	bh=u3NTW4TF2J/fqYvafkDu/Pkk2RY6Ig3tg/l2jpZlum4=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=MvzfYhkOsItVJ2N/wx1b0U1JcehLZhhV4JEe5zeUwi2D8ATOBi0lSSEDmN/P3PHSvdW2jThHkG9WzcV28Kye2B23BEYLH6veu51K2BWxO0UbyRqKek8dK3wtM24Gx/hL6b5vuz7f38J2dB6azbhrfSBL7VmpXgo35/V1hm3hfJ8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=cOBHz0ay; arc=none smtp.client-ip=74.125.82.170
+	 MIME-Version; b=QE7Belz3e02ISEUAAPhUnZ3YRPz6fIgheDcJBDm5nBy13D5XYw4l6saNFabqYnQ0l7FMv6/4F171TSWpD37mR9tXZ/ilGyYN1Hz7y/19sBUipjCjuzbosQGcnaDWXs3uj2ZYunbdXSxEfXNiKpO+FldnX+91YSkmGCwecOoEl/0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=l4wd9VhZ; arc=none smtp.client-ip=74.125.82.53
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="cOBHz0ay"
-Received: by mail-dy1-f170.google.com with SMTP id 5a478bee46e88-3535bf8b3e0so3724634eec.0
-        for <linux-scsi@vger.kernel.org>; Mon, 12 Oct 2026 16:53:10 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="l4wd9VhZ"
+Received: by mail-dl1-f53.google.com with SMTP id a92af1059eb24-15ea896ddc8so3374039c88.0
+        for <linux-scsi@vger.kernel.org>; Mon, 12 Oct 2026 16:53:12 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1791849190; x=1792453990; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1791849191; x=1792453991; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=WKqTTNOUPJPjcRmMteqhHp/MGik/ghthsy575wyp2OI=;
-        b=cOBHz0ay1tmVFK2IgNbsqFBbCrow7MYHIpO8bRo9mje0chayzAp2VE0VvqG8FOHn0t
-         6B1EZDxhraqzO3EceRB7lqm9/jQo9OSXG9Hg1/zNJvSr1EN/9tP471uj7u8DB5VY4DFY
-         4lleKXWFpWTDtTfnDem6H56pWS3SxmbyX4qLevglGBAwsZyn7JauLm55sL9vHLkgyl2N
-         gTOgGTqK1lo1hggRc3Pivl3NLBdcSm8V+XItrBWfYgDR3oslWf6q+Nku62iecnNK/m/a
-         bRwvBzbJtbli7mP/o15ZXMBo0PL6tVMyPEJtWxw+rni7kftxK6ZsOq9oyyCzvFTS6whi
-         /Yrw==
+        bh=Lly4oUBlk3WeftbIfcVx/NFfRYGOA+OADKb5EF5cmn4=;
+        b=l4wd9VhZHtkGsOp7TuKf9cQE6zQTfUMK+AIu1tQrxaUMk+JMLfCGteOv4k2GkKAe/r
+         Ds0q/P9fKkNBDnonsKOnyRCdOQ2oew4H2yqd/VVU4QTJqLbsgVFY/n0sOThAptUOzDoV
+         PeGDlUGq1gfL7BkM4GmiMTC6NPEiaOFPLZ6AfxPuytxTVYq11EhfkjMr3sndv37MaSbm
+         KqyNumgRZbJefa4ivQ8KiNeyDPxc1mGnGu36tZ0MKvmZLKWWqCTQs5XLRjlPx1K0qsRE
+         yq9L3NBPoFv0Kao/49vd3lZnCEaP2NFXj/0b0ahBU5tb0qXjldYzGDwV3nowA+0xJcd4
+         2x3g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791849190; x=1792453990;
+        d=1e100.net; s=20260707; t=1791849191; x=1792453991;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=WKqTTNOUPJPjcRmMteqhHp/MGik/ghthsy575wyp2OI=;
-        b=F4BmCPZyyXPxPfpxPzDXonjjQGmtwOqFfaFlgTMV/sYhG0ATWFuO7lecs3KsRzs5YL
-         tWEX6KB5y0Ha7aDy/AClA/WJ8FZoSKBf0pjP5yqLor6+l7FI1sMQO32DA1p/zO8b0Iep
-         Nz8cOdIlxOKG23qanZvDD81l6EIvYqX3fX2QWoNU7L5912qygOb+BGs/000QLENJBqro
-         6uAK9wowFe4msorIOPOQzcyQsaipdTNUAODzZiA+edIaDfr7uKSlDZ+1Nxjn3a4G/6E5
-         TgfN7UzYJl6VOYFVfwbb18znGwBXYKSNYWQCUtcFCQXbXyBRjiOnfIoT8RktWUHraWLa
-         mxnw==
-X-Gm-Message-State: AFq9FYKma+eMvlWJHQWSTDXa7xs2Pgtsfh3csmtirQ38VCXMCd+U3oJU
-	HUnOzlhoDR34dwnAiKmFz5WBZsi28GhzlQ8s4fvNSCxgEVqjMgC4rOKuEPKNzZUb
-X-Gm-Gg: AYBFou1AQ9Xfy2Smo3Rm8DN57TW/A9xPBqLmmw6lBZxjqaBXPk1lovJQKSXl9z+xn65
-	REBX8kSs0k8cSjFS/vVJUl4xqEuCzsH/Ic94JypZN+KZStHYpikD4GyLNcIJTcAgsu7gnvRe2Fs
-	14l3rQgydJ1Fovjxa2YGYKiM9m5A5yfs6aCyMGn2HwOZRLEEgXOCLUGaA3FefWTDG+oEqxX9jj1
-	KHyHG1zrUSr2mVJgGnXkM9EUNJLOq6D9C0sS9Wh7LCir6zFt/MgYcfKedCh9KiDlEPhEKW7uxKH
-	X92otNG2t1plOFsSm/ocNwCZT6smwSzVzEUHUnyHax0PK/MiD+pKWAblInXrYYEM+dIREfGAAKM
-	vi6QEWTrPVU+BmzeRR22dEO9eVbfWbSqEL3t4pN2Bplb2FyMJgVQi/Ntpg5ejZAvMWxr0RQNtvl
-	PlSKUPFyRiWjaszswf9YLEFTANjy/44sIHrNQqXZCwz05oX9sl/BQOmVsGt5fx3E435eFZhQmOQ
-	cWLEXQ4u6Q6qkgp1sH9XMEDO2AZqMkM0cZ/rCLmez8prgXCqoFw7jJtLw==
-X-Received: by 2002:a05:7301:4714:b0:359:d728:ea39 with SMTP id 5a478bee46e88-359d728ec5amr7797428eec.25.1791849190024;
-        Mon, 12 Oct 2026 16:53:10 -0700 (PDT)
+        bh=Lly4oUBlk3WeftbIfcVx/NFfRYGOA+OADKb5EF5cmn4=;
+        b=i2Elv6XTC2yu87Li7Hxv9eRM1LDO22bw/KuendbgDCZjjZdrfdQPzwh9zbrwJRkefA
+         0rIrufK6OBPRw1kQ+baQD8COr4b68IC3Dx68RvGmqsL/BBdx0mDBwCsvBImW6X+7OjRB
+         4Dtlh5UoJD5MbklZbxnPQvzhBpUoihlqbYYlVdIzeFGt+LKR75IjMlBuIpt1x0Syd2BS
+         VjdN16hhqIJmUJ0IYtUTqM0TuajwrS6SY2wl8Et/siPa+WMnRvd4Xs3iLU5WDDAa+JJ7
+         oIUtgz+8fPg+e0ptn9pnmx9BlbYlyeInQv4B2fOb6DScHHupAD9vB3JJTsvlaV2daBp3
+         RTbg==
+X-Gm-Message-State: AFq9FYICd0ae6AUwTo2bWaqMZ66v1doLnwRvOlm1bY2gc+D5S81Yq8kR
+	HMF2rnazjFXWsNlkMO1MjaNvQDzATsDbGJxJfKNtItkRcDJXnhDDhqLalyloYDQ5
+X-Gm-Gg: AYBFou2Sz+wLs0f0EBcc8G6kMQ2vY41FjVfyHedAirla+bCh4tIh4X6QiivMyyaSgt2
+	MDo7ATnrHeyflT1I1rlTm3i7yJDkVOCMKfFSFZqgYRd8g9NpwcBO6NtKPzwjMfR2cMze673AE+O
+	coHLq4+xMOVB6exfh12u17BFWrSadCVS/MUnEcRDU6H75sUey0xwIHT/46U7lGE6GsyX0ZkKBKW
+	8FMPagmNH5fExlNf2RjBxDTPr48Bh52YIDMxoZxu1vv2z/I4DJfifDjijW2QJIlLfLSbw3xzu8E
+	ymWqZPLrs3ijldQu56ze5gqGqjLw+ev0J7LilrX1LiDguYmJc6LeVGUeEY2LTDU9BmCfKl34MCy
+	KTAKeC5HQogOSWHPzCbSfKU186Us+xAsYO8/RL0tnY42WBb/HfVzik46mc3x+mUvb2hfYX9XeDv
+	ykQjGZ9P6WkKEC8irRYTvJswRBV/y08mBXR4fcs4ApY4YN3hKqO7q1CD8sMrUx15PzZrFYZs9aG
+	CfVeGvEK3hp7RoC8tIuHgXsOhiVaVNyWmWyoTP7/ZStpTyE0hc6lM3F4g==
+X-Received: by 2002:a05:701b:2091:10b0:143:2968:564c with SMTP id a92af1059eb24-16a6043be98mr16023733c88.26.1791849191107;
+        Mon, 12 Oct 2026 16:53:11 -0700 (PDT)
 Received: from dhcp-10-231-55-133.dhcp.broadcom.net ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-35b29c2f861sm15137264eec.11.2026.10.12.16.53.09
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-35b29c2f861sm15137264eec.11.2026.10.12.16.53.10
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 12 Oct 2026 16:53:09 -0700 (PDT)
+        Mon, 12 Oct 2026 16:53:10 -0700 (PDT)
 From: Nigel Kirkland <nkirkland2304@gmail.com>
 To: linux-scsi@vger.kernel.org,
 	nigel.kirkland@broadcom.com
 Cc: jsmart833426@gmail.com,
 	paul.ely@broadcom.com,
 	nkirkland2304@gmail.com
-Subject: [PATCH v6 4/8] lpfc: Check fc4_xpt_flags before decrementing ndlp kref on FDISC error
-Date: Mon, 12 Oct 2026 17:16:44 -0700
-Message-Id: <20261013001648.62289-5-nkirkland2304@gmail.com>
+Subject: [PATCH v6 5/8] lpfc: Rework I/O flush ordering when unloading driver
+Date: Mon, 12 Oct 2026 17:16:45 -0700
+Message-Id: <20261013001648.62289-6-nkirkland2304@gmail.com>
 X-Mailer: git-send-email 2.38.0
 In-Reply-To: <20261013001648.62289-1-nkirkland2304@gmail.com>
 References: <20261013001648.62289-1-nkirkland2304@gmail.com>
@@ -78,80 +78,97 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The current initial kref count drop logic for an ndlp that fails FDISC
-assumes that the ndlp has never registered with transport layer and thus
-the lpfc_dev_loss_tmo_callbk never called.  However, a failed FDISC can
-occur after a successful transport layer registration too.  So,
-lpfc_dev_loss_tmo_callbk can occur and there is a potential use-after-free
-on the ndlp.
+The lpfc_els_abort routine has a code path that cancels outstanding
+I/Os on the ELS ring when attempted aborts fail.  The failed aborts are
+queued to a drv_cmpl_list and then cancelled after the ELS pring->txcmplq
+is fully traversed.  However if the abort failure returns IOCB_ABORTING,
+then the driver should not have cancelled it.  Doing so starts two threads
+working on the same iocb and ndlp, leading to unintended race conditions.
 
-Check ndlp->fc4_xpt_flags if previously registered with an upper layer
-transport and check ndlp->nlp_flags if there is a LPFC_EVT_DEV_LOSS work
-pending.  If not previously registered nor LPFC_EVT_DEV_LOSS work pending,
-then set the NLP_DROPPED flag as before and decrement the initial kref on
-FDISC error.  However, if ndlp has been previously registered, then let the
-pre-existing logic for each transport's respective dev_loss_tmo_callbk
-perform the initial kref decrement.
+Fix by capturing the IOCB_ABORTING return value in lpfc_els_abort and not
+adding it to the list of iocbs for cancelling.  We should allow the iocb
+scheduled for abort to complete naturally.  This avoids simultaneous
+threads acting on the same iocb and ndlp objects.
+
+The lpfc_free_iocb_list is moved to execute after lpfc_sli4_hba_unset
+allowing the routine to flush I/O before freeing it.  And, in
+lpfc_pci_remove_one_s4 a call to flush the phba->wq is added.  This makes
+the unload logic consistent with offline handling logic.
 
 Signed-off-by: Nigel Kirkland <nkirkland2304@gmail.com>
 
 ---
- drivers/scsi/lpfc/lpfc_els.c | 26 +++++++++++++++++++++-----
- 1 file changed, 21 insertions(+), 5 deletions(-)
+ drivers/scsi/lpfc/lpfc_init.c      | 16 ++++++++++++++--
+ drivers/scsi/lpfc/lpfc_nportdisc.c | 11 +++++++++--
+ 2 files changed, 23 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index 6f6394a0047c..4918d71ebfe4 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -11395,6 +11395,7 @@ lpfc_cmpl_els_fdisc(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 	struct serv_parm *sp;
- 	uint8_t fabric_param_changed;
- 	u32 ulp_status, ulp_word4;
-+	unsigned long flags;
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 6460127bcc7b..7352cb6e584b 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -13514,6 +13514,9 @@ lpfc_sli4_hba_unset(struct lpfc_hba *phba)
+ 	/* Stop the SLI4 device port */
+ 	if (phba->pport)
+ 		phba->pport->work_port_events = 0;
++
++	/* All IO completed and queues released. Free the IOCBs. */
++	lpfc_free_iocb_list(phba);
+ }
  
- 	ulp_status = get_job_ulpstatus(phba, rspiocb);
- 	ulp_word4 = get_job_word4(phba, rspiocb);
-@@ -11416,7 +11417,6 @@ lpfc_cmpl_els_fdisc(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 		ulp_status, ulp_word4, vport->fc_prevDID);
+ /*
+@@ -14948,11 +14951,20 @@ lpfc_pci_remove_one_s4(struct pci_dev *pdev)
  
- 	if (ulp_status) {
--
- 		if (lpfc_fabric_login_reqd(phba, cmdiocb, rspiocb)) {
- 			lpfc_retry_pport_discovery(phba);
- 			goto out;
-@@ -11427,12 +11427,28 @@ lpfc_cmpl_els_fdisc(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 			goto out;
- 		/* Warn FDISC status */
- 		lpfc_vlog_msg(vport, KERN_WARNING, LOG_ELS,
--			      "0126 FDISC cmpl status: x%x/x%x)\n",
--			      ulp_status, ulp_word4);
-+			      "0126 FDISC cmpl status: (x%x/x%x) ndlp x%px "
-+			      "Data: x%lx x%x x%x x%x x%x x%x x%x x%x x%x\n",
-+			      ulp_status, ulp_word4, ndlp, ndlp->nlp_flag,
-+			      ndlp->nlp_DID, ndlp->nlp_last_elscmd,
-+			      ndlp->nlp_type, ndlp->nlp_rpi, ndlp->nlp_state,
-+			      ndlp->nlp_prev_state, ndlp->fc4_xpt_flags,
-+			      kref_read(&ndlp->kref));
+ 	/* Perform scsi free before driver resource_unset since scsi
+ 	 * buffers are released to their corresponding pools here.
++	 * lpfc_sli4_hba_unset() issues aborts via lpfc_sli_hba_iocb_abort(),
++	 * which allocates abort IOCBs from phba->lpfc_iocb_list; the pool
++	 * must still exist, so lpfc_free_iocb_list() runs only after unset.
+ 	 */
+ 	lpfc_io_free(phba);
+-	lpfc_free_iocb_list(phba);
+-	lpfc_sli4_hba_unset(phba);
  
--		/* drop initial reference */
--		if (!test_and_set_bit(NLP_DROPPED, &ndlp->nlp_flag))
-+		/* If have not previously registered with transport layer and no
-+		 * LPFC_EVT_DEV_LOSS work pending, then drop initial reference.
-+		 * Otherwise, let the dev_loss_tmo_callbk drop the initial
-+		 * reference.
-+		 */
-+		spin_lock_irqsave(&ndlp->lock, flags);
-+		if (!(ndlp->fc4_xpt_flags & (SCSI_XPT_REGD | NVME_XPT_REGD)) &&
-+		    !test_bit(NLP_IN_DEV_LOSS, &ndlp->nlp_flag) &&
-+		    !test_and_set_bit(NLP_DROPPED, &ndlp->nlp_flag)) {
-+			spin_unlock_irqrestore(&ndlp->lock, flags);
- 			lpfc_nlp_put(ndlp);
-+		} else {
-+			spin_unlock_irqrestore(&ndlp->lock, flags);
-+		}
++	/* Flush the PHBA WQ - there could be a race with ELS IOs while lpfc
++	 * is unloading.  This stops a race between completions, aborts and
++	 * resource recovery.
++	 */
++	if (phba->wq)
++		flush_workqueue(phba->wq);
++
++	lpfc_sli4_hba_unset(phba);
+ 	lpfc_unset_driver_resource_phase2(phba);
+ 	lpfc_sli4_driver_resource_unset(phba);
  
- 		goto fdisc_failed;
+diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
+index 2c8d995a45bf..f917a5bcfd02 100644
+--- a/drivers/scsi/lpfc/lpfc_nportdisc.c
++++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
+@@ -255,8 +255,9 @@ lpfc_els_abort(struct lpfc_hba *phba, struct lpfc_nodelist *ndlp)
+ 	spin_lock_irq(&phba->hbalock);
+ 	if (phba->sli_rev == LPFC_SLI_REV4)
+ 		spin_lock(&pring->ring_lock);
++
+ 	list_for_each_entry_safe(iocb, next_iocb, &pring->txcmplq, list) {
+-	/* Add to abort_list on on NDLP match. */
++		/* Add to abort_list on NDLP match. */
+ 		if (lpfc_check_sli_ndlp(phba, pring, iocb, ndlp))
+ 			list_add_tail(&iocb->dlist, &abort_list);
  	}
+@@ -271,7 +272,13 @@ lpfc_els_abort(struct lpfc_hba *phba, struct lpfc_nodelist *ndlp)
+ 		retval = lpfc_sli_issue_abort_iotag(phba, pring, iocb, NULL);
+ 		spin_unlock_irq(&phba->hbalock);
+ 
+-		if (retval && test_bit(FC_UNLOADING, &phba->pport->load_flag)) {
++		/* An abort that fails here is just cancelled when the driver is
++		 * going offline.  However, if the abort failure is because the
++		 * IOCB is already getting aborted, don't cancel.  Just let it
++		 * complete.
++		 */
++		if (test_bit(FC_UNLOADING, &phba->pport->load_flag) &&
++		    retval && retval != IOCB_ABORTING) {
+ 			list_del_init(&iocb->list);
+ 			list_add_tail(&iocb->list, &drv_cmpl_list);
+ 		}
 -- 
 2.38.0
 
