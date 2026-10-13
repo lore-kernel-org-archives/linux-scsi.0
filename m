@@ -1,78 +1,71 @@
-Received: from mail-dy1-f180.google.com (mail-dy1-f180.google.com [74.125.82.180])
+Received: from mail-dy1-f169.google.com (mail-dy1-f169.google.com [74.125.82.169])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B956A3CB551
-	for <linux-scsi@vger.kernel.org>; Mon, 12 Oct 2026 23:00:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 97D1C3DDB03
+	for <linux-scsi@vger.kernel.org>; Mon, 12 Oct 2026 23:53:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791846026; cv=none; b=SZuXynxHMnMlPzJtW0/vFz/Lr2eSu3PlenkW7OgrDmAn84Xnts9ofN6FmZcJO0WmepJu5/hJY0xTluYMvI1kMNQdGc85zsQaWERUgU06K68AJTJ6gV3V073GhF5G0fRLq4dzq8GNSUOIn+fD64jB/J6Z+RKCcAVxr2w5UFd26WE=
+	t=1791849188; cv=none; b=Q6vy/FjOP0sTnKsTEHcqbNazgM2KFUAiIv3kP67ff1rnYzo4nEFzDpFlKFNr0ETJM/uFIapkpxbt23n48pnxBhcGHrFVZ6B4MvTsc/DVD3gExv3nikjWHZBQvUj+THt0cROUfFdpqFDh8Qf7jDadf3I8c6W1e/lf+72HYEzYHLQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791846026; c=relaxed/simple;
-	bh=CJntl5vLVbYMLsA3KBqUJDcMecoNCBVdlHh6cm6Lojw=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=lFAFkV+uCsUSS4yKlIhoMgPbLijfakVFoKDtw7iu9uLx09wuQVFwEkE6FSEv8SI9IzvYUPOcRsYN2W+X/8XVuCb5NnW0iRTGeehRmYl9lVNYYJbiZqHlQTVe8J3guGmjAigMrgh6avXh8GYc5Cc9X0oWXGYhn/kP3VpSkbLN3SQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr; spf=none smtp.mailfrom=isslab.korea.ac.kr; dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b=F4F6MMxR; arc=none smtp.client-ip=74.125.82.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
+	s=arc-20240116; t=1791849188; c=relaxed/simple;
+	bh=YXziDMRfKeg9I927ddqmPSoNHctTveDjWR82uSp74kc=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=Qc4gQ5ui528GMzOibkB4a+msV38UwShnSL+kVqHhIPWGJ4yh9K2Hd1o3QaYJNiTjGtRdPfBQMw53r0h7XUE5uAolNeQ0/z+koYW1YWlLu6G9qzLf/ATYduO5NfiEn8oVZSradtpE2Fe5CPMJco07oYi96Jq9cg7sPAJOaM4RUvQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=OyoqNDB+; arc=none smtp.client-ip=74.125.82.169
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b="F4F6MMxR"
-Received: by mail-dy1-f180.google.com with SMTP id 5a478bee46e88-33bf40b0c8bso1012962eec.0
-        for <linux-scsi@vger.kernel.org>; Mon, 12 Oct 2026 16:00:23 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="OyoqNDB+"
+Received: by mail-dy1-f169.google.com with SMTP id 5a478bee46e88-3115c4451c8so2488237eec.1
+        for <linux-scsi@vger.kernel.org>; Mon, 12 Oct 2026 16:53:06 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=isslab-korea-ac-kr.20251104.gappssmtp.com; s=20251104; t=1791846022; x=1792450822; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=M8BFdvYSISp8AAXKvEuQiO1EpCQWSnukAZdzABGNTMg=;
-        b=F4F6MMxRB63hR7L7UuWdBg59TxAVOOlV7uUWPnyOySMYgB+iVydutSDuhWSht/qCSw
-         pxqjN9EwF+AFcK5LkgJttmNIIuhS+Y2BJ1Otjrqs9jCAAUhjR2XM2B0Dp8h1EOjMf0R5
-         l3BNzv0bDofaLK5ID14CprdcRRt9NhzJ4pcgb1pj4uksbAWNfTTp44Bjx3m1A1RV31OF
-         IL5UdLf9tfINu/8yeE4/8XqpOi/NAp3w2dsDJC/cZzWGEhbdfxqZm5ZLyBrGc3sZB6Wj
-         gnUzC4FA12bGb8baGrFH9KibhPDw6fQqd6q3Jok/opLYAEScFr8hzPfwIg5U+XREPtOB
-         5jag==
+        d=gmail.com; s=20251104; t=1791849186; x=1792453986; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=AVGn1G3b0bwj3QPcyUG23lJBdQUMQdXFctIvFOnw/8Q=;
+        b=OyoqNDB+fkhNeEyUaQbt7xLLm5W/nk1jo9du8Qtj5/mV+9a3z+Xvl+6wsO6KuG19MV
+         9Pnzre9HXmQP2k1XUI/Wl0yl1nqQ0JYnneE6Pp2s8EgB/6ZyEsKMaFDj9mo0sF3N70/m
+         4fOvWFZ9gfdbeNgANhXoCP4jbbwpUasCCkw/XdB9BFiLjzH2i3SWqYAekN51ukZxY+cD
+         uuJTH/h6WPeSawEXV5+MFJ4UYWXc7sf6wc7HmjGcexM3sPpz+ORYrvwflL4/wQp0YLGA
+         OJjwGntHhdYbSRtk6J5jktwxzMf95tJt9D8OOfZVxK1UjAJ4tHxdUmmD6Q4YCHYcMqLi
+         D+YQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791846022; x=1792450822;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=M8BFdvYSISp8AAXKvEuQiO1EpCQWSnukAZdzABGNTMg=;
-        b=URWZJ0wuKYFYuSbnFcTHSwDClCo8EI8gbXxQvMgwF6R9mkAertPGBXLeNLaMv+7bP+
-         rf95IUeY2uGfFkYg8EhY8WcOghuf3fh7aKBBtb4D8vSoxrtHCpo1E/R55zpCLEabCpR+
-         UT0Eyq+QB4A2wqbPDKtCceaWVDOB1r6TpJzpI923ISJH5jOzWbMv41j0BGk2NUBdHpdh
-         o5+8QA0/3EfnW5MC/QpN0QShM75W4A/UxK3NQsnhVwETfZ1w9V6YCY4IqSCpkuZAoDWw
-         PwFQz74v6RI4KpbWW3bMqvv+dUELe+UXqBzUP+tIBrBIJvCI+a/q6fODhG0O5fdAPeSu
-         DAYw==
-X-Gm-Message-State: AFq9FYL2cGCVGEu9mkBscYa51jv8AvjURRjCh/Bz57pnYsYnJApRR0Lg
-	6/s3ynCIiXmKWdwTGoW+HINNrQR/rotM9DLBnIkBD8focmlGfg0xE/XrbvoR1ZUcaYrxgH8gluG
-	1F9ctRPKDRg==
-X-Gm-Gg: AYBFou3SfRFhXiDXJMy9gQm4LMq+TUdhvxB2QneCwL7EPQmaIYQ9WM3qQBLwQlMrDa3
-	XWakf7i82eCbxe+w0ZoDmexOnXKzfFBPgp9thcaaWT9jHROLxnl56h9ZXB+UVpCE+dSCL3Vr5ua
-	Hs8lUt7vcbTkf3TEJQRFlqU7OusgZcKc5FVjDDKTi7moWpRjlRAmRO4BkUdHML1UeJZbK5+Noii
-	ofnmYTKYOgM+tzOtrBRq8xOfVudQ6Q3tvKIB7TS8X23KiFc0YM+4NdE1zZ+2IEY6FGFO2qbdLkI
-	MegHeclaTw6x47GbcU1sFUVubtApAk9giTjTRln7BIL9n5hPDyexiV2ZrmOVvbQFpGfupPqgS3D
-	+5GRDsPunkTp+uX2dIVmLh6okuNTG1adehB4kgxt7kmez2mzEZnLjpSMcbgTz94rIDKrzs7SOrt
-	YdTr1T4bhmPypCJPsoeqMYx+DdfdRlGTYNrgVDWy8vvsYVaJGN772JBE7hfSr2oR5p1sVytXi8j
-	yGFV6SOot7TWnyjnIHs2Q==
-X-Received: by 2002:a05:7301:7d16:b0:350:2a5c:56c with SMTP id 5a478bee46e88-3537e08eee0mr15713738eec.20.1791846022251;
-        Mon, 12 Oct 2026 16:00:22 -0700 (PDT)
-Received: from yhlee-960QFG.Davolink ([2406:5900:1044:110c:7bd2:1202:246d:44ce])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-358de54fe47sm24149748eec.31.2026.10.12.16.00.18
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 12 Oct 2026 16:00:20 -0700 (PDT)
-From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+        d=1e100.net; s=20260707; t=1791849186; x=1792453986;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=AVGn1G3b0bwj3QPcyUG23lJBdQUMQdXFctIvFOnw/8Q=;
+        b=rUsjkfJP1nUgVkB0xXbiBtjT7MVCJiwYXA5/HLf7b20UVQxbHDP9TmG1IVi0w+IL8b
+         JFVKUKJ1VzYGxt8fNrHJJfJNg8nVF8EjaxBxF46wpvdU3Kqfgz5MRZURrMBixTi6uEBx
+         nMW9KPOJssRy9ggsLiYlYqnmEfSjW84hsOGT6p+7xr50L2pbsV4lal8V2bZ9krAqLV29
+         vgOc6rk8V3Hp4NNxOFja2KlclnyFCPhrUbpg+uOpOJLPC3OuNrO19UFAhrT4XKbatPcW
+         dnYEcdqI7DeNBnUFTf7jPKbszYbXgJXOg2Kf+OGCVt/DRqTDeSNiTHH8DHx3q7yBp1lw
+         lm8w==
+X-Gm-Message-State: AFq9FYK/P6kxXhja1FX2kxTdQ4Uee+UNY1PaD/FdonlwBbjTCK0hzOxp
+	+BIQCKPqez1SwRs3I6j5QWAN0js9af0X8WI/2lcoEQrZVjKLl7Y8469XnCtYo1Sc
+X-Gm-Gg: AYBFou39bDyxVM9VbDerr346sEddURacx3y3ppl8EfzKYRu46RcZudL2ztHUFeQxhH5
+	gJXd0gQ/7xcaHQyYGOVLbZQps8+vMyvNxRwiwIFATNVMMPCiaIsJG/2S/7y2IJKlT9sTdHzYnt3
+	P870xTGk1c1ZEcTZxc9081OwWjkGEp+LtJaRFz8PlJluIPnpAfG5R6sALAvdu/WbGeTeas/1DA4
+	Ly6CLisGJU96cdWs4IUxQv0EMU6CVjhz/pHaOJx+8YzC2KmzJNLPHMPOVQJmh502V4kSD94BwyN
+	Wuy1DI0PMA07N3G7YoDEfGlXep9/6O4D8LHqfC96UML2Q8kgqSN0BAss2pLMUAdprr7d+SMiB0q
+	EPy08zCBXdfTcSxMxHkPN226EK1cbf3LP8fg9PdH/Ntudxmhcsc02Xlbf1Xr3snSFw0Z/OGl0xN
+	aTQjFYkX8tapqv5UMFyV8iJM8oRQXGoEGs/KkL0q++z20DpyIuY/nktF965nAZTIGrPwOHVyg9i
+	y02zfS/+DhYkVEhIYg0H97PZ7DM2AZNcBNpkbEZx+3w2kQr6+6KxY6Grw==
+X-Received: by 2002:a05:7301:4242:b0:35a:7f06:7836 with SMTP id 5a478bee46e88-35a7f067cf0mr5400812eec.8.1791849185548;
+        Mon, 12 Oct 2026 16:53:05 -0700 (PDT)
+Received: from dhcp-10-231-55-133.dhcp.broadcom.net ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-35b29c2f861sm15137264eec.11.2026.10.12.16.53.04
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 12 Oct 2026 16:53:04 -0700 (PDT)
+From: Nigel Kirkland <nkirkland2304@gmail.com>
 To: linux-scsi@vger.kernel.org,
-	target-devel@vger.kernel.org
-Cc: mkp@kernel.org,
-	sashiko-reviews@lists.linux.dev,
-	Hannes Reinecke <hare@suse.de>,
-	Bart Van Assche <bvanassche@acm.org>,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] scsi: target: tcm_fc: reject overlapping write-data frames
-Date: Tue, 13 Oct 2026 08:00:07 +0900
-Message-ID: <20261012230007.2457828-1-yhlee@isslab.korea.ac.kr>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <sashiko-outbox-168364@kernel.org>
-References: <20261012153502.2435483-1-yhlee@isslab.korea.ac.kr> <sashiko-outbox-168364@kernel.org>
+	nigel.kirkland@broadcom.com
+Cc: jsmart833426@gmail.com,
+	paul.ely@broadcom.com,
+	nkirkland2304@gmail.com
+Subject: [PATCH v6 0/8] lpfc: Update lpfc to revision 15.0.0.1
+Date: Mon, 12 Oct 2026 17:16:40 -0700
+Message-Id: <20261013001648.62289-1-nkirkland2304@gmail.com>
+X-Mailer: git-send-email 2.38.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -81,31 +74,46 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Thanks for the careful read.
+This patch set contains important bug fixes related to cleanup
+handling in both normal and error paths, and refactoring of
+duplicate code.
 
-On the lock: a command's write-data frames are not delivered concurrently.
-A target write-data frame is a sequence request (EX_CTX/SEQ_CTX clear), so
-fcoe_rcv() steers it by rx_id onto one per-CPU queue and fcoe_receive_work()
-drains that queue serially; one exchange is one rx_id, hence one CPU and one
-work item.  ft_recv_write_data() for a command is therefore single-threaded,
-which is why the existing cmd->write_data_len accumulation and the
-== se_cmd->data_length test have run unlocked since the driver was added in
-3699d92a4d7b.  write_seg[] is updated in the same place under the same
-guarantee and adds no new shared state.
+The patches were cut against Martin's 7.4/scsi-queue tree.
 
-On the FT_WRITE_SEGS limit: a lost frame makes the byte count never reach
-data_length, so that command already fails without this patch.  The only
-case newly affected is pure reordering that keeps more than FT_WRITE_SEGS
-disjoint ranges open at once and then completes; the libfc initiator keeps a
-single contiguous watermark (fsp->xfer_contig_end), so four tracked ranges is
-already more than the in-tree initiator.
+Nigel Kirkland (8):
+  lpfc: Fix use-after-free in lpfc_cmpl_ct_cmd_vmid
+  lpfc: Early return out of lpfc_els_abort when HBA_SETUP flag is not
+    set
+  lpfc: Fix kernel oops when unmapping scsi dma buffers for an aborted
+    cmd
+  lpfc: Check fc4_xpt_flags before decrementing ndlp kref on FDISC error
+  lpfc: Rework I/O flush ordering when unloading driver
+  lpfc: Refactor calls on fc_disctmo to lpfc_set_disctmo in RSCN handler
+  lpfc: Update correct ndlp refcnt when rejecting an unsolicited PLOGI
+  lpfc: Update lpfc version to 15.0.0.1
 
-On the dropped frame: it takes the same path as the four existing drops in
-this function (no REL_OFF, DDP without SEQ_INIT, runt frame, offset past the
-buffer) - the frame is freed and the initiator recovers the command by
-ABTS/timeout, as for a lost frame; tcm_fc arms no receiver-side timer.  I
-would keep that consistent rather than make this one drop abort on its own,
-but can add an explicit abort if you prefer.
+Changes since v5:
+  - Two patches have been dropped from the set pending analysis of
+    sashiko feedback. The patches will be resubmitted in a future
+    patch set after additional testing.
+  - Updated patch 4 to address sashiko comment.
 
-Thanks,
-Yehyeong
+Changes since v4:
+  - 4 patches have been dropped from the set for review of sashiko
+    comment and soak testing of any necessary changes. The patches
+    will be resubmitted in a future patch set.
+  - Updated patch 6 to address sashiko comments.
+
+
+ drivers/scsi/lpfc/lpfc_ct.c        |  2 -
+ drivers/scsi/lpfc/lpfc_els.c       | 80 ++++++++++++++++++++----------
+ drivers/scsi/lpfc/lpfc_hbadisc.c   |  7 +++
+ drivers/scsi/lpfc/lpfc_init.c      | 16 +++++-
+ drivers/scsi/lpfc/lpfc_nportdisc.c | 30 ++++++++++-
+ drivers/scsi/lpfc/lpfc_sli.c       |  8 ++-
+ drivers/scsi/lpfc/lpfc_version.h   |  2 +-
+ 7 files changed, 111 insertions(+), 34 deletions(-)
+
+-- 
+2.38.0
+
