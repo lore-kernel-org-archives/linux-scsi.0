@@ -1,89 +1,286 @@
-Received: from mail-pf1-f175.google.com (mail-pf1-f175.google.com [209.85.210.175])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0746051EE1F
-	for <linux-scsi@vger.kernel.org>; Tue, 13 Oct 2026 15:13:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A1D8516162;
+	Tue, 13 Oct 2026 15:14:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791904422; cv=none; b=i2ykBZjPorAgtCWRr+v1NjPhzkc/Cw/m+i6KW8/57Nne7IzrB+YmL1VcSKaUqLwY2ROjn4ocZTjC2lzJatdSCrGENDsyu+yNRmU8+d+RRQ+BM55m8ttqUJGeas1YIpue77aKIzTK6isqbAXMaIpfV5WmmKajbSU2AbWXXIqIXPg=
+	t=1791904443; cv=none; b=LXp4yDA38fsTFd6sHU1ylM2/qRCfwAXSK9Yuog1Kl3Q6+I8BQydNORvlEmiwVHqBGxlXA7Co5dNKbFeFC/myZLlSDDJCwbVh4DlqVr8A8N7RMYpzeWvxqak3dXKLxZq3OZZMn4Hl+g7wSXb01ffjIDPPn35q6/9H8LfyQpFwpFs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791904422; c=relaxed/simple;
-	bh=fxKrLbuOEmB5AkcOmcb4Fp+IPQhQ9N+SgUmQy4QU0js=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ibUU2cz70HqlfPlxsnMyE9wAYOjFltuzfrKXd9YrMtrJb2OGUJtO4uWEL6tvgc9Z3N3YyuxNWg3Eys58OyB8g4+R1PUyJV2tuF4lq5GeYxmNAE+n2Cqo+Gahi7z6owmhOxOC1TUeJ4YiozWBY4Y83ttrJ1ix/gqZZ7bheAwyVrQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr; spf=none smtp.mailfrom=isslab.korea.ac.kr; dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b=FI/GVrVI; arc=none smtp.client-ip=209.85.210.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
+	s=arc-20240116; t=1791904443; c=relaxed/simple;
+	bh=2k7CL5BDCTQMRGPrACd5d5hU5TGkD0PVJs0dITN+1Po=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=tITvpz6eaiA6bWQU3AYJb0fGzIsvp69ipzdWa3rsGcPrDe/0tZ0slRaHJIkVZNglV6ZxW2enY3LO9R8FsGcY6/T6f0j2NVIrw9C4HbCX4eBeKwylJsb5QzAriEM7n6gRzk+ZYf06Rg3lqZVOVw8uQC04GbCG3UeJL1Bk6e7A1oI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EStLdfZ4; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b="FI/GVrVI"
-Received: by mail-pf1-f175.google.com with SMTP id d2e1a72fcca58-8935f42e8f0so1170643b3a.2
-        for <linux-scsi@vger.kernel.org>; Tue, 13 Oct 2026 08:13:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=isslab-korea-ac-kr.20251104.gappssmtp.com; s=20251104; t=1791904420; x=1792509220; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=XdGTvBWv6RVTx72b2QrJCUkExOa8bBmrCbj+7tkLEbw=;
-        b=FI/GVrVIB/dt/amjEfe1yg+FQbFN6bOtBbUqyzHY15VOPNsHlvdRuE2VD2tET8XmDC
-         fuFirRUUEI2AfHJX2q53aRByAYZsn394CP0+ccPIrpsysN7yfjLmEsBzVLDYl66qX29x
-         rMoUciauobi5YpeHz1IWdlNNsEL55kTzh3AG4p5ZEPqc+L1h9UbAGhhpUERKte826n/J
-         xZqgYrvOzIyEDrv3GAWlhKInH/qW/o7DOiEntyTT/amesX04b/X+ycSiye+ZS6VPY2Md
-         60m8Hs7zGD0QLmBBqAepotZSvwUNu912+VCKeF4BhYEswLaMB9EeyCAj8eiz3L2gGKbA
-         niBw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791904420; x=1792509220;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=XdGTvBWv6RVTx72b2QrJCUkExOa8bBmrCbj+7tkLEbw=;
-        b=OXeXow1oV0r1QeWL378dLNlRS7BCQUtxFqNYXcA0kL1ztM7Pg2ygYdWSgqugAW7zrd
-         CENhUn+n5cOBz+6llY6/33YddfZpTjszvDlHctKhZ55Xgg5pW8ZoTh3xAPslSeIndCXR
-         Pkwaykcz9oHPUSZm9c1h23jHKgt3aYc5TB0yzW/1ydQcA17XJpOVe5vh85z8V4db7cXX
-         P9qrg9SJntRCB3nZnzD3gBTFOix83Ryv2THscrMNGOGOvTjr4sMkBu8/UhDjWHUFvGT+
-         9fR+hiXpKxe6DJ25meCPdxrgMXx6cq4ohDwb3TPX7m9/OeGMUTtwYY2D3ZsciJ+yBecR
-         Rp4w==
-X-Gm-Message-State: AFq9FYL1H14ZQLJQHmZj/T4qUx9trzLWKjyx30JbZA/m3efmKz82hWeA
-	qhhK7rWibI3qFhJxWvUjcCClXBpJ85df2FGQDofwyzR0PfjgOlc1bPr3VAc8R35gZXs=
-X-Gm-Gg: AYBFou1j5OMXRmAJ5Kf75qMkofR0R+QkREBJpIfELQQX0wDSGnxB8pEdyxVU+qmUInU
-	ukunUjBpqiN658dQjKkkvWZAhMl7cncgSjRMpSRQnNmvZ/BVulwgmg9o9rUL8BBeZFdahCP1H+q
-	AYVT7212TvOMMTcjezO7T/Yt+Gl68R1o4UIAzSSnpl3G3YPX/tLMIdFcHaSfrJTDMkWcED8g/7m
-	K9D8irH0pblsSQbZRrNJ5PQggQl4FP5/2lXDnMwEQjytRbi5P3cbNUUqzI8y4Weun5UWmG7u+fI
-	2cndXNg9vWF3lMybjjCUmLY1DclgtlXsVC7bAnzhlN9KvtiIRouLJPl8hbx+wmLPB+WR/hLnk1C
-	Nt2sZQaRB7r9H3ATK9f5y+KzhLhGsnOJec4ZFyWOtWcMP4hpEMrFKCM0vnjONFGD3xnhDYDVnG+
-	326rvyoltxZCR2HCK1W4CC1mwnS//MM++AYjspI5RQ6hYvDm76LFPJb1nCgzQapDFHX0JrYOb+x
-	zLVLGsVtDVUHO3+LhsZ
-X-Received: by 2002:a05:6a00:2e95:b0:874:708d:b620 with SMTP id d2e1a72fcca58-897c6e1be95mr10797802b3a.30.1791904418255;
-        Tue, 13 Oct 2026 08:13:38 -0700 (PDT)
-Received: from localhost.localdomain ([2406:5900:1044:110c:c51c:be8a:c517:276])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-896c37e267csm5363547b3a.27.2026.10.13.08.13.33
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 13 Oct 2026 08:13:36 -0700 (PDT)
-From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
-To: sashiko-bot@kernel.org,
-	mkp@kernel.org,
-	James.Bottomley@HansenPartnership.com,
-	aacraid@microsemi.com
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org,
-	yhlee@isslab.korea.ac.kr
-Subject: Re: [PATCH 2/2] scsi: aacraid: bound the HBA sense response copy to the source buffer
-Date: Wed, 14 Oct 2026 00:13:25 +0900
-Message-ID: <20261013151325.3169759-1-yhlee@isslab.korea.ac.kr>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <sashiko-outbox-169893@kernel.org>
-References: <20261013140214.3156938-1-yhlee@isslab.korea.ac.kr> <20261013140214.3156938-3-yhlee@isslab.korea.ac.kr> <sashiko-outbox-169893@kernel.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EStLdfZ4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 139041F00893;
+	Tue, 13 Oct 2026 15:13:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1791904441;
+	bh=iWi4IxfnQiutVrp4mRJQjtOZDBSjGIMVxxtGuyoDWoA=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc;
+	b=EStLdfZ4K5E6tJVGJyXckKVNKvAC9pImHOjucLTUEe4cD2QIAMiyAP3JqubWVnqOz
+	 tn5EHx04+E+T1MV2gnalX9qItGYzrsCUMEq9wnfjprZc2qwgM2FrMss3ugjuJIvr7H
+	 M9XD3Kq6cBSEms0yMaPeMdl/3AX5Yv2onNx66d6bzLmdYkVM0/dy2cH2MJfBhOw5zE
+	 YhqRVMV016fA68fhVoKPkeJQHbGVcUzxRjNt10VJJLWdmHBU4jEwEhMs97pKgpVNk1
+	 gSXpxkeRLYDm99LW4xE386wi+j/RlKV1vamMWpsRMvMt1wAfAYvyKn5YTpXqkjHehe
+	 H9HHqBtgISIbA==
+From: "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
+Date: Tue, 13 Oct 2026 16:04:55 +0100
+Subject: [PATCH v6 15/39] mm/vma: add vma[_flags]_is_mm_managed()
+ predicates
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20261013-b4-mmap-prepare-vma-flag-sanify-v6-15-1aa3c9b139f9@kernel.org>
+References: <20261013-b4-mmap-prepare-vma-flag-sanify-v6-0-1aa3c9b139f9@kernel.org>
+In-Reply-To: <20261013-b4-mmap-prepare-vma-flag-sanify-v6-0-1aa3c9b139f9@kernel.org>
+To: Andrew Morton <akpm@linux-foundation.org>, 
+ "Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>, 
+ Jann Horn <jannh@google.com>, Pedro Falcato <pfalcato@suse.de>, 
+ David Hildenbrand <david@kernel.org>, Mike Rapoport <rppt@kernel.org>, 
+ Suren Baghdasaryan <surenb@google.com>, Michal Hocko <mhocko@suse.com>, 
+ Jonathan Corbet <corbet@lwn.net>, 
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+ Dennis Dalessandro <dennis.dalessandro@cornelisnetworks.com>, 
+ Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>, 
+ Paul Moore <paul@paul-moore.com>, 
+ Stephen Smalley <stephen.smalley.work@gmail.com>, 
+ Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, 
+ Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, 
+ Andrii Nakryiko <andrii@kernel.org>, Eduard Zingerman <eddyz87@gmail.com>, 
+ Kumar Kartikeya Dwivedi <memxor@gmail.com>, Zi Yan <ziy@nvidia.com>, 
+ Baolin Wang <baolin.wang@linux.alibaba.com>, 
+ Nico Pache <nico.pache@linux.dev>, Ryan Roberts <ryan.roberts@arm.com>, 
+ Dev Jain <dev.jain@arm.com>, Barry Song <baohua@kernel.org>, 
+ Lance Yang <lance.yang@linux.dev>, Usama Arif <usama.arif@linux.dev>, 
+ Kiryl Shutsemau <kas@kernel.org>, Doug Gilbert <dgilbert@interlog.com>, 
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+ "Martin K. Petersen" <mkp@kernel.org>, Simona Vetter <simona@ffwll.ch>, 
+ Helge Deller <deller@gmx.de>, Sebastian Reichel <sre@kernel.org>, 
+ John Hubbard <jhubbard@nvidia.com>, Peter Xu <peterx@redhat.com>, 
+ Masami Hiramatsu <mhiramat@kernel.org>, Oleg Nesterov <oleg@redhat.com>, 
+ Peter Zijlstra <peterz@infradead.org>, Thomas Gleixner <tglx@kernel.org>, 
+ Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, 
+ Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org, 
+ Arnaldo Carvalho de Melo <acme@kernel.org>, 
+ Namhyung Kim <namhyung@kernel.org>, Mark Rutland <mark.rutland@arm.com>, 
+ Rik van Riel <riel@surriel.com>, Harry Yoo <harry@kernel.org>, 
+ Juri Lelli <juri.lelli@redhat.com>, 
+ Vincent Guittot <vincent.guittot@linaro.org>, 
+ Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, 
+ Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>, 
+ David Airlie <airlied@gmail.com>, Will Deacon <will@kernel.org>, 
+ "Aneesh Kumar K.V" <aneesh.kumar@kernel.org>, 
+ Nick Piggin <npiggin@gmail.com>, Arnd Bergmann <arnd@arndb.de>, 
+ Muchun Song <muchun.song@linux.dev>, Oscar Salvador <osalvador@suse.de>, 
+ "Matthew Wilcox (Oracle)" <willy@infradead.org>, Jan Kara <jack@suse.cz>, 
+ Marc Zyngier <maz@kernel.org>, Oliver Upton <oupton@kernel.org>, 
+ Catalin Marinas <catalin.marinas@arm.com>, 
+ Madhavan Srinivasan <maddy@linux.ibm.com>, Anup Patel <anup@brainfault.org>, 
+ Paul Walmsley <pjw@kernel.org>, Palmer Dabbelt <palmer@dabbelt.com>, 
+ Albert Ou <aou@eecs.berkeley.edu>, 
+ Christian Borntraeger <borntraeger@linux.ibm.com>, 
+ Janosch Frank <frankja@linux.ibm.com>, 
+ Claudio Imbrenda <imbrenda@linux.ibm.com>, 
+ Alexander Gordeev <agordeev@linux.ibm.com>, 
+ Gerald Schaefer <gerald.schaefer@linux.ibm.com>, 
+ Heiko Carstens <hca@linux.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>, 
+ "David S. Miller" <davem@davemloft.net>, 
+ Andreas Larsson <andreas@gaisler.com>, 
+ Alexander Viro <viro@zeniv.linux.org.uk>, 
+ Christian Brauner <brauner@kernel.org>, 
+ Matthew Brost <matthew.brost@intel.com>, 
+ Joshua Hahn <joshua.hahnjy@gmail.com>, Rakie Kim <rakie.kim@sk.com>, 
+ Byungchul Park <byungchul@sk.com>, Gregory Price <gourry@gourry.net>, 
+ Ying Huang <ying.huang@linux.alibaba.com>, 
+ Alistair Popple <apopple@nvidia.com>, Chris Li <chrisl@kernel.org>, 
+ Kairui Song <kasong@tencent.com>, Kemeng Shi <shikemeng@huaweicloud.com>, 
+ Nhat Pham <nphamcs@gmail.com>, Baoquan He <baoquan.he@linux.dev>, 
+ Youngjun Park <youngjun.park@lge.com>, Johannes Weiner <hannes@cmpxchg.org>, 
+ Qi Zheng <qi.zheng@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
+ Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>, 
+ Wei Xu <weixugc@google.com>, Chengming Zhou <chengming.zhou@linux.dev>, 
+ Michal Hocko <mhocko@kernel.org>, Miklos Szeredi <miklos@szeredi.hu>, 
+ Xu Xin <xu.xin@linux.dev>
+Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, 
+ linux-doc@vger.kernel.org, linux-usb@vger.kernel.org, 
+ linux-rdma@vger.kernel.org, selinux@vger.kernel.org, 
+ linux-sound@vger.kernel.org, bpf@vger.kernel.org, 
+ linux-scsi@vger.kernel.org, linux-fbdev@vger.kernel.org, 
+ dri-devel@lists.freedesktop.org, linux-trace-kernel@vger.kernel.org, 
+ linux-perf-users@vger.kernel.org, linux-arch@vger.kernel.org, 
+ linux-fsdevel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
+ kvmarm@lists.linux.dev, linuxppc-dev@lists.ozlabs.org, kvm@vger.kernel.org, 
+ kvm-riscv@lists.infradead.org, linux-riscv@lists.infradead.org, 
+ linux-s390@vger.kernel.org, sparclinux@vger.kernel.org, 
+ fuse-devel@lists.linux.dev, Ihor Solodrai <ihor.solodrai@linux.dev>, 
+ Bert Karwatzki <spasswolf@web.de>, "Lorenzo Stoakes (ARM)" <ljs@kernel.org>
+X-Mailer: b4 0.14.3
+X-Developer-Signature: v=1; a=openpgp-sha256; l=5470; i=ljs@kernel.org;
+ h=from:subject:message-id; bh=2k7CL5BDCTQMRGPrACd5d5hU5TGkD0PVJs0dITN+1Po=;
+ b=owGbwMvMwCV2fu7ZrsZH9SKMp9WSGLLOeZwMZ1B8nauuatK06r3l9AMnFyoWmPkx7lpRv1/wa
+ szm4wWaHaUsDGJcDLJiiizPv4jvDxIJm9d5wd8NZg4rE8gQBi5OAZgI8zFGhmMzare9X/NjW+2j
+ t/wewjy2znuvbt64bOv3Mg+T2VN6LPUY/pmt9Qn/tOlwaNWK6Es/uu1+TeTnVM+MF/Z993Khwbk
+ 2Rg4A
+X-Developer-Key: i=ljs@kernel.org; a=openpgp;
+ fpr=E7F417BF5214569E89D04F46CF9DCD8A81E27F14
 
-You are right.  struct aac_native_hba backs err with a 512-byte union
-(resp.err / resp_bytes[FW_ERROR_BUFFER_SIZE]), so the copy stayed within
-that buffer -- it is not an out-of-bounds read -- and capping the length
-to the 32-byte sense_response_buf would have truncated valid sense data.
-I have dropped this patch; v2 keeps only the SRB bound:
-https://lore.kernel.org/linux-scsi/20261013150420.3168223-1-yhlee@isslab.korea.ac.kr/
+Rather than referring to VMA flags with uncertain meaning, add a new
+predicate that explicitly describes what absence of the VMA_PFNMAP_BIT and
+VMA_MIXEDMAP_BIT flags means, and then refer to that function for
+determining VMA mergeability.
+
+If neither of these flags are set, that means the contents of the mapping
+are managed by core mm.
+
+Otherwise they are instead owned by some other kernel component, usually a
+driver: the memory may be MMIO, kernel-allocated pages or even ordinary
+pages the driver maps itself, but core mm must not populate, reclaim,
+migrate, copy-on-write or merge the range itself.
+
+We initially also treat VMA_IO_BIT as implying a mapping is not mm-managed,
+as by implication it cannot be. (mlock() also sets VMA_IO_BIT transiently
+on ordinary VMAs while locking them, which is addressed later in this
+series.)
+
+However the intent is to in future remove this, as no mapping should be
+marked as an I/O mapping without also being marked with VMA_PFNMAP_BIT.
+
+This forms the basis of further work intended to improve how we express VMA
+properties such as this.
+
+Also update the VMA userland tests to reflect the change.
+
+No functional change intended.
+
+Reviewed-by: Zi Yan <ziy@nvidia.com>
+Reviewed-by: Suren Baghdasaryan <surenb@google.com>
+Acked-by: David Hildenbrand (Arm) <david@kernel.org>
+Signed-off-by: Lorenzo Stoakes (ARM) <ljs@kernel.org>
+---
+ include/linux/mm.h              | 53 ++++++++++++++++++++++++++++++++++++++++-
+ tools/testing/vma/include/dup.h | 29 +++++++++++++++++++++-
+ 2 files changed, 80 insertions(+), 2 deletions(-)
+
+diff --git a/include/linux/mm.h b/include/linux/mm.h
+index 438ab06a4a91..df8a5a1eb9c3 100644
+--- a/include/linux/mm.h
++++ b/include/linux/mm.h
+@@ -1612,6 +1612,41 @@ static inline bool vma_is_shared_maywrite(const struct vm_area_struct *vma)
+ 	return is_shared_maywrite(&vma->flags);
+ }
+ 
++/**
++ * vma_flags_is_mm_managed() - Do the specified VMA flags indicate that the
++ * contents of the VMA are managed by core mm?
++ * @flags: The VMA flags to test.
++ *
++ * Such a mapping is one established by a simple mmap() or brk() with no driver
++ * or other kernel component involved.
++ *
++ * They are rmappable, and core mm services rmap operations including reclaim,
++ * as well as population, CoW and merge/split (if eligible).
++ *
++ * Mappings which fail this test are those where this is not the case -
++ * e.g. MMIO, user-mapped kernel pages, udmabuf (pfnmap shmem), etc.
++ *
++ * Returns: true if the flags indicate an mm-managed mapping.
++ */
++static inline bool vma_flags_is_mm_managed(const vma_flags_t *flags)
++{
++	return !vma_flags_test_any(flags, VMA_PFNMAP_BIT, VMA_MIXEDMAP_BIT,
++				   VMA_IO_BIT);
++}
++
++/**
++ * vma_is_mm_managed() - Are the contents of @vma managed by core mm?
++ * @vma: The VMA to test.
++ *
++ * See vma_flags_is_mm_managed() for a description of this property.
++ *
++ * Returns: true if the VMA is mm-managed.
++ */
++static inline bool vma_is_mm_managed(const struct vm_area_struct *vma)
++{
++	return vma_flags_is_mm_managed(&vma->flags);
++}
++
+ /**
+  * vma_flags_can_merge() - Do the specified VMA flags permit the VMA to be
+  * merged with another?
+@@ -1620,7 +1655,23 @@ static inline bool vma_is_shared_maywrite(const struct vm_area_struct *vma)
+  */
+ static inline bool vma_flags_can_merge(const vma_flags_t *flags)
+ {
+-	return !vma_flags_test_any_mask(flags, VMA_SPECIAL_FLAGS);
++	/*
++	 * VMA merging assumes that a VMA's flags and fields completely describe
++	 * its state.
++	 *
++	 * However, mappings which are not mm-managed may have established state
++	 * upon mapping not embodied in any attribute of the VMA.
++	 *
++	 * Additionally, private (CoW) PFN maps encode the source PFN of the
++	 * range in vma->vm_pgoff, which may otherwise cause spurious merges.
++	 */
++	if (!vma_flags_is_mm_managed(flags))
++		return false;
++	/* VMA explicitly marked as being unmergeable. */
++	if (vma_flags_test(flags, VMA_DONTEXPAND_BIT))
++		return false;
++
++	return true;
+ }
+ 
+ /**
+diff --git a/tools/testing/vma/include/dup.h b/tools/testing/vma/include/dup.h
+index a6a8e53c4b38..89c645a6ad60 100644
+--- a/tools/testing/vma/include/dup.h
++++ b/tools/testing/vma/include/dup.h
+@@ -1665,7 +1665,34 @@ static inline bool file_is_dev_zero(const struct file *file)
+ 	return file && file->f_op == &zero_fops;
+ }
+ 
++static inline bool vma_flags_is_mm_managed(const vma_flags_t *flags)
++{
++	return !vma_flags_test_any(flags, VMA_PFNMAP_BIT, VMA_MIXEDMAP_BIT,
++				   VMA_IO_BIT);
++}
++
++static inline bool vma_is_mm_managed(const struct vm_area_struct *vma)
++{
++	return vma_flags_is_mm_managed(&vma->flags);
++}
++
+ static inline bool vma_flags_can_merge(const vma_flags_t *flags)
+ {
+-	return !vma_flags_test_any_mask(flags, VMA_SPECIAL_FLAGS);
++	/*
++	 * VMA merging assumes that a VMA's flags and fields completely describe
++	 * its state.
++	 *
++	 * However, mappings which are not mm-managed may have established state
++	 * upon mapping not embodied in any attribute of the VMA.
++	 *
++	 * Additionally, private (CoW) PFN maps encode the source PFN of the
++	 * range in vma->vm_pgoff, which may otherwise cause spurious merges.
++	 */
++	if (!vma_flags_is_mm_managed(flags))
++		return false;
++	/* VMA explicitly marked as being unmergeable. */
++	if (vma_flags_test(flags, VMA_DONTEXPAND_BIT))
++		return false;
++
++	return true;
+ }
+
+-- 
+2.55.0
+
