@@ -1,99 +1,124 @@
-Received: from mail-pj1-f47.google.com (mail-pj1-f47.google.com [209.85.216.47])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 685DC4EF158
-	for <linux-scsi@vger.kernel.org>; Wed, 14 Oct 2026 16:28:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0BB283D7D9F
+	for <linux-scsi@vger.kernel.org>; Wed, 14 Oct 2026 16:39:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791995313; cv=none; b=fjCLkw0iLrcU8K+7eJfkmXM5RRzvk8ArcYBIIMp2Ud/KOlpplmnU5IFJnkDaLPK+XuHuDjcY6Sfo2Uu4GLWB1rtatpvgwpSYB7jBaegfsJDARnDczcvOZrvttbuDCvGIQqiiZDOV3DLc3D/56ZMcn1yXX0zYnawuvPxNGSX2MJo=
+	t=1791995983; cv=none; b=SnESZbBtIF0/b4H5U3WRz5M0KPMaBTvf14XOc8Lyx85qjFNk8qG+WZQhu6ENge0ZptbR51yEJv0MwV/xsU/oK/7otckIWaSqgHNPy1mSGG/z2/pn5zQjd2s8J48p47uweSqkhBLpKw2+soGPiZBRrXkHGjI60c0QYO8LihxyAso=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791995313; c=relaxed/simple;
-	bh=yPehagrcDiSo/RPxpFDGlChD/sFaJFFXbcf24P4/SZQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=kDyV6jRW9+iNQyv/nMCrlUQk5PaUtWNxh8pPA69jjav9e7Qp+u23X0SCwnwKSQvFo9IDFUcrPx/E36KPhYMbTBfNd5/aGIKEMMcvBuYOdC70do08gC6oJLUHXod+JUw2Bb8Y31s0I4LBahpbrWB2T80+fxhiBf0EqpHVLZhCdsk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr; spf=none smtp.mailfrom=isslab.korea.ac.kr; dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b=lIRYVvwC; arc=none smtp.client-ip=209.85.216.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
+	s=arc-20240116; t=1791995983; c=relaxed/simple;
+	bh=kQHju2ccYea81hNOD9+GtPW58tlHTKKw6MstYT+vvN8=;
+	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
+	 Date; b=sKrRbLDHtGHfGhpbzjC0zv+RwyJoZy9bymQabPwcnVxSBXOnuY87rDI2P5jYmiFdJ74E6PzlOjDfhuqGx1VN7vXZYaWsZvM24wAz32k0GHFqp+TfUCGgaX+55I+GJQVIr7Gy4WcXM/NyScjtG6uzThLR/KSgo0NEAaV7WfZb9JQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nM9u3ZMp; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b="lIRYVvwC"
-Received: by mail-pj1-f47.google.com with SMTP id 98e67ed59e1d1-3ac91ac8924so157206a91.1
-        for <linux-scsi@vger.kernel.org>; Wed, 14 Oct 2026 09:28:32 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=isslab-korea-ac-kr.20251104.gappssmtp.com; s=20251104; t=1791995312; x=1792600112; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:date:subject:cc:to:from:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=yPehagrcDiSo/RPxpFDGlChD/sFaJFFXbcf24P4/SZQ=;
-        b=lIRYVvwCOSB2o6vXGaZ8hE9lYCM4YxgmSpYD5ifRiWsoLelYQcOxudtPE+/Z377njL
-         Hd9H/tzcAJSFxeaHTH0wgE/KIZi43UDkWF15h86S3hhYPa2CgVbzgxw/GAWcRfaO0Q8b
-         +KUr/5aKFIS/uQtXGj3ATpC9ZdRjGv3qhYKtb2TqWqI435vBuLmYGkpqrwMzDVUIossl
-         PHg4KbXiroeZq5+jctCfPUaR/uH6dGpN2b2Kqw0UVdLuQInviKgdBxv0zwR6tb5vzO8x
-         hLjZC2DH2VvXIv4Q/sKnJEkcAd8szuwpDpr7qth8Dq3ItVM0H/qH0PwWxk7HvijAsb6x
-         nqkw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791995312; x=1792600112;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:date:subject:cc:to:from:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=yPehagrcDiSo/RPxpFDGlChD/sFaJFFXbcf24P4/SZQ=;
-        b=wDBn/YXeQO+bLkGTXkrud88u5YqTseqcWV+KjAAB7wL15ZsVkEComiepcad+sTdG9s
-         /JkDUnBgBayDRy+RMXSmZyyRJ0PFWQbPdOkYZ5ix20WR0hAKaH8PUujVEI6gkxwlBuzX
-         yL23KenCswLkF+Tpnrs3lvFk4HI+9SD8G85sC4eg21zVz7R4FgVug52ipz1RW/DP93an
-         KW/T+rPDuGlyGQ8Q63Kv4YqxvHEMXLcrPa25vR/w0rMMUYh7jDA1aDcTy7/9wxmoj4os
-         4v7dRGf6/pFK7dCCZgEHndls3R/Ph9Qe3RurxrlutLK60A92Tq3GiCkbvfzog3GkfeaT
-         9lrA==
-X-Gm-Message-State: AFq9FYKJLJjREI6aumcn/C8xRzgp7vDmI9V9L4TcKDAbBlqyB/TjdM3Q
-	Um9cBvMBczvusuOfAzig90WddYpqPQCe8u/pjqoeiFVo7H8/ZIkCtuG86wnKytPk+tE=
-X-Gm-Gg: AYBFou1bJ+Pb406x3bAVeijFTH7G6szNadSdXarH+L5rRYsYkeYFpN8/lrPtdYC1sjj
-	/8mxKLYbyHuZG5+RLD1t+Ex+jv08SUx8QLg67bKhLaTyE750RNW+eMq2Mo/lKhidYM+fjiNAbqO
-	oLhLfocHKvi2gkh1klA3yXqQbA/NLvyWE8rvaC+O6RpK3oYPZNlTKqZxZURfY4IoEaVSmk2p21g
-	98TG/EsGPvEAORe4BYRTLMTpxRxUAMojQ11VV36O6QzesLXhMNodXxvwYqBw53I3qV5fevDt56g
-	u+qcigWGa6XvqIZlPulA31ssCi3QMx6bf9s7t+9Kt5XgZVyxBJEYF2Vli2/wHPuBDH7gw4PzV+2
-	67k1JLvnjZnMfhs/E/Fbk9MW0go73bv3fadrFx95IYBtsCbOmzIEujdcfsVp5PKQQjQzhu6wRLk
-	5l6g7e+mbs4Gm2PSL7hY3iep+ZsJf2cSOZJzlfY04oGuNeEufy6zQ0A6y+8OBwwNkjLanquGYte
-	NW+xSo+p6DNltFGg/6O
-X-Received: by 2002:a17:90b:2681:b0:3aa:ff61:9504 with SMTP id 98e67ed59e1d1-3ab3a9127f1mr12794263a91.20.1791995311706;
-        Wed, 14 Oct 2026 09:28:31 -0700 (PDT)
-Received: from localhost.localdomain ([2406:5900:1044:110c:1c49:61ee:8c8:3f4c])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3ac94798212sm114910a91.14.2026.10.14.09.28.29
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 14 Oct 2026 09:28:31 -0700 (PDT)
-From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
-To: sashiko-bot@kernel.org,
-	"Martin K . Petersen" <mkp@kernel.org>,
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	yhlee@isslab.korea.ac.kr
-Subject: Re: [PATCH v5 0/6] scsi: mvumi: bound the values the firmware supplies
-Date: Thu, 15 Oct 2026 01:28:18 +0900
-Message-ID: <20261014162818.3650987-1-yhlee@isslab.korea.ac.kr>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20261014151914.3632701-1-yhlee@isslab.korea.ac.kr>
-References: <20261014151914.3632701-1-yhlee@isslab.korea.ac.kr>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nM9u3ZMp"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6E8ED1F000C4;
+	Wed, 14 Oct 2026 16:39:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1791995981;
+	bh=a9istGm0okFqLytv2+rEhKqRL8/7mddRC6aGzqPEBj0=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=nM9u3ZMpZa4Y72X9KeJdcjNUfGHS3siIS4CszCJ1OQx9z9w2s+Qw3Y805qyG17tJW
+	 0qt/tvB3B1CY2g9qnV3fYydfQ7NmpKeu2c3yfLQsA40aHMSGnEmgvPVlOlpNXs6evZ
+	 QiH0KaZ9JcRmz2JISpInR7xTq2MfKfTFo2r60qygI71UhzeE79/JlD5zRto9OhpvCZ
+	 5UZ4K0hJY+7KlCuD+FRwJGcf4s/W4T45j0RvOZ3vAULyKRx+sIyROdzhW6Byyqjp+S
+	 4nK5CifcOo2XgCXrlgjBvI6yvidz6OrR5YrwD7s/wnj2bKmaqON+TNXU0g7bbyfpjA
+	 UVDPaXqfKBKVw==
+Message-ID: <sashiko-outbox-171547@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v6 3/5] scsi: mvumi: bound the hotplug event bitmap
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Yehyeong Lee" <yhlee@isslab.korea.ac.kr>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20261014162413.3649841-4-yhlee@isslab.korea.ac.kr>
+References: <20261014162413.3649841-1-yhlee@isslab.korea.ac.kr>
+ <20261014162413.3649841-4-yhlee@isslab.korea.ac.kr>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 14 Oct 2026 16:39:41 +0000
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
 
-Superseded by [PATCH v6 0/5],
-<20261014162413.3649841-1-yhlee@isslab.korea.ac.kr>.
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [High] scsi: mvumi: unaligned memory access in find_next_zero_bit()
+- [High] scsi: mvumi: unaligned bitmap access and overlap in hotplug event
+--
 
-The real defects the reviews on this series found are fixed there: the
-target/LUN alias from 6/6 is now a device-count bound in 4/5, the shift
-counts 4/5 checks are read with READ_ONCE() so the checked value is the
-shifted one, the hotplug bitmap is bounded by the transfer length rather
-than the buffer, and the response frame tag is validated where it is used.
+commit 858b7c6c7bb4515208e9ef60baca2c850663e824
+Author: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+scsi: mvumi: bound the hotplug event bitmap
 
-The rest I did not change, and the v6 cover letter says why: the driver has
-no device-to-host endianness conversion anywhere, so converting one field
-would be inconsistent; the bitmap alignment, the size >> 3 overlap and the
-truncating shift in mvumi_delete_internal_cmd() are pre-existing and want
-their own patches; keeping the sizes across a shrinking reset is correct
-because the driver is what publishes them; and there is no ordering pair
-for a dma_rmb() to protect.
+This commit bounds the hotplug event bitmap to prevent the firmware from
+reading past the event buffer. It checks the hotplug event size against
+the expected structure length.
+
+> diff --git a/drivers/scsi/mvumi.c b/drivers/scsi/mvumi.c
+> index 2378b676a7a78..9a3dde53dea97 100644
+> --- a/drivers/scsi/mvumi.c
+> +++ b/drivers/scsi/mvumi.c
+> @@ -1652,11 +1652,25 @@ static int mvumi_rescan_bus(void *data)
+>  static void mvumi_proc_msg(struct mvumi_hba *mhba,
+>  					struct mvumi_hotplug_event *param)
+>  {
+> -	u16 size =3D param->size;
+> +	u16 size =3D READ_ONCE(param->size);
+>  	const unsigned long *ar_bitmap;
+>  	const unsigned long *re_bitmap;
+>  	int index;
+> =20
+> +	/*
+> +	 * The second bitmap starts size bits into the event buffer and
+> +	 * find_next_zero_bit() reads it a long at a time, so that is the
+> +	 * furthest the two scans reach.  Bound it by the length the firmware
+> +	 * was told it may write, not by the buffer: the bytes past that are
+> +	 * still zero, and a zero bit here means a device is present.
+> +	 */
+> +	if (sizeof(*param) + (size >> 3) + BITS_TO_LONGS(size) * sizeof(long) >
+> +			sizeof(struct mvumi_event_req)) {
+
+[Severity: High]
+Does this code introduce an unaligned memory access and potential overlap
+between bitmaps?
+
+Looking at struct mvumi_hotplug_event, the bitmap array sits at a 4-byte
+offset:
+
+drivers/scsi/mvumi.h:
+struct mvumi_hotplug_event {
+	u16 size;
+	u8 dummy[2];
+	u8 bitmap[];
+};
+
+Since param->bitmap sits at a 4-byte offset within the DMA buffer, casting =
+it
+to unsigned long * and passing it to find_next_zero_bit() in mvumi_proc_msg=
+()
+will cause an alignment fault on strict-alignment 64-bit architectures.
+
+Additionally, if the firmware provides a size that is not a multiple of 8,
+does the size >> 3 offset truncate the remainder?
+
+If truncated, re_bitmap will overlap with ar_bitmap's memory, which might
+cause the same bits to be scanned for both device additions and removals.
+This new bounds check explicitly relies on the size >> 3 offset without
+accounting for the unaligned access or overlap.
+
+> +		dev_err(&mhba->pdev->dev,
+> +			"invalid hotplug event bitmap size %u\n", size);
+> +		return;
+> +	}
+> +
+>  	if (mhba->fw_flag & MVUMI_FW_ATTACH) {
+>  		index =3D -1;
+>  		ar_bitmap =3D (const unsigned long *) param->bitmap;
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261014162413.3649=
+841-1-yhlee@isslab.korea.ac.kr?part=3D3
