@@ -1,73 +1,73 @@
-Received: from mo4-p01-ob.smtp.rzone.de (mo4-p01-ob.smtp.rzone.de [81.169.146.164])
+Received: from mo4-p02-ob.smtp.rzone.de (mo4-p02-ob.smtp.rzone.de [85.215.255.80])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 071EB4BEE30;
-	Wed, 14 Oct 2026 10:02:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=81.169.146.164
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D92D4A3F3B;
+	Wed, 14 Oct 2026 10:43:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=85.215.255.80
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791972165; cv=pass; b=SUx7/qH+NROJbYo33qWbAF2qcqsXs91Jn9+YI0UACr9WpXP49t/zXBFcYX45VEbfJmKoluUg+CvT4y2FILLR/IjapV1INZkulYy0ScoGz+91h6ZeE4+JHlpscshpTKPRmbk21GHdjMsfvlq0ZviRG7z2szzhtOkwky7BvHm65ZQ=
+	t=1791974623; cv=pass; b=eByTsGb1/33Fz0LtBD8TEaYHHfPg890uL0gDHbpK8DMvAdonWK0ttdlVB/Zbj/Ne6/i4aVq+osc6qWnmeRZwVVaf4i2pUFVKA4c0KiclPyLuKvdj0N52re6cPCzaroKWL2fYozQynNrcWqhhDBIRcl15L9oSSchjqu7RfNQum1k=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791972165; c=relaxed/simple;
-	bh=LU7vNk9YRQ1bVdmZHWK7IWnOehUVxwe+e/ZzXKTUHlU=;
+	s=arc-20240116; t=1791974623; c=relaxed/simple;
+	bh=5x3u6FiR8qckv8HF7OAp0XN3GDedSEoUChbL0yqk9NI=;
 	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=NDBGIaAU892dI7JsGDfqH/ztSM3vXiSz/sofVIPdS3WDKb5lb/D+DDwoHMQU6ICGmDzIkwvrKujuVed+xQIEOiOfoykxV28mEozzpAERSbqCeXvzS0nF904Q6dUFcktEqGQSzg4ga1EUv2X7i0rIdCA4k7fG8pU/Si6krhQHLPE=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de; spf=none smtp.mailfrom=iokpp.de; dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=P6g4o/PQ; dkim=permerror (0-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=Bfzu6UdI; arc=pass smtp.client-ip=81.169.146.164
+	 Content-Type:MIME-Version; b=nhr0XUf9ctuyNRQDP/oRI+qoiEB3FOjTfCrJtn+gRpQzBSNQ4u23wBhoakG3cx66mlW1+py5k1GLiXCvhp70eoHesxdd98NkqXeKTCnizNn0sk0b2SbCWF/QO9IIFYVSaOjnrqcdkYTz7UKdxcLcVdJ3NzfxEyVPWT76LOnXgI8=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de; spf=none smtp.mailfrom=iokpp.de; dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=hUS+ocX+; dkim=permerror (0-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=l6rdbnAn; arc=pass smtp.client-ip=85.215.255.80
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=iokpp.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="P6g4o/PQ";
-	dkim=permerror (0-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="Bfzu6UdI"
-ARC-Seal: i=1; a=rsa-sha256; t=1791972158; cv=none;
+	dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="hUS+ocX+";
+	dkim=permerror (0-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="l6rdbnAn"
+ARC-Seal: i=1; a=rsa-sha256; t=1791974612; cv=none;
     d=strato.com; s=strato-dkim-0002;
-    b=Wt9QYJIMbvQvExV74rkMMGrMtoQl1RaxB5LYWO3T6/DlIKABs/uGFGREwSfLcK/OU2
-    NRz/0ASbebaI71zaeHA7GLEg1vYsb8IYI0yoTEFCjTyPqbWzCcnwUk21epbMG7EtrYXg
-    FUW2dMpsXO31YPJUdMNbN+W4FOyfbrVRyvqGXkc+r330QhweUG5r5lnGxOjukoaYou0e
-    Mg4jMHim2Lks+L4Fi01dh3Xu4++SZscZwW0Dh+6otezF1Sws0jTNUYzEPs8R5UXylm4w
-    M6HEtyzXodIiLuNDEEB31McD8JaQXJwJjB2ux0BpgxDXzvs3pBgpZ4wv5xFhKeLPrWV0
-    ISKA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1791972158;
+    b=rozXirl2H8Nl9/n7e0eazNK/Qscin6anq4zwtddIecm2bbE2jJ/Dh4AbszU0x8uMnC
+    1y7xRVgB0ELBGDVpJTzoJ15334vjLcZU01xfrsoXJxllz4I0lQo+M8HkJvtQqCu+F/Ha
+    C85CfBfZdFbzUM7dWDcX3YAeqLrhYWjhbjFwRs1DeOIQ7XbgjgLI/caS5p1GsBn1+Cx/
+    3HPfLGYOH++x2hgkl31poanxcWeCMyogA2GCw9IDV/EcZVXePRrFWtVb/h6J4eJgIl8b
+    YcILrfqyktE8HkxtcNkLFns27cXtzmfMGlF1X2c1oATrzIuDguIwJd0C1/y1GiAKlb18
+    Po0g==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1791974612;
     s=strato-dkim-0002; d=strato.com;
     h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
     From:Subject:Sender;
-    bh=LU7vNk9YRQ1bVdmZHWK7IWnOehUVxwe+e/ZzXKTUHlU=;
-    b=GeyvGAA2a3F8s8kPAVIEiOQBzf50+Vsq+ajLDWj+bOZRn9y7YCF+SeFJ/kpkufixmf
-    Q4AGcnTOK3MrimoKBzFL4PutsyLCkmi+wNfu+tAeFbtdr/MoZp618H7O5/JAHiazNJwb
-    Lw1dfQb7eyDVEvKeeofbwjj1iITEoLDOq9SW/I8vuD35tQgsWkOlM5qjMpWMJq4BKk0I
-    oLK5JhtxAXajN0w+RzHzyWXiRM86m0vy8LO2dJxTiRNdotp8C75eUzil2hgTOK7tzpBe
-    7TZkSlMBenMKlTE/MXYfgKcNEDquCs6fo0nqa9uNuoNBjDltDjJOTM94ZOH3Jq4m7r61
-    Clmw==
+    bh=5x3u6FiR8qckv8HF7OAp0XN3GDedSEoUChbL0yqk9NI=;
+    b=E4cYyf9x0geOUmdAbksbptRmbGfWIrMouyc7WmY+ISjkhaboLc/ypSOYn5/nBI6RX6
+    qlArPdiiADJb6EyvFng63sXv0961p4Mn1ZRTaJU1eMjeVLM1Ba9Vrg+o8YDmHGspILlQ
+    Ar181JahhFxZ3Bum9dbFoCgCOKLZNanjh7LVFIF121mocPcyka1oq19gQWuAMRJXhK5S
+    ZCZPVI+XmaI8yT3v1S/NQHMIM8c/YxMDfPE3GDBVH1jYDIJae8JuPdtGLVAmSIIvGNZT
+    Gj9mzxcVj5OPZuK1NqZQB3AJeoMgnDZXWQZU5cpnndVF5OqDGLFbHznXuDgtcs1CmsF8
+    bHww==
 ARC-Authentication-Results: i=1; strato.com;
     arc=none;
     dkim=none
-X-RZG-CLASS-ID: mo01
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1791972158;
+X-RZG-CLASS-ID: mo02
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1791974612;
     s=strato-dkim-0002; d=iokpp.de;
     h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
     From:Subject:Sender;
-    bh=LU7vNk9YRQ1bVdmZHWK7IWnOehUVxwe+e/ZzXKTUHlU=;
-    b=P6g4o/PQEa7sOu7vq6bz9ksS5oOFG8rXp8Sb3ZvpQV+4nU9RKC0UjOkPFHvB6GlMoL
-    HckKNmuSlu5AkDDlMDTylMiPjjUDX+ZOgyadgvR+hfMeVYvJQrNTmOKtYesngsTt9Ine
-    nef2Ylfn4513+wNzdOHSUeLBOsYLe4rHNixeWU7zSNHmBMp3KG6431CMtV3numvg/Udp
-    rBRoB/pFhc+d9UREEJ23PKLyUYRAyVP8hXG487Du2bML2LuW0qdmJH1Lda88Uh4XXOTC
-    HUS+55GgLJAChL1+fOEDQ7VCgbpXhSq1vQ4PBGuNruGEOXICXF1eyhbgptBEaFA74ADC
-    WBgA==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; t=1791972158;
+    bh=5x3u6FiR8qckv8HF7OAp0XN3GDedSEoUChbL0yqk9NI=;
+    b=hUS+ocX+kAntLxaHRsDwgJt4us0Wp3rmOksQFOnvP6Vfu2r1y1oVO0g1EJ2oMpQApM
+    Ol3SWLy3IHr1Mb7yO56CDa/uHIwa7gWAfT3cn1fOqXY52KRmE8JB5/i5SuGBU2g85JBX
+    wbNVaX/1Z8yvbMCvRO84u7sonY0sXLO2pEgTHcE6NY9nC4X5TdLi2QNmKvIY6YeQlrph
+    P1hzZYKytaSfUZ24RZfHxc8mujhoG99W39PdR960CqLutcIzCAYhF89UaGXLCedAVVtP
+    YdnZPkEhE69mL6jLyENQdg0oqWEmUbk0RPwNnB7WLrekgPr0AedHux2ppFi1JIu+6lD8
+    MUNQ==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; t=1791974612;
     s=strato-dkim-0003; d=iokpp.de;
     h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
     From:Subject:Sender;
-    bh=LU7vNk9YRQ1bVdmZHWK7IWnOehUVxwe+e/ZzXKTUHlU=;
-    b=Bfzu6UdIjU7MKlW6t+Y3RAb9MvujxZ5P6Od2FD/gM+n+LyrYsjaCcAEpQvjl4dHiET
-    ++bNgTJ1YzZoz7zCSoDA==
+    bh=5x3u6FiR8qckv8HF7OAp0XN3GDedSEoUChbL0yqk9NI=;
+    b=l6rdbnAnBnxiqzUh2jm3/q78XdqMTW74v1E+AcdAfOjwQLBtLIqW2I7WLTRnVi9oqQ
+    qio2UyYsVPBFObNVChDQ==
 X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSe9tgBDSDt0V0DBslXBtZUxPOub3IZuk"
 Received: from [10.176.237.108]
     by smtp.strato.de (RZmta 55.6.3 AUTH)
-    with ESMTPSA id z831ad29EA2b3Nq
+    with ESMTPSA id z831ad29EAhV3el
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
 	(Client did not present a certificate);
-    Wed, 14 Oct 2026 12:02:37 +0200 (CEST)
-Message-ID: <4275c168417c7f5b8f89f06dc15b7459a6346ec0.camel@iokpp.de>
-Subject: Re: [PATCH 1/3] scsi: ufs: bsg: Validate request_len before
- accessing request
+    Wed, 14 Oct 2026 12:43:31 +0200 (CEST)
+Message-ID: <c39f4af2716cdc1c71170a9eabdbe29abb8c4bb2.camel@iokpp.de>
+Subject: Re: [PATCH 2/3] scsi: ufs: bsg: Clear the UIC result byte before
+ sending UIC commands
 From: Bean Huo <beanhuo@iokpp.de>
 To: Stanley Jhu <stanleyjhu@google.com>, "Martin K. Petersen"
  <mkp@kernel.org>,  "James E.J. Bottomley"
@@ -76,10 +76,10 @@ Cc: powenkao@google.com, Alim Akhtar <alim.akhtar@samsung.com>, Bart Van
  Assche <bvanassche@acm.org>, Bean Huo <beanhuo@micron.com>, Peter Wang
  <peter.wang@mediatek.com>, linux-scsi@vger.kernel.org, 
  linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Date: Wed, 14 Oct 2026 12:02:36 +0200
-In-Reply-To: <20261013102913.948718-2-stanleyjhu@google.com>
+Date: Wed, 14 Oct 2026 12:43:30 +0200
+In-Reply-To: <20261013102913.948718-3-stanleyjhu@google.com>
 References: <20261013102913.948718-1-stanleyjhu@google.com>
-	 <20261013102913.948718-2-stanleyjhu@google.com>
+	 <20261013102913.948718-3-stanleyjhu@google.com>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 User-Agent: Evolution 3.44.4-0ubuntu2.1 
@@ -91,71 +91,19 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 
 On Tue, 2026-10-13 at 18:29 +0800, Stanley Jhu wrote:
-> ufs_bsg_request() and ufs_bsg_exec_advanced_rpmb_req() read the
-> request buffer without checking job->request_len, which userspace
-> controls. A short request causes an out-of-bounds read. Found by
+> ufs_bsg_request() passes the user-supplied UIC argument2 unchanged,
+> including the result byte (bits 7:0) that only the host controller
+> writes. A non-zero value triggers the WARN_ON_ONCE() in
+> ufshcd_dispatch_uic_cmd() and corrupts the reported result. Found by
 > syzkaller.
 >=20
-> Reject requests shorter than the structure each path reads.
+> Clear the result byte before sending the command.
 >=20
-> Fixes: 64d4864714c2 ("scsi: ufs: bsg: Remove unnecessary length checkup")
-> Fixes: 6ff265fc5ef6 ("scsi: ufs: core: bsg: Add advanced RPMB support in
-> ufs_bsg")
+> Fixes: e77044c5a842 ("scsi: ufs-bsg: Add support for uic commands in
+> ufs_bsg_request()")
+> Fixes: 9fb4c793223b ("scsi: ufs: core: Complain if UIC argument 2 is inva=
+lid")
 > Cc: stable@vger.kernel.org
 > Signed-off-by: Stanley Jhu <stanleyjhu@google.com>
-> ---
-> =C2=A0drivers/ufs/core/ufs_bsg.c | 8 ++++++++
-> =C2=A01 file changed, 8 insertions(+)
->=20
-> diff --git a/drivers/ufs/core/ufs_bsg.c b/drivers/ufs/core/ufs_bsg.c
-> index 7a66917b3fc0..dab1f05aff38 100644
-> --- a/drivers/ufs/core/ufs_bsg.c
-> +++ b/drivers/ufs/core/ufs_bsg.c
-> @@ -73,6 +73,9 @@ static int ufs_bsg_exec_advanced_rpmb_req(struct ufs_hb=
-a
-> *hba, struct bsg_job *j
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0if (hba->ufs_version < uf=
-shci_version(4, 0) || !hba-
-> >dev_info.b_advanced_rpmb_en)
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0return -EINVAL;
-> =C2=A0
-> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0if (job->request_len < sizeof(=
-*rpmb_request))
-> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0return -EINVAL;
-> +
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0if (rpmb_request->ehs_req=
-.length !=3D 2 || rpmb_request-
-> >ehs_req.ehs_type !=3D 1)
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0return -EINVAL;
-> =C2=A0
-> @@ -142,6 +145,11 @@ static int ufs_bsg_request(struct bsg_job *job)
-> =C2=A0
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0bsg_reply->reply_payload_=
-rcv_len =3D 0;
-> =C2=A0
-> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0if (job->request_len < sizeof(=
-*let )) {
-> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0bsg_reply->result =3D -EINVAL;
-> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0return -EINVAL;
-> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0}
-> +
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0ufshcd_rpm_get_sync(hba);
-> =C2=A0
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0msgcode =3D bsg_request->=
-msgcode;
-
-Stanley,=20
-
-The check was removed by my commit 64d4864714c2 when adding arpmb support, =
-since
-msgcode check was thought to be enough, thanks for fixing it.=20
-
 
 Reviewed-by: Bean Huo <beanhuo@micron.com>
-
-
