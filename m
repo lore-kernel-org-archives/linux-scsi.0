@@ -1,36 +1,48 @@
-Received: from mta0.migadu.com (out-210.mta0.migadu.com [91.218.175.210])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E133841C2F2
-	for <linux-scsi@vger.kernel.org>; Wed, 14 Oct 2026 12:18:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.210
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A8A9376490;
+	Wed, 14 Oct 2026 13:31:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791980317; cv=none; b=NKPHyzmBP0MdKSC4ty7yUBk8wR7wqdb6waIy3UgqQ9rZ3V30keE/GI4fY7ZRs7myDoL7NqOGPx36JfLDIw6R1GC+safdMA5IDP4QVooN0gQU0ixewF0nCwpQXfX2cLOMXlCf/xm0ZfAaxTovjfIc/O/3kLleqT+Nkwl0JbFtNFg=
+	t=1791984677; cv=none; b=GCjJ4kkKQN/2BdwVkv1hpLnKRuAOeqHGz2ikFF/rh+5MjLUoLH5blVcFJS0k1MhBn5upahEI2wm5eSwRkIorV1EdLE+xDVKdM8k/UgW7cxMQjw4kpxl/Cg6XevKkgfV8hPGl+7dwajEJveYZ0AEA64W5EWJPFGbUTb3yX9IzDN8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791980317; c=relaxed/simple;
-	bh=epxOBuojfAEGBJOX5236uAg0yXfK5UUnnWkEkz0tIRM=;
+	s=arc-20240116; t=1791984677; c=relaxed/simple;
+	bh=HJZ5MJgxunIkRLWvc+jLcJkipmTsNFq8aI446pdfw+4=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=IW7/2BzCkQYhnFRbTkrrBUOHObPhnuiocUIYJrVXObZjbAqlsVMt+EiqI3/KFNRflkHXR125ZnsJdibvD4pLl5JYxnmpnHOKFtZc4Ex3qAn16bynRwK0hZISH8v/czld9E9b9mXWiszaDG2+02u2uWfp9NtTKK7I3udU+X/DGAo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=vLAoH4+n; arc=none smtp.client-ip=91.218.175.210
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	 In-Reply-To:Content-Type; b=ozPNp4Mjcrui4mIAn7HxZEoy+x5d3jc+8B5bck12M6N5qHK1zu6thvqxs781wlsvEaWEo0DljryIgnQnJmpgL6YPqT4eQ0UV9PewVEi71H3lc+yvxRu+Lhp9grBTimBg/bJk17eviaVBtgVmslIbw1tMUDZR87KiFYkVd1uNIkg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=3ZWGrcJI; arc=none smtp.client-ip=199.89.1.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="vLAoH4+n"
-X-Envelope-To: linux-scsi@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=epxOBuojfAEGBJOX5236uAg0yXfK5UUnnWkEkz0tIRM=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1791980311; v=1; x=1792585111;
- b=vLAoH4+nc84ay/n2UPu8MNMP/A7wX1/R6ddCSgohs3z+JBmHaJbGbtK/GHDVmh93DxZZ1pTu
- ysAtIUKIzoeOtHuO0d774zbM2RWbYEOh3gPBiX5+FSyqXxTOoT8XSKPiXk/2Q7vhImAjPT4e1RZ
- FXo1lbojVTzGU+bdzJ2edGog=
-X-Envelope-To: linux-scsi@vger.kernel.org
-Received: by mta12.migadu.com with ESMTPS id 2f5f8524ab26ce5d;
-	Wed, 14 Oct 2026 12:18:31 +0000
-X-Mizu-Trace-ID: 2f5f8524ab26ce5d
-X-Migadu-Flow: FLOW_OUT
-Message-ID: <a114aeca-8e9f-4353-9dd3-9ce077f6fba4@linux.dev>
-Date: Wed, 14 Oct 2026 13:18:31 +0100
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="3ZWGrcJI"
+Received: from localhost (localhost [127.0.0.1])
+	by 011.lax.mailroute.net (Postfix) with ESMTP id 4j4XCV3nv2z1XM4Tn;
+	Wed, 14 Oct 2026 13:31:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1791984657; x=1794576658; bh=cULsbpL4/ypKr+b68EUXjCd8
+	bXVDfuRvjPXfSXjEzpw=; b=3ZWGrcJInZgri4227+zHAIEdnus5zn0z6LYL4scC
+	gfLrwOfWV8HJGLAOnu3jOl2Sw111b0dGAi0MZePronT8fIuHPrIvVx1MpOdyzFmT
+	KX8GARuMLp/edex9APL7R24aairirPi9QBkKilarynx34y4iC4Nl1++fELWKivo4
+	mjgw4HFN0vwJRYjj0V+ZM0B5dbrLATb9h3bmVIV6Zt+EH13X6+q5OQyVgMLCUBYn
+	1ce90hdU+hvyCLaxtQ3He94XRk4oVHdndO+sr+Kg5rg+8IgFKCe71ur/CxBLYGOo
+	1PWmkJqhos0dQqvjzqxSb8L1B+CdgVLH+2Bfh5C8quC8vQ==
+X-Virus-Scanned: by MailRoute
+Received: from 011.lax.mailroute.net ([127.0.0.1])
+ by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id IJ_-2R3aBdpI; Wed, 14 Oct 2026 13:30:57 +0000 (UTC)
+Received: from [192.168.51.14] (c-24-6-239-25.hsd1.ca.comcast.net [24.6.239.25])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4j4XCN3s84z1XM4Tl;
+	Wed, 14 Oct 2026 13:30:56 +0000 (UTC)
+Message-ID: <e3706904-3b53-41bf-b8c0-48ac4d2e2cf5@acm.org>
+Date: Wed, 14 Oct 2026 06:30:55 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -38,36 +50,55 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4] scsi: libsas: Fix SMP IO deadlock during HA resume
-To: yangxingui <yangxingui@huawei.com>, yanaijie@huawei.com,
- jejb@linux.ibm.com, mkp@kernel.org
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
- linuxarm@huawei.com, liuyonglong@huawei.com, kangfenglong@huawei.com
-References: <20260928040234.992912-1-yangxingui@huawei.com>
- <820657c2-1cbd-47d8-92f2-477531692135@linux.dev>
- <ba5d9188-937c-237c-e104-9b66e7c3be3e@huawei.com>
+Subject: Re: [PATCH 2/3] scsi: ufs: bsg: Clear the UIC result byte before
+ sending UIC commands
+To: Stanley Jhu <stanleyjhu@google.com>, "Martin K. Petersen"
+ <mkp@kernel.org>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+Cc: powenkao@google.com, Alim Akhtar <alim.akhtar@samsung.com>,
+ Bean Huo <beanhuo@micron.com>, Peter Wang <peter.wang@mediatek.com>,
+ linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+ stable@vger.kernel.org
+References: <20261013102913.948718-1-stanleyjhu@google.com>
+ <20261013102913.948718-3-stanleyjhu@google.com>
 Content-Language: en-US
-From: John Garry <john.garry@linux.dev>
-In-Reply-To: <ba5d9188-937c-237c-e104-9b66e7c3be3e@huawei.com>
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20261013102913.948718-3-stanleyjhu@google.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On 10/8/26 04:11, yangxingui wrote:
->>> Fixes: 3dbbbf656b850 ("scsi: libsas: Fix HA resume deadlock and 
->>> hisi_sas disk-wake race")
->>> Signed-off-by: Xingui Yang <yangxingui@huawei.com>
->>
->> Question: do you have a (non-hisi_sas) SAS HBA card whose driver uses 
->> libsas? pm8001 would be such an example. It would be nice to verify 
->> that all these and other non-rpm libsas changes does cause regression 
->> there.
+On 10/13/26 3:29 AM, Stanley Jhu wrote:
+> ufs_bsg_request() passes the user-supplied UIC argument2 unchanged,
+> including the result byte (bits 7:0) that only the host controller
+> writes. A non-zero value triggers the WARN_ON_ONCE() in
+> ufshcd_dispatch_uic_cmd() and corrupts the reported result. Found by
+> syzkaller.
 > 
-> We don't have a pm8001 card at hand. From analysis the patch is a
-> no-op for the LLDDs without runtime PM support: pm8001 and isci
+> Clear the result byte before sending the command.
+> 
+> Fixes: e77044c5a842 ("scsi: ufs-bsg: Add support for uic commands in ufs_bsg_request()")
+> Fixes: 9fb4c793223b ("scsi: ufs: core: Complain if UIC argument 2 is invalid")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Stanley Jhu <stanleyjhu@google.com>
+> ---
+>   drivers/ufs/core/ufs_bsg.c | 1 +
+>   1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/ufs/core/ufs_bsg.c b/drivers/ufs/core/ufs_bsg.c
+> index dab1f05aff38..331ead0403a1 100644
+> --- a/drivers/ufs/core/ufs_bsg.c
+> +++ b/drivers/ufs/core/ufs_bsg.c
+> @@ -179,6 +179,7 @@ static int ufs_bsg_request(struct bsg_job *job)
+>   		break;
+>   	case UPIU_TRANSACTION_UIC_CMD:
+>   		memcpy(&uc, &bsg_request->upiu_req.uc, UIC_CMD_SIZE);
+> +		uc.argument2 &= ~MASK_UIC_COMMAND_RESULT;
+>   		ret = ufshcd_send_bsg_uic_cmd(hba, &uc);
+>   		if (ret)
+>   			dev_err(hba->dev, "send uic cmd: error code %d\n", ret);
 
-It would be good if you could get another card whose driver uses libsas 
-to verify these and any changes.
+Shouldn't invalid inputs be rejected rather than trying to correct these?
 
-Anyway, the patch looks ok, so:
+Thanks,
 
-Reviewed-by: John Garry <john.garry@linux.dev>
+Bart.
