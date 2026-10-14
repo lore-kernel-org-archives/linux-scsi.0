@@ -1,63 +1,64 @@
-Received: from mail-pj1-f47.google.com (mail-pj1-f47.google.com [209.85.216.47])
+Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D247556BB0
-	for <linux-scsi@vger.kernel.org>; Wed, 14 Oct 2026 15:19:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57C56551986
+	for <linux-scsi@vger.kernel.org>; Wed, 14 Oct 2026 15:24:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791991190; cv=none; b=geVoEPVkUf9KaqhdkEhX7GOr6wYoKvOQSG2bkJCvDH1yJr/Wonkc3SmQ9bjdL62vRea1cPGXZPOXbTxWSpwRupGXwDpJV7SZmqBzPAJ8pjhdpDjJkOGLMG06ITZV3mfVDpn2pGTQb87fLvp2YqwA8tq2+6hxbspNYvurwISXvDk=
+	t=1791991463; cv=none; b=kLvUI5txNo8CgMtoGZJyBJMxHSCdr4/IFCz/5qP21+g6SuouEhVHCLKa71TINcM11Vm2H4o7PX23E+pZdAQPxvIRUQi78CwrrhOZztY627gwK9a0oDS3bPV/6h29qURYw98SqkfmgGUfktSPLYUkfuBvgG0q8/3ueYV6YsO+lIE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791991190; c=relaxed/simple;
-	bh=zZ4wrRNrUSlbAIRtWsrlzRF+70WmEZHyaWAMWVXvwfU=;
+	s=arc-20240116; t=1791991463; c=relaxed/simple;
+	bh=AuomWEZX4AZzaXCJpww4x5u2oFWJ1CWj9oyE8+TmNiA=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=LT62phCIRh2II8RrdYfJ5/AwvjRQjXzLrT5fyJYFohrvARLKCIUffQAO8XwWLFwoPFSqtfBLT253j5psFduGn39VNpjCuwJ2161Od/KTywfzSSVbD6fJLIBlHpjP5csGit0sDx2EmDpc7IcAGbSkyJ5gIYG2M2RNRPN2/tLsQwA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr; spf=none smtp.mailfrom=isslab.korea.ac.kr; dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b=MyGrqvJa; arc=none smtp.client-ip=209.85.216.47
+	 MIME-Version:Content-Type; b=o7/G7cXRlwJnRBE2H4IWz904cwL/MmXW+HN3BLOHJpXjTO++HDuWiJreU7Ml4ucV9+BkvMRTqpzoms+4wjAKRd5GHs4qVL8T/PElxYWvF4BPsEW7Bu5Cse/hor+KHBglAIIScALFbNlypOq3wBhcwzb5ut4GTLAhg5IpRqnmBSU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr; spf=none smtp.mailfrom=isslab.korea.ac.kr; dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b=tim4LgQF; arc=none smtp.client-ip=209.85.214.181
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b="MyGrqvJa"
-Received: by mail-pj1-f47.google.com with SMTP id 98e67ed59e1d1-3ac7842c17dso388973a91.3
-        for <linux-scsi@vger.kernel.org>; Wed, 14 Oct 2026 08:19:48 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b="tim4LgQF"
+Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-2e618db81c0so9715025ad.2
+        for <linux-scsi@vger.kernel.org>; Wed, 14 Oct 2026 08:24:21 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=isslab-korea-ac-kr.20251104.gappssmtp.com; s=20251104; t=1791991188; x=1792595988; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=Yt2lnf8MDVtM059brPwM3fIP69zsoLXWM8Qr1rtqseg=;
-        b=MyGrqvJa/9a17O/A9tbOIwlbPkWZSgRyWttuxUOmkfG6+Mn2Akqjk/W0RwVPw74357
-         hfbFfwC9n7+F9dIbmExFAv0h+q8FuGtZXmPqxd5d0o08rgArVfyOMF07xVOYv69pfY9X
-         YEXI02+nLyfg0qVcRnOb6sk5VPp5OrsLa2bkD6I8sZUNhwU9mWplOBSKEnUhllbSARPy
-         v8YpYIMZQwc9lU8V1LqwhTooutKrePp+dDbvDg77YEQenOXsdgnjJUNtevhcQJg6U28a
-         uCS78Sw+h4bUEFAgAaNrSFJYMTptA39HnyLm66vD4kcOTbzMH8NBEmrcwj83euTk3KsJ
-         KhVw==
+        d=isslab-korea-ac-kr.20251104.gappssmtp.com; s=20251104; t=1791991461; x=1792596261; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:references
+         :in-reply-to:message-id:date:subject:cc:to:from:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=Oe+0IhcD+dLnpRRZ2AO6uP7D6+WkqiUo4+grQwp5VRM=;
+        b=tim4LgQFznfakpE7Q77lOgtffIurbEZsGhEFewaNF64KSC5GqyLjgjbO/XaX49kEpC
+         06tvI1hVJrCeUJIgInYdmPDsvtcQavZkZujTr2lYOH7iOTrifuVFP3mM/25GKISS2Uei
+         Dai+m8DxizKQh7uqa8qX4ph3W62gRn7K9CrEQlLkh3GMEJVdl6JuPIYaNHCrPLTQk+OD
+         LaObQwB2CuhtdAkeoihpH2QrwLWvFPXfX42zBQeZRqLzdT2nhD68PoUlhBA6OzNxMWq6
+         wIufLcNo3vHG4UQbWF0YTDQquqeF69nXx5TiXC5PVPzDs6DedGU8aMgsv6jGMWF1SVEc
+         DWrg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791991188; x=1792595988;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=Yt2lnf8MDVtM059brPwM3fIP69zsoLXWM8Qr1rtqseg=;
-        b=gDGwP38eavum96mSNoORXjvsDldOZpmdLoB9LrWT+gDQ1VtekP5f9xC5SxIdP1U+f+
-         MDTzo/CxZqfHS9Icc8nG2MyhB7wiafEbnccHA6HtnwOX9x4aH0qSpjYb4EPKCzqmY67K
-         bblve9fgr04QO+ci5fFzZUGwFanuINYK/5i32KwZ+V8BaDZLwlSG/73SoyOrsT1SYnaP
-         9KtLfZLgC8jteJy4u7+QfUQQwQIL25TF6qJrciBg1m81H9oT7kYrreg3j8tiQCg1N41G
-         doVhdDxPjrkQBDzVTFyT62iOFH5+zpNflOyLqsnGwV/VhzeIeN14ltViES2H2ctC+pZ+
-         +84w==
-X-Gm-Message-State: AFq9FYK6Nn7RWV5hm/yPdfenvL2QRpc4Llr/z/LBrABE1SbVVH+osUD9
-	GWUvSK1zJm5oRye1VNCRI38KoKnVsysdn/iw0uUm2t7lkKhBv9OrcjpGBgX+jeM4PV4=
-X-Gm-Gg: AYBFou177SjAs6MKSHuVc0J5E4PDsuxTZEjP9ZyC66aD//3Ib/4umjf6gv6C1lBQj5K
-	o1p1lyqrC5d6DyATseWtWVvMNSM0STqL3yJRctX+SBe47m7GpUtCvotUa1cd0sRnTEHET76nObj
-	DlTw7Vikwmgz+ZkIWO+KTMwvKtjEgB5nnBcdnVItneTzciHRZUzwd0wAI37S9W+UMkYxLaqipnj
-	4KquGUvBKcG9357LRtkT/krkdPHX8Iv9nym7B7VmTDv3enN4IW6jQMlzQSmE6FF8f7xqQ11eEaW
-	NH64SYCIgYdkyQI+4k/Hu4lOUNyQbSDFA5qqB2HtcIQwHrPUf/Hvniug8V7LKH2XY3sBjnkPCke
-	Xg8fHGmXBAt3hpnxJSxI4OMJWR3FP3rsNDW/CXOa3xNmYgKjuYHQaSNs43JO1cdj4/+AofuyUXu
-	gfzKJeF85a3kaAVppu3+Z/GCi5vjmaJAXvWwhCrdOIJggJPWsznD1Hy7i/NemGA8I9fdRC9lW3c
-	+5ZSrtaHQYUqD0+hvLjY07bCwiFoWEI
-X-Received: by 2002:a17:90b:574c:b0:3ac:83c1:2c0 with SMTP id 98e67ed59e1d1-3ac83c10467mr1056621a91.64.1791991186183;
-        Wed, 14 Oct 2026 08:19:46 -0700 (PDT)
+        d=1e100.net; s=20260707; t=1791991461; x=1792596261;
+        h=content-transfer-encoding:content-type:mime-version:references
+         :in-reply-to:message-id:date:subject:cc:to:from:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=Oe+0IhcD+dLnpRRZ2AO6uP7D6+WkqiUo4+grQwp5VRM=;
+        b=dhR/pTIC1kJBtTMbDa1tA2LMXTNsAXw09+dPIL5KAT0gP8aql3qp6ZkYywYjZ/L21L
+         xQ5PhV6dCjnzlrYdN0CShMLlL1S6nefxHxHQmuqdrc5TW2Pcosd7OmCr+pwMoYn5HHVx
+         UBizARHgbdbAfeZvZVGc4N3J8G31Tk+rizsnSlqkkjXPvkMICS/5FYkLSI4cniGAcHoA
+         UwfqqXJruCwcwbr8ypzJjT2KnGwkOokaHm14MldDqhmlm2ZKgLxIXSKR/mDGl27upIOh
+         oRiz8LTYvV0jPbM8zchEA3vhEceuqf+803YkE3efJEtmn07EDbiA2wXspLmyyEUPiJrB
+         C2gw==
+X-Gm-Message-State: AFq9FYKkL6tork4779tA4ftuur9rwUAzJIjRTZMPnMgS+/P/iqGXjf1+
+	G2YOGZ3QyRY8A97KGQTuR5atERu2dQu+0KkF4PsNqMZIK4V00t6SLoxs9vRJovO2l4k=
+X-Gm-Gg: AYBFou0M7dHec99bEQdFiRJ+lEP3a8KLccYbJFf+x/7bmwhw+mxUjVCB2xNATgRUQmZ
+	YQxWf0L+TdZvITmSYxLn5UcJYFlJnRh8EihYCtE9ToUI+O34eLH1Ww93MQfQzib8Gg30wApdp4W
+	b+Gj0wbRZsSGoTWMplvPSwPeM0K0v4ZwOGTGepK7ou0viyeEaVjq011vC3FvLPOKC+XzLjB22Qc
+	gxiGPHsegLPNPIj9tkUsY7y+Nc5vWyh6skHSwiGJhr/WtQ1sVeloefAaxaQK2yP7GV5jW7EqVZs
+	SeZpcLcf3KAKkIuSiFf8+oc3KImQcy6qpjanJKym6SGTsJVp67OGy08jDSR8BtMwsPYNdUXvr3Z
+	yr++m+fmIX5AM2zjtsWB7+5zZbTU46AunTHGPesWY173Do/HuthAnfmpXlALDeNi7lRDKsV30/a
+	CKz9sM+mF+w8/BWPx6WETJxddLTHprW+pK86beLRdp18t7FTsdEyx+syDC99KEXQ9aKMJ3Dq4pL
+	zyLr+QWsrDqxBxDRlYg
+X-Received: by 2002:a17:902:c94b:b0:2e6:dcce:8222 with SMTP id d9443c01a7336-2e842f389cbmr147131975ad.57.1791991460638;
+        Wed, 14 Oct 2026 08:24:20 -0700 (PDT)
 Received: from localhost.localdomain ([2406:5900:1044:110c:1c49:61ee:8c8:3f4c])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3ac8d40e7f3sm622450a91.5.2026.10.14.08.19.43
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2e8421b298dsm69536815ad.33.2026.10.14.08.24.18
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 14 Oct 2026 08:19:45 -0700 (PDT)
+        Wed, 14 Oct 2026 08:24:20 -0700 (PDT)
 From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
 To: "Martin K . Petersen" <mkp@kernel.org>,
 	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>
@@ -65,58 +66,31 @@ Cc: linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org,
 	yhlee@isslab.korea.ac.kr
-Subject: [PATCH v5 6/6] scsi: mvumi: widen the flush cache loop counter
-Date: Thu, 15 Oct 2026 00:19:14 +0900
-Message-ID: <20261014151914.3632701-7-yhlee@isslab.korea.ac.kr>
+Subject: Re: [PATCH v2 0/2] scsi: mvumi: bound two firmware-supplied lengths
+Date: Thu, 15 Oct 2026 00:24:08 +0900
+Message-ID: <20261014152408.3637388-1-yhlee@isslab.korea.ac.kr>
 X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20261014151914.3632701-1-yhlee@isslab.korea.ac.kr>
-References: <20261014151914.3632701-1-yhlee@isslab.korea.ac.kr>
+In-Reply-To: <20261013173145.3412863-1-yhlee@isslab.korea.ac.kr>
+References: <20261013173145.3412863-1-yhlee@isslab.korea.ac.kr>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-mvumi_flush_cache() walks the targets with an unsigned char counter while
-the bound it compares against, mhba->max_target_id, comes from the u16
-max_devices_support field of the firmware handshake page.  A controller
-reporting 256 or more devices makes the counter wrap back to zero before
-it ever reaches the bound, so the loop never ends.  mvumi_flush_cache()
-runs from the shutdown, suspend and remove paths, so the firmware can
-wedge any of them.
+Please drop this series.  It is superseded by
 
-Give the counter the type of the bound.  It is assigned to
-frame->device_id, a u16, so nothing truncates it again, and target_map
-holds round_up(max_target_id, 8) / 8 bytes, which covers every index the
-wider counter produces.  That last part needs the earlier patch in this
-series: without the reset check it adds, max_target_id can grow past the
-bitmap it was allocated for, and the wider counter would then walk further
-past it than the narrow one could.
+  [PATCH v5 0/6] scsi: mvumi: bound the values the firmware supplies
+  <20261014151914.3632701-1-yhlee@isslab.korea.ac.kr>
+  https://lore.kernel.org/linux-scsi/20261014151914.3632701-1-yhlee@isslab.korea.ac.kr/
 
-Fixes: f0c568a478f0 ("[SCSI] mvumi: Add Marvell UMI driver")
-Cc: stable@vger.kernel.org
-Signed-off-by: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
----
- drivers/scsi/mvumi.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Both patches are 1/6 and 2/6 of that series, unchanged except for a
+READ_ONCE() in 2/6.  The series also carries the handshake size patch I
+posted separately and three more bounds that a full pass over the driver's
+firmware-supplied values turned up.
 
-diff --git a/drivers/scsi/mvumi.c b/drivers/scsi/mvumi.c
-index 07cfac9276e7b..090ae79ec8c3a 100644
---- a/drivers/scsi/mvumi.c
-+++ b/drivers/scsi/mvumi.c
-@@ -769,8 +769,9 @@ static unsigned char mvumi_flush_cache(struct mvumi_hba *mhba)
- {
- 	struct mvumi_cmd *cmd;
- 	struct mvumi_msg_frame *frame;
--	unsigned char device_id, retry = 0;
-+	unsigned char retry = 0;
- 	unsigned char bitcount = sizeof(unsigned char) * 8;
-+	unsigned short device_id;
- 
- 	for (device_id = 0; device_id < mhba->max_target_id; device_id++) {
- 		if (!(mhba->target_map[device_id / bitcount] &
--- 
-2.43.0
-
+Sorry for the two threads; one series is easier to review and easier to
+pick up.
