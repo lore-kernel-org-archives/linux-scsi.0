@@ -1,69 +1,91 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BFF3C414410;
-	Wed, 14 Oct 2026 03:57:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21A5C30F803;
+	Wed, 14 Oct 2026 04:59:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791950258; cv=none; b=fuoU3vS17ZkeV1zeVzSqbNxY5GqoY+L+Tz0VnabDCSeKO4IVJPTg52WoJdQIjilxLVYF/RB4TQ4608A5S6ND+mHTiZRYetT5o1VoLmZUbccJAI0pucC4qMCqSY87b6Q88EsamAUi0KMGOgMummZ/wDoUCszkPaLE2Yw7217lfLc=
+	t=1791953966; cv=none; b=rduMHYdB3kumvXLGfOZJVZmQk75H+8kMEFiDlBU0Ks5hkb6s0lh1imlbQ+CI1XMHfq3RQL9Fk0DeaXgOsvFG+ivTlS/ag1GKJKpte2w690VXA8waiwYBKvrMg2PDPWRAlXIwCXWA7H4sm7tstb6V3h5Jg6Dg0r50ozC8/9tiPpU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791950258; c=relaxed/simple;
-	bh=diUCE9BiR+sJaRN1GfNSMYLFo31sBhyw1y01tHVES40=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=btX+W/naKV02VZBG9RSYX5e6i8AAXmd5yibFfbxdMqMFjjnUG9Aj0tz4tIZ96iY6xGX6HR0N2RbAyTuaF1WR1QVqwaLXnjs1Y/HtKAH/wRUVT6jsgMixckCNMYcrVkshjv+Aq52Rqq2HONRMQFTXot7qEhILfGQ9MtfBPV56ra0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WNz+BVPk; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791953966; c=relaxed/simple;
+	bh=k2G1gGW7lhO5m5s8SoUEHosvhmLHajlLPnUGO/LbcQ4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=DmKiG+paPtTJ3pTF+5zV8pVRlLEd0x4GRrQRxNFAc9LA3+un6Q8Bycnhktxyr5Mlhi2XLh8SfjSRELn9pVARu869FsjGHYNDjEPN6CVIWy1R2noZbBwSjDP+UgIiZYiEu2JKkedDR1nnoFiOOC3o/XGxyFt9b232BDfJw4Qcjys=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=Rt6mJKKh; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WNz+BVPk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 924681F00898;
-	Wed, 14 Oct 2026 03:57:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791950257;
-	bh=eSd13mBE9Oom744JU6LE90MD2uZ8STosKq32EJDeVKM=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=WNz+BVPkUcOvE6cAorizdUGcRaeGXQDx/vSKtO0LNe1CymIZbUwWgKrkfb+cvCcto
-	 fpA+51tmf0NuCks3R4fxOP31SpiWvpjZ6dSYPO3cjlbj91t0oTk4kZVDgT0JBWvjJ7
-	 a1ANuwfNKuvsnClkEMIj3OmDXrrCF0UpiPjD3DR5z5vSvMEee03DFG79zxalwVAs+g
-	 LThpXvWmNmaZFW+apRo6NOBx7rTZNGyd7PmC/6Km2vh3830zyQNvVxsf72WkXwVHAV
-	 VCqp60L0cZz7paDbR2KOwNb5o3BJ3IepZ+eOChffIN6FkbzEsY5zlnD/xu4u6HZtvw
-	 Q8fYlwuYtF16A==
-From: "Martin K. Petersen (Oracle)" <mkp@kernel.org>
-To: Yu Zhang <yuz08559@gmail.com>
-Cc: "Martin K . Petersen" <mkp@kernel.org>,
-	michael.christie@oracle.com,
-	d.bogdanov@yadro.com,
-	linux-scsi@vger.kernel.org,
-	target-devel@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] scsi: target: Disable interrupts while holding delayed_cmd_lock
-Date: Tue, 13 Oct 2026 23:57:27 -0400
-Message-ID: <179194999403.3016381.12964304644212104831.b4-ty@b4>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20260927091329.13482-1-yuz08559@gmail.com>
-References: <20260927091329.13482-1-yuz08559@gmail.com>
+	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="Rt6mJKKh"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 049511F000FF;
+	Wed, 14 Oct 2026 04:59:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linuxfoundation.org;
+	s=korg; t=1791953964;
+	bh=lz89EZ5EYVxYJOKYY6jYn9HslcKbAALQidGCQ+zsu+M=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=Rt6mJKKhFKaBTu3FLOge+9WtxpYekrxNKcx/wN1DDPvpB113c09qBxE6AVVoOz7m9
+	 /S9ihVJQzRW/yxqyjWdR3hM8Jo8VrsihCItVH2d9cEPt1bgoUOC/L1V+HML4tehYlf
+	 9IpBGQdPM5pEO9Ua/HFn+63YGHdbWyTxe98YPt6U=
+Date: Wed, 14 Oct 2026 06:59:28 +0200
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Olivier Kaloudoff <olivier.kaloudoff@gmail.com>
+Cc: linux-usb@vger.kernel.org, oneukum@suse.com, stern@rowland.harvard.edu,
+	linux-scsi@vger.kernel.org, usb-storage@lists.one-eyed-alien.net,
+	stable@vger.kernel.org
+Subject: Re: [PATCH] usb: uas: validate status URB length before parsing the
+ IU
+Message-ID: <2026101453-worry-arose-6024@gregkh>
+References: <20261013221937.41490-1-olivier.kaloudoff@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <20261013221937.41490-1-olivier.kaloudoff@gmail.com>
 
-On Sun, 27 Sep 2026 19:13:29 +1000, Yu Zhang wrote:
-
-> target_do_delayed_work() takes dev->delayed_cmd_lock with a plain
-> spin_lock(). It runs from system_percpu_wq, so interrupts stay enabled
-> while the lock is held. Every other acquisition of that lock uses
-> spin_lock_irqsave(): target_handle_task_attr() and
-> transport_complete_ordered_sync() in target_core_transport.c, and
-> target_non_ordered_release() in target_core_device.c.
+On Wed, Oct 14, 2026 at 12:19:37AM +0200, Olivier Kaloudoff wrote:
+> uas_stat_cmplt() dereferences iu->tag without verifying that the
+> status URB actually carried a full IU header.  The transfer buffer is
+> a freshly-zeroed sense_iu, so a status URB that completes
+> successfully but with a short or empty actual_length — observed in
+> the wild during link-level upsets (Thunderbolt-chain xhci blips) and
+> on a wedging bridge — reads back as iu_id=0/tag=0 and produces the
+> misleading
 > 
-> [...]
+>   stat urb: no pending cmd for uas-tag 0
+> 
+> log spam seen e.g. on an ASMT135x enclosure and a Samsung T7, right
+> before the affected commands time out into the error handler.
+> 
+> Beyond the noise, a short packet that happens to carry a
+> plausible-looking header could be matched to an inflight command and
+> drive the state machine off garbage.  Bail out on anything shorter
+> than a full struct iu.
+> 
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Olivier Kaloudoff <olivier.kaloudoff@gmail.com>
+> ---
+>  drivers/usb/storage/uas.c | 7 +++++++
+>  1 file changed, 7 insertions(+)
+> 
+> diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
+> index 265162981269..88fed50c262b 100644
+> --- a/drivers/usb/storage/uas.c
+> +++ b/drivers/usb/storage/uas.c
+> @@ -315,6 +315,13 @@ static void uas_stat_cmplt(struct urb *urb)
+>  		goto bail;
+>  	}
+>  
+> +	if (urb->actual_length < sizeof(struct iu)) {
+> +		dev_err(&urb->dev->dev,
+> +			"stat urb: short transfer (%u bytes)\n",
+> +			urb->actual_length);
 
-Applied to 7.3/scsi-fixes, thanks!
+Do not allow broken / malicious devices to spam the kernel log.
 
-[1/1] scsi: target: Disable interrupts while holding delayed_cmd_lock
-      https://git.kernel.org/mkp/scsi/c/04a67a8b1a44
+And how was this tested?
 
--- 
-Martin K. Petersen
+thanks,
+
+greg k-h
