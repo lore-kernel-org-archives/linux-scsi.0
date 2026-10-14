@@ -1,335 +1,91 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2370940F744;
-	Wed, 14 Oct 2026 05:33:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D42DF4334A5;
+	Wed, 14 Oct 2026 07:28:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.61.82.184
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791956031; cv=none; b=gbfpPBJHau3BmRbKlk74VuAGYnlI1MPHwWuL/8noURW0oMoC7STv4bGG4VboKC23ZQbwilJX0eK92sKO0n4Ym50MuNDQuQ1tVut9vu3eL00EdxYaCDO8AgWvzyBfMTBKOSHZue3J3UKsOAt579422pnSHKugoxCASIuoH66TaiU=
+	t=1791962944; cv=none; b=R85hCiwXXafL7oyklitz5WSJwvxLQl+XIHz2cbb0PbyVqPTbc1JA7ICzQWsSezr0LMSAsr1ec3kYiu/TgwGxUc3hDUz4uw7Yew0O7M1AGXihWEAZKEEphG15J32PT6+7HRqZCU/19OCyLZ2Riryvayy1IYqc6lgARM93baXL+uI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791956031; c=relaxed/simple;
-	bh=FRPOGaRCLkKJtC1Y2WQSf88178qo+gplXZ+OnLsBGjA=;
-	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=gzEVx91GwkYyV7fnvjPf1DhH3+ojT7XfQZ8kuVfzBvs3iW0ZzlUpcTIrsbZuRrTYxrcLCmn7Vh1XCU8gAdn7judCQSMTur83S75c9vX+zclZVWD9SBBbpGqBoa9p2fjWR1//FIuc58I1UNYiJGEruXIbXD7r0Hm7mKMHUIoEfpk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QyCJf7oR; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791962944; c=relaxed/simple;
+	bh=yyej2xlBADXECYdNP7xUgE69xFnPcTg7CV+ZJLWTNPs=;
+	h=Message-ID:Subject:From:To:CC:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=plS8mK42EXR3e9R78gKA4BHtqwS1iUy/RCiZSh/hQkz5S/Ss3qDi8NeZbBr70cogvmdN6xgggNJCkq+WAawhz6AYIqWQaz7ELLJqyE7HYe/JJ11ZAkzUS4usSjQaod8MOPz9KrsPWWboPoD/i9JopkV/3yq7rbzY7fRM7k/5TOA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=cURh56RX; arc=none smtp.client-ip=210.61.82.184
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QyCJf7oR"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 503D01F00893;
-	Wed, 14 Oct 2026 05:33:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791956030;
-	bh=XRFS/Ox0GgGRm10dlOPJthHRs+5fjHb2lNmiCZUXrmg=;
-	h=From:To:Subject:Date:In-Reply-To:References;
-	b=QyCJf7oRVN7ywPNUQFwRq41MQtZeaLoihtG9+ViS7CKENC6GIU5efS2Z6AB+IhlUJ
-	 zqLO8lD/UGPl98t/vboFO9Fh36UGGlAyR7RHYVmc3cEowCvODruCS3qy5Ea173PiE6
-	 y1ov0TCtoDZ6fvhZuFViPUaNfm/R5XdiLpt5Pz9iP0ksdLrpEig/o5XfnIPLIcjCzt
-	 c/labX8gBpjWz1YeL/SXQW28QF+TNBl74bq8jVHMqCYb/DZCIVXw9kZfO0f+V2Q+a/
-	 c93oRQmgP+pHXK/9hLfahWjiagAF7GmEGLHRr57B+frVRSRuEgSOKHhYlL+2rm8eDk
-	 AxhoWYSn77fFA==
-From: Damien Le Moal <dlemoal@kernel.org>
-To: Jens Axboe <axboe@kernel.dk>,
-	linux-block@vger.kernel.org,
-	Christoph Hellwig <hch@lst.de>,
-	linux-scsi@vger.kernel.org,
-	"Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH v7 10/10] scsi: sd_zbc: define storage element management operations
-Date: Wed, 14 Oct 2026 14:33:36 +0900
-Message-ID: <20261014053337.2328544-11-dlemoal@kernel.org>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20261014053337.2328544-1-dlemoal@kernel.org>
-References: <20261014053337.2328544-1-dlemoal@kernel.org>
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="cURh56RX"
+X-UUID: e83bd262c7a011f18dc8c9802ae25ab1-20261014
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+	h=MIME-Version:Content-Transfer-Encoding:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=yyej2xlBADXECYdNP7xUgE69xFnPcTg7CV+ZJLWTNPs=;
+	b=cURh56RX50xBQgIeETnKrxYqeLCihFKk5ppnIrLY2HLiSqf9BW63z11CDHBZn40KE3gOBn3IT1zKy3sNNlrc9EMI183xpAH/MvgiK2HfOG3WzCaFj7+qYq1w/nqtjf8HMALF6/w3Et+7XBLe7U2K0A1zRPx4EhLXdg/DBv0h8mw=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.20,REQID:51dcb2c8-a6dd-4e17-8dc7-c663ec9263dc,IP:0,U
+	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+	release,TS:0
+X-CID-META: VersionHash:291e20b,CLOUDID:22f35120-2f17-48f6-b8a0-2bb5971c52b4,B
+	ulkID:nil,BulkQuantity:0,SF:80|81|82|83|102|836|865|888|898,TC:-5,Content:
+	0|15|50|99,EDM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:-1,COL:0,
+	OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: e83bd262c7a011f18dc8c9802ae25ab1-20261014
+Received: from mtkmbs11n1.mediatek.inc [(172.21.101.185)] by mailgw02.mediatek.com
+	(envelope-from <peter.wang@mediatek.com>)
+	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+	with ESMTP id 498926688; Wed, 14 Oct 2026 15:28:53 +0800
+Received: from mtkmbs11n1.mediatek.inc (172.21.101.185) by
+ mtkmbs11n2.mediatek.inc (172.21.101.187) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.29; Wed, 14 Oct 2026 15:28:51 +0800
+Received: from [10.233.130.16] (10.233.130.16) by mtkmbs11n1.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.2.2562.29 via Frontend
+ Transport; Wed, 14 Oct 2026 15:28:51 +0800
+Message-ID: <07b41e9e46d26b4a0e0683404e98cd29d38cced0.camel@mediatek.com>
+Subject: Re: [PATCH 2/3] scsi: ufs: bsg: Clear the UIC result byte before
+ sending UIC commands
+From: Peter Wang <peter.wang@mediatek.com>
+To: Stanley Jhu <stanleyjhu@google.com>, "Martin K. Petersen"
+	<mkp@kernel.org>, "James E.J. Bottomley"
+	<James.Bottomley@HansenPartnership.com>
+CC: <powenkao@google.com>, Alim Akhtar <alim.akhtar@samsung.com>, "Bart Van
+ Assche" <bvanassche@acm.org>, Bean Huo <beanhuo@micron.com>,
+	<linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<stable@vger.kernel.org>
+Date: Wed, 14 Oct 2026 15:28:51 +0800
+In-Reply-To: <20261013102913.948718-3-stanleyjhu@google.com>
+References: <20261013102913.948718-1-stanleyjhu@google.com>
+	 <20261013102913.948718-3-stanleyjhu@google.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.52.3-0ubuntu1.1 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-MTK: N
 
-Define the storage element management operations using struct
-blk_storage_elements_ops. These operations are valid only on SMR disks
-supporting the storage element depopulation feature.
+On Tue, 2026-10-13 at 18:29 +0800, Stanley Jhu wrote:
+> ufs_bsg_request() passes the user-supplied UIC argument2 unchanged,
+> including the result byte (bits 7:0) that only the host controller
+> writes. A non-zero value triggers the WARN_ON_ONCE() in
+> ufshcd_dispatch_uic_cmd() and corrupts the reported result. Found by
+> syzkaller.
+>=20
+> Clear the result byte before sending the command.
+>=20
+> Fixes: e77044c5a842 ("scsi: ufs-bsg: Add support for uic commands in
+> ufs_bsg_request()")
+> Fixes: 9fb4c793223b ("scsi: ufs: core: Complain if UIC argument 2 is
+> invalid")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Stanley Jhu <stanleyjhu@google.com>
+> ---
 
-Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Martin K. Petersen <mkp@kernel.org>
----
- drivers/scsi/sd.c     |   3 +
- drivers/scsi/sd.h     |   2 +
- drivers/scsi/sd_zbc.c | 233 ++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 238 insertions(+)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index db7c19d1c2ff..48c46f4a1ace 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -3943,6 +3943,9 @@ static const struct block_device_operations sd_fops = {
- 	.get_unique_id		= sd_get_unique_id,
- 	.free_disk		= scsi_disk_free_disk,
- 	.pr_ops			= &sd_pr_ops,
-+#ifdef CONFIG_BLK_DEV_ZONED
-+	.se_ops			= &sd_zbc_se_ops,
-+#endif
- };
- 
- /**
-diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
-index 6a72371fee78..fc8c49903811 100644
---- a/drivers/scsi/sd.h
-+++ b/drivers/scsi/sd.h
-@@ -243,6 +243,8 @@ unsigned int sd_zbc_complete(struct scsi_cmnd *cmd, unsigned int good_bytes,
- int sd_zbc_report_zones(struct gendisk *disk, sector_t sector,
- 		unsigned int nr_zones, struct blk_report_zones_args *args);
- 
-+extern const struct blk_se_ops sd_zbc_se_ops;
-+
- #else /* CONFIG_BLK_DEV_ZONED */
- 
- static inline int sd_zbc_read_zones(struct scsi_disk *sdkp,
-diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
-index 2c77f878ab3f..39cd4f9fcce5 100644
---- a/drivers/scsi/sd_zbc.c
-+++ b/drivers/scsi/sd_zbc.c
-@@ -548,6 +548,239 @@ static void sd_zbc_print_zones(struct scsi_disk *sdkp)
- 			  sdkp->zone_info.zone_blocks);
- }
- 
-+static void sd_zbc_parse_storage_element(struct scsi_disk *sdkp, u8 *desc,
-+					 struct blk_se *element)
-+{
-+	struct scsi_device *sdp = sdkp->device;
-+	sector_t zone_sectors = sd_zbc_zone_sectors(sdkp);
-+	u64 capacity;
-+
-+	memset(element, 0, sizeof(*element));
-+
-+	element->id = get_unaligned_be32(&desc[4]);
-+
-+	switch (desc[14]) {
-+	case SCSI_PHYS_ELEM_TYPE_ALL_ACCESS_STORAGE:
-+		element->type = BLK_SE_TYPE_RDWR;
-+		capacity = get_unaligned_be64(&desc[16]);
-+		if (!zone_sectors || capacity == ULLONG_MAX)
-+			element->nr_zones = 0;
-+		else
-+			element->nr_zones =
-+				logical_to_sectors(sdp, capacity) >>
-+					ilog2(zone_sectors);
-+		break;
-+	case SCSI_PHYS_ELEM_TYPE_FRAC_ACCESS_STORAGE:
-+		element->paired_id = get_unaligned_be32(&desc[16]);
-+		if (desc[20] & 0x01)
-+			element->type = BLK_SE_TYPE_READ;
-+		else
-+			element->type = BLK_SE_TYPE_WRITE;
-+		element->nr_zones = get_unaligned_be64(&desc[24]);
-+		break;
-+	default:
-+		element->type = BLK_SE_TYPE_UNKNOWN;
-+	}
-+
-+	switch (desc[15]) {
-+	case SCSI_PHYS_ELEM_HEALTH_WITHIN_SPEC_LIMITS:
-+	case SCSI_PHYS_ELEM_HEALTH_AT_SPEC_LIMITS:
-+		element->status = BLK_SE_STS_OK;
-+		break;
-+	case SCSI_PHYS_ELEM_HEALTH_OUTSIDE_SPEC_LIMITS:
-+		element->status = BLK_SE_STS_DEGRADED;
-+		break;
-+	case SCSI_PHYS_ELEM_HEALTH_DEPOP_REVOKE_ERR:
-+		element->status = BLK_SE_STS_RESTORE_ERROR;
-+		break;
-+	case SCSI_PHYS_ELEM_HEALTH_DEPOP_REVOKE_IN_PROGRESS:
-+		element->status = BLK_SE_STS_RESTORE_IN_PROGRESS;
-+		break;
-+	case SCSI_PHYS_ELEM_HEALTH_DEPOP_ERR:
-+		element->status = BLK_SE_STS_REMOVE_ERROR;
-+		break;
-+	case SCSI_PHYS_ELEM_HEALTH_DEPOP_IN_PROGRESS:
-+		element->status = BLK_SE_STS_REMOVE_IN_PROGRESS;
-+		break;
-+	case SCSI_PHYS_ELEM_HEALTH_DEPOP_OK:
-+		element->status = BLK_SE_STS_REMOVED;
-+		element->restore_allowed = desc[13] & 0x01;
-+		break;
-+	case SCSI_PHYS_ELEM_HEALTH_NOT_REPORTED:
-+	default:
-+		element->status = BLK_SE_STS_UNKNOWN;
-+		break;
-+	}
-+}
-+
-+/*
-+ * Large hard limit on the number of storage elements. This accommodates all
-+ * known devices today and likely forever :)
-+ */
-+#define SD_ZBC_MAX_STORAGE_ELEMENTS	255
-+
-+static int sd_zbc_report_storage_elements(struct gendisk *disk,
-+					  struct blk_se *elements,
-+					  unsigned int *nr_elements)
-+{
-+	struct scsi_disk *sdkp = scsi_disk(disk);
-+	struct scsi_device *sdp = sdkp->device;
-+	const int timeout = sdp->request_queue->rq_timeout;
-+	struct scsi_sense_hdr sshdr;
-+	const struct scsi_exec_args exec_args = {
-+		.sshdr = &sshdr,
-+	};
-+	unsigned char cmd[16];
-+	unsigned int nr_descs, nr_se;
-+	unsigned int buf_size;
-+	int i, ret = 0, result;
-+	u8 *desc, *buf;
-+
-+	if (!sdkp->modify_zones_supported)
-+		return -EOPNOTSUPP;
-+
-+	/*
-+	 * We need at least 32B for the report header and 32B for each
-+	 * descriptor.
-+	 */
-+	nr_se = min(SD_ZBC_MAX_STORAGE_ELEMENTS, *nr_elements);
-+	buf_size = ALIGN((nr_se + 1) * 32, SECTOR_SIZE);
-+
-+	buf = kzalloc(buf_size, GFP_NOIO);
-+	if (!buf)
-+		return -ENOMEM;
-+
-+	memset(cmd, 0, 16);
-+	cmd[0] = SERVICE_ACTION_IN_16;
-+	cmd[1] = SAI_GET_PHYSICAL_ELEMENT_STATUS;
-+	put_unaligned_be32(buf_size, &cmd[10]);
-+
-+	result = scsi_execute_cmd(sdp, cmd, REQ_OP_DRV_IN, buf, buf_size,
-+				  timeout, 1, &exec_args);
-+	if (result) {
-+		sd_printk(KERN_ERR, sdkp,
-+			  "GET PHYSICAL ELEMENT STATUS failed\n");
-+		sd_print_result(sdkp, "GET PHYSICAL ELEMENT STATUS", result);
-+		if (result > 0 && scsi_sense_valid(&sshdr))
-+			sd_print_sense_hdr(sdkp, &sshdr);
-+		ret = -EIO;
-+		goto free_buf;
-+	}
-+
-+	nr_descs = get_unaligned_be32(&buf[0]);
-+	if (!nr_descs) {
-+		sd_printk(KERN_ERR, sdkp,
-+			  "Invalid number of phys element descriptors\n");
-+		ret = -EIO;
-+		goto free_buf;
-+	}
-+	if (nr_descs > SD_ZBC_MAX_STORAGE_ELEMENTS) {
-+		sd_printk(KERN_ERR, sdkp,
-+			  "Too many phys element descriptors\n");
-+		ret = -EIO;
-+		goto free_buf;
-+	}
-+
-+	if (!elements) {
-+		*nr_elements = nr_descs;
-+		goto free_buf;
-+	}
-+
-+	nr_descs = get_unaligned_be32(&buf[4]);
-+	if (!nr_descs) {
-+		sd_printk(KERN_ERR, sdkp,
-+			"Invalid number of reported phys element descriptors\n");
-+		ret = -EIO;
-+		goto free_buf;
-+	}
-+
-+	desc = &buf[32];
-+	for (i = 0; i < min(nr_se, nr_descs); i++, desc += 32)
-+		sd_zbc_parse_storage_element(sdkp, desc, &elements[i]);
-+	*nr_elements = i;
-+
-+free_buf:
-+	kfree(buf);
-+
-+	return ret;
-+}
-+
-+static int sd_zbc_remove_storage_element(struct gendisk *disk,
-+					 unsigned int element_id)
-+{
-+	struct scsi_disk *sdkp = scsi_disk(disk);
-+	struct scsi_device *sdp = sdkp->device;
-+	const int timeout = sdp->request_queue->rq_timeout;
-+	struct scsi_sense_hdr sshdr;
-+	const struct scsi_exec_args exec_args = {
-+		.sshdr = &sshdr,
-+	};
-+	unsigned char cmd[16];
-+	int result;
-+
-+	if (!sdkp->modify_zones_supported)
-+		return -EOPNOTSUPP;
-+
-+	memset(cmd, 0, 16);
-+	cmd[0] = SERVICE_ACTION_IN_16;
-+	cmd[1] = SAI_REMOVE_ELEMENT_AND_MODIFY_ZONES;
-+	put_unaligned_be32(element_id, &cmd[10]);
-+
-+	result = scsi_execute_cmd(sdp, cmd, REQ_OP_DRV_IN, NULL, 0,
-+				  timeout, 1, &exec_args);
-+	if (result) {
-+		sd_printk(KERN_ERR, sdkp,
-+			  "REMOVE ELEMENT AND MODIFY ZONES failed\n");
-+		sd_print_result(sdkp,
-+				"REMOVE ELEMENT AND MODIFY ZONES", result);
-+		if (result > 0 && scsi_sense_valid(&sshdr))
-+			sd_print_sense_hdr(sdkp, &sshdr);
-+		return -EIO;
-+	}
-+
-+	return 0;
-+}
-+
-+static int sd_zbc_restore_storage_elements(struct gendisk *disk)
-+{
-+	struct scsi_disk *sdkp = scsi_disk(disk);
-+	struct scsi_device *sdp = sdkp->device;
-+	const int timeout = sdp->request_queue->rq_timeout;
-+	struct scsi_sense_hdr sshdr;
-+	const struct scsi_exec_args exec_args = {
-+		.sshdr = &sshdr,
-+	};
-+	unsigned char cmd[16];
-+	int result;
-+
-+	if (!sdkp->modify_zones_supported)
-+		return -EOPNOTSUPP;
-+
-+	memset(cmd, 0, 16);
-+	cmd[0] = SERVICE_ACTION_IN_16;
-+	cmd[1] = SAI_RESTORE_ELEMENTS_AND_REBUILD;
-+
-+	result = scsi_execute_cmd(sdp, cmd, REQ_OP_DRV_IN, NULL, 0,
-+				  timeout, 1, &exec_args);
-+	if (result) {
-+		sd_printk(KERN_ERR, sdkp,
-+			  "RESTORE ELEMENTS AND REBUILD failed\n");
-+		sd_print_result(sdkp,
-+				"RESTORE ELEMENTS AND REBUILD", result);
-+		if (result > 0 && scsi_sense_valid(&sshdr))
-+			sd_print_sense_hdr(sdkp, &sshdr);
-+		return -EIO;
-+	}
-+
-+	return 0;
-+}
-+
-+const struct blk_se_ops sd_zbc_se_ops = {
-+	.report_elements	= sd_zbc_report_storage_elements,
-+	.remove_element		= sd_zbc_remove_storage_element,
-+	.restore_elements	= sd_zbc_restore_storage_elements,
-+};
-+
- /*
-  * Call blk_revalidate_disk_zones() if any of the zoned disk properties have
-  * changed that make it necessary to call that function. Called by
--- 
-2.55.0
-
+Reviewed-by: Peter Wang <peter.wang@mediatek.com>
