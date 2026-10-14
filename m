@@ -1,40 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A09E414412;
-	Wed, 14 Oct 2026 05:33:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62AE941A507;
+	Wed, 14 Oct 2026 05:33:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791956029; cv=none; b=jI76cDTFkPBvTSRkTarLef9HuuY7AH8BTRr1xAaSTsA5cTt2LRSNRilGDBjk+Sqe2BCgexWOiGqAbZXsBoyEJB8NcXx+sWx048DY76n3vfAu+YnlqWPVZPDOb96/GOU3QEcN+VZds9pugnzCRdMDPx/Sz7WRSuPngw1JKYLx3f4=
+	t=1791956030; cv=none; b=dgs8/VHDQx64W/A/0ChKQbNZ65ArO631LiYl832TOciG58Xqij8JOu3QrAf8rdxpvDDOQ0tQbXD17/SERPP9cLKy/TXRW1L17PamMYv/NmNkrHoBieVjvm1H4K/EI4bTMH0zvP2JJjcBCxc4KGWIoKMVZpD4g4CBYKijIRYho/Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791956029; c=relaxed/simple;
-	bh=gas4tmAo1mG/8El6XGHsViJU+0mleL1jmhBQ0pqAHBo=;
+	s=arc-20240116; t=1791956030; c=relaxed/simple;
+	bh=Uo4ysRbXg9GGUQZEoHrh5o+zhTgNOTRDwkbe/wf6uxE=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=tMJk87fk0WQ3SvmJcQt29iNLzmYirKwCq+vNesLDPAj9MNR3/eHTf0DOPctycY3m3ltGvUQXRZleqFXBfMpXHd3vF8uuBS1+cAzfak5cm/scgct0JcH37BpDgKvsQglFSOfVYYj1knHF4Rsei+IenFSm8lTv1G5Ml8+2DGJ12Xw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bhYl+hyo; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=T4k6bG3+A1Po5nhG5nEky9zFJ3gDRY/FzjKtSTmAYSlDsJwatECWke9SGW5cjiaKzM34etid/OUJiTa8TqOTtg17b0wRXGEqRBRkOuC/0mhaYDIBtQspQNHEAp3qabCFDDUXk43I8AX8fiTjFxJfyfRvVfJunvuwfO5ikc6RuKI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XcOAAC1D; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bhYl+hyo"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3B0DB1F0089A;
-	Wed, 14 Oct 2026 05:33:47 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XcOAAC1D"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 40A9A1F000FF;
+	Wed, 14 Oct 2026 05:33:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791956027;
-	bh=7FzShNPCcGaSQ1LNpGKyCNV0/TpMAcUqeqZKkQaG6g8=;
+	s=k20260515; t=1791956029;
+	bh=4sZ7tOOqqK7ZbkrMl58iGyDe364G85Jhm6NB9wXnCMs=;
 	h=From:To:Subject:Date:In-Reply-To:References;
-	b=bhYl+hyoGozWN/PY6X8M+DSyeAja2Vc01wJmSJ6LXNRPLtvUadtjui4ENEcb0oe1k
-	 jGJhON6OSxK6tVbWp4m9Pamcy5JSEjgLeQ84J4vqIXgWVRuWOvwUwlwT9DmE2BYfz9
-	 xfxminCEEEqySmMJtsntUZsCPQrHxcJrjGhbvUkLBjyCbuGab02NDZh41Vvcm3yBco
-	 xO0wzVapuYzFkrhG4d0rL4Y4VMEYkQClzSAZk40TlcYu/7GCglnWSOjgjoX0VdqEzj
-	 sTv/q/Qw8ginIqOc/Nz7/rtGdmU6hC/ZmJhDLffERCWFqPoR+iCxwWCKGyOZ6T42AB
-	 SSsqquXaEwQUQ==
+	b=XcOAAC1DByW55UDk0j3dn+OF23fz1dW1b/AwXYbM550NzOkbqZ2PgJQndnM/jXZ0T
+	 hREVEDh2zgQGVBSZTmD3vxqszxdzQKvvfncVY1Ww6UEa/VLg/9Hak8oWGJEn6mgmu9
+	 orK3R/7SrGtmbIopXP5aP3jIf04Mif9JNGl5a70wPqEAEcWXRYYwSmPfsgw8hRLiBW
+	 48QCQxm6AsqhplAJ+x46v2mKjpK762qhh8qVM+vsno57rjDqsAqNBxUcTGPjwOJ55i
+	 uD66+GOQKI91QUsvrJ/qu82v95dazBpegOrHDbTbdWdfeNkL42AvjZQKXqNpQj7700
+	 ojIUg92qDRNlA==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: Jens Axboe <axboe@kernel.dk>,
 	linux-block@vger.kernel.org,
 	Christoph Hellwig <hch@lst.de>,
 	linux-scsi@vger.kernel.org,
 	"Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH v7 08/10] scsi: sd: fail read commands to offline zones early
-Date: Wed, 14 Oct 2026 14:33:34 +0900
-Message-ID: <20261014053337.2328544-9-dlemoal@kernel.org>
+Subject: [PATCH v7 09/10] scsi: sd_zbc: always revalidate zones for disks supporting head depopulation
+Date: Wed, 14 Oct 2026 14:33:35 +0900
+Message-ID: <20261014053337.2328544-10-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20261014053337.2328544-1-dlemoal@kernel.org>
 References: <20261014053337.2328544-1-dlemoal@kernel.org>
@@ -46,46 +46,99 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Issuing read commands to offline zones of a ZBC disk will result in
-failures. So do not issue such command and fail then early in
-sd_setup_read_write_cmnd(). This change also checks write commands, which
-is fine but should actually never happen as the block layer zone write
-plugging code already fails write BIOs to offline zones early in the
-submission path.
+sd_zbc_revalidate_zones() skips revalidating the zones of a ZBC device if
+the zone size and total number of zones of the disk has not changed. This
+is to avoid a call to the rather slow blk_revalidate_disk_zones().
+
+However, for ZBC devices that support data preserving head depopulation
+(REMOVE ELEMENT AND MODIFY ZONES command), a disk capacity and number of
+zones does not change after a head is depopulated but the condition of
+zones changes as the zones served by the head that was depopulated become
+either read-only or offline. In this case, not calling
+blk_revalidate_disk_zones() prevents the block layer from taking
+appropriate actions on the zone write plugs of the disk for the zones that
+became read-only or offline.
+
+Avoid any issue with the block layer view of the zone conditions by not
+skipping the call to blk_revalidate_disk_zones() for disks that support
+the REMOVE ELEMENT AND MODIFY ZONES command. This check is done from
+sd_zbc_read_zones() using the helper function sd_zbc_check_modify_zones().
+The new scsi disk flag modify_zones_supported is defined to remember the
+result of this check.
 
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Martin K. Petersen <mkp@kernel.org>
 ---
- drivers/scsi/sd.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+ drivers/scsi/sd.h     |  1 +
+ drivers/scsi/sd_zbc.c | 26 +++++++++++++++++++++++++-
+ 2 files changed, 26 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index a1b21ea14e54..db7c19d1c2ff 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1424,7 +1424,8 @@ static blk_status_t sd_setup_read_write_cmnd(struct scsi_cmnd *cmd)
- {
- 	struct request *rq = scsi_cmd_to_rq(cmd);
- 	struct scsi_device *sdp = cmd->device;
--	struct scsi_disk *sdkp = scsi_disk(rq->q->disk);
-+	struct gendisk *disk = rq->q->disk;
-+	struct scsi_disk *sdkp = scsi_disk(disk);
- 	sector_t lba = sectors_to_logical(sdp, blk_rq_pos(rq));
- 	sector_t threshold;
- 	unsigned int nr_blocks = sectors_to_logical(sdp, blk_rq_sectors(rq));
-@@ -1456,6 +1457,11 @@ static blk_status_t sd_setup_read_write_cmnd(struct scsi_cmnd *cmd)
- 		goto fail;
- 	}
+diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
+index 574af8243016..6a72371fee78 100644
+--- a/drivers/scsi/sd.h
++++ b/drivers/scsi/sd.h
+@@ -156,6 +156,7 @@ struct scsi_disk {
+ 	unsigned	ignore_medium_access_errors : 1;
+ 	unsigned	rscs : 1; /* reduced stream control support */
+ 	unsigned	use_atomic_write_boundary : 1;
++	unsigned	modify_zones_supported : 1;
+ };
+ #define to_scsi_disk(obj) container_of(obj, struct scsi_disk, disk_dev)
  
-+	/* Prevent read/write to offline zones of ZBC disks. */
-+	if (sdkp->device->type == TYPE_ZBC &&
-+	    disk_zone_is_offline(disk, blk_rq_pos(rq)))
-+		goto fail;
+diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
+index 456beaf2e769..2c77f878ab3f 100644
+--- a/drivers/scsi/sd_zbc.c
++++ b/drivers/scsi/sd_zbc.c
+@@ -516,6 +516,21 @@ static int sd_zbc_check_capacity(struct scsi_disk *sdkp, unsigned char *buf,
+ 	return 0;
+ }
+ 
++/*
++ * sd_zbc_check_modify_zones - Check if the device supports depopulation
++ * @sdkp: Target disk
++ * @buf: command buffer
++ *
++ * Check if the device supports the REMOVE ELEMENT AND MODIFY ZONES command.
++ */
++static inline bool sd_zbc_check_modify_zones(struct scsi_disk *sdkp,
++					     unsigned char *buf)
++{
++	return scsi_report_opcode(sdkp->device, buf, SD_BUF_SIZE,
++				  SERVICE_ACTION_IN_16,
++				  SAI_REMOVE_ELEMENT_AND_MODIFY_ZONES) == 1;
++}
 +
- 	/*
- 	 * Some SD card readers can't handle accesses which touch the
- 	 * last one or two logical blocks. Split accesses as needed.
+ static void sd_zbc_print_zones(struct scsi_disk *sdkp)
+ {
+ 	if (sdkp->device->type != TYPE_ZBC || !sdkp->capacity)
+@@ -554,9 +569,15 @@ int sd_zbc_revalidate_zones(struct scsi_disk *sdkp)
+ 	if (!blk_queue_is_zoned(q))
+ 		return 0;
+ 
++	/*
++	 * If the zone size and number of zones has not changed, and the disk
++	 * does not support depopulating heads, skip the rather slow call to
++	 * blk_revalidate_disk_zones().
++	 */
+ 	if (sdkp->zone_info.zone_blocks == zone_blocks &&
+ 	    sdkp->zone_info.nr_zones == nr_zones &&
+-	    disk->nr_zones == nr_zones)
++	    disk->nr_zones == nr_zones &&
++	    !sdkp->modify_zones_supported)
+ 		return 0;
+ 
+ 	sdkp->zone_info.zone_blocks = zone_blocks;
+@@ -620,6 +641,9 @@ int sd_zbc_read_zones(struct scsi_disk *sdkp, struct queue_limits *lim,
+ 	if (ret != 0)
+ 		goto err;
+ 
++	/* Check if REMOVE ELEMENT AND MODIFY ZONES is supported. */
++	sdkp->modify_zones_supported = sd_zbc_check_modify_zones(sdkp, buf);
++
+ 	nr_zones = round_up(sdkp->capacity, zone_blocks) >> ilog2(zone_blocks);
+ 	if (nr_zones > INT_MAX) {
+ 		sd_printk(KERN_ERR, sdkp, "Too many zones (%llu)\n",
 -- 
 2.55.0
 
