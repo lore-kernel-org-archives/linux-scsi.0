@@ -1,179 +1,163 @@
-Received: from mail-wm1-f41.google.com (mail-wm1-f41.google.com [209.85.128.41])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF32455D86C
-	for <linux-scsi@vger.kernel.org>; Wed, 14 Oct 2026 16:57:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 533D5486406;
+	Wed, 14 Oct 2026 19:50:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791997060; cv=none; b=tE7z3LEo/Q4LVVby46+g5vEov1fSMbJcSFOtH+nyqXhgLaxzdXI5sMI3tistb1oMgxEaR6hmBG/pzRmH9SOEtMWwd7bUeVoQ4fRobguVDIy09qMWrBthUMKBixPXN+KLUhlbiB3lwPPbci1+fPt2fvU0mqrXJDiZyvm79Zt2zpA=
+	t=1792007426; cv=none; b=qsqopM0I2KySsW882PHqnyfBKLBMJaI2pRWph5W2/kBuOdX8jIgDWgibXr02Dl1Bcst60LfxeNPFKBlDvsFyF3GD+EYmaGylFcS0WAdjtQesgkBmPVDquOhM7uyQyj22ogxLJlvlRbCxWKz59QsI/cCDuBbh5PTvsi78U5pf3kg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791997060; c=relaxed/simple;
-	bh=f6jAdHzhboSsrvnAwQk9bd8ybs7PXFPvcgnOKc54iZA=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=i9njhJg7jlhoipt2WP9nekm9xf19ALbBt8lI2iZua4lMUnbNl0TKG9AQ+BfRrXaNY2ZQ4Ub7sq6lnpxgwGj9t6NsxsinZWyzJvyb+R4SoxA0YSJcN4W9X33mMr67TYkjPelxEcpGCSSfyYhYrjzJACzde3w+gBRNNuEJlBU1oag=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Hvk17E8q; arc=none smtp.client-ip=209.85.128.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1792007426; c=relaxed/simple;
+	bh=canbLA2SOamUFjLIrAaPoD6hNIYt9r51hATImDQ12Rw=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=IQSTQX0pp3aERxTDnHsEjxZybg/JxrynqCI94BmeNOx7Ahvgd69cW/+pS6ecpujON/zXfb9lgWDGJR5CZApGj1/f/BBuG2MqYS0LoBrA2aq8+ctVbDe2AMzTt5IAU2m+TpPlsImN00oM7dVoZ4REbL9CE7qHyXCEIz2WdJIiD1E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=dmh0ZPmP; arc=none smtp.client-ip=199.89.1.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Hvk17E8q"
-Received: by mail-wm1-f41.google.com with SMTP id 5b1f17b1804b1-4a01933b584so38345555e9.0
-        for <linux-scsi@vger.kernel.org>; Wed, 14 Oct 2026 09:57:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1791997057; x=1792601857; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:date:subject:cc:to:from:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=3qcxre9NbZoUsuxuBW1AKl0J1hEgizU6C0yp28P8CW8=;
-        b=Hvk17E8qvt/FVFRq3X8fP/WwagQByVmYs4aKHGAz9Ia5GFF8zBIeb27hM3Qxp3laeZ
-         HYLtLUPRvnPFfuJQtUImKG9+AyNcQDO4cSjcHNRA3NoQs0MWfC73VZJ0OUE5rm1UeD9r
-         A1syYWiMRku5DxIKmlEnuoV+zUfYyYK3KuhAsbga5znKTA6MlZWmytt4nkE0RpLJu+Gr
-         jRJ9s+l3EF0qpNyTXpoAmQfA7V5zvOX6qZgM2+FLhk7+QHx/5kcE20qVnEQzoASuEdtk
-         u63I5S6dmHyBCugFkjBQcesEyrS0lXM4X242Bi+aS2LYw4E0wvXz5yTPOhi4x2GmPaAI
-         tt8w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791997057; x=1792601857;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:date:subject:cc:to:from:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=3qcxre9NbZoUsuxuBW1AKl0J1hEgizU6C0yp28P8CW8=;
-        b=cuSO/Qx+/jH30TnK8+qFWFoftWR6ZaABbWU31weKzFEqLSRmRQW2DVXyLM558szD+2
-         gGMQhtXehTxu2noKOze8N1IhOcrWzXKcmZamY2pFgRmEYfGwY9WTZjWheE9LiCm2w2zp
-         cQp1X0OJP/e0moQbQRLvKZ7DIqVvBuCKuS7pzDkcv15+bRzKddqlK3WhPlrlJeibZg0M
-         JCGE7zE8VycLcPeCuqW5dKFanLjCMCQuTxV19zFaFFZR4mTyci6Z/jjriWkyAcId9sFP
-         3YwRWbjPfPAlS9STRWRLFRw6FjFowR8l+iWObEsuCi/X8fHl/o6aETXkpEGpWxQ4UtGC
-         Bc7w==
-X-Forwarded-Encrypted: i=1; AKwUvBxDXTOqh0fIDDWt9qAtGeUEi70f+8YneR41LB0rfAdL5N3AapfKSVW0nzfplWFwCOhUiHMUbm7HFYnH@vger.kernel.org
-X-Gm-Message-State: AFq9FYLCLmkIHE/pv8sKGN/OSYE3hR/UerOknqzVkoULAQF7Pfgjdyix
-	e9cqtvTWhvIfQjB0ENbdiMe2ELALe7YsAPv9fUQinES8DgLUzmh79NzH
-X-Gm-Gg: AYBFou37Gz1VZ8J+3pQaNTCRfun0kWnDO0oCta0UNmB/vTCm/wVm1Unng+/9+nUEqJ0
-	KFYXh5gWp4yn4ji7bPiG8zl1OI6+0y4zJiq9bVhCikKjt1hi6hZrnusc7tscPHb/hO0eXvUQmwP
-	Fu5/skAhEx5jcpoIlQCr/teAa7ZQsrnHCIDbdhHlOD6TJeh8ojzSauOP2oQksIdh63a3q0lxkM6
-	Cx7UOaxTjcQP8MeYNANfRLFjTVu4B3zD7c6rSE/79nzn6jaJ+LxSrzvYko8AMMIJc3Eopd5Gadz
-	q32Fy+O9Kir+ki/wVmRzAMdlxiY/OEN2/pcrv5s4ij7Gkodmp0+SF4ELp/VgQ4om00DI6qnYpa8
-	0WOZlwgcJRD0/8mMN03XJil3xXmf93/+WOsxVQlKoptxYOTS3Z68E9rf8ZqCxbMZgkTi128znJD
-	RYD0poMPZ3CgqtSnlskySAMHhdJE5IkhTBdA/Y+kaD5W86eQmYBb/7AOQm++Bh8I37aZSH2K8sk
-	AhN1abTgtr3eS8ExskOnbR7PHXykGEcJdSADIGUDl9W3hPDXE5t1ZQnAJTruFOBWtvhlyWAWgTn
-	e0wJo/GNe77LDI/mY1Rk5V5AB9WIlKfNmNyZUzteFlFiGsVueEjs0/NXX6x8s7zcoaI2Nd8BR0U
-	3OBUYcUai8S6YNeXCwfduv9kT3LkNlfCmiXEzYQ9Niph4icG6KXfpOK1EsdM1TAfXukS8LUH3mA
-	0=
-X-Received: by 2002:a05:600c:3e0a:b0:49e:6050:9fbe with SMTP id 5b1f17b1804b1-4a18e49c52bmr318268005e9.15.1791997056758;
-        Wed, 14 Oct 2026 09:57:36 -0700 (PDT)
-Received: from localhost.localdomain ([37.167.99.185])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a1bd680c83sm2701595e9.2.2026.10.14.09.57.35
-        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Wed, 14 Oct 2026 09:57:35 -0700 (PDT)
-From: Olivier Kaloudoff <olivier.kaloudoff@gmail.com>
-To: linux-usb@vger.kernel.org
-Cc: oneukum@suse.com,
-	stern@rowland.harvard.edu,
-	gregkh@linuxfoundation.org,
-	linux-scsi@vger.kernel.org,
-	usb-storage@lists.one-eyed-alien.net,
-	Olivier Kaloudoff <olivier.kaloudoff@gmail.com>
-Subject: [PATCH v3] usb: uas: validate status URB length before parsing the IU
-Date: Wed, 14 Oct 2026 18:56:18 +0200
-Message-ID: <20261014165618.33800-1-olivier.kaloudoff@gmail.com>
-X-Mailer: git-send-email 2.54.0
-In-Reply-To: <20261013221937.41490-1-olivier.kaloudoff@gmail.com>
-References: <20261013221937.41490-1-olivier.kaloudoff@gmail.com>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="dmh0ZPmP"
+Received: from localhost (localhost [127.0.0.1])
+	by 011.lax.mailroute.net (Postfix) with ESMTP id 4j4hd54sFvz1XM5kD;
+	Wed, 14 Oct 2026 19:50:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1792007407; x=1794599408; bh=r7wqfoGl36He6xJQoAE153P3
+	E0igpkKOLHPD1TGIFZo=; b=dmh0ZPmPEyCtxcmc1uYgaryLOFeCFrUO23VzjlMZ
+	7ndZQa6UVUc4n63kAwZKMKK32mhNOrMartWIYDCaOgHfme5Qioo59Wb90ywb33yn
+	oqTq5C3tCB/fTlE5N9r+MxIJ5U7FvLBx+nb+5V6YFLTnqfxMU6nxhP3Z0iunFZcw
+	/EmbhQhoSA7tv+rlRFz4GPNur4i5eNbrAVWKRhR5pAWi9ftsfBCfQ8NqR0ApajwC
+	rQY0tnk8d2klgribKiXINRzCxBBxmKJCQy4iL3PMkNk6xdIAdIZosT2tXfGeppy7
+	AsfPyl0MCPjtFCdRjWfSWuFtsK5Aw0sHrzalR8A6L0+MGQ==
+X-Virus-Scanned: by MailRoute
+Received: from 011.lax.mailroute.net ([127.0.0.1])
+ by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id fmm9AwGlRFjq; Wed, 14 Oct 2026 19:50:07 +0000 (UTC)
+Received: from [100.80.231.125] (unknown [104.135.182.41])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4j4hct0kxZz1XM4Tl;
+	Wed, 14 Oct 2026 19:50:06 +0000 (UTC)
+Message-ID: <889a01a1-cae0-4038-b0ad-2ad29231152b@acm.org>
+Date: Wed, 14 Oct 2026 12:50:05 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: =?UTF-8?B?UmU6IOetlOWkjTog562U5aSNOiBbUEFUQ0ggdjUgMS8yXSBzY3NpOiBz?=
+ =?UTF-8?Q?d=3A_mark_disk_dead_on_surprise_host_removal_to_avoid_I/O_hang?=
+To: =?UTF-8?B?6IOh6L+e5Yuk?= <hulianqin@vivo.com>,
+ Christoph Hellwig <hch@lst.de>
+Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <mkp@kernel.org>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Alan Stern <stern@rowland.harvard.edu>, Jens Axboe <axboe@kernel.dk>,
+ Hannes Reinecke <hare@suse.de>, Mike Christie <michael.christie@oracle.com>,
+ Damien Le Moal <dlemoal@kernel.org>, John Garry <john.g.garry@oracle.com>,
+ Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
+ "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+ "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
+ "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "usb-storage@lists.one-eyed-alien.net"
+ <usb-storage@lists.one-eyed-alien.net>,
+ "stable@vger.kernel.org" <stable@vger.kernel.org>
+References: <TYUPR06MB6217DD31B1B3CD09E431CC12D2922@TYUPR06MB6217.apcprd06.prod.outlook.com>
+ <20261012144923.GA10852@lst.de>
+ <TYUPR06MB62172FD04314EFE34D8091EAD29E2@TYUPR06MB6217.apcprd06.prod.outlook.com>
+ <9c28fbe7-089f-4d72-86be-5805bfebb213@acm.org>
+ <TYUPR06MB62173975C70E0BBCE434475ED29D2@TYUPR06MB6217.apcprd06.prod.outlook.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <TYUPR06MB62173975C70E0BBCE434475ED29D2@TYUPR06MB6217.apcprd06.prod.outlook.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: quoted-printable
 
-uas_stat_cmplt() dereferences iu->tag without verifying that the
-status URB actually carried a full IU header.  The transfer buffer
-is a freshly-zeroed sense_iu, so a status URB that completes
-successfully but with a short or empty actual_length — observed in
-the wild during link-level upsets (Thunderbolt-chain xhci blips) and
-on a wedging bridge — reads back as iu_id=0/tag=0 and produces the
-misleading
+On 10/13/26 7:20 PM, =E8=83=A1=E8=BF=9E=E5=8B=A4 wrote:
+> Given these, I went with SHOST_SURPRISE_REMOVAL as a more targeted
+> approach. If you think SDEV_OFFLINE is viable, I'd be happy to explore
+> it further.
 
-  stat urb: no pending cmd for uas-tag 0
+Has something like the entirely untested patch below been considered?
+With this approach no new state variables are required.
 
-log spam seen e.g. on an ASMT135x enclosure and a Samsung T7, right
-before the affected commands time out into the error handler.
+Thanks,
 
-Worse, this is not just log noise: a short packet that happens to
-carry a plausible header is matched to an inflight command, and the
-untouched bytes of the zeroed buffer then stand in for fields that
-were never transferred — sense_iu.status reads as SAM_STAT_GOOD,
-falsely completing the command, and response_iu.response_code reads
-as RC_TMF_COMPLETE.
+Bart.
 
-Enforce the IU header minimum before parsing the tag, then enforce
-per-IU minimums before dereferencing: STATUS IUs need at least the
-status byte, RESPONSE IUs need response_code; READ_READY and
-WRITE_READY IUs legitimately carry only the 4-byte header.
+Subject: [PATCH] scsi: sd: Mark the disk dead if runtime resume fails in=20
+sd_remove()
 
-Signed-off-by: Olivier Kaloudoff <olivier.kaloudoff@gmail.com>
+If a SCSI disk is unplugged while runtime suspended, its request queue
+is still in the pm-only state when sd_remove() is called. The runtime
+resume attempted by scsi_autopm_get_device() fails because the parent
+device, e.g. a USB device in the USB_STATE_NOTATTACHED state, cannot be
+resumed. Hence, sdev_runtime_resume() is not called and the pm-only
+state is not cleared. Next, del_gendisk() calls
+blk_report_disk_dead(disk, false), which calls sync_filesystem(). Any
+bio submitted by the filesystem waits forever in __bio_queue_enter()
+because the queue will never leave the pm-only state and because
+GD_DEAD has not yet been set:
+
+  __bio_queue_enter+0xb8/0x174
+  blk_mq_submit_bio+0x640/0x7e4
+  [ ... ]
+  exfat_sync_fs+0xa4/0xe0
+  sync_filesystem+0xa8/0xdc
+  fs_bdev_mark_dead+0x30/0x88
+  bdev_mark_dead+0x54/0xc4
+  blk_report_disk_dead+0x8c/0xd4
+  del_gendisk+0xa0/0x2f8
+  sd_remove+0x30/0x60
+  [ ... ]
+  scsi_remove_host+0x88/0x18c
+  usb_stor_disconnect+0x68/0xf4
+
+Fix this hang by calling blk_mark_disk_dead() if runtime resume fails.
+This sets GD_DEAD, tells the filesystem that the disk has been removed
+without attempting to sync it, and wakes up any bios that are waiting
+in __bio_queue_enter(). Syncing the filesystem is not possible anyway
+if runtime resume failed, so no data is lost that could otherwise have
+been written. If runtime resume succeeds, behavior is not changed. Make
+this change in sd_remove() instead of in a SCSI LLD such that it works
+for all SCSI transports.
+
+Reported-by: Lianqin Hu <hulianqin@vivo.com>
+Closes:=20
+https://lore.kernel.org/all/TYUPR06MB6217DD31B1B3CD09E431CC12D2922@TYUPR0=
+6MB6217.apcprd06.prod.outlook.com/
+Fixes: 6f8191fdf41d ("block: simplify disk shutdown")
+Cc: stable@vger.kernel.org
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
-v3: address Sashiko review — the bare header check still let a
-    4-15 byte STATUS/RESPONSE IU match an inflight tag and read the
-    zeroed buffer as SAM_STAT_GOOD / RC_TMF_COMPLETE.  Now enforce
-    per-IU minimums (status byte / response_code) before
-    dereferencing; READ/WRITE_READY legitimately carry only the
-    4-byte header.
-v2: use dev_err_ratelimited() so a device emitting a stream of
-    short status URBs cannot spam the kernel log (per Greg KH).
+  drivers/scsi/sd.c | 10 +++++++++-
+  1 file changed, 9 insertions(+), 1 deletion(-)
 
-    Tested: module reload + 16 forced disconnect/re-enumerate cycles
-    under write load on ASMT135x (Alpine Ridge TB path) and Samsung
-    T7 (AMD onboard xhci); compile-verified on 7.3-rc5 tree.
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index a1b21ea14e54..208b915f25a2 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -4270,7 +4270,15 @@ static void sd_remove(struct scsi_device *sdp)
+  	struct device *dev =3D &sdp->sdev_gendev;
+  	struct scsi_disk *sdkp =3D dev_get_drvdata(dev);
 
- drivers/usb/storage/uas.c | 20 ++++++++++++++++++++
- 1 file changed, 20 insertions(+)
+-	scsi_autopm_get_device(sdkp->device);
++	/*
++	 * If runtime resume fails, e.g. because the device was unplugged
++	 * while runtime suspended, the request queue stays in the pm-only
++	 * state and any I/O submitted by del_gendisk(), e.g. from
++	 * sync_filesystem(), would wait forever in __bio_queue_enter().
++	 * Prevent this by marking the disk dead.
++	 */
++	if (scsi_autopm_get_device(sdkp->device) < 0)
++		blk_mark_disk_dead(sdkp->disk);
 
-diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
-index 265162981..4e099f4a3 100644
---- a/drivers/usb/storage/uas.c
-+++ b/drivers/usb/storage/uas.c
-@@ -315,6 +315,13 @@ static void uas_stat_cmplt(struct urb *urb)
- 		goto bail;
- 	}
- 
-+	if (urb->actual_length < sizeof(struct iu)) {
-+		dev_err_ratelimited(&urb->dev->dev,
-+			"stat urb: short transfer (%u bytes)\n",
-+			urb->actual_length);
-+		goto bail;
-+	}
-+
- 	idx = be16_to_cpup(&iu->tag) - 1;
- 
- 	spin_lock_irqsave(&devinfo->lock, flags);
-@@ -337,6 +344,12 @@ static void uas_stat_cmplt(struct urb *urb)
- 
- 	switch (iu->iu_id) {
- 	case IU_ID_STATUS:
-+		if (urb->actual_length < offsetofend(struct sense_iu, status)) {
-+			dev_err_ratelimited(&urb->dev->dev,
-+				"stat urb: truncated STATUS IU (%u bytes)\n",
-+				urb->actual_length);
-+			break;
-+		}
- 		uas_sense(urb, cmnd);
- 		if (cmnd->result != 0) {
- 			/* cancel data transfers on error */
-@@ -363,6 +376,13 @@ static void uas_stat_cmplt(struct urb *urb)
- 		uas_xfer_data(urb, cmnd, SUBMIT_DATA_OUT_URB);
- 		break;
- 	case IU_ID_RESPONSE:
-+		if (urb->actual_length < offsetofend(struct response_iu,
-+						     response_code)) {
-+			dev_err_ratelimited(&urb->dev->dev,
-+				"stat urb: truncated RESPONSE IU (%u bytes)\n",
-+				urb->actual_length);
-+			break;
-+		}
- 		cmdinfo->state &= ~COMMAND_INFLIGHT;
- 		success = uas_evaluate_response_iu((struct response_iu *)iu, cmnd);
- 		if (!success) {
--- 
-2.47.3
+  	device_del(&sdkp->disk_dev);
+  	del_gendisk(sdkp->disk);
 
