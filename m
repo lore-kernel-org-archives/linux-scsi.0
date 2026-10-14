@@ -1,121 +1,121 @@
-Received: from mail-pf1-f181.google.com (mail-pf1-f181.google.com [209.85.210.181])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCD92524AE3
-	for <linux-scsi@vger.kernel.org>; Wed, 14 Oct 2026 15:24:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC68F54EEAE
+	for <linux-scsi@vger.kernel.org>; Wed, 14 Oct 2026 15:31:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791991485; cv=none; b=fMT9aciyJX6tOeZWSAnsq5i58HmMSZ5BVzkLtYOy1SZlkdGlRgcssDcLKpqNx29ZYQN0jQXU75j/Px52KTkjz97zsF3em4gdGns+xVw4jkiBUvpYttmFpuAFfzXQoCX+0ArROGqjsefBuIEa1XuagcdILxOC9hfPdDjEtncYKIo=
+	t=1791991907; cv=none; b=oTb8LsmZLO9H2b9imVJrxOtNRT+05Km4yyTaPjpl1I6WNi8Kt8mGYgkXVXapdqpHsk4qyVGQKr7cyWwuP3tQOY+Y0VFgf6RX5CMs0uNsw8FJTFmVh8VYAnQw6HwiVrynFo89KsidZKSu/KI+QVP9yIEXIA77iP1VIMohhKgbax4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791991485; c=relaxed/simple;
-	bh=CJI50wcXJ2BCcOVcasSmzvaz+gwwPUSdoPRdsX17WOc=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=BGSyhS9pSiuMCgLZNGDXVdxy1hPmLw/hN9EBhmfHevZlP2ljXmZctO8PiYkn/mJqMgEcJed+sJc0f9MsknstKiciDkFlgJQ2YyMCW+/SAlojR55yfaKtKfplUnb42VOBbamf63Bst9FmewDKlgSDwTzyijKHfrFIZTnt/0PYKLQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr; spf=none smtp.mailfrom=isslab.korea.ac.kr; dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b=HczcyIm3; arc=none smtp.client-ip=209.85.210.181
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
+	s=arc-20240116; t=1791991907; c=relaxed/simple;
+	bh=eVZfDdz+PxbaYJQQcTAWuy9CWwbkIXm1f3s4n33GK7E=;
+	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
+	 Date; b=QldBMPA82jnG+i5795//5M8vmlODPvxsi4O0PVnhqvT37YvM5ubxgN1om2Y455h6NbC/1i6dV6yekf/EhpaxYe5gBFJV9iwNxm2sxujwFOoNjCal47RTGs/FMBrk7NoZie8UZ/rn16XnXt3yx3Ti+CrAqCI3WNkJD6HQJLyiex0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Pdr3ihh5; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b="HczcyIm3"
-Received: by mail-pf1-f181.google.com with SMTP id d2e1a72fcca58-890d52c7c7bso3470214b3a.2
-        for <linux-scsi@vger.kernel.org>; Wed, 14 Oct 2026 08:24:43 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=isslab-korea-ac-kr.20251104.gappssmtp.com; s=20251104; t=1791991483; x=1792596283; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:date:subject:cc:to:from:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=5OkvFTt8xurlOqdzsXBI0/VdI7mHWZJ52WKipIc8xDM=;
-        b=HczcyIm3MWVmySNs2AZGzSS+u13XAxcWoXoaeoFo4Tt2jdwuDZVe3RIA41dDcHeQS8
-         oBG90vvTV47G2g0T2TpkRr8nqyDhcQui5uQiFuZ6Z/9umigpLRDlB3bOZM2DZ//+FTN6
-         5am15r1T8b+0dUADURcoe+bWU9J0CMtLeE1+uxIh3D8k6HjX/s1urS+rNluRYbs5kS58
-         v0S/kGfTHENI89s2B1ZY2hR/P8QoDVoA/NmhFKJK3f+NPych5RrAq2UwhgADJjGSGf35
-         vbHk3DzqrvQ2tt/GDfYyD4XE7feo/chohJSz8Q/IENgBzrXWAPkV1s/x2ZXz2Ho7m9aw
-         3jAQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791991483; x=1792596283;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:date:subject:cc:to:from:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=5OkvFTt8xurlOqdzsXBI0/VdI7mHWZJ52WKipIc8xDM=;
-        b=f/Vq3Em+a+IMBU/wLhVJ9bs81/DeKLt7elATU3dmYf4/JdLb25vy00eJH5aTJkEICD
-         NAZm/8QM/+NDp3msxgFxSEFmgD/ZiktY3kipAoO+ixWMAXna54kAdfqKbJtmQuPdDC1P
-         FDJYZdjvD0nBjSxsLlvAZQOlGZF525uA59hIdp6rpndK/R0PyGYbDamiU3pZLycPR5ur
-         Gzjj7loqY+Xo+xMmFFjwmSB7LesyoEOzDTQhtqfNidOtB60YEfhzTftComGHW67m2NbW
-         37N/5m+G1vSO/oQwOLLaqlwE7RQOKtj9vwX5i0JZdije7+A2/fyaN6eSVv4P6MNEciXS
-         NgRg==
-X-Gm-Message-State: AFq9FYK1qmeD8dxOAnRQt+RQ0pbulZshnFuk8pr9fSJNf4SbdgQMOFDt
-	DqwBoWEJLqpVJfZKFAKITnOk1coqvwKMRZJX1Jr4uDDNx25skEATSRO+h1E+E7HgTn/IT113xvm
-	CHGzD
-X-Gm-Gg: AYBFou3aLaXTQBTiJHWhyjDxv0SuSY1a7Y26gvXm9MQp0fJGQ6WpLG/BH9V2oGKtYc/
-	+xUNTJrkrck24XMMdDLYMI6f3ooEZOE3uOda/CNeq3mVAC0xU4RizdvgST7YOKSlcgSI9UnNgLN
-	VkOhMRon1OKI0IdpeliJYv9shc8YevvdNPFCnZuwDIR4qw0gJ5SFg26eCtjv8Y2OnIGjm4/fhP9
-	HPFBon4KVJwUGSS6vz/jVDdqFNf7TIHkdr8dEk0O4o+cqiaX5s7ADutw6g5TYy4X4P4Snyrn31q
-	cZ+PvGabzON2EOGZwj+I6Tt7fii4qGtliRgWl3rLRzUMeuws75vwq4EiThnbkCV8/habVmAh7TF
-	uo64ocnE5tmOuSIbhATbUMeYK6NsdDJG2Iap/44Ph+SB7lmJzvMsyCSZcJMMhhYzRXLQ4HqAj7u
-	bjXY2unH6MteimVUxxRKJRbczeWcB38c0ZYGQ1B/Jbu8RRZnEopu65KvcvKtxsK8zvEsUXwuJ8W
-	2tdZPF/SWRkG8Tf+Ds4
-X-Received: by 2002:a05:6a00:c488:b0:899:915:792b with SMTP id d2e1a72fcca58-89909158069mr7435498b3a.54.1791991482981;
-        Wed, 14 Oct 2026 08:24:42 -0700 (PDT)
-Received: from localhost.localdomain ([2406:5900:1044:110c:1c49:61ee:8c8:3f4c])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-89d802a42f8sm1299291b3a.10.2026.10.14.08.24.40
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 14 Oct 2026 08:24:42 -0700 (PDT)
-From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
-To: sashiko-bot@kernel.org,
-	"Martin K . Petersen" <mkp@kernel.org>,
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org,
-	yhlee@isslab.korea.ac.kr
-Subject: Re: [PATCH v4] scsi: mvumi: reject handshake sizes that overflow the list allocations
-Date: Thu, 15 Oct 2026 00:24:35 +0900
-Message-ID: <20261014152435.3637416-1-yhlee@isslab.korea.ac.kr>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <sashiko-outbox-171387@kernel.org>
-References: <20261014134104.3528958-1-yhlee@isslab.korea.ac.kr> <sashiko-outbox-171387@kernel.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Pdr3ihh5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 487621F000C4;
+	Wed, 14 Oct 2026 15:31:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1791991906;
+	bh=ezDL9RBCWMmBvMAoKGogHVn3zofXTdUvtmdbuEpY0L0=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=Pdr3ihh5XF4qfHSS+MP8J8uun1DERzfRZ0IsOAmbWYneuuiYk5AGq0EYXD5nZD805
+	 zlCiCJotASAnngjmHed20MBr+zFHfj+77HjQ6qUz2XEnsMAnwg59SAKCNnhHQ4zSA2
+	 wfijA8/fDHm/206amkDujxJjyQWKA//tgU9FRG4gKHB4t5H7jfRM7b/u5eojwrisNO
+	 12kNIh9+dunJDSU3T1HE0R6owr+6rAlT7VXqmA2pnFuvQu4UM1W0jZYbd3tz+q9uF0
+	 abCGTjy/a6VGj8dR/Oa9Vn/e/HLAC+TxAsJ24xF6dx5eQLbbOW6LLknFcx5N24dKjl
+	 m1gtzbVCgXsUg==
+Message-ID: <sashiko-outbox-171470@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v5 4/6] scsi: mvumi: reject handshake sizes that
+ overflow the list allocations
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Yehyeong Lee" <yhlee@isslab.korea.ac.kr>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20261014151914.3632701-5-yhlee@isslab.korea.ac.kr>
+References: <20261014151914.3632701-1-yhlee@isslab.korea.ac.kr>
+ <20261014151914.3632701-5-yhlee@isslab.korea.ac.kr>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 14 Oct 2026 15:31:45 +0000
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
 
-Both are real.  Neither is fixed in this version; both are fixed in the
-series that replaces it:
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [High] scsi: mvumi: ring queue desync when firmware limits shrink across =
+reset
+--
 
-  [PATCH v5 0/6] scsi: mvumi: bound the values the firmware supplies
-  <20261014151914.3632701-1-yhlee@isslab.korea.ac.kr>
-  https://lore.kernel.org/linux-scsi/20261014151914.3632701-1-yhlee@isslab.korea.ac.kr/
+commit af2767dc7ac6cb07639493635b81a3c6bd8a53fb
+Author: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
 
-- mvumi_flush_cache(): confirmed.  device_id is an unsigned char and the
-  bound, mhba->max_target_id, comes from the u16 max_devices_support, so a
-  reported count of 256 or more never terminates the loop, and that loop
-  runs from shutdown, suspend and remove.  Fixed by 6/6 of the series,
-  "scsi: mvumi: widen the flush cache loop counter"
-  <20261014151914.3632701-7-yhlee@isslab.korea.ac.kr>, which gives the
-  counter the type of its bound rather than rejecting the value: the rest
-  of the driver already handles counts above 255 -- mvumi_probe_devices()
-  walks it with an int and host->max_id is wider too -- so rejecting would
-  turn away a working configuration.  frame->device_id is a u16 and
-  target_map holds round_up(max_target_id, 8) / 8 bytes, so nothing
-  truncates or overruns after the widening, given the reset check 4/6 adds.
-  6/6 depends on 4/6 for that reason and its commit message says so.
-- mvumi_calculate_checksum(): confirmed.  Fixed by 2/6,
-  "scsi: mvumi: reject an out-of-range handshake frame length"
-  <20261014151914.3632701-3-yhlee@isslab.korea.ac.kr>, which rejects a
-  frame_length that does not fit the handshake page before the checksum
-  walks it.  HSP_MAX_SIZE is 48 and the header is 4 bytes, so a
-  frame_length above 44 is turned away, well below the 256 that makes the
-  counter wrap, and the same patch reads the field once with READ_ONCE() so
-  the checked value is the one used.  The counter width is left alone
-  there, since the input can no longer reach it.
+scsi: mvumi: reject handshake sizes that overflow the list allocations
 
-Looking for the rest of this shape turned up three more, all in the series:
-a hotplug event bitmap size that is not held inside the 512-byte event
-buffer (3/6), a response frame tag that is checked on the outbound-list
-frame but used from the copy made afterwards, with a > instead of >= bound
-(5/6), and an inbound or outbound entry size too small to hold the frames
-the driver puts in it (folded into 4/6).
+This commit adds bounds checking for handshake page sizes to prevent
+integer overflows and out-of-bounds writes during allocations. It also
+validates that firmware limits do not grow across a host reset.
+
+> diff --git a/drivers/scsi/mvumi.c b/drivers/scsi/mvumi.c
+> index 9e342db4b8383..e63b3ba7eaabd 100644
+> --- a/drivers/scsi/mvumi.c
+> +++ b/drivers/scsi/mvumi.c
+[ ... ]
+> @@ -1054,30 +1067,80 @@ static int mvumi_hs_process_page(struct mvumi_hba=
+ *mhba,
+>  	}
+> =20
+>  	switch (hs_header->page_code) {
+> -	case HS_PAGE_FIRM_CAP:
+> +	case HS_PAGE_FIRM_CAP: {
+[ ... ]
+> +		/* A host reset does not reallocate, so the sizes have to stay
+> +		 * the ones the buffers were allocated with.  Only check that
+> +		 * the firmware is not asking for more than they hold.
+> +		 */
+> +		if (mhba->fw_flag & MVUMI_FW_ALLOC) {
+> +			if (new_max_io > mhba->max_io ||
+> +			    new_ib_max_size > mhba->ib_max_size ||
+> +			    new_ob_max_size > mhba->ob_max_size ||
+> +			    new_list_num_io > mhba->list_num_io ||
+> +			    new_max_target_id > mhba->max_target_id) {
+> +				dev_err(&mhba->pdev->dev,
+> +					"handshake sizes grew across reset\n");
+> +				return -1;
+> +			}
+> +			break;
+
+[Severity: High]
+Does this break statement skip updating the driver's internal limits when t=
+he
+firmware capacities shrink across a reset?
+
+If a soft reset occurs and the firmware reports smaller capabilities for
+list_num_io or max_io, this path is taken because the new values are not
+larger than the old ones. However, by breaking out early, the driver misses
+updating its internal state to match the smaller firmware limits.
+
+Can this lead to desynchronization of the driver-firmware circular command
+rings and overflow of firmware queues?
+
+> +		}
+> +
+> +		mhba->max_io =3D new_max_io;
+> +		mhba->list_num_io =3D new_list_num_io;
+> +		mhba->max_transfer_size =3D hs_page1->max_transfer_size;
+> +		mhba->max_target_id =3D new_max_target_id;
+> +		mhba->hba_capability =3D new_capability;
+> +		mhba->ib_max_size_setting =3D hs_page1->cl_in_max_entry_size;
+> +		mhba->ib_max_size =3D new_ib_max_size;
+> +		mhba->ob_max_size_setting =3D hs_page1->cl_out_max_entry_size;
+> +		mhba->ob_max_size =3D new_ob_max_size;
+> +
+[ ... ]
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261014151914.3632=
+701-1-yhlee@isslab.korea.ac.kr?part=3D4
