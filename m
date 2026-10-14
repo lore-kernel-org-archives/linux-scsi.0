@@ -1,64 +1,69 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 767822E8B64;
-	Wed, 14 Oct 2026 03:49:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC835371CE3
+	for <linux-scsi@vger.kernel.org>; Wed, 14 Oct 2026 03:57:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791949756; cv=none; b=OT8ypOE4JWYg703uZrq6pFL6x7tlTkj/iRMLXk/H5rQqV4mWMgwM/3QOOfEe9tv7qQvfud4kUo717gO/oEXHf2Ej5AOOZGa/XzOQsR4ALhUWlFckACgduxQ6x8Lw/U0W1v4oHUa2BAuDG9K4cAOMsf+2CVcGEeI2qMfS3Zl3uSE=
+	t=1791950231; cv=none; b=HEte55JYjdrMHiQ/kf/zf5Rtgcuhwr8qxAppK4B3vnp8RvCeJSjMfrg3v1VDhfhRCp9K5Z2RyogtxMuWrC27PiXgWoOOrvzLA2YL4vdOpUGAouu2Df31gEhXKLP/imyaXRFNl8AEnEp4IPslIRqtgr/keJEpRo30PTJuU4yp86I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791949756; c=relaxed/simple;
-	bh=gzm1MYBnjiHbw/nylqbKHcZiq9QhiOhAMCEvfoGp9Zw=;
-	h=To:Cc:Subject:From:In-Reply-To:Message-ID:References:Date:
-	 MIME-Version:Content-Type; b=d9vR2txLwF//GHlsK9s+vfFjFcY//Kn5dtsLijB4q02bUaNGXgXovtmV4Iw8Lc0XIbDG7stOOehx/ynLEXcJSNMdmig47pv8/xkWjS3nloyCFtgPsPvHpka3oGV7Ww6GLmF0uN9Df7T6hKLF/hhGfTAqyU33T86CJUIUCRmu1mc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fcaNDndA; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1791950231; c=relaxed/simple;
+	bh=Vj4puABKFK/680nMNGHP2eGggduzThgROasFWzPooGQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=LGmZhoy2AHY2CMcQ0q77CvsfOKVSyy6NmaWFpV70HbF3/vq9xDlelf9OgKAsEoT4tmIwrUG2Ej/T29/QifyR/nExAJ6j+jUFY+vw1xVUmptZLeQlidqa+VdYaoOIPRcVWah2fgiOnMPTcrlO2YQT8+pvpPxvve9iHrTKA2U8Ng4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ASOh/V84; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fcaNDndA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 83B551F000FF;
-	Wed, 14 Oct 2026 03:49:14 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ASOh/V84"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 76DDC1F000FF;
+	Wed, 14 Oct 2026 03:57:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791949754;
-	bh=pjwDiI8ilvIe59XFRDzaVZx+IGVqLkUhkfQadIkhnfE=;
-	h=To:Cc:Subject:From:In-Reply-To:References:Date;
-	b=fcaNDndAZIGh4iqXCgtykXIe4i75UXur/cjos8vNx8MfM/gOhC8Iz5nzgDtcxNGsj
-	 tKQEdduR4HywcLHQSMzMMdzzX61ahuQEixS191BTgL5iK5evMy6Jn042vPZBTyDrmg
-	 AINcc87UUfHrFGuFZl/oo5D1M9AeTu/I7ZvKEw5KlvXweZ1nweBX5j2o3DP1hz4aoS
-	 5gc+wp3oeE7MlFBZD7CbpIfg2O1Xe8REYiZCNxessZhOlu6SbVFor/wT5pndvXKLe+
-	 EfX5R32i3kp8nu3+CJ0FwmC4/S35P+mxDZalWZ0JUf+/v9iTIt6UQ4cQi5S0VmRH+s
-	 Xuqs5EKNRBq4A==
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: Jens Axboe <axboe@kernel.dk>,  linux-block@vger.kernel.org,  Christoph
- Hellwig <hch@lst.de>,  linux-scsi@vger.kernel.org
-Subject: Re: [PATCH v6 00/10] Add support for storage element depopulation
-From: "Martin K. Petersen" <mkp@kernel.org>
-In-Reply-To: <20261013122750.2237843-1-dlemoal@kernel.org>
-Message-ID: <yq133u9eydh.fsf@mail.kernel.org>
-References: <20261013122750.2237843-1-dlemoal@kernel.org>
-Date: Tue, 13 Oct 2026 23:49:13 -0400
+	s=k20260515; t=1791950230;
+	bh=ObbVgna5aPWvPDde01DS3igJ7LHAv9j6bCu8IIf+QCk=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=ASOh/V84g7EAaW4blufXpBoTVCxMVzZkwhYtRYh93/dQW13LB3KZUUtso9Mez/1kJ
+	 4M/oHgBr3UtlAOf21jftVCKPAoul40be/oLma4mR/m6n5uO2qOqkM13a6w08tW1tsA
+	 GSHiPCRbtreqVWqIjQHjhqexZNH0wTP84VJP5jO+tDXTrac8C38CY3obqvz3gIfVpU
+	 8KJu9W3FEnY9HwM1yv2SRYEWLTm9kMotspTIXYJ2I1WD64Bw0FO6G4S7ytcB6/KJO0
+	 0Sr8eUEdjMATVtTycMuD1hsF9W+yocN4YxNxOXJh1M5m2i6Y7rjBApiGsSNeNmbxLA
+	 u1BIHZVsAHsVA==
+From: "Martin K. Petersen (Oracle)" <mkp@kernel.org>
+To: "Martin K. Petersen" <mkp@kernel.org>,
+	Bart Van Assche <bvanassche@acm.org>
+Cc: linux-scsi@vger.kernel.org,
+	John Garry <john.garry@linux.dev>,
+	Hannes Reinecke <hare@kernel.org>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Jonathan Corbet <corbet@lwn.net>
+Subject: Re: [PATCH] scsi: core: Fix scsi_done() documentation
+Date: Tue, 13 Oct 2026 23:56:45 -0400
+Message-ID: <179159633698.2229379.3968138477252474683.b4-ty@b4>
+X-Mailer: git-send-email 2.55.0
+In-Reply-To: <9d10e1068d75c1a708b3a56e85782d651411fe06.1790359673.git.bvanassche@acm.org>
+References: <9d10e1068d75c1a708b3a56e85782d651411fe06.1790359673.git.bvanassche@acm.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 
+On Fri, 25 Sep 2026 11:08:59 -0700, Bart Van Assche wrote:
 
-Damien,
+> Commit 11b68e36b167 ("scsi: core: Call scsi_done directly") changed
+> scsi_done from a function pointer member into a regular function.
+> 
+> Replace all references to the scsi_done function pointer member
+> with references to the scsi_done() function.
+> 
+> 
+> [...]
 
-> These patches define a new set of block device operations for
-> generically using from the block layer the storage element
-> depopulation feature of zoned block devices. Support for this feature
-> is added to the SCSI disk driver and an emulation of this feature
-> added to the zloop driver.
->
-> The management operations can be accessed using block layer API, which
-> is intended for file systems (e.g. zonefs and XFS), as well as using
-> ioctls for users using zoned disks directly from user space.
+Applied to 7.4/scsi-queue, thanks!
 
-Looks OK to me.
-
-Reviewed-by: Martin K. Petersen <mkp@kernel.org>
+[1/1] scsi: core: Fix scsi_done() documentation
+      https://git.kernel.org/mkp/scsi/c/931a0649b9a8
 
 -- 
 Martin K. Petersen
