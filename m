@@ -1,191 +1,268 @@
-Received: from AS8PR04CU009.outbound.protection.outlook.com (mail-westeuropeazon11011015.outbound.protection.outlook.com [52.101.70.15])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C3D6453A8A7;
-	Wed, 14 Oct 2026 13:59:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.70.15
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791986407; cv=fail; b=N7mX3zshNNpFAQutk7jG6gxO/pnuIy17Wq4L4OSHEy3RNz2f0ZRXEay/Kmbl+J6seFp125t2PyaZYQKEeLWEraAZcCMJOzgNn9qoHEJ0e9qxjarSvipkhHxq3NXk6UahWVzNh6RneLK38FSl924+imLSZv5crJE4i56T8Dnuppk=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791986407; c=relaxed/simple;
-	bh=WLeohUmHzQ3dVDkEGsvCcs1l7SzMIR4z0CivkYh+RZ0=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=TMn0/fiRzlLe5vYwKrEs5M3q/oEcroaNNHD/Q1TeEKCnH6Aan1XO4tGMR8YS9JIzcb30qF6jmnzBDyiKEJrHF3gXtqQ4mQeagHR33vGFsTZ9YXWLdT8Oipxo4cJbRZpP6Su3itDnJ+77iyYlsEPVN3UzC6jedBb1JsbjumJvqtQ=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com; spf=pass smtp.mailfrom=oss.nxp.com; dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b=BpKsW/rj; arc=fail smtp.client-ip=52.101.70.15
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29FDB501F5A
+	for <linux-scsi@vger.kernel.org>; Wed, 14 Oct 2026 14:39:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1791988787; cv=none; b=KEVaQfQGQ9mKCGpFuaC4pFl0fGKdBsBh/j8g6b6cyepnO7ohjy4w12TWKd7hs7P1QaQGlffIiihe5kN+wKqTyHNXI07+eXtDmZP5uQcyNj1bm98nff4Eq+PrsPHgM0abSKSCOmE74eT7CpWRbCQLiBVoU7r+IxJ0/F+ci+Jg5vo=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1791988787; c=relaxed/simple;
+	bh=YzlY/X5I3UNnug1Lni8l6Q89J94WWba8wKR/pHcYvUM=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=tbHM3mgPx8Pet6JA3AWOlq3/rhXBZ12WN4DBATJVI6t1WNZKC4iKVuFs6MMSV1wdIKUWqGO1/x3L4nk9Ioh0j5zvR2tkva1Xt6NqOUSNKo57hqQn3aHGF2J3vt4AyszvYGhIXeIVIuQB/hxV6rMyeS9xCR53xeiHJMXWdz+8BnI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=GQlUrJIP; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b="BpKsW/rj"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=yJmyikkjbejVm2BKDF5yzloK4IcrBGZtsXQBhh1VmtW6DQRKd6mwY/JtPUiKyvROS0699DJqqL3eEP/vml7IlERcX6u7Lxq87ZM/rwNX63ddHsVeCBEaeyMxW+wHcMYS/e4hC+I86z3ji+FYuCyBcqS7ddpQqc10dNhYrPriGGkF0Tl9CgAxI7bh972Nv8KAwR5CGYW8X5Yk8sR/CtF0LPgAqiB/IPSwL5mxhoNV2HE5pNomZOtIaT0OwVhhJOIks8yENnO3VQUeSy+qGJkRXwyei9i50bqohV2acD7bKfzGp8o4kMhlljgagtePP0kq5v/SU/XnmvY6SBvqPN9NrQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=/TQuo39XxHIeRF4aL6UrvJXcE9zZi/9g9aWwNBouqyA=;
- b=kwonHX22d7mhYuQAf1jql5AhUyGurE0Zm18GsK9Ms/ATE3aFWTXRqlQCX7YB9Ix2xtkNtZQh8jgLOutGDVJkGWv2df+9CyTyYpLL1m5SRHiu/P/KJNb8BGwbYL3wVmZrEG5bgXkVLQPhlVTlNcg74II+iVDoB/bYLzValGiOtFjtRy5gv9PFzRdiFnN8R5ZiRDCNnYU6YOxxRx2lS7FCKy+AM5tefHrg/W8OaOcJFNuKLZDF8VG7k4MknzJfVaps7cpkxAFYLJrQJX85Mn/Q+2zrb5XNv0Iejl4wntaUImyQPoRFihLAp6sut/WDAUWL/UBahqtl5uQUoAFqiwGSqA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
- dkim=pass header.d=oss.nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
- s=selector1-NXP1-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=/TQuo39XxHIeRF4aL6UrvJXcE9zZi/9g9aWwNBouqyA=;
- b=BpKsW/rjmN0xvdZH7G2k3WY6ml2KulMXtj9kiiHqCAa8Vyuc5+1hS1fqA8LRAt8m0s74x4s3Jb/GnN9TWpCBLU2ZVUh7jQ9QDN1d5+IVx3YNmUd9tWODmWdU9zB6bjJZ8nljWYCsGUPtUzYZIjWCSZ4D3T6tq5BJQOGmxrr203K3fvMWv7po+bFwT2PYcb/0oxxTVEVUU2NvJK3xTMuNycL0sQ83RqZnLmM5km+TJn5DZEvTqEwJ5aYDW7b5eFSbngTUIaZAJHWvO3i3cR/hRR4eBy+c4IgWpUPzLd6mwC0YNgptxqcNqqA/16S7QyAZtPNXEW5kV5YOljLqkHvj7Q==
-Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=oss.nxp.com;
-Received: from MIYPR04MB12551.eurprd04.prod.outlook.com (2603:10a6:290:78::24)
- by ZR6PR04MB642384.eurprd04.prod.outlook.com (2603:10a6:910:e1::5) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.522.13; Wed, 14 Oct
- 2026 13:59:55 +0000
-Received: from MIYPR04MB12551.eurprd04.prod.outlook.com
- ([fe80::d6bc:8ad8:510:5fd7]) by MIYPR04MB12551.eurprd04.prod.outlook.com
- ([fe80::d6bc:8ad8:510:5fd7%6]) with mapi id 15.21.0522.012; Wed, 14 Oct 2026
- 13:59:55 +0000
-Message-ID: <12d593d8-3a70-454c-9002-5dd0e35cb137@oss.nxp.com>
-Date: Wed, 14 Oct 2026 16:59:51 +0300
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v8 12/12] MAINTAINERS: Add NXP S32N7 UFS host controller
- entry
-To: Frank Li <Frank.li@oss.nxp.com>
-Cc: NXP S32 Linux Team <s32@nxp.com>, Alim Akhtar <alim.akhtar@samsung.com>,
- Avri Altman <avri.altman@sandisk.com>, Bart Van Assche <bvanassche@acm.org>,
- Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>,
- Conor Dooley <conor+dt@kernel.org>, Frank Li <Frank.Li@nxp.com>,
- Sascha Hauer <s.hauer@pengutronix.de>,
- Pengutronix Kernel Team <kernel@pengutronix.de>,
- Fabio Estevam <festevam@gmail.com>,
- "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
- "Martin K. Petersen" <mkp@kernel.org>,
- Sai Krishna Potthuri <sai.krishna.potthuri@amd.com>,
- Ajay Neeli <ajay.neeli@amd.com>, Manivannan Sadhasivam <mani@kernel.org>,
- Pedro Sousa <pedrom.sousa@synopsys.com>, Hannes Reinicke <hare@suse.de>,
- Joao Pinto <Joao.Pinto@synopsys.com>, linux-scsi@vger.kernel.org,
- devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
- imx@lists.linux.dev, linux-arm-kernel@lists.infradead.org,
- linux-arm-msm@vger.kernel.org, clizzi@redhat.com, aruizrui@redhat.com,
- eballetb@redhat.com, echanude@redhat.com
-References: <20261013103003.373156-1-larisa.grigore@oss.nxp.com>
- <20261013103003.373156-13-larisa.grigore@oss.nxp.com>
- <as5ABOqo2MTgQBs3@SMW015318>
-Content-Language: en-US
-From: Larisa Ileana Grigore <larisa.grigore@oss.nxp.com>
-In-Reply-To: <as5ABOqo2MTgQBs3@SMW015318>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: FR5P281CA0038.DEUP281.PROD.OUTLOOK.COM
- (2603:10a6:d10:f3::8) To MIYPR04MB12551.eurprd04.prod.outlook.com
- (2603:10a6:290:78::24)
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="GQlUrJIP"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1791988785;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=bzVNBY09mvf2nDmgbk62Joy79ZFbg9oae6nY/XE/rGw=;
+	b=GQlUrJIPM2HckpKVypzroOzfGnB3CkMgFQ5OGUeU2k0OywnxK2rFZl4e0AaSQn8V+BdC8P
+	sEc3b5WN9GfcS+MKu+Jl5Bk9CNDr6uUXKQDbcWXg5qkygpHkHYRmUNOOg9LoqYkL6+RH2p
+	ZwA1mludY7QZBSjuxi/gxq+qyI11akk=
+Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-673-ASXl3u3KMWqfUMtnEAB64w-1; Wed,
+ 14 Oct 2026 14:39:41 +0000
+X-MC-Unique: ASXl3u3KMWqfUMtnEAB64w-1
+X-Mimecast-MFC-AGG-ID: ASXl3u3KMWqfUMtnEAB64w_1791988780
+Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 67885195604E;
+	Wed, 14 Oct 2026 14:39:40 +0000 (UTC)
+Received: from loberman-thinkpadp1gen5.redhat.corp (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
+	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 42988195608E;
+	Wed, 14 Oct 2026 14:39:39 +0000 (UTC)
+From: Laurence Oberman <loberman@redhat.com>
+To: mkp@kernel.org
+Cc: linux-scsi@vger.kernel.org,
+	target-devel@vger.kernel.org,
+	mlombard@redhat.com,
+	michael.christie@oracle.com,
+	linux-kernel@vger.kernel.org,
+	Laurence Oberman <loberman@redhat.com>
+Subject: [PATCH 1/2] scsi: target: iscsi: Complete an aborted WRITE stuck before the first R2T
+Date: Wed, 14 Oct 2026 10:39:31 -0400
+Message-ID: <20261014143932.39453-2-loberman@redhat.com>
+In-Reply-To: <20261014143932.39453-1-loberman@redhat.com>
+References: <20261014143932.39453-1-loberman@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: MIYPR04MB12551:EE_|ZR6PR04MB642384:EE_
-X-MS-Office365-Filtering-Correlation-Id: 55872ce5-b399-4e03-e3f6-08df29fb6d16
-X-MS-Exchange-SharedMailbox-RoutingAgent-Processed: True
-X-LD-Processed: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635,ExtAddr
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
- BCL:0;ARA:13230040|23010399003|19092799006|1800799024|7416014|376014|366016|18002099003|22082099003|10067099003|11063799006|4143699003|261009223027099003|56012099006;
-X-Microsoft-Antispam-Message-Info:
- 5tS9FcA7uFr4ksnhv5Cdv785AMWe9SSH5RFSWwhcP9JlZnKPWCp7r/QLWGBILYPSClBHvEAynKShCuaxDZxQ6RCZHc6Df7rccLnyAfq3ok1knD/PtCJnb2F1erbrT2eng5EBw+ALIc1jCuPXjngKMfpG2eV7U0AMtr9pvoKOjZi+LIo60iN816L6XE1kEjTf/9Iqg8bGifGVN1qcaTPaUqGlQXcXrWLZOaJGHc+A7GqZdyiSXLrMFJuS1izfOcndwkQGOG3HmY72vQmbrLn87WGqOdHXdE4+UwnLB1s3zsqk1ehct202Xux7se9beFk67T9wN+psrBea1VGUqcVdAy6IR0mYek5/DOZWJaiVAq8ohNqpAQ+E09se9780BEYL5t3z/sOKvRt6If7GsH+NitRA7T5fmpP1whKAqdkawYbFm4fxSR9sscE6XhnunYqWY80RWSxDfXQeFs+d6BfVHy+sancXC642B35ynCXjmEMRz3RqkdAuoL5OEFdw7DAEATb0mp8FN3rOrJFX8FvK/VCBXk6CAhepUj619jcczea44K8F3997dDo/WuZWizlRNoCo37uowht52QDRWu/ZTITBN8V4+AYAjelFcw3G8mw2HrDCP8XXTsnryoxtmdkFm5QBZX/m6sqlj0U7Dq8lqkkT/BEQOQhGPLfQ5B5EoTA=
-X-Forefront-Antispam-Report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MIYPR04MB12551.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(19092799006)(1800799024)(7416014)(376014)(366016)(18002099003)(22082099003)(10067099003)(11063799006)(4143699003)(261009223027099003)(56012099006);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
- =?utf-8?B?bHdIYkU4K2RKQmFFbitsb2Ewa3BzeWpmamI1ZjFRY3crTFVDTXFuWUtXY3Fk?=
- =?utf-8?B?aGQ1anR3UzZzMU5GdUJpUk55RnRrQTNZNWw3V1NmU2dIclJiOTEzc2tZMDdR?=
- =?utf-8?B?c2gyQUtNcGNUKzl4OFhVeFNBQlJqTEJqSkN2VkFvbHNQcEdSc3QyVFhacUpM?=
- =?utf-8?B?MUF3WGtnQzJwYkVHRmhEWGJtd3RsTjhEVi8yeUxmdzd3c2NBbytmK1QzUktk?=
- =?utf-8?B?NUJLTTByQzhodW1EZ1JHeWxLOVJDTUNTRTBQaHhhd0JuOFplemNKMEtaVC84?=
- =?utf-8?B?RVprTGZsa2FDM004M3ZSV2Q1dGJjb3hUWHlZdjc2dmlHejhxdVF4K0FOb0Ez?=
- =?utf-8?B?U1RWVGgycFpzVEo2TzVtOGQxQ2lLa2NseXVGZXBGZWhIVVBMOTdOKzNsVkl3?=
- =?utf-8?B?RXJkU3VkUkxJUCtFMGJGSG13YlZ1akkvSzJyN3l5ZUFSbENKSXRaMmIrU0Qr?=
- =?utf-8?B?V09ZdjZDUXJ0UUxCQm9UbmU5cHQvcWk4RVJaQ3dyRi9jcjdJU2xrZHhabS9G?=
- =?utf-8?B?TEROVThCNnB0cnhBbkJzK2VHYzN3ankxWi91OXV5cHQwVUp1M0oyVTFiaElw?=
- =?utf-8?B?b01HTmtnWEJEcmxsMEZaV1VSZnlFaTY0aGxVcUYwS2IxWFR2Rm8rWXZxaVAz?=
- =?utf-8?B?REFlK1RRWW1CZ1gxbCtPZEhXakxHMkliYi83MkErMmFPR3FvczJ2bU5qelAv?=
- =?utf-8?B?VnpYWVdZa20vYW5hcHdOR1pZVDVVZEJoblBCRFAxK0J2VFBVdjhMWHdlRWlt?=
- =?utf-8?B?aDdTMmFoMlFYWTgzaWh5NlBLYUI5ajVhdUxZYXU3dWtsOVJLajFRSWU1Z1c2?=
- =?utf-8?B?anp5UVhLWUR2cFMrQzR3YzlKZFY4VVNjRUN2Yzd2Y1ppN1J2R1d3UTY1WGZP?=
- =?utf-8?B?VjZxRUFTcjRHQ0xpbFRVdzNWSFZTRnZxVndDWElWclQ2K1l4UysrWFhHYWtx?=
- =?utf-8?B?VnhIMko3UnEya3crS0NGTzNGNm9aOFpubThuUnkzYWU1K085ZTA5bnp4R0w3?=
- =?utf-8?B?S2ROZlNORTBHdnlFVDltK3k4ai9BdUhRTVJXVUZhaDlrNS8rWlBYM09KbmdO?=
- =?utf-8?B?cHlYVDJ0TUFQQnlkSUdyYXdNY3NrQjZqc0lQSmFTb1FxazBhdUZ1bk4wZDdY?=
- =?utf-8?B?RUg2NVF3bjg4N05HVFFzc2gzM1Zsb1IzUlRia3l0YW5IUmo3S2xsTTF3ZzBG?=
- =?utf-8?B?UnEzaDVsUWk0RDVrVVprMitBcVUxSVNhYmxMUzRkRnZLNFFXZG9HemNRcU9v?=
- =?utf-8?B?YWRYY1hNcjRvYXQ1b1hRUnNEbkZORCs4ZzdUdTBsRXBRZlpIUW5PZCt2VEdw?=
- =?utf-8?B?MGozOThXYjVRem5JMEIvemkvRW45a255MWdoc0ZFYXFmKzhrVWFaa0JTRnM3?=
- =?utf-8?B?QzBCNitHWnF4cm9HaXBzM3NsUm9lanFHaHR2YTZkcVRoOUpVNEk3V1BVTCty?=
- =?utf-8?B?SmxRY05SUk9iZng2Y1JPakkzMmlzYmsrSkZxNlluZTNpRjlzcERNZWZGRTFS?=
- =?utf-8?B?S2h2RjU1WXJxbWo1akVvYW5xRTZvNXRNZDZsUkFMcERkNEgzQVZkRXg0ZmZS?=
- =?utf-8?B?NnJpTXp4TjFiSzJpWmRjd3dSSUtOcU41T1RQaTBYU3NXMVVWWk1oalFBcVpS?=
- =?utf-8?B?L3ZCUXFsYi9DcnAwZDVGc3dDS2dXV093V2M2RVd6RnlXVXdSU01nWG9ranl6?=
- =?utf-8?B?dVNiYUt3YkNFVzlPTWhudjdhV1N6cERhMVlnbE4xL1BnRExhNHhEd3ZNcnVN?=
- =?utf-8?B?SEZUUS9Ba3Q0dFZBUTkxbk1JZnAyVVpmZ0pET0dvYnphRzFhaFEreEdabklV?=
- =?utf-8?B?ai9ySWNUcWtjcjlhaGptbFZyOGRoTGdtR0NOL3NHMUxjTVM5ZDJkUFRMY0VM?=
- =?utf-8?B?b1VUME1Lb3RPZ2thYjE4VWN0K2svWUZOYVI0Q2RadnVqNGR1dmlNL0ZWSHl1?=
- =?utf-8?B?aFNMSUh5WkpMckdwQkNaa3BLdGJpazcvSDJTdzQxS1Z0d0dLYTBGQWtpblJn?=
- =?utf-8?B?THpaRUI5eWhtOFRURUl3ejZZdk5oSmFzdXFYSFVDaGRGQisyc0VINmtXWUI5?=
- =?utf-8?B?QktFdGtEREZpZ2hrbG9qU0hpT1R3dVMzYWgydXNpUTU2KzVWWVJ1VnpyUkVD?=
- =?utf-8?B?WW1qczFmN3Y0QlJ5UldNQ3oydUVsTXRWR3hLWXpHRXhRYmpYZUFtSmJ1N2FW?=
- =?utf-8?B?V1pPR1lxYm1DYWVBMTVEU2hGOUZaS2I5YzFYazJhTzV3c0NsVXpzc1V6V2lH?=
- =?utf-8?B?aG8vREE1a2ErTkNyVFFPbWFJMEpJL3lpZk1IdGZRQnc4ZmptUnBXWUMvYkk5?=
- =?utf-8?B?Q0JmbUhBYVpCbHdsdE1VL1BPOEVyN2NCWEJMV2o5enZKWUZCVFV2dz09?=
-X-OriginatorOrg: oss.nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 55872ce5-b399-4e03-e3f6-08df29fb6d16
-X-MS-Exchange-CrossTenant-AuthSource: MIYPR04MB12551.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Oct 2026 13:59:55.4346
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: AVcpNMvGMLRyxLvXiqP4C/LfRGMBBu4vX6m4FhX7c4TDSD2617TPK+NAmXRWjqB77pQyxEceq6yhw+Q/8Z82gA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: ZR6PR04MB642384
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.0 on 127.0.0.2
 
-On 10/13/2026 5:28 PM, Frank Li wrote:
-> On Tue, Oct 13, 2026 at 12:30:03PM +0200, Larisa Grigore wrote:
->> Add maintainer for S32N7 UFS host controller driver.
->>
->> Signed-off-by: Larisa Grigore <larisa.grigore@oss.nxp.com>
->> ---
->>   MAINTAINERS | 8 ++++++++
->>   1 file changed, 8 insertions(+)
->>
->> diff --git a/MAINTAINERS b/MAINTAINERS
->> index f53047aa8d3c..16f1dbb763cd 100644
->> --- a/MAINTAINERS
->> +++ b/MAINTAINERS
->> @@ -28119,6 +28119,14 @@ L:	linux-scsi@vger.kernel.org
->>   S:	Maintained
->>   F:	drivers/ufs/host/ufs-renesas.c
->>
->> +UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER S32N7 HOOKS
->> +M:	Larisa Grigore <larisa.grigore@oss.nxp.com>
->> +R:	NXP S32 Linux Team <s32@nxp.com>
->> +L:	linux-scsi@vger.kernel.org
-> 
-> Please add imx@lists.linux.dev
-> 
-Sure. Thank you!
+A WRITE that arrives with immediate data, and whose data length exceeds
+FirstBurstLength, is left in TRANSPORT_WRITE_PENDING by
+iscsit_execute_cmd() until the first R2T is built. If a LUN_RESET or
+ABORT_TASK from another session sets CMD_T_ABORTED in that window,
+iscsit_execute_cmd() returns without sending the R2T.
 
-> Frank
-> 
->> +S:	Maintained
->> +F:	Documentation/devicetree/bindings/ufs/nxp,s32n79-ufshc.yaml
->> +F:	drivers/ufs/host/ufs-nxp-s32n7.c
->> +
->>   UNIWILL LAPTOP DRIVER
->>   M:	Armin Wolf <W_Armin@gmx.de>
->>   L:	platform-driver-x86@vger.kernel.org
->> --
->> 2.43.0
->>
->>
+Nothing then completes the command. No R2T has been sent, so the
+initiator cannot legally send more data; no DataOut timer was armed, so
+the ERL=0 timeout cannot fire either. The command stays in
+TRANSPORT_WRITE_PENDING with CMD_T_ABORTED set, and
+core_tmr_drain_state_list() blocks in target_put_cmd_and_wait() on it for
+as long as the connection stays up:
+
+  INFO: task kworker/5:2 blocked for more than 46 seconds.
+   target_put_cmd_and_wait+0x6d/0xb0 [target_core_mod]
+   core_tmr_drain_state_list+0x2dc/0x380 [target_core_mod]
+   core_tmr_lun_reset+0x93/0x1a0 [target_core_mod]
+
+Complete it in iscsit_execute_cmd() instead. No DataOut path can race
+with this: without an R2T the initiator cannot send further data for the
+command, and the branch is only reached when no unsolicited DataOut is
+expected either.
+
+That introduces a second site which can complete a command that
+iscsit_release_commands_from_conn() would also complete during connection
+teardown, because t_state is still TRANSPORT_WRITE_PENDING there.
+target_complete_cmd() on a command that already has CMD_T_ABORTED set
+goes straight into target_cmd_interrupted(), which queues
+target_abort_work and returns without setting CMD_T_COMPLETE and without
+changing t_state, so nothing in target core records that a completion has
+happened. A second target_complete_cmd() re-initialises and re-queues
+se_cmd->work while it is still queued and drops a command reference that
+was never taken. Add a one-shot claim, taken under se_cmd->t_state_lock,
+so that only one of the two sites completes the command.
+
+This was reported against an Oracle RAC cluster on two-session iSCSI LIO
+targets, where one node's LUN_RESET aborts WRITEs belonging to the other
+node's session. It was not reproducible in a lab, so the diagnosis came
+from instrumented kernels in the reporter's environment. Across two
+hosts, every stalled command had the same signature: DMA_TO_DEVICE,
+TRANSPORT_WRITE_PENDING, CMD_T_ABORTED | CMD_T_TAS, outstanding_r2ts == 0,
+write_data_done == first_burst_len, and an empty cmd_r2t_list. 217 of 222
+LUN_RESET drains completed in under a second; the rest took 46 to 54
+seconds, which is where the hung-task panics came from. One 53.7 second
+stall recovered on its own and the host ran for a further 19 hours. The
+stall only ever ended when the initiator gave up and dropped the
+connection, which let iscsit_release_commands_from_conn() complete the
+command.
+
+Assisted-by: Claude LLM
+Signed-off-by: Laurence Oberman <loberman@redhat.com>
+---
+ drivers/target/iscsi/iscsi_target.c      | 12 +++++--
+ drivers/target/iscsi/iscsi_target_erl1.c | 10 +++++-
+ drivers/target/iscsi/iscsi_target_util.c | 46 ++++++++++++++++++++++++
+ drivers/target/iscsi/iscsi_target_util.h |  2 ++
+ include/target/iscsi/iscsi_target_core.h |  5 +++
+ 5 files changed, 72 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
+index 124ff269b8e7..aab9237a6776 100644
+--- a/drivers/target/iscsi/iscsi_target.c
++++ b/drivers/target/iscsi/iscsi_target.c
+@@ -4198,10 +4198,18 @@ static void iscsit_release_commands_from_conn(struct iscsit_conn *conn)
+ 		if (cmd->se_cmd.t_state == TRANSPORT_WRITE_PENDING) {
+ 			/*
+ 			 * We never submitted the cmd to LIO core, so we have
+-			 * to tell LIO to perform the completion process.
++			 * to tell LIO to perform the completion process --
++			 * unless iscsit_execute_cmd() already did.  t_state
++			 * stays TRANSPORT_WRITE_PENDING across that
++			 * completion, so the claim is the only thing that can
++			 * tell us.
+ 			 */
++			bool claimed = iscsit_claim_completion_locked(cmd);
++
+ 			spin_unlock_irq(&se_cmd->t_state_lock);
+-			target_complete_cmd(&cmd->se_cmd, SAM_STAT_TASK_ABORTED);
++			if (claimed)
++				target_complete_cmd(&cmd->se_cmd,
++						    SAM_STAT_TASK_ABORTED);
+ 			continue;
+ 		}
+ 		spin_unlock_irq(&se_cmd->t_state_lock);
+diff --git a/drivers/target/iscsi/iscsi_target_erl1.c b/drivers/target/iscsi/iscsi_target_erl1.c
+index d8ca06e697d6..cf72c79be355 100644
+--- a/drivers/target/iscsi/iscsi_target_erl1.c
++++ b/drivers/target/iscsi/iscsi_target_erl1.c
+@@ -927,8 +927,16 @@ int iscsit_execute_cmd(struct iscsit_cmd *cmd, int ooo)
+ 
+ 			if (!(cmd->cmd_flags &
+ 					ICF_NON_IMMEDIATE_UNSOLICITED_DATA)) {
+-				if (cmd->se_cmd.transport_state & CMD_T_ABORTED)
++				/*
++				 * No R2T has been sent for this command yet,
++				 * so returning here leaves the initiator with
++				 * nothing to send and no DataOut timer armed.
++				 * Complete it, or nothing ever will.
++				 */
++				if (cmd->se_cmd.transport_state & CMD_T_ABORTED) {
++					iscsit_complete_aborted_cmd(cmd);
+ 					return 0;
++				}
+ 
+ 				iscsit_set_dataout_sequence_values(cmd);
+ 				conn->conn_transport->iscsit_get_dataout(conn, cmd, false);
+diff --git a/drivers/target/iscsi/iscsi_target_util.c b/drivers/target/iscsi/iscsi_target_util.c
+index c1888c42afdd..31248cb9e915 100644
+--- a/drivers/target/iscsi/iscsi_target_util.c
++++ b/drivers/target/iscsi/iscsi_target_util.c
+@@ -14,6 +14,7 @@
+ #include <scsi/scsi_tcq.h>
+ #include <scsi/iscsi_proto.h>
+ #include <target/target_core_base.h>
++#include <target/target_core_backend.h>
+ #include <target/target_core_fabric.h>
+ #include <target/iscsi/iscsi_transport.h>
+ 
+@@ -186,6 +187,51 @@ struct iscsit_cmd *iscsit_allocate_cmd(struct iscsit_conn *conn, int state)
+ }
+ EXPORT_SYMBOL(iscsit_allocate_cmd);
+ 
++/*
++ * A WRITE command still in TRANSPORT_WRITE_PENDING has never been passed to
++ * the backend, so when a TMR aborts it the fabric has to complete it.  More
++ * than one site can reach that conclusion for the same command, and
++ * target_complete_cmd() on a command that already has CMD_T_ABORTED set
++ * neither sets CMD_T_COMPLETE nor changes t_state, so target core keeps no
++ * state that would stop a second completion.  Serialise them here: whichever
++ * site claims the completion performs it and every other site leaves the
++ * command alone.
++ *
++ * Caller must hold cmd->se_cmd.t_state_lock.
++ */
++bool iscsit_claim_completion_locked(struct iscsit_cmd *cmd)
++{
++	lockdep_assert_held(&cmd->se_cmd.t_state_lock);
++
++	if (cmd->completion_claimed)
++		return false;
++
++	cmd->completion_claimed = true;
++	return true;
++}
++
++/* Complete an aborted command at most once.  Must not hold t_state_lock. */
++void iscsit_complete_aborted_cmd(struct iscsit_cmd *cmd)
++{
++	struct se_cmd *se_cmd = &cmd->se_cmd;
++	unsigned long flags;
++	bool claimed;
++
++	spin_lock_irqsave(&se_cmd->t_state_lock, flags);
++	claimed = iscsit_claim_completion_locked(cmd);
++	spin_unlock_irqrestore(&se_cmd->t_state_lock, flags);
++
++	if (!claimed)
++		return;
++
++	/*
++	 * No-op unless a DataOut timer was armed for this command; callers
++	 * that complete before the first R2T have none.
++	 */
++	iscsit_stop_dataout_timer(cmd);
++	target_complete_cmd(se_cmd, SAM_STAT_TASK_ABORTED);
++}
++
+ struct iscsi_seq *iscsit_get_seq_holder_for_datain(
+ 	struct iscsit_cmd *cmd,
+ 	u32 seq_send_order)
+diff --git a/drivers/target/iscsi/iscsi_target_util.h b/drivers/target/iscsi/iscsi_target_util.h
+index 7ae48a8a5cbf..8f3fe7428428 100644
+--- a/drivers/target/iscsi/iscsi_target_util.h
++++ b/drivers/target/iscsi/iscsi_target_util.h
+@@ -18,6 +18,8 @@ extern struct iscsi_r2t *iscsit_get_r2t_from_list(struct iscsit_cmd *);
+ extern void iscsit_free_r2t(struct iscsi_r2t *, struct iscsit_cmd *);
+ extern void iscsit_free_r2ts_from_list(struct iscsit_cmd *);
+ extern struct iscsit_cmd *iscsit_allocate_cmd(struct iscsit_conn *, int);
++extern bool iscsit_claim_completion_locked(struct iscsit_cmd *cmd);
++extern void iscsit_complete_aborted_cmd(struct iscsit_cmd *cmd);
+ extern struct iscsi_seq *iscsit_get_seq_holder_for_datain(struct iscsit_cmd *, u32);
+ extern struct iscsi_seq *iscsit_get_seq_holder_for_r2t(struct iscsit_cmd *);
+ extern struct iscsi_r2t *iscsit_get_holder_for_r2tsn(struct iscsit_cmd *, u32);
+diff --git a/include/target/iscsi/iscsi_target_core.h b/include/target/iscsi/iscsi_target_core.h
+index 51ca80abacf7..0707a9520810 100644
+--- a/include/target/iscsi/iscsi_target_core.h
++++ b/include/target/iscsi/iscsi_target_core.h
+@@ -496,6 +496,11 @@ struct iscsit_cmd {
+ 	u32			first_data_sg_off;
+ 	u32			kmapped_nents;
+ 	sense_reason_t		sense_reason;
++	/*
++	 * Set once the fabric has called target_complete_cmd() for this
++	 * command.  Protected by se_cmd.t_state_lock.
++	 */
++	bool			completion_claimed;
+ }  ____cacheline_aligned;
+ 
+ struct iscsi_tmr_req {
+-- 
+2.52.0
 
