@@ -1,163 +1,169 @@
-Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-dy1-f174.google.com (mail-dy1-f174.google.com [74.125.82.174])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 533D5486406;
-	Wed, 14 Oct 2026 19:50:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A23064457C6
+	for <linux-scsi@vger.kernel.org>; Wed, 14 Oct 2026 22:00:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792007426; cv=none; b=qsqopM0I2KySsW882PHqnyfBKLBMJaI2pRWph5W2/kBuOdX8jIgDWgibXr02Dl1Bcst60LfxeNPFKBlDvsFyF3GD+EYmaGylFcS0WAdjtQesgkBmPVDquOhM7uyQyj22ogxLJlvlRbCxWKz59QsI/cCDuBbh5PTvsi78U5pf3kg=
+	t=1792015232; cv=none; b=kOwQQNbDkg/Fd7Dl1Ah5JY1R8D73cjHUI8KB4cjQVM04ZAD4t93q4yUkq3JyqEZgZ35PCPH4leSQkZ/OSdzN7yDKuE19b6tcyAFdEJ2uQwwpkog6SuEniMU5SN4CuIPqgeknLLPJR4pW28OdeiKYPm/RbJnHfCAdSsYGDDPA4K4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792007426; c=relaxed/simple;
-	bh=canbLA2SOamUFjLIrAaPoD6hNIYt9r51hATImDQ12Rw=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=IQSTQX0pp3aERxTDnHsEjxZybg/JxrynqCI94BmeNOx7Ahvgd69cW/+pS6ecpujON/zXfb9lgWDGJR5CZApGj1/f/BBuG2MqYS0LoBrA2aq8+ctVbDe2AMzTt5IAU2m+TpPlsImN00oM7dVoZ4REbL9CE7qHyXCEIz2WdJIiD1E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=dmh0ZPmP; arc=none smtp.client-ip=199.89.1.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1792015232; c=relaxed/simple;
+	bh=BLZQOSYibwhfzt6l9poBjwrEcrA9JttRxudL7LQEggM=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=RRSkjdqBFuokbaeDM+keoaHmZXLu3GfNXsVIX5lReZ3kZ/ZhyBhcCBGLJQIzL4A9k5WpiLSEYm+luTIwZP6Xlbn4+h1YAwWeSel/xwHBjNNA4jegAInsdx7feMiM03QbBPn/kxObPVsslvVSnHVNShR5cwSf7BRMYi68PHXxkR0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=purestorage.com; spf=pass smtp.mailfrom=purestorage.com; dkim=pass (2048-bit key) header.d=purestorage.com header.i=@purestorage.com header.b=XsFBqPgX; arc=none smtp.client-ip=74.125.82.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=purestorage.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=purestorage.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="dmh0ZPmP"
-Received: from localhost (localhost [127.0.0.1])
-	by 011.lax.mailroute.net (Postfix) with ESMTP id 4j4hd54sFvz1XM5kD;
-	Wed, 14 Oct 2026 19:50:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1792007407; x=1794599408; bh=r7wqfoGl36He6xJQoAE153P3
-	E0igpkKOLHPD1TGIFZo=; b=dmh0ZPmPEyCtxcmc1uYgaryLOFeCFrUO23VzjlMZ
-	7ndZQa6UVUc4n63kAwZKMKK32mhNOrMartWIYDCaOgHfme5Qioo59Wb90ywb33yn
-	oqTq5C3tCB/fTlE5N9r+MxIJ5U7FvLBx+nb+5V6YFLTnqfxMU6nxhP3Z0iunFZcw
-	/EmbhQhoSA7tv+rlRFz4GPNur4i5eNbrAVWKRhR5pAWi9ftsfBCfQ8NqR0ApajwC
-	rQY0tnk8d2klgribKiXINRzCxBBxmKJCQy4iL3PMkNk6xdIAdIZosT2tXfGeppy7
-	AsfPyl0MCPjtFCdRjWfSWuFtsK5Aw0sHrzalR8A6L0+MGQ==
-X-Virus-Scanned: by MailRoute
-Received: from 011.lax.mailroute.net ([127.0.0.1])
- by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id fmm9AwGlRFjq; Wed, 14 Oct 2026 19:50:07 +0000 (UTC)
-Received: from [100.80.231.125] (unknown [104.135.182.41])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4j4hct0kxZz1XM4Tl;
-	Wed, 14 Oct 2026 19:50:06 +0000 (UTC)
-Message-ID: <889a01a1-cae0-4038-b0ad-2ad29231152b@acm.org>
-Date: Wed, 14 Oct 2026 12:50:05 -0700
+	dkim=pass (2048-bit key) header.d=purestorage.com header.i=@purestorage.com header.b="XsFBqPgX"
+Received: by mail-dy1-f174.google.com with SMTP id 5a478bee46e88-35c76e9614aso2788933eec.0
+        for <linux-scsi@vger.kernel.org>; Wed, 14 Oct 2026 15:00:30 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=purestorage.com; s=google2022; t=1792015230; x=1792620030; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=ax2g8uufqOaIKgsATKaZd6NmJCsf+WOoNHoXDhnIUxA=;
+        b=XsFBqPgXppUpq2tbRxyjNPWY4ZWEom74yEeXSERODZ/gCqodM9QGfuxf/f9NXAZIgB
+         7PP5YhODPNEJL48oxkk3/DXy8mGI9kfXVWUS779yjeuptzxWxitQjIs3C2af88aLk30x
+         gfeYGJ8rfpgxHccID/hiDrsLvqbgHJW7hChOkJYHRB7UnvFHFhJcP/BeDZX37ZYbC9IJ
+         YlmPw2IEWboQJPWSy9cG8hLidwPftHIuabAPGSiA+Rojvs2GnGn1VLZketxRd30fUqMV
+         p8j+mg6DVpZ7mBux07vZMdM+uAFVraMOPzPmiJ84Jy+mD1WdZzbLovzBh0mPiZFKwqjm
+         VaTA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792015230; x=1792620030;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=ax2g8uufqOaIKgsATKaZd6NmJCsf+WOoNHoXDhnIUxA=;
+        b=eY/a7k/bF/fEtbpF3DdBajoX7DTVz/PQZJhLPTI5jcUG8oAP+0fVkPmkXKgfwOwsET
+         2kvdTWrcFNianxmCCSD11ZfdhSMnFZoCF97wVsxX4KeSYvZa+EuY6wBhX0WPrWunz8Je
+         an201wznIXCukAcNpI4Oz4XTuknoClgr351wdr3sxcSSOrC27tGX1TRf/QMoBu7PXK+W
+         /lPYbqyE2BNJ6KRJWtpY7fPTuIP6V1+0NPtqljuziIwL7gvZsKymWtTFMLKhSOlSx+pP
+         FfsicAYbGhfV7rkjkN4HuuLE6H+7+21vr8DpuY+8vefKczVglwXRF0pom4rl/86jCEg9
+         w4+w==
+X-Gm-Message-State: AFq9FYJVnFDpDg5ZJEA7ztCATATBffkj4O5YHqbuzPs/vB7YfTnmjrxR
+	pvHOJpFWV/6awRicsuk8paOLIkfHq11cnh78wbgeNONjMAl0O/4oWwMVA2rAYn+JsDPXVphNDGn
+	k3CAMJHN+jlVZLPmnzF4pzPz4ja83PCZR3ay8OHJ286HIqC2EluFYhyMP69xHSjf5uhPbYNzjEs
+	0rGTClY9lPYjt61OzbKCuthLeE+ObOQ20oJJbpMcS5hYeh/jJm3g==
+X-Gm-Gg: AYBFou0cltj6rhQpYjQJHtdK+r/LgzvCaiSLDcHlCYH7q0HMwZafo3gzYNikjq9r2Pn
+	DHjT3k/KzMkxVY/j+GLGhlrp6Qb8Ug6GdWNYaa4OBDHWCKTDOuMYGBHrxov3XFIV/GnWERiLBUg
+	2jUemWRNG6uQjNFImPFJCqDaGCWg2CdJe8/bn8nnd4Pvyu7FN8R87jhTCB6y8UzbkR2W/NmDmrv
+	/IWFBVR9l5A0S9EnVb8VcBjtb44kQZQ6jxYi27neE1vJJ/tB2scRsOQF+wKvMJL3rQWff5qf/Zf
+	p9KYba/i1BZY3FJxMkx4kja2w+Y50U6N9oE8lB4sPSNMhzNc0Xh/HNTbG+I3h7Aa044+wCWyPd7
+	U18iDrEo+EU5bGU0wKEb4/Ch1ne2XoiAvWhEwO1xK3XMUTauKzcqahxy5Hb9IK+23upybMpl7HM
+	zD8oDZlVsjrNbp8t0Te0+kJ0Fug5VSeCcqNwT1wDPGNF1L3hI+n2C0tImemNZPx+RkbTWtRm3Sb
+	+ZvPKG7Mv/zIoP6ZVHgo1hUpmvapw2bHoxboqwP/2LyaZsqSCDkM1WogDDAM3KJyI4O8LmQUl6o
+	zdiK6KFYz4h7U0Tqx8H2BcJbUIEDSVkzgAOK1ihNT7TK0KEVdCG1jA+cmjkpQ+CvfvkejfM=
+X-Received: by 2002:a05:7300:4706:b0:34e:3ce1:39f8 with SMTP id 5a478bee46e88-3537e021d3cmr23884241eec.18.1792015228723;
+        Wed, 14 Oct 2026 15:00:28 -0700 (PDT)
+Received: from brian--MacBookPro18.purestorage.com ([170.85.204.106])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-35b19c6c7b4sm30236633eec.24.2026.10.14.15.00.27
+        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
+        Wed, 14 Oct 2026 15:00:27 -0700 (PDT)
+From: Brian Bunker <brian@purestorage.com>
+To: linux-scsi@vger.kernel.org
+Cc: "Martin K . Petersen" <mkp@kernel.org>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	James.Bottomley@HansenPartnership.com,
+	Hannes Reinecke <hare@suse.de>,
+	Bart Van Assche <bvanassche@acm.org>,
+	krishna.kant@purestorage.com,
+	Brian Bunker <brian@purestorage.com>
+Subject: [PATCH v7 0/5] scsi: Refresh INQUIRY data and reprobe on rescan
+Date: Wed, 14 Oct 2026 15:00:09 -0700
+Message-ID: <20261014220014.94330-1-brian@purestorage.com>
+X-Mailer: git-send-email 2.56.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: =?UTF-8?B?UmU6IOetlOWkjTog562U5aSNOiBbUEFUQ0ggdjUgMS8yXSBzY3NpOiBz?=
- =?UTF-8?Q?d=3A_mark_disk_dead_on_surprise_host_removal_to_avoid_I/O_hang?=
-To: =?UTF-8?B?6IOh6L+e5Yuk?= <hulianqin@vivo.com>,
- Christoph Hellwig <hch@lst.de>
-Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <mkp@kernel.org>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Alan Stern <stern@rowland.harvard.edu>, Jens Axboe <axboe@kernel.dk>,
- Hannes Reinecke <hare@suse.de>, Mike Christie <michael.christie@oracle.com>,
- Damien Le Moal <dlemoal@kernel.org>, John Garry <john.g.garry@oracle.com>,
- Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
- "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
- "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
- "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "usb-storage@lists.one-eyed-alien.net"
- <usb-storage@lists.one-eyed-alien.net>,
- "stable@vger.kernel.org" <stable@vger.kernel.org>
-References: <TYUPR06MB6217DD31B1B3CD09E431CC12D2922@TYUPR06MB6217.apcprd06.prod.outlook.com>
- <20261012144923.GA10852@lst.de>
- <TYUPR06MB62172FD04314EFE34D8091EAD29E2@TYUPR06MB6217.apcprd06.prod.outlook.com>
- <9c28fbe7-089f-4d72-86be-5805bfebb213@acm.org>
- <TYUPR06MB62173975C70E0BBCE434475ED29D2@TYUPR06MB6217.apcprd06.prod.outlook.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <TYUPR06MB62173975C70E0BBCE434475ED29D2@TYUPR06MB6217.apcprd06.prod.outlook.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-On 10/13/26 7:20 PM, =E8=83=A1=E8=BF=9E=E5=8B=A4 wrote:
-> Given these, I went with SHOST_SURPRISE_REMOVAL as a more targeted
-> approach. If you think SDEV_OFFLINE is viable, I'd be happy to explore
-> it further.
+This series teaches the SCSI rescan path to refetch standard INQUIRY data
+and reprobe the device when the peripheral qualifier or device type has
+changed.  The motivating case is an ALUA target that transitions through
+the "unavailable" state and afterwards reports a different peripheral
+qualifier; today the kernel keeps the stale INQUIRY data and the device's
+sysfs attributes diverge from what the target reports.
 
-Has something like the entirely untested patch below been considered?
-With this approach no new state variables are required.
+  1/5 serializes the INQUIRY-derived sysfs attributes under
+      sdev->inquiry_mutex so a concurrent reprobe cannot tear the read.
+  2/5 adds scsi_update_inquiry_data() as the single point that stores
+      INQUIRY data in sdev and updates the fields derived from it.
+      Returns SCSI_INQ_REPROBE_NEEDED only when peripheral qualifier or
+      device type changes, as these are the only fields that determine
+      driver binding.
+  3/5 refactors scsi_add_lun() to use scsi_update_inquiry_data(), sharing
+      one implementation between initial-probe and reprobe paths.
+  4/5 teaches scsi_rescan_device() to refetch INQUIRY and reprobe the
+      device when scsi_update_inquiry_data() reports a change.
+  5/5 calls scsi_rescan_device() from the scan path for existing devices
+      so that a SCAN_LUNS pass refreshes them as well.
 
-Thanks,
+Changes since v6 (all prompted by the Sashiko review of v6):
+  - 2/5: sdev->inquiry is now allocated once at its maximum size
+    (256 bytes) and later updates are copied into it in place. v6 freed
+    and replaced the buffer, which is a use-after-free for the helpers
+    in scsi_device.h that read sdev->inquiry without a lock
+    (scsi_device_tpgs(), scsi_device_protection(), ...). The fixed size
+    also means a growing inquiry_len can never run past the buffer, and
+    inq_len is clamped to 255 to fit the unsigned char inquiry_len.
+  - 2/5: Capability flags (removable, lockable, ppr, wdtr, sdtr,
+    tagged_supported, simple_tags, soft_reset, is_ata, allow_restart)
+    are now set only on the first call. Rewriting them on a live device
+    undid adjustments made after probe (BLIST_NOT_LOCKABLE, usb-storage
+    and scsi_ioctl clearing lockable, aacraid forcing tagged_supported,
+    ...), and raced with runtime state bits in the same word. A rescan
+    now updates the INQUIRY buffer, vendor/model/rev, PQ, type and
+    scsi_level only. Dropped Hannes' Reviewed-by.
+  - 3/5: No code changes.
+  - 4/5: Rewritten. If the INQUIRY refresh fails, the rescan carries on
+    with the existing data instead of skipping the VPD update and the
+    driver rescan and returning success. The device handler rescan
+    method is called in all cases again, as before this series. The
+    get_device()/put_device() pair around device_reprobe() is removed:
+    callers hold a reference, and dropping the last one from
+    scsi_evt_thread() would have run the release function from the
+    work it cancels. The reprobe failure path now checks whether the
+    device could actually be set offline before saying so.
+    scsi_probe_lun() is now called for live devices, so it returns the
+    INQUIRY length instead of storing it in sdev (the length is updated
+    with the data under inquiry_mutex), and only writes lun_in_cdb and
+    the target's scsi_level when they change. Dropped Hannes'
+    Reviewed-by.
+  - 5/5: Rewritten. v6 allocated a second scsi_device when an initial
+    scan found a device still in SDEV_CREATED, passed a length of 256
+    that truncated inquiry_len to 0, leaked a reference for pseudo
+    devices, and called the driver rescan method without the device
+    lock. The scan path is now unchanged apart from calling
+    scsi_rescan_device() for an existing, fully set up device. Dropped
+    Hannes' Reviewed-by.
+  - Build-tested every patch with gcc W=1, and the series with clang 23
+    and CONFIG_WARN_CONTEXT_ANALYSIS=y; no new warnings.
 
-Bart.
+v6 cover-letter Message-ID: <20261012210511.16061-1-brian@purestorage.com>
+v5 cover-letter Message-ID: <20260618233508.97960-1-brian@purestorage.com>
+v4 cover-letter Message-ID: <20260530002019.47109-1-brian@purestorage.com>
+v3 cover-letter Message-ID: <20260429224939.77082-1-brian@purestorage.com>
+v2 cover-letter Message-ID: <20260429012733.40855-1-brian@purestorage.com>
+v1 cover-letter Message-ID: <20260424215324.99045-1-brian@purestorage.com>
 
-Subject: [PATCH] scsi: sd: Mark the disk dead if runtime resume fails in=20
-sd_remove()
+Brian Bunker (5):
+  scsi: core: Protect INQUIRY sysfs attributes with mutex
+  scsi: core: Add scsi_update_inquiry_data() for updating INQUIRY data
+  scsi: core: Refactor scsi_add_lun() to use scsi_update_inquiry_data()
+  scsi: core: Add device reprobe support to scsi_rescan_device()
+  scsi: core: Handle reprobe for existing devices during SCSI scan
 
-If a SCSI disk is unplugged while runtime suspended, its request queue
-is still in the pm-only state when sd_remove() is called. The runtime
-resume attempted by scsi_autopm_get_device() fails because the parent
-device, e.g. a USB device in the USB_STATE_NOTATTACHED state, cannot be
-resumed. Hence, sdev_runtime_resume() is not called and the pm-only
-state is not cleared. Next, del_gendisk() calls
-blk_report_disk_dead(disk, false), which calls sync_filesystem(). Any
-bio submitted by the filesystem waits forever in __bio_queue_enter()
-because the queue will never leave the pm-only state and because
-GD_DEAD has not yet been set:
+ drivers/scsi/scsi.c        | 205 ++++++++++++++++++++++++++++++
+ drivers/scsi/scsi_scan.c   | 250 +++++++++++++++++++++----------------
+ drivers/scsi/scsi_sysfs.c  |  28 +++--
+ include/scsi/scsi_device.h |  13 ++
+ 4 files changed, 377 insertions(+), 119 deletions(-)
 
-  __bio_queue_enter+0xb8/0x174
-  blk_mq_submit_bio+0x640/0x7e4
-  [ ... ]
-  exfat_sync_fs+0xa4/0xe0
-  sync_filesystem+0xa8/0xdc
-  fs_bdev_mark_dead+0x30/0x88
-  bdev_mark_dead+0x54/0xc4
-  blk_report_disk_dead+0x8c/0xd4
-  del_gendisk+0xa0/0x2f8
-  sd_remove+0x30/0x60
-  [ ... ]
-  scsi_remove_host+0x88/0x18c
-  usb_stor_disconnect+0x68/0xf4
 
-Fix this hang by calling blk_mark_disk_dead() if runtime resume fails.
-This sets GD_DEAD, tells the filesystem that the disk has been removed
-without attempting to sync it, and wakes up any bios that are waiting
-in __bio_queue_enter(). Syncing the filesystem is not possible anyway
-if runtime resume failed, so no data is lost that could otherwise have
-been written. If runtime resume succeeds, behavior is not changed. Make
-this change in sd_remove() instead of in a SCSI LLD such that it works
-for all SCSI transports.
-
-Reported-by: Lianqin Hu <hulianqin@vivo.com>
-Closes:=20
-https://lore.kernel.org/all/TYUPR06MB6217DD31B1B3CD09E431CC12D2922@TYUPR0=
-6MB6217.apcprd06.prod.outlook.com/
-Fixes: 6f8191fdf41d ("block: simplify disk shutdown")
-Cc: stable@vger.kernel.org
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
-  drivers/scsi/sd.c | 10 +++++++++-
-  1 file changed, 9 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index a1b21ea14e54..208b915f25a2 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -4270,7 +4270,15 @@ static void sd_remove(struct scsi_device *sdp)
-  	struct device *dev =3D &sdp->sdev_gendev;
-  	struct scsi_disk *sdkp =3D dev_get_drvdata(dev);
-
--	scsi_autopm_get_device(sdkp->device);
-+	/*
-+	 * If runtime resume fails, e.g. because the device was unplugged
-+	 * while runtime suspended, the request queue stays in the pm-only
-+	 * state and any I/O submitted by del_gendisk(), e.g. from
-+	 * sync_filesystem(), would wait forever in __bio_queue_enter().
-+	 * Prevent this by marking the disk dead.
-+	 */
-+	if (scsi_autopm_get_device(sdkp->device) < 0)
-+		blk_mark_disk_dead(sdkp->disk);
-
-  	device_del(&sdkp->disk_dev);
-  	del_gendisk(sdkp->disk);
+base-commit: 2f4880c22e838d54eae9ab153b0f8dce60531bf1
+-- 
+2.56.0
 
