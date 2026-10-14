@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC68F54EEAE
-	for <linux-scsi@vger.kernel.org>; Wed, 14 Oct 2026 15:31:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5890132A3FF
+	for <linux-scsi@vger.kernel.org>; Wed, 14 Oct 2026 15:32:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791991907; cv=none; b=oTb8LsmZLO9H2b9imVJrxOtNRT+05Km4yyTaPjpl1I6WNi8Kt8mGYgkXVXapdqpHsk4qyVGQKr7cyWwuP3tQOY+Y0VFgf6RX5CMs0uNsw8FJTFmVh8VYAnQw6HwiVrynFo89KsidZKSu/KI+QVP9yIEXIA77iP1VIMohhKgbax4=
+	t=1791991980; cv=none; b=hsVpH9LF96nQ5Zjz6Y8Kv9RaL0TOXKGVc8jqVkGMM5pKXKWVBo67rZ6B2jAXPt0U6H9YUheI4Tc5uSO6YhbBscMRCkt6OxWoFieFdxHiUp9AYbUS211z1wmYqGCW/F2j4+VFeCZ+fsMB272ws7WxBPutn7Xnc3eK5wP6O9CurWg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791991907; c=relaxed/simple;
-	bh=eVZfDdz+PxbaYJQQcTAWuy9CWwbkIXm1f3s4n33GK7E=;
+	s=arc-20240116; t=1791991980; c=relaxed/simple;
+	bh=LdH1ik0FuhW1Amt+nJOdDgVmYk/lpJcN77adosaIcS4=;
 	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
-	 Date; b=QldBMPA82jnG+i5795//5M8vmlODPvxsi4O0PVnhqvT37YvM5ubxgN1om2Y455h6NbC/1i6dV6yekf/EhpaxYe5gBFJV9iwNxm2sxujwFOoNjCal47RTGs/FMBrk7NoZie8UZ/rn16XnXt3yx3Ti+CrAqCI3WNkJD6HQJLyiex0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Pdr3ihh5; arc=none smtp.client-ip=100.103.45.18
+	 Date; b=R7YYqqUR9KXlijYmA0Jt+kUovBvx7moXbGZ9mg9EKFlXMQSzAocCy6g+sFeey5Yo5Qigm3tzzTRvyvx5veeuMSe5H/caMig15qcUXK8AmT+tYQ7q0vxxOp+hgbxya28oJh2WhQnESbjMww2B/8u2aQ896mg+WneNp3E/gJRHb6s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RcPTEvbN; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Pdr3ihh5"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 487621F000C4;
-	Wed, 14 Oct 2026 15:31:46 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RcPTEvbN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 36E391F000C4;
+	Wed, 14 Oct 2026 15:32:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791991906;
-	bh=ezDL9RBCWMmBvMAoKGogHVn3zofXTdUvtmdbuEpY0L0=;
+	s=k20260515; t=1791991979;
+	bh=h/QVjTI0wF0kU/DGbFxRwdrnwsMxSPnCMWEo1PTkZdA=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Pdr3ihh5XF4qfHSS+MP8J8uun1DERzfRZ0IsOAmbWYneuuiYk5AGq0EYXD5nZD805
-	 zlCiCJotASAnngjmHed20MBr+zFHfj+77HjQ6qUz2XEnsMAnwg59SAKCNnhHQ4zSA2
-	 wfijA8/fDHm/206amkDujxJjyQWKA//tgU9FRG4gKHB4t5H7jfRM7b/u5eojwrisNO
-	 12kNIh9+dunJDSU3T1HE0R6owr+6rAlT7VXqmA2pnFuvQu4UM1W0jZYbd3tz+q9uF0
-	 abCGTjy/a6VGj8dR/Oa9Vn/e/HLAC+TxAsJ24xF6dx5eQLbbOW6LLknFcx5N24dKjl
-	 m1gtzbVCgXsUg==
-Message-ID: <sashiko-outbox-171470@kernel.org>
+	b=RcPTEvbNp90EQP/zv2BmzuW4aaTYdnYaXI0O5FmUfABUAV2C++0P3i5NOvJyIQVfK
+	 fQIe9vn7xgPxSyZA21uI+FanL3PCAkSmwu1X/mh+AwZuonkofKfFpxC8Du6l/yUN8O
+	 wUuaTL29RbZlMAHAf9zBUe0f3xJjZoX2Qy56t4jbAs1JEAqO85dOcDFb6S4Dd0iak8
+	 RQHB+9zjTVJdjioGFKHU/SkGk5uXa8QXhV8sX+BWSkOyu6oVUBTqpt8jrboqsj1tPm
+	 zxehopxMCRynIPZZ8W56KqMZj4C5e15dhWNO9eNVtqjiikjtwOopNjVqbCU+xvu1Dx
+	 z3TgLkhiCzFdg==
+Message-ID: <sashiko-outbox-171472@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 4/6] scsi: mvumi: reject handshake sizes that
- overflow the list allocations
+Subject: Re: [PATCH v5 1/6] scsi: mvumi: bound the per-event parameter and
+ sense dumps
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Yehyeong Lee" <yhlee@isslab.korea.ac.kr>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20261014151914.3632701-5-yhlee@isslab.korea.ac.kr>
+In-Reply-To: <20261014151914.3632701-2-yhlee@isslab.korea.ac.kr>
 References: <20261014151914.3632701-1-yhlee@isslab.korea.ac.kr>
- <20261014151914.3632701-5-yhlee@isslab.korea.ac.kr>
+ <20261014151914.3632701-2-yhlee@isslab.korea.ac.kr>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 14 Oct 2026 15:31:45 +0000
+Date: Wed, 14 Oct 2026 15:32:57 +0000
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -47,75 +47,51 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] scsi: mvumi: ring queue desync when firmware limits shrink across =
-reset
+- [Medium] scsi: mvumi: missing endianness conversion for firmware event fi=
+elds
 --
 
-commit af2767dc7ac6cb07639493635b81a3c6bd8a53fb
+commit edf8fe53e2e86275574e11fc999d2a119ef7acd5
 Author: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
 
-scsi: mvumi: reject handshake sizes that overflow the list allocations
+scsi: mvumi: bound the per-event parameter and sense dumps
 
-This commit adds bounds checking for handshake page sizes to prevent
-integer overflows and out-of-bounds writes during allocations. It also
-validates that firmware limits do not grow across a host reset.
+This commit adds bounds checking to the event parameter and sense data
+loops in mvumi_show_event() to prevent out-of-bounds reads when printing
+firmware events to the system log.
 
 > diff --git a/drivers/scsi/mvumi.c b/drivers/scsi/mvumi.c
-> index 9e342db4b8383..e63b3ba7eaabd 100644
+> index e70d336b4ab39..38a92f8c25f5b 100644
 > --- a/drivers/scsi/mvumi.c
 > +++ b/drivers/scsi/mvumi.c
-[ ... ]
-> @@ -1054,30 +1067,80 @@ static int mvumi_hs_process_page(struct mvumi_hba=
- *mhba,
->  	}
+> @@ -1361,7 +1361,8 @@ static void mvumi_show_event(struct mvumi_hba *mhba,
+>  	if (ptr->param_count) {
+>  		printk(KERN_WARNING "Event param(len 0x%x): ",
+>  						ptr->param_count);
+> -		for (i =3D 0; i < ptr->param_count; i++)
+> +		for (i =3D 0; i < ptr->param_count &&
+> +		     i < ARRAY_SIZE(ptr->params); i++)
+>  			printk(KERN_WARNING "0x%x ", ptr->params[i]);
+
+[Severity: Medium]
+As this patch modifies the parameter array loop in mvumi_show_event(), does
+this code miss an endianness conversion when reading from the hardware DMA
+buffer?
+
+The u32 parameter fields from the event payload (ptr->params[i]) are
+printed natively. On Big-Endian architectures, this could lead to
+byte-swapped values appearing in the system logs whenever the firmware
+reports an event.
+
+Additionally, just prior to this loop in mvumi_show_event(), other
+multi-byte fields from the hardware event structure (sequence_no, event_id,
+and device_id) are also printed natively. Can these fields cause garbage
+values to be logged on Big-Endian systems if they are not converted using
+functions like le32_to_cpu() or le16_to_cpu()?
+
 > =20
->  	switch (hs_header->page_code) {
-> -	case HS_PAGE_FIRM_CAP:
-> +	case HS_PAGE_FIRM_CAP: {
-[ ... ]
-> +		/* A host reset does not reallocate, so the sizes have to stay
-> +		 * the ones the buffers were allocated with.  Only check that
-> +		 * the firmware is not asking for more than they hold.
-> +		 */
-> +		if (mhba->fw_flag & MVUMI_FW_ALLOC) {
-> +			if (new_max_io > mhba->max_io ||
-> +			    new_ib_max_size > mhba->ib_max_size ||
-> +			    new_ob_max_size > mhba->ob_max_size ||
-> +			    new_list_num_io > mhba->list_num_io ||
-> +			    new_max_target_id > mhba->max_target_id) {
-> +				dev_err(&mhba->pdev->dev,
-> +					"handshake sizes grew across reset\n");
-> +				return -1;
-> +			}
-> +			break;
-
-[Severity: High]
-Does this break statement skip updating the driver's internal limits when t=
-he
-firmware capacities shrink across a reset?
-
-If a soft reset occurs and the firmware reports smaller capabilities for
-list_num_io or max_io, this path is taken because the new values are not
-larger than the old ones. However, by breaking out early, the driver misses
-updating its internal state to match the smaller firmware limits.
-
-Can this lead to desynchronization of the driver-firmware circular command
-rings and overflow of firmware queues?
-
-> +		}
-> +
-> +		mhba->max_io =3D new_max_io;
-> +		mhba->list_num_io =3D new_list_num_io;
-> +		mhba->max_transfer_size =3D hs_page1->max_transfer_size;
-> +		mhba->max_target_id =3D new_max_target_id;
-> +		mhba->hba_capability =3D new_capability;
-> +		mhba->ib_max_size_setting =3D hs_page1->cl_in_max_entry_size;
-> +		mhba->ib_max_size =3D new_ib_max_size;
-> +		mhba->ob_max_size_setting =3D hs_page1->cl_out_max_entry_size;
-> +		mhba->ob_max_size =3D new_ob_max_size;
-> +
-[ ... ]
+>  		printk(KERN_WARNING "\n");
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261014151914.3632=
-701-1-yhlee@isslab.korea.ac.kr?part=3D4
+701-1-yhlee@isslab.korea.ac.kr?part=3D1
