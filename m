@@ -1,40 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A2733CF1F9;
-	Wed, 14 Oct 2026 05:33:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A09E414412;
+	Wed, 14 Oct 2026 05:33:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791956029; cv=none; b=jJi5ikuqdvbVysBL4vLUjphtZ49uYY0mZIBdH8zlWxZd938wAtYCtiT1LZu30ceq0mCT1JUCS4F3wpCfN+AG1tp1xBX+7OEI/EYa6sldEVhcmVB3s832adXg6bbDKN6KiOEO/QVf6bNZIkNtsKSWee6tpiBv8r/cH4cSaq8Z8EI=
+	t=1791956029; cv=none; b=jI76cDTFkPBvTSRkTarLef9HuuY7AH8BTRr1xAaSTsA5cTt2LRSNRilGDBjk+Sqe2BCgexWOiGqAbZXsBoyEJB8NcXx+sWx048DY76n3vfAu+YnlqWPVZPDOb96/GOU3QEcN+VZds9pugnzCRdMDPx/Sz7WRSuPngw1JKYLx3f4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1791956029; c=relaxed/simple;
-	bh=+uH94CIILvArU6Rann2ZZKNV5Y92V1vzys1UbXLQ0QQ=;
+	bh=gas4tmAo1mG/8El6XGHsViJU+0mleL1jmhBQ0pqAHBo=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=FH7zIs24G7QK2h6kC0aYaHU9aKF+DT14l8rvbzeqREiBu8RVIljUUWuI1PNNmJn4yIYZEhpl5gptRzhh5q28mpuFsNHyQC0S/YQ9c1uvEt07xUM0rcaD/b8UQiPY+pNT7Jj+JmS5Tli7H9YV/OU1q7M6GfzPmRCu3R5W7dNeN5c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CIbHUb4c; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version; b=tMJk87fk0WQ3SvmJcQt29iNLzmYirKwCq+vNesLDPAj9MNR3/eHTf0DOPctycY3m3ltGvUQXRZleqFXBfMpXHd3vF8uuBS1+cAzfak5cm/scgct0JcH37BpDgKvsQglFSOfVYYj1knHF4Rsei+IenFSm8lTv1G5Ml8+2DGJ12Xw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bhYl+hyo; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CIbHUb4c"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2D2111F00899;
-	Wed, 14 Oct 2026 05:33:46 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bhYl+hyo"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3B0DB1F0089A;
+	Wed, 14 Oct 2026 05:33:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1791956026;
-	bh=EoD6AKN7JIOJT46QP32gY1pSzRM7a3Jbe+pxubIvU9Q=;
+	s=k20260515; t=1791956027;
+	bh=7FzShNPCcGaSQ1LNpGKyCNV0/TpMAcUqeqZKkQaG6g8=;
 	h=From:To:Subject:Date:In-Reply-To:References;
-	b=CIbHUb4cuXSJpUWCTZR3iua5GoRdgFa1PmKRscFJ4R8ow/dvDp5Q1CsA/jpFLWl1S
-	 ieiIAEWGpoVmqe0TvCbkstcSELZ1r883hdF6UDbtCA6Wy43H4HcVDNja5xW29opYKJ
-	 FlNLq3Uv/++Epl/NFUdLDlxULkzYs5qJk9dn3cvh4YUWFEGeJ+E1xLaKGZ7/l7entk
-	 m6cVx07GARQ7q0C0faxAfJveAaQiMJ5P1IPwRjuDf7Tr2AyULhbR1MjAi3piPNIvZk
-	 7ItywewX2HkINE6UVz5NzYNCL6O5weCnZ+EsJOxI5460d2LxIH00y13A1YIBg+7HVp
-	 6nUXfHWdq9k0w==
+	b=bhYl+hyoGozWN/PY6X8M+DSyeAja2Vc01wJmSJ6LXNRPLtvUadtjui4ENEcb0oe1k
+	 jGJhON6OSxK6tVbWp4m9Pamcy5JSEjgLeQ84J4vqIXgWVRuWOvwUwlwT9DmE2BYfz9
+	 xfxminCEEEqySmMJtsntUZsCPQrHxcJrjGhbvUkLBjyCbuGab02NDZh41Vvcm3yBco
+	 xO0wzVapuYzFkrhG4d0rL4Y4VMEYkQClzSAZk40TlcYu/7GCglnWSOjgjoX0VdqEzj
+	 sTv/q/Qw8ginIqOc/Nz7/rtGdmU6hC/ZmJhDLffERCWFqPoR+iCxwWCKGyOZ6T42AB
+	 SSsqquXaEwQUQ==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: Jens Axboe <axboe@kernel.dk>,
 	linux-block@vger.kernel.org,
 	Christoph Hellwig <hch@lst.de>,
 	linux-scsi@vger.kernel.org,
 	"Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH v7 07/10] zloop: add degrade_element control command
-Date: Wed, 14 Oct 2026 14:33:33 +0900
-Message-ID: <20261014053337.2328544-8-dlemoal@kernel.org>
+Subject: [PATCH v7 08/10] scsi: sd: fail read commands to offline zones early
+Date: Wed, 14 Oct 2026 14:33:34 +0900
+Message-ID: <20261014053337.2328544-9-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20261014053337.2328544-1-dlemoal@kernel.org>
 References: <20261014053337.2328544-1-dlemoal@kernel.org>
@@ -46,250 +46,46 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Allow users to mark storage elements of a zloop device as degraded using
-the new "degrade_element" control command. The element to degrade is
-indicated using the element_id option. Example:
-
-echo "degrade_element id=0,element_id=2" > /dev/zloop-control
-
-If the element ID identifies an all access storage element, read and write
-operations targeting a zone served by the degraded lement are failed.
-For a partial access storage element, read or write operations are failed
-depending on the storage element type. This check for an element status
-is done without taking the storage elements mutex lock, so in order to
-avoid memory access ordering issues, storage element status access is
-changed to use READ_ONCE() and WRITE_ONCE().
-
-The zoned_loop.rst documentation file is also updated to explain this new
-feature.
+Issuing read commands to offline zones of a ZBC disk will result in
+failures. So do not issue such command and fail then early in
+sd_setup_read_write_cmnd(). This change also checks write commands, which
+is fine but should actually never happen as the block layer zone write
+plugging code already fails write BIOs to offline zones early in the
+submission path.
 
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Martin K. Petersen <mkp@kernel.org>
 ---
- .../admin-guide/blockdev/zoned_loop.rst       | 19 +++-
- drivers/block/zloop.c                         | 88 ++++++++++++++++++-
- 2 files changed, 104 insertions(+), 3 deletions(-)
+ drivers/scsi/sd.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/Documentation/admin-guide/blockdev/zoned_loop.rst b/Documentation/admin-guide/blockdev/zoned_loop.rst
-index 6f344dc151a0..26b99a2f3e73 100644
---- a/Documentation/admin-guide/blockdev/zoned_loop.rst
-+++ b/Documentation/admin-guide/blockdev/zoned_loop.rst
-@@ -63,6 +63,7 @@ The options available for the add command can be listed by reading the
- 	$ cat /dev/zloop-control
-         add id=%d,capacity_mb=%u,zone_size_mb=%u,zone_capacity_mb=%u,conv_zones=%u,max_open_zones=%u,base_dir=%s,nr_queues=%u,queue_depth=%u,buffered_io,zone_append=%u,ordered_zone_append,discard_write_cache,stor_elements=%u
-         remove id=%d
-+        degrade_element id=%d,element_id=%u
- 
- In more details, the options that can be used with the "add" command are as
- follows.
-@@ -143,7 +144,23 @@ the zoned device will not be created.
- To fully delete a zoned device, after executing the remove operation, the device
- base directory containing the backing files of the device zones must be deleted.
- 
--4) Example
-+4) Degrading a storage element
-+------------------------------
-+
-+When storage element emulation is enabled, storage elements can be set in a
-+degraded state to emulate defective storage elements (e.g. defective heads of a
-+hard disk). This is done by issuing the "degrade_element" command to
-+/dev/zloop-control, specifying the ID of the target device and the ID of the
-+storage element to degrade::
-+
-+        $ echo "degrade_element id=X,element_id=Y" > /dev/zloop-control
-+
-+Any write access to sectors of a zone served by a degraded storage element will
-+result in a failure. For read accesses, the command will be failed if the read
-+element serving the zone is degraded, or if the storage elements are emulated
-+as all access physical elements.
-+
-+5) Example
- ----------
- 
- The following sequence of commands creates a 2GB zoned device with zones of 64
-diff --git a/drivers/block/zloop.c b/drivers/block/zloop.c
-index 24470c3d2e80..1fbc38ee6f50 100644
---- a/drivers/block/zloop.c
-+++ b/drivers/block/zloop.c
-@@ -38,6 +38,7 @@ enum {
- 	ZLOOP_OPT_DISCARD_WRITE_CACHE	= (1 << 11),
- 	ZLOOP_OPT_MAX_OPEN_ZONES	= (1 << 12),
- 	ZLOOP_OPT_STOR_ELEMENTS		= (1 << 13),
-+	ZLOOP_OPT_ELEMENT_ID		= (1 << 14),
- };
- 
- static const match_table_t zloop_opt_tokens = {
-@@ -55,6 +56,7 @@ static const match_table_t zloop_opt_tokens = {
- 	{ ZLOOP_OPT_DISCARD_WRITE_CACHE, "discard_write_cache"	},
- 	{ ZLOOP_OPT_MAX_OPEN_ZONES,	"max_open_zones=%u"	},
- 	{ ZLOOP_OPT_STOR_ELEMENTS,	"stor_elements=%u"	},
-+	{ ZLOOP_OPT_ELEMENT_ID,		"element_id=%u"		},
- 	{ ZLOOP_OPT_ERR,		NULL			}
- };
- 
-@@ -81,6 +83,7 @@ enum zloop_stor_elements {
- #define ZLOOP_DEF_ZONE_APPEND		true
- #define ZLOOP_DEF_ORDERED_ZONE_APPEND	false
- #define ZLOOP_DEF_STOR_ELEMENTS		ZLOOP_STOR_ELEMENTS_NONE
-+#define ZLOOP_DEF_ELEMENT_ID		0
- 
- /* Arbitrary limit on the zone size (16GB). */
- #define ZLOOP_MAX_ZONE_SIZE_MB		16384
-@@ -101,6 +104,7 @@ struct zloop_options {
- 	bool			ordered_zone_append;
- 	bool			discard_write_cache;
- 	enum zloop_stor_elements stor_elements;
-+	unsigned int		element_id;
- };
- 
- /*
-@@ -1206,6 +1210,31 @@ static int zloop_report_elements(struct gendisk *disk,
- 	return 0;
- }
- 
-+static int zloop_degrade_element(struct zloop_device *zlo,
-+				 unsigned int element_id)
-+{
-+	struct blk_se *se;
-+	int ret = 0;
-+
-+	if (zlo->stor_elements == ZLOOP_STOR_ELEMENTS_NONE)
-+		return -EOPNOTSUPP;
-+
-+	if (!element_id || element_id > zlo->nr_elements)
-+		return -EINVAL;
-+
-+	mutex_lock(&zlo->stor_elements_lock);
-+
-+	se = &zlo->elements[element_id - 1];
-+	if (READ_ONCE(se->status) == BLK_SE_STS_OK)
-+		WRITE_ONCE(se->status, BLK_SE_STS_DEGRADED);
-+	else
-+		ret = -EINVAL;
-+
-+	mutex_unlock(&zlo->stor_elements_lock);
-+
-+	return ret;
-+}
-+
- static void zloop_remove_element_work(struct work_struct *work)
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index a1b21ea14e54..db7c19d1c2ff 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -1424,7 +1424,8 @@ static blk_status_t sd_setup_read_write_cmnd(struct scsi_cmnd *cmd)
  {
- 	struct zloop_device *zlo = container_of(work, struct zloop_device,
-@@ -2081,6 +2110,42 @@ static int zloop_ctl_remove(struct zloop_options *opts)
- 	return 0;
- }
+ 	struct request *rq = scsi_cmd_to_rq(cmd);
+ 	struct scsi_device *sdp = cmd->device;
+-	struct scsi_disk *sdkp = scsi_disk(rq->q->disk);
++	struct gendisk *disk = rq->q->disk;
++	struct scsi_disk *sdkp = scsi_disk(disk);
+ 	sector_t lba = sectors_to_logical(sdp, blk_rq_pos(rq));
+ 	sector_t threshold;
+ 	unsigned int nr_blocks = sectors_to_logical(sdp, blk_rq_sectors(rq));
+@@ -1456,6 +1457,11 @@ static blk_status_t sd_setup_read_write_cmnd(struct scsi_cmnd *cmd)
+ 		goto fail;
+ 	}
  
-+static int zloop_ctl_degrade_element(struct zloop_options *opts)
-+{
-+	struct zloop_device *zlo;
-+	int ret = 0;
++	/* Prevent read/write to offline zones of ZBC disks. */
++	if (sdkp->device->type == TYPE_ZBC &&
++	    disk_zone_is_offline(disk, blk_rq_pos(rq)))
++		goto fail;
 +
-+	if (!(opts->mask & ZLOOP_OPT_ID)) {
-+		pr_err("No ID specified for degrade_element\n");
-+		return -EINVAL;
-+	}
-+
-+	if (opts->mask & ~(ZLOOP_OPT_ID | ZLOOP_OPT_ELEMENT_ID)) {
-+		pr_err("Invalid option specified for degrade_element\n");
-+		return -EINVAL;
-+	}
-+
-+	mutex_lock(&zloop_ctl_mutex);
-+
-+	zlo = idr_find(&zloop_index_idr, opts->id);
-+	if (!zlo || zlo->state == Zlo_creating)
-+		ret = -ENODEV;
-+	else if (zlo->state == Zlo_deleting)
-+		ret = -EINVAL;
-+	if (ret)
-+		goto unlock;
-+
-+	ret = zloop_degrade_element(zlo, opts->element_id);
-+	if (!ret)
-+		pr_info("Degraded element %u of device %u\n",
-+			opts->element_id, opts->id);
-+
-+unlock:
-+	mutex_unlock(&zloop_ctl_mutex);
-+
-+	return ret;
-+}
-+
- static int zloop_parse_options(struct zloop_options *opts, const char *buf)
- {
- 	substring_t args[MAX_OPT_ARGS];
-@@ -2101,6 +2166,7 @@ static int zloop_parse_options(struct zloop_options *opts, const char *buf)
- 	opts->zone_append = ZLOOP_DEF_ZONE_APPEND;
- 	opts->ordered_zone_append = ZLOOP_DEF_ORDERED_ZONE_APPEND;
- 	opts->stor_elements = ZLOOP_DEF_STOR_ELEMENTS;
-+	opts->element_id = ZLOOP_DEF_ELEMENT_ID;
- 
- 	if (!buf)
- 		return 0;
-@@ -2252,6 +2318,13 @@ static int zloop_parse_options(struct zloop_options *opts, const char *buf)
- 			}
- 			opts->stor_elements = token;
- 			break;
-+		case ZLOOP_OPT_ELEMENT_ID:
-+			if (match_uint(args, &token)) {
-+				ret = -EINVAL;
-+				goto out;
-+			}
-+			opts->element_id = token;
-+			break;
- 		case ZLOOP_OPT_ERR:
- 		default:
- 			pr_warn("unknown parameter or missing value '%s'\n", p);
-@@ -2280,14 +2353,16 @@ static int zloop_parse_options(struct zloop_options *opts, const char *buf)
- enum {
- 	ZLOOP_CTL_ADD,
- 	ZLOOP_CTL_REMOVE,
-+	ZLOOP_CTL_DEGRADE_ELEMENT,
- };
- 
- static struct zloop_ctl_op {
- 	int		code;
- 	const char	*name;
- } zloop_ctl_ops[] = {
--	{ ZLOOP_CTL_ADD,	"add" },
--	{ ZLOOP_CTL_REMOVE,	"remove" },
-+	{ ZLOOP_CTL_ADD,		"add" },
-+	{ ZLOOP_CTL_REMOVE,		"remove" },
-+	{ ZLOOP_CTL_DEGRADE_ELEMENT,	"degrade_element" },
- 	{ -1,	NULL },
- };
- 
-@@ -2335,6 +2410,9 @@ static ssize_t zloop_ctl_write(struct file *file, const char __user *ubuf,
- 	case ZLOOP_CTL_REMOVE:
- 		ret = zloop_ctl_remove(&opts);
- 		break;
-+	case ZLOOP_CTL_DEGRADE_ELEMENT:
-+		ret = zloop_ctl_degrade_element(&opts);
-+		break;
- 	default:
- 		pr_err("Invalid operation\n");
- 		ret = -EINVAL;
-@@ -2358,6 +2436,8 @@ static int zloop_ctl_show(struct seq_file *seq_file, void *private)
- 		tok = &zloop_opt_tokens[i];
- 		if (!tok->pattern)
- 			break;
-+		if (tok->token == ZLOOP_OPT_ELEMENT_ID)
-+			continue;
- 		if (i)
- 			seq_putc(seq_file, ',');
- 		seq_puts(seq_file, tok->pattern);
-@@ -2368,6 +2448,10 @@ static int zloop_ctl_show(struct seq_file *seq_file, void *private)
- 	seq_puts(seq_file, zloop_ctl_ops[1].name);
- 	seq_puts(seq_file, " id=%d\n");
- 
-+	/* Degrade element operation */
-+	seq_puts(seq_file, zloop_ctl_ops[2].name);
-+	seq_puts(seq_file, " id=%d,element_id=%u\n");
-+
- 	return 0;
- }
- 
+ 	/*
+ 	 * Some SD card readers can't handle accesses which touch the
+ 	 * last one or two logical blocks. Split accesses as needed.
 -- 
 2.55.0
 
