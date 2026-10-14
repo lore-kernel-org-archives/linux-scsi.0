@@ -1,130 +1,187 @@
-Received: from mail-wm1-f43.google.com (mail-wm1-f43.google.com [209.85.128.43])
+Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C871E52CCC2
-	for <linux-scsi@vger.kernel.org>; Tue, 13 Oct 2026 22:19:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A2A1127E074
+	for <linux-scsi@vger.kernel.org>; Wed, 14 Oct 2026 00:42:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1791929982; cv=none; b=ZzZSTWZVXCqW/W2QIiNGo25meYUnX5xzNIih+89ZLZh1IHo24XM37q1r1OijmJladnT4exr+GVbN6Mw9szy2+1IiI1yfXnbS3F/T9knuwOmrNHkCREQW/c575Ut7EHqyhoWaLKxK8dspy41RYV52Exn1A2qxXhlh0wEZwuL5ucc=
+	t=1791938566; cv=none; b=EzvsvLQBOH9oDs69CP8ta4IPHKmELiZ6tJ3n6FcFa+48VvDly91trZZKw5vaf943qawHXa8pbVK3YZiIgt2n+SG54V8qjBryqRqq+xQcEkRA77EOubH6bI7RaPPhcyfXPplukvFCcGLKL3HiiMEVpKrbVqk7YtFNnejr2tdY8FM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1791929982; c=relaxed/simple;
-	bh=A+I/86KdVa8jIDGYt6ApDmQiXDBusJSa5kMa1fb0xTQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=ZOiKE+kwb01yrVATCLKYDxQ6T2clA9tJnAQe0XJSCSVxEA3gxHw5l7rMZLFMJVd13xPDhFHwOTgrwc54/DJ2ICRg+kJKYV8mUiRx17tUQNLvlJg4xpbMeGku2WfeoAzDtsS9YljDMstSE3OQvHewn9Co8CCrzm7tJOTghRs2pFk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=T9ivcEh2; arc=none smtp.client-ip=209.85.128.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1791938566; c=relaxed/simple;
+	bh=7HcUK1CTNpahJarcDRW/PNLN4S+XdFX5l+dOxrBeiwg=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=s3siCJS9dkwdHZlgvipVBiXJZEMZy2VrBn7qpINMlcdz54w8kFyRhLEOZUoB/vB3s7/Z82HcF2ZEdh501ju0ynpTRmWNmu07vUfCoW6u/4SqyXfjGbSCkrcF+0uzM1h1oaQ00GbXNbky/u9uWY2Ro2It+uwhhWdLP8trsjl/MGc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr; spf=none smtp.mailfrom=isslab.korea.ac.kr; dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b=B/a1jyGC; arc=none smtp.client-ip=209.85.214.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="T9ivcEh2"
-Received: by mail-wm1-f43.google.com with SMTP id 5b1f17b1804b1-4a0286c981dso3027125e9.2
-        for <linux-scsi@vger.kernel.org>; Tue, 13 Oct 2026 15:19:40 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b="B/a1jyGC"
+Received: by mail-pl1-f171.google.com with SMTP id d9443c01a7336-2dd76b1361dso2991985ad.1
+        for <linux-scsi@vger.kernel.org>; Tue, 13 Oct 2026 17:42:44 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1791929979; x=1792534779; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:mime-version:message-id:date
-         :subject:cc:to:from:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=SfkApeXinHFIr0p8vXlFlLyypuKINDLCCxfSgft0shY=;
-        b=T9ivcEh20L2Gnf55fpi7DhP2HKShJOGeeTBrs3mIni6QHZp0ttdbtyyKpxc/m9Vce8
-         06mrG4FlYTMFm7pK4KNdp14OM3toRYmxvEltNOFm6CdqSKmJH9wYrgNhzFL0ghGbiRLK
-         HZdBJz1KcH9dup7ZCLkndjoFeAnmT5BuQGBYW0ipohtIy1mhKFvifFngR45FbEB0EMYh
-         jhGgdXYmyQqe1X1d+jTdxoKjFDzskAakrug5B3aBOVNYioYtDaWRVI2sDYDxWE+5E0Qe
-         k2+5HsHdT7D0Mq8Nf7IYBc6Gv8Cthsb1oUwt/RCpiHkaxdqHfezmgxOixLbW4Napo6z2
-         FJTA==
+        d=isslab-korea-ac-kr.20251104.gappssmtp.com; s=20251104; t=1791938564; x=1792543364; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=LySGsEgkXXlREpE9ITg3+XAbVmPqYYJKWOIEOpJmtB0=;
+        b=B/a1jyGC4kVqHhRUO62V4xQnJGh7D370CWqXbo26VH8KINX0odsXelgLHAWTvg1w0T
+         7p/Uj8QVg5/OWyySWbNzqhXZVhFlXQ6BlnGyPPtqn+MQDDbO3enLWtw+l+FxGLkW9gZD
+         b3TxHsY0PA8M7qal8Gsn7Sc9ckaVeL8CMvsa4sQrmBvJMWBTsGJL8Qgaqlbdq5tf1LSA
+         40+YHdeMxpf0azPX67qLMUKtIHjLUt97vJ2CMIaqi7SbeCzlXIa1RR+9062Duobtvy9f
+         KstNdc0AzWj+qMr2tyOlE9OVACYplyEnRL2YTJ36TrubogogBFEY5F1nfivOEwqXj7Yq
+         f3qg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1791929979; x=1792534779;
-        h=content-transfer-encoding:content-type:mime-version:message-id:date
-         :subject:cc:to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=SfkApeXinHFIr0p8vXlFlLyypuKINDLCCxfSgft0shY=;
-        b=CRYys0htgriFEBi9tX41WExp1dslbXi0brA0iG7bPSoUAEQq/JonO1Qn2BOUNQ3xEw
-         stdGOxZectLJaVhg8ar0T58S5wxlNBAGvb0w3QhvBP5R8hzzyPvPGVS6tzbDw9q9Pa/e
-         dqdBi/bTlmP9H/d/R3GdGR2I754mK1HarQalT60fpzmJvTwc6f/NIKUDKrsIMQadQOWt
-         ZS8KzlZ1j9Tq9GQKMPMjd9y3bzk6VJNehYvGhXFX4wlxQKdl7VtdoYxcrxCcrPF2ih+p
-         wWJLSBiHetW0UDi/7QFlMdxXYgdVk5Riab4/byqOmh031+cAASFsTD9gmx45KXu2+qrI
-         b3iw==
-X-Forwarded-Encrypted: i=1; AKwUvByEriS/09CPtGMKqeloirBQuMWhhajvKe3VS4K83EV4tNhwLD4JcGy9tN60NU9qChURX6DGJ7ZzQEpJ@vger.kernel.org
-X-Gm-Message-State: AFq9FYKCuKUOE3CTM9/U8tCNtaizI08PQpCw119+9Exv335RSrMFR/RJ
-	S7DfmY3/o1LVteX0TZ5N+o6vAgO7olztRRrKaM6xQsD5c9dLiFHxO2PhGicOqzoB
-X-Gm-Gg: AYBFou2KFbDx2oMWlM7xQGuSSIzOKydooXcKCUdRwmlOfneMBuVpFyFal6qRZoxGlGO
-	r6eXTYtv33hv/P+tIjmzsHKiiAQfqr+nAt0/Zc1G4MWOBRHcMAXH0QJ1t4cPXOSEq/cn0NtQz79
-	//+Buia2gXDU+e+sEkEPKsSXlVEH8EeT9PwT31SzQ3jKGpmha3j2CcWVxtxokXQGQEY6K4C6QjD
-	VEL4DWMtEFpCFB7Yeziptl5CjRgruhMU4FlXQMCprGyNEsNB3epsQTzPIh20fI9MKXgQtuKc1gQ
-	q/xjbZyZ0iY+54xS5gPn0MB2SPZWEIJyc/eLrmCo8KJ7eQnxL9fnjo2Ock90Z67EKfUqokf/5o5
-	lPeqWBFj0NMm23bmjM9rwqifwhT4jDBUl7HbNB68XWh7E6Dgtxq76EysZBJI74yrKdbQaHQ2LjW
-	4uKfX5EopNx1Hi29doMRYl09Zo25/6hORI6sj8v7FbIVxx0VAkVzL19KjcdAkiJsieDTptyVoJA
-	NXw98nw6jEu50sYXXMqHfW/39C1CyzEmmFncXa40ulWXriLSE7bGm/e7MkwhM0yAha1H2cHxkD/
-	9ObM3u5pPkMyw1zGg/C8axgwo9uWqKil9gAm5B/udOYb7pXwZ4kyyz4i48cqk55/rMLrEXi6yMs
-	AkYDwQOzVRJRily0WqFmBGL68mdp4GupL69h6GfnOJ4zutDSD/UNti41Lpat9W4bL5PvxW9rMx7
-	3pfyGeP65GEbLq32g=
-X-Received: by 2002:a05:600c:8b06:b0:4a1:7ce1:2eaf with SMTP id 5b1f17b1804b1-4a18e4e0963mr279668475e9.34.1791929978906;
-        Tue, 13 Oct 2026 15:19:38 -0700 (PDT)
-Received: from localhost.localdomain ([2a0d:e487:412d:e9fb:680d:a947:4b50:d9e])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a18beacd2csm428992205e9.14.2026.10.13.15.19.38
-        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Tue, 13 Oct 2026 15:19:38 -0700 (PDT)
-From: Olivier Kaloudoff <olivier.kaloudoff@gmail.com>
-To: linux-usb@vger.kernel.org
-Cc: oneukum@suse.com,
-	stern@rowland.harvard.edu,
-	gregkh@linuxfoundation.org,
-	linux-scsi@vger.kernel.org,
-	usb-storage@lists.one-eyed-alien.net,
-	Olivier Kaloudoff <olivier.kaloudoff@gmail.com>,
-	stable@vger.kernel.org
-Subject: [PATCH] usb: uas: validate status URB length before parsing the IU
-Date: Wed, 14 Oct 2026 00:19:37 +0200
-Message-ID: <20261013221937.41490-1-olivier.kaloudoff@gmail.com>
-X-Mailer: git-send-email 2.54.0
+        d=1e100.net; s=20260707; t=1791938564; x=1792543364;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=LySGsEgkXXlREpE9ITg3+XAbVmPqYYJKWOIEOpJmtB0=;
+        b=caAY/wL/EGUpHWeunLiRiasYRfa2vxcS/gL48ksaAssnB85aTgypWLEtCvucs9WS/W
+         B4sTGr9G/5rydsRGB6vgjFkRpRG4XqGtdHvYnJSChpJsMp8yu91hQsgxEnSWnF7qy06p
+         xvnb4dgAOeC68R2urs7/yl6feHrO6w6c7zGwpYb6+qvElYjkgJEZ+QIk0j2Hi3QzRZYn
+         Vy8tJ++P/m3KtSZeqKS7gZtFPflQ8l8hy2ryabgTCFrWv0FoVYrtvN9nCulZRMvEOtq7
+         QkaIHeTq73sk21pVhJtc+OwgdFw7/YpI4jspXbrb3wSURKs0oOZq1s6NmmI/fP6z9zNI
+         LWWQ==
+X-Gm-Message-State: AFq9FYJ2BY+XCW0f50hCIKDceXdefnwY2QJNPQqEiBmALWnXESFVAGeR
+	D4r+89pQZ8BxmS5UgwmrkjqxN0Jp9PhmgDaL6XaB3+WC8fCYWqBMIBbN/p7RSfOdqPM=
+X-Gm-Gg: AYBFou2oVVJ5eVk+2xeRG6MgMt/CsqHQwN0r8c8WaecAbBsFLXfT8K9Y6W7kK4Gq2q0
+	yWkS6B7GZSlaxvBNQdjOdxJi/ptjkwFGgRnv+9gKmRbYQ2YrznZd85b7AUGvb+Lao57v40yzIyQ
+	tdjDTVFTM62HZOj/9zCu1OSI4L0UwHMQDu88UCv+aLUNQTMqJWGQi6xLn6+vpLxVrHCpM8MBiOy
+	b/nADMURKI2IaXU1IorDiItuXZ83sr+5D/KQElKsvafHp21fdUWxqKOuLLWwISQ47kPBWIjuo9c
+	1rTz497eSYSnx8XOyAFr0tXnnVZujo8XOz/TgjcE95Bk0HopVZaSaLNNGuFrTJVpPhL+PnJ5diy
+	vhm0ExHDvotqMzfQZqj7ngWizzQcYgGN11diTvm+MeQQdg4gVjCLIK0LKHnl7OFCi52vJTcNsP+
+	6K1hNqbEkzM2smCHPXbAWrFNbPIGmC2J0ur6+ab9tUIDBeipYA2brWEqVtazRCdoLTlXFohkqQY
+	Y5jVhBHGs5XgkWoPiLPdQ==
+X-Received: by 2002:a17:90b:28ce:b0:3a4:85c4:68fc with SMTP id 98e67ed59e1d1-3ab3a79df67mr12125184a91.29.1791938563588;
+        Tue, 13 Oct 2026 17:42:43 -0700 (PDT)
+Received: from localhost.localdomain ([2406:5900:1044:110c:c51c:be8a:c517:276])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3ac7321cc5bsm432716a91.14.2026.10.13.17.42.41
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 13 Oct 2026 17:42:43 -0700 (PDT)
+From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+To: "Martin K . Petersen" <mkp@kernel.org>,
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org,
+	yhlee@isslab.korea.ac.kr
+Subject: [PATCH] scsi: mvumi: reject handshake sizes that overflow the list allocations
+Date: Wed, 14 Oct 2026 09:42:25 +0900
+Message-ID: <20261014004226.3469868-1-yhlee@isslab.korea.ac.kr>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-uas_stat_cmplt() dereferences iu->tag without verifying that the
-status URB actually carried a full IU header.  The transfer buffer is
-a freshly-zeroed sense_iu, so a status URB that completes
-successfully but with a short or empty actual_length — observed in
-the wild during link-level upsets (Thunderbolt-chain xhci blips) and
-on a wedging bridge — reads back as iu_id=0/tag=0 and produces the
-misleading
+mvumi_hs_process_page() takes max_io, the two command entry sizes and the
+list depth from the firmware handshake page.  The entry sizes are u8 fields
+used as shift counts, and 1 is an int, so a count of 29 or more makes the
+<< 2 applied to the shift overflow an int; a count of 32 or more is
+undefined outright.  max_io is a u16, and the sizes derived from the shifts
+are multiplied by it in mvumi_init_data() to size three unsigned int
+allocations, so a large entry size wraps the product and the loops that
+follow then walk and write past the short allocation.  The list depth is
+used as a shift count too, but only when the firmware sets
+HS_CAPABILITY_NEW_PAGE_IO_DEPTH_DEF; a count of 32 or more is undefined
+there as well.
 
-  stat urb: no pending cmd for uas-tag 0
+Reject an entry size above 29, which keeps 1U << n and the shift that
+follows it inside an unsigned int.  Then compute the worst-case allocation
+size in size_t at the top of mvumi_init_data() and reject it if it does not
+fit an unsigned int.  That total bounds all three allocations: the inbound
+list total, the outbound data pool and the tag arrays, whose sizes are the
+same products plus smaller terms.  Reject a list depth of 32 or more on the
+shifted path only, so that the plain assignment a few lines above, which
+takes the depth as a count rather than an exponent, keeps accepting every
+value a u8 can hold.  The shifts also use 1U now so that a legal count
+cannot overflow an int.
 
-log spam seen e.g. on an ASMT135x enclosure and a Samsung T7, right
-before the affected commands time out into the error handler.
+No realistic controller is rejected: a controller reporting 4096 commands
+with 64 KiB entries and a depth of 12 needs 513 MiB and passes unchanged.
 
-Beyond the noise, a short packet that happens to carry a
-plausible-looking header could be matched to an inflight command and
-drive the state machine off garbage.  Bail out on anything shorter
-than a full struct iu.
-
+Fixes: f0c568a478f0 ("[SCSI] mvumi: Add Marvell UMI driver")
 Cc: stable@vger.kernel.org
-Signed-off-by: Olivier Kaloudoff <olivier.kaloudoff@gmail.com>
+Signed-off-by: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
 ---
- drivers/usb/storage/uas.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+ drivers/scsi/mvumi.c | 35 +++++++++++++++++++++++++++++++----
+ 1 file changed, 31 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
-index 265162981269..88fed50c262b 100644
---- a/drivers/usb/storage/uas.c
-+++ b/drivers/usb/storage/uas.c
-@@ -315,6 +315,13 @@ static void uas_stat_cmplt(struct urb *urb)
- 		goto bail;
- 	}
+diff --git a/drivers/scsi/mvumi.c b/drivers/scsi/mvumi.c
+index e70d336b4ab39..b86d954f3576b 100644
+--- a/drivers/scsi/mvumi.c
++++ b/drivers/scsi/mvumi.c
+@@ -912,10 +912,23 @@ static int mvumi_init_data(struct mvumi_hba *mhba)
+ 	unsigned int tmp_size, offset, i;
+ 	void *virmem, *v;
+ 	dma_addr_t p;
++	size_t total;
  
-+	if (urb->actual_length < sizeof(struct iu)) {
-+		dev_err(&urb->dev->dev,
-+			"stat urb: short transfer (%u bytes)\n",
-+			urb->actual_length);
-+		goto bail;
+ 	if (mhba->fw_flag & MVUMI_FW_ALLOC)
+ 		return 0;
+ 
++	/* These are firmware-supplied and size the allocations below. */
++	total = (size_t)mhba->ib_max_size * mhba->max_io +
++		(size_t)mhba->ob_max_size * mhba->max_io +
++		sizeof(struct mvumi_dyn_list_entry) * (size_t)mhba->max_io +
++		160;
++	if (total > UINT_MAX) {
++		dev_err(&mhba->pdev->dev,
++			"handshake sizes too large: io %u, in %u, out %u\n",
++			mhba->max_io, mhba->ib_max_size, mhba->ob_max_size);
++		return -1;
 +	}
 +
- 	idx = be16_to_cpup(&iu->tag) - 1;
+ 	tmp_size = mhba->ib_max_size * mhba->max_io;
+ 	if (mhba->hba_capability & HS_CAPABILITY_SUPPORT_DYN_SRC)
+ 		tmp_size += sizeof(struct mvumi_dyn_list_entry) * mhba->max_io;
+@@ -1051,16 +1064,24 @@ static int mvumi_hs_process_page(struct mvumi_hba *mhba,
+ 	case HS_PAGE_FIRM_CAP:
+ 		hs_page1 = (struct mvumi_hs_page1 *) hs_header;
  
- 	spin_lock_irqsave(&devinfo->lock, flags);
++		/* Firmware-supplied shift counts: (1U << n) << 2 must fit. */
++		if (hs_page1->cl_in_max_entry_size > 29 ||
++		    hs_page1->cl_out_max_entry_size > 29) {
++			dev_err(&mhba->pdev->dev,
++				"invalid handshake entry size\n");
++			return -1;
++		}
++
+ 		mhba->max_io = hs_page1->max_io_support;
+ 		mhba->list_num_io = hs_page1->cl_inout_list_depth;
+ 		mhba->max_transfer_size = hs_page1->max_transfer_size;
+ 		mhba->max_target_id = hs_page1->max_devices_support;
+ 		mhba->hba_capability = hs_page1->capability;
+ 		mhba->ib_max_size_setting = hs_page1->cl_in_max_entry_size;
+-		mhba->ib_max_size = (1 << hs_page1->cl_in_max_entry_size) << 2;
++		mhba->ib_max_size = (1U << hs_page1->cl_in_max_entry_size) << 2;
+ 
+ 		mhba->ob_max_size_setting = hs_page1->cl_out_max_entry_size;
+-		mhba->ob_max_size = (1 << hs_page1->cl_out_max_entry_size) << 2;
++		mhba->ob_max_size = (1U << hs_page1->cl_out_max_entry_size) << 2;
+ 
+ 		dev_dbg(&mhba->pdev->dev, "FW version:%d\n",
+ 						hs_page1->fw_ver.ver_build);
+@@ -1069,8 +1090,14 @@ static int mvumi_hs_process_page(struct mvumi_hba *mhba,
+ 			mhba->eot_flag = 22;
+ 		else
+ 			mhba->eot_flag = 27;
+-		if (mhba->hba_capability & HS_CAPABILITY_NEW_PAGE_IO_DEPTH_DEF)
+-			mhba->list_num_io = 1 << hs_page1->cl_inout_list_depth;
++		if (mhba->hba_capability & HS_CAPABILITY_NEW_PAGE_IO_DEPTH_DEF) {
++			if (hs_page1->cl_inout_list_depth >= 32) {
++				dev_err(&mhba->pdev->dev,
++					"invalid handshake list depth\n");
++				return -1;
++			}
++			mhba->list_num_io = 1U << hs_page1->cl_inout_list_depth;
++		}
+ 		break;
+ 	default:
+ 		dev_err(&mhba->pdev->dev, "handshake: page code error\n");
+
+base-commit: 24a19b953e2a3d0ea5a8c4951a0ab8f32720c907
 -- 
-2.47.3
+2.43.0
 
