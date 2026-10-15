@@ -1,106 +1,107 @@
-Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
+Received: from lamorak.hansenpartnership.com (lamorak.hansenpartnership.com [198.37.111.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72AE04FDE7C;
-	Thu, 15 Oct 2026 12:29:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.142.43.55
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73D0D3EFFA6;
+	Thu, 15 Oct 2026 13:05:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.37.111.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792067379; cv=none; b=UhEtwloSKVkne/+WDyIvmr+/1JDmp8Jp3aog+VrWoTuULQOT9mK4t+mZOzeM6MTlOxpWuJbYHJltV3OEQ57MmG+6V1pPW5cHKAAPEISAvwqR3OyTyYTc5ZB9UP/MjIwJD6jp4LpZ52jfYp0tEXR/oZ0flo9IgfCSNjHO6L41B3s=
+	t=1792069534; cv=none; b=ZZ9H9bqB5wBtfFabNky/E2l/GGIsM3OLNEHThA2ias0uWlqHzXLEy9tAJLZ40sJU4zU40qe2VoknOKlXeVpoJ4SYL5k8aSefkqvrc8f2HP4DQDUjUGNTbE8MNYVH16AOAnRyMlxF2h6/BcJ7RBl0qPL74UQdgAAYIo9uRizx7Og=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792067379; c=relaxed/simple;
-	bh=EdkoGLcjTyLAvjh/5BwakDPBCwlzJa0pxxqLHTIhYzE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=RRj/4J28//Ibrl0AFqYjb52Z4O6fyn0bCa1K3BXnftw/Z2wXwQz9W5mmG/Mm3DFhp2wtbiUfzlH9yNphyED+WS3o5eSvhO264CJ6Nw8EU6B654twTCmDn8pLeJihWf3UQ3KrPCNj4Zi8BEfEBMYS/Mmp5zD14x+ej3DPsuLSkIU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de; spf=pass smtp.mailfrom=linutronix.de; dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=NDQaJqA1; dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=Diqi3L5P; arc=none smtp.client-ip=193.142.43.55
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
+	s=arc-20240116; t=1792069534; c=relaxed/simple;
+	bh=2fvPEbrksXUYBX4/5rBDlqNIqOnAiK7F/60abEAhyJ4=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=R+Gx2xu2jZsdA0CoCbpz1dqlaknY2qsXCeM0dIuosK2v7ulB7ltjIf2svlBigA1Vh+GFTJS5tv2Sgv1gwKTPRB0xewSv79HbPxM/sglO1fgKrFaetCOXcybRXY9moCbbVvPhJQOJHqqj7P9i3AgPGxRbf3I7+i0L1dLlo0Z721E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=rJFNl0Z0; arc=none smtp.client-ip=198.37.111.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="NDQaJqA1";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="Diqi3L5P"
-Date: Thu, 15 Oct 2026 14:29:34 +0200
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020; t=1792067375;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=SiJnkX+uFAvEbBRKpsYNT584aijBABjRduz0e55KArA=;
-	b=NDQaJqA1XcisH3IazYB8/nWljI3F8weUNXOJLgfRscMyCTkuWSzsOJJkt0uwDzduEoBNNF
-	nEvVe7jMpMH0LOXP8UBg7jjT04JglRlk73NiKd5JCpEyD6prTvdfi6BRyB2VWw/6K5VJ+y
-	9JsSuM4qwR+0dJBHIxYLmM6oAo5w2qH4OmH48V3E2ZoLpoedS0QeOPmgWYa+G1gvQGny5u
-	NxJAR5l4TIzo0AnMf+WPmLWAraxfHhPGU/YUvtEm4cMsYw9/UTrEgpm/KTra+xsc9QfrWT
-	iIoIxIsajla/iGTyBGYjC2n4VML86fDIeKEWrePXA4tMpGWUMd9gb4CaWCSGAw==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020e; t=1792067375;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=SiJnkX+uFAvEbBRKpsYNT584aijBABjRduz0e55KArA=;
-	b=Diqi3L5PlE5sEU6DgUxl0lbiUUozIpHXpQKeV58bDnIvh2Ko9ik1GhSZQOZxl+A8vv5Jln
-	jizG5+8pAa0WvvDg==
-From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-To: Daniel Wagner <dwagner@suse.de>
-Cc: Aaron Tomlin <atomlin@atomlin.com>, axboe@kernel.dk, tglx@kernel.org,
-	aacraid@microsemi.com, James.Bottomley@hansenpartnership.com,
-	mkp@kernel.org, frederic@kernel.org, ionut.nechita@windriver.com,
-	corbet@lwn.net, vincent.guittot@linaro.org, mingo@redhat.com,
-	peterz@infradead.org, radu@rendec.net, akpm@linux-foundation.org,
-	steve@abita.co, sean@ashe.io, chjohnst@gmail.com, neelx@suse.com,
-	mproche@gmail.com, nick.lange@gmail.com, marco.crivellari@suse.com,
-	rishil1999@outlook.com, linux-doc@vger.kernel.org,
-	linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v16 0/9] blk: honor isolcpus configuration
-Message-ID: <20261015122934.5itxaJ3l@linutronix.de>
-References: <20260910164237.500196-1-atomlin@atomlin.com>
- <2f32ffb6-d889-4281-a612-d4185311ca0d@flourine.local>
+	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="rJFNl0Z0"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+	d=hansenpartnership.com; s=20151216; t=1792069531;
+	bh=2fvPEbrksXUYBX4/5rBDlqNIqOnAiK7F/60abEAhyJ4=;
+	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
+	b=rJFNl0Z0lYR/zOH3BlCoKDQD4dzZt7OdD5lj3OddME8xbByRTNIEgcFX5y6Qxc8lK
+	 TbF6MgtePv3SO/G5fXkUhOQPPXaSQAwrlBPhHd7qZf0yVPlCU1/TZ3XmFH9ji5BqS/
+	 aQyeST2vFYWiyKCIu2jydxF5p+n3P5c8ihOaQWNg=
+Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4300:d341::8309])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519MLKEM768 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by lamorak.hansenpartnership.com (Postfix) with ESMTPSA id 3AEFC1C046A;
+	Thu, 15 Oct 2026 09:05:31 -0400 (EDT)
+Message-ID: <06bbaf40d9188e478c4b58eaaffb58139839d217.camel@HansenPartnership.com>
+Subject: Re: [PATCH v3 2/5] scsi: aic94xx: validate the EDB index in
+ asd_get_response_tasklet()
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Yehyeong Lee <yhlee@isslab.korea.ac.kr>, "Martin K . Petersen"
+	 <mkp@kernel.org>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	stable@vger.kernel.org
+Date: Thu, 15 Oct 2026 09:05:30 -0400
+In-Reply-To: <20261015091747.4184349-3-yhlee@isslab.korea.ac.kr>
+References: <20261015091747.4184349-1-yhlee@isslab.korea.ac.kr>
+	 <20261015091747.4184349-3-yhlee@isslab.korea.ac.kr>
+Autocrypt: addr=James.Bottomley@HansenPartnership.com;
+ keydata=mQENBE58FlABCADPM714lRLxGmba4JFjkocqpj1/6/Cx+IXezcS22azZetzCXDpm2MfNE
+ lecY3qkFjfnoffQiw5rrOO0/oRSATOh8+2fmJ6el7naRbDuh+i8lVESfdlkoqX57H5R8h/UTIp6gn
+ 1mpNlxjQv6QSZbl551zQ1nmkSVRbA5TbEp4br5GZeJ58esmYDCBwxuFTsSsdzbOBNthLcudWpJZHU
+ RfMc0ew24By1nldL9F37AktNcCipKpC2U0NtGlJjYPNSVXrCd1izxKmO7te7BLP+7B4DNj1VRnaf8
+ X9+VIApCi/l4Kdx+ZR3aLTqSuNsIMmXUJ3T8JRl+ag7kby/KBp+0OpotABEBAAG0N0phbWVzIEJvd
+ HRvbWxleSA8SmFtZXMuQm90dG9tbGV5QEhhbnNlblBhcnRuZXJzaGlwLmNvbT6JAVgEEwEIAEICGw
+ MGCwkIBwMCBhUIAgkKCwQWAgMBAh4BAheAAhkBFiEE1WBuc8i0YnG+rZrfgUrkfCFIVNYFAml2ZBI
+ FCS3GUMIACgkQgUrkfCFIVNZKjQf/deRzlXZClKxTC/Ee2yEPqqS7mm/INUA49KdQQ5oIhSxkUBy0
+ 9J4qjMIo5F8ZFkFTqikBqeL35LKu7O7rn8WETfX8Bxvos3HUsl3jHo34DES4MUFIpoQPgtiLRGwLb
+ K0cVCAArR2u2qj4ABmTRrs1I1kvdjEw6gatOuXtEe/j5O2fvfzTq9GBr0Q3n2IAsFXi4hLlx6VPE8
+ tyWUZ8BWJKtih3JAeUiXFvASL3McV0rV9RnU0VbjEQEhSE7PMYhWpnDC9AyBb0lXJllQRvC3NSkUB
+ 8KVQgNNxRPss0WE/nBoZ4dFA42jTyzTz8lNylxZoAWV7WJb3QxVg4oCodRVrxxrQhSmFtZXMgQm90
+ dG9tbGV5IDxqZWpiQGtlcm5lbC5vcmc+iQFVBBMBCAA/AhsDBgsJCAcDAgYVCAIJCgsEFgIDAQIeA
+ QIXgBYhBNVgbnPItGJxvq2a34FK5HwhSFTWBQJgS5mYBQkbNYS9AAoJEIFK5HwhSFTWBpwIAL5Bk3
+ 5FB34U6iHmDzzgdCbxLTs43T/YQyJpcGIvopBvnI/fDY8oSG6Df64/O6B+1R+A8TDp6ZG5ysUWnCC
+ 6GuIaEHemBYkitMPglR6+sGCMQY7O0mlsPvdssvKK1KI9Bno4VU6ogaF2qVzefSqg1Djmf/DcsxWP
+ rI/jdJ8FB5AYR2rjIdDFc+zRdAJuavo1/anyY2wgpFh/3R8IOYAEfWV9nGgYkf9+tA4EIn1sxE0I3
+ L5oW2N3mbyRrkzuBwO8ztMCwqEPk7moWzhokcZqMXiAIahaZdkashJC+s2X2RZSGCy+g+pvY5NN4B
+ BVG5XwLgVBqbHMTcxE0fbmPqz+q6O0LEphbWVzIEJvdHRvbWxleSA8amVqYkBoYW5zZW5wYXJ0bmV
+ yc2hpcC5jb20+iQFXBBMBCABBFiEE1WBuc8i0YnG+rZrfgUrkfCFIVNYFAmODZ5ACGwMFCRs1hL0F
+ CwkIBwICIgIGFQoJCAsCBBYCAwECHgcCF4AACgkQgUrkfCFIVNZu0Af/TzvL2/NdgAcw9uN3x60H8
+ jc4QUq14VpxcFEFEMpcj1morkX/G93V+56HBBaXZj+yK8PhxIA/SIz+sU7C/0YvKuvzakP8ZX/7WJ
+ e32SOUtjfr/VTaqjIBzNj6OxLvZpmNbBw7s6DwhhNpHOWqJ/1ml+PtDRDV71IB58yVqQjp1xlNKVl
+ ZppcJ5908EJzsFnRIVjiQiDSKoppqB2BCibBbrWcln7CiWMyOC/cco6SIn6twH+f7+aivJ3xGcOE2
+ a9gBKF5rNi9TBoX9oyPmshv/TDmnohsVrH7AYXlGYfZTk15SWEiROh1QX8/uD9wl/gcIv5EDUpT/F
+ L2jzOsA5663bw==
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.56.2 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <2f32ffb6-d889-4281-a612-d4185311ca0d@flourine.local>
 
-On 2026-10-15 13:22:35 [+0200], Daniel Wagner wrote:
-> During Plumbers we had several discussions on this series. This is what I
-> remember we discussed and decided:
-> 
->   - The current managed_irq behavior doesn't match the other flags of isolcpus.
-> 
->   - Instead of introducing managed_irq_strict, it's better to change the
->     existing managed_irq to follow the strict interpretation.
-> 
->   - The main existing user of the current managed_irq mapping is
->     RH with OpenShift. After discussing with Juri, it doesn't look like
->     it is a real blocker to change to the strict interpretation.
+First a meta question: the aic94xx is about 20 years old today ... have
+you actually tested this on real hardware?
 
-This is what I remember, too.
+On Thu, 2026-10-15 at 18:17 +0900, Yehyeong Lee wrote:
+> asd_get_response_tasklet() takes the empty data buffer index out of
+> the done list status block the sequencer wrote, with the same
+> arithmetic
+> escb_tasklet_complete() uses on its own copy:
+>=20
+> 	int=C2=A0 edb_id =3D ((resp_sb->flags & 0x70) >> 4)-1;
+>=20
+> The extracted field is three bits, so the subtraction yields -1
+> through 6, and the function indexes seq->edb_arr[] with it without
+> looking:
 
->   - If there are complaints about the managed irq behavior change, it's
->     better to introduce a different flag for this. Though there have been
->     many discussions and proposals on how to deal with isolation during the
->     conference, and the general mood was that the placement of resources
->     should be done during runtime. Thus it is likely that the old behaviour
->     is not necessary at all if runtime configuration is possible.
+These are the sequencer response flags ... is there any evidence of the
+sequencer ever setting these three bits to a zero value?
 
-The main argument/ problem is that managed_irq does not work as expected
-for the vast majority of users and should be fixed. This has only been
-"recently" documented.
+[...]
+> +	if (edb_id < 0 || edb_id >=3D ASD_EDBS_PER_SCB) {
 
-The whole isolcpus= was meant to be static and there was no argument why
-it needs to vanish. A dynamic interface for dynamic workloads is what
-you want especially if you have 80+ CPUs and workloads can change. But
-on <16 CPUs system the partition probably do not change. It is also not
-obvious if your driver(s) use managed_irqs or not.
-To get a runtime interface for this you would need to be able to
-reconfigure the managed_irq interrupt if "interrupts < CPUS". Otherwise
-it is just enable and disable like during CPU-hotplug but without it. If
-I remember it correctly, the device itself does not handle this at all
-but the block layers drains and starts queues during a hotplug event.
+Why the second comparison?  As you say the value could only be -1..6
+and ASD_EDBS_PER_SCB is defined to 7.
 
-> Hope this helps to move forward with this series,
-> Daniel
+Regards,
 
-Sebastian
+James
