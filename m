@@ -1,149 +1,117 @@
-Received: from mail-pj1-f41.google.com (mail-pj1-f41.google.com [209.85.216.41])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A89083D952F
-	for <linux-scsi@vger.kernel.org>; Thu, 15 Oct 2026 02:28:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EBB373DFC6D
+	for <linux-scsi@vger.kernel.org>; Thu, 15 Oct 2026 02:38:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792031287; cv=none; b=fc+RZuW3YxSJqyLqrXufzpRmRCk6Nsjc0NJJgENOPSRYbOQ+80Bu3nTfe/vpXHaPhD4u/1EMkBele+qkzl0rJXFWOAX2cVd0a61ZsPdp/QcDr3ASCZzsi/SgC+qR/MoIwq4t1d/LrsrEPLsD1k6VELIvZB9w5EiIckB+RN8e/0g=
+	t=1792031926; cv=none; b=WzvphovT0yLbJFRJnOLDITogg81O1j9+CeQoDG+6hEEGLE/C5tNoyyDIKZC0SKOy4aFC9zFjw04Pv3nFFRtxZ+pGzXwAP2Iz/eAaJUROfTxp3Gvvn8qoSpAncb+x0gD3HN91Wf+yA/Ilc22vqe9LpNVXRn8Uupb20G9SeCcsONU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792031287; c=relaxed/simple;
-	bh=DvmUcdBGk9Ip3K6aMNLyTsmPzHjEV1WQkSgWvFOcyz8=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=tctvdeDVjHUEAo55DFhY3EqULp0rls9TUTXZwXi5fGNAZolTEo1IuQyonITCInGyHasAQdKxSwnIwUA+SSZ8wnmalBiyIp8qnlf+Mj7WUi9+5h9VnJNj9WO8fhMq1uTIim31ruFg/mfgK79x1BbvJ8ZD4nqDuRs85brPAMAmrZA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr; spf=none smtp.mailfrom=isslab.korea.ac.kr; dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b=kLawuoei; arc=none smtp.client-ip=209.85.216.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
+	s=arc-20240116; t=1792031926; c=relaxed/simple;
+	bh=pveojx68NPcbZTl8AmUPgqPlU/XLzJPdyvg2qS1s0hs=;
+	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
+	 Date; b=N1iztUeV545aCQ+XMqgTnFGaiGa7O921pAHJDX4qWRQNlEpnkZ59tyoaBg/DJd7bdoccDTtf8O/gE97ROSl6NvOMneARKpck0g6R/0/zTsBUNURxuy3j5V8nLXgRZXw2EdMtSnhTcz/8P+yPrjzOg9Kd5vEVgFiK/vuWB49WHL4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DuZdyETm; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b="kLawuoei"
-Received: by mail-pj1-f41.google.com with SMTP id 98e67ed59e1d1-3ac5b090d16so1109870a91.0
-        for <linux-scsi@vger.kernel.org>; Wed, 14 Oct 2026 19:28:01 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=isslab-korea-ac-kr.20251104.gappssmtp.com; s=20251104; t=1792031281; x=1792636081; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=2vTCBryNCZePgMXjmqfRG2WB7QhMRd9mrUtZ7pw310o=;
-        b=kLawuoeinR4ABznzjO0d0pclVNPlXik1S0VbFxyOJXF6c+k2JanZU078D0O5v3l8k6
-         zEioVKftzO++gWuBtJQKMw2/YPbeevTfAlNqvLr4NH3hlhBoTxDFpzyxjEYewLsrB87I
-         z9m0BU9gm1hluEHYTuc50lut0Dkp0ng2jMaSN6dRMl+M+2DsCljhmuZx9fK7aR7ZWW1m
-         dESuFrObeRdMoOEdUR3PlzDMliOmZtdCfXaG+d4BnIzsI5cRyD6EVJ8ci2f27TQzZ6OG
-         YX9+GRW8pbKiLIXag2bIguVKOMWAIbULA7+kMTsu8QFx02kTOX8aTmHTQBSCPRWmOHmP
-         TLxg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792031281; x=1792636081;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=2vTCBryNCZePgMXjmqfRG2WB7QhMRd9mrUtZ7pw310o=;
-        b=IG71HqrXyHBrlm3Wy8DliJMkvqtendvDJS/ie3Wr8jzDgqJmlSG4TIHz3tB2Km9aE/
-         FQVmxTDQ+Vw9uW19QFtc5VuqQ91d4Jzu/ye0mv2IzM/cEYHX16X7y7jbidCT+z/6yPx1
-         xqyKAlctrRfld6HplwFHMi7J1/oUe89LU4bR9RF8b+2qFFqcGBW2GisoGJwnIRO6sZpZ
-         TygoENGCEc3l28j6amX0OBNwE/wO0UyRRdczBDu8UVQQjKdxJE0QS3Oc7ugMUHWr+dDj
-         8EGjpqTpODczBgBfQuht6DemkjeBf/6bAlh0wOO8b5P0SOcjyqOUyRrudVumIKelvjNJ
-         SnPA==
-X-Gm-Message-State: AFq9FYJuol8cKWZytx3jsdGv5BC16WNEw+MAuK/o+DiOvt3c+xHbqET9
-	g05zDq2PwlfVjwUj1XjsohMWZ42gqeQmu8bk6LMvxvE5c6ADqDkTnYRsPtS5wD8ZcGE=
-X-Gm-Gg: AYBFou2t0cZk0nyh2zNaVCaQFKbtHo/5gStLXXzxDvWAMpvt3Jv3UOjNi8u4RyKYeAg
-	87o3BTHh/j0NFMNGTctq/hzA/t7ukeQYz7ZApmfQwojZWrI6ajEyEQRo/5psdeH9VK2GMg79nFa
-	MKTMN4JxuqiXONnOS6y+gPsTwBgI0/w7jzHHht3OPkW1rjnxVa/qx+B600vOMB/J3qaQiF1RB38
-	ebiyhg1UZS2cwvmhqhrhjGYfWZwYu/Mjak7o3/Q8YQhnoDa8cMyAtId4G6PHVTnXB+7w+7gfAdW
-	sYzXSoB+Tzm4M2JRVkoyqthXNjAfGSAvcxijB2Tq34XiPb/uSyb0ED0Y2iOgOCmLRcrhBv2lpp9
-	TSLQs5PGVNcOMT8U9tJ4mJhJMLFX7U3n3QTDKZWGB4q9cBwCD3dgcNcgABJ57Rr6HueTGez/5Fa
-	sTgIO6BSWiRuK9+JNhLuDAv4rhU7dYJhb3iYDP3gzgwCd72gHqAqHJ9k1+sQLqQQGE3acNcsZG/
-	zlgqw==
-X-Received: by 2002:a17:90b:4e8b:b0:3ab:be66:ddd3 with SMTP id 98e67ed59e1d1-3abbe66dfa9mr7610333a91.32.1792031281033;
-        Wed, 14 Oct 2026 19:28:01 -0700 (PDT)
-Received: from yhlee-960QFG.. ([125.131.91.97])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3ac94375f3fsm1997383a91.4.2026.10.14.19.27.59
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 14 Oct 2026 19:28:00 -0700 (PDT)
-From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
-To: "Martin K . Petersen" <mkp@kernel.org>,
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org,
-	yhlee@isslab.korea.ac.kr
-Subject: [PATCH v8 8/8] scsi: mvumi: stamp a consumed outbound list entry out of range
-Date: Thu, 15 Oct 2026 11:27:28 +0900
-Message-ID: <20261015022728.3936714-9-yhlee@isslab.korea.ac.kr>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20261015022728.3936714-1-yhlee@isslab.korea.ac.kr>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DuZdyETm"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3B3EB1F000C4;
+	Thu, 15 Oct 2026 02:38:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1792031917;
+	bh=zTI7/v3zHAqmgLlgyviLX9EEPQ0KBlo1adTLCl429gc=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=DuZdyETm4QIbTsMwfizMjWrA85tyAVV/lg3VAIAH1jOAE9cLNj70gmOaT4vvTO2yH
+	 +Abvko6VFOPzc47nBUyPXISNULznkvsFLHmpNmtwZzOGYImaJKhi/d3+icCe7PTJTE
+	 vJlhF1/AyG0FA6bJP3kD3YA8EpXW1hAdgidnFOVh2XIlXp6ZaKLIHkXPtXwNqcOfGG
+	 wSLLG7IdUWkPQVds1uYM2owVgzHL1MDSsQMTlWFS0Fcli4ni39I6aOIl9WAlPxgALi
+	 oKG40nLNIHD0Sp3AX0YrPQSVx93i2Xu8l7b8tjCdSnur5yawWaylngOTLvCucVFCun
+	 esvS6Ir8Be2Ag==
+Message-ID: <sashiko-outbox-172162@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v8 7/8] scsi: mvumi: fix the DMA address rebuilt in
+ mvumi_delete_internal_cmd()
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Yehyeong Lee" <yhlee@isslab.korea.ac.kr>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20261015022728.3936714-8-yhlee@isslab.korea.ac.kr>
 References: <20261015022728.3936714-1-yhlee@isslab.korea.ac.kr>
+ <20261015022728.3936714-8-yhlee@isslab.korea.ac.kr>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 15 Oct 2026 02:38:36 +0000
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-mvumi_receive_ob_list_entry() copies a completion out of the outbound
-list and then writes 0xff over the tag, so that the entry is rejected if
-the firmware's copy pointer brings the driver back to it.  The comment
-right above the checks says why that can happen: "Copy pointer may point
-to entry in outbound list before entry has valid data".
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [High] scsi: mvumi: missing endianness conversion for DMA address SGL fie=
+lds
+- [High] scsi: mvumi: memory corruption due to trusting DMA memory for allo=
+cator parameters
+--
 
-Nothing ever compares a tag against 0xff.  The only test for a usable
-entry is
+commit ef0a8e1f55942bcd0c7bbd2536d73b0f59532840
+Author: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
 
-	tag >= mhba->tag_pool.size
+scsi: mvumi: fix the DMA address rebuilt in mvumi_delete_internal_cmd()
 
-and tag_pool.size is mhba->max_io, which the firmware supplies in the u16
-max_io_support.  As soon as the firmware asks for more than 255 commands,
-0xff is a tag in range and tag_cmd[255] can hold a live command, so a
-stale consumed entry is no longer turned away by its tag.
+This commit fixes a bug in mvumi_delete_internal_cmd() where a 32-bit shift
+on baseaddr_h resulted in truncation of the upper 32 bits of a DMA address.
+The fix uses a 64-bit cast before shifting to ensure the address is properly
+reconstructed for dma_free_coherent().
 
-What happens next depends on the controller.  Where request_id_enabled is
-set, mvumi_check_ob_frame() still compares the request_id left in the
-entry and rejects the frame.  Where it is not set, and the MV9580 case in
-mvumi_init_fw() never sets it, that comparison is skipped, so the entry
-passes, is copied, and completes whichever command owns tag 255 with the
-bytes of an older completion.
-
-The tag field is a u16 and tag_pool.size is an unsigned short, so 0xffff
-is >= every value the bound can take and is never a valid tag.  Stamp
-that instead.  The store is the same width it was.
-
-Fixes: f0c568a478f0 ("[SCSI] mvumi: Add Marvell UMI driver")
 Cc: stable@vger.kernel.org
-Signed-off-by: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
----
- drivers/scsi/mvumi.c | 2 +-
- drivers/scsi/mvumi.h | 6 ++++++
- 2 files changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/mvumi.c b/drivers/scsi/mvumi.c
-index bd1a8c1d54aeb..67a6bb6536950 100644
---- a/drivers/scsi/mvumi.c
-+++ b/drivers/scsi/mvumi.c
-@@ -571,7 +571,7 @@ static void mvumi_receive_ob_list_entry(struct mvumi_hba *mhba)
- 		}
- 
- 		memcpy(ob_data->data, p_outb_frame, mhba->ob_max_size);
--		p_outb_frame->tag = 0xff;
-+		p_outb_frame->tag = MVUMI_TAG_CONSUMED;
- 
- 		list_add_tail(&ob_data->list, &mhba->free_ob_list);
- 	}
-diff --git a/drivers/scsi/mvumi.h b/drivers/scsi/mvumi.h
-index d20eea2b61a31..f69a0807100c3 100644
---- a/drivers/scsi/mvumi.h
-+++ b/drivers/scsi/mvumi.h
-@@ -133,6 +133,12 @@ enum {
-  */
- #define MVUMI_MAX_TARGET_ID		255
- 
-+/*
-+ * Stamped into a consumed outbound list entry.  A valid tag is below
-+ * tag_pool.size, which is a u16, so the largest u16 is never one.
-+ */
-+#define MVUMI_TAG_CONSUMED		0xffff
-+
- #define DEVICE_OFFLINE	0
- #define DEVICE_ONLINE	1
- 
--- 
-2.43.0
+> diff --git a/drivers/scsi/mvumi.c b/drivers/scsi/mvumi.c
+> index 2410d2aa147d9..bd1a8c1d54aeb 100644
+> --- a/drivers/scsi/mvumi.c
+> +++ b/drivers/scsi/mvumi.c
+> @@ -295,8 +295,8 @@ static void mvumi_delete_internal_cmd(struct mvumi_hb=
+a *mhba,
+>  			m_sg =3D (struct mvumi_sgl *) &cmd->frame->payload[0];
+>  			sgd_getsz(mhba, m_sg, size);
 
+[Severity: High]
+Does reading the size natively here cause issues on big-endian architecture=
+s?
+The SGL buffer size is natively read back from a little-endian field in
+device DMA memory without using le32_to_cpu().
+
+> =20
+> -			phy_addr =3D (dma_addr_t) m_sg->baseaddr_l |
+> -				(dma_addr_t) ((m_sg->baseaddr_h << 16) << 16);
+> +			phy_addr =3D (dma_addr_t)(((u64)m_sg->baseaddr_h << 32) |
+> +						m_sg->baseaddr_l);
+
+[Severity: High]
+Is it safe to construct this DMA address without endianness conversion?
+
+These SGL fields are populated using cpu_to_le32() but are read back native=
+ly.
+On big-endian architectures, reading little-endian SGL fields natively yiel=
+ds
+corrupted values, which could cause dma_free_coherent() to unmap the wrong
+address or trigger a panic.
+
+[Severity: High]
+Can a compromised PCIe device modify these fields concurrently?
+
+cmd->frame is allocated in bidirectionally mapped DMA-coherent memory,
+so an untrusted device could modify sg_counts, size, baseaddr_h, and basead=
+dr_l
+after they have been initialized or concurrently during cleanup.
+
+Since the driver uses these values directly as parameters for
+dma_free_coherent() below, this introduces a DMA double fetch / TOCTOU
+vulnerability that could allow arbitrary unmapping of memory.
+
+> =20
+>  			dma_free_coherent(&mhba->pdev->dev, size, cmd->data_buf,
+>  								phy_addr);
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261015022728.3936=
+714-1-yhlee@isslab.korea.ac.kr?part=3D7
