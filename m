@@ -1,44 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A52812C325C
-	for <linux-scsi@vger.kernel.org>; Thu, 15 Oct 2026 02:40:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30FF72571B8
+	for <linux-scsi@vger.kernel.org>; Thu, 15 Oct 2026 02:41:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792032034; cv=none; b=RPtsU5CmwUseiRHuQddTqX79+Ic7Hv3SAj5JcGOywJNR9EawYl9SlLedXSVGZSPxXlY6k1lhIYAIMy6snFtMZxkVHa9HsMe0EUqeIbDuyCjNcnBUfgqPxovH1qBl1kXPNgbFE8Ix6jvKkqf60s2P8fg+FnGYqhdwr0SvAPwv3GQ=
+	t=1792032100; cv=none; b=ioLdIqVAxLg7Xm7LSbuwh7RnUsjqoJ9OFElTnZU8vGs/Jipj3rDg8qZNToAi+BjjVYaCIkdKDxl6qtovM7LiwPAWepspnzxsiGJSNSQf155hjfplGdEUeK+ibA2v/a77yZ1yqZng6XRxakFkPkBluP+Qf2j2IVmui6XavtkdBOw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792032034; c=relaxed/simple;
-	bh=mrrhfnAQxyOzZgKPrO+6iGrB0g7zc5R/ee5Abmi+PeE=;
+	s=arc-20240116; t=1792032100; c=relaxed/simple;
+	bh=U/NMqm8skQ29+UQW8oJSpbCJEAMeendWncHSK9zbuNA=;
 	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
-	 Date; b=iUEMX+Czm93lpMkxlVsJ5qxT1BLyl6btlzuN4CECq+zznPnCqTxCvcPj8CJr+aR/2NYbH0AxfBGjhHE1U7SarWjfIeA0k5wDgqB8xiNRktTTV0iOjoABpqYnEZdJuh9Kr/zWE5t42l93i0cvRCme/T2zGx7zeYifO+qjZNavbEk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gsnNy8mT; arc=none smtp.client-ip=100.103.45.18
+	 Date; b=guep3vYeqaRFraGGy3o6XfZLezWTlQRX2y/80CQPLcz1BCLRps+H3ljXCa+45ZG8NrSj1ToR8PVxAMdcOn96Iu9BE9OaZ3Reud7Yp3jomjZG5LhROy859B59JmfusULiPIjmNMcdSaUwn8psJ8uvHqqszuqxRS5FxC4A3szn+lg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=E2GCk7mj; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gsnNy8mT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 072381F000C4;
-	Thu, 15 Oct 2026 02:40:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="E2GCk7mj"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B8F0A1F000C4;
+	Thu, 15 Oct 2026 02:41:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792032033;
-	bh=fbofTko769gecTYhRF7txnju5t6YylfJS/wF+pibngU=;
+	s=k20260515; t=1792032098;
+	bh=Llf4pfkF0Be3ru4uEUz/KCAQG95Rpsmv0P4sd2H80d0=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=gsnNy8mTWGkwdjT5lZCEz3a+H79h3oENLlG7H4Pki7Szx8aAuFDallhfb3W9Ts38c
-	 0yvowSfk5Qxt5WD/rlGxngcbje+HVOZddB9PnCZLdQsEhOvabJO6bSGNMHJJ/blrVd
-	 H0jOYlvnkJSH6/dg3fxradnWmpgpHwN/aAnBFxxQGPGa2TFYan/pKKsxC/gVraTO6y
-	 JE/rO+ENqHgAZAw086F68lRDZpmNtzyY0SY1UBYY3w1u1rlGhq68LDZcvc6RHcesd2
-	 g2ytMFDJY91UkP4vdaRVrKXFIoPp+WpecQ0vS4oJVW+Za0PFDGYfX8ZuOBHD+3kbbj
-	 Zhylw/BzG+MCQ==
-Message-ID: <sashiko-outbox-172163@kernel.org>
+	b=E2GCk7mj4VQBOnI3Qjtrt8yJLJoUkljV0THtQsR3I/EGZOIeNbtjG8XEVtG3OlDJG
+	 YmPmztl8vuGvvVFgRkx3pcB+rJTmos1klAuM0zf/W4WfCvkDfra6R5EXvyagiZzjGU
+	 zY23SbbQ7Q+49jxxXr6Hvw6VPMjf14AWGrOgR35/nyRBnSyVj6BmK+UMUb5t5A8klH
+	 b6VMzGBGTcC2L4sLbkub4ehJyvZ10BeCRICbjzbrgvNOl0AW9DTBaeKwKfZ3vKSY5P
+	 XDl1Xz9/LR8SFH+dOmQy+b4vAZvuSVkJ329+D+teHOTx6ZJc5ZtmuYCrl+SpfLuVa2
+	 oZ7tYSFFhgh2w==
+Message-ID: <sashiko-outbox-172169@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v8 5/8] scsi: mvumi: reject handshake sizes that
- overflow the list allocations
+Subject: Re: [PATCH v8 2/8] scsi: mvumi: reject an out-of-range handshake
+ frame length
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Yehyeong Lee" <yhlee@isslab.korea.ac.kr>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20261015022728.3936714-6-yhlee@isslab.korea.ac.kr>
+In-Reply-To: <20261015022728.3936714-3-yhlee@isslab.korea.ac.kr>
 References: <20261015022728.3936714-1-yhlee@isslab.korea.ac.kr>
- <20261015022728.3936714-6-yhlee@isslab.korea.ac.kr>
+ <20261015022728.3936714-3-yhlee@isslab.korea.ac.kr>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 15 Oct 2026 02:40:32 +0000
+Date: Thu, 15 Oct 2026 02:41:38 +0000
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -47,79 +47,60 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] scsi: mvumi: missing firmware abort write causes infinite retry lo=
-op
+- [Medium] scsi: mvumi: missing endianness conversion for frame_length
 --
 
-commit 4d0f01fe304c4edb98be93f9e2717cb4c6551a92
+commit 86284f2a4fc8c1a95cd41e7f1687f3c482b376ac
 Author: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
 
-scsi: mvumi: reject handshake sizes that overflow the list allocations
+scsi: mvumi: reject an out-of-range handshake frame length
 
-mvumi_hs_process_page() takes max_io, the two command entry sizes and the
-list depth from the firmware handshake page. The entry sizes are u8 fields
-used as shift counts, and 1 is an int, so a count of 29 or more makes the
-<< 2 applied to the shift overflow an int; a count of 32 or more is
-undefined outright.
+This patch adds bounds checking to the frame_length obtained from the firmw=
+are
+handshake page to prevent out-of-bounds reads and hangs during checksum
+calculations. It also uses READ_ONCE() to ensure the DMA value is fetched o=
+nly
+once.
 
 > diff --git a/drivers/scsi/mvumi.c b/drivers/scsi/mvumi.c
-> index 18964e860ac8e..8b8e5545747e8 100644
+> index 38a92f8c25f5b..2378b676a7a78 100644
 > --- a/drivers/scsi/mvumi.c
 > +++ b/drivers/scsi/mvumi.c
-> @@ -912,10 +912,23 @@ static int mvumi_init_data(struct mvumi_hba *mhba)
->  	unsigned int tmp_size, offset, i;
->  	void *virmem, *v;
->  	dma_addr_t p;
-> +	u64 total;
+> @@ -1039,9 +1039,15 @@ static int mvumi_hs_process_page(struct mvumi_hba =
+*mhba,
+>  {
+>  	struct mvumi_hs_page1 *hs_page1;
+>  	unsigned char page_checksum;
+> +	u16 frame_length =3D READ_ONCE(hs_header->frame_length);
 > =20
->  	if (mhba->fw_flag & MVUMI_FW_ALLOC)
->  		return 0;
-> =20
-> +	/* These are firmware-supplied and size the allocations below. */
-> +	total =3D (u64)mhba->ib_max_size * mhba->max_io +
-> +		(u64)mhba->ob_max_size * mhba->max_io +
-> +		sizeof(struct mvumi_dyn_list_entry) * (u64)mhba->max_io +
-> +		160;
-> +	if (total > UINT_MAX) {
-> +		dev_err(&mhba->pdev->dev,
-> +			"handshake sizes too large: io %u, in %u, out %u\n",
-> +			mhba->max_io, mhba->ib_max_size, mhba->ob_max_size);
+> -	page_checksum =3D mvumi_calculate_checksum(hs_header,
+> -						hs_header->frame_length);
+> +	if (frame_length > HSP_MAX_SIZE - sizeof(struct mvumi_hs_header)) {
+
+[Severity: Medium]
+Is an endianness conversion required here before the bounds check?
+
+hs_header->frame_length is populated by the PCI device, which typically uses
+little-endian byte order. On big-endian architectures, reading it directly =
+into
+a u16 without le16_to_cpu() results in a byte-swapped value.
+
+This swapped value will cause the bounds check against HSP_MAX_SIZE to
+spuriously fail the handshake and abort the device probe. While the driver =
+may
+lack complete endian conversions overall, does this new check introduce an
+immediate probe failure on big-endian platforms?
+
+> +		dev_err(&mhba->pdev->dev, "invalid handshake frame length %d\n",
+> +			frame_length);
 > +		return -1;
-
-[Severity: High]
-If these new boundary checks fail and return -1, will it cause an infinite
-retry loop?
-
-When mvumi_hs_process_page() or mvumi_init_data() returns -1,
-mvumi_handshake() sets hs_fun to HS_S_ABORT but returns immediately without
-writing the abort state to the doorbell registers:
-
-	if (mvumi_hs_process_page(mhba, hs_header)) {
-		HS_SET_STATE(hs_fun, HS_S_ABORT);
-		return -1;
-	}
-
-Because the firmware never receives the abort, it waits for a response and
-eventually retries by asserting DRBL_HANDSHAKE_ISR.
-
-The caller mvumi_handshake_event() then processes the interrupt, calls
-mvumi_handshake() again, and resets the timeout:
-
-	if (isr_status & DRBL_HANDSHAKE_ISR) {
-		mhba->instancet->clear_intr(mhba);
-		mvumi_handshake(mhba);
-		before =3D jiffies;
-	}
-
-Doesn't this result in the driver probe hanging indefinitely on bad firmware
-instead of timing out or failing cleanly?
-
 > +	}
 > +
->  	tmp_size =3D mhba->ib_max_size * mhba->max_io;
->  	if (mhba->hba_capability & HS_CAPABILITY_SUPPORT_DYN_SRC)
->  		tmp_size +=3D sizeof(struct mvumi_dyn_list_entry) * mhba->max_io;
+> +	page_checksum =3D mvumi_calculate_checksum(hs_header, frame_length);
+>  	if (page_checksum !=3D hs_header->checksum) {
+>  		dev_err(&mhba->pdev->dev, "checksum error\n");
+>  		return -1;
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261015022728.3936=
-714-1-yhlee@isslab.korea.ac.kr?part=3D5
+714-1-yhlee@isslab.korea.ac.kr?part=3D2
