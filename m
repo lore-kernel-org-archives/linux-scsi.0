@@ -1,44 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2978F274658
-	for <linux-scsi@vger.kernel.org>; Thu, 15 Oct 2026 00:32:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ECE2D1DED49
+	for <linux-scsi@vger.kernel.org>; Thu, 15 Oct 2026 00:32:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792024326; cv=none; b=Ah4Gy1YL5RnmlOTNQ1YfbAx5so5AkS05jDv7LLwJgdtCM5YVcN34YaLpECKnSKh03e3r3Nqjc2IeolrFqZk0FNhQnAhR0NFogl/jF6EtA7lUz9NtQgcW2bvB47ejuQP85UhbMPJO1xhjUZAE7F5m+PGhBg9lYiHQG5Hn0zyC/Bc=
+	t=1792024331; cv=none; b=uNZl7dKFn9EUg3HWGtPjRdkHI5KGFCrAeD0U3CiCCZjEegqY+rLeHDwNtRoy/sWKYJQzsplPOpn41nSFMgJww9h9ckvH+8RAN5ZnT+fANvCeDogX6cU9fmZC4818+XWP1p8wTrAAf8gfZJXe3x6wU36t6vi6Kg5nQw2s1Bwl5WY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792024326; c=relaxed/simple;
-	bh=M0N0K+x5+yG951A2mhSo7l9NGrdUB15xMzakqzUlmP4=;
+	s=arc-20240116; t=1792024331; c=relaxed/simple;
+	bh=zds9UxSTaSx5yT9m/1VcVsZLFA7hwxVG1s5jO1bXKxU=;
 	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
-	 Date; b=psHcSv+TH9QY/VtDnJutW3S/TiZXqjstz6JEzPmJ8f6Z9jSdD+QmwvhcvQDuuydzVIHBcnYzJIUP/atGXWVGeLcX24PvAyE91316tPm4VRv4BqNUWojp0Mfpw5IOmFKlRXT89y2FDVFD2Ka9PggOst7DymhUZSKbzmVH1dQggdo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Sz0envr/; arc=none smtp.client-ip=100.103.45.18
+	 Date; b=P4FzYlPTWkQGD+sGv4zlNErD46r8SLKTpVhLLtAdDar91lHcupN9/U1WzRVge/IvH4e64wq/WqB9hdJCQUhIpuNjo/yFyLLb2pJLUcx4wNd8cGiasMPjDIVkbAeJo0VtKEWH/VlWPnhTyLJduG6FX8wnplB0uPC/NZLVBbdKihQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Kqgaw8BS; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Sz0envr/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 96C191F000C4;
-	Thu, 15 Oct 2026 00:32:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Kqgaw8BS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5E99C1F000C4;
+	Thu, 15 Oct 2026 00:32:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792024324;
-	bh=wRo6ybQZdty3rgFKDDQUAp8Qq7SLZtMXUUkfJUQJzJc=;
+	s=k20260515; t=1792024330;
+	bh=3ivd+WsDTezRdCt3LJLNC6rieG9jo0qhWrynogpB0+Y=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Sz0envr/K34PWeyHiIOin3oVnFRYpvCCVMKuUlGdF1U5aXTV469JnFQpF0ZnT0dhy
-	 MXb22NkYyEouWikVzg9nIHfwMD+9Y9rFtHFm+E7E5b7Thy5Q9K1aXJ0MDOJIffHL/y
-	 sXuLqhmLTnJkY2zhR1XQLbwrDAmGVwT+6hmqHTMnWlbpU1V1tIY2mv9h01w2rjl5qB
-	 5YvbNmkzWbhf4jkEq8rXEqX2sQWNIBGfz0h6sQnSYjOd0v7Bj9SMPH2S2ZFS5KCIPL
-	 EHZCtCZcEatlOcAfR4WwsV+1sXPIYwvnEDU18k7MW1PbJml+nJ97fJ74sl7Mkcuv3g
-	 gu+ulUVC6+RNg==
-Message-ID: <sashiko-outbox-172056@kernel.org>
+	b=Kqgaw8BSaFdS/VyekcQtcDTXI8JFNkiakfEGmSE/QAhC82btbMFdqHNz/ZQ45DLs+
+	 jRhdPQPdHNSE5ymTpqgA2ez/tlHad1sxXFooBzDvz/vb3gpuYlPSnJ5FKpRfr5TBqx
+	 ZQ3TbKCoZHXLaF55LJkcL4qFJyV2d1S9n4llzZmG7ScsHAoqI5MsLEFxrAXbPtq2TT
+	 7Od5uPkdpC6Wfg/13Q4mMcp7NmzDbZ+5VjlzvTmwYjxBbZcrw2Ehwxplz646v704SY
+	 AR5nMHLKUKeUc3bG02oARJl6gnWt+0Tr3Jzs7xVATj0H8DdFU0HujeXSI80meBtkqp
+	 +w4rhlJOhB20g==
+Message-ID: <sashiko-outbox-172057@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 5/5] scsi: ufs: core: Clear stale UIC result byte
- before peer DME retries
+Subject: Re: [PATCH v2 1/5] scsi: ufs: bsg: Complete the job on error
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Stanley Jhu" <stanleyjhu@google.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20261015001855.3450573-6-stanleyjhu@google.com>
+In-Reply-To: <20261015001855.3450573-2-stanleyjhu@google.com>
 References: <20261015001855.3450573-1-stanleyjhu@google.com>
- <20261015001855.3450573-6-stanleyjhu@google.com>
+ <20261015001855.3450573-2-stanleyjhu@google.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 15 Oct 2026 00:32:04 +0000
+Date: Thu, 15 Oct 2026 00:32:09 +0000
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -47,70 +46,68 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] ufs: race in ufshcd_dispatch_uic_cmd() between retry and late inte=
-rrupt
+- [High] scsi: ufs: bsg: heap out-of-bounds write/read in RPMB reply
 --
 
-commit 2dc892f166dff54aa2e190ad9b52806532df339b
+commit 500adcab38ae23977180188472414e7c66ab1588
 Author: Stanley Jhu <stanleyjhu@google.com>
 
-scsi: ufs: core: Clear stale UIC result byte before peer DME retries
+scsi: ufs: bsg: Complete the job on error
 
-This commit clears the stale UIC result byte and restores argument3 when an
-attempt fails before peer DME retries. This prevents a transient failure fr=
-om
-becoming a hard failure after retries due to uncleared error codes.
+This patch updates ufs_bsg_request to always complete the job via
+bsg_job_done() and return 0, matching other BSG transports. It prevents
+leaking the job's device reference and mapped scatterlists on error.
+Positive status codes continue to return 0 from SG_IO with the reply header.
 
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index bcc2512bf34b8..7532fd916bfd9 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -4400,9 +4400,12 @@ int ufshcd_dme_set_attr(struct ufs_hba *hba, u32 a=
-ttr_sel,
->  	do {
->  		/* for peer attributes we retry upon failure */
->  		ret =3D ufshcd_send_uic_cmd(hba, &uic_cmd);
-> -		if (ret)
-> +		if (ret) {
->  			dev_dbg(hba->dev, "%s: attr-id 0x%x val 0x%x error code %d\n",
->  				set, UIC_GET_ATTR_ID(attr_sel), mib_val, ret);
-> +			uic_cmd.argument2 &=3D ~MASK_UIC_COMMAND_RESULT;
-> +			uic_cmd.argument3 =3D mib_val;
-> +		}
->  	} while (ret && peer && --retries);
+Cc: stable@vger.kernel.org
+
+> diff --git a/drivers/ufs/core/ufs_bsg.c b/drivers/ufs/core/ufs_bsg.c
+> index 7a66917b3fc0e..18c318d781224 100644
+> --- a/drivers/ufs/core/ufs_bsg.c
+> +++ b/drivers/ufs/core/ufs_bsg.c
+> @@ -195,14 +195,12 @@ static int ufs_bsg_request(struct bsg_job *job)
+>  	ufshcd_rpm_put_sync(hba);
+>  	kfree(buff);
+>  	bsg_reply->result =3D ret;
+> -	/* complete the job here only if no error */
+> -	if (ret =3D=3D 0) {
+> +	if (ret =3D=3D 0)
+>  		job->reply_len =3D rpmb ? sizeof(struct ufs_rpmb_reply) :
+>  					sizeof(struct ufs_bsg_reply);
 
 [Severity: High]
-Can a retried UIC command be prematurely completed by a late interrupt from=
- a
-previous timed-out command?
+Does setting job->reply_len to sizeof(struct ufs_rpmb_reply) (which is 104
+bytes) cause an out-of-bounds write and read?
 
-If a call to ufshcd_send_uic_cmd() times out, the retry loop immediately
-invokes it again. In ufshcd_dispatch_uic_cmd(), the new command is assigned
-to hba->active_uic_cmd without holding the host_lock:
+The job->reply buffer is allocated with a fixed size of 96 bytes
+(SCSI_SENSE_BUFFERSIZE) in bsg_init_rq().
 
-drivers/ufs/core/ufshcd.c:ufshcd_dispatch_uic_cmd() {
-    ...
-    hba->active_uic_cmd =3D uic_cmd;
-    ...
+During a UFS Advanced RPMB request, ufshcd_advanced_rpmb_req_handler() casts
+the 96-byte job->reply buffer to a struct ufs_rpmb_reply and writes up to
+104 bytes, overflowing the allocation by 8 bytes.
+
+Later, bsg_complete_op() uses job->reply_len to copy the reply back to
+userspace:
+
+block/bsg-lib.c:bsg_complete_op() {
+        ...
+        int len =3D min(hdr->max_response_len, job->reply_len);
+        if (copy_to_user(uptr64(hdr->response), job->reply, len))
+        ...
 }
 
-If a late interrupt from the previously timed-out command fires right after
-this assignment, the ISR will read the new command under host_lock and
-complete it prematurely:
+Because job->reply_len is set to 104, this copies 8 bytes of adjacent
+slab memory to userspace, which could lead to heap corruption and
+memory disclosure.
 
-drivers/ufs/core/ufshcd.c:ufshcd_uic_cmd_compl() {
-    ...
-    guard(spinlock_irqsave)(&hba->host->host_lock);
-    cmd =3D hba->active_uic_cmd;
-    if (!cmd) {
-    ...
-}
-
-This could lead to invalid configuration and potential controller
-desynchronization, since the new command is completed using the old command=
-'s
-result.
+> -		bsg_job_done(job, ret, bsg_reply->reply_payload_rcv_len);
+> -	}
+> +	bsg_job_done(job, ret, bsg_reply->reply_payload_rcv_len);
+> =20
+> -	return ret;
+> +	return 0;
+>  }
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261015001855.3450=
-573-1-stanleyjhu@google.com?part=3D5
+573-1-stanleyjhu@google.com?part=3D1
