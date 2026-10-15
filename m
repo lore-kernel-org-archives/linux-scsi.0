@@ -1,61 +1,63 @@
-Received: from mail-pj1-f44.google.com (mail-pj1-f44.google.com [209.85.216.44])
+Received: from mail-pg1-f176.google.com (mail-pg1-f176.google.com [209.85.215.176])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0A3B4AC14A
-	for <linux-scsi@vger.kernel.org>; Thu, 15 Oct 2026 08:19:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B50044C33E0
+	for <linux-scsi@vger.kernel.org>; Thu, 15 Oct 2026 08:19:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792052390; cv=none; b=UVaE9Re4o/ZqmROECamyBhx8EsGs4ij2nEPf5A5a9qWmRdNoNUAVqsm+nhlbjcF5y6E8O3KShI8rbdSnUcfRBWxHOsMtKXt6VAUWS7JVjESoapw0t/ZWk61m+G67kMrl5SBcTTkygh77bU61OaxvqcC1oqvA+SarRwy4PM5d9Ck=
+	t=1792052394; cv=none; b=kQ7zQ28l1SPYWQ9A5yvzpWlNQuXa23ux3FaKy4qFPmeQPc1+EFgNOB15DDvkXi5siiidgZVxaiiv09Ymw85IyHuVXnNMOtx3YxVfsXVpmiNdJWkZZlUTgLyywfKu3LYmB502aEolOyoVIfeP0s56u/soJgVqgFnJzy771ztsB3I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792052390; c=relaxed/simple;
-	bh=6DHO4Va2w8tFmmBGFpjKQ98+TYZ/Yg9DyQqg582/Cdw=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=PIYxyIfk4w6q970/UhdndA8bEoOMVJQXB2/z/pRP9Z2nkqCsz5z8jm5K3BPsFPwtpMe/31vXTsAIk9tk3mLa2ZTx6WhUfe6657FbH//SryUdIkadKyf7vusG7R89Qk0YDyYW1QAQI2kTjA7AbfrAYbqGNbp1fV329kKmAT8si3g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr; spf=none smtp.mailfrom=isslab.korea.ac.kr; dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b=sIRrvJ7p; arc=none smtp.client-ip=209.85.216.44
+	s=arc-20240116; t=1792052394; c=relaxed/simple;
+	bh=55fngw8U7i276yUTXQntdbIZF4Wd6ep68zhxSVkxCO8=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=s2Ahv3tQQF1zZ/pmM0N0ho2+bTY9q+FmLWVXCt5T3uJIoC9rXUSV7mvvQc1qNTx6S++7iDf1AS6wP6S3R1XVOwN2GZE6uDUNOmmFFI/uXbF+fV28C0ykvoatOKEtcXnUcludO1sXK5Ilyb49oS5pFI39HOpoZGBfUQOHrcgc4j0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr; spf=none smtp.mailfrom=isslab.korea.ac.kr; dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b=Q1kWCDh2; arc=none smtp.client-ip=209.85.215.176
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b="sIRrvJ7p"
-Received: by mail-pj1-f44.google.com with SMTP id 98e67ed59e1d1-3ac9f49b984so223660a91.1
-        for <linux-scsi@vger.kernel.org>; Thu, 15 Oct 2026 01:19:47 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b="Q1kWCDh2"
+Received: by mail-pg1-f176.google.com with SMTP id 41be03b00d2f7-cd5e6f0a22bso941721a12.1
+        for <linux-scsi@vger.kernel.org>; Thu, 15 Oct 2026 01:19:51 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=isslab-korea-ac-kr.20251104.gappssmtp.com; s=20251104; t=1792052387; x=1792657187; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=cdMIhumT/Dh09O4oOrTO+0XHCJ1oiMJHbsxrI+Sf4R0=;
-        b=sIRrvJ7pSESoBeSW+WiqlVSGXSWo++zPek/Yapzdq9kyGeH6BRbOqbUCg/DqqQ2Jpn
-         7XmCCTNqaP6K+FEPQR06pYZ4LD6kb8spJ2JGDego9Pjz1Fuxi7I4m/xeuY5aNTMQTzKN
-         XGZz7AH1KKVG+M+dNXDZKyxjE9ZimGdXBRNTMoq1RWTFd9RX3y4RNuHxeIEL2fadYDOo
-         HpkElZRQebsnzBgIUigkkfTWUUzrU2PpnxX+j4YU96Uvb+sp1rTx6dtCYXDmwtOmihjN
-         hvDRCilyXdS6U2avpMEVyIyQAoMes12Ay9aYJ9EW7L89CUCu4Yy3EmjZtvv8S6WPeIIc
-         Rorg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792052387; x=1792657187;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=isslab-korea-ac-kr.20251104.gappssmtp.com; s=20251104; t=1792052391; x=1792657191; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=cdMIhumT/Dh09O4oOrTO+0XHCJ1oiMJHbsxrI+Sf4R0=;
-        b=ObxOC8ipF7A8O15cd6UQ798yVsIOiRbh8+fyOAce9mE87ZehpHTWTU/E+pYXsPP2om
-         q+dfjB0rRtSH7tWBHaxVxWVRyrEt8/FEIGISB9DC410pMFrufv6qo27gJBuIwejRvZ6Q
-         VpbT1iFTRfXqojvTf3mkrfdKnnrNN7MgSBvprIxXTvSt/MY0AV+/mdkEdp1w/35ZUDsp
-         0cx3M8e9CzCIH98KhmTcZAuYIchsM4SCXUYtMWID3n4kMufI7Uyxh1JH7fcVuM1jqp5n
-         pow6Als4qd2iqnFdlA+dVvFx2f4B/lE1vvQlfUK9GgafKdPdoyg3z7TRlNbdjcYQveVY
-         5l3A==
-X-Gm-Message-State: AFq9FYLF76GykNZ144rkLLOr31bi+jZwE8M/r6DseT6YHagts3IELQCu
-	3WTlAESStYYqiX6OC7Yua++A2iFO9QLXSBiRYZJeBwlytEEDhm0nI36RdeFdhQitUOU=
-X-Gm-Gg: AYBFou1bZuWqB6R8NPzPjCxKwXGLt5Fls4MiU7gI+IGBCUuO7vjV+tA00a0cF+gMwBp
-	P/lTGscnodP57hA84fHOTbN3fcF5A//i/O2grcIX6oll8X46l3mPJbSP3mYZFOSp/pQP69aUd9d
-	+rDX4M7N4p0ueXc0isZf6oMSyCBEzDAeHfF1G26+S6YkKsT6fIgrYn1L2iZEFuniP7vr9Y7GT1P
-	h77B8BVG5CVnzc1b9MbJU4epQPTgSI2r9tTgygOj3h4tNbNEONuX/p5lG+5n+luqi6UejX6RDPl
-	1yc0xgZbv8r6LLOL62M+/6l6lqcFiOAZGYLLn+s37BuseACW9ZMghSLOTFonCX0nLXn+h2dfg/f
-	G8HxN/kefBPfYIauPKO43Vf10Iy5pA1cM+yKepVsX8dXjnFbJm3bdV5cT/t0SDlmtyA7wIeAgIE
-	awLd+pE4NlLgwkvm8RJU7WmbFRfz7DHabfhVOzqbLhoKRXgKYoyLeJ9Vkz23mYY1Ja0gOcFQqB6
-	dxrng==
-X-Received: by 2002:a17:90b:1a82:b0:3a0:d82b:237b with SMTP id 98e67ed59e1d1-3ab3ab209f3mr9436183a91.25.1792052386864;
-        Thu, 15 Oct 2026 01:19:46 -0700 (PDT)
+        bh=i6VprNe7yjepyKxDyWl/GS5n+61wlhCAhAo3qvs5zaA=;
+        b=Q1kWCDh27bUa03NhPCldjuS+wzOaEOIz1HLSErnfDS93x7VJqbS7EJh5vx6dtqe+UD
+         RElTfA22CZ1s+/2nThKkzqhOQFI3YDxlqfRHmKxtT3+BVoQ/q7Y0Hl/lvd1xPkCD43XH
+         Jzi6fZdAdXt4vgj+IxaFOCthiB648HDmx9KDRKJqCAyNPQ4gNy+9TS05qFFSPO+4pEi6
+         /ob4e9rv6jle7QPo2MvGgbYzOyQRMqC7LK0JcaUTCf/+truXmFC9VLkJGnl3l2Q3jd2P
+         QP4N6JE5mrR0TMqrXYka6KKsh01pqEFsexJ8ag00KiYMIwUS7GbDjMooGIx9il6YaUyN
+         2csA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792052391; x=1792657191;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=i6VprNe7yjepyKxDyWl/GS5n+61wlhCAhAo3qvs5zaA=;
+        b=g1nBJDpWL32efICss9ASGEwZ4aXC9htWQJTspUFNFfsHDlf1bvquV89hV++XE0B9h0
+         XW8JXRHX2ZeaaQWZJjaDY5r1X01fA2hSumHEAXAPqz/evd60NRw3DgxXwblFz9ZKL65/
+         m/FmZZs1dirCnv+4CBy+2rSWla1M1AqgXV9FhZs0a7sK7OXbpo3gvGIjL09ByEP48XoK
+         pstdDsmtFLgGL40ytvhobeUj6Xcd8fiIXeND60wLPspb01ZbpxF2cwMr/RDCGaanJ+bh
+         NvgxpbZOig/LugEH8F9t7hkoeQBs88CdaR0MT9q2ERAuV+jJcpOWric9HH/O0HHL9LiY
+         Ldkg==
+X-Gm-Message-State: AFq9FYIHguRGMf2yN9CKf6TIvYndEITW2BHLbdvbFrptagD3vYttG6g6
+	IeIxJEvs0BnOui5VJFI5MOiH5qslDboyEyFp8CCru6rTCsPp8d0mbnM9sGQejNVtYNg=
+X-Gm-Gg: AYBFou3nQqp2Gi0EHbbGUW/YlnQxL6BSsbi5oX8a1WH053QsQPqk/PdQRD5I4pcGjh0
+	jeEWzNI7b6/0DMByYYCyZV2NwlgLy1DnH4HMThIsIlRrxny5Jvz8LJ8a+AsISldsxdkzg7ivNC9
+	CjmwQL/yww5oAE65gGWY9Tq0+vN7Z9v32xOfz7umdDQo+tFi65L6wL/asVTgRGG6jFu0XvaK9oB
+	E33VUw1DjEF0P6I30TuQAsf0N7H9+FqwbXya7z2IRTRXDeT+j0eCP/Xpu6cqo39VB38bpSwdob1
+	CbxwbNJTH61FMXy0f5IZVmuE2ViiA20GF9Qc4KKg7KLFreb/uE11HQjAS4+A4cJqRhq0xAp7XOl
+	GFmtshPi7X8+83DefT+3HSSNRgr3+w/UCEpDYhxAp4C28pYVHhasTrj3GRyTEv8+In1LLjcS6sY
+	h3xSndUs20ACpKG522Zy77f8ziocgLAQzN1w6KhW++P8M1x/IJGBTz5do4CN+XpiGfisnDY1pJw
+	sYaFw==
+X-Received: by 2002:a17:90b:1b06:b0:3ac:adce:60b2 with SMTP id 98e67ed59e1d1-3acadce66cfmr116114a91.2.1792052390946;
+        Thu, 15 Oct 2026 01:19:50 -0700 (PDT)
 Received: from yhlee-960QFG.. ([125.131.91.97])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3ac943e755bsm3319784a91.2.2026.10.15.01.19.44
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3ac943e755bsm3319784a91.2.2026.10.15.01.19.47
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 15 Oct 2026 01:19:46 -0700 (PDT)
+        Thu, 15 Oct 2026 01:19:48 -0700 (PDT)
 From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
 To: "Martin K . Petersen" <mkp@kernel.org>,
 	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>
@@ -63,10 +65,12 @@ Cc: linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org,
 	yhlee@isslab.korea.ac.kr
-Subject: [PATCH v2 0/5] scsi: aic94xx: validate the indices the sequencer supplies
-Date: Thu, 15 Oct 2026 17:19:29 +0900
-Message-ID: <20261015081935.4168771-1-yhlee@isslab.korea.ac.kr>
+Subject: [PATCH v2 1/5] scsi: aic94xx: bail out of escb_tasklet_complete() on a bad EDB index
+Date: Thu, 15 Oct 2026 17:19:30 +0900
+Message-ID: <20261015081935.4168771-2-yhlee@isslab.korea.ac.kr>
 X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20261015081935.4168771-1-yhlee@isslab.korea.ac.kr>
+References: <20261015081935.4168771-1-yhlee@isslab.korea.ac.kr>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -75,86 +79,70 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-This supersedes
+escb_tasklet_complete() derives the empty data buffer index from the done
+list opcode the sequencer wrote:
 
-  [PATCH 0/3] scsi: aic94xx: validate the sequencer-supplied EDB index
-  <20261015072612.4144043-1-yhlee@isslab.korea.ac.kr>
+	int edb = (dl->opcode & DL_PHY_MASK) - 1; /* [0xc1,0xc7] -> [0,6] */
 
-which should be dropped: its patch 2 was wrong in a way worth stating
-plainly.
+DL_PHY_MASK is 7, so the subtraction yields -1 through 6, and the
+function already says that anything outside [0,6] is wrong:
 
-aic94xx takes two numbers out of the done list the sequencer writes and
-uses both without looking at them.  One is the empty data buffer index,
-which v1 bounded in three places.  The other is the transaction context
-index, which v1 did not touch, and which turns out to be the same class of
-problem one level up.
+	if (edb > 6 || edb < 0) {
+		ASD_DPRINTK("edb is 0x%x! dl->opcode is 0x%x\n", ...);
+		...
+	}
 
- 1  escb_tasklet_complete() already noticed a bad EDB index and printed
-    about it, then fell through and used it anyway.  Add the missing
-    return.  Unchanged from v1.
- 2  asd_get_response_tasklet() never looked.  Bound it -- and, new in v2,
-    report SAS_INTERRUPTED on the way out.
- 3  asd_get_tmf_resp_tasklet() never looked either.  Unchanged from v1.
- 4  asd_tc_index_find() indexes tc_index_array[] with the number the
-    sequencer echoes back, in all three of its callers, without a bound.
-    New in v2.
- 5  the pointer that comes back is used as an Empty SCB without checking
-    that it is one, and struct scb is a union.  New in v2.
+The block reports the problem and then falls through to let it happen.
+edb is used twice afterwards: asd_bytes_dmaed_tasklet() adds
+ascb->edb_index to it to index seq->edb_arr[], and the out: label at the
+end of the function hands the same value to asd_invalidate_edb(), which
+indexes both escb->eb[] and seq->edb_arr[]. asd_assign_edbs2escbs() gives
+the first ESCB edb_index 0, so for that one edb == -1 reads
+seq->edb_arr[-1], one pointer before the array, and dereferences whatever
+it finds.
 
-On patch 2, the correction.  v1's bail returned without touching ts->stat,
-and asd_task_tasklet_complete() has already set ts->resp to
-SAS_TASK_COMPLETE and ts->stat to SAS_PROTO_RESPONSE by then.  That status
-is a promise that this function will fill in the real one.  For SSP,
-sas_end_task() starts from DID_OK and SAS_SAM_STAT_GOOD and its
-SAS_PROTO_RESPONSE arm only prints a notice, so the command completes as a
-success.  For STP, sas_ata_task_done() takes SAS_PROTO_RESPONSE to mean the
-ending FIS holds the status and copies ATA_RESP_FIS_SIZE out of a ts->buf
-that was never written.  So a hardening patch turned a bad index into a
-silently successful command, which is worse than what it was fixing.  v2
-reports SAS_INTERRUPTED instead, which is what this driver already uses for
-a response that arrived and could not be used, and it does the same for the
-lookup failure above it, which had the same hole before this series
-existed.
+Finish the check the way it reads: return instead of falling through.
 
-Patches 4 and 5 finish the class rather than leaving half of it.  The index
-in question is one the driver itself allocated and handed to the sequencer
-in scb->header.index, so it comes back echoed; asd_tc_index_find() reads
-tc_index_array[] with it, the array has hw_prof.max_scbs entries, and
-max_scbs cannot exceed 5957 while the field is a __le16.  All three callers
-of that helper already handle a NULL return, so the bound needs no caller
-changes.  Patch 5 adds the opcode check that asd_dl_tasklet_handler()
-already does.
+Whether the sequencer can really report an opcode that makes this zero is
+not something the tree answers. It is firmware loaded with
+request_firmware(), the done list opcode is described only by the comment
+above, and there is no Documentation/ file and no MAINTAINERS entry for
+this driver. This is not a claim of a reachable out-of-bounds access,
+only that the driver goes on to index an array with a value it has just
+decided is invalid. The intent to bound what the sequencer supplies is
+already in the same file, in asd_bytes_dmaed_tasklet():
 
-I have not reproduced any of this on a controller.  Injecting the three bad
-values through a KUnit test on a KASAN kernel does reach
-seq->edb_arr[-1] and tc_index_array[] past its end, and does leave a
-non-Empty SCB modified, which shows the arithmetic and the missing checks
-are real; it does not show that the sequencer emits those values, and
-nothing in the tree answers that, since it is firmware loaded with
-request_firmware() and there is no Documentation/ file or MAINTAINERS entry
-for this driver.  The commit messages are written on that basis and claim
-no reachable memory error.
+	size = min(size, (u16) sizeof(phy->frame_rcvd));
 
-Patch 1 keeps Cc: stable, as in v1.  Patches 4 and 5 carry it too: unlike
-the EDB bound, those two are an unchecked array index and a union
-reinterpretation that the driver never guarded at all.  Patches 2 and 3
-still do not, and I would rather a maintainer decide.
+which clamps a device-supplied length a few lines after indexing
+seq->edb_arr[] with a device-supplied index and no bound.
 
-Yehyeong Lee (5):
-  scsi: aic94xx: bail out of escb_tasklet_complete() on a bad EDB index
-  scsi: aic94xx: validate the EDB index in asd_get_response_tasklet()
-  scsi: aic94xx: validate the EDB index in asd_get_tmf_resp_tasklet()
-  scsi: aic94xx: bound the transaction context index from the sequencer
-  scsi: aic94xx: check that an ESCB lookup returned an ESCB
+One consequence worth naming: an ESCB dropped this way is not invalidated
+and so is not reposted to the sequencer, because the repost happens
+inside asd_invalidate_edb(). That takes one empty buffer out of
+circulation per malformed opcode. It is the lesser of the two, and
+recovering the ESCB instead would mean choosing some other buffer to
+invalidate, which this index cannot tell us.
 
- drivers/scsi/aic94xx/aic94xx_hwi.h  |  2 ++
- drivers/scsi/aic94xx/aic94xx_scb.c  |  1 +
- drivers/scsi/aic94xx/aic94xx_task.c | 16 ++++++++++++++++
- drivers/scsi/aic94xx/aic94xx_tmf.c  | 13 +++++++++++++
- 4 files changed, 32 insertions(+)
+Fixes: 2908d778ab3e ("[SCSI] aic94xx: new driver")
+Cc: stable@vger.kernel.org
+Signed-off-by: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+---
+ drivers/scsi/aic94xx/aic94xx_scb.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-
-base-commit: 2c3418fffa9d037b2038a6db48be63f9e2291806
+diff --git a/drivers/scsi/aic94xx/aic94xx_scb.c b/drivers/scsi/aic94xx/aic94xx_scb.c
+index 08c8dad9ad621..d050e5325b943 100644
+--- a/drivers/scsi/aic94xx/aic94xx_scb.c
++++ b/drivers/scsi/aic94xx/aic94xx_scb.c
+@@ -421,6 +421,7 @@ static void escb_tasklet_complete(struct asd_ascb *ascb,
+ 			    le64_to_cpu(ascb->scb->header.next_scb),
+ 			    le16_to_cpu(ascb->scb->header.index),
+ 			    ascb->scb->header.opcode);
++		return;
+ 	}
+ 
+ 	/* Catch these before we mask off the sb_opcode bits */
 -- 
 2.43.0
 
