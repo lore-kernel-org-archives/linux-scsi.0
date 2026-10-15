@@ -1,180 +1,112 @@
-Received: from mail-pl1-f177.google.com (mail-pl1-f177.google.com [209.85.214.177])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 726B4403AE0
-	for <linux-scsi@vger.kernel.org>; Thu, 15 Oct 2026 04:52:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD1F61AAE28
+	for <linux-scsi@vger.kernel.org>; Thu, 15 Oct 2026 05:03:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792039964; cv=none; b=Zp8FGWW6FlfKHzsBuTqwicjk740hf2jc0p9j9hazNF+lh4SPn4dN2xXgo8g3PcJ/gU+hhUogUz3cnsQmVugKm7bfJYpnXpK6CLqXKZvA+Ji5Yd5rpgy+J/poqjvLq6uzgRkb2zO4eE0OKzXSfbQe+3P2sxQvQlwjov79dBLGYvE=
+	t=1792040609; cv=none; b=XOLUBN24c0zj8WBLD54Ma7FkoARPN6zPBdwV+KkQM7utNSRxNv0npkY0DKOz5d5BDAcUT3AjM6AuSDFyvOZa/hQ2IcZz+xH9xB/NcsxnS+wQMYsJklXUbeWg6P3rs2gBseIYRs19vwxCP+9BumJ0RAxfUzKfAhpMo/YfUiwVqiw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792039964; c=relaxed/simple;
-	bh=rYJvJvnkgZtKchfVvlvx9ACL3kl2ex3CJVfJAmwIQMk=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=GthsTOZr1bdmDT8x1qKP30qTiMUtO24DqBIWJ8DXGAONLuRUDv3eBrRC1t4IAxvHI8IuLZuh7jhNQUBkPGcnTSUycbZMXsvGTET1otSkDf2e/m2Zuy1x1CY3Ry6FWhaq6WEpnWNlxNepy7yHHd45EPAzeUpBcpKFZLT9zYlvLG8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr; spf=none smtp.mailfrom=isslab.korea.ac.kr; dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b=Px0ZeuYX; arc=none smtp.client-ip=209.85.214.177
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
+	s=arc-20240116; t=1792040609; c=relaxed/simple;
+	bh=n9/0zZTmIuR/APxUqLP1beG8X3XmRWPPw3ZRs1DbZ0Q=;
+	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
+	 Date; b=duxcwVBkrp+leFO5A6otwxL6aJy3hpVVQ3awi7tWUWUEyXljusUTDekR0laR6Nw3ArEGh87CPg4t4lqwGbf3gALDCDufSL/05AGs2l7dBos496gSR9vwCl7956S0XWlvOZX/x4X8zHU/CskUUYjXgrDsYYHSOoM1PGhOh6LmVSQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=d5bGX0VD; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b="Px0ZeuYX"
-Received: by mail-pl1-f177.google.com with SMTP id d9443c01a7336-2dd9cbb661bso35256925ad.3
-        for <linux-scsi@vger.kernel.org>; Wed, 14 Oct 2026 21:52:43 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=isslab-korea-ac-kr.20251104.gappssmtp.com; s=20251104; t=1792039963; x=1792644763; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=Y1CW4E17PsqOiHZDTp/GHdRDHH51grlO5+TKs27nZFQ=;
-        b=Px0ZeuYXmH/JvRJMh907f6JqeolLx31GjA4u/2OtO7OcDMGiXIaaHLISZgDjRICpyX
-         77FxkEPoHgKMGqKe76ArLqsxBsiEv+4YmpDYblS4rFpysIGFWGZaZ20UVIa+E9GLxrEq
-         mT2/On0Am0kfDknsmA3OUNZzwqDqTzZ67Bbdn/FauSt+J/B0Ht63VkOSOdgFMYZqNMP7
-         nDnwHhVF66ZM4bJFPR95q1+jygZZ/2n/cU/ws23Krp8V8fCRviFye35BnT6YeglNqcwD
-         sSiTTxabyw9XXFX260p7pxM8WQHc9FIjuLLbOS5JjTumxkQ/AgGcpsKYNKXNcQrZE37R
-         ZrJg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792039963; x=1792644763;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=Y1CW4E17PsqOiHZDTp/GHdRDHH51grlO5+TKs27nZFQ=;
-        b=ukND0ldJSEYjofl5sH2YicxAiUYTISYpSEkheWdSDxxbr2X/J7k+RHwl3KJcteGARS
-         eJdchriPHX/D/HAC2DziHEjiGD+3BkDWjAhDoeMEqSyzEFgb2eawkY8zRQ7gU4kDt9Eq
-         bFCewllKYKJKla6tUlDElucQ3CUDHzK5VB06pjoafYZMw/QCvN90tCpvABloBOFlFolR
-         mVITBag5v1I3iY848PK5v3pzlztwa40TxGc4EhT8uvayQGU9Etg5hYdxoKMXJ6qWbQ3N
-         L5bUZxKmYaklq7HkE6uUGDN7eB8vfvQS0dHFLj7WoOnY2pc9znenwfpWckGL7KbC5uSK
-         59TQ==
-X-Gm-Message-State: AFq9FYIrVap/hn6HwbMBPSx0hirIAuN4KgV1oNi2wXOTLBxc8DNV5eyN
-	1SM50nlXJ8aeMO+bFD5A6hSD2YnlABx0O0eT21tPZiqnsQUf7lPpoD+msR6ovaFhEz0=
-X-Gm-Gg: AYBFou2VGEBLrZt9gFgklejQ+X186EC+LP89b+9am4xxE5GWkDc87and+/5gVaRg3S9
-	aA/P4HcW6SRtDcrsjhpUtFXykwo3SybvVLAnUXzyXD98B8Z7dErIWAcPjZRGo1opY93elvWJfJG
-	84OdphKQqFfJcDo5UhX/fHNcfsU7QpcTXRspgy5bW7MMUYFQdEhyvudMfg7IssvyOaODHjiCPoS
-	Govuh+A9OQVPbEz4vGQ76pUP5BN7wuBpJ+y9GD1qXeAzoGk0WsNmzbd1ZCqWK1fK8IatRqjL/vK
-	SbKDnFuIOHAR/r2wb1jjHS3d/czxH1PtlwtDQhNmA8TrCBLkvQds8NWFVXNZ1NX7z1PxUKHgm0F
-	L+JCIeP7StfwTSQE/c9O1UzPPAbx3XJFHL8Oq7gMWue8WjcgI989//9ykS5nzNDL7G3vJTejSVT
-	BEqfdnrAfiaZ+uJJ6ZjCEurjhdOQNjt6uS5EfxM1tlpT/+p5kCPMXT1euZWLix2lYzd1vXbQlNf
-	JI/yg==
-X-Received: by 2002:a17:903:32c2:b0:2e8:30dd:523d with SMTP id d9443c01a7336-2e8429a739emr170899815ad.13.1792039962771;
-        Wed, 14 Oct 2026 21:52:42 -0700 (PDT)
-Received: from yhlee-960QFG.. ([125.131.91.97])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2e962a4dfbbsm1615915ad.58.2026.10.14.21.52.40
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 14 Oct 2026 21:52:42 -0700 (PDT)
-From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
-To: "Martin K . Petersen" <mkp@kernel.org>,
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org,
-	yhlee@isslab.korea.ac.kr
-Subject: [PATCH v9 9/9] scsi: mvumi: bound the firmware handshake retry loop
-Date: Thu, 15 Oct 2026 13:52:13 +0900
-Message-ID: <20261015045213.3975845-10-yhlee@isslab.korea.ac.kr>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20261015045213.3975845-1-yhlee@isslab.korea.ac.kr>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="d5bGX0VD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1794C1F000C4;
+	Thu, 15 Oct 2026 05:03:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1792040608;
+	bh=Kqr8KhrZxuaDqJUd8R2juUdGsl/K+2szwxmqxNx3YYs=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=d5bGX0VDSMRPF7GZu/X4FV/mWm+368EMXn6jXvQwfIfygaGrxtvgtF32HA//eNAVU
+	 XsoHZk3cVowwjuX/zQzHBOWeubHXSZX7vEHWpq6BAfk+xPGAmJx+Drj1tOHsIJaCFc
+	 TmsTtk4FA1FGYHY1vkCof/UkpS+FIMmz+T7VmVwNcYg1BH01ZAbugKSGmiy3Ip8S2x
+	 Uj6ZI+Yb3MT9UEhoX5bj2KglAYeaAr13Ot5UAdN2qv5UQolFwra6kSvkQUwX6uf8fc
+	 FtiKiuOIma3wL3xWsDRTAKzfwTLIcEJyx7Y91fv245jYL3cWzhQpRvhkzB5pr/YTXt
+	 FQsh4es8fpbmA==
+Message-ID: <sashiko-outbox-172292@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v9 7/9] scsi: mvumi: free the internal command buffer by
+ what was allocated
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Yehyeong Lee" <yhlee@isslab.korea.ac.kr>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20261015045213.3975845-8-yhlee@isslab.korea.ac.kr>
 References: <20261015045213.3975845-1-yhlee@isslab.korea.ac.kr>
+ <20261015045213.3975845-8-yhlee@isslab.korea.ac.kr>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 15 Oct 2026 05:03:27 +0000
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-mvumi_check_handshake() drives the handshake by calling
-mvumi_handshake_event() until mhba->fw_state reaches FW_STATE_STARTED,
-with nothing bounding how many times that can happen:
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [High] scsi: mvumi: DMA Use-After-Free on internal command timeout
+--
 
-	do {
-		if (mvumi_handshake_event(mhba)) {
-			...
-			return -1;
-		}
-	} while (mhba->fw_state != FW_STATE_STARTED);
+commit a045f4b7ba7499dba25350d8e9d333f7c9956722
+Author: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
 
-Each call advances the state machine by one step and has its own
-FW_MAX_DELAY timeout, but that timeout is sampled on entry to
-mvumi_handshake_event(), so it only bounds one step.  A firmware that
-keeps asserting DRBL_HANDSHAKE_ISR, or that reports the same handshake
-state every round, is answered every round and the loop does not end.
+scsi: mvumi: free the internal command buffer by what was allocated
+   =20
+This patch stores the DMA buffer address and length directly in the
+mvumi_cmd struct instead of reconstructing it from the command frame.
+This avoids an issue where a 32-bit shift in mvumi_delete_internal_cmd()
+caused the upper 32 bits of the DMA address to be truncated.
 
-The firmware does not have to be hostile to keep the loop going.  The
-page walk advances hs_header->page_code, which lives in the coherent DMA
-handshake page, so a controller that writes that field back can keep the
-walk at the same page.  The restart that mvumi_handshake() takes when the
-firmware reports a status other than HS_STATUS_OK also returns to
-HS_S_START without ending the loop.
+> diff --git a/drivers/scsi/mvumi.c b/drivers/scsi/mvumi.c
+> index 2410d2aa147d9..133e53bc2cb37 100644
+> --- a/drivers/scsi/mvumi.c
+> +++ b/drivers/scsi/mvumi.c
+[ ... ]
+> @@ -286,21 +288,10 @@ static struct mvumi_cmd *mvumi_create_internal_cmd(=
+struct mvumi_hba *mhba,
+>  static void mvumi_delete_internal_cmd(struct mvumi_hba *mhba,
+>  						struct mvumi_cmd *cmd)
+>  {
+> -	struct mvumi_sgl *m_sg;
+> -	unsigned int size;
+> -	dma_addr_t phy_addr;
+> -
+>  	if (cmd && cmd->frame) {
+> -		if (cmd->frame->sg_counts) {
+> -			m_sg =3D (struct mvumi_sgl *) &cmd->frame->payload[0];
+> -			sgd_getsz(mhba, m_sg, size);
+> -
+> -			phy_addr =3D (dma_addr_t) m_sg->baseaddr_l |
+> -				(dma_addr_t) ((m_sg->baseaddr_h << 16) << 16);
+> -
+> -			dma_free_coherent(&mhba->pdev->dev, size, cmd->data_buf,
+> -								phy_addr);
+> -		}
+> +		if (cmd->data_buf)
+> +			dma_free_coherent(&mhba->pdev->dev, cmd->data_buf_size,
+> +					  cmd->data_buf, cmd->data_buf_phys);
 
-Count the steps and give up after MVUMI_HS_MAX_STEPS.  A handshake that
-completes needs four fixed steps plus one per page the firmware asks for
-in the u8 total_pages, so 259 at most, and a restart adds two; 1024
-leaves room for both and still terminates.
+[Severity: High]
+If an internal command times out in mvumi_issue_blocked_cmd(), the function
+returns without explicitly aborting the hardware operation or resetting the
+controller.
 
-This does not change what the driver writes to the firmware.  In
-particular, the HS_S_ABORT that mvumi_handshake() stores into its local
-hs_fun before returning -1 is still never written to the doorbell, so the
-FW_STATE_STARTING restart continues to work as before.
+The callers of mvumi_issue_blocked_cmd() (such as mvumi_inquiry(),
+mvumi_flush_cache(), or mvumi_scan_events()) then immediately invoke
+mvumi_delete_internal_cmd(), which unconditionally frees the DMA-mapped
+command frame and data buffer back to the system.
 
-Fixes: f0c568a478f0 ("[SCSI] mvumi: Add Marvell UMI driver")
-Cc: stable@vger.kernel.org
-Signed-off-by: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
----
- drivers/scsi/mvumi.c | 9 ++++++++-
- drivers/scsi/mvumi.h | 9 +++++++++
- 2 files changed, 17 insertions(+), 1 deletion(-)
+Since the hardware is unaware that the software has abandoned the command,
+can a delayed completion cause the hardware to write to the freed physical
+memory, resulting in a DMA use-after-free and memory corruption?
 
-diff --git a/drivers/scsi/mvumi.c b/drivers/scsi/mvumi.c
-index 994c04902fa12..a2759dbeedf75 100644
---- a/drivers/scsi/mvumi.c
-+++ b/drivers/scsi/mvumi.c
-@@ -1334,7 +1334,7 @@ static unsigned char mvumi_handshake_event(struct mvumi_hba *mhba)
- 
- static unsigned char mvumi_check_handshake(struct mvumi_hba *mhba)
- {
--	unsigned int tmp;
-+	unsigned int tmp, steps;
- 	unsigned long before;
- 
- 	before = jiffies;
-@@ -1355,6 +1355,7 @@ static unsigned char mvumi_check_handshake(struct mvumi_hba *mhba)
- 
- 	mhba->fw_state = FW_STATE_STARTING;
- 	dev_dbg(&mhba->pdev->dev, "start firmware handshake...\n");
-+	steps = 0;
- 	do {
- 		if (mvumi_handshake_event(mhba)) {
- 			dev_err(&mhba->pdev->dev,
-@@ -1362,6 +1363,12 @@ static unsigned char mvumi_check_handshake(struct mvumi_hba *mhba)
- 						mhba->fw_state);
- 			return -1;
- 		}
-+		if (++steps > MVUMI_HS_MAX_STEPS) {
-+			dev_err(&mhba->pdev->dev,
-+				"handshake did not finish in %u steps, state 0x%x.\n",
-+				MVUMI_HS_MAX_STEPS, mhba->fw_state);
-+			return -1;
-+		}
- 	} while (mhba->fw_state != FW_STATE_STARTED);
- 
- 	dev_dbg(&mhba->pdev->dev, "firmware handshake done\n");
-diff --git a/drivers/scsi/mvumi.h b/drivers/scsi/mvumi.h
-index d998c65c26472..9597e87a08167 100644
---- a/drivers/scsi/mvumi.h
-+++ b/drivers/scsi/mvumi.h
-@@ -399,6 +399,15 @@ struct mvumi_hs_header {
- #define HS_PAGE_CL_INFO		0x4
- #define HS_PAGE_TOTAL		0x5
- 
-+/*
-+ * Each mvumi_handshake() call advances the state machine by one step: four
-+ * fixed steps, plus one per page the firmware asks for in the u8 total_pages,
-+ * plus a restart if it ever reports a status other than HS_STATUS_OK.  This
-+ * caps how many steps the driver will take before giving up, so that a
-+ * firmware that keeps the handshake going cannot keep it going forever.
-+ */
-+#define MVUMI_HS_MAX_STEPS	1024
-+
- #define HSP_SIZE(i)	sizeof(struct mvumi_hs_page##i)
- 
- #define HSP_MAX_SIZE ({					\
--- 
-2.43.0
+>  		dma_free_coherent(&mhba->pdev->dev, mhba->ib_max_size,
+>  				cmd->frame, cmd->frame_phys);
+>  		kfree(cmd);
 
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261015045213.3975=
+845-1-yhlee@isslab.korea.ac.kr?part=3D7
