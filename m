@@ -1,89 +1,47 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 568CB4FD788;
-	Thu, 15 Oct 2026 11:22:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8333E31A07F;
+	Thu, 15 Oct 2026 11:50:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792063363; cv=none; b=CfvgDf7pyBo1gaOuUmygmWf+rqMech9rVPOC3OLuCwOD757xoroCv1MA8ZU33Ryqy/7Vtz3GvsUh4Hr0FoNDWQixAsVvJy7naTv5jiOYDqhITs2eOX+w11mi3pj5Ej8tp7PsyGoLos/h7F+G5u9+6BqbW7CRIiyw7lyJWAcHFNE=
+	t=1792065051; cv=none; b=nsT6UcAA00M1s5doY8crVSeV1CZIS3jZwoX6mqWHu5OEFg6e5ktfsUFkPPDb4jBmjr4IZEc2nXrKKFkclfRwSZ5dH1wGYkdwNZpBRzztJ/UWT8JuallUO9/JX/EDZFJbruA1fVj6cIfbmm1dByDfPNzgRmEVmfVuXAM+aav5m1c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792063363; c=relaxed/simple;
-	bh=llqqU4we6eRloN54nHJf/dm8JbByBlB9xb2+A8hWIwY=;
+	s=arc-20240116; t=1792065051; c=relaxed/simple;
+	bh=VSdHStomVn46F4ewruQ4QMhJT/fq+4WwDnwnLS9gKzI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=QstQPcqwCJY/oVNsAQUekpvc65puT7Bj39TMUSzxfDqIdnUACB2gcL0E0yjSiKx3ZkXh6cvFoIWGTQvi8j8q7UOFEBolEi1LfSuCvIbQSrp6D30oauzcFTiFgijwBV/9DmIpWnv8Kk4G84N4o7kxM2+I7UpbKC8wJ5PgzTl7lng=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=a2EKGaTz; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=mm1xbbUl; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=a2EKGaTz; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=mm1xbbUl; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	 Content-Type:Content-Disposition:In-Reply-To; b=jQidKskCANqX3kYyjE4UceRtoSby4SInsDTw56DONwP6cM8wJ/F218H9tqgqaV+slJB7G9WWYsz8pF24s8SAHuQIVgBLrdLV7KYeYKJ5e3fiDG91utjztFUi1CXPbCybYKsA/2yYPsXQ6PxZqhL7uL+FcyZ9DNaHB/W7DeyKC8c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JUK8s7P7; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="a2EKGaTz";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="mm1xbbUl";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="a2EKGaTz";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="mm1xbbUl"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 7E1A922246;
-	Thu, 15 Oct 2026 11:22:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1792063357; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=2RQ7QFdl3nIsJQGI3osLG5XKZI5HfDdAs8KL/NgWLzI=;
-	b=a2EKGaTz49+5OtTME5/fu5DvKGQ0YQwFSjaa1pEiVMwI5RxyvZ6i2VKh7njBrzTT1hQhiD
-	6OPS1a5TfftLtYULpanIXEUb0I9/+WtaA6nT1GntyLo18vt7y/xoaAtTHVXkWGrM1us221
-	4INzMetaNGC70qeSHCCXO67KWVFynhU=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1792063357;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=2RQ7QFdl3nIsJQGI3osLG5XKZI5HfDdAs8KL/NgWLzI=;
-	b=mm1xbbUlUNAifWHToy0ea7SgByfmNgI26wbMQAu9vtyLEByEUsc8G0KKaA0/9A06GrRCIZ
-	kSRrN0STL6toEUDg==
-Authentication-Results: smtp-out1.suse.de;
-	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=a2EKGaTz;
-	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=mm1xbbUl
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1792063357; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=2RQ7QFdl3nIsJQGI3osLG5XKZI5HfDdAs8KL/NgWLzI=;
-	b=a2EKGaTz49+5OtTME5/fu5DvKGQ0YQwFSjaa1pEiVMwI5RxyvZ6i2VKh7njBrzTT1hQhiD
-	6OPS1a5TfftLtYULpanIXEUb0I9/+WtaA6nT1GntyLo18vt7y/xoaAtTHVXkWGrM1us221
-	4INzMetaNGC70qeSHCCXO67KWVFynhU=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1792063357;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=2RQ7QFdl3nIsJQGI3osLG5XKZI5HfDdAs8KL/NgWLzI=;
-	b=mm1xbbUlUNAifWHToy0ea7SgByfmNgI26wbMQAu9vtyLEByEUsc8G0KKaA0/9A06GrRCIZ
-	kSRrN0STL6toEUDg==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 1D4E8132C9;
-	Thu, 15 Oct 2026 11:22:37 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id fapTLXy30Gr+SgAAD6G6ig
-	(envelope-from <dwagner@suse.de>); Thu, 15 Oct 2026 11:22:37 +0000
-Date: Thu, 15 Oct 2026 13:22:35 +0200
-From: Daniel Wagner <dwagner@suse.de>
-To: Aaron Tomlin <atomlin@atomlin.com>
-Cc: axboe@kernel.dk, tglx@kernel.org, aacraid@microsemi.com, 
-	James.Bottomley@hansenpartnership.com, mkp@kernel.org, frederic@kernel.org, bigeasy@linutronix.de, 
-	ionut.nechita@windriver.com, corbet@lwn.net, vincent.guittot@linaro.org, mingo@redhat.com, 
-	peterz@infradead.org, radu@rendec.net, akpm@linux-foundation.org, steve@abita.co, 
-	sean@ashe.io, chjohnst@gmail.com, neelx@suse.com, mproche@gmail.com, 
-	nick.lange@gmail.com, marco.crivellari@suse.com, rishil1999@outlook.com, 
-	linux-doc@vger.kernel.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v16 0/9] blk: honor isolcpus configuration
-Message-ID: <2f32ffb6-d889-4281-a612-d4185311ca0d@flourine.local>
-References: <20260910164237.500196-1-atomlin@atomlin.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JUK8s7P7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 689D31F000C4;
+	Thu, 15 Oct 2026 11:50:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1792065049;
+	bh=dJ4bhnxKo74R9ZM5Fm1e/unKSpya17F001qaVop7plU=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=JUK8s7P7SnzLUBf/a2RN7iwciGazWHAl6KIKTZSh0ogwXl/sONhLL19yeNbCXj73U
+	 Kph3yZqY+JtINzB5/rRsBt4YdaYRMCxYibSRNUSxkkdmu/ZZ7rxXV/q9In60IzD54I
+	 h2mOf3fnsmUUevoooPcGwe31+DnXRSJPHcByif53gioY31ZOC6gDtITC1ncPwI8+ar
+	 3WCAr5FiUsfd+XbPx3Y88FId02tLGUs18oqCoj/rqia+m+ABHG+TYN4DsY/NIaynD7
+	 zrctA26cKfHMMxd3T84Y9T+erE++R17oJswtkauKi0AVriBH96kcIryCUJJB+LTTXI
+	 DW1q/6OqHovlA==
+Date: Thu, 15 Oct 2026 12:50:43 +0100
+From: Lee Jones <lee@kernel.org>
+To: Liang Haowen <nbg2974@gmail.com>
+Cc: linux-leds@vger.kernel.org, Pavel Machek <pavel@kernel.org>,
+	"Martin K . Petersen" <mkp@kernel.org>, linux-scsi@vger.kernel.org,
+	platform-driver-x86@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Denis Benato <denis.benato@linux.dev>, Armin Wolf <W_Armin@gmx.de>,
+	Hans de Goede <hansg@kernel.org>,
+	Ilpo Jarvinen <ilpo.jarvinen@linux.intel.com>,
+	Marco Scardovi <scardracs@disroot.org>
+Subject: Re: [RFC v9 1/1] leds: asus-aura-scsi: Add ASUS Aura RGB LED driver
+ for ROG NVMe enclosures
+Message-ID: <20261015115043.GA1863739@google.com>
+References: <20260925134010.2815025-1-nbg2974@gmail.com>
+ <20260925134010.2815025-2-nbg2974@gmail.com>
+ <179198503855.839288.7797731903424311774@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -92,76 +50,94 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260910164237.500196-1-atomlin@atomlin.com>
-X-Rspamd-Action: no action
-X-Spam-Score: -3.01
-X-Spam-Flag: NO
-X-Spamd-Result: default: False [-3.01 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	SUSPICIOUS_RECIPS(1.50)[];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	FREEMAIL_ENVRCPT(0.00)[gmail.com,outlook.com];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	ARC_NA(0.00)[];
-	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	RCPT_COUNT_TWELVE(0.00)[27];
-	MIME_TRACE(0.00)[0:+];
-	FREEMAIL_CC(0.00)[kernel.dk,kernel.org,microsemi.com,hansenpartnership.com,linutronix.de,windriver.com,lwn.net,linaro.org,redhat.com,infradead.org,rendec.net,linux-foundation.org,abita.co,ashe.io,gmail.com,suse.com,outlook.com,vger.kernel.org];
-	DKIM_TRACE(0.00)[suse.de:+];
-	TO_DN_SOME(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	DNSWL_BLOCKED(0.00)[2a07:de40:b281:106:10:150:64:167:received];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	TAGGED_RCPT(0.00)[];
-	R_RATELIMIT(0.00)[to_ip_from(RLip3qrwmtdyuwmp1ydoxr43fi)];
-	MISSING_XM_UA(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns]
-X-Spam-Level: 
-X-Rspamd-Queue-Id: 7E1A922246
-X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
+In-Reply-To: <179198503855.839288.7797731903424311774@kernel.org>
 
-On Thu, Sep 10, 2026 at 12:42:28PM -0400, Aaron Tomlin wrote:
-> Maintainer guidance requested
-> =============================
+On Fri, 25 Sep 2026, Lee Jones wrote:
+
+> --- checkpatch.pl: clean (0 issues) ---
 > 
-> We would appreciate guidance from Frederic Weisbecker regarding preference
-> on this front:
->         1.  Do you prefer keeping "managed_irq_strict" as an explicit
->             opt-in (as implemented in this series) to preserve historical
->             behaviour for existing users of "managed_irq"?
+> On Fri, 25 Sep 2026, Liang Haowen wrote:
 > 
->         2.  Or would you prefer upgrading the semantics of "managed_irq"
->             directly in place without introducing a new parameter, on the
->             grounds that the legacy post-allocation behaviour is already
->             broken for modern multiqueue hardware?
+> > ASUS ROG external NVMe enclosures (ROG STRIX Arion, USB 0b05:1932) are
+> > plain USB mass-storage devices with no HID interface: the Aura LEDs
+> > hang off an ENE controller driven by vendor SCSI commands on the same
+> > LUN as the disk. The enclosure has 4 independently addressable LEDs,
+> > verified on hardware.
+> >
+> > Register a scsi_device_handler matched by INQUIRY (vendor "ROG",
+> > model "ESD-S1C"); it does not claim the sdev (sd keeps owning the
+> > disk) and exposes each LED as a multicolor LED class device,
+> > /sys/class/leds/asus-arion-0-0-0-0::led-0 through led-3. The
+> > H:C:T:L part of the sdev name keeps the names unique when more than
+> > one enclosure is connected, with its colons flattened to dashes. The
+> > color section stays empty, since multicolor LEDs enumerate their
+> > palette via multi_intensity, and the four identical zones use the
+> > function name with a "-N" ordinal, as the naming section in
+> > Documentation/leds/leds-class.rst asks for.
+> >
+> > Protocol: a 16-byte vendor CDB (opcode 0xec, 'A' 'S' signature,
+> > BE16 register index, argument count in byte 13), modelled by
+> > struct ene_cdb. MODE 0x8021 (Static) must be written first in every
+> > sequence or the device ignores it; colours go to 0x8160 + 3 * led
+> > and 0x8100 + 3 * led (3 bytes, wire order R, B, G; both tables are
+> > written because firmware revisions pull from one or the other);
+> > APPLY 0x80a0 takes 0x01 to apply; the controller also accepts 0xaa
+> > to save the state to its flash, which this driver never sends: the
+> > LED class interface is runtime state and does not promise persistence
+> > across power cycles, and a save on every update would wear the
+> > controller flash. The colour reverts to the stored default on power
+> > cycle, like any other runtime-only LED.
+> >
+> > The CDB cannot go through scsi_execute_cmd(): it sizes the command
+> > via scsi_command_size(opcode), which maps vendor opcode 0xec to
+> > 10 bytes, so byte 13 is dropped and the device silently ignores the
+> > write (GOOD status, no error). scsi_execute_cmd() also offers no way
+> > to override the derived length. The request is therefore built with
+> > scsi_alloc_request(), which initializes the scsi_cmnd parts a
+> > passthrough needs, with cmd_len set to the CDB size, mirroring what
+> > SG_IO does from userspace. A 5 s timeout and a single retry-less
+> > quiet submission cover the register writes.
+> >
+> > The write payload is copied into a per-device buffer before it is
+> > mapped with blk_rq_map_kern(), so no stack memory is ever mapped for
+> > DMA (VMAP_STACK).
+> >
+> > brightness_set only caches the colour and marks the LED pending
+> > under a spinlock; led_mc_calc_color_components() runs under that
+> > lock too, because it writes the shared subled_info array and
+> > trigger events call led_set_brightness() without the led_access lock
+> > that serializes sysfs stores. A single work item per enclosure then
+> > snapshots the pending LEDs and runs one ENE sequence for all of
+> > them. Funneling every update through one work item keeps the
+> > sequences from interleaving between concurrent LED updates and
+> > batches multi-LED updates into a single APPLY. A re-queued run
+> > with nothing pending returns before touching the device, so it
+> > cannot wear the flash with a pointless SAVE, and the lock keeps a
+> > colour write from being reordered after its pending flag on weakly
+> > ordered architectures.
+> >
+> > This is the monolithic out-of-tree version as verified on hardware;
+> > the Kconfig/Makefile/MAINTAINERS wiring lands with the agreed split
+> > into a SCSI transport helper and a shared ASUS Aura LED interface.
+> >
+> > Signed-off-by: Liang Haowen <nbg2974@gmail.com>
+> > ---
+> >  drivers/leds/rgb/leds-asus-aura-scsi.c | 404 +++++++++++++++++++++++++
+> >  1 file changed, 404 insertions(+)
+> >  create mode 100644 drivers/leds/rgb/leds-asus-aura-scsi.c
+> 
+> A driver source file without 'Kconfig' or 'Makefile' integration is dead code in
+> the tree.  Either wire it up now or hold off on submitting until the rest of the
+> pieces are ready.
 
-During Plumbers we had several discussions on this series. This is what I
-remember we discussed and decided:
+Also:
 
-  - The current managed_irq behavior doesn't match the other flags of isolcpus.
+Thank you for your contribution! Sashiko AI review found 3 potential issue(s) to consider:
+- [Low] leds: asus-aura-scsi: undefined function kzalloc_obj() causes build failure       
+- [Low] leds: asus-aura-scsi: blk_rq_map_kern() missing required request_queue argument   
+- [Low] leds: asus-aura-scsi: strscpy() called with missing size argument
 
-  - Instead of introducing managed_irq_strict, it's better to change the
-    existing managed_irq to follow the strict interpretation.
+Was this even tested?
 
-  - The main existing user of the current managed_irq mapping is
-    RH with OpenShift. After discussing with Juri, it doesn't look like
-    it is a real blocker to change to the strict interpretation.
-
-  - If there are complaints about the managed irq behavior change, it's
-    better to introduce a different flag for this. Though there have been
-    many discussions and proposals on how to deal with isolation during the
-    conference, and the general mood was that the placement of resources
-    should be done during runtime. Thus it is likely that the old behaviour
-    is not necessary at all if runtime configuration is possible.
-
-Hope this helps to move forward with this series,
-Daniel
+-- 
+Lee Jones
