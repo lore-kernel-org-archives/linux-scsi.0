@@ -1,63 +1,63 @@
-Received: from mail-pj1-f46.google.com (mail-pj1-f46.google.com [209.85.216.46])
+Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D46B377A8F
-	for <linux-scsi@vger.kernel.org>; Thu, 15 Oct 2026 08:19:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A8A984C8C68
+	for <linux-scsi@vger.kernel.org>; Thu, 15 Oct 2026 08:20:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792052400; cv=none; b=MMHQkqn6WgSZS1asRGYuYZPMXZTPciEeUQtmX7c9tdrdsVXxZXY82W/aAhNKw+ZTqEnJCcndnfi6fA/LjXPXlDR2iS+HOte46h9olWOz5gRSMC1V0vB4WJJMImCb8zFz/wzuG09/XYra9Hit6P3WoofpSY9fEjwUNHNc0r8BPDE=
+	t=1792052402; cv=none; b=K3vmNyk0KQeCGbBfdchosreMijpve957DLRclfkEOVvTLDc41cmURVi7A/Bk9hPJdRRtzESogp3wo0zs1PJZ/YiRG4hE2ZXXf/RfAPOeO4NoMKDTKzy9qp2Nw4uWOWWEoO1nUP7YARFyv/pHjR31xgn5e5x7bNo+GBSmmwXY9b4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792052400; c=relaxed/simple;
-	bh=jPr6aHaLpG8Cv9vSXXtGXXrD3GWFGv3J7yyXdkKzLjg=;
+	s=arc-20240116; t=1792052402; c=relaxed/simple;
+	bh=6oCmofZdhVK/JtuHeC7Ybfj4Gu03s9WOGhjx0BuI9MA=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=TjPB++xxBaJSK8IKBVLZtKitcaFwyT/NmO/B9RxQRcJLzbESlRB25WG9sYTSEmqNpP6O4EfwePkm7e3gWVDuiI0rvnmSRnY8x4kj1rXOCDVTqwNfvz+FubEOQ1JC1oGDnjAY3Jt3u7r8Rj/HfgvXQDEQFR07TVM+aLq/Hxef0H4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr; spf=none smtp.mailfrom=isslab.korea.ac.kr; dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b=P4LOvJGN; arc=none smtp.client-ip=209.85.216.46
+	 MIME-Version; b=Ssq6D2ru3fmeeJW2/XemVU270UN4MXzPZpA7ppLbBEDh3JWsDQ/qTN5AUqVPuQILzHXzhRr8YmMOoJhJeEyERubDlWf2aCCQGvx35NRnyi0L6FrVsc7tpmMiLXvYRCuAQTvlyUJWL/Gr+MecU83l1SFS1mJxHeBG3czzYBA17bI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr; spf=none smtp.mailfrom=isslab.korea.ac.kr; dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b=Us+CwUsT; arc=none smtp.client-ip=209.85.214.173
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b="P4LOvJGN"
-Received: by mail-pj1-f46.google.com with SMTP id 98e67ed59e1d1-3ab9268d90eso2631288a91.3
-        for <linux-scsi@vger.kernel.org>; Thu, 15 Oct 2026 01:19:58 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b="Us+CwUsT"
+Received: by mail-pl1-f173.google.com with SMTP id d9443c01a7336-2dd9cbb661bso36295415ad.3
+        for <linux-scsi@vger.kernel.org>; Thu, 15 Oct 2026 01:20:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=isslab-korea-ac-kr.20251104.gappssmtp.com; s=20251104; t=1792052398; x=1792657198; darn=vger.kernel.org;
+        d=isslab-korea-ac-kr.20251104.gappssmtp.com; s=20251104; t=1792052400; x=1792657200; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=qvbV2vy5EWHtCEzvAlTZKYV1AJ/f2e538Rv/grJak3I=;
-        b=P4LOvJGN2dKyX0feuvANyHR8De7LPksG/P0o3d2u7DBlp2E3FCPY/ydtX7OTkI7O0N
-         w8Z2cBH8metioXSQfMRvdqI2kWwpjyApFGVyBdiY2C1Fm/zQ+JlY0B1b4m6o7UjkvyIM
-         Hh2czmFD58lN5aAsxTW1IV/lizmckO1+9BHV42x1zuubioqfRlvfwMcZ0igUrOZSjaUV
-         6sq0uJFenAEtFlcK7qia5e83faZmOmqZ1lNbnL/PBgfxRBwnKNwKzcoEul22xZTdVBOb
-         pdazfYEVip797VFefWidwPEuNIDzUf5Eor0rleAR5aGEqO6tbSYx9sYgzri9RwKIBbbh
-         A5Eg==
+        bh=iAUL1kaMNkehBeLQFdV7k+ayEvBauEx20W/t7X6WlN4=;
+        b=Us+CwUsTxxH2UmVAbfR+da0aG2Zkafz14OCgJafZVwRM3K028dBR+2Vt54LsIWAmkc
+         Ur/cMyyI0eYeu9hFxPA+Q0TLKxVofMpVt+eZFFJ9EWEK91Xmul22L774uOGntRDwp4e3
+         vhRYROKmb0GjkZjQWwQFn54lQ5g0L6dalwA5aSypraVtzOKjoMbSYJnwc/epDNgv9jRZ
+         Bfi04hkkeWcO0IM4fe+/FAp5VoVia9H45Tp6XYhK2Weu6C7pt7MwC17PSMDMva3I9uS0
+         47RcHFcniQpRcmb5JI+Bvh/SHbZFG65hSQQWDeUt6XAtD6Vx6jVF4rL9L1BBlthgUKVg
+         f+Lw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792052398; x=1792657198;
+        d=1e100.net; s=20260707; t=1792052400; x=1792657200;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=qvbV2vy5EWHtCEzvAlTZKYV1AJ/f2e538Rv/grJak3I=;
-        b=CsivJRrj753kRk+pw9zqFDpT4o3rK8eSGBGSdZGH70IjrprFyC3Q9scX6mV1zuge47
-         BlQcH6M+VsTskpTEomV+7h5Y3wT0+HXS3myi+VyiQuhTQkvWUPUq5w8Bt102AuZpF1vs
-         4T4aqLCtyq3h0KTTDSTLpZ29VMWnzJ/pS7Fmllb7CP3pa2lL6J5JR0FWWAlaI4YUUh0D
-         YRXiJly+hW8YRujVUIBnW9NLffuOQA2H6OCNMvEMXNWSvqP7cbyGQ+eRnamuJBeRT9p4
-         0wDwKFbRJi5iqdqD57vVt+CNtCKt9WRW03OGmTpgM2oK3P3HdwNqRFVvVQEQDrDlVaYC
-         AVhw==
-X-Gm-Message-State: AFq9FYKXucBtTEVHAx1yh/nFHW0nmdCvvps8pWvGdvQm/nBoqz6+Nyju
-	WyzooEj2JzARml+xisjWazv4LGa0HrPwBoy+aPEG0+TRWtDKZXfi/+Ys5trSmJL5xlI=
-X-Gm-Gg: AYBFou0vERwAPzlyxlOEVcR9FSntQ0l584e0foiISMGWGGAH/R4h5CUkIky1C/Axb7D
-	EhGFkBB/kM13Ut2ZhWlyRwmAkdN4qoiZfqnLK1zPZYKy9jhzjmUwrwzyAv9DEj+XwQncMWds/t0
-	kGygttYk+X2ewhA9AzEtfCCeyhclaDwBe9X5UJD+hupIMHXclF6tfsfRjf/raRqteUUiXI6dq3G
-	b5qmTxZC/sbBcofX7LNOWQM6DYvmCJHTgC1H5JzCTq1/xY9ZmqC2bp0uKbI4U3QQSMFxPl0JiD9
-	u/WW3p7GABmF3ymrcT7A2CqdbF9VpBXJ2zPwuGukdTg+CDgKbYke4txRQL5+ER93MRprf7I75oB
-	g9m08rKMCI5ZvQzEpTXprX9dxiN37yyFHPec/ZHQHNQkulHdUBxA9HCtbShXB8JKurJ91HZUUYu
-	cjaRwQqWUUSLpEg02BwSRfb7P4rDiQ/oJAenu3bBMSY+X25onYVVAlaBas9i8YZ6RWz/UwX/N06
-	dd2pw==
-X-Received: by 2002:a17:90a:d2c7:b0:3a8:13d6:f740 with SMTP id 98e67ed59e1d1-3ab3a99aa95mr16029643a91.22.1792052397731;
-        Thu, 15 Oct 2026 01:19:57 -0700 (PDT)
+        bh=iAUL1kaMNkehBeLQFdV7k+ayEvBauEx20W/t7X6WlN4=;
+        b=0PTyCDGYDOBF7avlUP2I1frUHbB4cQBx1ZWtiRRuomzOFi8SQC/JC+zDj2H4NMkgqN
+         hdfY2t4uSBLqL3/IzH5DTEry1dfeP2Hfblp0mFPI2dqRWUXd7pmeUK2MuAzZk+SbjXij
+         WkcSuvcAO24Zm/LesjgcS7EPeC+qAhBt7GjLRLkNueMze64yfUntmEuNhkK1V2ogDFgW
+         zepjFqJvVjQojk2DUnhQROg5GqYs3qsNYMXhYty8NUlAaMzFWy6/xAXX4q5HUT3vLbyP
+         hLWcdQ2wRcvY1ANTmM6o534y1zIs3QGFCyrgbXu5YxBuQ6TCGX8WLPN0OnFG7aDwEYsp
+         CBDA==
+X-Gm-Message-State: AFq9FYLx/yynAWKFrk9EshL35nqsmdfOOj6G5O7Tl9c7acnxZ5AMghya
+	I+9zRr1hhga+t0hkTnegGIr5GHs6OCES5eaQ8srzG/jJPIoDh3DdMGMm55nBNS/i/GA=
+X-Gm-Gg: AYBFou3aK9lOHgrMm4F2MY5A+degc03NWhC8vZWPnKgXiJy/gm2b6UOlZK+on4YqsS2
+	MVSEJUGlvUO7EH+PxCtJN/H4XY/f9om4sQfbHCjWVTES0g4nY+7fRyizpTh6aP8YYWFLyBs6cqu
+	hNQ1LmYfSBPviRUv/Z0/H62eUIFp6CyDxoGZd4r6s5/iRgUEiI4ygBBCYG0rBDD/LGqPY4WvShq
+	B26Gf6bX0XZluD1OHGxqPulD97RO44H4+NIHlcTQfR7kdtUMdDiOSYXxiWM/8QS34mLt3lm4v5h
+	7ZhY9Iwuze3hPrGNe9G4MVrOwjtd9DaZ9UMXi+DQyg5zBozkQr3AopEKYuGCezTDB9ckqCMHad0
+	NiAfN9fLU6AVwuXSuaKNsDEyMLOjESlWfZW6b7q0qMJzp479h4VGNryVQ2Gm03a14vlaclCeVgL
+	xKIubLnYdxz1u15XywuHtEPiTp+0vnVwSM2vQD78shAtvLXcWjFDUwystPhroTolHBqIgBNLByT
+	EsIvw==
+X-Received: by 2002:a17:90a:1582:b0:3ab:9c73:130 with SMTP id 98e67ed59e1d1-3ab9c730935mr7506006a91.33.1792052399950;
+        Thu, 15 Oct 2026 01:19:59 -0700 (PDT)
 Received: from yhlee-960QFG.. ([125.131.91.97])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3ac943e755bsm3319784a91.2.2026.10.15.01.19.55
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3ac943e755bsm3319784a91.2.2026.10.15.01.19.58
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 15 Oct 2026 01:19:57 -0700 (PDT)
+        Thu, 15 Oct 2026 01:19:59 -0700 (PDT)
 From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
 To: "Martin K . Petersen" <mkp@kernel.org>,
 	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>
@@ -65,9 +65,9 @@ Cc: linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org,
 	yhlee@isslab.korea.ac.kr
-Subject: [PATCH v2 4/5] scsi: aic94xx: bound the transaction context index from the sequencer
-Date: Thu, 15 Oct 2026 17:19:33 +0900
-Message-ID: <20261015081935.4168771-5-yhlee@isslab.korea.ac.kr>
+Subject: [PATCH v2 5/5] scsi: aic94xx: check that an ESCB lookup returned an ESCB
+Date: Thu, 15 Oct 2026 17:19:34 +0900
+Message-ID: <20261015081935.4168771-6-yhlee@isslab.korea.ac.kr>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20261015081935.4168771-1-yhlee@isslab.korea.ac.kr>
 References: <20261015081935.4168771-1-yhlee@isslab.korea.ac.kr>
@@ -79,68 +79,95 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Every aSCB the driver allocates takes a slot in one shared index array,
-and the driver tells the sequencer which slot it used:
+asd_get_response_tasklet() and asd_get_tmf_resp_tasklet() look an Empty
+SCB up by the index_escb field of the done list status block and then use
+it as one:
 
-	/* asd_ascb_alloc() */
-	ascb->tc_index = asd_tc_index_get(seq, ascb);
+	escb = asd_tc_index_find(&asd_ha->seq,
+				 (int)le16_to_cpu(resp_sb->index_escb));
 	...
-	ascb->scb->header.index = cpu_to_le16((u16)ascb->tc_index);
+	edb = asd_ha->seq.edb_arr[edb_id + escb->edb_index];
+	...
+	asd_invalidate_edb(escb, edb_id);
 
-The sequencer hands that number back in the done list, and the driver
-looks the aSCB up again with it in three places: asd_dl_tasklet_handler()
-uses dl->index, and asd_get_response_tasklet() and
-asd_get_tmf_resp_tasklet() use the index_escb field of the status block.
-All three go through
+Nothing checks that what came back is an Empty SCB. There is one index
+space for every aSCB the driver allocates -- asd_ascb_alloc() is the only
+caller of asd_tc_index_get() -- so an in-range index can just as well
+name a live task, a control phy SCB or an internal command.
 
-	static inline void *asd_tc_index_find(struct asd_seq_data *seq, int index)
-	{
-		return seq->tc_index_array[index];
-	}
+That matters because struct scb is a union, and asd_invalidate_edb()
+reads its escb member without looking at the opcode:
 
-which does not look at index at all.
+	struct empty_scb *escb = &ascb->scb->escb;
+	struct sg_el     *eb   = &escb->eb[edb_id];
+	...
+	eb->flags |= ELEMENT_NOT_VALID;
+	escb->num_valid--;
 
-The array is kcalloc()ed with tc_index_bitmap_bits entries, which is
-hw_prof.max_scbs, which is asd_get_cmdctx_size() divided by sizeof(struct
-scb). The two values asd_get_cmdctx_size() can return are 32768 and
-65536, and struct scb starts with an 11-byte scb_header, so max_scbs
-cannot exceed 5957. Both numbers the sequencer supplies are __le16, so
-either one can name a slot past the end of the array, and the pointer
-read from there is then dereferenced.
+On an SCB that is not an Empty SCB those two stores land in whichever
+union member it really is -- for an initiate_ssp_task that region holds
+the SSP frame header and the scatter-gather elements of a command that is
+still in flight.
 
-Check the index where it is used. The three callers already handle a NULL
-return -- "Uh-oh! No escb for this dl?!" in the two status block paths
-and "BUG:sequencer:dl:no ascb?!" in the done list handler -- so none of
-them needs to change.
+Check the opcode, the way asd_dl_tasklet_handler() already does when it
+decides whether a done list entry belongs to an Empty SCB:
 
-This is not a claim of a reachable out-of-bounds access: the index
-originates with the driver and comes back echoed, and whether the
-sequencer can echo something else is not something the tree answers,
-since it is firmware loaded with request_firmware() and there is no
-Documentation/ file or MAINTAINERS entry for this driver. It is a bound
-on a number that arrives from outside, in the one place all three users
-share.
+	} else if (ascb->scb->header.opcode == EMPTY_SCB) {
+
+asd_get_response_tasklet() reports SAS_INTERRUPTED, as it does for the
+other two ways it can fail; asd_get_tmf_resp_tasklet() returns
+TMF_RESP_FUNC_FAILED, which is what res already holds.
+
+This is not a claim of a reachable type confusion. The index originates
+with the driver and the sequencer echoes it back, and whether it can echo
+a different one is not something the tree answers. The check is cheap and
+the idiom is already in the driver.
 
 Fixes: 2908d778ab3e ("[SCSI] aic94xx: new driver")
 Cc: stable@vger.kernel.org
 Signed-off-by: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
 ---
- drivers/scsi/aic94xx/aic94xx_hwi.h | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/scsi/aic94xx/aic94xx_task.c | 8 ++++++++
+ drivers/scsi/aic94xx/aic94xx_tmf.c  | 7 +++++++
+ 2 files changed, 15 insertions(+)
 
-diff --git a/drivers/scsi/aic94xx/aic94xx_hwi.h b/drivers/scsi/aic94xx/aic94xx_hwi.h
-index 930e192b1cd41..841769a8130a9 100644
---- a/drivers/scsi/aic94xx/aic94xx_hwi.h
-+++ b/drivers/scsi/aic94xx/aic94xx_hwi.h
-@@ -306,6 +306,8 @@ static inline int asd_tc_index_get(struct asd_seq_data *seq, void *ptr)
-  */
- static inline void *asd_tc_index_find(struct asd_seq_data *seq, int index)
- {
-+	if (index < 0 || index >= seq->tc_index_bitmap_bits)
-+		return NULL;
- 	return seq->tc_index_array[index];
- }
+diff --git a/drivers/scsi/aic94xx/aic94xx_task.c b/drivers/scsi/aic94xx/aic94xx_task.c
+index bb5094ca5de15..a8131407b2d08 100644
+--- a/drivers/scsi/aic94xx/aic94xx_task.c
++++ b/drivers/scsi/aic94xx/aic94xx_task.c
+@@ -170,6 +170,14 @@ static void asd_get_response_tasklet(struct asd_ascb *ascb,
+ 		return;
+ 	}
  
++	if (escb->scb->header.opcode != EMPTY_SCB) {
++		ASD_DPRINTK("index_escb %d is not an ESCB, opcode is 0x%x!\n",
++			    le16_to_cpu(resp_sb->index_escb),
++			    escb->scb->header.opcode);
++		ts->stat = SAS_INTERRUPTED;
++		return;
++	}
++
+ 	if (edb_id < 0 || edb_id >= ASD_EDBS_PER_SCB) {
+ 		ASD_DPRINTK("edb_id is %d! resp_sb->flags is 0x%x\n",
+ 			    edb_id, resp_sb->flags);
+diff --git a/drivers/scsi/aic94xx/aic94xx_tmf.c b/drivers/scsi/aic94xx/aic94xx_tmf.c
+index 1ee6009d83051..e8205e64b870f 100644
+--- a/drivers/scsi/aic94xx/aic94xx_tmf.c
++++ b/drivers/scsi/aic94xx/aic94xx_tmf.c
+@@ -282,6 +282,13 @@ static int asd_get_tmf_resp_tasklet(struct asd_ascb *ascb,
+ 		return res;
+ 	}
+ 
++	if (escb->scb->header.opcode != EMPTY_SCB) {
++		ASD_DPRINTK("index_escb %d is not an ESCB, opcode is 0x%x!\n",
++			    le16_to_cpu(resp_sb->index_escb),
++			    escb->scb->header.opcode);
++		return res;
++	}
++
+ 	if (edb_id < 0 || edb_id >= ASD_EDBS_PER_SCB) {
+ 		ASD_DPRINTK("edb_id is %d! resp_sb->flags is 0x%x\n",
+ 			    edb_id, resp_sb->flags);
 -- 
 2.43.0
 
