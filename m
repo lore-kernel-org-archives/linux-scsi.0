@@ -1,175 +1,99 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 811CC3A7F6B
-	for <linux-scsi@vger.kernel.org>; Wed, 14 Oct 2026 22:17:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 283CD846A
+	for <linux-scsi@vger.kernel.org>; Thu, 15 Oct 2026 00:05:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792016265; cv=none; b=RCgYUnj/1lq9zxwgLIneK8XKi+bgo6TlFAkdw4tbbEHPL4OYMu5xe69Eggd9Xn/rtvR0lHrUwCkhoGiqWH4YNNYIql19i+heBoFd5/psNUId5FQRjaIOyEfHpad8xCj+jdtwbnhgrqxc8nOYPDlLZNR0LRpHht1HhPJxa7GB/20=
+	t=1792022726; cv=none; b=kddGDf8QnrWxFYsUHSACA2Pt/MVhMsDQf3T5/Wk9l78yfF/UATjHYGrXh8Li2wDOUbBjI+yP4UT6QYJ8YLkaQDQYDG+WOanE6nDLEL1VfriyH9B6Z5G4ECp2o9exYdle8C0EY6Rz+syPTV/yWal7VvtnUBSMyz/HgyFq7U84BgM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792016265; c=relaxed/simple;
-	bh=y4EJohW+88Mf3lZ6Voe9atAU6EcjbZfLUad9jB9ICxI=;
-	h=Message-ID:From:Subject:To:In-Reply-To:References:Content-Type:
-	 Date; b=BekxA57knSl1uRJD5vIwCpNPGEXkKCLEKwCoHhJcNXH8Qoyu/ArsI2QtXY8OktJoTlpuUk9tinWltNz3u/9jxOpXsgUrRXZvDG/+IkMAiM2zV9ChJJBfIS8oN3apkV7lfJonv87eSNrWyxem4FvglHbptUllZYjmcypVYSaC8t8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MIoYHv8m; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1792022726; c=relaxed/simple;
+	bh=BiA1tyTLdISpGieZjQsAzyplsYAKvwK3pkgy5zdIpOo=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Fq1VFhLXthLsNZ/aA53RfZtMmoDfnx2Bwej9ErFQos0FkvQKDEyBrtZWmHiS1jjpRmcpwFwRfGimixrjGRQMlfyY9+aiPq3c1Vs7R2VrcZ1mXjHWz7dKQUIeUd4Du03sa6BVP+0/2ptl5zx52/D5TkxwrAJFIcp7FtXvvcJeDYc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=DrJRygs7; arc=none smtp.client-ip=199.89.1.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MIoYHv8m"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ECC611F000C4;
-	Wed, 14 Oct 2026 22:17:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792016264;
-	bh=ObDA27xOAUerVVpJWsCNLbL40kN4JhKLExq3Wv5bvbw=;
-	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
-	b=MIoYHv8mkXVsj4u6Fj9rUcxr+E1q5Tmwxvi6RjKTkxZkKyg1aheUL/isfUXIgHQW6
-	 pdp3BRM5kpnZIxIJvfys92r9qGhGSvWLMBhePLu9hkOZrBYY1ViYXZTV4VD787miHH
-	 L6ungZ+XYR4JlV0trEQswBJ3K9efBmht1msKrQT+1e2c9+KGbfzz2eADazPV92WKJ6
-	 4g/ctsNNpHuaANWiECO69n8sGhpZ2rJDdKJaYKMLuqHjAXwj94unuZZXR5QrDVRNMa
-	 U5ecpDs0+Mston+OVN8ujtyuasiFLI/y1trzIopqGAHXn0ZHF1uT9qvoUogeIv8TJj
-	 WEYmYP5uP68FA==
-Message-ID: <sashiko-outbox-171958@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v7 4/5] scsi: core: Add device reprobe support to
- scsi_rescan_device()
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Brian Bunker" <brian@purestorage.com>, linux-scsi@vger.kernel.org
-In-Reply-To: <20261014220014.94330-5-brian@purestorage.com>
-References: <20261014220014.94330-1-brian@purestorage.com>
- <20261014220014.94330-5-brian@purestorage.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 14 Oct 2026 22:17:43 +0000
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="DrJRygs7"
+Received: from localhost (localhost [127.0.0.1])
+	by 011.lax.mailroute.net (Postfix) with ESMTP id 4j4pHS3MvKz1XM4Tl;
+	Thu, 15 Oct 2026 00:05:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:mime-version:x-mailer:message-id:date
+	:date:subject:subject:from:from:received:received; s=mr01; t=
+	1792022721; x=1794614722; bh=Ao0A72fbS+/uSeSBMbRHyrIlAjB9grTz9Qs
+	HXM3q0qI=; b=DrJRygs7ELZT3RwC+6iW2RKgIJTp8sXr2VgSbR2WnnWQwkyzxAu
+	7CRAGpiDno7dF8DdjKewj2RGyG/l0lAY9kDEfvj70KaeV0M9W+pwjnLgVTfkvCOP
+	iQg9Snd2VOzs8FkxOPUoSXw9ek3FJC/IAoNjMeFMlEMKwvYftlvhwN7d5d8dzpii
+	PTLRdvLkwZiYFKP7WmpkHl9GRodYNiTgUNNFILQquAcVzlMLkqt2uQeVJUuOYewK
+	QnBaBLMTFS9Ln4x1ZirvX78Hb7LH9FP6tWOEPl0ldZ/+mLCaAKNDSJCQL2wlV0cq
+	g91xRGY9CtRy+YE9wLu7JmmSwDKxoionh7A==
+X-Virus-Scanned: by MailRoute
+Received: from 011.lax.mailroute.net ([127.0.0.1])
+ by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id QjgkgPUSBLih; Thu, 15 Oct 2026 00:05:21 +0000 (UTC)
+Received: from bvanassche.c.googlers.com.com (245.199.118.34.bc.googleusercontent.com [34.118.199.245])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4j4pHP0Th9z1XM5kD;
+	Thu, 15 Oct 2026 00:05:20 +0000 (UTC)
+From: Bart Van Assche <bvanassche@acm.org>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+	John Garry <john.garry@linux.dev>,
+	Hannes Reinecke <hare@kernel.org>,
+	Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH] scsi: core: Document the role of scsi_done()
+Date: Wed, 14 Oct 2026 17:05:10 -0700
+Message-ID: <6edb00749da7a5ce9b7752d389ad2ed5a38776e4.1792022610.git.bvanassche@acm.org>
+X-Mailer: git-send-email 2.56.0.212.g129ede20d9-goog
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
-s) to consider:
-- [High] scsi: data race in scsi_rescan_device() due to missing state_mutex
-- [High] scsi: data race on Scsi_Host bitfield in scsi_probe_lun() clobbers=
- tmf_in_progress
-- [Medium] scsi: bitfield data race in lun_in_cdb on live device rescan
---
+Document the role of scsi_done() and also how it deals with commands owne=
+d
+by the SCSI error handler.
 
-commit 0c2ca40c3d438ceb73cba9f08912149462c2d8ba
-Author: Brian Bunker <brian@purestorage.com>
-scsi: core: Add device reprobe support to scsi_rescan_device()
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+---
+ drivers/scsi/scsi_lib.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
-Updates INQUIRY data on rescan and calls device_reprobe() if the peripheral
-qualifier or device type changes. Handles ALUA unavailable state.
-
-> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-> index 93a8719fcf265..2c848265c9b9c 100644
-> --- a/drivers/scsi/scsi_scan.c
-> +++ b/drivers/scsi/scsi_scan.c
-[ ... ]
-> @@ -815,14 +820,14 @@ static int scsi_probe_lun(struct scsi_device *sdev,=
- unsigned char *inq_result,
-[ ... ]
-> -	if (sdev->inquiry_len < 36) {
-> +	if (inquiry_len < 36) {
->  		if (!sdev->host->short_inquiry) {
->  			shost_printk(KERN_INFO, sdev->host,
->  				    "scsi scan: INQUIRY result too short (%d),"
-> -				    " using 36\n", sdev->inquiry_len);
-> +				    " using 36\n", inquiry_len);
->  			sdev->host->short_inquiry =3D 1;
-
-[Severity: High]
-Because this function is now called for a live device by scsi_rescan_device=
-()
-(via scsi_refresh_inquiry()), could this assignment to the short_inquiry
-bitfield race with updates to adjacent bitfields in struct Scsi_Host?
-
-The short_inquiry bitfield is in the same machine word as tmf_in_progress
-and other dynamic host states.
-
-Since we only hold the device_lock() here and not the shost->host_lock, a
-concurrent update to tmf_in_progress, such as:
-
-scsi_error.c:scsi_ioctl_reset() {
-    ...
-    shost->tmf_in_progress =3D 1;
-    ...
-}
-
-might be clobbered by the unlocked read-modify-write of the bitfield word,
-potentially breaking host error recovery.
-
-[ ... ]
-> @@ -850,19 +855,25 @@ static int scsi_probe_lun(struct scsi_device *sdev,=
- unsigned char *inq_result,
-[ ... ]
-> +	/*
-> +	 * scsi_rescan_device() calls this function for a live device, so
-> +	 * only write lun_in_cdb if it changes. Clearing it first and then
-> +	 * setting it again could expose a wrong value to the I/O path.
-> +	 */
-> +	if (sdev->lun_in_cdb !=3D lun_in_cdb)
-> +		sdev->lun_in_cdb =3D lun_in_cdb;
-
-[Severity: Medium]
-Could this conditional bitfield assignment cause a data race during a live
-rescan?
-
-Although the check avoids writing when the value hasn't changed, if it does
-evaluate to true, writing to sdev->lun_in_cdb will perform a non-atomic
-read-modify-write of the 32-bit word containing it.=20
-
-This word also holds sdev->cdl_enable, which can be modified concurrently by
-sysfs writes without holding the device_lock:
-
-scsi_sysfs.c:sdev_store_cdl_enable() {
-    ...
-    sdev->cdl_enable =3D enable;
-    ...
-}
-
-If a sysfs write overlaps with this update, the sysfs state might be
-silently overwritten.
-
-[ ... ]
-> @@ -1677,12 +1736,42 @@ int scsi_rescan_device(struct scsi_device *sdev)
-[ ... ]
-> +	if (need_reprobe) {
-> +		/*
-> +		 * The peripheral qualifier or device type changed, so the
-> +		 * driver binding has to be re-evaluated. device_reprobe()
-> +		 * takes the device lock itself. sdev stays valid while the
-> +		 * lock is dropped because the caller holds a reference;
-> +		 * scsi_evt_thread() is covered by the cancel_work_sync() in
-> +		 * scsi_device_dev_release().
-> +		 */
-> +		device_unlock(dev);
-> +		ret =3D device_reprobe(dev);
-> +		device_lock(dev);
-> +
-> +		if (sdev->sdev_state =3D=3D SDEV_CANCEL ||
-> +		    sdev->sdev_state =3D=3D SDEV_DEL) {
-> +			ret =3D -ENODEV;
-> +		} else if (ret < 0) {
-> +			if (scsi_device_set_state(sdev, SDEV_OFFLINE) =3D=3D 0)
-
-[Severity: High]
-Is it safe to call scsi_device_set_state() here without holding the
-state_mutex?
-
-scsi_device_set_state() performs a non-atomic read-modify-write of
-sdev->sdev_state. If this races with a concurrent device removal
-(__scsi_remove_device), the removal path acquires state_mutex and sets
-SDEV_CANCEL or SDEV_DEL.
-
-If scsi_rescan_device() concurrently calls scsi_device_set_state() without
-state_mutex, it could read SDEV_RUNNING, allow the removal path to transiti=
-on
-the device to SDEV_CANCEL, and then overwrite that state with SDEV_OFFLINE.
-
-Since SDEV_OFFLINE still permits scsi_device_get(), subsequent callers could
-successfully grab a reference to a deleted device and use a destroyed reque=
-st
-queue, potentially leading to a use-after-free.
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261014220014.9433=
-0-1-brian@purestorage.com?part=3D4
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index f695a6605815..ab39514cc0c6 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1789,6 +1789,20 @@ static void scsi_done_internal(struct scsi_cmnd *c=
+md, bool complete_directly)
+ 		blk_mq_complete_request(req);
+ }
+=20
++/**
++ * scsi_done - Notify the SCSI mid-layer that a command has completed
++ * @cmd: Completed SCSI command
++ *
++ * Called by a SCSI low-level driver to notify the SCSI mid-layer that t=
+he
++ * command has completed. There are two cases:
++ *
++ * - The SCSI error handler does not own @cmd. In this case scsi_complet=
+e()
++ *   decides how to complete the command based on the value of @cmd->res=
+ult.
++ * - The SCSI error handler owns @cmd because scsi_timeout() has set
++ *   SCMD_STATE_COMPLETE. In this case this function has no effect, @cmd=
+->result
++ *   is ignored and the SCSI error handler decides whether to retry or f=
+ail
++ *   @cmd. See also scmd_eh_abort_handler() and scsi_eh_flush_done_q().
++ */
+ void scsi_done(struct scsi_cmnd *cmd)
+ {
+ 	scsi_done_internal(cmd, false);
