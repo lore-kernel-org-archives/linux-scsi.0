@@ -1,84 +1,81 @@
-Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
+Received: from mail-pf1-f172.google.com (mail-pf1-f172.google.com [209.85.210.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C66BB52F280
-	for <linux-scsi@vger.kernel.org>; Thu, 15 Oct 2026 14:01:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.182
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C7B9E3CD8A4
+	for <linux-scsi@vger.kernel.org>; Thu, 15 Oct 2026 14:58:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792072910; cv=none; b=i0IA6PNc9EGqUNWdIStcsuyMEtTFOhTh3A6qoA7l61hTzdgUeEuP+yD3U/4n3DS+Goq6LGqqNr3B7DP/5IvJHkUt4J/Qrze28iGEeg1ndfTcLXQ/lxZgZWW1bd61XNVm8okworntFx+r20ktRkcHlA/JIp+OMKSoLn/0fihFjaw=
+	t=1792076335; cv=none; b=C3GGDDin0uXNO6+QqPRvv2bT6G8DWVnOJViTyTbXMVZNbQ9dtsw+uHS2VE7C6CjX3qNoen6usaljdlpuSUybXaBIIOmbuoiGBw1nVIbjarIUCVxmsuPpQc6IR7Pn4RKFvNpOgBdS16LF9pXBLYnppLBJEDCz6d4tvvvaQ8FrQBM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792072910; c=relaxed/simple;
-	bh=F9D4NtGx2BASRaM0QdP9rN+CHp9G1qOy0hyNSwDNx9k=;
+	s=arc-20240116; t=1792076335; c=relaxed/simple;
+	bh=Pniyv4Tjn7uigkyv/0BCG5J8YLV0tpVRxHViqIJWGRk=;
 	h=Message-ID:Date:From:To:Cc:Subject:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=BEDAZu8xMbnZb+LZO6DZ/b7OyLT6iJz94gnORZLmqU9AT/QNm9v6+c/fgIte3mTBq0zZOn5TFY0RrqD+cT0tA6NJm2AlSGpQXvQ/aTmayYprhqToJWBHQdkvBu6vj9Pus15NoEqvLOnHTFaL3qzkjHBzPIxAtJvRKYm7Z+Wndsc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=tBsOpp9j; arc=none smtp.client-ip=209.85.214.182
+	 Content-Type:MIME-Version; b=oA0aDppUP02Gq5pOLGFD4pYM8e95gzSW6CqI9FdyOoxt7MA9T9Jj0zYAqW+XTQMQ9estky+YuFmqbG8F/oG6TPZQh/E73EnaOuNC3rv6+/posZnfV9lw49y7rHic7Ky5NY3asbkep72zKhgV6zX8YaYCa3buEb4vUz+PnmdP9Es=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Lzx5ZYOV; arc=none smtp.client-ip=209.85.210.172
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="tBsOpp9j"
-Received: by mail-pl1-f182.google.com with SMTP id d9443c01a7336-2dd76b1361dso15000715ad.1
-        for <linux-scsi@vger.kernel.org>; Thu, 15 Oct 2026 07:01:48 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Lzx5ZYOV"
+Received: by mail-pf1-f172.google.com with SMTP id d2e1a72fcca58-88cfa501c5cso938981b3a.3
+        for <linux-scsi@vger.kernel.org>; Thu, 15 Oct 2026 07:58:53 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792072908; x=1792677708; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1792076333; x=1792681133; darn=vger.kernel.org;
         h=mime-version:content-transfer-encoding:content-type:references
          :in-reply-to:subject:cc:to:from:date:message-id:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=LY9l4g61tf1ixC3MFomKzzwAunnhCUNKSY6ylI9RPFQ=;
-        b=tBsOpp9joQt+uFufsoQI0A2eWFco/4ZvcyPDHR5Pk1Hrua9gEHqzDDdRUDwlrpDV9+
-         p1Lm0PJhnv/ATzusAVdOYmAXNsi9m1uYhL/a8WImsxF6sfXmAIWcbrGX2ZlEpBNaseMR
-         snMh+R1O0yqc0Otuo4YjvnCx1WZ0R7NIFWIV3H5inilDOi9WJDWZJ6Ea92DfVAiMXhn5
-         Stz6LPRaXWMRkZRbXjqg/hilcCz2TNRGgqbtLYtknCYnjs+3TasyPFtKu4QXFmmwU3h1
-         EM+wOX8t3Ce4QVa2LVKGyHQBDKOnv0R42KXsIv1N0HETc5t0Rvo0NWCW1LpHcI4A33D9
-         DBuA==
+        bh=Pniyv4Tjn7uigkyv/0BCG5J8YLV0tpVRxHViqIJWGRk=;
+        b=Lzx5ZYOV3MHhsAU50jFPnYUzA+N27kaVnWFZh1ZX4V2QYIob/6YKs7QfFI0q9T/Y8S
+         UE92nLTFp8SH9diZsdqDl/zeKh9u3rHlp48QCvdv1dxjCn+FZfqSY4zq9hGyswPueruR
+         KR75V2clRkwuexrh3VUwC239IGld534fmmhOJpL2x/Jj3INrtY9H5WWH31S/dSgSL4Wc
+         ilx/gIAtKVv7CLHFlH321i9K8FLqWmZRHyREPQ/iQ9p7VTFFKcbG/YK5wxH6Jh35CVjl
+         D9iBU7CnfJAPRivRy4pDEYrsDs4+NHmr7oFN9QNY4iuDtVwBph1QLDQ5nm/yyghIxNHI
+         LdEA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792072908; x=1792677708;
+        d=1e100.net; s=20260707; t=1792076333; x=1792681133;
         h=mime-version:content-transfer-encoding:content-type:references
          :in-reply-to:subject:cc:to:from:date:message-id:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=LY9l4g61tf1ixC3MFomKzzwAunnhCUNKSY6ylI9RPFQ=;
-        b=zTumGQ8CuS5CTXiVJH1S8Ls4+JoLQIjgPrV6+65nhO1AT77brB6fIlgt4AZvmiTMg4
-         zBsRsSGO98oTV1FqtTEy+irc1te2kgcWy+PoC6NjTbuz7PMIhtmXJTkfTxwLwB2+PDXV
-         4EHrtilDOxxXd6Bdtpb0ZxhUHuXsuL6lkes7/wk1rR56OF8yDVmOu9Misja5g8JuyM+q
-         w6+LWV8Zc9X/E0mDkQdbvYj7pOYG1TTdt3UjqwJkIb1A91r811hHIoKjLH/hPb7VAQHj
-         q93S5Crlc4nPSIcOuWnQrKE2KW2QhFfk6qh6/LS5SQ4YvPFp8PRbYl5C6JGGprqushc6
-         CFhw==
-X-Forwarded-Encrypted: i=1; AKwUvBzI6Rd+y4h6UPX66SUA4BiBXEZ+Kgs+oq1dk36ZCTHYbJ+hhvAbhTQFsFy/ivdYdOX0DvWS25gqaO9B@vger.kernel.org
-X-Gm-Message-State: AFq9FYILBWNQgf5CFiOXd0gMpYe6IyJvpMx+eySfg+nfJtNrdTYO5GjL
-	CzYk86/tA4jebfHmKtdaoh6+87+L8LTQWhFZDkxeG5Oi9sx+AMbgRJRs
-X-Gm-Gg: AYBFou21Oi5vs+v0u//Pn1Ft/omSFIiN7AwnHB8KaVBWvXEigYNwTYHiVwhI0qwE5py
-	HOBO2ykK9xemzu2R1izQFSX2criF9D84488XCP7w+dmVZdeLyCMRx6ge1ePEsGMmZzZ1Ppcu9Bm
-	ehYSfq6uV2g3+DasllDdVubnNJoX0Sk+OlaIruXIGKnTOQS0jnc64s+9wepNn09B5uJxLvqYcJd
-	K5WQh3nv2XJpAP91nR3sCZXO6MqFhYOnpa3MW+ppEoH1W9CJmXjUYTNekQ19uFe7K3KbBgPfYJk
-	X5DUbiA0PCgTxbGBqW6P8YTpwoAK/KlIQOS9xOSLdrU4XJ8WycVApfqpK7MK1e3RPxZ6E3eqYys
-	+Bufo6NAWh16vkZhZfqN+1jVrF8Xklk/oFDxlIoLNgvLtC/Hyogojw8TMr8ok/VcLejsoMuybJ3
-	WZ6ylJOY1uwwZTFxIiOP3YQ1T2bE12gAr7KWPIOA5fyzPnleM/+es9Z8t+vFdVx2ZS4sN8fA==
-X-Received: by 2002:a17:903:2309:b0:2e5:38bf:cb43 with SMTP id d9443c01a7336-2e8427f0c01mr176866815ad.2.1792072907655;
-        Thu, 15 Oct 2026 07:01:47 -0700 (PDT)
+        bh=Pniyv4Tjn7uigkyv/0BCG5J8YLV0tpVRxHViqIJWGRk=;
+        b=NZTlbST8aLYHyYDYW/dKvwSwt4OmllS9v0D4O3NZ6QWrAIrpQaa7ePK1iMUB1ullHm
+         aYSaghXxWRjriAaNMg5HaG/123MqeoiC4oCKHT5FgZ2xI7NFdwkvzms2x+rrVqJbGPTh
+         LikhF3iUPG5Rn0QM5CvBFzbe8U4H7JboKL6Qf/1MZY2FZ3iSDZLGNcdvSveAYaNcus1Y
+         6aTizVteLxwEnU3cpUIRX+Xm536HJD2nbeAjSNFUv8SVuTg4iPuc645AsDMJAA+bkWxW
+         OAJEah16/7krnKnfFgT4jiYsGqImsN75+eskZ3Be2GtSDMjPX1xy4xC4a/kkJQjTCrJ2
+         Ebbg==
+X-Forwarded-Encrypted: i=1; AKwUvBwUy8dSs9UgQ5usyMakwW7eoNYTEq7Cd8vrzOhHPUhSauiMRVzULK5c2Uut1fDm7KGtacgNMK8IjDVs@vger.kernel.org
+X-Gm-Message-State: AFq9FYIBQqmGxmh8JCEzx9t48UnClMjx2eBznYFBulr+VGLlEK5peSnT
+	buHrj7ubxQ8cjb1Qa3ZL49Z122LbyKqOU+7KosH3JN14lb32Nc6vI/Ia
+X-Gm-Gg: AYBFou2RPqRx6oTuxgFYyKtK4/R8M0w1fWfHPpaTy7DdlQd+Sd5xsfQQL4w7dYr4i9s
+	TPsVXWYo+pwOXLTedyXOAu3ip280fa/bndDNtKTVArFi7tqd8IUguFcfRGskD6SA+TgI/OS0xvZ
+	YC4qUCPqHXs7O3uiN/nED+N5R/QemlpX4WS2dNfvasFS3RawWTDGOc76XMHIY3oR/ZHxe5YP02V
+	rg3/IS5Qf/oJ9lN3WKyabOZMhqY0/gQ2RmlFj79fKn+/upkl2Ja1mSBJ39GWexmTwO3s2BLEwu3
+	dPv58Bd51Z42LZFmjvgj6y73X66uPSzXRIk6gqtpRKz6RD2K6e350abFhbyw2pxzjCFGIZqLSbA
+	beKNjVxXzsCTH2bXvWnb4RIUkLLCYY4dMSeF0k2zXtipjUw954YHMLGqSQcQ265AmtOWgt/dQpy
+	CNswgEGtJxC+dEd3gUNuPWJxvsYX0A/DSsWWuKF37W6vQPIemGAD38mO7oISZWoaVpJCTTIA==
+X-Received: by 2002:a05:6a00:928b:b0:882:26ea:cd56 with SMTP id d2e1a72fcca58-897c73f3112mr16335178b3a.35.1792076332556;
+        Thu, 15 Oct 2026 07:58:52 -0700 (PDT)
 Received: from [127.0.1.1] ([240e:b8f:977f:f400:ec2a:b15e:fef8:70a])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2e94ba30f6asm16779985ad.57.2026.10.15.07.01.42
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-89e8064e424sm926212b3a.31.2026.10.15.07.58.48
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 15 Oct 2026 07:01:46 -0700 (PDT)
-Message-ID: <6ad0dcca.e4f0a24b.cac3b.c1fe@mx.google.com>
-Date: Thu, 15 Oct 2026 07:01:46 -0700 (PDT)
+        Thu, 15 Oct 2026 07:58:51 -0700 (PDT)
+Message-ID: <6ad0ea2b.5be36480.2ae40.b460@mx.google.com>
+Date: Thu, 15 Oct 2026 07:58:51 -0700 (PDT)
 From: Liang Haowen <nbg2974@gmail.com>
-To: Lee Jones <lee@kernel.org>
-Cc: linux-leds@vger.kernel.org, Pavel Machek <pavel@kernel.org>,
+To: linux-leds@vger.kernel.org
+Cc: Lee Jones <lee@kernel.org>, Pavel Machek <pavel@kernel.org>,
  Martin K . Petersen <mkp@kernel.org>, linux-scsi@vger.kernel.org,
  platform-driver-x86@vger.kernel.org, linux-kernel@vger.kernel.org,
  Denis Benato <denis.benato@linux.dev>, Armin Wolf <W_Armin@gmx.de>,
  Hans de Goede <hansg@kernel.org>,
  Ilpo Jarvinen <ilpo.jarvinen@linux.intel.com>,
- Marco Scardovi <scardracs@disroot.org>, sashiko-reviews@lists.linux.dev
-Subject: Re: [RFC v9 1/1] leds: asus-aura-scsi: Add ASUS Aura RGB LED driver
+ Marco Scardovi <scardracs@disroot.org>
+Subject: Re: [RFC v10 1/1] leds: asus-aura-scsi: Add ASUS Aura RGB LED driver
  for ROG NVMe enclosures
-In-Reply-To: <20261015115043.GA1863739@google.com>
-References: <20260925134010.2815025-1-nbg2974@gmail.com>
- <20260925134010.2815025-2-nbg2974@gmail.com>
- <179198503855.839288.7797731903424311774@kernel.org>
- <20261015115043.GA1863739@google.com>
+In-Reply-To: <20261015140051.1159817-2-nbg2974@gmail.com>
+References: <20261015140051.1159817-2-nbg2974@gmail.com>
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -86,58 +83,29 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 
-On Thu, 15 Oct 2026, Lee Jones wrote:
+The 0/1 cover letter for this series was blocked by my outgoing
+mail provider and never reached the lists; resending its content
+here.
 
-> A driver source file without 'Kconfig' or 'Makefile' integration is dead co=
-de in
-> the tree.  Either wire it up now or hold off on submitting until the rest o=
-f the
-> pieces are ready.
+v10, wiring the driver into the tree. A driver source file
+without Kconfig and Makefile entries is dead code in the tree,
+so this version adds them: LEDS_ASUS_AURA_SCSI sits inside the
+LEDS_CLASS_MULTICOLOR block in drivers/leds/rgb/Kconfig with a
+depends on SCSI, and the Makefile line beside the other rgb
+drivers.
 
-v10 wires it up: the drivers/leds/rgb/Kconfig and Makefile entries
-are in, and the series is posted as a new thread under the same
-subject.
+The only code change is strscpy() passing the buffer size
+explicitly now. The two-argument form is supported by the
+current string.h macros, but with the size written out the call
+builds on any tree.
 
-Your 25 Sep note never reached me: neither it nor the copy
-kernel.org relayed on 14 Oct is in any folder of my mailbox. I
-first saw its content today, quoted in this mail. The three week
-gap was delivery, not silence; this is my first chance to answer
-it.
+v10 was verified on hardware again after these changes: built
+with clang against 7.2.4, the four LEDs set to independent
+colours and confirmed by eye, 60 sequential and 100 concurrent
+updates, the sdev deleted mid-write (zero splats, clean
+detach), rmmod after detach, and a fresh attach through a host
+scan.
 
-> Thank you for your contribution! Sashiko AI review found 3 potential issue(=
-s) to consider:
-> - [Low] leds: asus-aura-scsi: undefined function kzalloc_obj() causes build=
- failure
-> - [Low] leds: asus-aura-scsi: blk_rq_map_kern() missing required request_qu=
-eue argument
-> - [Low] leds: asus-aura-scsi: strscpy() called with missing size argument
->
-> Was this even tested?
-
-Yes. The driver builds with clang (LLVM=3D1) against 7.2.4 with zero
-warnings, loads on the enclosure, and was exercised today: the four
-LED zones driven to independent colours and checked by eye, 60
-sequential and 100 concurrent updates, the sdev deleted mid-write
-(zero splats, clean detach), rmmod, and a fresh attach through a
-host scan.
-
-All three findings assume a tree older than v7.0:
-
-- kzalloc_obj() has existed since v7.0 (Kees Cook's series,
-  include/linux/slab.h).
-- blk_rq_map_kern() takes four arguments on current kernels; the
-  queue comes from the request itself, and scsi_execute_cmd()
-  calls it the same way.
-- strscpy() with two arguments is backed by __strscpy0 in
-  include/linux/string.h, which infers sizeof(dst) and rejects
-  non-array destinations. v10 passes the size explicitly anyway,
-  since it costs nothing.
-
-kzalloc_obj() has now been reported by the bot in all nine of
-its reviews and blk_rq_map_kern() in eight, and the answer has
-not changed since the first time. If sashiko could review
-against a current tree, or drop those two checks, the noise
-would stop.
-
-Best regards,
-Liang
+The interface direction is unchanged from v9: the LED side will
+move onto Marco's Dynamic Lighting class
+(OpenGamingCollective/linux-unstable#17) once that settles.
