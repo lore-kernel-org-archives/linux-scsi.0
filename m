@@ -1,63 +1,63 @@
-Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
+Received: from mail-pg1-f181.google.com (mail-pg1-f181.google.com [209.85.215.181])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23A053EC837
-	for <linux-scsi@vger.kernel.org>; Thu, 15 Oct 2026 04:52:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D2533F4DC7
+	for <linux-scsi@vger.kernel.org>; Thu, 15 Oct 2026 04:52:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792039958; cv=none; b=uXPMsgu3Yhb9mieo7W5AwA+oga5+T0WBxsvv33ImCYBHn9XIpyIHLdGNQgyQHiXPj4STr0aw97W8V3j+5Mv43QmWHMPPX9Je5nekAQQlPi35gq9tPLVsn+9rq4S/DN9JMm9yJslkKOdVE+eMI3V38OpOg2uj4WKbYNYygjiDB1c=
+	t=1792039960; cv=none; b=pcENg1JmpKCQchmF0RsY83ZskE3Wi64O4eMhNc0+CXF6x8yJ5awt5oRfUUBAYOfjAtFVI31RTNp4IuVTTSlkDdFyYVPpExLVyGZ33J0ZIQ+lOop/hLb6Bi54jHNmHdFNH/P9MoenLHLN5oqkTF0gkRzJOBR7nHn67mxdZzEDhMY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792039958; c=relaxed/simple;
-	bh=MDMjvCG2TCUAEeteskqIDIApECR9YheEmBxAhgDy9Lg=;
+	s=arc-20240116; t=1792039960; c=relaxed/simple;
+	bh=kiM6u0W/hsmshBfNmT71PePxEzLKAzCU7ISAde3J8oA=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Sat9ns46QcRje/peoAvIEMESoiP+BnBqPmGepo0RDNMQ5bIiJV7c0XODsdVLVT5NtVHxwosy2mzoDY4DyEv5LO1uA6vi7aDlYBYFKtvBP/FMxAnuIGNXXfdHn0oiJ98A1LWLitj7E55F412o6n/JIVQ51ID8o/g2cMHxfgNIz/4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr; spf=none smtp.mailfrom=isslab.korea.ac.kr; dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b=fTpgSHNu; arc=none smtp.client-ip=209.85.214.175
+	 MIME-Version; b=DmALmTr1ekeTXyXSlr8B/EjDsnZlV6/VgrH1uDjwa8YKTrjENj5aJ2nx51QlVCrCwOXhJPImXgcD9L/Cz8O1EM54g0zHXk9LsuJjvwdLUGmrphQFT9eBUf/2l0HhHStLysHJ/xRp2eXSwHu3FjYhWgM8I2blX2aMQOKNS9lxq7M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr; spf=none smtp.mailfrom=isslab.korea.ac.kr; dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b=k7EIbpDj; arc=none smtp.client-ip=209.85.215.181
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b="fTpgSHNu"
-Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-2e5d0ee1951so30692685ad.0
-        for <linux-scsi@vger.kernel.org>; Wed, 14 Oct 2026 21:52:36 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b="k7EIbpDj"
+Received: by mail-pg1-f181.google.com with SMTP id 41be03b00d2f7-cc1d57602e8so2009531a12.3
+        for <linux-scsi@vger.kernel.org>; Wed, 14 Oct 2026 21:52:39 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=isslab-korea-ac-kr.20251104.gappssmtp.com; s=20251104; t=1792039956; x=1792644756; darn=vger.kernel.org;
+        d=isslab-korea-ac-kr.20251104.gappssmtp.com; s=20251104; t=1792039958; x=1792644758; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=aEUqd/0o0iSnmGjCyVkzuHqVdm5ujeHCGbGGtInTt5o=;
-        b=fTpgSHNu+k6P0KkE1k1R2GHkKwPiYwlgklWG+1r2WUmV1pAe+qf4EP9dx9OhbdHWAW
-         5hL7PEwgTnXMdfDHtrkidHLco+theeS7D3eLjMa0jXmoPdRTLHeSzGxEtkOK7y/fQyOn
-         OK4v7r9CEMVwxUE6Ck6cQX2iSxHmQEv4IC/W0f9jg5pqIPID52yjZEtIa5a3XjOMxRQv
-         eZoI8suMNZ0mGASF6h8iFXDYIDS+JKaolGH8JuxgrmA8nFC6VxHCDd5k1ycFPueZa2gE
-         /H/aMsgipD51iLKTttELUqRBxlCOsHXvpWnU5e6BbUR+piIodDD2d3CR2WZrZZIuZEva
-         pJTA==
+        bh=nK6+12BDaJSc6Zv5ydKjvBfAWgujcnGE1f71j9SWy/Y=;
+        b=k7EIbpDj7LIcP2VR3ZNBWMZC5x0qPcMXEzcxHhOUAwgPJGIfY4ekmduRst54+Onqik
+         q97sKdUIOnA/Jr/bWJQryTcHupVWKnaoygFtIWzbmRalg3zfhCAn4S244qBKcXQo2lsM
+         w+/fwrkjChTVCw3Xy6Bt7lqR2MUkemaQPwgV4cPyk2OdMlLtzEDsXPUAk9MI8a34YUbo
+         IZIItOqMdA68iyg2aAaR1DcilvIBMLf138mI8p1CcxEeR5Y4HLc/FAFgTqzvodOJCKqI
+         ktG0uSdH3ME3Xp3NsBmZTDE59h5Bel1FG39OYUUd5Evhw2e4t32O7wlKU0vQ1JPBrruQ
+         v9MA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792039956; x=1792644756;
+        d=1e100.net; s=20260707; t=1792039958; x=1792644758;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=aEUqd/0o0iSnmGjCyVkzuHqVdm5ujeHCGbGGtInTt5o=;
-        b=kF3S07kv4OVAOkdffKK/aKwXi1P7d96cW8JrrZ6NYzPX6OAHfKpuIJXUrymZKHEWxh
-         vGRm6lDX7mXzPay/4DX6FM7JJrl3DF8Es3eE6fsoMCpL2q0Gi7qisZ5jplBsGsBCsJR6
-         iWbux6iiQmPyrJDzOnvphbCqgpCn52+i8ZeoDkZ9JdL9+qu14Kjoc/gl7dY/qjvZs5wp
-         a6Vc+BdoKaGF0O9kIcQRH2RKDRHRD+IX99zoFaf4q12yjMIg+xri89hcjWgqpg9XpFSl
-         pMq3w5DSw1vLIVU6bWiAemyNXl0j0gErBl5WFg18H2YU94OPhcVVee30jWt2aWVHQ6Yn
-         uzZQ==
-X-Gm-Message-State: AFq9FYKhd+gYiV3Gnla7lckBVPb70Wb6c8tBxn2vWav9LjORX3AwR2RF
-	h2HZGD0hEW8/oB6DbAO8CD2jHwe6+jFLJAhcQBeZDakm3r1S5rTFQ4ZNpJKRgbMfKS4=
-X-Gm-Gg: AYBFou0O9dIM4LcQFIi1RB9QwxtOg9fonIjT3zcbpQXn0atOUhnP261FT9YInfBygpT
-	fCEwKotnfgvF/CFa6ZI4ZnUW9XivWhQ5T73kNQ1mT5FzoZ9YLfu3O/IBstDBuuooFXkgaGtcb/M
-	K6akbezx89cAZmD4NCRO1irLkFamPJAhcgK2Kl/5Byl0nWuTDpYjcClJrcyKD1U4jTi+8DMsYnj
-	f3S7GgeYbWaVx+YE4MdxM+inOyMxZcJjjSlW3v0KewF0ANZbSJ77Qz5dVpvPYEQBG0NQOa9snoq
-	rEl5sltuDp17y777Xraf55OB69hZvnCkJbDsRrk9In8/nbIyEtCGk5DxAHVpMYZtb3glrd3FiEk
-	wGVkHa2AyUGv/hl4WsXyiSEDK3luK/AvMc243tvTUluCvo1ENHzk3G58nkIxZ4JKZaBgHWLsoKk
-	V/gmdgOPz5WFeaTMdQFYzsB9RnZdheLBiqTYTa5I20wZprMq46vJZUQa/WqijKvpOR6hQ97F7Ub
-	G3r3A==
-X-Received: by 2002:a17:903:1a0c:b0:2e9:5eee:e071 with SMTP id d9443c01a7336-2e95eeee183mr7710825ad.57.1792039956367;
-        Wed, 14 Oct 2026 21:52:36 -0700 (PDT)
+        bh=nK6+12BDaJSc6Zv5ydKjvBfAWgujcnGE1f71j9SWy/Y=;
+        b=NV2y8hVexay6yNG1+7WI8j5uBQLVwwJpd+uWOpkNgy5RC4+pohyTnvDyvGjP3evZR0
+         OAQX83fuoLQ158WkXrKUes1HzvMmr2jh8x5P96h1pHq1NdSQTBNhYG1fzwdrjPC4/h9a
+         DnA609XYx5NmOA3Y7LuaR84uCZoZ0tnx6W2J7fv/ITCS3oJNoXuUFip6WN8ecH2aNjwO
+         nuvyjJhHST0A2X1abe0s248nYAnw9/x7SS/ZI8JslvexJzjioPeybDrIn1Y4eK+XtIxc
+         8bmTtIrk80eRfqjltDcWjN0xaQwjP0BH3uLo5QoBM1Bjk0ZeQMxUAOmLWP6g+7oL64td
+         RXAw==
+X-Gm-Message-State: AFq9FYLyw3CuINCD+8EXMDS3jK/2o8UZy6OY1YJ3LrNBPiJ9mf9AHTHQ
+	cJJnB1OejAdj/PC+Y2P1t9KCxpggJk2Vdfi7HJe0zmp7LKI/51KDLz6ZsM9NJBGBBaE=
+X-Gm-Gg: AYBFou1qymE5oKlASkWUSKl4oj2883fUABhvpBdbrO8ENxDTl1eO9OnXK7Qyd42db/s
+	5nxf0RewYiLKPbbTluG1Bx5/9sRl9Yqi+yYQFCdX3j2dhP6oATGZKHWeDbCQJiz/TbevFFEUBqt
+	ltXo4O9XYf5L/V+dQuEdLVbNd1g1rk2KChHzTqdHM8ryDX899+4S77rF2l30uTVZH85shh77EAg
+	zgCJz7RKegoh2WZNFmCcq6PeNNl33H1sHMdcCjZAZ6fCGhj1KVD1RNM6iwkNKPmaMky1iD++Ah6
+	ELhPeLOaWCSQVB+R7vimpjnAY2w2x8A17KB97S8iAz2aUkx01mpvY7b7bzJA6+MCPfm1Ojrat27
+	OsiErI/xV4HbBQaG+oBU9jtxe6C2wbcer4QB4wuRx9ntn1kQsmJY+827ZMnLk+s0ZbYSIIUBNHz
+	9GccKCxBxwlrPze3jeXasKoNi1Cl2XCYpVm7y1VwNaURvcg4Hizw9hEO9Zwh/3V7sFAI8KbXDXl
+	YD0VAYWUPESydVj
+X-Received: by 2002:a17:903:2987:b0:2e2:b557:aa56 with SMTP id d9443c01a7336-2e842dfb377mr145527345ad.57.1792039958534;
+        Wed, 14 Oct 2026 21:52:38 -0700 (PDT)
 Received: from yhlee-960QFG.. ([125.131.91.97])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2e962a4dfbbsm1615915ad.58.2026.10.14.21.52.34
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2e962a4dfbbsm1615915ad.58.2026.10.14.21.52.36
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 14 Oct 2026 21:52:36 -0700 (PDT)
+        Wed, 14 Oct 2026 21:52:38 -0700 (PDT)
 From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
 To: "Martin K . Petersen" <mkp@kernel.org>,
 	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>
@@ -65,9 +65,9 @@ Cc: linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org,
 	yhlee@isslab.korea.ac.kr
-Subject: [PATCH v9 6/9] scsi: mvumi: validate the response frame tag before using it
-Date: Thu, 15 Oct 2026 13:52:10 +0900
-Message-ID: <20261015045213.3975845-7-yhlee@isslab.korea.ac.kr>
+Subject: [PATCH v9 7/9] scsi: mvumi: free the internal command buffer by what was allocated
+Date: Thu, 15 Oct 2026 13:52:11 +0900
+Message-ID: <20261015045213.3975845-8-yhlee@isslab.korea.ac.kr>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20261015045213.3975845-1-yhlee@isslab.korea.ac.kr>
 References: <20261015045213.3975845-1-yhlee@isslab.korea.ac.kr>
@@ -79,128 +79,118 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-mvumi_handle_clob() indexes mhba->tag_cmd[] with the tag of a response
-frame the firmware DMAs into the outbound list.  The array holds
-tag_pool.size entries, and the only check on that tag runs earlier, in
-mvumi_receive_ob_list_entry() and mvumi_check_ob_frame(), against the frame
-still sitting in the outbound list.  mvumi_receive_ob_list_entry() then
-copies the frame into an ob_data buffer and mvumi_handle_clob() reads the
-tag out of that copy, so the value that is checked and the value that is
-used are two separate fetches of firmware-writable memory.  A firmware that
-changes the tag after the check reaches tag_cmd[] with any u16, reads a
-pointer past the array and dereferences it, writes NULL past the array and
-pushes the tag onto the free stack for a later command to pick up.  The
-check is also off by one: tag_cmd[] and tag_pool.stack[] both hold
-tag_pool.size entries, so a tag equal to tag_pool.size passes a > test and
-lands one entry past both.
+mvumi_internal_cmd_sgl() allocates the internal command's data buffer
+with dma_alloc_coherent() and then publishes the address and the length
+to the controller by writing them into the command frame: lower_32_bits()
+in baseaddr_l, upper_32_bits() in baseaddr_h and the length through
+sgd_setsz().
 
-Check the tag that mvumi_handle_clob() actually uses, against the size of
-the array it indexes, and check the command it finds for NULL before
-dereferencing it: with two fetches the earlier NULL check no longer says
-anything about this one.  Re-check request_id against that command too,
-where the controller provides one, for the same reason the earlier check
-does: a tag changed between the check and the copy can land on a different
-command that is also live, and then only request_id tells the two apart.
-Make the two existing bounds checks >= so a tag equal to the entry count is
-rejected there too, and read the tag into a local in
-mvumi_receive_ob_list_entry() as well, so the check there and the accesses
-beside it see one value instead of three fetches.  Use READ_ONCE() for the
-tag and request_id both functions take out of the outbound list, so the
-single fetch is guaranteed rather than left to the compiler.
+mvumi_delete_internal_cmd() did not keep any of that.  It read the frame
+back to work out what to free -- sg_counts to decide whether there was a
+buffer at all, sgd_getsz() for the length, baseaddr_h and baseaddr_l for
+the address -- and handed the three results to dma_free_coherent().
+
+That rebuild does not say what it means to say:
+
+	phy_addr = (dma_addr_t) m_sg->baseaddr_l |
+		(dma_addr_t) ((m_sg->baseaddr_h << 16) << 16);
+
+baseaddr_h is a u32, so both shifts happen in 32-bit arithmetic and the
+term is always zero; the upper half is never put back.  That is not
+visible today, because the driver never raises this device's coherent DMA
+mask above the 32 bits pci_device_add() gives it -- dma_set_mask() moves
+only the streaming mask -- so dma_alloc_coherent() cannot hand out an
+address with an upper half to lose.  It is still not the address the
+expression is written to produce.
+
+Rather than widen the shift, stop reading the frame back.  The driver
+already has every value it needs: keep the address and the length in
+struct mvumi_cmd next to the virtual address it keeps there now, free by
+those, and decide whether there is a buffer from data_buf instead of from
+sg_counts.
+
+sgd_getsz() and GET_COMPACT_SGD_SIZE() had no other caller, so they go
+too.  sgd_setsz(), which writes the field, is unchanged.
 
 Fixes: f0c568a478f0 ("[SCSI] mvumi: Add Marvell UMI driver")
-Cc: stable@vger.kernel.org
 Signed-off-by: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
 ---
- drivers/scsi/mvumi.c | 45 ++++++++++++++++++++++++++++++++++----------
- 1 file changed, 35 insertions(+), 10 deletions(-)
+ drivers/scsi/mvumi.c | 19 +++++--------------
+ drivers/scsi/mvumi.h | 12 ++----------
+ 2 files changed, 7 insertions(+), 24 deletions(-)
 
 diff --git a/drivers/scsi/mvumi.c b/drivers/scsi/mvumi.c
-index 8b8e5545747e8..2410d2aa147d9 100644
+index 2410d2aa147d9..133e53bc2cb37 100644
 --- a/drivers/scsi/mvumi.c
 +++ b/drivers/scsi/mvumi.c
-@@ -466,9 +466,9 @@ static char mvumi_check_ob_frame(struct mvumi_hba *mhba,
+@@ -238,6 +238,8 @@ static int mvumi_internal_cmd_sgl(struct mvumi_hba *mhba, struct mvumi_cmd *cmd,
+ 	m_sg = (struct mvumi_sgl *) &cmd->frame->payload[0];
+ 	cmd->frame->sg_counts = 1;
+ 	cmd->data_buf = virt_addr;
++	cmd->data_buf_phys = phy_addr;
++	cmd->data_buf_size = size;
  
- 	udelay(1);
- 	p_outb_frame = mhba->ob_list + cur_obf * mhba->ob_max_size;
--	request_id = p_outb_frame->request_id;
--	tag = p_outb_frame->tag;
--	if (tag > mhba->tag_pool.size) {
-+	request_id = READ_ONCE(p_outb_frame->request_id);
-+	tag = READ_ONCE(p_outb_frame->tag);
-+	if (tag >= mhba->tag_pool.size) {
- 		dev_err(&mhba->pdev->dev, "ob frame data error\n");
- 		return -1;
- 	}
-@@ -530,6 +530,7 @@ static void mvumi_receive_ob_list_entry(struct mvumi_hba *mhba)
- 	struct mvumi_ob_data *ob_data;
- 	struct mvumi_rsp_frame *p_outb_frame;
- 	struct mvumi_hw_regs *regs = mhba->regs;
-+	unsigned short tag;
+ 	m_sg->baseaddr_l = cpu_to_le32(lower_32_bits(phy_addr));
+ 	m_sg->baseaddr_h = cpu_to_le32(upper_32_bits(phy_addr));
+@@ -286,21 +288,10 @@ static struct mvumi_cmd *mvumi_create_internal_cmd(struct mvumi_hba *mhba,
+ static void mvumi_delete_internal_cmd(struct mvumi_hba *mhba,
+ 						struct mvumi_cmd *cmd)
+ {
+-	struct mvumi_sgl *m_sg;
+-	unsigned int size;
+-	dma_addr_t phy_addr;
+-
+ 	if (cmd && cmd->frame) {
+-		if (cmd->frame->sg_counts) {
+-			m_sg = (struct mvumi_sgl *) &cmd->frame->payload[0];
+-			sgd_getsz(mhba, m_sg, size);
+-
+-			phy_addr = (dma_addr_t) m_sg->baseaddr_l |
+-				(dma_addr_t) ((m_sg->baseaddr_h << 16) << 16);
+-
+-			dma_free_coherent(&mhba->pdev->dev, size, cmd->data_buf,
+-								phy_addr);
+-		}
++		if (cmd->data_buf)
++			dma_free_coherent(&mhba->pdev->dev, cmd->data_buf_size,
++					  cmd->data_buf, cmd->data_buf_phys);
+ 		dma_free_coherent(&mhba->pdev->dev, mhba->ib_max_size,
+ 				cmd->frame, cmd->frame_phys);
+ 		kfree(cmd);
+diff --git a/drivers/scsi/mvumi.h b/drivers/scsi/mvumi.h
+index d20eea2b61a31..3fc76addbf304 100644
+--- a/drivers/scsi/mvumi.h
++++ b/drivers/scsi/mvumi.h
+@@ -189,20 +189,10 @@ struct mvumi_compact_sgl {
+ 	u32	flags;
+ };
  
- 	if (mhba->instancet->check_ob_list(mhba, &cur_obf, &assign_obf_end))
- 		return;
-@@ -546,10 +547,11 @@ static void mvumi_receive_ob_list_entry(struct mvumi_hba *mhba)
- 		/* Copy pointer may point to entry in outbound list
- 		*  before entry has valid data
- 		*/
--		if (unlikely(p_outb_frame->tag > mhba->tag_pool.size ||
--			mhba->tag_cmd[p_outb_frame->tag] == NULL ||
--			p_outb_frame->request_id !=
--				mhba->tag_cmd[p_outb_frame->tag]->request_id))
-+		tag = READ_ONCE(p_outb_frame->tag);
-+		if (unlikely(tag >= mhba->tag_pool.size ||
-+			     !mhba->tag_cmd[tag] ||
-+			     mhba->tag_cmd[tag]->request_id !=
-+			     READ_ONCE(p_outb_frame->request_id)))
- 			if (mvumi_check_ob_frame(mhba, cur_obf, p_outb_frame))
- 				continue;
- 
-@@ -1878,6 +1880,7 @@ static void mvumi_handle_clob(struct mvumi_hba *mhba)
- 	struct mvumi_rsp_frame *ob_frame;
- 	struct mvumi_cmd *cmd;
- 	struct mvumi_ob_data *pool;
-+	unsigned short tag;
- 
- 	while (!list_empty(&mhba->free_ob_list)) {
- 		pool = list_first_entry(&mhba->free_ob_list,
-@@ -1886,11 +1889,33 @@ static void mvumi_handle_clob(struct mvumi_hba *mhba)
- 		list_add_tail(&pool->list, &mhba->ob_data_list);
- 
- 		ob_frame = (struct mvumi_rsp_frame *) &pool->data[0];
--		cmd = mhba->tag_cmd[ob_frame->tag];
-+		/*
-+		 * The tag was checked against the frame in the outbound list.
-+		 * This is the copy, so check the value that is used.
-+		 */
-+		tag = ob_frame->tag;
-+		if (tag >= mhba->tag_pool.size) {
-+			dev_err(&mhba->pdev->dev,
-+				"ob frame tag[0x%x] out of range\n", tag);
-+			continue;
-+		}
-+		cmd = mhba->tag_cmd[tag];
-+		if (!cmd) {
-+			dev_err(&mhba->pdev->dev,
-+				"ob frame tag[0x%x] with no command\n", tag);
-+			continue;
-+		}
-+		if (mhba->request_id_enabled &&
-+		    ob_frame->request_id != cmd->request_id) {
-+			dev_err(&mhba->pdev->dev,
-+				"ob frame tag[0x%x] request ID 0x%x != 0x%x\n",
-+				tag, ob_frame->request_id, cmd->request_id);
-+			continue;
-+		}
- 
- 		atomic_dec(&mhba->fw_outstanding);
--		mhba->tag_cmd[ob_frame->tag] = NULL;
--		tag_release_one(mhba, &mhba->tag_pool, ob_frame->tag);
-+		mhba->tag_cmd[tag] = NULL;
-+		tag_release_one(mhba, &mhba->tag_pool, tag);
- 		if (cmd->scmd)
- 			mvumi_complete_cmd(mhba, cmd, ob_frame);
- 		else
+-#define GET_COMPACT_SGD_SIZE(sgd)	\
+-	((((struct mvumi_compact_sgl *)(sgd))->flags) & 0x3FFFFFL)
+-
+ #define SET_COMPACT_SGD_SIZE(sgd, sz) do {			\
+ 	(((struct mvumi_compact_sgl *)(sgd))->flags) &= ~0x3FFFFFL;	\
+ 	(((struct mvumi_compact_sgl *)(sgd))->flags) |= (sz);		\
+ } while (0)
+-#define sgd_getsz(_mhba, sgd, sz) do {				\
+-	if (_mhba->hba_capability & HS_CAPABILITY_SUPPORT_COMPACT_SG)	\
+-		(sz) = GET_COMPACT_SGD_SIZE(sgd);	\
+-	else \
+-		(sz) = (sgd)->size;			\
+-} while (0)
+-
+ #define sgd_setsz(_mhba, sgd, sz) do {				\
+ 	if (_mhba->hba_capability & HS_CAPABILITY_SUPPORT_COMPACT_SG)	\
+ 		SET_COMPACT_SGD_SIZE(sgd, sz);		\
+@@ -259,6 +249,8 @@ struct mvumi_cmd {
+ 	struct scsi_cmnd *scmd;
+ 	atomic_t sync_cmd;
+ 	void *data_buf;
++	dma_addr_t data_buf_phys;
++	unsigned int data_buf_size;
+ 	unsigned short request_id;
+ 	unsigned char cmd_status;
+ };
 -- 
 2.43.0
 
