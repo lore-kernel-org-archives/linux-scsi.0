@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C75352F7EE1;
-	Fri, 16 Oct 2026 09:52:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E4AB37C91E;
+	Fri, 16 Oct 2026 09:54:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792144368; cv=none; b=DwSHFmZwzsyRk15A0iD3PIT06z1w7NLVUOC8QymPHOc5zgqi8AEJKIUn7rhuvLlakP5TaqxBWDXhvoGqhonCtl7lmZSf3SmM/ZPIuYL9ca50cuqau6Ch7H5B1VMygY2MLTf9zmAVn6mvUXxSnPpns5pRy1AxOQPNDXgb/yHlDDQ=
+	t=1792144491; cv=none; b=Q2oy+dF0Qqq4PqwbRGx3CDOju79/MFpJRxdIXhYu6m7zJOU2KjLbOUbhF5X4BMiOmZ+NcLxH6DOznt2LtSaoRkSWJTisGOz7EJ8i5KQBLhDdpVF8hnxSHTscGpqSoJhES8lxpQ02KRVkbd+fZ8qfHjqJ+e/tLCK9ON37K1az4Cw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792144368; c=relaxed/simple;
-	bh=4m0G5Fxd7cEt9q2bJP/piomErw6XTud4jUu6ChyyiHc=;
+	s=arc-20240116; t=1792144491; c=relaxed/simple;
+	bh=xT2LBJqH0V2cIi0o5HP5JsWOT+cHaNnlyZRVk11zIdw=;
 	h=MIME-Version:Content-Type:Subject:From:To:Cc:In-Reply-To:
-	 References:Date:Message-Id; b=sQS+HVM7CAFXDtgC1SIry+3EpkqEugTysWMb5NCna2hJDWL4sprkRKsGqAnYt41SYUT4+GkLgrnCtwC316eRQrahfGAleSdCxwWn6jXyT5yMWuvuqOAW6t+Fb85VVsZxy6qh1DPyilJdLY1XupyYWHgE2p7/Jw/dblh/dwHZXeU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=leqoxnEs; arc=none smtp.client-ip=100.103.45.18
+	 References:Date:Message-Id; b=hftAzYwmBmETJrLrLXOolR1lcVajN5+rv2muq5+Y48c7vUBijxacJ5WM2KUrqwHyJjQYFXoJyaD5KqkJi/8O1KRO0vzsfdFZ39FSFokC4M1xHXh8qrSCgyEMy/6KgFNpEBgG0jLSbJRQq3G8j125EhyqJpJfx68sRPYs2H7fQNo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Z6pKM2AR; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="leqoxnEs"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 11A011F000C4;
-	Fri, 16 Oct 2026 09:52:37 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Z6pKM2AR"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E3FC11F000C4;
+	Fri, 16 Oct 2026 09:54:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792144367;
-	bh=S9qutPbcIRsUxmCjo4h9+V8s4IY3P9RUmUbWSOzj7zA=;
+	s=k20260515; t=1792144490;
+	bh=1LYuAnwQxjThq0bcnWdxYRswFEC5pOuk5XOjSf0KelA=;
 	h=Subject:From:To:Cc:In-Reply-To:References:Date;
-	b=leqoxnEsn3QjFcjdO0gJ0pMZw1iU/iU5g+o1bqhkg788IHUpXjr1pGD/hhUoLgtNC
-	 SB3EX13bmMngPwVi+7WcQvvckj3V04vFUFnmh6/FDjr6REr6wd5gKljlpXaVkLvQj6
-	 NFX3g5Nd9Rxh8rVAQKwhsNoPmLzYpddljp72bDUCRbVUOBhcJLYZIYLmYNEirc7ewi
-	 FHG+uvyGitTRqBHO3QRIbF2SWFR4+IDbUzqvQYqa6MFfpEbUz1/LEMfYRaAv44Ws9c
-	 w+OIXOZnVi3Op/kZ5lrWM3asUvZhDzNaBAx+PzcfeM9WkXvSIJ2ZcDsAWr6jF8Rz70
-	 nDgQlWDjktdPg==
+	b=Z6pKM2ARhe2PmJlQQA4GjGMeEkOqi4VEg+DLSe1QyAAM1a4JO3Azw+VW5Ye7eeOM4
+	 D7guIf9gdBqFO6looMpN3jDW+KtQFD3RHXMGvAs1ZIx04Vhadn7qfBQr5mssOR7EXf
+	 /2zHkDpWl91mSTZAoTN4k/I0iFgzrw1HfUDRCiibZ3uPIsPOnk/wOPpLtTKJ8LakJt
+	 1Rc9DChinNBIs2dGjYIzEdyx2xZEbH6aFezfLRtDMvGxHxtFiEQNO6/kJqE4+zTf64
+	 hbhOSjBXZ5TzraKk9gxQRaTwu7bvRIOzukX3UhZmX8OhAnV79N4oJsgf0ela7DotNx
+	 fRvNvpVdMYLig==
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -34,7 +34,8 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH v4 5/5] phy: qcom-qmp-ufs: Add Glymur support
+Subject: Re: [PATCH v4 2/5] scsi: ufs: qcom: dt-bindings: Document Glymur
+ UFS controller
 From: Manivannan Sadhasivam <mani@kernel.org>
 To: Pradeep P V K <pradeep.pragallapati@oss.qualcomm.com>
 Cc: Vinod Koul <vkoul@kernel.org>, 
@@ -52,39 +53,75 @@ Cc: Vinod Koul <vkoul@kernel.org>,
  devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
  linux-scsi@vger.kernel.org, nitin.rawat@oss.qualcomm.com, 
  sibi.sankar@oss.qualcomm.com, Taniya Das <taniya.das@oss.qualcomm.com>, 
- Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
-In-Reply-To: <20261009-glymur_ufs_qcb_enablement-v4-5-9a6ce83195b7@oss.qualcomm.com>
+ "Martin K. Petersen" <mkp@kernel.org>
+In-Reply-To: <20261009-glymur_ufs_qcb_enablement-v4-2-9a6ce83195b7@oss.qualcomm.com>
 References: <20261009-glymur_ufs_qcb_enablement-v4-0-9a6ce83195b7@oss.qualcomm.com>
- <20261009-glymur_ufs_qcb_enablement-v4-5-9a6ce83195b7@oss.qualcomm.com>
-Date: Fri, 16 Oct 2026 15:22:33 +0530
-Message-Id: <179214435398.106618.10901078741061119278.b4-reply@b4>
+ <20261009-glymur_ufs_qcb_enablement-v4-2-9a6ce83195b7@oss.qualcomm.com>
+Date: Fri, 16 Oct 2026 15:24:36 +0530
+Message-Id: <179214447679.106618.13395726363064166351.b4-reply@b4>
 X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=653; i=mani@kernel.org;
- h=from:subject:message-id; bh=4m0G5Fxd7cEt9q2bJP/piomErw6XTud4jUu6ChyyiHc=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBq0fPlItkYKusz+VRokfHGafUEG5kcst8lxkBry
- 2INrDXc+MeJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCatHz5QAKCRBVnxHm/pHO
- 9UlsB/93uTUB7pO9AQnLoeG9/we3xioUjw8aHx1Erb9VJTwehBSjCApaHinNikT4NqtncxFeqwz
- N9Mz7HST615kmLPHuvN5/1QYRFN3QmzXPWR/KOe4B/ysV4siNDmL+LUs0rPmscpYnEh5fibt5C3
- 3OQSvD4ND+oEMoMxhhfuxcyPXVnGod9WS8lfSI+ofwsGnrug0E26/5Zqw2Jj1iQZKW/35GxRvy6
- grzKdo/E9uX2g0QJKREdZdlv0MBHL5dh7oWvwG5fhweIaWnEBJTc/hhVgz476KXaw8u7lEgRhVc
- kVLQC6fEfDHBciykF7POskcp8U4SpStbQWprFITTNm/fc0Jp
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1673; i=mani@kernel.org;
+ h=from:subject:message-id; bh=xT2LBJqH0V2cIi0o5HP5JsWOT+cHaNnlyZRVk11zIdw=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBq0fRfFuzHOmJ1zEbRe2NvhNARv7jbUwiBdCiyq
+ YuCvgBsK7OJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCatH0XwAKCRBVnxHm/pHO
+ 9cHwB/0QDxC9RpCl15j1TBsqxmClzMTtsGJfD+kWTU9TRNlMH/0c/Y1N3j6QM6dB/3aU5ACLqFW
+ ElRIvVFM6Mj5oD89A2FsaVulMM0UEN7Rv+6nzmLFalEwXF1QRA8tzYyO2COE9p/n7ixKgIHPHVk
+ SFZnqz7gp66mntkSCferg3fnXe3eCBOWkw3B8sWEZcVmX84YocwTOjAs++99Go+9jKFV5Kdccho
+ pqoAxP4ZE8uUy0PzZ5qj8fhjyNPEPFWL/p7CnYvqfEOYxTWDBe5m37ogZbRdsr3t2WKTyFHswG9
+ DaIvTdUlco01MxI6IcTI6Slr3Ch3/Cws/w72ZvUpxs3Tpkv+
 X-Developer-Key: i=mani@kernel.org; a=openpgp;
  fpr=C668AEC3C3188E4C611465E7488550E901166008
 
 On 2026-10-09 16:05 +0530, Pradeep P V K wrote:
-> Add the init sequence tables and config for the UFS QMP phy found in
-> the Glymur SoC.
+> Document UFS Host Controller on Glymur SoC. Glymur UFSHC has a
+> multi-queue command (MCQ) register range in addition to the standard
+> one. So, both reg entries are required.
 > 
-> Similar to SM8750, the QSERDES RX and TX register offsets for
-> glymur SoC follow the v7 register layout, while the remaining
-> (PCS, MPHY base) register offsets follow v6 layout. Update the
-> register layouts accordingly.
-> 
-> Reviewed-by: Abel Vesa <abel.vesa@oss.qualcomm.com>
-> Acked-by: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+> Acked-by: Martin K. Petersen <mkp@kernel.org>
+> Acked-by: Rob Herring (Arm) <robh@kernel.org>
 > Signed-off-by: Pradeep P V K <pradeep.pragallapati@oss.qualcomm.com>
 
-Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Acked-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 
 - Mani
+
+
+> ---
+>  Documentation/devicetree/bindings/ufs/qcom,sm8650-ufshc.yaml | 3 +++
+>  1 file changed, 3 insertions(+)
+> 
+> diff --git a/Documentation/devicetree/bindings/ufs/qcom,sm8650-ufshc.yaml b/Documentation/devicetree/bindings/ufs/qcom,sm8650-ufshc.yaml
+> index d03295806657..f132b1a9ebc2 100644
+> --- a/Documentation/devicetree/bindings/ufs/qcom,sm8650-ufshc.yaml
+> +++ b/Documentation/devicetree/bindings/ufs/qcom,sm8650-ufshc.yaml
+> @@ -16,6 +16,7 @@ select:
+>        contains:
+>          enum:
+>            - qcom,eliza-ufshc
+> +          - qcom,glymur-ufshc
+>            - qcom,hawi-ufshc
+>            - qcom,kaanapali-ufshc
+>            - qcom,maili-ufshc
+> @@ -30,6 +31,7 @@ properties:
+>      items:
+>        - enum:
+>            - qcom,eliza-ufshc
+> +          - qcom,glymur-ufshc
+>            - qcom,hawi-ufshc
+>            - qcom,kaanapali-ufshc
+>            - qcom,maili-ufshc
+> @@ -80,6 +82,7 @@ allOf:
+>            contains:
+>              enum:
+>                - qcom,eliza-ufshc
+> +              - qcom,glymur-ufshc
+>                - qcom,maili-ufshc
+>                - qcom,nord-ufshc
+>      then:
+> 
+> -- 
+> 2.34.1
+> 
+> 
+
 
