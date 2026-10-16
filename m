@@ -1,185 +1,249 @@
-Received: from mail-pg1-f180.google.com (mail-pg1-f180.google.com [209.85.215.180])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73A9B4A5C42
-	for <linux-scsi@vger.kernel.org>; Fri, 16 Oct 2026 12:46:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DE844A4400
+	for <linux-scsi@vger.kernel.org>; Fri, 16 Oct 2026 12:46:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792154778; cv=none; b=Yfo0F0ukW7yY4nlqYLFvIi5qL19bdAxW93mVvg7Vlwpwyh2RUBt1o+URTgo1ZO/xMeQO/yjWA3LFwnW/BpJcIQjfjSyDNamX6JDxriAI5uKyTRng1qqGmFX6U5675RHGQzRYPLH4lcLH7yvODWjsaHlPo0ZkdMFlcjemqvFwXAo=
+	t=1792154794; cv=none; b=MXmChvU+r9VPkSxiMgJlbgnAx8uuDCqkUn8/C4325b0mUvIAZ1RZOBU87Vcm7OFIBAO4P+egMlW0YdBoRxsKQtV6MP0ysxgBhPOXTDO6P6iBpGz2nFeQqdju+HXmq924iAp22ByP68J1LP8Swxmt0tBu9H18UfZYlYHodcoigEU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792154778; c=relaxed/simple;
-	bh=g/A2LNTpg/TBBWsof9UO+iJupz/JhBE9bEfYXnOvlvk=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=lIxKsc3gfVgKN7YTJwplJdqZgX17Wpdp4FuQn/hvZCW7eJ7Ei3hn4s2LocudzfLhfdj8RJfspPv1enLeCM0Pv4lhvBOhrPFVBGn9gVNcFRGa1BZWATuGT6t14jdasEaZRoYj475WV+Dj38l0HB4IL/tcqgN0Xzj61FLFKgIrWvI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=PPiZgMhJ; arc=none smtp.client-ip=209.85.215.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1792154794; c=relaxed/simple;
+	bh=vIltqrhtG3fdcxt1zy5N+jmI+wWd2EFikeosnuR84v0=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=pDOaPa/XSsNoSwwo60HEf1bSxZX8R0Q6Qe5drHsvB/Wk7X31q2Qql6WuRPPp3/RyZuGsXxAN1gNIkXbDzsF4sVqnumK4Ob2H6rVzUW+HWXXE8r0v/M9jJgJwsQ2YlFgU8Ehqyp2RvxcdYuGhxYl3dsOD0nevofQvOFQVObUP49A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=i2u5UBbU; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=fVvYXRyd; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PPiZgMhJ"
-Received: by mail-pg1-f180.google.com with SMTP id 41be03b00d2f7-cc502d509c0so1444839a12.2
-        for <linux-scsi@vger.kernel.org>; Fri, 16 Oct 2026 05:46:16 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="i2u5UBbU";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="fVvYXRyd"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1792154790;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=jXE5vMlJLDULz4QabdUZcN7zMUliDBSGHX5ZEXcYJUA=;
+	b=i2u5UBbUk9o4R4tmmmbLJi1GAw/Os1H40Ni9lLSJPEyExmT1kIKs7+fSkx3LM9NvuUrmHc
+	O6QuuXLsiiGcKYVH3wEJa8iczRKb0gMsdzIr2HxlRtIIIrJS/COBSYJ6/NJmj8f7t81hbi
+	nxt3wzf7qvs3oUr4xb2u5ftL6aVlNvg=
+Received: from mail-qk1-f198.google.com (mail-qk1-f198.google.com
+ [209.85.222.198]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-683-UTn2cjfPPuiodJ5ginXqAw-1; Fri, 16 Oct 2026 12:46:29 +0000
+X-MC-Unique: UTn2cjfPPuiodJ5ginXqAw-1
+X-Mimecast-MFC-AGG-ID: UTn2cjfPPuiodJ5ginXqAw_1792154788
+Received: by mail-qk1-f198.google.com with SMTP id af79cd13be357-93cc40759b2so1345803285a.1
+        for <linux-scsi@vger.kernel.org>; Fri, 16 Oct 2026 05:46:29 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792154774; x=1792759574; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=U9uelrnhVgBO69REznhFRhGJ0U4UCFyoo6ufjAB5aFI=;
-        b=PPiZgMhJGO1DZn+ni3QL4jrdTbWZx/nfVOzdxu48kKJGgXpa/RfAzumq5L327kOkmU
-         UeSGyPU6P99RIl8m8dRxI1m8di3hMMW5WwdKfxG3BPiqa04vbaKHq1ZHNfL+/Xd3m26n
-         SNYApLqyflGHFSS/O2fsyjZUmzveV2YORI3s2Il+VGCHfWFE6sCGyRObLpMZr2m7EVU2
-         pF3AkINSodeSDJ+nAoTNEbzoQq8jdYju2yHS6cE2Gdnmp7UyvPG1xYGHFp1qTL6Wd2Jt
-         oG668bSVPgw9Dn7GIA4aLdp1qXnq6yCzxKFdu9aYYeih3KmKzIAqLAsyFr/Q4X84aEO6
-         VVVA==
+        d=redhat.com; s=google; t=1792154788; x=1792759588; darn=vger.kernel.org;
+        h=mime-version:user-agent:content-transfer-encoding:content-type
+         :references:in-reply-to:date:cc:to:from:subject:message-id:from:to
+         :cc:subject:date:message-id:reply-to:content-type;
+        bh=jXE5vMlJLDULz4QabdUZcN7zMUliDBSGHX5ZEXcYJUA=;
+        b=fVvYXRydkR18p6nqtrezQ0bchrrm4YbtTVsnMS+Px1ltfHtFDnjrjE0f4Mv+Ynespj
+         G2IHv2KDzleyPwLxJv5rlcqp3cTggTRO3DvXEsvvNjaL0lfKhfpPOII+ehBks6fqRAud
+         OuE/m4eNqfBuAdtVTr07MmZDRUePaavtWwEN90jE9GfKddijeNUsoyjOYBIwXg7BHscp
+         oMOAAMeKmX8uZCvKMhk5UCA9yEqvbTb97HzxlztNnNLIPseRomOQ3T1Z2WFu6eMCZt7i
+         osX3STLbHZqvAIpXm8KM/vEq6M0TYA73U+e5gw5fk4JKwXwqxjr55XTQzYPSvyQyTxHY
+         7XEA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792154774; x=1792759574;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=U9uelrnhVgBO69REznhFRhGJ0U4UCFyoo6ufjAB5aFI=;
-        b=deg8WvhkyJqC3UcfatATm1Woi0h1mYpW9JwvaUShOmx6f+X7jQjHG2aBA8/rThvKv6
-         6a4EXWPJy3UpR65SJTEYhiiCMccVT4zRBxgK1tCZyO4903bVB0DR1jlVMwsMxdJ4Uf1n
-         ByG8cfdsm/mvHSer95UOKq6dg2cBcTVwvjfGgRBIUobSwDaRN2VKrPom2bkKV24aF1JE
-         ICB7FXtS+zCh9HGo71AvxcMj7wh96ZreiUda7togxAnPz5uXN7YX466wBry+SHaWgHqo
-         e9ClGsO3bjPR+XGrW8iWqGuXZjQlfrWUBKqldYpwXv0SC99AmEuqbCY4ncWz3xuxbbCP
-         MPKw==
-X-Forwarded-Encrypted: i=1; AKwUvBzxDQHuKBGK/0KXpZojFMhVManRw0EwFQgHvo7hC1pasJFv32WL33kj3yBVHrkSttUmw5xGqiRVXlkj@vger.kernel.org
-X-Gm-Message-State: AFq9FYIDLCHWRWojCGAQPLwIHNqtc8BK/M1wR8wkP7m22WPmX2BaAoaV
-	tM8ddjYCALiaZ7r5fk4Zj8GzTzxOsXKL+qlo2s14Lo1honxMHHvkzAWA
-X-Gm-Gg: AYBFou0mCY5pqErvBTsZmyLfFwK/0intjRxK3kiddYAllV1huXNv6tle6VEkt1i1pyy
-	8tU6axCkhIXlChJp36d6c8/HB+0hM4eCrR/Jp7ESrjgKOysg8PhklEfjHYLa9VJx/iT9Q4Q3XzL
-	wLiukLycIyy5ckbYexpHBhfy4Cp2aONWsd1/Zf4Jsdm8IztkZAJJNtoUlu98fZwrpw8Vy1Sy5iW
-	E/kehVrPqYyCq3s03jlWY7lyiJ90Sb+4/u83YLrveWDjfMMeUjOX6lxrFUJBaMN5OOS6s94kXCr
-	pkYnr6ou1VYXjDMRBS9u/6dXvhCR/nKF09dv99xibpSRVA4BPcg9TXIZjcr0udyEkAkzNjSIOZ4
-	EpTUD2RQTPuhQj52WzJnWAv3WvURhfH07Mu2aoaphtJ7Zn9VO9vshlnVE1nugJjbMDMZKVZDw4c
-	YJeV0GWiw1H+R/Rg29SqPy2JYlGDKsTnKCgoVFRAGIH8WbTnGmgcOW1YQ+zAC1GYJFwuTIg3g7V
-	0a3RvRUKfJiVQZMA5+rrROV
-X-Received: by 2002:a17:90b:2cce:b0:3ac:8af9:4a77 with SMTP id 98e67ed59e1d1-3ac8af94f43mr6385936a91.10.1792154773600;
-        Fri, 16 Oct 2026 05:46:13 -0700 (PDT)
-Received: from DESKTOP-NM9EKIA ([125.134.240.130])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3acc9d266d6sm1756414a91.1.2026.10.16.05.46.10
+        d=1e100.net; s=20260707; t=1792154788; x=1792759588;
+        h=mime-version:user-agent:content-transfer-encoding:content-type
+         :references:in-reply-to:date:cc:to:from:subject:message-id:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=jXE5vMlJLDULz4QabdUZcN7zMUliDBSGHX5ZEXcYJUA=;
+        b=NdQFDTXQm4sLe+SCAqBpmbk7NbYBMKT3rM///7ZH9IYkspSdHPNVBVy4T1PU4T7xsn
+         UqLzNxWWuE1xvnegE6nzf7V487LKydIcT6ev/CggDeFOjWUuzBOxg63C78T5O7o6749e
+         zxQGa8AQRctSPpQDdqC4vcPgqfs5vPdHpCfGkodDWJxDK6hmGdmPE4STkrTFrjYcws6M
+         BEEasYPOtgGKWGhZqPWv5RBL/wIb195RH47X7xEDsO8HQJREOxkrcvRDBftORHlZgdYl
+         j5h1qGOTee2k4fXV0I1YRCX0XnLWZ//nS/zIhOCvCxbXmKuMcpSiLQ0r+DZvfXAW/rRV
+         ZMnA==
+X-Gm-Message-State: AFq9FYLaLrNulzVQDrVV66qRtLXL9W5kEVVOq7b/+O27WmJ8p8iJ48Ot
+	up2ntEY56YE8Rc0L/MYS7yk+u1BjH1IMz+O4JMoYPJWgxAJ4mX4tRW/A8xywC3yEgRxxikoYTSY
+	lXoIKdag/5o07SkFeToe3kyGH52/TYL/CaUJPU47KjGgq4wXHbrc3EWQoAmFQ+Gkw/AUOwmo=
+X-Gm-Gg: AYBFou2pYvUTpI14pJXBqPHMg2I7qnZ8bl46hA7MFgJ+Hp6ZlSOAGXkFfb6KZwbMxWq
+	ZMSqWItjywJ7ENeiK6F3egBVpfuHbH6ad/eLVLXk6Ou3H5mxSgAxCIUY2XUYqags8Zi3jKvvSje
+	0YrcOYFeudA7gBRd0DbsLd9ZjhDp5f+R2bNCfbliiSYdDlRoKYLYNoDUSiMuCb340mj2B4ebEl8
+	FHDijKs5jWAyMDiSq2YQXbQ9o5xBAAerWf30kiPMc5nkFjnkiZ2TW9ErIYSmnKR6C7ldpoMebR2
+	jHosvkSmYv0BPmRPbi2WqIbmwhsmb+WMLxt+rASLalxZ8xI6px86ovO6IjYs7nFTNTwczZ+QxVg
+	tIM4Ur7t0ZT2YShtMsmGwUEaMLMcMfPg8/TA=
+X-Received: by 2002:a05:620a:198d:b0:93e:66db:69b9 with SMTP id af79cd13be357-93ebd23ab8emr3416424685a.55.1792154788381;
+        Fri, 16 Oct 2026 05:46:28 -0700 (PDT)
+X-Received: by 2002:a05:620a:198d:b0:93e:66db:69b9 with SMTP id af79cd13be357-93ebd23ab8emr3416418785a.55.1792154787746;
+        Fri, 16 Oct 2026 05:46:27 -0700 (PDT)
+Received: from loberman-thinkpadp1gen5.rmtusma.csb ([2600:6c65:2440:d8c:929c:b769:6def:faa3])
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-93f1a16b5e4sm201356085a.14.2026.10.16.05.46.26
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 16 Oct 2026 05:46:13 -0700 (PDT)
-From: Joonhoe Kim <26rote@gmail.com>
-To: James.Bottomley@HansenPartnership.com,
-	mkp@kernel.org
-Cc: alim.akhtar@samsung.com,
-	bvanassche@acm.org,
-	beanhuo@micron.com,
-	stanleyjhu@google.com,
-	peter.wang@mediatek.com,
-	can.guo@oss.qualcomm.com,
-	mani@kernel.org,
-	linux-scsi@vger.kernel.org,
-	linux-arm-msm@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org
-Subject: [PATCH] scsi: ufs: core: Fix a deadlock between clock scaling and device commands
-Date: Fri, 16 Oct 2026 21:46:08 +0900
-Message-ID: <20261016124608.46-1-26rote@gmail.com>
-X-Mailer: git-send-email 2.55.0.windows.5
+        Fri, 16 Oct 2026 05:46:26 -0700 (PDT)
+Message-ID: <8e325cc7ca21d607b3664debcaa5f14b273b91b6.camel@redhat.com>
+Subject: Re: [PATCH 1/2] scsi: target: iscsi: Complete an aborted WRITE
+ stuck before the first R2T
+From: Laurence Oberman <loberman@redhat.com>
+To: sashiko-reviews@lists.linux.dev
+Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Date: Fri, 16 Oct 2026 08:46:25 -0400
+In-Reply-To: <sashiko-outbox-171458@kernel.org>
+References: <20261014143932.39453-1-loberman@redhat.com>
+	 <20261014143932.39453-2-loberman@redhat.com>
+	 <sashiko-outbox-171458@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.60.2 (3.60.2-2.fc44) 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-Since commit 08b12cda6c44 ("scsi: ufs: core: Switch to
-scsi_get_internal_cmd()"), device management commands go through
-blk_execute_rq() on the pseudo SCSI device, which shares the tagset
-with the logical units, while ufshcd_dev_man_lock() holds
-clk_scaling_lock for reading.
+On Wed, 2026-10-14 at 15:10 +0000, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 1 potential
+> issue(s) to consider:
+> - [High] iscsi: double completion and workqueue corruption for
+> aborted WRITEs on DataOut path
+> --
+>=20
+> commit 7b04f6989363db2c2b75d8c212ee852153982c8d
+> Author: Laurence Oberman <loberman@redhat.com>
+> =C2=A0=C2=A0=C2=A0=20
+> scsi: target: iscsi: Complete an aborted WRITE stuck before the first
+> R2T
+>=20
+> This patch resolves an issue where an aborted WRITE command that
+> arrives with
+> immediate data exceeding FirstBurstLength gets stuck in
+> TRANSPORT_WRITE_PENDING.
+> It accomplishes this by completing the command in
+> iscsit_execute_cmd() and
+> introducing a new iscsit_claim_completion_locked() helper to avoid a
+> double
+> completion race with iscsit_release_commands_from_conn().
+>=20
+> > diff --git a/drivers/target/iscsi/iscsi_target.c
+> > b/drivers/target/iscsi/iscsi_target.c
+> > index 124ff269b8e75..aab9237a67768 100644
+> > --- a/drivers/target/iscsi/iscsi_target.c
+> > +++ b/drivers/target/iscsi/iscsi_target.c
+> > @@ -4198,10 +4198,18 @@ static void
+> > iscsit_release_commands_from_conn(struct iscsit_conn *conn)
+> > =C2=A0		if (cmd->se_cmd.t_state =3D=3D
+> > TRANSPORT_WRITE_PENDING) {
+> > =C2=A0			/*
+> > =C2=A0			 * We never submitted the cmd to LIO core,
+> > so we have
+> > -			 * to tell LIO to perform the completion
+> > process.
+> > +			 * to tell LIO to perform the completion
+> > process --
+> > +			 * unless iscsit_execute_cmd() already
+> > did.=C2=A0 t_state
+> > +			 * stays TRANSPORT_WRITE_PENDING across
+> > that
+> > +			 * completion, so the claim is the only
+> > thing that can
+> > +			 * tell us.
+> > =C2=A0			 */
+> > +			bool claimed =3D
+> > iscsit_claim_completion_locked(cmd);
+> > +
+> > =C2=A0			spin_unlock_irq(&se_cmd->t_state_lock);
+> > -			target_complete_cmd(&cmd->se_cmd,
+> > SAM_STAT_TASK_ABORTED);
+> > +			if (claimed)
+> > +				target_complete_cmd(&cmd->se_cmd,
+> > +						=C2=A0=C2=A0=C2=A0
+> > SAM_STAT_TASK_ABORTED);
+>=20
+> [Severity: High]
+> Does this code miss the DataOut paths?
+>=20
+> Because target_complete_cmd() is called directly in
+> __iscsit_check_dataout_hdr()
+> and target_execute_cmd() is called in iscsit_check_dataout_payload()
+> for aborted
+> commands without setting the completion_claimed flag.
+>=20
+> If a command is aborted on the DataOut path:
+>=20
+> drivers/target/iscsi/iscsi_target.c:__iscsit_check_dataout_hdr() {
+> =C2=A0=C2=A0=C2=A0 ...
+> 		if (se_cmd->transport_state & CMD_T_ABORTED) {
+> 			if (hdr->flags & ISCSI_FLAG_CMD_FINAL &&
+> 			=C2=A0=C2=A0=C2=A0 --cmd->outstanding_r2ts < 1) {
+> 				iscsit_stop_dataout_timer(cmd);
+> 				target_complete_cmd(se_cmd,
+> SAM_STAT_TASK_ABORTED);
+> 			}
+> =C2=A0=C2=A0=C2=A0 ...
+> }
+>=20
+> Because completion_claimed is never set, target_complete_cmd()
+> delegates
+> to target_cmd_interrupted() which queues target_abort_work but leaves
+> the command in TRANSPORT_WRITE_PENDING.
+>=20
+> If the connection drops before target_abort_work removes the command
+> from the connection list, iscsit_release_commands_from_conn() will
+> find it,
+> iscsit_claim_completion_locked() will return true, and it will call
+> target_complete_cmd() a second time.
+>=20
+> Can this double call to target_complete_cmd() cause
+> target_cmd_interrupted()
+> to re-initialize and re-queue cmd->work while it is already pending
+> on the
+> workqueue, leading to workqueue linked-list corruption and a use-
+> after-free
+> when target_handle_abort() runs twice?
+>=20
+>=20
+Thanks for the review. I verified the mechanism and it is accurate:
+target_cmd_interrupted() queues target_abort_work and returns true, and
+target_complete_cmd_with_sense() then returns before reaching the
+"cmd->t_state =3D TRANSPORT_COMPLETE; cmd->transport_state |=3D
+CMD_T_COMPLETE" block. The command is left in TRANSPORT_WRITE_PENDING
+with nothing recorded to say it has been completed. The window is also
+not narrow: iscsit_release_commands_from_conn() holds conn->cmd_lock
+across its entire walk and iscsit_aborted_task() needs that same lock
+to
+unlink, so if the work item has not run yet, teardown is guaranteed to
+see the command rather than merely likely to.
 
-ufshcd_clock_scaling_prepare() and ufshcd_pause_command_processing()
-quiesce the tagset before taking clk_scaling_lock for writing. A device
-management command holding the lock for reading at that point is never
-dispatched and never times out, so the writer waits forever with all
-logical units quiesced. On a Lenovo Legion Tab Y700 Gen 5 this ended in
-a hung task panic.
+Your point about target_execute_cmd() is correct as well, and worth
+spelling out: it calls target_cmd_interrupted() before setting
+cmd->t_state =3D TRANSPORT_PROCESSING, so an aborted command taking the
+DATAOUT_SEND_TO_TRANSPORT path also stays in TRANSPORT_WRITE_PENDING.
 
-Take clk_scaling_lock before quiescing the tagset, and in
-ufshcd_clock_scaling_prepare() also wb_mutex, which is always taken
-before clk_scaling_lock. Release them in the reverse order. Commit
-b52d695d0620 ("scsi: ufs: core: Keep internal commands dispatchable
-during error handling") fixed the same problem in the error handler.
+However, this exposure is pre-existing rather than introduced here.
+Mainline at that site today is:
 
-Fixes: 08b12cda6c44 ("scsi: ufs: core: Switch to scsi_get_internal_cmd()")
-Fixes: dc5dcac53278 ("scsi: ufs: core: Add helpers to pause and resume command processing")
-Cc: stable@vger.kernel.org
-Signed-off-by: Joonhoe Kim <26rote@gmail.com>
----
-Reproduced on v7.3-rc4 with out-of-tree board support, using short fio
-write bursts and readers of the exception_event_status attribute while
-devfreq scales: a deadlock within 10 s without this patch, two clean
-600 s runs with it. The pause path was only checked by reading the
-code, and the reversed release order only by building it. Sashiko
-flagged this lock order in [1] and [2].
+	if (cmd->se_cmd.t_state =3D=3D TRANSPORT_WRITE_PENDING) {
+		spin_unlock_irq(&se_cmd->t_state_lock);
+		target_complete_cmd(&cmd->se_cmd,
+SAM_STAT_TASK_ABORTED);
+		continue;
+	}
 
-[1] https://lore.kernel.org/all/20260723130641.92FD31F000E9@smtp.kernel.org/
-[2] https://lore.kernel.org/all/20260813222950.8C1581F00A3E@smtp.kernel.org/
+The call is unconditional, so a command already completed by
+__iscsit_check_dataout_hdr() or by target_execute_cmd() is completed a
+second time by teardown as the code stands. This patch gates that call
+on the claim, and for a command arriving from either of those paths the
+claim succeeds, because neither path claims. Behaviour for them is
+therefore identical to mainline. The only change is that the site this
+patch adds in iscsit_execute_cmd() can no longer be double-completed.
 
- drivers/ufs/core/ufshcd.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+So the patch removes one reachable double completion and adds none. I
+would rather not extend it to cover the two pre-existing sites: this
+series has 300 reset cycles of customer validation behind it on a
+reproducer that previously failed at 95 and 196 cycles, and widening it
+would mean shipping code that validation never exercised. I am happy to
+post a separate patch for the pre-existing paths, on its own merits.
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index cc75384c6502..87f78ffc8cbd 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -1360,13 +1360,13 @@ int ufshcd_pause_command_processing(struct ufs_hba *hba, u64 timeout_us)
- 	int ret = 0;
- 
- 	mutex_lock(&hba->host->scan_mutex);
--	blk_mq_quiesce_tagset(&hba->host->tag_set);
- 	down_write(&hba->clk_scaling_lock);
-+	blk_mq_quiesce_tagset(&hba->host->tag_set);
- 
- 	if (ufshcd_wait_for_pending_cmds(hba, timeout_us)) {
- 		ret = -EBUSY;
--		up_write(&hba->clk_scaling_lock);
- 		blk_mq_unquiesce_tagset(&hba->host->tag_set);
-+		up_write(&hba->clk_scaling_lock);
- 		mutex_unlock(&hba->host->scan_mutex);
- 	}
- 
-@@ -1383,8 +1383,8 @@ void ufshcd_resume_command_processing(struct ufs_hba *hba)
- 	__releases(&hba->clk_scaling_lock)
- 	__releases(&hba->host->scan_mutex)
- {
--	up_write(&hba->clk_scaling_lock);
- 	blk_mq_unquiesce_tagset(&hba->host->tag_set);
-+	up_write(&hba->clk_scaling_lock);
- 	mutex_unlock(&hba->host->scan_mutex);
- }
- 
-@@ -1461,16 +1461,16 @@ static int ufshcd_clock_scaling_prepare(struct ufs_hba *hba, u64 timeout_us)
- 	 * clock scaling is in progress
- 	 */
- 	mutex_lock(&hba->host->scan_mutex);
--	blk_mq_quiesce_tagset(&hba->host->tag_set);
- 	mutex_lock(&hba->wb_mutex);
- 	down_write(&hba->clk_scaling_lock);
-+	blk_mq_quiesce_tagset(&hba->host->tag_set);
- 
- 	if (!hba->clk_scaling.is_allowed ||
- 	    ufshcd_wait_for_pending_cmds(hba, timeout_us)) {
- 		ret = -EBUSY;
-+		blk_mq_unquiesce_tagset(&hba->host->tag_set);
- 		up_write(&hba->clk_scaling_lock);
- 		mutex_unlock(&hba->wb_mutex);
--		blk_mq_unquiesce_tagset(&hba->host->tag_set);
- 		mutex_unlock(&hba->host->scan_mutex);
- 		goto out;
- 	}
-@@ -1487,9 +1487,9 @@ static void ufshcd_clock_scaling_unprepare(struct ufs_hba *hba, int err)
- 	__releases(&hba->wb_mutex)
- 	__releases(&hba->host->scan_mutex)
- {
-+	blk_mq_unquiesce_tagset(&hba->host->tag_set);
- 	up_write(&hba->clk_scaling_lock);
- 	mutex_unlock(&hba->wb_mutex);
--	blk_mq_unquiesce_tagset(&hba->host->tag_set);
- 	mutex_unlock(&hba->host->scan_mutex);
- 
- 	/* Enable Write Booster if current gear requires it else disable it */
--- 
-2.43.0
+The companion finding against patch 2 is a real defect introduced by
+this series and I am fixing it in v2.
+
+Thanks
+Laurence
 
