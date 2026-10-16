@@ -1,175 +1,118 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f52.google.com (mail-wr1-f52.google.com [209.85.221.52])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0096737B010;
-	Fri, 16 Oct 2026 14:47:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F8E438A72C
+	for <linux-scsi@vger.kernel.org>; Fri, 16 Oct 2026 14:54:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792162059; cv=none; b=igUrhUdWeC/PvhDimvhwDKezHgLrFhT7wh79pBmzkeymGRoI1eyz4CXCD/T9CS9arwW0dNilEBb5WHLH1ODq4bDzNNFB3IyFmf29aciyz+rp/heVO+k2dQ6Wr1lNXbnUM+Z7G1zQUyQLbjn2YnamRQzMVSVN5TOfDZexJU8DdK8=
+	t=1792162487; cv=none; b=PN8ZhygTyNJU8tXYhTDybEQ5JFQYQhH2IVJxqbIpS0gNzfqiQ1Q8VmhIWEA4CLXfhv/sWKi+z+Fsl8WWRTvBQb9BkOGAY9TDmc9EI0GkV+ZeXiwgBRd49p3EDF13Mz2SIvIqOP+4/QWvYJ7QF3vryhPnrDG3c4skbHuNzqdynHA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792162059; c=relaxed/simple;
-	bh=HtPwM1PCjsyC/WylC15pAfFJO+AQt0sKv8BR5kvKvco=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=DbfZ6aegbyFvJaj32CsW6TG9ueFksxp/PBzOi89MpdbxhILQ+WJ46dr3hhUxPREeZEM6j32l4Qz+kJy3tERzG4FG+wPZyaCnWn9lThsqbddl1PffYzJAGSOAfwIat1bONH7pruqTJIf3Pj/OMJj97XBxB80yOIcj6n26w4Bsk2Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=RnlzAt/5; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1792162487; c=relaxed/simple;
+	bh=C24Y8pYzO/aPrLA9AMl8TvcQHVpbwYHJDkWQ8XX3CzE=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=f3CgkHzuRuANHnRBnynBKdAUVZay3f4XwDVpVy0/IEPVw+xtdlL7Fr6xe+xRDQQGECEpPjBHMY7YlAAvJv4H1yILLTCmgazX/1Xe5nXy0my6tAxgVMnciUYaZeueqFoHDKHGy5fWNavpqBoeKCJHEH118nfnxekhx9xVi/qIzV0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=i2Ftfp5J; arc=none smtp.client-ip=209.85.221.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="RnlzAt/5"
-Received: from pps.filterd (m0353729.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69GEEWdW2270900;
-	Fri, 16 Oct 2026 14:47:29 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-type:date:from:in-reply-to:message-id:mime-version
-	:references:subject:to; s=pp1; bh=2VFCEUYCYjEdo8kS655yM+CRpOlu/c
-	dwWmSkKGPsNT8=; b=RnlzAt/5DfJQ8L70s3rs/Qrpct639m7CwVw5lhxhRdqogY
-	XRb4QP5CxeHHsu61iChXE/UkWf+L8t+tZkkhwP6p4kWS7d3VE2dVA+eSemTYLv5g
-	00zpbz5E+fw4xjMeQrhZ7Wrd4z+giB4nasnSRoC+It1Nv4b5AwJbEiTcokRllRJ5
-	st16S9DQ3PUenHjonsQHxTAZnFpxRgnbE1KK+sKIwN5YqSduj3YTjV122rXOye2I
-	CT67OopsSwHyESBczqrHZkk4mgzs2GDhjyL7vcA7PXtgAMw+8AnJX5iYB47NZDkN
-	Y2C9V0UXcl9pe9L+TCdwILheSb97ervAMxQbx1bg==
-Received: from ppma21.wdc07v.mail.ibm.com (5b.69.3da9.ip4.static.sl-reverse.com [169.61.105.91])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4h7dwhywf5-1
-	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-	Fri, 16 Oct 2026 14:47:28 +0000 (GMT)
-Received: from pps.filterd (ppma21.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma21.wdc07v.mail.ibm.com (8.18.1.11/8.18.1.11) with ESMTP id 69GE5WB93752394;
-	Fri, 16 Oct 2026 14:47:27 GMT
-Received: from smtprelay04.dal12v.mail.ibm.com ([172.16.1.6])
-	by ppma21.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4hb34mkxef-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 16 Oct 2026 14:47:27 +0000 (GMT)
-Received: from smtpav02.dal12v.mail.ibm.com (smtpav02.dal12v.mail.ibm.com [10.241.53.101])
-	by smtprelay04.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 69GElRLN30868036
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 16 Oct 2026 14:47:27 GMT
-Received: from smtpav02.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 253715805A;
-	Fri, 16 Oct 2026 14:47:27 +0000 (GMT)
-Received: from smtpav02.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 07FC858051;
-	Fri, 16 Oct 2026 14:47:27 +0000 (GMT)
-Received: from d (unknown [9.61.189.254])
-	by smtpav02.dal12v.mail.ibm.com (Postfix) with ESMTPS;
-	Fri, 16 Oct 2026 14:47:26 +0000 (GMT)
-From: Dave Marquardt <davemarq@linux.ibm.com>
-To: sashiko-bot@kernel.org
-Cc: sashiko-reviews@lists.linux.dev, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH v14 07/11] scsi: ibmvfc: extend async event handlers for
- async sub-CRQ events
-In-Reply-To: <sashiko-outbox-173052@kernel.org> (sashiko-bot@kernel.org's
-	message of "Thu, 15 Oct 2026 15:20:27 +0000")
-References: <20261015-ibmvfc-fpin-support-v14-0-a0b063b8d825@linux.ibm.com>
-	<20261015-ibmvfc-fpin-support-v14-7-a0b063b8d825@linux.ibm.com>
-	<sashiko-outbox-173052@kernel.org>
-Date: Fri, 16 Oct 2026 09:47:26 -0500
-Message-ID: <87y0bxbt35.fsf@linux.ibm.com>
-User-Agent: Gnus/5.13 (Gnus v5.13)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="i2Ftfp5J"
+Received: by mail-wr1-f52.google.com with SMTP id ffacd0b85a97d-48af4ba4425so1017827f8f.1
+        for <linux-scsi@vger.kernel.org>; Fri, 16 Oct 2026 07:54:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1792162484; x=1792767284; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=8hZGPnwDEfX+nqOzBQskZPmMNJTIRqNPt8gbd4kOL/U=;
+        b=i2Ftfp5JcX3Ok7EEeo+AU5BbuhXJs/sdV5zRXlENELgCFXkWhMaFm1wY6GsuL3YDEX
+         A006cAW1cY8diJj08KNFzY88NVhhFbMs9LEmLhv9GSqF8xudFxWovM29tV+KiNstx88e
+         sck7UqVpq/6n8wCWm+3nsA7/ifiFXdX5HnimGXivO4sZIEqbjHx4CGje29iIH+7QDf9h
+         6lD7m405LKGfp8rShNGBPblhz8nffET0KL6JbDV+SjL239VvEzVlpoVjPPIX7iZU41X+
+         4Y459Gjq1iXqCqZkW7Q8XllGh5G8I5AQiFQUT2KXZ257Af3/uZb0BSoFGvBD/Qw7TPul
+         aDOA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792162484; x=1792767284;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=8hZGPnwDEfX+nqOzBQskZPmMNJTIRqNPt8gbd4kOL/U=;
+        b=2ap7+meW8uPtnOWum9cfCor42mqGFZv9ZL4Zu50Td+3AZxCpN2j1fqzN+KIiX68onG
+         021vZwgfLeeJrBEZ1SgOryZlCop/eAFXGPkyu689O90Ml5baNhLvWKWfPxK+ZQO5wK3H
+         WnXIbrnuUrISIuXjuc3oMdY9t46cNaO4/pTFk60Z0cHNoEKjpwft6UQtRkL/WmXXLvo8
+         uls24czwtCDxoWswR5Hk0zF5Eaq+3eD8HqvnmSN2LQz7UnRdQdqubmLQUnpiQtLrgHxa
+         JIUryiC+bV6jcW7KQj+j9s6X7SskZGauxjrPGEx09grgq5EkBGcanO0gGlUw4gQgP8DR
+         /yLw==
+X-Forwarded-Encrypted: i=1; AKwUvByzdfiG/GIyhdNKLEhu8xb8/rwnArsQCFNfqn/klt2BkSXHA2iLp7oAjfoywwd1tXrGzLAAdhq9GUNr@vger.kernel.org
+X-Gm-Message-State: AFq9FYL7n1RgWjMLHzZu1ez3xBq34CRhiaOiWD1HJmFtaqqFFNax4YyK
+	nI7JPndTEgNUjqLBjFe9MlB05cph2D/1PsweSLDyLqyKOQu3cOm7YgVS
+X-Gm-Gg: AYBFou3ZFdW2MYPYqgzfgU5xwy6CBpI0Q61EuTV1L3PFnlP1Pj598m9OKir3RNTcJMO
+	zb9RR8V3+bk7zAzpF+FTFafbyKdFs7f+ABxp9dsTn1SitmEcdzy4D9rOsLYMS/dVeVFABabw/c9
+	z/Bxh00W4x0tS6cjvRRGnJCoVU4l/WNXm3AA4zwrSz7Z7rKQT6bSkrP7nCSlR/VR28goCPvHpMd
+	SN8KVpY9y4Om2P4c4RNSFUnKtxS7oXPsmqoMMx/6QLgEmWqA8eh8EY/6WK6xMKgObuhKso9097Y
+	mxkyRj/9byYfOJI/0SwSVnrFYmQ6lyYJlI+XZS6VhWtUWAMiPaVeuIXwz6p8m/wxwVCaYksFJ9I
+	2suAjaJO1JEuT+DR2MkT26s62BHZkSJLBNWX01tlH1IjElBNB26FHE2j26jxo1A+vZ/FE/oXPVP
+	hS56lRxNt0Ac91duWUyPWhuQfjwG2GBj3Qc6AaffLPKEV6tPQny9XHa9+6b+1XveQAtQyWvh5+R
+	mu1EKIWdyunLU8EAGTTf8woJa0xLIiEQnk/EbDOhiVPQ3vdVhXGbBBOkS483tLrPj0=
+X-Received: by 2002:a05:600c:37cf:b0:4a1:7dcf:be1f with SMTP id 5b1f17b1804b1-4a1d75dd618mr1120995e9.1.1792162484113;
+        Fri, 16 Oct 2026 07:54:44 -0700 (PDT)
+Received: from thomas-precision3591.paris.inria.fr (wifi-pro-83-149.paris.inria.fr. [128.93.83.149])
+        by smtp.googlemail.com with ESMTPSA id 5b1f17b1804b1-4a1c8a9ea3bsm50046305e9.0.2026.10.16.07.54.42
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 16 Oct 2026 07:54:43 -0700 (PDT)
+From: Thomas Fourier <fourier.thomas@gmail.com>
+To: 
+Cc: Thomas Fourier <fourier.thomas@gmail.com>,
+	Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <mkp@kernel.org>,
+	David Carroll <David.Carroll@microsemi.com>,
+	Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>,
+	Johannes Thumshirn <jthumshirn@suse.de>,
+	linux-scsi@vger.kernel.org (open list:AACRAID SCSI RAID DRIVER),
+	linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH] scsi: aacraid: fix dma_free_coherent() size
+Date: Fri, 16 Oct 2026 16:54:12 +0200
+Message-ID: <20261016145420.50870-2-fourier.thomas@gmail.com>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-TM-AS-GCONF: 00
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMDE2MDA1OCBTYWx0ZWRfXzA+IACljRJBw
- LMfHNC01/oV3ppfTNjYABr/D9D/fwUm0bPXBl7jocqhhSlF65ho1AFJVeZdxv0e0mA9iPKeZNHV
- l2KF5yCe+tdswvr1NaMgCcjyVXhgg8I=
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDE2MDA1OCBTYWx0ZWRfX7CGxr86LEGAu
- R5AgZ12iVa8SvjnBi+qdDEk62qnc7cW0ThSlEV18fQGelrjEq8wkiuImGHqyg/DqtaYxX9RL6zL
- pxK+wIoBwVMha2Aj/NaxLMSVITkI+llvzE30NWTxg5Exa5A23KNhOH1RdtB1YUR72qIPQd9berg
- vsva2Y/eprRknC5wQEnZsxamqn1q5arhwJgxRwg3+NkMGYAealhIRyScnqqmFZIMOOdWUPlfXlu
- 9BAXDddUVUN2NfV/sWDjCN6NnIwjp6qSdIBBmzWLkjXajgHey1NVDt4vLEX9xDlcr7/IST42vEb
- zJ7kAbdWOba6CmStpcnjfeCck9j4naDbOVE/ScNj7BsgpLFNI3jMUDxjChdH45aRSifUlmTCnlK
- +4EFv5t7H92fVjpXNdBWqTtC00bBbHwb5TUpd5MNSHIfdReuwEVqDR5pf5og0zGW7LZlJiRrxxq
- l5rZWw0OMgo76w5TnYA==
-X-Proofpoint-GUID: Xrq3k6tPo0_Ox7zGn-MRImsobjxo_yEp
-X-Authority-Analysis: v=2.4 cv=RoFQvymK c=1 sm=1 tr=0 ts=6ad23900 cx=c_pps
- a=GFwsV6G8L6GxiO2Y/PsHdQ==:117 a=GFwsV6G8L6GxiO2Y/PsHdQ==:17
- a=660iZSQnnn4A:10 a=VkNPw1HP01LnGYTKEx00:22 a=RnoormkPH1_aCDwRdu11:22
- a=uAbxVGIbfxUO_5tXvNgY:22 a=VwQbUJbxAAAA:8 a=VnNF1IyMAAAA:8
- a=RkTp2a6IZlHrwnyeuDYA:9
-X-Proofpoint-ORIG-GUID: Xrq3k6tPo0_Ox7zGn-MRImsobjxo_yEp
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-10-16_02,2026-10-14_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- priorityscore=1501 spamscore=0 phishscore=0 adultscore=0 bulkscore=0
- impostorscore=0 suspectscore=0 malwarescore=0 clxscore=1015
- lowpriorityscore=0 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2610080000
- definitions=main-2610160058
+Content-Transfer-Encoding: 8bit
 
-sashiko-bot@kernel.org writes:
+In fib_map_alloc(), dev->hw_fib_va is allocated with
+dma_alloc_coherent() with size
+    (dev->max_cmd_size + sizeof(struct aac_fib_xporthdr))
+    * (dev->scsi_host_ptr->can_queue + AAC_NUM_MGT_FIB) + (ALIGN32 - 1)
+but in aac_fib_map_free(), the same buffer is freed with size
+    (dev->max_fib_size + sizeof(struct aac_fib_xporthdr))
+    * (dev->scsi_host_ptr->can_queue + AAC_NUM_MGT_FIB) + (ALIGN32 - 1)
 
-> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
-> - [High] scsi: ibmvfc: UAF and module unload crash due to untracked async work
-> --
->
-> commit e22506651b699f9db9776870465be492a807fad7
-> Author: Dave Marquardt <davemarq@linux.ibm.com>
->
-> scsi: ibmvfc: extend async event handlers for async sub-CRQ events
->
-> This commit refactors async event handling to support both traditional async
-> CRQs and new asynchronous sub-queue CRQs. It introduces a tagged union
-> struct ibmvfc_async_crq_event to hold either event type and updates the
-> corresponding handlers and FPIN processing logic.
->
->> diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/ibmvfc-core.c
->> index 9c710897cd546..87ee19057551e 100644
->> --- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
->> +++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
->
-> [ ... ]
->
->> @@ -3629,14 +3711,14 @@ static void ibmvfc_handle_async(struct ibmvfc_async_crq *crq,
->>  			}
->>  			INIT_WORK(&aw->async_work_s, ibmvfc_process_async_work);
->>  			aw->vhost = vhost;
->> -			aw->crq = *crq;
->> +			aw->event = *ae;
->>  			schedule_work(&aw->async_work_s);
->
-> [Severity: High]
-> Does this code leave the scheduled work item untracked without a cancelation
-> path during module unload or device removal?
->
-> Looking at ibmvfc_remove(), it executes without flushing the system workqueue
-> or canceling these specific work items. It then calls ibmvfc_free_mem() which
-> unconditionally destroys vhost->tgt_pool via mempool_destroy():
+This could leave parts of the freed memory mapped to the device.
 
-This is the same issue as patch 4, and is being addressed.
+Change the dma_free_coherent() size to match the unmap.
 
-> drivers/scsi/ibmvscsi/ibmvfc-core.c:ibmvfc_remove() {
->     ...
->     flush_work(&vhost->rport_add_work_q);
->     fc_remove_host(vhost->host);
->     scsi_remove_host(vhost->host);
->     ...
->     ibmvfc_free_mem(vhost);
->     spin_lock(&ibmvfc_driver_lock);
->     list_del(&vhost->queue);
->     spin_unlock(&ibmvfc_driver_lock);
->     scsi_host_put(vhost->host);
-> }
->
-> If the work executes after the target pool is destroyed,
-> ibmvfc_process_async_work() looks up a target, takes a reference, and
-> eventually calls ibmvfc_release_tgt(), which triggers a use-after-free
-> by calling mempool_free() on the already-destroyed pool:
->
-> drivers/scsi/ibmvscsi/ibmvfc-core.c:ibmvfc_release_tgt() {
->     struct ibmvfc_target *tgt = container_of(kref, struct ibmvfc_target, kref);
->     mempool_free(tgt, tgt->vhost->tgt_pool);
-> }
->
-> Furthermore, since scsi_host_get() does not hold a module reference, rmmod
-> could complete while the work is still queued. Could this lead to the system
-> workqueue executing unmapped memory and causing a kernel panic?
+This was found with static analysis and only compile tested.
 
-Also fixed by using a vhost-specific workqueue, which will be done in
-the next revision.
+Fixes: 1bff5abca65d ("scsi: aacraid: Fix memory leak in fib init path")
+Signed-off-by: Thomas Fourier <fourier.thomas@gmail.com>
+---
+ drivers/scsi/aacraid/commsup.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
--Dave
+diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
+index c4485629f792..cf0ae251e43b 100644
+--- a/drivers/scsi/aacraid/commsup.c
++++ b/drivers/scsi/aacraid/commsup.c
+@@ -81,7 +81,7 @@ void aac_fib_map_free(struct aac_dev *dev)
+ 		return;
+ 
+ 	num_fibs = dev->scsi_host_ptr->can_queue + AAC_NUM_MGT_FIB;
+-	fib_size = dev->max_fib_size + sizeof(struct aac_fib_xporthdr);
++	fib_size = dev->max_cmd_size + sizeof(struct aac_fib_xporthdr);
+ 	alloc_size = fib_size * num_fibs + ALIGN32 - 1;
+ 
+ 	dma_free_coherent(&dev->pdev->dev, alloc_size, dev->hw_fib_va,
+-- 
+2.53.0
+
