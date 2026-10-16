@@ -1,177 +1,115 @@
-Received: from mail-pf1-f179.google.com (mail-pf1-f179.google.com [209.85.210.179])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF8E54DAF90
-	for <linux-scsi@vger.kernel.org>; Fri, 16 Oct 2026 15:55:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9DF084FC330
+	for <linux-scsi@vger.kernel.org>; Fri, 16 Oct 2026 16:11:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792166110; cv=none; b=hgrSLwl/e5qUXa2wWn4//IXaBDj2fjc5BzvOKkrTynpj0YEthmzcH8S/qUZFDQCXaXSH1bHUJ1qKahdCzfpe3BscVZ3u964bXnTGXtyZZEQs6m0YJT62Sd9w5lW5p+M3m+nCKFHg4HgNEWBJCP+pIEGAVhvI4LfjMCp02Va2r4Y=
+	t=1792167109; cv=none; b=CMrR2CjAteXgP4bhzvfGH3fEYYGsnPNBM6guLZ+TjKPyCf7QpEz35orZjXmI6gDHsX7hUi2pLF8p+ok9kBna60cGCUicq+ppPYiPifdsxmZn2dvGzhjvwzMLZ8Q7P8Mzcr4i5Fs+rL8sX8e6p9iQmks1JlRulKB03cl36IHR/4s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792166110; c=relaxed/simple;
-	bh=1aZ1Hbx0leHFN1nuRH3mHqgwJWSeWWZ5qKC0j/9xtH4=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Zzl6CZcivhDxKxza5057km6GVNqPs17Xg1kePdZWRoA5VXjPvC2N5b+ltpHbIzT5WZLjBu9IkdK/hpcDVOVkE7F2umapPG3G3pFaQ44P7QOPTmkruBcvwDYm+0QsCw25ZWf/AlFM8pvGAKHu3hmxCcztTRjEIk5Qj7xVAViUd8Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr; spf=none smtp.mailfrom=isslab.korea.ac.kr; dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b=cp1Pw6G0; arc=none smtp.client-ip=209.85.210.179
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
+	s=arc-20240116; t=1792167109; c=relaxed/simple;
+	bh=ydTrmRk8edZTgf7y/1Wl0ruYEF6mo2iZWv8TZfyBpVA=;
+	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
+	 Date; b=LesVLcfRQWXXftW0mu9/xJZtpm4hxugCk8WIvO6OzrMlJ7eH6ztKe2QArZF/tlGFrijr4k9R3wYuW0dT4veaRcCOEvebiyAUj4Qx3pf5G2fnb4Qa5M+38qGrjcvGXoDkjmsIjzwlCN2E9mKOwPykYTg2Zq37ww2A+0ZbfV0Dj7M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PTOSTbNt; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b="cp1Pw6G0"
-Received: by mail-pf1-f179.google.com with SMTP id d2e1a72fcca58-88b8f0a1bcdso40798b3a.3
-        for <linux-scsi@vger.kernel.org>; Fri, 16 Oct 2026 08:55:07 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=isslab-korea-ac-kr.20251104.gappssmtp.com; s=20251104; t=1792166107; x=1792770907; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=+nMO90+ihrPi/+vHsOKHFmp1mDYdajMoYewWX5BF1cA=;
-        b=cp1Pw6G09qsgGPrrnGYdMYs4f14g2mw91YkfZG1VZIYdGs3vkVve40OyM5aJJsFHSK
-         d+E0g5pV9RW+twafCaTd27ghvk0TSus9D0eId5lvOqHbLEtrH++pgYGrSXsHNEHvQJZa
-         kpzyAWzpAqZeMwigkXpNwNsQfKw3mPAm0YbhYIb0j5NN+Qu65Kq+pGfjaAoLVp1RCJEI
-         VYcMsDRjfX4mn5DTfo10DM13czB8l1dAH1RTWmy/LKnyaWGge3AjPWqA60h26SP5kMsk
-         yXFEdxfuNeZIYZEzH9DbXrB5Zq0HF5i8abKwFpF8bMpbAi5cXRRHCopsQ7RqDD0NLrCc
-         djAA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792166107; x=1792770907;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=+nMO90+ihrPi/+vHsOKHFmp1mDYdajMoYewWX5BF1cA=;
-        b=RgAkjtc+G91dDNvENpy6oV8NDHk6nWIAOfKQVrTAe1fblyGiqeobzBHmAEhlHGfcZz
-         Qyf8kAAJ2h03FbgEO/ByF6IwE059n6AK/IhdhxxCyI8/ioEVUnhMhn7gM8YBijStHjO0
-         DC6Wmvprlw5FSQrWuewuivCGUE+8nHJIiY5KHr7JvBBQm1Jz3yH2LNgrwyXJl+hElnhn
-         xn5LEMt9th+lTZI/C+Zv5yzSpchSB7pfCGDwHmaxX/Vq4fpddiSzIaQ5xoAxBBxyvGKJ
-         lXIvkQAXFnL4TK9dKthgSzwGoYw+TFMtPE3ucEj6gokif27w7vC4t9+Iv9f7BXklCrrp
-         Eqjw==
-X-Gm-Message-State: AFq9FYItFRqYNn6bHkwdAR5MAJR2OgoWKMmVzyRq0CDnO5+Ui+tJoy92
-	5afCu18tfL2s9jkdgfZUOLc3N5T4C4z0QiRYIgInz0kjVSGOwOW5073sPMz5AOvUAo0=
-X-Gm-Gg: AYBFou2LtG6l7sAuO5g3MEf9WwPn/4R+KRzq6hwOu2WDobzHuWHP1JYzaXAdk+PkiM1
-	eAhE6H0bdAPMR+ZgrSRtpT6Bjrho3RFBqcvWOzhYLvzQ81VLu3GLlU0xE9OpBjxGinGKtDwWr34
-	TCYIkfmVCG0igkoAZXIptrL23TFGQUUyHX+s1wOYSg0no24VEcFt4Y6OfGH8ypPuvG/qrDCMXWv
-	GQPLbgqrMnmOiTVo2pUMJRa+B47pC3LvYiSnuhzt2tRqIT3woeaHEqKIklTUVbONhssAVxKcumY
-	VhmpcsZjcdfKh7Bi4nJ8TPt2lrcZE/k3U8DyRFP9UG07qJQQqDNHiDPVDPDBR6ifLpcq9YdUtKr
-	LAkHCyfedpdf8tOEXRb4nqFAR5idXck83LG3ZJu574iLrmuRo5sF80/qwT//9xcmi/nR8Lt6htx
-	qnIMUVZ+pDVjFWG+H/hBKw6XdHRQ6lZ8P0U7XBHeiK8LamxJyhoMkM8xY4L6ti0WRv1Oc3Dh63z
-	qbY6HYIPlnie201b0iNyA==
-X-Received: by 2002:a05:6a21:2d46:b0:3e0:e242:5ff with SMTP id adf61e73a8af0-3e16bec70c6mr18933541637.56.1792166106456;
-        Fri, 16 Oct 2026 08:55:06 -0700 (PDT)
-Received: from yhlee-960QFG.Davolink ([2406:5900:1044:110c:5e7a:332f:f584:a3d8])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-cd65ab63cadsm983076a12.4.2026.10.16.08.55.04
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 16 Oct 2026 08:55:06 -0700 (PDT)
-From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
-To: "Martin K . Petersen" <mkp@kernel.org>,
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	yhlee@isslab.korea.ac.kr
-Subject: [PATCH v5 3/3] scsi: bfa: bound the RSCN event list by the received frame length
-Date: Sat, 17 Oct 2026 00:54:41 +0900
-Message-ID: <20261016155441.1607196-4-yhlee@isslab.korea.ac.kr>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20261016155441.1607196-1-yhlee@isslab.korea.ac.kr>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PTOSTbNt"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C888D1F000C4;
+	Fri, 16 Oct 2026 16:11:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1792167101;
+	bh=QkteZhfbS4ahFm+dxdPOZg40M/jtQpsRFcTR4LvayPw=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=PTOSTbNtb7pz2Rq6TtqoQttdXJNerV+UbbdX0hIW3GmGRDpiEMBqx13K966bb7tWL
+	 yvuflVeRKxcTK74PPAEwsoPrzX17bdZ93gU8gSrHfags0F4qVMQZt3I89UrZLUs7l1
+	 IHDS1hvdzp6Eot5qyYsiYJenREwNSp9L5x/9HsG/tzr8mB1Ku2byeh/UicrU3m6qJd
+	 I3a6Bm7oe3BwvAiYxUY3/ZbbddgmI9hmZLOmC3l904FVJFXirpTYB8PAwTVNiyEvyv
+	 Jmsn0U7Oej7YPfhfxvb/pVwvuUvJ16Wp46Jj6EYUy/6aviYpuVB63bzSfrJPLLzr7a
+	 DWYy3+cWhU6XQ==
+Message-ID: <sashiko-outbox-174607@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v5 2/3] scsi: bfa: drop unsolicited frames shorter than
+ the headers they must hold
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Yehyeong Lee" <yhlee@isslab.korea.ac.kr>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20261016155441.1607196-3-yhlee@isslab.korea.ac.kr>
 References: <20261016155441.1607196-1-yhlee@isslab.korea.ac.kr>
+ <20261016155441.1607196-3-yhlee@isslab.korea.ac.kr>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Fri, 16 Oct 2026 16:11:41 +0000
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-bfa_fcs_lport_scn_process_rscn() is given the length of the frame it has
-to parse and never looks at it. The number of events it walks comes only
-from the payload length the peer put in the frame:
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [High] scsi: bfa: OOB read of ELS command code due to missing payload bou=
+nds check
+--
 
-	num_entries =
-		(be16_to_cpu(rscn->payldlen) -
-		 sizeof(u32)) / sizeof(rscn->event[0]);
+commit 31f50cb105260d95a224555b9e6f894b5a59692b
+Author: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
 
-	for (i = 0; i < num_entries; i++) {
-		rscn_pid = rscn->event[i].portid;
+scsi: bfa: drop unsolicited frames shorter than the headers they must hold
 
-payldlen is a 16-bit field, so num_entries can be 16382 while the frame
-sits in an unsolicited frame buffer that holds 569 events after the
-fchs_s and the RSCN header. The loop reads up to 63 kB past the frame it
-was handed, and the duplicate scan nested inside it is quadratic in
-num_entries, so one frame can also take the receive path through more
-than a hundred million iterations.
+bfa_fcs_uf_recv() keeps the received frame length in a u16 and hands it,
+with a pointer to the frame, to every unsolicited frame consumer. Two
+lengths are never checked.
 
-The length that bounds this is already here. bfa_fcs_uf_recv() takes it
-from the completion with bfa_uf_get_frmlen() and it reaches this function
-through bfa_fcs_fabric_uf_recv() and bfa_fcs_lport_uf_recv(). Work out
-how many events the received frame can hold and take the smaller of that
-and what the payload claims. A frame whose payload fits is parsed exactly
-as before; one that claims more is parsed only as far as it goes, which
-also caps the duplicate scan.
+> diff --git a/drivers/scsi/bfa/bfa_fcs.c b/drivers/scsi/bfa/bfa_fcs.c
+> index 9b57312f43f50..8bb92f935a40f 100644
+> --- a/drivers/scsi/bfa/bfa_fcs.c
+> +++ b/drivers/scsi/bfa/bfa_fcs.c
+> @@ -1527,6 +1527,14 @@ bfa_fcs_uf_recv(void *cbarg, struct bfa_uf_s *uf)
+>  	struct fc_vft_s *vft;
+>  	struct bfa_fcs_fabric_s *fabric;
+> =20
+> +	/*
+> +	 * every consumer reads the FC header, so the frame has to hold one
+> +	 */
+> +	if (len < sizeof(struct fchs_s)) {
+> +		bfa_uf_free(uf);
+> +		return;
+> +	}
+> +
 
-Reject a payload length below the four-byte RSCN header it is measured
-from as well, instead of subtracting past it.
+[Severity: High]
+Does this check need to account for the payload length when processing ELS
+commands?
 
-The same shape is in lpfc_els.c, where lpfc_els_rcv_rscn() and
-lpfc_rscn_payload_check() walk the payload length without comparing it to
-the frame either.
+If a remote device sends an unsolicited FC frame of exactly 24 bytes with
+fchs->type =3D=3D FC_TYPE_ELS, can this cause a regression where the driver=
+ reads
+beyond the verified length?
 
-The read is caught by KASAN under a KUnit fault-injection harness; I have
-no Brocade hardware, so the frame and its oversized payload length are
-injected, with the arithmetic and the loop bounds modelled against an
-unsolicited frame buffer:
+For example, in drivers/scsi/bfa/bfa_fcs.c:bfa_fcs_fabric_uf_recv():
 
-  BUG: KASAN: slab-out-of-bounds in bfa_fcs_lport_scn_process_rscn+0x1156/0x1750
-  Read of size 4 at addr 0000000062270900 by task kunit_try_catch/19
+    struct fc_els_cmd_s *els_cmd =3D (struct fc_els_cmd_s *) (fchs + 1);
+    ...
+    if ((pid =3D=3D bfa_ntoh3b(FC_FABRIC_PORT)) &&
+        (els_cmd->els_code =3D=3D FC_ELS_FLOGI) && ...
 
-  Call Trace:
-   [<60935866>] ? bfa_fcs_lport_scn_process_rscn+0x1156/0x1750
-   [<603b5d8b>] ? kasan_report+0x11b/0x160
+And similarly in drivers/scsi/bfa/bfa_fcs_lport.c:bfa_fcs_lport_uf_recv():
 
-  The buggy address belongs to the object at 0000000062270000
-   which belongs to the cache kmalloc-4k of size 4096
-  The buggy address is located 0 bytes to the right of
-   allocated 2304-byte region [0000000062270000, 0000000062270900)
+    struct fc_els_cmd_s *els_cmd =3D (struct fc_els_cmd_s *) (fchs + 1);
+    ...
+    if ((fchs->type =3D=3D FC_TYPE_ELS) &&
+        (els_cmd->els_code =3D=3D FC_ELS_PLOGI)) {
 
-Fixes: 7725ccfda597 ("[SCSI] bfa: Brocade BFA FC SCSI driver")
-Cc: stable@vger.kernel.org
-Signed-off-by: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
----
- drivers/scsi/bfa/bfa_fcs_lport.c | 19 +++++++++++++++----
- 1 file changed, 15 insertions(+), 4 deletions(-)
+Because the driver recycles DMA buffers without zeroing them, the hardware =
+DMA
+writes only 24 bytes, leaving the old payload intact in the buffer. Could t=
+he
+driver read the stale els_code and process the stale payload as a new comma=
+nd?
 
-diff --git a/drivers/scsi/bfa/bfa_fcs_lport.c b/drivers/scsi/bfa/bfa_fcs_lport.c
-index 8c9d423129c07..49bcb76c118b6 100644
---- a/drivers/scsi/bfa/bfa_fcs_lport.c
-+++ b/drivers/scsi/bfa/bfa_fcs_lport.c
-@@ -5533,17 +5533,28 @@ bfa_fcs_lport_scn_process_rscn(struct bfa_fcs_lport_s *port,
- 			struct fchs_s *fchs, u32 len)
- {
- 	struct fc_rscn_pl_s *rscn = (struct fc_rscn_pl_s *) (fchs + 1);
--	int             num_entries;
-+	int             num_entries = 0, max_entries = 0;
- 	u32        rscn_pid;
- 	bfa_boolean_t   nsquery = BFA_FALSE, found;
- 	int             i = 0, j;
-+	u32             pl_off = sizeof(struct fchs_s) + sizeof(*rscn);
-+	u16             payldlen = be16_to_cpu(rscn->payldlen);
- 
--	num_entries =
--		(be16_to_cpu(rscn->payldlen) -
--		 sizeof(u32)) / sizeof(rscn->event[0]);
-+	/* payldlen spans a four-byte header and the event list */
-+	if (payldlen >= sizeof(u32))
-+		num_entries = (payldlen - sizeof(u32)) / sizeof(rscn->event[0]);
- 
- 	bfa_trc(port->fcs, num_entries);
- 
-+	/* the event list cannot run past the frame that was received */
-+	if (len > pl_off)
-+		max_entries = (len - pl_off) / sizeof(rscn->event[0]);
-+
-+	if (num_entries > max_entries)
-+		num_entries = max_entries;
-+
-+	bfa_trc(port->fcs, max_entries);
-+
- 	port->stats.num_rscn++;
- 
- 	bfa_fcs_lport_scn_send_ls_acc(port, fchs);
--- 
-2.43.0
+Should there be an additional length verification before accessing
+els_cmd->els_code?
 
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261016155441.1607=
+196-1-yhlee@isslab.korea.ac.kr?part=3D2
