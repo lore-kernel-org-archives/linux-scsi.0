@@ -1,42 +1,42 @@
 Received: from bali.collaboradmins.com (bali.collaboradmins.com [148.251.105.195])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B643C4825B0;
-	Fri, 16 Oct 2026 12:33:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2377483BFB;
+	Fri, 16 Oct 2026 12:33:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.251.105.195
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792154017; cv=none; b=KBifpkFSiIHAaD3dmFIFF8iYoBI8StlLKMSS6sRnUEX+z1tuu8De303djiDo7qgF8Qq5bVrJKRUnvZxPv7ji8ikDiuvHaszplTa0JylKVbGP0pGOkF2t+Ccon6kg8KhWixqEHLTJGLhZXT3eYUq+t7JBPgLv+4qojRLe4arPFMU=
+	t=1792154018; cv=none; b=t8fA95FEYEuH1PONBBvS8qELg+cKPJYweG7DVuM7XhLizANVPQd2Z8TNkXUEbLkq97h6jxlfs2rVRjmvn2LkL/JcUtkz4ahyq3Kwbk0OhYETxdeXsRsyYA4xG2x7Dc+1cFoQnWs+1ZTUZtb9g/F35l71UL8WrgprZFcY5a56bVo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792154017; c=relaxed/simple;
-	bh=m5hJfIrVYgzyNoAPyhFPMGOJ7BJWLS/eKC+SWXbrdVE=;
+	s=arc-20240116; t=1792154018; c=relaxed/simple;
+	bh=Yx74k9FBc1k/4s/wqGih7fG59PtJCXH6WArab5XivVg=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=lskUxJjH6REssb6nzJ0uah1uxhWOArHYeQHnUyVmYctuPckWMUJECauDy0zgMLXMnUFi3jGMntxLM97gmJvabTcQXyrKqqKJvGoa8Px5auXSEfb8Umrd8AuoKIGiJZNwr9Dh8lLpnL/QDaS5caeHF8VtkOP1eV60M2aHco7Z+1o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b=dVEfJGNW; arc=none smtp.client-ip=148.251.105.195
+	 In-Reply-To:To:Cc; b=oX0lvh51bzKpVEzcgoWHexnHIx7TbTkq5LmnN+eTByPgUDRovqdCiJRRDxDLEVr/s0PRETc+7mNx4/39pS/ItKwpRq+y1Pm6RqXQ0OLVMkZVVKjWHqprmMduxCQ0lERB0/40CT4jz2YEibD+sFqj4paAxEEl5YbTN/9nB4N9zk4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b=g0/myGBU; arc=none smtp.client-ip=148.251.105.195
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b="dVEfJGNW"
+	dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b="g0/myGBU"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
-	s=mail; t=1792154014;
-	bh=m5hJfIrVYgzyNoAPyhFPMGOJ7BJWLS/eKC+SWXbrdVE=;
+	s=mail; t=1792154015;
+	bh=Yx74k9FBc1k/4s/wqGih7fG59PtJCXH6WArab5XivVg=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=dVEfJGNWzq86haeY9ndZyivAyUvzSqrI57+Ovmd8GZceHLiUa/R4V3STE4rK0Vq0b
-	 gHXr96h2dv1eudtBhGCb1PR3A7GPDnEGmhOsXOUq4XWPZooem0J030HOp4M51o5i7J
-	 nKV7tIaSjq2z9dTztaLeRseclDh4iXv/zyi2k0jsZ0H2TFNaQXQmsJHc8ntN1h+iI+
-	 HsDXkC/Ez2fpXqtzcR1KltZHWeZ5r8wzufH/EiIKoZqTAy8MivPlmaRMEP6v2zjMCH
-	 hABCcc8W8mnnEg+ZiZJylgON7BfHpI07DbPYpTn58CsBTzb0hHw0tKTUYTYz+zO4Qi
-	 EqHu4CwSMdIRQ==
+	b=g0/myGBUGA3eWIVdKI0rfI8mInP2nfTF/6FA6oXVl/tGOzfQBQkaDGPhppVd4IRWT
+	 5NZowpSg6bt57MRDbUvWLc/2G/GdwEz6KC+IXEgpMUr6g/Gjx430JBXku4U73NdFwe
+	 9laH8wpvq6FOITyDY8Rk4FeGQzeIvf4V1Buw5Y3GvfJ9GFiPC7lLstp+ZMnoQ4Hy78
+	 NKldHDBt2EDkHOBBpy4pP6pHOB/k0FJcZpCBPdyjWgxwmj/6y/5/Ce0HY8K+U18B9A
+	 Kb6D8SWwSgjuBKXRnBerTmmLyl2ETRI6z28QCac1r4MlHzm3LV7OZeGYa8cV6vK1oS
+	 eLWt/Hscj4w9Q==
 Received: from yukiji.home (unknown [100.64.0.131])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: laeyraud)
-	by bali.collaboradmins.com (Postfix) with ESMTPSA id 29B6217E1509;
-	Fri, 16 Oct 2026 14:33:33 +0200 (CEST)
+	by bali.collaboradmins.com (Postfix) with ESMTPSA id 425BA17E150A;
+	Fri, 16 Oct 2026 14:33:34 +0200 (CEST)
 From: Louis-Alexis Eyraud <louisalexis.eyraud@collabora.com>
-Date: Fri, 16 Oct 2026 14:32:55 +0200
-Subject: [PATCH v14 03/23] dt-bindings: ufs: mediatek,ufs: Add mt8196
- variant
+Date: Fri, 16 Oct 2026 14:32:56 +0200
+Subject: [PATCH v14 04/23] scsi: ufs: mediatek: Move MTK_SIP_UFS_CONTROL to
+ mtk_sip_svc.h
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -45,7 +45,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261016-mt8196-ufs-v14-3-e8d565e0cd45@collabora.com>
+Message-Id: <20261016-mt8196-ufs-v14-4-e8d565e0cd45@collabora.com>
 References: <20261016-mt8196-ufs-v14-0-e8d565e0cd45@collabora.com>
 In-Reply-To: <20261016-mt8196-ufs-v14-0-e8d565e0cd45@collabora.com>
 To: Chunfeng Yun <chunfeng.yun@mediatek.com>, Vinod Koul <vkoul@kernel.org>, 
@@ -71,93 +71,59 @@ Cc: kernel@collabora.com, linux-arm-kernel@lists.infradead.org,
  Nicolas Frattaroli <nicolas.frattaroli@collabora.com>, 
  Louis-Alexis Eyraud <louisalexis.eyraud@collabora.com>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1792154009; l=2540;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1792154009; l=1832;
  i=louisalexis.eyraud@collabora.com; s=20250113; h=from:subject:message-id;
- bh=Fu9MfrHRxOqGq0SuEgCjBQkvUm2tW9NvFGGI8VG1HyQ=;
- b=1/2z1sYlEqYqWvUjCr1bFKPYOg+fGPuR+qxM0EZDMaRkQhteiSyfOGvcrTpF7IuvlDPu870EN
- gSReGPSA1l+BxbjNpGO5YlgIZ6KdbTvprRO2e3se/wH9KohmybDbpTY
+ bh=e11uj3DE6zvd4oYfRMlams6rLdYNXhiR9LbrPBoXvrA=;
+ b=ztPolG/plmM7/McYm3/1WAnOVFSO7sXVprjlyojcnDDZY8OTz/JIJUoBvA7QrqcCuVi0EjCI6
+ VACM361HSwSBngOw36wG+oDoWZQ0PjY9lhTCp9Z1ItzSO0d1BpWGxQe
 X-Developer-Key: i=louisalexis.eyraud@collabora.com; a=ed25519;
  pk=CHFBDB2Kqh4EHc6JIqFn69GhxJJAzc0Zr4e8QxtumuM=
 
 From: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
 
-The MediaTek MT8196 SoC's UFS controller uses a different set of supplies.
-It is therefore not compatible with the MT8195. It also have an additional
-0.9V supply pin (AVDD09_UFS_1), that is specific to this SoC, thus not
-currently described in the binding.
+SMC commands used by multiple drivers need to live in a shared header
+file somewhere to avoid code duplication. In order to rework the MPHY
+reset control to be in the phy-mtk-ufs.c driver, both ufs-mediatek and
+the phy driver need access to this command.
 
-Add a compatible for this SoC and new property for the additional supply,
-and modify the binding correspondingly.
+Move it to mtk_sip_svc.h, where other such command definitions already
+live.
 
-Signed-off-by: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
-Reviewed-by: Chaotian Jing <chaotian.jing@mediatek.com>
 Reviewed-by: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
-Reviewed-by: Rob Herring (Arm) <robh@kernel.org>
+Reviewed-by: Peter Wang <peter.wang@mediatek.com>
+Signed-off-by: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
 Signed-off-by: Louis-Alexis Eyraud <louisalexis.eyraud@collabora.com>
 ---
- .../devicetree/bindings/ufs/mediatek,ufs.yaml       | 21 +++++++++++++++++++++
- 1 file changed, 21 insertions(+)
+ drivers/ufs/host/ufs-mediatek-sip.h      | 1 -
+ include/linux/soc/mediatek/mtk_sip_svc.h | 3 +++
+ 2 files changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml b/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml
-index 945cb986b06b..99181ec9dda0 100644
---- a/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml
-+++ b/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml
-@@ -16,6 +16,7 @@ properties:
-       - mediatek,mt8183-ufshci
-       - mediatek,mt8192-ufshci
-       - mediatek,mt8195-ufshci
-+      - mediatek,mt8196-ufshci
+diff --git a/drivers/ufs/host/ufs-mediatek-sip.h b/drivers/ufs/host/ufs-mediatek-sip.h
+index 7d17aedf6fb8..d627dfb4a766 100644
+--- a/drivers/ufs/host/ufs-mediatek-sip.h
++++ b/drivers/ufs/host/ufs-mediatek-sip.h
+@@ -11,7 +11,6 @@
+ /*
+  * SiP (Slicon Partner) commands
+  */
+-#define MTK_SIP_UFS_CONTROL               MTK_SIP_SMC_CMD(0x276)
+ #define UFS_MTK_SIP_VA09_PWR_CTRL         BIT(0)
+ #define UFS_MTK_SIP_DEVICE_RESET          BIT(1)
+ #define UFS_MTK_SIP_CRYPTO_CTRL           BIT(2)
+diff --git a/include/linux/soc/mediatek/mtk_sip_svc.h b/include/linux/soc/mediatek/mtk_sip_svc.h
+index 6c95a29b79fa..36ab3153fe44 100644
+--- a/include/linux/soc/mediatek/mtk_sip_svc.h
++++ b/include/linux/soc/mediatek/mtk_sip_svc.h
+@@ -22,6 +22,9 @@
+ 	ARM_SMCCC_CALL_VAL(ARM_SMCCC_FAST_CALL, MTK_SIP_SMC_CONVENTION, \
+ 			   ARM_SMCCC_OWNER_SIP, fn_id)
  
-   clocks:
-     minItems: 1
-@@ -60,6 +61,9 @@ properties:
-   avdd09-supply:
-     description: Phandle to the 0.9V supply powering the AVDD09_UFS pin
- 
-+  avdd09-1-supply:
-+    description: Phandle to the 0.9V supply powering the AVDD09_UFS_1 pin
++/* UFS related SMC call */
++#define MTK_SIP_UFS_CONTROL		MTK_SIP_SMC_CMD(0x276)
 +
-   avdd12-supply:
-     description: Phandle to the 1.2V supply powering the AVDD12_UFS pin
+ /* Modem related SMC call */
+ #define MTK_SIP_KERNEL_CCCI_CONTROL	MTK_SIP_SMC_CMD(0x505)
  
-@@ -104,6 +108,7 @@ allOf:
-         clock-names:
-           items:
-             - const: main
-+        avdd09-1-supply: false
-         avdd12-ckbuf-supply: false
-   - if:
-       properties:
-@@ -119,6 +124,7 @@ allOf:
-           minItems: 3
-           maxItems: 3
-         avdd09-supply: false
-+        avdd09-1-supply: false
-   - if:
-       properties:
-         compatible:
-@@ -131,6 +137,21 @@ allOf:
-         clock-names:
-           minItems: 10
-         avdd09-supply: false
-+        avdd09-1-supply: false
-+  - if:
-+      properties:
-+        compatible:
-+          contains:
-+            const: mediatek,mt8196-ufshci
-+    then:
-+      properties:
-+        clocks:
-+          minItems: 10
-+        clock-names:
-+          minItems: 10
-+        avdd18-supply: false
-+      required:
-+        - operating-points-v2
- 
- examples:
-   - |
 
 -- 
 2.56.0
