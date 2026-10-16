@@ -1,42 +1,42 @@
 Received: from bali.collaboradmins.com (bali.collaboradmins.com [148.251.105.195])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B6DA346D2AA;
-	Fri, 16 Oct 2026 12:33:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0FF1372661;
+	Fri, 16 Oct 2026 12:33:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.251.105.195
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792154015; cv=none; b=ZG9Sfb8m6n1cmHWvLmUJBaM0XsLv5grhtqWk4X89mIt+thVAWc9nyHmJ5+s/qULCpuvGfqUybxjXSj2b+IT0Qv0v5UeKInFtgjzJYNsSnPdFfrmKfWr61/cAviaEHq0d0rYosvqEErZryto3Lk8LRUWu38nEMd7wrLBbhZXj1tY=
+	t=1792154016; cv=none; b=Dhmvkz4MuJGq7ApzmyiJ3UG64Qpaom/G7iuQl0L+9xrMhh7DeuR1XZh57w3dgvLavapCQOFisKYbK6M2JS88/CL+qr8h21yf8t5UTyFEGxifcgMCnI3dd5vThUuW/Rue8DjUMW7z5PK66Ulpl+SDCHyv9CGO2L0WlMQpE2pf9lQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792154015; c=relaxed/simple;
-	bh=1lUaK5hN/IF0S3Grrs4vV6++3p9/90FoHuhs0z+reyg=;
+	s=arc-20240116; t=1792154016; c=relaxed/simple;
+	bh=K/26MzkU9FCqjSme/Jf95F7IV6yqA5hZhDlcUzEyluk=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=LHdJdgwBd3U3H4FnJSuNcD3o7KoNpRzhnCmtO1kBg873gYJwVrTRlqRVUgc+Oze6OcVm5OLYrxj8nGuhBaQNKcNZyLxVezp4N9vJF65Zs4XYdbdNOuRdb9koc95XO3qWMbzuyoejE9tDZoOFDZTVKIbfLTLMdxRfhkZep7K3Ivk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b=OWum3iXc; arc=none smtp.client-ip=148.251.105.195
+	 In-Reply-To:To:Cc; b=XpMrJ88aCr1B90yD1X9OY1dj3oiYU4nDYHeQshe3IGaQX7RGnDfdb2Ea8RqjWNzWFfFN122Yl3u3oBvHc/cbblkN92DXgynrEDV98065MSBdiLIQtjnDhK6UKSw0NofsPgH5i3aOvhy02c3DV5V83rhr2HCeHX2hWcjHvMzUXcs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b=pceZrIPh; arc=none smtp.client-ip=148.251.105.195
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b="OWum3iXc"
+	dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b="pceZrIPh"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
-	s=mail; t=1792154011;
-	bh=1lUaK5hN/IF0S3Grrs4vV6++3p9/90FoHuhs0z+reyg=;
+	s=mail; t=1792154013;
+	bh=K/26MzkU9FCqjSme/Jf95F7IV6yqA5hZhDlcUzEyluk=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=OWum3iXcC9mXrbSFmboZB4AEyZtdqHB68NSy6BUs3yw9/gHJWD2RMqYmd6wrKrKQ7
-	 gzUYt5zaZci4fWYepObMBdwcG0OqLWQ5bX3AT1PcYbKguUoS7B1HBZvx91zIKsNiCO
-	 PzvOaqUbbTr6UmntATKaBpIS9zaczWDrMspN8K9sixfCqhue0gjdgfevPZ/6T9DLJO
-	 ulli33uGbN7Vcwg4UG4TESMyRIgKlClNN8Z0FSZ70FlGlvJGpq+gmqB6n2RZrGiRf0
-	 iDXHD9Aa7CsL2+Wm65gwkdJvSIxv7GKsBYZpUAmfSy9S5PQR86vrlG4AKCrszYGiZN
-	 nGgmGR/gNTXyg==
+	b=pceZrIPhc/nOzB8zN/PXNlRWcfAYkeYwCaYzvdyTxhSdTgF5MnwW9h9kfQA6i6eLj
+	 /I4uL7edCzh7+IhK9Ft/wsMMkqh0xvFOBHiiEZ5L5PQcWn2oEu+GrCysai2xwy4og+
+	 YhjJfy8LFtcpONYEfgEPSbs+0FRtGzEeMJwR4mqM9a39RC6WHcO1VMQhPcBA2jmiqf
+	 aXJIeo2mJtpEckQ47/oPxrCMXq4Xa0GsSab99pj4AFHEUZuWgRAWP1o/Dv6K663ODn
+	 xdaGDbSb509+P3JLSzFEKKbHpBustac2EZoqGdLuSD04xy2KWY763YgRTyGIkBtLHT
+	 U2prIdMPcH00g==
 Received: from yukiji.home (unknown [100.64.0.131])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: laeyraud)
-	by bali.collaboradmins.com (Postfix) with ESMTPSA id E53B317E05D6;
-	Fri, 16 Oct 2026 14:33:30 +0200 (CEST)
+	by bali.collaboradmins.com (Postfix) with ESMTPSA id 118EA17E142F;
+	Fri, 16 Oct 2026 14:33:32 +0200 (CEST)
 From: Louis-Alexis Eyraud <louisalexis.eyraud@collabora.com>
-Date: Fri, 16 Oct 2026 14:32:53 +0200
-Subject: [PATCH v14 01/23] dt-bindings: phy: Add mediatek,mt8196-ufsphy
- variant
+Date: Fri, 16 Oct 2026 14:32:54 +0200
+Subject: [PATCH v14 02/23] dt-bindings: ufs: mediatek,ufs: Complete the
+ binding
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -45,7 +45,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261016-mt8196-ufs-v14-1-e8d565e0cd45@collabora.com>
+Message-Id: <20261016-mt8196-ufs-v14-2-e8d565e0cd45@collabora.com>
 References: <20261016-mt8196-ufs-v14-0-e8d565e0cd45@collabora.com>
 In-Reply-To: <20261016-mt8196-ufs-v14-0-e8d565e0cd45@collabora.com>
 To: Chunfeng Yun <chunfeng.yun@mediatek.com>, Vinod Koul <vkoul@kernel.org>, 
@@ -69,77 +69,234 @@ Cc: kernel@collabora.com, linux-arm-kernel@lists.infradead.org,
  devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
  linux-scsi@vger.kernel.org, 
  Nicolas Frattaroli <nicolas.frattaroli@collabora.com>, 
- Conor Dooley <conor.dooley@microchip.com>, 
  Louis-Alexis Eyraud <louisalexis.eyraud@collabora.com>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1792154009; l=2063;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1792154009; l=7040;
  i=louisalexis.eyraud@collabora.com; s=20250113; h=from:subject:message-id;
- bh=4tciUbFB2HMiH9ffvziK6C0JBisBVNsNdL+4utx+2vg=;
- b=eyyNkQZ4YH4wShDx/ZhPkMbV5WxWOdcygzX47YN9Eqocd6JmenDkpve76rBziPxQExpr7MCJK
- tBeuyQBFJJjDWO4Gnz5+oThvMXV6RCtcBGTnVAwItfgaA4txieq0o2I
+ bh=ivetEHKHrEcHXNR72NMAsGGEUoJvHUIhuJ+Bhsd2DUU=;
+ b=Tte1Vu9STHeF9yb577g5cI89EFylBtLLCi5aIAIKAR2GA5WGckebn51xH5C3AwO1jypv6JsCs
+ dyUJqEfLuNfCSbj4xHboX9lDcMQVNTr0Rlpu/FAyk+Z5F4xmZ0WvGgb
 X-Developer-Key: i=louisalexis.eyraud@collabora.com; a=ed25519;
  pk=CHFBDB2Kqh4EHc6JIqFn69GhxJJAzc0Zr4e8QxtumuM=
 
 From: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
 
-The MediaTek MT8196 SoC includes an M-PHY compatible with the already
-existing mt8183 binding.
+As it stands, the mediatek,ufs.yaml binding is startlingly incomplete.
+Its one example, which is the only real "user" of this binding in
+mainline, uses the deprecated freq-table-hz property.
 
-However, one omission from the original binding was that all of these
-variants may have an optional reset.
+The resets, of which there are three optional ones, are completely
+absent.
 
-Add the new compatible, and also the resets property, with an example.
+The clock description for MT8195 is incomplete, as is the one for
+MT8192. It's not known if the one clock binding for MT8183 is even
+correct, but I do not have access to the necessary code and
+documentation to find this out myself.
 
-Reviewed-by: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
-Reviewed-by: Peter Wang <peter.wang@mediatek.com>
-Acked-by: Conor Dooley <conor.dooley@microchip.com>
-Acked-by: Vinod Koul <vkoul@kernel.org>
+The power supply situation is not much better; the binding describes one
+required power supply, but it's the UFS card supply, not any of the
+supplies feeding the controller silicon.
+
+No second example is present in the binding, making verification
+difficult.
+
+Disallow freq-table-hz and move to operating-points-v2. It's fine to
+break compatibility here, as the binding is currently unused and would
+be impossible to correctly use in its current state.
+
+Add the three resets and the corresponding reset-names property. These
+resets appear to be optional, i.e. not required for the functioning of
+the device.
+
+Move the list of clock names out of the if condition, and expand it for
+the confirmed clocks I could find by cross-referencing several clock
+drivers. For MT8195, increase the minimum number of clocks to include
+the rx_symbol ones, as they're internal to the SoC and should always
+be present, and should therefore not be omitted.
+
+MT8192 gets to have at least 3 clocks, as these were the ones I could
+quickly confirm from a glance at various trees. I can't say this was an
+exhaustive search though, but it's better than the current situation.
+
+Properly document all supplies, with which pin name on the SoCs they
+supply. Complete the example with them.
+
+Also add a MT8195 example to the binding, using supply labels that I am
+pretty sure would be the right ones for e.g. the Radxa NIO 12L.
+
+Finally, remove the 'ufs_' prefix from all clock names containing it
+and rename 'ufs' clock to 'main'.
+
 Signed-off-by: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
+Reviewed-by: Chaotian Jing <chaotian.jing@mediatek.com>
+Reviewed-by: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+Reviewed-by: Rob Herring (Arm) <robh@kernel.org>
 Signed-off-by: Louis-Alexis Eyraud <louisalexis.eyraud@collabora.com>
 ---
- .../devicetree/bindings/phy/mediatek,ufs-phy.yaml        | 16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
+ .../devicetree/bindings/ufs/mediatek,ufs.yaml      | 115 +++++++++++++++++----
+ 1 file changed, 96 insertions(+), 19 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/phy/mediatek,ufs-phy.yaml b/Documentation/devicetree/bindings/phy/mediatek,ufs-phy.yaml
-index 6e2edd43fc2a..ee71dfa4e0c0 100644
---- a/Documentation/devicetree/bindings/phy/mediatek,ufs-phy.yaml
-+++ b/Documentation/devicetree/bindings/phy/mediatek,ufs-phy.yaml
-@@ -27,6 +27,7 @@ properties:
-       - items:
-           - enum:
-               - mediatek,mt8195-ufsphy
-+              - mediatek,mt8196-ufsphy
-           - const: mediatek,mt8183-ufsphy
-       - const: mediatek,mt8183-ufsphy
+diff --git a/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml b/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml
+index 15c347f5e660..945cb986b06b 100644
+--- a/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml
++++ b/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml
+@@ -19,11 +19,25 @@ properties:
  
-@@ -43,6 +44,10 @@ properties:
-       - const: unipro
-       - const: mp
+   clocks:
+     minItems: 1
+-    maxItems: 8
++    maxItems: 10
+ 
+   clock-names:
+     minItems: 1
+-    maxItems: 8
++    items:
++      - const: main
++      - const: aes
++      - const: tick
++      - const: unipro_sysclk
++      - const: unipro_tick
++      - const: unipro_mp_bclk
++      - const: tx_symbol
++      - const: mem_sub
++      - const: rx_symbol0
++      - const: rx_symbol1
++
++  operating-points-v2: true
++
++  freq-table-hz: false
+ 
+   phys:
+     maxItems: 1
+@@ -31,8 +45,36 @@ properties:
+   reg:
+     maxItems: 1
  
 +  resets:
 +    items:
-+      - description: Optional UFS M-PHY reset.
++      - description: reset for the UniPro layer
++      - description: reset for the cryptography engine
++      - description: reset for the host controller
 +
-   "#phy-cells":
-     const: 0
++  reset-names:
++    items:
++      - const: unipro
++      - const: crypto
++      - const: hci
++
++  avdd09-supply:
++    description: Phandle to the 0.9V supply powering the AVDD09_UFS pin
++
++  avdd12-supply:
++    description: Phandle to the 1.2V supply powering the AVDD12_UFS pin
++
++  avdd12-ckbuf-supply:
++    description: Phandle to the 1.2V supply powering the AVDD12_CKBUF_UFS pin
++
++  avdd18-supply:
++    description: Phandle to the 1.8V supply powering the AVDD18_UFS pin
++
+   vcc-supply: true
  
-@@ -66,5 +71,16 @@ examples:
-         clock-names = "unipro", "mp";
-         #phy-cells = <0>;
++  vccq-supply: true
++
++  vccq2-supply: true
++
+   mediatek,ufs-disable-mcq:
+     $ref: /schemas/types.yaml#/definitions/flag
+     description: The mask to disable MCQ (Multi-Circular Queue) for UFS host.
+@@ -54,29 +96,41 @@ allOf:
+       properties:
+         compatible:
+           contains:
+-            enum:
+-              - mediatek,mt8195-ufshci
++            const: mediatek,mt8183-ufshci
+     then:
+       properties:
+         clocks:
+-          minItems: 8
++          maxItems: 1
+         clock-names:
+           items:
+-            - const: ufs
+-            - const: ufs_aes
+-            - const: ufs_tick
+-            - const: unipro_sysclk
+-            - const: unipro_tick
+-            - const: unipro_mp_bclk
+-            - const: ufs_tx_symbol
+-            - const: ufs_mem_sub
+-    else:
++            - const: main
++        avdd12-ckbuf-supply: false
++  - if:
++      properties:
++        compatible:
++          contains:
++            const: mediatek,mt8192-ufshci
++    then:
+       properties:
+         clocks:
+-          maxItems: 1
++          minItems: 3
++          maxItems: 3
+         clock-names:
+-          items:
+-            - const: ufs
++          minItems: 3
++          maxItems: 3
++        avdd09-supply: false
++  - if:
++      properties:
++        compatible:
++          contains:
++            const: mediatek,mt8195-ufshci
++    then:
++      properties:
++        clocks:
++          minItems: 10
++        clock-names:
++          minItems: 10
++        avdd09-supply: false
+ 
+ examples:
+   - |
+@@ -94,9 +148,32 @@ examples:
+             phys = <&ufsphy>;
+ 
+             clocks = <&infracfg_ao CLK_INFRA_UFS>;
+-            clock-names = "ufs";
+-            freq-table-hz = <0 0>;
++            clock-names = "main";
+ 
+             vcc-supply = <&mt_pmic_vemc_ldo_reg>;
+         };
      };
 +  - |
-+    #include <dt-bindings/reset/mediatek,mt8196-resets.h>
-+    ufs-phy@16800000 {
-+        compatible = "mediatek,mt8196-ufsphy", "mediatek,mt8183-ufsphy";
-+        reg = <0x16800000 0x10000>;
-+        clocks = <&ufs_ao_clk 3>,
-+                 <&ufs_ao_clk 5>;
-+        clock-names = "unipro", "mp";
-+        resets = <&ufs_ao_clk MT8196_UFSAO_RST0_UFS_MPHY>;
-+        #phy-cells = <0>;
++    ufshci@11270000 {
++        compatible = "mediatek,mt8195-ufshci";
++        reg = <0x11270000 0x2300>;
++        interrupts = <GIC_SPI 137 IRQ_TYPE_LEVEL_HIGH>;
++        phys = <&ufsphy>;
++        clocks = <&infracfg_ao 63>, <&infracfg_ao 64>, <&infracfg_ao 65>,
++                 <&infracfg_ao 54>, <&infracfg_ao 55>, <&infracfg_ao 56>,
++                 <&infracfg_ao 90>, <&infracfg_ao 93>, <&topckgen 212>,
++                 <&topckgen 215>;
++        clock-names = "main", "aes", "tick", "unipro_sysclk", "unipro_tick",
++                      "unipro_mp_bclk", "tx_symbol", "mem_sub", "rx_symbol0",
++                      "rx_symbol1";
++
++        operating-points-v2 = <&ufs_opp_table>;
++
++        avdd12-supply = <&mt6359_vrf12_ldo_reg>;
++        avdd12-ckbuf-supply = <&mt6359_vbbck_ldo_reg>;
++        avdd18-supply = <&mt6359_vio18_ldo_reg>;
++        vcc-supply = <&mt6359_vemc_1_ldo_reg>;
++        vccq2-supply = <&mt6359_vufs_ldo_reg>;
++
++        mediatek,ufs-disable-mcq;
 +    };
- 
- ...
 
 -- 
 2.56.0
