@@ -1,70 +1,123 @@
-Received: from mail-pg1-f197.google.com (mail-pg1-f197.google.com [209.85.215.197])
+Received: from mail-pj1-f47.google.com (mail-pj1-f47.google.com [209.85.216.47])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D9CB361DB5
-	for <linux-scsi@vger.kernel.org>; Fri, 16 Oct 2026 08:19:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.197
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2AF23FFF84
+	for <linux-scsi@vger.kernel.org>; Fri, 16 Oct 2026 08:28:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792138770; cv=none; b=ocVwkk8xAiD85BSOrUC9SWUJmyQM9nUZc6L7c2SQ/MK1+aZQQByBR/ihRbKrvc931aJwGuuyp4xtox/4TCcJJuF6FQlzDdGpX2CbnPCZM90AWRjRu5WLf46UlA0lO41qy0bmX0kDY+ycyXYLrU4Cqp2jJPeHYhTpHPN/xQjAoI8=
+	t=1792139314; cv=none; b=OjVcRqaQ4cOVSMpe9x0OC0yT2EL4ByGJvmR/72KuAiRXONRGkHgKxSLT44ubOF1+0XGHt+7iIKkErbxLSAvrR3RxULhBc68CC6H3JqFFrt0o1lT+CEcRU7b2Xq4Nkro0324XYr9DmRIsEniaIa+3yNolwbjl9JaHH2Zo9HAB81o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792138770; c=relaxed/simple;
-	bh=jIEy5cT5mmkkVcGKdpbeH8K331ZFV/0IWVEdNWVBdcc=;
-	h=MIME-Version:In-Reply-To:References:Message-ID:Date:Subject:From:
-	 To:Cc:Content-Type; b=H/4lFx0yduDstor1ElGnoZDgWg2jITq4v9culeYdgocsAzWDrH+uG+DOWoC1hgz370keXfnEIifwidJ1F2Ws3YZlYvdfUhUk3su//zqOznpdCESnBsj2DpIitzjx/JQcdzLCddDjUYMhAS9rCStTJu8vzlyyiV9g2CutVproxVE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=H9psIowU; arc=none smtp.client-ip=209.85.215.197
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com
+	s=arc-20240116; t=1792139314; c=relaxed/simple;
+	bh=56DHsbFjbbt032La1ZDE5ZQ6b4jYchWtNS/Q4wqnSSo=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=IXrCgPnwOVoyuoEhXRUQolcyfJIOY9+gxi+9N3cEjAJEGceUbg/Fv9LwU+bfdCpEFXaDsBBiRKYq35oWDJ8NjXeqp/utxeGPWZ+UxzGMfNwkIo+T05MnzfvTsWhmjOlLYo2CZVZxtEIhMhFkqY/pcjrRP01Tqye2Ykj+hw7+KGg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr; spf=none smtp.mailfrom=isslab.korea.ac.kr; dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b=NEVNAb/h; arc=none smtp.client-ip=209.85.216.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="H9psIowU"
-Received: by mail-pg1-f197.google.com with SMTP id 41be03b00d2f7-cd1e45a268cso2408631a12.1
-        for <linux-scsi@vger.kernel.org>; Fri, 16 Oct 2026 01:19:28 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b="NEVNAb/h"
+Received: by mail-pj1-f47.google.com with SMTP id 98e67ed59e1d1-3acc96a256dso323646a91.3
+        for <linux-scsi@vger.kernel.org>; Fri, 16 Oct 2026 01:28:32 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1792138768; x=1792743568; darn=vger.kernel.org;
-        h=content-type:cc:to:from:subject:date:message-id:references
-         :in-reply-to:mime-version:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=jIEy5cT5mmkkVcGKdpbeH8K331ZFV/0IWVEdNWVBdcc=;
-        b=H9psIowUu4TXcoj5LDcRHyhCK/XHrx5XlWUDfbx1BDTWGcJj+/huC+N6LepKzo2gGG
-         NM9Vy6xbXhR6LTdSEA/WXSg8MXnjCLMfOZes5fEOpP46P/I1HvYiA4TKltTSD+S/hioP
-         0/Ns5a6ky0V+F1BjSVxzDtI5flD5mdi6MktZVEbqXq0kgFdQ0wWjLfQe7DDG6kBJl+jV
-         5bEuMP2zmlzFZQ8iAilHY82A7akyEVLwbUdS9mRsoSin0VvbyNYOhrI4Bo4HlaCnu/3C
-         TjqivscDY9pDnps7jWOcUlruajLAtOZFqxDAGpN30LwEkCLd6SqRDhhmHcX+dO76P7Dr
-         pFoA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792138768; x=1792743568;
-        h=content-type:cc:to:from:subject:date:message-id:references
-         :in-reply-to:mime-version:x-gm-message-state:from:to:cc:subject:date
+        d=isslab-korea-ac-kr.20251104.gappssmtp.com; s=20251104; t=1792139312; x=1792744112; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=jIEy5cT5mmkkVcGKdpbeH8K331ZFV/0IWVEdNWVBdcc=;
-        b=Qhi5L4AtLhk9KVYIY3TkWUBMwlcmrCNr9bPGdhwBSdRwa0q2K6BLWiiOe1prwpxyST
-         disc1ydKiItIdIw0YO89V3Lm7OyC3cY9rKEnqhBRyBGiySUDs1aFNEj1DBPoiDrAPQry
-         uuo8meLv+6MezUxXxUEsIb1IbkwJy/2gLL+EUTVqJt0ehrDeuQtBjg/WDLtZD/jN8ICp
-         iY56XOWve/m2nL94HfDji6WSUSpvjbJ7wfn4HYGOD7Lx/r5k/yYfLdcftGJE6nprDuHa
-         BT4QOGL7z3ykVhA2bxNx1KxLm3azeX+oOOh5J3nCni0naLryVEdsoB+otW4C6mqMyEE7
-         Aozw==
-X-Forwarded-Encrypted: i=1; AKwUvBxqENFuqnmV0QozCx4N1tiQaNuoadpSlc9gUGRV5pNOf5VNDTPcjTFV4JZgVusxw1GOvr9Kba3YadC/@vger.kernel.org
-X-Gm-Message-State: AFq9FYIdJBmhRGApAfh8rLdgZ0RrYSvutK3fawRRGcZA02Md3XsWaz0N
-	dAKAMiPMN/fmzBO1cj99BgaPjHDwb3ChnZJHcYWwC7fzyFchSe7hDoYDswY0KiMZQSwRhqBwmZt
-	kP9UmGqVRJkkQL/4Ub2NmXg==
+        bh=3OFybTCapRj1qkibinKvw/kI5UMMbhQYY44MQA34050=;
+        b=NEVNAb/hFkhuBggq2r+sSNzQPZ1rV6n848g9w2pr7CmWzTCLrgPFCZP+JqP3845Vzw
+         Z7x1fRrIhjDCyzHQjGERPwm8PL+gh3b24y+wrxnDrxWoVH0TJsAm0OiyuEUIhrOo+tj/
+         lPWzY/y8iaa5DB/bBYwDaEcF1H53bDz1QtNkvIABBHTVEXUCaIiX4tk5F8Vq+GDS7GIe
+         N8SAX4eEkibhFcrqWe06l8ih1j6ZMlBwP1paPB8dhx415TBx9rR4yUoxvsOX5xWnRakS
+         PqBGgwtG86Od9pGCiAIyHGN3n2q5uT+NgtJNQSLTXT8A4bmli1xcQrMFMzxgHjqIg3C1
+         b9zQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792139312; x=1792744112;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=3OFybTCapRj1qkibinKvw/kI5UMMbhQYY44MQA34050=;
+        b=DckerG8Shzd779Ndz5rIwgTIR8Os/LOy0Y3iYV7llwen4KbzhxF2kWI9jumkTg442D
+         Kp0MdeRdQVvuS5SPALX9BKD4vbcdEUqgB0bUgkGaUOtvDQ5h/NvLD1Qa4BQ0kApeBlZB
+         pQiEdVgnNUXnUXRtbQtsUgJatoa5YaqGNrJxAl8ukK400vLjVNhV0R4nU7eAYeqd8I6g
+         HQfmnKvsenqHdMGmZyZ3VVngg5F/kqXdhPsukALiTqILOa18nJj3QZTCxxuiPy3Y96nz
+         2W5XrCJ0Uq/1L2/VYm1Anop0pBtTy6vRqPJPmuH0E5KT9KsrtgE9iZp+LZI9l3LHeemN
+         xpog==
+X-Gm-Message-State: AFq9FYJki6cJlyfX519W1qgup/OpNfRtXo+8U2tiwHOoFEq4vD4tTmJm
+	//TvfddAAYpJwWaq8KXzTEBs9LGiw3kyvDsThJeJjZ3VnwyFQKt75jnaKStY6XxGhG4=
+X-Gm-Gg: AYBFou1bi4RB0fgpWh5KeAFpqe5S3sOcqn9pcMbCD1J+DtV2uYa64S2aUegxm+9RuRY
+	SOZ8Wjg38xWZxz7KNZfOXHkrI2De+JuNRVRLnGOW1yO+qu+jPvCpZrbyS8NTZnuHx7Dc0kkxQTp
+	x8KXdflvXeLF6+2/k9ijZdAFlx7oN9V6NE06ZrnnQqEpA2O6gpguIZR0D6KVh7nFnywTEHBLdX1
+	xMn5JnyMiStTv+sBtYB47mwNZ4PPEnmysmVc6jYPCrNj/0sWngxPu1vNv5jSmqkA6pmsSyDLTmY
+	umE5n4waQiyBF8LQpZhOfRPm/BwLs0oe6j0HmfCXj20R9JCM+qcg4hVf9ykdgSxNK7zHE9MrTns
+	byJ44N63VQRodOeiv7YlePf6NmZ8LPLL4tZqdMP8raJUwKZdcKepSDlDOb/lfVJG4QZVKjS9SkZ
+	NvT9wUgcA6t4pyDDEw23D/3s2K1RFbMzxINi9CW1EWvwdjqQCAHH3cQGO0dNkG7a8FFiGUkqQPk
+	JcS30G2T/DjbEP5
+X-Received: by 2002:a17:90a:1582:b0:3ab:9f1a:3825 with SMTP id 98e67ed59e1d1-3ab9f1a4af4mr10274048a91.4.1792139311983;
+        Fri, 16 Oct 2026 01:28:31 -0700 (PDT)
+Received: from yhlee-960QFG.. ([125.131.91.97])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3acc48f19d9sm3088933a91.11.2026.10.16.01.28.30
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 16 Oct 2026 01:28:31 -0700 (PDT)
+From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+To: "Martin K . Petersen" <mkp@kernel.org>,
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	yhlee@isslab.korea.ac.kr
+Subject: [PATCH v4 2/3] scsi: bfa: drop unsolicited frames shorter than their VFT header
+Date: Fri, 16 Oct 2026 17:28:17 +0900
+Message-ID: <20261016082818.1237059-3-yhlee@isslab.korea.ac.kr>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20261016082818.1237059-1-yhlee@isslab.korea.ac.kr>
+References: <20261016082818.1237059-1-yhlee@isslab.korea.ac.kr>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: from pjq16.prod.google.com ([2002:a17:90b:5610:b0:3a8:6a28:2f71])
- (user=stanleyjhu job=prod-delivery.src-stubby-dispatcher) by
- 2002:a17:90b:3888:b0:3ac:7449:40b4 with SMTP id 98e67ed59e1d1-3ac7449442amr7697078a91.45.1792138768041;
- Fri, 16 Oct 2026 01:19:28 -0700 (PDT)
-In-Reply-To: <1792133053-143069-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1792133053-143069-1-git-send-email-shawn.lin@rock-chips.com>
-Message-ID: <18def4b6dd87d761.3137322e31362e3131332e313435.158157.0000sendgmr@google.com>
-Date: Fri, 16 Oct 2026 08:19:28 +0000
-Subject: Re: [PATCH] scsi: ufs: core: Fix stale comment in ufshcd_mcq_config_nr_queues()
-From: Stanley Jhu <stanleyjhu@google.com>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>, 
-	"Martin K. Petersen" <mkp@kernel.org>, Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"; format=flowed; delsp=yes
+Content-Transfer-Encoding: 8bit
 
-Reviewed-by: Stanley Jhu <stanleyjhu@google.com>
+bfa_fcs_uf_recv() keeps the received frame length in a u16 and, for a
+frame that carries a virtual fabric tagging header, steps over that
+header:
+
+	fchs = (struct fchs_s *) (vft + 1);
+	len -= sizeof(struct fc_vft_s);
+
+Nothing has checked that the frame is long enough to hold the header it
+says it has. A frame too short to hold its own VFT header makes the
+subtraction wrap, so len comes out near 65530 instead of going negative,
+and that length is what bfa_fcs_fabric_uf_recv() and
+bfa_fcs_lport_uf_recv() then hand to every ELS handler. Any of them that
+believes it reads up to 64 kB past the frame buffer.
+
+Drop the frame instead, the same way the block right above drops a frame
+whose virtual fabric id is unknown.
+
+Fixes: 7725ccfda597 ("[SCSI] bfa: Brocade BFA FC SCSI driver")
+Cc: stable@vger.kernel.org
+Signed-off-by: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+---
+ drivers/scsi/bfa/bfa_fcs.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/drivers/scsi/bfa/bfa_fcs.c b/drivers/scsi/bfa/bfa_fcs.c
+index 9b57312f43f50..711d2ed83a7aa 100644
+--- a/drivers/scsi/bfa/bfa_fcs.c
++++ b/drivers/scsi/bfa/bfa_fcs.c
+@@ -1552,6 +1552,11 @@ bfa_fcs_uf_recv(void *cbarg, struct bfa_uf_s *uf)
+ 		/*
+ 		 * skip vft header
+ 		 */
++		if (len < sizeof(struct fc_vft_s)) {
++			bfa_uf_free(uf);
++			return;
++		}
++
+ 		fchs = (struct fchs_s *) (vft + 1);
+ 		len -= sizeof(struct fc_vft_s);
+ 
+-- 
+2.43.0
+
