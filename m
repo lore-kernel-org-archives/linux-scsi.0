@@ -1,249 +1,129 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DE844A4400
-	for <linux-scsi@vger.kernel.org>; Fri, 16 Oct 2026 12:46:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DECAF4AE109;
+	Fri, 16 Oct 2026 12:46:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792154794; cv=none; b=MXmChvU+r9VPkSxiMgJlbgnAx8uuDCqkUn8/C4325b0mUvIAZ1RZOBU87Vcm7OFIBAO4P+egMlW0YdBoRxsKQtV6MP0ysxgBhPOXTDO6P6iBpGz2nFeQqdju+HXmq924iAp22ByP68J1LP8Swxmt0tBu9H18UfZYlYHodcoigEU=
+	t=1792154801; cv=none; b=MMGKlYk8JOEFlVtLiIWJ6WO28viM51Zji7MDl0XRZvPeaJvKmvAVbRjHYfsAMCdOCeTO36iLbCVdCE0ELTuHDvHCPNSEnJTy27l1e7bFv9fnQF9hiJrsugY+6ZlujcOlWnG9QTSEIlxGVfZ5ajIqgBUA3JO9giLHSp56kWWdtJs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792154794; c=relaxed/simple;
-	bh=vIltqrhtG3fdcxt1zy5N+jmI+wWd2EFikeosnuR84v0=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=pDOaPa/XSsNoSwwo60HEf1bSxZX8R0Q6Qe5drHsvB/Wk7X31q2Qql6WuRPPp3/RyZuGsXxAN1gNIkXbDzsF4sVqnumK4Ob2H6rVzUW+HWXXE8r0v/M9jJgJwsQ2YlFgU8Ehqyp2RvxcdYuGhxYl3dsOD0nevofQvOFQVObUP49A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=i2u5UBbU; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=fVvYXRyd; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1792154801; c=relaxed/simple;
+	bh=ZDFHTXyAZThK3CaaXd5DPwvhDcExsBTjb7giRFHJ/dk=;
+	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
+	 Date; b=OX2P4PgK7oBGMONRIcq1TVJqKvhvL5C5U4oAsv4vatP/t6+r/elJ+fXf2q/Redgd1zCgyeXaPZYZQNhCz3oKX4Af77yW7FDMqrwqYUrNK5nKdqjjn6gZB43mEJeaOH58X6wWDvF4x+Ozh6+y9PLkUO08g6UBVfHcLoBWhORz1Fw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SKGyFuyW; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="i2u5UBbU";
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="fVvYXRyd"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1792154790;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=jXE5vMlJLDULz4QabdUZcN7zMUliDBSGHX5ZEXcYJUA=;
-	b=i2u5UBbUk9o4R4tmmmbLJi1GAw/Os1H40Ni9lLSJPEyExmT1kIKs7+fSkx3LM9NvuUrmHc
-	O6QuuXLsiiGcKYVH3wEJa8iczRKb0gMsdzIr2HxlRtIIIrJS/COBSYJ6/NJmj8f7t81hbi
-	nxt3wzf7qvs3oUr4xb2u5ftL6aVlNvg=
-Received: from mail-qk1-f198.google.com (mail-qk1-f198.google.com
- [209.85.222.198]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-683-UTn2cjfPPuiodJ5ginXqAw-1; Fri, 16 Oct 2026 12:46:29 +0000
-X-MC-Unique: UTn2cjfPPuiodJ5ginXqAw-1
-X-Mimecast-MFC-AGG-ID: UTn2cjfPPuiodJ5ginXqAw_1792154788
-Received: by mail-qk1-f198.google.com with SMTP id af79cd13be357-93cc40759b2so1345803285a.1
-        for <linux-scsi@vger.kernel.org>; Fri, 16 Oct 2026 05:46:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1792154788; x=1792759588; darn=vger.kernel.org;
-        h=mime-version:user-agent:content-transfer-encoding:content-type
-         :references:in-reply-to:date:cc:to:from:subject:message-id:from:to
-         :cc:subject:date:message-id:reply-to:content-type;
-        bh=jXE5vMlJLDULz4QabdUZcN7zMUliDBSGHX5ZEXcYJUA=;
-        b=fVvYXRydkR18p6nqtrezQ0bchrrm4YbtTVsnMS+Px1ltfHtFDnjrjE0f4Mv+Ynespj
-         G2IHv2KDzleyPwLxJv5rlcqp3cTggTRO3DvXEsvvNjaL0lfKhfpPOII+ehBks6fqRAud
-         OuE/m4eNqfBuAdtVTr07MmZDRUePaavtWwEN90jE9GfKddijeNUsoyjOYBIwXg7BHscp
-         oMOAAMeKmX8uZCvKMhk5UCA9yEqvbTb97HzxlztNnNLIPseRomOQ3T1Z2WFu6eMCZt7i
-         osX3STLbHZqvAIpXm8KM/vEq6M0TYA73U+e5gw5fk4JKwXwqxjr55XTQzYPSvyQyTxHY
-         7XEA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792154788; x=1792759588;
-        h=mime-version:user-agent:content-transfer-encoding:content-type
-         :references:in-reply-to:date:cc:to:from:subject:message-id:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=jXE5vMlJLDULz4QabdUZcN7zMUliDBSGHX5ZEXcYJUA=;
-        b=NdQFDTXQm4sLe+SCAqBpmbk7NbYBMKT3rM///7ZH9IYkspSdHPNVBVy4T1PU4T7xsn
-         UqLzNxWWuE1xvnegE6nzf7V487LKydIcT6ev/CggDeFOjWUuzBOxg63C78T5O7o6749e
-         zxQGa8AQRctSPpQDdqC4vcPgqfs5vPdHpCfGkodDWJxDK6hmGdmPE4STkrTFrjYcws6M
-         BEEasYPOtgGKWGhZqPWv5RBL/wIb195RH47X7xEDsO8HQJREOxkrcvRDBftORHlZgdYl
-         j5h1qGOTee2k4fXV0I1YRCX0XnLWZ//nS/zIhOCvCxbXmKuMcpSiLQ0r+DZvfXAW/rRV
-         ZMnA==
-X-Gm-Message-State: AFq9FYLaLrNulzVQDrVV66qRtLXL9W5kEVVOq7b/+O27WmJ8p8iJ48Ot
-	up2ntEY56YE8Rc0L/MYS7yk+u1BjH1IMz+O4JMoYPJWgxAJ4mX4tRW/A8xywC3yEgRxxikoYTSY
-	lXoIKdag/5o07SkFeToe3kyGH52/TYL/CaUJPU47KjGgq4wXHbrc3EWQoAmFQ+Gkw/AUOwmo=
-X-Gm-Gg: AYBFou2pYvUTpI14pJXBqPHMg2I7qnZ8bl46hA7MFgJ+Hp6ZlSOAGXkFfb6KZwbMxWq
-	ZMSqWItjywJ7ENeiK6F3egBVpfuHbH6ad/eLVLXk6Ou3H5mxSgAxCIUY2XUYqags8Zi3jKvvSje
-	0YrcOYFeudA7gBRd0DbsLd9ZjhDp5f+R2bNCfbliiSYdDlRoKYLYNoDUSiMuCb340mj2B4ebEl8
-	FHDijKs5jWAyMDiSq2YQXbQ9o5xBAAerWf30kiPMc5nkFjnkiZ2TW9ErIYSmnKR6C7ldpoMebR2
-	jHosvkSmYv0BPmRPbi2WqIbmwhsmb+WMLxt+rASLalxZ8xI6px86ovO6IjYs7nFTNTwczZ+QxVg
-	tIM4Ur7t0ZT2YShtMsmGwUEaMLMcMfPg8/TA=
-X-Received: by 2002:a05:620a:198d:b0:93e:66db:69b9 with SMTP id af79cd13be357-93ebd23ab8emr3416424685a.55.1792154788381;
-        Fri, 16 Oct 2026 05:46:28 -0700 (PDT)
-X-Received: by 2002:a05:620a:198d:b0:93e:66db:69b9 with SMTP id af79cd13be357-93ebd23ab8emr3416418785a.55.1792154787746;
-        Fri, 16 Oct 2026 05:46:27 -0700 (PDT)
-Received: from loberman-thinkpadp1gen5.rmtusma.csb ([2600:6c65:2440:d8c:929c:b769:6def:faa3])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-93f1a16b5e4sm201356085a.14.2026.10.16.05.46.26
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 16 Oct 2026 05:46:26 -0700 (PDT)
-Message-ID: <8e325cc7ca21d607b3664debcaa5f14b273b91b6.camel@redhat.com>
-Subject: Re: [PATCH 1/2] scsi: target: iscsi: Complete an aborted WRITE
- stuck before the first R2T
-From: Laurence Oberman <loberman@redhat.com>
-To: sashiko-reviews@lists.linux.dev
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-Date: Fri, 16 Oct 2026 08:46:25 -0400
-In-Reply-To: <sashiko-outbox-171458@kernel.org>
-References: <20261014143932.39453-1-loberman@redhat.com>
-	 <20261014143932.39453-2-loberman@redhat.com>
-	 <sashiko-outbox-171458@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SKGyFuyW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2CE011F000C4;
+	Fri, 16 Oct 2026 12:46:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1792154799;
+	bh=wsQYsV1A6d3Q9LTOhBvoV1/8at0kxLQz0vH3H68Dex4=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=SKGyFuyWcy9p1xIgFNeeENir2EK1iGEqcjOS+x3uCLdv0gmDZqRNhTfOzEKAh9Utx
+	 X2g5pcg0nyjEawqqS4BkiPHvlE6gvuVYOLrNLOkfipW7Re1hOvFf+V0tHorljmY3cy
+	 BGU49Sr6rXCAGv+rStGYHkTOpn6zuSaRvfNSxRBYJAqIK5Y6u2SKh1k/UCwJTFvn+k
+	 DDiW4IRS+FL605BQMRYePuOMwM755G4q9Tl3p26XSfETUG4OsVvSlCcfanDiBhLvkK
+	 8BQ8NcCZ2q6qnACfVVj6hQaeMYimH97OE6n7OxYjwVDs54CNfbUDsxVc2bA4sTlw8G
+	 CVPoDr986CoTg==
+Message-ID: <sashiko-outbox-174333@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v14 02/23] dt-bindings: ufs: mediatek,ufs: Complete the
+ binding
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Louis-Alexis Eyraud" <louisalexis.eyraud@collabora.com>
+Cc: linux-phy@lists.infradead.org, devicetree@vger.kernel.org, linux-scsi@vger.kernel.org, robh@kernel.org, conor+dt@kernel.org, vkoul@kernel.org, neil.armstrong@linaro.org, olteanv@gmail.com
+In-Reply-To: <20261016-mt8196-ufs-v14-2-e8d565e0cd45@collabora.com>
+References: <20261016-mt8196-ufs-v14-0-e8d565e0cd45@collabora.com>
+ <20261016-mt8196-ufs-v14-2-e8d565e0cd45@collabora.com>
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.60.2 (3.60.2-2.fc44) 
+Date: Fri, 16 Oct 2026 12:46:38 +0000
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
 
-On Wed, 2026-10-14 at 15:10 +0000, sashiko-bot@kernel.org wrote:
-> Thank you for your contribution! Sashiko AI review found 1 potential
-> issue(s) to consider:
-> - [High] iscsi: double completion and workqueue corruption for
-> aborted WRITEs on DataOut path
-> --
->=20
-> commit 7b04f6989363db2c2b75d8c212ee852153982c8d
-> Author: Laurence Oberman <loberman@redhat.com>
-> =C2=A0=C2=A0=C2=A0=20
-> scsi: target: iscsi: Complete an aborted WRITE stuck before the first
-> R2T
->=20
-> This patch resolves an issue where an aborted WRITE command that
-> arrives with
-> immediate data exceeding FirstBurstLength gets stuck in
-> TRANSPORT_WRITE_PENDING.
-> It accomplishes this by completing the command in
-> iscsit_execute_cmd() and
-> introducing a new iscsit_claim_completion_locked() helper to avoid a
-> double
-> completion race with iscsit_release_commands_from_conn().
->=20
-> > diff --git a/drivers/target/iscsi/iscsi_target.c
-> > b/drivers/target/iscsi/iscsi_target.c
-> > index 124ff269b8e75..aab9237a67768 100644
-> > --- a/drivers/target/iscsi/iscsi_target.c
-> > +++ b/drivers/target/iscsi/iscsi_target.c
-> > @@ -4198,10 +4198,18 @@ static void
-> > iscsit_release_commands_from_conn(struct iscsit_conn *conn)
-> > =C2=A0		if (cmd->se_cmd.t_state =3D=3D
-> > TRANSPORT_WRITE_PENDING) {
-> > =C2=A0			/*
-> > =C2=A0			 * We never submitted the cmd to LIO core,
-> > so we have
-> > -			 * to tell LIO to perform the completion
-> > process.
-> > +			 * to tell LIO to perform the completion
-> > process --
-> > +			 * unless iscsit_execute_cmd() already
-> > did.=C2=A0 t_state
-> > +			 * stays TRANSPORT_WRITE_PENDING across
-> > that
-> > +			 * completion, so the claim is the only
-> > thing that can
-> > +			 * tell us.
-> > =C2=A0			 */
-> > +			bool claimed =3D
-> > iscsit_claim_completion_locked(cmd);
-> > +
-> > =C2=A0			spin_unlock_irq(&se_cmd->t_state_lock);
-> > -			target_complete_cmd(&cmd->se_cmd,
-> > SAM_STAT_TASK_ABORTED);
-> > +			if (claimed)
-> > +				target_complete_cmd(&cmd->se_cmd,
-> > +						=C2=A0=C2=A0=C2=A0
-> > SAM_STAT_TASK_ABORTED);
->=20
-> [Severity: High]
-> Does this code miss the DataOut paths?
->=20
-> Because target_complete_cmd() is called directly in
-> __iscsit_check_dataout_hdr()
-> and target_execute_cmd() is called in iscsit_check_dataout_payload()
-> for aborted
-> commands without setting the completion_claimed flag.
->=20
-> If a command is aborted on the DataOut path:
->=20
-> drivers/target/iscsi/iscsi_target.c:__iscsit_check_dataout_hdr() {
-> =C2=A0=C2=A0=C2=A0 ...
-> 		if (se_cmd->transport_state & CMD_T_ABORTED) {
-> 			if (hdr->flags & ISCSI_FLAG_CMD_FINAL &&
-> 			=C2=A0=C2=A0=C2=A0 --cmd->outstanding_r2ts < 1) {
-> 				iscsit_stop_dataout_timer(cmd);
-> 				target_complete_cmd(se_cmd,
-> SAM_STAT_TASK_ABORTED);
-> 			}
-> =C2=A0=C2=A0=C2=A0 ...
-> }
->=20
-> Because completion_claimed is never set, target_complete_cmd()
-> delegates
-> to target_cmd_interrupted() which queues target_abort_work but leaves
-> the command in TRANSPORT_WRITE_PENDING.
->=20
-> If the connection drops before target_abort_work removes the command
-> from the connection list, iscsit_release_commands_from_conn() will
-> find it,
-> iscsit_claim_completion_locked() will return true, and it will call
-> target_complete_cmd() a second time.
->=20
-> Can this double call to target_complete_cmd() cause
-> target_cmd_interrupted()
-> to re-initialize and re-queue cmd->work while it is already pending
-> on the
-> workqueue, leading to workqueue linked-list corruption and a use-
-> after-free
-> when target_handle_abort() runs twice?
->=20
->=20
-Thanks for the review. I verified the mechanism and it is accurate:
-target_cmd_interrupted() queues target_abort_work and returns true, and
-target_complete_cmd_with_sense() then returns before reaching the
-"cmd->t_state =3D TRANSPORT_COMPLETE; cmd->transport_state |=3D
-CMD_T_COMPLETE" block. The command is left in TRANSPORT_WRITE_PENDING
-with nothing recorded to say it has been completed. The window is also
-not narrow: iscsit_release_commands_from_conn() holds conn->cmd_lock
-across its entire walk and iscsit_aborted_task() needs that same lock
-to
-unlink, so if the work item has not run yet, teardown is guaranteed to
-see the command rather than merely likely to.
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [Medium] dt-bindings: ufs: mediatek: incompatible schema change breaks in=
+-tree mt8195.dtsi
+--
 
-Your point about target_execute_cmd() is correct as well, and worth
-spelling out: it calls target_cmd_interrupted() before setting
-cmd->t_state =3D TRANSPORT_PROCESSING, so an aborted command taking the
-DATAOUT_SEND_TO_TRANSPORT path also stays in TRANSPORT_WRITE_PENDING.
+commit 2eee1dd0c91a095faf6d7717e0d6ad307cbf851d
+Author: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
 
-However, this exposure is pre-existing rather than introduced here.
-Mainline at that site today is:
+dt-bindings: ufs: mediatek,ufs: Complete the binding
 
-	if (cmd->se_cmd.t_state =3D=3D TRANSPORT_WRITE_PENDING) {
-		spin_unlock_irq(&se_cmd->t_state_lock);
-		target_complete_cmd(&cmd->se_cmd,
-SAM_STAT_TASK_ABORTED);
-		continue;
-	}
+This commit updates the mediatek,ufs.yaml binding by making freq-table-hz
+disallowed, enforcing operating-points-v2, and renaming and expanding the
+clock requirements for MT8195 and MT8192 platforms. It also documents vario=
+us
+power supply pins and adds a new example for MT8195.
 
-The call is unconditional, so a command already completed by
-__iscsit_check_dataout_hdr() or by target_execute_cmd() is completed a
-second time by teardown as the code stands. This patch gates that call
-on the claim, and for a command arriving from either of those paths the
-claim succeeds, because neither path claims. Behaviour for them is
-therefore identical to mainline. The only change is that the site this
-patch adds in iscsit_execute_cmd() can no longer be double-completed.
+>     Disallow freq-table-hz and move to operating-points-v2. It's fine to
+>     break compatibility here, as the binding is currently unused and would
+>     be impossible to correctly use in its current state.
 
-So the patch removes one reachable double completion and adds none. I
-would rather not extend it to cover the two pre-existing sites: this
-series has 300 reset cycles of customer validation behind it on a
-reproducer that previously failed at 95 and 196 cycles, and widening it
-would mean shipping code that validation never exercised. I am happy to
-post a separate patch for the pre-existing paths, on its own merits.
+Is this description accurate regarding the binding being unused?
 
-The companion finding against patch 2 is a real defect introduced by
-this series and I am fixing it in v2.
+Looking at arch/arm64/boot/dts/mediatek/mt8195.dtsi, there is an active
+mainline user of the mediatek,mt8195-ufshci compatible string:
 
-Thanks
-Laurence
+arch/arm64/boot/dts/mediatek/mt8195.dtsi:ufshci() {
+        ...
+        compatible =3D "mediatek,mt8195-ufshci";
+        ...
+        clock-names =3D "ufs", "ufs_aes", "ufs_tick",
+                      "unipro_sysclk", "unipro_tick",
+                      "unipro_mp_bclk", "ufs_tx_symbol",
+                      "ufs_mem_sub";
+        freq-table-hz =3D <0 0>, <0 0>, <0 0>, <0 0>;
+        ...
+}
 
+Will this change cause dtbs_check validation to fail for the MT8195 platform
+since it still relies on freq-table-hz and the old ufs-prefixed clock names?
+
+> diff --git a/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml b/Do=
+cumentation/devicetree/bindings/ufs/mediatek,ufs.yaml
+> index 15c347f5e6604..945cb986b06b7 100644
+> --- a/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml
+> +++ b/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml
+
+[ ... ]
+
+> @@ -54,29 +96,41 @@ allOf:
+>        properties:
+>          compatible:
+>            contains:
+> -            enum:
+> -              - mediatek,mt8195-ufshci
+
+[ ... ]
+
+> +  - if:
+> +      properties:
+> +        compatible:
+> +          contains:
+> +            const: mediatek,mt8195-ufshci
+> +    then:
+> +      properties:
+> +        clocks:
+> +          minItems: 10
+> +        clock-names:
+> +          minItems: 10
+
+[Severity: Medium]
+Does enforcing a minimum of 10 clocks here break existing in-tree device
+trees?
+
+As shown above, the existing mt8195.dtsi specifies exactly 8 clocks. Because
+this patch requires 10 clocks, explicitly requires the new names without the
+ufs_ prefix, and forbids freq-table-hz, will it break backward compatibility
+and leave the tree in a broken state for MT8195 users?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261016-mt8196-ufs=
+-v14-0-e8d565e0cd45@collabora.com?part=3D2
