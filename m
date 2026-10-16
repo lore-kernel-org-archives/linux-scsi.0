@@ -1,119 +1,156 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C54064CA78B
-	for <linux-scsi@vger.kernel.org>; Fri, 16 Oct 2026 15:06:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63F7425C818;
+	Fri, 16 Oct 2026 15:53:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792163163; cv=none; b=BhQ+IN2V9J1BLKeGckoLpZD3oEjiyRZwYPmsf21FenDIo+IIF3JryUBk2Ko6izlSdTj8HmFeM1F5JIlWDyisJbteyj404S7qSJpDv1RwYl3YtFpRPNPOn63kB/ZABPAjMlW9UngjpEOZ0gl6Ajg5bFtUnGVTvraivlJiI6h1zU4=
+	t=1792166037; cv=none; b=f8Oql/DSmY3UvcCW0516la3spylK75CDUy3jIueYSH683Q2gAnvHoask+99suRovtjli3vtNIbie5cgy+YOBo+1VTrgP/pIVOGBMfvzwvh0NUERwF3MoLUE3SlW0VbJKuY3xmJsrYZIVfrYPiKrbtas1H4uzdFncdVVJT1FEKRo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792163163; c=relaxed/simple;
-	bh=e+kqVaVslgNGnDjeAHvVLb9xZFPGLyqC+qhEUvHDVk4=;
-	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
-	 Date; b=EvPsrN+kv/WH2R6ZreQKhNz1/xa6hDNYM1zwBmR0rQKKuF4pDlgiy5V+tpwUUbS/eh6HsSXjJ1Z7qBViGYDaa4hRgaC2R3BjLdUgMDyIotaiw0UTxfOLFG9FsL+iB3d2FLCDHpAuGMNRPmpzImoW1fNhEYGOQyiZKsYK6d7FJOg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jFfAQ3WB; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1792166037; c=relaxed/simple;
+	bh=yjR9YohEk9r0B5Bt/aE1yVkGKeBubww7kAMCTUVyJD8=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=JF7/MIdGbcAXXzXW8eaWGmPzrj+7BgA4BgNU1t6PT03mhS9I5sWEMv6aM/QMCgapS7uvg7KdbS3sF5SPI/ck3YZJx9HYIn6RkzG+V1y86dI4sVuSNJwIc5g5JUJ9WG0Km7naJEk2N/A4iqg6eg+03XrZFdeEY3eHaAr/JxX7V3o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=nzTc+Q3Y; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jFfAQ3WB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3F7B01F000C5;
-	Fri, 16 Oct 2026 15:06:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792163162;
-	bh=044C2z+LZwGScUBEhd+dnOhUBu6aaR4yNv3My/LpC6I=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=jFfAQ3WBop1BfGgQdJMVv9qFPT/X+jvzhqwOQMVgPm+LkNkeVEEzhaqyt1xWz3Yby
-	 M0MhErjnEcm/TXapsKiLVJh9e21qmgnYYl1N/N/R/BIZEHWiUnA1gHIw8T02XoPlWk
-	 ovkDMinUiPNuSkKFCY0XXauBjw769N56Y16EobqoiYKQGBw2B1zBVi8+4sLCxkith2
-	 ButDfPw/hftTBXQPmrhQ5eULzplSDOfP52dbw/ip0KJITE2HIipsKGsXPtf6rkJiEp
-	 CkpHdYbtLyPOyl7GIggecYXg5KS62a/kgZUAlvHYYxy2ZKhPjYYai8B8oxsNiT39p0
-	 p6SbOnx6m/4gA==
-Message-ID: <sashiko-outbox-174530@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] scsi: aacraid: fix dma_free_coherent() size
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Thomas Fourier" <fourier.thomas@gmail.com>
-Cc: =?utf-8?b?b3BlbiBsaXN0OkFBQ1JBSUQgU0NTSSBSQUlEIERSSVZFUg==?= <linux-scsi@vger.kernel.org>
-In-Reply-To: <20261016145420.50870-2-fourier.thomas@gmail.com>
-References: <20261016145420.50870-2-fourier.thomas@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 16 Oct 2026 15:06:01 +0000
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="nzTc+Q3Y"
+Received: from pps.filterd (m0353725.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69GEEDBN2839646;
+	Fri, 16 Oct 2026 15:53:53 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-type:date:from:in-reply-to:message-id:mime-version
+	:references:subject:to; s=pp1; bh=Sus2b9A/FQpep4EebbjSO+xeWNwUuT
+	C8IdCEnIp6SvI=; b=nzTc+Q3YBEuOORkZoDwEhnekXLkPwjnJ8lGT9XC9aeAOsQ
+	Gt5adWY5tI8EXok6hc2J6+BkN4QqCDE/UZbZ6ByILhfb6DY6iaAYDzkW9B/2A+1b
+	Bgw7wGVixrky4m9NXdr7jcO5IG75xCmdmJLXIy7AWINGcZsO1h4Q0OmFrfD+KcbI
+	XWndSn340C9KimWUO32zHCFt5tnYVjZkE0wOkQyF9mKOMPQyFMIkz+LLKeN9P4h0
+	yAbu95EmH/ExeuZCgHZ1RqkvvlP0XoABBmrbD2T0ao1y46EOobUadgnvxHMR8ZfM
+	B4vX/8sqCOaAUEk+zjTmF+nGuwLk3VtpPcc+H7Yg==
+Received: from ppma21.wdc07v.mail.ibm.com (5b.69.3da9.ip4.static.sl-reverse.com [169.61.105.91])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4h7dv0yed5-1
+	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
+	Fri, 16 Oct 2026 15:53:53 +0000 (GMT)
+Received: from pps.filterd (ppma21.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma21.wdc07v.mail.ibm.com (8.18.1.11/8.18.1.11) with ESMTP id 69GE5hA73752573;
+	Fri, 16 Oct 2026 15:53:52 GMT
+Received: from smtprelay05.wdc07v.mail.ibm.com ([172.16.1.72])
+	by ppma21.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4hb34mm5qq-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 16 Oct 2026 15:53:52 +0000 (GMT)
+Received: from smtpav04.wdc07v.mail.ibm.com (smtpav04.wdc07v.mail.ibm.com [10.39.53.231])
+	by smtprelay05.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 69GFrq2m26084020
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Fri, 16 Oct 2026 15:53:52 GMT
+Received: from smtpav04.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 4770F58050;
+	Fri, 16 Oct 2026 15:53:52 +0000 (GMT)
+Received: from smtpav04.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 0414758045;
+	Fri, 16 Oct 2026 15:53:52 +0000 (GMT)
+Received: from d (unknown [9.61.189.254])
+	by smtpav04.wdc07v.mail.ibm.com (Postfix) with ESMTPS;
+	Fri, 16 Oct 2026 15:53:51 +0000 (GMT)
+From: Dave Marquardt <davemarq@linux.ibm.com>
+To: sashiko-bot@kernel.org
+Cc: sashiko-reviews@lists.linux.dev, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH v14 09/11] scsi: ibmvfc: extend channel reg/dereg
+ helpers for async sub-CRQ
+In-Reply-To: <sashiko-outbox-173056@kernel.org> (sashiko-bot@kernel.org's
+	message of "Thu, 15 Oct 2026 15:21:15 +0000")
+References: <20261015-ibmvfc-fpin-support-v14-0-a0b063b8d825@linux.ibm.com>
+	<20261015-ibmvfc-fpin-support-v14-9-a0b063b8d825@linux.ibm.com>
+	<sashiko-outbox-173056@kernel.org>
+Date: Fri, 16 Oct 2026 10:53:51 -0500
+Message-ID: <87qzhpbq0g.fsf@linux.ibm.com>
+User-Agent: Gnus/5.13 (Gnus v5.13)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain
+X-TM-AS-GCONF: 00
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDE2MDA2MiBTYWx0ZWRfXzds0Yt7T4a5J
+ lG/L+fRGZd6hKUq6ZqA31mtx825M1RLMH0tJFQu36ODmhHm7hVmZp04gmvhnphpwjcql7VS165C
+ 9SP7VaTXx4iHNxB1z8yGy1pOuL5c748GisO7aWML6CMJY1ZDm1qN7pCp8UvP1JD+Xwxlk/xJz0d
+ HahtJ7ssoYXeA0LmP9kyftyOK77ffZilLgMhKmR7dAivRpzI09cFB6xE4Tw2f2VyMuTg8zg2sbC
+ Q6r9c8l5NBK8JlpsKQ30mrWQQQ5khuV6voT5BSjWA3UYTOsxGHWIZyUJqwErB6z6QWSKGQOnr3s
+ NY6OGWWlqYK4jHShF43s9o8aFWPb0OmTXCkyLO0m/xP/mfrfZO32/TWapJG3JEKCClNFqvxHaPg
+ ezvWCUWKFufM2cArRjE51e4CGuUswIGcO2YyAX7VdWpkxf7FtBL6VC6ATZ+TCfbpdsoHQyle5fD
+ xrRc5hfiSEj/1GZg+mw==
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMDE2MDA2MiBTYWx0ZWRfX+jdNr9HUk1dZ
+ ot+bAu9JNQHpS7mSBFDqrPl4n+FvQORNijXyBtTYWVN2LBnCSX7mJOHmeR594vC0lf6UQflxmd9
+ CEgD3Q2pC1xqtwo30M+fxzaRgvkmN9E=
+X-Proofpoint-ORIG-GUID: 8ghDN1npoILsNmHt848mzVjPdiDJrUKG
+X-Authority-Analysis: v=2.4 cv=a6KlZkSF c=1 sm=1 tr=0 ts=6ad24891 cx=c_pps
+ a=GFwsV6G8L6GxiO2Y/PsHdQ==:117 a=GFwsV6G8L6GxiO2Y/PsHdQ==:17
+ a=660iZSQnnn4A:10 a=VkNPw1HP01LnGYTKEx00:22 a=RnoormkPH1_aCDwRdu11:22
+ a=V8glGbnc2Ofi9Qvn3v5h:22 a=VwQbUJbxAAAA:8 a=VnNF1IyMAAAA:8
+ a=18-5Fqv7mxGyy7mi-rEA:9
+X-Proofpoint-GUID: 8ghDN1npoILsNmHt848mzVjPdiDJrUKG
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
+ definitions=2026-10-16_02,2026-10-14_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ bulkscore=0 malwarescore=0 spamscore=0 suspectscore=0 clxscore=1015
+ phishscore=0 priorityscore=1501 lowpriorityscore=0 impostorscore=0
+ adultscore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2610080000
+ definitions=main-2610160062
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] scsi: aacraid: DMA unmap size mismatch due to shrunken can_queue
---
+sashiko-bot@kernel.org writes:
 
-commit 1e9d5fb7ed09ff94558efbd312a1809b83cd68c2
-Author: Thomas Fourier <fourier.thomas@gmail.com>
+> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
+> - [Low] scsi: ibmvfc: race reading uninitialized hwq_id on early interrupt
+> --
+>
+> commit 305244f5c1aeffae812f2cadfc3586d45148fbbe
+> Author: Dave Marquardt <davemarq@linux.ibm.com>
+>
+> scsi: ibmvfc: extend channel reg/dereg helpers for async sub-CRQ
+>     
+> This commit extends ibmvfc_register_channel() and ibmvfc_deregister_channel()
+> to handle IBMVFC_PROTO_ASYNC channels. It removes the __maybe_unused
+> annotation from ibmvfc_interrupt_async_subq and updates error messages to
+> include the channel protocol.
+>
+>> diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/ibmvfc-core.c
+>> index fc69012efccc0..b12655f028879 100644
+>> --- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
+>> +++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
+>
+> [ ... ]
+>
+>> @@ -6882,7 +6901,8 @@ static int ibmvfc_register_channel(struct ibmvfc_host *vhost,
+>>  	rc = request_irq(scrq->irq, scrq->handler, 0, scrq->name, scrq);
+>
+> [Severity: Low]
+> Is there a potential race condition here when the interrupt is requested?
+>
+> If a hardware interrupt triggers immediately after request_irq() enables it,
+> the newly bound handler ibmvfc_interrupt_async_subq() could run before
+> scrq->hwq_id is initialized:
+>
+> ibmvfc_register_channel()
+>     ...
+>     rc = request_irq(scrq->irq, scrq->handler, 0, scrq->name, scrq);
+>     ...
+>     scrq->hwq_id = index;
+>
+> If an early interrupt happens, the handler calls ibmvfc_toggle_scrq_irq(),
+> which uses scrq->hwq_id for error logging if the hypervisor call fails.
+>
+> Could this result in reading an uninitialized (zeroed) scrq->hwq_id in the
+> dev_err() message? Would it be safer to initialize scrq->hwq_id before
+> calling request_irq()?
 
-scsi: aacraid: fix dma_free_coherent() size
+Yes, it would be safer. Consequences, as you say, are low, as hwq_id is
+used for error logging in ibmvfc_toggle_scrq_irq(). In the case
+described, it would log "sub-crq[0]" rather than the correct sub-crq index.
 
-This commit updates the DMA unmap size calculation in aac_fib_map_free()
-to use dev->max_cmd_size instead of dev->max_fib_size. This is intended to
-match the initial allocation size in fib_map_alloc() and prevent leaving
-parts of the memory mapped.
+Will fix in v15.
 
-> diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsu=
-p.c
-> index 0dba4406494a5..16cc4593a5c97 100644
-> --- a/drivers/scsi/aacraid/commsup.c
-> +++ b/drivers/scsi/aacraid/commsup.c
-> @@ -81,7 +81,7 @@ void aac_fib_map_free(struct aac_dev *dev)
->  		return;
-> =20
->  	num_fibs =3D dev->scsi_host_ptr->can_queue + AAC_NUM_MGT_FIB;
-> -	fib_size =3D dev->max_fib_size + sizeof(struct aac_fib_xporthdr);
-> +	fib_size =3D dev->max_cmd_size + sizeof(struct aac_fib_xporthdr);
->  	alloc_size =3D fib_size * num_fibs + ALIGN32 - 1;
-
-[Severity: High]
-Does this recalculation still result in a DMA unmap size mismatch?
-
-While this update corrects the fib_size multiplier, the num_fibs multiplier
-is based on dev->scsi_host_ptr->can_queue, which can be modified after the
-initial allocation.
-
-For example, fib_map_alloc() allocates memory based on the initial value of
-can_queue:
-
-drivers/scsi/aacraid/commsup.c:fib_map_alloc() {
-    ...
-	dev->hw_fib_va =3D dma_alloc_coherent(&dev->pdev->dev,
-		(dev->max_cmd_size + sizeof(struct aac_fib_xporthdr))
-		* (dev->scsi_host_ptr->can_queue + AAC_NUM_MGT_FIB) + (ALIGN32 - 1),
-		&dev->hw_fib_pa, GFP_KERNEL);
-    ...
-}
-
-However, for Rocket adapters, can_queue is shrunk after the allocation
-successfully completes:
-
-drivers/scsi/aacraid/rkt.c:aac_rkt_select_comm() {
-    ...
-			dev->scsi_host_ptr->can_queue =3D AAC_NUM_IO_FIB_RKT;
-    ...
-}
-
-When aac_fib_map_free() is called, it recalculates the unmap size using the
-newly shrunken can_queue, which causes a smaller size to be passed to
-dma_free_coherent().=20
-
-Will passing a mismatched smaller size to dma_free_coherent() violate the
-DMA API contract and lead to leaked memory or corrupt allocator state?
-
-> =20
->  	dma_free_coherent(&dev->pdev->dev, alloc_size, dev->hw_fib_va,
->  			  dev->hw_fib_pa);
-> =20
->  	dev->hw_fib_va =3D NULL;
->  	dev->hw_fib_pa =3D 0;
->  }
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261016145420.5087=
-0-2-fourier.thomas@gmail.com?part=3D1
+-Dave
