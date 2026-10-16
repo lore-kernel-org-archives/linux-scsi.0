@@ -1,74 +1,71 @@
-Received: from mail-pj1-f52.google.com (mail-pj1-f52.google.com [209.85.216.52])
+Received: from mail-pj1-f51.google.com (mail-pj1-f51.google.com [209.85.216.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DCC2A399003
-	for <linux-scsi@vger.kernel.org>; Fri, 16 Oct 2026 06:12:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFEA03B27D3
+	for <linux-scsi@vger.kernel.org>; Fri, 16 Oct 2026 06:15:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792131142; cv=none; b=GaN1xkEuU22CeoaBc4K4Z52jwpzWBAMADrR5RdXSWhp4sjYUSiciMFK7vgFgL6o5QuT7E+cHsta2Z3vvrwFVXO9AS+il7H5j+V69cTCeySWjcBIiHwPcDPKdqhRHzrau/9Ekzyl7WpuZ2jONvLbCShqodfO+NfUSbNdI1C51TIw=
+	t=1792131328; cv=none; b=jdvzvUosqnxKlhnQvKZ8waF2DtIRBszUBo6PV4Z9ySOgZjPx0s7Kc54esQQQoPs2SR3Rh5/w8iU3Sqpwqf5hLr8IxB/fUMaE72bHDWahrEpwlp7FqwF+Qidp+iznLdNr9LsUifZJSGT8BAUTwP6DEOyB/f7XXVYyX612qcHzDPo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792131142; c=relaxed/simple;
-	bh=GiK1rjWkVKYkYUyerIeHUjnzQfFpbLLdF4axllSUko8=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=nElf5YED84K/X/YntO5EWBc4T/1HT2lOsw4DyFW3a3R7ujxAjCvT/4vMLiAqH36Qrd56njxn9WBbkx4HdLS6YmDIs4Cn7wOvsdllroCNTbUbSqIqU8YDaVWxEzqIQZQLuWC1W4/jboe2reqMWRLjVYoqJVZDwrWSYuU/S157IF0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=cT9KOWN2; arc=none smtp.client-ip=209.85.216.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1792131328; c=relaxed/simple;
+	bh=n4MJC6iMf1cwKq/+yJirYmIkCBgatUkCCRnBrIPUEdk=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=LjRl17Z1rkKRNt7Z2f1wQnfdTNmmzg/Nc2dfE1ywFfjEBD6haKrBVmiVQzu9r75avpQbpqB2b+NB4RQBFwIZlIXCwfAmJJc0qoYRunIimso5Ft6AEChijX/wqVsYdBzu3HepsWRhj0RB7dw36BdZocaEWykGeiYN4YoX6ZaykqA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr; spf=none smtp.mailfrom=isslab.korea.ac.kr; dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b=iwcoB9DA; arc=none smtp.client-ip=209.85.216.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="cT9KOWN2"
-Received: by mail-pj1-f52.google.com with SMTP id 98e67ed59e1d1-38d489b6b71so3345241a91.0
-        for <linux-scsi@vger.kernel.org>; Thu, 15 Oct 2026 23:12:20 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b="iwcoB9DA"
+Received: by mail-pj1-f51.google.com with SMTP id 98e67ed59e1d1-38e42560ebcso1281636a91.1
+        for <linux-scsi@vger.kernel.org>; Thu, 15 Oct 2026 23:15:23 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792131140; x=1792735940; darn=vger.kernel.org;
+        d=isslab-korea-ac-kr.20251104.gappssmtp.com; s=20251104; t=1792131323; x=1792736123; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=cECDn9wixA330bGvTffyTHattrcKzY/ix80ysxVbhlI=;
-        b=cT9KOWN2ERwzS2XFzWsSwVytrHoIP911OrNYFbosERYwo6FDgwjUiNTI57jAI3WSNz
-         3LKijCyMgpUQbfNdQCKgzq/Ox7FLy0scCdzLXEbOArVwnR6XGM/u7ZLrf3v3S1JyhSiD
-         lwOV0Id1fiShnsro1j+WJqGEYo+gSYc4wLAGY2KLfHs5IquYACXuE35wYYoYvUmOeCz9
-         gBSWOl4LT4776qH6BGhkhT9er5Cc/B8IZKAvwYOL6gnAVkOp9AHQXoWtrxJQFf9NnnsI
-         06RcscAltZ1PUwgO7m2mzFKTxSkmMCXavjFDdq34zpOfZOB8R7v9as1Ma1BCEuUunbgh
-         eCqQ==
+        bh=eVW4rC+ucvWPCD3KbEY4n2x4mXCfOqTdSeZ6A0pMGGk=;
+        b=iwcoB9DA2ZkCF9DmPCzMhg1jnOVewj+7oA9W4IUUKz5jQnTRH8+ruZyaNVu0hYrKN+
+         O7sXv0VOG7SyisHMA0dsCbecQyu/VEzE9vLgLOE1/8DC1Vkh8WpDB4N3JyseSXhTOaa+
+         j0c/1huf3vt9ssZJSg35ytnI47P3hgenXU3HGDsDFUZfxOFNjHsXQANSt6FIc80suCx2
+         9H8qhen3y83Rm22j1jfCVN0lyUVOtn/SDBp4IIR3jU0d68x6pHKR4cjAB3Jwa4FlLVjA
+         hNoGBrNMfc8EBWFKZAgYPi8Bcvfu+jKkWG5j/E7CNjMJXx5+iXVpd0Mng+QWNOYrEsaL
+         k7nw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792131140; x=1792735940;
+        d=1e100.net; s=20260707; t=1792131323; x=1792736123;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=cECDn9wixA330bGvTffyTHattrcKzY/ix80ysxVbhlI=;
-        b=E5wCP8w7iJhtEFUsN7OSs8luuxQ1nD53tgkpmP65foaBgtcxWKRy5xgVV1NMPNL36S
-         7MdasXlPtoca42QDD8lE36rYJYBIJ1zn0eXOZQuG/OeHmp/MQgqefatlSR6oUVBUxyWj
-         poVlnVA6DIF7Ki7fL2c2DmZD7RD6pOkxK9TlHEf1OoLosyqpWo/9UZ5PAqSY2tRqCNnE
-         vffuUuV+18In4r8FQPLNio0JQ7WAHsXraFHJ/ei0jvMJPfe1yMKzWnYebR3a7gs6Q131
-         veRZoI2ydR/vlM7WMxVzPWNvk9hFcl6Ah9GWE0N6Zx58eDk3xN8oye3/VKn9sYXBVsgX
-         FTRw==
-X-Gm-Message-State: AFq9FYIKUfbSp6W4lbORRSx0eIP/y1HmFTYYEXGHgEzJe6ezGFnRv4th
-	vqzUCuQxEIfGi59dcElLMxGOv/kmY4XkTOFfuSmBR1p3PRmCAZvB3r5I
-X-Gm-Gg: AYBFou1fTWHTyVeLXkaBAPJoTRv2Y8J/a6VYYHhlOCNsbVDHNhpY8h+PxlTeKzkumAQ
-	9JcCLjn2PQ6i3ajGLopF94h0ta6GeBEBI8Jlz9xXftzjA6YKQd2CNFy3XL8HhqhZQodKFY1DR8h
-	O0LAeb7d9wD2uu+tjJ33RSpSPX/tayU4j1I25ngazSKJxH6cVuVeEtJ9euttopmXFmHamoHt881
-	oX2MtzDbMfG8x+3cn9oudxEREaBrQysXeVOt+aPmUFJDgDdhvQw+u/kSLuJfKeAVtIqKd9Wi4Nr
-	jkqJmKiw8yzlEp3acAMU/BYNd9gygwdcY3T1G8Hrct3SPB1MeprZcVo7UO8yy4M/6j9rEyXutJz
-	QSrGB42Xs0+D/1tKzLHtCBOyiKJK/MP0bKWuoRLKlfMATBsZwShlkwaIZq4ojDGtq8dGhKCTnUE
-	RYBc7tz9d5i5RZSG+3jbpG1tchkoUXaQfSOx0CdhK8PqsUxQmxmwkvCBrY6YQolMXeCSHT6Jynh
-	kp4OHCNMzh17dnMTJ2IECjiaLFsQAj5VShCVd0ixXc6Riinetfi1mbFHss6AhDwoJlqRZRWDXve
-	OUV7eEvDHGTkfrY1BTiBaQ4HHrNh9Um0dmw+EeprAAj0iusN
-X-Received: by 2002:a17:90b:4acb:b0:3ac:aa8d:19d6 with SMTP id 98e67ed59e1d1-3acaa8d2219mr2736921a91.17.1792131140016;
-        Thu, 15 Oct 2026 23:12:20 -0700 (PDT)
-Received: from EAIT-H54D9Q2FJQ.eait.uq.edu.au ([130.102.10.249])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3ac947dfa00sm7587036a91.17.2026.10.15.23.12.16
-        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Thu, 15 Oct 2026 23:12:18 -0700 (PDT)
-From: Yu Zhang <yuz08559@gmail.com>
-To: Mike Christie <michael.christie@oracle.com>,
-	Dmitry Bogdanov <d.bogdanov@yadro.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>
+        bh=eVW4rC+ucvWPCD3KbEY4n2x4mXCfOqTdSeZ6A0pMGGk=;
+        b=I/AnDtuDuLKm0koEXYsKYhn9YGrkRLpZjMaNhwEq1Y4OPfXWyy9/O9MeRDWU1ayOqh
+         cDmvZcfjiUH7WL1CINCvuCED3KSxKONgUrsk38j3SQyxSVYWwSaQWDrTKTyJIxtrDEC2
+         nADr7uQHY25KeDcWJEPTX3PcYPxDpHC2xEn93OGO06VC5XCZ+Gqba6z5ky231xiLJEID
+         HNrNqYP/KuLkn2s8VVW86HQidz72n+dXXd2jfceFbCP9RRzuutA9mV7sRQcFpm788j+Z
+         gDLiBWln+kkLkYRWa1ECGlcLMNRLxc5YZupRh0xk2PTzmcrluWRDxolFlkuNwXsGtzhZ
+         9hAQ==
+X-Gm-Message-State: AFq9FYLOTdBOoaG51roUPu9fcdm4LJb3y6HOYAK2zFC4ou03AyCJdgtM
+	2SofkVmmlhrdfNbswO7Ayx8c5eeaEXZ2Uc/zMN8R3em7YBy0zGbmh2802zSJIH2WS3A=
+X-Gm-Gg: AYBFou0fcEdzUJ+bdje4UA5Fh/cekzwlYD5Ssr9FCuW02NfCCj+/yAdGpYJErVKyeiR
+	SLe9cPbVBYSwqfkFe6zm1aeXAW6OaTQa7V3/n4ogMwsK+FNSLtdy5/obO59SscagCHu7n9J0UeP
+	RYjerQt8QwPlWWUPpd6AQ7PtlkxTYdOf3oDjkGJ6lS1hGS9EKCNBGguaENHAOR3IRmVrSrQk2VJ
+	D4S6zPZh4rUaJWPdGUl9AiX9f91IEpkACsmKxQ2q/0Sq79KdW1ilo+qz7zGVen4Cb8QI+lB6Tip
+	xOH+osoiLPdtUa6RuUVIAfvcH0GH3fDdjZrrWFXa3wfYKKKPmV9yCo25ytjDC5+icPfyAY5xQNu
+	BctlPrL8PwcOMjjp4jLV6SgoJ4vKGjIRQwStdwIXDRAWiJTW4fuFe8jsvneGBs9/MZCBjldALvL
+	aZREgDT7gs0k15uJwfI3NE68gvglJe86joQ1M2hDfta0+HZ4V4iiO5qRWroYi5ZeEJOnUMIZxAl
+	mKVLw==
+X-Received: by 2002:a17:90a:bc8:b0:3a8:545a:9e87 with SMTP id 98e67ed59e1d1-3ab3a747e4dmr11957759a91.15.1792131322640;
+        Thu, 15 Oct 2026 23:15:22 -0700 (PDT)
+Received: from yhlee-960QFG.. ([125.131.91.97])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3ac945e7311sm7678604a91.4.2026.10.15.23.15.20
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 15 Oct 2026 23:15:22 -0700 (PDT)
+From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+To: "Martin K . Petersen" <mkp@kernel.org>,
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>
 Cc: linux-scsi@vger.kernel.org,
-	target-devel@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	Yu Zhang <yuz08559@gmail.com>
-Subject: [BUG] scsi: target: use-after-free in PR REGISTER AND MOVE racing PR OUT CLEAR
-Date: Fri, 16 Oct 2026 16:11:50 +1000
-Message-ID: <20261016061150.90624-1-yuz08559@gmail.com>
-X-Mailer: git-send-email 2.55.0
+	yhlee@isslab.korea.ac.kr
+Subject: [PATCH] scsi: bfa: bound the RSCN event list by the received frame length
+Date: Fri, 16 Oct 2026 15:15:13 +0900
+Message-ID: <20261016061513.962742-1-yhlee@isslab.korea.ac.kr>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -77,63 +74,102 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-core_scsi3_emulate_pro_register_and_move() (drivers/target/target_core_pr.c)
-drops dev_reservation_lock to allocate the destination registration, then
-re-takes the lock and re-locates it:
+bfa_fcs_lport_scn_process_rscn() takes the length of the frame it was
+given and never looks at it. The number of events it walks comes only
+from the payload length the peer put in the frame:
 
-	spin_unlock(&dev->dev_reservation_lock);
-	if (core_scsi3_alloc_registration(... , 2, 1)) {
-		ret = TCM_INSUFFICIENT_REGISTRATION_RESOURCES;
-		goto out;
-	}
-	spin_lock(&dev->dev_reservation_lock);
-	dest_pr_reg = __core_scsi3_locate_pr_reg(dev, dest_node_acl, iport_ptr);
-	new_reg = 1;			/* result used unchecked */
-	...
-	__core_scsi3_complete_pro_release(dev, pr_res_nacl,
-					  dev->dev_pr_res_holder, 0, 0);
-	dev->dev_pr_res_holder = dest_pr_reg;
-	dest_pr_reg->pr_res_holder = 1;
+	num_entries =
+		(be16_to_cpu(rscn->payldlen) -
+		 sizeof(u32)) / sizeof(rscn->event[0]);
 
-While the lock is dropped, a PR OUT command from another I_T nexus - most
-easily CLEAR, which frees all registrations - runs
-__core_scsi3_free_registration() and clears dev->dev_pr_res_holder. The move
-path then uses the freed / NULL registration.
+	for (i = 0; i < num_entries; i++) {
+		rscn_pid = rscn->event[i].portid;
 
-On a stock tree this is a NULL dereference (dest_pr_reg / dev_pr_res_holder
-are NULL):
+payldlen is a 16-bit field, so num_entries can be 16382 while the frame
+sits in an unsolicited frame buffer of BFA_UF_BUFSZ, which holds 569
+events after the fchs_s and the RSCN header. The loop reads up to 63 kB
+past that buffer, and the duplicate scan nested inside it is quadratic in
+num_entries, so a single frame can also spin the receive path through
+more than a hundred million iterations.
 
-  BUG: KASAN: null-ptr-deref in __core_scsi3_complete_pro_release+0x9d/0x3b0
-  Read of size 1 at addr 0000000000000228
-  Call Trace:
-   __core_scsi3_complete_pro_release+0x9d/0x3b0
-   ? __core_scsi3_locate_pr_reg+0x13f/0x170
-   core_scsi3_emulate_pro_register_and_move+0xa95/...
-   target_scsi3_emulate_pr_out+0x3a4/...
-   __target_execute_cmd+0x56/0x140
+Bound the walk by both lengths that matter.
 
-A NULL check after the re-locate is not sufficient; a use-after-free of the
-destination registration then shows up - allocated by one REGISTER AND MOVE,
-freed by the concurrent CLEAR, still used by the move path (three tasks):
+The first is the received frame length, which is already here:
+bfa_fcs_uf_recv() takes it from the completion with bfa_uf_get_frmlen()
+and it is passed down through bfa_fcs_fabric_uf_recv() and
+bfa_fcs_lport_uf_recv() to this function. Work out how many events the
+received frame can hold and take the smaller of that and what the payload
+claims.
 
-  BUG: KASAN: slab-use-after-free in target_scsi3_emulate_pr_out+0xaf5/...
-  Read of size 8 at addr ffff8880058db670
-  Allocated by task 23:
-   __core_scsi3_alloc_registration+0x7c/...
-   core_scsi3_emulate_pro_register_and_move+0xed7/...
-   target_scsi3_emulate_pr_out+0x3a4/...
-  Freed by task 33:
-   __core_scsi3_free_registration+0x3d2/...
-   target_scsi3_emulate_pr_out+0xac0/...        (PR OUT CLEAR)
+The second is what the buffer physically holds. That frame length is not
+itself bounded by the buffer: uf_recv() assigns it straight from the
+completion message, "uf->data_len = m->xfr_len", and only warns when it
+is below sizeof(struct fchs_s), so a 16-bit transfer length larger than
+BFA_UF_BUFSZ is accepted. Cap the event count at BFA_UF_BUFSZ as well, so
+the bound does not rest on an invariant the completion path does not
+enforce.
 
-Reproducer (KASAN build, panics in ~1 minute)
----------------------------------------------
-- Two tcm_loop TPGs (SAS, distinct rtpi), a nexus each, both mapping one
-  iblock backstore -> two /dev/sdX = two I_T nexuses to the same LU.
-- Thread A on nexus 1: loop { PR OUT REGISTER; RESERVE;
-  REGISTER AND MOVE to nexus 2 (unregistered destination) }.
-- Thread B: loop { PR OUT CLEAR }.
+A frame whose payload fits is parsed exactly as before; one that claims
+more is parsed only as far as it goes, which also caps the duplicate
+scan.
 
-C reproducer and full dmesg available on request.
+The same shape is in lpfc_els.c, where lpfc_els_rcv_rscn() and
+lpfc_rscn_payload_check() walk the payload length without comparing it to
+the frame either.
 
-Reported-by: Yu Zhang <yuz08559@gmail.com>
+I have no Brocade hardware; this is from the code, with the arithmetic and
+the loop bounds modelled against a BFA_UF_BUFSZ buffer under KASAN.
+
+Fixes: 7725ccfda597 ("[SCSI] bfa: Brocade BFA FC SCSI driver")
+Cc: stable@vger.kernel.org
+Signed-off-by: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+---
+ drivers/scsi/bfa/bfa_fcs_lport.c | 20 +++++++++++++++++++-
+ 1 file changed, 19 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/bfa/bfa_fcs_lport.c b/drivers/scsi/bfa/bfa_fcs_lport.c
+index 8c9d423129c07..bb1a821716f38 100644
+--- a/drivers/scsi/bfa/bfa_fcs_lport.c
++++ b/drivers/scsi/bfa/bfa_fcs_lport.c
+@@ -5533,10 +5533,13 @@ bfa_fcs_lport_scn_process_rscn(struct bfa_fcs_lport_s *port,
+ 			struct fchs_s *fchs, u32 len)
+ {
+ 	struct fc_rscn_pl_s *rscn = (struct fc_rscn_pl_s *) (fchs + 1);
+-	int             num_entries;
++	int             num_entries, max_entries = 0;
+ 	u32        rscn_pid;
+ 	bfa_boolean_t   nsquery = BFA_FALSE, found;
+ 	int             i = 0, j;
++	u32        pl_off = sizeof(struct fchs_s) + sizeof(*rscn);
++	int             buf_cap = (BFA_UF_BUFSZ - pl_off) /
++				  sizeof(rscn->event[0]);
+ 
+ 	num_entries =
+ 		(be16_to_cpu(rscn->payldlen) -
+@@ -5544,6 +5547,21 @@ bfa_fcs_lport_scn_process_rscn(struct bfa_fcs_lport_s *port,
+ 
+ 	bfa_trc(port->fcs, num_entries);
+ 
++	/*
++	 * the event list cannot run past the frame that was received, nor
++	 * past what the unsolicited frame buffer physically holds
++	 */
++	if (len > pl_off)
++		max_entries = (len - pl_off) / sizeof(rscn->event[0]);
++
++	if (max_entries > buf_cap)
++		max_entries = buf_cap;
++
++	if (num_entries > max_entries)
++		num_entries = max_entries;
++
++	bfa_trc(port->fcs, max_entries);
++
+ 	port->stats.num_rscn++;
+ 
+ 	bfa_fcs_lport_scn_send_ls_acc(port, fchs);
+
+base-commit: 2f2f7eeef8b0a1a9b9ca998231419873ccae8d4e
+-- 
+2.43.0
+
