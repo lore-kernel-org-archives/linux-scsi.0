@@ -1,120 +1,148 @@
-Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 457EA4594E
-	for <linux-scsi@vger.kernel.org>; Sun, 18 Oct 2026 00:41:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0CB73486645
+	for <linux-scsi@vger.kernel.org>; Sun, 18 Oct 2026 12:14:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792284068; cv=none; b=pH7V4/HJzj3EF6g+Mtw4ayjKAqonE4ge7XRKGBjQeQaTMfi7rs8sxGI/nUx04XGMkhVQnVv21h80nYvYmDYye2OkBp00qr8q6qaNbl7ViApINzmIpHU9rN6GndIvCCmvio3WKo8Yva1i200QkoH/vm+ZQO0Yqdri9wOqCFGbpMw=
+	t=1792325647; cv=none; b=nahS17yZUfK85QO28pNuQhbR4dWgSA+7cMWDcOVcSW7JpPJPtqoZWdvs7GMJtSPI17phHMIhxWVaXC8pUdvi3jznI7LCwhY/N25TnWimrsPlVPyLZaKhrZQXUxUxwvt8rXVgBr44z+lKzCQMOcIRvzYj+1haNr7413HT66kttz0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792284068; c=relaxed/simple;
-	bh=aLPC+rHvFBjYJdvWCp19ojEMExO/FNau6zm7mtTm8Vk=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=c+K5zexC6oMuICuNz/XdnK8WmqgSdp87RS5dQmawC0rAqSNhEwaJA9EgE8vbHZDelCormOTTZmsbpjoEW4BdKLEuvGDkWyKHZVXzTrwyOeyyogXSeVRS8f9w9RmR/vh7sQnajjJp14Tc6nS+OozqkWpc5NNtqU2SgSigSI/xh3M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=PE4HWe0J; arc=none smtp.client-ip=199.89.1.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1792325647; c=relaxed/simple;
+	bh=0ZUoTOrw2sVIIJsHysZ9LrpXCPGOLNSWoimGoqE2U2E=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=jxIOIiyMZuu/3sP9p17pXJGfs6nBv49lt/qkxc5ZIzyyBGjOmvxOv+oytq95+zH6pLx2EtrCxk0X/GzMv9iQCTJKpu6tjeziFvTNwe436hjNQdWQHwUg9XVZ90ly+SUaQNy3pxq2RbpuDlKLrXSLNGSJt51M719Wwa2sIX4qKhk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=hpinP1vp; arc=none smtp.client-ip=209.85.214.170
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="PE4HWe0J"
-Received: from localhost (localhost [127.0.0.1])
-	by 011.lax.mailroute.net (Postfix) with ESMTP id 4j6fxG4M3Fz1XM5kt;
-	Sun, 18 Oct 2026 00:41:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:mime-version:x-mailer:message-id:date
-	:date:subject:subject:from:from:received:received; s=mr01; t=
-	1792284062; x=1794876063; bh=ql1I17f7DY9fTfE87GeahQ+nI90Orqvabze
-	FPAWXNAU=; b=PE4HWe0JD6Xzf4rR8y5B1dcf3prNjKfpMB1ry/fK/LJEtGrsv5M
-	FyE+bS+pxnE52TRSzVHSfdB6PYNU7dmT7kRKTieC0F0gBRBnbzugpw8KTaMXb+ly
-	bzTFNgzML8wfUwm/F2kKGmbdQVz1Mk8H71NKykpP5a5QRRONUZk3Oqke1U9MOcUR
-	yIlnWJdbV/Yf+43i15kwH0R1lfu88qs5zm+QsAPukLWC56SuFyvwRnWyYc3VP9o4
-	OmvxDyQ/xNt9El4oElblUWgNMe8Xz74VRtD+CcTu1Jf4tZO/F9d8eBhX/dZmnlFL
-	z7hJfkX5C4YrWHtMyasZv/P9n10vrPIrzvQ==
-X-Virus-Scanned: by MailRoute
-Received: from 011.lax.mailroute.net ([127.0.0.1])
- by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 2yrCtQhCV91y; Sun, 18 Oct 2026 00:41:02 +0000 (UTC)
-Received: from bvanassche.c.googlers.com.com (245.199.118.34.bc.googleusercontent.com [34.118.199.245])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4j6fx96j7Jz1XM4Tl;
-	Sun, 18 Oct 2026 00:41:01 +0000 (UTC)
-From: Bart Van Assche <bvanassche@acm.org>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
-	Bart Van Assche <bvanassche@acm.org>,
-	Nathan Chancellor <nathan@kernel.org>,
-	Satish Kharat <satishkh@cisco.com>,
-	Sesidhar Baddela <sebaddel@cisco.com>,
-	Karan Tilak Kumar <kartilak@cisco.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <mkp@kernel.org>
-Subject: [PATCH] scsi: fnic: Annotate fnic_nvme functions with __must_hold()
-Date: Sat, 17 Oct 2026 17:40:51 -0700
-Message-ID: <3c41b84d7d832dd767b30bc04cf875f800ce748d.1792283587.git.bvanassche@acm.org>
-X-Mailer: git-send-email 2.56.0.176.g3575e65682-goog
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="hpinP1vp"
+Received: by mail-pl1-f170.google.com with SMTP id d9443c01a7336-2e608cd460eso6379855ad.3
+        for <linux-scsi@vger.kernel.org>; Sun, 18 Oct 2026 05:14:05 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1792325645; x=1792930445; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=rTNuU8y07OWc3gpsCtxs9hMoDORTFAVO+j50HlgZwnM=;
+        b=hpinP1vpFyJpDdPHICXGzIQIRyImrKMVDhw1wgqsbp/SHHH8D77WA05IczWynz+ZQU
+         cE4hrlX3BUbq7wjQ2t4DM6bRSyXh/0EXGO5qZlEud8ZvnbFJGqykMI+TPhQQv0kS7MfQ
+         xFQoKTXBNyOirmkztWZlwE/YDM+shn63+be1LPBgy/2eS3R3X2gnx2amqEzRF2LNeQkE
+         HZseIBZNuNsA747O7X3E7lW71cbVvbIh/lGQg3N38dnYaB8kNGwKHCz7Ajg0WrVWuWx2
+         q2YRb2LbIMcOHjEUexc9g5nVeahpZZ7W33eKZE8hXJROfPktp6fSIBjvD7hMOqBXHKSr
+         Cxew==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792325645; x=1792930445;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=rTNuU8y07OWc3gpsCtxs9hMoDORTFAVO+j50HlgZwnM=;
+        b=i2dRdWABDnQlqq8fM8sSBIAzmzddrVWt9Vv8v4tdhhO4/ot4LvFoENFjmcTKgF4R8G
+         LxjWXPHQj0nYWHdShfacQftk5Nhagc9AdXJldF6Xdd/iK3wBOA+oQZnbfG8nRo8iB5Cb
+         PnIfmKPPUuX8f77GqOSTRCEpdhXkYoTkLyrI53vAdil00F91SDtFGeoCUN2Md4r+wnpO
+         GbZ8XNdg/qUEfu33foLex/kuszGTT6YaWMLPdiw2iBOZ8+/zAtPc8C4BcsfweRtgIBO4
+         j1B3n29EhLpcTdVtJMYM4OO5xzxc5WRG9g4VfzslRYYsibvxUbQMZpBQabyhszsXG3Yy
+         3SHg==
+X-Forwarded-Encrypted: i=1; AKwUvBySdPr3m3TR+xDT3Bedw0lhWoLCtda7+vnP6Wia179vln8dj+8tZ91k8tqG8n1pvwGOFv9qT8A2m2Y3@vger.kernel.org
+X-Gm-Message-State: AFq9FYJXjTCpgTGm6ZRTVRA/vcqTZkC0vv/X+lEYFb/I7y++c260ETaD
+	QwWBHqjg+PC4GCUOrjEW7QWlyTynKUxbTWMnrHA88+6XHuolx5DAtrsW
+X-Gm-Gg: AYBFou0AMAXoACr+jCv20rJ4jEjmiAC14yIN9uK3OR1bIi/BtNKzACaudsrS8TGTUBn
+	h4X6vWkv5DqskZK+D8Co+HCWnBs3Vdg6gKo/WnnSXjQM/iSq47SBZaggQsN1fCLJE/+RbsnGL/V
+	cvgCJif4KPyItYnKjy+eYamQy/OZKNVsuqDyKJz/2yA4mLeWSBqYXN9sl0/PTGUXZSI+qVhUSRw
+	xX/m+Otk/FJS8tT68IRixoGNnx2bz7Qtlz1gV96KnfzcFhaOXW1XVeJHTUfpCA+1eQgj92y0qwy
+	ls9tyP9Godua4DzAguxIygOAHsKVaDyPhVzMGb4++S/cxF0MmjUmD9lAAAQxSzg3DwsKM7a3uCY
+	hKPEhfrznlwOcPSI5lYhf/xQxEpSHhkAmax0tafXnoRBEAGuJoiYD3fLHDsYTNjVShixKtQBF7Q
+	Wr5aDDrECmS/7S3mFa6llUOq/oKu+VWTe1nIxqn0MKqLjwfUTglq/+4VaqJXtuB9XPqg5R7PYPJ
+	qSTjKb9JZQztU96P14hnyb/aNDOdB+K2b1TDTK8MY2HyPTNF+uNLXb5pgNoUCxSJw7jw0F5N3QY
+	/ST5N8NyEf9VLUEa0BjQK802QFejkHD1pPRSr/3zg6wThs/B
+X-Received: by 2002:a17:90b:2c90:b0:3ac:a521:953 with SMTP id 98e67ed59e1d1-3acef0ff0cdmr4044977a91.46.1792325645279;
+        Sun, 18 Oct 2026 05:14:05 -0700 (PDT)
+Received: from EAIT-H54D9Q2FJQ.eait.uq.edu.au ([130.102.10.249])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3acc48e8646sm11116604a91.10.2026.10.18.05.14.02
+        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
+        Sun, 18 Oct 2026 05:14:04 -0700 (PDT)
+From: Yu Zhang <yuz08559@gmail.com>
+To: Mike Christie <michael.christie@oracle.com>
+Cc: Dmitry Bogdanov <d.bogdanov@yadro.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	target-devel@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Yu Zhang <yuz08559@gmail.com>
+Subject: [BUG] scsi: target: PR OUT CLEAR registration-list teardown races concurrent PR OUT -> UAF / double list_del
+Date: Sun, 18 Oct 2026 22:13:57 +1000
+Message-ID: <20261018121357.63980-1-yuz08559@gmail.com>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-Add __must_hold() annotations for fnic_lock to
-nvfnic_process_ls_abts_rsp(), nvfnic_ls_rsp_recv(),
-nvfnic_delete_tport(), and nvfnic_add_tport() in
-drivers/scsi/fnic/fnic_nvme.c.
+core_scsi3_emulate_pro_clear() tears down the global registration_list holding
+only pr_tmpl->registration_lock, and __core_scsi3_free_registration() drops that
+lock across its pr_res_holders busy-wait:
 
-Document that callers must hold fnic_lock on entry and exit because
-these functions temporarily release and reacquire fnic_lock, and
-suppress context imbalance warnings reported by lock context analysis
-and sparse.
+	spin_lock(&pr_tmpl->registration_lock);
+	list_for_each_entry_safe(pr_reg, pr_reg_tmp,
+			&pr_tmpl->registration_list, pr_reg_list) {
+		...
+		__core_scsi3_free_registration(dev, pr_reg, NULL, calling_it_nexus);
+		...
+	}
+	spin_unlock(&pr_tmpl->registration_lock);
 
-Reported-by: Nathan Chancellor <nathan@kernel.org>
-Closes: https://lore.kernel.org/all/20261016023120.GA2863622@ax162/
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/scsi/fnic/fnic_nvme.c | 4 ++++
- 1 file changed, 4 insertions(+)
+__core_scsi3_free_registration():
 
-diff --git a/drivers/scsi/fnic/fnic_nvme.c b/drivers/scsi/fnic/fnic_nvme.=
-c
-index 00d9d5d439a3..d1b327c5c5e0 100644
---- a/drivers/scsi/fnic/fnic_nvme.c
-+++ b/drivers/scsi/fnic/fnic_nvme.c
-@@ -1284,6 +1284,7 @@ void nvfnic_fcpio_cmpl(struct fnic_io_req *io_req)
-=20
- void nvfnic_process_ls_abts_rsp(struct fnic_iport_s *iport,
- 		struct fc_frame_header *fchdr)
-+	__must_hold(&iport->fnic->fnic_lock)
- {
- 	uint32_t tport_fcid;
- 	struct fnic_tport_s *tport;
-@@ -1348,6 +1349,7 @@ void nvfnic_process_ls_abts_rsp(struct fnic_iport_s=
- *iport,
-  */
- void nvfnic_ls_rsp_recv(struct fnic_iport_s *iport,
- 		struct fc_frame_header *fchdr, int len)
-+	__must_hold(&iport->fnic->fnic_lock)
- {
- 	uint8_t *fcid;
- 	uint32_t tport_fcid;
-@@ -2086,6 +2088,7 @@ void nvfnic_exch_reset(struct fnic_iport_s *iport, =
-struct fnic_tport_s *tport)
- void nvfnic_delete_tport(struct fnic_iport_s *iport,
- 						struct fnic_tport_s *tport,
- 						unsigned long flags)
-+	__must_hold(&iport->fnic->fnic_lock)
- {
- 	struct fnic *fnic =3D iport->fnic;
- 	int ret;
-@@ -2179,6 +2182,7 @@ void nvfnic_delete_tport(struct fnic_iport_s *iport=
-,
-=20
- int nvfnic_add_tport(struct fnic *fnic, struct fnic_tport_s *tport,
- 		     unsigned long flags)
-+	__must_hold(&fnic->fnic_lock)
- {
- 	struct fnic_iport_s *iport =3D &fnic->iport;
- 	struct nvme_fc_port_info pinfo;
+	if (!list_empty(&pr_reg->pr_reg_list))
+		list_del(&pr_reg->pr_reg_list);
+	...
+	spin_unlock(&pr_tmpl->registration_lock);
+	while (atomic_read(&pr_reg->pr_res_holders) != 0)
+		cpu_relax();
+	...
+	spin_lock(&pr_tmpl->registration_lock);
+	...
+	kmem_cache_free(t10_pr_reg_cache, pr_reg);
+
+Unlike PR OUT PREEMPT (core_scsi3_pro_preempt), which holds
+dev->dev_reservation_lock across its entire registration_list free loop, CLEAR
+drops dev_reservation_lock before the loop. The same registration_lock-only
+teardown appears in core_scsi3_free_pr_reg_from_nacl() and the PR OUT REGISTER
+unregister path. PR OUT has no device-level serialization, so two I_T nexuses
+can run teardown loops concurrently.
+
+list_for_each_entry_safe() caches the next entry. While one CLEAR is parked in
+__core_scsi3_free_registration()'s registration_lock drop, a second concurrent
+CLEAR acquires registration_lock and list_del()s + kmem_cache_free()s exactly
+that cached next entry. The first CLEAR then advances onto the freed entry ->
+use-after-free read of ->pr_reg_list.next, list_del() on a poisoned node, and a
+double kmem_cache_free().
+
+Reproduced on a KASAN kernel with two tcm_loop I_T nexuses mapped to one iblock
+LUN, each looping { PR OUT REGISTER own-key ; PR OUT CLEAR own-key } via SG_IO:
+
+	list_del corruption, ffff...->next is LIST_POISON1 (dead000000000100)
+	kernel BUG at lib/list_debug.c:56!
+	RIP: __list_del_entry_valid_or_report+0xc2/0x140
+	Call Trace:
+	 __core_scsi3_free_registration+0x12d/0x430
+	 target_scsi3_emulate_pr_out+0xac0/0x13f0
+	 __target_execute_cmd+0x56/0x140
+	 target_execute_cmd+0x1a0/0x5b0
+	 tcm_loop_write_pending+0x15/0x20
+	 transport_generic_new_cmd+0x40b/0x700
+	 __target_submit+0xae/0x1e0
+	 target_queued_submit_work+0x64/0x190
+
+Note for a fix: simply taking dev_reservation_lock across the CLEAR teardown
+loop (mirroring PREEMPT) is not sufficient -- it deadlocks. A PR OUT command
+takes a pr_res_holders reference on its own registration via
+core_scsi3_locate_pr_reg() *before* acquiring dev_reservation_lock, so one CLEAR
+busy-waiting in __core_scsi3_free_registration() for another nexus's
+registration to reach pr_res_holders == 0 waits forever on a nexus whose own PR
+OUT is blocked on dev_reservation_lock (observed as an RCU stall). A correct fix
+likely needs the registration lifetime reworked (drop the locate reference
+before teardown, or defer the free to the last put) rather than only widening
+the lock.
+
+Reported-by: Yu Zhang <yuz08559@gmail.com>
