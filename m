@@ -1,72 +1,72 @@
-Received: from mo4-p01-ob.smtp.rzone.de (mo4-p01-ob.smtp.rzone.de [81.169.146.167])
+Received: from mo4-p02-ob.smtp.rzone.de (mo4-p02-ob.smtp.rzone.de [81.169.146.168])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 194553DAACB;
-	Sun, 18 Oct 2026 18:21:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=81.169.146.167
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C37F12C11EE;
+	Sun, 18 Oct 2026 18:24:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=81.169.146.168
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792347712; cv=pass; b=bx1wVyiJ2pmzShfoRIhFVrk0YPHTeomqMFBhHFOALDjUAAw1kL5KjxxtQj3/A7qRpZls0PbqZl1mD/ZMiWKFcXCpBjmMGdcvzDFlBbokAQMQXdfNdXxln5kPvBkgQ5RXGI+ClF8mGSXJYPl8dA/g9ntDSV89N0i53vZLylCCdcI=
+	t=1792347884; cv=pass; b=A7ngYHbzIH526gMVwYB/8syXkjRmgmg+cKKt5FMXKzj7EqEZkFHJ0w0qW/l8RUUXhS14LLZseKA/5Ckt0gkJDF1H8nV8/u5FiZzvihyXKDdcGc6Pb7T4nAlCqLXhj9pRAJWjYkOx4DKO5NXmQN05CLFqoH2bGR5ruloPir7qu9E=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792347712; c=relaxed/simple;
-	bh=3pKT3x2ThQdMxHZhCFYPZjzhmVUEvaSkjCmS5Kxzclc=;
+	s=arc-20240116; t=1792347884; c=relaxed/simple;
+	bh=XU3f8iOzysWsUXprwUt22rCfRKOt8VzIxFdJ24lS6Ew=;
 	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=rK0IJSXI3NA4FPHToh/vtFpQpYyRyzQAIosPPuHQsDDXWNqmvyBS1UMJJfUgqpey5O2bSqYqAOL1zQz1FpGVZlhIi51Rf1cAif88KLU3kjGFuzo+amaWqUlRaTYAg7zMM4F0wGu7aCHE5f2euROOQ2ml5o4FzJ7CGVIiD8PIqKw=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de; spf=none smtp.mailfrom=iokpp.de; dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=iFh4bgYo; dkim=permerror (0-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=3ymZfxcJ; arc=pass smtp.client-ip=81.169.146.167
+	 Content-Type:MIME-Version; b=NVpmrmSyjUN5VGeLYyKi36YSnLPaYbQY9S5fPVSNvHH/nB7AcOElemkwUEt7Ku+MCcF8rbFkxs6Jntb7p4oA9X65JarbQX820Lkmia/lb/2a3ioq6W1JeGcg2BgL31ID9f3wOVeJbHIqBy/Kyd2p7h4tWjFBntaljVQ1m4fLkCw=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de; spf=none smtp.mailfrom=iokpp.de; dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=Zy2X/iCz; dkim=permerror (0-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=qy72SpKr; arc=pass smtp.client-ip=81.169.146.168
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=iokpp.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="iFh4bgYo";
-	dkim=permerror (0-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="3ymZfxcJ"
-ARC-Seal: i=1; a=rsa-sha256; t=1792347701; cv=none;
+	dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="Zy2X/iCz";
+	dkim=permerror (0-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="qy72SpKr"
+ARC-Seal: i=1; a=rsa-sha256; t=1792347875; cv=none;
     d=strato.com; s=strato-dkim-0002;
-    b=p/cYTrrHL9DsBsr2+ou0E5MsJhCzYv1XJsvePJ1grYsACz0MhqI851j9A8AqEzG998
-    j/ClzCw9Uz6xKp2FidDallmUheg8u+L8qsvg/cMFJ9R6mY8ryY8RyFyQQ8F31Kb33v86
-    BHbhWrCPVC5GJnx+95K0V8YsCjsI1NmdY8yU2U3/EhQLf1l8vyvqktG2OfYHIOeE5kR+
-    ghd44FoUj1Skj3gOdhPyJ2x50Hn9YYAE4jGAczanePjlG2/REhcWeV8OtSH9j+MOFhPH
-    0i/hwU+mEqxSdX8CpuwCDcfbuAPrgMrxVNggH3pjr6mMj/VK6YNMXDV92F9W0ijC3N5Q
-    zozg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1792347701;
+    b=Qvs85FlQ3GFR7EOuOgGr6d08uSkuEYtOh9gW5vV2BX9lxZJLTjCG/NucJIG+ViuXRF
+    Ml0LcesctdAnpzncXAyfSuoW5lDb2mZdUnFpTrbn3f9AB6z2bMSR9nQlgZaSfh15hBtA
+    xusk8nqaoTnPgItw08EhrYbC2zjRe3J/JZgtyofdCXf5KAhcQgZt5Me64LKPcEhl7KTu
+    UKuclJ+CJnt4mYzgO9+XchCRT/Sw4a6IwH52kBncui5A4ULsa900EzXD/mUK3T9jbVsF
+    a6FhMeKHj13H5rpLQnDREDJANXDpZ0n/a9hh7dpnP22qPMLS+Gp9h/JfC7XsLrwwiTaO
+    4qJQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1792347875;
     s=strato-dkim-0002; d=strato.com;
     h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
     From:Subject:Sender;
-    bh=3pKT3x2ThQdMxHZhCFYPZjzhmVUEvaSkjCmS5Kxzclc=;
-    b=WWoRmwSn9ezX1Se+lFpGoGiKtgRVOvHMCy5mdrYfDlJlq5gYQEvk4u/G0bd9XAG7Wc
-    3xlLHzqqhKkpY3Ibb5G2VMe7gSQPJjsg2ahuxYkgGOV9Mx33xJMbIAXCKPs4NnEev5sn
-    G6mSpxuUO4eR5RI2tMF3wq0tcX/BGgdu+YfPf3VtGfopjiBjOjB8hlDOGj1VPztr9Cn8
-    0gJuHy/lgABsfKPZNRZyvS1H8kL/YBwjuel2vR3DYX3NRd+srA6h901DzTF+XhbYauPH
-    6AC1n1bOMP4JbQ8WhPwlmefjh/L30OzKQV28+UCHnyomBjufTxCTAdOgTsEDadTF+ehv
-    ZrBg==
+    bh=XU3f8iOzysWsUXprwUt22rCfRKOt8VzIxFdJ24lS6Ew=;
+    b=f9PRW0uXNY0fo36oXZRMYh45n5Kn5ZTrHwtIFbfJqSu1EunD1UMkdpOEWhQjzgYds8
+    bCk1NvVBJdMIRnVkdhqI9fmodhNYR7Bfq4HFWNMkofAMvV1QyM5i+ksx4jZ1HTDEWw+w
+    XsOBuGiMBjBaNn57yXDWAFzVqG1cuYO7cV2yEVhdZ5VNCyezN+d92Z/rZF5RPfZ1q5Gu
+    5YuiQ9WKmQp6ytao0ZF5QRODlAJkbFzOM2Vx047FpvP1bs/7ZIl0UupsvjGPksXBCfF3
+    cN83uKNBSiWWol8L7M2k4R4fyDqFiGkSBhydM1u4vqI7Sg/OcSjlhwuYH+DwhF0sR2+O
+    I2pA==
 ARC-Authentication-Results: i=1; strato.com;
     arc=none;
     dkim=none
-X-RZG-CLASS-ID: mo01
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1792347701;
+X-RZG-CLASS-ID: mo02
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1792347875;
     s=strato-dkim-0002; d=iokpp.de;
     h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
     From:Subject:Sender;
-    bh=3pKT3x2ThQdMxHZhCFYPZjzhmVUEvaSkjCmS5Kxzclc=;
-    b=iFh4bgYollk2iwNasoW0IxYJs0TaN/p2I3hQUuPQh2kvNGXtI0u1docBIO6HuiYyZq
-    cGR710G9NnE4Va1BEq5pzJ+O49+vd+afSCW1ecMZFl+Mnpjn8XKZkj/kQ802fPs7C9AM
-    whInmkwvXVWLnC3q8hWgUtbdATysOejTxpYKeIxk9QeGivjbkpWh9rw+xqnnBt/wSw1z
-    HHg5qHW62ijkyWPXRW8feRB/rv7ra/KkHoGyLge4PD5l1CMp+th0Yd+YeiLCNxDMcT60
-    V9wpePX9BgJ9UQA+P0o4+SfwNuPeNJ+OYo/Sd9spzHOmvER2LsFYCCruH+DoIZxoB/wl
-    xBDA==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; t=1792347701;
+    bh=XU3f8iOzysWsUXprwUt22rCfRKOt8VzIxFdJ24lS6Ew=;
+    b=Zy2X/iCzCV3TgxIIMLvX8TEJj2LXtsZ0LADH5S0eS5zH5FeHPuCrp+N6fzyAepOvuH
+    iGhWnFkM5ntacpZVtDZU2D1g1Z/m6M4POEyfweDFnIbHsWZVAx87uu0UGRNSLmuzAV0v
+    u9TVwhivv1WFdZqSQ8aykYH7A8e3MZZuKAA/Yy/9XBJSKNnTwhHOKrg1llOwLaF9sXYV
+    z+G1uihqJwHm9fmoP55eHHrEY1d4KiQth4xeSNmfmfMnSmUcJO0aHrVNFIQbThLZPvdT
+    0rUTe+yAE6ef2yzH5HGxq2lhdDGGqtOBq3bQANsuzRl60n0iIWii9w014pVsxHCRLVWf
+    SFqQ==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; t=1792347875;
     s=strato-dkim-0003; d=iokpp.de;
     h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
     From:Subject:Sender;
-    bh=3pKT3x2ThQdMxHZhCFYPZjzhmVUEvaSkjCmS5Kxzclc=;
-    b=3ymZfxcJgFv9ZRBiLMwcWu9Tqs0gK2Q8yhaq6SqGMmYOqfHOLWEfnl4zWFG5O1SuEY
-    sx5PJTzN69pDq6NFLCDA==
+    bh=XU3f8iOzysWsUXprwUt22rCfRKOt8VzIxFdJ24lS6Ew=;
+    b=qy72SpKrZHthUMyn3Dy4Bj6M/ef0lMx6IF1MyUBGz2Ctjmca9ZxTfZB1sfuGR/RNZA
+    sZDWwDNAZ4/dpkgRuzCA==
 X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSe9tgBDSDt0V0zNriHg+YfT0rGeWpIGzZge/Z0bJo/ZKBs7IP24cD2xnjN93xVc="
 Received: from p200300c5873684d949ea70d47c97a062.dip0.t-ipconnect.de
     by smtp.strato.de (RZmta 55.6.3 AUTH)
-    with ESMTPSA id z831ad29IILeHJa
+    with ESMTPSA id z831ad29IIOYHJo
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
 	(Client did not present a certificate);
-    Sun, 18 Oct 2026 20:21:40 +0200 (CEST)
-Message-ID: <361e83f8ae479909597238b4ddf9b3a1e40ef0c2.camel@iokpp.de>
-Subject: Re: [PATCH v2 1/5] scsi: ufs: bsg: Complete the job on error
+    Sun, 18 Oct 2026 20:24:34 +0200 (CEST)
+Message-ID: <95b7c186e20778557250f2f25c92dde77e355fbd.camel@iokpp.de>
+Subject: Re: [PATCH v2 2/5] scsi: ufs: bsg: Clear the reply buffer before use
 From: Bean Huo <beanhuo@iokpp.de>
 To: Stanley Jhu <stanleyjhu@google.com>, "Martin K. Petersen"
  <mkp@kernel.org>,  "James E.J. Bottomley"
@@ -76,12 +76,12 @@ Cc: Alim Akhtar <alim.akhtar@samsung.com>, Bart Van Assche
  <peter.wang@mediatek.com>, Brian Kao <powenkao@google.com>, 
  linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
  stable@vger.kernel.org
-Date: Sun, 18 Oct 2026 20:21:39 +0200
-In-Reply-To: <20261015001855.3450573-2-stanleyjhu@google.com>
+Date: Sun, 18 Oct 2026 20:24:34 +0200
+In-Reply-To: <20261015001855.3450573-3-stanleyjhu@google.com>
 References: <20261015001855.3450573-1-stanleyjhu@google.com>
-	 <20261015001855.3450573-2-stanleyjhu@google.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: base64
+	 <20261015001855.3450573-3-stanleyjhu@google.com>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 User-Agent: Evolution 3.44.4-0ubuntu2.1 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -90,26 +90,5 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 
-T24gVGh1LCAyMDI2LTEwLTE1IGF0IDA4OjE4ICswODAwLCBTdGFubGV5IEpodSB3cm90ZToKPiBp
-bmRleCA3YTY2OTE3YjNmYzAuLjE4YzMxOGQ3ODEyMiAxMDA2NDQKPiAtLS0gYS9kcml2ZXJzL3Vm
-cy9jb3JlL3Vmc19ic2cuYwo+ICsrKyBiL2RyaXZlcnMvdWZzL2NvcmUvdWZzX2JzZy5jCj4gQEAg
-LTE5NSwxNCArMTk1LDEyIEBAIHN0YXRpYyBpbnQgdWZzX2JzZ19yZXF1ZXN0KHN0cnVjdCBic2df
-am9iICpqb2IpCj4gwqDCoMKgwqDCoMKgwqDCoHVmc2hjZF9ycG1fcHV0X3N5bmMoaGJhKTsKPiDC
-oMKgwqDCoMKgwqDCoMKga2ZyZWUoYnVmZik7Cj4gwqDCoMKgwqDCoMKgwqDCoGJzZ19yZXBseS0+
-cmVzdWx0ID0gcmV0Owo+IC3CoMKgwqDCoMKgwqDCoC8qIGNvbXBsZXRlIHRoZSBqb2IgaGVyZSBv
-bmx5IGlmIG5vIGVycm9yICovCj4gLcKgwqDCoMKgwqDCoMKgaWYgKHJldCA9PSAwKSB7Cj4gK8Kg
-wqDCoMKgwqDCoMKgaWYgKHJldCA9PSAwKQo+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgam9iLT5yZXBseV9sZW4gPSBycG1iID8gc2l6ZW9mKHN0cnVjdCB1ZnNfcnBtYl9yZXBseSkg
-Ogo+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgc2l6ZW9mKHN0cnVjdCB1ZnNfYnNnX3JlcGx5KTsK
-PiAtwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgYnNnX2pvYl9kb25lKGpvYiwgcmV0LCBi
-c2dfcmVwbHktPnJlcGx5X3BheWxvYWRfcmN2X2xlbik7Cj4gLcKgwqDCoMKgwqDCoMKgfQo+ICvC
-oMKgwqDCoMKgwqDCoGJzZ19qb2JfZG9uZShqb2IsIHJldCwgYnNnX3JlcGx5LT5yZXBseV9wYXls
-b2FkX3Jjdl9sZW4pOwoKU2luY2UgdGhlIG9sZCBjb21tZW50IGlzIGdvbmUsIGl0J3MgYmV0dGVy
-IHRvIGFkZCBhIHNob3J0IG9uZSBiZWZvcmUKYnNnX2pvYl9kb25lKCkgc2F5aW5nIHdlIG11c3Qg
-YWx3YXlzIGNvbXBsZXRlIHRoZSBqb2IgYW5kIHJldHVybiAwPwoKb3RoZXJ3aXNlIGEgbGF0ZXIg
-Y2hhbmdlIGNvdWxkIGVhc2lseSBicmluZyBiYWNrIGVpdGhlciB0aGUgbGVhayBvciB0aGUgZG91
-YmxlCmNvbXBsZXRpb24gdGhhdCBiMTNhMzUzOWViMmEgZml4ZWQ/CgpSZXZpZXdlZC1ieTogQmVh
-biBIdW8gPGJlYW5odW9AbWljcm9uLmNvbT4KCj4gwqAKPiAtwqDCoMKgwqDCoMKgwqByZXR1cm4g
-cmV0Owo+ICvCoMKgwqDCoMKgwqDCoHJldHVybiAwOwo+IMKgfQoK
 
+Reviewed-by: Bean Huo <beanhuo@micron.com>
