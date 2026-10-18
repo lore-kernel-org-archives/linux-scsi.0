@@ -1,404 +1,170 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from CH4PR04CU002.outbound.protection.outlook.com (mail-northcentralusazolkn19013070.outbound.protection.outlook.com [52.103.20.70])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EEA8F35AC0E
-	for <linux-scsi@vger.kernel.org>; Sun, 18 Oct 2026 15:01:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792335665; cv=none; b=YoCrysOprcgr2bful6lPRpJVMwdUdEDGOFJYim2qgcI8BAczbf1oJSr+WTQlYzN1TqgGt2VdwoATrE19XNFFQs6biguVlxXekBMqliXXcdJRI3v6Bj7EHmc0zFH0C9kpNHdDhB+1JtPyF1oulkl7pNeML9zaNTiL3LUB9y1s/G0=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792335665; c=relaxed/simple;
-	bh=BNN3W2wSf9KKCx4doIe1ntAcjIC3/t/61mAt47X/Lik=;
-	h=Message-ID:From:Subject:To:Cc:In-Reply-To:References:Content-Type:
-	 Date; b=BZDgcVld50UHY8srrd7ntWmPFcgsEf0lOsahd9XbyDQXrSyUAlVUoErSmWE32zMZxetG+rHMGniFwzFLvoulMZ4BgMjE850t+HS42LcXLQ/2TfEgMAWIIorB9zBiuZCTGvsUVEI0+tTJzyaXIOzDgtyfS97jkI0hOxFWqum1wb0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CtsuOAxV; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD43C399360;
+	Sun, 18 Oct 2026 15:41:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.103.20.70
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1792338068; cv=fail; b=lXKVJ+2AnyPVQ13uS576cwgg46rwSjQyJcbx9xhiqkfJJAwnDmhJrl8ppnKSH39h1ExpldHWk5msbg+s02rhuMUkfLHudX2wBMi3xL7MpuO0mZGnOghBOP6qePmjxniBAcx5hFtB/aHflEhrU2Mdb9hS9OvIrV26v56BVSSNTDQ=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1792338068; c=relaxed/simple;
+	bh=cJvevRR9ZhF9Hq3e/pKeV0O7MuYsm71dPVjocEKkBt4=;
+	h=From:To:CC:Subject:Date:Message-ID:Content-Type:MIME-Version; b=pK8znB7ACBPTnL+R1FFxEjMDs9S7df9wrvA8e/zBVCJF4g3bMNu3kZJC0+kCzlj5Oo4Ou6ZiBPE7LzvZEtxDjFiK39g7B1F4wgZb6Rdg0Ibaq9/QOKqsE3bxnEUBkfXhbB2/yBhePfwxA1SAWsmAkzyqyfGudiMu/p8aBmB4tog=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com; spf=pass smtp.mailfrom=outlook.com; dkim=pass (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b=F2f34HcD; arc=fail smtp.client-ip=52.103.20.70
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=outlook.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CtsuOAxV"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 64A181F000C4;
-	Sun, 18 Oct 2026 15:01:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792335663;
-	bh=OqYkb/j9nBk7pZAt1BzyU/TBDmoc8Whzr2kPUzMS8FA=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=CtsuOAxV7NdJ575ORQR6kbtigaCMtsn+JFM2GvPVkz8A1dlQugLMzaTOkGfgttuPi
-	 Xo27L1ym/DEF5Pp8RYS1t7YQN6j3WpELuTi6UULL9r5rblGHCoXj5PTe5eBEkZoq8A
-	 FhbmPIbDWU5coj0FaMzrwqHOU/+VY24+E0Dwo10T8891j2RltgspKZywPvkt23M5RL
-	 VgTjJAVMpKZ/HESvbt+QynZvP9ti6aL5NvJJXZgjdwFrfuUMUgoQNety3JTnuJaDlT
-	 Vs7f0XXcGWUYItQJM5Hdm76Rcan3FTf/oLJV15metJc0tg9U7/Mv1uSqWHAs+QrZ35
-	 R4SwxFC0K9ohw==
-Message-ID: <sashiko-outbox-176224@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [GIT PULL] SCSI fixes for 7.3-rc7+
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "James Bottomley" <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
-In-Reply-To: <6a4bfcdc8e60669d95abb70bdaa07b87154c9a95.camel@HansenPartnership.com>
-References: <6a4bfcdc8e60669d95abb70bdaa07b87154c9a95.camel@HansenPartnership.com>
-Content-Type: text/plain; charset=utf-8
+	dkim=pass (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b="F2f34HcD"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=V2nehXLSv8dVYqb1D0ApTgprUaj3Me+7kJlDXBQDiJ0xvjSJ3b9/bTQNKgyNRU+kgbg6z9avieffdKjkeVkMgv8tpL4/uipf4IlPwvBPFj8tdawPURFuWmsWPiuDuV2C9sKnYHvtdwlz9n7vUHufnS40Eel98DpjfrG4GGenmEgChaAUwtc14UiRlbF8pyv+1xjfXgzXmVlrqhvD8cveNOOhNZYg3UzXHN2iVVnk90EgVa/65T9yHZc6AMYaARTHxzDHyFGHLgDD6iWfF2yYl/nlMxCO4lKKM/51juzmKoP+QK8aq7CPgahbNUOowb+KuALERYuE/UaweAqXml42sg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001; h=From:Date:Subject:Message-ID:MIME-Version;
+ bh=lDWrg9xSz9OKnGlNA3tRyXXO8KTsa5b6ZJktZ6FbDy0=;
+ b=U2fkGoCYyz1nrNHMfNHrmcX/9Hd2JPfN9W0nPF5GQ33+fUOEzxs9xPj8wm/nGA8/0ipaUN85Xy5xx05EvUstMtpNYlDwNkzuj2I+fN2VjDi5X4gfPaoy2yHiVF9EMsV5qYfAXA7e2cvJTN4hArNsZkYa/etARKTSSKHmVaRWrEGFuSWqynEnwBjbUEyalqD40qvh1Uu8g1rATQnlaNmjHMQi+MuUI51XfbRcgjbHUkQ+QPKaokwPAU+RbBEbe3O271EUg99LDknf76aUTrpShGpxj92z6oDOE5kTXXTWSzC1dRGMje7UI021nwEKDoPQWUo1hIlRDJc6IL9c1fwhsg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
+ dkim=none; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=outlook.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=lDWrg9xSz9OKnGlNA3tRyXXO8KTsa5b6ZJktZ6FbDy0=;
+ b=F2f34HcDwgsPFTRAzX54ajC8sTMP1lKZq2EWp6z9VcG1sD5MKehsKgHd75pvXMwqXPIlnIrc48ARyujuNegMf7bg6XrEpeVTRtCCOmfvhrmSUp0IP+z4vWjmtKBvTIQ8S9DwV3QUN0WZxRLyFbybNVXT1uXN6aoVNooOVskckPLBsAIYQ9xsBFC1OnOjDPV7W0xEBcbSDBTFefUHBMwzNpzC8D8SiCa/bTcsou1buJu/VEaLXdHE4KI0mv6pIb5Qi8HVCLlEA4zC+3tF6vMvbbvsS08SdfmLrw7f/YdDJqZpuPO6DEQfMjvB6SBBycmZ6eKWZjq94VrIiQlWb01sBQ==
+Received: from SA3PR05MB10385.namprd05.prod.outlook.com
+ (2603:10b6:806:39d::17) by FT1PR05MB999137.namprd05.prod.outlook.com
+ (2603:10b6:170:16::24) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.522.19; Sun, 18 Oct
+ 2026 15:41:04 +0000
+Received: from SA3PR05MB10385.namprd05.prod.outlook.com
+ ([fe80::e22f:a0f5:fcb0:9b0d]) by SA3PR05MB10385.namprd05.prod.outlook.com
+ ([fe80::e22f:a0f5:fcb0:9b0d%6]) with mapi id 15.21.0522.017; Sun, 18 Oct 2026
+ 15:41:04 +0000
+From: Wang Yingjie <x-professor@outlook.com>
+To: "James.Bottomley@HansenPartnership.com"
+	<James.Bottomley@HansenPartnership.com>, "mkp@kernel.org" <mkp@kernel.org>
+CC: "yangxiuwei@kylinos.cn" <yangxiuwei@kylinos.cn>, "axboe@kernel.dk"
+	<axboe@kernel.dk>, "bvanassche@acm.org" <bvanassche@acm.org>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	"io-uring@vger.kernel.org" <io-uring@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Wang Yingjie
+	<x-professor@outlook.com>
+Subject: [PATCH 0/6] scsi: make SG_IO user copyback failure-safe
+Thread-Topic: [PATCH 0/6] scsi: make SG_IO user copyback failure-safe
+Thread-Index: AQHdXxcV4d7XNHMimUKXaFSWzkcXtw==
+Date: Sun, 18 Oct 2026 15:41:04 +0000
+Message-ID: <cover.1792237341.git.x-professor@outlook.com>
+Accept-Language: zh-CN, en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: SA3PR05MB10385:EE_|FT1PR05MB999137:EE_
+x-ms-office365-filtering-correlation-id: ff30cba2-e97f-4e99-8bac-08df2d2e384b
+x-microsoft-antispam:
+ BCL:0;ARA:14566002|8022599003|24021099003|15080799012|22091999003|8062599012|8060799015|19110799012|24121999003|31061999003|38102599003|25010399006|102099032|3412199025|440099028|12091999003|3071699003|26121999007|1710799026;
+x-microsoft-antispam-message-info:
+ =?iso-8859-1?Q?Fb5ArY1MJklTHwqz8ZS7owrz1SvY74MIHMZKEZKt2ZePahpPshxVUEKNvD?=
+ =?iso-8859-1?Q?xgY7p1u9WYlAbe2u7Km68GgIzPI349Bl6yEt90Kzq1Shz94XyohThgtDG2?=
+ =?iso-8859-1?Q?NpQRjAJyCdKWiYzeu6BJBsvZdLhxOfssa4EDMHW9YjV4BNPDiB6/qnhqt3?=
+ =?iso-8859-1?Q?+knxuwSKwBkWsMnBJiDie0qRSizxBWjbn7RYZcqjOlIgIl4X39dHL1i4s7?=
+ =?iso-8859-1?Q?e7bmCLm4+bSqAnx6XbznNWtD122b/VDPm3dteBV7TWDjRlpKdhVQnMX9hS?=
+ =?iso-8859-1?Q?EM/qYW2SMbVjW11AIpiwhykJ8kLy3MChYRUKrMAKWh2piMITnIBW1nOKNo?=
+ =?iso-8859-1?Q?GNZJW0swpOyXm526gurcD1UxJUgVeud7lySzES42zxypGo350HBZQOzOxU?=
+ =?iso-8859-1?Q?wzsiYngU6tsBJQAyqb15UjagldnbzYB6d1nP1qyzIxj9+jpCf2wLw9OZtT?=
+ =?iso-8859-1?Q?tl9Rg9F5SJY1wZWHj5JB8z8vQ1J/AneL7/cCUr38z7CkwPVWmY+EyUCEm8?=
+ =?iso-8859-1?Q?Njs4qbkkXOjFE7pEQVWcwIE8Zd2fSBU6julxJpSjmrXj41KTOK/TNRyF6c?=
+ =?iso-8859-1?Q?frfZbNhNv6WVZ0PxDfe+wJ1Bio4LFhsKE7EAevkaNP1ks1xuE74Q4vYijb?=
+ =?iso-8859-1?Q?DSYV7P53eZaX0f057i+fS2TMXjmoY64hM6NP0EK8iP+G3XSjFYDx94NC9V?=
+ =?iso-8859-1?Q?nIpC2DB4Y0UwKNn9eJ7jgYTGh2+ETbPQktUlqA5/JfEJPPIdkbk5RbQwJy?=
+ =?iso-8859-1?Q?ggCPXnEt4kH8TXqAYh223iE/oVIapFVxt+XC33XKacr7tJf2m5TSwe0t1A?=
+ =?iso-8859-1?Q?jLVOOlUPJilN+NSi4JiZGguzmtIj+WvtJxV+TITDzZenX9POg2PgxDy2bb?=
+ =?iso-8859-1?Q?ZXOpW3WdegUpwwJEnHWUd1mTzzEQRBZcmRj1ReTmK9RcsUjxP4EoW+VLBO?=
+ =?iso-8859-1?Q?rSHk3UU7lC4FlJmr+oSWyI9dAAWkDcRlI4opuR3dpPoXOXYF8R/FbIG8w6?=
+ =?iso-8859-1?Q?JeF8CeODSAFnw+Aj+Vh1XXRFxr0dpWrg/3HMHEZfHIyHlQEl9PLvlFyRMB?=
+ =?iso-8859-1?Q?2ON0cldOh0wbd/ShNY8l+VZE9xn7kr7ql9B0Tbz3pE5HC/Qeh1uf73Ow+w?=
+ =?iso-8859-1?Q?I9szQUslvrSPlKn4i1ME5oeKROHKOX7sbvyw8H5vwndPXGjJLN?=
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?iso-8859-1?Q?el+sjHIDhULDwxhq13slqNLuWQ1boEitYm/OlQnGD32Pncbx4K4KH1FTZg?=
+ =?iso-8859-1?Q?wwSW23MwNd7wHtnPzUUvZU6YVeIgPshYhTGk+5VwpcMUOiX97/dGMU/LVS?=
+ =?iso-8859-1?Q?jWif/m0c+Y27Fm62lVLsmlUWCP1ResS8HeSb0xexYUV8Ee5VpCapdqnP9Q?=
+ =?iso-8859-1?Q?kDTfJ87YJWOhuAPasn0f98Swkw5SpcUBv+1tJHqwd2ulxPF7OE/HTDN12L?=
+ =?iso-8859-1?Q?rQnHuPnvjmcGpjILrch2MmouiY69ugnhteBfOojbqQyNqtS49Xu4Kn67uZ?=
+ =?iso-8859-1?Q?8o0C4trfxIqZ0AAv12dpuc2vjDbmJvIhEKOQEEZoh98ix7Ukhdsi/u4CXI?=
+ =?iso-8859-1?Q?Ybr5b23uYcDEFyUGLLrcqeqvmR62vUGhMHCcqQqmo9CMwgNi3VHk4ErEPu?=
+ =?iso-8859-1?Q?lKhPg5Fsqn1IuCVE3I05o5T764iXzJ1xEAdZhiiYCI2Wrz0/WPtvTuM6Fv?=
+ =?iso-8859-1?Q?w5IMAzTnX0ohSiI0PR/jwXtXTBJjMdf7PEsxKKX2PpiKboDOJgIFzk5+gp?=
+ =?iso-8859-1?Q?GOhYpwZSXY2r2MpAhC5GBCrTnTJlIsAM5OV0EuEJ87Jr/fd6WDLGiA6s6W?=
+ =?iso-8859-1?Q?VSa1usp2ZpLz/dQjdmTkkvL9glmR3/HsK7kh9Jl88qBGNbZ/uujdPBzasy?=
+ =?iso-8859-1?Q?LYbCajfeWM8QB7WDC3zU84ghmWksx3Xx91dvXl/TdmwG4Hb8BGYvxAIgLp?=
+ =?iso-8859-1?Q?fiJVAoSz6Ly+vQXnlxwleubD9es+ka4OYE7ga/JbwiQijn7y6u/que0/Zt?=
+ =?iso-8859-1?Q?kbzk9pxCqsV2CkuzWUBIp9+jgGkASuKKkwsfdtsLTNJeElP8+9HetcX8QN?=
+ =?iso-8859-1?Q?Sz2uPe/469u/Fyd3V+wxvvL3zPLhId6G/D76X1fwWpwjpXWqnYM72w2/VU?=
+ =?iso-8859-1?Q?Ea3U4i2QdhRgRnNVYZrV2Mr4OfTg/D9vaTno6TliaKZOACLFw5stv0gLuO?=
+ =?iso-8859-1?Q?37fe10xV0ahdH3/zqyOPFGI2qkXqdjTrvzCMIknVRwQx3Iil5xICcdBQ43?=
+ =?iso-8859-1?Q?ECkQesxy4Lig0BUJsSSQWhH4HAl1kXMNsFG2AUlVq7ywWTQQQAw8kWqRT4?=
+ =?iso-8859-1?Q?Cw6bzxHA7jRvsL5sFgFlwD3kJEc3kULMpNio1f0ljyGQ/tuwT/brAlpyoG?=
+ =?iso-8859-1?Q?pTRR3j4z4VqvqSRhishD6i07kJentMtCfW2DrbwYo2KYyiTbjv5SuFyNhh?=
+ =?iso-8859-1?Q?ld0QGaY9S+03vjcZkWqWgC5RTuJwzGnOhYvGE7HtztA5YKkwQ7EorEy6Pk?=
+ =?iso-8859-1?Q?FQ9U59EbVEc7RmXYpAiPNzvDdQbtF/4qVlX27A9QC5MjFstoOy1EVszw5M?=
+ =?iso-8859-1?Q?U8Dj2lC5XeSsB4XT7rTpBjIf1bx/6i13fUySOON6uXY1Pr0tsX34Pzrnyh?=
+ =?iso-8859-1?Q?TT7QQydzNQtDkux5VXC0uq61XLcO1I28PkICDXqCVVApPo6H2svmHJd0H0?=
+ =?iso-8859-1?Q?PuWvwiByJQ/CJ1gW?=
+Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
-Date: Sun, 18 Oct 2026 15:01:02 +0000
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+X-OriginatorOrg: outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: SA3PR05MB10385.namprd05.prod.outlook.com
+X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg: 00000000-0000-0000-0000-000000000000
+X-MS-Exchange-CrossTenant-Network-Message-Id: ff30cba2-e97f-4e99-8bac-08df2d2e384b
+X-MS-Exchange-CrossTenant-originalarrivaltime: 18 Oct 2026 15:41:04.6055
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
+X-MS-Exchange-CrossTenant-rms-persistedconsumerorg: 00000000-0000-0000-0000-000000000000
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: FT1PR05MB999137
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
-s) to consider:
-- [Critical] scsi: libiscsi: premature mgmt response frees pending task on =
-conn->mgmtqueue
-- [High] scsi: libsas: smp_execute_task_sg() skips runtime resume for sysfs=
- callers
-- [High] scsi: libsas: sas_smp_handler() fails with -EACCES when runtime PM=
- is disabled
-- [High] scsi: target: iscsi: UAF race on discovery_tpg param_list during l=
-ogin
---
-
-commit f682ddc340c78ec7c00ca8f8ce335b1612f00410
-Author: James Bottomley <James.Bottomley@HansenPartnership.com>
-
-SCSI fixes for 7.3-rc7+
-
-This pull request contains SCSI fixes for libiscsi, libsas, st, xen-scsifro=
-nt,
-target, and bsg.
-
-> diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-> index 5cbc51899de00..5bfdb30b9088d 100644
-> --- a/drivers/scsi/libiscsi.c
-> +++ b/drivers/scsi/libiscsi.c
-> @@ -1142,13 +1142,15 @@ static int iscsi_handle_reject(struct iscsi_conn =
-*conn, struct iscsi_hdr *hdr,
->  			spin_unlock(&conn->session->frwd_lock);
->  			spin_lock(&conn->session->back_lock);
->  		} else {
-> -			struct iscsi_task *task;
-> +			struct iscsi_task *task =3D NULL;
->  			/*
->  			 * Our nop as ping got dropped. We know the target
->  			 * and transport are ok so just clean up
->  			 */
-> -			task =3D iscsi_itt_to_task(conn, rejected_pdu.itt);
-> -			if (!task) {
-> +			if (!iscsi_verify_itt(conn, rejected_pdu.itt))
-> +				task =3D iscsi_itt_to_task(conn, rejected_pdu.itt);
-> +			if (!task || task->state =3D=3D ISCSI_TASK_FREE ||
-> +			    task->sc) {
->  				iscsi_conn_printk(KERN_ERR, conn,
->  						 "Invalid pdu reject. Could "
->  						 "not lookup rejected task.\n");
-
-[ ... ]
-
-> @@ -1284,7 +1286,7 @@ int __iscsi_complete_pdu(struct iscsi_conn *conn, s=
-truct iscsi_hdr *hdr,
->  	case ISCSI_OP_SCSI_TMFUNC_RSP:
->  	case ISCSI_OP_NOOP_IN:
->  		task =3D iscsi_itt_to_task(conn, hdr->itt);
-> -		if (!task)
-> +		if (!task || task->state =3D=3D ISCSI_TASK_FREE || task->sc)
->  			return ISCSI_ERR_BAD_ITT;
->  		break;
->  	default:
-
-[Severity: Critical]
-Can an unsolicited or premature management response PDU or Reject PDU free a
-task while it is still queued on conn->mgmtqueue in ISCSI_TASK_PENDING stat=
-e?
-
-In drivers/scsi/libiscsi.c, iscsi_alloc_mgmt_task() initializes a management
-task under session->frwd_lock with refcount =3D 1, task->sc =3D NULL, and
-task->state =3D ISCSI_TASK_PENDING:
-
-drivers/scsi/libiscsi.c:iscsi_alloc_mgmt_task() {
-	...
-	refcount_set(&task->refcount, 1);
-	task->conn =3D conn;
-	task->sc =3D NULL;
-	INIT_LIST_HEAD(&task->running);
-	task->state =3D ISCSI_TASK_PENDING;
-}
-
-When ihost->workq is used, iscsi_send_mgmt_task() adds task->running to
-conn->mgmtqueue while task->state is still ISCSI_TASK_PENDING and refcount =
-is
-still 1:
-
-drivers/scsi/libiscsi.c:iscsi_send_mgmt_task() {
-	...
-	} else {
-		list_add_tail(&task->running, &conn->mgmtqueue);
-		iscsi_conn_queue_xmit(conn);
-	}
-}
-
-The task only transitions to ISCSI_TASK_RUNNING later when iscsi_data_xmit()
-dequeues task->running from conn->mgmtqueue and calls iscsi_prep_mgmt_task(=
-).
-In addition, iscsi_alloc_task() for SCSI commands runs under
-session->frwd_lock (not session->back_lock) and sets task->state =3D
-ISCSI_TASK_PENDING before assigning task->sc =3D sc.
-
-Because both iscsi_handle_reject() and __iscsi_complete_pdu() only check for
-task->state =3D=3D ISCSI_TASK_FREE || task->sc under session->back_lock, a =
-target
-response (ISCSI_OP_NOOP_IN, ISCSI_OP_LOGOUT_RSP, ISCSI_OP_LOGIN_RSP,
-ISCSI_OP_TEXT_RSP, ISCSI_OP_SCSI_TMFUNC_RSP, or ISCSI_OP_REJECT with
-ISCSI_REASON_IMM_CMD_REJECT for ISCSI_OP_NOOP_OUT) naming the ITT of a task=
- in
-ISCSI_TASK_PENDING passes this check.
-
-That calls iscsi_complete_task() -> __iscsi_put_task() -> iscsi_free_task(),
-which drops task->refcount from 1 to 0 and returns the task to
-session->cmdpool.queue via kfifo_in() without unlinking task->running from
-conn->mgmtqueue:
-
-drivers/scsi/libiscsi.c:iscsi_free_task() {
-	...
-	session->tt->cleanup_task(task);
-	task->state =3D ISCSI_TASK_FREE;
-	task->sc =3D NULL;
-	if (conn->login_task =3D=3D task)
-		return;
-
-	kfifo_in(&session->cmdpool.queue, (void*)&task, sizeof(void*));
-}
-
-When iscsi_data_xmit() subsequently processes conn->mgmtqueue or the task is
-reallocated from cmdpool.queue, wouldn't this cause a use-after-free and
-conn->mgmtqueue list corruption? Should both checks require task->state !=3D
-ISCSI_TASK_RUNNING instead of task->state =3D=3D ISCSI_TASK_FREE?
-
-> diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas=
-_expander.c
-> index 811c9eb4fef11..26c2099c28b97 100644
-> --- a/drivers/scsi/libsas/sas_expander.c
-> +++ b/drivers/scsi/libsas/sas_expander.c
-> @@ -62,7 +62,11 @@ static int smp_execute_task_sg(struct domain_device *d=
-ev,
->  		to_sas_internal(dev->port->ha->shost->transportt);
->  	struct sas_ha_struct *ha =3D dev->port->ha;
-> =20
-> -	pm_runtime_get_sync(ha->dev);
-> +	/*
-> +	 * Non-blocking: a sync resume here would deadlock against
-> +	 * sas_drain_work() during HA resume.
-> +	 */
-> +	pm_runtime_get_noresume(ha->dev);
->  	mutex_lock(&dev->ex_dev.cmd_mutex);
->  	for (retry =3D 0; retry < 3; retry++) {
->  		if (test_bit(SAS_DEV_GONE, &dev->state)) {
-> @@ -135,7 +139,7 @@ static int smp_execute_task_sg(struct domain_device *=
-dev,
->  		}
->  	}
->  	mutex_unlock(&dev->ex_dev.cmd_mutex);
-> -	pm_runtime_put_sync(ha->dev);
-> +	pm_runtime_put(ha->dev);
-> =20
->  	BUG_ON(retry =3D=3D 3 && task !=3D NULL);
->  	sas_free_task(task);
-
-[Severity: High]
-Does replacing pm_runtime_get_sync(ha->dev) with
-pm_runtime_get_noresume(ha->dev) in smp_execute_task_sg() leave sysfs and
-exported PHY management callers executing SMP tasks while the SAS host is
-runtime-suspended?
-
-Only sas_smp_handler() was updated to resume ha->dev before calling
-smp_execute_task_sg(), but three other non-discovery paths invoke
-smp_execute_task() -> smp_execute_task_sg() on expander PHYs
-(!scsi_is_sas_phy_local(phy)) without waking ha->dev:
-
-1. Reading expander PHY link error sysfs attributes
-   (show_sas_phy_invalid_dword_count,
-   show_sas_phy_running_disparity_error_count,
-   show_sas_phy_loss_of_dword_sync_count, and
-   show_sas_phy_phy_reset_problem_count in drivers/scsi/scsi_transport_sas.=
-c)
-   calls sas_get_linkerrors() -> sas_smp_get_phy_events() ->
-   smp_execute_task() -> smp_execute_task_sg():
-
-drivers/scsi/libsas/sas_init.c:sas_get_linkerrors() {
-	if (scsi_is_sas_phy_local(phy)) {
-		...
-	}
-
-	return sas_smp_get_phy_events(phy);
-}
-
-2. Writing expander PHY linkrate sysfs attributes
-   (store_sas_phy_minimum_linkrate and store_sas_phy_maximum_linkrate in
-   drivers/scsi/scsi_transport_sas.c) calls sas_set_phy_speed() ->
-   sas_smp_phy_control() -> smp_execute_task() -> smp_execute_task_sg():
-
-drivers/scsi/libsas/sas_init.c:sas_set_phy_speed() {
-	...
-	} else {
-		struct sas_rphy *rphy =3D dev_to_rphy(phy->dev.parent);
-		struct domain_device *ddev =3D sas_find_dev_by_rphy(rphy);
-		ret =3D sas_smp_phy_control(ddev, phy->number,
-					  PHY_FUNC_LINK_RESET, rates);
-	}
-}
-
-3. Calling the exported sas_phy_reset() on an expander PHY calls
-   sas_smp_phy_control() -> smp_execute_task() -> smp_execute_task_sg()
-   without resuming ha->dev (unlike the sysfs workqueue wrappers
-   queue_phy_reset() and queue_phy_enable() in drivers/scsi/libsas/sas_init=
-.c,
-   which call pm_runtime_get_sync(ha->dev)).
-
-When the controller is runtime-suspended (for example on hisi_sas_v3_hw whe=
-re
-sas_suspend_devices() clears dev->lldd_dev and powers down the hardware),
-won't these expander PHY operations fail with -ECOMM or access a suspended
-HBA?
-
-> @@ -2222,6 +2226,11 @@ void sas_smp_handler(struct bsg_job *job, struct S=
-csi_Host *shost,
->  		goto out;
->  	}
-> =20
-> +	/* The host may have autosuspended, resume it here. */
-> +	ret =3D pm_runtime_resume_and_get(dev->port->ha->dev);
-> +	if (ret)
-> +		goto out;
-> +
->  	ret =3D smp_execute_task_sg(dev, job->request_payload.sg_list,
->  			job->reply_payload.sg_list);
->  	if (ret >=3D 0) {
-
-[Severity: High]
-Won't pm_runtime_resume_and_get(dev->port->ha->dev) fail with -EACCES on
-platform-bus libsas controllers that do not enable runtime PM, such as
-hisi_sas_v1_hw and hisi_sas_v2_hw?
-
-Previously, smp_execute_task_sg() called pm_runtime_get_sync(ha->dev) and d=
-id
-not check its return value. In drivers/base/power/runtime.c:rpm_resume(), w=
-hen
-dev->power.disable_depth > 0 and !(rpmflags & RPM_TRANSPARENT), it returns 1
-only if runtime_status and last_status are both RPM_ACTIVE, and returns
--EACCES otherwise:
-
-drivers/base/power/runtime.c:rpm_resume() {
-	if (dev->power.runtime_error) {
-		retval =3D -EINVAL;
-	} else if (dev->power.disable_depth > 0) {
-		if (dev->power.runtime_status =3D=3D RPM_ACTIVE &&
-		    dev->power.last_status =3D=3D RPM_ACTIVE)
-			retval =3D 1;
-		else if (rpmflags & RPM_TRANSPARENT)
-			goto out;
-		else
-			retval =3D -EACCES;
-	}
-}
-
-Unlike PCI devices (where pci_pm_init() calls pm_runtime_set_active()),
-platform devices are initialized by pm_runtime_init() with disable_depth =
-=3D 1,
-runtime_status =3D RPM_SUSPENDED, and last_status =3D RPM_INVALID. In
-drivers/scsi/hisi_sas/hisi_sas_main.c:hisi_sas_probe(), platform controllers
-set sha->dev =3D hisi_hba->dev (&pdev->dev) without calling
-pm_runtime_set_active() or pm_runtime_enable(), so every expander BSG reque=
-st
-in sas_smp_handler() will abort at if (ret) goto out with -EACCES when
-CONFIG_PM=3Dy.
-
-> diff --git a/drivers/target/iscsi/iscsi_target_configfs.c b/drivers/targe=
-t/iscsi/iscsi_target_configfs.c
-> index 704ec94383c3c..e1aa0af52c658 100644
-> --- a/drivers/target/iscsi/iscsi_target_configfs.c
-> +++ b/drivers/target/iscsi/iscsi_target_configfs.c
-> @@ -1306,17 +1306,24 @@ static ssize_t iscsi_disc_enforce_discovery_auth_=
-store(struct config_item *item,
->  		return -EINVAL;
->  	}
-> =20
-> +	if (iscsit_get_tpg(discovery_tpg) < 0)
-> +		return -EINVAL;
-> +
->  	param =3D iscsi_find_param_from_key(AUTHMETHOD,
->  				discovery_tpg->param_list);
-> -	if (!param)
-> -		return -EINVAL;
-> +	if (!param) {
-> +		err =3D -EINVAL;
-> +		goto out;
-> +	}
-> =20
->  	if (op) {
->  		/*
->  		 * Reset the AuthMethod key to CHAP.
->  		 */
-> -		if (iscsi_update_param_value(param, CHAP) < 0)
-> -			return -EINVAL;
-> +		if (iscsi_update_param_value(param, CHAP) < 0) {
-> +			err =3D -EINVAL;
-> +			goto out;
-> +		}
-> =20
->  		discovery_tpg->tpg_attrib.authentication =3D 1;
->  		iscsit_global->discovery_acl.node_auth.enforce_discovery_auth =3D 1;
-
-[Severity: High]
-Does acquiring discovery_tpg->tpg_access_lock via iscsit_get_tpg() prevent =
-the
-use-after-free race against concurrent discovery logins?
-
-In drivers/target/iscsi/iscsi_target_parameters.c, iscsi_update_param_value=
-()
-frees param->value and reallocates it in place:
-
-drivers/target/iscsi/iscsi_target_parameters.c:iscsi_update_param_value() {
-	kfree(param->value);
-
-	param->value =3D kstrdup(value, GFP_KERNEL);
-	...
-}
-
-However, the discovery login path does not acquire
-discovery_tpg->tpg_access_lock. When an initiator logs into a discovery
-session, iscsi_target_locate_portal() in
-drivers/target/iscsi/iscsi_target_nego.c sets conn->tpg =3D
-iscsit_global->discovery_tpg and calls iscsit_access_np(np, conn->tpg), whi=
-ch
-only takes discovery_tpg->np_login_sem:
-
-drivers/target/iscsi/iscsi_target_nego.c:iscsi_target_locate_portal() {
-	...
-		conn->tpg =3D iscsit_global->discovery_tpg;
-		if (iscsit_access_np(np, conn->tpg) < 0) {
-	...
-}
-
-Then iscsi_login_zero_tsih_s2() in drivers/target/iscsi/iscsi_target_login.c
-calls iscsi_copy_param_list(), which reads param->value while holding only
-discovery_tpg->np_login_sem:
-
-drivers/target/iscsi/iscsi_target_login.c:iscsi_login_zero_tsih_s2() {
-	...
-	if (iscsi_copy_param_list(&conn->param_list,
-				conn->tpg->param_list, 1) < 0) {
-	...
-}
-
-drivers/target/iscsi/iscsi_target_parameters.c:iscsi_copy_param_list() {
-	...
-		new_param->name =3D kstrdup(param->name, GFP_KERNEL);
-		new_param->value =3D kstrdup(param->value, GFP_KERNEL);
-	...
-}
-
-Since iscsi_disc_enforce_discovery_auth_store() holds only tpg_access_lock =
-and
-discovery login holds only np_login_sem, can kfree(param->value) in
-iscsi_update_param_value() still race with kstrdup(param->value, GFP_KERNEL)
-in iscsi_copy_param_list()?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/6a4bfcdc8e60669d95a=
-bb70bdaa07b87154c9a95.camel@HansenPartnership.com?part=3D1
+Several SCSI passthrough completion paths touch userspace while their=0A=
+completed request still owns a queue tag.  Sense or READ-bounce copyback=0A=
+can fault on a mapping backed by the same one-tag device, leaving the=0A=
+nested I/O unable to obtain the retained tag.  The synchronous and=0A=
+io_uring BSG paths additionally discard data-copyback failures.=0A=
+=0A=
+Snapshot request-backed completion state, free each request before=0A=
+userspace access, and preserve the existing error precedence while=0A=
+reporting copyback failures.  This covers block-device SG_IO, CDDA,=0A=
+and both synchronous and io_uring BSG completion.=0A=
+=0A=
+Same-device one-tag tests previously left SG_IO, CDDA, and BSG tasks in=0A=
+D state in blk_rq_unmap_user() -> filemap_fault.  The fixed paths=0A=
+completed without a stuck task or hung-task report.  BSG tests with an=0A=
+unaligned PROT_NONE destination returned false success in 20/20 runs=0A=
+before the error-propagation changes and -EFAULT in 20/20 runs after=0A=
+them, while writable controls continued to succeed.=0A=
+=0A=
+The series passed scripts/checkpatch.pl --strict, focused W=3D1 builds,=0A=
+the full bzImage build used for the wider audit, and QEMU differential=0A=
+tests on the affected paths.=0A=
+=0A=
+Yingjie Wang (6):=0A=
+  scsi: core: release SG_IO request before copying to userspace=0A=
+  scsi: sr: release CDDA request before copying to userspace=0A=
+  scsi: bsg: release synchronous request before user copyback=0A=
+  scsi: bsg: report synchronous data copyback failures=0A=
+  scsi: bsg: release io_uring request before user copyback=0A=
+  scsi: bsg: report io_uring data copyback failures=0A=
+=0A=
+ drivers/scsi/scsi_bsg.c   | 60 ++++++++++++++++++++++++++-------------=0A=
+ drivers/scsi/scsi_ioctl.c | 45 ++++++++++++++++++-----------=0A=
+ drivers/scsi/sr.c         |  3 ++=0A=
+ 3 files changed, 72 insertions(+), 36 deletions(-)=0A=
+=0A=
+=0A=
+base-commit: 0fcb05b72344f40806cbe810de8872f1698bf053=0A=
+-- =0A=
+2.43.0=0A=
+=0A=
