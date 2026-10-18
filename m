@@ -1,77 +1,76 @@
-Received: from mail-pj1-f42.google.com (mail-pj1-f42.google.com [209.85.216.42])
+Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82F714C8C5A
-	for <linux-scsi@vger.kernel.org>; Sun, 18 Oct 2026 13:59:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 38F653D6487
+	for <linux-scsi@vger.kernel.org>; Sun, 18 Oct 2026 14:05:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792331991; cv=none; b=k9HipdBxZyeDM54fgL4Sj8JLus1GuV+CrDJcbXH7Euxu4UPokqt2tqOkJN/PdmCYGjcQIk4mYd5cTu9WbYlBvm4+mJCym/SMMjcx5HjNeuLL5yLv3oH43BcNlbZHZ62VYOc7/b9aTiywTirXlWWGLbHUvM/VCjJysAKZFFQ4JBw=
+	t=1792332359; cv=none; b=Zg3nkuJB05up81dS29AL8HD8xixGDKg6XoeSPmmpRHA2aC/BFPfXtBESCJIi/zO86YZCl9O1CCVed7lgPFK3CQosA2INFJ6VuZ75U6XMue2+Gue/TktP2S6mX3sYOqwlknhEZiTgzK+R+avDkB5tBY5Owbfn2tWiAN2gVcSM2No=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792331991; c=relaxed/simple;
-	bh=8+dudQneRtlky3L0134Uq63K6jUPTy15f15f59Dl2JQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=eeOXg2uZZdGsJ5d3p82bVLce9XeytW0JDnWkF1wrFn3SRXxePa28dnM1IWLsUQVsJBqQxF9PxwaAlHNKLyZuSsOnsEwr9hu7KwmihSMT/lYZ69C4/BqIJ1dPvxArFMfYOtyFCoj/GhpF9wNDSHhm63g9i7qIhyN1/QSFOQGR7N0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr; spf=none smtp.mailfrom=isslab.korea.ac.kr; dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b=k0BaWAeN; arc=none smtp.client-ip=209.85.216.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
+	s=arc-20240116; t=1792332359; c=relaxed/simple;
+	bh=f5FX7hFfCqVhSVN2m/Vw4FFE3wckOMml10ljkFzuQ1o=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=CHbz9tffJ0f88G/apgu2ShcTV24rEV8uzU0WSzf8YwEOopoZFSYvHcgthud5In8IUmRXkmzLDSowKpZ1gyAcUMJvRTcHnCqs+qnMLYIUre7aWY9PAlxJ4zAqxtqZASrHH+1hT11de/fTvothS+DygkuEyj/lDRPZI7oLY8ohHyI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=mYftQRc1; arc=none smtp.client-ip=209.85.214.170
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b="k0BaWAeN"
-Received: by mail-pj1-f42.google.com with SMTP id 98e67ed59e1d1-3acdcfa2bd3so1215231a91.3
-        for <linux-scsi@vger.kernel.org>; Sun, 18 Oct 2026 06:59:47 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mYftQRc1"
+Received: by mail-pl1-f170.google.com with SMTP id d9443c01a7336-2e9995ce866so9721675ad.0
+        for <linux-scsi@vger.kernel.org>; Sun, 18 Oct 2026 07:05:58 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=isslab-korea-ac-kr.20251104.gappssmtp.com; s=20251104; t=1792331987; x=1792936787; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1792332357; x=1792937157; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=TfIM6O5XGdPMggK0iswqZ9O/3wNWaaWuby0Fr894zwY=;
-        b=k0BaWAeNPfZXhxMf4MJ8V7Tw2vl9R2PUPGSlaRy79qs3r96Qg3re0F0U6ZOE/Z7zWF
-         aOCqtMVHxrUs6YEje2YWPqamyYnC/HL0xPswbRf132ToWKcpuDNDHSgu0YmIt9jkMR+V
-         UmTIxs62vQ1tEzId3UcJCFeKZRlCH/+1P2zYhUMQntONodK3DnqM7wX9g9CFHm+BcGUN
-         l2bwLTcRzBR3P7w+Eat8/sT+trU32uzcXay/GxGYxUu8UyDAOHIMADU6jfICzTwSmw0i
-         vsqOe0BsMkRPeAdfnzxALdEvrwMBNPFmfIE4dJ6q2uCB4QK6bDVNeiYzT6kdzM9gAoIU
-         fBvw==
+        bh=wpUr77bZYWUJxHRGn89lY5QrpxEuBo3N7WkSWCTOfBs=;
+        b=mYftQRc1+OAlsyFlYwS80Hmtf9YBEfD3qfmAUO8nJgJMQPowoXZ2ydJYelgiR+3Yey
+         yXcna3f7YfMBceUzWlWXOFbwgIOmv5h0y8U4tdjwVBV7J0IhvvDdnjPI6PNY3yWknkUb
+         Bb4Ecs1ialVGiX00bwnfr+/g3I/eTs/UBm5oxmtsGccDpG4S9cZlxHTSJjg3zCbMiwjS
+         GXVkXJfO64JCV0IfxMI0qAvz0GFoaDevYtu6dH0XQFnuMUAV1XGw4SYROCdl2z/x/yAM
+         ldpr9sXVJrZixlxglHvUng2bX+nnntrpVaj5gxRnMuSEouFiOcKAfBv+af+NhU1YPqU3
+         H7ng==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792331987; x=1792936787;
+        d=1e100.net; s=20260707; t=1792332357; x=1792937157;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=TfIM6O5XGdPMggK0iswqZ9O/3wNWaaWuby0Fr894zwY=;
-        b=HsabOlcZewGM2qJT90u+T5bYoe2D8tYASorVbdGZNHzMme0uvgTbnIqy0t6L1Nt1NR
-         AvAbBeE4nNWfWSF6VrvyPniX0SoaAirSIJoyJOMZxUxfVGM1K7FMxIZqLDCIsVSiCvpq
-         qdTilSh4P9AzoiAPIhmfME+UHaZ9j7qROoIRDzIRW/F/Gfv5z0l6qAv4SbQVH8K8+syG
-         rs/A8lDIBoeysyFTA8shtrNy0l0zd0zKWiT0uNbJFwhAxQuuOraIyLf2r0J4S8qfdn5s
-         piVltCw7K6l8KZmUoWUDBx3xpZTvstSFQtXYk/WcWaADLGYg8s6D54z68S5UAZLn+GI4
-         qkNQ==
-X-Forwarded-Encrypted: i=1; AKwUvBwBoOZj5aYD99FYHNxUhvdXutGVxbgoWLWn5VJdamxPpIfixyYsy4AY4G2nrzplY58rFqNJ4aLG6Pvq@vger.kernel.org
-X-Gm-Message-State: AFq9FYIOF5uJYsh87p7URs0T2UQgB2z85bVWdwe1gnAvHqrh9Xh/n5r9
-	PRQ/gKnGekEpbO60gL1YJMIUjigYdN4A2l21vZsjDJnZpHLhWPp8ItbtEeQPi10e4b6mA+wm6CT
-	GhOro
-X-Gm-Gg: AYBFou34zHREOuwb+WOb0z3GjPB87MjNbBgzX1Yc6Nx5MBblpGVdb48S3PMBJhnPnnc
-	MiZDzUDnwGZhqyzyBJPkU1hvZ9PAHZS6UBIH3Iw4XX4HzzGVYr9rTU7GimLNazDq2L3jltf2QX+
-	rg1ShfYC3keagO+s/3Oo6CpFWD6qpZxe2DMeVmqqsFSN9+Cgus2NbCeB37f1FPGONBkZeEvWm8S
-	EWoolFWF+1EvykQf0ClrdoEY7792avZSpSW6qNRV5b9COIU2sZdNbgiIWMCxcSFUa4vxQhmfeSy
-	QxSQcZIgTZ0HHulJ0+3oLMW6i6Qw/AcOdQa2BqzGYhNcCVF7tWhsceMxb+J2msLVpx2YdHPRwYR
-	90efewKnuxyS4Y6Gdx1lwn473aJQxXbU1OEbsLHNEWU/c3Bz8l73m9saUxXszC+ATp+Us2SA8K3
-	QvOLmgiM4dvCnOLl7Yjkzq9mbfmf4UKilFUKtJVIN/uAIk7tQTx9P6HN5JGZ+5mkzN9AQ+/E+Wm
-	+jRY3mHwtfp/sfM6Rbp6A==
-X-Received: by 2002:a17:90b:1806:b0:3ab:e588:c2a8 with SMTP id 98e67ed59e1d1-3acef538909mr4550140a91.64.1792331986138;
-        Sun, 18 Oct 2026 06:59:46 -0700 (PDT)
-Received: from yhlee-960QFG.Davolink ([2406:5900:1044:110c:6c71:58da:ec95:3c04])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3ac947928b4sm16263797a91.11.2026.10.18.06.59.42
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 18 Oct 2026 06:59:45 -0700 (PDT)
-From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
-To: Karan Tilak Kumar <kartilak@cisco.com>,
-	Narsimhulu Musini <nmusini@cisco.com>,
-	Sesidhar Baddela <sebaddel@cisco.com>,
-	"Martin K . Petersen" <mkp@kernel.org>
-Cc: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	Hannes Reinecke <hare@suse.de>,
-	Yehyeong Lee <yhlee@isslab.korea.ac.kr>,
+        bh=wpUr77bZYWUJxHRGn89lY5QrpxEuBo3N7WkSWCTOfBs=;
+        b=r1KfRlzfTt8eeorACb3ECTyhxmdEEdakxhd+TqxPmnb1TYaoaKA16eAE/zi5Xs07lq
+         Nx84/UutA1fDGZMX4AHbGtr47K+wFnj+Z83iz8MV0YZVpZXym84XoypF0lnGaa+xatYu
+         x4pPGcoYf/nLJTsQastNl11tZpLsDY/fV7E9k5cOpWJZeAGKAGb5AnY/f4joNTkVArXC
+         6d6MEF9/SKL9Ymr/6TA3jwJsm7+dVUqJv0dLoFYXylhorysgg3PGBmjYMcveZD9XjslQ
+         lrk8uEWDmBdtYbxA7mjwxSHIKLlZYht0WTFUMioUyTaRou9OiZQ5/ksZaqNm5qF4Hhrg
+         FD8A==
+X-Forwarded-Encrypted: i=1; AKwUvBxwDN0O2cz+Ed4eY+5pkp6yg3ELT9pAH9Qu3+sp82iX7Fl1KkZr5fpajdDy35As9fR2yk0x9voBYEQt@vger.kernel.org
+X-Gm-Message-State: AFq9FYIjjGUvW+BPmnn1aiLMZg3FVKAR4mu+AaS/1IRaBaFJh5Vua+FW
+	Q8GPvY0oeFXSrvhd2zGW+sVK9ukm8CFvPGkuoatxdLhGMXJdaFV4SKtU
+X-Gm-Gg: AYBFou2ApIHr5uyq2ecHqhNESNnl3eEP2Tf12GZnD0/10a4nuJJjw7zfdOczjtE7fAN
+	q2vtR8ste0SRjlTd/oS7aN/PMrmyCZaEDGnuJF8lu5tk74watskjJTUIDxhxVJZ9SRYGq+C6MWT
+	x/lIu499mk7yyDpFFoOM5RXkmTL84edKtCcCComZ/z5FIWpA4/QN3cLiMn1xLyJ1c51jfZh15yX
+	pnIgPH+8rxfOAJcVrCCXWBrcAW9Ts/To8XkAKNzqjkIHuUeJYiL5ifkBE43bFsj+mFaPLVHb2sW
+	ZabAxBpjBGuEc0ovMs3v28s2qtnkWumy9WyaEUeQ54LMq3dyoCgBCglEhBcLzsFwVEcfqFsythY
+	tNuGhScB1qD8lbwqvjHBNDPrA6Sh2goOLe2qtkbONcl/Gd1WGj/khlkJgBVb06PwlVp1AQxvKB+
+	fRUvdseNlQ1DcduPRP1t1gqC6Q6+f31Ztx9zllC2+wMeOitRQcavifK2MvmKU47O7nUk4lSJRJ+
+	Ktvks5TENaLT5RGyZtrxhxPFDEm5wUx8/xIVA4Urg06uAHPTj6RvqVTjELxBa1+tdqoqM9tKgmR
+	uVZTb8lbcWYWmTGHrpE95Sg4cTl+xBkqN7gJ45WXxY2juCHK
+X-Received: by 2002:a17:90b:2e46:b0:3ac:9e76:aa9e with SMTP id 98e67ed59e1d1-3acee276f13mr4625395a91.3.1792332357473;
+        Sun, 18 Oct 2026 07:05:57 -0700 (PDT)
+Received: from EAIT-H54D9Q2FJQ.eait.uq.edu.au ([130.102.10.249])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3acc980a548sm5988739a91.0.2026.10.18.07.05.53
+        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
+        Sun, 18 Oct 2026 07:05:56 -0700 (PDT)
+From: Yu Zhang <yuz08559@gmail.com>
+To: Mike Christie <michael.christie@oracle.com>
+Cc: Dmitry Bogdanov <d.bogdanov@yadro.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	target-devel@vger.kernel.org,
 	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: snic: reject a target count larger than the response buffer
-Date: Sun, 18 Oct 2026 22:59:30 +0900
-Message-ID: <20261018135930.3190279-1-yhlee@isslab.korea.ac.kr>
-X-Mailer: git-send-email 2.43.0
+	linux-kernel@vger.kernel.org,
+	Yu Zhang <yuz08559@gmail.com>,
+	stable@vger.kernel.org
+Subject: [PATCH] scsi: target: fix se_lun use-after-free in SET TARGET PORT GROUPS secondary path
+Date: Mon, 19 Oct 2026 00:05:47 +1000
+Message-ID: <20261018140547.67428-1-yuz08559@gmail.com>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -80,136 +79,81 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-snic_queue_report_tgt_req() sizes the REPORT TARGETS response buffer for
-min(fwinfo.max_tgts, shost->max_id) entries.  The completion handler walks
-that buffer for as many entries as the adapter reports in tgt_cnt, and the
-only thing in the way is
+target_emulate_set_target_port_groups() handles a SECONDARY target-port
+asymmetric access state (OFFLINE) by walking dev->dev_sep_list under
+dev->se_port_lock to find the se_lun whose relative target port identifier
+matches the request, then dropping se_port_lock and calling
+core_alua_set_tg_pt_secondary_state() on that lun:
 
-	SNIC_BUG_ON(tgt_cnt > snic->fwinfo.max_tgts);
+	list_for_each_entry(lun, &dev->dev_sep_list, lun_dev_link) {
+		if (lun->lun_tpg->tpg_rtpi != rtpi)
+			continue;
+		// XXX: racy unlock
+		spin_unlock(&dev->se_port_lock);
+		if (!core_alua_set_tg_pt_secondary_state(lun, 1, 1))
+			found = true;
+		spin_lock(&dev->se_port_lock);
+		break;
+	}
 
-which compares against the adapter's exchange-version value rather than
-the bound the allocation was built with, and which is a WARN_ON_ONCE in
-any build without DEBUG, so it falls through into the walk.  An adapter
-reporting more targets than were asked for reads past the buffer, and the
-count is also stored for snic_handle_tgt_disc() to walk a second time and
-create a target per entry.
+core_alua_set_tg_pt_secondary_state() sleeps while using the lun --
+msleep(trans_delay_msecs) and, when alua_write_metadata is set, a
+kernel_write() of the ALUA metadata. The matched lun is a different target
+port than the one the command arrived on, so it is not pinned by the
+command's own lun_ref. A concurrent core_tpg_remove_lun() of that port
+(configfs LUN removal) drains its lun_ref, removes it from dev_sep_list and
+frees the se_lun via call_rcu(); since the command holds no reference and
+is not in an RCU read-side section across the sleep, the grace period can
+elapse and the lun is freed under it:
 
-The same exchange-version handler already clamps max_sgs_per_cmd against a
-driver limit; max_tgts is taken as it arrives.
+	BUG: KASAN: slab-use-after-free in core_alua_set_tg_pt_secondary_state
+	 core_alua_set_tg_pt_secondary_state
+	 target_emulate_set_target_port_groups
+	 __target_execute_cmd
+	Allocated by task 3486:
+	 configfs_mkdir
+	Freed by task 0:
+	 __call_rcu_common
 
-Compare the reported count against the bound the request was built with,
-and fail the completion the way an empty target list is already failed.
+Take the matched lun's lun_ref with percpu_ref_tryget_live() before
+dropping se_port_lock and release it after the transition, mirroring
+core_alua_queue_state_change_ua(). This pins the se_lun across the sleep,
+so a concurrent LUN removal waits in transport_clear_lun_ref() instead of
+freeing it.
 
-I have no Cisco VIC hardware; the completion is injected under a KUnit
-harness so that the adapter reports 259 targets for a 256-entry request.
-The W taint below is the UML test machine's own virtio_pcidev warning:
+Reproduced with two tcm_loop target ports (distinct RTPIs) on one
+backstore, explicit ALUA, large trans_delay_msecs: a SET TARGET PORT
+GROUPS (secondary OFFLINE, targeting the second port's RTPI) on the
+first port races a configfs removal of the second port's LUN -> the
+KASAN splat above; with this patch the LUN removal blocks until the
+transition completes and there is no use-after-free.
 
-BUG: KASAN: slab-out-of-bounds in snic_report_tgt_cmpl_handler+0x266/0x410
-Read of size 4 at addr 00000000622c0810 by task kunit_try_catch/20
-
-CPU: 0 UID: 0 PID: 20 Comm: kunit_try_catch Tainted: G        W        N  7.3.0-rc7-g58161ead29e5-dirty #7 VOLUNTARY
-Tainted: [W]=WARN, [N]=TEST
-Stack:
-60d4e7dc 6220f200 622c20d8 00000000
-ffffff00 60d4e7dc 60d56045 622c0810
-60dcd680 6009aac3 622cfce0 6003e621
-Call Trace:
-[<6009aac3>] ? dump_stack_lvl+0x5e/0x7a
-[<6003e621>] ? _printk+0x0/0xd7
-[<6004b21d>] ? print_report+0x14b/0x517
-[<603bdf3b>] ? kasan_save_track+0x1b/0x40
-[<6003e621>] ? _printk+0x0/0xd7
-[<600897a3>] ? snic_report_tgt_cmpl_handler+0x266/0x410
-[<603beebb>] ? kasan_report+0x11b/0x160
-[<600897a3>] ? snic_report_tgt_cmpl_handler+0x266/0x410
-[<60073dad>] ? _dev_printk+0x0/0xe8
-[<600897a3>] ? snic_report_tgt_cmpl_handler+0x266/0x410
-[<6008a11c>] ? snic_lt_silent_overrun.cold+0x46/0x4da
-[<6089d880>] ? snic_lt_silent_overrun+0x0/0x330
-[<600bf62d>] ? os_nsecs+0x2d/0x40
-[<600a16a4>] ? timer_read+0x14/0x30
-[<602235de>] ? ktime_get_ts64+0x8e/0x2c0
-[<60223550>] ? ktime_get_ts64+0x0/0x2c0
-[<606fa06c>] ? kunit_try_run_case+0x1bc/0x310
-[<606f9eb0>] ? kunit_try_run_case+0x0/0x310
-[<603c08f0>] ? __kasan_check_read+0x0/0x20
-[<600bf020>] ? um_set_signals+0x0/0x60
-[<600bf020>] ? um_set_signals+0x0/0x60
-[<6013e3cd>] ? __kthread_parkme+0xdd/0x1c0
-[<606f9eb0>] ? kunit_try_run_case+0x0/0x310
-[<60700130>] ? kunit_generic_run_threadfn_adapter+0x0/0x100
-[<607001ac>] ? kunit_generic_run_threadfn_adapter+0x7c/0x100
-[<6014464e>] ? kthread+0x36e/0x560
-[<601442e0>] ? kthread+0x0/0x560
-[<6009f0de>] ? new_thread_handler+0xce/0x130
-
-The buggy address belongs to the object at 00000000622c0000
-which belongs to the cache kmalloc-4k of size 4096
-The buggy address is located 0 bytes to the right of
-allocated 2064-byte region [00000000622c0000, 00000000622c0810)
-
-The buggy address belongs to the physical page:
-page: refcount:0 mapcount:0 mapping:0000000000000000 index:0x0 pfn:0x22c0
-head: order:3 mapcount:0 entire_mapcount:0 nr_pages_mapped:0 pincount:0
-flags: 0x40(head|zone=0)
-page_type: f5(slab)
-raw: 0000000000000040 0000000061402140 0000000000000122 0000000000000000
-raw: 0000000000000000 0000000000040004 00000000f5000000
-head: 0000000000000040 0000000061402140 0000000000000122 0000000000000000
-head: 0000000000000000 0000000000040004 00000000f5000000 0000000000000003
-head: 000000009f279a01 00000000ffffffff 00000000ffffffff 0000000000000000
-head: 0000000000000000 00000000ffffffff
-page dumped because: kasan: bad access detected
-
-Memory state around the buggy address:
-00000000622c0700: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-00000000622c0780: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
->00000000622c0800: 00 00 fc fc fc fc fc fc fc fc fc fc fc fc fc fc
-                        ^
-00000000622c0880: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
-00000000622c0900: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
-
-Fixes: c8806b6c9e82 ("snic: driver for Cisco SCSI HBA")
+Fixes: adf653f92f38e8 ("target: Subsume se_port + t10_alua_tg_pt_gp_member into se_lun")
 Cc: stable@vger.kernel.org
-Signed-off-by: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+Signed-off-by: Yu Zhang <yuz08559@gmail.com>
 ---
- drivers/scsi/snic/snic_disc.c | 16 ++++++++++++++--
- 1 file changed, 14 insertions(+), 2 deletions(-)
+ drivers/target/target_core_alua.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/snic/snic_disc.c b/drivers/scsi/snic/snic_disc.c
-index 71d34a702f2ab..df7da6413f84a 100644
---- a/drivers/scsi/snic/snic_disc.c
-+++ b/drivers/scsi/snic/snic_disc.c
-@@ -385,7 +385,7 @@ snic_report_tgt_cmpl_handler(struct snic *snic, struct snic_fw_req *fwreq)
- {
+diff --git a/drivers/target/target_core_alua.c b/drivers/target/target_core_alua.c
+index 1111111..2222222 100644
+--- a/drivers/target/target_core_alua.c
++++ b/drivers/target/target_core_alua.c
+@@ -402,13 +402,16 @@
+ 				if (lun->lun_tpg->tpg_rtpi != rtpi)
+ 					continue;
  
- 	u8 typ, cmpl_stat;
--	u32 cmnd_id, hid, tgt_cnt = 0;
-+	u32 cmnd_id, hid, tgt_cnt = 0, ntgts;
- 	ulong ctx;
- 	struct snic_req_info *rqi = NULL;
- 	struct snic_tgt_id *tgtid;
-@@ -406,7 +406,19 @@ snic_report_tgt_cmpl_handler(struct snic *snic, struct snic_fw_req *fwreq)
- 	/* printing list of targets here */
- 	SNIC_HOST_INFO(snic->shost, "Target Count = %d\n", tgt_cnt);
- 
--	SNIC_BUG_ON(tgt_cnt > snic->fwinfo.max_tgts);
-+	if (snic->fwinfo.max_tgts)
-+		ntgts = min_t(u32, snic->fwinfo.max_tgts, snic->shost->max_id);
-+	else
-+		ntgts = snic->shost->max_id;
+-				// XXX: racy unlock
++				if (!percpu_ref_tryget_live(&lun->lun_ref))
++					continue;
 +
-+	if (tgt_cnt > ntgts) {
-+		SNIC_HOST_ERR(snic->shost,
-+			      "Target count %u exceeds the %u requested.\n",
-+			      tgt_cnt, ntgts);
-+		ret = 1;
-+
-+		goto end;
-+	}
+ 				spin_unlock(&dev->se_port_lock);
  
- 	for (i = 0; i < tgt_cnt; i++)
- 		SNIC_HOST_INFO(snic->shost,
--- 
-2.43.0
-
+ 				if (!core_alua_set_tg_pt_secondary_state(
+ 						lun, 1, 1))
+ 					found = true;
+ 
++				percpu_ref_put(&lun->lun_ref);
+ 				spin_lock(&dev->se_port_lock);
+ 				break;
+ 			}
