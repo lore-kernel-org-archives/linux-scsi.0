@@ -1,75 +1,85 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32E9A35E937;
-	Mon, 19 Oct 2026 13:29:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 832A44EFFDA;
+	Mon, 19 Oct 2026 13:30:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.142.43.55
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792416561; cv=none; b=LrzuK4lr5B9Yf9xsNw0VRAdMPXWdmHydvPlejBTxa3pOREzjh0DP0XQURcUQvkgYKNjWkABNWwFOYN2V3thX0jr4t7fg8Zx2VzijFuKQLaiOwyStD7TtYEi/Kdd1a4hATjfoAnRXzxpscWZvygKCgvYfp5xEftQhAaVgVbxfkVc=
+	t=1792416603; cv=none; b=uQc3mvXZ4UQfYSLI2dvOjcnA0yb9VzSr3PyFzJZBU9WwZ2wnFBN9WmR5jDDeAHVt9BtWfBMDpZnTmKNIUzayrkUmiTJwoYVdaQoSCL8SSk2yPCD8axhYafS1WiTmnXOLk+Rf+4ipRpRwV1Mv140KB6Mf5bxkpVPMzc0O8ECdXdU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792416561; c=relaxed/simple;
-	bh=DxOA3K04TdGKgV9RBzwq7NMB042SfZvdvrNpiga7nYU=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=MSlG9Puwvxok4Iw7he8VraXQnfwg2BEpyi9hd9E0XnvPy0nwR4In76rOmJbrVDfzg6P3jqfyefeKP1V0mkovtLNhyAfftDPbG1RHQdpiwwc4I+lkClZ/X8L4EyLqYO+pgOqVq8S2qhYk4h6kZN6VJD6NUOqlkeJ+DdSThQ7dcXM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Cg8kmesW; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1792416603; c=relaxed/simple;
+	bh=4edqWoO4BtHuw6wsM7+aehcde8yUXgyeTW4Syto0Gp0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=JtDHfm24pSLs9M6wUgCK/ecgio3YUKS5JFJVXoOJsSmLTfxcdnLvUXRRU2bCxWYrOo05eTH2dDugkH8jIOdi7iSlaI+YRdvY9qrIzwDd3xFu4O0kqqYnlAmMEfxuMMYFDMIrAZQwmQYAbb/bVx0SzR0F/yUaWNpbfIWH+xPGJXc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de; spf=pass smtp.mailfrom=linutronix.de; dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=GY6awD07; dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=7NXhReUL; arc=none smtp.client-ip=193.142.43.55
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Cg8kmesW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5DC541F000C5;
-	Mon, 19 Oct 2026 13:29:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792416559;
-	bh=URC7r36kokGjXCV5G6Ei8oKV54JoMbconYpCKkPt2AY=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=Cg8kmesWN57mHmnl0en3kWYMO2yX0BgIRJzmq3FgiPIVkBHJCehyWohK/DQhrOEJy
-	 zJ545bTFLn74AXk4TK9iv4KqYQvZj/aULQzo3I9xAoccx+xnbNmrrny1YSqoudqAqC
-	 3t5pUrZqPQlIPOy7v9hANSTAMWsvK/nWshybXQj4HrMlb82PZDOAptKJ80fJhrkkTX
-	 wNbWypmgc1cWREAxmVJ4bDCxM4fm1RUbYpgiRmnELaMwuxy7BMgsE5pKMipz6Se2Nd
-	 irGKYFbN7VB6z/DugXCGWjA/4SWQSWoiCRXgiwnDkvgj8pO4A7CkPIUrUiPolEqqpY
-	 XI/4AyHot2C3w==
-From: netdev-bot+sinfo@kernel.org
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="GY6awD07";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="7NXhReUL"
+Date: Mon, 19 Oct 2026 15:29:59 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+	s=2020; t=1792416600;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=OOfOpAADPpkAm+yYaZybu39Zph8JXuRjRbssHcMIQMc=;
+	b=GY6awD07614OvcT0YkJTMjHB1x1s/Ffujde6mRxEhQeyyE3eG+4p+Hfl2c2QtRDtNlSLi5
+	hYz2MbEYovpj+qhGG1fmsfwXMM/2CIj8OgnlqdqWTLUAAtxz+8AFopG/+uRvUPOJSfsd2Q
+	ox/foxGmFGXgu5uORwi0jcrwF7jUSEDjVTP7nEDdnLEAu4nra4F+9Qh6qqkMS2DlbaDJnR
+	gnJHa0YfYlSTZf7BgPx0Ncl1s1Z4bQupEfe7ZzCFyuBT8VgQ9gMUFcbnVOl9cNUKV015Uv
+	XlUZlnHLkp4gUgH5ucJeH9Lv/r1CI5xRtvg8WsMzBdywhgBsEOZ6Pg7L1222Fg==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+	s=2020e; t=1792416600;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=OOfOpAADPpkAm+yYaZybu39Zph8JXuRjRbssHcMIQMc=;
+	b=7NXhReUL62MaWL0ZZcVtwwIglobziljA1RMaxAe9QBgX36QTH6dT7fjaSdjvveSUT1xjd/
+	XYGj61XqBNYocfAw==
+From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 To: Haoran Wang <haoranwangsec@gmail.com>
 Cc: Varun Prakash <varun@chelsio.com>,
- Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
- Clark Williams <clrkwllms@kernel.org>, Steven Rostedt <rostedt@goodmis.org>,
- linux-rt-devel@lists.linux.dev, linux-scsi@vger.kernel.org,
- netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+	Clark Williams <clrkwllms@kernel.org>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	linux-rt-devel@lists.linux.dev, linux-scsi@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
 Subject: Re: [PATCH] libcxgb: use raw_cpu_ptr() in ppm_get_cpu_entries()
-Date: Mon, 19 Oct 2026 13:29:18 +0000
-Message-ID: <179241655890.3290.16297373218443125626@kernel.org>
-In-Reply-To: <179241614797.5916.13928836073297916808@whr>
+Message-ID: <20261019132959.vUxChMBS@linutronix.de>
 References: <179241614797.5916.13928836073297916808@whr>
-Auto-Submitted: auto-generated
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <179241614797.5916.13928836073297916808@whr>
 
-Hi!
+On 2026-10-19 21:22:27 [+0800], Haoran Wang wrote:
+> diff --git a/drivers/net/ethernet/chelsio/libcxgb/libcxgb_ppm.c b/drivers/net/ethernet/chelsio/libcxgb/libcxgb_ppm.c
+> index 2e3973a32..5f68c5d57 100644
+> --- a/drivers/net/ethernet/chelsio/libcxgb/libcxgb_ppm.c
+> +++ b/drivers/net/ethernet/chelsio/libcxgb/libcxgb_ppm.c
+> @@ -125,10 +125,9 @@ static int ppm_get_cpu_entries(struct cxgbi_ppm *ppm, unsigned int count,
+>  	if (!ppm->pool)
+>  		return -EINVAL;
+>  
+> -	cpu = get_cpu();
+> -	pool = per_cpu_ptr(ppm->pool, cpu);
+> +	cpu = raw_smp_processor_id();
+> +	pool = raw_cpu_ptr(ppm->pool);
 
-This is an automated message. This series looks like a fix, but its
-commit messages seem to be missing some information:
+cpu needs too be obtained after the lock has been acquired.
+Please also explain why it is okay to obtain pool belonging to CPU1 on
+CPU0.
 
- - How the issue was discovered, e.g. hit in production, hit during
-   development, syzbot report, manual code inspection, LLM or static
-   analysis tool scan.
+>  	spin_lock_bh(&pool->lock);
+> -	put_cpu();
+>  
+>  	i = ppm_find_unused_entries(pool->bmap, ppm->pool_index_max,
+>  				    pool->next, count, 0);
 
- - Whether the issue was actually triggered, or is only theoretical
-   (e.g. found by code inspection). If it was triggered please include
-   the symptoms, like the stack trace or error messages.
 
- - What hardware the change was tested on. For driver fixes please
-   mention the device (and if relevant firmware version) used for
-   testing, or say that the change was not tested on real hardware.
-
-Please do not repost the series just to address the above. Instead,
-reply to this email with the missing information, so that reviewers
-can take it into account. If the series needs another revision for
-other reasons, please include the information in the commit messages
-then.
-
-The evaluation is done by an LLM so it may be wrong, if you think
-that is the case please reply and explain.
+Sebastian
