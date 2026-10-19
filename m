@@ -1,79 +1,79 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
 	t=1792448154;
-	b=sEunEJa+CG8Dt8skUVPrHNkomuuUwakk1KdN4P8rULswDpzYEgN5HCoHaYauGfPKBPox
-	 FomrCsyUBUkpCFWteY1dKq5SeQB68AQaPS3Ov0JyiNKqtF7JuOdHWH2nqgfhXdZDCPfCr
-	 abGuzvMY7mYLd9+B2iB1hzdXCLhtSVXS5XpQBA/+bq/FpmXny+6xc2kB1wK0ig6fzGKY4
-	 AGmG2kH9Sy28Zq+HZuLZ8L27T/ub1A8APy0ZicKHnIm6NnJG2zJ3iW6pYLI2apVgySofG
-	 +6RcmyKTtAOKRbEjnV02lzPKTdML4cjBAxYe/25gBjHAB7E2RjNsUSp3H9ZpqZz8a4g==
+	b=lt88dTM1NYECKS0JmdEY0KVvAr8PiPwKagVZoNY9gQ4lSbFbkpqFmGETpMvVYtE9xWYl
+	 +siABU2Mi0S/pQAYfGf4nyHZotj8dUOP9yEujwkVU+6upenrwUOlRpuCaozNvq+nbkL5a
+	 zEGLDN0Liq+UEJPjABSZnGpEAiB5i5NCLlVfaC710CLTsGkrAjsmYCDzKe/ypBKL5jiAW
+	 9XUDTFDft9XZ72YZwpqqEalEKJlu9jU1HZRiD4ohthBTeDgA9pymrJH1kSYHQV886dUZq
+	 Erbma/ai4fS5DlcGo4v57M+cvKyEAPgX6jxR9NgvbqcJQcwRKFeGNDLHNVh9j3LVrKg==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
 	a=rsa-sha256; c=relaxed/relaxed; t=1792448154;
-	h=Received:DKIM-Signature:Received:From:Subject:Date:Message-Id:
-	 MIME-Version:Content-Type:Content-Transfer-Encoding:X-B4-Tracking:
-	 X-Change-ID:To:Cc:X-Mailer:X-Developer-Signature:X-Developer-Key:
-	 X-Endpoint-Received:X-Original-From:Reply-To;
-	bh=ZHZq68fxdCCsR/WYufw3XonimOcw8HvlPj51w9h+3bE=;
-	b=Tq6tIWDaSEoPhSSSrfNeV2vDPnixJ/5HUfsnUUZrtO/yhy7wK67EFBZ/ROd392DF3+vM
-	 MY+f5bvdEWmV79Uigb4XV8Tj8NH1X69S1tpGJNrIerSlBba5l1/N3dRtbXSNzHasLlc+V
-	 mydtm8vXiyHt/VLIAhWnXkVnLKZut9cNE27Ii/8Z+BT7dqxn92bzUChkfSZhpSIyjMsF7
-	 wDUkE3X10uvjGGnXCcK32ce4qcr7d2oJ1El4w8epjfw7ySXsmFwWNdqKt/RxHH+9KHLR9
-	 h5ANXEtKPB3j5azUQJS+NN++z2jZtscbBvGX+p9trD0HaOZGW1twabpFc6c9xv+dwMw==
+	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
+	 Content-Type:Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To:Content-Transfer-Encoding;
+	bh=1SsAn/4D2KY8LrxXXAic0O4wc9gDlFfVuJBtWgZjhik=;
+	b=zn80yQaZQU52aJM/JqoKYJI7BAbYVP9HZdH80xMAhpELGtioG4CB8lSExEcMF/f95D3y
+	 aytfwHoFlk+YM3SMdE1Fa1VdzEmtA/zGrWO6Qqap9QGmDaTWLT+lVUjQdcla8B8OzyQ5H
+	 LdPoDqnS3atjZSEhUiKXFm/h0+OGKUeBscoooVTnL4bqBugqEsM42vABd4gWy1xCdj0SM
+	 bjmwpVkgzzer/+Gl1q66F//g5YwX/Jo6dGw5DG7lZZ+bGnI5Y3oJHwjS4FmAgGXv4PGRf
+	 yO/mdcTYhO3G5zetXvH/yr31E4XQb0FdYTn+fjtTf1qu9l0LdqyGBuasJjynxVgn8bA==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DwyL0PCl;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=bYkwTALH;
 	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83E2D606A33D;
-	Mon, 19 Oct 2026 22:15:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F95960A260D;
+	Mon, 19 Oct 2026 22:15:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DwyL0PCl
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=bYkwTALH
 Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
 ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
-	t=1792448153;
-	b=LhYmBitjPUqjEWhbo6DIEuUlZk80RtkBT5qgBIBlfA5LehF3eCO+M8VaYRWGqedw27m8
-	 TF0OuzBocbl+FtK3xy1AVnIL7pgJ1WdkatTsD9EjYIYPY7AnJducD7b+9zbCN+oFeZaWS
-	 seUY4/OBx6nGpOPRC5v/i647f6nJyWOb8xvMTtfq2djU3WDNc8ukcSN6h6v0ohSD1v+Gs
-	 0gCxTdApJCmxISiuzllf4vNUiLbglilYt0GyYO27Rz6Y020ObPCye/zfrOwUt4XxSPLdg
-	 UWz1QMihSikSxE6uj02bQh/qxNMZMZHTdLnarmZOV81VDvk0WtDS1w5JAwLccI3y7GA==
+	t=1792448154;
+	b=kSB1Iz0gufp1l26JULcV1o86K80KuuBoeSFWps/Rg8IJrll++7hDbkcf2Ojk1chWSKk4
+	 daQdzDyx9nfmDcM70GvBXrpD7K4Eur4zBXK5bw4O8CaghvxfqvFQ+FZY18HcOyfIRZzDT
+	 cB0mw+rqAiJsycD8Q5VaqXNXDBLI19wMzv3hoVnDzEHfNOh99EOh9RUgZQRMo2P6TXCt2
+	 w7gtBX5XG1HMGJULEQQjPu9F66hrV0dL800NNJ6Is78DflISLlyGw3fSyD0MRnpEF7Pvy
+	 myfKZbJ1f3Z5uDt0XE5yL0ufW2etHV4egwDeFGhRIbEXbUlMs5Tuspz0bJqED+a3TTg==
 ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
-	c=relaxed/relaxed; t=1792448153;
-	h=DKIM-Signature:Received:From:Subject:Date:Message-Id:MIME-Version:
-	 Content-Type:Content-Transfer-Encoding:X-B4-Tracking:X-Change-ID:To:
-	 Cc:X-Mailer:X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
-	 X-Original-From:Reply-To;
-	bh=ZHZq68fxdCCsR/WYufw3XonimOcw8HvlPj51w9h+3bE=;
-	b=s6ldM18/nybtP9N8KSet+0a9rseWFppU485/lU5LKlhC4w4wkp2byAbo3Jds+dWlTE2F
-	 jrHeJHYAhNn4XAEMQIxSlLYkR2L7XeAf+lc40nT4v+Ny0EMl7q3l94z3uh4E+KMG9GZ0X
-	 l3hPLNs5FMgjbB/IQFHQwrg+UX9mO3hoFgjJS0SM12Tjncdi3+/cjcRavX5Eh3RsTWy+F
-	 wspBpz7j8VImc8NO+pwO54sZV9mglRz3rJCEu96tNE2EEpZiX48oTZloCSP4FWbD09wIS
-	 4AnzVs28rGMvBbedUZYwZJC+E/+KioGuE8PIRUfDaAd/U3VKui4zjvgr0Xw+M85lbbA==
+	c=relaxed/relaxed; t=1792448154;
+	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
+	 Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To:Content-Transfer-Encoding;
+	bh=1SsAn/4D2KY8LrxXXAic0O4wc9gDlFfVuJBtWgZjhik=;
+	b=y7uL0HgnfNsouMiEgXioNeiRnsPSCpI1rWgQVugP/g1fZ2UvQ29XK2cfxsKuiecVE3zF
+	 tRvO0ZIbBGnEhTKaF2gN1/o/cG/lfjKgwsrpwTdvkWrSwGaM+qY27SVYN0iDSJKxGbXjV
+	 8HSnPhprH/6vAR/b4YOiHCWS96Fsqj1cH11ydasBXkRuGUCsY5AMTzRldszYhJX1u2iCG
+	 0gFHHsimyvxUnYsUw5v5LFPKhPqtOTDX3iPm127oADQtm0CWJLkxIWGQd7jZ6936TmVnN
+	 h8UAmN+RvBOwo0r37hsGW6b11DGT7CloIrawv0uDCqUJiUSI+Mj1oWIhutjjbeDAR0g==
 ARC-Authentication-Results: i=1; smtp.kernel.org; 
 	arc=none smtp.remote-ip=100.80.115.77
 Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.kernel.org (Postfix) with ESMTPS id BCB8D1F000C5;
-	Mon, 19 Oct 2026 22:15:49 +0000 (UTC)
+	by smtp.kernel.org (Postfix) with ESMTPS id 7C1E11F000CB;
+	Mon, 19 Oct 2026 22:15:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792448153;
-	bh=ZHZq68fxdCCsR/WYufw3XonimOcw8HvlPj51w9h+3bE=;
-	h=From:Subject:Date:To:Cc:Reply-To;
-	b=DwyL0PClxVjuElIQlfLsVl8jQQj3GfXxK01GOa8uDMRdPsEouiAMeUOFGsB296k/G
-	 FHz1OkbPldpLRL6wbdEgwFJ0dupsj0W3rgxgEjFdRQ6hYZ4xrILRGy6rE9NTDaXuxk
-	 x0EczOKJwb6+SScDX11+Ife7w15zgVcuuwpslcj8i2kgFEk+yze3h8PZWXMd1WdbaD
-	 T70xKxcJpwhioI0oawmt0cK4e4DUzag64V1XD8H/cOuJNCyva6Dci64xPM7PFFo95N
-	 3YnNo82GD3J2UCvkubEgYpFB+bOYwqqhfM38tuHFH2ZO+zCFsEIBVFJ/BuUXPKSYjw
-	 Z4KJ1gssZVh3g==
+	s=k20260515; t=1792448154;
+	bh=1SsAn/4D2KY8LrxXXAic0O4wc9gDlFfVuJBtWgZjhik=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To;
+	b=bYkwTALHV+njm1Y1HifTYYB2GWPiSX1vSy8JJBEs6W+Ua7wXfGbCRij+GtCjPm+Wm
+	 6UlKpT12C71skZ6OknL60+posaULWMf3OljWIsrF1JXvVCPzB11WcIjbYx7iMKhD5M
+	 YK6T1pcQeWZ5YEsdMp322OOYRfIvKBJtwpb/G+PZUBhU+XQJtE6JI6q7TJj1pSYqHA
+	 eLTzn7jLXMnWv5biiqyVupYGtHKLs5Rqiz8ILnhkxqzsdeBMDwZXG4C/a+sNmEB+se
+	 EloZcCZWQwdTxfETPlKaHb8aqhM/tdmSms0rXs7SCfarCsEUMKM7882/CTfgLNdeRU
+	 GMNr2kcGa+pYw==
 Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
-	by lkml.kernel.org (Postfix) with ESMTP id 181F04064F;
+	by lkml.kernel.org (Postfix) with ESMTP id 4774D40677;
 	Mon, 19 Oct 2026 22:15:49 +0000 (UTC)
 From: Dave Marquardt via B4 Relay <devnull+davemarq.linux.ibm.com@kernel.org>
-Subject: [PATCH v15 00/11] scsi: ibmvfc: make ibmvfc support FPIN messages
-Date: Mon, 19 Oct 2026 17:15:45 -0500
-Message-Id: <20261019-ibmvfc-fpin-support-v15-0-a858726e178a@linux.ibm.com>
+Date: Mon, 19 Oct 2026 17:15:53 -0500
+Subject: [PATCH v15 08/11] scsi: ibmvfc: add interrupt routine for
+ asynchronous sub CRQ
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -84,13 +84,9 @@ List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIAJGW1moC/3XOy27CMBAF0F9BXtfR+JUEVv2PioWfjSsSR7YTg
- VD+HZtWVYtgOaO5Z+4VJRu9Teiwu6JoV598mMpAxNsO6UFOnxZ7UxaIAm1hTwX2alydxm72E07
- LPIeYsbVKcgO94lSgkpyjdf58Zz+O33Na1JfVuVL1wsUw4jxEK//pwPkeoOGEMw6Y4HyJ9mTeT
- 35azk353Ogw1vjgUw7xcq+9Elr//BgMnjYsRxiwYJI55zrTdeoBrTVXwn4lAtC9kFiRVE9aqZz
- kTuunEv8jEfFC4kWSoKBlqjc9FY/Stm03wChqAqIBAAA=
-X-Change-ID: 20260925-ibmvfc-fpin-support-eeba4d08b425
+Message-Id: <20261019-ibmvfc-fpin-support-v15-8-a858726e178a@linux.ibm.com>
+References: <20261019-ibmvfc-fpin-support-v15-0-a858726e178a@linux.ibm.com>
+In-Reply-To: <20261019-ibmvfc-fpin-support-v15-0-a858726e178a@linux.ibm.com>
 To: Madhavan Srinivasan <maddy@linux.ibm.com>, 
  Michael Ellerman <mpe@ellerman.id.au>, Nicholas Piggin <npiggin@gmail.com>, 
  "Christophe Leroy (CS GROUP)" <chleroy@kernel.org>, 
@@ -100,289 +96,125 @@ To: Madhavan Srinivasan <maddy@linux.ibm.com>,
 Cc: linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, 
  linux-kernel@vger.kernel.org, Dave Marquardt <davemarq@linux.ibm.com>
 X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1792448148; l=13910;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1792448148; l=3347;
  i=davemarq@linux.ibm.com; s=20260216; h=from:subject:message-id;
- bh=XLoiGcp+F0sL46DqI3F0iQptMngwPNITkM0FET2rBjM=;
- b=aamJRkvetQVS3D8fcWrOapmArs5tl2EO0R8MQNJ0Uv0RnOQM9JCyXNMj4cYXSiwYCVpqpFetP
- 7CUxyNPrlrjANoav3PEQ9ArMXyfyL+sqdpd1uGUPdmoqOq91LvezFaK
+ bh=Eh62A6Y+lUfh8f/4MfnlRnZuPDVmZGcaIx37w0Ng5Nk=;
+ b=lmal3ZJbbuXVU+J5raFMWwUbcZohCA5sCclg4BawB9XPE5od/3xkcuFdf7j/W0qC/N+CMq9Ex
+ Xkc59LGpcayBikZLgOvCZ/+cex83yGJQ+p34p8/+PMQyFo1Nx60lSpS
 X-Developer-Key: i=davemarq@linux.ibm.com; a=ed25519;
  pk=vy0/nfobrje6EqZxuyw6a3ZstytG8WK2vf5Y3xtGrEg=
 X-Endpoint-Received: by B4 Relay for davemarq@linux.ibm.com/20260216 with
  auth_id=689
 X-Original-From: Dave Marquardt <davemarq@linux.ibm.com>
 Reply-To: davemarq@linux.ibm.com
+Content-Transfer-Encoding: 7bit
 
-This patch series adds FPIN (fabric performance impact notification)
-support to the ibmvfc (IBM Virtual Fibre Channel) driver. This comes
-in three flavors:
+From: Dave Marquardt <davemarq@linux.ibm.com>
 
-- basic, to recognize existing FPIN messages from the virtual I/O
-  server (VIOS) (patch 4)
-- full, supporting additional FPIN information and using its own
-  asynchronous sub-queue and interrupt (patches 6-10)
-- extended, supporting FC-LS-5 (patch 11)
+Add ibmvfc_interrupt_async_subq(), an IRQ handler dedicated to
+asynchronous sub-CRQ events from the adapter. The handler disables
+the sub-CRQ IRQ and then calls ibmvfc_drain_async_subq() to consume
+all pending entries before re-enabling interrupts.
 
-Full and extended FPIN support requires a new asynchronous sub-queue
-with its own interrupt. The asynchronous sub-queue support requires
-ibmvfc to also support a new IBMVFC_NOOP command, which the driver
-recognizes and ignores (patch 5).
+Add ibmvfc_next_async_scrq() to traverse the async sub-CRQ ring
+directly via msgs.async_scrq[], returning a typed
+struct ibmvfc_async_sub_crq * without the cast that would be needed
+when going through ibmvfc_next_scrq().
 
-The asynchronous sub-queue work is split across five patches: patch 6
-defines the necessary data structures, patches 7 and 8 add the
-interrupt and drain routines for the queue, patch 9 extends channel
-registration and deregistration to accommodate the new queue, and
-patches 1-3 fix IRQ cleanup and error handling bugs exposed during
-that work. Patch 10 wires everything together, registering the async
-sub-queue during channel initialization and advertising support to
-VIOS during NPIV login.
+ibmvfc_drain_async_subq() holds the host lock and per-queue q_lock
+while processing. It loops over available entries via
+ibmvfc_next_async_scrq(), wrapping each in a struct
+ibmvfc_async_crq_event and dispatching to ibmvfc_handle_async(),
+then clears the valid bit and issues a write barrier. After draining,
+it re-enables the sub-CRQ IRQ and performs one final check for a
+newly arrived entry to close the IRQ-enable race; if one is found it
+is processed before exiting the loop.
 
-All three modes convert an incoming FPIN message from VIOS to an FC
-extended link service message, in some cases using default values for
-information not provided by the VIOS FPIN message but expected in the
-FC ELS message. This FC ELS message is passed to fc_host_fpin_rcv for
-updating statistics and sending the information upstream by netlink
-multicast, where it may be read by listeners including the DM
-multipath daemon "multipathd."
-
-Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
 Signed-off-by: Dave Marquardt <davemarq@linux.ibm.com>
-
+Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
 ---
-Changes in v15:
-- patch 4 (add basic FPIN support): restore per-adapter fpin_workq instead
-  of schedule_work(); destroy it after ibmvfc_release_crq_queue() in
-  ibmvfc_remove() to ensure in-flight work items drain before tgt_pool is
-  freed and to close the original race where queue_work() could be called
-  on a destroyed workqueue pointer
-- patch 9 (extend channel reg/dereg helpers): initialize scrq->hwq_id
-  before request_irq() so error logging in ibmvfc_toggle_scrq_irq() shows
-  the correct index if an early interrupt triggers before hwq_id was set
-- patch 10 (register and use asynchronous sub CRQ): clamp scsi->active_queues
-  and nvme->active_queues to max_queues in ibmvfc_channel_setup_done() to
-  prevent out-of-bounds scrqs[] access on a malformed hypervisor response;
-  take host_lock around bitfield writes to mq_enabled, do_enquiry, and
-  nvme_enabled in ibmvfc_reg_sub_crqs() and ibmvfc_init_sub_crqs() to
-  prevent lost updates from concurrent read-modify-write on the packed
-  bitfield word
-- Link to v14: https://patch.msgid.link/20261015-ibmvfc-fpin-support-v14-0-a0b063b8d825@linux.ibm.com
+ drivers/scsi/ibmvscsi/ibmvfc-core.c | 66 +++++++++++++++++++++++++++++++++++++
+ 1 file changed, 66 insertions(+)
 
-Changes in v14:
-- Fix double-free of sub-CRQ at the hypervisor level: guard
-  H_FREE_SUB_CRQ in ibmvfc_deregister_channel() on scrq->cookie != 0
-  and clear cookie to zero on success; also clear cookie in the
-  ibmvfc_register_channel() irq_failed: rollback path (patch 3)
-- Add SCSI_IBMVFC_KUNIT_TEST Kconfig entry, Makefile line, and
-  ibmvfc_kunit.c with ibmvfc_deregister_channel_guard_test() verifying
-  the cookie and msgs.handle guard paths (patch 3)
-- Fix wild pointer dereference in ibmvfc_handle_scrq(): change signature
-  to accept struct ibmvfc_queue *scrq and use &scrq->evt_pool for event
-  validation instead of &evt->queue->evt_pool (patch 5)
-- Fix NULL pointer dereference in ibmvfc_channel_setup_done() when
-  mq_enabled=0: compute async->active_queues from the VIOS response
-  guarded by async->scrqs != NULL; guard async->scrqs[0].cookie access
-  in ibmvfc_channel_setup() with a NULL check (patch 10)
-- Fix host state machine stall on ibmvfc_reg_sub_crqs() failure: clear
-  vhost->mq_enabled in addition to do_enquiry so ibmvfc_npiv_login_done()
-  takes the non-channel fallback path and wakes the work queue (patch 10)
-- Link to v13: https://patch.msgid.link/20261007-ibmvfc-fpin-support-v13-0-b816abfa4fcc@linux.ibm.com
+diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/ibmvfc-core.c
+index eeba6e6b3cae..c1ee8eb57491 100644
+--- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
++++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
+@@ -4385,6 +4385,72 @@ static struct ibmvfc_crq *ibmvfc_next_scrq(struct ibmvfc_queue *scrq)
+ 	return crq;
+ }
+ 
++static struct ibmvfc_async_sub_crq *ibmvfc_next_async_scrq(struct ibmvfc_queue *scrq)
++{
++	struct ibmvfc_async_sub_crq *crq;
++
++	crq = &scrq->msgs.async_scrq[scrq->cur];
++	if (crq->valid & 0x80) {
++		if (++scrq->cur == scrq->size)
++			scrq->cur = 0;
++		rmb();
++	} else
++		crq = NULL;
++
++	return crq;
++}
++
++static void ibmvfc_drain_async_subq(struct ibmvfc_queue *scrq)
++{
++	struct ibmvfc_host *vhost = scrq->vhost;
++	struct ibmvfc_async_crq_event ae = {
++		.type = IBMVFC_ASYNC_CRQ_SUB,
++	};
++	struct ibmvfc_async_sub_crq *crq;
++	unsigned long flags;
++	int done = 0;
++
++	spin_lock_irqsave(&vhost->host->host_lock, flags);
++	spin_lock(scrq->q_lock);
++	while (!done) {
++		while ((crq = ibmvfc_next_async_scrq(scrq)) != NULL) {
++			ae.subq = *crq;
++			ibmvfc_handle_async(&ae, scrq->vhost);
++			crq->valid = 0;
++			wmb();	/* complete write */
++		}
++
++		ibmvfc_toggle_scrq_irq(scrq, 1);
++		crq = ibmvfc_next_async_scrq(scrq);
++		if (crq != NULL) {
++			ae.subq = *crq;
++			ibmvfc_toggle_scrq_irq(scrq, 0);
++			ibmvfc_handle_async(&ae, scrq->vhost);
++			crq->valid = 0;
++			wmb();	/* complete write */
++		} else
++			done = 1;
++	}
++	spin_unlock(scrq->q_lock);
++	spin_unlock_irqrestore(&vhost->host->host_lock, flags);
++}
++
++/**
++ * ibmvfc_interrupt_async_subq - Handle an async event from the adapter
++ * @irq:           interrupt request
++ * @scrq_instance: async subq
++ *
++ **/
++static irqreturn_t __maybe_unused ibmvfc_interrupt_async_subq(int irq, void *scrq_instance)
++{
++	struct ibmvfc_queue *scrq = (struct ibmvfc_queue *)scrq_instance;
++
++	ibmvfc_toggle_scrq_irq(scrq, 0);
++	ibmvfc_drain_async_subq(scrq);
++
++	return IRQ_HANDLED;
++}
++
+ static void ibmvfc_drain_sub_crq(struct ibmvfc_queue *scrq)
+ {
+ 	struct ibmvfc_crq *crq;
 
-Changes in v13:
-- Updated to 7.4/scsi-staging base
-- Extend ibmvfc_common_fpin_to_desc() with a severity parameter;
-  ibmvfc_ext_fpin_to_desc() now honours IBMVFC_FPIN_SEVERITY_VALID
-  and propagates the severity from the VIOS rather than always
-  defaulting to FPIN_CONGN_SEVERITY_WARNING (patch 11)
-- Handle scsi_host_get() failure in ibmvfc_get_first_vhost() (patch 4)
-- Add kernel-doc comment to ibmvfc_get_first_vhost() (patch 4)
-- Use list_for_each_entry to find an online FCP/NVMe target rport in
-  KUnit tests rather than taking the first list entry unconditionally
-  (patches 4, 7, 11)
-- Link to v12: https://patch.msgid.link/20260930-ibmvfc-fpin-support-v12-0-53a3fff7d77b@linux.ibm.com
-
-Changes in v12:
-- Wrap ibmvfc_handle_async() invocations in KUnit tests with host_lock to
-  prevent races with workqueue destruction on concurrent device removal
-  (patches 4, 7, 11)
-- Add missing scsi_host_put() in success exit path of ibmvfc_async_fpin_test()
-  (patch 4)
-- Pass resolved tgt->wwpn into ibmvfc_full_fpin_to_desc() instead of subq->wwpn
-  so FPIN descriptors are correctly populated when subq->wwpn is 0 (patch 7)
-- Fix kernel-doc comments in ibmvfc_register_channel() and
-  ibmvfc_deregister_channel() that incorrectly directed passing a negative index
-  (patch 9)
-- Fix double registration of scsi_scrqs in ibmvfc_reenable_crq_queue() by
-  registering async_scrqs instead (patch 10)
-- Link to v11: https://lore.kernel.org/linux-scsi/20260925044900.414340-1-tyreld@linux.ibm.com/
-
-Changes in v11:
-- Split the IRQ cleanup and NULL-pointer fixes out of the "register and
-  use" patch into two dedicated bug-fix patches (patches 1-2 and 1-3),
-  making the series 11 patches instead of 9
-- Replaced the single ibmvfc_queue async_sub_crq field in ibmvfc_host with
-  an ibmvfc_channels async_scrqs field, reusing the existing channel
-  infrastructure for allocation, registration, and teardown (patches 6, 9, 10)
-- Added IBMVFC_PROTO_ASYNC to enum ibmvfc_protocol; ibmvfc_register_channel()
-  and ibmvfc_deregister_channel() now dispatch on protocol rather than a
-  negative-index sentinel (patch 9)
-- Added IBMVFC_ASYNC_SUB_CRQ_FMT format enum value and corresponding
-  async_scrq pointer in union ibmvfc_msgs (patch 6)
-- ibmvfc_alloc_channels() selects IBMVFC_ASYNC_SUB_CRQ_FMT for async
-  protocol channels so queues are sized for ibmvfc_async_sub_crq entries
-  (patch 10)
-- Link to v10: https://lore.kernel.org/linux-scsi/20260911021910.1038128-1-tyreld@linux.ibm.com/
-
-Changes in v10:
-- Fix ibmvfc_find_target() to use logical and (&&) instead of logical or (||)
-  when checking whether fc and nvme remote ports are NULL (patch 4)
-- Fix build issues due to missing & operator when referencing the host lock
-  during irqsave/restore calls (patch 4, patch 7, patch 8, patch 11)
-- Fix kunit build issues caused by inclusion of code meant for later patches
-  (patch 4, patch 7, patch 11)
-- Link to v9: https://lore.kernel.org/linux-scsi/20260911021910.1038128-1-tyreld@linux.ibm.com/
-
-Changes in v9:
-- Fix ibmvfc_find_target() to check for either a valid rport or nvme_remote_port
-  so nvme targets are not silently dropped (patch 4)
-- Restore xxx_host_remove() ordering and destroy async work queue prior to these
-  calls. Check that the host is not offline prior to enqueuing new async work
-  (patch 4)
-- Link to v8: https://lore.kernel.org/linux-scsi/20260909-ibmvfc-fpin-support-v8-0-b27183b055af@linux.ibm.com
-
-Changes in v8:
-- Split patch 6 into two patches: extend channel registration/deregistration
-  for async subq (patch 9), and clear sub-CRQ IRQ on registration failure
-  and guard teardown (patch 1)
-- Fixed NULL dereference in ibmvfc_deregister_channel() when called on
-  an unallocated queue: guard memset() behind scrq->msgs.handle check
-- Fixed variable-shadowing bug in ibmvfc_register_channel() error path
-  where H_FREE_SUB_CRQ hcall result clobbered the return code
-- Deregister and re-register async sub-CRQ in ibmvfc_reenable_crq_queue()
-  and ibmvfc_reset_crq() alongside SCSI channel queues
-- Link to v7: https://patch.msgid.link/20260831-ibmvfc-fpin-support-v7-0-77d0b9809080@linux.ibm.com
-
-Changes in v7:
-- Removed CRQ valid bit clearing to callers of ibmvfc_handle_async in
-  all cases
-- Added validity checks that IBMVFC_ASYNC_ID_IS_ASSOC_ID is clear
-  before using node_name
-- Fixed error path cleanup in ibmvfc_init_sub_crqs
-- Deregister and reregister async sub-CRQ in CRQ reset and reenable
-  code.
-- Moved work queue destruction after sub CRQs teardown in ibmvfc_remove
-- Modified async event handling code to use a tagged union rather than
-  void *.
-- Use WQ_UNBOUND rather than WQ_PERCPU for fpin workqueue, as FPIN
-  events should be rare. Hold q_lock only in
-  ibmvfc_drain_async_subq(), like ibmvfc_drain_sub_crq().
-- Hardened KUnit tests to use host_lock and kref.
-- Link to v6: https://patch.msgid.link/20260817-ibmvfc-fpin-support-v6-0-62a2d525e70d@linux.ibm.com
-
-Changes in v6:
-- Use alloc_workqueue rather than devm_alloc_workqueue, and add
-  explicit destroy_workqueue calls
-- Moved ibmvfc_find_target into patch 4
-- Link to v5: https://patch.msgid.link/20260806-ibmvfc-fpin-support-v5-0-13fd6f8a8f8b@linux.ibm.com
-
-Changes in v5:
-- Incorporate changes for NVME-over-FC.
-- Removed now redundant fabric login patch.
-- Link to v4: https://patch.msgid.link/20260710-ibmvfc-fpin-support-v4-0-ef031ac19520@linux.ibm.com
-
-Changes in v4:
-- Refactored channel registration
-- Check whether async work queue is allocated before using or freeing
-- Fixed work queue allocation/destruction
-- Skip basic KUnit test when there are no ibmvfc devices available
-- Fix target not found condition in ibmvfc_process_async_work
-- Link to v3: https://patch.msgid.link/20260702-ibmvfc-fpin-support-v3-0-d95b9747cf88@linux.ibm.com
-
-Changes in v3:
-- Fixed latent bug, exposed by VFC_NOOP, related to dataless CRQs and events
-- Fixed FPIN TLV descriptor length calculations
-- Use safe list walker to walk targets in ibmvfc_process_async_work
-- Added write memory barriers after clearing CRQ valid field
-- Use per-vhost work queue for FPIN work
-- Link to v2: https://patch.msgid.link/20260608-ibmvfc-fpin-support-v2-0-d41f540fba5c@linux.ibm.com
-
-Highlights of changes in v2:
-- Refactored mostly common FPIN conversion routines and async event
-  processing into single routines with wrappers for differences.
-- Moved FPIN processing to a work queue to avoid conflicts with
-  fc_host_fpin_rcv and memory allocation
-- Set descriptor sizes correctly
-- Use target WWPN for basic FPIN descriptor
-- Split patch 4 into 3 patches, for definition, allocation, and use of
-  the asynchronous sub-queue for events
-- Link to v1: https://patch.msgid.link/20260408-ibmvfc-fpin-support-v1-0-52b06c464e03@linux.ibm.com
-
-To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-To: "Martin K. Petersen" <mkp@kernel.org>
-To: Madhavan Srinivasan <maddy@linux.ibm.com>
-To: Michael Ellerman <mpe@ellerman.id.au>
-To: Nicholas Piggin <npiggin@gmail.com>
-To: "Christophe Leroy (CS GROUP)" <chleroy@kernel.org>
-To: Tyrel Datwyler <tyreld@linux.ibm.com>
-Cc: linux-kernel@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org
-Cc: linuxppc-dev@lists.ozlabs.org
-
----
-
-Dave Marquardt (9):
-  scsi: ibmvfc: fix IRQ leak and guard deregister on channel reg failure
-  scsi: ibmvfc: add basic FPIN support
-  scsi: ibmvfc: add NOOP command support
-  scsi: ibmvfc: add FPIN extended flag and async sub-CRQ queue handle
-  scsi: ibmvfc: extend async event handlers for async sub-CRQ events
-  scsi: ibmvfc: add interrupt routine for asynchronous sub CRQ
-  scsi: ibmvfc: extend channel reg/dereg helpers for async sub-CRQ
-  scsi: ibmvfc: register and use asynchronous sub CRQ for events
-  scsi: ibmvfc: handle extended FPIN events
-
-Tyrel Datwyler (2):
-  scsi: ibmvfc: fix potential clobbering of rc after failed irq setup
-  scsi: ibmvfc: fix potential NULL pointer dereference on failed queue
-    allocation
-
- drivers/scsi/Kconfig                 |  10 +
- drivers/scsi/ibmvscsi/Makefile       |   1 +
- drivers/scsi/ibmvscsi/ibmvfc-core.c  | 720 ++++++++++++++++++++++++---
- drivers/scsi/ibmvscsi/ibmvfc.h       |  66 +++
- drivers/scsi/ibmvscsi/ibmvfc_kunit.c | 409 +++++++++++++++
- 5 files changed, 1141 insertions(+), 65 deletions(-)
- create mode 100644 drivers/scsi/ibmvscsi/ibmvfc_kunit.c
-
---
-2.55.0
-
----
-Dave Marquardt (9):
-      scsi: ibmvfc: fix IRQ leak and guard deregister on channel reg failure
-      scsi: ibmvfc: add basic FPIN support
-      scsi: ibmvfc: add NOOP command support
-      scsi: ibmvfc: add FPIN extended flag and async sub-CRQ queue handle
-      scsi: ibmvfc: extend async event handlers for async sub-CRQ events
-      scsi: ibmvfc: add interrupt routine for asynchronous sub CRQ
-      scsi: ibmvfc: extend channel reg/dereg helpers for async sub-CRQ
-      scsi: ibmvfc: register and use asynchronous sub CRQ for events
-      scsi: ibmvfc: handle extended FPIN events
-
-Tyrel Datwyler (2):
-      scsi: ibmvfc: fix potential clobbering of rc after failed irq setup
-      scsi: ibmvfc: fix potential NULL pointer dereference on failed queue allocation
-
- drivers/scsi/Kconfig                 |  10 +
- drivers/scsi/ibmvscsi/Makefile       |   1 +
- drivers/scsi/ibmvscsi/ibmvfc-core.c  | 811 +++++++++++++++++++++++++++++++----
- drivers/scsi/ibmvscsi/ibmvfc.h       |  69 +++
- drivers/scsi/ibmvscsi/ibmvfc_kunit.c | 529 +++++++++++++++++++++++
- 5 files changed, 1339 insertions(+), 81 deletions(-)
----
-base-commit: c3cff7fac01638ab58e85fe7df41a04fa25c5bae
-change-id: 20260925-ibmvfc-fpin-support-eeba4d08b425
-
-Best regards,
---  
-Dave Marquardt <davemarq@linux.ibm.com>
+-- 
+2.56.0
 
 
