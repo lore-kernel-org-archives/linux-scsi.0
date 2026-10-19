@@ -1,46 +1,47 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 006F7538798;
-	Mon, 19 Oct 2026 14:04:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9DFC63DB5C;
+	Mon, 19 Oct 2026 14:06:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792418670; cv=none; b=DJZcdUR8v4GS0pcCYKeHp0bE6tRQeesqtiS+mpTJvaPCrY4m5Fz2BCYV86ZXtzBkG9L9Ms1UrjOqJy/je53WnrQlphygWS6xjuqhwkgzRw2gufZZI26Fc55l0jgGCkjVHoudnqAAR45K5ZygNyaUhf1X+rR96c42DYiWRZEi3ng=
+	t=1792418770; cv=none; b=WPiss4Lk9LWVUjB9ZA5Zv9Mnh7+zn+qlF9lOoMgYor6TxWipyS8cO/woPSsC0F/RWW9J+jhL6fLxAVVP0C9W1N22P8uln7oBZDeThbeNdmoEPlp5N1+LMg+nsUjvSJ6AfI9an2t3pa5r/SVzYJ1RouUIW5sEWzkwOZl9Xlgg4mY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792418670; c=relaxed/simple;
-	bh=VLDFUnzYr/kJP7X9v9D8JhmnEzPCrODBEDVnGGHUFI0=;
+	s=arc-20240116; t=1792418770; c=relaxed/simple;
+	bh=Tve3eLng/1NxsN3ahkLKaF2/k4aK1FH/bs13xFaU6Ug=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=bpDmXBrFftadO7d59hw4jha5TGPQLm64mYWhkky3VVJegCJBM/eGFV1oKc5XbaI0roQNQJnuGy8VGj8xHkEXjYy+CByVLnb08CPV0cW6Kkxfr3ZKlwUeM84+Ns6WUbe387Md4LiQa56PjvlKIphfvBE/WKw7FEAcSC/OUXs9G0o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=izT9Gbk4; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=mILrszFp+C9d3QL4WqfxVmfBh+3cvcQTw99Mi4Y/PLD9erU+BDRF8juadFIZIQTkqhflZUvIGdMa7qGQ1R0wXfX0z8J6D9z2nuueLKdURl574FHcK6pn2Aw2AflOzaidxLdcX6oevYQw4d/rhJQokV9VX8eyRBWlcllaUJb3hTI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=O9l01LMg; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="izT9Gbk4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AC6CF1F000C4;
-	Mon, 19 Oct 2026 14:04:26 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="O9l01LMg"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9262D1F000C4;
+	Mon, 19 Oct 2026 14:06:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792418667;
-	bh=omVqzHTN2MdhSixPARI+dTwl1yirIrYLAitKRdp+isA=;
+	s=k20260515; t=1792418767;
+	bh=WVdthEYcxHl8cn/x2J1zllQeLKilCWicvaEWOCuh3bY=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=izT9Gbk4hwu4a4ZJ+/cTwzyWE+A64Gu27ecgW/8CdynPHGZ14Sx2iXvgPjGGrEuQO
-	 RaG2KhDL3g2eHIulYiD2kDi3GUWp51W2SY8IabwI0LKnRE41MTQ9UAiiKwaTdy+CSg
-	 UhVGgg6m+PI/9vmoy6qecaJhIUQL3wTAxjePds56VTu5NXlFQfMg3rV9u0j+aYa60a
-	 8HDYkhiHrzOBpt317QzrK25/3ZTLOq3lxBVcz7+2cnBiwRE+azOlWe2PiYylxEGPqd
-	 +CvIREAi+g8D+BZXfuQO3u5C4/OVjYfjUkGwYVQQudtUWBjKVpBklkpULLSUELErZP
-	 yPd8ook3udxXw==
+	b=O9l01LMgglyVVBNjC2RXALkDx47bTfJNZIV5aY2tYK6Ue/4M6UW6BMfS2sKc17NCI
+	 +7DIYyLf/uDeauoe28t79DnqZITuiXIdK/IPj5MrgJTSKfU0kCou+Nf7c2LqMN0A9H
+	 7RVCQlCeDQgF3/J2EIpqUPeTyCdd4YqmEWMC9l2y4SBBJbcZqSo+i19rs+zCjnEBw6
+	 IbsgkEIsW236v6532ZXEmFyVJfgjgFpW6+7JLD1K5zIINhl+owrYI824+OJgYgKnpy
+	 MjAA8ziJdJTkZk90DRUYfVjvxfHZjalw2gz/evXRvt1oiBrmsFIJhlQQ+ptcKZtpMy
+	 Owo94nRnI6tRQ==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Tyrel Datwyler <tyreld@linux.ibm.com>,
+Cc: David Strahan <David.Strahan@microchip.com>,
+	David Strahan <david.strahan@microchip.com>,
+	Don Brace <don.brace@microchip.com>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
 	Sasha Levin <sashal@kernel.org>,
-	maddy@linux.ibm.com,
 	James.Bottomley@HansenPartnership.com,
 	mkp@kernel.org,
+	storagedev@microchip.com,
 	linux-scsi@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.18-5.10] scsi: ibmvfc: check for NULL evt in implicit LOGO and target delete path
-Date: Mon, 19 Oct 2026 09:51:43 -0400
-Message-ID: <20261019135441.1420968-412-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.18-6.12] scsi: smartpqi: Add new PCI device-ids
+Date: Mon, 19 Oct 2026 09:52:52 -0400
+Message-ID: <20261019135441.1420968-481-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20261019135441.1420968-1-sashal@kernel.org>
 References: <20261019135441.1420968-1-sashal@kernel.org>
@@ -56,461 +57,422 @@ X-stable-base: Linux 6.18.57
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Tyrel Datwyler <tyreld@linux.ibm.com>
+From: David Strahan <David.Strahan@microchip.com>
 
-[ Upstream commit 0122eab60b151d7815f420a91c7315944a037714 ]
+[ Upstream commit 1a220e6e87a31c2572cd07ff47023e5cd92ac80f ]
 
-Unlike ibmvfc_tgt_implicit_logout the ibmvfc_tgt_implicit_logout_and_del
-path fails to check for a NULL evt returned from
-ibmvfc_get_reserved_event and passes that directly to ibmvfc_send_event
-which will unconditionally derefence the evt.
+All PCI ID entries in Hex.
 
-Check for a NULL evt and perform same escalation as
-ibmvfc_implicit_logout.
+Add PCI IDs for Hurray Data controllers:
+                                            VID  / DID  / SVID / SDID
+                                            ----   ----   ----   ----
+                                            9005 / 028f / 207d / 4246
+                                            9005 / 028f / 207d / 4256
+                                            9005 / 028f / 207d / 4356
+                                            9005 / 028f / 207d / 4940
+                                            9005 / 028f / 207d / 4a46
 
-Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
-Link: https://patch.msgid.link/20260723000149.969416-4-tyreld@linux.ibm.com
+Add PCI IDs for ZTE controllers:
+                                            VID  / DID  / SVID / SDID
+                                            ----   ----   ----   ----
+                                            9005 / 028f / 1cf2 / 5451
+                                            9005 / 028f / 1cf2 / 5452
+                                            9005 / 028f / 1cf2 / 5453
+
+Add PCI ID for Ramaxel controller:
+                                            VID  / DID  / SVID / SDID
+                                            ----   ----   ----   ----
+                                            9005 / 028f / 1f3f / 0670
+
+Signed-off-by: David Strahan <david.strahan@microchip.com>
+Reviewed-by: Don Brace <don.brace@microchip.com>
+Link: https://lore.kernel.org/linux-scsi/20260722220401.6357-1-david.strahan@microchip.com/
+Link: https://patch.msgid.link/20260722220401.6357-4-david.strahan@microchip.com
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-This is a real NULL-deref crash fix in ibmvfc’s target-delete path. The
-local tree is **v7.3-rc4** (`7.3.0-rc4`); the driver and the buggy call
-path exist here, and the change is an 8-line match of the sibling logout
-error path.
-
-===============================================================
-PHASE 1: COMMIT MESSAGE FORENSICS
-===============================================================
-
-**Step 1.1: PARSE THE SUBJECT LINE**
-- Subsystem: `scsi: ibmvfc`
-- Action verb: `check` (safety check; commit body describes a NULL
-  deref)
-- Intent: stop passing a NULL event into `ibmvfc_send_event` on the
-  implicit-LOGO + delete path
-
-Record: [scsi/ibmvfc] [check] [NULL evt before send on implicit
-logout/delete]
-
-**Step 1.2: PARSE ALL COMMIT MESSAGE TAGS**
-- Signed-off-by: Tyrel Datwyler \<tyreld@linux.ibm.com\> (author; IBM
-  ibmvfc maintainer/contributor)
-- Link:
-  https://patch.msgid.link/20260723000149.969416-4-tyreld@linux.ibm.com
-- Signed-off-by: Martin K. Petersen \<martin.petersen@oracle.com\> (SCSI
-  maintainer)
-- No Fixes:, Reported-by:, Tested-by:, Reviewed-by:, Acked-by:, or Cc:
-  stable
-- Ignore pipeline SOBs if present; none besides author + SCSI maintainer
-
-Record: Author + SCSI maintainer SOB; lore/msgid link; no
-Fixes/Reported-by (expected)
-
-**Step 1.3: ANALYZE THE COMMIT BODY TEXT**
-- Bug: `ibmvfc_tgt_implicit_logout` checks for NULL from event
-  allocation; `ibmvfc_tgt_implicit_logout_and_del` does not
-- Failure: NULL `evt` is passed to `ibmvfc_send_event`, which
-  dereferences it
-- Fix: same escalation as the sibling path (drop discovery thread, put
-  kref, reset host)
-
-Record: [NULL deref of evt] [kernel oops on target delete when reserved
-pool is empty] [no version pins in message] [missed sibling NULL check]
-
-**Step 1.4: DETECT HIDDEN BUG FIXES**
-Record: Not hidden. Explicit NULL-deref fix.
-
-===============================================================
-PHASE 2: DIFF ANALYSIS - LINE BY LINE
-===============================================================
-
-**Step 2.1: INVENTORY THE CHANGES**
-- File at commit: `drivers/scsi/ibmvscsi/ibmvfc.c` (+8 / -0)
-- Function: `ibmvfc_tgt_implicit_logout_and_del`
-- Scope: single-file surgical error-path
-
-Record: [ibmvfc.c +8] [ibmvfc_tgt_implicit_logout_and_del] [surgical]
-
-**Step 2.2: UNDERSTAND THE CODE FLOW CHANGE**
-Before: `discovery_threads++` → `__ibmvfc_tgt_get_implicit_logout_evt()`
-→ `ibmvfc_send_event(evt)` with no NULL test.
-After: if `!evt`, decrement `discovery_threads`,
-`ibmvfc_set_tgt_action(NONE)`, `kref_put`, `__ibmvfc_reset_host`,
-return.
-
-Record: [error path only: unguarded send → guarded recovery matching
-sibling]
-
-**Step 2.3: IDENTIFY THE BUG MECHANISM**
-Category: memory safety (NULL pointer dereference), plus leak/refcount
-on that path.
-
-Verified mechanism:
-- `__ibmvfc_tgt_get_implicit_logout_evt()` does `kref_get` then
-  `ibmvfc_get_reserved_event()`; on failure it returns NULL (`ibmvfc-
-  core.c` 4424–4427)
-- `__ibmvfc_get_event()` can return NULL when the reserved pool is empty
-  (1615–1630)
-- `ibmvfc_send_event()` starts with `*evt->xfer_iu = evt->iu` (1787) —
-  unconditional deref
-
-Record: [NULL deref] [empty reserved event pool → NULL evt → oops; fix
-mirrors implicit_logout]
-
-**Step 2.4: ASSESS THE FIX QUALITY**
-Obviously correct as a crash fix: must not call
-`ibmvfc_send_event(NULL)`, must undo `discovery_threads++`, must
-`kref_put` the get done inside the helper.
-
-Caveat (verified in `ibmvfc_set_tgt_action`): this path is entered with
-`tgt->action == IBMVFC_TGT_ACTION_LOGOUT_RPORT` (set in
-`ibmvfc_del_tgt`). From that state, only `LOGOUT_RPORT_WAIT` or
-`DEL_RPORT` are accepted; `ACTION_NONE` is silently ignored. The send-
-failure arm already uses `DEL_RPORT`. An automated review (sashiko-bot)
-flagged this. It does not reintroduce the NULL deref: `kref_put` still
-balances the helper, and `__ibmvfc_reset_host` still runs. Worst case,
-the target stays in `LOGOUT_RPORT` and is retried after reset — far
-better than an oops.
-
-Record: [minimal, matches sibling; ACTION_NONE is a no-op here but not a
-crash regression]
-
-===============================================================
-PHASE 3: GIT HISTORY INVESTIGATION
-===============================================================
-
-**Step 3.1: BLAME THE CHANGED LINES**
-- `ibmvfc_tgt_implicit_logout_and_del` introduced in `ed830385a2b1f`
-  (“Avoid loss of all paths during SVC node reboot”), contained in
-  **v5.7-rc1**
-- NULL-returning `get_event` and sibling check added in `b39f2d10b86d0`
-  (“Remove BUG_ON in the case of an empty event pool”), contained in
-  **v6.7-rc1**. That commit updated
-  `__ibmvfc_tgt_get_implicit_logout_evt` and
-  `ibmvfc_tgt_implicit_logout` but **left `and_del` unchecked**
-  (verified in the post-commit function body)
-
-Record: [and_del: ed830385a2b1f / v5.7] [NULL return + incomplete call-
-site update: b39f2d10b86d0 / v6.7]
-
-**Step 3.2: FOLLOW THE FIXES: TAG**
-Record: No Fixes: tag. Effective buggy change is b39f2d10b86d0 (in this
-tree; `git merge-base --is-ancestor` → YES)
-
-**Step 3.3: CHECK FILE HISTORY FOR RELATED CHANGES**
-Series msgid `…969416-4` is **[PATCH v2 03/33]** of “ibmvfc: NVMe/FC
-support over IBM Virtual FC”. Cover letter: patches 1–5 are **pre-
-existing bug fixes** so the series is bisect-safe. This patch does not
-depend on NVMe patches. Neighbors: `9c2aa65000f6f` (MAD send deadlock),
-`7e35396ec8539` (teardown flush). Later `848c70852e3fb` split `ibmvfc.c`
-→ `ibmvfc-core.c`.
-
-Record: [standalone bugfix in a feature series] [no functional prereq on
-later NVMe patches]
-
-**Step 3.4: CHECK THE AUTHOR'S OTHER COMMITS**
-Tyrel Datwyler is the ibmvfc author of the 2023 event-pool change and
-this follow-up, plus the NVMe/FC series. Martin K. Petersen applied it.
-
-Record: [subsystem author] [completes his own 2023 call-site sweep]
-
-**Step 3.5: CHECK FOR DEPENDENT/PREREQUISITE COMMITS**
-Needs `__ibmvfc_tgt_get_implicit_logout_evt` returning NULL,
-`ibmvfc_send_event`, `__ibmvfc_reset_host`. All present. Applies as 8
-lines with no new APIs.
-
-Record: [standalone vs current driver; prereq b39f2d10b86d0 is in this
-tree]
-
-===============================================================
-PHASE 4: MAILING LIST AND EXTERNAL RESEARCH
-===============================================================
-
-**Step 4.1: FIND THE ORIGINAL PATCH DISCUSSION**
-- `b4 dig -c 0122eab60b151` → [PATCH v2 03/33],
-  https://patch.msgid.link/20260723000149.969416-4-tyreld@linux.ibm.com
-- `b4 dig -a` → v2 series only in the match: “NVMe/FC support over IBM
-  Virtual FC” (2026-07-22)
-- Cover letter: this is one of four pre-existing bugs (NULL event deref
-  in `and_del`)
-- Martin K. Petersen: “Applied to 7.3/scsi-staging, thanks!”
-- Direct replies to 03/33: sashiko-bot only (ACTION_NONE concern). No
-  human NAK.
-
-Record: [lore msgid above] [v2 03/33] [SCSI maintainer applied] [AI note
-on ACTION_NONE, no NAK]
-
-**Step 4.2: CHECK WHO REVIEWED THE PATCH**
-`b4 dig -w`: Tyrel Datwyler; James Bottomley; Martin K. Petersen; linux-
-scsi; linuxppc-dev; linux-kernel; Brian King; Dave Marquardt.
-
-Record: [SCSI maintainers + IBM ibmvfc people + linuxppc-dev]
-
-**Step 4.3: SEARCH FOR THE BUG REPORT**
-No Reported-by / syzbot / bugzilla. Bug described by the driver author
-from code comparison with the sibling.
-
-Record: [author-found incomplete 2023 update; no external repro]
-
-**Step 4.4: CHECK FOR RELATED PATCHES AND SERIES**
-Standalone among 33; first four are bugfixes. Later patches are NVMe
-feature work and must not be required.
-
-Record: [self-contained; do not pull the NVMe series]
-
-**Step 4.5: CHECK STABLE MAILING LIST HISTORY**
-WebSearch of lore for this subject did not find a stable@ thread. Direct
-lore.kernel.org fetches returned 403.
-
-Record: [no stable-list hit found; lore HTTP 403 on direct fetch]
-
-===============================================================
-PHASE 5: CODE SEMANTIC ANALYSIS
-===============================================================
-
-**Step 5.1: IDENTIFY KEY FUNCTIONS IN THE DIFF**
-Record: [ibmvfc_tgt_implicit_logout_and_del]
-
-**Step 5.2: TRACE CALLERS**
-- Declared static; `ibmvfc_del_tgt()` sets `tgt->job_step =
-  ibmvfc_tgt_implicit_logout_and_del` when action becomes `LOGOUT_RPORT`
-  (687–694)
-- Work thread `IBMVFC_HOST_ACTION_TGT_DEL` / `TGT_DEL_FAILED` invokes
-  `tgt->job_step(tgt)` for `LOGOUT_RPORT` targets (6085–6097)
-
-Record: [ibmvfc_del_tgt → work queue TGT_DEL → and_del; host work
-thread, not IRQ]
-
-**Step 5.3: TRACE CALLEES**
-`__ibmvfc_tgt_get_implicit_logout_evt`, `ibmvfc_send_event`,
-`ibmvfc_set_tgt_action`, `kref_put`/`ibmvfc_release_tgt`,
-`__ibmvfc_reset_host`
-
-Record: [event alloc/send, tgt state, kref, host reset]
-
-**Step 5.4: FOLLOW THE CALL CHAIN**
-Trigger: target removal / path loss on IBM Virtual FC (the v5.7 commit
-was SVC node reboot / WWPN move). Userspace SCSI/FC path loss on a POWER
-guest can reach this. NULL only if reserved CRQ events are exhausted
-(`IBMVFC_NUM_INTERNAL_REQ` is small: `1+1+1+2+(disc_threads*2)`).
-Unlikely but the 2023 change exists specifically because it can happen;
-without this check it is a hard oops rather than recovery.
-
-Record: [reachable on target delete] [NULL when reserved pool empty]
-[oops from driver work thread]
-
-**Step 5.5: SEARCH FOR SIMILAR PATTERNS**
-Sibling `ibmvfc_tgt_implicit_logout` already has the same 8-line guard
-(4458–4464). This is the missed twin.
-
-Record: [same pattern already in implicit_logout; and_del was the hole]
-
-===============================================================
-PHASE 6: CROSS-REFERENCING AGAINST THE LOCAL TREE
-===============================================================
-
-**Step 6.1: DOES THE BUGGY CODE EXIST IN THIS TREE?**
-- `git describe HEAD`: **v7.3-rc4-27-gf0100363d8c37**; `make
-  kernelversion`: **7.3.0-rc4**
-- Function lives in `drivers/scsi/ibmvscsi/ibmvfc-core.c` (file split
-  after this commit)
-- `git merge-base --is-ancestor 0122eab60b151 HEAD` → YES (landed in
-  **v7.3-rc1**)
-- Current `ibmvfc_tgt_implicit_logout_and_del` already has the NULL
-  check (4530–4536)
-- The hole existed from v6.7 until v7.3-rc1; this lineage had it and now
-  has the fix
-- `CONFIG_SCSI_IBMVFC` depends on `PPC_PSERIES && SCSI`
-
-Record: [code path present in this tree] [bug from v6.7; fix already on
-this HEAD]
-
-**Step 6.2: CHECK FOR BACKPORT COMPLICATIONS**
-Against this HEAD the original diff would not apply as-is (`ibmvfc.c` →
-`ibmvfc-core.c`, NVMe churn). Against a pre-split tree matching
-v6.7–v7.2, the hunk is a clean 8-line insert next to the sibling.
-
-Record: [clean on pre-split ibmvfc.c; this HEAD already contains the
-equivalent]
-
-**Step 6.3: CHECK IF RELATED FIXES ARE ALREADY HERE**
-This exact fix is already an ancestor. Sibling NULL check from
-b39f2d10b86d0 is also here.
-
-Record: [this fix already present; no alternate incomplete fix]
-
-===============================================================
-PHASE 7: SUBSYSTEM AND MAINTAINER CONTEXT
-===============================================================
-
-**Step 7.1: IDENTIFY THE SUBSYSTEM AND ITS CRITICALITY**
-Record: [SCSI ibmvfc / IBM POWER Virtual FC] [IMPORTANT for pseries
-guests, not core-universal]
-
-**Step 7.2: ASSESS SUBSYSTEM ACTIVITY**
-Mature client driver; recent NVMe/FC work. This NULL check is a pre-
-existing SCSI-path bug, not NVMe enablement.
-
-Record: [mature; this fix is independent of NVMe feature work]
-
-===============================================================
-PHASE 8: IMPACT AND RISK ASSESSMENT
-===============================================================
-
-**Step 8.1: DETERMINE WHO IS AFFECTED**
-Record: [platform-specific: PPC_PSERIES Virtual FC; enterprise POWER
-VMs]
-
-**Step 8.2: DETERMINE THE TRIGGER CONDITIONS**
-Record: [target delete / implicit LOGO while reserved event pool empty]
-[uncommon but real] [not a syscall smash; storage path loss on the
-guest]
-
-**Step 8.3: DETERMINE THE FAILURE MODE SEVERITY**
-Record: [NULL deref in ibmvfc_send_event → oops] [CRITICAL/HIGH]
-
-**Step 8.4: CALCULATE RISK-BENEFIT RATIO**
-Benefit: avoid host oops during target logout/delete. Risk: 8 lines,
-error path only; ACTION_NONE is a no-op from LOGOUT_RPORT but send-
-failure already recovers via reset/delete. No API change.
-
-Record: [high benefit vs low risk]
-
-===============================================================
-PHASE 9: FINAL SYNTHESIS
-===============================================================
-
-**Step 9.1: COMPILE THE EVIDENCE**
-
-FOR:
-- Real NULL deref: `ibmvfc_send_event` uses `evt` without a check
-- Incomplete 2023 call-site update left only `and_del` unguarded
-- 8-line clone of the proven sibling path (thread count, kref, host
-  reset)
-- Author is the ibmvfc owner; SCSI maintainer applied it
-- Cover letter calls this a pre-existing bug, not NVMe feature
-- Reachable on IBM Virtual FC target delete (production POWER path)
-
-AGAINST:
-- Bundled as 03/33 of a large NVMe series (the patch itself is
-  independent)
-- No Fixes:/Cc:stable/user report (absence is expected)
-- `ACTION_NONE` does not stick from `LOGOUT_RPORT`; `DEL_RPORT` would
-  match the send-fail arm
-- This HEAD already contains the commit (v7.3-rc1); original file name
-  has changed
-
-UNRESOLVED:
-- Could not fetch lore.kernel.org HTML (403); used b4 mbox instead
-- No stable@ discussion found
-
-**Step 9.2: APPLY THE STABLE RULES CHECKLIST**
-1. Obviously correct and tested? **PASS** — mirrors sibling; applied by
-   SCSI maintainer
-2. Fixes a real bug that affects users? **PASS** — oops on target delete
-   if reserved events are gone
-3. Important issue? **PASS** — NULL deref / oops
-4. Small and contained? **PASS** — +8 lines, one function
-5. No new features or APIs? **PASS**
-6. Can apply to the local tree? **PASS** for this lineage (code exists;
-   equivalent already in tree). A naive apply of the original `ibmvfc.c`
-   diff onto current split sources would not be needed here.
-
-**Step 9.3: CHECK FOR EXCEPTION CATEGORIES**
-Record: [none; ordinary crash fix]
-
-**Step 9.4: MAKE YOUR DECISION**
-This tree is Linux **7.3-rc4**. The ibmvfc client, `and_del`, and NULL-
-returning event allocator are all here. The bug is a missed NULL check
-that oopses in `ibmvfc_send_event`. The patch is small, matches existing
-recovery, and does not pull in NVMe/FC. The ACTION_NONE no-op is a minor
-state-machine nit, not a reason to withhold a crash fix.
-
-------------------------------------------------
-What the commit solves for stable users
-------------------------------------------------
-On IBM POWER Virtual FC, deleting a target does an implicit logout. If
-the reserved event pool is empty, allocation returns NULL. The sibling
-logout path handled that; the delete path did not, so the host work
-thread would oops. Users see a kernel crash during path loss / target
-teardown rather than a host reset.
-
-------------------------------------------------
-Stable rules / risk vs benefit
-------------------------------------------------
-Meets the rules: real oops, tiny, no features. Benefit is crash
-avoidance on a production pseries driver. Risk is low; recovery matches
-the sibling. Do not backport the rest of the 33-patch NVMe series with
-it.
-
-------------------------------------------------
-Concerns
-------------------------------------------------
-`ACTION_NONE` is ignored from `LOGOUT_RPORT`; `DEL_RPORT` would be the
-closer match to the send-failure arm. Still prevents the oops. On this
-7.3-rc4 tree the fix is already present (`0122eab60b151`); that is not
-“already selected by the pipeline,” it is the mainline landing. The
-driver code this commit exists to protect is in this tree.
+Connection lost, reconnecting to https://agentn.us.api5.cursor.sh
+(attempt 1)...
+Retry attempt 1...
+## Phase 1: Commit message forensics
+
+**Step 1.1 — Subject**
+- Record: `[scsi: smartpqi] [Add] new PCI device-ids for Hurray Data,
+  ZTE, and Ramaxel OEM boards`
+
+**Step 1.2 — Tags**
+- Record:
+  - `Reviewed-by: Don Brace <don.brace@microchip.com>` (listed smartpqi
+    maintainer in MAINTAINERS)
+  - `Link: https://lore.kernel.org/linux-
+    scsi/20260722220401.6357-1-david.strahan@microchip.com/` (cover
+    letter)
+  - `Link: https://patch.msgid.link/20260722220401.6357-4-
+    david.strahan@microchip.com/` (this patch)
+  - `Signed-off-by: David Strahan <david.strahan@microchip.com>`
+  - `Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>`
+    (SCSI maintainer)
+  - No `Fixes:`, no `Reported-by:`, no `Cc: stable` (absence expected)
+  - Ignore any pipeline `Signed-off-by: Sasha Levin` / `[Upstream commit
+    ...]` markers
+
+**Step 1.3 — Body**
+- Record: Adds nine `PCI_DEVICE_SUB` entries (VID `9005` / DID `028f`)
+  for:
+  - Hurray Data SVID `207d`: SDIDs `4246`, `4256`, `4356`, `4940`,
+    `4a46`
+  - ZTE SVID `1cf2`: SDIDs `5451`, `5452`, `5453`
+  - Ramaxel SVID `1f3f`: SDID `0670`
+- Symptom/failure mode: those OEM SKUs are not in the explicit ID table,
+  so they only bind via the `PCI_ANY_ID` wildcard. With
+  `disable_device_id_wildcards=1`, probe returns `-ENODEV`.
+- Version info: submitted against Martin Petersen’s `7.2/scsi-queue`;
+  applied to `7.3/scsi-staging` / `7.3/scsi-queue`.
+- Root cause: missing OEM subsystem IDs, not a logic bug.
+
+**Step 1.4 — Hidden bug fix?**
+- Record: Not a disguised crash/UAF fix. Cover letter says “No
+  functional changes.” It is still a hardware-enablement ID table
+  update, which is an explicit stable exception.
+
+## Phase 2: Diff analysis
+
+**Step 2.1 — Inventory**
+- Record: `drivers/scsi/smartpqi/smartpqi_init.c` only; `+36 / -0`.
+  Function/object: `pqi_pci_id_table[]`. Surgical, single-file.
+
+**Step 2.2 — Flow change**
+- Record: Before: those nine subsystem IDs were absent; match fell
+  through to the table’s `PCI_ANY_ID` catch-all. After: they match
+  specific `PCI_DEVICE_SUB` rows first. No probe/remove/ioctl logic
+  changes.
+
+**Step 2.3 — Bug mechanism**
+- Record: Category **hardware workaround / device ID addition**. Not
+  UAF, leak, race, etc.
+
+**Step 2.4 — Fix quality**
+- Record: Obviously correct copies of adjacent `PCI_DEVICE_SUB` rows. No
+  `driver_data`. No API or locking change. Regression risk is negligible
+  (table grows; PCI match still first-match). Duplicate IDs were grepped
+  and are not present.
+
+## Phase 3: Git history
+
+**Step 3.1 — Blame / introduction**
+- Record: Driver added in `6c223761eb548` (2016-08-12), `smartpqi:
+  initial commit of Microsemi smartpqi driver`. Catch-all
+  `PCI_DEVICE_SUB(..., PCI_ANY_ID, PCI_ANY_ID)` is from that same
+  commit. Vendor blocks already exist: Hurray `0x207d` (e.g.
+  `48e6b7e708029`, `01b8bdddcfab0`), ZTE `0x1cf2` (since
+  `09d9968a8eff8`, 2021), Ramaxel `0x1f3f` (`01b8bdddcfab0` /
+  `dab5378485f60`).
+
+**Step 3.2 — Fixes: tag**
+- Record: None. Not applicable.
+
+**Step 3.3 — File history**
+- Record: Recent same-file work is a 4-patch series:
+  1. `225548863f0a2` AIO retry marker
+  2. `c64b2ab2ff516` `CCISS_BIG_PASSTHRU` ioctl
+  3. `1a220e6e87a31` this ID patch
+  4. `913337c48e6aa` version string
+- This patch only inserts ID rows; it does not use the ioctl or AIO
+  changes. Standalone.
+
+**Step 3.4 — Author**
+- Record: David Strahan is a regular Microchip smartpqi contributor
+  (many prior PCI ID commits). Reviewed by Don Brace, the listed
+  maintainer.
+
+**Step 3.5 — Prerequisites**
+- Record: Needs existing `pqi_pci_id_table` and neighboring `0x207d` /
+  `0x1cf2` / `0x1f3f` rows for a clean apply. Those exist in this
+  checkout. No new helpers or structs.
+
+## Phase 4: Mailing list / external
+
+**Step 4.1 — Original discussion**
+- Record: `b4 dig -c 1a220e6e87a31` → https://patch.msgid.link/202607222
+  20401.6357-4-david.strahan@microchip.com
+- Cover: `[PATCH v1 0/4] smartpqi: fixes and updates for 2.1.42-011`
+- This patch is `[PATCH v1 3/4] smartpqi: add new pci device-ids`
+- `b4 dig -a` shows one v1 of this ID patch (other “v2/v3/v4” labels are
+  sibling patches in the same send, not later ID-table revisions).
+  Applied version is that v1.
+- Martin K. Petersen: “Applied to 7.3/scsi-staging, thanks!” then
+  “Applied to 7.3/scsi-queue” listing `[3/4] ... 1a220e6e87a3`. No NAKs,
+  no stable nomination, no risk comments on the ID patch. Thread replies
+  were about patches 1/4 and 2/4, not IDs.
+
+**Step 4.2 — Recipients (`b4 dig -w`)**
+- Record: David Strahan, `linux-scsi@vger.kernel.org`, Don Brace.
+  Correct list and maintainer.
+
+**Step 4.3 — Bug report**
+- Record: No `Reported-by` / bugzilla / syzbot. Hardware enablement from
+  the vendor.
+
+**Step 4.4 — Series**
+- Record: Patches 1–2 are independent (retry-marker callback; new
+  ioctl). Patch 4 is a version string. This ID commit does not depend on
+  them.
+
+**Step 4.5 — Stable list**
+- Record: lore.kernel.org/stable fetch returned HTTP 403. mbox has no
+  “stable” / “NAK” hits. UNVERIFIED: whether anyone already asked
+  stable@ about this hash.
+
+## Phase 5: Code semantics
+
+**Step 5.1 — Functions**
+- Record: `pqi_pci_id_table` only (not a function). Consumed by
+  `MODULE_DEVICE_TABLE(pci, pqi_pci_id_table)` and
+  `pqi_pci_driver.id_table`.
+
+**Step 5.2 — Callers**
+- Record: `pci_register_driver(&pqi_pci_driver)` from `pqi_init()`.
+  Probe is `pqi_pci_probe()`. Path is PCI enumeration / module autoload,
+  not a syscall hot path.
+
+**Step 5.3 — Callees**
+- Record: Probe uses the matched `pci_device_id`. Relevant logic:
+
+```9468:9478:drivers/scsi/smartpqi/smartpqi_init.c
+        if (pqi_disable_device_id_wildcards &&
+                id->subvendor == PCI_ANY_ID &&
+                id->subdevice == PCI_ANY_ID) {
+                dev_warn(&pci_dev->dev,
+                        "controller not probed because device ID
+wildcards are disabled\n");
+                return -ENODEV;
+        }
+
+        if (id->subvendor == PCI_ANY_ID || id->subdevice == PCI_ANY_ID)
+                dev_warn(&pci_dev->dev,
+                        "controller device ID matched using
+wildcards\n");
+```
+
+**Step 5.4 — Reachability**
+- Record: Yes. Plug-in / boot with `CONFIG_SCSI_SMARTPQI`. Default:
+  catch-all already binds `9005:028f`. With
+  `disable_device_id_wildcards=1`, only explicit rows bind — these nine
+  SKUs need the new entries.
+
+**Step 5.5 — Similar patterns**
+- Record: Same file has a long history of OEM ID additions (`Add new PCI
+  IDs`, Hurray/ZTE/Ramaxel). This matches that pattern.
+
+## Phase 6: Local tree
+
+**Step 6.1 — Does the target code exist here?**
+- Record: Local tree is **v7.3-rc4** (`7.3.0-rc4`).
+  `drivers/scsi/smartpqi/` exists (`CONFIG_SCSI_SMARTPQI`). Neighboring
+  Hurray/ZTE/Ramaxel rows exist. The nine IDs are already in the table
+  because `1a220e6e87a31` is an ancestor of HEAD. The code this commit
+  touches is present.
+
+**Step 6.2 — Backport difficulty**
+- Record: In this tree: already applied / would apply cleanly. Older
+  stables may need context tweak if some neighboring IDs are missing;
+  still a mechanical table insert.
+
+**Step 6.3 — Related fixes already here?**
+- Record: Earlier Hurray/ZTE/Ramaxel IDs are here; these nine SDIDs were
+  new in this commit. No alternate fix.
+
+## Phase 7: Subsystem context
+
+**Step 7.1**
+- Record: SCSI hardware driver `drivers/scsi/smartpqi/`. Criticality
+  **IMPORTANT** (storage RAID/HBA on servers; not core mm/VFS). Not
+  staging.
+
+**Step 7.2**
+- Record: Actively maintained by Microchip; frequent ID and bugfix
+  updates. Driver itself is mature (2016).
+
+## Phase 8: Impact and risk
+
+**Step 8.1 — Who is affected**
+- Record: Driver-specific: Hurray Data, ZTE, and Ramaxel boards using
+  Adaptec2/Microchip `9005:028f`.
+
+**Step 8.2 — Trigger**
+- Record: Device present at enumeration. Common for those machines.
+  Unprivileged users do not trigger it; missing IDs mean the RAID
+  controller never binds (especially with wildcards disabled).
+
+**Step 8.3 — Failure mode**
+- Record: Controller not claimed (or only via wildcard, which some
+  deployments disable). Severity **MEDIUM** as a “bug,” **HIGH** as
+  hardware enablement for those boxes (boot disks can sit unused). Not a
+  panic/UAF.
+
+**Step 8.4 — Risk vs benefit**
+- Record: Benefit: OEM HBAs work / are explicitly supported, including
+  `disable_device_id_wildcards=1`. Risk: very low (36-line ID table
+  only). Ratio strongly favors backport.
+
+## Phase 9: Synthesis
+
+**Step 9.1 — Evidence**
+
+For:
+- Explicit stable exception: PCI IDs on an existing driver
+- Nine OEM SKUs; same VID/DID as the rest of the table
+- `disable_device_id_wildcards` makes explicit IDs actually required
+- 36 lines, one file, no logic/API change
+- Reviewed by Don Brace; applied by Martin K. Petersen
+- Standalone vs the rest of the 4-patch series
+- Driver and vendor blocks exist in this tree
+
+Against:
+- Cover letter: “No functional changes”
+- Catch-all already matches `9005:028f` when wildcards stay enabled
+- Not a crash/security/corruption fix
+- No `Cc: stable` (not a negative per the review rules)
+
+Unresolved:
+- Stable@ search 403; no independent confirmation of a prior stable
+  request
+
+**Step 9.2 — Stable rules**
+1. Obviously correct and tested? **PASS** (mechanical ID rows;
+   maintainer Reviewed-by)
+2. Real user-facing issue? **PASS** (hardware bind / explicit support)
+3. Important? **PASS** under the PCI-ID exception (storage HBA
+   enablement)
+4. Small and contained? **PASS** (+36, one table)
+5. No new features/APIs? **PASS** (IDs only; ioctl/version patches are
+   separate)
+6. Can apply to this tree? **PASS** (driver + table present; insertion
+   points exist)
+
+**Step 9.3 — Exception**
+- Record: **NEW DEVICE IDs** to an existing driver.
+
+**Step 9.4 — Decision**
+This is the standard PCI ID stable case. It should be backported to this
+tree: the smartpqi driver and ID table are here, the change is self-
+contained, and it enables known OEM controllers (including when wildcard
+matching is disabled).
+
+### What it solves for stable users
+Without these rows, Hurray/ZTE/Ramaxel `9005:028f` boards only match the
+wildcard. Default kernels still probe them; kernels using
+`disable_device_id_wildcards` refuse them. Listing the IDs is how this
+driver declares supported SKUs and how those machines get a bound HBA.
+
+### Risk vs benefit
+Benefit is hardware enablement; risk is essentially nil. No dependency
+on the AIO or `CCISS_BIG_PASSTHRU` patches.
 
 Verification:
-- [Phase 1] Subject/tags: scsi: ibmvfc NULL evt check; SOB Tyrel
-  Datwyler + Martin K. Petersen; Link msgid 20260723000149.969416-4; no
-  Fixes/Reported-by
-- [Phase 2] Diff: +8 in `ibmvfc_tgt_implicit_logout_and_del` only
-- [Phase 2] `__ibmvfc_get_event` can return NULL (ibmvfc-core.c
-  1615–1630); helper returns that NULL (4424–4427); `ibmvfc_send_event`
-  derefs at 1787
-- [Phase 2] `ibmvfc_set_tgt_action`: LOGOUT_RPORT allows only
-  LOGOUT_RPORT_WAIT or DEL_RPORT (531–537)
-- [Phase 3] and_del from ed830385a2b1f (v5.7-rc1); incomplete sweep
-  b39f2d10b86d0 (v6.7-rc1); this fix 0122eab60b151 (v7.3-rc1)
-- [Phase 3] `git merge-base --is-ancestor b39f2d10b86d0 HEAD` YES;
-  `0122eab60b151` YES
-- [Phase 3] After b39f2d10b86d0, and_del still called
-  `ibmvfc_send_event(evt)` with no NULL check
-- [Phase 4] `b4 dig -c 0122eab60b151`: v2 03/33 NVMe/FC series; cover
-  letter lists this as a pre-existing NULL deref
-- [Phase 4] `b4 dig -w`: linux-scsi, linuxppc-dev, James Bottomley,
-  Martin Petersen, Brian King
-- [Phase 4] `b4 dig -m`: Martin applied to 7.3/scsi-staging; sashiko-bot
-  ACTION_NONE comment; no human NAK
-- [Phase 4] lore HTML fetch 403; WebSearch found no stable@ thread for
-  this subject
-- [Phase 5] Caller: `ibmvfc_del_tgt` → TGT_DEL work → `job_step`
-- [Phase 6] `git describe HEAD` = v7.3-rc4-27-gf0100363d8c37;
-  kernelversion 7.3.0-rc4; NULL check present at ibmvfc-core.c 4530–4536
-- [Phase 7] CONFIG_SCSI_IBMVFC: PPC_PSERIES Virtual FC client
-- [Phase 8] Failure mode: NULL deref oops; severity HIGH/CRITICAL
-- UNVERIFIED: human-tested repro on hardware (author analysis +
-  maintainer apply only)
+- [Phase 1] Parsed tags: Reviewed-by Don Brace; Links to cover
+  `...6357-1` and patch `...6357-4`; SOBs Strahan and Martin Petersen;
+  no Fixes/Reported-by/Cc:stable
+- [Phase 2] Diff: +36 in `pqi_pci_id_table` only; nine `PCI_DEVICE_SUB`
+  entries; grep showed no duplicate SDIDs
+- [Phase 3] `git describe HEAD` → `v7.3-rc4-27-gf0100363d8c37`; `make
+  kernelversion` → `7.3.0-rc4`
+- [Phase 3] Commit SHA `1a220e6e87a31`; `git merge-base --is-ancestor
+  1a220e6e87a31 HEAD` succeeded
+- [Phase 3] Driver intro `6c223761eb548` (2016); catch-all from that
+  commit; prior Hurray `48e6b7e708029` / `01b8bdddcfab0`; ZTE
+  `09d9968a8eff8`; Ramaxel `dab5378485f60`
+- [Phase 3] Parent of ID commit still has neighbors `0x4240`, `0x4840`,
+  `0x544f`, `0x54da`, `0x0610`
+- [Phase 4] `b4 dig -c 1a220e6e87a31` → msgid `20260722220401.6357-4`;
+  `-w` CC linux-scsi + Don Brace; `-a` single v1 of this ID patch; `-m`
+  saved `/tmp/smartpqi-ids.mbox`
+- [Phase 4] Cover letter: “Adds PCI IDs … No functional changes.”
+  Martin: applied 1/4–4/4 to 7.3/scsi-queue. No NAK on IDs
+- [Phase 4] lore.kernel.org WebFetch 403; stable@ discussion UNVERIFIED
+- [Phase 5] `pqi_pci_probe` wildcard-disable path verified at lines
+  9468–9478; `module_param_named(disable_device_id_wildcards, ...)`
+- [Phase 6] Grep of current `smartpqi_init.c` found all nine new IDs;
+  `CONFIG_SCSI_SMARTPQI` in `drivers/scsi/smartpqi/Kconfig`
+- [Phase 7] MAINTAINERS: Don Brace, Supported
+- [Phase 8] Failure: `-ENODEV` when wildcards disabled; otherwise
+  wildcard match + warning
+- UNVERIFIED: whether older stable branches need context adjustment
+  around missing neighboring IDs (not this checkout)
 
 **YES**
 
- drivers/scsi/ibmvscsi/ibmvfc.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+ drivers/scsi/smartpqi/smartpqi_init.c | 36 +++++++++++++++++++++++++++
+ 1 file changed, 36 insertions(+)
 
-diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
-index 8d7c304636d99..63cc569284ded 100644
---- a/drivers/scsi/ibmvscsi/ibmvfc.c
-+++ b/drivers/scsi/ibmvscsi/ibmvfc.c
-@@ -4403,6 +4403,14 @@ static void ibmvfc_tgt_implicit_logout_and_del(struct ibmvfc_target *tgt)
- 	evt = __ibmvfc_tgt_get_implicit_logout_evt(tgt,
- 						   ibmvfc_tgt_implicit_logout_and_del_done);
- 
-+	if (!evt) {
-+		vhost->discovery_threads--;
-+		ibmvfc_set_tgt_action(tgt, IBMVFC_TGT_ACTION_NONE);
-+		kref_put(&tgt->kref, ibmvfc_release_tgt);
-+		__ibmvfc_reset_host(vhost);
-+		return;
-+	}
-+
- 	ibmvfc_set_tgt_action(tgt, IBMVFC_TGT_ACTION_LOGOUT_RPORT_WAIT);
- 	if (ibmvfc_send_event(evt, vhost, default_timeout)) {
- 		vhost->discovery_threads--;
+diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
+index 88cffb1fb59ce..3f5fabf723c3e 100644
+--- a/drivers/scsi/smartpqi/smartpqi_init.c
++++ b/drivers/scsi/smartpqi/smartpqi_init.c
+@@ -10152,10 +10152,30 @@ static const struct pci_device_id pqi_pci_id_table[] = {
+ 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
+ 			       0x207d, 0x4240)
+ 	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       0x207d, 0x4246)
++	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       0x207d, 0x4256)
++	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       0x207d, 0x4356)
++	},
+ 	{
+ 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
+ 			       0x207d, 0x4840)
+ 	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       0x207d, 0x4940)
++	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       0x207d, 0x4a46)
++	},
+ 	{
+ 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
+ 			       PCI_VENDOR_ID_ADVANTECH, 0x8312)
+@@ -10340,6 +10360,18 @@ static const struct pci_device_id pqi_pci_id_table[] = {
+ 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
+ 			       0x1cf2, 0x544f)
+ 	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       0x1cf2, 0x5451)
++	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       0x1cf2, 0x5452)
++	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       0x1cf2, 0x5453)
++	},
+ 	{
+ 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
+ 			       0x1cf2, 0x54da)
+@@ -10380,6 +10412,10 @@ static const struct pci_device_id pqi_pci_id_table[] = {
+ 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
+ 			       0x1f3f, 0x0610)
+ 	},
++	{
++		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
++			       0x1f3f, 0x0670)
++	},
+ 	{
+ 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
+ 			       PCI_VENDOR_ID_LENOVO, 0x0220)
 -- 
 2.53.0
 
