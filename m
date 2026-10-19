@@ -1,46 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D64165938A1;
-	Mon, 19 Oct 2026 13:58:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D4075BB51D;
+	Mon, 19 Oct 2026 14:00:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792418337; cv=none; b=VLGLUbW1zuCoMyrTZivBKAwHEyTNBa7iHwaCAujVPLSa+GEGoxrv18khazfKe+shYQhCqZCxS+4/4qBrPl6Xs3OnM1//0htfavRXwo9umr3qnUd4vqnDeRPG9XCSniHLqjZCJXQC87rg5Jdj7SONP57Xm3m/R8pnybzjkMusPeA=
+	t=1792418457; cv=none; b=UXyjA+KPJLIZrwSSsxbhwYPYNR6x59csvIYZvtvrMM6kNBCQxT4tXJZVevwe3nwwispXta1MWYj1c8eCJeT8Oc8/2PaFreZFozBIm8YhkFXcip+GUV8rHSpnmHl8Jhc7vqWtdGQ/IOPTZBb4Nf7h0uMFsoZBsKcayftkk3B/uuk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792418337; c=relaxed/simple;
-	bh=bT3u0ml0R3Y0Kb4s1tT9sFu/HeQUpRwvtWKkgy2VdjU=;
+	s=arc-20240116; t=1792418457; c=relaxed/simple;
+	bh=WxNPLJPDOBprheBWeMRcp9aK5//+9PUV06ZtROZL5q8=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=gDMOi93gJcOZXFqzgglS4zeIMABIYT+aq1B9IOf6wxQCQ44cpgmFFEabm92OL9HCV13xDo/gPWlWbUzZIeqDIdgbv1unsGMCbMYlU/lgW825Xzjp0SmVbTWvHN8o92m0h1iGWYNl2zxjVmrvnwqO6k78LVzi85/jEO+qbgmVaxU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=X+44V+UY; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=edE+dVaM4l9b35J+NFlO5NdXJQtRLmJrVphCja/+ZRc/NQjlldK9BN//EpaQuJm2od0DOtERKxwP0YWlWiu1JzGU05V80op5+XZaSL/G5q5xG61xgvEdmMiGk7miaA+etsEUaGtFEWs/wLkDrzf/I0qYnjcCJe2rdN5hws2IUBU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZVXfKoyn; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="X+44V+UY"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9CDCF1F000C7;
-	Mon, 19 Oct 2026 13:58:53 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZVXfKoyn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A2C991F000C6;
+	Mon, 19 Oct 2026 14:00:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792418334;
-	bh=NfE3wKi/vWXI5Wn/P+ZAA3BY3B/je2LljBAGpFdwS1E=;
+	s=k20260515; t=1792418455;
+	bh=gLYo+ZptyWNcradEon9AJ0IpeIgAlajqjarb/KKBy24=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=X+44V+UYyAfSmjtEoAaLb0XEskmUK3iEnvyVyvtTJgGZaW4H8EA+DjdxFxItnqSxC
-	 Y5Em2UoftWRUy06/FRS6D+B9f92KaGK4yMHbSlx28C3tVDYY9rC0jprNcXB+MtwByA
-	 rzTSzHPuT7TdfyqL3AFicehZDuY9fSJEhvgAWCx/LftD5kuFStJDmAGntBzFhBCen+
-	 XMJjs3eCc/U+s+RmkZUgJnXiU1tvnWTB6hsz2RhKT7PpOObAKb4Jb3yp85/keIW36C
-	 /jPTfHJKRrFjsA1VXfG0BnqM/aS0GuIXDubgMi29lC3QMZGw+75pa5mi3K/mZKbInw
-	 2CR51JqufDQRQ==
+	b=ZVXfKoynGsSBSCci1s47Hqt9AsA7/FPmvAlvfegWqaMDDQWQmf2FaaqaRHwUAV0Co
+	 2pfI565fcPLh/taJKlcU357IgK1B6jRUHN+AKGYyyv1Wdw7POvJOOSwatw6LoJ8cJN
+	 kV2zzW45pQBHZAr9aFEJrX8zVdQWoBGoWxzDbg+klEQDohPPy0FqyNcXWholvmvx/5
+	 B0DPXhjCOKu5RwxU9VEN4kmyGZvBKe4ruu553psDFEopoVv4xFV3G39E8Fia6eaDX+
+	 xvtcrK66X4CU6vlrE3+5zGQJ7AEcEdMSLWpCfdcNmOqDIheo2kwn+nn+AjRfSZjFdp
+	 utHNjAZGKfJgA==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Chen Changcheng <chenchangcheng@kylinos.cn>,
-	Narsimhulu Musini <nmusini@cisco.com>,
+Cc: "Ewan D. Milne" <emilne@redhat.com>,
 	"Martin K. Petersen (Oracle)" <mkp@kernel.org>,
 	Sasha Levin <sashal@kernel.org>,
-	kartilak@cisco.com,
-	sebaddel@cisco.com,
 	James.Bottomley@HansenPartnership.com,
 	linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.18-5.10] scsi: snic: Fix SCSI host leak on workqueue allocation failure
-Date: Mon, 19 Oct 2026 09:47:45 -0400
-Message-ID: <20261019135441.1420968-174-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.18-6.12] scsi: devinfo: Add BLIST_SKIP_IO_HINTS for EMC Symmetrix
+Date: Mon, 19 Oct 2026 09:49:12 -0400
+Message-ID: <20261019135441.1420968-261-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20261019135441.1420968-1-sashal@kernel.org>
 References: <20261019135441.1420968-1-sashal@kernel.org>
@@ -56,468 +53,358 @@ X-stable-base: Linux 6.18.57
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Chen Changcheng <chenchangcheng@kylinos.cn>
+From: "Ewan D. Milne" <emilne@redhat.com>
 
-[ Upstream commit 12e67eb89eb2b9516685c744d3f7de0a2d1bd701 ]
+[ Upstream commit f06a44e235ef188689ba23ffc72e9e89b10951a9 ]
 
-In snic_add_host(), if scsi_add_host() succeeds but
-alloc_ordered_workqueue() fails, the function returns -ENOMEM with
-shost->work_q left as NULL. The caller's error path then calls
-snic_del_host(), which returns early when !shost->work_q without calling
-scsi_remove_host(). The Scsi_Host remains registered in sysfs as a zombie
-device even after the probe has failed. This causes:
+EMC Symmetrix returns an error on MODE SENSE for page 0Ah subpage 05h
+because it does not implement the SBC-5 I/O hints.  These commands began to
+be sent as a result of commit 4f53138fffc2 ("scsi: sd: Translate data
+lifetime information").  Add BLIST_SKIP_IO_HINTS to avoid sending these
+commands because in large configurations the failed commands are displacing
+other useful information in internal error logs.
 
- - The leaked host remains visible in /sys/class/scsi_host/ after probe
-   failure, with state "running".
-
- - Subsequent SCSI host numbering is permanently shifted (the leaked host
-   ID from ida_alloc() is never reclaimed).
-
- - Memory leak: the Scsi_Host allocation can never be freed because
-   device_add() took a reference that can only be released by device_del()
-   inside scsi_remove_host().
-
-Fix by adding scsi_remove_host() in the workqueue allocation failure path
-inside snic_add_host(), undoing the successful scsi_add_host() before
-returning the error. This is cleaner than modifying snic_del_host() because
-snic_del_host() is called from a shared error label that also serves paths
-where snic_add_host() was never invoked.
-
-Reproducer (requires no real SNIC hardware):
-
- - Build CONFIG_SCSI_SNIC=y (built-in)
-
- - Add snic.test_mode=1 snic.inject_wq_fail=1 to kernel cmdline
-
- - Boot with a PCI device matching the snic driver (e.g. QEMU edu device,
-   PCI ID 0x1234:0x11e8, temporarily added to the driver's PCI ID table)
-
-Before the fix:
-
-  # /sys/class/scsi_host/ contains a zombie host0:
-  $ cat /sys/class/scsi_host/host0/proc_name
-  snic_scsi
-  $ cat /sys/class/scsi_host/host0/state
-  running
-  # ata_piix gets host1, host2 (host0 stuck):
-  scsi host1: ata_piix
-  scsi host2: ata_piix
-
-After the fix:
-
-  # host0 is properly freed and reused by ata_piix:
-  scsi host0: ata_piix
-  scsi host1: ata_piix
-  # No zombie host in /sys/class/scsi_host/
-
-Signed-off-by: Chen Changcheng <chenchangcheng@kylinos.cn>
-Acked-by: Narsimhulu Musini <nmusini@cisco.com>
-Link: https://patch.msgid.link/20260727073438.209673-1-chenchangcheng@kylinos.cn
+Signed-off-by: Ewan D. Milne <emilne@redhat.com>
+Link: https://patch.msgid.link/20260915173800.39117-1-emilne@redhat.com
 Signed-off-by: Martin K. Petersen (Oracle) <mkp@kernel.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-The local tree is **6.12.111** (`pending-6.12`). The buggy
-`snic_add_host()` / `snic_del_host()` error path is present here and the
-one-line fix applies cleanly.
+## Local tree
 
-===============================================================
-PHASE 1: COMMIT MESSAGE FORENSICS
-===============================================================
+This checkout is **6.18.y** (`v6.18.57-155-gcdf239ca885b2`, `VERSION=6`
+/ `PATCHLEVEL=18` / `SUBLEVEL=57`). The verdict is only for this tree.
 
-**Step 1.1: PARSE THE SUBJECT LINE**
-Record: `[scsi: snic:] [Fix] [SCSI host leak when workqueue allocation
-fails after scsi_add_host() succeeds]`
+The I/O-hints path and `BLIST_SKIP_IO_HINTS` are already here. At
+`v6.18`, the EMC `SYMMETRIX` blacklist entry does **not** skip those
+queries, so the bug exists.
 
-**Step 1.2: PARSE ALL COMMIT MESSAGE TAGS**
-Record:
-- `Fixes:` **absent** (expected for this review pipeline)
-- `Cc: stable@vger.kernel.org` **absent** (expected)
-- `Acked-by: Narsimhulu Musini <nmusini@cisco.com>` — original SNIC
-  driver author / Cisco maintainer
-- `Link: https://patch.msgid.link/20260727073438.209673-1-
-  chenchangcheng@kylinos.cn`
-- `Signed-off-by: Chen Changcheng <chenchangcheng@kylinos.cn>` (author)
-- `Signed-off-by: Martin K. Petersen (Oracle) <mkp@kernel.org>` (SCSI
-  maintainer)
-- `Reported-by:` none
-- `Tested-by:` none (author included a concrete reproducer in the body)
-- Ignore pipeline `Signed-off-by: Sasha Levin` / `[Upstream commit ...]`
-  if present
+---
 
-**Step 1.3: ANALYZE THE COMMIT BODY TEXT**
-Record:
-- **Bug:** `scsi_add_host()` succeeds, then `alloc_ordered_workqueue()`
-  fails. `snic_add_host()` returns `-ENOMEM` with `shost->work_q ==
-  NULL`. Probe goes to a shared error label that calls
-  `snic_del_host()`, which returns immediately when `!shost->work_q` and
-  **never** calls `scsi_remove_host()`.
-- **Symptoms:** zombie `/sys/class/scsi_host/hostN` with state
-  `running`; SCSI host ID from `ida_alloc()` never reclaimed (later
-  hosts are numbered higher); `Scsi_Host` never freed because
-  `device_add()`’s reference is only dropped by `device_del()` inside
-  `scsi_remove_host()`.
-- **Version info:** none in the message. Code dates to the original
-  driver (v4.2).
-- **Root cause:** error-path rollback does not undo a successful
-  `scsi_add_host()` when workqueue alloc fails. Author correctly avoids
-  changing `snic_del_host()` because that helper is also used on paths
-  that never called `snic_add_host()`.
+## PHASE 1: COMMIT MESSAGE FORENSICS
 
-**Step 1.4: DETECT HIDDEN BUG FIXES**
-Record: Not disguised. Explicit leak/rollback fix with a documented
-failure mode and a reproducer.
+**Step 1.1: Subject**
+- Record: **[scsi/devinfo] [Add] hardware blacklist flag
+  `BLIST_SKIP_IO_HINTS` for EMC Symmetrix**
 
-===============================================================
-PHASE 2: DIFF ANALYSIS - LINE BY LINE
-===============================================================
+**Step 1.2: Tags**
+- Record:
+  - `Signed-off-by: Ewan D. Milne <emilne@redhat.com>` (author, Red Hat
+    SCSI)
+  - `Link:
+    https://patch.msgid.link/20260915173800.39117-1-emilne@redhat.com`
+  - `Signed-off-by: Martin K. Petersen (Oracle) <mkp@kernel.org>` (SCSI
+    maintainer)
+  - No `Fixes:`, `Reported-by:`, `Tested-by:`, `Cc: stable` (absence is
+    expected)
+  - Pipeline `Signed-off-by: Sasha Levin` and `[Upstream commit …]`
+    ignored
 
-**Step 2.1: INVENTORY THE CHANGES**
-Record:
-- File: `drivers/scsi/snic/snic_main.c` — **+1 line**
-- Function: `snic_add_host()`
-- Scope: single-file surgical error-path fix
+**Step 1.3: Body**
+- Record: **Bug:** EMC Symmetrix does not implement SBC-5 I/O hints, so
+  `MODE SENSE` page `0Ah` subpage `05h` fails. Those commands started
+  after `4f53138fffc2` ("scsi: sd: Translate data lifetime
+  information").
+- **Symptom:** In large configs, failed commands fill the array’s
+  internal error logs and displace useful entries.
+- **Root cause:** Kernel probes a mode page the device does not
+  implement.
+- **Version info:** The probing started with `4f53138fffc2`
+  (`v6.9-rc1`); that commit is an ancestor of this tree.
 
-**Step 2.2: UNDERSTAND THE CODE FLOW CHANGE**
-Record:
-- **Before:** on `!shost->work_q`, log, set `ret = -ENOMEM`, return.
-  Host stays registered.
-- **After:** same path also calls `scsi_remove_host(shost)` before
-  returning `-ENOMEM`.
-- Path: probe error path only (`snic_probe()` → `snic_add_host()` after
-  `scsi_add_host()` succeeded).
+**Step 1.4: Hidden bug fix?**
+- Record: **No disguise.** This is an explicit hardware quirk. It is not
+  cleanup/refactor.
 
-Verified call chain in this tree:
+---
 
-```642:649:drivers/scsi/snic/snic_main.c
-        ret = snic_add_host(shost, pdev);
-        if (ret) {
-                ...
-                goto err_get_conf;
-        }
-```
+## PHASE 2: DIFF ANALYSIS
 
-`err_get_conf` later calls `snic_del_host()` (line 690). That helper
-still early-returns on `!shost->work_q`, so after this fix it will not
-call `scsi_remove_host()` a second time.
+**Step 2.1: Inventory**
+- Record: **1 file**, `drivers/scsi/scsi_devinfo.c`, **+1 / -1**, one
+  table entry.
+- Function: static `scsi_dev_info_list` initializer (EMC `SYMMETRIX`
+  row).
+- Scope: **single-file surgical quirk**.
 
-**Step 2.3: IDENTIFY THE BUG MECHANISM**
-Record: **Error-path / resource leak.** Missing undo of
-`scsi_add_host()` when workqueue allocation fails. Adding
-`scsi_remove_host()` is the matching rollback. Also reclaims the host ID
-(`ida_free()` in `scsi_host_dev_release()` after `device_del()`).
+**Step 2.2: Code flow**
+- Record: **Before:** flags `BLIST_SPARSELUN | BLIST_LARGELUN |
+  BLIST_REPORTLUN2 | BLIST_RETRY_ITF`.
+- **After:** same plus `BLIST_SKIP_IO_HINTS`.
+- Affected path: `sd_read_io_hints()` during `sd_revalidate_disk()`
+  (probe, open/revalidate, rescan). With the flag set it returns
+  immediately and does not send `MODE SENSE 0x0A/0x05`.
 
-**Step 2.4: ASSESS THE FIX QUALITY**
-Record:
-- Obviously correct: one matching rollback for the successful
-  `scsi_add_host()`.
-- Not changing `snic_del_host()` avoids calling `scsi_remove_host()` on
-  hosts that were never added (`err_get_conf` is also used when
-  `snic_get_conf()` fails **before** `snic_add_host()`).
-- Regression risk: very low. `scsi_remove_host()` is the documented
-  pairing of `scsi_add_host()`. No double-remove: `snic_del_host()`
-  still skips when `work_q` is NULL. No lock, API, or data-structure
-  change.
+**Step 2.3: Bug mechanism**
+- Record: **[Hardware workaround]** Device-specific skip of an
+  unsupported SCSI mode page. Same pattern as USB storage and the Iomega
+  ZIP `BLIST_SKIP_IO_HINTS` entries already in this tree.
 
-===============================================================
-PHASE 3: GIT HISTORY INVESTIGATION
-===============================================================
+**Step 2.4: Fix quality**
+- Record: **Obviously correct.** One flag bit on an existing
+  vendor/product match. Regression risk is **very low**: only EMC
+  `SYMMETRIX` skips a feature it does not implement. No API, locking, or
+  allocation changes.
 
-**Step 3.1: BLAME THE CHANGED LINES**
-Record:
-- Buggy control flow introduced in `c8806b6c9e824f` (“snic: driver for
-  Cisco SCSI HBA”, Narsimhulu Musini, 2015-05-29).
-- First appeared: **v4.2-rc1**. Present in this tree (`git merge-base
-  --is-ancestor c8806b6c9e824f HEAD` succeeded).
-- Nearby `alloc_ordered_workqueue()` rewrite: `6411307b63286e`
-  (v6.12-rc1) — formatting only; the leak predates that.
+---
 
-**Step 3.2: FOLLOW THE FIXES: TAG**
-Record: No `Fixes:` tag. Introducer is the original driver commit above,
-which **is** in this tree.
+## PHASE 3: GIT HISTORY
 
-**Step 3.3: CHECK FILE HISTORY FOR RELATED CHANGES**
-Record: Recent `snic_main.c` history is workqueue-name cleanup
-(`6411307b63286`, `b97c0741c7dcc`), slab-name uniqueness, const
-template, SPDX. **No prior leak fix.** Standalone one-line patch, not
-“X/Y” of a series (msgid `...-1` is a single patch).
+**Step 3.1: Blame**
+- Record: EMC `SYMMETRIX` row is old (`3441afc672bc` / `29cfc2ab71d96`
+  for `BLIST_RETRY_ITF`, 2018). The **new** failure is not that row; it
+  is `sd_read_io_hints()` from `4f53138fffc2` (**v6.9-rc1**,
+  2024-02-26).
 
-**Step 3.4: CHECK THE AUTHOR'S OTHER COMMITS**
-Record: `git log --author="Chen Changcheng" -- drivers/scsi/` in this
-tree is empty (author is not a historical SNIC contributor here). Weight
-instead: **Acked-by original driver author** Musini, and SCSI maintainer
-Martin K. Petersen applied it.
+**Step 3.2: Fixes: tag**
+- Record: **None.** The message names `4f53138fffc2`. `git merge-base
+  --is-ancestor 4f53138fffc2 HEAD` → **yes**. `git describe --contains
+  4f53138fffc2` → `v6.9-rc1~12^2~8`.
 
-**Step 3.5: CHECK FOR DEPENDENT/PREREQUISITE COMMITS**
-Record: None. Uses existing `scsi_remove_host()`. Reproducer mentions
-`snic.test_mode` / `snic.inject_wq_fail`; those parameters **do not
-exist in this tree** (local test harness only). The fix itself does not
-depend on them.
+**Step 3.3: File history**
+- Record: Related: `74b25178943fe` ("scsi: devinfo: Add
+  BLIST_SKIP_IO_HINTS for Iomega ZIP") — same quirk class, already in
+  this 6.18 tree. `633aeefafc9c2` introduced the flag (**v6.10-rc5**),
+  also an ancestor. **Standalone**, not patch X/Y.
 
-===============================================================
-PHASE 4: MAILING LIST AND EXTERNAL RESEARCH
-===============================================================
+**Step 3.4: Author**
+- Record: Ewan D. Milne is a long-time SCSI contributor (Red Hat).
+  Applied by SCSI maintainer Martin K. Petersen. Related flag work by
+  Bart Van Assche (`BLIST_SKIP_IO_HINTS` intro, `Cc: stable` there).
 
-**Step 4.1: FIND THE ORIGINAL PATCH DISCUSSION**
-Record:
-- `b4 dig -c <sha>` cannot be used: the candidate is **not** in this
-  checkout (and the first SHA tried was an unrelated merge).
-- Submission: msgid `20260727073438.209673-1-chenchangcheng@kylinos.cn`,
-  2026-07-27.
-- Thread: https://lists.openwall.net/linux-kernel/2026/07/27/428 and
-  https://lkml.iu.edu/hypermail/linux/kernel/2607.3/06578.html
-- Single revision (no v2/v3). Diff matches the candidate (1 line).
-- No NAK. Cisco maintainer Acked-by in-thread. No reviewer asked for
-  `Cc: stable`.
-- lore.kernel.org fetches returned HTTP 403 from this environment.
+**Step 3.5: Prerequisites**
+- Record: Needs `BLIST_SKIP_IO_HINTS` and `sd_read_io_hints()` skip
+  check. Both exist in `v6.18` (`include/scsi/scsi_devinfo.h:73`,
+  `drivers/scsi/sd.c:3235`). **Applies standalone.**
 
-**Step 4.2: CHECK WHO REVIEWED THE PATCH**
-Record: To/Cc included Cisco SNIC maintainers (`nmusini`, `kartilak`,
-`sebaddel`), James Bottomley, Martin K. Petersen, linux-scsi. Ack from
-Musini; applied by Petersen.
+---
 
-**Step 4.3: SEARCH FOR THE BUG REPORT**
-Record: No syzbot/bugzilla. Author-found with an injected workqueue-fail
-reproducer. Before/after sysfs and host-numbering evidence is in the
-message.
+## PHASE 4: MAILING LIST / EXTERNAL
 
-**Step 4.4: CHECK FOR RELATED PATCHES AND SERIES**
-Record: Standalone `[PATCH]`, not part of a multi-patch series.
+**Step 4.1: Original discussion**
+- Record: `b4 dig -c f06a44e235ef` →
+  https://patch.msgid.link/20260915173800.39117-1-emilne@redhat.com
+- **v1 only** (`b4 dig -a`). No NAKs. Laurence Oberman: “Looks good” +
+  `Reviewed-by`. Martin Petersen: applied to **7.3/scsi-fixes**
+  (`https://git.kernel.org/mkp/scsi/c/f06a44e235ef`). No `Cc: stable` in
+  review.
 
-**Step 4.5: CHECK STABLE MAILING LIST HISTORY**
-Record: **UNVERIFIED** — `https://lore.kernel.org/stable/?q=...`
-returned 403. No evidence of a prior stable NAK.
+**Step 4.2: Recipients (`b4 dig -w`)**
+- Record: Author + `linux-scsi@vger.kernel.org`. SCSI list was CCed;
+  maintainer applied it.
 
-===============================================================
-PHASE 5: CODE SEMANTIC ANALYSIS
-===============================================================
+**Step 4.3: Bug report**
+- Record: No syzbot/bugzilla. Description is operational: array error-
+  log overflow in large configs. That is a real enterprise SAN issue,
+  not a theoretical one.
 
-**Step 5.1: IDENTIFY KEY FUNCTIONS IN THE DIFF**
-Record: `snic_add_host()` (modified). Related: `snic_del_host()`,
-`snic_probe()`, `scsi_add_host()`, `scsi_remove_host()`.
+**Step 4.4: Series**
+- Record: **Standalone 1/1.** ZIP quirk is a sibling pattern, not a
+  dependency.
 
-**Step 5.2: TRACE CALLERS**
-Record:
-- `snic_add_host()` — only from `snic_probe()` (PCI probe).
-- `snic_del_host()` — `snic_probe()` error path (`err_get_conf`) and
-  `snic_remove()`.
-- Reachable on Cisco SNIC PCI probe, including under memory pressure
-  when `alloc_ordered_workqueue()` fails.
+**Step 4.5: Stable list**
+- Record: No lore.kernel.org/stable hit for this subject. WebFetch to
+  lore returned 403; stable search via WebSearch found nothing relevant.
 
-**Step 5.3: TRACE CALLEES**
-Record: `scsi_add_host()`, `alloc_ordered_workqueue()`,
-`scsi_remove_host()` (new). `scsi_remove_host()` sets host state,
-unregisters transport, `device_unregister(&shost->shost_dev)`,
-`device_del(&shost->shost_gendev)`. Final free and
-`ida_free(&host_index_ida, shost->host_no)` happen in
-`scsi_host_dev_release()` once refs drop.
+---
 
-**Step 5.4: FOLLOW THE CALL CHAIN**
-Record: PCI probe (`snic_probe` → `snic_add_host`). Not a syscall hot
-path. Userspace-visible effect when it fires: leftover
-`/sys/class/scsi_host/` entry and shifted host numbers for **other**
-SCSI drivers (author showed `ata_piix` taking host1/host2 because host0
-was stuck).
+## PHASE 5: CODE SEMANTIC ANALYSIS
 
-**Step 5.5: SEARCH FOR SIMILAR PATTERNS**
-Record: This `if (!shost->work_q) return;` before `scsi_remove_host()`
-is unique to snic. Sibling Cisco `fnic` adds the host later and has a
-dedicated `err_out_scsi_add_host` label. No duplicate snic copy of this
-bug.
+**Step 5.1: Functions**
+- Record: No function body change. Table consumed via
+  `sdev->sdev_bflags`. Consumer: `sd_read_io_hints()`.
 
-===============================================================
-PHASE 6: CROSS-REFERENCING AGAINST THE LOCAL TREE
-===============================================================
+**Step 5.2: Callers**
+- Record: `sd_read_io_hints()` is called only from
+  `sd_revalidate_disk()` (`drivers/scsi/sd.c:3773`).
+- `sd_revalidate_disk()` is called from:
+  - `sd_probe()` (disk attach)
+  - `sd_open()` if `sd_need_revalidate()`
+  - `sd_rescan()`
+  - sysfs cache-type store path
+- **Process context**, SCSI disk attach/revalidate. In a large Symmetrix
+  config this runs once per LUN (often thousands).
 
-**Step 6.1: DOES THE BUGGY CODE EXIST IN THIS TREE?**
-Record: **Yes.** Local tree: `p-6.12-3-gc504cf0baa3d8`, **6.12.111**,
-branch `pending-6.12`.
+**Step 5.3: Callees**
+- Record: Without the flag, `scsi_mode_sense(..., modepage=0x0a,
+  subpage=0x05, ...)`. On failure (`res < 0`) it already returns; the
+  kernel does not oops. Harm is the failed command on the array.
 
-```305:323:drivers/scsi/snic/snic_main.c
-        if (!shost->work_q) {
-                SNIC_HOST_ERR(shost, "Failed to Create ScsiHost wq.\n");
+**Step 5.4: Reachability**
+- Record: **Yes.** Any EMC Symmetrix LUN probed as `sd` hits this. Not
+  an obscure config path.
 
-                ret = -ENOMEM;
-        }
+**Step 5.5: Similar patterns**
+- Record: USB storage/`uas` set `BLIST_SKIP_IO_HINTS` because some
+  devices **reset** on that page. Iomega ZIP uses it because the query
+  makes the drive unusable. Same skip, milder Symmetrix symptom (error-
+  log flood).
 
-        return ret;
-} /* end of snic_add_host */
+---
 
-static void
-snic_del_host(struct Scsi_Host *shost)
-{
-        if (!shost->work_q)
-                return;
+## PHASE 6: LOCAL TREE CROSS-REFERENCE
 
-        destroy_workqueue(shost->work_q);
-        shost->work_q = NULL;
-        scsi_remove_host(shost);
-}
-```
+**Step 6.1: Buggy code in this tree?**
+- Record: **Yes.** `v6.18` has `sd_read_io_hints()` and the flag check,
+  and the EMC row **without** `BLIST_SKIP_IO_HINTS`. Bug since
+  `4f53138fffc2` (v6.9), so it is in 6.18.
 
-Bug present since v4.2.
+**Step 6.2: Backport difficulty**
+- Record: **Clean apply.** Parent of the candidate still has the same
+  two-line EMC entry as `v6.18`. No refactor of that table.
 
-**Step 6.2: CHECK FOR BACKPORT COMPLICATIONS**
-Record: **Clean apply.** Surrounding hunk matches the candidate exactly
-(`old found: True`, `new already applied: False`).
+**Step 6.3: Related fixes already here?**
+- Record: Flag infrastructure and ZIP/USB skips are present. **No**
+  existing skip for EMC Symmetrix at `v6.18`.
 
-**Step 6.3: CHECK IF RELATED FIXES ARE ALREADY HERE**
-Record: `git log --grep` for this leak / `snic_add_host` / “workqueue
-allocation failure” under `drivers/scsi/` found **no** prior fix.
+---
 
-===============================================================
-PHASE 7: SUBSYSTEM AND MAINTAINER CONTEXT
-===============================================================
+## PHASE 7: SUBSYSTEM CONTEXT
 
-**Step 7.1: IDENTIFY THE SUBSYSTEM AND ITS CRITICALITY**
-Record: SCSI driver `drivers/scsi/snic/` (Cisco PCI-Express SCSI HBA,
-`CONFIG_SCSI_SNIC`). **PERIPHERAL** hardware, but host-number leak is
-**system-wide** for SCSI host IDs.
+**Step 7.1**
+- Record: **[SCSI disk / scsi_devinfo] [IMPORTANT]** — not core mm/VFS,
+  but enterprise block storage. EMC/Dell Symmetrix (VMAX/PowerMax
+  lineage) is still used on LTS kernels.
 
-**Step 7.2: ASSESS SUBSYSTEM ACTIVITY**
-Record: Mature/quiet. Driver added 2015; recent churn is mechanical
-SCSI-wide workqueue cleanup. Long-standing bug, not a new-code issue.
+**Step 7.2**
+- Record: SCSI is actively maintained; this file is a mature quirk
+  table, not a new subsystem.
 
-===============================================================
-PHASE 8: IMPACT AND RISK ASSESSMENT
-===============================================================
+---
 
-**Step 8.1: DETERMINE WHO IS AFFECTED**
-Record: Driver-specific trigger (Cisco SNIC), **plus** any other SCSI
-host on the same machine (permanent host ID shift). Config:
-`CONFIG_SCSI_SNIC`.
+## PHASE 8: IMPACT AND RISK
 
-**Step 8.2: DETERMINE THE TRIGGER CONDITIONS**
-Record: Probe-time `alloc_ordered_workqueue()` failure (ENOMEM /
-workqueue creation failure). Uncommon, not a hot path, not unprivileged-
-syscall. Once it happens, the zombie host and ID leak persist until
-reboot.
+**Step 8.1: Who is affected**
+- Record: **Driver/hardware-specific:** hosts with `INQUIRY` vendor
+  `EMC` / product `SYMMETRIX`. Typical: datacenter SAN on 6.18 LTS.
 
-**Step 8.3: DETERMINE THE FAILURE MODE SEVERITY**
-Record:
-- Failure: unreclaimable `Scsi_Host`, zombie sysfs device in
-  `SHOST_RUNNING`, leaked host ID.
-- Severity: **HIGH** for leak class (not a panic). Worse than a one-shot
-  `kfree` leak because the object stays in sysfs and shifts numbering
-  for later hosts.
+**Step 8.2: Trigger**
+- Record: **Every disk revalidate** (probe, rescan, some opens). Common
+  on boot and device discovery. Unprivileged users do not trigger it
+  directly; udev/scan does. Not a race.
 
-**Step 8.4: CALCULATE RISK-BENEFIT RATIO**
-Record:
-- **Benefit:** medium for SNIC users under memory pressure; also
-  prevents global SCSI host-id skew.
-- **Risk:** very low (1 line, error path only, standard SCSI rollback).
-- **Ratio:** favorable.
+**Step 8.3: Failure mode**
+- Record: **Not a kernel oops.** Failed `MODE SENSE` is ignored in
+  `sd_read_io_hints()`. User-visible issue is **array error-log
+  pollution** in large LUN counts, hiding real faults. Severity
+  **MEDIUM** for the kernel, **HIGH** operationally on big arrays.
+  USB/ZIP cases of the same flag were crash/unusable-device; this is the
+  same class of quirk.
 
-===============================================================
-PHASE 9: FINAL SYNTHESIS
-===============================================================
+**Step 8.4: Risk/benefit**
+- Record: **Benefit: high for Symmetrix users, zero for others. Risk:
+  very low (1 flag bit, existing match).** Ratio favors backport.
 
-**Step 9.1: COMPILE THE EVIDENCE**
+---
 
-FOR:
-- Real error-path leak with concrete sysfs + host-ID consequences,
-  reproduced by the author
-- Buggy code is in this 6.12 tree (since v4.2)
-- One-line, obviously correct pairing of `scsi_remove_host()` with
-  successful `scsi_add_host()`
-- No double-remove on the shared `err_get_conf` path
-- Applies cleanly; no prerequisites
-- Acked by original driver author; applied by SCSI maintainer
-- Probe-path resource leaks are a common, accepted stable class
+## PHASE 9: SYNTHESIS
 
-AGAINST:
-- Trigger is rare (workqueue alloc fail during probe)
-- SNIC is a specialized Cisco HBA (small population)
-- Not a crash, UAF, or security bug
-- Reproducer uses out-of-tree inject knobs (does not affect the patch)
+**Step 9.1: Evidence**
 
-UNRESOLVED:
-- Stable-list discussion (lore 403)
-- Upstream SHA not in this checkout (`b4 dig` on a local commit was not
-  possible)
+For:
+- Real hardware incompatibility with a command 6.18 already sends
+- Enterprise arrays, large LUN counts, error-log displacement
+- 1-line quirk; `BLIST_SKIP_IO_HINTS` already in this tree
+- Same class as USB/ZIP skips; ZIP already on 6.18
+- Reviewed and applied to scsi-fixes by the SCSI maintainer
+- Applies cleanly to `v6.18`
 
-**Step 9.2: APPLY THE STABLE RULES CHECKLIST**
-1. Obviously correct and tested? **PASS** — 1-line rollback; author
-   showed before/after; maintainer Ack
-2. Fixes a real bug that affects users? **PASS** — zombie sysfs host +
-   leaked ID + unreclaimable `Scsi_Host`
-3. Important issue? **PASS** — unrecoverable resource leak that also
-   skews SCSI host numbering for other drivers
-4. Small and contained? **PASS** — +1 line, one function
-5. No new features or APIs? **PASS**
-6. Can apply to the local tree? **PASS** — code matches; clean apply
+Against:
+- Not a kernel crash, UAF, deadlock, or data corruption
+- No `Cc: stable` / `Fixes:`
+- Affects only one vendor/product
 
-**Step 9.3: CHECK FOR EXCEPTION CATEGORIES**
-Record: Not a device-ID/quirk/DT/build/docs exception. Ordinary error-
-path leak fix.
+Unresolved:
+- Lore HTTP 403; thread recovered via `b4 dig -m`. No public
+  syzbot/bugzilla count of affected arrays.
 
-**Step 9.4: MAKE YOUR DECISION**
-This is a real, long-standing probe rollback bug in this 6.12 tree. The
-fix is minimal, already reviewed, and undoes `scsi_add_host()` exactly
-when that call succeeded and the workqueue did not. Risk of regression
-is negligible; leaving it out leaves a zombie SCSI host and a leaked
-host ID if SNIC probe hits ENOMEM.
+**Step 9.2: Stable rules**
+1. Obviously correct and tested? **PASS** — 1-bit flag; maintainer
+   applied; `Reviewed-by: Laurence Oberman`
+2. Real bug affecting users? **PASS** — unsupported `MODE SENSE` on
+   production arrays
+3. Important issue? **PASS** as a hardware quirk (array log overflow in
+   large configs). Not a kernel panic.
+4. Small and contained? **PASS** — +1/-1, one table row
+5. No new features/APIs? **PASS** — uses existing flag
+6. Can apply to this tree? **PASS** — flag, consumer, and EMC row all
+   present at `v6.18`
 
-===============================================================
-Verification
-===============================================================
-- [Phase 1] Parsed tags: Acked-by Musini; Link msgid
-  `20260727073438.209673-1`; no Fixes/stable Cc (expected)
-- [Phase 2] Diff: +1 line in `snic_add_host()` error path;
-  `scsi_remove_host(shost)` before `-ENOMEM`
-- [Phase 2] Confirmed `snic_probe` uses shared `err_get_conf` which
-  calls `snic_del_host()` even when `snic_add_host()` was never invoked
-  (lines 630–690)
-- [Phase 2] Confirmed `snic_del_host()` early-return on `!work_q` skips
-  `scsi_remove_host()` — the leak mechanism
-- [Phase 3] `git blame`: buggy code from `c8806b6c9e824f` (v4.2-rc1);
-  ancestor of HEAD
-- [Phase 3] `git log --oneline -20 -- drivers/scsi/snic/snic_main.c`: no
-  prior leak fix
-- [Phase 3] `git log --grep` for this leak under `drivers/scsi/`: empty
-- [Phase 3] `git log --author="Chen Changcheng" -- drivers/scsi/`: no
-  prior commits in this tree
-- [Phase 4] `b4 dig -c` on a tree SHA: not applicable (candidate not in
-  checkout); used msgid/openwall/lkml instead
-- [Phase 4] Openwall/lkml: single-version patch, Acked-by Musini, no NAK
-- [Phase 4] lore.kernel.org and lore stable search: HTTP 403 —
-  UNVERIFIED
-- [Phase 5] Callers: `snic_add_host` only from `snic_probe`;
-  `snic_del_host` from probe error + remove
-- [Phase 5] `scsi_remove_host()` → `device_del()`;
-  `scsi_host_dev_release()` does `ida_free(host_no)`
-- [Phase 5] `test_mode`/`inject_wq_fail` not in this tree (reproducer-
-  only)
-- [Phase 6] `git describe HEAD`: `p-6.12-3-gc504cf0baa3d8`; `make
-  kernelversion`: 6.12.111
-- [Phase 6] Surrounding code identical to candidate hunk; patch not
-  already applied
-- [Phase 8] Failure mode: zombie sysfs SCSI host + permanent host-ID
-  leak; severity HIGH for leak class, rare trigger
-- UNVERIFIED: whether this was already discussed on stable@ (lore 403)
+**Step 9.3: Exception**
+- Record: **Hardware quirk/workaround** (scsi_devinfo blacklist),
+  analogous to USB/PCI quirks. That class is accepted for stable.
 
-This meets stable-kernel rules for this tree: real leak, small contained
-fix, clean apply, no new API.
+**Step 9.4: Decision**
+This is a one-line device quirk for hardware this 6.18 tree already
+probes with I/O-hints `MODE SENSE`. The skip flag and call site exist;
+the EMC row does not skip yet. Risk is negligible; benefit is real for
+Symmetrix/VMAX deployments. **YES for this tree.**
+
+---
+
+## What this solves for 6.18 users
+
+Since v6.9, `sd_revalidate_disk()` calls `sd_read_io_hints()`, which
+issues `MODE SENSE` page 0x0A subpage 0x05. EMC Symmetrix does not
+implement that SBC-5 page and returns an error. The kernel already
+swallows the error; on arrays with many LUNs those failures fill the
+controller’s error logs. Adding `BLIST_SKIP_IO_HINTS` stops the query
+for that INQUIRY match only.
+
+It meets stable rules: small, obviously correct, no new API, applies
+cleanly, and is a standard scsi_devinfo hardware quirk.
+
+---
+
+## Verification
+- **[Phase 1]** Parsed tags: author SOB Ewan Milne, Link to msgid,
+  maintainer SOB Martin Petersen; no Fixes/Reported-by/Cc:stable
+- **[Phase 2]** Diff: 1 line in `scsi_devinfo.c` EMC SYMMETRIX flags;
+  adds `BLIST_SKIP_IO_HINTS`
+- **[Phase 3]** `git describe HEAD` / `make kernelversion`: **6.18.57**
+- **[Phase 3]** `git merge-base --is-ancestor 4f53138fffc2 HEAD`: yes;
+  `git describe --contains`: v6.9-rc1
+- **[Phase 3]** `git merge-base --is-ancestor 633aeefafc9c2 HEAD`: yes
+  (flag intro, v6.10-rc5)
+- **[Phase 3]** `git blame` EMC row: `29cfc2ab71d96` added
+  `BLIST_RETRY_ITF` (2018); skip flag is new
+- **[Phase 3]** `git show v6.18:drivers/scsi/scsi_devinfo.c`: SYMMETRIX
+  **without** `BLIST_SKIP_IO_HINTS`
+- **[Phase 3]** `git grep BLIST_SKIP_IO_HINTS v6.18`: flag and `sd.c`
+  check present
+- **[Phase 4]** `b4 dig -c f06a44e235ef`: lore URL; v1 only; Reviewed-by
+  Laurence Oberman; applied to 7.3/scsi-fixes
+- **[Phase 4]** `b4 dig -m`: full thread, no NAK, no stable nomination
+- **[Phase 4]** WebFetch lore/msgid: **403**; used b4 mbox instead
+- **[Phase 5]** Callers: `sd_read_io_hints` ← `sd_revalidate_disk` ←
+  `sd_probe` / `sd_open` / `sd_rescan`
+- **[Phase 6]** Parent of candidate matches `v6.18` EMC lines → clean
+  apply
+- **[Phase 8]** Failure: array error-log flood, not kernel oops;
+  severity MEDIUM kernel / HIGH operational
+- **UNVERIFIED:** Exact customer ticket / number of arrays (not in the
+  thread)
 
 **YES**
 
- drivers/scsi/snic/snic_main.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/scsi/scsi_devinfo.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/snic/snic_main.c b/drivers/scsi/snic/snic_main.c
-index 1c24517e4e650..912f9f15dddc3 100644
---- a/drivers/scsi/snic/snic_main.c
-+++ b/drivers/scsi/snic/snic_main.c
-@@ -305,6 +305,7 @@ snic_add_host(struct Scsi_Host *shost, struct pci_dev *pdev)
- 	if (!shost->work_q) {
- 		SNIC_HOST_ERR(shost, "Failed to Create ScsiHost wq.\n");
- 
-+		scsi_remove_host(shost);
- 		ret = -ENOMEM;
- 	}
- 
+diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+index c51146882a1fa..a438e510f2cae 100644
+--- a/drivers/scsi/scsi_devinfo.c
++++ b/drivers/scsi/scsi_devinfo.c
+@@ -161,7 +161,7 @@ static struct {
+ 	{"DGC", "DISK", NULL, BLIST_SPARSELUN},	/* EMC CLARiiON, no storage on LUN 0 */
+ 	{"EMC",  "Invista", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
+ 	{"EMC", "SYMMETRIX", NULL, BLIST_SPARSELUN | BLIST_LARGELUN |
+-	 BLIST_REPORTLUN2 | BLIST_RETRY_ITF},
++	 BLIST_REPORTLUN2 | BLIST_RETRY_ITF | BLIST_SKIP_IO_HINTS},
+ 	{"EMULEX", "MD21/S2     ESDI", NULL, BLIST_SINGLELUN},
+ 	{"easyRAID", "16P", NULL, BLIST_NOREPORTLUN},
+ 	{"easyRAID", "X6P", NULL, BLIST_NOREPORTLUN},
 -- 
 2.53.0
 
