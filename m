@@ -1,47 +1,46 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C4A5570842;
-	Mon, 19 Oct 2026 13:58:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D64165938A1;
+	Mon, 19 Oct 2026 13:58:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792418293; cv=none; b=kw0GFNAnYMf4/n3wjievGQSuvNA9guDS7uDWfNixg6kOQl0GB2OZnyfOTWEKJHNw9T9yzj/XB/JtSyMWN0e05QrQXxJOsrj0IiQHoolgSUV6e0ESYe1ebfdXDY45ekTow9KtysaBQvAxh9fgMxQUu8qWg/fbzGMchkvrwo84huU=
+	t=1792418337; cv=none; b=VLGLUbW1zuCoMyrTZivBKAwHEyTNBa7iHwaCAujVPLSa+GEGoxrv18khazfKe+shYQhCqZCxS+4/4qBrPl6Xs3OnM1//0htfavRXwo9umr3qnUd4vqnDeRPG9XCSniHLqjZCJXQC87rg5Jdj7SONP57Xm3m/R8pnybzjkMusPeA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792418293; c=relaxed/simple;
-	bh=NP3gvf6a34mwh5taukdEUml/wKzNStiNfPjD8uO1j5E=;
+	s=arc-20240116; t=1792418337; c=relaxed/simple;
+	bh=bT3u0ml0R3Y0Kb4s1tT9sFu/HeQUpRwvtWKkgy2VdjU=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=MKoRPitzhIjZsKkGPvf6X1PSxIJoNEWxIzmAVeuflNZaGJIj49sd502jpL60v+s76q6qgK/FrdQyUwhxMbDAcWBkq3K77bOTMyT2S3FKGwJ/5tVG6jszkV/dF0JszMtDak7TT3k/fN7djQB9HBln050GjgYA7GWlZY6gJfGuCmk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mEB57Bcf; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=gDMOi93gJcOZXFqzgglS4zeIMABIYT+aq1B9IOf6wxQCQ44cpgmFFEabm92OL9HCV13xDo/gPWlWbUzZIeqDIdgbv1unsGMCbMYlU/lgW825Xzjp0SmVbTWvHN8o92m0h1iGWYNl2zxjVmrvnwqO6k78LVzi85/jEO+qbgmVaxU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=X+44V+UY; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mEB57Bcf"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ED9091F000C7;
-	Mon, 19 Oct 2026 13:58:09 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="X+44V+UY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9CDCF1F000C7;
+	Mon, 19 Oct 2026 13:58:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792418291;
-	bh=mlRDR92nhUdgHs3nQ41LKCHnUfuuZoYEUdnUm1tHsls=;
+	s=k20260515; t=1792418334;
+	bh=NfE3wKi/vWXI5Wn/P+ZAA3BY3B/je2LljBAGpFdwS1E=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=mEB57BcfaQQZhsK2sAlFAeNSYgiUkzmGu8QaqdY8TgsaL89Jxqto5CIbR2j5DmHAw
-	 Z6+F3sJEAEg7Hmb0jQTUjPBvMF408iyp9EaygaqblfYXaRRvY3ALPepo+kRieD0c6m
-	 6NZvrsdMoEDOZmbqPy1frD3iN4HEUYSeIhAmQzwY2PzjGASzwExUr6B4yH2c7wj4YF
-	 JQn3d+sRHzy98IhQC8mW0P8O5iXo+/1UZv5M6rsaXK8KJ+7rqB5dmig8BpWxWzgUOe
-	 i/tC8AoYftveyR+CA1AHhDzltQNGvcj8OjkBh608cXUsiJM73pB+jCzo6MPLrcw2ZT
-	 o8G6MGiWztKYQ==
+	b=X+44V+UYyAfSmjtEoAaLb0XEskmUK3iEnvyVyvtTJgGZaW4H8EA+DjdxFxItnqSxC
+	 Y5Em2UoftWRUy06/FRS6D+B9f92KaGK4yMHbSlx28C3tVDYY9rC0jprNcXB+MtwByA
+	 rzTSzHPuT7TdfyqL3AFicehZDuY9fSJEhvgAWCx/LftD5kuFStJDmAGntBzFhBCen+
+	 XMJjs3eCc/U+s+RmkZUgJnXiU1tvnWTB6hsz2RhKT7PpOObAKb4Jb3yp85/keIW36C
+	 /jPTfHJKRrFjsA1VXfG0BnqM/aS0GuIXDubgMi29lC3QMZGw+75pa5mi3K/mZKbInw
+	 2CR51JqufDQRQ==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Shivaprasad G Bhat <sbhat@linux.ibm.com>,
-	Kyle Mahlkuch <kmahlkuc@linux.ibm.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
+Cc: Chen Changcheng <chenchangcheng@kylinos.cn>,
+	Narsimhulu Musini <nmusini@cisco.com>,
+	"Martin K. Petersen (Oracle)" <mkp@kernel.org>,
 	Sasha Levin <sashal@kernel.org>,
-	njavali@marvell.com,
-	GR-QLogic-Storage-Upstream@marvell.com,
+	kartilak@cisco.com,
+	sebaddel@cisco.com,
 	James.Bottomley@HansenPartnership.com,
-	mkp@kernel.org,
 	linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.18-5.10] scsi: qla2xxx: Handle INTx not connected while passing through
-Date: Mon, 19 Oct 2026 09:47:14 -0400
-Message-ID: <20261019135441.1420968-143-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.18-5.10] scsi: snic: Fix SCSI host leak on workqueue allocation failure
+Date: Mon, 19 Oct 2026 09:47:45 -0400
+Message-ID: <20261019135441.1420968-174-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20261019135441.1420968-1-sashal@kernel.org>
 References: <20261019135441.1420968-1-sashal@kernel.org>
@@ -57,396 +56,468 @@ X-stable-base: Linux 6.18.57
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Shivaprasad G Bhat <sbhat@linux.ibm.com>
+From: Chen Changcheng <chenchangcheng@kylinos.cn>
 
-[ Upstream commit 7268e509b43ac1734e1bdb7d18553f7e1080dfb4 ]
+[ Upstream commit 12e67eb89eb2b9516685c744d3f7de0a2d1bd701 ]
 
-The PCI_INTERRUPT_PIN reports if the device supports the INTx.  However,
-when the device is assigned to a guest via vfio, the PCI_INTERRUPT_PIN
-is set to 0 (i.e none) if the line is not connected and/or the platform
-cannot route the interrupt.
+In snic_add_host(), if scsi_add_host() succeeds but
+alloc_ordered_workqueue() fails, the function returns -ENOMEM with
+shost->work_q left as NULL. The caller's error path then calls
+snic_del_host(), which returns early when !shost->work_q without calling
+scsi_remove_host(). The Scsi_Host remains registered in sysfs as a zombie
+device even after the probe has failed. This causes:
 
-In such cases, the guest PCI_INTERRUPT_PIN is 0 and the port number
-becomes -1 (255, uint8_t underflow) for qla[25|27|28]xx and qla2031
-devices.  The flt_region_nvram is never set, and subsequently the LUN
-detection fails.  Below warnings show the NVRAM configuration failure:
+ - The leaked host remains visible in /sys/class/scsi_host/ after probe
+   failure, with state "running".
 
- []-0073:1: Inconsistent NVRAM checksum=0xffffffc0 id=HCAM version=0x100.
- []-0074:1: Falling back to functioning (yet invalid -- WWPN) defaults.
- []-0076:1: NVRAM configuration failed.
+ - Subsequent SCSI host numbering is permanently shifted (the leaked host
+   ID from ida_alloc() is never reclaimed).
 
-Handle this case and set the port_no to devfn like its done everywhere
-else.
+ - Memory leak: the Scsi_Host allocation can never be freed because
+   device_add() took a reference that can only be released by device_del()
+   inside scsi_remove_host().
 
-Reference: commit 2bd42b03ab6b ("vfio/pci: Virtualize zero INTx PIN if no pdev->irq")
-Signed-off-by: Shivaprasad G Bhat <sbhat@linux.ibm.com>
-Reviewed-by: Kyle Mahlkuch <kmahlkuc@linux.ibm.com>
-Link: https://patch.msgid.link/177885270578.1573.14283751510936407585.stgit@linux.ibm.com
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Fix by adding scsi_remove_host() in the workqueue allocation failure path
+inside snic_add_host(), undoing the successful scsi_add_host() before
+returning the error. This is cleaner than modifying snic_del_host() because
+snic_del_host() is called from a shared error label that also serves paths
+where snic_add_host() was never invoked.
+
+Reproducer (requires no real SNIC hardware):
+
+ - Build CONFIG_SCSI_SNIC=y (built-in)
+
+ - Add snic.test_mode=1 snic.inject_wq_fail=1 to kernel cmdline
+
+ - Boot with a PCI device matching the snic driver (e.g. QEMU edu device,
+   PCI ID 0x1234:0x11e8, temporarily added to the driver's PCI ID table)
+
+Before the fix:
+
+  # /sys/class/scsi_host/ contains a zombie host0:
+  $ cat /sys/class/scsi_host/host0/proc_name
+  snic_scsi
+  $ cat /sys/class/scsi_host/host0/state
+  running
+  # ata_piix gets host1, host2 (host0 stuck):
+  scsi host1: ata_piix
+  scsi host2: ata_piix
+
+After the fix:
+
+  # host0 is properly freed and reused by ata_piix:
+  scsi host0: ata_piix
+  scsi host1: ata_piix
+  # No zombie host in /sys/class/scsi_host/
+
+Signed-off-by: Chen Changcheng <chenchangcheng@kylinos.cn>
+Acked-by: Narsimhulu Musini <nmusini@cisco.com>
+Link: https://patch.msgid.link/20260727073438.209673-1-chenchangcheng@kylinos.cn
+Signed-off-by: Martin K. Petersen (Oracle) <mkp@kernel.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-## Phase 1: Commit message forensics
+The local tree is **6.12.111** (`pending-6.12`). The buggy
+`snic_add_host()` / `snic_del_host()` error path is present here and the
+one-line fix applies cleanly.
 
-**Step 1.1: Subject line**
-Record: `[scsi/qla2xxx] [Handle] Handle INTx not connected while passing
-through`
-Subsystem is the QLogic Fibre Channel driver. The verb “Handle” is a
-correctness/workaround fix, not a feature add.
+===============================================================
+PHASE 1: COMMIT MESSAGE FORENSICS
+===============================================================
 
-**Step 1.2: Tags**
+**Step 1.1: PARSE THE SUBJECT LINE**
+Record: `[scsi: snic:] [Fix] [SCSI host leak when workqueue allocation
+fails after scsi_add_host() succeeds]`
+
+**Step 1.2: PARSE ALL COMMIT MESSAGE TAGS**
 Record:
-- `Reviewed-by: Kyle Mahlkuch <kmahlkuc@linux.ibm.com>`
-- `Link: https://patch.msgid.link/177885270578.1573.14283751510936407585
-  .stgit@linux.ibm.com`
-- `Signed-off-by: Shivaprasad G Bhat <sbhat@linux.ibm.com>` (author)
-- `Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>` (SCSI
+- `Fixes:` **absent** (expected for this review pipeline)
+- `Cc: stable@vger.kernel.org` **absent** (expected)
+- `Acked-by: Narsimhulu Musini <nmusini@cisco.com>` — original SNIC
+  driver author / Cisco maintainer
+- `Link: https://patch.msgid.link/20260727073438.209673-1-
+  chenchangcheng@kylinos.cn`
+- `Signed-off-by: Chen Changcheng <chenchangcheng@kylinos.cn>` (author)
+- `Signed-off-by: Martin K. Petersen (Oracle) <mkp@kernel.org>` (SCSI
   maintainer)
-- `Reference: commit 2bd42b03ab6b ("vfio/pci: Virtualize zero INTx PIN
-  if no pdev->irq")` (not a `Fixes:` tag)
-- No `Fixes:`, no `Cc: stable`, no `Reported-by`/`Tested-by` on the
-  committed version (those were requested on-list but not folded in)
-- Ignore pipeline-added Sasha Levin SOB if present (not on this commit)
+- `Reported-by:` none
+- `Tested-by:` none (author included a concrete reproducer in the body)
+- Ignore pipeline `Signed-off-by: Sasha Levin` / `[Upstream commit ...]`
+  if present
 
-**Step 1.3: Body**
+**Step 1.3: ANALYZE THE COMMIT BODY TEXT**
 Record:
-- **Bug:** Guest VFIO assignment virtualizes `PCI_INTERRUPT_PIN` to 0
-  when INTx is not connected / not routable.
-- **Mechanism:** For qla25/27/28xx and qla2031, the driver does
-  `ha->port_no--` on that register. `port_no` is `uint8_t`, so 0 wraps
-  to 255.
-- **Symptom:** `flt_region_nvram` is never selected (only ports 0–3 are
-  matched). NVRAM is read from the wrong/zero flash offset. Logs:
-  - `Inconsistent NVRAM checksum=0xffffffc0 id=HCAM version=0x100`
-  - `Falling back to functioning (yet invalid -- WWPN) defaults`
-  - `NVRAM configuration failed`
-- **User-visible result:** LUN detection fails; the HBA does not present
-  storage in the guest.
-- **Fix:** If PIN is 0, set `port_no` from `PCI_FUNC(devfn)`, matching
-  other qla2xxx paths.
+- **Bug:** `scsi_add_host()` succeeds, then `alloc_ordered_workqueue()`
+  fails. `snic_add_host()` returns `-ENOMEM` with `shost->work_q ==
+  NULL`. Probe goes to a shared error label that calls
+  `snic_del_host()`, which returns immediately when `!shost->work_q` and
+  **never** calls `scsi_remove_host()`.
+- **Symptoms:** zombie `/sys/class/scsi_host/hostN` with state
+  `running`; SCSI host ID from `ida_alloc()` never reclaimed (later
+  hosts are numbered higher); `Scsi_Host` never freed because
+  `device_add()`’s reference is only dropped by `device_del()` inside
+  `scsi_remove_host()`.
+- **Version info:** none in the message. Code dates to the original
+  driver (v4.2).
+- **Root cause:** error-path rollback does not undo a successful
+  `scsi_add_host()` when workqueue alloc fails. Author correctly avoids
+  changing `snic_del_host()` because that helper is also used on paths
+  that never called `snic_add_host()`.
 
-**Step 1.4: Hidden bug fix?**
-Record: No. This is an explicit functional bug fix, not cleanup
-disguised as a fix.
+**Step 1.4: DETECT HIDDEN BUG FIXES**
+Record: Not disguised. Explicit leak/rollback fix with a documented
+failure mode and a reproducer.
 
----
+===============================================================
+PHASE 2: DIFF ANALYSIS - LINE BY LINE
+===============================================================
 
-## Phase 2: Diff analysis
-
-**Step 2.1: Inventory**
+**Step 2.1: INVENTORY THE CHANGES**
 Record:
-- File: `drivers/scsi/qla2xxx/qla_os.c` (+10 / −5)
-- Function: `qla2x00_set_isp_flags()`
-- Scope: single-file surgical change
+- File: `drivers/scsi/snic/snic_main.c` — **+1 line**
+- Function: `snic_add_host()`
+- Scope: single-file surgical error-path fix
 
-**Step 2.2: Code flow**
-Before (verified on `7268e509b43ac^`):
-```c
-pci_read_config_byte(ha->pdev, PCI_INTERRUPT_PIN, &ha->port_no);
-if (IS_QLA25XX(ha) || IS_QLA2031(ha) || IS_QLA27XX(ha) ||
-IS_QLA28XX(ha))
-    ha->port_no--;
-else
-    ha->port_no = !(ha->port_no & 1);
+**Step 2.2: UNDERSTAND THE CODE FLOW CHANGE**
+Record:
+- **Before:** on `!shost->work_q`, log, set `ret = -ENOMEM`, return.
+  Host stays registered.
+- **After:** same path also calls `scsi_remove_host(shost)` before
+  returning `-ENOMEM`.
+- Path: probe error path only (`snic_probe()` → `snic_add_host()` after
+  `scsi_add_host()` succeeded).
+
+Verified call chain in this tree:
+
+```642:649:drivers/scsi/snic/snic_main.c
+        ret = snic_add_host(shost, pdev);
+        if (ret) {
+                ...
+                goto err_get_conf;
+        }
 ```
-After: if PIN is 0, `ha->port_no = PCI_FUNC(ha->pdev->devfn)`; else keep
-the old mapping.
 
-This is probe/init (`qla2x00_probe_one` → `qla2x00_set_isp_flags`), not
-an error path.
+`err_get_conf` later calls `snic_del_host()` (line 690). That helper
+still early-returns on `!shost->work_q`, so after this fix it will not
+call `scsi_remove_host()` a second time.
 
-**Step 2.3: Bug category**
-Record: **Logic / correctness + hardware/virt workaround**, with a
-**uint8_t underflow**.
+**Step 2.3: IDENTIFY THE BUG MECHANISM**
+Record: **Error-path / resource leak.** Missing undo of
+`scsi_add_host()` when workqueue allocation fails. Adding
+`scsi_remove_host()` is the matching rollback. Also reclaims the host ID
+(`ida_free()` in `scsi_host_dev_release()` after `device_del()`).
 
-Verified:
-- `qla_def.h`: `uint8_t port_no` — decrement of 0 → 255.
-- `qla_sup.c` `qla2xxx_get_flt_info()` only assigns `flt_region_nvram`
-  when `port_no` is 0, 1, 2, or 3. 255 never matches.
-- `ha` is `kzalloc`’d, so `flt_region_nvram` stays 0; NVRAM is then read
-  from flash offset 0.
-- `qla81xx`/`27xx` NVRAM path at `qla_init.c:10044–10288` emits exactly
-  log IDs 0x0073 / 0x0074 / 0x0076 from the commit message.
-- Fallback WWPNs are invalid → LUN discovery fails.
-
-**Step 2.4: Fix quality**
-Record: Obviously correct. PIN 0 means “no INTx”; using PCI function
-number is already how this driver sets `ha->portnum` for 83xx/82xx/etc.
-Bare-metal cards with PIN 1–4 are unchanged. Regression risk is low: the
-new branch only runs when PIN is 0, which previously produced a useless
-port number (255) on the 25/27/28/2031 path.
-
----
-
-## Phase 3: Git history
-
-**Step 3.1: Blame**
+**Step 2.4: ASSESS THE FIX QUALITY**
 Record:
-- `pci_read_config_byte(..., PCI_INTERRUPT_PIN, &ha->port_no)`
-  introduced in `a9083016a5314b` (2010, ISP82XX support).
-- Decrement / `!(pin & 1)` mapping in `f73cb695d3eccd` (2014, ISP2071).
-- The underflow is old; it became commonly hit after VFIO started
-  virtualizing PIN as 0.
+- Obviously correct: one matching rollback for the successful
+  `scsi_add_host()`.
+- Not changing `snic_del_host()` avoids calling `scsi_remove_host()` on
+  hosts that were never added (`err_get_conf` is also used when
+  `snic_get_conf()` fails **before** `snic_add_host()`).
+- Regression risk: very low. `scsi_remove_host()` is the documented
+  pairing of `scsi_add_host()`. No double-remove: `snic_del_host()`
+  still skips when `work_q` is NULL. No lock, API, or data-structure
+  change.
 
-**Step 3.2: Fixes tag**
-Record: No `Fixes:` tag. Related cause: `2bd42b03ab6b` (`vfio/pci:
-Virtualize zero INTx PIN if no pdev->irq`, 2025-04-14). That commit
-**is** an ancestor of this tree (`git merge-base --is-ancestor` exit 0).
-It was reported/tested by the same author (Shivaprasad G Bhat).
+===============================================================
+PHASE 3: GIT HISTORY INVESTIGATION
+===============================================================
 
-**Step 3.3: File history**
-Record: Standalone one-patch series. Later `3571ef0515640` (QLA29xx
-support) merged this PIN==0 check with an extra `IS_QLA29XX` in the
-decrement branch. No prerequisite refactor is required for the original
-hunk.
-
-**Step 3.4: Author**
-Record: Shivaprasad G Bhat (IBM). Other nearby work is
-powerpc/vfio/iommu, not qla2xxx maintainer. Reviewer Kyle Mahlkuch is
-also IBM. SCSI maintainer Martin K. Petersen applied it.
-
-**Step 3.5: Dependencies**
-Record: Self-contained. No new APIs. Does not require vfio source
-changes; it only reacts to PIN=0 in config space. Can apply standalone
-to any tree that still has the old decrement logic.
-
----
-
-## Phase 4: Mailing list / external
-
-**Step 4.1: Original discussion**
+**Step 3.1: BLAME THE CHANGED LINES**
 Record:
-- `b4 dig -c 7268e509b43ac` → https://patch.msgid.link/177885270578.1573
-  .14283751510936407585.stgit@linux.ibm.com
-- `b4 dig -a`: **v1 only** (single standalone patch).
-- Thread saved to mbox (lore HTTP 403 via WebFetch; mbox succeeded).
-- Reviewer feedback:
-  - Priya A: tested, asked for `Reported-by`/`Tested-by` (not added in
-    the committed version).
-  - Kyle Mahlkuch: “look reasonable and fix a known bug” + `Reviewed-
-    by`.
-  - Madhavan Srinivasan: ping for comments; no NAK.
-  - Martin K. Petersen: applied to **7.3/scsi-queue**.
-  - Author then asked to also land in **7.2**. Martin: left it in 7.3
-    because of conflict with a large qla2xxx update that cycle, and told
-    the author they **can post a stable backport request** once Linus
-    merged SCSI.
+- Buggy control flow introduced in `c8806b6c9e824f` (“snic: driver for
+  Cisco SCSI HBA”, Narsimhulu Musini, 2015-05-29).
+- First appeared: **v4.2-rc1**. Present in this tree (`git merge-base
+  --is-ancestor c8806b6c9e824f HEAD` succeeded).
+- Nearby `alloc_ordered_workqueue()` rewrite: `6411307b63286e`
+  (v6.12-rc1) — formatting only; the leak predates that.
 
-No NAKs. Maintainer explicitly treated this as stable-worthy.
+**Step 3.2: FOLLOW THE FIXES: TAG**
+Record: No `Fixes:` tag. Introducer is the original driver commit above,
+which **is** in this tree.
 
-**Step 4.2: Recipients (`b4 dig -w`)**
-Record: Marvell qla2xxx maintainers (`njavali@marvell.com`, `GR-QLogic-
-Storage-Upstream@marvell.com`), James Bottomley, Martin K. Petersen,
-`linux-scsi`, Alex Williamson (vfio), Kyle Mahlkuch.
+**Step 3.3: CHECK FILE HISTORY FOR RELATED CHANGES**
+Record: Recent `snic_main.c` history is workqueue-name cleanup
+(`6411307b63286`, `b97c0741c7dcc`), slab-name uniqueness, const
+template, SPDX. **No prior leak fix.** Standalone one-line patch, not
+“X/Y” of a series (msgid `...-1` is a single patch).
 
-**Step 4.3: Bug report**
-Record: Concrete guest logs in the commit. Independent tester Priya A
-confirmed it fixes LUN detection. This is a real IBM-reported VFIO
-passthrough failure, not theoretical.
+**Step 3.4: CHECK THE AUTHOR'S OTHER COMMITS**
+Record: `git log --author="Chen Changcheng" -- drivers/scsi/` in this
+tree is empty (author is not a historical SNIC contributor here). Weight
+instead: **Acked-by original driver author** Musini, and SCSI maintainer
+Martin K. Petersen applied it.
 
-**Step 4.4: Series**
-Record: Standalone `[PATCH]`, not `N/M`.
+**Step 3.5: CHECK FOR DEPENDENT/PREREQUISITE COMMITS**
+Record: None. Uses existing `scsi_remove_host()`. Reproducer mentions
+`snic.test_mode` / `snic.inject_wq_fail`; those parameters **do not
+exist in this tree** (local test harness only). The fix itself does not
+depend on them.
 
-**Step 4.5: Stable list**
-Record: lore.kernel.org/stable search returned HTTP 403. From the scsi
-thread, the maintainer invited a stable request; no evidence of a NAK
-against stable.
+===============================================================
+PHASE 4: MAILING LIST AND EXTERNAL RESEARCH
+===============================================================
 
----
-
-## Phase 5: Semantic analysis
-
-**Step 5.1: Functions**
-Record: `qla2x00_set_isp_flags()` only.
-
-**Step 5.2: Callers**
-Record: Called once from `qla2x00_probe_one()` (`qla_os.c:3090`), the
-PCI `.probe` callback (`qla_os.c:8360`). Probe context, once per
-adapter.
-
-**Step 5.3: Callees**
-Record: `pci_read_config_byte()`, `PCI_FUNC()`, ISP type macros. No
-alloc/lock changes.
-
-**Step 5.4: Reachability**
-Record: Yes. Trigger: VFIO-assign a QLogic 25/27/28xx or 2031 HBA into a
-guest whose kernel runs this driver, when the platform does not connect
-INTx (`pdev->irq == 0` or `IRQ_NOTCONNECTED`). Confirmed in
-`vfio_pci_config.c:1833–1835`. Userspace (hypervisor admin) can trigger
-this; unprivileged guest users then just see missing LUNs.
-
-**Step 5.5: Similar patterns**
-Record: `PCI_FUNC(ha->pdev->devfn)` is already used for `ha->portnum` in
-`qla_os.c` (83xx and others) and `qla_nx.c`. The fallback matches
-existing driver convention.
-
----
-
-## Phase 6: Local tree (this checkout)
-
-**Step 6.1: Does the buggy code exist here?**
+**Step 4.1: FIND THE ORIGINAL PATCH DISCUSSION**
 Record:
-- Tree: **Linux 7.3.0-rc4** (`git describe HEAD` =
-  `v7.3-rc4-27-gf0100363d8c37`).
-- `qla2xxx` is present. `port_no` is still `uint8_t`. FLT NVRAM
-  selection still keys off `port_no` 0–3.
-- VFIO PIN=0 virtualization is present (`2bd42b03ab6b` is an ancestor).
-- The underflow logic **did exist** on this 7.3 line before
-  `7268e509b43ac`; that commit is already an ancestor of HEAD. Current
-  `qla2x00_set_isp_flags()` already has the PIN==0 fallback, plus a
-  later `IS_QLA29XX` merge.
+- `b4 dig -c <sha>` cannot be used: the candidate is **not** in this
+  checkout (and the first SHA tried was an unrelated merge).
+- Submission: msgid `20260727073438.209673-1-chenchangcheng@kylinos.cn`,
+  2026-07-27.
+- Thread: https://lists.openwall.net/linux-kernel/2026/07/27/428 and
+  https://lkml.iu.edu/hypermail/linux/kernel/2607.3/06578.html
+- Single revision (no v2/v3). Diff matches the candidate (1 line).
+- No NAK. Cisco maintainer Acked-by in-thread. No reviewer asked for
+  `Cc: stable`.
+- lore.kernel.org fetches returned HTTP 403 from this environment.
 
-**Step 6.2: Backport difficulty**
-Record: On this 7.3-rc4 tree the fix is already merged. Cherry-picking
-again would be a no-op / conflict with the already-applied hunk plus
-QLA29xx. For *this* tree, the code change is already in place; no extra
-backport rework is needed for 7.3.
+**Step 4.2: CHECK WHO REVIEWED THE PATCH**
+Record: To/Cc included Cisco SNIC maintainers (`nmusini`, `kartilak`,
+`sebaddel`), James Bottomley, Martin K. Petersen, linux-scsi. Ack from
+Musini; applied by Petersen.
 
-**Step 6.3: Related fixes already here?**
-Record: This is the fix. The only later related edit is QLA29xx
-extending the same `else if` (still keeps the PIN==0 path). No
-alternate/competing fix.
+**Step 4.3: SEARCH FOR THE BUG REPORT**
+Record: No syzbot/bugzilla. Author-found with an injected workqueue-fail
+reproducer. Before/after sysfs and host-numbering evidence is in the
+message.
 
----
+**Step 4.4: CHECK FOR RELATED PATCHES AND SERIES**
+Record: Standalone `[PATCH]`, not part of a multi-patch series.
 
-## Phase 7: Subsystem context
+**Step 4.5: CHECK STABLE MAILING LIST HISTORY**
+Record: **UNVERIFIED** — `https://lore.kernel.org/stable/?q=...`
+returned 403. No evidence of a prior stable NAK.
 
-**Step 7.1:**
-Record: `drivers/scsi/qla2xxx` — **IMPORTANT** (widely used FC HBA in
-servers/SAN, including VFIO passthrough). Not core mm/vfs, but storage
-init failure is user-visible and serious for those systems.
+===============================================================
+PHASE 5: CODE SEMANTIC ANALYSIS
+===============================================================
 
-**Step 7.2:**
-Record: Actively developed (QLA29xx series and hardening landed after
-this commit in 7.3). The buggy PIN mapping itself dates to 2010/2014.
+**Step 5.1: IDENTIFY KEY FUNCTIONS IN THE DIFF**
+Record: `snic_add_host()` (modified). Related: `snic_del_host()`,
+`snic_probe()`, `scsi_add_host()`, `scsi_remove_host()`.
 
----
-
-## Phase 8: Impact and risk
-
-**Step 8.1: Who is affected**
-Record: Driver-specific + config-specific: `CONFIG_SCSI_QLA_FC` guests
-(and hosts) where `PCI_INTERRUPT_PIN` reads as 0. Primary real-world
-trigger is VFIO passthrough when INTx is not routed (IBM Power and
-similar). Dual-port 25/27/28xx and 2031 adapters.
-
-**Step 8.2: Trigger**
-Record: Adapter probe in the guest. Deterministic once PIN is 0 — not a
-race. Hypervisor admin can trigger it; then LUNs never appear.
-
-**Step 8.3: Failure mode**
-Record: HBA comes up with invalid NVRAM/WWPN; **LUN detection fails**.
-Not a panic/UAF. Severity: **HIGH** (device non-functional, storage
-unavailable). Matches stable-rules “hardware quirk” / “oh, that's not
-good”.
-
-**Step 8.4: Risk-benefit**
+**Step 5.2: TRACE CALLERS**
 Record:
-- Benefit: high for VFIO+qla2xxx users (adapter actually works).
-- Risk: very low (10 lines, PIN==0 only, existing `PCI_FUNC`
-  convention).
-- Ratio: strongly favors including the fix in this tree.
+- `snic_add_host()` — only from `snic_probe()` (PCI probe).
+- `snic_del_host()` — `snic_probe()` error path (`err_get_conf`) and
+  `snic_remove()`.
+- Reachable on Cisco SNIC PCI probe, including under memory pressure
+  when `alloc_ordered_workqueue()` fails.
 
----
+**Step 5.3: TRACE CALLEES**
+Record: `scsi_add_host()`, `alloc_ordered_workqueue()`,
+`scsi_remove_host()` (new). `scsi_remove_host()` sets host state,
+unregisters transport, `device_unregister(&shost->shost_dev)`,
+`device_del(&shost->shost_gendev)`. Final free and
+`ida_free(&host_index_ida, shost->host_no)` happen in
+`scsi_host_dev_release()` once refs drop.
 
-## Phase 9: Synthesis
+**Step 5.4: FOLLOW THE CALL CHAIN**
+Record: PCI probe (`snic_probe` → `snic_add_host`). Not a syscall hot
+path. Userspace-visible effect when it fires: leftover
+`/sys/class/scsi_host/` entry and shifted host numbers for **other**
+SCSI drivers (author showed `ata_piix` taking host1/host2 because host0
+was stuck).
 
-**Evidence FOR:**
-- Real, tested LUN-detection failure with matching driver logs.
-- uint8_t underflow is verified in this tree’s types and FLT matching.
-- Tiny, obviously correct, no new API.
-- Reviewed, maintainer-applied to 7.3; maintainer invited a stable
-  backport.
-- This 7.3 tree has both qla2xxx and the VFIO PIN=0 behavior.
+**Step 5.5: SEARCH FOR SIMILAR PATTERNS**
+Record: This `if (!shost->work_q) return;` before `scsi_remove_host()`
+is unique to snic. Sibling Cisco `fnic` adds the host later and has a
+dedicated `err_out_scsi_add_host` label. No duplicate snic copy of this
+bug.
 
-**Evidence AGAINST:**
-- Not a crash, UAF, or CVE.
-- Affects VFIO passthrough more than bare metal (PIN is usually 1–4 on
-  real silicon).
-- Committed message omitted the tester’s `Reported-by`/`Tested-by`
-  (quality of tags, not of the fix).
+===============================================================
+PHASE 6: CROSS-REFERENCING AGAINST THE LOCAL TREE
+===============================================================
 
-**Unresolved:** HTTP 403 on lore WebFetch (mbox was used instead).
-Stable-list search unverified beyond the scsi thread.
+**Step 6.1: DOES THE BUGGY CODE EXIST IN THIS TREE?**
+Record: **Yes.** Local tree: `p-6.12-3-gc504cf0baa3d8`, **6.12.111**,
+branch `pending-6.12`.
 
-**Stable rules checklist:**
-1. Obviously correct and tested? **PASS** (review + Priya A test +
-   maintainer apply)
-2. Real bug affecting users? **PASS** (LUN detection fails)
-3. Important? **PASS** (HBA/storage unusable in VFIO guests — HIGH)
-4. Small and contained? **PASS** (~15 lines, one function)
-5. No new features/APIs? **PASS**
-6. Applies to this local tree? **PASS** (7.3 already contains the
-   change; the surrounding driver is present)
+```305:323:drivers/scsi/snic/snic_main.c
+        if (!shost->work_q) {
+                SNIC_HOST_ERR(shost, "Failed to Create ScsiHost wq.\n");
 
-**Exception category:** Hardware/virt workaround (handle virtualized
-INTx PIN=0), analogous to a device quirk.
+                ret = -ENOMEM;
+        }
 
-This tree is **7.3-rc4**. The qla2xxx PIN-to-`port_no` bug and VFIO PIN
-virtualization both exist on this line. The patch is a small, tested
-correctness fix that restores NVRAM/LUN discovery for passed-through
-QLogic adapters. It meets stable-kernel rules and belongs in this tree.
+        return ret;
+} /* end of snic_add_host */
 
-Verification:
-- [Phase 1] Parsed subject/tags/body from `git log -1` on
-  `7268e509b43ac`; no Fixes/Cc-stable; Reference 2bd42b03ab6b.
-- [Phase 2] Diff is 15 lines in `qla2x00_set_isp_flags`; parent blob
-  still has unconditional `--`.
-- [Phase 2] `port_no` is `uint8_t` in `qla_def.h:4319`; FLT NVRAM only
-  matches ports 0–3 in `qla_sup.c`.
-- [Phase 2] Log IDs 0x0073/0x0074/0x0076 verified in `qla_init.c`.
-- [Phase 3] Blame: PIN read `a9083016a5314b` (2010); decrement
-  `f73cb695d3eccd` (2014).
-- [Phase 3] `git merge-base --is-ancestor 2bd42b03ab6b HEAD` = yes; same
-  for `7268e509b43ac`.
-- [Phase 3] Author log: IBM powerpc/vfio contributor; one qla2xxx
-  commit.
-- [Phase 4] `b4 dig -c/-a/-w/-m`: v1 only; scsi CCs including vfio and
-  Marvell; mbox has Priya test, Kyle R-b, Martin apply + stable-backport
-  invitation.
-- [Phase 4] lore WebFetch 403 — UNVERIFIED via HTTP; used mbox instead.
-- [Phase 5] Only caller: `qla2x00_probe_one`; VFIO sets PIN=0 at
-  `vfio_pci_config.c:1833–1835`.
-- [Phase 6] `git describe HEAD` = `v7.3-rc4-27-gf0100363d8c37`; `make
-  kernelversion` = 7.3.0-rc4; current `qla_os.c` already has the PIN==0
-  path.
-- [Phase 8] Failure: NVRAM fail → invalid WWPN → no LUNs; not a panic.
-- UNVERIFIED: whether a stable@vger thread was later posted (lore/stable
-  HTTP 403).
+static void
+snic_del_host(struct Scsi_Host *shost)
+{
+        if (!shost->work_q)
+                return;
+
+        destroy_workqueue(shost->work_q);
+        shost->work_q = NULL;
+        scsi_remove_host(shost);
+}
+```
+
+Bug present since v4.2.
+
+**Step 6.2: CHECK FOR BACKPORT COMPLICATIONS**
+Record: **Clean apply.** Surrounding hunk matches the candidate exactly
+(`old found: True`, `new already applied: False`).
+
+**Step 6.3: CHECK IF RELATED FIXES ARE ALREADY HERE**
+Record: `git log --grep` for this leak / `snic_add_host` / “workqueue
+allocation failure” under `drivers/scsi/` found **no** prior fix.
+
+===============================================================
+PHASE 7: SUBSYSTEM AND MAINTAINER CONTEXT
+===============================================================
+
+**Step 7.1: IDENTIFY THE SUBSYSTEM AND ITS CRITICALITY**
+Record: SCSI driver `drivers/scsi/snic/` (Cisco PCI-Express SCSI HBA,
+`CONFIG_SCSI_SNIC`). **PERIPHERAL** hardware, but host-number leak is
+**system-wide** for SCSI host IDs.
+
+**Step 7.2: ASSESS SUBSYSTEM ACTIVITY**
+Record: Mature/quiet. Driver added 2015; recent churn is mechanical
+SCSI-wide workqueue cleanup. Long-standing bug, not a new-code issue.
+
+===============================================================
+PHASE 8: IMPACT AND RISK ASSESSMENT
+===============================================================
+
+**Step 8.1: DETERMINE WHO IS AFFECTED**
+Record: Driver-specific trigger (Cisco SNIC), **plus** any other SCSI
+host on the same machine (permanent host ID shift). Config:
+`CONFIG_SCSI_SNIC`.
+
+**Step 8.2: DETERMINE THE TRIGGER CONDITIONS**
+Record: Probe-time `alloc_ordered_workqueue()` failure (ENOMEM /
+workqueue creation failure). Uncommon, not a hot path, not unprivileged-
+syscall. Once it happens, the zombie host and ID leak persist until
+reboot.
+
+**Step 8.3: DETERMINE THE FAILURE MODE SEVERITY**
+Record:
+- Failure: unreclaimable `Scsi_Host`, zombie sysfs device in
+  `SHOST_RUNNING`, leaked host ID.
+- Severity: **HIGH** for leak class (not a panic). Worse than a one-shot
+  `kfree` leak because the object stays in sysfs and shifts numbering
+  for later hosts.
+
+**Step 8.4: CALCULATE RISK-BENEFIT RATIO**
+Record:
+- **Benefit:** medium for SNIC users under memory pressure; also
+  prevents global SCSI host-id skew.
+- **Risk:** very low (1 line, error path only, standard SCSI rollback).
+- **Ratio:** favorable.
+
+===============================================================
+PHASE 9: FINAL SYNTHESIS
+===============================================================
+
+**Step 9.1: COMPILE THE EVIDENCE**
+
+FOR:
+- Real error-path leak with concrete sysfs + host-ID consequences,
+  reproduced by the author
+- Buggy code is in this 6.12 tree (since v4.2)
+- One-line, obviously correct pairing of `scsi_remove_host()` with
+  successful `scsi_add_host()`
+- No double-remove on the shared `err_get_conf` path
+- Applies cleanly; no prerequisites
+- Acked by original driver author; applied by SCSI maintainer
+- Probe-path resource leaks are a common, accepted stable class
+
+AGAINST:
+- Trigger is rare (workqueue alloc fail during probe)
+- SNIC is a specialized Cisco HBA (small population)
+- Not a crash, UAF, or security bug
+- Reproducer uses out-of-tree inject knobs (does not affect the patch)
+
+UNRESOLVED:
+- Stable-list discussion (lore 403)
+- Upstream SHA not in this checkout (`b4 dig` on a local commit was not
+  possible)
+
+**Step 9.2: APPLY THE STABLE RULES CHECKLIST**
+1. Obviously correct and tested? **PASS** — 1-line rollback; author
+   showed before/after; maintainer Ack
+2. Fixes a real bug that affects users? **PASS** — zombie sysfs host +
+   leaked ID + unreclaimable `Scsi_Host`
+3. Important issue? **PASS** — unrecoverable resource leak that also
+   skews SCSI host numbering for other drivers
+4. Small and contained? **PASS** — +1 line, one function
+5. No new features or APIs? **PASS**
+6. Can apply to the local tree? **PASS** — code matches; clean apply
+
+**Step 9.3: CHECK FOR EXCEPTION CATEGORIES**
+Record: Not a device-ID/quirk/DT/build/docs exception. Ordinary error-
+path leak fix.
+
+**Step 9.4: MAKE YOUR DECISION**
+This is a real, long-standing probe rollback bug in this 6.12 tree. The
+fix is minimal, already reviewed, and undoes `scsi_add_host()` exactly
+when that call succeeded and the workqueue did not. Risk of regression
+is negligible; leaving it out leaves a zombie SCSI host and a leaked
+host ID if SNIC probe hits ENOMEM.
+
+===============================================================
+Verification
+===============================================================
+- [Phase 1] Parsed tags: Acked-by Musini; Link msgid
+  `20260727073438.209673-1`; no Fixes/stable Cc (expected)
+- [Phase 2] Diff: +1 line in `snic_add_host()` error path;
+  `scsi_remove_host(shost)` before `-ENOMEM`
+- [Phase 2] Confirmed `snic_probe` uses shared `err_get_conf` which
+  calls `snic_del_host()` even when `snic_add_host()` was never invoked
+  (lines 630–690)
+- [Phase 2] Confirmed `snic_del_host()` early-return on `!work_q` skips
+  `scsi_remove_host()` — the leak mechanism
+- [Phase 3] `git blame`: buggy code from `c8806b6c9e824f` (v4.2-rc1);
+  ancestor of HEAD
+- [Phase 3] `git log --oneline -20 -- drivers/scsi/snic/snic_main.c`: no
+  prior leak fix
+- [Phase 3] `git log --grep` for this leak under `drivers/scsi/`: empty
+- [Phase 3] `git log --author="Chen Changcheng" -- drivers/scsi/`: no
+  prior commits in this tree
+- [Phase 4] `b4 dig -c` on a tree SHA: not applicable (candidate not in
+  checkout); used msgid/openwall/lkml instead
+- [Phase 4] Openwall/lkml: single-version patch, Acked-by Musini, no NAK
+- [Phase 4] lore.kernel.org and lore stable search: HTTP 403 —
+  UNVERIFIED
+- [Phase 5] Callers: `snic_add_host` only from `snic_probe`;
+  `snic_del_host` from probe error + remove
+- [Phase 5] `scsi_remove_host()` → `device_del()`;
+  `scsi_host_dev_release()` does `ida_free(host_no)`
+- [Phase 5] `test_mode`/`inject_wq_fail` not in this tree (reproducer-
+  only)
+- [Phase 6] `git describe HEAD`: `p-6.12-3-gc504cf0baa3d8`; `make
+  kernelversion`: 6.12.111
+- [Phase 6] Surrounding code identical to candidate hunk; patch not
+  already applied
+- [Phase 8] Failure mode: zombie sysfs SCSI host + permanent host-ID
+  leak; severity HIGH for leak class, rare trigger
+- UNVERIFIED: whether this was already discussed on stable@ (lore 403)
+
+This meets stable-kernel rules for this tree: real leak, small contained
+fix, clean apply, no new API.
 
 **YES**
 
- drivers/scsi/qla2xxx/qla_os.c | 15 ++++++++++-----
- 1 file changed, 10 insertions(+), 5 deletions(-)
+ drivers/scsi/snic/snic_main.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 07ccfe0226c5e..5b1fb7e5e0980 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -2803,11 +2803,16 @@ qla2x00_set_isp_flags(struct qla_hw_data *ha)
- 	else {
- 		/* Get adapter physical port no from interrupt pin register. */
- 		pci_read_config_byte(ha->pdev, PCI_INTERRUPT_PIN, &ha->port_no);
--		if (IS_QLA25XX(ha) || IS_QLA2031(ha) ||
--		    IS_QLA27XX(ha) || IS_QLA28XX(ha))
--			ha->port_no--;
--		else
--			ha->port_no = !(ha->port_no & 1);
-+		if (ha->port_no == 0) {
-+			/* None of INT[A|B|C|D] may be virtualized by vfio */
-+			ha->port_no = PCI_FUNC(ha->pdev->devfn);
-+		} else {
-+			if (IS_QLA25XX(ha) || IS_QLA2031(ha) ||
-+			    IS_QLA27XX(ha) || IS_QLA28XX(ha))
-+				ha->port_no--;
-+			else
-+				ha->port_no = !(ha->port_no & 1);
-+		}
+diff --git a/drivers/scsi/snic/snic_main.c b/drivers/scsi/snic/snic_main.c
+index 1c24517e4e650..912f9f15dddc3 100644
+--- a/drivers/scsi/snic/snic_main.c
++++ b/drivers/scsi/snic/snic_main.c
+@@ -305,6 +305,7 @@ snic_add_host(struct Scsi_Host *shost, struct pci_dev *pdev)
+ 	if (!shost->work_q) {
+ 		SNIC_HOST_ERR(shost, "Failed to Create ScsiHost wq.\n");
+ 
++		scsi_remove_host(shost);
+ 		ret = -ENOMEM;
  	}
  
- 	ql_dbg_pci(ql_dbg_init, ha->pdev, 0x000b,
 -- 
 2.53.0
 
