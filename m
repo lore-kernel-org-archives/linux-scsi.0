@@ -1,99 +1,79 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.48
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792448070;
-	b=ZhS7gMW8dF2xpz36t0meyp6mXfTO3MHFBMf0BkXz6ZoHlR6l8fq1wL2fQdTb6MTPDscn
-	 2ykTB5pzfbG5IH8T5XvCZwgFMJ0XbnOVfhxvpyyVFUX46RB3v5k1MbzH+9L0ror0BSWlU
-	 DCskT6ewbNcnTAJNmfsEjxjCtkI+eBGzUbhnu7OAYBQL6xaMsHp/R9Pfs82Q56I8Ttt5Q
-	 LoR6RsUVmAODN3+isW97ugItz3Tx7rK2/5hkmFG5pbI8f3YYvGTxx7ARTP3osjtrLDsTx
-	 CPWVShP5MWcNVDudZ4C3TzMcs3XSXDZYg+qVKYR18EJXV6Ma+FDwsFFaURwA+5ij9+g==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792448070;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
-	 Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=lZhdWSnfDKgW5o3GXJHt9J2xBtWTDX7lwKsBGbzGcUw=;
-	b=jUy3RSAelDTjVbvoQUSfULZHFKn1KXA0jjTRjJdpiguQZCvBlSZqMCLjF1xeTsJwdwz/
-	 s1BJ9/gEncHyf5DJcIXn4qgg5UXX1ITqMh8SzWCtXyzSyTtZeruh/8F+0+p3wSwgdhE6v
-	 Kh/LzhujIInwLEoVi7jEIDwqGDGbaOkDbkS4Bv7eD7C2tWmzyJhb/0LXbIWbVfPtQRQnT
-	 RkWHKCajeXgxk3e8kMulgO24Pfndk84nCalcx8nLyyETPZI3xumoHqYHgVKLM1WEM2wwp
-	 lfoC7O9e7GbLH9ZHXbYi2nifJ6O9TH3VSQj+dy+pb2ODAjs8aISDNBaAG+6oRXlJ+rg==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=purestorage.com;
-	spf=pass smtp.mailfrom=purestorage.com;
-	dkim=pass header.d=purestorage.com header.i=@purestorage.com header.a=rsa-sha256 header.s=google2022 header.b=IOkH6TO7;
-	arc=none smtp.remote-ip=74.125.82.48
-Received: from mail-dl1-f48.google.com (mail-dl1-f48.google.com [74.125.82.48])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1792448151;
+	b=FRyIIGb/0BCupcBSolzjwiQ1sWawHE1RBsWUh7IBLj8zQhuXT6pqlHZa/oa0zPYWxZGx
+	 ybQfQxNlR05MjTAKCo+OIGrhkYnzpblFnUZqi8sUVQTee/fr8VAowYoT3d6/dt8b2B0A+
+	 jxIJ8H4MXvF4Xyz6xk8wiTQsI1J3/Rfz6ngRbxhgRNWJ72oASDJWnQsARpIyf+yM076hS
+	 bcYNDcxpxmreVNR5nAhvjpzi+kFiQpYmWmKEpc5fHAPLT87K1f7TBEKcPYjX3lZXG2rqG
+	 +PK/HJ4dE2hwrZ2z6+UDv0NNdRxsUPgSPnjO4DusxA9R2hBp3cH7i97WEtAf/rAQOoA==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792448151;
+	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
+	 Content-Type:Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To:Content-Transfer-Encoding;
+	bh=C8U2KCtW2gkZ7Clqkc7+4hsRlGxw+1f7tFdd8uYfw3c=;
+	b=MjAiu0S4fk5F+p1/Z+Ja+OYOh0WPtP+KftkFf8p55X+Mou3Y1QXEbxuQgkZESulrXHK/
+	 MNYqvUw0Q4wx76qUwbadvXvwOhcc5MruVc6ymZIyy/Q/oPlzefkj7YUunHGZOnFeyrhWF
+	 MHzQXYSpT1si0oGxdpLXEuO0OieM8WOxj2BsVLaTa5bqdhnV0BGy9o5iY67D/HA9dCOeF
+	 z5KEMsDdpB2Xg25eNv8HUVYGmWlDFs12VlWUkGyWKCynlpSwLkjLRiBXDApRE+khdAb4B
+	 VYLYzc5GtexA2MSydRpT9qIvbO7H+clfaJ3Np5QrpdH2EoesYRmJSgU4R30+9zE4b6w==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=NoNRN5Pa;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A695D606A31B;
+	Mon, 19 Oct 2026 22:15:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=NoNRN5Pa
+Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
+ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
+	t=1792448150;
+	b=M/uMNA4OV3maeaJShNlv47pYjzQBGU9CLbgRpzKlJNnpSl1X18NhWSyJ7Bu0mdjRa8d4
+	 HKio6rBVaYQRa8pohz8WgfaDIp2VOd41wYCcnIuP0JuNuXevyZzWpOCpJrPE7vDbhMj8x
+	 KtSVaqq1qigXTxsCLizjauQwtpygycYzrG5sxSaDKwKxjivM6JsntRcUShLctU+2lc/mV
+	 rUpgjxz/Flo+zxbkPI9Oggm1drq9oVC8rTuCXSD4K1N5OTeGGrrfsjy8VrzfsF8RMllBs
+	 X2nOQTRkqw4ZOfhRYHeeQpNorylp1/bWLqDVNo+zfQUfnLm8q5O3MsIs4+qUwTpIZOA==
+ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
+	c=relaxed/relaxed; t=1792448150;
+	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
+	 Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To:Content-Transfer-Encoding;
+	bh=C8U2KCtW2gkZ7Clqkc7+4hsRlGxw+1f7tFdd8uYfw3c=;
+	b=3CldibCDgdf/sGK5kpVaMN7SSMPDSLno0XzDmYbzYuBdCdx4hSE/Q7mpH1Mjj1c3pxaU
+	 64QNhRs1u/5CFcx+aihTRon3APBZAkrVBeEJL1pveQ+8S4PYWbTlCISYZ3HFC85wytoN6
+	 0xcNhLJGOPRf/DIrrW72rOr6719SZsOS2zh6CAgHgXtOdsnaG/7zKMyDuwpA26gRdVHGf
+	 3FoAfDFCGKyeV7t33aklraY9X27fm9qSqPjYKmNM9yv0HrOP52utmsC6FpZWuSbcAje2U
+	 ex1TpePI9XT8n6o53Ye1YUcVNoh7Fnred5f25rI9jnXyuwE3Tqqc26nKMwRyEvKm9OA==
+ARC-Authentication-Results: i=1; smtp.kernel.org; 
+	arc=none smtp.remote-ip=100.80.115.77
+Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E49F7606A31F
-	for <linux-scsi@vger.kernel.org>; Mon, 19 Oct 2026 22:14:29 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E49F7606A31F
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=purestorage.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=purestorage.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=purestorage.com header.i=@purestorage.com header.a=rsa-sha256 header.s=google2022 header.b=IOkH6TO7
-Received: by mail-dl1-f48.google.com with SMTP id a92af1059eb24-16079d54c17so5572708c88.0
-        for <linux-scsi@vger.kernel.org>; Mon, 19 Oct 2026 15:14:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=purestorage.com; s=google2022; t=1792448069; x=1793052869; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=lZhdWSnfDKgW5o3GXJHt9J2xBtWTDX7lwKsBGbzGcUw=;
-        b=IOkH6TO7PLSwXhOxOw0H4E6dMTEItip+jhna0aiL+Vj6LZHDyongl5K+SsOAEAO8Qu
-         MKQYNNrrYGgLMvMPseQ57anEveEhcIV7MoY1L3jdghL253l7rMXzIE93bqvGJkDfr1aD
-         1rJhsSRwl5plRyMEPucYarpP/IT6ugS0qlG8sLe5BoBaXqXf/g/TF+H5esdJx2UbQjuX
-         X56m1L5RgsWjbylPnHRHkKiWLL//g2pgag+ccD7ISJpyt7PFnUZmN2UED7BXP9j+b2lV
-         JxC8J7/jdTcY9K0RX4SIZAP8QgDW2akYZ9JqTN+6Nqq6Iuhm8CT8WFssoZ/wSZt9ISZc
-         BDlw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792448069; x=1793052869;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=lZhdWSnfDKgW5o3GXJHt9J2xBtWTDX7lwKsBGbzGcUw=;
-        b=QlcZIDZ7W5dPabljOZ1+l6eMvq3osK7L0s8wYnHj/aqszGO4mbWoMElMTUgjWIzVR7
-         3ugEzOPN+F8/09wMpzQUAH7KlGfEO55Da6QvV3u6JMnzYY3A4qitbafAivkC4mpEIlj/
-         qU/DE7/+4z6WiEdYrNsOh3Pym2Gv55x3Y3nEcXjPlwnSTBxqddO7dtiwBwF3CBRG0Ckl
-         B4oQWYL89DwN7tzgfxw4lakD7+SDoke3IXA0leh3rEAe/NnhxCX7m+274o2TXutqLh+p
-         2HDyq/40C41v1H9uV8146guLA/YnbTHIUeZaj1Y4I0qeAcVS+oPsw+J9nlYAbr1+SVR7
-         M8+A==
-X-Gm-Message-State: AFq9FYIiivJ8qmX96epyr0CWtPJj35KEgGJRPaI3DTXFeOHBucbdx7PQ
-	f0q+b1EKGLt4tgDvTMtmCj5B42zSwGq7CUVDjvoreKgaJKHXR2yCQsHmgH07R9MBuF0aFbMtrbl
-	3J/wIRiQpDmN9IpNVFQs+bK/OV7BWRX6C6zafZSX3wTpopnTMEPLkEfpy0pXXwmc0EisDPoVLda
-	8x+FYX2TCots7jEWUQx/0DJ2ZkUHQ81yFFiVb2r/TXAYN6SolF3g==
-X-Gm-Gg: AYBFou2Sl6bN/jpoYTo/4V54ZNEJ2ewgo4ZkpxXVu17YEWt19su6gYzj+Zj5TYsO21T
-	CU0etL0NhIJg8Vcl431vdRH60wNmExqFDBlQcq1SYlfU02GcWf47u8Z76b2otT6e4cMNSnqwIjC
-	nq0G4efftFuPQ3xgEsiO0X5Q8lolIQGsG4Tus5173Iu7NgFZoDtmDWgzl+aUCkDtXgRYIxYZQn/
-	VXXR9l4Je6Y+2I4HkWB+V+X6P3tgEyUc9tkbnsrnn7jm91ZcHCjFtE1qxXlP0ypZ4+o3p+b07bN
-	sxWwTIxR2UPUyJtvpSDYKnreWEBfJQUo3MoMl0tfLJM5EKZsaLW5C7HqIXcgAtTqf0iWyqqXmw5
-	tarq0xtDC7iJP9LLHS0VrgHFbxlh02re8680p3jfzn/lZ6uoqmREpCZl4We5pTC7Bx+Fc9xlQOH
-	yH2q1vxPc0ncJUMa2PkNhNibC8GBKa/bZLpNHC33H6J6FkY+QurCozq8IiG/LLD2gJb/57WhEnI
-	/39XHWrNmJSjfidVzGg7VcN64mdcphyKpemU5iVFDpc11rokyMIx2Z8pcLaEqQ85IkYBVWsbbHJ
-	4IOKrJO0S2qPZJNOAK3wcrKXegUyObFUiSDEuF7dhgkDnUaK3X/lBCJCyzv6ECLoIgql1BQ=
-X-Received: by 2002:a05:701b:424d:10b0:166:af48:a2ba with SMTP id a92af1059eb24-18507af57eemr13916396c88.0.1792448068539;
-        Mon, 19 Oct 2026 15:14:28 -0700 (PDT)
-Received: from brian--MacBookPro18.purestorage.com ([170.85.204.106])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-18319d3b880sm29429839c88.10.2026.10.19.15.14.27
-        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Mon, 19 Oct 2026 15:14:28 -0700 (PDT)
-From: Brian Bunker <brian@purestorage.com>
-To: linux-scsi@vger.kernel.org
-Cc: "Martin K . Petersen" <mkp@kernel.org>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	James.Bottomley@HansenPartnership.com,
-	Hannes Reinecke <hare@suse.de>,
-	Bart Van Assche <bvanassche@acm.org>,
-	krishna.kant@purestorage.com,
-	Brian Bunker <brian@purestorage.com>
-Subject: [PATCH v8 5/5] scsi: core: Handle reprobe for existing devices during SCSI scan
-Date: Mon, 19 Oct 2026 15:14:04 -0700
-Message-ID: <20261019221405.40614-6-brian@purestorage.com>
-X-Mailer: git-send-email 2.56.0
-In-Reply-To: <20261019221405.40614-1-brian@purestorage.com>
-References: <20261019221405.40614-1-brian@purestorage.com>
+	by smtp.kernel.org (Postfix) with ESMTPS id BD3D51F000C8;
+	Mon, 19 Oct 2026 22:15:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1792448150;
+	bh=C8U2KCtW2gkZ7Clqkc7+4hsRlGxw+1f7tFdd8uYfw3c=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To;
+	b=NoNRN5PanC8iTmmDSh7t2n10LtHk7w5WDwRS182Gu+9vCL/oRTjNoiw1L976yZb1J
+	 PV0ekCivBuFd8Zc9Y3eDsjh9YxQppkvoeAj+F9X61R6o5M1an/k3kQ9m5gnbjIDUUS
+	 uqZcFB5YWd8V2dKwfMIAa8pHWfpu2+hu9q5gHfuW6njtzlwkJrV8nyKo+KcCPm6mpg
+	 fVzlag6hk8inTIvfZKhYhT5VRrvnTSTY7V3ERXnpYgFGJixez6hLPvJJ3Fh0zFov5m
+	 +6GsxnIKc8jiDoBJAMtZldA5mP9udnRbGhaQ3YyVdlJcMqinIBKkSdW4Snlo+rx5ip
+	 RYUeJbCQt/ojQ==
+Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
+	by lkml.kernel.org (Postfix) with ESMTP id 1F26040644;
+	Mon, 19 Oct 2026 22:15:49 +0000 (UTC)
+From: Dave Marquardt via B4 Relay <devnull+davemarq.linux.ibm.com@kernel.org>
+Date: Mon, 19 Oct 2026 17:15:46 -0500
+Subject: [PATCH v15 01/11] scsi: ibmvfc: fix IRQ leak and guard deregister
+ on channel reg failure
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -103,47 +83,83 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Message-Id: <20261019-ibmvfc-fpin-support-v15-1-a858726e178a@linux.ibm.com>
+References: <20261019-ibmvfc-fpin-support-v15-0-a858726e178a@linux.ibm.com>
+In-Reply-To: <20261019-ibmvfc-fpin-support-v15-0-a858726e178a@linux.ibm.com>
+To: Madhavan Srinivasan <maddy@linux.ibm.com>, 
+ Michael Ellerman <mpe@ellerman.id.au>, Nicholas Piggin <npiggin@gmail.com>, 
+ "Christophe Leroy (CS GROUP)" <chleroy@kernel.org>, 
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+ "Martin K. Petersen" <mkp@kernel.org>, 
+ Tyrel Datwyler <tyreld@linux.ibm.com>
+Cc: linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, 
+ linux-kernel@vger.kernel.org, Dave Marquardt <davemarq@linux.ibm.com>
+X-Mailer: b4 0.16.0
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1792448148; l=1764;
+ i=davemarq@linux.ibm.com; s=20260216; h=from:subject:message-id;
+ bh=sg9Lbgea4G1OveFwjkYaq90w+e+5hioGkpYGXVuzHdo=;
+ b=XHxxpKyKOPUSQxOCELptGm/YkrQMCTGpzBDPZT3aXC/9GvbutqZxbf8oQ/HxjEYHy0DP1Lav3
+ gEx5uFoozvHARXWZk0D/oz85SQm/10uimR2LWSk+IZxZRyzEONZAXFE
+X-Developer-Key: i=davemarq@linux.ibm.com; a=ed25519;
+ pk=vy0/nfobrje6EqZxuyw6a3ZstytG8WK2vf5Y3xtGrEg=
+X-Endpoint-Received: by B4 Relay for davemarq@linux.ibm.com/20260216 with
+ auth_id=689
+X-Original-From: Dave Marquardt <davemarq@linux.ibm.com>
+Reply-To: davemarq@linux.ibm.com
+Content-Transfer-Encoding: 7bit
 
-Complement scsi_rescan_device() reprobe by handling the scan path.
-When a manual or transport-initiated scan finds a LUN that already has
-a fully set up scsi_device, call scsi_rescan_device() for it so that
-changes to the standard INQUIRY data are picked up and the device is
-reprobed if its peripheral qualifier or device type changed.
+From: Dave Marquardt <davemarq@linux.ibm.com>
 
-The device lock is taken inside scsi_rescan_device() while the host's
-scan_mutex is held; that lock order is already used by
-scsi_remove_device(). Pseudo devices and devices that are still being
-set up by another scan are left alone.
+If request_irq() fails during ibmvfc_register_channel(), the error path
+disposes of the IRQ mapping via irq_dispose_mapping() but leaves scrq->irq
+populated with the stale virq number. A subsequent call to
+ibmvfc_deregister_channel() during teardown or reset cleanup then
+unconditionally invokes free_irq() and irq_dispose_mapping() on the stale
+IRQ descriptor, triggering kernel warnings.
 
-Co-developed-by: Krishna Kant <krishna.kant@purestorage.com>
-Signed-off-by: Krishna Kant <krishna.kant@purestorage.com>
-Signed-off-by: Brian Bunker <brian@purestorage.com>
+Fix this by:
+1. Explicitly setting scrq->irq to 0 after irq_dispose_mapping() in the
+   ibmvfc_register_channel() error path.
+2. Guarding free_irq() and irq_dispose_mapping() with a check for scrq->irq
+   in ibmvfc_deregister_channel() so unmapped or unregistered queues are
+   safely skipped.
+
+Signed-off-by: Dave Marquardt <davemarq@linux.ibm.com>
+Acked-by: Tyrel Datwyler <tyreld@linux.ibm.com>
 ---
- drivers/scsi/scsi_scan.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+ drivers/scsi/ibmvscsi/ibmvfc-core.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 87fd3ba5c3cc..c6424773c3f1 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -1156,6 +1156,16 @@ static int scsi_probe_and_add_lun(struct Scsi_Host *shost,
- 			SCSI_LOG_SCAN_BUS(3, sdev_printk(KERN_INFO, sdev,
- 				"scsi scan: device exists on %s\n",
- 				dev_name(&sdev->sdev_gendev)));
-+			/*
-+			 * Rescanning a device that has been fully set up:
-+			 * refresh its INQUIRY data so that peripheral
-+			 * qualifier or device type changes (e.g. ALUA state
-+			 * transitions) are picked up.
-+			 */
-+			if (rescan != SCSI_SCAN_INITIAL &&
-+			    !scsi_device_created(sdev) &&
-+			    !scsi_device_is_pseudo_dev(sdev))
-+				scsi_rescan_device(sdev);
- 			if (sdevp)
- 				*sdevp = sdev;
- 			else
+diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/ibmvfc-core.c
+index 0b154e07299c..7818838669ae 100644
+--- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
++++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
+@@ -6435,6 +6435,7 @@ static int ibmvfc_register_channel(struct ibmvfc_host *vhost,
+ 	if (rc) {
+ 		dev_err(dev, "Couldn't register sub-crq[%d] irq\n", index);
+ 		irq_dispose_mapping(scrq->irq);
++		scrq->irq = 0;
+ 		goto irq_failed;
+ 	}
+ 
+@@ -6463,9 +6464,11 @@ static void ibmvfc_deregister_channel(struct ibmvfc_host *vhost,
+ 
+ 	ENTER;
+ 
+-	free_irq(scrq->irq, scrq);
+-	irq_dispose_mapping(scrq->irq);
+-	scrq->irq = 0;
++	if (scrq->irq) {
++		free_irq(scrq->irq, scrq);
++		irq_dispose_mapping(scrq->irq);
++		scrq->irq = 0;
++	}
+ 
+ 	do {
+ 		rc = plpar_hcall_norets(H_FREE_SUB_CRQ, vdev->unit_address,
+
 -- 
 2.56.0
+
 
