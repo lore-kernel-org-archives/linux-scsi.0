@@ -1,66 +1,66 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=199.89.1.14
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=199.89.1.16
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792442016;
-	b=V7XykbKZJS4QrSTvihdVOFm4DEO62Cjfcsp+FXl8ZntDMhGpTRQFdvC+qT3Bx7YAMOVY
-	 Hn1NmEejtd0Ye617k7S9CrtFAjTbcpQSMMpPhEkQgcuHw1V78wgW4RHQs/HPfEAYpFDud
-	 QnqPX08/qc1PN/SGNsbpZ3S2lCCPNvQs6S269D+ApH4lXJpHCKGlkX0V/z0Xde2HLJrYa
-	 UcSs4AnFw+Xh0q7sSrYAxMlSpgy/aQwQU+3mR3oEwMRXL5RQ74cxTlA2r+K1xorHIxT9a
-	 lIjY3m7EOxoGpJ4WIe8yDZqdOJ/FvUiaQMrLsYQtVY8FSsEDPIyUgdXLKWbzdYwleDw==
+	t=1792442640;
+	b=H46Po/3nsJ7DYcHLDu9ycfs3mOP7ZjIkPNo5AbTy5WSszxy20gMBeoAlLRtknqPpZLdF
+	 JB+bLzYc+6Jr+/Qb6rgsCUWD2foFf7koMgbSbxrng6Fkv7MqJdiVvj0PWMnFf4UD4Qz+s
+	 3hkLKq6j5m7cMyKchRA6Uqto8AM+utYMPXDW1FuTHu0QrRHCw4w32qMrZPQYqIRZBwOY0
+	 fsMnSwo5X1SBCIrwOJ1UcIkP5uVK4+bwkmTKDAQnBwLaFUuDkBFQnDffZsEoUCZ6Wcz0l
+	 02iFQDw5bgzZLFFAkclnHiO2vqLqA/lbn3jvXODR2CBdVomkdXojHlbRIIvMIaYtcwQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792442016;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792442640;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Virus-Scanned:Received:
 	 Received:Message-ID:Date:MIME-Version:User-Agent:Subject:To:Cc:
 	 References:Content-Language:From:In-Reply-To:Content-Type:
 	 Content-Transfer-Encoding;
-	bh=ZqoytXf5ITNo48qVxQ8B8oufJFRCfKTNHeMZXX0L3jA=;
-	b=lJP+4MuWdpLrd9ktCN3RL/6EimDYY2dbeEGc4GCvCtuI+mymhT/QyN9ol0ElcakM+wbs
-	 3i5zIk7aTa1XLbZ4c8y2bwqvKnioRBRukWQxd+bdQ/ptj5EAddoPsQ1SdSdcsTp+zhRxw
-	 YL4Qyew45CQic/YsR8OVMxEqW6FmrkVwAOEWIW1qU9qCBORXH/zSfuSNNuOYfcZlJWw8R
-	 c4i9pAcRReo8UwwZlAVBIM57RQVVCzt12HbEo1ET+jUCEBADMfFj/X/b05itNixn6HRvj
-	 55YkJfd9h6p2XwTODkvD6vE6SIPwe+OoR8KmAkuFNqjjKT9JH3ZdZfwoAMW8U3Wm8gQ==
+	bh=U5m2BuDV1gmMh95uqNNkCLVlC0dsxerxNZCgV4VM2uQ=;
+	b=JkD3jqhwf4jn3/Y1IX2hALIhP5gn6tZDlxwoiGab1Z1nISy+gHh17Z1xSSbA5UDwCa1J
+	 9vIwHl9sAeM9bUkNoakqwTsQN2P/Ai6AnMBvSE1wTkvge6ix+qZo74Iwz543/CpyZdU6J
+	 aIAJcHRXXV8ayDGomGjsa9MOxV3iJMFsCoFCpOs0jjcFsIh2RpxSS3LbDOTdlf9kvUR3R
+	 Re7bChk3ZTp3COwQ5Z3M13bfo05dQ5r3Po44CHwKu3T5AW6HbhASgd5ElRpgws+xGWiQ5
+	 c5jZXBN20Zu5QtQxAbk0rUci5EpDXbkzT60A/vfg3g+A4GISPL8Nu8f2oaJfvHIVVXQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=acm.org;
 	spf=pass smtp.mailfrom=acm.org;
-	dkim=pass header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=Qi+fcTNn;
-	arc=none smtp.remote-ip=199.89.1.14
-Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
+	dkim=pass header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=EKqAkVfW;
+	arc=none smtp.remote-ip=199.89.1.16
+Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5883F606A31C;
-	Mon, 19 Oct 2026 20:33:36 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5883F606A31C
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DD90606A31B;
+	Mon, 19 Oct 2026 20:44:00 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4DD90606A31B
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=Qi+fcTNn
+	dkim=pass (2048-bit key, unprotected) header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=EKqAkVfW
 Received: from localhost (localhost [127.0.0.1])
-	by 011.lax.mailroute.net (Postfix) with ESMTP id 4j7nLl5dr8z1XM4Tn;
-	Mon, 19 Oct 2026 20:33:35 +0000 (UTC)
+	by 013.lax.mailroute.net (Postfix) with ESMTP id 4j7nZl59NlzlfvpT;
+	Mon, 19 Oct 2026 20:43:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:content-language:references:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1792442012; x=1795034013; bh=ZqoytXf5ITNo48qVxQ8B8ouf
-	JFRCfKTNHeMZXX0L3jA=; b=Qi+fcTNnDhW7cf5w9SHuU+qUyUA5byaq0TVPUT7j
-	Alt6hePI0FRosAOEIaMwMRKQY5AANGKwqXn1EX/PD33YhEzKUyktpccPl+KJq5jk
-	swQNMiyCJ5R2YDU85EX7qygQInVhOSEmOoUsDCz+J6kxN48f2jWP3hbx4/DooIEo
-	iLOIWUGcaZY4/56wp4tlR2d2S6uJBAtfP+eWT7B4QGrHlcxN7lI81+R+pab/Yq1Q
-	0JwL31thmCPfH8HxdAI0rcglFhHHhro/igB3QOcDCmtqJs7BDOr6BZyR0gUbK7Mt
-	WDiKWFS8y2FhqcRDZQakSgqaJ8uC3X6wWKH0J9ZsvOsJSQ==
+	 s=mr01; t=1792442635; x=1795034636; bh=U5m2BuDV1gmMh95uqNNkCLVl
+	C0dsxerxNZCgV4VM2uQ=; b=EKqAkVfWMA11zoBp9wyZMphVAigq4Z6kplOLFr2b
+	3vWj3BzPya4XZBGpdqdcAgySGzsGE0Ig9o4eyNYXuoqlv5Zo07+dIoAIHKHsnOLV
+	tnJm5froySMqtj+Xv3ctRcPTEoj3kPi0EwVvonJxqV/K5JHx3rgJXhGl4+galR4O
+	1w7PG2LmV5lNGxGlKaYnDTKxa8TL63gC2cNXjCU66qR9zrX8GndYImTjoSwhZ9H2
+	7buA7ZcwUHbPro4sZN0fEjHD2B8yfAZas7Hy7b6ktk3Mep8CeFG6+ZZ+qFNdS7LZ
+	lYX7vNRmnpIunr2lLE87mEbxRu0PlwRR3PL5qCCyNmWJKg==
 X-Virus-Scanned: by MailRoute
-Received: from 011.lax.mailroute.net ([127.0.0.1])
- by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 1iO_oSIpXFxk; Mon, 19 Oct 2026 20:33:32 +0000 (UTC)
-Received: from [IPV6:2a00:79e0:2ed2:d:80ed:7b96:75c0:6989] (unknown [104.135.182.41])
+Received: from 013.lax.mailroute.net ([127.0.0.1])
+ by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id rQInMFPKngAg; Mon, 19 Oct 2026 20:43:55 +0000 (UTC)
+Received: from [100.80.231.125] (unknown [104.135.182.41])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4j7nLg5kNVz1XM4Tl;
-	Mon, 19 Oct 2026 20:33:31 +0000 (UTC)
-Message-ID: <035f0183-a748-4eaa-a6a6-a358944535fa@acm.org>
-Date: Mon, 19 Oct 2026 13:33:30 -0700
+	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4j7nZf3LWqzlfvpH;
+	Mon, 19 Oct 2026 20:43:54 +0000 (UTC)
+Message-ID: <2060a8da-581b-46d1-a510-779f4df716cd@acm.org>
+Date: Mon, 19 Oct 2026 13:43:52 -0700
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -71,44 +71,48 @@ List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 2/6] scsi: sr: release CDDA request before copying to
- userspace
-To: Wang Yingjie <x-professor@outlook.com>,
- "James.Bottomley@HansenPartnership.com"
- <James.Bottomley@HansenPartnership.com>, "mkp@kernel.org" <mkp@kernel.org>
-Cc: "yangxiuwei@kylinos.cn" <yangxiuwei@kylinos.cn>,
- "axboe@kernel.dk" <axboe@kernel.dk>,
- "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
- "io-uring@vger.kernel.org" <io-uring@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "stable@vger.kernel.org" <stable@vger.kernel.org>
-References: <cover.1792237341.git.x-professor@outlook.com>
- <94d7bdf7391f208b74ba98988c2a52c939d689e6.1792237341.git.x-professor@outlook.com>
+Subject: Re: [PATCH v2 0/4] scsi: ufs: core: Factor hba->outstanding_reqs
+ helper and fix double completion
+To: Bean Huo <beanhuo@iokpp.de>, Stanley Jhu <stanleyjhu@google.com>,
+ "Martin K . Petersen" <mkp@kernel.org>, linux-scsi@vger.kernel.org
+Cc: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+ Alim Akhtar <alim.akhtar@samsung.com>, Bean Huo <beanhuo@micron.com>,
+ Peter Wang <peter.wang@mediatek.com>, Can Guo <can.guo@oss.qualcomm.com>,
+ linux-kernel@vger.kernel.org, stable@vger.kernel.org
+References: <20261017084403.875420-1-stanleyjhu@google.com>
+ <2e042211ca0ebc974ad5ec4c0de9f3f93b3c75c0.camel@iokpp.de>
 Content-Language: en-US
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <94d7bdf7391f208b74ba98988c2a52c939d689e6.1792237341.git.x-professor@outlook.com>
+In-Reply-To: <2e042211ca0ebc974ad5ec4c0de9f3f93b3c75c0.camel@iokpp.de>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On 10/18/26 8:41 AM, Wang Yingjie wrote:
-> diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-> index c36c54ecd354..de43d6e56479 100644
-> --- a/drivers/scsi/sr.c
-> +++ b/drivers/scsi/sr.c
-> @@ -968,8 +968,11 @@ static int sr_read_cdda_bpc(struct cdrom_device_info *cdi, void __user *ubuf,
->   		ret = -EIO;
->   	}
->   
-> +	blk_mq_free_request(rq);
->   	if (blk_rq_unmap_user(bio))
->   		ret = -EFAULT;
-> +	return ret;
-> +
->   out_put_request:
->   	blk_mq_free_request(rq);
->   	return ret;
+On 10/18/26 12:52 PM, Bean Huo wrote:
+> One more place has the same problem. In ufshcd_abort(), the "cmd was completed,
+> but without a notifying intr" path completes the request but leaves its bit set
+> in hba->outstanding_reqs:
+> 
+> if (!hba->mcq_enabled && !(reg & (1 << tag))) {
+> 	...
+> 	 __ufshcd_transfer_req_compl(hba, 1UL << tag);
+> 	...
+> }
+> 
+> 
+> could use the new helper in the same way as patch 2?
+> 
+> 
+>   if (ufshcd_clear_outstanding_reqs(hba, BIT(tag)))
+> 	ufshcd_compl_one_cqe(hba, tag, NULL);
 
-This change triggers a use-after-free because blk_mq_free_request() 
-calls bio_put(), isn't it?
+Hi Bean,
+
+There are two problems with calling ufshcd_compl_one_cqe() from
+ufshcd_abort():
+* ufshcd_compl_one_cqe() must only be called for SCSI commands while
+   'tag' may refer to a device management command.
+* SCSI commands must not be freed by a SCSI abort handler. Otherwise
+   a use-after-free may be triggered in scmd_eh_abort_handler() when it
+   tries to call scsi_queue_insert() or scsi_finish_command().
 
 Bart.
