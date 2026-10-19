@@ -1,79 +1,57 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1792448154;
-	b=lt88dTM1NYECKS0JmdEY0KVvAr8PiPwKagVZoNY9gQ4lSbFbkpqFmGETpMvVYtE9xWYl
-	 +siABU2Mi0S/pQAYfGf4nyHZotj8dUOP9yEujwkVU+6upenrwUOlRpuCaozNvq+nbkL5a
-	 zEGLDN0Liq+UEJPjABSZnGpEAiB5i5NCLlVfaC710CLTsGkrAjsmYCDzKe/ypBKL5jiAW
-	 9XUDTFDft9XZ72YZwpqqEalEKJlu9jU1HZRiD4ohthBTeDgA9pymrJH1kSYHQV886dUZq
-	 Erbma/ai4fS5DlcGo4v57M+cvKyEAPgX6jxR9NgvbqcJQcwRKFeGNDLHNVh9j3LVrKg==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792448154;
-	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
-	 Content-Type:Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
-	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
-	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=1SsAn/4D2KY8LrxXXAic0O4wc9gDlFfVuJBtWgZjhik=;
-	b=zn80yQaZQU52aJM/JqoKYJI7BAbYVP9HZdH80xMAhpELGtioG4CB8lSExEcMF/f95D3y
-	 aytfwHoFlk+YM3SMdE1Fa1VdzEmtA/zGrWO6Qqap9QGmDaTWLT+lVUjQdcla8B8OzyQ5H
-	 LdPoDqnS3atjZSEhUiKXFm/h0+OGKUeBscoooVTnL4bqBugqEsM42vABd4gWy1xCdj0SM
-	 bjmwpVkgzzer/+Gl1q66F//g5YwX/Jo6dGw5DG7lZZ+bGnI5Y3oJHwjS4FmAgGXv4PGRf
-	 yO/mdcTYhO3G5zetXvH/yr31E4XQb0FdYTn+fjtTf1qu9l0LdqyGBuasJjynxVgn8bA==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=bYkwTALH;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1792448775;
+	b=Q3nnHqPTP3ds/epD2C0MIoYnLRWceTglHYiCSNIqSBedOSpKXVxd2GCSsQD2QZ+SWlFn
+	 9mw9nx/3/mzN79gA/ApOKS3bztSbC1gArswzkc6HsRqEYV33jLBfQ7kAblFNYtMFPHGyL
+	 igyVPvfr4PmeiBWta3T3JuVJy3k8zqwjvH6tzUpQCnH+CjAr1AKD/O64aGkWPWkZI8A8/
+	 cFQfeQ2OdXDdd1Mpyq0QsqWTLlRBBqzqq2hiMr+Vbz1K5m/Cdm0KlJ1P/5dd0/dLDcm9i
+	 bCz/NKNp/9rqk6VxvKslLWsW1X4ZUFRslr+6TWFJYUGOjob3aIrFqD3zcyGsqjOpXGQ==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792448775;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=LlRL0+VYpIOHaaECalTh2x0CubxvgZCHa9dYckpKbm4=;
+	b=sp4/zo5cHycMowkItrL72iqRjv96A8BGPgXKE7CSv1iZIKba8QwaFZA9sYDeZpEI/Xdr
+	 92IJmFD7+TvZSXQBMMLVYz37QIGl7D1ZrFslKcdhpx0fAkvd/3Q+tM2RAI3cpbht6iSKd
+	 SDSr+FloMOh6uRujzW4Yk90lXei+bEKe668AaROzT0mxCH8ioVHrGpNxLS+Xvf0vG+raK
+	 Xe9PWe8pyHFRNljjHwo7N08lPgs4iTM7tkbM0ZmdKutfjcyvSDiUtyLiWUH8J9HdaxrnG
+	 ONUyD2nbTNDSYWyBi9zhA6z5EGqpM4aj195Zwei4F9G5wH4il82HjEimIVBvmpoUCeg==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="JRpE/Oih";
+	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F95960A260D;
-	Mon, 19 Oct 2026 22:15:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A62EC606A319
+	for <linux-scsi@vger.kernel.org>; Mon, 19 Oct 2026 22:26:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=bYkwTALH
-Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
-ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
-	t=1792448154;
-	b=kSB1Iz0gufp1l26JULcV1o86K80KuuBoeSFWps/Rg8IJrll++7hDbkcf2Ojk1chWSKk4
-	 daQdzDyx9nfmDcM70GvBXrpD7K4Eur4zBXK5bw4O8CaghvxfqvFQ+FZY18HcOyfIRZzDT
-	 cB0mw+rqAiJsycD8Q5VaqXNXDBLI19wMzv3hoVnDzEHfNOh99EOh9RUgZQRMo2P6TXCt2
-	 w7gtBX5XG1HMGJULEQQjPu9F66hrV0dL800NNJ6Is78DflISLlyGw3fSyD0MRnpEF7Pvy
-	 myfKZbJ1f3Z5uDt0XE5yL0ufW2etHV4egwDeFGhRIbEXbUlMs5Tuspz0bJqED+a3TTg==
-ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
-	c=relaxed/relaxed; t=1792448154;
-	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
-	 Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
-	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
-	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=1SsAn/4D2KY8LrxXXAic0O4wc9gDlFfVuJBtWgZjhik=;
-	b=y7uL0HgnfNsouMiEgXioNeiRnsPSCpI1rWgQVugP/g1fZ2UvQ29XK2cfxsKuiecVE3zF
-	 tRvO0ZIbBGnEhTKaF2gN1/o/cG/lfjKgwsrpwTdvkWrSwGaM+qY27SVYN0iDSJKxGbXjV
-	 8HSnPhprH/6vAR/b4YOiHCWS96Fsqj1cH11ydasBXkRuGUCsY5AMTzRldszYhJX1u2iCG
-	 0gFHHsimyvxUnYsUw5v5LFPKhPqtOTDX3iPm127oADQtm0CWJLkxIWGQd7jZ6936TmVnN
-	 h8UAmN+RvBOwo0r37hsGW6b11DGT7CloIrawv0uDCqUJiUSI+Mj1oWIhutjjbeDAR0g==
-ARC-Authentication-Results: i=1; smtp.kernel.org; 
-	arc=none smtp.remote-ip=100.80.115.77
-Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
-	(No client certificate requested)
-	by smtp.kernel.org (Postfix) with ESMTPS id 7C1E11F000CB;
-	Mon, 19 Oct 2026 22:15:51 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=JRpE/Oih
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0B71D1F000C4;
+	Mon, 19 Oct 2026 22:26:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792448154;
-	bh=1SsAn/4D2KY8LrxXXAic0O4wc9gDlFfVuJBtWgZjhik=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To;
-	b=bYkwTALHV+njm1Y1HifTYYB2GWPiSX1vSy8JJBEs6W+Ua7wXfGbCRij+GtCjPm+Wm
-	 6UlKpT12C71skZ6OknL60+posaULWMf3OljWIsrF1JXvVCPzB11WcIjbYx7iMKhD5M
-	 YK6T1pcQeWZ5YEsdMp322OOYRfIvKBJtwpb/G+PZUBhU+XQJtE6JI6q7TJj1pSYqHA
-	 eLTzn7jLXMnWv5biiqyVupYGtHKLs5Rqiz8ILnhkxqzsdeBMDwZXG4C/a+sNmEB+se
-	 EloZcCZWQwdTxfETPlKaHb8aqhM/tdmSms0rXs7SCfarCsEUMKM7882/CTfgLNdeRU
-	 GMNr2kcGa+pYw==
-Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
-	by lkml.kernel.org (Postfix) with ESMTP id 4774D40677;
-	Mon, 19 Oct 2026 22:15:49 +0000 (UTC)
-From: Dave Marquardt via B4 Relay <devnull+davemarq.linux.ibm.com@kernel.org>
-Date: Mon, 19 Oct 2026 17:15:53 -0500
-Subject: [PATCH v15 08/11] scsi: ibmvfc: add interrupt routine for
- asynchronous sub CRQ
+	s=k20260515; t=1792448774;
+	bh=LlRL0+VYpIOHaaECalTh2x0CubxvgZCHa9dYckpKbm4=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=JRpE/Oihe2tPHoOdKDMWNekn7ZH/g7Bpd0yWJ7v2LdvBt7PhURqZmTPDS7gXC4QNC
+	 0KmaRyDazHkOOYd7NdkgGnMuvQOEIFLiBXYJJAEKtRJDeTZA35Fb1I7aQ40BcvYRfX
+	 0TglTJyvU+oSo+ndos9ptF6waDnMPqZZKx0xIiK2M3kObIgAj4lzKTj5GpyIXu6PYj
+	 hq3El4/bAa2lH6D32Tk/Md/t+3drhru8MAuaagd6OcfReQPlVRY++CLiCBz/M+jvRu
+	 wD8tSKr3I0c8PvOOKeJK0p2Kqf5i2JzL+Ay5ASEJZgizdjLvO3df8GaHB28aOOSWJF
+	 3b01EmfwLogfQ==
+Message-ID: <sashiko-outbox-178317@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v15 10/11] scsi: ibmvfc: register and use asynchronous
+ sub CRQ for events
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Dave Marquardt" <davemarq@linux.ibm.com>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20261019-ibmvfc-fpin-support-v15-10-a858726e178a@linux.ibm.com>
+References: <20261019-ibmvfc-fpin-support-v15-0-a858726e178a@linux.ibm.com>
+ <20261019-ibmvfc-fpin-support-v15-10-a858726e178a@linux.ibm.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 19 Oct 2026 22:26:13 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -82,139 +60,175 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Message-Id: <20261019-ibmvfc-fpin-support-v15-8-a858726e178a@linux.ibm.com>
-References: <20261019-ibmvfc-fpin-support-v15-0-a858726e178a@linux.ibm.com>
-In-Reply-To: <20261019-ibmvfc-fpin-support-v15-0-a858726e178a@linux.ibm.com>
-To: Madhavan Srinivasan <maddy@linux.ibm.com>, 
- Michael Ellerman <mpe@ellerman.id.au>, Nicholas Piggin <npiggin@gmail.com>, 
- "Christophe Leroy (CS GROUP)" <chleroy@kernel.org>, 
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
- "Martin K. Petersen" <mkp@kernel.org>, 
- Tyrel Datwyler <tyreld@linux.ibm.com>
-Cc: linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, 
- linux-kernel@vger.kernel.org, Dave Marquardt <davemarq@linux.ibm.com>
-X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1792448148; l=3347;
- i=davemarq@linux.ibm.com; s=20260216; h=from:subject:message-id;
- bh=Eh62A6Y+lUfh8f/4MfnlRnZuPDVmZGcaIx37w0Ng5Nk=;
- b=lmal3ZJbbuXVU+J5raFMWwUbcZohCA5sCclg4BawB9XPE5od/3xkcuFdf7j/W0qC/N+CMq9Ex
- Xkc59LGpcayBikZLgOvCZ/+cex83yGJQ+p34p8/+PMQyFo1Nx60lSpS
-X-Developer-Key: i=davemarq@linux.ibm.com; a=ed25519;
- pk=vy0/nfobrje6EqZxuyw6a3ZstytG8WK2vf5Y3xtGrEg=
-X-Endpoint-Received: by B4 Relay for davemarq@linux.ibm.com/20260216 with
- auth_id=689
-X-Original-From: Dave Marquardt <davemarq@linux.ibm.com>
-Reply-To: davemarq@linux.ibm.com
-Content-Transfer-Encoding: 7bit
 
-From: Dave Marquardt <davemarq@linux.ibm.com>
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [High] scsi: ibmvfc: clearing mq_enabled in ibmvfc_reg_sub_crqs() skips d=
+eregistration
+- [High] scsi: ibmvfc: ibmvfc_init_sub_crqs() ignores ibmvfc_reg_sub_crqs()=
+ failures
+--
 
-Add ibmvfc_interrupt_async_subq(), an IRQ handler dedicated to
-asynchronous sub-CRQ events from the adapter. The handler disables
-the sub-CRQ IRQ and then calls ibmvfc_drain_async_subq() to consume
-all pending entries before re-enabling interrupts.
+commit 97f68806c8ca0b8cd795db2454a75c5e092d7ae9
+Author: Dave Marquardt <davemarq@linux.ibm.com>
 
-Add ibmvfc_next_async_scrq() to traverse the async sub-CRQ ring
-directly via msgs.async_scrq[], returning a typed
-struct ibmvfc_async_sub_crq * without the cast that would be needed
-when going through ibmvfc_next_scrq().
+scsi: ibmvfc: register and use asynchronous sub CRQ for events
 
-ibmvfc_drain_async_subq() holds the host lock and per-queue q_lock
-while processing. It loops over available entries via
-ibmvfc_next_async_scrq(), wrapping each in a struct
-ibmvfc_async_crq_event and dispatching to ibmvfc_handle_async(),
-then clears the valid bit and issues a write barrier. After draining,
-it re-enables the sub-CRQ IRQ and performs one final check for a
-newly arrived entry to close the IRQ-enable race; if one is found it
-is processed before exiting the loop.
+This commit wires the asynchronous sub-CRQ into the sub-CRQ lifecycle by
+allocating, registering, and freeing vhost->async_scrqs alongside the SCSI
+and NVMe channel queues. It also updates channel setup and login info to
+handle the async sub-CRQ and multi-queue capabilities.
 
-Signed-off-by: Dave Marquardt <davemarq@linux.ibm.com>
-Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
----
- drivers/scsi/ibmvscsi/ibmvfc-core.c | 66 +++++++++++++++++++++++++++++++++++++
- 1 file changed, 66 insertions(+)
+> diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/=
+ibmvfc-core.c
+> index 7e012281d368c..0d603542fe348 100644
+> --- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
+> +++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
 
-diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/ibmvfc-core.c
-index eeba6e6b3cae..c1ee8eb57491 100644
---- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
-+++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
-@@ -4385,6 +4385,72 @@ static struct ibmvfc_crq *ibmvfc_next_scrq(struct ibmvfc_queue *scrq)
- 	return crq;
- }
- 
-+static struct ibmvfc_async_sub_crq *ibmvfc_next_async_scrq(struct ibmvfc_queue *scrq)
-+{
-+	struct ibmvfc_async_sub_crq *crq;
-+
-+	crq = &scrq->msgs.async_scrq[scrq->cur];
-+	if (crq->valid & 0x80) {
-+		if (++scrq->cur == scrq->size)
-+			scrq->cur = 0;
-+		rmb();
-+	} else
-+		crq = NULL;
-+
-+	return crq;
-+}
-+
-+static void ibmvfc_drain_async_subq(struct ibmvfc_queue *scrq)
-+{
-+	struct ibmvfc_host *vhost = scrq->vhost;
-+	struct ibmvfc_async_crq_event ae = {
-+		.type = IBMVFC_ASYNC_CRQ_SUB,
-+	};
-+	struct ibmvfc_async_sub_crq *crq;
-+	unsigned long flags;
-+	int done = 0;
-+
-+	spin_lock_irqsave(&vhost->host->host_lock, flags);
-+	spin_lock(scrq->q_lock);
-+	while (!done) {
-+		while ((crq = ibmvfc_next_async_scrq(scrq)) != NULL) {
-+			ae.subq = *crq;
-+			ibmvfc_handle_async(&ae, scrq->vhost);
-+			crq->valid = 0;
-+			wmb();	/* complete write */
-+		}
-+
-+		ibmvfc_toggle_scrq_irq(scrq, 1);
-+		crq = ibmvfc_next_async_scrq(scrq);
-+		if (crq != NULL) {
-+			ae.subq = *crq;
-+			ibmvfc_toggle_scrq_irq(scrq, 0);
-+			ibmvfc_handle_async(&ae, scrq->vhost);
-+			crq->valid = 0;
-+			wmb();	/* complete write */
-+		} else
-+			done = 1;
-+	}
-+	spin_unlock(scrq->q_lock);
-+	spin_unlock_irqrestore(&vhost->host->host_lock, flags);
-+}
-+
-+/**
-+ * ibmvfc_interrupt_async_subq - Handle an async event from the adapter
-+ * @irq:           interrupt request
-+ * @scrq_instance: async subq
-+ *
-+ **/
-+static irqreturn_t __maybe_unused ibmvfc_interrupt_async_subq(int irq, void *scrq_instance)
-+{
-+	struct ibmvfc_queue *scrq = (struct ibmvfc_queue *)scrq_instance;
-+
-+	ibmvfc_toggle_scrq_irq(scrq, 0);
-+	ibmvfc_drain_async_subq(scrq);
-+
-+	return IRQ_HANDLED;
-+}
-+
- static void ibmvfc_drain_sub_crq(struct ibmvfc_queue *scrq)
- {
- 	struct ibmvfc_crq *crq;
+[ ... ]
 
--- 
-2.56.0
+> @@ -6977,6 +6995,7 @@ EXPORT_SYMBOL_IF_KUNIT(ibmvfc_deregister_channel);
+>  static void ibmvfc_reg_sub_crqs(struct ibmvfc_host *vhost,
+>  				struct ibmvfc_channels *channels)
+>  {
+> +	unsigned long flags;
+>  	int i, j;
+> =20
+>  	ENTER;
+> @@ -6987,7 +7006,10 @@ static void ibmvfc_reg_sub_crqs(struct ibmvfc_host=
+ *vhost,
+>  		if (ibmvfc_register_channel(vhost, channels, i)) {
+>  			for (j =3D i; j > 0; j--)
+>  				ibmvfc_deregister_channel(vhost, channels, j - 1);
+> +			spin_lock_irqsave(&vhost->host->host_lock, flags);
+>  			vhost->do_enquiry =3D 0;
+> +			vhost->mq_enabled =3D 0;
+> +			spin_unlock_irqrestore(&vhost->host->host_lock, flags);
+>  			return;
+>  		}
+>  	}
 
+[Severity: High]
+Does clearing vhost->mq_enabled here prevent previously registered channel
+sets from ever being deregistered?
 
+In ibmvfc_init_sub_crqs(), ibmvfc_reenable_crq_queue(), and
+ibmvfc_reset_crq(), channel sets are registered sequentially:
+
+	ibmvfc_reg_sub_crqs(vhost, &vhost->async_scrqs);
+	ibmvfc_reg_sub_crqs(vhost, &vhost->scsi_scrqs);
+	ibmvfc_reg_sub_crqs(vhost, &vhost->nvme_scrqs);
+
+If ibmvfc_reg_sub_crqs() succeeds for vhost->async_scrqs (or
+vhost->scsi_scrqs), and then fails on a later call for vhost->scsi_scrqs or
+vhost->nvme_scrqs, the error path in ibmvfc_reg_sub_crqs() only unwinds the
+current channels set and sets vhost->mq_enabled =3D 0, leaving the earlier
+channel sets registered with the hypervisor and their Linux IRQs active.
+
+Because ibmvfc_dereg_sub_crqs() guards deregistration on vhost->mq_enabled:
+
+	if (!vhost->mq_enabled || !channels->scrqs)
+		return;
+
+	for (i =3D 0; i < channels->max_queues; i++)
+		ibmvfc_deregister_channel(vhost, channels, i);
+
+all subsequent calls to ibmvfc_dereg_sub_crqs() in
+ibmvfc_reenable_crq_queue(), ibmvfc_reset_crq(), and
+ibmvfc_release_sub_crqs() will return early without calling
+ibmvfc_deregister_channel().
+
+When ibmvfc_release_sub_crqs() later runs during teardown,
+ibmvfc_dereg_sub_crqs() is skipped while ibmvfc_release_channels()
+unconditionally unmaps and frees each queue page (scrq->msgs.handle) and
+kfree()s channels->scrqs. Doesn't this leak the hypervisor sub-CRQ
+registrations and kernel IRQs, leaving the IRQ handler and hypervisor
+referencing freed scrq slab memory and DMA pages?
+
+[ ... ]
+
+> @@ -7081,9 +7084,53 @@ static void ibmvfc_release_channels(struct ibmvfc_=
+host *vhost,
+>  	}
+>  }
+> =20
+> +static void ibmvfc_init_sub_crqs(struct ibmvfc_host *vhost)
+> +{
+> +	unsigned long flags;
+> +
+> +	ENTER;
+> +	if (!vhost->mq_enabled)
+> +		return;
+> +
+> +	/* register async_sub_crq channel */
+> +	if (ibmvfc_alloc_channels(vhost, &vhost->async_scrqs))
+> +		goto out;
+> +
+> +	ibmvfc_reg_sub_crqs(vhost, &vhost->async_scrqs);
+> +
+> +	if (ibmvfc_alloc_channels(vhost, &vhost->scsi_scrqs))
+> +		goto deregister_async_sub_crq;
+> +
+> +	ibmvfc_reg_sub_crqs(vhost, &vhost->scsi_scrqs);
+> +
+> +	if (vhost->nvme_enabled) {
+> +		if (ibmvfc_alloc_channels(vhost, &vhost->nvme_scrqs)) {
+> +			spin_lock_irqsave(&vhost->host->host_lock, flags);
+> +			vhost->nvme_enabled =3D 0;
+> +			spin_unlock_irqrestore(&vhost->host->host_lock, flags);
+> +		} else
+> +			ibmvfc_reg_sub_crqs(vhost, &vhost->nvme_scrqs);
+> +	}
+> +
+> +	LEAVE;
+> +	return;
+> +
+> +deregister_async_sub_crq:
+> +	ibmvfc_dereg_sub_crqs(vhost, &vhost->async_scrqs);
+> +	ibmvfc_release_channels(vhost, &vhost->async_scrqs);
+> +out:
+> +	spin_lock_irqsave(&vhost->host->host_lock, flags);
+> +	vhost->do_enquiry =3D 0;
+> +	vhost->mq_enabled =3D 0;
+> +	spin_unlock_irqrestore(&vhost->host->host_lock, flags);
+> +}
+
+[Severity: High]
+The commit message states that in ibmvfc_init_sub_crqs(), failure of either
+ibmvfc_alloc_channels() or ibmvfc_reg_sub_crqs() disables multi-queue and
+aborts init. However, ibmvfc_reg_sub_crqs() returns void and its failure is
+not checked here.
+
+If ibmvfc_reg_sub_crqs(vhost, &vhost->async_scrqs) fails, should
+ibmvfc_init_sub_crqs() release vhost->async_scrqs and return rather than
+continuing to allocate vhost->scsi_scrqs and vhost->nvme_scrqs?
+
+Similarly, if ibmvfc_reg_sub_crqs(vhost, &vhost->scsi_scrqs) fails after
+vhost->async_scrqs has been registered, shouldn't it release
+vhost->scsi_scrqs and jump to deregister_async_sub_crq so vhost->async_scrqs
+is deregistered and released instead of proceeding to allocate
+vhost->nvme_scrqs?
+
+[ ... ]
+
+> +static void ibmvfc_release_sub_crqs(struct ibmvfc_host *vhost)
+>  {
+>  	ENTER;
+> +	ibmvfc_dereg_sub_crqs(vhost, &vhost->async_scrqs);
+> +	ibmvfc_release_channels(vhost, &vhost->async_scrqs);
+> +
+>  	if (!vhost->scsi_scrqs.scrqs)
+>  		return;
+
+[ ... ]
+
+>
+>
+>
+>
+
+[]
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261019-ibmvfc-fpi=
+n-support-v15-0-a858726e178a@linux.ibm.com?part=3D10
