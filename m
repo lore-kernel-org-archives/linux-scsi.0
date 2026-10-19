@@ -1,66 +1,74 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=199.89.1.16
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792445647;
-	b=Lx/tstiOdrb9rt3xnTgaKg7Bl7tMxYZSA8jnvQjZEWYB+GPkYfwE/QCQnGi9jNFwThRd
-	 IL9SH2/2YItDfLmGgkZ0kHQQZXKr9ZfDApEPKx7cVvpu8A8RE9weG0RkYASOO14DGN9lI
-	 7rLt0mtqrwIAHetygOzT4JOvYfxpajGH5eH33GcQYmlTDJySzMMPoD2SPISxOcN5RKvnJ
-	 H5Bkfbg0gjfm5FIGaSzwtoQKdVsgli7OCz3YcKEbewkzFqgz2lamxHoh8SwMtWgKX0y87
-	 EJtmC4qnoCRMd4CmsBgt4PO8pQnMxR8rEsxEDNZey4+AqEeRjORpeWKOH6Pa2RCLXVw==
+	t=1792446946;
+	b=uxPM02NE6TY9rBXS5Nd606kK7XLlPJ8b53PQ19kxOkUMolbPRoAtDH06amg8O7yk2wSf
+	 r/eeVWRhYApt/oExPK11weSAkfhMxeEmp8fXJ7ECidhcmM8RcMmn/fIKcgvJVKFPh3mT3
+	 3lhXP4X2X2ZNwTyxakIqzkk4xI9GhdWc+hR+H/CPmh3pHDfcTZaghey7/Cq/bG3N6npM2
+	 xT1yUTqvO1WBHLOEDyFyuXIfvxvlrkomaT65rKE6FZtNj6KCmyrzsEiTpP6+CGRlJsgMg
+	 dQTdp7riPSbDscDCQCoIbNZbHEsOi2O7wRBHu+utsFeZ5jdokWVOJvucJJBrljtoQHw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792445647;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792446946;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Virus-Scanned:Received:
-	 Received:Message-ID:Date:MIME-Version:User-Agent:Subject:To:Cc:
-	 References:Content-Language:From:In-Reply-To:Content-Type:
+	 Received:From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=5E7RzlaDuAw9uKwHLzxHAh7RmcEba2LCM1IqL7WsLws=;
-	b=I7QY+TKOknwrLHR3QxCxEJ+fK1lHcgA+laD+mdnt2WotgXQIcBDKM7wrpOhbUFe7dzZm
-	 JHgrwuSYfva0IcOBEHQbMTAGDWN9pvYHqsZUA+eHlXxdCUKGD/h4L4JktuIIL/mRhAF3m
-	 oeCDCrTTL/+JdLpnX/sUZVMymtyver2iBowTyK0+z5KBAtfg1vKMAP67DlY76cT6rFYM7
-	 ciDFxOSp1YREIfbCK8Ix0qGLCMJTtG+Xcx5Wp1/fn2ZSatmOX6lT/ErV9att7dbpCKMur
-	 Z13T1/PfScEUwUFdIiSls+6ggibFsiHKn8U/ilH3vk8SBvvMU0lJcy3cESW9UEX1EjQ==
+	bh=qnAcF7DiLfesErSEN9jHLUGZI40lao7HDdIoFwsZrGo=;
+	b=Qgzq5yUyQwm60C6i+UVR6m7wIW9iQRsKQUcigjxaoGRE5FA+yEh+CKFpfcV1epvnlpva
+	 j0IwmSIl1m6n0VZApbilCw1eTeu1fkPWo2mo1HaOPaG7i//p0pqA8IHYesJ8G3lXbfPGm
+	 UwoNhnG5+04gQvjpw8a/BnVyp19jjXiSQ82iB9B8ABIKJVWmN1cfx/6jiMEWRbngTKBhx
+	 r8ysGSTYeeMic4SoFvqtqFNluzqqtQ/lG/XIfgQpgPxeBabh8ahB0XTRVqYxBXBLSDzbC
+	 8fBYC83fHosOZPqEZZdAPOMIdVsqqfWC2HDdTdtcsH2fEzqfvzkw8YTI5EPqFAQLwrA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=acm.org;
 	spf=pass smtp.mailfrom=acm.org;
-	dkim=pass header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=Tcg4MwfJ;
+	dkim=pass header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=urMm9H5G;
 	arc=none smtp.remote-ip=199.89.1.16
 Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6DC33606A31B;
-	Mon, 19 Oct 2026 21:34:06 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6DC33606A31B
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F8BC606A31B;
+	Mon, 19 Oct 2026 21:55:46 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4F8BC606A31B
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=Tcg4MwfJ
+	dkim=pass (2048-bit key, unprotected) header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=urMm9H5G
 Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4j7phY5w9JzlfvpT;
-	Mon, 19 Oct 2026 21:34:05 +0000 (UTC)
+	by 013.lax.mailroute.net (Postfix) with ESMTP id 4j7q9Y48Xjzlfvpn;
+	Mon, 19 Oct 2026 21:55:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1792445642; x=1795037643; bh=5E7RzlaDuAw9uKwHLzxHAh7R
-	mcEba2LCM1IqL7WsLws=; b=Tcg4MwfJy/ak4sxLYRZ5vRAqHeAj9OBvWsFW9CKe
-	GhmAVJQ2XXY+4coq+xzTHvy2+2yZibSPxDQSxZ8/xILkiNcTk2jy1rfvWYMlXgT5
-	x7NfEXivich2yBQEamk6hgcAEiGlp1jmQm5y5s9Vwn/Wa25oBA2AtAD3ke+GOnQE
-	hLANc17PkU/Ikg9tMV6VPbw9Twut6WefASfjFw3qqoOGbGEfxHwIrGTtAiMUvxKU
-	ZsXFhy63xNL5ImYERAyySjmfcZabocyiXXTDCWXf4vNm9otw3yVS28cxt298QXvh
-	LTKrwQY52v+DrAzJN/q4xZ8jroPkXxBL9psf4SxwSeFZPQ==
+	content-transfer-encoding:mime-version:x-mailer:message-id:date
+	:date:subject:subject:from:from:received:received; s=mr01; t=
+	1792446941; x=1795038942; bh=qnAcF7DiLfesErSEN9jHLUGZI40lao7HDdI
+	oFwsZrGo=; b=urMm9H5G1ejBcfya+1u42UquflckVusTr4HPjj/i/j7cjjnozoK
+	CPAkKzt+37DHeGR4gvlBMaQ/VBg+KblFReuARp82fChxH4bBOXXBuNbyknehmr8a
+	/ZAIHJQNYcaB9ZEPOHjcveLbfPS+hTUlFxB6+3GlW8gKoQQJj4lq4hluaJhyf1ZO
+	vOINB+0U9yXSlAO8W5qCU2UTjwKckHdOQC7FFXNT7ENO6310UZD4S9b4SeIyCdO0
+	sH1YIBClbWwOVnbZjjXVyqPQkvO5EB0vXKCSfzZ/QbIwuXa0dGnKJsXSUCyWp89j
+	KQDvxRTgpt/xf+JQ0em8Xv58Jgb9wvrugiw==
 X-Virus-Scanned: by MailRoute
 Received: from 013.lax.mailroute.net ([127.0.0.1])
  by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id jc0h5tQdPjhN; Mon, 19 Oct 2026 21:34:02 +0000 (UTC)
-Received: from [100.80.231.125] (unknown [104.135.182.41])
+ id pGZJ_9Rcjmzp; Mon, 19 Oct 2026 21:55:41 +0000 (UTC)
+Received: from bvanassche.c.googlers.com.com (245.199.118.34.bc.googleusercontent.com [34.118.199.245])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4j7phT003mzlfvpH;
-	Mon, 19 Oct 2026 21:34:00 +0000 (UTC)
-Message-ID: <9321a59c-c560-4742-8b71-5b0ec1f30c2f@acm.org>
-Date: Mon, 19 Oct 2026 14:34:00 -0700
+	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4j7q9T0r1hzlfvpd;
+	Mon, 19 Oct 2026 21:55:41 +0000 (UTC)
+From: Bart Van Assche <bvanassche@acm.org>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+	John Garry <john.garry@linux.dev>,
+	Christoph Hellwig <hch@lst.de>,
+	Bart Van Assche <bvanassche@acm.org>,
+	Lianqin Hu <hulianqin@vivo.com>,
+	stable@vger.kernel.org
+Subject: [PATCH] scsi: sd: Mark the disk dead if runtime resume fails in sd_remove()
+Date: Mon, 19 Oct 2026 14:55:32 -0700
+Message-ID: <2c0c76d70f0fe197932836b9bcf8496095135d1b.1792446921.git.bvanassche@acm.org>
+X-Mailer: git-send-email 2.56.0.212.g129ede20d9-goog
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -70,72 +78,75 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: reject negative SG_SET_TIMEOUT values
-To: Wang Yingjie <x-professor@outlook.com>, "mkp@kernel.org"
- <mkp@kernel.org>, "axboe@kernel.dk" <axboe@kernel.dk>
-Cc: "fujita.tomonori@lab.ntt.co.jp" <fujita.tomonori@lab.ntt.co.jp>,
- "James.Bottomley@HansenPartnership.com"
- <James.Bottomley@HansenPartnership.com>,
- "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
- "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <20261017084547.2880694-1-x-professor@outlook.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20261017084547.2880694-1-x-professor@outlook.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
 
-On 10/17/26 1:45 AM, Wang Yingjie wrote:
-> The block SCSI path predates Git history. The BSG path has exposed the
-> same behavior since BSG was introduced.
-> 
-> Fixes: 3d6392cfbd7d ("bsg: support for full generic block layer SG v3")
+If a SCSI disk is unplugged while runtime suspended, its request queue
+is still in the pm-only state when sd_remove() is called. The runtime
+resume attempted by scsi_autopm_get_device() fails because the parent
+device, e.g. a USB device in the USB_STATE_NOTATTACHED state, cannot be
+resumed. Hence, sdev_runtime_resume() is not called and the pm-only
+state is not cleared. Next, del_gendisk() calls
+blk_report_disk_dead(disk, false), which calls sync_filesystem(). Any
+bio submitted by the filesystem waits forever in __bio_queue_enter()
+because the queue will never leave the pm-only state and because
+GD_DEAD has not yet been set:
 
-As mentioned above this issue is older than when Linus started using git
-so I think it would be appropriate to add the following:
+ __bio_queue_enter+0xb8/0x174
+ blk_mq_submit_bio+0x640/0x7e4
+ [ ... ]
+ exfat_sync_fs+0xa4/0xe0
+ sync_filesystem+0xa8/0xdc
+ fs_bdev_mark_dead+0x30/0x88
+ bdev_mark_dead+0x54/0xc4
+ blk_report_disk_dead+0x8c/0xd4
+ del_gendisk+0xa0/0x2f8
+ sd_remove+0x30/0x60
+ [ ... ]
+ scsi_remove_host+0x88/0x18c
+ usb_stor_disconnect+0x68/0xf4
 
-Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+Fix this hang by calling blk_mark_disk_dead() if runtime resume fails.
+This sets GD_DEAD, tells the filesystem that the disk has been removed
+without attempting to sync it, and wakes up any bios that are waiting
+in __bio_queue_enter(). Syncing the filesystem is not possible anyway
+if runtime resume failed, so no data is lost that could otherwise have
+been written. If runtime resume succeeds, behavior is not changed.
 
-> diff --git a/block/bsg.c b/block/bsg.c
-> index 82aaf3cee582..681da79a5ba2 100644
-> --- a/block/bsg.c
-> +++ b/block/bsg.c
-> @@ -132,6 +132,8 @@ static long bsg_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
->   	case SG_SET_TIMEOUT:
->   		if (get_user(val, intp))
->   			return -EFAULT;
-> +		if (val < 0)
-> +			return -EIO;
->   		bd->timeout = clock_t_to_jiffies(val);
->   		return 0;
->   	case SG_GET_TIMEOUT:
-> diff --git a/drivers/scsi/scsi_ioctl.c b/drivers/scsi/scsi_ioctl.c
-> index c14f81403a09..162a21112d49 100644
-> --- a/drivers/scsi/scsi_ioctl.c
-> +++ b/drivers/scsi/scsi_ioctl.c
-> @@ -195,10 +195,13 @@ static int sg_set_timeout(struct scsi_device *sdev, int __user *p)
->   {
->   	int timeout, err = get_user(timeout, p);
->   
-> -	if (!err)
-> -		sdev->sg_timeout = clock_t_to_jiffies(timeout);
-> +	if (err)
-> +		return err;
-> +	if (timeout < 0)
-> +		return -EIO;
->   
-> -	return err;
-> +	sdev->sg_timeout = clock_t_to_jiffies(timeout);
-> +	return 0;
->   }
+Please note that this patch converts temporary runtime resume failures
+into permanent failures. Before this patch, if runtime resume fails
+temporarily, a filesytem sync would be postponed until a later resume
+succeeds.
 
-Rejecting negative values with -EIO matches drivers/scsi/sg.c, which
-looks good. However, large positive int values still overflow
-bd->timeout and sdev->sg_timeout: both fields are 32-bit unsigned int 
-while clock_t_to_jiffies() returns unsigned long (clamping only at
-ULONG_MAX).
+Cc: Christoph Hellwig <hch@lst.de>
+Tested-by: Lianqin Hu <hulianqin@vivo.com>
+Reported-by: Lianqin Hu <hulianqin@vivo.com>
+Closes: https://lore.kernel.org/all/TYUPR06MB6217DD31B1B3CD09E431CC12D292=
+2@TYUPR06MB6217.apcprd06.prod.outlook.com/
+Fixes: 6f8191fdf41d ("block: simplify disk shutdown")
+Cc: stable@vger.kernel.org
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+---
+ drivers/scsi/sd.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
 
-Bart.
-
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index b0d2542fd317..dc45df819c42 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -4268,7 +4268,15 @@ static void sd_remove(struct scsi_device *sdp)
+ 	struct device *dev =3D &sdp->sdev_gendev;
+ 	struct scsi_disk *sdkp =3D dev_get_drvdata(dev);
+=20
+-	scsi_autopm_get_device(sdkp->device);
++	/*
++	 * If runtime resume fails, e.g. because the device was unplugged
++	 * while runtime suspended, the request queue stays in the pm-only
++	 * state and any I/O submitted by del_gendisk(), e.g. from
++	 * sync_filesystem(), would wait forever in __bio_queue_enter().
++	 * Prevent this by marking the disk dead.
++	 */
++	if (scsi_autopm_get_device(sdkp->device) < 0)
++		blk_mark_disk_dead(sdkp->disk);
+=20
+ 	device_del(&sdkp->disk_dev);
+ 	del_gendisk(sdkp->disk);
