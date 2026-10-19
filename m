@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0688533D02;
-	Mon, 19 Oct 2026 14:04:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 006F7538798;
+	Mon, 19 Oct 2026 14:04:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792418656; cv=none; b=tv4RIB0vxi9Bo4wH0tQP1zdafvXjctc9ZksJz5RfmTXUxquXWQpyBC/ax0hM//CWW3TAobwFVcN2YE+0BN/bY3Y2+KKQVGwjE4j/qFWIvn8Rl2neevccXv+7kTSOeOhQxRkN6dHaLLrcq9dHgbHHmV014TYziXsFvXF3+9Aphzk=
+	t=1792418670; cv=none; b=DJZcdUR8v4GS0pcCYKeHp0bE6tRQeesqtiS+mpTJvaPCrY4m5Fz2BCYV86ZXtzBkG9L9Ms1UrjOqJy/je53WnrQlphygWS6xjuqhwkgzRw2gufZZI26Fc55l0jgGCkjVHoudnqAAR45K5ZygNyaUhf1X+rR96c42DYiWRZEi3ng=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792418656; c=relaxed/simple;
-	bh=C1bgs5jaFhTTg1reKUnIiNRWJYbvls4rGwTNxbfQfjM=;
+	s=arc-20240116; t=1792418670; c=relaxed/simple;
+	bh=VLDFUnzYr/kJP7X9v9D8JhmnEzPCrODBEDVnGGHUFI0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=dCkzMmDEyCfy9lzrT6N3liGKd/tDXgrAOB1ZU23YdgpKzJDOx5aZyd3XOY5fDjPTP+KWbF02eDhiSWT5O3cLu85uTNYUnZ1ckKGJk8G/LJPdzUUy6V7BwWj9N7LlNrl3XnrZ8puoq7DxdNYtelcP+4bE1fA+H/NgwH68GAFesiw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dIIjvSe+; arc=none smtp.client-ip=100.103.45.18
+	 MIME-Version:Content-Type; b=bpDmXBrFftadO7d59hw4jha5TGPQLm64mYWhkky3VVJegCJBM/eGFV1oKc5XbaI0roQNQJnuGy8VGj8xHkEXjYy+CByVLnb08CPV0cW6Kkxfr3ZKlwUeM84+Ns6WUbe387Md4LiQa56PjvlKIphfvBE/WKw7FEAcSC/OUXs9G0o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=izT9Gbk4; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dIIjvSe+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BF1431F000CA;
-	Mon, 19 Oct 2026 14:04:12 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="izT9Gbk4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AC6CF1F000C4;
+	Mon, 19 Oct 2026 14:04:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792418653;
-	bh=yMtq3J68VL+kcl1SdaOWIUMZYTtpupDYw937qffVKRE=;
+	s=k20260515; t=1792418667;
+	bh=omVqzHTN2MdhSixPARI+dTwl1yirIrYLAitKRdp+isA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=dIIjvSe+zh5eqyHsWRUV5R9hRaol2oaf2vn2QxOHQ6n9z2v7cfoEk0rltJH45ZztL
-	 sDCvcpGV2wwIfbORZUXlgkA5DPb6R7fDMzbAPri3tZdVmxqLg2Q5PDGdenT8nouFPH
-	 5V4PF5XbcGsTUJbgJTBmAwU4teLGGa0ktLQ1Zf0UK5OZRnHXEJf6m1KWehtKCLOCKy
-	 LAWz/LrmzLRwb/2BXfVMYuSG4q64/oCNQY20hgyt4AXRCBAvpdqmzVKpX7wvbh7rhC
-	 xKdWioEbeGlYSO6bEt2jL5VWRCNzAhWsFbf/yaQFgiQugJE3Lsh9VWtuvcCHwgDEO7
-	 igmpYJ9Cpo3WA==
+	b=izT9Gbk4hwu4a4ZJ+/cTwzyWE+A64Gu27ecgW/8CdynPHGZ14Sx2iXvgPjGGrEuQO
+	 RaG2KhDL3g2eHIulYiD2kDi3GUWp51W2SY8IabwI0LKnRE41MTQ9UAiiKwaTdy+CSg
+	 UhVGgg6m+PI/9vmoy6qecaJhIUQL3wTAxjePds56VTu5NXlFQfMg3rV9u0j+aYa60a
+	 8HDYkhiHrzOBpt317QzrK25/3ZTLOq3lxBVcz7+2cnBiwRE+azOlWe2PiYylxEGPqd
+	 +CvIREAi+g8D+BZXfuQO3u5C4/OVjYfjUkGwYVQQudtUWBjKVpBklkpULLSUELErZP
+	 yPd8ook3udxXw==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
@@ -38,9 +38,9 @@ Cc: Tyrel Datwyler <tyreld@linux.ibm.com>,
 	linux-scsi@vger.kernel.org,
 	linuxppc-dev@lists.ozlabs.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.18-5.10] scsi: ibmvfc: free ibmvfc_target allocations with mempool_free
-Date: Mon, 19 Oct 2026 09:51:33 -0400
-Message-ID: <20261019135441.1420968-402-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.18-5.10] scsi: ibmvfc: check for NULL evt in implicit LOGO and target delete path
+Date: Mon, 19 Oct 2026 09:51:43 -0400
+Message-ID: <20261019135441.1420968-412-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20261019135441.1420968-1-sashal@kernel.org>
 References: <20261019135441.1420968-1-sashal@kernel.org>
@@ -58,382 +58,459 @@ Content-Transfer-Encoding: 8bit
 
 From: Tyrel Datwyler <tyreld@linux.ibm.com>
 
-[ Upstream commit 99143433f7f14139ac373c553ec8e1317d0ae58a ]
+[ Upstream commit 0122eab60b151d7815f420a91c7315944a037714 ]
 
-The ibmvfc_target *tgt structures for discovery are allocated using
-mempool_alloc but in turn free'd via kfree in ibmvfc_release_target
-breaking pool guarentees.
+Unlike ibmvfc_tgt_implicit_logout the ibmvfc_tgt_implicit_logout_and_del
+path fails to check for a NULL evt returned from
+ibmvfc_get_reserved_event and passes that directly to ibmvfc_send_event
+which will unconditionally derefence the evt.
 
-Fixup ibmvfc_release_target to call mempool_free instead so that memory
-is properly returned to the mempool instead of the general allocator.
+Check for a NULL evt and perform same escalation as
+ibmvfc_implicit_logout.
 
 Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
-Link: https://patch.msgid.link/20260723000149.969416-5-tyreld@linux.ibm.com
+Link: https://patch.msgid.link/20260723000149.969416-4-tyreld@linux.ibm.com
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-I have enough to decide: this is a one-line mempool/kfree mismatch in
-ibmvfc that can drain the target pool and hang discovery. The local
-7.3-rc4 tree has the driver and the bug’s code path.
+This is a real NULL-deref crash fix in ibmvfc’s target-delete path. The
+local tree is **v7.3-rc4** (`7.3.0-rc4`); the driver and the buggy call
+path exist here, and the change is an 8-line match of the sibling logout
+error path.
 
-## Phase 1: Commit message forensics
+===============================================================
+PHASE 1: COMMIT MESSAGE FORENSICS
+===============================================================
 
-**Step 1.1: Subject**
-Record: `[scsi/ibmvfc] [free] free ibmvfc_target allocations with
-mempool_free` — claimed intent: stop freeing mempool-allocated target
-structs with `kfree`.
+**Step 1.1: PARSE THE SUBJECT LINE**
+- Subsystem: `scsi: ibmvfc`
+- Action verb: `check` (safety check; commit body describes a NULL
+  deref)
+- Intent: stop passing a NULL event into `ibmvfc_send_event` on the
+  implicit-LOGO + delete path
 
-**Step 1.2: Tags**
-Record:
-- `Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>` (author; IBM
-  ibmvfc maintainer)
-- `Link:
-  https://patch.msgid.link/20260723000149.969416-5-tyreld@linux.ibm.com`
-- `Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>` (SCSI
+Record: [scsi/ibmvfc] [check] [NULL evt before send on implicit
+logout/delete]
+
+**Step 1.2: PARSE ALL COMMIT MESSAGE TAGS**
+- Signed-off-by: Tyrel Datwyler \<tyreld@linux.ibm.com\> (author; IBM
+  ibmvfc maintainer/contributor)
+- Link:
+  https://patch.msgid.link/20260723000149.969416-4-tyreld@linux.ibm.com
+- Signed-off-by: Martin K. Petersen \<martin.petersen@oracle.com\> (SCSI
   maintainer)
-- No `Fixes:`, `Reported-by:`, `Tested-by:`, `Reviewed-by:`, `Acked-
-  by:`, or `Cc: stable` (absence of the last two is expected for this
-  review)
+- No Fixes:, Reported-by:, Tested-by:, Reviewed-by:, Acked-by:, or Cc:
+  stable
+- Ignore pipeline SOBs if present; none besides author + SCSI maintainer
 
-**Step 1.3: Body**
-Record:
-- Bug: `ibmvfc_target` objects are allocated with `mempool_alloc()` but
-  released with `kfree()` in `ibmvfc_release_tgt` (message says
-  `ibmvfc_release_target`; the function is `ibmvfc_release_tgt`).
-- Symptom: “breaking pool guarantees” — reserved mempool elements never
-  return to the pool.
-- Root cause: allocator/free mismatch (`mempool_alloc` vs `kfree`).
-- No stack trace, reproducer, or version range. Failure mode is implied
-  (pool accounting), not a reported oops.
+Record: Author + SCSI maintainer SOB; lore/msgid link; no
+Fixes/Reported-by (expected)
 
-**Step 1.4: Hidden bug fix?**
-Record: Not hidden. It is an explicit allocator-mismatch fix. The cover
-letter for the series later names it as one of four pre-existing bugs,
-not NVMe feature work.
+**Step 1.3: ANALYZE THE COMMIT BODY TEXT**
+- Bug: `ibmvfc_tgt_implicit_logout` checks for NULL from event
+  allocation; `ibmvfc_tgt_implicit_logout_and_del` does not
+- Failure: NULL `evt` is passed to `ibmvfc_send_event`, which
+  dereferences it
+- Fix: same escalation as the sibling path (drop discovery thread, put
+  kref, reset host)
 
-## Phase 2: Diff analysis
+Record: [NULL deref of evt] [kernel oops on target delete when reserved
+pool is empty] [no version pins in message] [missed sibling NULL check]
 
-**Step 2.1: Inventory**
-Record:
-- File at commit time: `drivers/scsi/ibmvscsi/ibmvfc.c` (`1 insertion, 1
-  deletion`)
-- Function: `ibmvfc_release_tgt`
-- Scope: single-file, one-line surgical fix
+**Step 1.4: DETECT HIDDEN BUG FIXES**
+Record: Not hidden. Explicit NULL-deref fix.
 
-**Step 2.2: Code flow**
-Record:
-- Before: last `kref_put` on a target calls `kfree(tgt)`.
-- After: same path calls `mempool_free(tgt, tgt->vhost->tgt_pool)`.
-- Path: target teardown / kref drain (discovery logout, rport delete,
-  sysfs starget accessors, host teardown), not an error-only path.
+===============================================================
+PHASE 2: DIFF ANALYSIS - LINE BY LINE
+===============================================================
 
-**Step 2.3: Bug mechanism**
-Record: `[resource / mempool accounting]` plus a possible `[hang]`
-- Alloc: `tgt = mempool_alloc(vhost->tgt_pool, GFP_NOIO)` in
-  `ibmvfc_alloc_target`.
-- Pool: `mempool_create_kmalloc_pool(IBMVFC_TGT_MEMPOOL_SZ,
-  sizeof(struct ibmvfc_target))` with `IBMVFC_TGT_MEMPOOL_SZ == 64`.
-- `kfree` of a reserved pool object returns that slab object to the page
-  allocator without incrementing `pool->curr_nr`. After 64 alloc/free
-  cycles the reserved pool is empty.
-- `mempool_alloc()` with `GFP_NOIO` (`__GFP_RECLAIM` /
-  `__GFP_DIRECT_RECLAIM`) first tries `kmalloc`; on failure it waits
-  uninterruptibly on `pool->wait` until `mempool_free` refills. If
-  nothing ever calls `mempool_free`, that wait never ends.
-- Commit `5c66d9393f583` (2017) removed the NULL check on this
-  `mempool_alloc` because “mempool_alloc() cannot fail when passed
-  GFP_NOIO”. That is only true if the pool is actually returned to.
+**Step 2.1: INVENTORY THE CHANGES**
+- File at commit: `drivers/scsi/ibmvscsi/ibmvfc.c` (+8 / -0)
+- Function: `ibmvfc_tgt_implicit_logout_and_del`
+- Scope: single-file surgical error-path
 
-**Step 2.4: Fix quality**
-Record: Obviously correct matching free. Minimal. `tgt->vhost` is set
-before `kref_init`, so the pool pointer is valid on the free path.
-Regression risk is low. Theoretical extra requirement vs `kfree`: the
-pool must still exist; `ibmvfc_remove` does `fc_remove_host` /
-`scsi_remove_host` and target `kref_put`s before `ibmvfc_free_mem()` →
-`mempool_destroy()`. No later revert of this change.
+Record: [ibmvfc.c +8] [ibmvfc_tgt_implicit_logout_and_del] [surgical]
 
-## Phase 3: Git history
+**Step 2.2: UNDERSTAND THE CODE FLOW CHANGE**
+Before: `discovery_threads++` → `__ibmvfc_tgt_get_implicit_logout_evt()`
+→ `ibmvfc_send_event(evt)` with no NULL test.
+After: if `!evt`, decrement `discovery_threads`,
+`ibmvfc_set_tgt_action(NONE)`, `kref_put`, `__ibmvfc_reset_host`,
+return.
 
-**Step 3.1: Blame**
-Record: `kfree(tgt)` in `ibmvfc_release_tgt` comes from `b3c10489cb464b`
-/ original driver `072b91f9c6510` (“[SCSI] ibmvfc: IBM Power Virtual
-Fibre Channel Adapter Client Driver”, 2008-07-12, contained in
-v2.6.27-rc1). The mismatch is as old as the driver. `tgt_pool` was
-created in that same commit.
+Record: [error path only: unguarded send → guarded recovery matching
+sibling]
 
-**Step 3.2: Fixes tag**
-Record: None. Introducer is the original 2008 driver, present in this
-tree’s history.
+**Step 2.3: IDENTIFY THE BUG MECHANISM**
+Category: memory safety (NULL pointer dereference), plus leak/refcount
+on that path.
 
-**Step 3.3: File history**
-Record: This commit is `99143433f7f14`. Neighbors from the same
-submission:
-- `9c2aa65000f6f` 01/33 MAD send-failure deadlock
-- `7e35396ec8539` 02/33 rport_add_work_q teardown
-- `0122eab60b151` 03/33 NULL evt deref
-- **this** 04/33 mempool_free
-- `de7ac0f3f08b1` 05/33 move target list (NVMe prep, not required for
-  this line)
+Verified mechanism:
+- `__ibmvfc_tgt_get_implicit_logout_evt()` does `kref_get` then
+  `ibmvfc_get_reserved_event()`; on failure it returns NULL (`ibmvfc-
+  core.c` 4424–4427)
+- `__ibmvfc_get_event()` can return NULL when the reserved pool is empty
+  (1615–1630)
+- `ibmvfc_send_event()` starts with `*evt->xfer_iu = evt->iu` (1787) —
+  unconditional deref
 
-Standalone relative to 05/33+. Later `848c70852e3fb` split `ibmvfc.c`
-into `ibmvfc-core.c`; current tree has the fixed `mempool_free` in
-`ibmvfc-core.c`.
+Record: [NULL deref] [empty reserved event pool → NULL evt → oops; fix
+mirrors implicit_logout]
 
-**Step 3.4: Author**
-Record: Tyrel Datwyler is the IBM ibmvfc maintainer (majority of recent
-`drivers/scsi/ibmvscsi/` commits). SCSI maintainer Martin K. Petersen
-applied the series.
+**Step 2.4: ASSESS THE FIX QUALITY**
+Obviously correct as a crash fix: must not call
+`ibmvfc_send_event(NULL)`, must undo `discovery_threads++`, must
+`kref_put` the get done inside the helper.
 
-**Step 3.5: Dependencies**
-Record: None for the one-line change. It does not need NVMe/FC patches.
-`mempool_free` / `tgt_pool` / `ibmvfc_release_tgt` all exist in this
-tree.
+Caveat (verified in `ibmvfc_set_tgt_action`): this path is entered with
+`tgt->action == IBMVFC_TGT_ACTION_LOGOUT_RPORT` (set in
+`ibmvfc_del_tgt`). From that state, only `LOGOUT_RPORT_WAIT` or
+`DEL_RPORT` are accepted; `ACTION_NONE` is silently ignored. The send-
+failure arm already uses `DEL_RPORT`. An automated review (sashiko-bot)
+flagged this. It does not reintroduce the NULL deref: `kref_put` still
+balances the helper, and `__ibmvfc_reset_host` still runs. Worst case,
+the target stays in `LOGOUT_RPORT` and is retried after reset — far
+better than an oops.
 
-## Phase 4: Mailing list
+Record: [minimal, matches sibling; ACTION_NONE is a no-op here but not a
+crash regression]
 
-**Step 4.1: b4 dig**
-Record:
-- Lore:
-  https://patch.msgid.link/20260723000149.969416-5-tyreld@linux.ibm.com
-- Subject on list: `[PATCH v2 04/33] ibmvfc: free ibmvfc_target
-  allocations with mempool_free`
-- Series: `[PATCH v2 00/33] ibmvfc: NVMe/FC support over IBM Virtual FC`
-  (2026-07-22)
-- Cover letter (from saved mbox): “Patches 1-5: Bug fixes and
-  preparatory refactoring. Four pre-existing bugs are fixed before any
-  NVMe/FC work is introduced: … an allocator mismatch where mempool-
-  allocated ibmvfc_target structs are freed via kfree rather than
-  mempool_free.”
+===============================================================
+PHASE 3: GIT HISTORY INVESTIGATION
+===============================================================
+
+**Step 3.1: BLAME THE CHANGED LINES**
+- `ibmvfc_tgt_implicit_logout_and_del` introduced in `ed830385a2b1f`
+  (“Avoid loss of all paths during SVC node reboot”), contained in
+  **v5.7-rc1**
+- NULL-returning `get_event` and sibling check added in `b39f2d10b86d0`
+  (“Remove BUG_ON in the case of an empty event pool”), contained in
+  **v6.7-rc1**. That commit updated
+  `__ibmvfc_tgt_get_implicit_logout_evt` and
+  `ibmvfc_tgt_implicit_logout` but **left `and_del` unchecked**
+  (verified in the post-commit function body)
+
+Record: [and_del: ed830385a2b1f / v5.7] [NULL return + incomplete call-
+site update: b39f2d10b86d0 / v6.7]
+
+**Step 3.2: FOLLOW THE FIXES: TAG**
+Record: No Fixes: tag. Effective buggy change is b39f2d10b86d0 (in this
+tree; `git merge-base --is-ancestor` → YES)
+
+**Step 3.3: CHECK FILE HISTORY FOR RELATED CHANGES**
+Series msgid `…969416-4` is **[PATCH v2 03/33]** of “ibmvfc: NVMe/FC
+support over IBM Virtual FC”. Cover letter: patches 1–5 are **pre-
+existing bug fixes** so the series is bisect-safe. This patch does not
+depend on NVMe patches. Neighbors: `9c2aa65000f6f` (MAD send deadlock),
+`7e35396ec8539` (teardown flush). Later `848c70852e3fb` split `ibmvfc.c`
+→ `ibmvfc-core.c`.
+
+Record: [standalone bugfix in a feature series] [no functional prereq on
+later NVMe patches]
+
+**Step 3.4: CHECK THE AUTHOR'S OTHER COMMITS**
+Tyrel Datwyler is the ibmvfc author of the 2023 event-pool change and
+this follow-up, plus the NVMe/FC series. Martin K. Petersen applied it.
+
+Record: [subsystem author] [completes his own 2023 call-site sweep]
+
+**Step 3.5: CHECK FOR DEPENDENT/PREREQUISITE COMMITS**
+Needs `__ibmvfc_tgt_get_implicit_logout_evt` returning NULL,
+`ibmvfc_send_event`, `__ibmvfc_reset_host`. All present. Applies as 8
+lines with no new APIs.
+
+Record: [standalone vs current driver; prereq b39f2d10b86d0 is in this
+tree]
+
+===============================================================
+PHASE 4: MAILING LIST AND EXTERNAL RESEARCH
+===============================================================
+
+**Step 4.1: FIND THE ORIGINAL PATCH DISCUSSION**
+- `b4 dig -c 0122eab60b151` → [PATCH v2 03/33],
+  https://patch.msgid.link/20260723000149.969416-4-tyreld@linux.ibm.com
+- `b4 dig -a` → v2 series only in the match: “NVMe/FC support over IBM
+  Virtual FC” (2026-07-22)
+- Cover letter: this is one of four pre-existing bugs (NULL event deref
+  in `and_del`)
 - Martin K. Petersen: “Applied to 7.3/scsi-staging, thanks!”
-- No NAK on this patch. No reviewer asked for `Cc: stable` on this
-  specific patch.
+- Direct replies to 03/33: sashiko-bot only (ACTION_NONE concern). No
+  human NAK.
 
-**Step 4.2: Recipients (`b4 dig -w`)**
-Record: `james.bottomley@hansenpartnership.com`,
-`martin.petersen@oracle.com`, `linux-scsi@vger.kernel.org`, `linuxppc-
-dev@lists.ozlabs.org`, `brking@linux.ibm.com`, `davemarq@linux.ibm.com`.
-Right SCSI/PPC/IBM lists.
+Record: [lore msgid above] [v2 03/33] [SCSI maintainer applied] [AI note
+on ACTION_NONE, no NAK]
 
-**Step 4.3: Bug report**
-Record: No `Reported-by` / Bugzilla / syzbot. Bug was found by the
-maintainer while preparing NVMe/FC.
+**Step 4.2: CHECK WHO REVIEWED THE PATCH**
+`b4 dig -w`: Tyrel Datwyler; James Bottomley; Martin K. Petersen; linux-
+scsi; linuxppc-dev; linux-kernel; Brian King; Dave Marquardt.
 
-**Step 4.4: Series**
-Record: 33-patch NVMe/FC feature series. This patch is explicitly a pre-
-existing bugfix (phase 1, patches 1–4). Self-contained.
+Record: [SCSI maintainers + IBM ibmvfc people + linuxppc-dev]
 
-**Step 4.5: Stable list**
-Record: UNVERIFIED. lore.kernel.org search hit Anubis bot-protection
-(403). No stable discussion in the saved scsi thread mbox.
+**Step 4.3: SEARCH FOR THE BUG REPORT**
+No Reported-by / syzbot / bugzilla. Bug described by the driver author
+from code comparison with the sibling.
 
-## Phase 5: Semantic / call graph
+Record: [author-found incomplete 2023 update; no external repro]
 
-**Step 5.1: Functions**
-Record: `ibmvfc_release_tgt` only.
+**Step 4.4: CHECK FOR RELATED PATCHES AND SERIES**
+Standalone among 33; first four are bugfixes. Later patches are NVMe
+feature work and must not be required.
 
-**Step 5.2: Callers**
-Record: Many `kref_put(&tgt->kref, ibmvfc_release_tgt)` sites in
-`ibmvfc-core.c` and `ibmvfc-nvme.c`: starget node/port name/id sysfs,
-implicit logout / delete, PLOGI/PRLI, rport add/delete, host work
-thread, module remove. Reachable from FC discovery, link events, and
-sysfs.
+Record: [self-contained; do not pull the NVMe series]
 
-**Step 5.3: Callees**
-Record: `container_of`, then `mempool_free`. No new locks or
-allocations.
+**Step 4.5: CHECK STABLE MAILING LIST HISTORY**
+WebSearch of lore for this subject did not find a stable@ thread. Direct
+lore.kernel.org fetches returned 403.
 
-**Step 5.4: Reachability**
-Record: Yes, from normal IBM Power virtual FC use (target
-discovery/logout and host removal). Not an obscure debug path.
-`CONFIG_SCSI_IBMVFC` depends on `PPC_PSERIES`.
+Record: [no stable-list hit found; lore HTTP 403 on direct fetch]
 
-**Step 5.5: Similar patterns**
-Record: Only this kfree/mempool mismatch for targets. Event pools in the
-same driver already used mempool correctly. No follow-up fix after
-`99143433f7f14`.
+===============================================================
+PHASE 5: CODE SEMANTIC ANALYSIS
+===============================================================
 
-semcode MCP: not available in this session; used `git grep` / file
-reads.
+**Step 5.1: IDENTIFY KEY FUNCTIONS IN THE DIFF**
+Record: [ibmvfc_tgt_implicit_logout_and_del]
 
-## Phase 6: This tree
+**Step 5.2: TRACE CALLERS**
+- Declared static; `ibmvfc_del_tgt()` sets `tgt->job_step =
+  ibmvfc_tgt_implicit_logout_and_del` when action becomes `LOGOUT_RPORT`
+  (687–694)
+- Work thread `IBMVFC_HOST_ACTION_TGT_DEL` / `TGT_DEL_FAILED` invokes
+  `tgt->job_step(tgt)` for `LOGOUT_RPORT` targets (6085–6097)
 
-**Step 6.1: Local tree and buggy code**
-Record:
-- `git describe HEAD`: `v7.3-rc4-27-gf0100363d8c37`
-- `make kernelversion`: `7.3.0-rc4`
-- `git merge-base --is-ancestor 99143433f7f14 HEAD`: yes — the fix is
-  already in this checkout
-- Current code (`ibmvfc-core.c:1431-1434`) already has
-  `mempool_free(tgt, tgt->vhost->tgt_pool)`
-- The mismatch existed here from v2.6.27 until this commit; the driver
-  and `tgt_pool` still exist
+Record: [ibmvfc_del_tgt → work queue TGT_DEL → and_del; host work
+thread, not IRQ]
 
-**Step 6.2: Backport difficulty**
-Record: Clean one-liner against pre-split `ibmvfc.c`. This 7.3-rc4 tree
-already contains it; later split to `ibmvfc-core.c` does not change the
-correctness of the fix.
+**Step 5.3: TRACE CALLEES**
+`__ibmvfc_tgt_get_implicit_logout_evt`, `ibmvfc_send_event`,
+`ibmvfc_set_tgt_action`, `kref_put`/`ibmvfc_release_tgt`,
+`__ibmvfc_reset_host`
 
-**Step 6.3: Related fixes already here**
-Record: The fix itself is here. `5c66d9393f583` (NULL-check removal) is
-also here, which makes restoring pool refill more important.
+Record: [event alloc/send, tgt state, kref, host reset]
 
-## Phase 7: Subsystem
+**Step 5.4: FOLLOW THE CALL CHAIN**
+Trigger: target removal / path loss on IBM Virtual FC (the v5.7 commit
+was SVC node reboot / WWPN move). Userspace SCSI/FC path loss on a POWER
+guest can reach this. NULL only if reserved CRQ events are exhausted
+(`IBMVFC_NUM_INTERNAL_REQ` is small: `1+1+1+2+(disc_threads*2)`).
+Unlikely but the 2023 change exists specifically because it can happen;
+without this check it is a hard oops rather than recovery.
 
-**Step 7.1**
-Record: SCSI LLD `drivers/scsi/ibmvscsi/` — IBM Power Virtual FC.
-Criticality: IMPORTANT for `PPC_PSERIES` storage (enterprise PowerVM),
-PERIPHERAL for everyone else.
+Record: [reachable on target delete] [NULL when reserved pool empty]
+[oops from driver work thread]
 
-**Step 7.2**
-Record: Actively developed in 7.3 (large NVMe/FC series). The bug itself
-is old, not a new-subsystem issue.
+**Step 5.5: SEARCH FOR SIMILAR PATTERNS**
+Sibling `ibmvfc_tgt_implicit_logout` already has the same 8-line guard
+(4458–4464). This is the missed twin.
 
-## Phase 8: Impact and risk
+Record: [same pattern already in implicit_logout; and_del was the hole]
 
-**Step 8.1: Who is affected**
-Record: Users of `CONFIG_SCSI_IBMVFC` on IBM POWER (pSeries) with
-Virtual Fibre Channel. Not universal.
+===============================================================
+PHASE 6: CROSS-REFERENCING AGAINST THE LOCAL TREE
+===============================================================
 
-**Step 8.2: Trigger**
-Record: Target alloc/free churn (discovery, logout, rport delete, host
-reset). After 64 such cycles the reserved pool is empty. Hang requires
-subsequent `mempool_alloc(GFP_NOIO)` while `kmalloc` fails (memory
-pressure, no `__GFP_FS` reclaim). Unprivileged users do not call this
-directly; fabric events and scans do.
+**Step 6.1: DOES THE BUGGY CODE EXIST IN THIS TREE?**
+- `git describe HEAD`: **v7.3-rc4-27-gf0100363d8c37**; `make
+  kernelversion`: **7.3.0-rc4**
+- Function lives in `drivers/scsi/ibmvscsi/ibmvfc-core.c` (file split
+  after this commit)
+- `git merge-base --is-ancestor 0122eab60b151 HEAD` → YES (landed in
+  **v7.3-rc1**)
+- Current `ibmvfc_tgt_implicit_logout_and_del` already has the NULL
+  check (4530–4536)
+- The hole existed from v6.7 until v7.3-rc1; this lineage had it and now
+  has the fix
+- `CONFIG_SCSI_IBMVFC` depends on `PPC_PSERIES && SCSI`
 
-**Step 8.3: Failure mode**
-Record: Permanent mempool drain; under memory pressure, uninterruptible
-hang in `mempool_alloc` during discovery (storage bring-up / recovery
-stuck). Severity: HIGH for that platform (hang / lost discovery), not a
-KASAN UAF from `kfree` of kmalloc-backed pool memory.
+Record: [code path present in this tree] [bug from v6.7; fix already on
+this HEAD]
 
-**Step 8.4: Risk-benefit**
-Record: Benefit HIGH for ibmvfc users (restore mempool guarantees; avoid
-discovery hang). Risk VERY LOW (1 line, matching alloc/free, maintainer-
-authored, SCSI maintainer applied). Ratio favors including the fix.
+**Step 6.2: CHECK FOR BACKPORT COMPLICATIONS**
+Against this HEAD the original diff would not apply as-is (`ibmvfc.c` →
+`ibmvfc-core.c`, NVMe churn). Against a pre-split tree matching
+v6.7–v7.2, the hunk is a clean 8-line insert next to the sibling.
 
-## Phase 9: Synthesis
+Record: [clean on pre-split ibmvfc.c; this HEAD already contains the
+equivalent]
 
-**Step 9.1: Evidence**
+**Step 6.3: CHECK IF RELATED FIXES ARE ALREADY HERE**
+This exact fix is already an ancestor. Sibling NULL check from
+b39f2d10b86d0 is also here.
 
-For:
-- Real allocator mismatch present since 2008
-- One-line, obviously correct `mempool_free`
-- Can empty the 64-element pool and then hang `mempool_alloc(GFP_NOIO)`
-  under memory pressure
-- 2017 change already assumes mempool never fails on this path
-- Cover letter labels it a pre-existing bug, independent of NVMe/FC
-- IBM/SCSI maintainers; applied to 7.3 scsi-staging
-- Driver and bug exist in this 7.3-rc4 tree
+Record: [this fix already present; no alternate incomplete fix]
 
-Against:
-- No user/syzbot report in 18 years (may be rare or attributed to memory
-  pressure)
-- Sent as 04/33 of a feature series (the line itself does not depend on
-  the rest)
-- Platform-specific (PowerVM virtual FC only)
-- No `Fixes:` / `Cc: stable` (not a negative per the review rules)
+===============================================================
+PHASE 7: SUBSYSTEM AND MAINTAINER CONTEXT
+===============================================================
 
-Unresolved:
-- Stable-list discussion (lore search blocked)
+**Step 7.1: IDENTIFY THE SUBSYSTEM AND ITS CRITICALITY**
+Record: [SCSI ibmvfc / IBM POWER Virtual FC] [IMPORTANT for pseries
+guests, not core-universal]
 
-**Step 9.2: Stable rules**
-1. Obviously correct and tested? **PASS** — matching free; applied by
-   SCSI maintainer.
-2. Real bug that affects users? **PASS** — pool contract broken on every
-   target free; hang is a realistic stress case.
-3. Important (crash/security/corruption/deadlock)? **PASS** —
-   uninterruptible wait in discovery if the drained pool cannot be
-   refilled; storage recovery hang.
-4. Small and contained? **PASS** — 1 line, one function.
-5. No new features/APIs? **PASS** — not the NVMe work; just the free
-   path.
-6. Can apply to this tree? **PASS** — code exists; commit is already an
-   ancestor of HEAD; equivalent `mempool_free` is in `ibmvfc-core.c`.
+**Step 7.2: ASSESS SUBSYSTEM ACTIVITY**
+Mature client driver; recent NVMe/FC work. This NULL check is a pre-
+existing SCSI-path bug, not NVMe enablement.
 
-**Step 9.3: Exception category**
-Record: None needed (not a device ID/quirk/DT/build/doc exception). It
-is a normal bugfix.
+Record: [mature; this fix is independent of NVMe feature work]
 
-**Step 9.4: Decision**
-This should be backported to this tree. It is a one-line correction of a
-long-standing mempool leak/drain in IBM virtual FC target discovery,
-with hang potential under memory pressure, and no meaningful regression
-risk.
+===============================================================
+PHASE 8: IMPACT AND RISK ASSESSMENT
+===============================================================
 
----
+**Step 8.1: DETERMINE WHO IS AFFECTED**
+Record: [platform-specific: PPC_PSERIES Virtual FC; enterprise POWER
+VMs]
 
-**What it solves for this tree:** `ibmvfc_target` objects come from
-`vhost->tgt_pool` but were `kfree`d, so reserved pool slots were
-permanently lost. After enough discovery/logout churn,
-`mempool_alloc(GFP_NOIO)` no longer has a reserved pool and can block
-forever if `kmalloc` fails. This 7.3-rc4 tree still has that driver; the
-one-line `mempool_free` restores the guarantee.
+**Step 8.2: DETERMINE THE TRIGGER CONDITIONS**
+Record: [target delete / implicit LOGO while reserved event pool empty]
+[uncommon but real] [not a syscall smash; storage path loss on the
+guest]
 
-**Stable rules:** Small, obviously correct, no new API, real
-hang/discovery-failure bug, applies here.
+**Step 8.3: DETERMINE THE FAILURE MODE SEVERITY**
+Record: [NULL deref in ibmvfc_send_event → oops] [CRITICAL/HIGH]
 
-**Risk vs benefit:** Very low risk, high benefit for PowerVM FC users.
+**Step 8.4: CALCULATE RISK-BENEFIT RATIO**
+Benefit: avoid host oops during target logout/delete. Risk: 8 lines,
+error path only; ACTION_NONE is a no-op from LOGOUT_RPORT but send-
+failure already recovers via reset/delete. No API change.
 
-**Concerns:** No field crash report; bug is old. That does not make the
-mismatch or the hang path hypothetical. No extra commits are required.
+Record: [high benefit vs low risk]
+
+===============================================================
+PHASE 9: FINAL SYNTHESIS
+===============================================================
+
+**Step 9.1: COMPILE THE EVIDENCE**
+
+FOR:
+- Real NULL deref: `ibmvfc_send_event` uses `evt` without a check
+- Incomplete 2023 call-site update left only `and_del` unguarded
+- 8-line clone of the proven sibling path (thread count, kref, host
+  reset)
+- Author is the ibmvfc owner; SCSI maintainer applied it
+- Cover letter calls this a pre-existing bug, not NVMe feature
+- Reachable on IBM Virtual FC target delete (production POWER path)
+
+AGAINST:
+- Bundled as 03/33 of a large NVMe series (the patch itself is
+  independent)
+- No Fixes:/Cc:stable/user report (absence is expected)
+- `ACTION_NONE` does not stick from `LOGOUT_RPORT`; `DEL_RPORT` would
+  match the send-fail arm
+- This HEAD already contains the commit (v7.3-rc1); original file name
+  has changed
+
+UNRESOLVED:
+- Could not fetch lore.kernel.org HTML (403); used b4 mbox instead
+- No stable@ discussion found
+
+**Step 9.2: APPLY THE STABLE RULES CHECKLIST**
+1. Obviously correct and tested? **PASS** — mirrors sibling; applied by
+   SCSI maintainer
+2. Fixes a real bug that affects users? **PASS** — oops on target delete
+   if reserved events are gone
+3. Important issue? **PASS** — NULL deref / oops
+4. Small and contained? **PASS** — +8 lines, one function
+5. No new features or APIs? **PASS**
+6. Can apply to the local tree? **PASS** for this lineage (code exists;
+   equivalent already in tree). A naive apply of the original `ibmvfc.c`
+   diff onto current split sources would not be needed here.
+
+**Step 9.3: CHECK FOR EXCEPTION CATEGORIES**
+Record: [none; ordinary crash fix]
+
+**Step 9.4: MAKE YOUR DECISION**
+This tree is Linux **7.3-rc4**. The ibmvfc client, `and_del`, and NULL-
+returning event allocator are all here. The bug is a missed NULL check
+that oopses in `ibmvfc_send_event`. The patch is small, matches existing
+recovery, and does not pull in NVMe/FC. The ACTION_NONE no-op is a minor
+state-machine nit, not a reason to withhold a crash fix.
+
+------------------------------------------------
+What the commit solves for stable users
+------------------------------------------------
+On IBM POWER Virtual FC, deleting a target does an implicit logout. If
+the reserved event pool is empty, allocation returns NULL. The sibling
+logout path handled that; the delete path did not, so the host work
+thread would oops. Users see a kernel crash during path loss / target
+teardown rather than a host reset.
+
+------------------------------------------------
+Stable rules / risk vs benefit
+------------------------------------------------
+Meets the rules: real oops, tiny, no features. Benefit is crash
+avoidance on a production pseries driver. Risk is low; recovery matches
+the sibling. Do not backport the rest of the 33-patch NVMe series with
+it.
+
+------------------------------------------------
+Concerns
+------------------------------------------------
+`ACTION_NONE` is ignored from `LOGOUT_RPORT`; `DEL_RPORT` would be the
+closer match to the send-failure arm. Still prevents the oops. On this
+7.3-rc4 tree the fix is already present (`0122eab60b151`); that is not
+“already selected by the pipeline,” it is the mainline landing. The
+driver code this commit exists to protect is in this tree.
 
 Verification:
-- [Phase 1] Parsed tags: author Tyrel Datwyler, Link msgid
-  `...969416-5`, SOB Martin K. Petersen; no Fixes/Reported-by/Cc:stable
-- [Phase 2] Diff: 1 line in `ibmvfc_release_tgt`, `kfree(tgt)` →
-  `mempool_free(tgt, tgt->vhost->tgt_pool)`
-- [Phase 2] Confirmed alloc at `ibmvfc_alloc_target`:
-  `mempool_alloc(vhost->tgt_pool, GFP_NOIO)`; pool size 64; `GFP_NOIO`
-  is `__GFP_RECLAIM`
-- [Phase 2] `mm/mempool.c`: `mempool_alloc_noprof` retries and waits on
-  `pool->wait` when `__GFP_DIRECT_RECLAIM` is set; waiters woken from
-  `mempool_free`
-- [Phase 3] git blame: `kfree(tgt)` from original driver `072b91f9c6510`
-  (2008, v2.6.27-rc1)
-- [Phase 3] `git merge-base --is-ancestor 99143433f7f14 HEAD`: yes
-- [Phase 3] Related: `5c66d9393f583` (v4.12-rc1) removed mempool_alloc
-  NULL check
-- [Phase 4] `b4 dig -c 99143433f7f14`: `[PATCH v2 04/33]`; cover letter
-  lists this as a pre-existing bug; Martin: applied to 7.3/scsi-staging
-- [Phase 4] `b4 dig -w`: linux-scsi, linuxppc-dev, Bottomley, Petersen,
-  IBM
-- [Phase 4] `b4 dig -a`: v2 of 33-patch NVMe/FC series; this patch is in
-  the bugfix prefix
-- [Phase 4] UNVERIFIED: lore.kernel.org/stable search (Anubis 403)
-- [Phase 5] Callers: many `kref_put(..., ibmvfc_release_tgt)` in
-  discovery/teardown/sysfs
-- [Phase 6] `git describe HEAD`: v7.3-rc4-27-gf0100363d8c37;
-  kernelversion 7.3.0-rc4; current `ibmvfc-core.c` already uses
-  `mempool_free`
-- [Phase 7] `CONFIG_SCSI_IBMVFC` depends on `PPC_PSERIES`
-- [Phase 8] Failure mode: mempool drain → possible D-state hang in
-  target discovery under memory pressure; severity HIGH for that
-  platform
-- UNVERIFIED: whether a target kref can outlive `mempool_destroy` on
-  remove (no evidence it does; remove deletes rports first)
+- [Phase 1] Subject/tags: scsi: ibmvfc NULL evt check; SOB Tyrel
+  Datwyler + Martin K. Petersen; Link msgid 20260723000149.969416-4; no
+  Fixes/Reported-by
+- [Phase 2] Diff: +8 in `ibmvfc_tgt_implicit_logout_and_del` only
+- [Phase 2] `__ibmvfc_get_event` can return NULL (ibmvfc-core.c
+  1615–1630); helper returns that NULL (4424–4427); `ibmvfc_send_event`
+  derefs at 1787
+- [Phase 2] `ibmvfc_set_tgt_action`: LOGOUT_RPORT allows only
+  LOGOUT_RPORT_WAIT or DEL_RPORT (531–537)
+- [Phase 3] and_del from ed830385a2b1f (v5.7-rc1); incomplete sweep
+  b39f2d10b86d0 (v6.7-rc1); this fix 0122eab60b151 (v7.3-rc1)
+- [Phase 3] `git merge-base --is-ancestor b39f2d10b86d0 HEAD` YES;
+  `0122eab60b151` YES
+- [Phase 3] After b39f2d10b86d0, and_del still called
+  `ibmvfc_send_event(evt)` with no NULL check
+- [Phase 4] `b4 dig -c 0122eab60b151`: v2 03/33 NVMe/FC series; cover
+  letter lists this as a pre-existing NULL deref
+- [Phase 4] `b4 dig -w`: linux-scsi, linuxppc-dev, James Bottomley,
+  Martin Petersen, Brian King
+- [Phase 4] `b4 dig -m`: Martin applied to 7.3/scsi-staging; sashiko-bot
+  ACTION_NONE comment; no human NAK
+- [Phase 4] lore HTML fetch 403; WebSearch found no stable@ thread for
+  this subject
+- [Phase 5] Caller: `ibmvfc_del_tgt` → TGT_DEL work → `job_step`
+- [Phase 6] `git describe HEAD` = v7.3-rc4-27-gf0100363d8c37;
+  kernelversion 7.3.0-rc4; NULL check present at ibmvfc-core.c 4530–4536
+- [Phase 7] CONFIG_SCSI_IBMVFC: PPC_PSERIES Virtual FC client
+- [Phase 8] Failure mode: NULL deref oops; severity HIGH/CRITICAL
+- UNVERIFIED: human-tested repro on hardware (author analysis +
+  maintainer apply only)
 
 **YES**
 
- drivers/scsi/ibmvscsi/ibmvfc.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/ibmvscsi/ibmvfc.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
 diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
-index 63cc569284ded..e3853e05aa27a 100644
+index 8d7c304636d99..63cc569284ded 100644
 --- a/drivers/scsi/ibmvscsi/ibmvfc.c
 +++ b/drivers/scsi/ibmvscsi/ibmvfc.c
-@@ -1366,7 +1366,7 @@ static void ibmvfc_set_rport_dev_loss_tmo(struct fc_rport *rport, u32 timeout)
- static void ibmvfc_release_tgt(struct kref *kref)
- {
- 	struct ibmvfc_target *tgt = container_of(kref, struct ibmvfc_target, kref);
--	kfree(tgt);
-+	mempool_free(tgt, tgt->vhost->tgt_pool);
- }
+@@ -4403,6 +4403,14 @@ static void ibmvfc_tgt_implicit_logout_and_del(struct ibmvfc_target *tgt)
+ 	evt = __ibmvfc_tgt_get_implicit_logout_evt(tgt,
+ 						   ibmvfc_tgt_implicit_logout_and_del_done);
  
- /**
++	if (!evt) {
++		vhost->discovery_threads--;
++		ibmvfc_set_tgt_action(tgt, IBMVFC_TGT_ACTION_NONE);
++		kref_put(&tgt->kref, ibmvfc_release_tgt);
++		__ibmvfc_reset_host(vhost);
++		return;
++	}
++
+ 	ibmvfc_set_tgt_action(tgt, IBMVFC_TGT_ACTION_LOGOUT_RPORT_WAIT);
+ 	if (ibmvfc_send_event(evt, vhost, default_timeout)) {
+ 		vhost->discovery_threads--;
 -- 
 2.53.0
 
