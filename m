@@ -1,72 +1,75 @@
-Received: from mail-pj1-f44.google.com (mail-pj1-f44.google.com [209.85.216.44])
+Received: from mail-pf1-f175.google.com (mail-pf1-f175.google.com [209.85.210.175])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1769933939A
-	for <linux-scsi@vger.kernel.org>; Mon, 19 Oct 2026 01:39:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A16A3F6C48
+	for <linux-scsi@vger.kernel.org>; Mon, 19 Oct 2026 03:35:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792373962; cv=none; b=gvQocxu0if1wmNfGQ+m4OcG+imaanAMDO/L1NdJc69ESx5ztFdvMTe/0zSxPERxbStagvMiXxOiuIIh40ZcYn3+rLDpibuUgM4ShnCFtfViiKMoVTWsaGhVLKXtqGIMGmq1mWYoJtJwM7gGczn2aUwqPWbblkl7he8MDmUT2Rig=
+	t=1792380943; cv=none; b=YCEnuDhvqkmfF3EH2RRkzhnyUNZxWlDkfDXohG1v6yedXqtBkshOngsBcJ9S7Jtx3GbhK0rftbJ75CJ+QF1bIwyWCH4VTomYDWeSYM9IAK8QhA4HjrZo63Av1TWHKVKfDS3XPvnlMD9IqOGfkHHMtzPj28r8byt3lEwG5RrZ0Vg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792373962; c=relaxed/simple;
-	bh=HDe/sJAEmYOylIZNpRHLAmB90wcCrlY+qlF1S0YnkWc=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=p81YzgkTB2vHEfX+UR7km6+AwXXk2LJngghBjgZMJ3kWTdFz8StZIb9NN3T6Y95rb1rXA2nkefgb5QU9KPwZLBj+aD1LTaBlG7wSn9Y7ELa/k4/s9Mq9T9F+CtJ3jFb3xvoTsHQyzWxh9CAtwAdlU6sVy/VoFOfTU1nI+7IWOjE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr; spf=none smtp.mailfrom=isslab.korea.ac.kr; dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b=sL8NwdK3; arc=none smtp.client-ip=209.85.216.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
+	s=arc-20240116; t=1792380943; c=relaxed/simple;
+	bh=cvuvWuvGv9Z2Lk/0KigTFd9FadnFFHEycgAfdzJtmgE=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=cDgpLaZcfuBsusiw9ZJpEDSSuuiZ6nUtdZQn9dNnfkZNmmwSD4kSOj3vFtQT1aUKQcD7G2MhozCVYU3UGpYdZ2DiZJ8fcKLDz7PgKzXXaG+RvBwOgdbklRMLYAEMrgIEJETCI3rmnDHLxzYUOwYcpj2iE0Ew6fOsTGTEL4pSfEQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=M22mcz+G; arc=none smtp.client-ip=209.85.210.175
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.b="sL8NwdK3"
-Received: by mail-pj1-f44.google.com with SMTP id 98e67ed59e1d1-3ac6794fe45so1331734a91.0
-        for <linux-scsi@vger.kernel.org>; Sun, 18 Oct 2026 18:39:18 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="M22mcz+G"
+Received: by mail-pf1-f175.google.com with SMTP id d2e1a72fcca58-8a064dcfcfdso134373b3a.2
+        for <linux-scsi@vger.kernel.org>; Sun, 18 Oct 2026 20:35:42 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=isslab-korea-ac-kr.20251104.gappssmtp.com; s=20251104; t=1792373958; x=1792978758; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1792380942; x=1792985742; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=Y7FGjbZkzoe6sSfHIZ7/1NewrsALE0UfgLMmOjZ+FHk=;
-        b=sL8NwdK34shQcJNNM6irTQQa69JpLqegC1/k+AqvDkoqnG/MOaBsSJPE7fwsIOzkdy
-         9GiO9a4L1JqdinJ/wF9JA0JPEmK8FDCeXDEOWY9JkK0NlK38q0pMtDOaRavP/uQKPTYn
-         VugfXiCCDD+j7VDx7Eb47W5hd1AzcurDX6gd/AwRqSBu1tl/yISPJt+m3F1Mwmgh0LsZ
-         iOgw4PnE8Om+se8Uc++w+I585QQl1PdCR9A0xoS70J/CnITsR78MIonk/RuCixcBlyce
-         5sjh+iZLdvSiW/+N3YC+rcRWTlYZ5ZCFy1BcSF5UhaXiwYstsLVz52a8w9dy2HKM4SKG
-         u20g==
+        bh=WIXgzDkcDaZz08s4IW9pP5BfYLuDRW0ADUF3wvX19Fg=;
+        b=M22mcz+GrKOvc8MzD83mg7JUIfH2n4Sm/vuJ4QDoFEyvjYCZ0M630bKVCy//UWT9a9
+         2Ae8GJAo168iez7YT4RXzjYF6PSq++toYlY9e92Xqs6o8KYj1Y5bm+Zq53EvLl/tqvCF
+         t6ijQZRVjpWbpkZknqhgZobR5sVE4Au8iyH6lBZ0gIenpP0fHcdChPUcu3WYk5HA7DqY
+         8oZyBfqDnnj9QfU7n518JMgQP5kZrCqOyQYa9gMieYquvqsa9fdstleEVwqnN5srsomI
+         gBV6hXPYZjVOX9+RzQxypn4eDKlLq8BW3szrZtvcAh7uxxokAo3jj6t/sDTODBhVoG+b
+         nNjg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792373958; x=1792978758;
+        d=1e100.net; s=20260707; t=1792380942; x=1792985742;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=Y7FGjbZkzoe6sSfHIZ7/1NewrsALE0UfgLMmOjZ+FHk=;
-        b=Xr7MXnEetiCh7YN/MUgjHSZN86Pj5CyBgeaLs4OhNqkNEoxxTORmNRAqHgrshFKJmS
-         NQoMMCw1aBEp/W82JlU/16+xMyc4oTQuBL24PdwzbO2sY2cHEmYQfD8lOgysa17D3wsI
-         4g/kjhPPirzONCDXM0zxr351557eKt2iFQYiePBZFzRMvNdJ3Fe8aH8wqmVZFJvpAEKF
-         Gxp/UnfaA95+9UgPR5k+LEUojyhOw7MQvzlrBTb0EhB+IR8Tt/cIJQ6p3W4tCHcOBZMq
-         ICytQ2QejN7c2lxldW2SI7GgCR3KbOoaVVmvNng/sr1wqjeq4vDeppIYXsF6XaejledU
-         P9BQ==
-X-Gm-Message-State: AFq9FYKryalQMddr5oR7ELDOqOXXdZ5hc8EYjZVkgjGLi8NqSJu8Fpgj
-	Ku7dFfzNrfW7IlU9RJovaKphjSDqy2qf2G7e+Y4r1zwgWZnYlCTVoCYyXa+RVNBEk+2lpfuqaGW
-	Su435
-X-Gm-Gg: AYBFou03QnTYFouMDKzosA8HGcYVIELn15knRJweJ3RYn7haWz2O+xEFVRLOoCRJwPz
-	iDXROicvtq7yOMX/9E+75C4wT+ZTyonSpewX7ucC7CJUWWgjlMyFvp0Wg5+tUYOvc7oSxkzKo29
-	7FFOZM7PM/8MO5q4YTUNyzXzAXZygtPmcWNNa5FvdHZqPM8DnKtgrjY9PUH1qRh/VwLUbeOb1zk
-	BS7iKskU2z5Z0Ler8t4QVvNjhuXPa5uBY++HRKVUGU6Hp5XV1JFXc6cSOI91xWBapH8315qRdwz
-	o9J+TpulDLCeqiiKIzl0+LqiIcbLo08Q/QkF6cJpsMNgtkM+jrpFmhkopLoJTlcMys1GavJN3mG
-	ebkzMAI7APEehcqvVYjzN9s2lpO2gifTbrzMSdx9Z6Madtc61UPpuI7hERTDkaub+smHHhD5776
-	UzUhH3E9cuSCOvqfc6f0WM72ISwZ63jhIZPyLF2IO3VSJalvf4fwyELbeE8mhk1LXFIb+viMN5M
-	wW+jw==
-X-Received: by 2002:a17:90b:4c85:b0:3ab:188b:c5bf with SMTP id 98e67ed59e1d1-3aceec79ae9mr5212268a91.18.1792373958258;
-        Sun, 18 Oct 2026 18:39:18 -0700 (PDT)
-Received: from yhlee-960QFG.. ([125.131.91.97])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3acc4972fe6sm13789915a91.15.2026.10.18.18.39.16
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 18 Oct 2026 18:39:17 -0700 (PDT)
-From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
-To: "Martin K . Petersen" <mkp@kernel.org>,
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org,
+        bh=WIXgzDkcDaZz08s4IW9pP5BfYLuDRW0ADUF3wvX19Fg=;
+        b=Po2MRTn7/6YqUxvrcbOKSO7hxEOhmQywkzBhyZZKsUk7fEmZi6Tis5wJpgokAjCiLI
+         1ODa7+135wuMDh2rGb7wyt8lCswJuoekKPGGB0fkcwRrJXgOf1hfdslqyjdgq48+ihok
+         VmMj5RXAI1bemXuOMOp1c3bJ1mHM7/w6Pozqajlr3pLgH2n3lo4I6cr7wa1nla1tmew2
+         s05CwmdgyIqLyllEok8G5uIKq1vYuwmdw+LIEpVjozhqI6OHdbr2QexKz8JOjFF9CaB8
+         Rb6bwnlicQc9qy4ofov82gumvMj5xq31+1Cq6AjRjnZ61YjakfIPJC/JTpel0eM6cMd0
+         YaMA==
+X-Forwarded-Encrypted: i=1; AKwUvBzRIhG3ZO13YJykQxNWtHFLI46g+SwAM5iafh0YekHfcN7o5LhBWwe/c/zBElK98mjsifkSMkzvudNk@vger.kernel.org
+X-Gm-Message-State: AFq9FYKv1RnCoY+JDr3W2GjQRUB/Zzk2NN6L5pxaACd/R76dcXW2QpUt
+	FDq02cii/4PRrGhx5X7rMI6c4ISO9p8eGlNYy6YDMFWQM+9e2MLRLJm8
+X-Gm-Gg: AYBFou1hzGAMSojl3bIPuzcAl2yaibq/JwL+8lcVrxg2pi0rBFQ9o/k35YMaPiGlipd
+	T+Mfl2e22eVG/HTUdddVW///DnDT+nwirfpNehkPyYkda7/SO85GLf/+wQ4MeflOMruyosIHnd8
+	eWdV5/v0OkPz972kQh0xTXGVSK7wskhF23QF4AaoewIXs8jEiFAhwN8plzhrQaT+vN0hVuuWMBY
+	eLJnemHbxNTlWgTI5ll2J20QEAa1LDQ4oeiqQiHmKEX+YwkZQG2frMfkccjgh9VSt9HEfADdw0H
+	ZzhSJTGeFe+oXdmkC2y6c24vR7uIZ/QpBDdxbWXKvHq/fMvEjO5D1bGHDtJG9Kfe5Cet/HH+Fxk
+	CKxz1de8ZwstRKfTVEt5MRgAqBFHWtPTAzrTb8VbyzO4j96NdRN98pNA+V7o0csM0JnpdUEK9+V
+	oXXOpor/YlJ+910SvuBmXVi6bbvIABGze5fkAzff85Gh1N++bomkSlv7Nj8Qj32G1uepOkNxUKa
+	iOmjbykZdt0bl7ZbQjprmJ77O6TLnsXxuWqjeiif/vpw06s6qp3arnOs/izcxbENbzV6j/EkaRI
+	c01xMBxPuPLI00S1xsUO/iJMMRWJgt+Gy/OOwgCuNS5i1i6F
+X-Received: by 2002:a05:6a20:9184:b0:3e2:5624:694e with SMTP id adf61e73a8af0-3e256247190mr664484637.39.1792380941823;
+        Sun, 18 Oct 2026 20:35:41 -0700 (PDT)
+Received: from EAIT-H54D9Q2FJQ.eait.uq.edu.au ([130.102.10.249])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-89f57268ff1sm3352670b3a.22.2026.10.18.20.35.38
+        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
+        Sun, 18 Oct 2026 20:35:41 -0700 (PDT)
+From: Yu Zhang <yuz08559@gmail.com>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>,
+	Mike Christie <michael.christie@oracle.com>
+Cc: target-devel@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
+	Yu Zhang <yuz08559@gmail.com>,
 	stable@vger.kernel.org
-Subject: [PATCH] scsi: pmcraid: bound the HCAM data length reported to user space
-Date: Mon, 19 Oct 2026 10:39:12 +0900
-Message-ID: <20261019013912.3729383-1-yhlee@isslab.korea.ac.kr>
-X-Mailer: git-send-email 2.43.0
+Subject: [PATCH] scsi: target: fix list corruption in core_alua_free_tg_pt_gp()
+Date: Mon, 19 Oct 2026 13:35:32 +1000
+Message-ID: <20261019033532.73575-1-yuz08559@gmail.com>
+X-Mailer: git-send-email 2.55.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -75,129 +78,88 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-pmcraid_notify_ccn() and pmcraid_notify_ldn() take data_len out of the
-HCAM header the IOA wrote into the coherent DMA buffer and pass it on to
-pmcraid_notify_aen(), which uses it as the netlink attribute length:
+core_alua_free_tg_pt_gp() moves every se_lun off the group being freed
+and reattaches it to the default group.  For each lun it removes the
+membership link under tg_pt_gp->tg_pt_gp_lock, drops that lock, and only
+then takes lun->lun_tg_pt_gp_lock to call __target_attach_tg_pt_gp().
 
-      data_size = le32_to_cpu(pinstance->ccn.hcam->data_len) +
-                  sizeof(struct pmcraid_hcam_hdr);
-      ...
-      nla_put(skb, PMCRAID_AEN_ATTR_EVENT, data_size, aen_msg);
+lun->lun_tg_pt_gp still points at the group being freed across that gap.
+A concurrent core_alua_store_tg_pt_gp_info() holds lun->lun_tg_pt_gp_lock
+across both the detach and the attach (via target_swap_tg_pt_gp()), so it
+can move the same lun to a third group and re-add lun_tg_pt_gp_link to
+that group's list in the window.  When the free path then runs
+__target_attach_tg_pt_gp(), its bare list_add_tail() links the
+already-linked node a second time, corrupting both lists; the lun's
+group pointer is also overwritten and tg_pt_gp_members is decremented
+twice.
 
-data_len is never checked against the buffer it came from.  The CCN
-buffer is 4048 bytes, so an IOA reporting more than 4008 makes nla_put()
-read past the end of it, and what it reads is multicast to whoever is
-bound to the event group.  The LDN buffer is 4112 bytes and has the same
-problem above 4072.
+Writing a new group id to a LUN's alua_tg_pt_gp attribute while another
+process removes the LUN's current group (both via configfs) is enough to
+trigger it:
 
-Driving pmcraid_notify_ccn() with data_len one byte past the limit, with
-the HCAM buffer allocated by kmalloc() at the production size because
-dma_alloc_coherent() memory is page granular and not tracked by KASAN:
-
-  BUG: KASAN: slab-out-of-bounds in nla_put+0xc7/0x160
-  Read of size 4049 at addr 00000000622c2000 by task kunit_try_catch/19
-
-  CPU: 0 UID: 0 PID: 19 Comm: kunit_try_catch Tainted: G        W        N  7.3.0-rc7-g58161ead29e5-dirty #5 VOLUNTARY
-  Tainted: [W]=WARN, [N]=TEST
+  list_add double add: new=ffff8880055a64e0, prev=ffff8880055a64e0, next=ffff8880055a64e0.
+  kernel BUG at lib/list_debug.c:35!
+  RIP: 0010:__list_add_valid_or_report+0xdf/0xf0
   Call Trace:
-   [<6008af12>] ? dump_stack_lvl+0x5e/0x7a
-   [<6003e621>] ? _printk+0x0/0xd7
-   [<6004b21d>] ? print_report+0x14b/0x517
-   [<6003e621>] ? _printk+0x0/0xd7
-   [<606ffcb7>] ? nla_put+0xc7/0x160
-   [<603aeebb>] ? kasan_report+0x11b/0x160
-   [<60950e4d>] ? __alloc_skb+0x1bd/0x9c0
-   [<606ffcb7>] ? nla_put+0xc7/0x160
-   [<603afe70>] ? kasan_check_range+0x0/0x1c0
-   [<603affbe>] ? kasan_check_range+0x14e/0x1c0
-   [<603b0a41>] ? __asan_memcpy+0x31/0x80
-   [<606ffcb7>] ? nla_put+0xc7/0x160
-   [<608801af>] ? pmcraid_notify_aen+0x19f/0x440
-   [<60882ba7>] ? pmcraid_aen_ccn_oob_one+0x1a7/0x380
-   [<60213550>] ? ktime_get_ts64+0x0/0x2c0
-   [<606ea77c>] ? kunit_try_run_case+0x1bc/0x310
-   [<606ea5c0>] ? kunit_try_run_case+0x0/0x310
-   [<603b08f0>] ? __kasan_check_read+0x0/0x20
-   [<600af020>] ? um_set_signals+0x0/0x60
-   [<600af020>] ? um_set_signals+0x0/0x60
-   [<6012e3cd>] ? __kthread_parkme+0xdd/0x1c0
-   [<606ea5c0>] ? kunit_try_run_case+0x0/0x310
-   [<606f0840>] ? kunit_generic_run_threadfn_adapter+0x0/0x100
-   [<606f08bc>] ? kunit_generic_run_threadfn_adapter+0x7c/0x100
-   [<6013464e>] ? kthread+0x36e/0x560
-   [<601342e0>] ? kthread+0x0/0x560
-   [<6008f0de>] ? new_thread_handler+0xce/0x130
+   __target_attach_tg_pt_gp+0x9b/0x190
+   core_alua_free_tg_pt_gp+0x22f/0x3a0
+   config_item_put+0x89/0xa0
+   configfs_rmdir+0x42f/0x5b0
+   vfs_rmdir+0x22a/0x4b0
 
-  The buggy address belongs to the object at 00000000622c2000
-   which belongs to the cache kmalloc-4k of size 4096
-  The buggy address is located 0 bytes inside of
-   allocated 4048-byte region [00000000622c2000, 00000000622c2fd0)
+Re-check under lun->lun_tg_pt_gp_lock that the lun still references the
+group being freed before reattaching it to the default group.  If a
+concurrent store has already moved it, there is nothing to do: that
+store holds lun->lun_tg_pt_gp_lock across its own detach and attach, so
+the node stays consistently linked in the new group's list.
 
-W is a UML virtio warning and N marks the KUnit harness that drove the
-call; neither comes from this path.
+The store side was already made atomic in commit f9793d649c29 ("scsi:
+target: Perform ALUA group changes in one step"); the free path was left
+reattaching without revalidating the lun's group.
 
-Clamp data_len to what the buffer can hold before it is used as a length.
-A working IOA never reports more than that, so this does not change what
-user space sees from one.
-
-Found by inspection.  Not tested on a MaxRAID adapter.
-
-Fixes: 89a3681041507 ("[SCSI] pmcraid: PMC-Sierra MaxRAID driver to support 6Gb/s SAS RAID controller")
+Fixes: adf653f92f38 ("target: Subsume se_port + t10_alua_tg_pt_gp_member into se_lun")
 Cc: stable@vger.kernel.org
-Signed-off-by: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+Signed-off-by: Yu Zhang <yuz08559@gmail.com>
 ---
-diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
-index 942a993932049..f59d5a775aebb 100644
---- a/drivers/scsi/pmcraid.c
-+++ b/drivers/scsi/pmcraid.c
-@@ -1451,6 +1451,17 @@ static int pmcraid_notify_aen(
- 	return result;
- }
+ drivers/target/target_core_alua.c | 23 +++++++++++++++--------
+ 1 file changed, 15 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/target/target_core_alua.c b/drivers/target/target_core_alua.c
+index 10250ac..3a085e2 100644
+--- a/drivers/target/target_core_alua.c
++++ b/drivers/target/target_core_alua.c
+@@ -1746,16 +1746,23 @@ void core_alua_free_tg_pt_gp(
  
-+/* The IOA picks data_len, so cap it at what the HCAM buffer holds before it
-+ * becomes a copy length.  Returns the size to report, header included.
-+ */
-+static u32 pmcraid_hcam_data_size(__le32 data_len, size_t hcam_size)
-+{
-+	size_t hdr_size = sizeof(struct pmcraid_hcam_hdr);
-+
-+	return min_t(u32, le32_to_cpu(data_len), hcam_size - hdr_size) +
-+	       hdr_size;
-+}
-+
- /**
-  * pmcraid_notify_ccn - notifies about CCN event msg to user space
-  * @pinstance: pointer adapter instance structure
-@@ -1460,10 +1471,10 @@ static int pmcraid_notify_aen(
-  */
- static int pmcraid_notify_ccn(struct pmcraid_instance *pinstance)
- {
--	return pmcraid_notify_aen(pinstance,
--				pinstance->ccn.msg,
--				le32_to_cpu(pinstance->ccn.hcam->data_len) +
--				sizeof(struct pmcraid_hcam_hdr));
-+	u32 data_size = pmcraid_hcam_data_size(pinstance->ccn.hcam->data_len,
-+					       sizeof(struct pmcraid_hcam_ccn_ext));
-+
-+	return pmcraid_notify_aen(pinstance, pinstance->ccn.msg, data_size);
- }
+ 		spin_unlock(&tg_pt_gp->tg_pt_gp_lock);
+ 		/*
+-		 * If the passed tg_pt_gp does NOT match the default_tg_pt_gp,
+-		 * assume we want to re-associate a given tg_pt_gp_mem with
+-		 * default_tg_pt_gp.
++		 * tg_pt_gp_lock was dropped above, so a concurrent
++		 * core_alua_store_tg_pt_gp_info() may already have moved this
++		 * lun to another group and re-added lun_tg_pt_gp_link to that
++		 * group's list.  Reattach to the default group only while the
++		 * lun still references the group being freed; otherwise the
++		 * bare list_add_tail() in __target_attach_tg_pt_gp() would add
++		 * the already-linked node a second time and corrupt the list.
+ 		 */
+ 		spin_lock(&lun->lun_tg_pt_gp_lock);
+-		if (tg_pt_gp != dev->t10_alua.default_tg_pt_gp) {
+-			__target_attach_tg_pt_gp(lun,
+-					dev->t10_alua.default_tg_pt_gp);
+-		} else
+-			rcu_assign_pointer(lun->lun_tg_pt_gp, NULL);
++		if (rcu_dereference_check(lun->lun_tg_pt_gp,
++				lockdep_is_held(&lun->lun_tg_pt_gp_lock)) == tg_pt_gp) {
++			if (tg_pt_gp != dev->t10_alua.default_tg_pt_gp)
++				__target_attach_tg_pt_gp(lun,
++						dev->t10_alua.default_tg_pt_gp);
++			else
++				rcu_assign_pointer(lun->lun_tg_pt_gp, NULL);
++		}
+ 		spin_unlock(&lun->lun_tg_pt_gp_lock);
  
- /**
-@@ -1475,10 +1486,10 @@ static int pmcraid_notify_ccn(struct pmcraid_instance *pinstance)
-  */
- static int pmcraid_notify_ldn(struct pmcraid_instance *pinstance)
- {
--	return pmcraid_notify_aen(pinstance,
--				pinstance->ldn.msg,
--				le32_to_cpu(pinstance->ldn.hcam->data_len) +
--				sizeof(struct pmcraid_hcam_hdr));
-+	u32 data_size = pmcraid_hcam_data_size(pinstance->ldn.hcam->data_len,
-+					       sizeof(struct pmcraid_hcam_ldn));
-+
-+	return pmcraid_notify_aen(pinstance, pinstance->ldn.msg, data_size);
- }
- 
- /**
+ 		spin_lock(&tg_pt_gp->tg_pt_gp_lock);
 -- 
 2.43.0
 
