@@ -1,111 +1,85 @@
-Received: from mail-qt1-f175.google.com (mail-qt1-f175.google.com [209.85.160.175])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mail-m12771.qiye.163.com (mail-m12771.qiye.163.com [115.236.127.71])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 716E946A611
-	for <linux-scsi@vger.kernel.org>; Mon, 19 Oct 2026 04:29:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.160.175
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792384205; cv=pass; b=eLAYVJC3glBdE9URi1fToXZWZIsyvNYs4HD6u/WYdF88LrzMiwoDrySBzlnfLWM9mlyLpbV242HPxNqaAkXVr9zQd/FsuXjwEUJH1EMFt8yDus/PChRGye3R4aWOQ4c15IXQ1lKfC3IQGFoexfJ6t7jjaqORlszRORKveo3TbV4=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792384205; c=relaxed/simple;
-	bh=asE30SXVAoP90qhP9dNI0QR+nkwcC4PqmT3gY2NE+Dk=;
-	h=In-Reply-To:References:MIME-Version:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=FZ5RlSQIN8BVmyLnq7WGaWKyV/RAdq88wlGx0e9RujXgvWfEjoksTu0YpIMLdUDw9nIf58S1rXXgV8p/yJRJycnAZhS3GULFkArSJTaEuGdhuMQw7WUq0puEevFzK14jZzoAXUidacolpYQm1D05VOcOTng1KuACsiotc7QtvkI=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=rX/rQ0HE; arc=pass smtp.client-ip=209.85.160.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5587B47F3C1
+	for <linux-scsi@vger.kernel.org>; Mon, 19 Oct 2026 05:10:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.236.127.71
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1792386650; cv=none; b=uXPQn4eq+3p+idkR+kvLhEWBrCN3tpM9sjZQVcDRAdfzE8B/iBCvRXL91YJb6RKSQswJXQpFz3aj+yfzypKQVzlA0EUSaveXW3HQbGi3Djh7tDrFefxEzp+GucZ/Sz6i9Nn1UBi+KYND+kk2bnI8kYbIWFLYQoE+fYJD2CFVpmY=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1792386650; c=relaxed/simple;
+	bh=J+5GPTv8w35AGvo9/AUvrzN63L9qcXt1N+QsFiR43Ys=;
+	h=From:To:Cc:Subject:Date:Message-Id; b=TBbe/DyEZBvtpPFe4n8EFV1Bqp2k0kjTOcBA3/eERSoc6NzTRpt4cD4t2MOuDI9hsLcGQn3HYFoEJyps92Y9k2obHuSsk0KaSVTcJdE7hT8+0ftew81vys8PDWh+vPCSaycEA7Kl/UKxXhhAnMg5HvN7mLtqGoE9MWCsVHJ7X0o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=PM+F/RVk; arc=none smtp.client-ip=115.236.127.71
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="rX/rQ0HE"
-Received: by mail-qt1-f175.google.com with SMTP id d75a77b69052e-5337c7b9937so323131cf.0
-        for <linux-scsi@vger.kernel.org>; Sun, 18 Oct 2026 21:29:58 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1792384197; cv=none;
-        d=google.com; s=arc-20260327;
-        b=HNLLULjSr+8YQPA0ktNJ4CrzP/xxhs7WaltSFtpivaiyVepiAJiFOaTaZ00peHFQEu
-         6uKjls9m8JnrFP4HI9e43asBzmK6JX6rvF5/iSW4FnwtFH6oKUo20PkQRgFj96c02psi
-         Wnjeg5gcjwqwrRCTa9CtGIb80eBNHK/35ztDSDDbJj2b5/RyR/Icxj3r/UZCiispsego
-         GueQw1h3nmhGCIquDKDw/KHZq2pbHeeglTKfcMTpSk78V0e5kKyZw+9bpgQxrM7ouJPa
-         GKACwbwJCS1kvfB54G7p8bSRpVZF/OXozaHPjz0GqH/Fu7tVwSbnAnG0fLXJLnL5JtT4
-         mrJg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=cc:to:subject:message-id:date:from:mime-version:references
-         :in-reply-to:dkim-signature;
-        bh=asE30SXVAoP90qhP9dNI0QR+nkwcC4PqmT3gY2NE+Dk=;
-        fh=vYlNc98LFKbeu0a7Vdjhct3OhWIXa3cK89qBBrbSw+4=;
-        b=mPLSi19KvQhoMEaaGpVRRXfSvP8HLVSJ3HKEjXHQhKzH4hp936f0p96b1NgDjnYL79
-         ccBZGeCae7BVS+DUfsM9NEctBhZWRdYeyEbmGJIovnpZaKacd0Qxd0HnHKVAYGG/7HZr
-         ydOBxScJbl9a+BHSNxXLVUoXeCxBRn1fZW49ZM984Suc1HDmuCzRUSiozYCynsi9lQoj
-         zq9KPwc8PVbNOE6/OfVl2f7jQ3q2ruEycoO1DprMOp80hsXGG6vnr0BbMqff0ZNvkM1D
-         0I9IVmdYk1mGXaV1dVF2ALLnK9I6pgb9/kgyeGLmBMwwrJ68M+H2pz76ZUfJWpqjCvj2
-         yeIg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1792384197; x=1792988997; darn=vger.kernel.org;
-        h=content-type:cc:to:subject:message-id:date:from:mime-version
-         :references:in-reply-to:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=asE30SXVAoP90qhP9dNI0QR+nkwcC4PqmT3gY2NE+Dk=;
-        b=rX/rQ0HEKLJX8qBzFVQDFAiMyp/Zpn4YvJngjq2qxJL0TQl1+f3Qhr9zfPMQgC7yka
-         OyyUFmVHDrAAdGlrqIea2RR6Fg/fS8knB9pX9awXJuKRaSrpaTUY35+AlGcHn0tHuOv0
-         4KgKF2hf6E+rhzy7uiM9QM8n1i2Yxot4Kb+/doUezMR6iODptFXeBoTnshovBnhKT91P
-         aHOHMoMzWT2vEB7ZMMvfI83/thn6XBI8CD4invQSbHSr8+kNS1l8ONs9zDMwvzchxWmg
-         fvZtRNDyw82opiqdL2/0+N9k0ibVU8s3M0DIQm6bXACy/o5EFaW9Z3NLClCIFLmvBGI0
-         48oA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792384197; x=1792988997;
-        h=content-type:cc:to:subject:message-id:date:from:mime-version
-         :references:in-reply-to:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=asE30SXVAoP90qhP9dNI0QR+nkwcC4PqmT3gY2NE+Dk=;
-        b=bXZ88YM09jb0y0nDg3LeqaQQGOcSBg+vRJ1IYf6uj/kpWnMqfpF8mfqIG44u0gFeJp
-         Q346qFrxULGvRnYiIcTPwfm/+k/8pAGzj4+htGYYqYi2Q074BE4FBQOYCq+nH3/OM6ye
-         y3eB869CAiSDPnGyIyQ30im0wjhRuNCJ4v7BXrlGBrCvpcHHZrHsrdr475XE92C6pkKL
-         CvFW6G45jDeculCMTaQss29gI7Hy+ZNpn5Fo6PVD1JSnlZ/DDv2x7tYO1EcTAeHpgVCU
-         j+NLN53MiEJfoVEe4l5vH8cArbx6tha8DZOtKi30hdQ8i4PAFCYuI+UiE0OzXd5PM+y5
-         +OCQ==
-X-Forwarded-Encrypted: i=1; AKwUvBxC20BT3Tf3eJEWDGmuKTqWqHNgfyXah5j+MwmTuaYqYaf8VtQh3LFCXf0PcafvDvtK0SiyAurk/Vfv@vger.kernel.org
-X-Gm-Message-State: AFq9FYIUZ3mtpw+ELhGmkbeuX8mECsdbDO7g0RF9VkMopA6IpEEQ9AXF
-	YgkpJgLYcKO4JaE87vRlrptChOjbr6lOwWfrfEalLZs7wgtOhwDHlNu2W/UI5fvmtItdXmYZXuq
-	K+7W1bh4rI5g0JDa+xyS9vuP/UXb4TDX5Gsi6NI/q
-X-Gm-Gg: AYBFou2xtz5TwsSWDWxuz0ez6TFmBRGk/TbaDTxp/UvvPQl1vj2Le/RD7Ibz9zcvvvY
-	5HbZkUs3QwKI71ULjlg36dHA07rq62I2z+fHhw3p+i9O4nASHhJretw/FNUkbYfXc2UWo77sPCD
-	tEF1nLIdzMU9utPKYqDwFePI+smBZspvY/NSkzdMIUHkHNQMzZny9jPSdKH0VLZ2hFJqa9+gjlt
-	ThGpnp3xNlQqf+Z+/pSwckWpgoO37MshIDvoDETXlvtr6ZplLHLrZqh/OhiOKv72ifuma2c5oD6
-	sPehqLFe7lAgVvAkUNaJgULQmNgTLrnlJoH6tyO3Dk9xBqCu4HQlBw+YAN/MQKY1ogQDqsDBoBo
-	E0JtcNw0=
-X-Received: by 2002:a05:622a:90a:b0:52f:8389:29e0 with SMTP id
- d75a77b69052e-53649acf23cmr28899601cf.0.1792384196502; Sun, 18 Oct 2026
- 21:29:56 -0700 (PDT)
-Received: from 913411032810 named unknown by gmailapi.google.com with
- HTTPREST; Sun, 18 Oct 2026 23:29:55 -0500
-Received: from 913411032810 named unknown by gmailapi.google.com with
- HTTPREST; Sun, 18 Oct 2026 21:29:41 -0700
-In-Reply-To: <2e042211ca0ebc974ad5ec4c0de9f3f93b3c75c0.camel@iokpp.de>
-References: <20261017084403.875420-1-stanleyjhu@google.com> <2e042211ca0ebc974ad5ec4c0de9f3f93b3c75c0.camel@iokpp.de>
+	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="PM+F/RVk"
+Received: from localhost.localdomain (unknown [58.22.7.114])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 517656c25;
+	Mon, 19 Oct 2026 08:34:36 +0800 (GMT+08:00)
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Bart Van Assche <bvanassche@acm.org>,
+	linux-scsi@vger.kernel.org,
+	Bean Huo <beanhuo@micron.com>,
+	Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH v3] scsi: ufs: core: Fix stale comment in ufshcd_mcq_config_nr_queues()
+Date: Mon, 19 Oct 2026 08:34:22 +0800
+Message-Id: <1792370062-23050-1-git-send-email-shawn.lin@rock-chips.com>
+X-Mailer: git-send-email 2.7.4
+X-HM-Tid: 0aa15194e92c03a4kunme6592d26600a88
+X-HM-MType: 1
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFDSUNOT01LS0k3V1kYFggdWUFKV1ktWUFJV1kPCRoVCBIfWUFZGRhPSVZMGB1NH04ZTk
+	5KGk1WFRQJFhoXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0
+	tIVUpLSU9PT0hVSktLVUpCS0tZBg++
+DKIM-Signature: a=rsa-sha256;
+	b=PM+F/RVkhSZBhVWiklrV71Z+tmQF0EtutcP/zEpyqYaDbPG7Xx3zdQaT30AvZFq1dCA8n6pgriKs/9pEJ3tqDiFmumyuqmxJ7XdvR/XDEeyHpUMtVRsqA1VSo1QKV0oPK/01jBkZuLmmA//62GGEWLcnMTTHdO5BPYjR3G0weRw=; c=relaxed/relaxed; s=default; d=rock-chips.com; v=1;
+	bh=TyOzjxbbY7JyZH2FXiIeKAf2yjP76tT3088Ve2uPSlc=;
+	h=date:mime-version:subject:message-id:from;
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-From: Stanley Jhu <stanleyjhu@google.com>
-Date: Sun, 18 Oct 2026 23:29:55 -0500
-X-Gm-Features: AclHuK-HgN0FmhIdLMEsn6Gjhf6fsxEJCtdj6atYDCuubd88JF0LL5qqpkihSd8
-Message-ID: <CAE14pdc3QJyxY+YizyUfi2+NTB4oxYyqu_zTyT__-LfMxJLMmQ@mail.gmail.com>
-Subject: Re: [PATCH v2 0/4] scsi: ufs: core: Factor hba->outstanding_reqs
- helper and fix double completion
-To: Bean Huo <beanhuo@iokpp.de>, "Martin K . Petersen" <mkp@kernel.org>, linux-scsi@vger.kernel.org
-Cc: "James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>, 
-	Bart Van Assche <bvanassche@acm.org>, Alim Akhtar <alim.akhtar@samsung.com>, 
-	Bean Huo <beanhuo@micron.com>, Peter Wang <peter.wang@mediatek.com>, 
-	Can Guo <can.guo@oss.qualcomm.com>, linux-kernel@vger.kernel.org, 
-	stable@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
 
-On Sun, 2026-10-18 at 21:52 +0200, Bean Huo wrote:
-> One more place has the same problem. In ufshcd_abort(), the "cmd was completed,
-> but without a notifying intr" path completes the request but leaves its bit set
-> in hba->outstanding_reqs:
+The comment refers to "hba->dev_cmd_queue", but struct ufs_hba no longer
+has such a member (it was removed when the dedicated hwq for device
+commands was dropped). Reword it to describe the actual requirement:
+the queue is a host controller capability and it serves both non-polled
+SCSI commands and UFS device management commands.
 
-Good catch, thanks. I can confirm it. I will add a separate patch to fix
-it in v3.
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+Reviewed-by: Bean Huo <beanhuo@micron.com>
+---
+
+Changes in v3:
+- improve commit message (Bean)
+- collect tag from Bean
+
+Changes in v2:
+- address Bart's review comments
+
+ drivers/ufs/core/ufs-mcq.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
+index df293b6..25e392f 100644
+--- a/drivers/ufs/core/ufs-mcq.c
++++ b/drivers/ufs/core/ufs-mcq.c
+@@ -183,8 +183,8 @@ static int ufshcd_mcq_config_nr_queues(struct ufs_hba *hba)
+ 	}
+ 
+ 	/*
+-	 * Device should support at least one I/O queue to handle device
+-	 * commands via hba->dev_cmd_queue.
++	 * At least one non-poll (HCTX_TYPE_DEFAULT) queue is required for
++	 * non-polled SCSI commands and UFS device management commands.
+ 	 */
+ 	if (hba_maxq == poll_queues) {
+ 		dev_err(hba->dev, "At least one non-poll queue required\n");
+-- 
+2.7.4
+
