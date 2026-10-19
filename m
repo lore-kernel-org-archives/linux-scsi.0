@@ -1,85 +1,84 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.50
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.179
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792448064;
-	b=UoHm1JpTBtsROhpqOd8WrAbi8ynQueDBcpPF8+loMJXJ27eioAbpH99CzWSTFi+5MkGt
-	 84pY5D+ZdBKrXOQOe0vwmeP8IzF6Xfvxu/tNcTxYRntTkqThTnjU/L6JtltsDIrHyxY+v
-	 Fj1pxoxGhdwkiMo2v3v6RhcXKWS5acTVpDncMHoIT4c0qTTfYaKPuK9yHfFpQKVPGNa5o
-	 woOohCAXFRR9GTtorFJ1zTlJJrITpkTKNOjr85JW2TE+aCLMg74CoBTV+UKKrKNm/6xy1
-	 d7znQUlE2oCJWuWR+AGarD/NaZZM2o+TqdmFWMOcUOzU8ooq7wyIu5TXAfR6Nafrefg==
+	t=1792448066;
+	b=Wcnqsj2LVIZ2Q1ZYF4FyI5dpQbUbB9M3TePIuGyZiTJHZ9JGx1T8hdgn32LhOTRKUZ7q
+	 Ghkz0zyeQwQWeRtn18XCMzisvQ76TS+pr1wOBUD5xwvArWSkWldd6B+CK9gqsDBCwvr+a
+	 nWB0K2FpVyN4dn1IKoIKw93OkrhI2g5C30TqG9uKR1wb2jXHQJI1QjEegJHctspOWR5kZ
+	 AVzzMzpDDSAgM8DwrSzcWBmv84+Jp1lW0dKxnSjbkXnQGn1mdv1S1qkwRwoWJzHDgpDk/
+	 BXvc/ZL2D4zgbUZfi11Pyj2XjDBUNGL0W1u7lRT5EuaY3bwbNL+sDIGKUxYqTsVSbpA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792448064;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792448066;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
 	 Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=sv7c9NsoEPpc+ZILgTyR4tNCq18XKuIMkaA9FrsgiVY=;
-	b=o7V9QINuym1ZHbTBbj9cOxXNCIemymbQp/JxtqVPoHdb4o/4cflcYTMgAHH3W33BJBbl
-	 /rB9V1wytKsGbRm4dXpbD9IhFRhCtdr5TFTsUkI4rNLQUNBDdfcG0dv7bq8c9UG6ljDG/
-	 9bACFyEtdQ1MkKi67BOICRUVQmyGMXTYrNnIXBJ2V76Usd6MYhSbJevx933YbQxXAcexF
-	 Jb6b1L32NA0hYUN+GGU7GBHChwzUKd5iQREN7CMpqsR9OO5ICSgnTOWY1F0hNujeKZOnl
-	 /zka5U46vB0n0+xFBqNoOujw5FLwv7ja21vZN7S860LMNaDnpwia0nmelHrXQ3Y/s9Q==
+	bh=xn+xxisLM7m+etTGtO/GMeysQITTKpDcPtqyK+4T7J8=;
+	b=Qwo37nb5VEvcbcK+F1ypdYZc08UgGVS6WugiyBx2kqUTn5i0mJw2UIdQs5DzYHn/lQMf
+	 MdfCQ7+XoRda1AwxAxSZjuwlp5RHpSZRwH/dQgrIOBICwdjPD4uDov+7pfJCkycRyQ/GR
+	 FHCnQRTOaCxAY7XWx5X34If6pGDVUrY/A1ej0MF8CRXRCzOBWND+y+HqOP2ggrozEBM5z
+	 1Z7oXnIP755hfugptnUYpDR8xokBMoiYjvwLawOM8JMfv/lGl3I3GG203oc+W6FhCP5Mw
+	 3wGgr38Q3h/gP4NIXWWw4WM4X/1dW1zn/9/rvyBuZX8Oz0TN/uUqYCKJOo/c0l2aJuA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=purestorage.com;
 	spf=pass smtp.mailfrom=purestorage.com;
-	dkim=pass header.d=purestorage.com header.i=@purestorage.com header.a=rsa-sha256 header.s=google2022 header.b="H4L/hX2I";
-	arc=none smtp.remote-ip=74.125.82.50
-Received: from mail-dl1-f50.google.com (mail-dl1-f50.google.com [74.125.82.50])
+	dkim=pass header.d=purestorage.com header.i=@purestorage.com header.a=rsa-sha256 header.s=google2022 header.b=Jkl3hrw8;
+	arc=none smtp.remote-ip=74.125.82.179
+Received: from mail-dy1-f179.google.com (mail-dy1-f179.google.com [74.125.82.179])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4766A606A31D
-	for <linux-scsi@vger.kernel.org>; Mon, 19 Oct 2026 22:14:24 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4766A606A31D
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 334D1606A319
+	for <linux-scsi@vger.kernel.org>; Mon, 19 Oct 2026 22:14:26 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 334D1606A319
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=purestorage.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=purestorage.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=purestorage.com header.i=@purestorage.com header.a=rsa-sha256 header.s=google2022 header.b=H4L/hX2I
-Received: by mail-dl1-f50.google.com with SMTP id a92af1059eb24-1517bda04a0so2145794c88.0
-        for <linux-scsi@vger.kernel.org>; Mon, 19 Oct 2026 15:14:24 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=purestorage.com header.i=@purestorage.com header.a=rsa-sha256 header.s=google2022 header.b=Jkl3hrw8
+Received: by mail-dy1-f179.google.com with SMTP id 5a478bee46e88-3282db206d3so4389666eec.0
+        for <linux-scsi@vger.kernel.org>; Mon, 19 Oct 2026 15:14:25 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=purestorage.com; s=google2022; t=1792448063; x=1793052863; darn=vger.kernel.org;
+        d=purestorage.com; s=google2022; t=1792448065; x=1793052865; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=sv7c9NsoEPpc+ZILgTyR4tNCq18XKuIMkaA9FrsgiVY=;
-        b=H4L/hX2IyfFwG2bllxML23Z4oiY7z5kzF/1q6329stN1ujAKFadKX5w2f7sFIcNBBn
-         K4ofU7B6rtd/AaDEr6bhj26RAveFIzaH3bzPHvT+3+PLf/xulD4XLxJD381UU9yp+It0
-         SPdcwb3ej+MwbpL+qnVjdTSWvyCD7gm9rL5HCorV5mYRQA/JmCkujvuWgEShtgunqbBK
-         4yQDGBJY0KeLh3hsNFPGaLO9mDIBXh4VKs3kE81lL9DJNMyOD1W215AA2gW6EyGEAkif
-         LvFYONPByj24RfOO26LO2h1qSPZLbLzU4RgRLuHYFScXXTbke+vmBz238oUT5WJlC6aF
-         RM8g==
+        bh=xn+xxisLM7m+etTGtO/GMeysQITTKpDcPtqyK+4T7J8=;
+        b=Jkl3hrw8DmmSSBq2yOdZKTe6ll8LtaCvTIGUOoXVez8AngDN6SS5nWysUR6SRBE47Q
+         KuiO1twjXf/3PIfLgw0AaWp/2/1pX9fcEnyRCz9Zo6P2okWLJLP2tS0fY89yeIt/cC4C
+         taMPXV6xEG3d9970Vekazm4xMjUFzYgTr5QJjeFihMTHuGZOW50blDHutAEomEV8eVKt
+         OBFu0bw1JyWwYlmo5ZDiPYf1OBTsF95IPK6U+yNm1uXIMt0tULCzbpvXz6BOleVIEKlU
+         9JOxiG8mJQPq9YV0+K4KOntC4baV44lgVOOY4cWuyWJGu76+YXa4NOKT0QQKdcgdqXzI
+         IpvA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792448063; x=1793052863;
+        d=1e100.net; s=20260707; t=1792448065; x=1793052865;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=sv7c9NsoEPpc+ZILgTyR4tNCq18XKuIMkaA9FrsgiVY=;
-        b=GLr5DKAv1LEazzExPqu9U3+7XBYtc7n8WxhcbHHzCXULGC6osXAfonUwAX0g6jDD4N
-         gObCDpQDryY5caCRpGQCFNOGr9lppCaAVEBRm8PSHQzU3AnoKVDaIUXGDh479tOy2tI4
-         iZMELBRinrtPDqczEq5mLN6rzFOf3STou++B9HDvUL4mIIX50MmRoY7cnGYXNlr22fPk
-         d7ipdAW1g/ML2l218iODH1g5KyhEMXfn2wFD6eVQMTBGj9Zohy5FMha7fpbkqNlBkUVG
-         6x8C1f0c0SmGiILrOYtT3XCQKUe2yR/Dt255mTAANoQO7ujMEo5LVeqXp3Ff84cyXy08
-         mPVw==
-X-Gm-Message-State: AFq9FYIZevX2/79TjsnwKrG5fSMcaHYHwlogqvnPwKHiN+2OS+Qm6N7z
-	ROlxImQiaQ9gtfupOfA5VK9UThT0fERNtYb+q7D9EiOOQytkNIjJs98M6kYmoSiuWvMShMxDBE4
-	x/ItTaq+0lIMMpM1ewfHiRdqvbUUppbR6owNLcmY+Lh5kEL/q+O825PDyZcnPUL8w0oV0a0dTPj
-	+/MK6e7ExnQ36rMmQunoYBTrUGzY/Y6ZBVjZ9EUBzHDuQN9ELIYA==
-X-Gm-Gg: AYBFou28UCZ7ejBQcwCeMV3qWwZflvEQYFG5HXfHN6aZXmH8fkrLHNsCpV4JhKzJvrJ
-	Ejk42EqNQXnsKONTIj6kg+1FI4Xr/V611T5joZTId9PrKuKdzi6ZrJ9uXWPgyXoxgdw6nxkIx88
-	3XRX+ugT5Duby5KSWKr5MxDj/V3RQIOoxKqy/sCZFAXIuYrl7alwh/5+7XIwTk1y1nhKPG7AtR7
-	ysgLc68htZYBgcPvoUIDCAWXhYnPM86TmNfdajMWRNOtFZ4uGDyZFMJ2nGApvAI0s0RRLY33Nie
-	DBqfVgBosqe8DHLd2MI+kTBomIyS9KDhxHGP/+rzUdOgzfzCkPlo1yCJ334cuYBSCqBIqVXZEd0
-	dkgzMDAjo154Oat4U2BJGS8gbioYDoPRuT5Fd9bJNNsOyHGGRTzG7OWuAfU6GzczgpM3uNmSHLS
-	GF/H5msdSTtWLcO7Tuxvzx7C7GavrOYhxP9Kbx73IwT7cMtSJyVeXK24RZHVDZpfn3aBp90FD3G
-	NUnsqyeOn+EtwwPWBBVA3AU3OYx507lLWWomIbNVVM+9BexIpPTJ7pqASu/18LsasB6kjOVsA5e
-	sCb9DbZNvUIKTZ1oepZk9A/V74SxaBST9BaCsghDeUcX2UYg26HBpTmG6dn4hKK4jVI8b7zT9+/
-	BC8xfiw==
-X-Received: by 2002:a05:7022:5f13:b0:159:2c6d:fcc3 with SMTP id a92af1059eb24-18512e254abmr9637415c88.33.1792448062881;
-        Mon, 19 Oct 2026 15:14:22 -0700 (PDT)
+        bh=xn+xxisLM7m+etTGtO/GMeysQITTKpDcPtqyK+4T7J8=;
+        b=1oqJeCXX2hlTCpNRATVcVcpzyjabyOzg1TeWFTwGPO9+4unM7Fi4vAbmjSky6ZJQyp
+         gPMAAGZPozvG9fc82svn16HLJnaPWESE1xBXCg+UBWsmiTzXCiyPLjGg5/X/ELNH0x8e
+         ESpmsiLrERyXkzGrh4K/Jb0YL5351ivIBhhcLUkTDnZWSjBuV7ZQef6fSgIHrkJ+Lk15
+         bgoOXYt6gbj+L30uvYbS6UfEILvptp3BJPYqWZR+/vAHSQVLrSGL5Knb4lIvqVBzSail
+         6qwLayl2xPIfBOf6KTlIUoq9jpVR6qOpnsUcp4Necu2o5E4UtYkyO+P3PTBFVIHyLjKZ
+         1+TA==
+X-Gm-Message-State: AFq9FYIFQRZhtqlH/ZCZLGzjyePEJCzPvYkBStiG1V4WKQZGhwe4/qCK
+	UIL/xGgp7TUTxd7ZTq6PDthlfWS4DI6RHeZTh+2krqN2e8n2vG9zVq9ac2FN5MSgCXKFgltPUGq
+	Mrtygnu4BfmVEVWkC50/n9SFwqePRp7a+czrlswdxTZjFAS11A0xjEfjpVL59BxkKuJ3+/ZMK3Z
+	0l5IxUG5zT9eMwTtZbWEiOhLOIM/1gxSw+uW7R3xL7UYHUKYKiLQ==
+X-Gm-Gg: AYBFou1yi58PZlpzdUgm60Pi5tcWkGgL9UDu8Z5gNnYV1F+PJ3AXzZWnszvCMI67zTB
+	zW9qS09mTdv+kTzPjM2AcOg5DaMPiFOYu3gDoiYfhqmxLTvNVlAEHZ3O0tzdEfL5bY5kufli41z
+	zwRuwdn+Ie7Otii0DyFcFKAsfvg61DUYduKks/k3vgi+vTe6/jXM9KY5cesOYaACRkDKkVgFriU
+	/P62bUaP3hCxEQItVt6MWHicw4ezn9OUMLsIAKqOmaFSdw2HqLa6OH2hWwqu7/ccbjzLPe74WUi
+	lGuye5mAdlzTtergetLu4j7hC56QMDoE2pVz+GsC0JJhzTetwIMbuOdgQ11i+7Z79YNo693CIqv
+	EDTdCRmcdtZud26dfXHcQxMXFGSc+roDmpXSU2RGz7asRyEhDr5Bqjf0VywzioAZ1Dy2uECd3OA
+	NKiOOGl0trO8BfLC0RQwfqN8NtRtWYtIFLTWT9r7QH98t5hUVBGM6anHG21IMqtByw+PVqMu/nu
+	wL71woGFOuMY/zM4G+1rsUpf5mj2P33FbOs9LBFXkGWNnm97xZK+S7J2NOdy/KTGUyABBDyXJrh
+	gJQDgHeQaTGKE2kUzJKKyUWwJHdi8jFHZuqwiC/gV2/3AGT1b+svK/a6oK2WokLb+HvT8Zs=
+X-Received: by 2002:a05:701b:4549:10b0:166:b307:5855 with SMTP id a92af1059eb24-185075288e1mr12643664c88.0.1792448064795;
+        Mon, 19 Oct 2026 15:14:24 -0700 (PDT)
 Received: from brian--MacBookPro18.purestorage.com ([170.85.204.106])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-18319d3b880sm29429839c88.10.2026.10.19.15.14.21
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-18319d3b880sm29429839c88.10.2026.10.19.15.14.23
         (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Mon, 19 Oct 2026 15:14:22 -0700 (PDT)
+        Mon, 19 Oct 2026 15:14:24 -0700 (PDT)
 From: Brian Bunker <brian@purestorage.com>
 To: linux-scsi@vger.kernel.org
 Cc: "Martin K . Petersen" <mkp@kernel.org>,
@@ -88,10 +87,11 @@ Cc: "Martin K . Petersen" <mkp@kernel.org>,
 	Hannes Reinecke <hare@suse.de>,
 	Bart Van Assche <bvanassche@acm.org>,
 	krishna.kant@purestorage.com,
-	Brian Bunker <brian@purestorage.com>
-Subject: [PATCH v8 2/5] scsi: core: Add scsi_update_inquiry_data() for updating INQUIRY data
-Date: Mon, 19 Oct 2026 15:14:01 -0700
-Message-ID: <20261019221405.40614-3-brian@purestorage.com>
+	Brian Bunker <brian@purestorage.com>,
+	Hannes Reinecke <hare@kernel.org>
+Subject: [PATCH v8 3/5] scsi: core: Refactor scsi_add_lun() to use scsi_update_inquiry_data()
+Date: Mon, 19 Oct 2026 15:14:02 -0700
+Message-ID: <20261019221405.40614-4-brian@purestorage.com>
 X-Mailer: git-send-email 2.56.0
 In-Reply-To: <20261019221405.40614-1-brian@purestorage.com>
 References: <20261019221405.40614-1-brian@purestorage.com>
@@ -106,308 +106,226 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Add a new function scsi_update_inquiry_data() that stores standard
-INQUIRY data for a SCSI device and updates the fields derived from it:
+Refactor scsi_add_lun() to use the new scsi_update_inquiry_data()
+function instead of inline INQUIRY parsing code. This consolidates
+INQUIRY data handling in one place and ensures consistent behavior
+between initial device setup and device rescan operations.
 
-- Vendor, model, revision strings
-- Peripheral qualifier, device type and SCSI level
-- On the first call only: capability flags (removable, lockable,
-  tagged queuing support, transfer modes, ATA detection, ...)
+The following fields are now set by scsi_update_inquiry_data():
+- inquiry buffer, vendor, model, rev pointers
+- type, removable, lockable
+- inq_periph_qual
+- soft_reset, ppr, wdtr, sdtr
+- tagged_supported, simple_tags
+- is_ata, allow_restart
 
-The function:
-- Takes the inquiry_mutex to protect against concurrent sysfs reads
-- Allocates sdev->inquiry once at its maximum size and copies later
-  updates into it in place. Several helpers in <scsi/scsi_device.h>
-  (scsi_device_tpgs(), scsi_device_protection(), ...) read
-  sdev->inquiry without any lock, so the buffer must never be freed
-  while the device is live.
-- Computes scsi_level and type in local variables and stores each one
-  once with WRITE_ONCE(). Both are also read without inquiry_mutex (by
-  the I/O path, upper-level drivers and the uevent code), so a lockless
-  reader must never see an intermediate value, such as the unincremented
-  scsi_level or the uncorrected type of a well-known LUN.
-- Leaves the capability flags alone when refreshing an existing device.
-  LLDs and upper-level drivers adjust several of them after the initial
-  probe (usb-storage and scsi_ioctl clear lockable, aacraid forces
-  tagged_supported, ...), and they share a word with runtime state bits
-  that are written without inquiry_mutex.
-- Applies the BLIST_ISROM type override on every call. The BLIST_ISROM
-  removable override and BLIST_NOTQ only affect the capability flags,
-  so they are applied on the first call only
-- Returns 1 if device type or peripheral qualifier changed, indicating
-  the caller should call device_reprobe() to re-match drivers
-- Returns 0 on success with no changes requiring reprobe
-- Returns negative errno on failure
+Also update scsi_probe_lun() to compute scsi_level into a local
+variable rather than writing directly to sdev->scsi_level.
+scsi_update_inquiry_data() is now the authoritative setter of
+sdev->scsi_level under inquiry_mutex; scsi_probe_lun() needs the
+level early for lun_in_cdb and sdev_target->scsi_level before
+scsi_update_inquiry_data() is called.
 
-This is the core infrastructure needed for updating INQUIRY data during
-device rescan operations, which is required for proper ALUA unavailable
-state handling.
+scsi_add_lun() is only ever called for freshly allocated sdev instances
+where sdev->inquiry is NULL, so the redundant !sdev->inquiry guard is
+dropped along with the now-unreachable sanity check that followed it.
+
+This patch maintains identical behavior to the previous code.
+scsi_add_lun() continues to handle the remaining BLIST flags and
+device-specific setup that doesn't come directly from INQUIRY data.
 
 Co-developed-by: Krishna Kant <krishna.kant@purestorage.com>
 Signed-off-by: Krishna Kant <krishna.kant@purestorage.com>
+Reviewed-by: Hannes Reinecke <hare@kernel.org>
 Signed-off-by: Brian Bunker <brian@purestorage.com>
 ---
- drivers/scsi/scsi.c        | 215 +++++++++++++++++++++++++++++++++++++
- include/scsi/scsi_device.h |  13 +++
- 2 files changed, 228 insertions(+)
+ drivers/scsi/scsi_scan.c | 127 +++++++++------------------------------
+ 1 file changed, 29 insertions(+), 98 deletions(-)
 
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index 3af9e77847f7..6a421961dbd0 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -61,6 +61,7 @@
- #include <scsi/scsi_cmnd.h>
- #include <scsi/scsi_dbg.h>
- #include <scsi/scsi_device.h>
-+#include <scsi/scsi_devinfo.h>
- #include <scsi/scsi_driver.h>
- #include <scsi/scsi_eh.h>
- #include <scsi/scsi_host.h>
-@@ -549,6 +550,220 @@ void scsi_attach_vpd(struct scsi_device *sdev)
- 	kfree(vpd_buf);
- }
- 
-+/*
-+ * Size of the buffer that holds sdev->inquiry. sdev->inquiry_len is an
-+ * unsigned char, so at most 255 bytes of INQUIRY data are ever stored.
-+ */
-+#define SCSI_INQUIRY_BUF_LEN	256
-+
-+/*
-+ * Set the capability flags derived from INQUIRY data. These are only set
-+ * when the device is first probed: LLDs and upper-level drivers adjust
-+ * several of them afterwards (lockable, tagged_supported, ppr, ...), and
-+ * they share a word with runtime state bits that are updated without
-+ * inquiry_mutex, so they must not be rewritten on a live device.
-+ */
-+static void scsi_set_inquiry_flags(struct scsi_device *sdev,
-+				   unsigned char *inq_result, size_t inq_len)
-+	__must_hold(&sdev->inquiry_mutex)
-+{
-+	/*
-+	 * Check if this is an ATA device (SATA emulation layer).
-+	 * ATA devices need allow_restart set to work around SATL power
-+	 * management specifications.
-+	 */
-+	if (strncmp(sdev->vendor, "ATA     ", 8) == 0) {
-+		sdev->is_ata = 1;
-+		sdev->allow_restart = 1;
-+	}
-+
-+	/*
-+	 * BLIST_ISROM is a quirk for devices that report the wrong type but
-+	 * should be treated as (removable) CD-ROM.
-+	 */
-+	if (sdev->sdev_bflags & BLIST_ISROM)
-+		sdev->removable = 1;
-+	else
-+		sdev->removable = (inq_result[1] & 0x80) >> 7;
-+
-+	/*
-+	 * Set lockable to match removable. Devices with removable media
-+	 * can typically have their media locked/unlocked via the
-+	 * ALLOW_MEDIUM_REMOVAL command.
-+	 */
-+	sdev->lockable = sdev->removable;
-+
-+	/* Capability flags from INQUIRY bytes 3, 7 and 56 */
-+	sdev->soft_reset = (inq_result[7] & 1) && ((inq_result[3] & 7) == 2);
-+	if (sdev->scsi_level >= SCSI_3 ||
-+	    (inq_len > 56 && inq_result[56] & 0x04))
-+		sdev->ppr = 1;
-+	if (inq_result[7] & 0x60)
-+		sdev->wdtr = 1;
-+	if (inq_result[7] & 0x10)
-+		sdev->sdtr = 1;
-+
-+	/* BLIST_NOTQ forces tagged queuing off */
-+	if (sdev->scsi_level >= SCSI_2 && (inq_result[7] & 2) &&
-+	    !(sdev->sdev_bflags & BLIST_NOTQ)) {
-+		sdev->tagged_supported = 1;
-+		sdev->simple_tags = 1;
-+	}
-+}
-+
-+/**
-+ * scsi_update_inquiry_data - Update standard INQUIRY data for a SCSI device
-+ * @sdev: The device to update
-+ * @inq_result: Buffer containing new INQUIRY data
-+ * @inq_len: Length of inquiry data
-+ *
-+ * Stores the standard INQUIRY data for @sdev and updates the fields derived
-+ * from it: vendor, model, revision, peripheral qualifier, device type and
-+ * SCSI level. This is used both during initial device setup and when an
-+ * existing device is rescanned. On the first call the capability flags
-+ * derived from INQUIRY data are set as well; see scsi_set_inquiry_flags().
-+ *
-+ * The INQUIRY buffer is allocated once, at its maximum size, and later
-+ * updates copy the new data into it in place. Several helpers in
-+ * <scsi/scsi_device.h> read sdev->inquiry without holding inquiry_mutex,
-+ * so the buffer must not be freed or reallocated while the device is live.
-+ *
-+ * The BLIST_ISROM type override is applied on every call. Its removable
-+ * override, like BLIST_NOTQ, only affects the capability flags and is
-+ * therefore only applied on the first call.
-+ *
-+ * Returns:
-+ *   SCSI_INQ_UNCHANGED on success
-+ *   SCSI_INQ_REPROBE_NEEDED if peripheral qualifier or device type changed
-+ *  -ENOMEM on allocation failure
-+ *  -EINVAL if inquiry data is too short
-+ */
-+int scsi_update_inquiry_data(struct scsi_device *sdev,
-+			     unsigned char *inq_result, size_t inq_len)
-+{
-+	unsigned char *new_inquiry = NULL;
-+	unsigned char old_type;
-+	unsigned char old_periph_qual;
-+	unsigned char type;
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 8aae12fd38f3..93a8719fcf26 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -650,6 +650,7 @@ static int scsi_probe_lun(struct scsi_device *sdev, unsigned char *inq_result,
+ 	int first_inquiry_len, try_inquiry_len, next_inquiry_len;
+ 	int response_len = 0;
+ 	int pass, count, result, resid;
 +	char scsi_level;
-+	bool refresh;
-+
-+	/*
-+	 * Ensure we have at least the minimum standard INQUIRY data (36 bytes)
-+	 * to safely access device type, vendor, model, rev, and capability flags.
-+	 */
-+	if (inq_len < 36) {
-+		sdev_printk(KERN_WARNING, sdev,
-+			    "INQUIRY data too short (%zu bytes), need at least 36\n",
-+			    inq_len);
-+		return -EINVAL;
-+	}
-+	inq_len = min_t(size_t, inq_len, SCSI_INQUIRY_BUF_LEN - 1);
-+
-+	/*
-+	 * The buffer is only allocated on the first call, from scsi_add_lun(),
-+	 * before the device is visible to anyone else.
-+	 */
-+	if (!sdev->inquiry) {
-+		new_inquiry = kzalloc(SCSI_INQUIRY_BUF_LEN, GFP_KERNEL);
-+		if (!new_inquiry)
-+			return -ENOMEM;
-+	}
-+
-+	mutex_lock(&sdev->inquiry_mutex);
-+
-+	/*
-+	 * Save peripheral qualifier and device type before updating. These
-+	 * are the only two values that determine whether device_reprobe() is
-+	 * needed: type controls which upper-layer driver (sd, st, sr, ...) is
-+	 * bound, and PQ controls whether the LUN is accessible at all
-+	 * (scsi_bus_match() only matches PQ == 0).
-+	 */
-+	refresh = !new_inquiry;
-+	old_type = sdev->type;
-+	old_periph_qual = sdev->inq_periph_qual;
-+
-+	if (new_inquiry)
-+		sdev->inquiry = new_inquiry;
-+	memcpy(sdev->inquiry, inq_result, inq_len);
-+	memset(sdev->inquiry + inq_len, 0, SCSI_INQUIRY_BUF_LEN - inq_len);
-+	sdev->inquiry_len = inq_len;
-+
-+	strscpy(sdev->vendor, sdev->inquiry + INQUIRY_VENDOR_OFFSET);
-+	strscpy(sdev->model, sdev->inquiry + INQUIRY_MODEL_OFFSET);
-+	/*
-+	 * memcpy() instead of strscpy() because strscpy() would read past
-+	 * the end of the INQUIRY data if its length is exactly 36 bytes.
-+	 */
-+	memcpy(sdev->rev, sdev->inquiry + INQUIRY_REVISION_OFFSET,
-+	       INQUIRY_REVISION_LEN);
-+	sdev->rev[INQUIRY_REVISION_LEN] = '\0';
-+	sdev->inq_periph_qual = (inq_result[0] >> 5) & 7;
-+
-+	/*
-+	 * Compute scsi_level from INQUIRY bytes 2 and 3. This must be
-+	 * updated under inquiry_mutex alongside the other INQUIRY-derived
-+	 * fields so sysfs readers always see a consistent snapshot.
-+	 *
-+	 * scsi_level and type are also read without inquiry_mutex, by the
-+	 * I/O path, upper-level drivers and scsi_bus_uevent(). Compute them
-+	 * in local variables and store each one once, so that a lockless
-+	 * reader sees either the old or the new value, never an
-+	 * intermediate one.
-+	 */
+ 	struct scsi_failure failure_defs[] = {
+ 		/*
+ 		 * not-ready to ready transition or power-on, reset, continue.
+@@ -838,23 +839,26 @@ static int scsi_probe_lun(struct scsi_device *sdev, unsigned char *inq_result,
+ 	 */
+ 
+ 	/*
+-	 * The scanning code needs to know the scsi_level, even if no
+-	 * device is attached at LUN 0 (SCSI_SCAN_TARGET_PRESENT) so
+-	 * non-zero LUNs can be scanned.
++	 * The scanning code needs to know the scsi_level before
++	 * scsi_update_inquiry_data() is called, both to set the target
++	 * scsi_level and to determine lun_in_cdb. Use a local variable
++	 * here; sdev->scsi_level is set later under inquiry_mutex in
++	 * scsi_update_inquiry_data() to avoid races with concurrent sysfs
++	 * readers.
+ 	 */
+-	sdev->scsi_level = inq_result[2] & 0x0f;
+-	if (sdev->scsi_level >= 2 ||
+-	    (sdev->scsi_level == 1 && (inq_result[3] & 0x0f) == 1))
+-		sdev->scsi_level++;
+-	sdev->sdev_target->scsi_level = sdev->scsi_level;
 +	scsi_level = inq_result[2] & 0x0f;
 +	if (scsi_level >= 2 ||
 +	    (scsi_level == 1 && (inq_result[3] & 0x0f) == 1))
 +		scsi_level++;
-+	WRITE_ONCE(sdev->scsi_level, scsi_level);
-+
-+	/*
-+	 * Update device type from INQUIRY byte 0. BLIST_ISROM overrides the
-+	 * reported type with TYPE_ROM.
-+	 */
-+	if (sdev->sdev_bflags & BLIST_ISROM) {
-+		type = TYPE_ROM;
-+	} else {
-+		type = inq_result[0] & 0x1f;
-+
-+		/*
-+		 * Some devices may respond with wrong type for well-known
-+		 * logical units. Force well-known type to enumerate them
-+		 * correctly.
-+		 */
-+		if (scsi_is_wlun(sdev->lun) && type != TYPE_WLUN) {
-+			sdev_printk(KERN_WARNING, sdev,
-+				"%s: correcting incorrect peripheral device type 0x%x for W-LUN 0x%16xhN\n",
-+				__func__, type,
-+				(unsigned int)sdev->lun);
-+			type = TYPE_WLUN;
-+		}
-+	}
-+	WRITE_ONCE(sdev->type, type);
-+
-+	if (!refresh)
-+		scsi_set_inquiry_flags(sdev, inq_result, inq_len);
-+
-+	mutex_unlock(&sdev->inquiry_mutex);
-+
-+	if (refresh) {
-+		if (old_type != sdev->type) {
-+			sdev_printk(KERN_NOTICE, sdev,
-+				    "device type changed from %d to %d\n",
-+				    old_type, sdev->type);
-+			return SCSI_INQ_REPROBE_NEEDED;
-+		}
-+		if (old_periph_qual != sdev->inq_periph_qual) {
-+			sdev_printk(KERN_NOTICE, sdev,
-+				    "peripheral qualifier changed from %d to %d\n",
-+				    old_periph_qual, sdev->inq_periph_qual);
-+			return SCSI_INQ_REPROBE_NEEDED;
-+		}
-+	}
-+
-+	return SCSI_INQ_UNCHANGED;
-+}
-+
- /**
-  * scsi_report_opcode - Find out if a given command is supported
-  * @sdev:	scsi device to query
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index e6fd6bc30644..743babf1602c 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -408,6 +408,19 @@ void scsi_attach_vpd(struct scsi_device *sdev);
- void scsi_cdl_check(struct scsi_device *sdev);
- int scsi_cdl_enable(struct scsi_device *sdev, bool enable);
++	sdev->sdev_target->scsi_level = scsi_level;
  
-+/**
-+ * enum scsi_inq_update_result - Return values for scsi_update_inquiry_data()
-+ * @SCSI_INQ_UNCHANGED: INQUIRY data updated, no reprobe needed
-+ * @SCSI_INQ_REPROBE_NEEDED: INQUIRY data updated, standard INQUIRY data changed
-+ */
-+enum scsi_inq_update_result {
-+	SCSI_INQ_UNCHANGED = 0,
-+	SCSI_INQ_REPROBE_NEEDED = 1,
-+};
-+
-+int scsi_update_inquiry_data(struct scsi_device *sdev,
-+			     unsigned char *inq_result, size_t inq_len);
-+
- extern int __must_check scsi_device_get(struct scsi_device *);
- extern void scsi_device_put(struct scsi_device *);
- extern struct scsi_device *scsi_device_lookup(struct Scsi_Host *,
+ 	/*
+ 	 * If SCSI-2 or lower, and if the transport requires it,
+ 	 * store the LUN value in CDB[1].
+ 	 */
+ 	sdev->lun_in_cdb = 0;
+-	if (sdev->scsi_level <= SCSI_2 &&
+-	    sdev->scsi_level != SCSI_UNKNOWN &&
++	if (scsi_level <= SCSI_2 &&
++	    scsi_level != SCSI_UNKNOWN &&
+ 	    !sdev->host->no_scsi2_lun_in_cdb)
+ 		sdev->lun_in_cdb = 1;
+ 
+@@ -883,17 +887,6 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
+ 	struct queue_limits lim;
+ 	int ret;
+ 
+-	/*
+-	 * XXX do not save the inquiry, since it can change underneath us,
+-	 * save just vendor/model/rev.
+-	 *
+-	 * Rather than save it and have an ioctl that retrieves the saved
+-	 * value, have an ioctl that executes the same INQUIRY code used
+-	 * in scsi_probe_lun, let user level programs doing INQUIRY
+-	 * scanning run at their own risk, or supply a user level program
+-	 * that can correctly scan.
+-	 */
+-
+ 	/*
+ 	 * Copy at least 36 bytes of INQUIRY data, so that we don't
+ 	 * dereference unallocated memory when accessing the Vendor,
+@@ -902,54 +895,26 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
+ 	 * these strings are invalid, but often they contain plausible data
+ 	 * nonetheless.  It doesn't matter if the device sent < 36 bytes
+ 	 * total, since scsi_probe_lun() initializes inq_result with 0s.
++	 *
++	 * Set sdev_bflags before calling scsi_update_inquiry_data() so it
++	 * can use the correct blacklist flags (especially BLIST_ISROM).
+ 	 */
+-	sdev->inquiry = kmemdup(inq_result,
+-				max_t(size_t, sdev->inquiry_len, 36),
+-				GFP_KERNEL);
+-	if (sdev->inquiry == NULL)
+-		return SCSI_SCAN_NO_RESPONSE;
++	sdev->sdev_bflags = *bflags;
+ 
+-	strscpy(sdev->vendor, sdev->inquiry + INQUIRY_VENDOR_OFFSET);
+-	strscpy(sdev->model, sdev->inquiry + INQUIRY_MODEL_OFFSET);
+ 	/*
+-	 * memcpy() instead of strscpy() because strscpy() would read past
+-	 * the end of sdev->inquiry if its length is exactly 36 bytes.
++	 * scsi_probe_lun() already enforces a minimum of 36 bytes, so
++	 * sdev->inquiry_len is guaranteed >= 36 here.
+ 	 */
+-	memcpy(sdev->rev, sdev->inquiry + INQUIRY_REVISION_OFFSET,
+-	       INQUIRY_REVISION_LEN);
+-	sdev->rev[INQUIRY_REVISION_LEN] = '\0';
+-
+-	sdev->is_ata = strncmp(sdev->vendor, "ATA     ", 8) == 0;
+-	if (sdev->is_ata) {
+-		/*
+-		 * sata emulation layer device.  This is a hack to work around
+-		 * the SATL power management specifications which state that
+-		 * when the SATL detects the device has gone into standby
+-		 * mode, it shall respond with NOT READY.
+-		 */
+-		sdev->allow_restart = 1;
+-	}
+-
+-	if (*bflags & BLIST_ISROM) {
+-		sdev->type = TYPE_ROM;
+-		sdev->removable = 1;
+-	} else {
+-		sdev->type = (inq_result[0] & 0x1f);
+-		sdev->removable = (inq_result[1] & 0x80) >> 7;
+-
+-		/*
+-		 * some devices may respond with wrong type for
+-		 * well-known logical units. Force well-known type
+-		 * to enumerate them correctly.
+-		 */
+-		if (scsi_is_wlun(sdev->lun) && sdev->type != TYPE_WLUN) {
+-			sdev_printk(KERN_WARNING, sdev,
+-				"%s: correcting incorrect peripheral device type 0x%x for W-LUN 0x%16xhN\n",
+-				__func__, sdev->type, (unsigned int)sdev->lun);
+-			sdev->type = TYPE_WLUN;
+-		}
++	if (scsi_update_inquiry_data(sdev, inq_result, sdev->inquiry_len) < 0)
++		return SCSI_SCAN_NO_RESPONSE;
+ 
+-	}
++	/*
++	 * scsi_update_inquiry_data() has already set type, removable, lockable,
++	 * inq_periph_qual, scsi_level, inquiry_len, soft_reset, ppr, wdtr, sdtr,
++	 * tagged_supported, simple_tags, is_ata, and allow_restart from INQUIRY
++	 * data. Handle special cases that need the raw inq_result or additional
++	 * logic.
++	 */
+ 
+ 	if (sdev->type == TYPE_RBC || sdev->type == TYPE_ROM) {
+ 		/* RBC and MMC devices can return SCSI-3 compliance and yet
+@@ -960,46 +925,12 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
+ 			*bflags |= BLIST_NOREPORTLUN;
+ 	}
+ 
+-	/*
+-	 * For a peripheral qualifier (PQ) value of 1 (001b), the SCSI
+-	 * spec says: The device server is capable of supporting the
+-	 * specified peripheral device type on this logical unit. However,
+-	 * the physical device is not currently connected to this logical
+-	 * unit.
+-	 *
+-	 * The above is vague, as it implies that we could treat 001 and
+-	 * 011 the same. Stay compatible with previous code, and create a
+-	 * scsi_device for a PQ of 1
+-	 *
+-	 * Don't set the device offline here; rather let the upper
+-	 * level drivers eval the PQ to decide whether they should
+-	 * attach. So remove ((inq_result[0] >> 5) & 7) == 1 check.
+-	 */ 
+-
+-	sdev->inq_periph_qual = (inq_result[0] >> 5) & 7;
+-	sdev->lockable = sdev->removable;
+-	sdev->soft_reset = (inq_result[7] & 1) && ((inq_result[3] & 7) == 2);
+-
+-	if (sdev->scsi_level >= SCSI_3 ||
+-			(sdev->inquiry_len > 56 && inq_result[56] & 0x04))
+-		sdev->ppr = 1;
+-	if (inq_result[7] & 0x60)
+-		sdev->wdtr = 1;
+-	if (inq_result[7] & 0x10)
+-		sdev->sdtr = 1;
+-
+ 	sdev_printk(KERN_NOTICE, sdev, "%s %.8s %.16s %.4s PQ: %d "
+ 			"ANSI: %d%s\n", scsi_device_type(sdev->type),
+ 			sdev->vendor, sdev->model, sdev->rev,
+ 			sdev->inq_periph_qual, inq_result[2] & 0x07,
+ 			(inq_result[3] & 0x0f) == 1 ? " CCS" : "");
+ 
+-	if ((sdev->scsi_level >= SCSI_2) && (inq_result[7] & 2) &&
+-	    !(*bflags & BLIST_NOTQ)) {
+-		sdev->tagged_supported = 1;
+-		sdev->simple_tags = 1;
+-	}
+-
+ 	/*
+ 	 * Some devices (Texel CD ROM drives) have handshaking problems
+ 	 * when used with the Seagate controllers. borken is initialized
 -- 
 2.56.0
 
