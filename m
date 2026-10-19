@@ -1,57 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792448775;
-	b=Q3nnHqPTP3ds/epD2C0MIoYnLRWceTglHYiCSNIqSBedOSpKXVxd2GCSsQD2QZ+SWlFn
-	 9mw9nx/3/mzN79gA/ApOKS3bztSbC1gArswzkc6HsRqEYV33jLBfQ7kAblFNYtMFPHGyL
-	 igyVPvfr4PmeiBWta3T3JuVJy3k8zqwjvH6tzUpQCnH+CjAr1AKD/O64aGkWPWkZI8A8/
-	 cFQfeQ2OdXDdd1Mpyq0QsqWTLlRBBqzqq2hiMr+Vbz1K5m/Cdm0KlJ1P/5dd0/dLDcm9i
-	 bCz/NKNp/9rqk6VxvKslLWsW1X4ZUFRslr+6TWFJYUGOjob3aIrFqD3zcyGsqjOpXGQ==
+	t=1792448968;
+	b=rCnrE3xuts+IlCXF8X/QQHS7MkmaIp5LshgiTqA1RVEA5LklNBM2S2KCu/yfZA/UMgP8
+	 9Wf1YR6kGBgvSHsiMA7hXZ42IYBrM/RHjlOCsI4fIgG877SRVCsKPopNERWElFfB1aLxx
+	 Wy+EOLKXFOiEP5K1uSwKiqXHYq3bK8ippubpR5Ds4KwoGF6FQMfDJ45JqgSsxOF8ABbxz
+	 UUWIg5fDx0nBJEznqJgB/7meVbi7ilsXlbf9IkR6/62Nk31xpl57LuzcUbmw3PH7fswN9
+	 UQquuQYR3bffQ2omdtzGKEA4afR7xIJGGSwQ650E59qNH4ejGhvR40D9W/BzRlGtDvQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792448775;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792448968;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=LlRL0+VYpIOHaaECalTh2x0CubxvgZCHa9dYckpKbm4=;
-	b=sp4/zo5cHycMowkItrL72iqRjv96A8BGPgXKE7CSv1iZIKba8QwaFZA9sYDeZpEI/Xdr
-	 92IJmFD7+TvZSXQBMMLVYz37QIGl7D1ZrFslKcdhpx0fAkvd/3Q+tM2RAI3cpbht6iSKd
-	 SDSr+FloMOh6uRujzW4Yk90lXei+bEKe668AaROzT0mxCH8ioVHrGpNxLS+Xvf0vG+raK
-	 Xe9PWe8pyHFRNljjHwo7N08lPgs4iTM7tkbM0ZmdKutfjcyvSDiUtyLiWUH8J9HdaxrnG
-	 ONUyD2nbTNDSYWyBi9zhA6z5EGqpM4aj195Zwei4F9G5wH4il82HjEimIVBvmpoUCeg==
+	bh=xV2UVHfXlx/HRVoAphySgJRys3jdO5J+/U4pzUx99+w=;
+	b=p1mQ5bkN/TJJ45ZUqjsRMpsLlulkWhqk8HlMFjpTt0sSw2HU16Nxqn8tkzLpBLuVwWHR
+	 6cw9h9KhXjSNj7BIIRN2+fzbdTrOhgFJ5E/lj2i/Erbmabmtg43vylHjGErkR1tcajpkA
+	 5DuMgzFV4poRa9Ocda+bQM1Jkrxzyg3HRfHhAZSocEdicmFWc/ln7rd3muR4CN+eo5g2x
+	 Ys3nXhP0XaIuJ4972a+WXo61U1+qYeEpN/FLs3H2LZ+Sl7fsofSXKS/t9LxfJHiuo/hkO
+	 f+MBphr2Uup++7530n5TudhDGS8ONHa6VcQchrOH+Aei09NJ59zPjbj9xad5D8elZkw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="JRpE/Oih";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=mun318D9;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A62EC606A319
-	for <linux-scsi@vger.kernel.org>; Mon, 19 Oct 2026 22:26:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60575606A319
+	for <linux-scsi@vger.kernel.org>; Mon, 19 Oct 2026 22:29:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=JRpE/Oih
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0B71D1F000C4;
-	Mon, 19 Oct 2026 22:26:14 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=mun318D9
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B99C41F000C4;
+	Mon, 19 Oct 2026 22:29:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792448774;
-	bh=LlRL0+VYpIOHaaECalTh2x0CubxvgZCHa9dYckpKbm4=;
+	s=k20260515; t=1792448968;
+	bh=xV2UVHfXlx/HRVoAphySgJRys3jdO5J+/U4pzUx99+w=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=JRpE/Oihe2tPHoOdKDMWNekn7ZH/g7Bpd0yWJ7v2LdvBt7PhURqZmTPDS7gXC4QNC
-	 0KmaRyDazHkOOYd7NdkgGnMuvQOEIFLiBXYJJAEKtRJDeTZA35Fb1I7aQ40BcvYRfX
-	 0TglTJyvU+oSo+ndos9ptF6waDnMPqZZKx0xIiK2M3kObIgAj4lzKTj5GpyIXu6PYj
-	 hq3El4/bAa2lH6D32Tk/Md/t+3drhru8MAuaagd6OcfReQPlVRY++CLiCBz/M+jvRu
-	 wD8tSKr3I0c8PvOOKeJK0p2Kqf5i2JzL+Ay5ASEJZgizdjLvO3df8GaHB28aOOSWJF
-	 3b01EmfwLogfQ==
-Message-ID: <sashiko-outbox-178317@kernel.org>
+	b=mun318D9+5G3R7F3ry98iOEUuO5h3FLX7HdHlaHYzLQ8cZPKwuHkfr8iY195PIhDM
+	 8OCSFWqBCqULS7bufTyVfDrtY6PPe7SG161H72PJA+ZbcM+3Cyviz6gw4s+5wocO23
+	 QxZrkUWBItKeFSet9n01SKBLh8tb+ZCfZWP8Eg1Q1wY3cCMt25P/gLWNAPj6AdFUvy
+	 D+WQBmt4vfCAdzbsV6+XA8ZyFu6qfVrJ+nPiJc5cETBbJDPN1rqR9gyAbAFnTR0nv+
+	 Z2cGrWg/vHKoXjYCBd1Xjd2260jjiPmkHGgX2KLmwI0rgiDj4lx5QTzQ6PXGkcKltH
+	 IDGRnup7SBGDA==
+Message-ID: <sashiko-outbox-178320@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v15 10/11] scsi: ibmvfc: register and use asynchronous
- sub CRQ for events
+Subject: Re: [PATCH v15 03/11] scsi: ibmvfc: fix potential NULL pointer
+ dereference on failed queue allocation
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Dave Marquardt" <davemarq@linux.ibm.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20261019-ibmvfc-fpin-support-v15-10-a858726e178a@linux.ibm.com>
+In-Reply-To: <20261019-ibmvfc-fpin-support-v15-3-a858726e178a@linux.ibm.com>
 References: <20261019-ibmvfc-fpin-support-v15-0-a858726e178a@linux.ibm.com>
- <20261019-ibmvfc-fpin-support-v15-10-a858726e178a@linux.ibm.com>
+ <20261019-ibmvfc-fpin-support-v15-3-a858726e178a@linux.ibm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 19 Oct 2026 22:26:13 +0000
+Date: Mon, 19 Oct 2026 22:29:27 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -61,174 +61,88 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] scsi: ibmvfc: clearing mq_enabled in ibmvfc_reg_sub_crqs() skips d=
-eregistration
-- [High] scsi: ibmvfc: ibmvfc_init_sub_crqs() ignores ibmvfc_reg_sub_crqs()=
- failures
+- [Medium] scsi: ibmvfc: scrq->cookie not cleared on H_REG_SUB_CRQ failure =
+in ibmvfc_register_channel()
 --
 
-commit 97f68806c8ca0b8cd795db2454a75c5e092d7ae9
-Author: Dave Marquardt <davemarq@linux.ibm.com>
+commit 09a8086d40f44887491493f172cd7dd44285d18d
+Author: Tyrel Datwyler <tyreld@linux.ibm.com>
 
-scsi: ibmvfc: register and use asynchronous sub CRQ for events
+scsi: ibmvfc: fix potential NULL pointer dereference on failed queue alloca=
+tion
 
-This commit wires the asynchronous sub-CRQ into the sub-CRQ lifecycle by
-allocating, registering, and freeing vhost->async_scrqs alongside the SCSI
-and NVMe channel queues. It also updates channel setup and login info to
-handle the async sub-CRQ and multi-queue capabilities.
+This commit guards ibmvfc_deregister_channel() against calling H_FREE_SUB_C=
+RQ
+on an unregistered sub-CRQ queue and against zeroing an unallocated message
+buffer. It also adds a KUnit test suite to verify the deregistration guards.
 
 > diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/=
 ibmvfc-core.c
-> index 7e012281d368c..0d603542fe348 100644
+> index 145d559041f12..0fe6b6f4260ba 100644
 > --- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
 > +++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
-
-[ ... ]
-
-> @@ -6977,6 +6995,7 @@ EXPORT_SYMBOL_IF_KUNIT(ibmvfc_deregister_channel);
->  static void ibmvfc_reg_sub_crqs(struct ibmvfc_host *vhost,
->  				struct ibmvfc_channels *channels)
->  {
-> +	unsigned long flags;
->  	int i, j;
-> =20
->  	ENTER;
-> @@ -6987,7 +7006,10 @@ static void ibmvfc_reg_sub_crqs(struct ibmvfc_host=
- *vhost,
->  		if (ibmvfc_register_channel(vhost, channels, i)) {
->  			for (j =3D i; j > 0; j--)
->  				ibmvfc_deregister_channel(vhost, channels, j - 1);
-> +			spin_lock_irqsave(&vhost->host->host_lock, flags);
->  			vhost->do_enquiry =3D 0;
-> +			vhost->mq_enabled =3D 0;
-> +			spin_unlock_irqrestore(&vhost->host->host_lock, flags);
->  			return;
->  		}
->  	}
-
-[Severity: High]
-Does clearing vhost->mq_enabled here prevent previously registered channel
-sets from ever being deregistered?
-
-In ibmvfc_init_sub_crqs(), ibmvfc_reenable_crq_queue(), and
-ibmvfc_reset_crq(), channel sets are registered sequentially:
-
-	ibmvfc_reg_sub_crqs(vhost, &vhost->async_scrqs);
-	ibmvfc_reg_sub_crqs(vhost, &vhost->scsi_scrqs);
-	ibmvfc_reg_sub_crqs(vhost, &vhost->nvme_scrqs);
-
-If ibmvfc_reg_sub_crqs() succeeds for vhost->async_scrqs (or
-vhost->scsi_scrqs), and then fails on a later call for vhost->scsi_scrqs or
-vhost->nvme_scrqs, the error path in ibmvfc_reg_sub_crqs() only unwinds the
-current channels set and sets vhost->mq_enabled =3D 0, leaving the earlier
-channel sets registered with the hypervisor and their Linux IRQs active.
-
-Because ibmvfc_dereg_sub_crqs() guards deregistration on vhost->mq_enabled:
-
-	if (!vhost->mq_enabled || !channels->scrqs)
-		return;
-
-	for (i =3D 0; i < channels->max_queues; i++)
-		ibmvfc_deregister_channel(vhost, channels, i);
-
-all subsequent calls to ibmvfc_dereg_sub_crqs() in
-ibmvfc_reenable_crq_queue(), ibmvfc_reset_crq(), and
-ibmvfc_release_sub_crqs() will return early without calling
-ibmvfc_deregister_channel().
-
-When ibmvfc_release_sub_crqs() later runs during teardown,
-ibmvfc_dereg_sub_crqs() is skipped while ibmvfc_release_channels()
-unconditionally unmaps and frees each queue page (scrq->msgs.handle) and
-kfree()s channels->scrqs. Doesn't this leak the hypervisor sub-CRQ
-registrations and kernel IRQs, leaving the IRQ handler and hypervisor
-referencing freed scrq slab memory and DMA pages?
-
-[ ... ]
-
-> @@ -7081,9 +7084,53 @@ static void ibmvfc_release_channels(struct ibmvfc_=
+> @@ -6449,12 +6449,24 @@ static int ibmvfc_register_channel(struct ibmvfc_=
 host *vhost,
->  	}
+>  	do {
+>  		hcall_rc =3D plpar_hcall_norets(H_FREE_SUB_CRQ, vdev->unit_address, sc=
+rq->cookie);
+>  	} while (hcall_rc =3D=3D H_BUSY || H_IS_LONG_BUSY(hcall_rc));
+> +	scrq->cookie =3D 0;
+>  reg_failed:
+>  	LEAVE;
+>  	return rc;
 >  }
-> =20
-> +static void ibmvfc_init_sub_crqs(struct ibmvfc_host *vhost)
-> +{
-> +	unsigned long flags;
-> +
-> +	ENTER;
-> +	if (!vhost->mq_enabled)
-> +		return;
-> +
-> +	/* register async_sub_crq channel */
-> +	if (ibmvfc_alloc_channels(vhost, &vhost->async_scrqs))
-> +		goto out;
-> +
-> +	ibmvfc_reg_sub_crqs(vhost, &vhost->async_scrqs);
-> +
-> +	if (ibmvfc_alloc_channels(vhost, &vhost->scsi_scrqs))
-> +		goto deregister_async_sub_crq;
-> +
-> +	ibmvfc_reg_sub_crqs(vhost, &vhost->scsi_scrqs);
-> +
-> +	if (vhost->nvme_enabled) {
-> +		if (ibmvfc_alloc_channels(vhost, &vhost->nvme_scrqs)) {
-> +			spin_lock_irqsave(&vhost->host->host_lock, flags);
-> +			vhost->nvme_enabled =3D 0;
-> +			spin_unlock_irqrestore(&vhost->host->host_lock, flags);
-> +		} else
-> +			ibmvfc_reg_sub_crqs(vhost, &vhost->nvme_scrqs);
-> +	}
-> +
-> +	LEAVE;
-> +	return;
-> +
-> +deregister_async_sub_crq:
-> +	ibmvfc_dereg_sub_crqs(vhost, &vhost->async_scrqs);
-> +	ibmvfc_release_channels(vhost, &vhost->async_scrqs);
-> +out:
-> +	spin_lock_irqsave(&vhost->host->host_lock, flags);
-> +	vhost->do_enquiry =3D 0;
-> +	vhost->mq_enabled =3D 0;
-> +	spin_unlock_irqrestore(&vhost->host->host_lock, flags);
-> +}
 
-[Severity: High]
-The commit message states that in ibmvfc_init_sub_crqs(), failure of either
-ibmvfc_alloc_channels() or ibmvfc_reg_sub_crqs() disables multi-queue and
-aborts init. However, ibmvfc_reg_sub_crqs() returns void and its failure is
-not checked here.
+[Severity: Medium]
+Should scrq->cookie =3D 0 be placed after the reg_failed label (or should
+h_reg_sub_crq() avoid writing *cookie on error)?
 
-If ibmvfc_reg_sub_crqs(vhost, &vhost->async_scrqs) fails, should
-ibmvfc_init_sub_crqs() release vhost->async_scrqs and return rather than
-continuing to allocate vhost->scsi_scrqs and vhost->nvme_scrqs?
+Looking at h_reg_sub_crq() in drivers/scsi/ibmvscsi/ibmvfc-core.c, it
+unconditionally writes retbuf[0] into *cookie regardless of the return code:
 
-Similarly, if ibmvfc_reg_sub_crqs(vhost, &vhost->scsi_scrqs) fails after
-vhost->async_scrqs has been registered, shouldn't it release
-vhost->scsi_scrqs and jump to deregister_async_sub_crq so vhost->async_scrqs
-is deregistered and released instead of proceeding to allocate
-vhost->nvme_scrqs?
+static long h_reg_sub_crq(unsigned long unit_address, unsigned long ioba,
+			  unsigned long length, unsigned long *cookie,
+			  unsigned long *irq)
+{
+	unsigned long retbuf[PLPAR_HCALL_BUFSIZE];
+	long rc;
+
+	rc =3D plpar_hcall(H_REG_SUB_CRQ, retbuf, unit_address, ioba, length);
+	*cookie =3D retbuf[0];
+	*irq =3D retbuf[1];
+
+	return rc;
+}
+
+In plpar_hcall() (arch/powerpc/platforms/pseries/hvCall.S), r5 (unit_addres=
+s)
+is moved into r4 before HVSC and r4 is unconditionally stored into retbuf[0]
+after HVSC, even when HVSC returns an error such as H_PARAMETER or H_RESOUR=
+CE.
+
+When h_reg_sub_crq() fails in ibmvfc_register_channel():
+
+	rc =3D h_reg_sub_crq(vdev->unit_address, scrq->msg_token, PAGE_SIZE,
+			   &scrq->cookie, &scrq->hw_irq);
+
+	/* H_CLOSED indicates successful register, but no CRQ partner */
+	if (rc && rc !=3D H_CLOSED) {
+		dev_warn(dev, "Error registering sub-crq: %d\n", rc);
+		if (rc =3D=3D H_PARAMETER)
+			dev_warn_once(dev, "Firmware may not support MQ\n");
+		goto reg_failed;
+	}
+
+jumping to reg_failed skips scrq->cookie =3D 0, leaving a non-zero value in
+scrq->cookie. If ibmvfc_deregister_channel() is later called on this queue
+during reset or teardown (via ibmvfc_dereg_sub_crqs()), won't the new
+if (scrq->cookie) check evaluate to true and issue H_FREE_SUB_CRQ on a queue
+that failed registration?
 
 [ ... ]
-
-> +static void ibmvfc_release_sub_crqs(struct ibmvfc_host *vhost)
->  {
->  	ENTER;
-> +	ibmvfc_dereg_sub_crqs(vhost, &vhost->async_scrqs);
-> +	ibmvfc_release_channels(vhost, &vhost->async_scrqs);
-> +
->  	if (!vhost->scsi_scrqs.scrqs)
->  		return;
-
-[ ... ]
-
->
->
->
->
-
-[]
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261019-ibmvfc-fpi=
-n-support-v15-0-a858726e178a@linux.ibm.com?part=3D10
+n-support-v15-0-a858726e178a@linux.ibm.com?part=3D3
