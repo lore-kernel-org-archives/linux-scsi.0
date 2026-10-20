@@ -1,75 +1,48 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.215.198
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=193.218.36.5
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792484840;
-	b=NAxKrY/U1SRh/Aw7POwv2V8jT2HZCof0MP3tCrQzEnCRp58GRyO+08o+Q5F52oETItQd
-	 K+UYA4//ddtWyQcqak+sjJw1EFbJ7mOuiE0AxO7BDN3n+OJk7uWFfM8rmhOHwTQrpADjs
-	 K1l/RVV+NaE5LFSdkHAFXPqBbC3gTaXCoh9oVErWOkdhWeLkf3f3HMkULSnbWyd/Spttp
-	 z4rwVDHaeaU9xU2BorpChuLkQDJ5qnGYmU1TXJuxWVIjpmxy7WAvmO3tsev1NCur8O1aM
-	 d5HMeAHruLnwQnuNxlteaM3SJrWpA3OzuPcD/igczUT8SPRNu0U5Zfonff7Dozr6DNg==
+	t=1792491907;
+	b=ZzkKtK2zZkBM5GjooOOvOe6lJumIBv4LryrD0LfaMTq/HVWFOM4UKDyobucj/cR1u8rw
+	 T+R0fVvsAV9vtuij22nm4tB5RhhP4aW11abT25MMoal6ehVBtvBgbe17VriKQRTmpLntV
+	 fVhmcBgNQSctKdb1HuBu63tOkYKL0Hr6XpkzEpAERLELaeEvHy7oU0IGMWTsRLxACuA/r
+	 cTfEj0Q067ThbGCR3OKdGaYXsRe3AixmED+Unlr8FslKZOSDU/sFWdKUXfM4aQPRGKNte
+	 8i210fIUf1tkI9+XHjsFtfPIKJAiPnZ/r6AJCqSo4Fw7wmgWgD/XW9wIz4Vg3RODE4w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792484840;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:In-Reply-To:
-	 Mime-Version:References:X-Mailer:Message-ID:Subject:From:To:Cc:
-	 Content-Type;
-	bh=kX5wt9uloTBUKENvuugEarR+eHumxWJlY0qWlOLNBew=;
-	b=Po4VGlr7l2l2Au7FeqRc4MJzNgin+CfH4rimVfuXbq272AcZR2wMIwfMTiNC5d02vsYl
-	 wPWvQg7caichTqg8eWvKXVHGWAEe8QDmquBeKySrrvS+dGgEnNs/50UwEPr2xjocGXokp
-	 bH6t3GIjcsdOR/RmF6kj5nlEUqw3I0RUOgXxhLdEFOL6oOjkZ4W8I7yr2hvAilzvxEn8J
-	 NlimZbElzHzgkJIJiBdIoJEYKbhlYyD4aKoczl+tJgvZCuuARizoynKJHDaglLKa5BmPx
-	 QPEcu4cjaF8gQNCQ+e0UM9ZvZwqRbVYk6T3Ourm0w5C8dKt78mNz+S5du5RiYdJRJGg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792491907;
+	h=DMARC-Filter:Received:DKIM-Signature:Message-ID:Date:MIME-Version:
+	 User-Agent:From:Content-Language:To:Cc:Subject:Content-Type:
+	 Content-Transfer-Encoding:X-Last-TLS-Session-Version;
+	bh=8g/OFL5UVyVXc0FjEvvApKVC6NGiltcUoF3yC6VVRC8=;
+	b=37V8V0YOYNW12TJhLSYEYbNKe05pGW4a+dSMywOlTpzf4k7yuGaIYC7Mya7aGH/usQ+B
+	 h9sDwITUPNUA/AgTB3XpP7blbqp2BvLHpAqwGXB1V0/q5nsckACkHtcoaoOmZvRw+01/s
+	 XOTiL/DVubrAZ6lmYjrO0IBkhXqamb2GnMu/aJoRKd2Pz0MFtX+0Qzb3mNi+d3mf82Xmk
+	 Q7JjPphmMrVggHgrNbr5Liog6f10LxhBwGPPBaTdSZYuxCG1L5+ef34t1eF+3mpC7GrsN
+	 Eb+iAsljnOll1WloW3JMY/jesroqSeNe6Xgk6OilKevVHFUqcJbkpr0py/w3kXQ6Pfg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=google.com;
-	spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20251104 header.b=iUAtxhlc;
-	arc=none smtp.remote-ip=209.85.215.198
-Received: from mail-pg1-f198.google.com (mail-pg1-f198.google.com [209.85.215.198])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=pass header.from=maich.gr;
+	spf=pass smtp.mailfrom=maich.gr;
+	arc=none smtp.remote-ip=193.218.36.5
+Received: from mx.maich.gr (mx.maich.gr [193.218.36.5])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D843660A261B
-	for <linux-scsi@vger.kernel.org>; Tue, 20 Oct 2026 08:27:19 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D843660A261B
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20251104 header.b=iUAtxhlc
-Received: by mail-pg1-f198.google.com with SMTP id 41be03b00d2f7-cd0cf3b1c70so2046134a12.3
-        for <linux-scsi@vger.kernel.org>; Tue, 20 Oct 2026 01:27:19 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1792484839; x=1793089639; darn=vger.kernel.org;
-        h=content-type:cc:to:from:subject:message-id:references:mime-version
-         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=kX5wt9uloTBUKENvuugEarR+eHumxWJlY0qWlOLNBew=;
-        b=iUAtxhlcoUBtjAQsA2ZKXqqDMSMvLIdtm9auFahckVtDcaW8+Ak6DrnJYAllkMPAbW
-         m7WHL1NJfvdBHNa77/9ZX/1+LxT0UzpCDKG5VdiWRP5P1/wX7aGXoyNn7WUUcyPDK0eH
-         6EtKfSXwGJ9cXaG9+VGSYz03X8BEAzQbVMDbD2bw+EC/jGpUsAYElhgU+2PZh1LdgJL0
-         j7qfUrEFB1p+AfT7q1qdQGlHZgBeuwQe0qK1nihU/vuXYjiXy20mp8WEWGlV/EEV0+XM
-         UcYwqLeRdq/pYDWdpDNvV2avQAExYjyIZJZ548BT7KRGtY32bfv51lnqR7Y0hyVfX1Ek
-         c/WA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792484839; x=1793089639;
-        h=content-type:cc:to:from:subject:message-id:references:mime-version
-         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=kX5wt9uloTBUKENvuugEarR+eHumxWJlY0qWlOLNBew=;
-        b=T/9BerukR0Cr2xC7kZopQBQdvgnRZbKK7dWF3wQAtKlqlCzfBO8KRBsleNI+BrX8KN
-         6+/dxOtxlUJzVMVNrsjJXkRY/Zak5paHUWPuec66J89XUhwoC8vizEUJ+DvlBCE9Aah+
-         AmxUHyvxALXhCKrrLSdDpb25ATtDRDZVU5SHIL2yAp0n3s2b/Sc3uJTpgU2x11YafshV
-         V5wmr5dhVWrTuhbt3ob3y0dqb3KKJw4QOE9GAyCHHbGyYyDORLadoY94YISV6g5LXQMn
-         RAbQeK9I/71wIrC8V6yp7aJ2iQuUAIzWP0vKrPdVkRzPJy+fSAdXU97lr3/Ce4Q0fdtj
-         Eurw==
-X-Forwarded-Encrypted: i=1; AKwUvBzZuCB9+V5uL8FW4edifUnTy568dagenr3/uuEWxr9T/jATeukJoOTDBu1pOPVr9lLqy559011nDTio@vger.kernel.org
-X-Gm-Message-State: AFq9FYKSt6GKvqMcOx2BjlxPwvQwkIVnDMawVCol/WuYxTkMsYWBzVKD
-	zg0LFn2cLT/PFO+NLXraM1+mjKSbGQxwLEe1e3Yaz/2/7F41Tvl6a3bw6+3po2U4UelOYfTy2a4
-	xGZoXlv7d8TiO6w22Rq3l3w==
-X-Received: from pgp6-n1.prod.google.com ([2002:a05:6a02:62c6:10b0:ccb:62e:3f01])
- (user=stanleyjhu job=prod-delivery.src-stubby-dispatcher) by
- 2002:a05:6a20:a120:b0:3e2:257a:a61f with SMTP id adf61e73a8af0-3e226025463mr9267663637.59.1792484838935;
- Tue, 20 Oct 2026 01:27:18 -0700 (PDT)
-Date: Tue, 20 Oct 2026 16:27:17 +0800
-In-Reply-To: <78888420b7c60d2d5177cbf76f5efba04fab5d7b.camel@mediatek.com>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3BA55606A319;
+	Tue, 20 Oct 2026 10:24:55 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3BA55606A319
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=maich.gr
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=maich.gr
+Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id 3440B7BC1912;
+	Tue, 20 Oct 2026 13:24:44 +0300 (EEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=maich.gr; s=dkim;
+	t=1792491887; h=from:subject:date:message-id:to:cc:mime-version:content-type:
+	 content-transfer-encoding:content-language;
+	bh=8g/OFL5UVyVXc0FjEvvApKVC6NGiltcUoF3yC6VVRC8=;
+	b=ElrfHpvXBgAotjwZhOKZ40JJGadD7F6scC+Lgoik9Cq6rqwAlSfiia/YPs6TJaBrMao9TF
+	EHW7xn7gZK7uqlR2rxgJxyGJo+h2cL/41b7sn5ekRe8Oy92L0Wg+MSjX3K5qhdVuxoVCrf
+	k1cN6UaV6TKc0gx5qY+015gdYhbQ1+R0XFkUrH9YT8XnAiMdCGRS248+o8TwKXCw/hkbzk
+	uMWtGVihMv2py0VlFZMomR1wosH2Gn1+v9EJuBxQDu0HJNj9v5gNUzsa2QfvHLweXo0mzU
+	empWbNtyL5TxCtplLTERpij0JmQ4I3KCwPr2/UQmnmIYrJ6XyKudz1xi/+SiRA==
+Message-ID: <29f6c901-5209-4681-81cc-ff768cd405f4@maich.gr>
+Date: Tue, 20 Oct 2026 13:23:03 +0300
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -78,37 +51,148 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0
-References: <20261017084403.875420-1-stanleyjhu@google.com>
- <2e042211ca0ebc974ad5ec4c0de9f3f93b3c75c0.camel@iokpp.de> <2060a8da-581b-46d1-a510-779f4df716cd@acm.org>
- <78888420b7c60d2d5177cbf76f5efba04fab5d7b.camel@mediatek.com>
-X-Mailer: git-send-email 2.56.0.212.g129ede20d9-goog
-Message-ID: <20261020082717.3540301-1-stanleyjhu@google.com>
-Subject: Re: [PATCH v2 0/4] scsi: ufs: core: Factor hba->outstanding_reqs
- helper and fix double completion
-From: Stanley Jhu <stanleyjhu@google.com>
-To: Peter Wang <peter.wang@mediatek.com>, Bart Van Assche <bvanassche@acm.org>, 
-	Bean Huo <beanhuo@iokpp.de>, "Martin K . Petersen" <mkp@kernel.org>, linux-scsi@vger.kernel.org
-Cc: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>, 
-	Alim Akhtar <alim.akhtar@samsung.com>, Bean Huo <beanhuo@micron.com>, 
-	Can Guo <can.guo@oss.qualcomm.com>, linux-kernel@vger.kernel.org, 
-	stable@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+From: Alexander Antonakakis <alexis@maich.gr>
+Content-Language: en-US, el-en
+To: stable@vger.kernel.org
+Cc: regressions@lists.linux.dev, linux-scsi@vger.kernel.org,
+ gregkh@linuxfoundation.org, sashal@kernel.org
+Subject: [REGRESSION] 6.1.178+: lpfc: boot hang due to use-after-free of mboxq
+ in lpfc_sli4_driver_resource_setup() backport
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+X-Last-TLS-Session-Version: TLSv1.3
 
-On Tue, 2026-10-20 at 11:16 +0800, Peter Wang wrote:
-> So, should we remove the call to __ufshcd_transfer_req_compl from
-> ufshcd_abort, which was added by commit
-> 64180742605f ("scsi: ufs: Fix the SCSI abort handler")?
 
-__ufshcd_transfer_req_compl() is a wrapper around
-ufshcd_compl_one_cqe(), so calling it from ufshcd_abort() has the two
-issues Bart noted. In addition, ufshcd_abort() called it without
-clearing BIT(tag) in hba->outstanding_reqs, which left the command to be
-released a second time by a later ufshcd_poll() or LU reset.
+Hello,
 
-In v3 6/7 [1], we replace that __ufshcd_transfer_req_compl() call with
-claiming BIT(tag) via ufshcd_clear_outstanding_reqs() and calling
-ufshcd_release_scsi_cmd() if it is a SCSI command, matching the end of
-ufshcd_abort().
+Since 6.1.178, servers with an Emulex SLI-4 Fibre Channel HBA hang
+during boot when the lpfc driver initializes. 6.1.177 works.
+6.1.180, 6.1.187 and 6.1.190 (Debian 12 kernels 6.1.0-52 to -54)
+all hang in the same way.
 
-[1] https://lore.kernel.org/r/20261020082110.3511797-7-stanleyjhu@google.com
+Hardware:
+ =C2=A0 Emulex LPe31000/LPe32000 Series 16Gb/32Gb Fibre Channel Adapter
+ =C2=A0 Firmware 14.4.322.17, sli-4:2:c
+ =C2=A0 lpfc 14.2.0.7
+
+The cause appears to be the 6.1.y backport of:
+
+299f5baa1321 ("scsi: lpfc: Fix memory leak in=20
+lpfc_sli4_driver_resource_setup()")
+
+upstream commit 1bd28625e25be549ee7c47532e7c3ef91c682410
+
+In mainline, the new mempool_free(mboxq, ...) is placed after the
+call to lpfc_get_sli4_parameters(phba, mboxq) and its error check.
+In the 6.1.y backport it landed before that call. In
+drivers/scsi/lpfc/lpfc_init.c at v6.1.178:
+
+8178:=C2=A0 mempool_free(mboxq, phba->mbox_mem_pool);
+8187:=C2=A0 rc =3D lpfc_get_sli4_parameters(phba, mboxq);
+8200:=C2=A0 mempool_free(mboxq, phba->mbox_mem_pool);=C2=A0 /* error path */
+8207:=C2=A0 mempool_free(mboxq, phba->mbox_mem_pool);=C2=A0 /* error path */
+
+So mboxq is freed, then used for a mailbox command to the HBA
+(use-after-free), and may be freed again on the error paths
+(double free). This runs on every SLI-4 HBA probe, which matches
+the hang about 2 seconds into boot.
+
+Moving the mempool_free() at line 8178 to after the
+lpfc_get_sli4_parameters() call and its error handling, as in
+mainline, should fix it. Other stable branches that took this
+backport may be worth checking for the same placement.
+
+Downstream report: https://bugs.debian.org/1151377
+
+#regzbot introduced: 299f5baa1321a0951cc3ebbacc72b67433a65391
+
+This is a production server, so I can only test during maintenance
+windows, but I am happy to test a fix.
+
+Regards,
+Alexander Antonakakis
+
+--=20
+Alexander Antonakakis
+Information Systems Department
+Mediterranean Agronomic Institute of Chania (MAICh)
+Alsyllio Agrokepiou, 1 Makedonias str, Chania, Crete, 73100 GREECE
+=CE=A4. +30 28210 35000 ext.718 | =CE=95. antonakakis@maich.gr
+
+--
+=CE=94=CE=B9=CE=B5=CF=85=CE=BA=CF=81=CE=AF=CE=BD=CE=B9=CF=83=CE=B7 =CE=B7=CE=
+=BB=CE=B5=CE=BA=CF=84=CF=81=CE=BF=CE=BD=CE=B9=CE=BA=CE=BF=CF=8D =CF=84=CE=B1=
+=CF=87=CF=85=CE=B4=CF=81=CE=BF=CE=BC=CE=B5=CE=AF=CE=BF=CF=85
+=CE=9F=CE=B9 =CF=80=CE=BB=CE=B7=CF=81=CE=BF=CF=86=CE=BF=CF=81=CE=AF=CE=B5=CF=
+=82 =CF=80=CE=BF=CF=85 =CF=83=CF=85=CE=BC=CF=80=CE=B5=CF=81=CE=B9=CE=BB=CE=B1=
+=CE=BC=CE=B2=CE=AC=CE=BD=CE=BF=CE=BD=CF=84=CE=B1=CE=B9 =CF=83=CE=B5 =CE=B1=CF=
+=85=CF=84=CF=8C =CF=84=CE=BF =CE=BC=CE=AE=CE=BD=CF=85=CE=BC=CE=B1 =CE=B5=CE=AF=
+=CE=BD=CE=B1=CE=B9 =CE=B5=CE=BC=CF=80=CE=B9=CF=83=CF=84=CE=B5=CF=85=CF=84=CE=
+=B9=CE=BA=CE=AD=CF=82 =CE=BA=CE=B1=CE=B9 =CE=B7 =CF=87=CF=81=CE=AE=CF=83=CE=B7 =
+=CF=84=CE=BF=CF=85=CF=82
+=CE=B5=CF=80=CE=B9=CF=84=CF=81=CE=AD=CF=80=CE=B5=CF=84=CE=B1=CE=B9 =CE=BC=CF=
+=8C=CE=BD=CE=BF=CE=BD =CE=B1=CF=80=CF=8C =CF=84=CE=BF=CE=BD =CE=B1=CE=BD=CE=B1=
+=CF=86=CE=B5=CF=81=CF=8C=CE=BC=CE=B5=CE=BD=CE=BF =CF=80=CE=B1=CF=81=CE=B1=CE=
+=BB=CE=AE=CF=80=CF=84=CE=B7. =CE=95=CE=AC=CE=BD =CE=AD=CF=87=CE=B5=CF=84=CE=B5 =
+=CE=BB=CE=AC=CE=B2=CE=B5=CE=B9 =CF=84=CE=BF =CF=80=CE=B1=CF=81=CF=8C=CE=BD =CE=
+=BC=CE=AE=CE=BD=CF=85=CE=BC=CE=B1 =CE=B1=CF=80=CF=8C =CE=BB=CE=AC=CE=B8=CE=BF=
+=CF=82 =CE=BA=CE=B1=CE=B9 =CE=B4=CE=B5=CE=BD
+=CE=B5=CE=AF=CF=83=CF=84=CE=B5 =CE=BF =CF=80=CF=81=CE=BF=CE=BF=CF=81=CE=B9=CE=
+=B6=CF=8C=CE=BC=CE=B5=CE=BD=CE=BF=CF=82 =CF=80=CE=B1=CF=81=CE=B1=CE=BB=CE=AE=
+=CF=80=CF=84=CE=B7=CF=82, =CF=83=CE=B1=CF=82 =CE=B5=CE=BD=CE=B7=CE=BC=CE=B5=CF=
+=81=CF=8E=CE=BD=CE=BF=CF=85=CE=BC=CE=B5 =CF=8C=CF=84=CE=B9 =CE=B1=CF=80=CE=BF=
+=CE=BA=CE=AC=CE=BB=CF=85=CF=88=CE=B7, =CE=B1=CE=BD=CE=B1=CF=80=CE=B1=CF=81=CE=
+=B1=CE=B3=CF=89=CE=B3=CE=AE, =CE=B4=CE=B9=CE=B1=CE=BD=CE=BF=CE=BC=CE=AE =CE=AE =
+=CE=BF=CF=80=CE=BF=CE=B9=CE=B1=CF=83=CE=B4=CE=AE=CF=80=CE=BF=CF=84=CE=B5
+=CE=AC=CE=BB=CE=BB=CE=B7=CF=82 =CE=BC=CE=BF=CF=81=CF=86=CE=AE=CF=82 =CF=87=CF=
+=81=CE=AE=CF=83=CE=B7 =CF=84=CF=89=CE=BD =CF=80=CE=B5=CF=81=CE=B9=CE=B5=CF=87=
+=CE=BF=CE=BC=CE=AD=CE=BD=CF=89=CE=BD =CF=84=CE=BF=CF=85 =CF=80=CE=B1=CF=81=CF=
+=8C=CE=BD=CF=84=CE=BF=CF=82 =CE=BC=CE=B7=CE=BD=CF=8D=CE=BC=CE=B1=CF=84=CE=BF=
+=CF=82 =CE=B1=CF=80=CE=B1=CE=B3=CE=BF=CF=81=CE=B5=CF=8D=CE=B5=CF=84=CE=B1=CE=
+=B9. =CE=95=CF=80=CE=AF=CF=83=CE=B7=CF=82 =CF=80=CE=B1=CF=81=CE=B1=CE=BA=CE=B1=
+=CE=BB=CE=B5=CE=AF=CF=83=CE=B8=CE=B5 =CE=BD=CE=B1
+=CE=B1=CF=80=CE=BF=CF=83=CF=84=CE=B5=CE=AF=CE=BB=CE=B5=CF=84=CE=B5 =CF=84=CE=
+=BF =CE=B1=CF=81=CF=87=CE=B9=CE=BA=CF=8C =CE=BC=CE=AE=CE=BD=CF=85=CE=BC=CE=B1 =
+=CF=83=CF=84=CE=B7=CE=BD =CE=B4=CE=B9=CE=B5=CF=8D=CE=B8=CF=85=CE=BD=CF=83=CE=
+=B7 =CF=84=CE=BF=CF=85 =CE=B1=CF=80=CE=BF=CF=83=CF=84=CE=BF=CE=BB=CE=AD=CE=B1, =
+=CE=BA=CE=B1=CE=B8=CF=8E=CF=82 =CE=BA=CE=B1=CE=B9 =CF=83=CF=84=CE=B7 =CF=83=CF=
+=85=CE=BD=CE=AD=CF=87=CE=B5=CE=B9=CE=B1 =CE=BD=CE=B1 =CE=B4=CE=B9=CE=B1=CE=B3=
+=CF=81=CE=AC=CF=88=CE=B5=CF=84=CE=B5 =CF=84=CE=BF
+=CE=BC=CE=AE=CE=BD=CF=85=CE=BC=CE=B1 =CE=B1=CF=80=CF=8C =CF=84=CE=BF =CF=83=CF=
+=8D=CF=83=CF=84=CE=B7=CE=BC=CE=AC =CF=83=CE=B1=CF=82.
+=CE=97 =CE=B5=CF=80=CE=B9=CE=BA=CE=BF=CE=B9=CE=BD=CF=89=CE=BD=CE=AF=CE=B1 =CE=
+=BC=CE=AD=CF=83=CF=89 Internet =CE=B4=CE=B5=CE=BD =CE=B5=CE=AF=CE=BD=CE=B1=CE=
+=B9 =CE=B1=CF=83=CF=86=CE=B1=CE=BB=CE=AE=CF=82 =CE=BA=CE=B1=CE=B9 =CE=B5=CF=80=
+=CE=BF=CE=BC=CE=AD=CE=BD=CF=89=CF=82 =CF=84=CE=BF =CE=9C=CE=91=CE=99=CE=A7 =CE=
+=B4=CE=B5=CE=BD =CF=86=CE=AD=CF=81=CE=B5=CE=B9 =CE=B5=CF=85=CE=B8=CF=8D=CE=BD=
+=CE=B7 =CE=B3=CE=B9=CE=B1 =CE=BF=CF=80=CE=BF=CE=B9=CE=B1=CE=B4=CE=AE=CF=80=CE=
+=BF=CF=84=CE=B5
+=CE=B8=CE=B5=CF=84=CE=B9=CE=BA=CE=AE =CE=AE =CE=B1=CF=80=CE=BF=CE=B8=CE=B5=CF=
+=84=CE=B9=CE=BA=CE=AE =CE=B6=CE=B7=CE=BC=CE=B9=CE=AC =CF=80=CE=BF=CF=85 =CF=80=
+=CF=81=CE=BF=CE=BA=CE=BB=CE=AE=CE=B8=CE=B7=CE=BA=CE=B5 =CE=B1=CF=80=CF=8C =CF=
+=84=CE=B7=CE=BD =CF=87=CF=81=CE=AE=CF=83=CE=B7 =CF=84=CE=BF=CF=85 =CF=80=CE=B1=
+=CF=81=CF=8C=CE=BD=CF=84=CE=BF=CF=82 =CE=AE =CF=84=CF=89=CE=BD =CF=83=CF=85=CE=
+=BD=CE=B7=CE=BC=CE=BC=CE=AD=CE=BD=CF=89=CE=BD =CF=84=CE=BF=CF=85 =CE=BB=CF=8C=
+=CE=B3=CF=89 =CE=B9=CF=8E=CE=BD =CF=80=CE=BF=CF=85
+=CE=AD=CF=87=CE=BF=CF=85=CE=BD =CF=80=CE=B5=CF=81=CE=AC=CF=83=CE=B5=CE=B9 =CF=
+=83=CE=B5 =CE=B1=CF=85=CF=84=CE=AC.
+
+Email Disclaimer
+The information in this email is confidential and is intended solely for the ad=
+dressee(s). If you have
+received this transmission in error, and you are not an intended recipient, be =
+aware that any
+disclosure, copying, distribution or use of this transmission or its contents i=
+s prohibited.
+Furthermore, you are kindly requested to send us back the original message to t=
+he sender=E2=80=99s address and
+delete the message from your system immediately.
+Internet communications are not secure and therefore MAICh does not accept lega=
+l responsibility for the
+contents of this message and for any damage whatsoever that is caused by viruse=
+s being passed.
+
+
+
