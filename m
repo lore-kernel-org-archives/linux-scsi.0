@@ -1,91 +1,95 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.37.111.173
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792506446;
-	b=vqQ5XS98PSsWoKPzNcJRN6UChHbps7TXtkGh8bv1p6Va9KxvpeUdkO2XfcFaQQRlLK33
-	 ou0OcLyhTkr263kHMLN25tVJR+8Y2qYKzut0aeQ+sGPSza4uL+ghCup9ciSAZZlFfS660
-	 aYKTGBmaMol/Q3iYWYb0E8WMXTRuVwjihu3JIYmV1FN5h3QoTIyY8rRmlEh32vjKehW4b
-	 lCHQdyg81OMkYS2WFJkrCRKxQA3WUiOdKMtd4HV0FhGDhtK250rxgCQxObdKHAyZvFfL4
-	 j1Z5uhhDqnMeJ2nEcEWTlD481o+qcyfLq6u9HTyvsjaU0Fer7me22QoWXx5bDfl+YOA==
+	t=1792507918;
+	b=4omEl5ug2BaYRqN/4SN1E2pGjacmhvND7wOR8k1shFBjPO+3XUWKixcINOs63741MUZe
+	 5KtUHqCK0xpw0iLL5J/MXf/ZinIPaPed8+mzhakTWLJq5seW4eri41/A/Cf50ODlA21N1
+	 qPIW9yBUIHQ2TctN4GDaP/dn+1DRWkkIAzJ123SHbKOs3WmKvOidgQ7XL7jZn91mvucn3
+	 /oZF3bs/CQPR2U8N90uGlMMVwh+MDeX08Zxt36u7jupS/Ztl7y+9k/CiCaKKalnRr9662
+	 rLie1k/Y6RXRtqwAlVvqtnF6aV9lbx6bdbcJggSwwdnxtjsX35+zysovfAlGQFAkCtg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792506446;
-	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:Received:
-	 Received:Received:Received:Received:From:To:Cc:Subject:In-Reply-To:
-	 References:Date:Message-ID:User-Agent:MIME-Version:Content-Type:
-	 X-TM-AS-GCONF:X-Proofpoint-GUID:X-Proofpoint-ORIG-GUID:
-	 X-Proofpoint-Spam-Info:X-Proofpoint-Spam-Details-Enc:
-	 X-Authority-Analysis:X-Proofpoint-Virus-Version:
-	 X-Proofpoint-Spam-Details;
-	bh=FV4cnaw7sRSsSt0x7slQQic/Dpvr2Ij5JXzJAPl6FIQ=;
-	b=TqcZX0U2HFQk7ga9hazNCo/Y8It2whBTcHfqBVzkFL1bpAxXBiGw7gPzjGj8D4rlMn/V
-	 GHIy/zMl0Aj2hPQmiDzQArBXP6/Irf1HsuB2tn7tFrtcMOsgSrpYMkpdfPWCPOiC/J8RZ
-	 9LDv1BQfju32a7Q9/gKIqmy0n1cln+Ydm8WtbcsgxkgoHiR8w0gBD/JIxnh2Ug8fm0ANY
-	 cWPqE0BMWibLdO+mi1HIMuI2LmvrQc0+Z5scUtVd7rjbv8LArwGNgFhIZwLEqgCeKV10A
-	 b89uMmGm9Xy5FOqfEMSZ0JJMguW5HwWXrTuZvUAEQCJ4lkqGe3FoBlzpWB+oy16FHWg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792507918;
+	h=DMARC-Filter:DKIM-Signature:Received:Message-ID:Subject:From:To:Cc:
+	 Date:In-Reply-To:References:Autocrypt:Content-Type:
+	 Content-Transfer-Encoding:User-Agent:MIME-Version;
+	bh=DYXjhYohUan98NM/lys58QeMC8RgS+JMQUdLn51Hsac=;
+	b=CyVGFrJ+9MviCX1/o13JygxqntDKTj0AQETs4BF2ZPjSSSkugM5uNfqWyrHvLzpka8Hd
+	 0k89s6dloFuyWxS1SXkJkngROwHa8wO2qnox6WEvdPrsZwJhLi0SkwwQ8gFJ7GWoutdcP
+	 kkLFZkzW9zQXrrsyaBYRq/djtok9dMTPlvMnNgP29aCqH55SmD9uoPjVNWVr6xtFegKbF
+	 elEzvMHVeRh1Bb2FauwP14+Q3xon/vxEvznhHa/7Xd3rBfbxB2YQKIojVLMUdAPuNkmEm
+	 fslawpsHw0qXf6714zSLyhq/3UIw3tojoH/IrB1VGVmjD63RhsaVvhA6NY+kt5pLv1Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.ibm.com;
-	spf=pass smtp.mailfrom=linux.ibm.com;
-	dkim=pass header.d=ibm.com header.i=@ibm.com header.a=rsa-sha256 header.s=pp1 header.b=lGb3x3GC;
-	arc=none smtp.remote-ip=148.163.156.1
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+	dmarc=pass header.from=HansenPartnership.com;
+	spf=pass smtp.mailfrom=HansenPartnership.com;
+	dkim=pass header.d=hansenpartnership.com header.i=@hansenpartnership.com header.a=rsa-sha256 header.s=20151216 header.b=XndoBtHg;
+	arc=none smtp.remote-ip=198.37.111.173
+Received: from lamorak.hansenpartnership.com (lamorak.hansenpartnership.com [198.37.111.173])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4BEB606A31F;
-	Tue, 20 Oct 2026 14:27:25 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E4BEB606A31F
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47A37606A31C;
+	Tue, 20 Oct 2026 14:51:57 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 47A37606A31C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=ibm.com header.i=@ibm.com header.a=rsa-sha256 header.s=pp1 header.b=lGb3x3GC
-Received: from pps.filterd (m0353729.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69KDEC3Y870541;
-	Tue, 20 Oct 2026 14:26:54 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-type:date:from:in-reply-to:message-id:mime-version
-	:references:subject:to; s=pp1; bh=FV4cnaw7sRSsSt0x7slQQic/Dpvr2I
-	j5JXzJAPl6FIQ=; b=lGb3x3GCdnCbk115hL/vSalBfeKRA5ZIW7Ruta+u+h0TYB
-	EzavphSGyMpMc0DhxdxoJVzxJZAE1OFu9V9Arl5Qhws8moqzb0TIKd+yqQIKsH05
-	eYMByFl7ivMuRczy773ttR/8js+Hw9+BeJ9LLSETtsFEN5RkOsupRZYldpdRriSu
-	RKSPauUwAJjUfgK2ptUPYrDe+Lc6rI8Y6RahX+Ijb12t6r9gOTQQtwR5kFtEDI78
-	GfuO/dzIy04bF4Eht16kJhM13rYR5PAUL0+BgA1XkrVAFL+RH2OTp8FgUQBfobkj
-	ES/GmL96ffHTLufofD3gJteqDALQ0ZPl8lcC1Beg==
-Received: from ppma13.dal12v.mail.ibm.com (dd.9e.1632.ip4.static.sl-reverse.com [50.22.158.221])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4hdw5bbc4r-1
-	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-	Tue, 20 Oct 2026 14:26:53 +0000 (GMT)
-Received: from pps.filterd (ppma13.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma13.dal12v.mail.ibm.com (8.18.1.11/8.18.1.11) with ESMTP id 69KDK1oD350705;
-	Tue, 20 Oct 2026 14:26:53 GMT
-Received: from smtprelay03.wdc07v.mail.ibm.com ([172.16.1.70])
-	by ppma13.dal12v.mail.ibm.com (PPS) with ESMTPS id 4hcnjh28nm-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 20 Oct 2026 14:26:53 +0000 (GMT)
-Received: from smtpav05.dal12v.mail.ibm.com (smtpav05.dal12v.mail.ibm.com [10.241.53.104])
-	by smtprelay03.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 69KEQ5ab52756760
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 20 Oct 2026 14:26:05 GMT
-Received: from smtpav05.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 1BC275805D;
-	Tue, 20 Oct 2026 14:26:52 +0000 (GMT)
-Received: from smtpav05.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id F10A858065;
-	Tue, 20 Oct 2026 14:26:51 +0000 (GMT)
-Received: from e (unknown [9.61.26.156])
-	by smtpav05.dal12v.mail.ibm.com (Postfix) with ESMTPS;
-	Tue, 20 Oct 2026 14:26:51 +0000 (GMT)
-From: Dave Marquardt <davemarq@linux.ibm.com>
-To: sashiko-bot@kernel.org
-Cc: sashiko-reviews@lists.linux.dev, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH v15 03/11] scsi: ibmvfc: fix potential NULL pointer
- dereference on failed queue allocation
-In-Reply-To: <sashiko-outbox-178320@kernel.org> (sashiko-bot@kernel.org's
-	message of "Mon, 19 Oct 2026 22:29:27 +0000")
-References: <20261019-ibmvfc-fpin-support-v15-0-a858726e178a@linux.ibm.com>
-	<20261019-ibmvfc-fpin-support-v15-3-a858726e178a@linux.ibm.com>
-	<sashiko-outbox-178320@kernel.org>
-Date: Tue, 20 Oct 2026 09:26:51 -0500
-Message-ID: <87fqy0la6s.fsf@linux.ibm.com>
-User-Agent: Gnus/5.13 (Gnus v5.13)
+	dkim=pass (1024-bit key, unprotected) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.a=rsa-sha256 header.s=20151216 header.b=XndoBtHg
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+	d=hansenpartnership.com; s=20151216; t=1792507916;
+	bh=LexaumSGgf9IRQDtHz3O/M7QNPz/CJw5yVRJLAPIf1Y=;
+	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
+	b=XndoBtHgWNE/a8hOLdA0w5+/StIecBB6GltWENQBqDRm4zmYFGF/furLk15GS6l3E
+	 KA3J3PyktqeynwAxOxyBPYUWVUPvUtTg/Gts5KYu+sq2+uueJkfVk/oEXa0ePFILTN
+	 TQO/mE8oxWm5476cubXdVSZr3wZ8ZlcpPwjvl1EI=
+Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4300:d341::8309])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519MLKEM768 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by lamorak.hansenpartnership.com (Postfix) with ESMTPSA id 0E4BB1C025A;
+	Tue, 20 Oct 2026 10:51:56 -0400 (EDT)
+Message-ID: <1f9e1b5852aeb4827c31efcf537ff7201ac32cfb.camel@HansenPartnership.com>
+Subject: Re: [PATCH v3 2/5] scsi: aic94xx: validate the EDB index in
+ asd_get_response_tasklet()
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Yehyeong Lee <yhlee@isslab.korea.ac.kr>, "Martin K . Petersen"
+	 <mkp@kernel.org>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	stable@vger.kernel.org
+Date: Tue, 20 Oct 2026 10:51:55 -0400
+In-Reply-To: <20261016001453.232046-1-yhlee@isslab.korea.ac.kr>
+References: <20261015091747.4184349-1-yhlee@isslab.korea.ac.kr>
+		 <20261015091747.4184349-3-yhlee@isslab.korea.ac.kr>
+		 <06bbaf40d9188e478c4b58eaaffb58139839d217.camel@HansenPartnership.com>
+		 <20261016001453.232046-1-yhlee@isslab.korea.ac.kr>
+Autocrypt: addr=James.Bottomley@HansenPartnership.com;
+ keydata=mQENBE58FlABCADPM714lRLxGmba4JFjkocqpj1/6/Cx+IXezcS22azZetzCXDpm2MfNE
+ lecY3qkFjfnoffQiw5rrOO0/oRSATOh8+2fmJ6el7naRbDuh+i8lVESfdlkoqX57H5R8h/UTIp6gn
+ 1mpNlxjQv6QSZbl551zQ1nmkSVRbA5TbEp4br5GZeJ58esmYDCBwxuFTsSsdzbOBNthLcudWpJZHU
+ RfMc0ew24By1nldL9F37AktNcCipKpC2U0NtGlJjYPNSVXrCd1izxKmO7te7BLP+7B4DNj1VRnaf8
+ X9+VIApCi/l4Kdx+ZR3aLTqSuNsIMmXUJ3T8JRl+ag7kby/KBp+0OpotABEBAAG0N0phbWVzIEJvd
+ HRvbWxleSA8SmFtZXMuQm90dG9tbGV5QEhhbnNlblBhcnRuZXJzaGlwLmNvbT6JAVgEEwEIAEICGw
+ MGCwkIBwMCBhUIAgkKCwQWAgMBAh4BAheAAhkBFiEE1WBuc8i0YnG+rZrfgUrkfCFIVNYFAml2ZBI
+ FCS3GUMIACgkQgUrkfCFIVNZKjQf/deRzlXZClKxTC/Ee2yEPqqS7mm/INUA49KdQQ5oIhSxkUBy0
+ 9J4qjMIo5F8ZFkFTqikBqeL35LKu7O7rn8WETfX8Bxvos3HUsl3jHo34DES4MUFIpoQPgtiLRGwLb
+ K0cVCAArR2u2qj4ABmTRrs1I1kvdjEw6gatOuXtEe/j5O2fvfzTq9GBr0Q3n2IAsFXi4hLlx6VPE8
+ tyWUZ8BWJKtih3JAeUiXFvASL3McV0rV9RnU0VbjEQEhSE7PMYhWpnDC9AyBb0lXJllQRvC3NSkUB
+ 8KVQgNNxRPss0WE/nBoZ4dFA42jTyzTz8lNylxZoAWV7WJb3QxVg4oCodRVrxxrQhSmFtZXMgQm90
+ dG9tbGV5IDxqZWpiQGtlcm5lbC5vcmc+iQFVBBMBCAA/AhsDBgsJCAcDAgYVCAIJCgsEFgIDAQIeA
+ QIXgBYhBNVgbnPItGJxvq2a34FK5HwhSFTWBQJgS5mYBQkbNYS9AAoJEIFK5HwhSFTWBpwIAL5Bk3
+ 5FB34U6iHmDzzgdCbxLTs43T/YQyJpcGIvopBvnI/fDY8oSG6Df64/O6B+1R+A8TDp6ZG5ysUWnCC
+ 6GuIaEHemBYkitMPglR6+sGCMQY7O0mlsPvdssvKK1KI9Bno4VU6ogaF2qVzefSqg1Djmf/DcsxWP
+ rI/jdJ8FB5AYR2rjIdDFc+zRdAJuavo1/anyY2wgpFh/3R8IOYAEfWV9nGgYkf9+tA4EIn1sxE0I3
+ L5oW2N3mbyRrkzuBwO8ztMCwqEPk7moWzhokcZqMXiAIahaZdkashJC+s2X2RZSGCy+g+pvY5NN4B
+ BVG5XwLgVBqbHMTcxE0fbmPqz+q6O0LEphbWVzIEJvdHRvbWxleSA8amVqYkBoYW5zZW5wYXJ0bmV
+ yc2hpcC5jb20+iQFXBBMBCABBFiEE1WBuc8i0YnG+rZrfgUrkfCFIVNYFAmODZ5ACGwMFCRs1hL0F
+ CwkIBwICIgIGFQoJCAsCBBYCAwECHgcCF4AACgkQgUrkfCFIVNZu0Af/TzvL2/NdgAcw9uN3x60H8
+ jc4QUq14VpxcFEFEMpcj1morkX/G93V+56HBBaXZj+yK8PhxIA/SIz+sU7C/0YvKuvzakP8ZX/7WJ
+ e32SOUtjfr/VTaqjIBzNj6OxLvZpmNbBw7s6DwhhNpHOWqJ/1ml+PtDRDV71IB58yVqQjp1xlNKVl
+ ZppcJ5908EJzsFnRIVjiQiDSKoppqB2BCibBbrWcln7CiWMyOC/cco6SIn6twH+f7+aivJ3xGcOE2
+ a9gBKF5rNi9TBoX9oyPmshv/TDmnohsVrH7AYXlGYfZTk15SWEiROh1QX8/uD9wl/gcIv5EDUpT/F
+ L2jzOsA5663bw==
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.56.2 
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -95,109 +99,48 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: rbqdMuafVYe9-JTqUFofQxsSCoC1rVS8
-X-Proofpoint-ORIG-GUID: rbqdMuafVYe9-JTqUFofQxsSCoC1rVS8
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMDIwMDA1NiBTYWx0ZWRfX9OUMHlgCUHii
- LPk69ELpJQpsWLdAZwNfozd3NjP4ktSyRJYtU1bfxLnTpQJnzTRIP9+H662Ofu/XVxx9yTT94g2
- 6IZ0W48/V5Sqr918hLGQURaM/shxVx8=
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDIwMDA1NiBTYWx0ZWRfX4IZNGx4m9K0f
- 3mSIlV4bIQU+fvI3PufNILahjK0mA+3jxB8WtQxcMbiPauYC4VPvbg7mHVFCKOTZmXZEtU69wfR
- ZBnaMXyD198o+vZdQTlYp1bNm+9uJfWu6ejbInwqeh9b+FryuDzeuzmCNDC53pkHMxBImpzAY45
- tdOCAkkFbubFvIPd2Vqs6TJikUwhUhTrGdXfWD284EACH85C4DudhEuEDzH1SbMO+r2lEQVwzAs
- ziM5aPyI7A471q9kLb0GiMcpUOyQX35VHMMj7Sq74h/QRVt+8xGSlyO6Lua7uzo5AEGzad41UBn
- xWJMqDHI9HMxW2Ld0h9NtgeoDW5rrxHwnh/jgPlWKi6MqfejCC1929PzI6y3XF7c2L95D3HOERN
- fBFFiDmd2V+/0dUqBiIycG1Amr1LV6egQU7tfLvFUH8gv9xwrxRCIRL0hM3kSW0BTYBwwQzJjs8
- /zN5a3gwcNqEeNoVvTQ==
-X-Authority-Analysis: v=2.4 cv=Gb2CDgXL c=1 sm=1 tr=0 ts=6ad77a2d cx=c_pps
- a=AfN7/Ok6k8XGzOShvHwTGQ==:117 a=AfN7/Ok6k8XGzOShvHwTGQ==:17
- a=660iZSQnnn4A:10 a=VkNPw1HP01LnGYTKEx00:22 a=RnoormkPH1_aCDwRdu11:22
- a=uAbxVGIbfxUO_5tXvNgY:22 a=VwQbUJbxAAAA:8 a=VnNF1IyMAAAA:8
- a=p80Zfm7aPcmGqdMWmFsA:9
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.134,FMLib:17.12.100.49
- definitions=2026-10-20_02,2026-10-19_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- suspectscore=0 adultscore=0 malwarescore=0 spamscore=0 phishscore=0
- clxscore=1015 bulkscore=0 impostorscore=0 lowpriorityscore=0
- priorityscore=1501 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2610190000
- definitions=main-2610200056
 
-sashiko-bot@kernel.org writes:
-
-> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
-> - [Medium] scsi: ibmvfc: scrq->cookie not cleared on H_REG_SUB_CRQ failure in ibmvfc_register_channel()
+On Fri, 2026-10-16 at 09:14 +0900, Yehyeong Lee wrote:
+> > have you actually tested this on real hardware?
+>=20
+> No -- the hardware is twenty years old and I couldn't get a board. I
+> exercised the path by fault injection: built the function into a
+> KUnit harness, fed it a status block with those three bits zero, and
+> KASAN reported the read one entry before seq->edb_arr[] without the
+> guard and nothing with it. That isn't evidence the sequencer does
+> this, and I'm not presenting it as such.
+>=20
+> > is there any evidence of the sequencer ever setting these three
+> > bits to a zero value?
+>=20
+> I can't show that it does. I looked for something authoritative -- an
+> AIC-9410 done-list/status-block layout -- and there's no public
+> Adaptec spec; the sequencer is an opaque request_firmware() blob, and
+> the only in-tree description of this field is the commented-out size
+> line just above the decode. What the tree does settle is the decode:
+> the index is one-based, and the same seq->edb_arr[edb_id + edb_index]
+> access is also reached from the empty-buffer path
+> (escb_tasklet_complete -> asd_bytes_dmaed_tasklet), where edb < 0 is
+> rejected before the access
 > --
->
-> commit 09a8086d40f44887491493f172cd7dd44285d18d
-> Author: Tyrel Datwyler <tyreld@linux.ibm.com>
->
-> scsi: ibmvfc: fix potential NULL pointer dereference on failed queue allocation
->
-> This commit guards ibmvfc_deregister_channel() against calling H_FREE_SUB_CRQ
-> on an unregistered sub-CRQ queue and against zeroing an unallocated message
-> buffer. It also adds a KUnit test suite to verify the deregistration guards.
->
->> diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/ibmvfc-core.c
->> index 145d559041f12..0fe6b6f4260ba 100644
->> --- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
->> +++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
->> @@ -6449,12 +6449,24 @@ static int ibmvfc_register_channel(struct ibmvfc_host *vhost,
->>  	do {
->>  		hcall_rc = plpar_hcall_norets(H_FREE_SUB_CRQ, vdev->unit_address, scrq->cookie);
->>  	} while (hcall_rc == H_BUSY || H_IS_LONG_BUSY(hcall_rc));
->> +	scrq->cookie = 0;
->>  reg_failed:
->>  	LEAVE;
->>  	return rc;
->>  }
->
-> [Severity: Medium]
-> Should scrq->cookie = 0 be placed after the reg_failed label (or should
-> h_reg_sub_crq() avoid writing *cookie on error)?
->
-> Looking at h_reg_sub_crq() in drivers/scsi/ibmvscsi/ibmvfc-core.c, it
-> unconditionally writes retbuf[0] into *cookie regardless of the return code:
->
-> static long h_reg_sub_crq(unsigned long unit_address, unsigned long ioba,
-> 			  unsigned long length, unsigned long *cookie,
-> 			  unsigned long *irq)
-> {
-> 	unsigned long retbuf[PLPAR_HCALL_BUFSIZE];
-> 	long rc;
->
-> 	rc = plpar_hcall(H_REG_SUB_CRQ, retbuf, unit_address, ioba, length);
-> 	*cookie = retbuf[0];
-> 	*irq = retbuf[1];
->
-> 	return rc;
-> }
->
-> In plpar_hcall() (arch/powerpc/platforms/pseries/hvCall.S), r5 (unit_address)
-> is moved into r4 before HVSC and r4 is unconditionally stored into retbuf[0]
-> after HVSC, even when HVSC returns an error such as H_PARAMETER or H_RESOURCE.
->
-> When h_reg_sub_crq() fails in ibmvfc_register_channel():
->
-> 	rc = h_reg_sub_crq(vdev->unit_address, scrq->msg_token, PAGE_SIZE,
-> 			   &scrq->cookie, &scrq->hw_irq);
->
-> 	/* H_CLOSED indicates successful register, but no CRQ partner */
-> 	if (rc && rc != H_CLOSED) {
-> 		dev_warn(dev, "Error registering sub-crq: %d\n", rc);
-> 		if (rc == H_PARAMETER)
-> 			dev_warn_once(dev, "Firmware may not support MQ\n");
-> 		goto reg_failed;
-> 	}
->
-> jumping to reg_failed skips scrq->cookie = 0, leaving a non-zero value in
-> scrq->cookie. If ibmvfc_deregister_channel() is later called on this queue
-> during reset or teardown (via ibmvfc_dereg_sub_crqs()), won't the new
-> if (scrq->cookie) check evaluate to true and issue H_FREE_SUB_CRQ on a queue
-> that failed registration?
+> aic94xx_scb.c:410, the 0xc0 "no buffer" case. The response path
+> reaches the identical access with no such check. So it really turns
+> on whether the sequencer can set those bits to zero on a response: if
+> you know it can't, this is dead code like the second comparison and
+> I'll drop it; if the field is as unbounded as it looks, this is the
+> guard the driver already applies to the same array on its other
+> producer.
 
-Yes. I will move clearing scrq->cookie after the reg_failed label.
+There is a long tail of old server class hardware that has this chip as
+its on-board controller, so we try not to touch the driver to avoid
+causing bugs for them which will only show up months to years later
+when they install stable backports.  The problem you outline here is
+purely theoretical: if the sequencer put a zero in this field; however,
+there's never been any actual observation of any sequencer doing that,
+so there's no evidence a bug actually exists here.  Added to which the
+fact that the change is untested on real hardware seems to create a set
+of risks in applying it without much offset in the way of benefit.
 
--Dave
+Regards,
+
+James
