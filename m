@@ -1,117 +1,71 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=173.37.86.79
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792530063;
-	b=hW1O8mPPr6Yabskrp6lEeDyjLvXjc2CFd55wxyAIbIdlO6ZodSVK09hDVHD2OmNMe3t/
-	 aVr0EkQlAJvi0vg9BzQg7TvQvSq2rJyoXdv1nvCDR+KFUw5TAeYF3KlF/o7UTJtMQAO5O
-	 rHHRqyrS/kft7Y761n3eUFNkx9Wj4Q5gzt9tJ/FG8A63SEA8jSRtML8D6Q3h+jdVYWGJN
-	 VP7f+wEFVbrSe6d8aTfSw0xWl9SDcoa6sWbifDEsPu8bmaLbIIpIFVhkMxJzby3mtavqU
-	 MfxuiFcWzO9OzaiiCyg0n7iItERcwt35iLq0/pWGDtrbGm4ffgZSM2wacUrdkx/WGSg==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792530063;
-	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
-	 X-IPAS-Result:IronPort-Data:IronPort-HdrOrdr:X-Talos-CUID:
-	 X-Talos-MUID:X-IronPort-Anti-Spam-Filtered:X-IronPort-AV:Received:
-	 Received:From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
-	 Content-Transfer-Encoding:X-Authenticated-User:X-Outbound-Client-TLS:
-	 X-Outbound-SMTP-Client:X-Outbound-Node;
-	bh=sStWA3eP+fg4gqdrzt9l/SH3csz8qYH2NP7P6WSTMOc=;
-	b=ZoGxQ1ZjeOQxiyrrTsyv9QZRBFYRA24bT2cX43J8KVEn7ZFWGZgmcWNgcPzYvNTLz20K
-	 J8Xq8lQJj/+P0nYuyjnb+Y+DSOB+vizBGdC+qE5VLZO6HJn0zscKQ128EV5NQOY6SFQZN
-	 xPS9ZH/6AF4wy7LCdoj1O5I4ZJ1R+WGMPgW4wnfWxNgWRHGzbgKOX5ny0p0at478QyVeI
-	 myfdlfQBZbEoehKn4+Z0wgJRjjqLT1/a5QjmyDkjl1Ym+CUWra197rPBjC+f3inhqAT5a
-	 G8OrBHGzdaG2XVUKmYMjJXXamSwOYXaNi7vGtA49LlfZhc88BP3pJhlOQoBk23DXoSw==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=cisco.com;
-	spf=pass smtp.mailfrom=cisco.com;
-	dkim=pass header.d=cisco.com header.i=@cisco.com header.a=rsa-sha256 header.s=iport01 header.b=Z9HMaAQc;
-	arc=none smtp.remote-ip=173.37.86.79
-Received: from rcdn-iport-8.cisco.com (rcdn-iport-8.cisco.com [173.37.86.79])
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=165.173.182.50
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1792530548;
+	b=Szg2KRFbmc2zEtkGnMqvH7zbEJCNZzaoYhomgTb9iDXudgANo6mMOsee5/sliEF/aLqo
+	 wVCX0PIQhlORfT63NvHsL5UL/awV5s6/PIxYLiCvwGlov5CCiaPuarme6/pQ9jV2TR0sZ
+	 I6XDYSb1w3fs/Z5iXmUP30RUbr40CD/MdHSOmdWbyD9OpX45H0Lo5EuxvYwafa/QR3xTO
+	 GN8ePjF7ARHN6B4V54wgfUCsFqqjCApu7wU1NajQO6X5Tujx/ivSIqaqvADnaRYcMrUiz
+	 L82fY7L6dhw8ymGf8vgFfIB/pGrO3RNp6Ww/DCd5Ft1r3PF2ef7+iD7ieHpHEgtvXXA==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792530548;
+	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
+	 Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding;
+	bh=UYhLgunWkT1r2zjrjSU63H7YEQH2F+XP4XYRth7CJ+Q=;
+	b=GYEcH/WqcFYvp0Y4676/uJYTgofIp2bITYD9vgfQteWtZnbJ6+ZYluzPak0lBMSn/sGm
+	 mC9B9FLPFYm4LZlaaYc6aD1Ph2CWzXqKcrVw3ojNpRb5mUypxCP0ILMyXBBdSdPUTxnkU
+	 mtSnAyi5J/cWrbyxdvcoIfh6/TX2xWS3w3olmkjHMLc6YnJbuOIRYy0POT1OYXZavbSud
+	 iWkwmeFVifIgdtf0XzTvFPIkcEzjTn+20b477kI7LkiQxuwLO5PY+zKbp4cDhKvP6RvmX
+	 PVUJKXbQIT52w4rEMdfau0yKYaTCQ0xzsI4g9GPjsubu39wlgfVLhSshh21HI+AprGw==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=palmit.com.au;
+	spf=pass smtp.mailfrom=palmit.com.au;
+	dkim=pass header.d=palmit.com.au header.i=vince@palmit.com.au header.a=rsa-sha256 header.s=zmail header.b=yxhbpd+q;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=165.173.182.50
+Received: from sender5-of-o50.zoho.com (sender5-of-o50.zoho.com [165.173.182.50])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 809A5606A325;
-	Tue, 20 Oct 2026 21:01:02 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 809A5606A325
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cisco.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cisco.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 12E41606A322;
+	Tue, 20 Oct 2026 21:09:07 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 12E41606A322
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=palmit.com.au
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=palmit.com.au
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=cisco.com header.i=@cisco.com header.a=rsa-sha256 header.s=iport01 header.b=Z9HMaAQc
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=cisco.com; i=@cisco.com; l=1738; q=dns/txt;
-  s=iport01; t=1792530062; x=1793739662;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=sStWA3eP+fg4gqdrzt9l/SH3csz8qYH2NP7P6WSTMOc=;
-  b=Z9HMaAQc3nS5bn4rIeZjH3+f+GMsW3FbmOKRicfuMQCeDX/cGPek66k6
-   DfmAefKmzI/jhGi1+eOu1iAD7LObq6iwIe3/+rJfwJ0x+79NjBiowcdJT
-   KLGP9aosFBS2kobbFMJiN52MHZ47DiGazd+TY2SLk15XEUdQVn6NqiLKn
-   s+wskkt1iPjeVFKzUdhbv+nYI2QgGIxhCWh2jjYRRoFdyZNEhcjGfFEq4
-   3BC+GeLWqMowchHeWKBoTBqQdDzSnapDHoiEQyiKXz7Pa7+GO3efE/qs7
-   CsvyyiUWHRDmqz0lXKLDOKOKwiRclnrCNIWczKv8ip/kwFcvegNnQZl8b
-   A==;
-X-CSE-ConnectionGUID: dNcoE7x4SYaZ4JIq6ErBFw==
-X-CSE-MsgGUID: 8HTA1mCuSNONMj+iDvOkpQ==
-X-IPAS-Result: =?us-ascii?q?A0A/AgCY1ddq/5D/Ja1aglmCV4FVQxkwlCqgQIF+DwEBA?=
- =?us-ascii?q?Q9RBAEBhQWOFwImNAkOAQIEAwIDAQEBAQEBAQEBAQEBCgEBBQEBAQIBBwWBD?=
- =?us-ascii?q?hOGXJAVNgFGMIEggwKCdQO1TIIsgQHeSIFoAQsUAYE4hUCII22FBScVBoFJR?=
- =?us-ascii?q?IEVg2mBUoM+hXgEgiKBDIJdk2hIgR4DWSwBVRMNCgsHBYFoAzUSKhVuMh2BI?=
- =?us-ascii?q?z4XgQcbBgWBHYEggRkjGTZrgQldgSspYAEhgQiCAgKCUYIAAgFJQQ4HRVMJF?=
- =?us-ascii?q?g9DEkcmIggSCQETGi4LgRo4PAkoQRUMZwkDGgVEAiIIAg0JB4EBFBgNSBEsN?=
- =?us-ascii?q?xUZBD5uB5FcgweBD4I/pg6hD4QooVwaM4QEpmoBmQiCWaZqgWg8gVkzGggbF?=
- =?us-ascii?q?TuCZ1MZD985JzI9AgcCBw4DC5NmAQE?=
-IronPort-Data: A9a23:KNwgWa2VWxm73o17GfbD5TVwkn2cJEfYwER7XKvMYLTBsI5bpzIEx
- 2VMUDrXO/yIZTH3f9lzbYSxpxwFuZXTyIVgHgpr3Hw8FHgiRegpqji6wuYcGwvIc6UvmWo+t
- 512huHodZ5yEzmE4Ej9atANlFEkvYmQXL3wFeXYDS54QA5gWU8JhAlq8wIDqtYAbeORXUXX5
- rsen+WFYAX7gmYtYzpEg06+gEoHUMra6WtwUmMWPZinjHeG/1EJAZQWI72GLneQauF8Au6gS
- u/f+6qy92Xf8g1FIovNfmHTKxBirhb6ZGBiu1IOM0SQqkEqSh8ajs7XAMEhhXJ/0F1lqTzeJ
- OJl7vRcQS9xVkHFdX90vxNwS0mSNoUekFPLzOTWXcG7lyX7n3XQL/pGAGc9OqBH6rpMMGh8q
- d45MW4gdDqtmLfjqF67YrEEasULNsLnOsYb/3pn1zycValgSpHYSKKM7thdtNsyrpkRRrCFO
- IxDNGcpNUicC/FMEg9/5JYWn+6ymnj7ej5wo1OOrq1x6G/WpOB0+OW3YYuNJYzTH625mG7Ih
- l7vpmHSHyo8E/q6y3mE3myLhff2yHaTtIU6UefQGuRRqF+exGY7DBwQSEv9oPO8zEW5Xrp3L
- kUO5iso67A/6EGxVdT7dxqiqXWAs1gXXN84O+Q24QKK0q3JyxyUCmgNUnhKb9lOnM0zSDon2
- V+It8nkCTxmrPueTnf13q2Zsz6oIgAPIGMCbDNCRgwAi/HnrJw1hRvJZs1+C6PzhdrwcRn0w
- jaXvG09iq8VgMojyaq25xbEjiiqq5yPSRQ6ji3TX2S4/kZib5WkT5Kn5EKd7vtaKoudCF6bs
- xA5d9O29usCC9SJ0SeKWuhIRO7v7PeeOzqaillqd3U8ywmQF7eYVdg4yFlDyI1Ba67opReBj
- JfvhD5s
-IronPort-HdrOrdr: A9a23:AMgzA6DTDrvP/bvlHely55DYdb4zR+YMi2TDGXocdfUzSL37qy
- nAppomPHPP4gr5O0tQ+uxoWpPgfZq0z/ccirX5Vo3MYOCJggaVBbAnxZf+wjHmBi31/vNQ2O
- NdaaRkYeeAaGSS9fyb3CCIV/A93dKA7Kekwc3az3trUEVWTpsI1XYcNu5eeXcGIjWvwvECZf
- 2h2vY=
-X-Talos-CUID: 9a23:6eJz+WxuvCPAVWfR/NVyBgUYPMsiXyLNkEzhKn3kK0dwFpCPY3GPrfY=
-X-Talos-MUID: 9a23:3V4gVws0lLV/96j5T82n1BFeHZ5tyLmVLmcrtJdFuuWaEi9oAmLI
-X-IronPort-Anti-Spam-Filtered: true
-X-IronPort-AV: E=Sophos;i="6.27,168,1787011200"; 
-   d="scan'208";a="529907812"
-Received: from rcdn-l-core-07.cisco.com ([173.37.255.144])
-  by rcdn-iport-8.cisco.com with ESMTP/TLS/TLS_AES_256_GCM_SHA384; 20 Oct 2026 21:00:56 +0000
-Received: from fedora.lan?044cisco.com (unknown [10.188.123.254])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: kartilak@cisco.com)
-	by rcdn-l-core-07.cisco.com (Postfix) with ESMTPSA id 94E0C18000231;
-	Tue, 20 Oct 2026 21:00:54 +0000 (GMT)
-From: Karan Tilak Kumar <kartilak@cisco.com>
-To: sebaddel@cisco.com
-Cc: arulponn@cisco.com,
-	djhawar@cisco.com,
-	gcboffa@cisco.com,
-	mkai2@cisco.com,
-	satishkh@cisco.com,
-	aeasi@cisco.com,
-	jejb@linux.ibm.com,
-	martin.petersen@oracle.com,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	jmeneghi@redhat.com,
-	revers@redhat.com,
-	adakopou@redhat.com,
-	lduncan@suse.com,
-	"Karan Tilak Kumar (kartilak)" <kartilak@cisco.com>
-Subject: [PATCH] scsi: fnic: Update module authors
-Date: Tue, 20 Oct 2026 14:00:43 -0700
-Message-ID: <20261020210043.5279-1-kartilak@cisco.com>
-X-Mailer: git-send-email 2.47.1
+	dkim=pass (1024-bit key, unprotected) header.d=palmit.com.au header.i=vince@palmit.com.au header.a=rsa-sha256 header.s=zmail header.b=yxhbpd+q
+ARC-Seal: i=1; a=rsa-sha256; t=1792530542; cv=none; 
+	d=zohomail.com; s=zohoarc; 
+	b=Fp0dXy8cCAsJvezMjMgqXtNPv10Ia7tBMyVrY8LC5mO+eRv9rXxIrhOkYwu66EjJQa9lVOrY1ttnaT5Z44YRZtsUuXQQhWVIfOj9Byr/8+JwUTvhxoTTQ6UJARokVFyRPKRwjStMsoTBthPbe8qytZN7jScwlmgwUszovo/duUI=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
+	t=1792530542; h=Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:MIME-Version:Message-ID:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=UYhLgunWkT1r2zjrjSU63H7YEQH2F+XP4XYRth7CJ+Q=; 
+	b=jeFKND5ckOKkm7stR+lj1T4G2MyTlniBW/xjpJbHZgJQIqNXSzb7s8OQeTp2psoA5DW2hKxWnOGHAo2OelUg40rTOBAdJBYmzvdSaMLaxaHzf/GXD1O3bP4yWqC2kjFTArCkVt3ExV7HbngikC9LpUgO2nlpfig+ICu+kv9IgA4=
+ARC-Authentication-Results: i=1; mx.zohomail.com;
+	dkim=pass  header.i=palmit.com.au;
+	spf=pass  smtp.mailfrom=vince@palmit.com.au;
+	dmarc=pass header.from=<vince@palmit.com.au>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1792530542;
+	s=zmail; d=palmit.com.au; i=vince@palmit.com.au;
+	h=From:From:To:To:Cc:Cc:Subject:Subject:Date:Date:Message-ID:MIME-Version:Content-Transfer-Encoding:Message-Id:Reply-To;
+	bh=UYhLgunWkT1r2zjrjSU63H7YEQH2F+XP4XYRth7CJ+Q=;
+	b=yxhbpd+qDYooCqWE7lD+tVELN1ZANcd53IrGsyCLmiRree4F0DZKSPHx+AJZRDjy
+	GynVYXhPhnVHmMLO49dI9wzsZkIToIX9hcAOKCzxEe731VDpvA6SkkPb5ZdxA5QiDLf
+	zZO2J1oT3YZSdFI8jyktfXA3f3Vk/TXKzJpXCpAw=
+Received: by smtp.zohomail.com with SMTPS id 179253054089779.02106118084941;
+	Tue, 20 Oct 2026 14:09:00 -0700 (PDT)
+From: vince@palmit.com.au
+To: linux-scsi@vger.kernel.org
+Cc: sathya.prakash@broadcom.com,
+	sreekanth.reddy@broadcom.com,
+	suganath-prabu.subramani@broadcom.com,
+	ranjan.kumar@broadcom.com,
+	James.Bottomley@HansenPartnership.com,
+	mkp@kernel.org,
+	MPT-FusionLinux.pdl@broadcom.com,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: mpt3sas: Register devices during SANITIZE
+Date: Wed, 21 Oct 2026 07:08:56 +1000
+Message-ID: <20261020210856.42835-1-vince@palmit.com.au>
+X-Mailer: git-send-email 2.56.0
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -122,57 +76,53 @@ List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Authenticated-User: kartilak@cisco.com
-X-Outbound-Client-TLS: ANONYMOUS;unknown [10.188.123.254];TLSv1.3;TLS_AES_256_GCM_SHA384;256
-X-Outbound-SMTP-Client: 10.188.123.254, [10.188.123.254]
-X-Outbound-Node: rcdn-l-core-07.cisco.com
 
-From: "Karan Tilak Kumar (kartilak)" <kartilak@cisco.com>
+A SAS disk being sanitized responds to TEST UNIT READY with NOT
+READY, ASC 0x04, ASCQ 0x1b. mpt3sas discovery maps this sense to
+DEVICE_START_UNIT and issues START UNIT repeatedly. The drive stays
+NOT READY until the sanitize operation completes, causing discovery
+to exhaust its retry budget and decline SCSI device registration.
 
-Update the FNIC module author list and bump the driver version
-to 1.9.0.2.
+Allow registration only for the SANITIZE IN PROGRESS sense, so sd/sg
+can expose the target while retaining its actual NOT READY state.
+All other sense dispositions are unchanged.
 
-Reviewed-by: Sesidhar Baddela <sebaddel@cisco.com>
-Reviewed-by: Arulprabhu Ponnusamy <arulponn@cisco.com>
-Reviewed-by: Gian Carlo Boffa <gcboffa@cisco.com>
-Reviewed-by: Arun Easi <aeasi@cisco.com>
-Signed-off-by: Karan Tilak Kumar <kartilak@cisco.com>
+On an LSI SAS3008 with an HGST HUH728080AL4200, unpatched Linux
+7.2.11 retried discovery 145 times without registering the device.
+Linux 6.18.55 registered the same sanitizing drive. With the
+equivalent 7.2.11 fix the disk registered as /dev/sda (0 B) and
+/dev/sg0 while TEST UNIT READY still reported 02/04/1b and 47.32%
+SANITIZE progress. Another SAS drive continued to enumerate.
+
+This updated variant uses the named 0x041b sense constant introduced
+in newer kernels. It passed static review on the current SCSI
+for-next branch but has not been independently boot-tested there.
+
+Fixes: aee682fad6cd ("scsi: mpt3sas: Improve device discovery and readiness handling for slow devices")
+Assisted-by: LLM
+Signed-off-by: Vincent YUE <vince@palmit.com.au>
 ---
- drivers/scsi/fnic/fnic.h      | 2 +-
- drivers/scsi/fnic/fnic_main.c | 7 +++++--
- 2 files changed, 6 insertions(+), 3 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/fnic/fnic.h b/drivers/scsi/fnic/fnic.h
-index 3ba1592940ca..bc63cd7cc495 100644
---- a/drivers/scsi/fnic/fnic.h
-+++ b/drivers/scsi/fnic/fnic.h
-@@ -31,7 +31,7 @@
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index 085d4672d..a77bbc3d2 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -7700,7 +7700,9 @@ _scsih_determine_disposition(struct MPT3SAS_ADAPTER *ioc,
+ 				u16 scode = scsi_sense_code(sense_info.asc,
+ 							    sense_info.ascq);
  
- #define DRV_NAME		"fnic"
- #define DRV_DESCRIPTION		"Cisco FCoE HBA Driver"
--#define DRV_VERSION		"1.9.0.1"
-+#define DRV_VERSION             "1.9.0.2"
- #define PFX			DRV_NAME ": "
- #define DFX                     DRV_NAME "%d: "
- 
-diff --git a/drivers/scsi/fnic/fnic_main.c b/drivers/scsi/fnic/fnic_main.c
-index f13c381a66d7..a19c0b0d812d 100644
---- a/drivers/scsi/fnic/fnic_main.c
-+++ b/drivers/scsi/fnic/fnic_main.c
-@@ -56,8 +56,11 @@ static const struct pci_device_id fnic_id_table[] = {
- };
- 
- MODULE_DESCRIPTION(DRV_DESCRIPTION);
--MODULE_AUTHOR("Abhijeet Joglekar <abjoglek@cisco.com>, "
--	      "Joseph R. Eykholt <jeykholt@cisco.com>");
-+MODULE_AUTHOR("Karan Tilak Kumar <kartilak@cisco.com>");
-+MODULE_AUTHOR("Arun Easi <aeasi@cisco.com>");
-+MODULE_AUTHOR("Gian Carlo Boffa <gcboffa@cisco.com>");
-+MODULE_AUTHOR("Arulprabhu Ponnusamy <arulponn@cisco.com>");
-+MODULE_AUTHOR("Sesidhar Baddela <sebaddel@cisco.com>");
- MODULE_LICENSE("GPL v2");
- MODULE_VERSION(DRV_VERSION);
- MODULE_DEVICE_TABLE(pci, fnic_id_table);
+-				if (scode ==
++				if (scode == LU_NOT_READY_SANITIZE_IN_PROGRESS)
++					rc = DEVICE_READY;
++				else if (scode ==
+ 				    LU_NOT_READY_MANUAL_INTERVENTION_REQUIRED ||
+ 				    scode ==
+ 				    LU_NOT_ACCESSIBLE_TARGET_PORT_IN_STANDBY_STATE ||
 -- 
-2.47.1
+2.56.0
+
+
+This email and any attachments may contain privileged and confidential information and are intended for the named addressee only. If you have received this e-mail in error, please notify the sender and delete this e-mail immediately. Any confidentiality, privilege or copyright is not waived or lost because this e-mail has been sent to you in error. It is your responsibility to check this e-mail and any attachments for viruses. No warranty is made that this material is free from computer virus or any other defect or error. Any loss/damage incurred by using this material is not the sender's responsibility. The sender's entire liability will be limited to resupplying the material.
 
