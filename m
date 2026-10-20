@@ -1,66 +1,94 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=199.89.1.14
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.221.54
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792526263;
-	b=JrLQxouBJzObtZ6agYd/Vl4VMi2wjqpGfZ0xedcZld5JRKwAIlhNSN9uW4wetVQaqJm3
-	 TJkztNCWC55zgky0kFygDC7zHBYQ3++t7tmWLTNn65Neq5BcHeRd5K4jhSoSeGn1zcbzl
-	 rDvg6n/FZkwlkB3Jw9YoAgwvboZ2BKfyStRXHAG4s6xK2L0o9KEf36XW3dt5F0g4JPsch
-	 g01dfTxhuWJiXOaFxe2NnQbxsqZZfFHQWYRfSU4CLfapYXjpKuw64g9SCyex84l3ZO4A6
-	 nnWFhsiP7VZmvl8glT+/ZRDLGFXWuFn/U4rK7fdys84ohz68NnOhlYreyKud1yFRu4A==
+	t=1792526384;
+	b=Z745n4D5hgYrqB5MfZfqR4cGmUAVARQKHRZ8hAou4033hGlBaC0qP2q4tVw0WwvKtfXn
+	 m1rZkTuanD9iWWG2DojrSFhKn6tTWWfQNAboE0hBRXiB6947sdnvfI/scen347A4YGsMB
+	 s8hvy+7ZkGmgvnSUVgvNutljwOXabQl4oR2Yd8LZvHpeNFBZWvu3enf0WEk1DZ0tCbN0t
+	 ByrANsDadM3eHVDf0EcwSV2kPCwt7nedlC95A7jtFiX54YWGNZIkOKO1QFYuHxPB1EAzk
+	 cNf63+P11jcCSSwXmhMUqNUOZGEZrjNlpDAHorSX3qhh0JYLvFKkIkOKK1kzGTvUuew==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792526263;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Virus-Scanned:Received:
-	 Received:Message-ID:Date:MIME-Version:User-Agent:Subject:To:Cc:
-	 References:Content-Language:From:In-Reply-To:Content-Type:
+	a=rsa-sha256; c=relaxed/relaxed; t=1792526384;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-Id:X-Mailer:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding;
-	bh=sTEUgbUTY2uEZgUhNSeKZNJZu7md/19toDkZImjF00M=;
-	b=Jd624XC98QtNJm9I4jnU+GBheg/3Ucwt4i8idSNGkc8G5/IU3RnlAnCT5pEQKs+hWZyy
-	 ktKulW/QyAbjZGEDxoJyfLi7gvVpw9QcLz3hdoZFjeEzQPYN3E58uFLx1Jp/kuDZSvJKL
-	 FFCmGM5NGwHZ3o3FwtkAWZQyEtHFhoUoWD+NO335rnb/JkroQ+Cw86OP3Ur54/2GReCNa
-	 ZTYGZxq4ckLsF61I2n++laUog0V/IqAP03JqwwGeMuobyLgz+y1LYDPQHH63wFNIJknTy
-	 vodKqAsxPklBjNuKmLt2HMngqlXo8SSN4qJOhcMTMsN/iosW8qg3xWHt9v05tLA6BGg==
+	bh=+eR0lfDXlGBkQITg/93Hqy9Hz6un2dFbfB8Q3L+Xa5Y=;
+	b=RmD4QVHV76igd09nlrnGg8pGaZiQazG90CF1X2sgae59x+JB9xjvKrlomCeaDnIMOVBw
+	 xiva+AWrudfL5tg2piygABFe2k/6qmqYCGeMFbFUhFU1n5IAWG0WYtiqX8ezXTtddbHIf
+	 +PSX4/tDq4kdih7Gq/kn1VO9ErNsjcqn4xb1ini7fMjHwOB7IXrr1677Ae2z6h88q6AIk
+	 myfoUYkOj1j0fs0ZjuvS1ip4NqSwEFSuBHgY8GHMQ2iz1UEEKmWrQ8hnGIldypI+rKewF
+	 ES5AbZhP3cAdSHnvrz2uegjLzehrNtNTw09Q5/ZzrHF+DlQByX03HjWh0s3bDhUH71Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=acm.org;
-	spf=pass smtp.mailfrom=acm.org;
-	dkim=pass header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=zZgSE7Fi;
-	arc=none smtp.remote-ip=199.89.1.14
-Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=jpDb8266;
+	arc=none smtp.remote-ip=209.85.221.54
+Received: from mail-wr1-f54.google.com (mail-wr1-f54.google.com [209.85.221.54])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B60A4606A319;
-	Tue, 20 Oct 2026 19:57:42 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B60A4606A319
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2101606A31A
+	for <linux-scsi@vger.kernel.org>; Tue, 20 Oct 2026 19:59:43 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D2101606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=zZgSE7Fi
-Received: from localhost (localhost [127.0.0.1])
-	by 011.lax.mailroute.net (Postfix) with ESMTP id 4j8NVm5nWgz1XM4Tn;
-	Tue, 20 Oct 2026 19:57:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1792526252; x=1795118253; bh=sTEUgbUTY2uEZgUhNSeKZNJZ
-	u7md/19toDkZImjF00M=; b=zZgSE7FiotGSntfoWSCZxUUCLkb/F/uW2mkXDhdN
-	yU5dt7OWsLii6b4W2cICIG8W0bAiN0SBtwujpImz2txsnGQPc7xgeu6t4KYngnrr
-	V7Ol/zSzSdsn/NarmlhiZrTNGuKnsYJJx13gLqfBVLWqmcmB92MATTnSVqVuACTQ
-	WKhFaBJ7yHeMnQ4M9cnsjKfGj31slx8tmruwYfEOb1Vy+OnW+8Pt/s2q8BGg2/lj
-	XioP3QQyoQ+Qqww4qyWJuqnBBmLk/gwODm2I6O9LCXqp0epudg5TVE46Nm70e1LX
-	FxHljSRh+KDzbdfI6lI1wohq1M2pK4t1sP5M95aKViCIkw==
-X-Virus-Scanned: by MailRoute
-Received: from 011.lax.mailroute.net ([127.0.0.1])
- by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id qfgUZ2C7llJB; Tue, 20 Oct 2026 19:57:32 +0000 (UTC)
-Received: from [100.80.231.125] (unknown [104.135.182.41])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4j8NVh05Mpz1XM4Tl;
-	Tue, 20 Oct 2026 19:57:31 +0000 (UTC)
-Message-ID: <163380cc-fee3-49ee-a773-d67f4e907143@acm.org>
-Date: Tue, 20 Oct 2026 12:57:29 -0700
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=jpDb8266
+Received: by mail-wr1-f54.google.com with SMTP id ffacd0b85a97d-48b0584ad71so8553f8f.0
+        for <linux-scsi@vger.kernel.org>; Tue, 20 Oct 2026 12:59:43 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1792526382; x=1793131182; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:message-id:date
+         :subject:cc:to:from:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=+eR0lfDXlGBkQITg/93Hqy9Hz6un2dFbfB8Q3L+Xa5Y=;
+        b=jpDb8266n0eF8d/i2ZXHKfEYgqEsLR804+WEEzWiZiRgJmg9DmrtWWJmPob4hSs7uf
+         Yc8Kpxcwie9eGJiuOcy4end1XQ8xzlc5Mjt986wQpuK1NA49eQ+uX0yAwXuYaf5XRKLp
+         Jap/0yRqHi3E0Et4qP5I2EgvTqSrpadzAfaY5lsVKpYm3y1oOWqipSuvLYDYO+489Le4
+         WcW7tQW8E8yz1s5X5zkHJ1H9WxqgnHNfbo8OiesEx6UIF3VlB5ed6bxi7Y/LroCVIYcr
+         UGv8CE/ezRbG+1+qjg3g3qdiSD1Qrzc/DW1npAsL7PbVYYEz+LiCtSNV3IzRXU+nOgVy
+         GBWQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792526382; x=1793131182;
+        h=content-transfer-encoding:content-type:mime-version:message-id:date
+         :subject:cc:to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=+eR0lfDXlGBkQITg/93Hqy9Hz6un2dFbfB8Q3L+Xa5Y=;
+        b=JPm7miPu6ZMe8KyZS56crMhJuIQyaFq1s2pqjKYx5TMWZv2RDTRM81O5LPT7Zd1Cl9
+         RohTjx2AaEr3HGEM55kqR+/n2RXk3ib3IMRr5vr7J01prpxx8g1XCMhP5C7l6hkDBW1d
+         OAAoUlfmuzo452bihHbzddldNVuLtZB9+/ibLN2e1/ck2YjECUJ4VHqYZ1hdfXWW/ia+
+         0WZO3OQJCygKeES4s9jkUXlA6JdQnpL5FHHjb7JoQl/9KGW9+asHKiCrkh2X2jEXGIB6
+         oaV/QcEwshbWuIxDB2n7/rR6Bf9MpESGyAXPAQDqV4oPhjWvulFtNArapAQ6mVVI4xW2
+         4rsQ==
+X-Forwarded-Encrypted: i=1; AKwUvBwhul5RWixSmyPzoUU98DdwIT70tRvULgUG/3IZl4REEvVOZRfVJi52Iosplq7YiSEND/QRA9Q1e74z@vger.kernel.org
+X-Gm-Message-State: AFq9FYJMY/yrKVBM/P43me5OE3EIoNuH9eBqSNxdXsp3KkQTJcTl9uJX
+	oxLvLSsKKsowa7tiMqgVWzrmsltiisriEnKIWVFhDUWnCSbVauZR2CGv6aB8IlQY6uyA1A==
+X-Gm-Gg: AYBFou1wTiRBL6YcgTmSA9CIDN5B3q0PrstNXllI9KBRr1dh2DUOHCZ5vKMiWzFhtF4
+	NoXrRbxa46rp8yW5AqFXGOC5s6Gvdcg7eSHgkU0NFiZvGTvBQZPqvrRM3aKA0Ql++eE40S2CpvM
+	sY9kypipmAJ9Ys0YKHU8mncYCxAMCHDgKI3DL3i0AFibAjvIqWBP0HhvBa5u60SG65aWxG9ChFm
+	pw0KeF88Y0dW+muWQC/P/7JePHvYbgjjKZVYnts3gLamXyGp6S7RvxxWbSiAiwSOWmg2XP3nbHC
+	/E7ULW2ano2iSB8ugLPfoIPCOe7vJLwoQ54b9TcUchze//YWc8LhgpFx2NwXBZOd91Eqtv2He17
+	jzQM8LoJZmrzJikrBbAEsg3Hu0BAxw41ANd7xMx6gU+nooZe+u36SltPW3ElKoLP3jN44Jmul/8
+	q747K9L0R7wb6Dcfuf2PIVdtOI/8iZz71DOIgvwgxIjp6mHjViU1QqfHYNYBO7oXuWgOR/whsD3
+	6S9shlUnBt8
+X-Received: by 2002:a05:6000:1847:b0:48d:e5c9:39a4 with SMTP id ffacd0b85a97d-48e07f9f0a1mr23318111f8f.33.1792526381890;
+        Tue, 20 Oct 2026 12:59:41 -0700 (PDT)
+Received: from ADRIAN-PC.lan ([171.22.87.31])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48e2581f412sm594323f8f.16.2026.10.20.12.59.40
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 20 Oct 2026 12:59:41 -0700 (PDT)
+From: =?UTF-8?q?Adri=C3=A1n=20Garc=C3=ADa=20Casado?= <adriangarciacasado42@gmail.com>
+To: "Martin K . Petersen" <mkp@kernel.org>,
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>
+Cc: John Garry <john.g.garry@oracle.com>,
+	Jason Yan <yanaijie@huawei.com>,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	=?UTF-8?q?Adri=C3=A1n=20Garc=C3=ADa=20Casado?= <adriangarciacasado42@gmail.com>
+Subject: [PATCH] scsi: libsas: Add __printf attribute to sas_ata_printk()
+Date: Tue, 20 Oct 2026 21:59:34 +0200
+Message-Id: <20261020195934.250768-1-adriangarciacasado42@gmail.com>
+X-Mailer: git-send-email 2.39.5
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -70,29 +98,36 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 3/7] scsi: ufs: core: Fix double completion in
- ufshcd_clear_lu_cmds()
-To: Stanley Jhu <stanleyjhu@google.com>, "Martin K . Petersen"
- <mkp@kernel.org>, linux-scsi@vger.kernel.org
-Cc: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
- Alim Akhtar <alim.akhtar@samsung.com>, Bean Huo <beanhuo@micron.com>,
- Peter Wang <peter.wang@mediatek.com>, Can Guo <can.guo@oss.qualcomm.com>,
- linux-kernel@vger.kernel.org, stable@vger.kernel.org
-References: <20261020082110.3511797-1-stanleyjhu@google.com>
- <20261020082110.3511797-4-stanleyjhu@google.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20261020082110.3511797-4-stanleyjhu@google.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-On 10/20/26 1:21 AM, Stanley Jhu wrote:
-> In SDB mode, ufshcd_clear_lu_cmds() clears the request slot in the
-> controller and completes the request, but leaves its bit set in
-> hba->outstanding_reqs. ufshcd_poll() treats a request whose bit is set
-> in hba->outstanding_reqs and clear in the doorbell register as finished,
-> so the next ufshcd_poll() completes the same request again and unmaps
-> its DMA buffers twice.
+sas_ata_printk() formats its variadic arguments via struct va_format and
+%pV before passing them to printk().
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Because %pV hides the format string from the compiler, GCC does not suggest
+the format attribute under -Wsuggest-attribute=format, and callers do not
+get compile-time format string validation.
+
+Add the __printf(3, 4) attribute to sas_ata_printk() to enable compile-time
+format string checking for its callers.
+
+Signed-off-by: Adrián García Casado <adriangarciacasado42@gmail.com>
+---
+ drivers/scsi/libsas/sas_ata.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+index 61368e55bf..53eac56c3a 100644
+--- a/drivers/scsi/libsas/sas_ata.c
++++ b/drivers/scsi/libsas/sas_ata.c
+@@ -372,6 +372,7 @@ static int local_ata_check_ready(struct ata_link *link)
+ 	}
+ }
+ 
++__printf(3, 4)
+ static int sas_ata_printk(const char *level, const struct domain_device *ddev,
+ 			  const char *fmt, ...)
+ {
+-- 
+2.39.5
+
