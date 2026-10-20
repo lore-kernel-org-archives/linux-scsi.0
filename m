@@ -1,72 +1,75 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.215.198
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.71
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792484473;
-	b=fyK6NKacu3Qs1ovblNw4n9z2Wnsh4x8qLCtYFmsU+ixGe3jaNhLsUB3wQedwDPj1ELqQ
-	 ddLwFIJ02lzb49Kc8SaMSScSTvTqAxtWSLBTTVT3JA+FWHNQDAQycupSGkj2c8WgopgZp
-	 i2zlCrfjez8HOHbOZeCTZ0c/Ac02janNgVVXzXp9MJPChrvUQ7YC4/old0YnB4A6LELaW
-	 qtP+fbR26g3cP9p+uFr+ib3UfyMbGPSlnTGpfYt7WfZW9SX36CfSKR1tIdNIVtLdtNEJL
-	 NS7ffYGGh+NCMA0Y7bnXC8ibtV90qJULzarGFtbRtCyt0OLnhCrcNUMT15BC2vQyeig==
+	t=1792484475;
+	b=HCxp1gWN52izwGanBZnkNrydq8B3rAYumyj56yALXA2/Q1xssqWcl0vy1X/+lwo2dF6A
+	 uRBlCw6QB5j25mDFn/aOOBDaE1jZNON/475tOUAa73z2BdB/TH3sKL1OW1wOV8KqzgdGF
+	 q0jFZ2UHaaSxRM3OCCROLUb+3KtreeZFSbR9ra9erzU40CyJU3r0sZYmwt5TRB1PHPLtf
+	 MHrmwczrWi5FKVaKSGy1KqZ0AeuJnuweyOI1QkBrxjSnN+CNj7PnW1VjMSlY8+jWmCnOs
+	 6qA9QlUiX7IJe8++mhNdhFFymnAVRnAizxslTF36nX8KIhMivRcKNzkzVFw8nCR6ojw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792484473;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792484475;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:Mime-Version:
-	 X-Mailer:Message-ID:Subject:From:To:Cc:Content-Type;
-	bh=xE59jIBZZHvUjKrjm7mkHjm9YH7/I5FFkNh3MoDpP5o=;
-	b=Fr7vfe5nDKrPl8gVh2m8o3CV0ouU30LYsAmZXoeg/y/RiNFThoo5qFSsDFIM+XrPom47
-	 cyC/GyPt8wol8XjS4vfUBwFRbnKtkJA2N1fqdRfva+8/pF9Plrm57/QYfhhCg+CQJ3eEx
-	 8zeqDC3AEeRotQaWDZ4E8Dds2MVV2e2TSbJJhexFOrdXma1ewttNW3SX2feq8Q2vRKfgV
-	 FSm7NyaU3M+U8YvdyT/o/wbAuHmqP/zv8ccIt1YhAYpzztlvSGGYXmhPRz3Weh/mlMpiq
-	 ySZ+D5k27EJjAGkCb5I37vT6zASpCJ9bw2zUWrPmsWpgsOXRt4uP3g4+XYqY+Q6FAaw==
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:In-Reply-To:
+	 Mime-Version:References:X-Mailer:Message-ID:Subject:From:To:Cc:
+	 Content-Type;
+	bh=Ab3Ppi5U2ZBtscUyANpv309FwIIv3hXfnmRHZqkMu2E=;
+	b=H1sFVlKEh6dC+UsgrXOQ9s7LUQtg4hsLdeS1SdxGP3QA5jiKZo3dJRMKkjXiPgbX4N/K
+	 bNJ5y3aMfB67980NaiN+xjZb9ZQb2Tc/4MaLRiUOA0GLOsVzAuaw4AZ0D3Vpzt9OnMzrU
+	 /WFUCWef/n0Xngt5ISepcJ9NYYfZxmbKe7JWo0xDyqSB/leWtvueDTQJmgf5whrIL+F8F
+	 vd5nB3pmbdr4e/DEjL6KrF1t9V+7AVxuZhH8Regleim6x8cmutJLWyweXaMuVi5QGBr3R
+	 zQCsj5SZwQWlBmhMcjpdVnqup9yAgREF/4WD81NLpuCMu8KDIElFiNmrG8YcGf8dOug==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=google.com;
 	spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20251104 header.b=egqzuDqa;
-	arc=none smtp.remote-ip=209.85.215.198
-Received: from mail-pg1-f198.google.com (mail-pg1-f198.google.com [209.85.215.198])
+	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20251104 header.b=nGgmHFlG;
+	arc=none smtp.remote-ip=209.85.216.71
+Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com [209.85.216.71])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03E81606A321
-	for <linux-scsi@vger.kernel.org>; Tue, 20 Oct 2026 08:21:12 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 03E81606A321
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB6D2606A331
+	for <linux-scsi@vger.kernel.org>; Tue, 20 Oct 2026 08:21:14 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org EB6D2606A331
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20251104 header.b=egqzuDqa
-Received: by mail-pg1-f198.google.com with SMTP id 41be03b00d2f7-cd5ca3840c5so3419858a12.2
-        for <linux-scsi@vger.kernel.org>; Tue, 20 Oct 2026 01:21:12 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20251104 header.b=nGgmHFlG
+Received: by mail-pj1-f71.google.com with SMTP id 98e67ed59e1d1-3ac16335199so3254949a91.1
+        for <linux-scsi@vger.kernel.org>; Tue, 20 Oct 2026 01:21:14 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1792484472; x=1793089272; darn=vger.kernel.org;
-        h=content-type:cc:to:from:subject:message-id:mime-version:date:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=xE59jIBZZHvUjKrjm7mkHjm9YH7/I5FFkNh3MoDpP5o=;
-        b=egqzuDqaROCxpA9wEPwuX8gFaIAR8VyfSaNwp22zn/Eqn7+TL6Qph5xBbaUimxZmJM
-         N6LbIdAa2pBT+CUw/LaVFkFlcDqUGFvlpXeXlsl0+6XoJeQnvg2vRsgtbxMeGvLzW+x2
-         f3JJesiR47syfW0Kl9P++l1hCIgtOofUOXxwaPs2ZUvo7XbG8SWvAnKFMUBUvKWKnjDi
-         wKK1pT6VP6ZVweHGcJSpSnOGJjZvY38+vi66E/QvBnhilrBZ9ckPp/UPlYl3y7PMyusp
-         0SMfOsGfgANkS1yAvUgfcS9Bl+hnjCuIHXI6ljQdseNqdY5CCXnyRz9Npax4nkRvEmav
-         2VBw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792484472; x=1793089272;
-        h=content-type:cc:to:from:subject:message-id:mime-version:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+        d=google.com; s=20251104; t=1792484474; x=1793089274; darn=vger.kernel.org;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=xE59jIBZZHvUjKrjm7mkHjm9YH7/I5FFkNh3MoDpP5o=;
-        b=QBKZnWeR8e4KQ2DIDMqmpGUxp2lzfgbMXzWUdeXNg8zfmBvE9RztLzrduHjD3FEC/4
-         ucBLwb3WRLtMtzz/JY+u6blztu3+9xRZgVTeGGR1J98IxCPH87pIFP9NOBqVl4eVgYAm
-         /GHIWZSekLRDvIeUG/LHBq2Whzycnn4QzxLSExNIykU5DCWQW4Mq8Ben5XHMteib0Lh2
-         KY4Egi79H1zP76mFKVt7SdPIB3YcgwGGvxnJ3eDcfp20jr1lPqbvfKepauxQJCW4GT3n
-         rzREqBDF2W0jD42hTtjTeAY33xBiOC6SmaClUbYAFF2qorr3mRE1htkMgXc35wLPDdVq
-         IquQ==
-X-Forwarded-Encrypted: i=1; AKwUvBxAmK/PVKUnEvc80EcfALEryma43Vp74t5LREyvpN2+90TWWioL4Fcae8PyjnWvCC7w50xW3EPPJ1gh@vger.kernel.org
-X-Gm-Message-State: AFq9FYJivaC/tXd7EXE278MzkGKsXXz0I4VMSk3Ds2TvtBxwUQMx8O5+
-	76i6Mbh+Uo7+2PWNuJHGAxf8/veTguClPM/6+oUntkm6DP+dYz3uRIAWNsU1HQg4pXu732yFk87
-	t4UwIQzjIMuDFK2tiu+Y/NA==
-X-Received: from pgfd11-n1.prod.google.com ([2002:a05:6a02:654b:10b0:cc9:f487:a423])
+        bh=Ab3Ppi5U2ZBtscUyANpv309FwIIv3hXfnmRHZqkMu2E=;
+        b=nGgmHFlGOHR/4CdMZ9jRrEtoCBGol5VD2dAbWN9yFfQhpgsZaXtFMH7yOTkmmfS2Nt
+         I0BZUsdfeim80nDPaju41SSmHv1KiU1Ly9Fz3P8e4y5ZftrH0iFWzxg8tuhgdG7Ux1tB
+         /Xju31a7cc96C5aBB+DFKXop4o94CNo05NUZfCmEqBPBcSN7V7CsNzpGwDo+7Xmdsb2E
+         F+H/BzYfOCXRIxnfwBfSnBw+M2CtwxDhq06PI7EVCbG5PI7DvtYrRa+8WmxV9t5xo1eC
+         gUyKduYKozgxFeB+2uckyvSOo12NgY9NFKalozeufUynOX5SoSafwrSMfSizp9l81Ab3
+         jdbg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792484474; x=1793089274;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=Ab3Ppi5U2ZBtscUyANpv309FwIIv3hXfnmRHZqkMu2E=;
+        b=JNBU42NQRtb/KnBzBlDnUVnIE7H8VZnU9e1ML3aze0nUR/jgJ7dPjXWqAhJJCwH9fQ
+         I/idiESI1Qkk/J1sZ9jlagTDlWVpSfPhzCxAS2h0+slNNUUnWCkpTK6YMwXjROeHkYP5
+         NM9uhClWiO2HD9bRf2rgBxeM8ipa9ocQm4pFjA5l0ZBW7ZxTJ3MNogXgD36OPfukUNJV
+         9KZwo2kJRIcbvZo8DNnr6WXTqfclRVf2424GuLD81i0Id7Uz2dH4Jl00ZNMNZ8iWjo5+
+         q4Pewe3BxsvovX5ytpr6cP5++tnaTuCSs4pL94NTbhtZ+rHqQPA/YPicrUaJPSmgffx9
+         LnNw==
+X-Forwarded-Encrypted: i=1; AKwUvBxWH9v/7y5Ym10YVDDAefCHWCaYxX+6sH+JkHox+lAUbP2kOBgZ216ckKX3KddVkf/hXoz70Z80Pz0d@vger.kernel.org
+X-Gm-Message-State: AFq9FYLCv9Xc6imTPRFna1RG5wLBFv9MMMFgNLLbOGeKerqrNfjcaph6
+	Ae6ja1uzx4KmmoJpAEOUgiw0UJtafIxZjO5cmbBJ1OZrrR0cWGqRBI0diXUwTa5vqqqp25F8oKn
+	ytLcNc96l62B6f1cuiV2jLQ==
+X-Received: from pjbpb2.prod.google.com ([2002:a17:90b:3c02:b0:3ab:54fb:2a3d])
  (user=stanleyjhu job=prod-delivery.src-stubby-dispatcher) by
- 2002:a05:6a21:4903:b0:3e2:d8f:600f with SMTP id adf61e73a8af0-3e22613d7e1mr9017309637.72.1792484472121;
- Tue, 20 Oct 2026 01:21:12 -0700 (PDT)
-Date: Tue, 20 Oct 2026 16:21:03 +0800
+ 2002:a17:90b:4d0d:b0:3aa:fdad:7d6c with SMTP id 98e67ed59e1d1-3acef5b08bamr8689912a91.58.1792484474134;
+ Tue, 20 Oct 2026 01:21:14 -0700 (PDT)
+Date: Tue, 20 Oct 2026 16:21:04 +0800
+In-Reply-To: <20261020082110.3511797-1-stanleyjhu@google.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -76,10 +79,10 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 Mime-Version: 1.0
+References: <20261020082110.3511797-1-stanleyjhu@google.com>
 X-Mailer: git-send-email 2.56.0.212.g129ede20d9-goog
-Message-ID: <20261020082110.3511797-1-stanleyjhu@google.com>
-Subject: [PATCH v3 0/7] scsi: ufs: core: Factor hba->outstanding_reqs helper
- and fix double completions
+Message-ID: <20261020082110.3511797-2-stanleyjhu@google.com>
+Subject: [PATCH v3 1/7] scsi: ufs: core: Remove an always-false WARN_ONCE()
 From: Stanley Jhu <stanleyjhu@google.com>
 To: "Martin K . Petersen" <mkp@kernel.org>, linux-scsi@vger.kernel.org
 Cc: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>, 
@@ -89,60 +92,33 @@ Cc: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
 	stable@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 
-In Single Doorbell (SDB) mode, multiple completion and error handling
-paths can race on the same transfer request when bits in
-hba->outstanding_reqs are not claimed atomically with completing the
-request. A stale bit in hba->outstanding_reqs lets a later poll or
-reset complete the request again and unmap its DMA buffers twice.
+The WARN_ONCE() in ufshcd_poll() can never fire. completed_reqs is set
+to ~tr_doorbell & hba->outstanding_reqs on the line above, and
+hba->outstanding_reqs cannot change in between because ufshcd_poll()
+holds hba->outstanding_lock. So completed_reqs & ~hba->outstanding_reqs
+is always zero. Remove it. No functional change.
 
-Patch 1 removes a WARN_ONCE() in ufshcd_poll() whose condition is always
-false.
+Reviewed-by: Bean Huo <beanhuo@micron.com>
+Reviewed-by: Peter Wang <peter.wang@mediatek.com>
+Signed-off-by: Stanley Jhu <stanleyjhu@google.com>
+---
+ drivers/ufs/core/ufshcd.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-Patch 2 adds __ufshcd_clear_outstanding_reqs() and
-ufshcd_clear_outstanding_reqs() to share the bit-claim logic across
-ufshcd_poll() and ufshcd_abort() with no functional change.
-
-Patch 3 uses the helper in ufshcd_clear_lu_cmds() to fix a double
-completion during LU reset.
-
-Patch 4 converts ufshcd_eh_timed_out() to the helper as a cleanup.
-
-Patch 5 uses the helper return value in ufshcd_eh_timed_out() to prevent
-releasing driver resources for a request already completed by another
-context.
-
-Patch 6 uses the helper in ufshcd_abort() to fix a double release in
-the missing-interrupt path.
-
-Patch 7 skips releasing reserved requests at the end of ufshcd_abort().
-
-This series is based on mkp/for-next (db8b4d2bf2d3).
-
-Tested on QEMU ARM64 UFS in SDB mode across LU reset, abort, and PM
-timeout paths without double DMA unmaps.
-
-Changes since v2:
-- Move WARN_ONCE() removal to 1/7 and use __must_hold()/guard() (Bart).
-- Add patch 5 to fix a double release in ufshcd_eh_timed_out().
-- Add patch 6 to fix a double release in ufshcd_abort() (Bean, Bart).
-- Add patch 7 to skip releasing reserved requests in ufshcd_abort().
-- Link to v2: https://lore.kernel.org/r/20261017084403.875420-1-stanleyjhu@google.com
-
-Stanley Jhu (7):
-  scsi: ufs: core: Remove an always-false WARN_ONCE()
-  scsi: ufs: core: Add a helper for clearing hba->outstanding_reqs
-  scsi: ufs: core: Fix double completion in ufshcd_clear_lu_cmds()
-  scsi: ufs: core: Use ufshcd_clear_outstanding_reqs() in
-    ufshcd_eh_timed_out()
-  scsi: ufs: core: Fix double release in ufshcd_eh_timed_out()
-  scsi: ufs: core: Fix double release in ufshcd_abort()
-  scsi: ufs: core: Do not release a reserved request in ufshcd_abort()
-
- drivers/ufs/core/ufshcd.c | 56 ++++++++++++++++++++++++---------------
- 1 file changed, 35 insertions(+), 21 deletions(-)
-
-
-base-commit: db8b4d2bf2d3e02b4ff78bbf69d00e11795840de
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index bcc2512bf34b..12aafcf1f9b3 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -6072,9 +6072,6 @@ static int ufshcd_poll(struct Scsi_Host *shost, unsigned int queue_num)
+ 	spin_lock_irqsave(&hba->outstanding_lock, flags);
+ 	tr_doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+ 	completed_reqs = ~tr_doorbell & hba->outstanding_reqs;
+-	WARN_ONCE(completed_reqs & ~hba->outstanding_reqs,
+-		  "completed: %#lx; outstanding: %#lx\n", completed_reqs,
+-		  hba->outstanding_reqs);
+ 	if (queue_num == UFSHCD_POLL_FROM_INTERRUPT_CONTEXT) {
+ 		/* Do not complete polled requests from interrupt context. */
+ 		ufshcd_clear_polled(hba, &completed_reqs);
 -- 
 2.56.0.212.g129ede20d9-goog
 
