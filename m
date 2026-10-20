@@ -1,66 +1,51 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=199.89.1.14
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792515506;
-	b=l7aO5PsMboVN1xSLIPl17MIMq4L+WKgybpCVND4Y0uXuErOt3YaTFSyVL2aHyRt0ls1D
-	 +hTpCTSAUupEi096/CYKqbAeT4toA4YSOnk6xIX0j4ZjLJRS6joe34OFMhAGZ164CbGIb
-	 3cwoB1UTb51wD7Iw8TkJ8QLhmQKWKWdQJw2tPurKsc4SnXVrnEbsCygBoEwgttMjWY0cb
-	 TjbTGzhOtdCn8cHNVNBYOLivihr9ELCJsPZu8NkkoLzbzAZj05b/NPdYAGUAXIiGpoHyF
-	 GhBivSJAcQQ9dioJMfCFulcTbRZ0oT4LJFK3PAH1c1xojq6emmjGG+xNx/78Ha2XU0w==
+	t=1792515864;
+	b=twBIgxxAmVxhxUw3RTpVZKL9RkoFrLVSCYCMlBlrN43QbQQLo1tYzrt8C6jABn+AtBYT
+	 tq4UfqqrfCPdYZhi0oQ22s2ivXtpdCr1kbEqa4evyKgflMOiUkazqYYfBw7XzxFxenOSe
+	 OmdrPTUd2PWImnfLbFmMl0fFr9MdiTjkCaeHlBbQ4GERCrMrTMW3is3mzuIUBOiFgKUHX
+	 vksreeGwLIvzlKAv7SeaZsluJ5DsXSsbqxr3iMQMCsEKko8VqfYpoWq+gYYxGW3YpxuR0
+	 mHNLmLUwD5EmQ1GbL2kVyVCo6iDAiu/DvKccqDXXhDoBUWJdn+cyOcqp+GpEM71CdRw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792515506;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Virus-Scanned:Received:
-	 Received:Message-ID:Date:MIME-Version:User-Agent:Subject:To:Cc:
-	 References:Content-Language:From:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=u33Dm7JjbPZcT74XXr76WobWuAgvMPKW6Wg4WE97FmI=;
-	b=FM57s4D1/kzuEZ31mexh2SPZNCE6nC/Zbt3i52Vb2KRRbG9J+yl6VMbQiq6YNGGEZZqq
-	 1BmEkqDMGjmrikHR07kCxG/AkTP7p+UAJTWrUzshIaJHb7sp+wY/PbEwNHhFV4G9h3Vcv
-	 b2Q5sb/Ilit87OioQQzZen5OGmf4dg380UMiXLaqMojfzq57cyHuUfnpypV8GZIMCZicW
-	 cj+td8w/TflyZoeubYdEP+QhoHR4hGu1sQGGS7rWbl79qez1d6mhrnOYaa/vyppx3r/JY
-	 h4Z1SMDY0iLuNVlUY6fItQjQEcXA66z2IlOWyhEKyw1iBWrS5y6/QbtgztAJZgCUQkg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792515864;
+	h=Received:Message-ID:From:Subject:Reply-To:To:Cc:In-Reply-To:
+	 References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=2ly7lH7v+VDMueqPU2p6d5ywLJuHuLtyXRWe/1IaQkk=;
+	b=jtTS+HizMUkYyJbG8dbO5GYgh+Z1aH8/4TopmMZMl4KzgO3DOtLexxolB9lEDRWnkqhc
+	 Jay/NR56Hugd9wK3MoYhrlWDKjKktS4IMiET2iVhX/fUaRD2BMtJ7LJbVhjsLHkQspF6q
+	 Q4lqjrvzs26gZS86mwPbBh5ydfPVPwhSsKlWbJdxCxcoFQ4A7E95Xdt8XMpqGqwcAITz5
+	 CkgfPV7V2KFBNJdUk2oPatzUDMuG2mSZZMnmCauhZaIZWVEnBQzZPcQjyFIPA7kr0XzLK
+	 2kIXUXnH/1KDbIGImEfl4s3wHk0oSgNjoQi+kKQUN77mgUehLh9/M5bwEaFN0+Z5jLw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=acm.org;
-	spf=pass smtp.mailfrom=acm.org;
-	dkim=pass header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=yTirvnd3;
-	arc=none smtp.remote-ip=199.89.1.14
-Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 56A76606A31D;
-	Tue, 20 Oct 2026 16:58:26 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 56A76606A31D
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=yTirvnd3
-Received: from localhost (localhost [127.0.0.1])
-	by 011.lax.mailroute.net (Postfix) with ESMTP id 4j8JX15qM7z1XM4Tn;
-	Tue, 20 Oct 2026 16:58:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1792515500; x=1795107501; bh=u33Dm7JjbPZcT74XXr76WobW
-	uAgvMPKW6Wg4WE97FmI=; b=yTirvnd3iH8YEIMoSzHSJJT8FTMgDEoMnpO7xE8R
-	xZa3x7p8XloMx1L6Wgmw7J0PuvP/ERBLE5Piz8CW/TUASW6SeY3UOGIqrncrx1A1
-	+G/eY1/dKSWfmje5eLxTXPoKgXgcXTcvXmW7fnGm2IbloVo3JF+VxfEOsAQ81Qcx
-	nF/bNlFU+Vy9BJ6UELtOTKCKYTmWd2b9H8oCaZPWFzLdzszfvmtPk82N9qBG3xsg
-	yqIEE8Oybatzbse3Aj1kUvOb2tI5w7IPcd280TAM7ueEyCuFtf+4/zpkLeZ6stVs
-	C7XavL9/LXYkHkiRoTFY5rig+xLZSIQ9oiVQu3yhs+vKOA==
-X-Virus-Scanned: by MailRoute
-Received: from 011.lax.mailroute.net ([127.0.0.1])
- by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 5ZGCu1zuONdp; Tue, 20 Oct 2026 16:58:20 +0000 (UTC)
-Received: from [100.80.231.125] (unknown [104.135.182.41])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4j8JWv36SWz1XM4Tl;
-	Tue, 20 Oct 2026 16:58:19 +0000 (UTC)
-Message-ID: <e6305f92-dbdc-4f3c-8702-4611014167b6@acm.org>
-Date: Tue, 20 Oct 2026 09:58:18 -0700
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC57560A260D;
+	Tue, 20 Oct 2026 17:04:23 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A91201F000CA;
+	Tue, 20 Oct 2026 17:04:22 +0000 (UTC)
+Message-ID: <sashiko-outbox-179396@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH 2/9] driver core: prevent device_add() during system
+ shutdown
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "David Jeffery" <djeffery@redhat.com>, "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>, "Rafael
+ J. Wysocki" <rafael@kernel.org>, "Danilo Krummrich" <dakr@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org, "Tarun Sahu" <tarunsahu@google.com>, "Stuart
+ Hayes" <stuart.w.hayes@gmail.com>, "Laurence Oberman" <loberman@redhat.com>, "Bjorn
+ Helgaas" <helgaas@kernel.org>, kexec@lists.infradead.org, "Ewan Milne" <emilne@redhat.com>, "John
+ Meneghini" <jmeneghi@redhat.com>, =?utf-8?b?TG9tYmFyZGksIE1hdXJpemlv?= <mlombard@redhat.com>, "Bart
+ Van Assche" <bvanassche@acm.org>, "John Garry" <john.g.garry@oracle.com>, "Jeremy
+ Allison" <jallison@ciq.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "Pasha
+ Tatashin" <tatashin@google.com>
+In-Reply-To: <20261020164435.80499-3-djeffery@redhat.com>
+References: <20261020164435.80499-1-djeffery@redhat.com>
+ <20261020164435.80499-3-djeffery@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 20 Oct 2026 17:03:52 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -69,76 +54,185 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 2/7] scsi: ufs: core: Add a helper for clearing
- hba->outstanding_reqs
-To: Stanley Jhu <stanleyjhu@google.com>, "Martin K . Petersen"
- <mkp@kernel.org>, linux-scsi@vger.kernel.org
-Cc: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
- Alim Akhtar <alim.akhtar@samsung.com>, Bean Huo <beanhuo@micron.com>,
- Peter Wang <peter.wang@mediatek.com>, Can Guo <can.guo@oss.qualcomm.com>,
- linux-kernel@vger.kernel.org, stable@vger.kernel.org
-References: <20261020082110.3511797-1-stanleyjhu@google.com>
- <20261020082110.3511797-3-stanleyjhu@google.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20261020082110.3511797-3-stanleyjhu@google.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
 
-On 10/20/26 1:21 AM, Stanley Jhu wrote:
-> +static unsigned long __ufshcd_clear_outstanding_reqs(struct ufs_hba *hba,
-> +						     unsigned long mask,
-> +						     bool from_irq)
-> +	__must_hold(&hba->outstanding_lock)
-> +{
-> +	unsigned long completed_reqs = mask & hba->outstanding_reqs;
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [High] driver core: device_shutdown() calls synchronize_srcu() after bloc=
+king probes
+- [High] driver core: device_add() blocks nested device_link_add() during s=
+hutdown
+--
+
+commit fff836fc21ae90945fdc03da97b97959ca2c2584
+Author: Tarun Sahu <tarunsahu@google.com>
+
+driver core: prevent device_add() during system shutdown
+
+This commit prevents new devices from being registered during system
+shutdown by checking system_is_shutting_down() in device_add() and
+synchronizing in-flight device_add() calls in device_shutdown() using SRCU.
+
+> diff --git a/drivers/base/core.c b/drivers/base/core.c
+> index 83263e3fa5d44..bce555dd74f69 100644
+> --- a/drivers/base/core.c
+> +++ b/drivers/base/core.c
+
+[ ... ]
+
+> @@ -3647,13 +3666,20 @@ int device_add(struct device *dev)
+>  	struct device *parent;
+>  	struct kobject *kobj;
+>  	struct class_interface *class_intf;
+> -	int error =3D -EINVAL;
+> +	int idx, error =3D -EINVAL;
+>  	struct kobject *glue_dir =3D NULL;
+> =20
+> +	idx =3D srcu_read_lock(&device_add_srcu);
 > +
-> +	if (from_irq) {
-> +		/* Do not complete polled requests from interrupt context. */
-> +		ufshcd_clear_polled(hba, &completed_reqs);
+>  	dev =3D get_device(dev);
+>  	if (!dev)
+>  		goto done;
+> =20
+> +	if (unlikely(system_is_shutting_down())) {
+> +		error =3D -ESHUTDOWN;
+> +		goto done;
 > +	}
-> +	hba->outstanding_reqs &= ~completed_reqs;
+
+[Severity: High]
+Can this check in device_add() break nested device_link_add() calls for an
+in-flight supplier registration when system_state transitions to a shutdown
+state?
+
+Suppose a consumer device is already registered in devices_kset->list, and
+its supplier device is being registered in thread A:
+
+Thread A:
+device_add(sup_dev)
+  srcu_read_lock(&device_add_srcu)
+  system_is_shutting_down() -> false
+  kobject_add(&sup_dev->kobj, ...)
+    -> appends sup_dev to the tail of devices_kset->list (after con_dev)
+
+If thread B now initiates shutdown, sets system_state to SYSTEM_RESTART,
+SYSTEM_HALT, or SYSTEM_POWER_OFF, and waits in device_shutdown() at
+synchronize_srcu(&device_add_srcu), thread A continues in device_add():
+
+  if (dev->fwnode && !dev->fwnode->dev) {
+          dev->fwnode->dev =3D dev;
+          fw_devlink_link_device(dev);
+  }
+
+fw_devlink_link_device() walks the fwnode links and calls
+device_link_add(), which registers the link device via device_register():
+
+drivers/base/core.c:device_link_add() {
+    ...
+	if (device_register(&link->link_dev)) {
+		put_device(&link->link_dev);
+		link =3D NULL;
+		goto out;
+	}
+    ...
+reorder:
+	device_reorder_to_tail(consumer, NULL);
+    ...
+}
+
+Because system_is_shutting_down() is now true, the nested
+device_register(&link->link_dev) -> device_add(&link->link_dev) fails with
+-ESHUTDOWN.
+
+As a result, device_link_add() returns NULL without creating the device
+link and without calling device_reorder_to_tail(consumer, NULL) to move the
+consumer after the supplier in devices_kset->list (and
+__fw_devlink_link_to_consumers() / __fw_devlink_link_to_suppliers() drop
+the fwnode_link when fw_devlink_create_devlink() returns -EINVAL).
+
+When synchronize_srcu(&device_add_srcu) completes and device_shutdown()
+walks devices_kset->list backward from tail to head, wouldn't the supplier
+sup_dev be shut down before its consumer con_dev?
+
 > +
-> +	return completed_reqs;
-> +}
-> +
-> +static unsigned long ufshcd_clear_outstanding_reqs(struct ufs_hba *hba,
-> +						   unsigned long mask)
-> +{
-> +	guard(spinlock_irqsave)(&hba->outstanding_lock);
-> +	return __ufshcd_clear_outstanding_reqs(hba, mask, false);
-> +}
+>  	if (!dev->p) {
+>  		error =3D device_private_init(dev);
+>  		if (error)
+> @@ -3803,6 +3829,7 @@ int device_add(struct device *dev)
+>  	}
+>  done:
+>  	put_device(dev);
+> +	srcu_read_unlock(&device_add_srcu, idx);
+>  	return error;
+>   SysEntryError:
+>  	if (MAJOR(dev->devt))
+> @@ -4877,6 +4904,7 @@ void device_shutdown(void)
+> =20
+>  	wait_for_device_probe();
+>  	device_block_probing();
+> +	synchronize_srcu(&device_add_srcu);
 
-Please add a short comment above the above two functions that explains 
-the meaning of the return value.
+[Severity: High]
+Should synchronize_srcu(&device_add_srcu) be called before
+wait_for_device_probe() and device_block_probing() instead of after them?
 
->   /*
->    * Return: > 0 if one or more commands have been completed or 0 if no
->    * requests have been completed.
-> @@ -6071,12 +6094,9 @@ static int ufshcd_poll(struct Scsi_Host *shost, unsigned int queue_num)
->   
->   	spin_lock_irqsave(&hba->outstanding_lock, flags);
->   	tr_doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
-> -	completed_reqs = ~tr_doorbell & hba->outstanding_reqs;
-> -	if (queue_num == UFSHCD_POLL_FROM_INTERRUPT_CONTEXT) {
-> -		/* Do not complete polled requests from interrupt context. */
-> -		ufshcd_clear_polled(hba, &completed_reqs);
-> -	}
-> -	hba->outstanding_reqs &= ~completed_reqs;
-> +	completed_reqs =
-> +		__ufshcd_clear_outstanding_reqs(hba, ~tr_doorbell,
-> +						queue_num == UFSHCD_POLL_FROM_INTERRUPT_CONTEXT);
+If thread A is inside device_add(dev) and has already passed
+system_is_shutting_down() before system_state is updated, but has not yet
+reached bus_probe_device(dev), thread B can run wait_for_device_probe() and
+device_block_probing() to completion and then block in
+synchronize_srcu(&device_add_srcu).
 
-The above line is about 98 columns wide. That's too much - all other
-code in this driver is 80 columns wide. One way to address this is by
-introducing a local "from_irq" boolean variable:
+While thread B is waiting in synchronize_srcu(&device_add_srcu), thread A
+reaches:
 
-+	from_irq = queue_num == UFSHCD_POLL_FROM_INTERRUPT_CONTEXT;
-+	completed_reqs = __ufshcd_clear_outstanding_reqs(hba, ~tr_doorbell,
-+							 from_irq);
+device_add(dev)
+  bus_probe_device(dev)
+    device_initial_probe(dev)
+      __device_attach(dev, true)
 
-Otherwise this patch looks good to me.
+In drivers/base/dd.c:__device_attach(), if dev matches an asynchronous
+driver on the bus, __device_attach_driver() sets data.have_async =3D true a=
+nd
+returns 0 before reaching driver_probe_device() / really_probe() (where
+defer_all_probes is checked), and __device_attach() then schedules async
+probing without checking defer_all_probes:
 
-Bart.
+drivers/base/dd.c:__device_attach() {
+    ...
+		ret =3D bus_for_each_drv(dev->bus, NULL, &data,
+					__device_attach_driver);
+		if (!ret && allow_async && data.have_async) {
+			dev_dbg(dev, "scheduling asynchronous probe\n");
+			get_device(dev);
+			async =3D true;
+		} else {
+			pm_request_idle(dev);
+		}
+
+		if (dev->parent)
+			pm_runtime_put(dev->parent);
+	}
+out_unlock:
+	device_unlock(dev);
+	if (async)
+		async_schedule_dev(__device_attach_async_helper, dev);
+    ...
+}
+
+Similarly, if dev->driver was already set prior to device_add(dev),
+__device_attach() calls device_bind_driver(dev) -> driver_bound(dev) ->
+driver_deferred_probe_trigger(), queuing deferred_probe_work on
+system_dfl_wq.
+
+Once thread A calls srcu_read_unlock(&device_add_srcu, idx),
+synchronize_srcu(&device_add_srcu) in device_shutdown() returns without
+waiting for probes again. Can this allow __device_attach_async_helper()
+(which performs runtime PM calls on dev and dev->parent) or
+deferred_probe_work_func() (which reorders devices_kset->list via
+device_pm_move_to_tail()) to run concurrently with device_shutdown()?
+
+> =20
+>  	cpufreq_suspend();
+>
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261020164435.8049=
+9-1-djeffery@redhat.com?part=3D2
