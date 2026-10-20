@@ -1,54 +1,72 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.189
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.215.198
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792481976;
-	b=Cf++yTZaaH+KwEfL/bHdDb8/xMwTsOlywwXYsXnqvNB5VcMzoizn3re/qmwQNCrMbK5S
-	 1KzhHqWCENUitCgFiUmFbNyEGEU6Qf5urhFO6SomTl8FIxi+1smYZTjPnNsTlqemdERfs
-	 xz7b+5+I10s/EjabqrhfbLKte+8+9Yp9f/kcXu4RY3UXmJLs/urdFUZNkuFg7WnxKTDpi
-	 bAKkbL6jmuJe81HP9y23N6KXFYu4O3QRjKQrjccE33wy938VuQ2P91p6CM0TR5ha6BazU
-	 Y2YQbtKXWFV5UDwRAjGro30XNCju+/CzsNEXX+hqtC/tshnZSiEzcPxAau7UlVfqi3A==
+	t=1792484473;
+	b=fyK6NKacu3Qs1ovblNw4n9z2Wnsh4x8qLCtYFmsU+ixGe3jaNhLsUB3wQedwDPj1ELqQ
+	 ddLwFIJ02lzb49Kc8SaMSScSTvTqAxtWSLBTTVT3JA+FWHNQDAQycupSGkj2c8WgopgZp
+	 i2zlCrfjez8HOHbOZeCTZ0c/Ac02janNgVVXzXp9MJPChrvUQ7YC4/old0YnB4A6LELaW
+	 qtP+fbR26g3cP9p+uFr+ib3UfyMbGPSlnTGpfYt7WfZW9SX36CfSKR1tIdNIVtLdtNEJL
+	 NS7ffYGGh+NCMA0Y7bnXC8ibtV90qJULzarGFtbRtCyt0OLnhCrcNUMT15BC2vQyeig==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792481976;
-	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
-	 Subject:To:Cc:References:Content-Language:From:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding;
-	bh=1zGO+HS6XqWqoMXi7NdxrkJcFUMvHUc+0QyWCt8YQbs=;
-	b=DviVfCEeB8nKmKgs/C+k6mSIyLnVX/ZsLaYLwugig7K9kTygnMzJSeh3wT+ma9Ilr5Ee
-	 Wm1kvPr48pBYgytYaG7vZtG+IThcqaSuFkfXWEOL6nN2rvnIqb2flFT5dAVbXj50T/1XF
-	 Xb1mp6lWWLJQ072gbNa/IUZp7kPvYonFClMATDdKn2gdQieuz0gZ46eS3gItx607lFLol
-	 Xzs6i58469zd+RrCh0yoYC975WUG79LyfrX+3WANXu5RCknjEGd+si5aYHvmxQByQq3nr
-	 VbaRszxm1KA67jglikaqOfbUs+VFuv01KIuYdQ8Grl1J8Xr08+vUn60bK9RU6X8NDBA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792484473;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:Mime-Version:
+	 X-Mailer:Message-ID:Subject:From:To:Cc:Content-Type;
+	bh=xE59jIBZZHvUjKrjm7mkHjm9YH7/I5FFkNh3MoDpP5o=;
+	b=Fr7vfe5nDKrPl8gVh2m8o3CV0ouU30LYsAmZXoeg/y/RiNFThoo5qFSsDFIM+XrPom47
+	 cyC/GyPt8wol8XjS4vfUBwFRbnKtkJA2N1fqdRfva+8/pF9Plrm57/QYfhhCg+CQJ3eEx
+	 8zeqDC3AEeRotQaWDZ4E8Dds2MVV2e2TSbJJhexFOrdXma1ewttNW3SX2feq8Q2vRKfgV
+	 FSm7NyaU3M+U8YvdyT/o/wbAuHmqP/zv8ccIt1YhAYpzztlvSGGYXmhPRz3Weh/mlMpiq
+	 ySZ+D5k27EJjAGkCb5I37vT6zASpCJ9bw2zUWrPmsWpgsOXRt4uP3g4+XYqY+Q6FAaw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.dev;
-	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=YfgJpw7T;
-	arc=none smtp.remote-ip=91.218.175.189
-Received: from mta0.migadu.com (out-189.mta0.migadu.com [91.218.175.189])
+	dmarc=pass header.from=google.com;
+	spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com;
+	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20251104 header.b=egqzuDqa;
+	arc=none smtp.remote-ip=209.85.215.198
+Received: from mail-pg1-f198.google.com (mail-pg1-f198.google.com [209.85.215.198])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 422E9606A32E
-	for <linux-scsi@vger.kernel.org>; Tue, 20 Oct 2026 07:39:34 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 422E9606A32E
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03E81606A321
+	for <linux-scsi@vger.kernel.org>; Tue, 20 Oct 2026 08:21:12 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 03E81606A321
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=YfgJpw7T
-X-Envelope-To: linux-scsi@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=20TkE5EUd8YHt+v29oUMkAh6L5UeQPp7EcPr9ORP67M=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1792481973; v=1; x=1793086773;
- b=YfgJpw7ThpO+VG30/4JQmJEBXHf5ozauhPylRtwSHkWAI0sKHbmPEWNEnuIqbYdW+DKIEoc3
- jU13r6TAIDVi1RCWd9L/14RFAWVn2p6Oizff1Ac01TaBaePumxhH+KY899TTyLsMamD9k6Ns+6A
- dmJzHeyGUnkCZYTFtGAis2xU=
-X-Envelope-To: linux-scsi@vger.kernel.org
-Received: by mta12.migadu.com with ESMTPS id 0b179a5dfc27a0f9;
-	Tue, 20 Oct 2026 07:39:33 +0000
-X-Mizu-Trace-ID: 0b179a5dfc27a0f9
-X-Migadu-Flow: FLOW_OUT
-Message-ID: <557f3415-ea6c-4fba-844e-6d59f71f2ca0@linux.dev>
-Date: Tue, 20 Oct 2026 08:39:31 +0100
+	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20251104 header.b=egqzuDqa
+Received: by mail-pg1-f198.google.com with SMTP id 41be03b00d2f7-cd5ca3840c5so3419858a12.2
+        for <linux-scsi@vger.kernel.org>; Tue, 20 Oct 2026 01:21:12 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1792484472; x=1793089272; darn=vger.kernel.org;
+        h=content-type:cc:to:from:subject:message-id:mime-version:date:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=xE59jIBZZHvUjKrjm7mkHjm9YH7/I5FFkNh3MoDpP5o=;
+        b=egqzuDqaROCxpA9wEPwuX8gFaIAR8VyfSaNwp22zn/Eqn7+TL6Qph5xBbaUimxZmJM
+         N6LbIdAa2pBT+CUw/LaVFkFlcDqUGFvlpXeXlsl0+6XoJeQnvg2vRsgtbxMeGvLzW+x2
+         f3JJesiR47syfW0Kl9P++l1hCIgtOofUOXxwaPs2ZUvo7XbG8SWvAnKFMUBUvKWKnjDi
+         wKK1pT6VP6ZVweHGcJSpSnOGJjZvY38+vi66E/QvBnhilrBZ9ckPp/UPlYl3y7PMyusp
+         0SMfOsGfgANkS1yAvUgfcS9Bl+hnjCuIHXI6ljQdseNqdY5CCXnyRz9Npax4nkRvEmav
+         2VBw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792484472; x=1793089272;
+        h=content-type:cc:to:from:subject:message-id:mime-version:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=xE59jIBZZHvUjKrjm7mkHjm9YH7/I5FFkNh3MoDpP5o=;
+        b=QBKZnWeR8e4KQ2DIDMqmpGUxp2lzfgbMXzWUdeXNg8zfmBvE9RztLzrduHjD3FEC/4
+         ucBLwb3WRLtMtzz/JY+u6blztu3+9xRZgVTeGGR1J98IxCPH87pIFP9NOBqVl4eVgYAm
+         /GHIWZSekLRDvIeUG/LHBq2Whzycnn4QzxLSExNIykU5DCWQW4Mq8Ben5XHMteib0Lh2
+         KY4Egi79H1zP76mFKVt7SdPIB3YcgwGGvxnJ3eDcfp20jr1lPqbvfKepauxQJCW4GT3n
+         rzREqBDF2W0jD42hTtjTeAY33xBiOC6SmaClUbYAFF2qorr3mRE1htkMgXc35wLPDdVq
+         IquQ==
+X-Forwarded-Encrypted: i=1; AKwUvBxAmK/PVKUnEvc80EcfALEryma43Vp74t5LREyvpN2+90TWWioL4Fcae8PyjnWvCC7w50xW3EPPJ1gh@vger.kernel.org
+X-Gm-Message-State: AFq9FYJivaC/tXd7EXE278MzkGKsXXz0I4VMSk3Ds2TvtBxwUQMx8O5+
+	76i6Mbh+Uo7+2PWNuJHGAxf8/veTguClPM/6+oUntkm6DP+dYz3uRIAWNsU1HQg4pXu732yFk87
+	t4UwIQzjIMuDFK2tiu+Y/NA==
+X-Received: from pgfd11-n1.prod.google.com ([2002:a05:6a02:654b:10b0:cc9:f487:a423])
+ (user=stanleyjhu job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a05:6a21:4903:b0:3e2:d8f:600f with SMTP id adf61e73a8af0-3e22613d7e1mr9017309637.72.1792484472121;
+ Tue, 20 Oct 2026 01:21:12 -0700 (PDT)
+Date: Tue, 20 Oct 2026 16:21:03 +0800
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -57,99 +75,74 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: sd: Mark the disk dead if runtime resume fails in
- sd_remove()
-To: Bart Van Assche <bvanassche@acm.org>,
- "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
- Lianqin Hu <hulianqin@vivo.com>, stable@vger.kernel.org
-References: <2c0c76d70f0fe197932836b9bcf8496095135d1b.1792446921.git.bvanassche@acm.org>
-Content-Language: en-US
-From: John Garry <john.garry@linux.dev>
-In-Reply-To: <2c0c76d70f0fe197932836b9bcf8496095135d1b.1792446921.git.bvanassche@acm.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.56.0.212.g129ede20d9-goog
+Message-ID: <20261020082110.3511797-1-stanleyjhu@google.com>
+Subject: [PATCH v3 0/7] scsi: ufs: core: Factor hba->outstanding_reqs helper
+ and fix double completions
+From: Stanley Jhu <stanleyjhu@google.com>
+To: "Martin K . Petersen" <mkp@kernel.org>, linux-scsi@vger.kernel.org
+Cc: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>, 
+	Bart Van Assche <bvanassche@acm.org>, Alim Akhtar <alim.akhtar@samsung.com>, 
+	Bean Huo <beanhuo@micron.com>, Peter Wang <peter.wang@mediatek.com>, 
+	Can Guo <can.guo@oss.qualcomm.com>, linux-kernel@vger.kernel.org, 
+	stable@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-On 10/19/26 22:55, Bart Van Assche wrote:
-> If a SCSI disk is unplugged while runtime suspended, its request queue
-> is still in the pm-only state when sd_remove() is called. The runtime
-> resume attempted by scsi_autopm_get_device() fails because the parent
-> device, e.g. a USB device in the USB_STATE_NOTATTACHED state, cannot be
-> resumed. Hence, sdev_runtime_resume() is not called and the pm-only
-> state is not cleared. Next, del_gendisk() calls
-> blk_report_disk_dead(disk, false), which calls sync_filesystem(). Any
-> bio submitted by the filesystem waits forever in __bio_queue_enter()
-> because the queue will never leave the pm-only state and because
-> GD_DEAD has not yet been set:
-> 
->   __bio_queue_enter+0xb8/0x174
->   blk_mq_submit_bio+0x640/0x7e4
->   [ ... ]
->   exfat_sync_fs+0xa4/0xe0
->   sync_filesystem+0xa8/0xdc
->   fs_bdev_mark_dead+0x30/0x88
->   bdev_mark_dead+0x54/0xc4
->   blk_report_disk_dead+0x8c/0xd4
->   del_gendisk+0xa0/0x2f8
->   sd_remove+0x30/0x60
->   [ ... ]
->   scsi_remove_host+0x88/0x18c
->   usb_stor_disconnect+0x68/0xf4
-> 
-> Fix this hang by calling blk_mark_disk_dead() if runtime resume fails.
-> This sets GD_DEAD, tells the filesystem that the disk has been removed
-> without attempting to sync it, and wakes up any bios that are waiting
-> in __bio_queue_enter(). Syncing the filesystem is not possible anyway
-> if runtime resume failed, so no data is lost that could otherwise have
-> been written. If runtime resume succeeds, behavior is not changed.
-> 
-> Please note that this patch converts temporary runtime resume failures
-> into permanent failures. Before this patch, if runtime resume fails
-> temporarily, a filesytem sync would be postponed until a later resume
-> succeeds.
-> 
-> Cc: Christoph Hellwig <hch@lst.de>
-> Tested-by: Lianqin Hu <hulianqin@vivo.com>
-> Reported-by: Lianqin Hu <hulianqin@vivo.com>
-> Closes: https://lore.kernel.org/all/TYUPR06MB6217DD31B1B3CD09E431CC12D2922@TYUPR06MB6217.apcprd06.prod.outlook.com/
-> Fixes: 6f8191fdf41d ("block: simplify disk shutdown")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+In Single Doorbell (SDB) mode, multiple completion and error handling
+paths can race on the same transfer request when bits in
+hba->outstanding_reqs are not claimed atomically with completing the
+request. A stale bit in hba->outstanding_reqs lets a later poll or
+reset complete the request again and unmap its DMA buffers twice.
 
-FWIW:
+Patch 1 removes a WARN_ONCE() in ufshcd_poll() whose condition is always
+false.
 
-Reviewed-by: John Garry <john.garry@linux.dev>
+Patch 2 adds __ufshcd_clear_outstanding_reqs() and
+ufshcd_clear_outstanding_reqs() to share the bit-claim logic across
+ufshcd_poll() and ufshcd_abort() with no functional change.
+
+Patch 3 uses the helper in ufshcd_clear_lu_cmds() to fix a double
+completion during LU reset.
+
+Patch 4 converts ufshcd_eh_timed_out() to the helper as a cleanup.
+
+Patch 5 uses the helper return value in ufshcd_eh_timed_out() to prevent
+releasing driver resources for a request already completed by another
+context.
+
+Patch 6 uses the helper in ufshcd_abort() to fix a double release in
+the missing-interrupt path.
+
+Patch 7 skips releasing reserved requests at the end of ufshcd_abort().
+
+This series is based on mkp/for-next (db8b4d2bf2d3).
+
+Tested on QEMU ARM64 UFS in SDB mode across LU reset, abort, and PM
+timeout paths without double DMA unmaps.
+
+Changes since v2:
+- Move WARN_ONCE() removal to 1/7 and use __must_hold()/guard() (Bart).
+- Add patch 5 to fix a double release in ufshcd_eh_timed_out().
+- Add patch 6 to fix a double release in ufshcd_abort() (Bean, Bart).
+- Add patch 7 to skip releasing reserved requests in ufshcd_abort().
+- Link to v2: https://lore.kernel.org/r/20261017084403.875420-1-stanleyjhu@google.com
+
+Stanley Jhu (7):
+  scsi: ufs: core: Remove an always-false WARN_ONCE()
+  scsi: ufs: core: Add a helper for clearing hba->outstanding_reqs
+  scsi: ufs: core: Fix double completion in ufshcd_clear_lu_cmds()
+  scsi: ufs: core: Use ufshcd_clear_outstanding_reqs() in
+    ufshcd_eh_timed_out()
+  scsi: ufs: core: Fix double release in ufshcd_eh_timed_out()
+  scsi: ufs: core: Fix double release in ufshcd_abort()
+  scsi: ufs: core: Do not release a reserved request in ufshcd_abort()
+
+ drivers/ufs/core/ufshcd.c | 56 ++++++++++++++++++++++++---------------
+ 1 file changed, 35 insertions(+), 21 deletions(-)
 
 
-> ---
->   drivers/scsi/sd.c | 10 +++++++++-
->   1 file changed, 9 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index b0d2542fd317..dc45df819c42 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -4268,7 +4268,15 @@ static void sd_remove(struct scsi_device *sdp)
->   	struct device *dev = &sdp->sdev_gendev;
->   	struct scsi_disk *sdkp = dev_get_drvdata(dev);
->   
-> -	scsi_autopm_get_device(sdkp->device);
-> +	/*
-> +	 * If runtime resume fails, e.g. because the device was unplugged
-> +	 * while runtime suspended, the request queue stays in the pm-only
-> +	 * state and any I/O submitted by del_gendisk(), e.g. from
-> +	 * sync_filesystem(), would wait forever in __bio_queue_enter().
-> +	 * Prevent this by marking the disk dead.
-> +	 */
-> +	if (scsi_autopm_get_device(sdkp->device) < 0)
-
-Does this scsi_autopm_get_device() match with a "put", or does it even 
-matter since the device is going away?
-
-> +		blk_mark_disk_dead(sdkp->disk);
->   
->   	device_del(&sdkp->disk_dev);
->   	del_gendisk(sdkp->disk);
+base-commit: db8b4d2bf2d3e02b4ff78bbf69d00e11795840de
+-- 
+2.56.0.212.g129ede20d9-goog
 
