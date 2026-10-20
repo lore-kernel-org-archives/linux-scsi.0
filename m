@@ -1,88 +1,73 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=60.244.123.138
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.133.124
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792466201;
-	b=wylvF3BSNbkqmMMjeWC2Sq0cAOl5pD2/169rQL3jDV2kwT1cKDbjVGn+myw21vwB1zeA
-	 Hz3VHSVL2rlxzmk1swuoRWdFPPAkJyHXThpB6EAJCL35QTbCRRp12UQlZuckaa7ndAsv/
-	 TXnt5kJNe0xPNJGDMf93HULG1cnTO0+k3iUvd9/tIgINLgLHZbfYezMnqU91vO//cncS3
-	 3RmPrqlrxexoO0ztpAiDm2UsJ0IX2gguvrTC+dAfcX8l5Ru4t4auUwbRnQISp7oBi7hNf
-	 ppKo0MDvZtGrpPVIo/ArjyL7LAXurAflfzZ84lmy0BJm7OKdcw0dPLQNJ45QKJXwPrg==
+	t=1792467517;
+	b=gUs5m5eE+KRVEj3vTy1cvDckez1JQ/Ykng4TOhKrgW1tD5pbKRL3YR//DO9xN83gSieL
+	 alfcdZFUy7cljo7howE1FFG0StzyvgsfA1XRCRwedz5Av2cEQ6H2BahhZookrOi/Tjo+0
+	 oEq0Uud/25wAsOGp0XKlqRGM95DdWlqCGPzeE7h+jTHYzIAVi1rpXqE+YOcIgX774Nz9w
+	 vIE5p+E+rCEKeFQ98cQUYDsLjDNLO8DqSPlHR6Gu+k9JAliS9MPpxIBFEyulTOm1XwfPk
+	 Hl4vKtxuwfe8WLQ+DbK5eRcMPrjBH3w0jBDnxKmOM3DAIcVKLVQlO8x9J9lfpyoBIFw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792466201;
-	h=DMARC-Filter:X-UUID:DKIM-Signature:X-CID-CACHE:X-CID-P-RULE:
-	 X-CID-O-INFO:X-CID-META:X-CID-BVR:X-CID-BAS:X-CID-FACTOR:X-CID-RHF:
-	 X-UUID:Received:Received:Received:Message-ID:Subject:From:To:CC:Date:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:
-	 User-Agent:MIME-Version:X-MTK;
-	bh=O5ZOaJ6Z72XIUmbexIu+QOXH2D6iRVNezvOias5DY8g=;
-	b=LoVGGNYhwhCy0Bf4PY3lGB8cZsqRuR4t3IrbxEugL3bdz5zJlPjhQkwwVbZTk5++qTkr
-	 VpxqevK0Tn5xnnmKyP30q6xpMmiyjnGuNyefFmtBN8zmGYOIOdj9bnSgq466CZNt9HNo4
-	 UItCoWEcYTB/iNPI5H/8Op91bjBDRH9BEY+poQpNDKqedkaweB7Zzrjf6KSbkCCDJKwBD
-	 rQP/XdpG52h5i3aLTfB73VCo9ctwZ5X8XmyGo2XSqIPsejSr3aw9DoIqxsyXpd06EtWBE
-	 akIN+HEwJ02BE6m5y60wS/H1YbyGD8N+pFZJ9JF7cMqd9/ZLrNH94cYwjMqueuVLHrQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792467517;
+	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
+	 X-Mimecast-MFC-AGG-ID:Received:Received:Date:From:To:Cc:Subject:
+	 Message-ID:References:MIME-Version:Content-Type:Content-Disposition:
+	 In-Reply-To:X-Scanned-By;
+	bh=LyqF35HBbNaPNhpu9vnIOGXj1BnAm17RWcd5cz7Cexs=;
+	b=QSJGTNaMghfX/UUksTlOSEcxYSYmlXBnsFtKYKPB4lJ6tqpKaHRqLYCvG7dtQlogc+er
+	 g/wVWa0zIHbDgNnUL74DIHAPX6wysYfqH3rmMFxQ0VPlaOYKkl6AWWJDSPXGxb9kz8P7U
+	 xHBzgEnKGsH0//7KEtk4LeFeNZyDgVEGdoMEiPTxyOGngcwP7Y/0Ba2ChQ++UzEJ8IIH+
+	 3sDFbE3GBsUM1ic11LnX/8WCjEZBRpUxIuBxMm8/k2Pq/l1TuzfXWvZyDd1jNDEB2/77B
+	 hN3shCzU1iLyJr3+2xLO7FVsmnho05uD9aevDv2W8kfRk7xAXMWpE/c6Eu1OF8ruA6A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=mediatek.com;
-	spf=pass smtp.mailfrom=mediatek.com;
-	dkim=pass header.d=mediatek.com header.i=@mediatek.com header.a=rsa-sha256 header.s=dk header.b=rn5zoPNc;
-	arc=none smtp.remote-ip=60.244.123.138
-Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+	dmarc=pass header.from=redhat.com;
+	spf=pass smtp.mailfrom=redhat.com;
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=c+UIW8ar;
+	arc=none smtp.remote-ip=170.10.133.124
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2DE1606A319;
-	Tue, 20 Oct 2026 03:16:39 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org F2DE1606A319
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 657C9606A319
+	for <linux-scsi@vger.kernel.org>; Tue, 20 Oct 2026 03:38:36 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 657C9606A319
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=mediatek.com header.i=@mediatek.com header.a=rsa-sha256 header.s=dk header.b=rn5zoPNc
-X-UUID: a2be2850cc3411f1b1788b6acf885367-20261020
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=MIME-Version:Content-Transfer-Encoding:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=O5ZOaJ6Z72XIUmbexIu+QOXH2D6iRVNezvOias5DY8g=;
-	b=rn5zoPNc4IJvWRuInHlTlCE7JrZGZJUUulEX79KpOZ4HDzkBS9VXc0Qrvcg9EAed93rQSQ0cKjZXcUCeYJFBc+TlROv/TkosuEejR7Y2gFr0Ws1DgS1RvlkyVQj0G2Uy3qasSjBAREadrdqrJ1aq56876x31Rg4Qs7YJYg3hSY0=;
-X-CID-CACHE: Type:Local,Time:202610201115+08,HitQuantity:2
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.20,REQID:554d706c-e344-4800-b1aa-339d3bc82788,IP:0,U
-	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-	release,TS:0
-X-CID-META: VersionHash:291e20b,CLOUDID:049cddde-9ead-4216-888d-582ad3e48a93,B
-	ulkID:nil,BulkQuantity:0,SF:80|83|102|110|111|836|865|888|898,TC:-5,Conten
-	t:0|15|50|99,EDM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:-1,COL:
-	0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: a2be2850cc3411f1b1788b6acf885367-20261020
-Received: from mtkmbs11n2.mediatek.inc [(172.21.101.187)] by mailgw01.mediatek.com
-	(envelope-from <peter.wang@mediatek.com>)
-	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 1674679277; Tue, 20 Oct 2026 11:16:26 +0800
-Received: from mtkmbs13n1.mediatek.inc (172.21.101.193) by
- mtkmbs11n1.mediatek.inc (172.21.101.185) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.29; Tue, 20 Oct 2026 11:16:25 +0800
-Received: from [10.233.130.16] (10.233.130.16) by mtkmbs13n1.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.2.2562.29 via Frontend
- Transport; Tue, 20 Oct 2026 11:16:25 +0800
-Message-ID: <78888420b7c60d2d5177cbf76f5efba04fab5d7b.camel@mediatek.com>
-Subject: Re: [PATCH v2 0/4] scsi: ufs: core: Factor hba->outstanding_reqs
- helper and fix double completion
-From: Peter Wang <peter.wang@mediatek.com>
-To: Bart Van Assche <bvanassche@acm.org>, Bean Huo <beanhuo@iokpp.de>, Stanley
- Jhu <stanleyjhu@google.com>, "Martin K . Petersen" <mkp@kernel.org>,
-	<linux-scsi@vger.kernel.org>
-CC: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>, "Alim
- Akhtar" <alim.akhtar@samsung.com>, Bean Huo <beanhuo@micron.com>, Can Guo
-	<can.guo@oss.qualcomm.com>, <linux-kernel@vger.kernel.org>,
-	<stable@vger.kernel.org>
-Date: Tue, 20 Oct 2026 11:16:25 +0800
-In-Reply-To: <2060a8da-581b-46d1-a510-779f4df716cd@acm.org>
-References: <20261017084403.875420-1-stanleyjhu@google.com>
-	 <2e042211ca0ebc974ad5ec4c0de9f3f93b3c75c0.camel@iokpp.de>
-	 <2060a8da-581b-46d1-a510-779f4df716cd@acm.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.52.3-0ubuntu1.1 
+	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=c+UIW8ar
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1792467515;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=LyqF35HBbNaPNhpu9vnIOGXj1BnAm17RWcd5cz7Cexs=;
+	b=c+UIW8aroxd/4C59G0YD46dcW03+WKFRNy4rIGU1OtsOrcIWSbCEiVrSfbYhaVS27KPE9i
+	iYntoQ43IGH/ekLX6szWyUClsXcCwX+t6de2B9inVJHnWKbbr56oFE6y8NJxGJeIfsIkkt
+	xF0nsG/vl7s3tfPCuxxFdODZnmcemBc=
+Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-650-cwd6YC4LNKmXMtTHq6aIhQ-1; Tue,
+ 20 Oct 2026 03:38:31 +0000
+X-MC-Unique: cwd6YC4LNKmXMtTHq6aIhQ-1
+X-Mimecast-MFC-AGG-ID: cwd6YC4LNKmXMtTHq6aIhQ_1792467510
+Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 1195F1955DE9;
+	Tue, 20 Oct 2026 03:38:30 +0000 (UTC)
+Received: from rhel-developer-toolbox-latest (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
+	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with SMTP id 7D67E18001CA;
+	Tue, 20 Oct 2026 03:38:28 +0000 (UTC)
+Date: Mon, 19 Oct 2026 20:38:27 -0700
+From: Chris Leech <cleech@redhat.com>
+To: Ratnaker Gautam <ratnaker.gautam@kuleuven.be>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, 
+	"lduncan@suse.com" <lduncan@suse.com>, "michael.christie@oracle.com" <michael.christie@oracle.com>, 
+	James Bottomley <james.bottomley@hansenpartnership.com>, "mkp@kernel.org" <mkp@kernel.org>
+Subject: Re: [PATCH] scsi: libiscsi_tcp: prevent R2T range check overflow
+Message-ID: <20261019-purging-charm-a883db232701@redhat.com>
+References: <DB5PR08MB100629CD3750FBF71475B5224FD982@DB5PR08MB10062.eurprd08.prod.outlook.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -92,29 +77,46 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-X-MTK: N
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <DB5PR08MB100629CD3750FBF71475B5224FD982@DB5PR08MB10062.eurprd08.prod.outlook.com>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
 
-On Mon, 2026-10-19 at 13:43 -0700, Bart Van Assche wrote:
-> Hi Bean,
->=20
-> There are two problems with calling ufshcd_compl_one_cqe() from
-> ufshcd_abort():
-> * ufshcd_compl_one_cqe() must only be called for SCSI commands while
-> =C2=A0=C2=A0 'tag' may refer to a device management command.
-> * SCSI commands must not be freed by a SCSI abort handler. Otherwise
-> =C2=A0=C2=A0 a use-after-free may be triggered in scmd_eh_abort_handler()=
- when
-> it
-> =C2=A0=C2=A0 tries to call scsi_queue_insert() or scsi_finish_command().
->=20
-> Bart.
+On Mon, Oct 19, 2026 at 09:30:33PM +0000, Ratnaker Gautam wrote:
+> An iSCSI target controls the R2T data offset and length as 32-bit
+> values. Adding them before comparing the result with the SCSI data
+> buffer length can wrap. An R2T with offset 1 and length U32_MAX then
+> passes the check for a 4096-byte write.
+> 
+> The transmit path treats the wrapped range as valid, exhausts the
+> command scatterlist, and dereferences the NULL next entry in
+> iscsi_tcp_segment_done().
+> 
+> Check the offset first, then compare the length with the remaining
+> bytes in the data buffer.
+> 
+> Fixes: a081c13e39b5 ("[SCSI] iscsi_tcp: split module into lib and lld")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Ratnaker Gautam <ratnaker.gautam@kuleuven.be>
+> ---
+>  drivers/scsi/libiscsi_tcp.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/libiscsi_tcp.c b/drivers/scsi/libiscsi_tcp.c
+> index d35f93451ee9b..3c9e736d45e7e 100644
+> --- a/drivers/scsi/libiscsi_tcp.c
+> +++ b/drivers/scsi/libiscsi_tcp.c
+> @@ -601,7 +601,8 @@ static int iscsi_tcp_r2t_rsp(struct iscsi_conn *conn, struct iscsi_hdr *hdr)
+>  			      data_length, session->max_burst);
+>  
+>  	data_offset = be32_to_cpu(rhdr->data_offset);
+> -	if (data_offset + data_length > task->sc->sdb.length) {
+> +	if (data_offset > task->sc->sdb.length ||
+> +	    data_length > task->sc->sdb.length - data_offset) {
+>  		iscsi_conn_printk(KERN_ERR, conn,
+>  				  "invalid R2T with data len %u at offset %u "
+>  				  "and total length %d\n", data_length,
+> -- 
 
-Hi Bart,
-
-So, should we remove the call to __ufshcd_transfer_req_compl from=20
-ufshcd_abort, which was added by commit=E2=80=AF
-64180742605f (=E2=80=9Cscsi: ufs: Fix the SCSI abort handler=E2=80=9D)?
-
-Thanks.
-Peter
+Acked-by: Chris Leech <cleech@redhat.com>
 
