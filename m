@@ -1,50 +1,66 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=199.89.1.14
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792516788;
-	b=OkYjnPIDQff1C9X4R9wE6nMisYJ+TCFkdH5fynrLL2xibsHrRy4JrlEbFUmdckG+4txw
-	 rqQuZN+wc1dfLzJdCQFQpuq7JiKzluOh+gOS6AKjHHmPTNb8DuzxquRLkW5c2NDBZQ/U/
-	 TYo2cJdduZ4Dx5CFeaJxFfHtoKPkC1kOWsPWbEvWrTMSA2jMvV+ZOYSx/PKAv4tfR53kI
-	 2ep6/c9JX+AfWsdoFTbL9E3WH+C1ZCI/u1DlMxSAka06HT69zTkFD2lDif9jUag1XyBL8
-	 Sq6kInOCz/W4eORHS+w83jTswZ31mw1h7FggyAbKEdLcyuYmzOt3JjnCfXv2ocPUZaQ==
+	t=1792526263;
+	b=JrLQxouBJzObtZ6agYd/Vl4VMi2wjqpGfZ0xedcZld5JRKwAIlhNSN9uW4wetVQaqJm3
+	 TJkztNCWC55zgky0kFygDC7zHBYQ3++t7tmWLTNn65Neq5BcHeRd5K4jhSoSeGn1zcbzl
+	 rDvg6n/FZkwlkB3Jw9YoAgwvboZ2BKfyStRXHAG4s6xK2L0o9KEf36XW3dt5F0g4JPsch
+	 g01dfTxhuWJiXOaFxe2NnQbxsqZZfFHQWYRfSU4CLfapYXjpKuw64g9SCyex84l3ZO4A6
+	 nnWFhsiP7VZmvl8glT+/ZRDLGFXWuFn/U4rK7fdys84ohz68NnOhlYreyKud1yFRu4A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792516788;
-	h=Received:Message-ID:From:Subject:Reply-To:To:Cc:In-Reply-To:
-	 References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=bD78txjVe7XGBIsptpU3tzd0BEuwDgRAjGdsmV0nEpk=;
-	b=FxgWIiHBWrHaGIFZJzF/qtQDK/z5jrFQHbG/4TMQ96WZV1MXLe5kM1O1WWQXD7Vvrngl
-	 0gHWdCLQjcT3zbRIKQ24teCXHXUOImAVhUJUuDWCRd5tADY5s+TMuEhoE86Rjz0xAn8SF
-	 uJOj1mVMkDjHvVepPbTYs/aExcizK+VHoV24fU019DXnbl3VNnNXRUmVO550HapYwYGmz
-	 B29lRpPZp5cDn7YVQKIE3vRDrwvwpC8dNf3IyS6q6JxeQs6v3Lw06GqT8NA/YVvF+VwhW
-	 mRWoJZdzHb1OZKF/yUqvQhZ+O7kV/aY2qHi1hGnjhJ9TvHTvIijTo/BFtiqyZbENpPA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792526263;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Virus-Scanned:Received:
+	 Received:Message-ID:Date:MIME-Version:User-Agent:Subject:To:Cc:
+	 References:Content-Language:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=sTEUgbUTY2uEZgUhNSeKZNJZu7md/19toDkZImjF00M=;
+	b=Jd624XC98QtNJm9I4jnU+GBheg/3Ucwt4i8idSNGkc8G5/IU3RnlAnCT5pEQKs+hWZyy
+	 ktKulW/QyAbjZGEDxoJyfLi7gvVpw9QcLz3hdoZFjeEzQPYN3E58uFLx1Jp/kuDZSvJKL
+	 FFCmGM5NGwHZ3o3FwtkAWZQyEtHFhoUoWD+NO335rnb/JkroQ+Cw86OP3Ur54/2GReCNa
+	 ZTYGZxq4ckLsF61I2n++laUog0V/IqAP03JqwwGeMuobyLgz+y1LYDPQHH63wFNIJknTy
+	 vodKqAsxPklBjNuKmLt2HMngqlXo8SSN4qJOhcMTMsN/iosW8qg3xWHt9v05tLA6BGg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=acm.org;
+	spf=pass smtp.mailfrom=acm.org;
+	dkim=pass header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=zZgSE7Fi;
+	arc=none smtp.remote-ip=199.89.1.14
+Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A15C1606A31D;
-	Tue, 20 Oct 2026 17:19:48 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6B9F41F000C9;
-	Tue, 20 Oct 2026 17:19:47 +0000 (UTC)
-Message-ID: <sashiko-outbox-179411@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 6/9] driver core: async device shutdown infrastructure
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "David Jeffery" <djeffery@redhat.com>, "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>, "Rafael
- J. Wysocki" <rafael@kernel.org>, "Danilo Krummrich" <dakr@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org, "Tarun Sahu" <tarunsahu@google.com>, "Stuart
- Hayes" <stuart.w.hayes@gmail.com>, "Laurence Oberman" <loberman@redhat.com>, "Bjorn
- Helgaas" <helgaas@kernel.org>, kexec@lists.infradead.org, "Ewan Milne" <emilne@redhat.com>, "John
- Meneghini" <jmeneghi@redhat.com>, =?utf-8?b?TG9tYmFyZGksIE1hdXJpemlv?= <mlombard@redhat.com>, "Bart
- Van Assche" <bvanassche@acm.org>, "John Garry" <john.g.garry@oracle.com>, "Jeremy
- Allison" <jallison@ciq.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "Pasha
- Tatashin" <tatashin@google.com>
-In-Reply-To: <20261020164435.80499-7-djeffery@redhat.com>
-References: <20261020164435.80499-1-djeffery@redhat.com>
- <20261020164435.80499-7-djeffery@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 20 Oct 2026 17:19:17 +0000
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B60A4606A319;
+	Tue, 20 Oct 2026 19:57:42 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B60A4606A319
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key, unprotected) header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=zZgSE7Fi
+Received: from localhost (localhost [127.0.0.1])
+	by 011.lax.mailroute.net (Postfix) with ESMTP id 4j8NVm5nWgz1XM4Tn;
+	Tue, 20 Oct 2026 19:57:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1792526252; x=1795118253; bh=sTEUgbUTY2uEZgUhNSeKZNJZ
+	u7md/19toDkZImjF00M=; b=zZgSE7FiotGSntfoWSCZxUUCLkb/F/uW2mkXDhdN
+	yU5dt7OWsLii6b4W2cICIG8W0bAiN0SBtwujpImz2txsnGQPc7xgeu6t4KYngnrr
+	V7Ol/zSzSdsn/NarmlhiZrTNGuKnsYJJx13gLqfBVLWqmcmB92MATTnSVqVuACTQ
+	WKhFaBJ7yHeMnQ4M9cnsjKfGj31slx8tmruwYfEOb1Vy+OnW+8Pt/s2q8BGg2/lj
+	XioP3QQyoQ+Qqww4qyWJuqnBBmLk/gwODm2I6O9LCXqp0epudg5TVE46Nm70e1LX
+	FxHljSRh+KDzbdfI6lI1wohq1M2pK4t1sP5M95aKViCIkw==
+X-Virus-Scanned: by MailRoute
+Received: from 011.lax.mailroute.net ([127.0.0.1])
+ by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id qfgUZ2C7llJB; Tue, 20 Oct 2026 19:57:32 +0000 (UTC)
+Received: from [100.80.231.125] (unknown [104.135.182.41])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4j8NVh05Mpz1XM4Tl;
+	Tue, 20 Oct 2026 19:57:31 +0000 (UTC)
+Message-ID: <163380cc-fee3-49ee-a773-d67f4e907143@acm.org>
+Date: Tue, 20 Oct 2026 12:57:29 -0700
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -53,115 +69,30 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 3/7] scsi: ufs: core: Fix double completion in
+ ufshcd_clear_lu_cmds()
+To: Stanley Jhu <stanleyjhu@google.com>, "Martin K . Petersen"
+ <mkp@kernel.org>, linux-scsi@vger.kernel.org
+Cc: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+ Alim Akhtar <alim.akhtar@samsung.com>, Bean Huo <beanhuo@micron.com>,
+ Peter Wang <peter.wang@mediatek.com>, Can Guo <can.guo@oss.qualcomm.com>,
+ linux-kernel@vger.kernel.org, stable@vger.kernel.org
+References: <20261020082110.3511797-1-stanleyjhu@google.com>
+ <20261020082110.3511797-4-stanleyjhu@google.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20261020082110.3511797-4-stanleyjhu@google.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [High] driver core: premature completion in kill_device() races with devi=
-ce_del()
-- [Low] driver core: missing kernel-doc for DEV_FLAG_ASYNC_SHUTDOWN
---
+On 10/20/26 1:21 AM, Stanley Jhu wrote:
+> In SDB mode, ufshcd_clear_lu_cmds() clears the request slot in the
+> controller and completes the request, but leaves its bit set in
+> hba->outstanding_reqs. ufshcd_poll() treats a request whose bit is set
+> in hba->outstanding_reqs and clear in the doorbell register as finished,
+> so the next ufshcd_poll() completes the same request again and unmaps
+> its DMA buffers twice.
 
-commit 82979b053d4cad6e7ae5134feb8f79f9f979e23e
-Author: David Jeffery <djeffery@redhat.com>
-
-driver core: async device shutdown infrastructure
-
-This commit introduces asynchronous device shutdown support, allowing
-devices flagged with DEV_FLAG_ASYNC_SHUTDOWN to execute their shutdown
-callbacks in parallel after waiting for their child and consumer
-dependencies to finish shutting down.
-
-> diff --git a/drivers/base/core.c b/drivers/base/core.c
-> index 93605698affcc..7fee6043dd375 100644
-> --- a/drivers/base/core.c
-> +++ b/drivers/base/core.c
-
-[ ... ]
-
-> @@ -3925,6 +3932,7 @@ bool kill_device(struct device *dev)
->  	if (dev->p->dead)
->  		return false;
->  	dev->p->dead =3D true;
-> +	complete_all(&dev->p->complete);
->  	return true;
->  }
->  EXPORT_SYMBOL_GPL(kill_device);
-
-[Severity: High]
-Does signaling dev->p->complete in kill_device() wake parent and supplier
-devices too early when a child or consumer device is concurrently removed
-via device_del()?
-
-In device_del(), kill_device() is called right at the start before dropping
-device_lock(dev), while the actual driver unbinding and resource release
-happen later:
-
-drivers/base/core.c:device_del() {
-	device_lock(dev);
-	kill_device(dev);
-	device_unlock(dev);
-	...
-		list_for_each_entry(class_intf, &sp->interfaces, node)
-			if (class_intf->remove_dev)
-				class_intf->remove_dev(dev);
-	...
-	bus_remove_device(dev);
-	device_pm_remove(dev);
-	...
-	devres_release_all(dev);
-}
-
-During device_shutdown(), parent and supplier devices wait for child and
-consumer devices in wait_for_shutdown_dependencies() ->
-wait_for_device_shutdown(), which only waits on dev->p->complete:
-
-	if (async || wants_async_shutdown(dev))
-		wait_for_completion(&dev->p->complete);
-
-Meanwhile, __shutdown_one_device() returns immediately without waiting if
-dev->p->dead is set:
-
-	if (!dev->p || dev->p->dead)
-		return;
-
-Before this change, a deleting child or consumer stayed on
-devices_kset->list until kobject_del() at the end of device_del(), and
-shutdown_one_device() serialized on device_lock(dev) against
-bus_remove_device() -> device_release_driver() before device_shutdown()
-moved on to the parent or supplier. Similarly, for async suspend,
-device_pm_remove() does not call complete_all(&dev->power.completion) until
-after bus_remove_device() has completed.
-
-By completing dev->p->complete inside kill_device(), can a parent or
-supplier proceed with its ->shutdown() callback and shut down a bus or
-controller while its child or consumer is still executing
-class_intf->remove_dev(), ->remove(), or devres_release_all()?
-
-[ ... ]
-
-> diff --git a/include/linux/device.h b/include/linux/device.h
-> index aee79fd6b32b4..1ebafa7984621 100644
-> --- a/include/linux/device.h
-> +++ b/include/linux/device.h
-> @@ -612,6 +612,7 @@ enum struct_device_flags {
->  	DEV_FLAG_OF_NODE_REUSED =3D 7,
->  	DEV_FLAG_OFFLINE_DISABLED =3D 8,
->  	DEV_FLAG_OFFLINE =3D 9,
-> +	DEV_FLAG_ASYNC_SHUTDOWN =3D 10,
-> =20
->  	DEV_FLAG_COUNT
->  };
-
-[Severity: Low]
-enum struct_device_flags has a kernel-doc comment immediately above it (whi=
-ch
-is parsed via the :internal: directive in
-Documentation/driver-api/infrastructure.rst). Should an entry for
-@DEV_FLAG_ASYNC_SHUTDOWN be added to that comment to avoid a kernel-doc
-warning?
-
-[ ... ]
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261020164435.8049=
-9-1-djeffery@redhat.com?part=3D6
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
