@@ -1,56 +1,72 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792560936;
-	b=SyCwIT0QmVkbNeXZ2JlqmICBPMXgcDCFNwCxuxxcMIvRAchlTYxM1pslgNUjrrKNIxWt
-	 XVAvI4oelulmBov3rnSlFhqM4T1CPYML1oXPrfuzFS2mPu4I7xynMhb/LdKzV+i4l9gMJ
-	 4dyKLxtJ6Gdp199D3iSfsiinruZ7BDDpU0t7QdJBSEgY8BJldmhypUkqMXR+REC1EhsPJ
-	 8t5fR632aIdSgrgrbd0mohOcmu11zAhP+1BmCXNannJEURisA/KV+WTyOvbi/GnSsHdMA
-	 lNbKwWsPQ+tD9Kv0N6rGWb39izYENayEpup32rWr1SPJq+Nvo2cbDhPYTLY99bxgAyg==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792560936;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=xygS5ZZoMMoPhPcNBZvuKpErMC9HsA8rDupLxl2AxWo=;
-	b=m+eK9/KIwmX7eYpTtzcbqtuTF84n4W4Z+gHdydZR3vy/302aBoqxk7fpGhNNf5fqmng3
-	 do3Ygcd+jrc6YR5/Z751PZK2Jr+QGw0+dEJBrTQVZYvjKTyxk3OtW2OqyQOkSvNAPeGVW
-	 33NFD1LPHiud7ohQLVEX8YcylmEOeRYTdypBRY3T+nn2LUEGWlKMXOLi4o5wDd0m8gPpe
-	 v8NR5tlnzXhFt3zWmmP22dL0PQilcU3lHZiIosDySNt4pFoJA/hlt8zZdw3fSryUbPecc
-	 tQxFaqhdoGpRLIqYoUrUfLvHThDcTkAQmDaSRpeYxHq/DLOjOfLbs+bdlcJhVILDQeQ==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=mDBEi9tX;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=165.173.182.55
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1792564727;
+	b=0m8Lql45J8ZNDVaAQ+IgWkESYzs6lgfYP2SADOmk1iQwasvOHN7vq7Mut54HzCgJPGfA
+	 IW+dtCBdTTaGM7N2ZPqyFRVgoELlylAfyP26Su8jydkuTQuQMwrKMuZgWz+5bc7yhis7I
+	 l2deD0CvQAltAZzK5BbSzaSse16Ofkfhn7ifzWtOD3eemEuBTXEIoHPMql3ZYihlS8zmY
+	 FmBZwOic11AxFw5fWFqElUycOIX+icFy6hF9VVXQdi1fRVClQbYWHtoEOHzjldxXT+dST
+	 DfxBaI6VTI1GyVFqf3jkrbpMUdafVh2lmeuAG4CiTf5qbYQ92eB0D+NQBVp1YNJ992w==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792564727;
+	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
+	 Message-ID:In-Reply-To:References:Content-Type:
+	 Content-Transfer-Encoding:MIME-Version;
+	bh=BDt6l5GDnoTOng5Fb3euqR8Bsj7Oowlxk5tDbRhdWIY=;
+	b=Lh14kuF1kZQYxxGoHA9erAb1tp5M5g3rfZ8UvKjmHWZsqD7I/BoCd/u2hl3CQilUMGJ1
+	 xGAWYZw6K0lBjSx203ptt2z+CVzKkGGouKcBnPmr/g6mf5EDrn1WvpfSHmFN4+A4lQoRJ
+	 LuRaDQIrMY7qHlVgUMNcQazH8j2pqRDYxweOxT4+gifXQd4vptSG4fFIeB2NaN9wyVirN
+	 FvbFqsyWvORxz7sazWegQyvsPJIV6tZB9eYmV9+sF/MCLxJoKWQTPZ1bedT5VFeXmQ240
+	 vZkglz8r2ItrmOu+LLI9g1jLypW0Cw9MTgAFxZOfuN1FCO//K78l3wy5rA3NGoVKnfA==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=palmit.com.au;
+	spf=pass smtp.mailfrom=palmit.com.au;
+	dkim=pass header.d=palmit.com.au header.i=vince@palmit.com.au header.a=rsa-sha256 header.s=zmail header.b=wAc2rPgN;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=165.173.182.55
+Received: from sender5-of-o55.zoho.com (sender5-of-o55.zoho.com [165.173.182.55])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 016AB606A31A
-	for <linux-scsi@vger.kernel.org>; Wed, 21 Oct 2026 05:35:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DDCC8606A320;
+	Wed, 21 Oct 2026 06:38:46 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org DDCC8606A320
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=palmit.com.au
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=palmit.com.au
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=mDBEi9tX
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 970C01F000C9;
-	Wed, 21 Oct 2026 05:35:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792560935;
-	bh=xygS5ZZoMMoPhPcNBZvuKpErMC9HsA8rDupLxl2AxWo=;
-	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
-	b=mDBEi9tXFhPLD5dwZzR/8nZhyk9Fh23MubcvB9EvyAwO2a4BD7VQEOSHaVzPxCZFh
-	 ncCMdtsQ3GpVfXj6wczRXt5D+oKElHn8WkzA4pO9TjyyBPAiBMQ9PVeq6tJ4L4MpVM
-	 1bp5gxgBzFZvCa4zH4QAcL9TzCDnG+YzXgyekgl/nPUv6hkixUpRt1wGEestGdA/WG
-	 MNlKNCAd4/xcam+bLWZpafrvh6qetJI+wEviXl18yz3evFwDNvQXKU0EtslhmBEsj3
-	 2ONsi3Tr4RWT7uB9ugLu+DxHAMgz2i0W+l/3iGlm27y6oW9xM4ZwtAwSqTWx7lNDBl
-	 BVdeCn4izppxw==
-Message-ID: <sashiko-outbox-179808@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v1] scsi: ufs: Change the error check sequence for auto
- hibern8
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "HOYOUNG SEO" <hy50.seo@samsung.com>, linux-scsi@vger.kernel.org
-In-Reply-To: <20261021051951.1687479-1-hy50.seo@samsung.com>
-References: <CGME20261021052403epcas2p43e1a022f46314c1a9d1ffb66502c29eb@epcas2p4.samsung.com>
- <20261021051951.1687479-1-hy50.seo@samsung.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 21 Oct 2026 05:35:35 +0000
+	dkim=pass (1024-bit key, unprotected) header.d=palmit.com.au header.i=vince@palmit.com.au header.a=rsa-sha256 header.s=zmail header.b=wAc2rPgN
+ARC-Seal: i=1; a=rsa-sha256; t=1792564719; cv=none; 
+	d=zohomail.com; s=zohoarc; 
+	b=ixAuT6BZchITl4maYtsEjqj6z2ODZLzzQJ3Y8o/Yv2qrdwk0897RoS4T//ji6nZuwFyGbCe6o9O5ctCQfgYZj/XspyJ+DfptNhqieZjg/xd2HSD6cfeBgqLXrEZJYBh4JBcFXHnzNOMbCQO7qkr5povAciR6JQjk02ljR2iz6oM=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
+	t=1792564719; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=BDt6l5GDnoTOng5Fb3euqR8Bsj7Oowlxk5tDbRhdWIY=; 
+	b=NKD52nisB1U3l9TEOSgYgswunxsvCnY/7brm9VG8Azxd9+hI82UJ2Fu8VtDtmhdkfpd5opnQP5DJIq4nxxpqKsQvX3LWEImLslxLS8jK2mhQXSqI0CWVs2diqIvq3NLjPsN9pq3+7G3ZLJNjrQj1GWV3+QycVp6XJghRnDCeyQs=
+ARC-Authentication-Results: i=1; mx.zohomail.com;
+	dkim=pass  header.i=palmit.com.au;
+	spf=pass  smtp.mailfrom=vince@palmit.com.au;
+	dmarc=pass header.from=<vince@palmit.com.au>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1792564719;
+	s=zmail; d=palmit.com.au; i=vince@palmit.com.au;
+	h=From:From:To:To:Cc:Cc:Subject:Subject:Date:Date:Message-ID:In-Reply-To:Content-Type:Content-Transfer-Encoding:MIME-Version:Message-Id:Reply-To;
+	bh=BDt6l5GDnoTOng5Fb3euqR8Bsj7Oowlxk5tDbRhdWIY=;
+	b=wAc2rPgNjav7IwkpZ/6asknhZplrearKN+4pUkq9rVuUdwh5eTMDDA9LVrg/CUG4
+	/d//OpKQgmfcWdVfrpb3FMQKVAcoDyCNT2g0dYlvnLj8glywkLuQJpZ4+fEeeNj5CBM
+	F3ptGFh38U7yLpHy7N4T+oiSFw+OmRvYwgD8HqWU=
+Received: by smtp.zohomail.com with SMTPS id 1792564716568879.9171448651128;
+	Tue, 20 Oct 2026 23:38:36 -0700 (PDT)
+From: vince@palmit.com.au
+To: loberman@redhat.com
+Cc: linux-scsi@vger.kernel.org, sathya.prakash@broadcom.com,
+ sreekanth.reddy@broadcom.com, suganath-prabu.subramani@broadcom.com,
+ ranjan.kumar@broadcom.com, James.Bottomley@HansenPartnership.com,
+ mkp@kernel.org, MPT-FusionLinux.pdl@broadcom.com,
+ linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] scsi: mpt3sas: Register devices during SANITIZE
+Date: Wed, 21 Oct 2026 16:38:31 +1000
+Message-ID: <179256471169.16196.18345735696785515858@palmit.com.au>
+In-Reply-To: <20261020210856.42835-1-vince@palmit.com.au>
+References: <20261020210856.42835-1-vince@palmit.com.au>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -59,84 +75,51 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [Medium] scsi: ufs: fallthrough after auto hibern8 error in ufshcd_uic_cm=
-d_compl()
---
+Hi Laurence,
+Thanks for your review and for asking about the SANITIZE initiation.
 
-commit 5bb3d85e5945c6dc3a3a1bb37e02acd5c7703a06
-Author: HOYOUNG SEO <hy50.seo@samsung.com>
+I clarified the drives' history: SANITIZE was started under Linux 6.x
+or earlier, and the machine was powered off before it completed.
+When the drives were later connected to a Linux 7.x system, the HBA
+detected them, but mpt3sas did not register them as SCSI devices.
 
-scsi: ufs: Change the error check sequence for auto hibern8
+I have now reproduced the regression with a separate Seagate ST600MP0005
+600 GB SAS HDD, serial S7M0ER6F:
 
-This commit moves the ufshcd_is_auto_hibern8_error() check in
-ufshcd_uic_cmd_compl() ahead of the active_uic_cmd check so that
-auto-hibern8 errors are recorded even when no UIC command is active.
+1. Linux 6.18.55 LTS: I started SANITIZE OVERWRITE and verified that
+   TEST UNIT READY returned NOT READY (02/04/1B), with 0.07% progress.
 
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index cc75384c65021..e15b08488187f 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -5928,6 +5928,9 @@ static irqreturn_t ufshcd_uic_cmd_compl(struct ufs_=
-hba *hba, u32 intr_status)
->  	struct uic_command *cmd;
-> =20
->  	guard(spinlock_irqsave)(&hba->host->host_lock);
-> +	if (ufshcd_is_auto_hibern8_error(hba, intr_status))
-> +		hba->errors |=3D (UFSHCD_UIC_HIBERN8_MASK & intr_status);
-> +
->  	cmd =3D hba->active_uic_cmd;
->  	if (!cmd) {
->  		dev_err(hba->dev,
-> @@ -5935,9 +5938,6 @@ static irqreturn_t ufshcd_uic_cmd_compl(struct ufs_=
-hba *hba, u32 intr_status)
->  		return retval;
->  	}
-> =20
-> -	if (ufshcd_is_auto_hibern8_error(hba, intr_status))
-> -		hba->errors |=3D (UFSHCD_UIC_HIBERN8_MASK & intr_status);
-> -
->  	if (intr_status & UIC_COMMAND_COMPL) {
->  		/*
->  		 * Store the UIC command result in the lowest byte of
+2. Stock Linux 7.2.11 (unpatched mpt3sas): After rebooting, the HBA
+   detected the disk's SAS address (0x5000c5008e53f8e5), but the driver
+   repeatedly issued REPORT LUNS / TEST UNIT READY / START UNIT.
+   After 145 discovery attempts and 146 START UNIT commands, the disk
+   remained absent from both sd and sg device lists. This prevents users
+   from monitoring SANITIZE progress and may cause them to mistake a
+   healthy drive for a failed one.
 
-[Severity: Medium]
-When ufshcd_is_auto_hibern8_error() returns true in ufshcd_uic_cmd_compl(),
-execution still falls through after setting hba->errors:
+3. Patched Linux 7.2.11: After another reboot, the driver correctly
+   handled the 02/04/1B condition and immediately registered the same
+   disk as /dev/sda (0 B) and /dev/sg0. READ CAPACITY still reported
+   SANITIZE IN PROGRESS, and a subsequent REQUEST SENSE progress query
+   showed 22.58%. The other SAS disk registered normally throughout.
 
-drivers/ufs/core/ufshcd.c:ufshcd_uic_cmd_compl() {
-	...
-	if (ufshcd_is_auto_hibern8_error(hba, intr_status))
-		hba->errors |=3D (UFSHCD_UIC_HIBERN8_MASK & intr_status);
+This confirms that a drive already sanitizing at discovery time becomes
+invisible with unpatched 7.2.11, whereas the patched driver registers
+it without falsely treating the media as ready.
 
-	cmd =3D hba->active_uic_cmd;
-	if (!cmd) {
-		dev_err(hba->dev,
-			"No active UIC command. Maybe a timeout occurred?\n");
-		return retval;
-	}
-	...
-	if (intr_status & UFSHCD_UIC_PWR_MASK && hba->uic_async_done) {
-		cmd->cmd_active =3D false;
-		complete(hba->uic_async_done);
-		retval =3D IRQ_HANDLED;
-	}
-	...
-}
+The controlled reproduction used reboots rather than a separate full
+power-cycle test. The original drives had been powered off during
+SANITIZE.
 
-In the normal auto-hibern8 case where no UIC command is active
-(hba->active_uic_cmd is NULL), won't falling through to the !cmd check
-always log a misleading "No active UIC command. Maybe a timeout occurred?"
-error and return IRQ_NONE?
+I have saved the kernel boot logs, driver build IDs, device inventories,
+and the full 145-attempt trace. I can provide them if helpful.
 
-Also, if an asynchronous UIC command such as UIC_CMD_DME_SET is active with
-hba->uic_async_done set when an auto-hibern8 error interrupt arrives,
-UFSHCD_UIC_PWR_MASK includes UFSHCD_UIC_HIBERN8_MASK. Could falling through
-with UFSHCD_UIC_HIBERN8_MASK still set in intr_status prematurely complete
-hba->uic_async_done?
+Thanks again for the Reviewed-by!
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261021051951.1687=
-479-1-hy50.seo@samsung.com?part=3D1
+Best regards,
+Vincent YUE
+
+This email and any attachments may contain privileged and confidential information and are intended for the named addressee only. If you have received this e-mail in error, please notify the sender and delete this e-mail immediately. Any confidentiality, privilege or copyright is not waived or lost because this e-mail has been sent to you in error. It is your responsibility to check this e-mail and any attachments for viruses. No warranty is made that this material is free from computer virus or any other defect or error. Any loss/damage incurred by using this material is not the sender's responsibility. The sender's entire liability will be limited to resupplying the material.
+
