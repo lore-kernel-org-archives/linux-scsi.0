@@ -1,57 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792579405;
-	b=cftS//pVDCp5RftTDbjvTOY7q+wQiq2xEZgiBr+zSl8SJ9WNiM+R2IH+SUGPG9zoVhrT
-	 wuXpGAJwzNR1ytDqYMBzWGOZvkuXyzLO90Yd47MvtOXpIPmev/M+hjPvFzJQ0SMZb6oSa
-	 sesIb55+jH8GY8nqBEcXdRc+l1P/Vu2q3u5ero1Lr5u3gGDqJBEIBZ8ok728SvXwAi6Oe
-	 1mY74uF2khDplnbuCMkBHYJ5k73adeeB/xWe1DjWa4jCparSbmMmdudZOl3XEKQQVdalb
-	 R5E7wXpYVUPrtIY4Er7ZPay9p3S4n/Rx+zznvmbkACd6OYPvceLWdZHmT3HV4VkGG2g==
+	t=1792579431;
+	b=T5bitwQBsgRAnoey8VJ1N1M4fGum0KESAu39VmE1PwaOVRGvZ31A3Ll1CwGg1tTqCpdr
+	 KAF8fehvQAVyHPtRtmnVri/JioRrafzrW4uYwj7gOkM27xIJtQwDNPoEbwlpBnF42M5UA
+	 z3fPkCWruHPk2LybAaLxge5zjf53eBw/ONJqylwY+zpQdhLShH1+84KLBKcCMN+PhbeNi
+	 9+mMHZHSMaKYTgs488YtiQC+dfbL3j2yTbz0VBI8fkixd0jt1aCwnTpHO2yll7Mbe1fm6
+	 /aDeClFi1NULzDFL3v9YKBBFXUkaQ4dJwMoLkwmj0/UQB12ATboMT9H2dyQa4YLhi6Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792579405;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792579431;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=QLNnRAYgoC6gqcpObtlWMx1aEt4xkih7W2cqIt6tw90=;
-	b=UXZkvdZPKBco5PZuCd2xAx3aPtF09qDcBdpG2nHa9jRHmcCOwFeo1GPcpPvNs6JSr2LF
-	 t4mMt+TM1IQWFWTfYYsUDrY7cahJdLCadwZt687axPe1M1GzMlfXnUS4TanQwCUTjlvJo
-	 Y6IBSFFBKuaD1p4+tKTAuUbDZai6UmfvVAnFlK4TMxxPEkxFIwH9LHZnY/h/Y8G34Lbre
-	 9HDcFzKJzA5s2TEueSEvmvu2wUBMBRIZTuCXp93uOueOXZfDIN3kMWJdGSO4zDHHnKEcQ
-	 4r23sW+SGga69ju6KmaV3UMd/N+peftOkzpC3j6XZbxAEAyfTbwuIu6sFD3v31VvWWg==
+	bh=tghE7yNncJ7kYyjiKhXEXPUuEanSXSHX3YRF3xPABHg=;
+	b=KRWuKQ3TcRSRKVV2kCydW+6R41n7uynk+m2CvwPakfY93cUN1p70EQqwGpjB9SLnl79A
+	 p0heARrBrKYEJk7GVj5cR2t8tb7gu6MYDwmMi3NBG22dger03bKrhfQjTFeViUK6P4eCz
+	 5InRTQBKXWOUoVbJuvMgMn9zCN9XZQ5w27YrD0OSXgIzImgCjpeelRq845s3j34Aik413
+	 GnGvqeUgVIKGWpwgVZCK2ubotU2oVHccqOa4gh0MetdS5jeywgXnJ4f0JxbKLzXOTPmth
+	 7iXzOqVN//hDOE3FCYo2wchmA+uLMHt2Efz5uteS2FOM/xN9WWpCxcFhIYoceb6kCIw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Zw4HqsMi;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jMj1aAaz;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E9428606A31E
-	for <linux-scsi@vger.kernel.org>; Wed, 21 Oct 2026 10:43:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B965B606A319
+	for <linux-scsi@vger.kernel.org>; Wed, 21 Oct 2026 10:43:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Zw4HqsMi
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 57B0E1F000CA;
-	Wed, 21 Oct 2026 10:43:24 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jMj1aAaz
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 289821F000C9;
+	Wed, 21 Oct 2026 10:43:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792579404;
-	bh=QLNnRAYgoC6gqcpObtlWMx1aEt4xkih7W2cqIt6tw90=;
+	s=k20260515; t=1792579430;
+	bh=tghE7yNncJ7kYyjiKhXEXPUuEanSXSHX3YRF3xPABHg=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Zw4HqsMif49fG7funYoXBwuVXxi/8iQEZSTJfdsjEZ+jzDcM0oF8t6c7LbhWJWWx4
-	 JdIBolli7ykRcfLiYNROEDT1Js+hi2QWvQ2wQPFwEuAOMAIfPNKqP0Q76/sOzEacP2
-	 uEtfINWd5rZ3WkT85e7wa54cxetPf5s8uCIP0pLMmMedtOruqhb1jfMEEclVtNYevh
-	 YJWz/Oz12x/TFd5XXP0If/jOZYyX492d78VFPnXzqXYQypgeDGmmBx2JPUVx7rms57
-	 526qxHsk2ihW3pmrKTyFlig8UMW9IvtCVMYW/s8P1QawP+oAMcCCcN6hTZONXd+UFh
-	 BNkpox+dHT0Xw==
-Message-ID: <sashiko-outbox-180113@kernel.org>
+	b=jMj1aAazUmSOQbS7actn3hWObvNJRN3hx7sggQrRXl4Trzpy+cBS2mgFAvQh74F6n
+	 Pfbisvuf5c7zXA/nzGiihFExnp+HioONk7OfoYzZLW7b2MH1+MSDgxsPB7+HhOrqzb
+	 IXPfVRZuHPWnlI85hui+MG3HKjt+J2TAVacXNWmifpfvzbbM+RcoNMgW9sVBpilvtU
+	 JtE+Lg0vek+ickVw0vF3777ZyJ3qCaEUcbcQoXBoxrRP4/5xuOagKnM1SI7pSY9adI
+	 NO+aC48hO28vcjN/Z5efe7vSsdeAb2wvxcawUDiAu25k034/uNuPU5bdZCINhu20bG
+	 v0NawsImMHLwA==
+Message-ID: <sashiko-outbox-180114@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 05/14] scsi: qla2xxx: Fix double addition of fcport to
- gnl.fcport list
+Subject: Re: [PATCH 08/14] scsi: qla2xxx: Add validation check for base
+ vport index during delete
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nilesh Javali" <njavali@marvell.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20261021102310.3854868-6-njavali@marvell.com>
+In-Reply-To: <20261021102310.3854868-9-njavali@marvell.com>
 References: <20261021102310.3854868-1-njavali@marvell.com>
- <20261021102310.3854868-6-njavali@marvell.com>
+ <20261021102310.3854868-9-njavali@marvell.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 21 Oct 2026 10:43:23 +0000
+Date: Wed, 21 Oct 2026 10:43:49 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -61,166 +61,106 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] scsi: qla2xxx: FCF_ASYNC_ACTIVE leak on early return in qla24xx_as=
-ync_gnl()
-- [High] scsi: qla2xxx: incomplete fix for gnl_entry double add in qla24xx_=
-async_gnl()
+- [High] scsi: qla2xxx: qla24xx_vport_delete() returns 0 on invalid vp_idx =
+error
 --
 
-commit 26e3803dac33bf8507fb3ff3170def3e0261a1f3
-Author: Nilesh Javali <njavali@marvell.com>
+commit aea6ddb54a72c0125eb9b7df256e6e4ec1eed447
+Author: Manish Rangankar <mrangankar@marvell.com>
 
-scsi: qla2xxx: Fix double addition of fcport to gnl.fcport list
+scsi: qla2xxx: Add validation check for base vport index during delete
 
-This commit moves the FCF_ASYNC_SENT check in qla24xx_async_gnl() under
-vha->hw->tgt.sess_lock so that testing and setting FCF_ASYNC_SENT is
-serialized with adding fcport->gnl_entry to vha->gnl.fcports.
+This commit adds a check in qla24xx_vport_delete() to log an error and retu=
+rn
+early if vha->vp_idx is zero.
 
-> diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_i=
-nit.c
-> index bb0cc71de37b8..515a7ea4299db 100644
-> --- a/drivers/scsi/qla2xxx/qla_init.c
-> +++ b/drivers/scsi/qla2xxx/qla_init.c
-> @@ -1158,13 +1158,17 @@ int qla24xx_async_gnl(struct scsi_qla_host *vha, =
-fc_port_t *fcport)
->  	unsigned long flags;
->  	u16 *mb;
+> diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_a=
+ttr.c
+> index a4ca22024edeb..e6fc47c3f87f8 100644
+> --- a/drivers/scsi/qla2xxx/qla_attr.c
+> +++ b/drivers/scsi/qla2xxx/qla_attr.c
+> @@ -3276,6 +3276,12 @@ qla24xx_vport_delete(struct fc_vport *fc_vport)
+>  	struct qla_hw_data *ha =3D vha->hw;
+>  	uint16_t id =3D vha->vp_idx;
 > =20
-> -	if (!vha->flags.online || (fcport->flags & FCF_ASYNC_SENT))
-> +	if (!vha->flags.online)
->  		goto done;
-> =20
->  	ql_dbg(ql_dbg_disc, vha, 0x20d9,
->  	    "Async-gnlist WWPN %8phC \n", fcport->port_name);
-> =20
->  	spin_lock_irqsave(&vha->hw->tgt.sess_lock, flags);
-> +	if (fcport->flags & FCF_ASYNC_SENT) {
-> +		spin_unlock_irqrestore(&vha->hw->tgt.sess_lock, flags);
-> +		return QLA_SUCCESS;
+> +	if (!vha->vp_idx) {
+> +		ql_log(ql_log_fatal, vha, 0x700f,
+> +		       "failed to delete Vport idx [%d]\n", vha->vp_idx);
+> +		return 0;
 > +	}
 
 [Severity: High]
-Could returning QLA_SUCCESS directly here instead of jumping to done leak
-FCF_ASYNC_ACTIVE on fcport->flags and cause a session relogin hang?
+Should qla24xx_vport_delete() in drivers/scsi/qla2xxx/qla_attr.c return a
+non-zero error code here instead of 0 when !vha->vp_idx?
 
-When qla24xx_post_gnl_work() queues a QLA_EVT_GNL work item, it sets
-FCF_ASYNC_ACTIVE on fcport:
+qla24xx_vport_delete() is the .vport_delete callback invoked by
+fc_vport_terminate() in drivers/scsi/scsi_transport_fc.c:
 
-drivers/scsi/qla2xxx/qla_init.c:qla24xx_post_gnl_work() {
-	...
-	e->u.fcport.fcport =3D fcport;
-	fcport->flags |=3D FCF_ASYNC_ACTIVE;
-	return qla2x00_post_work(vha, e);
-}
+	if (i->f->vport_delete)
+		stat =3D i->f->vport_delete(vport);
+	else
+		stat =3D -ENOENT;
 
-Previously, commit 39d22740712c ("scsi: qla2xxx: Fix session hang in gnl")
-made the FCF_ASYNC_SENT check in qla24xx_async_gnl() jump to done so that
-FCF_ASYNC_ACTIVE would be cleared when bailing out:
-
-drivers/scsi/qla2xxx/qla_init.c:qla24xx_async_gnl() {
-	...
-done:
-	fcport->flags &=3D ~(FCF_ASYNC_ACTIVE);
-	return rval;
-}
-
-Because FCF_ASYNC_SENT is also set by non-GNL paths that do not clear
-FCF_ASYNC_ACTIVE upon completion, such as qlt_unreg_sess() ->
-qlt_free_session_done() in drivers/scsi/qla2xxx/qla_target.c:
-
-	spin_lock_irqsave(&vha->work_lock, flags);
-	sess->flags &=3D ~FCF_ASYNC_SENT;
-	sess->deleted =3D QLA_SESS_DELETED;
-	sess->free_pending =3D 0;
-	spin_unlock_irqrestore(&vha->work_lock, flags);
-
-as well as qla24xx_async_prli() -> qla2x00_async_prli_sp_done(),
-qla24xx_async_notify_ack() -> qla2x00_async_nack_sp_done(), and
-qla2x00_abort_isp_cleanup(), returning early without clearing
-FCF_ASYNC_ACTIVE or adding fcport to vha->gnl.fcports leaves
-FCF_ASYNC_ACTIVE permanently set once the other operation finishes.
-
-When FCF_ASYNC_ACTIVE remains set, both qla24xx_fcport_handle_login() and
-qla2x00_relogin() defer login indefinitely:
-
-drivers/scsi/qla2xxx/qla_init.c:qla24xx_fcport_handle_login() {
-	...
-	if (fcport->flags & (FCF_ASYNC_SENT | FCF_ASYNC_ACTIVE)) {
-		set_bit(RELOGIN_NEEDED, &vha->dpc_flags);
-		return 0;
+	spin_lock_irqsave(shost->host_lock, flags);
+	vport->flags &=3D ~FC_VPORT_DELETING;
+	if (!stat) {
+		vport->flags |=3D FC_VPORT_DELETED;
+		list_del(&vport->peers);
+		fc_host->npiv_vports_inuse--;
+		scsi_host_put(shost);		/* for fc_host->vport list */
 	}
+	spin_unlock_irqrestore(shost->host_lock, flags);
+
+	if (stat)
+		return stat;
 	...
-}
+	device_del(dev);
+	transport_destroy_device(dev);
 
->  	fcport->flags |=3D FCF_ASYNC_SENT;
->  	qla2x00_set_fcport_disc_state(fcport, DSC_GNL);
->  	fcport->last_rscn_gen =3D fcport->rscn_gen;
+	put_device(dev);			/* for self-reference */
 
-[Severity: High]
-Is checking FCF_ASYNC_SENT under sess_lock sufficient to prevent adding an
-already-linked fcport->gnl_entry to vha->gnl.fcports?
+When qla24xx_vport_delete() returns 0, fc_vport_terminate() treats the
+deletion as successful and unregisters and frees struct fc_vport, even thou=
+gh
+qla24xx_vport_delete() skipped tearing down vha, removing vha->host, stoppi=
+ng
+the vport timer, freeing vha->gnl.l and vha->scan.l, removing vha from
+ha->vp_list in qla24xx_deallocate_vp_id(), and decrementing
+ha->cur_vport_count.
 
-All QLA_EVT_GNL work items for a vha are dispatched from the single per-vha
-work item vha->iocb_work via qla2x00_iocb_work_fn() -> qla2x00_do_work(), so
-two calls to qla24xx_async_gnl() on the same vha do not run concurrently.
+Does this leave vha active on ha->vp_list with a dangling vha->fc_vport
+pointer, and cause qla2x00_delete_all_vps() in drivers/scsi/qla2xxx/qla_os.c
+to loop infinitely on the freed vha->fc_vport during driver unload:
 
-Instead, fcport->flags can have FCF_ASYNC_SENT cleared while
-fcport->gnl_entry is still linked on vha->gnl.fcports:
+	while (ha->cur_vport_count) {
+		spin_lock_irqsave(&ha->vport_slock, flags);
 
-1. In drivers/scsi/qla2xxx/qla_init.c, qla24xx_async_gnl_sp_done() clears
-FCF_ASYNC_SENT on sp->fcport without holding sess_lock and before splicing
-and unlinking entries from vha->gnl.fcports:
+		BUG_ON(base_vha->list.next =3D=3D &ha->vp_list);
+		/* This assumes first entry in ha->vp_list is always base vha */
+		vha =3D list_first_entry(&base_vha->list, scsi_qla_host_t, list);
+		scsi_host_get(vha->host);
 
-	sp->fcport->flags &=3D ~(FCF_ASYNC_SENT|FCF_ASYNC_ACTIVE);
-	...
-	spin_lock_irqsave(&vha->hw->tgt.sess_lock, flags);
+		spin_unlock_irqrestore(&ha->vport_slock, flags);
+		mutex_unlock(&ha->vport_lock);
 
-	INIT_LIST_HEAD(&h);
-	fcport =3D tf =3D NULL;
-	if (!list_empty(&vha->gnl.fcports))
-		list_splice_init(&vha->gnl.fcports, &h);
-	spin_unlock_irqrestore(&vha->hw->tgt.sess_lock, flags);
+		qla_nvme_delete(vha);
 
-2. During ISP abort cleanup, qla2x00_abort_isp_cleanup() in
-drivers/scsi/qla2xxx/qla_init.c clears FCF_ASYNC_SENT across vp_fcports
-without holding sess_lock or unlinking fcport->gnl_entry:
+		fc_vport_terminate(vha->fc_vport);
+		scsi_host_put(vha->host);
 
-	list_for_each_entry(fcport, &vha->vp_fcports, list) {
-		fcport->flags &=3D ~(FCF_LOGIN_NEEDED | FCF_ASYNC_SENT);
-		fcport->scan_state =3D 0;
+		mutex_lock(&ha->vport_lock);
 	}
 
-The same happens in qla2x00_async_iocb_timeout() (before the asynchronous
-abort completes), qlt_free_session_done(), and qla2x00_update_fcport().
+because vha is never removed from base_vha->list and ha->cur_vport_count is
+never decremented?
 
-3. If qla2x00_get_sp() fails in qla24xx_async_gnl() after
-list_add_tail(&fcport->gnl_entry, &vha->gnl.fcports), jumping to done leaves
-fcport->gnl_entry linked on vha->gnl.fcports with vha->gnl.sent =3D=3D 1, a=
-nd in
-qla24xx_async_gnl_sp_done(), the retrigger loop only unlinks the first entry
-before breaking with vha->gnl.sent =3D 0:
-
-	vha->gnl.sent =3D 0;
-	if (!list_empty(&vha->gnl.fcports)) {
-		/* retrigger gnl */
-		list_for_each_entry_safe(fcport, tf, &vha->gnl.fcports,
-		    gnl_entry) {
-			list_del_init(&fcport->gnl_entry);
-			fcport->flags &=3D ~(FCF_ASYNC_SENT | FCF_ASYNC_ACTIVE);
-			if (qla24xx_post_gnl_work(vha, fcport) =3D=3D QLA_SUCCESS)
-				break;
-		}
-	}
-
-In any of those cases, when a subsequent QLA_EVT_GNL runs
-qla24xx_async_gnl(), FCF_ASYNC_SENT is clear even under sess_lock, so
-list_add_tail(&fcport->gnl_entry, &vha->gnl.fcports) will still be called on
-an already-linked gnl_entry. Should qla24xx_async_gnl() also guard against
-!list_empty(&fcport->gnl_entry) under sess_lock and ensure gnl_entry is
-unlinked on failure and reset paths?
+> +
+>  	set_bit(VPORT_DELETE, &vha->dpc_flags);
+> =20
+>  	while (test_bit(LOOP_RESYNC_ACTIVE, &vha->dpc_flags))
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261021102310.3854=
-868-1-njavali@marvell.com?part=3D5
+868-1-njavali@marvell.com?part=3D8
