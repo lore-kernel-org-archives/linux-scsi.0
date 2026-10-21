@@ -1,92 +1,102 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.215.178
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=195.135.223.131
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792575842;
-	b=wvTnssY1FWbMO+Yo1CXMV6wSMvWkuw/K4wMWT4qukvN1YY3v0h+F00CD6hKtlMj5wZIN
-	 5ul13WQrWWDh5PBhTFe1amCiVUxLmKNXoyYICAxQ39Wlw6tWnOKxBp+mY2Hsj7GUSkbui
-	 TJ7HLw750w66nfD1KjJ+fM2aVBFuaF0FmC4m/4xr8n+KpuEt1wLxK3xHCCEko3rhaLh0O
-	 WS/7SB6HBBiR6wTI7oa1MVCO1FfprnFqjHVury+BJD3Q0hbXazeMswpDQJ/KJPA/pigtr
-	 KPPAm69UtZAS/Xku/VLWMlGc8O/1iwtUNZEjGT+Tt2kEuWm2QQIWgyKAOawzwT8YUog==
+	t=1792575934;
+	b=ThWjxZfzy3Lf4cbuLVUbc0iGGvx93nEFWDIPqwXxYmll+a/fZN5U7raX3yDumSwy+D9L
+	 KT0UiPjXydcITh2lCyOhS8GKGy8XDRqEx5iF58RyLp/PpRqvlrwW5avtYUWvNl+GXQ6CY
+	 UNgqI2kmntMA1eJvc8lN0S/ysTr5WkdXod9vGwWEsu4yezliLTp22FWD222KimY/+Gc/W
+	 X7iptBAax+2ZkIuovj6U7GqbPv+X43tj8hK++vZHRBQAJOVZXE6lrf96etn2AoPlvzkGi
+	 btuuJBuWxGn/JrBdNNrRNAlK6LVsRTe1sNQvLZZMT0EQZe3cs3fSCzVX7P/jNFTWB2g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792575842;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-Id:X-Mailer:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=1mDee8fRVwNUSS62hfCgOdMly0KHJWoEHw3uq1wP+dM=;
-	b=uLXD8B80lw4t9TNf4UzRRC1DsRRzBR0Pu+Mb2X7eY6n/dU/WULzCvk9BoO9/smqCSQ1e
-	 PT/NV3S0L51KnorADXQ18ZySEdH7FVisacBtYcdGXweXPr1jUoZEu8NsD7BrCH3K5DFGM
-	 p+OAiVActgxPQ7IvdpQpFFvWj8Kuy+YH7nRJ0P7YY2CVlhu+vgUz9RxToB4L33fX/lw55
-	 74dxjxMD/R8uABLdF3qmauBs0iRqeJ+wKEpHhf4XiuVBEoUat+gP1GbWEgPf7Vz53r7Av
-	 ayIxZcCxh3noilFJHynmvJiwiBeiVjixGJBQXvPy8uT+u1xWaR4w84Y67TnQ1tGI7jw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792575934;
+	h=DMARC-Filter:Received:DKIM-Signature:DKIM-Signature:DKIM-Signature:
+	 DKIM-Signature:Received:Received:Message-ID:Date:MIME-Version:
+	 User-Agent:Subject:To:References:Content-Language:From:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:X-Spamd-Result:X-Spam-Score:
+	 X-Spam-Level:X-Spam-Flag;
+	bh=GKQlFBofvdQ7UPjpNR4JdVsvRg1fAT51dUsu8Om4kRE=;
+	b=pYdOwHvTXbbkYhXgvqKmHY5Yn8YwID5V+MIksWR7yBvlVuKX6od5h9bib4VwpHFjtqs+
+	 ki913ic0GT48FJlLMROCB/AuPZcONWyHAzVl4Rpp40brKe8CKr15wb7bgkQt43/4k1DK0
+	 459NEhebAIhbNlMJGGwa7kzHnIDD6xsDnmUaYNEyd1grEFsYgiujvg3KRb6LAbt+dBDAy
+	 HtQHSg+mEkFTuYku3HAGFRwl/78Cl6h1q6y35Gnh57BhE4SZQ+mbx90KOFTWcAOR6pSCx
+	 J6g5wVd9OspPOzOi1BtFdfCGFCnBK9Fi+R0JKhJQ/qMXeejPvT12iRfU3mZ4hmKe+sg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=Src1xL7d;
-	arc=none smtp.remote-ip=209.85.215.178
-Received: from mail-pg1-f178.google.com (mail-pg1-f178.google.com [209.85.215.178])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=pass header.from=suse.de;
+	spf=pass smtp.mailfrom=suse.de;
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=IBbDs4fi;
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=slYK6ydr;
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=IBbDs4fi;
+	dkim=neutral header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=slYK6ydr;
+	arc=none smtp.remote-ip=195.135.223.131
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B8EA5606A319
-	for <linux-scsi@vger.kernel.org>; Wed, 21 Oct 2026 09:44:01 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B8EA5606A319
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90AFA606A31B;
+	Wed, 21 Oct 2026 09:45:33 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 90AFA606A31B
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=Src1xL7d
-Received: by mail-pg1-f178.google.com with SMTP id 41be03b00d2f7-cd5d2dafeccso186577a12.2
-        for <linux-scsi@vger.kernel.org>; Wed, 21 Oct 2026 02:44:01 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792575841; x=1793180641; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=1mDee8fRVwNUSS62hfCgOdMly0KHJWoEHw3uq1wP+dM=;
-        b=Src1xL7dJtcD+mW+4kphC0vx+JMq83KXMH7usEwmz9UqBfkDiDbWNHsEfnycXz6ud9
-         7VivyaxWw+ti00pkjfGK1MlvcmRnSq5gh2DOZe1/MkXLfzQ9CwFQo4aQ2ySO4JfEQmgg
-         0kKaPeUdtyv+tdFE3MQcZveKQZQbg1Rm0a0jfYnlKuRomlWGdsohhjfVVyUNem/FuDZQ
-         UOQ7jOtGhCzQwc65ruy2qqcKfbCFMfIvZf/jvwcPlUURw9h0goYmGrC4AXueXh1ipwzs
-         YlYj1nXfSkGmLs83iusDHVYQG6yPl3bWUdwQLSAOWrFOjvo3JzVOZqQsBPeWon4Lgbxu
-         S/SA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792575841; x=1793180641;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=1mDee8fRVwNUSS62hfCgOdMly0KHJWoEHw3uq1wP+dM=;
-        b=kZBuzTzKT3KzLv85Ob6ZknbvHQxpX+F7YRmVKK9PkuFv72QLmN7KHWCbaybHw9JLJ/
-         r9tXVau4/fGMo3ClI8lENMaxf+AvY4l6k07dTYCIjyBi7q4Ghk2Jkc/O23CU5IRuOq/c
-         t2CU4VRWLIL0fAKef3ecL5XDTQDyFNrtwEi5129bM7lXFAVT3HCGDVqpTHeRtIGGAGMy
-         Dxl3ZKopOdgnN2uKJAcl3gr8Qsjj1uMFpUG8w7IIvxxRGBdepeWupM+3kkYmk72SdVqJ
-         pwgr5mkfAqa4YFudYsKEV4elh+8BArpY1z1mHV3McOY25zmQJIs5N9oDWqZZGPS+5wlW
-         a+kg==
-X-Forwarded-Encrypted: i=1; AKwUvBxXDoCom8PlfTEoxyK+jSNGMC2APLsFT0G+VoXAKI/Roe8PkligNHG+uP7eDFfMBUnZbo7c6vdU8Wf/@vger.kernel.org
-X-Gm-Message-State: AFq9FYKnWZTNCRrUYSqADFGKP91WZVpHBaKZIjjQlEEbouwiLxwX1n0Z
-	ETBc1mgNHN8QR7ki5uro4wtHP/eK18iFBTCMLuG1FIfTKIgIAbBYZ9NM
-X-Gm-Gg: AYBFou300qU5nWIvgpnoeTNd7YxP9NYklYT5bp6DMzI7+lLxB905AzFhCfw/2ixPxP5
-	V/HKZdiX/ar8hT/7UmUUqkWB+SElDj345gPBJ4dI/qjF503bpfSeiQx9OW37Mcddveko3ivcHNb
-	EQI566qtchRNh5MqZEdJmDHEYHKS5YzaOM2kYq4khphPn49YwNM0O2eisJvVLGhh9mIPlzPntoJ
-	VZC7LEg3OU5It3VtB+yr0e2l6pZZ+KZZ945KFO0RMIOtDltgM+p6tbcd+Trqv2jMN501nV56u1s
-	wGrYv0YKrDc73MXGQozuoqpBSa0wwHUH9rcGTNgd1CaltwDr3b4IdmrNYJ6dX4cSYEhxJ/xX9jC
-	fsmIUo4k3xi8EtZvAynI392VO21bAfUOgL1jiW0IXsfSSUpDstwmFiZkTfM2OK+DwMX0Z0SuSRJ
-	ekd+7CATGxBHizkCjUyAYp5lfUBB5bam8bWrszAcc+p+HQFbzEK9rnKQZDMk11BqTnmITmwiOq6
-	PsjR5W+CNX5R017CaWsby2Fw3yFPB4svOo+3YCr2JxVNflaOd8r8+A=
-X-Received: by 2002:a17:90a:c887:b0:3ad:53e2:78c1 with SMTP id 98e67ed59e1d1-3ad86e980d9mr1157973a91.10.1792575841069;
-        Wed, 21 Oct 2026 02:44:01 -0700 (PDT)
-Received: from gmail.com ([188.253.12.32])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3ad8021d29bsm3644438a91.4.2026.10.21.02.43.58
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 21 Oct 2026 02:44:00 -0700 (PDT)
-From: Jia Jia <physicalmtea@gmail.com>
-To: "Martin K . Petersen" <mkp@kernel.org>
-Cc: James Bottomley <James.Bottomley@suse.de>,
-	Nicholas Bellinger <nab@linux-iscsi.org>,
-	linux-scsi@vger.kernel.org,
-	target-devel@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 1/1] scsi: target: validate REGISTER AND MOVE TransportID length
-Date: Wed, 21 Oct 2026 17:43:34 +0800
-Message-Id: <20261021094334.198599-1-physicalmtea@gmail.com>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (1024-bit key, unprotected) header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=IBbDs4fi;
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=slYK6ydr;
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=IBbDs4fi;
+	dkim=neutral header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=slYK6ydr
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id E43151F461;
+	Wed, 21 Oct 2026 09:45:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1792575931; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=GKQlFBofvdQ7UPjpNR4JdVsvRg1fAT51dUsu8Om4kRE=;
+	b=IBbDs4fi+BU/sRpXLk8OjTFC8gG9ckZNtvo/N5e0CP22hoKjw1Nw0W2zYVWkToowxIe+ue
+	vd4cewriZPc8NbQ9pEIaHfXnJqOUwJghHXNanClBfA3CfzgibK9hdkvbnnkBJdzFR2xtyb
+	igCEVMtH4KCvpmSn1+IRzlXw9kpjApg=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1792575931;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=GKQlFBofvdQ7UPjpNR4JdVsvRg1fAT51dUsu8Om4kRE=;
+	b=slYK6ydrJg0Hsby36XjiZ0I8rw3wJbFvq5J5su7GzV2SOddCPFnKHl5m5FlteC8r8zi/B3
+	b7RpFbjwSUlCYyBA==
+Authentication-Results: smtp-out2.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1792575931; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=GKQlFBofvdQ7UPjpNR4JdVsvRg1fAT51dUsu8Om4kRE=;
+	b=IBbDs4fi+BU/sRpXLk8OjTFC8gG9ckZNtvo/N5e0CP22hoKjw1Nw0W2zYVWkToowxIe+ue
+	vd4cewriZPc8NbQ9pEIaHfXnJqOUwJghHXNanClBfA3CfzgibK9hdkvbnnkBJdzFR2xtyb
+	igCEVMtH4KCvpmSn1+IRzlXw9kpjApg=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1792575931;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=GKQlFBofvdQ7UPjpNR4JdVsvRg1fAT51dUsu8Om4kRE=;
+	b=slYK6ydrJg0Hsby36XjiZ0I8rw3wJbFvq5J5su7GzV2SOddCPFnKHl5m5FlteC8r8zi/B3
+	b7RpFbjwSUlCYyBA==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id B02C4134FD;
+	Wed, 21 Oct 2026 09:45:31 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id A3V4IruJ2GrqJQAAD6G6ig
+	(envelope-from <hare@suse.de>); Wed, 21 Oct 2026 09:45:31 +0000
+Message-ID: <6dcc78eb-4bf5-42d3-afbb-a60a9e8121ce@suse.de>
+Date: Wed, 21 Oct 2026 11:45:31 +0200
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -96,45 +106,76 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v6 04/10] block: add storage element management ioctls
+To: Damien Le Moal <dlemoal@kernel.org>, Jens Axboe <axboe@kernel.dk>,
+ linux-block@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
+ linux-scsi@vger.kernel.org, "Martin K . Petersen"
+ <martin.petersen@oracle.com>
+References: <20261013122750.2237843-1-dlemoal@kernel.org>
+ <20261013122750.2237843-5-dlemoal@kernel.org>
+Content-Language: en-US
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20261013122750.2237843-5-dlemoal@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-Spamd-Result: default: False [-4.29 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-0.997];
+	NEURAL_HAM_SHORT(-0.20)[-0.999];
+	MIME_GOOD(-0.10)[text/plain];
+	XM_UA_NO_VERSION(0.01)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	ARC_NA(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	TO_DN_SOME(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	MID_RHS_MATCH_FROM(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	RCPT_COUNT_FIVE(0.00)[6];
+	FROM_EQ_ENVFROM(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:email,imap1.dmz-prg2.suse.org:helo]
+X-Spam-Score: -4.29
+X-Spam-Level: 
+X-Spam-Flag: NO
 
-REGISTER AND MOVE has a 24-byte parameter-list header followed by a
-TransportID.  A 24-byte parameter list with a zero TransportID length
-passes the existing tid_len + 24 check, then the handler reads buf[24]
-for the TransportID protocol identifier, one byte past the received
-parameter list.
+On 10/13/26 2:27 PM, Damien Le Moal wrote:
+> Define the new ioctl commands BLKREPORTSTORELEMS, BLKREMOVESTORELEM, and
+> BLKRESTORESTORELEMS to provide users accessing zoned block devices
+> directly with an interface to the storage elements management operations
+> of the block layer.
+> 
+> The ioctl BLKREPORTSTORELEMS allows to get the total number of storage
+> elements of a zoned block device and to get an array of storage element
+> descriptors (struct blk_se) describing the current state of the device
+> storage elements.
+> 
+> The ioctl BLKREMOVESTORELEM can be used to remove (depopulate) a storage
+> element that has a degraded status (i.e. BLK_SE_STS_DEGRADED).
+> 
+> Finally, the BLKRESTORESTORELEMS ioctl interfaces with
+> bdev_restore_storage_elements() to restore the depopulated storage
+> elements of a zoned device.
+> 
+> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+> ---
+>   block/blk-zoned.c             | 134 ++++++++++++++++++++++++++++++++++
+>   block/blk.h                   |   9 +++
+>   block/ioctl.c                 |   4 +
+>   include/uapi/linux/blkzoned.h |  36 +++++++++
+>   include/uapi/linux/fs.h       |   1 +
+>   5 files changed, 184 insertions(+)
+> 
+Reviewed-by: Hannes Reinecke <hare@kernel.org>
 
-A TransportID is at least 24 bytes.  Reject shorter TransportIDs and
-compare the declared length with the bytes following the header before
-reading buf[24].
+Cheers,
 
-A malformed PR OUT sent through vhost-scsi triggered this read on a
-KASAN kernel.  The command is now rejected with INVALID PARAMETER LIST
-before buf[24] is accessed.
-
-Fixes: c66ac9db8d4a ("[SCSI] target: Add LIO target core v4.0.0-rc6")
-Signed-off-by: Jia Jia <physicalmtea@gmail.com>
----
- drivers/target/target_core_pr.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
-index 25b1bcacc0c8..ca1a2802aa22 100644
---- a/drivers/target/target_core_pr.c
-+++ b/drivers/target/target_core_pr.c
-@@ -3226,10 +3226,11 @@ core_scsi3_emulate_pro_register_and_move(struct se_cmd *cmd, u64 res_key,
- 	transport_kunmap_data_sg(cmd);
- 	buf = NULL;
- 
--	if ((tid_len + 24) != cmd->data_length) {
--		pr_err("SPC-3 PR: Illegal tid_len: %u + 24 byte header"
--			" does not equal CDB data_length: %u\n", tid_len,
--			cmd->data_length);
-+	/* TransportID is at least 24 bytes. buf[24] is its first byte. */
-+	if (tid_len < 24 ||
-+	    tid_len != cmd->data_length - 24) {
-+		pr_err("SPC-3 PR: Illegal tid_len: %u for data_length: %u\n",
-+		       tid_len, cmd->data_length);
- 		ret = TCM_INVALID_PARAMETER_LIST;
- 		goto out_put_pr_reg;
- 	}
+Hannes
+-- 
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
