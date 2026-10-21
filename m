@@ -1,99 +1,104 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=195.135.223.131
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792575381;
-	b=sKTtWE4tD2qNUxv+5Y6GdJBQxhDncUiCwz4Kxe/SGdgz/05mU5UzqM045xV23aPQXTIj
-	 o+uwHGqlGrtdJwrYwQlXIa+JhfSk26IZDccVksAgL85gP4LhLo6VkHrjvNuIUgTdbJhTL
-	 h7JOp45Ddcdiu5kEgiwfg62BVAPjBu1vVD/ORO8dYTtNysE9aK9+74IIYDdYF6Szy62jC
-	 9P764dXgt4scblah3m7jmb6PhjtJ1o0hQjiqCDd+QRuqGKmcpHSJpBHL/jPB4mcAmpueu
-	 cPrSO3u3kem7AiEY4A78OwF6wEkjd+rV3B76jDM81u+8M+e6JlYfEZn2F6C4NxwTJyA==
+	t=1792575412;
+	b=e4Eju6awAjlJ3FAZBCPKt5ecWDR+8F+UtLtJN8x9TqFw9adPGGKwHnsU4GTv4HwJaBTo
+	 AidE4IMojugz3vYnWNDUKC3DN8oPsNdIzzepWXgx6t7tYDGQWuuHkqsqAUDJbbD7wq5X+
+	 fCpxmRsWyZEjucxvJ3DPnoF2Myfjl2yLHd2KAK+cCuPun/ME1vxGSxXxJqWjHATrb6cZg
+	 mjQdkgMhTO6SWMhYNFovrq4MhAZNcICKqNb8iIeaa5VLDYIEuDC2Qu1gE5RrkTfGaIzqr
+	 d+a+GWF30UhiVyCM3sFiGt6QlgTv5a301Tm7MY/S7zpFHBsJFuw9vUq9pclqHfYUd/w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792575381;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792575412;
 	h=DMARC-Filter:Received:DKIM-Signature:DKIM-Signature:DKIM-Signature:
 	 DKIM-Signature:Received:Received:Message-ID:Date:MIME-Version:
-	 User-Agent:Content-Language:To:Cc:From:Subject:Content-Type:
-	 Content-Transfer-Encoding:X-Rspamd-Server:X-Rspamd-Queue-Id:
-	 X-Rspamd-Action:X-Spam-Level:X-Spamd-Result:X-Spam-Flag:X-Spam-Score;
-	bh=WgVyCKVKDgFoGg4+h5dbV4IfdQEf1uDgK4HCWyH1+5s=;
-	b=AuGiISN79rT28sXXSdx5LoBZAe+sIRyh0uUH8yrIFWOnQVDMSQT5aL470fWuSMIM4Fj+
-	 6SEKquuKvKdoIhOaK+PJ2rWr8T9coDnKcH1f4sXS7qKPLCl1OhR5j1cOiFt230OHrFis1
-	 CClL6Tps2GZEQtNd0hxpDQnKRPV/K321p4Wvcx7UW00m2Ns9EIki4kd45fcmTYamWJ8AS
-	 CRinPQA1NIVA4cqoc7L14UcxzlAsGzeh8b+f7OOtNGOTa28bRzyi4EdTwad/e/+EVk2vf
-	 i2DQ4yr8PfFv4OoC6mudl6sZAcog1J5/yyTbYQ1fWyKKhX34feW3Wx5wA6M+mCfgtbQ==
+	 User-Agent:Subject:To:References:Content-Language:From:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:X-Rspamd-Action:X-Spam-Score:
+	 X-Spam-Flag:X-Spamd-Result:X-Spam-Level:X-Rspamd-Queue-Id:
+	 X-Rspamd-Server;
+	bh=0xKHBxgviBMY6RMZZZlVcmxSTz6Tc6DMhX3WPNXMYzM=;
+	b=kih5LCneoZA5gqvtzBDqUrbCFo1drbRmBcbuQLojHrppySWcMKjAxg6opyB3xHpSifJf
+	 j7zguUeDXue085Qc0ypirn3LFQUzo2C6NZltSZB8cjJXIkcmQ2JD6UnljAnRlSdmYMIhJ
+	 rqxqyCAkMupXhitO9YKHs3nCYkTqXDprFenX43jpRGNUSBNgVDhbM31R+xWCGV0loq5Tp
+	 2v20Svc15EvEnrbjAhhu5/Hzm1OL7O9dc9FhK5pekTsjncQBZF2XL2HbCd54jEY8Z8j6Z
+	 /qF8vNXP56x7/1dwVE9CapjZZh7++WuoEHcgj2NFn+HXDA4jdUafTa0bScvaYBWDAtw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=suse.de;
 	spf=pass smtp.mailfrom=suse.de;
-	dkim=pass header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=hZBgkfcN;
-	dkim=pass header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=l4OK01XY;
-	dkim=pass header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=hZBgkfcN;
-	dkim=neutral header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=l4OK01XY;
-	arc=none smtp.remote-ip=195.135.223.130
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=kisJ3RAi;
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=zStD+jgX;
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=klzqhM2L;
+	dkim=neutral header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=X6Zw3AzB;
+	arc=none smtp.remote-ip=195.135.223.131
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A8807606A32A
-	for <linux-scsi@vger.kernel.org>; Wed, 21 Oct 2026 09:36:20 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A8807606A32A
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 99B5B606A319;
+	Wed, 21 Oct 2026 09:36:51 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 99B5B606A319
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=hZBgkfcN;
-	dkim=pass header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=l4OK01XY;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=hZBgkfcN;
-	dkim=neutral header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=l4OK01XY
+	dkim=pass (1024-bit key, unprotected) header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=kisJ3RAi;
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=zStD+jgX;
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=klzqhM2L;
+	dkim=neutral header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=X6Zw3AzB
 Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 8455421DCD;
-	Wed, 21 Oct 2026 09:36:17 +0000 (UTC)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id D23AF1F7BB;
+	Wed, 21 Oct 2026 09:36:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1792575377; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	t=1792575410; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
 	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=WgVyCKVKDgFoGg4+h5dbV4IfdQEf1uDgK4HCWyH1+5s=;
-	b=hZBgkfcNnSyD2SqkhhG9K8K/rTo5kpzqsdp6Dl7PucbCOrQELfEyD/YbZFNnO358cQVLmj
-	Y+WQL0kKNGmedPidMQseEdJXZRRmrKWit6zUJNtTQnN3YFjp+PfPqS1E9AC1HagAHiWOoZ
-	ANOHbsEFV8ZZGaFgHmY3Zkks1ZcsnDw=
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=0xKHBxgviBMY6RMZZZlVcmxSTz6Tc6DMhX3WPNXMYzM=;
+	b=kisJ3RAiWDLqTgq2FKf5C2r5alLjq1rTUhGGE9Dt0mkDquxfOKf5xAcfevNQKpHUQAZxZ+
+	2R50PcRQ4DLYQ3SQf0BQX2KJSuyQGYU1s3MWDbl/Xmy5auth7sybAeWYt4KJcgQvfrcWBu
+	7Fov94Exn5j72hBaqgqVXMMw/O8UIgA=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1792575377;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	s=susede2_ed25519; t=1792575410;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
 	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=WgVyCKVKDgFoGg4+h5dbV4IfdQEf1uDgK4HCWyH1+5s=;
-	b=l4OK01XY7K6ux8lilD9GDrS1kxG0cIHIrk2zHk7Ago8vSsluDsKuKdgFdYP/UxDTuXWI9F
-	N9EVJ3eLHCHNHQAQ==
-Authentication-Results: smtp-out1.suse.de;
-	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=hZBgkfcN;
-	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=l4OK01XY
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=0xKHBxgviBMY6RMZZZlVcmxSTz6Tc6DMhX3WPNXMYzM=;
+	b=zStD+jgXOts5mwoQpJxSplGlGx9M8yJwYVUFbA+EwyNbIN3oukWBjxxmBYFLdtCTs2rJ1K
+	BgDWFl+6BvkNreDQ==
+Authentication-Results: smtp-out2.suse.de;
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=klzqhM2L;
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=X6Zw3AzB
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1792575377; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	t=1792575409; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
 	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=WgVyCKVKDgFoGg4+h5dbV4IfdQEf1uDgK4HCWyH1+5s=;
-	b=hZBgkfcNnSyD2SqkhhG9K8K/rTo5kpzqsdp6Dl7PucbCOrQELfEyD/YbZFNnO358cQVLmj
-	Y+WQL0kKNGmedPidMQseEdJXZRRmrKWit6zUJNtTQnN3YFjp+PfPqS1E9AC1HagAHiWOoZ
-	ANOHbsEFV8ZZGaFgHmY3Zkks1ZcsnDw=
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=0xKHBxgviBMY6RMZZZlVcmxSTz6Tc6DMhX3WPNXMYzM=;
+	b=klzqhM2LYnglM1/R959L98i24vz36Q3KKCoQRk5oPLYOYCw6Mum5fSxapOmJ4weGEnSbqx
+	sek3Xxklfl/mv7bK2b4bdyIaY8WykmJuguhtbzPcPfhpez2zSMCtXreBR6lvVyQxtn+ZhM
+	OyRGQJaGd6kCYcHjDIRXDgHxBlT1Qf0=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1792575377;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	s=susede2_ed25519; t=1792575409;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
 	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=WgVyCKVKDgFoGg4+h5dbV4IfdQEf1uDgK4HCWyH1+5s=;
-	b=l4OK01XY7K6ux8lilD9GDrS1kxG0cIHIrk2zHk7Ago8vSsluDsKuKdgFdYP/UxDTuXWI9F
-	N9EVJ3eLHCHNHQAQ==
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=0xKHBxgviBMY6RMZZZlVcmxSTz6Tc6DMhX3WPNXMYzM=;
+	b=X6Zw3AzBQC7/jhH587y+LkTWFuV5mH8Fm7P23R3UyfIv1KZ6zW0DuZ01lBLkAt0FAI6Y+p
+	5th/qltvrFRgRYAA==
 Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 4B78E134A5;
-	Wed, 21 Oct 2026 09:36:17 +0000 (UTC)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 8EB7B13518;
+	Wed, 21 Oct 2026 09:36:49 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
 	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id mNKzCpGH2GoFHAAAD6G6ig
-	(envelope-from <dwagner@suse.de>); Wed, 21 Oct 2026 09:36:17 +0000
-Message-ID: <aeeb1af3-8672-4f6d-bec8-1a8e29e5414d@suse.de>
-Date: Wed, 21 Oct 2026 11:36:16 +0200
+	id waeMF7GH2Go6HQAAD6G6ig
+	(envelope-from <hare@suse.de>); Wed, 21 Oct 2026 09:36:49 +0000
+Message-ID: <05a7b220-9795-4d7c-8e63-033e59143c78@suse.de>
+Date: Wed, 21 Oct 2026 11:36:49 +0200
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -104,30 +109,33 @@ List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v6 01/10] block: introduce disk_zone_is_offline()
+To: Damien Le Moal <dlemoal@kernel.org>, Jens Axboe <axboe@kernel.dk>,
+ linux-block@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
+ linux-scsi@vger.kernel.org, "Martin K . Petersen"
+ <martin.petersen@oracle.com>
+References: <20261013122750.2237843-1-dlemoal@kernel.org>
+ <20261013122750.2237843-2-dlemoal@kernel.org>
 Content-Language: en-US
-To: Nilesh Javali <njavali@marvell.com>
-Cc: GR-QLogic-Storage-Upstream@marvell.com, linux-scsi@vger.kernel.org
-From: Daniel Wagner <dwagner@suse.de>
-Subject: upstream bug found during backporting?
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20261013122750.2237843-2-dlemoal@kernel.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
-X-Rspamd-Queue-Id: 8455421DCD
+Content-Transfer-Encoding: 8bit
 X-Rspamd-Action: no action
-X-Spam-Level: 
-X-Spamd-Result: default: False [-3.50 / 50.00];
+X-Spam-Score: -4.50
+X-Spam-Flag: NO
+X-Spamd-Result: default: False [-4.50 / 50.00];
 	BAYES_HAM(-3.00)[100.00%];
-	SUBJECT_ENDS_QUESTION(1.00)[];
-	NEURAL_HAM_LONG(-1.00)[-0.998];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
 	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	NEURAL_HAM_SHORT(-0.20)[-0.999];
 	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
 	XM_UA_NO_VERSION(0.01)[];
+	MX_GOOD(-0.01)[];
 	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
-	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	ARC_NA(0.00)[];
 	RCVD_VIA_SMTP_AUTH(0.00)[];
+	ARC_NA(0.00)[];
+	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
 	TO_DN_SOME(0.00)[];
 	MIME_TRACE(0.00)[0:+];
 	MID_RHS_MATCH_FROM(0.00)[];
@@ -135,76 +143,35 @@ X-Spamd-Result: default: False [-3.50 / 50.00];
 	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
 	FROM_EQ_ENVFROM(0.00)[];
 	FROM_HAS_DN(0.00)[];
-	RCPT_COUNT_THREE(0.00)[3];
+	RCPT_COUNT_FIVE(0.00)[6];
 	RCVD_COUNT_TWO(0.00)[2];
 	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:email,suse.de:dkim,imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns,suse.de:email,suse.de:dkim];
 	DNSWL_BLOCKED(0.00)[2a07:de40:b281:106:10:150:64:167:received];
 	DKIM_TRACE(0.00)[suse.de:+]
-X-Spam-Flag: NO
-X-Spam-Score: -3.50
+X-Spam-Level: 
+X-Rspamd-Queue-Id: D23AF1F7BB
+X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
 
-Hi Nilesh,
+On 10/13/26 2:27 PM, Damien Le Moal wrote:
+> Introduce the helper function disk_zone_is_offline() for testing if a zone
+> of a gendisk has the offline condition. The zone to test is identified
+> using a sector number that must belong to the target zone to check.
+> 
+> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> ---
+>   block/blk-zoned.c      | 16 ++++++++++++++++
+>   include/linux/blkdev.h |  9 +++++++++
+>   2 files changed, 25 insertions(+)
+> 
+Reviewed-by: Hannes Reinecke <hare@kernel.org>
 
-JFYI, our internal review bot reported an issue on c449b4198701 ("scsi:
-qla2xxx: Use QP lock to search for bsg"). Not sure if it is valid.
+Cheers,
 
-Thanks,
-Daniel
-
-
-commit 0c7674d3d65a1b2b178e8f66495e79b048aee834
-Author: Daniel Wagner <dwagner@suse.de>
-Committer: Daniel Wagner <dwagner@suse.de>
-
-scsi: qla2xxx: Use QP lock to search for bsg
-
-distro-commit: 0a579d00004251aaa0344329b5f12478b5bc473f
-Git-commit: c449b4198701d828e40d60a2abd30970b74a1d75
-Backport-upstream: c449b4198701
-Backport-status: clean
-
-Re-verified: 1 confirmed issue. The type check for SRB_FXIOCB_BCMD was 
-inadvertently omitted when refactoring qla24xx_bsg_timeout() into 
-qla_bsg_found(). If a BSG job of type QL_VND_FX00_MGMT_CMD times out, it 
-is not matched in qla_bsg_found(), so it is never aborted or cleaned up 
-from req->outstanding_cmds[], leading to a resource leak and potential 
-use-after-free when the command completes or times out. This bug was 
-introduced in upstream commit c449b4198701 and remains unfixed in 
-origin/SLE15-SP7.
-
-Review-model: qwen3.8-27b
-Review-time: 562.49 seconds
-Input-tokens: 33795
-Output-tokens: 11633
-Total-tokens: 45428
-
-=== Findings ===
-
-=== Finding 1 ===
-Category: CHANGE-4
-Type: resource-leak
-Severity: medium
-Confidence: 0.95
-
-Message:
-SRB_FXIOCB_BCMD was removed from the type-check in qla_bsg_found(). If a bsg
-job's associated SRB has type SRB_FXIOCB_BCMD, it will no longer be found
-during timeout. The function will fall through to the 'SRB not found' path
-returning -ENXIO, but the SRB remains in req->outstanding_cmds[] and is 
-never
-removed or aborted by this path. The command will only be cleaned up when
-firmware eventually times it out via the normal completion path. This is a
-behavioral regression if such commands can exist.
-
-Evidence:
-Old check:
-   sp->type == SRB_CT_CMD ||
-   sp->type == SRB_ELS_CMD_HST ||
-   sp->type == SRB_ELS_CMD_HST_NOLOGIN ||
-   sp->type == SRB_FXIOCB_BCMD
-
-New check (SRB_FXIOCB_BCMD removed):
-   sp->type == SRB_CT_CMD ||
-   sp->type == SRB_ELS_CMD_HST ||
-   sp->type == SRB_ELS_CMD_HST_NOLOGIN
+Hannes
+-- 
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
