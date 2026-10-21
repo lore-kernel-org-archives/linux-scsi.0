@@ -1,90 +1,98 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.174
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792601081;
-	b=biAaCr+VYiwrajK8VgHYB7qfrnpcOZlxwi8JZEETAPk2fFygH0UG6YuVlWY2lxl8djzc
-	 ATM1K32ryN4fcEaDDomLvB4gZ+fJAvFJ7/11eLIQVCtQp5vIJJ4GzBtr0ef7fJeac/A0S
-	 uZzueSpcMNXx8tOUX91H02dmYjmlykFwd58AyNfIBYCZ2SMDcmiuuH1tRmpEyfof7nQzw
-	 6z3uIH7uN+XT6o6K6iWj4SZ72OqSkA73hoYA96Ou+1VDPzAvjsbwXxye317HzGHi6wBVd
-	 qi39fmDTjjvmgVF4BsM2llEzmfzgfi5GBpe9Yx5DsLkIHxM4PwnHKmCkW5vVWE4MufA==
+	t=1792602286;
+	b=JMqO4jjXHns2ab8bF5UQNsoUPcoIUA8OuQoXKY/yZwQKlM0JhArcph0sMPOa4TuhiE2z
+	 88UQwGY2xJdfyWQWDqyhVxFw6MQqn+rkQCquZinhzQ08TMVQFSXb3Iy7QQYTRn2qjlm37
+	 JYP50L4wTlaUM6DrN+69Ix7STAuO/ScH0lS7xBNC7PQ8b+CP5TnHJZ2TfPcQaOIUYaGHJ
+	 UX4YoW6ECj7xE+lDwHPh/kGBN30Rfd6oBrLj8yOGzfikcua+V7kYqXV+r51/pXLbGoWSc
+	 n9uWTnl+gmLBbWzuBgYpoVqumF0QILdCld/rU8uzKubSHNqgS8QDKetZfBxet5mqoCQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792601081;
-	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:Received:
-	 Received:Received:Received:Received:From:To:Cc:Subject:In-Reply-To:
-	 References:Date:Message-ID:User-Agent:MIME-Version:Content-Type:
-	 X-TM-AS-GCONF:X-Proofpoint-Spam-Details-Enc:X-Proofpoint-ORIG-GUID:
-	 X-Proofpoint-GUID:X-Proofpoint-Spam-Info:X-Authority-Analysis:
-	 X-Proofpoint-Virus-Version:X-Proofpoint-Spam-Details;
-	bh=e31l6mY+7kYwd3xTWE7F78PbWC6bDsSOvajR5yk1q0Q=;
-	b=V3A5NwFtI2hEvMAP8Mpqdm8v4JVtQJ0an1uzuyVjum06dpBPqC+og728dSvGoLYJ18it
-	 pYnO2rOadmce7wIWEFUQIT302rro0V8rl+RjqkM1C3vxnE50LQZ9O/LoHF4ZKeAC2Fkhi
-	 Z/oZSg6CUHN73EhzpnsQAFqMk4wPjFKlksRJCewgyLr6QhE+ripwayyAVyWF3UO7VSc3c
-	 7fMrHA3ecqGlLudrzRRrb3VCbpQTC0C9v9xtqkAQGB73DZOOULDwHQnGdMnDkjaJq4VUW
-	 3SqNdbCXtLx1IPjUFXsxGSe0ugRx88YviVxEkjkO/74UPf+JwyaQ3UFPt8lfbubbIfA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792602286;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
+	 MIME-Version:Content-Transfer-Encoding;
+	bh=D7a/aq8TmS1nl59vDrMFkTYHsVBfKzn9g+F3Ti4XDsc=;
+	b=zJyL3IwMrrvJumv5n2t9Zn5QYjDquMiS0hIlC5uTZikgX2XxEgh/ryYQTVkkLsrs57bZ
+	 0RhEzQe+zjK0hof55Nagra9qtsLVOKUvWXm52+YM8ANW1Iqj4flID1j3I23OjcEbsGMNM
+	 KF3HzLNxtD/MmCdwMiykyDaUkP9dYwUL81TXGCJLbkBiE1uXvNUBl2+UT+hU03do6UXZk
+	 Fhu1NKyeuQNvWT9iQlott8S4016c90cZSBgtBeKM0kX3PHW3H3jotxY7DF8VvmLTaFehw
+	 0O3ObPL1emqPrOUwUPYn5bbr+0AJiKr/2V/7JCs3ASCRX3fHQ4jSzBadxD0kq/kCgDA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.ibm.com;
-	spf=pass smtp.mailfrom=linux.ibm.com;
-	dkim=pass header.d=ibm.com header.i=@ibm.com header.a=rsa-sha256 header.s=pp1 header.b=hZjVbvzb;
-	arc=none smtp.remote-ip=148.163.158.5
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=purestorage.com;
+	spf=pass smtp.mailfrom=purestorage.com;
+	dkim=pass header.d=purestorage.com header.i=@purestorage.com header.a=rsa-sha256 header.s=google2022 header.b=IAY3OVrI;
+	arc=none smtp.remote-ip=74.125.82.174
+Received: from mail-dy1-f174.google.com (mail-dy1-f174.google.com [74.125.82.174])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1005606A31A;
-	Wed, 21 Oct 2026 16:44:40 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D1005606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91777606A31B
+	for <linux-scsi@vger.kernel.org>; Wed, 21 Oct 2026 17:04:45 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 91777606A31B
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=purestorage.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=purestorage.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=ibm.com header.i=@ibm.com header.a=rsa-sha256 header.s=pp1 header.b=hZjVbvzb
-Received: from pps.filterd (m0360072.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69LFi9Lh1594211;
-	Wed, 21 Oct 2026 16:44:37 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-type:date:from:in-reply-to:message-id:mime-version
-	:references:subject:to; s=pp1; bh=e31l6mY+7kYwd3xTWE7F78PbWC6bDs
-	SOvajR5yk1q0Q=; b=hZjVbvzbnfBdfrfEouGwGEHlBEbZ1H9zAyppysPDf28l+C
-	ugCZyuChKKUIUB+o/+Fvh4epHLVEuZNkQHl5PE84Pp43DWU9gT1kGisjY8DSBMd6
-	swRT/aKLkV9Cqjl+HQyhzxhAK/UuA/6QI+K+2vuSmLqXpaeXLn4J8t59355F1vtY
-	5loLBWbi65NqJyGPgvYAPSRkzgJ/1K7agGxeyuAxB+CJ3tjSrCadA6ZSf7v/8ffP
-	xlxNthvmQWjGh8V1aQZlNh4auqy+zfgw6dBAb/rFUo1ciZJJ92oxyoCgeA0rKCp6
-	anof4hFvbRvDEBdW5QmpaEjokTj7khofVqt+//hw==
-Received: from ppma13.dal12v.mail.ibm.com (dd.9e.1632.ip4.static.sl-reverse.com [50.22.158.221])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4hdw5a21ny-1
-	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-	Wed, 21 Oct 2026 16:44:37 +0000 (GMT)
-Received: from pps.filterd (ppma13.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma13.dal12v.mail.ibm.com (8.18.1.11/8.18.1.11) with ESMTP id 69LFZ3NV2114770;
-	Wed, 21 Oct 2026 16:44:36 GMT
-Received: from smtprelay03.dal12v.mail.ibm.com ([172.16.1.5])
-	by ppma13.dal12v.mail.ibm.com (PPS) with ESMTPS id 4hefss3ycc-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 21 Oct 2026 16:44:36 +0000 (GMT)
-Received: from smtpav05.wdc07v.mail.ibm.com (smtpav05.wdc07v.mail.ibm.com [10.39.53.232])
-	by smtprelay03.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 69LGiaNa18022940
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 21 Oct 2026 16:44:36 GMT
-Received: from smtpav05.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 0C9F258059;
-	Wed, 21 Oct 2026 16:44:36 +0000 (GMT)
-Received: from smtpav05.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id BD94158053;
-	Wed, 21 Oct 2026 16:44:35 +0000 (GMT)
-Received: from e (unknown [9.16.46.225])
-	by smtpav05.wdc07v.mail.ibm.com (Postfix) with ESMTPS;
-	Wed, 21 Oct 2026 16:44:35 +0000 (GMT)
-From: Dave Marquardt <davemarq@linux.ibm.com>
-To: sashiko-bot@kernel.org
-Cc: sashiko-reviews@lists.linux.dev, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH v15 10/11] scsi: ibmvfc: register and use asynchronous
- sub CRQ for events
-In-Reply-To: <sashiko-outbox-178317@kernel.org> (sashiko-bot@kernel.org's
-	message of "Mon, 19 Oct 2026 22:26:13 +0000")
-References: <20261019-ibmvfc-fpin-support-v15-0-a858726e178a@linux.ibm.com>
-	<20261019-ibmvfc-fpin-support-v15-10-a858726e178a@linux.ibm.com>
-	<sashiko-outbox-178317@kernel.org>
-Date: Wed, 21 Oct 2026 11:44:35 -0500
-Message-ID: <87mrs7vw98.fsf@linux.ibm.com>
-User-Agent: Gnus/5.13 (Gnus v5.13)
+	dkim=pass (2048-bit key, unprotected) header.d=purestorage.com header.i=@purestorage.com header.a=rsa-sha256 header.s=google2022 header.b=IAY3OVrI
+Received: by mail-dy1-f174.google.com with SMTP id 5a478bee46e88-35cd4e8bdbdso1826130eec.1
+        for <linux-scsi@vger.kernel.org>; Wed, 21 Oct 2026 10:04:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=purestorage.com; s=google2022; t=1792602285; x=1793207085; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=D7a/aq8TmS1nl59vDrMFkTYHsVBfKzn9g+F3Ti4XDsc=;
+        b=IAY3OVrIPRimhhQh5kFJRjlZAzrLM5l8IA+NXBqDPxuB3Gdwbv9Bn+Rg5owsvDINAb
+         XtfXb1oiooOVJVcMTL0j4CYmgsvbfsi6hG1jqF95f5TLU9kCPWecgPWDV7VAZOGxKN/y
+         bH3/td3Du/lsifVETSTvLAcapvka53n563ZNLIZSf/0Kn2mk+92yDv8l37JgRS4E3+0p
+         lyWqvlLrC6YOaO/Pt1JiDlMHDl7bor0711iMUhM7KBoGeh1SRPg+Sh8ESpBcpm0uFkNJ
+         ZYjRQu5TrvUbYko+0SBs5O662AktD+nia9nhM2IGKjHEGdVdkfi3uxET7D9oeZM2c6IY
+         MijQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792602285; x=1793207085;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=D7a/aq8TmS1nl59vDrMFkTYHsVBfKzn9g+F3Ti4XDsc=;
+        b=OMMVd/BaodbeSsNahvMiH/puArnHhDsRVFcdYzmpGBLRfQAH5KQEk9+z86bsph9fyA
+         dE5XjtI+mOixwXZMrecmDAv1cGiyKa5zOtJA1xyViKqtIV1JYLbi1VTXQmGFqHXPwRFh
+         LJXkCY+DQGDxeFHRjARgic3Yej+ZccLhEV9BBqzyoWMBersfImSWl0O5uXJLoOrymwlt
+         TPF0QN2f6F7doDphh9JBIdcUwDzZ0zBllff0PfguGf4vkI1eczL1f0MuIQmkzHdr3gBm
+         tXmwElmgq6bROGdLmjIqMeWS0aB4Hw0+Kviue9tjBOGOObNzGIvevILH2Y7+5glxBiIy
+         THfQ==
+X-Forwarded-Encrypted: i=1; AKwUvBzKA0T7nUIBvueROE0gviJXQtV/LL1Tnq1k80ZwO6pmbTnnEUOJhgBKjS1po5W8yPwbr1HIxSBRa6os@vger.kernel.org
+X-Gm-Message-State: AFq9FYKZuHtKrvYbVJAuQqW8heHMwdj307MfyC7BvPZiYQVeSozXpA/V
+	jpG1DtX22Dlt0XzHrxpMPJqUhPNV9zKMeQCdxyZebtfDOiAhtTGzIQvYUF1d+HQUDZY=
+X-Gm-Gg: AYBFou0F0C2midr6qOvM+/XBh8SU03X4EkemzyN2nmWfjaplcQ741wENhoSaRYZHZS2
+	QjpuOM5XDi00p36EPAA13lU2+J3pUFxaMxM31yB7MIwKuZ6PMW46jD1azMmOYmEdH/Nf1GB681q
+	WrZUGald1NTx76aeeL5z5THLLxifWC2SdQIoNG6PxpP1BNGLvwhNBkPZvl9amFIiocIr8Id6BTW
+	Z2uUGJiJKIApj9QrJXfMda1dj7VEl07kYsWio3pJdQv0Xo58/cmV/V2TXuoIlgmcuoOxLOTClip
+	ex8m63tkIGvguRK0oaX4v9JTYSEd/Xl9w0X9ITikLpw6hRnZ64CGlWtGWIpq8zUxyga9wApYmEi
+	hEPSUqn8g8O0PXVik6uOQBv3qMa2p24tnZttgRTxLnjr7h8LzgnHX5jJljiEekAQJMlMPSpZ6xS
+	NP9Ivc9x3Z6t+MJ+hTsRPh6H8uUsbhQp+Y3ZSef2DB6KUQz6OV9obQ9YSTLn2v2JIUP3EuxlUVB
+	NGg78BGfa4FlzD2m0+tjxcRqhYGaeXO2yHaxpR/GibEHlInNV3dxBBO+oQVHKEF2hBo3PI5EfOK
+	OnH6d7pKqMXesM+j3F9IDCOLJHaRkYtr+zDSPuGNPpY5u88nGSGHlL1lko+B7FelCp8pFQM/Vka
+	y72e0FH+VhX+DEtrzc2kvl7zxLgPmuQpbj4eusTLqpm2DlADxxmnp
+X-Received: by 2002:a05:7300:e9cf:10b0:365:b147:b458 with SMTP id 5a478bee46e88-3674b52acb8mr4309024eec.3.1792602283571;
+        Wed, 21 Oct 2026 10:04:43 -0700 (PDT)
+Received: from brian--MacBookPro18.purestorage.com ([170.85.204.106])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-36740cc8439sm9396277eec.11.2026.10.21.10.04.42
+        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
+        Wed, 21 Oct 2026 10:04:42 -0700 (PDT)
+From: Brian Bunker <brian@purestorage.com>
+To: Bart Van Assche <bvanassche@acm.org>,
+	linux-scsi@vger.kernel.org
+Cc: "Martin K . Petersen" <mkp@kernel.org>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	James.Bottomley@HansenPartnership.com,
+	Hannes Reinecke <hare@suse.de>,
+	krishna.kant@purestorage.com
+Subject: Re: [PATCH v8 0/5] scsi: Refresh INQUIRY data and reprobe on rescan
+Date: Wed, 21 Oct 2026 10:04:34 -0700
+Message-ID: <20261021170434.8478-1-brian@purestorage.com>
+X-Mailer: git-send-email 2.56.0
+In-Reply-To: <227b9f93-0dda-448f-a268-05cf4f9b6046@acm.org>
+References: <227b9f93-0dda-448f-a268-05cf4f9b6046@acm.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -94,184 +102,84 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain
-X-TM-AS-GCONF: 00
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDIxMDA2NiBTYWx0ZWRfX1rKyDk4OHIQt
- c3A6TKrbIMXxHg01KBTUJeT1E2l4Fw2T8nI4qPF0hgz/IIiNKM2gv4UXVZHnIHMcmBzUwZX1l0E
- EOcj7j6VLaJJPGLK0rNKJQGSrBi/sIJtKy3sQCnVx/rKa+0Gv6UJmS5PzPJptRdWsCdeps8rQHc
- R0h7m9WDOMT5OOOcWBT0d+vs9ei+hZd8+QljLhi/46V5MmvYRgneBMdpY5xTMsQK/5numtvD7BE
- fgEMBik87C5fkCg1L1zdD8oMquinbmyZYszjfPoUhulmUe/wMs5GPpcQTorY52gpx9guRjDuKsV
- zMTdFk6/XZuC8ZYWwyGyu//Bc+aDYVEpMFtFt5HXqqFkM/bW8eyWaug20QL7NALoBaeVCSJ4+aD
- crP+59FBebKP7CEuNG9ezRq/gybCVoiFgKQh7cM+EAnIm7SiLgAJM3vtfiJSxz/HDESYqf+fQXt
- AoifjVkgbiIsq4P/hhw==
-X-Proofpoint-ORIG-GUID: As4tNAfLRz_PnAozmdP2Iln76U5AOS3W
-X-Proofpoint-GUID: As4tNAfLRz_PnAozmdP2Iln76U5AOS3W
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMDIxMDA2NiBTYWx0ZWRfX+Co6Ye2EElRg
- YhSt1kvVNbHELG3Nq0iYEs7DlmtiIhCEd8GKPijP+xhNlKN6kpD90GGYCuFqvSt9feTccKglZkB
- JH9TffaFA1bkl7QGyk+l7pEcyugflco=
-X-Authority-Analysis: v=2.4 cv=ZfSIpcVA c=1 sm=1 tr=0 ts=6ad8ebf5 cx=c_pps
- a=AfN7/Ok6k8XGzOShvHwTGQ==:117 a=AfN7/Ok6k8XGzOShvHwTGQ==:17
- a=660iZSQnnn4A:10 a=VkNPw1HP01LnGYTKEx00:22 a=RnoormkPH1_aCDwRdu11:22
- a=RzCfie-kr_QcCd8fBx8p:22 a=VwQbUJbxAAAA:8 a=VnNF1IyMAAAA:8
- a=lttzEiji57sduyQuKiQA:9
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
- definitions=2026-10-21_04,2026-10-21_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- priorityscore=1501 impostorscore=0 malwarescore=0 spamscore=0 suspectscore=0
- clxscore=1015 phishscore=0 bulkscore=0 lowpriorityscore=0 adultscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2610190000 definitions=main-2610210066
+Content-Transfer-Encoding: 8bit
 
-sashiko-bot@kernel.org writes:
+On 10/20/26 3:09 PM, Bart Van Assche wrote:
+> This is a big behavior change. I prefer not to unbind disks if PQ
+> changes.
 
-> Thank you for your contribution! Sashiko AI review found 2 potential issue(s) to consider:
-> - [High] scsi: ibmvfc: clearing mq_enabled in ibmvfc_reg_sub_crqs() skips deregistration
-> - [High] scsi: ibmvfc: ibmvfc_init_sub_crqs() ignores ibmvfc_reg_sub_crqs() failures
-> --
->
-> commit 97f68806c8ca0b8cd795db2454a75c5e092d7ae9
-> Author: Dave Marquardt <davemarq@linux.ibm.com>
->
-> scsi: ibmvfc: register and use asynchronous sub CRQ for events
->
-> This commit wires the asynchronous sub-CRQ into the sub-CRQ lifecycle by
-> allocating, registering, and freeing vhost->async_scrqs alongside the SCSI
-> and NVMe channel queues. It also updates channel setup and login info to
-> handle the async sub-CRQ and multi-queue capabilities.
->
->> diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/ibmvfc-core.c
->> index 7e012281d368c..0d603542fe348 100644
->> --- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
->> +++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
->
-> [ ... ]
->
->> @@ -6977,6 +6995,7 @@ EXPORT_SYMBOL_IF_KUNIT(ibmvfc_deregister_channel);
->>  static void ibmvfc_reg_sub_crqs(struct ibmvfc_host *vhost,
->>  				struct ibmvfc_channels *channels)
->>  {
->> +	unsigned long flags;
->>  	int i, j;
->>  
->>  	ENTER;
->> @@ -6987,7 +7006,10 @@ static void ibmvfc_reg_sub_crqs(struct ibmvfc_host *vhost,
->>  		if (ibmvfc_register_channel(vhost, channels, i)) {
->>  			for (j = i; j > 0; j--)
->>  				ibmvfc_deregister_channel(vhost, channels, j - 1);
->> +			spin_lock_irqsave(&vhost->host->host_lock, flags);
->>  			vhost->do_enquiry = 0;
->> +			vhost->mq_enabled = 0;
->> +			spin_unlock_irqrestore(&vhost->host->host_lock, flags);
->>  			return;
->>  		}
->>  	}
->
-> [Severity: High]
-> Does clearing vhost->mq_enabled here prevent previously registered channel
-> sets from ever being deregistered?
->
-> In ibmvfc_init_sub_crqs(), ibmvfc_reenable_crq_queue(), and
-> ibmvfc_reset_crq(), channel sets are registered sequentially:
->
-> 	ibmvfc_reg_sub_crqs(vhost, &vhost->async_scrqs);
-> 	ibmvfc_reg_sub_crqs(vhost, &vhost->scsi_scrqs);
-> 	ibmvfc_reg_sub_crqs(vhost, &vhost->nvme_scrqs);
->
-> If ibmvfc_reg_sub_crqs() succeeds for vhost->async_scrqs (or
-> vhost->scsi_scrqs), and then fails on a later call for vhost->scsi_scrqs or
-> vhost->nvme_scrqs, the error path in ibmvfc_reg_sub_crqs() only unwinds the
-> current channels set and sets vhost->mq_enabled = 0, leaving the earlier
-> channel sets registered with the hypervisor and their Linux IRQs active.
->
-> Because ibmvfc_dereg_sub_crqs() guards deregistration on vhost->mq_enabled:
->
-> 	if (!vhost->mq_enabled || !channels->scrqs)
-> 		return;
->
-> 	for (i = 0; i < channels->max_queues; i++)
-> 		ibmvfc_deregister_channel(vhost, channels, i);
->
-> all subsequent calls to ibmvfc_dereg_sub_crqs() in
-> ibmvfc_reenable_crq_queue(), ibmvfc_reset_crq(), and
-> ibmvfc_release_sub_crqs() will return early without calling
-> ibmvfc_deregister_channel().
->
-> When ibmvfc_release_sub_crqs() later runs during teardown,
-> ibmvfc_dereg_sub_crqs() is skipped while ibmvfc_release_channels()
-> unconditionally unmaps and frees each queue page (scrq->msgs.handle) and
-> kfree()s channels->scrqs. Doesn't this leak the hypervisor sub-CRQ
-> registrations and kernel IRQs, leaving the IRQ handler and hypervisor
-> referencing freed scrq slab memory and DMA pages?
->
-> [ ... ]
+OK, no unbinding. v9 will never detach a driver from a bound disk.
 
-Yes, this is broken. I will remove the check for mq_enabled, as the
-check for channels->scrq is all that is needed here.
+> Having taken another look at the cover letter makes me wonder whether
+> it is really necessary to refetch standard INQUIRY data and reprobe the
+> device when the peripheral qualifier or device type has changed?
+> [...] When I was working on active/active SCSI arrays myself we
+> didn't care about the INQUIRY data in the kernel and let multipathd
+> figure out which path(s) to use.
 
->> @@ -7081,9 +7084,53 @@ static void ibmvfc_release_channels(struct ibmvfc_host *vhost,
->>  	}
->>  }
->>  
->> +static void ibmvfc_init_sub_crqs(struct ibmvfc_host *vhost)
->> +{
->> +	unsigned long flags;
->> +
->> +	ENTER;
->> +	if (!vhost->mq_enabled)
->> +		return;
->> +
->> +	/* register async_sub_crq channel */
->> +	if (ibmvfc_alloc_channels(vhost, &vhost->async_scrqs))
->> +		goto out;
->> +
->> +	ibmvfc_reg_sub_crqs(vhost, &vhost->async_scrqs);
->> +
->> +	if (ibmvfc_alloc_channels(vhost, &vhost->scsi_scrqs))
->> +		goto deregister_async_sub_crq;
->> +
->> +	ibmvfc_reg_sub_crqs(vhost, &vhost->scsi_scrqs);
->> +
->> +	if (vhost->nvme_enabled) {
->> +		if (ibmvfc_alloc_channels(vhost, &vhost->nvme_scrqs)) {
->> +			spin_lock_irqsave(&vhost->host->host_lock, flags);
->> +			vhost->nvme_enabled = 0;
->> +			spin_unlock_irqrestore(&vhost->host->host_lock, flags);
->> +		} else
->> +			ibmvfc_reg_sub_crqs(vhost, &vhost->nvme_scrqs);
->> +	}
->> +
->> +	LEAVE;
->> +	return;
->> +
->> +deregister_async_sub_crq:
->> +	ibmvfc_dereg_sub_crqs(vhost, &vhost->async_scrqs);
->> +	ibmvfc_release_channels(vhost, &vhost->async_scrqs);
->> +out:
->> +	spin_lock_irqsave(&vhost->host->host_lock, flags);
->> +	vhost->do_enquiry = 0;
->> +	vhost->mq_enabled = 0;
->> +	spin_unlock_irqrestore(&vhost->host->host_lock, flags);
->> +}
->
-> [Severity: High]
-> The commit message states that in ibmvfc_init_sub_crqs(), failure of either
-> ibmvfc_alloc_channels() or ibmvfc_reg_sub_crqs() disables multi-queue and
-> aborts init. However, ibmvfc_reg_sub_crqs() returns void and its failure is
-> not checked here.
->
-> If ibmvfc_reg_sub_crqs(vhost, &vhost->async_scrqs) fails, should
-> ibmvfc_init_sub_crqs() release vhost->async_scrqs and return rather than
-> continuing to allocate vhost->scsi_scrqs and vhost->nvme_scrqs?
->
-> Similarly, if ibmvfc_reg_sub_crqs(vhost, &vhost->scsi_scrqs) fails after
-> vhost->async_scrqs has been registered, shouldn't it release
-> vhost->scsi_scrqs and jump to deregister_async_sub_crq so vhost->async_scrqs
-> is deregistered and released instead of proceeding to allocate
-> vhost->nvme_scrqs?
+I'd like multipathd to make that decision too. The problem is a path it
+never gets to see. If a host scans while the array reports PQ = 1 on a
+path, scsi_bus_match() doesn't bind sd, so the path has no block device
+and multipathd doesn't know it exists. When the array returns to
+PQ = 0, nothing binds sd, and the path stays unusable until someone
+deletes the device and rescans. User space can't fix that; only the
+kernel can bind sd.
 
-This code will be reworked for ibmvfc_reg_sub_crqs() returns int and
-ibmvfc_init_sub_crqs() will take appropriate clean up actions when
-ibmvfc_reg_sub_crqs() returns non-zero.
+The array has no choice about PQ = 1 here. SPC-4 5.15.2.4.5 requires it
+in the unavailable state:
 
--Dave
+  a) INQUIRY (the peripheral qualifier (see 6.6.2) shall be set to
+     001b);
+
+We discussed this in "The PQ=1 saga" thread Martin started in January
+2023. The simplest fix, letting scsi_bus_match() bind at PQ = 1, came
+up there, and Martin pointed out that some arrays rely on PQ = 1 to
+keep a ULD from binding and that keying off TPGS is probably not
+enough. The IBM 2145 case behind 948e922fc446 (since reverted) shows
+why: it returns PQ = 1 with PDT 0 for LUNs that aren't mapped. So I'm
+not proposing that.
+
+What came out of that thread instead was to reprobe the device when it
+leaves the unavailable state. Martin suggested triggering a re-probe on
+the transition, and you suggested a rescan when the ALUA state goes
+from unavailable or standby to an active state. With unbinding off the
+table, that is all v9 needs to do:
+
+  - Only logical units with no driver bound are refreshed. A bound
+    disk is left exactly as it is today: no INQUIRY refetch, no
+    reprobe.
+
+  - If the refreshed INQUIRY data shows PQ = 0, the driver is bound.
+    Nothing is ever unbound.
+
+The trigger has to come from the target, because a LU with no driver
+bound gets no commands, so no UNIT ATTENTION or ALUA state change
+reaches it. Our arrays make the host rescan when they leave
+unavailable, the same way they do when the first volume is mapped to a
+host. On iSCSI they send an asynchronous event with REPORTED LUNS DATA
+HAS CHANGED, and iscsid writes to the sysfs rescan attribute of every
+device on the session, which ends up in scsi_rescan_device(). On FC
+they log out the host's initiators, and after the re-login the
+transport scans the target. That scan finds the existing scsi_device
+and today does nothing with it, so the scan path calls
+scsi_rescan_device() for registered devices that have no driver bound.
+Bound devices skip it, so the scan cost and the time scan_mutex is held
+don't change for them.
+
+That leaves one difference you should know about. While a path is
+unavailable, a host that was running when it became unavailable keeps
+a bound sd on that path, which ALUA and multipathd treat as a failed
+path. A host that scanned while it was unavailable has no sd on it.
+Both end up the same once the array returns to PQ = 0.
+
+This makes v9 much smaller than v8: no unbind, no offline handling,
+and no INQUIRY update on a device that has a driver bound. The fixes
+you and Sashiko found still apply where the code remains
+(device_is_registered() before binding, the inquiry_len handling, the
+PQ 3 / PDT 1Fh filters, and the structural points).
+
+Martin, does this direction work for you before I write it?
+
+Thanks,
+
+Brian
