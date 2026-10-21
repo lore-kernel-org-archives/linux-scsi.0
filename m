@@ -1,57 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792578968;
-	b=sw/KPZruRpX/u5xmGTqxHgOBYgWQWRCqtrHthy/MLUbfLHP49a7SEU7SyZiR/86TwoRG
-	 9outL6c4IKnKejlytWx0Spe6QNq0u4AIKygO7P6D5XkBtXb9vk9Pn4f3EcRopJ55Uet8d
-	 UADoSJzMSvZgti/1haDT7jDNNaAlHNu141QRAFg8ir2V+Du2oPnSbPkJzI3oYf50vcG6N
-	 UR7giV+8VIO0N5QfREiauJ2hZ026u8deVK35kv5/jgfJoqviJm+jP8PszzuFzqmrfEirk
-	 CWIXt9a+flhR63EY5QlDIPIeyF/z7jG1xYg72I8VSKG3ZduKzhy3NBiQ6RWUaLnYeYA==
+	t=1792579059;
+	b=E97f79WFdyVhA4xOTEPziTGx0WFTSgoENuLxN5ccwrsjqWOE8qSl5uSWkkTR3sQmRzmo
+	 qsPIIA+oTV/4ycQkOWUliQXFPfxPASlBMzvbxOECl4Ic3Rr3rF+vkC9wSi0dsUGuhmSUP
+	 4D+H3Cil9KzUkdA2kfwCjY1I1qUT/tgqfKaC4pLrjeAQDk/cRMzJSb33Di6kzkJrakiVJ
+	 n0wLEYMq998ZKyDi27vtWXAEr1BWRTqeKKuieKZ6ixUMP5J5zGcQDoAKXOfg+AfeBsrni
+	 40kFbcF9SG47WteLDajKObTjiVaEzg0GypcAAOuNMa9fw6w6Jp4XiLHAmFkrnBLNlgQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792578968;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792579059;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=Rn/W3qmVgAqbdrUSKZsvfOz3jFl9o9L2KjD1Z6+UmoM=;
-	b=RlQh3Txz6hKFyltfeUTIvE3TsVS68Sdlh8GrqCjJCd4PX6qjksiO3ujWFVzEp6d6TK+z
-	 4F1frUjuHzEEUJznRBeazefgHt6X76/X+7SIxwsfMQdyLxgDTCkMuHUnsR9jG962kwjjx
-	 ZNYcELEntTmEsxOqMXOHzjIGD4wY+4l/4htDrg/9S4BgVzzN1xBujudOjaK4eU2H/HLzY
-	 30HEvGmNhfqg8imh64QigkKJ+Ql54+QUF2OYctxHZiB+n4BCMZPrlH/J4X9bW/b1FcUg3
-	 mGzVbGMfJma6iXtIXTuGdjOctAZQA3jiZhoETLmIrHVL7GuU/RggxgIky+VXCn8yj4A==
+	bh=+miq/7YoU/WJ1P7kIq5mOVwXcpwS8c3F8YVo5eptDhA=;
+	b=p79bZ4lojc/ZH4BYzQVcmthD0U8RyuKBxOA4BG3M1I0n2TaU6R8fh1lS7NQJFSqVf9r9
+	 Adttus5SbDGErXy7d4+W9T/O4OiEGg8XmIWkcV9NFH4xGKRo14CQAtrIKCglMo+RnVfAU
+	 EKRzLxmgiSz9HbhkV8t8OsXQ+Ut7psfgLnO+aGCZwwJrNSIWwZkR+d+H6SfyMJ896A2Ym
+	 P5+yAFYtIK9eQNF+OmS3d9hA1VI8jEJUbDERNn/5Fx+iN2FEvqT+n1/tAeKTEjAuvcb7S
+	 zKMZ5zXLQkSbQ/JPxEGU4XzOU0A5Z8yL/8VqLm0k4JWbGiRU9DZEIZNOetTa/4eXTBw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="W4+S2P/o";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="DYm/pGPB";
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D45A606A31A
-	for <linux-scsi@vger.kernel.org>; Wed, 21 Oct 2026 10:36:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11BB9606A31D
+	for <linux-scsi@vger.kernel.org>; Wed, 21 Oct 2026 10:37:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=W4+S2P/o
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DEA1E1F000C9;
-	Wed, 21 Oct 2026 10:36:07 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DYm/pGPB
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8EDFB1F000CA;
+	Wed, 21 Oct 2026 10:37:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792578968;
-	bh=Rn/W3qmVgAqbdrUSKZsvfOz3jFl9o9L2KjD1Z6+UmoM=;
+	s=k20260515; t=1792579058;
+	bh=+miq/7YoU/WJ1P7kIq5mOVwXcpwS8c3F8YVo5eptDhA=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=W4+S2P/oHh0p5IYcHijA9p+Ow8TzAnM2c5eIx+ipL4l2uaQaZjTZtZ/hcG32BAZxb
-	 d7pcFbk54jZb77uWM3yTf1meaiynAVEWzJzH0y708zCqkJXS0SbI2jurx0fV+vi5xl
-	 RqUTJ/twRXEg/RZIomlPsvfG32OGPbdLaLZJi1w8HGY/j5UyXg3waxqJ4B25KOPuDm
-	 aIOhW0RFm0H62q4JpdKAwI8ky5NaVVf8A30LxhsaOnNBVoHiz5dCnC3ob0WtWfMY9U
-	 BtxnH2VIMk9s4GA/PHHuMWbpk5j5XSdpU8lc41IN1SiVUgKStuojoltgUGisBzfohM
-	 LUMHfDFd1f5XA==
-Message-ID: <sashiko-outbox-180105@kernel.org>
+	b=DYm/pGPBLfKtLyDsbZ5gyWVhE9w2FpbxSoDUDJeBOS2DhzCM9CJKj/9Y9D7U8D4We
+	 haUScRKyjVBUaZSfQsb7d7PtboaM4hQCqJga4NOg1Lu9SgoRfttCncWBDhpACrvr6n
+	 pnfwt41z8TvudromuiuIIt/fAtYuyTs60GTR6eXlGXQXzkpyraoU6RtpSCLDZuSc06
+	 jxBXFQY+dq0CtmnbEFTbmMgQdaQpDkFOVC/eKraPedCHLVnvrcARSQ0s8QjkphivkC
+	 AAKTEUKRSZJXO153HehAQ//27C1Ul0yMt44GGankzgX16yYTIxL4/8CLtai6qOqcSd
+	 pJXZTzzU/S5pw==
+Message-ID: <sashiko-outbox-180108@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 07/14] scsi: qla2xxx: Skip vport DPC processing during
- vport deletion
+Subject: Re: [PATCH 12/14] scsi: qla2xxx: Yield work_lock in fabric scan
+ path
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nilesh Javali" <njavali@marvell.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20261021102310.3854868-8-njavali@marvell.com>
+In-Reply-To: <20261021102310.3854868-13-njavali@marvell.com>
 References: <20261021102310.3854868-1-njavali@marvell.com>
- <20261021102310.3854868-8-njavali@marvell.com>
+ <20261021102310.3854868-13-njavali@marvell.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 21 Oct 2026 10:36:07 +0000
+Date: Wed, 21 Oct 2026 10:37:38 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -63,110 +63,103 @@ Precedence: list
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] scsi: qla2xxx: wrong vha delete_progress check in qla2x00_do_dpc_a=
-ll_vps()
+- [High] scsi: qla2xxx: wrong lock targeted with trylock loop in qla_fab_sc=
+an_finish()
 --
 
-commit 4fbe8fb96efa7d2224539e8ec6860bb2e6e4ec2d
-Author: Manish Rangankar <mrangankar@marvell.com>
+commit 97d6a044424099a02acc895f356a103166186107
+Author: Nilesh Javali <njavali@marvell.com>
 
-scsi: qla2xxx: Skip vport DPC processing during vport deletion
+scsi: qla2xxx: Yield work_lock in fabric scan path
 
-This commit attempts to prevent a race between virtual port dpc processing =
-in
-qla2x00_do_dpc_all_vps() and virtual port deletion by checking the
-delete_progress flag before invoking qla2x00_do_dpc_vp(). A later commit in
-the series ("scsi: qla2xxx: Fix use-after-free races during vport deletion")
-updates this check from vha to vp, and another follow-up commit ("scsi:
-qla2xxx: Re-acquire vport_slock and refresh tvp during vport DPC") further
-updates the loop.
+This commit replaces spin_lock_irqsave(&vha->work_lock, flags) in
+qla_fab_scan_finish() with a spin_trylock_irqsave() and cond_resched() loop
+to avoid a hard lockup observed during vport deletion.
 
-> diff --git a/drivers/scsi/qla2xxx/qla_mid.c b/drivers/scsi/qla2xxx/qla_mi=
-d.c
-> index 4ad23d206add2..f7a08bc0093a5 100644
-> --- a/drivers/scsi/qla2xxx/qla_mid.c
-> +++ b/drivers/scsi/qla2xxx/qla_mid.c
-> @@ -439,7 +439,7 @@ qla2x00_do_dpc_all_vps(scsi_qla_host_t *vha)
+> diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
+> index efe98609c149d..31308a6148585 100644
+> --- a/drivers/scsi/qla2xxx/qla_gs.c
+> +++ b/drivers/scsi/qla2xxx/qla_gs.c
+> @@ -3386,7 +3386,9 @@ void qla_fab_scan_finish(scsi_qla_host_t *vha, srb_=
+t *sp)
+>  	recheck =3D 1;
+>  out:
+>  	qla24xx_sp_unmap(vha, sp);
+> -	spin_lock_irqsave(&vha->work_lock, flags);
+> +	/* Avoid hard lockup: yield if work_lock is held instead of spinning */
+> +	while (!spin_trylock_irqsave(&vha->work_lock, flags))
+> +		cond_resched();
+>  	vha->scan.scan_flags &=3D ~SF_SCANNING;
+>  	spin_unlock_irqrestore(&vha->work_lock, flags);
 > =20
->  	spin_lock_irqsave(&ha->vport_slock, flags);
->  	list_for_each_entry_safe(vp, tvp, &ha->vp_list, list) {
-> -		if (vp->vp_idx) {
-> +		if (vp->vp_idx && !vha->flags.delete_progress) {
 
 [Severity: High]
-Should this check vp->flags.delete_progress instead of
-vha->flags.delete_progress?
+Is this targeting the right spinlock for the hard lockup shown in the commit
+message, and is a trylock loop safe here?
 
-In drivers/scsi/qla2xxx/qla_mid.c:qla2x00_do_dpc_all_vps(), vha is always t=
-he
-base physical host:
+In the qla2x00_iocb_work_fn() -> qla2x00_do_work() -> qla_fab_scan_finish()
+path, the static helper qla2x00_is_a_vp() is inlined into the
+max_fibre_devices scan loop in qla_fab_scan_finish():
 
-	if (vha->vp_idx)
-		return;
+drivers/scsi/qla2xxx/qla_gs.c:qla2x00_is_a_vp() {
+	...
+	spin_lock_irqsave(&ha->vport_slock, flags);
+	list_for_each_entry(vp, &ha->vp_list, list) {
+		twwn =3D wwn_to_u64(vp->port_name);
+		if (wwn =3D=3D twwn) {
+			rc =3D 1;
+			break;
+		}
+	}
+	spin_unlock_irqrestore(&ha->vport_slock, flags);
+	...
+}
 
-Each virtual port on ha->vp_list is represented by the loop iterator vp, and
-drivers/scsi/qla2xxx/qla_attr.c:qla24xx_vport_delete() only sets
-flags.delete_progress on the virtual port being deleted, never on the base
-physical host. Checking vha->flags.delete_progress here causes the condition
-to remain true for deleting virtual ports, allowing qla2x00_do_dpc_vp(vp) to
-continue running concurrently with teardown and potentially causing a
-use-after-free or null pointer dereference.
+drivers/scsi/qla2xxx/qla_gs.c:qla_fab_scan_finish() {
+	...
+	for (i =3D 0; i < vha->hw->max_fibre_devices; i++) {
+		...
+		/* Bypass virtual ports of the same host. */
+		if (qla2x00_is_a_vp(vha, wwn))
+			continue;
+		...
+	}
+}
 
-Although the follow-up commit "scsi: qla2xxx: Fix use-after-free races duri=
-ng
-vport deletion" changes this to check !vp->flags.delete_progress, this comm=
-it
-is broken on its own and is tagged for stable.
+Looking at the registers in the backtrace:
+- rbp is 0xffff98b803e60a58, which is vha (at the shost_priv offset 0xa58),
+  where &vha->work_lock at offset 0x30 would be 0xffff98b803e60a88.
+- rdi (the lock pointer passed to _raw_spin_lock_irqsave) is
+  0xffff98b149ff6488, which is at offset 0x488 of struct qla_hw_data *ha
+  (0xffff98b149ff6000), matching &ha->vport_slock (as also seen in commits
+  79b305e1e477, 0334585318b2, and 200e63c70fc1).
+- r10 and r15 hold 0x2100000eddd08241 (the 64-bit port name wwn passed to
+  qla2x00_is_a_vp(vha, wwn)), r13 holds 0xffffb9a8a4555000 (vha->scan.l),
+  rcx holds 0x800 (vha->hw->max_fibre_devices), and r12 holds 0xc000
+  (2048 * sizeof(struct fab_scan_rp)).
 
-Additionally, even when checking vp->flags.delete_progress, is delete_progr=
-ess
-set early enough in drivers/scsi/qla2xxx/qla_attr.c:qla24xx_vport_delete() =
-to
-prevent races with qla2x00_do_dpc_vp()?
+This indicates the worker was spinning on &ha->vport_slock inside
+qla2x00_is_a_vp() rather than on &vha->work_lock at the out label.
 
-In drivers/scsi/qla2xxx/qla_attr.c:qla24xx_vport_delete():
+In addition, vha->work_lock is not taken in the vport delete path
+(qla24xx_vport_delete() -> qla24xx_disable_vp() ->
+qla24xx_deallocate_vp_id()) and is only held across short, non-blocking flag
+and list updates with interrupts disabled. By contrast, ha->vport_slock
+protects ha->vp_list during vport deletion, where several
+list_for_each_entry_safe(vp, tvp, &ha->vp_list, list) loops (such as in
+qla2x00_abort_isp_cleanup(), qla2x00_abort_isp(), qla2x00_quiesce_io(),
+qla82xx_restart_isp(), and qla_pci_error_cleanup()) drop and re-acquire
+ha->vport_slock without refreshing tvp if qla24xx_deallocate_vp_id() removes
+an entry via list_del_init(&vha->list).
 
-	set_bit(VPORT_DELETE, &vha->dpc_flags);
-
-	while (test_bit(LOOP_RESYNC_ACTIVE, &vha->dpc_flags))
-		msleep(1000);
-
-
-	qla24xx_disable_vp(vha);
-	qla2x00_wait_for_sess_deletion(vha);
-
-	qla_nvme_delete(vha);
-	qla_enode_stop(vha);
-	qla_edb_stop(vha);
-
-	vha->flags.delete_progress =3D 1;
-
-	qlt_remove_target(ha, vha);
-
-	fc_remove_host(vha->host);
-
-	scsi_remove_host(vha->host);
-
-	/* Allow timer to run to drain queued items, when removing vp */
-	qla24xx_deallocate_vp_id(vha);
-
-Before flags.delete_progress is set, qla24xx_vport_delete() has already
-waited for resync, disabled the vport, deleted sessions, and stopped
-nvme/enode/edb. Could qla2x00_do_dpc_vp(vp) still enter during that window =
-to
-start a new loop resync, configure the vport, process purex items, or queue
-relogin work, and then continue executing concurrently with
-qlt_remove_target(), fc_remove_host(), and scsi_remove_host() before
-qla24xx_deallocate_vp_id() waits for vref_count to drain?
-
-Would it be safer to check test_bit(VPORT_DELETE, &vp->dpc_flags) here, mat=
-ching
-drivers/scsi/qla2xxx/qla_mid.c:qla2x00_alert_all_vps()?
-
->  			atomic_inc(&vp->vref_count);
->  			spin_unlock_irqrestore(&ha->vport_slock, flags);
->
+Could replacing spin_lock_irqsave(&vha->work_lock, flags) with a
+spin_trylock_irqsave() + cond_resched() loop also introduce regressions by
+bypassing queued spinlock fairness and realtime priority inheritance,
+busy-looping without cpu_relax() while toggling interrupts when
+need_resched() is false, or livelocking the qla2xxx_wq worker if the lock is
+ever stuck (leaving scan_flags with SF_SCANNING set and hanging
+flush_workqueue(vha->hw->wq) in qla2x00_wait_for_sess_deletion())?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261021102310.3854=
-868-1-njavali@marvell.com?part=3D7
+868-1-njavali@marvell.com?part=3D12
