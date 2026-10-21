@@ -1,66 +1,61 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=199.89.1.14
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792614556;
-	b=oD5l6zt/YIMeVyNu4b0zsaYwpUaLZ+cbdnUctLXL6YyxtD0Fg/0sS+gpo5YALTc0N+nW
-	 QU+TqUIBjaKA7NQa3Uo+McRagZbepi0BZi/8O1+JUIBTI/lGhT5qmWyHrAvGBCni1nvqm
-	 cr8XsCWf2SvJACBv+o+QzQCPCK6EwV758xTBzUkvBL1yraYfvinMwVvn+ZphDn20WNZOr
-	 QALa0rJd2SFu5ss9oZHZbGS2mS0Hy08Wh3MRzrB6imxO3m8/QElDOyuHeH4a1LSsoouZi
-	 idjmmDFkkOwHDXgHfSbvvh5l2x2h/rAmFJhC3aVoLu4iIbjmQ8e+GO2iHtv2GFIczuw==
+	t=1792615394;
+	b=1etMaZXVMGCch1gjVQwbe4CfIMaa8ZW+gJvuQ3BUk/0aih5LZlbh+H41zrcxtUmHpDlz
+	 0ZxIdVVT+B0FVqczoNrLlSTyhaX5DaIEnxa3VfZgMwsG95g5OXZWDin2YSJ/E0A9yVZqm
+	 4MyQ6SArqttiDDkES3+KqNSBKEOeU35Vzua4w4KaDuR1Kz24q6X35uc4rLInCUY4kDW/V
+	 jnnn7NPcFEBGNzaG9sovFzaP8EOKrLjztu9KfuR7kFrMvcYKG1o+ilrfIKX/jaI+4Jx0r
+	 lQjVQt2Jbg/HbAGx4Pa+xc6fKtYNajQV8Ml0oSEsvJnTk6VIP3UkAAhV5lVNkPJM/5A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792614556;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Virus-Scanned:Received:
-	 Received:Message-ID:Date:MIME-Version:User-Agent:Subject:To:Cc:
-	 References:Content-Language:From:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=N67W64rLQ7g17jQDap7JCizaVRTo5hdYxloLj3MCFzE=;
-	b=dfgM8R9BZ/Movaukg1bbP76cDrKJPAolFYiuC1A3BkigmE9yxC1bwU3OJotEE25bycrt
-	 EnWHDWXn/HsqPlhjAfeVQ2ILPy0AGy1SHZew7YM0AjO/fqWJOX7YU0K+MjFS79Wg4XIjl
-	 ID5/tP2EaCf2eRLjk+1XZABgdZcGWIcoajCMvt99yGsrbOnxle9aZQ9xJH1WFpfMPpUUp
-	 HX9QOXoqqOLnf3X8YRW5xiCqfbNGtRDogTgIxvf8g0vE2FuR15JgIR8TwIlf9LVXzsWjC
-	 xtjpFECi/uZWetVj00udfZ+lBxk39GU2QzYdIK0YirL9hewQSqyOtgRlCTrcV64DsMQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792615394;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=X+hgZpi6s8zitINqxdtV3NY32G2toc0s1ujAuu40Bds=;
+	b=JWsjWYs/6POFVc0FE2/auMT3d2UDTF/8v0JumvEsdEjShfelE04FPl0Un/FPefxgbDVR
+	 60gT6LKUSTa4LQqmzqsb2e4cSACyGUFoashCfPIOcpc24M82lp73R4ZHQaewQOjYx0Cm+
+	 5SJJd8sNpNG+DooXvQ6yYwpJs8jOEjce6V8tsuFEIFyZlTYtFbKZvIRzsIXQLyVE4pnM3
+	 hmg8IMGp31FH6FnqadBcl031ygjS7fMsF6s4afk0iWkSgEfFfHmKw97YXjYONqFYhmsMG
+	 hxEJfXLytJ9c7RWQgkkCz1Rokdf9Ck89U/S9ig/J5jWYwM4U2EV9ST3EEjWy8jetqvQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=acm.org;
-	spf=pass smtp.mailfrom=acm.org;
-	dkim=pass header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=QHPxv1NM;
-	arc=none smtp.remote-ip=199.89.1.14
-Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=WCvT85l+;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90588606A31E;
-	Wed, 21 Oct 2026 20:29:15 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 90588606A31E
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA901606A31A;
+	Wed, 21 Oct 2026 20:43:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=QHPxv1NM
-Received: from localhost (localhost [127.0.0.1])
-	by 011.lax.mailroute.net (Postfix) with ESMTP id 4j918j3zbpz1XM4Tn;
-	Wed, 21 Oct 2026 20:29:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1792614546; x=1795206547; bh=N67W64rLQ7g17jQDap7JCiza
-	VRTo5hdYxloLj3MCFzE=; b=QHPxv1NMCk15Xlf6/G+reX5rINWJl4zYj0M4Kf4R
-	xAyys6kf/AWITd9MxzSjMJTTyt4pQrY+2aLSkfrgAiZ60A4xSQrfPIRzveqo3Xg5
-	VocnHkgHzYfFrs/IpeCJNcGLPotcHic4/UW4JVsjrNRhLo5gSlHwS80xHNKI1J62
-	lTJ9pqbUmUhHmV6vPIfN+bm1FJ1WtkoDdxs+usZ1/3HdUmpgdf2wyvkbcUYAPhbA
-	cc442VNaSFnql/Ap2fVpb0A8tQBldBt9U0A3IGHoRzzi1hmFzMmyDiJNmngSQ1DU
-	jfIW4Dy92EsmZdQlAhRzpZcHy2G2gWutrcLS4mRC1iWNDw==
-X-Virus-Scanned: by MailRoute
-Received: from 011.lax.mailroute.net ([127.0.0.1])
- by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id SAEBwvzpxHju; Wed, 21 Oct 2026 20:29:06 +0000 (UTC)
-Received: from [IPV6:2a00:79e0:2ed2:d:9952:bdcb:9eec:da8c] (unknown [104.135.182.40])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4j918d1w4jz1XM4Tl;
-	Wed, 21 Oct 2026 20:29:05 +0000 (UTC)
-Message-ID: <eb20226b-cfae-4b10-b42c-1b12c2d17687@acm.org>
-Date: Wed, 21 Oct 2026 13:29:04 -0700
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=WCvT85l+
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C56C61F000C1;
+	Wed, 21 Oct 2026 20:43:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1792615393;
+	bh=X+hgZpi6s8zitINqxdtV3NY32G2toc0s1ujAuu40Bds=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=WCvT85l+M7vTXVdOSjvWu80mi6GWub+PZZf3lI8wNnsP/A/vd2Xa6CnSvLHJF1lYJ
+	 ldFG4vYTZ4hx0b0/Uu0Iz19+/9418gCW0jP79P/LMsCtGL4YnMULwet2uEGibn1jh8
+	 pbjUcYUH424ZeWdOvaP0RHhndcc6u7bQnNKyzAOAunAUt8/xRIqQHYbc77/eKe46wD
+	 o6b8akppup4YR0drKqecUYAaRet3P9REgqiSo+CzN/r7TUHmdZe7HSFqvCkxbnpCoZ
+	 KCp1zteSv40HEZNvYL+U6u4dhQtinkxeKoHLjN1O0P0bB0gduZ9PAAMY0MAfPrUb2v
+	 9wOy2B/bMwq0g==
+Date: Wed, 21 Oct 2026 14:43:11 -0600
+From: Keith Busch <kbusch@kernel.org>
+To: Runyu Xiao <runyu.xiao@seu.edu.cn>
+Cc: Christoph Hellwig <hch@lst.de>, Breno Leitao <leitao@debian.org>,
+	Andreas Hindborg <a.hindborg@kernel.org>,
+	Sagi Grimberg <sagi@grimberg.me>,
+	Chaitanya Kulkarni <kch@nvidia.com>,
+	Logan Gunthorpe <logang@deltatee.com>,
+	"Martin K. Petersen" <mkp@kernel.org>,
+	Lee Duncan <lduncan@suse.com>, Hannes Reinecke <hare@suse.com>,
+	Nicholas Bellinger <nab@linux-iscsi.org>,
+	linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
+	target-devel@vger.kernel.org, linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org, Jianhao Xu <jianhao.xu@seu.edu.cn>
+Subject: Re: [PATCH v6 0/4] nvmet: avoid recursive configfs open
+Message-ID: <atkj3yg7e_ff1vt2@kbusch-mbp>
+References: <20260926092148.128937-1-runyu.xiao@seu.edu.cn>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -70,45 +65,24 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] scsi: handle out-of-range SG_SET_TIMEOUT values
-To: Wang Yingjie <x-professor@outlook.com>, "mkp@kernel.org"
- <mkp@kernel.org>, "axboe@kernel.dk" <axboe@kernel.dk>
-Cc: "fujita.tomonori@lab.ntt.co.jp" <fujita.tomonori@lab.ntt.co.jp>,
- "James.Bottomley@HansenPartnership.com"
- <James.Bottomley@HansenPartnership.com>,
- "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
- "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <9321a59c-c560-4742-8b71-5b0ec1f30c2f@acm.org>
- <20261021181804.136336-1-x-professor@outlook.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20261021181804.136336-1-x-professor@outlook.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260926092148.128937-1-runyu.xiao@seu.edu.cn>
 
-On 10/21/26 11:18 AM, Wang Yingjie wrote:
-> diff --git a/block/bsg.c b/block/bsg.c
-> index 82aaf3cee5825..632b3f6d98b29 100644
-> --- a/block/bsg.c
-> +++ b/block/bsg.c
-> @@ -132,7 +132,11 @@ static long bsg_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
->   	case SG_SET_TIMEOUT:
->   		if (get_user(val, intp))
->   			return -EFAULT;
-> -		bd->timeout = clock_t_to_jiffies(val);
-> +		if (val < 0)
-> +			return -EIO;
-> +		bd->timeout = min_t(unsigned long, clock_t_to_jiffies(val),
-> +				    min_t(unsigned long, UINT_MAX,
-> +					  MAX_JIFFY_OFFSET));
+On Sat, Sep 26, 2026 at 05:21:44PM +0800, Runyu Xiao wrote:
+> Several configfs store callbacks open user-configured paths while holding
+> the item's frag_sem.  If a configured path resolves into configfs, the open
+> can re-enter __configfs_open_file() and try to acquire the same
+> non-recursive semaphore again.
+> 
+> Add helpers in configfs for opening non-configfs paths, then use them in the
+> nvmet file-backed namespace and passthru paths.  The series also pins the
+> target-core db_root path and uses the root-relative helper for ALUA and APTPL
+> metadata, so the helper has its target-core consumer in the same series.
 
-MAX_JIFFY_OFFSET is guaranteed to be larger than UINT_MAX so the second
-min_t() expression can be changed into UINT_MAX. Additionally, please
-use min() instead of min_t(). min() has been modified recently such that
-it allows some type promotions.
+For the nvme changes:
 
-Thanks,
+Acked-by: Keith Busch <kbusch@kernel.org>
 
-Bart.
+The bulk of the series is outside nvme though, so probably should go
+through a different tree.
