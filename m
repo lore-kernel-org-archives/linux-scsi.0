@@ -1,93 +1,88 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.41
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=148.163.156.1
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792687811;
-	b=gYfcFdBbjwet3FOqLkvhMrYWu9kFju6fu1pSCTeDQJHXJP4GrnlqxvnsYBC9HfO/VSKU
-	 5/VPPy2L+WFonC2SuKeo4mv/ScPQvbWgjnXxR6G8cp+ch6m6s5k9GGISRFe83bIP/Kmn/
-	 ZiJDcWSVNoxFjwe9ZG2J4F8TYrlMOWSqqeBaA0dwhgCCwK4jy3KzATxyaOZU3WvPDoDm9
-	 Sl7fCtcKUdd6qImCG2pzavKEyaq874iRN9cMIWv4euwf+vdCCrjIZIEFALq3v8yS8OFNr
-	 yT9aHhMGf27wTsB+kdLB6Lnm7Cc/ikDm8CXaDzwqZTPlh4hmf5sjhsM0MBqDlwE2eqg==
+	t=1792688951;
+	b=18+2Q/Tjqrz4py6QY4xJEtzEaxMbdfdMSI7zrADKTv1NHwm0TBZpfl2FjNtESsy1AFrN
+	 W+doMslPrebGQat3GeiLi7OC3APx+GCAj/BA0Xm0Gugh+1cnXmJqq61cSXi3NPjfTjWdq
+	 tcJzAK9qyPRn/VUuSrItlhxYIT+W86hxZFMWPyjy7VXSYGb7UNejsu4vK4wxosHlI7j/5
+	 4RuDWVzbrCVV6bqohU0ft1XIMYb0vFLtWvcJMEjbrpaunPHtBzGwPN+CICDB7WyFUnc5P
+	 M9mIoNz7E84IoY7uqZm8pqpG4lxMTOpFQmRFE/ne9gFYFrR8r3qJ+nSGY8Mi5NPQHtg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792687811;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=DYshgIa6KnBet2+0IXua2x2TyzIJmXFM77y+p9+FuZQ=;
-	b=EFg73vT6fsVAYLtoHR3pRMK18AML7VByMiUvqLxhDdqvByN8Fz3Hb9USM4GZwI5jhsU8
-	 XWP+YurC6TF/7S5hU37V9IV7D2VrNKASUuVA2NJeoLk41ELpZ1y4oFPqGG8qDUyGNqML/
-	 qulmfX7bC5r6jbJ8jl+CA8jkjQASh+9aodKffVs6+k02zYduFtJ3TVipiQ8bRhk0WDPCG
-	 2M6+KKzq6xWBJd4WuOkZ+vkAevvUQxmUSMHEu5SYruESW3fYu47B0Ma5T703Zppt57GEb
-	 bU/8au66Aa22QSEL+Gspi7XcOcDM7bsFi593oAPtqhHLjoLeb5x9NYcYASp8W1Ze5Mw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792688951;
+	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:Received:
+	 Received:Received:Received:Received:From:To:Cc:Subject:Date:
+	 Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
+	 Content-Transfer-Encoding:X-TM-AS-GCONF:X-Proofpoint-Spam-Info:
+	 X-Proofpoint-Spam-Details-Enc:X-Proofpoint-GUID:X-Authority-Analysis:
+	 X-Proofpoint-ORIG-GUID:X-Proofpoint-Virus-Version:
+	 X-Proofpoint-Spam-Details;
+	bh=AJ5ANGdJVaZH+wUzAzhVB5ljNnp6sprJ0+FTwXBhctY=;
+	b=dfk7ZIpaa45X/ynMPxK5jx1aTaK0NAlGhrG1hW9LQWwfmdRzs80FjuUnblaINRKctS0r
+	 ocjTaVnbMjTf8aOw/d0GEhlNkfY/MAlFSD5ic2wfke97S1hbMDhKy6Qx0zCo7551LVUHO
+	 WfDaYDXeLywrKI/A1I6/4ZlegiIuXRx/MW7RlB2e2awT/IUEsokJvVuq+pqvSE9a6rHHN
+	 X2Uhj4ipjwrYNPPu86f/LSM69+CS2+xnsye2T91szt+FwZ/91AD4WlIV/zxJ++RhJgU87
+	 CMxwxQzY4ii7r5eRUknZQQf0NzzxqHhPaVnTLr9KinYxlNb8Ysnnyz3QmXa93bfW03g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b="nus/qRN7";
-	arc=none smtp.remote-ip=209.85.216.41
-Received: from mail-pj1-f41.google.com (mail-pj1-f41.google.com [209.85.216.41])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=pass header.from=linux.ibm.com;
+	spf=pass smtp.mailfrom=linux.ibm.com;
+	dkim=pass header.d=ibm.com header.i=@ibm.com header.a=rsa-sha256 header.s=pp1 header.b="OWcdFwX/";
+	arc=none smtp.remote-ip=148.163.156.1
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B4F6606A31D
-	for <linux-scsi@vger.kernel.org>; Thu, 22 Oct 2026 16:50:10 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3B4F6606A31D
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D519606A319;
+	Thu, 22 Oct 2026 17:09:11 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5D519606A319
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=nus/qRN7
-Received: by mail-pj1-f41.google.com with SMTP id 98e67ed59e1d1-3ad787e0593so15809a91.3
-        for <linux-scsi@vger.kernel.org>; Thu, 22 Oct 2026 09:50:10 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792687809; x=1793292609; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=DYshgIa6KnBet2+0IXua2x2TyzIJmXFM77y+p9+FuZQ=;
-        b=nus/qRN7Tkld78bj3tzJ6Nx4QFUDBHzOCLPO/PimuYIVcI7+dVmbPTw7K9WR+Jsww3
-         o7DIsENk8rW7Peienxm8dB/tzVLd5Vum320SXU7uJN8ykGHXnF6A9vM9/seZ5upCMI77
-         m+VXwJstz78OED2Wq1Yq4JlRUMInBKRz9RzW5nBLHcFqSuJqLV2cFs2/QOiQkG6p9/w3
-         RHBT88gK6TMEWYhIwnZGHIO7vBEzyJLuknEwElthdRTi4tTPLnmv2Tk7JZaaGmpQKk1V
-         TDX91oF8kDMwXi1IIH+Kivp5fBeXZCzYQqAmPkLrj3yLFa1Mfm/+nqPlefMpKcovBv54
-         qb3Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792687809; x=1793292609;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=DYshgIa6KnBet2+0IXua2x2TyzIJmXFM77y+p9+FuZQ=;
-        b=ea7HGETs6GlmI/YDNQ0Uk7vyH1kW7Cy533/gAMwyAh2ALrsm+4ZD/5FKG4E2JZ2y3w
-         EucoLP/8bsiAyYPBUm+ZBYTBPk0kdm7icMAGTYd/Vzy06/qOsr8tnGaxc7JVmy8h7KpS
-         4ic1MdBDBs1klQ+3K9B4oiT5McW8FoFUKb70040tfLwv0koYby0V+aY05jSpCG8VR/fB
-         PB9QMtZPIi6pEC008BDUyxrQKXjBKPP4VF6bEZFmsEpiGoLkLv+/q1qnCSCSneIdFJai
-         ZosdfgJXCxWGb/sPD5TiuKqeaXo9tKlvy7G4r7uZgrSphDgGAgDxuZMiLEMfzWaHt7RX
-         X3BA==
-X-Forwarded-Encrypted: i=1; AKwUvBzj51YD2wNRygZVMqdahLhiGxPS+76ufHCHtne0jRR6DzBMtiCA+jnpRusYj4DQIoQIvSCxTVegMsyf@vger.kernel.org
-X-Gm-Message-State: AFq9FYK+iJJj5/78t6S6oDjwm5qWBOdjVBmATB1j/pLEq3SyjzUcfA+M
-	4Afqly/0bmVGXVvHd8qvgrRHChBcuoZj1dvvdV1Ve+h6y//CTw7D/RyzhXwY0OuD
-X-Gm-Gg: AYBFou3LnMLkpSKYiTCC9R1Y6L/Wz+eEyfjiENZ0eMbe4eY6MyJYmbItci+Z6Uqs2XH
-	AnJr8LDIKFfPAGseBPqhwQIr6Dxb/snikL/nZ0+W+8dNLNVkJ/oQ1Pescw83xr/xZ/oZD8q9Zuh
-	EEu9vv+olYMz3z34Oywq8mxYvN6R94a/FzUU5I1Z05BMklxnAB2GpubB/Jm64zNd8MjNnZ2iyhA
-	E61Bh6EJCVw0psp7qII0VHPZpuZK7STtTj2yG3uC/SJhSnfqK8xopA1geHgqYPSaYuHozcQAg0+
-	ZqJAiOI105eQNEPEumnHsiE8STlCfWEhETBR6g9RONxw0y9UFjsl0zMhGPBoMPRYSPESCT5jAcS
-	F4rXi25hdR/hr+lh/x0v6IuanqVx9P2bTj2QhNGOC82H9qCT/tb0SLQqQnxZ9iZOKILaD6dtx1R
-	d9K4Pl5CSttryM9IA51gf/UfaXqq/445mMZjzDYjLmyLcx1DkhCpnMIoHPTTC3Gp3byxs0XpA7A
-	BTcn/ml4VdYN4RVB1n/bCoPCPCjFRmcraX2FfyNP3kdCoLGfh0pM+cWyuqtVfOqgpvYwQYR
-X-Received: by 2002:a17:90b:4d06:b0:3ac:9e76:aa93 with SMTP id 98e67ed59e1d1-3ad86dbc0c6mr4089294a91.7.1792687809336;
-        Thu, 22 Oct 2026 09:50:09 -0700 (PDT)
-Received: from DESKTOP-NM9EKIA ([125.134.240.130])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3ada48bb3b6sm5160804a91.13.2026.10.22.09.50.06
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 22 Oct 2026 09:50:07 -0700 (PDT)
-From: Joonhoe Kim <26rote@gmail.com>
-To: mani@kernel.org,
-	mkp@kernel.org
-Cc: James.Bottomley@HansenPartnership.com,
-	bvanassche@acm.org,
-	linux-arm-msm@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: ufs: qcom: Reprogram ESI after a host controller reset
-Date: Fri, 23 Oct 2026 01:50:06 +0900
-Message-ID: <20261022165006.1275-1-26rote@gmail.com>
-X-Mailer: git-send-email 2.55.0.windows.5
+	dkim=pass (2048-bit key, unprotected) header.d=ibm.com header.i=@ibm.com header.a=rsa-sha256 header.s=pp1 header.b=OWcdFwX/
+Received: from pps.filterd (m0356517.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69MEEGXB132754;
+	Thu, 22 Oct 2026 17:09:10 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:date:from:in-reply-to:message-id
+	:mime-version:references:subject:to; s=pp1; bh=AJ5ANGdJVaZH+wUzA
+	zhVB5ljNnp6sprJ0+FTwXBhctY=; b=OWcdFwX/dHGym4TR/YqovfvBV6gx2cyLu
+	l4ZLPBpXfKYj7lm29Iu3wk1Ze20S+I+z3kN/f+VpbbZsxE8wj4ja6hfLOquViczz
+	TtjnbKdvHxYD9CPFaJcVC+vmiSOBb7mQjxadqU61U+NbpIRJaW0cp55MwS1NLojr
+	+tnbC3pucsoSZDy+Dg4b2XRS7k5wpy6m52K8Djbw3VrUb8zSGp8g0fX6bzAxTq7c
+	9xO9BiM/XSKWeL7R1ceuD7hEVC2dxfcYv4ITCJzCvdYk4sOFhR6wdlGqpV4l+qwH
+	mmM/dCim1q/h8pvnn5r7INRJu+7+VwxWVPrXSZnO2sdc7D+lJNibw==
+Received: from ppma22.wdc07v.mail.ibm.com (5c.69.3da9.ip4.static.sl-reverse.com [169.61.105.92])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4hdw5agdhb-1
+	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
+	Thu, 22 Oct 2026 17:09:10 +0000 (GMT)
+Received: from pps.filterd (ppma22.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma22.wdc07v.mail.ibm.com (8.18.1.11/8.18.1.11) with ESMTP id 69MEYr1Q604663;
+	Thu, 22 Oct 2026 17:09:09 GMT
+Received: from smtprelay06.fra02v.mail.ibm.com ([9.218.2.230])
+	by ppma22.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4hekdgg165-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 22 Oct 2026 17:09:09 +0000 (GMT)
+Received: from smtpav05.fra02v.mail.ibm.com (smtpav05.fra02v.mail.ibm.com [10.20.54.104])
+	by smtprelay06.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 69MH95FT48365860
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 22 Oct 2026 17:09:05 GMT
+Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 404722004B;
+	Thu, 22 Oct 2026 17:09:05 +0000 (GMT)
+Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 1875620043;
+	Thu, 22 Oct 2026 17:09:05 +0000 (GMT)
+Received: from tuxmaker.lnxne.boe (unknown [9.87.85.9])
+	by smtpav05.fra02v.mail.ibm.com (Postfix) with ESMTP;
+	Thu, 22 Oct 2026 17:09:05 +0000 (GMT)
+From: M Nikhil <nikh1092@linux.ibm.com>
+To: sashiko-reviews@lists.linux.dev, linux-s390@vger.kernel.org,
+        linux-scsi@vger.kernel.org
+Cc: niharp@linux.ibm.com, pasic@linux.ibm.com, bblock@linux.ibm.com
+Subject: [PATCH v13 1/2] zfcp: Replace sg-list with sg_table in zfcp_fsf_ct_els structure
+Date: Thu, 22 Oct 2026 19:08:27 +0200
+Message-ID: <20261022170828.4189701-2-nikh1092@linux.ibm.com>
+X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20261022170828.4189701-1-nikh1092@linux.ibm.com>
+References: <20261022170828.4189701-1-nikh1092@linux.ibm.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -98,97 +93,236 @@ List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMDIyMDA2NiBTYWx0ZWRfX4J4nteOMsn/8
+ E2sOgcjXHO4c4wWG5T1Fi4G5FJNLSXGkHBcy9iafEjvQOaE+yOTinPhsKTDUGIVIBW4jx4REFiL
+ KAM43LEb5pr8DOJh6T7FmxN4+4yElmc=
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDIyMDA2NiBTYWx0ZWRfX98viGQpoiamG
+ pCxA6qcV3kx2QcJXnjCn9fyBFQUVzlQNP83yOVO30VaYa/5Nl5sNOAtNOMfBCSnLNTeP6xm8sjN
+ YdvQ7RIfTA6b4iftlYPdoTJsaGTyf86A9JlPnG9PIkoH8iRzJTlfuIQF9flXJl+Swql6ka9pKZe
+ Y5qy30PJjCi2pUdniWBw6uENjMA1gkdkmGPh0rhFC1g6ChIfKFlTbfF+wz8bVYon4yrxiA34Akf
+ mtVbgCa/RxoLpQSiNsEnFNY6Wsjn9E6BdUOJE1mBxKJjhkrbC7E/shiGpe/NgrBoUsV3nE2hcpc
+ AGh9rSZ4bMvXklO/IKvQUMiYadWR/zYip5u51UA/uXpNsQuBScTmX5gmloWd0Ut6O2Oz8p3M5QH
+ og1dje/AI7kScomBNIhO0BsjiNb1+6JZ5tfacbm/BCnW5tUQlgYemkDWwQd+2OXVfDZDjNUp/C2
+ igEO/ggG7s+J1a725+w==
+X-Proofpoint-GUID: QW495p7KPgK_Q_x3gVQ4h7MBgmqrH9rZ
+X-Authority-Analysis: v=2.4 cv=JIKuIMKb c=1 sm=1 tr=0 ts=6ada4336 cx=c_pps
+ a=5BHTudwdYE3Te8bg5FgnPg==:117 a=5BHTudwdYE3Te8bg5FgnPg==:17
+ a=660iZSQnnn4A:10 a=VkNPw1HP01LnGYTKEx00:22 a=RnoormkPH1_aCDwRdu11:22
+ a=U7nrCbtTmkRpXpFmAIza:22 a=VnNF1IyMAAAA:8 a=SPISVwao-ayoBmANS60A:9
+ a=O8hF6Hzn-FEA:10
+X-Proofpoint-ORIG-GUID: QW495p7KPgK_Q_x3gVQ4h7MBgmqrH9rZ
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
+ definitions=2026-10-22_05,2026-10-21_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ suspectscore=0 malwarescore=0 lowpriorityscore=0 adultscore=0
+ priorityscore=1501 spamscore=0 phishscore=0 bulkscore=0 clxscore=1015
+ impostorscore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2610190000
+ definitions=main-2610220066
 
-ufs_qcom_config_esi() returns early once the ESI interrupts are set up.
-ufshcd_config_mcq() also calls it after every host controller reset,
-which clears the ESI base address, the vector mask and ESI enable. After
-the error handler has reset the controller, the completions then arrive
-only on the legacy interrupt while mcq_esi_enabled stays set.
+The zfcp_fsf_ct_els data structure is updated to replace the sg_req and
+sg_resp members, which are of type struct scatterlist, with request and
+response sg_table instances.
 
-Allocate the MSIs and request their interrupts only once, but program
-the ESI registers on every call. The MSI message is not cached for
-platform MSIs, so keep the one written at allocation.
+These sg_table structure reference the corresponding scatterlists
+(sg_req and sg_resp) maintained in struct zfcp_fc_req.
 
-Fixes: 519b6274a777 ("scsi: ufs: qcom: Add MCQ ESI config vendor specific ops")
-Signed-off-by: Joonhoe Kim <26rote@gmail.com>
+These changes allows to track the original and mapped scatterlist nents
+once zfcp is converted to use DMA-API for mapping the sg lists.
+
+Signed-off-by: M Nikhil <nikh1092@linux.ibm.com>
+Reviewed-by: Benjamin Block <bblock@linux.ibm.com>
+Reviewed-by: Nihar Panda <niharp@linux.ibm.com>
 ---
-Tested on a Lenovo Y700 Gen 5 (TB323FU, Kaanapali; out-of-tree board
-support) on v7.3-rc4 with commit b52d695d0620 ("scsi: ufs: core: Keep
-internal commands dispatchable during error handling") applied, forcing
-a full reset through the debugfs saved_err file: before,
-REG_UFS_MEM_CFG, ESILBA and ESIUBA read 0 after the reset and all
-completions came on the legacy interrupt; with this patch they come on
-the ESI interrupts again.
+ drivers/s390/scsi/zfcp_dbf.c | 16 ++++++++--------
+ drivers/s390/scsi/zfcp_fc.c  | 36 ++++++++++++++++++++++++------------
+ drivers/s390/scsi/zfcp_fsf.c |  6 ++++--
+ drivers/s390/scsi/zfcp_fsf.h |  9 +++++----
+ 4 files changed, 41 insertions(+), 26 deletions(-)
 
- drivers/ufs/host/ufs-qcom.c | 12 +++++++++---
- drivers/ufs/host/ufs-qcom.h |  2 ++
- 2 files changed, 11 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index fee9b54ba5e1..ea2a106cbe26 100644
---- a/drivers/ufs/host/ufs-qcom.c
-+++ b/drivers/ufs/host/ufs-qcom.c
-@@ -2414,7 +2414,9 @@ static void ufs_qcom_write_msi_msg(struct msi_desc *desc, struct msi_msg *msg)
+diff --git a/drivers/s390/scsi/zfcp_dbf.c b/drivers/s390/scsi/zfcp_dbf.c
+index 81fb8af408e9..f7e737e076bf 100644
+--- a/drivers/s390/scsi/zfcp_dbf.c
++++ b/drivers/s390/scsi/zfcp_dbf.c
+@@ -617,9 +617,9 @@ void zfcp_dbf_san_req(char *tag, struct zfcp_fsf_req *fsf, u32 d_id)
+ 	if (unlikely(!debug_level_enabled(dbf->san, ZFCP_DBF_SAN_LEVEL)))
+ 		return;
+ 
+-	length = (u16)zfcp_qdio_real_bytes(ct_els->req);
+-	zfcp_dbf_san(tag, dbf, "san_req", ct_els->req, ZFCP_DBF_SAN_REQ,
+-		     length, fsf->req_id, d_id, length);
++	length = (u16)zfcp_qdio_real_bytes(ct_els->sgt_req.sgl);
++	zfcp_dbf_san(tag, dbf, "san_req", ct_els->sgt_req.sgl,
++		     ZFCP_DBF_SAN_REQ, length, fsf->req_id, d_id, length);
+ }
+ 
+ static u16 zfcp_dbf_san_res_cap_len_if_gpn_ft(char *tag,
+@@ -627,9 +627,9 @@ static u16 zfcp_dbf_san_res_cap_len_if_gpn_ft(char *tag,
+ 					      u16 len)
  {
- 	struct device *dev = msi_desc_to_dev(desc);
- 	struct ufs_hba *hba = dev_get_drvdata(dev);
-+	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+ 	struct zfcp_fsf_ct_els *ct_els = fsf->data;
+-	struct fc_ct_hdr *reqh = sg_virt(ct_els->req);
++	struct fc_ct_hdr *reqh = sg_virt(ct_els->sgt_req.sgl);
+ 	struct fc_ns_gid_ft *reqn = (struct fc_ns_gid_ft *)(reqh + 1);
+-	struct scatterlist *resp_entry = ct_els->resp;
++	struct scatterlist *resp_entry = ct_els->sgt_resp.sgl;
+ 	struct fc_ct_hdr *resph;
+ 	struct fc_gpn_ft_resp *acc;
+ 	int max_entries, x, last = 0;
+@@ -698,9 +698,9 @@ void zfcp_dbf_san_res(char *tag, struct zfcp_fsf_req *fsf)
+ 	if (unlikely(!debug_level_enabled(dbf->san, ZFCP_DBF_SAN_LEVEL)))
+ 		return;
  
-+	host->esi_msg = *msg;
- 	ufshcd_mcq_config_esi(hba, msg);
+-	length = (u16)zfcp_qdio_real_bytes(ct_els->resp);
+-	zfcp_dbf_san(tag, dbf, "san_res", ct_els->resp, ZFCP_DBF_SAN_RES,
+-		     length, fsf->req_id, ct_els->d_id,
++	length = (u16)zfcp_qdio_real_bytes(ct_els->sgt_resp.sgl);
++	zfcp_dbf_san(tag, dbf, "san_res", ct_els->sgt_resp.sgl,
++		     ZFCP_DBF_SAN_RES, length, fsf->req_id, ct_els->d_id,
+ 		     zfcp_dbf_san_res_cap_len_if_gpn_ft(tag, fsf, length));
  }
  
-@@ -2442,8 +2444,10 @@ static int ufs_qcom_config_esi(struct ufs_hba *hba)
- 	struct ufs_qcom_irq *qi;
- 	int nr_irqs, ret;
+diff --git a/drivers/s390/scsi/zfcp_fc.c b/drivers/s390/scsi/zfcp_fc.c
+index 05d081297879..1fb6f2c3b607 100644
+--- a/drivers/s390/scsi/zfcp_fc.c
++++ b/drivers/s390/scsi/zfcp_fc.c
+@@ -393,10 +393,12 @@ static int zfcp_fc_ns_gid_pn_request(struct zfcp_port *port,
+ 	fc_req->ct_els.port = port;
+ 	fc_req->ct_els.handler = zfcp_fc_complete;
+ 	fc_req->ct_els.handler_data = &completion;
+-	fc_req->ct_els.req = &fc_req->sg_req;
+-	fc_req->ct_els.resp = &fc_req->sg_rsp;
++	fc_req->ct_els.sgt_req.sgl = &fc_req->sg_req;
++	fc_req->ct_els.sgt_resp.sgl = &fc_req->sg_rsp;
+ 	sg_init_one(&fc_req->sg_req, gid_pn_req, sizeof(*gid_pn_req));
+ 	sg_init_one(&fc_req->sg_rsp, gid_pn_rsp, sizeof(*gid_pn_rsp));
++	fc_req->ct_els.sgt_req.orig_nents = sg_nents(&fc_req->sg_req);
++	fc_req->ct_els.sgt_resp.orig_nents = sg_nents(&fc_req->sg_rsp);
  
--	if (host->esi_enabled)
--		return 0;
-+	if (host->esi_enabled) {
-+		ufshcd_mcq_config_esi(hba, &host->esi_msg);
-+		goto enable;
-+	}
+ 	zfcp_fc_ct_ns_init(&gid_pn_req->ct_hdr,
+ 			   FC_NS_GID_PN, ZFCP_FC_CT_SIZE_PAGE);
+@@ -558,12 +560,14 @@ static int zfcp_fc_adisc(struct zfcp_port *port)
+ 		return -ENOMEM;
  
- 	/*
- 	 * 1. We only handle CQs as of now.
-@@ -2481,12 +2485,14 @@ static int ufs_qcom_config_esi(struct ufs_hba *hba)
- 		}
+ 	fc_req->ct_els.port = port;
+-	fc_req->ct_els.req = &fc_req->sg_req;
+-	fc_req->ct_els.resp = &fc_req->sg_rsp;
++	fc_req->ct_els.sgt_req.sgl = &fc_req->sg_req;
++	fc_req->ct_els.sgt_resp.sgl = &fc_req->sg_rsp;
+ 	sg_init_one(&fc_req->sg_req, &fc_req->u.adisc.req,
+ 		    sizeof(struct fc_els_adisc));
+ 	sg_init_one(&fc_req->sg_rsp, &fc_req->u.adisc.rsp,
+ 		    sizeof(struct fc_els_adisc));
++	fc_req->ct_els.sgt_req.orig_nents = sg_nents(&fc_req->sg_req);
++	fc_req->ct_els.sgt_resp.orig_nents = sg_nents(&fc_req->sg_rsp);
+ 
+ 	fc_req->ct_els.handler = zfcp_fc_adisc_handler;
+ 	fc_req->ct_els.handler_data = fc_req;
+@@ -706,8 +710,10 @@ static int zfcp_fc_send_gpn_ft(struct zfcp_fc_req *fc_req,
+ 
+ 	ct_els->handler = zfcp_fc_complete;
+ 	ct_els->handler_data = &completion;
+-	ct_els->req = &fc_req->sg_req;
+-	ct_els->resp = &fc_req->sg_rsp;
++	ct_els->sgt_req.sgl = &fc_req->sg_req;
++	ct_els->sgt_resp.sgl = &fc_req->sg_rsp;
++	ct_els->sgt_req.orig_nents = sg_nents(&fc_req->sg_req);
++	ct_els->sgt_resp.orig_nents = sg_nents(&fc_req->sg_rsp);
+ 
+ 	ret = zfcp_fsf_send_ct(&adapter->gs->ds, ct_els, NULL,
+ 			       ZFCP_FC_CTELS_TMO);
+@@ -865,8 +871,10 @@ static int zfcp_fc_gspn(struct zfcp_adapter *adapter,
+ 
+ 	ct_els->handler = zfcp_fc_complete;
+ 	ct_els->handler_data = &completion;
+-	ct_els->req = &fc_req->sg_req;
+-	ct_els->resp = &fc_req->sg_rsp;
++	ct_els->sgt_req.sgl = &fc_req->sg_req;
++	ct_els->sgt_resp.sgl = &fc_req->sg_rsp;
++	ct_els->sgt_req.orig_nents = sg_nents(&fc_req->sg_req);
++	ct_els->sgt_resp.orig_nents = sg_nents(&fc_req->sg_rsp);
+ 
+ 	ret = zfcp_fsf_send_ct(&adapter->gs->ds, ct_els, NULL,
+ 			       ZFCP_FC_CTELS_TMO);
+@@ -924,8 +932,10 @@ static void zfcp_fc_rspn(struct zfcp_adapter *adapter,
+ 
+ 	ct_els->handler = zfcp_fc_complete;
+ 	ct_els->handler_data = &completion;
+-	ct_els->req = &fc_req->sg_req;
+-	ct_els->resp = &fc_req->sg_rsp;
++	ct_els->sgt_req.sgl = &fc_req->sg_req;
++	ct_els->sgt_resp.sgl = &fc_req->sg_rsp;
++	ct_els->sgt_req.orig_nents = sg_nents(&fc_req->sg_req);
++	ct_els->sgt_resp.orig_nents = sg_nents(&fc_req->sg_rsp);
+ 
+ 	ret = zfcp_fsf_send_ct(&adapter->gs->ds, ct_els, NULL,
+ 			       ZFCP_FC_CTELS_TMO);
+@@ -1090,8 +1100,10 @@ int zfcp_fc_exec_bsg_job(struct bsg_job *job)
+ 	if (!(atomic_read(&adapter->status) & ZFCP_STATUS_COMMON_OPEN))
+ 		return -EINVAL;
+ 
+-	ct_els->req = job->request_payload.sg_list;
+-	ct_els->resp = job->reply_payload.sg_list;
++	ct_els->sgt_req.sgl = job->request_payload.sg_list;
++	ct_els->sgt_resp.sgl = job->reply_payload.sg_list;
++	ct_els->sgt_req.orig_nents = sg_nents(ct_els->sgt_req.sgl);
++	ct_els->sgt_resp.orig_nents = sg_nents(ct_els->sgt_resp.sgl);
+ 	ct_els->handler_data = job;
+ 
+ 	switch (bsg_request->msgcode) {
+diff --git a/drivers/s390/scsi/zfcp_fsf.c b/drivers/s390/scsi/zfcp_fsf.c
+index d407f16e77ef..a3b99839da9e 100644
+--- a/drivers/s390/scsi/zfcp_fsf.c
++++ b/drivers/s390/scsi/zfcp_fsf.c
+@@ -1242,7 +1242,8 @@ int zfcp_fsf_send_ct(struct zfcp_fc_wka_port *wka_port,
  	}
  
-+	host->esi_enabled = true;
-+
-+enable:
- 	if (host->hw_ver.major >= 6) {
- 		ufshcd_rmwl(hba, ESI_VEC_MASK, FIELD_PREP(ESI_VEC_MASK, MAX_ESI_VEC - 1),
- 			    REG_UFS_CFG3);
- 	}
- 	ufshcd_mcq_enable_esi(hba);
--	host->esi_enabled = true;
- 	return 0;
- }
+ 	req->status |= ZFCP_STATUS_FSFREQ_CLEANUP;
+-	ret = zfcp_fsf_setup_ct_els(req, ct->req, ct->resp, timeout);
++	ret = zfcp_fsf_setup_ct_els(req, ct->sgt_req.sgl, ct->sgt_resp.sgl,
++				    timeout);
+ 	if (ret)
+ 		goto failed_send;
  
-diff --git a/drivers/ufs/host/ufs-qcom.h b/drivers/ufs/host/ufs-qcom.h
-index 944b2e532a09..d2647695abe3 100644
---- a/drivers/ufs/host/ufs-qcom.h
-+++ b/drivers/ufs/host/ufs-qcom.h
-@@ -5,6 +5,7 @@
- #ifndef UFS_QCOM_H_
- #define UFS_QCOM_H_
+@@ -1342,7 +1343,8 @@ int zfcp_fsf_send_els(struct zfcp_adapter *adapter, u32 d_id,
+ 	if (!zfcp_adapter_multi_buffer_active(adapter))
+ 		zfcp_qdio_sbal_limit(qdio, &req->qdio_req, 2);
  
-+#include <linux/msi.h>
- #include <linux/reset-controller.h>
- #include <linux/reset.h>
- #include <soc/qcom/ice.h>
-@@ -360,6 +361,7 @@ struct ufs_qcom_host {
- 	u32 phy_gear;
+-	ret = zfcp_fsf_setup_ct_els(req, els->req, els->resp, timeout);
++	ret = zfcp_fsf_setup_ct_els(req, els->sgt_req.sgl, els->sgt_resp.sgl,
++				    timeout);
  
- 	bool esi_enabled;
-+	struct msi_msg esi_msg;
+ 	if (ret)
+ 		goto failed_send;
+diff --git a/drivers/s390/scsi/zfcp_fsf.h b/drivers/s390/scsi/zfcp_fsf.h
+index 4b92e85ec71d..22e7fd933a78 100644
+--- a/drivers/s390/scsi/zfcp_fsf.h
++++ b/drivers/s390/scsi/zfcp_fsf.h
+@@ -487,8 +487,9 @@ struct zfcp_blk_drv_data {
  
- 	u32 saved_tx_eq_g1_setting;
- 	u32 boot_spare_cfg;
-
-base-commit: 2efb7a11f1aa4d2dc285fe2680cca22cb9f72f64
+ /**
+  * struct zfcp_fsf_ct_els - zfcp data for ct or els request
+- * @req: scatter-gather list for request, points to &zfcp_fc_req.sg_req or BSG
+- * @resp: scatter-gather list for response, points to &zfcp_fc_req.sg_rsp or BSG
++ * @sgt_req: sg_table for request, its sgl points to &zfcp_fc_req.sg_req or BSG
++ * @sgt_resp: sg_table for response, its sgl points to &zfcp_fc_req.sg_resp
++ *            or BSG
+  * @handler: handler function (called for response to the request)
+  * @handler_data: data passed to handler function
+  * @port: Optional pointer to port for zfcp internal ELS (only test link ADISC)
+@@ -496,8 +497,8 @@ struct zfcp_blk_drv_data {
+  * @d_id: Destination ID of either open WKA port for CT or of D_ID for ELS
+  */
+ struct zfcp_fsf_ct_els {
+-	struct scatterlist *req;
+-	struct scatterlist *resp;
++	struct sg_table sgt_req;
++	struct sg_table sgt_resp;
+ 	void (*handler)(void *);
+ 	void *handler_data;
+ 	struct zfcp_port *port;
 -- 
-2.43.0
+2.53.0
 
