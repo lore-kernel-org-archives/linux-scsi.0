@@ -1,88 +1,104 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.48
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.41
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792675800;
-	b=GrBgYNbF0fURt0vcefhyh3Pkun8gj4SXuV4UAdTiJX+zz0f9QSgw5PdASlCyLgwRbub/
-	 P0F2Mbe7xdpRPhspVbiP3NRcY9gmTlFrn0rC+//9H5LPohj3eQTiqj/xTCrBvZuDtTm2I
-	 baEhPPE5jVV4BNIsOHxmNIsbEWTNLruUEzRLMOjyS50iFbEozgm+gW1zrOic4YqW9faKs
-	 6BtJHHne4yOzYPEdDgWfVGuHoFEB9jxi8RKd0s/E1f/Vp8gb0yGn+BWi4xTirf2NSd3C9
-	 ext/kjW0eLvk3WfIVxDWZ9uhzIdfnfcNKcM5wPnsq0vjeUNj6GvlIJkTfms26P4HPaQ==
+	t=1792680343;
+	b=4Ie+TlWNBrRetRl0je3kGjEn8dK38j3iA6WM7aW5wG+tuMz4LO/0p6F11kcE7pCUO/LX
+	 NX+bD38HE5+Bu57i5NZnEeeSdjTqpwNko3krMSKkar940qwv2BYIEKewK1HUg+II4EStG
+	 gTNT0zvOyaqjYaUEZgsJfpjiURpjf/D2SUC40ZCXGD5V2uiDSQyAk8z0XecA32cGMrh3L
+	 ZsVkY1a/M/g7w5IhuKd1Re5zpGTBkVxaKKQhY9iOMBU/f5dWVGwC8R/E4nk1FuODL/810
+	 FNUpAiR44nugEunDd7o7GJ5VnZNBaTOUwZ3MQRZYNKYtqHV9EcE9fBPJDOkT9fMzo7g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792675800;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792680343;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Message-ID:Date:MIME-Version:User-Agent:Subject:To:Cc:References:
-	 Content-Language:From:In-Reply-To:Content-Type:
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=qTs7ITGH5Vm0O/b2VvByjBvC5hRyxCKXY/CuqHg+goE=;
-	b=X4dVUXMbpwX8FIx11tKyKVp6Ypz/Vi/KlSZWCKlkBxzU29smBzXVhJWG0xsF2/4j6Azy
-	 kvq46fAgHpRvrSXcD03QnvMxOJcXD8k/7L3jeWuIomWzuIdTTJuO7uf8d4larsyODTlOi
-	 PCZfILkalPZbQnPSvmL/0G6zu19EAkq8p1oAIFGNtyDorPvAKYOgokAYRmMDjkwxYogcX
-	 YXvZcJxno9X0QUJqeHAAXv+MfTntzN5AByDeZxyi7QDz0lbDl1yWMGjYDUjZtYWWRDw4U
-	 g0C648qmk2LZE5d+78JXEI4qf6t7qvcF1Lg5Iq7ESMxGbbPnNWtv5boSnd9gIwrryXw==
+	bh=YHBFmHAZzkTNwhPEuQe/n0EZjSl7NRJ9RBTHgn7pG6g=;
+	b=vb5K4gidjtorNlZ9HxlojEUgM4M27rbrD670qgbtnAugtTmNUGLBP9Ld0SxvSVU5gQqT
+	 qGx4LW8L8QL20GbHEHJoKi9TlJf1awf+mRx52r22YonpZfk1y9uBXqdbpBaDQ3RM0BoUn
+	 sB4g0J3yCCQvF1F1ZBU77OrYhCtrUWZlsZX5OE/o5KqZgzXP6RJFvuoLWaneOQdTYQGTk
+	 iN8EYTCqioaRIGLgqF5C4zO81XodHCZL9BMYVTdV7giJkbdJgBuftlFZBcBuzH2DqKO9H
+	 ifrMu1Jr5PGhkYNmrDMiE4LsICueTQTSGVA0vlaSZk6CoglaHyQGDjYVkADOMda47+g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=suse.com;
-	spf=pass smtp.mailfrom=suse.com;
-	dkim=pass header.d=suse.com header.i=@suse.com header.a=rsa-sha256 header.s=google header.b=UnnznAku;
-	arc=none smtp.remote-ip=209.85.128.48
-Received: from mail-wm1-f48.google.com (mail-wm1-f48.google.com [209.85.128.48])
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=MX4aGq+Z;
+	arc=none smtp.remote-ip=74.125.82.41
+Received: from mail-dl1-f41.google.com (mail-dl1-f41.google.com [74.125.82.41])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C70960A262B
-	for <linux-scsi@vger.kernel.org>; Thu, 22 Oct 2026 13:29:55 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6C70960A262B
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5959B606A322
+	for <linux-scsi@vger.kernel.org>; Thu, 22 Oct 2026 14:45:43 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5959B606A322
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=suse.com header.i=@suse.com header.a=rsa-sha256 header.s=google header.b=UnnznAku
-Received: by mail-wm1-f48.google.com with SMTP id 5b1f17b1804b1-4a2072b9832so3863995e9.1
-        for <linux-scsi@vger.kernel.org>; Thu, 22 Oct 2026 06:29:55 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=MX4aGq+Z
+Received: by mail-dl1-f41.google.com with SMTP id a92af1059eb24-157fe9d771bso2498672c88.0
+        for <linux-scsi@vger.kernel.org>; Thu, 22 Oct 2026 07:45:43 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1792675794; x=1793280594; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=qTs7ITGH5Vm0O/b2VvByjBvC5hRyxCKXY/CuqHg+goE=;
-        b=UnnznAkuDtGZE+MuoQei834/NZGnv+7Vu3YK0PkPpU0vwUPzY0P7vPsBfdCBwl1D7g
-         cDMgvm6L11UCVY634uIvYXoT301cHNuxy6xCGZwomfA5BcqKkBKwgphDojJzmW42m7yF
-         nZsOF3aj7f8myme7/ZAA5ACEV+B1OvvzCpRuMSqZGAZNuAiES68IdgYcIXt6kP5jlFRP
-         lxaajb5lltKGetqki+6nThGI6mtu4BZ4gT4LPreda2Yr5ihTPSWO7PSOFLXvma0SlABy
-         uOpEbcoLqT89POjef+36bd6+VJwTehl49AbT9dDCDWbVtSL3Kw3EDUgKzjdqTX4stHSI
-         hTZQ==
+        d=gmail.com; s=20251104; t=1792680342; x=1793285142; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=YHBFmHAZzkTNwhPEuQe/n0EZjSl7NRJ9RBTHgn7pG6g=;
+        b=MX4aGq+Z76FGWDcCUV1LNuRvEgXiZkCR1eq0l3RwGH0V2h9pF4ulMUXNn5dSFjqW0h
+         dvaIMrGEeu5BEQb/j8zn0XhshvClFROYk4h2ZW28nTXT48T5ArQH931fqAHdUOAFM4p9
+         Cxr5jFg2zRStIh6zh8a6kI/jpDiYNmLNO+1TsZEfy0BZYRKJtdTTP1DjjfMTd3K1k/ym
+         h4t75bJSWIoverA7ahvnVUnActI9LRbH2i9b/Tndc2tMA83g8lseNO+qnb6lWec7zavH
+         S6zcElnkrdUhivd4xhakT/4gvt5ladPKD61Xb1wbseoIaQnK0I72aOoiQF/xw1Ia9BFC
+         6fqw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792675794; x=1793280594;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=1e100.net; s=20260707; t=1792680342; x=1793285142;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=qTs7ITGH5Vm0O/b2VvByjBvC5hRyxCKXY/CuqHg+goE=;
-        b=gArkeCVrd53/qTa9usjYQ1PzSqlfogVGttkSuDj6O6LkO40cBHy7zEY1/HV55ELOvm
-         5gwyq3Zo6pQXsHdObyqoB7MBS6YWZYt1rYrJ0kRdyOtsAh2eTtt+hBQI2fcxSWaZ9r67
-         9QiCTZVA5+HBqLwptV19HsIbfSjUwhiDgj9x+Gr9s5SyrP2dl2AuTN6GUuU9br+XsMRn
-         jeyiHa7uvl+6LywnPwI/79qlpf8iTK5TxBz9lFgnaQgs64hcnYZzLY5Q8pASp6oePtLh
-         ZEkMsj+KMU6JzPM1QMhhQjgrAv3vz2hhmCyFn0zsv1ta0K4ZVYl6KAGSm4QTjQNz22iv
-         mbqw==
-X-Forwarded-Encrypted: i=1; AKwUvBzfzEqfxCsrylJgt/Rt+iB6/aCXIjrj4FcVCOdWWFLSfEpKacrNeAk+uNoeAQ2WaEc+v5NFeBUX30ww@vger.kernel.org
-X-Gm-Message-State: AFq9FYI5+sDVm74jO4qjim95Ck6EhFIiFh9Kcu2nUuv4NlTJ/fEHzdHa
-	wD2E81pNajJI5IydiiU33L++o4aM4wXZv8yXFeh8ChETIqnqqCIVludrB3dqdQukVg0=
-X-Gm-Gg: AYBFou1Ggm9fHySFmIVuuT7a9pY+0ACuekqDc20nlV0PIk89STqQJ7D2LFiyiCH0g0E
-	uRJMc1MFp/kYldLM+JxlLEZCpLS6PeToXPGGrKuxhkjZb/s9HZr9hEzmwYyP/ReWtPYk/1NgvAo
-	PhoRS8LgzhUnGgirzyqjYpQOY1C+wcOTAEfHqoGSa5GCM/i7EnVkaOqoftvTEPnxNeQME7kF5x4
-	OF2tcY1annwE/lva95zYDmZjV5eCFxciZEdoUoA1Cie/2EaGx+i98v3XmRt52Ok8ZBaWdedxr3y
-	33w2KEyOOKXVnGIm7O5PZFynGcanhUwxSOB1qb5Q+00jcGuhEgi/HVkpWD6yh4UXrt8evSBoQqb
-	SXVIDXSG9vOe4cdZgJnNr0OMkSemMibSNXPAd/rhd7GVhNmn5c+4UHHEreCQJShp4z+hK3jkUM6
-	ZimyiPGgA9mKaGGXIwhgI1MTLk2z4u94pOdnG32ZACHKxF7gsQPHeUhgcIuI8jnIOTFFRl6jMIJ
-	KMiTeGhwV6CdTIuPaI2N9HaADvatfsSYSQHLoR+rtqA6dwFMm1S9fuvX9GFnZGR72QvGQOxfmlG
-	2tPiIMklJ7Y5lYrvB10=
-X-Received: by 2002:a05:600c:6085:b0:4a1:a7f8:c124 with SMTP id 5b1f17b1804b1-4a204b04321mr42997325e9.7.1792675793804;
-        Thu, 22 Oct 2026 06:29:53 -0700 (PDT)
-Received: from ?IPV6:2001:a61:1362:6c01:90a6:c895:55cc:41c? ([2001:a61:1362:6c01:90a6:c895:55cc:41c])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a203a265afsm82566045e9.7.2026.10.22.06.29.53
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 22 Oct 2026 06:29:53 -0700 (PDT)
-Message-ID: <6015c40b-04ae-443e-8271-63e064f08ab0@suse.com>
-Date: Thu, 22 Oct 2026 15:29:52 +0200
+        bh=YHBFmHAZzkTNwhPEuQe/n0EZjSl7NRJ9RBTHgn7pG6g=;
+        b=rXHkURbTabWyGVfmC39x5UlnA/NzmHyiTcIP/MgewDBLFaMPvnIdlt9uMCEcxq/gjd
+         GiPYpRF85nPiI9vJ/ZVFA6HD/AE372o7S+QNOM5fN9HKFtztkrJPAQ1JQEIXH+pN5aC7
+         ZXQ50bLQJVz3RsqG1Loa9Y6Mc5HRPSqq24ViTsqmXPYWlC+7h8EZ2CZhKvMzCTm1Alah
+         f5O8OeHjo413gcpVq8B3fk4r2UREwumoExkBmSZl0LWZQzwcQq+QvP2AUe+Qu8bP3eKI
+         KY4B9yEqmFZhNct8LdlrPAA4ldpAKRkRKOGuoDV6FYan0SzIcbuGlyGLPklOr/Ht/adO
+         pbZQ==
+X-Forwarded-Encrypted: i=1; AKwUvBzMGqT7Simw0DJMiPiRny1KE/XuExrA7hjsdoajP8pqrTktt07KNKXVt2iBjaV4uG6Q78E6ZQmpa8kW@vger.kernel.org
+X-Gm-Message-State: AFq9FYKPcT0wUiVjC5IIOh9ucEMg7VkLJLjjMQjA129uZ4F0jQo5mY/I
+	1TUwFWo5MA9tWhZmYBc+SU3LMOIffUWdEIERbgMU84npMgfhUCs+pFU=
+X-Gm-Gg: AYBFou1pC7Hey7n++GkTznqj8pElD5AIouVmy8HGKcI6I8BJktvpcgBKNrb8aJQAX8e
+	wzlQbt7sXTZZV3hGBysY+7Hebhm5wXg9UsHOzkUpa8lJvHLxqHLH9b75Vwb6k1fmNUR98jkqvli
+	9MYYk93s7C5bSOlpS8mWUG7/6CPMybMCBzNHhUCaw5ZyLTXYa2MzT1fzHfrDFPnWbqqIu7T/knq
+	BIMngHcjwSSeedx11fZpXbU/SrYM4OYF7H/oy7SqLomXqksRhN8j7Jn9x3HuAma3fdGoSzqrxte
+	mu9jzGjz6myGgkAxyX1FSl5XU+ttD8NKgj3u8QLwviy5xN0lG6a2hgtGyfBQCDN+wmCT/RyEgDT
+	IyQ2/lZ+gYnN+i/nsmp0PHjydKgNsk3VEN39KyNn3LOyug+CkSvGoz3art5DBCKG5BB51yFVsvk
+	jnXYx2TZw385jKNsdqCbAjzs+0gFwckQV9I61EF6RYtj9kEeiGOvJmQ5GExJNkBFWmJII02NESK
+	cngJQD9MXwRSv4LgQHXLpLIahGChGTt0+uhSRu2pkUz50o0xlqwxOjha410JCWojA8asal4+7CC
+	2XH9WVC4nfYdZ4rAtLkZZElLvzPGfY3gUL8E/Y6U+t0=
+X-Received: by 2002:a05:7022:286:20b0:191:17d6:ccdf with SMTP id a92af1059eb24-19117d6ccf9mr5773178c88.8.1792680342117;
+        Thu, 22 Oct 2026 07:45:42 -0700 (PDT)
+Received: from anuj-MacBookPro.. ([2406:7400:63:e55a:5016:92c7:7a35:f3ff])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1903a275026sm23625880c88.5.2026.10.22.07.45.36
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 22 Oct 2026 07:45:41 -0700 (PDT)
+From: Anuj Gupta <anuj1072538@gmail.com>
+To: axboe@kernel.dk,
+	asml.silence@gmail.com,
+	kbusch@kernel.org,
+	hch@lst.de,
+	sagi@grimberg.me,
+	James.Bottomley@HansenPartnership.com,
+	mkp@kernel.org,
+	bernd@bsbernd.com,
+	joannelkoong@gmail.com,
+	miklos@szeredi.hu
+Cc: io-uring@vger.kernel.org,
+	linux-nvme@lists.infradead.org,
+	linux-block@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	fuse-devel@lists.linux.dev,
+	joshi.k@samsung.com,
+	anuj20.g@samsung.com
+Subject: [PATCH v2 0/5] dma-buf backed NVMe passthrough I/O
+Date: Thu, 22 Oct 2026 20:14:51 +0530
+Message-ID: <20261022144501.2478417-1-anuj1072538@gmail.com>
+X-Mailer: git-send-email 2.43.0
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -92,42 +108,58 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] usb: uas: wait for pending commands before unbinding
-To: Jiayi Li <lijiayi@kylinos.cn>
-Cc: Alan Stern <stern@rowland.harvard.edu>,
- Michal Pecio <michal.pecio@gmail.com>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-usb@vger.kernel.org,
- linux-scsi@vger.kernel.org, usb-storage@lists.one-eyed-alien.net,
- linux-kernel@vger.kernel.org
-References: <20261022123401.319479-1-lijiayi@kylinos.cn>
-Content-Language: en-US
-From: Oliver Neukum <oneukum@suse.com>
-In-Reply-To: <20261022123401.319479-1-lijiayi@kylinos.cn>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-Hi,
+This series adds support for dma-buf registered buffers in NVMe
+uring_cmd passthrough.
 
-thank you for doing this.
+It depends on this fix:
+https://lore.kernel.org/io-uring/20261022132027.2293931-1-anuj1072538@gmail.com/
 
-On 22.10.26 14:34, Jiayi Li wrote:
+Patches 1-2 add import flags to the fixed buffer import helpers, so
+uring_cmd users have to opt in to dma-buf. Patch 3 adds the io_uring
+side, patch 4 lets the block layer map dma-buf iterators for
+passthrough, and patch 5 enables it for the NVMe namespace character
+device.
 
-> +static void uas_pre_disconnect(struct usb_interface *intf)
-> +{
-> +	struct Scsi_Host *shost = usb_get_intfdata(intf);
-> +	struct uas_dev_info *devinfo = (struct uas_dev_info *)shost->hostdata;
-> +	unsigned long flags, start_time;
-> +
-> +	spin_lock_irqsave(shost->host_lock, flags);
-> +	scsi_block_requests(shost);
+Tested with this liburing test:
+https://github.com/anuj7781/liburing/tree/rw-dmabuf-pt
 
-No, on pure grounds of maintainability, please put the
-blocking of the host in the direct handler for disconnect.
-Unblocking in the caller something that was never blocked
-would forever trip up anybody reading the code.
+Changes since v1:
+- split into io_uring, block and nvme patches (Christoph)
+- pass import flags to io_import_reg_buf() and
+  io_uring_cmd_import_fixed(), and make callers opt in to dma-buf
+  (Christoph, Pavel)
+- add io_uring_cmd_hw_done(), so nvme no longer handles the dma-buf
+  map (Pavel)
+- warn if task_work is queued with a dma-buf map attached (Pavel)
+- make the -EREMOTEIO conversion explicit and comment it (Christoph)
+- refuse dma-bufs larger than 4GiB on the character device
 
-	Regards
-		Oliver
+v1: https://lore.kernel.org/linux-nvme/20261016103453.1129150-1-anuj1072538@gmail.com/
+
+Anuj Gupta (5):
+  io_uring/rsrc: pass import flags to io_import_reg_buf()
+  io_uring/uring_cmd: add import flags to io_uring_cmd_import_fixed()
+  io_uring/uring_cmd: support dma-buf registered buffers
+  block: map dma-buf iterators in blk_rq_map_user_iov()
+  nvme: support dma-buf registered buffers for passthrough
+
+ block/blk-map.c              | 15 ++++++++++++++-
+ drivers/nvme/host/core.c     | 16 ++++++++++++++++
+ drivers/nvme/host/ioctl.c    |  5 +++--
+ drivers/scsi/scsi_bsg.c      |  2 +-
+ fs/fuse/dev_uring.c          |  2 +-
+ include/linux/io_uring/cmd.h | 14 ++++++++++++--
+ io_uring/net.c               |  6 +++---
+ io_uring/rsrc.c              |  6 +++---
+ io_uring/rsrc.h              | 13 +++----------
+ io_uring/rw.c                |  5 +++--
+ io_uring/uring_cmd.c         | 31 +++++++++++++++++++++++++++++--
+ 11 files changed, 88 insertions(+), 27 deletions(-)
 
 
+base-commit: fd13f31ac62abac4df2166bb0a6fbff53b288e0c
+prerequisite-patch-id: 6ad52e1ffc603df71c6855926838f2df402c3ed1
+-- 
+2.43.0
