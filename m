@@ -1,56 +1,97 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.222.54
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792694745;
-	b=aB1dJsQ3vHc7z4NDY5V0oLL8DwW4+0jlv4xqW85XH41QuyAaKveoEZXntWt9Jws4DoGc
-	 ZNgkYBc9VpahAgACgBlxEx6XG0LxXcrc59naT9SCHp0O/Mpmos+c+te6UNtFY1wJOXlrS
-	 UA33x2CeWhxq2pP7OHuACoZPKy/Aoh25apRFtszKlz8D47vy3wLQN/MSg1OAwiEB25Y7B
-	 v2W/1wIAQqT/DpZyO6O0zwlHBCRiWjVAKGPld1vx9LqKCsL2c5wAVNq8WMrCAVGUXm0Ba
-	 4LuEVqtPLcls3PeFty3sTli5t2fGu3WIsodol7uXE38dmtP6O/d6KJUFOPxddBkkOAg==
+	t=1792695174;
+	b=2F4SGQxvm4NAsqCE52vtncNp5IJ7WeeMYIEpQwky9vMwHETB9XwxNdeqXVmUd6trRLIx
+	 Qm5XDi43fXE4QXPYLvqQ/L3wN5NfxpqgMdOq1AufSUyHFHCtUXTIncmwfSM5BsUhSAzyX
+	 vmvTXtX4l6En/+9txHdB8BFgGyZYJ244wyklsAxYWrrs8NmoVaVrDE9hwkVDBKu3A0EpC
+	 n3nr91bh900GBeOiAcVvIfYhe9zS8JZ3rBEsVOusSeIorX0hsfKCONWzs8JWFQMYQeJJT
+	 FYhSf/xgng5Kv0zwIrFjITpv3hlBBL9ZnV1ieJbLZz0FPQvCwZjVJ9GfgU/MP+69WrA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792694745;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=bdTp9jD5UsHayMIUOUjPFjDBuIiz49SNbtf2bsvLAww=;
-	b=1V16qjyZWR5fII+umdJ9ZYMpETJR9QbkZ1O4b85xEaFyhJ99TpFelKZsvUDPH5AaTjsD
-	 0BHNjyz4D70E2htPtfe7R609szu8carD+gf1ehy+D578DYzgBKtrTKQMdHfAyLEoOYBKb
-	 Lqd6uqWGZoubFHYbcvTo42FLgVs0IPlR8sQK+Diq0//AQk6BtFS4ZP2F1qKVR+jui2C2Z
-	 MWTFXXRAL0RVImya+ct0p0rNk0gPRIHGdTVSdgY+Zb5130PhdW0Y9iPzrj93fUxQem9iP
-	 sV5S4wrUrhMbguvjKCfVb4NriRrutclOoNNrYVgILXvXO3yHB9+ICQ6D8KQtSfcxeFw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792695174;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
+	 MIME-Version:Content-Transfer-Encoding;
+	bh=AWyBv4fpq7McuxLCX2w8h8EJeKQuEsSj5BIooBiqeg0=;
+	b=4stZqGdx/+ZAtb/8M4bC7P0w+r2cMKeNFXyfheEb+EUQksB4xd6un43VZsQBXZvLBOZN
+	 M21mBX4S4m6Lwp4L6QqjBFZqC8qzDY9wWxbHSfs60CxjviAZL+IGze6qEiTITvkyjTJaR
+	 jp6QQ2YuA82w7DtV4FrIGNSZFi87aF/ufmLHYXQ7VXKsN6I3JS3JGUIcifWplTRWPZ0Xj
+	 R44b49r6QAHpNdxIrPDtOcaM4/QJkS3coT8BCepVlOf44x+5PkSjVrIwPISjA6xwtuTTe
+	 V7s4a1L786NgvA3uBrR+vbs6BhjxCwdRq7W3VzJEugbGzPbz//nlOXQnguXMzOFsnVg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="PSwc/wt1";
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=R3IALzpF;
+	arc=none smtp.remote-ip=209.85.222.54
+Received: from mail-ua1-f54.google.com (mail-ua1-f54.google.com [209.85.222.54])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADBC8606A319
-	for <linux-scsi@vger.kernel.org>; Thu, 22 Oct 2026 18:45:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AFCD4606A33A
+	for <linux-scsi@vger.kernel.org>; Thu, 22 Oct 2026 18:52:53 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org AFCD4606A33A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=PSwc/wt1
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 23E851F01825;
-	Thu, 22 Oct 2026 18:45:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792694744;
-	bh=bdTp9jD5UsHayMIUOUjPFjDBuIiz49SNbtf2bsvLAww=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=PSwc/wt1ZtN73/OpykOheAycPjiZlmdnXMmR5wls00xi3orfFX+kCk9aGnU7w8s69
-	 SRel+dSsDYqrGS+GAv8f/kBVilb+cyVTgeGGS2fWueVLWzlhCqAnxBBTbxJvCijDgL
-	 dLm8YpPWow+/CKmdfDpmn3MxDBRnHtUHwguj3OlW3YPoGwOvMEK94mwaKVLaewZrgg
-	 K4BVKWBTDJo8FLoW6EtUJk3fCkAsQVJRPaX32uEUk5Wgx47yKjhzRFYhoj0XCBn29V
-	 1u+IgM3fCnqCAOeT0sD+dLJacaRHNgPGaz9vuYQBelPQMSigCmTPnSkXae/gYiXQAq
-	 xpjwYdo/LcJPw==
-Message-ID: <sashiko-outbox-181933@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] scsi: arm: Convert acornscsi-io.S to C
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Breno Rodrigues Alves" <breno3011alves@gmail.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20261022183658.58090-2-breno3011alves@gmail.com>
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=R3IALzpF
+Received: by mail-ua1-f54.google.com with SMTP id a1e0cc1a2514c-9907fa1d2d1so48882241.3
+        for <linux-scsi@vger.kernel.org>; Thu, 22 Oct 2026 11:52:53 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1792695173; x=1793299973; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=AWyBv4fpq7McuxLCX2w8h8EJeKQuEsSj5BIooBiqeg0=;
+        b=R3IALzpFfM9q2REeIpNq1MyfsrkB0pUuq7o7l9hl9XRIDRt9s5HSHTVJlOvLflYF2o
+         4vcMymW0nior67vJggTTcqFbeAe3PHWnx1stsHLHa4EvjnvcOc31O3pP50lJglYBqEo7
+         9R1xzovT7BQrQAENWN+58JTGi5qH8mm/7gbU0Oh8n5mg38dFI/OmlM8o19mmEVc7Ldec
+         CIpOUMWfbhduiIHrVYPEfpu+54ouaCCWNDCWlWx8MTtbg9SJzqCcF1xZws+VDbdH+6mX
+         uDVBoEJYibe+pAJCpRxoV1tjJ2/qsfbe19yblLSiD2hxepP49u2C9esuVyYDpwegwIxV
+         EvVw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792695173; x=1793299973;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=AWyBv4fpq7McuxLCX2w8h8EJeKQuEsSj5BIooBiqeg0=;
+        b=uiVTTTwr+MLo7H7DGbN7KH4ZiGni2NBLUG9p5nYOfsqyyxtexuT0qFLG/XiDVyJ4b+
+         5qQ9WjsJs8D+tT97fDeqiPOx3Foh97SLTsgPOwUDd4D9K5Yz6UAHNQMQo5qqvn122WLn
+         ZoZ6HS6IyVxIGVLaZkkzk5rDcnxp7wSmdxdbvt9tfoJ5USYjK6LK0B14RF0cyWlCQDBa
+         6xxZoPM2f6bX56kUqCFIV3wA6Xcl+SZExyJEsXqOab6K6cQiZPD6xdXOFv/HnY+1KipR
+         PNpREYMG2cx/FF4DTl65h0A3XFq/DVPioZGqNuImcOxkHx+VcfRb3c7TYyDdUpbKbgDm
+         dFEQ==
+X-Forwarded-Encrypted: i=1; AKwUvBz3LsIksfnnaZFNxSmlmSYhdXQ1qDp2rYBuSjfQ7CPSPgoKGkXPDRn9xETzSeWOzQ0AifQnd6EwPxe6@vger.kernel.org
+X-Gm-Message-State: AFq9FYLmD6H5/DNPRvRjAIP7bjqyBMTYv/gNQNCWRBzMOYxU7SvZ+POe
+	dtNxxau9m+Q5VQEvI0BCdIWjHcfGCEUCmBjDv7GYQiP4rndVKYZ6aK6p
+X-Gm-Gg: AYBFou2EwzfuWOWEJhUtvW3hZbtIPDxmbmvINClg9rK/nuJZ6ot/hK/4kjeeiwID4q+
+	4rDlEy/NyZkeqQNwvkFCxT2OxTw8rBxfFq3BOVNroN7wCKwMhrRJgQTjzUvLqgoYZh/jyd4MCqE
+	MmiHMXvfyk9hH+JiERRgluPPGOohekV0I4xHa6+EVgMNNSu0TVQFL28QPb1ZC9q43B5y50zLH51
+	bf7HDA5W3b5HtFJv0U+IYotJ7hzy+i73CZuIx3Y96EhL7qprLiANUjO9s9/lCqZMWrwEeLzsvy+
+	iGl+o2WZTaY+ZFSZpj1mXAz16ubUbAR874DSYUX2Ig3snSexLv1lpF1vC6rm2sx0ViCY/XZYTz0
+	hlrX23O1ou9DmMj3ga98nNgtdVNH6tZRFTAl/4+WMIuxq9Fm6wEFpcKHPMqjNEdaQ31CGJJE+st
+	2Oiqh3BScZVpz/Dm6P88gQvK4kLnZKySN5S5oaRzDer3BwiKsCE4ctIzBrE8ppHFHRpiQGYnkep
+	YfCDztDZLUUruDJmGtuHXtlj3v/fRmS17ghYXoofVnbrUl7HcsLt76IJN3lzGVn906TPXpWThCR
+	KwvNyR/afGAmwrUeMqnI
+X-Received: by 2002:a05:6102:2912:b0:7c3:7286:b7ea with SMTP id ada2fe7eead31-7ccc334dc12mr133557137.17.1792695172635;
+        Thu, 22 Oct 2026 11:52:52 -0700 (PDT)
+Received: from Biostar-A520MT ([187.94.15.233])
+        by smtp.gmail.com with ESMTPSA id 71dfb90a1353d-5ec124a7da8sm508980e0c.5.2026.10.22.11.52.50
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 22 Oct 2026 11:52:52 -0700 (PDT)
+From: Breno Rodrigues Alves <breno3011alves@gmail.com>
+To: linux@armlinux.org.uk
+Cc: James.Bottomley@HansenPartnership.com,
+	mkp@kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Breno Rodrigues Alves <breno3011alves@gmail.com>
+Subject: [PATCH v2 0/1] scsi: arm: Convert acornscsi-io.S to C
+Date: Thu, 22 Oct 2026 15:52:23 -0300
+Message-ID: <20261022185224.60700-1-breno3011alves@gmail.com>
+X-Mailer: git-send-email 2.56.0
+In-Reply-To: <20261022183658.58090-1-breno3011alves@gmail.com>
 References: <20261022183658.58090-1-breno3011alves@gmail.com>
- <20261022183658.58090-2-breno3011alves@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 22 Oct 2026 18:45:43 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -59,128 +100,29 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [Critical] scsi: arm: PTR_ALIGN() rounds up in __acornscsi_in() and __aco=
-rnscsi_out()
-- [High] scsi: arm: wrong MMIO pointer stride in __acornscsi_out() for trai=
-ling bytes
---
+v2 addresses two issues raised by the sashiko bot:
 
-commit a11c03319840bf581ce6e4031f7b0b04ae3afccc
-Author: Breno Rodrigues Alves <breno3011alves@gmail.com>
+  - PTR_ALIGN() rounds up, but the assembly's "bic r0, r0, #3"
+    rounds down.  Use PTR_ALIGN_DOWN() to match, otherwise an odd
+    on-card offset shifts the entire transfer by one 16-bit halfword
+    and can walk past the 4 KiB card window.
+  - In __acornscsi_out(), the trailing byte loop advanced by 2 bytes
+    into the unused upper half of the current card word.  Advance by
+    a full 32-bit word (card++) so the trailing byte lands in the
+    low half of the next card word, which is where the hardware
+    actually samples it.
 
-scsi: arm: Convert acornscsi-io.S to C
+No functional change for even-length transfers.  The odd-length
+behaviour is now correct for both directions.
 
-This commit replaces the hand-written ARM assembly routines __acornscsi_in()
-and __acornscsi_out() in drivers/scsi/arm/acornscsi-io.S with C
-implementations in drivers/scsi/arm/acornscsi-io.c.
+Breno (1):
+  scsi: arm: Convert acornscsi-io.S to C
 
-> diff --git a/drivers/scsi/arm/acornscsi-io.c b/drivers/scsi/arm/acornscsi=
--io.c
-> new file mode 100644
-> index 0000000000000..ad16d984d513a
-> --- /dev/null
-> +++ b/drivers/scsi/arm/acornscsi-io.c
-> @@ -0,0 +1,168 @@
-
-[ ... ]
-
-> +/*
-> + * Transfer a block of data from the Acorn SCSI card into memory.
-> + *
-> + * The card address is rounded down to a 32-bit boundary.  Each
-> + * 32-bit read from the card yields one valid 16-bit halfword in
-> + * the low half; pairs of card reads are packed into single 32-bit
-> + * memory words.
-> + */
-> +void __acornscsi_in(void __iomem *addr, char *buffer, int length)
-> +{
-> +	const u32 __iomem *card =3D PTR_ALIGN((const u32 __iomem *)addr, 4);
-
-[Severity: Critical]
-Should __acornscsi_in() and __acornscsi_out() use PTR_ALIGN_DOWN() instead =
-of
-PTR_ALIGN() here?
-
-In the removed assembly in drivers/scsi/arm/acornscsi-io.S, both routines
-started with:
-
-    bic r0, r0, #3
-
-which clears the lowest two bits of addr and rounds it down to the containi=
-ng
-4-byte boundary, matching the comment above __acornscsi_in().
-
-PTR_ALIGN(addr, 4) expands to ALIGN() and rounds an unaligned address up to
-the next 4-byte boundary. In drivers/scsi/arm/acornscsi.c,
-acornscsi_data_read() and acornscsi_data_write() pass:
-
-    host->base + (offset << 1)
-
-Whenever start_addr (and therefore offset) in on-card RAM is odd,
-(offset << 1) is only 2-byte aligned ((addr & 3) =3D=3D 2). Rounding up with
-PTR_ALIGN() advances card by 2 bytes to the next 32-bit card word instead of
-the containing 32-bit card word.
-
-Won't this shift the entire transfer by one 16-bit halfword in card RAM, and
-cause a transfer reaching the end of the 4 KiB page window
-(offset + this_len =3D=3D (1 << 12)) to access past the RAM window into
-host->base + 0x2000 (SBIC_REGIDX)?
-
-> +	u8 *buf =3D (u8 *)buffer;
-
-[ ... ]
-
-> +void __acornscsi_out(void __iomem *addr, char *buffer, int length)
-> +{
-> +	u32 __iomem *card =3D PTR_ALIGN((u32 __iomem *)addr, 4);
-> +	const u8 *buf =3D (const u8 *)buffer;
-
-[ ... ]
-
-> +	while (length >=3D 2) {
-> +		u16 v =3D *(const u16 *)buf;
-> +		void __iomem *cp =3D (void __iomem *)card;
-> +
-> +		writeb(v & 0xff, cp);
-> +		writeb(v >> 8, cp + 1);
-> +
-> +		card =3D (u32 __iomem *)(cp + 2);
-> +		buf +=3D 2;
-> +		length -=3D 2;
-> +	}
-> +
-> +	if (length >=3D 1)
-> +		writeb(*buf, (void __iomem *)card);
-> +}
-
-[Severity: High]
-When acornscsi_data_write() calls __acornscsi_out() with an odd transfer
-length where length % 4 =3D=3D 3, does the trailing byte get written to the=
- wrong
-MMIO offset?
-
-Each 16-bit SCSI data halfword is exposed in the low 16 bits (offsets +0 and
-+1) of a 32-bit card word, while the upper 16 bits (offsets +2 and +3) are
-not sampled by the hardware. In __acornscsi_in(), the while (length >=3D 2)
-loop advances card++ (4 bytes) so that if (length >=3D 1) reads the final o=
-dd
-byte from the next 32-bit card word.
-
-Here in __acornscsi_out(), setting:
-
-    card =3D (u32 __iomem *)(cp + 2);
-
-only advances card by 2 bytes into the unused upper half of the current
-32-bit card word. If length % 4 =3D=3D 3, the while (length >=3D 2) loop ru=
-ns once
-and the following if (length >=3D 1) statement writes the final byte to cp =
-+ 2
-instead of the low byte of the next 32-bit card word at cp + 4. Should this
-advance card by a full 32-bit word (card++) instead?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261022183658.5809=
-0-1-breno3011alves@gmail.com?part=3D1
+ drivers/scsi/arm/acornscsi-io.S | 116 ------------
+ drivers/scsi/arm/acornscsi-io.c | 168 ++++++++++++++++++++++
+ drivers/scsi/arm/acornscsi-io.h |  15 +++
+ drivers/scsi/arm/acornscsi.c    |   3 +-
+ 4 files changed, 184 insertions(+), 137 deletions(-)
