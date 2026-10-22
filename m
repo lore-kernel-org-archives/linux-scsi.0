@@ -1,66 +1,66 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=199.89.1.16
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=45.79.88.28
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792705002;
-	b=4MuQk762SejfK2zyoi4/cx9Hh8Sp1KEHQvXb0JZx253irtJTmsvcLRqTowjH21F+0ZWi
-	 pdtDsCYCCeBPoZXKbOVPRmXcqfo4808Q4e0OAaG/SbGjV7A5q4y3DJXMg2+2qSKjNxxSb
-	 fJCmxX8EzujLyDaO0/o8f2G2N0lsMQgruzUzx6bDQJPQA9Q575JFr0Un2WLJCEzk8Jsb1
-	 gst7aFc/n2Ln6hf/Jyjns7Q/EGCe71isOiGmWOTGZZJQLXXoBsB9QCLOe9JekMAe2JC2s
-	 34waAWTd6tYBvZcDFAPHKwRWVFS5rKkC7iXEsugUmx7w50lLsOzr7w7M7AFLFzCeTtw==
+	t=1792705482;
+	b=3aF97JCalImYEX7fB4qEqK9AzBsOXKPqBVEr4JaSsgwF03zFGnUnLHFKK/qV04jwV1o/
+	 89/MGFKBtOqVnwXyCt5GI8Z3ruI5u+VQWxH0d8Ob8NNyi5mPg09qgLhr56nDGf/iRBjQK
+	 Augh/Ma5Ye7/vrtqGpc9ORJp+J2+b3GvoxKXnwvxtdt2zHlbaTQPdVrNHiWtInKdeWC2X
+	 CRG8gFtNvNLVWHyv3n/Wka6/Zo3pq3QyJ74Lt8kyCJ+pqo/Z8jIBUyUijF7Yean85faM1
+	 x2N0+BW209Vt9DRngn5VF7GngGJ95gkhqg1KdqBYdTE0JPnUGxQYy8KyRZElVsHgS4Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792705002;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Virus-Scanned:Received:
-	 Received:Message-ID:Date:MIME-Version:User-Agent:Subject:To:Cc:
-	 References:Content-Language:From:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=P97ogRNwRirjbSwuVLSJWRY7wBV86JwHBN2vx2TWdSc=;
-	b=g9pJ248ftkh4oJuD1gZIdX+MzVBgUPYvt50NMWMjoJcddalBfkEtaXGEIaTz4g5We8MJ
-	 nkJHBdXSULjXvuQ8Rpr3mkdRasREDLZjqWDFNNSY9YlN9rX58jMXHe2WpHFcPBFpaX9th
-	 GJYRtQRLgzVPqUqwMRjHuHkJUXW5YjtNDejctgOM8/3vqJWKl3ire6qt88sTpxLxhHpXj
-	 XEGblUFyTOEHe6nWOu6brv/mz9A3jTnCBjz7NZfxRWKAMnK3lA4cZ6o6KstESoFpJHnro
-	 K3jTyKElDdMAlqc+a+jrQ/+Y6DBGHEfOumCeaLbKz2uYtVmQahLxgh5OF0/K6ikqiew==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792705482;
+	h=DMARC-Filter:DKIM-Filter:DKIM-Signature:Received:From:To:Cc:Subject:
+	 In-Reply-To:References:Date:Message-ID:MIME-Version:Content-Type;
+	bh=Woe6xHcsEP+dAFnzYb9P6peVQw4vpnrcC8v3BR/2jnE=;
+	b=fhteExr8hcREUrCm8IGS20B3J9/NmOMDfeSTHRuKkyqVKFeL3thLx5DB9qfxeRgH5rFL
+	 znx8GFsENbFLUgoudxg2PE/CCaPgxkx4YuF+iKL+MR/u5RA5iVf2DJK/b2KReoTh2Stgo
+	 8hM2XB2irZMIzSjDhAqrzFu/Hh4q+62tW0WrHxlxXQJvfMk9F0EUTaMTga/TQPhH48Aga
+	 gY4+Hk/F3Crdjcr4TWvBP/q3OddwrNt2mOr1B8dct5YDgB/xankCdaXS8YZGNwkD9SkM7
+	 B9bcsZ+ffiD27R45KXizSRcj82NSYkfCpvsBIQ0OVjimCuLl6CNRE5TfMMktr5v2Iyw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=acm.org;
-	spf=pass smtp.mailfrom=acm.org;
-	dkim=pass header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=Uthlo9TW;
-	arc=none smtp.remote-ip=199.89.1.16
-Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
+	dmarc=pass header.from=lwn.net;
+	spf=pass smtp.mailfrom=lwn.net;
+	dkim=pass header.d=lwn.net header.i=@lwn.net header.a=rsa-sha256 header.s=20201203 header.b=lhJJsOrJ;
+	arc=none smtp.remote-ip=45.79.88.28
+Received: from ms.lwn.net (ms.lwn.net [45.79.88.28])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C5C5606A319;
-	Thu, 22 Oct 2026 21:36:42 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6C5C5606A319
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA8A9606A31A;
+	Thu, 22 Oct 2026 21:44:41 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org DA8A9606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lwn.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lwn.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=Uthlo9TW
-Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4j9fc95pRbzlfvq1;
-	Thu, 22 Oct 2026 21:36:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1792704999; x=1795297000; bh=P97ogRNwRirjbSwuVLSJWRY7
-	wBV86JwHBN2vx2TWdSc=; b=Uthlo9TWBjDilrIEqBx3alrWKMPDqs4KkIq3Ko6I
-	dE76eGG4Nlnc3wA5ERZJrAI02v71VH1/YGdfssvDAO8Vi+mDaHiVO5sYcWlDjUcE
-	nr6h8e3f4ENkPoRBYqylQnQqpJsXeE6DEBsDN4bBMMR8Pk4zTHX/C400BpHLkUTS
-	SsS1ip4mXoOrE3WF3rWh4O0HgRu50vxt95z73Zau020xSuY2L6Aqpc5tTbOFrBgL
-	yPVVVDGY+RZeMGibKy1X2/llPvJfwxvXtbPd/NqnLecC9/5kIF19vnr+wj9qOzZ4
-	46CD7zvacY9yQS3nOvKkQm+E+vIPkTL8XmtgSVmBNBWFVw==
-X-Virus-Scanned: by MailRoute
-Received: from 013.lax.mailroute.net ([127.0.0.1])
- by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id tkT0WH8Qat7v; Thu, 22 Oct 2026 21:36:39 +0000 (UTC)
-Received: from [100.80.231.125] (unknown [104.135.182.41])
+	dkim=pass (2048-bit key, unprotected) header.d=lwn.net header.i=@lwn.net header.a=rsa-sha256 header.s=20201203 header.b=lhJJsOrJ
+DKIM-Filter: OpenDKIM Filter v2.11.0 ms.lwn.net D63E8408F6
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=lwn.net; s=20201203;
+	t=1792705481; bh=Woe6xHcsEP+dAFnzYb9P6peVQw4vpnrcC8v3BR/2jnE=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
+	b=lhJJsOrJHzLb6hn6bv7VHV2+mYFyaQtqk92z4rf3sxZo/TyHcTlvOfRjkRsCZIrF0
+	 Nip8jdgWVfzcS5qQI+OMAL+VtSulUBFCWcXY7gA8o/jOsJQsrstXMFjBdxeJfnxw9u
+	 5wJdFCNdvqkzNXjHfSnYt93QL8pkpmOBk6cOJ0/N/5f3M6MHxTIjb7KxIyxwiL3gqZ
+	 eG8q9GbK58WGOoVPrjX3IaLo2gcnl9GFu9fn8NRI2Ejut7IYXkXkh45XCpYhNNTgiz
+	 h8WveE+lhUaTo/m2YMOszMhQ417gK5tNzbqnqVBrp7v1kgVKLoOtQV+68J6yOnW5dH
+	 /1Q9GqWTslmNg==
+Received: from localhost (unknown [IPv6:2601:280:4600:814::1fe])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4j9fc63vt0zlfvps;
-	Thu, 22 Oct 2026 21:36:38 +0000 (UTC)
-Message-ID: <70292f68-e61b-468e-b055-caa164e7996a@acm.org>
-Date: Thu, 22 Oct 2026 14:36:37 -0700
+	by ms.lwn.net (Postfix) with ESMTPSA id D63E8408F6;
+	Thu, 22 Oct 2026 21:44:40 +0000 (UTC)
+From: Jonathan Corbet <corbet@lwn.net>
+To: Breno Rodrigues Alves <breno3011alves@gmail.com>, linux@armlinux.org.uk
+Cc: Bart Van Assche <bvanassche@acm.org>,
+ James.Bottomley@HansenPartnership.com, mkp@kernel.org,
+ linux-arm-kernel@lists.infradead.org, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Breno Rodrigues Alves
+ <breno3011alves@gmail.com>
+Subject: Re: [PATCH v4] scsi: arm: Convert acornscsi-io.S to C
+In-Reply-To: <20261022210252.80844-1-breno3011alves@gmail.com>
+References: <20261022183658.58090-1-breno3011alves@gmail.com>
+ <20261022210252.80844-1-breno3011alves@gmail.com>
+Date: Thu, 22 Oct 2026 15:44:40 -0600
+Message-ID: <871p9h1kc7.fsf@trenco.lwn.net>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -70,23 +70,24 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4] scsi: arm: Convert acornscsi-io.S to C
-To: Breno Rodrigues Alves <breno3011alves@gmail.com>, linux@armlinux.org.uk
-Cc: James.Bottomley@HansenPartnership.com, mkp@kernel.org,
- linux-arm-kernel@lists.infradead.org, linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <20261022183658.58090-1-breno3011alves@gmail.com>
- <20261022210252.80844-1-breno3011alves@gmail.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20261022210252.80844-1-breno3011alves@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 
-On 10/22/26 2:02 PM, Breno Rodrigues Alves wrote:
+Breno Rodrigues Alves <breno3011alves@gmail.com> writes:
+
+> The Acorn SCSI expansion card presents each 16-bit SCSI data halfword
+> on the low half of a 32-bit card access.  The hand-written assembly
+> in acornscsi-io.S implements the two directions of the data path:
+>
+>   - __acornscsi_in()  : packs pairs of 16-bit card reads into 32-bit
+>                         memory words
+>   - __acornscsi_out() : expands 16-bit memory halfwords into 32-bit
+>                         card writes (duplicating the halfword in both
+>                         halves for the bulk of the transfer)
+>
 > Both routines are simple pointer walks that a modern compiler handles
 > just as well as hand-written assembly, so replace the .S file with an
 > equivalent C implementation.
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+How have you tested this change?
+
+jon
