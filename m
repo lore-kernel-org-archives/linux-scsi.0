@@ -1,75 +1,108 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.69
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.215.227
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792640704;
-	b=3rak2dZvCwu9Fz6UyjeVm264pkUXjahxjNAl0WkOjtGMywMFL0T7S5iHHnNAzAfIfVb5
-	 +IKvtoOS3m7E6qga7dEnTdiyowRZkrmCjM6QPVy4m/9C8l3nfesfakYpmB8v3M2/lKBsu
-	 bj2RXMHAqGoJXAxoo2QfELbqJPKYcua0FcJcZB65z+dfxq70sFUM2iZxADd2LaHHU7vxg
-	 X1Z4jKJ4OPIqCHYEG1pTQrV8ZiPXccXNSPru+vlL40jD3fKTRrgIfbHVoMDiry7L8J+kL
-	 rkBG5Si/yZRyvjVTzLG6ppW3YZtppd3sJlqCTrJLn3eNc7S12JDDrGIHneG6TaYjrog==
+	t=1792653533;
+	b=QvAJg5cenZIJZpF/7NsQkP4ZLf7ZBDFrf1XZFSdpyr0VLZLvOBuaOa8oNj5UnPd55btx
+	 B3Un86/A4N3HdkPR+3WFEixZ7ZCw1L+ZnoH4lVFoGDIHSiQ3IQ6rTcPpmvVxgqfr+AWha
+	 aOs1XL6theMpC2x/aG0DBoGC4xrjhCb1RWsKkLNSGHlF5T8lzSqehmc7ZZOUbYhG7rPbz
+	 LvM0B3ZtEvETR+12nJuoCFkRgfYXqv7woaBXsUs32Wn4aWSEChkIskB99c30PpFknoYSj
+	 y1VkZqZuB9t0pdH/MMSUZ48gQaG2PFSI/RJYZYG/bcZnhmm2zidTd5RfyCHuqVYAvmA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792640704;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:In-Reply-To:
-	 Mime-Version:References:X-Mailer:Message-ID:Subject:From:To:Cc:
-	 Content-Type;
-	bh=akknKNV58WXQ7nC2UkOhMmYCn/cmxofWONSsK2knhEA=;
-	b=1udGCvRCrS/OdnvKXME7RbKJP3zh1LRYexLkAXIWQRzgMbyHPS4bTE6wSPkQTUaDVQ1p
-	 6MALpNyL9np6sVHmRzMldvwO05tZMn2Sk3Bt+gi7tAjo//VNxahRcryj/07dcN2jFCHXc
-	 WHcTrAuaiKCnf/75MQEhJPM1vb+WOqDH2+jl1XQu+xtSvl0AvRSklnA/aJFa6fwYGOZyy
-	 Wq6gU5pg3ByHtc44kZ5riPiGMK7caBReIIMnWqX+Bao0E5DswOkaZYwsPtmayVD+BLxop
-	 lrHoT3D6CcZROuL82oWe15XwQdKo5do1uSCcg+2y/75mZLHL5PQlbjXhi9OzI6GvZUA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792653533;
+	h=DMARC-Filter:Received:X-Google-DKIM-Signature:X-Forwarded-Encrypted:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:X-Relaying-Domain:
+	 X-CFilter-Loop:Received:DKIM-Signature:X-Forwarded-Encrypted:
+	 X-Received:X-Received:Received:From:To:Cc:Subject:Date:Message-ID:
+	 X-Mailer:MIME-Version:Content-Transfer-Encoding:
+	 X-DetectorID-Processed;
+	bh=gPiE3QWjmwTsVpl3XFuxTwOhK5xMwryQhv8LE68/7Gw=;
+	b=PbZ5db7u+eaTgoDzCX/LhJMCY08ygWs3hPIy/Yr1kRnAGaTiMWiOU5Hm7ZxrbLPzR5dN
+	 mRZSAa4npiNTflqB+EEsdmBTBhjzldulnOx4QTfaclhwZMOGriGHIfoqInUMswdxLcEe9
+	 vf+6x8krSOJKkuFhx/VgkvaLbHcLu3oDHNB5LJQNqfMlgULbqXqpoNJieuTV5lJoS2Vjz
+	 Hig7ul7n2uJ/ZEmU+1y3qMPMfQXTMSMUPtyvzJXld7E8+NVWIBycYegYokoSo11M/FYnk
+	 PoIldGJGcRXT6dKm8eYhFlPpi8QrqFCTTQ82zmObsOHFMEJvyQyyShJ6rIhuyHKWTlA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=google.com;
-	spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20251104 header.b=lgF9307k;
-	arc=none smtp.remote-ip=209.85.216.69
-Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com [209.85.216.69])
+	dmarc=pass header.from=broadcom.com;
+	spf=fail smtp.mailfrom=broadcom.com;
+	dkim=pass header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=LnUiiXeB;
+	arc=none smtp.remote-ip=209.85.215.227
+Received: from mail-pg1-f227.google.com (mail-pg1-f227.google.com [209.85.215.227])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D814E606A323
-	for <linux-scsi@vger.kernel.org>; Thu, 22 Oct 2026 03:44:53 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D814E606A323
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D8FD606A31A
+	for <linux-scsi@vger.kernel.org>; Thu, 22 Oct 2026 07:18:53 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5D8FD606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20251104 header.b=lgF9307k
-Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-3ac8f449d1bso1521632a91.3
-        for <linux-scsi@vger.kernel.org>; Wed, 21 Oct 2026 20:44:53 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1792640693; x=1793245493; darn=vger.kernel.org;
-        h=content-type:cc:to:from:subject:message-id:references:mime-version
-         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=akknKNV58WXQ7nC2UkOhMmYCn/cmxofWONSsK2knhEA=;
-        b=lgF9307k0B+RV6MQs78VnTvGLKvvUA0s01nSQSBIyTU6EC7geyYXyKYz7wOUCOYGsy
-         50z3azXN+7BC7x+hHdZvnAlHQtoUAlUVblarpQ+DgfNMMYp2XnjnMpu5wwbekpIotQj2
-         kPYE4ojxEoeOIMA4F1haw/8+fBkRVJ+HiRkKBl0+7vbYhClGUlQTZsw0wQzCS1tj3imL
-         rTQxTX9IRzecAF0E8SaWjVYI2jw5cpt3VT/3ENSHFqEIuzGy/4lO8MaIQnCM1Sfnspo9
-         H16yBbPJtHIqT5whr9L+g23RbdXH85KU5ZPkALD1Jl7RrC5yakrAyMibqoL0e61UCyWn
-         JTHg==
+	dkim=pass (1024-bit key, unprotected) header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=LnUiiXeB
+Received: by mail-pg1-f227.google.com with SMTP id 41be03b00d2f7-cd60c5da24cso801728a12.0
+        for <linux-scsi@vger.kernel.org>; Thu, 22 Oct 2026 00:18:53 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792640693; x=1793245493;
-        h=content-type:cc:to:from:subject:message-id:references:mime-version
-         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=akknKNV58WXQ7nC2UkOhMmYCn/cmxofWONSsK2knhEA=;
-        b=vP+XzCmMarRKpoAGuhkYXmjeAQ0ukxrJmITc9oTdf2el0vf9h84PQ1ewSrUriiOD//
-         hNGvv7qUXfp49yPSWfPS+CwyUyWTZqFrjKkzDPaKz7v+YBZpqP2UGpWbzFDxzcvI86yS
-         oLe8Ccs2YhK2X9bptrX3CIaM7cMBF0zVCCjThvrk0Epfqx8LQHSg/pmEEFV+nx8cCIiH
-         HFt/mQJgP9Ks3fVXObk+Jb1c4VJNNBmm49hZu8GZC2ugT26F7lgkQtzMLrTt+CfvsE+L
-         96yY+c1SZvGXNANKSqYP/aeVVs306QdhRRAY/HD0Rdgph8KZvaARjCAKY1tLsJVhn4N6
-         pCFQ==
-X-Forwarded-Encrypted: i=1; AKwUvBxTZPu/59Dki1T+AJitXTrS3KtDo2+EIFAirHkvAf8RVKVqvCRt866sNyCF+JAINwzCi8UA2ehc4sm2@vger.kernel.org
-X-Gm-Message-State: AFq9FYLUhDjzFEIplPDQv2qGRnYGhM3S/fT1shIU9sMBBkvOhFfmUSJc
-	2F9xqDRx0Rq1tw0DNei/o/CwBnZOapOT9EYDGb99USpDRsDDCdzTnpe46FAsE08wCq5tXBwAH6m
-	iTyJhXe7fCUaIpvXHinWs8A==
-X-Received: from plso12.prod.google.com ([2002:a17:902:bccc:b0:2e5:e1dc:c5])
- (user=stanleyjhu job=prod-delivery.src-stubby-dispatcher) by
- 2002:a17:90b:2b8c:b0:3ac:7c52:faeb with SMTP id 98e67ed59e1d1-3ad86d0bc21mr3695120a91.41.1792640693097;
- Wed, 21 Oct 2026 20:44:53 -0700 (PDT)
-Date: Thu, 22 Oct 2026 11:44:41 +0800
-In-Reply-To: <20261022034443.3034432-1-stanleyjhu@google.com>
+        d=1e100.net; s=20260707; t=1792653533; x=1793258333;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:dkim-signature:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=gPiE3QWjmwTsVpl3XFuxTwOhK5xMwryQhv8LE68/7Gw=;
+        b=GqsKhJSKDTS/pRyGDNpXS3vU2YnSvPmotY4DeRy7ICC30nWC7uFWy13EfkB/oi4wq9
+         tORkXtnJvGkP3wcBDzvnC2S8PShgPe5Z8+WKv2A5EldHjcMH+AmofajBy3XtzWmxwbam
+         4FJnIs2MGe7i0ebB3yNXj3OqZnzplVITg/1SRcZOnsJ6GBAGvZsQVPjBIf77ggexy2Gq
+         ENoPLC++IgOJkPSob2ZZ1gMXsaBxf/Jj34dYRaPEF6ULc2elxJG/t98nTGt0yd7GSWlf
+         Lv0gSM5eJnGu3gbpAIteAxEVimyyvGKW6QVzhIr2TztUthHBT9HkSq6QiRn/JnHd0QM8
+         Yp7A==
+X-Forwarded-Encrypted: i=1; AKwUvBzvMNLYw/FhGoH1ep0F1O9B3B+UIwQ3OqYBlxMsDEbpVARL98UUdBGRdi4SnbA58mCoStHtDic/hpnM@vger.kernel.org
+X-Gm-Message-State: AFq9FYIYqpSlfXqxe1y3onjy6dzpqePXIi8zJgUDGYzLBALaR1CcacnF
+	J6JnIS+PZ9IR/1jvetIWPhkDUFcm3ryxZltSQINp+G7LV9hztX1JOVJdITMpSrOHc+/FfO9fqxL
+	+vnagMFzPJMaN+NY8GgHJ0AYOwRwNQOnVyALctZtteD7JaN9CXJs0394hJpZftzZkB7symPOjZx
+	YwSKHxUJ2bhck8Cz333dUd2GINxqhhCI+drMJcFAYlKgO9/TYuYz8HDqLgyEx09c6HLHjCdBFGs
+	P8cO2NFtoBn
+X-Gm-Gg: AYBFou07Qak5HxR2gTynUbfE2QkduFgivM7BcoCsxchy6G1l6vLNS8EYdSRyIxsdJwG
+	1Y+5EDdDvFNBzSGuvsGS75wINNqZ9JL4AFFSUwSE7QPgNbi0YNCZ77YVWvF4b2MmpuqaEEmKHi2
+	VFS3GGjR+riSndSAgrg2sx7yjuWqh7VUcdwcLE61SW8WXgF1WQ1aYdKuYmyproHexVjlkriB6Sq
+	CxIQklOGfzVkt59mDt123Evf2i6MRhlHypIMXNA06lVTppPrpP7yDN0LwH6RomY5aovTT7Wf4lo
+	sXIigb3qWzuRKIuaz/w+nAtj6CxlzQA/MhOvz+RTqfcZSH+Ra6qozLvcUDK60pjyI7ou+r+5rJ5
+	29FUR1f+DGeZDX1T7Q5j3RenyakUSabTRTrlZjY843/ymd3SznDcYyxz4+sc5VcS0vCcmufAfza
+	dB81+ctGZEQTtkFu8YAyPWdNfbXRYxKPVDQQ==
+X-Received: by 2002:a17:90b:51c3:b0:3ac:9706:7739 with SMTP id 98e67ed59e1d1-3ad86f1bd90mr3104080a91.17.1792653532624;
+        Thu, 22 Oct 2026 00:18:52 -0700 (PDT)
+Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-125.dlp.protect.broadcom.com. [144.49.247.125])
+        by smtp-relay.gmail.com with ESMTPS id 98e67ed59e1d1-3ad8602f10asm1590030a91.1.2026.10.22.00.18.52
+        for <linux-scsi@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 22 Oct 2026 00:18:52 -0700 (PDT)
+X-Relaying-Domain: broadcom.com
+X-CFilter-Loop: Reflected
+Received: by mail-dy1-f197.google.com with SMTP id 5a478bee46e88-341eff9e381so3959169eec.1
+        for <linux-scsi@vger.kernel.org>; Thu, 22 Oct 2026 00:18:51 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google; t=1792653531; x=1793258331; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=gPiE3QWjmwTsVpl3XFuxTwOhK5xMwryQhv8LE68/7Gw=;
+        b=LnUiiXeBcWdhkli1TdvatmlNUvP8ZQu6TwBKT16lKjDzOTvangXV2lMJeaHG5f1AvN
+         uHch5HLep8jkIpcMK4GZThi9+iH7CAYud4i2a68WJXwxe0I1jwEx8FjMFpTEq/63H/lR
+         KWqQ+rQZ8oq2ZciZCTNdHeMvdnQs+efllJmPE=
+X-Forwarded-Encrypted: i=1; AKwUvBwkVDzgkTAhejOjJGeATE1vLNCBIxJvN7UtRcrsSIVsGRucbATHho6O09nXgv8/D4geUNOVt+X28bj9@vger.kernel.org
+X-Received: by 2002:a05:693c:20d0:20b0:368:c6b9:d3bb with SMTP id 5a478bee46e88-368c6b9e87bmr1870311eec.14.1792653530924;
+        Thu, 22 Oct 2026 00:18:50 -0700 (PDT)
+X-Received: by 2002:a05:693c:20d0:20b0:368:c6b9:d3bb with SMTP id 5a478bee46e88-368c6b9e87bmr1870282eec.14.1792653530184;
+        Thu, 22 Oct 2026 00:18:50 -0700 (PDT)
+Received: from matt-workstation.dhcp.broadcom.net ([192.19.38.250])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3674198fb21sm13687638eec.23.2026.10.22.00.18.45
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 22 Oct 2026 00:18:49 -0700 (PDT)
+From: Matt Wang <matt.wang@broadcom.com>
+To: vishal.bhakta@broadcom.com,
+	James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com,
+	linux-kernel@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	bcm-kernel-feedback-list@broadcom.com
+Cc: Matt Wang <matt.wang@broadcom.com>
+Subject: [PATCH] scsi: vmw_pvscsi: add boundary check for cmd_map access.
+Date: Thu, 22 Oct 2026 15:18:40 +0800
+Message-ID: <20261022071840.8655-1-matt.wang@broadcom.com>
+X-Mailer: git-send-email 2.47.3
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -78,62 +111,46 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0
-References: <20261022034443.3034432-1-stanleyjhu@google.com>
-X-Mailer: git-send-email 2.56.0.218.g1ec904b173-goog
-Message-ID: <20261022034443.3034432-5-stanleyjhu@google.com>
-Subject: [PATCH v5 4/6] scsi: ufs: core: Fix double release in ufshcd_eh_timed_out()
-From: Stanley Jhu <stanleyjhu@google.com>
-To: "Martin K . Petersen" <mkp@kernel.org>, linux-scsi@vger.kernel.org
-Cc: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>, 
-	Bart Van Assche <bvanassche@acm.org>, Alim Akhtar <alim.akhtar@samsung.com>, 
-	Bean Huo <beanhuo@micron.com>, Peter Wang <peter.wang@mediatek.com>, 
-	Can Guo <can.guo@oss.qualcomm.com>, linux-kernel@vger.kernel.org, 
-	stable@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 
-In SDB mode, a command that times out during a power management
-operation can be released twice:
+The context value provided by the device in a completion is used to
+index into cmd_map to find the command that was completed. To prevent
+out of bounds access or completion of an inactive context, check that
+the context value is in-bounds and that it maps to an active context.
 
-1. The command times out while its normal completion is running.
-2. The completion path clears BIT(rq->tag) in hba->outstanding_reqs and
-   releases the command. It has not called scsi_done() yet, so
-   SCMD_STATE_COMPLETE is still clear.
-3. ufshcd_eh_timed_out() recovers the link, sees SCMD_STATE_COMPLETE
-   clear, clears BIT(rq->tag) in hba->outstanding_reqs without checking
-   whether it was still set, and releases the same command a second
-   time.
-
-Return SCSI_EH_DONE when ufshcd_clear_outstanding_reqs() returns 0, as
-another path has already claimed the command.
-
-Fixes: 01d5e237b339 ("scsi: ufs: core: Handle PM commands timeout before SCSI EH")
-Cc: stable@vger.kernel.org
-Reviewed-by: Peter Wang <peter.wang@mediatek.com>
-Signed-off-by: Stanley Jhu <stanleyjhu@google.com>
+Signed-off-by: Matt Wang <matt.wang@broadcom.com>
 ---
- drivers/ufs/core/ufshcd.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ drivers/scsi/vmw_pvscsi.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 68b53f89f8c6..ff5977f7da68 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -9660,12 +9660,10 @@ static enum scsi_timeout_action ufshcd_eh_timed_out(struct scsi_cmnd *scmd)
- 	 */
- 	if (!test_bit(SCMD_STATE_COMPLETE, &scmd->state)) {
- 		if (!hba->mcq_enabled) {
--			unsigned long flags;
- 			struct request *rq = scsi_cmd_to_rq(scmd);
+diff --git a/drivers/scsi/vmw_pvscsi.c b/drivers/scsi/vmw_pvscsi.c
+index 151cac9f9..49d1950a7 100644
+--- a/drivers/scsi/vmw_pvscsi.c
++++ b/drivers/scsi/vmw_pvscsi.c
+@@ -201,6 +201,9 @@ static u64 pvscsi_map_context(const struct pvscsi_adapter *adapter,
+ static struct pvscsi_ctx *
+ pvscsi_get_context(const struct pvscsi_adapter *adapter, u64 context)
+ {
++	if (unlikely(context == 0 || context > adapter->req_depth)) {
++		return NULL;
++	}
+ 	return &adapter->cmd_map[context - 1];
+ }
  
--			spin_lock_irqsave(&hba->outstanding_lock, flags);
--			__clear_bit(rq->tag, &hba->outstanding_reqs);
--			spin_unlock_irqrestore(&hba->outstanding_lock, flags);
-+			if (!ufshcd_clear_outstanding_reqs(hba, BIT(rq->tag)))
-+				return SCSI_EH_DONE;
- 		}
+@@ -550,6 +553,11 @@ static void pvscsi_complete_request(struct pvscsi_adapter *adapter,
+ 	u32 sdstat = e->scsiStatus;
  
- 		if (ufshcd_is_scsi_cmd(scmd)) {
+ 	ctx = pvscsi_get_context(adapter, e->context);
++	if (ctx == NULL || ctx->cmd == NULL) {
++		dev_err_ratelimited(&adapter->dev->dev,
++				    "Can not find mapping for context %llu", e->context);
++		return;
++	}
+ 	cmd = ctx->cmd;
+ 	abort_cmp = ctx->abort_cmp;
+ 	pvscsi_unmap_buffers(adapter, ctx);
 -- 
-2.56.0.218.g1ec904b173-goog
+2.52.0
 
