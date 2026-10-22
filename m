@@ -1,108 +1,59 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.219.99
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792653550;
-	b=LThT2PdPPDxC/6upFigW97kJDG6dznXrm0L4GqScnq9tU3jDiyLI68JlwVyMjedpFvgJ
-	 0ct4Pwl+W/bIvoy1zZz2sh9flseNSowsVQuwMnytg5j5f/nMdzWYNjzbPBFGn0tmBcCS3
-	 pqGnK+Mm/dxk57FyVNe/COHWBzPV1iMsbnRQlXRfyWNlJFK2RnGVmhlB8VdT/ekN2AoBP
-	 6TUwliX4x9moaK4YSMTl/VeKuUD5GlKQWdjbZpnaUKEhNvFer0TWcFSauaTQ3LcbHqjpy
-	 KgmM2CMZ8qzjjnCvyud4b6Kio4XHR/DUzRHIFskHlanc+2aDllW+PtyH8+cDevTJlzA==
+	t=1792653918;
+	b=YyZC0aQ7oaIB2xIfa0h066MjJfLKtDVBB73MIxR3C53y5l/YPGoJMkR4G5ru8Is/fdQ2
+	 M4SHB1zf19vARtak9rxQ2vy8UWXGvjEwoQFoxiHBnAENDWwAmzk5ntzNgmrB6vDJmIi3H
+	 YRUTBVbCwoWFBXmNA5V2eXkNsbHJaHg1dDaA8A+rblvuDP/yPi1W+Vy/GnZo9tvc+QiId
+	 YfLgspYRWUhvAkZHYNrXBEYFvTgbKiyiQP5MS5kOIOB3TGE6mUCk8QJOfuZ09KO/bK7bH
+	 JWqljLNstdCi857TKvuvlHn/w4dznszvPmX0ai2j9KVwOl/IfJtsBGpKej1gMh6ausQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792653550;
-	h=DMARC-Filter:Received:X-Google-DKIM-Signature:X-Forwarded-Encrypted:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:X-Relaying-Domain:
-	 X-CFilter-Loop:Received:DKIM-Signature:X-Forwarded-Encrypted:
-	 X-Received:X-Received:Received:From:To:Cc:Subject:Date:Message-ID:
-	 X-Mailer:MIME-Version:Content-Transfer-Encoding:
-	 X-DetectorID-Processed;
-	bh=mb0Xuw2hsRE9Rh0sEojEm3qW3tIg9er9OBi3tNQNZUc=;
-	b=Dsnt7Odb3x8WZI60LePke+Ds7JV5bfi4y8+uLRlD1RxFU05yj145RpS4jqug1XXB97LE
-	 KGUNEQUMtnazQRIRzTKLTrdNJrvQaFhjkcuvlLhzjZE4PZ03Uf58zRrP+VNPeTBwll0h2
-	 4nM8OlIEAE9kAhpirjZ4K2mUiNpsIMaWhZ6ZolDLCtWx2A7kDpXg13mkO+e+X/VeCH8wK
-	 DAUaHIro1kpVYXoaOnH1yS3xcOEGUK+slU9PHaJ1tZGzfy7k63rI2BtScjuDTjrbYHRX+
-	 d477jSwJbLJt8gCXUlrul5TZqM568NsciQWmq6kEE9zhyAcaLXeizvaRNv1qYEKRobw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792653918;
+	h=Received:DKIM-Signature:Subject:From:To:Cc:Date:Message-ID:
+	 In-Reply-To:References:X-sashiko-severity:Content-Type:
+	 Content-Transfer-Encoding:MIME-Version;
+	bh=3+sI12mDcyiWW+7rUXYLDI24xLKvRl6Qlbizw4n1tjU=;
+	b=fczCgmWh7i0ptCkg24NVEXktOgWJkGIyHiDQluHRV2xoJp+NQ4i+5g+Eo7aHfRidb82c
+	 MVDebz5zWpk/O5yaCu/fb67HfzwybQ/HeNGSO2KpItA0kimbm8hfQJE3mc0GWyo1U0MNJ
+	 4J6D9C3y0Gk0cVyZks7wBU5UMCbW+dp7EDnyKNLVRubhWFiZV2B4U9hCG/SHPsJhBTTnb
+	 uuBPcLQ1AvywQ+DhLR26MHrt127oGkV+KDEtFn6CztgXhd08+N/YCd2xyigF50KfGcerD
+	 JLSdNNY6iZAmabX9UqVEY4eWuYoN5XpQVMzdoXMZgBoM1J96ya37z9PvzZwVjLb4Qag==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=broadcom.com;
-	spf=fail smtp.mailfrom=broadcom.com;
-	dkim=pass header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b="Am00/wPD";
-	arc=none smtp.remote-ip=209.85.219.99
-Received: from mail-qv1-f99.google.com (mail-qv1-f99.google.com [209.85.219.99])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ZrvXmHSJ;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA9B1606A31B
-	for <linux-scsi@vger.kernel.org>; Thu, 22 Oct 2026 07:19:09 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BA9B1606A31B
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2694606A33F;
+	Thu, 22 Oct 2026 07:25:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=Am00/wPD
-Received: by mail-qv1-f99.google.com with SMTP id 6a1803df08f44-917a64f28d0so8541116d6.0
-        for <linux-scsi@vger.kernel.org>; Thu, 22 Oct 2026 00:19:09 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792653549; x=1793258349;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:dkim-signature:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=mb0Xuw2hsRE9Rh0sEojEm3qW3tIg9er9OBi3tNQNZUc=;
-        b=FYex0R0yQu0RaSSRsD7XpbDj5Fv7Qmn+d7nhBawXs4fVCETnD0/L5gus/q38iNw7nW
-         hcI7T6EvurqyuGGtuJ5zryfroHS5dqb/EdKvABidnvZGUY8YqIEkyFUxOxI50SCwTV8t
-         INRPrrXvLN+ckQAyyp3nrIK8r7LcNrxsJAYpfXBUJQJkZVJhELPNr6wjuzMix3pvyGvS
-         iOj9+W1B9gdMhnXul+nuRYOXFQ4BYr+E2MzmSwI5HLkP6CvmLMCeqRHbUWM2hDwH8y6R
-         y3an3lZAv2CSb5PqrgerDPdjX+GNwTNho3WPykxrg8vMFBIVhQ8FOTKJbi4zDK+MvGuu
-         LHBg==
-X-Forwarded-Encrypted: i=1; AKwUvBxqW+XyRNda0K1wCBDh9lCufTJA58O5VeB8MQ6H8WuDTGe4AfnKlJXijxOepCcci0I3nBIpVAblT5jn@vger.kernel.org
-X-Gm-Message-State: AFq9FYKU7pA9aaGa2IzxZFuzjSxdbJLJTbqzQJTSCug1AxNjkOwvCDb1
-	6b93y9ZqGqt7FXkaXDQEkI1kpEs3s/ZE4EnsLdfSBFomGJ606I1rUGpGpsZ9euaQTi+7fdTRCMb
-	fvlzNeVGykuo1fZtclBBCmSEKebKc1NJ593IHuS6wWSbPJDomoFv5hfJElOkCjoGPEqyNBjjcXW
-	pHY16Q4hOynSLq2tqE56ExJTEPJH42jGIFHWVH+oAbG+g/5hJpUZ6vo4iCIpHcebnokCoiV5Tb/
-	JTcylQ6ZKb7
-X-Gm-Gg: AYBFou3wlD2RaXsV2cX/4EdlSh6xUQIX6kbld2CXX8q0g5/OrMi7mDND7sbi8y/pzVl
-	ISWsrxhfeMeNaQ5RRfl0Vf2Lq/HB7hWRfQDL0DbLpqSod4Wup57WxLoATea8r8gkRkxBOW7wUfa
-	qk7sCu+wS4aj0zbDUQVdW6LgDan23R+Yno0vQQZQBCaGWTQLsqekflhf7acB7M6zDmC9qTw+Lr9
-	PsLBQ13fuwTplcCURPJWnAvwOLmyLX/AIoEO7GpuHKzXjTjLTPyuPIrxGJhLzIy5cks/rnF8e5Q
-	HLeHri8KpC20kymqhg6cxI0PKHT5LWV/uA8DMT/YH651IMuKgrKK0UiWoKbjYNwzyMYZWeOCUja
-	9F55Xa9weEBZG+qIWmxke9c5VliCX7077Nc4qJeer1mhYaK1+rTNKNFt8Cjg5HhVyzc8DAFzGI/
-	DkgiqF1Dd2gZRKbGW4c+ZIWUmczUxlmRwmWg==
-X-Received: by 2002:a05:620a:2b9a:b0:93f:3834:31f9 with SMTP id af79cd13be357-93f626db0ddmr262991985a.12.1792653548663;
-        Thu, 22 Oct 2026 00:19:08 -0700 (PDT)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-120.dlp.protect.broadcom.com. [144.49.247.120])
-        by smtp-relay.gmail.com with ESMTPS id af79cd13be357-93f56de5a85sm74923185a.11.2026.10.22.00.19.08
-        for <linux-scsi@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 22 Oct 2026 00:19:08 -0700 (PDT)
-X-Relaying-Domain: broadcom.com
-X-CFilter-Loop: Reflected
-Received: by mail-dy1-f198.google.com with SMTP id 5a478bee46e88-35a04491c56so571933eec.0
-        for <linux-scsi@vger.kernel.org>; Thu, 22 Oct 2026 00:19:08 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1792653547; x=1793258347; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=mb0Xuw2hsRE9Rh0sEojEm3qW3tIg9er9OBi3tNQNZUc=;
-        b=Am00/wPDIWBGzmaaThjF2RGPXELEyDc/dNj7tCjcRmBMhTiD6lLPcluzUIZ3pvgp0a
-         zoDvZ4i+0EhWSy31mFSz0trIwvSEVehCmViouaYfJ8If3ELbd1FpQV388eQOvXbAwK2g
-         OTyQyyp4sEf73LbMp2eX+NziRp0EDhIy+cwh4=
-X-Forwarded-Encrypted: i=1; AKwUvBwii4RpZtdlAUA5LB4POW/XSid7toGsnN+SCBZgV3ca0Q6QQSqbkx1WJoLb7pdC/afoXBAj2BkzROYR@vger.kernel.org
-X-Received: by 2002:a05:693c:8809:10b0:359:fb64:11d7 with SMTP id 5a478bee46e88-368af69cd3dmr2002276eec.11.1792653547246;
-        Thu, 22 Oct 2026 00:19:07 -0700 (PDT)
-X-Received: by 2002:a05:693c:8809:10b0:359:fb64:11d7 with SMTP id 5a478bee46e88-368af69cd3dmr2002239eec.11.1792653546572;
-        Thu, 22 Oct 2026 00:19:06 -0700 (PDT)
-Received: from matt-workstation.dhcp.broadcom.net ([192.19.38.250])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-367411b4145sm15650049eec.15.2026.10.22.00.19.03
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 22 Oct 2026 00:19:06 -0700 (PDT)
-From: Matt Wang <matt.wang@broadcom.com>
-To: vishal.bhakta@broadcom.com,
-	James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com,
-	linux-kernel@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	bcm-kernel-feedback-list@broadcom.com
-Cc: Matt Wang <matt.wang@broadcom.com>
-Subject: [PATCH] scsi: vmw_pvscsi: clamp on e->dataLen in pvscsi_complete_request
-Date: Thu, 22 Oct 2026 15:18:58 +0800
-Message-ID: <20261022071858.8674-1-matt.wang@broadcom.com>
-X-Mailer: git-send-email 2.47.3
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ZrvXmHSJ
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DEF0D1F000C9;
+	Thu, 22 Oct 2026 07:25:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1792653917;
+	bh=3+sI12mDcyiWW+7rUXYLDI24xLKvRl6Qlbizw4n1tjU=;
+	h=Subject:From:To:Cc:Date:In-Reply-To:References;
+	b=ZrvXmHSJGSjbI+sMVod0u0OAzSFZQKd0AljLQMqU/sssGFDJtwoe1no2KdWHc40X2
+	 1pHfxlJpP8CLLESSRCi/LN6iB8dQYJbuQ1Q8jG3M6vy2rvuxeFc+FXvSmRVdL2/KH3
+	 3kBP3Rr77eqeztOwuNWspjKWbixPekqvb/rSNpCJQ/IL7AfrNmJfTm68X96akEzJH+
+	 nPwsKlpLlz27gElQuFRE5bMI5r9g5aDQF9VbFCkeA8RTRNqxQTJxhLP5IPg/Q3fmuo
+	 TdeKPtsTJOynGWML5JLgqdJmIjLYJCLNHyNv4Ab/Nwq+Dos6RNrv9d7WzOxFQJFKCi
+	 I9MIW/6EyOOug==
+Subject: Re: [PATCH] libcxgb: use raw_cpu_ptr() in ppm_get_cpu_entries()
+From: netdev-bot+sashiko@kernel.org
+To: haoranwangsec@gmail.com
+Cc: varun@chelsio.com, bigeasy@linutronix.de, clrkwllms@kernel.org,
+ rostedt@goodmis.org, linux-rt-devel@lists.linux.dev,
+ linux-scsi@vger.kernel.org, netdev@vger.kernel.org,
+ linux-kernel@vger.kernel.org, kuba@kernel.org
+Date: Thu, 22 Oct 2026 07:25:16 +0000
+Message-ID: <179265391648.3135.4737238756305443681@kernel.org>
+In-Reply-To: <179241614797.5916.13928836073297916808@whr>
+References: <179241614797.5916.13928836073297916808@whr>
+X-sashiko-severity: High
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -112,51 +63,134 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 
-When calculating the residual bytes, clamp dataLen to the buffer length
-before the subtraction. This prevents an overflow if the device sends a
-larger value than expected.
+Thank you for your contribution! Sashiko AI review found 2 potential
+issue(s) to consider.
 
-Signed-off-by: Matt Wang <matt.wang@broadcom.com>
----
- drivers/scsi/vmw_pvscsi.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+Critical: 0 · High: 1 · Medium: 0 · Low: 1
 
-diff --git a/drivers/scsi/vmw_pvscsi.c b/drivers/scsi/vmw_pvscsi.c
-index 151cac9f9..8e2c1b20f 100644
---- a/drivers/scsi/vmw_pvscsi.c
-+++ b/drivers/scsi/vmw_pvscsi.c
-@@ -548,6 +548,8 @@ static void pvscsi_complete_request(struct pvscsi_adapter *adapter,
- 	struct completion *abort_cmp;
- 	u32 btstat = e->hostStatus;
- 	u32 sdstat = e->scsiStatus;
-+	u64 data_len = e->dataLen;
-+	u32 data_trans = 0;
- 
- 	ctx = pvscsi_get_context(adapter, e->context);
- 	cmd = ctx->cmd;
-@@ -590,15 +592,16 @@ static void pvscsi_complete_request(struct pvscsi_adapter *adapter,
- 			 * returns zero dataLen with non zero data - do not set
- 			 * residual count in that case.
- 			 */
--			if (e->dataLen && (e->dataLen < scsi_bufflen(cmd)))
--				scsi_set_resid(cmd, scsi_bufflen(cmd) - e->dataLen);
-+			if (data_len && (data_len < scsi_bufflen(cmd)))
-+				scsi_set_resid(cmd, scsi_bufflen(cmd) - data_len);
- 			cmd->result = (DID_OK << 16);
- 			break;
- 
- 		case BTSTAT_DATARUN:
- 		case BTSTAT_DATA_UNDERRUN:
- 			/* Report residual data in underruns */
--			scsi_set_resid(cmd, scsi_bufflen(cmd) - e->dataLen);
-+			data_trans = min_t(u64, data_len, scsi_bufflen(cmd));
-+			scsi_set_resid(cmd, scsi_bufflen(cmd) - data_trans);
- 			cmd->result = (DID_ERROR << 16);
- 			break;
- 
+If you believe none of the issues are legitimate, please reply to each
+issue of Medium severity or higher and explain why the AI is wrong.
+If any of them are legitimate and you plan to respin, please let patchwork
+know by including "pw-bot: cr" as a separate line at the end of your reply
+(one such reply per series is enough).
+
+- [High] The patch introduces a cpu/pool mismatch race in
+  ppm_get_cpu_entries()…
+- [Low] The commit is a bug fix for a user-visible 'BUG: sleeping
+  function called from invalid context' on PREEMPT_RT.
+
+--
+
+libcxgb: use raw_cpu_ptr() in ppm_get_cpu_entries()
+
+This patch changes ppm_get_cpu_entries(). It drops get_cpu(),
+per_cpu_ptr() and put_cpu() and uses raw_smp_processor_id() and
+raw_cpu_ptr() instead. The aim is to stop spin_lock_bh() from being taken
+with preemption disabled, which triggers a sleeping-in-atomic BUG on
+PREEMPT_RT.
+
+> Signed-off-by: Haoran Wang <haoranwangsec@gmail.com>
+
+[Severity: Low]
+This fixes a user-visible BUG on PREEMPT_RT, but the commit has no Fixes:
+tag. The get_cpu()/per_cpu_ptr()/spin_lock_bh()/put_cpu() sequence has
+not changed since it was added in:
+
+Fixes: 47da7e62b391 ("cxgb4: add iSCSI DDP page pod manager")
+
+Should that tag be added, possibly with a Cc: stable?
+
+> diff --git a/drivers/net/ethernet/chelsio/libcxgb/libcxgb_ppm.c b/drivers/net/ethernet/chelsio/libcxgb/libcxgb_ppm.c
+> index 2e3973a32d9d..5f68c5d5766e 100644
+> --- a/drivers/net/ethernet/chelsio/libcxgb/libcxgb_ppm.c
+> +++ b/drivers/net/ethernet/chelsio/libcxgb/libcxgb_ppm.c
+> @@ -125,10 +125,9 @@ static int ppm_get_cpu_entries(struct cxgbi_ppm *ppm, unsigned int count,
+>  	if (!ppm->pool)
+>  		return -EINVAL;
+>  
+> -	cpu = get_cpu();
+> -	pool = per_cpu_ptr(ppm->pool, cpu);
+> +	cpu = raw_smp_processor_id();
+> +	pool = raw_cpu_ptr(ppm->pool);
+
+[Severity: High]
+Can cpu and pool refer to different CPUs here?
+
+The new code reads the current CPU twice, with preemption and migration
+both enabled. Say the task moves from CPU A to CPU B between
+raw_smp_processor_id() and raw_cpu_ptr(). The bit is then reserved in CPU
+B's bitmap under CPU B's lock, but the returned index is built from the
+old cpu value:
+
+drivers/net/ethernet/chelsio/libcxgb/libcxgb_ppm.c:ppm_get_cpu_entries() {
+    ...
+	i += cpu * ppm->pool_index_max;
+	ppm_mark_entries(ppm, i, count, caller_data);
+    ...
+}
+
+The index and the ppod_data[] entry now point into CPU A's slice, while
+bit i in CPU A's bitmap is still clear.
+
+Could a task on CPU A then get the same index, hardware page pod and
+ppod_data slot while the first transfer is still in flight?
+
+cxgbi_ppm_ppods_reserve() turns this index into hwidx and the DDP tag.
+cxgbit_ddp_reserve() and cxgbi_ddp_reserve() then program that tag into
+the adapter. The caller_data in ppod_data[] is also what
+cxgbi_parse_pdu_itt() uses later to match responses to tasks.
+
+On release, ppm_unmark_entries() gets the pool back from the index:
+
+	cpu = i / ppm->pool_index_max;
+	i %= ppm->pool_index_max;
+
+	pool = per_cpu_ptr(ppm->pool, cpu);
+	spin_lock_bh(&pool->lock);
+	bitmap_clear(pool->bmap, i, count);
+
+That would clear the bit in CPU A's pool, which may free another
+transfer's live entry. The bit that was really set in CPU B's pool would
+never be cleared.
+
+One preemptible caller that holds no spinlock is the iSCSI target TX
+path:
+
+iscsit_send_r2t()
+  cxgbit_get_r2t_ttt()
+    cxgbit_ddp_reserve()
+      cxgbi_ppm_ppods_reserve()
+        ppm_get_cpu_entries()
+
+iscsit_get_r2t_from_list() drops r2t_lock before it returns, so this
+whole chain runs unlocked. A remote initiator can drive it simply by
+sending WRITE commands to a Chelsio-offloaded target.
+
+The raw_ accessors are not checked by CONFIG_DEBUG_PREEMPT, so nothing
+would warn. The race exists on any SMP kernel built with CONFIG_PREEMPT,
+PREEMPT_LAZY or PREEMPT_RT.
+
+Given that, do these parts of the commit message still hold?
+
+    The preemption disable exists only to stabilize the per-CPU accessor,
+    the pool is serialized by pool->lock, not by preemption.
+
+    ...the defect is PREEMPT_RT-specific.
+
+The returned index encodes cpu, so cpu and pool still have to match even
+though pool->lock serializes the bitmap.
+
+Would it work to keep the saved cpu and derive the pool from it? For
+example:
+
+	cpu = raw_smp_processor_id();
+	pool = per_cpu_ptr(ppm->pool, cpu);
+
+Another option would be to wrap the lookup in
+migrate_disable()/migrate_enable().
+
+[ ... ]
+
 -- 
-2.52.0
-
+Sashiko AI review · https://netdev-ai.bots.linux.dev/sashiko/#/patchset/179241614797.5916.13928836073297916808%40whr
