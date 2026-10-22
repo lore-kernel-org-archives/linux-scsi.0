@@ -1,111 +1,60 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792662736;
-	b=oCbeCkCoHQrODI4OxmAYAkf68zk7Ji2x/oh6x/b9Txj86PQ9Z3VKMZBEk3gdp+S1bckt
-	 w2+t35p/6kPjZ1V4R4j5vTiI3M7J0X0xAa+dP8yfyz/+c/sVkS4wImvTT2fzPlZoa58iB
-	 PSZy4wrqI0IX9ihT9lsNy7ElD/d3/WuKIIPAv7nJpfrfpPKA3iXzIUmYAYgWkl3bEH7ng
-	 NmAcAE+7kqBau/d8UMmdpUJkpfF8cpbGoFb0aiANt0Q+AHyofeh3s0rkMQPccWy4Umtvl
-	 /MffCXRFoFE3QnPVQxwxGrzPZcZoyCCocp4NZTfvkXl74sPzvtEfHHGl+8Az5ulveMg==
+	t=1792665283;
+	b=UBu9q+Z6ySh25jaSzfEvTC/pSVD+MOby8xu3tn6hfrGTWExmVPHfwaf9KIo/6+HwBFcb
+	 2HqtoRPFrHpKJDL1qvuFKXEOyZcArm2n12FeBbBbHD+KhtyK9CGfpV+VtjSErigj5miFd
+	 Lh1P09oZb/Q3jN2GRF7v/bSt3tkZ/6yKl3pKjZ+jBmFrZkWqHTT2DdXb+v0Jre1OQlb6S
+	 7kduwYKlcV4b2ASpN3qhhrZGShTT/+Q4AIHQ1saUYYBtFgRD4Tzz+LPzthaIRD6uSuj5o
+	 U0J+nbtyz+G+m0QCvbAMIJ7B/MARYNfPdeFzDGXewqHlA1A+DFMt+vWv6fC9cQGbmbA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792662736;
-	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
-	 DKIM-Signature:X-Google-DKIM-Signature:X-Forwarded-Encrypted:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:X-Received:Received:From:Date:
-	 Subject:MIME-Version:Content-Type:Content-Transfer-Encoding:
-	 Message-Id:References:In-Reply-To:To:Cc:X-Mailer:X-Proofpoint-GUID:
-	 X-Proofpoint-Spam-Info:X-Authority-Analysis:X-Proofpoint-ORIG-GUID:
-	 X-Proofpoint-Spam-Details-Enc:X-Proofpoint-Virus-Version:
-	 X-Proofpoint-Spam-Details;
-	bh=LYt9rd0NfUvWvMCN389zamkO3Dpz4pDQJgC5BLvRDzI=;
-	b=NAzExIgirfwflFAB2bx59P0Uz0+YFVpUZOYUPh+pbX+hk97ldsBvK4ixqq/e9o+sPo6R
-	 43tQSsvzWe5rCVn+w/zOA+LpTahHfNQY1KpLBrPFZd1QnfgV1eMi7eaUKka4+gli4RcDp
-	 vXyfLFuwQNMVC21AU5SVML3gNvFP504Y6LHrckLVVafe5f5FLwUuax2GaZIFdVTaOxjow
-	 8cY2Ty9++77651sdVPHH2vJv60JQVKmgz1tbgIWBT76ZBDDLWSPpSqp2ObGKjH+9NXO59
-	 z42ahk+Ic0ur/ToUHKY16kU3uTTsh5l2c0FdyJH/EZzWgYDsmf5cvUhhKgqz4phrTcA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792665283;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=Ky4AYevjIhJIniLQkZbr0Wxu21YEIJLRLZRfDE9Acdc=;
+	b=ZUG1CDjT4Ow+VNesEbRCIteZJwYLkLTEtGlTYTjPAYl4i3boZgSwAkYy34ljV3JtPfjj
+	 H3ig4c4SDohHVqUju4ZEax4fjkWNqf+bJnEMleNXijrrmfIuyaMMRG6nFQANLnAhIOirD
+	 KlshBDgB/TJdK3pMKW5vaqYp5XBiv8h7jOxAoEuJwhubwWy5QC4xQ+My//yNLVAJOapLI
+	 fEyVHX0Kvho14YgnAG0KMsonzrIV38HCl/RjPCXtrW1GE9MGvkkHer+ifu2BqQOPScg9G
+	 FQ0zeE9CXiGFAHiFlvRcCw0VAiK0RIkx6VUAPqOfN5BAn6IVdwTXnzgFt5NLxAxTlCQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=oss.qualcomm.com;
-	spf=pass smtp.mailfrom=oss.qualcomm.com;
-	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=V7hWSRu9;
-	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=S0nZXerw;
-	arc=none smtp.remote-ip=205.220.180.131
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=j8goFgF3;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2CD1A606A328
-	for <linux-scsi@vger.kernel.org>; Thu, 22 Oct 2026 09:52:14 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2CD1A606A328
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C538606A327;
+	Thu, 22 Oct 2026 10:34:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=V7hWSRu9;
-	dkim=pass (2048-bit key, unprotected) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=S0nZXerw
-Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69M705Uv1995955
-	for <linux-scsi@vger.kernel.org>; Thu, 22 Oct 2026 09:52:14 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	LYt9rd0NfUvWvMCN389zamkO3Dpz4pDQJgC5BLvRDzI=; b=V7hWSRu9CGmPGUBC
-	bZyvP3ha08wYeCIRvaVAPf/Gf0eROu3Z+K5s+mYmzYCcNhtpkElunwVNidvyEcPi
-	MIUcxkQO/g+NQo5gc8XQ56j0TSEDKn/cUx1F0V/yqj8Zx+T1/T/y8CArBSPKlEdv
-	L6l/yTVBr54ftOBjtjfq/ekDUhtwAlQm8F9anGn8Nu9e9H6MPALxkFwHiRefp30c
-	ZsUQQINiFPylOoeuUrltHHHsislSUuXdAFY3rOz7yfSzwLpAufNChre5xP1NUCkl
-	PZ6rveCA/3Ab3nzgeVEZhKC5tOvJx3BS7LNetHjJhglvgMcAYj/0xt/OeMR0lS/s
-	rCgZaQ==
-Received: from mail-dy1-f199.google.com (mail-dy1-f199.google.com [74.125.82.199])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4hf93bsrnw-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Thu, 22 Oct 2026 09:52:13 +0000 (GMT)
-Received: by mail-dy1-f199.google.com with SMTP id 5a478bee46e88-30bcb065bfdso2771525eec.0
-        for <linux-scsi@vger.kernel.org>; Thu, 22 Oct 2026 02:52:13 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1792662733; x=1793267533; darn=vger.kernel.org;
-        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
-         :content-type:mime-version:subject:date:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=LYt9rd0NfUvWvMCN389zamkO3Dpz4pDQJgC5BLvRDzI=;
-        b=S0nZXerwXws6OKBZcUgBzInHxXP4VFvZwXGQn90ulcWdVZuI6xhjVVUdP06YYAQEMJ
-         fmlPZAJZjY88LUThaJxdXfTrdcl+rSczTm5LAUGQ9RggnRNQ0WJsCjITBGcDRGdGQH99
-         ndNTQKbkDlqPWOEbocYjiMrPBsuBlgSa/6iNOhgt6d1aUTKxPi6/wvE+R9mvfZTvhzCq
-         +ngDZkRMJEwV7ZKB7GWRp+XIjsYyPKgNy6pcu6ofEGOzptWhWnVfgKKdBDMWXG2UiyID
-         8cFS1rVV8VOKB6rHj4Z/R+jKWC+x/IRv+DRbfy8lYhiEPT4KtoRssLt6tKvWHhGKbtTe
-         uswA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792662733; x=1793267533;
-        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
-         :content-type:mime-version:subject:date:from:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=LYt9rd0NfUvWvMCN389zamkO3Dpz4pDQJgC5BLvRDzI=;
-        b=lcg5CDXNx0eCwa3j3e70iyyd0gmchS5G0sLMhfFBKU2cKhcmwmv4/wkQSdrkUZ7iIa
-         6a2Yspk5BkvNBZkSEPaECaQVabeBTD8/SlIup9sS3cXzcfr8bCBQ0qs8SZ+ODD+jiyY2
-         lZoj36gs3I83DGWP9XNcxYLmwtk+EdZMe77cVg5ln+k2m9oDguGfMd6M6BhNZQzZxDf1
-         grxY2HRjiePx3t/0YRO5gDNCMeKBuOvCzXuY60O1q7vC8SAKSfD37b5c4XtDqe5FlBFO
-         Ojc+H9qUbAKRy05BVgKFDVolQWZbOuIUummwxYdzxDxYQLLROSZOWKdoofYa70sMlhDI
-         chHA==
-X-Forwarded-Encrypted: i=1; AKwUvBxDun7Le+pfSJFOjPcY4pdwKHMYMkhWuKQo+y9ji1K3GIPMvJP6Co2RnJmmCdDL9u5ruIaEho/KzjUa@vger.kernel.org
-X-Gm-Message-State: AFq9FYKyW7Cye4b9CL1/obzxrSAaWK1N9kpAsDUoETU1KdLeYLZLW/gM
-	R7CqOehqfGx6crFIVV9dSVoo38HmGi1wnUNPqKVgd9COMmFBJZUVGO/w9WjjBImjpZ66WkOXV8S
-	Pp5yJ8tTh9G2OlNfkYeokTFU57pzjl2/UdXkY6ESFnuM1X0PNCJbrC8g2FaN/jvPS
-X-Gm-Gg: AYBFou2CG3NIIyLy16BvD8Ib5rkAgPdR7/L7R6C3Bb33HXGQII31dvXBTEpZ8a6PR+Q
-	m8iM8XiOX8zSvL/FAwH0O0Ry013k8LhvkWyVNkUl2pJppyrymtIoVGSH+bSLIIbw9nHZi+tClq5
-	1+Pq7lZ2iCtjzjoOyhyKeXnHSpfvhxNQ6aIu3Ea1Dm1S8IcRQtlsUIOTtd7Jb55LZHoGXCciF8p
-	XRFcXapQPM3V9vScggFeZk2QgZZsz95qvJY6lQwWGcz/xzf2fN0RZdlHTG0wnTro2rk+NrByypH
-	WMtnUTWzTfNInDf/CLQhI+7xieFzQY2N0cjJ31EocQ/9xnZopTfbaTFMle6yRMsnEnf0XIOQo1y
-	YR6Ne7fRZAimiWN2v0O8YWDghiYd6pxtd
-X-Received: by 2002:a05:7301:1885:b0:366:703c:5ef8 with SMTP id 5a478bee46e88-3674ce2fd08mr6635033eec.7.1792662732863;
-        Thu, 22 Oct 2026 02:52:12 -0700 (PDT)
-X-Received: by 2002:a05:7301:1885:b0:366:703c:5ef8 with SMTP id 5a478bee46e88-3674ce2fd08mr6635001eec.7.1792662732279;
-        Thu, 22 Oct 2026 02:52:12 -0700 (PDT)
-Received: from hu-kuldsing-hyd.qualcomm.com ([202.46.23.25])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3673e153519sm15742170eec.3.2026.10.22.02.52.07
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 22 Oct 2026 02:52:11 -0700 (PDT)
-From: Kuldeep Singh <kuldeep.singh@oss.qualcomm.com>
-Date: Thu, 22 Oct 2026 15:21:51 +0530
-Subject: [PATCH 2/3] ufs: ufs-qcom: Enable ICE before enabling crypto
- support
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=j8goFgF3
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 218D41F000D4;
+	Thu, 22 Oct 2026 10:34:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1792665281;
+	bh=Ky4AYevjIhJIniLQkZbr0Wxu21YEIJLRLZRfDE9Acdc=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=j8goFgF335pJffIOcVSUoDk+tXU2FNuINnveBFNgo228sAUV1W3s4ggSUZGNZp5Wj
+	 TptUdRazDXzyeEVeaJ8uUlsk/8hTE2T0FTuAP47mtIaa5Rmz8Ee+WJkyqnj2ZWwNX6
+	 ZFxkMGKm3alAnlQ8HRugvAXL5lsQVMQblEZm9tzmQAao9kZ3ehemixv57qDlAww4Y2
+	 4RGDaKXbmtuWNIrhyRogvmqCTepp/QEZkdqSuD1MZYWzbHvfN4cZg1bRsdt3pPULNr
+	 jknixHE1Qe38eV6YBKFO5z0w1mc1doMCXlK91/O5djmNChaaduL5DNVczF9F3ZbtdC
+	 1SaRqWIZ4l/KA==
+Message-ID: <sashiko-outbox-181342@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH 3/3] soc: qcom: ice: Add runtime PM support
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Kuldeep Singh" <kuldeep.singh@oss.qualcomm.com>, "Adrian Hunter" <adrian.hunter@intel.com>, "Ulf
+ Hansson" <ulfh@kernel.org>, "Abel Vesa" <abelvesa@kernel.org>, "Manivannan
+ Sadhasivam" <mani@kernel.org>, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, "Martin
+ K. Petersen" <mkp@kernel.org>, "Eric Biggers" <ebiggers@google.com>, "Bjorn
+ Andersson" <andersson@kernel.org>, "Konrad Dybcio" <konradybcio@kernel.org>
+Cc: linux-scsi@vger.kernel.org, linux-crypto@vger.kernel.org
+In-Reply-To: <20261022-qcom_ice_pm_enable-v1-3-f7a84086c651@oss.qualcomm.com>
+References: <20261022-qcom_ice_pm_enable-v1-0-f7a84086c651@oss.qualcomm.com>
+ <20261022-qcom_ice_pm_enable-v1-3-f7a84086c651@oss.qualcomm.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 22 Oct 2026 10:34:40 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -114,160 +63,446 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20261022-qcom_ice_pm_enable-v1-2-f7a84086c651@oss.qualcomm.com>
-References: <20261022-qcom_ice_pm_enable-v1-0-f7a84086c651@oss.qualcomm.com>
-In-Reply-To: <20261022-qcom_ice_pm_enable-v1-0-f7a84086c651@oss.qualcomm.com>
-To: Adrian Hunter <adrian.hunter@intel.com>, Ulf Hansson <ulfh@kernel.org>,
-        Abel Vesa <abelvesa@kernel.org>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-        "Martin K. Petersen" <mkp@kernel.org>,
-        Eric Biggers <ebiggers@google.com>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konradybcio@kernel.org>
-Cc: linux-mmc@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-crypto@vger.kernel.org,
-        Kuldeep Singh <kuldeep.singh@oss.qualcomm.com>
-X-Mailer: b4 0.15.2
-X-Proofpoint-GUID: 7CCxpOgiuQMzCZIGs_-qiJpnsCJPCZiR
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMDIyMDAzOSBTYWx0ZWRfX8VHCIG0qu8Dq
- B2lNu1K4AaGIzaHBgLM7a9io0foGYrCkwm03/QLU0D4pzjLd9G0cr9atiafcqO6HJA39GFxWxZU
- nqx7drLiKvPro3fJpO4cWiPzFf5bqoo=
-X-Authority-Analysis: v=2.4 cv=F4fC5ahN c=1 sm=1 tr=0 ts=6ad9dccd cx=c_pps
- a=cFYjgdjTJScbgFmBucgdfQ==:117 a=ZePRamnt/+rB5gQjfz0u9A==:17
- a=IkcTkHD0fZMA:10 a=660iZSQnnn4A:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=yx91gb_oNiZeI1HMLzn7:22
- a=EUspDBNiAAAA:8 a=poJO1rpmugtNz4m0g9UA:9 a=QEXdDO2ut3YA:10
- a=scEy_gLbYbu1JhEsrz4S:22
-X-Proofpoint-ORIG-GUID: 7CCxpOgiuQMzCZIGs_-qiJpnsCJPCZiR
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDIyMDAzOSBTYWx0ZWRfX8O8UIxEQLStM
- /ERr7DXydj0u7tEnAUIwWP7ixCR4nTdwMBmTOM964dKBqNSbv/pQJvPeikZEOPO/3/7y6hR4tv2
- KPHGe4lv9qvHWZdmGAgSV7DvOIppqBITG5s93W5XsvF+VN6xGqJIWwv3/NkMckH25n2pfXqfLcX
- fBtvX7MMYJ2wAww7PL/EGiSfcj0LmXzeTHXrDOipzUJgYLgmFPsl/YFvju+2UxGLjHsEUg1F5po
- TqHtygWAOK+wTVhF4pUw2VmEucTFFNNZgqrEBIJQDueityO7ZzdID09cKJ+mTehTkNKAEnHi/Bv
- ZABnsmH6tXa/m8NW4VxP5Vstmmh4bJx8ve9G2nnbKwGbdIGrwGKBtFG57+JbjtRMEttrobUC8DU
- te6YmTDw0TZ3iWuzI67AkXBugLKzi3zgIjiQuYJgAOJWOaafNp/YEB+nM0Qw0eLBOMV9mZ66Tfl
- vLIz8z6yMRcIpoCUAag==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
- definitions=2026-10-22_03,2026-10-21_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- suspectscore=0 spamscore=0 malwarescore=0 priorityscore=1501 adultscore=0
- phishscore=0 bulkscore=0 clxscore=1015 impostorscore=0 lowpriorityscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2610190000 definitions=main-2610220039
 
-ufs-qcom currently exposes UFS crypto profile and sets UFSHCD_CAP_CRYPTO
-before enabling ICE. This leaves a window where blk-crypto can issue
-keyslot programming calls before ufs-qcom has explicitly enabled ICE.
+Thank you for your contribution! Sashiko AI review found 5 potential issue(=
+s) to consider:
+- [High] soc: qcom: ice: unclocked MMIO access in qcom_ice_enable() when !C=
+ONFIG_PM
+- [High] soc: qcom: ice: unbalanced runtime PM refcount in qcom_ice_enable()
+- [High] soc: qcom: ice: clock and runtime PM leak on probe failure or unbi=
+nd
+- [High] soc: qcom: ice: broken pm_runtime return handling in qcom_ice_susp=
+end()
+- [High] soc: qcom: ice: skipped HWKM re-init and unclocked restore across =
+system PM
+--
 
-Similar to MMC, UFS also works today as ICE clocks remain enabled after
-the probe, but it should not rely on that implicit clock state. Once ICE
-supports runtime PM, ICE clocks can be suspended after probe, and
-accessing ICE registers before qcom_ice_enable() call can fail due to
-unclocked register access in qcom_ice_program_key().
+commit e58cd3bb281ecab50bf58fdb5388a26380d5ef70
+Author: Kuldeep Singh <kuldeep.singh@oss.qualcomm.com>
 
-Enable ICE during ufs crypto init path to ensure ICE is ready before
-blk-crypto can issue key programming calls.
+soc: qcom: ice: Add runtime PM support
 
-Also call qcom_ice_enable() from HCE PRE_CHANGE path once crypto support
-has been enabled. UFS controller reset can reset ICE state, and the UFS
-core can reprogram keys during HCE start before POST_CHANGE.
-Re-enabling ICE in PRE_CHANGE makes ICE ready before reset-time key
-reprogramming and for any later ICE operation.
+This commit adds runtime PM support to the Qualcomm Inline Crypto Engine
+(ICE) driver so that the core and iface clocks are gated when the device is
+idle on platforms with a dedicated ICE devicetree node. For legacy bindings
+where the ICE instance is created using the storage consumer device, manual
+clock control is retained.
 
-Fixes: 56541c7c4468 ("scsi: ufs: ufs-qcom: Switch to the new ICE API")
-Signed-off-by: Kuldeep Singh <kuldeep.singh@oss.qualcomm.com>
----
- drivers/ufs/host/ufs-qcom.c | 29 ++++++++++++++++++++---------
- 1 file changed, 20 insertions(+), 9 deletions(-)
+> diff --git a/drivers/soc/qcom/ice.c b/drivers/soc/qcom/ice.c
+> index e256595b9826f..f9939e2d037c7 100644
+> --- a/drivers/soc/qcom/ice.c
+> +++ b/drivers/soc/qcom/ice.c
 
-diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index fee9b54ba5e1..7e5aa4573e0c 100644
---- a/drivers/ufs/host/ufs-qcom.c
-+++ b/drivers/ufs/host/ufs-qcom.c
-@@ -158,13 +158,15 @@ static void ufs_qcom_config_ice_allocator(struct ufs_qcom_host *host)
- 	ufshcd_writel(hba, config, REG_UFS_MEM_ICE_NUM_CORE);
- }
- 
--static inline void ufs_qcom_ice_enable(struct ufs_qcom_host *host)
-+static const struct blk_crypto_ll_ops ufs_qcom_crypto_ops; /* forward decl */
-+
-+static inline int ufs_qcom_ice_enable(struct ufs_qcom_host *host)
- {
- 	if (host->hba->caps & UFSHCD_CAP_CRYPTO)
--		qcom_ice_enable(host->ice);
--}
-+		return qcom_ice_enable(host->ice);
- 
--static const struct blk_crypto_ll_ops ufs_qcom_crypto_ops; /* forward decl */
-+	return 0;
-+}
- 
- static int ufs_qcom_ice_init(struct ufs_qcom_host *host)
- {
-@@ -188,6 +190,12 @@ static int ufs_qcom_ice_init(struct ufs_qcom_host *host)
- 
- 	host->ice = ice;
- 
-+	err = qcom_ice_enable(host->ice);
-+	if (err) {
-+		dev_err(dev, "Failed to enable ICE: %d\n", err);
-+		return err;
-+	}
-+
- 	/* Initialize the blk_crypto_profile */
- 
- 	caps.reg_val = cpu_to_le32(ufshcd_readl(hba, REG_UFS_CCAP));
-@@ -318,11 +326,12 @@ static const struct blk_crypto_ll_ops ufs_qcom_crypto_ops = {
- 
- #else
- 
--static inline void ufs_qcom_ice_enable(struct ufs_qcom_host *host)
-+static int ufs_qcom_ice_init(struct ufs_qcom_host *host)
- {
-+	return 0;
- }
- 
--static int ufs_qcom_ice_init(struct ufs_qcom_host *host)
-+static inline int ufs_qcom_ice_enable(struct ufs_qcom_host *host)
- {
- 	return 0;
- }
-@@ -636,12 +645,15 @@ static int ufs_qcom_hce_enable_notify(struct ufs_hba *hba,
- 		 * is initialized.
- 		 */
- 		err = ufs_qcom_enable_lane_clks(host);
-+		if (err)
-+			return err;
-+
-+		err = ufs_qcom_ice_enable(host);
- 		break;
- 	case POST_CHANGE:
- 		/* check if UFS PHY moved from DISABLED to HIBERN8 */
- 		err = ufs_qcom_check_hibern8(hba);
- 		ufs_qcom_enable_hw_clk_gating(hba);
--		ufs_qcom_ice_enable(host);
- 		ufs_qcom_config_ice_allocator(host);
- 		break;
- 	default:
-@@ -660,10 +672,9 @@ static int ufs_qcom_fw_managed_hce_enable_notify(struct ufs_hba *hba,
- 	switch (status) {
- 	case PRE_CHANGE:
- 		ufs_qcom_select_unipro_mode(host);
--		break;
-+		return ufs_qcom_ice_enable(host);
- 	case POST_CHANGE:
- 		ufs_qcom_enable_hw_clk_gating(hba);
--		ufs_qcom_ice_enable(host);
- 		break;
- 	default:
- 		dev_err(hba->dev, "Invalid status %d\n", status);
+[ ... ]
 
--- 
-2.34.1
+> @@ -303,42 +305,99 @@ static void qcom_ice_hwkm_init(struct qcom_ice *ice)
+> =20
+>  int qcom_ice_enable(struct qcom_ice *ice)
+>  {
+> +	bool pm_acquired =3D false;
+> +	int err;
+> +
+> +	if (ice->use_pm_runtime && pm_runtime_suspended(ice->dev)) {
+> +		err =3D pm_runtime_resume_and_get(ice->dev);
+> +		if (err) {
+> +			dev_err(ice->dev, "runtime resume failed: %d\n", err);
+> +			return err;
+> +		}
+> +		pm_acquired =3D true;
+> +	}
+> +
+>  	qcom_ice_low_power_mode_enable(ice);
+>  	qcom_ice_optimization_enable(ice);
+>  	qcom_ice_hwkm_init(ice);
+> -	return qcom_ice_wait_bist_status(ice);
+> +
+> +	err =3D qcom_ice_wait_bist_status(ice);
+> +	if (err && pm_acquired) {
+> +		dev_err(ice->dev, "BIST failed, ret: %d\n", err);
+> +		pm_runtime_put_sync_suspend(ice->dev);
+> +	}
+> +
+> +	return err;
+>  }
 
+[Severity: High]
+In qcom_ice_enable() in drivers/soc/qcom/ice.c, pm_runtime_resume_and_get()
+is gated on an unlocked check of pm_runtime_suspended(ice->dev):
+
+include/linux/pm_runtime.h:pm_runtime_suspended() {
+	return dev->power.runtime_status =3D=3D RPM_SUSPENDED
+		&& !dev->power.disable_depth;
+}
+
+Because devm_pm_runtime_enable(&pdev->dev) is called in qcom_ice_probe()
+before consumers attach, ice->dev may already be in RPM_ACTIVE (for example,
+if userspace writes "on" to power/control via pm_runtime_forbid(), or after
+an earlier consumer call to qcom_ice_enable()) or in RPM_SUSPENDING when
+qcom_ice_enable() runs.
+
+When pm_runtime_suspended(ice->dev) returns false:
+- qcom_ice_enable() skips pm_runtime_resume_and_get(ice->dev) and does not
+  acquire a runtime PM usage reference for the consumer.
+- If ice->dev is concurrently in RPM_SUSPENDING, qcom_ice_enable() accesses
+  registers in qcom_ice_low_power_mode_enable(),
+  qcom_ice_optimization_enable(), qcom_ice_hwkm_init(), and
+  qcom_ice_wait_bist_status() while qcom_ice_runtime_suspend() disables
+  core_clk and iface_clk.
+- If power/control is later set back to "auto" (pm_runtime_allow()),
+  ice->dev can suspend and gate its clocks while the storage consumer is
+  still active.
+- When the consumer later calls qcom_ice_suspend() ->
+  pm_runtime_put_sync_suspend(ice->dev), it decrements
+  ice->dev->power.usage_count without a matching reference from
+  qcom_ice_enable().
+
+Additionally, when ice->dev is RPM_SUSPENDED on the initial call to
+qcom_ice_enable(), pm_runtime_resume_and_get(ice->dev) invokes
+qcom_ice_runtime_resume() -> qcom_ice_do_resume(), which runs
+qcom_ice_hwkm_init() and qcom_ice_wait_bist_status() before
+qcom_ice_low_power_mode_enable() and qcom_ice_optimization_enable(), and
+then qcom_ice_enable() runs qcom_ice_hwkm_init() and
+qcom_ice_wait_bist_status() a second time.
+
+Can qcom_ice_enable() leave the runtime PM usage count unbalanced or race
+with a concurrent runtime suspend when ice->dev is not in RPM_SUSPENDED?
+
+>  EXPORT_SYMBOL_GPL(qcom_ice_enable);
+> =20
+> -int qcom_ice_resume(struct qcom_ice *ice)
+> +static int qcom_ice_enable_clocks(struct qcom_ice *ice)
+>  {
+> -	struct device *dev =3D ice->dev;
+>  	int err;
+> =20
+>  	err =3D clk_prepare_enable(ice->core_clk);
+> -	if (err) {
+> -		dev_err(dev, "Failed to enable core clock: %d\n", err);
+> +	if (err)
+>  		return err;
+> -	}
+> =20
+>  	err =3D clk_prepare_enable(ice->iface_clk);
+>  	if (err) {
+> -		dev_err(dev, "Failed to enable iface clock: %d\n", err);
+> +		clk_disable_unprepare(ice->core_clk);
+>  		return err;
+>  	}
+> -	qcom_ice_hwkm_init(ice);
+> -	return qcom_ice_wait_bist_status(ice);
+> +
+> +	return 0;
+>  }
+> -EXPORT_SYMBOL_GPL(qcom_ice_resume);
+> =20
+> -int qcom_ice_suspend(struct qcom_ice *ice)
+> +static void qcom_ice_disable_clocks(struct qcom_ice *ice)
+>  {
+>  	clk_disable_unprepare(ice->iface_clk);
+>  	clk_disable_unprepare(ice->core_clk);
+> +}
+> +
+> +static int qcom_ice_do_resume(struct qcom_ice *ice)
+> +{
+> +	int err =3D 0;
+> +
+> +	err =3D qcom_ice_enable_clocks(ice);
+> +	if (err)
+> +		return err;
+> +
+> +	qcom_ice_hwkm_init(ice);
+> +
+> +	err =3D qcom_ice_wait_bist_status(ice);
+> +	if (err) {
+> +		dev_err(ice->dev, "Bist failed, ret: %d\n", err);
+> +		qcom_ice_disable_clocks(ice);
+> +		ice->hwkm_init_complete =3D false;
+> +	}
+> +
+> +	return err;
+> +}
+> +
+> +int qcom_ice_resume(struct qcom_ice *ice)
+> +{
+> +	if (ice->use_pm_runtime)
+> +		return pm_runtime_resume_and_get(ice->dev);
+> +
+> +	return qcom_ice_do_resume(ice);
+> +}
+> +EXPORT_SYMBOL_GPL(qcom_ice_resume);
+> +
+> +static int qcom_ice_do_suspend(struct qcom_ice *ice)
+> +{
+>  	ice->hwkm_init_complete =3D false;
+> +	qcom_ice_disable_clocks(ice);
+> =20
+>  	return 0;
+>  }
+> +
+> +int qcom_ice_suspend(struct qcom_ice *ice)
+> +{
+> +	if (ice->use_pm_runtime)
+> +		return pm_runtime_put_sync_suspend(ice->dev);
+> +
+> +	return qcom_ice_do_suspend(ice);
+> +}
+>  EXPORT_SYMBOL_GPL(qcom_ice_suspend);
+
+[Severity: High]
+In qcom_ice_suspend() in drivers/soc/qcom/ice.c, the return value of
+pm_runtime_put_sync_suspend(ice->dev) is returned directly to the caller,
+whereas previously qcom_ice_suspend() always returned 0.
+
+pm_runtime_put_sync_suspend() calls __pm_runtime_suspend(ice->dev,
+RPM_GET_PUT) in drivers/base/power/runtime.c, which decrements
+dev->power.usage_count first and can return:
+- 1 if the device was already in RPM_SUSPENDED,
+- -EAGAIN if another caller concurrently incremented usage_count or a resume
+  is pending,
+- -EBUSY if child_count is non-zero or a PM domain governor rejects suspend,
+- -EPERM if a 0 us PM QoS resume latency constraint is active.
+
+In all of these cases, ice->dev->power.usage_count has already been
+decremented, but both storage callers treat any non-zero return value as a
+suspend failure:
+
+1. In drivers/mmc/host/sdhci-msm.c, sdhci_msm_runtime_suspend() disables
+   msm_host->bulk_clks before calling sdhci_msm_ice_suspend():
+
+   drivers/mmc/host/sdhci-msm.c:sdhci_msm_runtime_suspend() {
+       ...
+       dev_pm_opp_set_rate(dev, 0);
+       clk_bulk_disable_unprepare(ARRAY_SIZE(msm_host->bulk_clks),
+                                  msm_host->bulk_clks);
+
+       return sdhci_msm_ice_suspend(msm_host);
+   }
+
+   A non-zero return causes runtime suspend to fail (and a return value of 1
+   sets dev->power.runtime_error =3D 1 in rpm_suspend()) with SDHCI clocks =
+left
+   disabled and ice->dev's usage_count already dropped.
+
+2. In drivers/ufs/core/ufshcd.c, __ufshcd_wl_suspend() treats a non-zero
+   return from ufshcd_vops_suspend() -> ufs_qcom_suspend() ->
+   qcom_ice_suspend() as an error:
+
+   drivers/ufs/core/ufshcd.c:__ufshcd_wl_suspend() {
+       ...
+       ret =3D ufshcd_vops_suspend(hba, pm_op, POST_CHANGE);
+       if (ret)
+           goto set_link_active;
+       ...
+   }
+
+   This aborts UFS suspend without calling qcom_ice_resume() to restore the
+   dropped ICE usage_count reference, causing the next suspend to underflow
+   ice->dev->power.usage_count. Similarly, ufshcd_wl_poweroff() calls
+   __ufshcd_wl_suspend(hba, UFS_SHUTDOWN_PM) even when UFS is already
+   runtime-suspended, calling qcom_ice_suspend() a second time.
+
+Will returning the raw result of pm_runtime_put_sync_suspend() from
+qcom_ice_suspend() cause suspend regressions in sdhci-msm and ufs-qcom?
+
+> @@ -560,10 +619,11 @@ int qcom_ice_import_key(struct qcom_ice *ice,
+>  }
+>  EXPORT_SYMBOL_GPL(qcom_ice_import_key);
+> =20
+> -static struct qcom_ice *qcom_ice_create(struct device *dev,
+> -					void __iomem *base)
+> +static struct qcom_ice *qcom_ice_create(struct device *dev, void __iomem=
+ *base,
+> +					bool use_pm_runtime)
+>  {
+>  	struct qcom_ice *engine;
+> +	int err;
+> =20
+>  	if (!qcom_scm_is_available())
+>  		return ERR_PTR(-EPROBE_DEFER);
+> @@ -579,36 +639,54 @@ static struct qcom_ice *qcom_ice_create(struct devi=
+ce *dev,
+> =20
+>  	engine->dev =3D dev;
+>  	engine->base =3D base;
+> +	engine->use_pm_runtime =3D use_pm_runtime;
+> =20
+>  	/*
+>  	 * Legacy DT binding uses different clk names for each consumer,
+>  	 * so lets try those first. If none of those are a match, it means
+>  	 * the we only have one clock and it is part of the dedicated DT node.
+> -	 * Also, enable the clock before we check what HW version the driver
+> -	 * supports.
+>  	 */
+> -	engine->core_clk =3D devm_clk_get_optional_enabled(dev, "ice_core_clk");
+> +	engine->core_clk =3D devm_clk_get_optional(dev, "ice_core_clk");
+>  	if (!engine->core_clk)
+> -		engine->core_clk =3D devm_clk_get_optional_enabled(dev, "ice");
+> +		engine->core_clk =3D devm_clk_get_optional(dev, "ice");
+>  	if (!engine->core_clk)
+> -		engine->core_clk =3D devm_clk_get_optional_enabled(dev, "core");
+> +		engine->core_clk =3D devm_clk_get_optional(dev, "core");
+>  	if (!engine->core_clk)
+> -		engine->core_clk =3D devm_clk_get_enabled(dev, NULL);
+> +		engine->core_clk =3D devm_clk_get(dev, NULL);
+>  	if (IS_ERR(engine->core_clk))
+>  		return ERR_CAST(engine->core_clk);
+> =20
+> -	engine->iface_clk =3D devm_clk_get_optional_enabled(dev, "iface");
+> +	engine->iface_clk =3D devm_clk_get_optional(dev, "iface");
+>  	if (IS_ERR(engine->iface_clk))
+>  		return ERR_CAST(engine->iface_clk);
+> =20
+> -	if (!qcom_ice_check_supported(engine))
+> +	err =3D qcom_ice_enable_clocks(engine);
+> +	if (err)
+> +		return ERR_PTR(err);
+> +
+> +	if (!qcom_ice_check_supported(engine)) {
+> +		qcom_ice_disable_clocks(engine);
+>  		return ERR_PTR(-EOPNOTSUPP);
+> +	}
+
+[Severity: High]
+Previously, qcom_ice_create() in drivers/soc/qcom/ice.c used
+devm_clk_get_optional_enabled() and devm_clk_get_enabled(), which registered
+clk_disable_unprepare() with devres for teardown. Replacing them with
+devm_clk_get_optional() and devm_clk_get() followed by
+qcom_ice_enable_clocks(engine) leaves no devres action to disable or
+unprepare engine->core_clk and engine->iface_clk:
+
+1. For the legacy DT binding (use_pm_runtime =3D=3D false), of_qcom_ice_get=
+() ->
+   qcom_ice_create(&pdev->dev, base, false) leaves core_clk and iface_clk
+   prepared and enabled, and qcom_ice_put() does not disable them:
+
+   drivers/soc/qcom/ice.c:qcom_ice_put() {
+       struct platform_device *pdev =3D to_platform_device(ice->dev);
+
+       if (!platform_get_resource_byname(pdev, IORESOURCE_MEM, "ice"))
+           platform_device_put(pdev);
+   }
+
+   If the consumer fails probe after devm_of_qcom_ice_get() or is unbound
+   (where ufshcd_remove() and sdhci_msm_remove() resume the host before
+   teardown without calling qcom_ice_suspend()), devm_clk_release() calls
+   clk_put() while core_clk and iface_clk remain prepared and enabled.
+
+2. For the dedicated DT binding (use_pm_runtime =3D=3D true), qcom_ice_enab=
+le()
+   acquires a runtime PM reference on ice->dev via
+   pm_runtime_resume_and_get(ice->dev) and enables core_clk and iface_clk.
+   If a subsequent step in consumer probe fails (or in ufs-qcom if the
+   second qcom_ice_enable() call in ufs_qcom_hce_enable_notify() fails BIST
+   when pm_acquired is false) or the consumer is unbound, neither
+   qcom_ice_put() nor the consumer remove callbacks release the runtime PM
+   reference on ice->dev. Moreover, if the qcom-ice driver itself is unbound
+   while active in qcom_ice_remove(), devm_pm_runtime_enable() only calls
+   pm_runtime_disable() without running qcom_ice_runtime_suspend().
+
+Does this leak the prepared/enabled core_clk and iface_clk clocks and the
+ice->dev runtime PM reference on probe failure or driver unbind?
+
+> +
+> +	if (use_pm_runtime)
+> +		qcom_ice_disable_clocks(engine);
+
+[Severity: High]
+CONFIG_QCOM_INLINE_CRYPTO_ENGINE does not depend on CONFIG_PM, and
+qcom_ice_driver uses pm_ptr(&qcom_ice_pm_ops) so it can be built with
+CONFIG_PM=3Dn.
+
+In qcom_ice_probe() -> qcom_ice_create(&pdev->dev, base, true),
+use_pm_runtime is unconditionally set to true and qcom_ice_disable_clocks()
+disables engine->core_clk and engine->iface_clk before returning.
+
+When CONFIG_PM=3Dn:
+- pm_runtime_set_suspended() and devm_pm_runtime_enable() in
+  qcom_ice_probe() are no-op stubs.
+- In qcom_ice_enable(), pm_runtime_suspended(ice->dev) is a stub that always
+  returns false, so qcom_ice_enable() never resumes the device or enables
+  clocks before calling qcom_ice_low_power_mode_enable(),
+  qcom_ice_optimization_enable(), qcom_ice_hwkm_init(), and
+  qcom_ice_wait_bist_status(), performing MMIO reads and writes to ICE
+  registers while core_clk and iface_clk are disabled.
+- In qcom_ice_resume(), pm_runtime_resume_and_get(ice->dev) returns 0
+  without invoking qcom_ice_runtime_resume(), leaving clocks disabled and
+  skipping qcom_ice_do_resume().
+- In qcom_ice_suspend(), pm_runtime_put_sync_suspend(ice->dev) calls the
+  __pm_runtime_suspend() stub, which returns -ENOSYS.
+
+What happens when a storage consumer calls qcom_ice_enable(),
+qcom_ice_resume(), or qcom_ice_suspend() on a kernel built with CONFIG_PM=
+=3Dn?
+
+[ ... ]
+
+> @@ -775,12 +862,18 @@ static const struct of_device_id qcom_ice_of_match_=
+table[] =3D {
+>  };
+>  MODULE_DEVICE_TABLE(of, qcom_ice_of_match_table);
+> =20
+> +static const struct dev_pm_ops qcom_ice_pm_ops =3D {
+> +	RUNTIME_PM_OPS(qcom_ice_runtime_suspend, qcom_ice_runtime_resume, NULL)
+> +	SYSTEM_SLEEP_PM_OPS(pm_runtime_force_suspend, pm_runtime_force_resume)
+> +};
+
+[Severity: High]
+With SYSTEM_SLEEP_PM_OPS(pm_runtime_force_suspend, pm_runtime_force_resume)
+in qcom_ice_pm_ops and qcom_ice_resume() delegating to
+pm_runtime_resume_and_get(ice->dev), two system PM state mismatches can
+occur when ice->use_pm_runtime is true:
+
+1. During dpm_prepare(), device_prepare() calls
+   pm_runtime_get_noresume(ice->dev), raising ice->dev->power.usage_count
+   from 1 to 2 while the storage consumer is active. When the consumer
+   suspends in dpm_suspend() and calls qcom_ice_suspend() ->
+   pm_runtime_put_sync_suspend(ice->dev), __pm_runtime_suspend() drops
+   usage_count from 2 to 1 and returns 0 without calling
+   qcom_ice_runtime_suspend(), leaving ice->dev in RPM_ACTIVE.
+
+   If system suspend aborts before pm_runtime_force_suspend(ice->dev) runs
+   (or if userspace sets ice->dev's power/control to "on"), ice->dev remains
+   in RPM_ACTIVE. When dpm_resume() runs ufshcd_wl_resume() ->
+   ufs_qcom_resume() in drivers/ufs/host/ufs-qcom.c, UFS controller v5.0.0
+   issues a synchronous hardware reset to ICE (UFS_ICE_SYNC_RST_SW in
+   UFS_MEM_ICE_CFG) and then calls qcom_ice_resume(host->ice) ->
+   pm_runtime_resume_and_get(ice->dev). Because ice->dev is still
+   RPM_ACTIVE, pm_runtime_resume_and_get() returns 0 without running
+   qcom_ice_do_resume(), skipping qcom_ice_hwkm_init() and
+   qcom_ice_wait_bist_status() after the hardware reset.
+
+2. During hibernation freeze/poweroff, after sdhci_msm_runtime_suspend()
+   calls qcom_ice_suspend() -> pm_runtime_put_sync_suspend(ice->dev),
+   ice->dev->power.usage_count is 1 (only the device_prepare() reference).
+   When pm_runtime_force_suspend(ice->dev) runs,
+   pm_runtime_need_not_resume(ice->dev) is true (usage_count <=3D 1), so it
+   calls qcom_ice_do_suspend() (setting ice->hwkm_init_complete =3D false a=
+nd
+   disabling clocks) and sets needs_force_resume =3D false.
+
+   During hibernation restore, pm_runtime_force_resume(ice->dev) leaves
+   ice->dev in RPM_SUSPENDED, and sdhci_msm_restore() in
+   drivers/mmc/host/sdhci-msm.c then calls sdhci_msm_ice_restore() ->
+   blk_crypto_reprogram_all_keys() -> qcom_ice_program_key() while ice->dev
+   is still suspended with clocks disabled and ice->hwkm_init_complete set
+   to false.
+
+Could system suspend recovery and hibernation restore leave ICE uninitializ=
+ed
+or unclocked when qcom_ice_resume() and qcom_ice_pm_ops rely on runtime PM
+status transitions?
+
+> +
+>  static struct platform_driver qcom_ice_driver =3D {
+>  	.probe	=3D qcom_ice_probe,
+>  	.remove	=3D qcom_ice_remove,
+>  	.driver =3D {
+>  		.name =3D "qcom-ice",
+>  		.of_match_table =3D qcom_ice_of_match_table,
+> +		.pm =3D pm_ptr(&qcom_ice_pm_ops),
+>  	},
+>  };
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261022-qcom_ice_p=
+m_enable-v1-0-f7a84086c651@oss.qualcomm.com?part=3D3
