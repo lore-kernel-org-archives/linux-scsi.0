@@ -1,52 +1,88 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.48
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792674797;
-	b=Lphw/CajLqF9bZ84hI2fpRoLUT4+S22EqKH2L72MM861WoHJ7zd/lc07GvoGs3ypEd+U
-	 Y65cFe7slgQt819Rf74puce1I2sdKKpduAE0blD3ZQ+9MFygiza9ck2kjT3LJbqUOjWpR
-	 W5HTwG+bWdeq0p0P61IgUIo742Nko9sRGRA/1p1jN3dbotM+qLbEYzAlunvPOX9iZkicd
-	 DPLoc8mkbTizi2DEfiw/UcZ9dv2pfXuTNZ5I22ZRLJMMjZkBSobZCH0EbPrw1vDvrup9v
-	 YL0KNEn4jgfLNDT2UDz0sFuRSbGkiHhPZ10n6mIJhKr6Zr6DHXtLZ5QmaVbT70IOEhg==
+	t=1792675800;
+	b=GrBgYNbF0fURt0vcefhyh3Pkun8gj4SXuV4UAdTiJX+zz0f9QSgw5PdASlCyLgwRbub/
+	 P0F2Mbe7xdpRPhspVbiP3NRcY9gmTlFrn0rC+//9H5LPohj3eQTiqj/xTCrBvZuDtTm2I
+	 baEhPPE5jVV4BNIsOHxmNIsbEWTNLruUEzRLMOjyS50iFbEozgm+gW1zrOic4YqW9faKs
+	 6BtJHHne4yOzYPEdDgWfVGuHoFEB9jxi8RKd0s/E1f/Vp8gb0yGn+BWi4xTirf2NSd3C9
+	 ext/kjW0eLvk3WfIVxDWZ9uhzIdfnfcNKcM5wPnsq0vjeUNj6GvlIJkTfms26P4HPaQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792674797;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=xlaV1V+yQ3J8w/w8Ck84D01xkjHZK2MyUGosH96xsm4=;
-	b=SODFDxOuYnUTM9ndsFzdfgdAmqq1h4NmlQRouTgh73DrzdyOgdudus372ScXGeTTg7Wm
-	 Ts9/65uhfu2zLOAvSJ5Z1fJDGZabkUZImO8TyInEAtKqmlC2oQCxzryjPKhP3Nm/cTixz
-	 rV3vD3AnLrjZ1Ol3b7t2z5H5r0Y8t705ZxPNkt5901SgDWRIhWD4OhQ7b3ztvFrKskvHy
-	 oo51XTC+spkQxJpOaItPYOtCCxmw3FQCoP75Gnho8ZBF0B2JB9id+5Rn1+oAF09jUdnX0
-	 IUC5rr639Ajj4+yIxhL8RvwLQc1Go48LNp2a3t8aIXR94+KSgfZOwtotrgv9cRh+nfw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792675800;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 Message-ID:Date:MIME-Version:User-Agent:Subject:To:Cc:References:
+	 Content-Language:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=qTs7ITGH5Vm0O/b2VvByjBvC5hRyxCKXY/CuqHg+goE=;
+	b=X4dVUXMbpwX8FIx11tKyKVp6Ypz/Vi/KlSZWCKlkBxzU29smBzXVhJWG0xsF2/4j6Azy
+	 kvq46fAgHpRvrSXcD03QnvMxOJcXD8k/7L3jeWuIomWzuIdTTJuO7uf8d4larsyODTlOi
+	 PCZfILkalPZbQnPSvmL/0G6zu19EAkq8p1oAIFGNtyDorPvAKYOgokAYRmMDjkwxYogcX
+	 YXvZcJxno9X0QUJqeHAAXv+MfTntzN5AByDeZxyi7QDz0lbDl1yWMGjYDUjZtYWWRDw4U
+	 g0C648qmk2LZE5d+78JXEI4qf6t7qvcF1Lg5Iq7ESMxGbbPnNWtv5boSnd9gIwrryXw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=linuxfoundation.org header.i=@linuxfoundation.org header.a=rsa-sha256 header.s=korg header.b=DNZcQL0z;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=suse.com;
+	spf=pass smtp.mailfrom=suse.com;
+	dkim=pass header.d=suse.com header.i=@suse.com header.a=rsa-sha256 header.s=google header.b=UnnznAku;
+	arc=none smtp.remote-ip=209.85.128.48
+Received: from mail-wm1-f48.google.com (mail-wm1-f48.google.com [209.85.128.48])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40FD2606A319;
-	Thu, 22 Oct 2026 13:13:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C70960A262B
+	for <linux-scsi@vger.kernel.org>; Thu, 22 Oct 2026 13:29:55 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6C70960A262B
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.a=rsa-sha256 header.s=korg header.b=DNZcQL0z
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5240B1F000C1;
-	Thu, 22 Oct 2026 13:13:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linuxfoundation.org;
-	s=korg; t=1792674796;
-	bh=xlaV1V+yQ3J8w/w8Ck84D01xkjHZK2MyUGosH96xsm4=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=DNZcQL0z3lmwG2/ll8BW3r8AVu0q/Zb7r4HFXCKMxwool0fDvQs9tz2YhS4gW1UTo
-	 0/0I0JfWjZ3MrG0/Wx5ib8lt53kQ+2rbnJxNmSH76EadYFtvxInLxfTYyP4UjxtHUM
-	 haFiKTF1W4YYKMIFBVj5sIOFdLQ02Dp/PDdDDqDk=
-Date: Thu, 22 Oct 2026 15:05:27 +0200
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Jiayi Li <lijiayi@kylinos.cn>
-Cc: Oliver Neukum <oneukum@suse.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Michal Pecio <michal.pecio@gmail.com>, linux-usb@vger.kernel.org,
-	linux-scsi@vger.kernel.org, usb-storage@lists.one-eyed-alien.net,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] usb: uas: wait for pending commands before unbinding
-Message-ID: <2026102214-citrus-reselect-b26d@gregkh>
-References: <20261022123401.319479-1-lijiayi@kylinos.cn>
+	dkim=pass (2048-bit key, unprotected) header.d=suse.com header.i=@suse.com header.a=rsa-sha256 header.s=google header.b=UnnznAku
+Received: by mail-wm1-f48.google.com with SMTP id 5b1f17b1804b1-4a2072b9832so3863995e9.1
+        for <linux-scsi@vger.kernel.org>; Thu, 22 Oct 2026 06:29:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1792675794; x=1793280594; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=qTs7ITGH5Vm0O/b2VvByjBvC5hRyxCKXY/CuqHg+goE=;
+        b=UnnznAkuDtGZE+MuoQei834/NZGnv+7Vu3YK0PkPpU0vwUPzY0P7vPsBfdCBwl1D7g
+         cDMgvm6L11UCVY634uIvYXoT301cHNuxy6xCGZwomfA5BcqKkBKwgphDojJzmW42m7yF
+         nZsOF3aj7f8myme7/ZAA5ACEV+B1OvvzCpRuMSqZGAZNuAiES68IdgYcIXt6kP5jlFRP
+         lxaajb5lltKGetqki+6nThGI6mtu4BZ4gT4LPreda2Yr5ihTPSWO7PSOFLXvma0SlABy
+         uOpEbcoLqT89POjef+36bd6+VJwTehl49AbT9dDCDWbVtSL3Kw3EDUgKzjdqTX4stHSI
+         hTZQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792675794; x=1793280594;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=qTs7ITGH5Vm0O/b2VvByjBvC5hRyxCKXY/CuqHg+goE=;
+        b=gArkeCVrd53/qTa9usjYQ1PzSqlfogVGttkSuDj6O6LkO40cBHy7zEY1/HV55ELOvm
+         5gwyq3Zo6pQXsHdObyqoB7MBS6YWZYt1rYrJ0kRdyOtsAh2eTtt+hBQI2fcxSWaZ9r67
+         9QiCTZVA5+HBqLwptV19HsIbfSjUwhiDgj9x+Gr9s5SyrP2dl2AuTN6GUuU9br+XsMRn
+         jeyiHa7uvl+6LywnPwI/79qlpf8iTK5TxBz9lFgnaQgs64hcnYZzLY5Q8pASp6oePtLh
+         ZEkMsj+KMU6JzPM1QMhhQjgrAv3vz2hhmCyFn0zsv1ta0K4ZVYl6KAGSm4QTjQNz22iv
+         mbqw==
+X-Forwarded-Encrypted: i=1; AKwUvBzfzEqfxCsrylJgt/Rt+iB6/aCXIjrj4FcVCOdWWFLSfEpKacrNeAk+uNoeAQ2WaEc+v5NFeBUX30ww@vger.kernel.org
+X-Gm-Message-State: AFq9FYI5+sDVm74jO4qjim95Ck6EhFIiFh9Kcu2nUuv4NlTJ/fEHzdHa
+	wD2E81pNajJI5IydiiU33L++o4aM4wXZv8yXFeh8ChETIqnqqCIVludrB3dqdQukVg0=
+X-Gm-Gg: AYBFou1Ggm9fHySFmIVuuT7a9pY+0ACuekqDc20nlV0PIk89STqQJ7D2LFiyiCH0g0E
+	uRJMc1MFp/kYldLM+JxlLEZCpLS6PeToXPGGrKuxhkjZb/s9HZr9hEzmwYyP/ReWtPYk/1NgvAo
+	PhoRS8LgzhUnGgirzyqjYpQOY1C+wcOTAEfHqoGSa5GCM/i7EnVkaOqoftvTEPnxNeQME7kF5x4
+	OF2tcY1annwE/lva95zYDmZjV5eCFxciZEdoUoA1Cie/2EaGx+i98v3XmRt52Ok8ZBaWdedxr3y
+	33w2KEyOOKXVnGIm7O5PZFynGcanhUwxSOB1qb5Q+00jcGuhEgi/HVkpWD6yh4UXrt8evSBoQqb
+	SXVIDXSG9vOe4cdZgJnNr0OMkSemMibSNXPAd/rhd7GVhNmn5c+4UHHEreCQJShp4z+hK3jkUM6
+	ZimyiPGgA9mKaGGXIwhgI1MTLk2z4u94pOdnG32ZACHKxF7gsQPHeUhgcIuI8jnIOTFFRl6jMIJ
+	KMiTeGhwV6CdTIuPaI2N9HaADvatfsSYSQHLoR+rtqA6dwFMm1S9fuvX9GFnZGR72QvGQOxfmlG
+	2tPiIMklJ7Y5lYrvB10=
+X-Received: by 2002:a05:600c:6085:b0:4a1:a7f8:c124 with SMTP id 5b1f17b1804b1-4a204b04321mr42997325e9.7.1792675793804;
+        Thu, 22 Oct 2026 06:29:53 -0700 (PDT)
+Received: from ?IPV6:2001:a61:1362:6c01:90a6:c895:55cc:41c? ([2001:a61:1362:6c01:90a6:c895:55cc:41c])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a203a265afsm82566045e9.7.2026.10.22.06.29.53
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 22 Oct 2026 06:29:53 -0700 (PDT)
+Message-ID: <6015c40b-04ae-443e-8271-63e064f08ab0@suse.com>
+Date: Thu, 22 Oct 2026 15:29:52 +0200
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -56,43 +92,27 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] usb: uas: wait for pending commands before unbinding
+To: Jiayi Li <lijiayi@kylinos.cn>
+Cc: Alan Stern <stern@rowland.harvard.edu>,
+ Michal Pecio <michal.pecio@gmail.com>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-usb@vger.kernel.org,
+ linux-scsi@vger.kernel.org, usb-storage@lists.one-eyed-alien.net,
+ linux-kernel@vger.kernel.org
+References: <20261022123401.319479-1-lijiayi@kylinos.cn>
+Content-Language: en-US
+From: Oliver Neukum <oneukum@suse.com>
 In-Reply-To: <20261022123401.319479-1-lijiayi@kylinos.cn>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Thu, Oct 22, 2026 at 08:34:01PM +0800, Jiayi Li wrote:
-> USB core normally disables interface endpoints before calling
-> uas_disconnect(). This cancels pending URBs while the device may still
-> be processing the associated commands. Some storage bridges then stop
-> responding after a driver rebind and need a disconnect and reconnect
-> to recover.
-> 
-> Enable soft unbinding and block new SCSI requests before waiting for
-> pending commands to finish. This keeps the endpoints available until
-> the wait completes. Stop waiting when USB core marks the device as
-> not attached, and continue with the existing cleanup on timeout.
-> 
-> Keep requests blocked when leaving the preparation step, including on
-> timeout. Set resetting before unblocking the host so that queued
-> requests cannot submit new URBs during teardown.
-> 
-> ---
-> diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
-> index 2651629..58a67d7 100644
-> --- a/drivers/usb/storage/uas.c
-> +++ b/drivers/usb/storage/uas.c
-> @@ -9,6 +9,7 @@
->   */
->  
->  #include <linux/blkdev.h>
-> +#include <linux/delay.h>
->  #include <linux/slab.h>
->  #include <linux/types.h>
->  #include <linux/module.h>
-> @@ -1211,16 +1212,55 @@ static int uas_reset_resume(struct usb_interface *intf)
->  	return 0;
->  }
->  
+Hi,
+
+thank you for doing this.
+
+On 22.10.26 14:34, Jiayi Li wrote:
+
 > +static void uas_pre_disconnect(struct usb_interface *intf)
 > +{
 > +	struct Scsi_Host *shost = usb_get_intfdata(intf);
@@ -101,84 +121,13 @@ On Thu, Oct 22, 2026 at 08:34:01PM +0800, Jiayi Li wrote:
 > +
 > +	spin_lock_irqsave(shost->host_lock, flags);
 > +	scsi_block_requests(shost);
-> +	spin_unlock_irqrestore(shost->host_lock, flags);
-> +
-> +	start_time = jiffies;
-> +	for (;;) {
-> +		if (READ_ONCE(devinfo->udev->state) == USB_STATE_NOTATTACHED)
-> +			return;
-> +
-> +		flush_work(&devinfo->work);
-> +
-> +		if (!usb_wait_anchor_empty_timeout(&devinfo->sense_urbs, 5000))
-> +			break;
-> +
-> +		if (!usb_wait_anchor_empty_timeout(&devinfo->data_urbs, 500))
-> +			break;
-> +
-> +		if (time_after(jiffies, start_time + 5 * HZ))
-> +			break;
-> +		if (uas_cmnd_list_empty(devinfo))
-> +			return;
-> +
-> +		msleep(20);
-> +	}
-> +
-> +	shost_printk(KERN_ERR, shost, "%s: timed out\n", __func__);
-> +}
-> +
->  static void uas_disconnect(struct usb_interface *intf)
->  {
->  	struct Scsi_Host *shost = usb_get_intfdata(intf);
->  	struct uas_dev_info *devinfo = (struct uas_dev_info *)shost->hostdata;
->  	unsigned long flags;
->  
-> +	uas_pre_disconnect(intf);
-> +
->  	spin_lock_irqsave(&devinfo->lock, flags);
->  	devinfo->resetting = 1;
->  	spin_unlock_irqrestore(&devinfo->lock, flags);
->  
-> +	if (shost->host_self_blocked)
-> +		scsi_unblock_requests(shost);
-> +
->  	cancel_work_sync(&devinfo->work);
->  	usb_kill_anchored_urbs(&devinfo->cmd_urbs);
->  	usb_kill_anchored_urbs(&devinfo->sense_urbs);
-> @@ -1260,6 +1300,7 @@ static void uas_shutdown(struct usb_interface *intf)
->  
->  static struct usb_driver uas_driver = {
->  	.name = "uas",
-> +	.soft_unbind = 1,
->  	.probe = uas_probe,
->  	.disconnect = uas_disconnect,
->  	.pre_reset = uas_pre_reset,
 
-Hi,
+No, on pure grounds of maintainability, please put the
+blocking of the host in the direct handler for disconnect.
+Unblocking in the caller something that was never blocked
+would forever trip up anybody reading the code.
 
-This is the friendly patch-bot of Greg Kroah-Hartman.  You have sent him
-a patch that has triggered this response.  He used to manually respond
-to these common problems, but in order to save his sanity (he kept
-writing the same thing over and over, yet to different people), I was
-created.  Hopefully you will not take offence and will fix the problem
-in your patch and resubmit it so that it can be accepted into the Linux
-kernel tree.
-
-You are receiving this message because of the following common error(s)
-as indicated below:
-
-- Your patch does not have a Signed-off-by: line.  Please read the
-  kernel file, Documentation/process/submitting-patches.rst and resend
-  it after adding that line.  Note, the line needs to be in the body of
-  the email, before the patch, not at the bottom of the patch or in the
-  email signature.
+	Regards
+		Oliver
 
 
-If you wish to discuss this problem further, or you have questions about
-how to resolve this issue, please feel free to respond to this email and
-Greg will reply once he has dug out from the pending patches received
-from other developers.
-
-thanks,
-
-greg k-h's patch email bot
