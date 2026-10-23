@@ -1,75 +1,78 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=67.231.148.174
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=67.231.156.173
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792750576;
-	b=OmWufzGWMxzYfmGSux2KrwdleNyI461/J0EkAEWb2UPNO/O05+KwxHSLGAMpsYXOZ29+
-	 0VAqScQA5i/uZlRvyI+O+HKpeRXntwO2nH1VpbvHkJ8R4mbXJOSrTfLzxpr1RlDaj6rV1
-	 xyfvjxxrvlln2uBIVv+Yb4jweXcD5SPlJwpDrA2z2vjwjDisDkkAKPlY3y6Cdvdl94xiZ
-	 up8dsO4gMfkxucmn362CPQeHpr7FXHi02rFjgg4yCXele4M39whikcM62lMjDQ3fgmDi0
-	 KubyZUW1LHFuoD1OBpjYkcAC+Xb/hSDxkAAKUmA0vnCpFys9EkCujxEclr+mLfJmuyw==
+	t=1792750578;
+	b=x2zEtz68Ar9ThSIS0U2I58YVSzIaPCZYqdvUSQ2ipfgjWJlHky5AXdfqx+Q9z2/j1Hpg
+	 gQtklAjT8BDexsDcHV3f4vl00twQipUq979GmSEqYXIl4y+aFqr1dMg9b82c2oPIK6g5L
+	 mnsosAH4HNstJw56erG0UlGQVlgis7DaEg+2GfJgNyNpzpa1Rbst/H6Z3OnuRZztKZOVb
+	 yNmHSN8Wk7UehML4qIqFJNgIbfvZtre8wQaIWbALbyDb520C7scgenS+3k7ub19/ofjZn
+	 dKhwygv4MwFRhJMTN03YDSHoqOIY3h6eha4qllr2E44Z0ixYUrFo7/lfcrqvK4WlD+Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792750576;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792750578;
 	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:Received:
-	 Received:From:To:CC:Subject:Date:Message-ID:X-Mailer:MIME-Version:
-	 Content-Transfer-Encoding:Content-Type:X-Proofpoint-Spam-Info:
-	 X-Proofpoint-Spam-Details-Enc:X-Proofpoint-GUID:
-	 X-Proofpoint-ORIG-GUID:X-Authority-Analysis:
+	 Received:From:To:CC:Subject:Date:Message-ID:X-Mailer:In-Reply-To:
+	 References:MIME-Version:Content-Transfer-Encoding:Content-Type:
+	 X-Proofpoint-GUID:X-Proofpoint-Spam-Details-Enc:
+	 X-Proofpoint-ORIG-GUID:X-Proofpoint-Spam-Info:X-Authority-Analysis:
 	 X-Proofpoint-Virus-Version;
-	bh=oZYkaf1ngEGmbQzEOHLs7AF9Y8Pn7vQgsUdmZ0rXb6c=;
-	b=NxJCFoXD43czJpiE8VfUThSflyjq17PcKVJSe9bpy0oAb/N6gU7bJvvy25YOoDuPzQH8
-	 AxpZohP3skMGwHgYxyBGBOAl9Q4vwGp8PxhEzyk9dSZbIr2PFsmiM0V0VWHFAqHaagjaq
-	 6XL1h/gMkk4C4OwBjdJ6RaD3A1xOJPuNB6HhQJizG+yGvNK5rX0sjksE39NLvexbXWUdz
-	 9/TQZj/ve79OFvIMzD4rKwgpbKw1sNO2R5LRkUhsq5zpqjm9R4nyHyHwK2y+7obliU9kf
-	 fnoyFlMoyOB+tBhwWKtYzMUy86fX5JCFvI7Bhw16E9kRwKUGe/L70hSLetDya9tMg2Q==
+	bh=mQqe1VdK2pK25OCPjhwiocpRCJwduSsKdoWrDThbVzU=;
+	b=5IPXdALV5sIxgveUl268W5bn83tDN+GQ+R2rzuQBRO8mG8S9V9tMcOeUyHVVgbWXM7/S
+	 soJQgtuNO4uNqowumJ1SA0VTDT0N+mWNBWagxlMRk9RHbGDy7ZFtywAjSgI4rFVWsFSQg
+	 lm8XTU9mFvyfkkLYIXh6+oxAF6CGOhVDIuEm2X1wmLih73L3NrClK/GFGmwyVU48ojFN8
+	 RKQycxQxsym94AZqrXVXHcLI9SwsraidPFR9HRRzJr0ZRZRMOQLhdFBFCqJ6ykzh9Gh7e
+	 gcFcwpBMxcMtho/Cg4FKSLUeVagqhEeGEWsdZRkpv3O5GMdEAtGMlAOdEhf4al7BYnQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=marvell.com;
 	spf=pass smtp.mailfrom=marvell.com;
-	dkim=pass header.d=marvell.com header.i=@marvell.com header.a=rsa-sha256 header.s=pfpt0220 header.b=KNUBlHPE;
-	arc=none smtp.remote-ip=67.231.148.174
-Received: from mx0b-0016f401.pphosted.com (mx0a-0016f401.pphosted.com [67.231.148.174])
+	dkim=pass header.d=marvell.com header.i=@marvell.com header.a=rsa-sha256 header.s=pfpt0220 header.b=B5c0TWhJ;
+	arc=none smtp.remote-ip=67.231.156.173
+Received: from mx0b-0016f401.pphosted.com (mx0b-0016f401.pphosted.com [67.231.156.173])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8645B606A31A
-	for <linux-scsi@vger.kernel.org>; Fri, 23 Oct 2026 10:16:15 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8645B606A31A
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 579F9606A31B
+	for <linux-scsi@vger.kernel.org>; Fri, 23 Oct 2026 10:16:18 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 579F9606A31B
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=marvell.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=marvell.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=marvell.com header.i=@marvell.com header.a=rsa-sha256 header.s=pfpt0220 header.b=KNUBlHPE
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69NAE7i43757731;
-	Fri, 23 Oct 2026 03:16:12 -0700
+	dkim=pass (2048-bit key, unprotected) header.d=marvell.com header.i=@marvell.com header.a=rsa-sha256 header.s=pfpt0220 header.b=B5c0TWhJ
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69NADXkV3273150;
+	Fri, 23 Oct 2026 03:16:15 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=
-	cc:content-transfer-encoding:content-type:date:from:message-id
-	:mime-version:subject:to; s=pfpt0220; bh=oZYkaf1ngEGmbQzEOHLs7AF
-	9Y8Pn7vQgsUdmZ0rXb6c=; b=KNUBlHPEVyTDWRXNLrP0hkJn9vA30mGyFl59/Uk
-	XQOv66aZwbc9uPRve9QOGpXvi5L5jGBuZc5caGw0HiW7SpW6YYnr7mjEMyR5rA58
-	8DKUj0+MNZ+Rhdy73pbA/vV9PyZTMJb8lqr3VQuGhH+158hMCoVGBFkht/+R9IYY
-	RwBZQQMQ7IpeB2OlxFeHsMpyal+/MSx+ztO7JQ1o/pdy32VCWOiCw434/qCKtEXM
-	vyQeY50v25LA3lZE/gtvVLI+UuiES9i82+HosDWoX6rEH5w+dax/56etXp0qvaFd
-	eK7Ge6q1qLwk2B3//FvqnR0HkydLTCL1qB+3rJtN40ShkLQ==
-Received: from dc5-exch05.marvell.com ([199.233.59.128])
-	by mx0a-0016f401.pphosted.com (PPS) with ESMTPS id 4hfmdtn9vu-1
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pfpt0220; bh=m
+	Qqe1VdK2pK25OCPjhwiocpRCJwduSsKdoWrDThbVzU=; b=B5c0TWhJ1Z4XOOVxc
+	Va8Mj5Rf0G9NsGtPB0mI4Rpm07EYiPXxMF4Q2vR+L3E1hcgaQyQkaFWNjDLZwQM5
+	A/jb96uXg3JPInWopYZENLBe1pHtPAA4QRMQ16oRyhidWP1w/hqn+oS2Xr+Pboz9
+	XBrVskRQrcwUca/DrB9vkeUyPKc9sEBpz87vl//eehpPk5z8a12f42hiqvx15SAU
+	mpQweqzNbVyty3Rl+YoqR+18hfgrVAkpdf3/stBjxj2PP6Sd/BRV0Qfg5zusEj7e
+	fByUYPapC78O0S4xdgQM1OiHCpSL02wkr/ipP2jI1eM9qvYOqxh99ES6Ug/HTG5b
+	6U8NQ==
+Received: from dc6wp-exch02.marvell.com ([4.21.29.225])
+	by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 4hf94b993g-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 23 Oct 2026 03:16:11 -0700 (PDT)
-Received: from DC5-EXCH05.marvell.com (10.69.176.209) by
- DC5-EXCH05.marvell.com (10.69.176.209) with Microsoft SMTP Server
+	Fri, 23 Oct 2026 03:16:14 -0700 (PDT)
+Received: from DC6WP-EXCH02.marvell.com (10.76.176.209) by
+ DC6WP-EXCH02.marvell.com (10.76.176.209) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.25; Fri, 23 Oct 2026 03:16:11 -0700
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH05.marvell.com
- (10.69.176.209) with Microsoft SMTP Server id 15.2.1544.25 via Frontend
- Transport; Fri, 23 Oct 2026 03:16:11 -0700
+ 15.2.1544.25; Fri, 23 Oct 2026 03:16:14 -0700
+Received: from maili.marvell.com (10.69.176.80) by DC6WP-EXCH02.marvell.com
+ (10.76.176.209) with Microsoft SMTP Server id 15.2.1544.25 via Frontend
+ Transport; Fri, 23 Oct 2026 03:16:14 -0700
 Received: from stgdev-a5u16.punelab.marvell.com (stgdev-a5u16.punelab.marvell.com [10.31.33.164])
-	by maili.marvell.com (Postfix) with ESMTP id 12E793F7069;
-	Fri, 23 Oct 2026 03:16:08 -0700 (PDT)
+	by maili.marvell.com (Postfix) with ESMTP id B46703F7069;
+	Fri, 23 Oct 2026 03:16:11 -0700 (PDT)
 From: Nilesh Javali <njavali@marvell.com>
 To: <martin.petersen@oracle.com>
 CC: <linux-scsi@vger.kernel.org>, <GR-FC-Storage-Upstream@marvell.com>,
         <emilne@redhat.com>, <jmeneghi@redhat.com>, <hare@suse.com>
-Subject: [PATCH v2 00/13] scsi: qla2xxx: Misc. Bug fixes
-Date: Fri, 23 Oct 2026 15:45:47 +0530
-Message-ID: <20261023101600.1431179-1-njavali@marvell.com>
+Subject: [PATCH v2 01/13] scsi: qla2xxx: Update MAINTAINERS with new FC storage alias
+Date: Fri, 23 Oct 2026 15:45:48 +0530
+Message-ID: <20261023101600.1431179-2-njavali@marvell.com>
 X-Mailer: git-send-email 2.23.1
+In-Reply-To: <20261023101600.1431179-1-njavali@marvell.com>
+References: <20261023101600.1431179-1-njavali@marvell.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -81,72 +84,50 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMDIzMDAzOSBTYWx0ZWRfX4RkRQnoryf6f
- RDZ2YNThkT0ksSDOoqc6pSPw7xU9vptKIWC43ToL3nPrRAHp0UGvfLBTIUtBuPn4VZU5s2IMnyT
- pKsQ9tk9MUH1BstkZJ1kUo/8S8fRO9k=
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDIzMDAzOSBTYWx0ZWRfXxIo7oXpkxvaf
- E7Qjn9eFUokj8VezNA81UWxwjqXaN5yDpmImBKW4Kl84TeXFrBbVYRDTb8Vv7ZcJdh+XegU8POn
- NuW+JtR6h2NQRMyj5xQyw0GcFiOSrs47vr/7pMMSpaPAlhLwAO82Uk56ioMkit86GddqwwfJH9X
- 65fHOC+2V8P9KNgUA5WYt9sfrtfdE+wRkr7veGe68PeibMO2p3jylXaAmfEGkGrzhfeZ/DMBvA8
- 5JMRuqRHej+E5cmNjqyjBPW/uQKE8YGRL6v6RkCRMId2hY8qfFI3Ug4IHd1Wytd4yXtVJdwxjHH
- bRpXZZfLWKVWFzCpabilaxytKjVWyXvc6Uq+y7OUMoYIQ4Zk8ekFzcJ0T4e0rrflnG9s3w60lRP
- tctjM/fon7lhgxYiP48A094kRtPi9r0w+wvqjTo/37PSBN/oq/XgrhtPVXyXDBFfU7/rl22Q0oq
- dUUkiEnmpR/XVbRhERA==
-X-Proofpoint-GUID: YnjJC8fW2iqvk68fOPJ-Rj6iloG8o40m
-X-Proofpoint-ORIG-GUID: YnjJC8fW2iqvk68fOPJ-Rj6iloG8o40m
-X-Authority-Analysis: v=2.4 cv=PalqFShd c=1 sm=1 tr=0 ts=6adb33eb cx=c_pps
- a=rEv8fa4AjpPjGxpoe8rlIQ==:117 a=rEv8fa4AjpPjGxpoe8rlIQ==:17
+X-Proofpoint-GUID: Z9QOI2J8kgJI7qNHIWQTgYlL2Xh5o6S5
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDIzMDAzOSBTYWx0ZWRfX2o/lW30nTBdH
+ ZvfK4wDfrmtO2UQ8NpOojN9ULPblzDhRRBz0kL55Mfm3Rg/sfLX/2WeQO6KbDClf9O4yYH/s7m+
+ Ij0+e2b8kCK2XbUR5EeRNCcjmMBP9E5r5ZveqAi8Rt4TrUEalh4MJTGMSQmrqTwU6VFvMGHJgEi
+ Ovb3xjte3mobJd0n2pD7oZrc8S+g95A97S2xGUX008vxilpT/PyRO8e3TOGx2JMgeF+vvqZlsby
+ MhWGgdz1jRvo+uNu9/3hqoZ0AqmnWNpQznzM/NIpRjl1Y5eXxk+0cnVdq6SUhC0iM9/OZW6juSO
+ ZQnajlXHjdC2er+rhlVLjtJ1M6j3c2CQ2iSpp1MyFdhxpFvJCf+SQsqbZLWT2ClR4wCF0gmsBfV
+ X6XVf0rkqlKF510Y1g+IjL+WiPNOyTJNkpMg8NnxvW1i4a746ADsi2YT97rFyggmR/b+zd9hD9L
+ bmUYvu8qmXQ3jih1Qsw==
+X-Proofpoint-ORIG-GUID: Z9QOI2J8kgJI7qNHIWQTgYlL2Xh5o6S5
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMDIzMDAzOSBTYWx0ZWRfXyJjmowJ3X9ZG
+ D4NXZW91wfSJG5w7f/ADg0tS0p5C97erfaARk/XxYMQyZa79tiRnWSgDWcSMBx/Mkc7xeunl1pX
+ vPcbb1YAfoSpwaBAxWkr5PAcEob0oh4=
+X-Authority-Analysis: v=2.4 cv=OrDaWC/t c=1 sm=1 tr=0 ts=6adb33ee cx=c_pps
+ a=gIfcoYsirJbf48DBMSPrZA==:117 a=gIfcoYsirJbf48DBMSPrZA==:17
  a=660iZSQnnn4A:10 a=VkNPw1HP01LnGYTKEx00:22 a=l0iWHRpgs5sLHlkKQ1IR:22
- a=EAYMVhzMl8SCOHhVQcBL:22 a=OhmfIpVFAqNssJYpP_EA:9
+ a=QXcCYyLzdtTjyudCfB6f:22 a=M5GUcnROAAAA:8 a=VwQbUJbxAAAA:8
+ a=7J84mRsLM548UZCnXY8A:9 a=OBjm3rFKGHvpk9ecZwUJ:22
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
  definitions=2026-10-23_03,2026-10-21_02,2025-10-01_01
 
-This series collects bug fixes and updates for the qla2xxx driver,
-addressing crashes, hard lockups, and races observed during virtual
-port (NPIV) teardown, async fabric scan, and BUS reset, along with
-29xx-specific async event handling.
+Update the MAINTAINERS entry for the QLA2XXX FC-SCSI driver, replacing
+the GR-QLogic-Storage-Upstream@marvell.com mailing list alias with
+GR-FC-Storage-Upstream@marvell.com.
 
-Changes in v2:
-- Drop "scsi: qla2xxx: Yield work_lock in fabric scan path".
-- Base vport delete (patch 08) returns -ENODEV instead of 0, so
-  fc_vport_terminate() does not free the fc_vport when the driver did
-  not tear the port down.
-- vport DPC (patch 10) skips a vport when VPORT_DELETE is set.
-  delete_progress is set only after disable, session deletion, and
-  NVMe teardown.
+Signed-off-by: Nilesh Javali <njavali@marvell.com>
+---
+ MAINTAINERS | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Manish Rangankar (4):
-  scsi: qla2xxx: Wait for session deletion before full-login LIP
-  scsi: qla2xxx: Fix scan state machine race and IRQ-unsafe sp_unmap
-  scsi: qla2xxx: Skip vport DPC processing during vport deletion
-  scsi: qla2xxx: Add validation check for base vport index during delete
-
-Nilesh Javali (9):
-  scsi: qla2xxx: Update MAINTAINERS with new FC storage alias
-  scsi: qla2xxx: Update few AENs for 29xx handling
-  Revert "scsi: qla2xxx: Validate BSG request_len before reading
-    vendor_cmd[]"
-  scsi: qla2xxx: Fix double addition of fcport to gnl.fcport list
-  scsi: qla2xxx: Validate vport before deletion
-  scsi: qla2xxx: Fix use-after-free races during vport deletion
-  scsi: qla2xxx: Re-acquire vport_slock and refresh tvp during vport DPC
-  scsi: qla2xxx: Fix purex IOCB copy size on non-29xx adapters
-  scsi: qla2xxx: Update version to 12.00.00.2610b1
-
- MAINTAINERS                        |  2 +-
- drivers/scsi/qla2xxx/qla_attr.c    |  6 ++++
- drivers/scsi/qla2xxx/qla_bsg.c     | 57 +++---------------------------
- drivers/scsi/qla2xxx/qla_def.h     |  1 -
- drivers/scsi/qla2xxx/qla_gs.c      | 28 ++++++++++++---
- drivers/scsi/qla2xxx/qla_init.c    | 40 ++++++++++++++-------
- drivers/scsi/qla2xxx/qla_isr.c     | 16 +++++----
- drivers/scsi/qla2xxx/qla_mid.c     | 34 +++++++++++++++---
- drivers/scsi/qla2xxx/qla_os.c      | 32 ++++++++++-------
- drivers/scsi/qla2xxx/qla_version.h |  4 +--
- 10 files changed, 123 insertions(+), 97 deletions(-)
-
-base-commit: 12e67eb89eb2b9516685c744d3f7de0a2d1bd701
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 9c768040658d..776eb78deb63 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -21970,7 +21970,7 @@ F:	drivers/scsi/qla1280.[ch]
+ 
+ QLOGIC QLA2XXX FC-SCSI DRIVER
+ M:	Nilesh Javali <njavali@marvell.com>
+-M:	GR-QLogic-Storage-Upstream@marvell.com
++M:	GR-FC-Storage-Upstream@marvell.com
+ L:	linux-scsi@vger.kernel.org
+ S:	Supported
+ F:	drivers/scsi/qla2xxx/
 -- 
 2.52.0
 
