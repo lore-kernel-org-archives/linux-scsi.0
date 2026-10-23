@@ -1,99 +1,69 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.215.172
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=124.126.103.232
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792712639;
-	b=hyZEh7qskP5FznRr6boWll/4szwjr/8wxp0bASUwS+BH/MH1dcZ5qzEFGdqH3x7x91eU
-	 L47aWW7T1nuBhL9UvzBrW6eSlAYh5A5q+aFR31bju7oIhQEuBufrU9UZYMIi31IRCpK4Q
-	 Q4oBiVa9LlAkZmmn5ciCgVq2i8aipR+o0YTeavuruQoy5OygGQnRlAUX/wqxL3wpxWxg+
-	 kpITxaFvU17g64al8FSCqwuwKR2dLU6z4S1NircrcUEJQq3qwdB0PWHFbJbIexgmP3MTp
-	 nrk7PkWSFQi+H5RI741t05lj+EmBMmw0aSzOOHoiJjRC1gefgwV7ve2n3F5m+N/fPMw==
+	t=1792719638;
+	b=g+RFBHnnTGDmh2fUHbPjOS/6HuQcD15i4bSSgtPf+exUApzL/m57U1pMgxh6e6aAiWCu
+	 jlCeFbg5T19FILgg4hMyJxtoEdNdyystuvS7B+vYDrYaiI2dJL1MStZub8g3oC4b3/eh/
+	 Q+BuV9PEh9nvP6Sgk0TgfX/qBybpYu4uEb3AY13N6emwtFOBnWZpD3X1QdSotbxHyV9AN
+	 lbU6/6GfU4TUbP7+9exQGlbEzGyf3yTZKS1hH2SAlWc14LPa81j6tjsFZGKQJdegBRm61
+	 gyYSwyeoFNJ08Q6xJhXDN2gmTo1Eeyxh8ZZNgXy6JkaArKuDLOKPH/sp2WXYb7SEpGg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792712639;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
-	 MIME-Version:Content-Transfer-Encoding;
-	bh=Fnh9YUI73W9upwsx2dI+MC9ZPKD79q7rWiJ2BDXOpW4=;
-	b=WuelrW5vHQFWa/nYFIIp2MzI3sESeZTMIiCgR8q602U1aROL3XBibRCcizMpJrUtNHK8
-	 p30VsYPFiCRutixaKvTDK86LUNZ5gihSxSWh0Q7nfDO++r4Tz6477mZ5VUXkgJP2vU+q5
-	 e76G8ttJ8KeR3LJqM1+NWnFtM4WMibL5w1tEEA2oJnIZdk/J6VhxVA40IKc41vMLfsVlj
-	 ZPtN3IagKd83sy/paeX2OGDj+1qUBU6vEBD3bZJOTZqlW7BnVJY6Cww269I6U5RBywv/d
-	 oynaeYD3AEicfEuw/aJRAEAmtziTUCkga4ZfkcNuc3A+hzexfMt9HOg8GSVodIa0L7w==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792719638;
+	h=DMARC-Filter:X-UUID:X-CID-P-RULE:X-CID-O-INFO:X-CID-META:X-CID-BVR:
+	 X-CID-BAS:X-CID-FACTOR:X-CID-RHF:X-UUID:X-User:Received:From:To:Cc:
+	 Subject:Date:Message-Id:X-Mailer:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=0xtcPJBB9DR3vT+rc57esCIkDtzhcoeMa6X95T8tUaE=;
+	b=PE2AN7N/4GjrpwkU6r8jkbUsI5FpF1rFAVG6tzuJalBpb+M5SzHxbeJCNj5I798CxMqU
+	 62yS8MiAg41FCsuhCuXhIiwcJJLvH9PJ5l+sFkYAJm3aCvMEeagCA6VnZcp/TpZxAdg2K
+	 D3nnTLs4Xtj+M1KltXEd7E1Ruh6qhHJQvdS4HYy8YNENu4Dg28y+MRp3lOK/h0nDHC1jf
+	 wdsSh7DnOzY9+ZhwbqdJMT78+m7s+xlBfPwF+eHZWDEbfu1k5TSLToG9KNQCsZpjUXmsI
+	 52SbNW5sUU2O6Mt2cGrwW5GXomIsSAOGHnJkcIx7AALQTcXCX/UgFJDZRlYOld5SNCw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=fail header.from=isslab.korea.ac.kr;
-	spf=none smtp.mailfrom=isslab.korea.ac.kr;
-	arc=none smtp.remote-ip=209.85.215.172
-Received: from mail-pg1-f172.google.com (mail-pg1-f172.google.com [209.85.215.172])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=none header.from=kylinos.cn;
+	spf=pass smtp.mailfrom=kylinos.cn;
+	arc=none smtp.remote-ip=124.126.103.232
+Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3D3B606A31A
-	for <linux-scsi@vger.kernel.org>; Thu, 22 Oct 2026 23:43:56 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A3D3B606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
-Received: by mail-pg1-f172.google.com with SMTP id 41be03b00d2f7-cc7d154ec4fso137022a12.0
-        for <linux-scsi@vger.kernel.org>; Thu, 22 Oct 2026 16:43:56 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=isslab-korea-ac-kr.20251104.gappssmtp.com; s=20251104; t=1792712636; x=1793317436; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=Fnh9YUI73W9upwsx2dI+MC9ZPKD79q7rWiJ2BDXOpW4=;
-        b=cTfKnNjMEmAgpuZnqXhLUjkKjK3844IAJCQv2wWy/JwTOnrXtVZQbSowCKiGyEkIHA
-         Qa8JfTFhW6YvaJq9DjbTQ8XbwvIphm2K5iSoC2+CEu595RM6bt7yIyPbKNqYapeGh6qy
-         RUQ0up8/jeY0I/4dimnPNaohzdkhN2m8OtF3KkjvNypzw2YFDFNUXn2BT0yx3Y1Duw5n
-         V6HT5xmmSP0cQ2edvHHEm9M+1f4bCnHxeCrORxB3BuTnPh0uD5kUC6PUvJJ2oyOGubzx
-         aLoFhLeOVhgU90/LrlTc7KK76TX+JLYuw+72xKSQC4GeMg74qOZ2XNIx7LSoC4QMGcQi
-         GuBw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792712636; x=1793317436;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=Fnh9YUI73W9upwsx2dI+MC9ZPKD79q7rWiJ2BDXOpW4=;
-        b=oMfqkJQSyEIismiBO4v18jf4ylz1pc6abHBY9klaeMNTbCeihI8kdMsgu5WyA2jwSr
-         fZG3rSTNiiaZQpQWCh6g/0T0LrB40XHC/dsg5P7C3ZPv6FHElpVDYat5ylUbzswlsttl
-         csFdlke3jUp5nDtG7WEboK3Pb1Aye8u7di5eZPc8jAwnCdC3dD7duWx76EvBSAP1skPp
-         Rmy8+ZJ31HJ5jTNlMMSV1mISv/nJpvDppuUulR0qQg4Od1Fka6/XCMPug9DUlD8QErZK
-         vP6RmFknWxdxQVa0TKEYPnryBKTFo6fRimdFbBUghBrq3gbxctpqelz89U0R/SZYnNFs
-         R3Ww==
-X-Forwarded-Encrypted: i=1; AKwUvBxygyQ8dYNjxnu+OqlyFpaBAnOYFJMVXh+iSOVN0OmmfNk7Kvy7VmeGzDnay1y/NSx9yNM1kc80sQca@vger.kernel.org
-X-Gm-Message-State: AFq9FYIOTzOdny7J63kmyjl/6IylKhZ+6lFeGB2LCzdtqGUGONPl2NVT
-	PaZDSBmrEQNoGIhohtgcRaKPglMnvZPPqVih80i+ohnH/Nt+kAxFZJNNJ3iFbTCmg70EufvD/ty
-	oeXNp
-X-Gm-Gg: AYBFou2Yd9U3xZ+xhRaOdDcnkMaA9MKmeGBir9iUKfJNbW+Tlc3qIZTKcSyLtRTXfxh
-	IJaxqLK/K9DAQgrzJNO7xfGvnd6GNwgCKnDMa9RIyuiXT9iqWYwdnHSBRH5SlVzItpaqYONTGjy
-	MsnRuV8eT7WIGsXIuxIWD2x1paR0ORAzhSWpy05JEZig/g0nH2HUrUIOYq9fij3hH3+FcpH4Ymf
-	NwGI6mcQ3F2eQoEy+DOUFUfwaB9jMYDfK7wuUmzcJET7L23v/aKkKKcegkdIytEcGyYVVvZoUv6
-	Hl8aDjqkp6gsdCXuqXShIMnim8M/C8AkBazjhI1tlrSyhG52telSiwrXszZM66XjixYtpz8tz4d
-	BWIdseqjuwowlaMQQnbZKbKyci/Ce33VjW/sUu8LAE5y9IOdir8eIn4blP0qObb83wIQhg7FZ7N
-	+DTqo6J+yloppt0fZyGBj2SYivHYeoogeYqXrRrwRxEBZpAzzX5/xkJJEOzYqr2rtjGSzSJUCyp
-	J6UF4es5SP0HODKUjhKUW8FD7ckn/cRhzkVzWC0jE9M/4DLS1t9YcozxWJh1nvW1NZuZJyKEgB5
-	gwD8
-X-Received: by 2002:a05:6a20:7349:b0:3de:8ee8:8323 with SMTP id adf61e73a8af0-3e37668deebmr388484637.29.1792712635638;
-        Thu, 22 Oct 2026 16:43:55 -0700 (PDT)
-Received: from yhlee-960QFG.Davolink ([2406:5900:1044:110c:13e0:b266:5a7d:e119])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-8a2c8dd328dsm137866b3a.29.2026.10.22.16.43.50
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 22 Oct 2026 16:43:54 -0700 (PDT)
-From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
-To: Ram Vegesna <ram.vegesna@broadcom.com>,
-	Daniel Wagner <dwagner@suse.de>,
-	"Martin K . Petersen" <mkp@kernel.org>
-Cc: James Smart <jsmart2021@gmail.com>,
-	Hannes Reinecke <hare@suse.de>,
-	Mike Christie <michael.christie@oracle.com>,
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42033606A326;
+	Fri, 23 Oct 2026 01:40:34 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 42033606A326
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
+X-UUID: baf67b34ce8211f19a56ed5b684f684d-20261023
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.19,REQID:d6f6e49f-869c-47d2-b558-f62d9f71d1bd,IP:0,U
+	RL:0,TC:0,Content:0,EDM:25,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
+	:release,TS:25
+X-CID-META: VersionHash:7db8b62,CLOUDID:3a105906de80bf8c66561fe19e8ebdc0,BulkI
+	D:nil,BulkQuantity:0,SF:102|865|898,TC:nil,Content:0|15|50|99,EDM:5,IP:nil
+	,URL:99|1,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,L
+	ES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_ULS
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: baf67b34ce8211f19a56ed5b684f684d-20261023
+X-User: lijiayi@kylinos.cn
+Received: from thinksys.tail1c7620.ts.net [(10.44.16.150)] by mailgw.kylinos.cn
+	(envelope-from <lijiayi@kylinos.cn>)
+	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
+	with ESMTP id 2022889980; Fri, 23 Oct 2026 09:40:30 +0800
+From: Jiayi Li <lijiayi@kylinos.cn>
+To: Oliver Neukum <oneukum@suse.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>,
+	Michal Pecio <michal.pecio@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-usb@vger.kernel.org,
 	linux-scsi@vger.kernel.org,
-	target-devel@vger.kernel.org,
+	usb-storage@lists.one-eyed-alien.net,
 	linux-kernel@vger.kernel.org,
-	yhlee@isslab.korea.ac.kr
-Subject: Re: [PATCH v3] scsi: elx: efct: fix target session lifetime against node teardown
-Date: Fri, 23 Oct 2026 08:43:39 +0900
-Message-ID: <20261022234339.3046449-1-yhlee@isslab.korea.ac.kr>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20261021142818.2782104-1-yhlee@isslab.korea.ac.kr>
-References: <20261021142818.2782104-1-yhlee@isslab.korea.ac.kr>
+	Jiayi Li <lijiayi@kylinos.cn>
+Subject: [PATCH v2] usb: uas: wait for pending commands before unbinding
+Date: Fri, 23 Oct 2026 09:39:31 +0800
+Message-Id: <20261023013931.388916-1-lijiayi@kylinos.cn>
+X-Mailer: git-send-email 2.34.1
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -105,133 +75,103 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Please drop this patch. The node use after free it describes is real, but I
-no longer think a correct fix fits in efct_lio.c alone, and I would rather
-withdraw it than have a partial fix carry a Fixes tag. What follows is what
-I found, in case it is useful. Line numbers are against f47d223627f8.
+USB core normally disables interface endpoints before calling
+uas_disconnect(). This cancels pending URBs while the device may still
+be processing the associated commands. Some storage bridges then stop
+responding after a driver rebind and need a disconnect and reconnect
+to recover.
 
-efct_scsi_new_initiator() hands a bare struct efc_node to
-efct_lio_setup_session() through lio_wq and returns EFC_SCSI_CALL_ASYNC, so
-the node state machine keeps running while the work is queued. A peer LOGO,
-an FC link down, a fabric change or target teardown during that window frees
-the node under the work, which then reads it:
+Enable soft unbinding and block new SCSI requests before waiting for
+pending commands to finish. This keeps the endpoints available until
+the wait completes. Stop waiting when USB core marks the device as
+not attached, and continue with the existing cleanup on timeout.
 
-  BUG: KASAN: slab-use-after-free in efct_lio_setup_session+0x934/0xa30
-  Read of size 8 at addr ffff888002d538a0 by task kworker/u4:0/12
+Keep requests blocked when leaving the preparation step, including on
+timeout. Set resetting before unblocking the host so that queued
+requests cannot submit new URBs during teardown.
 
-  CPU: 0 UID: 0 PID: 12 Comm: kworker/u4:0 Tainted: G                 N  7.3.0-00342-g66b1ae16db8c-dirty #7 PREEMPT(lazy)
-  Tainted: [N]=TEST
-  Workqueue: efct-kunit-wq efct_lio_setup_session
-  Call Trace:
-   <TASK>
-   print_report+0xcd/0x620
-   ? efct_lio_setup_session+0x934/0xa30
-   ? __virt_addr_valid+0x208/0x3f0
-   ? efct_lio_setup_session+0x934/0xa30
-   kasan_report+0xfb/0x130
-   ? efct_lio_setup_session+0x934/0xa30
-   efct_lio_setup_session+0x934/0xa30
-   ? __pfx_efct_lio_setup_session+0x10/0x10
-   ? lock_acquire+0x100/0x2d0
-   ? process_one_work+0x835/0x1c40
-   ? process_one_work+0x735/0x1c40
-   ? lock_release+0xc3/0x250
-   process_one_work+0x88b/0x1c40
-   ? __pfx_process_one_work+0x10/0x10
-   ? lock_acquire+0x100/0x2d0
-   ? worker_thread+0x2c7/0x11b0
-   ? lock_is_held_type+0x84/0xf0
-   ? __pfx_efct_lio_setup_session+0x10/0x10
-   worker_thread+0x649/0x11b0
-   ? __pfx_worker_thread+0x10/0x10
-   kthread+0x3aa/0x550
-   ? _raw_spin_unlock_irq+0x23/0x40
-   ? __pfx_kthread+0x10/0x10
-   ret_from_fork+0x493/0x940
-   ? __pfx_ret_from_fork+0x10/0x10
-   ? __switch_to+0x22/0xdc0
-   ? __pfx_kthread+0x10/0x10
-   ret_from_fork_asm+0x19/0x30
-   </TASK>
+Signed-off-by: Jiayi Li <lijiayi@kylinos.cn>
 
-  Allocated by task 33:
-   kasan_save_stack+0x33/0x60
-   kasan_save_track+0x14/0x30
-   __kasan_kmalloc+0x8f/0xa0
-   __kmalloc_noprof+0x23b/0x580
-   mempool_alloc_noprof+0x143/0x230
-   efct_kt_node_alloc.isra.0+0x38/0x4b0
-   efct_kt_uaf_after_cb+0x7a/0x370
-   kunit_try_run_case+0x1ca/0x4c0
-   kunit_generic_run_threadfn_adapter+0x7b/0xe0
-   kthread+0x3aa/0x550
-   ret_from_fork+0x493/0x940
-   ret_from_fork_asm+0x19/0x30
+---
+Changes in v2:
+- Pair SCSI request blocking and unblocking in uas_disconnect().
+- Use the address of the embedded host_lock in the current tree.
+- Add the missing Signed-off-by tag.
 
-  Freed by task 12:
-   kasan_save_stack+0x33/0x60
-   kasan_save_track+0x14/0x30
-   kasan_save_free_info+0x3b/0x60
-   __kasan_slab_free+0x43/0x70
-   kfree+0x119/0x490
-   mempool_free+0xbc/0x100
-   efc_node_free+0x311/0x4a0
-   efct_lio_setup_session+0x6f1/0xa30
-   process_one_work+0x88b/0x1c40
-   worker_thread+0x649/0x11b0
-   kthread+0x3aa/0x550
-   ret_from_fork+0x493/0x940
-   ret_from_fork_asm+0x19/0x30
+v1: https://lore.kernel.org/linux-usb/20261022123401.319479-1-lijiayi@kylinos.cn/
 
-  The buggy address belongs to the object at ffff888002d53800
-   which belongs to the cache kmalloc-1k of size 1024
-  The buggy address is located 160 bytes inside of
-   freed 1024-byte region [ffff888002d53800, ffff888002d53c00)
-
-Taking a reference on the node for the life of the work stops the slab use
-after free, but it does not stop the driver faulting on the same ordering.
-efc_node_free() clears node->nport before it drops the reference, so
-efct_get_vport_tpg() and efct_session_cb() still dereference a NULL nport
-unless they check it under efc->lock. I measured that: with the reference
-held and nothing else changed, the same case moves from a
-slab-use-after-free to a NULL pointer dereference in efct_session_cb().
-
-The reason I stopped is one step below that. libefc does not guarantee the
-backend is told to delete a session before it frees the node that owns it.
-efc_node_free() makes no backend upcall at all, and scsi_del_node is reached
-only from __efc_d_initiate_shutdown(), efc_device.c:225, :241, :255 and
-:264, and from __efc_d_device_gone(), efc_device.c:1451 to :1475. The first
-of those picks a branch from node->init and node->targ, and when both are
-false it falls through to efc_device.c:293 and goes to cleanup with no upcall
-at all. A remote initiator can arrange that, because
-efc_process_prli_payload() takes both flags straight from the PRLI service
-parameters at efc_device.c:366, and __efc_d_device_ready() accepts a further
-PRLI and re-runs that at efc_device.c:1355, after a session is registered.
-__efc_node_paused() is a second such path, setting node->req_free on
-EFC_EVT_SHUTDOWN at efc_node.c:916 with no upcall either. On both, a
-registered se_session and its efct->lookup entry outlive the struct efc_node
-they belong to, and efct_node_find(), efct_unsol.c:22, hands that entry out
-and takes a reference on it at efct_unsol.c:34 for every inbound FCP or BLS
-frame.
-
-Three smaller things nearby, which I am not proposing to fix either. The
-node->refound block in efc_node_free() calls
-efc_node_find(node->nport, FC_FID_DIR_SERV) at efc_node.c:137, above the
-"Node already Freed" guard at efc_node.c:140 that would have caught a NULL
-nport. __efc_d_device_ready() discards the scsi_new_node() return value at
-efc_device.c:1312, so an EFC_SCSI_CALL_ASYNC there is never completed. And
-the target branch of __efc_d_initiate_shutdown() tests only
-rc == EFC_SCSI_CALL_COMPLETE at efc_device.c:244, :258 and :267, while the
-initiator branch at :228 also accepts a negative return, so a negative
-return in the target branch leaves the node in __efc_d_wait_del_node,
-efc_device.c:82, with nothing left to wake it.
-
-What I think it wants is both halves together, a reference held on the node
-for the life of the setup work, and an invariant in libefc that a node for
-which scsi_new_node() succeeded gets exactly one scsi_del_node() before
-efc_node_free(), independent of init and targ. The second half changes the
-node state machine contract, including how the two delete completion events
-pair up and what a re-attach does, so that is your call and not something I
-should decide from the backend. I have a KUnit harness that reproduces the
-use after free, the session leak and the stale lookup entry, and I am happy
-to write patches or test whatever shape you prefer.
+diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
+index 8655edb..300ab63 100644
+--- a/drivers/usb/storage/uas.c
++++ b/drivers/usb/storage/uas.c
+@@ -9,6 +9,7 @@
+  */
+ 
+ #include <linux/blkdev.h>
++#include <linux/delay.h>
+ #include <linux/slab.h>
+ #include <linux/types.h>
+ #include <linux/module.h>
+@@ -1211,16 +1212,54 @@ static int uas_reset_resume(struct usb_interface *intf)
+ 	return 0;
+ }
+ 
++static void uas_pre_disconnect(struct usb_interface *intf)
++{
++	struct Scsi_Host *shost = usb_get_intfdata(intf);
++	struct uas_dev_info *devinfo = (struct uas_dev_info *)shost->hostdata;
++	unsigned long start_time;
++
++	start_time = jiffies;
++	for (;;) {
++		if (READ_ONCE(devinfo->udev->state) == USB_STATE_NOTATTACHED)
++			return;
++
++		flush_work(&devinfo->work);
++
++		if (!usb_wait_anchor_empty_timeout(&devinfo->sense_urbs, 5000))
++			break;
++
++		if (!usb_wait_anchor_empty_timeout(&devinfo->data_urbs, 500))
++			break;
++
++		if (time_after(jiffies, start_time + 5 * HZ))
++			break;
++		if (uas_cmnd_list_empty(devinfo))
++			return;
++
++		msleep(20);
++	}
++
++	shost_printk(KERN_ERR, shost, "%s: timed out\n", __func__);
++}
++
+ static void uas_disconnect(struct usb_interface *intf)
+ {
+ 	struct Scsi_Host *shost = usb_get_intfdata(intf);
+ 	struct uas_dev_info *devinfo = (struct uas_dev_info *)shost->hostdata;
+ 	unsigned long flags;
+ 
++	spin_lock_irqsave(&shost->host_lock, flags);
++	scsi_block_requests(shost);
++	spin_unlock_irqrestore(&shost->host_lock, flags);
++
++	uas_pre_disconnect(intf);
++
+ 	spin_lock_irqsave(&devinfo->lock, flags);
+ 	devinfo->resetting = 1;
+ 	spin_unlock_irqrestore(&devinfo->lock, flags);
+ 
++	scsi_unblock_requests(shost);
++
+ 	cancel_work_sync(&devinfo->work);
+ 	usb_kill_anchored_urbs(&devinfo->cmd_urbs);
+ 	usb_kill_anchored_urbs(&devinfo->sense_urbs);
+@@ -1260,6 +1299,7 @@ static void uas_shutdown(struct usb_interface *intf)
+ 
+ static struct usb_driver uas_driver = {
+ 	.name = "uas",
++	.soft_unbind = 1,
+ 	.probe = uas_probe,
+ 	.disconnect = uas_disconnect,
+ 	.pre_reset = uas_pre_reset,
