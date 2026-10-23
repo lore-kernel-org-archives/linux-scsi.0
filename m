@@ -1,57 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792751589;
-	b=hecCWbPcKzBtifzQwnd5fpCjXCJ+qtGTh1zSa7jyIxi+9Pd/Se7z6cPjAjObOiub9q/Q
-	 Vwtvz1mGpa3y77tPHyMBNwh+bbfMnJrPlfZslrQbWBZJ8z9IAVScrGRHC+LPhKCqavsi7
-	 yZ/QV4yePKIpyCnbbaRmqpJ9SylqYjbSWjtSEbybm6cHYJHVRqBtCS29Sws17GgYUWd71
-	 qk2TATt/7KTUHHA8RphOHqPO+qGIqdAU3EEGb9RZbmLqc/ajjd8dZSE0fEZaioWCW1AwG
-	 YUc9ie+XSD/hypW4/XIGdv27x2bQJxoTRBtxJUL0hYDG5b0+t7+mrsEPcZK31l4hrng==
+	t=1792751657;
+	b=ups9/0dT+h0VKOyivTBb1nmaG7l8KaN36QpCJP515PcjMGdeIFsRv02Es+8xhTDOdCHi
+	 yUzQ3heUXSzWx74lhBgPKSKtGfZ/UzyW5Nc2dMTIlAzlmphyGRD9ttWm8frvGuWnlqHQX
+	 +hsnmKhhyVBaWXuSrVgHV/MHOVopjJV+CEIv7S3Frl6QoFx2nm/ouvZmF8q5UtO69S9Zu
+	 8xC8Bp/BtHof7axpBcdVJeMvTyoFGdaINq7zga720NDqqx9TCOP9cHkVUIZrFhBqxIMc1
+	 K39lUU1t2sc/1xEEO8/I35ozP+d527vD8E3P4yDrsS2A9uwyLTfJ3Eu4E3V8+njNXQQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792751589;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792751657;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=TAScKY+I+gH7l4k+QvZCADTsccCEwwOGLI4QPVZdWGs=;
-	b=5QbD1Crcx8ZxOWHNciS9POzmye76hlJeNo/YIa6vLHytlT41pi68XEej++MS4F46JKBG
-	 nAeBQaUblxI6YDh+ap4JvT1OS4MGzk9MySQKUCqQVzMWXfdQKsk2fVl18IGaSqbKS/Vy+
-	 XWRxy8jiAJsnoKmRIa35PQV2Eo+jVFRcJm/4P7OlYX/IDGhc5OhyACf8/1bg3k6dpKAGm
-	 XePXV8N9MVQSVQjyEjjoUorY9KVD8hA8i7iLf+OzP4Gd83lUbVZCLPqt6gNHyjPbPaerS
-	 guruhfNGPdAxbwYA3Zhr1vSiFJuKM8/LHaKuK1nTNq+syB6wTS0TTT2g9aZribKk27Q==
+	bh=480ojL5B0wTxRo+Rwk7Sd8oIWh0pQRYXwICTyu0kZto=;
+	b=YYy+J+ZG12onKNnRRjJuqpN4wQvKdR8XM99pN4mABPHLjEdcykuHQsRd00EQb/XMMLfA
+	 n9A3I+jo0fzuYQPPfdm+i1v56UD8qnsrHs+gm/rhLIvKVm0E9pQUiEaRurz/ubBaAHJO1
+	 8I/a/2oCQgqHxmuw8AbkokdGkgWlW0vyANQ5gU2lUG5j49RZYfM5Q9rNUQEfX1XqFhevt
+	 nV6Y8ogl+md+h/FXfxRASNjZM36DzIN8cqCU1ztF3yo2MmtAY2Ty2vDSg6HvPTS2ZiQty
+	 O5wd/NwYhQ6wA0KI4sR4WsKr4ohdJXgglPSXJrNC0bm2fQ1wucbBLz0FSdfFjwZsAgw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=f0hEijPu;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lwDrFOlz;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B51F606A31A
-	for <linux-scsi@vger.kernel.org>; Fri, 23 Oct 2026 10:33:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 203E0606A31A
+	for <linux-scsi@vger.kernel.org>; Fri, 23 Oct 2026 10:34:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=f0hEijPu
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 877F41F01825;
-	Fri, 23 Oct 2026 10:33:08 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lwDrFOlz
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9A8121F01825;
+	Fri, 23 Oct 2026 10:34:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792751588;
-	bh=TAScKY+I+gH7l4k+QvZCADTsccCEwwOGLI4QPVZdWGs=;
+	s=k20260515; t=1792751656;
+	bh=480ojL5B0wTxRo+Rwk7Sd8oIWh0pQRYXwICTyu0kZto=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=f0hEijPu8GKBFoaA2GLzQp0PFHAnfXdcxcxZiJzKrKdt000glDXD/kAk79+9l9azl
-	 JVcIu3Uj9HViZ1DUfB6kd4F8A+X1am5wMpn3hmovWZTSAp2/vsvNpufssGXgxxFLPA
-	 4xlIsfLpMy4HWnjBHFhb1TL0Tk3mSwMrjglLRpOuME9sYJFo6Mn/ugAgvW7+xZmVMc
-	 2wUUufUFYlKbMXVCrTTVSXd0unO7n4Ld+Q7/6PQz/5do0AQPhLDHcgFWEeijBZPH8r
-	 lQbZ7dEOvKEUyLMKzrEjl4M8zFaYNsJUk7M87NmjCdTZu8HfvDayZ0e7yxsqA5hJkR
-	 3VlzHLtJdQK6g==
-Message-ID: <sashiko-outbox-182690@kernel.org>
+	b=lwDrFOlzo9uE4C9l51NAuV+lWcaUc5uCDS7lo/mm47JVvzk0s0ydhh4irIayhfPRM
+	 xyKBf0EvzG41A2EYABg4t0jaBls6PBXR6bK7ZhZ7MmIQtG+gnFu17VBjO81AoR7+jv
+	 8AWpsXjshn20uiIJjd2z/lydHECHe7/Adqgqs9p2IaMCUdBy6fKBdrCQde7XRGYCl9
+	 tSev9MavigzLatDTHRpBiq1yTb/2dEAsn74hhE9yyP1mTAAo6+DHP4Xuhka5qyZNVq
+	 n/oJowvlKpTwA8tuwbfJap6U+8tcdwp5O/eESnhmvuf6T3NMKxhDBzINWytGCzE13J
+	 EjWdysiluVkow==
+Message-ID: <sashiko-outbox-182693@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 03/13] Revert "scsi: qla2xxx: Validate BSG
- request_len before reading vendor_cmd[]"
+Subject: Re: [PATCH v2 06/13] scsi: qla2xxx: Fix scan state machine race and
+ IRQ-unsafe sp_unmap
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nilesh Javali" <njavali@marvell.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20261023101600.1431179-4-njavali@marvell.com>
+In-Reply-To: <20261023101600.1431179-7-njavali@marvell.com>
 References: <20261023101600.1431179-1-njavali@marvell.com>
- <20261023101600.1431179-4-njavali@marvell.com>
+ <20261023101600.1431179-7-njavali@marvell.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 23 Oct 2026 10:33:08 +0000
+Date: Fri, 23 Oct 2026 10:34:16 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -63,279 +63,204 @@ Precedence: list
 
 Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [High] scsi: qla2xxx: unchecked vendor_cmd[0] read in qla24xx_bsg_request=
-()
-- [High] scsi: qla2xxx: out-of-bounds vendor_cmd[] reads on short BSG reque=
-sts
+- [High] scsi: qla2xxx: incomplete scan.step race fix in qla_async_scan_sp_=
+done()
+- [High] scsi: qla2xxx: sp and DMA leak in qla_async_scan_sp_done() on work=
+ alloc fail
 --
 
-commit 6dca3d90086c395d6e304de559abf4c8c863ad1f
-Author: Nilesh Javali <njavali@marvell.com>
+commit e9cd982d25a90416902027b8c35c59ac8e31a64e
+Author: Manish Rangankar <mrangankar@marvell.com>
 
-Revert "scsi: qla2xxx: Validate BSG request_len before reading vendor_cmd[]"
+scsi: qla2xxx: Fix scan state machine race and IRQ-unsafe sp_unmap
 
-This commit reverts commit 4cf38dd9465736141263ebb63375868311a0ec81 to
-restore FC_BSG_HST_VENDOR handling for the Marvell qaucli management utilit=
-y,
-which passes a request_len smaller than sizeof(struct fc_bsg_request) plus
-the vendor_cmd words checked by that commit.
+This commit saves vha->scan.step into a local variable under work_lock in
+qla_async_scan_sp_done() and defers qla24xx_sp_unmap() to process context v=
+ia
+QLA_EVT_UNMAP when posting scan work fails.
 
-> diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bs=
-g.c
-> index ab559048dbb82..19a514a153aef 100644
-> --- a/drivers/scsi/qla2xxx/qla_bsg.c
-> +++ b/drivers/scsi/qla2xxx/qla_bsg.c
-> @@ -160,12 +160,6 @@ qla24xx_proc_fcp_prio_cfg_cmd(struct bsg_job *bsg_jo=
-b)
->  		goto exit_fcp_prio_cfg;
->  	}
-> =20
-> -	if (bsg_job->request_len <
-> -	    sizeof(struct fc_bsg_request) + 2 * sizeof(uint32_t)) {
-> -		ret =3D -EINVAL;
-> -		goto exit_fcp_prio_cfg;
-> -	}
-> -
->  	/* Get the sub command */
->  	oper =3D bsg_request->rqst_data.h_vendor.vendor_cmd[1];
-> =20
-> @@ -764,10 +758,6 @@ qla2x00_process_loopback(struct bsg_job *bsg_job)
->  		return -EIO;
->  	}
-> =20
-> -	if (bsg_job->request_len <
-> -	    sizeof(struct fc_bsg_request) + 3 * sizeof(uint32_t))
-> -		return -EINVAL;
-> -
->  	memset(&elreq, 0, sizeof(elreq));
-> =20
->  	elreq.req_sg_cnt =3D dma_map_sg(&ha->pdev->dev,
-> @@ -1000,10 +990,6 @@ qla84xx_reset(struct bsg_job *bsg_job)
->  		return -EINVAL;
->  	}
-> =20
-> -	if (bsg_job->request_len <
-> -	    sizeof(struct fc_bsg_request) + 2 * sizeof(uint32_t))
-> -		return -EINVAL;
-> -
->  	flag =3D bsg_request->rqst_data.h_vendor.vendor_cmd[1];
-> =20
->  	rval =3D qla84xx_reset_chip(vha, flag =3D=3D A84_ISSUE_RESET_DIAG_FW);
-> @@ -1048,10 +1034,6 @@ qla84xx_updatefw(struct bsg_job *bsg_job)
->  		return -EINVAL;
->  	}
-> =20
-> -	if (bsg_job->request_len <
-> -	    sizeof(struct fc_bsg_request) + 2 * sizeof(uint32_t))
-> -		return -EINVAL;
-> -
->  	sg_cnt =3D dma_map_sg(&ha->pdev->dev, bsg_job->request_payload.sg_list,
->  		bsg_job->request_payload.sg_cnt, DMA_TO_DEVICE);
->  	if (!sg_cnt) {
-> @@ -1529,15 +1511,9 @@ qla2x00_read_optrom(struct bsg_job *bsg_job)
->  	struct Scsi_Host *host =3D fc_bsg_to_shost(bsg_job);
->  	scsi_qla_host_t *vha =3D shost_priv(host);
->  	struct qla_hw_data *ha =3D vha->hw;
-> -	uint32_t start;
-> +	uint32_t start =3D bsg_request->rqst_data.h_vendor.vendor_cmd[1];
->  	int rval =3D 0;
-> =20
-> -	if (bsg_job->request_len <
-> -	    sizeof(struct fc_bsg_request) + 2 * sizeof(uint32_t))
-> -		return -EINVAL;
-> -
-> -	start =3D bsg_request->rqst_data.h_vendor.vendor_cmd[1];
-> -
->  	if (ha->flags.nic_core_reset_hdlr_active)
->  		return -EBUSY;
-> =20
-> @@ -1580,15 +1556,9 @@ qla2x00_update_optrom(struct bsg_job *bsg_job)
->  	struct Scsi_Host *host =3D fc_bsg_to_shost(bsg_job);
->  	scsi_qla_host_t *vha =3D shost_priv(host);
->  	struct qla_hw_data *ha =3D vha->hw;
-> -	uint32_t start;
-> +	uint32_t start =3D bsg_request->rqst_data.h_vendor.vendor_cmd[1];
->  	int rval =3D 0;
-> =20
-> -	if (bsg_job->request_len <
-> -	    sizeof(struct fc_bsg_request) + 2 * sizeof(uint32_t))
-> -		return -EINVAL;
-> -
-> -	start =3D bsg_request->rqst_data.h_vendor.vendor_cmd[1];
-> -
->  	mutex_lock(&ha->optrom_mutex);
->  	rval =3D qla2x00_optrom_setup(bsg_job, vha, start, 1);
->  	if (rval) {
-> @@ -2453,11 +2423,6 @@ qlafx00_mgmt_cmd(struct bsg_job *bsg_job)
->  	struct fc_port *fcport;
->  	char  *type =3D "FC_BSG_HST_FX_MGMT";
-> =20
-> -	if (bsg_job->request_len <
-> -	    sizeof(struct fc_bsg_request) + sizeof(uint32_t) +
-> -	    sizeof(struct qla_mt_iocb_rqst_fx00))
-> -		return -EINVAL;
-> -
->  	/* Copy the IOCB specific information */
->  	piocb_rqst =3D (struct qla_mt_iocb_rqst_fx00 *)
->  	    &bsg_request->rqst_data.h_vendor.vendor_cmd[1];
-> @@ -3379,13 +3344,6 @@ qla2x00_process_vendor_specific(struct scsi_qla_ho=
-st *vha, struct bsg_job *bsg_j
+> diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
+> index 20b1aef455c4f..efe98609c149d 100644
+> --- a/drivers/scsi/qla2xxx/qla_gs.c
+> +++ b/drivers/scsi/qla2xxx/qla_gs.c
+> @@ -3512,6 +3512,8 @@ static void qla2x00_find_free_fcp_nvme_slot(struct =
+scsi_qla_host *vha,
+>  static void qla_async_scan_sp_done(srb_t *sp, int res)
 >  {
->  	struct fc_bsg_request *bsg_request =3D bsg_job->request;
+>  	struct scsi_qla_host *vha =3D sp->vha;
+> +	struct qla_work_evt *e;
+> +	enum scan_step step;
+>  	unsigned long flags;
+>  	int rc;
 > =20
-> -	if (bsg_job->request_len <
-> -	    sizeof(struct fc_bsg_request) + sizeof(uint32_t)) {
-> -		ql_log(ql_log_warn, vha, 0x7000,
-> -		       "BSG request too small for vendor cmd.\n");
-> -		return -EINVAL;
-> -	}
-> -
->  	ql_dbg(ql_dbg_edif, vha, 0x911b, "%s FC_BSG_HST_VENDOR cmd[0]=3D0x%x\n",
->  	    __func__, bsg_request->rqst_data.h_vendor.vendor_cmd[0]);
+> @@ -3544,8 +3546,16 @@ static void qla_async_scan_sp_done(srb_t *sp, int =
+res)
+>  		 */
+>  		rc =3D qla2x00_post_next_scan_work(vha, sp, QLA_EVT_SCAN_FINISH);
+>  		if (rc) {
+> -			/* Cleanup here to prevent memory leak */
+> -			qla24xx_sp_unmap(vha, sp);
+> +			/* Defer sp_unmap to process context -- we are in IRQ */
+> +			e =3D qla2x00_alloc_work(vha, QLA_EVT_UNMAP);
+> +			if (e) {
+> +				e->u.iosb.sp =3D sp;
+> +				qla2x00_post_work(vha, e);
+> +			} else {
+> +				ql_log(ql_log_warn, vha, 0x2029,
+> +				       "%s: Failed to schedule sp_unmap, sp leaked\n",
+> +				       name);
+> +			}
+> =20
+>  			spin_lock_irqsave(&vha->work_lock, flags);
+>  			vha->scan.scan_flags &=3D ~SF_SCANNING;
+> @@ -3568,10 +3578,11 @@ static void qla_async_scan_sp_done(srb_t *sp, int=
+ res)
+>  	qla2x00_find_free_fcp_nvme_slot(vha, sp);
+> =20
+>  	spin_lock_irqsave(&vha->work_lock, flags);
+> +	step =3D vha->scan.step;
+>  	vha->scan.scan_flags &=3D ~SF_SCANNING;
+>  	spin_unlock_irqrestore(&vha->work_lock, flags);
+> =20
+> -	switch (vha->scan.step) {
+> +	switch (step) {
 
 [Severity: High]
-Does removing all of the request_len checks reintroduce out-of-bounds heap
-reads of bsg_request->rqst_data.h_vendor.vendor_cmd[] when userspace submits
-a short FC_BSG_HST_VENDOR request?
+Does saving vha->scan.step into a local variable while clearing SF_SCANNING
+between scan steps allow two fabric scans to run concurrently and corrupt
+vha->scan?
 
-In bsg_transport_sg_io_fn(), job->request is allocated with the exact
-user-supplied hdr->request_len:
+In the race described by the commit message, as soon as SF_SCANNING is
+cleared here in qla_async_scan_sp_done(), another CPU calling
+qla_fab_scan_start() -> qla_fab_async_scan(vha, NULL) can see SF_SCANNING
+clear, set SF_SCANNING, reset vha->scan.step to FAB_SCAN_START, and zero
+vha->scan.l:
 
-block/bsg-lib.c:bsg_transport_sg_io_fn() {
-    ...
-    job->request_len =3D hdr->request_len;
-    job->request =3D memdup_user(uptr64(hdr->request), hdr->request_len);
-    ...
+drivers/scsi/qla2xxx/qla_gs.c:qla_fab_async_scan() {
+	spin_lock_irqsave(&vha->work_lock, flags);
+	if (vha->scan.scan_flags & SF_SCANNING) {
+		spin_unlock_irqrestore(&vha->work_lock, flags);
+		ql_dbg(ql_dbg_disc + ql_dbg_verbose, vha, 0x2012,
+		    "%s: scan active for sp:%p\n", __func__, sp);
+		goto done_free_sp;
+	}
+	vha->scan.scan_flags |=3D SF_SCANNING;
+	if (!sp)
+		vha->scan.step =3D FAB_SCAN_START;
+
+	spin_unlock_irqrestore(&vha->work_lock, flags);
+	...
+		memset(vha->scan.l, 0, vha->scan.size);
 }
 
-And fc_bsg_host_dispatch() only verifies that job->request_len is at least
-sizeof(uint32_t) (4 bytes) before calling into qla24xx_bsg_request() ->
-qla2x00_process_vendor_specific().
+With this change, qla_async_scan_sp_done() switches on the saved step and
+posts QLA_EVT_SCAN_CMD or QLA_EVT_SCAN_FINISH for the first scan while the
+second scan is also running:
 
-In struct fc_bsg_request, rqst_data is a union whose total size is 16 bytes
-(sized by struct fc_bsg_host_ct), making sizeof(struct fc_bsg_request) 20
-bytes. However, struct fc_bsg_host_vendor only has an 8-byte vendor_id befo=
+1. If step was FAB_SCAN_GNNFT_NVME (or FAB_SCAN_GNNFT_FCP without NVMe),
+   qla_fab_scan_finish() runs on the workqueue concurrently with the new
+   scan, reads vha->scan.l while the new scan zeroes or overwrites it (which
+   can leave online ports in QLA_FCPORT_SCAN and schedule them for deletion
+   via qlt_schedule_sess_for_deletion()), and then clears SF_SCANNING at the
+   out label while the second scan's SRB is in flight.
+
+2. If step was an intermediate step, qla_fab_async_scan(vha, sp) runs with
+   the first scan's non-NULL sp. If the second scan failed an allocation in
+   FAB_SCAN_START (which clears SF_SCANNING while leaving vha->scan.step as
+   FAB_SCAN_START), the first scan enters case FAB_SCAN_START and overwrites
+   sp =3D qla2x00_get_sp(vha, NULL, GFP_KERNEL), leaking the first scan's sp
+   and its coherent DMA buffers ctarg.req and ctarg.rsp.
+
+3. Conversely, if qla_fab_async_scan() is entered while SF_SCANNING is
+   already set, it jumps to done_free_sp, which unconditionally clears
+   SF_SCANNING:
+
+drivers/scsi/qla2xxx/qla_gs.c:qla_fab_async_scan() {
+done_free_sp:
+	...
+	spin_lock_irqsave(&vha->work_lock, flags);
+	vha->scan.scan_flags &=3D ~SF_SCANNING;
+}
+
+   Once SF_SCANNING is cleared while an SRB is still in flight, another
+   qla_fab_scan_start() call can set vha->scan.step =3D FAB_SCAN_START befo=
 re
-the flexible array vendor_cmd[]:
+   qla_async_scan_sp_done() runs, so qla2x00_find_free_fcp_nvme_slot() (whi=
+ch
+   reads vha->scan.step outside work_lock) and step =3D vha->scan.step in
+   qla_async_scan_sp_done() will still see FAB_SCAN_START and hit WARN_ON(1=
+).
 
-include/uapi/scsi/scsi_bsg_fc.h:
-    struct fc_bsg_host_vendor {
-        __u64 vendor_id;
-        __u32 vendor_cmd[];
-    };
-
-So offsetof(struct fc_bsg_request, rqst_data.h_vendor.vendor_cmd) is 12
-bytes, meaning vendor_cmd[0] is at bytes 12..15 and vendor_cmd[1] is at byt=
-es
-16..19 (both within a 20-byte struct fc_bsg_request). Commit 4cf38dd94657
-rejected 20-byte qaucli requests because it checked against
-sizeof(struct fc_bsg_request) + N * sizeof(uint32_t) (20 + 4*N) rather than
-offsetof(struct fc_bsg_request, rqst_data.h_vendor.vendor_cmd) +
-N * sizeof(uint32_t) (12 + 4*N).
-
-Without bounds checks anchored at offsetof(struct fc_bsg_request,
-rqst_data.h_vendor.vendor_cmd), short requests read past the end of
-bsg_job->request in:
-- qla2x00_process_vendor_specific() reading vendor_cmd[0]
-- qla24xx_proc_fcp_prio_cfg_cmd(), qla84xx_reset(), qla84xx_updatefw(),
-  qla2x00_read_optrom(), qla2x00_update_optrom(), and
-  qla28xx_validate_flash_image() -> qla28xx_do_validate_flash_image()
-  reading vendor_cmd[1]
-- qla2x00_process_loopback() reading vendor_cmd[1] and vendor_cmd[2]
-- qlafx00_mgmt_cmd() overlaying a 36-byte struct qla_mt_iocb_rqst_fx00 at
-  &vendor_cmd[1]
-
-> @@ -3529,11 +3487,8 @@ qla24xx_bsg_request(struct bsg_job *bsg_job)
+>  	case FAB_SCAN_GPNFT_FCP:
+>  	case FAB_SCAN_GPNFT_NVME:
+>  		rc =3D qla2x00_post_next_scan_work(vha, sp, QLA_EVT_SCAN_CMD);
+> @@ -3594,7 +3605,16 @@ static void qla_async_scan_sp_done(srb_t *sp, int =
+res)
 >  	}
 > =20
->  	/* Disable port will bring down the chip, allow enable command */
-> -	if (bsg_request->msgcode =3D=3D FC_BSG_HST_VENDOR &&
-> -	    bsg_job->request_len >=3D
-> -		sizeof(struct fc_bsg_request) + sizeof(uint32_t) &&
-> -	    (bsg_request->rqst_data.h_vendor.vendor_cmd[0] =3D=3D QL_VND_MANAGE=
-_HOST_PORT ||
-> -	     bsg_request->rqst_data.h_vendor.vendor_cmd[0] =3D=3D QL_VND_GET_HO=
-ST_STATS))
-> +	if (bsg_request->rqst_data.h_vendor.vendor_cmd[0] =3D=3D QL_VND_MANAGE_=
-HOST_PORT ||
-> +	    bsg_request->rqst_data.h_vendor.vendor_cmd[0] =3D=3D QL_VND_GET_HOS=
-T_STATS)
->  		goto skip_chip_chk;
+>  	if (rc) {
+> -		qla24xx_sp_unmap(vha, sp);
+> +		/* Defer sp_unmap to process context -- we are in IRQ */
+> +		e =3D qla2x00_alloc_work(vha, QLA_EVT_UNMAP);
+> +		if (e) {
+> +			e->u.iosb.sp =3D sp;
+> +			qla2x00_post_work(vha, e);
+> +		} else {
+> +			ql_log(ql_log_warn, vha, 0x202a,
+> +			       "%s: Failed to schedule sp_unmap, sp leaked\n",
+> +			       __func__);
+> +		}
 
 [Severity: High]
-In qla24xx_bsg_request(), does dropping the bsg_request->msgcode =3D=3D
-FC_BSG_HST_VENDOR check and length check cause bsg_request->rqst_data.h_ven=
-dor.vendor_cmd[0]
-to be read unconditionally on every BSG request, including non-vendor
-requests?
+Can qla2x00_alloc_work(vha, QLA_EVT_UNMAP) ever succeed here or in the error
+path above when qla2x00_post_next_scan_work() just failed, and does this le=
+ak
+sp, its DMA buffers, and its vha and qpair references during unload or vport
+deletion?
 
-In struct fc_bsg_request, rqst_data is a union:
+Looking at qla2x00_post_next_scan_work():
 
-include/uapi/scsi/scsi_bsg_fc.h:
-    struct fc_bsg_request {
-        __u32 msgcode;
-        union {
-            struct fc_bsg_host_add_rport    h_addrport;
-            struct fc_bsg_host_del_rport    h_delrport;
-            struct fc_bsg_host_els          h_els;
-            struct fc_bsg_host_ct           h_ct;
-            struct fc_bsg_host_vendor       h_vendor;
+drivers/scsi/qla2xxx/qla_gs.c:qla2x00_post_next_scan_work() {
+	e =3D qla2x00_alloc_work(vha, cmd);
+	if (!e)
+		return QLA_FUNCTION_FAILED;
 
-            struct fc_bsg_rport_els         r_els;
-            struct fc_bsg_rport_ct          r_ct;
-        } rqst_data;
-    } __attribute__((packed));
+	e->u.iosb.sp =3D sp;
 
-Because rqst_data.h_vendor.vendor_cmd[0] is at byte offset 12..15:
-
-1. For legitimate non-vendor BSG requests smaller than 16 bytes, such as
-   FC_BSG_RPT_ELS (where msgcode + struct fc_bsg_rport_els is 5 bytes) or
-   FC_BSG_HST_ELS_NOLOGIN (where msgcode + struct fc_bsg_host_els is 8 byte=
-s),
-   reading vendor_cmd[0] reads past the end of the bsg_job->request buffer
-   allocated by memdup_user().
-
-2. For FC_BSG_HST_CT and FC_BSG_RPT_CT requests, bytes 12..15 alias
-   rqst_data.h_ct.preamble_word1 and rqst_data.r_ct.preamble_word2. If that
-   field happens to equal QL_VND_MANAGE_HOST_PORT (0x26) or
-   QL_VND_GET_HOST_STATS (0x24), qla24xx_bsg_request() jumps to skip_chip_c=
-hk
-   and bypasses the port_isolated, qla2x00_chip_is_down(vha), and
-   PFLG_DRIVER_REMOVING checks:
-
-drivers/scsi/qla2xxx/qla_bsg.c:qla24xx_bsg_request() {
-    ...
-    if (bsg_request->rqst_data.h_vendor.vendor_cmd[0] =3D=3D QL_VND_MANAGE_=
-HOST_PORT ||
-        bsg_request->rqst_data.h_vendor.vendor_cmd[0] =3D=3D QL_VND_GET_HOS=
-T_STATS)
-        goto skip_chip_chk;
-
-    if (vha->hw->flags.port_isolated) {
-        bsg_reply->result =3D DID_ERROR;
-        /* operation not permitted */
-        return -EPERM;
-    }
-
-    if (qla2x00_chip_is_down(vha)) {
-        ...
-        return -EBUSY;
-    }
-
-    if (test_bit(PFLG_DRIVER_REMOVING, &vha->pci_flags)) {
-        SET_DID_STATUS(bsg_reply->result, DID_ERROR);
-        return -EIO;
-    }
-
-skip_chip_chk:
-    ...
+	return qla2x00_post_work(vha, e);
 }
 
-Should qla24xx_bsg_request() retain the bsg_request->msgcode =3D=3D
-FC_BSG_HST_VENDOR check along with a check that bsg_job->request_len >=3D
-offsetof(struct fc_bsg_request, rqst_data.h_vendor.vendor_cmd) +
-sizeof(uint32_t)?
+Since qla2x00_post_work() always returns QLA_SUCCESS,
+qla2x00_post_next_scan_work() only fails when qla2x00_alloc_work() returns
+NULL:
+
+drivers/scsi/qla2xxx/qla_os.c:qla2x00_alloc_work() {
+	if (test_bit(UNLOADING, &vha->dpc_flags))
+		return NULL;
+
+	if (qla_vha_mark_busy(vha))
+		return NULL;
+
+	e =3D kzalloc_obj(struct qla_work_evt, GFP_ATOMIC);
+	...
+}
+
+When an in-flight scan SRB is aborted during driver unload (where UNLOADING
+is set before qla2x00_abort_all_cmds() invokes sp->done()) or vport deletion
+(where delete_progress causes qla_vha_mark_busy() to fail),
+qla2x00_post_next_scan_work() fails because qla2x00_alloc_work() returns
+NULL. Calling qla2x00_alloc_work(vha, QLA_EVT_UNMAP) immediately afterwards
+checks the exact same conditions and will also return NULL (and under
+GFP_ATOMIC allocation failure, retries the identical allocation in the same
+hard IRQ context).
+
+When the else branch is taken, sp, sp->u.iocb_cmd.u.ctarg.req, and
+sp->u.iocb_cmd.u.ctarg.rsp are leaked, and kref_put(&sp->cmd_kref,
+qla2x00_sp_release) is never called, leaving vha->vref_count elevated (which
+stalls qla24xx_deallocate_vp_id()) and leaving objects allocated in
+srb_cachep when kmem_cache_destroy(srb_cachep) runs in qla2x00_module_exit(=
+).
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261023101600.1431=
-179-1-njavali@marvell.com?part=3D3
+179-1-njavali@marvell.com?part=3D6
