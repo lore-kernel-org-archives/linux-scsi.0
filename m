@@ -1,55 +1,101 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.215.182
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792720901;
-	b=2MmxbmNe8MHf71P3w/YXwqLG45U4DvkoHMNzjzxBnXupLZEfWwUIBiYnArRATnLACvIZ
-	 a/YPkJFRv0MNll/u0K1BawMEXTyvMzqQv/6HkG6JQ3JFMLRBTKQidFr7AOLPsjQNkedGx
-	 Fi8tlXqBc1KVmVMNlW26j6qu9fi2kSJPGElkbNDP8FpULXaeO07vzFXi8K57JS4HLNxCj
-	 9Dm3WPExCWYcmprey5AhNdfHlt4q/yMPeLNyHtPsy6xv5Hmp4YWGSw0W3nUJxIIHpRhQT
-	 azSZjevrz2EPap1dk1MGwuzy5pLlC2CCaasbB+zgz1jZMaKqhEffSVVnUT+62Wdeq3Q==
+	t=1792722075;
+	b=0ODdwYay4BwH+90BpJRIfeEmHlZPq4OZCV5H1sYeI9wZyzzl8unrooEoK+YiJ7UqnXMU
+	 2W8VkX+OWy6iz2lH4u8tF8xKRIM9ikkklcjUrbUFctUxe4K8BkYy849gU+mbOmhlZARKW
+	 zVkhcZrLQD2b+8uzKN7iKsJXUH9IrPpWpWSkTDeXzBeJzzgqwIKVlvzVetS2lwXXZcEFN
+	 97qu6nbxYdhNSsu/6rKcxURLFCPOWAlOBEQiMbkcvtcjyia/kEMZ00SsyPqj17YV/rI8J
+	 JYlBAeu7HDZb35U1eAmg/0wx2B93jCmR3Uc8jqFqKitIU/r77K0lISGNwa4eUwnXA/g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792720901;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=kDq6nBHxAMj+4/8EvAu02PFRsyPzgle+8WOEaZceAsU=;
-	b=yxiW94D8JhmpNCEhVA2HG/GnrEk6xxEOo8cGQplOMKU+jU8ngqtlkeMws65UvuwLwCbJ
-	 JldLsZ5F5pqZLtnTMwKu9zCs8CDzvTh+JEns6rxW8vGqtPE2qNOxl3nh6pyAC0AoCU5kk
-	 STpIbOmgh1TkcScHRrwPCljpfNxctaU3EDXMC5tylLG5/DOE9rfQ5BPTSI+X/PFNG871Z
-	 9LUORdWbnB4dafPaWeJTFK34Ll5tmLjQ6uP58vCRs1828s9B+PTRaxoKnAuEc5G04l2Zz
-	 XPjySvhEBNqikFabVJTFh9DJDoIiwqluiOZzdyHiu5Qnht8CAlKZ82+yoNKi7wktPwQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792722075;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=XXX5hCVe20W2DEnZ0HF+fr0EqmB3/p1IDPVPZBeHOFk=;
+	b=ta6OWtoSisS+qrtO75v4qIgH4p4qnikBxZA1zvewlIqevRpIZ7pK6W7cFdoinQHzqZdz
+	 dOs2sov8kuizmwtQ0f9oWZomk6GFCcoC43jlD1Vso41pIsilleoB4gKZRNZFQr0SgdVrP
+	 wOgZVqJF97kEODjH4rRXBfKJjVGroZOu64IVRxGZyQLK7lBcYggkkAikA6Y9uOjocrm5t
+	 fVX7YHbH2eepDUMW6n4250RS4+EiURiCB9Hsc0vj7G6cuwM5z9nyShjdkKRZpI23vhiGE
+	 we4BvF8DHYXNkyTMG4LjSwASWD05SYy7/WtZIvFE42J30YrHgv1ox/PF773/DIdTKyQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Flvi9Pvr;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=fail header.from=isslab.korea.ac.kr;
+	spf=none smtp.mailfrom=isslab.korea.ac.kr;
+	dkim=pass header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.a=rsa-sha256 header.s=20251104 header.b=D7ulQNAY;
+	arc=none smtp.remote-ip=209.85.215.182
+Received: from mail-pg1-f182.google.com (mail-pg1-f182.google.com [209.85.215.182])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98F78606A319;
-	Fri, 23 Oct 2026 02:01:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5EE2A606A319
+	for <linux-scsi@vger.kernel.org>; Fri, 23 Oct 2026 02:21:12 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5EE2A606A319
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Flvi9Pvr
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 448AA1F01825;
-	Fri, 23 Oct 2026 02:01:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792720901;
-	bh=kDq6nBHxAMj+4/8EvAu02PFRsyPzgle+8WOEaZceAsU=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Flvi9Pvry6SP8GYW+eCF++tqTK5JCZMwpn0HcygWWddjZ789qX/hw8ivDysbCXgGn
-	 8HdfU/6Pw4OEaJQmhDC+Al6ERW+4liWfTzoubzfNliOmLojMnSqGpYWp2MwWFNvW1a
-	 K1q7c7ZlCJNDenVp3raiF9w65ulj8uFoIpRcsQzwS3TEGX8T0Ojl0DvjngygBZnwHt
-	 cT5dlStqTMbw26W81B60ODVomNxT+x0B02+9o8B47D7L1zH0x/9xCQfkeD8OZLd7rv
-	 JI47pmXNreDDDIDvtr/lxMW9j/SxOhzFSoCdr8fwVWJcniNsycAis7fcZe4kD5jvIV
-	 zpGSdpQ9j0EGA==
-Message-ID: <sashiko-outbox-182202@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2] usb: uas: wait for pending commands before unbinding
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Jiayi Li" <lijiayi@kylinos.cn>
-Cc: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
-In-Reply-To: <20261023013931.388916-1-lijiayi@kylinos.cn>
-References: <20261023013931.388916-1-lijiayi@kylinos.cn>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 23 Oct 2026 02:01:40 +0000
+	dkim=pass (2048-bit key, unprotected) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.a=rsa-sha256 header.s=20251104 header.b=D7ulQNAY
+Received: by mail-pg1-f182.google.com with SMTP id 41be03b00d2f7-cc7e79c1eaaso158866a12.2
+        for <linux-scsi@vger.kernel.org>; Thu, 22 Oct 2026 19:21:12 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=isslab-korea-ac-kr.20251104.gappssmtp.com; s=20251104; t=1792722072; x=1793326872; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=XXX5hCVe20W2DEnZ0HF+fr0EqmB3/p1IDPVPZBeHOFk=;
+        b=D7ulQNAYpQewZbA6rR4DxTDcoX9oMPs7QYZdu4flYQ3UEakeUTfC7TOSxNNhi8OAh0
+         jDQuD29MTwJKgOS1IOHArMimnzfJvu8FvdSr7izuK9dqyz17oRSlKwzQnI6FdQYMRM82
+         G2QDHuzwugLBqXAcH3RQLT67SVYC7Wy9FRlzGyvyonoPH8n2hHqF7Jq7O5V/tnHnkysF
+         f7IzCDR3eEDqQ8hrJgkR7w8v3aFcQbqYIa3YUKzlZrlPL7t84828V5X28zkPfi4vqAQy
+         wZwqaNglqVCbGHBLfFWt4ePexQuKzGwLdr1kdzFwULfW9msWfuVyMNwPXDotZKh7xJcR
+         nKmg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792722072; x=1793326872;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=XXX5hCVe20W2DEnZ0HF+fr0EqmB3/p1IDPVPZBeHOFk=;
+        b=JeXWGGwAVdtQFmLnMkgQEVY7xeEhF51Di4lJe6LOt0DH/Y4C80PCsQRSi9Y3yBQwCY
+         jsuAtNsp0KjrKSPt1mPA+kLW8mre+NtTJQqlGzNH9d7kDKsqyWvm7xKLdrbc6Y/4j0Nb
+         mT9V3pYFCVGuMJy0F6BkUymog7b9aMCuPckU9p3RCXHyODevNre2oU1mh8xJ6zgP8akv
+         B59cRTaI9UaOka5WWDZ+mIObA5ax5rNccjBDoYgCDuqwa3S6nOWwpt4HSOCGVNAMV9Z8
+         ORxrP289XGJX2ckGBozq/3dTrjDD2bBAAhnNvKU3gdUKMP0XFZ6M4ygiC/YgLxxoKYVG
+         OlsQ==
+X-Forwarded-Encrypted: i=1; AKwUvBxaT9k9xS1kEq44PDoulIsZoG46cY1mz0mtU1QGPHApfRlAQAauDZgNQDDZ9uDpBsLAJqC7dnHn/HNz@vger.kernel.org
+X-Gm-Message-State: AFq9FYJLWEWTgUxkVJc3YzIna83nbJAUV9P0SV1kIQElRKwIk3r9ZgFM
+	cqP+Y92ZLlbf7bdgvMazOKjT92WHN4McmQxCkRToIxy5vwPr0jdiE2VhDB61USu+18o=
+X-Gm-Gg: AYBFou1z7dwkF1aVqRKa8DXvBaz0J6EAeWNRkhay6PiqXaAlcpNlOaiIaoMJXxKavdM
+	M+jS+OMcUQU6JfczNWu4/rkloNMmaPib69jc6xFK5sE1H7B0lWadJQh4A6VEilMkxjAUEQoFJgF
+	sGsArjmd+sfz1KH+muRj8U02dJxePaELIwPI8pSv98jf5JXQwtqFa9UUzP569IzCCSBGAsl5jTk
+	ryoACss2o6okiBS3fXDS8kFkAynxdNbdChVc/dv9acFG0TvjrxQnkLJ3ztOR2QlLYJnL9Ly6ssr
+	qfi7ZFmVUUO16JZ/iRUts+tGDoZPaY5IQoq9N+HUpxevqOBqwnMgY8yiWT6dBlSGfvJPWCHcBAB
+	Eg0RgUDBFghCISdiIJFXFxbPrMaq+a7wRcr9nyXs3ILnJSYC3xgtEDR/vqcymiVwBdWzcGN1teh
+	reA03mYcSya0kg315+jS87UUeZ6p2Y2EAu1sc4jJscaMmIkwhZqA3JumfgYrz0wjpHx3V2212WS
+	JQOQ3Wm73WSL6QLq5vGvuWVoo7/qjplEsw92+ZzIfUmu7PqBdPISbBKuvBno/0N5zyKdYtbLleX
+	AKE=
+X-Received: by 2002:a17:90b:1fc7:b0:3ad:3715:d21 with SMTP id 98e67ed59e1d1-3adce7ca8c9mr598095a91.49.1792722072334;
+        Thu, 22 Oct 2026 19:21:12 -0700 (PDT)
+Received: from yhlee-960QFG.Davolink ([2406:5900:1044:110c:13e0:b266:5a7d:e119])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3add2994cd2sm183922a91.3.2026.10.22.19.21.07
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 22 Oct 2026 19:21:11 -0700 (PDT)
+From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+To: Nihar Panda <niharp@linux.ibm.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Benjamin Block <bblock@linux.ibm.com>,
+	Steffen Maier <maier@linux.ibm.com>,
+	Heiko Carstens <hca@linux.ibm.com>,
+	Vasily Gorbik <gor@linux.ibm.com>,
+	Alexander Gordeev <agordeev@linux.ibm.com>,
+	Christian Borntraeger <borntraeger@linux.ibm.com>,
+	Sven Schnelle <svens@linux.ibm.com>,
+	linux-s390@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org,
+	yhlee@isslab.korea.ac.kr
+Subject: [PATCH] scsi: zfcp: bound the RSCN page walk to the status read payload
+Date: Fri, 23 Oct 2026 11:20:56 +0900
+Message-ID: <20261023022056.3106651-1-yhlee@isslab.korea.ac.kr>
+X-Mailer: git-send-email 2.43.0
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -58,125 +104,73 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [Medium] usb: uas: stalled wait and false timeout error in uas_pre_discon=
-nect()
---
+zfcp_fc_incoming_rscn() takes the number of RSCN pages from rscn_plen in
+the received ELS and walks that many four byte pages out of the status
+read buffer payload. The fabric chooses rscn_plen, it is a 16 bit field,
+and nothing compares it against the payload. A value of 65535 gives 16383
+entries, so the loop reads up to 65532 bytes out of a payload of
+FSF_STATUS_READ_PAYLOAD_SIZE, which is 4032. The status read buffer is a
+single page and its payload ends at the page boundary, so the walk
+continues into whatever follows that page.
 
-commit 4c54d6873e1e380dddee1542eeac75bb8256858a
-Author: Jiayi Li <lijiayi@kylinos.cn>
+Every iteration also hands the four bytes it just read to
+zfcp_fc_enqueue_event(), and that event reaches user space through
+fc_host_post_event(), so the bytes past the payload are reported and not
+merely read.
 
-usb: uas: wait for pending commands before unbinding
+libfc bounds the same field. fc_disc_recv_rscn_req() refuses an RSCN whose
+rscn_plen is not covered by the received frame. zfcp does not share that
+code, so add the equivalent test here. Compare against the payload size
+rather than the firmware reported srb->length, because a bogus srb->length
+need not reach the payload at all.
 
-This commit enables soft_unbind on the uas driver and adds
-uas_pre_disconnect() to block SCSI requests and wait for pending URBs and
-commands to finish before unbinding the interface.
+A conforming RSCN is unaffected. An FC data field holds at most 2112
+bytes, so at most 528 pages, well under the 1008 the payload can hold.
 
-> diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
-> index 8655edbd66b16..300ab637be70b 100644
-> --- a/drivers/usb/storage/uas.c
-> +++ b/drivers/usb/storage/uas.c
+This is an out of bounds read and an information leak to user space. It is
+not a write and it corrupts no state. It assumes the adapter passes
+rscn_plen through unchanged, the same assumption the host bus adapter
+mediated paths in other drivers already make, and one the driver cannot
+check for itself.
 
-[ ... ]
+Not tested on hardware. The bound follows from the field widths and the
+payload size.
 
-> @@ -1211,16 +1212,54 @@ static int uas_reset_resume(struct usb_interface =
-*intf)
->  	return 0;
->  }
-> =20
-> +static void uas_pre_disconnect(struct usb_interface *intf)
-> +{
-> +	struct Scsi_Host *shost =3D usb_get_intfdata(intf);
-> +	struct uas_dev_info *devinfo =3D (struct uas_dev_info *)shost->hostdata;
-> +	unsigned long start_time;
-> +
-> +	start_time =3D jiffies;
-> +	for (;;) {
-> +		if (READ_ONCE(devinfo->udev->state) =3D=3D USB_STATE_NOTATTACHED)
-> +			return;
-> +
-> +		flush_work(&devinfo->work);
-> +
-> +		if (!usb_wait_anchor_empty_timeout(&devinfo->sense_urbs, 5000))
-> +			break;
-> +
-> +		if (!usb_wait_anchor_empty_timeout(&devinfo->data_urbs, 500))
-> +			break;
-> +
-> +		if (time_after(jiffies, start_time + 5 * HZ))
-> +			break;
-> +		if (uas_cmnd_list_empty(devinfo))
-> +			return;
-> +
-> +		msleep(20);
-> +	}
-> +
-> +	shost_printk(KERN_ERR, shost, "%s: timed out\n", __func__);
-> +}
+Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+Cc: stable@vger.kernel.org
+Signed-off-by: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+---
+ drivers/s390/scsi/zfcp_fc.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-[Severity: Medium]
-Can uas_pre_disconnect() stall for 5 seconds or emit a false timeout error =
-in
-the following cases?
+diff --git a/drivers/s390/scsi/zfcp_fc.c b/drivers/s390/scsi/zfcp_fc.c
+index 05d0812978798..24efd29b66bfc 100644
+--- a/drivers/s390/scsi/zfcp_fc.c
++++ b/drivers/s390/scsi/zfcp_fc.c
+@@ -270,6 +270,18 @@ static void zfcp_fc_incoming_rscn(struct zfcp_fsf_req *fsf_req)
+ 	no_entries = be16_to_cpu(head->rscn_plen) /
+ 		sizeof(struct fc_els_rscn_page);
+ 
++	/*
++	 * The fabric chooses rscn_plen, so refuse a value that would walk
++	 * the page list past the end of the status read payload.
++	 */
++	if (no_entries > FSF_STATUS_READ_PAYLOAD_SIZE /
++			 sizeof(struct fc_els_rscn_page)) {
++		dev_warn(&adapter->ccw_device->dev,
++			 "An RSCN with a payload length of %u was dropped\n",
++			 be16_to_cpu(head->rscn_plen));
++		return;
++	}
++
+ 	if (no_entries > 1) {
+ 		/* handle failed ports */
+ 		unsigned long flags;
 
-First, in uas_pre_disconnect(), time_after(jiffies, start_time + 5 * HZ) is
-checked before uas_cmnd_list_empty(devinfo). If the waits on sense_urbs and
-data_urbs both succeed (for example, 4.7s waiting on sense_urbs followed by
-0.4s waiting on data_urbs, or a scheduling delay), can total elapsed time
-exceed 5 * HZ and cause the loop to break out and log a timeout error even
-when all commands have completed and uas_cmnd_list_empty(devinfo) is true?
+base-commit: f47d223627f80cb7a1eb14c585fe6cb35de5e984
+-- 
+2.43.0
 
-Second, because uas_driver sets soft_unbind =3D 1, usb_unbind_interface() h=
-olds
-the interface lock (and callers such as usb_set_configuration() or
-usb_reset_device() also hold the device lock) when calling
-uas_disconnect() -> uas_pre_disconnect() without disabling interface
-endpoints. If the device is physically unplugged while uas_pre_disconnect()
-is sleeping in usb_wait_anchor_empty_timeout(&devinfo->sense_urbs, 5000),
-usb_disconnect() sets udev->state =3D USB_STATE_NOTATTACHED and calls
-usb_disable_device(), which blocks on the device or interface lock before
-reaching usb_disable_device_endpoints():
-
-drivers/usb/core/message.c:usb_disable_device() {
-	...
-			remove_intf_ep_devs(interface);
-			device_del(&interface->dev);
-		}
-	...
-	usb_disable_device_endpoints(dev, skip_ep0);
-}
-
-Since pending sense_urbs are not unlinked by USB core until uas_disconnect()
-returns, won't usb_wait_anchor_empty_timeout() wait the full 5000 ms, break
-out of the loop, and log a timeout error without rechecking whether
-devinfo->udev->state became USB_STATE_NOTATTACHED?
-
-Third, if a status URB completes with a non-zero status, uas_stat_cmplt()
-frees the URB without clearing COMMAND_INFLIGHT or devinfo->cmnd[idx]:
-
-drivers/usb/storage/uas.c:uas_stat_cmplt() {
-	...
-	if (status) {
-		if (status !=3D -ENOENT && status !=3D -ECONNRESET && status !=3D -ESHUTD=
-OWN)
-			dev_err(&urb->dev->dev, "stat urb: status %d\n", status);
-		goto bail;
-	}
-	...
-bail:
-	usb_free_urb(urb);
-}
-
-Once sense_urbs and data_urbs are empty and devinfo->work is flushed, no
-further status URB will complete for that command until uas_zap_pending() r=
-uns
-after uas_pre_disconnect(). Wouldn't uas_cmnd_list_empty(devinfo) remain fa=
-lse
-and cause uas_pre_disconnect() to spin in msleep(20) for the full 5 seconds
-before logging a timeout error?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261023013931.3889=
-16-1-lijiayi@kylinos.cn?part=3D1
