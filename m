@@ -1,111 +1,57 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792756557;
-	b=VJ7ewWNziVv/OHVQcYIu7inZxoBgSgzQITqjkb2cHEQiBx9/PMsomQlLWM91lyVZFhBV
-	 NxWvLofNP2c+nQOk7iY6153hT3aYTlDhebTAyAmfkrmKU0KoRCb0Cp4blWllkEHEDGl04
-	 Gmt/fgB1J58FXNObUzSuWQfkd6eZ/CgSUDxpvnECJn1hQ8iqwk0ZV3v9526dxQLT4r6kT
-	 5l3EaXCU+iBw7eZnid3SL5XFzDlHXUOzKZI/H+8m9VzXeF6zL4ztDZB3/dN3UilSSitzV
-	 P+fZG69sGUqjlao5huHFoOWBA0b6BQ4GBbJA8n6S2DfpuZPfQ+RFojSNU25NcWzprtQ==
+	t=1792756804;
+	b=zsNrmX4Niu1L4pb9h8xx1oJCzMRghCsnxPigG7Ul5ynVx4rUTk4L7kvKwYcPRVqU2p7P
+	 EeZik+IBHoWV5VQQV0aht0DOD4ea1bhiCbMta+H7fTdCJKuyoFDx0yDpefaUOtOzlcZxb
+	 TYPiolsTb8bIg/ln5n7qYUb3IDX8vImQvw/lkUb2MH6TfKdv5NY+1KnEeWcTE22Ahw16s
+	 u11Ul/uA+wBIUIAC45q3ytD5HG7+brcohKekEpubj2RDZFs9VynYvNGaYBAxFbHHEbrRs
+	 sUeZTJV2kngq2WRma+cXJ1o/tDp9m12B9LimBYAeQuquLqPnsftY4Z0T4qCChhzKp3w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792756557;
-	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
-	 DKIM-Signature:X-Google-DKIM-Signature:X-Forwarded-Encrypted:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:X-Received:Received:Message-ID:
-	 Date:MIME-Version:User-Agent:Subject:To:Cc:References:
-	 Content-Language:From:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding:X-Proofpoint-Spam-Info:
-	 X-Proofpoint-Spam-Details-Enc:X-Proofpoint-GUID:X-Authority-Analysis:
-	 X-Proofpoint-ORIG-GUID:X-Proofpoint-Virus-Version:
-	 X-Proofpoint-Spam-Details;
-	bh=0lfjro51D7Qg6x2xly6IGeYnaVRKofx4mi+Gn179GOg=;
-	b=i/J1u1usxyF7wvYBxK5RyOSEexeGnJqQG6KK3AiCmHQ+185DdVDyMSmr4KV7ObM0ByZy
-	 cc/afM0PoXaPJLaj9C2GLE6cXOvYn522e/znnmsj1R/LAXp0ceYNG17o96k2DJaWfabtx
-	 s74fKexdqfTae7HJ3w9RndWaDMaQtu9Volu96q7HxFQ0z1evCGn3piwqte0q04n7bqUnh
-	 xj967MCpCzVCWjbUwh1XSyCIIGTQqF5Zkd+VbXIqLX6Ly2CahIwu94ZWAjJds+cIFdYxm
-	 Is7QuxLuxJ856UqMS1USfIxYi0NrK/b3oNrSxRzJ1Wo8w53CKNULXwyj8Sw7AFKWUyA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792756804;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=D7LP8J3tHYKN5i8+EMOCpwo4nHHCnVjhbEVBGnkavOE=;
+	b=NLtZ3BIbqRNduWELQJbm8uDPq+bP/Npz0kH+PRXyfzyLl9hber6SCx9V/LvuiS15BcQr
+	 KVsmboVC9R4C/4AwN0LzmT6sgy/0f6oEJBko6i6LCXU6vwXI2PPlKLgICCRD3c+bo6v0h
+	 7Hv5ROJXHj6KaC2VWXOT0/CUxQLzQjghQbP4KEJvX4ePkTqktQ9BQf6hw2ZWv+JPRlXkx
+	 gVYYsOqjirrSB9KD6qW5RG7DIZmlJIqSstbPOzdk6vxn/mr1lIpkskeOXyOiYzsZ/DENH
+	 uoIL7N4DJut1m3Ot189IwLaXf1jI2dPsnSUiBBwcKA2IaMIWC3StUcafhiN12c7jdRQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=oss.qualcomm.com;
-	spf=pass smtp.mailfrom=oss.qualcomm.com;
-	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=cJKj8NvR;
-	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=cYaYOz3d;
-	arc=none smtp.remote-ip=205.220.180.131
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=AGdMAs08;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49777606A31F
-	for <linux-scsi@vger.kernel.org>; Fri, 23 Oct 2026 11:55:57 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 49777606A31F
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 55CC6606A31A
+	for <linux-scsi@vger.kernel.org>; Fri, 23 Oct 2026 12:00:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=cJKj8NvR;
-	dkim=pass (2048-bit key, unprotected) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=cYaYOz3d
-Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69NAATSH2164232
-	for <linux-scsi@vger.kernel.org>; Fri, 23 Oct 2026 11:55:56 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	0lfjro51D7Qg6x2xly6IGeYnaVRKofx4mi+Gn179GOg=; b=cJKj8NvR2w+BX3vH
-	+aQ4/rwe4iSgxxjXPyYptap1oi8ylQ+JWRjwFhCH4f9p/5hzCx84yZ5T8WByfr3e
-	hQWOMHlXMxxAseNvApfRTki+4bd4EJdrAj3jXjQb8sQORdUov5EK7MjlkLWbTgwa
-	QpiMarlh6BIUdOu0PEYscJ/j8oJSVXisuCa6qiy/kCYiGrbopZOO9f2Ms4l6NUYy
-	TdsMKwQ+jb1mQHAsXNaTaIf7HMdv/DJqAaDoSWJ/RXOdbFCS86TyZo9VyVQKVWtH
-	GPkL1L2LjaALQUBqeNw8dNZs6aE8f3UFbku/7kyiyq6P+IUCizodMfx4ZjYACj4h
-	s3YbHA==
-Received: from mail-qk1-f199.google.com (mail-qk1-f199.google.com [209.85.222.199])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4hfpahuyj9-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Fri, 23 Oct 2026 11:55:56 +0000 (GMT)
-Received: by mail-qk1-f199.google.com with SMTP id af79cd13be357-93e58614290so17548185a.3
-        for <linux-scsi@vger.kernel.org>; Fri, 23 Oct 2026 04:55:55 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1792756555; x=1793361355; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=0lfjro51D7Qg6x2xly6IGeYnaVRKofx4mi+Gn179GOg=;
-        b=cYaYOz3dHrMA8QLUy+K0FHR8wkiPvoNdfuBbrASgNBtBKBjOkIF3JpmPeEBiWdsxUE
-         hy/90shQOe91me6DwoBXoR284ZTCD5Sw2OP1HuYkAI8I95XSxhr58H8e2Mp8pTNlWuLk
-         DSdTOcb4weaX/qPhFpTpvEwtRK/jTypBT8wuelV4XNc5i0ku8qTPL6KydsMLjDLrzGZd
-         AiTUj+LJfScobF+l1eNK2FbFTiFDzy7lRKyk2wcsvH209mOMHLeGs2h5GFbb2Hli4K2P
-         P8DV/K+8fx6LrDVrx6Wn7kcdovqlFMc/RYne3i2PtGIEhd8rOeT7QNkl3px5q42GJXcv
-         Y1AQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792756555; x=1793361355;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=0lfjro51D7Qg6x2xly6IGeYnaVRKofx4mi+Gn179GOg=;
-        b=fdGVFbVSnwMJd/iL+F6XkrLUL+iV+9DnctCXBWDSJ7+op9o8dB+OlbfxFpvuhoCwXD
-         9Jl0kh5TXxycEHrOCjXKZb7Yc6dqF8uP52/1DiwR8v/TxFsMx1Y221VLvwfgfyhvxtUY
-         nSio1L1TLkBqOZ+BmesUVuhwnG42ycGaTdYSh943UlY7Mpi9DAaDLOHQ9oOL2YrPNgDb
-         GR73cqA/id/iGi0US/MPTli2RVIzJpsZDPxjB0tGdFpAQSyEcS2P1Y3J1uz/Ury/gwq3
-         YLmS73PlCQ/ilsSzJOk4OhWCXaGgOJ+kf32ejRDpK6UA6Z6O5kVRIRX+qms7BI1RqhUO
-         xfbQ==
-X-Forwarded-Encrypted: i=1; AKwUvBzqZS4k+SslqKxy2261k+C+VU4H8OuKco5iLIAF8agt83613L4t9WVVbUMOs0jxaBYSVCWK1+x6upBr@vger.kernel.org
-X-Gm-Message-State: AFq9FYKPmBYBiA62Ka4fdKgAYBDqL9BKzwOcJjhJoTHEP2A8cvmnc9jl
-	ma+z6vPL61kjIIJOkBCxziMO3ePoDewBCf0kIwQUs7w21OPMD7W/Ic24LTsY304oOkCg8wQMGno
-	WKMXcIZr10ZSYijvuJTDV1gU7LAmS2kKhaYVwzBp81c/BaH9Ohv2RvBVthfanabtL
-X-Gm-Gg: AYBFou0G8L/Vh7ze4x1YjJngRs/8cuHHeZj5utiEgtwqhJqjnoAu5eRUYJN2t23++NR
-	ejggE0CJTAisTbx7F1NpcXuoLJTr8NkKXR9Abgh38wNMg34QSQtqkno4rEZf9Crrk8XYrRz0WCm
-	YXXNFhf6Nq8YkqdMeIdlZvifbf5xgQqurlGCCB8Gf0peX3BkLZ4tidAtZS7PMYo7aqF2e1NC1ee
-	lN3vqRcuB/0Y5Xb2oiqdWCUNMQPxiO6sh/e1S9+70YARH7GZeOFoSXBzk0q3JoPw+bqBjGF3gyk
-	MYju2HhWaQKPgM5pE3j3Y8z3Bub4D6Wbm7MG6wm6NBnqj4DDiGTk4D3wrLE6EP393q9Zq5Iebnb
-	VIl7vXXM9DdufC0WyRTpRrw==
-X-Received: by 2002:a05:620a:a8ca:10b0:93e:5a3f:ac13 with SMTP id af79cd13be357-93f6f54812fmr372791385a.0.1792756555396;
-        Fri, 23 Oct 2026 04:55:55 -0700 (PDT)
-X-Received: by 2002:a05:620a:a8ca:10b0:93e:5a3f:ac13 with SMTP id af79cd13be357-93f6f54812fmr372786685a.0.1792756554732;
-        Fri, 23 Oct 2026 04:55:54 -0700 (PDT)
-Received: from [192.168.226.26] ([178.235.128.140])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c46a5c4d67bsm95403966b.14.2026.10.23.04.55.50
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 23 Oct 2026 04:55:53 -0700 (PDT)
-Message-ID: <feb43c1a-9f1b-4181-b663-eab9e55e4831@oss.qualcomm.com>
-Date: Fri, 23 Oct 2026 13:55:49 +0200
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=AGdMAs08
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BC5801F01825;
+	Fri, 23 Oct 2026 12:00:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1792756803;
+	bh=D7LP8J3tHYKN5i8+EMOCpwo4nHHCnVjhbEVBGnkavOE=;
+	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
+	b=AGdMAs08h/5MzQXXXaM78oQ7uIcqRdL5jDwa38d6VIbxvd7Ij13Z8qkmEgIuGzxeg
+	 gGT7lnKACeLfmek9Vp8wDJicIAq4FmDzTQf+6YM6sQ8tNR3Ezy6aMAMeBFHkhORWo2
+	 qC8EFlTSFlGszmA6oFJkBUPxQ4GLpV7woYEVU0dVxN70/NxUCDBGwNcv8z0Hgdw2wr
+	 Y0EETfzNBABb4itbSAFgtlowos5VyVuuBpCNHBQKhn67BF25KtGo1wDAqi0BKrNJs/
+	 Brkju7XL9wqDz4VEGl9qtROYH5KKBii4dJWmNG5yZdk68ju9g2NkLOt4nruudU7Dux
+	 WIkq9aBoLVPdw==
+Message-ID: <sashiko-outbox-182747@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v2 2/2] scsi: ufs: core: add is_sys_suspended state
+ before recovery
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "HOYOUNG SEO" <hy50.seo@samsung.com>, linux-scsi@vger.kernel.org
+In-Reply-To: <4eabe38e93631579a0cacda137a98053526fe030.1792755091.git.hy50.seo@samsung.com>
+References: <cover.1792755091.git.hy50.seo@samsung.com>
+ <CGME20261023113911epcas2p44c986c4542ca8bae511086ef4b2ad850@epcas2p4.samsung.com>
+ <4eabe38e93631579a0cacda137a98053526fe030.1792755091.git.hy50.seo@samsung.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Fri, 23 Oct 2026 12:00:01 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -114,85 +60,101 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 3/5] arm64: dts: qcom: glymur: Add UFS nodes
-To: Pradeep P V K <pradeep.pragallapati@oss.qualcomm.com>,
-        Vinod Koul <vkoul@kernel.org>,
-        Neil Armstrong <neil.armstrong@linaro.org>,
-        Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
-        Krzysztof Kozlowski <krzk+dt@kernel.org>,
-        Conor Dooley
- <conor+dt@kernel.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@sandisk.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konradybcio@kernel.org>,
-        Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>,
-        gopikrishna.garmidi@oss.qualcomm.com, jagadeesh.kona@oss.qualcomm.com,
-        Abel Vesa <abel.vesa@oss.qualcomm.com>,
-        Abel Vesa <abelvesa@kernel.org>
-Cc: linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, nitin.rawat@oss.qualcomm.com,
-        sibi.sankar@oss.qualcomm.com, Taniya Das <taniya.das@oss.qualcomm.com>
-References: <20261009-glymur_ufs_qcb_enablement-v4-0-9a6ce83195b7@oss.qualcomm.com>
- <20261009-glymur_ufs_qcb_enablement-v4-3-9a6ce83195b7@oss.qualcomm.com>
-Content-Language: en-US
-From: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
-In-Reply-To: <20261009-glymur_ufs_qcb_enablement-v4-3-9a6ce83195b7@oss.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMDIzMDA0NiBTYWx0ZWRfX2c3hWTc8pc0C
- i6JSlKz3fA0NPZlvWN2R+nPHO5rJyfFX2dMvP1xNs5V8A4BfVCiv94bInddbCmJUfzvsCYAh2kO
- fdP2OeAVqWH4n4srpC38Cb7nF3eP8C8=
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDIzMDA0NiBTYWx0ZWRfX7KC9vaDPvDUD
- rhFqVBf6bio3I3jvutLEppQFAGfJM0EcEG49+A6eV0htB6MWeQ4me6teY4+KBpE86kHmQj1SFZj
- XsHm2EzV6L+9EsOkKdSCVTIiEsnnPOI4B8Mh3g41+5KHHZsDnlY9cid6Iy1EMQDtNw117Etp4zK
- pI1KKZqSwLCeO6fN+ImFtrLPZNCtWUkQBMJoAyF7QmTcN0H+mAgw6AvxDeR+THFlYbwqSiVi7Aw
- pNmaSOzP8mhp9X0TaAZlI68YU6UvLcuGz384uSMQRzfwBpPDl985B5jtAdOH0F86ANXGZniT3WT
- BRZ/XZYdS7lmciUPeywNK9xIfmBD9hG1cP6NpABDaMeHGq7ixzGZhSBHvbQoq1znXHfednLDmzU
- CKhqOMQYUo+Y1aCoMQTNL1renSV6LewlC2yjZlM/DaKC5D5UzOrXCpjRqc4VVVCToW4R1DEF2iM
- luLIMX32vKhMGis0Rnw==
-X-Proofpoint-GUID: XY7c_crwWunFXbEkOZ8Lqi32Djp5JxHu
-X-Authority-Analysis: v=2.4 cv=YIMKWhGx c=1 sm=1 tr=0 ts=6adb4b4c cx=c_pps
- a=HLyN3IcIa5EE8TELMZ618Q==:117 a=PRfkaYvzSr8QmIIGAkY2Sg==:17
- a=IkcTkHD0fZMA:10 a=660iZSQnnn4A:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=ZpdpYltYx_vBUK5n70dp:22
- a=EUspDBNiAAAA:8 a=BBNwevgwxSeHGHzN-EcA:9 a=QEXdDO2ut3YA:10
- a=bTQJ7kPSJx9SKPbeHEYW:22
-X-Proofpoint-ORIG-GUID: XY7c_crwWunFXbEkOZ8Lqi32Djp5JxHu
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
- definitions=2026-10-23_03,2026-10-21_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- spamscore=0 adultscore=0 phishscore=0 lowpriorityscore=0 malwarescore=0
- impostorscore=0 bulkscore=0 suspectscore=0 clxscore=1015 priorityscore=1501
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2610190000 definitions=main-2610230046
 
-On 10/9/26 12:35 PM, Pradeep P V K wrote:
-> Add UFS PHY and UFS host controller nodes for Glymur SoC.
-> 
-> Reviewed-by: Abel Vesa <abel.vesa@oss.qualcomm.com>
-> Signed-off-by: Pradeep P V K <pradeep.pragallapati@oss.qualcomm.com>
-> ---
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [High] scsi: ufs: core: ufshcd_err_handler() skips recovery after failed =
+resume
+--
 
-[...]
+commit c53108b377c62c7e01a8b52d302e15dfdce25f17
+Author: HOYOUNG SEO <hy50.seo@samsung.com>
 
-> +				opp-201500000 {
-> +					opp-hz = /bits/ 64 <201500000>,
-> +						 /bits/ 64 <0>,
-> +						 /bits/ 64 <0>,
-> +						 /bits/ 64 <201500000>,
-> +						 /bits/ 64 <0>,
-> +						 /bits/ 64 <0>,
-> +						 /bits/ 64 <0>,
-> +						 /bits/ 64 <0>;
-> +					required-opps = <&rpmhpd_opp_svs_l1>;
-> +				};
+scsi: ufs: core: add is_sys_suspended state before recovery
 
-^ this should be svs, not svs_l1
+This commit skips the early link recovery in ufshcd_err_handler() when
+hba->is_sys_suspended is set so that error recovery waits on hba->host_sem
+instead of racing with __ufshcd_wl_resume() during system resume.
 
-Konrad
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index 0e6e593c24cfd..4b4d473530b16 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -7052,9 +7052,14 @@ static void ufshcd_err_handler(struct work_struct =
+*work)
+>  		 * runtime resume. This avoids potential deadlocks that could
+>  		 * happen if we tried to resume the device while a PM operation
+>  		 * is already in progress.
+> +		 *
+> +		 * During system resume, host_sem is held from
+> +		 * ufshcd_wl_suspend() until ufshcd_wl_resume() returns, so wait
+> +		 * for it below instead of recovering the link concurrently with
+> +		 * the resume path.
+>  		 */
+>  		ufshcd_rpm_get_noresume(hba);
+> -		if (hba->pm_op_in_progress) {
+> +		if (hba->pm_op_in_progress && !hba->is_sys_suspended) {
+
+[Severity: High]
+The commit message notes that if system resume fails, hba->is_sys_suspended
+stays set and ufshcd_err_handler() performs a full recovery as usual.
+However, when ufshcd_err_handler() wakes from down(&hba->host_sem) after
+ufshcd_wl_resume() -> __ufshcd_wl_resume() fails, it immediately checks
+ufshcd_err_handling_should_stop():
+
+drivers/ufs/core/ufshcd.c:ufshcd_err_handler() {
+	down(&hba->host_sem);
+	spin_lock_irqsave(&hba->host->host_lock, flags);
+	if (ufshcd_err_handling_should_stop(hba)) {
+		if (hba->ufshcd_state !=3D UFSHCD_STATE_ERROR)
+			hba->ufshcd_state =3D UFSHCD_STATE_OPERATIONAL;
+		spin_unlock_irqrestore(&hba->host->host_lock, flags);
+		up(&hba->host_sem);
+		return;
+	}
+}
+
+where ufshcd_err_handling_should_stop() is defined as:
+
+drivers/ufs/core/ufshcd.c:ufshcd_err_handling_should_stop() {
+	return (!hba->is_powered || hba->shutting_down ||
+		!hba->ufs_device_wlun ||
+		hba->ufshcd_state =3D=3D UFSHCD_STATE_ERROR ||
+		(!(hba->saved_err || hba->saved_uic_err || hba->force_reset ||
+		   ufshcd_is_link_broken(hba))));
+}
+
+If ufshcd_uic_hibern8_exit() fails in __ufshcd_wl_resume() and the subseque=
+nt
+call to ufshcd_link_recovery() also fails, ufshcd_link_recovery() sets
+hba->ufshcd_state =3D UFSHCD_STATE_ERROR even though it restores hba->saved=
+_err
+and hba->saved_uic_err:
+
+drivers/ufs/core/ufshcd.c:ufshcd_link_recovery() {
+	...
+	spin_lock_irqsave(&hba->host->host_lock, flags);
+	if (ret) {
+		hba->ufshcd_state =3D UFSHCD_STATE_ERROR;
+		hba->saved_err |=3D saved_err;
+		hba->saved_uic_err |=3D saved_uic_err;
+	}
+	ufshcd_clear_eh_in_progress(hba);
+	spin_unlock_irqrestore(&hba->host->host_lock, flags);
+}
+
+Alternatively, if ufshcd_link_recovery() succeeds in __ufshcd_wl_resume()
+(clearing hba->saved_err, hba->saved_uic_err, and hba->force_reset) and a
+later step in __ufshcd_wl_resume() such as ufshcd_set_dev_pwr_mode() fails,
+the saved error flags remain zero.
+
+In both cases, doesn't ufshcd_err_handling_should_stop() evaluate to true a=
+nd
+cause ufshcd_err_handler() to return immediately after acquiring
+hba->host_sem, skipping full recovery and ufshcd_recover_pm_error() while
+leaving the HBA in UFSHCD_STATE_ERROR or stuck with hba->is_sys_suspended
+set?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1792755091.gi=
+t.hy50.seo@samsung.com?part=3D2
