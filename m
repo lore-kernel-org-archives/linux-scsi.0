@@ -1,164 +1,92 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.103.23.27
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1792772588;
-	b=RG5TUH+Rg/KS4P97PxTcO6mGiJPGVoNmoqsUxD1sb1aieVsFU2IS2T6cmQ/GdPIgbZpW
-	 1XHB/WgzWgNoMXa+gjnkeNQO5TCAhoJKYnLVtUh79N3tOTfKagz6oD6IvwQ++1LV4pHEp
-	 +PoxV3Yi0pEcva1S8xx9cHv0fHarS92CrGbGmIbr4ZB6V0nDCj21uv1aG+EKFwR38E9x8
-	 JVlKiuwliVYA2qGPHidoYaaEz+4FHvCssDszq8oUA8VQesSxzeXBXDJAGKGBpwZxBnl92
-	 fNugGuIvBoipYg4NoZZcDac9FEDCJxbsdpYd2Ht7pNXmHgneftQSxdBm28JN3TqbmOA==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792772588;
-	h=DMARC-Filter:DKIM-Signature:Received:Received:From:To:CC:Subject:
-	 Thread-Topic:Thread-Index:Date:Message-ID:References:In-Reply-To:
-	 Accept-Language:Content-Language:X-MS-Has-Attach:X-MS-TNEF-Correlator:
-	 x-ms-publictraffictype:x-ms-traffictypediagnostic:
-	 x-ms-office365-filtering-correlation-id:x-microsoft-antispam:
-	 x-microsoft-antispam-message-info:
-	 x-ms-exchange-antispam-messagedata-chunkcount:
-	 x-ms-exchange-antispam-messagedata-0:Content-Type:
-	 Content-Transfer-Encoding:MIME-Version:X-OriginatorOrg:
-	 X-MS-Exchange-CrossTenant-AuthAs:X-MS-Exchange-CrossTenant-AuthSource:
-	 X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg:
-	 X-MS-Exchange-CrossTenant-Network-Message-Id:
-	 X-MS-Exchange-CrossTenant-originalarrivaltime:
-	 X-MS-Exchange-CrossTenant-fromentityheader:
-	 X-MS-Exchange-CrossTenant-id:
-	 X-MS-Exchange-CrossTenant-rms-persistedconsumerorg:
-	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=uTq0rYZnePu1bDpmNe6qAwHAmr7W6jNfBwOUC5NYSZs=;
-	b=dd4aJf9bw44ZuJKRLguipJTYuBkGTyQ5/3DGSJztywb2aax+En/DTeqUCTruNmXhDqCt
-	 610ydImL01uYMQ0ZGGjFca+oDBHLA9nf5bQyBnid7T60MxWwn/oAdH9ho3Lf1w1bTIydV
-	 izaGxPFkvfEm+QmQGHapbjeWjAJmfCspYIeQ5oWgj4v7DB9jQBpfb5dXmZU872UXmE1wT
-	 g2CL0WXg/D6ORy1XLb3wqDaWxuTkqdUDrD2bNYyhb5eW3mrNhMDlIXlu68yOmNgJqrWOO
-	 KsSpcqe/HrLbpBagh23+pP13FbRxKIl2X5Ka9F0UK2iGxxrWQEtA9zRE1rMag70KLVw==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=outlook.com;
-	spf=pass smtp.mailfrom=outlook.com;
-	dkim=pass header.d=outlook.com header.i=@outlook.com header.a=rsa-sha256 header.s=selector1 header.b=P8gQGhFy;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=52.103.23.27
-Received: from PH7PR06CU001.outbound.protection.outlook.com (mail-westus3azolkn19010027.outbound.protection.outlook.com [52.103.23.27])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.48
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1792775021;
+	b=CckXE80bs85nKcvbG+LcDwmDz44VMeHDR2FmMVhD9I8h9N34Y9tW0Ts82dvLv/nHV/MZ
+	 PYyF+csyHgzKlAgD7VJXFVHOeF+CfotuZYxv0KnY+OKRpmchHaCKNZKrw4CuOZBRSqkO2
+	 cLe+OmAmK+g0G0H2j4Rk9u4JHuRAGncJo7JmAyThH6ek9vBG6rslOUZc1cB+7bFTGfYrV
+	 yociAAVdZu2BH2B7xC6P+ryWsl14vlW2+WQ+1pQwAhb34/THIaUvYDUTDtdzgQYOOOkJq
+	 h4aQkumCBcXLF6jCZYr5qGceaokW2FOoIhI75SO4BIaoAvpBQhHvOCmegE4r4CEO4/g==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792775021;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=polE6Ne+EArcPG4oMwjyWJWJOuFChVzLTjy+aFTaauE=;
+	b=o4R3XkqLZQcDXfP20fh5L671SMaqyFHVkCqPQzXBFCaaLHYIEmPIMvfLOrSacbrQUyd+
+	 ZbFwl0FKJjqeXZg03a1cEnDDcPgrwL6vnavPMMKxQ82YNYjkYGblIMXRps30vr3XcIQfz
+	 Qjtz/xVBhvaqsW+gagsulW4b8KUuY5Sj9ZjkJtzMYced7xz+bVR3tlRiGVMHKhwwx0VCX
+	 v2vkU/+0ERIxotk9ePHM2p7aaL5KYsVaLdAkJJwGGkcKyNUSnhBvx3EjxDdbNF956gy6o
+	 kIIl8Amga9gFAVlhwOEgkSkU/yuIQrQR0yC89IqYgvVKKE5YUtyANKVub0OlK9N6NLw==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=p7QlVoSx;
+	arc=none smtp.remote-ip=74.125.82.48
+Received: from mail-dl1-f48.google.com (mail-dl1-f48.google.com [74.125.82.48])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33528606A320;
-	Fri, 23 Oct 2026 16:23:07 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 33528606A320
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=outlook.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D7E3E606A31D
+	for <linux-scsi@vger.kernel.org>; Fri, 23 Oct 2026 17:03:40 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D7E3E606A31D
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=outlook.com header.i=@outlook.com header.a=rsa-sha256 header.s=selector1 header.b=P8gQGhFy
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=Xk8Dkw86zSMeoNN5tnk/wGWwTv0TOneQYvffYQo9JHndACmjutjJrcMrj8UIww+6Kk1+ErksErHcjUBdvddshk6z2gpOCOuDxtoupJ6w9TEi7gZzRqzuWjlUS2NmuKm3+2xQjcPw+8f74gBOQ5TqoRfygNdhNZfZqPnKM4aHi1Mr53qtDH5ujaBfXzqkBt0A2ARGFCrpnO2ZL7vf4Aw9ZdE3SCsEl2PpO8rJVaOA87B4Ld4Mwz+gaaS2hCJjAPcdCFSdDYYrFFFiIHe6xEyFSU+IvqWTD/LkeXU3HywI/z48yhBjwHQnqrXQVP+rG8zw6wsRUzH3/A/8Gfr0eA/UpQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001; h=From:Date:Subject:Message-ID:MIME-Version;
- bh=uTq0rYZnePu1bDpmNe6qAwHAmr7W6jNfBwOUC5NYSZs=;
- b=P+rnRaX7j9PAH9L2Jw6Gm3xIrmakulUkZlZ+ggfXpdUpxl1GMz0LzFXigK/U0Keo5aZ88lQHaOyJFu7XO7Y/7tNDeyc25oFowvz3Rc4DjPFUf7Mw+26Z9AqEVdCB8eexoZAp1US6ncCuDLvJe8KNLpDBQtCxPdenKF8nRV3NEqK7MMeyi+COdNXIQ8sPUrp6NMbrTOgL9FsZ0j64BdBSiAOBNDRAQb3a7Nt+PkuLFmZGZRnafY913jhsgazyI/seqKfgj8AFRdeKvN02s16bTEgMMdh6g2z7GohSFIwdUydLCuxaXMqRkAnFxcTx29LDI1TS0yXPCsa/9PAyVF5Kmw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
- dkim=none; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=outlook.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=uTq0rYZnePu1bDpmNe6qAwHAmr7W6jNfBwOUC5NYSZs=;
- b=P8gQGhFyp8zyoJIV3hpWdUnhHp+v7wSniTHvQNHFyYXMbtMcP1IEF3AWepOt8p6ZepHZqutKl1/0dsqrDV6dyqkghXHMZvBk27HU42sIW7NDcs/JluBDgLU/ha2lFWrFCCYPeWr2Cm0S1X2zH7dYVs1++Klz0omDGSHYV1U0EYG5UL0eJUuUcxsKnNwqdsdB4zK3YSCHCiQbP8WwCjyYfC6qdg8DcLgT27dlAM5zYQQt2aUmH+JMjfEAwS/jJSWWf5HAZkpRP6I+z0s9jZLdc3rmrZf77o0Ki+Vfbrgfb27Q7yqN5zTlJ/PRY1KSrKdRjfHpa1+HwwMZRQ1oSE/2AA==
-Received: from SA3PR05MB10385.namprd05.prod.outlook.com
- (2603:10b6:806:39d::17) by IA0PR05MB10120.namprd05.prod.outlook.com
- (2603:10b6:208:3df::12) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.546.19; Fri, 23 Oct
- 2026 16:23:04 +0000
-Received: from SA3PR05MB10385.namprd05.prod.outlook.com
- ([fe80::e22f:a0f5:fcb0:9b0d]) by SA3PR05MB10385.namprd05.prod.outlook.com
- ([fe80::e22f:a0f5:fcb0:9b0d%6]) with mapi id 15.21.0546.017; Fri, 23 Oct 2026
- 16:23:04 +0000
-From: Yingjie Wang <x-professor@outlook.com>
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-CC: "Martin K . Petersen" <mkp@kernel.org>, "James E . J . Bottomley"
-	<James.Bottomley@HansenPartnership.com>, Bart Van Assche
-	<bvanassche@acm.org>, Jens Axboe <axboe@kernel.dk>, Yang Xiuwei
-	<yangxiuwei@kylinos.cn>, "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>, Yingjie Wang <x-professor@outlook.com>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>
-Subject: [PATCH v2 1/2] scsi: bsg: report synchronous data copyback failures
-Thread-Topic: [PATCH v2 1/2] scsi: bsg: report synchronous data copyback
- failures
-Thread-Index: AQHdYwrHlYBA24BlJkuiyy5GiQf4YQ==
-Date: Fri, 23 Oct 2026 16:23:04 +0000
-Message-ID:
- <2561d633cc8cef513d75eb1df260046a4971e783.1792772194.git.x-professor@outlook.com>
-References: <cover.1792772194.git.x-professor@outlook.com>
-In-Reply-To: <cover.1792772194.git.x-professor@outlook.com>
-Accept-Language: en-US, zh-CN
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: SA3PR05MB10385:EE_|IA0PR05MB10120:EE_
-x-ms-office365-filtering-correlation-id: 40b4dffb-be3c-4d97-2a42-08df3121ea23
-x-microsoft-antispam:
- BCL:0;ARA:14566002|41001999006|38102599003|22091999003|25010399006|8062599012|31061999003|8060799015|19110799012|24121999003|15080799012|8022599003|24021099003|12091999003|26121999007|3071699003|102099032|440099028|3412199025|1710799026;
-x-microsoft-antispam-message-info:
- =?utf-8?B?TkFybjJYdUl0YVMzWTdlaGFkSjBieUpnbkRaMW91Nno5SklEOVI0ZHdyTGJI?=
- =?utf-8?B?QzAydGExOU5Tb2x6dWdnbHpHSU9GWkVLUm1RNmZCd3RtNUFFRWdDQS8yZW4r?=
- =?utf-8?B?R3Ivd3hGNElyajNHVlMrU01DOHJjZVlUZ0tGdUVYTkpwcElPN2NLV3cvMmxn?=
- =?utf-8?B?Yyt3Vlo3VTlhVkNNMDR1R1JDREVhNVNQRE9YQk1LRXFhdFJOV0ZPVTdGblNS?=
- =?utf-8?B?SXRaUlNiQnRZZHoxMWFZMmZPaVlOWVhKYU1sKyszdExhek1YM21QTFB4Rmtm?=
- =?utf-8?B?VUhENGtmS0hNR3NYV3o4eERlUHdLY3d2TlBINXJVZmVwZEFTM3dEYnNnWWVJ?=
- =?utf-8?B?QzkvSEhEbFc4MGVMV2txeFpXMElSM29lMEdUb0RCdSs4NTAvTyswK045by9C?=
- =?utf-8?B?TjdPcVR1akh6emJoYjgyeHdia2lETTg3aXZzc2dTR0kzMWc2cVlWSWo4c1Iv?=
- =?utf-8?B?b3czRlNuRXVlaVlwd2Ztb0Z5dzRmYmo5WEdIMWJaYy84Nmt0Sm1XelA3cEdP?=
- =?utf-8?B?K1MyU2VqSzcvY3JIbktrYm9VSEJHdkhkUk1pKzlmK0lWT0R3K3dIM2lDWk9s?=
- =?utf-8?B?Y3ZmWTV2ZUgvYyt5cWN3R1JrQTA3cFBJN1dRU1g3Z3pOb1gzeHNDMWQyMDdD?=
- =?utf-8?B?WWV2c25YSzZLN2JtVVhEVDVoZExyV1puMC9EcnpML3lYZ3VSQ2VLY09la056?=
- =?utf-8?B?Q0c4NFZPVkJ6cU04ZXd2NXJJWk1hRWpMS3FOQXU5WlBGTFk1RjRrT0ovWTVS?=
- =?utf-8?B?QzFDdE9Rd0k0Kzl5R1BvQ3UwQy8rODRWM0g3NDZCcElCRkFKbi9QaTFyRmcy?=
- =?utf-8?B?dzRHMVRsV3dRTDRWTmovVjQzVU8zMEVIYTRNd1ZLMmdKbDJQZis3d2hHaG5y?=
- =?utf-8?B?VmlZQWxaNUt0aGRuME1DVXN6ZFVjcEFPSTk2SVQ2a0RQTXNFanVLajNHQVRN?=
- =?utf-8?B?VDAxN0c0SVEwOWVxeGtBc3VRZVdnZTYxNGVlUnVxeG4xYUdtRTBsV0ZzYWdw?=
- =?utf-8?B?WWExRDlzYVZMV2kxbWV4SjVUdHR0MWdQV1lSR01IOGdiTnYvS2xDVWFOSUVa?=
- =?utf-8?B?MW5kY2RPQTBDSlN4cDFyeGg3Sk9TNXRlYW9vME53eVJJUW9BRnNMYUxkMFBs?=
- =?utf-8?B?K0M5bHkzUzAzeUlPYkxoVkxlUmxkYkQ3WURMVjhIQzhUSVpEQXZVYzUyNXpP?=
- =?utf-8?B?UWxxOTFzRnZkNlU3SzNDZmpNdC9CYTNaQU5pdHB4WjgzcmUrbGpYK3BLR2d1?=
- =?utf-8?B?emJaa24wWGNyZkdsb1Z6OTRNd3JFQXQzRDhicE54RXJHWmZ5NmVXeCtsYThG?=
- =?utf-8?B?ZFQ5K1RxSy85NkdoU050NWQ5UVRIMTdHV3FLM1NyUExhOWxnUmFyQm43bFRk?=
- =?utf-8?B?bzg2VjJjM212djlJcG5jVitQa1JlbTVkRHU2SUVGc3Y0ZW5uc0tsZ0VlZ0pW?=
- =?utf-8?B?VlJLZXorZGthaWpJVXJkbHhLTForVU13RWVtNDlJZkJPUW9CR25qUUhhWlk2?=
- =?utf-8?B?RHZTM1M3dHVONml3b1FOQys1eUVVNnlJVTI4cXFocGJpTys2TmJwekg4b1hq?=
- =?utf-8?B?Zmg2dz09?=
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?utf-8?B?SUkvSnh6czNkQ1FzejNFZXh4R3dqTzZpdFRwOGg3T1JPZnduU0lGMHRpRzFR?=
- =?utf-8?B?Uk03RnRQcVd1ZWxZRVBaN2JJaXNOSWdXM0ZMTHNuSWpQUEt4UWhxVTBJaFRX?=
- =?utf-8?B?RmlCeFAzcnBzdE0vcTExRkRZY2YxTVpiMlVVSGJNS0xhblMvSyt6ejFLVEgy?=
- =?utf-8?B?dlBWaDVEREsybmxITzNmZjdPRGxNc0dEYjIxMndGY3F4aDl2TmM3S1dTZ1pI?=
- =?utf-8?B?UXU5ZHZRZmZGaGtiRWtSUUR1ekMybkpoM0psWUt1c2JJYUpzRnJwcXR3WVRN?=
- =?utf-8?B?dEViWlIvNGhoTUFzemlPb1RUQ2VBM0lXaDNra0FUUXlxODA0VE45T0lkSVpY?=
- =?utf-8?B?ZjRKMUdsTnpPMGpTR2FGVyszQldIeURodWQ2MmdCOHhDNHBYS0JDSUxINnMr?=
- =?utf-8?B?UEZKUnNrZEtFeENpUFNnQS9IT2d3TkhwcVlNNVQyQWhqaUxsTWI4N2ZkbkZz?=
- =?utf-8?B?S05mWlVreTV5SHZLNGVMSDdFMDI1V0N5MlRKOXBFaTdXVmdraXppQm8vTk03?=
- =?utf-8?B?N2hocW5Sb2ZSaVVjczhtSEdqNmRpS0hDZFBKZ2tJRWNtMGxpK2FOYnkvalpX?=
- =?utf-8?B?M25FQ2YxNUxHeXQ3VWVGRHdiSHlEc2hzQmJCa1BOS29TdkkxUllVRml6U0hJ?=
- =?utf-8?B?YklUYTY2dzR4STVUUlBHYW9zVG1XM1U5cmxXaERQMTNOdHdUT2FCcmU0UTI3?=
- =?utf-8?B?TnBxWUJqR2QxeUZjQ1hiVDhWYzNPNlZ3dWNub1BCeGxtK09sRDlCMXN0V2l0?=
- =?utf-8?B?YTU0OEhHdVoxTVNDcXlaR3FzbXlUL0dZQW4yV09NOGxxNDJVbEdCa01yeXlT?=
- =?utf-8?B?SUJiTG9XY2huUUlWckJHK1lwalMwcFhWeTBsZWs5bE9FWlZNVExQL3A1TytB?=
- =?utf-8?B?YzBRaDNyVHZObXh1aEhiZTBsZXRFVEFqT0RPbmxROHp6ZnZmcXRtcmYvalQz?=
- =?utf-8?B?dUNtdjVMOGtNbVNHUkt1L0MrR2lXM3FPcVRWa0JZeE04SzJURFA2dnZEa3Ev?=
- =?utf-8?B?SFg0ZmJXZmM2b2dOK1FtSWR1Y1NSVkJ5ckIrTm44dVE2UE15VUJoRnJ4Nm1M?=
- =?utf-8?B?aUNUSUxQTWgxcnlQRlB3ZjNVQ012Z3pESTkvRVlnVmVVSE1pYnhNUUhRMjNu?=
- =?utf-8?B?R0V0Q3YvL2ptSzFqT1pwazBETmJJT2xMVEdvaDdjQmpiam1RT0Z0eW50Sllj?=
- =?utf-8?B?Z2Z1ZURlTW9RQUE4Z2Z5V0wwNHVJaTM5enBvSm93S2JVYnRrTkpISUJweDRq?=
- =?utf-8?B?eWZnNkE2WXBvRXlyTkV5cHg2RmtsU1R4TmNMQTZpZzhLaEZPcVZYWE15VFdh?=
- =?utf-8?B?bnZlYTBybWNwQ0xmTGZrR3I5NUpRbDhMbmdkbk9yMG5ER1BtU1Y5UWhQU3BB?=
- =?utf-8?B?WkNhQlYwWjZIRmpLbERsQWZ2NFZtVzdFYUpZUjNKUFJROHlMdXFXcmJqV3VU?=
- =?utf-8?B?Y212RDVzR3hGVTZ2WUxkMzgreUF3Q0M5WjBPR2lCT0dpQTdOdkhqL255cGpk?=
- =?utf-8?B?NTl1dzhibjZEalltNHlGcGlEU2t4UXZtaFJkaytPQmNleGxLMDFPYnlGSGVB?=
- =?utf-8?B?UFlkYktwTTJHdlVzdWl6S2R1dEVPQVR6Wnkva2RsUkJtNHErN0lNcGhvb2lF?=
- =?utf-8?B?cVl6bCtuQnZSLzB1Nkg0V1Zta203QWRyN3E2M3E0alppQnM5M1ozV3FaRHMx?=
- =?utf-8?B?SFR4bnVMTVh2TGJDcHpxL2RWN1dsU2U5OHZIT3dKS3M1M1VudWprb2dIRnlD?=
- =?utf-8?B?NFByV29RQWViU01pUmZQMnNva3MrbFQxeVY3cXdJTTRsT2RrSU9aUXA1KzBQ?=
- =?utf-8?B?dmMwVE03YjRiN0ZQQkdvNlQ0eVRRZHpyOU51NzA1cU1qTi9MWlZVQkg2bmww?=
- =?utf-8?Q?pkpqpHrEOL7HG?=
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=p7QlVoSx
+Received: by mail-dl1-f48.google.com with SMTP id a92af1059eb24-18cdcfc05ffso1250074c88.1
+        for <linux-scsi@vger.kernel.org>; Fri, 23 Oct 2026 10:03:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1792775020; x=1793379820; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=polE6Ne+EArcPG4oMwjyWJWJOuFChVzLTjy+aFTaauE=;
+        b=p7QlVoSxrvi72JoxHcA015BxNnYC5AtEDDNId5wRlZRDWzk8mNTwIeOQwus+HmpCII
+         Fva4MAUWU8i9iB/vDIcng0Z0vwwHp1cArmT1wwgE7DeTpvNRQdKwkKYw/sVDZWIQGd4n
+         Gag552fY6ZNbv2gXF7K3R7ZfT2qL7hY35gtVy/9UjMzmgDSX6Z98o4NTLaMBDdmxWeqg
+         osyoTOBoSnfJrKCj+ymLpC+L3xPaw9T7SFE0250lMgwUIGQTsdsU+iIs20FECa6O/dEU
+         viT4C53qcjIMGPEKFRsoa98os4xjwSQuiupJP2w2PB6BTgER2WT/gWYkYfQOnhn/1E2D
+         JZxQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792775020; x=1793379820;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=polE6Ne+EArcPG4oMwjyWJWJOuFChVzLTjy+aFTaauE=;
+        b=xU3SNcb4C40nATWpX0+ebnXv0UY60FomIVu7u7BR2Dx9WleAVQX4Zq2q0pTnclbHmR
+         g3RR7GRcSRU1H4Zs697U9b2rViWQst8QdmdYcqxXJCNlOfyzgoz31XQj52cs1klZqXeZ
+         y2ibjHT6hpwrbA5IB18urh6i8wKat97uPxP7ejeGYGPaRon1/GjCHxzesvsqNgDKcdJb
+         yexrcx53VeIyA8KpSH3w2JRd4U5LvGpZq4XDasv+2nOdBWywBnd3Y6eckxwOC6ybUBpV
+         SU+a5fN403A1pXHVuQKrab3V3DvpTwPehuvfABXBnngbs4xdNvaY26+6J4sBKkK0hVk5
+         aKKw==
+X-Forwarded-Encrypted: i=1; AKwUvByyi4q4FNq0T2kfODjt2/hy+tJZR/oY+AoAC1IGywRl8eTbSRJt8WBnAIV4gB4d9UzOZcnWuJ9FEpz7@vger.kernel.org
+X-Gm-Message-State: AFq9FYLHfHTgHl7vb42vn2kwmOxbF1UWgckJS98zSKEMnMSNydP3ty05
+	4to6Y2EbSMjvLMhs+HfdiU1hT+k0vhIuXoxeW/8M+9ttmu6KL9/NT1ij
+X-Gm-Gg: AYBFou2SIyNgv7ROWNxbzh3NQBAAXM6x+jsB1kDjxxyKD/HHPUpud64M/ezgUy8FOIV
+	qXk0NTcpvSdrjzP6jbg68YY9OnyEV6Gbgn0euSsSXmSs3fwiVG8PTqjdJiOT9lABDiJBVPozz5q
+	b05QZPtPoZ5/6/xh1ew1/UCEzwEe1dkP7MxOH0f94LBzIEhUfr4LtozjwBfGf6xm4TKM3UeTv8h
+	5qBzWKgisaQodmHsYfvLhdWvaFWkSjfsPbdLRAwLBWr5c8/PByPCfBBFzKtAqnjyt27LBwYDe2G
+	B/PLRzplUCu0gh+u6ev4weRwUoipEuX+rl+k8hcg5+nDs+9rWGj6RNnBzDR0h6tySvFZevNJz39
+	QbH6HlPtsMk/f5DEktGo2ypK3BHKFopTU/e5NHzhsNY+XmUMfkhxoU5zBxqmpAFpJtXC8TkBzoi
+	di1Qi6gIRsu8qHaBNBPqlm1VT8CSvsyoi0GfYmcgXMTZChV9NhccrlmME/aCNM+swMckaMlk4V9
+	2CFg/PLAqK333Z7Q5h97sM9VX2wCWXt5CHZGAb8NIdmi7jTqAmgnXFDG/imH7enpq8qJQ==
+X-Received: by 2002:a05:701b:2713:b0:14a:51c8:ea06 with SMTP id a92af1059eb24-195c5bc7828mr3380353c88.29.1792775019432;
+        Fri, 23 Oct 2026 10:03:39 -0700 (PDT)
+Received: from Alienware-m16.lan ([45.153.102.184])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-197ed12c43asm1308673c88.21.2026.10.23.10.03.38
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 23 Oct 2026 10:03:38 -0700 (PDT)
+From: Andrew Luebke <andrew.luebke@gmail.com>
+To: Hannes Reinecke <hare@suse.com>
+Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <mkp@kernel.org>,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Andrew Luebke <andrew.luebke@gmail.com>
+Subject: [PATCH v2] scsi: aic79xx: Fix NULL pointer dereference in device reset
+Date: Fri, 23 Oct 2026 10:03:30 -0700
+Message-ID: <20261023170330.269844-1-andrew.luebke@gmail.com>
+X-Mailer: git-send-email 2.56.0
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -168,44 +96,213 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-X-OriginatorOrg: outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SA3PR05MB10385.namprd05.prod.outlook.com
-X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg: 00000000-0000-0000-0000-000000000000
-X-MS-Exchange-CrossTenant-Network-Message-Id: 40b4dffb-be3c-4d97-2a42-08df3121ea23
-X-MS-Exchange-CrossTenant-originalarrivaltime: 23 Oct 2026 16:23:04.1734
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
-X-MS-Exchange-CrossTenant-rms-persistedconsumerorg: 00000000-0000-0000-0000-000000000000
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA0PR05MB10120
+Content-Transfer-Encoding: 8bit
 
-c2NzaV9ic2dfc2dfaW9fZm4oKSBpZ25vcmVzIHRoZSByZXN1bHQgb2YgYmxrX3JxX3VubWFwX3Vz
-ZXIoKS4gRm9yIGEKZGF0YS1pbiBjb21tYW5kIHRoYXQgdXNlcyBhIGJvdW5jZSBidWZmZXIsIHVu
-bWFwcGluZyBjb3BpZXMgdGhlIGNvbXBsZXRlZApkYXRhIHRvIHVzZXJzcGFjZS4gSWYgdGhhdCBj
-b3B5IGZhaWxzLCBTR19JTyBjYW4gcmVwb3J0IHN1Y2Nlc3MgZGVzcGl0ZQp0aGUgY29weWJhY2sg
-ZmFpbHVyZS4KCkNhcHR1cmUgdGhlIHVubWFwIHN0YXR1cy4gUHJlc2VydmUgYW4gZWFybGllciBz
-ZW5zZS1idWZmZXIgY29weSBlcnJvciBhbmQKb3RoZXJ3aXNlIHJldHVybiB0aGUgZGF0YSBjb3B5
-YmFjayBlcnJvci4gVGhpcyBtYXRjaGVzIHRoZSBlcnJvcgpwcmVjZWRlbmNlIHVzZWQgYnkgc2Nz
-aV9jb21wbGV0ZV9zZ2hkcl9ycSgpLgoKT24geDg2XzY0LCBhIHZpcnRpby1zY3NpIElOUVVJUlkg
-d2l0aCBhbiB1bmFsaWduZWQgUFJPVF9OT05FIGRlc3RpbmF0aW9uCm1hZGUgaW9jdGwoKSByZXR1
-cm4gMCBpbiAyMC8yMCBydW5zIGJlZm9yZSB0aGlzIGNoYW5nZSBhbmQgcmV0dXJuIC0xIHdpdGgK
-ZXJybm8gRUZBVUxUIGluIDIwLzIwIHJ1bnMgYWZ0ZXJ3YXJkLiBXcml0YWJsZSBjb250cm9scyBz
-dWNjZWVkZWQgaW4KMjAvMjAgcnVucyBvbiBib3RoIGtlcm5lbHMuCgpGaXhlczogMTBlODg1NWI5
-NDUxICgiYnNnOiBhZGQgU0dfSU8gdG8gU0cgdjQiKQpDYzogc3RhYmxlQHZnZXIua2VybmVsLm9y
-ZwpTaWduZWQtb2ZmLWJ5OiBZaW5namllIFdhbmcgPHgtcHJvZmVzc29yQG91dGxvb2suY29tPgot
-LS0KIGRyaXZlcnMvc2NzaS9zY3NpX2JzZy5jIHwgNiArKysrLS0KIDEgZmlsZSBjaGFuZ2VkLCA0
-IGluc2VydGlvbnMoKyksIDIgZGVsZXRpb25zKC0pCgpkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3Np
-L3Njc2lfYnNnLmMgYi9kcml2ZXJzL3Njc2kvc2NzaV9ic2cuYwppbmRleCA1ZWVjMjQ4YTc3YTZi
-Li4zNzM5M2E4ZGVkZDg0IDEwMDY0NAotLS0gYS9kcml2ZXJzL3Njc2kvc2NzaV9ic2cuYworKysg
-Yi9kcml2ZXJzL3Njc2kvc2NzaV9ic2cuYwpAQCAtMTk5LDcgKzE5OSw3IEBAIHN0YXRpYyBpbnQg
-c2NzaV9ic2dfc2dfaW9fZm4oc3RydWN0IHJlcXVlc3RfcXVldWUgKnEsIHN0cnVjdCBzZ19pb192
-NCAqaGRyLAogCXN0cnVjdCBzY3NpX2NtbmQgKnNjbWQ7CiAJc3RydWN0IHJlcXVlc3QgKnJxOwog
-CXN0cnVjdCBiaW8gKmJpbzsKLQlpbnQgcmV0OworCWludCByZXQsIHVubWFwX3JldDsKIAogCWlm
-IChoZHItPnByb3RvY29sICE9IEJTR19QUk9UT0NPTF9TQ1NJICB8fAogCSAgICBoZHItPnN1YnBy
-b3RvY29sICE9IEJTR19TVUJfUFJPVE9DT0xfU0NTSV9DTUQpCkBAIC0yNzMsNyArMjczLDkgQEAg
-c3RhdGljIGludCBzY3NpX2JzZ19zZ19pb19mbihzdHJ1Y3QgcmVxdWVzdF9xdWV1ZSAqcSwgc3Ry
-dWN0IHNnX2lvX3Y0ICpoZHIsCiAJZWxzZQogCQloZHItPmRvdXRfcmVzaWQgPSBzY21kLT5yZXNp
-ZF9sZW47CiAKLQlibGtfcnFfdW5tYXBfdXNlcihiaW8pOworCXVubWFwX3JldCA9IGJsa19ycV91
-bm1hcF91c2VyKGJpbyk7CisJaWYgKCFyZXQpCisJCXJldCA9IHVubWFwX3JldDsKIAogb3V0X3B1
-dF9yZXF1ZXN0OgogCWJsa19tcV9mcmVlX3JlcXVlc3QocnEpOwotLSAKMi40My4wCgo=
+Commit c67e63800446 ("scsi: aic79xx: Do not reference SCSI command when
+resetting device") makes ahd_linux_dev_reset() build its TARGET RESET
+SCB with io_ctx set to NULL, but the function still calls
+ahd_set_residual(reset_scb, 0) a few lines later, which is
+scsi_set_resid() on the NULL command. Every call of the device reset
+handler therefore oopses and kills the SCSI error handler thread; all
+further I/O on that host hangs until the machine is power cycled.
+
+Hit on an Intel SE7501WV2S board (on-board AIC-7902, i686, v7.2.9) when
+a failing Ultra320 disk made the error handler escalate to a device
+reset. Both disks on that channel then stayed in D state:
+
+  sd 1:0:0:0: [sda] tag#287 Attempting to queue a TARGET RESET message:
+  BUG: kernel NULL pointer dereference, address: 0000009c
+  #PF: supervisor write access in kernel mode
+  EIP: ahd_linux_dev_reset.cold+0xee/0x26e
+  Call Trace:
+   scsi_eh_ready_devs+0x538/0x8d0
+   scsi_error_handler+0x3a2/0x3b0
+   kthread+0xd2/0x120
+  note: scsi_eh_1[78] exited with irqs disabled
+
+(0x9c is resid_len in struct scsi_cmnd on i386.)
+
+Making that call safe is not enough on its own. When the target accepts
+the reset, ahd_handle_nonpkt_busfree() (or, in packetized mode, the task
+management completion) calls ahd_handle_devreset(), and its
+ahd_abort_scbs() walks the target's pending SCBs - the reset SCB
+included - reading and setting their transaction status and freezing
+them through the wrappers in aic79xx_osm.h, which dereference io_ctx.
+The same walk runs if the reset times out and the error handler
+escalates to a bus reset.
+
+Commit c7f4c5dec651 ("scsi: aic79xx: Fix up NULL command in ahd_done()")
+taught ahd_done() about the NULL command, but not these wrappers.
+
+Let every accessor that dereferences the command accept an SCB without
+one. The ahd_cmd_*() helpers for the transaction status and the SCSI
+status check for a NULL command: the transaction status then reads as
+CAM_REQ_INPROG and the SCSI status as SAM_STAT_GOOD, and setting either
+does nothing. ahd_get_transfer_dir(), ahd_get_residual(),
+ahd_set_residual() and ahd_freeze_scb() have no such helper underneath,
+so they check scb->io_ctx themselves: the transfer direction reads as
+DMA_NONE and the residual as 0, while setting the residual and freezing
+the SCB do nothing. The ahd_set_residual(reset_scb, 0) call in
+ahd_linux_dev_reset() is then harmless, and the reset SCB completes
+through ahd_done() as that commit intended. The SCSI status, residual
+and transfer direction accessors get the check so that none of them can
+be handed the reset SCB and crash; the only path from the reset SCB to
+them that is apparent is ahd_handle_scsi_status(), should a packetized
+LUN RESET end in a status error.
+
+ahd_perform_autosense() also declines autosense for an SCB without a
+command. Otherwise a target that answered the reset with CHECK
+CONDITION would have the reset SCB requeued for REQUEST SENSE, and with
+negotiation pending ahd_handle_scsi_status() clears SCB_DEVICE_RESET on
+the way, so ahd_done() would later dereference the missing command.
+Declining leaves such a reset SCB to the reset timeout and the error
+handler's escalation, which completes it through ahd_abort_scbs().
+
+Tested on the SE7501WV2S with this patch applied to v7.2.11 (i686), on
+the disks of its second AIC-7902 channel (160 MB/s DT, not packetized).
+Device resets sent with SG_SCSI_RESET_DEVICE to a Seagate ST373453LW log
+"Bus Device Reset Message Sent" and "Device reset returning 0x2002"
+(SUCCESS), three of them while the disk was being read; the reads
+complete, scsi_eh_1 survives and the disk keeps working. scsi_eh_1 also
+survives a device reset of the channel's other disk - the one behind the
+crash above, which accepts the reset but no longer spins up - and a bus
+reset sent with SG_SCSI_RESET_BUS, after which the first disk still
+works. The device resets go through ahd_handle_devreset() and
+ahd_abort_scbs(), so they exercise the transaction status and freeze
+accessors on the reset SCB. Not tested: the packetized (IU) LUN RESET
+path, a device reset that times out and escalates to a bus reset, and
+the autosense change, since a target here answers TARGET RESET with a
+bus free as SCSI requires. The oops was not reproduced on purpose on an
+unpatched kernel; the crash above came from the failing disk.
+
+Fixes: c67e63800446 ("scsi: aic79xx: Do not reference SCSI command when resetting device")
+Cc: stable@vger.kernel.org
+Signed-off-by: Andrew Luebke <andrew.luebke@gmail.com>
+Assisted-by: LLM
+---
+
+Notes:
+    v2:
+     - Keep ahd_set_residual(reset_scb, 0) in ahd_linux_dev_reset(): with
+       the check in ahd_set_residual() the call is safe, and the patch now
+       touches only aic79xx_osm.h (Hannes).
+     - Move the NULL checks for the transaction status and the SCSI status
+       into ahd_cmd_set_transaction_status(), ahd_cmd_set_scsi_status() and
+       the two ahd_cmd_get_*() helpers (Hannes). ahd_set_residual() keeps
+       its check in the SCB wrapper: it calls the midlayer's
+       scsi_set_resid() directly, with no ahd_cmd_*() helper underneath.
+       The same goes for ahd_get_residual(), ahd_get_transfer_dir() and
+       ahd_freeze_scb().
+     - ahd_perform_autosense() returns 0 for an SCB without a command, so a
+       device reset that ends in CHECK CONDITION is not requeued for REQUEST
+       SENSE with SCB_DEVICE_RESET cleared (found by the Sashiko AI review of
+       v1).
+    v1: https://patchwork.kernel.org/project/linux-scsi/patch/20261020221530.2606178-1-andrew.luebke@gmail.com/
+    
+    This analysis, the patch and this changelog were prepared with an LLM coding
+    assistant (Claude Opus 5.5, Anthropic) at my direction; I reviewed them and
+    ran the hardware tests described above. Build-tested with W=1 for
+    x86_64 and i386 on mkp/scsi.git for-next (db8b4d2bf2d3): no new warnings;
+    checkpatch clean. sparse and smatch were not run.
+
+ drivers/scsi/aic7xxx/aic79xx_osm.h | 26 +++++++++++++++++++++-----
+ 1 file changed, 21 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.h b/drivers/scsi/aic7xxx/aic79xx_osm.h
+index c6eb2b97e..1facfd238 100644
+--- a/drivers/scsi/aic7xxx/aic79xx_osm.h
++++ b/drivers/scsi/aic7xxx/aic79xx_osm.h
+@@ -501,6 +501,8 @@ int	ahd_linux_show_info(struct seq_file *,struct Scsi_Host *);
+ static inline
+ void ahd_cmd_set_transaction_status(struct scsi_cmnd *cmd, uint32_t status)
+ {
++	if (!cmd)
++		return;
+ 	cmd->result &= ~(CAM_STATUS_MASK << 16);
+ 	cmd->result |= status << 16;
+ }
+@@ -514,6 +516,8 @@ void ahd_set_transaction_status(struct scb *scb, uint32_t status)
+ static inline
+ void ahd_cmd_set_scsi_status(struct scsi_cmnd *cmd, uint32_t status)
+ {
++	if (!cmd)
++		return;
+ 	cmd->result &= ~0xFFFF;
+ 	cmd->result |= status;
+ }
+@@ -527,6 +531,8 @@ void ahd_set_scsi_status(struct scb *scb, uint32_t status)
+ static inline
+ uint32_t ahd_cmd_get_transaction_status(struct scsi_cmnd *cmd)
+ {
++	if (!cmd)
++		return CAM_REQ_INPROG;
+ 	return ((cmd->result >> 16) & CAM_STATUS_MASK);
+ }
+ 
+@@ -539,6 +545,8 @@ uint32_t ahd_get_transaction_status(struct scb *scb)
+ static inline
+ uint32_t ahd_cmd_get_scsi_status(struct scsi_cmnd *cmd)
+ {
++	if (!cmd)
++		return SAM_STAT_GOOD;
+ 	return (cmd->result & 0xFFFF);
+ }
+ 
+@@ -566,13 +574,16 @@ u_long ahd_get_transfer_length(struct scb *scb)
+ static inline
+ int ahd_get_transfer_dir(struct scb *scb)
+ {
++	if (!scb->io_ctx)
++		return DMA_NONE;
+ 	return (scb->io_ctx->sc_data_direction);
+ }
+ 
+ static inline
+ void ahd_set_residual(struct scb *scb, u_long resid)
+ {
+-	scsi_set_resid(scb->io_ctx, resid);
++	if (scb->io_ctx)
++		scsi_set_resid(scb->io_ctx, resid);
+ }
+ 
+ static inline
+@@ -584,6 +595,8 @@ void ahd_set_sense_residual(struct scb *scb, u_long resid)
+ static inline
+ u_long ahd_get_residual(struct scb *scb)
+ {
++	if (!scb->io_ctx)
++		return 0;
+ 	return scsi_get_resid(scb->io_ctx);
+ }
+ 
+@@ -597,11 +610,12 @@ static inline
+ int ahd_perform_autosense(struct scb *scb)
+ {
+ 	/*
+-	 * We always perform autosense in Linux.
+-	 * On other platforms this is set on a
+-	 * per-transaction basis.
++	 * We always perform autosense in Linux, except for the device
++	 * reset SCB, which has no command to return sense data to.
+ 	 */
+-	return (1);
++	if (!scb->io_ctx)
++		return 0;
++	return 1;
+ }
+ 
+ static inline uint32_t
+@@ -631,6 +645,8 @@ void	ahd_platform_freeze_devq(struct ahd_softc *ahd, struct scb *scb);
+ static inline void
+ ahd_freeze_scb(struct scb *scb)
+ {
++	if (!scb->io_ctx)
++		return;
+ 	if ((scb->io_ctx->result & (CAM_DEV_QFRZN << 16)) == 0) {
+ 		scb->io_ctx->result |= CAM_DEV_QFRZN << 16;
+ 		scb->platform_data->dev->qfrozen++;
+
+base-commit: db8b4d2bf2d3e02b4ff78bbf69d00e11795840de
+-- 
+2.47.3
+
