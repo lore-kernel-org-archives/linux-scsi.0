@@ -1,57 +1,97 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.42
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792756804;
-	b=zsNrmX4Niu1L4pb9h8xx1oJCzMRghCsnxPigG7Ul5ynVx4rUTk4L7kvKwYcPRVqU2p7P
-	 EeZik+IBHoWV5VQQV0aht0DOD4ea1bhiCbMta+H7fTdCJKuyoFDx0yDpefaUOtOzlcZxb
-	 TYPiolsTb8bIg/ln5n7qYUb3IDX8vImQvw/lkUb2MH6TfKdv5NY+1KnEeWcTE22Ahw16s
-	 u11Ul/uA+wBIUIAC45q3ytD5HG7+brcohKekEpubj2RDZFs9VynYvNGaYBAxFbHHEbrRs
-	 sUeZTJV2kngq2WRma+cXJ1o/tDp9m12B9LimBYAeQuquLqPnsftY4Z0T4qCChhzKp3w==
+	t=1792758876;
+	b=EmiTpZ82ggoqEReHHSWCDLU+yQYSBrZMX7CwkR8BXhqGq3bo1It5m/bCD+CBiwusNGr2
+	 iERxoQbgIPYxML4Dhj8DTtac+wzMTVgSYVsoYQiF3uszQH9wD3Rxr0Tt9aaD2wB8XvgvP
+	 dkP6FplhESKCXzn7Uzk0FQrY4jsVfJVjk/gXmjcobOT+zPNY5FdxvjFzgz1B3h2cXyXZH
+	 /MY8W/Rw7DivCWC+OvlZqlIx069wU1yZ8Yd4wDrVxYLQ+tYpO7IhQJR39LPkSlOf9D+iu
+	 3a7IbuPSaMrvpKKppLmevVZ35yZg+a/8hrD2O6OIvhlV64o9wLXoIii4KNDdwJMiTfw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792756804;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=D7LP8J3tHYKN5i8+EMOCpwo4nHHCnVjhbEVBGnkavOE=;
-	b=NLtZ3BIbqRNduWELQJbm8uDPq+bP/Npz0kH+PRXyfzyLl9hber6SCx9V/LvuiS15BcQr
-	 KVsmboVC9R4C/4AwN0LzmT6sgy/0f6oEJBko6i6LCXU6vwXI2PPlKLgICCRD3c+bo6v0h
-	 7Hv5ROJXHj6KaC2VWXOT0/CUxQLzQjghQbP4KEJvX4ePkTqktQ9BQf6hw2ZWv+JPRlXkx
-	 gVYYsOqjirrSB9KD6qW5RG7DIZmlJIqSstbPOzdk6vxn/mr1lIpkskeOXyOiYzsZ/DENH
-	 uoIL7N4DJut1m3Ot189IwLaXf1jI2dPsnSUiBBwcKA2IaMIWC3StUcafhiN12c7jdRQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792758876;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
+	 MIME-Version:Content-Transfer-Encoding;
+	bh=GbI9dWRYHQC4FFZk8/mMBImcoolC/UhXap4+Lg16pBQ=;
+	b=m4LXRzMf28Qjp77Wp3vSTFHdxW4ur3rNP6fH/i+b3x9S9/VAo2Z6HUt7jLAtLffUwg5K
+	 Z0QJc/9gWhdZcXnfcqdNVPJXewaGSlNnBs95HnJRz65mBRdXXqZT2h9mVQlSAPlluc/34
+	 0M+40/iFDhAd0IDp/KyRvO4IYS/+LV/oHf09DjrIdgrEGJjEUeD1utGd7CdbAuob0GpRB
+	 3cafv/GdE5Kj5UpGNswtW4iJYy41oWPKsNJ0aSwq7Ip/+UwaWEdMzE4LIPQfPFS66Lhix
+	 OkUvZsYrROe8oCDSKSq5u8edQQPrQ68anWQcP058Pxrk+bo8qMJ4UcVs4R1JEx91o1A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=AGdMAs08;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=ePFoj4Ji;
+	arc=none smtp.remote-ip=209.85.216.42
+Received: from mail-pj1-f42.google.com (mail-pj1-f42.google.com [209.85.216.42])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 55CC6606A31A
-	for <linux-scsi@vger.kernel.org>; Fri, 23 Oct 2026 12:00:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EEAA1606A31F
+	for <linux-scsi@vger.kernel.org>; Fri, 23 Oct 2026 12:34:35 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org EEAA1606A31F
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=AGdMAs08
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BC5801F01825;
-	Fri, 23 Oct 2026 12:00:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792756803;
-	bh=D7LP8J3tHYKN5i8+EMOCpwo4nHHCnVjhbEVBGnkavOE=;
-	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
-	b=AGdMAs08h/5MzQXXXaM78oQ7uIcqRdL5jDwa38d6VIbxvd7Ij13Z8qkmEgIuGzxeg
-	 gGT7lnKACeLfmek9Vp8wDJicIAq4FmDzTQf+6YM6sQ8tNR3Ezy6aMAMeBFHkhORWo2
-	 qC8EFlTSFlGszmA6oFJkBUPxQ4GLpV7woYEVU0dVxN70/NxUCDBGwNcv8z0Hgdw2wr
-	 Y0EETfzNBABb4itbSAFgtlowos5VyVuuBpCNHBQKhn67BF25KtGo1wDAqi0BKrNJs/
-	 Brkju7XL9wqDz4VEGl9qtROYH5KKBii4dJWmNG5yZdk68ju9g2NkLOt4nruudU7Dux
-	 WIkq9aBoLVPdw==
-Message-ID: <sashiko-outbox-182747@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 2/2] scsi: ufs: core: add is_sys_suspended state
- before recovery
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "HOYOUNG SEO" <hy50.seo@samsung.com>, linux-scsi@vger.kernel.org
-In-Reply-To: <4eabe38e93631579a0cacda137a98053526fe030.1792755091.git.hy50.seo@samsung.com>
-References: <cover.1792755091.git.hy50.seo@samsung.com>
- <CGME20261023113911epcas2p44c986c4542ca8bae511086ef4b2ad850@epcas2p4.samsung.com>
- <4eabe38e93631579a0cacda137a98053526fe030.1792755091.git.hy50.seo@samsung.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 23 Oct 2026 12:00:01 +0000
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=ePFoj4Ji
+Received: by mail-pj1-f42.google.com with SMTP id 98e67ed59e1d1-3adac5c10e3so473500a91.0
+        for <linux-scsi@vger.kernel.org>; Fri, 23 Oct 2026 05:34:35 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1792758875; x=1793363675; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=GbI9dWRYHQC4FFZk8/mMBImcoolC/UhXap4+Lg16pBQ=;
+        b=ePFoj4Ji6UHC64tiavSfZtLS19cFHWa1RIj49Ihu0WgCjTj2eFsnrdkfPYSD0DN3xl
+         gfhn9yka82e7p/ZwJZurTV6x4+I5M6k7+zBV3NCM2SYWIEYyWz9Vjt9lLNBvmXFXkmOo
+         rPUA/V2XXYemSU0f8ranX3yXG5eKLF0HZ45o6NsHSCVMs7S5tr26XFER5LWndeIhtzPo
+         XY7uAMvzrmYoKR6AUkGtV6ialZhpJBCVsMV6fyTcNCwaw41H95tIV1kVgXseYcAbzPyd
+         ofgcIIsVMRys77aeNnETAAplDW9ALACdWziyrrZni/7WXxpUMshhY0eeFxTA35STSbba
+         6H3Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792758875; x=1793363675;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=GbI9dWRYHQC4FFZk8/mMBImcoolC/UhXap4+Lg16pBQ=;
+        b=D8UcSzdqXmPvEUJq/OK1TgMjabPni3isJLWOgaZVnaYpV/ETiqkFID3def1+ms1JdH
+         cixKGCA77Rvc04yGjlGhB5Db1ZmNoAQQ1yNGP5UV2X/0L2yPYQBH31cAoargfQPHTeg6
+         wx7raTe2jqelS7h5EqkO6af21Q7dQBn+yddUt2nsajcgGeumaLSnhXEm4giHLs2WT0mb
+         rvnTO+agGdlF7R8CAAcVSiCa8GjkvBAbG694Ml/TwVp1GWYwCkG9pNKHJu+28j48XfQv
+         lfEuTkdvAkMF2GP6ZTzQm1TJEIc4sy6S4bcBu/znaOwtLzStQJE7iTImPKdtFWqV37XR
+         kZcw==
+X-Forwarded-Encrypted: i=1; AKwUvBz6VREoEWNhHzSNY/qhvq+on/QPprWRRWAyUfnDuLfoUYcZ07vzp3eU1Fl7AVIOcbaKBetdIpOafUCS@vger.kernel.org
+X-Gm-Message-State: AFq9FYK5n+1nC2tF2idpkAmiKSYjurJF/kf8+xZXFcPqxEFu/IicjOil
+	15OApuZiPoxFzAPwyOPxAjGpOf5uPjNDli+GdLDli0EUo1Thq0UWvf4/
+X-Gm-Gg: AYBFou2PFMCvdskndrZerMZWkq6JUZg1wHToRzTVTcuRFJze2flIOraQW2HSlOdeff/
+	oNZIsFVMDtFqshejUfnaFfDZF8IWrbJCPJvTAiqBBWJjIbYrqbBfvt94lpWdtwzwhltRIIe8eze
+	000NPixwNm9gi7XzTPCAAvngIXP4uO0odCMAfOigQMV+1haXq21cHjiU02V1Vj603f5gM9vPksV
+	u9CaQbFiwA4BYj8iSss0pIFoXxDLSOY/K6Z8yM7yBzVlgvao0yZc8u4O7J7NiX43x/wgrgBf1HU
+	MgfNpYJz2ru4Hj7NHbxByRMdwLK0FtT3UEPOlzLGqwnwaCi6LCdD522H/Y65DcRrJ8R5dq5EHU0
+	aQBFsqr8s33bafATgeERKNoleKwZxiw93XP1eVgiBxqn5QJhq2HHDjdG5owj8ezPeAifXZUyiPT
+	Cv4qHac2e60Pvuq6mnWILkqwB/51jQCetLLZqPUn/lw9eOowMD2zDlvxgOohtcpus++1yviyE+f
+	lWvI+X+QyBSMs7pGNcAUjdyXNNzfZrEh17HO7kipBpjAw7SZVCoO10crsbcXnVhONjrQwU=
+X-Received: by 2002:a17:90a:d007:b0:3ac:9a5e:9ce9 with SMTP id 98e67ed59e1d1-3adce02dfbdmr1807811a91.29.1792758875260;
+        Fri, 23 Oct 2026 05:34:35 -0700 (PDT)
+Received: from DESKTOP-NM9EKIA ([125.134.240.130])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3addd8864f0sm110001a91.17.2026.10.23.05.34.32
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 23 Oct 2026 05:34:34 -0700 (PDT)
+From: Joonhoe Kim <26rote@gmail.com>
+To: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+Cc: mani@kernel.org,
+	mkp@kernel.org,
+	James.Bottomley@HansenPartnership.com,
+	bvanassche@acm.org,
+	linux-arm-msm@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] scsi: ufs: qcom: Reprogram ESI after a host controller reset
+Date: Fri, 23 Oct 2026 21:34:29 +0900
+Message-ID: <20261023123429.1967-1-26rote@gmail.com>
+X-Mailer: git-send-email 2.55.0.windows.5
+In-Reply-To: <a3298437-21c9-4b91-94f0-417d92045afc@oss.qualcomm.com>
+References: <20261022165006.1275-1-26rote@gmail.com> <a3298437-21c9-4b91-94f0-417d92045afc@oss.qualcomm.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -60,101 +100,30 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] scsi: ufs: core: ufshcd_err_handler() skips recovery after failed =
-resume
---
+On 10/23/26 9:45 AM, Konrad Dybcio wrote:
+> I'm not sure it's related, but with this change, do you still need
+>
+> https://lore.kernel.org/linux-arm-msm/20261007143716.2161-1-26rote@gmail.com/
+>
+> ?
 
-commit c53108b377c62c7e01a8b52d302e15dfdce25f17
-Author: HOYOUNG SEO <hy50.seo@samsung.com>
+Yes, they fix different problems.
 
-scsi: ufs: core: add is_sys_suspended state before recovery
+With MCQ enabled (which needs DT changes not yet upstream for
+Kaanapali) and without FORCE_MEM_CORE_ON on the UFS PHY AXI clock, the
+MCQ configuration is not retained over s2idle. The first command after
+resume then triggers an SMMU fault and the error handler resets the
+host; on my device that happened on almost every resume. With the clock
+patch the configuration is retained, and I have not seen a reset over
+s2idle since.
 
-This commit skips the early link recovery in ufshcd_err_handler() when
-hba->is_sys_suspended is set so that error recovery waits on hba->host_sem
-instead of racing with __ufshcd_wl_resume() during system resume.
+This patch is about any host reset, e.g. from the error handler after a
+UIC error: the reset clears the ESI registers, and ufs_qcom_config_esi()
+does not program them again, so completions fall back to the legacy
+interrupt. It does nothing about the s2idle faults themselves.
 
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index 0e6e593c24cfd..4b4d473530b16 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -7052,9 +7052,14 @@ static void ufshcd_err_handler(struct work_struct =
-*work)
->  		 * runtime resume. This avoids potential deadlocks that could
->  		 * happen if we tried to resume the device while a PM operation
->  		 * is already in progress.
-> +		 *
-> +		 * During system resume, host_sem is held from
-> +		 * ufshcd_wl_suspend() until ufshcd_wl_resume() returns, so wait
-> +		 * for it below instead of recovering the link concurrently with
-> +		 * the resume path.
->  		 */
->  		ufshcd_rpm_get_noresume(hba);
-> -		if (hba->pm_op_in_progress) {
-> +		if (hba->pm_op_in_progress && !hba->is_sys_suspended) {
-
-[Severity: High]
-The commit message notes that if system resume fails, hba->is_sys_suspended
-stays set and ufshcd_err_handler() performs a full recovery as usual.
-However, when ufshcd_err_handler() wakes from down(&hba->host_sem) after
-ufshcd_wl_resume() -> __ufshcd_wl_resume() fails, it immediately checks
-ufshcd_err_handling_should_stop():
-
-drivers/ufs/core/ufshcd.c:ufshcd_err_handler() {
-	down(&hba->host_sem);
-	spin_lock_irqsave(&hba->host->host_lock, flags);
-	if (ufshcd_err_handling_should_stop(hba)) {
-		if (hba->ufshcd_state !=3D UFSHCD_STATE_ERROR)
-			hba->ufshcd_state =3D UFSHCD_STATE_OPERATIONAL;
-		spin_unlock_irqrestore(&hba->host->host_lock, flags);
-		up(&hba->host_sem);
-		return;
-	}
-}
-
-where ufshcd_err_handling_should_stop() is defined as:
-
-drivers/ufs/core/ufshcd.c:ufshcd_err_handling_should_stop() {
-	return (!hba->is_powered || hba->shutting_down ||
-		!hba->ufs_device_wlun ||
-		hba->ufshcd_state =3D=3D UFSHCD_STATE_ERROR ||
-		(!(hba->saved_err || hba->saved_uic_err || hba->force_reset ||
-		   ufshcd_is_link_broken(hba))));
-}
-
-If ufshcd_uic_hibern8_exit() fails in __ufshcd_wl_resume() and the subseque=
-nt
-call to ufshcd_link_recovery() also fails, ufshcd_link_recovery() sets
-hba->ufshcd_state =3D UFSHCD_STATE_ERROR even though it restores hba->saved=
-_err
-and hba->saved_uic_err:
-
-drivers/ufs/core/ufshcd.c:ufshcd_link_recovery() {
-	...
-	spin_lock_irqsave(&hba->host->host_lock, flags);
-	if (ret) {
-		hba->ufshcd_state =3D UFSHCD_STATE_ERROR;
-		hba->saved_err |=3D saved_err;
-		hba->saved_uic_err |=3D saved_uic_err;
-	}
-	ufshcd_clear_eh_in_progress(hba);
-	spin_unlock_irqrestore(&hba->host->host_lock, flags);
-}
-
-Alternatively, if ufshcd_link_recovery() succeeds in __ufshcd_wl_resume()
-(clearing hba->saved_err, hba->saved_uic_err, and hba->force_reset) and a
-later step in __ufshcd_wl_resume() such as ufshcd_set_dev_pwr_mode() fails,
-the saved error flags remain zero.
-
-In both cases, doesn't ufshcd_err_handling_should_stop() evaluate to true a=
-nd
-cause ufshcd_err_handler() to return immediately after acquiring
-hba->host_sem, skipping full recovery and ufshcd_recover_pm_error() while
-leaving the HBA in UFSHCD_STATE_ERROR or stuck with hba->is_sys_suspended
-set?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1792755091.gi=
-t.hy50.seo@samsung.com?part=3D2
+Thanks,
+Joonhoe Kim
