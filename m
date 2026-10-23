@@ -1,85 +1,111 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=205.220.180.131
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792755655;
-	b=fxLhHs6znzT5dhjLbOnZroNKD+S12R1eZg3LPQm6ffkk5wPsdwHnFROyigYfknQWdena
-	 qAhkVTt+35Xa4KDXMjtAsuv08CkqfkTMnfunF2TMLB3OJsyij3p/8PB29f23bJ97t8upe
-	 X/W1gL5BlkOdEILC29x41IIXmwuWdyk+aE3GgAEnq+ge8HAUgo5ovGgHAloX4xl58mNm0
-	 9MnhNeFa57K46t2GN/C3ZPWHJDUz7cYjw26vxr6TXqR5KOthw6LoJs/uhGQBhmxsJ+4JK
-	 9Kn1Shwz23CJeDMr1J1W9E6ySxvIQtKxCVcNBEnTceLIhLLNFrN+LUemDhp4SnWrTFQ==
+	t=1792756557;
+	b=VJ7ewWNziVv/OHVQcYIu7inZxoBgSgzQITqjkb2cHEQiBx9/PMsomQlLWM91lyVZFhBV
+	 NxWvLofNP2c+nQOk7iY6153hT3aYTlDhebTAyAmfkrmKU0KoRCb0Cp4blWllkEHEDGl04
+	 Gmt/fgB1J58FXNObUzSuWQfkd6eZ/CgSUDxpvnECJn1hQ8iqwk0ZV3v9526dxQLT4r6kT
+	 5l3EaXCU+iBw7eZnid3SL5XFzDlHXUOzKZI/H+8m9VzXeF6zL4ztDZB3/dN3UilSSitzV
+	 P+fZG69sGUqjlao5huHFoOWBA0b6BQ4GBbJA8n6S2DfpuZPfQ+RFojSNU25NcWzprtQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792755655;
-	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:Received:
-	 Received:Received:Received:Received:From:To:Cc:Subject:Date:
-	 Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding:
-	 X-TM-AS-GCONF:X-Proofpoint-Spam-Info:X-Proofpoint-Spam-Details-Enc:
-	 X-Proofpoint-GUID:X-Authority-Analysis:X-Proofpoint-ORIG-GUID:
-	 X-Proofpoint-Virus-Version:X-Proofpoint-Spam-Details;
-	bh=hSiiBjdYGOC90gp66VdhgLidz2uIKbHRKjjfhmzqziU=;
-	b=bnpspACnAFAhSBKzoaG8XDZZx4xusXNQQDs6Oua0RJ7xYjNWLe7V3m9kQOhCyG8mi8rP
-	 aV4WAkGPv8Hj0xRu7ATyhoaJiIC3M/xH3AjNBlcCMPgm/3r173wGLPguYTnTmEVMzvSDH
-	 HFZAmHgM52UlDlJmezfs+92J1SXXGCDQDlt6Kj1nvrbMDgysCQHNjHv8Jp7bvfWQxQzlI
-	 lwZXFWKJS+tZdHn5ZcST9LNzD9Xe5hIy0X5ena1gy5awV5Y+Pd2OHsNsUw/liURaMlpfn
-	 pxd6yx0KyoMyD0HG7Rri+Nns1V4uwLbh+MJXhi0mGV9oBH9y0FGfr3HpKUU6rlFlI4Q==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792756557;
+	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
+	 DKIM-Signature:X-Google-DKIM-Signature:X-Forwarded-Encrypted:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:X-Received:Received:Message-ID:
+	 Date:MIME-Version:User-Agent:Subject:To:Cc:References:
+	 Content-Language:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding:X-Proofpoint-Spam-Info:
+	 X-Proofpoint-Spam-Details-Enc:X-Proofpoint-GUID:X-Authority-Analysis:
+	 X-Proofpoint-ORIG-GUID:X-Proofpoint-Virus-Version:
+	 X-Proofpoint-Spam-Details;
+	bh=0lfjro51D7Qg6x2xly6IGeYnaVRKofx4mi+Gn179GOg=;
+	b=i/J1u1usxyF7wvYBxK5RyOSEexeGnJqQG6KK3AiCmHQ+185DdVDyMSmr4KV7ObM0ByZy
+	 cc/afM0PoXaPJLaj9C2GLE6cXOvYn522e/znnmsj1R/LAXp0ceYNG17o96k2DJaWfabtx
+	 s74fKexdqfTae7HJ3w9RndWaDMaQtu9Volu96q7HxFQ0z1evCGn3piwqte0q04n7bqUnh
+	 xj967MCpCzVCWjbUwh1XSyCIIGTQqF5Zkd+VbXIqLX6Ly2CahIwu94ZWAjJds+cIFdYxm
+	 Is7QuxLuxJ856UqMS1USfIxYi0NrK/b3oNrSxRzJ1Wo8w53CKNULXwyj8Sw7AFKWUyA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.ibm.com;
-	spf=pass smtp.mailfrom=linux.ibm.com;
-	dkim=pass header.d=ibm.com header.i=@ibm.com header.a=rsa-sha256 header.s=pp1 header.b=o0CvD0ud;
-	arc=none smtp.remote-ip=148.163.156.1
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+	dmarc=pass header.from=oss.qualcomm.com;
+	spf=pass smtp.mailfrom=oss.qualcomm.com;
+	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=cJKj8NvR;
+	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=cYaYOz3d;
+	arc=none smtp.remote-ip=205.220.180.131
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B8887606A31B;
-	Fri, 23 Oct 2026 11:40:54 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B8887606A31B
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49777606A31F
+	for <linux-scsi@vger.kernel.org>; Fri, 23 Oct 2026 11:55:57 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 49777606A31F
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=ibm.com header.i=@ibm.com header.a=rsa-sha256 header.s=pp1 header.b=o0CvD0ud
-Received: from pps.filterd (m0356517.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69NAEB0C2613895;
-	Fri, 23 Oct 2026 11:40:54 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:date:from:message-id:mime-version
-	:subject:to; s=pp1; bh=hSiiBjdYGOC90gp66VdhgLidz2uIKbHRKjjfhmzqz
-	iU=; b=o0CvD0udikbMdIc/U2JL0iD5J0jYcXkfPbIOs7RfHoErC96l1SQcVhncz
-	nEjb4hFQfVNJZUJH8J9Z2Dn4cwmIhQT5DBEwzj8ob1+wwso76QnoJBbMLi91CvVY
-	xruUBAKbotJqemayr4sWxXCgiH53tDjtI0/L9Bm7hEYTHncaCjhTV23csV3LQKg7
-	YR/TXQs7gU+YE0lGq7kfeVZHR/g1lTi0oq9jyJU6ys/OsnHVvzd3j1o7BaZEEzf3
-	qYPClSbpMgNm/G/WP2miHmkPOYdalt9NiZOh47VGQ+4PO5MS+ARsGDEcaGyVFDCz
-	fvll0D+QEFRMRFyTEE99i7sImUlpg==
-Received: from ppma12.dal12v.mail.ibm.com (dc.9e.1632.ip4.static.sl-reverse.com [50.22.158.220])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4hdw5amtxv-1
-	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-	Fri, 23 Oct 2026 11:40:53 +0000 (GMT)
-Received: from pps.filterd (ppma12.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma12.dal12v.mail.ibm.com (8.18.1.11/8.18.1.11) with ESMTP id 69NAK2oW1967067;
-	Fri, 23 Oct 2026 11:40:52 GMT
-Received: from smtprelay01.fra02v.mail.ibm.com ([9.218.2.227])
-	by ppma12.dal12v.mail.ibm.com (PPS) with ESMTPS id 4hfj1x4wn7-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 23 Oct 2026 11:40:52 +0000 (GMT)
-Received: from smtpav05.fra02v.mail.ibm.com (smtpav05.fra02v.mail.ibm.com [10.20.54.104])
-	by smtprelay01.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 69NBenaa36438310
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 23 Oct 2026 11:40:49 GMT
-Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 1554C20043;
-	Fri, 23 Oct 2026 11:40:49 +0000 (GMT)
-Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id E8CF220040;
-	Fri, 23 Oct 2026 11:40:48 +0000 (GMT)
-Received: from tuxmaker.lnxne.boe (unknown [9.87.85.9])
-	by smtpav05.fra02v.mail.ibm.com (Postfix) with ESMTP;
-	Fri, 23 Oct 2026 11:40:48 +0000 (GMT)
-From: M Nikhil <nikh1092@linux.ibm.com>
-To: sashiko-reviews@lists.linux.dev, linux-s390@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-Cc: niharp@linux.ibm.com, pasic@linux.ibm.com, bblock@linux.ibm.com
-Subject: [PATCH v13 0/2] zfcp: Use DMA streaming API to map I/O
-Date: Fri, 23 Oct 2026 13:40:44 +0200
-Message-ID: <20261023114046.4137557-1-nikh1092@linux.ibm.com>
-X-Mailer: git-send-email 2.53.0
+	dkim=pass (2048-bit key, unprotected) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=cJKj8NvR;
+	dkim=pass (2048-bit key, unprotected) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=cYaYOz3d
+Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69NAATSH2164232
+	for <linux-scsi@vger.kernel.org>; Fri, 23 Oct 2026 11:55:56 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	0lfjro51D7Qg6x2xly6IGeYnaVRKofx4mi+Gn179GOg=; b=cJKj8NvR2w+BX3vH
+	+aQ4/rwe4iSgxxjXPyYptap1oi8ylQ+JWRjwFhCH4f9p/5hzCx84yZ5T8WByfr3e
+	hQWOMHlXMxxAseNvApfRTki+4bd4EJdrAj3jXjQb8sQORdUov5EK7MjlkLWbTgwa
+	QpiMarlh6BIUdOu0PEYscJ/j8oJSVXisuCa6qiy/kCYiGrbopZOO9f2Ms4l6NUYy
+	TdsMKwQ+jb1mQHAsXNaTaIf7HMdv/DJqAaDoSWJ/RXOdbFCS86TyZo9VyVQKVWtH
+	GPkL1L2LjaALQUBqeNw8dNZs6aE8f3UFbku/7kyiyq6P+IUCizodMfx4ZjYACj4h
+	s3YbHA==
+Received: from mail-qk1-f199.google.com (mail-qk1-f199.google.com [209.85.222.199])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4hfpahuyj9-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Fri, 23 Oct 2026 11:55:56 +0000 (GMT)
+Received: by mail-qk1-f199.google.com with SMTP id af79cd13be357-93e58614290so17548185a.3
+        for <linux-scsi@vger.kernel.org>; Fri, 23 Oct 2026 04:55:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1792756555; x=1793361355; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=0lfjro51D7Qg6x2xly6IGeYnaVRKofx4mi+Gn179GOg=;
+        b=cYaYOz3dHrMA8QLUy+K0FHR8wkiPvoNdfuBbrASgNBtBKBjOkIF3JpmPeEBiWdsxUE
+         hy/90shQOe91me6DwoBXoR284ZTCD5Sw2OP1HuYkAI8I95XSxhr58H8e2Mp8pTNlWuLk
+         DSdTOcb4weaX/qPhFpTpvEwtRK/jTypBT8wuelV4XNc5i0ku8qTPL6KydsMLjDLrzGZd
+         AiTUj+LJfScobF+l1eNK2FbFTiFDzy7lRKyk2wcsvH209mOMHLeGs2h5GFbb2Hli4K2P
+         P8DV/K+8fx6LrDVrx6Wn7kcdovqlFMc/RYne3i2PtGIEhd8rOeT7QNkl3px5q42GJXcv
+         Y1AQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792756555; x=1793361355;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=0lfjro51D7Qg6x2xly6IGeYnaVRKofx4mi+Gn179GOg=;
+        b=fdGVFbVSnwMJd/iL+F6XkrLUL+iV+9DnctCXBWDSJ7+op9o8dB+OlbfxFpvuhoCwXD
+         9Jl0kh5TXxycEHrOCjXKZb7Yc6dqF8uP52/1DiwR8v/TxFsMx1Y221VLvwfgfyhvxtUY
+         nSio1L1TLkBqOZ+BmesUVuhwnG42ycGaTdYSh943UlY7Mpi9DAaDLOHQ9oOL2YrPNgDb
+         GR73cqA/id/iGi0US/MPTli2RVIzJpsZDPxjB0tGdFpAQSyEcS2P1Y3J1uz/Ury/gwq3
+         YLmS73PlCQ/ilsSzJOk4OhWCXaGgOJ+kf32ejRDpK6UA6Z6O5kVRIRX+qms7BI1RqhUO
+         xfbQ==
+X-Forwarded-Encrypted: i=1; AKwUvBzqZS4k+SslqKxy2261k+C+VU4H8OuKco5iLIAF8agt83613L4t9WVVbUMOs0jxaBYSVCWK1+x6upBr@vger.kernel.org
+X-Gm-Message-State: AFq9FYKPmBYBiA62Ka4fdKgAYBDqL9BKzwOcJjhJoTHEP2A8cvmnc9jl
+	ma+z6vPL61kjIIJOkBCxziMO3ePoDewBCf0kIwQUs7w21OPMD7W/Ic24LTsY304oOkCg8wQMGno
+	WKMXcIZr10ZSYijvuJTDV1gU7LAmS2kKhaYVwzBp81c/BaH9Ohv2RvBVthfanabtL
+X-Gm-Gg: AYBFou0G8L/Vh7ze4x1YjJngRs/8cuHHeZj5utiEgtwqhJqjnoAu5eRUYJN2t23++NR
+	ejggE0CJTAisTbx7F1NpcXuoLJTr8NkKXR9Abgh38wNMg34QSQtqkno4rEZf9Crrk8XYrRz0WCm
+	YXXNFhf6Nq8YkqdMeIdlZvifbf5xgQqurlGCCB8Gf0peX3BkLZ4tidAtZS7PMYo7aqF2e1NC1ee
+	lN3vqRcuB/0Y5Xb2oiqdWCUNMQPxiO6sh/e1S9+70YARH7GZeOFoSXBzk0q3JoPw+bqBjGF3gyk
+	MYju2HhWaQKPgM5pE3j3Y8z3Bub4D6Wbm7MG6wm6NBnqj4DDiGTk4D3wrLE6EP393q9Zq5Iebnb
+	VIl7vXXM9DdufC0WyRTpRrw==
+X-Received: by 2002:a05:620a:a8ca:10b0:93e:5a3f:ac13 with SMTP id af79cd13be357-93f6f54812fmr372791385a.0.1792756555396;
+        Fri, 23 Oct 2026 04:55:55 -0700 (PDT)
+X-Received: by 2002:a05:620a:a8ca:10b0:93e:5a3f:ac13 with SMTP id af79cd13be357-93f6f54812fmr372786685a.0.1792756554732;
+        Fri, 23 Oct 2026 04:55:54 -0700 (PDT)
+Received: from [192.168.226.26] ([178.235.128.140])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c46a5c4d67bsm95403966b.14.2026.10.23.04.55.50
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 23 Oct 2026 04:55:53 -0700 (PDT)
+Message-ID: <feb43c1a-9f1b-4181-b663-eab9e55e4831@oss.qualcomm.com>
+Date: Fri, 23 Oct 2026 13:55:49 +0200
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -89,86 +115,84 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMDIzMDA0MyBTYWx0ZWRfXzZ0P1Scj5DXc
- 5MmKZvxiayloo13R9RDLv3gwORguRE3ILkYvdb9/GR/C2BzkQuFgAybYqSFIMQBRRI2ZvyY29Ij
- wafoOMvr63pzwzH2JDF0Yfqh7uajqKQ=
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDIzMDA0MyBTYWx0ZWRfX5EkiB9IUgAM7
- 48X8lpid0QxGafdUY7vEEl4iINAxarjP+tgXMxXtpRDxLZJY0ep+4BzjaQNGeQetbYAoQ//kUiF
- rSOJCAf7qWLjOhJtqorDAmAe+xHG8vjGP/FXXpmVN0pYMuUxpColzCJyzFWsQG1th8EzCqrseVQ
- fZSlnOnXbGu83fivLl0vk267WbgdCnlYtJXaQp3SZT9A8c+nNLuV5A2akwoCpaK8xgIAKR1txPz
- UojPpo98dNe9anLq68D8Kmk+jMUbb4CGVZn+MqcK3MV+xiDyAQn9gExEPlDjiSVUT7LzDclG7Di
- fEW3LQ5zdsx9l9ieF2RIgeOfxcVMyxq5YyK7obvkKCcV7h6VJd/2/49uTqbJYGVclaK5wP//ljJ
- Id5LBr6CVdVCGCthI4MJxI//1QC/uZRq/+BD3OnC+VvDdImvOnHdGqnQdHSQOXfEbIJ+SXl8mcj
- 9pwQHXMLz0jA1KH2Y3w==
-X-Proofpoint-GUID: ZZ3wFrRNQ-bBkx3pSrs8Oz2MIwt0De6T
-X-Authority-Analysis: v=2.4 cv=JIKuIMKb c=1 sm=1 tr=0 ts=6adb47c5 cx=c_pps
- a=bLidbwmWQ0KltjZqbj+ezA==:117 a=bLidbwmWQ0KltjZqbj+ezA==:17
- a=660iZSQnnn4A:10 a=VkNPw1HP01LnGYTKEx00:22 a=RnoormkPH1_aCDwRdu11:22
- a=U7nrCbtTmkRpXpFmAIza:22 a=Wd4ccqAm3J3WqkYLFQkA:9
-X-Proofpoint-ORIG-GUID: ZZ3wFrRNQ-bBkx3pSrs8Oz2MIwt0De6T
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v4 3/5] arm64: dts: qcom: glymur: Add UFS nodes
+To: Pradeep P V K <pradeep.pragallapati@oss.qualcomm.com>,
+        Vinod Koul <vkoul@kernel.org>,
+        Neil Armstrong <neil.armstrong@linaro.org>,
+        Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        Conor Dooley
+ <conor+dt@kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@sandisk.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konradybcio@kernel.org>,
+        Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>,
+        gopikrishna.garmidi@oss.qualcomm.com, jagadeesh.kona@oss.qualcomm.com,
+        Abel Vesa <abel.vesa@oss.qualcomm.com>,
+        Abel Vesa <abelvesa@kernel.org>
+Cc: linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, nitin.rawat@oss.qualcomm.com,
+        sibi.sankar@oss.qualcomm.com, Taniya Das <taniya.das@oss.qualcomm.com>
+References: <20261009-glymur_ufs_qcb_enablement-v4-0-9a6ce83195b7@oss.qualcomm.com>
+ <20261009-glymur_ufs_qcb_enablement-v4-3-9a6ce83195b7@oss.qualcomm.com>
+Content-Language: en-US
+From: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+In-Reply-To: <20261009-glymur_ufs_qcb_enablement-v4-3-9a6ce83195b7@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMDIzMDA0NiBTYWx0ZWRfX2c3hWTc8pc0C
+ i6JSlKz3fA0NPZlvWN2R+nPHO5rJyfFX2dMvP1xNs5V8A4BfVCiv94bInddbCmJUfzvsCYAh2kO
+ fdP2OeAVqWH4n4srpC38Cb7nF3eP8C8=
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDIzMDA0NiBTYWx0ZWRfX7KC9vaDPvDUD
+ rhFqVBf6bio3I3jvutLEppQFAGfJM0EcEG49+A6eV0htB6MWeQ4me6teY4+KBpE86kHmQj1SFZj
+ XsHm2EzV6L+9EsOkKdSCVTIiEsnnPOI4B8Mh3g41+5KHHZsDnlY9cid6Iy1EMQDtNw117Etp4zK
+ pI1KKZqSwLCeO6fN+ImFtrLPZNCtWUkQBMJoAyF7QmTcN0H+mAgw6AvxDeR+THFlYbwqSiVi7Aw
+ pNmaSOzP8mhp9X0TaAZlI68YU6UvLcuGz384uSMQRzfwBpPDl985B5jtAdOH0F86ANXGZniT3WT
+ BRZ/XZYdS7lmciUPeywNK9xIfmBD9hG1cP6NpABDaMeHGq7ixzGZhSBHvbQoq1znXHfednLDmzU
+ CKhqOMQYUo+Y1aCoMQTNL1renSV6LewlC2yjZlM/DaKC5D5UzOrXCpjRqc4VVVCToW4R1DEF2iM
+ luLIMX32vKhMGis0Rnw==
+X-Proofpoint-GUID: XY7c_crwWunFXbEkOZ8Lqi32Djp5JxHu
+X-Authority-Analysis: v=2.4 cv=YIMKWhGx c=1 sm=1 tr=0 ts=6adb4b4c cx=c_pps
+ a=HLyN3IcIa5EE8TELMZ618Q==:117 a=PRfkaYvzSr8QmIIGAkY2Sg==:17
+ a=IkcTkHD0fZMA:10 a=660iZSQnnn4A:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=ZpdpYltYx_vBUK5n70dp:22
+ a=EUspDBNiAAAA:8 a=BBNwevgwxSeHGHzN-EcA:9 a=QEXdDO2ut3YA:10
+ a=bTQJ7kPSJx9SKPbeHEYW:22
+X-Proofpoint-ORIG-GUID: XY7c_crwWunFXbEkOZ8Lqi32Djp5JxHu
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
  definitions=2026-10-23_03,2026-10-21_02,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- suspectscore=0 malwarescore=0 lowpriorityscore=0 adultscore=0
- priorityscore=1501 spamscore=0 phishscore=0 bulkscore=0 clxscore=1015
- impostorscore=0 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2610190000
- definitions=main-2610230043
+ spamscore=0 adultscore=0 phishscore=0 lowpriorityscore=0 malwarescore=0
+ impostorscore=0 bulkscore=0 suspectscore=0 clxscore=1015 priorityscore=1501
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2610190000 definitions=main-2610230046
 
-In the existing zFCP driver, virtual addresses are translated directly
-into bus (physical addresses) for DMA operations on all I/O buffers
-passing from zFCP driver to the device.
+On 10/9/26 12:35 PM, Pradeep P V K wrote:
+> Add UFS PHY and UFS host controller nodes for Glymur SoC.
+> 
+> Reviewed-by: Abel Vesa <abel.vesa@oss.qualcomm.com>
+> Signed-off-by: Pradeep P V K <pradeep.pragallapati@oss.qualcomm.com>
+> ---
 
-Need for using DMA-API in zFCP driver:
+[...]
 
-In a Secure Execution environment, the host must ensure that device DMA
-accesses are restricted to non-guest-private, page-sized memory blocks.
-This prevents I/O failures that can occur when a device attempts to
-access guest-private memory. Therefore, guest memory pages must be
-prepared by the hypervisor before they become accessible to an I/O
-device.
+> +				opp-201500000 {
+> +					opp-hz = /bits/ 64 <201500000>,
+> +						 /bits/ 64 <0>,
+> +						 /bits/ 64 <0>,
+> +						 /bits/ 64 <201500000>,
+> +						 /bits/ 64 <0>,
+> +						 /bits/ 64 <0>,
+> +						 /bits/ 64 <0>,
+> +						 /bits/ 64 <0>;
+> +					required-opps = <&rpmhpd_opp_svs_l1>;
+> +				};
 
-To support this requirement, the host Linux kernel must be reliably
-informed whenever a memory region becomes eligible for device DMA access
-and when that access must be revoked. This information must be
-maintained correctly at least at page size granularity. To satisfy these
-requirements, all I/O buffers used by the zFCP driver should be mapped
-through the DMA API.
+^ this should be svs, not svs_l1
 
-DMA API Integration in zFCP:
-
-The zFCP driver is updated to use the DMA streaming API's to map all the
-I/O buffers which will be passed to the device.
-All zFCP I/O buffers (QTCB, SRB, CT/ELS and SCSI I/O) are represented as
-scatter-gather lists and mapped through DMA API using dma_map_sgtable().
-Once the DMA transfer is complete, the corresponding mappings are
-released using dma_unmap_sgtable().
-
-By routing all device-visible memory through the DMA mapping layer, the
-driver ensures that:
-1. DMA access is properly authorized before use.
-2. DMA is revoked after use.
-3. Secure Execution memory restrictions are honored.
-
-M Nikhil (2):
-  zfcp: Replace sg-list with sg_table in zfcp_fsf_ct_els structure
-  zfcp: Use DMA streaming API to map I/O
-
- drivers/s390/scsi/zfcp_aux.c  |  16 ++
- drivers/s390/scsi/zfcp_dbf.c  |  16 +-
- drivers/s390/scsi/zfcp_def.h  |   4 +
- drivers/s390/scsi/zfcp_ext.h  |  12 +-
- drivers/s390/scsi/zfcp_fc.c   |  48 +++--
- drivers/s390/scsi/zfcp_fsf.c  | 325 +++++++++++++++++++++++++++++-----
- drivers/s390/scsi/zfcp_fsf.h  |   9 +-
- drivers/s390/scsi/zfcp_qdio.c |  40 +++--
- drivers/s390/scsi/zfcp_qdio.h |  27 +--
- drivers/s390/scsi/zfcp_scsi.c |  83 ++++++++-
- 10 files changed, 477 insertions(+), 103 deletions(-)
-
--- 
-2.53.0
-
+Konrad
