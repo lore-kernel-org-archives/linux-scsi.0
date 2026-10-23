@@ -1,101 +1,69 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.215.182
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=210.130.202.131
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792722075;
-	b=0ODdwYay4BwH+90BpJRIfeEmHlZPq4OZCV5H1sYeI9wZyzzl8unrooEoK+YiJ7UqnXMU
-	 2W8VkX+OWy6iz2lH4u8tF8xKRIM9ikkklcjUrbUFctUxe4K8BkYy849gU+mbOmhlZARKW
-	 zVkhcZrLQD2b+8uzKN7iKsJXUH9IrPpWpWSkTDeXzBeJzzgqwIKVlvzVetS2lwXXZcEFN
-	 97qu6nbxYdhNSsu/6rKcxURLFCPOWAlOBEQiMbkcvtcjyia/kEMZ00SsyPqj17YV/rI8J
-	 JYlBAeu7HDZb35U1eAmg/0wx2B93jCmR3Uc8jqFqKitIU/r77K0lISGNwa4eUwnXA/g==
+	t=1792730375;
+	b=YKBtDiiQWkrQcgLIMbT7NuY6QEr0uUIMw8LPdA+XvYahefjT7dIjn0bANex+BszRtBUb
+	 zZKRuOlJ3zX6yqaF2VWZ57GN4pvLdfRiOx6ZuKTuhF+Y+z8LxioG14l19zvPwt5LaFb9s
+	 kUWhIVpRbrH4Fft+BzXB0MxhbgKldPgPATaHtlbrTExl3N5tNPn7KJyBW9R8xo9SnvXcX
+	 UcWG0AMCyKBTB4/2UeYfO6uAS57xHnm/tfzzdxGo+PHis98aDUGAKqzA+p+sxnUj4Yndg
+	 Rjy7TUVtuJwCeuC5lIKJHtbEbVy/H1Fl1236WFIj6ouDdAClOqHvPyRryyhzi4dbUSw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792722075;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=XXX5hCVe20W2DEnZ0HF+fr0EqmB3/p1IDPVPZBeHOFk=;
-	b=ta6OWtoSisS+qrtO75v4qIgH4p4qnikBxZA1zvewlIqevRpIZ7pK6W7cFdoinQHzqZdz
-	 dOs2sov8kuizmwtQ0f9oWZomk6GFCcoC43jlD1Vso41pIsilleoB4gKZRNZFQr0SgdVrP
-	 wOgZVqJF97kEODjH4rRXBfKJjVGroZOu64IVRxGZyQLK7lBcYggkkAikA6Y9uOjocrm5t
-	 fVX7YHbH2eepDUMW6n4250RS4+EiURiCB9Hsc0vj7G6cuwM5z9nyShjdkKRZpI23vhiGE
-	 we4BvF8DHYXNkyTMG4LjSwASWD05SYy7/WtZIvFE42J30YrHgv1ox/PF773/DIdTKyQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792730375;
+	h=DMARC-Filter:DKIM-Signature:Received:X-Iguazu-Qid:X-Iguazu-QSIG:
+	 Received:From:To:Cc:Subject:Date:X-TSB-HOP2:Message-Id:X-Mailer;
+	bh=z1tYfu3ZKaPJUTpHE1RDxt7MpiCNNy7MOBzkxY5/95s=;
+	b=j0j35tCGn3+AvEfNG8+kMkT9Je8OUYO94kQCLext6eKwvHvMN8Qa7jGNju1Z7N/pOV1P
+	 ZtIeQUvbq0y3BdoAXC2skDZf/EVra/XDT5Sj+dXxuO6ENSbv1hoksF/0Y7TB4JW2NjQwv
+	 5/jCk4d1Fzs9LYuc/ZzVQP5UXiOkwy8lLm2jL6nt0nmVYANkyVJv/jnoUPIE61vqXa6YJ
+	 JFcWSDMWA+45999/RiKFUt6k85GN1D3Jwixr+5wGCZwzw6gf9tRbS/CM2RvKWKKsd1nnk
+	 BbaC2rss3BCtuo7MtHgUurGfl05fvuEdf3L8ZWy329Ph9RyyC+pc0kMY2jG9SYjjFaA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=fail header.from=isslab.korea.ac.kr;
-	spf=none smtp.mailfrom=isslab.korea.ac.kr;
-	dkim=pass header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.a=rsa-sha256 header.s=20251104 header.b=D7ulQNAY;
-	arc=none smtp.remote-ip=209.85.215.182
-Received: from mail-pg1-f182.google.com (mail-pg1-f182.google.com [209.85.215.182])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=pass header.from=mail.toshiba;
+	spf=pass smtp.mailfrom=mail.toshiba;
+	dkim=pass header.d=mail.toshiba header.i=nobuhiro.iwamatsu.x90@mail.toshiba header.a=rsa-sha256 header.s=key2.smx header.b=bG0UQf9A;
+	arc=none smtp.remote-ip=210.130.202.131
+Received: from mo-csw.securemx.jp (mo-csw1120.securemx.jp [210.130.202.131])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5EE2A606A319
-	for <linux-scsi@vger.kernel.org>; Fri, 23 Oct 2026 02:21:12 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5EE2A606A319
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 802CF606A319;
+	Fri, 23 Oct 2026 04:39:32 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 802CF606A319
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mail.toshiba
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mail.toshiba
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=isslab-korea-ac-kr.20251104.gappssmtp.com header.i=@isslab-korea-ac-kr.20251104.gappssmtp.com header.a=rsa-sha256 header.s=20251104 header.b=D7ulQNAY
-Received: by mail-pg1-f182.google.com with SMTP id 41be03b00d2f7-cc7e79c1eaaso158866a12.2
-        for <linux-scsi@vger.kernel.org>; Thu, 22 Oct 2026 19:21:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=isslab-korea-ac-kr.20251104.gappssmtp.com; s=20251104; t=1792722072; x=1793326872; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=XXX5hCVe20W2DEnZ0HF+fr0EqmB3/p1IDPVPZBeHOFk=;
-        b=D7ulQNAYpQewZbA6rR4DxTDcoX9oMPs7QYZdu4flYQ3UEakeUTfC7TOSxNNhi8OAh0
-         jDQuD29MTwJKgOS1IOHArMimnzfJvu8FvdSr7izuK9dqyz17oRSlKwzQnI6FdQYMRM82
-         G2QDHuzwugLBqXAcH3RQLT67SVYC7Wy9FRlzGyvyonoPH8n2hHqF7Jq7O5V/tnHnkysF
-         f7IzCDR3eEDqQ8hrJgkR7w8v3aFcQbqYIa3YUKzlZrlPL7t84828V5X28zkPfi4vqAQy
-         wZwqaNglqVCbGHBLfFWt4ePexQuKzGwLdr1kdzFwULfW9msWfuVyMNwPXDotZKh7xJcR
-         nKmg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792722072; x=1793326872;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=XXX5hCVe20W2DEnZ0HF+fr0EqmB3/p1IDPVPZBeHOFk=;
-        b=JeXWGGwAVdtQFmLnMkgQEVY7xeEhF51Di4lJe6LOt0DH/Y4C80PCsQRSi9Y3yBQwCY
-         jsuAtNsp0KjrKSPt1mPA+kLW8mre+NtTJQqlGzNH9d7kDKsqyWvm7xKLdrbc6Y/4j0Nb
-         mT9V3pYFCVGuMJy0F6BkUymog7b9aMCuPckU9p3RCXHyODevNre2oU1mh8xJ6zgP8akv
-         B59cRTaI9UaOka5WWDZ+mIObA5ax5rNccjBDoYgCDuqwa3S6nOWwpt4HSOCGVNAMV9Z8
-         ORxrP289XGJX2ckGBozq/3dTrjDD2bBAAhnNvKU3gdUKMP0XFZ6M4ygiC/YgLxxoKYVG
-         OlsQ==
-X-Forwarded-Encrypted: i=1; AKwUvBxaT9k9xS1kEq44PDoulIsZoG46cY1mz0mtU1QGPHApfRlAQAauDZgNQDDZ9uDpBsLAJqC7dnHn/HNz@vger.kernel.org
-X-Gm-Message-State: AFq9FYJLWEWTgUxkVJc3YzIna83nbJAUV9P0SV1kIQElRKwIk3r9ZgFM
-	cqP+Y92ZLlbf7bdgvMazOKjT92WHN4McmQxCkRToIxy5vwPr0jdiE2VhDB61USu+18o=
-X-Gm-Gg: AYBFou1z7dwkF1aVqRKa8DXvBaz0J6EAeWNRkhay6PiqXaAlcpNlOaiIaoMJXxKavdM
-	M+jS+OMcUQU6JfczNWu4/rkloNMmaPib69jc6xFK5sE1H7B0lWadJQh4A6VEilMkxjAUEQoFJgF
-	sGsArjmd+sfz1KH+muRj8U02dJxePaELIwPI8pSv98jf5JXQwtqFa9UUzP569IzCCSBGAsl5jTk
-	ryoACss2o6okiBS3fXDS8kFkAynxdNbdChVc/dv9acFG0TvjrxQnkLJ3ztOR2QlLYJnL9Ly6ssr
-	qfi7ZFmVUUO16JZ/iRUts+tGDoZPaY5IQoq9N+HUpxevqOBqwnMgY8yiWT6dBlSGfvJPWCHcBAB
-	Eg0RgUDBFghCISdiIJFXFxbPrMaq+a7wRcr9nyXs3ILnJSYC3xgtEDR/vqcymiVwBdWzcGN1teh
-	reA03mYcSya0kg315+jS87UUeZ6p2Y2EAu1sc4jJscaMmIkwhZqA3JumfgYrz0wjpHx3V2212WS
-	JQOQ3Wm73WSL6QLq5vGvuWVoo7/qjplEsw92+ZzIfUmu7PqBdPISbBKuvBno/0N5zyKdYtbLleX
-	AKE=
-X-Received: by 2002:a17:90b:1fc7:b0:3ad:3715:d21 with SMTP id 98e67ed59e1d1-3adce7ca8c9mr598095a91.49.1792722072334;
-        Thu, 22 Oct 2026 19:21:12 -0700 (PDT)
-Received: from yhlee-960QFG.Davolink ([2406:5900:1044:110c:13e0:b266:5a7d:e119])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3add2994cd2sm183922a91.3.2026.10.22.19.21.07
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 22 Oct 2026 19:21:11 -0700 (PDT)
-From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
-To: Nihar Panda <niharp@linux.ibm.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Benjamin Block <bblock@linux.ibm.com>,
-	Steffen Maier <maier@linux.ibm.com>,
-	Heiko Carstens <hca@linux.ibm.com>,
-	Vasily Gorbik <gor@linux.ibm.com>,
-	Alexander Gordeev <agordeev@linux.ibm.com>,
-	Christian Borntraeger <borntraeger@linux.ibm.com>,
-	Sven Schnelle <svens@linux.ibm.com>,
-	linux-s390@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org,
-	yhlee@isslab.korea.ac.kr
-Subject: [PATCH] scsi: zfcp: bound the RSCN page walk to the status read payload
-Date: Fri, 23 Oct 2026 11:20:56 +0900
-Message-ID: <20261023022056.3106651-1-yhlee@isslab.korea.ac.kr>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key, unprotected) header.d=mail.toshiba header.i=nobuhiro.iwamatsu.x90@mail.toshiba header.a=rsa-sha256 header.s=key2.smx header.b=bG0UQf9A
+DKIM-Signature: v=1;a=rsa-sha256;c=relaxed/simple;d=mail.toshiba;h=From:To:Cc:
+	Subject:Date:Message-Id;i=nobuhiro.iwamatsu.x90@mail.toshiba;s=key2.smx;t=
+	1792730304;x=1793939904;bh=inuWj1O+TmzBSNZIxOCWiXPTEyygPVgpo7DzFNfmKss=;b=bG0
+	UQf9A2/bFXEVoS/Ylj1KBgM4BEzd9mr9PvvEliZKr19gko7cfWmqW7fP0V8fbfVPZDzliZdauPWO6
+	hGMdJ4TQ4byHauSJTGEmNgqNWdyGKwD/rLdZ4NYiuPB0AqItlHrAenkacabRo7s83u71Kx95Su57W
+	PLa1Y1oh7uTucRLdDTQ7fEzLGN535yb/VR+ThLAk21qD51glRRbIE7XR1V5R31CbJq9ngspeR2TWD
+	WzpnGB007bRFRJoq++4m05s6mSmdfL0QHbUHm3z+mWOLhzjaxN+kUAC2cJ0FOOwhwHjJfuvlNCqUS
+	4c70lbW2ieyFbYOx3b1VrYT3crDyIeg==;
+Received: by mo-csw.securemx.jp (mx-mo-csw1120) id 69N4cNad3468980; Fri, 23 Oct 2026 13:38:24 +0900
+X-Iguazu-Qid: 2rWg7mGwshatov73wI
+X-Iguazu-QSIG: v=2; s=1; t=1792730303; q=2rWg7mGwshatov73wI; m=VsWGoRGGV4/oZ+rcYh55YTbX1XTesilBy2UGdYAMXp0=
+Received: from imx12-a.toshiba.co.jp (unknown [38.106.60.135])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	 id 4j9qyk6DCcz1xng; Fri, 23 Oct 2026 13:38:22 +0900 (JST)
+From: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+To: stable@vger.kernel.org
+Cc: gregkh@linuxfoundation.org, sashal@kernel.org,
+        Daniil Stas <daniil.stas@posteo.net>,
+        Guenter Roeck <linux@roeck-us.net>, Chris Healy <cphealy@gmail.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Bart Van Assche <bvanassche@acm.org>, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
+        linux-hwmon@vger.kernel.org,
+        Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Subject: [PATCH 5.10, 5.15, 6.1] hwmon: (drivetemp) Fix driver producing garbage data when SCSI errors occur
+Date: Fri, 23 Oct 2026 13:38:19 +0900
+X-TSB-HOP2: ON
+Message-Id: <1792730299-21490-1-git-send-email-nobuhiro.iwamatsu.x90@mail.toshiba>
+X-Mailer: git-send-email 2.7.4
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -104,73 +72,71 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-zfcp_fc_incoming_rscn() takes the number of RSCN pages from rscn_plen in
-the received ELS and walks that many four byte pages out of the status
-read buffer payload. The fabric chooses rscn_plen, it is a 16 bit field,
-and nothing compares it against the payload. A value of 65535 gives 16383
-entries, so the loop reads up to 65532 bytes out of a payload of
-FSF_STATUS_READ_PAYLOAD_SIZE, which is 4032. The status read buffer is a
-single page and its payload ends at the page boundary, so the walk
-continues into whatever follows that page.
+From: Daniil Stas <daniil.stas@posteo.net>
 
-Every iteration also hands the four bytes it just read to
-zfcp_fc_enqueue_event(), and that event reaches user space through
-fc_host_post_event(), so the bytes past the payload are reported and not
-merely read.
+commit 82163d63ae7a4c36142cd252388737205bb7e4b9 upstream.
 
-libfc bounds the same field. fc_disc_recv_rscn_req() refuses an RSCN whose
-rscn_plen is not covered by the received frame. zfcp does not share that
-code, so add the equivalent test here. Compare against the payload size
-rather than the firmware reported srb->length, because a bogus srb->length
-need not reach the payload at all.
+scsi_execute_cmd() function can return both negative (linux codes) and
+positive (scsi_cmnd result field) error codes.
 
-A conforming RSCN is unaffected. An FC data field holds at most 2112
-bytes, so at most 528 pages, well under the 1008 the payload can hold.
+Currently the driver just passes error codes of scsi_execute_cmd() to
+hwmon core, which is incorrect because hwmon only checks for negative
+error codes. This leads to hwmon reporting uninitialized data to
+userspace in case of SCSI errors (for example if the disk drive was
+disconnected).
 
-This is an out of bounds read and an information leak to user space. It is
-not a write and it corrupts no state. It assumes the adapter passes
-rscn_plen through unchanged, the same assumption the host bus adapter
-mediated paths in other drivers already make, and one the driver cannot
-check for itself.
+This patch checks scsi_execute_cmd() output and returns -EIO if it's
+error code is positive.
 
-Not tested on hardware. The bound follows from the field widths and the
-payload size.
-
-Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
-Cc: stable@vger.kernel.org
-Signed-off-by: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+Fixes: 5b46903d8bf37 ("hwmon: Driver for disk and solid state drives with temperature sensors")
+Signed-off-by: Daniil Stas <daniil.stas@posteo.net>
+Cc: Guenter Roeck <linux@roeck-us.net>
+Cc: Chris Healy <cphealy@gmail.com>
+Cc: Linus Walleij <linus.walleij@linaro.org>
+Cc: Martin K. Petersen <martin.petersen@oracle.com>
+Cc: Bart Van Assche <bvanassche@acm.org>
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
+Cc: linux-hwmon@vger.kernel.org
+Link: https://lore.kernel.org/r/20250105213618.531691-1-daniil.stas@posteo.net
+[groeck: Avoid inline variable declaration for portability]
+Signed-off-by: Guenter Roeck <linux@roeck-us.net>
+Signed-off-by: Nobuhiro Iwamatsu (CIP) <nobuhiro.iwamatsu.x90@mail.toshiba>
 ---
- drivers/s390/scsi/zfcp_fc.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+ drivers/hwmon/drivetemp.c | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/s390/scsi/zfcp_fc.c b/drivers/s390/scsi/zfcp_fc.c
-index 05d0812978798..24efd29b66bfc 100644
---- a/drivers/s390/scsi/zfcp_fc.c
-+++ b/drivers/s390/scsi/zfcp_fc.c
-@@ -270,6 +270,18 @@ static void zfcp_fc_incoming_rscn(struct zfcp_fsf_req *fsf_req)
- 	no_entries = be16_to_cpu(head->rscn_plen) /
- 		sizeof(struct fc_els_rscn_page);
+diff --git a/drivers/hwmon/drivetemp.c b/drivers/hwmon/drivetemp.c
+index 5bac2b0fc7bb6a..b3de637a3a1f29 100644
+--- a/drivers/hwmon/drivetemp.c
++++ b/drivers/hwmon/drivetemp.c
+@@ -165,6 +165,7 @@ static int drivetemp_scsi_command(struct drivetemp_data *st,
+ {
+ 	u8 scsi_cmd[MAX_COMMAND_SIZE];
+ 	int data_dir;
++	int err;
  
-+	/*
-+	 * The fabric chooses rscn_plen, so refuse a value that would walk
-+	 * the page list past the end of the status read payload.
-+	 */
-+	if (no_entries > FSF_STATUS_READ_PAYLOAD_SIZE /
-+			 sizeof(struct fc_els_rscn_page)) {
-+		dev_warn(&adapter->ccw_device->dev,
-+			 "An RSCN with a payload length of %u was dropped\n",
-+			 be16_to_cpu(head->rscn_plen));
-+		return;
-+	}
-+
- 	if (no_entries > 1) {
- 		/* handle failed ports */
- 		unsigned long flags;
-
-base-commit: f47d223627f80cb7a1eb14c585fe6cb35de5e984
+ 	memset(scsi_cmd, 0, sizeof(scsi_cmd));
+ 	scsi_cmd[0] = ATA_16;
+@@ -192,9 +193,12 @@ static int drivetemp_scsi_command(struct drivetemp_data *st,
+ 	scsi_cmd[12] = lba_high;
+ 	scsi_cmd[14] = ata_command;
+ 
+-	return scsi_execute_req(st->sdev, scsi_cmd, data_dir,
+-				st->smartdata, ATA_SECT_SIZE, NULL, HZ, 5,
+-				NULL);
++	err = scsi_execute_req(st->sdev, scsi_cmd, data_dir,
++			       st->smartdata, ATA_SECT_SIZE, NULL, HZ, 5,
++			       NULL);
++	if (err > 0)
++		err = -EIO;
++	return err;
+ }
+ 
+ static int drivetemp_ata_command(struct drivetemp_data *st, u8 feature,
 -- 
-2.43.0
+2.55.0
+
 
