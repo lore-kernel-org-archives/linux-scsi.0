@@ -1,75 +1,77 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=67.231.156.173
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=203.254.224.33
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792745503;
-	b=WaUgg7uqm4pO1OZpQknwQ46iHT5qmjQRmPq7AVykHJxUEBD6K8nrCoZ4sNJ14hjpVKEr
-	 L/FuxJlmnB0CBtSmOMety015JcJynFdHMDZV9u4Mm0R7pXwSKi/ZMfWENRJmwxGW1usAs
-	 l78opw7tT6nRFMiT156pH7/36hsJXsFvH1C9dyJ825xX1vjs/pjtxtZTXMCJB78+QWk/j
-	 KmvnScnV6twraNyeSuQRvE/c0ydy93srngexUGrs+yc0vhAlD0nKyJUJZaWgLDS8vv7sG
-	 kJVbcEM1lyean7JZ1eMoGEVB2RaG8vdWvNBuXCvWGNOQHtaC+bwQU60N11FrXFy73SQ==
+	t=1792745897;
+	b=VzLNf1sZhTY42WXRTC59CBHcahKVixDnH/ZX0z97VKd8QXZT/neRo/Z/wNnDt3xTE8C2
+	 5/9iqNWKRszy5hjQ5MytcYtvBEq5Dmvj361zzv/5Ix3ncNgQ45biqHhJKY1csbuemN2d9
+	 d/sZsFihisVMtwo7hAvSyKtH+pS9XoNaOJKHUXhMKJ85arwwXNLcPKt6FYoR0DxIM2IYU
+	 PE7h9e5OZ0l+5lER7ZQmGgas0cuOVYjl/wZu3cDyYylcWJ/IUr8U8GdXCG3QKUG+2xZRb
+	 aAbNtBKR1URT9zTbMHU63DDEtK/4mZNOBUT+mnHLn0SEQ42ETJ2CMWulA0DzHU81viw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792745503;
-	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:Received:
-	 Received:From:To:CC:Subject:Date:Message-ID:X-Mailer:MIME-Version:
-	 Content-Transfer-Encoding:Content-Type:X-Proofpoint-GUID:
-	 X-Proofpoint-Spam-Details-Enc:X-Proofpoint-ORIG-GUID:
-	 X-Proofpoint-Spam-Info:X-Authority-Analysis:
-	 X-Proofpoint-Virus-Version;
-	bh=VUJ+oHOVSLtyBWv5kBkquxwai/EoTA4pvAWMjiQBk2w=;
-	b=ZH1JAzA0jJYTqQDOSOSXzsv4F0XW72VMp1yz6W5xpr2etMAYq/caYIAR+aNaMUyY2s5B
-	 r2VHt6cFGKFRfUeDONnX1wnk4tTLKIGQ1b+biCplsZSMa1IEy3WvyDhFLnfPEQCy7gzWP
-	 mSPdVNvgjrVeI3rlnsMQq1z4zdP3H0lQV9nVElcBadK2yV5K2l7cWV+6ujTedy7aiK4nI
-	 CG2gEEs0RAvjZ/Tf1+8bCYecvRJzvOk0OZlRPLtVALrCm4dgXiWun+85nZe7t109STDU+
-	 bcQm7HdkN8A6YbH75FCkcnjZSlQzRndUyTQQ7kYq6ixUkRGU/WuUTvBpBr2rLfPSn9A==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792745897;
+	h=DMARC-Filter:Received:DKIM-Filter:DKIM-Signature:Received:Received:
+	 Received:Received:From:To:Cc:Subject:Date:Message-Id:X-Mailer:
+	 MIME-Version:Content-Transfer-Encoding:X-CMS-MailID:X-Msg-Generator:
+	 Content-Type:X-Sendblock-Type:CMS-TYPE:X-CPGSPASS:X-Hop-Count:
+	 X-CMS-RootMailID:References;
+	bh=U2a7kuFhlELNf+MmGZOqsc2PxuXwSEDIwnIA4z6ukmE=;
+	b=E5yuBF0YAWkmbw3A8q2muNTHZ/HsbV/t0oOZz+0wKazUVUahEj3aYKGpGboSaQbokHI8
+	 eEc6b+UipsPLtYGbKGyxp/juzAFKaE+lPkY1R8s1dWys4R39wDM+cgxfqXa5HvaduEcUn
+	 zyfVM2Px0rhUWI9RvPHLwFOukds93ioWr+Lgbl9gGcpC7V8hPlkDlOgLxoz7NbfvrMUZB
+	 6qG8X6SZBjIlwdgSeU47iu6Qiu3aVtqOv00YeWrO43pZ/fh5Cj9PL7VPbGVy2iRlz2a4A
+	 UKgNu284btMnl95JnyxDMLipq2Ivwyz0IhzMO0cGwEsnreBmRvGNGWlOfpNWgCPsf5Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=marvell.com;
-	spf=pass smtp.mailfrom=marvell.com;
-	dkim=pass header.d=marvell.com header.i=@marvell.com header.a=rsa-sha256 header.s=pfpt0220 header.b=X0d8KMsq;
-	arc=none smtp.remote-ip=67.231.156.173
-Received: from mx0b-0016f401.pphosted.com (mx0b-0016f401.pphosted.com [67.231.156.173])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dmarc=pass header.from=samsung.com;
+	spf=pass smtp.mailfrom=samsung.com;
+	dkim=pass header.d=samsung.com header.i=@samsung.com header.a=rsa-sha256 header.s=mail20170921 header.b=JlEjxIFz;
+	arc=none smtp.remote-ip=203.254.224.33
+Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D661E606A31A
-	for <linux-scsi@vger.kernel.org>; Fri, 23 Oct 2026 08:51:42 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D661E606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=marvell.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=marvell.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B89E8606A31A
+	for <linux-scsi@vger.kernel.org>; Fri, 23 Oct 2026 08:58:11 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B89E8606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=marvell.com header.i=@marvell.com header.a=rsa-sha256 header.s=pfpt0220 header.b=X0d8KMsq
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69N7EE3P2928756;
-	Fri, 23 Oct 2026 01:51:31 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=
-	cc:content-transfer-encoding:content-type:date:from:message-id
-	:mime-version:subject:to; s=pfpt0220; bh=VUJ+oHOVSLtyBWv5kBkquxw
-	ai/EoTA4pvAWMjiQBk2w=; b=X0d8KMsqpGh/UoFFl0CQEMdvHd3PY7tDmNeWw89
-	IvEQ3kSNyeC4cx4y6232PvYytlQczknj9+ONL+eBgeW6cZ6tBcIs5FBpN6SaCYXP
-	Bl1Rs+82YSz4NM10/yGP2Pqp10H8kj8kbIRxp5cOgD9KxMTRSTBToyy+ThZ4ss6M
-	a2GYr+RCinf4JNQwFjVaBU8aiU7y0hG1cox1hTLze+21stmXJTHI+MFWc7UM8/yA
-	5merpFsM3qKJazVS/4wjiTcd2kogECyM7zwftdXjbjE6ri8LJnU0DyROz81CRHaN
-	j4jnryWsvK2NRZDluajBpo4OS2yOUY+e6wDopljugBudoKA==
-Received: from dc6wp-exch02.marvell.com ([4.21.29.225])
-	by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 4hf94b8y31-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 23 Oct 2026 01:51:31 -0700 (PDT)
-Received: from DC6WP-EXCH02.marvell.com (10.76.176.209) by
- DC6WP-EXCH02.marvell.com (10.76.176.209) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.25; Fri, 23 Oct 2026 01:51:31 -0700
-Received: from maili.marvell.com (10.69.176.80) by DC6WP-EXCH02.marvell.com
- (10.76.176.209) with Microsoft SMTP Server id 15.2.1544.25 via Frontend
- Transport; Fri, 23 Oct 2026 01:51:31 -0700
-Received: from stgdev-a5u16.punelab.marvell.com (stgdev-a5u16.punelab.marvell.com [10.31.33.164])
-	by maili.marvell.com (Postfix) with ESMTP id 6FF683F70A7;
-	Fri, 23 Oct 2026 01:51:29 -0700 (PDT)
-From: Nilesh Javali <njavali@marvell.com>
-To: <martin.petersen@oracle.com>
-CC: <linux-scsi@vger.kernel.org>, <jmeneghi@redhat.com>,
-        <GR-ETH-Storage-Upstream@marvell.com>
-Subject: [PATCH] MAINTAINERS: Update Marvell Ethernet storage maintainers
-Date: Fri, 23 Oct 2026 14:21:12 +0530
-Message-ID: <20261023085112.1378540-1-njavali@marvell.com>
-X-Mailer: git-send-email 2.23.1
+	dkim=pass (1024-bit key, unprotected) header.d=samsung.com header.i=@samsung.com header.a=rsa-sha256 header.s=mail20170921 header.b=JlEjxIFz
+Received: from epcas2p4.samsung.com (unknown [182.195.41.56])
+	by mailout3.samsung.com (KnoxPortal) with ESMTP id 20261023085803epoutp03e067de7efd034adee0817086ce144888~hHOIL8q7J0679206792epoutp03H
+	for <linux-scsi@vger.kernel.org>; Fri, 23 Oct 2026 08:58:03 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20261023085803epoutp03e067de7efd034adee0817086ce144888~hHOIL8q7J0679206792epoutp03H
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1792745883;
+	bh=U2a7kuFhlELNf+MmGZOqsc2PxuXwSEDIwnIA4z6ukmE=;
+	h=From:To:Cc:Subject:Date:References:From;
+	b=JlEjxIFzthyIx9KZq83wP5HNnK2eV4x6jBn7JMUZMTZ/YA4t1U5zhs7MejELjpUlr
+	 VFZepre60nAzAFweeG1ow4yO+fLKOASSYuCk+gS7vQs1aJ+mT1YjEuTtk6j3Yu7iHL
+	 RtvDjdO7V5+rKQQGgsXeGB5Nli9/m93bs+0Q2C8A=
+Received: from epsnrtp01.localdomain (unknown [182.195.42.153]) by
+	epcas2p3.samsung.com (KnoxPortal) with ESMTPS id
+	20261023085803epcas2p31a4742e1500cb7a7413ad9b331bbda04~hHOHuhcxo1339413394epcas2p3C;
+	Fri, 23 Oct 2026 08:58:03 +0000 (GMT)
+Received: from epcpadp2new (unknown [182.195.40.142]) by
+	epsnrtp01.localdomain (Postfix) with ESMTP id 4j9xkM2Lzzz6B9m6; Fri, 23 Oct
+	2026 08:58:03 +0000 (GMT)
+Received: from epsmtip2.samsung.com (unknown [182.195.34.31]) by
+	epcas2p3.samsung.com (KnoxPortal) with ESMTPA id
+	20261023085501epcas2p3cc1319f4442d8fc77fdd64064bede2ed~hHLetksEP2290922909epcas2p33;
+	Fri, 23 Oct 2026 08:55:01 +0000 (GMT)
+Received: from ubuntu.dsn.sec.samsung.com (unknown [12.81.221.204]) by
+	epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
+	20261023085501epsmtip24b8ca6dd99dc5fc49e638b761bcd1265~hHLelS3Hj2401224012epsmtip2j;
+	Fri, 23 Oct 2026 08:55:01 +0000 (GMT)
+From: HOYOUNG SEO <hy50.seo@samsung.com>
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
+	martin.petersen@oracle.com, bvanassche@acm.org, kwangwon.min@samsung.com,
+	kwmad.kim@samsung.com, cpgs@samsung.com, h10.kim@samsung.com,
+	peter.wang@mediatek.com
+Cc: HOYOUNG SEO <hy50.seo@samsung.com>
+Subject: [PATCH v1] scsi: ufs: core: add is_sys_suspended state before
+ recovery
+Date: Fri, 23 Oct 2026 17:50:46 +0900
+Message-Id: <1582071873.61792745883325.JavaMail.epsvc@epcpadp2new>
+X-Mailer: git-send-email 2.34.1
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -80,86 +82,41 @@ List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Proofpoint-GUID: TE3lhjUETkePFsB13dpV3skYsMoMlMkK
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDIzMDAzNCBTYWx0ZWRfX2DWxmiDXPk/P
- Ynh8A+6mY2AGlogo3A/viIM/UAR3r7pYWgj82I9offbmmVlzx6JURKmT0i5tbxpivACAHFmnyjp
- S39WFuPZ4TeLRY5VyBMD3pV1E2DVSM5OGEfCcmGN4fDyO9b/CUZbzW5XtQWco0K1xJuxhhEk+ZY
- legUos+EvCKdqFkZU0wDZz9kcd1EIPCkQcLRVG81tp9x4IwLqbDyOEx3gI39yiwnC8SJmvIpZz6
- a31UiiZNj2WFOJvCiHaeHjCnwHQzxhUhjciXnS/0/7oFTrbjxXf3nNT/4NMS9aANIC8Qm+JXE/W
- ffVlhwHmjJx/4QtaZtaI8P32oXVumj6Ij3WXy6PBJTmhXvgxIO6UDCgIJy/q/uqoVJnOZQbRTij
- gKkp5XbVKuSmEcUTyTDH7GV8wJ52WOtfz1krfuDUuywCpiRM8WulOh3SV4GiUIXhrdIB9vDepyI
- RQLJJd5cnX74zXOiYvw==
-X-Proofpoint-ORIG-GUID: TE3lhjUETkePFsB13dpV3skYsMoMlMkK
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMDIzMDAzNCBTYWx0ZWRfX6X8+GQKKs2sK
- g0oPezBgWbcTYVyYNZktCg8u10Kr6oN4N5dD3tsUSow1DZN4E3LD0CEJhDyuPQnOD7QunQXJyMg
- y+xDNJkCxceOG6hUEONGUsFpmEzudP8=
-X-Authority-Analysis: v=2.4 cv=OrDaWC/t c=1 sm=1 tr=0 ts=6adb2013 cx=c_pps
- a=gIfcoYsirJbf48DBMSPrZA==:117 a=gIfcoYsirJbf48DBMSPrZA==:17
- a=660iZSQnnn4A:10 a=VkNPw1HP01LnGYTKEx00:22 a=l0iWHRpgs5sLHlkKQ1IR:22
- a=QXcCYyLzdtTjyudCfB6f:22 a=M5GUcnROAAAA:8 a=VwQbUJbxAAAA:8
- a=uDZJPa9GCa60il583OAA:9 a=OBjm3rFKGHvpk9ecZwUJ:22
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
- definitions=2026-10-23_02,2026-10-21_02,2025-10-01_01
+X-CMS-MailID: 20261023085501epcas2p3cc1319f4442d8fc77fdd64064bede2ed
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+X-CPGSPASS: Y
+X-Hop-Count: 3
+X-CMS-RootMailID: 20261023085501epcas2p3cc1319f4442d8fc77fdd64064bede2ed
+References: <CGME20261023085501epcas2p3cc1319f4442d8fc77fdd64064bede2ed@epcas2p3.samsung.com>
 
-Add Nilesh Javali and Manish Rangankar as co-maintainers
-for bnx2fc and qedf.
-Also update email alias for bnx2fc, bnx2i, qedf and qedi.
+If a linereset occurs during ufshcd_wl_resume and
+a hibern8_exit fail occurs, recovery is performed redundantly
+in both the err_handler and the __ufshcd_wl_resume function.
+To prevent this redundant recovery, a check for the is_sys_suspended
+state has been added to the err_handler.
 
-Signed-off-by: Nilesh Javali <njavali@marvell.com>
+Signed-off-by: HOYOUNG SEO <hy50.seo@samsung.com>
 ---
- MAINTAINERS | 16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
+ drivers/ufs/core/ufshcd.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 776eb78deb63..a616bf595b23 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -5281,9 +5281,9 @@ F:	drivers/net/ethernet/broadcom/bnx2.*
- F:	drivers/net/ethernet/broadcom/bnx2_*
- 
- BROADCOM BNX2FC 10 GIGABIT FCOE DRIVER
--M:	Saurav Kashyap <skashyap@marvell.com>
--M:	Javed Hasan <jhasan@marvell.com>
--M:	GR-QLogic-Storage-Upstream@marvell.com
-+M:	Nilesh Javali <njavali@marvell.com>
-+M:	Manish Rangankar <mrangankar@marvell.com>
-+M:	GR-ETH-Storage-Upstream@marvell.com
- L:	linux-scsi@vger.kernel.org
- S:	Supported
- F:	drivers/scsi/bnx2fc/
-@@ -5291,7 +5291,7 @@ F:	drivers/scsi/bnx2fc/
- BROADCOM BNX2I 1/10 GIGABIT iSCSI DRIVER
- M:	Nilesh Javali <njavali@marvell.com>
- M:	Manish Rangankar <mrangankar@marvell.com>
--M:	GR-QLogic-Storage-Upstream@marvell.com
-+M:	GR-ETH-Storage-Upstream@marvell.com
- L:	linux-scsi@vger.kernel.org
- S:	Supported
- F:	drivers/scsi/bnx2i/
-@@ -21933,9 +21933,9 @@ S:	Maintained
- F:	drivers/power/reset/qemu-virt-ctrl.c
- 
- QLOGIC QL41xxx FCOE DRIVER
--M:	Saurav Kashyap <skashyap@marvell.com>
--M:	Javed Hasan <jhasan@marvell.com>
--M:	GR-QLogic-Storage-Upstream@marvell.com
-+M:	Nilesh Javali <njavali@marvell.com>
-+M:	Manish Rangankar <mrangankar@marvell.com>
-+M:	GR-ETH-Storage-Upstream@marvell.com
- L:	linux-scsi@vger.kernel.org
- S:	Supported
- F:	drivers/scsi/qedf/
-@@ -21943,7 +21943,7 @@ F:	drivers/scsi/qedf/
- QLOGIC QL41xxx ISCSI DRIVER
- M:	Nilesh Javali <njavali@marvell.com>
- M:	Manish Rangankar <mrangankar@marvell.com>
--M:	GR-QLogic-Storage-Upstream@marvell.com
-+M:	GR-ETH-Storage-Upstream@marvell.com
- L:	linux-scsi@vger.kernel.org
- S:	Supported
- F:	drivers/scsi/qedi/
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index bcc2512bf34b..a164f23e8968 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -7042,7 +7042,7 @@ static void ufshcd_err_handler(struct work_struct *work)
+ 		 * is already in progress.
+ 		 */
+ 		ufshcd_rpm_get_noresume(hba);
+-		if (hba->pm_op_in_progress) {
++		if (hba->pm_op_in_progress && !hba->is_sys_suspended) {
+ 			ufshcd_link_recovery(hba);
+ 			ufshcd_rpm_put(hba);
+ 			return;
 -- 
-2.52.0
+2.34.1
+
 
