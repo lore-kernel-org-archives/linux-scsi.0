@@ -1,59 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792811394;
-	b=HlflsbC/0FhO+qaU7dhnfvwVdooW8Z6IdVppQqOQfg//m7voqryTAeH4HJqbXyr2Z1lP
-	 iDPzKIBpUCeOjpixsNeubRoUzdUV//4+g7wUqnYO9JCqQdOURuVais0o9JzmVwVqD3MdM
-	 HYBDNJQVhN8Wjd7htwxFekkmdRfUWi3QRG3AlPQESsaqgvLma1gFObHF0mJp9Nik6Uycy
-	 aLInmkWW7xq8qs8Ut9vA1FtlEdD7ffvQma++Py+EoYqfbqEcrsZ8aDY2Z7wwXvupw1axK
-	 eNWHrD5KUD23RTkAu3zf062JIwPlSEnBEJPxivtUCBnV0eA7VzX53HYLdbazVN4iqPA==
+	t=1792811486;
+	b=oh2MxfWRZTPC+K2fTkQAmlAVL/gbo5xbktWMvUX/saqum455Z+t38QmqTWeCqD+1q7ZO
+	 teQlyBHPZFFYjlaqnnXsxDGLiN9BlAgn0oJ9NxOaITU1B+OUFiwMv/8RciZKvJ8Un9wtV
+	 jEE/bKdCDnO+tl+6/iHcWDpl8jy32ARgFxCP8xs//GIoFLOzH8ciD2jsKauEznXNGDXKK
+	 j6yE6Vot1PhbJwIcS0/cNmSRoZTg3ndui2pSct+0u3Isv5FJbGWjZ493VPeO9rlfLyg3K
+	 IQEMo24Ndp5QORU0M/md3kkuX8J0+/ESyh2lauA8TovGjpkKqHITbL+Utqe8VSHfMuA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792811394;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792811486;
 	h=Received:DKIM-Signature:To:Cc:Subject:From:In-Reply-To:Message-ID:
 	 References:Date:MIME-Version:Content-Type;
-	bh=jeDtFxMmARx/BEdwf0rsWaK5rXrSn2uSaZplamu0Wm4=;
-	b=eyNHBLWPa7GbxUt60j/Cnq0QkbjuLjRBKKB/CF+6vgj18IUr1cPq9EEpzZyBFP/TQytL
-	 djaQT6uYjAdBpxFf0aTIMk2VZ7maevoihiCYZdzRLfnF4+nE9UMrlEQtETE1g87ujvmcp
-	 nt+fNISAGIh17/h2KfWF1qNZ/5nL+fQJ/M2vLUoxhAuaLJT9LKVl7mYrrNyBzUSaDLScd
-	 TU6cQu48HUYW/SRIikAiefPVD+rPXOI4mKN0CJyZp/yWVpe94e45MwaYHws9buYHSBjqj
-	 DvxVaoeek+AQEG1bDjrOJorw+tUIOSMYR4PY/gbn2NZCnVHx6GKDcH2TGwwdMoIr5HA==
+	bh=f+dzbcqBNIap0fRw/fCUp+JHmn0LFoofL/Vx1WIBSeo=;
+	b=pqe/JEbvGdY8SZyst7978DJC1/slDHL300k6bhaUXDiJR89R1zG52Nz8EOs+Qy8kxqCN
+	 9NTkBNLcXHMZr6OX+onThnrAWcL1ZYBA+4+zBEFka5RaQl1bJ9FYqlDMPPrvQjzYoWAEe
+	 ZAqVBfPob64Jb8w6z7J3N7E9bRfLl09GDThTrLN0Q13zIyeg31eT4fhlW8pkpU+TuZ/Fl
+	 wT51AY9CY19KkYz3Nfq26X70A8Ckq1NrmpetWGheW7GVfjvGrefCjmBwh5HU4Pl44rolZ
+	 ut68C1zAxN6sZoguHV7TRz+LR9BlSEqSYiWwWWG3EapRLtgQP/jngMoSM2bDLgj2STg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=QmY5HTP4;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fi2d7pIS;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98B8E606A31B;
-	Sat, 24 Oct 2026 03:09:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BDDB9606A31B;
+	Sat, 24 Oct 2026 03:11:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=QmY5HTP4
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EE2181F01825;
-	Sat, 24 Oct 2026 03:09:53 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fi2d7pIS
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 08C0E1F01825;
+	Sat, 24 Oct 2026 03:11:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792811394;
-	bh=jeDtFxMmARx/BEdwf0rsWaK5rXrSn2uSaZplamu0Wm4=;
+	s=k20260515; t=1792811485;
+	bh=f+dzbcqBNIap0fRw/fCUp+JHmn0LFoofL/Vx1WIBSeo=;
 	h=To:Cc:Subject:From:In-Reply-To:References:Date;
-	b=QmY5HTP4rrzTk/iBQnergo1aqKE0JSeQdhTStfWGD7+7PSYGGmgGpl6Y80Ea6v6wW
-	 OhEaSyjn6qqT4bOfE+Baf9cWDdg7yIbfF+U5WyOUpyEuYvo2fYr+Ofyneh33zQVr3S
-	 Ym5uKWLyQxUt95545UcgBx0YYpCLNQ+b5FXYZF1h+gj+B7Ezj9CsSh0xz1Yo78ZqJU
-	 ziCPTh6SJGjvINHAHWkuPrtlm/c6HkpD77bErkyncJcWvoUZJ8eomkauSJEiUpfm+G
-	 GXUHpsuoMxo042YuZ6DMIr3eNCMkzg2mE6gvQP+WPsSqpj72SmgO8YQ2dvmeezzjrh
-	 9tnuvKqXIeruQ==
-To: Alexander Koskovich <akoskovich@pm.me>
-Cc: Manivannan Sadhasivam <mani@kernel.org>,  "James E.J. Bottomley"
- <James.Bottomley@HansenPartnership.com>,  "Martin K. Petersen"
- <mkp@kernel.org>,  Abel Vesa <abel.vesa@oss.qualcomm.com>,  Konrad Dybcio
- <konrad.dybcio@oss.qualcomm.com>,  Luca Weiss <luca.weiss@fairphone.com>,
-  Bjorn Andersson <andersson@kernel.org>,  Dmitry Baryshkov
- <dmitry.baryshkov@oss.qualcomm.com>,  linux-arm-msm@vger.kernel.org,
-  linux-scsi@vger.kernel.org,  linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] scsi: ufs: qcom: Power down UFS during system suspend
- on Milos
+	b=fi2d7pIS3VLA+R1oEil0HcZ7uV+C04si11yb5+PyKeaK8zE3rFGwtsLJS8TnsSot3
+	 RIJ5b9sWYRjxNMHNqPT7C32zQDLplx9BDHk2hy2jJRIfl2da6s1m43KjYYyQLoh99l
+	 Wqk7ur4UN+Fx0wChsL19k/8Jo7ltPQXeBLrVeZjSBx5PX6gyw3qUC3amEfjZjpruiu
+	 Tnti619vYGQtMD/mntnoZdWdXFRTh4o53MTp144ZVHUWeIkhqNcGTe8Y0MMpGCGbHl
+	 bFlW5xfoUN27tNAF/T2pM2mHoQ84Egnz3Ry18T4aDhSdMiOAcFnWsTHxGStCeD/I55
+	 3w5jhEWKFemtg==
+To: Karan Tilak Kumar <kartilak@cisco.com>
+Cc: sebaddel@cisco.com,  arulponn@cisco.com,  djhawar@cisco.com,
+  gcboffa@cisco.com,  mkai2@cisco.com,  satishkh@cisco.com,
+  aeasi@cisco.com,  jejb@linux.ibm.com,  martin.petersen@oracle.com,
+  linux-scsi@vger.kernel.org,  linux-kernel@vger.kernel.org,
+  jmeneghi@redhat.com,  revers@redhat.com,  adakopou@redhat.com,
+  lduncan@suse.com
+Subject: Re: [PATCH] scsi: fnic: Update module authors
 From: "Martin K. Petersen" <mkp@kernel.org>
-In-Reply-To: <20261005-milos-ufs-suspend-v1-1-a6f8b89d5b63@pm.me>
-Message-ID: <yq1mrs37q19.fsf@mail.kernel.org>
-References: <20261005-milos-ufs-suspend-v1-1-a6f8b89d5b63@pm.me>
-Date: Fri, 23 Oct 2026 23:09:52 -0400
+In-Reply-To: <20261020210043.5279-1-kartilak@cisco.com>
+Message-ID: <yq1h5ib7pyj.fsf@mail.kernel.org>
+References: <20261020210043.5279-1-kartilak@cisco.com>
+Date: Fri, 23 Oct 2026 23:11:24 -0400
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -66,10 +64,10 @@ MIME-Version: 1.0
 Content-Type: text/plain
 
 
-Alexander,
+Karan,
 
-> On Milos the UFS PHY GDSC is turned off on every system suspend and
-> the PHY loses its register state, so exiting hibern8 on resume fails:
+> Update the FNIC module author list and bump the driver version to
+> 1.9.0.2.
 
 Applied to 7.4/scsi-staging, thanks!
 
