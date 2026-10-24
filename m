@@ -1,57 +1,58 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792811486;
-	b=oh2MxfWRZTPC+K2fTkQAmlAVL/gbo5xbktWMvUX/saqum455Z+t38QmqTWeCqD+1q7ZO
-	 teQlyBHPZFFYjlaqnnXsxDGLiN9BlAgn0oJ9NxOaITU1B+OUFiwMv/8RciZKvJ8Un9wtV
-	 jEE/bKdCDnO+tl+6/iHcWDpl8jy32ARgFxCP8xs//GIoFLOzH8ciD2jsKauEznXNGDXKK
-	 j6yE6Vot1PhbJwIcS0/cNmSRoZTg3ndui2pSct+0u3Isv5FJbGWjZ493VPeO9rlfLyg3K
-	 IQEMo24Ndp5QORU0M/md3kkuX8J0+/ESyh2lauA8TovGjpkKqHITbL+Utqe8VSHfMuA==
+	t=1792811906;
+	b=16sZ8TxNo65MSRjAD+xRWwrVRs1uzpXFxEQXSmP+VA98Bmk0NPmwnOZArXIKbolZTAOI
+	 AbV7pOwn15a7ibtyxhJP03pSo7us+VyAhwrkA4P1uyqWkbmP6aZ07VOgkRIYff7yhCacZ
+	 vtJXHX8aj0c2b1GL/I/44BzkPU2t9UZDiRkpr3AVCPUk39ZiF2HEiGIcnbqxaLd52IbIe
+	 reNdTR5f5yV7JqN3YJBs4krtEBWzyiOOi2ZpcE/Zf+bf944JVcvYEtkrM3GzfXFnVBDQR
+	 7PE7+PAjteb0ezESYqaSy3LJQfW+Vvvm/rA1Wnk2nSe6JnioznP5uVDRsSg1EyiBYaw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792811486;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792811906;
 	h=Received:DKIM-Signature:To:Cc:Subject:From:In-Reply-To:Message-ID:
 	 References:Date:MIME-Version:Content-Type;
-	bh=f+dzbcqBNIap0fRw/fCUp+JHmn0LFoofL/Vx1WIBSeo=;
-	b=pqe/JEbvGdY8SZyst7978DJC1/slDHL300k6bhaUXDiJR89R1zG52Nz8EOs+Qy8kxqCN
-	 9NTkBNLcXHMZr6OX+onThnrAWcL1ZYBA+4+zBEFka5RaQl1bJ9FYqlDMPPrvQjzYoWAEe
-	 ZAqVBfPob64Jb8w6z7J3N7E9bRfLl09GDThTrLN0Q13zIyeg31eT4fhlW8pkpU+TuZ/Fl
-	 wT51AY9CY19KkYz3Nfq26X70A8Ckq1NrmpetWGheW7GVfjvGrefCjmBwh5HU4Pl44rolZ
-	 ut68C1zAxN6sZoguHV7TRz+LR9BlSEqSYiWwWWG3EapRLtgQP/jngMoSM2bDLgj2STg==
+	bh=vqbPa5Xck1oNiM/EhxOJN0ahqtqyHMgmQ2kF9nBYDp8=;
+	b=n2aIS6M4AWCLpFPBrfO+8tXmV5WnufMCLVwu2GcllebCyso/MBcwQagLl7ahbo9QpH1w
+	 JSjuaD6CIpojqoi3Ul1ScUF4fP8UiC52tMQF92pI52GHaQTrpp8HHXBfaQGITKNnM+f4z
+	 jJyaGZWRLP/xEE1ViUZy3/RHml59pzYP2NFnOtxdAA9FGb69lNoPwWLORmC0K1A1DfSNC
+	 S565WP4OwELwPPyPtcpaR5k1rrL6U6ICzDqC2fHk2RrqophL08xr6dlLGmpPnh56g8rLS
+	 PeNthsybRxX7X3RVxHzrrFKaH+mQxQ9Y/+L5s80u5uHEU6FfpvC1jhON5HWDj+8+3cA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fi2d7pIS;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=bpiHHN0C;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BDDB9606A31B;
-	Sat, 24 Oct 2026 03:11:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A24D606A31A;
+	Sat, 24 Oct 2026 03:18:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fi2d7pIS
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 08C0E1F01825;
-	Sat, 24 Oct 2026 03:11:24 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=bpiHHN0C
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AA1101F01825;
+	Sat, 24 Oct 2026 03:18:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792811485;
-	bh=f+dzbcqBNIap0fRw/fCUp+JHmn0LFoofL/Vx1WIBSeo=;
+	s=k20260515; t=1792811906;
+	bh=vqbPa5Xck1oNiM/EhxOJN0ahqtqyHMgmQ2kF9nBYDp8=;
 	h=To:Cc:Subject:From:In-Reply-To:References:Date;
-	b=fi2d7pIS3VLA+R1oEil0HcZ7uV+C04si11yb5+PyKeaK8zE3rFGwtsLJS8TnsSot3
-	 RIJ5b9sWYRjxNMHNqPT7C32zQDLplx9BDHk2hy2jJRIfl2da6s1m43KjYYyQLoh99l
-	 Wqk7ur4UN+Fx0wChsL19k/8Jo7ltPQXeBLrVeZjSBx5PX6gyw3qUC3amEfjZjpruiu
-	 Tnti619vYGQtMD/mntnoZdWdXFRTh4o53MTp144ZVHUWeIkhqNcGTe8Y0MMpGCGbHl
-	 bFlW5xfoUN27tNAF/T2pM2mHoQ84Egnz3Ry18T4aDhSdMiOAcFnWsTHxGStCeD/I55
-	 3w5jhEWKFemtg==
-To: Karan Tilak Kumar <kartilak@cisco.com>
-Cc: sebaddel@cisco.com,  arulponn@cisco.com,  djhawar@cisco.com,
-  gcboffa@cisco.com,  mkai2@cisco.com,  satishkh@cisco.com,
-  aeasi@cisco.com,  jejb@linux.ibm.com,  martin.petersen@oracle.com,
-  linux-scsi@vger.kernel.org,  linux-kernel@vger.kernel.org,
-  jmeneghi@redhat.com,  revers@redhat.com,  adakopou@redhat.com,
-  lduncan@suse.com
-Subject: Re: [PATCH] scsi: fnic: Update module authors
+	b=bpiHHN0CY9b5rRGs7Be+XpHzOTZfzrqvFzE3KdGNRwEjwViwHpHIGXC5B3PRy+Ion
+	 HblSdVhfOn+yfj+p++B5c43OEGN0ZISaUaK6vSS4bHNwHEAPIxBorA1WVJCmsDiR+A
+	 XVy2kHvOrIptc78QS1hy0Na3mmqQ3wsInsGpGehNYYaZVXl6t73fOMutSfL7FKpKgK
+	 YFGRHgAFwAN2uhVGXqFigYskBa2Vd1bX9KVNaq3d0aRluMllCs27GnNKLt4tba/Ah3
+	 oTpZ7AhDMHGbfjv8g5WZ8/L1pATqBm6bSXyAZjmtKcTQhc4FR43MeKW9v3mRzdx1hg
+	 bXrsR6g/Ppufw==
+To: Stanley Jhu <stanleyjhu@google.com>
+Cc: "Martin K . Petersen" <mkp@kernel.org>,  linux-scsi@vger.kernel.org,
+  "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,  Bart
+ Van Assche <bvanassche@acm.org>,  Alim Akhtar <alim.akhtar@samsung.com>,
+  Bean Huo <beanhuo@micron.com>,  Peter Wang <peter.wang@mediatek.com>,
+  Can Guo <can.guo@oss.qualcomm.com>,  linux-kernel@vger.kernel.org,
+  stable@vger.kernel.org
+Subject: Re: [PATCH v5 0/6] scsi: ufs: core: Factor hba->outstanding_reqs
+ helper and fix double completions
 From: "Martin K. Petersen" <mkp@kernel.org>
-In-Reply-To: <20261020210043.5279-1-kartilak@cisco.com>
-Message-ID: <yq1h5ib7pyj.fsf@mail.kernel.org>
-References: <20261020210043.5279-1-kartilak@cisco.com>
-Date: Fri, 23 Oct 2026 23:11:24 -0400
+In-Reply-To: <20261022034443.3034432-1-stanleyjhu@google.com>
+Message-ID: <yq1bj8j7po6.fsf@mail.kernel.org>
+References: <20261022034443.3034432-1-stanleyjhu@google.com>
+Date: Fri, 23 Oct 2026 23:18:24 -0400
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -64,10 +65,13 @@ MIME-Version: 1.0
 Content-Type: text/plain
 
 
-Karan,
+Stanley,
 
-> Update the FNIC module author list and bump the driver version to
-> 1.9.0.2.
+> In Single Doorbell (SDB) mode, multiple completion and error handling
+> paths can race on the same transfer request when bits in
+> hba->outstanding_reqs are not claimed atomically with completing the
+> request. A stale bit in hba->outstanding_reqs lets a later poll or
+> reset complete the request again and unmap its DMA buffers twice.
 
 Applied to 7.4/scsi-staging, thanks!
 
