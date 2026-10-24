@@ -1,56 +1,56 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792810103;
-	b=lChFUwL8dN4By7AplrI66f7p/ISEEFKNI24tT644KpljyeOBTfDBDjjMLM5xkult5Whw
-	 j3lqhw8fIjCzXj4Al9EADA0u+JJ6yxbBiqv3JVR0iPRjtV9agTYd0HsgNmSLcyd5VG/V1
-	 xso0/SjPu3rotWCgBmJ9+AbXNPA/Das16ZcoXViev1BOuqzPTsKir4Yd5F5smoScw5Drg
-	 93ez1CQzkjPHuzmf9ClqhY/fMorfcLR3J9VjUJr73H+f/H5cB5LhugGDzBsiEfScswJ+n
-	 PS6eaxy3EH6r7Jy/aI5AMop9SnGZ3qaoZZzxGUvWbXyWOQ1O7bFlb4POG3Q5r5XIHkA==
+	t=1792810325;
+	b=lPUBceauvBRwoo46GB4iTboTl0WMW0H+JL7OWKlpuN/64Os+qplJo/Fj9mrIxwo5N0ed
+	 1xh2Gq8on+/UwLz3TJ8RopyKbknV4LyLhyLMFutAWy5O4ErEdCp3Y2zMYG7QajwuGpsQm
+	 /k+jRzfUzYVe6TXgq9ZTNeXoUt8vn2c8/SN4NHVk3ch1N+YqoRsOJ3IUVuokKhMH9DaIb
+	 YLwPqhR6iEEmHEwfYA4Uu+0kgQnQ8fPZz2PW81OTGPSCyZbkO8nATRjkFXMeDNT8BHXhK
+	 p76sDfQZzskW3+Fe0L0aFhr3RneB5wepGxEz0oi9yW9yItLrcMyKdSCiz2+tji8eaFA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792810103;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792810325;
 	h=Received:DKIM-Signature:To:Cc:Subject:From:In-Reply-To:Message-ID:
 	 References:Date:MIME-Version:Content-Type;
-	bh=aY7L4zQZONVWe8GQfjIX3wABqlw3CVUOAfDFqsaqk2s=;
-	b=hoFOq4iZB02I/fYHd6c2nTntEpUO8Y7K67Rwidc3edT2YJfH8cmX8VoEmnDEViUQ5Ps8
-	 MSM/MImpUbr2tgdZv44+8EcF/c/wPZB3BlhN9LvLQPCjMecbMlj5VXsNLAMsRK9L4BlMZ
-	 1e+Qc2Zvl9da3eSCexY6uq/gOoLs/joOb2wgc/WIgjbz0Wih6frgEIhDaXKLXRmgkj+fn
-	 hjeepzUvZMvSOCv7CMHRC9mT0p2eCZB3n236dSb1eH095UEt3M6kM10dAwLmpa0K3FQao
-	 Wqgu894SZQJTVAe/MtGZChibBTLxu7elwBmu73QRqW63abKlda3lBPdcC/+H94qc+Tw==
+	bh=aLNSqsBGXiY7rxJSvoWY1/IsOqJJCuwYrC3lByH3Dgo=;
+	b=aWEJTDGnXOel7exNyHd2v5uqk9nElvH6zKTOOwlyULRZnhA0XQAMEm0RDw97tAP7RIEu
+	 NL/3T83QcjYYlLcO/v67BSKEagUq9jfvJK2Qp8yQxZXPGhMPV/AxCw7sEX7SzKIybh5MG
+	 amA9di8+I/T/YU1ewDqPTfvt9HRmAq4H24AZmdW3yAarlEgYRdyRaPBty4if+6g4ulBwD
+	 gFKSVyIhvYjakR1q4rj9WwhlYwlhQ1ydeEez0TIwsnJD5qic17CHwJscGkKh0A4YXhpZq
+	 6R1sQQWLZ10lzwOxU4cDF1QVVRN6chOPJfC9sQA9Yrdo5VzJj3touhrNYHta9pG/5TA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=YkouPNOA;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=PmEjkiaa;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B348606A31A
-	for <linux-scsi@vger.kernel.org>; Sat, 24 Oct 2026 02:48:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DDC4606A31A;
+	Sat, 24 Oct 2026 02:52:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=YkouPNOA
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B39371F01825;
-	Sat, 24 Oct 2026 02:48:22 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=PmEjkiaa
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9331D1F01825;
+	Sat, 24 Oct 2026 02:52:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792810103;
-	bh=aY7L4zQZONVWe8GQfjIX3wABqlw3CVUOAfDFqsaqk2s=;
+	s=k20260515; t=1792810324;
+	bh=aLNSqsBGXiY7rxJSvoWY1/IsOqJJCuwYrC3lByH3Dgo=;
 	h=To:Cc:Subject:From:In-Reply-To:References:Date;
-	b=YkouPNOAWg09rkDXw8baPhHtVOypFMKa9IOnqe13l94pA15EqFfzJ2QuWbFTRkbmn
-	 w730c4jRVYMwPdrGPcHp95+JzvoiiS2KNF9jbbdNNlu7yusAC4QcSCdOfk4wFQZobd
-	 zeBaSN82dkyyYTNXs9NiighK93uJXOJTRcSdrJuU4DO90SvRZhz1gRJ6K+F3W9YsPK
-	 ly+Yh0Zux6YqEfx2kheRW04J+XPvMEhWoJx4o3muawHFg2EydvLX/KLyzCoaWlWDlh
-	 /+I+Tm6MDcKywq8xP4PzECwZ8zp+eSnEz+NGBd37Z1j09FYfm+aGBTBSX4RjJwsYlS
-	 t7MG1fskO/JJA==
-To: Ratnaker Gautam <ratnaker.gautam@kuleuven.be>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-  "lduncan@suse.com" <lduncan@suse.com>,  Chris Leech <cleech@redhat.com>,
-  "michael.christie@oracle.com" <michael.christie@oracle.com>,  James
- Bottomley <james.bottomley@hansenpartnership.com>,  "mkp@kernel.org"
- <mkp@kernel.org>
-Subject: Re: [PATCH] scsi: libiscsi_tcp: prevent R2T range check overflow
+	b=PmEjkiaa9p1QnjFlZbeEJb6jPzMuOOnbjleeIyINt3dB5y0lltq/gQfcKVIKRKHKw
+	 m2+UKX0c0p191dSWs3O74+ddHSu3h07LAkIXkuL9BAndiA0NBSaJhNUvBKB36BCLdX
+	 S+WFmPuR1x1CSUWhzgywLMYwq3Id2A9lEAfBxcvNt6x8EU4vQglyifIJiCEqD+f1Ez
+	 5bGPZCF/te3ZtRxwTfwRTVisFhW+7JOuMoBVeLITkYpzIOGmrM1f96jgsaMKnyVZMa
+	 ddLZbF63U8Akuqz/AE/ACf0POLseTcZbVDuIlREQwLnMGmh8xNF083XTXF2AJKxUrS
+	 rwZ0nD56WGo/Q==
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
+  linux-scsi@vger.kernel.org,  John Garry <john.garry@linux.dev>,
+  Christoph Hellwig <hch@lst.de>,  Lianqin Hu <hulianqin@vivo.com>,
+  stable@vger.kernel.org
+Subject: Re: [PATCH] scsi: sd: Mark the disk dead if runtime resume fails in
+ sd_remove()
 From: "Martin K. Petersen" <mkp@kernel.org>
-In-Reply-To: <DB5PR08MB100629CD3750FBF71475B5224FD982@DB5PR08MB10062.eurprd08.prod.outlook.com>
-Message-ID: <yq1pkwz95ld.fsf@mail.kernel.org>
-References: <DB5PR08MB100629CD3750FBF71475B5224FD982@DB5PR08MB10062.eurprd08.prod.outlook.com>
-Date: Fri, 23 Oct 2026 22:48:21 -0400
+In-Reply-To: <2c0c76d70f0fe197932836b9bcf8496095135d1b.1792446921.git.bvanassche@acm.org>
+Message-ID: <yq1jyn795fi.fsf@mail.kernel.org>
+References: <2c0c76d70f0fe197932836b9bcf8496095135d1b.1792446921.git.bvanassche@acm.org>
+Date: Fri, 23 Oct 2026 22:52:03 -0400
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -63,12 +63,13 @@ MIME-Version: 1.0
 Content-Type: text/plain
 
 
-Ratnaker,
+Bart,
 
-> An iSCSI target controls the R2T data offset and length as 32-bit
-> values. Adding them before comparing the result with the SCSI data
-> buffer length can wrap. An R2T with offset 1 and length U32_MAX then
-> passes the check for a 4096-byte write.
+> If a SCSI disk is unplugged while runtime suspended, its request queue
+> is still in the pm-only state when sd_remove() is called. The runtime
+> resume attempted by scsi_autopm_get_device() fails because the parent
+> device, e.g. a USB device in the USB_STATE_NOTATTACHED state, cannot be
+> resumed.
 
 Applied to 7.4/scsi-staging, thanks!
 
