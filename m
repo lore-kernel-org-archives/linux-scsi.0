@@ -1,61 +1,60 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792812306;
-	b=Tn9s679oAZ11auCIk26IhefbV1ah5GtKlnXwdwFMn+e3X7NjCyB4tCHoMZtdMmtKEpkj
-	 uhdj7cRHuhv8Fnkc5Ig5mCGzcZT+Vg+DpW7e7je/6XwF8rDddYVqcGcEc07IBsST/e0dN
-	 3Hqxcqi729w2MlQGcCS3nku7bRChS0h3kPLrocc98VJ+UpfuhQ1oDQTpUPGitrfBl04Gh
-	 KUDwk50CE40JWTZaQhN/ERPihygdAjkk9b0gGWAvgnSwPj9OOZnrlBb4V02QZK6X7TjL8
-	 Vs9ThO4ULsb1mGLhg5bjhE6sbT6CS1v7KbzJDOIU1Y8dz62Wx1zi+Y6eZKIaJ0l+VzQ==
+	t=1792812302;
+	b=4dSYrddwxjPg5LfwlvmqnAX9qqujnMdpWYQq9GZ/WPtRmzcYwP0BhUFd9bS0wyUQe3In
+	 OCrkbMIHhq9TULMrRUyeTCpna787/CUvUqBuQU1lDt+Jd6vBwuTzc29Hxmefb0Yp2Q5b2
+	 Myz0bLxpY3EfxNNO5j/FEPjhcnJkZdFfYQuxdTVvI3BMYu1VlhyV2l+Iyr68wjFu+G8TN
+	 u7I3XHWhXFeRt9bckh39HG7VXmDm9D5akuYGtPxSq8hYMRiks6J12WmJXFzQUF+3Tzatt
+	 zBOaRnz0GmrvpdZgEUaTI/JOQBNutap6CNwyNNRIM5+rkxmOldN458KNrrMbAdc56Ew==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792812306;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792812302;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding;
-	bh=I1+D8Xn1GxoNpJnTs1lnFP6TD5MdBz3XzG74ZRNUKJc=;
-	b=CoeoKl28k+6VpqJdvBeN3+pOH4pPEML8X/kA9ryrLcsYtL5FCy9ll/o+8ax49yu70cP+
-	 smTZihnXeASEzWfS2qJq8If+G3uEUTlLxuC79YICVbgQaQ5hXVX5pxQU/sO56wK0Dz/gJ
-	 prEHp+CalWfpimWLtQoW7E+msZUbVuyD/NIZddLPVyUHut/S6fk+GnwAnI+SrCUDEPQ3M
-	 GPdC7vNuLX+KfvyukFdGW0cP9f+pW8d14w66gjNKJlXKdeZI1FADH2hsTyONusgsBnK7y
-	 HTTD02VCi0e0AiFxZJbdVPvqryT9mklf5F2/cUFRGM4fF5gOmzLKdsARBB7eeJnnulw==
+	bh=1y0m+RW72zjkvSIvGPKNGDgucS1gVoG5fbX6Ia8hh2M=;
+	b=inxGhpAraTGyvUwHqZ7clhy70dnCLisvpTCRsN2W/5EaJnKNQfEbAXJK4vmAW6Fx1HrU
+	 +i1sJCKcDI/pdAC6hrGnhsgGtLYkypNKFeYu/kSGZMcBcxAyMjHcGCQxGOFjQGM5uDWxR
+	 G8qnLyxG1E5eKD6uy3o1cwuN0gWshwxaDl/meSHnq1v3D6/1M++BXTjqOX6wAYB4FJyfI
+	 DLCOQGleRGR7X5rt3WdJwyhTWldos6C30TwaWptE1ipQE6U2Azr5Hdrbj0qL1GEv2qbcU
+	 /2nBaT6gMOaN9XwlimhFUTtwsfNhc9Mh3GMU5eSEPSoYVZunEos+OMlbNfGJveKklnQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=iERf0Mb7;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=k5uRrMIU;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A514606A327;
-	Sat, 24 Oct 2026 03:25:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75FBF606A31A;
+	Sat, 24 Oct 2026 03:25:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=iERf0Mb7
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 269781F031E1;
-	Sat, 24 Oct 2026 03:25:05 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=k5uRrMIU
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 226001F01825;
+	Sat, 24 Oct 2026 03:25:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792812306;
-	bh=I1+D8Xn1GxoNpJnTs1lnFP6TD5MdBz3XzG74ZRNUKJc=;
+	s=k20260515; t=1792812302;
+	bh=1y0m+RW72zjkvSIvGPKNGDgucS1gVoG5fbX6Ia8hh2M=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=iERf0Mb7C05MjTgdEtSJyQGQU8lyedubW+8xduFCmDiOOrYw+EcGX+enwvrEmGPlr
-	 Uvk9bbAglbb7g6/f2fhAblTGlec1qq8Zp1WMGB68vNHxSEjq7v4rk7QBVbLCIpSPd5
-	 W6EJseuNu8/h5zZgP2rk8p4AvgUI9HjSNK1K9BaomkePkiiEYAqrZndQ641GD7p2Nv
-	 ebHQnFqDGcdyIMRow+rxouyjP/gdwqJVDZ015p/B0LgS/KRDj8qslET7bqW/yW4tH6
-	 69Z3C2ocS0DdKBGdz0tYarJyAVRE5Ic1O5ueNQ3rF58Gd1m3vlRh8xsr08Z2f1fgWX
-	 k1NLceaNl0puQ==
+	b=k5uRrMIUL7UPI4YVEdsW4VSsNLmLCpv3moGh83ysNiQBeBXF5lRJxfiW4k+1Ky01Y
+	 IR2jfQXa8xbBUgDYHRdf5gF1PxYt4y5pBSwmmkh/jQH56wlYTq6lNuRZjZZAUTF99y
+	 N8OZ17ewBcKDBf2ubfUKYCFSY1FTb6H8f4X2DpbHjHYNd44DjYRAJ/ACroVo8u+mGW
+	 NxN1oIFqNXoMaMS8YkSdl1p8fT0tiRyeXl1UEaZKenQ6NaDwEM8fBGj+bPj7nHPQBo
+	 7JUebaOm2WkqRb6impi/Ad9rB8bDqtPm4CWaXIA6DafKAxYeEHq379iC4Ei0/6YSYI
+	 A5Oe7ykDnbymA==
 From: "Martin K. Petersen (Oracle)" <mkp@kernel.org>
-To: linux-scsi@vger.kernel.org,
-	target-devel@vger.kernel.org,
-	Eric Biggers <ebiggers@kernel.org>
-Cc: "Martin K . Petersen" <mkp@kernel.org>,
-	linux-crypto@vger.kernel.org,
+To: Can Guo <can.guo@oss.qualcomm.com>,
+	linux-arm-msm@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	David Disseldorp <ddiss@suse.de>,
-	Lee Duncan <lduncan@suse.com>,
-	Alexandru Hossu <hossu.alexandru@gmail.com>
-Subject: Re: [PATCH] scsi: target: iscsi: Use crypto library API
-Date: Fri, 23 Oct 2026 23:24:54 -0400
-Message-ID: <179280384859.3823844.8121472859000206793.b4-ty@b4>
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: "Martin K . Petersen" <mkp@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH v1 1/1] scsi: ufs: ufs-qcom: Don't define variable in the middle of the code
+Date: Fri, 23 Oct 2026 23:24:50 -0400
+Message-ID: <179280384850.3823844.12942695742237789253.b4-ty@b4>
 X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20261001044857.169487-1-ebiggers@kernel.org>
-References: <20261001044857.169487-1-ebiggers@kernel.org>
+In-Reply-To: <20261013095924.959455-1-andriy.shevchenko@linux.intel.com>
+References: <20261013095924.959455-1-andriy.shevchenko@linux.intel.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -68,24 +67,16 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 
-On Wed, 30 Sep 2026 21:48:57 -0700, Eric Biggers wrote:
+On Tue, 13 Oct 2026 11:59:24 +0200, Andy Shevchenko wrote:
 
-> Make iscsi_target_auth.c call into the crypto library directly instead
-> of going through crypto_shash.  This is simpler and much more efficient,
-> as it avoids overhead of the crypto_shash layer.  The hash computation
-> itself also no longer has error codes that need to be checked.
-> 
-> For simplicity, still do a memory allocation per operation to buffer the
-> data (which is typically less than 50 bytes here) so that the one-shot
-> digest functions can be used.  It's still much more efficient than doing
-> the super slow crypto_alloc_shash().
-> 
-> [...]
+> While the C11 allows us to define variables in the code, we do not
+> do this style (see more at [1]). Move the declaration to the top of
+> the function.
 
 Applied to 7.4/scsi-queue, thanks!
 
-[1/1] scsi: target: iscsi: Use crypto library API
-      https://git.kernel.org/mkp/scsi/c/b633249f5883
+[1/1] scsi: ufs: ufs-qcom: Don't define variable in the middle of the code
+      https://git.kernel.org/mkp/scsi/c/fb20fe062b00
 
 -- 
 Martin K. Petersen
