@@ -1,66 +1,89 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=199.89.1.16
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.37.111.173
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792851670;
-	b=Vo2+moQJwMI/VGYfNP3LpE48zr0200WnnCwwMQveHEqrjPlLTGivXqulkIZLUettSbyT
-	 9yfrUBYYlYVV9OBzmm0jpmijJal871DBjkR8EvCUXctyZ7HLj5w8o8NfcetxcdpXtKUUl
-	 2Qw863ISdTbrkTqb87QIv5l30vvd0zBIqvC9gLyQnxkeAc67sNDoYMEcWoRkh4qI41pP3
-	 sCHVaTDlZ+K8ddPhUIJd8hvi7lzOXKLy4a7jcchylJKDoCGLyfzWgZrIzL2vuMFtcHc6l
-	 j8z1ijN2p2sFjjzLoSznFzCq1DWsPq2nV9kT0s9ZAyoMB5QtC0xqhu9JVkAp0xF7ZYA==
+	t=1792854551;
+	b=Mp2oDALAp55DxIrjT405A8HE0DHVHW8qDX2+PN5AeuzJjYuVp8hSnzDUC22Ae3xP2RQF
+	 cZMD+JsRg+QBpgFhFkdY1uhm0u/M51YRSNPO1ZCDElHmdBgTUMHQrx0SrBby4lO2CM8sO
+	 6XUdsvYrzNVZfKEdk1MamS4FgIaIobh0sP5sfyuwfLZmYcrwgNo5sVVg6Z+YhD4GmNfu4
+	 1SQfyhFFmQSSlTPMju03dqNG0DbuJm9xMMCINi9kFOhojzKdoF6sTQ0+BX92IaTlRXMp7
+	 EjpT85zyOpxvF5EhFN5mmpK08GdxE2odmcOHPdh/SCoJovcNA2uoIX4KUMBRjWYgGqQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792851670;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Virus-Scanned:Received:
-	 Received:Message-ID:Date:MIME-Version:User-Agent:Subject:To:Cc:
-	 References:Content-Language:From:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=E4v/Pwg/hwmgS8S2uHoRyjMThXPxdp/Fot4x4veOR5s=;
-	b=mWvOjeeU5c289CoBvSEIINuHRaNrwnKIpA8yx4gWoUJEKKcYF7EFx+z2R2f3TeJ0KCC/
-	 gjSzBbMb10LCUqdgUyK+/7EAJ0eHqOZOwW2XpPzWtR+lJYMLZ7PtEIQDCbjPMCvOt9iX6
-	 w8SJ+sTdXWdQIrj8ryih1Jt3OXJXhekNNsR6+e+N9RNWfmVCKtdeSTubC/yYWiw8AS37P
-	 e+1QfxOEWTRDIko1Uqy6qnVd+O1ljdR215g9GVx1+oudk+ZaTs3sd+ClvxRtfSi1zN+El
-	 rvfKEbqKXwqrLgIC+HshbotC5zuxp4eoYJ+cqeiYeTHSfSnsshnp6r1qLgHfgmvmz5w==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792854551;
+	h=DMARC-Filter:DKIM-Signature:Received:Message-ID:Subject:From:To:Cc:
+	 Date:Autocrypt:Content-Type:Content-Transfer-Encoding:User-Agent:
+	 MIME-Version;
+	bh=9TFuM2PkMNm4FJO+TMAn8pRJc7jwhD6Nz+dnPZDZv6w=;
+	b=go5NvCV1aRogZFZOvRG0puJ5t0Qctpz15DGnZJmF9WNUiOXjqWyl5S+qPCu2e6O8UOYk
+	 dpFIHG4nHVpL0K+90zK00yzVRgxnjC2oAPTorFSv2FLyssuNpa9y+UU5snb4OLGdY5OsG
+	 W4YVHJMABF+St/bne786tluajVPbW669iDmMdRWE1X/iWP5SrDuNCaoJX2PMzYG+QxCg2
+	 l1ev5+bFLXj0Rp9HK4YoHo6Mhs6kBwpNdpzELV6zq7e5zuOqfgb4rR3KZGIl7H6w3JCRQ
+	 gryQJrDSp/dw0eiFlCekZK/ANCRPENzzt4tEUEAU8eQyZ1BZFVl4rz3nitMhzxJfNMg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=acm.org;
-	spf=pass smtp.mailfrom=acm.org;
-	dkim=pass header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=B9Wslm6Q;
-	arc=none smtp.remote-ip=199.89.1.16
-Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
+	dmarc=pass header.from=HansenPartnership.com;
+	spf=pass smtp.mailfrom=HansenPartnership.com;
+	dkim=pass header.d=hansenpartnership.com header.i=@hansenpartnership.com header.a=rsa-sha256 header.s=20151216 header.b=dy0ncMuC;
+	arc=none smtp.remote-ip=198.37.111.173
+Received: from lamorak.hansenpartnership.com (lamorak.hansenpartnership.com [198.37.111.173])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8736D606A31A;
-	Sat, 24 Oct 2026 14:21:09 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8736D606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68450606A31A;
+	Sat, 24 Oct 2026 15:09:10 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 68450606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=B9Wslm6Q
-Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4jBhrh4VpTzlfvps;
-	Sat, 24 Oct 2026 14:21:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1792851653; x=1795443654; bh=E4v/Pwg/hwmgS8S2uHoRyjMT
-	hXPxdp/Fot4x4veOR5s=; b=B9Wslm6Q5DW5Kwz6QLoGhUqEouux7juoGoag02X+
-	URaO018ZstkNx/sMI/T17maDecVR7Nb5mnq1QL2SssD5KpaYXQTMFbMBDoUWY90O
-	Pvco0uNXEP0qjt9GUlOQNglnzM2INdjz82o2JmbeFmg6PqNehT1eMasCxS5OJanX
-	nME5+AcVegdZ7Xd0lHOYSK/YODvSGIwFCAxjVowQB92xHg+2KNBwBYfvEkojw7mO
-	XxNd4nkdZrYBoRpIlssHnCUeqDGcyj7DED+9EYmuf2BQ2E64wh+9WDIRQrAC0UDU
-	WwQhkbh1D1zDVFg0hHg1JYSecteKeWeuKNvtCMLLjfZQzg==
-X-Virus-Scanned: by MailRoute
-Received: from 013.lax.mailroute.net ([127.0.0.1])
- by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id HP2YyEJ6iqS8; Sat, 24 Oct 2026 14:20:53 +0000 (UTC)
-Received: from [192.168.51.14] (c-24-6-239-25.hsd1.ca.comcast.net [24.6.239.25])
+	dkim=pass (1024-bit key, unprotected) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.a=rsa-sha256 header.s=20151216 header.b=dy0ncMuC
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+	d=hansenpartnership.com; s=20151216; t=1792854549;
+	bh=qJbAEHYluzxThtSOLVQzY43XRTSJVlGKjPe84Ibg6TM=;
+	h=Message-ID:Subject:From:To:Date:From;
+	b=dy0ncMuC3CsjBsyZunp/5fEgSbMwTauVq+njsjz+3aJJhkt0KY70zV0aeEhTSZktw
+	 /wKGbcASldtSVOMi7+qkZQMfBl7sj43RAmOyki2YnLSBV9qMjZ1gxukJ48kc7b6OZW
+	 lUhF/RjPhXzuJIm6Xj+MYKMrbiXFiX2DBhxC6QMg=
+Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4300:d341::8309])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	 key-exchange X25519MLKEM768 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4jBhrM3ZfTzlfvpN;
-	Sat, 24 Oct 2026 14:20:51 +0000 (UTC)
-Message-ID: <991fd1f4-b054-42ba-a157-cc9d89dc594b@acm.org>
-Date: Sat, 24 Oct 2026 07:20:50 -0700
+	by lamorak.hansenpartnership.com (Postfix) with ESMTPSA id 175F11C0030;
+	Sat, 24 Oct 2026 11:09:09 -0400 (EDT)
+Message-ID: <80d0631c1c5dbb4c62dd26ad813f595e41d855a0.camel@HansenPartnership.com>
+Subject: [GIT PULL] SCSI updates for the 7.3+ merge window
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds
+	 <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel
+	 <linux-kernel@vger.kernel.org>
+Date: Sat, 24 Oct 2026 11:09:08 -0400
+Autocrypt: addr=James.Bottomley@HansenPartnership.com;
+ keydata=mQENBE58FlABCADPM714lRLxGmba4JFjkocqpj1/6/Cx+IXezcS22azZetzCXDpm2MfNE
+ lecY3qkFjfnoffQiw5rrOO0/oRSATOh8+2fmJ6el7naRbDuh+i8lVESfdlkoqX57H5R8h/UTIp6gn
+ 1mpNlxjQv6QSZbl551zQ1nmkSVRbA5TbEp4br5GZeJ58esmYDCBwxuFTsSsdzbOBNthLcudWpJZHU
+ RfMc0ew24By1nldL9F37AktNcCipKpC2U0NtGlJjYPNSVXrCd1izxKmO7te7BLP+7B4DNj1VRnaf8
+ X9+VIApCi/l4Kdx+ZR3aLTqSuNsIMmXUJ3T8JRl+ag7kby/KBp+0OpotABEBAAG0N0phbWVzIEJvd
+ HRvbWxleSA8SmFtZXMuQm90dG9tbGV5QEhhbnNlblBhcnRuZXJzaGlwLmNvbT6JAVgEEwEIAEICGw
+ MGCwkIBwMCBhUIAgkKCwQWAgMBAh4BAheAAhkBFiEE1WBuc8i0YnG+rZrfgUrkfCFIVNYFAml2ZBI
+ FCS3GUMIACgkQgUrkfCFIVNZKjQf/deRzlXZClKxTC/Ee2yEPqqS7mm/INUA49KdQQ5oIhSxkUBy0
+ 9J4qjMIo5F8ZFkFTqikBqeL35LKu7O7rn8WETfX8Bxvos3HUsl3jHo34DES4MUFIpoQPgtiLRGwLb
+ K0cVCAArR2u2qj4ABmTRrs1I1kvdjEw6gatOuXtEe/j5O2fvfzTq9GBr0Q3n2IAsFXi4hLlx6VPE8
+ tyWUZ8BWJKtih3JAeUiXFvASL3McV0rV9RnU0VbjEQEhSE7PMYhWpnDC9AyBb0lXJllQRvC3NSkUB
+ 8KVQgNNxRPss0WE/nBoZ4dFA42jTyzTz8lNylxZoAWV7WJb3QxVg4oCodRVrxxrQhSmFtZXMgQm90
+ dG9tbGV5IDxqZWpiQGtlcm5lbC5vcmc+iQFVBBMBCAA/AhsDBgsJCAcDAgYVCAIJCgsEFgIDAQIeA
+ QIXgBYhBNVgbnPItGJxvq2a34FK5HwhSFTWBQJgS5mYBQkbNYS9AAoJEIFK5HwhSFTWBpwIAL5Bk3
+ 5FB34U6iHmDzzgdCbxLTs43T/YQyJpcGIvopBvnI/fDY8oSG6Df64/O6B+1R+A8TDp6ZG5ysUWnCC
+ 6GuIaEHemBYkitMPglR6+sGCMQY7O0mlsPvdssvKK1KI9Bno4VU6ogaF2qVzefSqg1Djmf/DcsxWP
+ rI/jdJ8FB5AYR2rjIdDFc+zRdAJuavo1/anyY2wgpFh/3R8IOYAEfWV9nGgYkf9+tA4EIn1sxE0I3
+ L5oW2N3mbyRrkzuBwO8ztMCwqEPk7moWzhokcZqMXiAIahaZdkashJC+s2X2RZSGCy+g+pvY5NN4B
+ BVG5XwLgVBqbHMTcxE0fbmPqz+q6O0LEphbWVzIEJvdHRvbWxleSA8amVqYkBoYW5zZW5wYXJ0bmV
+ yc2hpcC5jb20+iQFXBBMBCABBFiEE1WBuc8i0YnG+rZrfgUrkfCFIVNYFAmODZ5ACGwMFCRs1hL0F
+ CwkIBwICIgIGFQoJCAsCBBYCAwECHgcCF4AACgkQgUrkfCFIVNZu0Af/TzvL2/NdgAcw9uN3x60H8
+ jc4QUq14VpxcFEFEMpcj1morkX/G93V+56HBBaXZj+yK8PhxIA/SIz+sU7C/0YvKuvzakP8ZX/7WJ
+ e32SOUtjfr/VTaqjIBzNj6OxLvZpmNbBw7s6DwhhNpHOWqJ/1ml+PtDRDV71IB58yVqQjp1xlNKVl
+ ZppcJ5908EJzsFnRIVjiQiDSKoppqB2BCibBbrWcln7CiWMyOC/cco6SIn6twH+f7+aivJ3xGcOE2
+ a9gBKF5rNi9TBoX9oyPmshv/TDmnohsVrH7AYXlGYfZTk15SWEiROh1QX8/uD9wl/gcIv5EDUpT/F
+ L2jzOsA5663bw==
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.56.2 
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -70,134 +93,383 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 00/10] Add S32N79RDB UFS support
-To: Larisa Grigore <larisa.grigore@oss.nxp.com>,
- NXP S32 Linux Team <s32@nxp.com>, Alim Akhtar <alim.akhtar@samsung.com>,
- Avri Altman <avri.altman@sandisk.com>, Rob Herring <robh@kernel.org>,
- Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
- <conor+dt@kernel.org>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <mkp@kernel.org>,
- Sai Krishna Potthuri <sai.krishna.potthuri@amd.com>,
- Ajay Neeli <ajay.neeli@amd.com>, Manivannan Sadhasivam <mani@kernel.org>,
- Pedro Sousa <pedrom.sousa@synopsys.com>, Joao Pinto
- <Joao.Pinto@synopsys.com>, Hannes Reinicke <hare@suse.de>
-Cc: Pengutronix Kernel Team <kernel@pengutronix.de>,
- Fabio Estevam <festevam@gmail.com>, linux-scsi@vger.kernel.org,
- devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
- imx@lists.linux.dev, linux-arm-kernel@lists.infradead.org,
- linux-arm-msm@vger.kernel.org, clizzi@redhat.com, aruizrui@redhat.com,
- eballetb@redhat.com, echanude@redhat.com
-References: <20261024122533.3609180-1-larisa.grigore@oss.nxp.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20261024122533.3609180-1-larisa.grigore@oss.nxp.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: quoted-printable
 
-On 10/24/26 5:25 AM, Larisa Grigore wrote:
-> This series adds support for the UFS host controller found on the NXP S=
-32N79
-> platform. The controller is based on the Synopsys DesignWare (DWC) UFS =
-host
-> architecture and requires S32N79-specific M-PHY initialization/calibrat=
-ion
-> sequence. It is compliant with JESD-223D "Universal Flash Storage Host
-> Controller Interface" v3.0, and supports up to HS-Gear 4 speed grade. I=
-t is
-> compatible with UFS 2.1, 3.0 and 3.1 devices. The MIPI UniPro is compli=
-ant with
-> "MIPI Alliance Specification for Unified Protocol", v1.8. The MIPI M-PH=
-Y is
-> compliant to version 4.1.
+The following changes since commit df2908090cda368b01ff43709f51890076c56157=
+:
 
-Please take a look at the report below. It comes from an LLM and hence
-may include errors:
-----------------------------------------------------------------------
+  Linux 7.3-rc2 (2026-09-06 15:07:20 -0700)
 
-## Main finding
+are available in the Git repository at:
 
-**Patch 9/10: PRE_CHANGE errors are ignored.** In=20
-`ufshcd_link_startup()` the core calls the PRE_CHANGE hook without=20
-checking what it returns:
-```c
-do {
-	ufshcd_vops_link_startup_notify(hba, PRE_CHANGE);
-	ret =3D ufshcd_dme_link_startup(hba);
-```
-So if `ufs_s32n7_link_startup_pre_change()` fails, DME_LINKSTARTUP is=20
-still sent. That covers an invalid `one_us_tick`, an SRAM_INIT_DONE=20
-timeout after up to 3 s, a calibration failure, or lanes not reaching=20
-Hibern8. The error codes and the `dev_err()` calls in that path have no=20
-effect. Either the series checks the PRE_CHANGE return value in the core=20
-(with an audit of the existing hooks), or the commit message should say=20
-that these failures only get logged.
+  https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git/ tags/scsi-=
+misc
 
-## Per-patch comments
+for you to fetch changes up to 2f4880c22e838d54eae9ab153b0f8dce60531bf1:
 
-**Cover letter / all patches**
-- The subject says `[PATCH 00/10]` without `v9`, but the body says=20
-"Changes in v9". It should be `[PATCH v9 nn/10]`.
-- Patches 1, 5, 6, 8 and 9 start with `scsi: ufs:`. Drop the `scsi:` so=20
-they read, for example, `ufs: dwc: =E2=80=A6` and `ufs: s32n7: =E2=80=A6`=
-. That matches=20
-patches 2 and 3 (`ufs: unipro:`).
+  scsi: ufs: rpmb: Fix power-on UNIT ATTENTION retry (2026-10-05 22:09:17 -=
+0400)
 
-**Patch 4/10 (Hibern8 TX FSM polling helper)**
-- The prefix is `ufs: host:`, but the helper is added to=20
-`drivers/ufs/core/ufshcd.c`. It should be `ufs: core:`.
-- The commit message names `ufshcd_check_hibern8()`, but the function is=20
-called `ufshcd_dme_check_tx_hibern8()`.
-- "Unlike the initial implementation, the timeout error is now reported=20
-only once=E2=80=A6" describes earlier versions. It belongs below the `---=
-` line.
-- Please don't use `extern` in new prototypes in `include/ufs/ufshcd.h`.
-- The HiSilicon and Qualcomm messages used to print the TX_FSM_STATE=20
-value(s) when a lane failed to reach Hibern8. The new helper only logs a=20
-timeout, so that diagnostic information is lost. Consider logging the=20
-lane and its last state.
+----------------------------------------------------------------
+Small number of driver updates (mpi3mr, ufs, scsi_debug).  By far the
+biggest core change (at 4000+ lines) is the sense code rework to make
+our sense handling follow the 16 bit defines in the SCSI standard rather
+than our split ASC and ASCQ handling which ends up being confusing and
+difficult to grep.  The changes should all be functionally equivalent
+and so far the bots and AI seem to agree; the code has been incubating
+in -next since 16 September with one reported issue fixed.  The
+remaining updates are minor.
 
-**Patch 5/10 (move CREG helpers)**
-- "Dropped `static` from =E2=80=A6" is not in the imperative mood.
-- The commit message should say why removing `static` matters. In=20
-Versal2, `phy_write_attrs[]`/`phy_read_attrs[]` were static arrays that=20
-got modified on every call. Two callers at once, for example two host=20
-instances, could corrupt each other's values. The move fixes that race,=20
-which is worth stating.
+----------------------------------------------------------------
+Bart Van Assche (3):
+      scsi: pm8001: Fix SATA FIS offset in struct hw_event_resp
+      scsi: core: Fix scsi_done() documentation
+      scsi: core: Micro-optimize the hot path
 
-**Patch 9/10 (S32N79 driver)**
-- **Hard-coded lane count:** `s32n79_reset_config[]`,=20
-`pwr_change_phy_regs[]` and the calibration tables only cover lanes 0=20
-and 1. But `ufshcd_dme_check_tx_hibern8()` is passed=20
-`hba->lanes_per_direction`. Use a fixed 2 consistently, or check=20
-`lanes_per_direction` in `init`.
-- **Connection setup:** `ufs_s32n7_link_startup_post_change()` repeats a=20
-subset of `ufshcd_dwc_connection_setup()`: local attributes only, no=20
-peer attributes and no `N_DEVICEID_VALID`. Please explain why the shared=20
-DWC helper, or `ufshcd_dwc_link_startup_notify()` with a=20
-`phy_initialization` hook, can't be used.
-- **Unexplained settings:** `UFSHCD_QUIRK_PERFORM_LINK_STARTUP_ONCE` and=20
-`hba->spm_lvl =3D UFS_PM_LVL_5` need a reason in the commit message, for=20
-example whether power is cut during system suspend.
-- **Includes:** `FIELD_PREP()` and `GENMASK()` are used without=20
-`<linux/bitfield.h>` or `<linux/bits.h>`. It compiles only because=20
-`ufshcd.h` happens to pull them in.
-- **Nits:**
-   - Use `u32 data` instead of `unsigned int data` for `ufshcd_dme_get()`=
-.
-   - `SCM_ONE_US_TICK 0x2CU` has a `U` suffix but `SCM_STATUS 0x30` doesn=
-'t.
-   - The comment says "SCM_MPHY_RAM_CONFIG_STATUS" but the macro is=20
-`SCM_STATUS`.
-   - The `dev_err()` in `ufs_s32n7_link_startup_notify()` repeats=20
-messages that the inner functions already print.
-   - `device_get_match_data()` is called in both probe and `init`.
-   - `ufs_s32n7_remove()` is a wrapper that adds nothing.
+Bean Huo (2):
+      scsi: ufs: core: Record the frequency the controller starts at
+      scsi: ufs: core: Report the current clock frequency to devfreq
 
-**Patch 1/10:** the change is fine. The `Fixes:` tag is debatable: the=20
-old positive return of 1 was already treated as a failure by `if (ret)`=20
-callers, so this isn't really a bug fix for stable.
+Bill Wendling (2):
+      scsi: bfa: Use snprintf() in bfa_fcs_fabric_nsymb_init()
+      scsi: bfa: Use snprintf() in bfa_fcs_fabric_psymb_init()
 
-To check these points I read the code in your local tree (`locking`=20
-branch). I did not apply or build the series.
+Chandrakanth Patil (17):
+      scsi: mpi3mr: Fix buffer overflow in BSG passthrough request copy
+      scsi: mpi3mr: Fix out-of-bounds read when copying BSG MPI requests
+      scsi: mpi3mr: Fix I/O block counter leak on admin request post failur=
+e
+      scsi: mpi3mr: Fix target device reference leak in BSG task management
+      scsi: mpi3mr: Fix buffer overflow when caching log data
+      scsi: mpi3mr: Fix out-of-bounds reply frame access
+      scsi: mpi3mr: Fix out-of-bounds sense buffer access
+      scsi: mpi3mr: Fix out-of-bounds bitmap access during device removal
+      scsi: mpi3mr: Fix target device reference leak in device removal hand=
+shake
+      scsi: mpi3mr: Fix out-of-bounds read in SAS topology change events
+      scsi: mpi3mr: Fix out-of-bounds read of event data
+      scsi: mpi3mr: Fix out-of-bounds phy array access on link change
+      scsi: mpi3mr: Fix buffer overflow in the BSG target device map
+      scsi: mpi3mr: Fix out-of-bounds read in PCIe topology change events
+      scsi: mpi3mr: zero out diagnostic buffer status memory
+      scsi: mpi3mr: Fix use-after-free of the firmware event workqueue
+      scsi: mpi3mr: Fix NULL pointer dereference on PCI error recovery
+
+Christoph Hellwig (1):
+      scsi: scsi_debug: Add support to corrupt data and/or reftag
+
+Damien Le Moal (41):
+      scsi: core: Define all additional sense codes and their qualifiers
+      scsi: core: constants: Use defined sense codes
+      scsi: core: constants: Rename internal struct field names
+      scsi: core: Rename sense field of struct scsi_failure
+      scsi: core: Prepare for using combined sense codes
+      scsi: core: Use struct scsi_sense_hdr to log sense keys and codes
+      scsi: core: Use combined sense codes
+      scsi: sd: Use combined sense codes
+      scsi: sr: Use combined sense codes
+      scsi: ses: Use combined sense codes
+      scsi: ch: Use combined sense codes
+      scsi: st: Use combined sense codes
+      scsi: device_handlers: hp_sw: Use combined sense codes
+      scsi: device_handlers: rdac: Use combined sense codes
+      scsi: device_handlers: emc: Use combined sense codes
+      scsi: device_handlers: alua: Use combined sense codes
+      scsi: mpt3sas: Use combined sense codes
+      scsi: mpi3mr: Use combined sense codes
+      scsi: 3w-xxxx: Use combined sense codes
+      scsi: leapraid: Use combined sense codes
+      scsi: megaraid: Use combined sense codes
+      scsi: myrb: myrs: Use combined sense codes
+      scsi: smartpqi: Use combined sense codes
+      scsi: qla2xxx: Use combined sense codes
+      scsi: ps3rom: Use combined sense codes
+      scsi: lpfc: Use combined sense codes
+      scsi: stex: Use combined sense codes
+      scsi: mvumi: Use combined sense codes
+      scsi: libiscsi: Use combined sense codes
+      scsi: ibmvscsi_tgt: Use combined sense codes
+      scsi: scsi_debug: Use combined sense codes
+      scsi: hpsa: Use combined sense codes
+      scsi: storvsc: Use combined sense codes
+      scsi: target: Use combined sense codes
+      scsi: usb: storage: Use combined sense codes
+      scsi: cdrom: Use combined sense codes
+      scsi: ata: libata: Use combined sense codes
+      scsi: s390: Use combined sense codes
+      scsi: core: Clean up scsi_proto.h
+      scsi: core: Remove scsi_build_sense() and scsi_build_sense_buffer()
+      scsi: core: Fix additional sense code definition
+
+Fan Wu (1):
+      scsi: dc395x: sync the waiting_timer before freeing the host
+
+Geert Uytterhoeven (1):
+      scsi: zorro7xx: Use individual zorro_driver_data structures
+
+John Garry (2):
+      scsi: core: Drop Scsi_Host.default_lock
+      scsi: scsi_debug: Default to a higher throughput config
+
+Jorge Ramirez-Ortiz (2):
+      scsi: ufs: rpmb: Retry power-on UNIT ATTENTION on the RPMB WLUN
+      scsi: ufs: rpmb: Use a fixed-length RPMB dev_id
+
+Kees Cook (1):
+      scsi: hpsa: Make buff allocation type unsigned
+
+Laurence Oberman (4):
+      scsi: st: Restore changed drive settings after reset also for MTLOAD =
+and MTRETEN
+      scsi: st: Record the tape position after a successful MTLOAD
+      scsi: st: Restore the drive buffering mode after reset
+      scsi: st: Relock the door after a reset
+
+Martin K. Petersen (Oracle) (10):
+      Merge patch series "scsi: replace __get_free_pages() with kmalloc()"
+      Merge patch series "ufs: rpmb: make RPMB usable with OP-TEE key deriv=
+ation"
+      Merge patch series "scsi: mpi3mr: Fix out-of-bounds accesses and refe=
+rence leaks"
+      Merge patch series "devfreq: check the get_cur_freq() return value an=
+d use it in ufshcd"
+      Merge patch series "Use defined 16-bits ASC/ASCQ combinations"
+      Merge patch series "mpi3mr: Few Enhancements and minor fixes"
+      Merge tag 'v7.3-rc2' into 7.4/scsi-staging
+      scsi: mpi3mr: Fix merge error
+      Merge patch series "scsi: scsi_debug: fix zoned write validation"
+      Merge patch series "scsi: st: Restore drive settings and state after =
+reset and MTLOAD"
+
+Mike Rapoport (Microsoft) (4):
+      scsi: target: file: Use kmalloc() to allocate temporary protection bu=
+ffer
+      scsi: proc: Use kmalloc() in proc writers
+      scsi: ipr: Use kmalloc() to allocate IPR dump buffer memory
+      scsi: sym53c8xx_2: Replace __get_free_pages() with kmalloc()
+
+Niklas Cassel (13):
+      scsi: scsi_debug: Refuse a zoned device with a non-zero lowest aligne=
+d LBA
+      scsi: scsi_debug: Make atomic writes and ZBC emulation mutually exclu=
+sive
+      scsi: scsi_debug: Refuse a negative physblk_exp
+      scsi: scsi_debug: Take the zone metadata lock before the data lock
+      scsi: scsi_debug: Evaluate scsi_debug_lbp() only once
+      scsi: scsi_debug: Avoid 32-bit overflow in WRITE SCATTERED offsets
+      scsi: scsi_debug: Report the residual of a write
+      scsi: scsi_debug: Enforce physical block alignment of zoned writes
+      scsi: scsi_debug: Do not write a partial physical block to a zoned de=
+vice
+      scsi: scsi_debug: Advance the write pointer over the data written
+      scsi: scsi_debug: Refuse a short WRITE ATOMIC (16) before writing it
+      scsi: scsi_debug: Map the region written by WRITE ATOMIC (16)
+      scsi: scsi_debug: Validate the access parameters of WRITE ATOMIC (16)
+
+Nitin Rawat (1):
+      scsi: ufs: ufs-qcom: Enable only lane clocks in lane clock APIs
+
+Peng Fan (1):
+      scsi: target: core: Use assign_bit() where applicable
+
+Peter Wang (2):
+      scsi: ufs: core: Always notify POST_CHANGE even on gear switch failur=
+e
+      scsi: ufs: core: Serialize AHIT register access between sysfs and hos=
+t driver
+
+Ranjan Kumar (10):
+      scsi: mpi3mr: Skip device shutdown during unload per controller confi=
+guration
+      scsi: mpi3mr: Update MPI Headers to revision 41
+      scsi: mpi3mr: Add early timestamp synchronization after driver load
+      scsi: mpi3mr: Fix NVMe page size caching for non-operational devices
+      scsi: mpi3mr: Fix performance regression caused by extended IRQ poll =
+sleep
+      scsi: mpi3mr: Fix memory leak on operational queue creation failure
+      scsi: mpi3mr: Fix firmware event reference leak during cleanup
+      scsi: mpi3mr: Fix SAS port allocation and registration error handling
+      scsi: mpi3mr: Fix SAS PHY cleanup in host addition error paths
+      scsi: mpi3mr: Driver version update to 8.18.0.8.50
+
+Shawn Guo (1):
+      scsi: ufs: qcom: Enable MCQ support for sa8255p
+
+Stanley Jhu (4):
+      scsi: ufs: core: Fast-abort unsupported Query IDNs
+      scsi: ufs: core: Dynamically disable timestamp on unsupported devices
+      scsi: MAINTAINERS: Remove Avri Altman as UFS reviewer
+      scsi: ufs: rpmb: Fix power-on UNIT ATTENTION retry
+
+ Documentation/scsi/scsi_mid_low_api.rst      |   32 +-
+ MAINTAINERS                                  |    1 -
+ drivers/ata/libata-eh.c                      |   17 +-
+ drivers/ata/libata-sata.c                    |   20 +-
+ drivers/ata/libata-scsi.c                    |  344 ++--
+ drivers/ata/libata.h                         |    5 +-
+ drivers/cdrom/cdrom.c                        |   10 +-
+ drivers/message/fusion/mptfc.c               |    8 +-
+ drivers/s390/scsi/zfcp_erp.c                 |   30 +-
+ drivers/s390/scsi/zfcp_ext.h                 |    2 +-
+ drivers/s390/scsi/zfcp_fsf.c                 |    9 +-
+ drivers/s390/scsi/zfcp_scsi.c                |    6 +-
+ drivers/s390/scsi/zfcp_sysfs.c               |    4 +-
+ drivers/scsi/3w-9xxx.c                       |   20 +-
+ drivers/scsi/3w-sas.c                        |   28 +-
+ drivers/scsi/3w-xxxx.c                       |   27 +-
+ drivers/scsi/53c700.c                        |   16 +-
+ drivers/scsi/BusLogic.c                      |   20 +-
+ drivers/scsi/a100u2w.c                       |    4 +-
+ drivers/scsi/a2091.c                         |    4 +-
+ drivers/scsi/a3000.c                         |    4 +-
+ drivers/scsi/aacraid/commsup.c               |    8 +-
+ drivers/scsi/advansys.c                      |    8 +-
+ drivers/scsi/aha1542.c                       |   20 +-
+ drivers/scsi/aha1740.c                       |   12 +-
+ drivers/scsi/arm/eesox.c                     |    8 +-
+ drivers/scsi/arm/fas216.c                    |   20 +-
+ drivers/scsi/atp870u.c                       |   12 +-
+ drivers/scsi/bfa/bfa_fcs.c                   |   88 +-
+ drivers/scsi/bfa/bfad_bsg.c                  |    4 +-
+ drivers/scsi/ch.c                            |   55 +-
+ drivers/scsi/constants.c                     |   61 +-
+ drivers/scsi/csiostor/csio_attr.c            |    4 +-
+ drivers/scsi/csiostor/csio_scsi.c            |    4 +-
+ drivers/scsi/dc395x.c                        |   18 +-
+ drivers/scsi/device_handler/scsi_dh_alua.c   |   55 +-
+ drivers/scsi/device_handler/scsi_dh_emc.c    |   28 +-
+ drivers/scsi/device_handler/scsi_dh_hp_sw.c  |   29 +-
+ drivers/scsi/device_handler/scsi_dh_rdac.c   |   55 +-
+ drivers/scsi/esp_scsi.c                      |   32 +-
+ drivers/scsi/fcoe/fcoe.c                     |    4 +-
+ drivers/scsi/fdomain.c                       |   16 +-
+ drivers/scsi/gvp11.c                         |    4 +-
+ drivers/scsi/hosts.c                         |   17 +-
+ drivers/scsi/hpsa.c                          |   71 +-
+ drivers/scsi/hpsa_cmd.h                      |   23 -
+ drivers/scsi/hptiop.c                        |    8 +-
+ drivers/scsi/ibmvscsi/ibmvfc-core.c          |  262 +--
+ drivers/scsi/ibmvscsi/ibmvfc-nvme.c          |    8 +-
+ drivers/scsi/ibmvscsi/ibmvscsi.c             |   86 +-
+ drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c     |    5 +-
+ drivers/scsi/imm.c                           |    4 +-
+ drivers/scsi/initio.c                        |    8 +-
+ drivers/scsi/ipr.c                           |  324 ++--
+ drivers/scsi/ips.c                           |   26 +-
+ drivers/scsi/leapraid/leapraid_func.h        |    7 -
+ drivers/scsi/leapraid/leapraid_os.c          |   15 +-
+ drivers/scsi/libfc/fc_fcp.c                  |    8 +-
+ drivers/scsi/libiscsi.c                      |    3 +-
+ drivers/scsi/libsas/sas_scsi_host.c          |   10 +-
+ drivers/scsi/lpfc/lpfc_els.c                 |   30 +-
+ drivers/scsi/lpfc/lpfc_hbadisc.c             |   44 +-
+ drivers/scsi/lpfc/lpfc_init.c                |   16 +-
+ drivers/scsi/lpfc/lpfc_scsi.c                |   26 +-
+ drivers/scsi/lpfc/lpfc_sli.c                 |    4 +-
+ drivers/scsi/mac53c94.c                      |    8 +-
+ drivers/scsi/megaraid.c                      |    8 +-
+ drivers/scsi/megaraid/mega_common.h          |    2 -
+ drivers/scsi/megaraid/megaraid_mbox.c        |   12 +-
+ drivers/scsi/megaraid/megaraid_sas_base.c    |   18 +-
+ drivers/scsi/mesh.c                          |   24 +-
+ drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h         |   77 +-
+ drivers/scsi/mpi3mr/mpi/mpi30_image.h        |    7 +-
+ drivers/scsi/mpi3mr/mpi/mpi30_ioc.h          |   15 +-
+ drivers/scsi/mpi3mr/mpi/mpi30_transport.h    |    2 +-
+ drivers/scsi/mpi3mr/mpi3mr.h                 |   13 +-
+ drivers/scsi/mpi3mr/mpi3mr_app.c             |   87 +-
+ drivers/scsi/mpi3mr/mpi3mr_fw.c              |  223 ++-
+ drivers/scsi/mpi3mr/mpi3mr_os.c              |  320 +++-
+ drivers/scsi/mpi3mr/mpi3mr_transport.c       |  104 +-
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c         |   69 +-
+ drivers/scsi/mvumi.c                         |   28 +-
+ drivers/scsi/myrb.c                          |   67 +-
+ drivers/scsi/myrs.c                          |   23 +-
+ drivers/scsi/nsp32.c                         |    8 +-
+ drivers/scsi/pcmcia/sym53c500_cs.c           |    8 +-
+ drivers/scsi/pm8001/pm8001_defs.h            |   98 +
+ drivers/scsi/pm8001/pm8001_hwi.c             |    2 +-
+ drivers/scsi/pm8001/pm8001_hwi.h             |    4 +-
+ drivers/scsi/pm8001/pm80xx_hwi.c             |    2 +-
+ drivers/scsi/pm8001/pm80xx_hwi.h             |  100 +-
+ drivers/scsi/pmcraid.c                       |   84 +-
+ drivers/scsi/ps3rom.c                        |    5 +-
+ drivers/scsi/qla1280.c                       |   44 +-
+ drivers/scsi/qla2xxx/qla_attr.c              |    4 +-
+ drivers/scsi/qla2xxx/qla_init.c              |    4 +-
+ drivers/scsi/qla2xxx/qla_isr.c               |    9 +-
+ drivers/scsi/qla2xxx/qla_target.c            |   99 +-
+ drivers/scsi/qla2xxx/qla_target.h            |    3 -
+ drivers/scsi/qlogicfas408.c                  |    8 +-
+ drivers/scsi/qlogicpti.c                     |   20 +-
+ drivers/scsi/scsi.c                          |   15 +-
+ drivers/scsi/scsi_common.c                   |   24 +-
+ drivers/scsi/scsi_debug.c                    |  647 +++++--
+ drivers/scsi/scsi_debugfs.c                  |    2 +-
+ drivers/scsi/scsi_devinfo.c                  |    5 +-
+ drivers/scsi/scsi_error.c                    |  165 +-
+ drivers/scsi/scsi_ioctl.c                    |    3 +-
+ drivers/scsi/scsi_lib.c                      |  182 +-
+ drivers/scsi/scsi_lib_test.c                 |   95 +-
+ drivers/scsi/scsi_logging.c                  |   22 +-
+ drivers/scsi/scsi_proc.c                     |    9 +-
+ drivers/scsi/scsi_scan.c                     |   38 +-
+ drivers/scsi/scsi_sysfs.c                    |   28 +-
+ drivers/scsi/scsi_transport_fc.c             |  136 +-
+ drivers/scsi/scsi_transport_spi.c            |   12 +-
+ drivers/scsi/sd.c                            |  126 +-
+ drivers/scsi/sd_zbc.c                        |    2 +-
+ drivers/scsi/sense_codes.h                   | 2496 +++++++++++++++++-----=
+----
+ drivers/scsi/ses.c                           |   23 +-
+ drivers/scsi/sgiwd93.c                       |    4 +-
+ drivers/scsi/smartpqi/smartpqi_init.c        |   31 +-
+ drivers/scsi/snic/snic_disc.c                |   16 +-
+ drivers/scsi/sr.c                            |    3 +-
+ drivers/scsi/sr_ioctl.c                      |   29 +-
+ drivers/scsi/st.c                            |  132 +-
+ drivers/scsi/st.h                            |    2 +
+ drivers/scsi/stex.c                          |   51 +-
+ drivers/scsi/storvsc_drv.c                   |   15 +-
+ drivers/scsi/sym53c8xx_2/sym_glue.c          |   56 +-
+ drivers/scsi/sym53c8xx_2/sym_hipd.h          |    4 +-
+ drivers/scsi/wd33c93.c                       |    4 +-
+ drivers/scsi/wd719x.c                        |   24 +-
+ drivers/scsi/xen-scsifront.c                 |   40 +-
+ drivers/scsi/zorro7xx.c                      |   31 +-
+ drivers/target/target_core_file.c            |    4 +-
+ drivers/target/target_core_pscsi.c           |   16 +-
+ drivers/target/target_core_spc.c             |   11 +-
+ drivers/target/target_core_transport.c       |   11 +-
+ drivers/target/target_core_ua.c              |   28 +-
+ drivers/target/target_core_ua.h              |    7 +-
+ drivers/target/target_core_user.c            |    5 +-
+ drivers/ufs/Kconfig                          |    1 +
+ drivers/ufs/core/ufs-debugfs.c               |    4 +-
+ drivers/ufs/core/ufs-rpmb.c                  |   30 +-
+ drivers/ufs/core/ufs-sysfs.c                 |   12 +-
+ drivers/ufs/core/ufshcd.c                    |  250 ++-
+ drivers/ufs/host/ufs-exynos.c                |    4 +-
+ drivers/ufs/host/ufs-mediatek.c              |   20 +-
+ drivers/ufs/host/ufs-qcom.c                  |   52 +-
+ drivers/ufs/host/ufs-qcom.h                  |    5 +-
+ drivers/ufs/host/ufs-sprd.c                  |    4 +-
+ drivers/ufs/host/ufshcd-pci.c                |    3 +-
+ drivers/usb/gadget/function/f_mass_storage.c |   34 +-
+ drivers/usb/gadget/function/storage_common.h |   71 +-
+ drivers/usb/storage/debug.c                  |   11 +-
+ drivers/usb/storage/debug.h                  |    4 +-
+ drivers/usb/storage/transport.c              |    7 +-
+ drivers/usb/storage/uas.c                    |   12 +-
+ drivers/usb/storage/usb.h                    |    4 +-
+ include/scsi/scsi_cmnd.h                     |    3 +-
+ include/scsi/scsi_common.h                   |   16 +-
+ include/scsi/scsi_dbg.h                      |    6 +-
+ include/scsi/scsi_device.h                   |   26 +-
+ include/scsi/scsi_host.h                     |    9 +-
+ include/scsi/scsi_proto.h                    |   71 +-
+ include/scsi/scsi_sense.h                    |  950 ++++++++++
+ include/trace/events/scsi.h                  |    4 +-
+ include/ufs/ufs.h                            |    1 +
+ include/ufs/ufshcd.h                         |    8 +
+ 170 files changed, 6319 insertions(+), 3627 deletions(-)
+ create mode 100644 include/scsi/scsi_sense.h
