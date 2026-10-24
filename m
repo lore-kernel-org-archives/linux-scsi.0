@@ -1,59 +1,53 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792811044;
-	b=ih3D1ih3xs+Om7K+g3nDG5rz9tYHAJS7h1clJS7beDfn5O1K0+IuqKxNZ9osdy0irSsj
-	 0d+aBf2qoHofDRibhIyWm+HuaO/nq/O/nwKChLJdHyk1IFUSxUuh/r1mDMHH7b3gSYfWE
-	 fu2b3eY3gjAkiJN/5YZ+TTWLxT4Vq7GuIlnmeG79S7ru1jG+iwE/L/OfBKAgtlflDjv6N
-	 XTbcTH+xO0+FwxPvz5Q5qneDTiMRCUQDwhfnhC2Q2tAUewTTcVUjCTf3ZqGTcYCKiFPKv
-	 QQVMkRakMMySilD5iOUshHfer8M6T6JsEHBtLbxV58EGRsOu273YbDF7bcOGwwFpT8g==
+	t=1792811136;
+	b=O20kgCzqodXq/6b6d7FpMd5ftAX3fRcItv4a+PoErZ8Tt3/+FfVdV6s2cxD1ZydFiX37
+	 n1qqO+eZurhe7c/nIL/YWfzsmFV0gVU+4HBvfeLST8r/IEFpD49gfoCzgbNzJJgLcx7by
+	 qAAMzmAeL7RZc1mB60WiqC8YItxIYS5x5PK4WYyQDtF/nx6UV+arDtSGsDoZDZ4PCJTmd
+	 ixEbzrCJNGSD/WAYHF3M9dXxC6VqT9j6BKsOR+saPQ2QRzUT4uaKjrFpI7Tnl67tDRHXL
+	 eKGwBuN7y0SkXcfzEJwVC8zGuSCj5AlwmGF9eelLxaaJ54LH0lS8+u5Nh/CVKROL8hA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792811044;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792811136;
 	h=Received:DKIM-Signature:To:Cc:Subject:From:In-Reply-To:Message-ID:
 	 References:Date:MIME-Version:Content-Type;
-	bh=TmK84cuyXL/OTFiUXGEgEikpxQYq9UtzXSvMycfVZmM=;
-	b=WxgEI8pzGoBAqjZqyQ/Zf0CLdZNejmoZxmTzrJt8Q+vLjbLWl2p5Kg0pFTgQh8vIm2MQ
-	 V7ZbBf5L/QDCrfxJF7gftSk9PZ/FLSIKB2bPv+R2TCesXZiDDw/ZrITE02jRltu94x0UV
-	 Qjmi59hTl6NT3hSyvEV/st1XLIaYbxfHN0gx6T234fLWXefJ4QqNQQ70jFgq5b17UCEw3
-	 RTdNrmY5fB6tHl40PcofjrQmj7QUlHvk4KlI5ddfI01FrYzwJESeZUsbrErR6+7x8PdB0
-	 +VgphYC5sshUBtbNU/UL0pC4OnIBD2C7IpAnvbRMLb3yGPpSE7j2GrBP21W7Zt+oVcg==
+	bh=sXlexXVyaZs4n+IvAt4+Ql/FTWVNz5R/wfmg+BBxB90=;
+	b=WRcEws8pB8vjP10ILtghHMr4iISGaR9rKOC05gC/vTocDNs0odDTPhdYG42tYMhMg7pn
+	 hO3iULT8PXNqm/NzFbFs9Cr2NP1OXc1XfMjPul/CfHfmns6kiRy2s5A55QXLqcUD7X8/4
+	 TwUQNjzKkvYFWUj0i8uvgFto75HG2lJPLlLRebX7XTpR2/fSB7o7GiGkIKdBLFlMjxwf9
+	 gLm5QNkpDgiVwgbuxKqUofKn00ShAp4yhBjWlZdvjDQjHMyLfq8t2pJ+HDUxeAPObXM7q
+	 X2kbn+3ZlZHAZO9uAe6vC1qX7rww3vZh3PPTFETmsjowmmNP01BYIuK308OMGan47EA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=XDqQoyeh;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jv7945fz;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92306606A32D;
-	Sat, 24 Oct 2026 03:04:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B901606A31D
+	for <linux-scsi@vger.kernel.org>; Sat, 24 Oct 2026 03:05:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=XDqQoyeh
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D7C681F031E3;
-	Sat, 24 Oct 2026 03:04:03 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jv7945fz
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9F3E21F01825;
+	Sat, 24 Oct 2026 03:05:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792811044;
-	bh=TmK84cuyXL/OTFiUXGEgEikpxQYq9UtzXSvMycfVZmM=;
+	s=k20260515; t=1792811136;
+	bh=sXlexXVyaZs4n+IvAt4+Ql/FTWVNz5R/wfmg+BBxB90=;
 	h=To:Cc:Subject:From:In-Reply-To:References:Date;
-	b=XDqQoyehhrXZSf5g3ZZgNDggw9S+puk3uA6GsYPiB5IoHkmv6HgRsyWxniUmEKdJP
-	 9KObSK5CtOndf6FpQ1QB1uZvcHcCW/SoQRrnQO1y5YDrg+qvAem+3rLvJQVIoneYP4
-	 VlRN0cq7iI89iOLnDv/3inMdLEsods1OG7jny0pjwntvYELdjy83TRY961L+6tt1CB
-	 a0R+u9Xlymv14iCeJDUnqNdJ0RFbGROE79BisauiKiPiFy0mJqCR2WTLyQHRC4utg9
-	 eLOww3VxV07nB4DfC6+qE+4BaIkXtXwjMRN+kyBMfygZc7MWggcjN//3Mqzj01+RZ7
-	 ZTXSisgpKw7VA==
-To: Wang Yingjie <x-professor@outlook.com>
-Cc: "Martin K . Petersen" <mkp@kernel.org>,  Jens Axboe <axboe@kernel.dk>,
-  Bart Van Assche <bvanassche@acm.org>,  FUJITA Tomonori
- <fujita.tomonori@lab.ntt.co.jp>,  "James E . J . Bottomley"
- <James.Bottomley@HansenPartnership.com>,  "linux-scsi@vger.kernel.org"
- <linux-scsi@vger.kernel.org>,  "linux-block@vger.kernel.org"
- <linux-block@vger.kernel.org>,  "linux-kernel@vger.kernel.org"
- <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v3] scsi: handle out-of-range SG_SET_TIMEOUT values
+	b=jv7945fzPqFwyzYGh7SHaUGBUmZia3/WrHQe5uEF0Bt6eX8JN5+zPaM0ybXtWHtRc
+	 vzMlApU7tmLja1kwyN4J4qkCRWI7s8CI2GgwQlyFexHRM62acfmG7FzcLmka0cgsJE
+	 xGr8k7lcnPWVlQSCeJPqDoxRAMxv02y0ZQ3VEWy/uIJlQ3MlDL0nO8PAmGR0ETk5Tt
+	 u0ESk0J5bwujcTMhtHPJkNfXkcsLeKZimk61i35MMv9ba3PWeHSf/LahocWf/BjfIZ
+	 3m4mX7CdMCdXAPlp38hkFi/CCF+DreFc984a0zXM/T30Aj2kPm/wRhkDQ13ROQHP3l
+	 09hLvkeVQQPAA==
+To: Nilesh Javali <njavali@marvell.com>
+Cc: <martin.petersen@oracle.com>,  <linux-scsi@vger.kernel.org>,
+  <jmeneghi@redhat.com>,  <GR-ETH-Storage-Upstream@marvell.com>
+Subject: Re: [PATCH] MAINTAINERS: Update Marvell Ethernet storage maintainers
 From: "Martin K. Petersen" <mkp@kernel.org>
-In-Reply-To: <20261022025508.294713-1-x-professor@outlook.com>
-Message-ID: <yq133tv94ve.fsf@mail.kernel.org>
-References: <eb20226b-cfae-4b10-b42c-1b12c2d17687@acm.org>
-	<20261022025508.294713-1-x-professor@outlook.com>
-Date: Fri, 23 Oct 2026 23:04:02 -0400
+In-Reply-To: <20261023085112.1378540-1-njavali@marvell.com>
+Message-ID: <yq1wlr77q88.fsf@mail.kernel.org>
+References: <20261023085112.1378540-1-njavali@marvell.com>
+Date: Fri, 23 Oct 2026 23:05:34 -0400
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -66,11 +60,10 @@ MIME-Version: 1.0
 Content-Type: text/plain
 
 
-> SG_SET_TIMEOUT accepts a signed int in USER_HZ units. The sg character
-> device rejects negative values and limits positive values so the
-> converted timeout fits its destination field. The block SCSI and BSG
-> paths instead pass the value to clock_t_to_jiffies(), which accepts an
-> unsigned long, and store the result in an unsigned int.
+Nilesh,
+
+> Add Nilesh Javali and Manish Rangankar as co-maintainers for bnx2fc
+> and qedf. Also update email alias for bnx2fc, bnx2i, qedf and qedi.
 
 Applied to 7.4/scsi-staging, thanks!
 
