@@ -1,57 +1,54 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792808536;
-	b=K8E2LW5UxZ2vHHvV0jlsRrvJuZcESsKbvxfenD08osHyBuoj3T2AZrxrwmETLh2DOczV
-	 dTbS84ksNrlYBkRmDEIFsLqDaZC8ZrNs+fEbaqbmJq4bEGx8jKlVLXJliz4hcup9PR5ig
-	 hM5szpHuCIO/jwcAcDH5BTRLBfiQAWu84B8UrHaH+T2PuCRbrrzdNR+XwMPpMUoJl+7Xv
-	 Yt9RuRey61m4n5K8H60L/9WCCsNRBJwEMTO8Y4BKPcGi5tx1sS6ygIa54V7snI5bbIwJY
-	 UV/9GH5oe7QV84XgJcoyvhLh2Eg3fl28bv4fI7sb4oq9Ia8O5n+XO1VdZdzWcbBibJg==
+	t=1792808988;
+	b=QMgyhYSrpuBPG5lPqpaLCd04TWxjDcF8lYvOuSoPYM8aiAMnBIOgRrR8vQLzZmRYvDcJ
+	 5eVhmRjS8oM/BwTTjCmK8BN17eHY0DXbLALlOHzQjffmPxDyFlx+piWJpuwv4uSUaReZa
+	 QaMPpUBetBG2z3d5ZLdTyaEqhOssUSieNxG7I7iv2vRK3NdfEySaYoI/BiTKkrBJgJXJ8
+	 g/GIKcr9ibTUtzYZoIW17SiOamKz59BfWDLsWSs6RKcUxqqZqPEDsKR01/KZt2sAS5mpD
+	 psJuMkHz3YMRVAv9tQ9+4aaawEC+Hd/rBnEtS9vL2daIqw52jJTcRPWXdoyzbWjZ4kQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792808536;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792808988;
 	h=Received:DKIM-Signature:To:Cc:Subject:From:In-Reply-To:Message-ID:
 	 References:Date:MIME-Version:Content-Type;
-	bh=6G+E7R9VEyV1U8G+bklUJdfGzGm9SBW7F33f+6tv8vI=;
-	b=doOzG6ReXiA/MFiPS+dxXPQ6unusHiaOUugxMvi2A/R9RdAMPkdzzMsrgB1OD5m85+py
-	 ztJ5LBRvP8Gb4LzW+N+bmdhHcOAPOFEzxx2RSw+rI5CVQYNEoYlBTIz/CmfRFjkR+ohN7
-	 4DUZuwuus9iZFNvmCqm/rYYg+HcyISR8p48CRR97hNEh/FroUvUrD9co9augW/YK+8dDC
-	 89sfEHS/dst1+NyHWwypZHsv5vprxnSdkUpogOKmlOuItNSqKp7JLp0+fur7eDObS5SVl
-	 JUlpAsGhByfVIzqHk7NA9/hNBh2yHD0+JrLO+1Gei3aptAsZyqaC2fhg6YGvq285A1g==
+	bh=BglvdCaKASDGLDgtpeQcM/HF+sqpSGZ9LQxsu7MOuxY=;
+	b=y1k+ZCQlKG9Ti2HKp6oLF5UpStHFkb3qMcQFIa0QQMcZwuAkIuurHhUUzhRc7eTLKRsN
+	 FJhnbS1Vgk3NPqHcHmrNf84Mx0IcRFOdB4qr7YGumhwzLuZaaXJvtDu/Xr0FMayrR0n0q
+	 CUyxCVsZknhp9OXePz65OLoQT2tOB5M1K0v8zkNuBXLBu2h1iGhgX8V8FR8cr9Z+UbTWa
+	 yhFKdsu1FklRAGUlmqLeuf597OwBIgbQtvkTygrfLSWpQO8RzciV3ugnA50ELYCUbDMN3
+	 eZ7pt7OGdX3OhKWLMtsR5nmH8f63/cd2v5qDmxaKsjpNwgXxI1OdqcP/IRGcLuMQ+EA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=IgYBL9nQ;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=FUkOdzXj;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E3F2C606A31A;
-	Sat, 24 Oct 2026 02:22:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B5253606A32D
+	for <linux-scsi@vger.kernel.org>; Sat, 24 Oct 2026 02:29:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=IgYBL9nQ
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 397281F01825;
-	Sat, 24 Oct 2026 02:22:15 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=FUkOdzXj
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 41FBD1F031E1;
+	Sat, 24 Oct 2026 02:29:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792808535;
-	bh=6G+E7R9VEyV1U8G+bklUJdfGzGm9SBW7F33f+6tv8vI=;
+	s=k20260515; t=1792808987;
+	bh=BglvdCaKASDGLDgtpeQcM/HF+sqpSGZ9LQxsu7MOuxY=;
 	h=To:Cc:Subject:From:In-Reply-To:References:Date;
-	b=IgYBL9nQgMJy+zomrxq+AzgvC99Hc9vmXnrB7JE7AcAkvRAY/2gs77sJ01ZpDbRbO
-	 fhgThgcbi7TFXP7+pnI3GU81Z8kQGU6czqBOyhknQIsYrLxyZ2BJJvJuukPHIH2kIk
-	 5Z6Q6sTKj1IgsyEfUBSfQWQaOiX8nFvTzPZegduoo62VOf2XKDQOomhpHJ27lwtP5j
-	 ZTR6S1pR8mlCUsUDn0FEVn3zWtRTInHXTpNg4SBfWOg7NeJ6suImlNOSJGPEoZvAuX
-	 B2rRVJl7EaBVtXJ9feTwyzKSGXAHjpEnihyw/bYJr81jThfqsCoGWn9JSDCRuU4C1C
-	 qdJe6NKTSG40g==
-To: Haotian Zhang <vulab@iscas.ac.cn>
-Cc: Ram Vegesna <ram.vegesna@broadcom.com>,  "James E.J. Bottomley"
- <James.Bottomley@HansenPartnership.com>,  "Martin K. Petersen"
- <mkp@kernel.org>,  James Smart <jsmart2021@gmail.com>,  Daniel Wagner
- <dwagner@suse.de>,  linux-scsi@vger.kernel.org,
-  target-devel@vger.kernel.org,  linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] scsi: elx: libefc: fix resources leak in efcport_init()
- error path
+	b=FUkOdzXjLlt53tTh+CDb96arjX/3fVWzNXld/BQFllBA4cvFWckePvUEJ1uOoyRF2
+	 oAHs4DLzS1OIzePpwWJwTTK2Xis8pmPLit81y2dEFtA55Qhk+X8uJ3RjA+VjRm1kSh
+	 pVVI4HyBuMy12r1XlhX1SdGQ0pXmU6vUbog/lCP+BubjeXvgrIrjPMqlH+odEM74Ee
+	 Ygsm7m2ris7tb0aZEy3uPEoVpkw6G63tKhI8AF9kki2x1s/rSB8N+w3fMmDOHSZ8og
+	 1IQpWOn4koK0+rHBEK+lQGlXdBmLOoFiF9HbETqjd7vc3yoUf/cDf+xRF50KPPhH7x
+	 AUd5nOow/5mww==
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
+  linux-scsi@vger.kernel.org,  John Garry <john.garry@linux.dev>,  Hannes
+ Reinecke <hare@kernel.org>
+Subject: Re: [PATCH] scsi: core: Document the role of scsi_done()
 From: "Martin K. Petersen" <mkp@kernel.org>
-In-Reply-To: <20261008185403.2791781-1-vulab@iscas.ac.cn>
-Message-ID: <yq1tsmbaldj.fsf@mail.kernel.org>
-References: <20261008185403.2791781-1-vulab@iscas.ac.cn>
-Date: Fri, 23 Oct 2026 22:22:13 -0400
+In-Reply-To: <6edb00749da7a5ce9b7752d389ad2ed5a38776e4.1792022610.git.bvanassche@acm.org>
+Message-ID: <yq1o6cjal0w.fsf@mail.kernel.org>
+References: <6edb00749da7a5ce9b7752d389ad2ed5a38776e4.1792022610.git.bvanassche@acm.org>
+Date: Fri, 23 Oct 2026 22:29:46 -0400
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -64,14 +61,10 @@ MIME-Version: 1.0
 Content-Type: text/plain
 
 
-Haotian,
+Bart,
 
-> efcport_init() creates efc->node_pool and efc->node_dma_pool before
-> allocating efc->els_io_pool. When the latter allocation fails it returns
-> -ENOMEM without releasing the node dma pool or the node pool, leaking
-> both. The caller efct_efclib_config() only logs the error and
-> efct_device_attach() failure path never calls efcport_destroy(), so the
-> resources are never freed.
+> Document the role of scsi_done() and also how it deals with commands
+> owned by the SCSI error handler.
 
 Applied to 7.4/scsi-staging, thanks!
 
