@@ -1,56 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792810325;
-	b=lPUBceauvBRwoo46GB4iTboTl0WMW0H+JL7OWKlpuN/64Os+qplJo/Fj9mrIxwo5N0ed
-	 1xh2Gq8on+/UwLz3TJ8RopyKbknV4LyLhyLMFutAWy5O4ErEdCp3Y2zMYG7QajwuGpsQm
-	 /k+jRzfUzYVe6TXgq9ZTNeXoUt8vn2c8/SN4NHVk3ch1N+YqoRsOJ3IUVuokKhMH9DaIb
-	 YLwPqhR6iEEmHEwfYA4Uu+0kgQnQ8fPZz2PW81OTGPSCyZbkO8nATRjkFXMeDNT8BHXhK
-	 p76sDfQZzskW3+Fe0L0aFhr3RneB5wepGxEz0oi9yW9yItLrcMyKdSCiz2+tji8eaFA==
+	t=1792810382;
+	b=bdi4h+Kvi56vRUhtSYecJQTROhh6ntfGq9+BNC4FcASACr3cLpnIDLjW75xC24x8o4pa
+	 pjsgBCeiHwqvmJTCGGJ05dvD/C5aDfbypgHbGVlcKllzMbNSlLecwvOBPRXrQzP0lcNcS
+	 oASR2fU0NIEnnDVNQtJw5pF21XrcrlVQwiPvBMPweCk5c6IAcQD5n9WpFRBKCwAgkF4x+
+	 cXk8ViK8ZSaKS2Y3CF5TpjIa6w0TonRK19LR3qlLtxCo6jyQcUzsYlSuxZTBosxltJYvn
+	 JATXa9R+n8DhI42CZxGz8vY1YMdyEVfizfM5aW6oohGaRJ6rCrKF+B1YPGRiqHntwww==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792810325;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792810382;
 	h=Received:DKIM-Signature:To:Cc:Subject:From:In-Reply-To:Message-ID:
 	 References:Date:MIME-Version:Content-Type;
-	bh=aLNSqsBGXiY7rxJSvoWY1/IsOqJJCuwYrC3lByH3Dgo=;
-	b=aWEJTDGnXOel7exNyHd2v5uqk9nElvH6zKTOOwlyULRZnhA0XQAMEm0RDw97tAP7RIEu
-	 NL/3T83QcjYYlLcO/v67BSKEagUq9jfvJK2Qp8yQxZXPGhMPV/AxCw7sEX7SzKIybh5MG
-	 amA9di8+I/T/YU1ewDqPTfvt9HRmAq4H24AZmdW3yAarlEgYRdyRaPBty4if+6g4ulBwD
-	 gFKSVyIhvYjakR1q4rj9WwhlYwlhQ1ydeEez0TIwsnJD5qic17CHwJscGkKh0A4YXhpZq
-	 6R1sQQWLZ10lzwOxU4cDF1QVVRN6chOPJfC9sQA9Yrdo5VzJj3touhrNYHta9pG/5TA==
+	bh=V7oDlq3bAYUPEWxfXkFJCRMeag1Sxl7hSlqFKhXKIGY=;
+	b=Z2y/xalokRuMG4aFnoEbXL12CxvK+Q/sdNBPjyZgJ2TlDzMHwIbs8XK+4OLO5SxQQuZS
+	 CRkaRGB9g6tD7HaFJi4RLyh+cSxbwLE4aIwm2Ew2uW6h00ToRgNIWkj1qC9u2c9ELy7Mx
+	 RbFVsJk3oGgxq7IsPz53ebf7PSLppB8QMXtsUgDWKAmh0MU3aopuz+Ta5bK42CViUDngh
+	 1f6cXxNuBrIbIK5N/MboFZSFdyUw488IEpFDJvnSAvG3JumSkvT/cXXuKvUxApOM7qPdE
+	 xpol14LQLVNXEzCv4Gic2yRNBhs5J7uytylKfnlwK10yKC5FPMtdwASyay8lCEAQSKA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=PmEjkiaa;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="bmIrOXf/";
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DDC4606A31A;
-	Sat, 24 Oct 2026 02:52:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B706C606A31A;
+	Sat, 24 Oct 2026 02:53:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=PmEjkiaa
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9331D1F01825;
-	Sat, 24 Oct 2026 02:52:04 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=bmIrOXf/
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0D1221F01828;
+	Sat, 24 Oct 2026 02:53:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792810324;
-	bh=aLNSqsBGXiY7rxJSvoWY1/IsOqJJCuwYrC3lByH3Dgo=;
+	s=k20260515; t=1792810381;
+	bh=V7oDlq3bAYUPEWxfXkFJCRMeag1Sxl7hSlqFKhXKIGY=;
 	h=To:Cc:Subject:From:In-Reply-To:References:Date;
-	b=PmEjkiaa9p1QnjFlZbeEJb6jPzMuOOnbjleeIyINt3dB5y0lltq/gQfcKVIKRKHKw
-	 m2+UKX0c0p191dSWs3O74+ddHSu3h07LAkIXkuL9BAndiA0NBSaJhNUvBKB36BCLdX
-	 S+WFmPuR1x1CSUWhzgywLMYwq3Id2A9lEAfBxcvNt6x8EU4vQglyifIJiCEqD+f1Ez
-	 5bGPZCF/te3ZtRxwTfwRTVisFhW+7JOuMoBVeLITkYpzIOGmrM1f96jgsaMKnyVZMa
-	 ddLZbF63U8Akuqz/AE/ACf0POLseTcZbVDuIlREQwLnMGmh8xNF083XTXF2AJKxUrS
-	 rwZ0nD56WGo/Q==
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-  linux-scsi@vger.kernel.org,  John Garry <john.garry@linux.dev>,
-  Christoph Hellwig <hch@lst.de>,  Lianqin Hu <hulianqin@vivo.com>,
-  stable@vger.kernel.org
-Subject: Re: [PATCH] scsi: sd: Mark the disk dead if runtime resume fails in
- sd_remove()
+	b=bmIrOXf/c6pinvbKtbyUHENO3cm+PtxGWadK1KxxJxqSYyO+c77WC4/8XZfAGUVUJ
+	 o8ZVr1MhR/Gce3TRc+O6L8pGRyOuGYu5ul+YA/lANPQeoeEJwZ5Asg5ONsYcDVapoT
+	 Xq6kqS8XVX8TNp+CKv2nCYFuDOWzGlBvPvxfkU8v9IO5WNrpAQ4S2UsR1nMfaxd1j6
+	 iVx1UbojP5KuEq2ZVfy1TdgOHbXdWglqqGtB3ZI0F1rYxiEN39z4hl0gFNZ7sXCrvP
+	 lHZ8B3XryqvOcXbxjUWGzl1QdyLoAp8UpstQo/MjF94VvUtCsTfV+wb/aXhB2A7wMp
+	 5edOSgbBSkZOQ==
+To: Laurence Oberman <loberman@redhat.com>
+Cc: linux-scsi@vger.kernel.org,  "Martin K . Petersen"
+ <martin.petersen@oracle.com>,  "James E . J . Bottomley"
+ <James.Bottomley@HansenPartnership.com>,  Kai =?utf-8?Q?M=C3=A4kisara?=
+ <Kai.Makisara@kolumbus.fi>,  John Meneghini <jmeneghi@redhat.com>,
+  linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] MAINTAINERS: add Laurence Oberman and John Meneghini as
+ SCSI tape driver maintainers
 From: "Martin K. Petersen" <mkp@kernel.org>
-In-Reply-To: <2c0c76d70f0fe197932836b9bcf8496095135d1b.1792446921.git.bvanassche@acm.org>
-Message-ID: <yq1jyn795fi.fsf@mail.kernel.org>
-References: <2c0c76d70f0fe197932836b9bcf8496095135d1b.1792446921.git.bvanassche@acm.org>
-Date: Fri, 23 Oct 2026 22:52:03 -0400
+In-Reply-To: <20261020125059.1797559-1-loberman@redhat.com>
+Message-ID: <yq1ecdf95dm.fsf@mail.kernel.org>
+References: <20261020125059.1797559-1-loberman@redhat.com>
+Date: Fri, 23 Oct 2026 22:53:00 -0400
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -63,13 +64,11 @@ MIME-Version: 1.0
 Content-Type: text/plain
 
 
-Bart,
+Laurence,
 
-> If a SCSI disk is unplugged while runtime suspended, its request queue
-> is still in the pm-only state when sd_remove() is called. The runtime
-> resume attempted by scsi_autopm_get_device() fails because the parent
-> device, e.g. a USB device in the USB_STATE_NOTATTACHED state, cannot be
-> resumed.
+> The SCSI tape driver (st) is currently marked as orphaned. Add
+> Laurence Oberman and John Meneghini as co-maintainers and change the
+> status to Maintained.
 
 Applied to 7.4/scsi-staging, thanks!
 
