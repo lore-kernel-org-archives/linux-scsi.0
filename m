@@ -1,56 +1,56 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792809978;
-	b=D1MUMm/XmC9HhKcEGNDdwFJ+wFbo8Nmq9JqsORN4evh6KHYooE6zZ6gqC4W8W9y5BWAD
-	 kjj5LVFr8hU+N5KuXwfDS80V+Yh3P4icmCpcld/7DjvxGjkTJy8njl18FhYytpHmXiojL
-	 AsuJ1hx1rKnljr5vo4xSx943d4rwhGuxXUwGV5nEgSNLW1DjaHYwMI9PlKA8B+yILsnTx
-	 C+PI+HsgsBcrOyQCys4HtxaxfP830SFFbvzY96z9bd4HgJEWM0v08PkIGz+sayOYYzoJx
-	 QFNy1zAko9LUAgf6sT/eZ3CuvG7cbfytVhc+55B79cHjp7LKRnj+QVaUURvoHJ8N0eg==
+	t=1792810103;
+	b=lChFUwL8dN4By7AplrI66f7p/ISEEFKNI24tT644KpljyeOBTfDBDjjMLM5xkult5Whw
+	 j3lqhw8fIjCzXj4Al9EADA0u+JJ6yxbBiqv3JVR0iPRjtV9agTYd0HsgNmSLcyd5VG/V1
+	 xso0/SjPu3rotWCgBmJ9+AbXNPA/Das16ZcoXViev1BOuqzPTsKir4Yd5F5smoScw5Drg
+	 93ez1CQzkjPHuzmf9ClqhY/fMorfcLR3J9VjUJr73H+f/H5cB5LhugGDzBsiEfScswJ+n
+	 PS6eaxy3EH6r7Jy/aI5AMop9SnGZ3qaoZZzxGUvWbXyWOQ1O7bFlb4POG3Q5r5XIHkA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792809978;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792810103;
 	h=Received:DKIM-Signature:To:Cc:Subject:From:In-Reply-To:Message-ID:
 	 References:Date:MIME-Version:Content-Type;
-	bh=pT6zx2apOrfdpBzUBKN8oRSaDsRZsmJ1DYkHGX8CN2Y=;
-	b=g9yucbLrNPA8C3RsO9eP1hofLxQSNakBy9u1e7oyuNnf3ZNQ307dRbiwiwVVB9NV5Osm
-	 cRWJlSBsjei7jTNCg8OGfu9xomGwX0jx6TgXui67FBUYR08mh+sd4xY+UBLprhFSn3k/g
-	 62gKRBcOFp61DCDa8PFRWt8DMpqR8VHwQSszsT8RpFghFliH8WxhJYvNH3piOBH29eTRI
-	 ZhbyCo3i9Jb6av8A4fK0OJltQpzayYuS2Og2Gn3dxLI2tPXw4Jz06hxlXfU1h05DRKz2X
-	 SiN6hwsLwyMMCHBGB6eFB/WRXFJSTPhTjdleB+hBN5nLdTk+aVCzNLw601rn8ETuPVQ==
+	bh=aY7L4zQZONVWe8GQfjIX3wABqlw3CVUOAfDFqsaqk2s=;
+	b=hoFOq4iZB02I/fYHd6c2nTntEpUO8Y7K67Rwidc3edT2YJfH8cmX8VoEmnDEViUQ5Ps8
+	 MSM/MImpUbr2tgdZv44+8EcF/c/wPZB3BlhN9LvLQPCjMecbMlj5VXsNLAMsRK9L4BlMZ
+	 1e+Qc2Zvl9da3eSCexY6uq/gOoLs/joOb2wgc/WIgjbz0Wih6frgEIhDaXKLXRmgkj+fn
+	 hjeepzUvZMvSOCv7CMHRC9mT0p2eCZB3n236dSb1eH095UEt3M6kM10dAwLmpa0K3FQao
+	 Wqgu894SZQJTVAe/MtGZChibBTLxu7elwBmu73QRqW63abKlda3lBPdcC/+H94qc+Tw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=bwR1cgaN;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=YkouPNOA;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 048AF606A31D
-	for <linux-scsi@vger.kernel.org>; Sat, 24 Oct 2026 02:46:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B348606A31A
+	for <linux-scsi@vger.kernel.org>; Sat, 24 Oct 2026 02:48:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=bwR1cgaN
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4C4CA1F01825;
-	Sat, 24 Oct 2026 02:46:17 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=YkouPNOA
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B39371F01825;
+	Sat, 24 Oct 2026 02:48:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792809977;
-	bh=pT6zx2apOrfdpBzUBKN8oRSaDsRZsmJ1DYkHGX8CN2Y=;
+	s=k20260515; t=1792810103;
+	bh=aY7L4zQZONVWe8GQfjIX3wABqlw3CVUOAfDFqsaqk2s=;
 	h=To:Cc:Subject:From:In-Reply-To:References:Date;
-	b=bwR1cgaNDW1aKGeDu7qtNC8ruHwFjYr24GjVweLbUUqX7haRWoldQeB//2Hb+9NcH
-	 iEWOlSaCHHE52H7hwewFn0/le4cvyC1gIRypsB9K2o6ElclsaVGR/IxltfyjPu2jzT
-	 hNOnFGV4XdIMK21ZU4TpdIh5GlxoQla81RyCGSnS16ybNOF3mxsK3tZPYsEPnv78n8
-	 Y5LsGawf9SQIriTdPzchlCfhl3nsS9ExSgEwZR9N+m4GQ7e5Qxho75AwgNQtz4okgC
-	 AGKawaSq7Qr+4LsoHlqG0zZNps1XH30qgtAPRKPdveqn3TM80y5pL+nRMIt7lKG3zj
-	 00mBhQ3Tnl8dA==
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-  "Martin K . Petersen" <martin.petersen@oracle.com>,  Bart Van Assche
- <bvanassche@acm.org>,  <linux-scsi@vger.kernel.org>,  Bean Huo
- <beanhuo@micron.com>
-Subject: Re: [PATCH v3] scsi: ufs: core: Fix stale comment in
- ufshcd_mcq_config_nr_queues()
+	b=YkouPNOAWg09rkDXw8baPhHtVOypFMKa9IOnqe13l94pA15EqFfzJ2QuWbFTRkbmn
+	 w730c4jRVYMwPdrGPcHp95+JzvoiiS2KNF9jbbdNNlu7yusAC4QcSCdOfk4wFQZobd
+	 zeBaSN82dkyyYTNXs9NiighK93uJXOJTRcSdrJuU4DO90SvRZhz1gRJ6K+F3W9YsPK
+	 ly+Yh0Zux6YqEfx2kheRW04J+XPvMEhWoJx4o3muawHFg2EydvLX/KLyzCoaWlWDlh
+	 /+I+Tm6MDcKywq8xP4PzECwZ8zp+eSnEz+NGBd37Z1j09FYfm+aGBTBSX4RjJwsYlS
+	 t7MG1fskO/JJA==
+To: Ratnaker Gautam <ratnaker.gautam@kuleuven.be>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+  "lduncan@suse.com" <lduncan@suse.com>,  Chris Leech <cleech@redhat.com>,
+  "michael.christie@oracle.com" <michael.christie@oracle.com>,  James
+ Bottomley <james.bottomley@hansenpartnership.com>,  "mkp@kernel.org"
+ <mkp@kernel.org>
+Subject: Re: [PATCH] scsi: libiscsi_tcp: prevent R2T range check overflow
 From: "Martin K. Petersen" <mkp@kernel.org>
-In-Reply-To: <1792370062-23050-1-git-send-email-shawn.lin@rock-chips.com>
-Message-ID: <yq1v76r95ow.fsf@mail.kernel.org>
-References: <1792370062-23050-1-git-send-email-shawn.lin@rock-chips.com>
-Date: Fri, 23 Oct 2026 22:46:16 -0400
+In-Reply-To: <DB5PR08MB100629CD3750FBF71475B5224FD982@DB5PR08MB10062.eurprd08.prod.outlook.com>
+Message-ID: <yq1pkwz95ld.fsf@mail.kernel.org>
+References: <DB5PR08MB100629CD3750FBF71475B5224FD982@DB5PR08MB10062.eurprd08.prod.outlook.com>
+Date: Fri, 23 Oct 2026 22:48:21 -0400
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -63,13 +63,12 @@ MIME-Version: 1.0
 Content-Type: text/plain
 
 
-Shawn,
+Ratnaker,
 
-> The comment refers to "hba->dev_cmd_queue", but struct ufs_hba no
-> longer has such a member (it was removed when the dedicated hwq for
-> device commands was dropped). Reword it to describe the actual
-> requirement: the queue is a host controller capability and it serves
-> both non-polled SCSI commands and UFS device management commands.
+> An iSCSI target controls the R2T data offset and length as 32-bit
+> values. Adding them before comparing the result with the SCSI data
+> buffer length can wrap. An R2T with offset 1 and length U32_MAX then
+> passes the check for a 4096-byte write.
 
 Applied to 7.4/scsi-staging, thanks!
 
