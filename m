@@ -1,61 +1,62 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792812304;
-	b=XaspDXzMV1BXnRL/ejzNTIZTJIaeTV0CHz4D+KXMleXCZxSuLy8oGlOTze541utWJI4a
-	 lj6qK/nQlp95SXC0y8b5v6vFVV1LaKHYHvrwLhfYc050GP4fdZo8TxBXYKf4L/QBB4owC
-	 tt//B9l4jD5ojO191AdDPYHsBbozp9y4ieHjBl2XUJcPkSrFEHbU+1XGFDywcDN8D6gkc
-	 XgEwMXmBFBuQ5a76BEzesapJG77aiBvX26W3Ku++RHo8ImSqiSV6nfc/jXc/bf2sMTXQS
-	 Y3wdoi5XwmBA2G/2d0mWMZu9S3GQYCoStnmyyVb2pYzGNnfmGzW1oxVrFFFlH5dxnWg==
+	t=1792812310;
+	b=zByaemZcfOIUBXukdiBRv+/kUUyAdA3rRoBw6w8TDO9PHKk5B6mq+fWs4Ob59gpa2Gki
+	 4bJh0RAWni4TNdUhGstMRiu0NnS/UBgdfuFEQU7PJKnyY3HZj8g4fWtgffuxwvORK4ZND
+	 o01OGqaIEc7bUSGxTuZUXjKZ44Vf3JcGrvv4Uv5wKmWYdObLiGcwwO19sbRtCPVk5syOW
+	 pEVOr2i3W4aTy2V8RqGG7gFu8N3BrBIQSTyqCxZ4mGcq4DcAOBywCfliHJrb+nr75mZRt
+	 jbzqGfdcq/qV+s8HD01AsIcLdVXONTntICHB85TLANRGG4IC+fr14PQHZFEjqEB7aNg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792812304;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792812310;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding;
-	bh=cfGHN4JKd/AUlO63Wg5o9yEEqpmqnzj9Ur1v5MiFYEI=;
-	b=L8qxPKP23SPberX8CMj7k3ff3id8J4DFOw3qWlwrlGOsUj90gESnRZ0My4/PR2S6K155
-	 4MDRoY/wh5f8Ljv+BgBriV6PMjqZa82V8LDuRAF2oKbm6pquA3aHSaz9L/WI/DVI5CiW+
-	 ocsaRDDAIGldQaNLT5evX49W0V3y+E5RTUHQ1hNgzqd5bkTwrtKtz13BOzmnCVa27C0dM
-	 xEJXQrntkNeq5ZC7Kp4p5u2aNIE7UE4vBIqqXD4baO2M8czcEVnc9LTjJ5SRKvqLmStDh
-	 631SOIalRR3NuL0DJxTLETFr9XTdGmdZXr44fWNJObAAgjiiaevRNis4nCQLsQV/6DQ==
+	bh=+Vv0G9U4xBM7Xo92WDByxZ/8b4XqaGzaN7j2K6DDzBs=;
+	b=3EfBLtZungLijoMTVuGXdvPvxBsPfjniS274QL+cf3enlYMTNlRZdEes+u/nWrl0ec8Q
+	 6uGwf2Xey/ZCjXkpn6rJ654SVZMcIFx2ew0Liu5+EjoqJmotk7hicoge5MGd+L6YafyKI
+	 K7+gGxdMDMTZLcLZ6S9tBNI+npISQkgLJ9cSA8dY/d1IvvhIl+OzuBP3h4fHByejniZKj
+	 abbdZhTH01mjckNK7gSNKm8xPmxlMd3dBJJrQTWllwP05XrCg8mz3s1n9Ufv1JRwOAy89
+	 3CMFA0Toi5CzcEN/xGmBOUNjjI0kg1Rp0Qzp3YSVwzUaSU8KXpAxZlZ6i+66bBVUmUw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=T8D0EGFx;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=mONT8OTf;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB434606A322;
-	Sat, 24 Oct 2026 03:25:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30453606A320;
+	Sat, 24 Oct 2026 03:25:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=T8D0EGFx
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5107C1F031E0;
-	Sat, 24 Oct 2026 03:25:02 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=mONT8OTf
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 031FC1F01829;
+	Sat, 24 Oct 2026 03:25:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792812303;
-	bh=cfGHN4JKd/AUlO63Wg5o9yEEqpmqnzj9Ur1v5MiFYEI=;
+	s=k20260515; t=1792812310;
+	bh=+Vv0G9U4xBM7Xo92WDByxZ/8b4XqaGzaN7j2K6DDzBs=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=T8D0EGFxeCtWmCXzZeN6YZMQvGN0sOEJKufwYKQHDmaqw/LYDOQZ445wzVd5pbcqz
-	 icMxHii8qaxQEYIwmAVAzi0VIGSJCRjbtZRZCgcazKHOOFi2vE2b98n2VvgnuNa2cT
-	 UACTirdISpSoeLSpLfd+8YjxLSwUCECS6Gaw+WPPU3ib418TfnjVWuX5i2lCcvwAI/
-	 RurXvGhBTrrSG51scY70dntQ7FT5HShjJ8grkTnOKQHUe6YIZmjZCg9stxZ2UAOlx9
-	 ZTIdsZCJ8JQcNgwKmzYUljAM8476T0mDYEqpDIN/5jmIRSN45B7QQsHoh9UHPxwvv8
-	 CNHtjGGdtyaOw==
+	b=mONT8OTfcmMB3LNUInMc3mCDSn5mkwIRC0WGHR9nDPOhqaiobhT8dctzZSIFXMNH4
+	 ASDzcBFlIx0C0nXK5nrvMsPhc7KyJ+W+zoPCUZSyDpYlFaOBmtk2zK6uqdwRr5IvmA
+	 bmQ4oQfJ5EYUUPKbinUduiR8jKKoRAADIOMlcBuVXBNNyPc4nJON/zSkcU5vZpKYh/
+	 uleaQvzS4fRmHgoV9FdxoiS2cli7DrXgjdu3hozIBci3SWgBNlQVsIDI9A0GvRIvtL
+	 DvrHi0jvxLAHDiQpO4x2Jc4k2xgOyLJPjyXsctxYxHwqRdPXunpHFVr08LLlO12eZN
+	 aYc7j8maiP45w==
 From: "Martin K. Petersen (Oracle)" <mkp@kernel.org>
-To: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	Bean Huo <beanhuo@iokpp.de>
+To: jejb@linux.ibm.com,
+	john.garry@linux.dev,
+	yanaijie@huawei.com,
+	Xingui Yang <yangxingui@huawei.com>
 Cc: "Martin K . Petersen" <mkp@kernel.org>,
 	linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	Stanley Jhu <stanleyjhu@google.com>,
-	Alim Akhtar <alim.akhtar@samsung.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	Bean Huo <beanhuo@micron.com>
-Subject: Re: [PATCH] scsi: MAINTAINERS: Add Bean Huo and Stanley Jhu as UFS reviewers
-Date: Fri, 23 Oct 2026 23:24:51 -0400
-Message-ID: <179280384848.3823844.17189538822093388567.b4-ty@b4>
+	linuxarm@huawei.com,
+	liuyonglong@huawei.com,
+	kangfenglong@huawei.com
+Subject: Re: [PATCH v3 0/4] scsi: hisi_sas: Some misc fixes
+Date: Fri, 23 Oct 2026 23:24:57 -0400
+Message-ID: <179280384862.3823844.8851353706623051221.b4-ty@b4>
 X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20261006082907.3405554-1-beanhuo@iokpp.de>
-References: <20261006082907.3405554-1-beanhuo@iokpp.de>
+In-Reply-To: <20261009033238.1076098-1-yangxingui@huawei.com>
+References: <20261009033238.1076098-1-yangxingui@huawei.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -68,21 +69,27 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 
-On Tue, 06 Oct 2026 10:29:07 +0200, Bean Huo wrote:
+On Fri, 09 Oct 2026 11:32:34 +0800, Xingui Yang wrote:
 
-> Bean Huo and Stanley Jhu have been contributing to and reviewing
-> changes in the UFS subsystem for a number of years, and would like
-> to help share the review load going forward.
+> This series contains three independent fixes for the hisi_sas driver,
+> plus a libsas fix found during review.
 > 
-> Add both as reviewers (R:) for the UFS subsystem.
-> 
+> Patch 1 fixes an out-of-bounds memcpy in sas_ssp_task_response(): a
+> device-provided sense_data_len >= 0x80000000 turns negative in the
+> min_t(int, ...) clamp and becomes a huge memcpy length.
 > 
 > [...]
 
 Applied to 7.4/scsi-queue, thanks!
 
-[1/1] scsi: MAINTAINERS: Add Bean Huo and Stanley Jhu as UFS reviewers
-      https://git.kernel.org/mkp/scsi/c/e7d41f493e73
+[1/4] scsi: libsas: Fix out-of-bounds memcpy in sas_ssp_task_response()
+      https://git.kernel.org/mkp/scsi/c/4d7f9c3fdce7
+[2/4] scsi: hisi_sas: Fix incorrect delay values from magic-number cleanup
+      https://git.kernel.org/mkp/scsi/c/7307109c92f7
+[3/4] scsi: hisi_sas: Clear PHY error counts on phyup
+      https://git.kernel.org/mkp/scsi/c/7991f33110d2
+[4/4] scsi: hisi_sas: Fix spinup failure for SAS SSP devices in Active_Wait state
+      https://git.kernel.org/mkp/scsi/c/92821c2358c7
 
 -- 
 Martin K. Petersen
