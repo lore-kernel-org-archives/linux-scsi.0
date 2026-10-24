@@ -1,53 +1,59 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792811136;
-	b=O20kgCzqodXq/6b6d7FpMd5ftAX3fRcItv4a+PoErZ8Tt3/+FfVdV6s2cxD1ZydFiX37
-	 n1qqO+eZurhe7c/nIL/YWfzsmFV0gVU+4HBvfeLST8r/IEFpD49gfoCzgbNzJJgLcx7by
-	 qAAMzmAeL7RZc1mB60WiqC8YItxIYS5x5PK4WYyQDtF/nx6UV+arDtSGsDoZDZ4PCJTmd
-	 ixEbzrCJNGSD/WAYHF3M9dXxC6VqT9j6BKsOR+saPQ2QRzUT4uaKjrFpI7Tnl67tDRHXL
-	 eKGwBuN7y0SkXcfzEJwVC8zGuSCj5AlwmGF9eelLxaaJ54LH0lS8+u5Nh/CVKROL8hA==
+	t=1792811394;
+	b=HlflsbC/0FhO+qaU7dhnfvwVdooW8Z6IdVppQqOQfg//m7voqryTAeH4HJqbXyr2Z1lP
+	 iDPzKIBpUCeOjpixsNeubRoUzdUV//4+g7wUqnYO9JCqQdOURuVais0o9JzmVwVqD3MdM
+	 HYBDNJQVhN8Wjd7htwxFekkmdRfUWi3QRG3AlPQESsaqgvLma1gFObHF0mJp9Nik6Uycy
+	 aLInmkWW7xq8qs8Ut9vA1FtlEdD7ffvQma++Py+EoYqfbqEcrsZ8aDY2Z7wwXvupw1axK
+	 eNWHrD5KUD23RTkAu3zf062JIwPlSEnBEJPxivtUCBnV0eA7VzX53HYLdbazVN4iqPA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792811136;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792811394;
 	h=Received:DKIM-Signature:To:Cc:Subject:From:In-Reply-To:Message-ID:
 	 References:Date:MIME-Version:Content-Type;
-	bh=sXlexXVyaZs4n+IvAt4+Ql/FTWVNz5R/wfmg+BBxB90=;
-	b=WRcEws8pB8vjP10ILtghHMr4iISGaR9rKOC05gC/vTocDNs0odDTPhdYG42tYMhMg7pn
-	 hO3iULT8PXNqm/NzFbFs9Cr2NP1OXc1XfMjPul/CfHfmns6kiRy2s5A55QXLqcUD7X8/4
-	 TwUQNjzKkvYFWUj0i8uvgFto75HG2lJPLlLRebX7XTpR2/fSB7o7GiGkIKdBLFlMjxwf9
-	 gLm5QNkpDgiVwgbuxKqUofKn00ShAp4yhBjWlZdvjDQjHMyLfq8t2pJ+HDUxeAPObXM7q
-	 X2kbn+3ZlZHAZO9uAe6vC1qX7rww3vZh3PPTFETmsjowmmNP01BYIuK308OMGan47EA==
+	bh=jeDtFxMmARx/BEdwf0rsWaK5rXrSn2uSaZplamu0Wm4=;
+	b=eyNHBLWPa7GbxUt60j/Cnq0QkbjuLjRBKKB/CF+6vgj18IUr1cPq9EEpzZyBFP/TQytL
+	 djaQT6uYjAdBpxFf0aTIMk2VZ7maevoihiCYZdzRLfnF4+nE9UMrlEQtETE1g87ujvmcp
+	 nt+fNISAGIh17/h2KfWF1qNZ/5nL+fQJ/M2vLUoxhAuaLJT9LKVl7mYrrNyBzUSaDLScd
+	 TU6cQu48HUYW/SRIikAiefPVD+rPXOI4mKN0CJyZp/yWVpe94e45MwaYHws9buYHSBjqj
+	 DvxVaoeek+AQEG1bDjrOJorw+tUIOSMYR4PY/gbn2NZCnVHx6GKDcH2TGwwdMoIr5HA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jv7945fz;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=QmY5HTP4;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B901606A31D
-	for <linux-scsi@vger.kernel.org>; Sat, 24 Oct 2026 03:05:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98B8E606A31B;
+	Sat, 24 Oct 2026 03:09:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jv7945fz
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9F3E21F01825;
-	Sat, 24 Oct 2026 03:05:35 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=QmY5HTP4
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EE2181F01825;
+	Sat, 24 Oct 2026 03:09:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792811136;
-	bh=sXlexXVyaZs4n+IvAt4+Ql/FTWVNz5R/wfmg+BBxB90=;
+	s=k20260515; t=1792811394;
+	bh=jeDtFxMmARx/BEdwf0rsWaK5rXrSn2uSaZplamu0Wm4=;
 	h=To:Cc:Subject:From:In-Reply-To:References:Date;
-	b=jv7945fzPqFwyzYGh7SHaUGBUmZia3/WrHQe5uEF0Bt6eX8JN5+zPaM0ybXtWHtRc
-	 vzMlApU7tmLja1kwyN4J4qkCRWI7s8CI2GgwQlyFexHRM62acfmG7FzcLmka0cgsJE
-	 xGr8k7lcnPWVlQSCeJPqDoxRAMxv02y0ZQ3VEWy/uIJlQ3MlDL0nO8PAmGR0ETk5Tt
-	 u0ESk0J5bwujcTMhtHPJkNfXkcsLeKZimk61i35MMv9ba3PWeHSf/LahocWf/BjfIZ
-	 3m4mX7CdMCdXAPlp38hkFi/CCF+DreFc984a0zXM/T30Aj2kPm/wRhkDQ13ROQHP3l
-	 09hLvkeVQQPAA==
-To: Nilesh Javali <njavali@marvell.com>
-Cc: <martin.petersen@oracle.com>,  <linux-scsi@vger.kernel.org>,
-  <jmeneghi@redhat.com>,  <GR-ETH-Storage-Upstream@marvell.com>
-Subject: Re: [PATCH] MAINTAINERS: Update Marvell Ethernet storage maintainers
+	b=QmY5HTP4rrzTk/iBQnergo1aqKE0JSeQdhTStfWGD7+7PSYGGmgGpl6Y80Ea6v6wW
+	 OhEaSyjn6qqT4bOfE+Baf9cWDdg7yIbfF+U5WyOUpyEuYvo2fYr+Ofyneh33zQVr3S
+	 Ym5uKWLyQxUt95545UcgBx0YYpCLNQ+b5FXYZF1h+gj+B7Ezj9CsSh0xz1Yo78ZqJU
+	 ziCPTh6SJGjvINHAHWkuPrtlm/c6HkpD77bErkyncJcWvoUZJ8eomkauSJEiUpfm+G
+	 GXUHpsuoMxo042YuZ6DMIr3eNCMkzg2mE6gvQP+WPsSqpj72SmgO8YQ2dvmeezzjrh
+	 9tnuvKqXIeruQ==
+To: Alexander Koskovich <akoskovich@pm.me>
+Cc: Manivannan Sadhasivam <mani@kernel.org>,  "James E.J. Bottomley"
+ <James.Bottomley@HansenPartnership.com>,  "Martin K. Petersen"
+ <mkp@kernel.org>,  Abel Vesa <abel.vesa@oss.qualcomm.com>,  Konrad Dybcio
+ <konrad.dybcio@oss.qualcomm.com>,  Luca Weiss <luca.weiss@fairphone.com>,
+  Bjorn Andersson <andersson@kernel.org>,  Dmitry Baryshkov
+ <dmitry.baryshkov@oss.qualcomm.com>,  linux-arm-msm@vger.kernel.org,
+  linux-scsi@vger.kernel.org,  linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] scsi: ufs: qcom: Power down UFS during system suspend
+ on Milos
 From: "Martin K. Petersen" <mkp@kernel.org>
-In-Reply-To: <20261023085112.1378540-1-njavali@marvell.com>
-Message-ID: <yq1wlr77q88.fsf@mail.kernel.org>
-References: <20261023085112.1378540-1-njavali@marvell.com>
-Date: Fri, 23 Oct 2026 23:05:34 -0400
+In-Reply-To: <20261005-milos-ufs-suspend-v1-1-a6f8b89d5b63@pm.me>
+Message-ID: <yq1mrs37q19.fsf@mail.kernel.org>
+References: <20261005-milos-ufs-suspend-v1-1-a6f8b89d5b63@pm.me>
+Date: Fri, 23 Oct 2026 23:09:52 -0400
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -60,10 +66,10 @@ MIME-Version: 1.0
 Content-Type: text/plain
 
 
-Nilesh,
+Alexander,
 
-> Add Nilesh Javali and Manish Rangankar as co-maintainers for bnx2fc
-> and qedf. Also update email alias for bnx2fc, bnx2i, qedf and qedi.
+> On Milos the UFS PHY GDSC is turned off on every system suspend and
+> the PHY loses its register state, so exiting hibern8 on resume fails:
 
 Applied to 7.4/scsi-staging, thanks!
 
