@@ -1,55 +1,59 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792810693;
-	b=Yd59eBGgPK0B3T8M+9PjPUoOm3vnqkpCoe86BSB0VsukWojG7QJNXJi37oPWKdkFURjo
-	 GZsjjAfpzCOrSQJSKcqXVJk/aJtDyPWrgi98lEmTBDtFCTSzGuOinVfBpF1BxYTgnsk8p
-	 nfN0lfVqSO65xKxU4EEcwPxFWldvE+GABAy2yHUs7mbKTuziIFRyjSXI6mYtaf1u/g4xV
-	 v56C2jSXCuYcJ38kmBeHqcX7dgqNwy6EQaEQuykIVLk0u5+eu8Upmsxh6Ejwj1G64kyxx
-	 9p7a0c+uxM8HpABbTDQZRiMccbddvbQLGagAaVqIUFo2go++AQVnB682AEN5D0S0cEA==
+	t=1792811044;
+	b=ih3D1ih3xs+Om7K+g3nDG5rz9tYHAJS7h1clJS7beDfn5O1K0+IuqKxNZ9osdy0irSsj
+	 0d+aBf2qoHofDRibhIyWm+HuaO/nq/O/nwKChLJdHyk1IFUSxUuh/r1mDMHH7b3gSYfWE
+	 fu2b3eY3gjAkiJN/5YZ+TTWLxT4Vq7GuIlnmeG79S7ru1jG+iwE/L/OfBKAgtlflDjv6N
+	 XTbcTH+xO0+FwxPvz5Q5qneDTiMRCUQDwhfnhC2Q2tAUewTTcVUjCTf3ZqGTcYCKiFPKv
+	 QQVMkRakMMySilD5iOUshHfer8M6T6JsEHBtLbxV58EGRsOu273YbDF7bcOGwwFpT8g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792810693;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792811044;
 	h=Received:DKIM-Signature:To:Cc:Subject:From:In-Reply-To:Message-ID:
 	 References:Date:MIME-Version:Content-Type;
-	bh=cro+irZEQt3ZfMyNbr9CZBPfNTqSS+IOtvDsUXouYO0=;
-	b=z4ziu7Z+kF2Ae41v2Re2m/lHaBKywcUAWnTyHbSfL2OL2wSLDR1cgCdwtQePPuvcb7p5
-	 BcTPokdRA0Cw5mcMZ92s4B6BoI5eIHfBCHXRbgGk83t1HU89y8je33uY427d3y54ETgEF
-	 XPYCB+hrip/skLivFPoeDVtl85FO+WObT/im1t7FfCPf5DIhT5M/+ngpbAh6z7jWutRbr
-	 SrSBOJMjJr5b3OP7ulMgmPrvHFuJOC8u2XZ8W04RhRwVsd0Eeua9v9HwK0yatv3MOuv26
-	 Q88JM/oxbA+RzRfl+gaYARpzUp1kUsl9r5ix3iIM7uEEzj1uQKRgvfjGYF2miO4Fy0Q==
+	bh=TmK84cuyXL/OTFiUXGEgEikpxQYq9UtzXSvMycfVZmM=;
+	b=WxgEI8pzGoBAqjZqyQ/Zf0CLdZNejmoZxmTzrJt8Q+vLjbLWl2p5Kg0pFTgQh8vIm2MQ
+	 V7ZbBf5L/QDCrfxJF7gftSk9PZ/FLSIKB2bPv+R2TCesXZiDDw/ZrITE02jRltu94x0UV
+	 Qjmi59hTl6NT3hSyvEV/st1XLIaYbxfHN0gx6T234fLWXefJ4QqNQQ70jFgq5b17UCEw3
+	 RTdNrmY5fB6tHl40PcofjrQmj7QUlHvk4KlI5ddfI01FrYzwJESeZUsbrErR6+7x8PdB0
+	 +VgphYC5sshUBtbNU/UL0pC4OnIBD2C7IpAnvbRMLb3yGPpSE7j2GrBP21W7Zt+oVcg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=UkHsYrGa;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=XDqQoyeh;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE2B8606A31A;
-	Sat, 24 Oct 2026 02:58:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92306606A32D;
+	Sat, 24 Oct 2026 03:04:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=UkHsYrGa
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2F0B61F01825;
-	Sat, 24 Oct 2026 02:58:12 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=XDqQoyeh
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D7C681F031E3;
+	Sat, 24 Oct 2026 03:04:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792810692;
-	bh=cro+irZEQt3ZfMyNbr9CZBPfNTqSS+IOtvDsUXouYO0=;
+	s=k20260515; t=1792811044;
+	bh=TmK84cuyXL/OTFiUXGEgEikpxQYq9UtzXSvMycfVZmM=;
 	h=To:Cc:Subject:From:In-Reply-To:References:Date;
-	b=UkHsYrGat/WNXin99vA8QbdU41M6j6dAUzuYgVs1ofrZcuS4cCdqHKBiwLI5mbkog
-	 abhHQiqG9yitk07Rmam4z5ZWWn4HVpZqKME6JSEf9+ovWqFilcU9Ccn3ZPcVxS94Il
-	 f9vcoAKzt98z6Ye14y5c9Z/Yen+q8TtoRicXt8lfE0WdqeuXbDvmkgMj2968gECK5J
-	 wH8F1c/5Tgb9KrEx1O+blxvBfsUIvQRtUqRLtlYRDBKd9W5m/9Mbt4bFQcL8OZNQbo
-	 8aDSYtGboeIt/gYZTccaQ123hX5DYghfRlO4hlMtETzX3xLJ/+/GShBkYgWWG9w7xk
-	 Ajwg2ZllvgvAA==
-To: Randy Dunlap <rdunlap@infradead.org>
-Cc: linux-scsi@vger.kernel.org,  "James E.J. Bottomley"
- <James.Bottomley@HansenPartnership.com>,  "Martin K. Petersen"
- <mkp@kernel.org>,  Phillip Potter <phil@philpotter.co.uk>,  Jens Axboe
- <axboe@kernel.dk>,  linux-block@vger.kernel.org
-Subject: Re: [PATCH] scsi: core: update cdrom.h coments
+	b=XDqQoyehhrXZSf5g3ZZgNDggw9S+puk3uA6GsYPiB5IoHkmv6HgRsyWxniUmEKdJP
+	 9KObSK5CtOndf6FpQ1QB1uZvcHcCW/SoQRrnQO1y5YDrg+qvAem+3rLvJQVIoneYP4
+	 VlRN0cq7iI89iOLnDv/3inMdLEsods1OG7jny0pjwntvYELdjy83TRY961L+6tt1CB
+	 a0R+u9Xlymv14iCeJDUnqNdJ0RFbGROE79BisauiKiPiFy0mJqCR2WTLyQHRC4utg9
+	 eLOww3VxV07nB4DfC6+qE+4BaIkXtXwjMRN+kyBMfygZc7MWggcjN//3Mqzj01+RZ7
+	 ZTXSisgpKw7VA==
+To: Wang Yingjie <x-professor@outlook.com>
+Cc: "Martin K . Petersen" <mkp@kernel.org>,  Jens Axboe <axboe@kernel.dk>,
+  Bart Van Assche <bvanassche@acm.org>,  FUJITA Tomonori
+ <fujita.tomonori@lab.ntt.co.jp>,  "James E . J . Bottomley"
+ <James.Bottomley@HansenPartnership.com>,  "linux-scsi@vger.kernel.org"
+ <linux-scsi@vger.kernel.org>,  "linux-block@vger.kernel.org"
+ <linux-block@vger.kernel.org>,  "linux-kernel@vger.kernel.org"
+ <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v3] scsi: handle out-of-range SG_SET_TIMEOUT values
 From: "Martin K. Petersen" <mkp@kernel.org>
-In-Reply-To: <20261020170603.3692218-1-rdunlap@infradead.org>
-Message-ID: <yq18q3n955h.fsf@mail.kernel.org>
-References: <20261020170603.3692218-1-rdunlap@infradead.org>
-Date: Fri, 23 Oct 2026 22:58:11 -0400
+In-Reply-To: <20261022025508.294713-1-x-professor@outlook.com>
+Message-ID: <yq133tv94ve.fsf@mail.kernel.org>
+References: <eb20226b-cfae-4b10-b42c-1b12c2d17687@acm.org>
+	<20261022025508.294713-1-x-professor@outlook.com>
+Date: Fri, 23 Oct 2026 23:04:02 -0400
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -62,11 +66,13 @@ MIME-Version: 1.0
 Content-Type: text/plain
 
 
-Randy,
+> SG_SET_TIMEOUT accepts a signed int in USER_HZ units. The sg character
+> device rejects negative values and limits positive values so the
+> converted timeout fits its destination field. The block SCSI and BSG
+> paths instead pass the value to clock_t_to_jiffies(), which accepts an
+> unsigned long, and store the result in an unsigned int.
 
-> Update the location and ending value of the cdrom ioctls.
-
-Adjusted start value and applied to 7.4/scsi-staging, thanks!
+Applied to 7.4/scsi-staging, thanks!
 
 -- 
 Martin K. Petersen
