@@ -1,74 +1,74 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.71
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.210.199
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792892099;
-	b=1/Crv2RdQNwiIs3kybRkLYeGIhVNelZcpYRAxRUF8MovO/mW8Dsm9OHJN2q8Hp7+yhDW
-	 Gr9uy3iBCUFWKknK7iKJAipQNbuFtvnUusJ/DO2FqEwsSAomsfkEK0ke7EIyKCp0kvlM+
-	 593uf6rWY+Uf4yRrHheGN2YPn0QABL9Lx8Plp5uvu6/kTlfsTlGx9QJ7JwYj0ZfX/Y5ie
-	 pr6TztRpjJJTB4U1fx1evDSFyhiTIfs+s+xxpUTnKbXQNN2QgAAZRG17X+FnfUkoeWMbP
-	 HyO93zLthHs8x6WVIVXZz/iofl6DKBXRHHGwAVkSq/phIVcKiCkDqiNZWPrx/L+y42g==
+	t=1792892097;
+	b=zNggq84xTpZ0RMoRRvxG5m2aIm99y8T/uURcZnkTD6Ul1GVlzrWqqaSARvGo3rAQQX6y
+	 Iy6K87/FzF1kO8ZwEiK5UPWi9tl+AjjBRfqv/UMxnMxdXs/axqtiZNFXG74KUWV54wTCv
+	 9ZXIyeX2zBm+CiFfVLfTcG/Kj9YPFJZ6wcGNuKivOH47jxM0Ufzyq+HwCUiqBfqyQBSBd
+	 mKbUXDOjX1mfC60Dlh8Yb9IcP6qDiNxEqD69/uUu3oLeTj0rn1a7IAlIhW+01y+l5Qx8Z
+	 c6fdLUH83By8SlcMB2t91aYqAUIMczpXg3YVSczfIBeXO8Ha1unSCoOrjYiEiQazMBQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792892099;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792892097;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:In-Reply-To:
 	 Mime-Version:References:X-Mailer:Message-ID:Subject:From:To:Cc:
 	 Content-Type;
-	bh=BP/T5caNyFQqrbvx80KyGJgS3Pl0WpQ0WItoit3D5n4=;
-	b=qzt2YfM7cUvrDZFH2Cg5xFMkDjAFeEqhORefYzA0LaiFh1CkS4fqU5cTDCoecBAOcIuQ
-	 XyXlrYIcnG+OwDOK6wWD7g6UeCBztTTGpj5mYCkWycGIymsLSkb3/s+wWc03dUtmuOn9g
-	 ushnbITvSsj2LKro8NICWE/yp4rH7zh3s4MOr1FpD0oj4UU1g7RcXt47oea7RqIy/WYFq
-	 LGW8pgZEycUcU92unq1Pwd8einG6Oby617KnwqgXkzfqumdxxBSeddXz9Ntl4CVjrGSOM
-	 /Ir1CHvJBW24E283dHgWHSlLvDAEN3CJDqKM8n8BeagyWWoUCkFz13jvkDiLCkj3S6A==
+	bh=AIvu/rqVnupfasFxvXjw2EGbKljTp1m69eUHoTTJV9I=;
+	b=gckxjIMoUVMdINDKcjidiUIYgFiGNhiQgzfRZnsLdZ7OrC+Fzkmo+pDg1ks/wW5fuud7
+	 CIerLj/KDgA0Z54uAsPpjBjbQfsTtc4u+1bFGd1jJLpLQEdD3h++VMFmmGntKqvghhI+c
+	 AMap9s9I1SXKf2q3q6gJ9NpnUNEswk8w13eFS+dZE634ejc3Lq4galWWRqRfUf2UgbrNR
+	 rCe6Qe+ceN4uymMHLMGktgXiOHQZl/GO504RuxabXVW0e/635orFxpx7ZqeD1FHiAbl5l
+	 3XmSJk/9VchlLk647Wvv1ewAjyxI/d4cQbbKz3g2k2XYp4+k0/RAuRTtW/ScTD0VwhA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=google.com;
 	spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20251104 header.b=dEzswU2F;
-	arc=none smtp.remote-ip=209.85.216.71
-Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com [209.85.216.71])
+	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20251104 header.b=meRXun4M;
+	arc=none smtp.remote-ip=209.85.210.199
+Received: from mail-pf1-f199.google.com (mail-pf1-f199.google.com [209.85.210.199])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C37A2606A330
-	for <linux-scsi@vger.kernel.org>; Sun, 25 Oct 2026 01:34:58 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C37A2606A330
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CDB45606A33A
+	for <linux-scsi@vger.kernel.org>; Sun, 25 Oct 2026 01:34:56 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CDB45606A33A
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20251104 header.b=dEzswU2F
-Received: by mail-pj1-f71.google.com with SMTP id 98e67ed59e1d1-3ab7f1efe5dso3524376a91.1
-        for <linux-scsi@vger.kernel.org>; Sat, 24 Oct 2026 18:34:58 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20251104 header.b=meRXun4M
+Received: by mail-pf1-f199.google.com with SMTP id d2e1a72fcca58-8a064f294cbso1573179b3a.2
+        for <linux-scsi@vger.kernel.org>; Sat, 24 Oct 2026 18:34:56 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1792892098; x=1793496898; darn=vger.kernel.org;
+        d=google.com; s=20251104; t=1792892096; x=1793496896; darn=vger.kernel.org;
         h=content-type:cc:to:from:subject:message-id:references:mime-version
          :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=BP/T5caNyFQqrbvx80KyGJgS3Pl0WpQ0WItoit3D5n4=;
-        b=dEzswU2Fcsi1HV/1C1T/dd4ptCo42oLxLfLaX5mdu4t50ngB7DU/MikWO9wmPQj6hH
-         wDUjsaOuZILakJWz6SJ3xNZCNmaVOroWsYUI0BdPbphSAX4n5KQs2LEcJzxhbWG/vmg/
-         JsaGpOiIsL68Yedj1JC3z2zz5qupKclpqFwpYMmmbVLaSjFk18tmQ/jScKl4xe2CLsFA
-         eU+M6DvthyaXWW+EldMi2NBn1+nYccZERagA7tSuxh5bnXFk8m69l/JToSc7HbFV4eHp
-         UctyADqbeG7sOpmRZAm98fcpI53RaKdQ4FyL6pbMHXBTEbA1fnu7Mi4VbAoQYn3SqQNH
-         tamA==
+        bh=AIvu/rqVnupfasFxvXjw2EGbKljTp1m69eUHoTTJV9I=;
+        b=meRXun4Mmvu+G3QNS9CFBaKuexKED0W7tcQDwPMkKaA773VOQuFVheJ48D2loz/E2/
+         htC8gwFFoBR5WElK9qWzOz+zWWdDZX9BUeRXxBOxKaIi1EbRjH31wlAjAmJRYV++5BD5
+         uKl6P4gM03fe5S0HE2r+x3damWoopGd/rPAder1qxEvHvgjuSX76+xZuSkTHCovYEbh/
+         RtHnqvYfQC5n+KbDVIvtFx37iE2Z3zGL94lsJGTAMvHZCdjoCvYyr/OnjmnqP7IL36oG
+         P/XuSRvsxy7EmhVN75t1HNdviJaU+iYVSCQy2uZv08pCA1l484GcrAlWfJ6BDOq1fB/v
+         aiVw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792892098; x=1793496898;
+        d=1e100.net; s=20260707; t=1792892096; x=1793496896;
         h=content-type:cc:to:from:subject:message-id:references:mime-version
          :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=BP/T5caNyFQqrbvx80KyGJgS3Pl0WpQ0WItoit3D5n4=;
-        b=ZkCez37hk8XMafsMI1C6K4JbdEeXKNdMZnUi6/DQUbjQjWaTuWbKd7UEVMzS1A5Y1T
-         JNBYux6gwkR8Pn5vFLD80Bripfj/d3fjLUh8l9Kyss0Eke8+KGtuYEn1b9HEtZvX/HUG
-         R7fmEFI13D0aFbWIgnEKKYPjqiLVVTu9Dz3Jvzu0sx4iFNzRGFz57rhj4Y2YZC8shv2j
-         HyjIzCn8Uorjf3pZPkadd3/gV7cbINzZQCfsz8qQQ+ueXs3cerWT0pQEkQ8LrBKrYVxf
-         vPGUIpuv4bydleB/ht3ZhxVxqxikkvoQHuZuk1c9iZfzbHNEZKi1yHahhJQ8N5TCjdA/
-         z7Mg==
-X-Forwarded-Encrypted: i=1; AKwUvBwNUtxQNZqgrsgvCvGS+Nf13IqKXMxhMq1uLyAAr6C7fwABYgeW8clPxR60pTG9fn1YoONLnZ24Qxn3@vger.kernel.org
-X-Gm-Message-State: AFq9FYJXY1WXmjucXrWXkvZZACLtQVHQE+OTbselupdGzZGQiuTlHimw
-	8cT2DYt5RzmxjHRSwkhuwsHqDv4PR/otclpSMj8YFbTFSSpBS2Wx9Rih8A9YTDlKgPiz/PUHdWf
-	1Ilkz6ttaTYPFWUwF8nJDmQ==
-X-Received: from pjvf5.prod.google.com ([2002:a17:90a:da85:b0:3ac:16a7:52de])
+        bh=AIvu/rqVnupfasFxvXjw2EGbKljTp1m69eUHoTTJV9I=;
+        b=MljWml5iGjsOK2XM9lsT+MHpMKSTxawpXKcdRFlw+B5/xTTK2wPxM6iqs6obWdTpFA
+         KtL4hV8NjkC16J4FZHmh83H+AOEjxy59cQs5VHMNo3j7O5pzetQ+7K4xhpcb2yj9Byvc
+         iCl5mRHZyKfYTm9j4jTCkFHMGGMbpNh4pQUTaZX+3Obrex2dhuc1Nyrflx6WVfpABEYy
+         Z25uPPWs3Je7aJzwR11SdO1xwaWNrJXIE7cL3mZJJSgenvOzfRGBRHlhRp6A7k8X/A7X
+         /6ur+H+ykcwE49KLcAz/i1ZHA8iK5ekslMiN4xLr/zO8sKRdPi9pKnPIMPhm5tvoTWf/
+         INew==
+X-Forwarded-Encrypted: i=1; AKwUvBxe5hx/sBtWKJrnNv03Z6KGj8oVPa/j3pt2a/P3Koj3cCUl3iHUOW2B05er9/XD1oIHMGIMVZs9/g1E@vger.kernel.org
+X-Gm-Message-State: AFq9FYKv462bHZw5XluFhZPeho6OoCW5gxDG+px24tcdkxD8rk/6Jb2I
+	3pGitveJU7ybePn/D9Ucpx7T8xoRvSTKfLKAicd9PWV+X6H223FgyBM0SKL5epjP3/Q+xzoW075
+	JUukWzltU7LhmrBJ1llwH6w==
+X-Received: from pfbf9.prod.google.com ([2002:a05:6a00:ad89:b0:89d:e1ff:97f3])
  (user=stanleyjhu job=prod-delivery.src-stubby-dispatcher) by
- 2002:a17:90b:3b8f:b0:3ac:450a:f9d4 with SMTP id 98e67ed59e1d1-3adeb16364bmr3012759a91.64.1792892097936;
- Sat, 24 Oct 2026 18:34:57 -0700 (PDT)
-Date: Sun, 25 Oct 2026 09:34:46 +0800
+ 2002:a05:6a00:3cc6:b0:883:904e:da56 with SMTP id d2e1a72fcca58-8a366f68ae7mr2652022b3a.36.1792892095863;
+ Sat, 24 Oct 2026 18:34:55 -0700 (PDT)
+Date: Sun, 25 Oct 2026 09:34:45 +0800
 In-Reply-To: <20261025013446.345974-1-stanleyjhu@google.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -81,8 +81,9 @@ Precedence: list
 Mime-Version: 1.0
 References: <20261025013446.345974-1-stanleyjhu@google.com>
 X-Mailer: git-send-email 2.56.0.307.g5fe7bd680c-goog
-Message-ID: <20261025013446.345974-6-stanleyjhu@google.com>
-Subject: [PATCH 5/5] scsi: ufs: hwmon, debugfs: Propagate runtime PM resume errors
+Message-ID: <20261025013446.345974-5-stanleyjhu@google.com>
+Subject: [PATCH 4/5] scsi: ufs: bsg: Abort ufs_bsg_request() when runtime
+ resume fails
 From: Stanley Jhu <stanleyjhu@google.com>
 To: "Martin K . Petersen" <mkp@kernel.org>, 
 	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>
@@ -93,88 +94,43 @@ Cc: Alim Akhtar <alim.akhtar@samsung.com>, Bart Van Assche <bvanassche@acm.org>,
 	stable@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 
-ufs_hwmon_read(), ufs_hwmon_write(), and ufs_debugfs_get_user_access()
-ignore the return value of ufshcd_rpm_get_sync():
+In ufs_bsg_request(), the return value of ufshcd_rpm_get_sync() is
+ignored:
 
-1. A hwmon sensor access, a debugfs exception-event write, or a debugfs
-   TX equalization retrain request runs when W-LUN runtime resume
-   fails, when power.runtime_error is set, or when W-LUN runtime PM is
-   disabled while suspended.
-2. ufshcd_rpm_get_sync() fails with a negative errno while leaving the
-   device unresumed.
-3. The caller still issues temperature or exception-event query UPIUs,
-   or retrains TX equalization, on the suspended target.
+1. A user-space BSG request arrives when W-LUN runtime resume fails,
+   when power.runtime_error is latched, or when W-LUN runtime PM is
+   disabled while not active.
+2. ufshcd_rpm_get_sync() returns a negative errno without resuming the
+   device.
+3. ufs_bsg_request() still dispatches raw query, NOP OUT, task
+   management, UIC, or advanced RPMB commands to the unresumed host.
 
-Convert all three call sites to ufshcd_rpm_resume_and_get() and release
-hba->host_sem before returning the error, ahead of
-__acquire(ufs_debugfs) in ufs_debugfs_get_user_access(). This covers
-ee_usr_mask_set(), ufs_debugfs_restart_ee(), and ufs_tx_eq_ctrl_write(),
-which all use ufs_debugfs_get_user_access().
+Use ufshcd_rpm_resume_and_get() and jump to out_complete on error so the
+BSG job is completed via bsg_job_done() with the failure code without
+dropping an unacquired runtime PM reference.
 
 Fixes: b294ff3e3449 ("scsi: ufs: core: Enable power management for wlun")
-Fixes: e88e2d32200a ("scsi: ufs: core: Probe for temperature notification support")
-Fixes: adbabdcf0db0 ("scsi: ufs: core: Add support to retrain TX Equalization via debugfs")
 Cc: stable@vger.kernel.org # needs "scsi: ufs: core: Introduce ufshcd_rpm_resume_and_get() helper"
 Signed-off-by: Stanley Jhu <stanleyjhu@google.com>
 ---
- drivers/ufs/core/ufs-debugfs.c |  8 +++++++-
- drivers/ufs/core/ufs-hwmon.c   | 12 ++++++++++--
- 2 files changed, 17 insertions(+), 3 deletions(-)
+ drivers/ufs/core/ufs_bsg.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/ufs/core/ufs-debugfs.c b/drivers/ufs/core/ufs-debugfs.c
-index 9f83628f3e2c..44a1a9692324 100644
---- a/drivers/ufs/core/ufs-debugfs.c
-+++ b/drivers/ufs/core/ufs-debugfs.c
-@@ -70,12 +70,18 @@ token_context_lock(ufs_debugfs);
- static int ufs_debugfs_get_user_access(struct ufs_hba *hba)
- 	__cond_acquires(0, ufs_debugfs)
- {
-+	int err;
-+
- 	down(&hba->host_sem);
- 	if (!ufshcd_is_user_access_allowed(hba)) {
- 		up(&hba->host_sem);
- 		return -EBUSY;
- 	}
--	ufshcd_rpm_get_sync(hba);
-+	err = ufshcd_rpm_resume_and_get(hba);
-+	if (err) {
-+		up(&hba->host_sem);
-+		return err;
-+	}
- 	__acquire(ufs_debugfs);
- 	return 0;
- }
-diff --git a/drivers/ufs/core/ufs-hwmon.c b/drivers/ufs/core/ufs-hwmon.c
-index aa0b60a0ee8a..2b9673d92573 100644
---- a/drivers/ufs/core/ufs-hwmon.c
-+++ b/drivers/ufs/core/ufs-hwmon.c
-@@ -61,7 +61,11 @@ static int ufs_hwmon_read(struct device *dev, enum hwmon_sensor_types type, u32
- 		return -EBUSY;
+diff --git a/drivers/ufs/core/ufs_bsg.c b/drivers/ufs/core/ufs_bsg.c
+index baf6ae917d36..8df1a2c6abf6 100644
+--- a/drivers/ufs/core/ufs_bsg.c
++++ b/drivers/ufs/core/ufs_bsg.c
+@@ -150,7 +150,9 @@ static int ufs_bsg_request(struct bsg_job *job)
+ 		goto out_complete;
  	}
  
 -	ufshcd_rpm_get_sync(hba);
-+	err = ufshcd_rpm_resume_and_get(hba);
-+	if (err) {
-+		up(&hba->host_sem);
-+		return err;
-+	}
++	ret = ufshcd_rpm_resume_and_get(hba);
++	if (ret)
++		goto out_complete;
  
- 	switch (attr) {
- 	case hwmon_temp_enable:
-@@ -113,7 +117,11 @@ static int ufs_hwmon_write(struct device *dev, enum hwmon_sensor_types type, u32
- 		return -EBUSY;
- 	}
- 
--	ufshcd_rpm_get_sync(hba);
-+	err = ufshcd_rpm_resume_and_get(hba);
-+	if (err) {
-+		up(&hba->host_sem);
-+		return err;
-+	}
- 
- 	if (val == 1)
- 		err = ufshcd_update_ee_usr_mask(hba, MASK_EE_URGENT_TEMP, 0);
+ 	msgcode = bsg_request->msgcode;
+ 	switch (msgcode) {
 -- 
 2.56.0.307.g5fe7bd680c-goog
 
