@@ -1,61 +1,64 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792866866;
-	b=yyOtaUDLn03td5lpEHrl/Etd2Nzi/8UyYjGQVo/TuO7oNAE21J2bnqIQmIlc+NiFwHcH
-	 UQKjr5z44kaLBcTlKqSYwvFuglHKrgD0XmuLRF4kYaeZxTupeAXPBg3r/7RoNPgw5y/4H
-	 6OXPSh/4Gw+ovAMbsA1phTXuS44JAOU04W+3EHEGFb0+SI/BsTDBGDrumWKV8LuOwrMoG
-	 6tTf8We7bz6BBxXb/EOGL94LVXoM2NitDSGmn6mudK4ZaSJDEuYOTarxn4tsjJ0hvy/uN
-	 eHJAs/5VEIoZFhbLJU5Chzn0NdOJH/6as57K8GpfkBl4UPvYHg0GdwMSfooGhZqrgpA==
+	t=1792889189;
+	b=qdpBfzVJ/tGEFQGNrK6XsTeKJRp19GVPJAj6Sa6wHfS5FyMxSwzc3eF0LIj9yYnYKOnR
+	 IJ3dHkiTiIsQCbd2821o26m+SIbnUPyJN9iwt/0W6+4pIq7643X0zCBzFHopsu0TY0uMX
+	 Exbl6Su6hj4xxMRgcaOjqBrdKNfHzIv+lo+qO6KhNb7+5oYP4nQBxK0/AZMoTSWHse7HD
+	 rTwMfxu2ANbi6R33ET1qj17secmPzfXmybX8mcRtXslFSgecqLOqplEIDCyfJDrQ4Jv8J
+	 nuWgpsfL+hRnE8jemVjt8qZLdKtGfAKD/gvVzwyskeWXrIJH70qK/6aA9f+q9f7nTgw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792866866;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=s9nU0Fvjo6mdgiLcbDY45ODCWAqQuhzbgwNHXYseekg=;
-	b=5FYKVhwCP8F2kn5qFhcbsE+idRHKUdrhCgNa+9sRLw10hE7o8ApC0ym5Le8uZKgJYzx5
-	 rlf+uTq/bs5iiibs9JaYBtufsbrcPLxVwsD5qP8kNPWed0NYURykQHEJhIJ4Isqz/PKGw
-	 yoAFXreM7UoEUp2+3XG/UsmcepCUM40aNl6+MBk7sf2uL/wwTq+yyNs3cqgTlJZXEivbP
-	 x1hxRMLlTPFH0hKOLW+aJlYDLI1pODkCxqHjDCQJ1v+EsNrdLlQhwMLDsFChexYV1ZQCR
-	 /m5YbF7xiMxLcNFsGk/oDmotA+IfPpZYWLYajcrVti8kIzoO4EGS8B8TWvoaI51eHYg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792889189;
+	h=Received:DKIM-Signature:Received:Subject:From:In-Reply-To:References:
+	 X-PR-Tracked-List-Id:X-PR-Tracked-Message-Id:X-PR-Tracked-Remote:
+	 X-PR-Tracked-Commit-Id:X-PR-Merge-Tree:X-PR-Merge-Refname:
+	 X-PR-Merge-Commit-Id:Message-Id:Date:To:Cc;
+	bh=lCgupTnG88FYF+bWl2JXFtr+dCaJV8aLojTy6cYxVMo=;
+	b=p753nugNTdSzLAUEptCi+szlY/gENkJEtUcpwVvcKylqg9Z65YuU4HtuMOlBkS1ITiFn
+	 R/MBifj/fnjUWZPvLDThHjkUJgGsCmKluiWKNqJSwz/rhfPeY5ssTF6gYZnLliB96yxid
+	 BcKk4T0hI401l9CcBqtdkGjHz3/lVu0zszlQ8CCgoqJaGLuKlxgrAmBUctJmniS0J4A9E
+	 N6j08aAOZliosX1oMTd23W6rCmXv3/MHYt9mvtMzSV/4fF4DvGjxvCmLQ7tS7b0lSxPot
+	 ynpqmxWqhlySud5AYtthEiO1qVayZeWqS+uNqVH3sRnJwguP2IQQO3LoWKW+K/vkL3A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ZEAfbq+Q;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=YSLZ5Ezy;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7519A606A31A;
-	Sat, 24 Oct 2026 18:34:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ECE93606A31A;
+	Sun, 25 Oct 2026 00:46:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ZEAfbq+Q
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B5A3A1F01825;
-	Sat, 24 Oct 2026 18:34:25 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=YSLZ5Ezy
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C982E1F01825;
+	Sun, 25 Oct 2026 00:46:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792866866;
-	bh=s9nU0Fvjo6mdgiLcbDY45ODCWAqQuhzbgwNHXYseekg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=ZEAfbq+QS+iGW5wz+Dd4IG/JP/4IWmkZACSMVb5KeFTV1lIJzPUc10pD/gIHcCDnd
-	 6v5iqBCF8jpqrwyMGMQNJnRgyYxJWq/Of+OwLz56dh6TDTBM5VHn335gecS0Z4nVZZ
-	 S3UvAP45hk3gy00vG+2kGgtgZANthcu+9Zwf4PhXzF/O1BHPTesKi5egOFaHV/cUpB
-	 hSL7NIB17AYAlliqz01nMvgQUE0+R2fKBSfhkZILHDgL+cd+Y/Yf6w/rvHnfgpXeXd
-	 OaJrrzbjP59vkr/D4b5S1OBGJYggjd4hGt+CavxDysPf1De5LLTD6XGoSxfVd5AW5H
-	 Lmm0O0wbXebyg==
-Date: Sat, 24 Oct 2026 11:34:24 -0700
-From: Eric Biggers <ebiggers@kernel.org>
-To: sashiko-reviews@lists.linux.dev
-Cc: Kuldeep Singh <kuldeep.singh@oss.qualcomm.com>,
-	Adrian Hunter <adrian.hunter@intel.com>,
-	Ulf Hansson <ulfh@kernel.org>, Abel Vesa <abelvesa@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K. Petersen" <mkp@kernel.org>,
-	Bjorn Andersson <andersson@kernel.org>,
-	Konrad Dybcio <konradybcio@kernel.org>, linux-scsi@vger.kernel.org,
-	linux-crypto@vger.kernel.org
-Subject: Re: [PATCH 3/3] soc: qcom: ice: Add runtime PM support
-Message-ID: <20261024183424.GE2553@quark>
-References: <20261022-qcom_ice_pm_enable-v1-0-f7a84086c651@oss.qualcomm.com>
- <20261022-qcom_ice_pm_enable-v1-3-f7a84086c651@oss.qualcomm.com>
- <sashiko-outbox-181342@kernel.org>
+	s=k20260515; t=1792889188;
+	bh=lCgupTnG88FYF+bWl2JXFtr+dCaJV8aLojTy6cYxVMo=;
+	h=Subject:From:In-Reply-To:References:Date:To:Cc;
+	b=YSLZ5EzyP2Bv8c76wVNedVft2LA/hTyitKagfEefrqcAQdixXaaN4jT8s/Rsb+OTj
+	 pUj6wsrHWi0i5oGjN79RizyC5zDCr4eT9U+ZMfR/AIFArh43ojJKYZT0mVYK6ne7cV
+	 es57fdPpFMwo1dfYkXRVm4v/G6nUnEJ1QPZnKfVm86UXkhuhwhlsdbsczNvFVBOBG4
+	 2Ivq7iOPAmGW4fHL/dpts804H5dlGjdI0fuYk1hfB2Npl53bfiT8FHh9DU5V6H5ENq
+	 KX+GTpA845gQ8A9avLNSrR7xKzCs7PO/ZsJHpIJvG24wQITzJ/onFrF3ez/Or+YI8D
+	 +FZJxXJWHvhPQ==
+Received: from [10.30.226.235] (localhost [IPv6:::1])
+	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id BE8AD391B1B3;
+	Sun, 25 Oct 2026 00:46:28 +0000 (UTC)
+Subject: Re: [GIT PULL] SCSI updates for the 7.3+ merge window
+From: pr-tracker-bot@kernel.org
+In-Reply-To: <80d0631c1c5dbb4c62dd26ad813f595e41d855a0.camel@HansenPartnership.com>
+References: <80d0631c1c5dbb4c62dd26ad813f595e41d855a0.camel@HansenPartnership.com>
+X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
+X-PR-Tracked-Message-Id: <80d0631c1c5dbb4c62dd26ad813f595e41d855a0.camel@HansenPartnership.com>
+X-PR-Tracked-Remote: https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git/ tags/scsi-misc
+X-PR-Tracked-Commit-Id: 2f4880c22e838d54eae9ab153b0f8dce60531bf1
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 6fba331225f5040e93d0947d1027e9712238291f
+Message-Id: <179288918731.1847209.619262748091601876.pr-tracker-bot@kernel.org>
+Date: Sun, 25 Oct 2026 00:46:27 +0000
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -64,19 +67,16 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <sashiko-outbox-181342@kernel.org>
 
-On Thu, Oct 22, 2026 at 10:34:40AM +0000, sashiko-bot@kernel.org wrote:
-> Thank you for your contribution! Sashiko AI review found 5 potential issue(s) to consider:
-> - [High] soc: qcom: ice: unclocked MMIO access in qcom_ice_enable() when !CONFIG_PM
-> - [High] soc: qcom: ice: unbalanced runtime PM refcount in qcom_ice_enable()
-> - [High] soc: qcom: ice: clock and runtime PM leak on probe failure or unbind
-> - [High] soc: qcom: ice: broken pm_runtime return handling in qcom_ice_suspend()
-> - [High] soc: qcom: ice: skipped HWKM re-init and unclocked restore across system PM
+The pull request you sent on Sat, 24 Oct 2026 11:09:08 -0400:
 
-I'll review this more carefully once these issues have been addressed.
+> https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git/ tags/scsi-misc
 
-- Eric
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/6fba331225f5040e93d0947d1027e9712238291f
+
+Thank you!
+
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
