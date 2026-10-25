@@ -1,74 +1,74 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.215.200
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.210.198
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792892093;
-	b=CKPUPqynuZkDD+gZ/9W6didTr73i6JFf6LjQT03/rL2EGMEMWYLPgmGrYnqdzsUTRciV
-	 Q2nZYqzbn++rPbUHZ6nbDtyeerNOB6EfuWP4wW0ZliHNACY3vyWhiDMNqetyP1c5pTdHm
-	 usC3pRMmamxLbzlj7tGIqL/latF6eLrSRZuk2J71TUQJMtnwzLgOuDYr/xbagJYVq+PfS
-	 CaqCYo2ldi/KoDH2q8TqqzaimeWPQk/mZPZbfhcE8v+18lSjZwUfU1/Qy7pn6ZGMP6RbI
-	 QYMjG7nc48LNTI0iaMNv6KCgbzMUaJTHJHIph/eWUPZhdOsZ3+8URI/AfiSLFixpXBg==
+	t=1792892095;
+	b=nfeozys/efM1b/opa5RjyTCEMGDtgiVHd6kwNF4PDhrlGtwFPg+NRODkJ9SJJfEowVRx
+	 BWSvwojaDQfkCEJ4MY93ZwY7k4wILI9bWD9oIbPn+TdAvMZhV6RJ/qqKN/DeqK9S9wcK4
+	 sKVM2AXyyuW6DZnYK9wA8c5fk31h4+MpVj/RGzRfIbqAyNTLnjZurGBRN+KUogPPiTyAR
+	 p/QE1viZSwcS6CQ1Ag9dX/9nawhVy/ZxqlF6sUVOal3r+VEHz2daMEqRKLhfkuUvaDIFQ
+	 IRbwMQHn/EHY9GYhywqmlXJ1PwMAp6e61Q9aZb7U1xsVdefoR2jDjEEZMPjFAxbhVsA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792892093;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792892095;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:In-Reply-To:
 	 Mime-Version:References:X-Mailer:Message-ID:Subject:From:To:Cc:
 	 Content-Type;
-	bh=TYSiwMwmay2OMU5hIoROJC2gk9HspYKqZIDwCmXW3lI=;
-	b=1efQRXVaSsM+I7UbCAXaZCtM+qbwihHvOZUSR0yXGSNMQChC1RnR2qyloi0pTHYsP7xL
-	 GgL07fRZaUuTnik4Bpqbmfp2JcZ7LSpv6WRuQWpt5/0tRCaiuVXuTDS3MDKW7lttp5fYl
-	 MsDcGzDdHaQhhCVGSdutU6N+N3ELwth+fkLWGjweB5T0wD5iUpYdOtR24JVGdb9hf8Cts
-	 b4v7uE78Kop5T1AaPSVDCHRxFnWxzg/SOHOreStf59UPkWX14QlIgXpSfftYKCKRHfxK4
-	 PaiSiBuQ14PP04b2+Or9MuQ0Zuy1vqhKS7UGYMMWuH7QLQ4MahgomRqC0IGENBlD80A==
+	bh=d8zTOCpdfLCFup0LtTUT8GHUquWtW5OhPtS3dNMqHJw=;
+	b=pJS42yVKYEWpvOy8sU2ZO0gb9n2r8ZefCp9q1HkEmQaJcDq/KiuzH+pxD5XfZPC4AoXr
+	 L54ARf8sTJPCeaFAhGrRPMfbiq6xKmzAz9rGMf7MSv1xAq+p8hD0KGQalRV5Gv8sv6INw
+	 MDyPsIVYXAfuMRPkkdtIp+o+AFxkdyhfOZRwEcNK9E+g4B/JahDmaXcWcPeXihu8o6lNx
+	 /hpBdB8mGmFq8SfJJX5Wo/7cWsq63oGFK8YFi0BYGmarlpy6A3ynk7N8AYgv99OCPr5dX
+	 jx/CN1+86C8x6ACGiCNcYQ74KtIc0wroPEl5Q772GpNri3HyrMNsu71R1lE/dGq/EIg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=google.com;
 	spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20251104 header.b=F4N0ZchE;
-	arc=none smtp.remote-ip=209.85.215.200
-Received: from mail-pg1-f200.google.com (mail-pg1-f200.google.com [209.85.215.200])
+	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20251104 header.b=INVTu4vU;
+	arc=none smtp.remote-ip=209.85.210.198
+Received: from mail-pf1-f198.google.com (mail-pf1-f198.google.com [209.85.210.198])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7703606A329
-	for <linux-scsi@vger.kernel.org>; Sun, 25 Oct 2026 01:34:52 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B7703606A329
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CAB55606A321
+	for <linux-scsi@vger.kernel.org>; Sun, 25 Oct 2026 01:34:54 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CAB55606A321
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20251104 header.b=F4N0ZchE
-Received: by mail-pg1-f200.google.com with SMTP id 41be03b00d2f7-cc7d2ff0087so1244929a12.0
-        for <linux-scsi@vger.kernel.org>; Sat, 24 Oct 2026 18:34:52 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20251104 header.b=INVTu4vU
+Received: by mail-pf1-f198.google.com with SMTP id d2e1a72fcca58-89fb6a45c48so1939970b3a.1
+        for <linux-scsi@vger.kernel.org>; Sat, 24 Oct 2026 18:34:54 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1792892092; x=1793496892; darn=vger.kernel.org;
+        d=google.com; s=20251104; t=1792892094; x=1793496894; darn=vger.kernel.org;
         h=content-type:cc:to:from:subject:message-id:references:mime-version
          :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=TYSiwMwmay2OMU5hIoROJC2gk9HspYKqZIDwCmXW3lI=;
-        b=F4N0ZchEUtxLDkRuysvRWHNjVkT2Cdxb8qW5SaGA/D9l4XU8KggToSVVBaSYhL508c
-         TgmDNkOW+NBil9p+ujKNfzwIi4cXt7r+1z+EGNP9Kk1HSd3Ys7r23PQUpdS6f9qMKgSR
-         1ABxqpuAlGG934lYJx4gRYywisYUHOURssZBBKBL+kl9vWMZcuC+RHIvqr5RgdkcDswa
-         kna2JQfGpqIC6gr1Nm24g5Pei/liKP1UUhcSx9uJ28ig22n7YogAC5duqRgs9yx/eSAX
-         nMz+N450hX6FEMzmbXHzR6jERiwO5mYc65LwLeQfKcqksJt18lRMVmST+xVDLBIkgrjt
-         lbkg==
+        bh=d8zTOCpdfLCFup0LtTUT8GHUquWtW5OhPtS3dNMqHJw=;
+        b=INVTu4vUwpEyC7ZtxvJsKVU2+nOgKLbSmZQV5fHfLi1+JJ898E1aLK08xff6wcILew
+         LSG5Nk78eLrG9Y1U1tpmffPRoP1gn9jCLfbXSA0sMUN/r6Yzm1+pZyvghn3Vj2IIkzIY
+         JgT5Y1kG1vcwJgXPaKd5+3cYPLiIBWsZ6fNFtHZtbMiWuKlQiVB2o2LXJ1HNlj0BmVsm
+         ejI6O0J2ETi9brA+6Bf3P7RCRBJRcPhdzwkQ295uNPiJBrGd0Hzu39yZ2v3FNO/Mhc4O
+         MVnCVqHltB160meoyBF8A0z8uTl8lnlx4mL/523peD9igjcf18omkXV2CoNFnFXIr8qg
+         sr8w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792892092; x=1793496892;
+        d=1e100.net; s=20260707; t=1792892094; x=1793496894;
         h=content-type:cc:to:from:subject:message-id:references:mime-version
          :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=TYSiwMwmay2OMU5hIoROJC2gk9HspYKqZIDwCmXW3lI=;
-        b=vTqri5HlpWTRZ5suXtX7YZOOsN7DS7rzv4NqkL1xOfa+j9ENMD+3785t2Da3SMQ5TL
-         QONyqZyRTLNQnj0SxcSRHpQdBbxGmctN1CI29q/cFEVt+uY2ihsemFV2Vyzeg3q2mwbt
-         iMwD6A2yJJBLwiMJQ4mKKuSA5hcloyv2ZnOpMIDIzR+F/k0QfliXkB1Z0Fatdzyq17Y3
-         PVi/g6es7ld8EErqLQr1WaTrMfUDhB5AJqDUSbneaNLMV/d+mv9J2k5IMBdITz8F8pdC
-         sI9mb276oUDPdJ+nqH+wD88+l4SRf9+4rIehBqBGNP+o64S0x/fxUzqErt8kZ8puWuY/
-         r97Q==
-X-Forwarded-Encrypted: i=1; AKwUvByW05nvM925TtSs0Hnk+dCKKvWxOhd3zl8EDg/aj9Ec51JFUJJU6luUp6GXflqREWucboSvyyeiNFZY@vger.kernel.org
-X-Gm-Message-State: AFq9FYKFaV9fY76VIGb6soU2cUFITPmZ+rSU9ShPqWOG6jGsLK+WShNl
-	CNMqGIPCvn7ddhgA17l1+NNf8VO4TB0RLcKmN9rFeemmcmVXNQL2wMpyl3L8AD4QKxjTkAjpO8I
-	EY2+SoMXyrdvm5aPGGxqtLw==
-X-Received: from pfblb14.prod.google.com ([2002:a05:6a00:4f0e:b0:899:4601:80d])
+        bh=d8zTOCpdfLCFup0LtTUT8GHUquWtW5OhPtS3dNMqHJw=;
+        b=tvrv4K5LpnaDBnKHuCOGx/IPKHVolSdLdFCZ3531XORA88qCi9OX4lDkXaQkhcDrQk
+         ODiDyy+pWZN++OxXC7OD9JXEAEAGT1W0+yofZ54URGuIkYykQe86c2zPN8CY+j+U/XBO
+         8wI+4j30lmKvC5qWfihT8ujyCoPAZtP9mAMFdm8nIrAqOBW3g0bMOyG4WC7cXaAgYxIv
+         K/WRjSAdb9g0Mfa+tsNQ5ElOzx+o80NcJEYwyXMW8EghFFdRlABJdXND5hzd61rCkIVv
+         gT9sO56TBCaFxLJjllOFpzc/AWk5h6+VIsiGdlCkk0gGV0FVyHF3oz5vmbtTUbMtIn/7
+         VMwQ==
+X-Forwarded-Encrypted: i=1; AKwUvBziL2MSI5rKAq51ayjn5KFmC++/3vH4ZbtnAYO1Y3pNpmwgEUTU+Vu/tbD4W9dpTcZabWBIlavmQ8IB@vger.kernel.org
+X-Gm-Message-State: AFq9FYLpMJ94dMm3aVwCYWgn0otE/iGnhxakd8t6v1pdxbgsPG+0twep
+	Yx1L8v5xwIsLuyU4vkk324Nk9MPunkTxIja0NCoUkBWrck4jpnlGrYgX0af1ZM7uW0kr9Zd2fIa
+	KycRF8UwQ2aKpQBr5deTpow==
+X-Received: from pjblj15.prod.google.com ([2002:a17:90b:344f:b0:3a4:fb9f:4a65])
  (user=stanleyjhu job=prod-delivery.src-stubby-dispatcher) by
- 2002:a05:6a00:94fb:b0:899:394d:2976 with SMTP id d2e1a72fcca58-8a3689aa5ddmr2517554b3a.39.1792892091847;
- Sat, 24 Oct 2026 18:34:51 -0700 (PDT)
-Date: Sun, 25 Oct 2026 09:34:43 +0800
+ 2002:a17:90b:4ac9:b0:3a7:db88:3491 with SMTP id 98e67ed59e1d1-3adeabe4324mr2618939a91.33.1792892093846;
+ Sat, 24 Oct 2026 18:34:53 -0700 (PDT)
+Date: Sun, 25 Oct 2026 09:34:44 +0800
 In-Reply-To: <20261025013446.345974-1-stanleyjhu@google.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -81,8 +81,8 @@ Precedence: list
 Mime-Version: 1.0
 References: <20261025013446.345974-1-stanleyjhu@google.com>
 X-Mailer: git-send-email 2.56.0.307.g5fe7bd680c-goog
-Message-ID: <20261025013446.345974-3-stanleyjhu@google.com>
-Subject: [PATCH 2/5] scsi: ufs: core: Introduce ufshcd_rpm_resume_and_get() helper
+Message-ID: <20261025013446.345974-4-stanleyjhu@google.com>
+Subject: [PATCH 3/5] scsi: ufs: sysfs: Propagate runtime PM resume errors
 From: Stanley Jhu <stanleyjhu@google.com>
 To: "Martin K . Petersen" <mkp@kernel.org>, 
 	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>
@@ -93,73 +93,209 @@ Cc: Alim Akhtar <alim.akhtar@samsung.com>, Bart Van Assche <bvanassche@acm.org>,
 	stable@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 
-ufshcd_clkscale_enable_store() and ufshcd_auto_hibern8_update() call
-ufshcd_rpm_get_sync() without checking its return value:
+All 14 ufshcd_rpm_get_sync() callers in ufs-sysfs.c ignore its return
+value:
 
-1. Runtime resume of the UFS device W-LUN fails and leaves the W-LUN in
-   RPM_SUSPENDED, or a prior runtime suspend error latches
-   power.runtime_error, or runtime PM is disabled while suspended so
-   !pm_runtime_suspended() still evaluates to true.
-2. ufshcd_rpm_get_sync() returns a negative errno and leaves
-   power.usage_count incremented.
-3. Both functions proceed as if the host were active, scaling clocks or
-   writing REG_AUTO_HIBERNATE_IDLE_TIMER while the controller or link
-   is still suspended.
+1. A user-space sysfs read or write runs when W-LUN runtime resume
+   fails, when power.runtime_error is set from a failed runtime
+   suspend, or when W-LUN runtime PM is disabled while not active.
+2. ufshcd_rpm_get_sync() returns a negative errno without waking the
+   device or host controller.
+3. ufshcd_read_hci_reg() reads an HCI MMIO register on an unresumed
+   controller, and the remaining handlers issue query UPIUs over a
+   suspended or broken link.
 
-Add ufshcd_rpm_resume_and_get() wrapping pm_runtime_resume_and_get() so
-failed resumes drop the usage reference automatically, and return early
-in ufshcd_clkscale_enable_store() and ufshcd_auto_hibern8_update() when
-it fails.
+Switch all 14 sysfs callers to ufshcd_rpm_resume_and_get() and return
+the error after releasing any held buffer and hba->host_sem.
 
-Fixes: b294ff3e3449 ("scsi: ufs: core: Enable power management for wlun")
-Cc: stable@vger.kernel.org
+Fixes: aef80fd1da32 ("scsi: ufs: sysfs: Resume the proper SCSI device")
+Fixes: b9d104465a6c ("scsi: ufs: Prepare to add HCI capabilities sysfs")
+Fixes: 600edc6620a4 ("scsi: ufs: sysfs: Make max_number_of_rtt read-write")
+Fixes: 6c4148ce7cc1 ("scsi: ufs: wb: Add explicit flush sysfs attribute")
+Fixes: 500d4b742e0c ("scsi: ufs: core: Add WB buffer resize support")
+Fixes: ae7795a8c258 ("scsi: ufs: core: Add HID support")
+Fixes: 1fd2e77b8897 ("scsi: ufs: core: Add device level exception support")
+Cc: stable@vger.kernel.org # needs "scsi: ufs: core: Introduce ufshcd_rpm_resume_and_get() helper"
 Signed-off-by: Stanley Jhu <stanleyjhu@google.com>
 ---
- drivers/ufs/core/ufshcd-priv.h | 5 +++++
- drivers/ufs/core/ufshcd.c      | 7 +++++--
- 2 files changed, 10 insertions(+), 2 deletions(-)
+ drivers/ufs/core/ufs-sysfs.c | 67 ++++++++++++++++++++++++++++--------
+ 1 file changed, 53 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-priv.h
-index e55c2a02c1f5..99f654b79035 100644
---- a/drivers/ufs/core/ufshcd-priv.h
-+++ b/drivers/ufs/core/ufshcd-priv.h
-@@ -388,6 +388,11 @@ static inline int ufshcd_rpm_get_sync(struct ufs_hba *hba)
- 	return pm_runtime_get_sync(&hba->ufs_device_wlun->sdev_gendev);
- }
+diff --git a/drivers/ufs/core/ufs-sysfs.c b/drivers/ufs/core/ufs-sysfs.c
+index cf49ad0258e1..19b62cf52410 100644
+--- a/drivers/ufs/core/ufs-sysfs.c
++++ b/drivers/ufs/core/ufs-sysfs.c
+@@ -250,13 +250,19 @@ EXPORT_SYMBOL_GPL(ufshcd_us_to_ahit);
  
-+static inline int ufshcd_rpm_resume_and_get(struct ufs_hba *hba)
-+{
-+	return pm_runtime_resume_and_get(&hba->ufs_device_wlun->sdev_gendev);
-+}
-+
- static inline int ufshcd_rpm_get_if_active(struct ufs_hba *hba)
+ static int ufshcd_read_hci_reg(struct ufs_hba *hba, u32 *val, unsigned int reg)
  {
- 	return pm_runtime_get_if_active(&hba->ufs_device_wlun->sdev_gendev);
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 5193be703752..2d73dc7d68a9 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -1864,7 +1864,9 @@ static ssize_t ufshcd_clkscale_enable_store(struct device *dev,
- 	if (value == hba->clk_scaling.is_enabled)
++	int ret;
++
+ 	down(&hba->host_sem);
+ 	if (!ufshcd_is_user_access_allowed(hba)) {
+ 		up(&hba->host_sem);
+ 		return -EBUSY;
+ 	}
+ 
+-	ufshcd_rpm_get_sync(hba);
++	ret = ufshcd_rpm_resume_and_get(hba);
++	if (ret) {
++		up(&hba->host_sem);
++		return ret;
++	}
+ 	ufshcd_hold(hba);
+ 	*val = ufshcd_readl(hba, reg);
+ 	ufshcd_release(hba);
+@@ -350,7 +356,9 @@ static ssize_t wb_on_store(struct device *dev, struct device_attribute *attr,
  		goto out;
+ 	}
+ 
+-	ufshcd_rpm_get_sync(hba);
++	res = ufshcd_rpm_resume_and_get(hba);
++	if (res)
++		goto out;
+ 	res = ufshcd_wb_toggle(hba, wb_enable);
+ 	ufshcd_rpm_put_sync(hba);
+ out:
+@@ -421,7 +429,9 @@ static ssize_t enable_wb_buf_flush_store(struct device *dev,
+ 		goto out;
+ 	}
+ 
+-	ufshcd_rpm_get_sync(hba);
++	res = ufshcd_rpm_resume_and_get(hba);
++	if (res)
++		goto out;
+ 	res = ufshcd_wb_toggle_buf_flush(hba, enable_wb_buf_flush);
+ 	ufshcd_rpm_put_sync(hba);
+ 
+@@ -490,7 +500,9 @@ static ssize_t wb_resize_enable_store(struct device *dev,
+ 		goto out;
+ 	}
+ 
+-	ufshcd_rpm_get_sync(hba);
++	res = ufshcd_rpm_resume_and_get(hba);
++	if (res)
++		goto out;
+ 	res = ufshcd_wb_set_resize_en(hba, mode);
+ 	ufshcd_rpm_put_sync(hba);
+ 
+@@ -598,7 +610,9 @@ static ssize_t device_lvl_exception_id_show(struct device *dev,
+ 	if (hba->dev_info.wspecversion < 0x410)
+ 		return -EOPNOTSUPP;
  
 -	ufshcd_rpm_get_sync(hba);
 +	err = ufshcd_rpm_resume_and_get(hba);
 +	if (err)
++		return err;
+ 	err = ufshcd_query_attr_qword(hba, UPIU_QUERY_OPCODE_READ_ATTR,
+ 				      QUERY_ATTR_IDN_DEV_LVL_EXCEPTION_ID,
+ 				      0, 0, &exception_id);
+@@ -1101,7 +1115,9 @@ static ssize_t ufs_sysfs_read_desc_param(struct ufs_hba *hba,
+ 		goto out;
+ 	}
+ 
+-	ufshcd_rpm_get_sync(hba);
++	ret = ufshcd_rpm_resume_and_get(hba);
++	if (ret)
 +		goto out;
- 	ufshcd_hold(hba);
+ 	ret = ufshcd_read_desc_param(hba, desc_id, desc_index,
+ 				param_offset, desc_buf, param_size);
+ 	ufshcd_rpm_put_sync(hba);
+@@ -1482,7 +1498,12 @@ static ssize_t _name##_show(struct device *dev,				\
+ 		up(&hba->host_sem);					\
+ 		return -ENOMEM;						\
+ 	}								\
+-	ufshcd_rpm_get_sync(hba);					\
++	ret = ufshcd_rpm_resume_and_get(hba);				\
++	if (ret) {							\
++		kfree(desc_buf);					\
++		up(&hba->host_sem);					\
++		return ret;						\
++	}								\
+ 	ret = ufshcd_query_descriptor_retry(hba,			\
+ 		UPIU_QUERY_OPCODE_READ_DESC, QUERY_DESC_IDN_DEVICE,	\
+ 		0, 0, desc_buf, &desc_len);				\
+@@ -1548,7 +1569,9 @@ static ssize_t _name##_show(struct device *dev,				\
+ 	}								\
+ 	if (ufshcd_is_wb_flags(QUERY_FLAG_IDN##_uname))			\
+ 		index = ufshcd_wb_get_query_index(hba);			\
+-	ufshcd_rpm_get_sync(hba);					\
++	ret = ufshcd_rpm_resume_and_get(hba);				\
++	if (ret)							\
++		goto out;						\
+ 	ret = ufshcd_query_flag(hba, UPIU_QUERY_OPCODE_READ_FLAG,	\
+ 		QUERY_FLAG_IDN##_uname, index, &flag);			\
+ 	ufshcd_rpm_put_sync(hba);					\
+@@ -1608,7 +1631,9 @@ static ssize_t max_number_of_rtt_show(struct device *dev,
+ 		return -EBUSY;
+ 	}
  
- 	hba->clk_scaling.is_enabled = value;
-@@ -4792,7 +4794,8 @@ void ufshcd_auto_hibern8_update(struct ufs_hba *hba, u32 ahit)
+-	ufshcd_rpm_get_sync(hba);
++	ret = ufshcd_rpm_resume_and_get(hba);
++	if (ret)
++		goto out;
+ 	ret = ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_READ_ATTR,
+ 		QUERY_ATTR_IDN_MAX_NUM_OF_RTT, 0, 0, &rtt);
+ 	ufshcd_rpm_put_sync(hba);
+@@ -1648,7 +1673,9 @@ static ssize_t max_number_of_rtt_store(struct device *dev,
+ 		goto out;
+ 	}
  
- 	WRITE_ONCE(hba->ahit, ahit);
- 	if (!pm_runtime_suspended(&hba->ufs_device_wlun->sdev_gendev)) {
--		ufshcd_rpm_get_sync(hba);
-+		if (ufshcd_rpm_resume_and_get(hba))
-+			return;
- 		ufshcd_hold(hba);
- 		/*
- 		 * Serialize with the host driver's AHIT control. Skip the
+-	ufshcd_rpm_get_sync(hba);
++	ret = ufshcd_rpm_resume_and_get(hba);
++	if (ret)
++		goto out;
+ 
+ 	memflags = memalloc_noio_save();
+ 	shost_for_each_device(sdev, hba->host)
+@@ -1700,7 +1727,11 @@ static int wb_read_resize_attrs(struct ufs_hba *hba,
+ 	}
+ 
+ 	index = ufshcd_wb_get_query_index(hba);
+-	ufshcd_rpm_get_sync(hba);
++	ret = ufshcd_rpm_resume_and_get(hba);
++	if (ret) {
++		up(&hba->host_sem);
++		return ret;
++	}
+ 	ret = ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_READ_ATTR,
+ 			idn, index, 0, attr_val);
+ 	ufshcd_rpm_put_sync(hba);
+@@ -1760,7 +1791,9 @@ static ssize_t _name##_show(struct device *dev,				\
+ 	}								\
+ 	if (ufshcd_is_wb_attrs(QUERY_ATTR_IDN##_uname))			\
+ 		index = ufshcd_wb_get_query_index(hba);			\
+-	ufshcd_rpm_get_sync(hba);					\
++	ret = ufshcd_rpm_resume_and_get(hba);				\
++	if (ret)							\
++		goto out;						\
+ 	if (ufshcd_is_qword_attr(QUERY_ATTR_IDN##_uname))		\
+ 		ret = ufshcd_query_attr_qword(hba,			\
+ 			UPIU_QUERY_OPCODE_READ_ATTR,			\
+@@ -1848,7 +1881,11 @@ static int hid_query_attr(struct ufs_hba *hba, enum query_opcode opcode,
+ 		return -EBUSY;
+ 	}
+ 
+-	ufshcd_rpm_get_sync(hba);
++	ret = ufshcd_rpm_resume_and_get(hba);
++	if (ret) {
++		up(&hba->host_sem);
++		return ret;
++	}
+ 	ret = ufshcd_query_attr(hba, opcode, idn, 0, 0, attr_val);
+ 	ufshcd_rpm_put_sync(hba);
+ 
+@@ -2121,7 +2158,9 @@ static ssize_t dyn_cap_needed_attribute_show(struct device *dev,
+ 		goto out;
+ 	}
+ 
+-	ufshcd_rpm_get_sync(hba);
++	ret = ufshcd_rpm_resume_and_get(hba);
++	if (ret)
++		goto out;
+ 	ret = ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_READ_ATTR,
+ 		QUERY_ATTR_IDN_DYN_CAP_NEEDED, lun, 0, &value);
+ 	ufshcd_rpm_put_sync(hba);
 -- 
 2.56.0.307.g5fe7bd680c-goog
 
