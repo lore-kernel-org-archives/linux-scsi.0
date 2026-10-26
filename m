@@ -1,111 +1,76 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=203.205.221.149
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793027526;
-	b=zA9sQNEuU99NQNP0Kbu8IT8gq0hjPOgmFimIQb4WIzhXNO/Lfe9K3NNODB9WCyKncOln
-	 NPdu0PMFZiguSKHmn493hR9IAqYcFwLt828w2g/AYrUad4oiyVCOxst5cKHNdQ1HrIHu9
-	 U2b3LIfu/UcAafboQFrRtRAeEhAH6lsEBvSueGp8qXbvchXjxOJXSZAW5dfxcM/Ciiail
-	 nteG3cGoYxly2tuFJTXllTq75iKtDIkBgqS3Sm+gS2VmqjOdhGkydhFApxml5WBDkZReq
-	 u7OVaJbcZptOxiXNfqHrxrro//tv0+eUAgH7Iq98d7p6P4YKgBuWyHwrxE9ZvBOs8WA==
+	t=1793027819;
+	b=V0nmnv70u4oGgLAfVxOeTm/GMrhTn2h/7jZ2ubLzo3is4x5MqtQAFsVIZUje6Tl+IYd/
+	 xaN6OVpYQ3ZKkdmoRsFzleLPEz5JBDwE4kFeSbG76w490zbx7Ta4E6gGARumGqPMwbg9I
+	 Npieu2WkHbNxgXaHSHL6iEddzOIGpsmlBW/JEkYAIQ3iVv3CZOUHoLSt9f/Lo2fZJ7l1o
+	 1dQiQjbTKCw2TOpZnPiI9p6TVOPlGx62RHGZ7CInGpPsXnhaGeGr7D5RYWLkAUYbxCC8r
+	 4HQrv3hZCKKa4+yLUibacLBwyOisU6V6IMEZQCsuxFeCHmKPDWwFX0d0w8fIkn/44wQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793027526;
-	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
-	 DKIM-Signature:X-Google-DKIM-Signature:X-Forwarded-Encrypted:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:X-Received:Received:Message-ID:
-	 Date:MIME-Version:User-Agent:Subject:To:Cc:References:
-	 Content-Language:From:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding:X-Proofpoint-ORIG-GUID:X-Proofpoint-GUID:
-	 X-Proofpoint-Spam-Details-Enc:X-Authority-Analysis:
-	 X-Proofpoint-Spam-Info:X-Proofpoint-Virus-Version:
-	 X-Proofpoint-Spam-Details;
-	bh=Siz2D5vkVqZu7iFgwk2tA7kIq5v4uUSOUjK1Fa1sAkk=;
-	b=vs+SKkZET1sywv+SKDolmy2wcxP9xYSOqybr20Cgec/B+I2Bo0AwAj4aJy6aBpQ79wi7
-	 iPqwOzZK6fKnIcTvKX1hijYJ83cBiVUM8sRJzBFl/s46X36v0aq7n8EHTeHsadO4rs1Tz
-	 cHHXdbbBtc8UNQoj7Agot67ei7T7bv50of3zPmSkhChzxSqJmfzqeOnbRJBiGEGk5NWLs
-	 00bNq08Ff1/JChQMtaPfHQQ96L5M5I2VDR4O56MSKjTvTDiiM+PwDet0k6MVWza7VljR+
-	 /NT1zux4W2n8Hfs6o6G81C9d7kZtRHU/nYfwk1ulHAWJghNDTT+NjEYSS3J4QYuASsw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793027819;
+	h=DMARC-Filter:DKIM-Signature:Received:X-QQ-mid:Message-ID:
+	 X-QQ-XMAILINFO:X-QQ-XMRINFO:From:To:Cc:Subject:Date:X-OQ-MSGID:
+	 X-Mailer:MIME-Version:Content-Transfer-Encoding;
+	bh=V5GkPV1OJFnkZ5kXP2DE2sZbq+RcL+loOw2b9lbmerY=;
+	b=SVKrKsTAoXI1dyYV4BMi+ccAIQzyXG6my1ntAiDbBfLaaZKU5iU4XruK7IwxiNGii0Dr
+	 i+GmcKd66o1mLROxueJ803E685ilsg2FHQAjP7HhRs3XZ1MHqfPMVP4LXW9ex+Ses5znB
+	 1IsxSHXoEA6pOZsfT4YPDnHTmYewSEmUUbUF9sk9WsRbHQPKER8K45hOd7lrj5L5uyzL1
+	 SwalN2qe8pM5nc8EEhHPfwqO0/AteR4bsf8FX5lXrRmU1v0eguKPBtmVoRFc2M7AEWAQj
+	 4IW//EP/uBSAg2uBPF3HFSXh1/mD/ULw37gn6sSME++HU+/ATj5kTzJCc+c7hZYvEyw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=oss.qualcomm.com;
-	spf=pass smtp.mailfrom=oss.qualcomm.com;
-	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=mefbt2FT;
-	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=BeQel0Di;
-	arc=none smtp.remote-ip=205.220.180.131
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dmarc=pass header.from=qq.com;
+	spf=pass smtp.mailfrom=qq.com;
+	dkim=pass header.d=qq.com header.i=@qq.com header.a=rsa-sha256 header.s=s201512 header.b=F4T6gEQX;
+	arc=none smtp.remote-ip=203.205.221.149
+Received: from out203-205-221-149.mail.qq.com (out203-205-221-149.mail.qq.com [203.205.221.149])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A8C11606A326
-	for <linux-scsi@vger.kernel.org>; Mon, 26 Oct 2026 15:12:05 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A8C11606A326
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88301606A31A;
+	Mon, 26 Oct 2026 15:16:56 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 88301606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qq.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=mefbt2FT;
-	dkim=pass (2048-bit key, unprotected) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=BeQel0Di
-Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69QEw9aq3584509
-	for <linux-scsi@vger.kernel.org>; Mon, 26 Oct 2026 15:12:04 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	Siz2D5vkVqZu7iFgwk2tA7kIq5v4uUSOUjK1Fa1sAkk=; b=mefbt2FTJ+upAxLN
-	veJjYdu1o+tJ9DEyyULCLvgjWnzeQ4HqySarcMoTaumrnuDxegpMu2/HiaO7vVoa
-	hlD0/EDATR46YBTmcUzKQiWp/SjWY0wrBfpTF54+iYvLd0HK674EvvT4FTf4CH+/
-	llKx/zkg+2rA3+mMU4wjaSuaGoT1bsE80Hdo09NYnZXoA1d9f4RpyblIrE4qfczP
-	ntows3NPP5GEidW7B8k4AcQJXkUjuwS+QKI8Jblg797qaefN5K8syAqBo5UB+ARj
-	a9ytIOEYtPDLlP5Mz3kMUDvlsi+JFjYNH0L2581wkkQhnrxnbgz/uileMB6/A3v8
-	SXwQUQ==
-Received: from mail-ua1-f69.google.com (mail-ua1-f69.google.com [209.85.222.69])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4hhvddarxg-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Mon, 26 Oct 2026 15:12:04 +0000 (GMT)
-Received: by mail-ua1-f69.google.com with SMTP id a1e0cc1a2514c-988bf286521so98313241.1
-        for <linux-scsi@vger.kernel.org>; Mon, 26 Oct 2026 08:12:04 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1793027524; x=1793632324; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=Siz2D5vkVqZu7iFgwk2tA7kIq5v4uUSOUjK1Fa1sAkk=;
-        b=BeQel0Di6yLoDXltTsS8fdXhHZHmjNg+0zOlfIBacjXcMdS1RBVmQp8aSh4ATXrjzN
-         k3FSnEw33Bt8tr0mwx9BRatHAtVtgMy/vXcDCoKlGB20TRyrfs9Cgk9Op8v2G7CunQnD
-         LeM4yN9KQxD/LjqdH9FH4nmj3lJiC+VwnGFIKknJxUuMO9ustAnclJiEG2FSThUuFFxw
-         haYdhrfxf5EIx04exMSjs/yGtb2Jp/jPrQ3YdbPfaRT0n+q6177tZ+ftl+3Y7q7vMcSb
-         c4Ij5pulfVk/EB0I5UDQolpAhLTSjAuh1CEevARb+uOS+KaGfXfEeT6N3HsDp1qpr9Q7
-         FhXQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793027524; x=1793632324;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=Siz2D5vkVqZu7iFgwk2tA7kIq5v4uUSOUjK1Fa1sAkk=;
-        b=14byn1TPBqQUxpClbWG+2p1NrxQ4H5GXx4KLwwpzkuFI/Yo8J6+f+jQebmdGkxI2ND
-         88h68nKjv67+tEZtTFHWhdYpk3x04DIE2X00pivVgIJN3OwIP5uNM/SwQ/okiPecogkf
-         HMqrhZmSJ73YqM0NhnUKPOoD9ZR5WxTs5SJTyHCHCoVPJTNPze4hSjBfRleM8SGRyHE9
-         XJp5p6FlFHzXhqMDfa+tFcVi04Y3UqSLbZ0CEqYJE+nJZPrdXkc3y9Iu6/r2QrmTuwxM
-         bjnCfzY9SBnX2atqsjDJ7bOzKqo7PHb44s1YMgY+OH8mzx1zgPU/KC9/oRXEG7RCdetO
-         jBcA==
-X-Forwarded-Encrypted: i=1; AKwUvByCRbDSHyUMhqj3eL3MdQ8WFozbfx04VxD08NpW5DUZk7OyGxLzHJCX2XaD3NUOK4SLnZA5bPISpDVP@vger.kernel.org
-X-Gm-Message-State: AFq9FYJ2rntmqJZTVyaXFq55EOrJeEVst6PPmBBzW9CBuoQEnOBXXNwz
-	MNDWPgpdFxS/fg4F1eYKumeMi8R4A5iO3EpBHcTgUav1tTCn9XmC+Dn4+p6OCCK87wkPkzS0rnc
-	Si/EziW5CWBSkHvncJr22Z92i1pp4XtBUCuf3UutwC2yJE2aA8UiWtZkE/Ll+TCFs
-X-Gm-Gg: AYBFou34J80fe4vk9T1C50MKn1Y3hrowoTdWtFYhm/+BHFrd8/fDefz98CZVc7kn7kc
-	uGx7X6r4VUQ/AP5E/MddpBEMb79tHIIIinhnBjSfUinzo80yLZn28rWlPxnm+lAsYMrrlVf+FvT
-	Km6Jn8OPkULPlGPAkYxWBsILKjcXE81VEpONIKTCCAyMWs7ScbVgaKr7wWJWFk8vYAvahH4c20P
-	SAMJbrlkTfOHO8LSNmercvmZf6eVuJJ7UHKYohvLWxSRXEe+uF6YnOacqoW29zGkLQjFIG4uJrY
-	H2m8vp6QEOuoItb5COOtxt806oBVhOreuKMwdMHvgKc/wraVa7o2E3SqN5CPZZfc+2G4lkPHIDh
-	gvVZwguCGydFFoyGUYzynWw==
-X-Received: by 2002:a05:6122:106e:b0:5e6:6546:84c7 with SMTP id 71dfb90a1353d-5ec230f8433mr2339075e0c.2.1793027523917;
-        Mon, 26 Oct 2026 08:12:03 -0700 (PDT)
-X-Received: by 2002:a05:6122:106e:b0:5e6:6546:84c7 with SMTP id 71dfb90a1353d-5ec230f8433mr2338960e0c.2.1793027522944;
-        Mon, 26 Oct 2026 08:12:02 -0700 (PDT)
-Received: from [192.168.226.26] ([178.235.128.140])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c46bd66c6dbsm327506866b.59.2026.10.26.08.11.59
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 26 Oct 2026 08:12:01 -0700 (PDT)
-Message-ID: <436398ee-4bae-42ae-9137-1a4d7d0582da@oss.qualcomm.com>
-Date: Mon, 26 Oct 2026 16:11:59 +0100
+	dkim=pass (1024-bit key, unprotected) header.d=qq.com header.i=@qq.com header.a=rsa-sha256 header.s=s201512 header.b=F4T6gEQX
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qq.com; s=s201512;
+	t=1793027807; bh=V5GkPV1OJFnkZ5kXP2DE2sZbq+RcL+loOw2b9lbmerY=;
+	h=From:To:Cc:Subject:Date;
+	b=F4T6gEQXCF9So9m4Ensh8ARd1xnIyIYn3Wlx5wy93daLNwbsn6iaNdJwxMtYTE3+P
+	 UqNr00ksBn57Fq+m4SGY1tp8bXzuUwlCOvUowVwSzPKofpBVKCgxtyKF2YjRlXqJqt
+	 lZMUEK5VFKUITBJQYEnClYxovg3QnAz0EtO0g7Qc=
+Received: from kernel-lab.tail5e91bb.ts.net ([2409:8950:57d:63:ad3c:addd:6586:2a94])
+	by newxmesmtplogicsvrsza53-0.qq.com (NewEsmtp) with SMTP
+	id 42D98026; Mon, 26 Oct 2026 23:16:45 +0800
+X-QQ-mid: xmsmtpt1793027805tjrij2d6z
+Message-ID: <tencent_FF729CBCFFA37F06072959FD798A11F55D0A@qq.com>
+X-QQ-XMAILINFO: MGJQUKeBeYZp4hmXt3y7HPTOhAebEBvhnoKYgoYz2gzml9qlAj6DSQN5DVc+lA
+	 LgI++NUmx17nau7w56WtJ2n2Odx7khEnWjQkoc8EW9iFTUg8VnRi5N7FHOdshEJxUFeO4TFTLAxa
+	 5ViJzBTuH2nR/hGYrkS4MziqtDnwQ/B6nc4CCMpoRrKqHkXcLn7j0NIEXRQgLc8yiikDe/xPBiG3
+	 Z2FeVjKx7IbZUBt7tZMinTFWUpzLuuBm9ZIOCwHTuO+XJJDEsVcyO3Kwxg4QHrZex1JYLG3QtPMH
+	 93ZmrYTxLQOjSPWpVImr7SMz7aWF4xTQ17DmYxYbNjcMZ9LPCRlTTrLKc0MzcUda0SWKPCTpb1X0
+	 oY/+RoukMDSGIs4Uez58hBTxWsUCe8gGkynhqQHSlt39gjpmWcllZUzcQZYVKZc6GyE+AEA++oJT
+	 e0hG8/20X+j+P6f1xI7UVxhYbklAYP/gVI95Pxjsg+woZQS/ik+en1fovd4yTEM5z3EbeFW09pAD
+	 l7prg687xS9zLIPWaXY042VN81To61cf+gfEllk+s/vEPQy5NcsNqEjftmLuosWia3qFKkWhJg7f
+	 l91yPQbcW1lab5AorY0zjcGP5UO/kpW0Oy2rrcMcY4ohvvGKJdRL12Ph5yefJ72Ee+msJfsKWZ7q
+	 6SfTqtdXK6EJ7H12JlBLv0OMYin4r1Wt7vEF3MTTvsG//HU3pghJ+yOQIxS06kReKAqQblr1Ke5c
+	 ptrqwSUK1Q9TYCbtt6pmTXP1ajIPDEsHbgKHglU+zwFUbHyPFk6ZXZa1oxBXbYB0xSGvuAJkcrWh
+	 MkVk9NenL2fqK2htTv0qYmEcw/0Qyrzm1lE0uHRpE8eGZNCkCxWOio6jgD7zvGcwRfkKcsO/Mz3g
+	 hCbuENnknARq1HYCR6XBDd4CiiDGez/yUYQ/3al+ga9jiQC5S9LnlWZw7Mmzm9h6+pfGaD6MSbWQ
+	 NTgFzKf3A9XffpGZe5lNgNwaA7h7JexSxz05SCPBC5qbfg2n4inz/0jrL1abHNiH27qyMne2r3Tc
+	 kb2iaXU+thCZLA+Rp6Gpc5pvWk+Z4Go/ov3jsIZ5f6HIrhCFw+
+X-QQ-XMRINFO: OWPUhxQsoeAVwkVaQIEGSKwwgKCxK/fD5g==
+From: Yingjie Wang <1075151112@qq.com>
+To: linux-scsi@vger.kernel.org
+Cc: loberman@redhat.com,
+	jmeneghi@redhat.com,
+	James.Bottomley@HansenPartnership.com,
+	mkp@kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-api@vger.kernel.org
+Subject: [PATCH] scsi: st: Prevent timeout arithmetic overflow
+Date: Mon, 26 Oct 2026 23:16:45 +0800
+X-OQ-MSGID: <20261026151645.2212994-1-1075151112@qq.com>
+X-Mailer: git-send-email 2.43.0
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -115,70 +80,101 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v12 6/6] arm64: dts: qcom: lemans: Add OPP-table for ICE
- UFS device node
-To: Abhinaba Rakshit <abhinaba.rakshit@oss.qualcomm.com>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konradybcio@kernel.org>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Adrian Hunter <adrian.hunter@intel.com>, Ulf Hansson <ulfh@kernel.org>,
-        Rob Herring <robh@kernel.org>,
-        Krzysztof Kozlowski <krzk+dt@kernel.org>,
-        Conor Dooley <conor+dt@kernel.org>,
-        Neeraj Soni <neeraj.soni@oss.qualcomm.com>,
-        Harshal Dev <harshal.dev@oss.qualcomm.com>,
-        Kuldeep Singh <kuldeep.singh@oss.qualcomm.com>
-Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-mmc@vger.kernel.org,
-        devicetree@vger.kernel.org
-References: <20260824-enable-ice-clock-scaling-v12-0-09271f583dc6@oss.qualcomm.com>
- <20260824-enable-ice-clock-scaling-v12-6-09271f583dc6@oss.qualcomm.com>
-Content-Language: en-US
-From: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
-In-Reply-To: <20260824-enable-ice-clock-scaling-v12-6-09271f583dc6@oss.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-ORIG-GUID: 1aiRaEAd2A3GDWGwTnY_wUdVSNIjaRW6
-X-Proofpoint-GUID: 1aiRaEAd2A3GDWGwTnY_wUdVSNIjaRW6
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDI2MDA2MCBTYWx0ZWRfX79yXEtd/aUOL
- 5jCFK1a9ULGwrum1rqwGadI1feHYAlu9wMsEeSTjUemT3CUsqGzBhjfJ0P+uDMstcJkIkuFFEMp
- eIMMpaMcHUlfG1xwFXht98mwB9I5sDMGP1cL/J8BZFB96gzJkH9H3ijdRqwciiQEA4sR48xNceO
- ZHyvql6fzq/HFZ735+S1S4F9bW1KcIr2ZYSKmuKRZfquuM3cDGwIXH/GbpJlHxZ8ochTMrdiMbm
- b0d9Y0baXtMHHFPBGrq6MEs95gzuzlFUY8p6jfomf56eu6XozFHqn8eFeY2PA9GYwElttoHYzsq
- emtkK07XGS/R8lgKWtd0GA5OQGGx2vz6Q5JcIlluT9yvLLQWu3VKAs00AZEgmxkFZSx1C7y2aVm
- 94L88zOHL5rGV4DXhx0bOvd6yQXns1r8RIc51tLCuCDSvuUMU3orwqLAesIQMlMocxyjKZjlsXt
- 7BcmVbvCuDUs2nK8tMQ==
-X-Authority-Analysis: v=2.4 cv=N8+8hG9B c=1 sm=1 tr=0 ts=6adf6dc4 cx=c_pps
- a=UbhLPJ621ZpgOD2l3yZY1w==:117 a=PRfkaYvzSr8QmIIGAkY2Sg==:17
- a=IkcTkHD0fZMA:10 a=660iZSQnnn4A:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=rJkE3RaqiGZ5pbrm-msn:22
- a=EUspDBNiAAAA:8 a=xhZcOr--89cURCpmMK0A:9 a=QEXdDO2ut3YA:10
- a=TOPH6uDL9cOC6tEoww4z:22
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMDI2MDA2MCBTYWx0ZWRfX0R4CujgA4bW1
- qJwT7IxM4rHtyEX9DM6lz8idSsgJKBMU9G3ToScJVy1dyi2scOxuUhGxZ3sTZI39I3teo3vvR6q
- LIKiEeZCjANs/y6nwTLknSXCa1YsTrI=
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
- definitions=2026-10-26_03,2026-10-21_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1015 phishscore=0 priorityscore=1501 adultscore=0 bulkscore=0
- malwarescore=0 suspectscore=0 lowpriorityscore=0 spamscore=0 impostorscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2610190000 definitions=main-2610260060
+Content-Transfer-Encoding: 8bit
 
-On 8/23/26 9:47 PM, Abhinaba Rakshit wrote:
-> Qualcomm Inline Crypto Engine (ICE) platform driver now supports
-> an optional OPP-table.
-> 
-> Add OPP-table for ICE UFS device nodes for LeMans platform.
-> 
-> Reviewed-by: Kuldeep Singh <kuldeep.singh@oss.qualcomm.com>
-> Signed-off-by: Abhinaba Rakshit <abhinaba.rakshit@oss.qualcomm.com>
-> ---
+MT_ST_TIMEOUTS converts the requested timeout from seconds to jiffies in
+signed int arithmetic. A sufficiently large value overflows before it is
+stored in long_timeout or passed to blk_queue_rq_timeout(). Non-immediate
+MTERASE commands also multiply long_timeout by eight, which can overflow
+even when the original seconds-to-jiffies conversion fits.
 
-Reviewed-by: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+These overflows can turn an administrator's timeout setting into a much
+shorter request timeout. MTSETDRVBUFFER requires CAP_SYS_ADMIN, but the
+driver should reject settings it cannot represent instead of accepting
+a wrapped value.
 
-Konrad
+Check the decoded seconds before multiplication, using the smaller of
+INT_MAX and MAX_JIFFY_OFFSET as the jiffies limit. This keeps both the
+signed timeout arguments and the relative jiffies interval in range.
+For MTERASE, multiply in u64 and clamp to the same limit, so a valid long
+timeout remains usable without wrapping when it is extended for erasure.
+Zero retains its existing behavior, and timeouts within the limit are
+unchanged.
+
+Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+Cc: stable@vger.kernel.org
+Signed-off-by: Yingjie Wang <1075151112@qq.com>
+---
+Validation of this revision:
+- Built drivers/scsi/st.o with x86_64 and i386 defconfig, CHR_DEV_ST=y,
+  HZ=1000 and W=1 (GCC 13.3). Both builds needed
+  -Wno-error=format-truncation for an existing create_one_cdev() warning,
+  also seen when compiling the base st.c with the same headers.
+- Host-side checks of the extracted fixed arithmetic covered both timeout
+  selectors, zero/default values, range rejection and erase saturation,
+  with modeled 32/64-bit limits and seven HZ values from 12 to 12287.
+  These are not device runtime tests. This revision has not been
+  boot-tested.
+
+ drivers/scsi/st.c | 21 ++++++++++++++-------
+ 1 file changed, 14 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
+index e9d41e3cc2dd3..fccb83e75a66c 100644
+--- a/drivers/scsi/st.c
++++ b/drivers/scsi/st.c
+@@ -172,6 +172,8 @@ static int debugging = DEBUG;
+ 
+ #define ST_TIMEOUT (900 * HZ)
+ #define ST_LONG_TIMEOUT (14000 * HZ)
++/* Fit the signed timeout arguments and the jiffies interval. */
++#define ST_MAX_TIMEOUT min_t(unsigned long, INT_MAX, MAX_JIFFY_OFFSET)
+ 
+ /* Remove mode bits and auto-rewind bit (7) */
+ #define TAPE_NR(x) ( ((iminor(x) & ~255) >> (ST_NBR_MODE_BITS + 1)) | \
+@@ -2306,6 +2308,7 @@ static void st_log_options(struct scsi_tape * STp, struct st_modedef * STm)
+ 
+ static int st_set_options(struct scsi_tape *STp, long options)
+ {
++	unsigned int seconds;
+ 	int value;
+ 	long code;
+ 	struct st_modedef *STm;
+@@ -2403,15 +2406,18 @@ static int st_set_options(struct scsi_tape *STp, long options)
+ 		}
+ 	} else if (code == MT_ST_TIMEOUTS) {
+ 		value = (options & ~MT_ST_OPTIONS);
++		seconds = value & ~MT_ST_SET_LONG_TIMEOUT;
++		if (seconds > ST_MAX_TIMEOUT / HZ)
++			return -EINVAL;
+ 		if ((value & MT_ST_SET_LONG_TIMEOUT) != 0) {
+-			STp->long_timeout = (value & ~MT_ST_SET_LONG_TIMEOUT) * HZ;
+-			DEBC_printk(STp, "Long timeout set to %d seconds.\n",
+-				    (value & ~MT_ST_SET_LONG_TIMEOUT));
++			STp->long_timeout = seconds * HZ;
++			DEBC_printk(STp, "Long timeout set to %u seconds.\n",
++				    seconds);
+ 		} else {
+ 			blk_queue_rq_timeout(STp->device->request_queue,
+-					     value * HZ);
+-			DEBC_printk(STp, "Normal timeout set to %d seconds.\n",
+-				    value);
++					     seconds * HZ);
++			DEBC_printk(STp, "Normal timeout set to %u seconds.\n",
++				    seconds);
+ 		}
+ 	} else if (code == MT_ST_SET_CLN) {
+ 		value = (options & ~MT_ST_OPTIONS) & 0xff;
+@@ -2942,7 +2948,8 @@ static int st_int_ioctl(struct scsi_tape *STp, unsigned int cmd_in, unsigned lon
+ 			timeout = STp->device->request_queue->rq_timeout;
+ 		}
+ 		else
+-			timeout = STp->long_timeout * 8;
++			timeout = min_t(u64, (u64)STp->long_timeout * 8,
++					ST_MAX_TIMEOUT);
+ 
+ 		DEBC_printk(STp, "Erasing tape.\n");
+ 		break;
+
+base-commit: 3650bb41391b51d9dcf87b0480ecafeb1526252f
+
