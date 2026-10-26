@@ -1,111 +1,66 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=103.168.172.139
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=199.89.1.14
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793055810;
-	b=5gw7butYPJMXjI4Tt2puiMFaZ+X6/waDMg+PMNthtWoKDRfKrNZaUCbdPKpH7JA4Ig5P
-	 HfB5jvV12fpKhfJUMNDQ29kqcTQypNX9jB21VeJ/Vg+xPQYUv8BVX/wRZVPO8hJCZbiYv
-	 pG4hiY3t1XbkuiaRPDkVWr0fzIt05D1XWK5DyeOFTCXtXPw7G6EIouyFnAb+h0Nf0Y0/i
-	 qyEROZLnb+FL2oLZtKOJYLytf4KlrcXKY/Nrk5/BfOZQ0I5254SY1eGp3Al8NUgrWtH27
-	 VJzn2g6y7r4OggRrc5060A8IEAd87MWZdLCCpd2UEzLql2YTot96UxuFLBWLClN/ukg==
+	t=1793057211;
+	b=lo/dRlgWlE7qL12qSs1SRsJ52gqA+rX8K5BillYWxJeaQsL7YxL/l9sjwiPx4dueTM9t
+	 OSZRDH8kuG8/2NGlfGEV0aCMYpe+byNN+jSK2Jgzq2UwJ26Nx3+AlDeapS40cgCs/Lntj
+	 xUFuQOWiNFywyKAapIQECoogm00RhjsD6GUY+trx1TcVKJlMUAh6RZ5eGvUu7q2R+zQUs
+	 nid1pjtyAnAafekFcKHKuKjc0tc4gTNE66237Qid2zOzECQexKsvkW4PSbNdDzNINxC7L
+	 6kua/M5X9AkzEnAfLz57dVnEvT7HWzKkFcSwDWSAaoYBALXdyoLuh10kyVBzpRWHyRA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793055810;
-	h=DMARC-Filter:Received:Received:DKIM-Signature:DKIM-Signature:
-	 X-DKIM2-Info:DKIM2-Signature:X-DKIM2-Info:Message-Instance:
-	 X-ME-Sender:X-ME-Proxy-Cause:X-ME-Proxy:Feedback-ID:Received:X-Mailer:
-	 MIME-Version:X-ThreadId:Date:From:To:Cc:Message-Id:In-Reply-To:
-	 References:Subject:Content-Type:Content-Transfer-Encoding;
-	bh=D7+yWhNEfwBLVAnh4DVgwdCxL54hx3J7AhdglfNEalQ=;
-	b=Ih+WFWpTKnt1iLoJduD00mz9crb3Z6ebuWdREG4xeidnfux/+ReHJ7KkBhrsRi/UdAUq
-	 pWwOFQfP8AoPlc9A52LhgZmclPR/f0ww6YdlfdITnzu8G71c5nXKmbQ5LiSBePJZSMr29
-	 IBWzGYcR7PnT8yScxBphn486JsxfyC33Q9v3lzYI9lmcUCJD+cRe+tE1QdgQjd7XiK0wM
-	 fss81zea0BkvgqMQ3hrSGiT85n2+24fTDxc+6K0gHCUKTs8X25xzqk3JDlMhpBBHLaDu7
-	 NwxAIfVbcuSifISVpVyQj75EE/xtArzhfm9Bqs7JmffJh/xuB/0TF/HDBS6o4lYSAkg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793057211;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Virus-Scanned:Received:
+	 Received:Message-ID:Date:MIME-Version:User-Agent:Subject:To:Cc:
+	 References:Content-Language:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=8OJ2lhnY0frKoHt4pVBk06hVCxKUnE042Gwl3AD2UNY=;
+	b=4Xz3tYKCK+6iMNwUyM6vfMk+UhmyL3feDviFqRurPvLgaHugJTAKCZbbx8Gx0WoxGiyr
+	 U1fVhZv7DP6OuzxZmeh1heeSaGdIz39obwXLqhGrh20vKq4LRapJJ4KQ3ld1pAl6BApRF
+	 ALwGnxszEP/0PZxsemLTjky5APfyAVxlOFEGXc9q3hmwPm3cwvbWhRaLd+C2EypHjFzGc
+	 xbgxEIRJnRNpqahowDFJJHQ3/p2d6s24T1m7x0aEi2pGDE7zDSsNJ4h+EobR5f6cLda1X
+	 6DJprx9DdXPNHrz4LeaObQDTLWtSOAigSTZ+dj0Pl5dFhArzCpl0ATeD+alzBk71beA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=arndb.de;
-	spf=pass smtp.mailfrom=arndb.de;
-	dkim=pass header.d=arndb.de header.i=@arndb.de header.a=rsa-sha256 header.s=fm2 header.b="YnCT/mJB";
-	dkim=pass header.d=messagingengine.com header.i=@messagingengine.com header.a=rsa-sha256 header.s=fm2 header.b=Z9BmjjcB;
-	arc=none smtp.remote-ip=103.168.172.139
-Received: from flow-a4-smtp.messagingengine.com (flow-a4-smtp.messagingengine.com [103.168.172.139])
+	dmarc=pass header.from=acm.org;
+	spf=pass smtp.mailfrom=acm.org;
+	dkim=pass header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=LWM+Ogvq;
+	arc=none smtp.remote-ip=199.89.1.14
+Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D04C606A32D
-	for <linux-scsi@vger.kernel.org>; Mon, 26 Oct 2026 23:03:30 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4D04C606A32D
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arndb.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arndb.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D31F3606A322;
+	Mon, 26 Oct 2026 23:26:50 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D31F3606A322
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=arndb.de header.i=@arndb.de header.a=rsa-sha256 header.s=fm2 header.b=YnCT/mJB;
-	dkim=pass (2048-bit key, unprotected) header.d=messagingengine.com header.i=@messagingengine.com header.a=rsa-sha256 header.s=fm2 header.b=Z9BmjjcB
-Received: from ams-compute-02.internal (ams-compute-02.internal [10.64.2.62])
-	by mailflow.phl.internal (Postfix) with ESMTP id 5B849138029B
-	for <linux-scsi@vger.kernel.org>; Mon, 26 Oct 2026 19:03:29 -0400 (EDT)
-Received: from ams-imap-03 ([10.64.2.23])
-  by ams-compute-02.internal (MEProxy); Mon, 26 Oct 2026 19:03:29 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=arndb.de; h=cc
-	:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm2; t=1793055790;
-	 x=1793062990; bh=D7+yWhNEfwBLVAnh4DVgwdCxL54hx3J7AhdglfNEalQ=; b=
-	YnCT/mJB73FAGmQIu27ctvo5RESP4K+pTIiK9EhLFaGH8j7kXKQE+tSbzesbfDxs
-	bV+9wV/9mJE87FIh60l/aPw0vUFP1oQOrI5riJBeeRGczFUwDyCLA8/y4BcBY12w
-	wRegLgnRHobHCSF6BA6i0C+reNBRVR2FKTT/gbMwVrLZscUYxkn/44Vw8eG0qSvi
-	tWJdiyjuyg2ickLmpnfR0RB/KUcSZm6NPyieIrb9GtPlZj+tCTyGrh4XFyNGGvj3
-	0mNzbe0+txL9uJr9T4IbJyuT48LYOX1e+ZzKJe7AQTdcUWk+BiA6E+y23Kktm4eF
-	0OdWKJ+MXJqpGpYEJntcLg==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm2; t=1793055790; x=
-	1793062990; bh=D7+yWhNEfwBLVAnh4DVgwdCxL54hx3J7AhdglfNEalQ=; b=Z
-	9BmjjcB8Ht97U3XpSdkutzu7KGGU83nJYqys9fKA8A8LFo89cKjsWQGjTr4pUO1L
-	aP9kjNesX0okG+vOVw+RbXwBhTP1dlNpD+KBb13+OcK03C9JQt4JuFOOxyE3GGLG
-	ZspFTpPuZDfO6wPr4qEO2A5TQRvlMMTy9lXbOlVikLCqKHWaoSShkmyr2lAQA0MW
-	I75SaI19xADFJtpVucfW5iXU1oSN1+WUXqV2eC8N5VxDvuOCOwE0yDQK4eXGJuSC
-	Y9wL+SsocvtYeidK4mRb5GFh4Lq5vzciH3Z2KUk3zskK7IRDyEhPwx+HWzKZpC0W
-	mE1pSP6ArkmhYFD6hOYlw==
-X-DKIM2-Info: draft=ietf-dkim-dkim2-spec-07;
-	repo=github.com/dkim2wg/interop; date=2026-10-18; sw=lmtpprox;
-	action=sign d=arndb.de a=rsa-sha256;
-DKIM2-Signature: i=1; m=1; t=1793055790; d=arndb.de;
-	mf=PGFybmRAYXJuZGIuZGU+;
-	rt=PGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnPg==;
-	s=fm2:rsa-sha256:mzpBt8cc2B/TWsBOYquPTmsnkd82su8NZdBz9gcgc3ZdLkN
-	59UJnGTYl4+nak3ABKsmTUBQLQzqGgmPy02tgnYvcpPhJvl1zn7+hbiMAStiWon/
-	pJl6qrghM/Qt74NjqRg77W30YgKhiSsGhhCQVco6qzNTPubWzJ0Uretc6WDFYuNt
-	WGFRkhzvr+KBlY4Jl2611BGUaObAPSd4pf63WRoRm+DEZRAmLFnRC1xfDxc5PuGm
-	mbkxO2EKLbNK6vrCzn0Cu8YVP/kPWyDyEGCJLaZEY3c03aYjQQVlS03GmG8pXpOk
-	4a7oocfyZQdYBt1ZfMdBO9h1RwGxmZfY30uISew==;
-X-DKIM2-Info: draft=ietf-dkim-dkim2-spec-07;
-	repo=github.com/dkim2wg/interop; date=2026-10-18; sw=lmtpprox;
-	action=mi-m=1; hc=12;
-	hn=cc,content-transfer-encoding,content-type,date,feedback-id,
-	from,in-reply-to,message-id,mime-version,references,subject,to;
-Message-Instance: m=1; h=sha256:t7TmO85uHz3Bu9BudK5SiRDodgnhLHm1Jzu0xBGeMzU=:nc6weggs1vuexqOORIgzQ+8Q4IQMXclbAa/HauyeO68=;
-X-ME-Sender: <xms:I9zfarVlhcJ2BCr_X0f-Oqe3MJ-tfizxDxcVqqJu0UTFnur8n55_Vw>
-    <xme:I9zfaua_l0AUV_QUaHlFQ6Xk6c6S9hDoF9LDP0z9ZWTiBfyLFB6bGMt2m3Qf-Wf2r
-    Gp1aY7E3hmIDYnxO6ClUpLNdypmMNJMMAjKb_KTlIEA5DbBcFarl32S>
-X-ME-Proxy-Cause: dmFkZTG2ipuQjn7o/dduxIouS3rexG2Fs38Yf1mgntfcBayDO96egVm+yZQ4lqIIentjs/
-    mqWlr4cScm3wkM9Qig2xKeks6qaebjWFYjqSr1PEW0Un0mkdsaFkbg+xdJQiG2O2dvowLj
-    8E21v7JskZMeciXQK6+wWU3W5TpMrftfB6Bs3P2KNxD6AlDYn9LdKl79i+Pap9CUN0lvH5
-    Kmf7XF9ELL/4XciMlrED2crBvL0Cr1f1u2ohCkkGXPJJyr9NhF3TZ6Ev/Xhe+zrfxeWaDU
-    CHzGxCZtrUFf0j+qOyVHd7hT7F2sM8dBpGw742e3r2mvfUUQKFeZdDheW6KomSHxo+nEDw
-    iI6qO2cDvY1NeToTkMsmxh+Idwqe78oXaZf4JBivXyC6kcFQnAnTHzPS/v1istw/y4OU7I
-    Ig5+4LcAMjuaK21mmbb4bb1DmpocpNGdDRw9yq3nlrcPMsuuD3uvsbn3xyT972zofrrKbr
-    ymQ2KeWkMRr8lrdJKsZ996mCPszGebzucdgyrtSsUPulGKB9lpIv0RpYgf85X7CxFkC5mx
-    0ahqqI390L+Dj1eTAd45HDhy64TtvMVlHqpgXnFPGAYR24gTjdAn2Wh1e+VqFY1QE9IKWw
-    dT6VBuP/aA1R/oxwzZkn1goeGaMw0LOVAE7QiXpixIzvdkU0wv6eIJAHAEFA
-X-ME-Proxy: <xmx:KdzfajHGJ6tf5pxLJ3v2PfbGRd6Rt6Io_8hyQBlkYOXCV7Lb2b01Vw>
-    <xmx:Kdzfapg-6ACQ-dUEsnrl6Ji_ntio6Ly_-zbhQjCdP4T2kZZPc2mbjg>
-    <xmx:KdzfapZpLCwDwzVm3OeHceISOSkLUArE0NE7AI0C6AgT-FmN177JAA>
-    <xmx:Kdzfam27dS94lXZ5VmP_WcqDu7eLBRosip4J-91RpWhTlpq7UwmFJg>
-    <xmx:LtzfasvLSVKrc-K83R8kLrDibnrCdXZT8NkkCjHCIPMKCuEvlTPp1urH>
-Feedback-ID: i56a14606:Fastmail
-Received: by mailuser.ams.internal (Postfix, from userid 501)
-	id C999832A0097; Mon, 26 Oct 2026 19:02:59 -0400 (EDT)
-X-Mailer: MessagingEngine.com Webmail Interface
+	dkim=pass (2048-bit key, unprotected) header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=LWM+Ogvq
+Received: from localhost (localhost [127.0.0.1])
+	by 011.lax.mailroute.net (Postfix) with ESMTP id 4jD8sQ1nfmz1XM30g;
+	Mon, 26 Oct 2026 23:26:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1793057206; x=1795649207; bh=8OJ2lhnY0frKoHt4pVBk06hV
+	CxKUnE042Gwl3AD2UNY=; b=LWM+OgvqO9YeCXbcglwV52/PFMK6y9Qp9tnkeQJe
+	yzJuoIasZQeqFaQH4MDWN9d1fwV4i7XQSdchMwl5nPj9QkndYUlluHiHl8RbmIw3
+	pvMjvRH2Zimes31WMI9+8SaYhEqs7nob32pFErdMaCweqIpUGOOAbEXYCBw2yw39
+	vQOWo75p0j+PXgECZfb/lK06fmFOAcamlb1f0GassQCRTWqV6IC486IUTjpERIKm
+	jts4gTPJHG2GmDqhen7tEMM+ch/PnK3zbuggnM7u/6QpwLRfeACQzMmXQorVv1bu
+	LVN1guWeUzuTBtJwvYKPIE0KH8Cv70po8mLwlg4ZmZv/fw==
+X-Virus-Scanned: by MailRoute
+Received: from 011.lax.mailroute.net ([127.0.0.1])
+ by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id kcc2EYQsIKR7; Mon, 26 Oct 2026 23:26:46 +0000 (UTC)
+Received: from [IPV6:2a00:79e0:2ed2:d:d824:fc54:e646:594c] (unknown [104.135.182.40])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4jD8sK2bfKz1XM4Tl;
+	Mon, 26 Oct 2026 23:26:45 +0000 (UTC)
+Message-ID: <5adbbab4-11f2-48be-9924-9d14a06d0ed7@acm.org>
+Date: Mon, 26 Oct 2026 16:26:43 -0700
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -115,78 +70,37 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-X-ThreadId: AmKN4IVPaSCN
-Date: Tue, 27 Oct 2026 00:02:38 +0100
-From: "Arnd Bergmann" <arnd@arndb.de>
-To: "James Houghton" <jthoughton@google.com>,
- "Andrew Morton" <akpm@linux-foundation.org>,
- "Alexander Viro" <viro@zeniv.linux.org.uk>
-Cc: "Thomas Gleixner" <tglx@kernel.org>,
- "Peter Zijlstra" <peterz@infradead.org>, "Kees Cook" <kees@kernel.org>,
- "David Hildenbrand (Red Hat)" <david@kernel.org>,
- "Lorenzo Stoakes" <ljs@kernel.org>, "Liam R. Howlett" <liam@infradead.org>,
- "Vlastimil Babka (SUSE)" <vbabka@kernel.org>,
- "Mike Rapoport" <rppt@kernel.org>, "Suren Baghdasaryan" <surenb@google.com>,
- "Michal Hocko" <mhocko@suse.com>, "Sean Christopherson" <seanjc@google.com>,
- "Paolo Bonzini" <pbonzini@redhat.com>, "Jim Mattson" <jmattson@google.com>,
- "Jens Axboe" <axboe@kernel.dk>, "Pavel Begunkov" <asml.silence@gmail.com>,
- "James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>,
- "Martin K. Petersen" <mkp@kernel.org>, "David Sterba" <dsterba@suse.com>,
- "Chris Mason" <mason@kernel.org>, "Alexei Starovoitov" <ast@kernel.org>,
- "Daniel Borkmann" <daniel@iogearbox.net>,
- "John Fastabend" <john.fastabend@gmail.com>,
- "Josh Poimboeuf" <jpoimboe@kernel.org>,
- "Steven Rostedt" <rostedt@goodmis.org>,
- "Masami Hiramatsu" <mhiramat@kernel.org>,
- "Mathieu Desnoyers" <mathieu.desnoyers@efficios.com>,
- "Ingo Molnar" <mingo@redhat.com>,
- "Arnaldo Carvalho de Melo" <acme@kernel.org>,
- "Namhyung Kim" <namhyung@kernel.org>, linux-mm@kvack.org,
- linux-fsdevel@vger.kernel.org, kvm@vger.kernel.org, io-uring@vger.kernel.org,
- linux-scsi@vger.kernel.org, linux-btrfs@vger.kernel.org, bpf@vger.kernel.org,
- linux-trace-kernel@vger.kernel.org, linux-perf-users@vger.kernel.org,
- linux-kernel@vger.kernel.org
-Message-Id: <3b0a8fc4-d140-4a90-b810-cbc1283fc083@app.fastmail.com>
-In-Reply-To: <20261026215226.3713941-11-jthoughton@google.com>
-References: <20261026215226.3713941-1-jthoughton@google.com>
- <20261026215226.3713941-11-jthoughton@google.com>
-Subject: Re: [RFC PATCH 10/10] uaccess: Move the NULL mm warning out of line
-Content-Type: text/plain
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 0/5] scsi: ufs: Fix device management timeouts and runtime
+ PM errors
+To: Stanley Jhu <stanleyjhu@google.com>, "Martin K . Petersen"
+ <mkp@kernel.org>,
+ "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>
+Cc: Alim Akhtar <alim.akhtar@samsung.com>, Bean Huo <beanhuo@micron.com>,
+ Can Guo <can.guo@oss.qualcomm.com>, Peter Wang <peter.wang@mediatek.com>,
+ linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20261025013446.345974-1-stanleyjhu@google.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20261025013446.345974-1-stanleyjhu@google.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On Mon, Oct 26, 2026, at 22:52, James Houghton wrote:
-> uaccess_without_mm() is inlined into every user copy, including every
-> copy_{to,from}_user() call site on architectures that define
-> INLINE_COPY_USER, such as arm64. Each inlined WARN_ON_ONCE() adds its
-> own __bug_table entry.
->
-> Keep the NULL current->mm check inline, but move the warning into a
-> single out-of-line, __cold function, uaccess_warn_without_mm().
->
-> The trade-off is that only the first offending access in the system
-> warns, rather than the first one from each call site. The stack trace
-> still identifies the caller, and the access is refused either way.
->
-> Compared to the base of this series, with defconfig + KVM:
->
->                      inline WARN_ON_ONCE()    out-of-line warning
->   x86_64 total       +5,884 B (+0.014%)       +9,714 B (+0.023%)
->   arm64  total      +40,948 B (+0.10%)       +24,609 B (+0.06%)
->
-> On arm64, this removes the ~16 KB of __bug_table growth, while text
-> size is unchanged, as a call is the same size as the inline brk. On
-> x86_64, the call is larger than the inline ud2 and causes more .cold
-> splitting, so this is a slight regression.
->
-> Signed-off-by: James Houghton <jthoughton@google.com>
-> ---
-> NOTE: This patch is included for reference only, to show the cost of the
->       inline warning.
+On 10/24/26 6:34 PM, Stanley Jhu wrote:
+> Add ufshcd_rpm_resume_and_get() around pm_runtime_resume_and_get() and
+> convert the 20 external and helper call sites to abort and propagate the
+> error when resuming the W-LUN fails. The three lifecycle call sites in
+> ufshcd_rpm_dev_flush_recheck_work(), ufshcd_wl_shutdown(), and
+> ufshcd_remove(), plus ufshcd_err_handling_prepare(), are intentionally
+> left unchanged.
 
-I would suspect that the growth is larger on architectures that
-don't implement __WARN_FLAGS() but rely on the generic WARN_ON().
+Patches 3/5 - 5/5 introduce a behavior change: a failed runtime suspend 
+sets power.runtime_error but leaves the W-LUN in the RPM_ACTIVE state.
+Today, sysfs, BSG and hwmon accesses still work in that state. With this 
+series they all fail with -EINVAL until the error handler's
+ufshcd_recover_pm_error() clears the flag. Is this behavior change
+intentional?
 
-This would mainly affect 32-bit arm and mips machines, some of which
-are very memory limited, most of the 64-bit architectures have it.
+Thanks,
 
-      Arnd
+Bart.
