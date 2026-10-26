@@ -1,57 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793020394;
-	b=roT4E/XrHEmEXp47MPCRt9CpDFqDXFqR9sL4OmwxkpDy9OLa9q1MBTXGls6dJK3rED69
-	 hnoSJdqi0KmlSSzGVmlzpfcVIbcD9zObP/+uRXH3GgJGXuMx8zSYr+fsq8JS4FWUKVozm
-	 I379dAFG9Lmc5v4gKq2jLXoahSllpTlSAJ0uhNdi5L4EWnxxJKYVp4TBP5GU7CB0xWbio
-	 FoeEYI/4dD7zcuAAU6wLwMRArK2EWTta3RPogS5ILIYSh0lKUFNWAe8ncvM17BliCghP3
-	 8Mb5fjOGLEWXJFFfybwMEK2tCm7KIHHtsmfJ7XTkEgzqTCVQYrcMQeDghcTy6YQ3YzA==
+	t=1793020395;
+	b=Ljh9oWiYyKz5o2Y9CUilbdEhOPgeH2rqshLlGgqXRfh8ZIvpgg04azZ9VWqqzVvutO5w
+	 eXp7dhpUqxIC7Y+yXdkOKa2+y5Qs9rztyeBnE7P2+/XTT/jjgaFebE80tkD9mtS72Mxj8
+	 PHfiXUksPHks3rB7Jcshv/zPazZl1iuuV3RuToNunvTkPhOmvW53lfC1Ro0uDvY5wJJc9
+	 RJRFjtMa8mnAAZ2HyWmmD8jRkxAvam6GrJvMN9RyTqbi7i5ea56nWBT9RgsLEBdvG/sAx
+	 zNioYOxnpWjtmR3DVBEC58qaN+7R95FOLjSVSNgpT5sKphHVxN+nsB6IIANi0l565rA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793020394;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793020395;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=v9D9wOQrYrgNP8BU6sBohP3BL2CIYA4r3ZNz3S9setk=;
-	b=poHRP45PTNkKhXncSd80IIfORVvc44KNciKg0zO+RZlvGHYSLn6YwdQaImycB3uK1iyy
-	 Hdg+DiFj2q662ZfQSBaIjT/OJ8IaSmuO3yVGM9QKh7mJ2ExixA6m+zqwC2Duq5eJ0vYhj
-	 oq38spOpgY4pQmjRttHZiVhWaLFgKNB1k01SzGu8zX4z5xL8LxBd2KTfDYdDSxjZ+IL0j
-	 jqGmtaQpJhfVTxMNN07snWpKYBylvrbg9wQqxEzrSTrFQpXUsAYc3i2fN1TTx/x3UhFev
-	 x+6N/r7A1ovSvPUxf/+dFcQ2AI10P1zMr/pJ0gtPpV19Sm34JN6ysiDu7MpDn1brVcA==
+	bh=GvlBjG1cDdzgzcygkraXNCsstcGHceJweWc8zuLq/Zo=;
+	b=ZiSXfVHNGMk0csZsYZLsRahDh2mrU1+afrJk599a44yJMxZDxFASEgweDAXaoF7k0/Il
+	 AAzeKQvRlx9JGG7YtK/esCBx8cIIfgRUVco7a+wHgWfIXGzsHk4Ar0T1NkiduirqvuUYX
+	 53a2C8/zq+5nbVm0gMksL2pPyT2YzB9EqhNoAtHXfuRDoh+umc11MihELsixEvabZ0Gjw
+	 1Shd/p9sjkDoWU4cHmEnQa3RC8UtrDk4Y1TTYxrAQgn7HS2ncjLkGmOoJgV7vK+JisnMz
+	 ce5cwGEXYUC8s9u9SltRaGHH6TWQfmq0no8du+5GRTg/oqHXM+u+z/xBTvvvdtLepyw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=CkLtRmeL;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=TQWb1yhc;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21DB9606A31A;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08871606A323;
 	Mon, 26 Oct 2026 13:13:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=CkLtRmeL
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AF1121F01828;
-	Mon, 26 Oct 2026 13:13:13 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=TQWb1yhc
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 768E91F01825;
+	Mon, 26 Oct 2026 13:13:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
 	s=k20260515; t=1793020394;
-	bh=v9D9wOQrYrgNP8BU6sBohP3BL2CIYA4r3ZNz3S9setk=;
+	bh=GvlBjG1cDdzgzcygkraXNCsstcGHceJweWc8zuLq/Zo=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=CkLtRmeL8EckewDewsqGEDNqIRHgJOlZH8wi7EiJM4+ojKhGXpw1BoF0MLM8Ue53p
-	 m9e2UweqlcVQGwPf3dpgRA7mthlHjxSIchXkXnplFK2DIMvwJPUgj6T2BbS494roOS
-	 DD91t/g1zYssId6JIvk8XHjOlxsu3mrwJstDTLMXKLEs4skIrdfFPMKwY8ONw+liLE
-	 YfpBrhmnvlEIIe2dJMNv1lYQgJ/RuzPj/VkAyeT15c48jyp09MBt7DY7/V9wmg0ilW
-	 vVXn8jQ5FueMgRyKKKqkGbvaHrWlUYnSKN1JZPDUzhk8gm4Ra14bCiSxaomxWSG1Rv
-	 V+MJ16K469YOw==
-Message-ID: <sashiko-outbox-185288@kernel.org>
+	b=TQWb1yhcprksQH2XxsQ1J39Gwm+wdmhgR4g1zJU6g5+uW+puJhXz517d296y8WFJD
+	 qW4R+sFFpCQEm/f7xwHQfw+auyD6ssHT7khraCvcwxSmOdiP+BP+XIP48RUQKE3iGa
+	 DxgUpQErFnoKG7W7lHmhDxbV1ABy9Bk5wjoRWoZ2YX/fTBkMNhwDGI1iWxF5fgnsBd
+	 4By54TCnzaPINzAAF7tx70EHTyOeFEHU+dMOd/+rL2VTRZjFM/qr4hefiEnyuRmJLT
+	 ioVID8vyhAedjjn2GtI9fFjUi+d+TaRcj5nnx58Qm04GFzGmdhjOWoMTDuLNatj54f
+	 4kHzfY3hc/A7Q==
+Message-ID: <sashiko-outbox-185289@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 1/4] scsi: target: iscsi: Complete an aborted WRITE
- stuck before the first R2T
+Subject: Re: [PATCH v3 2/4] scsi: target: iscsi: Complete an aborted WRITE
+ when a new R2T would be sent
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Laurence Oberman" <loberman@redhat.com>
 Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-In-Reply-To: <20261026124344.745124-2-loberman@redhat.com>
+In-Reply-To: <20261026124344.745124-3-loberman@redhat.com>
 References: <20261026124344.745124-1-loberman@redhat.com>
- <20261026124344.745124-2-loberman@redhat.com>
+ <20261026124344.745124-3-loberman@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 26 Oct 2026 13:13:13 +0000
+Date: Mon, 26 Oct 2026 13:13:14 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -63,95 +63,112 @@ Precedence: list
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] scsi: target: iscsi: UAF on cmd after iscsit_sequence_cmd() aborts=
- write
+- [Critical] scsi: target: iscsi: UAF of OOO cmd in iscsit_check_dataout_pa=
+yload()
 --
 
-commit bf534eddda8811708a661c23a1fc1d455c52b52d
+commit 93e4d74df05b6ac07e171f5586d09d2036dc2494
 Author: Laurence Oberman <loberman@redhat.com>
 
-scsi: target: iscsi: Complete an aborted WRITE stuck before the first R2T
+scsi: target: iscsi: Complete an aborted WRITE when a new R2T would be sent
 
-This commit completes WRITE commands in TRANSPORT_WRITE_PENDING that were
-aborted before the first R2T is sent in iscsit_execute_cmd(). It also adds
-a completion claim flag under se_cmd.t_state_lock so that only one of
-iscsit_execute_cmd() or iscsit_release_commands_from_conn() completes the
-command.
+This commit completes an aborted WRITE command via
+iscsit_complete_aborted_cmd() in iscsit_check_dataout_payload() when
+iscsit_check_post_dataout() returns DATAOUT_SEND_R2T and no outstanding R2Ts
+remain.
 
-> diff --git a/drivers/target/iscsi/iscsi_target_erl1.c b/drivers/target/is=
-csi/iscsi_target_erl1.c
-> index d8ca06e697d63..cf72c79be355a 100644
-> --- a/drivers/target/iscsi/iscsi_target_erl1.c
-> +++ b/drivers/target/iscsi/iscsi_target_erl1.c
-> @@ -927,8 +927,16 @@ int iscsit_execute_cmd(struct iscsit_cmd *cmd, int o=
-oo)
-> =20
->  			if (!(cmd->cmd_flags &
->  					ICF_NON_IMMEDIATE_UNSOLICITED_DATA)) {
-> -				if (cmd->se_cmd.transport_state & CMD_T_ABORTED)
-> +				/*
-> +				 * No R2T has been sent for this command yet,
-> +				 * so returning here leaves the initiator with
-> +				 * nothing to send and no DataOut timer armed.
-> +				 * Complete it, or nothing ever will.
-> +				 */
-> +				if (cmd->se_cmd.transport_state & CMD_T_ABORTED) {
-> +					iscsit_complete_aborted_cmd(cmd);
->  					return 0;
-> +				}
+> diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/i=
+scsi_target.c
+> index aab9237a67768..3dad7f69f3bae 100644
+> --- a/drivers/target/iscsi/iscsi_target.c
+> +++ b/drivers/target/iscsi/iscsi_target.c
+> @@ -1669,6 +1669,22 @@ iscsit_check_dataout_payload(struct iscsit_cmd *cm=
+d, struct iscsi_data *hdr,
+>  	if ((rc =3D=3D DATAOUT_NORMAL) || (rc =3D=3D DATAOUT_WITHIN_COMMAND_REC=
+OVERY))
+>  		return 0;
+>  	else if (rc =3D=3D DATAOUT_SEND_R2T) {
+> +		/*
+> +		 * A new R2T would never be answered for an aborted command.
+> +		 * The CMD_T_ABORTED handling in __iscsit_check_dataout_hdr()
+> +		 * does not cover this: it only runs for DataOut PDUs
+> +		 * belonging to R2Ts that were already issued, and
+> +		 * iscsit_dataout_update_r2t() has already decremented
+> +		 * outstanding_r2ts for the burst that just finished.  Guard
+> +		 * on outstanding_r2ts so that with MaxOutstandingR2T > 1 the
+> +		 * completion is still left to the last R2T to drain.
+> +		 */
+> +		if (cmd->se_cmd.transport_state & CMD_T_ABORTED) {
+> +			if (cmd->outstanding_r2ts < 1)
+> +				iscsit_complete_aborted_cmd(cmd);
+> +			return 0;
+> +		}
 
-[Severity: High]
-Can completing the command here cause a use-after-free on cmd in the
-callers of iscsit_sequence_cmd()?
+[Severity: Critical]
+Can completing the command here cause a use-after-free of cmd if
+ICF_OOO_CMDSN is set?
 
-When an iSCSI WRITE arrives with immediate data whose total data length
-exceeds FirstBurstLength and with ISCSI_FLAG_CMD_FINAL set on the Command
-PDU (so cmd->immediate_data =3D=3D 1 and cmd->unsolicited_data =3D=3D 0),
-iscsit_process_scsi_cmd() calls transport_generic_new_cmd(), which adds
-cmd->se_cmd to dev->queues[cpuid].state_list with cmd_kref =3D=3D 2 (initial
-kref plus SCF_ACK_KREF).
+When ImmediateData=3DYes and InitialR2T=3DNo, a WRITE command can arrive wi=
+th
+immediate data and expect additional unsolicited DataOut PDUs in the first
+burst followed by R2T-solicited data (payload_length < FirstBurstLength <
+se_cmd.data_length, so cmd->unsolicited_data =3D=3D 1 and
+ICF_NON_IMMEDIATE_UNSOLICITED_DATA is set).
 
-If an ABORT_TASK TMR, a same-session LUN_RESET, or a cross-session
-LUN_RESET with emulate_tas =3D=3D 0 aborts the command before
-iscsit_execute_cmd() runs, __target_check_io_state() sets CMD_T_ABORTED
-without CMD_T_TAS.
+In drivers/target/iscsi/iscsi_target.c:iscsit_process_scsi_cmd(),
+transport_generic_new_cmd(&cmd->se_cmd) is called before CmdSN sequencing:
 
-When iscsit_get_immediate_data() or cxgbit_get_immediate_data() then calls
-iscsit_sequence_cmd() -> iscsit_execute_cmd(), iscsit_complete_aborted_cmd()
-calls target_complete_cmd() -> target_cmd_interrupted(), queueing
-target_abort_work on target_completion_wq. On another CPU,
-target_abort_work -> target_handle_abort() runs iscsit_aborted_task(),
-drops SCF_ACK_KREF via target_put_sess_cmd(), and calls
-transport_cmd_check_stop_to_fabric() -> lio_check_stop_free() ->
-target_put_sess_cmd() -> iscsit_release_cmd() -> target_free_tag(), which
-returns the cmd slot to se_sess->sess_tag_pool.
+	cmd->sense_reason =3D transport_generic_new_cmd(&cmd->se_cmd);
+	if (cmd->sense_reason)
+		return 1;
 
-However, after iscsit_sequence_cmd() returns CMDSN_NORMAL_OPERATION (0),
-both drivers/target/iscsi/iscsi_target.c:iscsit_get_immediate_data() and
-drivers/target/iscsi/cxgbit/cxgbit_target.c:cxgbit_get_immediate_data()
-still dereference cmd without holding a reference on cmd->se_cmd:
+This places cmd->se_cmd on dev->queues[cpuid].state_list in
+TRANSPORT_WRITE_PENDING. When iscsit_get_immediate_data() subsequently calls
+iscsit_sequence_cmd() and cmd->cmd_sn > sess->exp_cmd_sn,
+drivers/target/iscsi/iscsi_target_erl1.c:iscsit_handle_ooo_cmdsn() queues
+an entry on sess->sess_ooo_cmdsn_list holding a raw pointer to cmd:
 
-drivers/target/iscsi/iscsi_target.c:iscsit_get_immediate_data() {
-    ...
-		cmdsn_ret =3D iscsit_sequence_cmd(cmd->conn, cmd,
-					(unsigned char *)hdr, hdr->cmdsn);
-		if (cmdsn_ret =3D=3D CMDSN_ERROR_CANNOT_RECOVER)
+	cmd->cmd_flags			|=3D ICF_OOO_CMDSN;
+	...
+	ooo_cmdsn->cmd			=3D cmd;
+
+Because cmd->unsolicited_data is set, iscsit_get_immediate_data() then calls
+iscsit_set_unsolicited_dataout(cmd).
+
+If a concurrent TMR aborts cmd while it is still waiting on
+sess->sess_ooo_cmdsn_list, __target_check_io_state() sets CMD_T_ABORTED on
+cmd->se_cmd. When the final unsolicited DataOut PDU of the first burst
+arrives, __iscsit_check_dataout_hdr() takes the cmd->unsolicited_data =3D=
+=3D 1
+path, and iscsit_dataout_post_crc_passed() clears cmd->unsolicited_data =3D=
+ 0
+and returns DATAOUT_SEND_R2T.
+
+In this new DATAOUT_SEND_R2T branch in iscsit_check_dataout_payload(),
+cmd->outstanding_r2ts is 0, so iscsit_complete_aborted_cmd(cmd) is called
+without checking ICF_OOO_CMDSN or removing cmd from
+sess->sess_ooo_cmdsn_list (unlike the adjacent DATAOUT_SEND_TO_TRANSPORT
+branch, which checks cmd->cmd_flags & ICF_OOO_CMDSN).
+
+Once target_complete_cmd() schedules target_abort_work ->
+target_handle_abort(), cmd is completed and freed via iscsit_release_cmd().
+When the missing ExpCmdSN PDU later arrives,
+drivers/target/iscsi/iscsi_target_erl1.c:iscsit_execute_ooo_cmdsns() will
+dereference the dangling ooo_cmdsn->cmd pointer:
+
+		cmd =3D ooo_cmdsn->cmd;
+		cmd->i_state =3D cmd->deferred_i_state;
+		ooo_count++;
+		sess->exp_cmd_sn++;
+		...
+		iscsit_remove_ooo_cmdsn(sess, ooo_cmdsn);
+
+		if (iscsit_execute_cmd(cmd, 1) < 0)
 			return -1;
 
-		if (cmd->sense_reason || cmdsn_ret =3D=3D CMDSN_LOWER_THAN_EXP) {
-			target_put_sess_cmd(&cmd->se_cmd);
-
-			return 0;
-		} else if (cmd->unsolicited_data)
-			iscsit_set_unsolicited_dataout(cmd);
-    ...
-}
-
-If the tag slot has already been reallocated from se_sess->sess_tag_pool,
-wouldn't reading cmd->sense_reason or cmd->unsolicited_data inspect the
-new command and potentially call target_put_sess_cmd() or
-iscsit_set_unsolicited_dataout() on the reallocated command?
+Should the DATAOUT_SEND_R2T abort path also account for commands with
+ICF_OOO_CMDSN set before completing cmd?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261026124344.7451=
-24-1-loberman@redhat.com?part=3D1
+24-1-loberman@redhat.com?part=3D2
