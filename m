@@ -1,77 +1,58 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=203.254.224.24
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=115.124.30.130
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792989709;
-	b=vzfPQvPbHTjdtoONbM0Gj6pUyC9HDKrXJF6zwdpKe6TnVkUci2gbqOG2d5KMRbCjMj49
-	 oWd6XiGhxEM8SgdQTXALlTIBeitzf3RG/0TKAEE5fyRGTeCMNT0KfWERdLyGds47QZQNq
-	 mt7rxJLfwHnbOGP5BI1BfmjrtIpCDjCbl4xiYLsyOpReAYJQajHeu/gqXrEpI6/ziHZ9G
-	 wBny+WccecFxGv0meF9pOQuy7BBUnF9QUB0mhtEOlynMtrMeHz+f/uYHuD5ovpD5lThL7
-	 7jk9TK6qMPQzL+TXEPijT2LtgzCQkaNrNUR8GtrLeVEd50G2EglWbBSTI38HwdhQcPA==
+	t=1792990013;
+	b=rwEhiE65Z5pXnEVyrNAmbIiQOjNJlnF/IuJEUGKY0vepgLXoFuLjaLu0z8fuyu9JavJr
+	 Fg8BsPgUb1T0ICvXGDCLJQOomtqdBfH2CpSNDwJct2hcOw6/hnYWL62NgVBHhSddJmDP+
+	 66bTYKteettPpKNPZX3Go0Z0vtUxV91btlOz4ODPHnfCfLKDmdqKrofsvUr0H+mY8BX3+
+	 pfxVN2vQEPymWJniEYF0GWqDvm/PAqzlVrVebn36Yly2l49DRYq5BSiGWjzzEDyeV+K7w
+	 s+riPcyzD+bVQVneaZK6hKWLOluDmf0ZfIrHKtCP2qL33krATJAoy3rAZDPODaq0Zog==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792989709;
-	h=DMARC-Filter:Received:DKIM-Filter:DKIM-Signature:Received:Received:
-	 Received:Received:From:To:Cc:Subject:Date:Message-Id:X-Mailer:
-	 In-Reply-To:MIME-Version:Content-Transfer-Encoding:X-CMS-MailID:
-	 X-Msg-Generator:Content-Type:X-Sendblock-Type:CMS-TYPE:X-CPGSPASS:
-	 cpgsPolicy:X-CFilter-Loop:X-CMS-RootMailID:References;
-	bh=i9Ml4qigH7DzspM/Amzf5XaHAXSm7xpnRAKJSyb+B5s=;
-	b=FUktRhIRB675Uwru+8jeKLOC8NynszrXRxLwMI/VYsn1Wkbs0LG5oCQkX2pts0T4BCem
-	 8nRj8P1Xz3k/zIdIoqpCLrraFOTclk8OLyMfkSefp2TxCiIY4Ulx6JmoYauN3PIEsXz2J
-	 DnujXh16iyT86Ye47Ef4AS3I4rU6pyHI1evQeO+LZmgJ6bfEGxR0YwGfFGbu5pb9+2A7P
-	 aBeRz+639qCZfDW/HAFPWXShB5UO4+GEN+pBRRx/QTOTAnsJINH4cVMs7XaRotHYToz8/
-	 IB8H8q3pYMcpT5cj8jEJPiRt6laJTclSktyT1NGb5f2Z4uOhuEs7e1Dhc8gTC8u5g0w==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792990013;
+	h=DMARC-Filter:DKIM-Signature:X-Alimail-AntiSpam:Received:From:To:Cc:
+	 Subject:Date:Message-ID:X-Mailer:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=F9we1B1BcqT0qfRF/FTS2JiiyttBbvpi5NbTu56uFe4=;
+	b=tNXCAWacU4SBaCPcDFe/PH9VuC76opO6vRPOe8YJpK0Fr4k3KXXExK+QdiW+052a3QUK
+	 1w0HRMtf+hBHD1MV71tekNC6I/Mtsf4StFgMJRWqDxylwGE67Z6/gAOSYffIYDa77gYvr
+	 A/zXMxnbq6B9ttMfXk5bt7tQLqrlWUdG5oAnxmYvfvocU5gLoGi/c4SYifku2DDHLZYr5
+	 8YJM6R15j+D15fEjd+YOaDSMXn2akiqFhst1LljQyHIK/hMpRAXAMhoeHAlTB1zncWwc2
+	 eA3mvx1UK/DZEAen+Qq691454Ruti7Ml5BA/Fjw35gbvLkJmkFGaRXyZv03H7KyLADA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=samsung.com;
-	spf=pass smtp.mailfrom=samsung.com;
-	dkim=pass header.d=samsung.com header.i=@samsung.com header.a=rsa-sha256 header.s=mail20170921 header.b="Ha/DKq0X";
-	arc=none smtp.remote-ip=203.254.224.24
-Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+	dmarc=pass header.from=linux.alibaba.com;
+	spf=pass smtp.mailfrom=linux.alibaba.com;
+	arc=none smtp.remote-ip=115.124.30.130
+Received: from out30-130.freemail.mail.aliyun.com (out30-130.freemail.mail.aliyun.com [115.124.30.130])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90D23606A320
-	for <linux-scsi@vger.kernel.org>; Mon, 26 Oct 2026 04:41:48 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 90D23606A320
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=samsung.com header.i=@samsung.com header.a=rsa-sha256 header.s=mail20170921 header.b=Ha/DKq0X
-Received: from epcas2p4.samsung.com (unknown [182.195.41.56])
-	by mailout1.samsung.com (KnoxPortal) with ESMTP id 20261026044141epoutp0161999b259c462c2d009db126da28f956~h_qI67uu52210422104epoutp01t
-	for <linux-scsi@vger.kernel.org>; Mon, 26 Oct 2026 04:41:41 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20261026044141epoutp0161999b259c462c2d009db126da28f956~h_qI67uu52210422104epoutp01t
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1792989701;
-	bh=i9Ml4qigH7DzspM/Amzf5XaHAXSm7xpnRAKJSyb+B5s=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=Ha/DKq0XOwk423BgBc++PfZrKnSvpFec1cfj+K6/wLLbhbNtfEOThZyQJY2HDVev9
-	 7ew1lKJvEMaPeQzbq6dJLL1J8FvPF5M7dkWLJ3IVT6ZfT1++8GLHe8oMu/8YEXyU4M
-	 dBLtAW7J6N4/dHKd+qiQcM4+5otd/gJQlPaz3uvs=
-Received: from epsnrtp03.localdomain (unknown [182.195.42.155]) by
-	epcas2p3.samsung.com (KnoxPortal) with ESMTPS id
-	20261026044140epcas2p3a062afdfe7952408f310da73cf0495ca~h_qIdHFO21523415234epcas2p3F;
-	Mon, 26 Oct 2026 04:41:40 +0000 (GMT)
-Received: from epcas2p1.samsung.com (unknown [182.195.38.206]) by
-	epsnrtp03.localdomain (Postfix) with ESMTP id 4jCgv82dysz3hhT9; Mon, 26 Oct
-	2026 04:41:40 +0000 (GMT)
-Received: from epsmtip1.samsung.com (unknown [182.195.34.30]) by
-	epcas2p3.samsung.com (KnoxPortal) with ESMTPA id
-	20261026044139epcas2p3a5b55ec93b313eeb9a38bbf0c93cf889~h_qHfcBAx1607616076epcas2p3S;
-	Mon, 26 Oct 2026 04:41:39 +0000 (GMT)
-Received: from ubuntu.dsn.sec.samsung.com (unknown [12.81.221.204]) by
-	epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
-	20261026044139epsmtip1c6e30acc4f83bf7ebfc8318ef2d9bc21~h_qHa79XP2136321363epsmtip1K;
-	Mon, 26 Oct 2026 04:41:39 +0000 (GMT)
-From: HOYOUNG SEO <hy50.seo@samsung.com>
-To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
-	martin.petersen@oracle.com, bvanassche@acm.org, kwangwon.min@samsung.com,
-	kwmad.kim@samsung.com, cpgs@samsung.com, h10.kim@samsung.com
-Cc: HOYOUNG SEO <hy50.seo@samsung.com>
-Subject: [PATCH v3 1/2] scsi: ufs: core: Clear saved errors in
- ufshcd_link_recovery
-Date: Mon, 26 Oct 2026 13:37:20 +0900
-Message-Id: <31fc787b76a2586ca6d3c442afdb694aab3d14bb.1792989286.git.hy50.seo@samsung.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <cover.1792989286.git.hy50.seo@samsung.com>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 885DD606A322;
+	Mon, 26 Oct 2026 04:46:44 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 885DD606A322
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
+DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux.alibaba.com; s=default;
+	t=1792990001; h=From:To:Subject:Date:Message-ID:MIME-Version;
+	bh=F9we1B1BcqT0qfRF/FTS2JiiyttBbvpi5NbTu56uFe4=;
+	b=YcoQ/Xj+gi9ghd2kMZHQnBRw8PPh+mZUHAJVXKgkDVyAnpWQsvF3dMfDhhF49PVjpQqkFnAe+BfAZ6wb/uB5nVLhhaNjd/V0ctw7ekyytO4LigHHJH+y6hhqF0ZaSin2l7jTpVcbAbCys74qoGWQib/CbwHAElhDfmPUNFHXAFo=
+X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R781e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033037033178;MF=xiangzao@linux.alibaba.com;NM=1;PH=DS;RN=9;SR=0;TI=SMTPD_---0XDRrqrG_1792989992;
+Received: from banye.tbsite.net(mailfrom:xiangzao@linux.alibaba.com fp:SMTPD_---0XDRrqrG_1792989992 cluster:ay36)
+          by smtp.aliyun-inc.com;
+          Mon, 26 Oct 2026 12:46:40 +0800
+From: Yuanhe Shu <xiangzao@linux.alibaba.com>
+To: "Martin K . Petersen" <mkp@kernel.org>
+Cc: linux-scsi@vger.kernel.org,
+	target-devel@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org,
+	John Garry <john.garry@linux.dev>,
+	David Disseldorp <ddiss@suse.de>,
+	Bryam Vargas <hexlabsecurity@proton.me>,
+	xiangzao@linux.alibaba.com
+Subject: [PATCH] scsi: target: Verify the iSCSI ISID is NUL-terminated
+Date: Mon, 26 Oct 2026 12:46:32 +0800
+Message-ID: <20261026044632.1738901-1-xiangzao@linux.alibaba.com>
+X-Mailer: git-send-email 2.43.7
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -82,78 +63,89 @@ List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CMS-MailID: 20261026044139epcas2p3a5b55ec93b313eeb9a38bbf0c93cf889
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-CMS-TYPE: 102P
-X-CPGSPASS: Y
-cpgsPolicy: CPGSC10-234,Y
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20261026044139epcas2p3a5b55ec93b313eeb9a38bbf0c93cf889
-References: <cover.1792989286.git.hy50.seo@samsung.com>
-	<CGME20261026044139epcas2p3a5b55ec93b313eeb9a38bbf0c93cf889@epcas2p3.samsung.com>
 
-ufshcd_link_recovery() resets both the device and the host and then
-re-establishes the link. Unlike ufshcd_reset_and_restore(), however, it
-does not clear hba->saved_err, hba->saved_uic_err and hba->force_reset,
-so the errors latched before the recovery remain pending after the link
-has already been recovered.
+iscsi_parse_pr_out_transport_id() returns the ISID of a FORMAT CODE 01b
+TransportID as a pointer into the PERSISTENT RESERVE OUT parameter list.
+The lower-case conversion loop only scans the ISID and never terminates
+it, and while spc4r37 Table 508 requires the field to be null-terminated,
+a non-conforming initiator can omit the NUL.  When the ISID ends at the
+end of the received buffer, the pointer is not a C string.
 
-When ufshcd_err_handler() runs afterwards,
-ufshcd_err_handling_should_stop() sees these stale errors. The error
-handler then quiesces all queues and, depending on the latched errors
-(e.g. a fatal error or UFSHCD_UIC_DL_PA_INIT_ERROR), performs another
-full ufshcd_reset_and_restore() on a link that is already operational.
+The registration code still consumes it as one: strcmp(isid,
+pr_reg->pr_reg_isid) in __core_scsi3_locate_pr_reg(), and snprintf("%s")
+and strcmp() in __core_scsi3_do_alloc_registration() and in the REGISTER
+AND MOVE path.
 
-Cache and clear the saved errors before the reset, as
-ufshcd_reset_and_restore() does, so that only errors raised during or
-after the recovery are left to the error handler. Put them back if the
-recovery fails.
+When the parameter list spans more than one page, transport_kmap_data_sg()
+maps it with vmap(), and the over-read walks off the end of the mapping
+into the vmalloc guard page and oopses.  Reproduced with a PR OUT
+REGISTER + SPEC_I_PT parameter list of exactly 8192 bytes whose final
+TransportID carries a 12-byte ISID without a terminating NUL:
 
-Signed-off-by: HOYOUNG SEO <hy50.seo@samsung.com>
+  BUG: unable to handle page fault for address: ffffc9000138c000
+  RIP: 0010:strcmp+0xc/0x30
+  Call Trace:
+   __core_scsi3_locate_pr_reg+0xd3/0x120 [target_core_mod]
+   core_scsi3_decode_spec_i_port+0x8fc/0x13a0 [target_core_mod]
+   core_scsi3_emulate_pro_register+0x73c/0x900 [target_core_mod]
+   ...
+   iscsi_target_rx_thread+0xef/0x1d0 [iscsi_target_mod]
+
+With a single-page parameter list the buffer is a kmap() direct mapping,
+so the over-read continues into the physically adjacent page instead of
+faulting.  snprintf("%s") then copies whatever follows the ISID in
+memory into pr_reg_isid, and PR IN READ FULL STATUS reports the
+registration back to any initiator, turning the over-read into an
+info leak of kernel heap contents.  Reproduced with a 4096-byte
+parameter list whose last TransportID ends at the end of the buffer
+with a 4-byte ISID and no NUL, interleaved with I/O to populate
+adjacent pages: the READ FULL STATUS response returned the ISID as
+"0xleak" followed by raw bytes that were not part of the parameter
+list.  The snprintf() into pr_reg_isid[PR_REG_ISID_LEN] caps the echoed
+ISID at 15 characters, so at most 11 bytes past the buffer are leaked
+per command, but the PR OUT command is not rate limited.
+
+Any initiator that can send PR OUT to an iSCSI-exported LUN can trigger
+either variant, including a guest via vhost-scsi.
+
+Require the TransportID to contain the terminating NUL before the ISID
+pointer is returned, so neither reproducer reaches the registration
+consumers.  REGISTER AND MOVE fails with TCM_INVALID_PARAMETER_LIST;
+the SPEC_I_PT scan skips the entry.
+
+Fixes: d04a179085c2 ("scsi: target: Bound PR-OUT TransportID parsing to the received buffer")
+Reported-by: kitta <kitta@linux.alibaba.com>
+Cc: stable@vger.kernel.org
+Cc: Bryam Vargas <hexlabsecurity@proton.me>
+Cc: John Garry <john.garry@linux.dev>
+Assisted-by: LLM
+Signed-off-by: Yuanhe Shu <xiangzao@linux.alibaba.com>
 ---
- drivers/ufs/core/ufshcd.c | 15 ++++++++++++++-
- 1 file changed, 14 insertions(+), 1 deletion(-)
+ drivers/target/target_core_fabric_lib.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index bcc2512bf34b..74dfbb98129e 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -4690,10 +4690,20 @@ EXPORT_SYMBOL_GPL(ufshcd_uic_change_pwr_mode);
- 
- int ufshcd_link_recovery(struct ufs_hba *hba)
- {
-+	u32 saved_err, saved_uic_err;
- 	int ret;
- 	unsigned long flags;
- 
- 	spin_lock_irqsave(&hba->host->host_lock, flags);
-+	/*
-+	 * The errors saved so far are handled by this full reset, so cache and
-+	 * clear them first, in case new errors are generated during recovery.
-+	 */
-+	saved_err = hba->saved_err;
-+	saved_uic_err = hba->saved_uic_err;
-+	hba->saved_err = 0;
-+	hba->saved_uic_err = 0;
-+	hba->force_reset = false;
- 	hba->ufshcd_state = UFSHCD_STATE_RESET;
- 	ufshcd_set_eh_in_progress(hba);
- 	spin_unlock_irqrestore(&hba->host->host_lock, flags);
-@@ -4704,8 +4714,11 @@ int ufshcd_link_recovery(struct ufs_hba *hba)
- 	ret = ufshcd_host_reset_and_restore(hba);
- 
- 	spin_lock_irqsave(&hba->host->host_lock, flags);
--	if (ret)
-+	if (ret) {
- 		hba->ufshcd_state = UFSHCD_STATE_ERROR;
-+		hba->saved_err |= saved_err;
-+		hba->saved_uic_err |= saved_uic_err;
-+	}
- 	ufshcd_clear_eh_in_progress(hba);
- 	spin_unlock_irqrestore(&hba->host->host_lock, flags);
- 
+diff --git a/drivers/target/target_core_fabric_lib.c b/drivers/target/target_core_fabric_lib.c
+index 2853b95b2c59..e15f5118b209 100644
+--- a/drivers/target/target_core_fabric_lib.c
++++ b/drivers/target/target_core_fabric_lib.c
+@@ -371,6 +371,17 @@ static bool iscsi_parse_pr_out_transport_id(
+ 			pr_err("Missing ISID in iSCSI Initiator port TransportID\n");
+ 			return false;
+ 		}
++		/*
++		 * The conversion loop below only scans the ISID without
++		 * ever terminating it, but the registration code reads it
++		 * as a C string.  With no NUL inside the TransportID,
++		 * the reads run past the descriptor, and past the
++		 * mapped buffer when the descriptor ends the buffer.
++		 */
++		if (!memchr(p, '\0', buf + tid_len - p)) {
++			pr_err("Missing NUL terminator for ISID in iSCSI Initiator port TransportID\n");
++			return false;
++		}
+ 		*port_nexus_ptr = p;
+ 		/*
+ 		 * Go ahead and do the lower case conversion of the received
 -- 
-2.34.1
+2.43.7
 
