@@ -1,79 +1,57 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793042937;
-	b=4RuFzAVLfw6yfQ+DezhM4jmZYysLeoNqh9DMU6vST+Mv9AM/mzXM11NEnUQQHncwSdvV
-	 BcsDRJ6Qn5POr0Qpl8tcLGD64sPeF4lMtPgIKy7LCZmOtZhO7jCvvCq6R2UnE/QStGcz8
-	 y9y3sbhfojS7gb+4hOHaGe2cZIOQl7sH/ikXLs5eoKPjhdFTUoSM0hOTaCE/WNZ3BFw29
-	 epStbtx2FLBM/GLeNB4EYiPpe4YP89VcNk/sS5CEk4rWAh/b+uatRwcBkjXcfeykajggN
-	 32yKs6BAIAXPD8N1B3OJ3GBsHhEvv8cAbvEhMvF2oiXe0qNoPBd4aRZ3uENKNsXT6Hw==
+	t=1793044611;
+	b=2f2RhaDBVOYfy662D0GsO+hW14WQGcrtXqfTSAhCCfNqS/MmFmKKsfIfKAQuI5PXmjuW
+	 X6ERuRUtQX1cauvmMZpXYgT/0KXxS/rBnVhq8DZOB+Hzl5CDSC7tUi59qtYNj+9A+mcvq
+	 TIWTJwALQbj14ikrjww4A4Yf+kY76vGooTBx8zi7Aqp8+IYyiFbv0gjUJOWsxC793lMnK
+	 LcoF4p8Av+hylIrP6/2V5pgnRrE1uqjj+LTzG82Qi9kQxAjU9q/9EyvV65qOpL/+uRb89
+	 AjQQAYAOxlqmmwi4dXU7Iq49gtchUVE4LDnBbMemRfP6XGcfTv52IXsEU7/Uhnblb5w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793042937;
-	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
-	 X-Mimecast-MFC-AGG-ID:Received:Received:From:To:Cc:Subject:Date:
-	 Message-ID:In-Reply-To:References:MIME-Version:
-	 Content-Transfer-Encoding:X-Scanned-By;
-	bh=v1XQGX54Fnq7sFTrzhJXTUypoJnsjPzpUwFKuGYYgsY=;
-	b=MqpcADpKDEaOMgqWoo5A1vvw/eJbcKyUidBvSLoxXMb1Je9H33C2WFNegnwxfjsfMj61
-	 DrwpmWF8IG2u2ckSle2/FhPHK00GQ26KaP4MjApaZTaXlRHkVUa1+bH1no/BZWwYZCZFy
-	 ZSzmizBbb6aAJZ4rI19oJ7/WqpbfH8/7JbC32nTtkw6GM5TprbRQRMr9iWkQ+9cTZZX5H
-	 ojwUY/SCh1gW0NKY3J/x5ZC5fcMWaZfUFgeycEJSnXFmlmVZTVfm/GsVL+ArCTmnFHnp1
-	 1I8YfxQherDAAU8LGUv56bOjmUqhoG5Fxep3A3mRAB3WQVsmwEs/6y+kbXq2MuY5+5Q==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793044611;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=zV16S2r/q7B2WiBe6lMyGomfGyDosaEDCJ5qkpQ7r2U=;
+	b=zN3SdWxmsdXW7cfuy9uNehIomf02cG5sxp2T/tKnWxwTF9xffGxtXmdppwzTE8cLBZmA
+	 6GmgovXpQJes4UQDxRjyMPq7+mFNgZJK2AmLJzK3BZBBDpMHo5TZsrnGU8HSnwbUj8HBS
+	 Q8pZII7/jL9qN1Y83sm9aPGp3iWZ82GZ7ML/zL56tJvfTgYCOm7eguTiIGbPVV7AzPFS7
+	 UXTWKS2e4lY4TZsDRQUZkhPm2DaT9qXx0L6GIbW6e5hdbp+2nhLC04zdupfCeZ7mQ5tYn
+	 1UgXMYkGAyjZ0bpKOpphxZ/iyY3A2B0c2GO3zU9TIa3J/ykQ01/WEmbviqKxmglpDdw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=redhat.com;
-	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=ciUeD4ad;
-	arc=none smtp.remote-ip=170.10.133.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=b7RGtPkk;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 679A4606A322
-	for <linux-scsi@vger.kernel.org>; Mon, 26 Oct 2026 19:28:57 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 679A4606A322
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7EDC1606A31A;
+	Mon, 26 Oct 2026 19:56:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=ciUeD4ad
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1793042936;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=v1XQGX54Fnq7sFTrzhJXTUypoJnsjPzpUwFKuGYYgsY=;
-	b=ciUeD4ad/kGL+IJ+ZSYmy7yNA3I9HUt1rDhzZ2/qHyuN9HrFISt0wqUQH7evyk3MgtVPkF
-	wdpHQQ3xx1jgOUKT54BiTCIS+zz+jwtiWo7MoDf1LAWpB4xiugaFQzJddDKBmkwyuZNJhI
-	lNaVchSFVtRCFVuWKr9xUmErzv2/1xY=
-Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-608-6XCWhfBMM2qgPCI_x5Lgfw-1; Mon,
- 26 Oct 2026 15:28:52 -0400
-X-MC-Unique: 6XCWhfBMM2qgPCI_x5Lgfw-1
-X-Mimecast-MFC-AGG-ID: 6XCWhfBMM2qgPCI_x5Lgfw_1793042931
-Received: from mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.95])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 190FF19560B7;
-	Mon, 26 Oct 2026 19:28:51 +0000 (UTC)
-Received: from loberman-thinkpadp16gen3.redhat.corp (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
-	by mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id C6D13767;
-	Mon, 26 Oct 2026 19:28:49 +0000 (UTC)
-From: Laurence Oberman <loberman@redhat.com>
-To: mkp@kernel.org
-Cc: linux-scsi@vger.kernel.org,
-	target-devel@vger.kernel.org,
-	bvanassche@acm.org,
-	michael.christie@oracle.com,
-	mlombard@redhat.com,
-	linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org
-Subject: [PATCH v5 2/2] scsi: target: iscsi: Complete an aborted WRITE stuck before the first R2T
-Date: Mon, 26 Oct 2026 15:28:35 -0400
-Message-ID: <20261026192835.1431767-3-loberman@redhat.com>
-In-Reply-To: <20261026192835.1431767-1-loberman@redhat.com>
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=b7RGtPkk
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 084371F01825;
+	Mon, 26 Oct 2026 19:56:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793044611;
+	bh=zV16S2r/q7B2WiBe6lMyGomfGyDosaEDCJ5qkpQ7r2U=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=b7RGtPkkEWi6PXWC14Xf210lh0BMafa497eUXbAjAmGC1M85XzCga77xXhQIm5KrW
+	 26oEyvn0pVy9bdjMecGKM9dRjnLaXALn74ykr+3QGDzWlageDjy3fx+ttIiSEV0zb3
+	 htcRa0UYFxveH1i9IoOOHCudUBp2en81BR+nQx3psQVpcSxHWVgfoII8dchTxFQGXp
+	 Kd1fmMmPWktwxPT6fe6jF9f4A0zC8m2Hly6Y8Tid6bsQiTGHQ48g4TB/XIQI7Lwmjx
+	 NdwD9ewXL+dVN+uObwn/AJwNrxfnO0CXDqKpyZ4kqjsdYyKhK8IATSxbWN+6Mj+ZtD
+	 MM1GgpE+wza8Q==
+Message-ID: <sashiko-outbox-185693@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v5 1/2] scsi: target: Complete an aborted command at
+ most once
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Laurence Oberman" <loberman@redhat.com>
+Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+In-Reply-To: <20261026192835.1431767-2-loberman@redhat.com>
 References: <20261026192835.1431767-1-loberman@redhat.com>
+ <20261026192835.1431767-2-loberman@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 26 Oct 2026 19:56:50 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -82,96 +60,200 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.6 on 10.30.177.95
 
-A WRITE that arrives with immediate data, and whose data length exceeds
-FirstBurstLength, is left in TRANSPORT_WRITE_PENDING by
-iscsit_execute_cmd() until the first R2T is built. If a LUN_RESET or
-ABORT_TASK from another session sets CMD_T_ABORTED in that window,
-iscsit_execute_cmd() returns without sending the R2T.
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [High] scsi: target: double transport_complete_callback() via CMD_T_STOP
+- [High] scsi: target: unguarded abort queueing in transport_generic_reques=
+t_failure()
+--
 
-Nothing then completes the command. No R2T has been sent, so the initiator
-cannot legally send more data; no DataOut timer was armed, so the ERL=0
-timeout cannot fire either. The command stays in TRANSPORT_WRITE_PENDING
-with CMD_T_ABORTED set, and core_tmr_drain_state_list() blocks in
-target_put_cmd_and_wait() on it for as long as the connection stays up:
+commit 9f0a0fc8e2f216b4d0f91c9797ea14d9a91154f8
+Author: Laurence Oberman <loberman@redhat.com>
 
-  INFO: task kworker/5:2 blocked for more than 46 seconds.
-   target_put_cmd_and_wait+0x6d/0xb0 [target_core_mod]
-   core_tmr_drain_state_list+0x2dc/0x380 [target_core_mod]
-   core_tmr_lun_reset+0x93/0x1a0 [target_core_mod]
+scsi: target: Complete an aborted command at most once
 
-Commit aaa00cc93c1d ("scsi: target/core: Fix TAS handling for aborted
-commands") is what left this site with nothing to complete the command.
-Before it, transport_check_aborted_status() sent the delayed TASK_ABORTED
-status here; that commit replaced the call with a bare CMD_T_ABORTED test
-and a return, on the basis that the target core would send TASK_ABORTED
-from the ABORT TMF context instead. It became a hang once ABORT and LUN
-RESET handling was made synchronous, because the abort path then waits in
-target_put_cmd_and_wait() for a fabric completion that no longer comes.
+This commit adds the CMD_T_ABORT_QUEUED flag under t_state_lock in
+target_cmd_interrupted() so that an aborted command only runs its completion
+callback and queues target_abort_work once.
 
-Complete the command here instead. No DataOut path can race with this:
-without an R2T the initiator cannot send further data for the command, and
-the branch is only reached when no unsolicited DataOut is expected either.
-If the connection drops before target_abort_work has run,
-iscsit_release_commands_from_conn() will complete the same command again,
-which the one-shot guard added in the previous patch makes a no-op.
+> diff --git a/drivers/target/target_core_transport.c b/drivers/target/targ=
+et_core_transport.c
+> index 927861c30afc4..4896a92392e0e 100644
+> --- a/drivers/target/target_core_transport.c
+> +++ b/drivers/target/target_core_transport.c
+> @@ -882,24 +882,45 @@ static void target_abort_work(struct work_struct *w=
+ork)
+>  	target_handle_abort(cmd);
+>  }
+> =20
+> +/*
+> + * Returns true if the command has been aborted or stopped, in which cas=
+e the
+> + * caller must not carry on with normal completion.  For an aborted comm=
+and the
+> + * work that must not run twice -- the completion callback and the queue=
+ing of
+> + * target_abort_work -- is done once, under CMD_T_ABORT_QUEUED.
+> + */
+>  static bool target_cmd_interrupted(struct se_cmd *cmd)
+>  {
+> +	bool queue_abort =3D false, stop =3D false;
+> +	unsigned long flags;
+>  	int post_ret;
+> =20
+> +	spin_lock_irqsave(&cmd->t_state_lock, flags);
+>  	if (cmd->transport_state & CMD_T_ABORTED) {
+> -		if (cmd->transport_complete_callback)
+> -			cmd->transport_complete_callback(cmd, false, &post_ret);
+> +		if (cmd->transport_state & CMD_T_ABORT_QUEUED) {
+> +			spin_unlock_irqrestore(&cmd->t_state_lock, flags);
+> +			return true;
+> +		}
+> +		cmd->transport_state |=3D CMD_T_ABORT_QUEUED;
+> +		queue_abort =3D true;
+> +	} else if (cmd->transport_state & CMD_T_STOP) {
+> +		stop =3D true;
+> +	}
+> +	spin_unlock_irqrestore(&cmd->t_state_lock, flags);
+> +
+> +	if (!queue_abort && !stop)
+> +		return false;
+> +
+> +	if (cmd->transport_complete_callback)
+> +		cmd->transport_complete_callback(cmd, false, &post_ret);
 
-This was reported against an Oracle RAC cluster on two-session iSCSI LIO
-targets, where one node's LUN_RESET aborts WRITEs belonging to the other
-node's session. It was not reproducible in a lab, so the diagnosis came
-from instrumented kernels in the reporter's environment. Across two hosts,
-every stalled command had the same signature: DMA_TO_DEVICE,
-TRANSPORT_WRITE_PENDING, CMD_T_ABORTED | CMD_T_TAS, outstanding_r2ts == 0,
-write_data_done == first_burst_len, and an empty cmd_r2t_list. 217 of 222
-LUN_RESET drains completed in under a second; the rest took 46 to 54
-seconds, which is where the hung-task panics came from. One 53.7 second
-stall recovered on its own and the host ran for a further 19 hours. The
-stall only ever ended when the initiator gave up and dropped the
-connection, which let iscsit_release_commands_from_conn() complete the
-command.
+[Severity: High]
+Can cmd->transport_complete_callback() still be called more than once when a
+command hits the CMD_T_STOP path first?
 
-Fixes: 2c9fa49e100f ("scsi: target/core: Make ABORT and LUN RESET handling synchronous")
-Cc: stable@vger.kernel.org
-Signed-off-by: Laurence Oberman <loberman@redhat.com>
----
- drivers/target/iscsi/iscsi_target_erl1.c | 13 ++++++++++++-
- 1 file changed, 12 insertions(+), 1 deletion(-)
+The commit message notes that leaving the CMD_T_STOP branch unguarded is
+harmless because complete_all() is idempotent, and explains that a first ca=
+ll
+to target_cmd_interrupted() can take the CMD_T_STOP branch before CMD_T_ABO=
+RTED
+is set afterwards.
 
-diff --git a/drivers/target/iscsi/iscsi_target_erl1.c b/drivers/target/iscsi/iscsi_target_erl1.c
-index d8ca06e..c78f312 100644
---- a/drivers/target/iscsi/iscsi_target_erl1.c
-+++ b/drivers/target/iscsi/iscsi_target_erl1.c
-@@ -12,6 +12,7 @@
- #include <linux/slab.h>
- #include <scsi/iscsi_proto.h>
- #include <target/target_core_base.h>
-+#include <target/target_core_backend.h>
- #include <target/target_core_fabric.h>
- #include <target/iscsi/iscsi_transport.h>
- 
-@@ -927,8 +928,18 @@ int iscsit_execute_cmd(struct iscsit_cmd *cmd, int ooo)
- 
- 			if (!(cmd->cmd_flags &
- 					ICF_NON_IMMEDIATE_UNSOLICITED_DATA)) {
--				if (cmd->se_cmd.transport_state & CMD_T_ABORTED)
-+				/*
-+				 * No R2T has been sent for this command yet,
-+				 * so returning here leaves the initiator with
-+				 * nothing to send and no DataOut timer armed.
-+				 * Complete it, or nothing ever will.
-+				 */
-+				if (cmd->se_cmd.transport_state & CMD_T_ABORTED) {
-+					iscsit_stop_dataout_timer(cmd);
-+					target_complete_cmd(&cmd->se_cmd,
-+							    SAM_STAT_TASK_ABORTED);
- 					return 0;
-+				}
- 
- 				iscsit_set_dataout_sequence_values(cmd);
- 				conn->conn_transport->iscsit_get_dataout(conn, cmd, false);
--- 
-2.43.0
+However, target_cmd_interrupted() executes cmd->transport_complete_callback=
+()
+when either queue_abort or stop is true, without clearing the callback poin=
+ter
+or guarding its execution. In drivers/target/target_core_sbc.c, both
+compare_and_write_callback() and compare_and_write_post() release dev->caw_=
+sem
+without clearing cmd->transport_complete_callback:
 
+drivers/target/target_core_sbc.c:compare_and_write_callback() {
+    ...
+out:
+	/*
+	 * In the MISCOMPARE or failure case, unlock ->caw_sem obtained in
+	 * sbc_compare_and_write() before the original READ I/O submission.
+	 */
+	up(&dev->caw_sem);
+	sg_free_table(&write_tbl);
+	return ret;
+}
+
+If a first call to target_cmd_interrupted() takes the CMD_T_STOP branch and=
+ a
+subsequent call takes either the CMD_T_ABORTED branch (after CMD_T_ABORTED =
+is
+set) or the CMD_T_STOP branch a second time, won't
+cmd->transport_complete_callback() run twice and call up(&dev->caw_sem) a
+second time?
+
+> +
+> +	if (queue_abort) {
+>  		INIT_WORK(&cmd->work, target_abort_work);
+>  		queue_work(target_completion_wq, &cmd->work);
+> -		return true;
+> -	} else if (cmd->transport_state & CMD_T_STOP) {
+> -		if (cmd->transport_complete_callback)
+> -			cmd->transport_complete_callback(cmd, false, &post_ret);
+> +	} else {
+>  		complete_all(&cmd->t_transport_stop_comp);
+> -		return true;
+>  	}
+> =20
+> -	return false;
+> +	return true;
+>  }
+
+[Severity: High]
+Does transport_generic_request_failure() in
+drivers/target/target_core_transport.c also need to test and set
+CMD_T_ABORT_QUEUED under cmd->t_state_lock?
+
+Commit 2c9fa49e100f ("scsi: target/core: Make ABORT and LUN RESET handling
+synchronous") added the same abort handling pattern to both
+target_cmd_interrupted() and transport_generic_request_failure():
+
+drivers/target/target_core_transport.c:transport_generic_request_failure() {
+    ...
+	if (cmd->transport_complete_callback)
+		cmd->transport_complete_callback(cmd, false, &post_ret);
+
+	if (cmd->transport_state & CMD_T_ABORTED) {
+		INIT_WORK(&cmd->work, target_abort_work);
+		queue_work(target_completion_wq, &cmd->work);
+		return;
+	}
+    ...
+}
+
+Because transport_generic_request_failure() does not check or set
+CMD_T_ABORT_QUEUED under cmd->t_state_lock, if CMD_T_ABORTED is set after
+target_cmd_interrupted() returns false in target_execute_cmd(), and executi=
+on
+then fails in target_write_prot_action() or __target_execute_cmd() (for
+example, when tcmu_queue_cmd() sees CMD_T_ABORTED and returns
+TCM_CHECK_CONDITION_ABORT_CMD, or when target_scsi3_ua_check() fails):
+
+drivers/target/target_core_transport.c:__target_execute_cmd() {
+    ...
+err:
+	spin_lock_irq(&cmd->t_state_lock);
+	cmd->transport_state &=3D ~CMD_T_SENT;
+	spin_unlock_irq(&cmd->t_state_lock);
+
+	transport_generic_request_failure(cmd, ret);
+}
+
+transport_generic_request_failure() will invoke
+cmd->transport_complete_callback(), queue target_abort_work on cmd->work, a=
+nd
+return early without setting CMD_T_ABORT_QUEUED or SCF_SENT_CHECK_CONDITION.
+
+If an iSCSI ERL=3D2 TMR TASK_REASSIGN then runs
+iscsit_task_reassign_complete_write() in
+drivers/target/iscsi/iscsi_target_tmr.c, it sees ICF_GOT_LAST_DATAOUT set a=
+nd
+CMD_T_SENT cleared, and calls target_execute_cmd() ->
+target_cmd_interrupted():
+
+drivers/target/iscsi/iscsi_target_tmr.c:iscsit_task_reassign_complete_write=
+() {
+    ...
+	if (cmd->cmd_flags & ICF_GOT_LAST_DATAOUT) {
+		if (!(cmd->se_cmd.transport_state & CMD_T_SENT)) {
+			pr_debug("WRITE ITT: 0x%08x: t_state: %d"
+				" never sent to transport\n",
+				cmd->init_task_tag, cmd->se_cmd.t_state);
+			target_execute_cmd(se_cmd);
+			return 0;
+		}
+    ...
+}
+
+Similarly, fabric error paths such as tcm_qla2xxx_write_pending(),
+tcm_qla2xxx_handle_data_work(), and isert_rdma_read_done() call
+transport_generic_request_failure() directly. Could these paths reach both
+transport_generic_request_failure() and target_cmd_interrupted() (or
+transport_generic_request_failure() twice) for the same aborted command,
+re-initializing cmd->work while queued and running
+cmd->transport_complete_callback() and target_handle_abort() a second time?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261026192835.1431=
+767-1-loberman@redhat.com?part=3D1
