@@ -1,76 +1,88 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=203.254.224.24
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.221.42
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792992652;
-	b=R5wComqh99cVptRW5C1GCq9enHo8Oo7DoJCfO1yaT4LX6PJm+cUIqJjucPmrLvX0NIE4
-	 12Z36w+ThcfWo6LnzTlm/bZbNd2vO8yyEpuWnepfKRpIB7o4rzfd6GxwVzIQIAETGko/r
-	 rjdH2GtIBHfWdqTbj9hzXNRL+R0cmFKjn4Vqb6BytZlYhwECRphQMgizx6VphztyCyJLT
-	 E7UhK0Lof8Y5PC4Dfz36ZZarBdskZtMlrRnBuJPOAARf8GbdO5QoE5mQoey1QGke8L31J
-	 lze6CR4d1J55rsI+ek5mjrtY2+B7TYlv4OO100Njdyf4180JjJ7Or8N3qer61FqnYTg==
+	t=1792997469;
+	b=Rr1d5EoD9ZA+em/I6trIKMqh4RHLoWEIxgBduRUl04tIJhamGxuWEqleHHlbyQ/bdW6m
+	 Zy1lzUCLNFJ6n6Mi40cmgqY55n1q7vzfYeMwZdQH5Ez9s8Nhofyx7P6y1/C5lOos05q+w
+	 wR6b07NdN8Ai2LzfQ7Xd9KeeZfErimOIukG1PKtK5ry60s56RUgjvaOX87+GmGraJhHWX
+	 M2R5UK9DeiZ5WCAoZk7rKRsweG+dNhjsg7acILZfT+0irY4nyTGNeq5g+wbb+d6RjJN91
+	 92BenYQxFhjiOk0Z1+jgUJc6YsFjWW9mqYsM2E78JvfHyMsMUCXD27ltzwUHFauJnyA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792992652;
-	h=DMARC-Filter:Received:DKIM-Filter:DKIM-Signature:Received:Received:
-	 Received:Received:From:To:Cc:Subject:Date:Message-Id:X-Mailer:
-	 MIME-Version:Content-Transfer-Encoding:X-CMS-MailID:X-Msg-Generator:
-	 Content-Type:X-Sendblock-Type:CMS-TYPE:X-CPGSPASS:cpgsPolicy:
-	 X-CFilter-Loop:X-CMS-RootMailID:References;
-	bh=C8BMVtqrQ6mF6BER4qpDCqBNmiEwk6DFbCT1JE/nmBI=;
-	b=ODOYMm/j4ginH64JVG7I9U9M05rYv5LIu4eMMO3tNXB/eYq8lkT7u4G4jPz+fWn2KcZo
-	 otiajcr2vL9v2DID00S/NYosILQNXNPh3dFv8WZU8RmfAtpEWv+mrhz0Ka8OmQNs99/OW
-	 9x3YTpCl1M3dfKAA/AA9AO9rFemqKB2nwRuzVD0E/aU1vI7Ywz2x4xO7Tr8+4AnzNMEEV
-	 TgKLY2RQHmPxH9s7Xt9Caz8cRsxqufwIqZIahdiTXuUGwS0yJmaxaDaiPvHPTkz7yrkJ6
-	 pi60Jfferw491MN7WkJAx2LJBa+pJMn/9KMaoRMSo2yvg5is09ok91leFpiuDmOrX5A==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792997469;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 Message-ID:Date:MIME-Version:User-Agent:Subject:To:Cc:References:
+	 Content-Language:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=0j1HbGy7SxsAlSqhArcwYTwwZPIic+C0p0uOLAj5YQ0=;
+	b=pdSdk2BitCED7tXtRidHhk0QRGKlMtAZfMp1+Vl1GlU6Kx/Wzg0Qk1EFjcLEEhcgsCCi
+	 6kZaK9dMWdVUFfOHkRGDD65jC9DiL9HMZVYuQi4tb3Ovb1BlpSrGzcUS5qgiZmIf6+xmI
+	 agIhcWzVfoYb8OaQo1h45cbYaS+xXhHIOuLQM7fSgCUZgbVMWbvlx8WTTszYWeePwvRal
+	 01mQd82Vldn/ax+vzT4v5IRfg3tgnj9HsYnBqrzkqg/gER202vXZI494UqomxNaYfAkli
+	 WSWE7ELcgyFqC4bENh+gZ+DDVKJm+2hiOHL+8N8TcoYWiMJfAekU4bknGQQlUOnCw9g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=samsung.com;
-	spf=pass smtp.mailfrom=samsung.com;
-	dkim=pass header.d=samsung.com header.i=@samsung.com header.a=rsa-sha256 header.s=mail20170921 header.b=Cu3ydTzH;
-	arc=none smtp.remote-ip=203.254.224.24
-Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+	dmarc=pass header.from=suse.com;
+	spf=pass smtp.mailfrom=suse.com;
+	dkim=pass header.d=suse.com header.i=@suse.com header.a=rsa-sha256 header.s=google header.b="APuzZa/l";
+	arc=none smtp.remote-ip=209.85.221.42
+Received: from mail-wr1-f42.google.com (mail-wr1-f42.google.com [209.85.221.42])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A8008606A31F
-	for <linux-scsi@vger.kernel.org>; Mon, 26 Oct 2026 05:30:49 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A8008606A31F
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98FD4606A331
+	for <linux-scsi@vger.kernel.org>; Mon, 26 Oct 2026 06:51:08 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 98FD4606A331
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=samsung.com header.i=@samsung.com header.a=rsa-sha256 header.s=mail20170921 header.b=Cu3ydTzH
-Received: from epcas2p1.samsung.com (unknown [182.195.41.53])
-	by mailout1.samsung.com (KnoxPortal) with ESMTP id 20261026053047epoutp01f8f6ea894edcf1d0517af927232c87b4~h-VA0BSj50568405684epoutp01c
-	for <linux-scsi@vger.kernel.org>; Mon, 26 Oct 2026 05:30:47 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20261026053047epoutp01f8f6ea894edcf1d0517af927232c87b4~h-VA0BSj50568405684epoutp01c
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1792992647;
-	bh=C8BMVtqrQ6mF6BER4qpDCqBNmiEwk6DFbCT1JE/nmBI=;
-	h=From:To:Cc:Subject:Date:References:From;
-	b=Cu3ydTzH1u/2U+jVooeasteYdoaSQADp4+aKOJq/1ujz3Y0QqV7B5ysT7Yromo34m
-	 k5AQyqmwredKSGH6gMQ2F96mE/SOlNu4PUdiIGPxVn+BizW7LnSGmZadJvpuh1XmQU
-	 GF9TybranXmzfGPRZOR5l4yWQFiwStF85EOHPwT4=
-Received: from epsnrtp01.localdomain (unknown [182.195.42.153]) by
-	epcas2p3.samsung.com (KnoxPortal) with ESMTPS id
-	20261026053047epcas2p3b7ce77ea13dc440f9e4433e7bd93d5bf~h-VAaVVoo2178921789epcas2p3E;
-	Mon, 26 Oct 2026 05:30:47 +0000 (GMT)
-Received: from epcas2p4.samsung.com (unknown [182.195.38.211]) by
-	epsnrtp01.localdomain (Postfix) with ESMTP id 4jChzp6HvHz6B9mR; Mon, 26 Oct
-	2026 05:30:46 +0000 (GMT)
-Received: from epsmtip2.samsung.com (unknown [182.195.34.31]) by
-	epcas2p3.samsung.com (KnoxPortal) with ESMTPA id
-	20261026053046epcas2p31ae8a493f40c0f12523feec6e036072f~h-U-liB7U2178521785epcas2p3F;
-	Mon, 26 Oct 2026 05:30:46 +0000 (GMT)
-Received: from ubuntu.dsn.sec.samsung.com (unknown [12.81.221.204]) by
-	epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
-	20261026053046epsmtip24230dbb5163b217d45d3409aed7c05d2~h-U-fQ8UQ2777927779epsmtip2L;
-	Mon, 26 Oct 2026 05:30:46 +0000 (GMT)
-From: HOYOUNG SEO <hy50.seo@samsung.com>
-To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
-	martin.petersen@oracle.com, bvanassche@acm.org, kwangwon.min@samsung.com,
-	kwmad.kim@samsung.com, cpgs@samsung.com, h10.kim@samsung.com
-Cc: HOYOUNG SEO <hy50.seo@samsung.com>
-Subject: [PATCH v4] scsi: ufs: Change the error check sequence for auto
- hibern8
-Date: Mon, 26 Oct 2026 14:26:32 +0900
-Message-Id: <20261026052632.1848929-1-hy50.seo@samsung.com>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (2048-bit key, unprotected) header.d=suse.com header.i=@suse.com header.a=rsa-sha256 header.s=google header.b=APuzZa/l
+Received: by mail-wr1-f42.google.com with SMTP id ffacd0b85a97d-48e3b22e971so1070514f8f.0
+        for <linux-scsi@vger.kernel.org>; Sun, 25 Oct 2026 23:51:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1792997467; x=1793602267; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=0j1HbGy7SxsAlSqhArcwYTwwZPIic+C0p0uOLAj5YQ0=;
+        b=APuzZa/l+iomygd2XnB1OLwxTWnBFALEW+WLtwiqq4qGZV2D7ZUvt830TlaSSiUq01
+         elOJDygunaN8Ek6VZ1ub2l4QUzb+L9/e4XityPv8VOMW9eZTRaKXU0VSmqo+BEdrCraB
+         hWff7GwMEj2QX0uYmCo/UyUSjfgdo+Ke+Ehniwsn4eNe7Uh4FARktmiwemjusGCN5DAA
+         cSdBoktwOP7Er37FSibtG21hWNBslEnxqitV/REjFbToHI7nlDmmBbuCqPgurxA/41ge
+         RS7Ne8RRlFtouPY0bK9LNCXVIYkRnJoJ1mNe+62N+0ABF4Roz0MfFQu922YnSwD0xEYm
+         rVZg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792997467; x=1793602267;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=0j1HbGy7SxsAlSqhArcwYTwwZPIic+C0p0uOLAj5YQ0=;
+        b=mFGtJ/EWCpV81BXLtaOsKxMqcVAnvE70AFc9ml4eRSqzabs6RGpvjjy3muE7ynp1en
+         92F7Fp87w9lGlSU1UlTQx9T+dFBUm+PzMBVaJ8sCQFQXDv3+VF6vGLW5HIsR3Y74zkaL
+         Zuxw5oTHZ+rJ8JWiOXBn3sy3QxZSgSdFEPjpCzn+6IegPWcRUtOUQ3x851H99wS4/WbE
+         TY7GkpuRDbo9Af1FFOCQIlgx7mYC2Jl7/+iY5EkJnLLjM0LtxumLPxDPABG1nS52QBf3
+         lZzxbeYVeU4rkpMjLEDkIcFsscU3Nc9bKg54mESxZ8YXDOWVcfGYV7OFMFQ4RFF0nFUX
+         ItXw==
+X-Forwarded-Encrypted: i=1; AKwUvBxtnr4lyFphQ/1yPXfm/iIKgWKQg/gJggvTdLbrgPGsIr+ORUuX2BO9h5FcCG34+N9Tqi59wi0hK06m@vger.kernel.org
+X-Gm-Message-State: AFq9FYK1EkrXZDPRGzpv4ayLBlYuOCTXOZDqJypbVwfA9O1J8smPw37C
+	7kXvgHKzCxjV48PQny3Sl6T3BT2q6VQhz98eKx+W5SVMd79Ig2l4zGuqm5vJeP4qAFI=
+X-Gm-Gg: AYBFou2Y8Myg71MojcAf0oqAnVXYDdRJDjP+/nx3aycAE2HY9gLZI/gQt3J9sY9V01X
+	ULNpzZBvV3UD6cBbHtLyYiuHaMgu4yO/rW8pbrriQorQSfzyDSGTtc0IMSNISn0GWPUPetHB8sY
+	FrgWh8LnspUAy9ZmPUzan9PMA7qOrkXqKXZP3/I2sdG/7A9YGrUXlihLaLCw2sUglHZrnEUbWA7
+	CLNFCIFEhcfpNECFBH4cBASm4FH3EOhTwkwU0goOy8N30Ib5bJnL8fRFZoJbjmptOuTbhk3ES6y
+	lKSs3iG5BdhBEo0+4yPwUtLPvaj/y/GxOf4OWdncaquYADx0dCBLatnt8cmv8ZBJ7TIjPPMaHqw
+	IQ2BBthUXjdx9ZbfBwuw2qRncp2ySwX6ZYoVTeQuhN2/5ncUsqB3ZQ7sRG2gq34c/5ySLKvlGjV
+	0qdPD0+RxdDfJIUeVxyKWmxX+6s4yW9/IpQp0FMNEWiLSSGMm9pBNz9OhrDNuLXy7FNKJbkOALM
+	dclIxnsSwN1ZFmHsK66pqmFGXBhFL2/3kyxL+nctuVeJaga+vWGeDW/+LCfkstZO4IcZXZzhp2d
+	OU8p+pb/RfSriA6V
+X-Received: by 2002:a5d:6f0c:0:b0:48e:1d81:5b86 with SMTP id ffacd0b85a97d-48e3eb9b259mr9504623f8f.52.1792997466877;
+        Sun, 25 Oct 2026 23:51:06 -0700 (PDT)
+Received: from ?IPV6:2001:a61:2a62:aa01:5ada:99ae:a1fe:1f54? ([2001:a61:2a62:aa01:5ada:99ae:a1fe:1f54])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48e3ecd8dcfsm14523532f8f.50.2026.10.25.23.51.06
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 25 Oct 2026 23:51:06 -0700 (PDT)
+Message-ID: <8b0665bc-7962-4803-9904-26815a6594b8@suse.com>
+Date: Mon, 26 Oct 2026 07:51:05 +0100
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -80,90 +92,143 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] scsi: aic79xx: Fix NULL pointer dereference in device
+ reset
+To: Andrew Luebke <andrew.luebke@gmail.com>
+Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <mkp@kernel.org>, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+References: <20261023170330.269844-1-andrew.luebke@gmail.com>
+Content-Language: en-US
+From: Hannes Reinecke <hare@suse.com>
+In-Reply-To: <20261023170330.269844-1-andrew.luebke@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CMS-MailID: 20261026053046epcas2p31ae8a493f40c0f12523feec6e036072f
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-CMS-TYPE: 102P
-X-CPGSPASS: Y
-cpgsPolicy: CPGSC10-234,Y
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20261026053046epcas2p31ae8a493f40c0f12523feec6e036072f
-References: <CGME20261026053046epcas2p31ae8a493f40c0f12523feec6e036072f@epcas2p3.samsung.com>
 
-Auto-hibern8 enter and exit are performed by the host controller without
-a UIC command, and the auto-hibern8 idle timer only runs while no UIC
-command is outstanding. An auto-hibern8 error (IS.UHES or IS.UHXS) is
-therefore usually reported while hba->active_uic_cmd is NULL.
+On 10/23/26 7:03 PM, Andrew Luebke wrote:
+> Commit c67e63800446 ("scsi: aic79xx: Do not reference SCSI command when
+> resetting device") makes ahd_linux_dev_reset() build its TARGET RESET
+> SCB with io_ctx set to NULL, but the function still calls
+> ahd_set_residual(reset_scb, 0) a few lines later, which is
+> scsi_set_resid() on the NULL command. Every call of the device reset
+> handler therefore oopses and kills the SCSI error handler thread; all
+> further I/O on that host hangs until the machine is power cycled.
+> 
+> Hit on an Intel SE7501WV2S board (on-board AIC-7902, i686, v7.2.9) when
+> a failing Ultra320 disk made the error handler escalate to a device
+> reset. Both disks on that channel then stayed in D state:
+> 
+>    sd 1:0:0:0: [sda] tag#287 Attempting to queue a TARGET RESET message:
+>    BUG: kernel NULL pointer dereference, address: 0000009c
+>    #PF: supervisor write access in kernel mode
+>    EIP: ahd_linux_dev_reset.cold+0xee/0x26e
+>    Call Trace:
+>     scsi_eh_ready_devs+0x538/0x8d0
+>     scsi_error_handler+0x3a2/0x3b0
+>     kthread+0xd2/0x120
+>    note: scsi_eh_1[78] exited with irqs disabled
+> 
+> (0x9c is resid_len in struct scsi_cmnd on i386.)
+> 
+> Making that call safe is not enough on its own. When the target accepts
+> the reset, ahd_handle_nonpkt_busfree() (or, in packetized mode, the task
+> management completion) calls ahd_handle_devreset(), and its
+> ahd_abort_scbs() walks the target's pending SCBs - the reset SCB
+> included - reading and setting their transaction status and freezing
+> them through the wrappers in aic79xx_osm.h, which dereference io_ctx.
+> The same walk runs if the reset times out and the error handler
+> escalates to a bus reset.
+> 
+> Commit c7f4c5dec651 ("scsi: aic79xx: Fix up NULL command in ahd_done()")
+> taught ahd_done() about the NULL command, but not these wrappers.
+> 
+> Let every accessor that dereferences the command accept an SCB without
+> one. The ahd_cmd_*() helpers for the transaction status and the SCSI
+> status check for a NULL command: the transaction status then reads as
+> CAM_REQ_INPROG and the SCSI status as SAM_STAT_GOOD, and setting either
+> does nothing. ahd_get_transfer_dir(), ahd_get_residual(),
+> ahd_set_residual() and ahd_freeze_scb() have no such helper underneath,
+> so they check scb->io_ctx themselves: the transfer direction reads as
+> DMA_NONE and the residual as 0, while setting the residual and freezing
+> the SCB do nothing. The ahd_set_residual(reset_scb, 0) call in
+> ahd_linux_dev_reset() is then harmless, and the reset SCB completes
+> through ahd_done() as that commit intended. The SCSI status, residual
+> and transfer direction accessors get the check so that none of them can
+> be handed the reset SCB and crash; the only path from the reset SCB to
+> them that is apparent is ahd_handle_scsi_status(), should a packetized
+> LUN RESET end in a status error.
+> 
+> ahd_perform_autosense() also declines autosense for an SCB without a
+> command. Otherwise a target that answered the reset with CHECK
+> CONDITION would have the reset SCB requeued for REQUEST SENSE, and with
+> negotiation pending ahd_handle_scsi_status() clears SCB_DEVICE_RESET on
+> the way, so ahd_done() would later dereference the missing command.
+> Declining leaves such a reset SCB to the reset timeout and the error
+> handler's escalation, which completes it through ahd_abort_scbs().
+> 
+> Tested on the SE7501WV2S with this patch applied to v7.2.11 (i686), on
+> the disks of its second AIC-7902 channel (160 MB/s DT, not packetized).
+> Device resets sent with SG_SCSI_RESET_DEVICE to a Seagate ST373453LW log
+> "Bus Device Reset Message Sent" and "Device reset returning 0x2002"
+> (SUCCESS), three of them while the disk was being read; the reads
+> complete, scsi_eh_1 survives and the disk keeps working. scsi_eh_1 also
+> survives a device reset of the channel's other disk - the one behind the
+> crash above, which accepts the reset but no longer spins up - and a bus
+> reset sent with SG_SCSI_RESET_BUS, after which the first disk still
+> works. The device resets go through ahd_handle_devreset() and
+> ahd_abort_scbs(), so they exercise the transaction status and freeze
+> accessors on the reset SCB. Not tested: the packetized (IU) LUN RESET
+> path, a device reset that times out and escalates to a bus reset, and
+> the autosense change, since a target here answers TARGET RESET with a
+> bus free as SCSI requires. The oops was not reproduced on purpose on an
+> unpatched kernel; the crash above came from the failing disk.
+> 
+> Fixes: c67e63800446 ("scsi: aic79xx: Do not reference SCSI command when resetting device")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Andrew Luebke <andrew.luebke@gmail.com>
+> Assisted-by: LLM
+> ---
+> 
+> Notes:
+>      v2:
+>       - Keep ahd_set_residual(reset_scb, 0) in ahd_linux_dev_reset(): with
+>         the check in ahd_set_residual() the call is safe, and the patch now
+>         touches only aic79xx_osm.h (Hannes).
+>       - Move the NULL checks for the transaction status and the SCSI status
+>         into ahd_cmd_set_transaction_status(), ahd_cmd_set_scsi_status() and
+>         the two ahd_cmd_get_*() helpers (Hannes). ahd_set_residual() keeps
+>         its check in the SCB wrapper: it calls the midlayer's
+>         scsi_set_resid() directly, with no ahd_cmd_*() helper underneath.
+>         The same goes for ahd_get_residual(), ahd_get_transfer_dir() and
+>         ahd_freeze_scb().
+>       - ahd_perform_autosense() returns 0 for an SCB without a command, so a
+>         device reset that ends in CHECK CONDITION is not requeued for REQUEST
+>         SENSE with SCB_DEVICE_RESET cleared (found by the Sashiko AI review of
+>         v1).
+>      v1: https://patchwork.kernel.org/project/linux-scsi/patch/20261020221530.2606178-1-andrew.luebke@gmail.com/
+>      
+>      This analysis, the patch and this changelog were prepared with an LLM coding
+>      assistant (Claude Opus 5.5, Anthropic) at my direction; I reviewed them and
+>      ran the hardware tests described above. Build-tested with W=1 for
+>      x86_64 and i386 on mkp/scsi.git for-next (db8b4d2bf2d3): no new warnings;
+>      checkpatch clean. sparse and smatch were not run.
+> 
+>   drivers/scsi/aic7xxx/aic79xx_osm.h | 26 +++++++++++++++++++++-----
+>   1 file changed, 21 insertions(+), 5 deletions(-)
+> 
+Sigh. It is a really bad sign if the patch description is far longer 
+than the patch itself. Might be okay for really intricate things, but
+adding NULL checks to functions certainly is not.
+But this doesn't change the validity of the patch, so:
 
-Since commit fcd8b0450a9a ("scsi: ufs: core: Make ufshcd_uic_cmd_compl()
-easier to analyze"), ufshcd_uic_cmd_compl() returns early when
-hba->active_uic_cmd is NULL, before ufshcd_is_auto_hibern8_error() is
-called. Such auto-hibern8 errors are no longer recorded in hba->errors,
-so ufshcd_check_errors() is not called for them and the error handler is
-not scheduled.
+Reviewed-by: Hannes Reinecke <hare@kernel.org>
 
-Check for auto-hibern8 errors before checking for an active UIC command,
-as was done before that commit, but keep returning early when there is
-no active UIC command so that a NULL cmd is never dereferenced. Only
-report the missing UIC command if no auto-hibern8 error was found.
+Cheers,
 
-Fixes: fcd8b0450a9a ("scsi: ufs: core: Make ufshcd_uic_cmd_compl() easier to analyze")
----
-Changes in v4:
- - Change patch version
-
-Changes in v3:
- - Check auto-hibern8 errors before the NULL check again, so that errors
-   reported while a non-hibernate UIC command is active are still
-   detected (Sashiko review).
- - Return early when no UIC command is active instead of falling
-   through, to avoid dereferencing a NULL cmd (Sashiko review).
- - Add Fixes tag, reword subject and commit message.
-
-Changes in v2:
- - Check UFSHCD_UIC_HIBERN8_MASK for auto-hibern8 only when cmd is NULL.
-
-v2: https://lore.kernel.org/linux-scsi/20261022074249.3098100-1-hy50.seo@samsung.com/
-
-Signed-off-by: HOYOUNG SEO <hy50.seo@samsung.com>
----
- drivers/ufs/core/ufshcd.c | 16 +++++++++++-----
- 1 file changed, 11 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index d085d394858f..4541776e8d38 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -5941,16 +5941,22 @@ static irqreturn_t ufshcd_uic_cmd_compl(struct ufs_hba *hba, u32 intr_status)
- 	struct uic_command *cmd;
- 
- 	guard(spinlock_irqsave)(&hba->host->host_lock);
-+
-+	/*
-+	 * Auto-hibern8 is performed without a UIC command, so check for
-+	 * auto-hibern8 errors before checking for an active UIC command.
-+	 */
-+	if (ufshcd_is_auto_hibern8_error(hba, intr_status)) {
-+		hba->errors |= (UFSHCD_UIC_HIBERN8_MASK & intr_status);
-+
- 	cmd = hba->active_uic_cmd;
- 	if (!cmd) {
--		dev_err(hba->dev,
--			"No active UIC command. Maybe a timeout occurred?\n");
-+		if (!(hba->errors & UFSHCD_UIC_HIBERN8_MASK))
-+			dev_err(hba->dev,
-+				"No active UIC command. Maybe a timeout occurred?\n");
- 		return retval;
- 	}
- 
--	if (ufshcd_is_auto_hibern8_error(hba, intr_status))
--		hba->errors |= (UFSHCD_UIC_HIBERN8_MASK & intr_status);
--
- 	if (intr_status & UIC_COMMAND_COMPL) {
- 		/*
- 		 * Store the UIC command result in the lowest byte of
+Hannes
 -- 
-2.34.1
-
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.com                               +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
