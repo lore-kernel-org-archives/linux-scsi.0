@@ -1,78 +1,79 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793031159;
-	b=BMl5yP2hSfOthz1W8RPo12Avh2iJYqLVe2+YfGIFCamqsuKZTtGYfkTIJn4aMarkMPkT
-	 Pt5QSCcM1v9Y33wrggytMCMjOYT7yRjvqUg6JDFVQLjuR0a+ysneAEzIjBne9z6zyeWR6
-	 38tYZSvIdM8faHwQDO8A16G0W6V2G6n0yB6xuQR1o8kWPzpSboYJq37DpF0l0pMQDpq9v
-	 NAVsRHUNR4Vm7EZ9qyjGQFq98woOFB4yssdtzy2cOjZgTNcLIv+b0XKXyZlnbdBLTCM+N
-	 pBBYBa4tcWKobcNK7Ajt0/muzKdp8Z3gZPzCTN05YpsKP2KdJs8umzpfA1+9P8COqYQ==
+	t=1793031163;
+	b=QpdTa6P1TYgenRKzFU7kWYNmJEDbtrTg0ASCDiR9+9X4rgdAANQUjFjqkCrplNo2+NhJ
+	 rEBxykhuAlQerAK51T+HXJO1EWmhm3Cm+lnO4Pj10yxwyzTKIBsdfULt5FuhGtgI1Wu01
+	 uj0n0ePD0UBjdmLg+j22YWhDKLvqa87pnRn6UI1RZ0lsUIbIJXF0nEcbP3GzCSi+k0uk/
+	 sA1ypek2/ydNLr2MvE3N6cdSlGCBPrhK72wuUgREn0VNqEmnL0RQd7cOomDz8l82+BqY3
+	 OrU24Fb592PeyciI9GLVLWO1k7cWBcFIT2jnXVnCVarUgkaYsc7WFbCNUdqVNxH89rQ==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793031159;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793031163;
 	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
 	 Content-Type:Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
 	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=F7Npv4/6BVdAZSR8mVUnSzo51kSho3k18+5Nnsi5eBg=;
-	b=pcumsJpGNewwmakxdcMjhzRLZmbYKPEK8W7rI6mA4gOz+UgURtlG4B0iT9AOzXIK/BVf
-	 LfS2s27EUix+ExXJE/Qhedphgkrf+3qQDaDHz5evB2tFxvukPicNt2e/A1x7/fWMaA8HS
-	 epSETL/GM1fzKZALgbggvj02y+Bxqysrd7gIZgDQoK6dcDyYcWm1RemuC+JSR3FK/cCyV
-	 i0HjdEAez3ETKnVYzHr/2O0Utp4GbUbgPAVgT+HHmlSPUh/hQB9MGEDIhm1c0hP6Dczw6
-	 hpUQ3rfpwLTb8qHsItaUgSKwVzwVLz2DDQjFR6zWApYZypJJMtVpK2WgLBA2aOcKf1g==
+	bh=NPb95s1ncOSpGwWuHgaN+fbOyUr2ak9Z9tfULiRSVgI=;
+	b=Wi3iwtKquPGKrBaqwjNm3CF/oxBSf4KWmzwcjYXcRTW55gO3/1Qv4OBPITCdTVj+mDdi
+	 mRmQxiWNUNURKKyJVOwKfkjBagj+HqPpop2mR2OmVQY3qppYFY4O78K8TfYiKMPyoun94
+	 gKQqLBnjugKGGKWdhGQ5DiqM4TVloMVy+EU+FvKbp7moiTfXHFCNZYiB6ChUDEYSD53DU
+	 vNYGvSm5IOVQHlwdCCN1BX+8n0+toVArKUDf4s1SKUeCaSTp9o5GPaB/SmQulFVVsVacr
+	 wM8zTMUkSddnsCiIBqTK/fgraZBML6hxhXZSfNNXx1GAlbHWvYD9ScBNPac6+JuZkMg==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="F/aH+EZa";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=CaLXm5bK;
 	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22000606A336;
-	Mon, 26 Oct 2026 16:12:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB87360A262F;
+	Mon, 26 Oct 2026 16:12:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=F/aH+EZa
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=CaLXm5bK
 Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
 ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
-	t=1793031159;
-	b=As89RU1qNWwGzDy8mkS3Ppjbt4Ej+6E5MbgSdoKGcoqUZ4iIq+koBx7v4oCeYQT1nRVW
-	 yclJWoKXiirhxtwSoaoMCytXBTpV7rINHXQ43iLF2ZAldpOHcnYr7XJGo3zFn3kGYkl4i
-	 xRWPlEdb4Qp5v4l2QfAApT6SGkGxP6l/2MyY6IsYfwPl2u5zdsoCKuAVeRdyDhc4cVG5R
-	 PtLq1lfp1vtQClZ1Fw2SNqq0JMDrir0ha8L1lQHKHHCiMGUk0harMMNMRbUIvL8/C9I0T
-	 VzDY6gHMxhjnjJzuMyqp2OJkjWopYSGmBb9Btm5D4bc2Q/9mi0+sSaIL6u+yLVq6KIQ==
+	t=1793031161;
+	b=AAhLRlwdzZrzOf5v19lwBK0n/MiEybJAfKxG0iiftJooGkJxa0mieMXMueTrI4G2COLr
+	 fXJYvmgqDzDvPgByf7lVk50FLMjG7tJElj8vuYV4gFougRfl0aFr5brHSgDTt0ssDPcbB
+	 FCBnYQ0kd0YvDtkU/djJ6pjf52FafgI0RY+WolSBI8jiE+LhjykJbiYiD4T5dCmXcxM73
+	 l0YxYkwAcNSNY3MBEYm10RKhLpmzy9BF9jzmdkAajeylh5DFiUsRF0iMrxutlhoyCYCjF
+	 x7QAcrytkdcjDXj8KYIlWBTI8mm6JqWdMhPrx8NbXr9PbxNt3ivHACrsdFQLwkM9sSg==
 ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
-	c=relaxed/relaxed; t=1793031159;
+	c=relaxed/relaxed; t=1793031161;
 	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
 	 Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
 	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=F7Npv4/6BVdAZSR8mVUnSzo51kSho3k18+5Nnsi5eBg=;
-	b=Qq/bWkw17ijXp/nxtQ539TvXihHlrABlRQJPpO0p9lwfzMW2q4WUST7HuDTxectwpvTp
-	 mn6VqWfUl/+VTzxCXHSQt8Z9D+rnOko1gXPgTkSDPjL+hr1cQgZBYe7+hvYdOnMDYZUWS
-	 UVOufmU2+gbumAvzIk8WyPZQYL5T4mVRtYKW73hWln3x9N99S1uPhEpckVY5dpZzFyZhh
-	 DqQce8gF/xD7swHi0szAonTkWkSwYahpfFnNa7w506o7NEXd7qsgkyuEkf9A0xByvWN16
-	 ZXHDmz5MTwwk91/skllgORMXPaluXZF3EwA0fahKgCoQiBuCa8N78kugJ6gXn06b41Q==
+	bh=NPb95s1ncOSpGwWuHgaN+fbOyUr2ak9Z9tfULiRSVgI=;
+	b=SklPzTgy5vAIqHl0Vuj5fIvba+XvQx6Plg91pSVBqk+5KoDj9Ij57NRiyod6aDG6IZj6
+	 Td1QkegDmkJ0QIb9O5D33ACgrku7uDQhPdnLkztH0OUgORGGIvPbKTfRrmJtlLk5cMN+i
+	 geQjQAr5AbW/V0DwV4jhyQ1QxBptEljhygdFNgDC6MjhqFthXWUOkRGu3fZ4YWIviy87M
+	 ABvomASYCVwm1SKsqPqs/7uI+2/8qT9Cjtyy3CqeKGdeNa6gylXRzt9tZuaHo/qLLe7TY
+	 xeB3mwJO/GwSag62fq+A9WheeBIuHud/WkhpRGA5Dr9UfUWX0KMrgxHZoJadbaYMgnQ==
 ARC-Authentication-Results: i=1; smtp.kernel.org; 
 	arc=none smtp.remote-ip=100.80.115.77
 Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.kernel.org (Postfix) with ESMTPS id 0245D1F031E5;
-	Mon, 26 Oct 2026 16:12:38 +0000 (UTC)
+	by smtp.kernel.org (Postfix) with ESMTPS id 56D0B1F031EA;
+	Mon, 26 Oct 2026 16:12:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793031159;
-	bh=F7Npv4/6BVdAZSR8mVUnSzo51kSho3k18+5Nnsi5eBg=;
+	s=k20260515; t=1793031161;
+	bh=NPb95s1ncOSpGwWuHgaN+fbOyUr2ak9Z9tfULiRSVgI=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To;
-	b=F/aH+EZaF4B6S4FRJXJ3Dr8CpGwa+a6pbjeCwfTYxuo9Uxksk7JhA85mX34jGM96w
-	 vkiKfSXeev0zzu8Eu0ENzhENF45rxgGnI+2Q2Aay8A+GJDOTpc0sHNEb9AvqcnohMj
-	 TOwqpuQM6ziJvDARWHQYO+Um6zpvCRR2wg8xf6baDL4BfVgOPZ5vlNjUGwf/aYM33A
-	 LajVTK1heXgUQYo3ZocQ3ra2ADpFDn6cbnIk6NikblvBCOoKUGAGfattygMbDfwdmp
-	 lTlsM71gbDGVQD65EtYq5BLADWehSgpIb1N5S7FExKuHIN+zTVcAfA5HZJyS0NWVQ5
-	 mC0ezbCjuVlWw==
+	b=CaLXm5bKJ0y/lGogxkywyPHMv0zEe6V9tJsmtldY1AqpfLO7s4j+eGt8h4CLNGg46
+	 A/8u2VGYr+PbECsOjDo9Rm8pDqqWZqTqR3Z5T6abaWrAjthaAxrz3jCh8LWkLL+gB3
+	 HnimvChKsS6oQYv/kEodia4poTUipn4aLvpbXZj9sIhQlaCT0xC+vvKeHQX2sf4kro
+	 yZ+AOu0fZOAn4a1phlDNJp0YZ8nYs9D12c+G+ueiS94NupKcfIjjT5CIBHxxDCcw04
+	 o+aT07rm1PC30UEjcpLBuvd01ZHYcEYh4d9bjxzjncLagVcUZl6AEfr7TogFgCl/WV
+	 qFiHl3SH5QExw==
 Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
-	by lkml.kernel.org (Postfix) with ESMTP id 6F43D44D99;
+	by lkml.kernel.org (Postfix) with ESMTP id 9D85A44DAD;
 	Mon, 26 Oct 2026 16:12:36 +0000 (UTC)
 From: Dave Marquardt via B4 Relay <devnull+davemarq.linux.ibm.com@kernel.org>
-Date: Mon, 26 Oct 2026 11:12:38 -0500
-Subject: [PATCH v16 06/12] scsi: ibmvfc: add NOOP command support
+Date: Mon, 26 Oct 2026 11:12:43 -0500
+Subject: [PATCH v16 11/12] scsi: ibmvfc: register and use asynchronous sub
+ CRQ for events
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -83,7 +84,7 @@ List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Message-Id: <20261026-ibmvfc-fpin-support-v16-6-a900aa657ed5@linux.ibm.com>
+Message-Id: <20261026-ibmvfc-fpin-support-v16-11-a900aa657ed5@linux.ibm.com>
 References: <20261026-ibmvfc-fpin-support-v16-0-a900aa657ed5@linux.ibm.com>
 In-Reply-To: <20261026-ibmvfc-fpin-support-v16-0-a900aa657ed5@linux.ibm.com>
 To: Madhavan Srinivasan <maddy@linux.ibm.com>, 
@@ -95,140 +96,411 @@ To: Madhavan Srinivasan <maddy@linux.ibm.com>,
 Cc: linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, 
  linux-kernel@vger.kernel.org, Dave Marquardt <davemarq@linux.ibm.com>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1793031155; l=4964;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1793031155; l=16054;
  i=davemarq@linux.ibm.com; s=20260216; h=from:subject:message-id;
- bh=YGRbIUdNWWyi7nKL+Hl5vEf39hZjfHe6uwnKRRlVDEE=;
- b=RbADDqKxCVwXVunO8QitHv+yesB1fToy6qFfL1zysiQjtc2xNJwmY1G2tiNi27vd485HI5MLw
- 0KdUtQRfU/SDzXR7HtU0+NYo4G31Kp9mpJ1+U5loRDSULU/BN8sMHNA
+ bh=f7P36c9MMKnwmSc0KbR53I+oVwAze9Yfv9U95/dx4sU=;
+ b=zJkbOL+JiKcu16lS2gr0C8OJzjGQ/oRPXM3erNqRmpOe33ajFV0FPlf4k38ppC42158NHdTjV
+ cU1hDeM0Y4xBO/0KEuDfmpeVKY9owiZ7bVwFGC7Ytodw9LBC4ZwHqEB
 X-Developer-Key: i=davemarq@linux.ibm.com; a=ed25519;
  pk=vy0/nfobrje6EqZxuyw6a3ZstytG8WK2vf5Y3xtGrEg=
 X-Endpoint-Received: by B4 Relay for davemarq@linux.ibm.com/20260216 with
  auth_id=689
 X-Original-From: Dave Marquardt <davemarq@linux.ibm.com>
 Reply-To: davemarq@linux.ibm.com
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
 From: Dave Marquardt <davemarq@linux.ibm.com>
 
-Add support for handling IBMVFC_NOOP format CRQ messages from the
-VIOS partner.
+Wire the async sub-CRQ into the sub-CRQ lifecycle so it is allocated,
+registered, and freed alongside the SCSI channel queues.
 
-Advertise the client's ability to handle NOOP commands by setting the
-IBMVFC_CAN_USE_NOOP_CMD capability in ibmvfc_set_login_info().
+In ibmvfc_probe(), initialize vhost->async_scrqs with desired_queues=1,
+max_queues=1, and protocol=IBMVFC_PROTO_ASYNC. Add
+ibmvfc_release_channels() as a helper to free a channels array and its
+queue buffers.
 
-Handle and ignore IBMVFC_NOOP format messages in both ibmvfc_handle_crq()
-and ibmvfc_handle_scrq(). In both handlers, log a rate-limited error if a
-NOOP is received while in the IBMVFC_ACTIVE state without the partner
-having advertised IBMVFC_SUPPORT_NOOP_CMD.
+In ibmvfc_init_sub_crqs(), allocate the async sub-CRQ via
+ibmvfc_alloc_channels() before allocating the SCSI channels. Change
+ibmvfc_reg_sub_crqs() to return int (0 on success, -1 on failure) so
+ibmvfc_init_sub_crqs() can detect registration failure per channel set
+and unwind correctly: async registration failure releases async_scrqs
+and disables multi-queue; SCSI registration failure releases scsi_scrqs,
+deregisters and releases async_scrqs, and disables multi-queue. In
+ibmvfc_reg_sub_crqs(), also clear vhost->mq_enabled on registration
+failure to prevent a host state machine stall: without this, mq_enabled
+remaining set causes ibmvfc_npiv_login_done() to enter the multi-queue
+branch while do_enquiry is 0, bypassing both ibmvfc_channel_enquiry()
+and the fallback that would wake up the work queue, leaving the host
+indefinitely in IBMVFC_HOST_ACTION_INIT_WAIT.
 
-In ibmvfc_handle_scrq(), also fix a typo ("Got and invalid" -> "Got an
-invalid"), add a missing return on invalid message types, and guard
-against null event pointers before processing CRQ responses.
+Both mq_enabled and do_enquiry are bitfields packed into the same word
+as other state flags such as using_channels. Writes to these fields
+from ibmvfc_reg_sub_crqs() and ibmvfc_init_sub_crqs() are performed
+outside host_lock, while concurrent writers like
+ibmvfc_channel_setup_done() hold host_lock when modifying other fields
+in the same word. To prevent lost updates from concurrent
+read-modify-write operations on the packed bitfield word, take
+host_lock around all failure-path writes to mq_enabled, do_enquiry, and
+nvme_enabled in ibmvfc_reg_sub_crqs() and ibmvfc_init_sub_crqs().
 
-Change ibmvfc_handle_scrq() to take a struct ibmvfc_queue *scrq
-parameter instead of struct ibmvfc_host *vhost, deriving vhost from
-scrq->vhost internally. Use &scrq->evt_pool for event validation instead
-of &evt->queue->evt_pool, avoiding a potential wild pointer dereference
-if crq->ioba contains a non-zero garbage token before ibmvfc_valid_event()
-has a chance to validate it.
+Remove vhost->mq_enabled from the ibmvfc_dereg_sub_crqs() guard,
+relying solely on !channels->scrqs. The previous guard caused all
+deregistration calls after a registration failure to be silently
+skipped: since ibmvfc_reg_sub_crqs() clears mq_enabled on failure, any
+previously registered channel sets (e.g. async_scrqs registered before
+scsi_scrqs fails) would be leaked — their hypervisor sub-CRQ
+registrations and IRQ handlers left active while
+ibmvfc_release_channels() subsequently freed the underlying memory.
+ibmvfc_deregister_channel() already guards individually on scrq->cookie
+and scrq->irq, so iterating unconditionally over channels with scrqs
+allocated is safe.
+
+In ibmvfc_alloc_channels(), select IBMVFC_ASYNC_SUB_CRQ_FMT for async
+protocol channels instead of IBMVFC_SUB_CRQ_FMT, so the queue is sized
+for ibmvfc_async_sub_crq entries. Zero active_queues on allocation
+failure to ensure the field is always consistent with scrqs.
+
+In ibmvfc_release_sub_crqs(), ibmvfc_reenable_crq_queue(), and
+ibmvfc_reset_crq(), deregister and re-register the async sub-CRQ
+alongside the SCSI channel queues.
+
+In ibmvfc_channel_setup_done(), compute async->active_queues from the
+VIOS response: set it to 1 only when async->scrqs is non-NULL and the
+response contains a non-zero async_sub_crq_handle, otherwise 0. Store
+the handle in vhost->async_scrqs.scrqs[0].vios_cookie via the
+active_queues loop. Clamp scsi->active_queues and nvme->active_queues
+to their respective max_queues values before using them as loop bounds,
+preventing out-of-bounds access to scrqs[] if the hypervisor returns a
+larger value than was allocated. In ibmvfc_channel_setup(), guard the
+access to async->scrqs[0].cookie behind a NULL check to prevent a
+dereference when mq_enabled is 0 and async->scrqs was never allocated.
+
+In ibmvfc_set_login_info(), advertise IBMVFC_USE_ASYNC_SUBQ,
+IBMVFC_CAN_HANDLE_FPIN, and IBMVFC_YES_SCSI capabilities whenever
+multi-queue channels are enabled. IBMVFC_YES_SCSI was previously only
+set for NVMe-enabled configurations; move it to the common multi-queue
+path so it is always advertised when channels are in use.
 
 Signed-off-by: Dave Marquardt <davemarq@linux.ibm.com>
-Acked-by: Tyrel Datwyler <tyreld@linux.ibm.com>
+Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
 ---
- drivers/scsi/ibmvscsi/ibmvfc-core.c | 36 ++++++++++++++++++++++++++++++------
- 1 file changed, 30 insertions(+), 6 deletions(-)
+ drivers/scsi/ibmvscsi/ibmvfc-core.c | 155 ++++++++++++++++++++++++++++--------
+ 1 file changed, 121 insertions(+), 34 deletions(-)
 
 diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/ibmvfc-core.c
-index 1cd39d36edf5..b52bf7863b2d 100644
+index af11726b76be..4d4ebe5f6f12 100644
 --- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
 +++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
-@@ -1580,7 +1580,9 @@ static void ibmvfc_set_login_info(struct ibmvfc_host *vhost)
- 		login_info->flags |= cpu_to_be16(IBMVFC_CLIENT_MIGRATED);
+@@ -191,7 +191,7 @@ static void ibmvfc_tgt_implicit_logout_and_del(struct ibmvfc_target *);
+ static void ibmvfc_tgt_move_login(struct ibmvfc_target *);
  
- 	login_info->max_cmds = cpu_to_be32(max_cmds);
--	login_info->capabilities = cpu_to_be64(IBMVFC_CAN_MIGRATE | IBMVFC_CAN_SEND_VF_WWPN);
-+	login_info->capabilities =
-+		cpu_to_be64(IBMVFC_CAN_MIGRATE | IBMVFC_CAN_SEND_VF_WWPN |
-+			    IBMVFC_CAN_USE_NOOP_CMD);
+ static void ibmvfc_dereg_sub_crqs(struct ibmvfc_host *, struct ibmvfc_channels *);
+-static void ibmvfc_reg_sub_crqs(struct ibmvfc_host *, struct ibmvfc_channels *);
++static int ibmvfc_reg_sub_crqs(struct ibmvfc_host *, struct ibmvfc_channels *);
+ 
+ static const char *unknown_error = "unknown error";
+ 
+@@ -966,6 +966,7 @@ static int ibmvfc_reenable_crq_queue(struct ibmvfc_host *vhost)
+ 	struct vio_dev *vdev = to_vio_dev(vhost->dev);
+ 	unsigned long flags;
+ 
++	ibmvfc_dereg_sub_crqs(vhost, &vhost->async_scrqs);
+ 	ibmvfc_dereg_sub_crqs(vhost, &vhost->scsi_scrqs);
+ 	ibmvfc_dereg_sub_crqs(vhost, &vhost->nvme_scrqs);
+ 
+@@ -988,6 +989,7 @@ static int ibmvfc_reenable_crq_queue(struct ibmvfc_host *vhost)
+ 	spin_unlock(vhost->crq.q_lock);
+ 	spin_unlock_irqrestore(&vhost->host->host_lock, flags);
+ 
++	ibmvfc_reg_sub_crqs(vhost, &vhost->async_scrqs);
+ 	ibmvfc_reg_sub_crqs(vhost, &vhost->scsi_scrqs);
+ 	ibmvfc_reg_sub_crqs(vhost, &vhost->nvme_scrqs);
+ 
+@@ -1008,6 +1010,7 @@ static int ibmvfc_reset_crq(struct ibmvfc_host *vhost)
+ 	struct vio_dev *vdev = to_vio_dev(vhost->dev);
+ 	struct ibmvfc_queue *crq = &vhost->crq;
+ 
++	ibmvfc_dereg_sub_crqs(vhost, &vhost->async_scrqs);
+ 	ibmvfc_dereg_sub_crqs(vhost, &vhost->scsi_scrqs);
+ 	ibmvfc_dereg_sub_crqs(vhost, &vhost->nvme_scrqs);
+ 
+@@ -1044,6 +1047,7 @@ static int ibmvfc_reset_crq(struct ibmvfc_host *vhost)
+ 	spin_unlock(vhost->crq.q_lock);
+ 	spin_unlock_irqrestore(&vhost->host->host_lock, flags);
+ 
++	ibmvfc_reg_sub_crqs(vhost, &vhost->async_scrqs);
+ 	ibmvfc_reg_sub_crqs(vhost, &vhost->scsi_scrqs);
+ 	ibmvfc_reg_sub_crqs(vhost, &vhost->nvme_scrqs);
+ 
+@@ -1586,9 +1590,11 @@ static void ibmvfc_set_login_info(struct ibmvfc_host *vhost)
  
  	if (vhost->mq_enabled || vhost->using_channels) {
  		login_info->capabilities |= cpu_to_be64(IBMVFC_CAN_USE_CHANNELS);
-@@ -3706,6 +3708,14 @@ static void ibmvfc_handle_crq(struct ibmvfc_crq *crq, struct ibmvfc_host *vhost,
- 	if (crq->format == IBMVFC_ASYNC_EVENT)
++		login_info->capabilities |= cpu_to_be64(IBMVFC_USE_ASYNC_SUBQ);
++		login_info->capabilities |= cpu_to_be64(IBMVFC_CAN_HANDLE_FPIN);
++		login_info->capabilities |= cpu_to_be64(IBMVFC_YES_SCSI);
+ 		if (vhost->nvme_enabled) {
+ 			login_info->capabilities |= cpu_to_be64(IBMVFC_YES_NVMEOF);
+-			login_info->capabilities |= cpu_to_be64(IBMVFC_YES_SCSI);
+ 			login_info->capabilities |= cpu_to_be64(IBMVFC_CAN_USE_WWPN_ALL);
+ 		}
+ 	}
+@@ -5804,6 +5810,7 @@ static void ibmvfc_channel_setup_done(struct ibmvfc_event *evt)
+ {
+ 	struct ibmvfc_host *vhost = evt->vhost;
+ 	struct ibmvfc_channel_setup *setup = vhost->channel_setup_buf;
++	struct ibmvfc_channels *async = &vhost->async_scrqs;
+ 	struct ibmvfc_channels *scsi = &vhost->scsi_scrqs;
+ 	struct ibmvfc_channels *nvme = &vhost->nvme_scrqs;
+ 	u32 mad_status = be16_to_cpu(evt->xfer_iu->channel_setup.common.status);
+@@ -5817,8 +5824,11 @@ static void ibmvfc_channel_setup_done(struct ibmvfc_event *evt)
+ 		ibmvfc_dbg(vhost, "Channel Setup succeeded\n");
+ 		flags = be32_to_cpu(setup->flags);
+ 		vhost->do_enquiry = 0;
+-		scsi->active_queues = be32_to_cpu(setup->num_scsi_subq_channels);
+-		nvme->active_queues = be32_to_cpu(setup->num_nvme_subq_channels);
++		scsi->active_queues = min(be32_to_cpu(setup->num_scsi_subq_channels),
++					  scsi->max_queues);
++		nvme->active_queues = min(be32_to_cpu(setup->num_nvme_subq_channels),
++					  nvme->max_queues);
++		async->active_queues = (async->scrqs && setup->async_sub_crq_handle) ? 1 : 0;
+ 
+ 		if (flags & IBMVFC_CHANNELS_CANCELED) {
+ 			ibmvfc_dbg(vhost, "Channels Canceled\n");
+@@ -5834,6 +5844,8 @@ static void ibmvfc_channel_setup_done(struct ibmvfc_event *evt)
+ 		for (i = 0; i < nvme->active_queues; i++)
+ 			nvme->scrqs[i].vios_cookie =
+ 				be64_to_cpu(setup->channel_handles[scsi->active_queues + i]);
++		for (i = 0; i < async->active_queues; i++)
++			async->scrqs[i].vios_cookie = be64_to_cpu(setup->async_sub_crq_handle);
+ 
+ 		ibmvfc_dbg(vhost, "Using %u SCSI channels\n",
+ 			   scsi->active_queues);
+@@ -5868,6 +5880,7 @@ static void ibmvfc_channel_setup(struct ibmvfc_host *vhost)
+ 	struct ibmvfc_event *evt = ibmvfc_get_reserved_event(&vhost->crq);
+ 	struct ibmvfc_channels *scsi = &vhost->scsi_scrqs;
+ 	struct ibmvfc_channels *nvme = &vhost->nvme_scrqs;
++	struct ibmvfc_channels *async = &vhost->async_scrqs;
+ 	unsigned int scsi_channels =
+ 		min(scsi->desired_queues, vhost->max_vios_scsi_channels);
+ 	unsigned int nvme_channels =
+@@ -5893,6 +5906,8 @@ static void ibmvfc_channel_setup(struct ibmvfc_host *vhost)
+ 		for (i = 0; i < nvme_channels; i++)
+ 			setup_buf->channel_handles[scsi_channels + i] =
+ 				cpu_to_be64(nvme->scrqs[i].cookie);
++		if (async->scrqs)
++			setup_buf->async_sub_crq_handle = cpu_to_be64(async->scrqs[0].cookie);
+ 	}
+ 
+ 	ibmvfc_init_event(evt, ibmvfc_channel_setup_done, IBMVFC_MAD_FORMAT);
+@@ -6740,6 +6755,9 @@ static int ibmvfc_alloc_queue(struct ibmvfc_host *vhost,
+ 		queue->evt_depth = scsi_qdepth;
+ 		queue->reserved_depth = IBMVFC_NUM_INTERNAL_SUBQ_REQ;
+ 		break;
++	case IBMVFC_ASYNC_SUB_CRQ_FMT:
++		fmt_size = sizeof(*queue->msgs.async_scrq);
++		break;
+ 	default:
+ 		dev_warn(dev, "Unknown command/response queue message format: %d\n", fmt);
+ 		return -EINVAL;
+@@ -6976,25 +6994,45 @@ VISIBLE_IF_KUNIT void ibmvfc_deregister_channel(struct ibmvfc_host *vhost,
+ }
+ EXPORT_SYMBOL_IF_KUNIT(ibmvfc_deregister_channel);
+ 
+-static void ibmvfc_reg_sub_crqs(struct ibmvfc_host *vhost,
++/**
++ * ibmvfc_reg_sub_crqs - Register all queues in a channel set with the hypervisor
++ * @vhost:	ibmvfc host struct
++ * @channels:	channel set to register
++ *
++ * Iterates over channels->max_queues entries and calls ibmvfc_register_channel()
++ * for each. If any registration fails, previously registered queues in this
++ * channel set are deregistered, vhost->mq_enabled and vhost->do_enquiry are
++ * cleared under host_lock, and -1 is returned. Returns 0 immediately (without
++ * iterating) if mq_enabled is 0 or channels->scrqs is NULL.
++ *
++ * Return:
++ * * %0	- success, or multi-queue disabled / channels not allocated
++ * * %-1	- channel registration failed
++ */
++static int ibmvfc_reg_sub_crqs(struct ibmvfc_host *vhost,
+ 				struct ibmvfc_channels *channels)
+ {
++	unsigned long flags;
+ 	int i, j;
+ 
+ 	ENTER;
+ 	if (!vhost->mq_enabled || !channels->scrqs)
+-		return;
++		return 0;
+ 
+ 	for (i = 0; i < channels->max_queues; i++) {
+ 		if (ibmvfc_register_channel(vhost, channels, i)) {
+ 			for (j = i; j > 0; j--)
+ 				ibmvfc_deregister_channel(vhost, channels, j - 1);
++			spin_lock_irqsave(&vhost->host->host_lock, flags);
+ 			vhost->do_enquiry = 0;
+-			return;
++			vhost->mq_enabled = 0;
++			spin_unlock_irqrestore(&vhost->host->host_lock, flags);
++			return -1;
+ 		}
+ 	}
+ 
+ 	LEAVE;
++	return 0;
+ }
+ 
+ static void ibmvfc_dereg_sub_crqs(struct ibmvfc_host *vhost,
+@@ -7003,7 +7041,7 @@ static void ibmvfc_dereg_sub_crqs(struct ibmvfc_host *vhost,
+ 	int i;
+ 
+ 	ENTER;
+-	if (!vhost->mq_enabled || !channels->scrqs)
++	if (!channels->scrqs)
  		return;
  
-+	if (crq->format == IBMVFC_NOOP) {
-+		if (vhost->state == IBMVFC_ACTIVE &&
-+		    !ibmvfc_check_caps(vhost, IBMVFC_SUPPORT_NOOP_CMD))
-+			dev_err_ratelimited(vhost->dev,
-+					    "Received unexpected NOOP command from partner\n");
-+		return;
+ 	for (i = 0; i < channels->max_queues; i++)
+@@ -7016,16 +7054,21 @@ static int ibmvfc_alloc_channels(struct ibmvfc_host *vhost,
+ 				 struct ibmvfc_channels *channels)
+ {
+ 	struct ibmvfc_queue *scrq;
++	enum ibmvfc_msg_fmt fmt;
+ 	int i, j;
+ 	int rc = 0;
+ 
+ 	channels->scrqs = kzalloc_objs(*channels->scrqs, channels->max_queues);
+-	if (!channels->scrqs)
++	if (!channels->scrqs) {
++		channels->active_queues = 0;
+ 		return -ENOMEM;
 +	}
-+
- 	/* The only kind of payload CRQs we should get are responses to
- 	 * things we send. Make sure this response is to something we
- 	 * actually sent
-@@ -4225,9 +4235,10 @@ static int ibmvfc_toggle_scrq_irq(struct ibmvfc_queue *scrq, int enable)
+ 
++	fmt = (channels->protocol != IBMVFC_PROTO_ASYNC) ? IBMVFC_SUB_CRQ_FMT :
++		IBMVFC_ASYNC_SUB_CRQ_FMT;
+ 	for (i = 0; i < channels->max_queues; i++) {
+ 		scrq = &channels->scrqs[i];
+-		rc = ibmvfc_alloc_queue(vhost, scrq, IBMVFC_SUB_CRQ_FMT);
++		rc = ibmvfc_alloc_queue(vhost, scrq, fmt);
+ 		if (rc) {
+ 			for (j = i; j > 0; j--) {
+ 				scrq = &channels->scrqs[j - 1];
+@@ -7041,30 +7084,6 @@ static int ibmvfc_alloc_channels(struct ibmvfc_host *vhost,
  	return rc;
  }
  
--static void ibmvfc_handle_scrq(struct ibmvfc_crq *crq, struct ibmvfc_host *vhost,
-+static void ibmvfc_handle_scrq(struct ibmvfc_crq *crq, struct ibmvfc_queue *scrq,
- 			       struct list_head *evt_doneq)
+-static void ibmvfc_init_sub_crqs(struct ibmvfc_host *vhost)
+-{
+-	ENTER;
+-	if (!vhost->mq_enabled)
+-		return;
+-
+-	if (ibmvfc_alloc_channels(vhost, &vhost->scsi_scrqs)) {
+-		vhost->do_enquiry = 0;
+-		vhost->mq_enabled = 0;
+-		return;
+-	}
+-
+-	ibmvfc_reg_sub_crqs(vhost, &vhost->scsi_scrqs);
+-
+-	if (vhost->nvme_enabled) {
+-		if (ibmvfc_alloc_channels(vhost, &vhost->nvme_scrqs))
+-			vhost->nvme_enabled = 0;
+-		else
+-			ibmvfc_reg_sub_crqs(vhost, &vhost->nvme_scrqs);
+-	}
+-
+-	LEAVE;
+-}
+-
+ static void ibmvfc_release_channels(struct ibmvfc_host *vhost,
+ 				    struct ibmvfc_channels *channels)
  {
-+	struct ibmvfc_host *vhost = scrq->vhost;
- 	struct ibmvfc_event *evt = (struct ibmvfc_event *)be64_to_cpu(crq->ioba);
- 
- 	switch (crq->valid) {
-@@ -4236,7 +4247,20 @@ static void ibmvfc_handle_scrq(struct ibmvfc_crq *crq, struct ibmvfc_host *vhost
- 	case IBMVFC_CRQ_XPORT_EVENT:
- 		return;
- 	default:
--		dev_err(vhost->dev, "Got and invalid message type 0x%02x\n", crq->valid);
-+		dev_err(vhost->dev, "Got an invalid message type 0x%02x\n", crq->valid);
-+		return;
-+	}
-+
-+	if (crq->format == IBMVFC_NOOP) {
-+		if (vhost->state == IBMVFC_ACTIVE &&
-+		    !ibmvfc_check_caps(vhost, IBMVFC_SUPPORT_NOOP_CMD))
-+			dev_err_ratelimited(vhost->dev,
-+					    "Received unexpected NOOP command from partner\n");
-+		return;
-+	}
-+
-+	if (unlikely(!evt)) {
-+		dev_err(vhost->dev, "Received null event\n");
- 		return;
+@@ -7083,9 +7102,74 @@ static void ibmvfc_release_channels(struct ibmvfc_host *vhost,
  	}
+ }
  
-@@ -4244,7 +4268,7 @@ static void ibmvfc_handle_scrq(struct ibmvfc_crq *crq, struct ibmvfc_host *vhost
- 	 * things we send. Make sure this response is to something we
- 	 * actually sent
- 	 */
--	if (unlikely(!ibmvfc_valid_event(&evt->queue->evt_pool, evt))) {
-+	if (unlikely(!ibmvfc_valid_event(&scrq->evt_pool, evt))) {
- 		dev_err(vhost->dev, "Returned correlation_token 0x%08llx is invalid!\n",
- 			crq->ioba);
++/**
++ * ibmvfc_init_sub_crqs - Allocate and register all sub-CRQ channel sets
++ * @vhost:	ibmvfc host struct
++ *
++ * Allocates and registers the async, SCSI, and (if nvme_enabled) NVMe
++ * sub-CRQ channel sets in order. Returns immediately if mq_enabled is 0.
++ *
++ * On failure at any stage, previously registered and allocated channel sets
++ * are deregistered and freed in reverse order, and vhost->mq_enabled and
++ * vhost->do_enquiry are cleared under host_lock to prevent the host state
++ * machine from stalling in IBMVFC_HOST_ACTION_INIT_WAIT.
++ */
++static void ibmvfc_init_sub_crqs(struct ibmvfc_host *vhost)
++{
++	unsigned long flags;
++
++	ENTER;
++	if (!vhost->mq_enabled)
++		return;
++
++	/* register async_sub_crq channel */
++	if (ibmvfc_alloc_channels(vhost, &vhost->async_scrqs))
++		goto out;
++
++	if (ibmvfc_reg_sub_crqs(vhost, &vhost->async_scrqs))
++		goto release_async_sub_crq;
++
++	if (ibmvfc_alloc_channels(vhost, &vhost->scsi_scrqs))
++		goto deregister_async_sub_crq;
++
++	if (ibmvfc_reg_sub_crqs(vhost, &vhost->scsi_scrqs))
++		goto release_scsi_sub_crqs;
++
++	if (vhost->nvme_enabled) {
++		if (ibmvfc_alloc_channels(vhost, &vhost->nvme_scrqs)) {
++			spin_lock_irqsave(&vhost->host->host_lock, flags);
++			vhost->nvme_enabled = 0;
++			spin_unlock_irqrestore(&vhost->host->host_lock, flags);
++		} else if (ibmvfc_reg_sub_crqs(vhost, &vhost->nvme_scrqs)) {
++			ibmvfc_release_channels(vhost, &vhost->nvme_scrqs);
++			spin_lock_irqsave(&vhost->host->host_lock, flags);
++			vhost->nvme_enabled = 0;
++			spin_unlock_irqrestore(&vhost->host->host_lock, flags);
++		}
++	}
++
++	LEAVE;
++	return;
++
++release_scsi_sub_crqs:
++	ibmvfc_release_channels(vhost, &vhost->scsi_scrqs);
++deregister_async_sub_crq:
++	ibmvfc_dereg_sub_crqs(vhost, &vhost->async_scrqs);
++release_async_sub_crq:
++	ibmvfc_release_channels(vhost, &vhost->async_scrqs);
++out:
++	spin_lock_irqsave(&vhost->host->host_lock, flags);
++	vhost->do_enquiry = 0;
++	vhost->mq_enabled = 0;
++	spin_unlock_irqrestore(&vhost->host->host_lock, flags);
++}
++
+ static void ibmvfc_release_sub_crqs(struct ibmvfc_host *vhost)
+ {
+ 	ENTER;
++	ibmvfc_dereg_sub_crqs(vhost, &vhost->async_scrqs);
++	ibmvfc_release_channels(vhost, &vhost->async_scrqs);
++
+ 	if (!vhost->scsi_scrqs.scrqs)
  		return;
-@@ -4287,7 +4311,7 @@ static void ibmvfc_drain_sub_crq(struct ibmvfc_queue *scrq)
- 	spin_lock_irqsave(scrq->q_lock, flags);
- 	while (!done) {
- 		while ((crq = ibmvfc_next_scrq(scrq)) != NULL) {
--			ibmvfc_handle_scrq(crq, scrq->vhost, &evt_doneq);
-+			ibmvfc_handle_scrq(crq, scrq, &evt_doneq);
- 			crq->valid = 0;
- 			wmb();
- 		}
-@@ -4295,7 +4319,7 @@ static void ibmvfc_drain_sub_crq(struct ibmvfc_queue *scrq)
- 		ibmvfc_toggle_scrq_irq(scrq, 1);
- 		if ((crq = ibmvfc_next_scrq(scrq)) != NULL) {
- 			ibmvfc_toggle_scrq_irq(scrq, 0);
--			ibmvfc_handle_scrq(crq, scrq->vhost, &evt_doneq);
-+			ibmvfc_handle_scrq(crq, scrq, &evt_doneq);
- 			crq->valid = 0;
- 			wmb();
- 		} else
+ 
+@@ -7351,6 +7435,9 @@ static int ibmvfc_probe(struct vio_dev *vdev, const struct vio_device_id *id)
+ 	vhost->task_set = 1;
+ 
+ 	vhost->mq_enabled = mq_enabled;
++	vhost->async_scrqs.desired_queues = 1;
++	vhost->async_scrqs.max_queues = 1;
++	vhost->async_scrqs.protocol = IBMVFC_PROTO_ASYNC;
+ 	vhost->scsi_scrqs.desired_queues = min(shost->nr_hw_queues, nr_scsi_channels);
+ 	vhost->scsi_scrqs.max_queues = shost->nr_hw_queues;
+ 	vhost->scsi_scrqs.protocol = IBMVFC_PROTO_SCSI;
 
 -- 
 2.56.0
