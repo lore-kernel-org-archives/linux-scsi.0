@@ -1,79 +1,79 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.remote-ip=100.103.45.18
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=fail;
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
 	t=1793031159;
-	b=hEpW09lAHFXhXfWpXjiQyWBs9AvGbby2IhPtk/zQMB1EhT9zM06ItM3Y292bmaq6auQI
-	 5sbWgQfG/G45SHn033RKhHahsexBu85z8OEhbjSvJ8StoIRUNhQagD8Qq554jTDqyos9n
-	 Yl6oP0kRodbjoRhQ3tuJZIudjpExM3nE+jMvTnAd7fx+jwwgpiDqUKBNMcvvah88hKX4A
-	 1oNMiGsghdHMEC9L38RVmcxk3VmkRTxEZs25h7FEYLELa175UCo/Kg4i02u/iQG2MMI8C
-	 a8W+HOWANvYzQIKdgDGukFZZ9KV+xIY0qOhc5MgmJtm/NZdH58a8CpeEXm8B6gfSLIQ==
+	b=IfkAZ16LDVytdqZJyS2FB9dGgxBVnGIYf862Lf4+tMvCNrfWT5jFEcUtMfhlt3wl4F9M
+	 Tm3jGb+snijC8TOB4ey/WWeQf5aCFTFftbvrrc9BpS4963P86LObL8fztKc3g7YOxVMjm
+	 5NjsLhObY+O1EnfSLBJ3rjR8Y6lny37HkOZA9zPEckpYCltM9m3r97O8GDVYAQ/H9dAvg
+	 cK+1e0t6XOT7TzbeMEN20jaa/Rv6kFkoTSI6GlmL6PbqwSkGr84R0RwMlUZXYOkfCDnux
+	 hx8BRghnZ0yQ0uHvMGnIgPePNZvPh1uHz8S6RBGNgxV/eodFXx7BjZ628azaY1LSR3g==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
 	a=rsa-sha256; c=relaxed/relaxed; t=1793031159;
 	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
-	 Content-Type:Content-Transfer-Encoding:Message-Id:References:
-	 In-Reply-To:To:Cc:X-Mailer:X-Developer-Signature:X-Developer-Key:
-	 X-Endpoint-Received:X-Original-From:Reply-To;
-	bh=cTxNrqWwYDQYUibZZscN+uZiP8/JT9XzH7O90YF6h+c=;
-	b=Uouz3SsGB3/rbZJ1k69BxAAuiYEeZ3nTmIF7l2zYeCEYwYCTFGpZfRYlwRcmodSKRb4d
-	 EXjC/Q5GW6u+oUhW+2/RwKJNmEjZCC6Vxk7x1sKB9FNQZGcoh+/yAXzsoGLhzjcFw6t1T
-	 T1NzfILcx7PcpWx1SYYstK5GqhfmXHKk/+PU9rTYlgqHQPefbs0rIU6PATGMB5m64DSrS
-	 ewSlBwhFz2U4Ud8gT8vA4atCI5A8T6O0EhM79gppzjvMeN4VADzjeR4ABtoBL3AwxmRJj
-	 vbDontDMFbnBl5C/sjIT6NRCwSNjroF5d5MkMCgwYhE370H1+uokmsUb8OVgWyoOc3w==
+	 Content-Type:Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To:Content-Transfer-Encoding;
+	bh=C8U2KCtW2gkZ7Clqkc7+4hsRlGxw+1f7tFdd8uYfw3c=;
+	b=krHIODrlmGM4Xfk4f0gM2BDaWKnXz8aKtKoczmVDDxhvCm9/BuooMptPpWklNCZ6Er7z
+	 BNRdl5AJPyqSMPAUjlWjZSSSAXhnWa8VzeChlaU8ts0VOXlaG3ZlNueJcOfDwLb1KAKSp
+	 J6f1PEmERsWp/FVzAB1ekrOFcM5GAtV1jHQHjWTNz6uI2ukcg/fNP6pxv/dKwmHe1nVLo
+	 EuRXPKUorY8L/o4R2t6loBKxCqJ3Rsvo1Nzf1wvWIgZPTodCmB+HZviBUoeZ3go5sDz4j
+	 ETkHvLq0B+Faga9/xfcbHqejJs4xJGbXsppyXiHKmv0NSGZiAvwnvZSgH9NsEQIjYug==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=olrHiL9p;
-	arc=fail smtp.remote-ip=100.103.45.18
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="U2lKkDH/";
+	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A494F606A323;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0741606A326;
 	Mon, 26 Oct 2026 16:12:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=olrHiL9p
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=U2lKkDH/
 Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
 ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
 	t=1793031158;
-	b=CI5a/NEkoDFMFeAvcp6IPGpbZpLzs6pd3QSrqlIMKfknvgn139yV6HO8SFyt5Zi+aUZC
-	 CjkFXLfIXKjdsXvYmhjOD70zOFjCp+R4fDCUZTSL6ZOta6dnw7diqZjPpkGu1T1kmEOqm
-	 diejWWuO6Xh26HrSJWqmLwlEMSnNupGF7ynp+Sp9+7xeP0dw8d6f9QwxNrkENureioSUZ
-	 YIRqKlxEJN3sdzFOrm30gFKjZMRc0mAiH8MMTz0QAXSaN9Rh6L/XPnxuOVrb44QxaF4Au
-	 /X6RQAjdV4SWLFuIXkV34Pdj+5I13O5wLknAblLHd7eBPeXMcXVa2cmM80Vrl6wdW2w==
+	b=WrES6PQi7UVopr/SZ2JajxpXeVbyVkZ7MZZnpduFeAjOFr5hPJl07k6FQT4XY/Tmn7if
+	 AN0XA/2lCsHj1Rx48ZB3tfYcN99pND39l5t40pE5Uy+ehWFrKEpahtNqwecYUa7+oRDk3
+	 J/WHpWwLgWuO7aj6hX8+ngLdujNSQ93GAfk+DKz6sfd/RwFJehJE98m2wxsCUSS33CjUb
+	 hAyeMuq+fTqwU8IY6/6ObkhBUkv8h0SVLhhw3gMstdei0FX9duX0svdt9cBDeNwsLrokR
+	 /gBBiRoXNqTx3dm23e4pefQx7nFUK1T5E6LOTxULZi6i+x67Fu3II1ce2KM7pwjQdUw==
 ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
 	c=relaxed/relaxed; t=1793031158;
 	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
-	 Content-Transfer-Encoding:Message-Id:References:In-Reply-To:To:Cc:
-	 X-Mailer:X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
-	 X-Original-From:Reply-To;
-	bh=cTxNrqWwYDQYUibZZscN+uZiP8/JT9XzH7O90YF6h+c=;
-	b=UdrtqYLL4LfM92g3bXF5gDKLzzhDYJVUthUxcSLe0r/HG/8hTxdv53H8f3NDAxWI12x1
-	 On6TsZmVx3ILQpBL2dUoL7CbZ+aS+qHbUXMKJRbAbqDbm+8p/PrN3EXHLUd6U4awZKhLa
-	 sjCyov6ZRo5nMUwaALQ7EDRnM2iSKu/spMLJeR+Sth97py0ibdRcAP0jWap/x0usrSZjM
-	 f45kAIGf1EUEcP3HKbq8DXQS5XhEyc+hLJ5ghqbP4nVUg0UVH3IXfEmT4pJ3Dn8X51V8X
-	 Z4vgrBxCg8b56AjTzptKUUGoiUIFN/VshD11KfAJ+F9YxGfokh2Htv2KnzkbQkTeW2Q==
+	 Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To:Content-Transfer-Encoding;
+	bh=C8U2KCtW2gkZ7Clqkc7+4hsRlGxw+1f7tFdd8uYfw3c=;
+	b=upNvLUwjro/+Wuu2pMPUqGbtZsrnOfmhJdGUsgLLMSZ9BkV0x2PgyogRhP/Ct1UeuMBA
+	 3TySKqS1Bw4jXcDbPQAg9BBnlFQpaZ6CHs2oANesFDDn5q4yxc7bBG6OEpHJgQDz8Cfb3
+	 G3tKaObG136bbvnZzIUFchqXuepK+YAhrcPhj6RWhiROAQfK8n+sAfXPs9LQCXlFDu9J3
+	 tW6PNw8Q7uh10P8MjsAZqkYjY7is2DEOJpYndSX41bV12WhoJ895S/XqK5tPQ/V7dWhbs
+	 WGbRRd58MTAnCuITpCiInBRCu2Pu/FUMUtlTsaH0m1u20nSpIiaR6Vyl8NEtFW4rEow==
 ARC-Authentication-Results: i=1; smtp.kernel.org; 
 	arc=none smtp.remote-ip=100.80.115.77
 Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.kernel.org (Postfix) with ESMTPS id D5E3D1F031E0;
+	by smtp.kernel.org (Postfix) with ESMTPS id D6E401F031E2;
 	Mon, 26 Oct 2026 16:12:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
 	s=k20260515; t=1793031158;
-	bh=cTxNrqWwYDQYUibZZscN+uZiP8/JT9XzH7O90YF6h+c=;
+	bh=C8U2KCtW2gkZ7Clqkc7+4hsRlGxw+1f7tFdd8uYfw3c=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To;
-	b=olrHiL9p42rJQbVVmI69WFj+LQVKzjlyu1l3wouPtUZaHhS0mVPZTMmOx/jj8zcEe
-	 LTPGT4XnTHhsbnvVI5taEmDqece5EDLaNOUza0R4TLtV3THnWerLGSn/XnMrVTZUzO
-	 z2MlVdeUrwd1T/MaEZsnESExABiaDEtPEAB6Pe0GiCEuoZ0RQ70q11sn7DgHaUoOG0
-	 uzUHKShAF8SL5+lxpGR0oPX1QSVit8PmYsq1Nvegpy+CfRhSKVSTXqw92Y563kjtEs
-	 p2SlYE16Un5ngFrAp9nXLS7rh25AaxHDQOiMAjB93GqZO9jd3C5nwM4GfcWVNttSsh
-	 2PhcUv+VwGIjA==
+	b=U2lKkDH/C5qkdeMZvHbP2B8V49AWdfHTVYuoZnGIAfKIPjpusnRkFZtoadL8q0F26
+	 kuYuLiOkcfxl6CIsNz5C89jeWvlQpI3VLj4iU6lx/L+o0KYR6i9aRQzVN2jhiWGQam
+	 93MuJDRZcYw+oWD+SFpoNS3FMBKRal0Uhn1D8iIA2S8G6WCrWvSrzdttZCcAn6pmUT
+	 bdhkoBJEfw3iAfRcwaJ9mpaYRUGhJH3mXfJpbLowgrS4Vjy+FdB9libgHNwdC2+SC8
+	 z6UgXblGT9IdZhKiz7SqH0lmLgwgmkQ9K8Tcv34G20+d69mXDOTr2XalOaFywXIrJz
+	 9b7wf6Vv99KEQ==
 Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
-	by lkml.kernel.org (Postfix) with ESMTP id 53B7D44D8D;
+	by lkml.kernel.org (Postfix) with ESMTP id 4393744D7B;
 	Mon, 26 Oct 2026 16:12:36 +0000 (UTC)
 From: Dave Marquardt via B4 Relay <devnull+davemarq.linux.ibm.com@kernel.org>
-Date: Mon, 26 Oct 2026 11:12:35 -0500
-Subject: [PATCH v16 03/12] scsi: ibmvfc: fix potential NULL pointer
- dereference on failed queue allocation
+Date: Mon, 26 Oct 2026 11:12:33 -0500
+Subject: [PATCH v16 01/12] scsi: ibmvfc: fix IRQ leak and guard deregister
+ on channel reg failure
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -84,8 +84,7 @@ List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20261026-ibmvfc-fpin-support-v16-3-a900aa657ed5@linux.ibm.com>
+Message-Id: <20261026-ibmvfc-fpin-support-v16-1-a900aa657ed5@linux.ibm.com>
 References: <20261026-ibmvfc-fpin-support-v16-0-a900aa657ed5@linux.ibm.com>
 In-Reply-To: <20261026-ibmvfc-fpin-support-v16-0-a900aa657ed5@linux.ibm.com>
 To: Madhavan Srinivasan <maddy@linux.ibm.com>, 
@@ -97,275 +96,68 @@ To: Madhavan Srinivasan <maddy@linux.ibm.com>,
 Cc: linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, 
  linux-kernel@vger.kernel.org, Dave Marquardt <davemarq@linux.ibm.com>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1793031155; l=9567;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1793031155; l=1764;
  i=davemarq@linux.ibm.com; s=20260216; h=from:subject:message-id;
- bh=uI8SnVBfUvavsiwC9am/BShrQJaJZWPpVp8IoO/vXio=;
- b=U9Yt9T/TL/nUWPUWyQLZkW26KaKAZ5SJZbZlLO3MQL1rVOAGFfG3jUcTF1QVql/2/z/oco/Aq
- M62OSCVVZL5CeH8NxCzZ39N9/DfFhO4fBzK7RAxiEnC0Rve4y9ruWWo
+ bh=sg9Lbgea4G1OveFwjkYaq90w+e+5hioGkpYGXVuzHdo=;
+ b=XZfD35vk6f1v48C9oZxH3Bfuy0PBEgn8Yg8hr2GEXc02S24T6UaQ52slTslvsmUZGoPWXIR7L
+ ilFNsVLTlhtDigTnWwDXGwCLcBGh14K58wvPeVLKrDkXaY0MZBPQVoY
 X-Developer-Key: i=davemarq@linux.ibm.com; a=ed25519;
  pk=vy0/nfobrje6EqZxuyw6a3ZstytG8WK2vf5Y3xtGrEg=
 X-Endpoint-Received: by B4 Relay for davemarq@linux.ibm.com/20260216 with
  auth_id=689
 X-Original-From: Dave Marquardt <davemarq@linux.ibm.com>
 Reply-To: davemarq@linux.ibm.com
+Content-Transfer-Encoding: 7bit
 
-From: Tyrel Datwyler <tyreld@linux.ibm.com>
+From: Dave Marquardt <davemarq@linux.ibm.com>
 
-Guard ibmvfc_deregister_channel() against calling H_FREE_SUB_CRQ on a
-queue that was never registered and against memsetting a buffer that was
-never allocated.
+If request_irq() fails during ibmvfc_register_channel(), the error path
+disposes of the IRQ mapping via irq_dispose_mapping() but leaves scrq->irq
+populated with the stale virq number. A subsequent call to
+ibmvfc_deregister_channel() during teardown or reset cleanup then
+unconditionally invokes free_irq() and irq_dispose_mapping() on the stale
+IRQ descriptor, triggering kernel warnings.
 
-Add an scrq->cookie guard around the H_FREE_SUB_CRQ hypercall so it is
-only issued when the cookie is non-zero; clear scrq->cookie to zero on
-success to prevent double-free if the function is called again during
-reset or teardown. Add scrq->cookie = 0 in the ibmvfc_register_channel()
-irq_failed: cleanup path for the same reason. Guard the memset() of the
-queue message buffer behind a check of scrq->msgs.handle to prevent a
-NULL dereference when the function is called on a queue that was never
-allocated, such as async_sub_crq when multi-queue is disabled or
-initialization failed before ibmvfc_alloc_queue() was reached. Update the
-error message to include channels->protocol so failures can be
-distinguished across SCSI, NVMe, and async sub-CRQ channels.
-
-Expose ibmvfc_deregister_channel() via VISIBLE_IF_KUNIT and
-EXPORT_SYMBOL_IF_KUNIT and add a kernel-doc header to support KUnit
-testing.
-
-Add ibmvfc_get_first_vhost() to retrieve the first registered ibmvfc
-adapter with a reference held; expose it via VISIBLE_IF_KUNIT and
-EXPORT_SYMBOL_IF_KUNIT for use by KUnit tests.
-
-Add SCSI_IBMVFC_KUNIT_TEST Kconfig entry and Makefile line, and create
-ibmvfc_kunit.c with an ibmvfc-channel-test suite containing
-ibmvfc_deregister_channel_guard_test(). The test verifies that calling
-ibmvfc_deregister_channel() on a queue with cookie == 0 and
-msgs.handle == NULL issues no hypercall, performs no memset, and leaves
-the queue state unchanged.
+Fix this by:
+1. Explicitly setting scrq->irq to 0 after irq_dispose_mapping() in the
+   ibmvfc_register_channel() error path.
+2. Guarding free_irq() and irq_dispose_mapping() with a check for scrq->irq
+   in ibmvfc_deregister_channel() so unmapped or unregistered queues are
+   safely skipped.
 
 Signed-off-by: Dave Marquardt <davemarq@linux.ibm.com>
-Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
+Acked-by: Tyrel Datwyler <tyreld@linux.ibm.com>
 ---
- drivers/scsi/Kconfig                 | 10 ++++++
- drivers/scsi/ibmvscsi/Makefile       |  1 +
- drivers/scsi/ibmvscsi/ibmvfc-core.c  | 64 +++++++++++++++++++++++++++++++-----
- drivers/scsi/ibmvscsi/ibmvfc.h       |  8 +++++
- drivers/scsi/ibmvscsi/ibmvfc_kunit.c | 63 +++++++++++++++++++++++++++++++++++
- 5 files changed, 137 insertions(+), 9 deletions(-)
+ drivers/scsi/ibmvscsi/ibmvfc-core.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 4a2af0f702e1..f47789b1102d 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -759,6 +759,16 @@ config SCSI_IBMVFC
- 	  To compile this driver as a module, choose M here: the
- 	  module will be called ibmvfc.
- 
-+config SCSI_IBMVFC_KUNIT_TEST
-+	tristate "KUnit tests for the IBM POWER Virtual FC Client" if !KUNIT_ALL_TESTS
-+	depends on SCSI_IBMVFC && KUNIT
-+	default KUNIT_ALL_TESTS
-+	help
-+	  Compile IBM POWER Virtual FC client KUnit tests. These tests
-+	  cover the sub-CRQ channel deregistration guard path.
-+	  To compile this driver as a module, choose M here: the module
-+	  will be called ibmvfc_kunit.
-+
- config SCSI_IBMVFC_TRACE
- 	bool "enable driver internal trace"
- 	depends on SCSI_IBMVFC
-diff --git a/drivers/scsi/ibmvscsi/Makefile b/drivers/scsi/ibmvscsi/Makefile
-index 9408c7f4cdee..a227bc633f3a 100644
---- a/drivers/scsi/ibmvscsi/Makefile
-+++ b/drivers/scsi/ibmvscsi/Makefile
-@@ -3,3 +3,4 @@ ibmvfc-objs := ibmvfc-core.o ibmvfc-nvme.o
- 
- obj-$(CONFIG_SCSI_IBMVSCSI)	+= ibmvscsi.o
- obj-$(CONFIG_SCSI_IBMVFC)	+= ibmvfc.o
-+obj-$(CONFIG_SCSI_IBMVFC_KUNIT_TEST)	+= ibmvfc_kunit.o
 diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/ibmvfc-core.c
-index 145d559041f1..f0502d748210 100644
+index 0b154e07299c..7818838669ae 100644
 --- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
 +++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
-@@ -6450,11 +6450,23 @@ static int ibmvfc_register_channel(struct ibmvfc_host *vhost,
- 		hcall_rc = plpar_hcall_norets(H_FREE_SUB_CRQ, vdev->unit_address, scrq->cookie);
- 	} while (hcall_rc == H_BUSY || H_IS_LONG_BUSY(hcall_rc));
- reg_failed:
-+	scrq->cookie = 0;
- 	LEAVE;
- 	return rc;
- }
- 
--static void ibmvfc_deregister_channel(struct ibmvfc_host *vhost,
-+/**
-+ * ibmvfc_deregister_channel - Deregister a sub-CRQ channel with the hypervisor
-+ * @vhost:	ibmvfc host struct
-+ * @channels:	ibmvfc channels struct containing the sub-CRQ array
-+ * @index:	index into the sub-CRQ array
-+ *
-+ * Frees the IRQ, disposes of the IRQ mapping, and calls H_FREE_SUB_CRQ to
-+ * release the sub-CRQ with the hypervisor. On success the queue message
-+ * buffer is zeroed and the current index is reset. If H_FREE_SUB_CRQ fails,
-+ * an error is logged but the channel resources are cleaned up regardless.
-+ */
-+VISIBLE_IF_KUNIT void ibmvfc_deregister_channel(struct ibmvfc_host *vhost,
- 				      struct ibmvfc_channels *channels,
- 				      int index)
- {
-@@ -6471,20 +6483,28 @@ static void ibmvfc_deregister_channel(struct ibmvfc_host *vhost,
- 		scrq->irq = 0;
+@@ -6435,6 +6435,7 @@ static int ibmvfc_register_channel(struct ibmvfc_host *vhost,
+ 	if (rc) {
+ 		dev_err(dev, "Couldn't register sub-crq[%d] irq\n", index);
+ 		irq_dispose_mapping(scrq->irq);
++		scrq->irq = 0;
+ 		goto irq_failed;
  	}
  
--	do {
--		rc = plpar_hcall_norets(H_FREE_SUB_CRQ, vdev->unit_address,
--					scrq->cookie);
--	} while (rc == H_BUSY || H_IS_LONG_BUSY(rc));
-+	if (scrq->cookie) {
-+		do {
-+			rc = plpar_hcall_norets(H_FREE_SUB_CRQ, vdev->unit_address,
-+						scrq->cookie);
-+		} while (rc == H_BUSY || H_IS_LONG_BUSY(rc));
+@@ -6463,9 +6464,11 @@ static void ibmvfc_deregister_channel(struct ibmvfc_host *vhost,
  
--	if (rc)
--		dev_err(dev, "Failed to free sub-crq[%d]: rc=%ld\n", index, rc);
-+		if (rc)
-+			dev_err(dev, "Failed to free protocol (%d) sub-crq[%d]: rc=%ld\n",
-+				channels->protocol, index, rc);
-+		else
-+			scrq->cookie = 0;
+ 	ENTER;
+ 
+-	free_irq(scrq->irq, scrq);
+-	irq_dispose_mapping(scrq->irq);
+-	scrq->irq = 0;
++	if (scrq->irq) {
++		free_irq(scrq->irq, scrq);
++		irq_dispose_mapping(scrq->irq);
++		scrq->irq = 0;
 +	}
  
- 	/* Clean out the queue */
--	memset(scrq->msgs.crq, 0, PAGE_SIZE);
--	scrq->cur = 0;
-+	if (scrq->msgs.handle) {
-+		memset(scrq->msgs.crq, 0, PAGE_SIZE);
-+		scrq->cur = 0;
-+	}
- 
- 	LEAVE;
- }
-+EXPORT_SYMBOL_IF_KUNIT(ibmvfc_deregister_channel);
- 
- static void ibmvfc_reg_sub_crqs(struct ibmvfc_host *vhost,
- 				struct ibmvfc_channels *channels)
-@@ -7118,5 +7138,31 @@ static void __exit ibmvfc_module_exit(void)
- 	fc_release_transport(ibmvfc_transport_template);
- }
- 
-+#if IS_ENABLED(CONFIG_KUNIT)
-+/**
-+ * ibmvfc_get_first_vhost - Get the first ibmvfc host from the global list
-+ *
-+ * Grabs the driver spinlock and retrieves the first host adapter from the
-+ * driver list. If found, increments its reference count via scsi_host_get().
-+ *
-+ * Return value:
-+ *	struct ibmvfc_host * with reference held on success, NULL otherwise
-+ **/
-+VISIBLE_IF_KUNIT struct ibmvfc_host *ibmvfc_get_first_vhost(void)
-+{
-+	struct ibmvfc_host *vhost = NULL;
-+
-+	spin_lock(&ibmvfc_driver_lock);
-+	if (!list_empty(&ibmvfc_head))
-+		vhost = list_first_entry(&ibmvfc_head, struct ibmvfc_host, queue);
-+	if (vhost)
-+		if (!scsi_host_get(vhost->host))
-+			vhost = NULL;
-+	spin_unlock(&ibmvfc_driver_lock);
-+	return vhost;
-+}
-+EXPORT_SYMBOL_IF_KUNIT(ibmvfc_get_first_vhost);
-+#endif
-+
- module_init(ibmvfc_module_init);
- module_exit(ibmvfc_module_exit);
-diff --git a/drivers/scsi/ibmvscsi/ibmvfc.h b/drivers/scsi/ibmvscsi/ibmvfc.h
-index ca80ceffe53a..421ce8bc3ea3 100644
---- a/drivers/scsi/ibmvscsi/ibmvfc.h
-+++ b/drivers/scsi/ibmvscsi/ibmvfc.h
-@@ -1088,4 +1088,12 @@ static inline struct ibmvfc_host *ibmvfc_channels_to_vhost(struct ibmvfc_channel
- #define ibmvfc_remove_trace_file(kobj, attr) do { } while (0)
- #endif
- 
-+#if IS_ENABLED(CONFIG_KUNIT)
-+#include <kunit/visibility.h>
-+VISIBLE_IF_KUNIT void ibmvfc_deregister_channel(struct ibmvfc_host *vhost,
-+						struct ibmvfc_channels *channels,
-+						int index);
-+VISIBLE_IF_KUNIT struct ibmvfc_host *ibmvfc_get_first_vhost(void);
-+#endif
-+
- #endif
-diff --git a/drivers/scsi/ibmvscsi/ibmvfc_kunit.c b/drivers/scsi/ibmvscsi/ibmvfc_kunit.c
-new file mode 100644
-index 000000000000..24799aa2368a
---- /dev/null
-+++ b/drivers/scsi/ibmvscsi/ibmvfc_kunit.c
-@@ -0,0 +1,63 @@
-+// SPDX-License-Identifier: GPL-2.0-or-later
-+#include <kunit/test.h>
-+#include <kunit/visibility.h>
-+#include <scsi/scsi_device.h>
-+#include <scsi/scsi_transport_fc.h>
-+#include "ibmvfc.h"
-+
-+MODULE_IMPORT_NS("EXPORTED_FOR_KUNIT_TESTING");
-+
-+/**
-+ * ibmvfc_deregister_channel_guard_test - unit test for ibmvfc_deregister_channel()
-+ *   guard conditions
-+ * @test: pointer to kunit structure
-+ *
-+ * Tests that ibmvfc_deregister_channel() safely handles a queue that was
-+ * never registered with the hypervisor (cookie == 0, msgs.handle == NULL):
-+ * - no H_FREE_SUB_CRQ hypercall is issued
-+ * - no memset is attempted on a NULL buffer
-+ * - cookie and cur remain zero after the call
-+ *
-+ * Return: void
-+ */
-+static void ibmvfc_deregister_channel_guard_test(struct kunit *test)
-+{
-+	struct ibmvfc_channels channels = {};
-+	struct ibmvfc_queue scrq = {};
-+	struct ibmvfc_host *vhost;
-+
-+	vhost = ibmvfc_get_first_vhost();
-+	if (!vhost)
-+		kunit_skip(test, "No ibmvfc devices available");
-+
-+	/*
-+	 * Embed the synthetic queue in a channels struct with one entry.
-+	 * cookie == 0 and msgs.handle == NULL: ibmvfc_deregister_channel()
-+	 * must skip both the H_FREE_SUB_CRQ hypercall and the memset.
-+	 */
-+	channels.scrqs = &scrq;
-+	channels.max_queues = 1;
-+
-+	ibmvfc_deregister_channel(vhost, &channels, 0);
-+
-+	KUNIT_EXPECT_EQ(test, scrq.cookie, 0UL);
-+	KUNIT_EXPECT_EQ(test, scrq.cur, 0);
-+	KUNIT_EXPECT_NULL(test, scrq.msgs.handle);
-+
-+	scsi_host_put(vhost->host);
-+}
-+
-+static struct kunit_case ibmvfc_channel_test_cases[] = {
-+	KUNIT_CASE(ibmvfc_deregister_channel_guard_test),
-+	{},
-+};
-+
-+static struct kunit_suite ibmvfc_channel_test_suite = {
-+	.name = "ibmvfc-channel-test",
-+	.test_cases = ibmvfc_channel_test_cases,
-+};
-+kunit_test_init_section_suite(ibmvfc_channel_test_suite);
-+
-+MODULE_LICENSE("GPL");
-+MODULE_AUTHOR("Dave Marquardt <davemarq@linux.ibm.com>");
-+MODULE_DESCRIPTION("Test module for IBM Virtual Fibre Channel Driver");
+ 	do {
+ 		rc = plpar_hcall_norets(H_FREE_SUB_CRQ, vdev->unit_address,
 
 -- 
 2.56.0
