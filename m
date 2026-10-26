@@ -1,57 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793032020;
-	b=hX5Otbx6JiPK3A5B2oj4tbtyS0+o46Z8EnpHKnACvoHO0oQjnI9wHSxJWIDXZ3F2Nr5I
-	 RG+GQw7uAEKzBQaAhMn0ChMfDcP0WpGH57R5XAr9pyeDGcrG1W5HrFNw72+sLuk3OgSzi
-	 Vz98UCqevRNIgMA8VzG/ZiFpCCji4KWGoX5pl9lR0eYgZBE4F0noHycGv8/06vHIpYgu7
-	 PIlGLQZfgf3u7EeI26wx5oThgwzYaqtW13dTtFJ/r1eQkbvlljatkQ0ygqxhV5g7+6Vp1
-	 InJHro/vWE96YfYpsclo4BtyYOS0WAV2GqNeaZIFr0C394a5U0/pUvdm3X19lrxXNMw==
+	t=1793032312;
+	b=475e8fmkntio+0yG521C6VrKo40di3VwiJGDbEIYdIApYk2Y7vfXBF1MFn2u00G6l28P
+	 ogvkFEmC27+VLYbeFVGxv+I/rPBKBeG4rO/jmrbgcLcIqnQCCNiDEBHEmEd4eA2N9rmR+
+	 ZwsWFBDn4dGnRS6vDxcoUG0R/6yN3HCHF6G3UgmpPGdAYBeiKYuSys0J9yYeNhrull6Fm
+	 FEoPRdYTVJO3a99/TtdSqJIwVyM0S+uXxh5EeaExrSvZMpTg1CzainVHEzF7T1It2I5Bc
+	 TCFGrCRRuoXAvDSYVi1SkPiHZct2roLs3+tZQKz1sSrpl1tpwgolNDTAd6aybUkgKOw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793032020;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793032312;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=NYTi6c6OP7XdCnbtAK2aZteembyS8mE23/N2ueqon9Y=;
-	b=qEIalb+UNnbG4x/qh9WEi0K+Z3dZu33RkxXkaCBrFaY4jp3KDWHyPSMVhRgLRmIaEc7x
-	 ic9dSG0GLdLf+tvTCWIzOBbEHOBF5E+Fgp5eJSGWKN2od09ED8bjr2cBzoEs18Hjgrnp4
-	 OfoS61xuXy7AqCsRANU/CK6z5fv5P9v5gwwuz+JxA8yAV/rJEWXh49oBjDHPQ0YjFEMCK
-	 ZSqK1AlW4EbcJn+51yb6tKqJ4bo3zBUW5TFTSCwyrgP9ppuuI4DUGbnZ37ohZCugRBNYM
-	 mkRglHyFOIiXVn+wWs29dhIC2eNyvE/AqWJOaRhSDjxNY6u1082QFphA5bG7OeNe7nQ==
+	bh=17Sb3RBUjHmIJ3f9t/Bg0TQGr1ZFBKIeLRe6lADamVg=;
+	b=KoaDzeEvRdNbLqATgs8YUt+J8uYc5lOVP3rFl8Fnil9+BPJx5p74DVXXitw+h+0ImWrc
+	 OXeAkiCOTkhgfnT5Dy85Brwy4UpXTuFImWGK/S/SNt22co9TcPSZ5RbnBOD26dGh4Sc2m
+	 fhfAKmEGN//MeUmQWnHpVYKTtauRao7BgBX5nTEIYkcBYssJTFEFHufcbEZfUARR6DYmR
+	 HhNx/rM7n1A5yhXrEcAfI10tCB+nyk2jnCDEgv6UiatsqvHyP8La84ID/OpbfIOI4OV2Q
+	 sLnOcjubSz3+ddZGgx+k+FG8Pz2shX+O8yZ/h04hcfdGzPRB1P80WloymJORegZ7/+g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=VhlDVDm2;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="d9kh8/iZ";
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E3A7F606A331
-	for <linux-scsi@vger.kernel.org>; Mon, 26 Oct 2026 16:26:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08A1B606A320
+	for <linux-scsi@vger.kernel.org>; Mon, 26 Oct 2026 16:31:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=VhlDVDm2
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 61A151F01825;
-	Mon, 26 Oct 2026 16:26:59 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=d9kh8/iZ
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 760D51F01829;
+	Mon, 26 Oct 2026 16:31:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793032019;
-	bh=NYTi6c6OP7XdCnbtAK2aZteembyS8mE23/N2ueqon9Y=;
+	s=k20260515; t=1793032311;
+	bh=17Sb3RBUjHmIJ3f9t/Bg0TQGr1ZFBKIeLRe6lADamVg=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=VhlDVDm2bHngkm+ifyRyKbvZneFyzUiopynzQ2RkzABO6QL7Dp8yTHy99sTRsoMsN
-	 hu0ULHMtE1/7IrhN4o9yOXZuxJqO2B/Rz0XZH1aDxI1ys1UgNuFLzQeTGNT1m1saKu
-	 8ZHbmwHclRBg3RNsseSfmlpKfKcbUyiV9eWw9ZjHjLmKUCzdC/sM+jKUPoEknqVwTa
-	 uWzIH+Rf3lrLzdgTLSbob6errUMHKTLjVCPIkO+Tu5B2/sbAt4ajSMZErTd9jEXRD0
-	 hor0HTtGqKX4bRctMxZ8l71e2Mx8p+LrZM8ApuCUPGYNhLcMlS1IT4ogMGbBjW/iVX
-	 9wgRM1s7t/Cbg==
-Message-ID: <sashiko-outbox-185517@kernel.org>
+	b=d9kh8/iZ0kCVZcjADywjtbvw0WblX8T++eZUXVti5oGcYZU6GdICFQRXZt9RJbxzH
+	 PgZyagw2Or0dZ348Cb+8Ts9vVubOmpHqCZbMze0PuWuApKrnBVQ19RKLcX2J5x4Soe
+	 V7/0fhc/yz9bxfj2adHYx6EcynoBqemhvrKgmi1acLExXd3ZAMFlQkI0EaIrdBtT++
+	 tTeEPzk7qnPC/RfSKnbGlSX2U114oZPdCP1V87kfBSjzbhUOgubsZwNtK6/PKfmHxZ
+	 mhnVVX7pj9Afkd+/GgRDC7cooryxkYBZob8aTzTRiMUKpMsV/1U9zJVV2If9Z2Prre
+	 ID1WasJmwt31g==
+Message-ID: <sashiko-outbox-185519@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v16 03/12] scsi: ibmvfc: fix potential NULL pointer
- dereference on failed queue allocation
+Subject: Re: [PATCH v16 11/12] scsi: ibmvfc: register and use asynchronous
+ sub CRQ for events
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Dave Marquardt" <davemarq@linux.ibm.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20261026-ibmvfc-fpin-support-v16-3-a900aa657ed5@linux.ibm.com>
+In-Reply-To: <20261026-ibmvfc-fpin-support-v16-11-a900aa657ed5@linux.ibm.com>
 References: <20261026-ibmvfc-fpin-support-v16-0-a900aa657ed5@linux.ibm.com>
- <20261026-ibmvfc-fpin-support-v16-3-a900aa657ed5@linux.ibm.com>
+ <20261026-ibmvfc-fpin-support-v16-11-a900aa657ed5@linux.ibm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 26 Oct 2026 16:26:58 +0000
+Date: Mon, 26 Oct 2026 16:31:51 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -63,145 +63,157 @@ Precedence: list
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [Low] scsi: ibmvfc: build failure when CONFIG_KUNIT is disabled
+- [High] scsi: ibmvfc: broken error unwind and MQ disable in ibmvfc_reg_sub=
+_crqs()
 --
 
-commit e6767e190b474e7d3a6e33d2ed96de8dbb05ff1a
-Author: Tyrel Datwyler <tyreld@linux.ibm.com>
+commit 0ac96c5239b66a2d4b7e04178af6f76c367e358d
+Author: Dave Marquardt <davemarq@linux.ibm.com>
 
-scsi: ibmvfc: fix potential NULL pointer dereference on failed queue alloca=
-tion
+scsi: ibmvfc: register and use asynchronous sub CRQ for events
 
-This commit guards ibmvfc_deregister_channel() against freeing an
-unregistered sub-CRQ or clearing an unallocated message buffer, and adds a
-KUnit test suite to verify the guard conditions.
+This commit wires the asynchronous sub-CRQ into the ibmvfc sub-CRQ lifecycle
+so that it is allocated, registered, and released alongside the SCSI and NV=
+Me
+channel queues. It also updates channel setup and login capability flags to
+advertise async sub-CRQ support.
 
 > diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/=
 ibmvfc-core.c
-> index 145d559041f12..f0502d7482105 100644
+> index af11726b76beb..4d4ebe5f6f123 100644
 > --- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
 > +++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
-> @@ -6450,11 +6450,23 @@ static int ibmvfc_register_channel(struct ibmvfc_=
-host *vhost,
->  		hcall_rc =3D plpar_hcall_norets(H_FREE_SUB_CRQ, vdev->unit_address, sc=
-rq->cookie);
->  	} while (hcall_rc =3D=3D H_BUSY || H_IS_LONG_BUSY(hcall_rc));
->  reg_failed:
-> +	scrq->cookie =3D 0;
->  	LEAVE;
->  	return rc;
->  }
+[ ... ]
+> @@ -988,6 +989,7 @@ static int ibmvfc_reenable_crq_queue(struct ibmvfc_ho=
+st *vhost)
+>  	spin_unlock(vhost->crq.q_lock);
+>  	spin_unlock_irqrestore(&vhost->host->host_lock, flags);
 > =20
-> -static void ibmvfc_deregister_channel(struct ibmvfc_host *vhost,
-> +/**
-> + * ibmvfc_deregister_channel - Deregister a sub-CRQ channel with the hyp=
-ervisor
-> + * @vhost:	ibmvfc host struct
-> + * @channels:	ibmvfc channels struct containing the sub-CRQ array
-> + * @index:	index into the sub-CRQ array
-> + *
-> + * Frees the IRQ, disposes of the IRQ mapping, and calls H_FREE_SUB_CRQ =
-to
-> + * release the sub-CRQ with the hypervisor. On success the queue message
-> + * buffer is zeroed and the current index is reset. If H_FREE_SUB_CRQ fa=
-ils,
-> + * an error is logged but the channel resources are cleaned up regardles=
-s.
-> + */
-> +VISIBLE_IF_KUNIT void ibmvfc_deregister_channel(struct ibmvfc_host *vhos=
-t,
->  				      struct ibmvfc_channels *channels,
->  				      int index)
+> +	ibmvfc_reg_sub_crqs(vhost, &vhost->async_scrqs);
+>  	ibmvfc_reg_sub_crqs(vhost, &vhost->scsi_scrqs);
+>  	ibmvfc_reg_sub_crqs(vhost, &vhost->nvme_scrqs);
+> =20
+[ ... ]
+> @@ -1044,6 +1047,7 @@ static int ibmvfc_reset_crq(struct ibmvfc_host *vho=
+st)
+>  	spin_unlock(vhost->crq.q_lock);
+>  	spin_unlock_irqrestore(&vhost->host->host_lock, flags);
+> =20
+> +	ibmvfc_reg_sub_crqs(vhost, &vhost->async_scrqs);
+>  	ibmvfc_reg_sub_crqs(vhost, &vhost->scsi_scrqs);
+>  	ibmvfc_reg_sub_crqs(vhost, &vhost->nvme_scrqs);
+> =20
+[ ... ]
+> @@ -6976,25 +6994,45 @@ VISIBLE_IF_KUNIT void ibmvfc_deregister_channel(s=
+truct ibmvfc_host *vhost,
+>  }
+>  EXPORT_SYMBOL_IF_KUNIT(ibmvfc_deregister_channel);
+> =20
+> -static void ibmvfc_reg_sub_crqs(struct ibmvfc_host *vhost,
+[ ... ]
+> +static int ibmvfc_reg_sub_crqs(struct ibmvfc_host *vhost,
+>  				struct ibmvfc_channels *channels)
 >  {
-> @@ -6471,20 +6483,28 @@ static void ibmvfc_deregister_channel(struct ibmv=
-fc_host *vhost,
->  		scrq->irq =3D 0;
+> +	unsigned long flags;
+>  	int i, j;
+> =20
+>  	ENTER;
+>  	if (!vhost->mq_enabled || !channels->scrqs)
+> -		return;
+> +		return 0;
+> =20
+>  	for (i =3D 0; i < channels->max_queues; i++) {
+>  		if (ibmvfc_register_channel(vhost, channels, i)) {
+>  			for (j =3D i; j > 0; j--)
+>  				ibmvfc_deregister_channel(vhost, channels, j - 1);
+> +			spin_lock_irqsave(&vhost->host->host_lock, flags);
+>  			vhost->do_enquiry =3D 0;
+> -			return;
+> +			vhost->mq_enabled =3D 0;
+> +			spin_unlock_irqrestore(&vhost->host->host_lock, flags);
+> +			return -1;
+>  		}
 >  	}
 > =20
-> -	do {
-> -		rc =3D plpar_hcall_norets(H_FREE_SUB_CRQ, vdev->unit_address,
-> -					scrq->cookie);
-> -	} while (rc =3D=3D H_BUSY || H_IS_LONG_BUSY(rc));
-> +	if (scrq->cookie) {
-> +		do {
-> +			rc =3D plpar_hcall_norets(H_FREE_SUB_CRQ, vdev->unit_address,
-> +						scrq->cookie);
-> +		} while (rc =3D=3D H_BUSY || H_IS_LONG_BUSY(rc));
-> =20
-> -	if (rc)
-> -		dev_err(dev, "Failed to free sub-crq[%d]: rc=3D%ld\n", index, rc);
-> +		if (rc)
-> +			dev_err(dev, "Failed to free protocol (%d) sub-crq[%d]: rc=3D%ld\n",
-> +				channels->protocol, index, rc);
-> +		else
-> +			scrq->cookie =3D 0;
-> +	}
-> =20
->  	/* Clean out the queue */
-> -	memset(scrq->msgs.crq, 0, PAGE_SIZE);
-> -	scrq->cur =3D 0;
-> +	if (scrq->msgs.handle) {
-> +		memset(scrq->msgs.crq, 0, PAGE_SIZE);
-> +		scrq->cur =3D 0;
-> +	}
-> =20
 >  	LEAVE;
+> +	return 0;
 >  }
-> +EXPORT_SYMBOL_IF_KUNIT(ibmvfc_deregister_channel);
-
 [ ... ]
-
-> diff --git a/drivers/scsi/ibmvscsi/ibmvfc.h b/drivers/scsi/ibmvscsi/ibmvf=
-c.h
-> index ca80ceffe53a5..421ce8bc3ea33 100644
-> --- a/drivers/scsi/ibmvscsi/ibmvfc.h
-> +++ b/drivers/scsi/ibmvscsi/ibmvfc.h
-> @@ -1088,4 +1088,12 @@ static inline struct ibmvfc_host *ibmvfc_channels_=
-to_vhost(struct ibmvfc_channel
->  #define ibmvfc_remove_trace_file(kobj, attr) do { } while (0)
->  #endif
+> @@ -7083,9 +7102,74 @@ static void ibmvfc_release_channels(struct ibmvfc_=
+host *vhost,
+>  	}
+>  }
 > =20
-> +#if IS_ENABLED(CONFIG_KUNIT)
-> +#include <kunit/visibility.h>
-> +VISIBLE_IF_KUNIT void ibmvfc_deregister_channel(struct ibmvfc_host *vhos=
-t,
-> +						struct ibmvfc_channels *channels,
-> +						int index);
-> +VISIBLE_IF_KUNIT struct ibmvfc_host *ibmvfc_get_first_vhost(void);
-> +#endif
+[ ... ]
+> +static void ibmvfc_init_sub_crqs(struct ibmvfc_host *vhost)
+> +{
+> +	unsigned long flags;
+> +
+> +	ENTER;
+> +	if (!vhost->mq_enabled)
+> +		return;
+> +
+> +	/* register async_sub_crq channel */
+> +	if (ibmvfc_alloc_channels(vhost, &vhost->async_scrqs))
+> +		goto out;
+> +
+> +	if (ibmvfc_reg_sub_crqs(vhost, &vhost->async_scrqs))
+> +		goto release_async_sub_crq;
+> +
+> +	if (ibmvfc_alloc_channels(vhost, &vhost->scsi_scrqs))
+> +		goto deregister_async_sub_crq;
+> +
+> +	if (ibmvfc_reg_sub_crqs(vhost, &vhost->scsi_scrqs))
+> +		goto release_scsi_sub_crqs;
+> +
+> +	if (vhost->nvme_enabled) {
+> +		if (ibmvfc_alloc_channels(vhost, &vhost->nvme_scrqs)) {
+> +			spin_lock_irqsave(&vhost->host->host_lock, flags);
+> +			vhost->nvme_enabled =3D 0;
+> +			spin_unlock_irqrestore(&vhost->host->host_lock, flags);
+> +		} else if (ibmvfc_reg_sub_crqs(vhost, &vhost->nvme_scrqs)) {
+> +			ibmvfc_release_channels(vhost, &vhost->nvme_scrqs);
+> +			spin_lock_irqsave(&vhost->host->host_lock, flags);
+> +			vhost->nvme_enabled =3D 0;
+> +			spin_unlock_irqrestore(&vhost->host->host_lock, flags);
+> +		}
+> +	}
 
-[Severity: Low]
-Does this break the build when CONFIG_SCSI_IBMVFC is enabled and CONFIG_KUN=
-IT
-is disabled?
+[Severity: High]
+Does clearing vhost->do_enquiry and vhost->mq_enabled unconditionally inside
+ibmvfc_reg_sub_crqs() cause inconsistent state and leaked sub-CRQ
+registrations when a later channel set fails to register?
 
-In drivers/scsi/ibmvscsi/ibmvfc-core.c, ibmvfc_deregister_channel() uses
-VISIBLE_IF_KUNIT and EXPORT_SYMBOL_IF_KUNIT(ibmvfc_deregister_channel)
-outside of any CONFIG_KUNIT guard.
+In ibmvfc_init_sub_crqs(), vhost->async_scrqs and vhost->scsi_scrqs are
+allocated and registered first. When vhost->nvme_enabled is set and
+ibmvfc_reg_sub_crqs(vhost, &vhost->nvme_scrqs) fails, ibmvfc_init_sub_crqs()
+appears to intend to only disable NVMe by releasing vhost->nvme_scrqs and
+setting vhost->nvme_enabled =3D 0.
 
-However, drivers/scsi/ibmvscsi/ibmvfc.h only includes <kunit/visibility.h>
-when CONFIG_KUNIT is enabled, so the fallback definitions in
-include/kunit/visibility.h:
+However, because ibmvfc_reg_sub_crqs() has already set vhost->do_enquiry =
+=3D 0
+and vhost->mq_enabled =3D 0, multi-queue and channel enquiry are disabled f=
+or
+the entire host while vhost->async_scrqs and vhost->scsi_scrqs remain
+allocated and registered with the hypervisor with active IRQ handlers.
 
-#else
-    #define VISIBLE_IF_KUNIT static
-    #define EXPORT_SYMBOL_IF_KUNIT(symbol)
-#endif
+Similarly, in ibmvfc_reenable_crq_queue() and ibmvfc_reset_crq():
 
-are never pulled in when CONFIG_KUNIT is disabled, causing compilation of
-drivers/scsi/ibmvscsi/ibmvfc-core.c to fail due to unknown macros.
+	ibmvfc_reg_sub_crqs(vhost, &vhost->async_scrqs);
+	ibmvfc_reg_sub_crqs(vhost, &vhost->scsi_scrqs);
+	ibmvfc_reg_sub_crqs(vhost, &vhost->nvme_scrqs);
 
-A later commit in the series, commit 1bc41de0e60f ("scsi: ibmvfc: add basic
-FPIN support"), adds an unconditional #include <kunit/visibility.h> to
-drivers/scsi/ibmvscsi/ibmvfc-core.c, though leaving this commit and commit
-1b37c48a1902 ("scsi: ibmvfc: add link state to host struct") unbuildable wi=
-th
-CONFIG_KUNIT=3Dn during bisection.
+If registering vhost->async_scrqs succeeds, and a subsequent call to
+ibmvfc_reg_sub_crqs() for vhost->scsi_scrqs or vhost->nvme_scrqs fails,
+vhost->mq_enabled and vhost->do_enquiry are cleared to 0, but the already
+registered channel sets are not deregistered via ibmvfc_dereg_sub_crqs().
 
-Should <kunit/visibility.h> be included unconditionally in
-drivers/scsi/ibmvscsi/ibmvfc.h (or drivers/scsi/ibmvscsi/ibmvfc-core.c) in
-this commit?
+Should the caller handle clearing vhost->mq_enabled and vhost->do_enquiry (=
+or
+unwinding previously registered channel sets) instead of clearing those fla=
+gs
+unconditionally in ibmvfc_reg_sub_crqs()?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261026-ibmvfc-fpi=
-n-support-v16-0-a900aa657ed5@linux.ibm.com?part=3D3
+n-support-v16-0-a900aa657ed5@linux.ibm.com?part=3D11
