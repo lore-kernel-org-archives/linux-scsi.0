@@ -1,91 +1,75 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.214.198
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793049463;
-	b=LbSV9ywcVyZ3b8XehhjTkkFLFf2QSGidcHyhWCG1LBiThRQ0vlFfCHRU0YLKQ8gGkQUh
-	 ddQiYuxgJPhtRVW+Hwl9LupBtUkVIHrSdu/dLjvXJD/p87zCsgjcWVSFsz66R64Ehw8qc
-	 Gjcjrf22RZX2aI5S1Z+jbc1as3clrBoiDiXLCPu7ITug+fkm/qjf87bytyeXPg2NOwfri
-	 YplQ+wOHD6UKz7nxpOsBIr2k2vvxfYO9H55HqiT3p0ATY5zyoOTt/Wgf+SIdTlaYjigjP
-	 3KqPj2YN2aZ4EYhfc+JVypHZIxkpVi8pImM2iu5Aqx+Z+AT8LWRAZwsDU924UHEHK7g==
+	t=1793051569;
+	b=PcdDvVzpcmmprechRyMctX13OgtpoU/183pNhWhJ/cBH6magcHLS93IxDdJAwjGwva42
+	 BHxuDDAAXrckGI++IwoVBnqvRt8bHw946S3pFbYUlDPuxuAkd6RRodgTL8kNVid7KWVge
+	 BCUSDeewkabVlxv9h9Y8+29kk6oF/63JW/wS9N81wuaQa0H9uDUryeOdi+LZXduT1bMSN
+	 cKKho39+0tiNpV78wLPLdsBO+2E+HhEv0y2TCvniSV2Eoaahd8OjX8CBZAg4kKg+fp3fs
+	 1ZzpgY03q/rnLf7W5OI32KuG35OKrWNCiezIZsl/rEcFFxV/8fjfBu6+/nPPKAfpLyw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793049463;
-	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:Received:
-	 Received:Received:Received:Received:From:To:Cc:Subject:In-Reply-To:
-	 References:Date:Message-ID:User-Agent:MIME-Version:Content-Type:
-	 X-TM-AS-GCONF:X-Authority-Analysis:X-Proofpoint-GUID:
-	 X-Proofpoint-Spam-Info:X-Proofpoint-ORIG-GUID:
-	 X-Proofpoint-Spam-Details-Enc:X-Proofpoint-Virus-Version:
-	 X-Proofpoint-Spam-Details;
-	bh=e2Ui39yGphVQXmHqV++3fx2VRkqj2x1+yGDqIiiKip4=;
-	b=2YOt0lnKZg40PEQ+R5m95Hj6dUQUzgq30kgUAT1VqzaqAaG3gZfJXB23n0SYlj+qMxJd
-	 yhpoua0ArnjKqszaVWbXY10b7IusJSUmWKa6Rf9Ju0peUNzhkPp4mGo9T2lWVSt1Ixh8E
-	 lSX8sivBDBifIbYyb5SKwn7stRzFJ2/kGKaeM1B80smTYF776DKlAlZM2sNhb8EwjybRZ
-	 CcDxtoEDmHoMJSAY8Jn3klRy+qBiEJUmCB4DeUBWG4BS6DkAxtHRYgxpYYb9zOZOearEm
-	 3vFXi2/vH/9CmRSWCPZgPCOnSeCAWjpqZmAt9GK+17EocQQHjich3RNy1FAveu1/q7w==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793051569;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:In-Reply-To:
+	 Mime-Version:References:X-Mailer:Message-ID:Subject:From:To:Cc:
+	 Content-Type;
+	bh=RD5MWqHEB8iYDLFdQXvkJ0xSc6fsoJ0ZXufXHQQ7zgM=;
+	b=a6FRa9ANyiF7q/0R2eDoYQ8dpsu9DLlwhwzJCVFBRgH+mHtb23zKcHED2t4lpZrSVPr4
+	 eqEQQ6cJ7EHz9EgV2j0g8H8V9U6NlDtwdaBj3O8wH8zj5QI9QNVj04CJ/97pzRvLlrvg8
+	 5X8ZqU5JKfsM6uZyZiYJGEWxSXoeHBg7zMZoLiBquC89aPm2u2LzKY6T313o4/Q14M2Cn
+	 ICvFp5EFecS3Qq1v2vDUhLdZpf0u8ZPptyxXaOoUAP6UiwDse3VZ+iUGbhXw7gMlnPg/s
+	 cv0dtMasnFBMvOZ7uTDDVOpxw9LViwd/k4N50sV9umyIbZCU9DtdGjhll3PfGLlmqgg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.ibm.com;
-	spf=pass smtp.mailfrom=linux.ibm.com;
-	dkim=pass header.d=ibm.com header.i=@ibm.com header.a=rsa-sha256 header.s=pp1 header.b=cTbFXiZC;
-	arc=none smtp.remote-ip=148.163.158.5
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=google.com;
+	spf=pass smtp.mailfrom=flex--jthoughton.bounces.google.com;
+	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20251104 header.b=ttuByBgZ;
+	arc=none smtp.remote-ip=209.85.214.198
+Received: from mail-pl1-f198.google.com (mail-pl1-f198.google.com [209.85.214.198])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1EB76606A31A;
-	Mon, 26 Oct 2026 21:17:42 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1EB76606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8BBD0606A32E
+	for <linux-scsi@vger.kernel.org>; Mon, 26 Oct 2026 21:52:49 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8BBD0606A32E
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--jthoughton.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=ibm.com header.i=@ibm.com header.a=rsa-sha256 header.s=pp1 header.b=cTbFXiZC
-Received: from pps.filterd (m0360072.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69QJFHw3276673;
-	Mon, 26 Oct 2026 21:17:40 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-type:date:from:in-reply-to:message-id:mime-version
-	:references:subject:to; s=pp1; bh=e2Ui39yGphVQXmHqV++3fx2VRkqj2x
-	1+yGDqIiiKip4=; b=cTbFXiZCduDDRZfa8/6oWlRR35izjm9jnI2pTbz8+n1XEn
-	nedsOqJQ5LmbMrcZLiGLFSUNpFIr0pK8ig2UtzSp9ImodFgl+v+MMazyGCosIKZe
-	qfrnDrlynm5zLXVKXdQ8lLBVIiIh3DyWb3t8cU+e+hoxtBqUSJ0JmpRkDxeOGl33
-	atvcUL1ykeTCb6DEKVmMd75ovwZ57q8SkHfi+b97uLtegYenvHMZM7wzoir2nqxb
-	rBAInGFZcvff+E9bT83VzrdRDSlJiy/Npt3WDnZd3p8UMgx96Fo/7diqGltrSSxf
-	zuDoKV3QNTMvd7Lkc72m3rbyDpqTuGvOyYk76Ucg==
-Received: from ppma23.wdc07v.mail.ibm.com (5d.69.3da9.ip4.static.sl-reverse.com [169.61.105.93])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4hgmavc1d2-1
-	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-	Mon, 26 Oct 2026 21:17:40 +0000 (GMT)
-Received: from pps.filterd (ppma23.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma23.wdc07v.mail.ibm.com (8.18.1.11/8.18.1.11) with ESMTP id 69QIovvI3043177;
-	Mon, 26 Oct 2026 21:17:39 GMT
-Received: from smtprelay02.dal12v.mail.ibm.com ([172.16.1.4])
-	by ppma23.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4hh8ggywpc-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 26 Oct 2026 21:17:39 +0000 (GMT)
-Received: from smtpav06.dal12v.mail.ibm.com (smtpav06.dal12v.mail.ibm.com [10.241.53.105])
-	by smtprelay02.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 69QLHc0K50659632
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Mon, 26 Oct 2026 21:17:39 GMT
-Received: from smtpav06.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id E20E358055;
-	Mon, 26 Oct 2026 21:17:38 +0000 (GMT)
-Received: from smtpav06.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id C365C58043;
-	Mon, 26 Oct 2026 21:17:38 +0000 (GMT)
-Received: from e (unknown [9.61.189.219])
-	by smtpav06.dal12v.mail.ibm.com (Postfix) with ESMTPS;
-	Mon, 26 Oct 2026 21:17:38 +0000 (GMT)
-From: Dave Marquardt <davemarq@linux.ibm.com>
-To: sashiko-bot@kernel.org
-Cc: sashiko-reviews@lists.linux.dev, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH v16 03/12] scsi: ibmvfc: fix potential NULL pointer
- dereference on failed queue allocation
-In-Reply-To: <sashiko-outbox-185517@kernel.org> (sashiko-bot@kernel.org's
-	message of "Mon, 26 Oct 2026 16:26:58 +0000")
-References: <20261026-ibmvfc-fpin-support-v16-0-a900aa657ed5@linux.ibm.com>
-	<20261026-ibmvfc-fpin-support-v16-3-a900aa657ed5@linux.ibm.com>
-	<sashiko-outbox-185517@kernel.org>
-Date: Mon, 26 Oct 2026 16:17:38 -0500
-Message-ID: <87fqxsf9fx.fsf@linux.ibm.com>
-User-Agent: Gnus/5.13 (Gnus v5.13)
+	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20251104 header.b=ttuByBgZ
+Received: by mail-pl1-f198.google.com with SMTP id d9443c01a7336-2cfc52ddc55so34562895ad.3
+        for <linux-scsi@vger.kernel.org>; Mon, 26 Oct 2026 14:52:49 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1793051569; x=1793656369; darn=vger.kernel.org;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=RD5MWqHEB8iYDLFdQXvkJ0xSc6fsoJ0ZXufXHQQ7zgM=;
+        b=ttuByBgZyXhz+vCIDU5aBy90hRWqwioXsk1DTyafweNnvz2VRwJpnWhZTDjU/ruhRF
+         +eNkpq2S/OLTAC4WKDyiSOVdOZpoaInxvu9UjK8OVtqVOVGoXQz0xw4USi3sYBtAAjKW
+         xFkNF7RtNx3C8ylvzrtr3yIDJFmQr5Fpx5GMG7lg7Zxkb9Zz76slRyBARq30C4fj/GZc
+         lewXB4OZG8GXpxXvg/Z2Si+lR9m0f1WY60ZFwIRoGIQ8gBxO4HkEYP6M2T1bDHZOH6bh
+         LsWrGaMFI/TsCQGQozWRU1Jk+J5GWR7q6ZBrNLB6qEnTv5RGoUe2N/rfxG8p6ofbEptr
+         6CiQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793051569; x=1793656369;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=RD5MWqHEB8iYDLFdQXvkJ0xSc6fsoJ0ZXufXHQQ7zgM=;
+        b=feXwoZrwG59Pa7h4jjC11zjzA53EvBCTat4ec6sIALr0ZGwPmteygrtLhu4VaI2xov
+         Wc58RtBU1709NVT0OnYiQo4WFneG+IXLjhvvxSmD2cdP0tER76jlBnBfaMgxiVOqiaxs
+         ZKd0qJFsWfesM1L10zIurUKb0FD9rkf7D2F1Uou8dr+m3vzzcSeXNjTCwMikyypf5FCz
+         rCD2S88MgnKeHBxUCbFNXjA8QUZblXZT9a4r9jMhW6HuWofY60t+3sCUhAlQLEQR7+Rh
+         rQ+2mUThslt/hamz0KBWVRp3+2ztlFbofb0xiYlc8VUZQYwC3PQ+sS2I7pECpUhn+9xt
+         x6TQ==
+X-Forwarded-Encrypted: i=1; AKwUvBz0sx+ar7M++sFus4b20TRPSPiN6aJ8q6dVEuhf6wkQdD1vwW7o/Mvc6BARYnv9suB+XlCUrYN6CryH@vger.kernel.org
+X-Gm-Message-State: AFq9FYJG+W+DeXEdqBo/kLH5ao6L7CKMB9UGtixwiX0d9YltleeHnQxE
+	K/+tF4T6iZ+MMCY1k/MhxRd7Fehrd8te4gHA2WHI5hCJn9j9Gn3xuj+cRc1AzvH0Kg7imdMLt5i
+	6U8IHaSSYDWMBjqSYhJWFcQ==
+X-Received: from pjps6.prod.google.com ([2002:a17:90a:a106:b0:3ad:c8d8:70c3])
+ (user=jthoughton job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a17:90b:2688:b0:3a8:cb54:e135 with SMTP id 98e67ed59e1d1-3adea899125mr6172313a91.19.1793051568668;
+ Mon, 26 Oct 2026 14:52:48 -0700 (PDT)
+Date: Mon, 26 Oct 2026 21:52:17 +0000
+In-Reply-To: <20261026215226.3713941-1-jthoughton@google.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -94,172 +78,78 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Type: text/plain
-X-TM-AS-GCONF: 00
-X-Authority-Analysis: v=2.4 cv=P8SvFSAu c=1 sm=1 tr=0 ts=6adfc374 cx=c_pps
- a=3Bg1Hr4SwmMryq2xdFQyZA==:117 a=3Bg1Hr4SwmMryq2xdFQyZA==:17
- a=660iZSQnnn4A:10 a=VkNPw1HP01LnGYTKEx00:22 a=RnoormkPH1_aCDwRdu11:22
- a=RzCfie-kr_QcCd8fBx8p:22 a=VwQbUJbxAAAA:8 a=VnNF1IyMAAAA:8
- a=TxC64Fj3QtcIoGYGvycA:9
-X-Proofpoint-GUID: cEz9mXxV2YixcaGcLimKAsRdGVF2UX0A
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMDI2MDA4NCBTYWx0ZWRfX3JvF+OycFehH
- 6PwncLv+soUD+YgBh0Xlq2bgzkldHgFGqhmvjj1R+v1bXLlZMyFPlti69Nukv1OZF5fvV1Ior8f
- Ic/8q0XgkKu8oHflDUdzrvCWed/kYMo=
-X-Proofpoint-ORIG-GUID: cEz9mXxV2YixcaGcLimKAsRdGVF2UX0A
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDI2MDA4NCBTYWx0ZWRfXxw067mLq0l2v
- XjQOCwz7oU9c4OoeIksZ8P6KxxsrbYLDuL/aHupFzi+PcCxW/BNxvBF5MMktLucRM6NGleEeNu6
- s5UzAR2k3cu3CFi3kA63GSgh0Ym1IQ4F76Y/E9Wt4YO9mX1HncKNXlLOcjA15AIAgvlsOKC4M9j
- C6ewCm3uznAj3Ex4cNDEAaZKUdx1yelYHjLKeaWqq1uvM26GoBG0AZV6AJePIsg/STQzEgIc4lV
- tW80XOHaNYvHkWx4ueGljFNwFNVIBhAP9jD4RY72jGgqBrQqetImOrD5uDs7k0AxRSyfJ47j3BW
- nRHtO+Fh1aDNB9m+rKNED1HUTfr7ewQmU5ms9TRsUhA+K6Q9EQNb9XoIOHh9/dAoOebdmLi0pab
- INZ/5Es/LNBbjB/ZeQYZ7KIDUWlUDygeG1+aHSz8u/JQTASq7Cb+GmfIhG3cKu5YjKShpYEYSb6
- Zu31zLQV+CRkylPPScQ==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
- definitions=2026-10-26_04,2026-10-21_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- impostorscore=0 adultscore=0 malwarescore=0 phishscore=0 spamscore=0
- clxscore=1015 bulkscore=0 suspectscore=0 priorityscore=1501
- lowpriorityscore=0 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2610190000
- definitions=main-2610260084
+Mime-Version: 1.0
+References: <20261026215226.3713941-1-jthoughton@google.com>
+X-Mailer: git-send-email 2.56.0.307.g5fe7bd680c-goog
+Message-ID: <20261026215226.3713941-2-jthoughton@google.com>
+Subject: [RFC PATCH 01/10] scsi: bsg: Don't copy sense data to user memory
+ when canceled
+From: James Houghton <jthoughton@google.com>
+To: Andrew Morton <akpm@linux-foundation.org>, Alexander Viro <viro@zeniv.linux.org.uk>
+Cc: Thomas Gleixner <tglx@kernel.org>, Peter Zijlstra <peterz@infradead.org>, Kees Cook <kees@kernel.org>, 
+	Arnd Bergmann <arnd@arndb.de>, David Hildenbrand <david@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>, 
+	"Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>, Mike Rapoport <rppt@kernel.org>, 
+	Suren Baghdasaryan <surenb@google.com>, Michal Hocko <mhocko@suse.com>, 
+	Sean Christopherson <seanjc@google.com>, Paolo Bonzini <pbonzini@redhat.com>, 
+	Jim Mattson <jmattson@google.com>, Jens Axboe <axboe@kernel.dk>, 
+	Pavel Begunkov <asml.silence@gmail.com>, 
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+	"Martin K. Petersen" <mkp@kernel.org>, David Sterba <dsterba@suse.com>, Chris Mason <mason@kernel.org>, 
+	Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, 
+	John Fastabend <john.fastabend@gmail.com>, Josh Poimboeuf <jpoimboe@kernel.org>, 
+	Steven Rostedt <rostedt@goodmis.org>, Masami Hiramatsu <mhiramat@kernel.org>, 
+	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>, Ingo Molnar <mingo@redhat.com>, 
+	Arnaldo Carvalho de Melo <acme@kernel.org>, Namhyung Kim <namhyung@kernel.org>, linux-mm@kvack.org, 
+	linux-fsdevel@vger.kernel.org, kvm@vger.kernel.org, io-uring@vger.kernel.org, 
+	linux-scsi@vger.kernel.org, linux-btrfs@vger.kernel.org, bpf@vger.kernel.org, 
+	linux-trace-kernel@vger.kernel.org, linux-perf-users@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, James Houghton <jthoughton@google.com>
+Content-Type: text/plain; charset="UTF-8"
 
-sashiko-bot@kernel.org writes:
+scsi_bsg_uring_task_cb() copies the sense data to the submitter's
+response_addr with copy_to_user(). It runs as io_uring task work, but
+io_uring may also run it with tw.cancel set from other contexts when the
+submitting task can't run it: from a kworker when the submitting task
+has exited (io_tctx_fallback_work()), or from io_cancel_local_task_work()
+when a DEFER_TASKRUN ring is torn down.
 
-> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
-> - [Low] scsi: ibmvfc: build failure when CONFIG_KUNIT is disabled
-> --
->
-> commit e6767e190b474e7d3a6e33d2ed96de8dbb05ff1a
-> Author: Tyrel Datwyler <tyreld@linux.ibm.com>
->
-> scsi: ibmvfc: fix potential NULL pointer dereference on failed queue allocation
->
-> This commit guards ibmvfc_deregister_channel() against freeing an
-> unregistered sub-CRQ or clearing an unallocated message buffer, and adds a
-> KUnit test suite to verify the guard conditions.
->
->> diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/ibmvfc-core.c
->> index 145d559041f12..f0502d7482105 100644
->> --- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
->> +++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
->> @@ -6450,11 +6450,23 @@ static int ibmvfc_register_channel(struct ibmvfc_host *vhost,
->>  		hcall_rc = plpar_hcall_norets(H_FREE_SUB_CRQ, vdev->unit_address, scrq->cookie);
->>  	} while (hcall_rc == H_BUSY || H_IS_LONG_BUSY(hcall_rc));
->>  reg_failed:
->> +	scrq->cookie = 0;
->>  	LEAVE;
->>  	return rc;
->>  }
->>  
->> -static void ibmvfc_deregister_channel(struct ibmvfc_host *vhost,
->> +/**
->> + * ibmvfc_deregister_channel - Deregister a sub-CRQ channel with the hypervisor
->> + * @vhost:	ibmvfc host struct
->> + * @channels:	ibmvfc channels struct containing the sub-CRQ array
->> + * @index:	index into the sub-CRQ array
->> + *
->> + * Frees the IRQ, disposes of the IRQ mapping, and calls H_FREE_SUB_CRQ to
->> + * release the sub-CRQ with the hypervisor. On success the queue message
->> + * buffer is zeroed and the current index is reset. If H_FREE_SUB_CRQ fails,
->> + * an error is logged but the channel resources are cleaned up regardless.
->> + */
->> +VISIBLE_IF_KUNIT void ibmvfc_deregister_channel(struct ibmvfc_host *vhost,
->>  				      struct ibmvfc_channels *channels,
->>  				      int index)
->>  {
->> @@ -6471,20 +6483,28 @@ static void ibmvfc_deregister_channel(struct ibmvfc_host *vhost,
->>  		scrq->irq = 0;
->>  	}
->>  
->> -	do {
->> -		rc = plpar_hcall_norets(H_FREE_SUB_CRQ, vdev->unit_address,
->> -					scrq->cookie);
->> -	} while (rc == H_BUSY || H_IS_LONG_BUSY(rc));
->> +	if (scrq->cookie) {
->> +		do {
->> +			rc = plpar_hcall_norets(H_FREE_SUB_CRQ, vdev->unit_address,
->> +						scrq->cookie);
->> +		} while (rc == H_BUSY || H_IS_LONG_BUSY(rc));
->>  
->> -	if (rc)
->> -		dev_err(dev, "Failed to free sub-crq[%d]: rc=%ld\n", index, rc);
->> +		if (rc)
->> +			dev_err(dev, "Failed to free protocol (%d) sub-crq[%d]: rc=%ld\n",
->> +				channels->protocol, index, rc);
->> +		else
->> +			scrq->cookie = 0;
->> +	}
->>  
->>  	/* Clean out the queue */
->> -	memset(scrq->msgs.crq, 0, PAGE_SIZE);
->> -	scrq->cur = 0;
->> +	if (scrq->msgs.handle) {
->> +		memset(scrq->msgs.crq, 0, PAGE_SIZE);
->> +		scrq->cur = 0;
->> +	}
->>  
->>  	LEAVE;
->>  }
->> +EXPORT_SYMBOL_IF_KUNIT(ibmvfc_deregister_channel);
->
-> [ ... ]
->
->> diff --git a/drivers/scsi/ibmvscsi/ibmvfc.h b/drivers/scsi/ibmvscsi/ibmvfc.h
->> index ca80ceffe53a5..421ce8bc3ea33 100644
->> --- a/drivers/scsi/ibmvscsi/ibmvfc.h
->> +++ b/drivers/scsi/ibmvscsi/ibmvfc.h
->> @@ -1088,4 +1088,12 @@ static inline struct ibmvfc_host *ibmvfc_channels_to_vhost(struct ibmvfc_channel
->>  #define ibmvfc_remove_trace_file(kobj, attr) do { } while (0)
->>  #endif
->>  
->> +#if IS_ENABLED(CONFIG_KUNIT)
->> +#include <kunit/visibility.h>
->> +VISIBLE_IF_KUNIT void ibmvfc_deregister_channel(struct ibmvfc_host *vhost,
->> +						struct ibmvfc_channels *channels,
->> +						int index);
->> +VISIBLE_IF_KUNIT struct ibmvfc_host *ibmvfc_get_first_vhost(void);
->> +#endif
->
-> [Severity: Low]
-> Does this break the build when CONFIG_SCSI_IBMVFC is enabled and CONFIG_KUNIT
-> is disabled?
->
-> In drivers/scsi/ibmvscsi/ibmvfc-core.c, ibmvfc_deregister_channel() uses
-> VISIBLE_IF_KUNIT and EXPORT_SYMBOL_IF_KUNIT(ibmvfc_deregister_channel)
-> outside of any CONFIG_KUNIT guard.
->
-> However, drivers/scsi/ibmvscsi/ibmvfc.h only includes <kunit/visibility.h>
-> when CONFIG_KUNIT is enabled, so the fallback definitions in
-> include/kunit/visibility.h:
->
-> #else
->     #define VISIBLE_IF_KUNIT static
->     #define EXPORT_SYMBOL_IF_KUNIT(symbol)
-> #endif
->
-> are never pulled in when CONFIG_KUNIT is disabled, causing compilation of
-> drivers/scsi/ibmvscsi/ibmvfc-core.c to fail due to unknown macros.
->
-> A later commit in the series, commit 1bc41de0e60f ("scsi: ibmvfc: add basic
-> FPIN support"), adds an unconditional #include <kunit/visibility.h> to
-> drivers/scsi/ibmvscsi/ibmvfc-core.c, though leaving this commit and commit
-> 1b37c48a1902 ("scsi: ibmvfc: add link state to host struct") unbuildable with
-> CONFIG_KUNIT=n during bisection.
->
-> Should <kunit/visibility.h> be included unconditionally in
-> drivers/scsi/ibmvscsi/ibmvfc.h (or drivers/scsi/ibmvscsi/ibmvfc-core.c) in
-> this commit?
+In a kworker, current->mm is NULL, and the copy does not reliably fail:
+the user half of the address space belongs to whatever mm happens to be
+lazily loaded, if any, so up to max_response_len bytes of sense data may
+be written into an unrelated process.
 
-I'm configured a kernel build pseries_le_defconfig and then turned
-CONFIG_KUNIT off. Indeed, there's an error when building ibmvfc-core.c.
+Don't copy the sense data when the task work is canceled, and complete
+the command with -ECANCELED.
 
-I tried including <kunit/visibility.h> unconditionally in ibmvfc.h, but
-that caused build warnings for ibmvfc-nvme.c about unused
-functions. Including <kunit/visibility.h> in ibmvfc-core.c resolved the
-issue.
+Fixes: 7b6d3255e7f8 ("scsi: bsg: add io_uring passthrough handler")
+Signed-off-by: James Houghton <jthoughton@google.com>
+---
+ drivers/scsi/scsi_bsg.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
 
-This will be the fix in v17.
+diff --git a/drivers/scsi/scsi_bsg.c b/drivers/scsi/scsi_bsg.c
+index 5eec248a77a6..3755e33fcdd2 100644
+--- a/drivers/scsi/scsi_bsg.c
++++ b/drivers/scsi/scsi_bsg.c
+@@ -43,9 +43,17 @@ static void scsi_bsg_uring_task_cb(struct io_tw_req tw_req, io_tw_token_t tw)
+ 	if (pdu->bio)
+ 		blk_rq_unmap_user(pdu->bio);
+ 
++	/*
++	 * If the request is being canceled, e.g. because the submitting task
++	 * has exited, this may run from a kworker or in a different task, so
++	 * don't copy the sense data to the submitter's address.
++	 */
++	if (unlikely(tw.cancel))
++		ret = -ECANCELED;
++
+ 	if (scsi_status_is_check_condition(scmd->result)) {
+ 		driver_status = DRIVER_SENSE;
+-		if (pdu->response_addr)
++		if (pdu->response_addr && !tw.cancel)
+ 			sense_len_wr = min_t(unsigned int, pdu->max_response_len,
+ 					     scmd->sense_len);
+ 	}
+-- 
+2.56.0.307.g5fe7bd680c-goog
 
--Dave
