@@ -1,74 +1,111 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=205.220.168.131
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793027244;
-	b=ZuUseOP6Hm0QdYhyS5kb2v+eTQZxvhezThYhpvf36yIadkoglZZYn+7nblpxSF5L7kJF
-	 eriJrg45iea7qFs2hs6vCgOTHP0LN8+oVg2Gdrk+paFxHRe3Ab7AMO+l+8w6iv9UVchrY
-	 zkC2OEAEnCgMzAb5p5AMJPSA4bAMxt0LeSnU7z+Ey8ZoWZetS8ppH5gxk/+szkAfLIh2l
-	 Ufsu+f6RuXN7SzX+dawSLQeDb+zDjrEXSXUqxoYrDe0v4hgNRFkr4alGKCXkEc2XoCALz
-	 E61YbrzrkS0vaLwjYhZYdBzEfpwzh0nERtyIt8IVRyD6+sJVEcEQdcmlu59Hmzq5H4Q==
+	t=1793027519;
+	b=sIECMJe9Kdr4uDWHf3DxMLrkY8dkSJIvXwozjgLZXJKCpBs+zgBOV96lddzg9u90jhS5
+	 by5T0Fk6HcxDXMOaYBio4N1fd7YN2McdttWd+jpFwsy2WRQOlp8WrDdy4dIHWbyBTFuqE
+	 m+WqRakY/kZMcqolvHcfraP86FBQnOiAEcuOftiMffYJJm4nK+lgVA1wcd3RK5wAxlAr7
+	 bQwhBs1XG0T1w0u8OP2W5zFHDMnAHz8XuU3YVB6BdSBk4QJ1kCIaOHlesoZBKWuh+DqFT
+	 Oawtccpy5tdMEY9BXlx4q4QUWwYdI4vxT9ULnwvKzkB/asDoEPH12NDYXsJkB7zU1nA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793027244;
-	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
-	 X-Mimecast-MFC-AGG-ID:Received:Received:From:To:Cc:Subject:Date:
-	 Message-ID:MIME-Version:Content-Transfer-Encoding:X-Scanned-By;
-	bh=ErBXZ3qkp9rEhypSgiIPkrPyS3IBvbxgicF7GVZZyVE=;
-	b=zc9lWkxX0ILTIOfV/ih2lAKYQ6Haj5agshvpwRJ3rVxesjfXm5XWXIv8i1NkOAuepdX7
-	 EDfwmNQQ2tuX1UhOHxmsmzHCrFMvKvcoCM+B2UC/utIixpxn2WOetg4lAK1csvivcu32E
-	 WxjoTc/nMUyRqRMKMJs6ovL1tvNquLiIdNssUYUlx+mKOTEwlNBSsx2J9A9mWSNQcq4Lt
-	 I3o9FmgPYJr85ZLm65qBFZMvIhIGToaRo49N4j617b2/+RuAoWhb5QISQGbKZAu9OSBot
-	 4jsMgksNXRH5F2HzmdDtVqsBEtN2MoJxkBjnsQSKZHKbgMYeu2NCBoyHU51AFZKz7dA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793027519;
+	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
+	 DKIM-Signature:X-Google-DKIM-Signature:X-Forwarded-Encrypted:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:X-Received:Received:Message-ID:
+	 Date:MIME-Version:User-Agent:Subject:To:Cc:References:
+	 Content-Language:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding:X-Proofpoint-Spam-Info:X-Proofpoint-GUID:
+	 X-Authority-Analysis:X-Proofpoint-ORIG-GUID:
+	 X-Proofpoint-Spam-Details-Enc:X-Proofpoint-Virus-Version:
+	 X-Proofpoint-Spam-Details;
+	bh=zI748uxWKPPDTZ/WsRErMlRZ+qLc7z2c01W+e2hpsZg=;
+	b=m7F8dXt+X4GKo1fIRmBn2P+hVyYh6YFwTmUTVPp4AX5Nj3cQy1bJq1gSAyyyTHmGowwu
+	 BsGRNtqk4lDjpSdPS7NY5v5mB5RT2uGsCtWG7s3oSrqmYr5yE7not9LaQIDkQ73RIZ71X
+	 zAcRbW94wH6tnz6ag5bX2+SZ0xr47dpieHC2ijCslITVOf1o4soF3tYhCJC5a8yyDuqwR
+	 StDKIX6+Yg3Dd+XEcxXdzkhPFDXOMqsb3WUUWQWnTioOsvtTDBM2FMwjn9zz4Rfmu/Siy
+	 iZB0bHFI4LZa642h4WKrg2t5jqbH4hWVMb+jkVzp8UENSThgXRCDxBxZHqOPtJHM92g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=redhat.com;
-	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=LaR3N+ma;
-	arc=none smtp.remote-ip=170.10.129.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	dmarc=pass header.from=oss.qualcomm.com;
+	spf=pass smtp.mailfrom=oss.qualcomm.com;
+	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=DyWaPPud;
+	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=OItY+r7g;
+	arc=none smtp.remote-ip=205.220.168.131
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 021D8606A32D
-	for <linux-scsi@vger.kernel.org>; Mon, 26 Oct 2026 15:07:22 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 021D8606A32D
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C190606A31B
+	for <linux-scsi@vger.kernel.org>; Mon, 26 Oct 2026 15:11:58 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3C190606A31B
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=LaR3N+ma
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1793027242;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=ErBXZ3qkp9rEhypSgiIPkrPyS3IBvbxgicF7GVZZyVE=;
-	b=LaR3N+majJ6gG8kAXy3PTMZ0Td09Y4her8zqiP73zPD2cQiD1MWEISGonsQlKeszy7x1V1
-	ZeSr4PW7txLDfgFzHJS8kC8byyjw6DL7+akn/S5xTcEkofzTr5tT8IenDqHXmIE8ojeZY5
-	62BTH2hZgKq06IzObbE2wjaqigo8s+w=
-Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-125-MLbv_7tYPS-1zBVVyJ9h5Q-1; Mon,
- 26 Oct 2026 11:07:16 -0400
-X-MC-Unique: MLbv_7tYPS-1zBVVyJ9h5Q-1
-X-Mimecast-MFC-AGG-ID: MLbv_7tYPS-1zBVVyJ9h5Q_1793027235
-Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 63A7818007FD;
-	Mon, 26 Oct 2026 15:07:15 +0000 (UTC)
-Received: from loberman-thinkpadp16gen3.redhat.corp (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
-	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 31DD530000E3;
-	Mon, 26 Oct 2026 15:07:14 +0000 (UTC)
-From: Laurence Oberman <loberman@redhat.com>
-To: mkp@kernel.org
-Cc: linux-scsi@vger.kernel.org,
-	target-devel@vger.kernel.org,
-	mlombard@redhat.com,
-	michael.christie@oracle.com,
-	bvanassche@acm.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v4 0/3] scsi: target: iscsi: fix stalled and doubly completed aborted WRITEs
-Date: Mon, 26 Oct 2026 11:07:07 -0400
-Message-ID: <20261026150710.1063511-1-loberman@redhat.com>
+	dkim=pass (2048-bit key, unprotected) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=DyWaPPud;
+	dkim=pass (2048-bit key, unprotected) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=OItY+r7g
+Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69QEwSua2082549
+	for <linux-scsi@vger.kernel.org>; Mon, 26 Oct 2026 15:11:57 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	zI748uxWKPPDTZ/WsRErMlRZ+qLc7z2c01W+e2hpsZg=; b=DyWaPPudMv5hXrWD
+	yfOs0uowTvmp5SjVQGyCK1Xy7Cg0TbbU/L2fUVWIk6+PCjGCaCcbukFB8GkQONVJ
+	Qa7Kqxbl0scWGiN5FKPbYLFr7HmQIMQxOIX4Xmd03gnCDF3YgVBJcRTX6kerdp6C
+	kpMXU6j+wuXBIbiDOrB93tJqnj6ImBFNeLKRlRLq6wEJRIcANruTZRpySHyVkncA
+	RNqmHEIm+6LPBQZPk7FBUSAD/H/qn6aDghRUg7D6/UG88DOoFycLG7WRaTfAPaE5
+	aoWw8TlTd9PJWBSKvCaVRmN8GSQt4KHLePGSkJtQGtq9InN5mDwDpuQYCiKge8cX
+	3oyqUg==
+Received: from mail-vk1-f197.google.com (mail-vk1-f197.google.com [209.85.221.197])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4hhsgsu2cg-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Mon, 26 Oct 2026 15:11:57 +0000 (GMT)
+Received: by mail-vk1-f197.google.com with SMTP id 71dfb90a1353d-5eaabe26601so168604e0c.2
+        for <linux-scsi@vger.kernel.org>; Mon, 26 Oct 2026 08:11:57 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1793027517; x=1793632317; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=zI748uxWKPPDTZ/WsRErMlRZ+qLc7z2c01W+e2hpsZg=;
+        b=OItY+r7gTyWXjl/u0sTcwO6VnPryXe0YeKIQGQEhyBL9RTkH3p7fRiUwYg4JTLqqKT
+         Q7hcTzXKFNoIdSwF0xHXmFD45lZME4hr+8KOl3L9BGgEWRQXIe5N+RgiUOib88KmKhGt
+         TZ9QDj2pUk42l4/4L8UJpsvTB8uQv08zZJVfad0Wh/FAQBJxDVx4OwN5wCkydYlrfzgG
+         uJ0ahMUhgPDPLHxU93TaiYZ8oH9P7RTfcP6QbeUSLnPuE6EThunrgYeDm8zUWYUYyaOH
+         C12CsXzQ0b4EhcNTYnaYeeOuaja0oqKTZZ6XsD04IsgWuEWP2dGCpggiiPs43/WYxQKg
+         L6/A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793027517; x=1793632317;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=zI748uxWKPPDTZ/WsRErMlRZ+qLc7z2c01W+e2hpsZg=;
+        b=HQWMaPUXlilzHwA3MI01bAUlfPI6E1keBuh59w0iS35CMCgyyDG62JUIZTQM7kyTb5
+         M/WIPrSNvuXgseUHl+Oix1N3QBL/28k+7FffVeB5aJuBvPPQu0YqZKibEZB5Q4kZvXKg
+         4qYukyVusJyDHR6K3Dj/2RV4BepFMLorcL7ZGoWsSrVkuaVx2UXIhH9v3DSveMMtNTu5
+         qzlDI+sE8CFmk7aAIjY93j4ObL+7K7nSI6Lfv07X/TyaB2isoTFNlQqG0IoFN5eD1mEv
+         0foqwIhoPWs73TfboP5PMEQ2HP285t88zw+jp14dLy1i9gTcS2n0XedvMDEdOQcmqkdT
+         ZeIQ==
+X-Forwarded-Encrypted: i=1; AKwUvBz1KqxeFQVlzEmDolZFUTwVnM/egIUoVb5XXHpew+1Rl2ovq/T3Rw9VRZMik8mTsBlVc1A6eCgdgGzV@vger.kernel.org
+X-Gm-Message-State: AFq9FYKjB7L+P767EZ0Rf4yzLueqbjXG1POmNlDXlezk6LxarxAyyLDy
+	hQVItAqXhFS5F+FezV8XFKxJm0fPa/DdSibj8hjudUpWVSa2ug4sIdYHQUhAEMT+DCwHJUBDj1U
+	T7QMRg2M9sSNJxD0dB+87YRksxwG/WxOXN20LKMjbyn9JahXW7zSTcG9YSpNqb5oY
+X-Gm-Gg: AYBFou0h0TNgyf5NyXWYPHT7dNt/yNBpcyFFMZOwV7S8uDMCzNGK01YHABz3ZeWyYIw
+	Ul7S5C5sLRjRHXAkt4rhnQl0AhE0sSpLUwOQkETzZp1g5zbxdOCeQEf2Xp5v03gPN1pZRbh7VBD
+	AfKX4kbJXtqyhPNjDQQbmXC4VlB9QxwIxrDFHFUUhGH0ppCwel240uCoCrcCXMqYY1OpN4xhNj0
+	gaPtswVUpgPcZ0dVvZzvgokUzE+GoD+ndWbyqtByj/+SAXa0zUWhqUz4jB3PqWc1+SIo0FyWuv1
+	krAtM6IQMVo+72RvvMGSow0RIyNB7kK0TgEcM53l9zaUZGxZaFZ4n+X3SMpM7qPiDDgvaAlAqUc
+	82Uq7TXCZZwVzq2qCosVuow==
+X-Received: by 2002:a05:6122:8617:b0:5ea:af6f:16e7 with SMTP id 71dfb90a1353d-5ec2506ae8dmr2821918e0c.4.1793027516467;
+        Mon, 26 Oct 2026 08:11:56 -0700 (PDT)
+X-Received: by 2002:a05:6122:8617:b0:5ea:af6f:16e7 with SMTP id 71dfb90a1353d-5ec2506ae8dmr2821858e0c.4.1793027515922;
+        Mon, 26 Oct 2026 08:11:55 -0700 (PDT)
+Received: from [192.168.226.26] ([178.235.128.140])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c46bd66c6dbsm327506866b.59.2026.10.26.08.11.52
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 26 Oct 2026 08:11:54 -0700 (PDT)
+Message-ID: <3650f273-d361-497b-8db8-7d5ca96283aa@oss.qualcomm.com>
+Date: Mon, 26 Oct 2026 16:11:51 +0100
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -78,147 +115,71 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v12 5/6] arm64: dts: qcom: monaco: Add OPP-table for ICE
+ UFS and ICE SDHC nodes
+To: Abhinaba Rakshit <abhinaba.rakshit@oss.qualcomm.com>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konradybcio@kernel.org>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Adrian Hunter <adrian.hunter@intel.com>, Ulf Hansson <ulfh@kernel.org>,
+        Rob Herring <robh@kernel.org>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        Conor Dooley <conor+dt@kernel.org>,
+        Neeraj Soni <neeraj.soni@oss.qualcomm.com>,
+        Harshal Dev <harshal.dev@oss.qualcomm.com>,
+        Kuldeep Singh <kuldeep.singh@oss.qualcomm.com>
+Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-mmc@vger.kernel.org,
+        devicetree@vger.kernel.org
+References: <20260824-enable-ice-clock-scaling-v12-0-09271f583dc6@oss.qualcomm.com>
+ <20260824-enable-ice-clock-scaling-v12-5-09271f583dc6@oss.qualcomm.com>
+Content-Language: en-US
+From: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+In-Reply-To: <20260824-enable-ice-clock-scaling-v12-5-09271f583dc6@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMDI2MDA2MCBTYWx0ZWRfX2fX0IF4iULIs
+ QDl9LiDz74dAaC8Rb8Zh601CCvIQkoWKXl+pnpayzGHu2Nn2KdAPuQjE/lMzHTMUM/6T6SQ7iIX
+ zyaUX+C+pk2Im3QBRIiVDoA4Ww2oLsQ=
+X-Proofpoint-GUID: 6eeKFPby_hYS9zU19RjhXYC93_3xyCYO
+X-Authority-Analysis: v=2.4 cv=c+8+0h9l c=1 sm=1 tr=0 ts=6adf6dbd cx=c_pps
+ a=JIY1xp/sjQ9K5JH4t62bdg==:117 a=PRfkaYvzSr8QmIIGAkY2Sg==:17
+ a=IkcTkHD0fZMA:10 a=660iZSQnnn4A:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=DJpcGTmdVt4CTyJn9g5Z:22
+ a=EUspDBNiAAAA:8 a=-W0wxAWcNmATYll7EfoA:9 a=QEXdDO2ut3YA:10
+ a=tNoRWFLymzeba-QzToBc:22
+X-Proofpoint-ORIG-GUID: 6eeKFPby_hYS9zU19RjhXYC93_3xyCYO
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDI2MDA2MCBTYWx0ZWRfX4Ey6Z7ykZwXv
+ XVpxMO0/RcA05UJrnMnVWVkpm4ckUNFY0WaCl5RrVlhIRiSV2QK7p/BPD6R0OIHMCy96hmX9oqu
+ RYFbxQQSNb3z8mOQtL1e1s4Wg5oRxSjc8mvuhk1UKTprjYMbKMRl/qXCSwwaQWj61tjOctHpTH8
+ L0fgVHs4ieI4mRDgEes32CYlBSojwijRu3zZ2Ox/6rSjqLzZLA8Z0y0P0asyDldzdb7BIwNcVsq
+ vCBUnSdJFgUzjw1AjygD8LxOenByorvbEjy5xeebJEfC5EJIHVHPWqkJBk/xSqrVshv11klWbJg
+ orL6asT2yisnBUe1lMGX9zkjj7j/TXyy1VjYmWaNo4HSH6mg23uP820290OF0HdAJpOlcuHHl5L
+ EYnFhWQIA82KOT0uk2qunV/Uame24RNdQWZ2yTI07YSbSfzyQIwQhcrTxsltKauZx7ddyTpExdV
+ iZJmXupW/rRifxnIaHQ==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
+ definitions=2026-10-26_03,2026-10-21_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ malwarescore=0 lowpriorityscore=0 clxscore=1015 priorityscore=1501
+ suspectscore=0 adultscore=0 phishscore=0 impostorscore=0 spamscore=0
+ bulkscore=0 classifier=typeunknown authscore=0 authtc= authcc= route=outbound
+ adjust=0 reason=mlx scancount=1 engine=8.22.0-2610190000
+ definitions=main-2610260060
 
-These three patches apply on top of commit d5869dae5080 ("scsi: target: iscsi: Fix hang for aborted WRITE_PENDING commands").
+On 8/23/26 9:47 PM, Abhinaba Rakshit wrote:
+> Qualcomm Inline Crypto Engine (ICE) platform driver now, supports
+> an optional OPP-table.
+> 
+> Add OPP-table for ICE UFS and ICE SDHC device nodes for Monaco
+> platform.
+> 
+> Signed-off-by: Abhinaba Rakshit <abhinaba.rakshit@oss.qualcomm.com>
+> ---
 
-A WRITE command that is still in TRANSPORT_WRITE_PENDING has never been
-passed to the backend, so when a TMR aborts it the iSCSI fabric is the one
-that has to complete it. That commit fixed the case where the final
-DataOut PDU for an already-issued R2T arrives after the abort. Two more
-paths can leave such a command with nothing to complete it, or let it be
-completed twice:
+Reviewed-by: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
 
- - Patch 1 is the hang this work started from. A WRITE that arrives with
-   immediate data, aborted after that data has been received but before
-   the first R2T is built, is never completed by anything: no R2T has been
-   sent so the initiator cannot send more data, and no DataOut timer is
-   armed so the ERL=0 timeout cannot fire either. core_tmr_lun_reset()
-   then blocks for as long as the connection stays up.
-
- - Patches 2 and 3 fix two existing sites that complete an aborted
-   WRITE_PENDING command without recording that they have done so, and
-   which connection teardown can therefore complete a second time.
-
-Patch 1 also adds a one-shot completion claim. target_complete_cmd() on a
-command that already has CMD_T_ABORTED set goes into
-target_cmd_interrupted(), which queues target_abort_work and returns
-without setting CMD_T_COMPLETE and without changing t_state, so target
-core records nothing that would stop a second completion. The command
-stays in TRANSPORT_WRITE_PENDING and on conn_cmd_list until
-target_abort_work reaches iscsit_aborted_task(), and
-iscsit_release_commands_from_conn() completes anything it finds in
-TRANSPORT_WRITE_PENDING. The claim is what makes exactly one site
-complete the command.
-
-Changes since v3:
- - Dropped the patch that completed an aborted WRITE in the
-   DATAOUT_SEND_R2T branch of iscsit_check_dataout_payload(). The review
-   of v3 pointed out that the adjacent DATAOUT_SEND_TO_TRANSPORT branch
-   deliberately checks ICF_OOO_CMDSN and defers, and the dropped patch did
-   not: it could complete and free a command still reachable by raw
-   pointer from sess_ooo_cmdsn_list, which iscsit_execute_ooo_cmdsns()
-   dereferences later. Simply mirroring the neighbour is not enough
-   either, because a command with ICF_NON_IMMEDIATE_UNSOLICITED_DATA set
-   falls through iscsit_execute_cmd() without being completed when the
-   CmdSN gap is filled. That window needs more thought than this series
-   should carry, and it was never observed in the field, so it will come
-   back on its own.
- - Patches 1 to 3 are unchanged from v3 patches 1, 3 and 4 respectively.
-
-v3: https://lore.kernel.org/linux-scsi/20261026124344.745124-1-loberman@redhat.com/
-v2: https://lore.kernel.org/linux-scsi/20261016175351.126373-1-loberman@redhat.com/
-v1: https://lore.kernel.org/linux-scsi/20261014143932.39453-1-loberman@redhat.com/
-
-Two other findings against v3 are pre-existing rather than introduced
-here, and I am reporting them separately rather than widening this series
-again:
-
-iscsit_get_immediate_data() reads cmd->sense_reason and
-cmd->unsolicited_data after iscsit_sequence_cmd() returns, holding no
-reference, and target_handle_abort() drops the final reference for an
-aborted command. Patch 1 adds a path where that can happen, but so does
-the branch directly above it: iscsit_handle_immediate_data() sets
-ICF_GOT_LAST_DATAOUT when all of the command's data arrives as immediate
-data, and iscsit_execute_cmd() then calls target_execute_cmd() from the
-same caller with the same abort states. Patch 1 adds a third path with a
-property two existing paths already have.
-
-In patch 3, CMD_T_ABORTED can be set between the check and
-target_cmd_interrupted() inside target_execute_cmd(), leaving the
-completion unclaimed. That is also what happens today for every aborted
-command on that path; the patch narrows the window rather than closing it.
-
-A correction to something I said during the v2 review, in case it is
-relied on: I wrote that if the outstanding_r2ts read in the dropped patch
-was stale low, "the later completion in __iscsit_check_dataout_hdr()
-becomes a no-op". That was wrong -- before patch 2 of this series that
-site called target_complete_cmd() directly and never consulted the claim.
-
-On moving the one-shot guard into target core:
-
-This will be explored later on but is not in scope for this series; it
-changes the path every fabric completes through and I have no way to test
-easily in iSER, FC or SRP right now.
-
-How this was found and tested:
-
-The hang was reported against an Oracle RAC cluster on two-session iSCSI
-LIO targets, where one node's LUN_RESET aborts WRITEs belonging to the
-other node's session. It was not reproducible in a lab, so the diagnosis
-came from instrumented kernels in the reporter's environment, logging
-every site that completes or waits on an aborted command.
-
-Across two hosts every stall had the identical signature given in patch 1,
-and the stall only ever ended when the initiator gave up and dropped the
-connection. 217 of 222 LUN_RESET drains completed in under a second; the
-rest took 46 to 54 seconds, which is where the hung-task panics came from.
-One 53.7 second stall recovered on its own and the host ran for a further
-19 hours.
-
-An earlier attempt at this fix completed the command from
-core_tmr_drain_state_list() instead. That is not safe: at that point the
-initiator may still be sending DataOut for the command, and the result was
-a double completion -- re-queued se_cmd->work, list_del corruption and a
-refcount underflow. Mentioning it in case the same idea comes up in
-review.
-
-What is and is not tested:
-
-Patch 1, backported to a 5.14-based distro kernel, has run 300 LUN_RESET
-cycles with no hang, in two independent runs: one instrumented and one
-with the tracing removed. The same reproducer previously failed at 95 and
-196 cycles. The instrumented kernels also carried the dropped
-DATAOUT_SEND_R2T patch, and recorded that its site fired zero times in
-either run, so removing it does not change anything those runs exercised.
-
-Patches 2 and 3 are closed by inspection. Patch 2's site did run during
-those tests, but by way of the unclaimed target_complete_cmd() it
-replaces; when the claim succeeds the two are the same two calls in the
-same order, so the tested behaviour is preserved. Patch 3 leaves the
-non-aborted path through target_execute_cmd() untouched.
-
-The reporter's environment is a production cluster and is the only place
-this has ever reproduced, so I cannot offer an upstream -rc run from
-there. A build of this series is going to them for a further 300-cycle run
-and I will report back. If that is a blocker for patches 2 and 3, I would
-rather you took patch 1 on its own than held the series.
-
-Laurence Oberman (3):
-  scsi: target: iscsi: Complete an aborted WRITE stuck before the first
-    R2T
-  scsi: target: iscsi: Claim the completion in
-    __iscsit_check_dataout_hdr()
-  scsi: target: iscsi: Claim the completion on the DataOut submit path
-
- drivers/target/iscsi/iscsi_target.c      | 28 +++++++++++----
- drivers/target/iscsi/iscsi_target_erl1.c | 10 +++++-
- drivers/target/iscsi/iscsi_target_util.c | 46 ++++++++++++++++++++++++
- drivers/target/iscsi/iscsi_target_util.h |  2 ++
- include/target/iscsi/iscsi_target_core.h |  6 ++++
- 5 files changed, 85 insertions(+), 7 deletions(-)
-
--- 
-2.43.0
-
+Konrad
