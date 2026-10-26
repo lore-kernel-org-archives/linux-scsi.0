@@ -1,75 +1,75 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=203.254.224.34
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=203.254.224.24
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792992191;
-	b=thyclzI9cbHQzcOdoUsml+Ny6EScwz3gAEivRO302LGVeXd7AXScFjKS+CbULa3aPGsu
-	 njhoRlyZNAgbWQRipkxc3AW2bqln1LTn3i899h9PVvGYL9K5HeLF6YDIG9DTv0plOxpKP
-	 WY2UzoorSRspZskOqqqHy2i2oiHo28yq5XobgRKdlhcdPdmM8HDV+izQSVWuBWBL8eB/l
-	 usgmWaS485tpSZTsFfFZstyN8/0X7kah9eg9mNSO2atrT3lc05WxkKP5FHZisWVHBwvQn
-	 mFBkYTjvtAPgZ7CAAbfHwUwK9+sood2LQf+E0vJAQmWtisfyv5OCTGa/WsoQyIPDyCQ==
+	t=1792992652;
+	b=R5wComqh99cVptRW5C1GCq9enHo8Oo7DoJCfO1yaT4LX6PJm+cUIqJjucPmrLvX0NIE4
+	 12Z36w+ThcfWo6LnzTlm/bZbNd2vO8yyEpuWnepfKRpIB7o4rzfd6GxwVzIQIAETGko/r
+	 rjdH2GtIBHfWdqTbj9hzXNRL+R0cmFKjn4Vqb6BytZlYhwECRphQMgizx6VphztyCyJLT
+	 E7UhK0Lof8Y5PC4Dfz36ZZarBdskZtMlrRnBuJPOAARf8GbdO5QoE5mQoey1QGke8L31J
+	 lze6CR4d1J55rsI+ek5mjrtY2+B7TYlv4OO100Njdyf4180JjJ7Or8N3qer61FqnYTg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792992191;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792992652;
 	h=DMARC-Filter:Received:DKIM-Filter:DKIM-Signature:Received:Received:
 	 Received:Received:From:To:Cc:Subject:Date:Message-Id:X-Mailer:
 	 MIME-Version:Content-Transfer-Encoding:X-CMS-MailID:X-Msg-Generator:
 	 Content-Type:X-Sendblock-Type:CMS-TYPE:X-CPGSPASS:cpgsPolicy:
 	 X-CFilter-Loop:X-CMS-RootMailID:References;
-	bh=ibNij6yZxrWsBHWu4Pq0Js8TIgxWW+Y0Ro4CWUNEGHg=;
-	b=cb28u5PdjfID8AGymuztn+dn2JQIRfwzj6QJ72xZWGzaICIix/Jqe1sUUsDGjdoO0EKo
-	 GuQ5/XVj7N/i7Z2Q/RFI1tfZzQ0m8QbHc4URoI9tXJfm7LgFasxmRBvFyLND86176nYB7
-	 9FOIjFcO/kZhB9HSFeC80+JkRXx/T1JJMsNIggqEHtbzeDzVZM8U86SZufYVb2iubfYh7
-	 f52ynaab7ui3Qm2eHWn5e4Rsmdmgw5suAUVqxenqN7J2BrYgRigCAuHqT22BYg4dmReht
-	 tx+kz1bzj6PjPU22j2lkybotDb7+L9T+n0LoPPaTOsF+/fQHXXm+BmJohmi+vnEmSXg==
+	bh=C8BMVtqrQ6mF6BER4qpDCqBNmiEwk6DFbCT1JE/nmBI=;
+	b=ODOYMm/j4ginH64JVG7I9U9M05rYv5LIu4eMMO3tNXB/eYq8lkT7u4G4jPz+fWn2KcZo
+	 otiajcr2vL9v2DID00S/NYosILQNXNPh3dFv8WZU8RmfAtpEWv+mrhz0Ka8OmQNs99/OW
+	 9x3YTpCl1M3dfKAA/AA9AO9rFemqKB2nwRuzVD0E/aU1vI7Ywz2x4xO7Tr8+4AnzNMEEV
+	 TgKLY2RQHmPxH9s7Xt9Caz8cRsxqufwIqZIahdiTXuUGwS0yJmaxaDaiPvHPTkz7yrkJ6
+	 pi60Jfferw491MN7WkJAx2LJBa+pJMn/9KMaoRMSo2yvg5is09ok91leFpiuDmOrX5A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=samsung.com;
 	spf=pass smtp.mailfrom=samsung.com;
-	dkim=pass header.d=samsung.com header.i=@samsung.com header.a=rsa-sha256 header.s=mail20170921 header.b=oDncGNEG;
-	arc=none smtp.remote-ip=203.254.224.34
-Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
+	dkim=pass header.d=samsung.com header.i=@samsung.com header.a=rsa-sha256 header.s=mail20170921 header.b=Cu3ydTzH;
+	arc=none smtp.remote-ip=203.254.224.24
+Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
 	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A11B9606A31A
-	for <linux-scsi@vger.kernel.org>; Mon, 26 Oct 2026 05:23:09 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A11B9606A31A
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A8008606A31F
+	for <linux-scsi@vger.kernel.org>; Mon, 26 Oct 2026 05:30:49 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A8008606A31F
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=samsung.com header.i=@samsung.com header.a=rsa-sha256 header.s=mail20170921 header.b=oDncGNEG
+	dkim=pass (1024-bit key, unprotected) header.d=samsung.com header.i=@samsung.com header.a=rsa-sha256 header.s=mail20170921 header.b=Cu3ydTzH
 Received: from epcas2p1.samsung.com (unknown [182.195.41.53])
-	by mailout4.samsung.com (KnoxPortal) with ESMTP id 20261026052307epoutp049040af9891d806962861a5c80efe5e18~h-OULricU2743327433epoutp04K
-	for <linux-scsi@vger.kernel.org>; Mon, 26 Oct 2026 05:23:07 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20261026052307epoutp049040af9891d806962861a5c80efe5e18~h-OULricU2743327433epoutp04K
+	by mailout1.samsung.com (KnoxPortal) with ESMTP id 20261026053047epoutp01f8f6ea894edcf1d0517af927232c87b4~h-VA0BSj50568405684epoutp01c
+	for <linux-scsi@vger.kernel.org>; Mon, 26 Oct 2026 05:30:47 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20261026053047epoutp01f8f6ea894edcf1d0517af927232c87b4~h-VA0BSj50568405684epoutp01c
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1792992187;
-	bh=ibNij6yZxrWsBHWu4Pq0Js8TIgxWW+Y0Ro4CWUNEGHg=;
+	s=mail20170921; t=1792992647;
+	bh=C8BMVtqrQ6mF6BER4qpDCqBNmiEwk6DFbCT1JE/nmBI=;
 	h=From:To:Cc:Subject:Date:References:From;
-	b=oDncGNEGdsZFIrei2W4IZtUsMHsBZ4grRaJbFIcqKLd+0qe7xoXCovZ0VdrWW0FVf
-	 fWXVE2yiyjoyuZdSFgT1Q5U419wa6ulTP/7LBpV8wWCxmDaSWH/Ei+p6QGeZb+rRXe
-	 KKLYhJzqnKMxXWIMJ14ooOwib1WRVYGw2JmJ8GEo=
-Received: from epsnrtp04.localdomain (unknown [182.195.42.156]) by
+	b=Cu3ydTzH1u/2U+jVooeasteYdoaSQADp4+aKOJq/1ujz3Y0QqV7B5ysT7Yromo34m
+	 k5AQyqmwredKSGH6gMQ2F96mE/SOlNu4PUdiIGPxVn+BizW7LnSGmZadJvpuh1XmQU
+	 GF9TybranXmzfGPRZOR5l4yWQFiwStF85EOHPwT4=
+Received: from epsnrtp01.localdomain (unknown [182.195.42.153]) by
 	epcas2p3.samsung.com (KnoxPortal) with ESMTPS id
-	20261026052307epcas2p3480f9f1f127bce8b4a909278415d2d2b~h-OT36iz71320013200epcas2p3M;
-	Mon, 26 Oct 2026 05:23:07 +0000 (GMT)
-Received: from epcas2p4.samsung.com (unknown [182.195.38.202]) by
-	epsnrtp04.localdomain (Postfix) with ESMTP id 4jChpy5hP0z6B9m5; Mon, 26 Oct
-	2026 05:23:06 +0000 (GMT)
-Received: from epsmtip1.samsung.com (unknown [182.195.34.30]) by
-	epcas2p1.samsung.com (KnoxPortal) with ESMTPA id
-	20261026052306epcas2p166bb6661beb7b60ba1c294034103469e~h-OTBPVT70384703847epcas2p1x;
-	Mon, 26 Oct 2026 05:23:06 +0000 (GMT)
+	20261026053047epcas2p3b7ce77ea13dc440f9e4433e7bd93d5bf~h-VAaVVoo2178921789epcas2p3E;
+	Mon, 26 Oct 2026 05:30:47 +0000 (GMT)
+Received: from epcas2p4.samsung.com (unknown [182.195.38.211]) by
+	epsnrtp01.localdomain (Postfix) with ESMTP id 4jChzp6HvHz6B9mR; Mon, 26 Oct
+	2026 05:30:46 +0000 (GMT)
+Received: from epsmtip2.samsung.com (unknown [182.195.34.31]) by
+	epcas2p3.samsung.com (KnoxPortal) with ESMTPA id
+	20261026053046epcas2p31ae8a493f40c0f12523feec6e036072f~h-U-liB7U2178521785epcas2p3F;
+	Mon, 26 Oct 2026 05:30:46 +0000 (GMT)
 Received: from ubuntu.dsn.sec.samsung.com (unknown [12.81.221.204]) by
-	epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
-	20261026052306epsmtip123a71c4e105db4c972be2d4da86cb7ae~h-OS8mAb61606016060epsmtip1D;
-	Mon, 26 Oct 2026 05:23:06 +0000 (GMT)
+	epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
+	20261026053046epsmtip24230dbb5163b217d45d3409aed7c05d2~h-U-fQ8UQ2777927779epsmtip2L;
+	Mon, 26 Oct 2026 05:30:46 +0000 (GMT)
 From: HOYOUNG SEO <hy50.seo@samsung.com>
 To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
 	alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
 	martin.petersen@oracle.com, bvanassche@acm.org, kwangwon.min@samsung.com,
 	kwmad.kim@samsung.com, cpgs@samsung.com, h10.kim@samsung.com
 Cc: HOYOUNG SEO <hy50.seo@samsung.com>
-Subject: [PATCH v1] scsi: ufs: Change the error check sequence for auto
+Subject: [PATCH v4] scsi: ufs: Change the error check sequence for auto
  hibern8
-Date: Mon, 26 Oct 2026 14:18:51 +0900
-Message-Id: <20261026051851.1845934-1-hy50.seo@samsung.com>
+Date: Mon, 26 Oct 2026 14:26:32 +0900
+Message-Id: <20261026052632.1848929-1-hy50.seo@samsung.com>
 X-Mailer: git-send-email 2.34.1
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -81,7 +81,7 @@ List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CMS-MailID: 20261026052306epcas2p166bb6661beb7b60ba1c294034103469e
+X-CMS-MailID: 20261026053046epcas2p31ae8a493f40c0f12523feec6e036072f
 X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
 X-Sendblock-Type: AUTO_CONFIDENTIAL
@@ -89,8 +89,8 @@ CMS-TYPE: 102P
 X-CPGSPASS: Y
 cpgsPolicy: CPGSC10-234,Y
 X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20261026052306epcas2p166bb6661beb7b60ba1c294034103469e
-References: <CGME20261026052306epcas2p166bb6661beb7b60ba1c294034103469e@epcas2p1.samsung.com>
+X-CMS-RootMailID: 20261026053046epcas2p31ae8a493f40c0f12523feec6e036072f
+References: <CGME20261026053046epcas2p31ae8a493f40c0f12523feec6e036072f@epcas2p3.samsung.com>
 
 Auto-hibern8 enter and exit are performed by the host controller without
 a UIC command, and the auto-hibern8 idle timer only runs while no UIC
@@ -111,6 +111,9 @@ report the missing UIC command if no auto-hibern8 error was found.
 
 Fixes: fcd8b0450a9a ("scsi: ufs: core: Make ufshcd_uic_cmd_compl() easier to analyze")
 ---
+Changes in v4:
+ - Change patch version
+
 Changes in v3:
  - Check auto-hibern8 errors before the NULL check again, so that errors
    reported while a non-hibernate UIC command is active are still
