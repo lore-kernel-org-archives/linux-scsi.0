@@ -1,118 +1,79 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.133.124
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793031140;
-	b=pIFeZWk8Hy3YqQtzvv5hFDjVL+K9k8YIdq/MS7qHRzS1EujSrRoh/Xdp3XyYf95GKK3m
-	 ledIl3z2147ru6lyPi3rtmjvCZulHAQIU8PEEAVVLdfIXdKLNI0IlvFpjAsra7F2oBD0b
-	 aEZG+vclejoCWqFgf+DudLd0mlvDSSlGvKjgE0AS/lcRBFekHkYsm9JGVQX3GJ1OFWDF5
-	 iXVQqZ1h3sKb7hkNV6lhvUGo6zh6CV3xELEZJJ61TmO5ofHdc19b2eGL9eAmtF7o98Qk6
-	 6pVAah0ki5aLyIknI5so2629ApMOW/FC2lgNbWWrO0j1cMls6iCwuUtTc7g4uJ6HqYQ==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793031140;
-	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
-	 X-Mimecast-MFC-AGG-ID:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:X-Received:Received:Message-ID:
-	 Subject:From:To:Cc:Date:In-Reply-To:References:Content-Type:
-	 Content-Transfer-Encoding:User-Agent:MIME-Version;
-	bh=09IOwG5JDndjYFaj+K+hzBiH/v9WxlSaY0hoWZ3Empk=;
-	b=VDMg6OBHfmztUvDLTIoRypFmpOjxRBXWLIjCWRolW8BhNc+DMtrGRF4M9IkYzZvN82Vr
-	 IhtfxRi3Uo+ZW+gVFMv5Q7CM6djtwhIzcfTwkrEQg26gJXz31stzl16QBZ4U0uQWaLrwv
-	 Sh/GltrOAf/rySXm1eOG8sD1wRBm5L5bmdRa7qPvkgJHUx7PPZqPoKW/98dXFtXGaZC+J
-	 7MWwTgx/4oh3a6d9A54K6NcBXDDw5H7izqje/RVEIuw0NJMcSdhpRarooy6ZEXdiVka94
-	 8zWynGwpKxV7HbgViCgVlSnh/mWGoXMCmoBmnppXXuxz1o7ampjoJLH9ElkNcHio6vg==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=redhat.com;
-	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=MeYqZdx2;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=s9iJ38O5;
-	arc=none smtp.remote-ip=170.10.133.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.remote-ip=100.103.45.18
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=fail;
+	t=1793031159;
+	b=hEpW09lAHFXhXfWpXjiQyWBs9AvGbby2IhPtk/zQMB1EhT9zM06ItM3Y292bmaq6auQI
+	 5sbWgQfG/G45SHn033RKhHahsexBu85z8OEhbjSvJ8StoIRUNhQagD8Qq554jTDqyos9n
+	 Yl6oP0kRodbjoRhQ3tuJZIudjpExM3nE+jMvTnAd7fx+jwwgpiDqUKBNMcvvah88hKX4A
+	 1oNMiGsghdHMEC9L38RVmcxk3VmkRTxEZs25h7FEYLELa175UCo/Kg4i02u/iQG2MMI8C
+	 a8W+HOWANvYzQIKdgDGukFZZ9KV+xIY0qOhc5MgmJtm/NZdH58a8CpeEXm8B6gfSLIQ==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793031159;
+	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
+	 Content-Type:Content-Transfer-Encoding:Message-Id:References:
+	 In-Reply-To:To:Cc:X-Mailer:X-Developer-Signature:X-Developer-Key:
+	 X-Endpoint-Received:X-Original-From:Reply-To;
+	bh=cTxNrqWwYDQYUibZZscN+uZiP8/JT9XzH7O90YF6h+c=;
+	b=Uouz3SsGB3/rbZJ1k69BxAAuiYEeZ3nTmIF7l2zYeCEYwYCTFGpZfRYlwRcmodSKRb4d
+	 EXjC/Q5GW6u+oUhW+2/RwKJNmEjZCC6Vxk7x1sKB9FNQZGcoh+/yAXzsoGLhzjcFw6t1T
+	 T1NzfILcx7PcpWx1SYYstK5GqhfmXHKk/+PU9rTYlgqHQPefbs0rIU6PATGMB5m64DSrS
+	 ewSlBwhFz2U4Ud8gT8vA4atCI5A8T6O0EhM79gppzjvMeN4VADzjeR4ABtoBL3AwxmRJj
+	 vbDontDMFbnBl5C/sjIT6NRCwSNjroF5d5MkMCgwYhE370H1+uokmsUb8OVgWyoOc3w==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=olrHiL9p;
+	arc=fail smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A494F606A323;
+	Mon, 26 Oct 2026 16:12:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=olrHiL9p
+Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
+ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
+	t=1793031158;
+	b=CI5a/NEkoDFMFeAvcp6IPGpbZpLzs6pd3QSrqlIMKfknvgn139yV6HO8SFyt5Zi+aUZC
+	 CjkFXLfIXKjdsXvYmhjOD70zOFjCp+R4fDCUZTSL6ZOta6dnw7diqZjPpkGu1T1kmEOqm
+	 diejWWuO6Xh26HrSJWqmLwlEMSnNupGF7ynp+Sp9+7xeP0dw8d6f9QwxNrkENureioSUZ
+	 YIRqKlxEJN3sdzFOrm30gFKjZMRc0mAiH8MMTz0QAXSaN9Rh6L/XPnxuOVrb44QxaF4Au
+	 /X6RQAjdV4SWLFuIXkV34Pdj+5I13O5wLknAblLHd7eBPeXMcXVa2cmM80Vrl6wdW2w==
+ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
+	c=relaxed/relaxed; t=1793031158;
+	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
+	 Content-Transfer-Encoding:Message-Id:References:In-Reply-To:To:Cc:
+	 X-Mailer:X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To;
+	bh=cTxNrqWwYDQYUibZZscN+uZiP8/JT9XzH7O90YF6h+c=;
+	b=UdrtqYLL4LfM92g3bXF5gDKLzzhDYJVUthUxcSLe0r/HG/8hTxdv53H8f3NDAxWI12x1
+	 On6TsZmVx3ILQpBL2dUoL7CbZ+aS+qHbUXMKJRbAbqDbm+8p/PrN3EXHLUd6U4awZKhLa
+	 sjCyov6ZRo5nMUwaALQ7EDRnM2iSKu/spMLJeR+Sth97py0ibdRcAP0jWap/x0usrSZjM
+	 f45kAIGf1EUEcP3HKbq8DXQS5XhEyc+hLJ5ghqbP4nVUg0UVH3IXfEmT4pJ3Dn8X51V8X
+	 Z4vgrBxCg8b56AjTzptKUUGoiUIFN/VshD11KfAJ+F9YxGfokh2Htv2KnzkbQkTeW2Q==
+ARC-Authentication-Results: i=1; smtp.kernel.org; 
+	arc=none smtp.remote-ip=100.80.115.77
+Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 10BAD606A31D
-	for <linux-scsi@vger.kernel.org>; Mon, 26 Oct 2026 16:12:19 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 10BAD606A31D
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=MeYqZdx2;
-	dkim=pass (2048-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=s9iJ38O5
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1793031139;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=09IOwG5JDndjYFaj+K+hzBiH/v9WxlSaY0hoWZ3Empk=;
-	b=MeYqZdx2PkOT6PhXaPEPe638+HQv/afB/MpHaOYaqcmlcMPjpPv2rWOPNjAVWsEMymhSW3
-	92/Bd4KERPFJMLpHzjijyy+44kpktPjYI3ALXoqIChIMozC6yl2sxwizHUls9xN0satSrp
-	dTLDl2QLy9KyyeVZJz0sFiIwIbnOtzI=
-Received: from mail-yw1-f200.google.com (mail-yw1-f200.google.com
- [209.85.128.200]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-634-PR9kQcwVMWOKqlvwl4griw-1; Mon, 26 Oct 2026 12:12:11 -0400
-X-MC-Unique: PR9kQcwVMWOKqlvwl4griw-1
-X-Mimecast-MFC-AGG-ID: PR9kQcwVMWOKqlvwl4griw_1793031131
-Received: by mail-yw1-f200.google.com with SMTP id 00721157ae682-836c9f68dcbso48583517b3.0
-        for <linux-scsi@vger.kernel.org>; Mon, 26 Oct 2026 09:12:11 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1793031131; x=1793635931; darn=vger.kernel.org;
-        h=mime-version:user-agent:content-transfer-encoding:content-type
-         :references:in-reply-to:date:cc:to:from:subject:message-id:from:to
-         :cc:subject:date:message-id:reply-to:content-type;
-        bh=09IOwG5JDndjYFaj+K+hzBiH/v9WxlSaY0hoWZ3Empk=;
-        b=s9iJ38O5x4N8poKWzSVBS2+4au6ssR6Bs0YgXCPngGFXbaMVpEz06tAr1ND+ZeGS76
-         93vXmWiJGfXoaDgMSTl7PNIX3TlVlPRzWBd9rjf6YhSrnAjx/0dhhd7MBOEpldUQnpYN
-         wE3tqBhtfHDvHeSp059YtJCwGlffARxM6NIygRfFMk01CFds89V31XFlvNnb1BsCpv8G
-         ni1ZOKmLBRDZ8UYdGGSJuENq32pFcdSch7z/QMs4vN9FolB8Tn6PL4w8Wib23C2HrJAB
-         sRVaDP40S93NloiZkNZfzC04RksEibMKZmST/uTCscBZXtDehZpbtBl+rJCF/qleMkeH
-         ngRw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793031131; x=1793635931;
-        h=mime-version:user-agent:content-transfer-encoding:content-type
-         :references:in-reply-to:date:cc:to:from:subject:message-id:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=09IOwG5JDndjYFaj+K+hzBiH/v9WxlSaY0hoWZ3Empk=;
-        b=eFCg+Fw6oyxXSiVzWZWhmIeOIwPC/lhhpEry3HhBXBEEBXZJ43r513PPHWwp+CaA9u
-         aotgbo9a6hlORjXu42PMV21Wohhg58/Q4v+HDTCy2yFwCYovVHei71CrltINiMKIoBH5
-         2ECuovEpC5UFGyn8Vn/avDS4s1nVSezY3W7Gn2CClXeDb1CgfPuluTcENngfj9wwzvHZ
-         86HEMY/D+PO8IqSThj6gWo2jiQgkLgPLdorc4KaNjuC9EBzVPlCBJ+ch7Vl9XGHLzlvT
-         W/c8hzeHcCdKWMIoxaA4c0as7gGK65cephiLOmx2HFMH2rIjfGO76PMAowTIJRlQqM4G
-         uH/Q==
-X-Gm-Message-State: AFq9FYKrY5jqIH5BYj9HoQmhudHQ3aNLA7CkcgiJFqtnLdqSpAn3+hJL
-	ePWdVa8tCTTNLFMFNpXaLHxCa8s28bIfCoQ1+whiuDpyKbh7NRSIMK2t4ijtZqluZzljoFU4Shh
-	ajs51ygofkLFvgtr9YUW+8ErKAA3LlfdHQFFQuhoI1mqUUqDeqeU6Suj+LRSh/FQ=
-X-Gm-Gg: AYBFou3JbbAffs8JqjOG3I740ZF1+nkQcLI36nyagVUN1RlkxpuzFNAR4CDtxLH1JMn
-	sm/POYaawJcs52OKVsvR50MFc9naRnvm5c6hDfaYovM2w7PRAzFk/WiMVrDnAXFTLRV/HczYUmA
-	oA7D9uoeddmKSTtbyDS5TwgKu4MGOlOITTureS6KM9ETK9KQW5Da1aybvAfBzhpR4175SVjYp++
-	GJPamw/KJ/lpJMPXMg0NeEMKE+HS1OY34mJr2jNtoMCzwbJjlEGvVd5yaU+4lArSH+NO0luqqj7
-	6Toau0KAojSbphb6a61vhEpSNP+5WAHrYZZq6c2CZv8Cb7FBSRz6scD1NSg9ClbWbv/1k4mijUj
-	gEndVNJMGB1Qr37AGcWLML6n9Bu+DuBZAHFG0HzoE7npouAI2YT1cN3L+zDuS6r+bOHZaTdc99S
-	wtCrk+FPoDQLBty20DTRQejA==
-X-Received: by 2002:a05:690c:c354:b0:8b0:d421:e024 with SMTP id 00721157ae682-8b166be0d33mr33251587b3.44.1793031130902;
-        Mon, 26 Oct 2026 09:12:10 -0700 (PDT)
-X-Received: by 2002:a05:690c:c354:b0:8b0:d421:e024 with SMTP id 00721157ae682-8b166be0d33mr33251437b3.44.1793031130373;
-        Mon, 26 Oct 2026 09:12:10 -0700 (PDT)
-Received: from loberman-thinkpadp16gen3.rmtusma.csb ([2600:6c65:2440:d8c:aa2b:ddff:fe88:da74])
-        by smtp.gmail.com with ESMTPSA id 00721157ae682-8b166dcf543sm33937057b3.14.2026.10.26.09.12.08
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 26 Oct 2026 09:12:09 -0700 (PDT)
-Message-ID: <8d705915480f6cbe6a1b37c2cd06eb98727b3207.camel@redhat.com>
-Subject: Re: [PATCH v4 0/3] scsi: target: iscsi: fix stalled and doubly
- completed aborted WRITEs
-From: Laurence Oberman <loberman@redhat.com>
-To: Bart Van Assche <bvanassche@acm.org>, mkp@kernel.org
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, 
-	mlombard@redhat.com, michael.christie@oracle.com,
- linux-kernel@vger.kernel.org
-Date: Mon, 26 Oct 2026 12:12:08 -0400
-In-Reply-To: <79480408-8403-4a93-a2dc-c5f01864a20c@acm.org>
-References: <20261026150710.1063511-1-loberman@redhat.com>
-	 <79480408-8403-4a93-a2dc-c5f01864a20c@acm.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.60.2 (3.60.2-2.fc44) 
+	by smtp.kernel.org (Postfix) with ESMTPS id D5E3D1F031E0;
+	Mon, 26 Oct 2026 16:12:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793031158;
+	bh=cTxNrqWwYDQYUibZZscN+uZiP8/JT9XzH7O90YF6h+c=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To;
+	b=olrHiL9p42rJQbVVmI69WFj+LQVKzjlyu1l3wouPtUZaHhS0mVPZTMmOx/jj8zcEe
+	 LTPGT4XnTHhsbnvVI5taEmDqece5EDLaNOUza0R4TLtV3THnWerLGSn/XnMrVTZUzO
+	 z2MlVdeUrwd1T/MaEZsnESExABiaDEtPEAB6Pe0GiCEuoZ0RQ70q11sn7DgHaUoOG0
+	 uzUHKShAF8SL5+lxpGR0oPX1QSVit8PmYsq1Nvegpy+CfRhSKVSTXqw92Y563kjtEs
+	 p2SlYE16Un5ngFrAp9nXLS7rh25AaxHDQOiMAjB93GqZO9jd3C5nwM4GfcWVNttSsh
+	 2PhcUv+VwGIjA==
+Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
+	by lkml.kernel.org (Postfix) with ESMTP id 53B7D44D8D;
+	Mon, 26 Oct 2026 16:12:36 +0000 (UTC)
+From: Dave Marquardt via B4 Relay <devnull+davemarq.linux.ibm.com@kernel.org>
+Date: Mon, 26 Oct 2026 11:12:35 -0500
+Subject: [PATCH v16 03/12] scsi: ibmvfc: fix potential NULL pointer
+ dereference on failed queue allocation
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -122,175 +83,291 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20261026-ibmvfc-fpin-support-v16-3-a900aa657ed5@linux.ibm.com>
+References: <20261026-ibmvfc-fpin-support-v16-0-a900aa657ed5@linux.ibm.com>
+In-Reply-To: <20261026-ibmvfc-fpin-support-v16-0-a900aa657ed5@linux.ibm.com>
+To: Madhavan Srinivasan <maddy@linux.ibm.com>, 
+ Michael Ellerman <mpe@ellerman.id.au>, Nicholas Piggin <npiggin@gmail.com>, 
+ "Christophe Leroy (CS GROUP)" <chleroy@kernel.org>, 
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+ "Martin K. Petersen" <mkp@kernel.org>, 
+ Tyrel Datwyler <tyreld@linux.ibm.com>
+Cc: linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, 
+ linux-kernel@vger.kernel.org, Dave Marquardt <davemarq@linux.ibm.com>
+X-Mailer: b4 0.14.3
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1793031155; l=9567;
+ i=davemarq@linux.ibm.com; s=20260216; h=from:subject:message-id;
+ bh=uI8SnVBfUvavsiwC9am/BShrQJaJZWPpVp8IoO/vXio=;
+ b=U9Yt9T/TL/nUWPUWyQLZkW26KaKAZ5SJZbZlLO3MQL1rVOAGFfG3jUcTF1QVql/2/z/oco/Aq
+ M62OSCVVZL5CeH8NxCzZ39N9/DfFhO4fBzK7RAxiEnC0Rve4y9ruWWo
+X-Developer-Key: i=davemarq@linux.ibm.com; a=ed25519;
+ pk=vy0/nfobrje6EqZxuyw6a3ZstytG8WK2vf5Y3xtGrEg=
+X-Endpoint-Received: by B4 Relay for davemarq@linux.ibm.com/20260216 with
+ auth_id=689
+X-Original-From: Dave Marquardt <davemarq@linux.ibm.com>
+Reply-To: davemarq@linux.ibm.com
 
-On Mon, 2026-10-26 at 08:24 -0700, Bart Van Assche wrote:
-> On 10/26/26 8:07 AM, Laurence Oberman wrote:
-> =C2=A0> On moving the one-shot guard into target core:
-> =C2=A0>
-> =C2=A0> This will be explored later on but is not in scope for this
-> series; it
-> =C2=A0> changes the path every fabric completes through and I have no way
-> to test
-> =C2=A0> easily in iSER, FC or SRP right now.
->=20
-> I don't think that argument holds. Fabric drivers that complete an
-> aborted command exactly once never trigger a one-shot guard in
-> target_cmd_interrupted(), so their behavior wouldn't change. The
-> guard
-> can be a new transport_state bit that is tested and set under
-> t_state_lock, and the CMD_T_ABORTED test can be moved under that lock
-> too. Today target_cmd_interrupted() reads transport_state without
-> holding any lock. That would:
-> - make the iSCSI-private completion_claimed member and both new
-> helpers
-> =C2=A0=C2=A0 unnecessary;
-> - close the race that patch 3 only narrows (CMD_T_ABORTED being set
-> =C2=A0=C2=A0 between the iSCSI test and target_cmd_interrupted());
-> - also cover the sites this series doesn't touch, e.g. the deferred
-> =C2=A0=C2=A0 ICF_OOO_CMDSN path where iscsit_execute_ooo_cmdsns() ends up
-> calling
-> =C2=A0=C2=A0 target_execute_cmd() for an aborted command without taking t=
-he
-> claim.
->=20
-> Please consider doing this instead of adding iSCSI-specific
-> bookkeeping. If the iSCSI-only approach is kept for stable, please
-> explain in the cover letter why the core approach isn't suitable.
->=20
-> Patch 1/3:
->=20
-> =C2=A0> Fixes: aaa00cc93c1d ("scsi: target/core: Fix TAS handling for
-> aborted=20
-> commands")
->=20
-> transport_check_aborted_status() only sent the TASK ABORTED status.
-> It
-> didn't drop the reference that the abort path now waits on. Nothing
-> waited in target_put_cmd_and_wait() until commit 2c9fa49e100f
-> ("scsi: target/core: Make ABORT and LUN RESET handling synchronous").
-> I think that's the commit this patch fixes, or at least it should be
-> mentioned too. Both commits went into v5.0, so stable coverage
-> doesn't
-> change.
->=20
-> =C2=A0> +bool iscsit_claim_completion_locked(struct iscsit_cmd *cmd)
-> =C2=A0> +{
-> =C2=A0> +	lockdep_assert_held(&cmd->se_cmd.t_state_lock);
->=20
-> Please also add __must_hold(&cmd->se_cmd.t_state_lock) to the
-> declaration so that Clang's context analysis can check this at
-> compile
-> time.
->=20
-> =C2=A0> +/* Complete an aborted command at most once.=C2=A0 Must not hold=
-=20
-> t_state_lock. */
-> =C2=A0> +void iscsit_complete_aborted_cmd(struct iscsit_cmd *cmd)
->=20
-> Please change that comment into a __must_not_hold() annotation.
->=20
-> =C2=A0> +	spin_lock_irqsave(&se_cmd->t_state_lock, flags);
->=20
-> All callers run in process context with interrupts enabled, and
-> iscsit_release_commands_from_conn() uses spin_lock_irq() on the same
-> lock. spin_lock_irq() is enough here.
->=20
-> =C2=A0> +	bool			completion_claimed;
->=20
-> Please add __guarded_by(&se_cmd.t_state_lock) instead of just stating
-> in a comment which lock protects this member.
->=20
-> Patch 2/3: looks fine to me, assuming the series stays as it is.
->=20
-> Patch 3/3: as explained above, this patch narrows the race but
-> doesn't
-> close it, and the ooo_cmdsn branch right above the new code still
-> defers to a path that doesn't take the claim. I'd rather see this
-> solved in target_cmd_interrupted() than merge a partial fix that will
-> be replaced later anyway.
->=20
-> Thanks,
->=20
-> Bart.
+From: Tyrel Datwyler <tyreld@linux.ibm.com>
 
-Hi Bart
+Guard ibmvfc_deregister_channel() against calling H_FREE_SUB_CRQ on a
+queue that was never registered and against memsetting a buffer that was
+never allocated.
 
+Add an scrq->cookie guard around the H_FREE_SUB_CRQ hypercall so it is
+only issued when the cookie is non-zero; clear scrq->cookie to zero on
+success to prevent double-free if the function is called again during
+reset or teardown. Add scrq->cookie = 0 in the ibmvfc_register_channel()
+irq_failed: cleanup path for the same reason. Guard the memset() of the
+queue message buffer behind a check of scrq->msgs.handle to prevent a
+NULL dereference when the function is called on a queue that was never
+allocated, such as async_sub_crq when multi-queue is disabled or
+initialization failed before ibmvfc_alloc_queue() was reached. Update the
+error message to include channels->protocol so failures can be
+distinguished across SCSI, NVMe, and async sub-CRQ channels.
 
+Expose ibmvfc_deregister_channel() via VISIBLE_IF_KUNIT and
+EXPORT_SYMBOL_IF_KUNIT and add a kernel-doc header to support KUnit
+testing.
 
-You are right, I apologize. A guard that only fires on a
-second completion is a no-op for any fabric that completes once, so
-there is nothing for iSER, FC or SRP to regress. I will do it in
-target_cmd_interrupted() instead.
+Add ibmvfc_get_first_vhost() to retrieve the first registered ibmvfc
+adapter with a reference held; expose it via VISIBLE_IF_KUNIT and
+EXPORT_SYMBOL_IF_KUNIT for use by KUnit tests.
 
-That makes v5 two patches: the core guard, and the iscsit_execute_cmd()
-completion that is the actual hang fix, with no completion_claimed
-member and no helpers. v4 patches 2 and 3 are then unnecessary, since a
-second target_complete_cmd() becomes harmless wherever it comes from,
-and it also picks up the ICF_OOO_CMDSN path you mention, which I could
-not reach from the fabric side at all.
+Add SCSI_IBMVFC_KUNIT_TEST Kconfig entry and Makefile line, and create
+ibmvfc_kunit.c with an ibmvfc-channel-test suite containing
+ibmvfc_deregister_channel_guard_test(). The test verifies that calling
+ibmvfc_deregister_channel() on a queue with cookie == 0 and
+msgs.handle == NULL issues no hypercall, performs no memset, and leaves
+the queue state unchanged.
 
-One design question before I write it. target_cmd_interrupted() has two
-branches:
+Signed-off-by: Dave Marquardt <davemarq@linux.ibm.com>
+Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
+---
+ drivers/scsi/Kconfig                 | 10 ++++++
+ drivers/scsi/ibmvscsi/Makefile       |  1 +
+ drivers/scsi/ibmvscsi/ibmvfc-core.c  | 64 +++++++++++++++++++++++++++++++-----
+ drivers/scsi/ibmvscsi/ibmvfc.h       |  8 +++++
+ drivers/scsi/ibmvscsi/ibmvfc_kunit.c | 63 +++++++++++++++++++++++++++++++++++
+ 5 files changed, 137 insertions(+), 9 deletions(-)
 
-	if (cmd->transport_state & CMD_T_ABORTED) {
-		...
-		INIT_WORK(&cmd->work, target_abort_work);
-		queue_work(target_completion_wq, &cmd->work);
-		return true;
-	} else if (cmd->transport_state & CMD_T_STOP) {
-		...
-		complete_all(&cmd->t_transport_stop_comp);
-		return true;
-	}
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index 4a2af0f702e1..f47789b1102d 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -759,6 +759,16 @@ config SCSI_IBMVFC
+ 	  To compile this driver as a module, choose M here: the
+ 	  module will be called ibmvfc.
+ 
++config SCSI_IBMVFC_KUNIT_TEST
++	tristate "KUnit tests for the IBM POWER Virtual FC Client" if !KUNIT_ALL_TESTS
++	depends on SCSI_IBMVFC && KUNIT
++	default KUNIT_ALL_TESTS
++	help
++	  Compile IBM POWER Virtual FC client KUnit tests. These tests
++	  cover the sub-CRQ channel deregistration guard path.
++	  To compile this driver as a module, choose M here: the module
++	  will be called ibmvfc_kunit.
++
+ config SCSI_IBMVFC_TRACE
+ 	bool "enable driver internal trace"
+ 	depends on SCSI_IBMVFC
+diff --git a/drivers/scsi/ibmvscsi/Makefile b/drivers/scsi/ibmvscsi/Makefile
+index 9408c7f4cdee..a227bc633f3a 100644
+--- a/drivers/scsi/ibmvscsi/Makefile
++++ b/drivers/scsi/ibmvscsi/Makefile
+@@ -3,3 +3,4 @@ ibmvfc-objs := ibmvfc-core.o ibmvfc-nvme.o
+ 
+ obj-$(CONFIG_SCSI_IBMVSCSI)	+= ibmvscsi.o
+ obj-$(CONFIG_SCSI_IBMVFC)	+= ibmvfc.o
++obj-$(CONFIG_SCSI_IBMVFC_KUNIT_TEST)	+= ibmvfc_kunit.o
+diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/ibmvfc-core.c
+index 145d559041f1..f0502d748210 100644
+--- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
++++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
+@@ -6450,11 +6450,23 @@ static int ibmvfc_register_channel(struct ibmvfc_host *vhost,
+ 		hcall_rc = plpar_hcall_norets(H_FREE_SUB_CRQ, vdev->unit_address, scrq->cookie);
+ 	} while (hcall_rc == H_BUSY || H_IS_LONG_BUSY(hcall_rc));
+ reg_failed:
++	scrq->cookie = 0;
+ 	LEAVE;
+ 	return rc;
+ }
+ 
+-static void ibmvfc_deregister_channel(struct ibmvfc_host *vhost,
++/**
++ * ibmvfc_deregister_channel - Deregister a sub-CRQ channel with the hypervisor
++ * @vhost:	ibmvfc host struct
++ * @channels:	ibmvfc channels struct containing the sub-CRQ array
++ * @index:	index into the sub-CRQ array
++ *
++ * Frees the IRQ, disposes of the IRQ mapping, and calls H_FREE_SUB_CRQ to
++ * release the sub-CRQ with the hypervisor. On success the queue message
++ * buffer is zeroed and the current index is reset. If H_FREE_SUB_CRQ fails,
++ * an error is logged but the channel resources are cleaned up regardless.
++ */
++VISIBLE_IF_KUNIT void ibmvfc_deregister_channel(struct ibmvfc_host *vhost,
+ 				      struct ibmvfc_channels *channels,
+ 				      int index)
+ {
+@@ -6471,20 +6483,28 @@ static void ibmvfc_deregister_channel(struct ibmvfc_host *vhost,
+ 		scrq->irq = 0;
+ 	}
+ 
+-	do {
+-		rc = plpar_hcall_norets(H_FREE_SUB_CRQ, vdev->unit_address,
+-					scrq->cookie);
+-	} while (rc == H_BUSY || H_IS_LONG_BUSY(rc));
++	if (scrq->cookie) {
++		do {
++			rc = plpar_hcall_norets(H_FREE_SUB_CRQ, vdev->unit_address,
++						scrq->cookie);
++		} while (rc == H_BUSY || H_IS_LONG_BUSY(rc));
+ 
+-	if (rc)
+-		dev_err(dev, "Failed to free sub-crq[%d]: rc=%ld\n", index, rc);
++		if (rc)
++			dev_err(dev, "Failed to free protocol (%d) sub-crq[%d]: rc=%ld\n",
++				channels->protocol, index, rc);
++		else
++			scrq->cookie = 0;
++	}
+ 
+ 	/* Clean out the queue */
+-	memset(scrq->msgs.crq, 0, PAGE_SIZE);
+-	scrq->cur = 0;
++	if (scrq->msgs.handle) {
++		memset(scrq->msgs.crq, 0, PAGE_SIZE);
++		scrq->cur = 0;
++	}
+ 
+ 	LEAVE;
+ }
++EXPORT_SYMBOL_IF_KUNIT(ibmvfc_deregister_channel);
+ 
+ static void ibmvfc_reg_sub_crqs(struct ibmvfc_host *vhost,
+ 				struct ibmvfc_channels *channels)
+@@ -7118,5 +7138,31 @@ static void __exit ibmvfc_module_exit(void)
+ 	fc_release_transport(ibmvfc_transport_template);
+ }
+ 
++#if IS_ENABLED(CONFIG_KUNIT)
++/**
++ * ibmvfc_get_first_vhost - Get the first ibmvfc host from the global list
++ *
++ * Grabs the driver spinlock and retrieves the first host adapter from the
++ * driver list. If found, increments its reference count via scsi_host_get().
++ *
++ * Return value:
++ *	struct ibmvfc_host * with reference held on success, NULL otherwise
++ **/
++VISIBLE_IF_KUNIT struct ibmvfc_host *ibmvfc_get_first_vhost(void)
++{
++	struct ibmvfc_host *vhost = NULL;
++
++	spin_lock(&ibmvfc_driver_lock);
++	if (!list_empty(&ibmvfc_head))
++		vhost = list_first_entry(&ibmvfc_head, struct ibmvfc_host, queue);
++	if (vhost)
++		if (!scsi_host_get(vhost->host))
++			vhost = NULL;
++	spin_unlock(&ibmvfc_driver_lock);
++	return vhost;
++}
++EXPORT_SYMBOL_IF_KUNIT(ibmvfc_get_first_vhost);
++#endif
++
+ module_init(ibmvfc_module_init);
+ module_exit(ibmvfc_module_exit);
+diff --git a/drivers/scsi/ibmvscsi/ibmvfc.h b/drivers/scsi/ibmvscsi/ibmvfc.h
+index ca80ceffe53a..421ce8bc3ea3 100644
+--- a/drivers/scsi/ibmvscsi/ibmvfc.h
++++ b/drivers/scsi/ibmvscsi/ibmvfc.h
+@@ -1088,4 +1088,12 @@ static inline struct ibmvfc_host *ibmvfc_channels_to_vhost(struct ibmvfc_channel
+ #define ibmvfc_remove_trace_file(kobj, attr) do { } while (0)
+ #endif
+ 
++#if IS_ENABLED(CONFIG_KUNIT)
++#include <kunit/visibility.h>
++VISIBLE_IF_KUNIT void ibmvfc_deregister_channel(struct ibmvfc_host *vhost,
++						struct ibmvfc_channels *channels,
++						int index);
++VISIBLE_IF_KUNIT struct ibmvfc_host *ibmvfc_get_first_vhost(void);
++#endif
++
+ #endif
+diff --git a/drivers/scsi/ibmvscsi/ibmvfc_kunit.c b/drivers/scsi/ibmvscsi/ibmvfc_kunit.c
+new file mode 100644
+index 000000000000..24799aa2368a
+--- /dev/null
++++ b/drivers/scsi/ibmvscsi/ibmvfc_kunit.c
+@@ -0,0 +1,63 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++#include <kunit/test.h>
++#include <kunit/visibility.h>
++#include <scsi/scsi_device.h>
++#include <scsi/scsi_transport_fc.h>
++#include "ibmvfc.h"
++
++MODULE_IMPORT_NS("EXPORTED_FOR_KUNIT_TESTING");
++
++/**
++ * ibmvfc_deregister_channel_guard_test - unit test for ibmvfc_deregister_channel()
++ *   guard conditions
++ * @test: pointer to kunit structure
++ *
++ * Tests that ibmvfc_deregister_channel() safely handles a queue that was
++ * never registered with the hypervisor (cookie == 0, msgs.handle == NULL):
++ * - no H_FREE_SUB_CRQ hypercall is issued
++ * - no memset is attempted on a NULL buffer
++ * - cookie and cur remain zero after the call
++ *
++ * Return: void
++ */
++static void ibmvfc_deregister_channel_guard_test(struct kunit *test)
++{
++	struct ibmvfc_channels channels = {};
++	struct ibmvfc_queue scrq = {};
++	struct ibmvfc_host *vhost;
++
++	vhost = ibmvfc_get_first_vhost();
++	if (!vhost)
++		kunit_skip(test, "No ibmvfc devices available");
++
++	/*
++	 * Embed the synthetic queue in a channels struct with one entry.
++	 * cookie == 0 and msgs.handle == NULL: ibmvfc_deregister_channel()
++	 * must skip both the H_FREE_SUB_CRQ hypercall and the memset.
++	 */
++	channels.scrqs = &scrq;
++	channels.max_queues = 1;
++
++	ibmvfc_deregister_channel(vhost, &channels, 0);
++
++	KUNIT_EXPECT_EQ(test, scrq.cookie, 0UL);
++	KUNIT_EXPECT_EQ(test, scrq.cur, 0);
++	KUNIT_EXPECT_NULL(test, scrq.msgs.handle);
++
++	scsi_host_put(vhost->host);
++}
++
++static struct kunit_case ibmvfc_channel_test_cases[] = {
++	KUNIT_CASE(ibmvfc_deregister_channel_guard_test),
++	{},
++};
++
++static struct kunit_suite ibmvfc_channel_test_suite = {
++	.name = "ibmvfc-channel-test",
++	.test_cases = ibmvfc_channel_test_cases,
++};
++kunit_test_init_section_suite(ibmvfc_channel_test_suite);
++
++MODULE_LICENSE("GPL");
++MODULE_AUTHOR("Dave Marquardt <davemarq@linux.ibm.com>");
++MODULE_DESCRIPTION("Test module for IBM Virtual Fibre Channel Driver");
 
-If the guard is one-shot across both, a second call that would have
-taken the CMD_T_STOP branch is suppressed too, and I am not sure that
-is safe --
-a suppressed complete_all() could leave a waiter in
-transport_wait_for_tasks() stuck. Should the guard cover only the
-CMD_T_ABORTED branch, or do you see a reason it is safe across both?
+-- 
+2.56.0
 
- > I think that's the commit this patch fixes, or at least it should be
- > mentioned too.
-
-Agreed. transport_check_aborted_status() sent the status but nothing
-waited on the reference until 2c9fa49e100f, so that is what turned this
-into a hang. v5 will carry:
-
-  Fixes: 2c9fa49e100f ("scsi: target/core: Make ABORT and LUN RESET
-handling synchronous")
-
-and explain aaa00cc93c1d in the body as what left the site with nothing
-to complete the command. Both are in v5.0 so the stable range is
-unchanged.
-
-On the annotations: thank you, I had not come across them. They are in
-include/linux/compiler-context-analysis.h and I can see how
-drivers/nvme/host uses them. They apply to completion_claimed and the
-two
-helpers, which the core approach removes, so there may be nothing left
-to
-annotate -- but if any of that survives in v5 it will carry
-__must_hold()/__must_not_hold()/__guarded_by() rather than comments,
-and
-spin_lock_irq() rather than spin_lock_irqsave(), which is right for the
-process-context callers.
-
-Worth saying plainly: the core guard will be new code with no field
-evidence behind it. The 300 reset cycles validated completing the
-command in iscsit_execute_cmd(); the claim was only ever there to stop
-a double completion that an earlier version of mine had caused. Moving
-that guard into target core does not change the hang fix, but it does
-mean the guard itself arrives untested, and I would rather say so than
-imply otherwise.
-
-The reporter is covered on a distro backport in the meantime, so there
-is no schedule pressure on this from my side.
-
-I will post v5 once you have had a chance to answer the CMD_T_STOP
-question.
-
-Thanks for the thorough review.
-
-Laurence
 
