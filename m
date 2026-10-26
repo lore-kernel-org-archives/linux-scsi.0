@@ -1,63 +1,42 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=220.197.31.3
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=213.73.89.199
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793007700;
-	b=f2ubfFHTk/Hwk2HneJ6ycjw9JAkiDusp/QLI+fHymAIQBLE0I0rub1P6DZ5X6PQUIc0v
-	 SHkvXzUok2ILJsm5YvEpSd5OogAnzfanwo8a2i1wH0DLKcZvawpY003PY1Erou/603FXL
-	 ti27bxiiGZkYimgKo6OLMO9spN/DeZ83IuEN+E6oJi8ZkGkAMMydbpUOeSWSn6APOKG6X
-	 ST6No4HwFBiZw1slX9NakCSHrfOhkKEduPKdcbq42vEzhvH9gDbAy3nFskPARTyPcLPmo
-	 vQfM8TgSJnp4CY47tFVbEGyg3G0D3OUeTJGOBxYkX/Wyg/b3t6IgCwrwKY8Lhj9zhGg==
+	t=1793008328;
+	b=gwgSQqaUEYO779H5Jh0U48tlfYzKG4Mk+Fv2QHraMCOQcBeTb4lE1Mu8HRNuMhloi0/t
+	 5pFfAY9O3kzWkw5QBxmsPwu2AVw7cJgVYNTwT79dRa1WhgXqny8ji8iqep6KV5YR6OzsA
+	 6/70AIMx73ZtL06xCfjwquGDnsXhvR2k2H9WOwSlxR7dnV2Z60eB381P+qqpToqX+C9U4
+	 qdZDdCXGr2X3HuiaAKioYF452BPEtNvdikgywGwGPW7s/AkR39aaE+Dq4Dhu2UnU//SQx
+	 VBSL8StKpMpbibM/1rvwu1/rlcpXvb+idKAYlk2Elh9NUnNhGvQhnUjLN2TAGlN4tvA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793007700;
-	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
-	 Message-Id:X-Mailer:In-Reply-To:References:MIME-Version:
-	 Content-Transfer-Encoding:X-CM-TRANSID:X-Coremail-Antispam:Sender:
-	 X-CM-SenderInfo;
-	bh=JgiWxZmRIHTWEjiXSDwq0C9oBBVSA5xc05w3DSwHI58=;
-	b=yhAGSdvcFDlJkeJsn05xl6QwN2YLChtLr4vq7Ai93p9ZxJhGcJoma+C9oAnqqPMsq4qp
-	 No841WEWRdn1ABwtzHv4alsvT1oOjYHxUjQveGi5Gv5npHh0DHttpepsD6UHGAg619E9n
-	 7TkKl7Ark8yh5iqf2wnNuo/knMsgYS/i/8gSj6c31DAiW15eUTuhR2Z3nM9tsiqRG3OXZ
-	 Fc/SZf7lO31gNTYARUYsIR61xBtt8bUiMn+7TPSOErTWfSC7PdQsAgJP5enyJZREW3wwF
-	 NLmO/aamkeor47Ug/8HVtU006RfXgKxO16em2F/UrdXeinNDgZrn+X/FCfw77to7Lgg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793008328;
+	h=DMARC-Filter:Received:Received:From:Content-Type:
+	 Content-Transfer-Encoding:Mime-Version:Subject:Message-Id:Date:Cc:To:
+	 X-Mailer;
+	bh=b663ovS+3r1v/8UqeGNu+yv1SsbRjYEg5RNSbzMsgto=;
+	b=l4EhP41YraSkmEpNdcwuCCJyyh6/wD1YWJWjqJJWmWLfGXuOHZYqO2i7EoR7RdzWbSWb
+	 P743kTqLv6KjcYHuKI6Kg/l1ySuiNOMBCKlm8AvOPnMbUfuBL/GcYXit/u8yS0I4EwPqr
+	 qRy+GAl/BzOMBEoxESVD/biTzG7lwqyi8GzWWVWnmvtE6c41eiat/4F9MZ2E6+jeCdOP6
+	 etP9O2J3qrmD2DEc79hQrtqXNsPCStx+GnBVkmFRRSRDufnhFIHYoRhtN9IN59nMPlqCF
+	 TITjc2JlF56l6z/WNcfHJ38UjCa/BgtC9b02WbPIm/BQ9iNG17fIH8r5GPLWnv+whvg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=kylinos.cn;
-	spf=pass smtp.mailfrom=163.com;
-	dkim=pass header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=YXC0Ropa;
-	arc=none smtp.remote-ip=220.197.31.3
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.3])
+	dmarc=none header.from=h3q.com;
+	spf=pass smtp.mailfrom=h3q.com;
+	arc=none smtp.remote-ip=213.73.89.199
+Received: from mail.h3q.com (mail.h3q.com [213.73.89.199])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02424606A33C;
-	Mon, 26 Oct 2026 09:41:34 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 02424606A33C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=YXC0Ropa
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=Jg
-	iWxZmRIHTWEjiXSDwq0C9oBBVSA5xc05w3DSwHI58=; b=YXC0RopaQByhhsrR8l
-	bq9vFwEWO27+xAG/HZDxga++ggErN5QV3kZV7sM9YWZN8Fvo5SdB1OBnYZBuDG/W
-	7FpSvDpWDrIxH60ca0I8BJo3vN/NHakcpdw7+Efl4XrXqmw9qBMDtniuhUKJq60x
-	zIQUqQq5zi6pbgQ1MFDqKwabM=
-Received: from localhost.localdomain (unknown [])
-	by gzga-smtp-mtada-g1-1 (Coremail) with SMTP id _____wD337_7H99qxoxSCg--.51708S2;
-	Mon, 26 Oct 2026 17:40:11 +0800 (CST)
-From: Yang Xiuwei <yangxiuwei@kylinos.cn>
-To: x-professor@outlook.com
-Cc: mkp@kernel.org,
-	James.Bottomley@HansenPartnership.com,
-	linux-scsi@vger.kernel.org,
-	bvanassche@acm.org,
-	axboe@kernel.dk,
-	io-uring@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 6/6] scsi: bsg: release io_uring requests in end-I/O
-Date: Mon, 26 Oct 2026 17:40:10 +0800
-Message-Id: <20261026094010.1324076-1-yangxiuwei@kylinos.cn>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <8f30e238d2b169702308303687e9504c7513ecc8.1793003363.git.x-professor@outlook.com>
-References: <cover.1793003363.git.x-professor@outlook.com> <8f30e238d2b169702308303687e9504c7513ecc8.1793003363.git.x-professor@outlook.com>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6004606A32E
+	for <linux-scsi@vger.kernel.org>; Mon, 26 Oct 2026 09:52:06 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D6004606A32E
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=h3q.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h3q.com
+Received: (qmail 26869 invoked from network); 26 Oct 2026 09:52:04 -0000
+Received: from mail.h3q.com (HELO mail.h3q.com) (mail.h3q.com)
+  by mail.h3q.com with ESMTPS (ECDHE-RSA-AES256-GCM-SHA384 encrypted); 26 Oct 2026 09:52:04 -0000
+From: Denis Ahrens <denis@h3q.com>
+Content-Type: text/plain;
+	charset=us-ascii
+Content-Transfer-Encoding: 7bit
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -66,27 +45,56 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wD337_7H99qxoxSCg--.51708S2
-X-Coremail-Antispam: 1Uf129KBjDUn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73
-	VFW2AGmfu7bjvjm3AaLaJ3UbIYCTnIWIevJa73UjIFyTuYvjxUYc_TUUUUU
-Sender: yangxiuwei2025@163.com
-X-CM-SenderInfo: p1dqw55lxzvxisqskqqrwthudrp/xtbC6huYKWrfH-uF4gAA32
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3901.100.1.1.12\))
+Subject: [PATCH] scsi: mvme16x: enable 53c710 burst-8 hardware transfer mode
+Message-Id: <733CA975-51A9-4687-BBD5-1FB4171FA3FE@h3q.com>
+Date: Mon, 26 Oct 2026 10:51:54 +0100
+Cc: "Martin K. Petersen" <mkp@kernel.org>,
+ linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org,
+ Geert Uytterhoeven <geert@linux-m68k.org>
+To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+X-Mailer: Apple Mail (2.3901.100.1.1.12)
 
-Hi Yingjie,
+The shared 53c700.c backend runs the 53c710 with burst mode disabled
+when hostdata->burst_length is left unset: NCR_700_chip_setup() falls
+through to BURST_DISABLE in CTEST7 and a 1-byte burst length in
+DMODE_710_REG, so the chip delivers one byte per transfer period.
+The other 53c710 hosts in-tree already use it: sim710 and lasi700 pick
+burst 8, sni_53c710 burst 4.
 
-On Mon, 26 Oct 2026, Yingjie Wang wrote:
-> +		pdu->sense_buffer = kmalloc(pdu->max_response_len,
-> +					    gfp_mask | __GFP_ACCOUNT);
+A/B verified on an MVME177 (53c710 rev 2, ZuluSCSI drives):
+  raw reads 16 MiB @64k  4.7/4.8/5.1 -> 5.8/6.1/6.7 MB/s (+23..26%)
+  4 MiB @16k             3.4 -> 4.4 MB/s
+  4 MiB @4k              3.2 -> 3.9 MB/s
+  4 MiB @512B            2.1 -> 2.2 MB/s (small-buffer case is SCSI
+                         command-count bound; burst only raises bytes
+                         per command, not commands)
+  writes                 unchanged (filesystem-bound, not ASIC-bound)
 
-Tested in a VM: INQUIRY batch latency went from 30us to 42us with this
-allocation.
+Integrity: a 16 MiB /dev/urandom payload round-trips bit-exact on a
+cold read (sync + drop_caches, md5 verified write vs read); dmesg
+clean with no timeouts, sense errors, retries or resets.
 
-The long tag hold is IORING_SETUP_DEFER_TASKRUN. Returning -EOPNOTSUPP
-for that flag seems like a compromise. I'd like to hear what others
-think.
+Signed-off-by: Denis Ahrens <denis@h3q.com>
+---
+ drivers/scsi/mvme16x_scsi.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Thanks,
-Yang Xiuwei
+diff --git a/drivers/scsi/mvme16x_scsi.c b/drivers/scsi/mvme16x_scsi.c
+index f4db93c13986..ff6b22c864a9 100644
+--- a/drivers/scsi/mvme16x_scsi.c
++++ b/drivers/scsi/mvme16x_scsi.c
+@@ -60,6 +60,7 @@ static int mvme16x_probe(struct platform_device *dev)
+ 	hostdata->base = (void __iomem *)0xfff47000UL;
+ 	hostdata->clock = 50;	/* XXX - depends on the CPU clock! */
+ 	hostdata->chip710 = 1;
++	hostdata->burst_length = 8;
+ 	hostdata->dmode_extra = DMODE_FC2;
+ 	hostdata->dcntl_extra = EA_710;
+ 	hostdata->ctest7_extra = CTEST7_TT1;
+
+base-commit: c03c1a14507dfaf8b856c2608f9ac216021fc222
+-- 
+2.43.0
 
