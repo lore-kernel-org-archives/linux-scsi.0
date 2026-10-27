@@ -1,69 +1,90 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=124.126.103.232
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=148.163.156.1
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793106958;
-	b=pqx8ktoIKJ/dn+J8ufALZo4IK7CVZ30QGpiKoLVFPQLO7NQaWGI/dIEyKb3xTJ07MnTJ
-	 LhuIPoYMKoH8BneCJFyve0dzQ7eDKrNl0Wwbi0kKUUvyzDidKzXeW1igbGX19wSEEfa/1
-	 SY/Rt0aChPCQY4UAFVnrwYemPGSC/iWu/b7PddPF22zhSpqGJzc4/pDN81qYWj54Yj+Ll
-	 MH/j+sGdMbimEVao7C3/4K2d4EpmMxbSCKZ4Ei0unTx9LBli4wCiTFOyRR7XiZcgdYTxP
-	 wEL6ee/OXIrub2YgQuQ1zpiHHzFnp6Zvm1CjaJYIU6fIMZruWIOcAzCtNO2gcvnkFag==
+	t=1793110101;
+	b=k8Knaukqp1Te/MU7i3CJo9F0kKPW+8GOPspzPROmd5YmeRgEhzaRJecPJIeaIRDnOiWB
+	 zEzPKRDD1H6gMSXYlErEsEWblkQyl2Sri4sU2nZxQZ4+UXmHWoIq3eggkBbRnCm9z97C+
+	 5VvvZt/+llho50ygg5zIBfaqh3ygoig8vuWASusaXgLCkFnFGR5vJSrM5Kcvtls+A+5Zz
+	 KSnBdKGnXjBHwZWF5m4+EESc6IK4vZYGFUs/8DgrVCQbuC5OVoRVtltq5FpY0xh2OPTvr
+	 uY6isOkr1hDLyUk3sjKaQdwGy0++fO4UiEx8E8Ndp6AA2SWSLArUomPgbwpG5vNhNow==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793106958;
-	h=DMARC-Filter:X-UUID:X-CID-P-RULE:X-CID-O-INFO:X-CID-META:X-CID-BVR:
-	 X-CID-BAS:X-CID-FACTOR:X-CID-RHF:X-UUID:X-User:Received:From:To:Cc:
-	 Subject:Date:Message-Id:X-Mailer:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=U0fsmp5+oCqk/juys+O6WZR1t8yuSbZnSlyA5iZcgB8=;
-	b=qFvBpCaW6RvRcyXWgOA/INPvBdCXzOXneEU9gHLZ48OYBQLrziXTHlo5QgrruioJPV2v
-	 A+qXMUE1fgToHrTKUwcOLfM7osl4wJdBj9K24LrdmVnsXyVDA0m/kLuES2zkX44Omk7pr
-	 LznAKr1A5GnP3yznIaCpLJiw9JkzsUcj1TrxqGu5++eVwk80qgpfFe1Ku58cnB9m9+PPs
-	 VFlhAZ5p8p1xM943UHPVwsyKtZzz3MgqJqIbMxh+/vBTIPnGS4f7kqjW84xxCOgTSF8l7
-	 EAmoSuaXnQsV6OYiwbh6DXhltHZx7YmJlQWuhZx6oZ5q+KXzsnn2HHHfU1nLN/w5L+A==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793110101;
+	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:Received:
+	 Received:Received:Received:Received:From:To:Cc:Subject:In-Reply-To:
+	 References:Date:Message-ID:User-Agent:MIME-Version:Content-Type:
+	 X-TM-AS-GCONF:X-Authority-Analysis:X-Proofpoint-Spam-Details-Enc:
+	 X-Proofpoint-GUID:X-Proofpoint-Spam-Info:X-Proofpoint-ORIG-GUID:
+	 X-Proofpoint-Virus-Version:X-Proofpoint-Spam-Details;
+	bh=yE6Yh8nRyVDcjdtvJCKPkA7gLaolSB4uHiKRdyI0rIM=;
+	b=eGar8CuoJEb7DDF7CE5VB8YV/NfgB/Hvg8vlnlB9X9BQeCTPtxwH9ke/oTFF45t/P+PW
+	 f8Mv3TI8yzuvudDYQQZ64FeydXRcEGoQ4mjveEDHnO1eQgBapzHUEUEu757gqd7A5b0v7
+	 8IFGn7iqH/0oG2dCVDqutq15EuTqDJBhNkVGK8PSoYxe8dhQ+Hpj9cTKBfj1MHsIlSai7
+	 Ca7oNI/5yuKPKSP1JKzxDGnpglWYXM3ulucRyLLH0rL0cQ0TJS1+V4D+Arcbe8eatjkb3
+	 u4vQoByZ7OFh/hNcJaDq3u1ApWzRC0hDiqzg0vhqGppn7YTw04X77GGk8QQXGS5rBDw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=kylinos.cn;
-	spf=pass smtp.mailfrom=kylinos.cn;
-	arc=none smtp.remote-ip=124.126.103.232
-Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
+	dmarc=pass header.from=linux.ibm.com;
+	spf=pass smtp.mailfrom=linux.ibm.com;
+	dkim=pass header.d=ibm.com header.i=@ibm.com header.a=rsa-sha256 header.s=pp1 header.b=ONeMug7g;
+	arc=none smtp.remote-ip=148.163.156.1
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E38A606A321;
-	Tue, 27 Oct 2026 13:15:54 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5E38A606A321
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: 8750e7c2d20811f19a56ed5b684f684d-20261027
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.19,REQID:5e9f9de0-1e50-4ca7-94ba-5d7e4db73ee9,IP:0,U
-	RL:0,TC:0,Content:0,EDM:25,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
-	:release,TS:25
-X-CID-META: VersionHash:7db8b62,CLOUDID:c9679b3ff450370af954405342b3e6f0,BulkI
-	D:nil,BulkQuantity:0,SF:102|865|898,TC:nil,Content:0|15|50|99,EDM:5,IP:nil
-	,URL:99|1,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,L
-	ES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_ULS
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 8750e7c2d20811f19a56ed5b684f684d-20261027
-X-User: lijiayi@kylinos.cn
-Received: from thinksys.tail1c7620.ts.net [(10.44.16.150)] by mailgw.kylinos.cn
-	(envelope-from <lijiayi@kylinos.cn>)
-	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
-	with ESMTP id 938926953; Tue, 27 Oct 2026 21:15:49 +0800
-From: Jiayi Li <lijiayi@kylinos.cn>
-To: Oliver Neukum <oneukum@suse.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>,
-	Michal Pecio <michal.pecio@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-usb@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	usb-storage@lists.one-eyed-alien.net,
-	linux-kernel@vger.kernel.org,
-	Jiayi Li <lijiayi@kylinos.cn>
-Subject: [PATCH v3] usb: uas: wait for pending commands before unbinding
-Date: Tue, 27 Oct 2026 21:14:58 +0800
-Message-Id: <20261027131458.983241-1-lijiayi@kylinos.cn>
-X-Mailer: git-send-email 2.34.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05BDB606A320;
+	Tue, 27 Oct 2026 14:08:20 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 05BDB606A320
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key, unprotected) header.d=ibm.com header.i=@ibm.com header.a=rsa-sha256 header.s=pp1 header.b=ONeMug7g
+Received: from pps.filterd (m0356517.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69R5iGdG1503999;
+	Tue, 27 Oct 2026 14:08:18 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-type:date:from:in-reply-to:message-id:mime-version
+	:references:subject:to; s=pp1; bh=yE6Yh8nRyVDcjdtvJCKPkA7gLaolSB
+	4uHiKRdyI0rIM=; b=ONeMug7gCA9gVLKwJGAYG5wBuTk3vn+hndjiWb0qKtuSvt
+	Sq+JHOYwl70/7psKwmc17vT9kkJ5WemH3mf8pIo2vLqTzCT/lOQv1oeqw30zNTRo
+	JHJImEITWNOep2oVG9wq9GIfpfkENQ44xJc8I8tjhNSFMJ0zf5nXXtHLtcMasQYT
+	n8dtowMxz8VHH/BSyKUzbW6J8NQNbu16hpk90yLVxHdagoLLP9ZbJa9/3QfA4FFI
+	brPBIZmAEK1UT52Fbb3PE8wyXkf2zBx10CQVDQDykctbUBxR2dcA6Q0B1ECurxKp
+	c9Y9ro8reQaafXY9hzhnd4CMUr5K/hV28PZOS9fQ==
+Received: from ppma23.wdc07v.mail.ibm.com (5d.69.3da9.ip4.static.sl-reverse.com [169.61.105.93])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4hgmd6yt30-1
+	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
+	Tue, 27 Oct 2026 14:08:18 +0000 (GMT)
+Received: from pps.filterd (ppma23.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma23.wdc07v.mail.ibm.com (8.18.1.11/8.18.1.11) with ESMTP id 69RDoQIL097227;
+	Tue, 27 Oct 2026 14:08:17 GMT
+Received: from smtprelay07.wdc07v.mail.ibm.com ([172.16.1.74])
+	by ppma23.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4hh8gh307n-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 27 Oct 2026 14:08:17 +0000 (GMT)
+Received: from smtpav06.wdc07v.mail.ibm.com (smtpav06.wdc07v.mail.ibm.com [10.39.53.233])
+	by smtprelay07.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 69RE8HvO14746306
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 27 Oct 2026 14:08:17 GMT
+Received: from smtpav06.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 320AE58067;
+	Tue, 27 Oct 2026 14:08:17 +0000 (GMT)
+Received: from smtpav06.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id EECF05803F;
+	Tue, 27 Oct 2026 14:08:16 +0000 (GMT)
+Received: from e (unknown [9.61.53.188])
+	by smtpav06.wdc07v.mail.ibm.com (Postfix) with ESMTPS;
+	Tue, 27 Oct 2026 14:08:16 +0000 (GMT)
+From: Dave Marquardt <davemarq@linux.ibm.com>
+To: sashiko-bot@kernel.org
+Cc: sashiko-reviews@lists.linux.dev, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH v16 09/12] scsi: ibmvfc: add interrupt routine for
+ asynchronous sub CRQ
+In-Reply-To: <sashiko-outbox-185515@kernel.org> (sashiko-bot@kernel.org's
+	message of "Mon, 26 Oct 2026 16:24:16 +0000")
+References: <20261026-ibmvfc-fpin-support-v16-0-a900aa657ed5@linux.ibm.com>
+	<20261026-ibmvfc-fpin-support-v16-9-a900aa657ed5@linux.ibm.com>
+	<sashiko-outbox-185515@kernel.org>
+Date: Tue, 27 Oct 2026 09:08:16 -0500
+Message-ID: <877bj3fd7z.fsf@linux.ibm.com>
+User-Agent: Gnus/5.13 (Gnus v5.13)
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -73,181 +94,125 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-TM-AS-GCONF: 00
+X-Authority-Analysis: v=2.4 cv=ZYOIpcVA c=1 sm=1 tr=0 ts=6ae0b052 cx=c_pps
+ a=3Bg1Hr4SwmMryq2xdFQyZA==:117 a=3Bg1Hr4SwmMryq2xdFQyZA==:17
+ a=660iZSQnnn4A:10 a=VkNPw1HP01LnGYTKEx00:22 a=RnoormkPH1_aCDwRdu11:22
+ a=U7nrCbtTmkRpXpFmAIza:22 a=VwQbUJbxAAAA:8 a=lgx1sjMKL3iQhMCxiSoA:9
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDI3MDA1NCBTYWx0ZWRfX8R7td/yXkBtx
+ UAPY/VUgvezovDbfodP29QM4Eoy2Rf551Dqj/TANXaOOQ2mvts908pgVgJouP5kVJckfNf2IAH5
+ BNcQe1ITTmoKvFoj9jAuP6s/Jwf5k6dZseKSYv/M3bH6C7XAU8u3ZOhMnvy6pHSwU4TLFke/9KR
+ e4PSFqTe9oXE+jGV7m0qIoRObHjaf1qo+OVu6lFSz2oqNsXhHur/9vxYxyfjd1tTSihw/2+OB47
+ W53wF+TGyGBvU0XQFlBSp/65j2LhiZa2PL6ZlpG8st+SkBUyH2a8G4qqs6AMOXjrD1qPilE7ahr
+ B6nx0sCHlIdmZflm4g7WUUSry09Faf4CGrWFP7aj+hGVU4YW1R24uTRfbVhzoj+481Mo6kflXGZ
+ i8quVvCDasbY74XdyCnTsyQlEMxtPau3O72X7weuTqJbyAlIn3xkLqPD+dMM20ffCAFfSJ+YoAx
+ Ieooq0LYIXPl0Hdx9Pw==
+X-Proofpoint-GUID: tw_NDnbAQpGwlypYonKoE-NeZJkApjMT
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMDI3MDA1NCBTYWx0ZWRfX/bbufX7Zbrfo
+ LqfvyITFTFzI2EyFUWcrzkNIuZeCUaP5fnc3hfBFfitZhDm4jITaAkOokLsBC5FXd4cr2Hfi2mf
+ 9q4DPqJj26916tbZz3EI9tO7X9/DnHI=
+X-Proofpoint-ORIG-GUID: tw_NDnbAQpGwlypYonKoE-NeZJkApjMT
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
+ definitions=2026-10-27_02,2026-10-21_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ impostorscore=0 priorityscore=1501 suspectscore=0 phishscore=0 clxscore=1015
+ bulkscore=0 malwarescore=0 lowpriorityscore=0 spamscore=0 adultscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2610190000 definitions=main-2610270054
 
-USB core normally disables interface endpoints before calling
-uas_disconnect(), cancelling URBs while the device may still be
-processing the associated commands. Some storage bridges may then
-fail to recover after a driver rebind and require a disconnect and
-reconnect.
+sashiko-bot@kernel.org writes:
 
-Enable soft unbinding and give already accepted commands a bounded
-grace period to complete before teardown. The disconnect sequence is:
+>> diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/ibmvfc-core.c
+>> index 64981a5a39fbf..2cb38757333a4 100644
+>> --- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
+>> +++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
+>> @@ -4387,6 +4387,72 @@ static struct ibmvfc_crq *ibmvfc_next_scrq(struct ibmvfc_queue *scrq)
+>>  	return crq;
+>>  }
+>>  
+>> +static struct ibmvfc_async_sub_crq *ibmvfc_next_async_scrq(struct ibmvfc_queue *scrq)
+>> +{
+>> +	struct ibmvfc_async_sub_crq *crq;
+>> +
+>> +	crq = &scrq->msgs.async_scrq[scrq->cur];
+>> +	if (crq->valid & 0x80) {
+>> +		if (++scrq->cur == scrq->size)
+>> +			scrq->cur = 0;
+>> +		rmb();
+>> +	} else
+>> +		crq = NULL;
+>> +
+>> +	return crq;
+>> +}
+>> +
+>> +static void ibmvfc_drain_async_subq(struct ibmvfc_queue *scrq)
+>> +{
+>> +	struct ibmvfc_host *vhost = scrq->vhost;
+>> +	struct ibmvfc_async_crq_event ae = {
+>> +		.type = IBMVFC_ASYNC_CRQ_SUB,
+>> +	};
+>> +	struct ibmvfc_async_sub_crq *crq;
+>> +	unsigned long flags;
+>> +	int done = 0;
+>> +
+>> +	spin_lock_irqsave(&vhost->host->host_lock, flags);
+>> +	spin_lock(scrq->q_lock);
+>> +	while (!done) {
+>> +		while ((crq = ibmvfc_next_async_scrq(scrq)) != NULL) {
+>> +			ae.subq = *crq;
+>> +			ibmvfc_handle_async(&ae, scrq->vhost);
+>
+> [Severity: High]
+> Can calling ibmvfc_handle_async() while holding scrq->q_lock trigger a
+> lockdep recursive locking warning?
+>
+> Every struct ibmvfc_queue (including async_scrqs, scsi_scrqs, and nvme_scrqs)
+> initializes queue->_lock at the same call site in ibmvfc_alloc_queue():
+>
+> 	spin_lock_init(&queue->_lock);
+> 	queue->q_lock = &queue->_lock;
+>
+> This places scrq->q_lock, scsi_q[i].q_lock, and nvme_q[i].q_lock into the
+> same lockdep class.
+>
+> When ibmvfc_drain_async_subq() processes a reset-triggering async event
+> (such as IBMVFC_AE_RESUME, IBMVFC_AE_LINK_UP, IBMVFC_AE_SCN_FABRIC, or
+> IBMVFC_AE_SCN_DOMAIN) while vhost->action is IBMVFC_HOST_ACTION_LOGO_WAIT
+> (for example, if a second async event arrives while NPIV logout is in flight
+> with vhost->using_channels set) or vhost->state is IBMVFC_HOST_OFFLINE, the
+> call chain reaches ibmvfc_purge_requests():
+>
+>   ibmvfc_drain_async_subq()
+>     spin_lock(scrq->q_lock)
+>     ibmvfc_handle_async()
+>       __ibmvfc_reset_host()
+>         ibmvfc_hard_reset_host()
+>           ibmvfc_purge_requests()
+>
+> In ibmvfc_purge_requests(), the loops over active SCSI and NVMe sub-queues
+> acquire scsi_q[i].q_lock and nvme_q[i].q_lock at subclass 0 while
+> scrq->q_lock of the same lockdep class is still held:
+>
+> 	for (i = 0; i < shwqs; i++) {
+> 		spin_lock_irqsave(scsi_q[i].q_lock, flags);
+> 		spin_lock(&scsi_q[i].l_lock);
+> 		...
+> 	}
+>
+> 	for (i = 0; i < nhwqs; i++) {
+> 		spin_lock_irqsave(nvme_q[i].q_lock, flags);
+> 		spin_lock(&nvme_q[i].l_lock);
+> 		...
+> 	}
+>
+> Should async sub-queue locks use a separate lockdep class or subclass, or
+> should ibmvfc_handle_async() be called without holding scrq->q_lock?
 
-  -> cancel pending scan work and block new requests
-  -> stop software retries for accepted commands
-  -> wait for commands that can still complete normally
-  -> set resetting and unblock requests
-  -> cancel work and URBs, then clean up remaining commands
-  -> synchronize scan work and remove the host
+I'm rewriting ibmvfc_drain_async_subq() to create a list of events to
+handle, similar to the way ibmvfc_drain_sub_crq() does it, then unlock
+the queue lock, and then call ibmvfc_handle_async() for each event. This
+resolves the lockdep issue.
 
-Commands needing a retry are left for the existing cleanup, while
-other accepted commands can still complete normally. Stop waiting
-when there are no commands left to wait for, USB core marks the device
-as not attached, or the grace period expires.
-
-This does not abort tasks already accepted by the device. If a command
-cannot finish during the grace period, an affected bridge may still
-require a disconnect and reconnect to recover.
-
-Signed-off-by: Jiayi Li <lijiayi@kylinos.cn>
----
-Changes in v3:
-- Stop software retries during disconnect, including retries triggered
-  by later READY IUs, and leave those commands for final cleanup.
-- Replace flush_work() and anchor waits with command-table polling.
-- Cancel pending scan work before blocking the host, while keeping
-  synchronous cancellation after command cleanup.
-
-v2: https://lore.kernel.org/linux-usb/20261023013931.388916-1-lijiayi@kylinos.cn/
-v1: https://lore.kernel.org/linux-usb/20261022123401.319479-1-lijiayi@kylinos.cn/
-
- drivers/usb/storage/uas.c | 68 ++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 67 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
-index 8655edbd66b168b34ff793509457e7f921028f17..63a0ac515737e4782bba50aa2bc2b54ee8282acd 100644
---- a/drivers/usb/storage/uas.c
-+++ b/drivers/usb/storage/uas.c
-@@ -9,6 +9,7 @@
-  */
- 
- #include <linux/blkdev.h>
-+#include <linux/delay.h>
- #include <linux/slab.h>
- #include <linux/types.h>
- #include <linux/module.h>
-@@ -62,6 +63,7 @@ enum {
- 	DATA_OUT_URB_INFLIGHT   = BIT(10),
- 	COMMAND_ABORTED         = BIT(11),
- 	IS_IN_WORK_LIST         = BIT(12),
-+	COMMAND_NO_RETRY        = BIT(13),
- };
- 
- /* Overrides scsi_pointer */
-@@ -119,6 +121,9 @@ static void uas_do_work(struct work_struct *work)
- 		if (!(cmdinfo->state & IS_IN_WORK_LIST))
- 			continue;
- 
-+		if (cmdinfo->state & COMMAND_NO_RETRY)
-+			continue;
-+
- 		err = uas_submit_urbs(cmnd, cmnd->device->hostdata);
- 		if (!err)
- 			cmdinfo->state &= ~IS_IN_WORK_LIST;
-@@ -147,7 +152,8 @@ static void uas_add_work(struct scsi_cmnd *cmnd)
- 
- 	lockdep_assert_held(&devinfo->lock);
- 	cmdinfo->state |= IS_IN_WORK_LIST;
--	queue_work(workqueue, &devinfo->work);
-+	if (!(cmdinfo->state & COMMAND_NO_RETRY))
-+		queue_work(workqueue, &devinfo->work);
- }
- 
- static void uas_zap_pending(struct uas_dev_info *devinfo, int result)
-@@ -265,6 +271,10 @@ static void uas_xfer_data(struct urb *urb, struct scsi_cmnd *cmnd,
- 	struct uas_cmd_info *cmdinfo = scsi_cmd_priv(cmnd);
- 	int err;
- 
-+	if ((cmdinfo->state & (COMMAND_NO_RETRY | IS_IN_WORK_LIST)) ==
-+	    (COMMAND_NO_RETRY | IS_IN_WORK_LIST))
-+		return;
-+
- 	cmdinfo->state |= direction | SUBMIT_STATUS_URB;
- 	err = uas_submit_urbs(cmnd, cmnd->device->hostdata);
- 	if (err) {
-@@ -1211,16 +1221,71 @@ static int uas_reset_resume(struct usb_interface *intf)
- 	return 0;
- }
- 
-+static void uas_pre_disconnect(struct usb_interface *intf)
-+{
-+	struct Scsi_Host *shost = usb_get_intfdata(intf);
-+	struct uas_dev_info *devinfo = (struct uas_dev_info *)shost->hostdata;
-+	struct uas_cmd_info *cmdinfo;
-+	unsigned long flags, start_time;
-+	int i;
-+
-+	spin_lock_irqsave(&devinfo->lock, flags);
-+	for (i = 0; i < devinfo->qdepth; i++) {
-+		if (!devinfo->cmnd[i])
-+			continue;
-+		cmdinfo = scsi_cmd_priv(devinfo->cmnd[i]);
-+		cmdinfo->state |= COMMAND_NO_RETRY;
-+	}
-+	spin_unlock_irqrestore(&devinfo->lock, flags);
-+
-+	start_time = jiffies;
-+	for (;;) {
-+		if (READ_ONCE(devinfo->udev->state) == USB_STATE_NOTATTACHED)
-+			return;
-+
-+		spin_lock_irqsave(&devinfo->lock, flags);
-+		for (i = 0; i < devinfo->qdepth; i++) {
-+			if (!devinfo->cmnd[i])
-+				continue;
-+			cmdinfo = scsi_cmd_priv(devinfo->cmnd[i]);
-+			if ((cmdinfo->state &
-+			     (COMMAND_NO_RETRY | IS_IN_WORK_LIST)) !=
-+			    (COMMAND_NO_RETRY | IS_IN_WORK_LIST))
-+				break;
-+		}
-+		spin_unlock_irqrestore(&devinfo->lock, flags);
-+
-+		if (i >= devinfo->qdepth)
-+			return;
-+		if (time_after(jiffies, start_time + 5 * HZ))
-+			break;
-+
-+		msleep(20);
-+	}
-+
-+	shost_printk(KERN_ERR, shost, "%s: timed out\n", __func__);
-+}
-+
- static void uas_disconnect(struct usb_interface *intf)
- {
- 	struct Scsi_Host *shost = usb_get_intfdata(intf);
- 	struct uas_dev_info *devinfo = (struct uas_dev_info *)shost->hostdata;
- 	unsigned long flags;
- 
-+	cancel_work(&devinfo->scan_work);
-+
-+	spin_lock_irqsave(&shost->host_lock, flags);
-+	scsi_block_requests(shost);
-+	spin_unlock_irqrestore(&shost->host_lock, flags);
-+
-+	uas_pre_disconnect(intf);
-+
- 	spin_lock_irqsave(&devinfo->lock, flags);
- 	devinfo->resetting = 1;
- 	spin_unlock_irqrestore(&devinfo->lock, flags);
- 
-+	scsi_unblock_requests(shost);
-+
- 	cancel_work_sync(&devinfo->work);
- 	usb_kill_anchored_urbs(&devinfo->cmd_urbs);
- 	usb_kill_anchored_urbs(&devinfo->sense_urbs);
-@@ -1260,6 +1325,7 @@ static void uas_shutdown(struct usb_interface *intf)
- 
- static struct usb_driver uas_driver = {
- 	.name = "uas",
-+	.soft_unbind = 1,
- 	.probe = uas_probe,
- 	.disconnect = uas_disconnect,
- 	.pre_reset = uas_pre_reset,
-
-base-commit: f1ac44c32cba88ad65dcecd4a279661d14e93651
--- 
-2.53.0.windows.1
-
+-Dave
