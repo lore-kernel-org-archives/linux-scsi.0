@@ -1,13 +1,13 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=195.3.219.148
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793124111;
-	b=eiIDxELXG3ibWUkMGth/is+8yY2DDjEvbwVgEQskKlli9jMSYxSgBtWdYmnrbCFbtDv6
-	 Lre/V6AsWjB8nxq4C4bgkFmCMdY8WsDT5rMUKzMIgq3Zyl1P46/cOKgDHzQsHLCs/xV1i
-	 6qBr4ZxDmi+5aCQWXB7FbZovBh/dJan3NOK4s8RrClQYaswKSEMvVA+LUuhnNBGkqn9/i
-	 hmw7uupJfJvApQPXLjx879fR4V6KLQovq3CeQw0Gj/eDF/15pVlTeEi/bC9Trz/QHQMkh
-	 Pjo8Dk9rg1P2dIkJGIbe+95rmpbN14ieU6KOsP9nkU/FGslFXAcx6lC52HAstBbgN9Q==
+	t=1793124113;
+	b=E+x1ZGGXa1IugiFWBoXlG9ZKvvw5mrdiV8c7TYedLsBrF4GgdSlDYXPMtpLWoQ8AbDG/
+	 ebl3qUpL3p6PtY6AwskyyAQRBFCGL+BKeOC0zDR9bIJNvPlsm4vWxOdO0B1/En4uokwHl
+	 HID/OVvvfin2GkXUo+sbe/lPslqNfrfagXo0AZEduvc7IDo1nzRVF5Um/IEB3ddSPqzOM
+	 BoP2S0GYzusX3bgFkXsHHgUubOX93tpc30wKpLDcXRDede4JTLUQajLwGzo1AUdiiQ0qs
+	 YX4LC6zVLaP4noHbnrI9adljKDqH7O1FsFkw7H6lQrR1HuwD8GA+VGUdSZwS+Sf8V2A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793124111;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793124113;
 	h=DMARC-Filter:Received:DKIM-Filter:DKIM-Signature:DKIM-Signature:
 	 Received:Received:From:To:CC:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding:
@@ -15,70 +15,70 @@ ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
 	 X-KSMG-AntiSpam-Interceptor-Info:X-KSMG-AntiSpam-Status:
 	 X-KSMG-AntiVirus:X-KSMG-AntiVirus-Status:X-KSMG-KATA-Status:
 	 X-KSMG-LinksScanning:X-KSMG-Message-Action:X-KSMG-Rule-ID;
-	bh=49uE+nPMQ26/ZqWVeSBjBPTudg0al439h0nnVz+XZz4=;
-	b=nOsrU0P1dyqxL2TchJKBlLUtPHWOR9DksGw9SqLBroww53pmmehfVBlPALoT284xo11F
-	 3nwHCCC5uTmMsGmY0/MIAIss9mY1Xo4PQ9EVYpFGiGthrsLALlvROegG1PSv4WFtFF1oJ
-	 k/rXx7zZ0oxg+dNABIYvasL3lPwowI+izs/MsGilyfOBdlX3G0Apdpl1oHQBRJEKvCsOz
-	 J66Zfk5UZw+nuxRu8Ld1LUpg7WVxI9PoqMzsuftF7FrxGW8dvurY39AwHDSD9LQRPVoFV
-	 Wv+I7XmCKWXKT/TyGyhQ1phayzPyR5ikozqS5DWA2VXIxXUWlatRfZc8of5kQxp8yjQ==
+	bh=qOdW7WofTCTc0l5wghtUGi34GVtMNdVoKH9J/yGAT+k=;
+	b=P05S3xBa7MsVzH5bEzLuDyLF7SXZp6ZCRd4EqaeUZJBE7Q9u2NmHGT3CUEnRjPeNIBWS
+	 wcaOkCQYc/dBT3wXA49B61nYnN8USz6YT74SEGBk1DuDOUv0rxyMSHCds7VrLyZVfQLwh
+	 wraSPXZw6VNTxo82wxbym7kNk6KAiSRb2Saj8iSAEkfgEnqgve6CkttDZwCWGDhmDjPLc
+	 dQeClM46gfYF5cSRo/JzUA1G6q3pf+5YlziilTnHvA+63aW9pJlCROFguzj7kPjfWVe3V
+	 q3NKdLNkhbCKQSqAV0uIw3QQvkshMpmTLCPiHyZDyAcrsK3lx4XNQ66GspZwN7+slUg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=yadro.com;
 	spf=pass smtp.mailfrom=yadro.com;
-	dkim=pass header.d=yadro.com header.i=@yadro.com header.a=rsa-sha256 header.s=mta-02 header.b=lUXQsRiN;
-	dkim=pass header.d=yadro.com header.i=@yadro.com header.a=rsa-sha256 header.s=mta-03 header.b=HO4BLeba;
+	dkim=pass header.d=yadro.com header.i=@yadro.com header.a=rsa-sha256 header.s=mta-02 header.b=l6z4cscm;
+	dkim=pass header.d=yadro.com header.i=@yadro.com header.a=rsa-sha256 header.s=mta-03 header.b="w/TXvcnT";
 	arc=none smtp.remote-ip=195.3.219.148
 Received: from mta-01.yadro.com (mta-01.yadro.com [195.3.219.148])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 976C7606A31D;
-	Tue, 27 Oct 2026 18:01:49 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 976C7606A31D
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F172606A325;
+	Tue, 27 Oct 2026 18:01:52 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3F172606A325
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=yadro.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yadro.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=yadro.com header.i=@yadro.com header.a=rsa-sha256 header.s=mta-02 header.b=lUXQsRiN;
-	dkim=pass (2048-bit key, unprotected) header.d=yadro.com header.i=@yadro.com header.a=rsa-sha256 header.s=mta-03 header.b=HO4BLeba
+	dkim=pass (2048-bit key, unprotected) header.d=yadro.com header.i=@yadro.com header.a=rsa-sha256 header.s=mta-02 header.b=l6z4cscm;
+	dkim=pass (2048-bit key, unprotected) header.d=yadro.com header.i=@yadro.com header.a=rsa-sha256 header.s=mta-03 header.b=w/TXvcnT
 Received: from mta-01.yadro.com (localhost [127.0.0.1])
-	by mta-01.yadro.com (Postfix) with ESMTP id 90A1220028;
-	Tue, 27 Oct 2026 21:01:39 +0300 (MSK)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mta-01.yadro.com 90A1220028
+	by mta-01.yadro.com (Postfix) with ESMTP id 96A0220029;
+	Tue, 27 Oct 2026 21:01:42 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mta-01.yadro.com 96A0220029
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yadro.com; s=mta-02;
-	t=1793124099; bh=49uE+nPMQ26/ZqWVeSBjBPTudg0al439h0nnVz+XZz4=;
+	t=1793124102; bh=qOdW7WofTCTc0l5wghtUGi34GVtMNdVoKH9J/yGAT+k=;
 	h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type:From;
-	b=lUXQsRiN9iEVInHx2TDm3b+IU6BiYszXeIVIFEmmR1qFdX/BadRGeMHppUQOgL+9h
-	 oO9r7zeIG+aF0BsvkobyGzrhDc6IZOstWrdWQx7jgNDkImGna6CbBtPtqioPppeJ3X
-	 MiO0P2LA0lPvSageR5m3MYz2nlrJNJoInsWinNL6XNI/VOh0CGiF5VXauN5ICCYgPc
-	 zis+Mp+acJTETkQ9dql6GJ26dPsFWhnpqsDfppQrn+877nJASGsv1ICGwn2iDGi+nF
-	 vkXhEjAzWRxD7E9Wbill8Xu+RCOE5aWcEcPEhG3OQFbbqPtPRVwt2yQEzqKIJD63wS
-	 jA4cghKCTgdAg==
+	b=l6z4cscmL904YXncvrgZBeLqNpnCUVU78JJWW9ciMm4s50jDpUg3bdedOu+mmMiMU
+	 qQw0GS4mT9SXoIt2IrarNur/j5gkyHMrDWMBFgEM2IxxzS+ZXRk1fyhjgV/NHTVBcd
+	 s6J4OVdzxukTk0vQUNEVvmfV5mOWeXsggvho0JVJHhf27A9GkrE67hXfPrCZCfeC33
+	 NZ7vMCAeOf9yP8bAsWLlYtgLufXOsBK6NilaJUEvUK00CwHx5MVqPKQrnWJNk6aifE
+	 BNyG4XSxZ8U1Z4YfPdr3f/op/WkhQHInUx6TDhv7LtDDGRVzvdGRvVyHlOSt3onO6R
+	 NBooW43pSwm4g==
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yadro.com; s=mta-03;
-	t=1793124099; bh=49uE+nPMQ26/ZqWVeSBjBPTudg0al439h0nnVz+XZz4=;
+	t=1793124102; bh=qOdW7WofTCTc0l5wghtUGi34GVtMNdVoKH9J/yGAT+k=;
 	h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type:From;
-	b=HO4BLebaryo++LLBM0l38eXH6FufiQXUg+Ky2XCN60EPOspJIDOh0PRFX2UjDBKGt
-	 7drSa6kTuiBQ8v8bIcnuy2wJ/XZnaT52B/saMjlec8tKLtvs20ICgTkDFHY0xlZGte
-	 4DkfcmA7oaXQ8mbC2G/xO9zSkwwXm6rfkZkU8ZrHdLbaMNx+iWIMOrmw3yW0jp7FTi
-	 4kvtd9+0/98XRSnfQgZuI8vWPd9vvKy6zn12cX17ZOZ4GaQsPR3q0n0qLF2nGcYR22
-	 +dhEBusyYzg279t2dMFUQ2jKX1eCIFUUUL5t2GjK0J+lRpGN5q5hXWlMlz29pN9hNa
-	 Ml0bMSiEWJU+Q==
+	b=w/TXvcnTw2ko7auipSGgdrxbvCBdmSsZuSv9ODF61/vkNoIg6a0eN0d3v8UTmuoLr
+	 VSVINE1s/9vUUGaaKEC55Tpup/ybVlwZrf/ZImpvH98WwuOQZm76BdvhXk9DxdQojm
+	 rkdxfaaLmVycxP77avYFBwHn1rk1hD1DZdABRMLJEM0dqyY1FBbkrt0I+aQZY6V6P0
+	 7o3z1fYZUz3PYUCjk/clOEQOPBsUkv6cwBemE8yLu21qSkSpxWBvx0U8eZTXE61MmV
+	 6ZhYuRLi+A+EixBNfGjk6m5DOi7sFlcAtsSbCkPVx4FNObAzkBwPeWxn4KbI+C9oQZ
+	 A95OYe8FHTPIQ==
 Received: from RTM-EXCH-06.corp.yadro.com (unknown [10.34.9.206])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
 	by mta-01.yadro.com (Postfix) with ESMTPS;
-	Tue, 27 Oct 2026 21:01:39 +0300 (MSK)
+	Tue, 27 Oct 2026 21:01:42 +0300 (MSK)
 Received: from NB-591.corp.yadro.com (10.34.9.247) by
  RTM-EXCH-06.corp.yadro.com (10.34.9.206) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.49; Tue, 27 Oct 2026 21:01:41 +0300
+ 15.2.2562.49; Tue, 27 Oct 2026 21:01:44 +0300
 From: Dmitry Bogdanov <d.bogdanov@yadro.com>
 To: Martin Petersen <martin.petersen@oracle.com>, Maurizio Lombardi
 	<mlombard@redhat.com>, Laurence Oberman <loberman@redhat.com>,
 	<target-devel@vger.kernel.org>
 CC: <michael.christie@oracle.com>, <linux-scsi@vger.kernel.org>,
 	<linux@yadro.com>, Dmitry Bogdanov <d.bogdanov@yadro.com>
-Subject: [PATCH 1/2] Revert "scsi: target: iscsi: Fix hang for aborted WRITE_PENDING commands"
-Date: Tue, 27 Oct 2026 21:01:22 +0300
-Message-ID: <20261027180123.13163-2-d.bogdanov@yadro.com>
+Subject: [PATCH 2/2] scsi: target: iscsi: fix hanging WRITE_PENDING commands
+Date: Tue, 27 Oct 2026 21:01:23 +0300
+Message-ID: <20261027180123.13163-3-d.bogdanov@yadro.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20261027180123.13163-1-d.bogdanov@yadro.com>
 References: <20261027180123.13163-1-d.bogdanov@yadro.com>
@@ -105,30 +105,79 @@ X-KSMG-LinksScanning: NotDetected
 X-KSMG-Message-Action: skipped
 X-KSMG-Rule-ID: 5
 
-This reverts commit d5869dae5080e976d4b03cc33eb7ceb527f242bf as it
-introduces double completion of the command and other issues.
+When Data comes for an aborted WRITE command in WRITE_PENDING state it
+is silently received and the command does not pass to the target. That leads
+to hanging of other session with LUN_RESET aborting that command.
+
+Pass the aborted WRITE commands when all Data has been gathered.
 
 Signed-off-by: Dmitry Bogdanov <d.bogdanov@yadro.com>
 ---
- drivers/target/iscsi/iscsi_target.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+ drivers/target/iscsi/iscsi_target.c      | 17 -----------------
+ drivers/target/iscsi/iscsi_target_erl1.c |  8 --------
+ 2 files changed, 25 deletions(-)
 
 diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
-index 124ff269b8e75..62ada3a52210e 100644
+index 62ada3a52210e..03d618cd76721 100644
 --- a/drivers/target/iscsi/iscsi_target.c
 +++ b/drivers/target/iscsi/iscsi_target.c
-@@ -1533,10 +1533,8 @@ __iscsit_check_dataout_hdr(struct iscsit_conn *conn, void *buf,
- 		 */
- 		if (se_cmd->transport_state & CMD_T_ABORTED) {
- 			if (hdr->flags & ISCSI_FLAG_CMD_FINAL &&
--			    --cmd->outstanding_r2ts < 1) {
-+			    --cmd->outstanding_r2ts < 1)
+@@ -1518,23 +1518,6 @@ __iscsit_check_dataout_hdr(struct iscsit_conn *conn, void *buf,
+ 			if (hdr->flags & ISCSI_FLAG_CMD_FINAL)
  				iscsit_stop_dataout_timer(cmd);
--				target_complete_cmd(se_cmd, SAM_STAT_TASK_ABORTED);
--			}
+ 
+-			return iscsit_dump_data_payload(conn, payload_length, 1);
+-		}
+-	} else {
+-		/*
+-		 * For the normal solicited data path:
+-		 *
+-		 * Check for a delayed TASK_ABORTED status and dump any
+-		 * incoming data out payload if one exists.  Also, when the
+-		 * ISCSI_FLAG_CMD_FINAL is set to denote the end of the current
+-		 * data out sequence, we decrement outstanding_r2ts.  Once
+-		 * outstanding_r2ts reaches zero, go ahead and send the delayed
+-		 * TASK_ABORTED status.
+-		 */
+-		if (se_cmd->transport_state & CMD_T_ABORTED) {
+-			if (hdr->flags & ISCSI_FLAG_CMD_FINAL &&
+-			    --cmd->outstanding_r2ts < 1)
+-				iscsit_stop_dataout_timer(cmd);
  
  			return iscsit_dump_data_payload(conn, payload_length, 1);
  		}
+diff --git a/drivers/target/iscsi/iscsi_target_erl1.c b/drivers/target/iscsi/iscsi_target_erl1.c
+index d8ca06e697d63..44b851e4a602d 100644
+--- a/drivers/target/iscsi/iscsi_target_erl1.c
++++ b/drivers/target/iscsi/iscsi_target_erl1.c
+@@ -908,8 +908,6 @@ int iscsit_execute_cmd(struct iscsit_cmd *cmd, int ooo)
+ 				return 0;
+ 			}
+ 			spin_unlock_bh(&cmd->istate_lock);
+-			if (cmd->se_cmd.transport_state & CMD_T_ABORTED)
+-				return 0;
+ 			return transport_send_check_condition_and_sense(se_cmd,
+ 					cmd->sense_reason, 0);
+ 		}
+@@ -927,9 +925,6 @@ int iscsit_execute_cmd(struct iscsit_cmd *cmd, int ooo)
+ 
+ 			if (!(cmd->cmd_flags &
+ 					ICF_NON_IMMEDIATE_UNSOLICITED_DATA)) {
+-				if (cmd->se_cmd.transport_state & CMD_T_ABORTED)
+-					return 0;
+-
+ 				iscsit_set_dataout_sequence_values(cmd);
+ 				conn->conn_transport->iscsit_get_dataout(conn, cmd, false);
+ 			}
+@@ -942,9 +937,6 @@ int iscsit_execute_cmd(struct iscsit_cmd *cmd, int ooo)
+ 
+ 		if ((cmd->data_direction == DMA_TO_DEVICE) &&
+ 		    !(cmd->cmd_flags & ICF_NON_IMMEDIATE_UNSOLICITED_DATA)) {
+-			if (cmd->se_cmd.transport_state & CMD_T_ABORTED)
+-				return 0;
+-
+ 			iscsit_set_unsolicited_dataout(cmd);
+ 		}
+ 		return target_submit(&cmd->se_cmd);
 -- 
 2.25.1
 
