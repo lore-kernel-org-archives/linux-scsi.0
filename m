@@ -1,74 +1,86 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.72
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=195.3.219.148
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793135924;
-	b=ZRB7Gj882J2oVNd6JuDCR6ksUEdTvu13F36mzpTLgeEQGKAa6+P0aoPjXQoROLyNwXBl
-	 g3Etn3xpZz38LP3GgbUf17qCsYMC5/QUL/DwMBBW0e+9uFW8ICFaCtlHAljwTWiIJymNC
-	 0HsNt2KDENW4pn1wcKwJmFH58JUxss7tQg7RY5gGvBM5hEPyvQqHWTlAzQZMfYRKPyTOY
-	 DJOCx9Viqo9ooOXNvJ+SkaBptsRV6N9GRFWzIZa+niXai35yJibSToF+5GAx+Ww98fQDa
-	 jAWYGfisJvPEVW1dUgN3pp+s08+6iq+uf1PLyUZzMW/X4XBpVVjMU4yf9Spy/8yhxTA==
+	t=1793141751;
+	b=knTP0pW0VvaYtGZE3N4ceFRBG+ttNqeIXpG20xI6156z5XAyQBzjHv+90cU+8K3RxpPA
+	 V6dJuEV7kQRbGSbdo66kAP9NADej0yX9YkZtOJEhso9rTtlOIkBwVAec1r+JgEZO0+jSJ
+	 kIe6KggIhLCKLefn6DnnFHG+feq6e2nfd7MQiaQnaxW/I5JnVXXJBQCcF4vznVS1GpsZz
+	 JB/gVsGJ7UxJrttb2pcu1iPBtk2Y8ZotDBloDIXOuF8/MGlM5OvjaQ6KK9vp+z2G6eN8+
+	 bfqDx0qLM4lwt1cIedudG3ZG6fW+CTqiDAJbeDhIUo5mB+nBQeg3eld6anrmGgQSTcQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793135924;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:In-Reply-To:
-	 Mime-Version:References:Message-ID:Subject:From:To:Cc:Content-Type;
-	bh=qUMx95Z2/FLv64tnydT/x/C4fd+wJMNdslwBEILinGo=;
-	b=1XWhvMQdrxwcobXq4U+ODUhPaYStSQr5rd6SW+rCmSIxyAqIu80K7ihaTEh0TaDF7Ihy
-	 mv35H8fu9nNAJcluIiCV5pO1+TQ7ZxcA/V5eWK+SFEb0ZyhH1RKknKR6BS1VNucKDV7Vs
-	 UBki48uXlvU3lRI9qmSO2z7rQ8gJsYB4Qb9rfZupAdyQqm4uDyesdtVsABwWhWxJyagfE
-	 jg53bxVx4ORK3P4FznDE4LWq8TEfwu/69MKY8wHRnjEAlNjMwHoR6TRVUej3l7LK1tFxm
-	 lV6HoLXu53fCZb/vGNUHavKLAK3LXuL30p6xkCzg2d7nL77R35hmNkXfUDI5/URB4KQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793141751;
+	h=DMARC-Filter:Received:DKIM-Filter:DKIM-Signature:DKIM-Signature:
+	 Received:Received:Date:From:To:CC:Subject:Message-ID:References:
+	 MIME-Version:Content-Type:Content-Disposition:
+	 Content-Transfer-Encoding:In-Reply-To:X-Originating-IP:
+	 X-ClientProxiedBy:X-KSMG-AntiPhishing:
+	 X-KSMG-AntiSpam-Interceptor-Info:X-KSMG-AntiSpam-Status:
+	 X-KSMG-AntiVirus:X-KSMG-AntiVirus-Status:X-KSMG-KATA-Status:
+	 X-KSMG-LinksScanning:X-KSMG-Message-Action:X-KSMG-Rule-ID;
+	bh=ywhaCbnTX+qTpWHanCXUPC4b96UVNtT+R99Ydrulnr8=;
+	b=C3JImntZ75ji2LHtASC39WHcczybLnFsKfbik8vt49CI6oCnwGfrkPUL78yq/aeJUPqA
+	 K0MaSH58OBWn3UErh3GPuHEhMz9jDYA+mI1QLvE1C+wqui2etiVloqqeOsPOP8QDftMdZ
+	 /wr6RF57v/Dr6UBsjmtWadMYk9zSWWUOFQI1olp25+RqN6tuSFkucWVQ+DC5Ugmko3lFY
+	 cwpeVylnp/0PSw2gm9yDWywnutHIXpkO6rdcG0Pt4IPk0Pw87S/2GWtpct7pjMMIkHOUh
+	 Q4VsxNIwFTieKKFsABMDIGD14LtkD9HmmMU1AaWEzAfHBLhZH5yH1fjHdcZ6FWAZIxw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=google.com;
-	spf=pass smtp.mailfrom=flex--seanjc.bounces.google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=O9t1oNxh;
-	arc=none smtp.remote-ip=209.85.216.72
-Received: from mail-pj1-f72.google.com (mail-pj1-f72.google.com [209.85.216.72])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=pass header.from=yadro.com;
+	spf=pass smtp.mailfrom=yadro.com;
+	dkim=pass header.d=yadro.com header.i=@yadro.com header.a=rsa-sha256 header.s=mta-02 header.b=xJEuQSev;
+	dkim=pass header.d=yadro.com header.i=@yadro.com header.a=rsa-sha256 header.s=mta-03 header.b=GqERLg4l;
+	arc=none smtp.remote-ip=195.3.219.148
+Received: from mta-01.yadro.com (mta-01.yadro.com [195.3.219.148])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7895A606A320
-	for <linux-scsi@vger.kernel.org>; Tue, 27 Oct 2026 21:18:44 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7895A606A320
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--seanjc.bounces.google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88C8C606A31A;
+	Tue, 27 Oct 2026 22:55:48 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 88C8C606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=yadro.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yadro.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=O9t1oNxh
-Received: by mail-pj1-f72.google.com with SMTP id 98e67ed59e1d1-3ab7f1efe5dso432350a91.1
-        for <linux-scsi@vger.kernel.org>; Tue, 27 Oct 2026 14:18:44 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20260707; t=1793135924; x=1793740724; darn=vger.kernel.org;
-        h=content-type:cc:to:from:subject:message-id:references:mime-version
-         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=qUMx95Z2/FLv64tnydT/x/C4fd+wJMNdslwBEILinGo=;
-        b=O9t1oNxhj7Xw67fxZOhJmZ8vNAdxWgxOGEEZGK9oId6/aVHLsnFtQlbNQ6bzhC9B0E
-         f9O/mJB1tznoMWpJP5vr6IAfWd7OYL3+vqog/K86lyrB9hPII1dxM6rPxBJ9Kby9+ucJ
-         q3hnsiNT2ru8vSf8egpVYYGw35wKVG80Vu3ezvTOK/2hErKcg9OsAoYftXOMXvmgvOsE
-         USSlpzb9cbn2+MUY6DGfb3+M18AMUDB5o3XD1HYrd07vSA1sr+KPFgLsCAHlt3yIU0CJ
-         46wb1/8vXqcmincC/gKw4zIHqOkFMeY2f47UtXQrgsFIIglqeYn4Rz2uN2mV+APvhSlW
-         0LBg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793135924; x=1793740724;
-        h=content-type:cc:to:from:subject:message-id:references:mime-version
-         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=qUMx95Z2/FLv64tnydT/x/C4fd+wJMNdslwBEILinGo=;
-        b=ebZQzi4SRM240qepPmt84IlQXrw9nyFRGT+K4BL7hIUwxWj1SyHSzELkPJDeeYK5uf
-         lfwtKkaF3JJ+0PRjbITwfs5gZyXae9TBUPmwA1YE80XS7omNYxY7iXpyj2AKgoeU9NrQ
-         A0onLtvnTKuAJDz+D2pvKn5WiJvtVz+A22WnPACJNQ+zw3oi+XOQfynNJtNKGv/awlHC
-         TkIdtrRWUTu8lWQcLztvvZOsZU635C2YKOnLeGuLCNUiH/iUl+eIgWe1bSrqocYuXsKV
-         YudHZFWi/2ykQyecyBdbzPGejhqDa/Mr+9aajEvp1hrxC0OFBnFu4qDfrmPMpTC8ocET
-         NXAQ==
-X-Forwarded-Encrypted: i=1; AKwUvBzqI2Dnk5hfNPhlOMo9qWpJFfrJF/XLE9lACgZvqxPW9lRA6OSq1ZUsnmEedhUGvXbRRphbIp0F8p0p@vger.kernel.org
-X-Gm-Message-State: AFq9FYI3qGtQTpfTcLyDvPzMuyvJJluS/l9W2hq1iOaFCLgCn6g1+Uv5
-	3T7hUTEfQXpp24GvNaN0WA/arkRNjl1H5HmJUwHxjoaUQ8hNuQw9QUqzgemiLuzOqBWDtjnzo3Y
-	0moxEfg==
-X-Received: from pjvv8.prod.google.com ([2002:a17:90b:5888:b0:3ad:850b:6f1c])
- (user=seanjc job=prod-delivery.src-stubby-dispatcher) by 2002:a17:90b:288a:b0:3ac:9706:7739
- with SMTP id 98e67ed59e1d1-3ae5819e5afmr211698a91.17.1793135923585; Tue, 27
- Oct 2026 14:18:43 -0700 (PDT)
-Date: Tue, 27 Oct 2026 14:18:42 -0700
-In-Reply-To: <ac22215d-3e58-4aab-851e-47c30836e058@app.fastmail.com>
+	dkim=pass (2048-bit key, unprotected) header.d=yadro.com header.i=@yadro.com header.a=rsa-sha256 header.s=mta-02 header.b=xJEuQSev;
+	dkim=pass (2048-bit key, unprotected) header.d=yadro.com header.i=@yadro.com header.a=rsa-sha256 header.s=mta-03 header.b=GqERLg4l
+Received: from mta-01.yadro.com (localhost [127.0.0.1])
+	by mta-01.yadro.com (Postfix) with ESMTP id 2FF3E20003;
+	Wed, 28 Oct 2026 01:55:46 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mta-01.yadro.com 2FF3E20003
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yadro.com; s=mta-02;
+	t=1793141746; bh=ywhaCbnTX+qTpWHanCXUPC4b96UVNtT+R99Ydrulnr8=;
+	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:From;
+	b=xJEuQSevRhbxKUhbXOgkgPSeOU9Q0uMdYWvVYUqvhUwLjBBdBAQyBSg4AAwh+dnBv
+	 BpGvEnVSKx/gN3M5ZQcWC/+TiKno6O3211wbkNJ7WGyXIp6gzJ2jOuzU3NElZH+lG7
+	 +Nx0KZ3Dfso4RbR72SRX9LejbmC7VijicfnAVizrbNxAeAmq6b/PBrvE5vhaaz8n48
+	 VNd/h54KMWO2lbi4GPoR7cgZMlZki+GXSSC1E6Zw00oKAobaXzB1cPC5PmXNQiSNLT
+	 w4AHhDnIvD3Uub+bCFgJVhpH1lcc7G5GBpV6KGctUZ95a3ROO+wGqCuuAm1SJ2U1td
+	 jAFSorb9rcw5g==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yadro.com; s=mta-03;
+	t=1793141746; bh=ywhaCbnTX+qTpWHanCXUPC4b96UVNtT+R99Ydrulnr8=;
+	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:From;
+	b=GqERLg4lmGEC4NNEuTury1CqBqvZlHE2OYvAr4ucgHozCsbq28mmT24hSBkq08QEf
+	 Y88lqxvqhyyWMayVfE765fMKGHF/2sVewxR5bA7KhLuKsLsjFOUMfO9SDsonJ//RP0
+	 GVv4jL/8EMLDaAebkjMn3YizF8n+rMIXsawkx9FJnkE/FUJEBlCBj8R6eRAyDkWxks
+	 JmWTZMnqut6KpbbFPelSycihe0VQRJHgMNpcv7/J/oxMZeMSMZM75Jrx1Iip8hyQo2
+	 8O6hxvStI1JYdxOB8xalfmjS9sFeKfaThad5+vLysnivT0WP0GGvX1i1ndzhyjSMVH
+	 R8zWw9GndgMkw==
+Received: from RTM-EXCH-06.corp.yadro.com (unknown [10.34.9.206])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by mta-01.yadro.com (Postfix) with ESMTPS;
+	Wed, 28 Oct 2026 01:55:45 +0300 (MSK)
+Received: from yadro.com (10.34.9.246) by RTM-EXCH-06.corp.yadro.com
+ (10.34.9.206) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.49; Wed, 28 Oct
+ 2026 01:55:45 +0300
+Date: Wed, 28 Oct 2026 01:55:45 +0300
+From: Dmitry Bogdanov <d.bogdanov@yadro.com>
+To: <sashiko-reviews@lists.linux.dev>
+CC: <target-devel@vger.kernel.org>, <linux-scsi@vger.kernel.org>
+Subject: Re: [PATCH 2/2] scsi: target: iscsi: fix hanging WRITE_PENDING
+ commands
+Message-ID: <20261027225545.GA32229@yadro.com>
+References: <20261027180123.13163-1-d.bogdanov@yadro.com>
+ <20261027180123.13163-3-d.bogdanov@yadro.com>
+ <sashiko-outbox-187009@kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -77,102 +89,182 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0
-References: <20261026215226.3713941-1-jthoughton@google.com>
- <14f5f919-55bd-47c6-a1c8-6f1445cce733@app.fastmail.com> <CADrL8HXQdzcroeGN-ACjyy-jSAdBNHiT1_BCVVe0P+Y8ZueiyA@mail.gmail.com>
- <ac22215d-3e58-4aab-851e-47c30836e058@app.fastmail.com>
-Message-ID: <auEVMrMDqVuKtDqh@google.com>
-Subject: Re: [RFC PATCH 00/10] uaccess: Refuse and warn on user accesses when
- current->mm is NULL
-From: Sean Christopherson <seanjc@google.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: James Houghton <jthoughton@google.com>, Andrew Morton <akpm@linux-foundation.org>, 
-	Alexander Viro <viro@zeniv.linux.org.uk>, Thomas Gleixner <tglx@kernel.org>, 
-	Peter Zijlstra <peterz@infradead.org>, Kees Cook <kees@kernel.org>, 
-	"David Hildenbrand (Red Hat)" <david@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>, 
-	"Liam R. Howlett" <liam@infradead.org>, "Vlastimil Babka (SUSE)" <vbabka@kernel.org>, Mike Rapoport <rppt@kernel.org>, 
-	Suren Baghdasaryan <surenb@google.com>, Michal Hocko <mhocko@suse.com>, Paolo Bonzini <pbonzini@redhat.com>, 
-	Jim Mattson <jmattson@google.com>, Jens Axboe <axboe@kernel.dk>, 
-	Pavel Begunkov <asml.silence@gmail.com>, 
-	"James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>, 
-	"Martin K. Petersen" <mkp@kernel.org>, David Sterba <dsterba@suse.com>, Chris Mason <mason@kernel.org>, 
-	Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, 
-	John Fastabend <john.fastabend@gmail.com>, Josh Poimboeuf <jpoimboe@kernel.org>, 
-	Steven Rostedt <rostedt@goodmis.org>, Masami Hiramatsu <mhiramat@kernel.org>, 
-	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>, Ingo Molnar <mingo@redhat.com>, 
-	Arnaldo Carvalho de Melo <acme@kernel.org>, Namhyung Kim <namhyung@kernel.org>, linux-mm@kvack.org, 
-	linux-fsdevel@vger.kernel.org, kvm@vger.kernel.org, io-uring@vger.kernel.org, 
-	linux-scsi@vger.kernel.org, linux-btrfs@vger.kernel.org, bpf@vger.kernel.org, 
-	linux-trace-kernel@vger.kernel.org, linux-perf-users@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <sashiko-outbox-187009@kernel.org>
+X-ClientProxiedBy: RTM-EXCH-01.corp.yadro.com (10.34.9.201) To
+ RTM-EXCH-06.corp.yadro.com (10.34.9.206)
+X-KSMG-AntiPhishing: NotDetected, bases: 2026/10/27 19:34:00
+X-KSMG-AntiSpam-Interceptor-Info: not scanned
+X-KSMG-AntiSpam-Status: not scanned, disabled by settings
+X-KSMG-AntiVirus: Kaspersky Secure Mail Gateway, version 2.1.1.8310, bases: 2026/10/27 19:28:00 #28750693
+X-KSMG-AntiVirus-Status: NotDetected, skipped
+X-KSMG-KATA-Status: Not Scanned
+X-KSMG-LinksScanning: NotDetected, bases: 2026/10/27 19:34:00
+X-KSMG-Message-Action: skipped
+X-KSMG-Rule-ID: 5
 
-On Tue, Oct 27, 2026, Arnd Bergmann wrote:
-> On Tue, Oct 27, 2026, at 18:29, James Houghton wrote:
-> >> I would think that user_access_begin() is a more natural place
-> >> for the added checks, as this should be called exactly once for
-> >> any function that accesses user space and also stays out of the
-> >> way of the copy_from_kernel_nofault() etc.
+On Tue, Oct 27, 2026 at 06:18:12PM +0000, sashiko-bot@kernel.org wrote:
+> 
+> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
+> - [High] scsi: target: iscsi: double completion in iscsit_release_commands_from_conn()
+> --
+> 
+> commit 31a87057639fce26dc0f2f4bbcd6ddacf96b85a5
+> Author: Dmitry Bogdanov <d.bogdanov@yadro.com>
+> 
+> scsi: target: iscsi: fix hanging WRITE_PENDING commands
+> 
+> This commit removes early CMD_T_ABORTED checks in the iSCSI Data-Out and
+> command execution paths so that aborted WRITE commands in WRITE_PENDING state
+> are passed to the target core once all Data-Out PDUs have been received.
+> 
+> > diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
+> > index 62ada3a52210e..03d618cd76721 100644
+> > --- a/drivers/target/iscsi/iscsi_target.c
+> > +++ b/drivers/target/iscsi/iscsi_target.c
+> > @@ -1518,23 +1518,6 @@ __iscsit_check_dataout_hdr(struct iscsit_conn *conn, void *buf,
+> >                       if (hdr->flags & ISCSI_FLAG_CMD_FINAL)
+> >                               iscsit_stop_dataout_timer(cmd);
 > >
-> > user_access_begin() isn't used in a lot of places that I want to
-> > catch, including the KVM case. Roughly:
-> >
-> >   kvm_write_guest_cached() --> __copy_to_user() --> raw_copy_to_user()
-> >
-> > There's no user_access_begin() in there. :/
+> > -                     return iscsit_dump_data_payload(conn, payload_length, 1);
+> > -             }
+> > -     } else {
+> > -             /*
+> > -              * For the normal solicited data path:
+> > -              *
+> > -              * Check for a delayed TASK_ABORTED status and dump any
+> > -              * incoming data out payload if one exists.  Also, when the
+> > -              * ISCSI_FLAG_CMD_FINAL is set to denote the end of the current
+> > -              * data out sequence, we decrement outstanding_r2ts.  Once
+> > -              * outstanding_r2ts reaches zero, go ahead and send the delayed
+> > -              * TASK_ABORTED status.
+> > -              */
+> > -             if (se_cmd->transport_state & CMD_T_ABORTED) {
+> > -                     if (hdr->flags & ISCSI_FLAG_CMD_FINAL &&
+> > -                         --cmd->outstanding_r2ts < 1)
+> > -                             iscsit_stop_dataout_timer(cmd);
 > 
-> Good point, yes. After the changes described in
-> https://lwn.net/Articles/1102061/, I had assumed that all
-> __copy_{from,to}_user() are going from common code, but it looks
-> like the series so far only touches __{get,put}_user().
-> 
-> There are of course few enough of these left that I think
-> we can consider doing the same thing here and turn them all
-> into the checking version:
-> 
-> $ git grep -wl __copy_'\(from\|to\)'_user  drivers mm virt
-> drivers/gpu/drm/i915/gem/i915_gem_execbuffer.c
-> drivers/gpu/drm/i915/i915_gem.c
-> drivers/gpu/drm/i915/i915_query.c
-> drivers/usb/gadget/udc/atmel_usba_udc.c
-> drivers/vhost/scsi.c
-> drivers/vhost/vhost.c
-> mm/kasan/kasan_test_c.c
-> virt/kvm/kvm_main.c
-> 
-> > I do think user_access_begin() should have the new check though, so
-> > I've added it in the v2.
-> 
-> I had the details confused here. Seing that user_access_begin()
-> and the other accessors always call access_ok() at some
-> point, maybe that would be enough?:
+> [Severity: High]
+> Could passing an aborted WRITE_PENDING command to target_execute_cmd() cause
+> a double abort completion and use-after-free if the connection closes afterward
+> in iscsit_release_commands_from_conn()?
 
-It would help, but it wouldn't cover everything, e.g. KVM "caches" the access_ok()
-checks well in advance of actually performing a user access.  I don't know that I
-would fixate on KVM too much though, as KVM's memslots infrastructure that begets
-that behavior is quite unique, i.e. it's unlikely other subsystems will have these
-types of bugs *and* elide access_ok() checks at the time of access.  And KVM has
-natural chokepoints for these accesses, so it's easy enough to harden KVM itself.
+Yes, it can cause. But my patch neither was intended to address that
+problem neither increases its probability. WRITE_PENDING always may be
+aborted, in parallel from other session, right
+before target_cmd_interrupted() in target_execute_cmd().
 
-The counter-argument is that _if_ there are other subsystems that are caching
-access_ok() checks, then those are probably the subsystems that are most likely
-to mess this up and thus would benefit the most from common hardening.
+And that is easily fixed by changing cmd->t_state in
+target_execute_cmd() before target_cmd_interrupted() to take the
+cmd ownership by the target core:
 
-> --- a/include/asm-generic/access_ok.h
-> +++ b/include/asm-generic/access_ok.h
-> @@ -33,6 +33,9 @@ static inline int __access_ok(const void __user *ptr, unsigned long size)
->         unsigned long limit = TASK_SIZE_MAX;
->         unsigned long addr = (unsigned long)ptr;
->  
-> +       if (WARN_ONCE(!current->mm))
-> +               return false;
-> +
->         if (IS_ENABLED(CONFIG_ALTERNATE_USER_ADDRESS_SPACE) ||
->             !IS_ENABLED(CONFIG_MMU))
+-----------------
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index 2c9f4b58c024f..14ea1a9d7fa40 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -2561,6 +2561,10 @@ static bool target_handle_task_attr(struct se_cmd *cmd)
+ void target_execute_cmd(struct se_cmd *cmd)
+ {
+        trace_target_execute_cmd(cmd);
++
++       spin_lock_irq(&cmd->t_state_lock);
++       cmd->t_state = TRANSPORT_PROCESSING;
++       spin_unlock_irq(&cmd->t_state_lock);
+        /*
+         * Determine if frontend context caller is requesting the stopping of
+         * this command for frontend exceptions.
+@@ -2571,7 +2575,6 @@ void target_execute_cmd(struct se_cmd *cmd)
+                return;
+
+        spin_lock_irq(&cmd->t_state_lock);
+-       cmd->t_state = TRANSPORT_PROCESSING;
+        cmd->transport_state |= CMD_T_ACTIVE | CMD_T_SENT;
+        spin_unlock_irq(&cmd->t_state_lock);
+
+---------------
+
+
+> 
+> With this check removed in __iscsit_check_dataout_hdr(), an aborted WRITE
+> command in TRANSPORT_WRITE_PENDING state receives its remaining Data-Out PDUs
+> and calls target_execute_cmd() in iscsit_check_dataout_payload() (or in
+> iscsit_execute_cmd() for out-of-order CmdSNs):
+> 
+> drivers/target/iscsi/iscsi_target.c:iscsit_check_dataout_payload() {
+>         ...
+>                 iscsit_stop_dataout_timer(cmd);
+>                 if (ooo_cmdsn)
+>                         return 0;
+>                 target_execute_cmd(&cmd->se_cmd);
+>                 return 0;
+>         ...
+> }
+> 
+> In target_execute_cmd(), target_cmd_interrupted() is called before
+> cmd->t_state is updated to TRANSPORT_PROCESSING:
+> 
+> drivers/target/target_core_transport.c:target_execute_cmd() {
+>         if (target_cmd_interrupted(cmd))
+>                 return;
+> 
+>         spin_lock_irq(&cmd->t_state_lock);
+>         cmd->t_state = TRANSPORT_PROCESSING;
+>         cmd->transport_state |= CMD_T_ACTIVE | CMD_T_SENT;
+>         spin_unlock_irq(&cmd->t_state_lock);
+>         ...
+> }
+> 
+> Because CMD_T_ABORTED is set, target_cmd_interrupted() queues
+> target_abort_work on target_completion_wq and returns true without changing
+> cmd->t_state:
+> 
+> drivers/target/target_core_transport.c:target_cmd_interrupted() {
+>         ...
+>         if (cmd->transport_state & CMD_T_ABORTED) {
+>                 if (cmd->transport_complete_callback)
+>                         cmd->transport_complete_callback(cmd, false, &post_ret);
+>                 INIT_WORK(&cmd->work, target_abort_work);
+>                 queue_work(target_completion_wq, &cmd->work);
 >                 return true;
+>         }
+>         ...
+> }
 > 
-> (plus the few extra copies of access_ok()/__access_ok())
+> As a result, cmd->se_cmd.t_state remains TRANSPORT_WRITE_PENDING. When
+> CMD_T_TAS is set (for example, when aborted by a LUN_RESET on another session
+> with emulate_tas enabled), target_handle_abort() queues SAM_STAT_TASK_ABORTED
+> status and drops one cmd_kref reference via
+> transport_cmd_check_stop_to_fabric(), leaving the command on
+> conn->conn_cmd_list in TRANSPORT_WRITE_PENDING state until ExpStatSN
+> acknowledges the status (or, when CMD_T_TAS is not set, until
+> target_abort_work runs iscsit_aborted_task()).
 > 
-> As a quick fix I would probably start with just the 'if (!mm) return false'
-> bit here to get something merged while we still discuss the other
-> details.
+> If the connection closes while the command is still on conn->conn_cmd_list,
+> iscsit_release_commands_from_conn() checks for TRANSPORT_WRITE_PENDING:
+> 
+> drivers/target/iscsi/iscsi_target.c:iscsit_release_commands_from_conn() {
+>         ...
+>                 if (cmd->se_cmd.t_state == TRANSPORT_WRITE_PENDING) {
+>                         /*
+>                          * We never submitted the cmd to LIO core, so we have
+>                          * to tell LIO to perform the completion process.
+>                          */
+>                         spin_unlock_irq(&se_cmd->t_state_lock);
+>                         target_complete_cmd(&cmd->se_cmd, SAM_STAT_TASK_ABORTED);
+>                         continue;
+>                 }
+>         ...
+> }
+> 
+> Wouldn't this call target_complete_cmd() -> target_cmd_interrupted() a second
+> time on the same command, re-initializing and re-queueing cmd->work for
+> target_abort_work while iscsit_release_commands_from_conn() also frees the
+> command via iscsit_free_cmd(), leading to workqueue corruption, cmd_kref
+> underflow, and use-after-free of struct iscsit_cmd?
+> 
+> --
+> Sashiko AI review · https://sashiko.dev/#/patchset/20261027180123.13163-1-d.bogdanov@yadro.com?part=2
