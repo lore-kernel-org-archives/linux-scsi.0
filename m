@@ -1,78 +1,70 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=124.126.103.232
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793104138;
-	b=5oKy74JRNtFVvsTQBH62XQZQlBmnTtF8KpepJAjfgCmrw1xcVkAI7QI8Fp/kwvRRPXD+
-	 zyZfBQJfnlEtE+uUDrR0oNFE32c+6wPYtcRjmTOGt+z1sioDuSKx7MglHUb9Xfy655ml9
-	 FsPUsiGcxVtZq7ToHrIaRP+4Y3JhgLhCoeSw3qmBeq5ScbzKjkoIzmDFAXYkQWon6cRxP
-	 ZE2lSBazNE2nA2GPzdLvaa6BUplC72CdnhLERBanX2F/d7UOK3+2/373+PwN/U/pAp1dQ
-	 jIyFpuEVr32gWKRBR2jfp2IsF7mirLgcUxGiIEqNbRmZi8uT2aJ9ypJWZmXCi7KrKyA==
+	t=1793104340;
+	b=kzZk3Pn5E6B+t/lsT/5dbN8SrhPPanAn1WRh26PXG66rqxjsnaGnJ4U7ZnRyDtzWPprZ
+	 nVTiJkwP5ON92WtQuA3vORBjV3bQo8TCTGAqHVm6YKQsk/uvmi+Uya2fk3cTszpUlYxTl
+	 thyma2h0pjypwnhTXIXA4hvBcyfDoZwg0zrM1qOBh2mOwuPjj9j4eCL7CCiGdv6EQrw1c
+	 3qnzzdRZIdUt/nl4qY0vM+oWrLs91a+uI9xWXSXJ+8keWF4Vpf2bdTdvlf+dIDIv/z/2s
+	 li9RGHIE8i4tDGQ+3fl55TiadKYHk3iizTZbxQWCYJEjcYukQOJ2bX6u/+YRHmfmYkg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793104138;
-	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
-	 X-Mimecast-MFC-AGG-ID:Received:Received:From:To:Cc:Subject:Date:
-	 Message-ID:In-Reply-To:References:MIME-Version:
-	 Content-Transfer-Encoding:X-Scanned-By;
-	bh=WOyAdyJ3VwLj6BYWXKFaYpPKWtpHPNj/CyN5SfKZYo0=;
-	b=s+B1Yc2ebDVJUh/UXJr1Sr63bPV+NEuMcSyiFVC3d4czdE3hVrR+NtUmYzjlA5nK6++e
-	 Nf8r9E+0XOek6aZsRyFlQCnqBLFr/rRmaUmT34RYNKx8ym0T62iCHmUeHxdG1wLae9AJa
-	 Y+3SmpWOsSE1UCzN8OMqH4JuqGf2Z+eCfnHjw36YD3JZR8JXlRwRKFWZRMxCM7EjwJzg6
-	 03/ufgGR6EvhnRNQyBkTG4+5ItnneNs2f4SdoNNNmGyAeVjoJxnebT/0TR4Elja8Y/K61
-	 8lCi/dl7gIBCCh8dCZd0jMkpEFfTay39GumsikhYSzOe8oUknEW8Z8HwmNiWrbUg1TA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793104340;
+	h=DMARC-Filter:X-UUID:X-CID-P-RULE:X-CID-O-INFO:X-CID-META:X-CID-BVR:
+	 X-CID-BAS:X-CID-FACTOR:X-CID-RHF:X-UUID:X-User:Received:From:To:Cc:
+	 Subject:Date:Message-Id:X-Mailer:In-Reply-To:References:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=D/JBPkvv/qyx1+277tmAX2f1cVbpMop2ccu3ZRTgyrk=;
+	b=RpQkdhUJjhPfSFKpB4zMplQBGP7mL2TRm7IpQdUex4imTdYVlGfLAxSThD40FPTo4LqT
+	 jRr3d2H4w17RBAZ0sIWAe8FzzKDPtIxDYc8W7o5FSMkXAuUIPPo67f1gYxTRuFHP+Y7RQ
+	 ZxEW8YPfmY1oqeKeFPH0LGmB6u4crduwDTDXuF7fxH1kaU5ZKlum80Y41HlGRXf2XX4aQ
+	 TtiJppq0ZVxcRXXm0koH6ZWZfDZF4kYTAgXB9x9AnKXQdhVv8pvznuRw9Eczy2AAAKOwF
+	 l8zCISD+nFWGEDsDw/2mFaY/PmpohamkblcRKgqvw+oziu64I0OfVCJJOxN5HPDuqDQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=redhat.com;
-	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=ei7OTtvo;
-	arc=none smtp.remote-ip=170.10.133.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	dmarc=none header.from=kylinos.cn;
+	spf=pass smtp.mailfrom=kylinos.cn;
+	arc=none smtp.remote-ip=124.126.103.232
+Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E99560A2619
-	for <linux-scsi@vger.kernel.org>; Tue, 27 Oct 2026 12:28:58 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4E99560A2619
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=ei7OTtvo
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1793104137;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=WOyAdyJ3VwLj6BYWXKFaYpPKWtpHPNj/CyN5SfKZYo0=;
-	b=ei7OTtvoAc+fiYRDFZrjYi1dhE5NhFQ1pgTITJlu0qK6dJ7uD7EEu2UD9trzVK4CcYu1V3
-	ZEGvJnskwWgiMQxvTvvQfyM4LXB40QDd4tV4IEB6626RLirtWuLOg82nX+8VFwlC7etEnB
-	0tZDhrfpmvT2t48BK8hehHCQurKfYFQ=
-Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-668-8NxQxAqJM0-ZHjEXoNMkvQ-1; Tue,
- 27 Oct 2026 08:28:46 -0400
-X-MC-Unique: 8NxQxAqJM0-ZHjEXoNMkvQ-1
-X-Mimecast-MFC-AGG-ID: 8NxQxAqJM0-ZHjEXoNMkvQ_1793104124
-Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 911D51800864;
-	Tue, 27 Oct 2026 12:28:44 +0000 (UTC)
-Received: from loberman-thinkpadp16gen3.redhat.corp (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
-	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 79BC930002CB;
-	Tue, 27 Oct 2026 12:28:43 +0000 (UTC)
-From: Laurence Oberman <loberman@redhat.com>
-To: mkp@kernel.org
-Cc: linux-scsi@vger.kernel.org,
-	target-devel@vger.kernel.org,
-	bvanassche@acm.org,
-	michael.christie@oracle.com,
-	mlombard@redhat.com,
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A42C606A31E;
+	Tue, 27 Oct 2026 12:32:16 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6A42C606A31E
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
+X-UUID: 6e8d6306d20211f19a56ed5b684f684d-20261027
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.19,REQID:12316910-0ca6-4cc6-898b-f2e94ee5b24a,IP:0,U
+	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+	release,TS:0
+X-CID-META: VersionHash:7db8b62,CLOUDID:3e25585a5367c03d8bfd50d1bffd8b8c,BulkI
+	D:nil,BulkQuantity:0,SF:81|82|83|102|865|898,TC:nil,Content:0|15|50|99,EDM
+	:-3,IP:nil,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0
+	,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: 6e8d6306d20211f19a56ed5b684f684d-20261027
+X-User: lijiayi@kylinos.cn
+Received: from thinksys.tail1c7620.ts.net [(10.44.16.150)] by mailgw.kylinos.cn
+	(envelope-from <lijiayi@kylinos.cn>)
+	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
+	with ESMTP id 383760322; Tue, 27 Oct 2026 20:32:11 +0800
+From: Jiayi Li <lijiayi@kylinos.cn>
+To: Oliver Neukum <oneukum@suse.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>,
+	Michal Pecio <michal.pecio@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-usb@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	usb-storage@lists.one-eyed-alien.net,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH v6 1/4] scsi: target: Do not re-enable interrupts in compare_and_write_post()
-Date: Tue, 27 Oct 2026 08:28:34 -0400
-Message-ID: <20261027122837.2148074-2-loberman@redhat.com>
-In-Reply-To: <20261027122837.2148074-1-loberman@redhat.com>
-References: <20261027122837.2148074-1-loberman@redhat.com>
+Subject: Re: [PATCH v2] usb: uas: wait for pending commands before unbinding
+Date: Tue, 27 Oct 2026 20:31:50 +0800
+Message-Id: <20261027123150.976281-1-lijiayi@kylinos.cn>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <caa4542a-f1af-4a24-bc1f-f6c17d6e93ee@suse.com>
+References: <caa4542a-f1af-4a24-bc1f-f6c17d6e93ee@suse.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -83,61 +75,59 @@ List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
 
-target_complete_cmd() may be called by a backend driver from interrupt
-context, as the comment above target_complete_cmd_with_sense() says. For a
-command that has been aborted it calls target_cmd_interrupted(), which
-invokes cmd->transport_complete_callback(). Once the WRITE phase of a
-COMPARE AND WRITE has been set up that callback is
-compare_and_write_post(), which takes t_state_lock with spin_lock_irq()
-and drops it with spin_unlock_irq(), unconditionally enabling interrupts
-in a caller that had them disabled.
+Hi,
 
-Use spin_lock_irqsave() / spin_unlock_irqrestore() instead.
+Thank you for the follow-up.
 
-compare_and_write_callback() has the same pattern, but its
-spin_lock_irq() is on the path taken after a successful compare, which is
-reached only from target_complete_ok_work() in process context; the
-success == false path returns long before it. It is left alone.
+On Tue, Oct 27, 2026, Oliver Neukum wrote:
+> Even if an error occured? Does it make sense to wish to complete
+> commands that have failed while the driver is being unloaded.
 
-Signed-off-by: Laurence Oberman <loberman@redhat.com>
----
+I have changed the disconnect preparation to stop retries after
+allocation or URB submission failures. After blocking the host, accepted
+commands are marked with COMMAND_NO_RETRY. Commands needing a retry are
+left for the existing cleanup, while other accepted commands can still
+complete normally.
 
-Notes:
-    Pre-existing, and not needed by the rest of the series, but
-    compare_and_write_post() is modified by patch 2 and the mismatch between
-    its spin_lock_irq() and the spin_lock_irqsave() a few lines below would be
-    confusing to leave in place.
-    
-    No Fixes: tag -- the pattern predates target_cmd_interrupted().
+The wait now polls the command table, excluding commands left for cleanup,
+rather than waiting for anchors that those commands may still occupy.
 
- drivers/target/target_core_sbc.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+> Indeed, but shouldn't we cancel scan_work _before_ we even try to complete
+> commands?
 
-diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
-index 21f5cb8..8c52e1e 100644
---- a/drivers/target/target_core_sbc.c
-+++ b/drivers/target/target_core_sbc.c
-@@ -352,15 +352,16 @@ static sense_reason_t compare_and_write_post(struct se_cmd *cmd, bool success,
- {
- 	struct se_device *dev = cmd->se_dev;
- 	sense_reason_t ret = TCM_NO_SENSE;
-+	unsigned long flags;
- 
--	spin_lock_irq(&cmd->t_state_lock);
-+	spin_lock_irqsave(&cmd->t_state_lock, flags);
- 	if (success) {
- 		*post_ret = 1;
- 
- 		if (cmd->scsi_status == SAM_STAT_CHECK_CONDITION)
- 			ret = TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
- 	}
--	spin_unlock_irq(&cmd->t_state_lock);
-+	spin_unlock_irqrestore(&cmd->t_state_lock, flags);
- 
- 	/*
- 	 * Unlock ->caw_sem originally obtained during sbc_compare_and_write()
--- 
-2.43.0
+I have added cancel_work(&devinfo->scan_work) before blocking the host.
+This cancels pending scan work without waiting for a running scan.
 
+> Understood. We need a genuine cancellation code.
+
+Is additional cancellation handling required for this change, or can
+it be addressed separately?
+
+> Yes, but that doesn't answer you why you are setting resetting
+> only _after_ waiting for commands to complete.
+
+resetting also suppresses normal completion processing:
+uas_stat_cmplt() skips processing the received IU, and uas_data_cmplt()
+skips uas_try_complete(). Setting it before the wait would therefore
+prevent some accepted commands from completing normally.
+
+During preparation, scsi_block_requests() prevents new commands from
+being accepted while existing commands retain their completion paths.
+I set resetting when the wait ends, including on timeout, before
+unblocking the host.
+
+> This answers it, but why do you unblock the device then at all?
+
+The temporary SCSI host block needs to be released so queued requests and
+requests issued during device removal can finish. For example,
+sd_shutdown() may issue a synchronous cache flush. Leaving the host
+blocked can leave that request waiting for dispatch.
+
+With resetting already set, requests reaching that check in
+uas_queuecommand_lck() are completed with DID_ERROR without submitting
+new URBs. This restores the existing teardown behaviour after the
+grace period.
+
+Thanks,
+Jiayi
