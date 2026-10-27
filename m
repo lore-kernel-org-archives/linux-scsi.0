@@ -1,99 +1,102 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=74.125.230.70
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.218.52
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793115909;
-	b=fInp0ba2oPzHfMf3k63rLX6alpjQ2WiDVNzAnNeDgXwaEfdpxZ7H7N/eX3uLwiQQjYwR
-	 xi8Iik3EcoffTzRbAA3GzW6z2mrtzrxT6JCFKqeF8sf2QtJLyKGXpfYlf5iVvFT/89amu
-	 lAe9Ntzt0yhaHCxCIcMXKC+bzPhWtkCIDEZ6ghN1k2+j1du20Y4HK0M5zDo1fGkt7a7Gg
-	 Z6hJcKBOblOjno6Eds+MTB1LzuqHab2pm1ECo7qcTsEjanuMqiBVMYnuKBmjcSIDSNUIO
-	 gjpBVdzU7IXP+1ZCXQfbzqOzoYsFtlKxcjln20z9XxiUAVvw0FwR566AYLI4f7Ge3mg==
+	t=1793122223;
+	b=dZ+aHJpJrXGQGrEBvIyZMNoBH2XXhJO6CW+HlIopT9wJNHLTqebT53Zbl5WPtix/vdb2
+	 6Z/0SdDofiGexXnhe4r1C7NdPv5z2v6+Oy+HfOdxTYIQK6hzl3QKWNza+dC2d3lCGvM+n
+	 FEKWiys7oX81cHtYb3sFjrpnH9sj7OZVIDUJ1QKU7uUpTaiROjEBOO7WF0GKdFGscxID5
+	 j0NvRG6rl2YACfMrM2+0xSA4Icfq9p8ChVLC2qcJbypH/Op6ATOPkcLztYJ8kWvB5MECP
+	 04BkRjkr6bK9x6IisqCOVduzO9Pc+RbbJ7PyxmUG5xzFbMcCW1TVslciSiWuKifUhkA==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793115909;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793122223;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:MIME-Version:References:
-	 In-Reply-To:From:Date:X-Gm-Features:Message-ID:Subject:To:Cc:
-	 Content-Type:Content-Transfer-Encoding;
-	bh=7qVC9UUYwsvf3txmzp76sMUotGQnqFYvIzeVPR+E2O0=;
-	b=hvCBKbnnarjP6Le5H5PESa3fE1NxiMwELm6l9HP/TyFDDnlRVrF48oWWm3q0tA7wIkyl
-	 3Hg9RNuTD4gZfwgJxUEJ28ZHr8tquSltM/dMtwpApBSdUQlR2W0qJpz1eLZbyQpC1ACsy
-	 /QgHaVZvNeO/bQ6r5SEUzrF19NmyLyI/wWMCpkLb7Y6hh64OMcGTjet5kLjJMT3qh3XWL
-	 za7j8Es2nbhA0nWBh788Zp/f/nnwZ2vbjVE28K+BlONSHZfdfSCpjTcCEiCPC5xDIgRWJ
-	 hHW+nckD1tPS4UG35s/yLfaIqH+zKmQ+WEfBmILeSgwMStc31TBl3ZWt7NHz1gVGwLg==
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
+	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
+	 Message-ID:Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
+	bh=7gQ+97vReKa4toS9130cb0MEUCUe5fofr2ehSKz/dNw=;
+	b=zGl5oZ3dpks8H6jgr4Wcb2uK6mnvXCKowJWVZt+l2ueTH6TfWouFbJ6NfkNoXDt62jB3
+	 crt9EJJ4U7xN2MvzwcAAGVDxpcbEGCsIELqDTf2sZ/fLnx6Db7vowShSwk/Gx16Vp3uib
+	 SNIRbG9vJ57or9qScYAhj/1S6wnXSPa9aQwKMha9XmT5fEAKdkQbBq4ldSHR+XAMexnZE
+	 lAedOYlHGMP+pML0Y7vIkqaay5sPfO3bVfyQdezm9VldQtlPKcmFyeIVSpHW8C4eOxeUT
+	 MzYT6x9JVGsIw7wDGZpO90c0ysQTLY670ke1U9EgdMfQpsnhUFHc5X7WfLZg3eJqaPw==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=qnMepubd;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=74.125.230.70
-Received: from mail-lr2-f6.google.com (mail-lr2-f6.google.com [74.125.230.70])
+	dmarc=pass header.from=google.com;
+	spf=pass smtp.mailfrom=google.com;
+	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=AH5XVSYu;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.218.52
+Received: from mail-ej1-f52.google.com (mail-ej1-f52.google.com [209.85.218.52])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32842606A335
-	for <linux-scsi@vger.kernel.org>; Tue, 27 Oct 2026 15:45:09 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 32842606A335
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 89A38606A321
+	for <linux-scsi@vger.kernel.org>; Tue, 27 Oct 2026 17:30:23 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 89A38606A321
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=qnMepubd
-Received: by mail-lr2-f6.google.com with SMTP id 38308e7fff4ca-3ab1be9340aso28428151fa.1
-        for <linux-scsi@vger.kernel.org>; Tue, 27 Oct 2026 08:45:08 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1793115907; cv=none;
+	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=AH5XVSYu
+Received: by mail-ej1-f52.google.com with SMTP id a640c23a62f3a-c4322d310e7so11515066b.0
+        for <linux-scsi@vger.kernel.org>; Tue, 27 Oct 2026 10:30:23 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1793122222; cv=none;
         d=google.com; s=arc-20260327;
-        b=DSSg5ZUTJ1yNTNFAact0uv2Rkowf364qmsL6cbqJuQthh4WMLMl71qovksGZLwhwfv
-         6FWQn6AQtxnFdKW5dJj3ceDYqny9zrXKQAB+yMKq4foWzGpOurcn6LHX2mqQSCkmSAgY
-         yaIr1z0rpJ1pqoYv6iOkIkl4Xyb5B5KALG8IHWld9D98K/WkvwMOBzF5fpb7I3hIJ/YD
-         HsXN5BvbP/zTw2bAwB3NyFgFIo5h1DDlBqP06NtkHdIuaO0bbDl0cWiKa03BvfpyzO/l
-         h+7/twAmNwNUARZBfj9Th8cOmFyo8+k/UNzsBfIwE370vCH0L4ZfOCKC33SUeD0tl0Ce
-         MG/g==
+        b=QRksCQ52DsdcNX/sdV5v2fF/D8T73/jcEklsOAiv0/h3CCm6W3jWy0L4NUtom8v5e0
+         RXdibkPWZ0yiyJ07Qzj4sMcyUer7ekj5gKgNz3RvVZFfiHbxcg70llrzH+II0GolfZ8X
+         gMUftOAZrthvA1Bn9UVnbLhAiJlSBczBLlibqgSQm5Nog6PpjvMYofs0NF5r7wLxzYHs
+         0oP0cYRl/V/dmbAhHaB3PDj9eubJM6lnHY+NAt+cDZ+4dp8qCCGG4aAduGDEN4iY1DsC
+         yrBDcEPytR9l6aqJElUV3b8acxX4ZgwJBCITh5tVr/tbpro/QJ/llGSWUOrveNDbGiYd
+         nVqA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:dkim-signature;
-        bh=7qVC9UUYwsvf3txmzp76sMUotGQnqFYvIzeVPR+E2O0=;
-        fh=gUfsL9ppqjROwdjOOpA7gVU01au1qshFQ+BhECdF0Kg=;
-        b=IzMQGdnVOEtaJcgNxARYXqLBFoH45pVSReebn/dgin8CVae+c1xbExfkrY/CPfnriJ
-         X1AERR0IdQR8oIe+9HyIv8haTAiQBJzSQxMlY9NwOXZ01wwJMFggMgHNsdYiIRvvlPrD
-         17f3PkQ/KW+2vyL1/3J1pyzzqLy6jQs6HnH9sJjtR3ppBJU6wZI0sHQZv845mDMRjkTc
-         L33ugzspo2uQwQAONOPNmryLd2IyufiCv1RMTT4heDlsofj8qPkgHZBJdG4vbAdCPOAD
-         BDD8Kii+xUOR0M1UlBt98Z9J7+0ZiKMszt3WmkVpxWN4rjvHPmLK7w3Ifl5zJhgQeDtl
-         SeZg==;
+        bh=7gQ+97vReKa4toS9130cb0MEUCUe5fofr2ehSKz/dNw=;
+        fh=6d3sb40ZOTjyqaQQZXRcZIhTBm2fv+x7BiKfnDSxY6g=;
+        b=MTlEzP0ln04TDLdHvojAjZGMobVhG0lV4ak/Zu3Kbs9MRkvHLY0F11qNshJxbIWiYz
+         0uJ3fKce5K+vp+wUc8v/yJLofKt2cRytnEWFor55scQTCS9XQoety21iYHgArAXiirKz
+         KY13Jy4r8kJF8pQ3EK8/7Ms1ShrBWp76Jp3S3RU4Gq5tbCdGCpq67EjFOxf9JyWip0JY
+         QPV2WHItWUsVgujLlmfj1genNQtW6/JVRBR+aqsYmSSFnNdYZS5YOfiFMcVYl5InthsR
+         0/WcTXKsJxOKvpeOzsCpzqfMq6HVVJUEix0gSy5WrcweE2EhDFzjIQSWzCAKkrvLOW5I
+         Flqg==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793115907; x=1793720707; darn=vger.kernel.org;
+        d=google.com; s=20260707; t=1793122222; x=1793727022; darn=vger.kernel.org;
         h=content-transfer-encoding:content-type:cc:to:subject:message-id
          :date:from:in-reply-to:references:mime-version:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=7qVC9UUYwsvf3txmzp76sMUotGQnqFYvIzeVPR+E2O0=;
-        b=qnMepubdAlpijU9hG+aKTmNngMlElH4JCL9LchVQUUXjCS/uoOBrudjzIXUNngXy4H
-         NRVcIYDFyG1D+HKi6aq2g/IY656Rd3Cg+1/fm3C0WMD7yFMxQFgP0vD2gk2fW120yHn/
-         B7vlVrFTihDvpJApxmougYmK4Si2t/t1wWCikVI9yzF0b+MG0LrcCaBju9oZb0B2d5dj
-         HU7qaZ+OYZXCxeY37tof/DgC6IqY8QlHbZhaDZiP3wRakZ3UuxK5QNIYpAPIYGRfBHRo
-         puRsAXgNkjjxmHL8+JWtVdY2q7EVfV3+ELHL9rYZh7wWQGa9GJnDYK/wXfFtC1P/U94P
-         npVQ==
+        bh=7gQ+97vReKa4toS9130cb0MEUCUe5fofr2ehSKz/dNw=;
+        b=AH5XVSYuq6HUx6QejcrLzJHXiZbWI9DboIxOz+yByNgh84gxZAIKBuzZHV99EG6rqB
+         sL71z4Wm6MSPA3Nnza0i731ilrImuFj3jUTow6hkS/0r7bYzxQobbOzdeIyt6ASGeEbF
+         yTa0PHt944q+HSgG6NrCVe3wZJYFAVwhpzaLqX011nHEVLqO4I7UJy1zd5cfMTXQHdaA
+         BSUKBBxl7R08MamwKyO7Ss8mI2wGFLi7Y2RxS2XZ75lMQCOMaDZ6YNjy/Um35SI/BQEx
+         H9A/IMXo16KCWMivgQdBOKUL0g+UWglSQzebhEs3U4Ckl7bH2Y72gGHNDHSXACje/sxH
+         22yg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793115907; x=1793720707;
+        d=1e100.net; s=20260707; t=1793122222; x=1793727022;
         h=content-transfer-encoding:content-type:cc:to:subject:message-id
          :date:from:in-reply-to:references:mime-version:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=7qVC9UUYwsvf3txmzp76sMUotGQnqFYvIzeVPR+E2O0=;
-        b=KffgmMz+KzjyDtioEgvzqPbmh3jc5M6n0OETtkCQVKRBWPxw+S+d3MeXfZVC/H1Zgv
-         0yKvviXrTaDvBQsqplSHRIU+cv47g6emoyJkszM+x58e7ZGqLYeUxnabD5ynH/FeXQsP
-         tDpitfpiqnqacKQPIuRBcmSwrkjlo+3vozGJ4UKDi8Ufy/xheZJnLUzz4mCflFpzEnsc
-         C42sdRLUox2DuyvhiJFgqcyfVOfGF3meSG3RfqizesfmmYr2JcClsvV6gficvl8tAI4s
-         Zku0ACAwHIU5MUXju7ijzXgQz7s/QdOfvqUfQmYAPCBbAPli1aRNY8lrVlnDN0j/3ACi
-         cvwQ==
-X-Gm-Message-State: AFq9FYJs2PFT7KO5AhXfpONrPIX28uYwXzkMQE3XadHwXjdQmcyJPJK+
-	tWMPMLEjIVmPDR0xX4HxieFdKt68BaPHweXB2FGlziumqHQtNElEE3AjHEUk8Lyh4R3Ns1f3Ix9
-	YDQF+S6rRgC1aENYz5l0/9w/3cxbCmst2Ln6Alvnx0Q==
-X-Gm-Gg: AYBFou0DRZdK1WQH6FsSf+i+ey7IaIGPKGIeQsBvVoKka3bXewmWeKILNfUUoNbHsPp
-	VS/peFSfvHwz1uunc7VgPfYhjZB7FTUUP3XvqOw8taDf+wV7DOZzF4liw6LhqUEbWdmnuhThyr8
-	qTg55nWetWbCuGn0zuqsN/cHVKH6NcDVLGx78qDN4Eg+iiF2cUkgNP9RkdO4ttoPnSfaa3g5YLQ
-	dzdyym+nxxUQer0JE418vLS+ksaGr0Wfs5zxYTogxSiaqhJjroaYhdsU5Vb2n3bbfM50siIPyhs
-	PUdeqYvmEBvHv7NdiBMMi4G1xgYDHPjm7sU5agFEipZxSZIgeqNjoB8eF+oDJNkgAmUHKV+6V/x
-	47kDBhmoa8nbNilVFMf2+pBiNNQP8G7n87DJsrA==
-X-Received: by 2002:a05:651c:2118:b0:3a6:4452:bff1 with SMTP id
- 38308e7fff4ca-3ac6fd1896dmr27035421fa.16.1793115907142; Tue, 27 Oct 2026
- 08:45:07 -0700 (PDT)
+        bh=7gQ+97vReKa4toS9130cb0MEUCUe5fofr2ehSKz/dNw=;
+        b=fJ3HLhm709zHA0bCPV9L/3eLomtZ2JCwgCUlFjgIj8LmbR50QHY0UFoKeVyJeaA+uB
+         +T1iPxbNFcLPOLDaK61Ja4UoWFqf9qv55XOgAOpers2APwci3IqDlBTnUVHSaEwz9U5m
+         FZxg0Nz+T3bqqbKhjr8/YvmOqdobQE+GHwiLjzCagJdNwk85rQYASv/YuRK8p5ZB1pXg
+         wlMbGAJOF/urh6Rp6DklE9sL2sqTCehJz3dRZfkIFfchhsVW5HihOI12hte9ukWZ69Iw
+         qNvm8uuV0kXJlKBii9+Ocjot+4Vdna7LWT4oqyY+arOEiHkc2Lyo7ul7G8nvrvlFECQq
+         6goQ==
+X-Forwarded-Encrypted: i=1; AKwUvBxONiKNV8zkUktvxGt9Zxnyqv4zeTtVG/KU33tMP9DzokUIFK3/Rt4y58Tr0BpYfINOJ2HipVIx+BmX@vger.kernel.org
+X-Gm-Message-State: AFq9FYIGE2JJW4WRCWq0LFK68NDtpISLdgZwQJI0E23Z+XHA+OBtz1A4
+	2M6f0kc7vv9HlA3SFpEdW/t3sxGHFQ9TzCItDgw5AA+qeH3tN7Fia5lNOi5th3HyNb0SuhhZLE1
+	+Y/Bmg2wBciY0vTJTcdkb8PszuiR+IQnPjx8LMDdW
+X-Gm-Gg: AYBFou3A8CLS75oo+kZsV8I2eFz+74oMC+BDTMKfrcOBlHQ886Ea+XAlOx2l+mO+rCD
+	xxxqeoqeOf/XNMxvZuC92P7OLbWePHbxaYSsFVVbkyXwFEcpUdMJerd9PRgkT6zealO31vBUydE
+	r7n6oASGQU2yl/7cWpHcRs8mL5YAOdw9fbuCQwdNQVjPoWQYZQGGwZauG4r9DNWjDIEyWHSc7eg
+	vo5/pa8/KigA6b0ruJfISbjg6Kl8iFOQiUIo/D98l2Nf/uYU/GBSrcBkuy4lE9CuxsEbWzC/YC0
+	cOPfK4Sv6M0rdTg0Rqvc5oVv18A/dBzDT9PZ2KZ7iUD+lcyxDv1M5Ey/Z6IwyZwGT3rInpSD/hz
+	VVxJOjkM6jlP0NoBUCTfrAXmbclTc6++nowKGnjPLE67OyJ6C4l44BoIT5q0eMZ8fmnFxAwtDqi
+	KMEGHqpDZU/iUeMyGq+j+PlnZVOybQkZtilE1/WDesPS2CH2ZV/OQxZuxePabxPjV00xHu+e0x/
+	//k/SxMI5HC4BuoTMYr0z+nXx0VeR8Ssg==
+X-Received: by 2002:a17:907:80c:b0:c46:6a50:40c2 with SMTP id
+ a640c23a62f3a-c46bdee2675mr1178260566b.39.1793122221137; Tue, 27 Oct 2026
+ 10:30:21 -0700 (PDT)
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -103,137 +106,121 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261027150752.951217-1-bsdhenrymartin@gmail.com> <sashiko-outbox-186828@kernel.org>
-In-Reply-To: <sashiko-outbox-186828@kernel.org>
-From: henry martin <bsdhenrymartin@gmail.com>
-Date: Tue, 27 Oct 2026 23:44:55 +0800
-X-Gm-Features: AclHuK8o_x8D51yrjumY0OMRV8pch24SxXC-FujqEcNgHdBayQFoQUU8OSZPKKo
-Message-ID: <CAEnQdOrkc5EMpWBAreTOG038brf9LcfffL7psoNO50JiFt+8Fg@mail.gmail.com>
-Subject: Re: [PATCH] scsi: qedi: fix OOB read in login/text response completion
-To: sashiko-reviews@lists.linux.dev
-Cc: linux-scsi@vger.kernel.org
+References: <20261026215226.3713941-1-jthoughton@google.com> <14f5f919-55bd-47c6-a1c8-6f1445cce733@app.fastmail.com>
+In-Reply-To: <14f5f919-55bd-47c6-a1c8-6f1445cce733@app.fastmail.com>
+From: James Houghton <jthoughton@google.com>
+Date: Tue, 27 Oct 2026 10:29:43 -0700
+X-Gm-Features: AclHuK_V7ZmMdE83iy-wOvaliSqHMUcbKVcnfqQwnRgRgjPYRFDHKTZOMwXOk5E
+Message-ID: <CADrL8HXQdzcroeGN-ACjyy-jSAdBNHiT1_BCVVe0P+Y8ZueiyA@mail.gmail.com>
+Subject: Re: [RFC PATCH 00/10] uaccess: Refuse and warn on user accesses when
+ current->mm is NULL
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Alexander Viro <viro@zeniv.linux.org.uk>, 
+	Thomas Gleixner <tglx@kernel.org>, Peter Zijlstra <peterz@infradead.org>, Kees Cook <kees@kernel.org>, 
+	"David Hildenbrand (Red Hat)" <david@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>, 
+	"Liam R. Howlett" <liam@infradead.org>, "Vlastimil Babka (SUSE)" <vbabka@kernel.org>, Mike Rapoport <rppt@kernel.org>, 
+	Suren Baghdasaryan <surenb@google.com>, Michal Hocko <mhocko@suse.com>, 
+	Sean Christopherson <seanjc@google.com>, Paolo Bonzini <pbonzini@redhat.com>, 
+	Jim Mattson <jmattson@google.com>, Jens Axboe <axboe@kernel.dk>, 
+	Pavel Begunkov <asml.silence@gmail.com>, 
+	"James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>, 
+	"Martin K. Petersen" <mkp@kernel.org>, David Sterba <dsterba@suse.com>, Chris Mason <mason@kernel.org>, 
+	Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, 
+	John Fastabend <john.fastabend@gmail.com>, Josh Poimboeuf <jpoimboe@kernel.org>, 
+	Steven Rostedt <rostedt@goodmis.org>, Masami Hiramatsu <mhiramat@kernel.org>, 
+	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>, Ingo Molnar <mingo@redhat.com>, 
+	Arnaldo Carvalho de Melo <acme@kernel.org>, Namhyung Kim <namhyung@kernel.org>, linux-mm@kvack.org, 
+	linux-fsdevel@vger.kernel.org, kvm@vger.kernel.org, io-uring@vger.kernel.org, 
+	linux-scsi@vger.kernel.org, linux-btrfs@vger.kernel.org, bpf@vger.kernel.org, 
+	linux-trace-kernel@vger.kernel.org, linux-perf-users@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-Correct, thanks.  Confirmed in-tree: push_callback_call() only
-propagates -EFAULT from btf_check_subprog_call(), so the -EINVAL
-path reaches check_stack_arg_read() with caller->stack_arg_regs
-unvalidated or stale - and it is a heap array sized by
-out_stack_arg_cnt, so this is a NULL deref or stale-state copy.
-
-One refinement: set_timer_callback_state() (async timer/workqueue)
-does not set in_callback_fn, so that check alone misses the
-original frame[-1] case.  v2 rejects on both:
-
-    if (vstate->curframe =3D=3D 0 || state->in_callback_fn)
-
-pw-bot: cr
-
-Regards,
-Henry
-
-<sashiko-bot@kernel.org> =E4=BA=8E2026=E5=B9=B410=E6=9C=8827=E6=97=A5=E5=91=
-=A8=E4=BA=8C 23:23=E5=86=99=E9=81=93=EF=BC=9A
+On Mon, Oct 26, 2026 at 5:13=E2=80=AFPM Arnd Bergmann <arnd@arndb.de> wrote=
+:
 >
-> Thank you for your contribution! Sashiko AI review found 1 potential issu=
-e(s) to consider:
-> - [Medium] scsi: qedi: unclamped dlength in qedi_process_text_resp() and =
-login_resp()
-> --
->
-> commit b81ce3a14651452d3f551e4635d2337a8b305729
-> Author: Henry Martin <bsdhenrymartin@gmail.com>
->
-> scsi: qedi: fix OOB read in login/text response completion
->
-> This commit clamps the payload length extracted from the CQE in
-> qedi_process_text_resp() and qedi_process_login_resp() to
-> qedi_conn->gen_pdu.resp_buf_size before advancing resp_wr_ptr, preventing
-> an out-of-bounds read when completing the PDU to userspace.
->
-> > diff --git a/drivers/scsi/qedi/qedi_fw.c b/drivers/scsi/qedi/qedi_fw.c
-> > index c8af10c326532..5e20716043aee 100644
-> > --- a/drivers/scsi/qedi/qedi_fw.c
-> > +++ b/drivers/scsi/qedi/qedi_fw.c
-> > @@ -115,6 +115,8 @@ static void qedi_process_text_resp(struct qedi_ctx =
-*qedi,
+> On Mon, Oct 26, 2026, at 22:52, James Houghton wrote:
 > >
-> >       pld_len =3D cqe_text_response->hdr_second_dword &
-> >                 ISCSI_TEXT_RESPONSE_HDR_DATA_SEG_LEN_MASK;
-> > +     if (pld_len > qedi_conn->gen_pdu.resp_buf_size)
-> > +             pld_len =3D qedi_conn->gen_pdu.resp_buf_size;
-> >       qedi_conn->gen_pdu.resp_wr_ptr =3D qedi_conn->gen_pdu.resp_buf + =
-pld_len;
+> > This series comes out of a set of bugs that were found in KVM where the
+> > kernel can sometimes write to a random process's user memory[1]. The KV=
+M
+> > fixes at [1] are still required, even with this uaccess series, as note=
+d
+> > by Sean here[2] and below in this cover letter. The beginning of this
+> > series includes fixes for similar bugs found through static analysis
+> > with Claude Opus 5.5. I don't think any of these bugs are more severe
+> > than the KVM bugs[1].
 > >
-> >       memset(task_ctx, '\0', sizeof(*task_ctx));
-> > @@ -294,6 +296,8 @@ static void qedi_process_login_resp(struct qedi_ctx=
- *qedi,
-> >       resp_hdr_ptr->status_detail =3D cqe_login_response->status_detail=
-;
-> >       pld_len =3D cqe_login_response->hdr_second_dword &
-> >                 ISCSI_LOGIN_RESPONSE_HDR_DATA_SEG_LEN_MASK;
-> > +     if (pld_len > qedi_conn->gen_pdu.resp_buf_size)
-> > +             pld_len =3D qedi_conn->gen_pdu.resp_buf_size;
-> >       qedi_conn->gen_pdu.resp_wr_ptr =3D qedi_conn->gen_pdu.resp_buf + =
-pld_len;
+> > We hit one of the KVM bugs in production, and it was challenging to
+> > debug. This series makes such bugs, where the kernel is doing uaccess
+> > without an mm, much more obvious.
 >
-> [Severity: Medium]
-> Should resp_hdr_ptr->dlength also be populated from the clamped pld_len i=
-n
-> both qedi_process_text_resp() and qedi_process_login_resp()?
+> Nice work!
+
+Thanks!
+
+> > Such an access does not reliably fail. The user portion of the address
+> > space belongs to whatever mm happens to be lazily loaded, if any. If
+> > the access faults, the fault handler refuses to handle it and the copy
+> > fails, but if the page is already mapped, the access silently reads or
+> > writes another task's memory.
 >
-> Earlier in both functions, resp_hdr_ptr->dlength is written using the raw
-> unclamped 24-bit CQE value before pld_len is clamped to
-> qedi_conn->gen_pdu.resp_buf_size:
+> This sounds like the problem depends a lot on the architecture,
+> and to what degree they implement lazy mm switching. If an architecture
+> makes all user pointers invalid for a kernel thread, this does not
+> actually happen, right?
 >
-> drivers/scsi/qedi/qedi_fw.c:qedi_process_text_resp() {
->         ...
->         hton24(resp_hdr_ptr->dlength,
->                (cqe_text_response->hdr_second_dword &
->                 ISCSI_TEXT_RESPONSE_HDR_DATA_SEG_LEN_MASK));
->         ...
->         pld_len =3D cqe_text_response->hdr_second_dword &
->                   ISCSI_TEXT_RESPONSE_HDR_DATA_SEG_LEN_MASK;
->         if (pld_len > qedi_conn->gen_pdu.resp_buf_size)
->                 pld_len =3D qedi_conn->gen_pdu.resp_buf_size;
->         qedi_conn->gen_pdu.resp_wr_ptr =3D qedi_conn->gen_pdu.resp_buf + =
-pld_len;
+> E.g. on arm64 with CONFIG_ARM64_SW_TTBR0_PAN, the page table base for
+> the current process is only set in user_access_begin() and would
+> not point to any task here. Without ttbr0_pan, it should be
+> covered by cpu_set_reserved_ttbr0() turning off all user space access
+> for kernel threads.
 >
-> and similarly in qedi_process_login_resp():
+> Should this perhaps be addressed in architecture specific code
+> instead of in a common place?
+
+You're right that whether corruption can actually occur depends on the
+architecture and config. I'll write a note about this in the v2 cover
+letter.
+
+That being said, I still think the right thing to do is to have the
+new check(s) in common code. Instances of improper uaccesses are still
+bugs, even if no corruption occurs.
+
+> > =3D=3D The New WARN =3D=3D
+> >
+> > The rest of the series makes the generic uaccess helpers WARN_ON_ONCE()
+> > and refuse the access when current->mm is NULL:
+> >
+> >  - Patch 6 adds uaccess_should_fail(), which combines the existing
+> >    should_fail_usercopy() fault injection check with the NULL mm check,
+> >    and uses it in place of should_fail_usercopy(). This covers
+> >    copy_{to,from}_user() on all architectures (including the masked
+> >    user access paths, which never call access_ok()), the
+> >    __copy_{to,from}_user() variants used by KVM's guest memory
+> >    accessors, the user-backed iov_iter copy routines and
+> >    strncpy_from_user().
+> ...
+> > The checks are deliberately limited to generic code. Accesses
+> > implemented entirely by architectures (get_user(), put_user(),
+> > clear_user(), and direct users of user_access_begin() or
+> > masked_user_access_begin()) are not covered. Please let me know if the
+> > new check should be placed elsewhere.
 >
-> drivers/scsi/qedi/qedi_fw.c:qedi_process_login_resp() {
->         ...
->         hton24(resp_hdr_ptr->dlength,
->                (cqe_login_response->hdr_second_dword &
->                 ISCSI_LOGIN_RESPONSE_HDR_DATA_SEG_LEN_MASK));
->         ...
->         pld_len =3D cqe_login_response->hdr_second_dword &
->                   ISCSI_LOGIN_RESPONSE_HDR_DATA_SEG_LEN_MASK;
->         if (pld_len > qedi_conn->gen_pdu.resp_buf_size)
->                 pld_len =3D qedi_conn->gen_pdu.resp_buf_size;
->         qedi_conn->gen_pdu.resp_wr_ptr =3D qedi_conn->gen_pdu.resp_buf + =
-pld_len;
->
-> When __iscsi_complete_pdu() calls iscsi_recv_pdu(), the netlink message i=
-s
-> allocated and populated with only data_size (the clamped pld_len) bytes o=
-f
-> payload following the header:
->
-> drivers/scsi/scsi_transport_iscsi.c:iscsi_recv_pdu() {
->         int len =3D nlmsg_total_size(sizeof(*ev) + sizeof(struct iscsi_hd=
-r) +
->                                    data_size);
->         ...
->         pdu =3D (char*)ev + sizeof(*ev);
->         memcpy(pdu, hdr, sizeof(struct iscsi_hdr));
->         memcpy(pdu + sizeof(struct iscsi_hdr), data, data_size);
->
-> If the CQE data segment length exceeds resp_buf_size, won't this leave
-> resp_hdr_ptr->dlength advertising the larger unclamped length in the
-> embedded struct iscsi_hdr while only resp_buf_size bytes of payload are
-> actually present in the netlink message sent to userspace?
->
-> --
-> Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261027150752.95=
-1217-1-bsdhenrymartin@gmail.com?part=3D1
+> I would think that user_access_begin() is a more natural place
+> for the added checks, as this should be called exactly once for
+> any function that accesses user space and also stays out of the
+> way of the copy_from_kernel_nofault() etc.
+
+user_access_begin() isn't used in a lot of places that I want to
+catch, including the KVM case. Roughly:
+
+  kvm_write_guest_cached() --> __copy_to_user() --> raw_copy_to_user()
+
+There's no user_access_begin() in there. :/
+
+I do think user_access_begin() should have the new check though, so
+I've added it in the v2.
+
+Thanks for the feedback, Arnd. :)
