@@ -1,106 +1,57 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.remote-ip=85.215.255.51
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=fail;
-	t=1793124780;
-	b=Q14U67MBRnh2VYc3UrRMjjRh9gvD8SwF2yKdqafD6Gk/eIQNdHrXg03LTtcV2jXyx5Xg
-	 zmcHwmVyebcWpa+7/xJpsis4Lr20UyPev6vCiBqclb57S8/Gb4veApwq4llsFpvtgfWuh
-	 sAcPHKJI+pDIhlTWGHg4EnArxeJZrkrj8KJaaOvMeBhOu/JdWeHwepIcTTHe9F4/DRVJ1
-	 LRkc0u8Gx0ydDxePdu1VceEXFcz1prl1tYDtDi1A5A8E1NGpRhkxoyW6MoGrIL2rhO/9g
-	 DPKj326Nrh+RH3H7wCf309j/neml/nnRiUWQ89Brstu3n64Efoz9XVa9elszLJg0sdQ==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793124780;
-	h=DMARC-Filter:X-RZG-CLASS-ID:DKIM-Signature:DKIM-Signature:X-RZG-AUTH:
-	 Received:Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:Content-Transfer-Encoding:User-Agent:MIME-Version;
-	bh=9K0cHhogjFGdzGmlyT7TpNjKvBBWzvIeBsJB7+bteoY=;
-	b=Ax16ckMd0FMS09aeDGftx2Akky+ToIqZhovl8GQtQAPaoXDYd+C1XAxscjetXoFxsjzs
-	 RhiyGf6o+jsCyyCIIGIAb825vZjgfrl4Om+UrwoxwRfcPKMHSqUWdQpV+YaPUVJ9TiaG3
-	 kIqtSF+dNh3Ru/D/DRlZ4neL3zuL4rcph6BIPkZV0CVOLgXRRxwRiOgfQOT6UVh7nipNR
-	 HypgdUMuiyNr09n6fPCUqUPZW1Rrfbjbc4eldE/oV0gZCrSu+5D876gTwaE7LguOSwegg
-	 lypunK5djRXFh8n6TYiBxocgdKQhP2DqZK1Z8nGJyzzgLL1k4uiWxTBcWglIUnangOw==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=iokpp.de;
-	spf=none smtp.mailfrom=iokpp.de;
-	dkim=pass header.d=iokpp.de header.i=@iokpp.de header.a=rsa-sha256 header.s=strato-dkim-0002 header.b=n2jbAlcY;
-	dkim=pass header.d=iokpp.de header.i=@iokpp.de header.a=ed25519-sha256 header.s=strato-dkim-0003 header.b=egdW8twB;
-	arc=fail smtp.remote-ip=85.215.255.51
-Received: from mo4-p01-ob.smtp.rzone.de (mo4-p01-ob.smtp.rzone.de [85.215.255.51])
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1793125095;
+	b=KfUJjPwbZx9DaQNyBFwcsPqdBmjE0vNGWWl8ZpTuxeBUEnLtTGlRL8vIFEEfrvu2rjhX
+	 mFIaA+GXzAVso3fO70/S62SR29VoFTkL75hfSixFEi+UbI0wmx0EnkFwXKzPbaJPuOTxt
+	 manNEGYaPgnHjIMFfdgjOLD02zEt2qSGZJ5wGGEYy7LU/cYD6tcQ9L37ebBR9CIWt0RF0
+	 QzKQrXbDcB+e1i6eDKrWwEIVxB8uQYLjn4O21I+vdP3xa3yAVC6uLB7iwrgJ8i+59R750
+	 kX7696R0EjeHeetw/yjK4stsXeu2/uBtL5zTK+pkSypXWl4RJU2UcPhq99b0EIeryQA==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793125095;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=1OGP3vAf2N6yBHBFjlNU3/YbFZwF9jv1NKjFlU67lBQ=;
+	b=soQ45BTuocnEdXtyTlVflSBSaIeWdkwsj7pW0VZGwBqpdxMHIuPuYZWUKdQL3mgQrKIe
+	 QQhlUJt5a6xgp4pWoiHe3D7KmKb8Ird4hJhmoiOi2jRuXMHVsLa5Jzb7DU8eTrYc9h7qw
+	 3PbAXikfPDMwoyImf2SZtp/XhO98QWP7OeWzeWLHenHdN9T8fu5DDfDfh5MxZw106skUZ
+	 1gedRx/z19NUFGkU1F5wVY0TtVZS9XZsOhLAAoeTUjq13HvLJ9kp+E+JAM267SfMzZneE
+	 vhlMON2ThTYA8ohyxYghqoi5C/KQJczG0DI+RQMhrMDhB9sJhAKgZVsVZG+2U0xZ2Cg==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=YSZmF1+I;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3C9D606A31A;
-	Tue, 27 Oct 2026 18:12:58 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B3C9D606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=iokpp.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E05D7606A320;
+	Tue, 27 Oct 2026 18:18:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=iokpp.de header.i=@iokpp.de header.a=rsa-sha256 header.s=strato-dkim-0002 header.b=n2jbAlcY;
-	dkim=pass header.d=iokpp.de header.i=@iokpp.de header.a=ed25519-sha256 header.s=strato-dkim-0003 header.b=egdW8twB
-ARC-Seal: i=1; a=rsa-sha256; t=1793124762; cv=none;
-    d=strato.com; s=strato-dkim-0002;
-    b=PIoEo8fub/GpGERjlGpouvvVB8GpP7cdZoDkfCzVh7oaKbakx6rtgmoQA/G0e0566e
-    RDHf3OiSgApdYiFkO4K+9JFV/XyD5oJxPqkzYNtet/Iwnf7uRWaeqbi02nh6+gOcTEGS
-    +16ntBlFtQAJzQ+6z+AWT3bFRHrKn/Ne7WZT43DJigqhxnPaPx+ffInwFdb9jJWgP0tG
-    8EI8IBkGp9yel0qKDOAL1abnzMjCRPfQxD0tHBb7QMmDpbvATRmPAA6yugQXYGPqbQNr
-    OlhdG88CEtoyw2xDmxpzWC6Uev+jkNQWGuSQrkVb24gf0lmajHuD4ujP6hAfk7eXK03c
-    piqg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1793124762;
-    s=strato-dkim-0002; d=strato.com;
-    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
-    From:Subject:Sender;
-    bh=9K0cHhogjFGdzGmlyT7TpNjKvBBWzvIeBsJB7+bteoY=;
-    b=dwutRWKLncdhHyX1EGDYs9rmfTtQzI4XIPskR/LgP7IvBW6z7ck0f8vV5ZcYYMGkrW
-    bj/Y+MR3Ogs9nDm5rT6PYKzgg6qQqnlkc3KZSFKDZXutQUci61ncJLUGT0PAn5072xmC
-    YOYAIDUsXegwFUbv3BlqTEBS+Ao6Ajwvre5cRYybHgLZpP6n7rtRX3Ia0IT9uCAvKjjc
-    f0w8rXhJqLD2KrJjVQ3C7a65dGVSatOOK6agHvYujaPymyvrwJC/VmVNOn1pfRZrIJYi
-    1J/4EiJP0BTVxUJBfOZLYGcV4qT1FG3t5PFhLEDmpxzAms055vNsMuyTHQy6qgYhm+jk
-    /a4g==
-ARC-Authentication-Results: i=1; strato.com;
-    arc=none;
-    dkim=none
-X-RZG-CLASS-ID: mo01
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1793124762;
-    s=strato-dkim-0002; d=iokpp.de;
-    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
-    From:Subject:Sender;
-    bh=9K0cHhogjFGdzGmlyT7TpNjKvBBWzvIeBsJB7+bteoY=;
-    b=n2jbAlcYTcjr+S2o3wo+mRgWFTSYQGPZovPk7NZjoBylSEXoxlJ75k81J84F9sCn/K
-    esGjbVW2E0c2iL3+ZrHJvC5TUW4Vng/E279lLCeUYTR1Heo6RucezoT6pQt9J6VuKtwm
-    aTTSmSb7Dx884gWN7wv+mli8W/BykMQWYSG3DUE8+VE5nhZGXm2jIyRs5GYB/0fXGdsO
-    IpEr7AW1ZicQ2R/h095hDcu5eCg/ehiwiEyYvo9/vfwr9oSo8hSgsQ+cZNXUZWd+vjfu
-    MBHz+W49GnLLjnKELbaYvt02kMiqEPEKk/TDro9ewpwIVG1bQgZtjM51z9GOBdji9hEv
-    czEQ==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; t=1793124762;
-    s=strato-dkim-0003; d=iokpp.de;
-    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
-    From:Subject:Sender;
-    bh=9K0cHhogjFGdzGmlyT7TpNjKvBBWzvIeBsJB7+bteoY=;
-    b=egdW8twBSUfAwmSUUlzcedi+4pG0XAEow8WgPBhFmDylWAzgkz2+71kbAM86xkXrbr
-    Wax23uO52XvrOFSKN1Cw==
-X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSe9tgBDSDt0V0DBslXBtZUxPOub3IZyk"
-Received: from [10.176.237.181]
-    by smtp.strato.de (RZmta 55.6.3 AUTH)
-    with ESMTPSA id z831ad29RICf8Xg
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
-	(Client did not present a certificate);
-    Tue, 27 Oct 2026 19:12:41 +0100 (CET)
-Message-ID: <112238206a5698e8766528c2b6d4d3e208c28d71.camel@iokpp.de>
-Subject: Re: [PATCH v6] scsi: ufs: Change the error check sequence for auto
- hibern8
-From: Bean Huo <beanhuo@iokpp.de>
-To: HOYOUNG SEO <hy50.seo@samsung.com>, linux-scsi@vger.kernel.org, 
- linux-kernel@vger.kernel.org, alim.akhtar@samsung.com, avri.altman@wdc.com,
-  jejb@linux.ibm.com, martin.petersen@oracle.com, bvanassche@acm.org, 
- kwangwon.min@samsung.com, kwmad.kim@samsung.com, cpgs@samsung.com, 
- h10.kim@samsung.com
-Cc: stable@vger.kernel.org, Stanley Jhu <stanleyjhu@google.com>
-Date: Tue, 27 Oct 2026 19:12:40 +0100
-In-Reply-To: <20261027110357.3649301-1-hy50.seo@samsung.com>
-References: 
-	<CGME20261027110813epcas2p4011de6cde600db5c995d3a3e45b056fb@epcas2p4.samsung.com>
-	 <20261027110357.3649301-1-hy50.seo@samsung.com>
-Content-Type: text/plain; charset="UTF-8"
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=YSZmF1+I
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5CA711F01825;
+	Tue, 27 Oct 2026 18:18:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793125094;
+	bh=1OGP3vAf2N6yBHBFjlNU3/YbFZwF9jv1NKjFlU67lBQ=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=YSZmF1+I/9k26v77gyfEvT+NI1GLOfFFiKzTX66mVkenCf7m5rsfVu2pvz4Od5175
+	 jY9+OILnQGz2fs09iMzUO7R2fgqX4Fa/LFrrJy/zBNsS+qBhK8SmooG9X81IBg6zko
+	 zkAKjHMsACJ2C8yRhBImyKp9E+MK97lCoW2q6G/sgkgbJtb3ccZNG1GjlAuMsSYBEv
+	 ChK3+Y53UWJdhhSsGdmZlA4m5pWgFXpCRtOKGbDD5iUd7d0YcxtT/MFk/8pELTuy/Z
+	 9jdH0NW0nE8HVET25jUo7F9YoF9dvZq/kPRaqarr1T8gkTpnQ2t7PFEUqGP/vb1Do+
+	 Q1W6iX83Ucn5w==
+Message-ID: <sashiko-outbox-187009@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH 2/2] scsi: target: iscsi: fix hanging WRITE_PENDING
+ commands
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Dmitry Bogdanov" <d.bogdanov@yadro.com>, target-devel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20261027180123.13163-3-d.bogdanov@yadro.com>
+References: <20261027180123.13163-1-d.bogdanov@yadro.com>
+ <20261027180123.13163-3-d.bogdanov@yadro.com>
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.4-0ubuntu2.1 
+Date: Tue, 27 Oct 2026 18:18:12 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -109,32 +60,138 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
 
-On Tue, 2026-10-27 at 20:03 +0900, HOYOUNG SEO wrote:
-> Auto-hibern8 enter and exit are performed by the host controller without
-> a UIC command, and the auto-hibern8 idle timer only runs while no UIC
-> command is outstanding. An auto-hibern8 error (IS.UHES or IS.UHXS) is
-> therefore usually reported while hba->active_uic_cmd is NULL.
->=20
-> Since commit fcd8b0450a9a ("scsi: ufs: core: Make ufshcd_uic_cmd_compl()
-> easier to analyze"), ufshcd_uic_cmd_compl() returns early when
-> hba->active_uic_cmd is NULL, before ufshcd_is_auto_hibern8_error() is
-> called. Such auto-hibern8 errors are no longer recorded in hba->errors,
-> so ufshcd_check_errors() is not called for them and the error handler is
-> not scheduled.
->=20
-> Check for auto-hibern8 errors before checking for an active UIC command,
-> as was done before that commit, but keep returning early when there is
-> no active UIC command so that a NULL cmd is never dereferenced. Only
-> report the missing UIC command if no auto-hibern8 error was found.
->=20
-> Fixes: fcd8b0450a9a ("scsi: ufs: core: Make ufshcd_uic_cmd_compl() easier=
- to
-> analyze")
-> Cc: stable@vger.kernel.org=C2=A0# v6.13+
-> Signed-off-by: HOYOUNG SEO <hy50.seo@samsung.com>
-> Reviewed-by: Stanley Jhu <stanleyjhu@google.com>
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [High] scsi: target: iscsi: double completion in iscsit_release_commands_=
+from_conn()
+--
 
+commit 31a87057639fce26dc0f2f4bbcd6ddacf96b85a5
+Author: Dmitry Bogdanov <d.bogdanov@yadro.com>
 
-Reviewed-by: Bean Huo <beanhuo@micron.com>
+scsi: target: iscsi: fix hanging WRITE_PENDING commands
+
+This commit removes early CMD_T_ABORTED checks in the iSCSI Data-Out and
+command execution paths so that aborted WRITE commands in WRITE_PENDING sta=
+te
+are passed to the target core once all Data-Out PDUs have been received.
+
+> diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/i=
+scsi_target.c
+> index 62ada3a52210e..03d618cd76721 100644
+> --- a/drivers/target/iscsi/iscsi_target.c
+> +++ b/drivers/target/iscsi/iscsi_target.c
+> @@ -1518,23 +1518,6 @@ __iscsit_check_dataout_hdr(struct iscsit_conn *con=
+n, void *buf,
+>  			if (hdr->flags & ISCSI_FLAG_CMD_FINAL)
+>  				iscsit_stop_dataout_timer(cmd);
+> =20
+> -			return iscsit_dump_data_payload(conn, payload_length, 1);
+> -		}
+> -	} else {
+> -		/*
+> -		 * For the normal solicited data path:
+> -		 *
+> -		 * Check for a delayed TASK_ABORTED status and dump any
+> -		 * incoming data out payload if one exists.  Also, when the
+> -		 * ISCSI_FLAG_CMD_FINAL is set to denote the end of the current
+> -		 * data out sequence, we decrement outstanding_r2ts.  Once
+> -		 * outstanding_r2ts reaches zero, go ahead and send the delayed
+> -		 * TASK_ABORTED status.
+> -		 */
+> -		if (se_cmd->transport_state & CMD_T_ABORTED) {
+> -			if (hdr->flags & ISCSI_FLAG_CMD_FINAL &&
+> -			    --cmd->outstanding_r2ts < 1)
+> -				iscsit_stop_dataout_timer(cmd);
+
+[Severity: High]
+Could passing an aborted WRITE_PENDING command to target_execute_cmd() cause
+a double abort completion and use-after-free if the connection closes after=
+ward
+in iscsit_release_commands_from_conn()?
+
+With this check removed in __iscsit_check_dataout_hdr(), an aborted WRITE
+command in TRANSPORT_WRITE_PENDING state receives its remaining Data-Out PD=
+Us
+and calls target_execute_cmd() in iscsit_check_dataout_payload() (or in
+iscsit_execute_cmd() for out-of-order CmdSNs):
+
+drivers/target/iscsi/iscsi_target.c:iscsit_check_dataout_payload() {
+	...
+		iscsit_stop_dataout_timer(cmd);
+		if (ooo_cmdsn)
+			return 0;
+		target_execute_cmd(&cmd->se_cmd);
+		return 0;
+	...
+}
+
+In target_execute_cmd(), target_cmd_interrupted() is called before
+cmd->t_state is updated to TRANSPORT_PROCESSING:
+
+drivers/target/target_core_transport.c:target_execute_cmd() {
+	if (target_cmd_interrupted(cmd))
+		return;
+
+	spin_lock_irq(&cmd->t_state_lock);
+	cmd->t_state =3D TRANSPORT_PROCESSING;
+	cmd->transport_state |=3D CMD_T_ACTIVE | CMD_T_SENT;
+	spin_unlock_irq(&cmd->t_state_lock);
+	...
+}
+
+Because CMD_T_ABORTED is set, target_cmd_interrupted() queues
+target_abort_work on target_completion_wq and returns true without changing
+cmd->t_state:
+
+drivers/target/target_core_transport.c:target_cmd_interrupted() {
+	...
+	if (cmd->transport_state & CMD_T_ABORTED) {
+		if (cmd->transport_complete_callback)
+			cmd->transport_complete_callback(cmd, false, &post_ret);
+		INIT_WORK(&cmd->work, target_abort_work);
+		queue_work(target_completion_wq, &cmd->work);
+		return true;
+	}
+	...
+}
+
+As a result, cmd->se_cmd.t_state remains TRANSPORT_WRITE_PENDING. When
+CMD_T_TAS is set (for example, when aborted by a LUN_RESET on another sessi=
+on
+with emulate_tas enabled), target_handle_abort() queues SAM_STAT_TASK_ABORT=
+ED
+status and drops one cmd_kref reference via
+transport_cmd_check_stop_to_fabric(), leaving the command on
+conn->conn_cmd_list in TRANSPORT_WRITE_PENDING state until ExpStatSN
+acknowledges the status (or, when CMD_T_TAS is not set, until
+target_abort_work runs iscsit_aborted_task()).
+
+If the connection closes while the command is still on conn->conn_cmd_list,
+iscsit_release_commands_from_conn() checks for TRANSPORT_WRITE_PENDING:
+
+drivers/target/iscsi/iscsi_target.c:iscsit_release_commands_from_conn() {
+	...
+		if (cmd->se_cmd.t_state =3D=3D TRANSPORT_WRITE_PENDING) {
+			/*
+			 * We never submitted the cmd to LIO core, so we have
+			 * to tell LIO to perform the completion process.
+			 */
+			spin_unlock_irq(&se_cmd->t_state_lock);
+			target_complete_cmd(&cmd->se_cmd, SAM_STAT_TASK_ABORTED);
+			continue;
+		}
+	...
+}
+
+Wouldn't this call target_complete_cmd() -> target_cmd_interrupted() a seco=
+nd
+time on the same command, re-initializing and re-queueing cmd->work for
+target_abort_work while iscsit_release_commands_from_conn() also frees the
+command via iscsit_free_cmd(), leading to workqueue corruption, cmd_kref
+underflow, and use-after-free of struct iscsit_cmd?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261027180123.1316=
+3-1-d.bogdanov@yadro.com?part=3D2
