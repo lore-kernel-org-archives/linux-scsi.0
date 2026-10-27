@@ -1,75 +1,70 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.210.199
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=124.126.103.232
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793082150;
-	b=w2YfbWVgCcZNofyLedPWa1m2MYdXBS83UfLLoE6+2mnSjlrImVdr8Flq2442BGahIs77
-	 5ib+AYUBi8HChb/nEQgJpk0l0ReSOCkNt4Q9xA/NME7z2yyzJ7W46hos2+zWg9/QpJYWq
-	 HtZkCCOypOBb7MBNW3qO27w9guEOnCE3RnzIMfzPW0jUyG4WZULJ/7clyZjOoLF5xIYD8
-	 VWYTaSyXip8pPvBeh6oJF9Hr+JGn44u5B+Exfz17wXBNhR0cb1/vwlFroe1fYNtFONodk
-	 L3XG+w23W7RLXutx3ShVe9GsthsA3MGV9RpyK+u2VefAzwrkf7FZYiK+mw1ICCnx35g==
+	t=1793086712;
+	b=UGqNFKVExC4jcs6vb8264ZzClK8jKbEpK8ocQB5kjg6xRcHRbTSttwD5VXvmxu5mebxc
+	 SNfYUBcuf0F5TMdsEnzUluVLZKvXCL4HpcbyBxIfkvOynQeMTVOmu+R6V6NPz5Z85ObB3
+	 YgOl6xODB9iPdHydr3hdmEkaybchS4Lcx3Kf/fJFUMleORq3LfFv/dgjZd7Ndm9aaVz0/
+	 Xad66n3tBU462vSRH4CEulcqAj4oDyVwjuN4Q8MbRuVkGjVp7Dl9ju3Q0mgfEEZqNttbt
+	 1y2O4QKYcrHiV+MStuBM2WdwUaurRPw5bVZMvQFHdrkRYy9vVNdW7pdP1CBOBfcwJow==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793082150;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:In-Reply-To:
-	 Mime-Version:References:X-Mailer:Message-ID:Subject:From:To:Cc:
-	 Content-Type;
-	bh=pb4Br9/vfh3JVQQfd+eU+eg6IJow6IVC4FUCyw6gp8Y=;
-	b=wPbZVhLQYFHRbHe1bomZJjwK6f1IjIKyUavblh5AikJJwZvHH+IlsQkWba0WGCX+uVbi
-	 p7L4Nb14jMxw02X3s4zrzGYaCqvRZ96OsJKfR247e/ll280EuH76kMDnO1hnoWOfreIxe
-	 ky5efbg2gtATob/B8gPdNpOozmLHrScnh1lvDPV438DH8Sswu6SweRl+bzzl5mY1wPir0
-	 RC5o0pVWbuBAmIQXaOyxoOBusg2vIJrjITuJUNQofaEmUfuTGlLAk1ifchCW57VtNVU23
-	 7LrmnVgb8rn1HwKg1U9PbazGBGRkVyfp2IJ0gBpCzbNe/xqYhV2bqBc8GucYlKDCT2g==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793086712;
+	h=DMARC-Filter:X-UUID:X-CID-P-RULE:X-CID-O-INFO:X-CID-META:X-CID-BVR:
+	 X-CID-BAS:X-CID-FACTOR:X-CID-RHF:X-UUID:X-User:Received:From:To:Cc:
+	 Subject:Date:Message-Id:X-Mailer:In-Reply-To:References:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=g/cQoyLXBnCxnipooHLbfvDEWmeWX4FnyljXnjfREbk=;
+	b=0I7TXPeLmaHhqUAdabmQfY0XF2TFFtDQ0DWmVFnEp3pfeM+tK15pCGl8mB8BUhSMpTmF
+	 85SEtVjh/aGccs38dmUPus9IWrBhJt7Ikh2npovio9xmO9nMHDCciOxxQrOpiCG0HCGU3
+	 4hTvt+rkR+iFTg4zts3txy5mUsZWbRE+q/Ztsp4YFnx/4bu/WZTxkNCCf5p+zl/OIwRn9
+	 uKDb2eiwE32Z20KRFDA9+omfzSkGCBad+G2o0OisA2eFpRKKacnHpZr7u+Uy22SDYeS7r
+	 ExVcmgzKzemrqe3Vgf3sYcIGmDabe69eF5nY3u8TfNgwmQ5CooEyxgeh1WEtYkjZ/dA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=google.com;
-	spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20251104 header.b=FGfPa3OZ;
-	arc=none smtp.remote-ip=209.85.210.199
-Received: from mail-pf1-f199.google.com (mail-pf1-f199.google.com [209.85.210.199])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=none header.from=kylinos.cn;
+	spf=pass smtp.mailfrom=kylinos.cn;
+	arc=none smtp.remote-ip=124.126.103.232
+Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09488606A320
-	for <linux-scsi@vger.kernel.org>; Tue, 27 Oct 2026 06:22:29 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 09488606A320
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20251104 header.b=FGfPa3OZ
-Received: by mail-pf1-f199.google.com with SMTP id d2e1a72fcca58-89f9fdbabe1so5314758b3a.1
-        for <linux-scsi@vger.kernel.org>; Mon, 26 Oct 2026 23:22:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1793082149; x=1793686949; darn=vger.kernel.org;
-        h=content-type:cc:to:from:subject:message-id:references:mime-version
-         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=pb4Br9/vfh3JVQQfd+eU+eg6IJow6IVC4FUCyw6gp8Y=;
-        b=FGfPa3OZPqu5KX+0CwdB0xB3NYxeVGxztvP2JFEmJuhKsWM1/1A5qvWsqJP1vUWFDC
-         mz97b+0aS9zkQebuBxwrBSGXU2YYe7ZAzp9s9kvk0o3uM3IrqyobT9XzNl8kA5P1VtfP
-         YnZp3MuD1JVVEletQKD6vZ+iyT8IHXJtDLzTq8EcWivPyKZEp8HuGRGDu/PRW+YRMtUr
-         gzjR0NTSK0qYdukNjpF6TyyWGZJ5RYjJt1eSYNjk0IkeLjTPuOz27nESgTork1gutSad
-         9Wo8tsYWeQ1NR8JDcfBNEmSuGkLqi3+1C+gZbxdVVAt8tGSZt1Ol39OvxZsY2W162ktQ
-         /kOg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793082149; x=1793686949;
-        h=content-type:cc:to:from:subject:message-id:references:mime-version
-         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=pb4Br9/vfh3JVQQfd+eU+eg6IJow6IVC4FUCyw6gp8Y=;
-        b=E1nbTK/S2aO01m8l8uy79+W47jTeosNNCcrpU6SEfbvmVMcOdlQaqx1Qa9Z0a1tNVF
-         W6ZSgsPUfc1CfaFoKWrWt2kTq6/SHnXU0VGFREVNEM9HY4VmwD7a9VLM3z41uKUWI5JY
-         9lCRBkbgFChRSAfv+CKS7/FVuL8FNAPuHDxEAf25qbOzwaJtrOtBOOZok6qkRVMIgkK0
-         xuH2Pzu6ynwvkVrpBXf0qNFnWOUpPEo8ECvW26PLyBFvG1i3FLZUd90tufP692SlL9eP
-         E+XKWFL5YbZX2MjLgtANqQ+2g/X5y4oX7J5ZKvcX8tx2YmZMktn7mlyePj0/MTFrhwlQ
-         QeFQ==
-X-Forwarded-Encrypted: i=1; AKwUvByFq3CPSv28u9ZRyMsA/Km8j2urCYCGFbQMOCV5iRiHkBHhnfTC62+ecRBfOQ6afD9qcDmINwPlNZNW@vger.kernel.org
-X-Gm-Message-State: AFq9FYKbwdmfkZaMl0x7DxfAiCIsiTbEPBwOt42Ic43UL8Cjc7clPG40
-	wlkaG2WCmeFdA4w+4rbevjgSNska3J/StQgDhF8OuGHnvVnKFzYZ1vntcnovWLi1ryFRPnXdyz0
-	F5dDbPU44Ar2gp5zVt38PWw==
-X-Received: from pfbbo7.prod.google.com ([2002:a05:6a00:e87:b0:89f:dd5e:68c4])
- (user=stanleyjhu job=prod-delivery.src-stubby-dispatcher) by
- 2002:a05:6a00:2d01:b0:882:fafe:9874 with SMTP id d2e1a72fcca58-8a368aa1b6emr6990163b3a.31.1793082149110;
- Mon, 26 Oct 2026 23:22:29 -0700 (PDT)
-Date: Tue, 27 Oct 2026 14:22:27 +0800
-In-Reply-To: <5adbbab4-11f2-48be-9924-9d14a06d0ed7@acm.org>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CDAFF606A326;
+	Tue, 27 Oct 2026 07:38:28 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CDAFF606A326
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
+X-UUID: 61d60c68d1d911f19a56ed5b684f684d-20261027
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.19,REQID:2bb69ba0-fa30-4a77-89d2-568a5f0e7275,IP:0,U
+	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+	release,TS:0
+X-CID-META: VersionHash:7db8b62,CLOUDID:2f9fde66d6e7e7b741c9b643745160e4,BulkI
+	D:nil,BulkQuantity:0,SF:81|82|83|102|865|898,TC:nil,Content:0|15|50|99,EDM
+	:-3,IP:nil,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0
+	,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: 61d60c68d1d911f19a56ed5b684f684d-20261027
+X-User: lijiayi@kylinos.cn
+Received: from thinksys.tail1c7620.ts.net [(10.44.16.150)] by mailgw.kylinos.cn
+	(envelope-from <lijiayi@kylinos.cn>)
+	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
+	with ESMTP id 1220175306; Tue, 27 Oct 2026 15:38:20 +0800
+From: Jiayi Li <lijiayi@kylinos.cn>
+To: Oliver Neukum <oneukum@suse.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>,
+	Michal Pecio <michal.pecio@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-usb@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	usb-storage@lists.one-eyed-alien.net,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] usb: uas: wait for pending commands before unbinding
+Date: Tue, 27 Oct 2026 15:38:00 +0800
+Message-Id: <20261027073800.648951-1-lijiayi@kylinos.cn>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <e6009e1b-2d95-4350-8374-d5930200ed24@suse.com>
+References: <e6009e1b-2d95-4350-8374-d5930200ed24@suse.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -78,49 +73,58 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0
-References: <5adbbab4-11f2-48be-9924-9d14a06d0ed7@acm.org>
-X-Mailer: git-send-email 2.56.0.307.g5fe7bd680c-goog
-Message-ID: <20261027062227.1955867-1-stanleyjhu@google.com>
-Subject: Re: [PATCH 0/5] scsi: ufs: Fix device management timeouts and runtime
- PM errors
-From: Stanley Jhu <stanleyjhu@google.com>
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: "Martin K . Petersen" <mkp@kernel.org>, 
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>, 
-	Alim Akhtar <alim.akhtar@samsung.com>, Bean Huo <beanhuo@micron.com>, 
-	Can Guo <can.guo@oss.qualcomm.com>, Peter Wang <peter.wang@mediatek.com>, 
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-On 10/26/26 4:26 PM, Bart Van Assche wrote:
-> Patches 3/5 - 5/5 introduce a behavior change: a failed runtime suspend
-> sets power.runtime_error but leaves the W-LUN in the RPM_ACTIVE state.
-> Today, sysfs, BSG and hwmon accesses still work in that state. With this
-> series they all fail with -EINVAL until the error handler's
-> ufshcd_recover_pm_error() clears the flag. Is this behavior change
-> intentional?
+Hi,
 
-Thanks for catching this. The v1 cover letter and commit messages were
-wrong to claim that a failed W-LUN runtime suspend latches
-power.runtime_error.
+Thank you for the review.
 
-In __ufshcd_wl_suspend(), every runtime suspend failure path
-(ufshcd_bkops_ctrl(), ufshcd_set_dev_pwr_mode() and
-ufshcd_link_state_transition()) schedules error recovery and sets
-ret = -EBUSY. The vendor vops->suspend callbacks return 0, -EBUSY or
--EAGAIN. rpm_suspend() only sets dev->power.runtime_error when retval is
-neither -EBUSY nor -EAGAIN, so a failed W-LUN runtime suspend leaves
-power.runtime_error at 0 and runtime_status at RPM_ACTIVE. In that state
-pm_runtime_resume_and_get() returns 0 and sysfs, BSG and hwmon accesses
-keep working as before.
+On Mon, Oct 26, 2026, Oliver Neukum wrote:
+> 1. If an error happens while disconnect is running, why do we want to schedule
+> work?
+> 2. Why only this and not also scan_work?
 
-I checked this on QEMU, with and without this series, in SDB and MCQ
-modes, by failing ufshcd_set_dev_pwr_mode() during W-LUN runtime
-suspend. rpm_suspend() returned -EBUSY, runtime_error stayed 0, and
-sysfs, BSG and debugfs accesses all succeeded.
+devinfo->work retries allocation and URB submission for commands already
+accepted by UAS. Those commands may need further URBs submitted before
+they can complete, so I intended to allow that work to continue while
+new SCSI requests are blocked.
 
-pm_runtime_resume_and_get() only returns an error when the W-LUN is not
-RPM_ACTIVE and runtime resume fails, or when runtime PM is disabled
-while the W-LUN is suspended. I will send a v2 that drops the incorrect
-runtime_error claim from the cover letter and commit messages.
+However, the existing queue_work() calls already schedule these retries;
+flush_work() is not needed to enable them.
+
+I tested removing only this flush_work() call, leaving the worker and
+retry logic unchanged. Normal reads and commands with controlled
+allocation failures that later recovered still completed successfully.
+With controlled persistent allocation or submission failures, preparation
+timed out and the existing cleanup completed. Subsequent rebinds and reads
+also succeeded. I will therefore remove this call in the next revision.
+
+> Some commands run longer
+
+Yes. This is intended as a best-effort grace period before cancellation.
+The timeout values were taken from uas_wait_for_pending_cmnds(); they
+were not selected to cover the maximum duration of every SCSI command.
+
+If a command remains unfinished when preparation times out, the
+existing cleanup proceeds. An affected bridge may still require a
+physical disconnect and reconnect in that case.
+
+> Is the resetting flag even needed anymore?
+> If it is needed, why set it so late?
+
+resetting is still needed before scsi_unblock_requests(), so requests
+dispatched during the remaining teardown cannot submit new URBs.
+
+Setting it before preparation also prevents the submission worker from
+progressing and makes the status and data callbacks skip normal command
+completion processing. In the hardware comparison with the flag set
+earlier, the URBs returned, but the command table remained populated
+until preparation timed out.
+
+The intended order is therefore to block new requests, allow accepted
+commands to finish, then set resetting before unblocking the host and
+performing the final cleanup.
+
+Thanks,
+Jiayi
