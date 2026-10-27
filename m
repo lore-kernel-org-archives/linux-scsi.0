@@ -1,51 +1,51 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793115855;
-	b=YJZGGqc2Ty866RubH8lOrBGrxxpj/qdNycKZehIHTZsPWKgbgMgswexr2sa7eVxw/1V8
-	 uGFjlPaLYi1c28S8w4S5lFtLzQqfePA6U3Mc6j1MfuHnx1dcSsbp+5leLYhZoKfDptij4
-	 b0K8ZkNYrPGiLhFnJRHiTxtaOLm6Tu0nTiFdvbaKFyP5xC0UlKtHzHqFCQRUcTS/W6zhe
-	 RCDLVkEsGlfnWrL0D059L2Y/jjqDWBYj3zQtQXQDC4mIMSMd4aPweciaaYlmgDSb+FP2Q
-	 0KzkjYYky8bXuaSp3PRh6tw4HhApi5NFfhZnuy3+jiB7EVpvqDWrr1d1syM96fYk+vQ==
+	t=1793115854;
+	b=WUWj5kq3Pk6eViPkn/kCmA5TiRLuBpAC39mZX252UIRKIIhRipKWYDtVuI6kcXobfrIH
+	 CcRhqubKRqci9qSqTZzmHYjNoYS8l5WyJdz61wQputj1IK7ZaFdwExM9j67MYYuOAcuh9
+	 WVgDFNSh8c2LjPc7T8O3+6H00qfIkcHTW65CKRvVoKpHCBC9AsX28NQOI3UkF1qOa9Wfs
+	 X/wK74Xscu4o9CRGXT1xTmPpYP5nFF/IJiynTdmySa6won4pgfTgZaqCMUoLXWnYsvjpx
+	 JaQ/qZ5r8H4v+Rzl9Ly93OGNXkrHR2weeB/NxG2B2jGGFbfZuMVcnle1OBDmVh78w4Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793115855;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793115854;
 	h=Received:DKIM-Signature:Received:Message-ID:User-Agent:Date:From:To:
 	 Cc:Subject:References:MIME-Version:Content-Type;
-	bh=EnDqdoBlLXNNsQWF1PTAQfygtIq8DiYIDOwKN0S5TYo=;
-	b=xbtJo5024VQYK1zULUca5HdA5IM6E8fsgnvb8t8qpBhR/zkLHTPAAfFaGuo44j6pSy/t
-	 s9AYzd6V7UINHSdhTZHUPGRaEaWxYgsJwd11YYI2BBWD2bOXQhQaPZtySQuKKu0ZyYZUy
-	 Ra3VkynqVr8KaThDcfGuuUVeU5eM53Ma0xo+MI880EG0VBUrcjh85uxMGBWxWpHkNstJ2
-	 KNYUBT/sIc/SVK8bfufh5TUeHkbKe/AwSoHnPEnxfyvWCtNWDajGwxeGtikb0VLRStzaH
-	 JhbrPENV8Uv2DyYTy3fKwt0ferhjim5J9kzrDfvz6+6d7jgjSyPRSNDkgdo7//9iIwQ==
+	bh=fpo83JJokXYjEujj6r4TMCvSFPUafgC/gibglk3KIJo=;
+	b=BR16/TxzabRcLWOiDor9flTWd3yTiZLE2YPs+FFCMIcJX+tWybwWewVfcG4cU5zU+8lz
+	 EnutPpRb08cUk3775hu1LNplJi/EFs6M0Uofdy5eNdd3NtkhxblitHRIdORIxMs5Ls4fH
+	 GTuxSHbAJdjlCPuZJRv1eByCvkmFXPlnFsqqmXg4tog3JtkoqZJ2J75Z6JQPNi6XR+u9C
+	 +F7rSDfc/aFEbr40uSJqu8EACcAUjDlDFmUOE3U0IsRVXtSB7BsufE8MZA1S7CY8XkVmA
+	 LUrnFWOduGzpEGDjy/luOp9Yv2R1nhysI0i4YgCuMGvEJUQXj3wu5PYUtSl8eFIXKDw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=JRTNu4g7;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=dRCE5OfD;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF1B9606A33F;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84DF5606A32D;
 	Tue, 27 Oct 2026 15:44:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=JRTNu4g7
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 718051F031E3;
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=dRCE5OfD
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 48C031F031F4;
 	Tue, 27 Oct 2026 15:44:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
 	s=k20260515; t=1793115854;
-	bh=EnDqdoBlLXNNsQWF1PTAQfygtIq8DiYIDOwKN0S5TYo=;
+	bh=fpo83JJokXYjEujj6r4TMCvSFPUafgC/gibglk3KIJo=;
 	h=Date:From:To:Cc:Subject:References;
-	b=JRTNu4g77Y9W+naHrADfdMOHHQ9syVNyuM9xuMSXf3IuDIeWHdAFsn5XSf+e4kBfC
-	 a5hguQUVEWlTVw0jOJOcIAbOSLJw7XAY7O7x1NyvbIVcFZuf1iKx9xxR9haMcpnMQQ
-	 Dz22lwb0JIesfTJczu36lzaG8VJgEtG/H2KHPfJd5I7cEQcvF/DeTc2cm5LNOX5J6r
-	 vG+5VARedfxaW466FILJdpYspMDYinA+T/0PE3+gsmkoOYK53dL6lNixOTUKparNzU
-	 qBkZvBEN34T6qIx9SOwEasvcNuhC2ZH94OsnAE2mLKvDHnj+0gFDUd0U5dTRt76BYp
-	 Gjd2BmjfO8DFA==
+	b=dRCE5OfDYXBgtk7dnfD1xuKrA7mtXKGbWDZc2l5bgSltXOnLKtL5O94PrcC1+w2nX
+	 mrfpPSfkYE5jIaO0gEX2OfLARGnOE7JoPLNa8tK7YDbCvx5NX24LiQHtjHb2CdNmTL
+	 WyyDzMMJKgjtdgVcmCIkBLVWuiS/oaldsrvG+V710MKSt8wtxll4vys7tH9SOL2zsD
+	 E9FyKgeWCnJd0NxfgfSVeo7Uf/+nYxMJqYhpLGAgq+T8kFi9Kk/sVJjPpIJYxVU+De
+	 VCIcMdrlzZmaP16CqcZ4AMUqRTmDxoOkkk6SvY7bdjEA85piOfEnjkP2ng4Vc3YAAl
+	 lAq5Kv48fwh/Q==
 Received: from rostedt by gandalf with local (Exim 4.100.1)
 	(envelope-from <rostedt@kernel.org>)
-	id 1xLjLR-000000078iW-3Joy;
+	id 1xLjLR-000000078hw-2W0c;
 	Tue, 27 Oct 2026 11:44:13 -0400
-Message-ID: <20261027154413.617192888@kernel.org>
+Message-ID: <20261027154413.428706632@kernel.org>
 User-Agent: quilt/0.69
-Date: Tue, 27 Oct 2026 11:37:04 -0400
+Date: Tue, 27 Oct 2026 11:37:03 -0400
 From: Steven Rostedt <rostedt@kernel.org>
 To: linux-kernel@vger.kernel.org,
  linux-trace-kernel@vger.kernel.org
@@ -107,7 +107,7 @@ Cc: Masami Hiramatsu <mhiramat@kernel.org>,
  linux-scsi@vger.kernel.org,
  linux-sctp@vger.kernel.org,
  netdev@vger.kernel.org
-Subject: [PATCH 6/9] scsi: ufs: Use trace_call__##name() at guarded tracepoint call sites
+Subject: [PATCH 5/9] drm: Use trace_call__##name() at guarded tracepoint call sites
 References: <20261027153658.703730257@kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -135,86 +135,75 @@ Parts of the original v2 series have already been merged in mainline.
 This patch is being reposted as a follow-up cleanup for the remaining
 unmerged pieces.
 
-Link: https://patch.msgid.link/20260515135946.2238888-1-vineeth@bitbyteword.org
+Link: https://patch.msgid.link/20260515135932.2238842-1-vineeth@bitbyteword.org
 Suggested-by: Steven Rostedt <rostedt@goodmis.org>
 Suggested-by: Peter Zijlstra <peterz@infradead.org>
 Signed-off-by: Vineeth Pillai (Google) <vineeth@bitbyteword.org>
 Assisted-by: Claude:claude-sonnet-4-6
 Signed-off-by: Steven Rostedt <rostedt@goodmis.org>
 ---
- drivers/ufs/core/ufshcd.c | 31 ++++++++++++++++---------------
- 1 file changed, 16 insertions(+), 15 deletions(-)
+ drivers/gpu/drm/amd/amdgpu/amdgpu_cs.c   | 2 +-
+ drivers/gpu/drm/amd/amdgpu/amdgpu_vm.c   | 4 ++--
+ drivers/gpu/drm/scheduler/sched_entity.c | 5 +++--
+ 3 files changed, 6 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index cc75384c6502..7a169cf0093b 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -421,8 +421,8 @@ static void ufshcd_add_cmd_upiu_trace(struct ufs_hba *hba,
- 	else
- 		header = &lrb->ucd_rsp_ptr->header;
+diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_cs.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_cs.c
+index 5558e7330cf4..8873e28f526f 100644
+--- a/drivers/gpu/drm/amd/amdgpu/amdgpu_cs.c
++++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_cs.c
+@@ -1025,7 +1025,7 @@ static void trace_amdgpu_cs_ibs(struct amdgpu_cs_parser *p)
+ 		struct amdgpu_job *job = p->jobs[i];
  
--	trace_ufshcd_upiu(hba, str_t, header, &rq->sc.cdb,
--			  UFS_TSF_CDB);
-+	trace_call__ufshcd_upiu(hba, str_t, header, &rq->sc.cdb,
-+			       UFS_TSF_CDB);
+ 		for (j = 0; j < job->num_ibs; ++j)
+-			trace_amdgpu_cs(p, job, &job->ibs[j]);
++			trace_call__amdgpu_cs(p, job, &job->ibs[j]);
+ 	}
  }
  
- static void ufshcd_add_query_upiu_trace(struct ufs_hba *hba,
-@@ -432,8 +432,8 @@ static void ufshcd_add_query_upiu_trace(struct ufs_hba *hba,
- 	if (!trace_ufshcd_upiu_enabled())
- 		return;
+diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_vm.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_vm.c
+index 2bd07007def4..f10e443e1ebe 100644
+--- a/drivers/gpu/drm/amd/amdgpu/amdgpu_vm.c
++++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_vm.c
+@@ -1425,7 +1425,7 @@ int amdgpu_vm_bo_update(struct amdgpu_device *adev, struct amdgpu_bo_va *bo_va,
  
--	trace_ufshcd_upiu(hba, str_t, &rq_rsp->header,
--			  &rq_rsp->qr, UFS_TSF_OSF);
-+	trace_call__ufshcd_upiu(hba, str_t, &rq_rsp->header,
-+			       &rq_rsp->qr, UFS_TSF_OSF);
- }
- 
- static void ufshcd_add_tm_upiu_trace(struct ufs_hba *hba, unsigned int tag,
-@@ -445,15 +445,15 @@ static void ufshcd_add_tm_upiu_trace(struct ufs_hba *hba, unsigned int tag,
- 		return;
- 
- 	if (str_t == UFS_TM_SEND)
--		trace_ufshcd_upiu(hba, str_t,
--				  &descp->upiu_req.req_header,
--				  &descp->upiu_req.input_param1,
--				  UFS_TSF_TM_INPUT);
-+		trace_call__ufshcd_upiu(hba, str_t,
-+					&descp->upiu_req.req_header,
-+					&descp->upiu_req.input_param1,
-+					UFS_TSF_TM_INPUT);
- 	else
--		trace_ufshcd_upiu(hba, str_t,
--				  &descp->upiu_rsp.rsp_header,
--				  &descp->upiu_rsp.output_param1,
--				  UFS_TSF_TM_OUTPUT);
-+		trace_call__ufshcd_upiu(hba, str_t,
-+					&descp->upiu_rsp.rsp_header,
-+					&descp->upiu_rsp.output_param1,
-+					UFS_TSF_TM_OUTPUT);
- }
- 
- static void ufshcd_add_uic_command_trace(struct ufs_hba *hba,
-@@ -477,7 +477,7 @@ static void ufshcd_add_uic_command_trace(struct ufs_hba *hba,
- 		arg3 = ufshcd_readl(hba, REG_UIC_COMMAND_ARG_3);
+ 	if (trace_amdgpu_vm_bo_mapping_enabled()) {
+ 		list_for_each_entry(mapping, &bo_va->valids, list)
+-			trace_amdgpu_vm_bo_mapping(mapping);
++			trace_call__amdgpu_vm_bo_mapping(mapping);
  	}
  
--	trace_ufshcd_uic_command(hba, str_t, cmd, arg1, arg2, arg3);
-+	trace_call__ufshcd_uic_command(hba, str_t, cmd, arg1, arg2, arg3);
- }
+ error_free:
+@@ -2189,7 +2189,7 @@ void amdgpu_vm_bo_trace_cs(struct amdgpu_vm *vm, struct ww_acquire_ctx *ticket)
+ 				continue;
+ 		}
  
- static void ufshcd_add_command_trace(struct ufs_hba *hba, struct scsi_cmnd *cmd,
-@@ -526,8 +526,9 @@ static void ufshcd_add_command_trace(struct ufs_hba *hba, struct scsi_cmnd *cmd,
- 	} else {
- 		doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+-		trace_amdgpu_vm_bo_cs(mapping);
++		trace_call__amdgpu_vm_bo_cs(mapping);
  	}
--	trace_ufshcd_command(cmd->device, hba, str_t, tag, doorbell, hwq_id,
--			     transfer_len, intr, lba, opcode, group_id);
-+	trace_call__ufshcd_command(cmd->device, hba, str_t, tag, doorbell,
-+				   hwq_id, transfer_len, intr, lba, opcode,
-+				   group_id);
  }
  
- static void ufshcd_print_clk_freqs(struct ufs_hba *hba)
+diff --git a/drivers/gpu/drm/scheduler/sched_entity.c b/drivers/gpu/drm/scheduler/sched_entity.c
+index 7be0387bac3c..ddf161a47742 100644
+--- a/drivers/gpu/drm/scheduler/sched_entity.c
++++ b/drivers/gpu/drm/scheduler/sched_entity.c
+@@ -500,7 +500,8 @@ static bool drm_sched_entity_add_dependency_cb(struct drm_sched_entity *entity,
+ 
+ 	if (trace_drm_sched_job_unschedulable_enabled() &&
+ 	    !test_bit(DMA_FENCE_FLAG_SIGNALED_BIT, &entity->dependency->flags))
+-		trace_drm_sched_job_unschedulable(sched_job, entity->dependency);
++		trace_call__drm_sched_job_unschedulable(sched_job,
++							entity->dependency);
+ 
+ 	if (!dma_fence_add_callback(entity->dependency, &entity->cb,
+ 				    drm_sched_entity_wakeup))
+@@ -630,7 +631,7 @@ void drm_sched_entity_push_job(struct drm_sched_job *sched_job)
+ 		unsigned long index;
+ 
+ 		xa_for_each(&sched_job->dependencies, index, entry)
+-			trace_drm_sched_job_add_dep(sched_job, entry);
++			trace_call__drm_sched_job_add_dep(sched_job, entry);
+ 	}
+ 	atomic_inc(entity->rq->sched->score);
+ 	WRITE_ONCE(entity->last_user, current->group_leader);
 -- 
 2.53.0
