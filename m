@@ -1,111 +1,77 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=202.12.124.141
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=203.254.224.24
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793097350;
-	b=K1GVeG6P/MMrHlpui1LEIg8EsgrIpz/czk6+BWpwwXXA1tmjC2nXOTsRr7IEAx+5pBho
-	 yDf/tN7OMFqMQBxQrgIw+zdUHaNk1EZ0iHhG2bjt5iMPNnp2TxgilKm+V9UeroRoQb2QJ
-	 Ki5uYeeOKPW9SXbN42bAE8RRQ/vgKunapzDD7ZF3iLhdCx13A4eiEZYmrXvOKGetqYw3o
-	 s/SMflxh9E9LSpCaEHAg0/7gL7HGgluIckEJcOIdfrQqPK8YYWIPSJMKOihS5+EMaYwuU
-	 usjqreEJVRZc0aneVzV8H0YTPbj08Jf+6iG6JMdRT4oa1FYxn2wO/gJYKRGEe1kL2qg==
+	t=1793099299;
+	b=TswHR3BH4wDuJW0lI0/u1OzJOmknLFUBnuK8Iw+KxVS5ujj4KIz2ND/0FuhT1DxpboeD
+	 KT5gLmC72YEwpzvl58Yc/SxT3mnNo4pJRKdxnTYwOB9YIj8z3/i2SN8yM8aOKulhUtle4
+	 /vQT2YacasTID7TWK6RXC3Nr1qbt0RPM0ah8PblfKfakjpky1+q0d/ZJ7CR9W2vhIg0ie
+	 N+9Rsq8AcY3k/zymTDU7JrC7w80zG4hd8gWqsanLbxGtpkVE3mwueU5ga0drSPNI+jvrg
+	 qdaSmLpv1AX1GgPsXL8IsvU1h+gaXy8mp0kaDddzEVc0K4O2qO7BJvg029agQPfWhKQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793097350;
-	h=DMARC-Filter:Received:Received:DKIM-Signature:DKIM-Signature:
-	 X-DKIM2-Info:DKIM2-Signature:X-DKIM2-Info:Message-Instance:
-	 X-ME-Sender:X-ME-Proxy-Cause:X-ME-Proxy:Feedback-ID:Received:X-Mailer:
-	 MIME-Version:X-ThreadId:Date:From:To:Cc:Message-Id:In-Reply-To:
-	 References:Subject:Content-Type:Content-Transfer-Encoding;
-	bh=cD96WCdctpe4xqBu48fVzWQv2mdj+Q39Vw8+UuE9NOY=;
-	b=xwVbw2Bq70b1uUqmCdVWmeFQWcxdlH9bQVH5iJZeaYbpHrgMXM480mxiySphA81OGnxm
-	 bXD25+ffo7RoXDjlkygp4W59Q+XXWsM69rla2KnIdsDmMkiSlBreQNDWYouDSWgZsnM+0
-	 X+86X5MXnxfv09R/ynFGj6wMK085i9whTZkfSPZ85I2Tp8f2ByolzMfBf+wJjd2mO0pUU
-	 NmLmLweHpAtpfiAs0h3RfNv5hATWJ45tSR97bujnpqn+VOCSqRDah822g58eoN+zRZihM
-	 nK2JS5T93zONrEiZDcnc/4l+LUM+CiP0rCXxQ+rh64Z7szrirNu2S+snGXarT09ZnDA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793099299;
+	h=DMARC-Filter:Received:DKIM-Filter:DKIM-Signature:Received:Received:
+	 Received:Received:From:To:Cc:Subject:Date:Message-Id:X-Mailer:
+	 MIME-Version:Content-Transfer-Encoding:X-CMS-MailID:X-Msg-Generator:
+	 Content-Type:X-Sendblock-Type:CMS-TYPE:X-CPGSPASS:cpgsPolicy:
+	 X-CFilter-Loop:X-CMS-RootMailID:References;
+	bh=J2d2zJ5HLBob4v1CtJnPXEx47rAgJ9b+O4LDKjyJETg=;
+	b=oFQ8iLgzNGXBRNFd3FNty4lTCcv/dF1pkpXimwNqz1dj6VHVeoM7eZOl1sNPViy4vcyO
+	 8lIilCEhabTF/gwb4fqUykVDR4J6rYpRcKdaREJfiYDAHzu8AiUaEy1F06yCupVp1DaNe
+	 D3Xj/S7JVg50CWoKn6yz6qVY84ZtTMjKjA54QSKRQTKLlsFz/+e01zf4/spYuYU7Xr0Cn
+	 vO0RQ6CffvFJ6R99vOCZQddDG74C5PCMJ9uiI797+ZX1YSZJpG5gm4+NWWFBAfNT1to2O
+	 Kz+5iQw4PYas6NvKq6B7oDfHh5ALzQDbpGyvjfQRm0IZmWXk6wScJ0LAWHTmm7u93ow==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=arndb.de;
-	spf=pass smtp.mailfrom=arndb.de;
-	dkim=pass header.d=arndb.de header.i=@arndb.de header.a=rsa-sha256 header.s=fm2 header.b=g0poesKL;
-	dkim=pass header.d=messagingengine.com header.i=@messagingengine.com header.a=rsa-sha256 header.s=fm2 header.b=wMaGvRgN;
-	arc=none smtp.remote-ip=202.12.124.141
-Received: from flow-b6-smtp.messagingengine.com (flow-b6-smtp.messagingengine.com [202.12.124.141])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=samsung.com;
+	spf=pass smtp.mailfrom=samsung.com;
+	dkim=pass header.d=samsung.com header.i=@samsung.com header.a=rsa-sha256 header.s=mail20170921 header.b="MoH/qVXp";
+	arc=none smtp.remote-ip=203.254.224.24
+Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E119606A334
-	for <linux-scsi@vger.kernel.org>; Tue, 27 Oct 2026 10:35:50 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7E119606A334
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arndb.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arndb.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6A2C606A323
+	for <linux-scsi@vger.kernel.org>; Tue, 27 Oct 2026 11:08:17 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E6A2C606A323
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=arndb.de header.i=@arndb.de header.a=rsa-sha256 header.s=fm2 header.b=g0poesKL;
-	dkim=pass (2048-bit key, unprotected) header.d=messagingengine.com header.i=@messagingengine.com header.a=rsa-sha256 header.s=fm2 header.b=wMaGvRgN
-Received: from ams-compute-02.internal (ams-compute-02.internal [10.64.2.62])
-	by mailflow.stl.internal (Postfix) with ESMTP id CACFD1302966
-	for <linux-scsi@vger.kernel.org>; Tue, 27 Oct 2026 06:35:49 -0400 (EDT)
-Received: from ams-imap-03 ([10.64.2.23])
-  by ams-compute-02.internal (MEProxy); Tue, 27 Oct 2026 06:35:49 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=arndb.de; h=cc
-	:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm2; t=1793097324;
-	 x=1793104524; bh=cD96WCdctpe4xqBu48fVzWQv2mdj+Q39Vw8+UuE9NOY=; b=
-	g0poesKLuQGMaU7v25wYb164Iof879cLQ+jrS7Vw6CuhEsyJqwn7PFMO9TEgL555
-	salmD3V/ClUhsKzYPi0e1twlBEQsUQgTWR1AZ4ucxcvSWh0tFF+QsAmR7kyrExiD
-	rs8QFLT2d4K3gWpb7cbvYPqhV9WNtc7sDvVFrq/AeZGLbrsDceBV0QVq1catnKNP
-	0vZraw8GdX+eRczyZn9JW2/ZNbjBM4QFUKd6YGV2yTzJi2ns5fiipJSmFKiJF3sN
-	GoBWeR4K6FMeN3rQg7Q7I4UT9hD0E+qvVgrEVdMfqW0b8abtf0o6SMw5UbAH+FLg
-	hVWbTZEFzS2/5wF4AlN9FA==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm2; t=1793097324; x=
-	1793104524; bh=cD96WCdctpe4xqBu48fVzWQv2mdj+Q39Vw8+UuE9NOY=; b=w
-	MaGvRgN74SqlQokg0yGoa0qHrxHvnpo1EgRYl+NAZ2HGjyf2DoHqc5uAKC9rWw6/
-	vV5njRj3VAjVsozr2QciajWKilgp9EVdkzTxKpA/MsGbxExu52PceTGPRcPZsISB
-	KpYKodw2SCDSr9uGfucfgcGE2SA0UG7iid20bXHmKysdvynyqnnRbJjpSNwQ33N1
-	0pa9wUuAxjPIT/YsNOqCEmHDj7Qibp8Oyln4Wr2lT6g2YFOhW7GTB1NdlTnD6Y/N
-	mqImDReIq39YA7WkoOuwESu2xsiCrgirovD+YpK1k72+skpa4xR6mPYjJvlLn92L
-	+KFpP5vjxlM5S0xUcBdYw==
-X-DKIM2-Info: draft=ietf-dkim-dkim2-spec-07;
-	repo=github.com/dkim2wg/interop; date=2026-10-18; sw=lmtpprox;
-	action=sign d=arndb.de a=rsa-sha256;
-DKIM2-Signature: i=1; m=1; t=1793097324; d=arndb.de;
-	mf=PGFybmRAYXJuZGIuZGU+;
-	rt=PGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnPg==;
-	s=fm2:rsa-sha256:FXtHERPiJQMH5g8T6S1UzaSMj8R5F+H/uJaSSAo9w02wM3u
-	TbEELDyA3kq5dIVUOHDpuBYk1kHCmfM4yCzYpxfGYq3JnbCVavx83/UL/+m4rLWT
-	vHjH9uK7GR8UQCe817RVZVSPWRi85Afcw5TLJcLcBdX1D90hS4/PayAaP+l123Cb
-	Lr/RfVTZClSmv0SSQzRvzAYv55LdBaIidi/r2W1PHeq3I5OSx6zbJCxrQaFJGiUp
-	zofv5PIMXlWS5BjW4PsBsvpn+75KA0letcJoWr1Zc+ZjCyIYRZgFwaIRhiB0i6N7
-	Z6DyhbMIIs4ghLFgujoeOwF4atZA+tADAMQC3Bg==;
-X-DKIM2-Info: draft=ietf-dkim-dkim2-spec-07;
-	repo=github.com/dkim2wg/interop; date=2026-10-18; sw=lmtpprox;
-	action=mi-m=1; hc=12;
-	hn=cc,content-transfer-encoding,content-type,date,feedback-id,
-	from,in-reply-to,message-id,mime-version,references,subject,to;
-Message-Instance: m=1; h=sha256:cKjetnoeFjJorNH+mroEPI71xZFnj0iEAx7opE2N30E=:+7cbM9Ly9xGwj1eAsvoI2B7rTf1bDojBouGfp8ZZDqA=;
-X-ME-Sender: <xms:Yn7gauJPeu1PinbCI2gYx0_jlj2PnQL9uVqEmxziDToBSgj9D_xRbA>
-    <xme:Yn7gag_jv3yDvc0KG6xNU0a3i3tsXlBRwgQXJ5nMfcMcUHLemzagppJ4LiVff77wd
-    kWfJ0mG4Cc1YdeleyjjRgNmR8bhi_EzFH5DKuKtc6zsMLGUhHUiVHY>
-X-ME-Proxy-Cause: dmFkZTFn5p5gNfTa2ln7Ur1M8HLGH3FByI3bMffV+IVuNBxFNqZT4qibdV0911N+HRUSXj
-    K07q1nctC5A6CcFfeLY7jBaLOsZKNIqYeTCeDTItiSfcD8KPMq3RagWnzHGWxZYBxWAiCm
-    A3VT2o0IozuPu/s7pvPmuxDhNCPVlHQtdJeKAQbZtM/B41WPfEm0WHEt7Z4VBmU7Awz3r2
-    CW1Ic84f68hqkyPgXyGKcQw2wWDeenYkz/P7wEtiFmdUVM0amFmkVyW6og0RqG5tm89hZw
-    aKjqOAwHgBmvujhKmrOmxUKnEU58c+GvStpS1gjFmbH3Cw9L2zocbcI2nShgNxT4DZbAQR
-    wgaSkDdcdMc/d9G+mxaz1POpKC9kteRE12RXj5cBt5pww+0ny7yXHoqz13E7ttwMLwV2Zx
-    irGvBcy8nzFHGZLzVSm2bc8v02AbCF8YXzUkvfzziFLvAHlSLPGQdoNZ9j8Z+n4FuXVzNX
-    YX6+5h5244zwOTl9aQiqLa2ox4HvDWrM9qIOP1ddj/Qc6TrOohBTM5knyFzE2y92EKQkba
-    jTOi3P5IOCM4Xz9GLVwUPx/34MQnZ46TWseR6J3W3XI63DkzQUPhI7lmU3qjmL7/C1LwgY
-    Sem/AhqkedQIukr61kUqtibtpdY8TqVUBtJQynB3XFjVXPk3rqiMNJFlIJrQ
-X-ME-Proxy: <xmx:Z37gapHvcVHvMaM3ipgnYUZzm2Ryqqq0XCp7NdxFgDjKT2zqjSy1vg>
-    <xmx:Z37gapt5WD8JfcDqZC3gZOEaTUAl0efsI8damzFuxdzMc9AsHa6DBA>
-    <xmx:Z37gao4LOQoh_k9Rjo00qqoo4baOxCcq29WjL83ZgQ6XABea2d3MPA>
-    <xmx:Z37galm2wjPgXkNjyPJ3HOpQNs8U8c25nqH_wkaWl6-1QurrUIflow>
-    <xmx:bH7gapzWCUwwKYEsxCX9776XutFUkBaJpOGzr7ZN12X60l-MCDK0DRme>
-Feedback-ID: i56a14606:Fastmail
-Received: by mailuser.ams.internal (Postfix, from userid 501)
-	id A3C9932A0093; Tue, 27 Oct 2026 06:35:14 -0400 (EDT)
-X-Mailer: MessagingEngine.com Webmail Interface
+	dkim=pass (1024-bit key, unprotected) header.d=samsung.com header.i=@samsung.com header.a=rsa-sha256 header.s=mail20170921 header.b=MoH/qVXp
+Received: from epcas2p4.samsung.com (unknown [182.195.41.56])
+	by mailout1.samsung.com (KnoxPortal) with ESMTP id 20261027110815epoutp0117fa1171aadb4311b5a2d4aef5905cc8~iXk8Tq6Mf2759127591epoutp01q
+	for <linux-scsi@vger.kernel.org>; Tue, 27 Oct 2026 11:08:15 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20261027110815epoutp0117fa1171aadb4311b5a2d4aef5905cc8~iXk8Tq6Mf2759127591epoutp01q
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1793099295;
+	bh=J2d2zJ5HLBob4v1CtJnPXEx47rAgJ9b+O4LDKjyJETg=;
+	h=From:To:Cc:Subject:Date:References:From;
+	b=MoH/qVXp1KJnlmYOItify0XUtHFePB31y9JecR0hmjt6jSGvR5XNUfTH/s3+Nutjm
+	 /rMdkHoawjN4G0v1TXQZpjscg8ob1cL9N61DDbXlRL+2tK0ZMXBQx4YkLEtVsaESso
+	 RuT5PlRltBF0me6AXh1PsPePJdqPT2K80lhebMVM=
+Received: from epsnrtp04.localdomain (unknown [182.195.42.156]) by
+	epcas2p2.samsung.com (KnoxPortal) with ESMTPS id
+	20261027110814epcas2p276d32aee099ea7822dbe9495c9d4dcd4~iXk71-ODu0483304833epcas2p2F;
+	Tue, 27 Oct 2026 11:08:14 +0000 (GMT)
+Received: from epcas2p1.samsung.com (unknown [182.195.38.202]) by
+	epsnrtp04.localdomain (Postfix) with ESMTP id 4jDSQk40V1z6B9mB; Tue, 27 Oct
+	2026 11:08:14 +0000 (GMT)
+Received: from epsmtip2.samsung.com (unknown [182.195.34.31]) by
+	epcas2p4.samsung.com (KnoxPortal) with ESMTPA id
+	20261027110813epcas2p4011de6cde600db5c995d3a3e45b056fb~iXk6uJPBq0449304493epcas2p4t;
+	Tue, 27 Oct 2026 11:08:13 +0000 (GMT)
+Received: from ubuntu.dsn.sec.samsung.com (unknown [12.81.221.204]) by
+	epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
+	20261027110813epsmtip2c36e1e5b4a84ca8655d87b84dd827fcb~iXk6pG0-l0549405494epsmtip2Q;
+	Tue, 27 Oct 2026 11:08:13 +0000 (GMT)
+From: HOYOUNG SEO <hy50.seo@samsung.com>
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
+	martin.petersen@oracle.com, bvanassche@acm.org, kwangwon.min@samsung.com,
+	kwmad.kim@samsung.com, cpgs@samsung.com, h10.kim@samsung.com
+Cc: HOYOUNG SEO <hy50.seo@samsung.com>, stable@vger.kernel.org, Stanley Jhu
+	<stanleyjhu@google.com>
+Subject: [PATCH v6] scsi: ufs: Change the error check sequence for auto
+ hibern8
+Date: Tue, 27 Oct 2026 20:03:57 +0900
+Message-Id: <20261027110357.3649301-1-hy50.seo@samsung.com>
+X-Mailer: git-send-email 2.34.1
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -115,55 +81,112 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-X-ThreadId: AUJ1OXWu3nCJ
-Date: Tue, 27 Oct 2026 11:33:08 +0100
-From: "Arnd Bergmann" <arnd@arndb.de>
-To: "James Houghton" <jthoughton@google.com>,
- "Andrew Morton" <akpm@linux-foundation.org>,
- "Alexander Viro" <viro@zeniv.linux.org.uk>
-Cc: "Thomas Gleixner" <tglx@kernel.org>,
- "Peter Zijlstra" <peterz@infradead.org>, "Kees Cook" <kees@kernel.org>,
- "David Hildenbrand (Red Hat)" <david@kernel.org>,
- "Lorenzo Stoakes" <ljs@kernel.org>, "Liam R. Howlett" <liam@infradead.org>,
- "Vlastimil Babka (SUSE)" <vbabka@kernel.org>,
- "Mike Rapoport" <rppt@kernel.org>, "Suren Baghdasaryan" <surenb@google.com>,
- "Michal Hocko" <mhocko@suse.com>, "Sean Christopherson" <seanjc@google.com>,
- "Paolo Bonzini" <pbonzini@redhat.com>, "Jim Mattson" <jmattson@google.com>,
- "Jens Axboe" <axboe@kernel.dk>, "Pavel Begunkov" <asml.silence@gmail.com>,
- "James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>,
- "Martin K. Petersen" <mkp@kernel.org>, "David Sterba" <dsterba@suse.com>,
- "Chris Mason" <mason@kernel.org>, "Alexei Starovoitov" <ast@kernel.org>,
- "Daniel Borkmann" <daniel@iogearbox.net>,
- "John Fastabend" <john.fastabend@gmail.com>,
- "Josh Poimboeuf" <jpoimboe@kernel.org>,
- "Steven Rostedt" <rostedt@goodmis.org>,
- "Masami Hiramatsu" <mhiramat@kernel.org>,
- "Mathieu Desnoyers" <mathieu.desnoyers@efficios.com>,
- "Ingo Molnar" <mingo@redhat.com>,
- "Arnaldo Carvalho de Melo" <acme@kernel.org>,
- "Namhyung Kim" <namhyung@kernel.org>, linux-mm@kvack.org,
- linux-fsdevel@vger.kernel.org, kvm@vger.kernel.org, io-uring@vger.kernel.org,
- linux-scsi@vger.kernel.org, linux-btrfs@vger.kernel.org, bpf@vger.kernel.org,
- linux-trace-kernel@vger.kernel.org, linux-perf-users@vger.kernel.org,
- linux-kernel@vger.kernel.org
-Message-Id: <3c125ff6-5426-4f19-8e34-fb564d4b6387@app.fastmail.com>
-In-Reply-To: <14f5f919-55bd-47c6-a1c8-6f1445cce733@app.fastmail.com>
-References: <20261026215226.3713941-1-jthoughton@google.com>
- <14f5f919-55bd-47c6-a1c8-6f1445cce733@app.fastmail.com>
-Subject: Re: [RFC PATCH 00/10] uaccess: Refuse and warn on user accesses when
- current->mm is NULL
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-CMS-MailID: 20261027110813epcas2p4011de6cde600db5c995d3a3e45b056fb
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+X-CPGSPASS: Y
+cpgsPolicy: CPGSC10-234,Y
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20261027110813epcas2p4011de6cde600db5c995d3a3e45b056fb
+References: <CGME20261027110813epcas2p4011de6cde600db5c995d3a3e45b056fb@epcas2p4.samsung.com>
 
-On Tue, Oct 27, 2026, at 01:12, Arnd Bergmann wrote:
->
-> E.g. on arm64 with CONFIG_ARM64_SW_TTBR0_PAN, the page table base for
-> the current process is only set in user_access_begin() and would
-> not point to any task here. Without ttbr0_pan, it should be
-> covered by cpu_set_reserved_ttbr0() turning off all user space access
-> for kernel threads.
+Auto-hibern8 enter and exit are performed by the host controller without
+a UIC command, and the auto-hibern8 idle timer only runs while no UIC
+command is outstanding. An auto-hibern8 error (IS.UHES or IS.UHXS) is
+therefore usually reported while hba->active_uic_cmd is NULL.
 
-correction: for non-sw_ttbr0_pan, enter_lazy_tlb() does nothing
-on arm64, so it is the same as x86 and the others.
+Since commit fcd8b0450a9a ("scsi: ufs: core: Make ufshcd_uic_cmd_compl()
+easier to analyze"), ufshcd_uic_cmd_compl() returns early when
+hba->active_uic_cmd is NULL, before ufshcd_is_auto_hibern8_error() is
+called. Such auto-hibern8 errors are no longer recorded in hba->errors,
+so ufshcd_check_errors() is not called for them and the error handler is
+not scheduled.
 
-     Arnd
+Check for auto-hibern8 errors before checking for an active UIC command,
+as was done before that commit, but keep returning early when there is
+no active UIC command so that a NULL cmd is never dereferenced. Only
+report the missing UIC command if no auto-hibern8 error was found.
+
+Fixes: fcd8b0450a9a ("scsi: ufs: core: Make ufshcd_uic_cmd_compl() easier to analyze")
+Cc: stable@vger.kernel.org # v6.13+
+Signed-off-by: HOYOUNG SEO <hy50.seo@samsung.com>
+Reviewed-by: Stanley Jhu <stanleyjhu@google.com>
+---
+Changes in v6:
+ - Add the missing "Cc: stable@vger.kernel.org" tag next to the Fixes tag
+   and keep the tags in one block (Bart Van Assche, Stanley Jhu).
+ - Add Stanley's Reviewed-by. No code change.
+
+Changes in v5:
+ - Fix the unmatched brace in ufshcd_uic_cmd_compl() that broke the build
+   in v4 (Stanley Jhu, Sashiko, kernel test robot).
+ - Use a local bool for the ufshcd_is_auto_hibern8_error() result instead
+   of testing hba->errors (Bart Van Assche).
+ - Move the Signed-off-by above the "---" line and Cc stable.
+ - Link to all previous versions.
+
+Changes in v4:
+ - Changed patch version
+
+Changes in v3:
+ - Check auto-hibern8 errors before the NULL check again, so that errors
+   reported while a non-hibernate UIC command is active are still
+   detected (Sashiko review).
+ - Return early when no UIC command is active instead of falling
+   through, to avoid dereferencing a NULL cmd (Sashiko review).
+ - Add Fixes tag, reword subject and commit message.
+
+Changes in v2:
+ - Check UFSHCD_UIC_HIBERN8_MASK for auto-hibern8 only when cmd is NULL.
+
+v1: https://lore.kernel.org/linux-scsi/20261021051951.1687479-1-hy50.seo@samsung.com/
+v2: https://lore.kernel.org/linux-scsi/20261022074249.3098100-1-hy50.seo@samsung.com/
+v3: https://lore.kernel.org/linux-scsi/20261026051851.1845934-1-hy50.seo@samsung.com/
+v4: https://lore.kernel.org/linux-scsi/20261026052632.1848929-1-hy50.seo@samsung.com/
+v5: https://lore.kernel.org/linux-scsi/20261027021037.3398180-1-hy50.seo@samsung.com/
+
+ drivers/ufs/core/ufshcd.c | 18 +++++++++++++-----
+ 1 file changed, 13 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index d085d394858f..c08278a2e43e 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -5939,18 +5939,26 @@ static irqreturn_t ufshcd_uic_cmd_compl(struct ufs_hba *hba, u32 intr_status)
+ {
+ 	irqreturn_t retval = IRQ_NONE;
+ 	struct uic_command *cmd;
++	bool ah8_err;
+ 
+ 	guard(spinlock_irqsave)(&hba->host->host_lock);
++
++	/*
++	 * Auto-hibern8 is performed without a UIC command, so check for
++	 * auto-hibern8 errors before checking for an active UIC command.
++	 */
++	ah8_err = ufshcd_is_auto_hibern8_error(hba, intr_status);
++	if (ah8_err)
++		hba->errors |= (UFSHCD_UIC_HIBERN8_MASK & intr_status);
++
+ 	cmd = hba->active_uic_cmd;
+ 	if (!cmd) {
+-		dev_err(hba->dev,
+-			"No active UIC command. Maybe a timeout occurred?\n");
++		if (!ah8_err)
++			dev_err(hba->dev,
++				"No active UIC command. Maybe a timeout occurred?\n");
+ 		return retval;
+ 	}
+ 
+-	if (ufshcd_is_auto_hibern8_error(hba, intr_status))
+-		hba->errors |= (UFSHCD_UIC_HIBERN8_MASK & intr_status);
+-
+ 	if (intr_status & UIC_COMMAND_COMPL) {
+ 		/*
+ 		 * Store the UIC command result in the lowest byte of
+-- 
+2.34.1
+
