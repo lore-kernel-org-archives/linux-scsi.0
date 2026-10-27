@@ -1,118 +1,74 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.72
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793131695;
-	b=wSy+lRIgX1ykioHlnfzS1Lu4dLmm6ac3CZoEu8eCS59VmTmmf2Mx6CVNYDXfrt3GpBe/
-	 Yic2I16VOfMiT5rioByClub8ZD9do0NYSZFH1p1r064z6oWrJJBcFbjQ0cicZX/EY0uKc
-	 wpTjvpGiPOhxcTFyPa4ArEBX3nCl5rNGUoBgaxadwfzPMU+DJYid5a80nIhwdrvbExja4
-	 1pWyqS+0iwwAvKjrBdsLgjU07iuPH918wkOYISCcbz2IJGi6F1r31q9/VZ3CTpg28BAQ5
-	 rhpSm1EkZnr3RgZ66JTPlgo/M10w86RqAFhyUVgKtOCYKk0hUT/iGhd7YQFmFqnQm5w==
+	t=1793135924;
+	b=ZRB7Gj882J2oVNd6JuDCR6ksUEdTvu13F36mzpTLgeEQGKAa6+P0aoPjXQoROLyNwXBl
+	 g3Etn3xpZz38LP3GgbUf17qCsYMC5/QUL/DwMBBW0e+9uFW8ICFaCtlHAljwTWiIJymNC
+	 0HsNt2KDENW4pn1wcKwJmFH58JUxss7tQg7RY5gGvBM5hEPyvQqHWTlAzQZMfYRKPyTOY
+	 DJOCx9Viqo9ooOXNvJ+SkaBptsRV6N9GRFWzIZa+niXai35yJibSToF+5GAx+Ww98fQDa
+	 jAWYGfisJvPEVW1dUgN3pp+s08+6iq+uf1PLyUZzMW/X4XBpVVjMU4yf9Spy/8yhxTA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793131695;
-	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
-	 X-Mimecast-MFC-AGG-ID:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 X-Received:Received:Message-ID:Subject:From:To:Cc:Date:In-Reply-To:
-	 References:Content-Type:Content-Transfer-Encoding:User-Agent:
-	 MIME-Version;
-	bh=1YJHX2FJISPkStTvYFWPCn9XZ+gAuo9LLswhwwgRlLw=;
-	b=aDhk4eG9bW56DUkVedfmglHwMyja70VxfnRDaLwlFGpgCv819P37APoWpj5mOcmnnmhb
-	 2iq9PI98E/WFAdBSUHNVzj0p2s/V3c3xwyivZ6PfYqFS5miT60IMeCJAXinaEiMWN8a4y
-	 orwp4KxcWSm9XMF1agiBJh7Hsv/keoSZrRAIjaMjCrjZAhnXffhU1oQNam25oE3fCBGX+
-	 KtCedh66WaBnBR8y5bXQy6CljnYie8Q8AdrBTH4x9W9LACY00LcqxlDHRPVY7Yzm5wOtQ
-	 LE7a8GVyNzu5sk8cpmsKvqrPXe1ZbszME+Kp1HwUHUg+0Mo4eVGcDFUtmVbIAIY2/iA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793135924;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:In-Reply-To:
+	 Mime-Version:References:Message-ID:Subject:From:To:Cc:Content-Type;
+	bh=qUMx95Z2/FLv64tnydT/x/C4fd+wJMNdslwBEILinGo=;
+	b=1XWhvMQdrxwcobXq4U+ODUhPaYStSQr5rd6SW+rCmSIxyAqIu80K7ihaTEh0TaDF7Ihy
+	 mv35H8fu9nNAJcluIiCV5pO1+TQ7ZxcA/V5eWK+SFEb0ZyhH1RKknKR6BS1VNucKDV7Vs
+	 UBki48uXlvU3lRI9qmSO2z7rQ8gJsYB4Qb9rfZupAdyQqm4uDyesdtVsABwWhWxJyagfE
+	 jg53bxVx4ORK3P4FznDE4LWq8TEfwu/69MKY8wHRnjEAlNjMwHoR6TRVUej3l7LK1tFxm
+	 lV6HoLXu53fCZb/vGNUHavKLAK3LXuL30p6xkCzg2d7nL77R35hmNkXfUDI5/URB4KQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=redhat.com;
-	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=aR8cSDd9;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=q8+kAvfn;
-	arc=none smtp.remote-ip=170.10.133.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=google.com;
+	spf=pass smtp.mailfrom=flex--seanjc.bounces.google.com;
+	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=O9t1oNxh;
+	arc=none smtp.remote-ip=209.85.216.72
+Received: from mail-pj1-f72.google.com (mail-pj1-f72.google.com [209.85.216.72])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5320B606A320
-	for <linux-scsi@vger.kernel.org>; Tue, 27 Oct 2026 20:08:15 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5320B606A320
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7895A606A320
+	for <linux-scsi@vger.kernel.org>; Tue, 27 Oct 2026 21:18:44 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7895A606A320
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--seanjc.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=aR8cSDd9;
-	dkim=pass (2048-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=q8+kAvfn
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1793131694;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=1YJHX2FJISPkStTvYFWPCn9XZ+gAuo9LLswhwwgRlLw=;
-	b=aR8cSDd9jMORIlbWKoSTde0HER1rCk+/qw9qZ3Rorzf5B8ZzFryiAXcCyXp065CumI04+F
-	7RxbO6VXwbf7HTuR7zmWFjdQkFEwrUOn8pS9/NXd6geseMQ5pkkjYFzs8zMsriPnR2o55S
-	JoSzb9vzyPW4Q56almJz4e6Ja7NEDl0=
-Received: from mail-qt1-f198.google.com (mail-qt1-f198.google.com
- [209.85.160.198]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-500-TzsX9k55NF2i0m42QVzeCQ-1; Tue, 27 Oct 2026 16:08:11 -0400
-X-MC-Unique: TzsX9k55NF2i0m42QVzeCQ-1
-X-Mimecast-MFC-AGG-ID: TzsX9k55NF2i0m42QVzeCQ_1793131691
-Received: by mail-qt1-f198.google.com with SMTP id d75a77b69052e-5337f26ee19so8555991cf.2
-        for <linux-scsi@vger.kernel.org>; Tue, 27 Oct 2026 13:08:11 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=O9t1oNxh
+Received: by mail-pj1-f72.google.com with SMTP id 98e67ed59e1d1-3ab7f1efe5dso432350a91.1
+        for <linux-scsi@vger.kernel.org>; Tue, 27 Oct 2026 14:18:44 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1793131691; x=1793736491; darn=vger.kernel.org;
-        h=mime-version:user-agent:content-transfer-encoding:content-type
-         :references:in-reply-to:date:cc:to:from:subject:message-id:from:to
-         :cc:subject:date:message-id:reply-to:content-type;
-        bh=1YJHX2FJISPkStTvYFWPCn9XZ+gAuo9LLswhwwgRlLw=;
-        b=q8+kAvfnx8sybzGir6W5dQI4xnjenBkEH9mhZZhY3vmDnaU25E9waAZMqgZ1gjaF7j
-         1tA4/kQq6I3ChmaFGydy9MzP4RW+WtSrp+sf48ex+Xbfq8cqnnDHfp1JdJDGSj6a+E30
-         04aU0DAQgafipdhLqT/9sr+BY5eWU/i435zBAcHeWZHV+Zc2HqrBYgknqdoePO1sAC6Q
-         GkFVr/Gc7Ma2SwDj5AbPYNX7qf/t3Fva3GKVkJ1abRwNengs9SvVMsSX71OeTt6p8Ws/
-         +G8mHI6GR/j4vnrABLDvF1uPXkbQmxyYv/MV0+BW8Jniz/s5OIu/jfh411639535HqIk
-         nkaA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793131691; x=1793736491;
-        h=mime-version:user-agent:content-transfer-encoding:content-type
-         :references:in-reply-to:date:cc:to:from:subject:message-id:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+        d=google.com; s=20260707; t=1793135924; x=1793740724; darn=vger.kernel.org;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=1YJHX2FJISPkStTvYFWPCn9XZ+gAuo9LLswhwwgRlLw=;
-        b=IRFe9tB1mQhE4DWRWc6k5lSE7PtZlXD+Rfay0vVmtc8EmwDcUWuIBW9Z8rhIRlJAoV
-         QRgY4YGZU/OhK0X4FlO9pXAFl770HclL3B/SFphNcvrp3l2v8ng8bJNg4V56+kTA1lP3
-         G5GaY2OCBQXnXfzKEFAkzUT1PRDjP3wLSGIREmORyPHxaY7nyRrqSYRZ3QPLXLc+fNRp
-         lIv2h9uGHWNQU80DZuPvlyyjwFIADthIfyNm9iSIdNvLDiCDMhZLwHeg3A22TNkJniPs
-         3HjsQIkT00DiDe52n8XCKF8aPOJOhbOxjZ4Nu9c0KLmTzu6LW1UbxiDZDCDMY7se0A6F
-         aHSQ==
-X-Forwarded-Encrypted: i=1; AKwUvByOOvkoKifwrlCXo9AxdWBAo+R+WLot8kHv9Hw+2+HnEy4z+jVFuJJfNrGqBrXEkGNyzyk4AZejc/0J@vger.kernel.org
-X-Gm-Message-State: AFq9FYLFRFxS35okhPKd7+wGuQotqoIZNrE/8OnmkvevmL6SSdzAmfqC
-	4byVvlFeeTM9v9fE5RC68NJeUxltkEEaP3xYLF3R06KVroHWDu3HCtkzoyJAtvSVVxnj93zJ/uw
-	KlhAw3396CT1lFNvqxwnVNz86U7vlDupusAqG6w31BRlk/kv0ToetmBHfu8ILW5Y=
-X-Gm-Gg: AYBFou1l/d8lKhHyvIiOpZB0GZ2beWUhHDkbaSpNvYJo+vv9Qwmew3jHOCVcnbfL2Bx
-	Tl0vDm/ATOt2P2jcY9De6pCJnod4XQAuFYKO/RIL96D/mU1HPFUBz/1hNV1u8Rl8aEGVXZZEKGM
-	hd+HzWwf2rVG+4Yr7MZzMNaYIBFzlsZWh67tzeU11pr917Nt+9wTIiRF8dM4PO6AabEhu2NZKpj
-	EPUcvU2LeR+tF59ilTn0xwyXQpxTS6EYn5jjV4svECUSq2dMpGd0IVQnoCZioM58FuPTW/qUsGt
-	/jR2+oIlEkXKtU0ud/JwuvO+VN+z1T/HzS0cGOu7XcB1prmGQ4jIez1Gw3ywsBkDSv9GAhYwS+u
-	1mNfAggxsup0tfT2wK8rw0E/ejo3emenfArfQ+23JCycEirAYOHr5nJ17AW+42YK6ebNTaDF+uf
-	3eJmYeaggID1yjzg4=
-X-Received: by 2002:a05:622a:1822:b0:533:983b:e53f with SMTP id d75a77b69052e-53fcd197865mr6547521cf.59.1793131691229;
-        Tue, 27 Oct 2026 13:08:11 -0700 (PDT)
-X-Received: by 2002:a05:622a:1822:b0:533:983b:e53f with SMTP id d75a77b69052e-53fcd197865mr6546721cf.59.1793131690641;
-        Tue, 27 Oct 2026 13:08:10 -0700 (PDT)
-Received: from loberman-thinkpadp1gen5.rmtusma.csb ([96.39.69.186])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-53838cf49c9sm87523701cf.3.2026.10.27.13.08.09
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 27 Oct 2026 13:08:09 -0700 (PDT)
-Message-ID: <d7a1701ddc2e7c976ad8ff9ec071d9bfdc86a7e2.camel@redhat.com>
-Subject: Re: [PATCH 0/2] target: iscsi: fix hanged WRITE_PENDING commands
-From: Laurence Oberman <loberman@redhat.com>
-To: Dmitry Bogdanov <d.bogdanov@yadro.com>, Martin Petersen
-	 <martin.petersen@oracle.com>, Maurizio Lombardi <mlombard@redhat.com>, 
-	target-devel@vger.kernel.org
-Cc: michael.christie@oracle.com, linux-scsi@vger.kernel.org, linux@yadro.com
-Date: Tue, 27 Oct 2026 16:08:08 -0400
-In-Reply-To: <20261027180123.13163-1-d.bogdanov@yadro.com>
-References: <20261027180123.13163-1-d.bogdanov@yadro.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.60.2 (3.60.2-2.fc44) 
+        bh=qUMx95Z2/FLv64tnydT/x/C4fd+wJMNdslwBEILinGo=;
+        b=O9t1oNxhj7Xw67fxZOhJmZ8vNAdxWgxOGEEZGK9oId6/aVHLsnFtQlbNQ6bzhC9B0E
+         f9O/mJB1tznoMWpJP5vr6IAfWd7OYL3+vqog/K86lyrB9hPII1dxM6rPxBJ9Kby9+ucJ
+         q3hnsiNT2ru8vSf8egpVYYGw35wKVG80Vu3ezvTOK/2hErKcg9OsAoYftXOMXvmgvOsE
+         USSlpzb9cbn2+MUY6DGfb3+M18AMUDB5o3XD1HYrd07vSA1sr+KPFgLsCAHlt3yIU0CJ
+         46wb1/8vXqcmincC/gKw4zIHqOkFMeY2f47UtXQrgsFIIglqeYn4Rz2uN2mV+APvhSlW
+         0LBg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793135924; x=1793740724;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=qUMx95Z2/FLv64tnydT/x/C4fd+wJMNdslwBEILinGo=;
+        b=ebZQzi4SRM240qepPmt84IlQXrw9nyFRGT+K4BL7hIUwxWj1SyHSzELkPJDeeYK5uf
+         lfwtKkaF3JJ+0PRjbITwfs5gZyXae9TBUPmwA1YE80XS7omNYxY7iXpyj2AKgoeU9NrQ
+         A0onLtvnTKuAJDz+D2pvKn5WiJvtVz+A22WnPACJNQ+zw3oi+XOQfynNJtNKGv/awlHC
+         TkIdtrRWUTu8lWQcLztvvZOsZU635C2YKOnLeGuLCNUiH/iUl+eIgWe1bSrqocYuXsKV
+         YudHZFWi/2ykQyecyBdbzPGejhqDa/Mr+9aajEvp1hrxC0OFBnFu4qDfrmPMpTC8ocET
+         NXAQ==
+X-Forwarded-Encrypted: i=1; AKwUvBzqI2Dnk5hfNPhlOMo9qWpJFfrJF/XLE9lACgZvqxPW9lRA6OSq1ZUsnmEedhUGvXbRRphbIp0F8p0p@vger.kernel.org
+X-Gm-Message-State: AFq9FYI3qGtQTpfTcLyDvPzMuyvJJluS/l9W2hq1iOaFCLgCn6g1+Uv5
+	3T7hUTEfQXpp24GvNaN0WA/arkRNjl1H5HmJUwHxjoaUQ8hNuQw9QUqzgemiLuzOqBWDtjnzo3Y
+	0moxEfg==
+X-Received: from pjvv8.prod.google.com ([2002:a17:90b:5888:b0:3ad:850b:6f1c])
+ (user=seanjc job=prod-delivery.src-stubby-dispatcher) by 2002:a17:90b:288a:b0:3ac:9706:7739
+ with SMTP id 98e67ed59e1d1-3ae5819e5afmr211698a91.17.1793135923585; Tue, 27
+ Oct 2026 14:18:43 -0700 (PDT)
+Date: Tue, 27 Oct 2026 14:18:42 -0700
+In-Reply-To: <ac22215d-3e58-4aab-851e-47c30836e058@app.fastmail.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -121,88 +77,102 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
+Mime-Version: 1.0
+References: <20261026215226.3713941-1-jthoughton@google.com>
+ <14f5f919-55bd-47c6-a1c8-6f1445cce733@app.fastmail.com> <CADrL8HXQdzcroeGN-ACjyy-jSAdBNHiT1_BCVVe0P+Y8ZueiyA@mail.gmail.com>
+ <ac22215d-3e58-4aab-851e-47c30836e058@app.fastmail.com>
+Message-ID: <auEVMrMDqVuKtDqh@google.com>
+Subject: Re: [RFC PATCH 00/10] uaccess: Refuse and warn on user accesses when
+ current->mm is NULL
+From: Sean Christopherson <seanjc@google.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: James Houghton <jthoughton@google.com>, Andrew Morton <akpm@linux-foundation.org>, 
+	Alexander Viro <viro@zeniv.linux.org.uk>, Thomas Gleixner <tglx@kernel.org>, 
+	Peter Zijlstra <peterz@infradead.org>, Kees Cook <kees@kernel.org>, 
+	"David Hildenbrand (Red Hat)" <david@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>, 
+	"Liam R. Howlett" <liam@infradead.org>, "Vlastimil Babka (SUSE)" <vbabka@kernel.org>, Mike Rapoport <rppt@kernel.org>, 
+	Suren Baghdasaryan <surenb@google.com>, Michal Hocko <mhocko@suse.com>, Paolo Bonzini <pbonzini@redhat.com>, 
+	Jim Mattson <jmattson@google.com>, Jens Axboe <axboe@kernel.dk>, 
+	Pavel Begunkov <asml.silence@gmail.com>, 
+	"James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>, 
+	"Martin K. Petersen" <mkp@kernel.org>, David Sterba <dsterba@suse.com>, Chris Mason <mason@kernel.org>, 
+	Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, 
+	John Fastabend <john.fastabend@gmail.com>, Josh Poimboeuf <jpoimboe@kernel.org>, 
+	Steven Rostedt <rostedt@goodmis.org>, Masami Hiramatsu <mhiramat@kernel.org>, 
+	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>, Ingo Molnar <mingo@redhat.com>, 
+	Arnaldo Carvalho de Melo <acme@kernel.org>, Namhyung Kim <namhyung@kernel.org>, linux-mm@kvack.org, 
+	linux-fsdevel@vger.kernel.org, kvm@vger.kernel.org, io-uring@vger.kernel.org, 
+	linux-scsi@vger.kernel.org, linux-btrfs@vger.kernel.org, bpf@vger.kernel.org, 
+	linux-trace-kernel@vger.kernel.org, linux-perf-users@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
 
-On Tue, 2026-10-27 at 21:01 +0300, Dmitry Bogdanov wrote:
-> ISCSI has some old leftovers in the code that prevents passing the
-> aborted
-> command to the target core to make the actual abort. Such commands
-> hang
-> until connection is closed.
-> So remove those leftovers.
->=20
-> Dmitry Bogdanov (2):
-> =C2=A0 Revert "scsi: target: iscsi: Fix hang for aborted WRITE_PENDING
-> =C2=A0=C2=A0=C2=A0 commands"
-> =C2=A0 scsi: target: iscsi: fix hanging WRITE_PENDING commands
->=20
-> =C2=A0drivers/target/iscsi/iscsi_target.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 |=
- 19 -------------------
-> =C2=A0drivers/target/iscsi/iscsi_target_erl1.c |=C2=A0 8 --------
-> =C2=A02 files changed, 27 deletions(-)
+On Tue, Oct 27, 2026, Arnd Bergmann wrote:
+> On Tue, Oct 27, 2026, at 18:29, James Houghton wrote:
+> >> I would think that user_access_begin() is a more natural place
+> >> for the added checks, as this should be called exactly once for
+> >> any function that accesses user space and also stays out of the
+> >> way of the copy_from_kernel_nofault() etc.
+> >
+> > user_access_begin() isn't used in a lot of places that I want to
+> > catch, including the KVM case. Roughly:
+> >
+> >   kvm_write_guest_cached() --> __copy_to_user() --> raw_copy_to_user()
+> >
+> > There's no user_access_begin() in there. :/
+> 
+> Good point, yes. After the changes described in
+> https://lwn.net/Articles/1102061/, I had assumed that all
+> __copy_{from,to}_user() are going from common code, but it looks
+> like the series so far only touches __{get,put}_user().
+> 
+> There are of course few enough of these left that I think
+> we can consider doing the same thing here and turn them all
+> into the checking version:
+> 
+> $ git grep -wl __copy_'\(from\|to\)'_user  drivers mm virt
+> drivers/gpu/drm/i915/gem/i915_gem_execbuffer.c
+> drivers/gpu/drm/i915/i915_gem.c
+> drivers/gpu/drm/i915/i915_query.c
+> drivers/usb/gadget/udc/atmel_usba_udc.c
+> drivers/vhost/scsi.c
+> drivers/vhost/vhost.c
+> mm/kasan/kasan_test_c.c
+> virt/kvm/kvm_main.c
+> 
+> > I do think user_access_begin() should have the new check though, so
+> > I've added it in the v2.
+> 
+> I had the details confused here. Seing that user_access_begin()
+> and the other accessors always call access_ok() at some
+> point, maybe that would be enough?:
 
-Hello Dmitri
-Thanks for posting this. I have a series in flight for the same hang:
+It would help, but it wouldn't cover everything, e.g. KVM "caches" the access_ok()
+checks well in advance of actually performing a user access.  I don't know that I
+would fixate on KVM too much though, as KVM's memslots infrastructure that begets
+that behavior is quite unique, i.e. it's unlikely other subsystems will have these
+types of bugs *and* elide access_ok() checks at the time of access.  And KVM has
+natural chokepoints for these accesses, so it's easy enough to harden KVM itself.
 
-https://lore.kernel.org/linux-scsi/20261027122837.2148074-1-loberman@redhat=
-.com/
+The counter-argument is that _if_ there are other subsystems that are caching
+access_ok() checks, then those are probably the subsystems that are most likely
+to mess this up and thus would benefit the most from common hardening.
 
-Is the revert maybe aimed at the wrong layer, and the sashiko review of
-your 2/2 makes the case better than I can: with the fabric check
-removed, an aborted command reaches target_execute_cmd(),
-target_cmd_interrupted() queues target_abort_work and returns without
-changing t_state, the command stays on conn_cmd_list in
-TRANSPORT_WRITE_PENDING, and iscsit_release_commands_from_conn()
-completes it a second time if the connection closes.
-
-That is the same double completion you are reverting d5869dae5080 for.
-It
-is not a defect in Maurizio's patch and it will not be fixed by
-replacing
-it -- target_cmd_interrupted() records nothing when it queues an abort,
-so
-any site that completes an aborted WRITE_PENDING command can be
-followed
-by another one. I found this from vmcores on a customer system before
-either of us posted, so no argument from me that it is real.
-
-Patch 3 of my series fixes it there, under t_state_lock, for both
-queueing sites in target_core_transport.c and for every fabric. With
-that
-in place your 2/2 is safe and d5869dae5080 does not need reverting for
-this reason -- which matters, because the revert is not free: that
-commit
-carries CVE-2026-97951 and is in 5.10.y, 5.15.y, 6.1.y, 6.6.y, 6.12.y,
-6.18.y and 7.2.y.
-
-Two questions on 2/2 independent of all that.
-
-Removing the sense_reason early return in iscsit_execute_cmd() means
-transport_send_check_condition_and_sense() now runs for an aborted
-command. It guards only on SCF_SENT_CHECK_CONDITION, never checks
-CMD_T_ABORTED, and ends in queue_status(); target_handle_abort() also
-calls queue_status() for a CMD_T_TAS command, and each drops a
-reference.
-Can an aborted command with a sense reason send both a CHECK CONDITION
-and a TASK ABORTED, and drop two references?
-
-And with the early return gone, a LUN_RESET aborting a large WRITE
-waits in target_put_cmd_and_wait() for the whole remaining data
-transfer. That is bounded where today it is not, but on a large
-transfer it may still trip the hung task timeout that made this
-visible.
-
-On the overlap: your 2/2 and patch 4 of my series touch the same lines,
-so only one can apply, and I have no attachment to mine if yours is the
-better shape. Patches 1 to 3 are core-side and conflict with nothing
-you have posted.=C2=A0
-
-Martin, would you prefer those three as their own series,
-given both candidate iSCSI fixes need patch 3 to be correct?
-
-I am happy to test either or both: I have a reporter's environment that
-reproduces this reliably and 300-cycle runs on it.
-
-Many Thanks
-Laurence
-
+> --- a/include/asm-generic/access_ok.h
+> +++ b/include/asm-generic/access_ok.h
+> @@ -33,6 +33,9 @@ static inline int __access_ok(const void __user *ptr, unsigned long size)
+>         unsigned long limit = TASK_SIZE_MAX;
+>         unsigned long addr = (unsigned long)ptr;
+>  
+> +       if (WARN_ONCE(!current->mm))
+> +               return false;
+> +
+>         if (IS_ENABLED(CONFIG_ALTERNATE_USER_ADDRESS_SPACE) ||
+>             !IS_ENABLED(CONFIG_MMU))
+>                 return true;
+> 
+> (plus the few extra copies of access_ok()/__access_ok())
+> 
+> As a quick fix I would probably start with just the 'if (!mm) return false'
+> bit here to get something merged while we still discuss the other
+> details.
