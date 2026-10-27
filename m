@@ -1,102 +1,118 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.218.45
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793127092;
-	b=VWQPTowdEQT25nPp0LUpNxkklcZmr358yZAxy7iwHVieTHXjxb6I8NUl1S9hBcmisEck
-	 gebiPJZwsb2buT64EC0DxqBzhJwI2D5Lkxy3XPZWGIbXDC3JlgNsk1FIVnwo0KgJ3X1/i
-	 cnYJ3Tn+xK+LW0PKnxVFA6U3BAvM12FRqiXXLMlHDawkRtKeO1oxkvJrM9mjtpCRzJkUp
-	 BVqXYKXIXe/MEc3n8L14TZHr7FWFpDYP0Avk4btm8qgPwxMhtblC02cr7wVPb/yOu78zX
-	 co2z7tQxDywxQ6fci9A2+oDiZj0xCXrswm+GpwIVrCp+RwqEtOpndwM9T1tTyb/EYew==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793127092;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.133.124
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1793131695;
+	b=wSy+lRIgX1ykioHlnfzS1Lu4dLmm6ac3CZoEu8eCS59VmTmmf2Mx6CVNYDXfrt3GpBe/
+	 Yic2I16VOfMiT5rioByClub8ZD9do0NYSZFH1p1r064z6oWrJJBcFbjQ0cicZX/EY0uKc
+	 wpTjvpGiPOhxcTFyPa4ArEBX3nCl5rNGUoBgaxadwfzPMU+DJYid5a80nIhwdrvbExja4
+	 1pWyqS+0iwwAvKjrBdsLgjU07iuPH918wkOYISCcbz2IJGi6F1r31q9/VZ3CTpg28BAQ5
+	 rhpSm1EkZnr3RgZ66JTPlgo/M10w86RqAFhyUVgKtOCYKk0hUT/iGhd7YQFmFqnQm5w==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793131695;
+	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
+	 X-Mimecast-MFC-AGG-ID:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
-	 Message-ID:Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
-	bh=UJlLnl+V5fVkcEdrgjKFPN24Q/fJ++IZ4ZhlDmWxnT0=;
-	b=lS+Qs+4IiZZrkVSRKOHCo9qxp1EKIfAO3dVmhCkWFF+oY2csF9Oo0rV0AK9wiOj+NrjX
-	 +QSXUs+VhPXMxB6Pd+jKcoXsJwidSuJA2mbhAgDHPo2LdoYSu9XhlDID6hfTkeemP4hke
-	 O+2AoBiQlIR7Iv9xhQ0nmARRT5+XPUmS+m+eG+FOCwM4gcE37LfKSRTsgetFu9pIv0HES
-	 VOISG8r5UELG03KSedaqDHVfTwLz9J3qTn9Ojzywx6AMJsmRJRrgXjae/ODKabT3w3nL6
-	 v2T5me8YefihCkQuR+56UuZg8t6nuuyLM6ChpcDuWwBg6t/V6H2XHdrsOf5npIgSPqw==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=google.com;
-	spf=pass smtp.mailfrom=google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=HFK9DQOj;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.218.45
-Received: from mail-ej1-f45.google.com (mail-ej1-f45.google.com [209.85.218.45])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 X-Received:Received:Message-ID:Subject:From:To:Cc:Date:In-Reply-To:
+	 References:Content-Type:Content-Transfer-Encoding:User-Agent:
+	 MIME-Version;
+	bh=1YJHX2FJISPkStTvYFWPCn9XZ+gAuo9LLswhwwgRlLw=;
+	b=aDhk4eG9bW56DUkVedfmglHwMyja70VxfnRDaLwlFGpgCv819P37APoWpj5mOcmnnmhb
+	 2iq9PI98E/WFAdBSUHNVzj0p2s/V3c3xwyivZ6PfYqFS5miT60IMeCJAXinaEiMWN8a4y
+	 orwp4KxcWSm9XMF1agiBJh7Hsv/keoSZrRAIjaMjCrjZAhnXffhU1oQNam25oE3fCBGX+
+	 KtCedh66WaBnBR8y5bXQy6CljnYie8Q8AdrBTH4x9W9LACY00LcqxlDHRPVY7Yzm5wOtQ
+	 LE7a8GVyNzu5sk8cpmsKvqrPXe1ZbszME+Kp1HwUHUg+0Mo4eVGcDFUtmVbIAIY2/iA==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=redhat.com;
+	spf=pass smtp.mailfrom=redhat.com;
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=aR8cSDd9;
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=q8+kAvfn;
+	arc=none smtp.remote-ip=170.10.133.124
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 99B5A606A31F
-	for <linux-scsi@vger.kernel.org>; Tue, 27 Oct 2026 18:51:31 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 99B5A606A31F
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5320B606A320
+	for <linux-scsi@vger.kernel.org>; Tue, 27 Oct 2026 20:08:15 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5320B606A320
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=HFK9DQOj
-Received: by mail-ej1-f45.google.com with SMTP id a640c23a62f3a-c3fd91337baso21459366b.3
-        for <linux-scsi@vger.kernel.org>; Tue, 27 Oct 2026 11:51:31 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1793127090; cv=none;
-        d=google.com; s=arc-20260327;
-        b=E7TlPh5jcCSewxeA6KMQ4bkHFoxvD9RkoKG61x+zCAhBba8PdZgXz00QTAflwgLJ/t
-         PVRbd1F2f+p8hYpV7whcoTFklWBmWwufnhb8Ud8d62ip5wBI/pz57gJovmkiCdbRb+Cw
-         gbP9KiJQOfIHSFUcZapk7zqGMx8bfmualoOo9DoIeFFXnWfbC+WCmlp7pV1/t1uJtlN+
-         F42IIc8hCn9ZJ5TPzS0dC2vra0PMFAnQk5ZEcF16ZSY76PuMzfq1e9mF/mmKMA13tweS
-         x1Cy/tybLdMT2O7TR6X65EqZpJbuipewtxtU7qx9XmJMtryi4Cjdy3zRkD663juJhscr
-         dqAQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=UJlLnl+V5fVkcEdrgjKFPN24Q/fJ++IZ4ZhlDmWxnT0=;
-        fh=anEsDqP2Ct4yTH6Sb28v197Pq5RiroP12xDz3HyY8+A=;
-        b=Ys5WuLmkxXxJQZF6gRGyloGttUOIFVYtphCd3+gRU3U4R8Zeqwx3PpxZAIltQaNEAz
-         W5RNfqDz3BlSMEH0tonzRxvoYt3U2mHDIdOLfpdUoJL1UvxmQtH+qpv3VOe4hF7KG04k
-         +Fcb/E31reVao35LT1+1821DCciukLrPCwgqy+Xn5khCP34fDUzwRTkw2j+mPwcvNGTP
-         77bxiXm7e/yxln0xeYdXxyobnghdANcErCVmPC6lUz25+HDJsD0Lq6FZJ5joCob+kyau
-         ZcHShbv546JLulSPY4cDpxq7/f7425fUON9FZG2WGjWxWbjUHWOW083JlHQ/VHPe/cXj
-         IMOg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=aR8cSDd9;
+	dkim=pass (2048-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=q8+kAvfn
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1793131694;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=1YJHX2FJISPkStTvYFWPCn9XZ+gAuo9LLswhwwgRlLw=;
+	b=aR8cSDd9jMORIlbWKoSTde0HER1rCk+/qw9qZ3Rorzf5B8ZzFryiAXcCyXp065CumI04+F
+	7RxbO6VXwbf7HTuR7zmWFjdQkFEwrUOn8pS9/NXd6geseMQ5pkkjYFzs8zMsriPnR2o55S
+	JoSzb9vzyPW4Q56almJz4e6Ja7NEDl0=
+Received: from mail-qt1-f198.google.com (mail-qt1-f198.google.com
+ [209.85.160.198]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-500-TzsX9k55NF2i0m42QVzeCQ-1; Tue, 27 Oct 2026 16:08:11 -0400
+X-MC-Unique: TzsX9k55NF2i0m42QVzeCQ-1
+X-Mimecast-MFC-AGG-ID: TzsX9k55NF2i0m42QVzeCQ_1793131691
+Received: by mail-qt1-f198.google.com with SMTP id d75a77b69052e-5337f26ee19so8555991cf.2
+        for <linux-scsi@vger.kernel.org>; Tue, 27 Oct 2026 13:08:11 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20260707; t=1793127090; x=1793731890; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=UJlLnl+V5fVkcEdrgjKFPN24Q/fJ++IZ4ZhlDmWxnT0=;
-        b=HFK9DQOjx55GzwyinowY3WKQr1IsXRiJeV+D7Z8hkiYPym2ZUBwoZvUifqN/FnkNGU
-         pfa1ZewvhEMvZLoaCIPFZp4tA/umOO4oOn0eM3xlRhU2sdWIJfNsPw9HVJXR4LYjiytX
-         dUAGwL90rw0Q5w+OWsW5iboZVP9RCytMSNYKe3ji15diP1zhAfgrHC9FvXhRMxxUMt35
-         TQ2tHe1FHlUZ2NICIb0rhXxsSpvA5sFGf5zLgnOgSw/RZnKbxxQN9s376gQ8m4D1+J80
-         lvL/AJdZ7uKnroRkKZncUslhbEYHXR8yj6xbpQX2rU8tK9ueLcaFgAw4VAp3h++AYDrG
-         cmtg==
+        d=redhat.com; s=google; t=1793131691; x=1793736491; darn=vger.kernel.org;
+        h=mime-version:user-agent:content-transfer-encoding:content-type
+         :references:in-reply-to:date:cc:to:from:subject:message-id:from:to
+         :cc:subject:date:message-id:reply-to:content-type;
+        bh=1YJHX2FJISPkStTvYFWPCn9XZ+gAuo9LLswhwwgRlLw=;
+        b=q8+kAvfnx8sybzGir6W5dQI4xnjenBkEH9mhZZhY3vmDnaU25E9waAZMqgZ1gjaF7j
+         1tA4/kQq6I3ChmaFGydy9MzP4RW+WtSrp+sf48ex+Xbfq8cqnnDHfp1JdJDGSj6a+E30
+         04aU0DAQgafipdhLqT/9sr+BY5eWU/i435zBAcHeWZHV+Zc2HqrBYgknqdoePO1sAC6Q
+         GkFVr/Gc7Ma2SwDj5AbPYNX7qf/t3Fva3GKVkJ1abRwNengs9SvVMsSX71OeTt6p8Ws/
+         +G8mHI6GR/j4vnrABLDvF1uPXkbQmxyYv/MV0+BW8Jniz/s5OIu/jfh411639535HqIk
+         nkaA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793127090; x=1793731890;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
+        d=1e100.net; s=20260707; t=1793131691; x=1793736491;
+        h=mime-version:user-agent:content-transfer-encoding:content-type
+         :references:in-reply-to:date:cc:to:from:subject:message-id:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=UJlLnl+V5fVkcEdrgjKFPN24Q/fJ++IZ4ZhlDmWxnT0=;
-        b=emJl0AlcH2VXJxnzJO3kaRKlavTlTET5odwR83gezS1wt8ssEY7eVU8tg3PUnxihwm
-         UVs/qBdvRbCJZR5j1MYy7Eju9D/aRGkgaSwNjWdDWQJtrB6fNtlEUaOKwN1a4FDtYG2N
-         A/y1qESoFCPnj1i7TaNrcVED18FJFkr2XCleEwXKKMVaPJA1uhI0afDEMaPPcwR4vYEc
-         qFf+ayGmSqkOmlH6PVeSf6MyxczxyV66iGCB9RTkfNPYLILxiofAz3g1eHD4YtgMHi9i
-         l3HhPOUC4p++W6B8tjCgtJUx/S/EzuvzxCcRyTau1fF1EmJAnc3d6zhj7glIV6Qao0xK
-         uL6Q==
-X-Forwarded-Encrypted: i=1; AKwUvByicGZcUoljSSUrrIYutE8Tn0mq0xnsVSGfUVDTt5Q/rbpnHAOoAKQiVy+4c/JF+tNasPNLH1n6LwhP@vger.kernel.org
-X-Gm-Message-State: AFq9FYIYX++tL57sT01Bd4/ekJJe8pWndvUXpAPZigqYDkqkVf5+9vQX
-	gKX/xCGULqhNh58c8ukxlOjuGihSOTcb9WMlPKBzdXTwciOUQEhGs7KrNwJXAaSSRBAIJFYF/ge
-	1/RD9z4Yr3AheOTgbrxJ1TXN8Pg7caMvT4nV+AL7b
-X-Gm-Gg: AYBFou0AiyrLiH+MoX6xeeWHu3V7EYaNt8mRZRcOCOKOxQMBk7Wad5b2F12NMK4IARr
-	JIJLBIrmstCOHLC4qlT0dlOw4TbaImqA29wIEws33EO9Kadv5/Zq0Wfmr7TtVL7pTN7SexY93tm
-	wSVdJf6J0TC/e6TyJ7shez2+WAEp8zLoaADjJEqEQ/AuSQL0G/VRRfyaZ/Bv0xeDRbHNIxSdDrN
-	2sMMbMnbC3EqGmE3vuYMio/xh8oQpbaGHKKH6gyo4eOjlLtTk0AR7sd9h/N6Y3gLLxgDus3Z33N
-	Ywk6W8iwr3wR/A9X8KmJY+HJmIn72HyH1yYKd9mxgVyHaz7P6p5tD70elxGyIvgLTCjyncTa8sW
-	vo23U7tZIfFY+wN/kbgDCcWXEXY3q1Wl68spp/v/87r4QnUxI1A3spJ2DgZmSstpj7Ef9THjEgP
-	eQ7nbK+vf9ofG9V5e6jkIb5/HeMYGIew+C6r4qQjfKlYGQ67mOBYyEHiINbtT0/AcW17breETXJ
-	OnUDPrfzK76WotPlO2IuXYs6nt5aP2x4w==
-X-Received: by 2002:a17:907:a08a:b0:c41:8e21:4d5a with SMTP id
- a640c23a62f3a-c49bdb68d78mr15531766b.5.1793127089381; Tue, 27 Oct 2026
- 11:51:29 -0700 (PDT)
+        bh=1YJHX2FJISPkStTvYFWPCn9XZ+gAuo9LLswhwwgRlLw=;
+        b=IRFe9tB1mQhE4DWRWc6k5lSE7PtZlXD+Rfay0vVmtc8EmwDcUWuIBW9Z8rhIRlJAoV
+         QRgY4YGZU/OhK0X4FlO9pXAFl770HclL3B/SFphNcvrp3l2v8ng8bJNg4V56+kTA1lP3
+         G5GaY2OCBQXnXfzKEFAkzUT1PRDjP3wLSGIREmORyPHxaY7nyRrqSYRZ3QPLXLc+fNRp
+         lIv2h9uGHWNQU80DZuPvlyyjwFIADthIfyNm9iSIdNvLDiCDMhZLwHeg3A22TNkJniPs
+         3HjsQIkT00DiDe52n8XCKF8aPOJOhbOxjZ4Nu9c0KLmTzu6LW1UbxiDZDCDMY7se0A6F
+         aHSQ==
+X-Forwarded-Encrypted: i=1; AKwUvByOOvkoKifwrlCXo9AxdWBAo+R+WLot8kHv9Hw+2+HnEy4z+jVFuJJfNrGqBrXEkGNyzyk4AZejc/0J@vger.kernel.org
+X-Gm-Message-State: AFq9FYLFRFxS35okhPKd7+wGuQotqoIZNrE/8OnmkvevmL6SSdzAmfqC
+	4byVvlFeeTM9v9fE5RC68NJeUxltkEEaP3xYLF3R06KVroHWDu3HCtkzoyJAtvSVVxnj93zJ/uw
+	KlhAw3396CT1lFNvqxwnVNz86U7vlDupusAqG6w31BRlk/kv0ToetmBHfu8ILW5Y=
+X-Gm-Gg: AYBFou1l/d8lKhHyvIiOpZB0GZ2beWUhHDkbaSpNvYJo+vv9Qwmew3jHOCVcnbfL2Bx
+	Tl0vDm/ATOt2P2jcY9De6pCJnod4XQAuFYKO/RIL96D/mU1HPFUBz/1hNV1u8Rl8aEGVXZZEKGM
+	hd+HzWwf2rVG+4Yr7MZzMNaYIBFzlsZWh67tzeU11pr917Nt+9wTIiRF8dM4PO6AabEhu2NZKpj
+	EPUcvU2LeR+tF59ilTn0xwyXQpxTS6EYn5jjV4svECUSq2dMpGd0IVQnoCZioM58FuPTW/qUsGt
+	/jR2+oIlEkXKtU0ud/JwuvO+VN+z1T/HzS0cGOu7XcB1prmGQ4jIez1Gw3ywsBkDSv9GAhYwS+u
+	1mNfAggxsup0tfT2wK8rw0E/ejo3emenfArfQ+23JCycEirAYOHr5nJ17AW+42YK6ebNTaDF+uf
+	3eJmYeaggID1yjzg4=
+X-Received: by 2002:a05:622a:1822:b0:533:983b:e53f with SMTP id d75a77b69052e-53fcd197865mr6547521cf.59.1793131691229;
+        Tue, 27 Oct 2026 13:08:11 -0700 (PDT)
+X-Received: by 2002:a05:622a:1822:b0:533:983b:e53f with SMTP id d75a77b69052e-53fcd197865mr6546721cf.59.1793131690641;
+        Tue, 27 Oct 2026 13:08:10 -0700 (PDT)
+Received: from loberman-thinkpadp1gen5.rmtusma.csb ([96.39.69.186])
+        by smtp.gmail.com with ESMTPSA id d75a77b69052e-53838cf49c9sm87523701cf.3.2026.10.27.13.08.09
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 27 Oct 2026 13:08:09 -0700 (PDT)
+Message-ID: <d7a1701ddc2e7c976ad8ff9ec071d9bfdc86a7e2.camel@redhat.com>
+Subject: Re: [PATCH 0/2] target: iscsi: fix hanged WRITE_PENDING commands
+From: Laurence Oberman <loberman@redhat.com>
+To: Dmitry Bogdanov <d.bogdanov@yadro.com>, Martin Petersen
+	 <martin.petersen@oracle.com>, Maurizio Lombardi <mlombard@redhat.com>, 
+	target-devel@vger.kernel.org
+Cc: michael.christie@oracle.com, linux-scsi@vger.kernel.org, linux@yadro.com
+Date: Tue, 27 Oct 2026 16:08:08 -0400
+In-Reply-To: <20261027180123.13163-1-d.bogdanov@yadro.com>
+References: <20261027180123.13163-1-d.bogdanov@yadro.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.60.2 (3.60.2-2.fc44) 
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -106,138 +122,87 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261026215226.3713941-4-jthoughton@google.com> <10ab2f3b005f0df2c0a88e93e6917826d928bb1f82c6a645f942c099e48f8b6e@mail.kernel.org>
-In-Reply-To: <10ab2f3b005f0df2c0a88e93e6917826d928bb1f82c6a645f942c099e48f8b6e@mail.kernel.org>
-From: James Houghton <jthoughton@google.com>
-Date: Tue, 27 Oct 2026 11:50:52 -0700
-X-Gm-Features: AclHuK8M0uftDAMQJptfiH_zotg0NLNK0vqcV1a8EUqq1l3N0gBPNm3WO8H3TD0
-Message-ID: <CADrL8HVHCVoh3AToNzFCe7KP=yC8byCGCzGYzzBEGYtYNC4fJw@mail.gmail.com>
-Subject: Re: [RFC PATCH 03/10] bpf: Fail sleepable user copy helpers when
- current->mm is NULL
-To: bot+bpf-ci@kernel.org
-Cc: akpm@linux-foundation.org, viro@zeniv.linux.org.uk, tglx@kernel.org, 
-	peterz@infradead.org, kees@kernel.org, arnd@arndb.de, david@kernel.org, 
-	ljs@kernel.org, liam@infradead.org, vbabka@kernel.org, rppt@kernel.org, 
-	surenb@google.com, mhocko@suse.com, seanjc@google.com, pbonzini@redhat.com, 
-	jmattson@google.com, axboe@kernel.dk, asml.silence@gmail.com, 
-	James.Bottomley@hansenpartnership.com, mkp@kernel.org, dsterba@suse.com, 
-	mason@kernel.org, ast@kernel.org, daniel@iogearbox.net, 
-	john.fastabend@gmail.com, jpoimboe@kernel.org, rostedt@goodmis.org, 
-	mhiramat@kernel.org, mathieu.desnoyers@efficios.com, mingo@redhat.com, 
-	acme@kernel.org, namhyung@kernel.org, linux-mm@kvack.org, 
-	linux-fsdevel@vger.kernel.org, kvm@vger.kernel.org, io-uring@vger.kernel.org, 
-	linux-scsi@vger.kernel.org, linux-btrfs@vger.kernel.org, bpf@vger.kernel.org, 
-	linux-trace-kernel@vger.kernel.org, linux-perf-users@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, andrii@kernel.org, martin.lau@kernel.org, 
-	eddyz87@gmail.com, yonghong.song@linux.dev, ihor.solodrai@linux.dev
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-On Mon, Oct 26, 2026 at 3:30=E2=80=AFPM <bot+bpf-ci@kernel.org> wrote:
->
-> > bpf: Fail sleepable user copy helpers when current->mm is NULL
->
-> TL;DR: Commit message only: the security_file_release() example of a slee=
-pable
-> program running from a kworker looks inaccurate, since such a program app=
-ears
-> not to be attachable there. The fix itself looks justified.
->
-> > bpf: Fail sleepable user copy helpers when current->mm is NULL
-> >
-> > Sleepable BPF programs can run on behalf of a kernel thread, or of a
-> > task that has already gone through exit_mm(). For example, bpf_wq
-> > callbacks always run from a kworker, bpf_task_work callbacks queued
-> > late enough run from exit_task_work(), and lsm.s or fentry.s programs
-> > may be attached to functions called during exit_files(),
-> > exit_task_work() or from kernel threads (e.g. security_file_release()
-> > from a kworker running delayed_fput()).
-> > In such contexts, bpf_copy_from_user(), bpf_copy_from_user_str() and
-> > bpf_copy_from_user{,_str}_dynptr() (when reading from the current task)
-> > call copy_from_user() or strncpy_from_user() without an mm. That access
-> > does not reliably fail: the user half of the address space belongs to
-> > whatever mm happens to be lazily loaded, if any, so the program may rea=
-d
-> > another task's memory.
-> > As there is no user memory to read from in this case, fail with -EFAULT
-> > without attempting the access.
-> > Fixes: 07be4c4a3e7a ("bpf: Add bpf_copy_from_user() helper.")
-> > Fixes: 65ab5ac4df01 ("bpf: Add bpf_copy_from_user_str kfunc")
-> > Fixes: a498ee7576de ("bpf: Implement dynptr copy kfuncs")
-> > Signed-off-by: James Houghton <jthoughton@google.com>
->
-> The commit message gives security_file_release() as an example of a place
-> where an lsm.s or fentry.s program can run from a kworker:
->
-> > (e.g. security_file_release() from a kworker running delayed_fput())
->
-> Is this example accurate for the tree being patched?
->
-> bpf_lsm_file_release is not in the sleepable_lsm_hooks set in
-> kernel/bpf/bpf_lsm.c, so btf_id_allow_sleepable() rejects a sleepable
-> BPF_PROG_TYPE_LSM program there.  bpf_lsm_file_free_security, the other h=
-ook
-> reached from __fput() through file_free(), is in untrusted_lsm_hooks rath=
-er
-> than the sleepable set.
->
-> For a BPF_PROG_TYPE_TRACING program, check_attach_sleepable() requires
-> within_error_injection_list(addr) (or a syscall prefix when
-> CONFIG_FUNCTION_ERROR_INJECTION is off), or an fmodret set with
-> KF_SLEEPABLE.  Neither security_file_release() nor bpf_lsm_file_release()
-> has ALLOW_ERROR_INJECTION, and the only fmodret sets are in
-> net/bpf/test_run.c, net/mptcp/bpf.c and bpf_testmod.
->
-> That suggests a program attached to security_file_release() is never
-> sleepable and cannot call bpf_copy_from_user() or the KF_SLEEPABLE copy
-> kfuncs.
+On Tue, 2026-10-27 at 21:01 +0300, Dmitry Bogdanov wrote:
+> ISCSI has some old leftovers in the code that prevents passing the
+> aborted
+> command to the target core to make the actual abort. Such commands
+> hang
+> until connection is closed.
+> So remove those leftovers.
+>=20
+> Dmitry Bogdanov (2):
+> =C2=A0 Revert "scsi: target: iscsi: Fix hang for aborted WRITE_PENDING
+> =C2=A0=C2=A0=C2=A0 commands"
+> =C2=A0 scsi: target: iscsi: fix hanging WRITE_PENDING commands
+>=20
+> =C2=A0drivers/target/iscsi/iscsi_target.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 |=
+ 19 -------------------
+> =C2=A0drivers/target/iscsi/iscsi_target_erl1.c |=C2=A0 8 --------
+> =C2=A02 files changed, 27 deletions(-)
 
-Great catch. Yeah, the examples aren't right (but the fix is still correct)=
-.
+Hello Dmitri
+Thanks for posting this. I have a series in flight for the same hang:
 
-> The fix itself still looks justified, since bpf_wq callbacks run from a
-> kworker and is_async_cb_sleepable() is true for them.  Only the example
-> appears to be off.
->
-> Would an example that is actually reachable keep the changelog accurate?
-> For instance, bpf_lsm_task_alloc() when kthreadd forks a kernel thread
-> (current is kthreadd), or bpf_lsm_kernel_read_file() and bpf_lsm_file_ope=
-n()
-> when a kworker loads firmware with kernel_read_file().  All three hooks a=
-re
-> in sleepable_lsm_hooks.
+https://lore.kernel.org/linux-scsi/20261027122837.2148074-1-loberman@redhat=
+.com/
 
-I've adjusted the first paragraph of the changelog to:
+Is the revert maybe aimed at the wrong layer, and the sashiko review of
+your 2/2 makes the case better than I can: with the fabric check
+removed, an aborted command reaches target_execute_cmd(),
+target_cmd_interrupted() queues target_abort_work and returns without
+changing t_state, the command stays on conn_cmd_list in
+TRANSPORT_WRITE_PENDING, and iscsit_release_commands_from_conn()
+completes it a second time if the connection closes.
 
-  Sleepable BPF programs can run on behalf of a kernel thread, or of a
-  task that has already gone through exit_mm(). For example, bpf_wq
-  callbacks always run from a kworker, bpf_task_work callbacks queued late
-  enough run from exit_task_work(), lsm.s programs may be attached to
-  hooks reached from kernel threads or from exit_task_work() (e.g.
-  bpf_lsm_inode_free_security() when the final __fput() of an unlinked
-  file runs from delayed_fput() or from exit_task_work(), or
-  bpf_lsm_bprm_check_security() during a usermode helper's
-  kernel_execve()), and fentry.s programs may be attached to
-  error-injectable functions called from kernel threads (e.g.
-  btrfs_should_cancel_balance() from the btrfs-balance kthread).
+That is the same double completion you are reverting d5869dae5080 for.
+It
+is not a defect in Maurizio's patch and it will not be fixed by
+replacing
+it -- target_cmd_interrupted() records nothing when it queues an abort,
+so
+any site that completes an aborted WRITE_PENDING command can be
+followed
+by another one. I found this from vmcores on a customer system before
+either of us posted, so no argument from me that it is real.
 
-I think all the Fixes are still accurate. The first Fixes isn't very
-obvious; re-checking it with Claude provided a pretty clear
-explanation for why it's accurate:
+Patch 3 of my series fixes it there, under t_state_lock, for both
+queueing sites in target_core_transport.c and for every fabric. With
+that
+in place your 2/2 is safe and d5869dae5080 does not need reverting for
+this reason -- which matters, because the revert is not free: that
+commit
+carries CVE-2026-97951 and is in 5.10.y, 5.15.y, 6.1.y, 6.6.y, 6.12.y,
+6.18.y and 7.2.y.
 
-    This is the subtle one. In 07be4c4a3e7a (v5.10) the sleepable LSM
-    set was just bpf_lsm_file_mprotect and bpf_lsm_bprm_committed_creds,
-    and both always run with an mm. The LSM examples above only became
-    sleepable later, in 423f16108c9d ("bpf: Augment the set of sleepable
-    LSM hooks", v5.11), and bpf_wq only arrived in 81f1d7a583fa ("bpf:
-    wq: add bpf_wq_set_callback_impl", v6.10).
+Two questions on 2/2 independent of all that.
 
-    However, fentry.s was already allowed on any ALLOW_ERROR_INJECTION
-    function other than __add_to_page_cache_locked, should_fail_alloc_page
-    and should_failslab, and that list already included
-    btrfs_should_cancel_balance() (called from the btrfs-balance kthread
-    via balance_kthread() -> btrfs_balance() -> __btrfs_balance()), as
-    well as btrfs_check_node() and btrfs_check_leaf_full() (called from
-    the btrfs end-io workers). So bpf_copy_from_user() could be called
-    without an mm from the moment it existed, and 07be4c4a3e7a is the
-    right commit to blame rather than 423f16108c9d.
+Removing the sense_reason early return in iscsit_execute_cmd() means
+transport_send_check_condition_and_sense() now runs for an aborted
+command. It guards only on SCF_SENT_CHECK_CONDITION, never checks
+CMD_T_ABORTED, and ends in queue_status(); target_handle_abort() also
+calls queue_status() for a CMD_T_TAS command, and each drops a
+reference.
+Can an aborted command with a sense reason send both a CHECK CONDITION
+and a TASK ABORTED, and drop two references?
+
+And with the early return gone, a LUN_RESET aborting a large WRITE
+waits in target_put_cmd_and_wait() for the whole remaining data
+transfer. That is bounded where today it is not, but on a large
+transfer it may still trip the hung task timeout that made this
+visible.
+
+On the overlap: your 2/2 and patch 4 of my series touch the same lines,
+so only one can apply, and I have no attachment to mine if yours is the
+better shape. Patches 1 to 3 are core-side and conflict with nothing
+you have posted.=C2=A0
+
+Martin, would you prefer those three as their own series,
+given both candidate iSCSI fixes need patch 3 to be correct?
+
+I am happy to test either or both: I have a reporter's environment that
+reproduces this reliably and 300-cycle runs on it.
+
+Many Thanks
+Laurence
+
