@@ -1,51 +1,51 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
 	t=1793115855;
-	b=3GEcYfIo7qkbS1I0GMH3f9l5waXHN1fQ9mgdmWy0zT3f7yAXnMXPu538xJFZ7pJOYdX/
-	 4840iaLq2JCLpQa7MqeQ93S4kuqbQgZcShLit3CP6Citq8tyM3O4irsilqce92nHzHrrb
-	 orXZ26d++71/7gp9iLuZrJgJDUyTdsLcKAdSsCx0b4WgcypAue7xCIXh5RhrJPFR1SHUz
-	 WOJGoA/pFB04hLCTmUPOeUaKTyPiuyfhECESHTytr3WzFlHe+n+3/HS5n8BPhgZE5A+cN
-	 bkWff8uKU6cNAnRQsV24/j+QG8aisxzZDiVKh5Q9QWV6UJhymSV3ER0GQgAYhOqDxtQ==
+	b=AZQdHTgd/iFGntHZuUVYl1Kf1HgfP1rDkEP/6+Cc+mkiF5R3ijtvouuBBgoHmQYvggyt
+	 ufdoFriPh03h+UbAlBUNGw9rkm7Tn8FMF8YZtOkKFIqtbS7JaqWv9stkNOwz/GCissxXH
+	 /4XCYrO+eMFqtbxqom4fj4JutAc0suJZnHlnaRyKXHx9nY692ZH44h1CTon7ilp3gEaDq
+	 deb5pPr3lauE1Uy55QSEZV9MQU47qemwRsMtpNeXcaNp+nroS9QrJng90Z3RfIO8YIJCV
+	 4nn2ZvvZH7jOlfJgGArOVOEN4JeaflzsEntWUJNwRTk1MVyFeWWe3u50JH7dZf6uO1Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
 	a=rsa-sha256; c=relaxed/relaxed; t=1793115855;
 	h=Received:DKIM-Signature:Received:Message-ID:User-Agent:Date:From:To:
 	 Cc:Subject:References:MIME-Version:Content-Type;
-	bh=/z7vULV9ET96OVawlpuKhOOFOEzaoRsKx7ENimt5WTY=;
-	b=4tGC9v1YPOrmhv3E4tuSmGTIH36olEpnskyUp0vPlUAhn7KcceUbwlBPggcv0sPd0Xrm
-	 15TzA8arSEN2A6z1y9SMQcWViRopOuCoWctzunz1OearV9xPY69xNhV7xnD1UgHO3VbmS
-	 26fSlmHa3M6aGvkO01se0KRQIaweYxvQR1taxuDUpA6fsYghAA4wCIzGsi2ogAaUp52rw
-	 +zn1iy7JjugyRwsjSeuV4OLm2iP8KqBFKptUCQljB5eUim10NODgbYuslkTNjqaP0qBvN
-	 kz8kvA6fic1bz9Ev5nNSwqT8npiTlP5khYncGrANge5ddc+s0OyLecf0v9ZbIg5UzFQ==
+	bh=65ibzMdITZGSAinHNOg+LTDdIfpABOn2+CpyYHzaFRs=;
+	b=w2vjufNOoKuwPYCE4+EYmWTkJUPUaMsd4wCvIMBRJ3atOuyZFqiXNnRN58D/2PSCUm2x
+	 cZvXCAUXahjLWKoYtw+dAXVgJvCq/xEvXaWLgREEYfmKIGSZV9iid/Oh3iyS1oZ4gQAH5
+	 vv/GCRwC925Z6NfPBywF1Uj1CT4mlZSrOYQL/bqjS/js6YgnGX14eMD83XUsmiLwjKN8m
+	 kQJ9a1AV5+q5ajbbFzVA6R04mLAouMflj+H1kO8WFMzaRiK//ZaWxLGJTE/2w4Xn553jg
+	 ypRGAgUrwROHK5gY6AGtEXt9uVoHHtmy7EEHWOa+W5pKMsEDE/4MhHkiYyKiyjzQL7g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jdXfyJo0;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ILrstzel;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 12E1460A261E;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 480EF60A262A;
 	Tue, 27 Oct 2026 15:44:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jdXfyJo0
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CDEA01F031E1;
-	Tue, 27 Oct 2026 15:44:14 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ILrstzel
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 15EB01F031EC;
+	Tue, 27 Oct 2026 15:44:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
 	s=k20260515; t=1793115855;
-	bh=/z7vULV9ET96OVawlpuKhOOFOEzaoRsKx7ENimt5WTY=;
+	bh=65ibzMdITZGSAinHNOg+LTDdIfpABOn2+CpyYHzaFRs=;
 	h=Date:From:To:Cc:Subject:References;
-	b=jdXfyJo0CGxQAq6lrM+rdnAC5kkyIyDGCyaXy8RY12C/xhAmDv3kBWgF640VC9QLr
-	 5ShJWb1/tqFMTWp3gx+4Bu638fVHYryIf65TpGBn9iErS6v5zw4chc+UIqthKMFSol
-	 m7QJgZDgqjgnpl6sFCER7TZcLp5ZqjJm9yTM5hebyb6YNCzPAgGsdwC0gbxsalLn38
-	 6BtLExOerDeAlk2bQKM+UiC1Lxrm5PIavqM9G8sYWMn19MLQ3I2DWjlYV/2TCRcwCQ
-	 2IqeWVq3OUlxSdmQQEVXdpj261/935ndAUdylVs9l3k+qqwUfbv56vUmNl7D9zeeR4
-	 0hWk1S9PZO1eQ==
+	b=ILrstzel9sh37XBGgpdGLVoMZZPwgFmzqTPYiJYdvHBD2VW/wP7qteo/K2QbcrcgN
+	 hHTd29eWnKhMWjnGR6ag5JLvmd0f+VAVAcMjHbxUFv7v6i6p8LO3QgMbHcuOBAyA6r
+	 PRwNWLLNmG/DdOwJpG4XAz1QoP+ANfM0NLFCjQ1xSYxSU3sr1nI7FYlBg4cpLsHYvP
+	 b8ykWLq92n2UhVg1XBzUtlktg7Zvf/Tpzl3/2WFxAW7/cWK0juK5sz6qDJFK8o3rn8
+	 imb0TrnpC8AATsUq8uc4J8Is1et9nN/XgP/s1eRBRG5fRWoiOyTW16S16Aw/4zFPXk
+	 BdM2I95nC1z/w==
 Received: from rostedt by gandalf with local (Exim 4.100.1)
 	(envelope-from <rostedt@kernel.org>)
-	id 1xLjLS-000000078je-0hhf;
+	id 1xLjLS-000000078kD-1Ukd;
 	Tue, 27 Oct 2026 11:44:14 -0400
-Message-ID: <20261027154413.997660461@kernel.org>
+Message-ID: <20261027154414.184324075@kernel.org>
 User-Agent: quilt/0.69
-Date: Tue, 27 Oct 2026 11:37:06 -0400
+Date: Tue, 27 Oct 2026 11:37:07 -0400
 From: Steven Rostedt <rostedt@kernel.org>
 To: linux-kernel@vger.kernel.org,
  linux-trace-kernel@vger.kernel.org
@@ -107,8 +107,7 @@ Cc: Masami Hiramatsu <mhiramat@kernel.org>,
  linux-scsi@vger.kernel.org,
  linux-sctp@vger.kernel.org,
  netdev@vger.kernel.org
-Subject: [PATCH 8/9] kernel: time, trace: Use trace_call__##name() at guarded tracepoint
- call sites
+Subject: [PATCH 9/9] x86: msr: Use trace_call__##name() at guarded tracepoint call sites
 References: <20261027153658.703730257@kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -136,72 +135,44 @@ Parts of the original v2 series have already been merged in mainline.
 This patch is being reposted as a follow-up cleanup for the remaining
 unmerged pieces.
 
-Link: https://patch.msgid.link/20260515135959.2238922-1-vineeth@bitbyteword.org
+Link: https://patch.msgid.link/20260515140004.2238951-1-vineeth@bitbyteword.org
 Suggested-by: Steven Rostedt <rostedt@goodmis.org>
 Suggested-by: Peter Zijlstra <peterz@infradead.org>
 Signed-off-by: Vineeth Pillai (Google) <vineeth@bitbyteword.org>
 Assisted-by: Claude:claude-sonnet-4-6
 Signed-off-by: Steven Rostedt <rostedt@goodmis.org>
 ---
- kernel/time/tick-sched.c       | 12 ++++++------
- kernel/trace/trace_benchmark.c |  2 +-
- 2 files changed, 7 insertions(+), 7 deletions(-)
+ arch/x86/lib/msr.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/kernel/time/tick-sched.c b/kernel/time/tick-sched.c
-index 5d53ab18b31a..9bdd49e66acf 100644
---- a/kernel/time/tick-sched.c
-+++ b/kernel/time/tick-sched.c
-@@ -346,32 +346,32 @@ static bool check_tick_dependency(atomic_t *dep)
- 		return !!val;
+diff --git a/arch/x86/lib/msr.c b/arch/x86/lib/msr.c
+index dfdd1da89f36..14785fe5e07b 100644
+--- a/arch/x86/lib/msr.c
++++ b/arch/x86/lib/msr.c
+@@ -125,21 +125,21 @@ EXPORT_SYMBOL_FOR_KVM(msr_clear_bit);
+ #ifdef CONFIG_TRACEPOINTS
+ void do_trace_write_msr(u32 msr, u64 val, int failed)
+ {
+-	trace_write_msr(msr, val, failed);
++	trace_call__write_msr(msr, val, failed);
+ }
+ EXPORT_SYMBOL(do_trace_write_msr);
+ EXPORT_TRACEPOINT_SYMBOL(write_msr);
  
- 	if (val & TICK_DEP_MASK_POSIX_TIMER) {
--		trace_tick_stop(0, TICK_DEP_MASK_POSIX_TIMER);
-+		trace_call__tick_stop(0, TICK_DEP_MASK_POSIX_TIMER);
- 		return true;
- 	}
+ void do_trace_read_msr(u32 msr, u64 val, int failed)
+ {
+-	trace_read_msr(msr, val, failed);
++	trace_call__read_msr(msr, val, failed);
+ }
+ EXPORT_SYMBOL(do_trace_read_msr);
+ EXPORT_TRACEPOINT_SYMBOL(read_msr);
  
- 	if (val & TICK_DEP_MASK_PERF_EVENTS) {
--		trace_tick_stop(0, TICK_DEP_MASK_PERF_EVENTS);
-+		trace_call__tick_stop(0, TICK_DEP_MASK_PERF_EVENTS);
- 		return true;
- 	}
- 
- 	if (val & TICK_DEP_MASK_SCHED) {
--		trace_tick_stop(0, TICK_DEP_MASK_SCHED);
-+		trace_call__tick_stop(0, TICK_DEP_MASK_SCHED);
- 		return true;
- 	}
- 
- 	if (val & TICK_DEP_MASK_CLOCK_UNSTABLE) {
--		trace_tick_stop(0, TICK_DEP_MASK_CLOCK_UNSTABLE);
-+		trace_call__tick_stop(0, TICK_DEP_MASK_CLOCK_UNSTABLE);
- 		return true;
- 	}
- 
- 	if (val & TICK_DEP_MASK_RCU) {
--		trace_tick_stop(0, TICK_DEP_MASK_RCU);
-+		trace_call__tick_stop(0, TICK_DEP_MASK_RCU);
- 		return true;
- 	}
- 
- 	if (val & TICK_DEP_MASK_RCU_EXP) {
--		trace_tick_stop(0, TICK_DEP_MASK_RCU_EXP);
-+		trace_call__tick_stop(0, TICK_DEP_MASK_RCU_EXP);
- 		return true;
- 	}
- 
-diff --git a/kernel/trace/trace_benchmark.c b/kernel/trace/trace_benchmark.c
-index e19c32f2a938..189d383934fd 100644
---- a/kernel/trace/trace_benchmark.c
-+++ b/kernel/trace/trace_benchmark.c
-@@ -51,7 +51,7 @@ static void trace_do_benchmark(void)
- 
- 	local_irq_disable();
- 	start = trace_clock_local();
--	trace_benchmark_event(bm_str, bm_last);
-+	trace_call__benchmark_event(bm_str, bm_last);
- 	stop = trace_clock_local();
- 	local_irq_enable();
- 
+ void do_trace_rdpmc(u32 msr, u64 val, int failed)
+ {
+-	trace_rdpmc(msr, val, failed);
++	trace_call__rdpmc(msr, val, failed);
+ }
+ EXPORT_SYMBOL(do_trace_rdpmc);
+ EXPORT_TRACEPOINT_SYMBOL(rdpmc);
 -- 
 2.53.0
