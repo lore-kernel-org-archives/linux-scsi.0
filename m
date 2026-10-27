@@ -1,51 +1,48 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
 	t=1793115854;
-	b=gXEq9gnOGCO5kUBn5dgmaLgNmPS+RcqDRXKuLedW0QRc2Ro18XGfBIFpYINfgcywwiT+
-	 UKHYapk0xzl7YjmqAR755lrI8tr6y0AEJoDg/sNAz6i9vWajX2qx9WMnKyPygR8Bq9vgJ
-	 d1Rr2N/HHyoa0nNCffCEuwX6lrnbU6bkQqtiwe9u0KOcrQdbLbVHpB4CMaov8nEXPn7Kg
-	 +rO0xMRe1zNw9uTM5QoO+91z0zwbocwB6L28KGKpDJtrDdu/15vlMBuwE3rPtCp9U3lTz
-	 T5huqo67ueyV/BBWPe4gJB6CCLlxaJC+A+ZwDS3sLP17Pt85R467c1n3yaisN7+nBJw==
+	b=4lglhReqNazRjjhHSdm1lzTHJpjkH3uHZKUvP7623tBxqEdo7uV84MQlsWBjQgttnIH4
+	 S6QUkQh8dXv8NmjiOwspeMdpFaV758pI4NoqZPdG1oRbau44L26PavJsFYhihyUt3lgXE
+	 pvvgmsESxAD34ZEVysKK+zxHMPO6xHSkRNyMOkdmrDqIEyoyrPPy2STbT3WErmULeie6x
+	 /7wiu2EJpT1SBBFMADblA95kjog95DD42rmwg+9iHD2uZE6Eq1VS8VLHH8QFRb93Q7gof
+	 h6XcD4XunP4m/gjah4n9QRYKloMqzX37fZriVZb+3xPTqsHtoI/99p1MvExRezlHWkg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
 	a=rsa-sha256; c=relaxed/relaxed; t=1793115854;
 	h=Received:DKIM-Signature:Received:Message-ID:User-Agent:Date:From:To:
 	 Cc:Subject:References:MIME-Version:Content-Type;
-	bh=KzGA3Z1wHw/pEoG+sL3nupeeb8x6YGTMS4RDHQzgvgY=;
-	b=tc54JVH3cTEG+R7G+NJ6y5lrXm0QMexnNN/FAwN9l/xHGFPP0uaqtHjqojAZzJgz3nWw
-	 tlAuRH4r0+OKNhsWqGtbr63Jb5fvmhf8wgYggN+aIb0gSzgeMYA0tipkyaPISpmfN8QlV
-	 uH5A3q6o2JL0yUYKvVr8OTO0l4cDJ8ZxpfN0ijwBxzhvRfnAmWxnX34ktBkk7rwKPabgg
-	 o+Bt7ZEgTB4MVwr0ZjSe1pMwkczN8KMYal4lXdZpI07puwSkoGv18Ey/gr6G4GthnUGQJ
-	 vMxh7+LhCjZJwaXhT3GtB0SyNgfj7qlQZLxHugv8AJdsF8HPSjSFc3vU/Pc0WxvvVtA==
+	bh=JM8xIfdgR8N97X1b3lbIpuPAQb06bQ+UjBVoY3gvbrQ=;
+	b=e7JxThDZ833kY/m+03Rxhyli4gDE5ERQPMfNxmDbRceZVQdzo8vFTArDLUbNwyvX8hRa
+	 qzGJCXycV+6yc0htgbo/wr/JzEGmuIy3oiXfzxEwJHdg1evlkepaSShMVDavb8+UjJwrB
+	 IozvZyXR8hFZc9v0qNdpq7N2CxcjF9SjfFjvoADNJSL1Rgx/ayaF/QRWes0OJfzblpcIa
+	 x1Y6zBIy+txlq08TF3CBRpnMp/OKpdjorvOXP1HO1zDlnzMPeEPBNbJVFAblX9UbqkYYK
+	 3jMZauW9pJ8oF+Y1AAYOgSbFZMupfFLKYnvi7wyHZSY97knwrV0Ut+IeNv0SFxtCwtA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=AfWSo6hV;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C57C606A325;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF7A5606A31B;
 	Tue, 27 Oct 2026 15:44:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=AfWSo6hV
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AE7F31F01829;
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 774F21F01828;
 	Tue, 27 Oct 2026 15:44:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
 	s=k20260515; t=1793115853;
-	bh=KzGA3Z1wHw/pEoG+sL3nupeeb8x6YGTMS4RDHQzgvgY=;
+	bh=JM8xIfdgR8N97X1b3lbIpuPAQb06bQ+UjBVoY3gvbrQ=;
 	h=Date:From:To:Cc:Subject:References;
-	b=AfWSo6hVC8lFb2WltHtSejhRNb8UVs4QhxXiq9vQdf1BIByfe9oE6+YTcNLAIj/ij
-	 3gpWorjlfL03ffDe/a0Y7zrHwNXVdr1DR/zvjYR4BpAak7GpvDRWT4ox+fq1KeA0qZ
-	 +WGKSFcSgYCjnPSZerKO5mRsxr8GKU6SWwT2XhPZCzwR6uNubRVKWAWTnDFYdBJf1Z
-	 zjqlXN1fpTmDt8g1X9LtEpEsz+J0GOuyGwQ8YvurX3hCaxpzEsdVHMSLEB+A3VZuD3
-	 yNTB+rSiUQQwCZ4Tx07KoB4EjjXu+sClnPzBaDmhQjDD3Wc9fmInB+d1UCt6ifIqzI
-	 3oU5XNtcbw1LA==
+	b=kORGCCK5ceCR9W1JSe8erJ5KVSujbKUR6xlP36EcnI1w/pi9sfO8Dv9mOkHB3XHQy
+	 kmjOS8Mdq2flJuSlUp6bUHmz0888PX+f9NOJbey3BbM/Jzkf0r1aSnqGj+TnSmk3VL
+	 HMyiIMOaMpD414IHg/LprZN30QWTV20w9awBG/q6DGVFwKw1ufgsOTYhlhm6/1v3JC
+	 7I5SOyCuPo9S2BtKrP0w4Pt+rjcmDZRpXa0joOXTOXweQdSHhuJm2dwVCpCY58HBOO
+	 7RZXHFFCQvzAu3v7MVZ4vG1pCWNm/YeF/etjrnoQMS+hTVZx7OTk17B/37mXDZ18/e
+	 8Dj3WQ78oIVOw==
 Received: from rostedt by gandalf with local (Exim 4.100.1)
 	(envelope-from <rostedt@kernel.org>)
-	id 1xLjLR-000000078gI-05dC;
-	Tue, 27 Oct 2026 11:44:13 -0400
-Message-ID: <20261027154412.834382801@kernel.org>
+	id 1xLjLQ-000000078fQ-3QXz;
+	Tue, 27 Oct 2026 11:44:12 -0400
+Message-ID: <20261027154412.637514479@kernel.org>
 User-Agent: quilt/0.69
-Date: Tue, 27 Oct 2026 11:37:00 -0400
+Date: Tue, 27 Oct 2026 11:36:59 -0400
 From: Steven Rostedt <rostedt@kernel.org>
 To: linux-kernel@vger.kernel.org,
  linux-trace-kernel@vger.kernel.org
@@ -107,8 +104,7 @@ Cc: Masami Hiramatsu <mhiramat@kernel.org>,
  linux-scsi@vger.kernel.org,
  linux-sctp@vger.kernel.org,
  netdev@vger.kernel.org
-Subject: [PATCH 2/9] accel/habanalabs: Use trace_call__##name() at guarded tracepoint call
- sites
+Subject: [PATCH 1/9] net: Use trace_call__##name() at guarded tracepoint call sites
 References: <20261027153658.703730257@kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -136,89 +132,98 @@ Parts of the original v2 series have already been merged in mainline.
 This patch is being reposted as a follow-up cleanup for the remaining
 unmerged pieces.
 
-Link: https://patch.msgid.link/20260515135914.2238789-1-vineeth@bitbyteword.org
+Link: https://patch.msgid.link/20260515135909.2238774-1-vineeth@bitbyteword.org
 Suggested-by: Steven Rostedt <rostedt@goodmis.org>
 Suggested-by: Peter Zijlstra <peterz@infradead.org>
 Signed-off-by: Vineeth Pillai (Google) <vineeth@bitbyteword.org>
 Assisted-by: Claude:claude-sonnet-4-6
 Signed-off-by: Steven Rostedt <rostedt@goodmis.org>
 ---
- drivers/accel/habanalabs/common/device.c  | 9 +++++----
- drivers/accel/habanalabs/common/mmu/mmu.c | 3 ++-
- drivers/accel/habanalabs/common/pci/pci.c | 6 ++++--
- 3 files changed, 11 insertions(+), 7 deletions(-)
+ net/core/dev.c             | 2 +-
+ net/core/xdp.c             | 2 +-
+ net/openvswitch/actions.c  | 2 +-
+ net/openvswitch/datapath.c | 2 +-
+ net/sctp/outqueue.c        | 2 +-
+ net/tipc/node.c            | 2 +-
+ 6 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/accel/habanalabs/common/device.c b/drivers/accel/habanalabs/common/device.c
-index 09b27bac3a31..68c6f973d53f 100644
---- a/drivers/accel/habanalabs/common/device.c
-+++ b/drivers/accel/habanalabs/common/device.c
-@@ -132,8 +132,9 @@ static void *hl_dma_alloc_common(struct hl_device *hdev, size_t size, dma_addr_t
+diff --git a/net/core/dev.c b/net/core/dev.c
+index 1a09e7869118..447894e09239 100644
+--- a/net/core/dev.c
++++ b/net/core/dev.c
+@@ -6685,7 +6685,7 @@ void netif_receive_skb_list(struct list_head *head)
+ 		return;
+ 	if (trace_netif_receive_skb_list_entry_enabled()) {
+ 		list_for_each_entry(skb, head, list)
+-			trace_netif_receive_skb_list_entry(skb);
++			trace_call__netif_receive_skb_list_entry(skb);
+ 	}
+ 	netif_receive_skb_list_internal(head);
+ 	trace_netif_receive_skb_list_exit(0);
+diff --git a/net/core/xdp.c b/net/core/xdp.c
+index 1d679e8fd649..d6296d59f8e3 100644
+--- a/net/core/xdp.c
++++ b/net/core/xdp.c
+@@ -362,7 +362,7 @@ int xdp_rxq_info_reg_mem_model(struct xdp_rxq_info *xdp_rxq,
+ 		xsk_pool_set_rxq_info(allocator, xdp_rxq);
+ 
+ 	if (trace_mem_connect_enabled() && xdp_alloc)
+-		trace_mem_connect(xdp_alloc, xdp_rxq);
++		trace_call__mem_connect(xdp_alloc, xdp_rxq);
+ 	return 0;
+ }
+ 
+diff --git a/net/openvswitch/actions.c b/net/openvswitch/actions.c
+index 12e339cbf791..044feae58e6f 100644
+--- a/net/openvswitch/actions.c
++++ b/net/openvswitch/actions.c
+@@ -1278,7 +1278,7 @@ static int do_execute_actions(struct datapath *dp, struct sk_buff *skb,
+ 		int err = 0;
+ 
+ 		if (trace_ovs_do_execute_action_enabled())
+-			trace_ovs_do_execute_action(dp, skb, key, a, rem);
++			trace_call__ovs_do_execute_action(dp, skb, key, a, rem);
+ 
+ 		/* Actions that rightfully have to consume the skb should do it
+ 		 * and return directly.
+diff --git a/net/openvswitch/datapath.c b/net/openvswitch/datapath.c
+index b2a0b09fd4a5..11b438c7e039 100644
+--- a/net/openvswitch/datapath.c
++++ b/net/openvswitch/datapath.c
+@@ -336,7 +336,7 @@ int ovs_dp_upcall(struct datapath *dp, struct sk_buff *skb,
+ 	int err;
+ 
+ 	if (trace_ovs_dp_upcall_enabled())
+-		trace_ovs_dp_upcall(dp, skb, key, upcall_info);
++		trace_call__ovs_dp_upcall(dp, skb, key, upcall_info);
+ 
+ 	if (upcall_info->portid == 0) {
+ 		err = -ENOTCONN;
+diff --git a/net/sctp/outqueue.c b/net/sctp/outqueue.c
+index e92fb9da4647..e3d7be7009e3 100644
+--- a/net/sctp/outqueue.c
++++ b/net/sctp/outqueue.c
+@@ -1268,7 +1268,7 @@ int sctp_outq_sack(struct sctp_outq *q, struct sctp_chunk *chunk)
+ 	/* SCTP path tracepoint for congestion control debugging. */
+ 	if (trace_sctp_probe_path_enabled()) {
+ 		list_for_each_entry(transport, transport_list, transports)
+-			trace_sctp_probe_path(transport, asoc);
++			trace_call__sctp_probe_path(transport, asoc);
  	}
  
- 	if (trace_habanalabs_dma_alloc_enabled() && !ZERO_OR_NULL_PTR(ptr))
--		trace_habanalabs_dma_alloc(&(hdev)->pdev->dev, (u64) (uintptr_t) ptr, *dma_handle,
--						size, caller);
-+		trace_call__habanalabs_dma_alloc(&(hdev)->pdev->dev,
-+						 (u64) (uintptr_t) ptr,
-+						 *dma_handle, size, caller);
+ 	sack_ctsn = ntohl(sack->cum_tsn_ack);
+diff --git a/net/tipc/node.c b/net/tipc/node.c
+index 53b0993c2c23..6c32618cc625 100644
+--- a/net/tipc/node.c
++++ b/net/tipc/node.c
+@@ -1953,7 +1953,7 @@ static bool tipc_node_check_state(struct tipc_node *n, struct sk_buff *skb,
  
- 	return ptr;
- }
-@@ -2656,7 +2657,7 @@ inline u32 hl_rreg(struct hl_device *hdev, u32 reg)
- 	u32 val = readl(hdev->rmmio + reg);
- 
- 	if (unlikely(trace_habanalabs_rreg32_enabled()))
--		trace_habanalabs_rreg32(&(hdev)->pdev->dev, reg, val);
-+		trace_call__habanalabs_rreg32(&(hdev)->pdev->dev, reg, val);
- 
- 	return val;
- }
-@@ -2674,7 +2675,7 @@ inline u32 hl_rreg(struct hl_device *hdev, u32 reg)
- inline void hl_wreg(struct hl_device *hdev, u32 reg, u32 val)
- {
- 	if (unlikely(trace_habanalabs_wreg32_enabled()))
--		trace_habanalabs_wreg32(&(hdev)->pdev->dev, reg, val);
-+		trace_call__habanalabs_wreg32(&(hdev)->pdev->dev, reg, val);
- 
- 	writel(val, hdev->rmmio + reg);
- }
-diff --git a/drivers/accel/habanalabs/common/mmu/mmu.c b/drivers/accel/habanalabs/common/mmu/mmu.c
-index 6c7c4ff8a8a9..dd8b6fb3aa1f 100644
---- a/drivers/accel/habanalabs/common/mmu/mmu.c
-+++ b/drivers/accel/habanalabs/common/mmu/mmu.c
-@@ -263,7 +263,8 @@ int hl_mmu_unmap_page(struct hl_ctx *ctx, u64 virt_addr, u32 page_size, bool flu
- 		mmu_funcs->flush(ctx);
- 
- 	if (trace_habanalabs_mmu_unmap_enabled() && !rc)
--		trace_habanalabs_mmu_unmap(&hdev->pdev->dev, virt_addr, 0, page_size, flush_pte);
-+		trace_call__habanalabs_mmu_unmap(&hdev->pdev->dev, virt_addr, 0,
-+						 page_size, flush_pte);
- 
- 	return rc;
- }
-diff --git a/drivers/accel/habanalabs/common/pci/pci.c b/drivers/accel/habanalabs/common/pci/pci.c
-index 81cbd8697d4c..12663e8e12e0 100644
---- a/drivers/accel/habanalabs/common/pci/pci.c
-+++ b/drivers/accel/habanalabs/common/pci/pci.c
-@@ -123,7 +123,8 @@ int hl_pci_elbi_read(struct hl_device *hdev, u64 addr, u32 *data)
- 		pci_read_config_dword(pdev, mmPCI_CONFIG_ELBI_DATA, data);
- 
- 		if (unlikely(trace_habanalabs_elbi_read_enabled()))
--			trace_habanalabs_elbi_read(&hdev->pdev->dev, (u32) addr, val);
-+			trace_call__habanalabs_elbi_read(&hdev->pdev->dev,
-+							 (u32) addr, val);
- 
- 		return 0;
+ 	if (trace_tipc_node_check_state_enabled()) {
+ 		trace_tipc_skb_dump(skb, false, "skb for node state check");
+-		trace_tipc_node_check_state(n, true, " ");
++		trace_call__tipc_node_check_state(n, true, " ");
  	}
-@@ -186,7 +187,8 @@ static int hl_pci_elbi_write(struct hl_device *hdev, u64 addr, u32 data)
- 
- 	if ((val & PCI_CONFIG_ELBI_STS_MASK) == PCI_CONFIG_ELBI_STS_DONE) {
- 		if (unlikely(trace_habanalabs_elbi_write_enabled()))
--			trace_habanalabs_elbi_write(&hdev->pdev->dev, (u32) addr, val);
-+			trace_call__habanalabs_elbi_write(&hdev->pdev->dev,
-+							  (u32) addr, val);
- 		return 0;
- 	}
- 
+ 	l = n->links[bearer_id].link;
+ 	if (!l)
 -- 
 2.53.0
