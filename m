@@ -1,102 +1,85 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.remote-ip=209.85.218.49
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=fail;
-	t=1793123600;
-	b=ouDFPRgIt2hXVIbdO1k6/TRaNTWdBlSxKSWmHaVARKX5HEcAFGrZmx2tMPXInFFaLAtf
-	 NgHx35e4ecQqQ15V4xMpnHOfn5zh6lwhcdhqjtMt9hbIwyVH4OwImPeZzeJmycNn0SgPh
-	 UYIUHuQfKt/kM90qsykIMAmyp9Oy1NOWL6f/NmQBigNMz9GdFAuN6wzf3iAldQzBMHRTH
-	 GlyVQzJOQZRkebWtnp9MZIQOG+OQJ4j2VTJNukiGMA/QlxbThDAIc7h6x47luOoFZDYXf
-	 tZdSaxMm2E++yzjQqNVSQoeuTaPZqckkjZw/xzJ1a0/CUFtK9/HCy2Vxlbyz7qctBMg==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793123600;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
-	 Message-ID:Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
-	bh=eZ7BfEA5+mgPjgQ08MRW3gJSoX82BS/9Z3gx++ZKTBg=;
-	b=SZacMfMxmubaHL0NyWuGavBgSa/AwfpEME+oXcNJb4sEheutAa3NdA2r6hRbA8ZEMqWu
-	 ZsN9exZUbLtwpHYLkjUsrJVh3OKVlNDU/cVhHENU6gOKIjqmIh8WsKrZoPlYEBQeuM7bQ
-	 SsRc93+dZNCmttdRqmIg2qAyQ0K8U+pKqVsGpmeg285ANYsqVmpepENNIeXkZjK9W5d6L
-	 zAV/JsDXSPq9vjkkqTIyppg0/2FWT5MymH8wmdRR9qXc/3ALJnfSlaqSfXXbzEvE5OlXW
-	 YavdGAsJFV/R7qPuid256x37SjyCTT3gRywrwnivan89S7QsdP2M1c8WJitD9/mneOA==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=google.com;
-	spf=pass smtp.mailfrom=google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=inJR6ox6;
-	arc=fail smtp.remote-ip=209.85.218.49
-Received: from mail-ej1-f49.google.com (mail-ej1-f49.google.com [209.85.218.49])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=195.3.219.148
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1793124111;
+	b=AXGK+e54Rxbzn6ItBpf4DJI2hV3Sx2U46czeYJKjhJ/zKMu7/pJ9pjcBTP4b7laUs7bl
+	 F8+AnIf++2312fieUC5lnxPKpqYolVvJD0IdNAtDLDoEqHQfgkGmchNtYnRDsPTPkRWwe
+	 08R6F+aDBpCcis7GLayaT53cPOfsfedhbifv4vDiDaCrNh9Ja/YTHt/mEM/cv85NF+HXe
+	 p9+I4Lmsknw7JmjGB+Y7x60tiP2lVIzNY0P5w9a6pitgf8QbiAnH6HQIXLm2TCQOANQ7G
+	 v8IOmyEkUl9PIsySOCT7buUfDAPcZfxjbIf08ZzBMsMg/n8npSlAkdr109vY3b2zi3A==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793124111;
+	h=DMARC-Filter:Received:DKIM-Filter:DKIM-Signature:DKIM-Signature:
+	 Received:Received:From:To:CC:Subject:Date:Message-ID:X-Mailer:
+	 MIME-Version:Content-Transfer-Encoding:Content-Type:X-Originating-IP:
+	 X-ClientProxiedBy:X-KSMG-AntiPhishing:
+	 X-KSMG-AntiSpam-Interceptor-Info:X-KSMG-AntiSpam-Status:
+	 X-KSMG-AntiVirus:X-KSMG-AntiVirus-Status:X-KSMG-KATA-Status:
+	 X-KSMG-LinksScanning:X-KSMG-Message-Action:X-KSMG-Rule-ID;
+	bh=EoFSjHbCT0ntK/QpdldsUfHLOSdhKoC9v8cWfqZ7lD4=;
+	b=W1AQ9g/7LsoBAZyWHdS6B+DT4iBANDZAMIFQUhnmsIZzGF15czM/g3x6zp6ga0XC1k+N
+	 utLonnZzgeDmc9XTUAdEBLT0gL4ch0rOzSEtWKDWyM8U1cVTS35qslkcT/biMBo//FZ+z
+	 KGCYBnBk7qfz19ejlfu+7mKZ+SwBUtDbsQ36O62aK5SDsDyUTyFNWDXNj4y9J6rh/MFbH
+	 HEbPgJNa2WAqVzvZXxvU4uxsbvVxJd5v1pR04V6pSn5XahIzu0q2UBKtjdIHfx0iyl71L
+	 k0IeSdDMeN5W+g0db2R32poxjIRxBUiK28EQvXkCXP73RVx1AX+b+Gl7NjUS/gQdFuw==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=yadro.com;
+	spf=pass smtp.mailfrom=yadro.com;
+	dkim=pass header.d=yadro.com header.i=@yadro.com header.a=rsa-sha256 header.s=mta-02 header.b=Delm4Pa2;
+	dkim=pass header.d=yadro.com header.i=@yadro.com header.a=rsa-sha256 header.s=mta-03 header.b=lV3t7RpP;
+	arc=none smtp.remote-ip=195.3.219.148
+Received: from mta-01.yadro.com (mta-01.yadro.com [195.3.219.148])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D76F4606A31F
-	for <linux-scsi@vger.kernel.org>; Tue, 27 Oct 2026 17:53:19 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D76F4606A31F
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64D2E606A31A;
+	Tue, 27 Oct 2026 18:01:47 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 64D2E606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=yadro.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yadro.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=inJR6ox6
-Received: by mail-ej1-f49.google.com with SMTP id a640c23a62f3a-c46d41f6af3so13862466b.1
-        for <linux-scsi@vger.kernel.org>; Tue, 27 Oct 2026 10:53:19 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1793123598; cv=none;
-        d=google.com; s=arc-20260327;
-        b=s19yUUkjAqgt0ZG0o4OZNY0dfwvqsEELib7UaMOnblTXg9t/IqSt21IqHZcjQOVj2f
-         2mKcVwD0QhcYy4LTa3L7/9pteWsvs7k8dj00F0grPzbQ21M6IYJyrbd0o//QO5q7YdIY
-         tFPce3auqV+474ThJrlrWbKOrLDUOTwJsPxEhNcEMlaVfefUs22VYiHiifwcfd8QYCSH
-         IrjUo9UUBjMaWX/iDSnx6i48RlRKRVUZdEwR0krCfA1srGM3NI3PLXlm+Kg8UvRzzLPv
-         sOgHX/ikSZgN86hyndocoZsf8JU4tdJxI/1WQzQ3PXUm4EwLWC50Sqo4du9KtthaVcJB
-         Bv7g==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=eZ7BfEA5+mgPjgQ08MRW3gJSoX82BS/9Z3gx++ZKTBg=;
-        fh=sOS/XA3MhrS51h/od48nrlHoPhAB/GdRx2Xagv4dE3w=;
-        b=RLDQRR4kDYdBgtnolULC9d1r5OJy/aotRpY3EEA3AD6F8eutSiCvEgSccWz5aPEZiO
-         TD06bvnziBzme2tS5K9E3PWldmjwnroOtowPHcTwFnpXYLTu9/Uuj5gZePdTsv+WVnCa
-         kznoUZmB7VlQJcz7oQ4J5RRqFgMvm45oraqc6StWe3+BPw9RtDb6V711jfIMQtNSpP99
-         JgZaAE9A/WXK2+uy5Ir4wqBEUaUuKH3MQh4AuAfGpYMapIB9EmAL+22/Yah28hPB9qQn
-         Y1KMybnx4/Ojil1knzge57Nd+VmGDmI5/9QzHZT9PmmL4bl+09er5afkg0xDVDuGNg/p
-         xRPw==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20260707; t=1793123598; x=1793728398; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=eZ7BfEA5+mgPjgQ08MRW3gJSoX82BS/9Z3gx++ZKTBg=;
-        b=inJR6ox6aQPgzkJ0wZYiPBugaLW1/kUDoRUxznaXNPrxE2Wn3DkQl3afONPaEwO9sl
-         vnrt6FP9OFfRf9KWlwZNng3ZlaCrfp3bQxPXGc+Gx+AORrKLJ8WZpN9m6kJEM6IAqHPq
-         Jk4iMXPxJgkZqxRsoYIxQcD6CPbdcJbwTT1mEJs9Oh6VfooqjmJi5DvsYqRTbZ70S79m
-         W2gdT7rvplj4k08tnzQQgxgOTLo5uqZ4a0mScYBLYVaYMXTVeZPwvd3azNIWeu6/sXO8
-         zyeS5P1gD5N0vXZJTHB1IRGypOyTZEZWjLyDPXDDqsHxY4MhwV784zCuBQDBJ99Srvxy
-         lKbg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793123598; x=1793728398;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=eZ7BfEA5+mgPjgQ08MRW3gJSoX82BS/9Z3gx++ZKTBg=;
-        b=XB7kdUEjMUReKYE2RVJSbXqyD0Ff1hxSiamPMHeVT1AX0g1gG7ufjBMvYYRtAn8DGi
-         wQ0+XgB0bj6kNkUdCLizsn46kkQDzIoaR4DOyUfxOKOAW8hgAIeN5xboKqZn1NsxmKwT
-         WhT/H9f53TQNe66eqQy3Le6uHp3nJRuEHTTVgH/O6Jeue+o82GRdqm4rsr69Mvmp591p
-         6bQ6X6qxuXQxgllXdWBf/ekM6pQUGBzE2CLiox5lfwrB5BZLdo2eZusPVPawV7BhpJm/
-         JZZAtWAY9EDyU+0nKTRcJvQS8ajiC+Tsi6CZblXtZfthLjgSnpWBMumxGjmUzvYyepR9
-         WcBA==
-X-Forwarded-Encrypted: i=1; AKwUvBzr10Z/bY0B0DR1VAHMk64ybC3lqKiVZsaaZiX2RfFvV8phP9vCysi+UCOrDPBX7o5AmQkNKMZ+ruja@vger.kernel.org
-X-Gm-Message-State: AFq9FYLO418NOxOE2G4B0CyvZRN10HWRvihpkcbdyRO7glL5HJ1GXlKi
-	6UpWEOJIfVbtfxpJIaW+tvipQq8y7+8zsqO5NN7N0bRLangMmlQ+/iTey2lBwsFut9ny7ed3ODp
-	XB6MO/trzNmcjEjorO8I5KBHGoR1+xxeNKDsfNbv4
-X-Gm-Gg: AYBFou188iX+lSAfvzOpY3dNieH3i6JCAQuu2uyLEdZqKVNFwQ7rSUiB32IAkRCk2KZ
-	mStJSJRR0RazhblzPKRF87LTO80SlR9p/mn6XZxLP1oTS+pIZP7aMoCO0WRTLttDCXPYhb3vOa9
-	AR7SDHQSDqrXpjX1uu0US37i50CRjV+3ZnfiCs20I8KxBi+1CCJih/IRfeQMQQPJslFpicKwN6q
-	qcKn8XNYHG1i/WJ9YNaTQMlAwhOy44BMiKkyA403LMCKUXmxnxSbrSiL2FCBSe83M8AabeBw7gk
-	RO9mhA0KfsQY+aoc1K5WFlP2b7Wbomg4AGCxORO/ZRyk9MntAaZiSBTOyiDvKkJ7i319dyvOmyd
-	SrBwfVyElW9OxxKrs9yrXJoLO9mNUYeWEMECZqZsHatX4G8VRGtTwrpXmAiXAQLo+c4E9ZCjHhV
-	P3luqhtyzW1ROhhk5WICq09LoamHwhEWcpg+fwv156G9dz4jm3w5J32K9z6qOe74ZChXK3i/Te8
-	MBTihbknHeMVg==
-X-Received: by 2002:a17:906:dc8e:b0:c31:e958:408c with SMTP id
- a640c23a62f3a-c46bde8b464mr1159692166b.38.1793123597614; Tue, 27 Oct 2026
- 10:53:17 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=yadro.com header.i=@yadro.com header.a=rsa-sha256 header.s=mta-02 header.b=Delm4Pa2;
+	dkim=pass (2048-bit key, unprotected) header.d=yadro.com header.i=@yadro.com header.a=rsa-sha256 header.s=mta-03 header.b=lV3t7RpP
+Received: from mta-01.yadro.com (localhost [127.0.0.1])
+	by mta-01.yadro.com (Postfix) with ESMTP id 35CDC2001B;
+	Tue, 27 Oct 2026 21:01:37 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mta-01.yadro.com 35CDC2001B
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yadro.com; s=mta-02;
+	t=1793124097; bh=EoFSjHbCT0ntK/QpdldsUfHLOSdhKoC9v8cWfqZ7lD4=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type:From;
+	b=Delm4Pa21HYL2LWgh63p0OEqnZYeUC/R/M8Q3p5ic1nXCt/fWHIbtX0DW5xIKQvxK
+	 m/n/hGkHtQn3vP41pe7UCHxZFEoQkFnNONee19oUYqqIpTbMnuGKhc5iipRA8z3T0N
+	 FBf+IYbh+bDa+1KH1MAhy4ELYoFRC6VsX/+0JCKrzyXJhasc6805NNbwiWdzJoj3lM
+	 SW2G3PA0p5LCFnm6ji3d+/tasgsoYjoasnAAWXCZdPBLxvfdyK8V1B1Rk5qwW4Dvuj
+	 UK+fqh31MOoP/FH8oTcbBaL6r6Motqtbvhe2ynyKjUE/H7+/vSyCSicfBNmsLawO+v
+	 GXI04QmOiRuSw==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yadro.com; s=mta-03;
+	t=1793124097; bh=EoFSjHbCT0ntK/QpdldsUfHLOSdhKoC9v8cWfqZ7lD4=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type:From;
+	b=lV3t7RpPa1fc/jLeJphb22IjU9Rbw41EPmUq6CsfIKww4D6LpM4SOxA3e91eHz+Va
+	 Fj1+pZUQKiPI9v5BV2ZgEUXDm2ryE8mw5y+VRlQdgToG7WwBTUaecphiAflSCPOjH2
+	 ERw6bTjMy0vF4qE/06LEZ3tdc5AGcUKsWNlVkJp5BEKdjWNAvIHUL9SZ0yc7JaiW7e
+	 wWvcyFuloNqSRumkCgvO5BpDZPS3n+7m6HuL68qZ48bbh5Y/uFlu3yy2jt1L2LVqGi
+	 6ee24v0RlDdNdnL1hVKZttUHQ7tlCTsGy7V0BZ3o4r8UKSP8BaqMDv8NVXGH6xegfg
+	 ISYs4CdTDJrRw==
+Received: from RTM-EXCH-06.corp.yadro.com (unknown [10.34.9.206])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by mta-01.yadro.com (Postfix) with ESMTPS;
+	Tue, 27 Oct 2026 21:01:35 +0300 (MSK)
+Received: from NB-591.corp.yadro.com (10.34.9.247) by
+ RTM-EXCH-06.corp.yadro.com (10.34.9.206) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.49; Tue, 27 Oct 2026 21:01:37 +0300
+From: Dmitry Bogdanov <d.bogdanov@yadro.com>
+To: Martin Petersen <martin.petersen@oracle.com>, Maurizio Lombardi
+	<mlombard@redhat.com>, Laurence Oberman <loberman@redhat.com>,
+	<target-devel@vger.kernel.org>
+CC: <michael.christie@oracle.com>, <linux-scsi@vger.kernel.org>,
+	<linux@yadro.com>, Dmitry Bogdanov <d.bogdanov@yadro.com>
+Subject: [PATCH 0/2] target: iscsi: fix hanged WRITE_PENDING commands
+Date: Tue, 27 Oct 2026 21:01:21 +0300
+Message-ID: <20261027180123.13163-1-d.bogdanov@yadro.com>
+X-Mailer: git-send-email 2.25.1
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -106,39 +89,34 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261026215226.3713941-1-jthoughton@google.com>
- <20261026215226.3713941-2-jthoughton@google.com> <1ee97e9e-3658-41a7-a879-348f51ab547d@kernel.dk>
-In-Reply-To: <1ee97e9e-3658-41a7-a879-348f51ab547d@kernel.dk>
-From: James Houghton <jthoughton@google.com>
-Date: Tue, 27 Oct 2026 10:52:40 -0700
-X-Gm-Features: AclHuK_7gnb7g4GjAy_SA5zcAxXhabVZixR-oCAtO-qS-tkfEqOEG_LlV9pvyY0
-Message-ID: <CADrL8HVgOYb1hzWDJzm4sCrEAR7PL1xBv-1zTGebTusPoDsGXQ@mail.gmail.com>
-Subject: Re: [RFC PATCH 01/10] scsi: bsg: Don't copy sense data to user memory
- when canceled
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Alexander Viro <viro@zeniv.linux.org.uk>, 
-	Thomas Gleixner <tglx@kernel.org>, Peter Zijlstra <peterz@infradead.org>, Kees Cook <kees@kernel.org>, 
-	Arnd Bergmann <arnd@arndb.de>, David Hildenbrand <david@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>, 
-	"Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>, Mike Rapoport <rppt@kernel.org>, 
-	Suren Baghdasaryan <surenb@google.com>, Michal Hocko <mhocko@suse.com>, 
-	Sean Christopherson <seanjc@google.com>, Paolo Bonzini <pbonzini@redhat.com>, 
-	Jim Mattson <jmattson@google.com>, Pavel Begunkov <asml.silence@gmail.com>, 
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
-	"Martin K. Petersen" <mkp@kernel.org>, David Sterba <dsterba@suse.com>, Chris Mason <mason@kernel.org>, 
-	Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, 
-	John Fastabend <john.fastabend@gmail.com>, Josh Poimboeuf <jpoimboe@kernel.org>, 
-	Steven Rostedt <rostedt@goodmis.org>, Masami Hiramatsu <mhiramat@kernel.org>, 
-	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>, Ingo Molnar <mingo@redhat.com>, 
-	Arnaldo Carvalho de Melo <acme@kernel.org>, Namhyung Kim <namhyung@kernel.org>, linux-mm@kvack.org, 
-	linux-fsdevel@vger.kernel.org, kvm@vger.kernel.org, io-uring@vger.kernel.org, 
-	linux-scsi@vger.kernel.org, linux-btrfs@vger.kernel.org, bpf@vger.kernel.org, 
-	linux-trace-kernel@vger.kernel.org, linux-perf-users@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: RTM-EXCH-04.corp.yadro.com (10.34.9.204) To
+ RTM-EXCH-06.corp.yadro.com (10.34.9.206)
+X-KSMG-AntiPhishing: NotDetected
+X-KSMG-AntiSpam-Interceptor-Info: not scanned
+X-KSMG-AntiSpam-Status: not scanned, disabled by settings
+X-KSMG-AntiVirus: Kaspersky Secure Mail Gateway, version 2.1.1.8310, bases: 2026/10/27 10:49:00 #28748526
+X-KSMG-AntiVirus-Status: NotDetected, skipped
+X-KSMG-KATA-Status: Not Scanned
+X-KSMG-LinksScanning: NotDetected
+X-KSMG-Message-Action: skipped
+X-KSMG-Rule-ID: 5
 
-On Mon, Oct 26, 2026 at 7:41=E2=80=AFPM Jens Axboe <axboe@kernel.dk> wrote:
->
-> Reviewed-by: Jens Axboe <axboe@kernel.dk>
+ISCSI has some old leftovers in the code that prevents passing the aborted
+command to the target core to make the actual abort. Such commands hang
+until connection is closed.
+So remove those leftovers.
 
-Thanks, Jens!
+Dmitry Bogdanov (2):
+  Revert "scsi: target: iscsi: Fix hang for aborted WRITE_PENDING
+    commands"
+  scsi: target: iscsi: fix hanging WRITE_PENDING commands
+
+ drivers/target/iscsi/iscsi_target.c      | 19 -------------------
+ drivers/target/iscsi/iscsi_target_erl1.c |  8 --------
+ 2 files changed, 27 deletions(-)
+
+-- 
+2.25.1
+
