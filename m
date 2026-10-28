@@ -1,56 +1,56 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=154.81.10.10
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793172712;
-	b=qIUFyQafyhYclAbhzFkG5v2MDIKXKEIWCF7BLtwCL6T8GbWUNoKn1dJl9Wb4Dnag2ZHk
-	 biAWutlqBgROnRwiQa/dfwps2xRraKgIVTNYCz2ngzh77kfRziPhAMAUPV5TeYpJ6tLth
-	 mUnqZP6Cdvz4Zp3qOesITE7HW2LyxYqzbJfkU4GGidLrZgRIwYxI5eiDy4mo4dfvfPHQ+
-	 froQDOJUsM48KttPIMwhfEuDU+YvtMOf0EqIZmWQyx138/ELF7bIXjzCY0qORLlnn6SkB
-	 Gv1NMi7wuzm9JUL8eIn6METReuUTgun0VpMKtG9dCXGu6tb3HDaM5+DJJh4hywP0uFw==
+	t=1793173711;
+	b=F3/UT9gndKTjL6Ecm23waefQcdJ7MFcIdahLXeCr2CzzwlopM+XHexwwTchSQwT6ueeU
+	 D7/ik0YffWfKNzsoIVdbc6tuXMEHr5k7fZEWyXs+LO/IenDKrixYxJNQBtpCyJtMhH0TI
+	 CdvHHPfRIc2KLNIU86lvrVMzNMeLGX/Vf5jR5KIYLlfnPXFH5JoRNJfA7dMw33iYzRD1e
+	 nq+f1ajhFLZbgyVI0GH2tXvLppdrJ8HdJuE21CZ5esaoWjMkHB328vdrfbGxTqOQMcp9d
+	 KaAjyLVPTsn2bd6tHpKO+DujlOG8FnHdRF1AEOUCKSyag5aZbbHfCpGYEo/AVR5RSzA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793172712;
-	h=DMARC-Filter:Received:From:To:Cc:Subject:Date:Message-Id:X-Mailer:
-	 MIME-Version:Content-Transfer-Encoding:X-HM-Tid:X-HM-MType:
-	 X-HM-Spam-Status:DKIM-Signature;
-	bh=d20iozcM94y1ynJJGzlYfaLHRuOSfOKuZNnqcN4LWBQ=;
-	b=aiJNaeUGlUB4HQGOJT4aVfceo3YkUYYe+1YYIkISa4dDVwsNU2Ez5/IFHwG0fW09fLcN
-	 SRA1XnPYdw7T1CR1MFxEyh/MoPYEvKBo4015Iqsjj5vbK4yImg1XTqWHfPYlYoKlNqbCa
-	 mTSQ06lBCcAwTiEW4/oKdXD83iYBl79c7SE8iTa9/ukufgmy5CbUa72B2EcVn8fVzb2jp
-	 XWhkM/8+szqVEV5QUHPWcJEVIivyvy8ym8idWWOD1IJ4Sxuh+K+kVJSJbn3NYR/7mNDII
-	 mcBemxoSl+jUqjlnLcGV++rpvXfkNg2KbxkFPcYSfgR6trZF8o8ZVPALtZ435BqM1JA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793173711;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=hMxNosNSPHKTbwy+utnLGi1/Q9d5zhtPv/ATgD9Ny6k=;
+	b=qMxJLUURk9SWZYx9s89fIIkw8Wt+kRRn9pvjWpfzMLPMOYmBPeAR9jkMZq9NMs4jmSnu
+	 vcqOFVtL7zrHEjGCiiBi0XdUm/9UZP3Vw/bgYl92cZtTtBCpzyxLjRNGS4Qd1CFL0pAt7
+	 HmCy/bJ4LTF47d8EwL1ITrVJF9wFu6exzJtug+l2+kqmqG5chCIWy19MEV54gInf6gsgS
+	 AyaRCDtR5kGkkykN+up4bruSj2/LtC+UeJQR2T4Qd3tPUzIlJz5BhlnAG+Z0UzvPt2iEr
+	 ZP9NxTeaNr+9igYjYpAthJGAR55dpiYR7j5FTLAEQG6Q2+qTkov/1Id7LQGI1J0NcBg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=rock-chips.com;
-	spf=pass smtp.mailfrom=rock-chips.com;
-	dkim=pass header.d=rock-chips.com header.i=@rock-chips.com header.a=rsa-sha256 header.s=default header.b=TB+GQMii;
-	arc=none smtp.remote-ip=154.81.10.10
-Received: from mail-m1010.netease.com (mail-m1010.netease.com [154.81.10.10])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=SxdKlOS7;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91297606A31A
-	for <linux-scsi@vger.kernel.org>; Wed, 28 Oct 2026 07:31:49 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 91297606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3BB82606A31D
+	for <linux-scsi@vger.kernel.org>; Wed, 28 Oct 2026 07:48:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=rock-chips.com header.i=@rock-chips.com header.a=rsa-sha256 header.s=default header.b=TB+GQMii
-Received: from localhost.localdomain (unknown [61.154.14.87])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 52a1342f6;
-	Wed, 28 Oct 2026 15:31:39 +0800 (GMT+08:00)
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K . Petersen" <mkp@kernel.org>
-Cc: Bart Van Assche <bvanassche@acm.org>,
-	Bean Huo <beanhuo@micron.com>,
-	Heiko Stuebner <heiko@sntech.de>,
-	Stanley Jhu <stanleyjhu@google.com>,
-	Alim Akhtar <alim.akhtar@samsung.com>,
-	linux-rockchip@lists.infradead.org,
-	linux-scsi@vger.kernel.org,
-	Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH] scsi: ufs: core: Retry the full device init on fatal link loss
-Date: Wed, 28 Oct 2026 15:31:29 +0800
-Message-Id: <20261028073129.1661829-1-shawn.lin@rock-chips.com>
-X-Mailer: git-send-email 2.25.1
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=SxdKlOS7
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id ADD3E1F031E2;
+	Wed, 28 Oct 2026 07:48:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793173710;
+	bh=hMxNosNSPHKTbwy+utnLGi1/Q9d5zhtPv/ATgD9Ny6k=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=SxdKlOS7QtMdFMCABmt/wqZWXo9KqJtDJ+ukGDcC6M1xNSVGSuUIlvesu9P+0vs+o
+	 ygIgC6kFKqXoQr7bH3Zjja/1SzcdpffTRu/5qL6boNcKYj2m9gUV2GaPItaBmDKWKf
+	 7LG/oXV4l/O2jwTonzNWRopNIfF2h0capA7VNZ9dJlZlgIYIBDnpS4lNqZ6txPSKnB
+	 vHG802+WZxx3US6Nm0bRLFjRVNtQbMVqvnqUDuCZYZ0Rw//w4HsFqv5qXR1mlZgQB3
+	 QpA54C3Sf+umBUToxOWwv2wumsda40prLbJId06pFDI23+fsXwrKoI6pZqn0qGEfZ7
+	 WKMMXohH2dEFw==
+Message-ID: <sashiko-outbox-187593@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] scsi: ufs: core: Retry the full device init on fatal
+ link loss
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Shawn Lin" <shawn.lin@rock-chips.com>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20261028073129.1661829-1-shawn.lin@rock-chips.com>
+References: <20261028073129.1661829-1-shawn.lin@rock-chips.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 28 Oct 2026 07:48:30 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -59,132 +59,160 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-HM-Tid: 0aa1816bf8ef03a4kunm8a59feb98d47f
-X-HM-MType: 1
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVkaGk8ZVk5LTklJTkwfQ0oZTVYVFA
-	kWGhdVEwETFhoSFyQUDg9ZV1kYEgtZQVlNSlVKTk9VSk9VQ0xZV1kWGg8SFR0UWUFZT0tIVUpLSU
-	9PT0hVSktLVUpCS0tZBg++
-DKIM-Signature: a=rsa-sha256;
-	b=TB+GQMiiZFz6iEXGHZpLEHkhiImt1AHwh5JT9q9S7vFCqPvkeXGWlvbQ4EzrWzsPfAlklF7HWq39Veuzngx5G5mWDoTEwGa7A0V4UKZxWesattozxQs0Suzt1Lmx8FTZK2IpvpwICsusizal8qyEsPUT3iF89ck8wmMZmK9+Qd0=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
-	bh=d20iozcM94y1ynJJGzlYfaLHRuOSfOKuZNnqcN4LWBQ=;
-	h=date:mime-version:subject:message-id:from;
 
-On an RK3576 board the UFS device is rarely reported dead during the
-initialization at boot: DEVICE_FATAL_ERROR | UIC_LINK_LOST is latched and
-the following UIC query fails with -EIO, leaving the device unusable.
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [High] scsi: ufs: core: uncollected eh_work and sticky saved_err in ufshc=
+d_init()
+- [High] scsi: ufs: core: missing ufshcd_mcq_enable() on retry in ufshcd_in=
+it()
+--
 
-Recover by resetting the device and the controller and redoing the whole
-initialization sequence, up to three times with a 100 ms settle delay in
-between. The retry covers the link startup, the device verification, the
-completion of the device initialization and the device parameters setup,
-since any of them can fail once the link has been lost.
+commit dd93c52494a126db3d5dec49c3f84c857b512392
+Author: Shawn Lin <shawn.lin@rock-chips.com>
 
-This is done in ufshcd_init() rather than in the platform driver's probe.
-A host driver only reaches its private data through ufshcd_get_variant(),
-which is set from the ->init callback that ufshcd_pltfrm_init() invokes
-on the caller's behalf, so the resources needed to reset the device are
-not available before or after that call. More importantly, retrying
-ufshcd_pltfrm_init() would request the interrupt, clocks and regulators a
-second time without any of the earlier registrations being rolled back:
-ufshcd_pltfrm_init() returns the error as-is, it does not undo what the
-previous attempt already set up. That leaves the controller with leaked
-resources and makes the retry fail on the interrupt registration.
+scsi: ufs: core: Retry the full device init on fatal link loss
 
-Doing the retry inside ufshcd_init() avoids both problems: the host data
-is already reachable through hba->priv, and the interrupt, clocks and
-regulators are acquired only once.
+This commit adds a retry loop in ufshcd_init() that resets the UFS device
+and host controller up to three times with a 100 ms delay if link startup
+or device initialization fails during boot.
 
-The failure looks like this on RK3576:
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index ee643830a57a2..e75370d1b9501 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -11419,12 +11419,14 @@ int ufshcd_init(struct ufs_hba *hba, void __iom=
+em *mmio_base, unsigned int irq)
+> =20
+>  	/* Initialize hba, detect and initialize UFS device */
+>  	ktime_t probe_start =3D ktime_get();
+> +	int retries =3D 3;
+> =20
+> +retry_init:
+>  	hba->ufshcd_state =3D UFSHCD_STATE_RESET;
+> =20
+>  	err =3D ufshcd_link_startup(hba);
+>  	if (err)
+> -		goto out_release;
+> +		goto retry_device_init;
+> =20
+>  	if (hba->mcq_enabled)
+>  		ufshcd_config_mcq(hba);
 
-  ufshcd-rockchip 29e00000.ufs: ufshcd_check_errors: saved_err 0x880 saved_uic_err 0x0
-  host_regs: 00000000: 0187011f 00000000 00000200 00000000
-  host_regs: 00000010: 00000000 000005e6 00000000 00000000
-  host_regs: 00000020: 00000000 00031ef5 00000000 00000000
-  host_regs: 00000030: 00000008 00000001 00000000 00000000
-  host_regs: 00000040: 00000000 00000000 00000000 00000000
-  host_regs: 00000050: 02dd3000 00000001 00000000 00000000
-  host_regs: 00000060: 00000000 00000000 00000000 00000000
-  host_regs: 00000070: 02dd4000 00000001 00000000 00000000
-  host_regs: 00000080: 00000000 00000000 00000000 00000000
-  host_regs: 00000090: 00000016 00000000 00000000 00000000
-  ufshcd-rockchip 29e00000.ufs: ufshcd_err_handler started; HBA state eh_fatal; powered 1; shutting down 0; saved_err = 2176; saved_uic_err = 0; force_reset = 0
-  ufshcd-rockchip 29e00000.ufs: ufshcd_query_flag: Sending flag query for idn 1 failed, err = 5
+[Severity: High]
+On controllers with MCQ enabled, does retrying after ufshcd_hba_stop() and
+ufshcd_hba_enable() leave the hardware in legacy single doorbell mode while
+hba->mcq_enabled remains true?
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
----
+Before the retry_init label in drivers/ufs/core/ufshcd.c:ufshcd_init(),
+ufshcd_add_scsi_host() enables MCQ by calling ufshcd_mcq_enable():
 
- drivers/ufs/core/ufshcd.c | 29 +++++++++++++++++++++++++----
- 1 file changed, 25 insertions(+), 4 deletions(-)
+drivers/ufs/core/ufs-mcq.c:ufshcd_mcq_enable() {
+	ufshcd_rmwl(hba, MCQ_MODE_SELECT, MCQ_MODE_SELECT, REG_UFS_MEM_CFG);
+	hba->mcq_enabled =3D true;
+}
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index ee643830a57a..e75370d1b950 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -11419,12 +11419,14 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
- 
- 	/* Initialize hba, detect and initialize UFS device */
- 	ktime_t probe_start = ktime_get();
-+	int retries = 3;
- 
-+retry_init:
- 	hba->ufshcd_state = UFSHCD_STATE_RESET;
- 
- 	err = ufshcd_link_startup(hba);
- 	if (err)
--		goto out_release;
-+		goto retry_device_init;
- 
- 	if (hba->mcq_enabled)
- 		ufshcd_config_mcq(hba);
-@@ -11441,16 +11443,16 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
- 	/* Verify device initialization by sending NOP OUT UPIU */
- 	err = ufshcd_verify_dev_init(hba);
- 	if (err)
--		goto out_release;
-+		goto retry_device_init;
- 
- 	/* Initiate UFS initialization, and waiting until completion */
- 	err = ufshcd_complete_dev_init(hba);
- 	if (err)
--		goto out_release;
-+		goto retry_device_init;
- 
- 	err = ufshcd_device_params_init(hba);
- 	if (err)
--		goto out_release;
-+		goto retry_device_init;
- 
- 	err = ufshcd_post_device_init(hba);
- 
-@@ -11468,6 +11470,25 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
- 	ufshcd_pm_qos_init(hba);
- 	return 0;
- 
-+retry_device_init:
-+	if (retries--) {
-+		dev_warn(hba->dev, "UFS init failed %d, full retry (%d left)\n",
-+			 err, retries);
-+
-+		ufshcd_device_reset(hba);
-+		ufs_put_device_desc(hba);
-+		ufshcd_hba_stop(hba);
-+		if (ufshcd_hba_enable(hba)) {
-+			dev_err(hba->dev, "Host controller enable failed\n");
-+			ufshcd_print_evt_hist(hba);
-+			ufshcd_print_host_state(hba);
-+			goto out_release;
-+		}
-+
-+		msleep(100);
-+		goto retry_init;
-+	}
-+
- out_release:
- 	ufshcd_release(hba);
- out_disable:
--- 
-2.25.1
+When initialization fails and enters retry_device_init, calling
+ufshcd_hba_stop() and ufshcd_hba_enable() toggles REG_CONTROLLER_ENABLE,
+which resets the host controller registers including MCQ_MODE_SELECT in
+REG_UFS_MEM_CFG while hba->mcq_enabled stays true.
 
+When jumping back to retry_init, ufshcd_init() calls ufshcd_config_mcq(hba)
+without calling ufshcd_mcq_enable(hba), unlike ufshcd_device_init() on
+subsequent resets:
+
+drivers/ufs/core/ufshcd.c:ufshcd_device_init() {
+	/* Reconfigure MCQ upon reset */
+	if (hba->mcq_enabled && !init_dev_params) {
+		ufshcd_config_mcq(hba);
+		ufshcd_mcq_enable(hba);
+	}
+}
+
+Without re-enabling MCQ_MODE_SELECT in REG_UFS_MEM_CFG, won't subsequent
+device management commands (starting with NOP OUT in
+ufshcd_verify_dev_init()) be posted to the MCQ submission queues while the
+hardware ignores them and times out?
+
+[ ... ]
+
+> @@ -11468,6 +11470,25 @@ int ufshcd_init(struct ufs_hba *hba, void __iome=
+m *mmio_base, unsigned int irq)
+>  	ufshcd_pm_qos_init(hba);
+>  	return 0;
+> =20
+> +retry_device_init:
+> +	if (retries--) {
+> +		dev_warn(hba->dev, "UFS init failed %d, full retry (%d left)\n",
+> +			 err, retries);
+> +
+> +		ufshcd_device_reset(hba);
+> +		ufs_put_device_desc(hba);
+> +		ufshcd_hba_stop(hba);
+> +		if (ufshcd_hba_enable(hba)) {
+> +			dev_err(hba->dev, "Host controller enable failed\n");
+> +			ufshcd_print_evt_hist(hba);
+> +			ufshcd_print_host_state(hba);
+> +			goto out_release;
+> +		}
+> +
+> +		msleep(100);
+> +		goto retry_init;
+> +	}
+
+[Severity: High]
+What happens to the scheduled hba->eh_work and the latched error bits in
+hba->saved_err and hba->saved_uic_err when retry_device_init loops back to
+retry_init after a fatal error interrupt?
+
+When DEVICE_FATAL_ERROR | UIC_LINK_LOST (0x880) fires during the failed
+attempt, ufshcd_check_errors() latches the error into hba->saved_err and
+hba->saved_uic_err, sets hba->ufshcd_state to
+UFSHCD_STATE_EH_SCHEDULED_FATAL, and queues hba->eh_work:
+
+drivers/ufs/core/ufshcd.c:ufshcd_check_errors() {
+		hba->saved_err |=3D hba->errors;
+		hba->saved_uic_err |=3D hba->uic_error;
+		...
+		ufshcd_schedule_eh_work(hba);
+}
+
+Because hba->ufs_device_wlun is still NULL during ufshcd_init() (until
+ufshcd_async_scan() runs later), ufshcd_err_handling_should_stop(hba)
+returns true when ufshcd_err_handler() executes:
+
+drivers/ufs/core/ufshcd.c:ufshcd_err_handler() {
+	down(&hba->host_sem);
+	spin_lock_irqsave(&hba->host->host_lock, flags);
+	if (ufshcd_err_handling_should_stop(hba)) {
+		if (hba->ufshcd_state !=3D UFSHCD_STATE_ERROR)
+			hba->ufshcd_state =3D UFSHCD_STATE_OPERATIONAL;
+		spin_unlock_irqrestore(&hba->host->host_lock, flags);
+		up(&hba->host_sem);
+		return;
+	}
+}
+
+Since retry_device_init does not flush hba->eh_work or clear hba->saved_err,
+hba->saved_uic_err, and hba->force_reset under hba->host->host_lock (as
+ufshcd_reset_and_restore() does), two issues appear possible:
+
+1. If hba->eh_work runs concurrently with the retry, ufshcd_err_handler()
+can overwrite hba->ufshcd_state with UFSHCD_STATE_OPERATIONAL after
+retry_init sets it to UFSHCD_STATE_RESET.
+
+2. Even after a retry succeeds, hba->saved_err retains the sticky
+DEVICE_FATAL_ERROR | UIC_LINK_LOST bits. On any later non-fatal UIC event
+(such as a line reset during power mode configuration in
+ufshcd_post_device_init() or during normal runtime),
+ufshcd_check_errors() checks ufshcd_is_saved_err_fatal(hba), misclassifies
+the event as a fatal error, and either leaves hba->ufshcd_state in
+UFSHCD_STATE_EH_SCHEDULED_FATAL across ufshcd_process_probe_result() or
+triggers an unnecessary full reset once hba->ufs_device_wlun is added.
+
+Should retry_device_init flush hba->eh_work and clear hba->saved_err,
+hba->saved_uic_err, and hba->force_reset under host_lock before retrying?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261028073129.1661=
+829-1-shawn.lin@rock-chips.com?part=3D1
