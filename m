@@ -1,100 +1,87 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.218.51
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793194461;
-	b=O3IFN71QjUe38ltqgsQWVm8m4KVB6qfq0whrzlx0pgn3decT6sRFHRaqhzh2as9vrPhf
-	 gtzFK/91MC3lr2zdECPSQJ8Lu+XmtDxNuIB1km3TRyxsVPOWAP66EPCcsXmfxLJDYfkkG
-	 IkF7I6bUeTj4sBt3/Pjv8JZv6B1s8XVuaBvEJ7THOiW7/skbkV3Z5dSKa4TY+Bc7mwOBU
-	 kOlMCIvxLV0d/KHMKttQGxRgio36h2ZvZB8nS/uwkH30bmtp+xmrGeSUXBkrs8Ka49FIn
-	 LQ95aVdcOYpvxJLmQadoR26iiMPUn7G4G1AP475H6r8y9o+Bv7vgqAUOF2UXDLIn4Xg==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793194461;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:MIME-Version:References:
-	 In-Reply-To:From:Date:X-Gm-Features:Message-ID:Subject:To:Cc:
-	 Content-Type:Content-Transfer-Encoding;
-	bh=Ee4OtoDdUVVMPj/wc6rKMnSoGu+WOHUA0z+EnvP+fWM=;
-	b=dyXe6uVXDMxmFczNoRGJcyzRmlSY2VKN27ZMQ/4z4KtQAm1hxNrwwrAFYNiOQx4XMcTk
-	 +F0CO1sMQcVO4bSmQRQDRJVpDIgzC4sOgCrhzhxfAZ0KKBQM1QOWA1QO6di2cSurUldnD
-	 aJMdZ3lJajwd15BA2cwhSem6rzy1QOhdZTwsPFXJFbzHRNxkoyBtiH5m2+kVXCNRycU3V
-	 5cAg4rCCEyBq6gHOxEWYiez8Ke4n5zNvGqAwAmyztKa0RhHhYNcDDWGyzA17UJqqF3VlW
-	 yRKg30vbPVA0WniUEpfiGIA5s2kf4KhWa4lVwdcuuZMvV5GV2Un7LpXzCPg9hZjrxLQ==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=flipper.net;
-	spf=pass smtp.mailfrom=flipper.net;
-	dkim=pass header.d=flipper.net header.i=@flipper.net header.a=rsa-sha256 header.s=google header.b=jOdl6IAy;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.218.51
-Received: from mail-ej1-f51.google.com (mail-ej1-f51.google.com [209.85.218.51])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=195.3.219.148
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1793196160;
+	b=kq1jnpBjyg8Whr+TmGDDVduYLr0By6cBFnM2Rjj3t0lwoCULp+uHwjxxtJxcGdvdbkXx
+	 b3lcxIw5yiUwbe/0EZMJv10hYN1Boa3E2gTrhjh5nd8Rozt+VTKdDBYtiWJs09GocHKEV
+	 WCVeaGk7LKFnywa/rRAJrb2B1BumDFck6TFRwRkwRj3mi8khmT09i3Q1cHxy3AbM6zw3v
+	 2NOz5jiABMfKj9x55REwfprOlRWmhaz/tShSK9JVsT49WWjshtLFx7ui2OxxFhiXto2Ro
+	 i14dcNrmfuCsxz6Xi7DU3Vqz6XKcyT9oOBYWK0jXa5R+68TYj62Qo02ttJVvXS34tIg==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793196160;
+	h=DMARC-Filter:Received:DKIM-Filter:DKIM-Signature:DKIM-Signature:
+	 Received:Received:Date:From:To:CC:Subject:Message-ID:References:
+	 MIME-Version:Content-Type:Content-Disposition:
+	 Content-Transfer-Encoding:In-Reply-To:X-Originating-IP:
+	 X-ClientProxiedBy:X-KSMG-AntiPhishing:
+	 X-KSMG-AntiSpam-Interceptor-Info:X-KSMG-AntiSpam-Status:
+	 X-KSMG-AntiVirus:X-KSMG-AntiVirus-Status:X-KSMG-KATA-Status:
+	 X-KSMG-LinksScanning:X-KSMG-Message-Action:X-KSMG-Rule-ID;
+	bh=6qa2C8sCvrTQ2ETgMYfY5rx37DEoDs+XYsH6Tphrrvg=;
+	b=T+o/o0V4yUSwu9p8fDoVN7BwEJgPUBmtP0Z6cTqQQnspD/uBrKjZ3QlbuU6uhHh/28Ey
+	 vfOGv25WkHHnOQLWOPTNjyxgmX54QbZ/CzTGG7yChrhVq2k379Xey6e1pozUDGVunCBFI
+	 ZcmqLcIEv3w3vWCHtaZe3uySXYAtp7emnXOihhxTeDB05zBXSy3ieU/6kadp+OOXJ2Dyz
+	 /5ElilYQyoQq8hg2E+nVs6+D7XDbtXmhLFINAjW4E8aRJiRIK0l/LFhhHKRjfTvmqweIE
+	 +RKhNPx0RAiwcH9S6nVdaDMgbG63vi9e0oa6Etwlde5SWg/ckuceIbqKAwss0rrRuFw==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=yadro.com;
+	spf=pass smtp.mailfrom=yadro.com;
+	dkim=pass header.d=yadro.com header.i=@yadro.com header.a=rsa-sha256 header.s=mta-02 header.b=slSp5xR5;
+	dkim=pass header.d=yadro.com header.i=@yadro.com header.a=rsa-sha256 header.s=mta-03 header.b=rKtjQHwz;
+	arc=none smtp.remote-ip=195.3.219.148
+Received: from mta-01.yadro.com (mta-01.yadro.com [195.3.219.148])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61684606A31A
-	for <linux-scsi@vger.kernel.org>; Wed, 28 Oct 2026 13:34:20 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 61684606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=flipper.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flipper.net
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 538E5606A31A;
+	Wed, 28 Oct 2026 14:02:36 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 538E5606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=yadro.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yadro.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=flipper.net header.i=@flipper.net header.a=rsa-sha256 header.s=google header.b=jOdl6IAy
-Received: by mail-ej1-f51.google.com with SMTP id a640c23a62f3a-c4677aad67bso108524766b.0
-        for <linux-scsi@vger.kernel.org>; Wed, 28 Oct 2026 06:34:20 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1793194459; cv=none;
-        d=google.com; s=arc-20260327;
-        b=dXJdYN/g/R5UFKE2hEHoSy5N2MOa+xcZsd157LyGpti9v3vy77NFJKG4+57d2bnX+N
-         uzmjyrsXqgdeEBLkyNgfpnPDOv691CnxRwu+YSwZUVY5psBdfRhfU2hxwVyxWOCrdTje
-         Jf3KHpa5BLm03vgj+6FOcP6M/yvBXJufCE0HHsPmv2raN2cqmNgvUnqyYUgRnIEkllST
-         y+YEa5dr6VnxHkICagtEI7vaLiD4zj8C99vg1xa9SfYwxPL5GklLG+HVvBaMrq/6JgmZ
-         +/YFLrK5gIFInV+anEEACDszwtPOs3sLItNQS8QrcNjCdHyDaBVG/j7wUOddwppz54Ab
-         8g4Q==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=Ee4OtoDdUVVMPj/wc6rKMnSoGu+WOHUA0z+EnvP+fWM=;
-        fh=gUfsL9ppqjROwdjOOpA7gVU01au1qshFQ+BhECdF0Kg=;
-        b=bsklaIvIJhMhViPxrpEaFyOkHCLlZdhecC3bICTRf3k4BwDAQZ9x9CWFCqgyIxCYNV
-         2RQdQyP0qsW30iK851LoiEdyq3iDr3VqXVEA2qwqHu4C4G+yBg3DxgV0/D9TgBkYVpT/
-         0yBok4x9b2bBf4biOUlOROsyM+4WGJxT7vFFl7FtSSd3a7gzltZy2ooISaO2l2MI++3h
-         10DU8W7THHnMJ40/KK0EaJhei3SOQPrUn/DBj2NlGq1eIOxyufzKXyyQ6eiGw8mPMfnr
-         QlGwhYzjNeUlhvFJCOI+xAhk5BnLGfyp61GpbMUBtw45o50n8Y/+aRZb956zfjIB2DpJ
-         D0zQ==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=flipper.net; s=google; t=1793194459; x=1793799259; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=Ee4OtoDdUVVMPj/wc6rKMnSoGu+WOHUA0z+EnvP+fWM=;
-        b=jOdl6IAyzXbXUbv44SywYV9QSdrBLgZNl7M0RuAA1vSSmKpLW5xneO3yvAXDkYLEHV
-         eRA+3mnIYnc1ppFHTgPCXI9lNI+3c7e+j4Bd7DIQTx0zYUEB5XXaHgYnEnclq5W7TPUl
-         LGRH8H//FM0ZN8roZ+50vZT+u5omdRaiQGbKIpql6MaSDZIRwyzF0sLtNMpHEeCfdSi3
-         U7j0dFD1QRiAUH9XXohyYqfeHvaDiZj/TJ9m5LYwAebdbvWUfN8yO0cIuWQmanz4D2P9
-         OynjpmJS9els5kM6YkSrVxCR7etD1MaOFEQChlZZMYvCUyRLC3kJ9uQXgcaXQIr8w6iD
-         Z1HQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793194459; x=1793799259;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=Ee4OtoDdUVVMPj/wc6rKMnSoGu+WOHUA0z+EnvP+fWM=;
-        b=zt9zjC2vvgZgYT9NHennbmkDrOKAckVm9vNApLGGTHMnojrMenSumMhQX2atPtm/Si
-         xP0oCRlY48yi0OpKwmURnYTvhApTByIbiZWZ87gwsfDaRGa6vtGZpQf7KCg2QN1xvzXy
-         NMAnDhW55xjSNsz+kg5gVSYOfcujrpzQI4eQiIFOIzORwSBItxcy17s9htolGSzpLgv/
-         czjjSEIEFbJS/f1N7jKh3T/OKLnO0XGE49HbNtdPCnUfRKQmg6taZ/9nljPWXl5JEa7x
-         PSrGebRFeuZMVwJ0EzF5oRyb/IbO5+f5KelwyiaVlUx850RsCBbuS/dIjWGPUnD9XDB7
-         U1rA==
-X-Gm-Message-State: AFq9FYL2zfckyApPWBocZzlN94bSD9S5279/dJOeu49X+I+MMMwIjfD8
-	tiO1zNA3g9nopAG9jtJiybwmeYu70tI2B+AdDac3WO8zQ3UqHEnyA1pIMkqnXlWck3jBBlY0StM
-	7UcrBkeb/7fu2U+rjVox5TupN14A/nO3NnTMSTsAtEA==
-X-Gm-Gg: AYBFou2+2WbeYBaMyqQgeadVxb/5Tca70kBExGE/vEqHtf9UVw3O3BuvB7xmE5yctWU
-	HJneY3pxbW4YVR3iolT/FBxyEOg8G2FDdCPggbMppkBBs2vSJi2vmgaEcB1rEBOJj+sqn2QXpLR
-	5vp4a90ZM8E0c1WtFjbRiyFmN7Od5ocYX92yMkn5rQRaMIJQxQK+FsYW7KOFlITqdtFK4FWesLu
-	gPe3SF14z2fGMO9w6L/4dNX4Pi677jHfJX0usqyl1/kr1YE/BmKusBfJ0JPdyNjq8i8tmJKhgoW
-	YFImr4B1onU/NZNo/OW+7RWeUatzcEmUPjS454H4hvwT3OhF4/ptFLTzw03gwAyZV+ecf9M/g16
-	pNyjuGhw9VXuf7MaPzKfuSgmG17SAEiUmknJvxoRic2UStmV46HPS8sCdxRhkDjlCc4Udi3pJhU
-	PrMCuDZs+QGrbT2Gc=
-X-Received: by 2002:a17:907:60d1:b0:c31:9a1c:de76 with SMTP id
- a640c23a62f3a-c49bdf389ccmr208900966b.14.1793194458590; Wed, 28 Oct 2026
- 06:34:18 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=yadro.com header.i=@yadro.com header.a=rsa-sha256 header.s=mta-02 header.b=slSp5xR5;
+	dkim=pass (2048-bit key, unprotected) header.d=yadro.com header.i=@yadro.com header.a=rsa-sha256 header.s=mta-03 header.b=rKtjQHwz
+Received: from mta-01.yadro.com (localhost [127.0.0.1])
+	by mta-01.yadro.com (Postfix) with ESMTP id 0BF5120026;
+	Wed, 28 Oct 2026 17:02:32 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mta-01.yadro.com 0BF5120026
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yadro.com; s=mta-02;
+	t=1793196152; bh=6qa2C8sCvrTQ2ETgMYfY5rx37DEoDs+XYsH6Tphrrvg=;
+	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:From;
+	b=slSp5xR5A8llQRG6YfZ6316njzfmOHIxD4+Mhv5FC8TOquqTU0JDKN/nR2614wOEL
+	 SBHDauu1cvo/G1cgMFMMBdP8wQTGB96TYvn4sbg/Q0WoRwdhYIcMC5lGlxq4++2uDR
+	 vsr+tj0SjLbiWe4twvZdt0X0+NZlRTbp9Q3dByTDoddxPyqwruUhJCyIryIEANGzdP
+	 6Wt89xeIJBdn+AenHhhaYNNlDnbNRDa8l7aGpMEh8PnFNX00Z7ZLrduF0LvDONRa6T
+	 yRkIU8Lj2+fbixcqgtGWQi40VOYzeLZmmkhjbCj+fwZiFiZk68PobKEevxVFSe5GuO
+	 v1+K2wlz3I6Ow==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yadro.com; s=mta-03;
+	t=1793196152; bh=6qa2C8sCvrTQ2ETgMYfY5rx37DEoDs+XYsH6Tphrrvg=;
+	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:From;
+	b=rKtjQHwzmn2IhSe1N/1DuKOxizk4qPOklcKt4y6THxexFwQL4V4/zkQym+0vtXIoP
+	 wdkgFQHTnkcHmh1jLyKKTj3FcWTyYhPl3d5LeRfQEbTIPtagW8H3WHNT7GsjRouGm6
+	 NdJXiZrreF3ebsI3k2DwCBMbIf0Vjj6C9SuxgCBlE/uZaS45XNzbF8OllqH8bQh7XP
+	 T6ht5u+h6fGolafvoEfSmEezSpTgBkEMlX4SWdCK+jfxEjrb8QIom1y4Q0fsYAS5jz
+	 m2kc2BzGKPAk5BjC8YOBi0yYu8S1b4CH6OHlE47+elLGPU2OPL4k2gaDywG9L3oup7
+	 YCt6YmVZdhA1Q==
+Received: from RTM-EXCH-06.corp.yadro.com (unknown [10.34.9.206])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by mta-01.yadro.com (Postfix) with ESMTPS;
+	Wed, 28 Oct 2026 17:02:21 +0300 (MSK)
+Received: from yadro.com (10.34.9.247) by RTM-EXCH-06.corp.yadro.com
+ (10.34.9.206) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.49; Wed, 28 Oct
+ 2026 17:02:21 +0300
+Date: Wed, 28 Oct 2026 17:02:21 +0300
+From: Dmitry Bogdanov <d.bogdanov@yadro.com>
+To: Laurence Oberman <loberman@redhat.com>
+CC: Martin Petersen <martin.petersen@oracle.com>, Maurizio Lombardi
+	<mlombard@redhat.com>, <target-devel@vger.kernel.org>,
+	<michael.christie@oracle.com>, <linux-scsi@vger.kernel.org>,
+	<linux@yadro.com>
+Subject: Re: [PATCH 0/2] target: iscsi: fix hanged WRITE_PENDING commands
+Message-ID: <20261028140221.GB32229@yadro.com>
+References: <20261027180123.13163-1-d.bogdanov@yadro.com>
+ <d7a1701ddc2e7c976ad8ff9ec071d9bfdc86a7e2.camel@redhat.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -104,223 +91,140 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261028-biwin-tua-quirk-v1-1-767a12c9b9cc@flipper.net> <sashiko-outbox-187901@kernel.org>
-In-Reply-To: <sashiko-outbox-187901@kernel.org>
-From: Alexey Charkov <alchark@flipper.net>
-Date: Wed, 28 Oct 2026 17:34:01 +0400
-X-Gm-Features: AclHuK84rdq1eh77fj4l7hk6VSAzgGvuEl-QASfPeiofUA5FndtFXoShRb4A-Pk
-Message-ID: <CAKTNdwEGr-VSWUSPOQZO_Pr-i=Wm+jMaoHneMjmUbMJmihUJQw@mail.gmail.com>
-Subject: Re: [PATCH] scsi: ufs: core: Clear power-on UNIT ATTENTION on BIWIN devices
-To: sashiko-reviews@lists.linux.dev
-Cc: linux-scsi@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <d7a1701ddc2e7c976ad8ff9ec071d9bfdc86a7e2.camel@redhat.com>
+X-ClientProxiedBy: RTM-EXCH-01.corp.yadro.com (10.34.9.201) To
+ RTM-EXCH-06.corp.yadro.com (10.34.9.206)
+X-KSMG-AntiPhishing: NotDetected, bases: 2026/10/28 13:11:00
+X-KSMG-AntiSpam-Interceptor-Info: not scanned
+X-KSMG-AntiSpam-Status: not scanned, disabled by settings
+X-KSMG-AntiVirus: Kaspersky Secure Mail Gateway, version 2.1.1.8310, bases: 2026/10/28 07:15:00 #28752282
+X-KSMG-AntiVirus-Status: NotDetected, skipped
+X-KSMG-KATA-Status: Not Scanned
+X-KSMG-LinksScanning: NotDetected, bases: 2026/10/28 13:11:00
+X-KSMG-Message-Action: skipped
+X-KSMG-Rule-ID: 5
 
-On Wed, Oct 28, 2026 at 5:17=E2=80=AFPM <sashiko-bot@kernel.org> wrote:
->
-> Thank you for your contribution! Sashiko AI review found 2 potential issu=
-e(s) to consider:
-> - [Medium] scsi: ufs: unhandled broken OCS quirk in ufshcd_clear_unit_att=
-ention()
-> - [Medium] scsi: ufs: core: ufshcd_issue_devman_upiu_cmd() hardcodes lun =
-0 in lrbp
-> --
->
-> commit 02e1f4aa450245801c780ec99fe1072a3f8e77c3
-> Author: Alexey Charkov <alchark@flipper.net>
->
-> scsi: ufs: core: Clear power-on UNIT ATTENTION on BIWIN devices
->
-> This patch adds a device quirk for BIWIN UFS devices (models starting wit=
-h
-> BWU2A05) to clear pending power-on unit attention conditions across all
-> logical units after a host reset and restore by issuing a TEST_UNIT_READY
-> command via the device management slot.
->
-> > diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> > index ee643830a57a2..d52275a813fd3 100644
-> > --- a/drivers/ufs/core/ufshcd.c
-> > +++ b/drivers/ufs/core/ufshcd.c
->
-> [ ... ]
->
-> > @@ -8265,6 +8268,55 @@ static void ufshcd_process_probe_result(struct u=
-fs_hba *hba,
-> >                         hba->curr_dev_pwr_mode, hba->uic_link_state);
-> >  }
+Hi Laurence,
+
+On Tue, Oct 27, 2026 at 04:08:08PM -0400, Laurence Oberman wrote:
+> 
+> On Tue, 2026-10-27 at 21:01 +0300, Dmitry Bogdanov wrote:
+> > ISCSI has some old leftovers in the code that prevents passing the
+> > aborted
+> > command to the target core to make the actual abort. Such commands
+> > hang
+> > until connection is closed.
+> > So remove those leftovers.
 > >
-> > +/**
-> > + * ufshcd_clear_unit_attention - clear the power-on UNIT ATTENTION of =
-each LU
-> > + * @hba: per adapter instance
-> > + *
-> > + * Send a TEST UNIT READY to each logical unit to clear the power-on U=
-NIT
-> > + * ATTENTION left by a device reset, for devices that keep reporting i=
-t to
-> > + * WRITE commands instead. Receiving the UNIT ATTENTION is what clears=
- it, so
-> > + * only transport failures matter.
-> > + *
-> > + * Use the device management slot rather than the logical units' reque=
-st
-> > + * queues: those are blocked during error handling, and during a runti=
-me
-> > + * resume of the device W-LU its runtime suspended consumers cannot ta=
-ke
-> > + * requests until it has resumed.
-> > + */
-> > +static void ufshcd_clear_unit_attention(struct ufs_hba *hba)
-> > +{
-> > +     struct utp_upiu_req req_upiu, rsp_upiu;
-> > +     struct scsi_device *sdev;
-> > +     int err;
-> > +
-> > +     shost_for_each_device(sdev, hba->host) {
-> > +             if (scsi_is_wlun(sdev->lun))
-> > +                     continue;
-> > +
-> > +             req_upiu =3D (struct utp_upiu_req){
-> > +                     .header =3D {
-> > +                             .transaction_code =3D UPIU_TRANSACTION_CO=
-MMAND,
-> > +                             .lun =3D ufshcd_scsi_to_upiu_lun(sdev->lu=
-n),
-> > +                             .command_set_type =3D UPIU_COMMAND_SET_TY=
-PE_SCSI,
-> > +                     },
-> > +                     .sc.cdb[0] =3D TEST_UNIT_READY,
-> > +             };
-> > +
-> > +             ufshcd_dev_man_lock(hba);
-> > +             err =3D ufshcd_issue_devman_upiu_cmd(hba, &req_upiu, &rsp=
-_upiu,
-> > +                                                NULL, NULL,
-> > +                                                DEV_CMD_TYPE_SCSI,
-> > +                                                UPIU_QUERY_OPCODE_NOP)=
-;
->
-> [Severity: Medium]
-> When ufshcd_clear_unit_attention() sends a DEV_CMD_TYPE_SCSI command to a
-> non-zero LUN, ufshcd_issue_devman_upiu_cmd() still passes a hardcoded LUN=
- of
-> 0 to ufshcd_setup_dev_cmd():
->
-> drivers/ufs/core/ufshcd.c:ufshcd_issue_devman_upiu_cmd() {
->         ...
->         tag =3D scsi_cmd_to_rq(cmd)->tag;
->
->         ufshcd_setup_dev_cmd(hba, cmd, cmd_type, 0, tag);
->         ...
-> }
->
-> This leaves lrbp->lun set to 0 even though req_upiu.header.lun targets a
-> non-zero LUN.
->
-> If the command times out during error recovery (for example via
-> ufshcd_err_handler() -> ufshcd_reset_and_restore() ->
-> ufshcd_host_reset_and_restore() -> ufshcd_clear_unit_attention() when
-> hba->pm_op_in_progress is false), scmd_eh_abort_handler() invokes
-> ufshcd_abort() -> ufshcd_mcq_abort() -> ufshcd_try_to_abort_task(), which
-> uses lrbp->lun to issue UFS_QUERY_TASK and UFS_ABORT_TASK:
->
-> drivers/ufs/core/ufshcd.c:ufshcd_try_to_abort_task() {
->         ...
->         for (poll_cnt =3D 100; poll_cnt; poll_cnt--) {
->                 err =3D ufshcd_issue_tm_cmd(hba, lrbp->lun, tag, UFS_QUER=
-Y_TASK,
->                                           &resp);
->         ...
-> }
->
-> And ufshcd_clear_cmd() -> ufshcd_mcq_sq_cleanup() also uses lrbp->lun to
-> build the nexus written to REG_SQCTI:
->
-> drivers/ufs/core/ufs-mcq.c:ufshcd_mcq_sq_cleanup() {
->         ...
->         /* SQCTI =3D EXT_IID, IID, LUN, Task Tag */
->         nexus =3D lrbp->lun << 8 | task_tag;
->         opr_sqd_base =3D mcq_opr_base(hba, OPR_SQD, id);
->         writel(nexus, opr_sqd_base + REG_SQCTI);
->         ...
-> }
->
-> Should ufshcd_issue_devman_upiu_cmd() pass req_upiu->header.lun instead o=
-f 0
-> to ufshcd_setup_dev_cmd() so that task abort and MCQ queue cleanup target=
- the
-> right LUN?
+> > Dmitry Bogdanov (2):
+> >   Revert "scsi: target: iscsi: Fix hang for aborted WRITE_PENDING
+> >     commands"
+> >   scsi: target: iscsi: fix hanging WRITE_PENDING commands
+> >
+> >  drivers/target/iscsi/iscsi_target.c      | 19 -------------------
+> >  drivers/target/iscsi/iscsi_target_erl1.c |  8 --------
+> >  2 files changed, 27 deletions(-)
+> 
+> Hello Dmitri
+> Thanks for posting this. I have a series in flight for the same hang:
+> 
+> https://lore.kernel.org/linux-scsi/20261027122837.2148074-1-loberman@redhat.com/
 
-Makes sense, I'll implement this in v2 after waiting for other feedback.
+I know, that is why both you and Maurizio in To: field. I want from
+you some comments. Thank you for review.
 
-> > +             ufshcd_dev_man_unlock(hba);
-> > +             if (err) {
-> > +                     dev_warn(hba->dev,
-> > +                              "TEST UNIT READY to LUN %llu failed: %d\=
-n",
-> > +                              sdev->lun, err);
-> > +                     scsi_device_put(sdev);
-> > +                     break;
-> > +             }
->
-> [Severity: Medium]
-> What happens here on host controllers with UFSHCD_QUIRK_BROKEN_OCS_FATAL_=
-ERROR
-> (such as ufs-exynos)?
->
-> When a logical unit has a pending unit attention condition, the device
-> responds to TEST_UNIT_READY with a Response UPIU having header.response s=
-et
-> to TARGET_FAILURE and header.status set to SAM_STAT_CHECK_CONDITION. On
-> controllers with UFSHCD_QUIRK_BROKEN_OCS_FATAL_ERROR, hardware reports
-> OCS_FATAL_ERROR in the UTRD/CQE whenever the Response UPIU has a non-zero
-> response or status field.
->
-> For normal SCSI commands, ufshcd_transfer_rsp_status() overrides ocs back=
- to
-> OCS_SUCCESS:
->
-> drivers/ufs/core/ufshcd.c:ufshcd_transfer_rsp_status() {
->         ...
->         if (hba->quirks & UFSHCD_QUIRK_BROKEN_OCS_FATAL_ERROR) {
->                 if (lrbp->ucd_rsp_ptr->header.response ||
->                     lrbp->ucd_rsp_ptr->header.status)
->                         ocs =3D OCS_SUCCESS;
->         }
->         ...
-> }
->
-> However, ufshcd_issue_devman_upiu_cmd() uses a reserved device management
-> command (!ufshcd_is_scsi_cmd(cmd)). In ufshcd_compl_one_cqe(), the reserv=
-ed
-> command path bypasses ufshcd_transfer_rsp_status() and leaves
-> lrbp->utr_descriptor_ptr->header.ocs as OCS_FATAL_ERROR, which
-> ufshcd_issue_dev_cmd() then returns directly:
->
-> drivers/ufs/core/ufshcd.c:ufshcd_issue_dev_cmd() {
->         ...
->         rq->timeout =3D timeout;
->         sts =3D blk_execute_rq(rq, true);
->         if (sts !=3D BLK_STS_OK)
->                 return blk_status_to_errno(sts);
->         return lrbp->utr_descriptor_ptr->header.ocs;
-> }
->
-> Wouldn't this cause ufshcd_clear_unit_attention() to see OCS_FATAL_ERROR =
-on
-> the first LUN that reports unit attention, log a warning, and break out o=
-f
-> the loop before clearing the remaining LUNs?
+> 
+> Is the revert maybe aimed at the wrong layer, and the sashiko review of
+> your 2/2 makes the case better than I can: with the fabric check
+> removed, an aborted command reaches target_execute_cmd(),
+> target_cmd_interrupted() queues target_abort_work and returns without
+> changing t_state, the command stays on conn_cmd_list in
+> TRANSPORT_WRITE_PENDING, and iscsit_release_commands_from_conn()
+> completes it a second time if the connection closes.
 
-It probably will, but this failure mode requires a BIWIN
-BWU2A05-series UFS device on an Exynos host controller, which is not a
-combination I have access to (I only have Rockchip RK3576 boards). I'm
-not sure those even exist.
+As I said in response to sashiko-bot, that is the current (always be) behavior.
+It is not introduced by my patch.
 
-If anything, this should probably be fixed in the common
-ufshcd_compl_one_cqe() function, not directly related to this patch,
-because it would also affect similar pre-existing logic in the
-Advanced RPMB flow.
+> That is the same double completion you are reverting d5869dae5080 for.
+> It
+> is not a defect in Maurizio's patch and it will not be fixed by
+> replacing
+> it -- target_cmd_interrupted() records nothing when it queues an abort,
+> so
+> any site that completes an aborted WRITE_PENDING command can be
+> followed
+> by another one. I found this from vmcores on a customer system before
+> either of us posted, so no argument from me that it is real.
 
-Best regards,
-Alexey
+Not the same, d5869dae5080 greatly increases the probability of the
+double completion by calling target_complete_cmd() which is allowed to be
+called only once for the cmd. Calling it twice is wrong by nature. Fabric
+module shall call either target_execute_cmd() either
+transport_generic_request_failure(). target_complete_cmd() is for
+backstore modules. That target_complete_cmd() at the iscsi
+connection release is not so good too. But it was intended to be the
+last(and the only) call from fabric driver for the command never be in
+the target core.
+
+> 
+> Patch 3 of my series fixes it there, under t_state_lock, for both
+> queueing sites in target_core_transport.c and for every fabric. With
+> that
+> in place your 2/2 is safe and d5869dae5080 does not need reverting for
+> this reason -- which matters, because the revert is not free: that
+> commit
+> carries CVE-2026-97951 and is in 5.10.y, 5.15.y, 6.1.y, 6.6.y, 6.12.y,
+> 6.18.y and 7.2.y.
+
+My intention is to not create a situation when there a race is possible
+instead of fixing those races. 
+
+> Two questions on 2/2 independent of all that.
+> 
+> Removing the sense_reason early return in iscsit_execute_cmd() means
+> transport_send_check_condition_and_sense() now runs for an aborted
+> command. It guards only on SCF_SENT_CHECK_CONDITION, never checks
+> CMD_T_ABORTED, and ends in queue_status(); target_handle_abort() also
+> calls queue_status() for a CMD_T_TAS command, and each drops a
+> reference.
+> Can an aborted command with a sense reason send both a CHECK CONDITION
+> and a TASK ABORTED, and drop two references?
+
+No, transport_send_check_condition_and_sense will change t_state, send
+status and decrease cmd->refcnt and then unblock wait_for_completion of
+ABORT/LUN_RESET. Both the commnand and ABORT of that command will be
+completed sucessfully.
+Noone calls target_handle_abort().
+
+> And with the early return gone, a LUN_RESET aborting a large WRITE
+> waits in target_put_cmd_and_wait() for the whole remaining data
+> transfer. That is bounded where today it is not, but on a large
+> transfer it may still trip the hung task timeout that made this
+> visible.
+ 
+That is a idea for a future discussion and improvmens. This patchset is
+narrowed to just to fix the stuck of WRITE_PENDING commands.
+
+The abort of WRITE_PENDIG command in the state waiting for DataOuts
+currently will wait for the data completion. So, my patch again does not
+do worse.
+
+> On the overlap: your 2/2 and patch 4 of my series touch the same lines,
+> so only one can apply, and I have no attachment to mine if yours is the
+> better shape. Patches 1 to 3 are core-side and conflict with nothing
+> you have posted.
+> 
+> Martin, would you prefer those three as their own series,
+> given both candidate iSCSI fixes need patch 3 to be correct?
+> 
+> I am happy to test either or both: I have a reporter's environment that
+> reproduces this reliably and 300-cycle runs on it.
+
+My patch is more than 2 years old in customers setups, but certainly
+it would be great to test it in other environments too.
+
+BR,
+ Dmitry
