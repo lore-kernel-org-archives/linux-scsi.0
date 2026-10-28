@@ -1,86 +1,102 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.221.49
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.210.173
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793191847;
-	b=JeDdKxbmJ+qFzsUNARYEdEpAS7CxOJRuXNOhu0r6SIJRfa2US+K4U7f/SKkdYxFK1sWF
-	 AxxhdBOFoT9iUJ25DYZqwwJFhKqPhaqG+Zbnj7I/cmKXqONjtgdrS4sTOVN2fpJXNClpZ
-	 hGHgSl4/hT5B71pfT1N7yZ1sEhOPrapgTlFicrDTVaDzJ7XGuX2XtI65TnBQYguSXuLrE
-	 uYqztrz8Dmn8kh76jpFgVKCFSSBCAb5LqOz3ugnRiS3mX4aIK5XY8EPc5FEjMtMpnccVL
-	 NzrrUj001IO25t9F5ZNpHAZB+lJrb4lsnKrqMvOHraPYfNvhCI7dJTc3HGEpMMYJuFg==
+	t=1793191935;
+	b=4xVYYS6hvfZMFu48pfEABOwfom4OTPRXTOAA1E9tTSaqsLHfssJWmSlvC+PXXXlR/G1N
+	 /0rQDwLki6u6DhNYfnG0/WfDOwzAHVHLzsvLij44Yb3TdBKaYRfYEaHqKsXszlAZ4jwsI
+	 KzeD4th9xcGslYBaL1nPmi9B+lo9jl0CT+eGMPG4fU7Dnb3AsZ8A/IZ7cPKATIkkFJQiD
+	 h7GARblON1dpIzIGN6goCGr6g3/6RJZP8EQrTe3mxas+mCwNB5jedXICiXZTb7t9+KHDD
+	 jAdeSXJAgcww1+jnPfxRMxfGwNudAL3d/pg5qC06XKYZ7nxWr47f9O11VpW/jjDfd+Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793191847;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793191935;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:Message-ID:Date:
-	 MIME-Version:User-Agent:Subject:To:Cc:References:Content-Language:
-	 From:In-Reply-To:Content-Type:Content-Transfer-Encoding;
-	bh=yvPx2xXJewvedlV4WY3CoxZ6zehy3H+Hf+g7jdJP70I=;
-	b=FQJCBqsNiQM1pjeTOB2EshCR+2rFQqtXfOsQIj0zUYtVx8Iq9TSFOElzhcWWnV/JIgNN
-	 gjnaFlmQsNaA6DEegWuq1adIPJciV74c/cNqjRwRUWt4W5OV0o1SAWizmBDbd7a0DIwYt
-	 csTfCDD90eY0M0LAklvnNZ19AVA2tSlB5q6lt30mDs7/TISAydwTYhj9G0nrtOJioHCzj
-	 rERksK70GeU9uMoeh8foIhtFs4G4azEe6trgrHxZmizv/7rEnPHmak+JbED70yiP66vx3
-	 I1Bx8DpF2Za/rOo2Rd8Mss2wPyGf0k8IjwWXpix45cpXP3Wmo5u0WShIEWodsW2OzRA==
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 Message-ID:Date:From:To:Cc:Subject:In-Reply-To:References:
+	 Content-Type:Content-Transfer-Encoding:MIME-Version;
+	bh=jif9CDAVAYhJXkuCpp/HgAnuYrVFMmNUw2aPhFOa0WA=;
+	b=fvnxpzH9Z3acOcli90gTUB69zzSuS443bE7yHIB2fhKqE5QJ6Uc0MBf/nlVeGxMmUV6E
+	 72XHglNlaxKdkXpVaOtv0iYiYQLLKkH93FtTTFRs/nmX1XT9Xolb6eTL0wocBtjEK241w
+	 l0yr5yk294OafavNmbMi1jlEH8HyxFIv3XkQsnkTaE4n+rvKa05h+NpiOuTNbtOOAe54u
+	 uPy3xn3iECpv5lIQ2BXconX/92FEbo3oR/LA+4DarQhVlkDtaiZPljHkNplaLqKdZh3el
+	 S6qA4VSMzAJN0NsqashulVyGFHWzgDEmU5JlxyJ33SnYnKEGw6pye69d/FCBkYR054g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=suse.com;
-	spf=pass smtp.mailfrom=suse.com;
-	dkim=pass header.d=suse.com header.i=@suse.com header.a=rsa-sha256 header.s=google header.b=ein3cTn+;
-	arc=none smtp.remote-ip=209.85.221.49
-Received: from mail-wr1-f49.google.com (mail-wr1-f49.google.com [209.85.221.49])
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=ZKnwUVbT;
+	arc=none smtp.remote-ip=209.85.210.173
+Received: from mail-pf1-f173.google.com (mail-pf1-f173.google.com [209.85.210.173])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 305CE606A31C
-	for <linux-scsi@vger.kernel.org>; Wed, 28 Oct 2026 12:50:45 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 305CE606A31C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7257E606A31D
+	for <linux-scsi@vger.kernel.org>; Wed, 28 Oct 2026 12:52:15 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7257E606A31D
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=suse.com header.i=@suse.com header.a=rsa-sha256 header.s=google header.b=ein3cTn+
-Received: by mail-wr1-f49.google.com with SMTP id ffacd0b85a97d-48e00eee27dso680560f8f.0
-        for <linux-scsi@vger.kernel.org>; Wed, 28 Oct 2026 05:50:45 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=ZKnwUVbT
+Received: by mail-pf1-f173.google.com with SMTP id d2e1a72fcca58-8a05effaf8dso696257b3a.2
+        for <linux-scsi@vger.kernel.org>; Wed, 28 Oct 2026 05:52:15 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1793191844; x=1793796644; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=yvPx2xXJewvedlV4WY3CoxZ6zehy3H+Hf+g7jdJP70I=;
-        b=ein3cTn+yYgiVPAyZxdHK47dDdWylyq7WOPvhnu3T1dfXJ8ttWkb0p10PyZA+Ef1zq
-         KRfFHxywXPaEpSe/0VvepL3WmEH5Y1yw3dTMx70AMah7B5Y7jrlk2X4Ix9owzqrj8TlB
-         ZlCOMm40u4JxTIOdj3sOKMlrbOh+bg5bveTiveEiNcF2XOalDEt5FJ8eEt3osi/55EIN
-         R3Jx8UR2815ifrum8fOeMys9kuNno4Z3eGDeYgRD4UsDK1qlG/1cHo1bHt9dXNhrjIHe
-         zvNwYuIf5FaRIeGwnQN2/qjvDaU0fuVbOgOqP4mQYAipqM6YdWHa45QsTc3pibRgV7e5
-         cZGw==
+        d=gmail.com; s=20260707; t=1793191935; x=1793796735; darn=vger.kernel.org;
+        h=mime-version:content-transfer-encoding:content-type:references
+         :in-reply-to:subject:cc:to:from:date:message-id:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=jif9CDAVAYhJXkuCpp/HgAnuYrVFMmNUw2aPhFOa0WA=;
+        b=ZKnwUVbTIEGSp3YRgh3c5uKjT02PZpb8VjznUtGAmlyaZaegMduYT+jTcMWxiWUnpW
+         ZA4rCNqIZLDv97TYXn/nyqIe67U8TFasmoaaub/5wikT/0QXhdo4aLEzUifNj26SgGbI
+         +3Uxb9Whc4EmPZomkH3zEcCJg2MKSC0fTCHCk9M3E08VZbjjLcDUcD5sgejKUoU/xOaE
+         QF8lP4uGpqnkxU/4i6A2h64zncOHnLPFid4GRNhKvGOeIJSs6vQA07i7fj6axZfAjsL0
+         6HRACEo1ufoTcN5ln4SxVcuwkCZQKfSYlqmaYRLZtS5/rUE2O7sGCqyLiGTAhdTBxZT5
+         5Dlw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793191844; x=1793796644;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=yvPx2xXJewvedlV4WY3CoxZ6zehy3H+Hf+g7jdJP70I=;
-        b=uUwuGdw2F/0U5K9t4c1Y7QGNIJL9vT+Jud8urwdLEDahcplpMv2gUHLDEsaw9iUMR6
-         g8fnPR93XbghcTCD7KLsWorbw3XPLas1Cx6TZXzGqDjg7JfShAkQiB7uPD6OLkHfRTGD
-         VA76tCHlOX8jfjLOt13QIWzxbPkKXd9sY1ttYyqbdreWubW0X7ZrXnuK9+3yP9ZOd3xR
-         hplBUhlSAH8wdOPvM+QwFrYHUORwoKoMF8xjkbFhU9eEaY/tTnDkvd+CibvbmXaOXCbY
-         YkwAEX57b1cxHgiGAIxJcO58slqkt3JNIvBpEL3nNSLWaGrntYNoKJEHJD41oJJ5pGRN
-         z9CA==
-X-Gm-Message-State: AFq9FYICvKRB/1H/NrQZEo7+FjoTvmQO7tUOz56C5rNedzNlLVFF15dE
-	eVT8fXmFPbHXuHAXKE6Pwe1BFjxbr84PNUHpBUzoyRVy31BLUYUuo9LaZTQSTIO2WLM=
-X-Gm-Gg: AYBFou3xKyrZ7Lxgo6jjZlZSEUcGFZVuzU023IZRyudrkm9lYqiH3yWtycxK5ar9Adk
-	Q2HnVv6xQGj7Kkrm7N6/WXN2cAa81L0sZV41CEgeDw+2Er6exdD7BbyD7ag7C4rViMQWdu/pNPG
-	xCxYZu1+is7IHqna4B//g4RfhCH+o9YH1kwRT2NqN6OA8s6idN1yssyC2OniPgUUWAJVMm16/hX
-	Lx0vOEVDq/8au/yfykZFsqZHy4hsFJHF9ZqYvFTcgDdKWqKNXzNA/3IsTjysh0x+ZCKS+cVzVQK
-	PyfkrMeKB3PZvHp3dPtxkiBaE2UC1AM9hWFWKQeUDA0PqTjI7mgLl9+m8OIMQ6becGAXgzzht9U
-	6KltOtNKddR3QyyEWzmOIsxPOQrkUF0r96Hn8+itUixMlL42oj1e5SY1NdczXOp9pcWqkE7b86H
-	GPlA4HIulHJAoq9Nk40pVXrV1zU7aIYgWMiLA1F/dPeSmd41o59MIzvYoChKqaKQ3nCKn5tGaZu
-	ENF8dfU1RAeP6TpQsgG572DwvEOMX8c6a6Jcx6I3382NhefmdL7omFOFbqUKVzBXClrrOQAL/VK
-	e4MidXmz8wR55m9/SDWKRSgvnuX9Q6H/j5q8KUhErLw0HoxOGJ3ynHAUUKNGqKcYavmd
-X-Received: by 2002:a05:6000:1608:b0:48d:f855:d1e0 with SMTP id ffacd0b85a97d-48e5d5eb61fmr3375821f8f.57.1793191844387;
-        Wed, 28 Oct 2026 05:50:44 -0700 (PDT)
-Received: from ?IPV6:2001:a61:13b5:e001:5d05:908:ac82:a3a1? ([2001:a61:13b5:e001:5d05:908:ac82:a3a1])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48e3eb8f387sm28249255f8f.4.2026.10.28.05.50.43
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 28 Oct 2026 05:50:44 -0700 (PDT)
-Message-ID: <8b4be460-0fb5-483d-9e46-f5be0f99c3e5@suse.com>
-Date: Wed, 28 Oct 2026 13:50:43 +0100
+        d=1e100.net; s=20260707; t=1793191935; x=1793796735;
+        h=mime-version:content-transfer-encoding:content-type:references
+         :in-reply-to:subject:cc:to:from:date:message-id:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=jif9CDAVAYhJXkuCpp/HgAnuYrVFMmNUw2aPhFOa0WA=;
+        b=gJI6EWpgFRjkiF05Ry9DKDE/MyBJEQ/AFvDFbZHabk7lLKPKXYtRlIuTZBnfEilyH/
+         EZAO/mlwsfwdUBmiZjrNAWEfxcOcKyhJx3IYapZDzjDYicj37yJXwAHlOZli1ViJKuHx
+         sW60BtNnoMJVdgImru6WwezFxcPNykxwFQvLenTvtwfJrLamIMX2lCTNv1TI2p0xiPS5
+         f8GXZCnl1CsB8YI7aHtNPi8yIshpTlW7rTCR7qYWA8lZN0SZHBpGBD6kQvG+VhXsYB1D
+         Dj56t8IySNh8i6oalX5ab8LX9gCLX11Mw4eGsGzYs5MdCzXwlv1W0Y7mf5ufTdQT/I4B
+         Jiug==
+X-Forwarded-Encrypted: i=1; AKwUvBw/n+afN3eR3qqFBf7DiJ7mYXleaiK7TLDFw54JbGMCBb9rHOX6N/+ROARGKZdPNgIo1v/wuChuHrOm@vger.kernel.org
+X-Gm-Message-State: AFq9FYI5KoGoSQeI1nU6qsMdB9nu8BvS08q0H6szAoKZLhVspsQdL7zm
+	qK8vbkJ7yZJQWuLeQaMwstlSQtNMsntCjIDNtCHIc+QxrgHGucVL8Qud
+X-Gm-Gg: AYBFou1CwuEZrVKOVWLe0s6seDzJs7c4xSlP4HE0x9puxT/7uim0REoY/z6UJu2cfAy
+	j6v0vFs+4RgYxqiRIiFUT6K9VkYffeBZZrthZBn+H8GOb4o/ZO+1UTrA2r3rjMRrnZz2D39TnIY
+	nuHlUa2tSmxFo9b2xSpCJfbMZklGhxn7YAj0N9eJ60dXAnkTwtxgdvQn7Ti2JDdGn+EoaIFyMys
+	UulZ2sx4vaFPBlKX2ZFRhttaB7e8qVHoKSwkAbOe/M0oUX7uqlQjud2RQsVmlkFboItZ8KbIUjs
+	Dn/0TQbG0qECZ7eveIjG85F+JX4pHQ5DJnYbh+2GJhJbexZoZp+lXPL0VlxKVuVoBOzi5FFWSHs
+	coCbV0NSNyZrEjNCVwv+m6eEFR4r+0VFxta94/iuXUde/YOLtQe233fzsOYfd6SYrvEG/YJRGJC
+	g0e3hJZpOMryvaNoQRB0GG7YAW7aGJjquyiEygf+ECLADy+MoS73g+ZvoZ16pgFsYUKqkbNb8IV
+	LhJ+Bcv5oQKLlZNRkdLhRTSsAC8XX5mqKp6brhLkLijmfRhnmEx70jzEw==
+X-Received: by 2002:a05:6a00:3a0e:b0:881:fa65:d507 with SMTP id d2e1a72fcca58-8a6e6a17a2fmr1919876b3a.22.1793191934270;
+        Wed, 28 Oct 2026 05:52:14 -0700 (PDT)
+Received: from [127.0.1.1] ([240e:46c:8910:7739:c024:4f7e:9059:99de])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-8a6e634ae83sm751438b3a.20.2026.10.28.05.52.10
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 28 Oct 2026 05:52:13 -0700 (PDT)
+Message-ID: <6ae1effd.d3aa34e6.c46b1.441f@mx.google.com>
+Date: Wed, 28 Oct 2026 05:52:13 -0700 (PDT)
+From: Liang Haowen <nbg2974@gmail.com>
+To: Lee Jones <lee@kernel.org>
+Cc: linux-leds@vger.kernel.org, Pavel Machek <pavel@kernel.org>,
+ Martin K . Petersen <mkp@kernel.org>, linux-scsi@vger.kernel.org,
+ platform-driver-x86@vger.kernel.org, linux-kernel@vger.kernel.org,
+ Denis Benato <denis.benato@linux.dev>, Armin Wolf <W_Armin@gmx.de>,
+ Hans de Goede <hansg@kernel.org>,
+ Ilpo Jarvinen <ilpo.jarvinen@linux.intel.com>,
+ Marco Scardovi <scardracs@disroot.org>
+Subject: Re: (subset) [RFC v10 1/1] leds: asus-aura-scsi: Add ASUS Aura RGB
+ LED driver for ROG NVMe enclosures
+In-Reply-To: <179319085271.3664457.8130606663267466619.b4-ty@b4>
+References: <20261015140051.1159817-1-nbg2974@gmail.com>
+ <20261015140051.1159817-2-nbg2974@gmail.com>
+ <179319085271.3664457.8130606663267466619.b4-ty@b4>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -90,85 +106,8 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 2/2] usb: uas: add US_FL_QDEPTH_075 quirk to cap queue
- depth at probe time
-To: Luca Cecchi <luca.cecchi.info@gmail.com>, linux-usb@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org, stern@rowland.harvard.edu
-References: <20261009080341.295646-1-luca.cecchi.info@gmail.com>
- <20261009081225.304319-1-luca.cecchi.info@gmail.com>
- <20261009081225.304319-2-luca.cecchi.info@gmail.com>
-Content-Language: en-US
-From: Oliver Neukum <oneukum@suse.com>
-In-Reply-To: <20261009081225.304319-2-luca.cecchi.info@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
 
+Thanks, Lee. Your reviews along the way made the driver much
+better, and I'm glad to see it land.
 
-
-On 09.10.26 10:12, Luca Cecchi wrote:
-> The previous patch in this series ("usb: uas: implement
-> .change_queue_depth to allow per-device queue depth override") lets
-> userspace lower a device's queue depth via the standard sysfs
-> attribute, but only after udev has had a chance to act. That still
-> leaves a window between probe and udev's write where the device runs
-> at the full default depth.
-> 
-> This adds US_FL_QDEPTH_075: it caps can_queue to 3/4 of the device's
-> reported maximum directly in uas_probe(), closing that window for
-> devices that need it. Applied here to the Lexar ES3 enclosure
-> (21c4:0003) from the previous patch.
-> 
-> v3: Sashiko AI review found two real issues in v2 (first version of
->      this patch, sent alongside v2 of patch 1), both fixed:
-> 
->      - [High] US_FL_QDEPTH_075 is bit 32 (0x100000000ULL - all 32 bits
->        below it are already allocated upstream). UNUSUAL_DEV()'s
->        driver_info field is kernel_ulong_t, i.e. a 32-bit unsigned
->        long on 32-bit arches - storing this flag there would silently
->        truncate to 0 at compile time, disabling the quirk on 32-bit
->        kernels with no warning. Confirmed by checking
->        include/linux/mod_devicetable.h's usb_device_id definition.
-> 
->        Fix: dropped the UNUSUAL_DEV() table entry for the Lexar device
->        entirely. uas-detect.h's uas_use_uas_driver() already has
->        precedent for exactly this situation - the ASMedia/Seagate/
->        HIKSEMI checks there match idVendor/idProduct directly and OR
->        the flag into a local u64 variable, never touching driver_info.
->        Added the Lexar check the same way. devinfo->flags itself is a
->        plain u64 with no 32-bit-platform narrowing anywhere in that
->        path, so this sidesteps the truncation entirely.
-> 
->      - [Medium] the 3/4 cap in uas_probe() unconditionally overwrote
->        can_queue, which could raise it instead of capping it for
->        devices with a small qdepth (e.g. qdepth=4: the existing
->        default is qdepth-2=2, but (4*3)/4=3 is larger, defeating the
->        point of a cap). Fixed with min_t() against the existing
->        qdepth-2 value - this quirk may now only lower can_queue, never
->        raise it.
-> 
->      Re-validated on bare metal with the same Lexar ES3 unit after the
->      drive turned out to have been thermally stressed from several
->      hours of back-to-back testing (confirmed by reproducing the same
->      command-timeout/reset behaviour on Windows with a completely
->      different driver stack, UASPStor - ruling out the driver/patch as
->      the cause). After letting the drive rest:
-> 
->      - Confirmed the quirk applies on its own at probe time
->        (queue_depth=24) even with the udev rule from the previous
->        patch disabled, so it isn't just masking a udev race.
->      - Two 6-minute runs of the original load test (24 sync writers,
->        randwrite, 64KiB, direct=1): 840-843MB/s, zero
->        uas_eh_abort_handler/uas_eh_host_reset_handler events.
->      - Same test run concurrently with a second USB flash drive under
->        load on the same controller: no effect on throughput or
->        stability.
->      - Unplugged/replugged the drive mid-load: in-flight commands were
->        cleaned up correctly (uas_zap_pending, no hang), the device
->        re-enumerated as SuperSpeed, uas re-bound, and the quirk
->        re-applied queue_depth=24 on the new probe without any help
->        from udev.
->      - Mixed 70/30 read/write load: 614MB/s read + 263MB/s write, zero
->        events.
-> 
-> Signed-off-by: Luca Cecchi <luca.cecchi.info@gmail.com>Signed-off-by: Oliver Neukum <oneukum@suse.com>
+Liang
