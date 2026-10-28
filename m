@@ -1,102 +1,88 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.210.173
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.51
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793191935;
-	b=4xVYYS6hvfZMFu48pfEABOwfom4OTPRXTOAA1E9tTSaqsLHfssJWmSlvC+PXXXlR/G1N
-	 /0rQDwLki6u6DhNYfnG0/WfDOwzAHVHLzsvLij44Yb3TdBKaYRfYEaHqKsXszlAZ4jwsI
-	 KzeD4th9xcGslYBaL1nPmi9B+lo9jl0CT+eGMPG4fU7Dnb3AsZ8A/IZ7cPKATIkkFJQiD
-	 h7GARblON1dpIzIGN6goCGr6g3/6RJZP8EQrTe3mxas+mCwNB5jedXICiXZTb7t9+KHDD
-	 jAdeSXJAgcww1+jnPfxRMxfGwNudAL3d/pg5qC06XKYZ7nxWr47f9O11VpW/jjDfd+Q==
+	t=1793192075;
+	b=EjWnqCxm6eqa99cacdUO4gO1wk9rlo4N++t9Cj1VwtW/XmzYgeoUktbyJnUVOAoEVcNc
+	 EGJsZN8FbHlGzzPaAhz5SjU3N161Gphb5jHJwvbYkIXm4sdqs4gSJYfakMkrGrjdZk8kk
+	 N5EWGmTQYa1h/jfX4JD6fM1upzjOIXNrZqPTsPVnz+WNzeiQZUJgVgpoouHbcdIglmNxM
+	 uZS8VHy9ImDx3uQWtZtotmScw/dAQgxVPt8Ins/PkdQL3KpPIhoPYypII810bw0P4wrWm
+	 qKzauZYW4Uni13vT2yb5kg9FDnvrW5W3Ycom9TkiI6dm8IkPc+fdQpKXScc04CbL5/Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793191935;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793192075;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Message-ID:Date:From:To:Cc:Subject:In-Reply-To:References:
-	 Content-Type:Content-Transfer-Encoding:MIME-Version;
-	bh=jif9CDAVAYhJXkuCpp/HgAnuYrVFMmNUw2aPhFOa0WA=;
-	b=fvnxpzH9Z3acOcli90gTUB69zzSuS443bE7yHIB2fhKqE5QJ6Uc0MBf/nlVeGxMmUV6E
-	 72XHglNlaxKdkXpVaOtv0iYiYQLLKkH93FtTTFRs/nmX1XT9Xolb6eTL0wocBtjEK241w
-	 l0yr5yk294OafavNmbMi1jlEH8HyxFIv3XkQsnkTaE4n+rvKa05h+NpiOuTNbtOOAe54u
-	 uPy3xn3iECpv5lIQ2BXconX/92FEbo3oR/LA+4DarQhVlkDtaiZPljHkNplaLqKdZh3el
-	 S6qA4VSMzAJN0NsqashulVyGFHWzgDEmU5JlxyJ33SnYnKEGw6pye69d/FCBkYR054g==
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:Date:Subject:
+	 MIME-Version:Content-Type:Content-Transfer-Encoding:Message-Id:
+	 X-B4-Tracking:X-Change-ID:To:Cc:X-Mailer:X-Developer-Signature:
+	 X-Developer-Key;
+	bh=tu+eO7nns4BvX7b+E6s7tzt+Km0pkqqyKwMsHmrLMZU=;
+	b=SqkJJWvetnJI1nkvcb8XRiWgfashsN8aFpWInpy+XlqFQ81c8uMJA9+CToABWfY8/Enj
+	 GcuDiVAb5VDGXC9eb36i9WNK7WI0rbdkBgEWwFZXRBiypSvGwRJXzZ+xWCGxtrf9RIJP+
+	 dG5SMsNV+UrrMqbiuCVrFRc+7fGAaNFYAyqCa+kkYfs9kQmg4MjELKwANFtj1WeCRBCSr
+	 q0XrvyOal7DN6MgvMrvNJ8gh6u9CqSd4bGukKLzjHaJEU63WJXJSmvm4EKSR584GgZqWm
+	 V82HBkxD6/0q6Mgvqarj6X+PjMsuyQmvjja0Uu6IEJMGkLmbb2kkmCkTuCssxfBEzRw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=ZKnwUVbT;
-	arc=none smtp.remote-ip=209.85.210.173
-Received: from mail-pf1-f173.google.com (mail-pf1-f173.google.com [209.85.210.173])
+	dmarc=pass header.from=flipper.net;
+	spf=pass smtp.mailfrom=flipper.net;
+	dkim=pass header.d=flipper.net header.i=@flipper.net header.a=rsa-sha256 header.s=google header.b=GXHOL+aQ;
+	arc=none smtp.remote-ip=209.85.128.51
+Received: from mail-wm1-f51.google.com (mail-wm1-f51.google.com [209.85.128.51])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7257E606A31D
-	for <linux-scsi@vger.kernel.org>; Wed, 28 Oct 2026 12:52:15 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7257E606A31D
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC742606A31C
+	for <linux-scsi@vger.kernel.org>; Wed, 28 Oct 2026 12:54:34 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BC742606A31C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=flipper.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flipper.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=ZKnwUVbT
-Received: by mail-pf1-f173.google.com with SMTP id d2e1a72fcca58-8a05effaf8dso696257b3a.2
-        for <linux-scsi@vger.kernel.org>; Wed, 28 Oct 2026 05:52:15 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=flipper.net header.i=@flipper.net header.a=rsa-sha256 header.s=google header.b=GXHOL+aQ
+Received: by mail-wm1-f51.google.com with SMTP id 5b1f17b1804b1-4a9a8d6cea8so7072055e9.1
+        for <linux-scsi@vger.kernel.org>; Wed, 28 Oct 2026 05:54:34 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793191935; x=1793796735; darn=vger.kernel.org;
-        h=mime-version:content-transfer-encoding:content-type:references
-         :in-reply-to:subject:cc:to:from:date:message-id:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=jif9CDAVAYhJXkuCpp/HgAnuYrVFMmNUw2aPhFOa0WA=;
-        b=ZKnwUVbTIEGSp3YRgh3c5uKjT02PZpb8VjznUtGAmlyaZaegMduYT+jTcMWxiWUnpW
-         ZA4rCNqIZLDv97TYXn/nyqIe67U8TFasmoaaub/5wikT/0QXhdo4aLEzUifNj26SgGbI
-         +3Uxb9Whc4EmPZomkH3zEcCJg2MKSC0fTCHCk9M3E08VZbjjLcDUcD5sgejKUoU/xOaE
-         QF8lP4uGpqnkxU/4i6A2h64zncOHnLPFid4GRNhKvGOeIJSs6vQA07i7fj6axZfAjsL0
-         6HRACEo1ufoTcN5ln4SxVcuwkCZQKfSYlqmaYRLZtS5/rUE2O7sGCqyLiGTAhdTBxZT5
-         5Dlw==
+        d=flipper.net; s=google; t=1793192073; x=1793796873; darn=vger.kernel.org;
+        h=cc:to:message-id:content-transfer-encoding:content-type
+         :mime-version:subject:date:from:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=tu+eO7nns4BvX7b+E6s7tzt+Km0pkqqyKwMsHmrLMZU=;
+        b=GXHOL+aQECScglN9UHqIcLF0jV1XLQEOWn/xcKV1iZwzGUqpi2uDEuGDyf2i6aDXxO
+         5xgVY5LkDib0Vi/k/1vQ2jccuvT3JNFwfPCnpvUeBcmi6d9OWLL6ATcjx4pPUiTy+1A0
+         RQ9NLOgfwNz32MhdGpBEX5BcQ4sHcLhd3zKcTWCrV0jm3FQI7qXBujnkqNfkwkaMVKhQ
+         Ve9GAnjvPvFfVvFLiVq4viKvUrVFW6Wr7iTKF+bE0g4iBrASk17wWP1ycOMLbBB9z8Es
+         BR/o3DpYZXXFL8o2J11YZ8VejmaGGFbq+Uc3vjfFHm6ispzTNAxPH5XN1n9v/AumHJq1
+         QtYw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793191935; x=1793796735;
-        h=mime-version:content-transfer-encoding:content-type:references
-         :in-reply-to:subject:cc:to:from:date:message-id:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=jif9CDAVAYhJXkuCpp/HgAnuYrVFMmNUw2aPhFOa0WA=;
-        b=gJI6EWpgFRjkiF05Ry9DKDE/MyBJEQ/AFvDFbZHabk7lLKPKXYtRlIuTZBnfEilyH/
-         EZAO/mlwsfwdUBmiZjrNAWEfxcOcKyhJx3IYapZDzjDYicj37yJXwAHlOZli1ViJKuHx
-         sW60BtNnoMJVdgImru6WwezFxcPNykxwFQvLenTvtwfJrLamIMX2lCTNv1TI2p0xiPS5
-         f8GXZCnl1CsB8YI7aHtNPi8yIshpTlW7rTCR7qYWA8lZN0SZHBpGBD6kQvG+VhXsYB1D
-         Dj56t8IySNh8i6oalX5ab8LX9gCLX11Mw4eGsGzYs5MdCzXwlv1W0Y7mf5ufTdQT/I4B
-         Jiug==
-X-Forwarded-Encrypted: i=1; AKwUvBw/n+afN3eR3qqFBf7DiJ7mYXleaiK7TLDFw54JbGMCBb9rHOX6N/+ROARGKZdPNgIo1v/wuChuHrOm@vger.kernel.org
-X-Gm-Message-State: AFq9FYI5KoGoSQeI1nU6qsMdB9nu8BvS08q0H6szAoKZLhVspsQdL7zm
-	qK8vbkJ7yZJQWuLeQaMwstlSQtNMsntCjIDNtCHIc+QxrgHGucVL8Qud
-X-Gm-Gg: AYBFou1CwuEZrVKOVWLe0s6seDzJs7c4xSlP4HE0x9puxT/7uim0REoY/z6UJu2cfAy
-	j6v0vFs+4RgYxqiRIiFUT6K9VkYffeBZZrthZBn+H8GOb4o/ZO+1UTrA2r3rjMRrnZz2D39TnIY
-	nuHlUa2tSmxFo9b2xSpCJfbMZklGhxn7YAj0N9eJ60dXAnkTwtxgdvQn7Ti2JDdGn+EoaIFyMys
-	UulZ2sx4vaFPBlKX2ZFRhttaB7e8qVHoKSwkAbOe/M0oUX7uqlQjud2RQsVmlkFboItZ8KbIUjs
-	Dn/0TQbG0qECZ7eveIjG85F+JX4pHQ5DJnYbh+2GJhJbexZoZp+lXPL0VlxKVuVoBOzi5FFWSHs
-	coCbV0NSNyZrEjNCVwv+m6eEFR4r+0VFxta94/iuXUde/YOLtQe233fzsOYfd6SYrvEG/YJRGJC
-	g0e3hJZpOMryvaNoQRB0GG7YAW7aGJjquyiEygf+ECLADy+MoS73g+ZvoZ16pgFsYUKqkbNb8IV
-	LhJ+Bcv5oQKLlZNRkdLhRTSsAC8XX5mqKp6brhLkLijmfRhnmEx70jzEw==
-X-Received: by 2002:a05:6a00:3a0e:b0:881:fa65:d507 with SMTP id d2e1a72fcca58-8a6e6a17a2fmr1919876b3a.22.1793191934270;
-        Wed, 28 Oct 2026 05:52:14 -0700 (PDT)
-Received: from [127.0.1.1] ([240e:46c:8910:7739:c024:4f7e:9059:99de])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-8a6e634ae83sm751438b3a.20.2026.10.28.05.52.10
+        d=1e100.net; s=20260707; t=1793192073; x=1793796873;
+        h=cc:to:message-id:content-transfer-encoding:content-type
+         :mime-version:subject:date:from:x-gm-gg:x-gm-message-state:from:to
+         :cc:subject:date:message-id:reply-to:content-type;
+        bh=tu+eO7nns4BvX7b+E6s7tzt+Km0pkqqyKwMsHmrLMZU=;
+        b=OX8DGy654aoyXdSGEEMTA4j7ll+yd2KL2WqVi07e85S9PPLe513SzYl00Lf1WHoy6S
+         WUM49yvlu1kysbk57raoKWc5a+gZlN/ZZVHz+wAgDtp8AlHA34bgEmoSUvuwTFJJ8MkW
+         Bk8YOvn4mMbi9QX0H7NqCtIm7AJyCfQbkoeRokZ5uX/52lZhQx3mgAAGeL/+fBafKLLn
+         rnhQO7KBQTVDpgBNa1aJV8bgp9fRzbwvhqrTCLFDMDUNOwYbRA8cBUeFeFsp5vTZigqL
+         lmJ+MDwJAA1MW1Rky3bfmk7o3cQNb2+2/WAnGg2hRZctMS1SaZJEs9s38a+PK8p95Dkd
+         YbWA==
+X-Gm-Message-State: AFq9FYKtEVXtKXHugfyKWrg2tT3bijYd/Ieex4oc/EUGX50u1q1YUsXQ
+	iCz5sDyN36C5o1BF8t9B6LN4txfO/H9q/SbuUYnV5sE4ZBUzyQMaEZbgeVQhbucGFak=
+X-Gm-Gg: AYBFou3NiOL6HGlZEYg5fw7JhbE2GPFZsQ+pmwyjmrIJ/JKy50eSmTZUsN55SSOSBGo
+	YNaOd5TDkaJyh7fTC/EK6vyPs1x9dZgw70SgDDCT9OBb6QGYeAcM939fH1T+3YY31FTY6lSw1jE
+	qruiNSOXMnMw8kajvUxQms3QybWd5+z2KxsYHQyqw4gh+FoUXFKuPRctDHpXyGNXpzEKfH/C+5Y
+	ZoYI2qwL/399n2ndoljPCSKAOMYynrYMLev6opL5oZ0t2zbxgW2L6d3+8rCMIdgwuNAEdYUDUI0
+	n3/nJcdHZ2RG3FmfaVPVevwi3cugv+oFIIKzBXWrUQCpkMX9OpPP1Cu2OPgPvknsqP1K09uc14W
+	ZLm9KMTczEI2lszEj1PAtrNSlGwEC5MwdZdRzCTVvqmqmsZ7Edwm7fU2eTQbHEwIigc/4RWqf3d
+	OLUZ06cBnsEBdurtJtZ/JSF+DjPU9JR3/ptzJmP1LLu7HA2Q2uSdZsGkGjkGFGgmPwkMutLYyTQ
+	ANoLSsrO5Fy3lBMdCv7sn9acMpYKeRwJTiWlRpMazaA5f35xJFG1nGDSOlnh67QhoP8rPM54CNa
+	OECQzo6fLmNv3Qw0/4kByeWoziY1OluG51+x+wH9ofnpFWWi0T7DsmrgkhGCMMseTH70hZS0HPC
+	+kxKDUoPfqg==
+X-Received: by 2002:a05:600c:3b29:b0:4a0:20b4:ba93 with SMTP id 5b1f17b1804b1-4a997bfaa4fmr37804585e9.16.1793192072733;
+        Wed, 28 Oct 2026 05:54:32 -0700 (PDT)
+Received: from alchark-surface.localdomain (bba-86-98-194-229.alshamil.net.ae. [86.98.194.229])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a97c9f1403sm48686715e9.9.2026.10.28.05.54.30
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 28 Oct 2026 05:52:13 -0700 (PDT)
-Message-ID: <6ae1effd.d3aa34e6.c46b1.441f@mx.google.com>
-Date: Wed, 28 Oct 2026 05:52:13 -0700 (PDT)
-From: Liang Haowen <nbg2974@gmail.com>
-To: Lee Jones <lee@kernel.org>
-Cc: linux-leds@vger.kernel.org, Pavel Machek <pavel@kernel.org>,
- Martin K . Petersen <mkp@kernel.org>, linux-scsi@vger.kernel.org,
- platform-driver-x86@vger.kernel.org, linux-kernel@vger.kernel.org,
- Denis Benato <denis.benato@linux.dev>, Armin Wolf <W_Armin@gmx.de>,
- Hans de Goede <hansg@kernel.org>,
- Ilpo Jarvinen <ilpo.jarvinen@linux.intel.com>,
- Marco Scardovi <scardracs@disroot.org>
-Subject: Re: (subset) [RFC v10 1/1] leds: asus-aura-scsi: Add ASUS Aura RGB
- LED driver for ROG NVMe enclosures
-In-Reply-To: <179319085271.3664457.8130606663267466619.b4-ty@b4>
-References: <20261015140051.1159817-1-nbg2974@gmail.com>
- <20261015140051.1159817-2-nbg2974@gmail.com>
- <179319085271.3664457.8130606663267466619.b4-ty@b4>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+        Wed, 28 Oct 2026 05:54:32 -0700 (PDT)
+From: Alexey Charkov <alchark@flipper.net>
+Date: Wed, 28 Oct 2026 16:54:21 +0400
+Subject: [PATCH] scsi: ufs: core: Clear power-on UNIT ATTENTION on BIWIN
+ devices
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -106,8 +92,178 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20261028-biwin-tua-quirk-v1-1-767a12c9b9cc@flipper.net>
+X-B4-Tracking: v=1; b=H4sIAAAAAAAC/6tWKk4tykwtVrJSqFYqSi3LLM7MzwNyDHUUlJIzE
+ vPSU3UzU4B8JSMDIzNDAyML3aTM8sw83ZLSRN3C0syibF2TNFMT47RkSzNDQzMloK6CotS0zAq
+ widGxEH5xaVJWanIJyBil2loAo+aODnMAAAA=
+X-Change-ID: 20261028-biwin-tua-quirk-4f543fc96116
+To: Alim Akhtar <alim.akhtar@samsung.com>, 
+ Bart Van Assche <bvanassche@acm.org>, Bean Huo <beanhuo@micron.com>, 
+ Stanley Jhu <stanleyjhu@google.com>, 
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+ "Martin K. Petersen" <mkp@kernel.org>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ Alexey Charkov <alchark@flipper.net>
+X-Mailer: b4 0.16.0
+X-Developer-Signature: v=1; a=openpgp-sha256; l=5556; i=alchark@flipper.net;
+ h=from:subject:message-id; bh=sPjc0WbtQP3T5OVtFuZlBHejCL2UFm9D19nKEw6dZCg=;
+ b=owGbwMvMwCW2adGNfoHIK0sZT6slMWQ9/NA0Ldb70pnC8pXuSZO15+jePJ/ipcw6gX9XwoalW
+ S+iDYyOdUxkYRDjYrAUU2SZ+22J7VQjvlm7PDy+wsxhZQIZIi3SwAAELAx8uYl5pUY6Rnqm2oZ6
+ hkY6xjpGDFycAjDV6iYM/xO3hJfvvNTOF2Jem9C2frn22SJps2f8J79aVGZFhXwJ/cHI0Nxs7vr
+ +e1T3zFWXcyZIXvd/qN757GXy/ZKohicP3X5a8AMA
+X-Developer-Key: i=alchark@flipper.net; a=openpgp;
+ fpr=9DF6A43D95320E9ABA4848F5B2A2D88F1059D4A5
 
-Thanks, Lee. Your reviews along the way made the driver much
-better, and I'm glad to see it land.
+With the link off across suspend (UFS_PM_LVL_5), resume resets the device,
+which leaves a power-on UNIT ATTENTION pending on every logical unit. The
+SCSI core retries the command that receives it and relies on the device to
+clear the condition once reported.
 
-Liang
+The BIWIN BWU2A0526B128G and BWU2A0516B064G do not clear it when reporting
+it to a WRITE. Writes queued across a system suspend then fail on every
+retry for the full 180s retry window, until the SCSI error handler's
+TEST UNIT READY clears it, and end in I/O errors. A single TEST UNIT READY
+or READ clears it. This seems to be limited to the particular BIWIN device
+family (with 128GB and 64GB variants exhibiting this behavior), as Samsung
+and FORESEE ones I have tested clear it on WRITE as they should.
+
+Add a device quirk that sends a TEST UNIT READY to each logical unit at
+the end of ufshcd_host_reset_and_restore(), and enable it for BIWIN
+models starting with BWU2A05. That function follows every device reset:
+on resume from link off, system or runtime, and in the UFS error
+handler, which also carries out the SCSI error handler's host resets.
+
+Signed-off-by: Alexey Charkov <alchark@flipper.net>
+---
+ drivers/ufs/core/ufshcd.c | 54 +++++++++++++++++++++++++++++++++++++++++++++++
+ include/ufs/ufs_quirks.h  |  9 ++++++++
+ include/ufs/ufshcd.h      |  1 +
+ 3 files changed, 64 insertions(+)
+
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index ee643830a57a..d52275a813fd 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -321,6 +321,9 @@ static const struct ufs_dev_quirk ufs_fixups[] = {
+ 	{ .wmanufacturerid = UFS_VENDOR_TOSHIBA,
+ 	  .model = "THGJFJT1E45BATP",
+ 	  .quirk = UFS_DEVICE_QUIRK_NO_TIMESTAMP_SUPPORT },
++	{ .wmanufacturerid = UFS_VENDOR_BIWIN,
++	  .model = "BWU2A05",
++	  .quirk = UFS_DEVICE_QUIRK_TUR_TO_CLEAR_UA },
+ 	{}
+ };
+ 
+@@ -8265,6 +8268,55 @@ static void ufshcd_process_probe_result(struct ufs_hba *hba,
+ 			  hba->curr_dev_pwr_mode, hba->uic_link_state);
+ }
+ 
++/**
++ * ufshcd_clear_unit_attention - clear the power-on UNIT ATTENTION of each LU
++ * @hba: per adapter instance
++ *
++ * Send a TEST UNIT READY to each logical unit to clear the power-on UNIT
++ * ATTENTION left by a device reset, for devices that keep reporting it to
++ * WRITE commands instead. Receiving the UNIT ATTENTION is what clears it, so
++ * only transport failures matter.
++ *
++ * Use the device management slot rather than the logical units' request
++ * queues: those are blocked during error handling, and during a runtime
++ * resume of the device W-LU its runtime suspended consumers cannot take
++ * requests until it has resumed.
++ */
++static void ufshcd_clear_unit_attention(struct ufs_hba *hba)
++{
++	struct utp_upiu_req req_upiu, rsp_upiu;
++	struct scsi_device *sdev;
++	int err;
++
++	shost_for_each_device(sdev, hba->host) {
++		if (scsi_is_wlun(sdev->lun))
++			continue;
++
++		req_upiu = (struct utp_upiu_req){
++			.header = {
++				.transaction_code = UPIU_TRANSACTION_COMMAND,
++				.lun = ufshcd_scsi_to_upiu_lun(sdev->lun),
++				.command_set_type = UPIU_COMMAND_SET_TYPE_SCSI,
++			},
++			.sc.cdb[0] = TEST_UNIT_READY,
++		};
++
++		ufshcd_dev_man_lock(hba);
++		err = ufshcd_issue_devman_upiu_cmd(hba, &req_upiu, &rsp_upiu,
++						   NULL, NULL,
++						   DEV_CMD_TYPE_SCSI,
++						   UPIU_QUERY_OPCODE_NOP);
++		ufshcd_dev_man_unlock(hba);
++		if (err) {
++			dev_warn(hba->dev,
++				 "TEST UNIT READY to LUN %llu failed: %d\n",
++				 sdev->lun, err);
++			scsi_device_put(sdev);
++			break;
++		}
++	}
++}
++
+ /**
+  * ufshcd_host_reset_and_restore - reset and restore host controller
+  * @hba: per-adapter instance
+@@ -8306,6 +8358,8 @@ static int ufshcd_host_reset_and_restore(struct ufs_hba *hba)
+ 
+ 	if (err)
+ 		dev_err(hba->dev, "%s: Host init failed %d\n", __func__, err);
++	else if (hba->dev_quirks & UFS_DEVICE_QUIRK_TUR_TO_CLEAR_UA)
++		ufshcd_clear_unit_attention(hba);
+ 	ufshcd_update_evt_hist(hba, UFS_EVT_HOST_RESET, (u32)err);
+ 	return err;
+ }
+diff --git a/include/ufs/ufs_quirks.h b/include/ufs/ufs_quirks.h
+index e9c59ec1ceae..74d4ca3badb7 100644
+--- a/include/ufs/ufs_quirks.h
++++ b/include/ufs/ufs_quirks.h
+@@ -17,6 +17,7 @@
+ #define UFS_VENDOR_SKHYNIX     0x1AD
+ #define UFS_VENDOR_TOSHIBA     0x198
+ #define UFS_VENDOR_WDC         0x145
++#define UFS_VENDOR_BIWIN       0xDAB
+ 
+ /**
+  * ufs_dev_quirk - ufs device quirk info
+@@ -109,4 +110,12 @@ struct ufs_dev_quirk {
+ /* Some UFS 4 devices do not support the qTimestamp attribute */
+ #define UFS_DEVICE_QUIRK_NO_TIMESTAMP_SUPPORT	(1 << 13)
+ 
++/*
++ * Some UFS devices do not clear the power-on UNIT ATTENTION condition when
++ * reporting it to a WRITE command, so writes keep failing with it. A TEST
++ * UNIT READY clears it. Enable this quirk to send one to each logical unit
++ * after every host reset and restore, which follows each device reset.
++ */
++#define UFS_DEVICE_QUIRK_TUR_TO_CLEAR_UA	(1 << 14)
++
+ #endif /* UFS_QUIRKS_H_ */
+diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+index be62165b785e..6140798ed128 100644
+--- a/include/ufs/ufshcd.h
++++ b/include/ufs/ufshcd.h
+@@ -37,6 +37,7 @@ enum dev_cmd_type {
+ 	DEV_CMD_TYPE_NOP		= 0x0,
+ 	DEV_CMD_TYPE_QUERY		= 0x1,
+ 	DEV_CMD_TYPE_RPMB		= 0x2,
++	DEV_CMD_TYPE_SCSI		= 0x3,
+ };
+ 
+ enum ufs_event_type {
+
+---
+base-commit: 151a134a4e6ec66f69db8750c66006f5207f7a9d
+change-id: 20261028-biwin-tua-quirk-4f543fc96116
+
+Best regards,
+--  
+Alexey Charkov <alchark@flipper.net>
+
