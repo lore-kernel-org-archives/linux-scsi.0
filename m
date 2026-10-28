@@ -1,92 +1,56 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.227.130
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=154.81.10.10
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793168491;
-	b=UbfWk7hdn1qVEbvdaF5riQUyxXZ9av6Uq5Ka3lMRRjtNOFRQZ0VWlUljW7tvf8ueRBR0
-	 s8Mb2N5P30bQJuHJKFYljpDzWyQqrx/TJwFKOytdc438rKJG5Yv7kIaSFMGvys9hZ3I1G
-	 J+0qa+WrvbhAjagqaBWba4WotqHvIsaMrR8fDpIjlPawC5TF99UxJbUPXu2Y5n04kCHcn
-	 BZZ/xhH9w4dyaMdX5GrL+aUbveAKdWTJ0ZFADWVOets+BAIY5QKAR+FJ/3QvKYxvUvtvW
-	 mUNUAvuNggi26yX3s2Qp0zcYdzxUQBQ/OInvwoIy52FodFgTuohX47CPHaJiUFzmsjA==
+	t=1793172712;
+	b=qIUFyQafyhYclAbhzFkG5v2MDIKXKEIWCF7BLtwCL6T8GbWUNoKn1dJl9Wb4Dnag2ZHk
+	 biAWutlqBgROnRwiQa/dfwps2xRraKgIVTNYCz2ngzh77kfRziPhAMAUPV5TeYpJ6tLth
+	 mUnqZP6Cdvz4Zp3qOesITE7HW2LyxYqzbJfkU4GGidLrZgRIwYxI5eiDy4mo4dfvfPHQ+
+	 froQDOJUsM48KttPIMwhfEuDU+YvtMOf0EqIZmWQyx138/ELF7bIXjzCY0qORLlnn6SkB
+	 Gv1NMi7wuzm9JUL8eIn6METReuUTgun0VpMKtG9dCXGu6tb3HDaM5+DJJh4hywP0uFw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793168491;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
-	 Date:Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding;
-	bh=/05ZaCRLQ9lx6QfXSfycpdBANncM/d6CKhfzXQZzHNE=;
-	b=jUPXpdRPBluRQVMyujSUOgmTQXpBQ91FlwhsteUMpN6ae9+BYrWhXnN3Vtlby8hTu6rV
-	 JQT3zfZnWYLNSwceF2fInpCxsrQk73pvuGv8D9L2TxX4ilAC9nqOqk9Xsl3S0Ofsw2fe5
-	 kZTR3D47Yi9/1vcngpxJWkTNGBBXoPvXLXXsXopZZHIoD3wEr2qF/LbeO0VrngaqOdxCQ
-	 Mvyc4lcdaJ9f+XAs4Q0S3QrEuwPBI6OMz36pl9d3FGmrYiIB4XCVPcq1sIHQSMjPTnuDg
-	 ugVb91ezvpMl1qN8qUIDDOS8y57pKJWUlJrC6FhrFtFC2DnJEaibtsDsPeHL0PNxukw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793172712;
+	h=DMARC-Filter:Received:From:To:Cc:Subject:Date:Message-Id:X-Mailer:
+	 MIME-Version:Content-Transfer-Encoding:X-HM-Tid:X-HM-MType:
+	 X-HM-Spam-Status:DKIM-Signature;
+	bh=d20iozcM94y1ynJJGzlYfaLHRuOSfOKuZNnqcN4LWBQ=;
+	b=aiJNaeUGlUB4HQGOJT4aVfceo3YkUYYe+1YYIkISa4dDVwsNU2Ez5/IFHwG0fW09fLcN
+	 SRA1XnPYdw7T1CR1MFxEyh/MoPYEvKBo4015Iqsjj5vbK4yImg1XTqWHfPYlYoKlNqbCa
+	 mTSQ06lBCcAwTiEW4/oKdXD83iYBl79c7SE8iTa9/ukufgmy5CbUa72B2EcVn8fVzb2jp
+	 XWhkM/8+szqVEV5QUHPWcJEVIivyvy8ym8idWWOD1IJ4Sxuh+K+kVJSJbn3NYR/7mNDII
+	 mcBemxoSl+jUqjlnLcGV++rpvXfkNg2KbxkFPcYSfgR6trZF8o8ZVPALtZ435BqM1JA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b="hOlg+nA/";
-	arc=none smtp.remote-ip=74.125.227.130
-Received: from mail-pj2-f2.google.com (mail-pj2-f2.google.com [74.125.227.130])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=pass header.from=rock-chips.com;
+	spf=pass smtp.mailfrom=rock-chips.com;
+	dkim=pass header.d=rock-chips.com header.i=@rock-chips.com header.a=rsa-sha256 header.s=default header.b=TB+GQMii;
+	arc=none smtp.remote-ip=154.81.10.10
+Received: from mail-m1010.netease.com (mail-m1010.netease.com [154.81.10.10])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1E78606A31D
-	for <linux-scsi@vger.kernel.org>; Wed, 28 Oct 2026 06:21:30 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D1E78606A31D
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91297606A31A
+	for <linux-scsi@vger.kernel.org>; Wed, 28 Oct 2026 07:31:49 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 91297606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=hOlg+nA/
-Received: by mail-pj2-f2.google.com with SMTP id d9443c01a7336-2e61817b178so1923295ad.1
-        for <linux-scsi@vger.kernel.org>; Tue, 27 Oct 2026 23:21:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793168490; x=1793773290; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=/05ZaCRLQ9lx6QfXSfycpdBANncM/d6CKhfzXQZzHNE=;
-        b=hOlg+nA/4j3I+dum72siK93wRo/zZ5R0RYTABviO0iUbEAPzLR1Cn34yl1rcxDv97W
-         u6sO2IoTkPGl4Jg67O5IQCEC3OXgZFKcL3YLDqfg9+Csvg2pw/EijY9vfpOPmRxSYpy8
-         v0ElFL5/4xliuJZdTng6X8aCZ8GEi0sfl2DQdFPnD6QO3ZHEZepapdAC2kS+vLHW8C/X
-         3CnQEOqinnayZ0ydRKNX1+BkSQ4iDh3097DIQp9VZ0rRyQBKgcH8M6AkNtK8uYQGowkw
-         spxxCmzFxggsJ1SjimGPxJu4Bu1t5bHpn9679QGR9+OlSh4OnO3mDlUBCedmdiu9C0NF
-         rYgw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793168490; x=1793773290;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=/05ZaCRLQ9lx6QfXSfycpdBANncM/d6CKhfzXQZzHNE=;
-        b=D0qrdStGzUNPwv9J0xpYb/RD7a/C7viVoLAZ91u8AmiGjGFhhRv7TfOlgD26kRyVm2
-         nUkfCk+tJ9d5SUSc1YvESF/A7VBsKNdwy8nN8rt81uWgtpcNGtbUIewl14MYm8wbLNzu
-         zjdLvSNKFRi/T9QX1XtzK5ZhHmUMCYrHSWP7bicLkAxiboHmpe7GQOYSQi1nxwIfqPLR
-         CJFrcEwXpj92DZuz50ArAv3CjrzJ3mCERIacmsF6WjpDRpbV3GE0C9jy2Xj0NpSFk5R2
-         4o/PQKV+p/OGtVREzkwwvsbDXBRZzmFC7VbSIChx63OK+wv/erTb6RfDPTPPqhMYfel+
-         2lNA==
-X-Gm-Message-State: AFq9FYL9MTb+doBcjARPhX283TJrTADZmKvJSxrmn4mhiGWZIsgBZdCm
-	wZcHssNRX4KNEojCr/qCk32ZKXEMOvvvRDDt7f+5MsgNhzSyNO55FjOp
-X-Gm-Gg: AYBFou3fVeb/o+Bhu4JKzYGNLwTIeSsb/whRz8YpsC6UGhx69QbQF1tQNXDZAxmI16w
-	AtuksjNeF5Px5x/yTJ/sxSxVKFuuaMZpTgw7ilKNuG7fjIgQ+NZqXFgU1GiPPqMJYoZo2qhvz8w
-	97tjn7/xyANYLlytS9O9oqOSSm1qTyYCeLkE/JN40ccFIVENnw0VKhmXA5I39RA5hH5MLu6jk7j
-	cZRuvEkS9OKVydv5kyV28K7cPavumrPGO/OZ+o8UahKzFwdSKFHTPrChqd+kilsfSUAdcB2r8Vj
-	9Qag8pRAudYQF3nhLOkXZCcG3P84w5pCR5LbXbL6+adn/bOjD+4IWPB7XhSfKflXitb2C4TNUFb
-	KqWo54mI7+/DS2kC6tx3qLFCP8s53mKxlxHCmhqHgKzccsfykKUjI3T4mrHzDLjMRE02MX8YOrf
-	4zWZtixr8023/g+iOJisMk2lnzYlre7NFZZsoFcJ2OmyS+COeEYpPKAJ+LHQjaioOi3rC8qh6kK
-	wxrJzzS6HJc+AMAzolyuw+hskjPSldtj/kCxzlRol93w6t6ou1YVVpmFxxDrflYyJtz0mOeOTND
-	zwkjxu3+YE471/XFUBIvbnYtdhH0v2uhNDg87Qip59qWG4Gik5U=
-X-Received: by 2002:a17:903:324d:b0:2e8:3d48:4d8d with SMTP id d9443c01a7336-2eaffb1868bmr15283205ad.0.1793168490216;
-        Tue, 27 Oct 2026 23:21:30 -0700 (PDT)
-Received: from LAPTOP-QJLDGQ2L.localdomain ([112.224.179.134])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2eae6c33917sm17992275ad.48.2026.10.27.23.21.27
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 27 Oct 2026 23:21:29 -0700 (PDT)
-From: Boyan Liu <yymhvert@gmail.com>
+	dkim=pass (1024-bit key, unprotected) header.d=rock-chips.com header.i=@rock-chips.com header.a=rsa-sha256 header.s=default header.b=TB+GQMii
+Received: from localhost.localdomain (unknown [61.154.14.87])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 52a1342f6;
+	Wed, 28 Oct 2026 15:31:39 +0800 (GMT+08:00)
+From: Shawn Lin <shawn.lin@rock-chips.com>
 To: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
 	"Martin K . Petersen" <mkp@kernel.org>
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	co+4a4f9998e2b4b490@bugs.sh,
-	Boyan Liu <yymhvert@gmail.com>,
-	stable@vger.kernel.org
-Subject: [PATCH] scsi: sd_zbc: cap zone report count by buffer size
-Date: Wed, 28 Oct 2026 14:16:51 +0800
-Message-ID: <20261028061651.110435-1-yymhvert@gmail.com>
-X-Mailer: git-send-email 2.43.0
+Cc: Bart Van Assche <bvanassche@acm.org>,
+	Bean Huo <beanhuo@micron.com>,
+	Heiko Stuebner <heiko@sntech.de>,
+	Stanley Jhu <stanleyjhu@google.com>,
+	Alim Akhtar <alim.akhtar@samsung.com>,
+	linux-rockchip@lists.infradead.org,
+	linux-scsi@vger.kernel.org,
+	Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH] scsi: ufs: core: Retry the full device init on fatal link loss
+Date: Wed, 28 Oct 2026 15:31:29 +0800
+Message-Id: <20261028073129.1661829-1-shawn.lin@rock-chips.com>
+X-Mailer: git-send-email 2.25.1
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -97,66 +61,130 @@ List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-HM-Tid: 0aa1816bf8ef03a4kunm8a59feb98d47f
+X-HM-MType: 1
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVkaGk8ZVk5LTklJTkwfQ0oZTVYVFA
+	kWGhdVEwETFhoSFyQUDg9ZV1kYEgtZQVlNSlVKTk9VSk9VQ0xZV1kWGg8SFR0UWUFZT0tIVUpLSU
+	9PT0hVSktLVUpCS0tZBg++
+DKIM-Signature: a=rsa-sha256;
+	b=TB+GQMiiZFz6iEXGHZpLEHkhiImt1AHwh5JT9q9S7vFCqPvkeXGWlvbQ4EzrWzsPfAlklF7HWq39Veuzngx5G5mWDoTEwGa7A0V4UKZxWesattozxQs0Suzt1Lmx8FTZK2IpvpwICsusizal8qyEsPUT3iF89ck8wmMZmK9+Qd0=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
+	bh=d20iozcM94y1ynJJGzlYfaLHRuOSfOKuZNnqcN4LWBQ=;
+	h=date:mime-version:subject:message-id:from;
 
-sd_zbc_report_zones() limits descriptor parsing to the requested zone
-count and the device-reported ZONE LIST LENGTH, but not to the number of
-descriptors that fit in the allocated report buffer. A malicious or
-malfunctioning device can report an oversized length and cause
-out-of-bounds reads while the descriptors are parsed:
+On an RK3576 board the UFS device is rarely reported dead during the
+initialization at boot: DEVICE_FATAL_ERROR | UIC_LINK_LOST is latched and
+the following UIC query fails with -EIO, leaving the device unusable.
 
-    BUG: KASAN: slab-out-of-bounds in sd_zbc_report_zones (drivers/scsi/sd_zbc.c:256)
-    Read of size 8 at addr ffff88802c8d2610 by task kworker/u8:2/37
-    Call Trace:
-     sd_zbc_report_zones (drivers/scsi/sd_zbc.c:256)
-     blk_revalidate_disk_zones (block/blk-zoned.c:2354)
-     sd_zbc_revalidate_zones (drivers/scsi/sd_zbc.c:566)
-     sd_revalidate_disk (drivers/scsi/sd.c:3898)
-     sd_probe (drivers/scsi/sd.c:4101)
+Recover by resetting the device and the controller and redoing the whole
+initialization sequence, up to three times with a 100 ms settle delay in
+between. The retry covers the link startup, the device verification, the
+completion of the device initialization and the device parameters setup,
+since any of them can fail once the link has been lost.
 
-Cap the descriptor count with min3() over the remaining requested zones,
-the device-reported count, and max_in_buf derived from buflen. This
-matches nvme_ns_report_zones() and preserves iteration over reports
-that require multiple commands.
+This is done in ufshcd_init() rather than in the platform driver's probe.
+A host driver only reaches its private data through ufshcd_get_variant(),
+which is set from the ->init callback that ufshcd_pltfrm_init() invokes
+on the caller's behalf, so the resources needed to reset the device are
+not available before or after that call. More importantly, retrying
+ufshcd_pltfrm_init() would request the interrupt, clocks and regulators a
+second time without any of the earlier registrations being rolled back:
+ufshcd_pltfrm_init() returns the error as-is, it does not undo what the
+previous attempt already set up. That leaves the controller with leaked
+resources and makes the retry fail on the interrupt registration.
 
-Fixes: d41003513e61 ("block: rework zone reporting")
-Cc: stable@vger.kernel.org
-Reported-by: co+4a4f9998e2b4b490@bugs.sh
-Signed-off-by: Boyan Liu <yymhvert@gmail.com>
+Doing the retry inside ufshcd_init() avoids both problems: the host data
+is already reachable through hba->priv, and the interrupt, clocks and
+regulators are acquired only once.
+
+The failure looks like this on RK3576:
+
+  ufshcd-rockchip 29e00000.ufs: ufshcd_check_errors: saved_err 0x880 saved_uic_err 0x0
+  host_regs: 00000000: 0187011f 00000000 00000200 00000000
+  host_regs: 00000010: 00000000 000005e6 00000000 00000000
+  host_regs: 00000020: 00000000 00031ef5 00000000 00000000
+  host_regs: 00000030: 00000008 00000001 00000000 00000000
+  host_regs: 00000040: 00000000 00000000 00000000 00000000
+  host_regs: 00000050: 02dd3000 00000001 00000000 00000000
+  host_regs: 00000060: 00000000 00000000 00000000 00000000
+  host_regs: 00000070: 02dd4000 00000001 00000000 00000000
+  host_regs: 00000080: 00000000 00000000 00000000 00000000
+  host_regs: 00000090: 00000016 00000000 00000000 00000000
+  ufshcd-rockchip 29e00000.ufs: ufshcd_err_handler started; HBA state eh_fatal; powered 1; shutting down 0; saved_err = 2176; saved_uic_err = 0; force_reset = 0
+  ufshcd-rockchip 29e00000.ufs: ufshcd_query_flag: Sending flag query for idn 1 failed, err = 5
+
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 ---
- drivers/scsi/sd_zbc.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
-index 56e455fb5add..6a2644a67849 100644
---- a/drivers/scsi/sd_zbc.c
-+++ b/drivers/scsi/sd_zbc.c
-@@ -222,7 +222,7 @@ int sd_zbc_report_zones(struct gendisk *disk, sector_t sector,
- {
- 	struct scsi_disk *sdkp = scsi_disk(disk);
- 	sector_t lba = sectors_to_logical(sdkp->device, sector);
--	unsigned int nr, i;
-+	unsigned int nr, i, max_in_buf;
- 	unsigned char *buf;
- 	u64 zone_length, start_lba;
- 	size_t offset, buflen = 0;
-@@ -241,13 +241,16 @@ int sd_zbc_report_zones(struct gendisk *disk, sector_t sector,
- 	if (!buf)
- 		return -ENOMEM;
+ drivers/ufs/core/ufshcd.c | 29 +++++++++++++++++++++++++----
+ 1 file changed, 25 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index ee643830a57a..e75370d1b950 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -11419,12 +11419,14 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
  
-+	max_in_buf = (buflen - 64) / 64;
+ 	/* Initialize hba, detect and initialize UFS device */
+ 	ktime_t probe_start = ktime_get();
++	int retries = 3;
+ 
++retry_init:
+ 	hba->ufshcd_state = UFSHCD_STATE_RESET;
+ 
+ 	err = ufshcd_link_startup(hba);
+ 	if (err)
+-		goto out_release;
++		goto retry_device_init;
+ 
+ 	if (hba->mcq_enabled)
+ 		ufshcd_config_mcq(hba);
+@@ -11441,16 +11443,16 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+ 	/* Verify device initialization by sending NOP OUT UPIU */
+ 	err = ufshcd_verify_dev_init(hba);
+ 	if (err)
+-		goto out_release;
++		goto retry_device_init;
+ 
+ 	/* Initiate UFS initialization, and waiting until completion */
+ 	err = ufshcd_complete_dev_init(hba);
+ 	if (err)
+-		goto out_release;
++		goto retry_device_init;
+ 
+ 	err = ufshcd_device_params_init(hba);
+ 	if (err)
+-		goto out_release;
++		goto retry_device_init;
+ 
+ 	err = ufshcd_post_device_init(hba);
+ 
+@@ -11468,6 +11470,25 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+ 	ufshcd_pm_qos_init(hba);
+ 	return 0;
+ 
++retry_device_init:
++	if (retries--) {
++		dev_warn(hba->dev, "UFS init failed %d, full retry (%d left)\n",
++			 err, retries);
 +
- 	while (zone_idx < nr_zones && lba < sdkp->capacity) {
- 		ret = sd_zbc_do_report_zones(sdkp, buf, buflen, lba, true);
- 		if (ret)
- 			goto out;
- 
- 		offset = 0;
--		nr = min(nr_zones, get_unaligned_be32(&buf[0]) / 64);
-+		nr = min3(nr_zones - zone_idx,
-+			  get_unaligned_be32(&buf[0]) / 64, max_in_buf);
- 		if (!nr)
- 			break;
- 
++		ufshcd_device_reset(hba);
++		ufs_put_device_desc(hba);
++		ufshcd_hba_stop(hba);
++		if (ufshcd_hba_enable(hba)) {
++			dev_err(hba->dev, "Host controller enable failed\n");
++			ufshcd_print_evt_hist(hba);
++			ufshcd_print_host_state(hba);
++			goto out_release;
++		}
++
++		msleep(100);
++		goto retry_init;
++	}
++
+ out_release:
+ 	ufshcd_release(hba);
+ out_disable:
 -- 
-2.43.0
+2.25.1
 
