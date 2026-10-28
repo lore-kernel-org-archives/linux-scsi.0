@@ -1,89 +1,70 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.46
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=124.126.103.232
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793177298;
-	b=JxWErboU1BvxOnvPqjZBvWRdOUlmCywesxQN6NL+PMQJ0IX0M/lQ7pujue+O0P6joaar
-	 9WpGBYorLOvNKkmEGRlDNvxzsVJoI3HRhgCxGVcQ4N+CbxXxnuynp6MJAOwynCCjyJR22
-	 5KGbht1RCR66T+2q0flX8Xx+DxaGTpivueD24p/a+klWejrPNqj0daH28XCQebI+gnnsf
-	 CTxO2ILLhFXdj4g6f4wXvAD1RYCl9h3fpo5Bu/53ZNHZaIckICWNyvgFVLxuar/02FEIR
-	 +7alfluU9R9QphUtPn0hc75H3tRIQnqyara7XY/utSX+O6wDWrvaN5XuaK2mxjmaDoA==
+	t=1793179344;
+	b=URMQ24dasmdiTMtFF7KmKSnyZx5p1J7CVUZcL7V5FLDMxSt1pqEC+0x75s1aTA5ioSK5
+	 UP3kt82q3pUEnk8jPbBBMmr5OixXE6qTLMMLJ7Ni3RXWHKlooijId2YpIhEoo18q1ZX0b
+	 N7lxm8GaeCM+fAN3/KxZodiNOADNdNYIPNemzeLAQ5gKWWXQVD+nhhC5RuaKIHI2TiGQw
+	 9nR1pPtGVrJmy0TMGbFXrYXByB0j9EWQFUIcSmbH1BvjfoAXN4NxMDOFU+g/NJRV8g0r5
+	 QJ8f1s8oDogMCZ1GhpEGwXYqXsSohKDvfjezrxr7o75bI293zdFW3lZtMc0YysEfScQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793177298;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Message-ID:Date:MIME-Version:User-Agent:Subject:To:Cc:References:
-	 Content-Language:From:In-Reply-To:Content-Type:
+	a=rsa-sha256; c=relaxed/relaxed; t=1793179344;
+	h=DMARC-Filter:X-UUID:X-CID-P-RULE:X-CID-O-INFO:X-CID-META:X-CID-BVR:
+	 X-CID-BAS:X-CID-FACTOR:X-CID-RHF:X-UUID:X-User:Received:From:To:Cc:
+	 Subject:Date:Message-Id:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=/P4FiXSfTahRag+IvS76kiNUJNsGZXNeZs1soro+q0U=;
-	b=cB0HQGLQAIUZ/AXbTHr4Mdzc1/CQlO2M8VcFuEiwLwZ2CV3GVQOzZVz/hOYIU6nyyQ6N
-	 /DnhRHzw52a4x/mG1BFAtsN2hQVqta7m/+4yhV1V/Zo2uSrSGXugpxjgRT+Jw5pFaik/J
-	 eDjr0Kow0fROWEkR7NNBMZ9YRgObfver/YKf6LFXzBfu/SkdYwC4N1+01zaCDUsF6o+1r
-	 zt53XvxFfpz6RJ0GXM2HFoe+ahdZNx5QVeDY5jOdeOq/yKBUfrHf7mjUGtJP3ZYJm5X4d
-	 NeO+pOIZNLs6F3N0CQiCdQIhL/jrml7lM0qMqW60MA7MVk/kURarRd7/iH1vBArDVjg==
+	bh=E+YCM5bjA5bWVsmy2H/KDlpYbRIIKtbo2lnh36vInrU=;
+	b=DpOhBAs9YDj2kdbs3DKkiRPFmgxzKe0FX+oMTqKby7KW0PVcu8DTgZsgzbpGY5Ii5RFx
+	 NtC8c17s+j8RC0nKfLcNH/AOxkUAgRIv65+9KX/CeyzniqBIFFoEonTwTYeX50VLMCMyF
+	 TWg43qDEOZUS/y4VzBz1RVLRCMr0voKw39Bbg7DLZX+JjHpT4uznnFY/m3+AfJyMKmenp
+	 B0hjYORWXdge8Y7fxFgZYyild/HEh7B6c72QFlJ4NrZCNLns+VvJGVCqROm+UUhGLHSVm
+	 lI7OfHEdAKa+PU6GLTI8IIZjZu/scsUzuMWdO1MiN4uLF/X5Mvcc5VHfkTZufOdBSmw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=suse.com;
-	spf=pass smtp.mailfrom=suse.com;
-	dkim=pass header.d=suse.com header.i=@suse.com header.a=rsa-sha256 header.s=google header.b=D98NASGz;
-	arc=none smtp.remote-ip=209.85.128.46
-Received: from mail-wm1-f46.google.com (mail-wm1-f46.google.com [209.85.128.46])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=none header.from=kylinos.cn;
+	spf=pass smtp.mailfrom=kylinos.cn;
+	arc=none smtp.remote-ip=124.126.103.232
+Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0463A606A31A
-	for <linux-scsi@vger.kernel.org>; Wed, 28 Oct 2026 08:48:17 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0463A606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=suse.com header.i=@suse.com header.a=rsa-sha256 header.s=google header.b=D98NASGz
-Received: by mail-wm1-f46.google.com with SMTP id 5b1f17b1804b1-4a549cd7fd2so6296015e9.0
-        for <linux-scsi@vger.kernel.org>; Wed, 28 Oct 2026 01:48:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1793177296; x=1793782096; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=/P4FiXSfTahRag+IvS76kiNUJNsGZXNeZs1soro+q0U=;
-        b=D98NASGz48p7nzkolCFiBv4ijS+AKWuUcJww6ATbM972WUm4X5vRZV7iNzb9SIxKyx
-         gFC7a4SjHboCVyZlMEQewuvtX9pBbZJ8HQXd/YRps3XtTbGtkp5xlpIMBKURowHrhJsU
-         EhDFxa4FvXAYYT07wlt2TAHY3/eO5IlCs1/zrnH5D+KNjaDT10CkZerq/B085TALGqGQ
-         WfM4VhyXuV4oFa/7BOzbL/T+qAV81zbphPF5Sw14di0J5Qz//ji+Fl3yzluw7lPLV3Fb
-         aOGI4xsBxHqcn7jKTp8hUtcafadwY4BQSUp2z7uZgYIjKohp8dq14HCzQrmSmCH7JchF
-         A4MA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793177296; x=1793782096;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=/P4FiXSfTahRag+IvS76kiNUJNsGZXNeZs1soro+q0U=;
-        b=Zg0lVcL/EZX85FHyVOPJZ/+61plKVDS9xf8iU8SJgPgXyuSDzckHRmczcE0Isl/Z02
-         C9RU+sIdpGvFMEbU2BdkQakV4CNRcBv7hmqC64sWxQAhQq1pN+XHXjk05I4Q62g1MFRS
-         +q0TrB8WTYmQCIEecVAOG02I9RwACMWQ4i8HUlTbDxXBZxwHLESwFd/PuGMdtsrC+qWJ
-         grwy9gB+Z2M1lCIpHCjC+FghL3Jz6MVrfbJN5oDVcY/g535Czvw8UQpyz9sGjGvv/1Ob
-         1vmKBEiSlv4IRZ1bTBrW/G9H8LjRURw/0zbdGNGwQlUIyYmi7IGJ4MHFU+7dyeCik1B7
-         DWGg==
-X-Forwarded-Encrypted: i=1; AKwUvBy2VI97Ola+l55tWSVqvN1Puk8qGv3oZW54RzYgAEKM/UIkrTei00ziS/8YO2zkwNV5aTMSKTDySE5Z@vger.kernel.org
-X-Gm-Message-State: AFq9FYJwHee+0X+297mCakJIqEFzkRjxN2tAXq3r98Z71L5t9liX/QVj
-	spiNkgsqlJClIV7QyvDgDqGIGx2yFy7yfilcSJzlGWmk5O5HV9XQUm9bac7zDHAqT6i6HGfZ9GV
-	SYOXw
-X-Gm-Gg: AYBFou2032ar7hAJdW7HPg5QaDaxkxxkYpqrjTuWCYJJBXDvFLDr0Gj/jchUzbkRJEZ
-	4rnDooYocJRL9S31y3hJxCGk7Pih9QFQhdWTKO97oUi5hq3NjTMLss5y/NLXcLRdCkK/CGbsH/F
-	ZOf9vEq3dpJPdus9Q6c9jAT464Y793ZioNGjO4jp8KFhhgU/acPqKcL+XpnOX6I1td8Rud5a598
-	sIvKvsyhhYmVFcDkqF1VK5mBj30hCv1bxo14JkI/bQ9K2hhKRxCU9XBCbVGyP/cwUYgQIbf1tOP
-	8GdrvyFC6WcYfkUi6Cw4VPvtUfqfh1OI5t1pRWiWqW4D7d0SWFQ2lO3n0Ppr9n7eNCdZ6hSKVwk
-	8aEZVTglyc5nlDUZauYkr8BLO1luK7s6OXBCZFdXL708ZbEl106e9iGm4DHJ9Zgjue9r0NdJ5SQ
-	KRRLt7mTHdeRJFKyUoFfMTnXvGFmLOIATS2AbTgMPYQ/zdGwOgDittzsf6pGcm/RwTIjA8jozTO
-	Xdh4jtuBYWlQ+lolK7e33FF++o2Xaal70eweMPLZrZL4vbWIoQo2kEhY2ZMy58M4ND8cvTdrQvM
-	WAssJHgXJtL87E9mNZZf4UVSONnu/QqLl8JC0gEb+J3wFMNgoFWEt7F4aF21NmiVFd3H
-X-Received: by 2002:a05:600c:a00f:b0:4a1:9c71:9f17 with SMTP id 5b1f17b1804b1-4a996d873a9mr22922355e9.9.1793177296320;
-        Wed, 28 Oct 2026 01:48:16 -0700 (PDT)
-Received: from ?IPV6:2001:a61:13b5:e001:5d05:908:ac82:a3a1? ([2001:a61:13b5:e001:5d05:908:ac82:a3a1])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a93103e72dsm25003415e9.2.2026.10.28.01.48.15
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 28 Oct 2026 01:48:15 -0700 (PDT)
-Message-ID: <5230664a-9666-4196-a798-260da5aa8e8e@suse.com>
-Date: Wed, 28 Oct 2026 09:48:15 +0100
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A14B3606A31D;
+	Wed, 28 Oct 2026 09:22:21 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A14B3606A31D
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
+X-UUID: 0efc6234d2b111f19a56ed5b684f684d-20261028
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.19,REQID:86e7db5b-4852-4942-97b3-0eb42640d1af,IP:0,U
+	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+	release,TS:0
+X-CID-META: VersionHash:7db8b62,CLOUDID:ce3dac4351f476495faf6e51ac462211,BulkI
+	D:nil,BulkQuantity:0,SF:81|82|83|102|865|898,TC:nil,Content:0|15|50|99,EDM
+	:-3,IP:nil,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0
+	,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: 0efc6234d2b111f19a56ed5b684f684d-20261028
+X-User: lijiayi@kylinos.cn
+Received: from thinksys.tail1c7620.ts.net [(10.44.16.150)] by mailgw.kylinos.cn
+	(envelope-from <lijiayi@kylinos.cn>)
+	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
+	with ESMTP id 874095675; Wed, 28 Oct 2026 17:22:12 +0800
+From: Jiayi Li <lijiayi@kylinos.cn>
+To: Oliver Neukum <oneukum@suse.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>,
+	Michal Pecio <michal.pecio@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-usb@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	usb-storage@lists.one-eyed-alien.net,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3] usb: uas: wait for pending commands before unbinding
+Date: Wed, 28 Oct 2026 17:21:53 +0800
+Message-Id: <20261028092153.1481202-1-lijiayi@kylinos.cn>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <5230664a-9666-4196-a798-260da5aa8e8e@suse.com>
+References: <5230664a-9666-4196-a798-260da5aa8e8e@suse.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -93,36 +74,38 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3] usb: uas: wait for pending commands before unbinding
-To: Jiayi Li <lijiayi@kylinos.cn>
-Cc: Alan Stern <stern@rowland.harvard.edu>,
- Michal Pecio <michal.pecio@gmail.com>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-usb@vger.kernel.org,
- linux-scsi@vger.kernel.org, usb-storage@lists.one-eyed-alien.net,
- linux-kernel@vger.kernel.org
-References: <8469d5fa-2f4e-4565-8d84-43d6b71b4a9c@suse.com>
- <20261028020958.1141513-1-lijiayi@kylinos.cn>
-Content-Language: en-US
-From: Oliver Neukum <oneukum@suse.com>
-In-Reply-To: <20261028020958.1141513-1-lijiayi@kylinos.cn>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-
-
-
-On 28.10.26 03:09, Jiayi Li wrote:
+Content-Transfer-Encoding: 8bit
 
 Hi,
 
-> USB core has already terminated the interface URBs, but a running
-> synchronous scan may still be waiting for SCSI command completion.
-> Waiting for scan_work at the beginning of uas_disconnect() would
-> therefore delay the command cleanup below.
+On Wed, 28 Oct 2026 at 09:48:15 +0100, Oliver Neukum wrote:
+> Why? What is it waiting for? And why do you think we can skip
+> that wait safely?
 
-Why? What is it waiting for? And why do you think we can skip
-that wait safely?
+The wait is not skipped; it is deferred until after the command
+cleanup.
 
-	Regards
-		Oliver
+uas_scan_work() calls scsi_scan_host(). In the synchronous scan path,
+it may be blocked in scsi_execute_cmd() waiting for the current scan
+command, such as INQUIRY or REPORT LUNS, to complete.
 
+On a physical disconnect, USB core disables the interface before
+calling uas_disconnect(). The status URB may then complete with
+-ESHUTDOWN, and uas_stat_cmplt() exits without clearing
+COMMAND_INFLIGHT or completing the SCSI command.
+
+Waiting for scan_work before reaching that cleanup can leave the scan
+waiting for SCSI timeout/EH instead.
+
+The first cancel_work() only prevents scan_work from starting if it is
+still pending. If scan_work is already running, disconnect proceeds to
+cancel the URBs and call uas_zap_pending(), which completes the
+remaining command with DID_NO_CONNECT.
+
+The existing cancel_work_sync() is then called after that cleanup and
+before scsi_remove_host() and resource release. Therefore the running
+scan is still synchronized; the wait is moved after the operation
+which allows the scan command to finish, rather than omitted.
+
+Thanks,
+Jiayi
