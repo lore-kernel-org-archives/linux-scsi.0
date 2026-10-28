@@ -1,49 +1,67 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793205076;
-	b=BOlhrAhCBEa0COKW53P5MlKQoMEXDod/zrI6qH0Yv1/Gs15QEbt0Cj+nBm6s3HiWqg1V
-	 J4+1c1Q1Xv7hCp1m8SH/JjxyOKjyao5lcO+OLqIQzPfq7dd7uYoFZbSr7saNSrBqzIQAq
-	 67oKX6o+yG49EJngZ71bqPnUDrp6U9x41SE9hyLfuSb/TS9nC6CmXGrs7BXZkxRrhZn8j
-	 pMZy4fDZ6EQckr8fon9I3WSk2uKlPlN4L9OviWm7AZENkmvom2MHKTnFScfeKl9f2HsCP
-	 nmEmp1BP4Wrq7x7I+8hDQahHUhCpEg35RsUfdYzXP9Pzmfa+UOtYkLG19l/ooMTq/Cw==
+	t=1793209478;
+	b=Oen4RtLsjNqDv2+UzxEz+y9vpuz91gSw/F/gUrhVLJqWDsqHyFtmHA6KA8Ou2pIWOcr1
+	 KKgPC+zBc0llPnXEMBJmt0NtuokwUR+xnwtqxc0xU1C1rt853GS09atmSh4NfFUK0DHMi
+	 a3UjNhFM+rsewkZNMz56yyszSGUz0XmHbAFdIs4RygYbAX4bAwveg+bULcCTz8CSQoIaz
+	 4WPiTJBaW9AQbRU0hzwWHX/9pBghcahFQAEJpye7hM7h7u1Y4M7eJC3N6JsGT/SCfchw2
+	 gxaT8Xqg+zctKtmEZGhYef2cQyj447aDqTVXDg1Z6z/ncsU3gAebVtFvwIitiOX1tOg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793205076;
-	h=DMARC-Filter:Received:Date:From:To:Cc:Subject:Message-ID:References:
-	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To:User-Agent;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
-	b=SiDJzQNNiaXisgm/f+wDPqvHV3X9BnaBJ6gge1NHcq0DGly+hA6/3TSsKn+3W0aReDmM
-	 BV4AP3RFMpo3kyrvlYYs4LMyS2iTTefGhUCObG22lZ3vfVkFH0EshWHmUbilge1BPrJIN
-	 KFOTBPMUWh8qYZn9z3Zdq0PjRqS9n9cfwZkvT9O4U6gYyMqdeCdRqKEzX6DbOgP5BKukt
-	 MDR5n8i6jEbPxeBHG7SwBaSOQ9W+e7qOZ5b7ZbdzaLR74qutl3O5GP2B2YyplVAMfInya
-	 mr0ARVyOZjQJifuyKlIHqscpF7X1n+iMzUu7zi0714RbDSsEBFekN/kiMwEk5CgNgGw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793209478;
+	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
+	 In-Reply-To:References:User-Agent:X-stable:X-Patchwork-Hint:
+	 MIME-Version:Content-Transfer-Encoding;
+	bh=66yvyzKGWV0Rnaw20Py7KQmgiWDmOfwJtXa0VXFTngk=;
+	b=KZGItsOtAfETFVgV+T+zokgL5ouixUI9cG2pbTqMVsXnfLRY+nfikpIo+1UBbmcM2uKu
+	 IuQE1chigrBzSgzkPbOXGPszAldXtxRgjfi6U67WT0M0HF6cgal45USPv32vqLqoX5dcr
+	 mwuB3SW/URTuZwDx5Ij4/uKMBmOKs0/ynOSlp7BwDBLoxW61EvtES413d5aD5VLbwym12
+	 MeWAYGVqtstbrlmgMEbCJndK00HvHrJ3yJ/tlcxUSdlEl78k9nrf6mcgUmHFfAu9oC8KN
+	 COewD6F8l9LU7cuV6ekpZhNVrrXeSGpwLq0VVUnEA2kBkuoIHsObZrJFAw+YJJUuLzA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=lst.de;
-	spf=pass smtp.mailfrom=lst.de;
-	arc=none smtp.remote-ip=213.95.11.211
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+	dkim=pass header.d=linuxfoundation.org header.i=@linuxfoundation.org header.a=rsa-sha256 header.s=korg header.b=O3Dj+Vdx;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63AA6606A321;
-	Wed, 28 Oct 2026 16:31:16 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 63AA6606A321
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 60B8E68BFE; Wed, 28 Oct 2026 17:31:12 +0100 (CET)
-Date: Wed, 28 Oct 2026 17:31:11 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Anuj Gupta <anuj1072538@gmail.com>
-Cc: axboe@kernel.dk, asml.silence@gmail.com, kbusch@kernel.org, hch@lst.de,
-	sagi@grimberg.me, James.Bottomley@HansenPartnership.com,
-	mkp@kernel.org, bernd@bsbernd.com, joannelkoong@gmail.com,
-	miklos@szeredi.hu, io-uring@vger.kernel.org,
-	linux-nvme@lists.infradead.org, linux-block@vger.kernel.org,
-	linux-scsi@vger.kernel.org, fuse-devel@lists.linux.dev,
-	joshi.k@samsung.com, anuj20.g@samsung.com
-Subject: Re: [PATCH v2 5/5] nvme: support dma-buf registered buffers for
- passthrough
-Message-ID: <20261028163111.GB22862@lst.de>
-References: <20261022144501.2478417-1-anuj1072538@gmail.com> <20261022144501.2478417-6-anuj1072538@gmail.com>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B606E606A321;
+	Wed, 28 Oct 2026 17:44:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key, unprotected) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.a=rsa-sha256 header.s=korg header.b=O3Dj+Vdx
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 10AF91F01828;
+	Wed, 28 Oct 2026 17:44:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linuxfoundation.org;
+	s=korg; t=1793209477;
+	bh=66yvyzKGWV0Rnaw20Py7KQmgiWDmOfwJtXa0VXFTngk=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=O3Dj+VdxXo+Ts/bq6KRaQd906XkJk40DLCInEnKnWHgRUCUznX4+qvH5EgSksxljR
+	 9YJFtIQJe7bjWfroru1/Ji4eZSfk6aWnBJ4FQmpv+9GBX9MVIWCSKXzxEO9bHM53s2
+	 6PbnlF8gEiHu/7CGXGqY5CYxsf7YBqtiMKmxRwVE=
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: stable@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	patches@lists.linux.dev,
+	Daniil Stas <daniil.stas@posteo.net>,
+	Guenter Roeck <linux@roeck-us.net>,
+	Chris Healy <cphealy@gmail.com>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	linux-kernel@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	linux-ide@vger.kernel.org,
+	linux-hwmon@vger.kernel.org,
+	"Nobuhiro Iwamatsu (CIP)" <nobuhiro.iwamatsu.x90@mail.toshiba>,
+	Sasha Levin <sashal@kernel.org>
+Subject: [PATCH 5.10 485/516] hwmon: (drivetemp) Fix driver producing garbage data when SCSI errors occur
+Date: Wed, 28 Oct 2026 18:00:37 +0100
+Message-ID: <20261028170014.967212572@linuxfoundation.org>
+X-Mailer: git-send-email 2.56.0
+In-Reply-To: <20261028170003.522232767@linuxfoundation.org>
+References: <20261028170003.522232767@linuxfoundation.org>
+User-Agent: quilt/0.69
+X-stable: review
+X-Patchwork-Hint: ignore
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -53,12 +71,78 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261022144501.2478417-6-anuj1072538@gmail.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Transfer-Encoding: 8bit
 
-Looks good:
+5.10-stable review patch.  If anyone has any objections, please let me know.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+------------------
+
+From: Daniil Stas <daniil.stas@posteo.net>
+
+commit 82163d63ae7a4c36142cd252388737205bb7e4b9 upstream.
+
+scsi_execute_cmd() function can return both negative (linux codes) and
+positive (scsi_cmnd result field) error codes.
+
+Currently the driver just passes error codes of scsi_execute_cmd() to
+hwmon core, which is incorrect because hwmon only checks for negative
+error codes. This leads to hwmon reporting uninitialized data to
+userspace in case of SCSI errors (for example if the disk drive was
+disconnected).
+
+This patch checks scsi_execute_cmd() output and returns -EIO if it's
+error code is positive.
+
+Fixes: 5b46903d8bf37 ("hwmon: Driver for disk and solid state drives with temperature sensors")
+Signed-off-by: Daniil Stas <daniil.stas@posteo.net>
+Cc: Guenter Roeck <linux@roeck-us.net>
+Cc: Chris Healy <cphealy@gmail.com>
+Cc: Linus Walleij <linus.walleij@linaro.org>
+Cc: Martin K. Petersen <martin.petersen@oracle.com>
+Cc: Bart Van Assche <bvanassche@acm.org>
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
+Cc: linux-hwmon@vger.kernel.org
+Link: https://lore.kernel.org/r/20250105213618.531691-1-daniil.stas@posteo.net
+[groeck: Avoid inline variable declaration for portability]
+Signed-off-by: Guenter Roeck <linux@roeck-us.net>
+Signed-off-by: Nobuhiro Iwamatsu (CIP) <nobuhiro.iwamatsu.x90@mail.toshiba>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/hwmon/drivetemp.c | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/hwmon/drivetemp.c b/drivers/hwmon/drivetemp.c
+index 00303af82a777..098d30e210636 100644
+--- a/drivers/hwmon/drivetemp.c
++++ b/drivers/hwmon/drivetemp.c
+@@ -165,6 +165,7 @@ static int drivetemp_scsi_command(struct drivetemp_data *st,
+ {
+ 	u8 scsi_cmd[MAX_COMMAND_SIZE];
+ 	int data_dir;
++	int err;
+ 
+ 	memset(scsi_cmd, 0, sizeof(scsi_cmd));
+ 	scsi_cmd[0] = ATA_16;
+@@ -192,9 +193,12 @@ static int drivetemp_scsi_command(struct drivetemp_data *st,
+ 	scsi_cmd[12] = lba_high;
+ 	scsi_cmd[14] = ata_command;
+ 
+-	return scsi_execute_req(st->sdev, scsi_cmd, data_dir,
+-				st->smartdata, ATA_SECT_SIZE, NULL, HZ, 5,
+-				NULL);
++	err = scsi_execute_req(st->sdev, scsi_cmd, data_dir,
++			       st->smartdata, ATA_SECT_SIZE, NULL, HZ, 5,
++			       NULL);
++	if (err > 0)
++		err = -EIO;
++	return err;
+ }
+ 
+ static int drivetemp_ata_command(struct drivetemp_data *st, u8 feature,
+-- 
+2.53.0
+
+
 
