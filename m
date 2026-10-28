@@ -1,120 +1,79 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=64.68.200.34
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793197844;
-	b=UhR++E43WznOyUv/AdJL3fIVU/VHUjNATjweTKzkyUyU5/B0N6rS++c85ec2kZ+qj8jN
-	 ua6kt1e1nw89dxqkJiYRIXi4Bs4yA136qD7JiHKGtO/YeYfV+zhYuvNyHpLX5PxQCAZyU
-	 Jc7UCuSmQSUASQnO0svH72sAaUamQF1XP1iGXvU27I3Fach989QCnOGkC1FFF855EKR6k
-	 UZ3p15WIQ9ga+nRAT1R1kxw4RBbLSJxuv13HmA1+BMgApw7rt1LKz11iu+NuNy5ooqmLA
-	 /0ddF0sB8I3oAdzwJg7gpGKCxWbD95QzJ9YhdumV7EWFAO6eXtGnZf50XCsbi5qNj8w==
+	t=1793202350;
+	b=eL4IKdKdQRLoYJmclbsC6G+fMvetOUwWdhCv9jJV8XaqWYoU4GC6V52ITp/ewvTusACb
+	 LNqlCZr7kQh+Yr2OcMT6nPMWb/54Q33mamEHLETtmeC+7zyNwzlZzhXIdLqFl2lb7R8Vh
+	 umMuX0jIzWOdQz0rsUy2t+oPI+VeKr+4KebVIMkWQs/OmvtHklqWdec6OquiZ07FEdnfL
+	 dLD1FOhFLneAbolRGXNDtIUwP5c6Y+LOK3XFHyqLyClLiaIcYDIE510TaZrufyaTqfAkK
+	 p8V/fct0/j6tDqlNE5OcDxdb2GYjEaC7k/xjNZXVadPRyYYxQMgAaQmap5Atz163sjQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793197844;
-	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
-	 X-Mimecast-MFC-AGG-ID:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 X-Received:Received:Message-ID:Subject:From:To:Cc:Date:In-Reply-To:
-	 References:Content-Type:Content-Transfer-Encoding:User-Agent:
-	 MIME-Version;
-	bh=Sv/iTPs4xlWjnrYC4tMYxP+iSSAMw3Kx4oBZaMa50nw=;
-	b=l7Yw1FW7V3SUfIzAWX+h1oQK+5IXnwMrZ1vjSYEJ0VU6SR50joOi1qr9GNe2ZmW8hZTe
-	 7FgdCUlreUP1QO5gGAdWEnOfRVGR1gjD1zFtxaQ91wCu8jp8GmqMHPcnH675BDNhYktT9
-	 v33ZrK2NIPtfGpyXty95sbNUUx18mjPcfvqXRoywbtlwX4Cx4iH5pQYaeEXMT/gwC1Vky
-	 UsTDzXPC8WY/99OgJl9YP2ueSaO0Avmumtw083gfauE0EiKAbjaoTWiLtCdhOSGJT448B
-	 H4TNFKmqbYnN5ogyjIb2J9c6l5q2sm5AHetwvah0PwwjX5Wt3MIgtox3H0wreHHWiwQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793202350;
+	h=DMARC-Filter:Received:Received:DKIM-Signature:X-Virus-Scanned:
+	 Received:Received:DKIM-Signature:Received:Message-ID:Date:
+	 MIME-Version:User-Agent:Reply-To:Subject:To:Cc:References:From:
+	 Content-Language:Autocrypt:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=WwQVlZHVzAfY3mEXsVrF6T2UrGTIl/6KBhHBS1lJ9xg=;
+	b=2QaOGfz1xLiAXu6usOWjvtCcdGYW791ygDGXyuJ/MXx2pBliwVgmn6F2+Pn62LfvPp7Q
+	 M6ubv0iMxw8y+0NZvmWBgQLFM5C5CIUGuoZoL80ux0KkD2lPSrPkOAvaNs3I+fxSZvc56
+	 GOkNH2V4vhSs4wx70lQGWgQsHwN0GNoRn5SvscMzZyW+2iCcjhRB5hqo/aM9x1eco9HuX
+	 tZ919IB/wCLAgdTHiL6/ywgSdLFvBUcsuSdaLBVP2pSGYgtZ/o970GPu9x9chyR2cfRCX
+	 mTOiT+ttkvbFMn5HirDvR2GMRjadrCvn7rIcwjZknBMOQwjzKHtDcWXP90Msu3E/tiw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=redhat.com;
-	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=aQHn9TsG;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b="RbUYO/D0";
-	arc=none smtp.remote-ip=170.10.129.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	dmarc=none header.from=gonehiking.org;
+	spf=pass smtp.mailfrom=gonehiking.org;
+	dkim=pass header.d=gonehiking.org header.i=@gonehiking.org header.a=rsa-sha256 header.s=easymail header.b=HB28GRDp;
+	dkim=pass header.d=gonehiking.org header.i=@gonehiking.org header.a=rsa-sha256 header.s=easymail header.b=jmqeftvP;
+	arc=none smtp.remote-ip=64.68.200.34
+Received: from outbound.easymail.ca (outbound.easymail.ca [64.68.200.34])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72A1B606A320
-	for <linux-scsi@vger.kernel.org>; Wed, 28 Oct 2026 14:30:42 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 72A1B606A320
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2857606A329
+	for <linux-scsi@vger.kernel.org>; Wed, 28 Oct 2026 15:45:49 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C2857606A329
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gonehiking.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gonehiking.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=aQHn9TsG;
-	dkim=pass (2048-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=RbUYO/D0
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1793197841;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=Sv/iTPs4xlWjnrYC4tMYxP+iSSAMw3Kx4oBZaMa50nw=;
-	b=aQHn9TsGrEXCmBUPbz4ruTyirrH9FDL2gRRhTHwGAQN8dR/NOig76SneA0HsnepVfp/Kvy
-	lASwuFtqOVmqwAewDwKxiGdtxHaAVwM1JRMRrB92D5/PY3WLZVKM34O2A6IFepE7rDxtcd
-	ixVPSCxshWxHzup52oNKIJMhi+OSLIg=
-Received: from mail-qv1-f69.google.com (mail-qv1-f69.google.com
- [209.85.219.69]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-349-2oTOsFyIMKmMKZhfk1R9Uw-1; Wed, 28 Oct 2026 10:30:40 -0400
-X-MC-Unique: 2oTOsFyIMKmMKZhfk1R9Uw-1
-X-Mimecast-MFC-AGG-ID: 2oTOsFyIMKmMKZhfk1R9Uw_1793197840
-Received: by mail-qv1-f69.google.com with SMTP id 6a1803df08f44-91c818c72bdso15076376d6.3
-        for <linux-scsi@vger.kernel.org>; Wed, 28 Oct 2026 07:30:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1793197839; x=1793802639; darn=vger.kernel.org;
-        h=mime-version:user-agent:content-transfer-encoding:content-type
-         :references:in-reply-to:date:cc:to:from:subject:message-id:from:to
-         :cc:subject:date:message-id:reply-to:content-type;
-        bh=Sv/iTPs4xlWjnrYC4tMYxP+iSSAMw3Kx4oBZaMa50nw=;
-        b=RbUYO/D03w3KFDtoVh8mz6tiGtVOwCV4DT3OXWPknHGN1MkTDhIvwOcsi30fSDe5BI
-         d1yXEBSBfKNu1K7K+hENUr92yJz2jquGolvqL50ceS9td/q04sT/ZnK6pACLQv+9nyrI
-         9oLgzQpaLjcEc3ljeof9sxe8HoIt2sipnMJlEAF6Vnm45Y43lKqBOg5fzA4G/dyQdRp8
-         btDpMmmu0f7txvQvKHuSRot65rfwQd4n76fpTXgajZy7BlloYdzKhIHQPC2Ujg/3i3Hm
-         JafVrjzKDevhJwIrJeVJuY+Nl5HXR5k6qiM/DrLIaVia6Ouk82wljTWMO94EIm+JnyUf
-         uBBA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793197839; x=1793802639;
-        h=mime-version:user-agent:content-transfer-encoding:content-type
-         :references:in-reply-to:date:cc:to:from:subject:message-id:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=Sv/iTPs4xlWjnrYC4tMYxP+iSSAMw3Kx4oBZaMa50nw=;
-        b=EutO8F95rZVS8DjUimNunadEjkIUG+efVCuSr1bI7agxv8dIWXlt4R5vIr67rc4RW9
-         JkaFVkFrt6Sd5/WZlHsBj9FC24o8eaNj0Dzqw08W4IykvNeTWN9OU8A/mgk+eKf4Lqnh
-         aY13n/ywyalccRupi3Q4x8Io6BlvDcKjPd+cj7w6yp/IBrsf7dfu8UsPwUq8bMooF9P9
-         cEXH0G4HkEDobrUVxY4EoKd5QTjR7uBeLwKtLv93ypZXbd9kX7oY6ZVWYclkH6xbllKN
-         sSeUEmAYPCXWn6j2OXWa5UuICjMw4IigLI5reMuzAzez9X9XKcwhU0nFm8MEvs/FEHvZ
-         jCUg==
-X-Forwarded-Encrypted: i=1; AKwUvBxPLlyAkZbgO6g1iM9aX0xQYXMl/tS3VoOBI3Ip7+AEuk1wvxdShFVA46FkGJVB/byypWBstDckyXML@vger.kernel.org
-X-Gm-Message-State: AFq9FYLgwNIk7tXbu68+oEj03afCfwRY7YkV5g9rcqSfy+iLDrgn2Ltg
-	dmJWv5DnKiBKI6lyc6JWN//INhn6elSwOhMIWlJgjDnwos+03gOWZ+tX4JzSwkAxBO3tO9ilAaV
-	AEYHm+Nf6Ay8c8hv4Qy3ZHRTFfBI262DAw3FfMyZiC1iKct76fCoOwaTG2ZrcSfo=
-X-Gm-Gg: AYBFou2gRdfCAWlFE/KRVp7U3sudGdUUNgW7XuShY8pKFKrbXBbk2PN/ouo8O+pYWDp
-	DPimi4laCu8NPWWgmJ/ycfOjhLllxIUSIczug/LeetRT/naWeQyoK3IZawjEwQX1AIuHXI+MuzH
-	qvKrHMUW7fQqfiCRta1+Fzx26rR/Eka9rRKUKWhHOgJQ+Ax6F0Stzx/RAWVk3uPbpqUj0DSiDdb
-	p3cVeCmc8S91YLl1l+Z7z7EXyXFsBBEYsExHLdQNzccd6WxVoqRUEG9e4zQ9uzhl6xVG+yT7eRD
-	DPAwwq0A12Gt9aeCW1TVu5nqLdln+zMYmcEFjxqbwAAn/x8RUESfWf/voMjQZToHUNFuqY7vj7f
-	X4OwpznE0W0ms/dSTnbWRSZKEv7Z5MLYpsAgaLdg9Xyzt1kEhp4RmEu03jOZcEijczQjuXdvY6f
-	KHrbJ2NbL2wLoVhaFIK9If3XPFe3L+r38L5i4vPkzv7Uo9QWRW0lwRgs0WRYsgZlzosDM4KvE=
-X-Received: by 2002:a05:6214:450c:b0:91b:ec1d:1746 with SMTP id 6a1803df08f44-91c7d216835mr39651746d6.55.1793197839249;
-        Wed, 28 Oct 2026 07:30:39 -0700 (PDT)
-X-Received: by 2002:a05:6214:450c:b0:91b:ec1d:1746 with SMTP id 6a1803df08f44-91c7d216835mr39650396d6.55.1793197838400;
-        Wed, 28 Oct 2026 07:30:38 -0700 (PDT)
-Received: from loberman-thinkpadp16gen3.rmtusma.csb ([2600:6c65:2440:d8c:aa2b:ddff:fe88:da74])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-91c47a6d598sm131076236d6.3.2026.10.28.07.30.36
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 28 Oct 2026 07:30:37 -0700 (PDT)
-Message-ID: <f4cbbca9e8b743da07902e97b09e49ac7e1cc5fb.camel@redhat.com>
-Subject: Re: [PATCH 0/2] target: iscsi: fix hanged WRITE_PENDING commands
-From: Laurence Oberman <loberman@redhat.com>
-To: Dmitry Bogdanov <d.bogdanov@yadro.com>
-Cc: Martin Petersen <martin.petersen@oracle.com>, Maurizio Lombardi
-	 <mlombard@redhat.com>, target-devel@vger.kernel.org, 
-	michael.christie@oracle.com, linux-scsi@vger.kernel.org, linux@yadro.com
-Date: Wed, 28 Oct 2026 10:30:36 -0400
-In-Reply-To: <20261028140221.GB32229@yadro.com>
-References: <20261027180123.13163-1-d.bogdanov@yadro.com>
-	 <d7a1701ddc2e7c976ad8ff9ec071d9bfdc86a7e2.camel@redhat.com>
-	 <20261028140221.GB32229@yadro.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.60.2 (3.60.2-2.fc44) 
+	dkim=pass (2048-bit key, unprotected) header.d=gonehiking.org header.i=@gonehiking.org header.a=rsa-sha256 header.s=easymail header.b=HB28GRDp;
+	dkim=pass (2048-bit key) header.d=gonehiking.org header.i=@gonehiking.org header.a=rsa-sha256 header.s=easymail header.b=jmqeftvP
+Received: from mailout.easymail.ca (pco.easydns.net [64.68.203.197])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by outbound.easymail.ca (Postfix) with ESMTPS id 2D3B320ACE;
+	Wed, 28 Oct 2026 15:45:43 +0000 (UTC)
+Received: from localhost (localhost [127.0.0.1])
+	by mailout.easymail.ca (Postfix) with ESMTP id 1AAF860D1B;
+	Wed, 28 Oct 2026 15:45:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gonehiking.org;
+	s=easymail; t=1793202343;
+	bh=WwQVlZHVzAfY3mEXsVrF6T2UrGTIl/6KBhHBS1lJ9xg=;
+	h=Date:Reply-To:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=HB28GRDpLDPvjGQqaKVOnF+zB1qziuMqjacBod2WYWMIZe9J/5aiHBNZA/hFfgmWK
+	 AAfXphJr8nS4dAjS5HJCdBKW9NFG2n5MhTf5n4vsKzvEmDFHXnfTSd8RdV1Ldr6c+k
+	 VPByMqcHwVX5kE/namnM7fjGBge4TL6sbI80QYjNGvhxE+vgfbgZWzpZHIYflf+a2I
+	 LmM41rQOvHwTU5UsmtMPP0/YwccU/JMBCP2jgnBFVmwriA2vTFhlgdv2N6f8yHmsEj
+	 sbDjJzX9XnMSKASSBER4BxqilFZdwoKE07AL8TuJhXTzkEnQ/Q8tkHzF0i7k1XDwJX
+	 Ta4iTWkPpRu9Q==
+X-Virus-Scanned: Debian amavisd-new at emo09-pco.easydns.vpn
+Received: from mailout.easymail.ca ([127.0.0.1])
+	by localhost (emo09-pco.easydns.vpn [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id DIG8KVX5uqrZ; Wed, 28 Oct 2026 15:45:42 +0000 (UTC)
+Received: from [127.0.0.1] (localhost [127.0.0.1]) by mailout.easymail.ca (Postfix) with ESMTPSA
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gonehiking.org;
+	s=easymail; t=1793202342;
+	bh=WwQVlZHVzAfY3mEXsVrF6T2UrGTIl/6KBhHBS1lJ9xg=;
+	h=Date:Reply-To:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=jmqeftvPvDlGOBWT7r92sutGqRTJqKw/Cdy9BxKd0C7z0A2N2y4GNZq+Re8PjLVYu
+	 gkMkbzs+0xpsf3xpmzYbH7SaF68dQkjeOFytelGhtcq2fko44GaLsp3ipvHSIKDrDr
+	 6Aivk3XrpAWfwnRNO2AvQqSK7iQZ+f2QAcNLaGZhhYosJsMY5jZPFlnh6d2xzN+k5t
+	 pFXzjk6OG/2DNCAQbZPONooCDDIzDTw8eXiJXHW73AueX9SNQo6/OLGbhrnhbbolj5
+	 cd61rmdT5UCCQinrpirwWlV7yNvJwhpQo7ZsCLBSBhKNIQRP/RSPdWIJsoz8NGWqTp
+	 q/Aaeq7JtdP3Q==
+Received: from [127.0.0.1] (localhost [127.0.0.1]) by mailout.easymail.ca (Postfix) with ESMTPSA
+Message-ID: <10f06b90-1012-401b-93b5-331d487973ab@gonehiking.org>
+Date: Wed, 28 Oct 2026 09:45:40 -0600
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -124,173 +83,393 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Reply-To: khalid@gonehiking.org
+Subject: Re: [PATCH v4 04/54] scsi: BusLogic: Pass the host pointer directly
+ to several functions
+To: Bart Van Assche <bvanassche@acm.org>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <mkp@kernel.org>
+References: <cover.1790360262.git.bvanassche@acm.org>
+ <09e99ec9c6fa24ee5fe3c47110c88a1be076e01a.1790360262.git.bvanassche@acm.org>
+From: Khalid Aziz <khalid@gonehiking.org>
+Content-Language: en-US
+Autocrypt: addr=khalid@gonehiking.org; keydata=
+ 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
+In-Reply-To: <09e99ec9c6fa24ee5fe3c47110c88a1be076e01a.1790360262.git.bvanassche@acm.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Wed, 2026-10-28 at 17:02 +0300, Dmitry Bogdanov wrote:
-> Hi Laurence,
->=20
-> On Tue, Oct 27, 2026 at 04:08:08PM -0400, Laurence Oberman wrote:
-> >=20
-> > On Tue, 2026-10-27 at 21:01 +0300, Dmitry Bogdanov wrote:
-> > > ISCSI has some old leftovers in the code that prevents passing
-> > > the
-> > > aborted
-> > > command to the target core to make the actual abort. Such
-> > > commands
-> > > hang
-> > > until connection is closed.
-> > > So remove those leftovers.
-> > >=20
-> > > Dmitry Bogdanov (2):
-> > > =C2=A0 Revert "scsi: target: iscsi: Fix hang for aborted WRITE_PENDIN=
-G
-> > > =C2=A0=C2=A0=C2=A0 commands"
-> > > =C2=A0 scsi: target: iscsi: fix hanging WRITE_PENDING commands
-> > >=20
-> > > =C2=A0drivers/target/iscsi/iscsi_target.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0 | 19 ------------------
-> > > -
-> > > =C2=A0drivers/target/iscsi/iscsi_target_erl1.c |=C2=A0 8 --------
-> > > =C2=A02 files changed, 27 deletions(-)
-> >=20
-> > Hello Dmitri
-> > Thanks for posting this. I have a series in flight for the same
-> > hang:
-> >=20
-> > https://lore.kernel.org/linux-scsi/20261027122837.2148074-1-loberman@re=
-dhat.com/
->=20
-> I know, that is why both you and Maurizio in To: field. I want from
-> you some comments. Thank you for review.
->=20
-> >=20
-> > Is the revert maybe aimed at the wrong layer, and the sashiko
-> > review of
-> > your 2/2 makes the case better than I can: with the fabric check
-> > removed, an aborted command reaches target_execute_cmd(),
-> > target_cmd_interrupted() queues target_abort_work and returns
-> > without
-> > changing t_state, the command stays on conn_cmd_list in
-> > TRANSPORT_WRITE_PENDING, and iscsit_release_commands_from_conn()
-> > completes it a second time if the connection closes.
->=20
-> As I said in response to sashiko-bot, that is the current (always be)
-> behavior.
-> It is not introduced by my patch.
->=20
-> > That is the same double completion you are reverting d5869dae5080
-> > for.
-> > It
-> > is not a defect in Maurizio's patch and it will not be fixed by
-> > replacing
-> > it -- target_cmd_interrupted() records nothing when it queues an
-> > abort,
-> > so
-> > any site that completes an aborted WRITE_PENDING command can be
-> > followed
-> > by another one. I found this from vmcores on a customer system
-> > before
-> > either of us posted, so no argument from me that it is real.
->=20
-> Not the same, d5869dae5080 greatly increases the probability of the
-> double completion by calling target_complete_cmd() which is allowed
-> to be
-> called only once for the cmd. Calling it twice is wrong by nature.
-> Fabric
-> module shall call either target_execute_cmd() either
-> transport_generic_request_failure(). target_complete_cmd() is for
-> backstore modules. That target_complete_cmd() at the iscsi
-> connection release is not so good too. But it was intended to be the
-> last(and the only) call from fabric driver for the command never be
-> in
-> the target core.
->=20
-> >=20
-> > Patch 3 of my series fixes it there, under t_state_lock, for both
-> > queueing sites in target_core_transport.c and for every fabric.
-> > With
-> > that
-> > in place your 2/2 is safe and d5869dae5080 does not need reverting
-> > for
-> > this reason -- which matters, because the revert is not free: that
-> > commit
-> > carries CVE-2026-97951 and is in 5.10.y, 5.15.y, 6.1.y, 6.6.y,
-> > 6.12.y,
-> > 6.18.y and 7.2.y.
->=20
-> My intention is to not create a situation when there a race is
-> possible
-> instead of fixing those races.=20
->=20
-> > Two questions on 2/2 independent of all that.
-> >=20
-> > Removing the sense_reason early return in iscsit_execute_cmd()
-> > means
-> > transport_send_check_condition_and_sense() now runs for an aborted
-> > command. It guards only on SCF_SENT_CHECK_CONDITION, never checks
-> > CMD_T_ABORTED, and ends in queue_status(); target_handle_abort()
-> > also
-> > calls queue_status() for a CMD_T_TAS command, and each drops a
-> > reference.
-> > Can an aborted command with a sense reason send both a CHECK
-> > CONDITION
-> > and a TASK ABORTED, and drop two references?
->=20
-> No, transport_send_check_condition_and_sense will change t_state,
-> send
-> status and decrease cmd->refcnt and then unblock wait_for_completion
-> of
-> ABORT/LUN_RESET. Both the commnand and ABORT of that command will be
-> completed sucessfully.
-> Noone calls target_handle_abort().
->=20
-> > And with the early return gone, a LUN_RESET aborting a large WRITE
-> > waits in target_put_cmd_and_wait() for the whole remaining data
-> > transfer. That is bounded where today it is not, but on a large
-> > transfer it may still trip the hung task timeout that made this
-> > visible.
-> =C2=A0
-> That is a idea for a future discussion and improvmens. This patchset
-> is
-> narrowed to just to fix the stuck of WRITE_PENDING commands.
->=20
-> The abort of WRITE_PENDIG command in the state waiting for DataOuts
-> currently will wait for the data completion. So, my patch again does
-> not
-> do worse.
->=20
-> > On the overlap: your 2/2 and patch 4 of my series touch the same
-> > lines,
-> > so only one can apply, and I have no attachment to mine if yours is
-> > the
-> > better shape. Patches 1 to 3 are core-side and conflict with
-> > nothing
-> > you have posted.
-> >=20
-> > Martin, would you prefer those three as their own series,
-> > given both candidate iSCSI fixes need patch 3 to be correct?
-> >=20
-> > I am happy to test either or both: I have a reporter's environment
-> > that
-> > reproduces this reliably and 300-cycle runs on it.
->=20
-> My patch is more than 2 years old in customers setups, but certainly
-> it would be great to test it in other environments too.
->=20
-> BR,
-> =C2=A0Dmitry
+On 9/25/26 12:25 PM, Bart Van Assche wrote:
+> Pass the struct Scsi_Host pointer directly to multiple functions. This
+> prepares the BusLogic driver for enabling compiler-based lock context
+> analysis. No functionality has been changed.
+> 
+> Cc: Khalid Aziz <khalid@gonehiking.org>
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> ---
+>   drivers/scsi/BusLogic.c | 93 +++++++++++++++++++++++------------------
+>   drivers/scsi/BusLogic.h |  2 +-
+>   2 files changed, 54 insertions(+), 41 deletions(-)
+> 
 
-OK Great, reverting d5869dae5080 and applying yours and getting it
-tested. If it passes than we can revisit my patches 1-3 for a later
-series.
+Hi Bert,
 
-On testing: I will build revert + your 2/2 on a RHEL9.8 based distro
-kernel and put it through the reporter's environment -- an Oracle RAC
-cluster where this reproduces reliably and where the earlier candidate
-fixes failed at 95 and 196 LUN_RESET cycles. The pass mark is 300
-cycles, which is what my patch 4 cleared twice. I will deliberately
-leave my core patches out of that build so the result is about your
-series alone.
+Sorry about the delay in picking this back up.
 
-Thanks for all your reviews and assistance.
-Laurence
+I looked at a few other ways of accomplishing what you are trying to do and 
+those result in more code churn than I would like. This might be the least 
+disruptive. I found that MPT Fusion and FCoE drivers also define their 
+queuecommand functions without using DEF_SCSI_QCMD(). These are very 
+commonly used drivers so that makes me feel more comfortable with the 
+change you are proposing. I am ok with this change:
+
+Acked-by: Khalid Aziz <khalid@gonehiking.org>
+
+--
+Khalid
+
+> diff --git a/drivers/scsi/BusLogic.c b/drivers/scsi/BusLogic.c
+> index 27b446c0c5d0..75aaf35383a9 100644
+> --- a/drivers/scsi/BusLogic.c
+> +++ b/drivers/scsi/BusLogic.c
+> @@ -276,8 +276,9 @@ static void blogic_create_addlccbs(struct blogic_adapter *adapter,
+>     Lock should already have been acquired by the caller.
+>   */
+>   
+> -static struct blogic_ccb *blogic_alloc_ccb(struct blogic_adapter *adapter)
+> +static struct blogic_ccb *blogic_alloc_ccb(struct Scsi_Host *host)
+>   {
+> +	struct blogic_adapter *adapter = (void *)host->hostdata;
+>   	static unsigned long serial;
+>   	struct blogic_ccb *ccb;
+>   	ccb = adapter->free_ccbs;
+> @@ -307,7 +308,8 @@ static struct blogic_ccb *blogic_alloc_ccb(struct blogic_adapter *adapter)
+>     caller.
+>   */
+>   
+> -static void blogic_dealloc_ccb(struct blogic_ccb *ccb, int dma_unmap)
+> +static void blogic_dealloc_ccb(struct Scsi_Host *host, struct blogic_ccb *ccb,
+> +			       int dma_unmap)
+>   {
+>   	struct blogic_adapter *adapter = ccb->adapter;
+>   
+> @@ -2596,8 +2598,10 @@ static void blogic_scan_inbox(struct blogic_adapter *adapter)
+>     should already have been acquired by the caller.
+>   */
+>   
+> -static void blogic_process_ccbs(struct blogic_adapter *adapter)
+> +static void blogic_process_ccbs(struct Scsi_Host *host)
+>   {
+> +	struct blogic_adapter *adapter = (void *)host->hostdata;
+> +
+>   	if (adapter->processing_ccbs)
+>   		return;
+>   	adapter->processing_ccbs = true;
+> @@ -2621,7 +2625,7 @@ static void blogic_process_ccbs(struct blogic_adapter *adapter)
+>   			/*
+>   			   Place CCB back on the Host Adapter's free list.
+>   			 */
+> -			blogic_dealloc_ccb(ccb, 1);
+> +			blogic_dealloc_ccb(host, ccb, 1);
+>   #if 0			/* this needs to be redone different for new EH */
+>   			/*
+>   			   Bus Device Reset CCBs have the command field
+> @@ -2650,7 +2654,7 @@ static void blogic_process_ccbs(struct blogic_adapter *adapter)
+>   				if (ccb->status == BLOGIC_CCB_RESET &&
+>   						ccb->tgt_id == tgt_id) {
+>   					command = ccb->command;
+> -					blogic_dealloc_ccb(ccb, 1);
+> +					blogic_dealloc_ccb(host, ccb, 1);
+>   					adapter->active_cmds[tgt_id]--;
+>   					command->result = DID_RESET << 16;
+>   					scsi_done(command);
+> @@ -2721,7 +2725,7 @@ static void blogic_process_ccbs(struct blogic_adapter *adapter)
+>   			/*
+>   			   Place CCB back on the Host Adapter's free list.
+>   			 */
+> -			blogic_dealloc_ccb(ccb, 1);
+> +			blogic_dealloc_ccb(host, ccb, 1);
+>   			/*
+>   			   Call the SCSI Command Completion Routine.
+>   			 */
+> @@ -2740,11 +2744,12 @@ static void blogic_process_ccbs(struct blogic_adapter *adapter)
+>   static irqreturn_t blogic_inthandler(int irq_ch, void *devid)
+>   {
+>   	struct blogic_adapter *adapter = (struct blogic_adapter *) devid;
+> +	struct Scsi_Host *host = adapter->scsi_host;
+>   	unsigned long processor_flag;
+>   	/*
+>   	   Acquire exclusive access to Host Adapter.
+>   	 */
+> -	spin_lock_irqsave(&adapter->scsi_host->host_lock, processor_flag);
+> +	spin_lock_irqsave(&host->host_lock, processor_flag);
+>   	/*
+>   	   Handle Interrupts appropriately for each Host Adapter type.
+>   	 */
+> @@ -2794,25 +2799,25 @@ static irqreturn_t blogic_inthandler(int irq_ch, void *devid)
+>   	   Process any completed CCBs.
+>   	 */
+>   	if (adapter->firstccb != NULL)
+> -		blogic_process_ccbs(adapter);
+> +		blogic_process_ccbs(host);
+>   	/*
+>   	   Reset the Host Adapter if requested.
+>   	 */
+>   	if (adapter->adapter_extreset) {
+>   		blogic_warn("Resetting %s due to External SCSI Bus Reset\n", adapter, adapter->full_model);
+>   		blogic_inc_count(&adapter->ext_resets);
+> -		blogic_resetadapter(adapter, false);
+> +		blogic_resetadapter(host, false);
+>   		adapter->adapter_extreset = false;
+>   	} else if (adapter->adapter_intern_err) {
+>   		blogic_warn("Resetting %s due to Host Adapter Internal Error\n", adapter, adapter->full_model);
+>   		blogic_inc_count(&adapter->adapter_intern_errors);
+> -		blogic_resetadapter(adapter, true);
+> +		blogic_resetadapter(host, true);
+>   		adapter->adapter_intern_err = false;
+>   	}
+>   	/*
+>   	   Release exclusive access to Host Adapter.
+>   	 */
+> -	spin_unlock_irqrestore(&adapter->scsi_host->host_lock, processor_flag);
+> +	spin_unlock_irqrestore(&host->host_lock, processor_flag);
+>   	return IRQ_HANDLED;
+>   }
+>   
+> @@ -2823,9 +2828,10 @@ static irqreturn_t blogic_inthandler(int irq_ch, void *devid)
+>     already have been acquired by the caller.
+>   */
+>   
+> -static bool blogic_write_outbox(struct blogic_adapter *adapter,
+> +static bool blogic_write_outbox(struct Scsi_Host *host,
+>   		enum blogic_action action, struct blogic_ccb *ccb)
+>   {
+> +	struct blogic_adapter *adapter = (void *)host->hostdata;
+>   	struct blogic_outbox *next_outbox;
+>   
+>   	next_outbox = adapter->next_outbox;
+> @@ -2859,17 +2865,16 @@ static int blogic_hostreset(struct scsi_cmnd *SCpnt)
+>   {
+>   	struct blogic_adapter *adapter =
+>   		(struct blogic_adapter *) SCpnt->device->host->hostdata;
+> -
+> +	struct Scsi_Host *shost = adapter->scsi_host;
+>   	unsigned int id = SCpnt->device->id;
+>   	struct blogic_tgt_stats *stats = &adapter->tgt_stats[id];
+>   	int rc;
+>   
+> -	spin_lock_irq(&SCpnt->device->host->host_lock);
+> -
+> +	spin_lock_irq(&shost->host_lock);
+>   	blogic_inc_count(&stats->adapter_reset_req);
+> +	rc = blogic_resetadapter(shost, false);
+> +	spin_unlock_irq(&shost->host_lock);
+>   
+> -	rc = blogic_resetadapter(adapter, false);
+> -	spin_unlock_irq(&SCpnt->device->host->host_lock);
+>   	return rc;
+>   }
+>   
+> @@ -2878,11 +2883,11 @@ static int blogic_hostreset(struct scsi_cmnd *SCpnt)
+>     Outgoing Mailbox for execution by the associated Host Adapter.
+>   */
+>   
+> -static enum scsi_qc_status blogic_qcmd_lck(struct scsi_cmnd *command)
+> +static enum scsi_qc_status blogic_qcmd_lck(struct Scsi_Host *shost, struct scsi_cmnd *command)
+>   {
+>   	void (*comp_cb)(struct scsi_cmnd *) = scsi_done;
+>   	struct blogic_adapter *adapter =
+> -		(struct blogic_adapter *) command->device->host->hostdata;
+> +		(struct blogic_adapter *) shost->hostdata;
+>   	struct blogic_tgt_flags *tgt_flags =
+>   		&adapter->tgt_flags[command->device->id];
+>   	struct blogic_tgt_stats *tgt_stats = adapter->tgt_stats;
+> @@ -2913,12 +2918,12 @@ static enum scsi_qc_status blogic_qcmd_lck(struct scsi_cmnd *command)
+>   	   probably hung so signal an error as a Host Adapter Hard Reset
+>   	   should be initiated soon.
+>   	 */
+> -	ccb = blogic_alloc_ccb(adapter);
+> +	ccb = blogic_alloc_ccb(shost);
+>   	if (ccb == NULL) {
+> -		spin_unlock_irq(&adapter->scsi_host->host_lock);
+> +		spin_unlock_irq(&shost->host_lock);
+>   		blogic_delay(1);
+> -		spin_lock_irq(&adapter->scsi_host->host_lock);
+> -		ccb = blogic_alloc_ccb(adapter);
+> +		spin_lock_irq(&shost->host_lock);
+> +		ccb = blogic_alloc_ccb(shost);
+>   		if (ccb == NULL) {
+>   			command->result = DID_ERROR << 16;
+>   			comp_cb(command);
+> @@ -3046,7 +3051,7 @@ static enum scsi_qc_status blogic_qcmd_lck(struct scsi_cmnd *command)
+>   	if (dma_mapping_error(&adapter->pci_device->dev, sense_buf)) {
+>   		blogic_err("DMA mapping for sense data buffer failed\n",
+>   				adapter);
+> -		blogic_dealloc_ccb(ccb, 0);
+> +		blogic_dealloc_ccb(shost, ccb, 0);
+>   		return SCSI_MLQUEUE_HOST_BUSY;
+>   	}
+>   	ccb->sensedata = sense_buf;
+> @@ -3061,15 +3066,15 @@ static enum scsi_qc_status blogic_qcmd_lck(struct scsi_cmnd *command)
+>   		   so signal an error as a Host Adapter Hard Reset should
+>   		   be initiated soon.
+>   		 */
+> -		if (!blogic_write_outbox(adapter, BLOGIC_MBOX_START, ccb)) {
+> -			spin_unlock_irq(&adapter->scsi_host->host_lock);
+> +		if (!blogic_write_outbox(shost, BLOGIC_MBOX_START, ccb)) {
+> +			spin_unlock_irq(&shost->host_lock);
+>   			blogic_warn("Unable to write Outgoing Mailbox - Pausing for 1 second\n", adapter);
+>   			blogic_delay(1);
+> -			spin_lock_irq(&adapter->scsi_host->host_lock);
+> -			if (!blogic_write_outbox(adapter, BLOGIC_MBOX_START,
+> +			spin_lock_irq(&shost->host_lock);
+> +			if (!blogic_write_outbox(shost, BLOGIC_MBOX_START,
+>   						ccb)) {
+>   				blogic_warn("Still unable to write Outgoing Mailbox - Host Adapter Dead?\n", adapter);
+> -				blogic_dealloc_ccb(ccb, 1);
+> +				blogic_dealloc_ccb(shost, ccb, 1);
+>   				command->result = DID_ERROR << 16;
+>   				scsi_done(command);
+>   			}
+> @@ -3089,12 +3094,20 @@ static enum scsi_qc_status blogic_qcmd_lck(struct scsi_cmnd *command)
+>   		   pending.
+>   		 */
+>   		if (ccb->status == BLOGIC_CCB_COMPLETE)
+> -			blogic_process_ccbs(adapter);
+> +			blogic_process_ccbs(shost);
+>   	}
+>   	return 0;
+>   }
+>   
+> -static DEF_SCSI_QCMD(blogic_qcmd)
+> +static enum scsi_qc_status blogic_qcmd(struct Scsi_Host *shost, struct scsi_cmnd *cmd)
+> +{
+> +	enum scsi_qc_status rc;
+> +
+> +	spin_lock_irq(&shost->host_lock);
+> +	rc = blogic_qcmd_lck(shost, cmd);
+> +	spin_unlock_irq(&shost->host_lock);
+> +	return rc;
+> +}
+>   
+>   #if 0
+>   /*
+> @@ -3103,9 +3116,8 @@ static DEF_SCSI_QCMD(blogic_qcmd)
+>   
+>   static int blogic_abort(struct scsi_cmnd *command)
+>   {
+> -	struct blogic_adapter *adapter =
+> -		(struct blogic_adapter *) command->device->host->hostdata;
+> -
+> +	struct Scsi_Host *const shost = command->device->host;
+> +	struct blogic_adapter *adapter = (void *) shost->hostdata;
+>   	int tgt_id = command->device->id;
+>   	struct blogic_ccb *ccb;
+>   	blogic_inc_count(&adapter->tgt_stats[tgt_id].aborts_request);
+> @@ -3144,7 +3156,7 @@ static int blogic_abort(struct scsi_cmnd *command)
+>   				adapter->fw_ver[0] < '5') {
+>   			blogic_warn("Unable to Abort CCB #%ld to Target %d - Abort Tag Not Supported\n", adapter, ccb->serial, tgt_id);
+>   			return FAILURE;
+> -		} else if (blogic_write_outbox(adapter, BLOGIC_MBOX_ABORT,
+> +		} else if (blogic_write_outbox(shost, BLOGIC_MBOX_ABORT,
+>   					ccb)) {
+>   			blogic_warn("Aborting CCB #%ld to Target %d\n",
+>   					adapter, ccb->serial, tgt_id);
+> @@ -3169,7 +3181,7 @@ static int blogic_abort(struct scsi_cmnd *command)
+>   		   may still be pending.
+>   		 */
+>   		if (ccb->status == BLOGIC_CCB_COMPLETE)
+> -			blogic_process_ccbs(adapter);
+> +			blogic_process_ccbs(shost);
+>   		return SUCCESS;
+>   	}
+>   	return SUCCESS;
+> @@ -3181,8 +3193,9 @@ static int blogic_abort(struct scsi_cmnd *command)
+>     currently executing SCSI Commands as having been Reset.
+>   */
+>   
+> -static int blogic_resetadapter(struct blogic_adapter *adapter, bool hard_reset)
+> +static int blogic_resetadapter(struct Scsi_Host *host, bool hard_reset)
+>   {
+> +	struct blogic_adapter *adapter = (void *)host->hostdata;
+>   	struct blogic_ccb *ccb;
+>   	int tgt_id;
+>   
+> @@ -3203,7 +3216,7 @@ static int blogic_resetadapter(struct blogic_adapter *adapter, bool hard_reset)
+>   
+>   	for (ccb = adapter->all_ccbs; ccb != NULL; ccb = ccb->next_all)
+>   		if (ccb->status == BLOGIC_CCB_ACTIVE)
+> -			blogic_dealloc_ccb(ccb, 1);
+> +			blogic_dealloc_ccb(host, ccb, 1);
+>   	/*
+>   	 * Wait a few seconds between the Host Adapter Hard Reset which
+>   	 * initiates a SCSI Bus Reset and issuing any SCSI Commands.  Some
+> @@ -3212,9 +3225,9 @@ static int blogic_resetadapter(struct blogic_adapter *adapter, bool hard_reset)
+>   	 */
+>   
+>   	if (hard_reset) {
+> -		spin_unlock_irq(&adapter->scsi_host->host_lock);
+> +		spin_unlock_irq(&host->host_lock);
+>   		blogic_delay(adapter->bus_settle_time);
+> -		spin_lock_irq(&adapter->scsi_host->host_lock);
+> +		spin_lock_irq(&host->host_lock);
+>   	}
+>   
+>   	for (tgt_id = 0; tgt_id < adapter->maxdev; tgt_id++) {
+> diff --git a/drivers/scsi/BusLogic.h b/drivers/scsi/BusLogic.h
+> index 24697a5bedc8..6ace3c307a90 100644
+> --- a/drivers/scsi/BusLogic.h
+> +++ b/drivers/scsi/BusLogic.h
+> @@ -1279,7 +1279,7 @@ static int blogic_sdev_configure(struct scsi_device *,
+>   				 struct queue_limits *lim);
+>   static void blogic_qcompleted_ccb(struct blogic_ccb *);
+>   static irqreturn_t blogic_inthandler(int, void *);
+> -static int blogic_resetadapter(struct blogic_adapter *, bool hard_reset);
+> +static int blogic_resetadapter(struct Scsi_Host *host, bool hard_reset);
+>   static void blogic_msg(enum blogic_msglevel, char *, struct blogic_adapter *, ...);
+>   static int __init blogic_setup(char *);
+>   
 
