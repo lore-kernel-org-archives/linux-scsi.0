@@ -1,67 +1,66 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=199.89.1.14
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793211878;
-	b=S3ewKB+RzomIpldox7ckUfMFZhRZs0O+ayAT8eemCoDIV5v1osvloChVSet+8PKl3SBV
-	 ePmEoNI75RX/V68+1XrOAv1PAN4tv19HU2ovXT6wtuGrPLU9nstn7eShAF3DIFJsvY+fa
-	 Bv6a4BuNyYSZHvY9lWnz8HlqRmYAe0gXy5puf9pEG7ZyRYSQZkSUuMKnDTS8ulZNuEEEM
-	 eO87rNYcmjqihbwMGRYwwIbVOI78/mJNF3j1VcRL0atjeGYBGBV7uFFH2gWeNsZ9ayeug
-	 5SF0kUpo0VqJwIO75JGdJZtiBKJoR2pY3tMwGKO2lVgtTebT4MMtfZhOlRuImVbfODg==
+	t=1793212852;
+	b=o6k4ftZtRSgJHjdwGyiOG0f/TTuZs4JLnQPYnPT7Jfo2vjhe5CWh3awsJH5KkZEp2obZ
+	 ZBLhCVBZ9QtQtxrKYXOugiNonKVUNoZoINEqKs2HMvQMhxVQnkG5nMyJuh7rOYQ3fRPjy
+	 jmTKN7edjZgFNSVtjvNeDErISpIcXcMNayf5xL4hARtTFM1vs2r8yUaB7tAvsPlLDGPY0
+	 Rz8aV0WxELKwNbHXXc5Jzf/+8ehy60J0yo2qhVsY7i2jel5O2iSSxczdq6hx4O/9gV+hd
+	 apHFNivmJHyRLbfwSei9HoYtoNdojKxJT2i5hN904ONHerKZyI6zWyrEJfLAnr2h+vw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793211878;
-	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
-	 In-Reply-To:References:User-Agent:X-stable:X-Patchwork-Hint:
-	 MIME-Version:Content-Transfer-Encoding;
-	bh=or8+JLMxiZBPAbx6o4e8NET7jv5HaVgGCgnWz6oodK8=;
-	b=HRDJi8puiUqmt//Z5Lifj8Vd7VXAAZtdenCXglyhnntKW1T5hdqomQE2z96lE3FblS5l
-	 YrU77LDlyDFAKxIHL4RlgpPtaMhRMypvO3xyBUd8XTVhheQkcacrS9C81uDitD9rhHg3m
-	 vYHGGiPVpK3iwj6NgEKbUAJwzFZpnK7oO+n/h2RUheBFDpbjlcqeMckY8cY6SrMlfpb8z
-	 jXdFSFzZBEz68jK+pTaLT8BlUWuQY+guvJgc3lb+b1HWnARm8SZCevzf9OGtzrX4Tr8JJ
-	 JYwCQ1AEhbId0Zzl3j0yk//GkWbY4y4dvCGF0GeYGRN+1SfvPnadq1+KXDs7qIJJaLA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793212852;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Virus-Scanned:Received:
+	 Received:Message-ID:Date:MIME-Version:User-Agent:Subject:To:Cc:
+	 References:Content-Language:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=38YjRw3XFCX/Ql/NfUUIye1DUBOgX/1UPpqGpaC2PX8=;
+	b=F+zXSEUoag8NmdzgHTum0kIV5FW2ZaeCtKbqDjT2m83/+mcmGnrbA5dVJFypwyXlE+uf
+	 2tzexzb2j6RBJKfSnNhkcOoVCFcKdiu7rWC7aC5fEZ9wnav17UDO/xlndCB2E/qhnuCOI
+	 a1BV2Mrr7yVNwaafIVMFp0HnUCr4knj9TIO1vA6jMU3R5gY6SkUjC3CN4rhM3Od9rvXeQ
+	 lZ/ZMeDWGySNRp0Po734BP0CK8KoogYntedSWEUAKDybxc+rDI0UGSuKwEFcixgfQyycj
+	 qZ4nYoyRq5nMOl+mNQncTmm8Jwzi26wQlvBFNn1LnR+oMF+8yL8SfT+Ivy7EO0I1wsA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=linuxfoundation.org header.i=@linuxfoundation.org header.a=rsa-sha256 header.s=korg header.b=FrMkiKcx;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=acm.org;
+	spf=pass smtp.mailfrom=acm.org;
+	dkim=pass header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=dyhXSdYK;
+	arc=none smtp.remote-ip=199.89.1.14
+Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED4C8606A31C;
-	Wed, 28 Oct 2026 18:24:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0D1C606A31D;
+	Wed, 28 Oct 2026 18:40:51 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D0D1C606A31D
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.a=rsa-sha256 header.s=korg header.b=FrMkiKcx
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 46B071F01825;
-	Wed, 28 Oct 2026 18:24:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linuxfoundation.org;
-	s=korg; t=1793211877;
-	bh=or8+JLMxiZBPAbx6o4e8NET7jv5HaVgGCgnWz6oodK8=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=FrMkiKcxGezg51JX8Re+YsM6RtA0x7t4rtuyGtV2SzW1o0+TW/nT9Dy6NKkXkDjjQ
-	 Q+7Y15nhSbT+Rh6YJ6/joPNYgMVIl61jZ1lsv/IEB16SjABO/ZwsMBGJmIBEdgHyku
-	 4KJUGPQp0oZE6gNeKgtLgAH9wAgEIScPTUYdkfxc=
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: stable@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	patches@lists.linux.dev,
-	Daniil Stas <daniil.stas@posteo.net>,
-	Guenter Roeck <linux@roeck-us.net>,
-	Chris Healy <cphealy@gmail.com>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	linux-kernel@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	linux-ide@vger.kernel.org,
-	linux-hwmon@vger.kernel.org,
-	"Nobuhiro Iwamatsu (CIP)" <nobuhiro.iwamatsu.x90@mail.toshiba>,
-	Sasha Levin <sashal@kernel.org>
-Subject: [PATCH 5.15 532/571] hwmon: (drivetemp) Fix driver producing garbage data when SCSI errors occur
-Date: Wed, 28 Oct 2026 18:01:19 +0100
-Message-ID: <20261028170020.654917731@linuxfoundation.org>
-X-Mailer: git-send-email 2.56.0
-In-Reply-To: <20261028170008.009143722@linuxfoundation.org>
-References: <20261028170008.009143722@linuxfoundation.org>
-User-Agent: quilt/0.69
-X-stable: review
-X-Patchwork-Hint: ignore
+	dkim=pass (2048-bit key, unprotected) header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=dyhXSdYK
+Received: from localhost (localhost [127.0.0.1])
+	by 011.lax.mailroute.net (Postfix) with ESMTP id 4jFGQW2fVJz1XM4Tn;
+	Wed, 28 Oct 2026 18:40:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1793212848; x=1795804849; bh=38YjRw3XFCX/Ql/NfUUIye1D
+	UBOgX/1UPpqGpaC2PX8=; b=dyhXSdYKrZzmr/KB9KCkNelx9i63KI8vZFKaBOK6
+	7LjJjdSPAc2Z2Bo13//PPPFZbRq9J1LtUEGn+2WMqj0Px2cHvSDt4XLRWNYvRAfy
+	1RM6crMnZWd0aUoDS4I2K1cycppbsj7ESJ4JHjEStFSfN8w3k08DAMIoY0tMWqnl
+	qgSqtSEAR/GUBzVP7zyT/t6g8gCqyiVrx148mBTbyxIlyQM64cSpwZ5OSmpfEe7G
+	jUqZQVt0i/FwrmuW/phDE2OOnCClGycQj06C3ulwCVNerbpNNDZ3m7Bkpwuko/ME
+	cfBiyeeBYFHsVrqwUAogonm8e0kOH9OOEzZlOD/j0fmwqQ==
+X-Virus-Scanned: by MailRoute
+Received: from 011.lax.mailroute.net ([127.0.0.1])
+ by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id 0X-Qh9JJIudq; Wed, 28 Oct 2026 18:40:48 +0000 (UTC)
+Received: from [IPV6:2a00:79e0:2ed2:d:2401:7afd:3947:f56f] (unknown [104.135.182.43])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4jFGQR5ZKYz1XM4Tl;
+	Wed, 28 Oct 2026 18:40:47 +0000 (UTC)
+Message-ID: <96f75e1f-9b4d-490d-9492-e60bdc31ae79@acm.org>
+Date: Wed, 28 Oct 2026 11:40:47 -0700
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -71,78 +70,28 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi: ufs: core: Clear power-on UNIT ATTENTION on BIWIN
+ devices
+To: Alexey Charkov <alchark@flipper.net>,
+ Alim Akhtar <alim.akhtar@samsung.com>, Bean Huo <beanhuo@micron.com>,
+ Stanley Jhu <stanleyjhu@google.com>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <mkp@kernel.org>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20261028-biwin-tua-quirk-v1-1-767a12c9b9cc@flipper.net>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20261028-biwin-tua-quirk-v1-1-767a12c9b9cc@flipper.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-5.15-stable review patch.  If anyone has any objections, please let me know.
+On 10/28/26 5:54 AM, Alexey Charkov wrote:
+>   drivers/ufs/core/ufshcd.c | 54 +++++++++++++++++++++++++++++++++++++++++++++++
+>   include/ufs/ufs_quirks.h  |  9 ++++++++
+>   include/ufs/ufshcd.h      |  1 +
 
-------------------
+The quirk has been implemented in the wrong layer. The right layer to
+implement this type of quirk is the SCSI disk driver (sd.c).
 
-From: Daniil Stas <daniil.stas@posteo.net>
-
-commit 82163d63ae7a4c36142cd252388737205bb7e4b9 upstream.
-
-scsi_execute_cmd() function can return both negative (linux codes) and
-positive (scsi_cmnd result field) error codes.
-
-Currently the driver just passes error codes of scsi_execute_cmd() to
-hwmon core, which is incorrect because hwmon only checks for negative
-error codes. This leads to hwmon reporting uninitialized data to
-userspace in case of SCSI errors (for example if the disk drive was
-disconnected).
-
-This patch checks scsi_execute_cmd() output and returns -EIO if it's
-error code is positive.
-
-Fixes: 5b46903d8bf37 ("hwmon: Driver for disk and solid state drives with temperature sensors")
-Signed-off-by: Daniil Stas <daniil.stas@posteo.net>
-Cc: Guenter Roeck <linux@roeck-us.net>
-Cc: Chris Healy <cphealy@gmail.com>
-Cc: Linus Walleij <linus.walleij@linaro.org>
-Cc: Martin K. Petersen <martin.petersen@oracle.com>
-Cc: Bart Van Assche <bvanassche@acm.org>
-Cc: linux-kernel@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-ide@vger.kernel.org
-Cc: linux-hwmon@vger.kernel.org
-Link: https://lore.kernel.org/r/20250105213618.531691-1-daniil.stas@posteo.net
-[groeck: Avoid inline variable declaration for portability]
-Signed-off-by: Guenter Roeck <linux@roeck-us.net>
-Signed-off-by: Nobuhiro Iwamatsu (CIP) <nobuhiro.iwamatsu.x90@mail.toshiba>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/hwmon/drivetemp.c | 10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/hwmon/drivetemp.c b/drivers/hwmon/drivetemp.c
-index 5bac2b0fc7bb6..b3de637a3a1f2 100644
---- a/drivers/hwmon/drivetemp.c
-+++ b/drivers/hwmon/drivetemp.c
-@@ -165,6 +165,7 @@ static int drivetemp_scsi_command(struct drivetemp_data *st,
- {
- 	u8 scsi_cmd[MAX_COMMAND_SIZE];
- 	int data_dir;
-+	int err;
- 
- 	memset(scsi_cmd, 0, sizeof(scsi_cmd));
- 	scsi_cmd[0] = ATA_16;
-@@ -192,9 +193,12 @@ static int drivetemp_scsi_command(struct drivetemp_data *st,
- 	scsi_cmd[12] = lba_high;
- 	scsi_cmd[14] = ata_command;
- 
--	return scsi_execute_req(st->sdev, scsi_cmd, data_dir,
--				st->smartdata, ATA_SECT_SIZE, NULL, HZ, 5,
--				NULL);
-+	err = scsi_execute_req(st->sdev, scsi_cmd, data_dir,
-+			       st->smartdata, ATA_SECT_SIZE, NULL, HZ, 5,
-+			       NULL);
-+	if (err > 0)
-+		err = -EIO;
-+	return err;
- }
- 
- static int drivetemp_ata_command(struct drivetemp_data *st, u8 feature,
--- 
-2.53.0
-
-
-
+Bart.
