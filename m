@@ -1,72 +1,72 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.210.199
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.210.198
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793257714;
-	b=3y3zm+YcHW5ThQX2VW2v7EnkZgzV3TKfMwnTRp5LO9O8tg+tYnk1ys4MldZ4Lhjmus1s
-	 nuwp0qWgxMl7jzeF8W9ekuX/N5qzW8g0Haq52fYfdkPNbGeUEyt7Y8HtmVjBWjeymg2G/
-	 QqYdGAt/I5Uk/lFxE/Y8vleKcST4NAgTQ6jBHXR9dNum+r+OLireEV3yLRAVui0u9jOH3
-	 BnZ4Q48+Pz1q60TUmqqhak+PItRnpOwT7WhaVaJPxLq/YOyv8LDuzLeuokzQdjFE7Jq2o
-	 ZKGyhXH1T6Xet64QZ2vyrYZNV7xHTJhNOIIOiKLn+j3MZGOaotx9QH/TylUlmI/MkWA==
+	t=1793257724;
+	b=j87Oe5upW5AbauO8kANGRGXQriASlq426HwltJPYwWwYL6EOVLzZ2abs6FrS18C50Y1N
+	 MP4HDG7j/b7uGIb3ramifxfJ873W6zYiQkMSRWN7FcosP6b5fTEPgF54nEDuAJcDeyaBJ
+	 rlsdROV185qqfc2XiGG+cHVUlNYLisrm80lTIITwBlN0VwZQHdnF7bpIptj8o8nE7GQ8M
+	 ZXjF2iEH3nC1IOw7CnmtQOUhIuSgmI2u9cxD/e5Z/Xxzm2CQTveuC/caIlIHuSMCZo0xk
+	 BfREtgFIIr7VG0fi3eSl6BmjDGGT26Ig/MyaB8Re9Ov+3ltUkatZtPkWcDnPxZo3nrw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793257714;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793257724;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:Mime-Version:
 	 X-Mailer:Message-ID:Subject:From:To:Cc:Content-Type;
-	bh=K3AM1SjPaLQrVo38ruBsuLHnWg43JcXaTUMKROby+Fo=;
-	b=itjSkvrfDzwvu2dW37EN5xetwikP4kFjS/4n1StIcw/cb7bR1xZ3CEDfsk6LM0dQYNFU
-	 bIQdeW1WwR2cbQR9HII63jLo4mD4Ua+e66MyQKU3zLppUgnERwa7/aXLXYfHuyU81/IgN
-	 jhBZN2Nxg7qzqlHISq4sz+DIt9pVbkW+ZBBgFDMP6Wy0S5NfeQP6TNqHS0HC+9W8O7cev
-	 rhqhNaLCzCDT8TgNF/CrN5aiHHwUgZwoS0ZZ7Oj2qovcltP02xignJ14DhgYZl2SIHgxz
-	 5MZz1jEdZEvKI/0WAsJ5eLSlriukUy3RaAZCvEJS9wWg/YXyrbY57ld3A9cMf9iJhjw==
+	bh=od3rktvThpmHG27AUgKJOFT+duaXCWPVODMzLp55jMA=;
+	b=twZPFGgzUKX595VUcuySJZfpQX2vYLf2wonPyuF1Ue6tiuZTBCUU/iU8Oup+dyCv9k9E
+	 fYInU7w36HsL+iZPflshmPaZXoBqnM5SNhloquq1eK4ml72DnxWlRCmjdJ8tlUVozl9gP
+	 WXadnTTZQpXDPT0veZGwVTOCY83NDd3wGwSthYt3kvmj4l0jJdD7Es7SYyve8QcxvNTgg
+	 xP8ESxP5xj8NipIZrDfQUKqGwTp4pO3fP70f510ufi37aymvzcQ6HbWxDaFyMUu2Onl2S
+	 b51VL2qZ9B4iX6TTFFoo8UIsI9EDTfXBzeRoHNZxxJJe5Lx+54stPt5RJmMQ66tTYJg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=google.com;
 	spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b="Ay/HXkdc";
-	arc=none smtp.remote-ip=209.85.210.199
-Received: from mail-pf1-f199.google.com (mail-pf1-f199.google.com [209.85.210.199])
+	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=HyVBIC70;
+	arc=none smtp.remote-ip=209.85.210.198
+Received: from mail-pf1-f198.google.com (mail-pf1-f198.google.com [209.85.210.198])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3BBD6606A320
-	for <linux-scsi@vger.kernel.org>; Thu, 29 Oct 2026 07:08:33 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3BBD6606A320
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF511606A320
+	for <linux-scsi@vger.kernel.org>; Thu, 29 Oct 2026 07:08:43 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org AF511606A320
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=Ay/HXkdc
-Received: by mail-pf1-f199.google.com with SMTP id d2e1a72fcca58-8a079256596so1736520b3a.0
-        for <linux-scsi@vger.kernel.org>; Thu, 29 Oct 2026 00:08:33 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=HyVBIC70
+Received: by mail-pf1-f198.google.com with SMTP id d2e1a72fcca58-8a0688a43d3so1443423b3a.0
+        for <linux-scsi@vger.kernel.org>; Thu, 29 Oct 2026 00:08:43 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20260707; t=1793257712; x=1793862512; darn=vger.kernel.org;
+        d=google.com; s=20260707; t=1793257723; x=1793862523; darn=vger.kernel.org;
         h=content-type:cc:to:from:subject:message-id:mime-version:date:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=K3AM1SjPaLQrVo38ruBsuLHnWg43JcXaTUMKROby+Fo=;
-        b=Ay/HXkdc42VKrrrHQ1rh+tKnXsuLOIa1OfJrZUcujGB5FqhWKSmQQZVWMYVPZtXkaK
-         MNE2Mtr+Lkie5BhgtYxJe5Y1KyeiU2WMOeL8O6gxNtpa6te3Vbzk65XTKLWWS6r2m9Gk
-         EnCkC33NAkCC1ie1dxu7f/FtB9/9jL0OWhkLfG3oJUriVxrRXhh85nLgWLLMkLLMaOcH
-         CBK2OG2GrMuJPMfPdZsIastGuZLqFJE10MqhBcfAC9fWTN4Rfn68X0J0g6dr90EJrp5a
-         jLGZJmtb+uHL5+lW8JZdyGJ1TRMtZUv4ml/QofdCPJZKtJd7x00ZD3LpGFy1WB/iDWFB
-         X5Kg==
+        bh=od3rktvThpmHG27AUgKJOFT+duaXCWPVODMzLp55jMA=;
+        b=HyVBIC70hD8mnthnqdIJhsKQpoP0dlSBmgVrk4awRy1knIFUL0VFd3izX48WAOS0x8
+         7S9cRNybzdUtrsXId7772cYkrdh16Ejrqf7ve9QmZ3veqxNPVSvGgBa0EHMIU2YPXOnJ
+         J38SjYFQFjiBFzpC//DAlXUW88lAVFeLSPwMNlgbISiATQpX4N0lESipsxGqulmyKgzv
+         WO7u5OgVacyoOdZ1ggMJf9cdA/vL6YBb/oPIZw++nIPg8MuoYzZmuztMucD0V4LBkCOk
+         OFmZhiMDzSZ+YAp6BF+9WjxICPbWdCF9tj6aUO0DkfOBbWLinuLAb/XyFdhd9u++JhXM
+         FU6A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793257712; x=1793862512;
+        d=1e100.net; s=20260707; t=1793257723; x=1793862523;
         h=content-type:cc:to:from:subject:message-id:mime-version:date
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=K3AM1SjPaLQrVo38ruBsuLHnWg43JcXaTUMKROby+Fo=;
-        b=Nta7O02+xlrQ9l14NmQFIXAasEWrX1970gqtYMTSp/bg9zovAhvG4WQUnS70KPUMSl
-         A0dKEy0UItXMvVtot47IrnVCHVCZ0LKOs4cSA0z2SCtUyVRca2jm6035RBa5YOVGnV8y
-         hnQs14d5EtPXSAkQU7GoKyC5d2QKnf0vD8V6DkWcJHTddV57qCsJ/zArL9EB2h81dTwg
-         TKKvUxCAs5RZLftkxEQubbcWOT1rNqcccXYdHgeuiyLJIDeNWDFQ4nSI+UsEatfz5BOb
-         XbsOW7IuKoh9kAKqW7qZBQ2mhrMZpOZ6WdSQ1dUOMQMZe+jVoagYrramydAxfacW+s1I
-         kJCg==
-X-Forwarded-Encrypted: i=1; AKwUvBzHNBaaGNzAqOFDwpBoOEQKWwCKXMLlFo1bY+CCq1AgdgPUg7BXICRmkZWzx7aVc4v6OUWux4htA1LA@vger.kernel.org
-X-Gm-Message-State: AFq9FYIKj7QngI1x4JiNyjdJvVLyb/l+Y2b/c/tN42pxp0osZyrPOm5p
-	h9CXSmJny4eGic1IFNKFZie8eWXw3v2Dmp0RZD9BwwSNyX4FeGcSgyWZUswDlWVFFnwLrcugKuK
-	NROj482tffC0Q3Vwt/NwbhA==
+        bh=od3rktvThpmHG27AUgKJOFT+duaXCWPVODMzLp55jMA=;
+        b=MvbHsDjD7Uyd+oiDdE2eaC3Iok4xnhwQW/R+xb+PEZ40VYiVIauLaZAan1pchBRrdn
+         7cP973xloRSnyB6UgO8lDRTyFv+Fm7TmJ+A61hPXATLXrX/bI+usoVlz9Tl736+FAsMe
+         169NUcuiJAX9uzjocb6bs307u42N0hkw1ZYhFBf1Rq2/eOT9POzjSYMz/lPzR7MsHNkm
+         fQdZc3/d2PrbbhQLL8qXQGo5cvXXnE7XxY9XY+nhmxtx+Z/oUcEB2YTc/OXqyEwCZlqE
+         ZU3E7vbh9jRLtC3GwPbNae2VAkD3KG9I0v/L1bXme/QzhxChBKo/lTnRk7fSPY/gQcwa
+         TcUw==
+X-Forwarded-Encrypted: i=1; AKwUvByhQLI/YDAZ86kgC3gx2/8dZGMHTGwhKVwLmY/rWKAJh6M5SFiN/rQkIbN4pnlSj2/rLDzvuaWsUfnK@vger.kernel.org
+X-Gm-Message-State: AFq9FYLLTV8VCspiElmtIRfa1IAuivufQq18+RKFDLaNYHenuYJVvthr
+	9bttxZ3xLT4PUS4vc/rRUrNR4kREUSGYCSQ+aTEvKJsvGpBf8E1mzYRUPKWeRs95gWVtaPYCUvD
+	6yidUtyeiyBBbL4QfT/6I0w==
 X-Received: from pfbbr15.prod.google.com ([2002:a05:6a00:440f:b0:8a0:7c0e:8263])
  (user=stanleyjhu job=prod-delivery.src-stubby-dispatcher) by
- 2002:a05:6372:a810:b0:3dd:a009:3182 with SMTP id adf61e73a8af0-3e9023432c4mr3356622637.42.1793257712327;
- Thu, 29 Oct 2026 00:08:32 -0700 (PDT)
-Date: Thu, 29 Oct 2026 15:08:30 +0800
+ 2002:a05:6a00:1905:b0:82f:38df:681c with SMTP id d2e1a72fcca58-8a6e480a6dfmr3468902b3a.6.1793257722603;
+ Thu, 29 Oct 2026 00:08:42 -0700 (PDT)
+Date: Thu, 29 Oct 2026 15:08:35 +0800
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -77,67 +77,84 @@ List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 Mime-Version: 1.0
 X-Mailer: git-send-email 2.56.0.313.g2479322e68-goog
-Message-ID: <20261029040002.2100002-1-stanleyjhu@google.com>
-Subject: [PATCH] scsi: ufs: core: Keep clock-gating hold on failed W-LUN
- runtime resume
+Message-ID: <20261029040003.2100003-1-stanleyjhu@google.com>
+Subject: [PATCH v2 0/5] scsi: ufs: Fix device management timeouts and runtime
+ PM errors
 From: Stanley Jhu <stanleyjhu@google.com>
 To: "Martin K . Petersen" <mkp@kernel.org>, 
 	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>, 
 	Alim Akhtar <alim.akhtar@samsung.com>, Bart Van Assche <bvanassche@acm.org>, 
 	Bean Huo <beanhuo@micron.com>
-Cc: "Rafael J . Wysocki" <rafael@kernel.org>, Praveen Talari <praveen.talari@oss.qualcomm.com>, 
-	Peter Wang <peter.wang@mediatek.com>, Can Guo <can.guo@oss.qualcomm.com>, 
-	John Garry <john.garry@linux.dev>, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, Stanley Jhu <stanleyjhu@google.com>, 
-	stable@vger.kernel.org
+Cc: Can Guo <can.guo@oss.qualcomm.com>, Peter Wang <peter.wang@mediatek.com>, 
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	Stanley Jhu <stanleyjhu@google.com>
 Content-Type: text/plain; charset="UTF-8"
 
-1. __ufshcd_wl_suspend() takes one ufshcd_hold() reference and sets
-   hba->clk_gating.is_suspended while the UFS device W-LUN enters
-   RPM_SUSPENDED.
-2. Since commit eef1d74bf88f ("PM: runtime: Only set runtime_error on
-   suspend callback failures"), a failed runtime resume (for example
-   START STOP UNIT completing with an error) leaves the W-LUN in
-   RPM_SUSPENDED with power.runtime_error == 0, while
-   __ufshcd_wl_resume() already clears hba->clk_gating.is_suspended and
-   calls ufshcd_release().
-3. The next W-LUN runtime resume runs __ufshcd_wl_resume() again without
-   an intervening suspend and calls ufshcd_release() a second time,
-   dropping a reference it does not own and underflowing
-   hba->clk_gating.active_reqs on UFSHCD_CAP_CLK_GATING hosts.
+This series fixes two problems in UFS core entry points that issue
+device management commands or touch host registers.
 
-Keep hba->clk_gating.is_suspended and the suspend hold across a failed
-W-LUN runtime resume, so the hold stays paired with the W-LUN
-RPM_SUSPENDED state and the next successful resume releases it.
+Patch 1/5 restores the millisecond to jiffies conversion of device
+management command timeouts. Since the timeout moved to rq->timeout,
+a 1500 ms query timeout waits 6 s with CONFIG_HZ=250.
 
-Fixes: eef1d74bf88f ("PM: runtime: Only set runtime_error on suspend callback failures")
-Cc: stable@vger.kernel.org # v7.3+
-Signed-off-by: Stanley Jhu <stanleyjhu@google.com>
----
- drivers/ufs/core/ufshcd.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+Patches 2/5 to 5/5 handle runtime PM resume errors. Several UFS core,
+sysfs, BSG, hwmon, and debugfs entry points call ufshcd_rpm_get_sync()
+before accessing host registers or issuing device management and UIC
+commands, but ignore its return value.
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index cc75384c6502..9be370cea52a 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -10626,8 +10626,14 @@ static int __ufshcd_wl_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- out:
- 	if (ret)
- 		ufshcd_update_evt_hist(hba, UFS_EVT_WL_RES_ERR, (u32)ret);
--	hba->clk_gating.is_suspended = false;
--	ufshcd_release(hba);
-+	/*
-+	 * A failed runtime resume leaves the W-LUN RPM_SUSPENDED, so keep
-+	 * is_suspended and the suspend hold for the next resume.
-+	 */
-+	if (!ret || pm_op != UFS_RUNTIME_PM) {
-+		hba->clk_gating.is_suspended = false;
-+		ufshcd_release(hba);
-+	}
- 	hba->pm_op_in_progress = false;
- 	return ret;
- }
+ufshcd_rpm_get_sync() wraps pm_runtime_get_sync() on the UFS device
+W-LUN and returns a negative errno when runtime resume of the W-LUN or
+host controller fails, leaving the device or controller in
+RPM_SUSPENDED.
+
+Continuing after such a failure can access host registers or issue
+commands while the device or controller is not known to be active,
+while checking pm_runtime_get_sync() directly would leave
+power.usage_count elevated unless balanced with
+pm_runtime_put_noidle().
+
+Add ufshcd_rpm_resume_and_get() around pm_runtime_resume_and_get() and
+convert the 20 external and helper call sites to abort and propagate the
+error when resuming the W-LUN fails. The three lifecycle call sites in
+ufshcd_rpm_dev_flush_recheck_work(), ufshcd_wl_shutdown(), and
+ufshcd_remove(), plus ufshcd_err_handling_prepare(), are intentionally
+left unchanged.
+
+Tested on QEMU ARM64 UFS (SDB and MCQ) with W-LUN runtime resume and
+suspend failures via sysfs offline (no behavior change on suspend
+failure) and GDB power.disable_depth=1 to make ufshcd_rpm_get_sync()
+fail, and on SDB with a timed out query request.
+
+Changes since v1:
+- Drop the incorrect claim that a failed W-LUN runtime suspend
+  latches power.runtime_error from the cover letter and commit
+  messages. The PM core latches a runtime suspend error only if it
+  is neither -EBUSY nor -EAGAIN, and in-tree UFS drivers fail W-LUN
+  runtime suspend only with -EBUSY or -EAGAIN (Bart).
+- Say in the cover letter how the series was tested.
+- Describe each failing sequence in patches 2-5 step by step in
+  time order, and drop the runtime PM disabled (-EACCES) scenario.
+
+Link: https://lore.kernel.org/linux-scsi/20261025013446.345974-1-stanleyjhu@google.com/
+
+Stanley Jhu (5):
+  scsi: ufs: core: Restore jiffies conversion of device management
+    timeouts
+  scsi: ufs: core: Introduce ufshcd_rpm_resume_and_get() helper
+  scsi: ufs: sysfs: Propagate runtime PM resume errors
+  scsi: ufs: bsg: Abort ufs_bsg_request() when runtime resume fails
+  scsi: ufs: hwmon, debugfs: Propagate runtime PM resume errors
+
+ drivers/ufs/core/ufs-debugfs.c |  8 +++-
+ drivers/ufs/core/ufs-hwmon.c   | 12 +++++-
+ drivers/ufs/core/ufs-sysfs.c   | 67 +++++++++++++++++++++++++++-------
+ drivers/ufs/core/ufs_bsg.c     |  4 +-
+ drivers/ufs/core/ufshcd-priv.h |  5 +++
+ drivers/ufs/core/ufshcd.c      |  9 +++--
+ 6 files changed, 84 insertions(+), 21 deletions(-)
+
+
+base-commit: 503e6172fa74da6b4944ece458f5534681e51d21
 -- 
-2.56.0.313.g2479322e68-goog
+2.56.0.307.g5fe7bd680c-goog
 
