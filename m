@@ -1,59 +1,58 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793237316;
-	b=Mj9PFeW60Xx/egNaoGtsDlL1dmXnp75KAZ8ZNCQIujKhVqELytGm/0qv3OHS0o2oa7JI
-	 JassDsLD/6PKRZdpRtZkv6MJu0EnaD8xfP9b3Zhzl3juh6bhaLgreiJGCxL0nFHjn+SDZ
-	 hWuao7PQGrEnw5p8e5SNFQqz4VHjTkQEG93XKyms1ZxTLql6ddkj4RI0Ifta76m/iMFtg
-	 Du4N50DbnWYrxZdKIElZHX9uBcd8PL6cpLJ4/I8pTEBewFpPLRsyS0bTJaYLfi2542sc7
-	 I41gBH51Y4epAdg+hCVXaoFI4R83HDoOAY9LjDWkRTTTGQNoQhECdOU7dsBzHrYpqRw==
+	t=1793237612;
+	b=qaduW6lv+MKXQn3aG2SC1kGpTh6PipnL/YztmjJwABAW6URHtTX3Jez3ME92nqBP0ngl
+	 /Yv/Uq0bNNv6lgeIavZabhnDw6qHyoXgSob84d9WR4cHUZMA9Scq+3Bsc1OekkAEckZze
+	 4LXU8h/CTjmOQ4wY/n4JYfH+MkWuDfeca2ZAqesuAKiLRfaoMQNPkhJoW5/mySBUlYsUz
+	 Ium5uoUmF8RQh0nDcNSMIAu0k0ToOkF4RXdm0QXbBEheWvyr0jX2bANsM4LOQ42q3hsfC
+	 HT637I0PqFIK1qEyHDvP2c0pUsplOTVRVuz/EFIrwv+JL+JCjP/hKaa2coe7S6nh96Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793237316;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793237612;
 	h=Received:DKIM-Signature:To:Cc:Subject:From:In-Reply-To:Message-ID:
 	 References:Date:MIME-Version:Content-Type;
-	bh=D0bcWDtBiSC9G7p3sTH868ZySBSNWw7tmJ+S91FtIWs=;
-	b=lqcokY/b0mIYFBDAP1kLOzXJlhcwB9iotVzVk8u3+cK+C4n/x+oOOC80uHDT5BdiL2Cn
-	 Y4ocaSxXnLtpUEk6j4Zkmh7/dajYOd4ESvxffSIVAs83Wq1RfWIC9wkEP3O+UFfRdpdHW
-	 ZrbS/TjxDjJ+We40VnHKG3vi0kLlJTMH5E73fuLbTdSiCXbMpte523mvnECxHiaP2y3Z3
-	 C/HUW1uLkZhkFWrKf3mnfak5hH3ItL07XYFjT6kcDuqtKORN8zOpzLKzSAu+tHqnoSMzQ
-	 R24bsE1KRmIv+OPz+J+IMmar9ursn1IFID74ObxrXL4OwpL8cP16sdOGPdYLmtL6AcA==
+	bh=T5EDiDybKTR5BUxLZVM+JKGIurr97tQCzsH9fmn+UCc=;
+	b=K1hrh0bljdVMeF2BRkQqiaciNnHIZyOFOf1G2mitrAwl9LJYDgiwdTsTlvncEVz/BBKq
+	 zmvuan8H9NsJtjIB3MaDdPYcq0ai+O3mEVGmDU0SFGp5KU6nMhmK015IJJd5Np0OW76d9
+	 V0qGAsyKkmQU0T/iagU2Tr1GRL9IrzbGtDCPlMzmvhz3ufzmzcqWevXUJxnQARGCYttss
+	 tUoPJl67rC5qbr/gGmd3PD67mpnkn+Zo557LCYVZS2bdUUiKm0f88hRe5ay3xSEGAd37M
+	 F1ipUc2f19Ilxf/zhzsM5llW650+tNyCRRhTSIS/lci1ducLPrdKBQHHRxLdjNsJ3+Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=hFiahoOw;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=EovunwIa;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 13F99606A31A;
-	Thu, 29 Oct 2026 01:28:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41D6A606A31A
+	for <linux-scsi@vger.kernel.org>; Thu, 29 Oct 2026 01:33:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=hFiahoOw
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 607431F01828;
-	Thu, 29 Oct 2026 01:28:35 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=EovunwIa
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 874B41F01828;
+	Thu, 29 Oct 2026 01:33:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793237315;
-	bh=D0bcWDtBiSC9G7p3sTH868ZySBSNWw7tmJ+S91FtIWs=;
+	s=k20260515; t=1793237611;
+	bh=T5EDiDybKTR5BUxLZVM+JKGIurr97tQCzsH9fmn+UCc=;
 	h=To:Cc:Subject:From:In-Reply-To:References:Date;
-	b=hFiahoOw+yTvzSdWbA/Ilkc9NNZDe4fkDxRkbB9SsxzJJQdub+nXyVLS8nlfFgefy
-	 0PyuviXBKzDyHHv1IeIqrs7vmKEyZr6u65M+xRdiVBDFjSJFYZ/IAY6logCooQ9thM
-	 tT8DpYHlhFl1a3Fp4bRjTIkVYwobU7ebw3BBLhvfU+TKEmellhdfeIh7s06fKER3jI
-	 BNK5iBzgqgahWn2KfpxudUuRckuSojqeou0D6Bco/u/aS/kwKvjRE6bghjcHOV1Ut0
-	 KCgCN9p6fhlv/l5vLto3Ft/THw3WWZmTAxDDFHtIgLQPUezyisyDOJ5tCkELqMPlcv
-	 IHvC4xGmL4tWg==
-To: HOYOUNG SEO <hy50.seo@samsung.com>
-Cc: linux-scsi@vger.kernel.org,  linux-kernel@vger.kernel.org,
-  alim.akhtar@samsung.com,  avri.altman@wdc.com,  jejb@linux.ibm.com,
-  martin.petersen@oracle.com,  bvanassche@acm.org,
-  kwangwon.min@samsung.com,  kwmad.kim@samsung.com,  cpgs@samsung.com,
-  h10.kim@samsung.com,  stable@vger.kernel.org,  Stanley Jhu
- <stanleyjhu@google.com>
-Subject: Re: [PATCH v6] scsi: ufs: Change the error check sequence for auto
- hibern8
+	b=EovunwIaa86//hrxc4UtQtc792xJgpLswYhGqcrvLz0xzDu6vRCrc1OnfqNKlJdwB
+	 B60QWs52zFT2aybNYXRrQDm20MwF+RCivH8CIkP0lcYFLg9+7kqps39FrsAxSAPXtx
+	 Op17sYfP0KoIUteNalj/yoitIxAzMaTUQ2HVADshICMr/G/Q8wsWOZBkkfdqNdvaz4
+	 4eERxJe7fT+b3m54Erqp7KEClr4ryLACitzcYa8nCkKhurH9MfDTMaKfKVDAcgdmdH
+	 Op2xoEmzwG+u0pysGW9LsD07FlcSg05rZMwTpohF1CqRuP8nL7j9jptj1X6Gf5Y2/S
+	 3ywo0BibJY6vA==
+To: khalid@gonehiking.org
+Cc: Bart Van Assche <bvanassche@acm.org>,  "Martin K . Petersen"
+ <martin.petersen@oracle.com>,  linux-scsi@vger.kernel.org,  "James E.J.
+ Bottomley" <James.Bottomley@HansenPartnership.com>,  "Martin K. Petersen"
+ <mkp@kernel.org>
+Subject: Re: [PATCH v4 04/54] scsi: BusLogic: Pass the host pointer directly
+ to several functions
 From: "Martin K. Petersen" <mkp@kernel.org>
-In-Reply-To: <20261027110357.3649301-1-hy50.seo@samsung.com>
-Message-ID: <yq1qzh947ny.fsf@mail.kernel.org>
-References: <CGME20261027110813epcas2p4011de6cde600db5c995d3a3e45b056fb@epcas2p4.samsung.com>
-	<20261027110357.3649301-1-hy50.seo@samsung.com>
-Date: Wed, 28 Oct 2026 21:28:34 -0400
+In-Reply-To: <10f06b90-1012-401b-93b5-331d487973ab@gonehiking.org>
+Message-ID: <yq1ld7h47g4.fsf@mail.kernel.org>
+References: <cover.1790360262.git.bvanassche@acm.org>
+	<09e99ec9c6fa24ee5fe3c47110c88a1be076e01a.1790360262.git.bvanassche@acm.org>
+	<10f06b90-1012-401b-93b5-331d487973ab@gonehiking.org>
+Date: Wed, 28 Oct 2026 21:33:30 -0400
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -66,15 +65,17 @@ MIME-Version: 1.0
 Content-Type: text/plain
 
 
-Hoyoung,
+Khalid,
 
-> Auto-hibern8 enter and exit are performed by the host controller
-> without a UIC command, and the auto-hibern8 idle timer only runs while
-> no UIC command is outstanding. An auto-hibern8 error (IS.UHES or
-> IS.UHXS) is therefore usually reported while hba->active_uic_cmd is
-> NULL.
+> I looked at a few other ways of accomplishing what you are trying to
+> do and those result in more code churn than I would like. This might
+> be the least disruptive. I found that MPT Fusion and FCoE drivers also
+> define their queuecommand functions without using DEF_SCSI_QCMD().
+> These are very commonly used drivers so that makes me feel more
+> comfortable with the change you are proposing. I am ok with this
+> change:
 
-Applied to 7.4/scsi-staging, thanks!
+Applied #4 + #5 to 7.4/scsi-staging, thanks!
 
 -- 
 Martin K. Petersen
