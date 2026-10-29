@@ -1,102 +1,100 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=195.135.223.131
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793279749;
-	b=uY2PGVZDAIZB7I6o44Jv4WVwZoRQVpy7yMjOxusQ5m/35awdQRikvgf5rZABtpy9rnZ4
-	 imtWmsFDEwNZgLqZPbO4wbs2Vdrn+nTFY2qxfoZFV5O8B5Ti0JFEMLyUoQaVKY/Ekr85W
-	 672ITr+4Qte+LmAw1VcEXT0BN/H14o6l2XGzq/1Wd/0fySu4/O5iUTSerB7fp35evH7oE
-	 H6gcTHwbpdbDx3P21m9qzZx3aHdMFgy+kKRfeDJULFdwpEB5uo5yLOX10CE7W6nfDi9/d
-	 LIPboT0REzr2pfCwDv+/sbxF+5ESKccMUtoViI5svOWN7m4ZoGqQ0NdCZk6l6sUJnrA==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793279749;
-	h=DMARC-Filter:Received:DKIM-Signature:DKIM-Signature:DKIM-Signature:
-	 DKIM-Signature:Received:Received:From:Date:Subject:MIME-Version:
-	 Content-Type:Content-Transfer-Encoding:Message-Id:X-B4-Tracking:
-	 X-Change-ID:To:Cc:X-Mailer:X-Rspamd-Queue-Id:X-Spam-Level:
-	 X-Rspamd-Server:X-Rspamd-Action:X-Spam-Flag:X-Spamd-Result:
-	 X-Spam-Score;
-	bh=d7d1UVwvKGrgB7+MNPNGp4vckOA+VTyvPz9idktThnk=;
-	b=5W3xegm4BfAMAIpBetepOMVPr8/SW5j450dRAwBH6UFl3yEiq9pl0PsgJtCCeTXrGc1q
-	 RVHm6Rwv6FatGxIxAeMw+AeBkUdUew/ijHh+ouG2NlACje0Px3FW/0+PYCyEizi16RU3T
-	 jqUM7UMirbfhR5Opt3897KEzp4870Ax5Se/mUfDHYuYHWvDWanizoM5EZgHsn8H6aewOt
-	 Xyg3flOU0+sq34o5RavSfHOz9R1gA4zlVi/b5olIpLSLBWrpbJerrOfhU/4vfXgMagiVD
-	 u8lchyNNJLrwbu0Gv0Gv7E3ny6G4SdAbEuA1ZWr7b88a19YM+H/isJs2NpM+ECmb0QA==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=suse.de;
-	spf=pass smtp.mailfrom=suse.de;
-	dkim=pass header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=z1db2E7T;
-	dkim=pass header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=0k8HWk7o;
-	dkim=pass header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=m1vp1aoD;
-	dkim=neutral header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=bFryf+WM;
-	arc=none smtp.remote-ip=195.135.223.131
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.remote-ip=209.85.208.48
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=fail;
+	t=1793280838;
+	b=cp/XjmDglYthhp4JQ3vJF32n4035ySfOGLuND/ffxviH0Ts/mEbEghz9FnhBSNlzu4j8
+	 CwK2poA+bSMug+b/Hf45xK+HqS3vVwwRSlHQ9qTDVTSBBCV4uE7AwatmO/8s+IAaLW/uK
+	 +moBXgvaVEJ5zkVhnvUHwzkMF+KbYeP+ybwDEG6OGIjsdeTdijtItZHYDk7Q5O7fieWYo
+	 kBcq/wOB1zTZ1OWbfzapgFrk76wXpOLcVctaADqyuouq8wgvWVL52btdZTXmM6wS9BzD5
+	 hh1axAfTQLAzNTUhQUwa7TogNism2pAcE7nkaOXT+8fpI0CEedfHv1C3BkKNfxZ5y0w==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793280838;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:MIME-Version:References:
+	 In-Reply-To:From:Date:X-Gm-Features:Message-ID:Subject:To:Cc:
+	 Content-Type:Content-Transfer-Encoding;
+	bh=F+eNJSMVkwDxJUThG2ULRs96wZbJ07yl55m4EZseYWk=;
+	b=mDk6svlctP4oxO/1oDcloqqMihVCqte+EqQCwzluBBNA2jF6ekAw1ji+8td/V4eis+Pf
+	 kGHtO8+uzDK3NvV8uZYhsLemotjJL46zYeTJUVWfGbBJjMH2UYaqlzAOxD7LfNqh9VbzC
+	 HUzr9/opVd4yLa6H2d46k3bztxaxHT4KLC2fJHDWhIsb9kVgXJyj5AaYA05ViJQuT3lh9
+	 UB3OS7pspUQ5oUOY2aSuuig1JGgUUnc+nlaYkzmdW7Yuh8AXDbWsXTsKCfS3U+Thkwy9O
+	 zo/K9GSfLz/Xi7Yv8kz7EgGSYAabts0FYpAuTvsNg2LY4ZSbhpmWqhD/g++NUiK/NDg==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=flipper.net;
+	spf=pass smtp.mailfrom=flipper.net;
+	dkim=pass header.d=flipper.net header.i=@flipper.net header.a=rsa-sha256 header.s=google header.b=pXENXzws;
+	arc=fail smtp.remote-ip=209.85.208.48
+Received: from mail-ed1-f48.google.com (mail-ed1-f48.google.com [209.85.208.48])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49F86606A31C;
-	Thu, 29 Oct 2026 13:15:48 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 49F86606A31C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCAA6606A31C
+	for <linux-scsi@vger.kernel.org>; Thu, 29 Oct 2026 13:33:57 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CCAA6606A31C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=flipper.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flipper.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=z1db2E7T;
-	dkim=pass header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=0k8HWk7o;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=m1vp1aoD;
-	dkim=neutral header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=bFryf+WM
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id ECE341F7F2;
-	Thu, 29 Oct 2026 13:15:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1793279746; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=d7d1UVwvKGrgB7+MNPNGp4vckOA+VTyvPz9idktThnk=;
-	b=z1db2E7TwogPMD8Q3f4y2j8NbOkyAfQSLE6mDDF3IbTvuvXm3vDyEBUScya1Uar3vP9vdJ
-	6xLmEwS1pabNDwwEXqbmMWz2YHSw9Wuc36Oq8kxaJBLhlylJ8J8pGU9UzrSSQzZ5E3rUDg
-	PQviEsFB5jjpwCgO7vtOhXOwdbKEDN8=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1793279746;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=d7d1UVwvKGrgB7+MNPNGp4vckOA+VTyvPz9idktThnk=;
-	b=0k8HWk7oWzlKCpcWL+CmD+G8Vfl19ucwMamgwn7CW80RJW0vMeTmMdUFDGI+5srUhCczi1
-	CmGkAfJA5hB4x0Cw==
-Authentication-Results: smtp-out2.suse.de;
-	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=m1vp1aoD;
-	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=bFryf+WM
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1793279744; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=d7d1UVwvKGrgB7+MNPNGp4vckOA+VTyvPz9idktThnk=;
-	b=m1vp1aoDXKIacrjliT4oWDRr9KzjdrP9ehJnvXD8/5RAg7yXsm495E/1awBA4sJX5hOl9B
-	m1C8MhTLtSoSP7WB4FyzvLXvrxbqQbxm1aJbsuG8i0J+cEnHVDn8Ecyi5vWs9mAgXW3k1V
-	ANciSeBhYJIrpc8Y5WwxyoOp1cAYkkc=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1793279744;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=d7d1UVwvKGrgB7+MNPNGp4vckOA+VTyvPz9idktThnk=;
-	b=bFryf+WMuO4/j3M+HfuaszfjDSX9j8tB43JZXjzZ0xM+hh4pxq6Te4CFlVr/9tf5X5UFHO
-	b1BXPdHFsH9RfLCQ==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id BBB2A1339F;
-	Thu, 29 Oct 2026 13:15:44 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id 5QjcJABH42r/cwAAD6G6ig
-	(envelope-from <dwagner@suse.de>); Thu, 29 Oct 2026 13:15:44 +0000
-From: Daniel Wagner <dwagner@suse.de>
-Date: Thu, 29 Oct 2026 14:15:30 +0100
-Subject: [PATCH] scsi: qla2xxx: Check FCE state under fce_mutx in debugfs
- release
+	dkim=pass (2048-bit key, unprotected) header.d=flipper.net header.i=@flipper.net header.a=rsa-sha256 header.s=google header.b=pXENXzws
+Received: by mail-ed1-f48.google.com with SMTP id 4fb4d7f45d1cf-6b486e1d02eso2912533a12.2
+        for <linux-scsi@vger.kernel.org>; Thu, 29 Oct 2026 06:33:57 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1793280836; cv=none;
+        d=google.com; s=arc-20260327;
+        b=Gk0ShsjVASE+y+f/WV+zSjXOsNFBwJgXF4Ssk499/gHs98APhuYvD51f2F/Vtre+OB
+         KoW+I2EbxHDWPHShQijFphkbclikrsVefHg398Fc2rXnzwwK/qtwd8IbAgcGI6JGfcUc
+         ilJAlOqG4AOqPc0L6il6cPBC6j85V9e9D52TDE71bX2arACXisvG8n3lGZvfAv9aMuUc
+         c59sVxt7RFr9EuIJPmd398ttAUwBbm6uAHM5ls08h1sOZAS+I6JhSwCpPsP/ZF/x0XSt
+         uO0iEnY2Z5noPguS+JFFZMvaxsm8K25WGAiD8gg9fUqb50YrR6U45X7GQGxTxfxTOeFO
+         J1yw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=F+eNJSMVkwDxJUThG2ULRs96wZbJ07yl55m4EZseYWk=;
+        fh=huDnxIwPSwizRg/jZYfjiXYSqMeoWhcTkCWqAd/e5qM=;
+        b=Mv12ol6tsol/jiqhblrlxP0gRjv1GAfswmg6Wrr4GSOYbP4C7V5bESbbPmTEG2o1VE
+         13F93lm55J49TVEX7Mqai+1HPmHDzqfjr/BtzgrFLlvrXQeHfSlIagCT3q40Zxgb5ajy
+         CTieZwV5Z/sAtPIA5qhhVDaK38mah3nVnW+gg4/zZMNjROYyd4yTU3yq7NuQXC0MTP/o
+         DRgji2747mxy0Gk5qf+mJgktgJ2LYz8vNG4AMkacIipmqLBxtZ48a3Rp0cN5En3x2qsA
+         Glch8KNekTsQh0FsgKTTkR63nbJsCQ1qU5/vk989xW3a7AyJhlyVg52st5QWgcJ3HYu7
+         mzkA==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=flipper.net; s=google; t=1793280836; x=1793885636; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=F+eNJSMVkwDxJUThG2ULRs96wZbJ07yl55m4EZseYWk=;
+        b=pXENXzwsbXs1Bi1Q/de3hCPfefNHByHAaEvTI4G0A+WREg0Ect4dw9f9kyV9r4ucgP
+         5F8ZmauJaht58zJtnNK9yMCCSb6tLrLTukk6Ug6FxEAzCXTpRiUqJ9naaf/5aRrmgGtv
+         EqbpZTfV7dKVYlJk3jVCnw/cvh5RAwYd5eDt20AZIQoEzM8XyrHQIO5UrTh0TJj1U/wY
+         mynDC5vs+gyCvgk6DPi6HBAO34nYUcnZDwWHTHtxUSGt7oj2nx/ZxgHyhdeApsrdeZE6
+         8+o5CslRF1nuPE1Jb22mXJdJAwnJ9C7DxsFXc7wblydSBsSwtBUvrtyWjL6HSTNjSE5T
+         BlyA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793280836; x=1793885636;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=F+eNJSMVkwDxJUThG2ULRs96wZbJ07yl55m4EZseYWk=;
+        b=SfHZS14yb4EOiBne5O6ujqRNywa2sU/ZnSnWn7ofMEOi+TwxR+8PRINO4ZbwkjkSL2
+         l6Fw5dL5hIF0TZrd/d90ptwkBgy4uWa7aBYo3I7dZlh4lvj0d1vKiXlw7bJjhokE1wsp
+         DB+VQDFw8bKdFeWrj3JkVgHyb8A1DflRKxM+5If6UMvUDzSw9XfcIOjI9004nsC0ImQL
+         uCn6yJ7GT63WldJshfz/bl13M7mFMJpzxO9f871iCfm8mW2GLeCe0rtPBhnCvyY06r+N
+         cgBbxVazBTQHVy0bC+bDq9t5WfhL8+EqfNZhzchEjK8Zh3ZKjDmJz2i+WpK+OEWOJw+1
+         XOTA==
+X-Gm-Message-State: AFq9FYJPX7jovRpP8JGgsW+XshNhTQGaRlouMWDCI4CMEPLeeVhKMwN7
+	5/uUr8lX9K2q350QScJpaKdGSYqLP1mNPHJ5KvLE4som1SVW0DtwlE+9SOsBebh2NoFIqQwxE77
+	bfADhJ7T+MnJNGmlOZq67Oqv7CBOEyXM4YysOr/JE6A==
+X-Gm-Gg: AYBFou0WtK0iJXOCcLcI1oF6aNeccAhjMa9eJzH4yHOx+e1rVRgt9E+mh4Ycgdp7skE
+	/OS8euleNIF/cA4JSs0masEPPKA5CzdGqMmsZ6rW9HA0oHhfi5luyzqyhLp9eztdgvN4h86j5kM
+	cRFEvfBj/g5VVJls955qipCBRQjuvOwCczDnFVOy74xLPINgLD9hCvS0KDiDGDalmcC6L7Ib0N2
+	3j4aZ8sGD4rszJ7IQfgi+LnMa/ZLDup3QKQjFuuRZ8YMr3hJSbqCUHqu2BlxSmcA6LfDKt+NcyB
+	7VD9D1O5vKad0Vd76e1yBt2NkJHoK2GXprFD+Yx8IQE23KmzHx0ovr1IUJKm7qko2LBFYqbV5Tc
+	em0U1tOr9Zf9k6w9D+buevCq0vKTnLZlIT0f8R2p+hAj3kYI2QKbm0tnnZL3DpY3Bn4VrAOafue
+	4aGGLpkd4644L+mQI=
+X-Received: by 2002:a17:907:6d29:b0:c2e:3f49:df04 with SMTP id
+ a640c23a62f3a-c49bdb68d6dmr477795466b.1.1793280836138; Thu, 29 Oct 2026
+ 06:33:56 -0700 (PDT)
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -106,115 +104,98 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20261029-qla2xxx-fix-v1-1-7e272ffdc4b8@suse.de>
-X-B4-Tracking: v=1; b=H4sIAAAAAAAC/yWMSQqAMAwAvyI5W2h7KNSviAeNUSPi0qoUxL8b9
- TgDMxdECkwRiuyCQCdHXmYBk2eAQz33pLgVBqutM9p6tU21TSmpjpPyBr1oh0YjSLEGEv3dyur
- neDQj4f4u4L4frSwOrG8AAAA=
-X-Change-ID: 20261029-qla2xxx-fix-91c92616c10c
-To: Nilesh Javali <njavali@marvell.com>, 
- GR-QLogic-Storage-Upstream@marvell.com, 
- "Martin K. Petersen" <mkp@kernel.org>, 
- Himanshu Madhani <himanshu.madhani@oracle.com>, 
- Quinn Tran <qutran@marvell.com>
-Cc: linux-scsi@vger.kernel.org, stable@vger.kernel.org, 
- Daniel Wagner <dwagner@suse.de>
-X-Mailer: b4 0.16.0
-X-Rspamd-Queue-Id: ECE341F7F2
-X-Spam-Level: 
-X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
-X-Rspamd-Action: no action
-X-Spam-Flag: NO
-X-Spamd-Result: default: False [-13.51 / 50.00];
-	SUSE_INTERNAL_BYPASS(-9.00)[];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	RCPT_COUNT_SEVEN(0.00)[8];
-	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
-	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	ARC_NA(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	TO_DN_SOME(0.00)[];
-	MID_RHS_MATCH_FROM(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	RCVD_COUNT_TWO(0.00)[2];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo,suse.de:dkim,suse.de:email];
-	DNSWL_BLOCKED(0.00)[2a07:de40:b281:106:10:150:64:167:received];
-	DKIM_TRACE(0.00)[suse.de:+]
-X-Spam-Score: -13.51
+References: <20261029-biwin-tua-quirk-v2-1-4d71af956ac5@flipper.net> <sashiko-outbox-189185@kernel.org>
+In-Reply-To: <sashiko-outbox-189185@kernel.org>
+From: Alexey Charkov <alchark@flipper.net>
+Date: Thu, 29 Oct 2026 17:33:42 +0400
+X-Gm-Features: AclHuK-InaAZRWkyXXw7fbMZCCfKUR5Fcnop4TxQ9forW4KTFobV-VEqdzfk2_o
+Message-ID: <CAKTNdwHeHECQiM=MBew4YE6E0STwPBxyo_QnshASoE7u2z8P1w@mail.gmail.com>
+Subject: Re: [PATCH v2] scsi: core: Clear power-on UNIT ATTENTION on BIWIN UFS devices
+To: sashiko-reviews@lists.linux.dev, 
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
+	"Martin K. Petersen" <mkp@kernel.org>, Bart Van Assche <bvanassche@acm.org>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-qla2x00_dfs_fce_release() tests ha->flags.fce_enabled and ha->fce
-before taking fce_mutex. Since commit 841df27d619e ("scsi: qla2xxx:
-Move FCE Trace buffer allocation to user control") the buffer can be
-freed at runtime by writing 0 to the fce debugfs file, which clears
-ha->fce under fce_mutex.
+On Thu, Oct 29, 2026 at 3:12=E2=80=AFPM <sashiko-bot@kernel.org> wrote:
+[...]
+> [Severity: High]
+> Can scsi_test_unit_ready() starve waiting for a request tag when retrying
+> writes saturate the queue?
+>
+> scsi_test_unit_ready() calls scsi_execute_cmd() -> scsi_alloc_request() -=
+>
+> blk_mq_alloc_request() with flags =3D=3D 0, which waits in blk_mq_get_tag=
+() for a
+> normal non-reserved tag from bitmap_tags.
+>
+> When write commands receive a power-on/reset unit attention,
+> drivers/scsi/scsi_lib.c:scsi_io_completion_action() requeues them immedia=
+tely:
+>
+>         case ACTION_RETRY:
+>                 /* Retry the same command immediately */
+>                 __scsi_queue_insert(cmd, SCSI_MLQUEUE_EH_RETRY, false);
+>                 break;
+>
+> In __scsi_queue_insert() -> blk_mq_requeue_request() ->
+> __blk_mq_requeue_request() -> blk_mq_put_driver_tag():
+>
+>         if (rq->tag =3D=3D BLK_MQ_NO_TAG || rq->internal_tag =3D=3D BLK_M=
+Q_NO_TAG)
+>                 return;
+>
+>         __blk_mq_put_driver_tag(rq->mq_hctx, rq);
+>
+> When an I/O scheduler is attached (such as the default mq-deadline on UFS=
+,
+> where dd_init_sched() sets q->async_depth =3D q->nr_requests so writes ca=
+n
+> consume all tags in sched_tags->bitmap_tags), __blk_mq_requeue_request()
+> releases rq->tag but keeps the scheduler tag (rq->internal_tag) across al=
+l
+> retries. When no I/O scheduler is configured, blk_mq_limit_depth() impose=
+s no
+> limit on writes and blk_mq_put_driver_tag() does not release rq->tag on
+> requeue because rq->internal_tag =3D=3D BLK_MQ_NO_TAG.
+>
+> If enough write requests are queued to fill all non-reserved tags across =
+a
+> reset or runtime resume, won't those writes endlessly fail and requeue wh=
+ile
+> pinning every tag, blocking scsi_test_unit_ready() in blk_mq_get_tag() un=
+til
+> a write exceeds the 180s retry window and fails with an I/O error?
 
-If that write runs between the unlocked check and mutex_lock() in
-release, release goes on to memset(ha->fce, ...) with ha->fce == NULL:
+Hmm, I've simulated this scenario and it is indeed the case. When a
+lot of writes are in-flight at the moment of an injected UFS
+error-handler reset, they end up holding every scheduler tag upon
+resume, meaning the TUR queues behind them, and the recovery doesn't
+happen until after the writes time out with an I/O error (which is
+pretty much the original broken behavior this was meant to fix).
 
-  CPU0 (close)                    CPU1 (echo 0 > fce)
-  !ha->fce -> false
-                                  mutex_lock(&ha->fce_mutex)
-                                  qla2x00_free_fce_trace()
-                                    ha->fce = NULL
-                                  mutex_unlock(&ha->fce_mutex)
-  mutex_lock(&ha->fce_mutex)
-  memset(NULL, 0, ...)
+Given that, I'm wondering if dealing with this via the UFS devman
+interface (as was done in v1) is a better option after all. Bart, what
+would you say?
 
-Move the check under fce_mutex.
+- sd.c looks like a wrong place, because sd never sees resets the UFS
+layer does on its own, such as UFS error recovery
+- The midlayer (like this version) doesn't seem to work either,
+because it only learns about the reset under the host lock, where it
+can't issue commands, and queuing them in a process context means they
+wait for a tag from the same pool as the offending writes are holding
+- The devman path in UFS, on the other hand, knows when UFS does all
+of its resets, and has its own reserved tag, so the TUR can go out
+inside the reset before LU queues restart (thus no deadlock of the
+sorts referenced in edc0596cc04b)
 
-Fixes: 841df27d619e ("scsi: qla2xxx: Move FCE Trace buffer allocation to user control")
-Cc: stable@vger.kernel.org
-Signed-off-by: Daniel Wagner <dwagner@suse.de>
----
- drivers/scsi/qla2xxx/qla_dfs.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/scsi/qla2xxx/qla_dfs.c b/drivers/scsi/qla2xxx/qla_dfs.c
-index 5d08bdbcf70a..247174a38d94 100644
---- a/drivers/scsi/qla2xxx/qla_dfs.c
-+++ b/drivers/scsi/qla2xxx/qla_dfs.c
-@@ -464,11 +464,11 @@ qla2x00_dfs_fce_release(struct inode *inode, struct file *file)
- 	struct qla_hw_data *ha = vha->hw;
- 	int rval;
- 
--	if (ha->flags.fce_enabled || !ha->fce)
--		goto out;
--
- 	mutex_lock(&ha->fce_mutex);
- 
-+	if (ha->flags.fce_enabled || !ha->fce)
-+		goto unlock;
-+
- 	/* Re-enable FCE tracing. */
- 	ha->flags.fce_enabled = 1;
- 	memset(ha->fce, 0, fce_calc_size(ha->fce_bufs));
-@@ -480,8 +480,8 @@ qla2x00_dfs_fce_release(struct inode *inode, struct file *file)
- 		ha->flags.fce_enabled = 0;
- 	}
- 
-+unlock:
- 	mutex_unlock(&ha->fce_mutex);
--out:
- 	return single_release(inode, file);
- }
- 
-
----
-base-commit: c339f4010dea8b0d754f84ace70cd1b089878ef8
-change-id: 20261029-qla2xxx-fix-91c92616c10c
+I've run the same test on v1 (TUR through the devman slot): the TUR
+went out inside the reset, before ufshcd_err_handler finished, and all
+399599 WRITEs in the same window succeeded, with no UNIT ATTENTIONs,
+stalls or I/O errors. If we go that way, v3 would be v1 plus setting
+lrbp->lun from the request UPIU, as pointed out by Sashiko during the
+review of v1.
 
 Best regards,
---  
-Daniel Wagner <dwagner@suse.de>
-
+Alexey
