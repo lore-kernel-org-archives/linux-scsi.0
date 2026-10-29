@@ -1,56 +1,66 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793238873;
-	b=f/7YYk/UKNiK/UVzexYz8WeqmlHkcw6621VSjLL+/QpCfIlMLEp99a15cJk+Bz6HFg8g
-	 TWJWPhnXhJKT4Hf/z5spdPSjdp793V7VW3MXoBGoiPZvtd658wyJdCUsr+G0jwhxnG3kA
-	 GzZZYxhh9PxoeKu7KDQWZI6n6H/DO+Mv+z2D4ed63DITtlfyrgsrtOkAizcKqqSyHnQJF
-	 iEKwWveZqn1xaPcXkSbNLEQsKBVQCLbJPXQu5HLbDzQrCXPO9bcK/pgZ36qz0KTJd0e3d
-	 hND5F3M1WSbe9rfgPP9cVAKTdErN6Uynz3y4Qj1Ac8Lpr/tAfz8BCqNte9fMlpC4pVg==
+	t=1793239387;
+	b=iHB9RPOqVQxRqtJ5KIM3VsdXzPwvEstAcxvV3KRbo6tdFiLPfpkFJz9EgPxxSOJpufJj
+	 wcHf7BgxhwseGlqc6diKDwLmW5o4eiZxUaq+mDa9b3vDNNH7EfclIto4NmbLUtm8izsYz
+	 gaEJDkzHx/LbdMPvKNl2D1L+cV2Gue1EeyyA3sqlNLzyPx1z2M44hN+sefyjBKsnjpHUD
+	 e3NCR4NWb1KYSMGV+gQ3To35J6k56mG8T2ZP3fAg0andxIw24IqcAPq4oP8w0R2w4pxPd
+	 kqSpDywov+fyUcogVnEUHZ91v3Imiy3BB9/UxdkLd3bVzqqM1blRrmbcGN1vi5O6R/A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793238873;
-	h=Received:DKIM-Signature:To:Cc:Subject:From:In-Reply-To:Message-ID:
-	 References:Date:MIME-Version:Content-Type:Content-Transfer-Encoding;
-	bh=KFUY+ufLmeKpF4j7Hh0RMIGS9MmAEj3cLOlUqVTjeas=;
-	b=BZylGfgA619BxgWey0nWWaOE8AtYhSL8p+vTO4wTvJGMDtP1Sdr/xt2HRoLhUjuO2JK4
-	 Sr2q8g+mIhatYW5Qjmba8rpioz0u60OEkhQ750GSfWw4uQu5TpX2wkQ3rnogaT25ERqfX
-	 dDLK0QMBhUnK15BQoJLHmbUE+ZR5z/iXzSvgDFzWWPdciCU0zZ7LW7dtOvcbuI0tDUQy1
-	 lUuwS8L0d5ynk1h73k//HjvvLloZc7zGBLloKQFtBBMiuDqLMTTlsftCkRzN9bPg2W5v1
-	 0KuLx8MAKFUUTYpNNyy5MeevexX2j21pSlC0IGJpE9OubvBFpYoM3zr5VRz4r0eGPrA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793239387;
+	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
+	 In-Reply-To:References:MIME-Version:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=82EWEmTBFTHlp3Xbk9DdfBWQDqYO1PeqHpfQuSaH6o8=;
+	b=Q5yMS6XwOdl1bHzg9TkNR3cbyPDenwPyTZJ5CfjdE94HXyB1UsJf29XI8D/jsX1zIQfl
+	 xCydqEevisakWn8/8tyUicIBXzV+eMpWlYBbPJfoabWLdf2Up2WMJonOmS26e7A5suh9m
+	 iIcn9wQXv90v5XhSy+N4/sYkC976iYZ+UFfUPo0ly0wihHUjngWflVnMbIcf70e/JJXir
+	 G3/75usJkK92X0fIOwm57+S77OPL8QBy+vipXC/eol90x8B9ak5vkr+ZMTzm3kGULfvKw
+	 KlH5FyusCvsWkkg6/g3V2OdycuPScpirVMKZ9BFmfbRaSbDBb2jDA3RvKMHnA8oGYmA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=dF0dC2GJ;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DCXGBdls;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 18474606A31C;
-	Thu, 29 Oct 2026 01:54:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 13B6E606A31C;
+	Thu, 29 Oct 2026 02:03:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=dF0dC2GJ
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 625991F01825;
-	Thu, 29 Oct 2026 01:54:32 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DCXGBdls
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5937F1F01829;
+	Thu, 29 Oct 2026 02:03:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793238872;
-	bh=KFUY+ufLmeKpF4j7Hh0RMIGS9MmAEj3cLOlUqVTjeas=;
-	h=To:Cc:Subject:From:In-Reply-To:References:Date;
-	b=dF0dC2GJ59i82RuGIVffPk26UPSfKN/Kdc8LjqD8AqQKjOkzDIYNr2cg+HhOFpSyd
-	 q+7b2WBXBDtSjIUGzyOlCHsoBT+gpv5JzUZEQtvV8Gyizv1iliNx2FzD76/UFIPMZB
-	 w3gIdcM0GMqm+jodujQYcuktIJVI75HCHyj2Bcsije63ihyfCv3XafAj/2Ym0lFh8z
-	 4MDrgPUCizgWjBcVpFuTJDaZqe04g9LLjZJ2zLoz72EOu0cjmiUymQcSFHnCdXlZr+
-	 VsACayKwGxVXosTv8fsgX2YzNPlwkA+T6dU3Vom4X3R/gyhVd/tA8zaJYhkdij6jV2
-	 NlqGyluvyv92Q==
-To: =?utf-8?Q?Adri=C3=A1n_Garc=C3=ADa?= Casado
- <adriangarciacasado42@gmail.com>
-Cc: "Martin K . Petersen" <mkp@kernel.org>,  "James E . J . Bottomley"
- <James.Bottomley@HansenPartnership.com>,  John Garry
- <john.g.garry@oracle.com>,  Jason Yan <yanaijie@huawei.com>,
-  linux-scsi@vger.kernel.org,  linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] scsi: libsas: Add __printf attribute to sas_ata_printk()
-From: "Martin K. Petersen" <mkp@kernel.org>
-In-Reply-To: <20261020195934.250768-1-adriangarciacasado42@gmail.com>
-Message-ID: <yq14ie546gg.fsf@mail.kernel.org>
-References: <20261020195934.250768-1-adriangarciacasado42@gmail.com>
-Date: Wed, 28 Oct 2026 21:54:31 -0400
+	s=k20260515; t=1793239386;
+	bh=82EWEmTBFTHlp3Xbk9DdfBWQDqYO1PeqHpfQuSaH6o8=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=DCXGBdls4rNx+a5PDTFNAov6fZxMx8gV51xcRKLX9ieFKyMYjnNT/p5N973wDwERG
+	 wYTe8o4yQynY7q6ihffPul38/8wj3TuDPWHCTmP9kmHnok7yjaO/stXmzPNTSn3JVG
+	 6fKCfZBXMgj585GRyek361zkvugL6eHkW0arf5qYr2NuZPptsvrCi58a5rcrFVRyJK
+	 Lw/6HFqXxyxRDDXt3zI8kYIjkHcEEceO/tAWtY7wvTvy4FqmyEB+YWQI+VdYrDgszf
+	 Mu8cThzts2uR7cwbE8FFhQ9lRg0tUsepaswmp0i4gJMYa3Bmx+0EZDNbBOjPA6aho1
+	 8L/svisLTTUIQ==
+From: "Martin K. Petersen (Oracle)" <mkp@kernel.org>
+To: James.Bottomley@HansenPartnership.com,
+	Joonhoe Kim <26rote@gmail.com>
+Cc: "Martin K . Petersen" <mkp@kernel.org>,
+	alim.akhtar@samsung.com,
+	bvanassche@acm.org,
+	beanhuo@micron.com,
+	stanleyjhu@google.com,
+	peter.wang@mediatek.com,
+	can.guo@oss.qualcomm.com,
+	mani@kernel.org,
+	linux-scsi@vger.kernel.org,
+	linux-arm-msm@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org
+Subject: Re: [PATCH] scsi: ufs: core: Fix a deadlock between clock scaling and device commands
+Date: Wed, 28 Oct 2026 22:02:44 -0400
+Message-ID: <179323465378.491807.15412315305334194970.b4-ty@b4>
+X-Mailer: git-send-email 2.56.0
+In-Reply-To: <20261016124608.46-1-26rote@gmail.com>
+References: <20261016124608.46-1-26rote@gmail.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -60,16 +70,30 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 
+On Fri, 16 Oct 2026 21:46:08 +0900, Joonhoe Kim wrote:
 
-Adri=C3=A1n,
+> Since commit 08b12cda6c44 ("scsi: ufs: core: Switch to
+> scsi_get_internal_cmd()"), device management commands go through
+> blk_execute_rq() on the pseudo SCSI device, which shares the tagset
+> with the logical units, while ufshcd_dev_man_lock() holds
+> clk_scaling_lock for reading.
+> 
+> ufshcd_clock_scaling_prepare() and ufshcd_pause_command_processing()
+> quiesce the tagset before taking clk_scaling_lock for writing. A device
+> management command holding the lock for reading at that point is never
+> dispatched and never times out, so the writer waits forever with all
+> logical units quiesced. On a Lenovo Legion Tab Y700 Gen 5 this ended in
+> a hung task panic.
+> 
+> [...]
 
-> sas_ata_printk() formats its variadic arguments via struct va_format and
-> %pV before passing them to printk().
+Applied to 7.4/scsi-queue, thanks!
 
-Applied to 7.4/scsi-staging, thanks!
+[1/1] scsi: ufs: core: Fix a deadlock between clock scaling and device commands
+      https://git.kernel.org/mkp/scsi/c/2327df6d2a29
 
---=20
+-- 
 Martin K. Petersen
