@@ -1,66 +1,80 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=199.89.1.14
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=148.163.158.5
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793294406;
-	b=vfNlF1FLVWexbPgTaEGkT1AHqyaTmCG4pryYZpTY5i62y3zhj85oh0t8UZvSE4rqdpnl
-	 fwDs2AFVHBfTblGAaIG2QyPmkLeT12y7nIahvfGOao8dWaaIIQYG/FMW9bR3SSQ57xQeF
-	 oHRHWrov7xZJ3wBUH2E4ECLNcoyEZHFe6Ysc9XiQPncvlXf0RNyEID/A2fe20OjyCnPp5
-	 4Eb/UOQPX4MhbeLMHeIZoqRy0v9tsVkhM639YnmHnHfGcRVsTfiWjpY44PGYV2t1YGwqE
-	 PC9YQDb0waxkx90/3UPe+n0qokDNKIwEc1geT4gclvWHR204Pb1lVRbNlQtzOdI0vaA==
+	t=1793299854;
+	b=FNOezK0M1d3SHdgG8B9M1caIgyy2s/YuO8GYmlsOui0tVA3XsGB7Hcx0M9FyAwOGN0mk
+	 Z8zyxP7Jp66HbKTGUrNDZHGdcmq0c0CR1Pakx4xKg9ayAdOKUcRgN4kmDufLRxL8Ozuna
+	 +VycdvmwjmvMmZeVu2ZEAotq4KhzIlmkrGHELEyQAuQ+bZ4BKgJDGxdrNgTNvjCuyr97m
+	 d7OTxCzSqGP1lgzdRHaR5VVoJyPlCnp4Qh4k6DguqDwM3TJoSIxwNMvzRrN0g1vXTPWfM
+	 4Wu68cZubTl7QlWVTJ6iQA0SjHlpS7W+JSdno7KkoO2qLxcCbDSeFqzjooiR1fqx4Og==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793294406;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Virus-Scanned:Received:
-	 Received:Content-Type:Message-ID:Date:MIME-Version:User-Agent:Subject:
-	 To:Cc:References:Content-Language:From:In-Reply-To;
-	bh=VxtvlvEWwkqnKZd/qIKxT8eDk+lfaH08lnODPX9Rp8U=;
-	b=DNnwT0qgBdubVycqtNZFpBtg0ozHfZro+TzAwd7fRHbtRU0141/thBZ/oA1xxYYPvanz
-	 GebgO/86cf9qNrSZkELnbakvFXaxIf+Lgp55B2hNWVD0QOUc77DlRrDJzQk/rmG3sH8+d
-	 MemICVwu4qfC3TfoLhaomoNKH67b/vLU+X4p6N2GWowKhiz7FsYeGxvZRbdgfslCE9PdZ
-	 7Z7xWfOzZv8sBDTAn4r7KvMIIW5zfATIcjhALJb4sjrINPVwRxBl+UuU8uwIzO8CZyI7j
-	 8IyLj2rhIo1PQgYGTRU2i9+MaQvBGim4+fRMBnKA6MHtSMMOsSlGZmLNmypC5rHJViQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793299854;
+	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:Received:
+	 Received:Received:Received:Received:Message-ID:Date:MIME-Version:
+	 User-Agent:Content-Language:To:Cc:From:Subject:Content-Type:
+	 Content-Transfer-Encoding:X-TM-AS-GCONF:X-Authority-Analysis:
+	 X-Proofpoint-ORIG-GUID:X-Proofpoint-Spam-Details-Enc:
+	 X-Proofpoint-GUID:X-Proofpoint-Spam-Info:X-Proofpoint-Virus-Version:
+	 X-Proofpoint-Spam-Details;
+	bh=LX/IchEq0zst/gkv3fV1vQRcm0Go39Qa/xzSrfdyNGM=;
+	b=NfLOV789LwPNJi38iXFihMCcdrA1hDPH8wB4EbGQQzJ0R/fsrG94FWI4a7ImclXZzT4y
+	 /3zLSDQDcKcqoK1QtlXe5K6cdVbv7ipxSlwRvadWFPKiADFW55mid+gJOtSIdkYsn7VS/
+	 o1tPkRNHCX557mC4YYFJutRg7YJvTL9CfKiiKZYuPRsEvj7ZpzCTwgKp8L9zY5J64H3yt
+	 72DH50a28uo2yu+NV8RdVZyIZGPfuwrk9bRVAUml+ZdwrUo/hDnVRl3gZo37hCB8vBvzH
+	 8M4MTzKXK/YWJZwYrzPNKPcr/xLx0oFozhLofPeyD87O195suVm7U2WBfHdblJ5plSQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=acm.org;
-	spf=pass smtp.mailfrom=acm.org;
-	dkim=pass header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=HggMxMKK;
-	arc=none smtp.remote-ip=199.89.1.14
-Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
+	dmarc=pass header.from=linux.ibm.com;
+	spf=pass smtp.mailfrom=linux.ibm.com;
+	dkim=pass header.d=ibm.com header.i=@ibm.com header.a=rsa-sha256 header.s=pp1 header.b=edstEevJ;
+	arc=none smtp.remote-ip=148.163.158.5
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A2CC606A31A;
-	Thu, 29 Oct 2026 17:20:06 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2A2CC606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90E17606A31A;
+	Thu, 29 Oct 2026 18:50:53 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 90E17606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=HggMxMKK
-Received: from localhost (localhost [127.0.0.1])
-	by 011.lax.mailroute.net (Postfix) with ESMTP id 4jFrZs4f9xz1XM30j;
-	Thu, 29 Oct 2026 17:20:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	in-reply-to:from:from:content-language:references:subject
-	:subject:user-agent:mime-version:date:date:message-id
-	:content-type:content-type:received:received; s=mr01; t=
-	1793294398; x=1795886399; bh=VxtvlvEWwkqnKZd/qIKxT8eDk+lfaH08lnO
-	DPX9Rp8U=; b=HggMxMKKVrJ94ewqmLJvF89lxx4k8UzahG6cDv1HCfyVNedU0EQ
-	yrGXqz1CrfuR7O3yL7ZG1gw0g4KdkfMrUBuobLQXoCiMwR4qgrVwSD5fl12r+eqx
-	9Zh7VxNMIikWMs6/ZixdGm6RH8Z7VSH1sFXvcSZMqd9zEXY4kDxOhyYyZbSPnclY
-	jVUP9NMNIVtmq1XEAv+BDs5ZGUxYeg4tKLSBRiIibpKEczcMZA/mP0rnSDWM+BWW
-	HWsDI8Sx2Ek3EJDlHc0hLlFP13BL4I89cwlbKRR1BByqm32XsOGaTQBmbD9DN8ba
-	rp4TFo43h/iJh+B2hALPpJe+9lf6qUE4kDg==
-X-Virus-Scanned: by MailRoute
-Received: from 011.lax.mailroute.net ([127.0.0.1])
- by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id MXE5VPTlT1GW; Thu, 29 Oct 2026 17:19:58 +0000 (UTC)
-Received: from [IPV6:2a00:79e0:2ed2:d:bc59:f725:8fec:453b] (unknown [104.135.182.43])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4jFrZk3MH0z1XM30h;
-	Thu, 29 Oct 2026 17:19:58 +0000 (UTC)
-Content-Type: multipart/mixed; boundary="------------NBzSFqsJwXRKLj19EosG89sj"
-Message-ID: <e9ada0a2-aa36-4cde-a7b7-5d4693d372ae@acm.org>
-Date: Thu, 29 Oct 2026 10:19:57 -0700
+	dkim=pass (2048-bit key, unprotected) header.d=ibm.com header.i=@ibm.com header.a=rsa-sha256 header.s=pp1 header.b=edstEevJ
+Received: from pps.filterd (m0353725.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69TGEIZb3505303;
+	Thu, 29 Oct 2026 18:50:48 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=pp1; bh=LX/IchEq0zst/gkv3fV1vQRcm0Go
+	39Qa/xzSrfdyNGM=; b=edstEevJS6d5bdTSudOTp1GFgLCKiQHHEzyuPxbt++hJ
+	tHFN3O3kYtNyoafkA+EXSVWs6nRKXfC5zVF+1c89fXdrKUVi9bL/kn2mtNdUVibi
+	PQLOZTEiLSaX2UFekF4J6kks+nhZNiQ9pAOrtfT7EnBXGOp9Qy1RTkrdnecximMf
+	LXs4RcSw3F6ZcNxziS7MRBVpKRJbbYJVOCfcjbMY1bTrawS4+FOwLjYGeEdDzhyF
+	FX42mOwsdBfBhtuqfSyukNHNo3/TZ9CWfmu2S5d6mut8NaGwhJKNvvZM/QiAVYtY
+	/8qlBOw+lOly7ylqAvtt8YOQV/g0BHbERDPl2URe+A==
+Received: from ppma23.wdc07v.mail.ibm.com (5d.69.3da9.ip4.static.sl-reverse.com [169.61.105.93])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4hgk3gbwr5-1
+	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
+	Thu, 29 Oct 2026 18:50:48 +0000 (GMT)
+Received: from pps.filterd (ppma23.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma23.wdc07v.mail.ibm.com (8.18.1.11/8.18.1.11) with ESMTP id 69TGJx4R3449875;
+	Thu, 29 Oct 2026 18:50:48 GMT
+Received: from smtprelay03.dal12v.mail.ibm.com ([172.16.1.5])
+	by ppma23.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4hm6pb9gqm-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 29 Oct 2026 18:50:48 +0000 (GMT)
+Received: from smtpav02.wdc07v.mail.ibm.com (smtpav02.wdc07v.mail.ibm.com [10.39.53.229])
+	by smtprelay03.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 69TIollV20316842
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 29 Oct 2026 18:50:47 GMT
+Received: from smtpav02.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 0BFFF58058;
+	Thu, 29 Oct 2026 18:50:47 +0000 (GMT)
+Received: from smtpav02.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 676D35805C;
+	Thu, 29 Oct 2026 18:50:46 +0000 (GMT)
+Received: from [9.61.39.38] (unknown [9.61.39.38])
+	by smtpav02.wdc07v.mail.ibm.com (Postfix) with ESMTP;
+	Thu, 29 Oct 2026 18:50:46 +0000 (GMT)
+Message-ID: <29073ebc-b616-475b-bc05-384da09fbb54@linux.ibm.com>
+Date: Thu, 29 Oct 2026 13:50:45 -0500
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -71,213 +85,125 @@ List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] scsi: core: Clear power-on UNIT ATTENTION on BIWIN UFS
- devices
-To: Alexey Charkov <alchark@flipper.net>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <mkp@kernel.org>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20261029-biwin-tua-quirk-v2-1-4d71af956ac5@flipper.net>
 Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20261029-biwin-tua-quirk-v2-1-4d71af956ac5@flipper.net>
-
-This is a multi-part message in MIME format.
---------------NBzSFqsJwXRKLj19EosG89sj
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Paul Ely <paul.ely@broadcom.com>
+Cc: hare@suse.de, msmurthy@linux.ibm.com
+From: Kyle Mahlkuch <kmahlkuc@linux.ibm.com>
+Subject: [PATCH v2] scsi: lpfc: Fix race conditions in ELS retry
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Authority-Analysis: v=2.4 cv=BOMmP1QG c=1 sm=1 tr=0 ts=6ae39588 cx=c_pps
+ a=3Bg1Hr4SwmMryq2xdFQyZA==:117 a=3Bg1Hr4SwmMryq2xdFQyZA==:17
+ a=IkcTkHD0fZMA:10 a=660iZSQnnn4A:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=RnoormkPH1_aCDwRdu11:22 a=V8glGbnc2Ofi9Qvn3v5h:22 a=VnNF1IyMAAAA:8
+ a=Q-fNiiVtAAAA:8 a=Bz3PlmeQYvTki0S0ELIA:9 a=QEXdDO2ut3YA:10
+X-Proofpoint-ORIG-GUID: EwpCjOlHLhaJS7iapAt1IwfixQHgfo4F
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMDI5MDA3MyBTYWx0ZWRfX4la0dvE84NqX
+ 79DAIoxOhEilZ7l3N4llTS/qbXZOi5ZFMkTKpbHLQ4MOS6Smxjs3JPo18+DUikJk0HA52bbbV/R
+ +lcRyT25xb/+MbqX6nH6z+LEZcqUgLfq9OW1jAfxcplQY+SmbapaVpDx8mC5dMtjvOq9IE56dCp
+ KK6f3GfN2wLpEJLPDEM3GaOIvf9iYGTVzG+uhZj2k8wXO4U7nf9/vx1TDoyocYo9sQ68vLmIc3D
+ kQUFheC+DHhqP3qo0U+xIQu/RhAM7swmofqYXPt3Zcth0RmyfsZE/u511C5rwdeCB6T1t39ADs5
+ 7Rvo+BCt9SHO7M5MnDG9cuFNPZX0ldBDUafbvRo3BHL5Ca75pfsZ/1XUGIpm2LC6EjRrHk3beb0
+ XnNq1WGgQI4zuzkI0uh0zAPr08hiMl/DzI4s1VOlHv5x0pPVRtyiDMrjdf9DOwm1MT+JkSHFxWn
+ l3B9dvKTy97UT+myXPw==
+X-Proofpoint-GUID: EwpCjOlHLhaJS7iapAt1IwfixQHgfo4F
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMDI5MDA3MyBTYWx0ZWRfXz9xGFcqcJ5YP
+ 9PdYSoj/h3N4D47fCX979aLONRCqkKt6xbo/D4wUMDVA7RXBdI06tTej8bghWK4hrnK2QAU8w6u
+ Oi0XXMPyEkFmk01dk/gDGB660J/wh4c=
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
+ definitions=2026-10-29_05,2026-10-21_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ suspectscore=0 bulkscore=0 malwarescore=0 clxscore=1011 spamscore=0
+ phishscore=0 adultscore=0 impostorscore=0 priorityscore=1501
+ lowpriorityscore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2610190000
+ definitions=main-2610290073
 
-On 10/29/26 3:41 AM, Alexey Charkov wrote:
-> The SCSI core retries a command that receives a UNIT ATTENTION and relies
-> on the device to clear the condition once reported. The BIWIN
-> BWU2A0526B128G and BWU2A0516B064G UFS devices do not clear a power on or
-> reset UNIT ATTENTION when reporting it to a WRITE. After a device reset,
-> such as on resume with the UFS link off or in UFS error recovery, writes
-> then fail on every retry for the full 180s retry window and end in I/O
-> errors. A TEST UNIT READY or READ clears it.
+This patch addresses a race condition in the lpfc driver's ELS retry
+event handling that can lead to a use-after-free in the
+lpfc_cancel_retry_delay_tmo(), where the NLP_DELAY_TMO flag is cleared
+before acquiring the lock to check if the retry event is queued. This
+creates a window where the timer can be rescheduled and fire, causing
+both the cancel path and the worker thread to release the same 
+reference, resulting in a double-put and use-after-free.
 
-Does the attached untested patch help?
+Signed-off-by: Kyle Mahlkuch <kmahlkuc@linux.ibm.com>
+Signed-off-by: Paul Ely <paul.ely@broadcom.com>
+Tested-by: Maram Srimannarayana Murthy <msmurthy@linux.ibm.com>
+---
+  drivers/scsi/lpfc/lpfc_els.c     | 32 +++++++++++++++++++++++++-------
+  drivers/scsi/lpfc/lpfc_hbadisc.c |  5 +++++
+  2 files changed, 30 insertions(+), 7 deletions(-)
 
-Thanks,
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index 6f6394a0047c..ffd61ac46646 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -4477,18 +4477,36 @@ lpfc_issue_els_edc(struct lpfc_vport *vport, 
+uint8_t retry)
+  void
+  lpfc_cancel_retry_delay_tmo(struct lpfc_vport *vport, struct 
+lpfc_nodelist *nlp)
+  {
+-	struct lpfc_work_evt *evtp;
++	struct lpfc_hba *phba = vport->phba;
++	struct lpfc_work_evt *evtp = &nlp->els_retry_evt;
++	struct lpfc_nodelist *arg_ndlp = NULL;
++	unsigned long flags;
++
 
-Bart.
---------------NBzSFqsJwXRKLj19EosG89sj
-Content-Type: text/x-patch; charset=UTF-8;
- name="0001-scsi-core-Clear-persistent-UNIT-ATTENTION-with-TEST-.patch"
-Content-Disposition: attachment;
- filename*0="0001-scsi-core-Clear-persistent-UNIT-ATTENTION-with-TEST-.pa";
- filename*1="tch"
-Content-Transfer-Encoding: base64
-
-RnJvbSBhODFkZmM1YjlkMWFlOGQ3N2MwZWY0ZWE3MDMyMmM5Mzc3NjdhOGYyIE1vbiBTZXAg
-MTcgMDA6MDA6MDAgMjAwMQpGcm9tOiBCYXJ0IFZhbiBBc3NjaGUgPGJ2YW5hc3NjaGVAYWNt
-Lm9yZz4KRGF0ZTogVGh1LCAyOSBPY3QgMjAyNiAxMDoxMTo0MiAtMDcwMApTdWJqZWN0OiBb
-UEFUQ0hdIHNjc2k6IGNvcmU6IENsZWFyIHBlcnNpc3RlbnQgVU5JVCBBVFRFTlRJT04gd2l0
-aCBURVNUIFVOSVQKIFJFQURZCgpSZWNvdmVyIGZyb20gcGVyc2lzdGVudCBVTklUIEFUVEVO
-VElPTiBjb25kaXRpb25zIGluIHRoZSBTQ1NJIG1pZGxheWVyCmluc3RlYWQgb2YgbWFpbnRh
-aW5pbmcgYSBwZXItZGV2aWNlIHF1aXJrIGxpc3QgZm9yIHRhcmdldHMgc3VjaCBhcwpCSVdJ
-TiBCV1UyQTA1KiBVRlMgZGV2aWNlcyB0aGF0IGZhaWwgdG8gY2xlYXIgcG93ZXItb24gVU5J
-VCBBVFRFTlRJT04Kb24gV1JJVEUgY29tbWFuZHMgYWZ0ZXIgYSByZXNldCBhbmQgb25seSBj
-bGVhciBpdCBvbiBURVNUIFVOSVQgUkVBRFkuCgpSZXRyeSBVTklUIEFUVEVOVElPTiB1cCB0
-byB0d2ljZSBvbiB0aGUgbm9ybWFsIGNvbXBsZXRpb24gcGF0aCBpbgpzY3NpX2NoZWNrX3Nl
-bnNlKCkgZm9yIG5vbi1yZW1vdmFibGUgYmxvY2sgcmVxdWVzdHMgYnkgcmV0dXJuaW5nCk5F
-RURTX1JFVFJZIHdoaWxlIHNjbWQtPnJldHJpZXMgPCAyIGFuZCBGQUlMRUQgdGhlcmVhZnRl
-ciwgaW5zdGVhZCBvZgpsZXR0aW5nIHNjc2lfaW9fY29tcGxldGlvbl9hY3Rpb24oKSByZXRy
-eSB1bmNvdW50ZWQgdW50aWwgdGhlIGNvbW1hbmQKcnVudGltZSBsaW1pdCBpcyBleGNlZWRl
-ZC4KCkFkZCBzY3NpX2VoX2NsZWFyX3VhKCkgdG8gc2NzaV9laF9yZWFkeV9kZXZzKCkgYWhl
-YWQgb2YgZGV2aWNlIHJlc2V0CnNvIHRoYXQgdGhlIGVycm9yIGhhbmRsZXIgc2VuZHMgVEVT
-VCBVTklUIFJFQURZIHRvIGNvbnN1bWUgYSBzdHVjawpVTklUIEFUVEVOVElPTiBhbmQgdmVy
-aWZpZXMgd2l0aCBhIGZvbGxvdy11cCBURVNUIFVOSVQgUkVBRFkgdGhhdCB0aGUKY29uZGl0
-aW9uIGNsZWFyZWQgYmVmb3JlIHJlcXVldWVpbmcgYWZmZWN0ZWQgY29tbWFuZHMuIFNhdmUg
-YW5kCnJlc3RvcmUgc2NtZC0+c2Vuc2VfYnVmZmVyIGFjcm9zcyBzY3NpX3NlbmRfZWhfY21u
-ZCgpIHNvIHRoYXQgdGhlCm9yaWdpbmFsIHNlbnNlIGRhdGEgcmVtYWlucyBpbnRhY3Qgd2hp
-bGUgZmlsdGVyaW5nIHdvcmtfcSBhbmQgaWYKcmV0cmllcyBhcmUgbGF0ZXIgZXhoYXVzdGVk
-LgoKSW50cm9kdWNlIHNjc2lfY21kX25lZWRzX3N0dSgpIGFuZCB1c2UgaXQgaW4gc2NzaV9l
-aF9zdHUoKSBpbnN0ZWFkIG9mCnRlc3Rpbmcgc2NzaV9jaGVja19zZW5zZShzY21kKSA9PSBG
-QUlMRUQgc28gdGhhdCBzY3NpX2VoX3N0dSgpIG9ubHkKc2VuZHMgU1RBUlRfVU5JVCBmb3Ig
-TFVfTk9UX1JFQURZX0lOSVRJQUxJWklOR19DT01NQU5EX1JFUVVJUkVEIGFuZApub3QgZm9y
-IHBlcnNpc3RlbnQgVU5JVCBBVFRFTlRJT04gd2hlbiBzZGV2LT5hbGxvd19yZXN0YXJ0IGlz
-IHNldC4KCkZhaWwgbm9uLXJlbW92YWJsZSBjb21tYW5kcyBpbiBzY3NpX2lvX2NvbXBsZXRp
-b25fYWN0aW9uKCkgb24gVU5JVApBVFRFTlRJT04gd2hlbiBzY3NpX25vcmV0cnlfY21kKCkg
-aXMgdHJ1ZSBvciByZXRyaWVzIGV4Y2VlZAptYXgoY21kLT5hbGxvd2VkLCAzKSB0byBob25v
-ciBmYWlsZmFzdCBmbGFncyBhbmQgcHJldmVudCBpbmZpbml0ZQpyZXRyeSBsb29wcyBpZiBh
-IHRhcmdldCBjb250aW51ZXMgdG8gcmVwb3J0IFVOSVQgQVRURU5USU9OIGFmdGVyCnJlY292
-ZXJ5LgoKUmVwb3J0ZWQtYnk6IEFsZXhleSBDaGFya292IDxhbGNoYXJrQGZsaXBwZXIubmV0
-PgpDbG9zZXM6IGh0dHBzOi8vbG9yZS5rZXJuZWwub3JnL2xpbnV4LXNjc2kvMjAyNjEwMjgt
-Yml3aW4tdHVhLXF1aXJrLXYxLTEtNzY3YTEyYzliOWNjQGZsaXBwZXIubmV0LwpTaWduZWQt
-b2ZmLWJ5OiBCYXJ0IFZhbiBBc3NjaGUgPGJ2YW5hc3NjaGVAYWNtLm9yZz4KLS0tCiBkcml2
-ZXJzL3Njc2kvc2NzaV9lcnJvci5jIHwgMTY3ICsrKysrKysrKysrKysrKysrKysrKysrKysr
-KysrKysrKysrKy0tCiBkcml2ZXJzL3Njc2kvc2NzaV9saWIuYyAgIHwgICA0ICsKIDIgZmls
-ZXMgY2hhbmdlZCwgMTYyIGluc2VydGlvbnMoKyksIDkgZGVsZXRpb25zKC0pCgpkaWZmIC0t
-Z2l0IGEvZHJpdmVycy9zY3NpL3Njc2lfZXJyb3IuYyBiL2RyaXZlcnMvc2NzaS9zY3NpX2Vy
-cm9yLmMKaW5kZXggNzU0NDJkNjBjMzBlLi5lNzg5OWM4NmQxNzEgMTAwNjQ0Ci0tLSBhL2Ry
-aXZlcnMvc2NzaS9zY3NpX2Vycm9yLmMKKysrIGIvZHJpdmVycy9zY3NpL3Njc2lfZXJyb3Iu
-YwpAQCAtNzE2LDYgKzcxNiwyMCBAQCBlbnVtIHNjc2lfZGlzcG9zaXRpb24gc2NzaV9jaGVj
-a19zZW5zZShzdHJ1Y3Qgc2NzaV9jbW5kICpzY21kKQogCQkgICAgc3NoZHIuc2Vuc2VfY29k
-ZSA9PQogCQkgICAgTFVfTk9UX1JFQURZX0lOSVRJQUxJWklOR19DT01NQU5EX1JFUVVJUkVE
-KQogCQkJcmV0dXJuIEZBSUxFRDsKKwkJLyoKKwkJICogUmV0cnkgVU5JVCBBVFRFTlRJT04g
-dXAgdG8gdHdpY2Ugb24gdGhlIG5vcm1hbCBjb21wbGV0aW9uCisJCSAqIHBhdGggZm9yIG5v
-bi1yZW1vdmFibGUgYmxvY2sgcmVxdWVzdHMsIHRoZW4gaW52b2tlIHRoZSBlcnJvcgorCQkg
-KiBoYW5kbGVyIHNvIFRFU1QgVU5JVCBSRUFEWSBjYW4gY2xlYXIgYSBzdHVjayBVTklUIEFU
-VEVOVElPTi4KKwkJICovCisJCWlmIChzc2hkci5zZW5zZV9rZXkgPT0gVU5JVF9BVFRFTlRJ
-T04gJiYKKwkJICAgICFzZGV2LT5yZW1vdmFibGUgJiYKKwkJICAgICFibGtfcnFfaXNfcGFz
-c3Rocm91Z2gocmVxKSAmJgorCQkgICAgc2NtZC0+c3VibWl0dGVyICE9IFNVQk1JVFRFRF9C
-WV9TQ1NJX0VSUk9SX0hBTkRMRVIgJiYKKwkJICAgICFzY3NpX25vcmV0cnlfY21kKHNjbWQp
-KSB7CisJCQlpZiAoc2NtZC0+cmV0cmllcyA8IDIpCisJCQkJcmV0dXJuIE5FRURTX1JFVFJZ
-OworCQkJcmV0dXJuIEZBSUxFRDsKKwkJfQogCQkvKgogCQkgKiBQYXNzIHRoZSBVQSB1cHdh
-cmRzIGZvciBhIGRldGVybWluYXRpb24gaW4gdGhlIGNvbXBsZXRpb24KIAkJICogZnVuY3Rp
-b25zLgpAQCAtMTU4Miw2ICsxNTk2LDI0IEBAIHN0YXRpYyBpbnQgc2NzaV9laF90cnlfc3R1
-KHN0cnVjdCBzY3NpX2NtbmQgKnNjbWQpCiAJcmV0dXJuIDE7CiB9CiAKK3N0YXRpYyBib29s
-IHNjc2lfY21kX25lZWRzX3N0dShjb25zdCBzdHJ1Y3Qgc2NzaV9jbW5kICpzY21kKQorewor
-CXN0cnVjdCBzY3NpX3NlbnNlX2hkciBzc2hkcjsKKworCWlmICghc2NtZC0+ZGV2aWNlLT5h
-bGxvd19yZXN0YXJ0IHx8CisJICAgIChzY21kLT5laF9lZmxhZ3MgJiBTQ1NJX0VIX0FCT1JU
-X1NDSEVEVUxFRCkgfHwKKwkgICAgaG9zdF9ieXRlKHNjbWQtPnJlc3VsdCkgIT0gRElEX09L
-IHx8CisJICAgICFzY3NpX3N0YXR1c19pc19jaGVja19jb25kaXRpb24oc2NtZC0+cmVzdWx0
-KSB8fAorCSAgICAhU0NTSV9TRU5TRV9WQUxJRChzY21kKSkKKwkJcmV0dXJuIGZhbHNlOwor
-CisJcmV0dXJuIHNjc2lfY29tbWFuZF9ub3JtYWxpemVfc2Vuc2Uoc2NtZCwgJnNzaGRyKSAm
-JgorCQkhc2NzaV9zZW5zZV9pc19kZWZlcnJlZCgmc3NoZHIpICYmCisJCShzc2hkci5zZW5z
-ZV9rZXkgPT0gTk9UX1JFQURZIHx8CisJCSBzc2hkci5zZW5zZV9rZXkgPT0gVU5JVF9BVFRF
-TlRJT04pICYmCisJCXNzaGRyLnNlbnNlX2NvZGUgPT0gTFVfTk9UX1JFQURZX0lOSVRJQUxJ
-WklOR19DT01NQU5EX1JFUVVJUkVEOworfQorCiAgLyoqCiAgKiBzY3NpX2VoX3N0dSAtIHNl
-bmQgU1RBUlRfVU5JVCBpZiBuZWVkZWQKICAqIEBzaG9zdDoJJnNjc2kgaG9zdCBiZWluZyBy
-ZWNvdmVyZWQuCkBAIC0xNjEwLDggKzE2NDIsNyBAQCBzdGF0aWMgaW50IHNjc2lfZWhfc3R1
-KHN0cnVjdCBTY3NpX0hvc3QgKnNob3N0LAogCQl9CiAJCXN0dV9zY21kID0gTlVMTDsKIAkJ
-bGlzdF9mb3JfZWFjaF9lbnRyeShzY21kLCB3b3JrX3EsIGVoX2VudHJ5KQotCQkJaWYgKHNj
-bWQtPmRldmljZSA9PSBzZGV2ICYmIFNDU0lfU0VOU0VfVkFMSUQoc2NtZCkgJiYKLQkJCSAg
-ICBzY3NpX2NoZWNrX3NlbnNlKHNjbWQpID09IEZBSUxFRCApIHsKKwkJCWlmIChzY21kLT5k
-ZXZpY2UgPT0gc2RldiAmJiBzY3NpX2NtZF9uZWVkc19zdHUoc2NtZCkpIHsKIAkJCQlzdHVf
-c2NtZCA9IHNjbWQ7CiAJCQkJYnJlYWs7CiAJCQl9CkBAIC0xNjQ1LDYgKzE2NzYsMTI0IEBA
-IHN0YXRpYyBpbnQgc2NzaV9laF9zdHUoc3RydWN0IFNjc2lfSG9zdCAqc2hvc3QsCiAJcmV0
-dXJuIGxpc3RfZW1wdHkod29ya19xKTsKIH0KIAorc3RhdGljIGJvb2wgc2NzaV9jbWRfaGFz
-X3VhKGNvbnN0IHN0cnVjdCBzY3NpX2NtbmQgKnNjbWQpCit7CisJc3RydWN0IHNjc2lfc2Vu
-c2VfaGRyIHNzaGRyOworCisJaWYgKChzY21kLT5laF9lZmxhZ3MgJiBTQ1NJX0VIX0FCT1JU
-X1NDSEVEVUxFRCkgfHwKKwkgICAgaG9zdF9ieXRlKHNjbWQtPnJlc3VsdCkgIT0gRElEX09L
-IHx8CisJICAgICFzY3NpX3N0YXR1c19pc19jaGVja19jb25kaXRpb24oc2NtZC0+cmVzdWx0
-KSB8fAorCSAgICAhU0NTSV9TRU5TRV9WQUxJRChzY21kKSkKKwkJcmV0dXJuIGZhbHNlOwor
-CisJcmV0dXJuIHNjc2lfY29tbWFuZF9ub3JtYWxpemVfc2Vuc2Uoc2NtZCwgJnNzaGRyKSAm
-JgorCQkhc2NzaV9zZW5zZV9pc19kZWZlcnJlZCgmc3NoZHIpICYmCisJCXNzaGRyLnNlbnNl
-X2tleSA9PSBVTklUX0FUVEVOVElPTjsKK30KKworc3RhdGljIGJvb2wgc2NzaV9laF9zZW5k
-X3R1cl9jbGVhcl91YShzdHJ1Y3Qgc2NzaV9jbW5kICpzY21kKQoreworCXN0YXRpYyB1bnNp
-Z25lZCBjaGFyIHR1cl9jb21tYW5kWzZdID0geyBURVNUX1VOSVRfUkVBRFkgfTsKKwl1OCBz
-ZW5zZV9idWZbU0NTSV9TRU5TRV9CVUZGRVJTSVpFXTsKKwlzdHJ1Y3Qgc2NzaV9zZW5zZV9o
-ZHIgc3NoZHI7CisJZW51bSBzY3NpX2Rpc3Bvc2l0aW9uIHJ0bjsKKwlib29sIGNsZWFyZWQg
-PSBmYWxzZTsKKwlpbnQgaTsKKworCW1lbWNweShzZW5zZV9idWYsIHNjbWQtPnNlbnNlX2J1
-ZmZlciwgc2l6ZW9mKHNlbnNlX2J1ZikpOworCisJLyoKKwkgKiBTZW5kIFRFU1QgVU5JVCBS
-RUFEWSB0byBjb25zdW1lIHRoZSBwZW5kaW5nIFVOSVQgQVRURU5USU9OLCB0aGVuCisJICog
-c2VuZCBhIGZvbGxvdy11cCBURVNUIFVOSVQgUkVBRFkgdG8gdmVyaWZ5IHRoYXQgdGhlIGNv
-bmRpdGlvbgorCSAqIGNsZWFyZWQgcmF0aGVyIHRoYW4gcmVtYWluaW5nIHN0dWNrLgorCSAq
-LworCWZvciAoaSA9IDA7IGkgPCA0OyBpKyspIHsKKwkJcnRuID0gc2NzaV9zZW5kX2VoX2Nt
-bmQoc2NtZCwgdHVyX2NvbW1hbmQsIHNpemVvZih0dXJfY29tbWFuZCksCisJCQkJCXNjbWQt
-PmRldmljZS0+ZWhfdGltZW91dCwgMCk7CisJCWlmIChydG4gPT0gTkVFRFNfUkVUUlkpCisJ
-CQljb250aW51ZTsKKwkJaWYgKHJ0biAhPSBTVUNDRVNTKQorCQkJYnJlYWs7CisJCWlmICgh
-c2NzaV9jb21tYW5kX25vcm1hbGl6ZV9zZW5zZShzY21kLCAmc3NoZHIpIHx8CisJCSAgICBz
-c2hkci5zZW5zZV9rZXkgPT0gTk9fU0VOU0UgfHwKKwkJICAgIHNzaGRyLnNlbnNlX2tleSA9
-PSBSRUNPVkVSRURfRVJST1IpIHsKKwkJCWNsZWFyZWQgPSB0cnVlOworCQkJYnJlYWs7CisJ
-CX0KKwkJaWYgKHNzaGRyLnNlbnNlX2tleSAhPSBVTklUX0FUVEVOVElPTikKKwkJCWJyZWFr
-OworCX0KKworCW1lbWNweShzY21kLT5zZW5zZV9idWZmZXIsIHNlbnNlX2J1Ziwgc2l6ZW9m
-KHNlbnNlX2J1ZikpOworCXJldHVybiBjbGVhcmVkOworfQorCisvKioKKyAqIHNjc2lfZWhf
-Y2xlYXJfdWEgLSBjbGVhciBwZW5kaW5nIFVOSVQgQVRURU5USU9OIGNvbmRpdGlvbnMgaWYg
-bmVlZGVkCisgKiBAc2hvc3Q6CVNDU0kgaG9zdCBiZWluZyByZWNvdmVyZWQuCisgKiBAd29y
-a19xOgkmbGlzdF9oZWFkIGZvciBwZW5kaW5nIGNvbW1hbmRzLgorICogQGRvbmVfcToJJmxp
-c3RfaGVhZCBmb3IgcHJvY2Vzc2VkIGNvbW1hbmRzLgorICoKKyAqIElmIGNvbW1hbmRzIGZh
-aWwgcmVwZWF0ZWRseSB3aXRoIFVOSVQgQVRURU5USU9OIGJlY2F1c2UgYSB0YXJnZXQgZG9l
-cyBub3QKKyAqIGNsZWFyIHRoZSBjb25kaXRpb24gZm9yIHRob3NlIGNvbW1hbmRzIChmb3Ig
-ZXhhbXBsZSwgV1JJVEUpLCBzZW5kCisgKiBURVNUIFVOSVQgUkVBRFkgdG8gY2xlYXIgdGhl
-IFVOSVQgQVRURU5USU9OIGJlZm9yZSBlc2NhbGF0aW5nIHRvIGEgcmVzZXQuCisgKgorICog
-UmV0dXJuOiAxIGlmIEB3b3JrX3EgaXMgZW1wdHksIDAgb3RoZXJ3aXNlLgorICovCitzdGF0
-aWMgaW50IHNjc2lfZWhfY2xlYXJfdWEoc3RydWN0IFNjc2lfSG9zdCAqc2hvc3QsCisJCQkg
-ICAgc3RydWN0IGxpc3RfaGVhZCAqd29ya19xLAorCQkJICAgIHN0cnVjdCBsaXN0X2hlYWQg
-KmRvbmVfcSkKK3sKKwlzdHJ1Y3Qgc2NzaV9jbW5kICpzY21kLCAqdWFfc2NtZCwgKm5leHQ7
-CisJc3RydWN0IHNjc2lfZGV2aWNlICpzZGV2OworCisJc2hvc3RfZm9yX2VhY2hfZGV2aWNl
-KHNkZXYsIHNob3N0KSB7CisJCWlmIChzY3NpX2hvc3RfZWhfcGFzdF9kZWFkbGluZShzaG9z
-dCkpIHsKKwkJCVNDU0lfTE9HX0VSUk9SX1JFQ09WRVJZKDMsCisJCQkJCQlzZGV2X3ByaW50
-ayhLRVJOX0lORk8sIHNkZXYsCisJCQkJCQkJICAgICIlczogc2tpcCBjbGVhciBVQSwgcGFz
-dCBlaCBkZWFkbGluZVxuIiwKKwkJCQkJCQkgICAgY3VycmVudC0+Y29tbSkpOworCQkJc2Nz
-aV9kZXZpY2VfcHV0KHNkZXYpOworCQkJYnJlYWs7CisJCX0KKworCQl1YV9zY21kID0gTlVM
-TDsKKwkJbGlzdF9mb3JfZWFjaF9lbnRyeShzY21kLCB3b3JrX3EsIGVoX2VudHJ5KSB7CisJ
-CQlpZiAoc2NtZC0+ZGV2aWNlID09IHNkZXYgJiYgc2NzaV9jbWRfaGFzX3VhKHNjbWQpKSB7
-CisJCQkJdWFfc2NtZCA9IHNjbWQ7CisJCQkJYnJlYWs7CisJCQl9CisJCX0KKworCQlpZiAo
-IXVhX3NjbWQpCisJCQljb250aW51ZTsKKworCQlTQ1NJX0xPR19FUlJPUl9SRUNPVkVSWSgz
-LAorCQkJCQlzZGV2X3ByaW50ayhLRVJOX0lORk8sIHNkZXYsCisJCQkJCQkgICAgIiVzOiBT
-ZW5kaW5nIFRFU1RfVU5JVF9SRUFEWSB0byBjbGVhciBVQVxuIiwKKwkJCQkJCSAgICBjdXJy
-ZW50LT5jb21tKSk7CisKKwkJaWYgKCFzY3NpX2RldmljZV9vbmxpbmUoc2RldikgfHwKKwkJ
-ICAgIHNjc2lfZWhfc2VuZF90dXJfY2xlYXJfdWEodWFfc2NtZCkpIHsKKwkJCWlmIChzZGV2
-LT5leHBlY3RpbmdfY2NfdWEpCisJCQkJc2Rldi0+ZXhwZWN0aW5nX2NjX3VhID0gMDsKKwkJ
-CWxpc3RfZm9yX2VhY2hfZW50cnlfc2FmZShzY21kLCBuZXh0LCB3b3JrX3EsIGVoX2VudHJ5
-KSB7CisJCQkJaWYgKHNjbWQtPmRldmljZSA9PSBzZGV2ICYmCisJCQkJICAgIHNjc2lfY21k
-X2hhc191YShzY21kKSAmJgorCQkJCSAgICBzY3NpX2VoX2FjdGlvbihzY21kLCBTVUNDRVNT
-KSA9PSBTVUNDRVNTKQorCQkJCQlzY3NpX2VoX2ZpbmlzaF9jbWQoc2NtZCwgZG9uZV9xKTsK
-KwkJCX0KKwkJfSBlbHNlIHsKKwkJCVNDU0lfTE9HX0VSUk9SX1JFQ09WRVJZKDMsCisJCQkJ
-CQlzZGV2X3ByaW50ayhLRVJOX0lORk8sIHNkZXYsCisJCQkJCQkJICAgICIlczogRmFpbGVk
-IHRvIGNsZWFyIFVBXG4iLAorCQkJCQkJCSAgICBjdXJyZW50LT5jb21tKSk7CisJCX0KKwl9
-CisKKwlyZXR1cm4gbGlzdF9lbXB0eSh3b3JrX3EpOworfQorCiAKIC8qKgogICogc2NzaV9l
-aF9idXNfZGV2aWNlX3Jlc2V0IC0gc2VuZCBiZHIgaWYgbmVlZGVkCkBAIC0yMjc1LDEzICsy
-NDI0LDEzIEBAIHZvaWQgc2NzaV9laF9yZWFkeV9kZXZzKHN0cnVjdCBTY3NpX0hvc3QgKnNo
-b3N0LAogCQkJc3RydWN0IGxpc3RfaGVhZCAqd29ya19xLAogCQkJc3RydWN0IGxpc3RfaGVh
-ZCAqZG9uZV9xKQogewotCWlmICghc2NzaV9laF9zdHUoc2hvc3QsIHdvcmtfcSwgZG9uZV9x
-KSkKLQkJaWYgKCFzY3NpX2VoX2J1c19kZXZpY2VfcmVzZXQoc2hvc3QsIHdvcmtfcSwgZG9u
-ZV9xKSkKLQkJCWlmICghc2NzaV9laF90YXJnZXRfcmVzZXQoc2hvc3QsIHdvcmtfcSwgZG9u
-ZV9xKSkKLQkJCQlpZiAoIXNjc2lfZWhfYnVzX3Jlc2V0KHNob3N0LCB3b3JrX3EsIGRvbmVf
-cSkpCi0JCQkJCWlmICghc2NzaV9laF9ob3N0X3Jlc2V0KHNob3N0LCB3b3JrX3EsIGRvbmVf
-cSkpCi0JCQkJCQlzY3NpX2VoX29mZmxpbmVfc2RldnMod29ya19xLAotCQkJCQkJCQkgICAg
-ICBkb25lX3EpOworCWlmICghc2NzaV9laF9zdHUoc2hvc3QsIHdvcmtfcSwgZG9uZV9xKSAm
-JgorCSAgICAhc2NzaV9laF9jbGVhcl91YShzaG9zdCwgd29ya19xLCBkb25lX3EpICYmCisJ
-ICAgICFzY3NpX2VoX2J1c19kZXZpY2VfcmVzZXQoc2hvc3QsIHdvcmtfcSwgZG9uZV9xKSAm
-JgorCSAgICAhc2NzaV9laF90YXJnZXRfcmVzZXQoc2hvc3QsIHdvcmtfcSwgZG9uZV9xKSAm
-JgorCSAgICAhc2NzaV9laF9idXNfcmVzZXQoc2hvc3QsIHdvcmtfcSwgZG9uZV9xKSAmJgor
-CSAgICAhc2NzaV9laF9ob3N0X3Jlc2V0KHNob3N0LCB3b3JrX3EsIGRvbmVfcSkpCisJCXNj
-c2lfZWhfb2ZmbGluZV9zZGV2cyh3b3JrX3EsIGRvbmVfcSk7CiB9CiBFWFBPUlRfU1lNQk9M
-X0dQTChzY3NpX2VoX3JlYWR5X2RldnMpOwogCmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kv
-c2NzaV9saWIuYyBiL2RyaXZlcnMvc2NzaS9zY3NpX2xpYi5jCmluZGV4IGFiMzk1MTRjYzBj
-Ni4uMjhmY2ZjNmRlMTE3IDEwMDY0NAotLS0gYS9kcml2ZXJzL3Njc2kvc2NzaV9saWIuYwor
-KysgYi9kcml2ZXJzL3Njc2kvc2NzaV9saWIuYwpAQCAtODQ5LDYgKzg0OSwxMCBAQCBzdGF0
-aWMgdm9pZCBzY3NpX2lvX2NvbXBsZXRpb25fYWN0aW9uKHN0cnVjdCBzY3NpX2NtbmQgKmNt
-ZCwgaW50IHJlc3VsdCkKIAkJCQkgKi8KIAkJCQljbWQtPmRldmljZS0+Y2hhbmdlZCA9IDE7
-CiAJCQkJYWN0aW9uID0gQUNUSU9OX0ZBSUw7CisJCQl9IGVsc2UgaWYgKHNjc2lfbm9yZXRy
-eV9jbWQoY21kKSB8fAorCQkJCSAgIChjbWQtPmFsbG93ZWQgIT0gU0NTSV9DTURfUkVUUklF
-U19OT19MSU1JVCAmJgorCQkJCSAgICBjbWQtPnJldHJpZXMgPiBtYXgoY21kLT5hbGxvd2Vk
-LCAzKSkpIHsKKwkJCQlhY3Rpb24gPSBBQ1RJT05fRkFJTDsKIAkJCX0gZWxzZSB7CiAJCQkJ
-LyogTXVzdCBoYXZlIGJlZW4gYSBwb3dlciBnbGl0Y2gsIG9yIGEKIAkJCQkgKiBidXMgcmVz
-ZXQuICBDb3VsZCBub3QgaGF2ZSBiZWVuIGEK
-
---------------NBzSFqsJwXRKLj19EosG89sj--
+  	if (!test_and_clear_bit(NLP_DELAY_TMO, &nlp->nlp_flag))
+  		return;
+  	timer_delete_sync(&nlp->nlp_delayfunc);
+  	nlp->nlp_last_elscmd = 0;
+-	if (!list_empty(&nlp->els_retry_evt.evt_listp)) {
+-		list_del_init(&nlp->els_retry_evt.evt_listp);
+-		/* Decrement nlp reference count held for the delayed retry */
+-		evtp = &nlp->els_retry_evt;
+-		lpfc_nlp_put((struct lpfc_nodelist *)evtp->evt_arg1);
+-	}
++
++	/*
++	 * If retry event is queued, remove it under lock and consume
++	 * its payload to prevent double-put. The event holds a reference
++	 * to the nodelist that must be released exactly once.
++	 */
++	spin_lock_irqsave(&phba->hbalock, flags);
++	if (!list_empty(&evtp->evt_listp)) {
++		list_del_init(&evtp->evt_listp);
++		/* Take local copy and clear to prevent reuse */
++		arg_ndlp = (struct lpfc_nodelist *)evtp->evt_arg1;
++		evtp->evt_arg1 = NULL;
++		smp_wmb(); /* Ensure NULL visible before unlock */
++ 	}
++	spin_unlock_irqrestore(&phba->hbalock, flags);
++
++	/* Drop the event-held reference outside the lock */
++	if (arg_ndlp)
++		lpfc_nlp_put(arg_ndlp);
++
+  	if (test_and_clear_bit(NLP_NPR_2B_DISC, &nlp->nlp_flag)) {
+  		if (vport->num_disc_nodes) {
+  			if (vport->port_state < LPFC_VPORT_READY) {
+diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c 
+b/drivers/scsi/lpfc/lpfc_hbadisc.c
+index 4c673dffa671..3eb142cf4455 100644
+--- a/drivers/scsi/lpfc/lpfc_hbadisc.c
++++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
+@@ -846,6 +846,11 @@ lpfc_work_list_done(struct lpfc_hba *phba)
+  		switch (evtp->evt) {
+  		case LPFC_EVT_ELS_RETRY:
+  			ndlp = (struct lpfc_nodelist *) (evtp->evt_arg1);
++			/*
++			 * Consume the payload to prevent reuse or double-put.
++			 * evt_arg1 was populated when event was queued.
++			 */
++			evtp->evt_arg1 = NULL;
+  			if (!hba_pci_err) {
+  				lpfc_els_retry_delay_handler(ndlp);
+  				free_evt = 0; /* evt is part of ndlp */
+-- 
+2.55.0
