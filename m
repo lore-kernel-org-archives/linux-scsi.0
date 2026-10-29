@@ -1,58 +1,58 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=103.126.93.188
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793238146;
-	b=Uv6g49EYMSMIC78ZDo08PQIEn3fYLcrUuf4FZkgmK/0XeI1dLEM9yFVTEky+3ZJTHbrQ
-	 j+9RiD+nsG3mu+9jipNCB4DG6tDr/XQzVk8wLMqI1kOqgBfRctqKbFwVb5TLEawv2lN40
-	 9yc2HGTv4At+Wt44jchzBmKEt1DeAlhCinNClRjKQDMk0KvcasVPDtlQ5gwGQyUSTnnvF
-	 U5Npj/YHMEfBuMK37ACsTu5yss25OBBWtEPH6ASDHKPRgw3REuwRs3RLZmGhvXQ6rFxJb
-	 Ad82FY6FiymYNCw4sbx/WpHrWnoPbFJtzRhUXwASVG1XO2VZBBxCjtLS91TS8a8TXyw==
+	t=1793238542;
+	b=RkqbwZzmXqWB9E/ILIA7teLUH8mx4AHC1h/zbCz8SYPJPJb4HLBQjMEbCQxDcbFqum9w
+	 iIltfPBK30EE/eqJO6md5QrkXJL4HFWeu+NXAxmukw45IXed30Ud1MHt558TrYNTKyONj
+	 OxozZVi1OWgDaFcWl1gJrO2x++YopXkL1Cf6zD8+w/z02CKFUQnDPhyqV54hHRM3JtP9N
+	 i2vNBQeTZhlQt6/iDl39KuaMIU1VfL4EzaxBxjVxN5KAx1mMDoa1F3LE9aanWLHNNLPGU
+	 WOTbd6QwL6LA/TmW+MfRYMBpCnGW4BMScQrZ69+iTBQU4jge1++Z4dMhZcj4DT9aUdw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793238146;
-	h=Received:DKIM-Signature:To:Cc:Subject:From:In-Reply-To:Message-ID:
-	 References:Date:MIME-Version:Content-Type;
-	bh=cSGJzZiXCj798GkI10LTKETldsERRDK+xDXKBEXm4a0=;
-	b=yIQeNDwPS4m8uCvPxsBecnUrTgYjtn1BzhXBYyMfPeeyqgMh2Urmp7AliEn4cdGtCyF4
-	 m+KrrSW0KQSUnCJo9gdcvJw2Aqn9Au7IQwKjduO3ONAWHllwFXgEvHVSbrYirX+B08ZSv
-	 BHH4Bxgfg3PfwaUDw0yN1GSAW/EYQR8mzrzTzraUAZ3DFdqE41iaX2TwyFGH++J2PeU6n
-	 NMWFkbERNPWBoD/i9N4153ROlzzz4lNu2Bcx0VdPdYhGj7B84v9ytEi4GJFeM66eiuSfN
-	 80CFB6COVHto7FscjJ9aJU4WAYdmZSWeai2WdNJP/mG9db+0Sxr9LCodKfWQk/OIO2g==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793238542;
+	h=DMARC-Filter:Received:From:To:Cc:Subject:Date:Message-Id:X-Mailer:
+	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding:
+	 X-HM-Tid:X-HM-MType:X-HM-Spam-Status:DKIM-Signature;
+	bh=8kTFkc1SQZFRTAY1PkZ4hE8zrC/53qbcoSnlYt68xys=;
+	b=5QXjt7s1voE7i9jgy4thFiRzxZKHDcwYLSA0V9mPfq59rlP5rOFgDaEDu/PEtg8scLoT
+	 VoXlJAuVDzXpG/Hzp67t5Wfmn+uWMuXqcZPylx2zivP9bUSk9KHLWZQbG5rNIPAZkLSP1
+	 HMfk+pSujvrZFMs/gob07BxF6ERzPbtKoLRC11r2/AN3qmiK4p5x3LaI/7VW6GLOO9poG
+	 B3ASw7LX9NikmyYq+jHHqQsR0g9YJ92NERVJjOKuu0ZSn55VjqJEpsrLGaQHxUYTtnvyt
+	 p2LYLDeGvMZKmAhi+GzrX6qq3TojDIIfu5h81PKnEagVEBIq5reVIbTgCZoMKONtLfw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ZY6ccAh3;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=rock-chips.com;
+	spf=pass smtp.mailfrom=rock-chips.com;
+	dkim=pass header.d=rock-chips.com header.i=@rock-chips.com header.a=rsa-sha256 header.s=default header.b=aWIIpH7T;
+	arc=none smtp.remote-ip=103.126.93.188
+Received: from mail-m93188.xmail.ntesmail.com (mail-m93188.xmail.ntesmail.com [103.126.93.188])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1201D606A31E;
-	Thu, 29 Oct 2026 01:42:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80994606A32A
+	for <linux-scsi@vger.kernel.org>; Thu, 29 Oct 2026 01:48:59 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 80994606A32A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ZY6ccAh3
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 61EC31F01825;
-	Thu, 29 Oct 2026 01:42:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793238145;
-	bh=cSGJzZiXCj798GkI10LTKETldsERRDK+xDXKBEXm4a0=;
-	h=To:Cc:Subject:From:In-Reply-To:References:Date;
-	b=ZY6ccAh3ZhtgL7SqJxAlpVRWXzarAV9lXOZKzhhRP0Q+qeDkGKrdpJ1jfat6br3K3
-	 0RXk5s991sRoJN6RbinnCx+VdW5vHpir2s/YA+j5jXFw+5RjwRO8/e/FZ57bckxzoe
-	 80PGCN3gizm0YFfPyZC3y+Uv/vx+mxKOwKPJRTW8g4BW/D9qzE9ya6mJlEI35ebZKi
-	 N05ED56bPm/G9O092tSFEglYG5tj8sod3hTA/NawwZqRYfttnGw5OxdJgApocMg1cq
-	 A/Iq9aQakOesS+9HOuUeC9rN24RX6QVkE/0Q1lhObol5UpE6ZF0FypMJ8dOmFvNInX
-	 gDX+1cILmqZQw==
-To: Yu Zhang <yuz08559@gmail.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-  linux-scsi@vger.kernel.org,  target-devel@vger.kernel.org,
-  linux-kernel@vger.kernel.org,  Mike Christie
- <michael.christie@oracle.com>,  Dmitry Bogdanov <d.bogdanov@yadro.com>,
-  stable@vger.kernel.org
-Subject: Re: [PATCH v2] scsi: target: fix demo-mode dynamic ACL dev-entry
- UAF vs LUN teardown
-From: "Martin K. Petersen" <mkp@kernel.org>
-In-Reply-To: <20261014013746.46705-1-yuz08559@gmail.com>
-Message-ID: <yq1a4nx470r.fsf@mail.kernel.org>
-References: <20261013120528.37749-1-yuz08559@gmail.com>
-	<20261014013746.46705-1-yuz08559@gmail.com>
-Date: Wed, 28 Oct 2026 21:42:24 -0400
+	dkim=pass (1024-bit key, unprotected) header.d=rock-chips.com header.i=@rock-chips.com header.a=rsa-sha256 header.s=default header.b=aWIIpH7T
+Received: from localhost.localdomain (unknown [61.154.14.87])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 52b92425a;
+	Thu, 29 Oct 2026 09:48:51 +0800 (GMT+08:00)
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K . Petersen" <mkp@kernel.org>
+Cc: Bart Van Assche <bvanassche@acm.org>,
+	Bean Huo <beanhuo@micron.com>,
+	Heiko Stuebner <heiko@sntech.de>,
+	Stanley Jhu <stanleyjhu@google.com>,
+	Alim Akhtar <alim.akhtar@samsung.com>,
+	linux-rockchip@lists.infradead.org,
+	linux-scsi@vger.kernel.org,
+	Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH v2 1/2] scsi: ufs: core: Move the device initialization sequence into a new function
+Date: Thu, 29 Oct 2026 09:48:38 +0800
+Message-Id: <20261029014839.3390579-2-shawn.lin@rock-chips.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20261029014839.3390579-1-shawn.lin@rock-chips.com>
+References: <20261029014839.3390579-1-shawn.lin@rock-chips.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -62,17 +62,133 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
+X-HM-Tid: 0aa185587c5703a4kunmb608b1c4109638
+X-HM-MType: 1
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVlCHkgZVkMYGEtLSUlITEgYH1YVFA
+	kWGhdVEwETFhoSFyQUDg9ZV1kYEgtZQVlNSlVKTk9VSk9VQ0xZV1kWGg8SFR0UWUFZT0tIVUpLSU
+	9PT0hVSktLVUpCS0tZBg++
+DKIM-Signature: a=rsa-sha256;
+	b=aWIIpH7T/sNX8MsAiLUoglRSY4DDGnQ31IvQL/UHHeqglsbKO23CxSpfhgQBLsVumeNGlGjuWx3vpb1jinYMExIwgQUKZD6R5OMHMwvxd0dueLJ9onwtYz3oUgIBeFyeod3ZwbmafOy+507eG5anz39YfHjp29BVgSMK0S2cNrI=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
+	bh=8kTFkc1SQZFRTAY1PkZ4hE8zrC/53qbcoSnlYt68xys=;
+	h=date:mime-version:subject:message-id:from;
 
+Move the link startup and device initialization steps from ufshcd_init()
+into a new function ufshcd_full_device_init(), so that the sequence can
+be retried as a unit. No functional change intended.
 
-Yu,
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+---
 
-> A demo-mode (generate_node_acls=1) login that allocates a dynamic
-> NodeACL populates that ACL's per-LUN dev entries in
-> core_tpg_add_node_to_devs() *before* the ACL is linked onto
-> tpg->acl_node_list by target_add_node_acl():
+(no changes since v1)
 
-Applied to 7.4/scsi-staging, thanks!
+ drivers/ufs/core/ufshcd.c | 84 +++++++++++++++++++++++----------------
+ 1 file changed, 50 insertions(+), 34 deletions(-)
 
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index ee643830a57a..f1e54d719537 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -11207,6 +11207,55 @@ static int ufshcd_add_scsi_host(struct ufs_hba *hba)
+ 	return err;
+ }
+ 
++/**
++ * ufshcd_full_device_init - Link startup and full device initialization
++ * @hba: per-adapter instance
++ *
++ * Execute the whole device initialization sequence used during driver
++ * probe: link startup, MCQ configuration, device verification, device
++ * initialization completion and device parameter setup.
++ *
++ * Return: 0 upon success; < 0 upon failure.
++ */
++static int ufshcd_full_device_init(struct ufs_hba *hba)
++{
++	int err;
++
++	hba->ufshcd_state = UFSHCD_STATE_RESET;
++
++	err = ufshcd_link_startup(hba);
++	if (err)
++		return err;
++
++	if (hba->mcq_enabled)
++		ufshcd_config_mcq(hba);
++
++	if (hba->quirks & UFSHCD_QUIRK_SKIP_PH_CONFIGURATION)
++		return 0;
++
++	/* Debug counters initialization */
++	ufshcd_clear_dbg_ufs_stats(hba);
++
++	/* UniPro link is active now */
++	ufshcd_set_link_active(hba);
++
++	/* Verify device initialization by sending NOP OUT UPIU */
++	err = ufshcd_verify_dev_init(hba);
++	if (err)
++		return err;
++
++	/* Initiate UFS initialization, and waiting until completion */
++	err = ufshcd_complete_dev_init(hba);
++	if (err)
++		return err;
++
++	err = ufshcd_device_params_init(hba);
++	if (err)
++		return err;
++
++	return ufshcd_post_device_init(hba);
++}
++
+ /**
+  * ufshcd_init - Driver initialization routine
+  * @hba: per-adapter instance
+@@ -11420,41 +11469,8 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+ 	/* Initialize hba, detect and initialize UFS device */
+ 	ktime_t probe_start = ktime_get();
+ 
+-	hba->ufshcd_state = UFSHCD_STATE_RESET;
+-
+-	err = ufshcd_link_startup(hba);
+-	if (err)
+-		goto out_release;
+-
+-	if (hba->mcq_enabled)
+-		ufshcd_config_mcq(hba);
+-
+-	if (hba->quirks & UFSHCD_QUIRK_SKIP_PH_CONFIGURATION)
+-		goto initialized;
+-
+-	/* Debug counters initialization */
+-	ufshcd_clear_dbg_ufs_stats(hba);
+-
+-	/* UniPro link is active now */
+-	ufshcd_set_link_active(hba);
+-
+-	/* Verify device initialization by sending NOP OUT UPIU */
+-	err = ufshcd_verify_dev_init(hba);
+-	if (err)
+-		goto out_release;
+-
+-	/* Initiate UFS initialization, and waiting until completion */
+-	err = ufshcd_complete_dev_init(hba);
+-	if (err)
+-		goto out_release;
+-
+-	err = ufshcd_device_params_init(hba);
+-	if (err)
+-		goto out_release;
+-
+-	err = ufshcd_post_device_init(hba);
++	err = ufshcd_full_device_init(hba);
+ 
+-initialized:
+ 	ufshcd_process_probe_result(hba, probe_start, err);
+ 	if (err)
+ 		goto out_release;
 -- 
-Martin K. Petersen
+2.25.1
+
