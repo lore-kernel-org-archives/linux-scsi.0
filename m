@@ -1,66 +1,77 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=199.89.1.16
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.129.124
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793288230;
-	b=e3t2yVnIxK7i2sRFtnRW5gzKWK8Nu7GMvxE1sMdV8E820dRfRrjnuxVxH35BgKM4yu5T
-	 yxosehRjMPR9reOaV/kcM5tF8fJOmyL4qNpw/CvgPXzwAUuSLn7HpGCxcr3LET5Qqbwmm
-	 0stdnFl6/eqWAchD9swXNfwRYZyLyLh3MeFntv9H/AHzFbkXqOWWzZGXaAHzOdXbFeBB2
-	 Pp9jvowvFIFqIT7w3rrYWy3pTY2lqYoD/KMMWrYYy6bV+Bi/iaj46j0b5SGo5/mL+dr8e
-	 eTdFUblaro3KON85kjuF7yMEJTxZdO78fGOkrir4KCSKZW2eTEJfJss+DrQHlA15kgw==
+	t=1793289898;
+	b=IjHyUtOibBhQYujBQ9g2IICgld+fXLyzdQ7yAwNGYUXL5VgN2ogM7831Zi4D4rO3g3g6
+	 C5zeQdwiLj/r/H7pT0Ixq9jqnApXfLaTR8OH8THxMgJFZ5ixgyiEVYmoeKqryQrhRrpUP
+	 2+3a/fLp9krpPkPyXZ1MUymP3B1s0mYipZW/21QFPZjsMIg0zbfFUHSQQVMdGKua8YokA
+	 C+28V9qhikoZpKj3DTadVHv3jqeSmlE6H6FgcgBWoLp+N7jK0HMW4xJksinvzM+cpDEJm
+	 qX7460LkaRCE9kcLAoMo3VZJuWxReICJAj454IgCMOZjZlcVGoznT6mZFQatTHBYIXg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793288230;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Virus-Scanned:Received:
-	 Received:Message-ID:Date:MIME-Version:User-Agent:Subject:To:Cc:
-	 References:Content-Language:From:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=7w8z6oU4/4x8U/rb5nvJuW4qpERxGYIwAjYcgMWl1C4=;
-	b=2XDkiNpAszUsmq5d/oyGGLdd79m1/AyugdY+3iFbzyLXbXk4EDCvBt1W34mxeNy1YVpI
-	 Yf/rUmQSQSOZ+6tnw5UQfYnQmiS3xxHZEJXkMQWbmFgCiTubwkKUIfNmLLuX1zuCJT4ut
-	 3/idj+OZOnV+WVncMpXUtchojn9h7RteMx+Su7jP7y840OWS+6VYPDOwgjcGK5Crp3DLL
-	 az3vBWr540XVyec2nA4f/e6MLftqcN5VSN7RfV8WdeHk0O1rDCtxTUHNWlgbMsWOAW7Pk
-	 UfAJn6gLY5MiaAlSkhKyTquvSZ11HZ41b21tE3WR+uAGkrwBgeL0oiQDRgk5i/NjkNg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793289898;
+	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
+	 X-Mimecast-MFC-AGG-ID:Received:Received:From:To:Cc:Subject:Date:
+	 Message-ID:MIME-Version:Content-Transfer-Encoding:X-Scanned-By;
+	bh=Ujti69uAXYq3nrNEejy8limZ43MgliAb4aAxtO/+OGE=;
+	b=gJ4lcBKUykU22nfX2vAVs5aFDu0P8Iv/cdnVlQ3T8sHsitBjvd0ZLWHyXguHQ+Sip+G3
+	 f92ZZqpPmkkBRM8xecacGvpa/r8/1ZcwrzPZx87+EaVaOS5AvWLWmgAiH9yDRoJieYin6
+	 LRo6m0Ci9bKp3yWxdSM+JEAhHAblHmK3lWP2DnCEGcy1nNKsSP8FJ4y6DmsCWwf6HB8wp
+	 Tdy0CookPuJVtEv3qdU9Y0CulTRnLNApUWZSk/y6o7RpAmcZXUh2BSCsGI2huCYts4QaU
+	 UNMpKmmBaUMF5WFERPlQCY6qnWbCQUfv3fHcwgZ38EaJP3zlNmJevQu9CJSONGxwa0Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=acm.org;
-	spf=pass smtp.mailfrom=acm.org;
-	dkim=pass header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=oLSWziy5;
-	arc=none smtp.remote-ip=199.89.1.16
-Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
+	dmarc=pass header.from=redhat.com;
+	spf=pass smtp.mailfrom=redhat.com;
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=BFWmR8i8;
+	arc=none smtp.remote-ip=170.10.129.124
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7FE35606A320;
-	Thu, 29 Oct 2026 15:37:09 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7FE35606A320
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB24B606A333
+	for <linux-scsi@vger.kernel.org>; Thu, 29 Oct 2026 16:04:54 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org DB24B606A333
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=oLSWziy5
-Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4jFpHz41c6zlfvpd;
-	Thu, 29 Oct 2026 15:37:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1793288218; x=1795880219; bh=7w8z6oU4/4x8U/rb5nvJuW4q
-	pERxGYIwAjYcgMWl1C4=; b=oLSWziy5PwNbh3pn9QWRWOe4vKaAAc8+f1NEd2l4
-	Dn9GVo6ykR01ggc1sBoYV8uNSjkPbODJ75FXkCUhGtOW5SHilOy34bcxmN3OxLtk
-	L0P2Ss26lzYVKxSCtl/YuOD/VKlLh9mf6q7eZ+lDUyi3zCsizBuyMa0YHFgfu6MG
-	9tLxpeNosnrd6zo1/BayXqP6c2YRkHkccdWumN0S6+5W+VSA/uMMrceaO1PXne3l
-	ARCY8Bbb2BdkqCeOc7HsV+Hiy+mtiO2ADT09TdoUMDeFIsXeGOdcKdp+J7h9pAOG
-	ZU9Bvc6luAi3vNCRXACnDSJ87ENnMjBojQoViFCgZqdqlA==
-X-Virus-Scanned: by MailRoute
-Received: from 013.lax.mailroute.net ([127.0.0.1])
- by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id CZ0FcHmo7fqc; Thu, 29 Oct 2026 15:36:58 +0000 (UTC)
-Received: from [100.80.231.125] (unknown [104.135.182.41])
+	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=BFWmR8i8
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1793289893;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=Ujti69uAXYq3nrNEejy8limZ43MgliAb4aAxtO/+OGE=;
+	b=BFWmR8i8lN39a/4W1Y3jxkiFLlHmb5bY3fd3pVVfCxtrExFElaY1dFvXiQ80/TQz5qn1Zz
+	FoXfXtG124xbCW72AceY0ysLyFUCKLuFsIvx8LV856P0AWBtPCu8Gu5X0KsG7pboKOwPjo
+	yvO6mO59uEBLAGNBppLgLt6p1WVKAiY=
+Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-313-djN2mtQlNgiWl8wg_aSqvQ-1; Thu,
+ 29 Oct 2026 12:04:47 -0400
+X-MC-Unique: djN2mtQlNgiWl8wg_aSqvQ-1
+X-Mimecast-MFC-AGG-ID: djN2mtQlNgiWl8wg_aSqvQ_1793289886
+Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4jFpHr6dVmzlfvpc;
-	Thu, 29 Oct 2026 15:36:56 +0000 (UTC)
-Message-ID: <3be5c9ac-44f3-46c0-bb81-6bde6edcba28@acm.org>
-Date: Thu, 29 Oct 2026 08:36:56 -0700
+	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 27730195FDE8;
+	Thu, 29 Oct 2026 16:04:46 +0000 (UTC)
+Received: from jtaubepe-thinkpadx1carbongen12.ibmlowe.csb (unknown [10.22.80.33])
+	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 6132F30002CB;
+	Thu, 29 Oct 2026 16:04:44 +0000 (UTC)
+From: Jesse Taube <jtaubepe@redhat.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	Nimal Prabudoss I <nprabudo@redhat.com>,
+	jmeneghi@redhat.com,
+	Nilesh Javali <njavali@marvell.com>,
+	Manish Rangankar <mrangankar@marvell.com>,
+	GR-ETH-Storage-Upstream@marvell.com,
+	Jesse Taube <jtaubepe@redhat.com>
+Subject: [PATCH] scsi: qedf: Remove unesseary function call
+Date: Thu, 29 Oct 2026 12:04:43 -0400
+Message-ID: <20261029160443.904468-1-jtaubepe@redhat.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -70,49 +81,30 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: ufs: core: Skip completion of SCSI commands owned
- by the SCSI EH
-To: Stanley Jhu <stanleyjhu@google.com>, "Martin K . Petersen"
- <mkp@kernel.org>,
- "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
- Alim Akhtar <alim.akhtar@samsung.com>, Bean Huo <beanhuo@micron.com>
-Cc: Peter Wang <peter.wang@mediatek.com>, Can Guo <can.guo@oss.qualcomm.com>,
- John Garry <john.garry@linux.dev>, "Bao D . Nguyen"
- <quic_nguyenb@quicinc.com>, linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org, stable@vger.kernel.org
-References: <20261029040004.2100004-1-stanleyjhu@google.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20261029040004.2100004-1-stanleyjhu@google.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
 
-On 10/29/26 12:09 AM, Stanley Jhu wrote:
-> +static inline bool ufshcd_cmd_owned_by_scsi_eh(struct scsi_cmnd *cmd)
-> +{
-> +	return cmd->submitter == SUBMITTED_BY_BLOCK_LAYER &&
-> +	       test_bit(SCMD_STATE_COMPLETE, &cmd->state);
-> +}
+The result of `skb_transport_header` was unused. Calling this function
+warned when `skb_transport_header_was_set` returned false causing a
+panic on debug kernels.
 
-This is a layering violation. The UFS driver has no business checking
-these fields. cmd->submitter checks and cmd->state checks should happen
-by the SCSI core and not by any SCSI LLD.
+Signed-off-by: Jesse Taube <jtaubepe@redhat.com>
+---
+ drivers/scsi/qedf/qedf_main.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-> @@ -6009,6 +6025,10 @@ void ufshcd_compl_one_cqe(struct ufs_hba *hba, int task_tag,
->   		lrbp->compl_time_stamp_local_clock = local_clock();
->   	}
->   	if (ufshcd_is_scsi_cmd(cmd)) {
-> +		if (unlikely(ufshcd_cmd_owned_by_scsi_eh(cmd))) {
-> +			ufshcd_release_scsi_cmd(hba, cmd);
-> +			return;
-> +		}
->   		if (unlikely(ufshcd_should_inform_monitor(hba, cmd)))
->   			ufshcd_update_monitor(hba, cmd);
->   		ufshcd_add_command_trace(hba, cmd, UFS_CMD_COMP);
+diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
+index da429b3a4283..f2bc0ac684e0 100644
+--- a/drivers/scsi/qedf/qedf_main.c
++++ b/drivers/scsi/qedf/qedf_main.c
+@@ -2496,7 +2496,6 @@ static void qedf_recv_frame(struct qedf_ctx *qedf,
+ 
+ 	/* Pull the header */
+ 	hp = (struct fcoe_hdr *)skb->data;
+-	fh = (struct fc_frame_header *) skb_transport_header(skb);
+ 	skb_pull(skb, sizeof(struct fcoe_hdr));
+ 	fr_len = skb->len - sizeof(struct fcoe_crc_eof);
+ 
+-- 
+2.56.0
 
-The problem described in the patch description applies to all SCSI LLDs
-and hence should be solved in a generic way instead of in the UFS driver
-only.
-
-Bart.
