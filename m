@@ -1,72 +1,75 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.210.198
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.210.197
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793257724;
-	b=j87Oe5upW5AbauO8kANGRGXQriASlq426HwltJPYwWwYL6EOVLzZ2abs6FrS18C50Y1N
-	 MP4HDG7j/b7uGIb3ramifxfJ873W6zYiQkMSRWN7FcosP6b5fTEPgF54nEDuAJcDeyaBJ
-	 rlsdROV185qqfc2XiGG+cHVUlNYLisrm80lTIITwBlN0VwZQHdnF7bpIptj8o8nE7GQ8M
-	 ZXjF2iEH3nC1IOw7CnmtQOUhIuSgmI2u9cxD/e5Z/Xxzm2CQTveuC/caIlIHuSMCZo0xk
-	 BfREtgFIIr7VG0fi3eSl6BmjDGGT26Ig/MyaB8Re9Ov+3ltUkatZtPkWcDnPxZo3nrw==
+	t=1793257725;
+	b=b+n/osvfwB30SqwpQnHIAwH7Mzm2CkMAvwmEgsYrH3ni2ziMW8XSX/K7Vo+i8iy14ZS+
+	 NlDLg0Sxx7+eWY7NQDy9kGWaB8PLv4gz76hU5VN1gphfvioZLNcLTC2eE+wpFsDpvvlZp
+	 Qu/czArgDEilX6Le4D85WyE7kQkarjatOVdU/UIYW492Bx1cwX98oap1+85F72xAYPTKh
+	 QiCJrBamnW6pBTn6I8eWEXTTwy/XQkHRBJyU0SCd5SdGkDYVh0zMlLa/h7whHAczcDSVz
+	 UuyXACqjXaoPm/cLsv6u/DgBL1mg3g7mv5HEaMUmYizHoR5spYlJCgDK5HKyPizwlGg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793257724;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793257725;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:Mime-Version:
-	 X-Mailer:Message-ID:Subject:From:To:Cc:Content-Type;
-	bh=od3rktvThpmHG27AUgKJOFT+duaXCWPVODMzLp55jMA=;
-	b=twZPFGgzUKX595VUcuySJZfpQX2vYLf2wonPyuF1Ue6tiuZTBCUU/iU8Oup+dyCv9k9E
-	 fYInU7w36HsL+iZPflshmPaZXoBqnM5SNhloquq1eK4ml72DnxWlRCmjdJ8tlUVozl9gP
-	 WXadnTTZQpXDPT0veZGwVTOCY83NDd3wGwSthYt3kvmj4l0jJdD7Es7SYyve8QcxvNTgg
-	 xP8ESxP5xj8NipIZrDfQUKqGwTp4pO3fP70f510ufi37aymvzcQ6HbWxDaFyMUu2Onl2S
-	 b51VL2qZ9B4iX6TTFFoo8UIsI9EDTfXBzeRoHNZxxJJe5Lx+54stPt5RJmMQ66tTYJg==
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:In-Reply-To:
+	 Mime-Version:References:X-Mailer:Message-ID:Subject:From:To:Cc:
+	 Content-Type;
+	bh=c2wt0/O9P4h169mOPfGdNt9HMfMIWbdoAewi8Z+Zhoo=;
+	b=mvkoqfU25IoDCfc8xDWbSuVoBhrQFhj0d5AMHsXK52OmAa03cJ363V6xupMqnqmxJILb
+	 ZSGDAW8/IWayiU395X6XchnEc9vXk2eVKxm400nJkVA6qPyGSNka/z4exaEF6Sip5U/TP
+	 dhTcQIrr7aLV58alViPk+1BRWtar9QbLtmGo7auzcISATMAng4iahJW4G9wAN60duCMzU
+	 LW/ajknqw/SopsPELfYLFReGSLZD78CFTiVwfgm89jSVugz22Xe4UXhhXZCFPh6+AKNv4
+	 AEKAZE1BxJn5RxHtTfqb0zDs5Vm4jVgzB2lFuNKDiL9ZtjiB2aqkSzsjfa2oAqwpanA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=google.com;
 	spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=HyVBIC70;
-	arc=none smtp.remote-ip=209.85.210.198
-Received: from mail-pf1-f198.google.com (mail-pf1-f198.google.com [209.85.210.198])
+	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=G8w0gCtP;
+	arc=none smtp.remote-ip=209.85.210.197
+Received: from mail-pf1-f197.google.com (mail-pf1-f197.google.com [209.85.210.197])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF511606A320
-	for <linux-scsi@vger.kernel.org>; Thu, 29 Oct 2026 07:08:43 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org AF511606A320
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A526606A33B
+	for <linux-scsi@vger.kernel.org>; Thu, 29 Oct 2026 07:08:45 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7A526606A33B
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=HyVBIC70
-Received: by mail-pf1-f198.google.com with SMTP id d2e1a72fcca58-8a0688a43d3so1443423b3a.0
-        for <linux-scsi@vger.kernel.org>; Thu, 29 Oct 2026 00:08:43 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=G8w0gCtP
+Received: by mail-pf1-f197.google.com with SMTP id d2e1a72fcca58-8a08e315b5cso835350b3a.2
+        for <linux-scsi@vger.kernel.org>; Thu, 29 Oct 2026 00:08:45 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20260707; t=1793257723; x=1793862523; darn=vger.kernel.org;
-        h=content-type:cc:to:from:subject:message-id:mime-version:date:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=od3rktvThpmHG27AUgKJOFT+duaXCWPVODMzLp55jMA=;
-        b=HyVBIC70hD8mnthnqdIJhsKQpoP0dlSBmgVrk4awRy1knIFUL0VFd3izX48WAOS0x8
-         7S9cRNybzdUtrsXId7772cYkrdh16Ejrqf7ve9QmZ3veqxNPVSvGgBa0EHMIU2YPXOnJ
-         J38SjYFQFjiBFzpC//DAlXUW88lAVFeLSPwMNlgbISiATQpX4N0lESipsxGqulmyKgzv
-         WO7u5OgVacyoOdZ1ggMJf9cdA/vL6YBb/oPIZw++nIPg8MuoYzZmuztMucD0V4LBkCOk
-         OFmZhiMDzSZ+YAp6BF+9WjxICPbWdCF9tj6aUO0DkfOBbWLinuLAb/XyFdhd9u++JhXM
-         FU6A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793257723; x=1793862523;
-        h=content-type:cc:to:from:subject:message-id:mime-version:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+        d=google.com; s=20260707; t=1793257725; x=1793862525; darn=vger.kernel.org;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=od3rktvThpmHG27AUgKJOFT+duaXCWPVODMzLp55jMA=;
-        b=MvbHsDjD7Uyd+oiDdE2eaC3Iok4xnhwQW/R+xb+PEZ40VYiVIauLaZAan1pchBRrdn
-         7cP973xloRSnyB6UgO8lDRTyFv+Fm7TmJ+A61hPXATLXrX/bI+usoVlz9Tl736+FAsMe
-         169NUcuiJAX9uzjocb6bs307u42N0hkw1ZYhFBf1Rq2/eOT9POzjSYMz/lPzR7MsHNkm
-         fQdZc3/d2PrbbhQLL8qXQGo5cvXXnE7XxY9XY+nhmxtx+Z/oUcEB2YTc/OXqyEwCZlqE
-         ZU3E7vbh9jRLtC3GwPbNae2VAkD3KG9I0v/L1bXme/QzhxChBKo/lTnRk7fSPY/gQcwa
-         TcUw==
-X-Forwarded-Encrypted: i=1; AKwUvByhQLI/YDAZ86kgC3gx2/8dZGMHTGwhKVwLmY/rWKAJh6M5SFiN/rQkIbN4pnlSj2/rLDzvuaWsUfnK@vger.kernel.org
-X-Gm-Message-State: AFq9FYLLTV8VCspiElmtIRfa1IAuivufQq18+RKFDLaNYHenuYJVvthr
-	9bttxZ3xLT4PUS4vc/rRUrNR4kREUSGYCSQ+aTEvKJsvGpBf8E1mzYRUPKWeRs95gWVtaPYCUvD
-	6yidUtyeiyBBbL4QfT/6I0w==
-X-Received: from pfbbr15.prod.google.com ([2002:a05:6a00:440f:b0:8a0:7c0e:8263])
+        bh=c2wt0/O9P4h169mOPfGdNt9HMfMIWbdoAewi8Z+Zhoo=;
+        b=G8w0gCtPvtHfdPkRoHpX5bKVfSBj2vbcM8IdNuCuhd90wmJFzTVagaN2CO4SH9D5Qu
+         xhGqnBq3HBijXRGx63AGeG5LN3vBbsDSUWX+oI3R2Rv57lHs6npjOM78etALD5USt09X
+         ZL5mvZvwhDcoWLldvm3+tuQiWpyFVY3rvY6fvX5Uf+JKe0dfwMAHvCRkTCLrD8duQrbp
+         M+UUeXG0g8YpecEmSMvan711a+DKe3HEMp2mFxJc16PIPx+xZKlRrG7/jOWLoMl4W7Kh
+         2kMnSrWEmi61LMchzpdmoaihOhtFhVH15cfVZYUyCj/5BEG1NNm7RsTfXJ1gQ3zmI5NM
+         Z8vw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793257725; x=1793862525;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=c2wt0/O9P4h169mOPfGdNt9HMfMIWbdoAewi8Z+Zhoo=;
+        b=ivIuzukH8rovjlPbj3RbXRwRzzFXu5fGvkAYj5H+cuHGT64CfVf0q3SvCK/bT/l3Ks
+         0V64JTLkkAdb56vgsxje7Z9TLvQ/9YKJ1D6hqt8JucM3LdNIOQ7+JNDloewoQCf0/6p7
+         FF5oBKbUvkxVvy6QSJz7VCdT/C7x63FqswNnaOwUp/rQv9NZwNZ6NZiN9r1HSKS98QGi
+         LQdWZ9e7zGmlSgEsLT9i3GNmvrg3bw6xFgz3ovHlbrFJeiGccPfim9jSjqsOW68mqNZe
+         zcvCrTM+owgD5rOK0S1hrHNwVGcPvF7Q92YsdcEwE/PiKdPDJRBvfjmQ/lJqzx4btyzp
+         weFQ==
+X-Forwarded-Encrypted: i=1; AKwUvBwFtU/bUY0mIfHlKmii18beu3L44mQ1GtPjfXZF6aLzbh6hecfdrRJqlQZrYM7wtU0B1mWx2mZ+4/TS@vger.kernel.org
+X-Gm-Message-State: AFq9FYLQA9eyRrTxxiXBjJzje4IBPkgqxbwYsiXQ7QnHKcofUWkjCxGf
+	euwcq40erJ6vJyrtHJTomhD/34NDcDk6S6PHTygpx7jzR/eJmcpx6FS6VD0AsNUnuTGX7QzukOl
+	SxXNrgS+bQ/FUv3Z6uv2Enw==
+X-Received: from pgdo13-n2.prod.google.com ([2002:a05:6a02:620d:20b0:cc7:52da:b682])
  (user=stanleyjhu job=prod-delivery.src-stubby-dispatcher) by
- 2002:a05:6a00:1905:b0:82f:38df:681c with SMTP id d2e1a72fcca58-8a6e480a6dfmr3468902b3a.6.1793257722603;
- Thu, 29 Oct 2026 00:08:42 -0700 (PDT)
-Date: Thu, 29 Oct 2026 15:08:35 +0800
+ 2002:a05:6a20:6a21:b0:3e0:d5c0:74b3 with SMTP id adf61e73a8af0-3e90243d45fmr4171831637.65.1793257724559;
+ Thu, 29 Oct 2026 00:08:44 -0700 (PDT)
+Date: Thu, 29 Oct 2026 15:08:36 +0800
+In-Reply-To: <20261029040003.2100003-1-stanleyjhu@google.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -76,10 +79,11 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 Mime-Version: 1.0
+References: <20261029040003.2100003-1-stanleyjhu@google.com>
 X-Mailer: git-send-email 2.56.0.313.g2479322e68-goog
-Message-ID: <20261029040003.2100003-1-stanleyjhu@google.com>
-Subject: [PATCH v2 0/5] scsi: ufs: Fix device management timeouts and runtime
- PM errors
+Message-ID: <20261029040003.2100003-2-stanleyjhu@google.com>
+Subject: [PATCH v2 1/5] scsi: ufs: core: Restore jiffies conversion of device
+ management timeouts
 From: Stanley Jhu <stanleyjhu@google.com>
 To: "Martin K . Petersen" <mkp@kernel.org>, 
 	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>, 
@@ -87,74 +91,40 @@ To: "Martin K . Petersen" <mkp@kernel.org>,
 	Bean Huo <beanhuo@micron.com>
 Cc: Can Guo <can.guo@oss.qualcomm.com>, Peter Wang <peter.wang@mediatek.com>, 
 	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	Stanley Jhu <stanleyjhu@google.com>
+	Stanley Jhu <stanleyjhu@google.com>, stable@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 
-This series fixes two problems in UFS core entry points that issue
-device management commands or touch host registers.
+Before commit 08b12cda6c44 ("scsi: ufs: core: Switch to
+scsi_get_internal_cmd()"), ufshcd_wait_for_dev_cmd() converted the
+millisecond timeout with msecs_to_jiffies() before waiting for the
+command. That commit moved the timeout to the block layer and assigns
+the millisecond value to rq->timeout as is, but rq->timeout is in
+jiffies. A 1500 ms query timeout (QUERY_REQ_TIMEOUT_DEFAULT) becomes
+6 s with CONFIG_HZ=250 and 15 s with CONFIG_HZ=100, and NOP_OUT_TIMEOUT
+and ADVANCED_RPMB_REQ_TIMEOUT grow the same way.
 
-Patch 1/5 restores the millisecond to jiffies conversion of device
-management command timeouts. Since the timeout moved to rq->timeout,
-a 1500 ms query timeout waits 6 s with CONFIG_HZ=250.
+Restore the conversion with msecs_to_jiffies().
 
-Patches 2/5 to 5/5 handle runtime PM resume errors. Several UFS core,
-sysfs, BSG, hwmon, and debugfs entry points call ufshcd_rpm_get_sync()
-before accessing host registers or issuing device management and UIC
-commands, but ignore its return value.
+Fixes: 08b12cda6c44 ("scsi: ufs: core: Switch to scsi_get_internal_cmd()")
+Cc: stable@vger.kernel.org # v6.19+
+Signed-off-by: Stanley Jhu <stanleyjhu@google.com>
+---
+ drivers/ufs/core/ufshcd.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-ufshcd_rpm_get_sync() wraps pm_runtime_get_sync() on the UFS device
-W-LUN and returns a negative errno when runtime resume of the W-LUN or
-host controller fails, leaving the device or controller in
-RPM_SUSPENDED.
-
-Continuing after such a failure can access host registers or issue
-commands while the device or controller is not known to be active,
-while checking pm_runtime_get_sync() directly would leave
-power.usage_count elevated unless balanced with
-pm_runtime_put_noidle().
-
-Add ufshcd_rpm_resume_and_get() around pm_runtime_resume_and_get() and
-convert the 20 external and helper call sites to abort and propagate the
-error when resuming the W-LUN fails. The three lifecycle call sites in
-ufshcd_rpm_dev_flush_recheck_work(), ufshcd_wl_shutdown(), and
-ufshcd_remove(), plus ufshcd_err_handling_prepare(), are intentionally
-left unchanged.
-
-Tested on QEMU ARM64 UFS (SDB and MCQ) with W-LUN runtime resume and
-suspend failures via sysfs offline (no behavior change on suspend
-failure) and GDB power.disable_depth=1 to make ufshcd_rpm_get_sync()
-fail, and on SDB with a timed out query request.
-
-Changes since v1:
-- Drop the incorrect claim that a failed W-LUN runtime suspend
-  latches power.runtime_error from the cover letter and commit
-  messages. The PM core latches a runtime suspend error only if it
-  is neither -EBUSY nor -EAGAIN, and in-tree UFS drivers fail W-LUN
-  runtime suspend only with -EBUSY or -EAGAIN (Bart).
-- Say in the cover letter how the series was tested.
-- Describe each failing sequence in patches 2-5 step by step in
-  time order, and drop the runtime PM disabled (-EACCES) scenario.
-
-Link: https://lore.kernel.org/linux-scsi/20261025013446.345974-1-stanleyjhu@google.com/
-
-Stanley Jhu (5):
-  scsi: ufs: core: Restore jiffies conversion of device management
-    timeouts
-  scsi: ufs: core: Introduce ufshcd_rpm_resume_and_get() helper
-  scsi: ufs: sysfs: Propagate runtime PM resume errors
-  scsi: ufs: bsg: Abort ufs_bsg_request() when runtime resume fails
-  scsi: ufs: hwmon, debugfs: Propagate runtime PM resume errors
-
- drivers/ufs/core/ufs-debugfs.c |  8 +++-
- drivers/ufs/core/ufs-hwmon.c   | 12 +++++-
- drivers/ufs/core/ufs-sysfs.c   | 67 +++++++++++++++++++++++++++-------
- drivers/ufs/core/ufs_bsg.c     |  4 +-
- drivers/ufs/core/ufshcd-priv.h |  5 +++
- drivers/ufs/core/ufshcd.c      |  9 +++--
- 6 files changed, 84 insertions(+), 21 deletions(-)
-
-
-base-commit: 503e6172fa74da6b4944ece458f5534681e51d21
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index fd52deb72d21..68a98cde5812 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -3390,7 +3390,7 @@ static int ufshcd_issue_dev_cmd(struct ufs_hba *hba, struct scsi_cmnd *cmd,
+ 	struct request *rq = scsi_cmd_to_rq(cmd);
+ 	blk_status_t sts;
+ 
+-	rq->timeout = timeout;
++	rq->timeout = msecs_to_jiffies(timeout);
+ 	sts = blk_execute_rq(rq, true);
+ 	if (sts != BLK_STS_OK)
+ 		return blk_status_to_errno(sts);
 -- 
-2.56.0.307.g5fe7bd680c-goog
+2.56.0.313.g2479322e68-goog
 
