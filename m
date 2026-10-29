@@ -1,72 +1,72 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.210.198
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.215.197
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793257745;
-	b=tFFkAPdg0VR8Gu0CAXK+mqrOpgsQf8s139ZBXnh7ngLsXpMq/O2dzN3dIO0iMszsTmbB
-	 EQPMxnkRmxIu2/KkzDWDAz+aG/g4D95vTcsuqe1pCihqXHI0pqBGK8NdfBNBXjWDNb7/J
-	 mfvaP08aiuaME0go4P1wTxYwDA8FwBbLew80ONVUEXOlw3m+MD3kC69Vkc6vPSPyQd2Lt
-	 QtsY9kUJ9N4aaehMLrapVgM62f8tgWyInXVTDFYjXHKPkevdfiTTIig1jLlyQ4a+KqCFi
-	 JP6P7yaPYb7ADPBAwxq1dRQpa5cjnFxiu1v+PI97+fxjfs1CV91bNm2sUjsBbDVelrw==
+	t=1793257908;
+	b=ukwepXHG2Y8ZpwbEry87FQISh1UPFwoanOqYHAcGTuIpmLSQ3GdFy6vzGk3jAhobb8gf
+	 VMV1iYMM27Ne8SX2EI4Zt6Z5p9sHlePz3lIbrUDuwTacIzq1JO2Z5wm2XdHT96LQy5C7V
+	 FQT7gkElbty5dA8Syx233u7H3H3jn2kcPK7/akO+wy5Iw8m3bufwHuVnfGfVhp0ZQWs3A
+	 qTQb+vrd+ElK/A46wAxpZP5vmbq7DxxTy4Wa4iOcNiWRnSPabynYXvH/3PcASebn+8BPM
+	 DauBPrOuLqp1fWGq6mjsvOVnc2ZOWkMnjRcCN73JVwBlVoIh7hMq7IU8dzDm3nEEeMw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793257745;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793257908;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:Mime-Version:
 	 X-Mailer:Message-ID:Subject:From:To:Cc:Content-Type;
-	bh=/ChzfnrguZ/H1j3NAqG6KHPxUvTJUSYvVzUQIOYG/3o=;
-	b=n2qDreWe/6EiUp+NHi/qaKWpsyqD8CnusEMAH8y8Em3VT1aZ+pKXzhY9Z5p36aAz3qru
-	 oKn/weC2bFWbYzDKJpcS8D4gegyQ7Ipi0+fnrTrDvMKgpQdTTxewkMn9rEGm3b8yDZ9EY
-	 OwFiaZM7ksW7PgXv37bvqT51Yuju5VcjUuGRhxRQczoR1t7WR04KByWmjIVcommk6aI2Y
-	 3eiB5Qi9krv+uah926dPEIBsCvqeS2U7Bm7X1/j9SOxD/ErA20SgLNiksPZJVDhYRru8R
-	 KR2ixurcebXOJxkBHDJfdZR1ncuon7Ujqrn8XHJM5cRz/KIFy/hj2vltV2qyL61BYWw==
+	bh=Iu7Uqt4YczqlMrxp9jzAO7KekNm49X3RSeLMX+ma4tE=;
+	b=qDUJ1AAobXhPaho64DBdmMT6ayVxztkm58dEtAKlRc8AymG9PGRW/Fo6Fa4KWyGJ3gkm
+	 Cslio+K+TrmMoew75/2jgeAzID5E9XnTURsprvE+4zHagaW4HkuHDku5iJTBZujPxfi5W
+	 sB1xHrJ3vcQBk6FyY5YH6X0uMH8XE8UMTdn+j1XH5VqNeAGy6/cLpCFWXcUEGx7bNnsqR
+	 x0ujNbzyZJJq7o7kLmXLpsnd6WOKi8eR/wlHFRb7gHMCmeT3Uw0+Gx1C81uON0s32CLNx
+	 tuKm4AVs7dl9fJ+HDv8JShtdTbQCPToNxybirKyBjy7s2wo4eRVzJArc2vNCRAi8hkA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=google.com;
 	spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=fUtHDdYT;
-	arc=none smtp.remote-ip=209.85.210.198
-Received: from mail-pf1-f198.google.com (mail-pf1-f198.google.com [209.85.210.198])
+	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=RnbylbY5;
+	arc=none smtp.remote-ip=209.85.215.197
+Received: from mail-pg1-f197.google.com (mail-pg1-f197.google.com [209.85.215.197])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 377D9606A321
-	for <linux-scsi@vger.kernel.org>; Thu, 29 Oct 2026 07:09:05 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 377D9606A321
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1095606A31A
+	for <linux-scsi@vger.kernel.org>; Thu, 29 Oct 2026 07:11:47 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org F1095606A31A
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=fUtHDdYT
-Received: by mail-pf1-f198.google.com with SMTP id d2e1a72fcca58-8a086f5d91aso2468277b3a.1
-        for <linux-scsi@vger.kernel.org>; Thu, 29 Oct 2026 00:09:05 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=RnbylbY5
+Received: by mail-pg1-f197.google.com with SMTP id 41be03b00d2f7-cd67d4bbdffso1391716a12.3
+        for <linux-scsi@vger.kernel.org>; Thu, 29 Oct 2026 00:11:47 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20260707; t=1793257744; x=1793862544; darn=vger.kernel.org;
+        d=google.com; s=20260707; t=1793257907; x=1793862707; darn=vger.kernel.org;
         h=content-type:cc:to:from:subject:message-id:mime-version:date:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=/ChzfnrguZ/H1j3NAqG6KHPxUvTJUSYvVzUQIOYG/3o=;
-        b=fUtHDdYTbr4K7eLAdZ3R7KNAhqOkxXUIkvORkUSs9hjc9OkEWcH62XXHqxEFozA2hB
-         H4mDDdPA3ewNS+S3Fvhkr+83biOy2LwTNQM+jRf6DNL95FD2iFRwdw9N9z6q5Sk5XYUK
-         vafLmAzlUqQq/DIheti4b40xpLbnsDbeHepfgSaTQqddEC1rrCC+cMtdnVSJPDw5x/AU
-         J4johsDHur9BY3M51h8Oz3JJV2NEkgWApKBHHSrnGumhtA76a4NDo3WQ8S49LjpjOP6O
-         6Hx5oHz0DYmsSvDs/cU0ICSVN1gq08QzqAbKaRs8qIIb2W1ZB1BJugi5gQU1EcN8E4Io
-         W73g==
+        bh=Iu7Uqt4YczqlMrxp9jzAO7KekNm49X3RSeLMX+ma4tE=;
+        b=RnbylbY5TpsAV+pUsapBaJcX2gIJQOOj6Vbx1fYDLjvfitKc0kiwcEVP+6mNXflR5S
+         hW8oTxs57FeA9+gGUM6bv2zvZ05drHDUVw/JN4ckopktY0gVRyuv1LIp+Qzp30p/YHwM
+         nr96nHJcpDyytaocE+ZgpTYz71E3RD9VhcS2l6SDBLi+Ha+2C3QDduyGYhW2yC0CC/wj
+         td6kIXqU+I2v9vzLVgz2kAXZ1RFhl2MRDPxJk36fX8tSx+9IeeacIOJ9EEZYIkK4ZTOJ
+         qAvTxMBhIhQDDjjo7oUfmz7pylK0Lc8ZZkyAUElbmH47GEMOvgbhEmvix2K2iTVOBZp8
+         AJ6g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793257744; x=1793862544;
+        d=1e100.net; s=20260707; t=1793257907; x=1793862707;
         h=content-type:cc:to:from:subject:message-id:mime-version:date
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=/ChzfnrguZ/H1j3NAqG6KHPxUvTJUSYvVzUQIOYG/3o=;
-        b=t6y6XNRgeoibsMI1trFF36oZuAhwHed+isZpRf7BMyPtgv9T2Gv80S37JC+4AWmpHX
-         1y0R5n5sU3FkWaW/xEGiXL3NUHFTyGoCudvLJn4YoNxUOk+QkKUskiv9jAIbKrQPwn1u
-         yU+aykVSwpqVmbMHy3NSaNQ6GzxNTveeuNI2oBmUTYAY1yA+mi5o5dL2SoEJkiaIvCCC
-         naALNZiV39byv96ULnTCq87Kxl8EqRFmFcwNHRQqHlNdqUYZr/suZQGFsqDNhI3vzw+2
-         tCgfJh3PdpPIGT9AbohQuKcPexZOHOGAUUCPt4n2uYxSn7V7lRai9p6RQ6thaN6oNpBU
-         wlmg==
-X-Forwarded-Encrypted: i=1; AKwUvBx9TAIBqLyOkYE74M+6cg6wtq5n5O4egTFGv9wfykm8DkbaX2V/XtEJVVz7ycx8Jc3a/jcWC6T21ICI@vger.kernel.org
-X-Gm-Message-State: AFq9FYIA6qqFaR7INb8p2lZSHuhGTeQd1Esh3YR4JssZ9Kcumr2qTjIS
-	Qrb4gWk8hc+bx2B+VYijZos+XlMhkXuBn72qPQOs6bx17h0phe/NmQtiTqunnQh+tHjPKepexiN
-	a8btlAMU7ViSjaBy+mSxB8w==
-X-Received: from pffl11-n1.prod.google.com ([2002:a05:6a00:c34b:10b0:89e:78fd:6ab9])
+        bh=Iu7Uqt4YczqlMrxp9jzAO7KekNm49X3RSeLMX+ma4tE=;
+        b=blcPRoevoDdghC8/r1mgmR4ptB7AODUTjeH7Xc+BfpBEcquhQcNiWPGF+yfQh9sT6m
+         8WVF2CX93VwqqrnC2Yx1InMFPELGYha6cO1RyG3Op1FokNhINXEvSCPx9EomOlU98lAc
+         H1EQCXchgMcYK14LURHQabPIJO/mDa4O009eW4pCXk08ROhId7IBAU5De0VgE66MHlEJ
+         ljC4ExAnf9bAYAMXQTcom9BrWw2qUgJomRA34P5k2qO5wV1Wy+j4VLuuhOdCYhwkaJG9
+         wVDbf/1LgUH06AUDoIiX/1IR4YCeW58RgxOWZVHKohy7WNnBY5amdoRD8DiCqerm+yIZ
+         DmJQ==
+X-Forwarded-Encrypted: i=1; AKwUvBxOHL4ldV7OU2o09X0SoVgGOFG/pcWX6CrLLnj9NUrecJDiVjT2WWI2ot3wBR3wTr4vyg8oYw6/MnuY@vger.kernel.org
+X-Gm-Message-State: AFq9FYLphUT8IwKsTSKGk/1pHA7QfD0p6R26vji8uR0ACGnZysWTR2U8
+	RzvB5gadwzbK6HhFcYucbrUuSwE7HsSOzFVPe953gbh8GwRG3BIIEZE0Ibivh2Ur/qb47ATa7+h
+	DrtDz4KqmDLojtGq60Z4VuQ==
+X-Received: from pfbk11.prod.google.com ([2002:a05:6a00:b00b:b0:89e:861c:6b39])
  (user=stanleyjhu job=prod-delivery.src-stubby-dispatcher) by
- 2002:a05:6a00:230a:b0:883:71f6:5fb with SMTP id d2e1a72fcca58-8a6e6348be0mr4187982b3a.13.1793257744383;
- Thu, 29 Oct 2026 00:09:04 -0700 (PDT)
-Date: Thu, 29 Oct 2026 15:09:02 +0800
+ 2002:a05:6a20:258d:b0:3e1:d5f8:692c with SMTP id adf61e73a8af0-3e90234d133mr4462716637.21.1793257907155;
+ Thu, 29 Oct 2026 00:11:47 -0700 (PDT)
+Date: Thu, 29 Oct 2026 15:11:45 +0800
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -77,88 +77,90 @@ List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 Mime-Version: 1.0
 X-Mailer: git-send-email 2.56.0.313.g2479322e68-goog
-Message-ID: <20261029040004.2100004-1-stanleyjhu@google.com>
-Subject: [PATCH] scsi: ufs: core: Skip completion of SCSI commands owned by
- the SCSI EH
+Message-ID: <20261029040005.2100005-1-stanleyjhu@google.com>
+Subject: [PATCH] PM: runtime: Update runtime_pm.rst for non-fatal resume errors
 From: Stanley Jhu <stanleyjhu@google.com>
-To: "Martin K . Petersen" <mkp@kernel.org>, 
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>, 
-	Alim Akhtar <alim.akhtar@samsung.com>, Bart Van Assche <bvanassche@acm.org>, 
-	Bean Huo <beanhuo@micron.com>
-Cc: Peter Wang <peter.wang@mediatek.com>, Can Guo <can.guo@oss.qualcomm.com>, 
-	John Garry <john.garry@linux.dev>, "Bao D . Nguyen" <quic_nguyenb@quicinc.com>, 
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	Stanley Jhu <stanleyjhu@google.com>, stable@vger.kernel.org
+To: "Rafael J . Wysocki" <rafael@kernel.org>
+Cc: Len Brown <lenb@kernel.org>, Pavel Machek <pavel@kernel.org>, 
+	Praveen Talari <praveen.talari@oss.qualcomm.com>, Jonathan Corbet <corbet@lwn.net>, 
+	Mark Brown <broonie@kernel.org>, Brian Norris <briannorris@chromium.org>, 
+	Alan Stern <stern@rowland.harvard.edu>, Jens Axboe <axboe@kernel.dk>, 
+	Bart Van Assche <bvanassche@acm.org>, linux-pm@vger.kernel.org, linux-doc@vger.kernel.org, 
+	linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, Stanley Jhu <stanleyjhu@google.com>
 Content-Type: text/plain; charset="UTF-8"
 
-1. A SCSI command times out. scsi_timeout() sets SCMD_STATE_COMPLETE
-   and hands the command to the SCSI error handler.
-2. The abort fails, so the error handler resets the LU and
-   ufshcd_clear_lu_cmds() completes the cleared command.
-3. ufshcd_compl_one_cqe() overwrites cmd->result with DID_REQUEUE.
-4. scsi_eh_flush_done_q() only sets DID_TIME_OUT when cmd->result is
-   zero. A command that may not be retried, such as an SG_IO
-   command, is finished with DID_REQUEUE instead of DID_TIME_OUT.
-5. If a retried command times out again, the DID_TIME_OUT set by
-   scsi_timeout() is overwritten as well. sd_eh_action() then does not
-   count the medium access timeout, so the disk is not taken
-   offline, and a REQ_FAILFAST_DEV command is retried instead of
-   failed fast.
+Since commit eef1d74bf88f ("PM: runtime: Only set runtime_error on
+suspend callback failures"), rpm_callback() no longer sets
+dev->power.runtime_error when ->runtime_resume() returns an error.
+However, Documentation/power/runtime_pm.rst still states that the PM
+core treats any ->runtime_resume() error as a fatal device error and
+refuses to run runtime PM helper functions until the device status is
+manually reset.
 
-Only release the LLD resources of such a command, since the SCSI error
-handler owns it. Commands sent by scsi_send_eh_cmnd() reuse the
-timed-out scsi_cmnd with SCMD_STATE_COMPLETE set and still complete
-normally. Completions that arrive after the command was resubmitted
-are not handled here.
+Update the resume callback semantics bullet to state that on error the
+PM core resets the runtime PM status to 'suspended', returns the error
+code from synchronous resume helpers, and leaves power.runtime_error
+unset so a subsequent resume request can invoke ->runtime_resume()
+again. Also drop ->runtime_resume() from the ->runtime_idle()
+comparison of callbacks whose negative return codes are treated as fatal
+device errors.
 
-Fixes: 7a3e97b0dc4b ("[SCSI] ufshcd: UFS Host controller driver")
-Fixes: ab248643d3d6 ("scsi: ufs: core: Add error handling for MCQ mode")
-Cc: stable@vger.kernel.org
+Fixes: eef1d74bf88f ("PM: runtime: Only set runtime_error on suspend callback failures")
 Signed-off-by: Stanley Jhu <stanleyjhu@google.com>
 ---
- drivers/ufs/core/ufshcd.c | 20 ++++++++++++++++++++
- 1 file changed, 20 insertions(+)
+This updates Documentation/power/runtime_pm.rst as discussed in the v3
+thread for commit eef1d74bf88f:
+https://lore.kernel.org/r/CAJZ5v0ga8qqYg79+hQVtO8T=FOCj8XLmTz3HpEKoOykV_K-HSQ@mail.gmail.com
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index fd52deb72d21..710d57bb4dbc 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -5987,6 +5987,22 @@ void ufshcd_release_scsi_cmd(struct ufs_hba *hba, struct scsi_cmnd *cmd)
- 	ufshcd_clk_scaling_update_busy(hba);
- }
+Two .runtime_resume() paths assumed the old latching behavior:
+- blk_pre_runtime_resume() (q->pm_only underflow):
+https://lore.kernel.org/r/20261029040001.2100001-1-stanleyjhu@google.com
+- __ufshcd_wl_resume() in UFS, where after a failed resume the retried
+  resume releases the clock-gating hold a second time:
+https://lore.kernel.org/r/20261029040002.2100002-1-stanleyjhu@google.com
+
+Should other .runtime_resume() callbacks that undo suspend-time state
+on failure, assuming no retry, be audited?
+
+ Documentation/power/runtime_pm.rst | 17 +++++++++--------
+ 1 file changed, 9 insertions(+), 8 deletions(-)
+
+diff --git a/Documentation/power/runtime_pm.rst b/Documentation/power/runtime_pm.rst
+index 40a5c23d5259..04dc2a538352 100644
+--- a/Documentation/power/runtime_pm.rst
++++ b/Documentation/power/runtime_pm.rst
+@@ -222,11 +222,12 @@ what to do to handle the device).
+     I/O operations as needed.  The runtime PM status of the device is then
+     'active'.
  
-+/**
-+ * ufshcd_cmd_owned_by_scsi_eh - Check if the SCSI EH owns @cmd
-+ * @cmd: SCSI command pointer
-+ *
-+ * scsi_timeout() sets SCMD_STATE_COMPLETE before it hands a block-layer
-+ * command to the SCSI EH. Commands from scsi_send_eh_cmnd() reuse such a
-+ * scsi_cmnd with the bit still set and must still reach scsi_done().
-+ *
-+ * Return: true if the SCSI EH owns @cmd.
-+ */
-+static inline bool ufshcd_cmd_owned_by_scsi_eh(struct scsi_cmnd *cmd)
-+{
-+	return cmd->submitter == SUBMITTED_BY_BLOCK_LAYER &&
-+	       test_bit(SCMD_STATE_COMPLETE, &cmd->state);
-+}
-+
- /**
-  * ufshcd_compl_one_cqe - handle a completion queue entry
-  * @hba: per adapter instance
-@@ -6009,6 +6025,10 @@ void ufshcd_compl_one_cqe(struct ufs_hba *hba, int task_tag,
- 		lrbp->compl_time_stamp_local_clock = local_clock();
- 	}
- 	if (ufshcd_is_scsi_cmd(cmd)) {
-+		if (unlikely(ufshcd_cmd_owned_by_scsi_eh(cmd))) {
-+			ufshcd_release_scsi_cmd(hba, cmd);
-+			return;
-+		}
- 		if (unlikely(ufshcd_should_inform_monitor(hba, cmd)))
- 			ufshcd_update_monitor(hba, cmd);
- 		ufshcd_add_command_trace(hba, cmd, UFS_CMD_COMP);
-
-base-commit: 503e6172fa74da6b4944ece458f5534681e51d21
+-  * If the resume callback returns an error code, the PM core regards this as a
+-    fatal error and will refuse to run the helper functions described in
+-    `Section 4`_ for the device, until its status is directly set to either
+-    'active', or 'suspended' (by means of special helper functions provided by
+-    the PM core for this purpose).
++  * If the resume callback returns an error code, the PM core sets the
++    device's runtime PM status back to 'suspended' and returns the error
++    code from synchronous resume helpers.  As with a suspend callback
++    returning -EBUSY or -EAGAIN, this does not set power.runtime_error, so
++    the helper functions described in `Section 4`_ are not blocked and a
++    subsequent resume request can run the resume callback again.
+ 
+ The idle callback (a subsystem-level one, if present, or the driver one) is
+ executed by the PM core whenever the device appears to be idle, which is
+@@ -250,9 +251,9 @@ call to pm_runtime_autosuspend().
+ To prevent this suspension (for example, if the callback routine has scheduled
+ a delayed suspend or determined the device cannot be idle), the routine must
+ return a non-zero value (typically -EBUSY or -EAGAIN).  Unlike
+-->runtime_suspend() and ->runtime_resume(), the PM core does not treat negative
+-return codes from ->runtime_idle() as a fatal device error; any non-zero value
+-simply stops the PM core from suspending the device.
++->runtime_suspend(), the PM core does not treat negative return codes from
++->runtime_idle() as a fatal device error, and any non-zero value simply stops
++the PM core from suspending the device.
+ 
+ Core Guarantees and Synchronization Rules
+ -----------------------------------------
 -- 
 2.56.0.313.g2479322e68-goog
 
