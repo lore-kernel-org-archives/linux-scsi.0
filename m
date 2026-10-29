@@ -1,56 +1,102 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=195.135.223.131
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793272340;
-	b=TGvjABXPEyOvU/8zV0QhozsZQfzfhPi9Q7aIub46baYsXzA1lgzL4QYHSPTpbwYXWiHg
-	 RyHMp90xaujEltHDxiM/rE3+Nf5UFZFAbRFRai6IqVY0fIoqMWu4yqRKGUPqz78KG5av1
-	 XU6VrLYIKR7O+iVyqArYs2EX6yh/CxaPpo8G1+0VCQxuYjnHUB8qsEU5d1wTLWQpkvyWr
-	 JZ+jCVlZx3aJkQ/MzevgT6JffUgwXbhDiVwl/KRSF+a5gtKdysZUFNrpkaMMisihAclqJ
-	 PG9qVbUzUm3mHGfrRjBtqItSTct3Xxg8ONAPQigdwG5hHJ4eK/GDFrqbvRV1oyLFkRA==
+	t=1793279749;
+	b=uY2PGVZDAIZB7I6o44Jv4WVwZoRQVpy7yMjOxusQ5m/35awdQRikvgf5rZABtpy9rnZ4
+	 imtWmsFDEwNZgLqZPbO4wbs2Vdrn+nTFY2qxfoZFV5O8B5Ti0JFEMLyUoQaVKY/Ekr85W
+	 672ITr+4Qte+LmAw1VcEXT0BN/H14o6l2XGzq/1Wd/0fySu4/O5iUTSerB7fp35evH7oE
+	 H6gcTHwbpdbDx3P21m9qzZx3aHdMFgy+kKRfeDJULFdwpEB5uo5yLOX10CE7W6nfDi9/d
+	 LIPboT0REzr2pfCwDv+/sbxF+5ESKccMUtoViI5svOWN7m4ZoGqQ0NdCZk6l6sUJnrA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793272340;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=w/sjecDxQN2Q/G5rdX0BgBoYAl5m9a8mDy9gKf7A+KA=;
-	b=aAJMn9R92nDgk9ptqSD4FEbaEW+iJgcFmBCgKVHQ0k6w66VNJvG4/gHqbDnOE7sFuHAx
-	 E4iNFfPcqSaxd/RF5FZB5UpcUwXl7pH8XzuUcprAWPJ/VoThy8kPYcgF2DmoEvpIrhRKZ
-	 RR6/rrx+kx9v/icXRG0iiGfGf4lIehzNB54XhE1fjPs/Q6g9Xkmrk6Vufj216UDZORlVS
-	 VXYrRSAMpl9uTWoQIEdOirV6e+fDsf1lQNAETCxEqkEytNX+Pnem1JlVG2SbiLRUSbVFA
-	 87+g1ObIDFjhJbTY8xqef0E7tbctwQQovMtP9p5GOQqZyKdulvXkc5fp0TaQXrEdVJQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793279749;
+	h=DMARC-Filter:Received:DKIM-Signature:DKIM-Signature:DKIM-Signature:
+	 DKIM-Signature:Received:Received:From:Date:Subject:MIME-Version:
+	 Content-Type:Content-Transfer-Encoding:Message-Id:X-B4-Tracking:
+	 X-Change-ID:To:Cc:X-Mailer:X-Rspamd-Queue-Id:X-Spam-Level:
+	 X-Rspamd-Server:X-Rspamd-Action:X-Spam-Flag:X-Spamd-Result:
+	 X-Spam-Score;
+	bh=d7d1UVwvKGrgB7+MNPNGp4vckOA+VTyvPz9idktThnk=;
+	b=5W3xegm4BfAMAIpBetepOMVPr8/SW5j450dRAwBH6UFl3yEiq9pl0PsgJtCCeTXrGc1q
+	 RVHm6Rwv6FatGxIxAeMw+AeBkUdUew/ijHh+ouG2NlACje0Px3FW/0+PYCyEizi16RU3T
+	 jqUM7UMirbfhR5Opt3897KEzp4870Ax5Se/mUfDHYuYHWvDWanizoM5EZgHsn8H6aewOt
+	 Xyg3flOU0+sq34o5RavSfHOz9R1gA4zlVi/b5olIpLSLBWrpbJerrOfhU/4vfXgMagiVD
+	 u8lchyNNJLrwbu0Gv0Gv7E3ny6G4SdAbEuA1ZWr7b88a19YM+H/isJs2NpM+ECmb0QA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=X7ErNlq8;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=suse.de;
+	spf=pass smtp.mailfrom=suse.de;
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=z1db2E7T;
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=0k8HWk7o;
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=m1vp1aoD;
+	dkim=neutral header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=bFryf+WM;
+	arc=none smtp.remote-ip=195.135.223.131
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37D61606A31A
-	for <linux-scsi@vger.kernel.org>; Thu, 29 Oct 2026 11:12:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49F86606A31C;
+	Thu, 29 Oct 2026 13:15:48 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 49F86606A31C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=X7ErNlq8
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A360B1F01828;
-	Thu, 29 Oct 2026 11:12:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793272339;
-	bh=w/sjecDxQN2Q/G5rdX0BgBoYAl5m9a8mDy9gKf7A+KA=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=X7ErNlq8LncTI+/mycEc/Gdq3l/CGgnWUZOdPyUOTxjw2YlgTA69geD1L3ofK/HQD
-	 qnw2Ug4QavTQjl7A+1CnQqR6EO7qmv07GSWRqe4JFgM+7GtJQ2OyNw8fEIz0jsB7hx
-	 mkZ6dan6T/g4/9O5LPIj8adLANlqKw9psPaK6nbxoWJ6dTlE5qTD5lFsyDQ54rETeO
-	 KjlK+ps9DHGVVFGZlETBdrVoXF32WEQ6aSvwbZ09dSa1pLMQnmT7XNy95EnWfx+aKh
-	 ZVy//O5xFPJSwUL2bI+i4JzTV+EP4JVCWJT5g0g9FaPqAJjfVzHnEj5VdhQzO83NZE
-	 yDlQbhJj+xCTA==
-Message-ID: <sashiko-outbox-189185@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2] scsi: core: Clear power-on UNIT ATTENTION on BIWIN
- UFS devices
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Alexey Charkov" <alchark@flipper.net>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20261029-biwin-tua-quirk-v2-1-4d71af956ac5@flipper.net>
-References: <20261029-biwin-tua-quirk-v2-1-4d71af956ac5@flipper.net>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 29 Oct 2026 11:12:19 +0000
+	dkim=pass (1024-bit key, unprotected) header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=z1db2E7T;
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=0k8HWk7o;
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=m1vp1aoD;
+	dkim=neutral header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=bFryf+WM
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id ECE341F7F2;
+	Thu, 29 Oct 2026 13:15:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1793279746; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=d7d1UVwvKGrgB7+MNPNGp4vckOA+VTyvPz9idktThnk=;
+	b=z1db2E7TwogPMD8Q3f4y2j8NbOkyAfQSLE6mDDF3IbTvuvXm3vDyEBUScya1Uar3vP9vdJ
+	6xLmEwS1pabNDwwEXqbmMWz2YHSw9Wuc36Oq8kxaJBLhlylJ8J8pGU9UzrSSQzZ5E3rUDg
+	PQviEsFB5jjpwCgO7vtOhXOwdbKEDN8=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1793279746;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=d7d1UVwvKGrgB7+MNPNGp4vckOA+VTyvPz9idktThnk=;
+	b=0k8HWk7oWzlKCpcWL+CmD+G8Vfl19ucwMamgwn7CW80RJW0vMeTmMdUFDGI+5srUhCczi1
+	CmGkAfJA5hB4x0Cw==
+Authentication-Results: smtp-out2.suse.de;
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=m1vp1aoD;
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=bFryf+WM
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1793279744; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=d7d1UVwvKGrgB7+MNPNGp4vckOA+VTyvPz9idktThnk=;
+	b=m1vp1aoDXKIacrjliT4oWDRr9KzjdrP9ehJnvXD8/5RAg7yXsm495E/1awBA4sJX5hOl9B
+	m1C8MhTLtSoSP7WB4FyzvLXvrxbqQbxm1aJbsuG8i0J+cEnHVDn8Ecyi5vWs9mAgXW3k1V
+	ANciSeBhYJIrpc8Y5WwxyoOp1cAYkkc=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1793279744;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=d7d1UVwvKGrgB7+MNPNGp4vckOA+VTyvPz9idktThnk=;
+	b=bFryf+WMuO4/j3M+HfuaszfjDSX9j8tB43JZXjzZ0xM+hh4pxq6Te4CFlVr/9tf5X5UFHO
+	b1BXPdHFsH9RfLCQ==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id BBB2A1339F;
+	Thu, 29 Oct 2026 13:15:44 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id 5QjcJABH42r/cwAAD6G6ig
+	(envelope-from <dwagner@suse.de>); Thu, 29 Oct 2026 13:15:44 +0000
+From: Daniel Wagner <dwagner@suse.de>
+Date: Thu, 29 Oct 2026 14:15:30 +0100
+Subject: [PATCH] scsi: qla2xxx: Check FCE state under fce_mutx in debugfs
+ release
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -59,166 +105,116 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20261029-qla2xxx-fix-v1-1-7e272ffdc4b8@suse.de>
+X-B4-Tracking: v=1; b=H4sIAAAAAAAC/yWMSQqAMAwAvyI5W2h7KNSviAeNUSPi0qoUxL8b9
+ TgDMxdECkwRiuyCQCdHXmYBk2eAQz33pLgVBqutM9p6tU21TSmpjpPyBr1oh0YjSLEGEv3dyur
+ neDQj4f4u4L4frSwOrG8AAAA=
+X-Change-ID: 20261029-qla2xxx-fix-91c92616c10c
+To: Nilesh Javali <njavali@marvell.com>, 
+ GR-QLogic-Storage-Upstream@marvell.com, 
+ "Martin K. Petersen" <mkp@kernel.org>, 
+ Himanshu Madhani <himanshu.madhani@oracle.com>, 
+ Quinn Tran <qutran@marvell.com>
+Cc: linux-scsi@vger.kernel.org, stable@vger.kernel.org, 
+ Daniel Wagner <dwagner@suse.de>
+X-Mailer: b4 0.16.0
+X-Rspamd-Queue-Id: ECE341F7F2
+X-Spam-Level: 
+X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
+X-Rspamd-Action: no action
+X-Spam-Flag: NO
+X-Spamd-Result: default: False [-13.51 / 50.00];
+	SUSE_INTERNAL_BYPASS(-9.00)[];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	RCPT_COUNT_SEVEN(0.00)[8];
+	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
+	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	ARC_NA(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	TO_DN_SOME(0.00)[];
+	MID_RHS_MATCH_FROM(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	RCVD_COUNT_TWO(0.00)[2];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo,suse.de:dkim,suse.de:email];
+	DNSWL_BLOCKED(0.00)[2a07:de40:b281:106:10:150:64:167:received];
+	DKIM_TRACE(0.00)[suse.de:+]
+X-Spam-Score: -13.51
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [High] scsi: core: tag starvation in scsi_clear_reset_ua() when writes sa=
-turate queue
-- [High] scsi: core: missing quiesce and negative RPM check in scsi_clear_r=
-eset_ua()
---
+qla2x00_dfs_fce_release() tests ha->flags.fce_enabled and ha->fce
+before taking fce_mutex. Since commit 841df27d619e ("scsi: qla2xxx:
+Move FCE Trace buffer allocation to user control") the buffer can be
+freed at runtime by writing 0 to the fce debugfs file, which clears
+ha->fce under fce_mutex.
 
-commit a245ee3df8cf93fd94b7ad3e84680f44164fbb37
-Author: Alexey Charkov <alchark@flipper.net>
+If that write runs between the unlocked check and mutex_lock() in
+release, release goes on to memset(ha->fce, ...) with ha->fce == NULL:
 
-scsi: core: Clear power-on UNIT ATTENTION on BIWIN UFS devices
+  CPU0 (close)                    CPU1 (echo 0 > fce)
+  !ha->fce -> false
+                                  mutex_lock(&ha->fce_mutex)
+                                  qla2x00_free_fce_trace()
+                                    ha->fce = NULL
+                                  mutex_unlock(&ha->fce_mutex)
+  mutex_lock(&ha->fce_mutex)
+  memset(NULL, 0, ...)
 
-This commit adds the BLIST_TUR_AFTER_RESET quirk flag for BIWIN BWU2A05 UFS
-devices and issues a TEST UNIT READY command from scsi_evt_thread() when
-SDEV_EVT_POWER_ON_RESET_OCCURRED is pending and the device is runtime activ=
-e.
+Move the check under fce_mutex.
 
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index ab39514cc0c6b..863ae93f2618b 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-[ ... ]
-> @@ -2713,6 +2714,32 @@ static void scsi_evt_emit(struct scsi_device *sdev=
-, struct scsi_event *evt)
->  	kobject_uevent_env(&sdev->sdev_gendev.kobj, KOBJ_CHANGE, envp);
->  }
-> =20
-> +/*
-> + * Some devices do not clear a power on or reset UNIT ATTENTION when rep=
-orting
-> + * it to commands such as WRITE, which then keep failing on every retry.=
- Send
-> + * them a TEST UNIT READY, which does clear it.
-> + *
-> + * Leave a device that is not runtime active alone. Until it is, only PM
-> + * requests can reach it, and their senders deal with the UNIT ATTENTION=
-. Any
-> + * other command that keeps failing with it holds a queue reference, whi=
-ch
-> + * aborts a runtime suspend, and re-arms this event on every retry.
-> + */
-> +static void scsi_clear_reset_ua(struct scsi_device *sdev)
-> +{
-> +	struct device *dev =3D &sdev->sdev_gendev;
-> +	struct scsi_sense_hdr sshdr;
-> +	int active;
-> +
-> +	active =3D pm_runtime_get_if_active(dev);
-> +	if (!active)
-> +		return;
+Fixes: 841df27d619e ("scsi: qla2xxx: Move FCE Trace buffer allocation to user control")
+Cc: stable@vger.kernel.org
+Signed-off-by: Daniel Wagner <dwagner@suse.de>
+---
+ drivers/scsi/qla2xxx/qla_dfs.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-[Severity: High]
-What happens if runtime PM is disabled on dev, or if sdev is quiesced when
-scsi_clear_reset_ua() runs?
+diff --git a/drivers/scsi/qla2xxx/qla_dfs.c b/drivers/scsi/qla2xxx/qla_dfs.c
+index 5d08bdbcf70a..247174a38d94 100644
+--- a/drivers/scsi/qla2xxx/qla_dfs.c
++++ b/drivers/scsi/qla2xxx/qla_dfs.c
+@@ -464,11 +464,11 @@ qla2x00_dfs_fce_release(struct inode *inode, struct file *file)
+ 	struct qla_hw_data *ha = vha->hw;
+ 	int rval;
+ 
+-	if (ha->flags.fce_enabled || !ha->fce)
+-		goto out;
+-
+ 	mutex_lock(&ha->fce_mutex);
+ 
++	if (ha->flags.fce_enabled || !ha->fce)
++		goto unlock;
++
+ 	/* Re-enable FCE tracing. */
+ 	ha->flags.fce_enabled = 1;
+ 	memset(ha->fce, 0, fce_calc_size(ha->fce_bufs));
+@@ -480,8 +480,8 @@ qla2x00_dfs_fce_release(struct inode *inode, struct file *file)
+ 		ha->flags.fce_enabled = 0;
+ 	}
+ 
++unlock:
+ 	mutex_unlock(&ha->fce_mutex);
+-out:
+ 	return single_release(inode, file);
+ }
+ 
 
-In drivers/base/power/runtime.c:pm_runtime_get_conditional(), disable_depth
-is checked before runtime_status:
+---
+base-commit: c339f4010dea8b0d754f84ace70cd1b089878ef8
+change-id: 20261029-qla2xxx-fix-91c92616c10c
 
-	spin_lock_irqsave(&dev->power.lock, flags);
-	if (dev->power.disable_depth > 0) {
-		retval =3D -EINVAL;
-	} else if (dev->power.runtime_status !=3D RPM_ACTIVE) {
-		retval =3D 0;
+Best regards,
+--  
+Daniel Wagner <dwagner@suse.de>
 
-When runtime PM is disabled (for example during system suspend via
-device_suspend() / __device_suspend_late() or during device removal via
-__scsi_remove_device() -> device_del()), pm_runtime_get_if_active() returns
--EINVAL even if the device is RPM_SUSPENDED. Because if (!active) treats
--EINVAL as non-zero, scsi_clear_reset_ua() proceeds to issue
-scsi_test_unit_ready(), which blocks in blk_queue_enter() on q->mq_freeze_w=
-q.
-
-Even when active > 0, the device may be quiesced via
-drivers/scsi/scsi_lib.c:scsi_device_quiesce():
-
-	blk_set_pm_only(q);
-
-	memflags =3D blk_mq_freeze_queue(q);
-	synchronize_rcu();
-	blk_mq_unfreeze_queue(q, memflags);
-
-	mutex_lock(&sdev->state_mutex);
-	err =3D scsi_device_set_state(sdev, SDEV_QUIESCE);
-
-This leaves dev->power.runtime_status at RPM_ACTIVE with disable_depth =3D=
-=3D 0
-during system suspend/resume or UFS shutdown in
-drivers/ufs/core/ufshcd.c:ufshcd_wl_shutdown():
-
-	ufshcd_rpm_get_sync(hba);
-
-	ufshcd_store_tx_eq_settings(hba);
-
-	scsi_device_quiesce(sdev);
-	...
-	__ufshcd_wl_suspend(hba, UFS_SHUTDOWN_PM);
-
-On BIWIN BWU2A05 devices, hba->ufs_device_wlun also gets tur_after_reset =
-=3D 1.
-If a BLK_MQ_REQ_PM command (such as START_STOP in ufshcd_set_dev_pwr_mode()
-or SYNCHRONIZE_CACHE in sd_suspend_common()) reports a power-on or reset un=
-it
-attention while sdev is quiesced, scsi_report_sense() schedules
-sdev->event_work. When scsi_clear_reset_ua() then submits a non-PM request =
-via
-scsi_test_unit_ready(), blk_queue_enter() sleeps in TASK_UNINTERRUPTIBLE on
-q->mq_freeze_wq while holding the runtime PM reference (hanging indefinitely
-in ufshcd_wl_shutdown() where scsi_device_resume() is never called).
-
-Should scsi_clear_reset_ua() check if (active <=3D 0) (or handle -EINVAL wh=
-en
-CONFIG_PM=3Dy) and also guard against sdev->sdev_state !=3D SDEV_RUNNING ||
-blk_queue_pm_only(sdev->request_queue), similar to
-drivers/scsi/scsi_scan.c:scsi_rescan_device()?
-
-> +
-> +	scsi_test_unit_ready(sdev, sdev->request_queue->rq_timeout, 1, &sshdr);
-
-[Severity: High]
-Can scsi_test_unit_ready() starve waiting for a request tag when retrying
-writes saturate the queue?
-
-scsi_test_unit_ready() calls scsi_execute_cmd() -> scsi_alloc_request() ->
-blk_mq_alloc_request() with flags =3D=3D 0, which waits in blk_mq_get_tag()=
- for a
-normal non-reserved tag from bitmap_tags.
-
-When write commands receive a power-on/reset unit attention,
-drivers/scsi/scsi_lib.c:scsi_io_completion_action() requeues them immediate=
-ly:
-
-	case ACTION_RETRY:
-		/* Retry the same command immediately */
-		__scsi_queue_insert(cmd, SCSI_MLQUEUE_EH_RETRY, false);
-		break;
-
-In __scsi_queue_insert() -> blk_mq_requeue_request() ->
-__blk_mq_requeue_request() -> blk_mq_put_driver_tag():
-
-	if (rq->tag =3D=3D BLK_MQ_NO_TAG || rq->internal_tag =3D=3D BLK_MQ_NO_TAG)
-		return;
-
-	__blk_mq_put_driver_tag(rq->mq_hctx, rq);
-
-When an I/O scheduler is attached (such as the default mq-deadline on UFS,
-where dd_init_sched() sets q->async_depth =3D q->nr_requests so writes can
-consume all tags in sched_tags->bitmap_tags), __blk_mq_requeue_request()
-releases rq->tag but keeps the scheduler tag (rq->internal_tag) across all
-retries. When no I/O scheduler is configured, blk_mq_limit_depth() imposes =
-no
-limit on writes and blk_mq_put_driver_tag() does not release rq->tag on
-requeue because rq->internal_tag =3D=3D BLK_MQ_NO_TAG.
-
-If enough write requests are queued to fill all non-reserved tags across a
-reset or runtime resume, won't those writes endlessly fail and requeue while
-pinning every tag, blocking scsi_test_unit_ready() in blk_mq_get_tag() until
-a write exceeds the 180s retry window and fails with an I/O error?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261029-biwin-tua-=
-quirk-v2-1-4d71af956ac5@flipper.net?part=3D1
