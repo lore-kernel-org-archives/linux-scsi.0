@@ -1,84 +1,86 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.182
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.170
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793233544;
-	b=drA+afvwcUdewtEmScEH7bGeqkj1LzDfVYG3bODphb5iSSYOw5e6ssseq0IBZCW2+tTQ
-	 vICJ8KXOAjrNgpobUTekcJuq+o2jZc5qfxAmVMm6EwsLO/9J1I5Y0+GczjCY/NQjvBLTl
-	 V+qWoCy7XrmMWR98sr5vU1y4V07uM+yKh7ypY5VANG8kgmaqrMdcoNJHJPvG7jiL6lXVs
-	 4urQMy0BatEPzMfEjkYodLxdUGjY3AakvsjzsNPBY/g0d1nfLXd8A0vDFsYj2L9xX9khF
-	 pUSWasExQ5O5d/wcwITeCgN8mK1UUdcK1VCDp97UFMlHFYa3zHBd15r7U8A+9x3h9mg==
+	t=1793233545;
+	b=zOkC3NJsoJlycwJPEjxpu02wi5mg7Nk3Ow+oEsv3I3NZYNEFkZUn0q9sdR4aDXz4dOLM
+	 Jr0BJ2ELSGDr7JNev/SwKqE/oiQg1MJM0Ige1zpp9sb6sPpqFyhT9n6nHkIZGuitqE3qe
+	 8o+8GM0R1BxOb6ojfA91DoZ+Ni+xD1n7yqMEgjgj8y9lOFHJ75BPsoRZfpPkiTEax+udt
+	 Nk0tSQGhM8XdVTahU5LhbJoWUJ0/SgQ/3L1A9TbJzLJaNV9ZU1ZKQEXTDosNJqvomXPyz
+	 17DO/uL6nSJtQEwqbEQE4aLc0fGolMZICm297RjU4BVNa/Y3QoGmX6AIpCmnOgxQ/Pg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793233544;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793233545;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
-	 Date:Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding;
-	bh=J8aoBH6mRlcl+9seTx28oQLyEYfZFS6tzcA9q1jraRg=;
-	b=CzjmvBY5ptpyp8TdH6Co9S6DaVSZLGUwOQk1YBujlKC+kW/XXpaPEA4k8rS+S7P4TY+c
-	 qydQn3rJ7mWSJsIF4fUxAfSGkNxI31BG1a7bUFzZzjR3lMvB3ZojoTOP4Fin+jV4gdUdy
-	 Ee6ezV7x8oYHVcGMpsSwqtb9r3hSd+u+ICDk5wbEy5gbDpSCvy6mJO9PhP2YTn6k+uDQP
-	 mWDPlVdpW8ugg+CHQMVd4Ya9tmMvxZt7TmHd2od82wbJito7O/wVL+5Top9XGdzuSFV3o
-	 ySzvf6qXOFEbM4+pxnz/ILCRzfcrfePhBmMaLXQCyEkPSX3woIFjEEf+rsaMIl0Lx5Q==
+	 Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=k/10f5c+oWWOXFNZyBGAsvHHDb+DQboLM334VsQA3NU=;
+	b=Hd08gCI+lLgqGPa7/px7ET1Cc6ZzWA8pH0ji/bQ5sgHM3zv0+YrWxzFMQXrY1e03g7lu
+	 RbIFVQAC3COdK9u2cQ9ImONvxMASb86XrkNqj22nNoM8sRNMF0AgtRjkxgwQd/U4ahwdD
+	 gbzzLvrVAtesz31079F2nU33On7nEPowK8Ue/oPUibEZsuBnBRhfs2dxBe7EcHseQugtP
+	 wuf/C91tUo1ZwwDWz4KVUqfMw37aKaEfpAZTl4pYWHOK9N0iCJL4MJX31CH2pVSR8E1JR
+	 Qn6QYroRSqTGMwEmUYGXQ2ZSGSzTTC7DacqtzMFLCjhSAMoYXLgGdVoxrfgndIBPz+A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=purestorage.com;
 	spf=pass smtp.mailfrom=purestorage.com;
-	dkim=pass header.d=purestorage.com header.i=@purestorage.com header.a=rsa-sha256 header.s=google2022 header.b=MqWlfqG4;
-	arc=none smtp.remote-ip=74.125.82.182
-Received: from mail-dy1-f182.google.com (mail-dy1-f182.google.com [74.125.82.182])
+	dkim=pass header.d=purestorage.com header.i=@purestorage.com header.a=rsa-sha256 header.s=google2022 header.b=OVv8kmyQ;
+	arc=none smtp.remote-ip=74.125.82.170
+Received: from mail-dy1-f170.google.com (mail-dy1-f170.google.com [74.125.82.170])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6FF05606A31A
-	for <linux-scsi@vger.kernel.org>; Thu, 29 Oct 2026 00:25:43 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6FF05606A31A
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5B15606A31D
+	for <linux-scsi@vger.kernel.org>; Thu, 29 Oct 2026 00:25:44 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C5B15606A31D
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=purestorage.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=purestorage.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=purestorage.com header.i=@purestorage.com header.a=rsa-sha256 header.s=google2022 header.b=MqWlfqG4
-Received: by mail-dy1-f182.google.com with SMTP id 5a478bee46e88-3550c917fd3so2254755eec.0
-        for <linux-scsi@vger.kernel.org>; Wed, 28 Oct 2026 17:25:43 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=purestorage.com header.i=@purestorage.com header.a=rsa-sha256 header.s=google2022 header.b=OVv8kmyQ
+Received: by mail-dy1-f170.google.com with SMTP id 5a478bee46e88-3514b90bb89so2960678eec.1
+        for <linux-scsi@vger.kernel.org>; Wed, 28 Oct 2026 17:25:44 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=purestorage.com; s=google2022; t=1793233542; x=1793838342; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=J8aoBH6mRlcl+9seTx28oQLyEYfZFS6tzcA9q1jraRg=;
-        b=MqWlfqG4TL8G85iQPmd7tMVR+2RnOk9O3sZLD0kQM9ONIjI0RAqjZBExO/vWHKfK47
-         rw6o8dYHJMZKK2NL+VoP5nOFTKCZPQYNfE5G8oZ8Y2qvS07Ch/JF0miQloGu3PWsdJLg
-         aah/MuWFnL4tYnpL4HIc5UwX2LdW0MgG+nu39RSbj81cY28zai1SLszdQdozaK3S03+Z
-         t/H40ywudeVhWnPVW/xsZ36JfPrT/JZiCcs9mu2Ec4PJWYauOXeTe0NXIQmR9MFADtcL
-         fkOfAcdzj6w2cifQoR1tKexNQQITDqcK0YgtImO9UxkC/yCO/t7O56ixvQK9pVZF0QO1
-         aVfA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793233542; x=1793838342;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=purestorage.com; s=google2022; t=1793233544; x=1793838344; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=J8aoBH6mRlcl+9seTx28oQLyEYfZFS6tzcA9q1jraRg=;
-        b=xmCvXKT0QdXAUrNffWHeGeXC6VCRdK1tfHgQSlQ21wQ459XXOSjyg7BNVyoi7Yq3xR
-         oD4XmXMDtHrZwoUldvdexV6K2vzC0v97Lp3b5z5d9rH2p9/FLDrERNfj6a9GTbX0MlP4
-         L+YRnZmHNqqC4wYXUr8Za+f3aDJKHRMylTg8h8ar6TXBBHk9p4N696XgwfLKBe1DBCWV
-         3I0iUC4+i92GAhSpj+dcP2BnC29XEMkrpehCiqk29bDe/JZ0xzKAIpVzlp+Di/S2f4JQ
-         Is9vMekHJ1DbVR5oLM+BpIr0LMmUcYkkFn4vzHt916fi3+WyhxQW5pKRWwYZTNQWFtOe
-         fY4w==
-X-Gm-Message-State: AFq9FYKs8IeHQGL33WM+YUdGVjwir/ryKFAr50BkD1XK91Y4J3W5lcEN
-	5J75KOI/M6tLvHLh4tLYRbxQZyZg7ie//km8vlU7f3/7qxzkPTrjdIOsQ1hBd6W+lJqpPGx9Lsh
-	bi0lJZ3Y+sqxkOGf3axpJOYRCzxHOmABLXU+a2knshedhKnt/HR5dnVfV6y6GfYD96c+kH9NnOu
-	Idb2C5WmDO0h3osYlAiinCKMdcu46mPYJgpOA7eJ7hKiXlaXM7+w==
-X-Gm-Gg: AYBFou0e0Fdd7frAM6bjb/BrhNY5xwhv12KMa1kXKV6rkm5+1JpOR1VQXhAYS/l0h8n
-	bUlPnShBqsp8hnUlFsSeEyNTz56CSwjzZFMzSeK97RbJk4DwBaemI4QR8nHQLMBxegtHgRVG4mo
-	TRVno1ZV4M+xgaqtsoop2C82TrU8CQKcJiWjgIlOfXgkDXwkR2xhrx+C74rlB3KZ2bq6lXaiAyq
-	OeCqojooYTJOeRcafJK+ZLUGUHHNXm7VT9n7NDeC9JTFq/aGIkhn1V0h99EvEVdFqk3tLjDZPvN
-	NdDTIUrN6UUDeg2C3Wu/HUH3wKL4bt8mSiX1phGqdViGOXdZ6lGXRba+wleSnRX32kSzOaDeOBy
-	HlLFHKnBuCscgyzhQmqMfns9IBuWV0w0jCd/85J8wxyg7fIDGqR+4RfakVqvedWjVrRLjpNKQDI
-	wvMWpnFBbns9QeOrnDlWAJbVyaymf3u2oapgzNcx2jL+JHnwgPkXDhGOAXn6yxjL4o5s0tTDR8f
-	D7ZG21Bkf7gutqZpedtE9uavvMQguOnGl4I3JabFq9moiot8/nAMMVhx151NQ5HKCkfTT9waxUN
-	l++YrJc7exZol9sUV1uTvx1C5M0yxm5TN7O0nOa04sfUphKWUe7bykvxxyvHH5aSGU7P4mpjkwr
-	nm1n4VUxyG9FMwraAkjkrDsBnEiOxjJe23yql2OpJrxSZ01zQAtgHSYIL8+3nxBPatdD0zYcyxi
-	Eg1Lr+T5Sm+mt9bxpm2kZtMNsZng==
-X-Received: by 2002:a05:7301:700a:b0:368:2548:c081 with SMTP id 5a478bee46e88-36a203d4194mr4476581eec.25.1793233541885;
-        Wed, 28 Oct 2026 17:25:41 -0700 (PDT)
+        bh=k/10f5c+oWWOXFNZyBGAsvHHDb+DQboLM334VsQA3NU=;
+        b=OVv8kmyQ4JUBa/ZpjgvrAbS1Sx2CWnps4eyLy+hbh+wkGxn4YtliWhIhCfFRja6N17
+         5y9H1JUx82B/6H8mIsaDN/2/Un0F7VMSTL6XHgcFE8foW/H4WyGLFOmd9my+JrCKGGeW
+         kwlMJ6XTBpK/ga5cGbGOoMbPut+MAlJP3NrWdIhUQauuif4NKs1iB4oOZXgtJnsE3FeF
+         lIB+VQphi330yqdDVG4iVUErh0OY9WX9LJ1HHYgfqiA+cqwNqv6XWW+BmZ+XNunNVT1p
+         xsVcPH656CpTXblgVobaFRp2vX3vLIlK2+6q6BGcGa617NJlnJFsbY0L62ace4XRpomL
+         a24A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793233544; x=1793838344;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=k/10f5c+oWWOXFNZyBGAsvHHDb+DQboLM334VsQA3NU=;
+        b=W2MTKxHwD7Mg83ynRFYTOeVjfY+oSx1V+WUwhhZ2prrtwq5NfrY+1e5cpLwnuVeLjL
+         WRl427t2l3WUNSFftc708qRJnRPGnT25hvnvOenO8hUFbTcySrTdvydDkf+lWBj3DPpV
+         yFraI2BRIPerP/wnJROU+ADp1LC4KMToR6/xqSkPvgdyo1gIDu7J+WiGD70VpOV9Z5lh
+         5wCMfYFTzFn7iV1UASgkjfkBZ/gsI6iE15Pmayv+nio3En+K1uK6OY9OKo6aPDbXcJH9
+         T1DN8xJIitKLVKyKyp/psKZq89zc8Txx9nBnRNp1BnKc3enQ3dUTBamB39TAJg2M4vCX
+         ZL0g==
+X-Gm-Message-State: AFq9FYJZRa77KlNybag30hnHBibQz91WPbvbOqQAx8xtMQwuTw7hMgz5
+	6qyzCxwIRcEzJBwLGoKUzM/2vIK1f2zKOI+6wEKGHFnueFCsAWmJgO4IdcdNIMPWNy2iN0Y3ZCF
+	2ZZACdGgFptyx5BsLRgKb0ZCw9/AuXSIp9uLuGLa5w5aZDoUqKLuy0+hkcs2fwCtsl+5bbrXM4e
+	Y5O/idcT4V2gfkRdvgnfUb0VySqnGZwgJQRSMW61fhIXqMwd47DQ==
+X-Gm-Gg: AYBFou3kHy7DJUGuPD620XJU3R1pXmn826WXtvhaE0jeSDzuNLAmkJfWWZHVCCCOHlq
+	sS5o/c5HSWXUE8M6LsABZqhM1lgOHNOizi60OTQUHZAmHVsuAbNpGVaSMEKaWU7v+myTP9NPUhs
+	8SumCU1EKaXCBkXS3o+w3Hc146wpPC2miq9cSAz0IWJ2MCiwRO6JVsodcPq+zN1Sn1vHrcKk6/A
+	GtdQotqFV1qK2OnDtFlSP5DVhhY2wdVM/cJR++yKD6ifGqE4+EmmJ5QAHbv02yME3p/tPFdLDe8
+	wPnBHjGSY8tMB1+M41+XgVOZURtVIHC7Qvd096osyVHpGyHytc7mPj2vb4leCWIgC/XTvhjScog
+	WWJRA8kyj/cF7S0vH81eBjUuBWp944AMWDKjXEZ5ZO9oCaaGHFuu8hZvVlJbFvAIbT2RYT22VJr
+	/8g+qGnOV0GQ4cmiw/RAfAqTwk1VR2DBl/0Rxzs7vL0scV/CTPBA5u6Dq3g+csREY8DfDMSlc4p
+	tcV6ZI+ceOF9lQPcfpaBjCLHtAxR0TRraXqPtEUlgCcbBVJJv5YcWxoo73a8OC7g43wUs59sKk+
+	uKfdfiBXlF4ODRjBUdUsFyqG5LvInNHrNf6eCz1ZymlwmKgkzwuWF9zSMQibDpvT4YRlDuBPhRD
+	hf8c1B2PLU1QXzVK8c8Wq/oxxcGw8pfVX0uDk/KC52OyqvM6mFLOtT6kB9g4tuTlZSf/bdTC3wa
+	r1OzRVLz6LpzoONR3XjkV3CEZRtHIOC3NQllkAjL5UCZvHWcw=
+X-Received: by 2002:a05:693c:6092:b0:369:d7b0:99f0 with SMTP id 5a478bee46e88-36a2007b9f2mr6322299eec.21.1793233543172;
+        Wed, 28 Oct 2026 17:25:43 -0700 (PDT)
 Received: from brian--MacBookPro18.purestorage.com ([170.85.204.106])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-36a239a2e29sm11294226eec.26.2026.10.28.17.25.40
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-36a239a2e29sm11294226eec.26.2026.10.28.17.25.42
         (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Wed, 28 Oct 2026 17:25:41 -0700 (PDT)
+        Wed, 28 Oct 2026 17:25:42 -0700 (PDT)
 From: Brian Bunker <brian@purestorage.com>
 To: linux-scsi@vger.kernel.org
 Cc: "Martin K . Petersen" <mkp@kernel.org>,
@@ -86,10 +88,12 @@ Cc: "Martin K . Petersen" <mkp@kernel.org>,
 	Hannes Reinecke <hare@kernel.org>,
 	Bart Van Assche <bvanassche@acm.org>,
 	Krishna Kant <krishna.kant@purestorage.com>
-Subject: [PATCH v3 0/3] scsi: Bind sd to LUs in the ALUA unavailable state
-Date: Wed, 28 Oct 2026 17:25:28 -0700
-Message-ID: <20261029002531.82824-1-brian@purestorage.com>
+Subject: [PATCH v3 1/3] scsi: core: Move REPORT TARGET PORT GROUPS into the SCSI core
+Date: Wed, 28 Oct 2026 17:25:29 -0700
+Message-ID: <20261029002531.82824-2-brian@purestorage.com>
 X-Mailer: git-send-email 2.56.0
+In-Reply-To: <20261029002531.82824-1-brian@purestorage.com>
+References: <20261029002531.82824-1-brian@purestorage.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -101,133 +105,230 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-A LU that is in the ALUA unavailable state on a target port reports
-peripheral qualifier 001b in its INQUIRY data. scsi_bus_match() only
-matches devices with peripheral qualifier 000b, so if a host scans such
-a path, no upper-level driver is ever bound to it. When the target port
-later becomes available, nothing binds sd and the path stays unusable
-until the device is deleted and rescanned. A host that was already
-running when the path became unavailable keeps sd bound, so the result
-depends on when the host scanned.
+ALUA is a standard SCSI feature, independent of multipathing, but only
+the ALUA device handler can currently send REPORT TARGET PORT GROUPS.
+Move submit_rtpg() into the SCSI core as scsi_report_tpgs(), together
+with the resubmission with a larger buffer that alua_rtpg() did when
+the parameter data did not fit, so that the core can read the ALUA
+state of a device itself. The parameter data format definitions move to
+scsi_proto.h with it.
 
-This series fixes that at scan time. The SCSI core reads the ALUA access
-state of a device with REPORT TARGET PORT GROUPS before the device is
-registered, and matches sd to PQ 001b devices whose access state could
-be read. SPC-4 requires PQ 001b in the unavailable state, and the
-command fails for an unmapped LUN, so these are taken to be mapped LUs
-that are unavailable. This is the same situation as a path in the
-standby state, to which sd already binds. The path then stays in the
-multipath map as a failed path, and the existing UNIT ATTENTION handling
-brings it back when the target port becomes available.
+scsi_dh_alua calls scsi_report_tpgs() with the same timeout, retries
+and parameter data format as before.
 
-PQ 001b cannot be matched on its own: an unmapped LUN reports it as
-well, and some targets report every possible LUN in REPORT LUNS. Binding
-sd to all of those would create disks with no backing LU. An unmapped
-LUN fails REPORT TARGET PORT GROUPS, so the access state is what tells
-the two cases apart.
+No functional change.
 
-  1/3 moves submit_rtpg() out of scsi_dh_alua into the SCSI core as
-      scsi_report_tpgs(), so the core can read the ALUA state of a
-      device itself. No functional change.
-  2/3 sends REPORT TARGET PORT GROUPS from scsi_add_lun() for a device
-      that reports TPGS support and sets sdev->access_state from the
-      descriptor of the target port group of this path.
-  3/3 matches PQ 001b devices whose access state could be read, which
-      are taken to be mapped LUs in the unavailable state.
+Suggested-by: Hannes Reinecke <hare@kernel.org>
+Co-developed-by: Krishna Kant <krishna.kant@purestorage.com>
+Signed-off-by: Krishna Kant <krishna.kant@purestorage.com>
+Signed-off-by: Brian Bunker <brian@purestorage.com>
+---
+ drivers/scsi/device_handler/scsi_dh_alua.c | 63 ++++++----------------
+ drivers/scsi/scsi_lib.c                    | 52 ++++++++++++++++++
+ include/scsi/scsi_device.h                 |  3 ++
+ include/scsi/scsi_proto.h                  |  3 ++
+ 4 files changed, 73 insertions(+), 48 deletions(-)
 
-This is an alternative to the series that refreshes the INQUIRY data
-and reprobes the device on rescan ("scsi: Refresh INQUIRY data and
-reprobe on rescan", v8 last posted). That series needs a way to update
-the INQUIRY data of a live device and to reprobe it. This one does not
-change the INQUIRY data after the device is discovered, and has no
-reprobe, so none of the locking and ordering issues that came with
-refreshing it.
-
-The INQUIRY data in sysfs is unchanged by this series. It is read and
-created once, when the device is discovered, and keeps the peripheral
-qualifier reported at that time like the rest of the INQUIRY data. At
-any given time that cached peripheral qualifier can be out of sync with
-the device, for example after the target port moves between available
-and unavailable. An INQUIRY sent to the device returns the current
-value, and the access_state attribute shows the current ALUA state.
-
-This does not make every target work. Today none does: a host that scans
-a path while it is unavailable never binds sd to it. With this series a
-target that answers sd's probe commands in that state is handled
-correctly, and the others are no worse off. What it relies on, and the
-known limits:
-  - SPC-4 requires PQ 001b in the unavailable state and requires REPORT
-    TARGET PORT GROUPS there. It does not say that PQ 001b is reported
-    only in that state, so a PQ 001b device whose access state could be
-    read is taken to be a mapped LU that is unavailable: an unmapped
-    LUN fails the command.
-  - The decision is made once, at scan, like the peripheral qualifier
-    itself. If REPORT TARGET PORT GROUPS fails (other than with UNIT
-    ATTENTION, which is retried), or the INQUIRY data and VPD page 0x83
-    do not allow it to be sent, nothing is matched, as before.
-  - SPC-4 requires neither READ CAPACITY nor, in the unavailable state,
-    MODE SENSE. sd's probe commands are sent to the target. If a target
-    rejects them, sd keeps default values, such as a capacity of 0,
-    until a later revalidate, as it does for a standby path today. If
-    the path changes state while sd probes, it can also end up with a
-    mix.
-  - The ALUA device handler is unchanged and treats a new port group as
-    active/optimized until it learns the state, so the first regular
-    I/O to an unavailable path, e.g. the partition table read, can fail
-    with LOGICAL UNIT NOT ACCESSIBLE, TARGET PORT IN UNAVAILABLE STATE.
-    A path in the standby state already does the same with TARGET PORT
-    IN STANDBY STATE.
-  - The standard INQUIRY data, including the peripheral qualifier and
-    what sd uses from it, is only read when the device is discovered;
-    the kernel has no mechanism to refresh it. A rescan, e.g. on the
-    INQUIRY DATA HAS CHANGED UNIT ATTENTION, reads the VPD pages again
-    and revalidates sd, but does not read the INQUIRY data again.
-
-Changes since v2 (prompted by the Sashiko review of 3/4):
-  - Dropped 3/4, which started a new port group in scsi_dh_alua in the
-    access state read at scan. alua_bus_attach() calls alua_initialize()
-    before it sets sdev->handler_data, so the initial RTPG that
-    alua_check_vpd() queues is not scheduled, and alua_prep_fn() would
-    keep failing I/O to a path that had since recovered until something
-    else queued an RTPG. scsi_dh_alua is no longer changed apart from
-    calling scsi_report_tpgs().
-  - 2/3: The commit message no longer says that the handler queues an
-    RTPG when it attaches.
-  - 1/3, 3/3: No changes.
-
-Changes since v1 (prompted by the Sashiko review of 4/4):
-  - 4/4: scsi_bus_match() no longer tests sdev->access_state. The
-    peripheral qualifier is read once when the device is scanned, but
-    access_state follows the ALUA state, so a device scanned in the
-    unavailable state stopped matching as soon as its path became
-    available: when an upper-level driver module is loaded later, when
-    a driver is rebound through sysfs, or when the ALUA device handler
-    updated access_state before sd was probed. scsi_add_lun() now
-    records in a new sdev->match_unavailable flag whether the device
-    reported PQ 001b and its access state could be read, and
-    scsi_bus_match() uses that. SPC-4 requires PQ 001b in the
-    unavailable state and an unmapped LUN fails the command, so this
-    does not depend on the state the command returns, which can already
-    be available if the path recovered between the INQUIRY and the
-    command.
-  - 1/4 to 3/4: No changes.
-
-v2 cover-letter Message-ID: <20261028230807.61578-1-brian@purestorage.com>
-v1 cover-letter Message-ID: <20261028184216.25453-1-brian@purestorage.com>
-
-Brian Bunker (3):
-  scsi: core: Move REPORT TARGET PORT GROUPS into the SCSI core
-  scsi: core: Read the ALUA access state when a device is scanned
-  scsi: core: Match ULDs to logical units in the ALUA unavailable state
-
- drivers/scsi/device_handler/scsi_dh_alua.c |  63 +++---------
- drivers/scsi/scsi_lib.c                    |  52 ++++++++++
- drivers/scsi/scsi_scan.c                   | 110 +++++++++++++++++++++
- drivers/scsi/scsi_sysfs.c                  |  14 ++-
- include/scsi/scsi_device.h                 |   9 ++
- include/scsi/scsi_proto.h                  |   3 +
- 6 files changed, 202 insertions(+), 49 deletions(-)
-
+diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+index 87ac0a6d63e5..06eb35cc9d7c 100644
+--- a/drivers/scsi/device_handler/scsi_dh_alua.c
++++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+@@ -29,9 +29,6 @@
+ #define TPGS_SUPPORT_TRANSITION		0x80
+ #define TPGS_SUPPORT_ALL		0xdf
+ 
+-#define RTPG_FMT_MASK			0x70
+-#define RTPG_FMT_EXT_HDR		0x10
+-
+ #define TPGS_MODE_UNINITIALIZED		 -1
+ #define TPGS_MODE_NONE			0x0
+ #define TPGS_MODE_IMPLICIT		0x1
+@@ -120,34 +117,6 @@ static void release_port_group(struct kref *kref)
+ 	kfree_rcu(pg, rcu);
+ }
+ 
+-/*
+- * submit_rtpg - Issue a REPORT TARGET GROUP STATES command
+- * @sdev: sdev the command should be sent to
+- */
+-static int submit_rtpg(struct scsi_device *sdev, unsigned char *buff,
+-		       int bufflen, struct scsi_sense_hdr *sshdr, int flags)
+-{
+-	u8 cdb[MAX_COMMAND_SIZE];
+-	blk_opf_t opf = REQ_OP_DRV_IN | REQ_FAILFAST_DEV |
+-				REQ_FAILFAST_TRANSPORT | REQ_FAILFAST_DRIVER;
+-	const struct scsi_exec_args exec_args = {
+-		.sshdr = sshdr,
+-	};
+-
+-	/* Prepare the command. */
+-	memset(cdb, 0x0, MAX_COMMAND_SIZE);
+-	cdb[0] = MAINTENANCE_IN;
+-	if (!(flags & ALUA_RTPG_EXT_HDR_UNSUPP))
+-		cdb[1] = MI_REPORT_TARGET_PGS | MI_EXT_HDR_PARAM_FMT;
+-	else
+-		cdb[1] = MI_REPORT_TARGET_PGS;
+-	put_unaligned_be32(bufflen, &cdb[6]);
+-
+-	return scsi_execute_cmd(sdev, cdb, opf, buff, bufflen,
+-				ALUA_FAILOVER_TIMEOUT * HZ,
+-				ALUA_FAILOVER_RETRIES, &exec_args);
+-}
+-
+ /*
+  * submit_stpg - Issue a SET TARGET PORT GROUP command
+  *
+@@ -518,6 +487,9 @@ static int alua_tur(struct scsi_device *sdev)
+ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
+ {
+ 	struct scsi_sense_hdr sense_hdr;
++	const struct scsi_exec_args exec_args = {
++		.sshdr = &sense_hdr,
++	};
+ 	struct alua_port_group *tmp_pg;
+ 	int len, k, off, bufflen = ALUA_RTPG_SIZE;
+ 	int group_id_old, state_old, pref_old, valid_states_old;
+@@ -549,7 +521,17 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
+ 
+  retry:
+ 	err = 0;
+-	retval = submit_rtpg(sdev, buff, bufflen, &sense_hdr, pg->flags);
++	retval = scsi_report_tpgs(sdev, &buff, &bufflen,
++				  !(pg->flags & ALUA_RTPG_EXT_HDR_UNSUPP),
++				  ALUA_FAILOVER_TIMEOUT * HZ,
++				  ALUA_FAILOVER_RETRIES, &exec_args);
++	if (!buff) {
++		sdev_printk(KERN_WARNING, sdev,
++			    "%s: kmalloc buffer failed\n", __func__);
++		/* Temporary failure, bypass */
++		pg->expiry = 0;
++		return SCSI_DH_DEV_TEMP_BUSY;
++	}
+ 
+ 	if (retval) {
+ 		/*
+@@ -581,7 +563,7 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
+ 		}
+ 
+ 		/*
+-		 * submit_rtpg() has failed on existing arrays
++		 * scsi_report_tpgs() has failed on existing arrays
+ 		 * when requesting extended header info, and
+ 		 * the array doesn't support extended headers,
+ 		 * even though it shouldn't according to T10.
+@@ -629,21 +611,6 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
+ 
+ 	len = get_unaligned_be32(&buff[0]) + 4;
+ 
+-	if (len > bufflen) {
+-		/* Resubmit with the correct length */
+-		kfree(buff);
+-		bufflen = len;
+-		buff = kmalloc(bufflen, GFP_KERNEL);
+-		if (!buff) {
+-			sdev_printk(KERN_WARNING, sdev,
+-				    "%s: kmalloc buffer failed\n",__func__);
+-			/* Temporary failure, bypass */
+-			pg->expiry = 0;
+-			return SCSI_DH_DEV_TEMP_BUSY;
+-		}
+-		goto retry;
+-	}
+-
+ 	orig_transition_tmo = pg->transition_tmo;
+ 	if ((buff[4] & RTPG_FMT_MASK) == RTPG_FMT_EXT_HDR && buff[5] != 0)
+ 		pg->transition_tmo = buff[5];
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index f695a6605815..ebbfe3238d97 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -3581,6 +3581,58 @@ int scsi_vpd_tpg_id(struct scsi_device *sdev, int *rel_id)
+ }
+ EXPORT_SYMBOL(scsi_vpd_tpg_id);
+ 
++/**
++ * scsi_report_tpgs - Issue a REPORT TARGET PORT GROUPS command
++ * @sdev: SCSI device to send the command to
++ * @buff: buffer for the parameter data, replaced if it is too small
++ * @bufflen: length of @buff
++ * @ext_hdr: request the extended header parameter data format
++ * @timeout: command timeout in jiffies
++ * @retries: number of times to retry the command in the midlayer
++ * @args: optional arguments for scsi_execute_cmd()
++ *
++ * Resend the command with a larger buffer if the parameter data does not
++ * fit.
++ *
++ * Return: the result of the last command, or -ENOMEM with *@buff set to
++ * NULL if a larger buffer could not be allocated.
++ */
++int scsi_report_tpgs(struct scsi_device *sdev, unsigned char **buff,
++		     int *bufflen, bool ext_hdr, int timeout, int retries,
++		     const struct scsi_exec_args *args)
++{
++	blk_opf_t opf = REQ_OP_DRV_IN | REQ_FAILFAST_DEV |
++			REQ_FAILFAST_TRANSPORT | REQ_FAILFAST_DRIVER;
++	u8 cdb[MAX_COMMAND_SIZE] = { };
++	int ret, len;
++
++	cdb[0] = MAINTENANCE_IN;
++	cdb[1] = MI_REPORT_TARGET_PGS;
++	if (ext_hdr)
++		cdb[1] |= MI_EXT_HDR_PARAM_FMT;
++
++ retry:
++	put_unaligned_be32(*bufflen, &cdb[6]);
++	ret = scsi_execute_cmd(sdev, cdb, opf, *buff, *bufflen, timeout,
++			       retries, args);
++	if (ret)
++		return ret;
++
++	len = get_unaligned_be32(&(*buff)[0]) + 4;
++	if (len > *bufflen) {
++		/* Resubmit with the correct length */
++		kfree(*buff);
++		*bufflen = len;
++		*buff = kmalloc(len, GFP_KERNEL);
++		if (!*buff)
++			return -ENOMEM;
++		goto retry;
++	}
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(scsi_report_tpgs);
++
+ /**
+  * scsi_set_sense - build sense data for a command
+  * @scmd:	scsi command for which the sense should be formatted
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index e6fd6bc30644..691275db0677 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -583,6 +583,9 @@ extern void sdev_enable_disk_events(struct scsi_device *sdev);
+ extern int scsi_vpd_lun_id(struct scsi_device *, char *, size_t);
+ extern int scsi_vpd_lun_serial(struct scsi_device *, char *, size_t);
+ extern int scsi_vpd_tpg_id(struct scsi_device *, int *);
++int scsi_report_tpgs(struct scsi_device *sdev, unsigned char **buff,
++		     int *bufflen, bool ext_hdr, int timeout, int retries,
++		     const struct scsi_exec_args *args);
+ 
+ #ifdef CONFIG_PM
+ extern int scsi_autopm_get_device(struct scsi_device *);
+diff --git a/include/scsi/scsi_proto.h b/include/scsi/scsi_proto.h
+index 9c7d31aa6bae..6826f2d74407 100644
+--- a/include/scsi/scsi_proto.h
++++ b/include/scsi/scsi_proto.h
+@@ -145,6 +145,9 @@
+ #define MI_MANAGEMENT_PROTOCOL_IN 0x10
+ /* value for MI_REPORT_TARGET_PGS ext header */
+ #define MI_EXT_HDR_PARAM_FMT  0x20
++/* format field in byte 4 of the REPORT TARGET PORT GROUPS parameter data */
++#define RTPG_FMT_MASK         0x70
++#define RTPG_FMT_EXT_HDR      0x10
+ /* values for maintenance out */
+ #define MO_SET_IDENTIFYING_INFORMATION 0x06
+ #define MO_SET_TARGET_PGS     0x0a
 -- 
 2.56.0
 
