@@ -1,104 +1,104 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=195.135.223.130
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793264055;
-	b=GHFKD8vbCGMX7+c1dncMd/w1b5/797vbuhpuMRDURv+xE6Ie5YK/6+1HIjqNVUfSVtnc
-	 q/gaK4tJfn6dZLYX1HTLA9b4Yt9KD7y8Fh2/SHc2HUbovTy6VdHGuxM16QYqSgfQQAyeE
-	 7eRUIfRFzapPZS/C6QfapLqFT8yJCZ/4pL8Fz/ZOYZ7kQWUvQDXTKLDezl0jEk4ghWIdg
-	 GuZi1YbNF66X3HNIfYAbneUhskMSuyhV552G/QCuvlMoDUE0S6ZjeNEm2LgvNenYNHKs2
-	 yf5xKAkHj5CdlLHgcZxN8EBqB2ZXpNKAHkhKfFBUtBOZUf91Rr4c+mBb4qfXIF6lBXg==
+	t=1793264106;
+	b=MhOC0bYnLEBhARwRdvwV5v5uZhslt4KCKzPEYKO3jriwNavuJp/hGy4z/DFLg49EHffd
+	 WmJNYHDlhTWAAHh5wYhjX5gd7l9lrCm0egK3/LJ4l+cI+/2/x/mPTCW9YOi4fjml9tlGe
+	 mrmwK/lWavDU5KQlBuTg9krZbSDhYZ554+bmbnoCspkW6YW9Ld6ma6DKf14VuKFy/Ntdr
+	 DWe6GTF+DXBh89zJp2xOAicJSNHAKNxlfJ6AkWce3+6di9iChKzMJ6gM2qw8xNfXGjKcy
+	 vUffCH1OE0xf5HVnVGiUGegK/hl1cGJ0II/BxQdXhNS2XO5cKeqp0gN491IE6GLC74w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793264055;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793264106;
 	h=DMARC-Filter:Received:DKIM-Signature:DKIM-Signature:DKIM-Signature:
 	 DKIM-Signature:Received:Received:Message-ID:Date:MIME-Version:
 	 User-Agent:Subject:To:Cc:References:Content-Language:From:In-Reply-To:
 	 Content-Type:Content-Transfer-Encoding:X-Rspamd-Queue-Id:X-Spam-Level:
 	 X-Rspamd-Server:X-Rspamd-Action:X-Spam-Flag:X-Spamd-Result:
 	 X-Spam-Score;
-	bh=MZWjl4IDtrGxyEmOGVyKe8shE1SzFnQKi/23wyxVeJA=;
-	b=PUBSfN/dG3dH5gP+T85aKMHGJSW8zQTL+JxtQo34Z54+MMPsUxCX5OeRN/+TcUSM48UP
-	 IoN4r+90Dq8OYNLuGopuOkvzz6p7Bm/1ObP/tgKyuJ7k0vh+mDJWFgouZZlLreI47L7Q7
-	 6e4sfbeCcT6CedVRPYJWnCmtJ4b8ayS8I1Mr6wWQamDx8edIYAMZoFPoGKxd4NHpN9QF1
-	 YrHD3GlS1GJuY6V287f7KGLLs6A3eRMZ6ZQEwa2KVYBBWZjtP+bQ9YQ2/4LNWe+bPT6xl
-	 F6s7syVaCHerJJTtxBOpktHTY1Ijl7gqMREeV/dhQkkG4PqIpk6YMswG1EgTPvYG64A==
+	bh=EdMtTwsajzBH7gU5HUpZa4PfhaTsUN8O9oAkqPuHMCQ=;
+	b=3e85GRIK2/qgOSTbhUHXi0PPJIai9i4uB6Upu62yYj487roiGuOtoYiyFpX39ERylxIw
+	 mZa3AfqwUbCOYB7REjRO3qUHxcAC6ULKynn2ZZ7MdnmbHpxufrzWNciQdzUkS1x8+Mbfo
+	 9f3I3R5VzUxyCeuD9EV//EwJn+dJLzf893hb7yILbrkj6C6n+dJscqoJDpfq+8CAN0qS0
+	 J/nesHia8QmSXxDLYC66g3NoAhOXF1hXmaN2YC+rL2tIThhxaUj2KCwaz8vEOscZhYdfb
+	 BA1vUs6TK0O/I42upU30mLP0NqLSoNrJMtEmrKuR1yXTZiAqtKbGsCq5n4oHILn6axA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=suse.de;
 	spf=pass smtp.mailfrom=suse.de;
-	dkim=pass header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=cf0sb9EP;
-	dkim=pass header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=QByszS9g;
-	dkim=pass header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=tehb8DMb;
-	dkim=neutral header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=d99JzZvm;
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=IvmGWFSc;
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=jG29vRRt;
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=IvmGWFSc;
+	dkim=neutral header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=jG29vRRt;
 	arc=none smtp.remote-ip=195.135.223.130
 Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E793606A31A
-	for <linux-scsi@vger.kernel.org>; Thu, 29 Oct 2026 08:54:14 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9E793606A31A
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4338A606A324
+	for <linux-scsi@vger.kernel.org>; Thu, 29 Oct 2026 08:55:06 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4338A606A324
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=cf0sb9EP;
-	dkim=pass header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=QByszS9g;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=tehb8DMb;
-	dkim=neutral header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=d99JzZvm
+	dkim=pass (1024-bit key, unprotected) header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=IvmGWFSc;
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=jG29vRRt;
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=IvmGWFSc;
+	dkim=neutral header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=jG29vRRt
 Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 59103226AA;
-	Thu, 29 Oct 2026 08:54:11 +0000 (UTC)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 8A3B4226B8;
+	Thu, 29 Oct 2026 08:55:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1793264052; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	t=1793264104; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=MZWjl4IDtrGxyEmOGVyKe8shE1SzFnQKi/23wyxVeJA=;
-	b=cf0sb9EPjYJdLsXXFuKwuB6XDeCCXPp9Dby1U1LWwdAVucRNFxIAPfcaL+5cwGZz7MLA2V
-	ZE94IE+fSEA9YYCc5y+Z2D9UaTaPmQd5r2ag066/5NFqRFoStXIiOuwbIy9nz4JzAmG73J
-	7M42Fu+HybOgyuIZD2H85hWXN0iW+7A=
+	bh=EdMtTwsajzBH7gU5HUpZa4PfhaTsUN8O9oAkqPuHMCQ=;
+	b=IvmGWFScMZeIaupz5+JoAbn3i/JbguLDapW9db/hRenD++UXa4biFifmX+u7/t4xxXWcjz
+	C1kA5vYxX+K4jfDrnPEl61F33nmszOLrZL+wsA3kjrRVMm/Bhl/w7QmuUI6yUL8EgUtWud
+	soUmb1+2yLgNJSE0nsDaBgRyRWkIOBs=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1793264052;
+	s=susede2_ed25519; t=1793264104;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=MZWjl4IDtrGxyEmOGVyKe8shE1SzFnQKi/23wyxVeJA=;
-	b=QByszS9gzTEXY/zr7hL0xmeKyz4EyRYRD+CrFgp+NMzLgad3VlGammE18IamalaEqgGC9p
-	9FNZOrh2FiP2lOAA==
+	bh=EdMtTwsajzBH7gU5HUpZa4PfhaTsUN8O9oAkqPuHMCQ=;
+	b=jG29vRRt+fIAa+elgICmAet+LrU2lDd5KfnTlbCFudEE/QobH6IhUqVb8XOUvDqpEDhCE+
+	3wC684B09AvJg4Dg==
 Authentication-Results: smtp-out1.suse.de;
-	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=tehb8DMb;
-	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=d99JzZvm
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=IvmGWFSc;
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=jG29vRRt
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1793264051; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	t=1793264104; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=MZWjl4IDtrGxyEmOGVyKe8shE1SzFnQKi/23wyxVeJA=;
-	b=tehb8DMbbdiecqXMFz8AzPcI7jsQKpHCQwxKhpGAXI38Pr7/xse4UTRCKde1yke54TZaoq
-	/jjgVmTLP03gywYGEjY6o+ewV3KgTe0IonHQxbNveltIaqxhRDl1hro6veAV5SBY9crPod
-	aPaKXvDVSnG3I4PyC3f7bGPc5LTL894=
+	bh=EdMtTwsajzBH7gU5HUpZa4PfhaTsUN8O9oAkqPuHMCQ=;
+	b=IvmGWFScMZeIaupz5+JoAbn3i/JbguLDapW9db/hRenD++UXa4biFifmX+u7/t4xxXWcjz
+	C1kA5vYxX+K4jfDrnPEl61F33nmszOLrZL+wsA3kjrRVMm/Bhl/w7QmuUI6yUL8EgUtWud
+	soUmb1+2yLgNJSE0nsDaBgRyRWkIOBs=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1793264051;
+	s=susede2_ed25519; t=1793264104;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=MZWjl4IDtrGxyEmOGVyKe8shE1SzFnQKi/23wyxVeJA=;
-	b=d99JzZvmcyisXlmReOt8vBAeIsvQ1hDKk0ZWaDh7OKoxvAMKLqqnEIFNALHzygql/JcdQ1
-	i8B1F9cBkvzuROAg==
+	bh=EdMtTwsajzBH7gU5HUpZa4PfhaTsUN8O9oAkqPuHMCQ=;
+	b=jG29vRRt+fIAa+elgICmAet+LrU2lDd5KfnTlbCFudEE/QobH6IhUqVb8XOUvDqpEDhCE+
+	3wC684B09AvJg4Dg==
 Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 1C0FF1339F;
-	Thu, 29 Oct 2026 08:54:11 +0000 (UTC)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 482AA1339F;
+	Thu, 29 Oct 2026 08:55:04 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
 	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id ohKSNbIJ42qoXwAAD6G6ig
-	(envelope-from <hare@suse.de>); Thu, 29 Oct 2026 08:54:11 +0000
-Message-ID: <6c553315-46f6-4b27-86c3-648450ba41ea@suse.de>
-Date: Thu, 29 Oct 2026 09:54:10 +0100
+	id pqmFB+gJ42r9YAAAD6G6ig
+	(envelope-from <hare@suse.de>); Thu, 29 Oct 2026 08:55:04 +0000
+Message-ID: <999ae7ca-4914-4bcc-8d3f-23956880a4ed@suse.de>
+Date: Thu, 29 Oct 2026 09:55:03 +0100
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -109,21 +109,21 @@ List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 1/3] scsi: core: Move REPORT TARGET PORT GROUPS into
- the SCSI core
+Subject: Re: [PATCH v3 2/3] scsi: core: Read the ALUA access state when a
+ device is scanned
 To: Brian Bunker <brian@purestorage.com>, linux-scsi@vger.kernel.org
 Cc: "Martin K . Petersen" <mkp@kernel.org>,
  "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
  Hannes Reinecke <hare@kernel.org>, Bart Van Assche <bvanassche@acm.org>,
  Krishna Kant <krishna.kant@purestorage.com>
 References: <20261029002531.82824-1-brian@purestorage.com>
- <20261029002531.82824-2-brian@purestorage.com>
+ <20261029002531.82824-3-brian@purestorage.com>
 Content-Language: en-US
 From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20261029002531.82824-2-brian@purestorage.com>
+In-Reply-To: <20261029002531.82824-3-brian@purestorage.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Rspamd-Queue-Id: 59103226AA
+X-Rspamd-Queue-Id: 8A3B4226B8
 X-Spam-Level: 
 X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
 X-Rspamd-Action: no action
@@ -150,36 +150,40 @@ X-Spamd-Result: default: False [-13.50 / 50.00];
 	MID_RHS_MATCH_FROM(0.00)[];
 	RCVD_COUNT_TWO(0.00)[2];
 	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:dkim,suse.de:email,purestorage.com:email,imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo,suse.de:dkim,suse.de:email,purestorage.com:email];
 	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
 	DKIM_TRACE(0.00)[suse.de:+]
 X-Spam-Score: -13.50
 
 On 10/29/26 1:25 AM, Brian Bunker wrote:
-> ALUA is a standard SCSI feature, independent of multipathing, but only
-> the ALUA device handler can currently send REPORT TARGET PORT GROUPS.
-> Move submit_rtpg() into the SCSI core as scsi_report_tpgs(), together
-> with the resubmission with a larger buffer that alua_rtpg() did when
-> the parameter data did not fit, so that the core can read the ALUA
-> state of a device itself. The parameter data format definitions move to
-> scsi_proto.h with it.
+> sdev->access_state is only set by a device handler, and the ALUA
+> device handler reads the state with an RTPG that runs after the device
+> has been registered and matched to a driver. The SCSI core therefore
+> has no ALUA state for a device while it decides whether to bind an
+> upper-level driver to it.
 > 
-> scsi_dh_alua calls scsi_report_tpgs() with the same timeout, retries
-> and parameter data format as before.
+> For a device that reports TPGS support, send REPORT TARGET PORT GROUPS
+> from scsi_add_lun(), after the VPD pages have been read, and set
+> sdev->access_state from the descriptor of the target port group of
+> this path. UNIT ATTENTIONs, which a target typically reports first
+> after a login or an ALUA state change, are retried, and the command is
+> resent without the extended header if the target rejects it. If the
+> command fails, e.g. with LOGICAL UNIT NOT SUPPORTED because no LU is
+> mapped at the LUN, sdev->access_state is left as it is.
 > 
-> No functional change.
+> The command uses the same timeout as the INQUIRY of the scan. The ALUA
+> device handler keeps updating sdev->access_state afterwards as before.
 > 
 > Suggested-by: Hannes Reinecke <hare@kernel.org>
 > Co-developed-by: Krishna Kant <krishna.kant@purestorage.com>
 > Signed-off-by: Krishna Kant <krishna.kant@purestorage.com>
 > Signed-off-by: Brian Bunker <brian@purestorage.com>
 > ---
->   drivers/scsi/device_handler/scsi_dh_alua.c | 63 ++++++----------------
->   drivers/scsi/scsi_lib.c                    | 52 ++++++++++++++++++
->   include/scsi/scsi_device.h                 |  3 ++
->   include/scsi/scsi_proto.h                  |  3 ++
->   4 files changed, 73 insertions(+), 48 deletions(-)
+>   drivers/scsi/scsi_scan.c | 94 ++++++++++++++++++++++++++++++++++++++++
+>   1 file changed, 94 insertions(+)
 > 
+Nice. Something I wanted to do for a long time.
+
 Reviewed-by: Hannes Reinecke <hare@kernel.org>
 
 Cheers,
