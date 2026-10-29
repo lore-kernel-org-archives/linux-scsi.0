@@ -1,56 +1,56 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=156.224.81.31
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793238553;
-	b=peOaYTxQIYH9tyOJzgB60EmEpCyTnDGHwli5AW0s/m9jX8aXlSd+eAVFjhwXXpEPUyrE
-	 XtV4kM6b5Q5I7XCo0O2KT41eydJ+idF+9eYPC4YY1SCjN8yyqZPStSihAkyypgD9q9Qn4
-	 45XCtrFg2pjmkuPeyqTTMUVjvAsoCd3Aqe1v4JScxI6+RsqcruyYxKVejaP/G0YeYZ6u8
-	 DnGwVwwCK6oPJ7bKEqVR6r25rNMrcxNxi0i9IBQ0MTlu4QJGvA70rDJjc8TjtX2B58S+7
-	 4T0JHhGYIracDyvbnZhbHKSBjqga5FDWXmbl/0oQexThu55U02e2G/AKqE9Vf/ZclgA==
+	t=1793238873;
+	b=f/7YYk/UKNiK/UVzexYz8WeqmlHkcw6621VSjLL+/QpCfIlMLEp99a15cJk+Bz6HFg8g
+	 TWJWPhnXhJKT4Hf/z5spdPSjdp793V7VW3MXoBGoiPZvtd658wyJdCUsr+G0jwhxnG3kA
+	 GzZZYxhh9PxoeKu7KDQWZI6n6H/DO+Mv+z2D4ed63DITtlfyrgsrtOkAizcKqqSyHnQJF
+	 iEKwWveZqn1xaPcXkSbNLEQsKBVQCLbJPXQu5HLbDzQrCXPO9bcK/pgZ36qz0KTJd0e3d
+	 hND5F3M1WSbe9rfgPP9cVAKTdErN6Uynz3y4Qj1Ac8Lpr/tAfz8BCqNte9fMlpC4pVg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793238553;
-	h=DMARC-Filter:Received:From:To:Cc:Subject:Date:Message-Id:X-Mailer:
-	 MIME-Version:Content-Transfer-Encoding:X-HM-Tid:X-HM-MType:
-	 X-HM-Spam-Status:DKIM-Signature;
-	bh=aRmcfacEfs2rrBgysy9LNl7I54CQ6xpqJjiIzapBhcU=;
-	b=I8Z5EZo77oSjqPkbG4Mrx+OCVdUQ2uiD0x5PPfOiSODJkDAluK+GiR7PvLfHxn5PDO8S
-	 0GPO+QuaZ+YK+Ju1t+Ut6nbR0adfM+IBw0eW8Fob1P+QhuA7Fxl/0uOA3KeS12f3GJ3w7
-	 Xhhj9wglf59K6dpWmveiSp52O89Qkf3Biw7hIpxTlAwdF2cOF3hFKAOY2G01/+t1+pUXQ
-	 ukb4+DTcYde9dAeqxOkYkziOFailoSXlz4g2sMz+Icfp46nf7XNDjijiMzVVJQgO7qiXK
-	 0oSsTanfQBZOU4dtwzDxgqJM/QIIwqjX7lnvnS3WHUBsmdOmlf+L226BgyfI8Z/9s/A==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793238873;
+	h=Received:DKIM-Signature:To:Cc:Subject:From:In-Reply-To:Message-ID:
+	 References:Date:MIME-Version:Content-Type:Content-Transfer-Encoding;
+	bh=KFUY+ufLmeKpF4j7Hh0RMIGS9MmAEj3cLOlUqVTjeas=;
+	b=BZylGfgA619BxgWey0nWWaOE8AtYhSL8p+vTO4wTvJGMDtP1Sdr/xt2HRoLhUjuO2JK4
+	 Sr2q8g+mIhatYW5Qjmba8rpioz0u60OEkhQ750GSfWw4uQu5TpX2wkQ3rnogaT25ERqfX
+	 dDLK0QMBhUnK15BQoJLHmbUE+ZR5z/iXzSvgDFzWWPdciCU0zZ7LW7dtOvcbuI0tDUQy1
+	 lUuwS8L0d5ynk1h73k//HjvvLloZc7zGBLloKQFtBBMiuDqLMTTlsftCkRzN9bPg2W5v1
+	 0KuLx8MAKFUUTYpNNyy5MeevexX2j21pSlC0IGJpE9OubvBFpYoM3zr5VRz4r0eGPrA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=rock-chips.com;
-	spf=pass smtp.mailfrom=rock-chips.com;
-	dkim=pass header.d=rock-chips.com header.i=@rock-chips.com header.a=rsa-sha256 header.s=default header.b=Ea53EblT;
-	arc=none smtp.remote-ip=156.224.81.31
-Received: from mail-m8131.xmail.ntesmail.com (mail-m8131.xmail.ntesmail.com [156.224.81.31])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=dF0dC2GJ;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9723E606A334
-	for <linux-scsi@vger.kernel.org>; Thu, 29 Oct 2026 01:48:58 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9723E606A334
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 18474606A31C;
+	Thu, 29 Oct 2026 01:54:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=rock-chips.com header.i=@rock-chips.com header.a=rsa-sha256 header.s=default header.b=Ea53EblT
-Received: from localhost.localdomain (unknown [61.154.14.87])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 52b912910;
-	Thu, 29 Oct 2026 09:48:49 +0800 (GMT+08:00)
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K . Petersen" <mkp@kernel.org>
-Cc: Bart Van Assche <bvanassche@acm.org>,
-	Bean Huo <beanhuo@micron.com>,
-	Heiko Stuebner <heiko@sntech.de>,
-	Stanley Jhu <stanleyjhu@google.com>,
-	Alim Akhtar <alim.akhtar@samsung.com>,
-	linux-rockchip@lists.infradead.org,
-	linux-scsi@vger.kernel.org,
-	Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v2 0/2] Retry the full device init on fatal link loss
-Date: Thu, 29 Oct 2026 09:48:37 +0800
-Message-Id: <20261029014839.3390579-1-shawn.lin@rock-chips.com>
-X-Mailer: git-send-email 2.25.1
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=dF0dC2GJ
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 625991F01825;
+	Thu, 29 Oct 2026 01:54:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793238872;
+	bh=KFUY+ufLmeKpF4j7Hh0RMIGS9MmAEj3cLOlUqVTjeas=;
+	h=To:Cc:Subject:From:In-Reply-To:References:Date;
+	b=dF0dC2GJ59i82RuGIVffPk26UPSfKN/Kdc8LjqD8AqQKjOkzDIYNr2cg+HhOFpSyd
+	 q+7b2WBXBDtSjIUGzyOlCHsoBT+gpv5JzUZEQtvV8Gyizv1iliNx2FzD76/UFIPMZB
+	 w3gIdcM0GMqm+jodujQYcuktIJVI75HCHyj2Bcsije63ihyfCv3XafAj/2Ym0lFh8z
+	 4MDrgPUCizgWjBcVpFuTJDaZqe04g9LLjZJ2zLoz72EOu0cjmiUymQcSFHnCdXlZr+
+	 VsACayKwGxVXosTv8fsgX2YzNPlwkA+T6dU3Vom4X3R/gyhVd/tA8zaJYhkdij6jV2
+	 NlqGyluvyv92Q==
+To: =?utf-8?Q?Adri=C3=A1n_Garc=C3=ADa?= Casado
+ <adriangarciacasado42@gmail.com>
+Cc: "Martin K . Petersen" <mkp@kernel.org>,  "James E . J . Bottomley"
+ <James.Bottomley@HansenPartnership.com>,  John Garry
+ <john.g.garry@oracle.com>,  Jason Yan <yanaijie@huawei.com>,
+  linux-scsi@vger.kernel.org,  linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] scsi: libsas: Add __printf attribute to sas_ata_printk()
+From: "Martin K. Petersen" <mkp@kernel.org>
+In-Reply-To: <20261020195934.250768-1-adriangarciacasado42@gmail.com>
+Message-ID: <yq14ie546gg.fsf@mail.kernel.org>
+References: <20261020195934.250768-1-adriangarciacasado42@gmail.com>
+Date: Wed, 28 Oct 2026 21:54:31 -0400
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -60,61 +60,16 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-HM-Tid: 0aa18558751703a4kunmb608b1c410961f
-X-HM-MType: 1
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVkaQhlOVhoYSkoaGkxLGk9CQ1YVFA
-	kWGhdVEwETFhoSFyQUDg9ZV1kYEgtZQVlNSlVKTk9VSk9VQ0xZV1kWGg8SFR0UWUFZT0tIVUpLSU
-	9PT0hVSktLVUpCS0tZBg++
-DKIM-Signature: a=rsa-sha256;
-	b=Ea53EblTJOg1xWrK0Oo/wBuIXJGt3m7Dgg6shKF6wL1H4VT6Uf/9mELvH8hzNHHgQhqjjPW6SKgHrXkacRNM6PsZa9/DjfX8/FauLtgLGwNhjkP1vtHuroq6kKHuVsIvMuR79Xpb980J32l5R3Tl4tiBT03TgepcMLEQRmsuVr0=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
-	bh=aRmcfacEfs2rrBgysy9LNl7I54CQ6xpqJjiIzapBhcU=;
-	h=date:mime-version:subject:message-id:from;
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
 
-On an RK3572 board the UFS device is sometimes reported dead during the
-initialization at boot: DEVICE_FATAL_ERROR | UIC_LINK_LOST is latched and
-the following UIC query fails with -EIO, leaving the device unusable.
+Adri=C3=A1n,
 
-  [    2.784068][    C0] ufshcd-rockchip 2a2d0000.ufs: ufshcd_check_errors: saved_err 0x880 saved_uic_err 0x0
-  [    2.784112][    C0] host_regs: 00000000: 0187011f 00000000 00000200 00000000
-  [    2.784125][    C0] host_regs: 00000010: 00000000 000005e6 00000000 00000000
-  [    2.784137][    C0] host_regs: 00000020: 00000000 00031ef5 00000000 00000000
-  [    2.784148][    C0] host_regs: 00000030: 00000008 00000001 00000000 00000000
-  [    2.784159][    C0] host_regs: 00000040: 00000000 00000000 00000000 00000000
-  [    2.784170][    C0] host_regs: 00000050: 02dd3000 00000001 00000000 00000000
-  [    2.784182][    C0] host_regs: 00000060: 00000000 00000000 00000000 00000000
-  [    2.784193][    C0] host_regs: 00000070: 02dd4000 00000001 00000000 00000000
-  [    2.784204][    C0] host_regs: 00000080: 00000000 00000000 00000000 00000000
-  [    2.784215][    C0] host_regs: 00000090: 00000016 00000000 00000000 00000000
-  [    2.784266][   T13] ufshcd-rockchip 2a2d0000.ufs: ufshcd_err_handler started; HBA state eh_fatal; powered 1; shutting down 0; saved_err = 2176; saved_uic_err = 0; force_reset = 0
-  [    2.784334][  T168] ufshcd-rockchip 2a2d0000.ufs: ufshcd_query_flag: Sending flag query for idn 1 failed, err = 5
+> sas_ata_printk() formats its variadic arguments via struct va_format and
+> %pV before passing them to printk().
 
-Recover by resetting the device and the controller and redoing the whole
-initialization sequence, up to three times with a 100 ms settle delay in
-between. Patch 1/2 moves the initialization sequence into a new function
-so that it can be retried as a unit, and patch 2/2 adds the retry loop
-around its call site in ufshcd_init().
+Applied to 7.4/scsi-staging, thanks!
 
-
-Changes in v2:
-- Move the initialization sequence into a new function and retry by
-  looping over its call site instead of adding more gotos to
-  ufshcd_init()(Bart)
-- Stop a pending error handler and clear the error state latched by the
-  failed attempt, so that the retry starts from a clean state(sashiko)
-- Reconfigure and re-enable MCQ after the controller re-enable, since
-  the HCE toggle clears the MCQ mode setting(sashiko)
-
-Shawn Lin (2):
-  scsi: ufs: core: Move the device initialization sequence into a new
-    function
-  scsi: ufs: core: Retry the full device init on fatal link loss
-
- drivers/ufs/core/ufshcd.c | 114 +++++++++++++++++++++++++++++---------
- 1 file changed, 87 insertions(+), 27 deletions(-)
-
--- 
-2.25.1
-
+--=20
+Martin K. Petersen
