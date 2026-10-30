@@ -1,63 +1,63 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=199.89.1.16
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
 	t=1793400178;
-	b=kpcBfn+aVGcPGsyFD29XCbNwdf/qreJxcMTgKGUsAlESVXLS9pu8G42iO4p1ZEQ58CU5
-	 zhZDRQI2XDjFk7Tx7n9lzRvQTEdE1vNbC2s3lpf0zr+l/gdgtafjU2w+g3lVLh0G1BXdP
-	 858+xGYNfmcvIbUKsVjWbcmZp/qo6zwrA0SsMJUtBdc50pmifqsVxTqL0y2fUjdk0vM2o
-	 +tkHcLg0K09t4ZVMjpP+FjRoxisfOMnpaizaQh+MhafQr+eCXU7lgBPKlP5/auS10OaMM
-	 hMs80hbQM6dbAZ9WFTIG0mcpRVudkSlDAV8WSn+F5qjoNRIYrOCYKB097+CbVW9fxcA==
+	b=w+nwYm/7Q1A9bAYYop0d64yYnPAZNg6SydLfbnXF1lO/ZFklUbtWA8BrYSgoojJP4IJx
+	 uMDzhRVnJDKTWrI9MQnmbHXiCQs65Pd/s1liCGZ5nOYsBzyh+Ra9s33MkINclvYSkVG/Y
+	 UM08O3RMT3OquTrAzB6TyEVqmPJlhr3zPPK86af04TRGD/qj1sHZRDxnqw8h9HcApRxNX
+	 PUkyZeNf1qKut+t5qZCveV+SMgzE00epRs3x4YpHERu+YW1odyLAynGl2u5zIPyI3EB8g
+	 NDVS3vYSOYH0F/VEdBv0AvS2rWinZ9IUKrKwEQlPvq0Y85+jsmDhvo0+GqYmHZQf2/Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
 	a=rsa-sha256; c=relaxed/relaxed; t=1793400178;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Virus-Scanned:Received:
 	 Received:From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:
 	 References:MIME-Version:Content-Transfer-Encoding;
-	bh=+yai0S4IOWzQpDW42z0yQiwqshtFSb4Zmxtb4feiJXE=;
-	b=rfHNO82obChmsH0tOdT0Dxmlnn/w33QsNQrGbGpD2tD8mISBykFtTK32Ms8z1RtJYXwm
-	 pVPBPUkJO6E+qOaLN5H478t/E+Y+YcpwSoDu0m6QBbXMkUZqvbp8idNNCp0Z9PNN+h5wu
-	 6J3SZ55LVHEZXqgLSALt+5i82It5XYYBTD/1PoFIPiTaUDiR+zribkBGShOHC4D5S60Qf
-	 PCnhv96ll/km3yQdZzNt0ifPGDeT0u7UsakaVErYRTum6V4PkLjYqent1LJUBsFscwzF2
-	 KMv6rLCrr73gsRf40jNGBmQcqPDyuswVbyiOnI5bsCCggnixp0nPq1RGQeMlJQVffvA==
+	bh=hm5efXQ/ntgShoZk0j6IG28okjUc3yc6D+XhPH/dUpQ=;
+	b=Sm3E17nBiOOx2S8y5jP3jOfOAH6jbztXESJMBktBklr/s3H7vapw/WRH2CBxw4syauqt
+	 Ga/JX/d1TApkEvh75uHLDirDgiwtbusAOY/YtxxZ7u96AF6spyoXxzxjhlK/fdq3IIT6w
+	 3CREjMhNIriFm87fH7Dfa8zSFNlhZlP73plCUhOvxRrexb7/AuQ8i9zdiGcH2NtlKgI1r
+	 KlFIRvjiW0q9wLK5VQrxywOElJo9zS435ZrshA0wVCdZHs1tPdyBabez0L4Uct3NSXEgy
+	 j4WfapLk4T49yyH2kuazjhNm1zAQ03IVZz03Oi3eOIrVlPboj4qUx8oihoTNnpNu0rQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=acm.org;
 	spf=pass smtp.mailfrom=acm.org;
-	dkim=pass header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=KJAyZnZD;
+	dkim=pass header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=X59egFFP;
 	arc=none smtp.remote-ip=199.89.1.16
 Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AED00606A31C
-	for <linux-scsi@vger.kernel.org>; Fri, 30 Oct 2026 22:42:57 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org AED00606A31C
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 459B0606A325
+	for <linux-scsi@vger.kernel.org>; Fri, 30 Oct 2026 22:42:58 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 459B0606A325
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=KJAyZnZD
+	dkim=pass (2048-bit key, unprotected) header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=X59egFFP
 Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4jGbhx1spGzlfvqP;
+	by 013.lax.mailroute.net (Postfix) with ESMTP id 4jGbhx5tptzlfvqC;
 	Fri, 30 Oct 2026 22:42:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:mime-version:references:in-reply-to
 	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1793400173; x=1795992174; bh=+yai0
-	S4IOWzQpDW42z0yQiwqshtFSb4Zmxtb4feiJXE=; b=KJAyZnZDIIhvSnSMwiyXt
-	1eeQWbUyj83mWmKk/lTyjjfEJwdmVJKjOoiuw89GiD/nXG+/1H4u3qug/gC/mTV8
-	A99tNd3JOQivFFk6UR+YLRmvHxoxAo1C123xxt1BoXxUg7toaa1EU8ONlWOdmyTJ
-	YuXAmt5RbotUtm45NmQP0G7mTIKuuqUJaW24Xsbt+LvqhdM9hNicjM+CC/zGtHYV
-	/XTQx4XT9m+bNHXuBAemKz41ztk+MbpJoJHXLZ1GugGr8gOI3+pEmrgkGQ31qigd
-	hxOPvA/gy/D8vadCb75NB1EE0NDOklqE1GlgbM4bEmeBcuxP7quLs8Csys3BxKDI
-	g==
+	:received:received; s=mr01; t=1793400174; x=1795992175; bh=hm5ef
+	XQ/ntgShoZk0j6IG28okjUc3yc6D+XhPH/dUpQ=; b=X59egFFPsvWuF/bRvFlNX
+	gON0uiRLs9R65TOGhougfLJr8E0IdmVhdNkoKrsSaQHjfDLNgsrCkzUU1/kbBpSt
+	3W4LGXi/G6owdlxrQJrlcfBgsMdccviUn3mwTM9hoaslojzSTU8lTD2IrKNcOEsr
+	MbB0ANFIpzkES2GxMDgqQNsL5hDGMQP8GZy9BH3Rh5ScGLwfJrp4gutOSk6zdhdQ
+	I++uoTMm9xvrADpXp4/2TqxAP8vxROeF808W2sO41HboX9yS9dHryI5+GRy7xKAe
+	k+OH4lQaPys0Gp3HKjAHI2q3mU0bf2j2jDGahlU3B+hjRpCkqLQl9s9EmmKoQ536
+	Q==
 X-Virus-Scanned: by MailRoute
 Received: from 013.lax.mailroute.net ([127.0.0.1])
  by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id SkFvB3Rw0nTL; Fri, 30 Oct 2026 22:42:53 +0000 (UTC)
+ id 9J-bktckAduR; Fri, 30 Oct 2026 22:42:54 +0000 (UTC)
 Received: from bvanassche.c.googlers.com.com (57.237.82.34.bc.googleusercontent.com [34.82.237.57])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4jGbhs0mmSzlfvqC;
-	Fri, 30 Oct 2026 22:42:53 +0000 (UTC)
+	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4jGbht2rFjzlfvqD;
+	Fri, 30 Oct 2026 22:42:54 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
@@ -65,9 +65,9 @@ Cc: linux-scsi@vger.kernel.org,
 	Bart Van Assche <bvanassche@acm.org>,
 	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
 	"Martin K. Petersen" <mkp@kernel.org>
-Subject: [PATCH 1/5] scsi: core: Introduce scsi_cmd_needs_stu()
-Date: Fri, 30 Oct 2026 15:42:35 -0700
-Message-ID: <c35a3b27958cb93c26c1ccecccd572c54da448e4.1793400000.git.bvanassche@acm.org>
+Subject: [PATCH 2/5] scsi: core: Simplify scsi_eh_ready_devs()
+Date: Fri, 30 Oct 2026 15:42:36 -0700
+Message-ID: <de1a210fb52adaefd818ed68eb5e7678a004762e.1793400000.git.bvanassche@acm.org>
 X-Mailer: git-send-email 2.56.0.317.g454f8302e1-goog
 In-Reply-To: <cover.1793400000.git.bvanassche@acm.org>
 References: <cover.1793400000.git.bvanassche@acm.org>
@@ -82,63 +82,37 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-Introduce scsi_cmd_needs_stu() and use it in scsi_eh_stu() instead of
-testing scsi_check_sense(scmd) =3D=3D FAILED. This makes it explicit that
-START UNIT is only sent for LU_NOT_READY_INITIALIZING_COMMAND_REQUIRED
-and prevents that the error handler reports sense data a second time.
-This patch prepares for making scsi_decide_disposition() escalate
-persistent UNIT ATTENTION conditions to the error handler.
+Replace the nested if-statements in scsi_eh_ready_devs() with a single
+if-statement that combines the conditions with the && operator. This
+reduces the indentation level and makes it easier to insert additional
+recovery steps. No functionality has been changed.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/scsi_error.c | 30 ++++++++++++++++++++++++++++--
- 1 file changed, 28 insertions(+), 2 deletions(-)
+ drivers/scsi/scsi_error.c | 13 ++++++-------
+ 1 file changed, 6 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 75442d60c30e..f27186d5262f 100644
+index f27186d5262f..ee80af923a4a 100644
 --- a/drivers/scsi/scsi_error.c
 +++ b/drivers/scsi/scsi_error.c
-@@ -1582,6 +1582,33 @@ static int scsi_eh_try_stu(struct scsi_cmnd *scmd)
- 	return 1;
+@@ -2301,13 +2301,12 @@ void scsi_eh_ready_devs(struct Scsi_Host *shost,
+ 			struct list_head *work_q,
+ 			struct list_head *done_q)
+ {
+-	if (!scsi_eh_stu(shost, work_q, done_q))
+-		if (!scsi_eh_bus_device_reset(shost, work_q, done_q))
+-			if (!scsi_eh_target_reset(shost, work_q, done_q))
+-				if (!scsi_eh_bus_reset(shost, work_q, done_q))
+-					if (!scsi_eh_host_reset(shost, work_q, done_q))
+-						scsi_eh_offline_sdevs(work_q,
+-								      done_q);
++	if (!scsi_eh_stu(shost, work_q, done_q) &&
++	    !scsi_eh_bus_device_reset(shost, work_q, done_q) &&
++	    !scsi_eh_target_reset(shost, work_q, done_q) &&
++	    !scsi_eh_bus_reset(shost, work_q, done_q) &&
++	    !scsi_eh_host_reset(shost, work_q, done_q))
++		scsi_eh_offline_sdevs(work_q, done_q);
  }
+ EXPORT_SYMBOL_GPL(scsi_eh_ready_devs);
 =20
-+/*
-+ * Return true if @scmd completed with CHECK CONDITION and current (not
-+ * deferred) sense data and store the normalized sense data in @sshdr.
-+ */
-+static bool scsi_cmd_current_sense(const struct scsi_cmnd *scmd,
-+				   struct scsi_sense_hdr *sshdr)
-+{
-+	if ((scmd->eh_eflags & SCSI_EH_ABORT_SCHEDULED) ||
-+	    host_byte(scmd->result) !=3D DID_OK ||
-+	    !scsi_status_is_check_condition(scmd->result))
-+		return false;
-+
-+	return scsi_command_normalize_sense(scmd, sshdr) &&
-+		!scsi_sense_is_deferred(sshdr);
-+}
-+
-+static bool scsi_cmd_needs_stu(const struct scsi_cmnd *scmd)
-+{
-+	struct scsi_sense_hdr sshdr;
-+
-+	return scmd->device->allow_restart &&
-+		scsi_cmd_current_sense(scmd, &sshdr) &&
-+		(sshdr.sense_key =3D=3D NOT_READY ||
-+		 sshdr.sense_key =3D=3D UNIT_ATTENTION) &&
-+		sshdr.sense_code =3D=3D LU_NOT_READY_INITIALIZING_COMMAND_REQUIRED;
-+}
-+
-  /**
-  * scsi_eh_stu - send START_UNIT if needed
-  * @shost:	&scsi host being recovered.
-@@ -1610,8 +1637,7 @@ static int scsi_eh_stu(struct Scsi_Host *shost,
- 		}
- 		stu_scmd =3D NULL;
- 		list_for_each_entry(scmd, work_q, eh_entry)
--			if (scmd->device =3D=3D sdev && SCSI_SENSE_VALID(scmd) &&
--			    scsi_check_sense(scmd) =3D=3D FAILED ) {
-+			if (scmd->device =3D=3D sdev && scsi_cmd_needs_stu(scmd)) {
- 				stu_scmd =3D scmd;
- 				break;
- 			}
