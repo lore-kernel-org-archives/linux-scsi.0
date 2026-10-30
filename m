@@ -1,56 +1,98 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.172
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793373110;
-	b=GO/Vw7GV8bt4d/ayRcGUesKPDn+bslQwDFZk8Pkun8GVc1KDlDemLMfcQ9TgR9raxVfX
-	 gtva6ff1pAlf14+4VI0DX9/RJqkzW52xlV8BuR7O1akotjhJtUKkxcpDuhTnMmR8nc68u
-	 UYqUDUXeKEvB2hRlfLhCHbSUJ8MLStOeXxgkKsTe2Ag0QF3DBc/Nl7bvrtBfQv1S0NUy8
-	 n9l/iQ88zFn4WaUl3eXu03c51xyj5yQ/172UMM3b0DcWozw/jddeM4sopKn4u6fou+tPk
-	 4R1jBBQbwqRD0di+G+ArIDVcEEmigRODoYqqxGb3JlVgD4+SdutR4SrDxWE50Sm14oA==
+	t=1793378563;
+	b=HRwIlDbxnIgafpiGfidbq3OdfATyXs8vsW5ngEECVoeKRL22ZCMqELjngLOUETv9tHut
+	 x0GWfMf4PrDtqq+FEyY+fIj4QPmAaUFdt4V4/Oerlxp1gdQkBSghIBEDFBRtqioUJ7NJy
+	 JwNEWTbActAq5zkLTh3wiFycWan2ade6tSAtgNQoZJXJnkZZuhA8z0obfqXDAocWI8Wx4
+	 acV/Oh90FMMs62849pIDb1nqCKOA6WJC460qi/3iJerb0Xw7FA9w3BZDjvwivVFQyT82y
+	 uuRpkxhJo0iq7g1BT1i+3qfq4lt+eQTnGhyCaiXy/vpW5NEfbsIqtpX4p9NFbReY3VA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793373110;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=ofW/E7+P4QejBOVA/fyLWR0z3UaG5FhQMjEI2pXGqik=;
-	b=Q+MBJ9lRlpysXatugixaNfL7PxfOZCvRl+6DpMTVJUC/pH2qGRE4ifq9BZxmEFp60xYU
-	 0itOjtas8n/7LUFbDfB9QsDVrK+RAJqyZUFGGaD/pdYT/zkdI1bkwzHLN4ct2VBi8y1DY
-	 5RwEBgp+qXtgni/Vv0BKtHz847K0vtSsIvL1oZoREYJUbzkO0y1djFmaLGf6uyo7+EgFA
-	 ZJGzywAjhjfzO3r/X3J4JRi12romH7Kzgv6+m3IDF2u5/WHJvmzc5hdsb4ZCmRtgj29VZ
-	 u8vQ0aygDwvR6pew8vm4jWqyoanNZrF65pha+Wd8a3uZQSd1MWFT3BIIF6m0tiIssDw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793378563;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
+	 Date:Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding;
+	bh=aAccZoMJEsplah6L3JydDrUjSPOSkdX8e1SPOAKO6Bo=;
+	b=GMH9+j3wMoZoMLoVDRAXi6PFk0OyZVOE5xznu489oU5a+KzGShoEEvWLtbd2rz6VZ2cQ
+	 bdbFfw2BqaET62yUHxIua3HcqrHJg0/eDqCguiZ0T97Pyy/f7HNDmykMArSFPATp5Hi3N
+	 U3n177/tE2q8pDDLXqTwPa7lJJmw2mfDZOwl+vSt4pcUrtNW78C/n+DIw6mVprQXJjO5K
+	 jqUQ+PopfNyfWotbJZh9bv8u6OBYX6rF6bXYkKzVbYklS91siVBMWYrgkzxv/Odrohw4z
+	 V9Gj10LXWYvLO/MGQXIv6UbEilcCgoL++IdHxAkR+iMRfIRRTZVdzdnbywEZqpQDNlg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Iqr3A3oO;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=purestorage.com;
+	spf=pass smtp.mailfrom=purestorage.com;
+	dkim=pass header.d=purestorage.com header.i=@purestorage.com header.a=rsa-sha256 header.s=google2022 header.b=fOOQI2sD;
+	arc=none smtp.remote-ip=74.125.82.172
+Received: from mail-dy1-f172.google.com (mail-dy1-f172.google.com [74.125.82.172])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 50EA2606A31A
-	for <linux-scsi@vger.kernel.org>; Fri, 30 Oct 2026 15:11:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D316F606A31E
+	for <linux-scsi@vger.kernel.org>; Fri, 30 Oct 2026 16:42:42 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D316F606A31E
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=purestorage.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=purestorage.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Iqr3A3oO
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B89591F000C1;
-	Fri, 30 Oct 2026 15:11:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793373109;
-	bh=ofW/E7+P4QejBOVA/fyLWR0z3UaG5FhQMjEI2pXGqik=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Iqr3A3oOuSv4V+L+9+q0feIfKIhFQxDIOiwRDld6chAwXF3RKCcQoJNT8QKI0Dkl/
-	 OQAXbbEfiJLtwA38KAMU88VcMHr5N/xqtjqigg0wLW3kVFWZOreJUEGlREiIS4kvBs
-	 Evj30t1VFFuRG3N8opqqeLMR6qFFQkng+mc2LHNi32nImUwWfSqB+CPQrG5UsWTgio
-	 NvQT5zkGByNxgHoFrWwEtxqJhsCxp0IeQzFMFEIOsDbIwQYb9edINxsUHocSz0nPy4
-	 W4jDIlUXaA2w7blh5B7IxpgUk4cPCbDtGNCgaLkdRv3/TwuzTGabB0NMLf/Sw5Jf5N
-	 1UWfQiL2v9dNA==
-Message-ID: <sashiko-outbox-191144@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] scsi: mpt3sas: Time out delayed not-responding device
- blocks
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Jeff Layton" <jlayton@kernel.org>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20261030-sas-abba-v1-1-b8cdd714a37c@kernel.org>
-References: <20261030-sas-abba-v1-1-b8cdd714a37c@kernel.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 30 Oct 2026 15:11:49 +0000
+	dkim=pass (2048-bit key, unprotected) header.d=purestorage.com header.i=@purestorage.com header.a=rsa-sha256 header.s=google2022 header.b=fOOQI2sD
+Received: by mail-dy1-f172.google.com with SMTP id 5a478bee46e88-36a1947498bso240267eec.1
+        for <linux-scsi@vger.kernel.org>; Fri, 30 Oct 2026 09:42:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=purestorage.com; s=google2022; t=1793378562; x=1793983362; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=aAccZoMJEsplah6L3JydDrUjSPOSkdX8e1SPOAKO6Bo=;
+        b=fOOQI2sD1kQOz7BdV6DnuNb/+senZa6K3B1yYyrmt2HoSX7L4IVAWfLet9n9JbCKy3
+         aKE/GN9N736JEASCXk70x6H2s9sgjostR5q6fqMWmqBtuWqp851AUZXF07DKCUNHIIyB
+         mCgsEBXUYE0xDlBHQ4xoO7PJp9pMyr12K5cRrd73IPm0esCSBVq9UlXcMtXBVY5aRqW2
+         PV1k3gmYMhfnvtObunJyVxgI8xqDb9xIK1bOkX4xqJzp6ZZAfcoJFcNg5M+fm0aG/sE/
+         ayVgPR1TludH+1wQsZ4VSRxFxB111M7Tz0FJi7Frivl3G9FbebBB1nl+qBSEc3swqHAF
+         319g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793378562; x=1793983362;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=aAccZoMJEsplah6L3JydDrUjSPOSkdX8e1SPOAKO6Bo=;
+        b=xNsZdiehIrP3H1nIC1gKSiXV7NXYubEA80LNH9YjVVSMQr45qJR33UyzPtmsMKp1DP
+         i6Lj+l+eROefCdDeMir/8Kl3R8AHCzEb/TxG9pACiSq3cbOQmYJHN898bVWjDGlpOYs2
+         dwdC6RzmIfpBLN/PqR1dM2y3BVpen+gJsd6A/7BIgG1/r653BHi072EPv0keipVz1L/F
+         /EpxvvholHmZvm8NX573ad17X/u9ZOXlFeSrN56LT/Dvn+PGpRi7iB52H9ihaVlKDpm2
+         BJjWyQIBWTqehM64v0ofndJimAPyttMo+TKYhFkWANLNc3xZz+v2pWyPjTuxwHggrQJ+
+         bk9g==
+X-Gm-Message-State: AFq9FYIe/6Qvlya+4oT89f1zBomaWn1wYqL7lvHgZuGGe7B7M6Yq5DTm
+	4Ce2o4X1TltPxK9VfvWFs70pqd6lqHs3k7mnyLPIREKE3ojPJf4ULul8X4siH1yAX7T9lWWTMdA
+	ZVcseM5sBIwIkr9QNcvxVPE+Fi5xVn+iFyBcBxZWWk+yj6qWhk4o9r78ya1dg2N9y/Zy0+IH8nL
+	HmYGmnJFkygQ4VuhVnHxHqV4UhmFJyBhfimgKbYcqX/eRp7JK/QeL8qCt6r9uBx7MXus9Qve/sN
+	nbfs8bVXkFFtRO1H/ZE6x01lTD0Q25anVr3qZygnWkFR5pls0Bwig==
+X-Gm-Gg: AYBFou0nlgdE3GrfiBfBPRUJjebea6s5m0rA3ZdGyqTKGO9HVlQbr+PyHeYk4mnPInK
+	x/9Wgc8aXuLe6wyaQALSiIqvOdlZNbjcB34D5YXgovGycKaiJ/mNDw53TUobH6mEcOqib+onBId
+	LUBrb0rj1SLKEqhkHaplxsUUKio4NS7Ys8SxFA5YOg0qClIr+q0jkRS/k4BLdYaruUEA/pQneMi
+	3nH5gx1Mw2CglxXJnPh0LOLswV3czXD/o5u96n5OxdU91ZbQRo0LzTZC75HZK+GIM9fssfS2jC2
+	PTvARBc/pMF8NvWCGmN83sPTbRV44uS3KTKU+MHDifXA8XHtIMBZ4rdjF0QTvODZI7mbjDumjdh
+	weKOVyQVOmOuXIsLD9EliSNQ2vfH6tZwArJWBO9WuJQLYOOsQjgkQjKIki4xQSE50nFCxxgKjoi
+	nI4eKUEVES00aCKRdB4qzG7CH2NCr4mdQ559Bun9tmvuWS4V6WK/S3wfzm3+Ue/1XGm7QL/hcPl
+	BOkvI8NbCFQIrnkJpTzZ2vFse5i5y/bStaW4I8gwG0MBdN8a9q1c+dpKbNwtd//zPRYyLrgaS7z
+	YDXUoZ+dzBTQc9yikOGgS01GoKtavBU8qH79lBv3JetIYDFuIvX74+5QUP0xuzhhPbV0b0MKElZ
+	cPFdnF/hN15ntR3dbVXA6BstmJXpiWDewC9vEi3YoR7TguUkFXtvEv+nVzFNhmyGWYssg3KXJ7L
+	V1ipgjdJp3FRCee+kE4gM=
+X-Received: by 2002:a05:7300:cb0b:b0:36a:1c97:26e5 with SMTP id 5a478bee46e88-36a4232f2bdmr5566292eec.12.1793378561529;
+        Fri, 30 Oct 2026 09:42:41 -0700 (PDT)
+Received: from brian--MacBookPro18.purestorage.com ([170.85.204.93])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-36a4294419dsm8475040eec.18.2026.10.30.09.42.40
+        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
+        Fri, 30 Oct 2026 09:42:40 -0700 (PDT)
+From: Brian Bunker <brian@purestorage.com>
+To: linux-scsi@vger.kernel.org,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>
+Cc: lijinlin <lijinlin3@huawei.com>,
+	Wu Bo <wubo40@huawei.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	linux-kernel@vger.kernel.org,
+	Brian Bunker <brian@purestorage.com>
+Subject: [PATCH 0/1] scsi: core: Restart a stopped queue when sysfs sets a device running
+Date: Fri, 30 Oct 2026 09:42:28 -0700
+Message-ID: <20261030164229.10037-1-brian@purestorage.com>
+X-Mailer: git-send-email 2.56.0
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -59,233 +101,94 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [High] scsi: mpt3sas: use-after-free of sdev->hostdata in _scsih_dnr_unbl=
-ock_work()
-- [High] scsi: mpt3sas: race on block state in _scsih_dnr_unblock_work()
---
+A SCSI device can be left in SDEV_RUNNING with its request queue stopped
+for good. The task that put it there hangs holding the device lock, and
+anything else that takes the lock hangs behind it.
 
-commit e9db80ae705cdf5de784aed30440e0d8af678dd9
-Author: Jeff Layton <jlayton@kernel.org>
+This was seen with iSCSI when a session drops again just after
+recovering. The error handler offlines a device while its transport has
+it blocked, which leaves the queue stopped. iscsid then writes "running"
+to the device's state attribute and store_state_field() moves it to
+SDEV_RUNNING without restarting the queue. The rescan it starts sends an
+INQUIRY that can never be dispatched. When the transport later unblocks
+the device, scsi_internal_device_unblock_nowait() skips it because it is
+already running, so nothing restarts the queue.
 
-scsi: mpt3sas: Time out delayed not-responding device blocks
+Evidence from a vmcore of a hung initiator (a RHEL 9.6 5.14 kernel; the
+code involved is the same in mainline). The device is sd 0:0:0:1, and
+iscsid is the task that wrote "running" to it:
 
-This commit adds a delayed work item (dnr_unblock_work) to time out and
-release delayed not-responding SDEV_BLOCK states on SCSI devices after the
-firmware's report device missing delay plus a 30-second margin, preventing
-deadlocks during concurrent sysfs scans.
+  PID: 12087  TASK: ffff9635c9c80000  COMMAND: "iscsid"
+   #5 blk_execute_rq
+   #6 scsi_execute_cmd
+   #7 scsi_vpd_inquiry
+  #10 scsi_attach_vpd
+  #11 scsi_rescan_device_rh
+  #12 store_state_field
+  #13 kernfs_fop_write_iter
 
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/=
-mpt3sas_scsih.c
-> index 085d4672db854..dda5a429a9173 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> @@ -3878,6 +3878,7 @@ _scsih_internal_device_block(struct scsi_device *sd=
-ev,
->  	sdev_printk(KERN_INFO, sdev, "device_block, handle(0x%04x)\n",
->  	    sas_device_priv_data->sas_target->handle);
->  	sas_device_priv_data->block =3D 1;
-> +	sas_device_priv_data->block_deadline =3D 0;
-> =20
->  	r =3D scsi_internal_device_block_nowait(sdev);
->  	if (r =3D=3D -EINVAL)
-> @@ -3903,6 +3904,7 @@ _scsih_internal_device_unblock(struct scsi_device *=
-sdev,
->  	sdev_printk(KERN_WARNING, sdev, "device_unblock and setting to running,=
- "
->  	    "handle(0x%04x)\n", sas_device_priv_data->sas_target->handle);
->  	sas_device_priv_data->block =3D 0;
-> +	sas_device_priv_data->block_deadline =3D 0;
->  	r =3D scsi_internal_device_unblock_nowait(sdev, SDEV_RUNNING);
->  	if (r =3D=3D -EINVAL) {
->  		/* The device has been set to SDEV_RUNNING by SD layer during
-> @@ -4121,6 +4123,7 @@ _scsih_ublock_io_device_wait(struct MPT3SAS_ADAPTER=
- *ioc, u64 sas_address,
->  			&& count++ <=3D command_retry_count);
-> =20
->  		sas_device_priv_data->block =3D 0;
-> +		sas_device_priv_data->block_deadline =3D 0;
->  		if (rc !=3D DEVICE_READY)
->  			sas_device_priv_data->deleted =3D 1;
->  		scsi_internal_device_unblock_nowait(sdev, SDEV_RUNNING);
-> @@ -4221,6 +4224,74 @@ _scsih_block_io_all_device(struct MPT3SAS_ADAPTER =
-*ioc)
->  	}
->  }
-> =20
-> +/*
-> + * Margin on top of the firmware's report device missing delay before
-> + * _scsih_dnr_unblock_work() releases a delayed not-responding block.
-> + */
-> +#define MPT3SAS_DNR_BLOCK_SLACK	30
-> +
-> +static unsigned long
-> +_scsih_dnr_block_timeout(struct MPT3SAS_ADAPTER *ioc)
-> +{
-> +	return (max(ioc->device_missing_delay, ioc->pcie_device_missing_delay) +
-> +	    MPT3SAS_DNR_BLOCK_SLACK) * HZ;
-> +}
-> +
-> +/**
-> + * _scsih_dnr_unblock_work - release expired delayed not-responding bloc=
-ks
-> + * @work: the dnr_unblock_work of the adapter
-> + *
-> + * Within the device missing delay, the firmware either reports the devi=
-ce
-> + * as not responding, and the event callback unblocks it, or the device
-> + * comes back, and only the firmware event worker unblocks it.  The work=
-er
-> + * may first need shost->scan_mutex or the SAS transport's host lock, and
-> + * a scan holding those can have a command queued on the blocked sdev.
-> + * Past the delay the block has no further use, so release it here.
-> + */
-> +static void
-> +_scsih_dnr_unblock_work(struct work_struct *work)
-> +{
-> +	struct MPT3SAS_ADAPTER *ioc =3D container_of(to_delayed_work(work),
-> +	    struct MPT3SAS_ADAPTER, dnr_unblock_work);
-> +	struct MPT3SAS_DEVICE *sas_device_priv_data;
-> +	struct scsi_device *sdev;
-> +	unsigned long deadline, next =3D 0;
-> +
-> +	if (ioc->remove_host)
-> +		return;
-> +	if (ioc->shost_recovery || ioc->pci_error_recovery) {
-> +		queue_delayed_work(system_dfl_wq, &ioc->dnr_unblock_work, HZ);
-> +		return;
-> +	}
-> +
-> +	shost_for_each_device(sdev, ioc->shost) {
-> +		sas_device_priv_data =3D sdev->hostdata;
-> +		if (!sas_device_priv_data || !sas_device_priv_data->block)
-> +			continue;
-> +		deadline =3D sas_device_priv_data->block_deadline;
-> +		if (!deadline)
-> +			continue;
-> +		if (time_before(jiffies, deadline)) {
-> +			if (!next || time_before(deadline, next))
-> +				next =3D deadline;
-> +			continue;
-> +		}
-> +		sdev_printk(KERN_WARNING, sdev,
-> +		    "delayed not-responding block expired, handle(0x%04x)\n",
-> +		    sas_device_priv_data->sas_target->handle);
-> +		_scsih_internal_device_unblock(sdev, sas_device_priv_data);
-> +	}
+  sdev_state                   = SDEV_RUNNING
+  queue_stopped                = 1
+  request_queue->quiesce_depth = 1
+  sdev_gendev.mutex.owner      = 0xffff9635c9c80001 (iscsid, plus a flag bit)
 
-[Severity: High]
-Can _scsih_dnr_unblock_work() trigger a use-after-free on sdev->hostdata
-(struct MPT3SAS_DEVICE) and sas_device_priv_data->sas_target (struct
-MPT3SAS_TARGET)?
+The INQUIRY iscsid is waiting on belongs to that device's queue and was
+never dispatched:
 
-_scsih_dnr_unblock_work() runs on system_dfl_wq without holding
-shost->scan_mutex, shost->host_lock, or any adapter lock. Inside
-shost_for_each_device(), __scsi_iterate_devices() only holds
-shost->host_lock while calling scsi_device_get(sdev) to take a reference on
-sdev->sdev_gendev, then drops shost->host_lock before returning sdev to the
-loop body.
+  state = MQ_RQ_IDLE, start_time_ns = 0, deadline = 0
 
-Concurrently on another CPU, __scsi_remove_device(sdev) can run (for
-example, when scsi_probe_and_add_lun() fails on a newly allocated sdev
-after TARG_NOT_RESPONDING unblocks it, when ioc->firmware_event_thread
-removes the target via scsi_remove_target(), or via sysfs delete).
-__scsi_remove_device() synchronously invokes scsih_sdev_destroy() before
-put_device(&sdev->sdev_gendev):
+The other LUNs of the same session were unblocked by the transport and
+had their queues restarted:
 
-drivers/scsi/mpt3sas/mpt3sas_scsih.c:scsih_sdev_destroy() {
-    ...
-	kfree(sdev->hostdata);
-	sdev->hostdata =3D NULL;
-}
+  lun 1: SDEV_RUNNING            queue_stopped = 1
+  lun 2: SDEV_TRANSPORT_OFFLINE  queue_stopped = 0
+  ...
+  lun 9: SDEV_TRANSPORT_OFFLINE  queue_stopped = 0
 
-and scsi_target_reap() invokes scsih_target_destroy(), freeing
-starget->hostdata (sas_target).
+(scsi_rescan_device_rh is this distro kernel's name for
+scsi_rescan_device().)
 
-Because holding a reference on sdev->sdev_gendev does not prevent
-__scsi_remove_device() from calling ->sdev_destroy(),
-_scsih_dnr_unblock_work() and _scsih_internal_device_unblock() can read and
-write freed sas_device_priv_data (block and block_deadline) and dereference
-freed sas_device_priv_data->sas_target->handle.
+The kernel log of the same crash shows the sequence for the stuck device
+(sd 0:0:0:1) and its siblings:
 
-> +
-> +	/*
-> +	 * A block made while this ran may have queued the work already,
-> +	 * with its own later deadline.  Pull the timer in to the earliest
-> +	 * one seen here; the next run reschedules for the rest.
-> +	 */
-> +	if (next)
-> +		mod_delayed_work(system_dfl_wq, &ioc->dnr_unblock_work,
-> +		    max_t(long, next - jiffies, 1));
-> +}
-> +
->  /**
->   * _scsih_block_io_device - set the device state to SDEV_BLOCK
->   * @ioc: per adapter object
-> @@ -4234,6 +4305,8 @@ _scsih_block_io_device(struct MPT3SAS_ADAPTER *ioc,=
- u16 handle)
->  	struct MPT3SAS_DEVICE *sas_device_priv_data;
->  	struct scsi_device *sdev;
->  	struct _sas_device *sas_device;
-> +	unsigned long timeout =3D _scsih_dnr_block_timeout(ioc);
-> +	bool blocked =3D false;
-> =20
->  	sas_device =3D mpt3sas_get_sdev_by_handle(ioc, handle);
-> =20
-> @@ -4254,10 +4327,16 @@ _scsih_block_io_device(struct MPT3SAS_ADAPTER *io=
-c, u16 handle)
->  			continue;
->  		}
->  		_scsih_internal_device_block(sdev, sas_device_priv_data);
-> +		sas_device_priv_data->block_deadline =3D (jiffies + timeout) ?: 1;
-> +		blocked =3D true;
->  	}
+  [50958.843822]  connection9:0: detected conn error (1021)
+  [50968.259428]  connection9:0: detected conn error (1020)
+  [50968.259456] sd 0:0:0:1: Device offlined - not ready after error recovery
+  [50978.298947]  session9: session recovery timed out after 10 secs
+  [50978.298977] sd 0:0:0:2: rejecting I/O to offline device
 
-[Severity: High]
-Does running _scsih_dnr_unblock_work() on system_dfl_wq without
-synchronization race with _scsih_block_io_device() in interrupt context and
-_scsih_ublock_io_device_wait() on firmware_event_thread?
+The other LUNs are unblocked by the recovery timeout at 50978. The
+offlined device is not: by then it had already been written back to
+running.
 
-There appear to be two races on sas_device_priv_data->block,
-sas_device_priv_data->block_deadline, and sdev->sdev_state:
+Only a device that the error handler offlined while it was blocked can
+end up like this. A device that the transport unblocks normally has its
+queue restarted, and sysfs only accepts "running" for a device that is
+running or offline.
 
-1. _scsih_dnr_unblock_work() runs in process context with interrupts
-enabled and calls _scsih_internal_device_unblock():
+So in the case above, the error handler offlined the device, iscsid
+wrote "running" to it, and only then did the recovery timeout unblock
+the session. All three happened within about ten seconds, which is why
+this is rare.
 
-drivers/scsi/mpt3sas/mpt3sas_scsih.c:_scsih_internal_device_unblock() {
-    ...
-	sas_device_priv_data->block =3D 0;
-	sas_device_priv_data->block_deadline =3D 0;
-	r =3D scsi_internal_device_unblock_nowait(sdev, SDEV_RUNNING);
-    ...
-}
+The fix restarts the queue in store_state_field() when it moves a device
+to SDEV_RUNNING. scsi_start_queue() is a no-op when the queue is not
+stopped, so this is harmless for devices that were never blocked.
 
-If an interrupt for a new DELAY_NOT_RESPONDING event fires right after
-sas_device_priv_data->block =3D 0 is written,
-mpt3sas_scsih_event_callback()->_scsih_block_io_device() sees
-sas_device_priv_data->block =3D=3D 0, calls _scsih_internal_device_block()
-(setting sas_device_priv_data->block =3D 1 and sdev->sdev_state =3D SDEV_BL=
-OCK),
-and sets a new non-zero sas_device_priv_data->block_deadline.
+I do not have a deterministic reproducer. The analysis above comes from
+the vmcore, and initiators running with this patch have not hit the hang
+again, but with a race this narrow that is not proof the patch fixes it.
+Review of the state transitions is welcome.
 
-When _scsih_internal_device_unblock() resumes, it overwrites
-sas_device_priv_data->block_deadline =3D 0 and calls
-scsi_internal_device_unblock_nowait(sdev, SDEV_RUNNING). That leaves sdev
-in SDEV_RUNNING with sas_device_priv_data->block =3D=3D 1 and
-block_deadline =3D=3D 0, causing scsih_qcmd() to reject all commands with
-SCSI_MLQUEUE_DEVICE_BUSY indefinitely while _scsih_dnr_unblock_work()
-ignores the device because block_deadline is 0.
+Brian Bunker (1):
+  scsi: core: Restart a stopped queue when sysfs sets a device running
 
-2. In _scsih_ublock_io_device_wait() (and _scsih_ublock_io_all_device()),
-sas_device_priv_data->block_deadline remains armed throughout the
-_scsih_wait_for_device_to_become_ready() retry loop (up to
-command_retry_count =3D 144 retries). If block_deadline expires while
-_scsih_ublock_io_device_wait() is still polling the returning device or
-offlining a failed device, _scsih_dnr_unblock_work() will concurrently call
-_scsih_internal_device_unblock() and transition the device to SDEV_RUNNING.
+ drivers/scsi/scsi_sysfs.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261030-sas-abba-v=
-1-1-b8cdd714a37c@kernel.org?part=3D1
+-- 
+2.56.0
+
