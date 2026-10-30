@@ -1,84 +1,99 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.219.45
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.51
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793380752;
-	b=IUUdjxDSFsAA8x8ICIBIyHejFavkGXbWt2NV+sPM0lUdU06EbsIdMAPYbsEyhlr7EYCn
-	 mygRgw5uolRL9zCSe0+xsNIKlCNj1KwVk1VTl2i8kTD6RcCzq6ZZ3h38ABYa7WiU2+JMo
-	 uS6fM+S+WMgXOLr7H7r2qckxNxtkTkpoFnkMrJW8P1SR3ibvxl1Tbm6r6xjJmeTW/bXMt
-	 wCTcgSMI204PY3SXuEmHEcXdQUjsdWK6HhsLX2rKIttGwIRw23H776ZhJoMtDWePhfNki
-	 x5MK7rglTLlWYG8WXeiOIvrR+cnjwDI5bGgdfQ5L9ISMoZvYRPVYk66mm4Q9c/Ky4bw==
+	t=1793383055;
+	b=ITNl6hA+X0vhzJBzlDNuWc81GaPf+DXlmBfssB4G+MuOB2HTOERNcF0sNXQNFoGSVWoh
+	 jeSCF3hFbXF/sBQbzmCuR0fzOfHVZ0kdgjwCT58Dv6eoZzTAhF7X8wFpswtN1pLyh4Ehi
+	 03R2//R5uDTwLFbvr65FnLi2KktmrEzD4As9L8D1d0kT4rwmxX6rNd5gCCXfoOsb8LR3A
+	 +xESbC9m0piYhbORcjGeuPuIKMJm8rm0xmu6nGszlpLFqGusaFqtwyCMUzZwP40lFBHj+
+	 GkRi/UgwUlAVNl5kVROEiS05dUT8VUVrgKzIgzXwClTdu0pmD7byrtyvaINb80xT06w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793380752;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793383055;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Mime-Version:Content-Transfer-Encoding:Content-Type:Date:Message-Id:
-	 Subject:Cc:To:From:X-Mailer:References:In-Reply-To;
-	bh=JauK/xMdQboHkyA0i/AilFknl7ToPebcspkolAFjyJc=;
-	b=avXowl5P8VPRL4pgxtmfZTxktjrpM6kBfJuZKeDxL9DU9CuoASVj1rVGwriacxKHiVy3
-	 jQrXMMubvPHRKI2qXotc9QnTXcgrcK6NNJCr0QdNsRqp3r2/lADUWlemiA/cZWPahHj5R
-	 hZ2UDiY/C/gjWONJASi0ODw+SD/ymQYnuAtqtvGLRLgbh3djqU66uTK2LkJHe/J8I/ir4
-	 C0sVshJOp/g1cg3My29im7xyUYIQJhuH8jH7twBMHO/Af0T0698IVz+2f8vcYJ9iuSVkS
-	 XovStT2cz4uh3ZfBczvi0PisIjOelzbunaafYznAsbvA/MC0g5dcY0almjGu8iDx3/g==
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
+	 Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=CLpTpdtsg8iyrp7yCQ1ty082f2eTL981yqmWUegIT5Y=;
+	b=zJA+DJKjWG7P2SKSeoRtQQvWUJ1g4u26n2jXQxbIkqj3URgzJWKlmvGDmB6F7LyWNgYN
+	 fbuTFfFPFoMYyDyOoTOwsrPuTBlCBdlBSVYe7K7uE9qeotXWTXn30ViNPrsLrZsgdwo6v
+	 2iQn5Sk4dDzpxVRmi3LjVlkndLJ5v0DxpYmT3JSyzCL9RBk+Ri0iowHTTLxskRf1RFJz1
+	 E0DVwjchVcSrTNfm+XAuxqggFimNwikwoT3vG9gis+bQXz/+eETEKCKtpIbWlDbNgFLsE
+	 Q+IeVv3j7zHkQQImnC+suUq/W1S8BR0A0xNOlZ6hUlFsRcJJt53cOI3YW6eFo8EsxuA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=baylibre.com;
-	spf=pass smtp.mailfrom=baylibre.com;
-	dkim=pass header.d=baylibre.com header.i=@baylibre.com header.a=rsa-sha256 header.s=google header.b=J5Y2iwTc;
-	arc=none smtp.remote-ip=209.85.219.45
-Received: from mail-qv1-f45.google.com (mail-qv1-f45.google.com [209.85.219.45])
+	dmarc=pass header.from=purestorage.com;
+	spf=pass smtp.mailfrom=purestorage.com;
+	dkim=pass header.d=purestorage.com header.i=@purestorage.com header.a=rsa-sha256 header.s=google2022 header.b="ThuHcXl/";
+	arc=none smtp.remote-ip=74.125.82.51
+Received: from mail-dl1-f51.google.com (mail-dl1-f51.google.com [74.125.82.51])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7AA48606A31E
-	for <linux-scsi@vger.kernel.org>; Fri, 30 Oct 2026 17:19:11 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7AA48606A31E
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=baylibre.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=baylibre.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FB4B606A321
+	for <linux-scsi@vger.kernel.org>; Fri, 30 Oct 2026 17:57:34 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8FB4B606A321
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=purestorage.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=purestorage.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=baylibre.com header.i=@baylibre.com header.a=rsa-sha256 header.s=google header.b=J5Y2iwTc
-Received: by mail-qv1-f45.google.com with SMTP id 6a1803df08f44-91b55859245so14040026d6.0
-        for <linux-scsi@vger.kernel.org>; Fri, 30 Oct 2026 10:19:11 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=purestorage.com header.i=@purestorage.com header.a=rsa-sha256 header.s=google2022 header.b=ThuHcXl/
+Received: by mail-dl1-f51.google.com with SMTP id a92af1059eb24-181516de561so924286c88.1
+        for <linux-scsi@vger.kernel.org>; Fri, 30 Oct 2026 10:57:34 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baylibre.com; s=google; t=1793380750; x=1793985550; darn=vger.kernel.org;
-        h=in-reply-to:references:from:to:cc:subject:message-id:date
-         :content-type:content-transfer-encoding:mime-version:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=JauK/xMdQboHkyA0i/AilFknl7ToPebcspkolAFjyJc=;
-        b=J5Y2iwTcPzr7dpVRiC8KA/knpvPlibh2HPeAnwckIeIMbHIQC+3nkn1o+cDhMuJHf3
-         J5kVs1+LwGfTF7WBmN/OVxDKjrDf3yK2vTN+EAgik21Bt+weEEa/sKh383a0NKEQoS13
-         SyYDy1F9GYxA2k1O9I7NqUovEfoC6neasSqY7PFwLd1i6uc+i/arnmTi74SzNn0r+D9G
-         qzMv9q7u8IxnVOR01mbJBiRyTO/7dzWIeGyncMVrLdQIuP0wdiq4kDvjuHmBsY/B0Bid
-         5VhTiPFKjgbqd86NhOGWa3KIRPq0Mn1t+tLhtpDGhQkyncG0iRDhVbUGwv72iG/wF3w7
-         tMwQ==
+        d=purestorage.com; s=google2022; t=1793383054; x=1793987854; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=CLpTpdtsg8iyrp7yCQ1ty082f2eTL981yqmWUegIT5Y=;
+        b=ThuHcXl/Hy+TMsfSaw+ZpOiTZkfkn22y8K5YDla4tNh82b5EQj+JqsXHk49TTCJN+G
+         nEysmXzvrX59tNZT+t9lHV5geiAc3iaOKSYG8erMc7XVF9+47JBh5F6zmlifqewaiued
+         M4Wu6kDqN0rZRgiUhtPNl0OxsKjH1V4Z1a97x9i5m4kGvjopzSQJrkw9FoQAofSa7z+H
+         UzK79eWsLJXrTBh5N0RCQ5uhAHj25D6M+SD39Iu/IHJSFbdXNFCxUcDEc1cXhk4XPZIv
+         uiSF77faDdzcu+e/liH1r0n3esBK9x0jXd9pQr/pR+HnabA2D/HqVgB6vjRki/l7sOJ5
+         tNMQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793380750; x=1793985550;
-        h=in-reply-to:references:from:to:cc:subject:message-id:date
-         :content-type:content-transfer-encoding:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=JauK/xMdQboHkyA0i/AilFknl7ToPebcspkolAFjyJc=;
-        b=apmVd2aLSqRoqs1h/GKUqzSkHnZK2l0EB/nUSu5BqTseuR/GMYAwPHB9xJ2ppGAQTA
-         TKUeUGyBw42+6cqZfuuTXyK/q3w9zsOIRv5vPswy7dyrkCjSP6GJJo2k9bSQFliZ/ucJ
-         34LBbZTai0Q/X17SXfltOjNo5y7JO4MxSiRU+Ac07rDHWA0zMddokcI/AMW3l+xNctrN
-         ykTaVWEhxoyeFzt1FOBVRdV0cOuqT569R+55xd2WlH7Ujy/qb+3lb/TyqBjMaFqdvA6g
-         BmpP7xcwSgQW/8ipKSsVdGNB0H7JL/IURBeoSWuGwQlYFUHXiMk7Mw9yNnf+SaSWiEAl
-         NO0w==
-X-Forwarded-Encrypted: i=1; AKwUvBxwNnHmrXYeLnfF1WehmcnC4Gm7ZJ+lLE0SebJ4fMnxljyDrSGyGbuWeJvV7zi7Lbr+JqlXndLi0AhK@vger.kernel.org
-X-Gm-Message-State: AFq9FYIVp4Aqz/XL/VrQLISlr3Qx4HBwiZs9ezESkEnFaVNEjslySGOY
-	c3d5fi4k10JdvMlX/G2KSDSdSihXmzrqHSvcszM+pd7aoAUG45aibBbJnjimP5mtdDM=
-X-Gm-Gg: AYBFou3SXxPeg27H3HT9EA0PZE+mOie8lbfnEfxWcbeVjqs+aTtHcOE3MsR4yG/9OQ5
-	iV+jsmsX4JFiwNXmSuSde2SAoxBENDu0a5tIFnK5/GNW0zmFf/dWdWO/MgBSFN6iKNMaapCngUs
-	5kC5A8VqfxY5ATQMzz3TOKOwAieb4PSqgfdGwsKwJhhcH3HOc033yOT8grxliTZLJ5aRwIE6ZZW
-	nBsxlmNvoGrWHKPsrSCi5cdRPzhlf9NuwZ2xzAQFEMjIahnRrNeanTchSif0FisfXNKw2VZe8jp
-	XesKqNJrrT6HlXX/ckYLqu4J5MmHQNQDy43zit8mJOsSSLMaF1cvKjXDHZnWcGuRf1ZVwXMPf26
-	qAhZdCUhBCXUN2dF28CAXxBL3aJhIkPS1XzJ3wTcwKk4EoLcyFE380BlUqokKVfl4JhmXatkQnz
-	CfVjx2OPEFbsA2R3rmi41985k/aWCFjQvLpqzfYIu3SjBpawRDRw2a6cnhhFmqn58Psj6BFQ4El
-	CrZFt8YvhoknP4gM4YpUzHI4ptkyUszsH/rWH7S7q7O/OHMXlaxgAx34Qsf07KpLL9/0SPanBte
-	UAQDGRNI0/5tTgjUoWjjVwT7oss8OmiLdk0klKEJLNMtj8eRK3EoORi4GAcCwJQa
-X-Received: by 2002:a05:6214:e82:b0:91c:71a9:34a6 with SMTP id 6a1803df08f44-91ca4b9af72mr48585976d6.37.1793380750212;
-        Fri, 30 Oct 2026 10:19:10 -0700 (PDT)
-Received: from localhost ([2001:1970:3847:e000:1977:be2f:4a71:2892])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-91ca7f3db1asm20663476d6.16.2026.10.30.10.19.07
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 30 Oct 2026 10:19:09 -0700 (PDT)
+        d=1e100.net; s=20260707; t=1793383054; x=1793987854;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=CLpTpdtsg8iyrp7yCQ1ty082f2eTL981yqmWUegIT5Y=;
+        b=pKEVzzNyZYxSR6j94bWLNHxZ8EYSMwcmexAziZndFVfX4Q3hqKZM3RDVmFWEC1gBR7
+         8m7ZXmj72owww6nBm3VMHWNalgulzXY2/Uj/e81TOnKyjCcfBFECf+S7ETYYBVXpJoW6
+         JvFf85BdSSV8KW/ep4sId905hLZCd8Fgw+AI7D87hCIsAk5+6/HMQy+mXpUA/oNDgDcd
+         mQIjRdXviqIIz9RG1rOG2wiw3nOZyUAJ2TRFgwh/i9cNK+xvN8ENXDoF0DtQorhSadng
+         KVyE11kEcgEjV6WUYKGob/1KEXTzt/lTL85uAab2fdkSjIqBBJB9TAXBzBjv5PRi5bVw
+         gSQw==
+X-Gm-Message-State: AFq9FYJKNl6dWydjaIZBOjCEbZyMeCHJ5+fptJ42apRqBcMsy5Y/8mFs
+	So7OQTx1SFyq+gLXAlLHSjmPgxHq027wfkBaEy7RmJtGVbAhCtjmWvmyUxpblwPQdrBb7jss4K5
+	OzVhkkqlIYZUeXAPQbafUhYBdVPZorR0j/LUzLC8OPXiRyTZjIPp9x9waHFnLArL8mMPsksQ4Qc
+	//mO71fDuTbLLd5hUnORnAhmoZqIaCDiDYPAH8cmx9fpTMn0bpOg==
+X-Gm-Gg: AYBFou0Q710YKRL8pATlRnrPpH8rnPr/wWLQiGrC/iLPhnsMERHYngLPGRuRq85qR3y
+	i+y+HmRUnuVlayE/vefCntKRnDV8LwGALA2Ujx5OjsUimsRiDS8LsKq4Sw82Wzx9N7noqjxM5CA
+	CTC9YUe8HSlcGiEtk0nrouVnU4fix+4BLQtDWLD0GaVoTiEJg+JdnyBsn8hwAh5IhbEAoOAvabd
+	Q/5D3gnNMtsG+Bxz4qla0e/29VqF7URSpPyYmBpJeIQS7x5Rk0SSoqQYVKzXFzxlxvjSfQtyHxb
+	u+GtbLrSatB2x5/Velrr6VDQxsY0KOGgHWfs1AUjyFRehIQbVqBSPpfec31SlYKne++RuVV7QlZ
+	DxwEBHChc7BvmRquCBgUHYJ48zXdSy5/gDSme+u/5rtDycEsfMD1nHIiXfuP/c6zGmIPA5Vceal
+	U7EJvdpfXIjxwEMSK/nLwPqcJOftAMYHXVg1K1y/1Q+NAH9TOrj62yo8HilWgxcDoRdRGj3N33w
+	uQNZUgigylGAKScjERdcJUONrxhhy3uoeJIfnTXZKLSpp0Sh/8QlOkWioHI2b7gKppgRrbgRlDL
+	qBr7tcwzHQ0R8xPGplZ1VYao5Gu5IcXH/JeVop9xHBVnAMznsxLPzSDP9ZdebE6l1QGVTiqTuWp
+	2kZqAEmJDkus8BxMNnhv4GxQFo6LN/lEcOtYqCb1euFRd18WLMd8W/UF9Hlp2LHRjVQx7E3YExD
+	fJLtxS5+Qqs0nyvTiQChh9pnbnDDQq1+F2fqRlHcqkTlFH4Q==
+X-Received: by 2002:a05:7022:1588:b0:1a3:d292:f696 with SMTP id a92af1059eb24-1a949f6c426mr8673287c88.16.1793383053445;
+        Fri, 30 Oct 2026 10:57:33 -0700 (PDT)
+Received: from brian--MacBookPro18.purestorage.com ([170.85.204.93])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-36a4294419dsm8802701eec.18.2026.10.30.10.57.32
+        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
+        Fri, 30 Oct 2026 10:57:32 -0700 (PDT)
+From: Brian Bunker <brian@purestorage.com>
+To: linux-scsi@vger.kernel.org,
+	"Martin K . Petersen" <mkp@kernel.org>,
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>
+Cc: Bart Van Assche <bvanassche@acm.org>,
+	linux-kernel@vger.kernel.org,
+	Brian Bunker <brian@purestorage.com>
+Subject: [PATCH v2 1/1] scsi: core: Restart the queue when unblocking a device set running
+Date: Fri, 30 Oct 2026 10:57:20 -0700
+Message-ID: <20261030175721.24379-2-brian@purestorage.com>
+X-Mailer: git-send-email 2.56.0
+In-Reply-To: <20261030175721.24379-1-brian@purestorage.com>
+References: <20261030175721.24379-1-brian@purestorage.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -87,156 +102,84 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Fri, 30 Oct 2026 13:19:06 -0400
-Message-Id: <DMICF1DA617T.1TZ7DMV5WG818@baylibre.com>
-Subject: Re: [PATCH v7 0/2] Add UFS Host driver support for SpacemiT K3 SoC
-Cc: "Anirudh Srinivasan" <asrinivasan@oss.tenstorrent.com>, "Aurelien Jarno"
- <aurelien@aurel32.net>, "Jennifer Berringer" <jberring@redhat.com>,
- <linux-scsi@vger.kernel.org>, <devicetree@vger.kernel.org>,
- <linux-riscv@lists.infradead.org>, <spacemit@lists.linux.dev>,
- <linux-kernel@vger.kernel.org>, "Krzysztof Kozlowski"
- <krzysztof.kozlowski@oss.qualcomm.com>, "linux-riscv"
- <linux-riscv-bounces@lists.infradead.org>
-To: "Yixun Lan" <dlan@kernel.org>, "Alim Akhtar" <alim.akhtar@samsung.com>,
- "Avri Altman" <avri.altman@sandisk.com>, "Bart Van Assche"
- <bvanassche@acm.org>, "Rob Herring" <robh@kernel.org>, "Krzysztof
- Kozlowski" <krzk+dt@kernel.org>, "Conor Dooley" <conor+dt@kernel.org>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, "Philipp
- Zabel" <p.zabel@pengutronix.de>, "Paul Walmsley" <pjw@kernel.org>, "Palmer
- Dabbelt" <palmer@dabbelt.com>, "Albert Ou" <aou@eecs.berkeley.edu>,
- "Alexandre Ghiti" <alex@ghiti.fr>, "Martin K. Petersen" <mkp@kernel.org>
-From: "Trevor Gamblin" <tgamblin@baylibre.com>
-X-Mailer: aerc 0.22.0
-References: <20261002-08-k3-ufs-support-v7-0-bb39007ff9ae@kernel.org>
-In-Reply-To: <20261002-08-k3-ufs-support-v7-0-bb39007ff9ae@kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-On Thu Oct 1, 2026 at 11:10 PM EDT, Yixun Lan wrote:
-> This series try to add UFS support for SpacemiT K3 SoC, the controller
-> components consists of System Bus Interface Unit, UFS Host Controller
-> Interface, UFS Transport Protocol Layer, UFS Host Registers, Device
-> Management Entity (DME), Transport Layer, Network Layer, Data Link
-> Layer, PHY Adapter Layer, and M-PHY Interface. A more detail functional
-> block diagram can be found in SpacemiT website, chapter 9.7.3 [1]
->
-> The DTS patch has been dropped in this series [2], and will send
-> in separate series once this patch accepted. For people who want to
-> test UFS driver, please grab the DT patch from version v5 [3].
+A device that its transport blocks has its queue stopped. If the SCSI
+error handler then gives up on the device, it moves it from SDEV_BLOCK
+to SDEV_OFFLINE and leaves the queue stopped. When userspace later
+writes "running" to the device's state attribute, store_state_field()
+moves it to SDEV_RUNNING, still with the queue stopped, and rescans it.
+The rescan takes the device lock and waits for I/O that can never be
+dispatched.
 
-Hi,
+When the transport then unblocks the device,
+scsi_internal_device_unblock_nowait() rejects a device in SDEV_RUNNING
+with -EINVAL before it reaches scsi_start_queue(), so nothing ever
+restarts the queue. The task that wrote "running" hangs forever holding
+the device lock, and anything else that takes it hangs behind it. The
+-EINVAL also makes scsi_host_unblock() stop at this device and leave the
+rest of the host blocked, and keeps the device in SDEV_RUNNING when the
+transport asked for SDEV_TRANSPORT_OFFLINE.
 
-I've been testing this series (and the DT patch from v5) successfully using=
- a
-v7.3 kernel in Yocto's meta-riscv layer. It's been working well with fastbo=
-ot
-flash in our nightly CI. An example:
+This shows up with iSCSI when a session drops again just after
+recovering. iscsid onlines the session's devices after a relogin by
+writing "running" to every device it finds offline:
 
-https://forgejo.baylibre.com/tgamblin/boardgarden/actions/runs/827/jobs/9/a=
-ttempt/1
+  1. The session is blocked, which blocks the device and stops its
+     queue.
+  2. The error handler cannot recover the device and moves it from
+     SDEV_BLOCK to SDEV_OFFLINE. The queue stays stopped.
+  3. iscsid writes "running": SDEV_OFFLINE -> SDEV_RUNNING with the
+     queue still stopped, then the rescan sends an INQUIRY that sits
+     unsent while holding the device lock.
+  4. The session recovery timeout calls scsi_target_unblock(). The
+     other devices go from SDEV_BLOCK to SDEV_TRANSPORT_OFFLINE and get
+     their queues restarted, but this one is skipped because it is
+     already running.
 
-For both patches:
+A vmcore from such a hang shows the device in SDEV_RUNNING with
+queue_stopped set and the queue's quiesce_depth at 1, the rescan's
+INQUIRY never started (MQ_RQ_IDLE, no start time or deadline), and
+iscsid owning the device lock while other tasks wait for it.
 
-Tested-by: Trevor Gamblin <tgamblin@baylibre.com>
->
-> One known issue is that the device will occasionally raise BKOPS interrup=
-t
-> when doing some high load test, log from dmesg shows
->
-> [  806.710763] ufshcd-spacemit c0e00000.ufshc: ufshcd_bkops_exception_eve=
-nt_handler: device raised urgent BKOPS exception for bkops status 1
->
-> Link: https://spacemit.com/community/document/info?nodepath=3Dhardware/ke=
-y_stone/k3/k3_docs/k3_usermanual/09_memory_storage.md&lang=3Den [1]
-> Link: https://lore.kernel.org/all/20260918-belligerent-succinct-kraken-7f=
-a592@quoll/ [2]
-> Link: https://lore.kernel.org/all/20260916-08-k3-ufs-support-v5-3-1f5d71f=
-1027d@kernel.org/ [3]
-> Signed-off-by: Yixun Lan <dlan@kernel.org>
-> ---
-> Changes in v7:
-> - check err return value of ufs_spacemit_quirk_host_pa_saveconfigtime()
-> - Link to v6: https://patch.msgid.link/20260921-08-k3-ufs-support-v6-0-34=
-79768a2299@kernel.org
->
-> Changes in v6:
-> - drop unused macro and dev_req_params
-> - use global PX_xx macros
-> - fix axi clock name
-> - drop dts patch
-> - collect tags
-> - Link to v5: https://patch.msgid.link/20260916-08-k3-ufs-support-v5-0-1f=
-5d71f1027d@kernel.org
->
-> Changes in v5:
-> - adjust clock names
-> - add runtime power support
-> - collect tags
-> - Link to v4: https://patch.msgid.link/20260908-08-k3-ufs-support-v4-0-22=
-aa2bd97d3b@kernel.org
->
-> Changes in v4:
-> - fix clock and reset settings
-> - drop function which retrieve value of tx_lanes
-> - propagate return error of ufs_spacemit_dme_set()
-> - check return value ufs_spacemit_check_hibern8()
-> - drop call to ufshcd_vops_phy_initialization()
-> - handle compiling warning if CONFIG_OF not enabled
->  add __maybe_unused to ufs_spacemit_of_match
-> - Link to v3: https://patch.msgid.link/20260806-08-k3-ufs-support-v3-0-03=
-7fb322acdb@kernel.org
->
-> Changes in v3:
-> - collect tags
-> - fix dt-binding warning reported-by sashiko
-> - fix low freq in opp-2 table
-> - fix err checking in check_hibern8()
-> - propagate err code in link_startup_notify()
-> - update documents for event_notify()
-> - ufs clock driver is merged into v7.3-rc1, update cover letter
-> - Link to v2: https://patch.msgid.link/20260725-08-k3-ufs-support-v2-0-45=
-036a2a2418@kernel.org
->
-> Changes in v2:
-> - fix missing interrupts property
-> - move ufs node to k3-com260.dtsi
-> - convert freq-table-hz to operating-points-v2
-> - rework reset_control, fix header and drop global variable
-> - drop dump_host_regs() debug interface
-> - converge and refactor dme_set() operations
-> - massive reduce of busy delay() loops
-> - drop vendor specific hce_enable_notify(), fallback to default
-> - drop unused member from struct ufs_spacemit_host
-> - add COMPILE_TEST support to Kconfig
-> - comment style fix
-> - Link to v1: https://patch.msgid.link/20260702-08-k3-ufs-support-v1-0-1a=
-64a3ab128f@kernel.org
->
-> ---
-> Yixun Lan (2):
->       scsi: ufs: spacemit: dt-bindings: Add UFS controller for K3 SoC
->       scsi: ufs: spacemit: k3: Add UFS Host Controller driver
->
->  .../devicetree/bindings/ufs/spacemit,k3-ufshc.yaml |  56 ++
->  drivers/ufs/host/Kconfig                           |  12 +
->  drivers/ufs/host/Makefile                          |   1 +
->  drivers/ufs/host/ufs-spacemit.c                    | 652 +++++++++++++++=
-++++++
->  drivers/ufs/host/ufs-spacemit.h                    |  77 +++
->  5 files changed, 798 insertions(+)
-> ---
-> base-commit: cee9395acd8043be0644b25c34bfa86623f2b935
-> change-id: 20260605-08-k3-ufs-support-c8b308e415e2
->
-> Best regards,
-> -- =20
-> Yixun Lan <dlan@kernel.org>
->
->
-> _______________________________________________
-> linux-riscv mailing list
-> linux-riscv@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-riscv
+Handle this in scsi_internal_device_unblock_nowait(), which already
+restarts the queue of an SDEV_OFFLINE device: accept an SDEV_RUNNING
+device whose queue is still stopped, move it to the requested state and
+restart the queue. A running device whose queue is not stopped was never
+blocked and is still rejected.
 
+Do not restart the queue from store_state_field() instead. The device is
+still blocked by its transport at that point, and some transports and
+drivers rely on the stopped queue to keep commands away while they
+reconnect or reset the adapter.
+
+Fixes: f0f82e2476f6 ("scsi: core: Fix capacity set to zero after offlinining device")
+Signed-off-by: Brian Bunker <brian@purestorage.com>
+---
+ drivers/scsi/scsi_lib.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index f695a6605815..b89407902430 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -3065,6 +3065,15 @@ int scsi_internal_device_unblock_nowait(struct scsi_device *sdev,
+ 		else
+ 			sdev->sdev_state = SDEV_CREATED;
+ 		break;
++	case SDEV_RUNNING:
++		/*
++		 * The device was set running through sysfs while it was
++		 * blocked, so its queue is still stopped. Finish the unblock.
++		 */
++		if (!sdev->queue_stopped)
++			return -EINVAL;
++		sdev->sdev_state = new_state;
++		break;
+ 	case SDEV_CANCEL:
+ 	case SDEV_OFFLINE:
+ 		break;
+-- 
+2.56.0
 
