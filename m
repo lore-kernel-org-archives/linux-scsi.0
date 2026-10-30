@@ -1,56 +1,84 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.219.45
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793379484;
-	b=05vfbE9H1422jOmEUHy+m8eJEekyZzk/HTa+tT5X0fWcqttTaGTNQcUF9XTQHTsFLNab
-	 rkSZUlTYZGntF0ZSrtMliE6Sw0VgDDsbSCLFVwzgch656YhH4mDlMxmOMHDh/dGJPkyzr
-	 UH+BZEE36igxSl4HYLCbMezpPQu6XSKubF6RU3xZN1aylkZAlIz3TggnGLsDOu6SGTBxv
-	 k733vCY3RBaLIzi2N2BC2lzJFxK1ZwpfKRnvCG1pOETM5bRpTqYbY6tv4KQi1oP3UqjGu
-	 XWo1Rkk6tg/GsLweDv/+I5GtA/bY0g/9zbl/oBVN7U92K5uIAbu4z2ofFmkKNFoR8Fg==
+	t=1793380752;
+	b=IUUdjxDSFsAA8x8ICIBIyHejFavkGXbWt2NV+sPM0lUdU06EbsIdMAPYbsEyhlr7EYCn
+	 mygRgw5uolRL9zCSe0+xsNIKlCNj1KwVk1VTl2i8kTD6RcCzq6ZZ3h38ABYa7WiU2+JMo
+	 uS6fM+S+WMgXOLr7H7r2qckxNxtkTkpoFnkMrJW8P1SR3ibvxl1Tbm6r6xjJmeTW/bXMt
+	 wCTcgSMI204PY3SXuEmHEcXdQUjsdWK6HhsLX2rKIttGwIRw23H776ZhJoMtDWePhfNki
+	 x5MK7rglTLlWYG8WXeiOIvrR+cnjwDI5bGgdfQ5L9ISMoZvYRPVYk66mm4Q9c/Ky4bw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793379484;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=Gs0rI+5ABWijLT/lJaJHw4+lAMveWUxz1GnPI5swUXw=;
-	b=b03seTXFw/sQza78VqOgn+0dBHdgM0GsJ1WGV3UiTJXeB4Hz5RxUWXG1QhHhxfPNGSBd
-	 8fWIqJt6zPOQqvZLQYstjkcMaxJNsSN0p+Afu3uIMgcJxdCsjKV5s73tQFKFJlCLTAaYz
-	 BKKv8nxnhg/V1jbjPejqga2BqblnDwNs+3Kzwu68Hpa/+slnzULoHlt9EellbLAp/W4KF
-	 6kuCfBGDxQD/Ia7SIQGQfPFbBy1Kh5wbOsl4FFzTVs8wWifdr59/qQ37CyswMN6gpjFNK
-	 LAHezXolcLWv6i1bHBUGUCra966xPDN1vcjHW/rvUfl/RudaX09wwz0krmU3byn6bhQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793380752;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 Mime-Version:Content-Transfer-Encoding:Content-Type:Date:Message-Id:
+	 Subject:Cc:To:From:X-Mailer:References:In-Reply-To;
+	bh=JauK/xMdQboHkyA0i/AilFknl7ToPebcspkolAFjyJc=;
+	b=avXowl5P8VPRL4pgxtmfZTxktjrpM6kBfJuZKeDxL9DU9CuoASVj1rVGwriacxKHiVy3
+	 jQrXMMubvPHRKI2qXotc9QnTXcgrcK6NNJCr0QdNsRqp3r2/lADUWlemiA/cZWPahHj5R
+	 hZ2UDiY/C/gjWONJASi0ODw+SD/ymQYnuAtqtvGLRLgbh3djqU66uTK2LkJHe/J8I/ir4
+	 C0sVshJOp/g1cg3My29im7xyUYIQJhuH8jH7twBMHO/Af0T0698IVz+2f8vcYJ9iuSVkS
+	 XovStT2cz4uh3ZfBczvi0PisIjOelzbunaafYznAsbvA/MC0g5dcY0almjGu8iDx3/g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=cmx43o7r;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=none header.from=baylibre.com;
+	spf=pass smtp.mailfrom=baylibre.com;
+	dkim=pass header.d=baylibre.com header.i=@baylibre.com header.a=rsa-sha256 header.s=google header.b=J5Y2iwTc;
+	arc=none smtp.remote-ip=209.85.219.45
+Received: from mail-qv1-f45.google.com (mail-qv1-f45.google.com [209.85.219.45])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3DEE4606A31C
-	for <linux-scsi@vger.kernel.org>; Fri, 30 Oct 2026 16:58:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7AA48606A31E
+	for <linux-scsi@vger.kernel.org>; Fri, 30 Oct 2026 17:19:11 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7AA48606A31E
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=baylibre.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=baylibre.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=cmx43o7r
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8FD111F000C1;
-	Fri, 30 Oct 2026 16:58:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793379483;
-	bh=Gs0rI+5ABWijLT/lJaJHw4+lAMveWUxz1GnPI5swUXw=;
-	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
-	b=cmx43o7r29s0XxvJXw/62AERXyZhzlr1dX5/sGfYoRQwGOFxQ+4pmTEsb9hmGCbu9
-	 plOXvjgLbKnZ+DOQfVCe0Iajw53ld1A3DoAEAHdDHG/sNFBWQAK93/dsGttjF/1phW
-	 onhjxmxNwuy/fMlfNApDjekejclTdtOShOkjjM8Ai/AmYLDG3oKcZsqbBjYt/GFIri
-	 SgvbrfcLbnMO3cyLB4JgwkMJmMyQCux3L8Or/P0EBk07GxkkKk2Rso3Hf5aCzGcBZx
-	 RMlyz6uA20U2rW8Js4A+866RkyduNBUYWqtqtx6EZNS5B9Jc05hKYbqwbEfVsSZ2It
-	 2NLb9ZfrGreXQ==
-Message-ID: <sashiko-outbox-191294@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 1/1] scsi: core: Restart a stopped queue when sysfs sets
- a device running
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Brian Bunker" <brian@purestorage.com>, linux-scsi@vger.kernel.org
-In-Reply-To: <20261030164229.10037-2-brian@purestorage.com>
-References: <20261030164229.10037-1-brian@purestorage.com>
- <20261030164229.10037-2-brian@purestorage.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 30 Oct 2026 16:58:03 +0000
+	dkim=pass (2048-bit key, unprotected) header.d=baylibre.com header.i=@baylibre.com header.a=rsa-sha256 header.s=google header.b=J5Y2iwTc
+Received: by mail-qv1-f45.google.com with SMTP id 6a1803df08f44-91b55859245so14040026d6.0
+        for <linux-scsi@vger.kernel.org>; Fri, 30 Oct 2026 10:19:11 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=baylibre.com; s=google; t=1793380750; x=1793985550; darn=vger.kernel.org;
+        h=in-reply-to:references:from:to:cc:subject:message-id:date
+         :content-type:content-transfer-encoding:mime-version:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=JauK/xMdQboHkyA0i/AilFknl7ToPebcspkolAFjyJc=;
+        b=J5Y2iwTcPzr7dpVRiC8KA/knpvPlibh2HPeAnwckIeIMbHIQC+3nkn1o+cDhMuJHf3
+         J5kVs1+LwGfTF7WBmN/OVxDKjrDf3yK2vTN+EAgik21Bt+weEEa/sKh383a0NKEQoS13
+         SyYDy1F9GYxA2k1O9I7NqUovEfoC6neasSqY7PFwLd1i6uc+i/arnmTi74SzNn0r+D9G
+         qzMv9q7u8IxnVOR01mbJBiRyTO/7dzWIeGyncMVrLdQIuP0wdiq4kDvjuHmBsY/B0Bid
+         5VhTiPFKjgbqd86NhOGWa3KIRPq0Mn1t+tLhtpDGhQkyncG0iRDhVbUGwv72iG/wF3w7
+         tMwQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793380750; x=1793985550;
+        h=in-reply-to:references:from:to:cc:subject:message-id:date
+         :content-type:content-transfer-encoding:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=JauK/xMdQboHkyA0i/AilFknl7ToPebcspkolAFjyJc=;
+        b=apmVd2aLSqRoqs1h/GKUqzSkHnZK2l0EB/nUSu5BqTseuR/GMYAwPHB9xJ2ppGAQTA
+         TKUeUGyBw42+6cqZfuuTXyK/q3w9zsOIRv5vPswy7dyrkCjSP6GJJo2k9bSQFliZ/ucJ
+         34LBbZTai0Q/X17SXfltOjNo5y7JO4MxSiRU+Ac07rDHWA0zMddokcI/AMW3l+xNctrN
+         ykTaVWEhxoyeFzt1FOBVRdV0cOuqT569R+55xd2WlH7Ujy/qb+3lb/TyqBjMaFqdvA6g
+         BmpP7xcwSgQW/8ipKSsVdGNB0H7JL/IURBeoSWuGwQlYFUHXiMk7Mw9yNnf+SaSWiEAl
+         NO0w==
+X-Forwarded-Encrypted: i=1; AKwUvBxwNnHmrXYeLnfF1WehmcnC4Gm7ZJ+lLE0SebJ4fMnxljyDrSGyGbuWeJvV7zi7Lbr+JqlXndLi0AhK@vger.kernel.org
+X-Gm-Message-State: AFq9FYIVp4Aqz/XL/VrQLISlr3Qx4HBwiZs9ezESkEnFaVNEjslySGOY
+	c3d5fi4k10JdvMlX/G2KSDSdSihXmzrqHSvcszM+pd7aoAUG45aibBbJnjimP5mtdDM=
+X-Gm-Gg: AYBFou3SXxPeg27H3HT9EA0PZE+mOie8lbfnEfxWcbeVjqs+aTtHcOE3MsR4yG/9OQ5
+	iV+jsmsX4JFiwNXmSuSde2SAoxBENDu0a5tIFnK5/GNW0zmFf/dWdWO/MgBSFN6iKNMaapCngUs
+	5kC5A8VqfxY5ATQMzz3TOKOwAieb4PSqgfdGwsKwJhhcH3HOc033yOT8grxliTZLJ5aRwIE6ZZW
+	nBsxlmNvoGrWHKPsrSCi5cdRPzhlf9NuwZ2xzAQFEMjIahnRrNeanTchSif0FisfXNKw2VZe8jp
+	XesKqNJrrT6HlXX/ckYLqu4J5MmHQNQDy43zit8mJOsSSLMaF1cvKjXDHZnWcGuRf1ZVwXMPf26
+	qAhZdCUhBCXUN2dF28CAXxBL3aJhIkPS1XzJ3wTcwKk4EoLcyFE380BlUqokKVfl4JhmXatkQnz
+	CfVjx2OPEFbsA2R3rmi41985k/aWCFjQvLpqzfYIu3SjBpawRDRw2a6cnhhFmqn58Psj6BFQ4El
+	CrZFt8YvhoknP4gM4YpUzHI4ptkyUszsH/rWH7S7q7O/OHMXlaxgAx34Qsf07KpLL9/0SPanBte
+	UAQDGRNI0/5tTgjUoWjjVwT7oss8OmiLdk0klKEJLNMtj8eRK3EoORi4GAcCwJQa
+X-Received: by 2002:a05:6214:e82:b0:91c:71a9:34a6 with SMTP id 6a1803df08f44-91ca4b9af72mr48585976d6.37.1793380750212;
+        Fri, 30 Oct 2026 10:19:10 -0700 (PDT)
+Received: from localhost ([2001:1970:3847:e000:1977:be2f:4a71:2892])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-91ca7f3db1asm20663476d6.16.2026.10.30.10.19.07
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 30 Oct 2026 10:19:09 -0700 (PDT)
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -59,150 +87,156 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Fri, 30 Oct 2026 13:19:06 -0400
+Message-Id: <DMICF1DA617T.1TZ7DMV5WG818@baylibre.com>
+Subject: Re: [PATCH v7 0/2] Add UFS Host driver support for SpacemiT K3 SoC
+Cc: "Anirudh Srinivasan" <asrinivasan@oss.tenstorrent.com>, "Aurelien Jarno"
+ <aurelien@aurel32.net>, "Jennifer Berringer" <jberring@redhat.com>,
+ <linux-scsi@vger.kernel.org>, <devicetree@vger.kernel.org>,
+ <linux-riscv@lists.infradead.org>, <spacemit@lists.linux.dev>,
+ <linux-kernel@vger.kernel.org>, "Krzysztof Kozlowski"
+ <krzysztof.kozlowski@oss.qualcomm.com>, "linux-riscv"
+ <linux-riscv-bounces@lists.infradead.org>
+To: "Yixun Lan" <dlan@kernel.org>, "Alim Akhtar" <alim.akhtar@samsung.com>,
+ "Avri Altman" <avri.altman@sandisk.com>, "Bart Van Assche"
+ <bvanassche@acm.org>, "Rob Herring" <robh@kernel.org>, "Krzysztof
+ Kozlowski" <krzk+dt@kernel.org>, "Conor Dooley" <conor+dt@kernel.org>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, "Philipp
+ Zabel" <p.zabel@pengutronix.de>, "Paul Walmsley" <pjw@kernel.org>, "Palmer
+ Dabbelt" <palmer@dabbelt.com>, "Albert Ou" <aou@eecs.berkeley.edu>,
+ "Alexandre Ghiti" <alex@ghiti.fr>, "Martin K. Petersen" <mkp@kernel.org>
+From: "Trevor Gamblin" <tgamblin@baylibre.com>
+X-Mailer: aerc 0.22.0
+References: <20261002-08-k3-ufs-support-v7-0-bb39007ff9ae@kernel.org>
+In-Reply-To: <20261002-08-k3-ufs-support-v7-0-bb39007ff9ae@kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] scsi: core: store_state_field() unquiesces device while transport =
-is blocked
---
+On Thu Oct 1, 2026 at 11:10 PM EDT, Yixun Lan wrote:
+> This series try to add UFS support for SpacemiT K3 SoC, the controller
+> components consists of System Bus Interface Unit, UFS Host Controller
+> Interface, UFS Transport Protocol Layer, UFS Host Registers, Device
+> Management Entity (DME), Transport Layer, Network Layer, Data Link
+> Layer, PHY Adapter Layer, and M-PHY Interface. A more detail functional
+> block diagram can be found in SpacemiT website, chapter 9.7.3 [1]
+>
+> The DTS patch has been dropped in this series [2], and will send
+> in separate series once this patch accepted. For people who want to
+> test UFS driver, please grab the DT patch from version v5 [3].
 
-commit 4cd1c48b68b2c4d68b2b301b92ebce5b3fae1723
-Author: Brian Bunker <brian@purestorage.com>
+Hi,
 
-scsi: core: Restart a stopped queue when sysfs sets a device running
+I've been testing this series (and the DT patch from v5) successfully using=
+ a
+v7.3 kernel in Yocto's meta-riscv layer. It's been working well with fastbo=
+ot
+flash in our nightly CI. An example:
 
-This commit calls scsi_start_queue() in store_state_field() when transition=
-ing
-a SCSI device to SDEV_RUNNING via sysfs so that a device offlined while its
-transport had blocked the queue does not hang during the subsequent rescan.
+https://forgejo.baylibre.com/tgamblin/boardgarden/actions/runs/827/jobs/9/a=
+ttempt/1
 
-> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-> index fe54792ed69e4..f5416a1548bd3 100644
-> --- a/drivers/scsi/scsi_sysfs.c
-> +++ b/drivers/scsi/scsi_sysfs.c
-> @@ -811,8 +811,16 @@ store_state_field(struct device *dev, struct device_=
-attribute *attr,
->  		ret =3D 0;
->  	} else {
->  		ret =3D scsi_device_set_state(sdev, state);
-> -		if (ret =3D=3D 0 && state =3D=3D SDEV_RUNNING)
-> +		if (ret =3D=3D 0 && state =3D=3D SDEV_RUNNING) {
-> +			/*
-> +			 * The device may have been offlined while blocked by
-> +			 * its transport, so its queue can still be stopped.
-> +			 * The transport's unblock skips a running device and
-> +			 * would never restart it, so restart it here.
-> +			 */
-> +			scsi_start_queue(sdev);
->  			rescan_dev =3D true;
+For both patches:
 
-[Severity: High]
-Does transitioning the device to SDEV_RUNNING and calling scsi_start_queue()
-while sdev->queue_stopped is set unquiesce the device while its transport or
-host still actively has it blocked?
+Tested-by: Trevor Gamblin <tgamblin@baylibre.com>
+>
+> One known issue is that the device will occasionally raise BKOPS interrup=
+t
+> when doing some high load test, log from dmesg shows
+>
+> [  806.710763] ufshcd-spacemit c0e00000.ufshc: ufshcd_bkops_exception_eve=
+nt_handler: device raised urgent BKOPS exception for bkops status 1
+>
+> Link: https://spacemit.com/community/document/info?nodepath=3Dhardware/ke=
+y_stone/k3/k3_docs/k3_usermanual/09_memory_storage.md&lang=3Den [1]
+> Link: https://lore.kernel.org/all/20260918-belligerent-succinct-kraken-7f=
+a592@quoll/ [2]
+> Link: https://lore.kernel.org/all/20260916-08-k3-ufs-support-v5-3-1f5d71f=
+1027d@kernel.org/ [3]
+> Signed-off-by: Yixun Lan <dlan@kernel.org>
+> ---
+> Changes in v7:
+> - check err return value of ufs_spacemit_quirk_host_pa_saveconfigtime()
+> - Link to v6: https://patch.msgid.link/20260921-08-k3-ufs-support-v6-0-34=
+79768a2299@kernel.org
+>
+> Changes in v6:
+> - drop unused macro and dev_req_params
+> - use global PX_xx macros
+> - fix axi clock name
+> - drop dts patch
+> - collect tags
+> - Link to v5: https://patch.msgid.link/20260916-08-k3-ufs-support-v5-0-1f=
+5d71f1027d@kernel.org
+>
+> Changes in v5:
+> - adjust clock names
+> - add runtime power support
+> - collect tags
+> - Link to v4: https://patch.msgid.link/20260908-08-k3-ufs-support-v4-0-22=
+aa2bd97d3b@kernel.org
+>
+> Changes in v4:
+> - fix clock and reset settings
+> - drop function which retrieve value of tx_lanes
+> - propagate return error of ufs_spacemit_dme_set()
+> - check return value ufs_spacemit_check_hibern8()
+> - drop call to ufshcd_vops_phy_initialization()
+> - handle compiling warning if CONFIG_OF not enabled
+>  add __maybe_unused to ufs_spacemit_of_match
+> - Link to v3: https://patch.msgid.link/20260806-08-k3-ufs-support-v3-0-03=
+7fb322acdb@kernel.org
+>
+> Changes in v3:
+> - collect tags
+> - fix dt-binding warning reported-by sashiko
+> - fix low freq in opp-2 table
+> - fix err checking in check_hibern8()
+> - propagate err code in link_startup_notify()
+> - update documents for event_notify()
+> - ufs clock driver is merged into v7.3-rc1, update cover letter
+> - Link to v2: https://patch.msgid.link/20260725-08-k3-ufs-support-v2-0-45=
+036a2a2418@kernel.org
+>
+> Changes in v2:
+> - fix missing interrupts property
+> - move ufs node to k3-com260.dtsi
+> - convert freq-table-hz to operating-points-v2
+> - rework reset_control, fix header and drop global variable
+> - drop dump_host_regs() debug interface
+> - converge and refactor dme_set() operations
+> - massive reduce of busy delay() loops
+> - drop vendor specific hce_enable_notify(), fallback to default
+> - drop unused member from struct ufs_spacemit_host
+> - add COMPILE_TEST support to Kconfig
+> - comment style fix
+> - Link to v1: https://patch.msgid.link/20260702-08-k3-ufs-support-v1-0-1a=
+64a3ab128f@kernel.org
+>
+> ---
+> Yixun Lan (2):
+>       scsi: ufs: spacemit: dt-bindings: Add UFS controller for K3 SoC
+>       scsi: ufs: spacemit: k3: Add UFS Host Controller driver
+>
+>  .../devicetree/bindings/ufs/spacemit,k3-ufshc.yaml |  56 ++
+>  drivers/ufs/host/Kconfig                           |  12 +
+>  drivers/ufs/host/Makefile                          |   1 +
+>  drivers/ufs/host/ufs-spacemit.c                    | 652 +++++++++++++++=
+++++++
+>  drivers/ufs/host/ufs-spacemit.h                    |  77 +++
+>  5 files changed, 798 insertions(+)
+> ---
+> base-commit: cee9395acd8043be0644b25c34bfa86623f2b935
+> change-id: 20260605-08-k3-ufs-support-c8b308e415e2
+>
+> Best regards,
+> -- =20
+> Yixun Lan <dlan@kernel.org>
+>
+>
+> _______________________________________________
+> linux-riscv mailing list
+> linux-riscv@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-riscv
 
-sdev->queue_stopped is set in scsi_stop_queue() when a device is blocked via
-scsi_device_block() or scsi_internal_device_block_nowait(). When a transport
-or host later unblocks an SDEV_OFFLINE device,
-scsi_internal_device_unblock_nowait() in drivers/scsi/scsi_lib.c already
-restarts the queue:
 
-	switch (sdev->sdev_state) {
-	case SDEV_BLOCK:
-	case SDEV_TRANSPORT_OFFLINE:
-		sdev->sdev_state =3D new_state;
-		break;
-	case SDEV_CREATED_BLOCK:
-		if (new_state =3D=3D SDEV_TRANSPORT_OFFLINE ||
-		    new_state =3D=3D SDEV_OFFLINE)
-			sdev->sdev_state =3D new_state;
-		else
-			sdev->sdev_state =3D SDEV_CREATED;
-		break;
-	case SDEV_CANCEL:
-	case SDEV_OFFLINE:
-		break;
-	default:
-		return -EINVAL;
-	}
-	scsi_start_queue(sdev);
-
-So if an SDEV_OFFLINE device still has sdev->queue_stopped set when
-store_state_field() runs, the transport or host has not unblocked it yet.
-Unquiescing the queue and moving the device to SDEV_RUNNING in that state
-appears to cause several regressions:
-
-1. Some transports and drivers rely on scsi_block_targets() or
-scsi_host_block() keeping request queues quiesced for mutual exclusion rath=
-er
-than rejecting commands in queuecommand. For example, in
-include/scsi/scsi_transport_srp.h, srp_chkready() returns 0 even when
-rport->state is SRP_RPORT_BLOCKED:
-
-	switch (rport->state) {
-	case SRP_RPORT_RUNNING:
-	case SRP_RPORT_BLOCKED:
-	default:
-		return 0;
-	case SRP_RPORT_FAIL_FAST:
-		return DID_TRANSPORT_FAILFAST << 16;
-	case SRP_RPORT_LOST:
-		return DID_NO_CONNECT << 16;
-	}
-
-While srp_reconnect_rport() in drivers/scsi/scsi_transport_srp.c blocks the
-targets, srp_rport_reconnect() in drivers/infiniband/ulp/srp/ib_srp.c
-recreates RDMA channels and reinitializes ch->free_tx without locking under
-the guarantee that queues are stopped:
-
-	scsi_block_targets(shost, &shost->shost_gendev);
-	res =3D rport->state !=3D SRP_RPORT_LOST ? i->f->reconnect(rport) : -ENODE=
-V;
-
-Similarly, aacraid (aac_suspend(), aac_shutdown(), aac_pci_error_detected(),
-and aac_reset_adapter() in drivers/scsi/aacraid/linit.c) relies on
-scsi_host_block() to keep queues stopped while tearing down adapter resourc=
-es.
-
-2. If the host was blocked via scsi_host_block(), a subsequent
-scsi_host_unblock() in drivers/scsi/scsi_lib.c stops iterating on the first
-device where scsi_internal_device_unblock() returns an error:
-
-	shost_for_each_device(sdev, shost) {
-		ret =3D scsi_internal_device_unblock(sdev, new_state);
-		if (ret) {
-			scsi_device_put(sdev);
-			break;
-		}
-	}
-
-Because scsi_internal_device_unblock_nowait() returns -EINVAL when
-sdev->sdev_state is SDEV_RUNNING, unblocking the host will abort on this
-device and leave any remaining devices on the host stuck in SDEV_BLOCK with
-stopped queues.
-
-3. When transport recovery times out (such as session_recovery_timedout() in
-drivers/scsi/scsi_transport_iscsi.c calling scsi_target_unblock(&session->d=
-ev,
-SDEV_TRANSPORT_OFFLINE)), scsi_internal_device_unblock_nowait() rejects
-SDEV_RUNNING with -EINVAL, leaving the device in SDEV_RUNNING on a timed-out
-session instead of transitioning it to SDEV_TRANSPORT_OFFLINE.
-
-4. On iSCSI and FC, while the session or rport is blocked,
-iscsi_session_chkready() and fc_remote_port_chkready() return
-DID_IMM_RETRY << 16. Once error recovery has finished
-(!scsi_host_in_recovery(cmd->device->host)), __scsi_queue_insert() in
-drivers/scsi/scsi_lib.c requeues the command and kicks requeue_work
-immediately:
-
-	blk_mq_requeue_request(scsi_cmd_to_rq(cmd),
-			       !scsi_host_in_recovery(cmd->device->host));
-
-With the queue unquiesced by store_state_field(), won't the rescan I/O (and
-any other queued requests) spin in a tight zero-delay requeue loop until the
-transport unblocks or the command runtime expires while holding the device
-lock in scsi_rescan_device()?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261030164229.1003=
-7-1-brian@purestorage.com?part=3D1
