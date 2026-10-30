@@ -1,56 +1,85 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=210.61.82.184
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793325080;
-	b=pbTSgAex2zpzqTzaD2uuv7KBgqLVjEVl/h8zMrlZbKNQV5ogDWJI/261ABRYCW9TLPll
-	 CWWVaA+jib+cEubttFymB9dqMluWpMhiCk/OKFfXHio5TKh+X9OtMO6gR7t+eu/VdbITS
-	 etNZ4CUDDR3+onc4xWYTIGKnxUM6yDfJY9Wsy2ufYVvBeOg54H8qNiV7QBUJ/czWN/UL/
-	 +/XwF/erb/tbTPnlZ50veIu/F03UWHZ0Ig1IgG3EzY6eomMwYrSWE8HHNk4rrsA5r863s
-	 0Ih92vWovGDCpcmzD781W59WSZzknuZU7kB1azLR8a5UrzpGSIPZdHceqnI64TngZRQ==
+	t=1793341969;
+	b=caEEXy2+BqGsF2yrbXr7HWfn/cFrzYqI7a7khOSVJGjrnyWs3fmO/tiSFfJdLtzZtUmm
+	 VryzuHtnf4bcpyJTXevfJKj/kwFRpMxN5U9DTQuLObAddJZlzlrBZeNu2FtBdOsyGVCXN
+	 73bKzCwVnBcLCXFT0gdPMpkwuR8/OChgeGJsfKayiOTBuc9W8mXuBE4m9QDW5I7qp8wYD
+	 2a5Gx8m2iA2n8fO6XZPBXaTEOYQAb7WmScQDFX6gUN3fmtdCS373k54c4otRqH9za8meS
+	 c1QCoSQuPEYLgJQuUqpGG6tbL1e2sFpADTSu+DNB7DrhyPqJWi0wRqUNQrjB2IodO9w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793325080;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=ezfW0kTIA5PHgkQx11DUQmWu3ivUkuVOVr5h6sqizzk=;
-	b=RLg9KpFGLQvL2J9KyQrOlgfz2hHauE+MsVCAQBbRN2B9/XBWBm/HnznQmcDMHx5BAbeo
-	 PJ7lAjLO+U73AM23qvVTJ3PsYVb8nHS5sBaCGJ4JChdnPCI0eXPjDULD4Qq/CiECkesdW
-	 uUnA/sfEjBed0u5B9wdwQP8PRW00CkQIH4hDQvVBwwEAiH/2X4XE17GyDLCHUghK2ab7e
-	 hcX8fl3GAopW+hRwDMKfZrhLvtx6zeazaIjdBsLGTgzRVkhWAG/wUY5/MT626b7sA/HwA
-	 EMxGfIW6t38Bxnpw/nUoJMo6AK9SG/8zF9Y874jxDeXsbeJ7g+NT8zd1bIuCqFSN6wQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793341969;
+	h=DMARC-Filter:X-UUID:DKIM-Signature:X-CID-P-RULE:X-CID-O-INFO:
+	 X-CID-META:X-CID-BVR:X-CID-BAS:X-CID-FACTOR:X-CID-RHF:X-UUID:Received:
+	 Received:Received:Message-ID:Subject:From:To:CC:Date:In-Reply-To:
+	 References:Content-Type:Content-Transfer-Encoding:User-Agent:
+	 MIME-Version:X-MTK;
+	bh=pfj4X609hKhIRQ7z+Mq1LilV5/LakH8sYEZmcW2v6iI=;
+	b=VxJ9B8UcaVA5+REKLztXUWo8afinzwnUiY1Zo5+OTK6ZHHVvJ5kfqixFqoYO/uwM/kRk
+	 v/n2AOY59BbhVpX915S9Rv4SVEbYWjuH9iwKS4wVkL9t6SLhoFYNbYS1d2YJ7up5fYYQg
+	 nLa0seiJvIfhuiv8OmFc12HGTs9BLIwn7fFZtsBfQg4yVyMIRz/KRr3XP/v6Mnkvqf6uN
+	 fRh4C2qSC/z+HnHMtbmR6PnYAGOyEDxhVKgHd/vhKVPvZENzYyLi7DmP2JsXQPTp05ssc
+	 kmqz7cRRxnq2zb4XvQsK3KoFB0VRuHIJjUB4ij5zfwmxVr5W6ZjV5Hli92UVigtWdfQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=d9a6pZWp;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=mediatek.com;
+	spf=pass smtp.mailfrom=mediatek.com;
+	dkim=pass header.d=mediatek.com header.i=@mediatek.com header.a=rsa-sha256 header.s=dk header.b=QYOERf5X;
+	arc=none smtp.remote-ip=210.61.82.184
+Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0C7D606A31A
-	for <linux-scsi@vger.kernel.org>; Fri, 30 Oct 2026 01:51:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 10E03606A31A;
+	Fri, 30 Oct 2026 06:32:47 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 10E03606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=d9a6pZWp
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 93EE11F000C1;
-	Fri, 30 Oct 2026 01:51:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793325079;
-	bh=ezfW0kTIA5PHgkQx11DUQmWu3ivUkuVOVr5h6sqizzk=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=d9a6pZWpVGK3q1CRPsKjb79iuASnQ7wh3sdEgQZU/tyTWDlF/ea8gLyVgf9Mvn5eH
-	 FnGe47xS25wSnQrwk/344TU5Y8Q9QevLsQd5bAcsiD5x1t1IK+9MGccWrW9dBe4w8i
-	 i5RfbqSZ/qdxXgBdT92soOLcB6wkfluymun/9DODAz9iR088Z2m53xZoQY0b41ya2l
-	 fZEz602cF4a9ecAiAZH6k8ATz/Yxwz3tbx0eT65kGXrmsx1gqUjd4rK/wurvkboDnw
-	 VcJLp3T2IvKYB6lywzc+zWPVNioP/XmqVWn4/FUwWvo87mSYHvD4Qsyzw7nK0SSWQH
-	 awYbaCFtzQ59g==
-Message-ID: <sashiko-outbox-190159@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2] scsi: ufs: mcq: Reap aborted CQEs before returning
- from abort
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Jeuk Kim" <jeuk20.kim@gmail.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20261030011321.1868029-1-jeuk20.kim@gmail.com>
-References: <20261030011321.1868029-1-jeuk20.kim@gmail.com>
-Content-Type: text/plain; charset=utf-8
+	dkim=pass (1024-bit key, unprotected) header.d=mediatek.com header.i=@mediatek.com header.a=rsa-sha256 header.s=dk header.b=QYOERf5X
+X-UUID: b420f2c2d42b11f18dc8c9802ae25ab1-20261030
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+	h=MIME-Version:Content-Transfer-Encoding:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=pfj4X609hKhIRQ7z+Mq1LilV5/LakH8sYEZmcW2v6iI=;
+	b=QYOERf5XmrsQPWZPvK73zFPBDDwN8WazkZmAblzBF6C1zK/bEd7AOvbjowbVYGQ2diHA1+KoV4bE43MLRRXnrzK5XqCbebuRgG0AQOAF8SLpzyNpBWaJ/+fRYYeEBX8odUtcpFsHKpTbTtEvS1BG7pL1Yx45KSOLg2SrUMV2pBE=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.21,REQID:895cdad1-cafa-4729-a787-946d41c78b32,IP:0,U
+	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+	release,TS:0
+X-CID-META: VersionHash:b0318ac,CLOUDID:8cf4af21-7030-4fea-80dc-cfd692cf1438,B
+	ulkID:nil,BulkQuantity:0,SF:80|81|82|83|102|136|836|865|888|898,TC:-5,Cont
+	ent:0|15|50|99,EDM:-3|-100,IP:nil,URL:99|1,File:130,RT:0,Bulk:nil,QS:nil,B
+	EC:-1,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_ULS
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: b420f2c2d42b11f18dc8c9802ae25ab1-20261030
+Received: from mtkmbs11n2.mediatek.inc [(172.21.101.187)] by mailgw02.mediatek.com
+	(envelope-from <peter.wang@mediatek.com>)
+	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+	with ESMTP id 1961799278; Fri, 30 Oct 2026 14:32:39 +0800
+Received: from mtkmbs11n1.mediatek.inc (172.21.101.185) by
+ mtkmbs11n2.mediatek.inc (172.21.101.187) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.29; Fri, 30 Oct 2026 14:32:38 +0800
+Received: from [10.233.130.16] (10.233.130.16) by mtkmbs11n1.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.2.2562.29 via Frontend
+ Transport; Fri, 30 Oct 2026 14:32:38 +0800
+Message-ID: <53fe962918514149044cd919786ff12d56b8d33d.camel@mediatek.com>
+Subject: Re: [PATCH v2 0/5] scsi: ufs: Fix device management timeouts and
+ runtime PM errors
+From: Peter Wang <peter.wang@mediatek.com>
+To: Stanley Jhu <stanleyjhu@google.com>, "Martin K . Petersen"
+	<mkp@kernel.org>, "James E . J . Bottomley"
+	<James.Bottomley@HansenPartnership.com>, Alim Akhtar
+	<alim.akhtar@samsung.com>, Bart Van Assche <bvanassche@acm.org>, Bean Huo
+	<beanhuo@micron.com>
+CC: Can Guo <can.guo@oss.qualcomm.com>, <linux-scsi@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+Date: Fri, 30 Oct 2026 14:32:38 +0800
+In-Reply-To: <20261029040003.2100003-1-stanleyjhu@google.com>
+References: <20261029040003.2100003-1-stanleyjhu@google.com>
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 30 Oct 2026 01:51:19 +0000
+User-Agent: Evolution 3.52.3-0ubuntu1.1 
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -59,272 +88,88 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+X-MTK: N
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
-s) to consider:
-- [High] scsi: ufs: unguarded completion and missing outstanding_reqs clear=
- in ufshcd_clear_lu_cmds()
-- [High] scsi: ufs: missing UFSHCD_LRB_COMPLETED check in ufshcd_eh_timed_o=
-ut()
-- [Medium] scsi: ufs: ufshcd_compl_one_cqe() clobbers cmd->result of timed-=
-out commands
---
+On Thu, 2026-10-29 at 15:08 +0800, Stanley Jhu wrote:
+> This series fixes two problems in UFS core entry points that issue
+> device management commands or touch host registers.
+>=20
+> Patch 1/5 restores the millisecond to jiffies conversion of device
+> management command timeouts. Since the timeout moved to rq->timeout,
+> a 1500 ms query timeout waits 6 s with CONFIG_HZ=3D250.
+>=20
+> Patches 2/5 to 5/5 handle runtime PM resume errors. Several UFS core,
+> sysfs, BSG, hwmon, and debugfs entry points call
+> ufshcd_rpm_get_sync()
+> before accessing host registers or issuing device management and UIC
+> commands, but ignore its return value.
+>=20
+> ufshcd_rpm_get_sync() wraps pm_runtime_get_sync() on the UFS device
+> W-LUN and returns a negative errno when runtime resume of the W-LUN
+> or
+> host controller fails, leaving the device or controller in
+> RPM_SUSPENDED.
+>=20
+> Continuing after such a failure can access host registers or issue
+> commands while the device or controller is not known to be active,
+> while checking pm_runtime_get_sync() directly would leave
+> power.usage_count elevated unless balanced with
+> pm_runtime_put_noidle().
+>=20
+> Add ufshcd_rpm_resume_and_get() around pm_runtime_resume_and_get()
+> and
+> convert the 20 external and helper call sites to abort and propagate
+> the
+> error when resuming the W-LUN fails. The three lifecycle call sites
+> in
+> ufshcd_rpm_dev_flush_recheck_work(), ufshcd_wl_shutdown(), and
+> ufshcd_remove(), plus ufshcd_err_handling_prepare(), are
+> intentionally
+> left unchanged.
+>=20
+> Tested on QEMU ARM64 UFS (SDB and MCQ) with W-LUN runtime resume and
+> suspend failures via sysfs offline (no behavior change on suspend
+> failure) and GDB power.disable_depth=3D1 to make ufshcd_rpm_get_sync()
+> fail, and on SDB with a timed out query request.
+>=20
+> Changes since v1:
+> - Drop the incorrect claim that a failed W-LUN runtime suspend
+> =C2=A0 latches power.runtime_error from the cover letter and commit
+> =C2=A0 messages. The PM core latches a runtime suspend error only if it
+> =C2=A0 is neither -EBUSY nor -EAGAIN, and in-tree UFS drivers fail W-LUN
+> =C2=A0 runtime suspend only with -EBUSY or -EAGAIN (Bart).
+> - Say in the cover letter how the series was tested.
+> - Describe each failing sequence in patches 2-5 step by step in
+> =C2=A0 time order, and drop the runtime PM disabled (-EACCES) scenario.
+>=20
+> Link:
+> https://lore.kernel.org/linux-scsi/20261025013446.345974-1-stanleyjhu@goo=
+gle.com/
+> =C2=A0
+>=20
+> Stanley Jhu (5):
+> =C2=A0 scsi: ufs: core: Restore jiffies conversion of device management
+> =C2=A0=C2=A0=C2=A0 timeouts
+> =C2=A0 scsi: ufs: core: Introduce ufshcd_rpm_resume_and_get() helper
+> =C2=A0 scsi: ufs: sysfs: Propagate runtime PM resume errors
+> =C2=A0 scsi: ufs: bsg: Abort ufs_bsg_request() when runtime resume fails
+> =C2=A0 scsi: ufs: hwmon, debugfs: Propagate runtime PM resume errors
+>=20
+> =C2=A0drivers/ufs/core/ufs-debugfs.c |=C2=A0 8 +++-
+> =C2=A0drivers/ufs/core/ufs-hwmon.c=C2=A0=C2=A0 | 12 +++++-
+> =C2=A0drivers/ufs/core/ufs-sysfs.c=C2=A0=C2=A0 | 67 +++++++++++++++++++++=
+++++++-----
+> --
+> =C2=A0drivers/ufs/core/ufs_bsg.c=C2=A0=C2=A0=C2=A0=C2=A0 |=C2=A0 4 +-
+> =C2=A0drivers/ufs/core/ufshcd-priv.h |=C2=A0 5 +++
+> =C2=A0drivers/ufs/core/ufshcd.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 |=C2=A0 9 +=
+++--
+> =C2=A06 files changed, 84 insertions(+), 21 deletions(-)
+>=20
+>=20
+> base-commit: 503e6172fa74da6b4944ece458f5534681e51d21
 
-commit 54407428c294792b0ec3e920d76f745b0a9af3bc
-Author: Jeuk Kim <jeuk20.kim@samsung.com>
+For the series:
+Reviewed-by: Peter Wang <peter.wang@mediatek.com>
 
-scsi: ufs: mcq: Reap aborted CQEs before returning from abort
-
-This commit tracks per-command driver completion via UFSHCD_LRB_COMPLETED a=
-nd
-waits in ufshcd_mcq_sq_cleanup() for the CQE of an aborted or reset command=
- to
-be reaped before returning. If SQ cleanup times out, DMA mappings are kept
-intact until host-reset cleanup releases uncompleted commands after stopping
-the HBA.
-
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index cc75384c65021..3f2b99cfd87fc 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-
-[ ... ]
-
-> @@ -6014,6 +6020,7 @@ void ufshcd_compl_one_cqe(struct ufs_hba *hba, int =
-task_tag,
->  			(struct utp_upiu_req *)lrbp->ucd_rsp_ptr);
->  		cmd->result =3D 0;
->  	}
-> +	set_bit(UFSHCD_LRB_COMPLETED, &lrbp->flags);
->  	/* Do not touch lrbp after scsi_done() has been called. */
->  	scsi_done(cmd);
->  }
-
-[Severity: Medium]
-When a command has already timed out and SCMD_STATE_COMPLETE is set on
-cmd->state, should ufshcd_compl_one_cqe() avoid overwriting cmd->result (ju=
-st
-as ufshcd_mcq_force_compl_one() below guards set_host_byte(cmd, DID_REQUEUE)
-with !test_bit(SCMD_STATE_COMPLETE, &cmd->state))?
-
-When a SCSI command times out, scsi_timeout() sets SCMD_STATE_COMPLETE on
-scmd->state and schedules scmd_eh_abort_handler(). If ufshcd_abort() returns
-FAILED (for example when lrbp->req_abort_skip is set, the command is found =
-in
-the SQ, UFS_QUERY_TASK or UFS_ABORT_TASK fails, or ufshcd_mcq_sq_cleanup()
-times out) or eh_deadline has expired, scmd_eh_abort_handler() jumps to out:
-before calling set_host_byte(scmd, DID_TIME_OUT) and queues the command to
-eh_cmd_q with scmd->result =3D=3D 0 (or with DID_TIME_OUT already set if a
-retried command timed out a second time).
-
-When SCSI EH then runs ufshcd_eh_device_reset_handler() ->
-ufshcd_clear_lu_cmds() -> ufshcd_mcq_sq_cleanup(), or drains CQEs during ho=
-st
-reset via ufshcd_mcq_compl_all_cqes_lock(), or processes a late CQE interru=
-pt
-after an SQ cleanup timeout, ufshcd_compl_one_cqe() runs while
-SCMD_STATE_COMPLETE is already set and unconditionally executes:
-
-drivers/ufs/core/ufshcd.c:ufshcd_compl_one_cqe() {
-	if (ufshcd_is_scsi_cmd(cmd)) {
-		...
-		cmd->result =3D ufshcd_transfer_rsp_status(hba, cmd, cqe);
-		ufshcd_release_scsi_cmd(hba, cmd);
-	} else {
-		...
-		cmd->result =3D 0;
-	}
-}
-
-For an OCS_ABORTED CQE, ufshcd_transfer_rsp_status() returns DID_REQUEUE <<=
- 16,
-setting scmd->result to a non-zero value. Later in scsi_eh_flush_done_q():
-
-drivers/scsi/scsi_error.c:scsi_eh_flush_done_q() {
-			if (!scmd->result &&
-			    !(scmd->flags & SCMD_FORCE_EH_SUCCESS))
-				scmd->result |=3D (DID_TIME_OUT << 16);
-			...
-			scsi_finish_command(scmd);
-}
-
-Because scmd->result is now DID_REQUEUE << 16 instead of 0, !scmd->result is
-false and DID_TIME_OUT is not set when finishing the command. Can this cause
-passthrough/SG_IO requests and scsi_execute_cmd() callers to observe
-DID_REQUEUE instead of DID_TIME_OUT, and prevent scsi_noretry_cmd() and
-sd_eh_action() from matching DID_TIME_OUT?
-
-[ ... ]
-
-> @@ -7934,31 +7947,34 @@ int ufshcd_advanced_rpmb_req_handler(struct ufs_h=
-ba *hba, struct utp_upiu_req *r
->  	return err ? : result;
->  }
-> =20
-> +struct ufshcd_lu_reset_info {
-> +	u64 lun;
-> +	int err;
-> +};
-> +
->  static bool ufshcd_clear_lu_cmds(struct request *req, void *priv)
->  {
->  	struct scsi_cmnd *cmd =3D blk_mq_rq_to_pdu(req);
->  	struct scsi_device *sdev =3D cmd->device;
->  	struct Scsi_Host *shost =3D sdev->host;
->  	struct ufs_hba *hba =3D shost_priv(shost);
-> -	const u64 lun =3D *(u64 *)priv;
-> +	struct ufshcd_lu_reset_info *reset =3D priv;
->  	const u32 tag =3D req->tag;
-> +	int err;
-> =20
-> -	if (blk_mq_is_reserved_rq(req) || sdev->lun !=3D lun)
-> +	if (blk_mq_is_reserved_rq(req) || sdev->lun !=3D reset->lun)
->  		return true;
-> =20
-> -	if (ufshcd_clear_cmd(hba, tag) < 0) {
-> +	err =3D ufshcd_clear_cmd(hba, tag);
-> +	if (err) {
-> +		reset->err =3D err;
->  		dev_err(hba->dev, "%s: failed to clear request %d\n", __func__,
->  			tag);
->  		return true;
->  	}
-> =20
-> -	if (hba->mcq_enabled) {
-> -		struct ufs_hw_queue *hwq =3D ufshcd_mcq_req_to_hwq(hba, req);
-> -
-> -		if (hwq)
-> -			ufshcd_mcq_poll_cqe_lock(hba, hwq);
-> +	if (hba->mcq_enabled)
->  		return true;
-> -	}
-> =20
->  	ufshcd_compl_one_cqe(hba, tag, NULL);
->  	return true;
-> @@ -7972,6 +7988,7 @@ static bool ufshcd_clear_lu_cmds(struct request *re=
-q, void *priv)
->   */
->  static int ufshcd_eh_device_reset_handler(struct scsi_cmnd *cmd)
->  {
-> +	struct ufshcd_lu_reset_info reset =3D { .lun =3D cmd->device->lun };
->  	struct Scsi_Host *host;
->  	struct ufs_hba *hba;
->  	int err;
-> @@ -7989,7 +8006,8 @@ static int ufshcd_eh_device_reset_handler(struct sc=
-si_cmnd *cmd)
->  		/* clear the commands that were pending for corresponding LUN */
->  		blk_mq_tagset_busy_iter(&hba->host->tag_set,
->  					ufshcd_clear_lu_cmds,
-> -					&cmd->device->lun);
-> +					&reset);
-> +		err =3D reset.err;
->  	}
-
-[Severity: High]
-What happens in ufshcd_clear_lu_cmds() when blk_mq_tagset_busy_iter() visit=
-s a
-request on reset.lun that has already completed in the driver?
-
-blk_mq_tagset_busy_iter() visits every request where blk_mq_request_started=
-()
-(req->state !=3D MQ_RQ_IDLE) is true. A command on reset.lun that already
-completed via ufshcd_compl_one_cqe() (setting UFSHCD_LRB_COMPLETED and call=
-ing
-ufshcd_release_scsi_cmd()) remains started in MQ_RQ_IN_FLIGHT if it complet=
-ed
-after scsi_timeout() set SCMD_STATE_COMPLETE (since scsi_done_internal()
-returns early before blk_mq_complete_request(), and ufshcd_abort() then fai=
-ls
-and queues the command to eh_cmd_q), or in MQ_RQ_COMPLETE if it was queued =
-to
-eh_cmd_q via scsi_complete() -> scsi_eh_scmd_add().
-
-Because ufshcd_clear_lu_cmds() does not check UFSHCD_LRB_COMPLETED before
-calling ufshcd_clear_cmd(hba, tag):
-
-1. In MCQ mode, now that reset.err is propagated to
-   ufshcd_eh_device_reset_handler(), visiting an already-completed command =
-on
-   a host with UFSHCD_QUIRK_MCQ_BROKEN_RTC causes ufshcd_mcq_sq_cleanup() to
-   return -ETIMEDOUT and fails the LU reset even when no command is pending=
- in
-   hardware. On hosts without that quirk, ufshcd_mcq_sq_cleanup() still sto=
-ps
-   the hardware SQ and issues SQ_ICU for a tag that has already completed.
-
-2. In SDB mode (!hba->mcq_enabled), ufshcd_clear_lu_cmds() neither checks
-   UFSHCD_LRB_COMPLETED / hba->outstanding_reqs nor clears tag in
-   hba->outstanding_reqs. For an already-completed command on reset.lun,
-   ufshcd_clear_cmd() sees the doorbell bit is 0 and returns 0, and
-   ufshcd_clear_lu_cmds() calls ufshcd_compl_one_cqe(hba, tag, NULL) a seco=
-nd
-   time, triggering a double scsi_dma_unmap() and underflowing
-   hba->clk_gating.active_reqs and hba->clk_scaling.active_reqs. For a comm=
-and
-   that was still pending in hba->outstanding_reqs, ufshcd_clear_lu_cmds()
-   clears the doorbell bit and calls ufshcd_compl_one_cqe(hba, tag, NULL)
-   while leaving tag set in hba->outstanding_reqs, so a subsequent
-   ufshcd_poll() call sees (~tr_doorbell & hba->outstanding_reqs) and compl=
-etes
-   the same tag a second time via __ufshcd_transfer_req_compl().
-
-Should ufshcd_clear_lu_cmds() check whether the command is already completed
-(and clear hba->outstanding_reqs under hba->outstanding_lock in SDB mode)
-before cleaning up and completing the tag?
-
-[ ... ]
-
-> @@ -9653,6 +9672,7 @@ static enum scsi_timeout_action ufshcd_eh_timed_out=
-(struct scsi_cmnd *scmd)
->  			set_host_byte(scmd, DID_TIME_OUT);
->  		}
-> =20
-> +		set_bit(UFSHCD_LRB_COMPLETED, &lrbp->flags);
->  		scsi_done(scmd);
->  	}
-
-[Severity: High]
-Can ufshcd_eh_timed_out() call ufshcd_release_scsi_cmd(hba, scmd) a second
-time here because it only checks !test_bit(SCMD_STATE_COMPLETE, &scmd->stat=
-e)
-instead of checking UFSHCD_LRB_COMPLETED (under hwq->cq_lock in MCQ mode)?
-
-When hba->pm_op_in_progress is true, ufshcd_eh_timed_out() runs
-ufshcd_link_recovery(hba) -> ufshcd_host_reset_and_restore() before this
-block. That can leave SCMD_STATE_COMPLETE clear while UFSHCD_LRB_COMPLETED =
-is
-already set in two cases:
-
-1. At the start of ufshcd_host_reset_and_restore(), ufshcd_complete_request=
-s()
-   calls ufshcd_mcq_force_compl_one() (or __ufshcd_transfer_req_compl() in =
-SDB
-   mode), which releases scmd via ufshcd_release_scsi_cmd(), sets
-   UFSHCD_LRB_COMPLETED, and completes scmd with DID_REQUEUE via
-   scsi_done(scmd) before ufshcd_hba_enable(), ufshcd_device_init(), and
-   ufshcd_probe_hba() finish. Because the host is not in SHOST_RECOVERY,
-   DID_REQUEUE causes scsi_complete() -> scsi_queue_insert() to requeue the
-   request (or wakes blk_execute_rq() in scsi_execute_cmd() to retry). When
-   scsi_queue_rq() runs while ufshcd_host_reset_and_restore() still has
-   hba->ufshcd_state =3D=3D UFSHCD_STATE_RESET, scsi_queue_rq() executes
-   clear_bit(SCMD_STATE_COMPLETE, &cmd->state) and ufshcd_queuecommand()
-   returns SCSI_MLQUEUE_HOST_BUSY, leaving SCMD_STATE_COMPLETE =3D=3D 0 whi=
-le
-   UFSHCD_LRB_COMPLETED =3D=3D 1.
-
-2. If scmd already completed in ufshcd_compl_one_cqe() (which called
-   ufshcd_release_scsi_cmd() and set UFSHCD_LRB_COMPLETED), but
-   scsi_done_internal() returned early at blk_should_fake_timeout() before
-   setting SCMD_STATE_COMPLETE, ufshcd_mcq_force_compl_one() during
-   ufshcd_link_recovery() now sees UFSHCD_LRB_COMPLETED is set and skips sc=
-md
-   without setting SCMD_STATE_COMPLETE.
-
-In both cases, when ufshcd_link_recovery(hba) returns, ufshcd_eh_timed_out()
-sees !test_bit(SCMD_STATE_COMPLETE, &scmd->state) is true and calls
-ufshcd_release_scsi_cmd(hba, scmd) and scsi_done(scmd) a second time,
-resulting in a double scsi_dma_unmap() and active_reqs underflow.
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261030011321.1868=
-029-1-jeuk20.kim@gmail.com?part=3D1
