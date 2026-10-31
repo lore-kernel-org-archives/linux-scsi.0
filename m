@@ -1,66 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793410824;
-	b=4P8QnpEC+aoda9jFzAkaoa7qspaKogkhFhlR73sAPYnFBP7pH8p662UcP8VsBYyvezu3
-	 +yyoYKzbAprftc1KfcgIvrPXaXVWmpVsw1LC7x69R5kfmt6MYv4VCuNximBrxU7CoE/4p
-	 RhoDPBkq9vq2nEhnQTL+rL3VJjlMEaQ9F+ChsYuIaGFf/CDgXaMqn6kum7gFr+yTRi+8m
-	 6jJ9X4rn6S8J94KPMTR+uuTmtrP/KM+I69FaqkyaBGn6Q4aF2lsK77Ro9BuOI63DFmnK4
-	 OGCVQK3fA7rv/fHX4aZiQ7jsy0XMw94caqg5KjTDTCgowM0ZliwT8cgJBKXJ9YU5SSg==
+	t=1793410826;
+	b=ZQ7aSlcm+95NWe1ycMWH4b4JXz0U0ZhNQRrgOGzVlpD1aykrjLWv3DOxgW+5ODp3W4Rg
+	 6f3lvw+wvfOiGSXisXC2JJ6a1755VaLX3Op3+FARFG91yaYAhlE0Q1xF7BhtqfUILVXui
+	 o54/c2woDjLl5mewOgrpL4+2+efEJyEhjCjY2yXTg9cKa/dXAh1VvLE83K5JqxfISbrFA
+	 EgZX06berX+LzhBuu3QvJRVPVMIBl63OvYd6JuOscnKO69d7lN/LAs1lHy94UV6SMAqkl
+	 b5QKZHXX5MS+Dj60yQ3JewtKJH6fjfeklXF7A3l4O1DqTEWNMbw1n0TXm8lmAiNxyRw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793410824;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793410826;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding;
-	bh=1/86xQn13sQ2wQsTVCOqnQlazj8JTkW7FmVpuw8Eg9U=;
-	b=rhpL3LnCoa1kAiYE2fJTqQAmBt0lIsiVq7ha4uhWRsbwHoZ1bir8OF+/eWt/yuPGBxDt
-	 BcXujJ/I9Q18n9UVndpRJiMwjpj0UggZGjSSQE4s9EAXDG6SjyQxzCc72lGN5qmqnFUqn
-	 oBvRhtNMH2ToF5dRW3WXsi62SFoBVhjecblQ8chMw/TcrXuhluMiDPSNVBOFZYBagIslH
-	 RAtup4gJAixvBeGTmcL7HcAOd9ojlfXXx1B9eGJy9yVzUIQit3BHuJpWAdXyNgLdEucF+
-	 ij4ZNe391KwaG1AZa+83nraSsxUpxPhQhAApxvXRbhDV9TQ+3BA7H687rbkZQyY8Fsw==
+	bh=2t0RcGd/7teWs7LIzlpmlSpF5GPOOwLxfjFfZfOYR+o=;
+	b=AISK3V8WuhENAGwxAFDtRedJQK628tzkyAA9Zo7bo+gFULvSzdaQgXDa3Whqc8BK6AcU
+	 8X6py0QbnqF7UnVeVEO0qTKj9c4/UHwjJQy2EHESWPKkfJhBMK4sGSgOVb05bAEBe6Y5v
+	 OCiezQTrc5dG29QDpz4v7ze9Wi+9/nINg46M1YEE5+4j9WoC/rsSAylRBSHTlz2ZN3W7X
+	 fJ6c4UCQQMPyxNTiu8fwdQmW05IKT1hBHn/RRBCCXXCWN6/WAR0p/FZ0NVOvGXPaZV8tl
+	 LmesgaEyeAx4d425tfvBZ+9mCqGr3qIktuNOAObpld16SF4WlZBTaefW3kB/kMZTBzw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="d/M0yBOj";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=R+MbIE1n;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1252606A322;
-	Sat, 31 Oct 2026 01:40:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A5757606A332;
+	Sat, 31 Oct 2026 01:40:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=d/M0yBOj
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E66AF1F00A02;
-	Sat, 31 Oct 2026 01:40:21 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=R+MbIE1n
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 925611F0093A;
+	Sat, 31 Oct 2026 01:40:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793410823;
-	bh=1/86xQn13sQ2wQsTVCOqnQlazj8JTkW7FmVpuw8Eg9U=;
+	s=k20260515; t=1793410826;
+	bh=2t0RcGd/7teWs7LIzlpmlSpF5GPOOwLxfjFfZfOYR+o=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=d/M0yBOjUq5yz9zCLdUxc8F9FfVLKk0ra1zMVYwiRkbJ830XbNc/my7PGdbowHeMu
-	 BEmX4cGv444nJsQg8ZsOy6xgbA86aP9cIV9pbRc1naY75WxCgyVUQya+YUny0kde+h
-	 pv/QjwZhE8oE6rG/W/KCmiMuprNQCFkmDudet5eBe1Dhbq1guk1tg4/k/egkkAS9OO
-	 baD5IwYmapVSsl42sGr4vwBx57nkZ0U1DsHkuBpbyiKoD/YaKw/XJVsGenDap695ku
-	 m1f+2gVj5Bl8FLEIbm839NH+f/QcZRbVpQ/xEmHYR0aobaUGqT7SMG2DJbAkhgQa75
-	 KrAEF0/7V89Yw==
+	b=R+MbIE1nUNsZk35w09nru6Ky4tHNsa24llykO0JLApygBbcSPCas9v4Ds5j5aFU1A
+	 /FPb4LPEZSJD9m5JPZ5h6YGf28hrEPBoGAqcR9OpShxRYTy85skiBlzz2Le8X6LXos
+	 7Pk/m3gPAhwnn95qezYbXb08Ka7Aem8oLCemt1+GLM5OU5YPf95diOCmIoat1+BTpt
+	 2zOfY6dtp5q0PicnlQExI5dmlChreWe/LBpZFNLtmbd2H1RYOAH5G3tkyYJJ7CdsiC
+	 qcAjPsAsP5xzOm0+yKOI9yLFoF1E04Psc5wxdhdkQH/TjNiLF6ci/+P/qPLfxwRos7
+	 mbxb6JcWU30vw==
 From: "Martin K. Petersen (Oracle)" <mkp@kernel.org>
-To: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	alim.akhtar@samsung.com,
-	jejb@linux.ibm.com,
-	bvanassche@acm.org,
-	kwangwon.min@samsung.com,
-	kwmad.kim@samsung.com,
-	cpgs@samsung.com,
-	h10.kim@samsung.com,
-	Avri Altman <avri.altman@sandisk.com>,
-	"Martin K. Petersen" <mkp@kernel.org>,
-	HOYOUNG SEO <hy50.seo@samsung.com>
-Cc: stable@vger.kernel.org,
-	Stanley Jhu <stanleyjhu@google.com>
-Subject: Re: [PATCH v6] scsi: ufs: Change the error check sequence for auto hibern8
-Date: Fri, 30 Oct 2026 21:40:08 -0400
-Message-ID: <179340755635.952351.686725763455220200.b4-ty@b4>
+To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	Giuseppe Piscitelli <ooonea@gmail.com>
+Cc: "Martin K . Petersen" <mkp@kernel.org>,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] scsi: scsi_debug: Drain target cleanup before module exit
+Date: Fri, 30 Oct 2026 21:40:11 -0400
+Message-ID: <179340755630.952351.18201943224015271945.b4-ty@b4>
 X-Mailer: git-send-email 2.56.0
-In-Reply-To: <20261027110357.3649301-1-hy50.seo@samsung.com>
-References: <20261027110357.3649301-1-hy50.seo@samsung.com>
+In-Reply-To: <20261026202342.668361-1-ooonea@gmail.com>
+References: <20261026202342.668361-1-ooonea@gmail.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -73,26 +64,17 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 
-On Tue, 27 Oct 2026 20:03:57 +0900, HOYOUNG SEO wrote:
+On Mon, 26 Oct 2026 21:23:41 +0100, Giuseppe Piscitelli wrote:
 
-> Auto-hibern8 enter and exit are performed by the host controller without
-> a UIC command, and the auto-hibern8 idle timer only runs while no UIC
-> command is outstanding. An auto-hibern8 error (IS.UHES or IS.UHXS) is
-> therefore usually reported while hba->active_uic_cmd is NULL.
-> 
-> Since commit fcd8b0450a9a ("scsi: ufs: core: Make ufshcd_uic_cmd_compl()
-> easier to analyze"), ufshcd_uic_cmd_compl() returns early when
-> hba->active_uic_cmd is NULL, before ufshcd_is_auto_hibern8_error() is
-> called. Such auto-hibern8 errors are no longer recorded in hba->errors,
-> so ufshcd_check_errors() is not called for them and the error handler is
-> not scheduled.
-> 
-> [...]
+> Target destruction queues cleanup in an exclusive async domain. The
+> module loader's async_synchronize_full() does not wait for exclusive
+> domains. Wait for target cleanup after removing the hosts and before
+> removing the debugfs root and returning from module exit.
 
 Applied to 7.4/scsi-queue, thanks!
 
-[1/1] scsi: ufs: Change the error check sequence for auto hibern8
-      https://git.kernel.org/mkp/scsi/c/6b2ff2b3eafa
+[1/1] scsi: scsi_debug: Drain target cleanup before module exit
+      https://git.kernel.org/mkp/scsi/c/34c99ce29939
 
 -- 
 Martin K. Petersen
