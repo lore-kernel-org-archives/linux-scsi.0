@@ -1,59 +1,58 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793410825;
-	b=uxnZvafcgZHdU5AuwSaxSSLW8tZ5Tx/6ASZtOs7lKUd+qePCpGUEmpayQ5c8ZASjEnNG
-	 3VW0vSgyF6AFmzFWV1oFWSLHfyeBsRfK01H+5iSC805+nWJ5fJ0bVuCX4Hu7YlZ130wTw
-	 IrCsWENXIMXkttCgmiWVXbYM3zlKZcNHRgQS4Cas3vwzWTUEtgKHeR5cfDjQwtczvs5QM
-	 hsAO+m/2TBm2csvBx96TqxU+WX2uZuPkRB6ZzfNgY8ARqqBPhn8ZhJh/hj+yyOdOleOYg
-	 45xr+QCQdWBOHne7Rylp4+keNtcfCYpAb6YPlLYF+dDkwI02yf0UvQsu32pQPUr/dSg==
+	t=1793410827;
+	b=kuhV+/RaK/qnfSs9Ip4QOgEmzHbGsR88KqmxBWqv4aTwswbuD3EoJsFdT9CbQYaFwdYH
+	 d9xu13LuD2G9b5lSR0irKpZHhQAjRLhJOZX6z6Ha/+18yJLwmzh/90po3wmotB70rQXKF
+	 pxJWAg3oAfB9++LDtmEaROs0+TAyXRbAak8npqs56sccmqZR1z5Y9hIafIpSbuGa61e3d
+	 yj+Q9n5zgcdp4Cmpj8IcSDYKcC9js6RXAbPosk2A7tC64UNoHPWGRTYZxUeOAgppScolJ
+	 qormpCQL/9EFyNUH6xw9T0POt98fEvQ+X5LBp93kcOVtxH/RwdCYX+w55CCQxu99bFg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793410825;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793410827;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding;
-	bh=fw/Ph/kohbFU5AYEhVaIaWTjk/GWqMVAXnYUbUWLbJU=;
-	b=tymZPkDocYrefabb08sV+P0H3vcpaR+U/6BBy9C24ghtkUp4BzuALgCLjaVGyheFPnNV
-	 DIqFpw/tDZ+GAHg+U0k9WH96cCq9PZrY2ejdaFlOyJOcrlc0fKA+DM0KuVjRvoRXQZATn
-	 fn6SR5wk0Q/hXqTOd47ASOgZnMOQBwFQiQFGEVybzk07pEUToMJTj7jgximMqVV8rdwJW
-	 QqZ66xHrja/HA7SS3/fPKd2bXsIQM35kV6Sr6QcsENiYpP3OoLDJ8CQ0HsEMDq7FXHyjI
-	 jcUQbx2LxLQ3LL0uZNZBILkcMRMGRuLaKcPzK3FYmMnhTQU76jfRDUP+N2iggtvll7Q==
+	bh=zZjxsa0LSifeGK+Jmivu9RulGYImhdvbNfYOKA2qzx8=;
+	b=cnDfZUfFlV9swyOLMrOvtSSd4ZckrMdc5QqqZEfvkCg68nbmdDGqHZHh9zEhWk8eVZbL
+	 krAPaQXAvW24ea5npMkyykX0tSEX6/V9+15Pda9hi8oU/GWBKVnJpVprjJBaJAqa03gAg
+	 RD8tU/mTPNRFgk6ir8a/VNgCLoozzjE2gUvavI/axoOb4jqLRBRF09k/Ojs0G7s3GBVAr
+	 2gJEzojmJ0AKgLNIFO7QQ6gLqC+WlvDZXYLm/G67K/YhY+fkO3JohDuNqJFdJyG007FKq
+	 HU7fP4d7oJRXasMlUZ2VhICGjEdzGV2wC1BQ8g2m0tvhM26P2a5USwY1IHvDevh3TQw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=gE6WcBO8;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Z6oXofTU;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74FAB606A320;
-	Sat, 31 Oct 2026 01:40:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F46B606A33F;
+	Sat, 31 Oct 2026 01:40:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=gE6WcBO8
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 85A091F000C1;
-	Sat, 31 Oct 2026 01:40:24 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Z6oXofTU
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 766EF1F00A16;
+	Sat, 31 Oct 2026 01:40:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793410825;
-	bh=fw/Ph/kohbFU5AYEhVaIaWTjk/GWqMVAXnYUbUWLbJU=;
+	s=k20260515; t=1793410827;
+	bh=zZjxsa0LSifeGK+Jmivu9RulGYImhdvbNfYOKA2qzx8=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=gE6WcBO8E5tWoFp7S1yGc/qECRS4fY9KYUJ77YORfgpKWvHO80cX0tf1bNOK0jwA0
-	 iyLaMv5eMxwP1QikiN2254/5IRUdXtJKD3JCq3UFpI8AVIMHPF9KC1e+I1mQUnKYT7
-	 DsEJ5IySmhg/lhHXkbyz6fW72tvbLI5kroe33WrQAikZfPxucJc/N4q8kkxwYAeJh9
-	 MIwGtBSGzfIrrL8dhEZ78POOXPzrDpuD9/S0wQfPlew4HGhggNr6nofVCdUiaE2n+N
-	 XPCdCYWrRcLnnHTWLasmjaTCwskP37we3QAdCwYhXJa2VAE7TGfian+i4cagTxSSqE
-	 nzncrj23dB6aQ==
+	b=Z6oXofTU43ed3wUcfHI8ZZm1cthROX+9LFiHyvW6fiwdij4YnYgrfXPt64K+qJAAe
+	 3mawsgf0bv9QVWipNTE3+Qb/uRkDbtRr+AaFUvqqJq79vsy60mY9KJc0WMwSkHHgHf
+	 XYde/l1fAzQq/ur5eAQuU7/T2gSBe/ZtS70VZkEh4i7YbrZ5oH7xlDEuiHuWMR6fot
+	 ryxPhGvBUOiMDoH1ob8t8f0fYBuMHUMKS9ZjuNHaB5xPXd0Ny6Bmgk12qyW7row+3W
+	 EsYQNtw6PPRfAD2D0mCGvVYr38vNVTgxZ8GRPNR3YKfcO58KcPJL6m45bRwZrvm4dQ
+	 VY56x1kc+h05w==
 From: "Martin K. Petersen (Oracle)" <mkp@kernel.org>
-To: Hannes Reinecke <hare@suse.com>,
-	James.Bottomley@HansenPartnership.com,
-	linux-scsi@vger.kernel.org,
-	Imre Kaloz <kaloz@kernel.org>
+To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	Giuseppe Piscitelli <ooonea@gmail.com>
 Cc: "Martin K . Petersen" <mkp@kernel.org>,
-	linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org
-Subject: Re: [PATCH] scsi: aic7xxx: Use default settings on the SGI O2 onboard controllers
-Date: Fri, 30 Oct 2026 21:40:10 -0400
-Message-ID: <179340755627.952351.15831662600930147004.b4-ty@b4>
+	Bart Van Assche <bvanassche@acm.org>,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] scsi: core: Balance the pseudo target reap reference
+Date: Fri, 30 Oct 2026 21:40:12 -0400
+Message-ID: <179340755631.952351.2187048231241062717.b4-ty@b4>
 X-Mailer: git-send-email 2.56.0
-In-Reply-To: <20261026131432.26065-1-kaloz@kernel.org>
-References: <20261026131432.26065-1-kaloz@kernel.org>
+In-Reply-To: <20261027100859.1031135-1-ooonea@gmail.com>
+References: <20261027100859.1031135-1-ooonea@gmail.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -66,22 +65,21 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 
-On Mon, 26 Oct 2026 14:14:32 +0100, Imre Kaloz wrote:
+On Tue, 27 Oct 2026 11:08:50 +0100, Giuseppe Piscitelli wrote:
 
-> The SGI O2 firmware runs its onboard aic7880s without the Adaptec BIOS,
-> so scratch RAM holds no settings. The left over BIOS path reads
-> uninitialised bytes, and bad parity panics the boot.
+> With memory allocation profiling enabled, unloading scsi_debug reports
+> allocations left at module unload. A stock Linux 7.2.11 VM without OpenZFS
+> emitted the following on each of three load/unload cycles:
 > 
-> Use the defaults there with host ID 0. ahc_init() keeps the default host
-> ID ahc_pci_config() chose, 7 on other PCI controllers, so only the O2
-> changes.
+> [    1.644665] drivers/scsi/scsi_debug.c:8863 module scsi_debug func:sdebug_add_host_helper has 1024 allocated at module unload
+> [    1.656260] drivers/scsi/scsi_debug.c:1261 module scsi_debug func:sdebug_target_alloc has 16 allocated at module unload
 > 
 > [...]
 
 Applied to 7.4/scsi-queue, thanks!
 
-[1/1] scsi: aic7xxx: Use default settings on the SGI O2 onboard controllers
-      https://git.kernel.org/mkp/scsi/c/696bdfc58975
+[1/1] scsi: core: Balance the pseudo target reap reference
+      https://git.kernel.org/mkp/scsi/c/8a832fb632da
 
 -- 
 Martin K. Petersen
