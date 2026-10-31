@@ -1,58 +1,53 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=160.30.148.34
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793410827;
-	b=kuhV+/RaK/qnfSs9Ip4QOgEmzHbGsR88KqmxBWqv4aTwswbuD3EoJsFdT9CbQYaFwdYH
-	 d9xu13LuD2G9b5lSR0irKpZHhQAjRLhJOZX6z6Ha/+18yJLwmzh/90po3wmotB70rQXKF
-	 pxJWAg3oAfB9++LDtmEaROs0+TAyXRbAak8npqs56sccmqZR1z5Y9hIafIpSbuGa61e3d
-	 yj+Q9n5zgcdp4Cmpj8IcSDYKcC9js6RXAbPosk2A7tC64UNoHPWGRTYZxUeOAgppScolJ
-	 qormpCQL/9EFyNUH6xw9T0POt98fEvQ+X5LBp93kcOVtxH/RwdCYX+w55CCQxu99bFg==
+	t=1793456501;
+	b=q1UZpUvCniJMMTkpSS1eLDiA+ZPd7h6I0AauwzxzHwo4CUetqhXPFHCi3HnVzpsxNQij
+	 Yiijsp/l4EBXJH4H2FFzrR0fcC3Fuoot9Qmxxe/JvDk5q7XDILwsukXixEFV1aeOQ7Qhu
+	 VRK1HoVoUjOleVZKGp/2Wvcmz66oUgFkCHWO305Z0bKj2AdtgPJKxVZEFNIegTC/7VTeS
+	 jahYOl04erFncgzyoVCEV7Z4JPmllCzky/RF/KxliCkHE4QWfPBo5IsdSGQMaD89lnH1V
+	 /KEO89opFa3q9BMn39LyZPL0Vec0kJh6N+9HY1E3p8qeMkjlGaOmAkriRozaT1yJMlQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793410827;
-	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
-	 In-Reply-To:References:MIME-Version:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=zZjxsa0LSifeGK+Jmivu9RulGYImhdvbNfYOKA2qzx8=;
-	b=cnDfZUfFlV9swyOLMrOvtSSd4ZckrMdc5QqqZEfvkCg68nbmdDGqHZHh9zEhWk8eVZbL
-	 krAPaQXAvW24ea5npMkyykX0tSEX6/V9+15Pda9hi8oU/GWBKVnJpVprjJBaJAqa03gAg
-	 RD8tU/mTPNRFgk6ir8a/VNgCLoozzjE2gUvavI/axoOb4jqLRBRF09k/Ojs0G7s3GBVAr
-	 2gJEzojmJ0AKgLNIFO7QQ6gLqC+WlvDZXYLm/G67K/YhY+fkO3JohDuNqJFdJyG007FKq
-	 HU7fP4d7oJRXasMlUZ2VhICGjEdzGV2wC1BQ8g2m0tvhM26P2a5USwY1IHvDevh3TQw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793456501;
+	h=DMARC-Filter:Received:Received:Received:X-Zmail-TransId:X-Mailer:
+	 Message-ID:Date:Mime-Version:From:To:Cc:Subject:Content-Type:X-MAIL:
+	 X-TLS:X-ENVELOPE-SENDER:X-SOURCE-IP:X-CLEAN:
+	 X-Fangmail-Anti-Spam-Filtered:X-Fangmail-MID-QID;
+	bh=P8bqr59X4O70bBUBeBQOEpLRbZ5kC1qr02XdRj51bCc=;
+	b=j5KcU4kc74nYgSh3NGkCmzsdboB/YnNqUC5pejWLbG9pzjnmPsfbz/Os8iedxOR3GRNd
+	 uYs5t9Y6u7wUHaS4O04TqCbuEc+h85lvE7Ph74rpBgUYzWubz2fdeXN1yOnRHbSLfyv3I
+	 42bBe44y3Xh3u1kb6v0M8jL48soD5LmtvKls+ljuPLR78GoIbESXQfiLGecwPA9qJKKks
+	 z9ElnxZmjBJql4ZoFmB9lTBzWaXEl5sv37ftWD8/eak8lIdCB9oPa6l4eAvbBjgukX1XH
+	 AsL0R7IjHvOnLfQ/nJ/9FM2GmqdAFYp412W56mPHAoGRIepRK2mvGyozpvmI5S9Ey8A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Z6oXofTU;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=zte.com.cn;
+	spf=pass smtp.mailfrom=zte.com.cn;
+	arc=none smtp.remote-ip=160.30.148.34
+Received: from mxhk.zte.com.cn (mxhk.zte.com.cn [160.30.148.34])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F46B606A33F;
-	Sat, 31 Oct 2026 01:40:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Z6oXofTU
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 766EF1F00A16;
-	Sat, 31 Oct 2026 01:40:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793410827;
-	bh=zZjxsa0LSifeGK+Jmivu9RulGYImhdvbNfYOKA2qzx8=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=Z6oXofTU43ed3wUcfHI8ZZm1cthROX+9LFiHyvW6fiwdij4YnYgrfXPt64K+qJAAe
-	 3mawsgf0bv9QVWipNTE3+Qb/uRkDbtRr+AaFUvqqJq79vsy60mY9KJc0WMwSkHHgHf
-	 XYde/l1fAzQq/ur5eAQuU7/T2gSBe/ZtS70VZkEh4i7YbrZ5oH7xlDEuiHuWMR6fot
-	 ryxPhGvBUOiMDoH1ob8t8f0fYBuMHUMKS9ZjuNHaB5xPXd0Ny6Bmgk12qyW7row+3W
-	 EsYQNtw6PPRfAD2D0mCGvVYr38vNVTgxZ8GRPNR3YKfcO58KcPJL6m45bRwZrvm4dQ
-	 VY56x1kc+h05w==
-From: "Martin K. Petersen (Oracle)" <mkp@kernel.org>
-To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	Giuseppe Piscitelli <ooonea@gmail.com>
-Cc: "Martin K . Petersen" <mkp@kernel.org>,
-	Bart Van Assche <bvanassche@acm.org>,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] scsi: core: Balance the pseudo target reap reference
-Date: Fri, 30 Oct 2026 21:40:12 -0400
-Message-ID: <179340755631.952351.2187048231241062717.b4-ty@b4>
-X-Mailer: git-send-email 2.56.0
-In-Reply-To: <20261027100859.1031135-1-ooonea@gmail.com>
-References: <20261027100859.1031135-1-ooonea@gmail.com>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D069D606A31A;
+	Sat, 31 Oct 2026 14:21:40 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D069D606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zte.com.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zte.com.cn
+Received: from mse-fl1.zte.com.cn (unknown [10.5.228.132])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mxhk.zte.com.cn (FangMail) with ESMTPS id 4jH0X309rXz4yjjC;
+	Sat, 31 Oct 2026 22:21:39 +0800 (CST)
+Received: from xaxapp01.zte.com.cn ([10.88.99.176])
+	by mse-fl1.zte.com.cn with SMTP id 69VELTce055656;
+	Sat, 31 Oct 2026 22:21:30 +0800 (+08)
+	(envelope-from shao.mingyin@zte.com.cn)
+Received: from mapi (xaxapp04[null])
+	by mapi (Zmail) with MAPI id mid32;
+	Sat, 31 Oct 2026 22:21:33 +0800 (CST)
+X-Zmail-TransId: 2afb6ae5f96d23f-0bc39
+X-Mailer: Zmail v1.0
+Message-ID: <20261031222133489hI-BEIDpFMxrtlntnLiFb@zte.com.cn>
+Date: Sat, 31 Oct 2026 22:21:33 +0800 (CST)
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -61,25 +56,56 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Mime-Version: 1.0
+From: <shao.mingyin@zte.com.cn>
+To: <mkp@kernel.org>, <james.bottomley@hansenpartnership.com>,
+        <linux-scsi@vger.kernel.org>
+Cc: <linux-kernel@vger.kernel.org>
+Subject: =?UTF-8?B?W1BBVENIXSBzY3NpOiBzY3NpX2RldmluZm86IHJldHVybiBhbiBlcnJvciB3aGVuIHRoZSBwcm9jIHdyaXRlIGZhaWxz?=
+Content-Type: text/plain;
+	charset="UTF-8"
+X-MAIL:mse-fl1.zte.com.cn 69VELTce055656
+X-TLS: YES
+X-ENVELOPE-SENDER: shao.mingyin@zte.com.cn
+X-SOURCE-IP: 10.5.228.132 unknown Sat, 31 Oct 2026 22:21:39 +0800
+X-CLEAN: YES
+X-Fangmail-Anti-Spam-Filtered: true
+X-Fangmail-MID-QID: 6AE5F973.000/4jH0X309rXz4yjjC
 
-On Tue, 27 Oct 2026 11:08:50 +0100, Giuseppe Piscitelli wrote:
+From: Shao Mingyin <shao.mingyin@zte.com.cn>
 
-> With memory allocation profiling enabled, unloading scsi_debug reports
-> allocations left at module unload. A stock Linux 7.2.11 VM without OpenZFS
-> emitted the following on each of three load/unload cycles:
-> 
-> [    1.644665] drivers/scsi/scsi_debug.c:8863 module scsi_debug func:sdebug_add_host_helper has 1024 allocated at module unload
-> [    1.656260] drivers/scsi/scsi_debug.c:1261 module scsi_debug func:sdebug_target_alloc has 16 allocated at module unload
-> 
-> [...]
+proc_scsi_devinfo_write() calls scsi_dev_info_list_add_str() but ignores
+its return value, so a write to /proc/scsi/device_info always reports
+success, even when the string is malformed and no entry was added.  Users
+and scripts then believe that the quirk is in effect.
 
-Applied to 7.4/scsi-queue, thanks!
+scsi_init_devinfo() already checks the return value of the same function
+and fails the initialization.  Return the parser error, but keep returning
+the number of bytes written on success: a proc write handler that returns
+zero for a non-empty write would look like a short write to the caller.
 
-[1/1] scsi: core: Balance the pseudo target reap reference
-      https://git.kernel.org/mkp/scsi/c/8a832fb632da
+Signed-off-by: Shao Mingyin <shao.mingyin@zte.com.cn>
+---
+diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+index cfc259fd0141..b1f3bcd739b4 100644
+--- a/drivers/scsi/scsi_devinfo.c
++++ b/drivers/scsi/scsi_devinfo.c
+@@ -688,6 +688,7 @@ static ssize_t proc_scsi_devinfo_write(struct file *file,
+ {
+ 	char *buffer;
+ 	ssize_t err = length;
++	int ret;
 
--- 
-Martin K. Petersen
+ 	if (!buf || length>PAGE_SIZE)
+ 		return -EINVAL;
+@@ -706,7 +707,9 @@ static ssize_t proc_scsi_devinfo_write(struct file *file,
+ 		goto out;
+ 	}
+
+-	scsi_dev_info_list_add_str(buffer);
++	ret = scsi_dev_info_list_add_str(buffer);
++	if (ret)
++		err = ret;
+
+ out:
+ 	kfree(buffer);
