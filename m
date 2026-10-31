@@ -1,58 +1,58 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793410828;
-	b=ReVLVH+xF3pVM3QyiV6KNqn/Z6traAmJja3gsQgk6vNJISVMLDN5I/swAWN+CgL73KCo
-	 Mz/YQurTzTWQ/njM+0QX5Vdj8ciO6Aq2QDL+zlEYcEBvuNEd3z7qI96y3KQm8wEWEXxj5
-	 DVCdNRFMaTEdzTDJnWNx2A3n1rWrVQjEMUiwrCwEUpDPXy9+xQmjtv2gSPu3nOliEAzgM
-	 Fd3qI/G+fw5vUWq/bo2/KHKGi22umiWiwPH0OFo0o8jYNu1zROwpehiS39s3sobN1I0nk
-	 l3kfbLUkmpBIEso7d3UXeQaVRkImO6Ti59lQd1K+orzZZ5HY29x8MAgQIP1HbQ6Qjdg==
+	t=1793410824;
+	b=Ay0NHpklt72CUnuFTfKKxrb+0/tq0RqL5jw2f8F1tZhL6zsvGXy233l5FPf/bwhXsbnX
+	 Ccadni3OT7bcrUrJHQbkMEm1OriCFv3WR8tC3OgnXaR7NbKI37h+X6mGrPzryzvikRKLl
+	 L7YUnpV1BN1uipKe132GxBoMq0lb4pftMse+qJUElM9myW1AupvrVxDGouOMePxw77V8n
+	 M9jigWDtR0PocwzQoOu4gY7PWDv+3OQ6axqEJrSCCTM2wDyj+oI/qMD1SA0bM7BPpeqNW
+	 PCNDtjXsPtFGJStW3lqrVEw8czGkVQuiyK1q4IvbJho0ipo7Q6mvxSWjYkiuXZBhNEg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793410828;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793410824;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding;
-	bh=98D7mBse7sjFF0w4g4HxetS/1PSF+M12i5Y1TE9fdT0=;
-	b=zDPBpuIdWtSdAotcgwQuqcrK4ZdrTTsJKkgcV2I62zWrilU2uTRdReHv1GI8fXxWTfpl
-	 dKwCC3b2o7b1TrUHIV+lZM8kxpcr0GbNZuXUzKCYJEHV3AZ1w4fU7f4k7ogwGKcIjyT3A
-	 /tMdtXbFASPMLLz42hAg7HZ8sOqCiuLUN21xBB1QSxPKYVtWK/9gnvKs5dSqSowH1aT8D
-	 u6LSEW58DZCCXZTEGUmVpLRQ+Hsf18LimQ1XfhDJGiq25Z2utEedmjwC4IqOfls6KIw48
-	 sBqcQQn2EyFnBWXdb9B4rHeGjOBbGG4sAsykne3vpmIZ3ijcjRZIzQnp/Cib7+BGD8Q==
+	bh=bU5shHp7LlIscgQhG0sOxp1r7GidigzvXa1rktcJqqs=;
+	b=DdirjWVCZEA970plgsT1osK91o6eREkzAoEcSFPx/ZXPxjY3vso29O+FwOrMoeeR3o3C
+	 DqJU1gXzYEhX62irWFdCxsczgd9+46ZtADqohD5A+zbnISY8dOam2H4sNikvZVNKXXpfS
+	 MlwtZ72g6bEHisWzd+wzsK032VXK6cTBqWTuYWEGlQP0/p+G3mYwyAsodZ22asg0zWRBP
+	 0uaXriYCZ9hKHbiX98cBP6fl9hwjcP/aCjrVTT6TYmBBSGPpV3fOsOZoQzPEfvrjUcSjG
+	 d43mg9/fBNj4ykPciwHSw1PyIeemR/m4eC2ag88VcTGOhGUP79Cesl3SCskjaAsTK3g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=VvXvjg4b;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lwn8Qr8v;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C81260A2607
-	for <linux-scsi@vger.kernel.org>; Sat, 31 Oct 2026 01:40:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 67EDD606A329;
+	Sat, 31 Oct 2026 01:40:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=VvXvjg4b
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6D9471F00A02;
-	Sat, 31 Oct 2026 01:40:27 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lwn8Qr8v
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8DB051F0093A;
+	Sat, 31 Oct 2026 01:40:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793410828;
-	bh=98D7mBse7sjFF0w4g4HxetS/1PSF+M12i5Y1TE9fdT0=;
+	s=k20260515; t=1793410824;
+	bh=bU5shHp7LlIscgQhG0sOxp1r7GidigzvXa1rktcJqqs=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=VvXvjg4bCkvUXbJKfc14oU32QvZU648SerRsuy5PLoko+tO4KCODs6s9rwjKCVXZg
-	 Q0Bk4SOhEaddZ989WaeDngQJw3MjMqI9JWIWBYS3ttMe9yxdtVXxCI/KVt1MJBxNxd
-	 ikllmnqLSiJyrx7bapcGjzSDKSff2txClIn46q6R+l0SBbYBGZ7UaLRWmgEMV6vDqf
-	 a60Eo7dz+QWwCAkgbTmZ3ynViwXnF3s+WgfaZzSy56bykl5eoFJQpA3tgJkd6A4D6F
-	 KXaXsxPfxgdc3ylGfbB+lRknFA9L2nMEzrK90n3NuxnnTBgFGm5w8p/xZbiwpFF/0n
-	 ewk71V/zxBYhA==
+	b=lwn8Qr8vJUjW56V5E+05NtABvG+UFds/NH4zwi5f6QcBpOJOvzqDnVx7VLypS7hUO
+	 ToxF99MHdzq4ULFKCkZ3e1C7SV/s9eOASB4R1tSvA0YG33h9iXh6ifi0u3R4NnL/o0
+	 6rfXeY9OOsCtsIUE+xH+2plRIGBV+mzaUjxwfkaLUmeyyLnfZMDtrz8m7d7dEnXItZ
+	 C+eEzZ6j/Ir264nl68meRCQbRY4seuv6hN32wz5bCyPi2QfzSlE+Q/2oJOdW9ndo3X
+	 TizDkdCjKwOXsEL66WI4kBltfhN5ulXNa0P+Vf/N6afp4vg76WWnwIcXpw9be9JCw0
+	 P8sudbWyX83CQ==
 From: "Martin K. Petersen (Oracle)" <mkp@kernel.org>
-To: linux-scsi@vger.kernel.org,
-	Matthew Whitehead <tedheadster@gmail.com>
+To: Imre Kaloz <kaloz@kernel.org>
 Cc: "Martin K . Petersen" <mkp@kernel.org>,
-	James.Bottomley@hansenpartnership.com,
-	loberman@redhat.com,
-	emilne@redhat.com
-Subject: Re: [PATCH] scsi: aha1542: Remove unneeded scsi_dma_unmap() call
-Date: Fri, 30 Oct 2026 21:40:13 -0400
-Message-ID: <179340755638.952351.662755375610107343.b4-ty@b4>
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	Hannes Reinecke <hare@suse.com>,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] scsi: aic7xxx: Fix REQUEST SENSE allocation length on big-endian hosts
+Date: Fri, 30 Oct 2026 21:40:09 -0400
+Message-ID: <179340755626.952351.12723652064711976932.b4-ty@b4>
 X-Mailer: git-send-email 2.56.0
-In-Reply-To: <20260929144528.7061-1-tedheadster@gmail.com>
-References: <20260929144528.7061-1-tedheadster@gmail.com>
+In-Reply-To: <20261013094253.2956-1-kaloz@kernel.org>
+References: <20261013094253.2956-1-kaloz@kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -65,24 +65,21 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 
-On Tue, 29 Sep 2026 10:45:28 -0400, Matthew Whitehead wrote:
+On Tue, 13 Oct 2026 11:42:53 +0200, Imre Kaloz wrote:
 
-> aha1542 never DMA maps the command's scatterlist. Data is bounced
-> through a per-command buffer allocated with dma_alloc_coherent() in
-> aha1542_init_cmd_priv(), the adapter is programmed with
-> acmd->data_buffer_handle, and the payload is copied to and from the
-> request segments in aha1542_queuecommand() and aha1542_free_cmd().
-> 
-> The scsi_dma_unmap() call left in aha1542_free_cmd() therefore unmaps
-> a scatterlist that was never mapped. With CONFIG_DMA_API_DEBUG enabled
-> this results in:
+> The REQUEST SENSE length was taken from sg->len after the
+> AHC_DMA_LAST_SEG flag was or-ed in and the value converted to
+> little-endian, so the 8-bit field is 0x80 on big-endian hosts and the
+> target is asked for 128 bytes into a 32-byte buffer. Use the buffer
+> size, as aic79xx does. On an SGI O2 with a Fujitsu MAX3147NC, the sense
+> data of its CHECK CONDITIONs during probe was lost.
 > 
 > [...]
 
 Applied to 7.4/scsi-queue, thanks!
 
-[1/1] scsi: aha1542: Remove unneeded scsi_dma_unmap() call
-      https://git.kernel.org/mkp/scsi/c/9ec6671b137d
+[1/1] scsi: aic7xxx: Fix REQUEST SENSE allocation length on big-endian hosts
+      https://git.kernel.org/mkp/scsi/c/9a2690eb4bbe
 
 -- 
 Martin K. Petersen
