@@ -1,49 +1,97 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.41
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793571358;
-	b=WRYXjjqcdiymMtLEDeK4EJy4oXhfR3SovdrmA1GLFQOmfNzWwBt4WpuGr7vYd5qznl7B
-	 tw3HpHJB/w5TjnMS1bZQjJ6TeiUhZGEKcQZeU/gYj2E27gClQas20c2X2P8dPfozszdS9
-	 Kor4lxKNJrrUpAHIBVqgecKnqgEnwwr5xTsHpKKxAvdR9xC1fp0ReZZ0OUDT9TfXHsPN/
-	 SnZ9M0nNSPH7RQ4oolC7q9oW8SuP/bDDtavfwEJINKNAGNqbG17QWpZ6WJ6Y33P3rKQWQ
-	 mUqLi2ovjm3FdZt513vPID4dlSWahY2H0YWYo9W1gbhOpkwH7VkXo9yKdJvIjvCnTXA==
+	t=1793579788;
+	b=wqcKIvE2ZHYq5WI/q/MQ3jCSdp/F4NvRrVpk2v4D7+KnBSoGVOXEMnMISgLMdx30D291
+	 6Aaa592N/IX2ehrOgbdiWbDpyvVCppAG1ubSiHgHDeuUl4jfigJbYQJfZsFlx1+ty5M3O
+	 smpkUBOdtHug80hvSm3+8KhTWdzcwZ+D/be7539J105A8oHrC608iQVkpG3u+0xSyGJ6+
+	 sXiyQiSYEp+rf9whmh6w6ZrhvhX3SME4o34kvahhX5daa/cbgBOKt5pSPQhtKdsYUKmBP
+	 D6Jlu5O/pyH/jyhpH9bFdOhpa/I4HKjcHbzOLs0F+VNaJ6frkVFhtJITkLKeeqI5OBA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793571358;
-	h=Received:DKIM-Signature:Received:Content-Type:MIME-Version:
-	 Content-Transfer-Encoding:Subject:From:Message-Id:Date:References:
-	 In-Reply-To:To:Cc;
-	bh=FTHI4iJKGW8nTdZJYWi2ZEsJRVp05NwkVgRYnkQTnQI=;
-	b=1QHtu6rNVURm7eD0rqTrDslkatx7XA0p/kvhzHe/A3lWszK0pPcVd4b6Yj0NUWYhq7bO
-	 dYTFONS1nTgl3HIy6MaT2k+lWdzFfp28U6CLkCrfemkqR02GGE/QI8ktiTsjX5dAicfD5
-	 mTiCP2dmdXI+LJfYkXxdQhphEYRWZvtZQlMkz2p+nTEoYtsm++RRFMPeR9RF4D7+WI7nX
-	 BPfxmKmPZL1wFmoE+JZdRUTW5MYN/e2sDKTcR+shOEGorjHfH6Z3y4Rbc3EYKDi0nA00D
-	 wjoCzNMpYhOETbbxvNiIMX0fVVT6ZBRl/V+UIu50+SKBIc6Gbf7DVzuR6M8GLMYXH4Q==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793579788;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-Id:X-Mailer:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=d5I/3o3ZMDmTHhqki/RL15OKEhwf2lx/PeEsYN29HFM=;
+	b=0QLzAF3wal/jlKdY2L2WtlmtRagrU3IuGXyLfsS3cHzPlfKQEJQvHNeV4MQRR5yF6N4n
+	 19wgpHGQXuUpbb3khO7G61+/NMBettV85u3LcCx9DxtxgBSxyAhdrilJGz0tsdE9TXIK+
+	 M2jMRwMR4b36uYLE8MU2lmER8xCm8bmoLGCGtFmGVmqHTEyhcqYLibX/F71WQq/FRfyl6
+	 IGk2lHbRoBoqjMoDKxwvzei4QSYuaf644jkIl2LQBuTZQt04t2xkp0HlkmPKud6Y3x18E
+	 HmOWMB9Ye9nfENvo8pSka9Y4OfdulDOpZ41C5nlPxyarh7s0LbGva5MQIkGG7QhPYFA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kSuQm1gi;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=mCsT9VkB;
+	arc=none smtp.remote-ip=209.85.128.41
+Received: from mail-wm1-f41.google.com (mail-wm1-f41.google.com [209.85.128.41])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C24F60A2602;
-	Sun,  1 Nov 2026 22:15:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8AC43606A324
+	for <linux-scsi@vger.kernel.org>; Mon,  2 Nov 2026 00:36:27 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8AC43606A324
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kSuQm1gi
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 225BF1F00A1B;
-	Sun,  1 Nov 2026 22:15:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793571353;
-	bh=FTHI4iJKGW8nTdZJYWi2ZEsJRVp05NwkVgRYnkQTnQI=;
-	h=Subject:From:Date:References:In-Reply-To:To:Cc;
-	b=kSuQm1gig26F3a5hbFrlCEgTV6KZdAUm8pVgji64pGU9IHFtmj1+0lqa6FjFwtpwY
-	 RQDDMAWpx0nuTd442k2/dkXZmO3ak6/b0bODbLMMOiXHR7sqan7+OYTSomVvsVhatc
-	 5sO4YlxH84ZbDrCWiv6NIlf3enn6ckTlaSH0A2hbLwanZ7TAw2vRzqI9LjdgxD9mYw
-	 rVyzHjy74WbfzuCKilIc61p8YM/etpQQgk31aiPP5AoELP2cxYQDze2rDXYJz/8udp
-	 9mbnMTtDK0Vamho7QvOMgWKAobDTF7XMy60kwODafcPU8OakiOi1fCrlQV4kt03Hd9
-	 bPj8B6YTEsy3w==
-Received: from [10.30.226.235] (localhost [IPv6:::1])
-	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id 032DA38003B8;
-	Sun,  1 Nov 2026 22:15:53 +0000 (UTC)
-Content-Type: text/plain; charset="utf-8"
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=mCsT9VkB
+Received: by mail-wm1-f41.google.com with SMTP id 5b1f17b1804b1-4a4dc547987so12190305e9.0
+        for <linux-scsi@vger.kernel.org>; Sun, 01 Nov 2026 16:36:27 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1793579786; x=1794184586; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=d5I/3o3ZMDmTHhqki/RL15OKEhwf2lx/PeEsYN29HFM=;
+        b=mCsT9VkBi31Q/07PhFPnoQyS8sTl+vy7CHR/3/MgntufJMCCERNwr2dA08BepuRIJn
+         Jo8Iqd/a8TGougUUFsKMEXkjZXNUEVi/67EPw6/9OitQWRIkM8c4c+IC4ahoWroHNc9J
+         kf7vSNvWX2ZCdoFGTDKRswi8fLboxdbzWtm4vNggw0JoaVP/oI8i3v0tKBe5ddxFz6Y4
+         zGwOujyrTbdDJKwGbNhALIzvSyn6sKOcqLrxA27A+zTZqNC/IL0BCTEQfegmqrrdy9u3
+         Oa107eopoqYAhcQ+o1zziZOFkdqknyP9K5/3WeBmMdvC0yq0PdDLlc3JXuKPHOoiQ9eq
+         H1vg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793579786; x=1794184586;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=d5I/3o3ZMDmTHhqki/RL15OKEhwf2lx/PeEsYN29HFM=;
+        b=Cky5oDZbcGq7cLFMVA8ckoZM3CdOrob4RGJRxfFQX7cZxugRsVg/c72vYS6hwXzw8s
+         Tx5iZDVXrjaU2rsvhGnp8lso/o9h14PPD6zRmc6LVse4pP48mAvMxmNOw2YHDKGuJGxM
+         q4dqMpWM/UBuWHS7IJiqia5K0aiHFua73AhHFIo/pfBgWLatQCH5O6YuFmPNIrPMbvUu
+         JKwh4awKvjYU+jBLhwMJeCGDcWYwlRMozO0KujC1pyPKb3EguMFLRu3POe6derHY0qD4
+         gLFDoN1psce6MLtioIHlEgnp+ibT7wpPnlXQfbfIJtFzorG+iXAhJtoHYZ49hmNeVVMt
+         6mbw==
+X-Forwarded-Encrypted: i=1; AKwUvBwPPh1dB0M40NuEK9DkZidgp7ZRKaIK/KoXqlaum+PNKZqAAEpLDSdsAAPCALYrpTpM0YCx8sudUDZg@vger.kernel.org
+X-Gm-Message-State: AFq9FYKAVEFM30s9Al9JF8wLjKTseEWGKrAj5Kg0n4qusNG/RhWgJmDa
+	qjMZvAD4bp3ZSWsZaHBBvy0QrNX3xs7GG7rMhJ+M3uG9rGXucI3oLgM=
+X-Gm-Gg: AYBFou2hr/m1CL2u7phwol2+Ik/c0AzsqmghYQSpKI9v9TX3559dVVEAh8pkbr0NTnS
+	P+YWqyKa0O+jsTxxARcFoxVdarlvSDtfJpTcY0UzXywI+RkDfvnS4zWVM4OCP4vxFbxyvQDxfZm
+	LCwLufaPOxdycawhrok9zWxNv38I4Dt3JmQgTFBt3NW0/ZOYBUUBi4tOIKXuC7vMp4MsoVn6s4I
+	RR9ofYucH5vEOncoXj9KQl1IViW4WPM4Fbl1zOXcl946Gsm1ywfk9jPpF9HoTdsUxYn1jJufqUL
+	sw+EmY8yVvi9BDXYQck8k0KJSZLOcdZ/YCrQ14HDZG6KgdAIgTeLFyp5CEg7DqItSTAxMeKHCqD
+	s7SU3DUJAV9q6bEjBDM/QWT/kgLjJneshChm5OgH6oYoaJjNLBvuDfJr0ky31/u+m9dNqbpUu+u
+	EVIn2f9jj/z1ETvFynZXf4US9BhTn6I4ZCJdkDeUvsOKfVLZU/3/1ue8Y1ZovEX2YgI72USwTzQ
+	BxmiSFPyUivFvV/RWUshz4/6QYVhrhi+t+Rj1Pd0uP3cg4EJEGN5uad8lLgUQgkE/fKy4lNrUnF
+	fgkyvcLJwENEWcSIiJpphCgzGSQB+zfBMsOe
+X-Received: by 2002:a05:600c:5397:b0:4a4:4d57:8462 with SMTP id 5b1f17b1804b1-4ac18b7e65bmr197850895e9.24.1793579785959;
+        Sun, 01 Nov 2026 16:36:25 -0800 (PST)
+Received: from sasha-User.lan ([185.159.163.49])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4aa813d2950sm302007805e9.8.2026.11.01.16.36.23
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 01 Nov 2026 16:36:25 -0800 (PST)
+From: Asdlerto Korry <korryasdlerto@gmail.com>
+To: "Martin K . Petersen" <mkp@kernel.org>,
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>
+Cc: Bart Van Assche <bvanassche@acm.org>,
+	Alim Akhtar <alim.akhtar@samsung.com>,
+	Bean Huo <beanhuo@micron.com>,
+	Peter Wang <peter.wang@mediatek.com>,
+	Can Guo <can.guo@oss.qualcomm.com>,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Asdlerto Korry <korryasdlerto@gmail.com>
+Subject: [RFC PATCH] scsi: ufs: core: Allow error recovery before the device W-LUN exists
+Date: Mon,  2 Nov 2026 02:36:07 +0200
+Message-Id: <20261102003607.341651-1-korryasdlerto@gmail.com>
+X-Mailer: git-send-email 2.25.1
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -54,167 +102,102 @@ List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: Re: [PATCH v6 00/39] mm: make VMA flag semantics explicit, eliminate
- VM_SPECIAL
-From: patchwork-bot+linux-riscv@kernel.org
-Message-Id: 
- <179357135155.2624073.13862678489444424470.git-patchwork-notify@kernel.org>
-Date: Sun, 01 Nov 2026 22:15:51 +0000
-References: 
- <20261013-b4-mmap-prepare-vma-flag-sanify-v6-0-1aa3c9b139f9@kernel.org>
-In-Reply-To: 
- <20261013-b4-mmap-prepare-vma-flag-sanify-v6-0-1aa3c9b139f9@kernel.org>
-To: Lorenzo Stoakes (ARM) <ljs@kernel.org>
-Cc: linux-riscv@lists.infradead.org, akpm@linux-foundation.org,
- liam@infradead.org, vbabka@kernel.org, jannh@google.com, pfalcato@suse.de,
- david@kernel.org, rppt@kernel.org, surenb@google.com, mhocko@suse.com,
- corbet@lwn.net, gregkh@linuxfoundation.org,
- dennis.dalessandro@cornelisnetworks.com, jgg@ziepe.ca, leon@kernel.org,
- paul@paul-moore.com, stephen.smalley.work@gmail.com, perex@perex.cz,
- tiwai@suse.com, ast@kernel.org, daniel@iogearbox.net, andrii@kernel.org,
- eddyz87@gmail.com, memxor@gmail.com, ziy@nvidia.com,
- baolin.wang@linux.alibaba.com, nico.pache@linux.dev, ryan.roberts@arm.com,
- dev.jain@arm.com, baohua@kernel.org, lance.yang@linux.dev,
- usama.arif@linux.dev, kas@kernel.org, dgilbert@interlog.com,
- James.Bottomley@HansenPartnership.com, mkp@kernel.org, simona@ffwll.ch,
- deller@gmx.de, sre@kernel.org, jhubbard@nvidia.com, peterx@redhat.com,
- mhiramat@kernel.org, oleg@redhat.com, peterz@infradead.org, tglx@kernel.org,
- mingo@redhat.com, bp@alien8.de, dave.hansen@linux.intel.com, x86@kernel.org,
- acme@kernel.org, namhyung@kernel.org, mark.rutland@arm.com, riel@surriel.com,
- harry@kernel.org, juri.lelli@redhat.com, vincent.guittot@linaro.org,
- maarten.lankhorst@linux.intel.com, mripard@kernel.org, tzimmermann@suse.de,
- airlied@gmail.com, will@kernel.org, aneesh.kumar@kernel.org,
- npiggin@gmail.com, arnd@arndb.de, muchun.song@linux.dev, osalvador@suse.de,
- willy@infradead.org, jack@suse.cz, maz@kernel.org, oupton@kernel.org,
- catalin.marinas@arm.com, maddy@linux.ibm.com, anup@brainfault.org,
- pjw@kernel.org, palmer@dabbelt.com, aou@eecs.berkeley.edu,
- borntraeger@linux.ibm.com, frankja@linux.ibm.com, imbrenda@linux.ibm.com,
- agordeev@linux.ibm.com, gerald.schaefer@linux.ibm.com, hca@linux.ibm.com,
- gor@linux.ibm.com, davem@davemloft.net, andreas@gaisler.com,
- viro@zeniv.linux.org.uk, brauner@kernel.org, matthew.brost@intel.com,
- joshua.hahnjy@gmail.com, rakie.kim@sk.com, byungchul@sk.com,
- gourry@gourry.net, ying.huang@linux.alibaba.com, apopple@nvidia.com,
- chrisl@kernel.org, kasong@tencent.com, shikemeng@huaweicloud.com,
- nphamcs@gmail.com, baoquan.he@linux.dev, youngjun.park@lge.com,
- hannes@cmpxchg.org, qi.zheng@linux.dev, shakeel.butt@linux.dev,
- axelrasmussen@google.com, yuanchu@google.com, weixugc@google.com,
- chengming.zhou@linux.dev, mhocko@kernel.org, miklos@szeredi.hu,
- xu.xin@linux.dev, linux-mm@kvack.org, linux-kernel@vger.kernel.org,
- linux-doc@vger.kernel.org, linux-usb@vger.kernel.org,
- linux-rdma@vger.kernel.org, selinux@vger.kernel.org,
- linux-sound@vger.kernel.org, bpf@vger.kernel.org, linux-scsi@vger.kernel.org,
- linux-fbdev@vger.kernel.org, dri-devel@lists.freedesktop.org,
- linux-trace-kernel@vger.kernel.org, linux-perf-users@vger.kernel.org,
- linux-arch@vger.kernel.org, linux-fsdevel@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, kvmarm@lists.linux.dev,
- linuxppc-dev@lists.ozlabs.org, kvm@vger.kernel.org,
- kvm-riscv@lists.infradead.org, linux-s390@vger.kernel.org,
- sparclinux@vger.kernel.org, fuse-devel@lists.linux.dev,
- ihor.solodrai@linux.dev, spasswolf@web.de, tiwai@suse.de,
- emil@etsalapatis.com
 
-Hello:
+ufshcd_err_handling_should_stop() returns true while hba->ufs_device_wlun
+is NULL, i.e. until the first probe has added the device W-LUN. If the
+link fails during that first probe (for example NOP OUT failing after
+link startup), the error handler therefore never resets the host or the
+link: it only marks the state operational and returns, and the probe
+keeps failing until it gives up.
 
-This series was applied to riscv/linux.git (fixes)
-by Andrew Morton <akpm@linux-foundation.org>:
+On a Samsung Galaxy M52 5G (SM7325) the first link startup regularly
+ends in PA errors (LINERESET). With the W-LUN check removed, the error
+handler performs a real host reset and restore and the device comes up;
+without it, it never does.
 
-On Tue, 13 Oct 2026 16:04:40 +0100 you wrote:
-> The VM_SPECIAL / VMA_SPECIAL_FLAGS mask conflates several unrelated
-> properties:
-> 
-> * Is this managed by core mm, or by a driver mapping MMIO, kernel-allocated
->   pages, or even ordinary pages itself?
-> * Can it be expanded or merged?
-> * Is this a 'weird' case like mlock where migration might race and we
->   'have' to set invalid flags to notify?
-> * Is it another 'weird' case where we just want to stop GUP from touching
->   it?
-> 
-> [...]
+Removing the check exposes three places that dereference
+hba->ufs_device_wlun unconditionally on this path:
+ufshcd_rpm_get_sync()/ufshcd_rpm_put(), ufshcd_err_handling_prepare()
+and ufshcd_recover_pm_error(). Skip the W-LUN runtime PM handling there
+when the W-LUN does not exist yet; there is nothing to resume and no
+regular SCSI I/O before it is added.
 
-Here is the summary with links:
-  - [v6,01/39] mm/vma: fix mmap_prepare file handling, remove file_doesnt_need_get
-    (no matching commit)
-  - [v6,02/39] mm/vma: introduce and use vma_[flags_]can_merge()
-    https://git.kernel.org/riscv/c/86a779c53204
-  - [v6,03/39] mm: consistently validate VMA state after mmap[_prepare] hooks
-    https://git.kernel.org/riscv/c/9cae38dc11da
-  - [v6,04/39] mm/vma: ensure mmap_prepare doesn't set actions on a mergeable vma
-    https://git.kernel.org/riscv/c/6335c786299f
-  - [v6,05/39] mm: make map_kernel_pages_[prepare,complete] internal and unexported
-    https://git.kernel.org/riscv/c/2a234f79d416
-  - [v6,06/39] mm/vma: tidy up map kernel pages enum values
-    https://git.kernel.org/riscv/c/4852f3421456
-  - [v6,07/39] mm: assert mmap lock held, use new flags API in vm_insert_page[s]
-    https://git.kernel.org/riscv/c/dad8e88fcfce
-  - [v6,08/39] mm: add mmap action for discontiguous kernel page mapping
-    https://git.kernel.org/riscv/c/b7b4d8f37a4f
-  - [v6,09/39] docs: filesystems: update mmap_prepare docs for discontig kernel pgs
-    https://git.kernel.org/riscv/c/ae60723abb65
-  - [v6,10/39] drivers/usb/mon: update to use mmap_prepare + map kernel pages
-    https://git.kernel.org/riscv/c/5323bb5f6ef3
-  - [v6,11/39] infiniband: update hfi1 to use remap_vmalloc_range()
-    (no matching commit)
-  - [v6,12/39] selinux: reject writable opens of policy file, drop mmap shared/write check
-    https://git.kernel.org/riscv/c/c6ce4378f20a
-  - [v6,13/39] ALSA: pcm: use vm_insert_page() to map PCM status page
-    https://git.kernel.org/riscv/c/ceb0de27371f
-  - [v6,14/39] bpf: arena: mark arena_map_mmap() mappings VM_MIXEDMAP
-    https://git.kernel.org/riscv/c/0c2c9885c5e9
-  - [v6,15/39] mm/vma: add vma[_flags]_is_mm_managed() predicates
-    https://git.kernel.org/riscv/c/7fdbc26b69c0
-  - [v6,16/39] mm/vma: only allow mmap to clear VMA_MAYWRITE_BIT if not mm-managed
-    https://git.kernel.org/riscv/c/d99c4a302c5a
-  - [v6,17/39] mm/vma: add and use vma_[flags]_is_fixed_mapping
-    https://git.kernel.org/riscv/c/9201d0f5b9d5
-  - [v6,18/39] scsi: sg: convert mmap hook to mmap_prepare and rework
-    https://git.kernel.org/riscv/c/abdd54cef5fc
-  - [v6,19/39] fbdev: defio: assert FBINFO_VIRTFB, drop VM_IO, add VM_MIXEDMAP
-    https://git.kernel.org/riscv/c/19458d015fcc
-  - [v6,20/39] HSI: cmt_speech: convert mmap hook to mmap_prepare, refactor
-    https://git.kernel.org/riscv/c/5605c40895fc
-  - [v6,21/39] mm/gup: error out early on !VMA_MAYREAD_BIT VMAs
-    https://git.kernel.org/riscv/c/2d2b1c508f21
-  - [v6,22/39] uprobes: remove VM_IO, set VM_MIXEDMAP for mapped kernel pages
-    https://git.kernel.org/riscv/c/0d219bc3cb88
-  - [v6,23/39] mm/mlock: clear VMA_LOCKED_MASK over mmap callback
-    https://git.kernel.org/riscv/c/61e012ab9a1c
-  - [v6,24/39] mm/mlock: eliminate weird VMA_IO_BIT abuse and simplify
-    https://git.kernel.org/riscv/c/aea83f2694ed
-  - [v6,25/39] mm/vma: enforce that mm-managed mappings may not set VMA_IO_BIT
-    https://git.kernel.org/riscv/c/99fd6bf43d5d
-  - [v6,26/39] mm: remove VMA_IO_BIT check in vma[_flags]_is_mm_managed()
-    https://git.kernel.org/riscv/c/88d77002e1a1
-  - [v6,27/39] mm: remove hugetlb_inline.h
-    https://git.kernel.org/riscv/c/94c86564538e
-  - [v6,28/39] mm: rename is_vm_hugetlb_page() to vma_is_hugetlb()
-    (no matching commit)
-  - [v6,29/39] mm: drop some redundant checks around hugetlb VMAs
-    (no matching commit)
-  - [v6,30/39] mm/vma: introduce vma[_flags]_is_mm_backed()
-    https://git.kernel.org/riscv/c/44debd840ec9
-  - [v6,31/39] mm/madvise: update is_valid_guard_vma() to use vma_is_mm_backed()
-    https://git.kernel.org/riscv/c/fc95d1cf4a13
-  - [v6,32/39] mm/uffd: use predicates for userfaultfd checks
-    https://git.kernel.org/riscv/c/fb700342f506
-  - [v6,33/39] mm/madvise: use predicates for madvise(..., MADV_DOFORK)
-    https://git.kernel.org/riscv/c/1d1104fe6dc6
-  - [v6,34/39] mm: eliminate VMA_SPECIAL_FLAGS usage when hugetlb explicitly tested
-    https://git.kernel.org/riscv/c/531e56359ffb
-  - [v6,35/39] mm: eliminate VMA_SPECIAL_FLAGS check in lru_gen_look_around()
-    https://git.kernel.org/riscv/c/5997da57a09b
-  - [v6,36/39] mm: avoid use of VMA_SPECIAL_FLAGS in migrate_vma_setup()
-    https://git.kernel.org/riscv/c/8bf792b7afcb
-  - [v6,37/39] mm: eliminate VM_SPECIAL, VMA_SPECIAL_FLAGS
-    https://git.kernel.org/riscv/c/72a993449cb0
-  - [v6,38/39] fuse: dax: do not set VM_MIXEDMAP
-    https://git.kernel.org/riscv/c/b0d88bfa7515
-  - [v6,39/39] mm/huge_memory: remove vma_is_special_huge()
-    https://git.kernel.org/riscv/c/e2a1d080f510
+Note: the error handler then calls ufshcd_verify_dev_init() through
+ufshcd_reset_and_restore() while the tag set is quiesced. This needs the
+pseudo SCSI device queue to be unquiesced in ufshcd_err_handling_prepare()
+(as done upstream), otherwise blk_execute_rq() waits forever.
 
-You are awesome, thank you!
+Signed-off-by: Asdlerto Korry <korryasdlerto@gmail.com>
+---
+ drivers/ufs/core/ufshcd-priv.h |  4 ++++
+ drivers/ufs/core/ufshcd.c      | 13 +++++++++----
+ 2 files changed, 13 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-priv.h
+index e55c2a02c1f5..2cb0d542d114 100644
+--- a/drivers/ufs/core/ufshcd-priv.h
++++ b/drivers/ufs/core/ufshcd-priv.h
+@@ -385,6 +385,8 @@ static inline int ufshcd_update_ee_usr_mask(struct ufs_hba *hba,
+ 
+ static inline int ufshcd_rpm_get_sync(struct ufs_hba *hba)
+ {
++	if (!hba->ufs_device_wlun)
++		return 0;
+ 	return pm_runtime_get_sync(&hba->ufs_device_wlun->sdev_gendev);
+ }
+ 
+@@ -410,6 +412,8 @@ static inline int ufshcd_rpm_resume(struct ufs_hba *hba)
+ 
+ static inline void ufshcd_rpm_put(struct ufs_hba *hba)
+ {
++	if (!hba->ufs_device_wlun)
++		return;
+ 	pm_runtime_put(&hba->ufs_device_wlun->sdev_gendev);
+ }
+ 
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index fd52deb72d21..9767fbc7b870 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -6876,8 +6876,9 @@ static void ufshcd_err_handling_prepare(struct ufs_hba *hba)
+ 	 */
+ 	pm_runtime_get_sync(hba->dev);
+ 	ufshcd_rpm_get_sync(hba);
+-	if (pm_runtime_status_suspended(&hba->ufs_device_wlun->sdev_gendev) ||
+-	    hba->is_sys_suspended) {
++	if (hba->ufs_device_wlun &&
++	    (pm_runtime_status_suspended(&hba->ufs_device_wlun->sdev_gendev) ||
++	     hba->is_sys_suspended)) {
+ 		enum ufs_pm_op pm_op;
+ 
+ 		/*
+@@ -6926,7 +6927,6 @@ static void ufshcd_err_handling_unprepare(struct ufs_hba *hba)
+ static inline bool ufshcd_err_handling_should_stop(struct ufs_hba *hba)
+ {
+ 	return (!hba->is_powered || hba->shutting_down ||
+-		!hba->ufs_device_wlun ||
+ 		hba->ufshcd_state == UFSHCD_STATE_ERROR ||
+ 		(!(hba->saved_err || hba->saved_uic_err || hba->force_reset ||
+ 		   ufshcd_is_link_broken(hba))));
+@@ -6935,12 +6935,17 @@ static inline bool ufshcd_err_handling_should_stop(struct ufs_hba *hba)
+ #ifdef CONFIG_PM
+ static void ufshcd_recover_pm_error(struct ufs_hba *hba)
+ {
+-	struct scsi_target *starget = hba->ufs_device_wlun->sdev_target;
++	struct scsi_target *starget;
+ 	struct Scsi_Host *shost = hba->host;
+ 	struct scsi_device *sdev;
+ 	struct request_queue *q;
+ 	bool resume_sdev_queues = false;
+ 
++	/* Nothing to recover before the device W-LUN has been added */
++	if (!hba->ufs_device_wlun)
++		return;
++	starget = hba->ufs_device_wlun->sdev_target;
++
+ 	hba->is_sys_suspended = false;
+ 
+ 	/*
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/patchwork/pwbot.html
-
+2.25.1
 
