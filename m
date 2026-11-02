@@ -1,49 +1,48 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793632240;
-	b=5MlzrwqvDs6AXmXw41m2bh1161gUlA3eU7hGpY8G/Aarp0CnLMFaIls72IFt9NZjKInb
-	 l/dJOsEHz4cBibavvKOS6fFY9P4tObxQ8ENt/8z1yVOFFhdo5yilVY0vLrL5VHQtFAeI4
-	 63p9f+E0c2N1rZe/dTFMMrT8qA/y+Wlt7pR7MjnKXIJsJVA/A04MG5lIRO/k0awrz2jnX
-	 Fs7ZouzWpHjfigzKwoyAcKm+gffYBMokOl43g5O5KGsfuPpB7xXZpUNvcl9tZtTn2F8kL
-	 rCTnCQ82fi9T5OSymQpbQFkBNSuJR4xi0HLXOG+Uw8oI637GX/i8dM77ljXA1lFHBVQ==
+	t=1793632274;
+	b=LK3umSY3DLDT0beSMSLI0BqTQm3rRB8gnPS0MDYTjyEMEDqigx/ov1qDvR28dTy5QN1S
+	 JinTAJ3lph7zvrKxgw/v593bBOqFZsXncIE7b2dAmjVVoYOnWVmlDk7qfMPPVQuB6Nbm/
+	 q0H7JNbKveDDq5Z0TMBKREo+g/m4an5zso54t5tu0DzBqb8p7lN4agxJd2dVhbrEIjhKX
+	 STzelHFAzC1/kWgwwgyKAOp9na6BCpUcWpEb8af7cgUAjJ+DvdtRjoqc7NFRyAwCdPZav
+	 YHieXiUsm0a51b/eTLo9JiW4TIsTGum32IBsC1PREVXQOFOABiHZQgrhhxnO/T9QeaA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793632240;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793632274;
 	h=Received:DKIM-Signature:From:Date:Subject:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding:Message-Id:References:In-Reply-To:To:Cc:
 	 X-Mailer:X-Developer-Signature:X-Developer-Key;
-	bh=uhE82sMafPzxvfPBNz7KCycPN06o3nm9WBF7ozqhvvQ=;
-	b=MAWHx/YWfCBAgrBNwM98JVB6D/qlfyRmj/lOrXxfyC/lw5o3aNLZ+3cU3fLmvpkUs74b
-	 JlgvmgXdR90oHtNlqrakDORnhX3dqXO2Rfhko9AVSaqEC2Ma7aVlOsO0XWFXD1Hg1YicV
-	 reV6GvY0GH69Jz2BCLf3bV8j/OzFETmlDiaUoSMDAj5ydDe1smAmB4nTATmcr/jVaTAuE
-	 nzn0U70eufSEfencNwg4jcDWoBvjFHSGYw/yyhEni8XZKjjloEZwaBNwra/PsRu+kCWol
-	 EyniJklU6c8VBMg0Be+GcDf46xo9ShyzQUX/5BFkpjVX8PGZm9gBwideWUuX1s9hqjQ==
+	bh=vqkxnch8qakIwUVP+9QJA5QeGLg7HpbhcDTmIF75pEs=;
+	b=2fNgH7XGggPvv0OsRWHu1eYBwxVK9YVI8ZwtOLg0pbH8IgCQ1H7Q1VT75NIrh734RaG7
+	 ueQU6NK70/AKiq+AlLTNPmi+CYMgY1C2mWJq9UK5ufbpHl6yGMI7YKGoLCQIi105T3Bor
+	 Cg9VeH7YalK6PyCzso7alWYtKDKfd5uKYSMk0NivWQeDafplcBPj6MqzStQkkrtug0/8E
+	 WHjydgLfOT5abQyE2IypTcpQ6ueHyuYu0fuNobZkSCJWza44zYp3lvhXBB3oTs9oRCRD0
+	 4yxzUtGSDid9jYdSDcowtdqlqHcm16As8r2nSMZQBhQ+hAb12B2J74lke+U0UAeldfQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="ge/hcfes";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=cxCVzhBy;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 572F16073649;
-	Mon,  2 Nov 2026 15:10:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 613A1607672B;
+	Mon,  2 Nov 2026 15:11:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ge/hcfes
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8DBAA1F00A16;
-	Mon,  2 Nov 2026 15:10:25 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=cxCVzhBy
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A9C151F00A16;
+	Mon,  2 Nov 2026 15:11:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793632240;
-	bh=uhE82sMafPzxvfPBNz7KCycPN06o3nm9WBF7ozqhvvQ=;
+	s=k20260515; t=1793632273;
+	bh=vqkxnch8qakIwUVP+9QJA5QeGLg7HpbhcDTmIF75pEs=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=ge/hcfesra4b7uwUf9ZqYWB9njrsdW7ikBhB2+TOOaHniD4pDo5CkBQJygC306u5b
-	 wB/PtUdGYF68K8Wo2p8YgjLfxD3D2QhC4+E4fHRnOPwNucxkzf5DU27WF/NlWY0Iqy
-	 GAJgUzmaayVQyj5BRZUykLpT+rpgSNU232/4wjRYpPZguWsLgLHVBrYn151kBTwpRV
-	 nXPzhip9LUf2q59LdnLw/8JsXlkcQJRIUj4EgrnieDoD7zSduQEyreNMEArDccn4Qs
-	 hw/iWwFl3I5EqeuSbLMiGYZHNpZsLMqiQMwr9TKPFUnb5SsH7J+RiUYOedx6+niPBc
-	 3NqMUySut53JA==
+	b=cxCVzhByWu3o4NPMXdI664xNWkShTHR36O9m/09VZ9+jFA9OG6kKc4h3juX9pF4hG
+	 KES/99TyZfxZMZsILDCBbUPiL2m0c7yvku8def0K3xyx1BZSfmHoibrjV4xOJY9TRv
+	 aRQUlDzCSvfjdbS81rVindZYNfHG/n3/STb1D5KKMtjDWOzG48TPwOOda5MyUodL1/
+	 sl6+1c+KcBwatTkHqiITxDL+ifFRuErDfWC3t7wYwV8vzWLwDTzNDzYcITGLDruDX/
+	 CBg0J86Rpsxds6f1vNXAUOdjLXrIDS/33ZjvCLz1gmlcS3YhkDRMkNQrIFMIeovXK6
+	 qXYbgPdy439+w==
 From: Christian Brauner <brauner@kernel.org>
-Date: Mon, 02 Nov 2026 16:07:08 +0100
-Subject: [PATCH RFC 01/23] nubus: let procfs own the seq_file of the
- resource files
+Date: Mon, 02 Nov 2026 16:07:10 +0100
+Subject: [PATCH RFC 03/23] PCI/proc: let procfs copy in config space writes
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -55,7 +54,7 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261102-work-procfs-drivers-v1-1-a994bd4d3b1a@kernel.org>
+Message-Id: <20261102-work-procfs-drivers-v1-3-a994bd4d3b1a@kernel.org>
 References: <20261102-work-procfs-drivers-v1-0-a994bd4d3b1a@kernel.org>
 In-Reply-To: <20261102-work-procfs-drivers-v1-0-a994bd4d3b1a@kernel.org>
 To: linux-fsdevel@vger.kernel.org
@@ -91,54 +90,124 @@ Cc: Linus Torvalds <torvalds@linux-foundation.org>,
  "Christian Brauner (Amutable)" <brauner@kernel.org>, 
  Chuck Lever <cel@kernel.org>
 X-Mailer: b4 0.17-dev
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1301; i=brauner@kernel.org;
- h=from:subject:message-id; bh=x7z4QEHcj9RNvDtDgoKANKctl9Sfloc7qmQpa+Y73Ns=;
- b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9WK7fFm4VGPxTRVG9kNHvu4d2mV3i6b4vmrNOVrR6u
- yuKTYntKGVhEONikBVTZHFoNwmXW85TsdkoUwNmDisTyBAGLk4BmAhfLMM/qxq9uhSer5rKl2Ql
- TFnt4xj4b6+efHfdMuZlO/bd3bPxKSPDGfl1C7eGHtq3U9NZa+MW4UvzrpQ9y/tVL3jEJn1i6Nl
- SLgA=
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3416; i=brauner@kernel.org;
+ h=from:subject:message-id; bh=FHhIortRJiKYhZazrarBsz8LKuG1O3uAWYPgQRTjmaQ=;
+ b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9WG4Q5v+r4smER+KNHzUv/1vj6ThP4Dffzpik1rx7S
+ Ye2i2bmdJSyMIhxMciKKbI4tJuEyy3nqdhslKkBM4eVCWQIAxenAEzk62VGhs6XkTMTRfwbPBQL
+ /x4Lzpj+wfz/1vf3Y5U2mfjmTS4+wc7wz+JImkaMBv+rn36HnuYuOOJ748u9kLuro6932ZoynGx
+ 15wQA
 X-Developer-Key: i=brauner@kernel.org; a=openpgp;
  fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 
-Get the inode from the file instead of ->private, declare the show
-function and let procfs open and free the seq_file.
+Implement ->proc_write_buf() so procfs copies in what is written before
+it pins the entry, and write the config space from that copy with
+get_unaligned_le16() and get_unaligned_le32() instead of get_user().
+
+The copy holds at most PCI_CFG_SPACE_EXP_SIZE bytes. Larger writes come
+up short with PROC_ENTRY_SHORT_WRITES, like they did before because
+they were cut at the end of the config space.
+
+A buffer that can't be read used to write zeroes to the config space and
+report success. It fails with -EFAULT now and nothing is written.
 
 Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
- drivers/nubus/proc.c | 12 ++----------
- 1 file changed, 2 insertions(+), 10 deletions(-)
+ drivers/pci/proc.c | 32 +++++++++++---------------------
+ 1 file changed, 11 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/nubus/proc.c b/drivers/nubus/proc.c
-index 3ea3d1738eae..cb21ad1d9964 100644
---- a/drivers/nubus/proc.c
-+++ b/drivers/nubus/proc.c
-@@ -107,7 +107,7 @@ nubus_proc_alloc_pde_data(unsigned char *ptr, unsigned int size)
+diff --git a/drivers/pci/proc.c b/drivers/pci/proc.c
+index e0dc70123f82..d420353ee2b3 100644
+--- a/drivers/pci/proc.c
++++ b/drivers/pci/proc.c
+@@ -16,6 +16,7 @@
+ #include <linux/security.h>
+ #include <linux/panic.h>
+ #include <linux/sched.h>
++#include <linux/unaligned.h>
+ #include <asm/byteorder.h>
+ #include "pci.h"
  
- static int nubus_proc_rsrc_show(struct seq_file *m, void *v)
- {
--	struct inode *inode = m->private;
-+	struct inode *inode = file_inode(m->file);
- 	struct nubus_proc_pde_data *pded;
- 
- 	pded = pde_data(inode);
-@@ -138,16 +138,8 @@ static int nubus_proc_rsrc_show(struct seq_file *m, void *v)
- 	return 0;
+@@ -114,8 +115,8 @@ static ssize_t proc_bus_pci_read(struct file *file, char __user *buf,
+ 	return nbytes;
  }
  
--static int nubus_rsrc_proc_open(struct inode *inode, struct file *file)
--{
--	return single_open(file, nubus_proc_rsrc_show, inode);
--}
--
- static const struct proc_ops nubus_rsrc_proc_ops = {
--	.proc_open	= nubus_rsrc_proc_open,
--	.proc_read	= seq_read,
--	.proc_lseek	= seq_lseek,
--	.proc_release	= single_release,
-+	.proc_show	= nubus_proc_rsrc_show,
- };
+-static ssize_t proc_bus_pci_write(struct file *file, const char __user *buf,
+-				  size_t nbytes, loff_t *ppos)
++static ssize_t proc_bus_pci_write(struct file *file, char *buf, size_t nbytes,
++				  loff_t *ppos)
+ {
+ 	struct inode *ino = file_inode(file);
+ 	struct pci_dev *dev = pde_data(ino);
+@@ -145,51 +146,38 @@ static ssize_t proc_bus_pci_write(struct file *file, const char __user *buf,
+ 		nbytes = size - pos;
+ 	cnt = nbytes;
  
- void nubus_proc_add_rsrc_mem(struct proc_dir_entry *procdir,
+-	if (!access_ok(buf, cnt))
+-		return -EINVAL;
+-
+ 	pci_config_pm_runtime_get(dev);
+ 
+ 	if ((pos & 1) && cnt) {
+-		unsigned char val;
+-		get_user(val, buf);
+-		pci_user_write_config_byte(dev, pos, val);
++		pci_user_write_config_byte(dev, pos, *buf);
+ 		buf++;
+ 		pos++;
+ 		cnt--;
+ 	}
+ 
+ 	if ((pos & 3) && cnt > 2) {
+-		__le16 val;
+-		get_user(val, (__le16 __user *) buf);
+-		pci_user_write_config_word(dev, pos, le16_to_cpu(val));
++		pci_user_write_config_word(dev, pos, get_unaligned_le16(buf));
+ 		buf += 2;
+ 		pos += 2;
+ 		cnt -= 2;
+ 	}
+ 
+ 	while (cnt >= 4) {
+-		__le32 val;
+-		get_user(val, (__le32 __user *) buf);
+-		pci_user_write_config_dword(dev, pos, le32_to_cpu(val));
++		pci_user_write_config_dword(dev, pos, get_unaligned_le32(buf));
+ 		buf += 4;
+ 		pos += 4;
+ 		cnt -= 4;
+ 	}
+ 
+ 	if (cnt >= 2) {
+-		__le16 val;
+-		get_user(val, (__le16 __user *) buf);
+-		pci_user_write_config_word(dev, pos, le16_to_cpu(val));
++		pci_user_write_config_word(dev, pos, get_unaligned_le16(buf));
+ 		buf += 2;
+ 		pos += 2;
+ 		cnt -= 2;
+ 	}
+ 
+ 	if (cnt) {
+-		unsigned char val;
+-		get_user(val, buf);
+-		pci_user_write_config_byte(dev, pos, val);
++		pci_user_write_config_byte(dev, pos, *buf);
+ 		pos++;
+ 	}
+ 
+@@ -337,9 +325,11 @@ static int proc_bus_pci_release(struct inode *inode, struct file *file)
+ #endif /* HAVE_PCI_MMAP */
+ 
+ static const struct proc_ops proc_bus_pci_ops = {
++	.proc_flags	= PROC_ENTRY_SHORT_WRITES,
+ 	.proc_lseek	= proc_bus_pci_lseek,
+ 	.proc_read	= proc_bus_pci_read,
+-	.proc_write	= proc_bus_pci_write,
++	.proc_write_buf	= proc_bus_pci_write,
++	.proc_write_size = PCI_CFG_SPACE_EXP_SIZE,
+ 	.proc_ioctl	= proc_bus_pci_ioctl,
+ #ifdef CONFIG_COMPAT
+ 	.proc_compat_ioctl = proc_bus_pci_ioctl,
 
 -- 
 2.53.0
