@@ -1,49 +1,49 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793629695;
-	b=nTH7l5PL/OLJLRKV3skilqSPRTHzttg+eqoJYPYGUUm7AhBWDvxkIAIUiEwdxhC0/lnF
-	 EJkaZhmpruA9gNz3xbv0YRanXY6wkIRg13MY79JfAoFG3p0TW7i3JOcLhQ0I7tmiS3cCg
-	 +EwYfpBOWztpT5xXFnzd8QcejFZNR+4nbOkwmWOknDPx6ZFrvSVFIXPhzBZnf9KGqpt7z
-	 UBW6qiazObVWIQvpFL0oESteJSGG9Sl4pKwaV9+POItOQNsobPx7NB9wNNyrAnJtdkLda
-	 Zaya50/j+frRBrx9lsitNDjMgVbMUZNEs6+UDrQbyXO0Npg/SLronnzyWxQLrLeEfAA==
+	t=1793629737;
+	b=ylUUb+mr45KMBssKmoIXLgrEcxjF/XW7onF/dxU/UzwB0L4UTkoPUYXfYGmtPNLW/L3W
+	 w/hfeCjnVPf3hTiLuTnmCNAFhWCZMubeH9wOmTzGbAJBjW9/K6kPbwdC363x2JywOYNhK
+	 qmu14IxCSAjpSxNxuXWq6WS8EIp1hR85uCCl1MFY1b8BN3mh0kD/lpiF0YlW1OwdnlWoo
+	 4lPopE5u/T/jC9HwHhjvUCSjtwdVM2VdG/8ZnYQ+UTKLUDMah74yZ0dS1Jt2dj3OS7dW/
+	 hiNjstxtt/l9LNh6YVSAgU99gOg9XKk+DneoXXLF9Bi350gZQHHK3OYjd5XnNbiuNPg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793629695;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793629737;
 	h=Received:DKIM-Signature:From:Date:Subject:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding:Message-Id:References:In-Reply-To:To:Cc:
 	 X-Mailer:X-Developer-Signature:X-Developer-Key;
-	bh=1ZOes0sCXeNJHkx8XbBRI4Lha74UqRf0e01UMCXW7Bw=;
-	b=4tWcqeySUqGE0aJlz5JNp6dcsKFt3178igcUpVqO7YPfZTK3aribbXDXGqHh6rPue1eY
-	 sdVphjmAR14YPbRECo3meSYCNH+ZiFHYUl9uGfRJNsT8kIT+VGpxf/+KPWJbcPMQRSUsC
-	 OcXSuru8NyFXZGZ7XevN9yjPfTn+uVsZdVrYSqRUypbv7/110Ubn/+tzAz/6qzWakN+zx
-	 KfiozRMV4+GQ/AKkeRllYEDfcakxkZmilJvsLv+AoGudt5huEU7Z6LJoH+u6BcqRdfmmG
-	 JmEylRA93B+Onc1oqv1gDdmH09yNMQmON2PQYvzB1r5P4I/UQvPY5+NfWaIXELGbaow==
+	bh=XiY4DYbDFOQzsur4dsXe00fq74GEf+50WHY2d0xcL1w=;
+	b=T0w7isbB2kntqWYaa59et5KCXIn/4mE2X6zpAjit1zmUJRG31QmBYbEPSkuxV62VABdc
+	 GnORMVcxYXzoMNMs2Ruldob9GqUABouI+3BeZlVULOOdwJFi5D1WUucnL//9QUvF3mGwN
+	 c3Lcd+zlgHsrlG9Wx4VBc3i3aClCqX6ipDlXuX0AgWQI4Cv+Rbd94m8Y8Dp1mGD4zc5Q0
+	 eVyh08IwHhTihyyVz2SsdOR1MLt2Z3s6rUfsJ8/KfJG/6LlP6ubHNNaclEb54VujZv8UG
+	 7WasPno+p27LPB/wAL6lC3XBq107hRWMgckbS1+ka1AZ8BRigEcEk4NDA/BzloaRRUw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=EUO4pFKl;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ccK9IwZ2;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 12050606A5BD;
-	Mon,  2 Nov 2026 14:28:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B8278606C3CA;
+	Mon,  2 Nov 2026 14:28:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=EUO4pFKl
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E1D0D1F00A16;
-	Mon,  2 Nov 2026 14:28:00 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ccK9IwZ2
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EF4581F00A16;
+	Mon,  2 Nov 2026 14:28:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793629694;
-	bh=1ZOes0sCXeNJHkx8XbBRI4Lha74UqRf0e01UMCXW7Bw=;
+	s=k20260515; t=1793629736;
+	bh=XiY4DYbDFOQzsur4dsXe00fq74GEf+50WHY2d0xcL1w=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=EUO4pFKlhnL5pvQEUCCWvi+78+6q6ZDjIsg25RLdmrCR7DaMvvK7VU6IyXjatgNdA
-	 v6HEQdINaxmfpwL2YFS2jHE5mgZGSzD0u2zuKU1c9+C8L4IeSjDRJMsuWNe0QCLWYE
-	 HgyuHlkfOpyx10+G5lbOHU8K9XY1lWRM1PLPhSPcCmeOf5pWcbxWRZzIqvBtaEEgcu
-	 pLUrAxK6nHoCIsss5clQs1KkJnkGgrrsihUVIBffccQLmDOjMDkbkev4FX0WQJfpGn
-	 FiQqi51nTBd2t+6sn7+AKsB+sOUb1ObmcEa84GBOKFz/ycMk49a3RHfimrV1ontC6D
-	 8uUxFKZ7AJNfQ==
+	b=ccK9IwZ2RL3c7Hy5HZzwdHvXaNaGEP1ChdB7VM84tsCaQ/e8r1nS4+9u7d7e0yAEX
+	 o5/ZDGPl9K4GuclD+kk90STbN5FxtWo+gUSw2mvruWyBftbc9DQWq4rFNfC2tz9RhT
+	 ZK6VIgyDlWShu/QH9u3X2Kw1zgWsfkqIyhYGecDGydGGid39AAHco88m05Wppl8aTe
+	 ccS57hTC3taUO0J/byUbxA0h7x/ybz6vqMXDyE5opv6i4PNG4GiLmyriRl5XKf0pqQ
+	 vVsMOApctetsDaa7KIpt9Pkcr4GpedPJlr79XxSiDLZAUjs4BN9QKFACzOXnnO6P1j
+	 F2Bry1T1wFZTQ==
 From: Christian Brauner <brauner@kernel.org>
-Date: Mon, 02 Nov 2026 15:21:43 +0100
-Subject: [PATCH RFC 28/38] scsi: esas2r: bound the lengths of the HBA, SMP
- and firmware ioctls
+Date: Mon, 02 Nov 2026 15:21:46 +0100
+Subject: [PATCH RFC 31/38] proc: sysctl: resume readdir after the last name
+ it returned
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -55,7 +55,7 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261102-work-procfs-bugfixes-v1-28-59422ed3e465@kernel.org>
+Message-Id: <20261102-work-procfs-bugfixes-v1-31-59422ed3e465@kernel.org>
 References: <20261102-work-procfs-bugfixes-v1-0-59422ed3e465@kernel.org>
 In-Reply-To: <20261102-work-procfs-bugfixes-v1-0-59422ed3e465@kernel.org>
 To: linux-fsdevel@vger.kernel.org
@@ -91,186 +91,206 @@ Cc: Linus Torvalds <torvalds@linux-foundation.org>,
  "Christian Brauner (Amutable)" <brauner@kernel.org>, 
  Chuck Lever <cel@kernel.org>, stable@vger.kernel.org
 X-Mailer: b4 0.17-dev
-X-Developer-Signature: v=1; a=openpgp-sha256; l=6672; i=brauner@kernel.org;
- h=from:subject:message-id; bh=gYkKA8sDklmz8nTf0EqD2RrY/Q3IBTgyykjWiVDWZYA=;
- b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9mJPz+N2NHXK/t+en+35gneV78ubBxkVGR/jbO/9sW
- Dbb9di/yx2lLAxiXAyyYoosDu0m4XLLeSo2G2VqwMxhZQIZwsDFKQATkRNhZNimE16dqx5cOOOB
- 1nyumpBTfd/0T3+YWsenvUg5fd6+L/wM//N26dx8v26+6gL+G0t3cCusnP/gdPiKe/7rxHbVSdf
- F5fECAA==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=6760; i=brauner@kernel.org;
+ h=from:subject:message-id; bh=uVHmiW/kcnqfpMjVEbqExYuffumnSnR0NdR9kllvaCA=;
+ b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9mJNzU5YpvSPCj1uM2UPakevStcYsHqNsvqO1Art+s
+ 3+bsPxaRykLgxgXg6yYIotDu0m43HKeis1GmRowc1iZQIYwcHEKwETClzEynPA9d/Cr/asOT6nq
+ Cy/j74k9mbZAb9YXNanby29PWFm5lp2R4WHo9q1CpdazUjk8ZXPOOG6pZeyTv+X/rVF0Auu3H/f
+ +MQEA
 X-Developer-Key: i=brauner@kernel.org; a=openpgp;
  fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 
-esas2r_ioctl_handler() copies in a struct atto_express_ioctl, a bit over
-512k, and hands the union member for the command to the handlers. For
-EXPRESS_IOCTL_HBA and EXPRESS_IOCTL_SMP the length of the buffered ioctl
-is the size of the member plus lengths that come straight from
-userspace:
+proc_sys_readdir() counts the entries of a directory and resumes a
+listing at the number getdents64() stopped at. The entries are sorted
+by name, so one that is registered or unregistered in between shifts
+everything behind it by one. Listing /proc/sys/net/ipv4/conf with a
+buffer that holds ".", ".." and "all" and registering a device whose
+name sorts before "all" makes the next call return "all" a second time.
+Unregistering one that sorted before the position makes it skip an
+entry instead. So a listing that takes more than one call shows a name
+twice, or not at all. Even the 64k buffer of ls needs a second call to
+find the end of the directory, so a device that comes up right then
+repeats the last entry.
 
-  bi.length = sizeof(struct atto_ioctl) + ioctl_hba->data_length;
+So remember the name of the last entry a call emitted in the file and
+resume at the first usable entry after it, like kernfs resumes after
+the node it stopped at. The entry itself can't be pinned across calls,
+unregistering waits for that. If the position was moved by a seek in
+between the listing counts from the start like before, seeking to an
+arbitrary position has never been better than that.
 
-  bi.length = sizeof(struct atto_ioctl_smp)
-	    + le32_to_cpu(si->req_length)
-	    + le32_to_cpu(si->rsp_length);
+That also takes one walk down the tree to resume instead of a walk over
+every entry in front of the position with a round trip through
+sysctl_lock for each of them.
 
-handle_buffered_ioctl() copies bi.length bytes from the member into a
-DMA buffer and, once the adapter is done, copies the DMA buffer back
-over the member. Nothing checks that the lengths fit into the struct
-that was copied in. So a large data_length makes it read past the
-struct and then write the DMA buffer back over the memory behind it.
-
-The firmware commands pass sizeof(struct atto_express_ioctl) to
-esas2r_{read,write}_{fw,fs}() as the length of data.fwrw.image, which
-starts 28 bytes into the struct. So they can read and write 28 bytes
-past it as well.
-
-The handler is reachable through /proc/scsi/esas2r/ATTONode. It is
-created with mode 0, which procfs turns into 0444, and esas2r doesn't
-check for a capability anywhere. So any local user can do this on a
-machine with such an adapter.
-
-Bound all of these by the room from the member to the end of the
-struct. read_hw() passes handle_hba_ioctl() a single struct atto_ioctl
-and only ever returns that, so there the data length has to be zero.
-
-Reported-by: Chris Mason <mason@kernel.org>
-Fixes: 26780d9e12ed ("[SCSI] esas2r: ATTO Technology ExpressSAS 6G SAS/SATA RAID Adapter Driver")
+Fixes: 77b14db502cb ("[PATCH] sysctl: reimplement the sysctl proc support")
 Cc: stable@vger.kernel.org
 Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
- drivers/scsi/esas2r/esas2r.h       |  2 +-
- drivers/scsi/esas2r/esas2r_ioctl.c | 41 ++++++++++++++++++++++++--------------
- drivers/scsi/esas2r/esas2r_main.c  |  3 ++-
- 3 files changed, 29 insertions(+), 17 deletions(-)
+ fs/proc/proc_sysctl.c | 106 ++++++++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 103 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/esas2r/esas2r.h b/drivers/scsi/esas2r/esas2r.h
-index a763edd05fe4..10101f50b282 100644
---- a/drivers/scsi/esas2r/esas2r.h
-+++ b/drivers/scsi/esas2r/esas2r.h
-@@ -967,7 +967,7 @@ int esas2r_write_params(struct esas2r_adapter *a, struct esas2r_request *rq,
- int esas2r_ioctl_handler(void *hostdata, unsigned int cmd, void __user *arg);
- int esas2r_ioctl(struct scsi_device *dev, unsigned int cmd, void __user *arg);
- u8 handle_hba_ioctl(struct esas2r_adapter *a,
--		    struct atto_ioctl *ioctl_hba);
-+		    struct atto_ioctl *ioctl_hba, size_t room);
- enum scsi_qc_status esas2r_queuecommand(struct Scsi_Host *host,
- 					struct scsi_cmnd *cmd);
- int esas2r_show_info(struct seq_file *m, struct Scsi_Host *sh);
-diff --git a/drivers/scsi/esas2r/esas2r_ioctl.c b/drivers/scsi/esas2r/esas2r_ioctl.c
-index 3f7c1d131ec3..f99318f61c93 100644
---- a/drivers/scsi/esas2r/esas2r_ioctl.c
-+++ b/drivers/scsi/esas2r/esas2r_ioctl.c
-@@ -311,17 +311,27 @@ static int smp_ioctl_callback(struct esas2r_adapter *a,
- 	return true;
+diff --git a/fs/proc/proc_sysctl.c b/fs/proc/proc_sysctl.c
+index 6c0859c66563..38b61887b59c 100644
+--- a/fs/proc/proc_sysctl.c
++++ b/fs/proc/proc_sysctl.c
+@@ -417,6 +417,54 @@ static void next_entry(struct ctl_table_header **phead, const struct ctl_table *
+ 	*pentry = entry;
  }
  
-+/* The room from @member to the end of a struct atto_express_ioctl. */
-+#define EXPRESS_IOCTL_ROOM(member)				\
-+	(sizeof(struct atto_express_ioctl) -			\
-+	 offsetof(struct atto_express_ioctl, member))
++/*
++ * The first usable entry of @dir after @name, or the first one at all for a
++ * NULL @name. The entries are sorted by name, so that is where a listing
++ * resumes when entries in front of it came or went in between. -ENOENT if
++ * the directory is being unregistered.
++ */
++static int entry_after(struct ctl_dir *dir, const char *name, int namelen,
++		       struct ctl_table_header **phead,
++		       const struct ctl_table **pentry)
++{
++	struct ctl_table_header *head = NULL;
++	const struct ctl_table *entry = NULL;
++	struct rb_node *node, *after = NULL;
++	struct ctl_node *ctl_node;
 +
- static u8 handle_smp_ioctl(struct esas2r_adapter *a, struct atto_ioctl_smp *si)
- {
- 	struct esas2r_buffered_ioctl bi;
-+	u64 length = (u64)sizeof(struct atto_ioctl_smp) +
-+		     le32_to_cpu(si->req_length) +
-+		     le32_to_cpu(si->rsp_length);
++	spin_lock(&sysctl_lock);
++	if (unlikely(dir->header.unregistering)) {
++		spin_unlock(&sysctl_lock);
++		return -ENOENT;
++	}
++	if (!name) {
++		after = rb_first(&dir->root);
++	} else for (node = dir->root.rb_node; node;) {
++		const struct ctl_table *table;
++		struct ctl_table_header *h;
 +
-+	/* The request and the response follow @si in the same buffer. */
-+	if (length > EXPRESS_IOCTL_ROOM(data.ioctl_smp))
-+		return IOCTL_INVALID_PARAM;
- 
- 	memset(&bi, 0, sizeof(bi));
- 
- 	bi.a = a;
- 	bi.ioctl = si;
--	bi.length = sizeof(struct atto_ioctl_smp)
--		    + le32_to_cpu(si->req_length)
--		    + le32_to_cpu(si->rsp_length);
-+	bi.length = length;
- 	bi.offset = 0;
- 	bi.callback = smp_ioctl_callback;
- 	return handle_buffered_ioctl(&bi);
-@@ -1221,11 +1231,16 @@ static void hba_ioctl_done_callback(struct esas2r_adapter *a,
- 	}
++		ctl_node = rb_entry(node, struct ctl_node, node);
++		h = ctl_node->header;
++		table = &h->ctl_table[ctl_node - h->node];
++		if (namecmp(table->procname, strlen(table->procname),
++			    name, namelen) > 0) {
++			after = node;
++			node = node->rb_left;
++		} else {
++			node = node->rb_right;
++		}
++	}
++	ctl_node = first_usable_entry(after);
++	spin_unlock(&sysctl_lock);
++	if (ctl_node) {
++		head = ctl_node->header;
++		entry = &head->ctl_table[ctl_node - head->node];
++	}
++	*phead = head;
++	*pentry = entry;
++	return 0;
++}
++
+ /*
+  * sysctl_perm does NOT grant the superuser all rights automatically, because
+  * some sysctl variables are readonly even to root.
+@@ -675,6 +723,36 @@ static __poll_t proc_sys_poll(struct file *filp, poll_table *wait)
+ 	return ret;
  }
  
-+/* @room is the size of the buffer that starts with @ioctl_hba. */
- u8 handle_hba_ioctl(struct esas2r_adapter *a,
--		    struct atto_ioctl *ioctl_hba)
-+		    struct atto_ioctl *ioctl_hba, size_t room)
- {
- 	struct esas2r_buffered_ioctl bi;
- 
-+	/* The data follows @ioctl_hba in the same buffer. */
-+	if (ioctl_hba->data_length > room - sizeof(struct atto_ioctl))
-+		return IOCTL_INVALID_PARAM;
++/*
++ * Where the next readdir resumes. The entries are counted, so one that is
++ * registered or unregistered in front of the position would shift what
++ * the next call returns. The name of the last entry emitted doesn't move.
++ */
++struct sysctl_cursor {
++	loff_t pos;			/* the position behind the entry */
++	int len;
++	char name[NAME_MAX + 1];
++};
 +
- 	memset(&bi, 0, sizeof(bi));
++/* If this can't remember the entry the next call counts from the start. */
++static void sysctl_cursor_set(struct file *file, const char *name, int len,
++			      loff_t pos)
++{
++	struct sysctl_cursor *cursor = file->private_data;
++
++	if (len > NAME_MAX)
++		return;
++	if (!cursor) {
++		cursor = kmalloc(sizeof(*cursor), GFP_KERNEL);
++		if (!cursor)
++			return;
++		file->private_data = cursor;
++	}
++	cursor->pos = pos;
++	cursor->len = len;
++	memcpy(cursor->name, name, len);
++}
++
+ static bool proc_sys_fill_cache(struct file *file,
+ 				struct dir_context *ctx,
+ 				struct ctl_table_header *head,
+@@ -753,8 +831,11 @@ static int scan(struct ctl_table_header *head, const struct ctl_table *table,
+ 	else
+ 		res = proc_sys_fill_cache(file, ctx, head, table);
  
- 	bi.a = a;
-@@ -1349,31 +1364,27 @@ int esas2r_ioctl_handler(void *hostdata, unsigned int cmd, void __user *arg)
- 			err = esas2r_write_fw(a,
- 					      (char *)ioctl->data.fwrw.image,
- 					      0,
--					      sizeof(struct
--						     atto_express_ioctl));
-+					      EXPRESS_IOCTL_ROOM(data.fwrw.image));
+-	if (res)
++	if (res) {
+ 		ctx->pos = *pos;
++		sysctl_cursor_set(file, table->procname, strlen(table->procname),
++				  ctx->pos);
++	}
  
- 			if (err >= 0) {
- 				err = esas2r_read_fw(a,
- 						     (char *)ioctl->data.fwrw.
- 						     image,
- 						     0,
--						     sizeof(struct
--							    atto_express_ioctl));
-+						     EXPRESS_IOCTL_ROOM(data.fwrw.image));
- 			}
- 		} else if (ioctl->data.fwrw.img_type == FW_IMG_FS_API) {
- 			err = esas2r_write_fs(a,
- 					      (char *)ioctl->data.fwrw.image,
- 					      0,
--					      sizeof(struct
--						     atto_express_ioctl));
-+					      EXPRESS_IOCTL_ROOM(data.fwrw.image));
+ 	return res;
+ }
+@@ -762,6 +843,7 @@ static int scan(struct ctl_table_header *head, const struct ctl_table *table,
+ static int proc_sys_readdir(struct file *file, struct dir_context *ctx)
+ {
+ 	struct ctl_table_header *head = grab_header(file_inode(file));
++	struct sysctl_cursor *cursor = file->private_data;
+ 	struct ctl_table_header *h = NULL;
+ 	const struct ctl_table *entry;
+ 	struct ctl_dir *ctl_dir;
+@@ -775,9 +857,20 @@ static int proc_sys_readdir(struct file *file, struct dir_context *ctx)
+ 	if (!dir_emit_dots(file, ctx))
+ 		goto out;
  
- 			if (err >= 0) {
- 				err = esas2r_read_fs(a,
- 						     (char *)ioctl->data.fwrw.
- 						     image,
- 						     0,
--						     sizeof(struct
--							    atto_express_ioctl));
-+						     EXPRESS_IOCTL_ROOM(data.fwrw.image));
- 			}
- 		} else {
- 			ioctl->header.return_code = IOCTL_BAD_FLASH_IMGTYPE;
-@@ -1441,9 +1452,9 @@ int esas2r_ioctl_handler(void *hostdata, unsigned int cmd, void __user *arg)
- 		break;
+-	pos = 2;
++	/*
++	 * Resume after the last entry the previous call emitted. Only a seek
++	 * that moved the position away from it counts from the start, like
++	 * seeking to an arbitrary position always did.
++	 */
++	if (cursor && cursor->pos == ctx->pos) {
++		entry_after(ctl_dir, cursor->name, cursor->len, &h, &entry);
++		pos = ctx->pos;
++	} else {
++		first_entry(ctl_dir, &h, &entry);
++		pos = 2;
++	}
  
- 	case EXPRESS_IOCTL_HBA:
--		ioctl->header.return_code = handle_hba_ioctl(a,
--							     &ioctl->data.
--							     ioctl_hba);
-+		ioctl->header.return_code =
-+			handle_hba_ioctl(a, &ioctl->data.ioctl_hba,
-+					 EXPRESS_IOCTL_ROOM(data.ioctl_hba));
- 		break;
+-	for (first_entry(ctl_dir, &h, &entry); h; next_entry(&h, &entry)) {
++	for (; h; next_entry(&h, &entry)) {
+ 		if (!scan(h, entry, &pos, file, ctx)) {
+ 			sysctl_head_finish(h);
+ 			break;
+@@ -788,6 +881,12 @@ static int proc_sys_readdir(struct file *file, struct dir_context *ctx)
+ 	return 0;
+ }
  
- 	case EXPRESS_IOCTL_VDA:
-diff --git a/drivers/scsi/esas2r/esas2r_main.c b/drivers/scsi/esas2r/esas2r_main.c
-index ada278c24c51..75a70ae9441b 100644
---- a/drivers/scsi/esas2r/esas2r_main.c
-+++ b/drivers/scsi/esas2r/esas2r_main.c
-@@ -178,7 +178,8 @@ static ssize_t read_hw(struct file *file, struct kobject *kobj,
- 	if (!a->local_atto_ioctl)
- 		return -ENOMEM;
++static int proc_sys_dir_release(struct inode *inode, struct file *file)
++{
++	kfree(file->private_data);
++	return 0;
++}
++
+ static int proc_sys_permission(const struct mnt_idmap *idmap,
+ 			       struct inode *inode, int mask)
+ {
+@@ -867,6 +966,7 @@ static const struct file_operations proc_sys_dir_file_operations = {
+ 	.read		= generic_read_dir,
+ 	.iterate_shared	= proc_sys_readdir,
+ 	.llseek		= generic_file_llseek,
++	.release	= proc_sys_dir_release,
+ };
  
--	if (handle_hba_ioctl(a, a->local_atto_ioctl) != IOCTL_SUCCESS)
-+	if (handle_hba_ioctl(a, a->local_atto_ioctl,
-+			     sizeof(struct atto_ioctl)) != IOCTL_SUCCESS)
- 		return -ENOMEM;
- 
- 	memcpy(buf, a->local_atto_ioctl, length);
+ static const struct inode_operations proc_sys_inode_operations = {
 
 -- 
 2.53.0
