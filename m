@@ -1,57 +1,109 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793628364;
-	b=1bc8uB144UiYrxKU48xHROUkRU/oEK/adAqMf3VThciGS6FUv0iDs24GI9f4Cr1xuVWZ
-	 dcd36bAVtdgb2AFRVOdUQI9mKxZA3MpeL+Q5zPJEac8u+12FWY/CI4cpY0Sjp6ih2FYbc
-	 tvIGi6K3KGzFOGptzdyCw96izvX8yIwoj3RIAjYIWOo2PoyUYq+3OSdN+DK5ZtxFRshG8
-	 sHyvqQHaFyfQBPGulX4NgeNTKy57ZnAplffLduY90e4D6l+5AY3qD2mfqCcpCxxxnHb1E
-	 SMQzi7AVwhJaLocOD3xQIpp29DnKYLV6DYew5FdQ5FV5NI7/1hqV/EPl3C4uSXuSlcQ==
+	t=1793629260;
+	b=pCpHSVZDMMdk6s2/SWjI0YYQxt3cLXCpszddhZgCLrD+zL+P1nSYoDjGmWwEsPGQRuoS
+	 cAF+bgvb4//kt5Wwy5h30dajrh4j4Oyu4lOfrLg9hYjc+HhlN9WcTQLOx97AxD9fJDKmY
+	 GImIjoJ0o5r6bMWBreBX3aZy2fGlhnYDKn1wJzqL6Wxaav6MS4KzJC9Z5/1wzOzE8CLt9
+	 t9NIHnDkbziEWw6zFMPilZPTpBAKhNswWQpO6JtBnrRLy7fpM3gm/E/DWhUO8j+IB6HnY
+	 wm503hZLiIrM4tF2OY8MYwnk+JmVUbqFEciduIYQE6lhvx0uU1BUyMmhHg3uQqZ/32g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793628364;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=+fg6Ehoh0iTyWfObODRkCugp/L7wnz8F1QclqvaiFBo=;
-	b=ws/ARyg4Vquk7zmczB4moIUkyI3PgLmCVs9QjXHgfJSz6QhZ7Mxpwu50W1wyTsyZ/X/u
-	 cBy6Eat8KRBFGvS9EsVPnZuRhrsEd4toBgMKkCYlwljYIWbQShGBFPz+6DJdNoy8K0qmQ
-	 ZACeN0XgZirT4TiGh+Jsds+hy8eoGQ/2SMV2U8Sli86tOtrAWjjdh8pWJCWbgIIuPXy3u
-	 e86iRRMKzRHkZy3mPgfsGy7cd4W/t8Mk1S14gQz91X1lrN1pgASAs43j9q3x+N50/Kfn/
-	 ffuuTODYJondPGHuwcB8Hu2FPD0e5rkPLKJkXx+T/oQfyCV6Z5DOpAG7/O5I+hcMeHw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793629260;
+	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
+	 MIME-Version:Content-Type:X-Developer-Signature:X-Developer-Key:
+	 Content-Transfer-Encoding;
+	bh=AMQhAUoLjC1OsRhPIF0X/aZZvhoGLtnfpHmE2nV4Wn8=;
+	b=w0iUuu25LcgkA3xGhaCiKMEKC4+WEmJvuCSsM7a4JcQzbZkbzH95lmjyghuNDSZ636lM
+	 zDqlTkdA53RBUQ/pfPUtP35lwyf23hoIVTza23nSQ/mxH15ctyh9mOtI68HNAhD4vZQq2
+	 H1pAwc8FT0JABLkWPADeSKIfS3K0Si2FdjU7nGK5JKm78OPZr0ETnE6cVeYr9JSM8ejlT
+	 qSV26qfr4m9ADzs0JeKUvRhT3WqpTt1yNreGV/9s3Zy1LwstRqheSzSloj1kmuJYwmew3
+	 hQf23VzxVy8e0WCjv8ctXarDx8UwmqgUEp8H2W9zOkRKd4ZYX1BHGBPLKByfm8j/6Qg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="KhXfp9+/";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=i0H9lG0B;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE875606A329
-	for <linux-scsi@vger.kernel.org>; Mon,  2 Nov 2026 14:06:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 821D9606A327;
+	Mon,  2 Nov 2026 14:21:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=KhXfp9+/
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 33BC11F00A16;
-	Mon,  2 Nov 2026 14:06:03 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=i0H9lG0B
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EED4A1F00A24;
+	Mon,  2 Nov 2026 14:20:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793628363;
-	bh=+fg6Ehoh0iTyWfObODRkCugp/L7wnz8F1QclqvaiFBo=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=KhXfp9+/+D4AuaRiEp+6vpA12XoPBAjwbVz7mPBAtqEAlYKNFnFnIfDFmGKrkun3g
-	 Amm2YYRBKS3c9scGg0lmcc7mjIqMU15gGZiI16swecbgyYFOaGXN+cnXhJxIiww91o
-	 uYWnLcp/R4Q1WS9oqbl+9Kqv7wwisT7duIAcqGndrese5o9Uc3mVq1r1LT624qClKh
-	 Ml5o1nZRwusvVsXKhrPwyWzIssm5N4An6IbSrOQIYcZpn59hvE5djduiDvu7s3wkXt
-	 BDqEQ3ae1vwf/oNO5ElcgfAfmzcvraaUQ1634KNVrth9mt+RKRdtndEIS77r+Ctzaz
-	 UNt16VIOrJfcQ==
-Message-ID: <sashiko-outbox-193523@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 2/2] scsi: mpt3sas: Time out delayed not-responding
- device blocks
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Jeff Layton" <jlayton@kernel.org>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20261102-sas-abba-v2-2-b3b9ba874b5a@kernel.org>
-References: <20261102-sas-abba-v2-0-b3b9ba874b5a@kernel.org>
- <20261102-sas-abba-v2-2-b3b9ba874b5a@kernel.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 02 Nov 2026 14:06:02 +0000
+	s=k20260515; t=1793629260;
+	bh=AMQhAUoLjC1OsRhPIF0X/aZZvhoGLtnfpHmE2nV4Wn8=;
+	h=From:To:Cc:Subject:Date;
+	b=i0H9lG0Be05TEfu/3sSSx1mNu2tXsbt81HU4VhWr1YaNjWqP1nbmV2PU6N9fCZNuw
+	 nivi01r4yhBVK5q6ZZ/2sNWNfeS1/SVvtod3GB/cMk9XHlaJxrROzU9uNyaCbwueWN
+	 AE/rw/aIukHRd/bUpfVF3u6Oo+d1/1nWu8xicACG8hfScuBzUWJR1oSKGUI3TT1yza
+	 I6qw7gNhliBS+HPnhAgAxa3M/VUpvB8uzbr6ovyo5O6M56NbveIxMw0j6pJhZqxruk
+	 pALxbTScur8TNXplk3A0Y4Q0gW4y8sE5l288k+10HrKs8+OO7WmnOZctFatwni3om7
+	 HzOPbsKYJ2AYQ==
+From: Christian Brauner <brauner@kernel.org>
+To: linux-fsdevel@vger.kernel.org
+Cc: Christian Brauner <brauner@kernel.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Jann Horn <jannh@google.com>,
+	Josef Bacik <josef@toxicpanda.com>,
+	Chris Mason <mason@kernel.org>,
+	Jeff Layton <jlayton@kernel.org>,
+	NeilBrown <neil@brown.name>,
+	Eric Dumazet <edumazet@kernel.org>,
+	Thomas Gleixner <tglx@kernel.org>,
+	Al Viro <viro@zeniv.linux.org.uk>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Christoph Hellwig <hch@lst.de>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	Joel Granados <joel.granados@kernel.org>,
+	Kees Cook <kees@kernel.org>,
+	Jan Kara <jack@suse.cz>,
+	Jan Kara <jack@suse.com>,
+	linux-kernel@vger.kernel.org,
+	linux-nfs@vger.kernel.org,
+	linux-acpi@vger.kernel.org,
+	linux-kselftest@vger.kernel.org,
+	linux-s390@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	linux-um@lists.infradead.org,
+	linux-wireless@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org,
+	netdev@vger.kernel.org,
+	ntfs3@lists.linux.dev,
+	platform-driver-x86@vger.kernel.org,
+	coreteam@netfilter.org,
+	kexec@lists.infradead.org,
+	linux-pci@vger.kernel.org,
+	linux-sound@vger.kernel.org,
+	netfilter-devel@vger.kernel.org,
+	dri-devel@lists.freedesktop.org,
+	ibm-acpi-devel@lists.sourceforge.net,
+	jfs-discussion@lists.sourceforge.net,
+	linux-alpha@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-cifs@vger.kernel.org,
+	linux-fbdev@vger.kernel.org,
+	linux-hwmon@vger.kernel.org,
+	linux-mm@kvack.org,
+	linux-sh@vger.kernel.org,
+	linux-usb@vger.kernel.org,
+	samba-technical@lists.samba.org,
+	sparclinux@vger.kernel.org,
+	linux-m68k@lists.linux-m68k.org,
+	linux-doc@vger.kernel.org,
+	linux-serial@vger.kernel.org,
+	linux-atm-general@lists.sourceforge.net,
+	Chuck Lever <chuck.lever@oracle.com>,
+	Takashi Iwai <tiwai@suse.de>,
+	linux-input@vger.kernel.org,
+	linux-raid@vger.kernel.org,
+	linux-ext4@vger.kernel.org,
+	linux-modules@vger.kernel.org,
+	linux-debuggers@vger.kernel.org
+Subject: [PATCH RFC 0/7] proc: move procfs to what kernfs does
+Date: Mon,  2 Nov 2026 15:19:15 +0100
+Message-ID: <20261102-defizit-jobaussicht-kurios-7016c6e67442@brauner>
+X-Mailer: git-send-email 2.53.0
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -60,322 +112,130 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+X-Developer-Signature: v=1; a=openpgp-sha256; l=6321; i=brauner@kernel.org; h=from:subject:message-id; bh=DeFgfcqlv/TY20j7H/EH1gPUF0B7m3TaniK1kcChAz8=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9mGNqL7pz+vPzk4KWfT6wfNmBh/f/+az2dnquniC7r OfbdVtpkY5SFgYxLgZZMUUWh3aTcLnlPBWbjTI1YOawMoEMYeDiFICJLNFkZJi9z+Wc51MV9sWG KyZ0i3EcLl3135Rh1V/p2TenWEnnPCln+F99gMWOyX62xk4Du399RQ9XTQsXMmEy4ArfuSn16RK 3R1wA
+X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
-s) to consider:
-- [High] scsi: mpt3sas: race between _scsih_dnr_unblock_work() and unlocked=
- unblock paths
-- [High] scsi: mpt3sas: _scsih_clear_block_deadline() races and misses bloc=
-ked sdevs
-- [Medium] scsi: mpt3sas: _scsih_dnr_unblock_work() unblocks devices during=
- host recovery
---
+Ok, as mentioned off-list I have an RFC version of getting rid of page
+fault induced stalls in procfs when removing entry which plagues
+networking devices among others.
 
-commit 3086ca833022a9345fb0fd3cc229d91c87b61323
-Author: Jeff Layton <jlayton@kernel.org>
+There was a hackish very narrow AI solution to a part of this bug class
+that was floated off-list. It used a second buffering mechanism on top
+of seqfiles which was really nasty. Plus, it didn't fix the whole bug
+class, it only eliminated a small portion. If we want to get rid of the
+whole page fault issue we need a bigger hammer. So I tried to work
+through that over the last couple of weeks. The series in a shape where
+it's not totally insane to have someone else look at it. So here it is.
 
-scsi: mpt3sas: Time out delayed not-responding device blocks
+I understand it's big but I thought it's probably nicer to look at the
+end result than just making a promise of what it might end up looking
+like.
 
-This commit adds a delayed work item to time out and release device blocks
-triggered by DELAY_NOT_RESPONDING events if the device missing delay expires
-without a subsequent firmware event unblocking the device. This avoids a
-deadlock where a sysfs SCSI scan holds sas_host->lock while waiting on a
-blocked sdev and prevents the firmware event worker from acquiring
-sas_host->lock.
+It's not super polished yet and I haven't gotten into sorting out all
+the warts as there were some really gnarly bugs in there like the whole
+readdir mess that repeated entries or terminated early. I think we could
+go a lot further there if we wanted to but I think that blows this out
+of proportion and at some point it becomes difficult to grasp the scope.
+So I'd rather delay that until I have a sense of how acceptable this all
+is.
 
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/=
-mpt3sas_scsih.c
-> index c7886a12d3088..af2666f9576e5 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+remove_proc_entry() waits until every call into the entry has returned,
+and most of those calls copy to or from userspace with the entry pinned.
 
-[ ... ]
+A reader or writer can make a page fault in that copy take as long as
+it wants, with userfaultfd or by punching holes into a memfd over and
+over. And the callers of remove_proc_entry() like to hold locks while
+they wait. addrconf holds RTNL when it removes /proc/net/dev_snmp6/<dev>
+and xt_hashlimit holds a mutex that all network namespaces share.
 
-> @@ -3934,6 +3936,26 @@ _scsih_internal_device_unblock(struct scsi_device =
-*sdev,
->  	}
->  }
-> =20
-> +/**
-> + * _scsih_clear_block_deadline - keep dnr_unblock_work off a blocked sdev
-> + * @ioc: per adapter object
-> + * @sas_device_priv_data: per device driver private data
-> + *
-> + * Called by the firmware event worker before it polls a blocked device
-> + * with TURs.  The worker unblocks the device when polling ends, and
-> + * must not have dnr_unblock_work send I/O to it in the meantime.
-> + */
-> +static void
-> +_scsih_clear_block_deadline(struct MPT3SAS_ADAPTER *ioc,
-> +			    struct MPT3SAS_DEVICE *sas_device_priv_data)
-> +{
-> +	unsigned long flags;
-> +
-> +	spin_lock_irqsave(&ioc->block_lock, flags);
-> +	sas_device_priv_data->block_deadline =3D 0;
-> +	spin_unlock_irqrestore(&ioc->block_lock, flags);
-> +}
-> +
->  /**
->   * _scsih_ublock_io_all_device - unblock every device
->   * @ioc: per adapter object
-> @@ -3974,6 +3996,7 @@ _scsih_ublock_io_all_device(struct MPT3SAS_ADAPTER =
-*ioc, u8 no_turs)
->  			continue;
->  		}
-> =20
-> +		_scsih_clear_block_deadline(ioc, sas_device_priv_data);
->  		do {
->  			pcie_device =3D mpt3sas_get_pdev_by_handle(ioc, sas_target->handle);
->  			if (pcie_device && (!ioc->tm_custom_handling) &&
-> @@ -4089,6 +4112,7 @@ _scsih_ublock_io_device_wait(struct MPT3SAS_ADAPTER=
- *ioc, u64 sas_address,
->  		if (!sas_device_priv_data->block)
->  			continue;
-> =20
-> +		_scsih_clear_block_deadline(ioc, sas_device_priv_data);
+Every network device with IPv6 gets a /proc/net/dev_snmp6/<dev> that
+everyone can read, and addrconf_ifdown() removes it with RTNL held. So
+any local user can keep RTNL for as long as their read stays stalled.
+Until then no device can be registered, removed or renamed and no
+network namespace can be created or torn down.
 
-[Severity: High]
-As reported by Sashiko on v1 [1], can _scsih_dnr_unblock_work() still race
-with the firmware event worker or unblock remaining sdevs while the worker =
-is
-polling devices?
+Without privileges a FUSE mount in a user namespace whose daemon never
+answers is enough to stall the copy. Killing the reader ends it, but
+until then whoever removes the file sits in D state.
 
-First, in both _scsih_ublock_io_all_device() and
-_scsih_ublock_io_device_wait(), sdev->hostdata and
-sas_device_priv_data->block are checked without holding ioc->block_lock
-before passing sas_device_priv_data to _scsih_clear_block_deadline(). If
-__scsi_remove_device() -> scsih_sdev_destroy() runs concurrently, it clears
-sdev->hostdata under ioc->block_lock and frees sas_device_priv_data before
-_scsih_clear_block_deadline() takes ioc->block_lock and writes to
-sas_device_priv_data->block_deadline. Even if the sdev is not being removed,
-_scsih_dnr_unblock_sdev() can run between the unlocked
-sas_device_priv_data->block check and _scsih_clear_block_deadline(), leaving
-the worker to poll an already-unblocked running sdev with TURs.
+xt_hashlimit removes the proc file of a table with hashlimit_mutex
+held. Every rule insert in every network namespace takes that mutex and
+so does network namespace cleanup. cleanup_net() runs on a single
+workqueue with pernet_ops_rwsem held, so a stalled reader also stops
+every later network namespace teardown and every module load that
+registers pernet operations. xt_recent does the same with recent_mutex.
 
-Second, _scsih_clear_block_deadline() is called inside the
-shost_for_each_device() loop for one sdev at a time right before
-_scsih_wait_for_device_to_become_ready(), which sleeps across up to
-command_retry_count retries. While the worker sleeps polling the first
-blocked sdev (such as LUN 0 of a multi-LUN target in
-_scsih_ublock_io_device_wait(), or the first blocked device in
-_scsih_ublock_io_all_device()), block_deadline remains active on all subseq=
-ent
-blocked sdevs. If their deadline expires during that sleep,
-_scsih_dnr_unblock_work() will unblock those sdevs prematurely and cause the
-polling loop to skip them when it later checks sas_device_priv_data->block.
+And it's not specific to networking. remove_proc_entry(), proc_remove()
+and remove_proc_subtree() have over 200 callers and plenty of them hold
+locks. A stalled reader of /proc/fs/ext4/<dev>/options holds up the
+unmount of that filesystem with s_umount held, and every sync(2) with
+it. The same goes for PCI hot-removal, for freeing IRQ descriptors,
+which CPU bring-up waits on, and for unplugging a USB sound card.
+syzbot has hit removal under locks before (cf. [1]), and the xt_recent
+deadlock fixed in (1) below is another one.
 
-Third, when _scsih_sas_broadcast_primitive_event() calls
-_scsih_block_io_all_device() to keep all devices blocked during broadcast
-primitive task management, any sdev already blocked by an earlier
-DELAY_NOT_RESPONDING event is skipped without clearing block_deadline:
+Stalling the kernel in a copy to or from userspace is a well-known
+exploitation primitive. It's why unprivileged userfaultfd can't do it
+by default anymore since v5.11 (d0d4730ac2e4), and FUSE has been used
+the same way.
 
-drivers/scsi/mpt3sas/mpt3sas_scsih.c:_scsih_block_io_all_device()
-	shost_for_each_device(sdev, ioc->shost) {
-		sas_device_priv_data =3D sdev->hostdata;
-		if (!sas_device_priv_data)
-			continue;
-		if (sas_device_priv_data->block)
-			continue;
+kernfs doesn't have that problem. The code of a kernfs file only ever
+runs with the node pinned and never touches userspace memory, kernfs
+copies in and out itself. This moves procfs over to the same scheme.
 
-If that earlier deadline expires while _scsih_sas_broadcast_primitive_event=
-()
-is still running, wouldn't _scsih_dnr_unblock_work() unblock the device in
-the middle of task management?
+sysfs has only held its active reference around ->show() and ->store()
+since v2.6.23, the same release that made remove_proc_entry() wait for
+the entry's callers. A copy to userspace couldn't be stalled for long
+back then. userfaultfd only came in v4.3 and FUSE in user namespaces in
+v4.18. configfs moved its copies out of its active reference in v5.3
+and DRM copies ioctl arguments in and out around the driver's handler
+the same way. debugfs still holds its reference across the copies,
+ran into a deadlock with wifi drivers because of it and grew an API to
+cancel operations instead (cf. [2]).
 
->  		do {
->  			host_reset_completion_count =3D 0;
->  			pcie_device =3D mpt3sas_get_pdev_by_handle(ioc, sas_target->handle);
-> @@ -4225,6 +4249,92 @@ _scsih_block_io_all_device(struct MPT3SAS_ADAPTER =
-*ioc)
->  	}
->  }
-> =20
-> +/*
-> + * Margin on top of the firmware's report device missing delay before
-> + * _scsih_dnr_unblock_work() releases a delayed not-responding block.
-> + */
-> +#define MPT3SAS_DNR_BLOCK_SLACK	30
-> +
-> +static unsigned long
-> +_scsih_dnr_block_timeout(struct MPT3SAS_ADAPTER *ioc)
-> +{
-> +	return (max(ioc->device_missing_delay, ioc->pcie_device_missing_delay) +
-> +	    MPT3SAS_DNR_BLOCK_SLACK) * HZ;
-> +}
-> +
-> +/**
-> + * _scsih_dnr_unblock_sdev - release an expired delayed not-responding b=
-lock
-> + * @ioc: per adapter object
-> + * @sdev: scsi device struct
-> + *
-> + * Return: the deadline of an unexpired block on @sdev, or 0 if none.
-> + */
-> +static unsigned long
-> +_scsih_dnr_unblock_sdev(struct MPT3SAS_ADAPTER *ioc, struct scsi_device =
-*sdev)
-> +{
-> +	struct MPT3SAS_DEVICE *sas_device_priv_data;
-> +	unsigned long flags, deadline =3D 0;
-> +
-> +	spin_lock_irqsave(&ioc->block_lock, flags);
-> +	sas_device_priv_data =3D sdev->hostdata;
-> +	if (!sas_device_priv_data || !sas_device_priv_data->block ||
-> +	    !sas_device_priv_data->block_deadline)
-> +		goto out;
-> +	if (time_before(jiffies, sas_device_priv_data->block_deadline)) {
-> +		deadline =3D sas_device_priv_data->block_deadline;
-> +		goto out;
-> +	}
-> +	sdev_printk(KERN_WARNING, sdev,
-> +	    "delayed not-responding block expired, handle(0x%04x)\n",
-> +	    sas_device_priv_data->sas_target->handle);
-> +	_scsih_internal_device_unblock(sdev, sas_device_priv_data);
-> +out:
-> +	spin_unlock_irqrestore(&ioc->block_lock, flags);
-> +	return deadline;
-> +}
+That touches just about every ->proc_read(), ->proc_write() and
+->proc_ioctl() in the tree, so I've split it up into seven series. They
+go out as replies to this mail:
 
-[Severity: High]
-Does _scsih_dnr_unblock_sdev() race with the other unblock paths that do not
-acquire ioc->block_lock?
+(1) proc: fix a few old bugs in /proc handlers (38 patches)
 
-While _scsih_dnr_unblock_sdev() runs on system_dfl_wq under ioc->block_lock,
-_scsih_ublock_io_device() (called from interrupt context in
-mpt3sas_scsih_event_callback() -> _scsih_tm_tr_send() on
-MPI2_EVENT_SAS_TOPO_RC_TARG_NOT_RESPONDING and from worker context in
-_scsih_check_device() and _scsih_remove_device()),
-_scsih_ublock_io_all_device(), and _scsih_ublock_io_device_wait() inspect a=
-nd
-clear sas_device_priv_data->block and call _scsih_internal_device_unblock()
-or scsi_internal_device_unblock_nowait() without holding ioc->block_lock:
+    Bugs in the handlers and in procfs itself that are a lot older than
+    the conversion and that reviewing it turned up. Most of them are for
+    stable. They come first so they can go there on their own and the
+    conversion doesn't have to bother with that crap.
 
-drivers/scsi/mpt3sas/mpt3sas_scsih.c:_scsih_ublock_io_device()
-	shost_for_each_device(sdev, ioc->shost) {
-		...
-		if (sas_device_priv_data->block)
-			_scsih_internal_device_unblock(sdev,
-				sas_device_priv_data);
-	}
+(2) proc: let procfs own the data path (16 patches)
 
-If _scsih_dnr_unblock_sdev() and _scsih_ublock_io_device() (or
-_scsih_ublock_io_all_device()) both see sas_device_priv_data->block =3D=3D =
-1 and
-call _scsih_internal_device_unblock() concurrently, the first call transiti=
-ons
-sdev->sdev_state from SDEV_BLOCK to SDEV_RUNNING (or from SDEV_CREATED_BLOCK
-to SDEV_CREATED). The second caller's scsi_internal_device_unblock_nowait()
-then returns -EINVAL and enters the fallback path in
-_scsih_internal_device_unblock():
+    The procfs side. procfs owns the seq_file of an entry, copies in
+    writes, copies out reads and copies ioctl arguments in and out, and
+    only calls into an entry with it pinned. proc_create_seq() and
+    friends and the plain seq_file users are switched over here too.
 
-drivers/scsi/mpt3sas/mpt3sas_scsih.c:_scsih_internal_device_unblock()
-	r =3D scsi_internal_device_unblock_nowait(sdev, SDEV_RUNNING);
-	if (r =3D=3D -EINVAL) {
-		...
-		sas_device_priv_data->block =3D 1;
-		r =3D scsi_internal_device_block_nowait(sdev);
-		...
-		sas_device_priv_data->block =3D 0;
-		r =3D scsi_internal_device_unblock_nowait(sdev, SDEV_RUNNING);
-	}
+(3) proc: convert the arch and platform entries (22 patches)
+(4) proc: convert the driver entries (23 patches)
+(5) proc: convert the fs, kernel and mm entries (27 patches)
+(6) proc: convert the net entries and the kfifo samples (11 patches)
 
-That re-blocks the already-unblocked sdev, and if the sdev was in
-SDEV_CREATED during a scan, scsi_internal_device_block_nowait() puts it back
-into SDEV_CREATED_BLOCK where the subsequent unblock transitions it only to
-SDEV_CREATED, racing with scsi_sysfs_add_sdev().
+(7) proc: drop the __user methods (5 patches)
 
-In addition, when _scsih_ublock_io_device(), _scsih_ublock_io_all_device(),=
- or
-_scsih_ublock_io_device_wait() clears sas_device_priv_data->block =3D 0 wit=
-hout
-holding ioc->block_lock before calling scsi_internal_device_unblock_nowait(=
-),
-a concurrent DELAY_NOT_RESPONDING interrupt in _scsih_block_io_device() can
-take ioc->block_lock, observe block =3D=3D 0, set block =3D 1 and block_dea=
-dline,
-and call scsi_internal_device_block_nowait(). The unblocking thread then ru=
-ns
-scsi_internal_device_unblock_nowait(sdev, SDEV_RUNNING), leaving sdev in
-SDEV_RUNNING with its request queue started while sas_device_priv_data->blo=
-ck
-is still 1 (causing scsih_qcmd() to return SCSI_MLQUEUE_DEVICE_BUSY for all
-commands).
+    Drops the old methods for every entry that can be removed and gives
+    the new ones the names kernfs uses, ->proc_read(), ->proc_write()
+    and ->proc_ioctl(). This needs all four conversion series.
 
-Should all unblock paths synchronize using ioc->block_lock?
+The series should all indicate cleanly what dependencies they have so b4
+should be able to pull it for review. But I could be wrong.
 
-> +
-> +/**
-> + * _scsih_dnr_unblock_work - release expired delayed not-responding bloc=
-ks
-> + * @work: the dnr_unblock_work of the adapter
-> + *
-> + * Within the device missing delay, the firmware either reports the devi=
-ce
-> + * as not responding, and the event callback unblocks it, or the device
-> + * comes back, and only the firmware event worker unblocks it.  The work=
-er
-> + * may first need shost->scan_mutex or the SAS transport's host lock, and
-> + * a scan holding those can have a command queued on the blocked sdev.
-> + * Past the delay the block has no further use, so release it here.
-> + */
-> +static void
-> +_scsih_dnr_unblock_work(struct work_struct *work)
-> +{
-> +	struct MPT3SAS_ADAPTER *ioc =3D container_of(to_delayed_work(work),
-> +	    struct MPT3SAS_ADAPTER, dnr_unblock_work);
-> +	struct scsi_device *sdev;
-> +	unsigned long deadline, next =3D 0;
-> +
-> +	if (ioc->remove_host)
-> +		return;
-> +	if (ioc->shost_recovery || ioc->pci_error_recovery) {
-> +		queue_delayed_work(system_dfl_wq, &ioc->dnr_unblock_work, HZ);
-> +		return;
-> +	}
+With all of it on a KASAN and lockdep kernel the removal selftests of
+every part pass, the proc, pktgen and allocinfo selftests behave like
+without it and the bugs from (1) that reproduce in a VM are gone. Every
+patch builds on its own on x86_64 and i386, and with W=1 on the
+architectures it touches.
 
-[Severity: Medium]
-Should _scsih_dnr_unblock_work() also check scsi_host_in_recovery(ioc->shos=
-t)
-and avoid unblocking targets marked sas_target->deleted, and use
-mod_delayed_work() here?
+[1]: https://lore.kernel.org/r/000000000000f24f4705b6988f3e@google.com
+[2]: https://lore.kernel.org/r/20231109212251.213873-7-johannes@sipsolutions.net
 
-When a host reset finishes in mpt3sas_base_hard_reset_handler(),
-mpt3sas_scsih_reset_done_handler() marks unresponding targets with
-sas_target->deleted =3D 1 and queues MPT3SAS_REMOVE_UNRESPONDING_DEVICES, a=
-nd
-ioc->shost_recovery is cleared to 0 while scsi_host_in_recovery(ioc->shost)
-can remain true until SCSI EH finishes. During SHOST_RECOVERY, scsih_qcmd()
-relies on sas_device_priv_data->block remaining set so TEST_UNIT_READY
-commands complete immediately with UNIT_ATTENTION / I_T_NEXUS_LOSS_OCCURRED,
-which is why _mpt3sas_fw_work() waits for both scsi_host_in_recovery() and
-ioc->shost_recovery before running _scsih_remove_unresponding_devices():
-
-drivers/scsi/mpt3sas/mpt3sas_scsih.c:_mpt3sas_fw_work()
-	case MPT3SAS_REMOVE_UNRESPONDING_DEVICES:
-		while (scsi_host_in_recovery(ioc->shost) ||
-					 ioc->shost_recovery) {
-			if (ioc->remove_host || ioc->fw_events_cleanup)
-				goto out;
-			ssleep(1);
-		}
-		_scsih_remove_unresponding_devices(ioc);
-
-Because _scsih_dnr_unblock_work() only checks ioc->shost_recovery and
-_scsih_dnr_unblock_sdev() does not check sas_target->deleted (unlike
-_scsih_ublock_io_all_device()), a block deadline expiring after
-ioc->shost_recovery clears can unblock pre-reset or deleted devices while
-SHOST_RECOVERY or post-reset device removal is still pending.
-
-Also, if _scsih_block_io_device() queues dnr_unblock_work with a full timeo=
-ut
-at the same time _scsih_dnr_unblock_work() enters the recovery deferral
-branch, queue_delayed_work(..., HZ) will be a no-op because the work item is
-already pending, pushing the 1-second retry out to the full timeout unless
-mod_delayed_work() is used.
-
-[1] https://lore.kernel.org/r/20261030-sas-abba-v1-1-b8cdd714a37c@kernel.org
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261102-sas-abba-v=
-2-0-b3b9ba874b5a@kernel.org?part=3D2
+-- 
+Christian Brauner <brauner@kernel.org>
