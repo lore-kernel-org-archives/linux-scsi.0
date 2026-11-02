@@ -1,100 +1,101 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.218.45
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.218.50
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793621129;
-	b=n95aLySH7ysSvo3EgQZR6mkEvk9RTtxSETx67HYObuDUgCK0QXtClnAHtv3Nt+RUalqC
-	 JD/uP9zeeJKO267dq+FzswMh6whhWWV6MPiy3QgyAGi2ekhZg54QZnT+dGqDggsgNvxLO
-	 e5GX0APWE+nJr/g4MpZ3Nobun/M+GxVHFzT/087kzXKN1OuqF0tUphuIO11LNlKeX2z0i
-	 L8uXBTl4dHpGuvqTTw+mZi1I1XVCZjHkI2HsrrrH0hAqPCcmoZjtzsMRuL3hDTyYVs9RM
-	 HyrG0a62xgFhZd8gc6a629bNoD+JOFvG1vG6xi+Nx5wtPQ4Myjce/KVzv2WCJn8+NiA==
+	t=1793621179;
+	b=ne5t+iZsf08KAaijEtLXccevm79zhu+hxzCvVeC9ay9DqsPoa8RdCIa9/hg9hlXv5bWp
+	 2+WJw1GzrEvw1TZK/xDIxk8TgiJ6zUvfQATKBBUM6t4Uar12ntMuEs3nLSvfNO+uJQZ3M
+	 gfowrGfVYetx2m9BOmdv6DvUndDX/MIIe/mIujfsbtG4SxMdDdYiLrvek78P0Jc9NKoe4
+	 5cBBgsk/q5K+F+8cs997YvWvBVjUwXU0GR5NUyD2wBtI0IGeY5m/o8uiNv9zMxS+PAuox
+	 VR8suWd/v1S6aGjR2UkW+3nMmEd36wePceiTFfOF+1YIMWlw4tbDAktf7uyPYRy6isA==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793621129;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793621179;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
 	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
 	 Message-ID:Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
-	bh=+ZBFqIsnvhiWwoQmNZFa1u8ZkrptuSUpK2Sox6s25Co=;
-	b=BSi/W5Cqjw5xQc21FS+IBYJnbarUc4f7wd7qyxmnx/eM8V4H1dnk6mVLrIS4TqMhvGhq
-	 qejoaiwwAosFivWzreonMRmBqoj7ocZ76MraQq5p9XWMbEPHrP1emfSovK5rdw0XX9oT2
-	 A2HNuLiPgltNStTPOa8Y0phUf0ho0NRMFx9P54DIAJU87/LChwVy+Tirn/L+hcQBDWiY/
-	 bwp1yKovSII11JQrnSSgPzdKNWM7usURxvig3Ooory1sFzjcWi/gGG9/UMgZ+VtbjB5b4
-	 Ch6zf/Fz0UaKbD7pWuDWefKwckJBVrlIGHSrhuiiDoCMt/HS73+psRZzImL1iuoomMg==
+	bh=JHEhxfLaPmXxjNS+ukaQsatORN659ol3TwCtCyeDnas=;
+	b=eWBObT2yeHvyJHv6RQv/ZCzUYmvBUo6gI1jiOSb/UhSzX/YJ2kiuYgRMhpwkucKnFc5i
+	 Af6FY6KbhizDZAMnnAbQMQZRaat2zgUgq9AhaIjcfcBIJkDaY4mGpDydrkDrk2b6J6RPy
+	 CiNawC/M71mMJDg/Fw0PviuURS4sGDE6tq1iessndAEY01kg4C+d4acu+IbytLpgNa22d
+	 GFpmu4zSrsaPi9VJ4Gl5W8CU/32l1nIhomYvNemdF/inUTIelUUqKX6heQ2nj0/t/9Vh4
+	 SFQ1PFn9eytFEirRlFRiCntDMG05xVXGcoQUimpHV2hBWGTMyjhXDGkM0KjPE/JVbeA==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=flipper.net;
 	spf=pass smtp.mailfrom=flipper.net;
-	dkim=pass header.d=flipper.net header.i=@flipper.net header.a=rsa-sha256 header.s=google header.b=eyqSjj0R;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.218.45
-Received: from mail-ej1-f45.google.com (mail-ej1-f45.google.com [209.85.218.45])
+	dkim=pass header.d=flipper.net header.i=@flipper.net header.a=rsa-sha256 header.s=google header.b=xcsLg5Yc;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.218.50
+Received: from mail-ej1-f50.google.com (mail-ej1-f50.google.com [209.85.218.50])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C404606A327
-	for <linux-scsi@vger.kernel.org>; Mon,  2 Nov 2026 12:05:29 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5C404606A327
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3AE8F606A329
+	for <linux-scsi@vger.kernel.org>; Mon,  2 Nov 2026 12:06:19 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3AE8F606A329
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=flipper.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flipper.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=flipper.net header.i=@flipper.net header.a=rsa-sha256 header.s=google header.b=eyqSjj0R
-Received: by mail-ej1-f45.google.com with SMTP id a640c23a62f3a-c49b431f022so420544766b.1
-        for <linux-scsi@vger.kernel.org>; Mon, 02 Nov 2026 04:05:29 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1793621128; cv=none;
+	dkim=pass (2048-bit key, unprotected) header.d=flipper.net header.i=@flipper.net header.a=rsa-sha256 header.s=google header.b=xcsLg5Yc
+Received: by mail-ej1-f50.google.com with SMTP id a640c23a62f3a-c46822eefb6so392129266b.2
+        for <linux-scsi@vger.kernel.org>; Mon, 02 Nov 2026 04:06:19 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1793621178; cv=none;
         d=google.com; s=arc-20260327;
-        b=qYsQ5pm8z0LjRnAuIpZQZAp90hZKh22RIYyECu8h1fHPXhZ6b5vy9b4sehNRjF//5k
-         GpWpuRrp145Zq1XRlJTsRxg6xz+UjGSClpgxGtTZOOOZMUwlCs8uEwM/kLz4RzOHVImH
-         yV+sYZHgwUd9+l79XOzQEjYOWDkE/jtC5BxewngfwdoDCphgW2peWyp8EfZGXejJrrk6
-         YXnvKB0LRlhzTOrksmga7FGuysv+ZZ4V36FdRIOLQmPFQE0o6o3PLuDFWQFCxcNK2qwo
-         BejbIqbtaPMcHJYhvVE8j8r4vdpZh0vJUXCklQsKBfrBEubj7Ctr5jIjkwMFxeR9/Mc/
-         8WmA==
+        b=O+FzakG/4k0eHyOP3pyMhbqQnsh8qysBaLKXVuJ4YCCeX5LIalENKxNbZvv24EqgHu
+         yP5IsooTyz3LC1RyfpLVjeeLRYK5bnfDJC3WNTT58BXn/9v93m+TOv88I4S+pjRkWKxH
+         iHNx+s4MHJijEqu0hGdRLuHphco58tb2TjTmIhs2eKoAfP8XggZWz/7w9czwIecKGqyF
+         jhTYiJRKKzcwWPEL0z7Ta2fO1t4se4lkM6862YnzSfSJUn6KVgM0efB7WVy5i3ca5Jpk
+         B4YO+kivXukEgUJe92FkxZWnMTQ28sW9nC2sM0mXM4gNi1bvTC8LWBjmdRNRLMJixZAI
+         pEVQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:dkim-signature;
-        bh=+ZBFqIsnvhiWwoQmNZFa1u8ZkrptuSUpK2Sox6s25Co=;
-        fh=9v4pUaDTasDA+DvytSX3ijbdZrOfxAWZCg74UGoBZCc=;
-        b=ncadrC9pBTQQPAwct7lptHwfImBioqhFj/06WS2hZ+KLKgb1rwrn2td4ir838MXU86
-         0fEkWvvWPGncc5g+zXsRwIMTAlRf1rdz4+J0sa8jqZi7/LateIWEnxzYai4HehYrYFpO
-         2K4DiCUiRL0gsNazFzwikSEVi+ZdJgkN1qxxDRnnmM/MmZ1vcPwVa5OQEVQnlVLiUDGS
-         8IgYaOrLd6ByGPhnq8RwbfKU+Tb+tdpd/kDBnGBM89LMI/RbBvJOjvS6hL/b8ceV+aFC
-         ohuOzRCHtOvdKnGb/7Vx2uzDBRVCObtzbIOryED1N0TR7nwvvYTopyW1/VwRWGe/hOcH
-         vFTA==;
+        bh=JHEhxfLaPmXxjNS+ukaQsatORN659ol3TwCtCyeDnas=;
+        fh=R6bFMZuiOm0qV89c1+cuppUks3A+o8Nu0Pbk+PIjlLc=;
+        b=NSBHlnCi0EjVjrBMTmeaaprdDgNEFdboF3fn+LLzX53P/g/C0C7RRJcM8O12SfLeDF
+         AlURTgCPgFVmeTuAbalNtaRLU29JOVotNbqQwHqE8taRJiSD5O2oiyAc2FsPjRSixOU3
+         FZ7jec+RAuTrLnjrhR/7I8bwFwA7gGXLRUxlLVRkkKtJVcLay+cZ68xI5mZcxSSmcSvk
+         w5MSSNmvxp5ry8DJsQOu74+oUGWuE/rXHk8iPNXOUKbQp1nqf4BdkAJ5wByfUQ15D1WY
+         cxoR4pIF76/p6AxzGFUpGw7JvdpKHA2FmgLWS33mev5ruuPOVV7SUXphdiBdJpEgcI/Y
+         vWnA==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=flipper.net; s=google; t=1793621128; x=1794225928; darn=vger.kernel.org;
+        d=flipper.net; s=google; t=1793621178; x=1794225978; darn=vger.kernel.org;
         h=content-transfer-encoding:content-type:cc:to:subject:message-id
          :date:from:in-reply-to:references:mime-version:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=+ZBFqIsnvhiWwoQmNZFa1u8ZkrptuSUpK2Sox6s25Co=;
-        b=eyqSjj0RkClijpWfiBqMXb15FITMx4DjasDVdZORNx3FOFBUaKU5tW2w9tVSJKDyNV
-         aKz96K7T/ve9eR8LfdYP/qajNhVRMQRFpIbZ81dhPMJ9m/BQMcUVoJ7QN7De8GTm1LnQ
-         e3DtLTNJqVCErgIkg68YlVC3O3vFUfSMTnSBEyga4KfPi5Q9Ub6ogO81tDd0IcsCf91k
-         Nb1BQYrWSNKTah+7ZW3/14+rDETXJ2wPSk2VrvfmQpcwKafbkh1fCbV98DGZYS8ZdjTQ
-         BLWrM5i7Hc2rsqo6VyG1wfIOrifcUGB0og3W3c350XVAOKC6OKTdfq6+AFhJ35t5+jJo
-         NDfA==
+        bh=JHEhxfLaPmXxjNS+ukaQsatORN659ol3TwCtCyeDnas=;
+        b=xcsLg5YcAkb1OQ+4J/X5IlrCrkVofx+k0Q63BRV2QtzdJsDsstolQhW8tYq+cGMn3H
+         GPyZFNvW878pzH1B8wZaH2o/bShbFEkaZjRn3OSS8Q4/tY/IzTF1yzzqhugjGP3ODNin
+         s4kUsKDR/y4H73QAhwClIt4WPNlwLMlluk+I3x6UbcQnDKjX/uaqsLgj9dkfxNx1iGZ1
+         tDHuuq5MgdA+lCriEYfzBgQ1VDRTNyT6w64Kn+07vqYOZ3a0N+6H1rzNQAsFqiD1rgsI
+         n9urbYzU7kvgaa6QWPbR6K52Fmep1848h6oo+AWxP5dlK3PR8oK4duvhGwM4MeIAcePM
+         LvQg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793621128; x=1794225928;
+        d=1e100.net; s=20260707; t=1793621178; x=1794225978;
         h=content-transfer-encoding:content-type:cc:to:subject:message-id
          :date:from:in-reply-to:references:mime-version:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=+ZBFqIsnvhiWwoQmNZFa1u8ZkrptuSUpK2Sox6s25Co=;
-        b=R4ChrOL/NvzMMaMmyr2toVbYM3HUO+6UlqlJm9pQmYtBXpp39hhGjA342n0cWvSJR/
-         5unABF/ipveToDAgC9XvRqpEK08TFa8mE8zI25NjUarXxzzmcNqCfMcz88sRHjhgt0o5
-         4M9igChcHmLhbKOybgNovBLipz0B2eRyXY1f0RIrT65Wn2qgFoFgQYJyxHziBXsHv4zK
-         vGoKJu4LQ5RJZ+3YaAk31WQHVsnUKQ5rBsi4Y39ehk4DqJMtnklkf37mlvq4dppPbkE3
-         rKMYBsf6wllRlNBgnz9xMT/+I5iZvrr9Lda8rotQVoF9Svq9coge+cBlfSR4q1namW72
-         Hy7w==
-X-Forwarded-Encrypted: i=1; AKwUvByXUPRamFghF/T1QzPk7uR4BmTN8FatSAvkSLFxuNLNKdvK2fLJThaMrr5Uh+dkoKXQJTQIKrBsANOV@vger.kernel.org
-X-Gm-Message-State: AFq9FYJvj1NefGBmueln6tEVC73r1FCZpKET5lsx7tHjOcXqFYeINMgN
-	4q5GHJKPHuxZHXKaxo2mIWsS7+yAUyCY2MiDm8F2geyKjdj2JlfMSLZnCaSUnI1RBLgcaUnlp8R
-	0oVsgQLF8jhaUYVi8MblhutORdopnn6lGbLMLO+hRVeDzNOZ2L/PxdtAtttJJ
-X-Gm-Gg: AYBFou0BnfDqshT+7fYyu060+pn4ROQiLn+9eO+jRgoXPbA3wgGTWJsmnfdlS9YgoJn
-	SBploejF/kD0tCHDkVnBhOeWKVguwKb1awtIXUVMGx5fcWPluaDweVu7nyyKsRsGKSRTlkb8Yqv
-	uwdb05ptXHXyvO/KEuvfvgrXwGdqh9c1lecAFX/tEuR33TzSDsbXZ4rgKDDWZ2cH4+cEWy7qkKv
-	odnrcBt8yNsaVmM+Fbyn33myMXbqR2JS+CAV3fV/J0bLyuOAeKraLfK8yTH6Pxpvapw8GtjQ1ho
-	KAd3H9Wmp/42RlWYA+vB1Jba74DojT6rtzbsowEuaJp7v+48b2reUIYsKAALGrfo+Hh6lmAkWsy
-	y7h/11tiGKLNso5+ErwMHxHEsIkKAsoGn92dpsqReUOZivr+ptTo4P6DHov7VO1uZ5jV4CQ==
-X-Received: by 2002:a17:906:458:b0:c4c:c997:8711 with SMTP id
- a640c23a62f3a-c4cc997b01dmr214871466b.38.1793621127536; Mon, 02 Nov 2026
- 04:05:27 -0800 (PST)
+        bh=JHEhxfLaPmXxjNS+ukaQsatORN659ol3TwCtCyeDnas=;
+        b=nlbXkb9J+tJfKha2UVh8f8wVoWjUfya3ERLUFVczRP5/7QMW9JQat4hYQrWXfMHkIS
+         TsPDWQEvXAELSM76sq1tS3qgbiIScXhSn9YKvSos5vkc1Nxd+NPPNW3tEnlZrFM4K/NK
+         zvKQOvjmD7SJfrq4pl23NBcH+JqD2q1QnOHEjiHOlwsVvTW2jc4y51sixuJISCvM52G5
+         w1MGALiSGaQwPcwyCaj+ghjU6KX0RkFEfYpUgXO7BLxbAMEWIxAQO9so6lkcHVDZNPx1
+         kT3EdH1kF3ALIMievkOiBy2KZnXa8J6xKacwRlr28Qtslk/hzNp8+QQEbfLDyOj6OhOO
+         9r5Q==
+X-Forwarded-Encrypted: i=1; AKwUvByeE5JjTzkT7mHR6pZxl+KVUmwJAEOdOutAdzUPsWChW6QS3UQ9KDJ+KxYoUoC9k4i8ucPBDmVRuLSp@vger.kernel.org
+X-Gm-Message-State: AFq9FYI4NDzFry5tzFaDTiYM4pM7bA5NNf296X40guyRaPJ7N/7TvD4D
+	plBeR6v+H6IkD42qVVw/SLiooonHsdAWu1uSXaEofB/hJmLsYWdXS14PE4FnhiqPnpL5Hj+whLN
+	X2iH1np9YO4Ps0OVtCF12B8M2hxNzMi3iTLDHytuhtUPTWf4e2xf7hHx6QQ==
+X-Gm-Gg: AYBFou2m7wL68xnVPbngONGI77kbYMmwuZxQUT0Ak1vHlQB1y+BwVYv/SuccksqHGI7
+	kl3e++btDUmKCd1/SgbdTFN6710qPnph9ST4e5tqyENP7Oi2EDxoZuOolnojLm3I/8+T2ODOtat
+	ftHj6O6Yvrq1XXQtoZnE8f7z9PPY6AePNR+e6TOtJBNK8TLkDhFTSQn2pfh2EBP4iI/cJAL9vuV
+	KBgEcStTFbdhfVQeuQ4VJ2Nhva5VNuIObaUPdTgNhLh257RZ92orQx5jzB9PnB48ahey912VWrn
+	C85fffE0GRUI90NE8tGvE5CiJK10Le59CX+S3usEdtg80MfBjux2u4cDP3GckjK/afgZ3VAltU6
+	OpRyKDR9JMci4PAOlJ6IMBs7oKb/hUQAZw279fccXcTr+sdtt3yoKiw1OVDqvHlM672BTCwJdny
+	3OF+XIK4p8bFZYeVE=
+X-Received: by 2002:a17:906:9f87:b0:c46:9ca9:f524 with SMTP id
+ a640c23a62f3a-c4ca7a6e316mr817145766b.32.1793621177520; Mon, 02 Nov 2026
+ 04:06:17 -0800 (PST)
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -104,82 +105,56 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <cover.1793400000.git.bvanassche@acm.org>
-In-Reply-To: <cover.1793400000.git.bvanassche@acm.org>
+References: <cover.1793400000.git.bvanassche@acm.org> <5c34851674a67879e175251b9bfe6ccf091e390a.1793400000.git.bvanassche@acm.org>
+In-Reply-To: <5c34851674a67879e175251b9bfe6ccf091e390a.1793400000.git.bvanassche@acm.org>
 From: Alexey Charkov <alchark@flipper.net>
-Date: Mon, 2 Nov 2026 16:05:10 +0400
-X-Gm-Features: AclHuK978rZ9d1GZnK74RSlxGeVP4zjkT5roGpC1NZMHApOTAykLuYZkiNlWDVQ
-Message-ID: <CAKTNdwFQOcSaSNzMQAg3XV3AH4tx7Js_cy-tFB5i9s=6szWGyw@mail.gmail.com>
-Subject: Re: [PATCH 0/5] Recover from persistent UNIT ATTENTION conditions
+Date: Mon, 2 Nov 2026 16:06:00 +0400
+X-Gm-Features: AclHuK9euYgbqoaS7882GWwkMIZnogwya3fXALcoP_3DC2yTP4uvKeyC-tO5YUE
+Message-ID: <CAKTNdwF47-UT2ckHfyg+pQ4G371Tx0FEHAvRLZfmDoVrU+da-Q@mail.gmail.com>
+Subject: Re: [PATCH 4/5] scsi: core: Escalate persistent UNIT ATTENTION conditions
 To: Bart Van Assche <bvanassche@acm.org>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, 
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
+	"Martin K. Petersen" <mkp@kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Sat, Oct 31, 2026 at 2:42=E2=80=AFAM Bart Van Assche <bvanassche@acm.org=
+On Sat, Oct 31, 2026 at 2:43=E2=80=AFAM Bart Van Assche <bvanassche@acm.org=
 > wrote:
 >
-> Hi Martin,
+> Recover from persistent UNIT ATTENTION conditions in the SCSI midlayer
+> instead of maintaining a per-device quirk list for targets such as
+> BIWIN BWU2A05* UFS devices that fail to clear power-on or reset UNIT
+> ATTENTION on WRITE commands while clearing it on commands such as TEST
+> UNIT READY, READ, and SYNCHRONIZE CACHE.
 >
-> Some SCSI targets do not clear a power-on or reset UNIT ATTENTION
-> condition for all commands. BIWIN BWU2A05* UFS devices, for example,
-> keep reporting UNIT ATTENTION for WRITE commands while TEST UNIT READY,
-> READ and SYNCHRONIZE CACHE clear the condition. Today such WRITE
-> commands are retried until the command runtime limit is exceeded. A
-> quirk has been proposed for these devices [1]. This patch series instead
-> makes the SCSI core recover from persistent UNIT ATTENTION conditions,
-> so that no per-device quirk list has to be maintained:
-> - Patches 1 and 2 prepare the SCSI error handler for the changes in
->   the later patches.
-> - Patch 3 makes the SCSI error handler send TEST UNIT READY to clear
->   UNIT ATTENTION conditions before it falls back to resetting the
->   device.
-> - Patch 4 makes scsi_decide_disposition() invoke the error handler if
->   a command receives the same UNIT ATTENTION repeatedly. The behavior
->   of the exported scsi_check_sense() function, used by libata, is not
->   changed.
-> - Patch 5 limits the number of retries in scsi_io_completion_action()
->   of commands that keep receiving UNIT ATTENTION.
+> If a non-removable block request that is not failfast receives the same
+> UNIT ATTENTION repeatedly, retry it twice and invoke the error handler
+> thereafter, instead of letting scsi_io_completion_action() retry
+> uncounted until the command runtime limit is exceeded. The error
+> handler clears the UNIT ATTENTION by sending TEST UNIT READY. Track
+> this with a dedicated per-command counter and the additional sense code
+> of the most recent UNIT ATTENTION instead of scmd->retries.
+> scmd->retries is also incremented for other retry reasons and by the
+> error handler, and a target may report multiple queued UNIT ATTENTION
+> conditions with different additional sense codes. On most
+> architectures the new fields occupy an existing hole in struct
+> scsi_cmnd. Limit the number of error handler invocations for commands
+> with unlimited retries since scsi_eh_flush_done_q() does not limit
+> these.
 >
-> Please consider this patch series for the next merge window.
+> Only apply this escalation when the sense data is evaluated by
+> scsi_decide_disposition() and leave the behavior of the exported
+> scsi_check_sense() function unchanged. libata calls scsi_check_sense()
+> from its own error handler, which translates FAILED into an ATA port
+> reset and never sends TEST UNIT READY.
 >
-> [1] https://lore.kernel.org/linux-scsi/20261028-biwin-tua-quirk-v1-1-767a=
-12c9b9cc@flipper.net/
->
-> Thanks,
->
-> Bart.
->
-> Bart Van Assche (5):
->   scsi: core: Introduce scsi_cmd_needs_stu()
->   scsi: core: Simplify scsi_eh_ready_devs()
->   scsi: core: Clear UNIT ATTENTION conditions with TEST UNIT READY
->   scsi: core: Escalate persistent UNIT ATTENTION conditions
->   scsi: core: Limit retries of commands that receive UNIT ATTENTION
->
->  drivers/scsi/scsi_error.c | 255 +++++++++++++++++++++++++++++++++++---
->  drivers/scsi/scsi_lib.c   |   5 +
->  include/scsi/scsi_cmnd.h  |   7 ++
->  3 files changed, 249 insertions(+), 18 deletions(-)
+> Reported-by: Alexey Charkov <alchark@flipper.net>
+> Closes: https://lore.kernel.org/linux-scsi/20261028-biwin-tua-quirk-v1-1-=
+767a12c9b9cc@flipper.net/
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 
-Thanks a lot, Bart! I've tested it on my offending devices (five
-Flipper One boards, three with BIWIN BWU2A0526B128G / BWU2A0516B064G
-UFS, two with FORESEE C2G071 for control), and everything now works as
-expected. I tried UFS error-handler resets under light and saturating
-write load, runtime PM with a WRITE first after resume, and suspend to
-RAM. With the full series the BIWIN devices recover from the reset
-UNIT ATTENTION within ~40-65ms and there are no I/O errors; the
-FORESEE devices never enter the error handler.
+Tested-by: Alexey Charkov <alchark@flipper.net>
 
-One note on the ordering: with patch 4 but not patch 5, a target whose
-UNIT ATTENTION never clears (emulated by a test hook) keeps the
-command cycling through the error handler with an LU reset per round
-until the runtime limit. Maybe patch 5 could go before patch 4, so
-that the command fails after four rounds instead of hundreds of resets
-in ~15s?
-
-In any case, these work great for me, and I'll send my Tested-by on
-both patch 4 and 5.
-
-Best regards,
+Thanks a lot and best regards,
 Alexey
