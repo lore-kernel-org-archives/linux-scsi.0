@@ -1,49 +1,49 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793629462;
-	b=qJ8XSeS7NVUPkUU7KpuYdrXPg/PKb4pq/9GWo+XUDFVFuAS1GiHL4KtgN2K4iwJER4Eo
-	 a29fqeHzeJkQsmk/5knK1FhvO/0r64qI3+H1MPc+orNQFMWaWCvSsvAGmfdUSQTftfwYB
-	 4PjacoliFTRWpVRiTJUhGGUgjLtXcm8lYcojd0DCfUcuGHYHCLU849zh89IWpJ657tZRH
-	 TUZ7jMyWWOp8ltlg3MYKEg6I5QqTC/diFvS+4LkWaySPIMYpsPyDXthzqDacNb1dV50p7
-	 x4njmwhv0R+QlPpph9LdsCpgTTdH79NRb2QdJhV46j2ur8hfUWLoorh/cimxLC7nZXQ==
+	t=1793629489;
+	b=KGYSkkcegaoYgUkblu0yaM2Sqj1eJBbGCAQcO1vYZD7/PUx8zKsBZYlyYJC80pJeFfrb
+	 22aBwqkEguaoPxbuOK7IUDPhaswnVbq1puqdJgxzL9vAP1UXzxfzKy4bpZ+lnNaFq64Gh
+	 qvkIz9OuX96w9cqCpgE7Sa+1mmftJVBIGRWHG/e4HcW1hF/C8sadiAcFv7gtJL6rzeSWF
+	 goYsnr1Zw4n7gwTl0hlTBbFiPaVLp6Ooz+UsnFr74v9AUSA+9O/Qma7N+1mfiTUSsyULB
+	 yws+PNILAPM2E3PbmqBTc+miOPkJVqtEeWAwOvqmDNOnG8WuMJpQwUE4JGNO3obxUrA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793629462;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793629489;
 	h=Received:DKIM-Signature:From:Date:Subject:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding:Message-Id:References:In-Reply-To:To:Cc:
 	 X-Mailer:X-Developer-Signature:X-Developer-Key;
-	bh=LrGvZ3iuNEQwh46pZ+Sey+hIl+TylMI6LnuDESRA+nc=;
-	b=EASeVSyIGCaKLE0PlBuQsb342hzTNcP7t65sx9l81K8WfH7h6gob/GaTeNKB+Kl0Y11R
-	 exeXI7PR1wUT+p7gpd+geuG2LlHlm8+pDhuVbl22Yt5dpruUHFXOXvWKCPT14ZdCDGjhf
-	 0tYVuuaR1I8VEoQcegNuNeeCJuBM9yVSTuvPGRwaMkq0+NwDtJUgpRDK/PBqHF670nwYa
-	 spSqhN7vwsEA8tnZzR9up5r4IDtHTfcnH9qwpsMvEzDImHzLwbCEBqWvj/GqAm5N2zXBm
-	 MC2eCgLd4JanQRgXjT8zOa/QR+oFLRKuaRSNIV1O64URMeMlpJ73tq7bgMZP6uPmOew==
+	bh=S8IXtzTL1USde6aV/lVKsFPWulIUW0ciUvC5Tm4lMm4=;
+	b=YXI3j26QaQtxs0P08ZpzQGa0RtvYBhbxskyuDQ9TaEeo/Fgovnp+/aROSxz8CYog3jM1
+	 Ug7YxW6maW+1TUqE8YlzKWAtHaJn2RBUKFjFV6YIDPqPopreG1D9gpkAPubuD5Lp9+GHr
+	 070d5ZprFc2Z48fzDRjiPQP/mtD+ZIY4/cNWIU940ESBeaLzooFRKhfLPJHUNkAOUt9w2
+	 Samyk33rz8XFFXnlAT46B1ndl0uEX81+nmR/Xp1mMfRuRlNAwUXXPucHtCBJiPJDgfj7R
+	 qp0VX1jMb4gJp2r1fqrQOb2jmsMAwShLEQ7MrqMFiMsml5HkiherCHqd8dbN3a7bitA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=PPfyE6QJ;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=eItiv4ZS;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1EBFB606C3FC;
-	Mon,  2 Nov 2026 14:24:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A3466070CAF;
+	Mon,  2 Nov 2026 14:24:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=PPfyE6QJ
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 527D01F00A17;
-	Mon,  2 Nov 2026 14:24:08 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=eItiv4ZS
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A91FA1F00A17;
+	Mon,  2 Nov 2026 14:24:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793629461;
-	bh=LrGvZ3iuNEQwh46pZ+Sey+hIl+TylMI6LnuDESRA+nc=;
+	s=k20260515; t=1793629488;
+	bh=S8IXtzTL1USde6aV/lVKsFPWulIUW0ciUvC5Tm4lMm4=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=PPfyE6QJfnkYegdNJOVyvRw2w0u6zk/zq1ATvwc/6eUWjFe4vJ1pRwfd7t9Ibhm29
-	 IG8+/3Y2h9D6Ml0EqluGiF7ZzqNXzL3BnjR04OHSHQICnr6q/zg5AgXD6brOztOzhp
-	 Tm5r+Xn3qFTr/0ct+giZygbQPAoKv9HR1rxcIMLZsGHigSCh3rld2MQkXvCo/Ahi3k
-	 OPLhbcK1nwFtdEjV44unUVPhIPYHIiNsNsBvSGn2WZYWfU7Yx81G3k7ZcW6H6YJJZZ
-	 iSvJgVc7lHHoAy7pZXSTctPPyJxiyAjwkTJ8kb6zg1ymJ6Dkna5fZS/L05pAfwaVCn
-	 /p3edvhBr30yw==
+	b=eItiv4ZSsA0o29cJddRhknzQ/bhOslnikosU7shAbLsc6vTsBfmDsItQHBMrbvVWd
+	 iPZbUolyR+DqkWlaAa0X2CnLcF2jyDfURGxamilT7KyJvcn1fKmbflZQF9mZNYHiZO
+	 V0ITbrToBCzB7hRC4b/UItl9wr2159FfzOymbnfHnOF2rwSD+IUlNRm9Mg0cMAS2zm
+	 5gwJPTLnvktaVBDt4cpf/GZOkyIf5vc3Gnqu0sv5l4CtGAi/V20ChSZvsil7rMsNnM
+	 0OhXFaQi0hOR9dRoU2RCfw23JXyWpcHF2yT6L1CDbIcvCpMbQZH6dQmQwY5xG0/KbE
+	 t+ML1xiLi3rHQ==
 From: Christian Brauner <brauner@kernel.org>
-Date: Mon, 02 Nov 2026 15:21:26 +0100
-Subject: [PATCH RFC 11/38] scsi: ips: don't return 0 from writes to the
- proc file
+Date: Mon, 02 Nov 2026 15:21:28 +0100
+Subject: [PATCH RFC 13/38] scsi: core: NUL-terminate what is written to the
+ host proc files
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -55,7 +55,7 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261102-work-procfs-bugfixes-v1-11-59422ed3e465@kernel.org>
+Message-Id: <20261102-work-procfs-bugfixes-v1-13-59422ed3e465@kernel.org>
 References: <20261102-work-procfs-bugfixes-v1-0-59422ed3e465@kernel.org>
 In-Reply-To: <20261102-work-procfs-bugfixes-v1-0-59422ed3e465@kernel.org>
 To: linux-fsdevel@vger.kernel.org
@@ -89,41 +89,42 @@ Cc: Linus Torvalds <torvalds@linux-foundation.org>,
  linux-ext4@vger.kernel.org, linux-modules@vger.kernel.org, 
  linux-debuggers@vger.kernel.org, 
  "Christian Brauner (Amutable)" <brauner@kernel.org>, 
- Chuck Lever <cel@kernel.org>
+ Chuck Lever <cel@kernel.org>, stable@vger.kernel.org
 X-Mailer: b4 0.17-dev
-X-Developer-Signature: v=1; a=openpgp-sha256; l=745; i=brauner@kernel.org;
- h=from:subject:message-id; bh=AdCDbLhnpBt+TcsQ0P6GBBq6Ub9shryNzqH+cUsZhBE=;
- b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9mJPdt/hGgM8qEaYIn9fiBlE/kqwu7y3d1vz/wn2JQ
- 1nljmYxHaUsDGJcDLJiiiwO7Sbhcst5KjYbZWrAzGFlAhnCwMUpABNpYWNkuMNVfzzE8+fiU716
- eVvUz3BoagZsjeKTeFXs/sHF2WvyS4a/YldW32kR8Rf1s2fVtZ1uwyx92y2ElcvRtJJH6bK80SQ
- 2AA==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1011; i=brauner@kernel.org;
+ h=from:subject:message-id; bh=jBwXVCCRpDjmnAajxR/zAvEvmAtZKAE0jCj6+Cnx3v0=;
+ b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9mJOt8KzyxT3HqTxz47pOZlhlreHadWzKU9ECZ1HJM
+ /eTjxsd7ShlYRDjYpAVU2RxaDcJl1vOU7HZKFMDZg4rE8gQBi5OAZjInBpGhnblJ+n8i6QvucrH
+ 3L3hMeP2tqzHWnkyxe8aQsOergg+85jhr/wPVbOd51/rtnu/jeqzYHXMzjH9s/7NWaZa++nPtf+
+ 38wEA
 X-Developer-Key: i=brauner@kernel.org; a=openpgp;
  fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 
-ips_write_info() ignores what is written to /proc/scsi/ips/<n> and
-returns 0. Writers that use stdio, echo for example, take that as no
-progress and retry forever. Return the number of bytes that were
-written.
+proc_scsi_host_write() copies what is written into a page and hands it
+to ->write_info() without terminating it. ppa and imm parse it with
+strncmp() and simple_strtoul(), which read on past what was written into
+whatever the page held before. Terminate the copy. A write is at most
+PROC_BLOCK_SIZE bytes, so the page always has room for that.
 
 Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+Cc: stable@vger.kernel.org
 Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
- drivers/scsi/ips.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/scsi_proc.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/ips.c b/drivers/scsi/ips.c
-index 45c5b9acb664..bf3a961834fb 100644
---- a/drivers/scsi/ips.c
-+++ b/drivers/scsi/ips.c
-@@ -1428,7 +1428,7 @@ ips_write_info(struct Scsi_Host *host, char *buffer, int length)
- 	if (!ha)
- 		return (-EINVAL);
- 
--	return 0;
-+	return length;
- }
- 
- static int
+diff --git a/drivers/scsi/scsi_proc.c b/drivers/scsi/scsi_proc.c
+index fdc355d783da..dbd03360b5a4 100644
+--- a/drivers/scsi/scsi_proc.c
++++ b/drivers/scsi/scsi_proc.c
+@@ -80,6 +80,7 @@ static ssize_t proc_scsi_host_write(struct file *file, const char __user *buf,
+ 		ret = -EFAULT;
+ 		if (copy_from_user(page, buf, count))
+ 			goto out;
++		page[count] = '\0';
+ 		ret = shost->hostt->write_info(shost, page, count);
+ 	}
+ out:
 
 -- 
 2.53.0
