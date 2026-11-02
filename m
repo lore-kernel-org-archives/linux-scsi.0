@@ -1,49 +1,49 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793632789;
-	b=HV7lnYEHg/q5Z0TsTvb0Atde4NbuvfvfxPz8gy7UoUZRNmU7YDbTeU9ja0JYtrvykte0
-	 9GcARUzE68TB7xEcLgb+drhiZPSOCIn9tIW7wtNG7NtH1Xon02c8K1qQnwwB/ELi0c5ok
-	 ZTA07++YVRPQ+njhk1+YoVSc4kOgz+cerM7kWrmydwahm/Rq1/YJYtfKKidrkfU5SAXGp
-	 d7jsXt7Qy9uAoKPY66rgarNKgT7asbddan4UHpGE2GZ43+TxDdO3ODv0zlddB66ZiUDZJ
-	 ikfguYnJV1U3TQRFPWCkZZILDUsw/Jcw3PXvmLM5NFWRh2bCHGqdeM2VfJWuJN2DNfw==
+	t=1793632830;
+	b=5fdiGbtyJGEIe44PJ70Wrqg15UGikdNvDRbusnad64aUWxexkj7GuddbJT7FzpOsBGdC
+	 gt8wc72EBitUWKn40doBSCLqt84nSIQedcU6ncslEifjab4NX3Xdji7cBZX1RmOHuqxyO
+	 IdCRQmnnkYzkOS+grBDt3pzraEah0tCjuJhUjOAXsMA2a1RKt036e5eEVviwVqIjc+/Ug
+	 AhyJ+BKJ37/oMEnezlEYg4O9qOUsDHuzvZ7AkfFpL1Km5bZm3L534MbOadEdCBwb3Jppe
+	 9V5s7KQxa0hfqd/8nnQxeb4euVz84vrjIxankhEAWZuV0lyQ6cvinzTQ3aJkm2iJQjg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793632789;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793632830;
 	h=Received:DKIM-Signature:From:Date:Subject:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding:Message-Id:References:In-Reply-To:To:Cc:
 	 X-Mailer:X-Developer-Signature:X-Developer-Key;
-	bh=o8L0vvGY5Km24xgHgPbylEP8c5DuS625RCEauDmBOHw=;
-	b=dVaAYwoME7pll84PYzg6PRZ6jfClzOaGiIh2gH/uxQawnW/GAsUW1pfQeoM6qekHMKak
-	 zydmpjvAaJp/dm1yTmaVUTWWo7uFH6atqbAALPyM2SsYWvdlsFzAtJtXDiKyzOOKhtTgI
-	 EoUapslF1PaJWrMA5DBFQhUrZm4YL6Q38uBk39wZwLwColceiWtuc2ysO04yESwKmvzNI
-	 yC0zmd1D64nXAumDr95G9/+oQ+YG9nJXvwyn3m5SmEYM7vjqosYdLr2cRD9biPyz8wWvb
-	 3bxZKtoGMzseBpbvFLKnhQ/5TGVBXouhbsXV/SPnyQ0KdKVWoe7nBnzWkneo/RAcXYA==
+	bh=yfb68sR2lkv/WstwrNi2kV1cVJpZCk5/QcENUoLv//k=;
+	b=unkcPFsNa2+3HcYh0LAfiTowMru1F1Qp4HuyQlB+blcxtVML0fb+B+gx2htZQSES9mWe
+	 S8A/dMGga6gSBvea+wSH+QmoIIPL+ZtbP+LN5DDub99hjrR2Z8rIuLp98zK9vQwINtvru
+	 onuIWdT8fWQ2/FXeQ4bOva5R1IQwrhiXDB/LRMi3AIb84KpMZ/kCYK7lxIce5tsskfIKR
+	 cZr+L//yxZW0mmklMZCyc2vTtR0ZfDEhCgSBnEOS3MOacw+Dca72jJAkgPe6NVK88Davn
+	 mGwemVBk7xWV4e2IyFerazL05fUAg7DZdRLi+V2nYnlcCeJfIam08I7soOjt/gx5fSA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=FISzkgiD;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BN1DryDe;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6808160703A1;
-	Mon,  2 Nov 2026 15:19:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D170609622F;
+	Mon,  2 Nov 2026 15:20:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=FISzkgiD
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AC6A21F00A1C;
-	Mon,  2 Nov 2026 15:19:30 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BN1DryDe
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D70991F00A18;
+	Mon,  2 Nov 2026 15:20:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793632788;
-	bh=o8L0vvGY5Km24xgHgPbylEP8c5DuS625RCEauDmBOHw=;
+	s=k20260515; t=1793632829;
+	bh=yfb68sR2lkv/WstwrNi2kV1cVJpZCk5/QcENUoLv//k=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=FISzkgiD/yGuvR5vmXFKZeW9WfMgEMNzsKuSLgjo5EcXuoWsQeOK9E+zoYez94iwP
-	 kd6gyDs+JBsqALh51n9A8+QTvp0EtTnI1VuAQVToT3JauFOAYWcitc4Ij8VOStoQHW
-	 HHtZ3oepjBq45VLaZrj+hF2sTz5wHN/lLPiI7eNqaF7rYYCqUQ/+mzk+bSyv7sw/P2
-	 0Gtuci3mXrlYHF3T4dLdAjX8+3RrsfMa0Ybz3rc2hywNaARmKsDWWKsP2DPHejgwhY
-	 CSyzQiOBTaMPhT4NH/NFnIcCftSoSwRNaEqIAiartqZhauq2wH7uX/8R0Gi2xJOmu4
-	 rQ5tXNgRbeYdA==
+	b=BN1DryDe3qV+C4aWHJuIRcQk7/grenL2yY2/u1V9RuZ76eccMjBgLsEcUTNnhaGbx
+	 eXhhwX7Vgu+zR+JmG/2wvin1dOiYZvsWSYg6kfl1F4CTtJJewyZhllNVl1QPSHankI
+	 Y/8n3DCOX6o11uevej4+0kaVGNpGzwrrLFwkHxO8Xf20op7zpFONM4MND0dOsyrGS9
+	 lt+VjVHm27V5kG1yhzDMUWKDR0YRqKdDimg5wHtncjttH7DdkNFA88vxAFcS8nd5HC
+	 WE2enuopE0QMfUuIQi9FBTnJNj/5vBq/jOfhCbxPWlMeXV21MywGi2MtjhSPk+gxJF
+	 /V1HSYuIItaBw==
 From: Christian Brauner <brauner@kernel.org>
-Date: Mon, 02 Nov 2026 16:07:11 +0100
-Subject: [PATCH RFC 01/27] jbd2: let procfs own the seq_file of the info
- file
+Date: Mon, 02 Nov 2026 16:07:13 +0100
+Subject: [PATCH RFC 03/27] lockd: let procfs copy in writes to
+ nlm_end_grace
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -55,7 +55,7 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261102-work-procfs-fs-v1-1-d09a996317b3@kernel.org>
+Message-Id: <20261102-work-procfs-fs-v1-3-d09a996317b3@kernel.org>
 References: <20261102-work-procfs-fs-v1-0-d09a996317b3@kernel.org>
 In-Reply-To: <20261102-work-procfs-fs-v1-0-d09a996317b3@kernel.org>
 To: linux-fsdevel@vger.kernel.org
@@ -91,91 +91,68 @@ Cc: Linus Torvalds <torvalds@linux-foundation.org>,
  "Christian Brauner (Amutable)" <brauner@kernel.org>, 
  Chuck Lever <cel@kernel.org>
 X-Mailer: b4 0.17-dev
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2318; i=brauner@kernel.org;
- h=from:subject:message-id; bh=4wXeP/X63evRQ0XlRmaO+RfgvVw7qBYaC3PXgCgMk/I=;
- b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9WG74e18U46btbmdaLFZySH/a4bJqy6EXrWETf+nEX
- czabLYjsqOEhUGMi0FWTJHFod0kXG45T8Vmo0wNmDmsTCBDGLg4BWAiiRcZfvz/JWB5uf7z1qfa
- eR5bDib8Y7/02ydhzb6jJ8MZJrVNc2VkmBYey/3mL2tK5+xlRYFcaYV+5zS/m7WkLC2MPxt0YDU
- PKwA=
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1756; i=brauner@kernel.org;
+ h=from:subject:message-id; bh=yoBjzpwXPCFL2mmsMcO6fDyZh19yBZX5M0Ko6zu/SW0=;
+ b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9WG4otvP03RvTPvA6+q/2CHm77dh8jlWRxmva3p208
+ Ze+9//u4Y5SFgYxLgZZMUUWh3aTcLnlPBWbjTI1YOawMoEMYeDiFICJzFzD8JNRYNGmuUuv5fXJ
+ SixnOtLlrT9xxidJDp7+ycnCGRxRXQ8Z/qlce21cuoK5yfPMxbQIy6ar6sn9zobuoRNUY3eHqBs
+ eYwQA
 X-Developer-Key: i=brauner@kernel.org; a=openpgp;
  fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 
-Declare the seq_operations and the size of the session state and let
-procfs open and free the seq_file of /proc/fs/jbd2/<dev>/info.
-->proc_open() only takes the snapshot of the statistics now and
-->proc_release() frees it. Reading the file then no longer holds up its
-removal when the journal goes away.
+Implement ->proc_write_buf() so procfs copies in what is written before
+it pins the entry. simple_transaction_get() was only used to get a copy
+of what was written, so look at procfs' copy instead and drop the
+transaction. A second write to the same file doesn't fail with -EBUSY
+anymore. Writes larger than PAGE_SIZE - 1 bytes fail with -EINVAL from
+procfs instead of -EFBIG from simple_transaction_get(), which refused a
+few bytes less.
 
 Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
- fs/jbd2/journal.c | 33 +++++++++------------------------
- 1 file changed, 9 insertions(+), 24 deletions(-)
+ fs/lockd/procfs.c | 13 +++----------
+ 1 file changed, 3 insertions(+), 10 deletions(-)
 
-diff --git a/fs/jbd2/journal.c b/fs/jbd2/journal.c
-index 3a4f3f613ead..1e4f4e95a00e 100644
---- a/fs/jbd2/journal.c
-+++ b/fs/jbd2/journal.c
-@@ -1173,51 +1173,36 @@ static const struct seq_operations jbd2_seq_info_ops = {
- 	.show   = jbd2_seq_info_show,
- };
- 
-+/* procfs opened the seq_file and allocated @s */
- static int jbd2_seq_info_open(struct inode *inode, struct file *file)
+diff --git a/fs/lockd/procfs.c b/fs/lockd/procfs.c
+index a01f08c8c2f3..47949bec7a09 100644
+--- a/fs/lockd/procfs.c
++++ b/fs/lockd/procfs.c
+@@ -18,21 +18,15 @@
+  * We only allow strings that start with 'Y', 'y', or '1'.
+  */
+ static ssize_t
+-nlm_end_grace_write(struct file *file, const char __user *buf, size_t size,
+-		    loff_t *pos)
++nlm_end_grace_write(struct file *file, char *buf, size_t size, loff_t *pos)
  {
- 	journal_t *journal = pde_data(inode);
--	struct jbd2_stats_proc_session *s;
--	int rc, size;
-+	struct jbd2_stats_proc_session *s = ((struct seq_file *)file->private_data)->private;
-+	int size = sizeof(struct transaction_stats_s);
+-	char *data;
+ 	struct lockd_net *ln = net_generic(current->nsproxy->net_ns,
+ 					   lockd_net_id);
  
--	s = kmalloc_obj(*s);
--	if (s == NULL)
--		return -ENOMEM;
--	size = sizeof(struct transaction_stats_s);
- 	s->stats = kmalloc(size, GFP_KERNEL);
--	if (s->stats == NULL) {
--		kfree(s);
-+	if (s->stats == NULL)
- 		return -ENOMEM;
--	}
- 	spin_lock(&journal->j_history_lock);
- 	memcpy(s->stats, &journal->j_stats, size);
- 	s->journal = journal;
- 	spin_unlock(&journal->j_history_lock);
+ 	if (size < 1)
+ 		return -EINVAL;
+ 
+-	data = simple_transaction_get(file, buf, size);
+-	if (IS_ERR(data))
+-		return PTR_ERR(data);
 -
--	rc = seq_open(file, &jbd2_seq_info_ops);
--	if (rc == 0) {
--		struct seq_file *m = file->private_data;
--		m->private = s;
--	} else {
--		kfree(s->stats);
--		kfree(s);
--	}
--	return rc;
--
-+	return 0;
+-	switch(data[0]) {
++	switch(buf[0]) {
+ 	case 'Y':
+ 	case 'y':
+ 	case '1':
+@@ -61,10 +55,9 @@ nlm_end_grace_read(struct file *file, char __user *buf, size_t size,
  }
  
- static int jbd2_seq_info_release(struct inode *inode, struct file *file)
- {
- 	struct seq_file *seq = file->private_data;
- 	struct jbd2_stats_proc_session *s = seq->private;
-+
- 	kfree(s->stats);
--	kfree(s);
--	return seq_release(inode, file);
-+	return 0;
- }
- 
- static const struct proc_ops jbd2_info_proc_ops = {
-+	.proc_seq_ops	= &jbd2_seq_info_ops,
-+	.proc_state_size = sizeof(struct jbd2_stats_proc_session),
- 	.proc_open	= jbd2_seq_info_open,
--	.proc_read	= seq_read,
--	.proc_lseek	= seq_lseek,
- 	.proc_release	= jbd2_seq_info_release,
+ static const struct proc_ops lockd_end_grace_proc_ops = {
+-	.proc_write	= nlm_end_grace_write,
++	.proc_write_buf	= nlm_end_grace_write,
+ 	.proc_read	= nlm_end_grace_read,
+ 	.proc_lseek	= default_llseek,
+-	.proc_release	= simple_transaction_release,
  };
  
+ int __init
 
 -- 
 2.53.0
