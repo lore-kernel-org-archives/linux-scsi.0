@@ -1,48 +1,48 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793717305;
-	b=ohwrqtzX/ZP1ZbrOE6EW0w1Z4HhXLeb+1w0W5ML84XsyCIDjpqvbheWSwE2mp4Ekb73r
-	 65SXAfV1OAF+4g5ok90BbvkgmZ/S6jfWAn+SEhsTCTnx+X1Y9aJWxd3+gRL1aTMf9Vido
-	 z/jREXMeTN5524ECTnuOHYGlvRDRoIvlQFvVKo5cZb4Q5pwpZoaxhEW73rx4L8RjlZIak
-	 wkPL0uPsQQrH8FqR+TUE4STQRFGq3kmKlaXkg47Lly6qxuLD/tGlTe5jdGp2CEci+yTMJ
-	 fXdXT9UISAjTp8TvGw5L1Cr95q0rRHouRk+Mg9bLKKm0eDMqwWZezyDZlabDmDSsajw==
+	t=1793717328;
+	b=YKq8F8eGgkE4SPPyqC5MUzzA4kU2fibYbAMn0q2s1AmmD9Ls4bUS66Gi75m4HIxwul5e
+	 cVScxEYOjPkejdVrtd1K5LGhOZg0f3Lt/OvO9T50tEGo8DXw/hREsKtJXWtf6EDNXCByx
+	 R6pypfZ+6d+83G5CV/fY+ciHdlyJpXlG2xbNGsrR1eEfsGPaqehS8+bTLhxBEhaoHmu7G
+	 ZgKAJFQVtINxHXQyz0WwksmMcpSN/IRVsW2WtDJK53UN4Quyu5IRH5hyWCnvWu12SxHGb
+	 n56KpkHyDwZP/3MLaYIhgt+k+ySwe05x9tHJSfL6o+J0IpeK+Tz+EMbI9KvHIMeJUrA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793717305;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793717328;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=c0x/bwvUTy91TeSNlshE2x6EC5UWF1SAOxo9ylrayLg=;
-	b=5mPQym73+iKZn6w2LBq2+N3PywUVFCYBiyWcqAsRMVAhtudsa60NDRWaqq16d2U/vLAa
-	 SFxjqT6a3/RpuCcZTGtv9uEqyHmeTayqb9Ng7+vfd7nZnt3buk1tICkQZ0522vatsA3n6
-	 WRqob25JFY/7fn8UEZmVofXRCSbX9B+RZTUZhig5kgzxwpEWEAUsPEfyQjN/RZMGp49W1
-	 jT8xX4OB+YopWFRx6QVFmMWixQWD4Xsd+R39zuvdRO/wWZHv3jb0QNWY8NTO+gpIPRP38
-	 ewkhtuQSHS6EnxQirZSAnvqPb/+C+W/cecPBzi5UlWneg3xEQx9yA2u3j7V1dFC50fw==
+	bh=0V+CicgMBoN1QbZ4PU2bDKMr8pvOiaSaM7EPJ1DfD7w=;
+	b=TKRn4Y29sJiC6brl3oq5/6JqNdBuAslN029+hxm6A6I/x1A+TmpKqesXLexACBSw9BNQ
+	 hST9zAI04KB5bJUkJMz+JBv6UibDIeVvYFQFUY0faltNkvDDJg3sZYBztvw+BRx7vd+q8
+	 4ZTE2l1YVCsh60nnL5YeSvuQGCyxT+aTSkVoAILBfdrVIrYx0lGokLjc4NesvMTQiU9jQ
+	 9NDZm6VOPARznBoym96grt3SwJV2lz+m0QnTlP11zq0AQg5KZdZqhBB83dmBk4mAj9WSA
+	 TUCmn0UlXCiFIlh8yFl1Ew3r7rrECZ8LbhXa7NKw8FPtqZYQ2AMy/+MUOkLf11o9TxA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=bqxUBmmI;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=PVuIrc17;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1179606B250;
-	Tue,  3 Nov 2026 14:48:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D25DE606D2D7;
+	Tue,  3 Nov 2026 14:48:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=bqxUBmmI
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B29171F000C1;
-	Tue,  3 Nov 2026 14:48:22 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=PVuIrc17
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CA0571F00919;
+	Tue,  3 Nov 2026 14:48:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793717304;
-	bh=c0x/bwvUTy91TeSNlshE2x6EC5UWF1SAOxo9ylrayLg=;
+	s=k20260515; t=1793717327;
+	bh=0V+CicgMBoN1QbZ4PU2bDKMr8pvOiaSaM7EPJ1DfD7w=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=bqxUBmmIruc8WVpdDnTaZKZMybp6tbdqSNtX5Vxb8SbRLH8Zr2JWwBPY98aQ3hFcO
-	 mF4KERe0Pl6zVdX7ZTe2YfvSwUDpjVOk0tXjo8nokMnupOaJWZpwf9x3s1jjDqLc7o
-	 D8x2o27+nwq7964W+Sy/E0e8KLqKLtVO62ftCwu5g7mpOe3sE4UYTyU1eKEd9wvkG6
-	 9ziGsoyYsjc+8FEQzGARNtSKo/GIQynC+oiEc7kqzm/+yyy218WWaRIIGwPjaGFK1d
-	 0aiHWvAjGKyvLg2SLb3ZdKLVkElsDVk3YwkpAFqEpwcF1NBvaDa6WRGXNTZsB/rjMv
-	 m/ZkDBbjhFEUA==
-Message-ID: <sashiko-outbox-195500@kernel.org>
+	b=PVuIrc17XR1DR65SazgbGfICE7wjxOzqZgkY9U1rqo2UnB6kZRbNYqycjDbOYBHPI
+	 mtr+oI337If1hGZt23auaywjb3aFf3e8V7x2KLacnHZWCqxTNAHGtZLRjV/QTQa/U0
+	 2ZVG3QOmYYo3Vbue///pzGjX2fvcEVYSv1E5A4Nokf1yW93VnBHjLJNY9R0S7cKzna
+	 lEsPjbqB4XU52YaxjHh1FMLVvCbZQad8DMHktuK95ryZyb144WX0kMVeswfQ7MIXWT
+	 q6wVkMNqoNp3Q2h44ir/sz5Pqydvc1rrrcEksxS0NSkW2lL6OZFvuNnmSZDzSaqv1o
+	 ng7I2nNH/acPg==
+Message-ID: <sashiko-outbox-195510@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH RFC 28/38] scsi: esas2r: bound the lengths of the HBA,
- SMP and firmware ioctls
+Subject: Re: [PATCH RFC 38/38] selftests/proc: check that a faulting
+ readlink() doesn't hold up removal
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Christian Brauner" <brauner@kernel.org>
 Cc: "Linus Torvalds" <torvalds@linux-foundation.org>, "Jann Horn" <jannh@google.com>, "Josef
@@ -57,12 +57,12 @@ Cc: "Linus Torvalds" <torvalds@linux-foundation.org>, "Jann Horn" <jannh@google.
  Pavlu" <petr.pavlu@suse.com>, "Anna Schumaker" <anna@kernel.org>, yukuai@fygo.io, "Heiko
  Carstens" <hca@linux.ibm.com>, "Vasily Gorbik" <gor@linux.ibm.com>, "Alexander
  Gordeev" <agordeev@linux.ibm.com>, "Christian Borntraeger" <borntraeger@linux.ibm.com>
-In-Reply-To: <20261102-work-procfs-bugfixes-v1-28-59422ed3e465@kernel.org>
+In-Reply-To: <20261102-work-procfs-bugfixes-v1-38-59422ed3e465@kernel.org>
 References: <20261102-work-procfs-bugfixes-v1-0-59422ed3e465@kernel.org>
- <20261102-work-procfs-bugfixes-v1-28-59422ed3e465@kernel.org>
+ <20261102-work-procfs-bugfixes-v1-38-59422ed3e465@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 03 Nov 2026 14:48:22 +0000
+Date: Tue, 03 Nov 2026 14:48:45 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -74,92 +74,57 @@ Precedence: list
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] scsi: esas2r: TOCTOU race on data_length in handle_hba_ioctl() via=
- read_hw()
+- [Medium] selftests/proc: Makefile adds nonexistent proc-remove-slow-reade=
+r target
 --
 
-commit 8af21917bc01e9991b2ab872e7a4c38c91a6e388
+commit ac0073c08526e8690efa58576485d79bbd906522
 Author: Christian Brauner <brauner@kernel.org>
 
-scsi: esas2r: bound the lengths of the HBA, SMP and firmware ioctls
+selftests/proc: check that a faulting readlink() doesn't hold up removal
 
-This commit adds bounds checks on user-supplied lengths for the HBA, SMP,
-and firmware ioctls in esas2r to prevent out-of-bounds reads and writes past
-the end of struct atto_express_ioctl and a->local_atto_ioctl.
+This commit adds a selftest verifying that a readlink() call faulting via
+userfaultfd on /proc/asound/<id> does not block removal of the /proc symlink
+when renaming a dummy sound card.
 
-> diff --git a/drivers/scsi/esas2r/esas2r_ioctl.c b/drivers/scsi/esas2r/esa=
-s2r_ioctl.c
-> index 3f7c1d131ec34..f99318f61c934 100644
-> --- a/drivers/scsi/esas2r/esas2r_ioctl.c
-> +++ b/drivers/scsi/esas2r/esas2r_ioctl.c
+> diff --git a/tools/testing/selftests/proc/.gitignore b/tools/testing/self=
+tests/proc/.gitignore
+> index 7b81334927820..e2566cc0ae079 100644
+> --- a/tools/testing/selftests/proc/.gitignore
+> +++ b/tools/testing/selftests/proc/.gitignore
+> @@ -22,6 +22,8 @@
+>  /proc-uptime-002
+>  /proc-pidns
+>  /proc-remove-slow-sysctl
+> +/proc-remove-slow-reader
+> +/proc-remove-slow-readlink
+>  /read
+>  /self
+>  /setns-dcache
+> diff --git a/tools/testing/selftests/proc/Makefile b/tools/testing/selfte=
+sts/proc/Makefile
+> index bce6beca72744..6a9bdc999f545 100644
+> --- a/tools/testing/selftests/proc/Makefile
+> +++ b/tools/testing/selftests/proc/Makefile
+> @@ -33,5 +33,7 @@ TEST_GEN_PROGS +=3D proc-fsconfig-hidepid
+>  TEST_GEN_PROGS +=3D proc-sysctl-readdir-churn
+>  TEST_GEN_PROGS +=3D proc-pidns
+>  TEST_GEN_PROGS +=3D proc-remove-slow-sysctl
+> +TEST_GEN_PROGS +=3D proc-remove-slow-reader
 
-[ ... ]
+[Severity: Medium]
+Was proc-remove-slow-reader added to TEST_GEN_PROGS in
+tools/testing/selftests/proc/Makefile (and to
+tools/testing/selftests/proc/.gitignore) by mistake?
 
-> @@ -1221,11 +1231,16 @@ static void hba_ioctl_done_callback(struct esas2r=
-_adapter *a,
->  	}
->  }
-> =20
-> +/* @room is the size of the buffer that starts with @ioctl_hba. */
->  u8 handle_hba_ioctl(struct esas2r_adapter *a,
-> -		    struct atto_ioctl *ioctl_hba)
-> +		    struct atto_ioctl *ioctl_hba, size_t room)
->  {
->  	struct esas2r_buffered_ioctl bi;
-> =20
-> +	/* The data follows @ioctl_hba in the same buffer. */
-> +	if (ioctl_hba->data_length > room - sizeof(struct atto_ioctl))
-> +		return IOCTL_INVALID_PARAM;
-> +
->  	memset(&bi, 0, sizeof(bi));
-> =20
->  	bi.a =3D a;
-
-[Severity: High]
-Can a concurrent write_hw() bypass this bounds check when handle_hba_ioctl()
-is called from read_hw()?
-
-In drivers/scsi/esas2r/esas2r_main.c, read_hw() and write_hw() both operate
-on the shared a->local_atto_ioctl buffer without holding a driver lock (and
-kernfs only serializes per open file description via of->mutex, not across
-separate file descriptors):
-
-drivers/scsi/esas2r/esas2r_main.c:read_hw() {
-	...
-	if (handle_hba_ioctl(a, a->local_atto_ioctl,
-			     sizeof(struct atto_ioctl)) !=3D IOCTL_SUCCESS)
-		return -ENOMEM;
-	...
-}
-
-drivers/scsi/esas2r/esas2r_main.c:write_hw() {
-	...
-	memset(a->local_atto_ioctl, 0, sizeof(struct atto_ioctl));
-	memcpy(a->local_atto_ioctl, buf, length);
-	...
-}
-
-Inside handle_hba_ioctl(), ioctl_hba->data_length is read twice without
-synchronization:
-
-drivers/scsi/esas2r/esas2r_ioctl.c:handle_hba_ioctl() {
-	if (ioctl_hba->data_length > room - sizeof(struct atto_ioctl))
-		return IOCTL_INVALID_PARAM;
-
-	memset(&bi, 0, sizeof(bi));
-
-	bi.a =3D a;
-	bi.ioctl =3D ioctl_hba;
-	bi.length =3D sizeof(struct atto_ioctl) + ioctl_hba->data_length;
-	...
-	return handle_buffered_ioctl(&bi);
-}
-
-If write_hw() overwrites a->local_atto_ioctl->data_length with a non-zero
-value between the bounds check and the assignment to bi.length, wouldn't
-handle_buffered_ioctl() still read and write bi.length bytes past the end of
-a->local_atto_ioctl?
+This patch adds tools/testing/selftests/proc/proc-remove-slow-readlink.c, b=
+ut
+tools/testing/selftests/proc/proc-remove-slow-reader.c does not exist in the
+tree. Because the default all target in tools/testing/selftests/lib.mk depe=
+nds
+on $(TEST_GEN_PROGS), building the proc selftests fails with no rule to make
+target proc-remove-slow-reader.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261102-work-procf=
-s-bugfixes-v1-0-59422ed3e465@kernel.org?part=3D28
+s-bugfixes-v1-0-59422ed3e465@kernel.org?part=3D38
