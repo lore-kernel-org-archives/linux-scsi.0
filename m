@@ -1,47 +1,104 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=195.135.223.130
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793688876;
-	b=hzgqnxm3zgzuf0aUiAo+TwbFOHepCXmvsaus4+O16k1bbnO3tlMmS7GNAK/SQbdP73Wx
-	 xzOwuyw17pzLskYehOZKR01L4HyqMkAwrhloAtnQYaLWRgX5Rs/yrtIHrweYslhVn6IcK
-	 5eqreAaTkJs7AG6hEGnM44Bx1G2OzTfXuk+OMdgcjYlJEbhMEwrN+GEiyDeuvQrQThuPC
-	 Ouk0Qu8+orBy7D4vdsbuDAohgoazM3TDZGQOq89zItMIirS0tNttMsfXc/Dh5VDgdO4mg
-	 13lD5Y/t/jfmnd6XcL+jeZEx6/Imiv0ZTsk8HzaRaTu+LUKiTj28eRMK++TurW7lIWQ==
+	t=1793690883;
+	b=TujPyGblvkesERM+y95oevETWZ3rW4AigJ4JRswNrrbD9hFfPh7zuISgYi8B6MBQ4O7G
+	 qKKQh47etqTfCZfYVZum+FVEyhIwxfVjvA7Pcjsg7uW+E3SahLgAI6ktvfhPQPJ9s3IvK
+	 +VzzDIuRa9Miyjmuu5fGTzIi51he9cGd4ZWTgc936ytQKRQjLbmeWpPlpt3xPl9S2PYXj
+	 WjXhbCeKSB7iYY8zJjoLGCd8U4rcIT05BTlI6DrYxzSaZBr1Y7y/yWXaP69dGLtFgOeZS
+	 yhMmqMAcBwFvNgxzyEubgpw72l0ujjiNuLs9op3pCxbZWa1k3t0w6x729Je8z3Vs7Vg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793688876;
-	h=Received:DKIM-Signature:Message-ID:Date:MIME-Version:User-Agent:
-	 Subject:To:Cc:References:Content-Language:From:Autocrypt:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding;
-	bh=pI+R0vssS3+rBEwGlEmrhAJtAWwC+K6R2fL7Q2wxluc=;
-	b=kHpHcYPZNySrVpcXOaZLKz7xVjV1Av85dZ82VFATW6ctQdNLvHkXM8xPm8vTEwpgtxuC
-	 PzvUVZcMmuK4xW9wuQUrRhISAEDM/i2eLIbmqaHah1ydPBfvqtdCLKxILkTz/bClasLEb
-	 02/LAN95Mz+aVP9ZIR9IYM7nDdFt7t1Zl+JJIuoupoibtIcnfINE5AVg7WrJGidH1jGI4
-	 829cycOww4c4If2fp9RJAZeSjSVW50H8YBv7rAHGwNexqAYmGBxmtJ1E4ZwXseO87faFy
-	 jrFAKpILH896Zgxs8XETeVpx2YPPDQbndp4cA+JCgBmecLIy2XG4qj3v57PsvEJEw6g==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793690883;
+	h=DMARC-Filter:Received:DKIM-Signature:DKIM-Signature:DKIM-Signature:
+	 DKIM-Signature:Received:Received:Message-ID:Date:MIME-Version:
+	 User-Agent:Subject:To:Cc:References:Content-Language:From:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:X-Rspamd-Queue-Id:X-Spam-Level:
+	 X-Rspamd-Server:X-Rspamd-Action:X-Spam-Flag:X-Spamd-Result:
+	 X-Spam-Score;
+	bh=pWaY/rYsgBaeFIYf4z3GhG6EaFKHiV2sHSaImiqX9fs=;
+	b=lz9Ige7dgSKA4684hB+yC1MyybJgkqoHM/E2goxeIRdRjBBk5hF/Yizq5ipr2VEu4opq
+	 aV4GICAUMMzeWtbi7/srbeD5Lslkq9eF7XLiCOUg49+oNrogV4yFQa/B2b+2J2WVP8CpB
+	 IdQd87y+okU+FqOCIR+st18/+UC6PE0B7e99rojnBQTeFvwo2NJ3+G4ZDxve3tGghKwaS
+	 ZBPfyvjiZs4nrk7D+wY7i6C+lKtFmMv2+N2svFvw+baxye+kQfKtp/AVvZaY1GFiYqBGW
+	 8fe8b8vdzsUOFtPIlfkQAcjNbha6FdHExMau8nedfZLku0WJjAVGP7FoG47Xy+5GE5w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=HVwwGpgK;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=suse.de;
+	spf=pass smtp.mailfrom=suse.de;
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=TrQhA5fm;
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=Ku3KscF2;
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=s8dlFG6M;
+	dkim=neutral header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=jEa7bNLd;
+	arc=none smtp.remote-ip=195.135.223.130
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E3EAD606A334;
-	Tue,  3 Nov 2026 06:54:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94608606A32F;
+	Tue,  3 Nov 2026 07:28:02 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 94608606A32F
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=HVwwGpgK
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 57D471F000C1;
-	Tue,  3 Nov 2026 06:54:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793688875;
-	bh=pI+R0vssS3+rBEwGlEmrhAJtAWwC+K6R2fL7Q2wxluc=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=HVwwGpgKph2PTCR3kNBpzgeJl9Fiv96ILTSVlqr7otzEN5KOe+3Oq36TZyy3FWiTn
-	 B5JC9rU3ADl82tq64bDRGFlV2NLyjhAO9fPnLejhbwzeG1Z9dc6ee0GVq9fDWJMr9G
-	 uEn9b1MhNhFVniqfmxfA0bqOs/QBhcC6kPjZ8hJFtdA34IHlyTNGGcCj68Y62ICtjk
-	 Ouq+kpEpWGx9PHR9MkFKZswgqiZXimSJHDR7+eldSuTYGotHgFLXgZCx0dKYEpIAcw
-	 6pYXyTE/pVVs21IvMkWqyQ4k+6ZNZ7Rqbrs3FA5NB7/Klj97W0Huza14rR1CDkHC3E
-	 tLDaFtIRr3wRA==
-Message-ID: <a0736b1b-707e-4f24-8249-c7363c673a43@kernel.org>
-Date: Tue, 3 Nov 2026 07:54:21 +0100
+	dkim=pass (1024-bit key, unprotected) header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=TrQhA5fm;
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=Ku3KscF2;
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=s8dlFG6M;
+	dkim=neutral header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=jEa7bNLd
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id E539921FB1;
+	Tue,  3 Nov 2026 07:27:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1793690875; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=pWaY/rYsgBaeFIYf4z3GhG6EaFKHiV2sHSaImiqX9fs=;
+	b=TrQhA5fmlx2kt2xwubOoC5NQTfypnMNM/pgCwrpQQr9qIMAV+b6j9cG8tiHzlcvCm9OyBj
+	HenNnS/CWjtpXkY2POqwXP30rVYKR+gbG01g/H1ucH4Pm0KQ/p7LDYspKjrri4+FduvG93
+	o9MmAYpHjd/FqbRWNNUpoydh+LkGWB0=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1793690875;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=pWaY/rYsgBaeFIYf4z3GhG6EaFKHiV2sHSaImiqX9fs=;
+	b=Ku3KscF2UypdIV6w1fX5xDeL4cnSik1+CGpJLINKtplvXd9O/syV3+OtPvayrb0wPxpfju
+	NQsUG0iT7y/0SCCQ==
+Authentication-Results: smtp-out1.suse.de;
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=s8dlFG6M;
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=jEa7bNLd
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1793690873; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=pWaY/rYsgBaeFIYf4z3GhG6EaFKHiV2sHSaImiqX9fs=;
+	b=s8dlFG6M6g5Q+lt1wruJNEE0OjY6rFU5JUOoRYe4S4pOWaCNpA+Qr6oaLgUMeYx26MAYUN
+	qvOE4qCk0lTJAoxH/fwN20NWaugPrAlN6tfKhPyhTHFmPbyOs645mjlWO/lUiRYQ5HT0hG
+	Suu469lgp16I1dtRHWgvJrbn9UB3iuA=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1793690873;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=pWaY/rYsgBaeFIYf4z3GhG6EaFKHiV2sHSaImiqX9fs=;
+	b=jEa7bNLdx6B7nfiSj3TKkmzYNm3QGHnzU3hIgpYqn/K0qgoMiv8OQf8jbfF6rMZAQ80/AD
+	+vlqOewEkRQq7tBw==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 66013134B8;
+	Tue,  3 Nov 2026 07:27:53 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id A2vADvmM6WrOSQAAD6G6ig
+	(envelope-from <hare@suse.de>); Tue, 03 Nov 2026 07:27:53 +0000
+Message-ID: <c5460180-e134-423a-b67f-a58a00106eb8@suse.de>
+Date: Tue, 3 Nov 2026 08:27:52 +0100
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -52,139 +109,182 @@ List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH RFC 19/23] tty: sysrq: let procfs copy in writes to
- /proc/sysrq-trigger
-To: Christian Brauner <brauner@kernel.org>, linux-fsdevel@vger.kernel.org
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
- Jann Horn <jannh@google.com>, Josef Bacik <josef@toxicpanda.com>,
- Chris Mason <mason@kernel.org>, Jeff Layton <jlayton@kernel.org>,
- NeilBrown <neil@brown.name>, Eric Dumazet <edumazet@kernel.org>,
- Thomas Gleixner <tglx@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>,
- Jonathan Corbet <corbet@lwn.net>, Christoph Hellwig <hch@lst.de>,
- Greg Kroah-Hartman <gregkh@suse.de>, Joel Granados
- <joel.granados@kernel.org>, Kees Cook <kees@kernel.org>,
- Jan Kara <jack@suse.cz>, Jan Kara <jack@suse.com>,
- linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org,
- linux-acpi@vger.kernel.org, linux-kselftest@vger.kernel.org,
- linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
- linux-um@lists.infradead.org, linux-wireless@vger.kernel.org,
- linuxppc-dev@lists.ozlabs.org, netdev@vger.kernel.org,
- ntfs3@lists.linux.dev, platform-driver-x86@vger.kernel.org,
- coreteam@netfilter.org, kexec@lists.infradead.org,
- linux-pci@vger.kernel.org, linux-sound@vger.kernel.org,
- netfilter-devel@vger.kernel.org, dri-devel@lists.freedesktop.org,
- ibm-acpi-devel@lists.sourceforge.net, jfs-discussion@lists.sourceforge.net,
- linux-alpha@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- linux-cifs@vger.kernel.org, linux-fbdev@vger.kernel.org,
- linux-hwmon@vger.kernel.org, linux-mm@kvack.org, linux-sh@vger.kernel.org,
- linux-usb@vger.kernel.org, samba-technical@lists.samba.org,
- sparclinux@vger.kernel.org, linux-m68k@lists.linux-m68k.org,
- linux-doc@vger.kernel.org, linux-serial@vger.kernel.org,
- linux-atm-general@lists.sourceforge.net, Takashi Iwai <tiwai@suse.de>,
- linux-input@vger.kernel.org, linux-raid@vger.kernel.org,
- linux-ext4@vger.kernel.org, linux-modules@vger.kernel.org,
- linux-debuggers@vger.kernel.org, Chuck Lever <cel@kernel.org>
-References: <20261102-work-procfs-drivers-v1-0-a994bd4d3b1a@kernel.org>
- <20261102-work-procfs-drivers-v1-19-a994bd4d3b1a@kernel.org>
+Subject: Re: [PATCH v2] scsi: virtio_scsi: implement eh_host_reset_handler
+To: Stefan Hajnoczi <stefanha@redhat.com>,
+ Nguyen Ngoc Thang <ngocthang2710.1999@gmail.com>
+Cc: mst@redhat.com, jasowangio@gmail.com, mkp@kernel.org,
+ James.Bottomley@hansenpartnership.com, pbonzini@redhat.com,
+ eperezma@redhat.com, virtualization@lists.linux.dev,
+ linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+ sashiko-bot@kernel.org, kwolf@redhat.com
+References: <20260911164417.33860-1-ngocthang2710.1999@gmail.com>
+ <28865bba-ac60-4c6e-aec8-64b1fcdb1c8f@suse.de>
+ <20260914133144.15509-1-ngocthang2710.1999@gmail.com>
+ <20261102200615.GC1738758@shajnocz.csb>
 Content-Language: en-US
-From: Jiri Slaby <jirislaby@kernel.org>
-Autocrypt: addr=jirislaby@kernel.org; keydata=
- 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
-In-Reply-To: <20261102-work-procfs-drivers-v1-19-a994bd4d3b1a@kernel.org>
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20261102200615.GC1738758@shajnocz.csb>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-Rspamd-Queue-Id: E539921FB1
+X-Spam-Level: 
+X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
+X-Rspamd-Action: no action
+X-Spam-Flag: NO
+X-Spamd-Result: default: False [-12.00 / 50.00];
+	SUSE_INTERNAL_BYPASS(-9.00)[];
+	BAYES_HAM(-3.00)[100.00%];
+	SUSPICIOUS_RECIPS(1.50)[];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	XM_UA_NO_VERSION(0.01)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	URIBL_BLOCKED(0.00)[suse.de:dkim,suse.de:email,imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo];
+	FREEMAIL_TO(0.00)[redhat.com,gmail.com];
+	RCPT_COUNT_TWELVE(0.00)[13];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	MIME_TRACE(0.00)[0:+];
+	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	ARC_NA(0.00)[];
+	FREEMAIL_ENVRCPT(0.00)[gmail.com];
+	RCVD_TLS_ALL(0.00)[];
+	TO_DN_SOME(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:dkim,suse.de:email,imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	FREEMAIL_CC(0.00)[redhat.com,gmail.com,kernel.org,hansenpartnership.com,lists.linux.dev,vger.kernel.org];
+	DNSWL_BLOCKED(0.00)[2a07:de40:b281:106:10:150:64:167:received,2a07:de40:b281:104:10:150:64:97:from];
+	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
+	DKIM_TRACE(0.00)[suse.de:+];
+	MID_RHS_MATCH_FROM(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	TAGGED_RCPT(0.00)[];
+	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from]
+X-Spam-Score: -12.00
 
-On 02. 11. 26, 16:07, Christian Brauner wrote:
-> Implement ->proc_write_buf() so procfs copies in what is written before
-> it pins the entry, and handle the keys from that copy. Writes larger
-> than PAGE_SIZE - 1 bytes fail with -EINVAL now. They used to trigger the
-> first key, or all of them in bulk mode. procfs allocates the copy, which
-> is as small as the write, opening the file allocated as much already.
+On 11/2/26 9:06 PM, Stefan Hajnoczi wrote:
+> On Mon, Sep 14, 2026 at 08:31:44PM +0700, Nguyen Ngoc Thang wrote:
+>> Once virtscsi_eh_timed_out() lets SCSI EH run on an unresponsive host,
+>> abort and device reset both fail the same way (same dead ctrl vq), and
+>> since virtio_scsi implements neither target nor bus reset, EH falls
+>> through to scsi_eh_offline_sdevs(), which frees the stuck commands' DMA
+>> buffers without any guarantee the device has actually stopped touching
+>> them. If bus mastering (or whatever broke the transport) comes back
+>> later, the device can still write into memory the kernel has already
+>> reused.
+>>
+>> Add a real eh_host_reset_handler instead. virtio_reset_device() is the
+>> guarantee scsi_eh_offline_sdevs() was missing: once it returns, the
+>> device will not touch guest memory again, so it is safe to hand
+>> outstanding commands' buffers back. Reuse virtscsi_remove_vqs() +
+>> virtscsi_init() -- the exact sequence already used across
+>> suspend/resume -- to tear the virtqueues down and rebuild them.
+>>
+>> Verified with a QEMU virtio-scsi repro (PCI_COMMAND_MASTER cleared
+>> mid-write): EH now runs abort -> device reset -> host reset -> abort ->
+>> device reset -> host reset -> offline, then dd's stuck fsync returns
+>> EIO and D-state drains to 0, in ~244s total. No task remains
+>> uninterruptibly blocked.
 > 
-> Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
-
-Reviewed-by: Jiri Slaby <jirislaby@kernel.org>
-
-> ---
->   drivers/tty/sysrq.c | 9 +++------
->   1 file changed, 3 insertions(+), 6 deletions(-)
+> By the way, there is a known limitation in the QEMU virtio-scsi
+> implementation where some reset-related operations are implemented
+> synchronously (can block vCPUs and QEMU activity while waiting for I/O
+> to drain in some situations) instead of asynchronously. Recently there
+> has been work in QEMU to make VIRTIO device reset asynchronous, for
+> example, but it needs to be implemented on a per-device basis and
+> virtio-scsi hasn't taken advantage of it yet.
 > 
-> diff --git a/drivers/tty/sysrq.c b/drivers/tty/sysrq.c
-> index f4571d05b496..99363e1b59ed 100644
-> --- a/drivers/tty/sysrq.c
-> +++ b/drivers/tty/sysrq.c
-> @@ -1200,17 +1200,14 @@ EXPORT_SYMBOL(unregister_sysrq_key);
->    * However, if the first character is an underscore,
->    * all characters are processed.
->    */
-> -static ssize_t write_sysrq_trigger(struct file *file, const char __user *buf,
-> +static ssize_t write_sysrq_trigger(struct file *file, char *buf,
->   				   size_t count, loff_t *ppos)
->   {
->   	bool bulk = false;
->   	size_t i;
->   
->   	for (i = 0; i < count; i++) {
-> -		char c;
-> -
-> -		if (get_user(c, buf + i))
-> -			return -EFAULT;
-> +		char c = buf[i];
->   
->   		if (c == '_')
->   			bulk = true;
-> @@ -1225,7 +1222,7 @@ static ssize_t write_sysrq_trigger(struct file *file, const char __user *buf,
->   }
->   
->   static const struct proc_ops sysrq_trigger_proc_ops = {
-> -	.proc_write	= write_sysrq_trigger,
-> +	.proc_write_buf	= write_sysrq_trigger,
->   	.proc_lseek	= noop_llseek,
->   };
->   
+> Please let me know if you'd like to discuss or contribute. It's
+> something that is on my radar but not until 2027.
 > 
+>>
+>> Suggested-by: Hannes Reinecke <hare@suse.de>
+>> Signed-off-by: Nguyen Ngoc Thang <ngocthang2710.1999@gmail.com>
+>> ---
+>> v1 -> v2: implemented eh_host_reset_handler as suggested by Hannes
+>> Reinecke in review of the original RFC, instead of relying solely on
+>> the EH loop falling through to offline.
+>> ---
+>>   drivers/scsi/virtio_scsi.c | 24 ++++++++++++++++++++++++
+>>   1 file changed, 24 insertions(+)
+>>
+>> diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+>> index b4f20c487718..9698f4f91cc6 100644
+>> --- a/drivers/scsi/virtio_scsi.c
+>> +++ b/drivers/scsi/virtio_scsi.c
+>> @@ -833,6 +833,8 @@ static enum scsi_timeout_action virtscsi_eh_timed_out(struct scsi_cmnd *scmnd)
+>>   	return SCSI_EH_NOT_HANDLED;
+>>   }
+>>   
+>> +static int virtscsi_host_reset(struct scsi_cmnd *sc);
+>> +
+>>   static const struct scsi_host_template virtscsi_host_template = {
+>>   	.module = THIS_MODULE,
+>>   	.name = "Virtio SCSI HBA",
+>> @@ -846,6 +848,7 @@ static const struct scsi_host_template virtscsi_host_template = {
+>>   	.eh_abort_handler = virtscsi_abort,
+>>   	.eh_device_reset_handler = virtscsi_device_reset,
+>>   	.eh_timed_out = virtscsi_eh_timed_out,
+>> +	.eh_host_reset_handler = virtscsi_host_reset,
+>>   	.sdev_init = virtscsi_device_alloc,
+>>   
+>>   	.dma_boundary = UINT_MAX,
+>> @@ -947,6 +950,27 @@ static int virtscsi_init(struct virtio_device *vdev,
+>>   	return err;
+>>   }
+>>   
+>> +/*
+>> + * No bus/target reset in virtio-scsi, so EH lands here after device
+> 
+> The choice to use the VIRTIO device reset in virtscsi_host_reset() looks
+> good to me, but I would like clarification on this comment. virtio-scsi
+> does have I_T_NEXUS_RESET and I believe this is the modern equivalent to
+> the pre-SCSI-6 TARGET RESET. Is it really the case that virtio-scsi
+> doesn't have target reset? And do you want to go ahead and implement
+> .eh_target_reset_handler() using I_T_NEXUS_RESET?
+> 
+Would probably not a bad idea to use I_T_NEXUS_RESET here.
+Not sure what it does internally, though; _is_ there a nexus
+to reset?
 
+>> + * reset also times out. A virtio reset guarantees the device won't
+>> + * touch guest memory again, so stuck commands can be freed safely.
+>> + * Same teardown/rebuild already used for suspend/resume.
+>> + */
+>> +static int virtscsi_host_reset(struct scsi_cmnd *sc)
+>> +{
+>> +	struct virtio_scsi *vscsi = shost_priv(sc->device->host);
+>> +	struct virtio_device *vdev = vscsi->vdev;
+>> +
+>> +	scmd_printk(KERN_INFO, sc, "host reset\n");
+>> +
+>> +	virtscsi_remove_vqs(vdev);
+> 
+> This is synchronous and may take a long time. I noticed that some SCSI
+> drivers have a timeout that returns FAILED when the low-level host reset
+> operation takes too long. This can be done here too but would require
+> adding a timeout to virtio_reset_device() (i.e. see the virtio-pci
+> implementation that loops until the device register indicates reset is
+> complete).
+> 
+Never, ever, return FAILED from a host reset.
+That will induce a non-recoverable error, and you have to reset the
+OS to get the virtio devices back.
+Not something you'd want to do I guess.
 
+Yes, I know that host reset can take a long time. But normally
+host reset would be the last resort, so really when you have to
+call it your system has exhausted all other options.
+
+Cheers,
+
+Hannes
 -- 
-js
-suse labs
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
