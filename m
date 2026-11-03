@@ -1,66 +1,66 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=199.89.1.16
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=199.89.1.14
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793728296;
-	b=fOhxYzMWvlnmh6BDz4VCqe/4YyKA/25JiFIexbs/+MePXM9SsIq+u9SUWuwzl8xxyAr4
-	 ioF6fW8TTwm7sadljUaPX8mRHnESYDBfnfjkW1UWLBvYsUe5RU1xPqMQD76MJ39pwlewq
-	 weja7XdwK9JJxj/CNm4uWJOH1hfM8PJUkYkW6DyGAIZMFDASZJUF8zzEIq+BVLUEzg9xl
-	 mg2OOgBmtnQi3X57Ebb4Eroc4CCGqdRaumkRupCO9Bdxo0zkc2S+hKNiyt6Ekek+FFkNL
-	 lsAFw03Ium3sdPm+kW7zfbNGVmTMeAEGC1o+GFvc21pHGVe6ThdC6LLWBT1dbZPZ81Q==
+	t=1793728429;
+	b=v4Z/sFPipCVFEPJZ4KVoiqnGKXR+Av8BB1tM3uQ4BKZOWoXfzoyW+XT5XGniffGEPkDJ
+	 o9NKEE1tfD7P25hwjs6c0k8oVjfZxJNFt4EAaXF6GIit1OmtDN9ZEiJb311cXeWT81sdE
+	 +Oq5PTBdA3WK9oDj+nlRts19mb4c6IRQ1EJ2+pCNf41j33MO5PP3fCOwi4fImFc/dU1C6
+	 R2YYGPLTkx6Hxvd4JsfiTWH+Qlqu4jvdJLp9LonBswwW2XAR+yJau4ffoenjqMGc0/8gS
+	 VRmlsHVIixdzit/hFE1Pf76o+qfcftpXK9K1cZvOIddN8jd+1BHHZBGkDHyFSDTXl4g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793728296;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793728429;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Virus-Scanned:Received:
 	 Received:Message-ID:Date:MIME-Version:User-Agent:Subject:To:Cc:
 	 References:Content-Language:From:In-Reply-To:Content-Type:
 	 Content-Transfer-Encoding;
-	bh=Fqeyvm7FX0eXD7hMo/JywxL4ZlWhm9hN7Af29X1fAyI=;
-	b=mcriLMYPpBHen9AYb8iHYok9L0wXeEVbzvPW8WOQHW0bVIqhC21KWK+tucWxnRpFM2Fv
-	 sE4wmri8gQXWXXovwStniakbWbNudZry4QgVYRbNn8yJc3rAhZPyxMW9mQ3YYd/m8r96o
-	 OJA1iKR2GG/uwpDQpA50/XDNon4Oti3P8KNGuWXxRlC3y9+S8nL2aYnOxuSEAc6S5IsdR
-	 6qF4pVMnxdNC09/ZDbs/q8WdTdXVRyIA3pQPue/GJjfWTEJrX1PGQpME5rttU2zUGYE/1
-	 WOtTTaBt4yBi8EAbx4YkKvBUPIV+2WshBmcWzIWdvutoq3mSl12IX37S2sdjmCmlLgg==
+	bh=nv/S8+4XbDZcebn2R51IJieAKP1m3RtJvkfF3QMxym4=;
+	b=3lrlrmUHiFPoFuZHzH0zT7PJU99PHBomJDKzvJpGkebY/Y1UF7uZljM1zEceounwNPtD
+	 fb9gu7nKVqHWdgc0BpueQXXXSf0zCPNSnwjXRuXGFFr4b3/Ru4kIQwAYAKdvDTAzWz14P
+	 /BPs1ira5mpky829jeVThfueqCbyGpUButGRWzc8vhxxxYji0TR2MsECsGTjnoCCOOG4g
+	 CXUJTfevjHfiIkFtmylEkqo9tqe675OOJHW2lQimZL/4UNL17YiH9nLr3nd87xeKWX5E8
+	 frQRAlGM9mMb1lppKwGhj3ssiDDdZflsHY3edx2IG1y/MKxdGUveZcNIPMZ0w8814rw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=acm.org;
 	spf=pass smtp.mailfrom=acm.org;
-	dkim=pass header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=o+rtQdVi;
-	arc=none smtp.remote-ip=199.89.1.16
-Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
+	dkim=pass header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=r8YfTIAk;
+	arc=none smtp.remote-ip=199.89.1.14
+Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2BC8606A334;
-	Tue,  3 Nov 2026 17:51:35 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D2BC8606A334
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 724C6606A324;
+	Tue,  3 Nov 2026 17:53:49 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 724C6606A324
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=o+rtQdVi
+	dkim=pass (2048-bit key, unprotected) header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=r8YfTIAk
 Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4jJx2v1fNGzlfwgF;
-	Tue,  3 Nov 2026 17:51:35 +0000 (UTC)
+	by 011.lax.mailroute.net (Postfix) with ESMTP id 4jJx5S5T4Rz1XLktx;
+	Tue,  3 Nov 2026 17:53:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:content-language:references:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1793728293; x=1796320294; bh=Fqeyvm7FX0eXD7hMo/JywxL4
-	ZlWhm9hN7Af29X1fAyI=; b=o+rtQdVipGe40JYePYEvDhDJML08S1p46tuQbcz4
-	p+mZSuZBYqdyWOHFskCIEEoE0ZJw7aE9POPWMZmXkv07KrfxDlsDbdIBbZW8HGyN
-	TjQ0bjQXIqVHTwoPgomtG/ne5+cSJSaDOO6ju8Ouvhp8JVm7CyH1n64I+UUJRclH
-	wchLxVrbKX3HPCmaPsPl1k+aBryAMwqe0oEXcH2PDMowYUAJQMa59fkPiqtVFZ6r
-	KMHz5uNMolE6NMmxSVIj6CPidn29w5w/P4egt/Mr3VBm0FquXUUJKmZ6oCBw6fGB
-	nQF2a/2uPglyxKK4RKuKWaHR7FA+++0cDU5ZsIki+R9mYg==
+	 s=mr01; t=1793728424; x=1796320425; bh=nv/S8+4XbDZcebn2R51IJieA
+	KP1m3RtJvkfF3QMxym4=; b=r8YfTIAkCYBU4vtqIaBhFbgBI53QY2dlipL8p6MZ
+	R6N+cyOsOyihZHkfJVGt/cWCcM8VzMaYn4V8rdyg66wOEzSsHPsKAA6nxPgtC1L3
+	GrdU9a0qyA62toxXqekrxhMxPtFtaCuZJgXdfRmFdpt8rGrVArYfZjPvr6ieWLa1
+	XiAIh4APqPCF47YiOJNJvv8GQN+r0zjy7qtDT6pAOnYYIKu9UYQffw50or9sOYii
+	zTh1xLotom9/E8WepKxW8Z4bSJFwZeT1PN/E4KNbwuhw8vdoq6TrmfyHTIJkTmrt
+	e1TlWUBryytPkLD6gKwama66XixRoa6zBL19NfJUgN+F5A==
 X-Virus-Scanned: by MailRoute
-Received: from 013.lax.mailroute.net ([127.0.0.1])
- by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id ENP3WjZl7kaH; Tue,  3 Nov 2026 17:51:33 +0000 (UTC)
+Received: from 011.lax.mailroute.net ([127.0.0.1])
+ by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id P6WlHWsK3ueh; Tue,  3 Nov 2026 17:53:44 +0000 (UTC)
 Received: from [IPV6:2a00:79e0:2ed2:d:b098:ee7:dc7c:db4e] (unknown [104.135.182.42])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4jJx2r4sZLzlfvpW;
-	Tue,  3 Nov 2026 17:51:32 +0000 (UTC)
-Message-ID: <4f38227c-a524-4d42-a3e4-ad0157939b41@acm.org>
-Date: Tue, 3 Nov 2026 09:51:31 -0800
+	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4jJx5M4wVSz1XLkvj;
+	Tue,  3 Nov 2026 17:53:43 +0000 (UTC)
+Message-ID: <a608e18b-30a1-4c26-a456-c6b219d4a517@acm.org>
+Date: Tue, 3 Nov 2026 09:53:42 -0800
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -71,26 +71,44 @@ List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 0/2] scsi: ufs: fix an RPMB teardown cycle and a shift UB
-To: shao.mingyin@zte.com.cn, martin.petersen@oracle.com,
- alim.akhtar@samsung.com, linux-scsi@vger.kernel.org
-Cc: james.bottomley@hansenpartnership.com, peter.griffin@linaro.org,
- beanhuo@micron.com, stanleyjhu@google.com,
- linux-samsung-soc@vger.kernel.org, linux-kernel@vger.kernel.org,
- stable@vger.kernel.org
-References: <20261103185229490gmhePBF5_11x_thf4X-Rw@zte.com.cn>
+Subject: Re: [PATCH v10 01/11] ufs: core: Return a negative errno from WLUN
+ suspend/resume
+To: Larisa Grigore <larisa.grigore@oss.nxp.com>,
+ NXP S32 Linux Team <s32@nxp.com>, Alim Akhtar <alim.akhtar@samsung.com>,
+ Bean Huo <beanhuo@micron.com>, Stanley Jhu <stanleyjhu@google.com>,
+ Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>,
+ Conor Dooley <conor+dt@kernel.org>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <mkp@kernel.org>,
+ Sai Krishna Potthuri <sai.krishna.potthuri@amd.com>,
+ Ajay Neeli <ajay.neeli@amd.com>, Manivannan Sadhasivam <mani@kernel.org>,
+ Pedro Sousa <pedrom.sousa@synopsys.com>,
+ Adrian Hunter <adrian.hunter@intel.com>, Can Guo <quic_cang@quicinc.com>,
+ Asutosh Das <quic_asutoshd@quicinc.com>
+Cc: imx@lists.linux.dev, linux-scsi@vger.kernel.org,
+ devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-arm-msm@vger.kernel.org, clizzi@redhat.com, aruizrui@redhat.com,
+ eballetb@redhat.com, echanude@redhat.com
+References: <20261103133215.1385823-1-larisa.grigore@oss.nxp.com>
+ <20261103133215.1385823-2-larisa.grigore@oss.nxp.com>
 Content-Language: en-US
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20261103185229490gmhePBF5_11x_thf4X-Rw@zte.com.cn>
+In-Reply-To: <20261103133215.1385823-2-larisa.grigore@oss.nxp.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On 11/3/26 2:52 AM, shao.mingyin@zte.com.cn wrote:
-> Two independent fixes in the UFS stack, found while reading the probe and
-> remove paths and the task-management hooks.
-This series no longer applies. Please rebase it on top of Martin's
-for-next branch.
+On 11/3/26 5:32 AM, Larisa Grigore wrote:
+> __ufshcd_wl_suspend() and __ufshcd_wl_resume() may return a positive result
+> code, e.g. from ufshcd_link_startup() when DME link startup fails while
+> restoring the link.
+> 
+> The runtime PM core treats any non-zero value as a failure of the WLUN,
+> but rpm_get_suppliers() only checks for a negative value. The LUs
+> consuming the WLUN are thus reported as resumed and receive I/O while
+> the WLUN is still suspended.
+> 
+> Convert positive values to -EIO, as ufshcd_init() already does.
+> Do the same in __ufshcd_wl_suspend() for consistency, so that callers
+> always get a negative errno.
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 
-Thanks,
-
-Bart.
