@@ -1,48 +1,48 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793718099;
-	b=YpIV9DPMIuPyHcjwGM1udC+7w6hcqZ9DZrCUHnCcZyWw3MR/OhXCoSGSHwdlT8BxmeDw
-	 LaR+1+Jyz57viHTtPGwaU21RGPuR08AHgXM20Z/wkwN1ibc3EzW07y2+GCMOjQaRAPIIi
-	 PsnRVmbltsLLNs4RXiwCfrswNmLCk2p368GaqZKdY9IkokTyafSu+CB3IK3cTXiTZk68e
-	 8aZ8hZ1SMyRpt3/ZB2bc27cJVVe3FuTTsNF/D0dAwpZljrvIuf6HaJ+abqsCjDvsRGpw7
-	 xeQiFaQQ/t6LY7v+ewAs+/E6rIDhl8xVuuYZyBC7QX9LeVvKstogc/2WLYlEg6cN1rA==
+	t=1793719131;
+	b=tHgLfxBqB3OVYSTbTVuR4b30dEoUnAL9GiPZBjsGtxWP2LmCOdyhnzDuzw8aV67qxJu+
+	 OqvR1pzkDbvj/YnTPMoUc60nlk58kn79UuOdMJh9+ou8w+1y+dwdqijQeIm991OtVu+Rq
+	 ePKC0NuCDvbQSaM1GB988tNCH7eMLeLntboAGrthjNN/R7nxteb05QTlnEFTr9U/zkC+R
+	 yAofY4FgyroyA8LcXBIsqC01SveaM/mDc7o8h4Ca3RfZ/aTSnnQgBuYTD7ahBdpibSReC
+	 ShxH68CuHuA7ekWNzdEbt+mXajVcTkQ02osCyp7a3B258cqyLDOPIFrS0VSfOlOHWWw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793718099;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793719131;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=H4Y/D8MHsuJxIcgQs16JMa9LVQhoWAXgdYCn9GW8dZE=;
-	b=dF9n0jiQ0pARZ0a8pWXyvHoJp4aeATDT0ZMqspbCZB1Evg2sjGHKkakHlMrmudtAtFpO
-	 OYAGYUxlgZsmstpGPNwqae9+a8VvtB6CHjTCwJq85dbCUoX6ilRIOA8WWO1So69ZPpC/0
-	 o86rhH8U+Dyc+Mzz5nCXE9K8MkimX2ArAeuPDRPWpmnkViHWR0l0SpiJtlAsgC2kpD+we
-	 sKp65LNCvmTfoySb1TGl+Brq2MZqMvrSgQvxL998Fp4wwfjesx5vEVqjUrHBN7DbWOGfa
-	 yKVxapLURPO/XKwYRGUsOhEbYJ6uc3sEIw5GrYU4j5M/CRRACC3bfhSMVZ/KTM4VKfw==
+	bh=Bc8aT4Z6get1K0vbpp5ygtanM/hIwI+PelNNb0VgB7c=;
+	b=mtXPuqtX4jmWHuPTnUJp5WMiDcrBAjULAoqzcagKStFaOzHRViFtmNFsPL5lnTuXAdgc
+	 osWYd/7r9GUgW0uzvvmr0aEW9VXh772nO5GGWe8W/vLHf9OpzKXX+z0kL5G1R/D75+6GT
+	 Xr2LsdliHD6AeBI+95m562i5YosYCaUpcFluESpI9nR9hBlPJFtpYd1ISPGU7Fv0jJeim
+	 FYtChRzTwfc+ESh/hXpdUSWiSDsumM+PjTYTSu1iVE/7DQ8c2L4X5hQ42RzUSAMYtUwgO
+	 j84EL7wmu9afc5BudIIky0Qf9u3/sdU27piGNpxus5M7fI5z/VNSC3ZhylQOVjkMvew==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=iPOrW1sZ;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="CoJeH/FT";
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA68E60A6F71;
-	Tue,  3 Nov 2026 15:01:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9EB2606B258;
+	Tue,  3 Nov 2026 15:18:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=iPOrW1sZ
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 664741F0093A;
-	Tue,  3 Nov 2026 15:01:36 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=CoJeH/FT
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 856681F0093A;
+	Tue,  3 Nov 2026 15:18:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793718098;
-	bh=H4Y/D8MHsuJxIcgQs16JMa9LVQhoWAXgdYCn9GW8dZE=;
+	s=k20260515; t=1793719130;
+	bh=Bc8aT4Z6get1K0vbpp5ygtanM/hIwI+PelNNb0VgB7c=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=iPOrW1sZYpx/JoZZqS9qV1GcjvdBuAyBkHMbgeIvuF9N8xnYtd/uAH/lu/jAlLzKf
-	 Nq5vM4zhxl93ARwt5IDAUvoCbIWrHeNs/6trXeNMyLqwoaSZliHN1Lmdtd6F1TrRM+
-	 E8t3nn11OR2O0yTsAAjfZ0JhJXAcI/KIsNGJZleh6tn4/huZCrKzH0zz2IUXdKnzkK
-	 6W9TGbxhz+i9CE9TQ8pBES4DkH/dBUxXGqSsH1jdznxKqWRCNHZxYwypnamo4/Cqy5
-	 fIsF/ocsyOzXijxNmThFmUaDNsK0S2Y+yjWibAtCyfn78+Zol7hiv1kIJFamvcET5T
-	 yE9Ruio9sbg7Q==
-Message-ID: <sashiko-outbox-195542@kernel.org>
+	b=CoJeH/FTtYurhrEu7pHCjreAy8kglbRPwM3Bp2MFbNXs5sfimskiQ6GdFaw2b46h5
+	 LFYZjIjC0HLk9VtZElPrV+LCrvrtO/TXriYCzcHxI7ww7m4DuMtGSua9gCijZ8ag5C
+	 C1QyPEjg//XpCtccxJ83qTFkU2bPqiwCZUATJ82pjvzmj0HhclIwZdtkBZ4X0D4FpB
+	 W2kjXVSW4Jh+gJKkh7n8hluL4QKxxLPc9zkayoPnR79tHeS7TL9oS5+LArhquuyOcO
+	 R0f20W9hUcQSALMEMf5u4F5ldJdbIIx8/qJHUPE3ePz+MiGIzk37ns/uj3hE88ZoNC
+	 wd/gwuy246nxg==
+Message-ID: <sashiko-outbox-195591@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH RFC 15/16] proc: let procfs copy ioctl arguments in and
- out
+Subject: Re: [PATCH RFC 11/23] selftests/proc: check that a faulting writer
+ doesn't hold up removal
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Christian Brauner" <brauner@kernel.org>
 Cc: "Linus Torvalds" <torvalds@linux-foundation.org>, "Jann Horn" <jannh@google.com>, "Josef
@@ -57,12 +57,12 @@ Cc: "Linus Torvalds" <torvalds@linux-foundation.org>, "Jann Horn" <jannh@google.
  Pavlu" <petr.pavlu@suse.com>, "Anna Schumaker" <anna@kernel.org>, yukuai@fygo.io, "Heiko
  Carstens" <hca@linux.ibm.com>, "Vasily Gorbik" <gor@linux.ibm.com>, "Alexander
  Gordeev" <agordeev@linux.ibm.com>, "Christian Borntraeger" <borntraeger@linux.ibm.com>
-In-Reply-To: <20261102-work-procfs-core-v1-15-75df35e4f8b8@kernel.org>
-References: <20261102-work-procfs-core-v1-0-75df35e4f8b8@kernel.org>
- <20261102-work-procfs-core-v1-15-75df35e4f8b8@kernel.org>
+In-Reply-To: <20261102-work-procfs-drivers-v1-11-a994bd4d3b1a@kernel.org>
+References: <20261102-work-procfs-drivers-v1-0-a994bd4d3b1a@kernel.org>
+ <20261102-work-procfs-drivers-v1-11-a994bd4d3b1a@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 03 Nov 2026 15:01:36 +0000
+Date: Tue, 03 Nov 2026 15:18:48 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -72,115 +72,92 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [Medium] proc: unguarded zero-length user copies in pde_ioctl_buf()
-- [Low] proc: split declaration and initialization of __free() variable in =
-pde_ioctl_buf()
+- [Medium] selftests/proc: fail and leak scsi_debug host without CONFIG_SCS=
+I_PROC_FS
 --
 
-commit 468d1faef733a0559be5a05e125e1ce20ec69e4e
+commit d0cceed0cde591b286c7977ad630183fc653ded2
 Author: Christian Brauner <brauner@kernel.org>
 
-proc: let procfs copy ioctl arguments in and out
+selftests/proc: check that a faulting writer doesn't hold up removal
 
-This commit introduces ->proc_ioctl_buf() and ->proc_ioctl_args to allow
-procfs to copy ioctl arguments from and to userspace outside of pinning the
-proc_dir_entry, preventing page faults during user copies from blocking
-remove_proc_entry().
+This commit adds a procfs selftest that uses userfaultfd and scsi_debug to
+verify that a writer faulting during copy-in does not block removal of a
+/proc/scsi/scsi_debug/<host> entry and fails with -EIO once the fault is
+resolved.
 
-> diff --git a/fs/proc/inode.c b/fs/proc/inode.c
-> index 3f29a1663d266..7e4ca5751abb5 100644
-> --- a/fs/proc/inode.c
-> +++ b/fs/proc/inode.c
+> diff --git a/tools/testing/selftests/proc/proc-remove-slow-writer.c b/too=
+ls/testing/selftests/proc/proc-remove-slow-writer.c
+> new file mode 100644
+> index 0000000000000..f69ca75ba87cb
+> --- /dev/null
+> +++ b/tools/testing/selftests/proc/proc-remove-slow-writer.c
+> @@ -0,0 +1,203 @@
+
 [ ... ]
-> @@ -571,11 +572,66 @@ static long pde_ioctl(struct proc_dir_entry *pde, s=
-truct file *file, unsigned in
-[ ... ]
-> +static long pde_ioctl_buf(struct proc_dir_entry *pde, struct file *file,
-> +			  unsigned int cmd, void __user *uarg, unsigned long arg)
+
+> +/* the numbers of the hosts in /proc/scsi/scsi_debug as a bitmap */
+> +static int list_hosts(unsigned long *hosts)
 > +{
-> +	void *buf __free(kvfree) =3D NULL;
-> +	struct proc_ioctl_arg a;
-> +	size_t size;
-> +	long rv;
+> +	struct dirent *d;
+> +	DIR *dir;
 > +
-> +	if (!pde_ioctl_arg(pde, cmd, &a))
-> +		return -ENOTTY;
-> +	size =3D max(a.in, a.out);
-> +	if (size) {
-> +		buf =3D kvzalloc(size, GFP_KERNEL);
+> +	memset(hosts, 0, MAX_HOSTS / 8);
+> +	dir =3D opendir(HOST_DIR);
+> +	if (!dir)
+> +		/* the directory comes with the first host and goes with the last */
+> +		return errno =3D=3D ENOENT ? 0 : -errno;
 
-[Severity: Low]
-This isn't a bug, but in pde_ioctl_buf() in fs/proc/inode.c, buf is declared
-with __free(kvfree) =3D NULL at the top of the function and assigned later =
-when
-size is non-zero. Per the cleanup.h guidelines, could buf be defined and
-initialized in a single statement once size is known (for example,
-void *buf __free(kvfree) =3D size ? kvzalloc(size, GFP_KERNEL) : NULL;)?
+[ ... ]
 
-> +		if (!buf)
-> +			return -ENOMEM;
-> +		if (copy_from_user(buf, uarg, a.in))
-> +			return -EFAULT;
-> +	}
+> +FIXTURE_SETUP(host)
+> +{
+> +	unsigned long before[MAX_HOSTS / HOST_BITS];
+> +	unsigned long after[MAX_HOSTS / HOST_BITS];
 > +
-> +	if (!pde_pin(pde))
-> +		return -ENOTTY;
-> +	rv =3D pde->proc_ops->proc_ioctl_buf(file, cmd, buf ?: (void *)arg);
-> +	pde_unpin(pde);
-> +	if (rv >=3D 0 && copy_to_user(uarg, buf, a.out))
-> +		return -EFAULT;
+> +	self->host =3D -1;
+> +	if (access(ADD_HOST, W_OK) && system("modprobe -q scsi_debug add_host=
+=3D0"))
+> +		SKIP(return, "no scsi_debug");
+> +	if (access(ADD_HOST, W_OK))
+> +		SKIP(return, ADD_HOST ": %s", strerror(errno));
+> +
+> +	/* host numbers are reused, so look for the one that's new */
+> +	ASSERT_EQ(list_hosts(before), 0);
+> +	ASSERT_EQ(add_host(1), 0);
+> +	ASSERT_EQ(list_hosts(after), 0);
+> +	self->host =3D new_host(before, after);
+> +	ASSERT_GE(self->host, 0);
+> +	snprintf(self->path, sizeof(self->path), HOST_DIR "/%d", self->host);
+> +}
+> +
+> +FIXTURE_TEARDOWN(host)
+> +{
+> +	if (self->host >=3D 0 && !access(self->path, F_OK))
+> +		add_host(-1);
+> +}
 
 [Severity: Medium]
-Should copy_from_user() and copy_to_user() in pde_ioctl_buf() in
-fs/proc/inode.c be guarded by checking a.in and a.out respectively?
+What happens if the test runs on a kernel where scsi_debug is available
+(CONFIG_SCSI_DEBUG is enabled), but CONFIG_SCSI_PROC_FS is disabled?
 
-Because a.in and a.out are runtime values loaded from
-proc_ops->proc_ioctl_args, check_copy_size() and _inline_copy_from_user() /
-_inline_copy_to_user() do not short-circuit when the length is 0 and still
-invoke raw_copy_from_user() / raw_copy_to_user().
+The sysfs attribute /sys/bus/pseudo/drivers/scsi_debug/add_host is still
+present and writable without CONFIG_SCSI_PROC_FS, while /proc/scsi is never
+created. In FIXTURE_SETUP(host), list_hosts(before) sees ENOENT on
+/proc/scsi/scsi_debug and returns 0, add_host(1) creates a new scsi_debug
+host in the kernel, and list_hosts(after) still sees ENOENT and returns 0
+with an empty bitmap.
 
-When a command has a.out =3D=3D 0 (such as an _IOW or _IO command) and user=
-space
-passes arg =3D=3D 0, calling copy_to_user(NULL, buf, 0) fails with -EFAULT =
-on
-C-SKY after ->proc_ioctl_buf() has already succeeded, because C-SKY checks =
-the
-destination pointer for NULL before checking whether the length is 0:
+As a result, new_host(before, after) returns -1 and ASSERT_GE(self->host, 0)
+fails the test instead of skipping for the missing prerequisite. Because
+FIXTURE_SETUP(host) aborts with self->host still set to -1, the newly
+created scsi_debug host is never removed by add_host(-1) and remains leaked.
 
-arch/csky/lib/usercopy.c:raw_copy_to_user() {
-	...
-	"0:     cmpnei  %1, 0           \n"
-	"       bf      8f              \n"
-	...
-}
-
-On UML, calling copy_from_user() with a.in =3D=3D 0 or copy_to_user() with
-a.out =3D=3D 0 still enters buffer_op() -> do_op_one_page() -> maybe_map() =
-->
-handle_page_fault() on uarg before checking if remain =3D=3D 0:
-
-arch/um/kernel/skas/uaccess.c:buffer_op() {
-	...
-	size =3D min(PAGE_ALIGN(addr) - addr, (unsigned long) len);
-	remain =3D len;
-
-	n =3D do_op_one_page(addr, size, is_write, op, arg);
-	if (n !=3D 0)
-		return (n < 0 ? remain : 0);
-	...
-}
-
-Additionally, when both a.in =3D=3D 0 and a.out =3D=3D 0, size is 0 and buf=
- remains
-NULL, so copy_to_user(uarg, NULL, 0) passes a NULL source pointer into
-raw_copy_to_user() (and memcpy() on CONFIG_UACCESS_MEMCPY or UML builds).
-
-Would it make sense to check if (a.in && copy_from_user(buf, uarg, a.in)) a=
-nd
-if (rv >=3D 0 && a.out && copy_to_user(uarg, buf, a.out))?
+Should FIXTURE_SETUP(host) check that /proc/scsi exists and skip before
+calling add_host(1)?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261102-work-procf=
-s-core-v1-0-75df35e4f8b8@kernel.org?part=3D15
+s-drivers-v1-0-a994bd4d3b1a@kernel.org?part=3D11
