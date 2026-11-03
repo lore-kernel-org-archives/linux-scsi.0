@@ -1,53 +1,66 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=183.62.165.209
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=199.89.1.14
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793735388;
-	b=yNtJRUfeJQQhYGEGGX8ANiD8Y015hezzhNN66NXYKjoR2pO8YN3z1H5rPWYIsacv+oxY
-	 rov2z9NSVntuir/EFET14aLCBmzZkiaPWkTXyP3YPp/CFEyYSoqHUMUgbG3d1JwyVK+Y0
-	 6wyG/GySiU6EncJ0kR/Ps2nJA4009/Jyjq7mjaq8sMEaMrrpUb3DNweIBbkMoYHJLpqYN
-	 gjjvxGGG/oN/i9rrh2yK5sxpNiPpJS0tk8LgeXJvynjrbQRVDDgrjLj51S0L1bEje3UO7
-	 1X8JNfx6e09SfQ4xIaxs2lZb6j2L/35uej2H1nXMHzdHBvMr2cQGTptt0GONu2k+kGA==
+	t=1793739093;
+	b=Y392jxThhgrf2/06ZTD1hsf2lh5ol5h3uzZowfPnH6N8uBXvXXxj1MJJPnRjRz5b8+fe
+	 /fNwCx+lKXcpEg2oqzO4br4XVuJs7C12Yk4+RS5KtJdOTyMQXb41h/fXhUFib/q1jeQPW
+	 mp6ooSQsuTgNXlC9BNltAFHUAujiOG5br4SgnkWGqgx+/2D556mBK880zi/QCXIsPqt6p
+	 wJPlF03YUOr5CO7YhLs09kk8N6s0IZoAGJ9zFv4bnYeLImN70zIBL/wMHbrRZmh/CEcCN
+	 BIT8oE3mIrTrazC2Lbf9VZ9qrbRT9/+A94uxG0MMyWUL4gDU/GkLdolv2iHEnHWaNOQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793735388;
-	h=DMARC-Filter:Received:Received:Received:X-Zmail-TransId:X-Mailer:
-	 Message-ID:Date:Mime-Version:From:To:Cc:Subject:Content-Type:X-MAIL:
-	 X-TLS:X-ENVELOPE-SENDER:X-SOURCE-IP:X-CLEAN:
-	 X-Fangmail-Anti-Spam-Filtered:X-Fangmail-MID-QID;
-	bh=wr1vBxqOwzVVeBlfORJLdh2wU2b9XxfZ/Zk2+hfs9Rs=;
-	b=f6bvV/NJknGdy8/xXmotPeHkBTeSIxMRwIF22rhDoXWUbkOeBYNq0O6vODauDhOKYtCv
-	 C48lbVyg4N7h4yII2CPNSgmfmxGP0GUN+LYuL6W5VjjLQwoq+aAVyorjzy8lkDU0JD/3y
-	 lbSiTUvYaoNp/dznxFDWyjPNXvXUDrw+XKq4tflsfYqjtUmgmIkLq3NkPWdzWe97jN4De
-	 rKQE4IzrQc1LS5HdP42Y36nCJI0vETgoi3dWGj4vN3J3/x/8n4DvOKDTOPQVLgbdnVW48
-	 dr0CudhvvexL4vv1DwPAsioca60hKdezt3W8KDc+EIZHjIvpOjRIagPncAFYIVn8E3g==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793739093;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Virus-Scanned:Received:
+	 Received:Message-ID:Date:MIME-Version:User-Agent:Subject:To:Cc:
+	 References:Content-Language:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=ImfCTvx9zEM0hCgk0rF4q02G78x6VIbWM4Sk8YP8Ob0=;
+	b=3mJvC8AMMMkNUjxwW3UuxdhbDvCi6/dZDjsUQuCR4fG6su+vpAj+iMG0rmZMb/8Zc3dx
+	 1Nvy7rCASVE5hkD3b6gyqt4j/kZHwsYdlA/9pERI3dT3917d04xcWDa0VKLP8mDsUvrmT
+	 foreV0jEPcWW7hJIu5GyN1KkOouXq1JewxYDeoBC6iGMkVU6ODLBZ1Ve1hPho3lOr/CJK
+	 0i6IQcCOA/c6saQhEDq1CQgbdPcd/3A2SQBwPL0jRa8wl8blsh2BzZLvKbsu57Ci2JI/e
+	 YeSbSfsPCEK6cl7yqS6MGfNUE83saoFp8XIyeT47PvNpGDXW4tt7yka5sdFhowBxEGg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=zte.com.cn;
-	spf=pass smtp.mailfrom=zte.com.cn;
-	arc=none smtp.remote-ip=183.62.165.209
-Received: from mxct.zte.com.cn (mxct.zte.com.cn [183.62.165.209])
+	dmarc=pass header.from=acm.org;
+	spf=pass smtp.mailfrom=acm.org;
+	dkim=pass header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b="10zhzj/c";
+	arc=none smtp.remote-ip=199.89.1.14
+Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FFAE606A32C;
-	Tue,  3 Nov 2026 19:49:47 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8FFAE606A32C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zte.com.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zte.com.cn
-Received: from mse-fl2.zte.com.cn (unknown [10.5.228.133])
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCD0F606A324;
+	Tue,  3 Nov 2026 20:51:32 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BCD0F606A324
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key, unprotected) header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=10zhzj/c
+Received: from localhost (localhost [127.0.0.1])
+	by 011.lax.mailroute.net (Postfix) with ESMTP id 4jK12X1QzGz1XM30j;
+	Tue,  3 Nov 2026 20:51:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1793739090; x=1796331091; bh=ImfCTvx9zEM0hCgk0rF4q02G
+	78x6VIbWM4Sk8YP8Ob0=; b=10zhzj/cEmoTYtBDFc+VkMpDCeZJyLXhcYMLX5Sc
+	Auh8TSc0cEPz0TJ1NPb8iFqEZTZmQUh5hsfbDDGNnqsdP0rFPMa3TIkqM4jRUNhD
+	wDmhUNk+H3joOIu7TDmps2jIf+IxlV5el89pdmbPB05pAED9no28ZlKZ41a7rM1K
+	4Ur7M2aQnxyHEh00NeNSVlQrQ7S9aPD5L2GXJDuwrK1lhDtQYfcesxZEo6nDDbtV
+	g7L71EMfofKkEzDinYelDFrTHmsqRWbdfhI3+sAWnTfIAQoKogrkQdtet3CMabh/
+	zH+xhaIt16DSEP+nreCD5dV4y7Yt7k7u8K/2qLxYGbJU6Q==
+X-Virus-Scanned: by MailRoute
+Received: from 011.lax.mailroute.net ([127.0.0.1])
+ by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id t_SHQYvpfgLy; Tue,  3 Nov 2026 20:51:30 +0000 (UTC)
+Received: from [100.80.231.125] (unknown [104.135.182.41])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mxct.zte.com.cn (FangMail) with ESMTPS id 4jJzgD4KJGz57KTr;
-	Wed, 04 Nov 2026 03:49:44 +0800 (CST)
-Received: from xaxapp02.zte.com.cn ([10.88.97.241])
-	by mse-fl2.zte.com.cn with SMTP id 6A3JnbwE052245;
-	Wed, 4 Nov 2026 03:49:37 +0800 (+08)
-	(envelope-from shao.mingyin@zte.com.cn)
-Received: from mapi (xaxapp05[null])
-	by mapi (Zmail) with MAPI id mid32;
-	Wed, 4 Nov 2026 03:49:40 +0800 (CST)
-X-Zmail-TransId: 2afc6aea3ad43f2-f7913
-X-Mailer: Zmail v1.0
-Message-ID: <20261104034940800qG8bny1y_TdrfjLr-KGpv@zte.com.cn>
-Date: Wed, 4 Nov 2026 03:49:40 +0800 (CST)
+	(Authenticated sender: bvanassche@acm.org)
+	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4jK12T68Y1z1XM30h;
+	Tue,  3 Nov 2026 20:51:29 +0000 (UTC)
+Message-ID: <ca5e40fc-125c-439c-af28-a277d12a6df7@acm.org>
+Date: Tue, 3 Nov 2026 12:51:29 -0800
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -56,82 +69,31 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0
-From: <shao.mingyin@zte.com.cn>
-To: <martin.petersen@oracle.com>, <alim.akhtar@samsung.com>,
-        <bvanassche@acm.org>, <linux-scsi@vger.kernel.org>
-Cc: <james.bottomley@hansenpartnership.com>, <peter.griffin@linaro.org>,
-        <beanhuo@micron.com>, <stanleyjhu@google.com>,
-        <linux-samsung-soc@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: =?UTF-8?B?W1BBVENIIHYzXSBzY3NpOiB1ZnM6IGV4eW5vczogVXNlIEJJVCgpIGZvciB0aGUgbmV4dXMgdHlwZSB0YWcgbWFzaw==?=
-Content-Type: text/plain;
-	charset="UTF-8"
-X-MAIL:mse-fl2.zte.com.cn 6A3JnbwE052245
-X-TLS: YES
-X-ENVELOPE-SENDER: shao.mingyin@zte.com.cn
-X-SOURCE-IP: 10.5.228.133 unknown Wed, 04 Nov 2026 03:49:44 +0800
-X-CLEAN: YES
-X-Fangmail-Anti-Spam-Filtered: true
-X-Fangmail-MID-QID: 6AEA3AD8.000/4jJzgD4KJGz57KTr
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] block: Keep RPM_ACTIVE in blk_pre_runtime_resume() when
+ already active
+To: Brian Norris <briannorris@chromium.org>
+Cc: Stanley Jhu <stanleyjhu@google.com>, Jens Axboe <axboe@kernel.dk>,
+ "Rafael J . Wysocki" <rafael@kernel.org>,
+ Praveen Talari <praveen.talari@oss.qualcomm.com>,
+ Alan Stern <stern@rowland.harvard.edu>, linux-block@vger.kernel.org,
+ linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org, stable@vger.kernel.org
+References: <20261029040001.2100001-1-stanleyjhu@google.com>
+ <8125a75a-ea47-49f8-90e4-7f7c83db90e2@acm.org> <auo6tLmH0R4_TRG6@google.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <auo6tLmH0R4_TRG6@google.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-From: Shao Mingyin <shao.mingyin@zte.com.cn>
+On 11/3/26 11:49 AM, Brian Norris wrote:
+> Pardon me if I'm misreading/misunderstanding, but I believe your
+> suggestion is essentially to unwind the quoted commit 6e1fcab00a23,
+> which might reintroduce a deadlock.
 
-exynos_ufs_specify_nexus_t_xfer_req() and
-exynos_ufs_specify_nexus_t_tm_req() set and clear the nexus type mask
-with '(1 << tag)'.  Commit 01aad16c2257 ("scsi: ufs: exynos: Fix
-programming of HCI_UTRL_NEXUS_TYPE") converted the same expression in
-exynos_ufs_post_link() to BIT() and noted that the UTMRL access should be
-changed as well; the four remaining mask computations were missed.
+Hmm ... I think that you are right. Let me take another look at this
+patch.
 
-Use BIT() there too, matching the rest of the driver.  The transfer
-request tag is in 0..nutrs-1, and nutrs can be 32, so BIT() makes the
-width of the shift explicit; the task management tag is in 0..nutmrs-1
-(at most 7), so only the transfer side can reach bit 31.  No functional
-change.
-
-Signed-off-by: Shao Mingyin <shao.mingyin@zte.com.cn>
----
-v3:
-- Make this a standalone cleanup: no Fixes: and no Cc: stable.  The
-  kernel is built with -fno-strict-overflow, under which GCC and Clang
-  both define the signed shift here and neither trips the shift
-  sanitizer, so there is no runtime bug to backport.
-- nutrs counts UTP transfer request slots and nutmrs counts task
-  management request slots; only the former can be 32.
-- Capitalize the subject verb.
-
- drivers/ufs/host/ufs-exynos.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/ufs/host/ufs-exynos.c b/drivers/ufs/host/ufs-exynos.c
-index 3bcbc9ebbb28..ee47958253bb 100644
---- a/drivers/ufs/host/ufs-exynos.c
-+++ b/drivers/ufs/host/ufs-exynos.c
-@@ -997,9 +997,9 @@ static void exynos_ufs_specify_nexus_t_xfer_req(struct ufs_hba *hba,
- 	type =  hci_readl(ufs, HCI_UTRL_NEXUS_TYPE);
- 
- 	if (is_scsi_cmd)
--		hci_writel(ufs, type | (1 << tag), HCI_UTRL_NEXUS_TYPE);
-+		hci_writel(ufs, type | BIT(tag), HCI_UTRL_NEXUS_TYPE);
- 	else
--		hci_writel(ufs, type & ~(1 << tag), HCI_UTRL_NEXUS_TYPE);
-+		hci_writel(ufs, type & ~BIT(tag), HCI_UTRL_NEXUS_TYPE);
- }
- 
- static void exynos_ufs_specify_nexus_t_tm_req(struct ufs_hba *hba,
-@@ -1013,13 +1013,13 @@ static void exynos_ufs_specify_nexus_t_tm_req(struct ufs_hba *hba,
- 	switch (func) {
- 	case UFS_ABORT_TASK:
- 	case UFS_QUERY_TASK:
--		hci_writel(ufs, type | (1 << tag), HCI_UTMRL_NEXUS_TYPE);
-+		hci_writel(ufs, type | BIT(tag), HCI_UTMRL_NEXUS_TYPE);
- 		break;
- 	case UFS_ABORT_TASK_SET:
- 	case UFS_CLEAR_TASK_SET:
- 	case UFS_LOGICAL_RESET:
- 	case UFS_QUERY_TASK_SET:
--		hci_writel(ufs, type & ~(1 << tag), HCI_UTMRL_NEXUS_TYPE);
-+		hci_writel(ufs, type & ~BIT(tag), HCI_UTMRL_NEXUS_TYPE);
- 		break;
- 	}
- }
+Bart.
