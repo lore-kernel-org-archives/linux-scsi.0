@@ -1,55 +1,53 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=160.30.148.35
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=183.62.165.209
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793735384;
-	b=P3ZHhQqNNk4l55tqPQtiDZrjhVUE6yN8UZ9HvkzQUayaxvgtVvrU6LZRRnFS9Xrmez+9
-	 bW1JSeV7TK9qXALkzPgaDzMTQF3LOYlx066wvNJEt8kg8lkL7cRIDi4agMxCj5t++y8EU
-	 oFS7q2a5o2zow19N06aapXI1GJUv4uJZeupAn19pTXNKCW6jyadbAmEJtgRpgTzOKTRZh
-	 MuFa7H0+DUZ2G5sFOiZTEBVI+u38xkGgtDfVppH1QhEgz7qjzinNPGLKJFVQYWpCpd5h2
-	 YGY4cFFAEdhb3cB7qgwyiIwC/8MTR7gtbjLvNvH/gLAAGyhtw9l397tu7n1NzAtbfUg==
+	t=1793735388;
+	b=yNtJRUfeJQQhYGEGGX8ANiD8Y015hezzhNN66NXYKjoR2pO8YN3z1H5rPWYIsacv+oxY
+	 rov2z9NSVntuir/EFET14aLCBmzZkiaPWkTXyP3YPp/CFEyYSoqHUMUgbG3d1JwyVK+Y0
+	 6wyG/GySiU6EncJ0kR/Ps2nJA4009/Jyjq7mjaq8sMEaMrrpUb3DNweIBbkMoYHJLpqYN
+	 gjjvxGGG/oN/i9rrh2yK5sxpNiPpJS0tk8LgeXJvynjrbQRVDDgrjLj51S0L1bEje3UO7
+	 1X8JNfx6e09SfQ4xIaxs2lZb6j2L/35uej2H1nXMHzdHBvMr2cQGTptt0GONu2k+kGA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793735384;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793735388;
 	h=DMARC-Filter:Received:Received:Received:X-Zmail-TransId:X-Mailer:
-	 Message-ID:In-Reply-To:References:Date:Mime-Version:From:To:Cc:
-	 Subject:Content-Type:X-MAIL:X-TLS:X-ENVELOPE-SENDER:X-SOURCE-IP:
-	 X-CLEAN:X-Fangmail-Anti-Spam-Filtered:X-Fangmail-MID-QID;
-	bh=4vPuarKyRMKeh3rN+6+a8c86tLfNuc2zV04pU1af7g0=;
-	b=H8RDjVs9pjfulwbrt/iFWvw45xKcv44izEaPZlS7gVMrvRAQx7mEHNiQ/N7aiTN487Zw
-	 A59F2XVvhNbspXIYxBWmeG3pWgUtLb4ix3rhpfw1QK02RbxDN9MxGbajoziW/fSasgejN
-	 rleSZ3L7QsTQalEkvApmdd90gAp683/MheBlaBYygZZGPTQjFEQ7YPOco198GBgEftnJd
-	 n3K3G9jBC45bM/6i03oygn0oNT3av1cIO34RRynUBxhYR/MpkQ9y/783YodSvau/90BrU
-	 3gD6ym0Rdmmy/PGr1kHgmYeZbZZeyMOK/X2ukZjrF+3UU4T27uEcyB8vPRrQMDnYl8g==
+	 Message-ID:Date:Mime-Version:From:To:Cc:Subject:Content-Type:X-MAIL:
+	 X-TLS:X-ENVELOPE-SENDER:X-SOURCE-IP:X-CLEAN:
+	 X-Fangmail-Anti-Spam-Filtered:X-Fangmail-MID-QID;
+	bh=wr1vBxqOwzVVeBlfORJLdh2wU2b9XxfZ/Zk2+hfs9Rs=;
+	b=f6bvV/NJknGdy8/xXmotPeHkBTeSIxMRwIF22rhDoXWUbkOeBYNq0O6vODauDhOKYtCv
+	 C48lbVyg4N7h4yII2CPNSgmfmxGP0GUN+LYuL6W5VjjLQwoq+aAVyorjzy8lkDU0JD/3y
+	 lbSiTUvYaoNp/dznxFDWyjPNXvXUDrw+XKq4tflsfYqjtUmgmIkLq3NkPWdzWe97jN4De
+	 rKQE4IzrQc1LS5HdP42Y36nCJI0vETgoi3dWGj4vN3J3/x/8n4DvOKDTOPQVLgbdnVW48
+	 dr0CudhvvexL4vv1DwPAsioca60hKdezt3W8KDc+EIZHjIvpOjRIagPncAFYIVn8E3g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=zte.com.cn;
 	spf=pass smtp.mailfrom=zte.com.cn;
-	arc=none smtp.remote-ip=160.30.148.35
-Received: from mxhk.zte.com.cn (mxhk.zte.com.cn [160.30.148.35])
+	arc=none smtp.remote-ip=183.62.165.209
+Received: from mxct.zte.com.cn (mxct.zte.com.cn [183.62.165.209])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C813606A324;
-	Tue,  3 Nov 2026 19:49:43 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1C813606A324
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FFAE606A32C;
+	Tue,  3 Nov 2026 19:49:47 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8FFAE606A32C
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zte.com.cn
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zte.com.cn
-Received: from mse-fl1.zte.com.cn (unknown [10.5.228.132])
+Received: from mse-fl2.zte.com.cn (unknown [10.5.228.133])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mxhk.zte.com.cn (FangMail) with ESMTPS id 4jJzg93bQ7z8XrrJ;
-	Wed, 04 Nov 2026 03:49:41 +0800 (CST)
-Received: from xaxapp01.zte.com.cn ([10.88.99.176])
-	by mse-fl1.zte.com.cn with SMTP id 6A3JnWaJ010926;
-	Wed, 4 Nov 2026 03:49:32 +0800 (+08)
+	by mxct.zte.com.cn (FangMail) with ESMTPS id 4jJzgD4KJGz57KTr;
+	Wed, 04 Nov 2026 03:49:44 +0800 (CST)
+Received: from xaxapp02.zte.com.cn ([10.88.97.241])
+	by mse-fl2.zte.com.cn with SMTP id 6A3JnbwE052245;
+	Wed, 4 Nov 2026 03:49:37 +0800 (+08)
 	(envelope-from shao.mingyin@zte.com.cn)
-Received: from mapi (xaxapp04[null])
+Received: from mapi (xaxapp05[null])
 	by mapi (Zmail) with MAPI id mid32;
-	Wed, 4 Nov 2026 03:49:35 +0800 (CST)
-X-Zmail-TransId: 2afb6aea3acf164-ff67d
+	Wed, 4 Nov 2026 03:49:40 +0800 (CST)
+X-Zmail-TransId: 2afc6aea3ad43f2-f7913
 X-Mailer: Zmail v1.0
-Message-ID: <20261104034935427D1IVl2AY_0fcWTEaGq7-g@zte.com.cn>
-In-Reply-To: <2ed72d06-a938-422e-a62c-562f9efbb62a@acm.org>
-References: 202611040259247915t_cYYK0k5pPbEqfdTAQu@zte.com.cn,2ed72d06-a938-422e-a62c-562f9efbb62a@acm.org
-Date: Wed, 4 Nov 2026 03:49:35 +0800 (CST)
+Message-ID: <20261104034940800qG8bny1y_TdrfjLr-KGpv@zte.com.cn>
+Date: Wed, 4 Nov 2026 03:49:40 +0800 (CST)
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -60,42 +58,80 @@ List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 Mime-Version: 1.0
 From: <shao.mingyin@zte.com.cn>
-To: <bvanassche@acm.org>
-Cc: <martin.petersen@oracle.com>, <alim.akhtar@samsung.com>,
-        <james.bottomley@hansenpartnership.com>, <peter.griffin@linaro.org>,
+To: <martin.petersen@oracle.com>, <alim.akhtar@samsung.com>,
+        <bvanassche@acm.org>, <linux-scsi@vger.kernel.org>
+Cc: <james.bottomley@hansenpartnership.com>, <peter.griffin@linaro.org>,
         <beanhuo@micron.com>, <stanleyjhu@google.com>,
-        <linux-scsi@vger.kernel.org>, <linux-samsung-soc@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <stable@vger.kernel.org>
-Subject: =?UTF-8?B?UmU6IFtQQVRDSCB2MiAwLzJdIHNjc2k6IHVmczogZml4IGFuIFJQTUIgdGVhcmRvd24gY3ljbGUgYW5kIGEgc2hpZnQgVUI=?=
+        <linux-samsung-soc@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: =?UTF-8?B?W1BBVENIIHYzXSBzY3NpOiB1ZnM6IGV4eW5vczogVXNlIEJJVCgpIGZvciB0aGUgbmV4dXMgdHlwZSB0YWcgbWFzaw==?=
 Content-Type: text/plain;
 	charset="UTF-8"
-X-MAIL:mse-fl1.zte.com.cn 6A3JnWaJ010926
+X-MAIL:mse-fl2.zte.com.cn 6A3JnbwE052245
 X-TLS: YES
 X-ENVELOPE-SENDER: shao.mingyin@zte.com.cn
-X-SOURCE-IP: 10.5.228.132 unknown Wed, 04 Nov 2026 03:49:41 +0800
+X-SOURCE-IP: 10.5.228.133 unknown Wed, 04 Nov 2026 03:49:44 +0800
 X-CLEAN: YES
 X-Fangmail-Anti-Spam-Filtered: true
-X-Fangmail-MID-QID: 6AEA3AD5.000/4jJzg93bQ7z8XrrJ
+X-Fangmail-MID-QID: 6AEA3AD8.000/4jJzgD4KJGz57KTr
 
-On 11/3/26 11:28, Bart Van Assche wrote:
-> Please take a look at the attached review report from an LLM.
+From: Shao Mingyin <shao.mingyin@zte.com.cn>
 
-Thanks, I went through it and verified the points locally, including a
-KASAN reproduction of the devm lifetime problem with
-CONFIG_DEBUG_KOBJECT_RELEASE: devres frees ufs_rpmb when the host
-detaches while the delayed kobject release of &ufs_rpmb->dev still runs.
+exynos_ufs_specify_nexus_t_xfer_req() and
+exynos_ufs_specify_nexus_t_tm_req() set and clear the nexus type mask
+with '(1 << tag)'.  Commit 01aad16c2257 ("scsi: ufs: exynos: Fix
+programming of HCI_UTRL_NEXUS_TYPE") converted the same expression in
+exynos_ufs_post_link() to BIT() and noted that the UTMRL access should be
+changed as well; the four remaining mask computations were missed.
 
-I'm withdrawing patch 1/2.  The ordering it adds is already part of
-Stanley's v5 series (2/3, "Decouple device lifecycle from devres to avoid
-UAF", Reviewed-by: Bean Huo); that patch also allocates ufs_rpmb with
-kzalloc(), frees it in the release callback, pins the RPMB WLUN and
-guards rpmb_route_frames() against teardown.  Mine only breaks the
-refcount cycle and leaves the ownership unchanged, so it is incomplete
-and a duplicate.
+Use BIT() there too, matching the rest of the driver.  The transfer
+request tag is in 0..nutrs-1, and nutrs can be 32, so BIT() makes the
+width of the shift explicit; the task management tag is in 0..nutmrs-1
+(at most 7), so only the transfer side can reach bit 31.  No functional
+change.
 
-I'll resend the Exynos BIT() change separately, as a cleanup without
-Cc: stable and without Fixes:, and with the nutrs/nutmrs description
-fixed.
+Signed-off-by: Shao Mingyin <shao.mingyin@zte.com.cn>
+---
+v3:
+- Make this a standalone cleanup: no Fixes: and no Cc: stable.  The
+  kernel is built with -fno-strict-overflow, under which GCC and Clang
+  both define the signed shift here and neither trips the shift
+  sanitizer, so there is no runtime bug to backport.
+- nutrs counts UTP transfer request slots and nutmrs counts task
+  management request slots; only the former can be 32.
+- Capitalize the subject verb.
 
-Thanks,
-Shao
+ drivers/ufs/host/ufs-exynos.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/ufs/host/ufs-exynos.c b/drivers/ufs/host/ufs-exynos.c
+index 3bcbc9ebbb28..ee47958253bb 100644
+--- a/drivers/ufs/host/ufs-exynos.c
++++ b/drivers/ufs/host/ufs-exynos.c
+@@ -997,9 +997,9 @@ static void exynos_ufs_specify_nexus_t_xfer_req(struct ufs_hba *hba,
+ 	type =  hci_readl(ufs, HCI_UTRL_NEXUS_TYPE);
+ 
+ 	if (is_scsi_cmd)
+-		hci_writel(ufs, type | (1 << tag), HCI_UTRL_NEXUS_TYPE);
++		hci_writel(ufs, type | BIT(tag), HCI_UTRL_NEXUS_TYPE);
+ 	else
+-		hci_writel(ufs, type & ~(1 << tag), HCI_UTRL_NEXUS_TYPE);
++		hci_writel(ufs, type & ~BIT(tag), HCI_UTRL_NEXUS_TYPE);
+ }
+ 
+ static void exynos_ufs_specify_nexus_t_tm_req(struct ufs_hba *hba,
+@@ -1013,13 +1013,13 @@ static void exynos_ufs_specify_nexus_t_tm_req(struct ufs_hba *hba,
+ 	switch (func) {
+ 	case UFS_ABORT_TASK:
+ 	case UFS_QUERY_TASK:
+-		hci_writel(ufs, type | (1 << tag), HCI_UTMRL_NEXUS_TYPE);
++		hci_writel(ufs, type | BIT(tag), HCI_UTMRL_NEXUS_TYPE);
+ 		break;
+ 	case UFS_ABORT_TASK_SET:
+ 	case UFS_CLEAR_TASK_SET:
+ 	case UFS_LOGICAL_RESET:
+ 	case UFS_QUERY_TASK_SET:
+-		hci_writel(ufs, type & ~(1 << tag), HCI_UTMRL_NEXUS_TYPE);
++		hci_writel(ufs, type & ~BIT(tag), HCI_UTMRL_NEXUS_TYPE);
+ 		break;
+ 	}
+ }
