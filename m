@@ -1,76 +1,52 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=203.254.224.34
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=159.226.251.81
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793698709;
-	b=zpjNeer2jPvKtQ/cbb5YhseAm3EBMASJz3yoPyjTLLS7IKZUIx+WPRIAecT5cYC7ryMy
-	 r9P1gdpfz7uimhz8wFV5Pzyk38kpGH6QNnaxK8514UqX6O0fFF329B6PtEyhos4BOYsYj
-	 KyGHOU9OjE2/emdC4pyhO2G63Qz2JCV8ZHMRQCnRaQ1hBfMc1jDHQfZOWe9LmonKEtwaj
-	 vmkyTYNda4aM/bFCLSwJ7SZCufftdAdNNGcsEJCnx0ymTk/pmLQjGGTVbowGC2XeqNUL8
-	 qSLDQTXqf9fPhaey2M01q4B4CYafjPrRs7sQB2p94u84qfy7QTlX/uewf8V/SKybGfw==
+	t=1793699180;
+	b=kjMFbRSMjL2lajoZogohDzuL6C4CIyiCvpC035X2Q1o/Teg50C6+GGJFGtYVhPkUWSg2
+	 wMW4CbsSB1clu3r3c8A3Y3b4rnTgqJO8Ka/NIwPLPXcPl/tNLe+DHXZvS0TgoUzk15ClF
+	 +pSUadz9GcYZvBIsjpBT2XAFRSRGXZXeaAzeF+nfNoV5G/SgAKb9fsOiUPHxBH1JTFTXq
+	 ZYFXPtfaCeAjDJ2g8+/QxsAY9ciFUmFYzF/ktNhYaNRGbpRmSqZQgg4yXoWsRbsqoe4l6
+	 steRAPo9akIOGQ7ld4kEj/PQrm+IGiai+9VyFbeVro6X2d+wbrq5i0JxUCixnHJx81w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793698709;
-	h=DMARC-Filter:Received:DKIM-Filter:DKIM-Signature:Received:Received:
-	 Received:Received:From:To:Subject:Date:Message-Id:X-Mailer:
-	 In-Reply-To:MIME-Version:Content-Transfer-Encoding:X-CMS-MailID:
-	 X-Msg-Generator:Content-Type:X-Sendblock-Type:CMS-TYPE:X-CPGSPASS:
-	 cpgsPolicy:X-CFilter-Loop:X-CMS-RootMailID:References;
-	bh=KVy14myF4mRZ5Al3DN/5JiuYBIeU6oA6zQbK4opNW+c=;
-	b=Jh2EkuVD0J6FA6XAZJWtNveMf3htsKlnBMPElH/JrpbV+dbKFqK+eagX5ne2OGVEWh4O
-	 DKHJYW56uQ5aK+ocdUXLSAqx863rtfyAz7L5sXiUz16UHw7z5rKMJJm0WPJhODyhonuj/
-	 xT9h2IymVl9uRuIqOUxxBF9fBLD4hr8lPaM35Lb8kS8VQ2DEzKbVCH3IkI+C13I1pG47l
-	 1pI27wd7oqv74cmPpei0rdT/ZYMHHduvUPj7Syh4KSKCXSNSzobjd/QoS2s+FrG2eidXo
-	 k/vRw3cxSi9Dvcz4Ysyss6c3nGUkINH2GdJNjJ68WIX/XrTKbBEQOi44arO9Lre41ZA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793699180;
+	h=DMARC-Filter:Received:From:To:Cc:Subject:Date:Message-Id:X-Mailer:
+	 MIME-Version:Content-Transfer-Encoding:X-CM-TRANSID:
+	 X-Coremail-Antispam:X-Originating-IP:X-CM-SenderInfo;
+	bh=IErLZQ5klLGiNPfBwdYPl2dFtqBHQL7H8/SqhYiFBvE=;
+	b=V9gFfcvs79JGKmznm9+d/9wSgDZmZNu/x/X5IFb/RF4iIAJsepeqpdqqik58Yob6HdQB
+	 DazfW9QDgapawnRchjwLBBtozQ3mTwFdJGWNlChpSkEjB+fQe+ts54gsEe5XJOMZlk1Zg
+	 0SvfolRG//zr85FaMsI41FhAppIE1dT0JpnDCLra1BKIEI4WUvWtlZ6E7gBAcMG+BIKBB
+	 yPjdFlZw7TbHcLzn1jPEjZjeh/9WQ0W5po9zwywKQq2H4lDKjtaXJBeLYGXPnjCGxBln7
+	 g/+BRxr4SDe6wYuYO97mMBmedbq+Sq/o2gS6dsQxTqeo8GEhJD8Of/iwzXdaO11v8Fg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=samsung.com;
-	spf=pass smtp.mailfrom=samsung.com;
-	dkim=pass header.d=samsung.com header.i=@samsung.com header.a=rsa-sha256 header.s=mail20170921 header.b=py97u9mN;
-	arc=none smtp.remote-ip=203.254.224.34
-Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+	dmarc=none header.from=iscas.ac.cn;
+	spf=pass smtp.mailfrom=iscas.ac.cn;
+	arc=none smtp.remote-ip=159.226.251.81
+Received: from cstnet.cn (smtp81.cstnet.cn [159.226.251.81])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6BD23606A326
-	for <linux-scsi@vger.kernel.org>; Tue,  3 Nov 2026 09:38:28 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6BD23606A326
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=samsung.com header.i=@samsung.com header.a=rsa-sha256 header.s=mail20170921 header.b=py97u9mN
-Received: from epcas2p1.samsung.com (unknown [182.195.41.53])
-	by mailout4.samsung.com (KnoxPortal) with ESMTP id 20261103093826epoutp049b95d89faea80cd16b8aec63a108db0b~kf3hSS-mo1279812798epoutp04f
-	for <linux-scsi@vger.kernel.org>; Tue,  3 Nov 2026 09:38:26 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20261103093826epoutp049b95d89faea80cd16b8aec63a108db0b~kf3hSS-mo1279812798epoutp04f
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1793698706;
-	bh=KVy14myF4mRZ5Al3DN/5JiuYBIeU6oA6zQbK4opNW+c=;
-	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=py97u9mNO6VBk7vjbRqfBvdtYo6uc8imEA2TTAB4bpUWjdFjwam4Fo3DL531GCjkI
-	 9uXCHZBzdXlKzkpMHb6odhVmQ2V7ViRMySsluf9HJN2J6hXsmApQj8X/02ijGg7V5b
-	 oOne+pFeZ1pZ1+n7tB5OtGbHCCWk7NlN5YE6z8TA=
-Received: from epsnrtp01.localdomain (unknown [182.195.42.153]) by
-	epcas2p2.samsung.com (KnoxPortal) with ESMTPS id
-	20261103093826epcas2p255c10a6e087d5568f27af306550c57f0~kf3g-Pn670701907019epcas2p2V;
-	Tue,  3 Nov 2026 09:38:26 +0000 (GMT)
-Received: from epcas2p1.samsung.com (unknown [182.195.38.211]) by
-	epsnrtp01.localdomain (Postfix) with ESMTP id 4jJk5s4ybQz6B9m4; Tue,  3 Nov
-	2026 09:38:25 +0000 (GMT)
-Received: from epsmtip1.samsung.com (unknown [182.195.34.30]) by
-	epcas2p3.samsung.com (KnoxPortal) with ESMTPA id
-	20261103093825epcas2p3d741e7c61c82ea89cbd63299b853732d~kf3gN0RcN2578925789epcas2p3U;
-	Tue,  3 Nov 2026 09:38:25 +0000 (GMT)
-Received: from ubuntu.dsn.sec.samsung.com (unknown [12.81.221.204]) by
-	epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
-	20261103093825epsmtip1091e8620de6999e5bafe61133514c023~kf3gHwW5c0972309723epsmtip14;
-	Tue,  3 Nov 2026 09:38:25 +0000 (GMT)
-From: HOYOUNG SEO <hy50.seo@samsung.com>
-To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	bvanassche@acm.org, mkp@kernel.org, martin.petersen@oracle.com,
-	stanleyjhu@google.com, alim.akhtar@samsung.com, kwangwon.min@samsung.com,
-	kwmad.kim@samsung.com, cpgs@samsung.com, h10.kim@samsung.com
-Subject: Re: [PATCH v3 0/2] scsi: ufs: core: Avoid redundant link recovery
- during system resume
-Date: Tue,  3 Nov 2026 18:33:58 +0900
-Message-Id: <20261103093358.1835628-1-hy50.seo@samsung.com>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2D1A6082BC0;
+	Tue,  3 Nov 2026 09:46:18 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org F2D1A6082BC0
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
+Received: from dfae2b116770.home.arpa (unknown [36.110.52.2])
+	by APP-03 (Coremail) with SMTP id rQCowAAHF5horelqOE87AA--.2657S2;
+	Tue, 03 Nov 2026 17:46:17 +0800 (CST)
+From: Wentao Liang <vulab@iscas.ac.cn>
+To: Sathya Prakash <sathya.prakash@broadcom.com>,
+	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
+	Ranjan Kumar <ranjan.kumar@broadcom.com>
+Cc: MPT-FusionLinux.pdl@broadcom.com,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Wentao Liang <vulab@iscas.ac.cn>,
+	stable@vger.kernel.org
+Subject: [PATCH 1/4] scsi: mptfusion: Put the SCSI device in mptspi_write_spi_device_pg1()
+Date: Tue,  3 Nov 2026 09:46:25 +0000
+Message-Id: <20261103094625.1289590-1-vulab@iscas.ac.cn>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <cover.1792989286.git.hy50.seo@samsung.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -81,40 +57,61 @@ List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CMS-MailID: 20261103093825epcas2p3d741e7c61c82ea89cbd63299b853732d
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-CMS-TYPE: 102P
-X-CPGSPASS: Y
-cpgsPolicy: CPGSC10-234,Y
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20261103093825epcas2p3d741e7c61c82ea89cbd63299b853732d
-References: <cover.1792989286.git.hy50.seo@samsung.com>
-	<CGME20261103093825epcas2p3d741e7c61c82ea89cbd63299b853732d@epcas2p3.samsung.com>
+X-CM-TRANSID:rQCowAAHF5horelqOE87AA--.2657S2
+X-Coremail-Antispam: 1UD129KBjvJXoW7Cw18GF15trWUXrWfur1rZwb_yoW8Xr45pF
+	WUWayjyF98GrW7KFnxGa45ZFyY93yIy3yrC3s7Ca4Ig3WrJFy5GrykJFyrWrsYyFZ3GFWU
+	Zr47tF1xurWDZrJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUvY14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26ryj6F1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+	2Ix0cI8IcVAFwI0_Jw0_WrylYx0Ex4A2jsIE14v26F4UJVW0owAm72CE4IkC6x0Yz7v_Jr
+	0_Gr1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7MxkF7I0En4kS14v2
+	6r1q6r43MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrV
+	AFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCI
+	c40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r4j6ryUMIIF0xvE2Ix0cI8IcVCY1x0267
+	AKxVW8Jr0_Cr1UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWx
+	JVW8Jr1lIxAIcVC2z280aVCY1x0267AKxVW8Jr0_Cr1UYxBIdaVFxhVjvjDU0xZFpf9x0J
+	jU-B_UUUUU=
+X-CM-SenderInfo: pyxotu46lvutnvoduhdfq/1tbiBwgAA2rpnO5OTQAAs+
 
-Hi Bart, Peter, Stanley, Bean,
+mptspi_write_spi_device_pg1() walks the LUNs of the target looking for a
+tape device so that inline data padding can be enabled for it.  The loop
+uses scsi_device_lookup_by_target(), which takes a reference on the
+returned scsi_device, but the reference is never dropped: not when the
+LUN turns out not to be a tape and not when the loop is left after a tape
+has been found.  Every SPI negotiation that runs with a minimum sync
+period of 8 therefore leaks one reference to a SCSI device and keeps the
+device from being released.
 
-A gentle ping on this series. It fixes a small race during system
-resume: if a LINERESET is reported and the hibern8 exit fails in
-__ufshcd_wl_resume(), both ufshcd_err_handler() (through its early
-pm_op_in_progress path) and __ufshcd_wl_resume() call
-ufshcd_link_recovery(), and nothing serializes the two.
+Release the reference with scsi_device_put() both before moving on to the
+next LUN and before leaving the loop.
 
-  1/2 makes ufshcd_link_recovery() clear the saved errors the way
-      ufshcd_reset_and_restore() already does, so the error handler
-      does not act on errors that have already been recovered.
+Fixes: 19fff154e7ee ("[SCSI] mptfusion: Adding inline data padding support for TAPE drive.")
+Cc: stable@vger.kernel.org
+Assisted-by: DeepSeek-V4.1-Flash and OpenAI Codex
+Signed-off-by: Wentao Liang <vulab@iscas.ac.cn>
+---
+ drivers/message/fusion/mptspi.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-  2/2 makes the error handler wait for host_sem instead of recovering
-      the link early when hba->is_sys_suspended is set. The early path
-      added by commit f966e02ae521 is kept for runtime PM, where
-      host_sem is not held.
+diff --git a/drivers/message/fusion/mptspi.c b/drivers/message/fusion/mptspi.c
+index 56892b1f3de2..9c513ba9fe05 100644
+--- a/drivers/message/fusion/mptspi.c
++++ b/drivers/message/fusion/mptspi.c
+@@ -914,8 +914,11 @@ static int mptspi_write_spi_device_pg1(struct scsi_target *starget,
+ 				nego_parms |= MPI_SCSIDEVPAGE1_RP_IDP;
+ 				pg1->RequestedParameters =
+ 				    cpu_to_le32(nego_parms);
++				scsi_device_put(sdev);
+ 				break;
+ 			}
++			if (sdev)
++				scsi_device_put(sdev);
+ 		}
+ 	}
+ 
+-- 
+2.34.1
 
-Since v2 only the commit message of 2/2 changed, following the Sashiko
-review. Sashiko did not report any issues on v3.
-
-Any review or comment would be appreciated, especially on 2/2 and the
-system PM vs. runtime PM difference.
-
-Thanks,
-Hoyoung
