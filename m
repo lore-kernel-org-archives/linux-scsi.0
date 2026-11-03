@@ -1,54 +1,66 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.146
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=199.89.1.16
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793725318;
-	b=NQEvpBW/Otgx5eYKmADVR60paU9pgXnoVaprwVnj6/K8JPjg1T/ZfO3pyTKwFUk+MEmr
-	 7+VCwKok3dAPJsNtOTnN12hdOeQ5yKFciuztAYmp4LItHdvYS2WtZ1DGYc1OYS6WipVrp
-	 e9IcZBNlz4NsLdbliKvS7BVXcTBoDdLTXr2zlP5j7vUEeK5QRhZarDfwR3M9BoIY5Q4Wx
-	 fQj7Ed7TshHJbYZPhYNNcFwycBsfe739/+sFYCFPXJlEFn4vBK1SvVSSIGXqwXe22bMgl
-	 //VMDzMUh03AbMsppLSZ4eWI/l0ozoB21z47mvp+PRxt8vpWBQCn12EpR/7wPjYUQCA==
+	t=1793728296;
+	b=fOhxYzMWvlnmh6BDz4VCqe/4YyKA/25JiFIexbs/+MePXM9SsIq+u9SUWuwzl8xxyAr4
+	 ioF6fW8TTwm7sadljUaPX8mRHnESYDBfnfjkW1UWLBvYsUe5RU1xPqMQD76MJ39pwlewq
+	 weja7XdwK9JJxj/CNm4uWJOH1hfM8PJUkYkW6DyGAIZMFDASZJUF8zzEIq+BVLUEzg9xl
+	 mg2OOgBmtnQi3X57Ebb4Eroc4CCGqdRaumkRupCO9Bdxo0zkc2S+hKNiyt6Ekek+FFkNL
+	 lsAFw03Ium3sdPm+kW7zfbNGVmTMeAEGC1o+GFvc21pHGVe6ThdC6LLWBT1dbZPZ81Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793725318;
-	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
-	 Subject:To:Cc:References:Content-Language:From:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding;
-	bh=/ygLRDArd2qcZRlnb2YAG6JBEFLHnwKUcdybO4KmhRQ=;
-	b=hw3yA3Gx4rWYdmd8y0GnEW9AJYZIOsaq4qmHJWertiFeKjz7G9bbOcbOEENCix/BiSdu
-	 iCHM7BYd7nvtdQuuGIcgEY/N6JuaXNZNrRQY73gY8ki7s71zLprCTagw86fH0l6kuhJKz
-	 gZHMPKHEvQiDswr/1cjzOSXQGY4pi2XW9CLoei9EphSwB2iUUOPEV0sFelvFMctJ//P/G
-	 KkmV76aHQRsOeQ/g1E969I7Ii5m8SiRWqNudQPsO3Qul5joTny+7y0Y+hlcR0CmRozPaO
-	 akJbs3TCTyJKJIFnv1DWpzjO8LKLaXcieFg/QDJ2VDM9FpWykkgZJRmi76teW8gUtAw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793728296;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Virus-Scanned:Received:
+	 Received:Message-ID:Date:MIME-Version:User-Agent:Subject:To:Cc:
+	 References:Content-Language:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=Fqeyvm7FX0eXD7hMo/JywxL4ZlWhm9hN7Af29X1fAyI=;
+	b=mcriLMYPpBHen9AYb8iHYok9L0wXeEVbzvPW8WOQHW0bVIqhC21KWK+tucWxnRpFM2Fv
+	 sE4wmri8gQXWXXovwStniakbWbNudZry4QgVYRbNn8yJc3rAhZPyxMW9mQ3YYd/m8r96o
+	 OJA1iKR2GG/uwpDQpA50/XDNon4Oti3P8KNGuWXxRlC3y9+S8nL2aYnOxuSEAc6S5IsdR
+	 6qF4pVMnxdNC09/ZDbs/q8WdTdXVRyIA3pQPue/GJjfWTEJrX1PGQpME5rttU2zUGYE/1
+	 WOtTTaBt4yBi8EAbx4YkKvBUPIV+2WshBmcWzIWdvutoq3mSl12IX37S2sdjmCmlLgg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.dev;
-	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=lXJx8p1e;
-	arc=none smtp.remote-ip=95.215.58.146
-Received: from mta1.migadu.com (out-146.mta1.migadu.com [95.215.58.146])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=pass header.from=acm.org;
+	spf=pass smtp.mailfrom=acm.org;
+	dkim=pass header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=o+rtQdVi;
+	arc=none smtp.remote-ip=199.89.1.16
+Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17126606A328
-	for <linux-scsi@vger.kernel.org>; Tue,  3 Nov 2026 17:01:56 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 17126606A328
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2BC8606A334;
+	Tue,  3 Nov 2026 17:51:35 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D2BC8606A334
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=lXJx8p1e
-X-Envelope-To: linux-scsi@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=EVSPRf8vZjWZPWFWXvzAwsJ1II8mVWMBvcu4Y1x6kdg=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1793725315; v=1; x=1794330115;
- b=lXJx8p1eUasX2fzSD5gCO1OI3g/AW83HJ9DXJk8vDD5bQo7xzdiMhW9JYgas3xcogvLJPiEM
- Xq6tiCHXEzY0xIpMvF0Wt0Ug461eIAoZ3tDZ1BTbUWR9436X2ZiVAPM76zQerAkgdSfifUW3hCI
- jNKOsdoQBwVej+2WOugS+lLI=
-X-Envelope-To: linux-scsi@vger.kernel.org
-Received: by mta12.migadu.com with ESMTPS id f9a1694e07816c8b;
-	Tue, 03 Nov 2026 17:01:54 +0000
-X-Mizu-Trace-ID: f9a1694e07816c8b
-X-Migadu-Flow: FLOW_OUT
-Message-ID: <0dce8e2f-e039-45f1-9579-91cad6563a66@linux.dev>
-Date: Tue, 3 Nov 2026 17:01:53 +0000
+	dkim=pass (2048-bit key, unprotected) header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=o+rtQdVi
+Received: from localhost (localhost [127.0.0.1])
+	by 013.lax.mailroute.net (Postfix) with ESMTP id 4jJx2v1fNGzlfwgF;
+	Tue,  3 Nov 2026 17:51:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1793728293; x=1796320294; bh=Fqeyvm7FX0eXD7hMo/JywxL4
+	ZlWhm9hN7Af29X1fAyI=; b=o+rtQdVipGe40JYePYEvDhDJML08S1p46tuQbcz4
+	p+mZSuZBYqdyWOHFskCIEEoE0ZJw7aE9POPWMZmXkv07KrfxDlsDbdIBbZW8HGyN
+	TjQ0bjQXIqVHTwoPgomtG/ne5+cSJSaDOO6ju8Ouvhp8JVm7CyH1n64I+UUJRclH
+	wchLxVrbKX3HPCmaPsPl1k+aBryAMwqe0oEXcH2PDMowYUAJQMa59fkPiqtVFZ6r
+	KMHz5uNMolE6NMmxSVIj6CPidn29w5w/P4egt/Mr3VBm0FquXUUJKmZ6oCBw6fGB
+	nQF2a/2uPglyxKK4RKuKWaHR7FA+++0cDU5ZsIki+R9mYg==
+X-Virus-Scanned: by MailRoute
+Received: from 013.lax.mailroute.net ([127.0.0.1])
+ by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id ENP3WjZl7kaH; Tue,  3 Nov 2026 17:51:33 +0000 (UTC)
+Received: from [IPV6:2a00:79e0:2ed2:d:b098:ee7:dc7c:db4e] (unknown [104.135.182.42])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4jJx2r4sZLzlfvpW;
+	Tue,  3 Nov 2026 17:51:32 +0000 (UTC)
+Message-ID: <4f38227c-a524-4d42-a3e4-ad0157939b41@acm.org>
+Date: Tue, 3 Nov 2026 09:51:31 -0800
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -59,65 +71,26 @@ List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: libsas: Fix interval notation
-To: Manuel Ebner <manuelebnerli@mailbox.org>, Jason Yan
- <yanaijie@huawei.com>, Jonathan Corbet <corbet@lwn.net>,
- Shuah Khan <skhan@linuxfoundation.org>, Randy Dunlap <rdunlap@infradead.org>
-Cc: linux-scsi@vger.kernel.org, linux-doc@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <20260916124403.315227-2-manuelebnerli@mailbox.org>
- <9fd990b5-b4fd-423a-bd80-2bb630fc5de5@linux.dev>
- <2deda25727af9db748f86f2a3d1f61047c903f3a.camel@mailbox.org>
+Subject: Re: [PATCH 0/2] scsi: ufs: fix an RPMB teardown cycle and a shift UB
+To: shao.mingyin@zte.com.cn, martin.petersen@oracle.com,
+ alim.akhtar@samsung.com, linux-scsi@vger.kernel.org
+Cc: james.bottomley@hansenpartnership.com, peter.griffin@linaro.org,
+ beanhuo@micron.com, stanleyjhu@google.com,
+ linux-samsung-soc@vger.kernel.org, linux-kernel@vger.kernel.org,
+ stable@vger.kernel.org
+References: <20261103185229490gmhePBF5_11x_thf4X-Rw@zte.com.cn>
 Content-Language: en-US
-From: John Garry <john.garry@linux.dev>
-In-Reply-To: <2deda25727af9db748f86f2a3d1f61047c903f3a.camel@mailbox.org>
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20261103185229490gmhePBF5_11x_thf4X-Rw@zte.com.cn>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 
-On 11/3/26 14:25, Manuel Ebner wrote:
-> On Wed, 2026-09-16 at 14:40 +0100, John Garry wrote:
->> On 9/16/26 13:44, Manuel Ebner wrote:
->>> Remove needless ']' from interval boundary.
->>>
->>
->> This documentation is wrong for this structure description (not shown) -
->> it should be for asd_sas_phy, not sas_phy
->>
->> Same for sas_port -> asd_sas_port
-> 
-> Does replacing all sas_phy -> asd_sas_phy and sas_port -> asd_sas_port
-> fix this? Then I'll send a patch.
-> 
+On 11/3/26 2:52 AM, shao.mingyin@zte.com.cn wrote:
+> Two independent fixes in the UFS stack, found while reading the probe and
+> remove paths and the task-management hooks.
+This series no longer applies. Please rebase it on top of Martin's
+for-next branch.
 
-uh, I don't think that anyone would be checking this documentation from 
-now on, as I don't expect any drivers for new SAS HBAs which may even 
-want to use libsas will appear.
+Thanks,
 
-John
-
- > Thanks>   Manuel
-> 
-> 
->>
->>> Signed-off-by: Manuel Ebner <manuelebnerli@mailbox.org>
->>> ---
->>>    Documentation/scsi/libsas.rst | 2 +-
->>>    1 file changed, 1 insertion(+), 1 deletion(-)
->>>
->>> diff --git a/Documentation/scsi/libsas.rst b/Documentation/scsi/libsas.rst
->>> index 305a253d5..9ebf2bf28 100644
->>> --- a/Documentation/scsi/libsas.rst
->>> +++ b/Documentation/scsi/libsas.rst
->>> @@ -75,7 +75,7 @@ enabled
->>>        - must be set (0/1)
->>>    
->>>    id
->>> -    - must be set [0,MAX_PHYS)]
->>> +    - must be set [0,MAX_PHYS)
->>
->> this looks ok, even though it is so trivial
->>
->>>    
->>>    class, proto, type, role, oob_mode, linkrate
->>>        - must be set
-
+Bart.
