@@ -1,48 +1,48 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793717324;
-	b=NtgDEEfWyQ8//lySdtVyIlOq14Cer3+hyLTapmpWxZso/bdZoICJQhTCM4qRtMTsHpfK
-	 u6egAQauvHGBEDxgC+gNZEnT76aTkgxG9OrrxKrCJ4J6IY4F4EEb7J0W0j7fPiVoOSMRR
-	 EBZmNVG4Bl7cHPwhXktLZU3R3mm45GqAobeUOLbqmHBcOwMOrY0SH1d2v1+/nJa5Kla7Y
-	 2wY6RizI9GWc3R32gtSGFaCcDwJcw4EjvNLi6hRqGBvOPxH5BKaXSLktLjGRyr0A61yEM
-	 r/ZnjxY0Wz0vNiPCvcTYDlXQ2AN/CBlzGghOL2HmMxRUhJc7w2gt8j6Vo5rXqWIli4w==
+	t=1793718069;
+	b=dpfB8oklmoTH0RV5K0uReR6Ukg5AcHhGMGbLLI+XAts0frMuOadwrxfK7uHAdEgcQN38
+	 J1Iy+G7Kg7htKzvmvuqkUPbs7mzenN4TJhq2xPbyoKb04YTXs1xRfqeOvNMQttIEemN1V
+	 9mWIGscG3vU5ZeOwfCg+m8wJHUI0LHkzdQ9WYCMQMoXbRKFhaLO+Un6tPickD9pm81sEZ
+	 jlSfoIXS25A+uGqW4fVHVlHC7SDHWoefUkDlsoz16XjKbsAiMtQDgZwINZVMlKYVnr50J
+	 RBYhEH7j7AaQbxTTqrh8uaWa4HbIUckkz0DJzcAg4QCWpgncD5R7AUP2ehhYL+GF/tA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793717324;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793718069;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=ED7DfxpP0C+3U90pEocB+hyI9bQg1Q/rMH3eRirphfo=;
-	b=2gp182rsppAKGIP8LOl38vsJOB9aSxBJ0KM9RAlAablyXuPC/h+xK7R/zX6L8RmsYVir
-	 S5/I1M9c2AP/WORuTPaz5O0cgeoxZRj3RZbJxhv4ehizt0iRlv9VnvBoXNal7Vq0i/mSp
-	 /29+814sTB95qOg5kBTpQPeC9v1IbETxBiHJ6f/CAxC7K7pdU4L4HaW6vaR2yHUyXjSct
-	 Ge7uuZ+JZ5WojNjp74qnR9pMAPsLtaX2fmfqndmY7nYiJ5M0TXLv/9QIj3ZJF5uv4B+Nw
-	 OgV9JGzv0dGmxOaZSyU00JbYOG+NwiZuKTra9RMSJf6Uv48mTDO+jUDste7VIxEQ8PA==
+	bh=BEajqQ35phGWaUcr3y1eTDvwsu33+Nn0Y7Ck4F/8MEY=;
+	b=JsYWg+Mbx1aNUxYec+NHv0hgOO8q2Te7ZSJ50rp08ulRqtF0In4w8LUhCEvyANOaGdtn
+	 Phwpv88bgnubAFGOdAlH04fF62vCBEb+gO5z7RrER2+d45C3phGwmTTMF9JtQz4DNOfVw
+	 0zNlRgr9LfDZt34Jsp/bIXQfuAoIsKQz42qdKalNkexkpaccnD1WJMbxY7kuiUWqmYrvA
+	 zItIqZXMGth/iio7B6aPmIZsBmmpyyyrQUhbYvg23+UQ7OycPHI/EO4BYh3/1fQaLQ47E
+	 4WbV5XhejVym64IUzvrUmXj65AVaGV4IQ1qmArq8sCWtV5wGGKCx+NzUS2ZyresByjA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ljtTrKrz;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=VEcq0ggu;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3CA0606B243;
-	Tue,  3 Nov 2026 14:48:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5FA2F606D836;
+	Tue,  3 Nov 2026 15:01:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ljtTrKrz
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4E4781F000C1;
-	Tue,  3 Nov 2026 14:48:41 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=VEcq0ggu
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CFD2F1F000C1;
+	Tue,  3 Nov 2026 15:01:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793717323;
-	bh=ED7DfxpP0C+3U90pEocB+hyI9bQg1Q/rMH3eRirphfo=;
+	s=k20260515; t=1793718068;
+	bh=BEajqQ35phGWaUcr3y1eTDvwsu33+Nn0Y7Ck4F/8MEY=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ljtTrKrzjwh9bmTgB/C4QRv4lPNCmDXb0oGrnMVLkXCeEPfpYMq2XwmiskAtwQlsK
-	 oR+9Ko1Pl3b/OoYpR0JTmvi3u4DF0d6V6KQt841p42E0GJwXEsp4zexEhStpCZGKot
-	 pkJLfSa1M3AMrCCthqht9MFhgLn+Yh9p8Octt6Ghr3uXvq/2JhHMONBnt+SmQKq34t
-	 I08bZ2ixHGY9RHmh/bJlC1bBT/o22sClyAftWhJVYpDvJ2AVldTnb++uYWhQYb014k
-	 kzsT0ppwzb8VRvjDyZBpKuGuVZJ8s3MbvTiItwdFL05JRwkjFnFrqSpfLfwR7+VZN8
-	 /LmgWCZM8tKSQ==
-Message-ID: <sashiko-outbox-195508@kernel.org>
+	b=VEcq0gguO6/NoWa+wL6fwqCLqkldJUUFWXaU48FgopqIQWVInov4USQPNMlWECfku
+	 tjmmYgoSxJFwLb8AMyTRkOEe9RIAgKCTxUsnF6zQuC56KDIfRvxTZM6B4OGZ+0RxLb
+	 mh81fLroJS4nyQyOkcaBszjAOxkYEOtX3GkPZMu84uutLjUi79KxQ0Ta6LswLb4aME
+	 +9R/WJkvVhkvygnNcEPN9DxaCT6J3JtUHgSP8vKYwTs6rh6No+CNqGd39rP3s8vdpa
+	 CSPispydKapyfU9yanW1YMZNTbAP3BOy5UszvDaukMX2hst4qdOs00Vyn/j4PbSImA
+	 6uri+styQIxoQ==
+Message-ID: <sashiko-outbox-195531@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH RFC 36/38] selftests/proc: check that faulting sysctl
- accesses don't hold up removal
+Subject: Re: [PATCH RFC 04/16] proc: let procfs own the seq_file of seq_file
+ entries
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Christian Brauner" <brauner@kernel.org>
 Cc: "Linus Torvalds" <torvalds@linux-foundation.org>, "Jann Horn" <jannh@google.com>, "Josef
@@ -57,12 +57,12 @@ Cc: "Linus Torvalds" <torvalds@linux-foundation.org>, "Jann Horn" <jannh@google.
  Pavlu" <petr.pavlu@suse.com>, "Anna Schumaker" <anna@kernel.org>, yukuai@fygo.io, "Heiko
  Carstens" <hca@linux.ibm.com>, "Vasily Gorbik" <gor@linux.ibm.com>, "Alexander
  Gordeev" <agordeev@linux.ibm.com>, "Christian Borntraeger" <borntraeger@linux.ibm.com>
-In-Reply-To: <20261102-work-procfs-bugfixes-v1-36-59422ed3e465@kernel.org>
-References: <20261102-work-procfs-bugfixes-v1-0-59422ed3e465@kernel.org>
- <20261102-work-procfs-bugfixes-v1-36-59422ed3e465@kernel.org>
+In-Reply-To: <20261102-work-procfs-core-v1-4-75df35e4f8b8@kernel.org>
+References: <20261102-work-procfs-core-v1-0-75df35e4f8b8@kernel.org>
+ <20261102-work-procfs-core-v1-4-75df35e4f8b8@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 03 Nov 2026 14:48:40 +0000
+Date: Tue, 03 Nov 2026 15:01:06 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -74,90 +74,95 @@ Precedence: list
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [Medium] selftests/proc: getdents test faults in dir_emit_dots() before e=
-ntry lookup
+- [High] proc: unpinned dereference of pde->seq_ops->next in pde_seq_next()
 --
 
-commit fc0ab3f791b6ab04b43d13e015f97882092d54fc
+commit ae41131fe28a1e7fcf9c3b743e2a30697e315fe9
 Author: Christian Brauner <brauner@kernel.org>
 
-selftests/proc: check that faulting sysctl accesses don't hold up removal
+proc: let procfs own the seq_file of seq_file entries
 
-This commit adds a proc selftest using userfaultfd and a tun device in a new
-network namespace to verify that page faults during read(), write(), and
-getdents64() on /proc/sys do not block sysctl table unregistration.
+This commit allows procfs to own the seq_file for seq_file and single-show
+entries by wrapping their seq_operations and pinning the proc_dir_entry
+only around start, next, show, and stop callbacks rather than across
+userspace copies in seq_read_iter().
 
-> diff --git a/tools/testing/selftests/proc/proc-remove-slow-sysctl.c b/too=
-ls/testing/selftests/proc/proc-remove-slow-sysctl.c
-> new file mode 100644
-> index 0000000000000..e1b1fd19a07ab
-> --- /dev/null
-> +++ b/tools/testing/selftests/proc/proc-remove-slow-sysctl.c
-> @@ -0,0 +1,213 @@
+> diff --git a/fs/proc/inode.c b/fs/proc/inode.c
+> index 66a3688757dd7..8425465aae5d7 100644
+> --- a/fs/proc/inode.c
+> +++ b/fs/proc/inode.c
+> @@ -218,6 +218,110 @@ static void pde_unpin(struct proc_dir_entry *pde)
+>  		unuse_pde(pde);
+>  }
+> =20
 
 [ ... ]
 
-> +TEST_F(proc_sys_slow, getdents)
+> +static void pde_seq_stop_pinned(struct seq_file *m, void *v)
 > +{
-> +	struct worker w =3D {
-> +		.op	=3D SYSCTL_GETDENTS,
-> +		.len	=3D BUF_PAGES * self->psz,
-> +	};
+> +	struct proc_dir_entry *pde =3D seq_pde(m);
 > +
-> +	w.fd =3D open(CONF_PATH, O_RDONLY | O_DIRECTORY | O_CLOEXEC);
-> +	ASSERT_GE(w.fd, 0);
-> +	stall_and_remove(_metadata, self, &w);
+> +	if (pde_has_proc_seq_ops(pde))
+> +		pde->seq_ops->stop(m, v);
+> +	pde_unpin(pde);
+> +}
 > +
-> +	/* What was looked up before the removal still arrives, then nothing. */
-> +	EXPECT_GT(w.ret, 0);
+> +static void *pde_seq_start(struct seq_file *m, loff_t *pos)
+> +{
+> +	struct proc_dir_entry *pde =3D seq_pde(m);
+> +	void *v;
+> +
+> +	if (!pde_pin(pde))
+> +		return ERR_PTR(-EIO);
+> +	if (!pde_has_proc_seq_ops(pde))
+> +		return single_start(m, pos);
+> +	v =3D pde->seq_ops->start(m, pos);
+> +	if (v =3D=3D ERR_PTR(-EIO))
+> +		pde_seq_stop_pinned(m, v);
+> +	return v;
+> +}
+> +
+> +static void *pde_seq_next(struct seq_file *m, void *v, loff_t *pos)
+> +{
+> +	struct proc_dir_entry *pde =3D seq_pde(m);
+> +	loff_t old =3D *pos;
+> +
+> +	if (!pde_has_proc_seq_ops(pde)) {
+> +		++*pos;
+> +		return NULL;
+> +	}
+> +	v =3D pde->seq_ops->next(m, v, pos);
+> +	if (v =3D=3D ERR_PTR(-EIO))
+> +		pde_seq_stop_pinned(m, v);
+> +	/* seq_file would blame these seq_operations, blame the entry's */
+> +	if (*pos =3D=3D old) {
+> +		pr_info_ratelimited("buggy .next function %ps did not update position =
+index\n",
+> +				    pde->seq_ops->next);
+> +		++*pos;
+> +	}
+> +	return v;
+> +}
 
-[Severity: Medium]
-Does TEST_F(proc_sys_slow, getdents) in
-tools/testing/selftests/proc/proc-remove-slow-sysctl.c actually fault on a
-looked-up sysctl entry, or does it fault inside dir_emit_dots() before any
-entry is looked up?
+[Severity: High]
+In pde_seq_next(), if pde->seq_ops->next(m, v, pos) returns ERR_PTR(-EIO)
+without advancing *pos, pde_seq_stop_pinned(m, v) is called before the
+if (*pos =3D=3D old) check.
 
-In FIXTURE_SETUP(proc_sys_slow), only the first page of self->buf is
-registered with userfaultfd. When TEST_F(proc_sys_slow, getdents) opens
-CONF_PATH, w.fd starts at file position 0 and is passed directly to
-stall_and_remove() -> work_thread() -> getdents64().
+Since pde_seq_stop_pinned() calls pde_unpin(pde), which decrements
+pde->in_use and can complete pde->pde_unload_completion, a concurrent
+remove_proc_entry() waiting in proc_entry_rundown() can finish and allow a
+module to unload or free the memory backing pde->seq_ops before
+pr_info_ratelimited() dereferences pde->seq_ops->next and formats it with
+%ps. In addition, pde->seq_ops->stop(m, v) in pde_seq_stop_pinned() will
+observe the unincremented *pos value.
 
-In fs/proc/proc_sysctl.c:proc_sys_readdir(), dir_emit_dots() runs before
-sysctl_dir_next():
-
-fs/proc/proc_sysctl.c:proc_sys_readdir() {
-	...
-	if (!dir_emit_dots(file, ctx))
-		return 0;
-
-	if (cursor && cursor->pos =3D=3D ctx->pos) {
-		err =3D sysctl_dir_next(ctl_dir, &d, cursor->name, cursor->len);
-	} else {
-		loff_t pos =3D 2;
-
-		err =3D sysctl_dir_next(ctl_dir, &d, NULL, 0);
-	...
-}
-
-Because ctx->pos is 0, dir_emit_dots() writes "." at the start of self->buf
-and triggers the single userfaultfd page fault before sysctl_dir_next() is
-called and while d.head is still NULL.
-
-While work_thread() is sleeping in dir_emit_dots(), stall_and_remove() clos=
-es
-self->tun (which unregisters CONF_PATH and marks ctl_dir->header as
-unregistering) and resolves the fault on the first page with UFFDIO_ZEROPAG=
-E.
-When work_thread() resumes, dir_emit_dots() finishes emitting "." and "..",
-sysctl_dir_next() immediately returns -ENOENT, and getdents64() returns the
-48 bytes from the dot entries without ever entering the entry-emission loop.
-
-Should TEST_F(proc_sys_slow, getdents) advance w.fd past "." and ".." first
-(for example with lseek(w.fd, 2, SEEK_SET)) before calling stall_and_remove=
-()
-so the fault occurs in dir_emit() after sysctl_dir_next() and
-proc_sys_fill_dirent() have looked up an entry?
+Could the if (*pos =3D=3D old) check be moved ahead of the
+if (v =3D=3D ERR_PTR(-EIO)) check so that pde->seq_ops->next is only access=
+ed
+while the entry is still pinned and *pos is updated before ->stop() is
+called?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261102-work-procf=
-s-bugfixes-v1-0-59422ed3e465@kernel.org?part=3D36
+s-core-v1-0-75df35e4f8b8@kernel.org?part=3D4
