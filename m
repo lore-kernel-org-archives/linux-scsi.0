@@ -1,110 +1,114 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=40.107.162.71
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793711423;
-	b=qrg3MEfmOLrL3AjdJOuiYTqcLqntvwUqiO4UZRqOCY+tnr+tJ9sK6wFbPA3v8/TLqNS0
-	 SqDzN8hjBimEZV7i5cVN9gPwV41GdpHgyjDldjumV2qAKoowT+gNMlsPhHd9L6AwRReQC
-	 uZQj05B0imwNX3RDsTurlq4L1sFCOfsIcSV1HtyRt6tY2ZC0n3qHKxzTiGwfgd6nPleSc
-	 PrB6GweHsrhgA8U5zAsxwU8f5Dolk2+B7m1lHgZieDZkWXKsnBwT96uZwYYIfhIK3UkIm
-	 7mWG0Kc+jJtbT0aSwuaE9vuVnXRTprNGDTwmn6AQpUgTU04et3enyySjxt+xQRCOBcA==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793711423;
-	h=DMARC-Filter:DKIM-Signature:Received:Received:Message-ID:Date:
-	 User-Agent:Subject:To:Cc:References:Content-Language:From:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:X-ClientProxiedBy:MIME-Version:
-	 X-MS-Exchange-MessageSentRepresentingType:X-MS-PublicTrafficType:
-	 X-MS-TrafficTypeDiagnostic:X-MS-Office365-Filtering-Correlation-Id:
-	 X-MS-Exchange-SharedMailbox-RoutingAgent-Processed:X-LD-Processed:
-	 X-MS-Exchange-SenderADCheck:X-MS-Exchange-AntiSpam-Relay:
-	 X-Microsoft-Antispam:X-Microsoft-Antispam-Message-Info:
-	 X-Forefront-Antispam-Report:
-	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
-	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
-	 X-MS-Exchange-CrossTenant-Network-Message-Id:
-	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
-	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
-	 X-MS-Exchange-CrossTenant-FromEntityHeader:
-	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
-	 X-MS-Exchange-CrossTenant-UserPrincipalName:
-	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=veXguC1CfKrLaZLXQgQAbq0NSZuoxitHZi/raJLFeN8=;
-	b=zPRVGpWVEQlnifB5XcY5V3SSOtoWI4+iO2Hk5txaMGAbjtNn9nLunonMthRhWrtlgZWc
-	 NZEF/60anKUZjWfAj8T58QaCNa8McBIkvPEcfp3AycSNkxR9Po9InvM53c43x+arRYsyv
-	 A4m6qdWKDhPqSnhFsRjNEqUiUB5qfNt4HEI3C6IuLUvPt2214VKWftqB/GzkufrWwQFkx
-	 AxUmld4N052acQO7LYce8ZkzMt6PIdiO1Er/t2gEw6u8rTxdkcKjxsVO88LtuRV/cDRhR
-	 GIui1aLSzD1B0ZAWN/Lx8wVDMCVTZV3XWGb5x/Rc1Rm6JFqaSTZT5OWXMJ+Kgu8Jraw==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=oss.nxp.com;
-	spf=pass smtp.mailfrom=oss.nxp.com;
-	dkim=pass header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.a=rsa-sha256 header.s=selector1-NXP1-onmicrosoft-com header.b=R629nqe9;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=40.107.162.71
-Received: from PA4PR04CU001.outbound.protection.outlook.com (mail-francecentralazon11013071.outbound.protection.outlook.com [40.107.162.71])
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.133.124
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1793711476;
+	b=JS+81s0XVHXLTPNgKJyjaYlCCVbjuTUxYpuI5b9ZxrvKtqKC4bwlcRQa1Btwz0E4BF/1
+	 YQI5pQyHJMFdrcEAVqhAAodmW+BnxDBn9lW/MmtpwM7XnyjE50uLjVQkSjB5NB89EFcd0
+	 FSvPb9dxFQOL7UQLsFyU3x2958UiK7Hyn1P+GFgxPkBUlQXWtlXPHWco4SE5wGujp4wL6
+	 0fjU/0bXzy2GVkMh8Ts4w4HEcvWjuOezOmqVtb27jpH0sC8KrIEGI2bjtLfZ+m/mrR2tA
+	 84LMj6SI/BspyfFQxzpVoQUjiEOOFhGEuazfN45KIKaZ80clycxSj+1oUknFkiTVkTA==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793711476;
+	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
+	 X-Mimecast-MFC-AGG-ID:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:X-Received:Received:Date:From:
+	 To:Cc:Subject:Message-ID:References:MIME-Version:Content-Type:
+	 Content-Disposition:Content-Transfer-Encoding:In-Reply-To;
+	bh=0smI/wkIKBhttmjun844YlQk8k5yNcKMLGY89LEOpsg=;
+	b=cCQZpkSrtpIUsXHN4sceilnO6a3HMEJYUC0JABYPxGV8o5TUkup0g5t1uCf/hfk9eq63
+	 02moASHgwkR/fFRaOLgSD3qqTgQD19+cJyfhpKVQlbGm5L5bIVURqErNPzFGyUZ1KNZBC
+	 fqKL+LbnUAFTC1GEHhL74WjtGwa4BCO+wtaNSZS9ZGY0jS3kC0MrdKeRt2Kwm3V9taIPV
+	 2Y/BqsFc2jysDzMmx1H095q7fBZl4gOSG4i+biv39UkdPY+OhtpkOjwFkTDFDwsfLDSzi
+	 Z8wZo2o4SXuPIu6j7Qo9OFzqIfFkEpxh74s0J7+scS05w9A+XWxrgMHk5npNykDQn4Q==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=redhat.com;
+	spf=pass smtp.mailfrom=redhat.com;
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=jEVz+2SP;
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=fD8ZqIgO;
+	arc=none smtp.remote-ip=170.10.133.124
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E2B36082BE7;
-	Tue,  3 Nov 2026 13:10:22 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6E2B36082BE7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A403606D83C
+	for <linux-scsi@vger.kernel.org>; Tue,  3 Nov 2026 13:11:15 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2A403606D83C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.a=rsa-sha256 header.s=selector1-NXP1-onmicrosoft-com header.b=R629nqe9
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=lKxQkjSSU343bpjdLduwyWOH1/OKKYzOiW+vZHnlDliX+Igw7BfKELWDCwJ8yGSCzQtHVjBbicK09tXePtDCLgn1qLfhKJQ5nO80VSzrpyUP7vwDnMx+fAHsE3MPPwrMPz7mDiAv6tCm9T1EuUs//PaDjBskWY1dLjwR0IDLnX+psXB5g+IyDKxY+GGevKNy9sfo0UirhENDYmOuvPNTCHqVnoEpFLLPFw85uZyr12nWQ50V1id9cLm5WRB/8vndW71bC9bXWeJ/ZAaSu2luux0+rbSEiAIY0dOXr5msaBtYnRQYdh4a1vCCZJTgvECGzh3GVO7LlZNA7y6VrkrPZQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=veXguC1CfKrLaZLXQgQAbq0NSZuoxitHZi/raJLFeN8=;
- b=D5HwSzfo5NzIy37FAG3nNw83lLI0nvTzvXTRdRxQWs9i4TsB5EQFfIX4xXJ8Ig+4k/pg7CgYrAB+C3HxtCj9F3Dqg4AuFMosmaptWZ4Yq2BhoJn1S3W6ji24Jwe9/vXaGzfnfJ5BFmQ0HMyjjeTm2X80Z1KAGnMcntIVQNo0VjZK0koj5uQ7ZBgHte3Z3RUXqNxsVwa6a1MS8iQxJ6zP9H8otcTQB+L4JMzcITQxjyKA5JP4CA2pTEtecCO8XHRR+qdCB8FpgzYG94Ng9QTnmPT24pMJxMnSxzpVC1FQyLaEGSYK7tP9ZOPgXWEvPKgz3FEVOXvv/DG/FrLYJ6R68A==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
- dkim=pass header.d=oss.nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
- s=selector1-NXP1-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=veXguC1CfKrLaZLXQgQAbq0NSZuoxitHZi/raJLFeN8=;
- b=R629nqe9VeS3u5PM9FbSsqedfPNUlNu5Vj2BzJSm0w56naAnrFBDRNPymAKWiVFT70JMxkcXlNP6/41Gfz5UMUe+2m/0s4IX+T2kc5wEx/i0dGxlsMazvtrt/omqgS/8Ww74EthjyrhIBm7SKn5OmmE24HdqiqRyB40ZMBoezun8LNzZ/Ki+NFaydq03bh8jzBboVORcYSklKCuqdXesI5dRkbQkaAlfTl0ohU4qIBBfse/G2GzlAGrmepUMI1sVUl5gyAuJ8yw59Svp4VPr+UkVIb1vqyoWS0kSrdo3vp8wM7JHWCJKaSTxoBMaiPHRYW1On2tZ9v1vrYCXaRXvtA==
-Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=oss.nxp.com;
-Received: from GV2PR04MB12558.eurprd04.prod.outlook.com
- (2603:10a6:150:368::10) by DU0PR04MB9561.eurprd04.prod.outlook.com
- (2603:10a6:10:312::7) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.569.12; Tue, 3 Nov
- 2026 13:10:16 +0000
-Received: from GV2PR04MB12558.eurprd04.prod.outlook.com
- ([fe80::cd9f:102:ea58:4c49]) by GV2PR04MB12558.eurprd04.prod.outlook.com
- ([fe80::cd9f:102:ea58:4c49%6]) with mapi id 15.21.0592.007; Tue, 3 Nov 2026
- 13:10:16 +0000
-Message-ID: <275e4894-a7d9-44f2-a7bb-c73f80d05f6b@oss.nxp.com>
-Date: Tue, 3 Nov 2026 15:10:11 +0200
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 00/10] Add S32N79RDB UFS support
-To: Bart Van Assche <bvanassche@acm.org>, NXP S32 Linux Team <s32@nxp.com>,
- Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman
- <avri.altman@sandisk.com>, Rob Herring <robh@kernel.org>,
- Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
- <conor+dt@kernel.org>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <mkp@kernel.org>,
- Sai Krishna Potthuri <sai.krishna.potthuri@amd.com>,
- Ajay Neeli <ajay.neeli@amd.com>, Manivannan Sadhasivam <mani@kernel.org>,
- Pedro Sousa <pedrom.sousa@synopsys.com>, Joao Pinto
- <Joao.Pinto@synopsys.com>, Hannes Reinicke <hare@suse.de>
-Cc: Pengutronix Kernel Team <kernel@pengutronix.de>,
- Fabio Estevam <festevam@gmail.com>, linux-scsi@vger.kernel.org,
- devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
- imx@lists.linux.dev, linux-arm-kernel@lists.infradead.org,
- linux-arm-msm@vger.kernel.org, clizzi@redhat.com, aruizrui@redhat.com,
- eballetb@redhat.com, echanude@redhat.com
-References: <20261024122533.3609180-1-larisa.grigore@oss.nxp.com>
- <991fd1f4-b054-42ba-a157-cc9d89dc594b@acm.org>
-Content-Language: en-US
-From: Larisa Ileana Grigore <larisa.grigore@oss.nxp.com>
-In-Reply-To: <991fd1f4-b054-42ba-a157-cc9d89dc594b@acm.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: AS4PR10CA0028.EURPRD10.PROD.OUTLOOK.COM
- (2603:10a6:20b:5d8::13) To GV2PR04MB12558.eurprd04.prod.outlook.com
- (2603:10a6:150:368::10)
+	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=jEVz+2SP;
+	dkim=pass (2048-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=fD8ZqIgO
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1793711475;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=0smI/wkIKBhttmjun844YlQk8k5yNcKMLGY89LEOpsg=;
+	b=jEVz+2SPYF/43d4+wuOT3mSF5a/phDPfKHDdPLlabriOiYFYua6HEGUWn829Op6aw33CRE
+	Vg9dwTs5tSWUU+CueBSRC5TnDIXP/t1YwlIReqFCRn210oZPohZqOKlZIUIGZClKCb+kmS
+	o6dTWKwuXqXye30+t2aJJnXZvoDvR4U=
+Received: from mail-dl1-f70.google.com (mail-dl1-f70.google.com
+ [74.125.82.70]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-314-m5VvmvkrPpKHGIH1rurfKw-1; Tue, 03 Nov 2026 08:11:13 -0500
+X-MC-Unique: m5VvmvkrPpKHGIH1rurfKw-1
+X-Mimecast-MFC-AGG-ID: m5VvmvkrPpKHGIH1rurfKw_1793711473
+Received: by mail-dl1-f70.google.com with SMTP id a92af1059eb24-154e9d2d94fso8001217c88.0
+        for <linux-scsi@vger.kernel.org>; Tue, 03 Nov 2026 05:11:13 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1793711472; x=1794316272; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :content-type:mime-version:references:message-id:subject:cc:to:from
+         :date:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=0smI/wkIKBhttmjun844YlQk8k5yNcKMLGY89LEOpsg=;
+        b=fD8ZqIgO0G0b2Ju40PEVvYrSFqpZOlwEibKAfpqYcfFqn/kuWRnTQHak3pgwM1+v7i
+         NRsBBS5h8YBAU+VcfypsWQ2OEVG3t4IqR8MKG5V69KkHtRleyvwf1CBN9eLF3gTgZ0jh
+         8lzZ/2h5X4Ez6xEM3QsMLcOjFd1rm8S/+HEdl1E5p4AWy/RHDNFEIidn7iRe4waEJD4Q
+         O2tywSPzS5eFu0pXnEN+6lGItdqnP4jIEl5NLi48t6Lbh+7qb55chbdJYK/Lgz9ffA3u
+         XwK3jukQLJ91HJPYy6riBnsH26A9fEZorb4aNY+JMhpFGFs4/fIYKw0AzMq8DcmIBZDS
+         HE4Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793711472; x=1794316272;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :content-type:mime-version:references:message-id:subject:cc:to:from
+         :date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=0smI/wkIKBhttmjun844YlQk8k5yNcKMLGY89LEOpsg=;
+        b=qSLoFZ/1RBha2LBspYCl+tBGwDVu4w57sM/P+wcoOvQDeOoTh8qvoAoAomLcMCFr6X
+         DDLPoddficjZMRLpGn4GrZDyE5WgK+mvxkteqVeFY/CB16vQKr2xSruRpX5SUztq7Eqk
+         cobmMToPTXSpvmrzWrOFgr18x+/xLY3HRja4X3ToBT6rdU7FLZb9QMnwIaARdJ8LWwHJ
+         PBL6IMR/2eNzUOniTslWBd5t4gXOnT0ijT5T1WBVL9qIEZhf2qlq89K7lDHzOXmEy6Dj
+         c23YITGNdgSDhkQhLs6ZO+FPGz5whNfPGsdwx5b+xvNrhjRXds92W1Of7zgvYd+JApXP
+         58Fw==
+X-Gm-Message-State: APuU4Z/HkmqzltyE/Q0SmH7N01tUneFvi/sBsY2kiqT1XDl8KMZcDoyJ
+	TjrscNQKXeSk0F/GN/XgTdkZLULNN5NXBWmGfHgNdUg/YRY13TNuDIZLw3E28YLsqx3kPFd2dTq
+	QF+IO3OINuCUk89e9CKg45n06/cA7kwK3+S+dnSpEBWe99z3iyUStIBansQEEURg=
+X-Gm-Gg: AYBFou0w1qzW5uwieqXsZq8fB74F+PR3ogtNN68h/TgPO9/tQJ6aSlS8+ft7sHDMHLc
+	/3FE/CyGjiGoD1yVspHUg5ej0dYrAKLTFdIxK0X0JV9hpV2wisHnHSNTT7rAGjrJLf0Cn29vPyH
+	/CWAtR+zHoGops6icNlmVP5zxm9/oPRKaE/Y2jr2CRkmCP3uh3UdIy7RVv/4IXYXx0a91QLGXBZ
+	vK1zymexGjRM2GxflfnXKMg7Ul6u5BiZYzF9r3Oyzvk91gnNY9DtBdB4YOkKzUikTHfWxpFPXgL
+	6VBVZi2lwniiCtH28mKLk7JrI1SQeJYbh8GIWozgzfO/hU4xvw1dTPjjWUBQNhjCxCFJEPF0kRC
+	nEU6cqfS0w6MLYp4HRecAHXVcJ+Ob7xLCdG8a3fYR0Zo070UH0d/+/NFnMpXgsXjrqJYh/XPYlR
+	XCTL1/HZeunCM9mqxfKqFfbzYMVKo0R/6PkAYjqiM=
+X-Received: by 2002:a05:701b:454f:20b0:1a6:7a2:cfc3 with SMTP id a92af1059eb24-1ac59fbf8cfmr20574678c88.13.1793711472380;
+        Tue, 03 Nov 2026 05:11:12 -0800 (PST)
+X-Received: by 2002:a05:701b:454f:20b0:1a6:7a2:cfc3 with SMTP id a92af1059eb24-1ac59fbf8cfmr20574626c88.13.1793711471648;
+        Tue, 03 Nov 2026 05:11:11 -0800 (PST)
+Received: from mgandhi-thinkpadp16vgen1.punetw6.csb ([2401:4900:88f9:2014:83b2:887f:ed66:aa65])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1ac1854d925sm76528079c88.7.2026.11.03.05.11.08
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 03 Nov 2026 05:11:11 -0800 (PST)
+Date: Tue, 3 Nov 2026 18:41:06 +0530
+From: "Milan P. Gandhi" <mgandhi@redhat.com>
+To: sashiko-reviews@lists.linux.dev
+Cc: linux-scsi@vger.kernel.org, sathya.prakash@broadcom.com,
+	kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
+	sreekanth.reddy@broadcom.com, martin.petersen@oracle.com
+Subject: Re: [PATCH] scsi: mpi3mr: Fix integer overflow in reply frame size
+ calculation
+Message-ID: <aundaviO6V5enLO-@mgandhi-thinkpadp16vgen1.punetw6.csb>
+References: <20261103123316.223917-1-mgandhi@redhat.com>
+ <sashiko-outbox-195282@kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -114,191 +118,23 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: GV2PR04MB12558:EE_|DU0PR04MB9561:EE_
-X-MS-Office365-Filtering-Correlation-Id: 4881d7a5-0c33-4006-2d81-08df39abcd96
-X-MS-Exchange-SharedMailbox-RoutingAgent-Processed: True
-X-LD-Processed: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635,ExtAddr
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
- BCL:0;ARA:13230040|366016|19092799006|7416014|23010399003|1800799024|376014|6133799003|10067099003|18002099003|22082099003|261102123227099003|3023799007|56012099006|261028144727099003|5023799004|4143699003|11063799006|261026140227099003|921020|261022105027099003|261009223027099003|261022075727099003|261026121527099003|261021121427099003;
-X-Microsoft-Antispam-Message-Info:
- HDjdg1fYKvW5veW2nBBMjAm2DSWLkb70J59u9zaWkw1pc2DgaEOXYijH2LauqAAnMom5BoZSOImQ728KJs9/IWqVmHEcegQ6MgfOZH0MkHDW2sl3NziLuaMGOSSPbiC4zl/VBGXNEAJhfQvv7qA9ULRcK0y/+t0jrDjxmFe++CsYMBZz46/KSdTe3PqFSNqLASz6DMPHZJkfEphKS3odBKlmP1bOXKQEDpouSKuGDjJF6BpO7UmQI54YGNhZGKVNMdwlUHRqu/DF7TuDSaXy/dcrwfEEAaGk2F72p8GXWHyPDSz9epvJNL79ORbeyNnWspi83Sdnvp3IZzPDmTFkVAIigbw8+g7Og/ivHmAih+hztpTlIJaVzu/BbnRzdXFnnmESYXWF6IOjJiZBckrETzqF5Zow1kz4q4uikc94rLb6Psi1veYG/OrLYOP0AuNFyLgt9ZK6I1T0UcJLKvd4gL6Q0KxNym3lb/Nsjopm1J//noaC0ujq9vRiVWI/oFSjf18j1p6wsf8kDQl582rJeaHhA9oRy1osqXd285sWP6AGI6bUDkZlyYR5MHE4sSOuLEm76c57I8EH4P0kPMz26hDqpHIgy5+oZsVE34pz55UhzOvtz6pqFoppWvXiVeUYarXOH/U3LM4QDl6Ls2Qlp4lwkYkIJTPVgywVD2JDk1+ZgPZA8AZbckTA/0aglchlPbzek/KB6jL8Pq2oUcbOGQ==
-X-Forefront-Antispam-Report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:GV2PR04MB12558.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(19092799006)(7416014)(23010399003)(1800799024)(376014)(6133799003)(10067099003)(18002099003)(22082099003)(261102123227099003)(3023799007)(56012099006)(261028144727099003)(5023799004)(4143699003)(11063799006)(261026140227099003)(921020)(261022105027099003)(261009223027099003)(261022075727099003)(261026121527099003)(261021121427099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
- =?utf-8?B?QldCN0FQZENVRzRYUWx6TVN0UDNSSWZBRHVBZks3bklITWthUlAxNjBJUWlJ?=
- =?utf-8?B?Q0kyakVSK3cwUXpRSzNsdUgyMi8vdHZPUmk4M0dCbmZBbjVwcFNWSm5pdWIz?=
- =?utf-8?B?dk5GT3Zyd1BDRkVnWGhMV2ZWd3FmelBDdGJiWkFCRlNjY3dkdUgzK0xmTVlZ?=
- =?utf-8?B?SzVaSWpILzh0d2FEWXJGYjQ1SkJTd2IwTDdpQjZYU01aZVdKbWk2MVI4Z294?=
- =?utf-8?B?enpNbTBLamloT1lnOTcvNGlxZ0QyWFRuTGw1dzJseEdIYTZuQmdqUEU1bXA4?=
- =?utf-8?B?a1U0OU9PcEczaHI2dUlpaEJ2RkVNS1FLdnZDeExhMHZrOVB0N21YdWMrKzJR?=
- =?utf-8?B?VUhRd0dnanVKN0VQNHovMTJmc3RySVgzdnF5MDhldUNxMEFLU0RvL2FtREht?=
- =?utf-8?B?aDZhSlBBQ0J4a0l0LzBCTXBsZmFpa3VuVGxhUTdSVjFhcFlaL3g5L1NOVy9L?=
- =?utf-8?B?SzNEbEtWTW1kUnU0akdZcVlBRzFsNVNkU21OWEZ6OHpnVGh5RlZ3VUpkY2ps?=
- =?utf-8?B?ckFXemgrUk1wL2FSbWR1c3htSlEvM1p4RDMvNTQrdXlXYUhIOW9WZldHdHhn?=
- =?utf-8?B?OXFUMG9hVWV6Y25FVzVIeWN2V2ZocUJZNVhhR1pTa2lwRDhSWkdUMXJOcTQ5?=
- =?utf-8?B?UU9TbmQ3MlJLRXFLRFYrZWt4UHNZQjlSazhqN1F3MXFFTG1SdzhOTml1RTl4?=
- =?utf-8?B?NTR0NWRuQ2RCdWVSVzlvZTh4RzdwQ1VobHIxS1ZBdE4zbGRiUUlMRUdQVDAw?=
- =?utf-8?B?V1NpdVBVSkN2M1BwdmZ5T1pQa1ptZFNWTkF6amF3U3VKbW5CYVpyd0Q2VG0r?=
- =?utf-8?B?RCt0YWNlcURHQ1BIQXgzM2dva0poS1dNYzE2MWdBb3RQZEpJY21PamJjMnhN?=
- =?utf-8?B?aEFzbVlzYVVVQzJXM0pXb2JTWHJQcys1M2hHWTZReWJOazJQSnJnT0lRdUc4?=
- =?utf-8?B?MmhEOHU5dVhIdkp2SDlNWEJvWGdOeUNaZjJtRTlxL2Eya0M5MW15SUNnNCt3?=
- =?utf-8?B?N3VUM2Qxa3UwdDNOMjQ3V0dFSXdLU3hkd0lUcWVrUkI4SGJseis0QzRkY2JT?=
- =?utf-8?B?WElZYmE2eVlJUUZnUVB4MGdPVGxtaWZqWDNqWWYreVZBajVrc1RtVGxmTTRF?=
- =?utf-8?B?czJUdEtSMW0zNVpXQ1loUzd5aTE0OTNQRmtQNllCeXlJOXNPU1RqRkM4MW41?=
- =?utf-8?B?ZFhXV0daci9vSGtFbzd2TVliTkdXcUdqS2R0clJHYmlQdnZIZGtRK2lMaWRE?=
- =?utf-8?B?dU9FOFhScTVGL1dwaVVCbFI5WEpWM0htdFJXdUF4dkp6T0xWRm45QmxtcCtD?=
- =?utf-8?B?bk11NW9tQVNFMy9xdGVjN0dyd1JLelljelNwUDNvNk55elZWRUdqZmdTY0hp?=
- =?utf-8?B?ejIyUWhNbW5GM2RlQ253OGZVTTJPenlkaDd2QldoNWpjSzJDYWFYRy9TcEFL?=
- =?utf-8?B?dU10Z3UzckduSzBVSVlHS09IZDhRUllnTGFacmpFRkNhcVUyVnRpRkpLY2Iz?=
- =?utf-8?B?R1kzb1QxV3gvaTN5N0VWeUx6RE9sbHBnYmEra1I0elYrUGhtTXpRM1BwNDZx?=
- =?utf-8?B?UUpsRlRFamo4QXhrVDBXeGpjbVdxMWRiOGp1dDBmNWluaFJWYWtZUU5yVDQ4?=
- =?utf-8?B?RFBFcjFuMXJtYWNiYUlyNEZqTkRFVzJRVk51b2J3ODYzdFY2cGVFSVpRbSt0?=
- =?utf-8?B?Lzd5OEt0UlNyNWFCaHBXTlpSNkJ6UjVNdmducUhJSFZLQ0RuVHZ0V25pZjV0?=
- =?utf-8?B?TFVPa2Mzc0xpdHg1VHZVSFpkU2NDYm5BczltVThJV2xwTVVISGxRS0pvaGtU?=
- =?utf-8?B?VWJZTXowNm1MQUtZaWRnKy9NRmhyRVIzMFVXbmEzN2g3dGJ5eUl5dlhNTnVz?=
- =?utf-8?B?anFZYmdVVXkyOFY5NmhzSm1nL0oxQWxrQ2JPNnJZVDY1cFQ5K2lsM0x5a0Zn?=
- =?utf-8?B?Y2RnRU1QUlZhNlRLajUwdXZ6TDk5Nzl4Q0Z5M2QvTVU0TTF4OEM1VWlKUlhi?=
- =?utf-8?B?N1FCQStxYUVmQm4vR3R5S3ZsNG15R0h6eWpTMzZqRWU3ZEljTisxUzNucTF0?=
- =?utf-8?B?TUw4VXFua0x1TE56ZEdIcE1WSGx0cWpkbjZtQ2tZZkU0U3YzeGczRjlHOEsz?=
- =?utf-8?B?YTh3MTFZcWZNeEtiKytxWG1xUnp3bURJdm01MFdrN0hsUE1NV2tPVzZGM25H?=
- =?utf-8?B?TjRyRnFiNk1RNXY2QUVkS2lUVFZoZXgzdHFoQ3c3NjdFZHpnVU1JK29ya3d2?=
- =?utf-8?B?VzNqbzc3R09sUy90dkJGd3o1NW5iWHNtZWY4ZFgrVmNHUmprT3Z4ZkIrYlZt?=
- =?utf-8?B?RVJTVHV2QzFLVVNSYzJrVHBaTDFmYnh0TlJ1L2ZjR2txNWd1akZNclI0YXh3?=
- =?utf-8?Q?M/rD+7xnnL0QlyzI=3D?=
-X-OriginatorOrg: oss.nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 4881d7a5-0c33-4006-2d81-08df39abcd96
-X-MS-Exchange-CrossTenant-AuthSource: GV2PR04MB12558.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 03 Nov 2026 13:10:16.2451
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: LH+++WLxkLWQlIJiO7XeuECYUTX6jLvTmRFd3dGoGnGceoToBp0qoI1dgGtUrSzuzQzqve0BqDBv2OdvqxT1NA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DU0PR04MB9561
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <sashiko-outbox-195282@kernel.org>
 
-On 10/24/2026 5:20 PM, Bart Van Assche wrote:
-> On 10/24/26 5:25 AM, Larisa Grigore wrote:
->> This series adds support for the UFS host controller found on the NXP 
->> S32N79
->> platform. The controller is based on the Synopsys DesignWare (DWC) UFS 
->> host
->> architecture and requires S32N79-specific M-PHY initialization/ 
->> calibration
->> sequence. It is compliant with JESD-223D "Universal Flash Storage Host
->> Controller Interface" v3.0, and supports up to HS-Gear 4 speed grade. 
->> It is
->> compatible with UFS 2.1, 3.0 and 3.1 devices. The MIPI UniPro is 
->> compliant with
->> "MIPI Alliance Specification for Unified Protocol", v1.8. The MIPI M- 
->> PHY is
->> compliant to version 4.1.
-> 
-> Please take a look at the report below. It comes from an LLM and hence
-> may include errors:
-> ----------------------------------------------------------------------
-> 
-> ## Main finding
-> 
-> **Patch 9/10: PRE_CHANGE errors are ignored.** In 
-> `ufshcd_link_startup()` the core calls the PRE_CHANGE hook without 
-> checking what it returns:
-> ```c
-> do {
->      ufshcd_vops_link_startup_notify(hba, PRE_CHANGE);
->      ret = ufshcd_dme_link_startup(hba);
-> ```
-> So if `ufs_s32n7_link_startup_pre_change()` fails, DME_LINKSTARTUP is 
-> still sent. That covers an invalid `one_us_tick`, an SRAM_INIT_DONE 
-> timeout after up to 3 s, a calibration failure, or lanes not reaching 
-> Hibern8. The error codes and the `dev_err()` calls in that path have no 
-> effect. Either the series checks the PRE_CHANGE return value in the core 
-> (with an audit of the existing hooks), or the commit message should say 
-> that these failures only get logged.
-> 
+On Tue, Nov 03, 2026 at 12:49:25PM +0000, sashiko-bot@kernel.org wrote:
+> Should mpi3mr_issue_iocfacts() enforce a minimum reply_frame_size of at least
+> 16 dwords (64 bytes, covering struct mpi3_iounit_control_reply and all other
+> fixed reply structures) instead of only checking for zero?
 
-ufshcd_vops_link_startup_notify(hba, PRE_CHANGE) is not checked in 
-ufshcd_link_startup(), and this applies to every host driver, not only 
-S32N79. Because this is core behaviour and not specific to this driver, 
-I would prefer not to change it in this series. A fix in the core that 
-checks the PRE_CHANGE return value can follow as a separate patch, so 
-that it gets reviewed on its own and does not hold up this driver.
+Thanks for the detailed analysis. You are completely right.
+A reply_frame_size below 16 dwords (64 bytes) breaks several downstream
+consumers that assume a minimum reply frame size—most notably
+mrioc->logdata_entry_sz underflowing or causing division-by-zero,
+out-of-bounds writes in bsg_reply_buf, and truncating fixed completion
+replies like struct mpi3_iounit_control_reply (64 bytes).
 
-> ## Per-patch comments
-> 
-> **Cover letter / all patches**
-> - The subject says `[PATCH 00/10]` without `v9`, but the body says 
-> "Changes in v9". It should be `[PATCH v9 nn/10]`.
-> - Patches 1, 5, 6, 8 and 9 start with `scsi: ufs:`. Drop the `scsi:` so 
-> they read, for example, `ufs: dwc: …` and `ufs: s32n7: …`. That matches 
-> patches 2 and 3 (`ufs: unipro:`).
-> 
-> **Patch 4/10 (Hibern8 TX FSM polling helper)**
-> - The prefix is `ufs: host:`, but the helper is added to `drivers/ufs/ 
-> core/ufshcd.c`. It should be `ufs: core:`.
-> - The commit message names `ufshcd_check_hibern8()`, but the function is 
-> called `ufshcd_dme_check_tx_hibern8()`.
-> - "Unlike the initial implementation, the timeout error is now reported 
-> only once…" describes earlier versions. It belongs below the `---` line.
-> - Please don't use `extern` in new prototypes in `include/ufs/ufshcd.h`.
-> - The HiSilicon and Qualcomm messages used to print the TX_FSM_STATE 
-> value(s) when a lane failed to reach Hibern8. The new helper only logs a 
-> timeout, so that diagnostic information is lost. Consider logging the 
-> lane and its last state.
-> 
-> **Patch 5/10 (move CREG helpers)**
-> - "Dropped `static` from …" is not in the imperative mood.
-> - The commit message should say why removing `static` matters. In 
-> Versal2, `phy_write_attrs[]`/`phy_read_attrs[]` were static arrays that 
-> got modified on every call. Two callers at once, for example two host 
-> instances, could corrupt each other's values. The move fixes that race, 
-> which is worth stating.
-> 
-> **Patch 9/10 (S32N79 driver)**
-> - **Hard-coded lane count:** `s32n79_reset_config[]`, 
-> `pwr_change_phy_regs[]` and the calibration tables only cover lanes 0 
-> and 1. But `ufshcd_dme_check_tx_hibern8()` is passed `hba- 
->  >lanes_per_direction`. Use a fixed 2 consistently, or check 
-> `lanes_per_direction` in `init`.
-> - **Connection setup:** `ufs_s32n7_link_startup_post_change()` repeats a 
-> subset of `ufshcd_dwc_connection_setup()`: local attributes only, no 
-> peer attributes and no `N_DEVICEID_VALID`. Please explain why the shared 
-> DWC helper, or `ufshcd_dwc_link_startup_notify()` with a 
-> `phy_initialization` hook, can't be used.
-> - **Unexplained settings:** `UFSHCD_QUIRK_PERFORM_LINK_STARTUP_ONCE` and 
-> `hba->spm_lvl = UFS_PM_LVL_5` need a reason in the commit message, for 
-> example whether power is cut during system suspend.
-> - **Includes:** `FIELD_PREP()` and `GENMASK()` are used without `<linux/ 
-> bitfield.h>` or `<linux/bits.h>`. It compiles only because `ufshcd.h` 
-> happens to pull them in.
-> - **Nits:**
->    - Use `u32 data` instead of `unsigned int data` for `ufshcd_dme_get()`.
->    - `SCM_ONE_US_TICK 0x2CU` has a `U` suffix but `SCM_STATUS 0x30` 
-> doesn't.
->    - The comment says "SCM_MPHY_RAM_CONFIG_STATUS" but the macro is 
-> `SCM_STATUS`.
->    - The `dev_err()` in `ufs_s32n7_link_startup_notify()` repeats 
-> messages that the inner functions already print.
->    - `device_get_match_data()` is called in both probe and `init`.
->    - `ufs_s32n7_remove()` is a wrapper that adds nothing.
-> 
+I will prepare and submit a v2 enforcing a minimum bound of 16 dwords
+(64 bytes) along with the upper bound overflow check.
 
-Will fix in v10.
-
-> **Patch 1/10:** the change is fine. The `Fixes:` tag is debatable: the 
-> old positive return of 1 was already treated as a failure by `if (ret)` 
-> callers, so this isn't really a bug fix for stable.
-> 
-> To check these points I read the code in your local tree (`locking` 
-> branch). I did not apply or build the series.
-Will drop the "Fixes" tag and will add a new commit which resolves the 
-actual problem. __ufshcd_wl_resume will no longer return a positive 
-value in case of an error.
-
-Best regards,
-Larisa
