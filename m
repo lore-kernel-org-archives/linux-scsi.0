@@ -1,112 +1,121 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.69.33
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793711289;
-	b=m9LS+o8AlJfgKoyswx5DISaOXnhEqdlVcY64GgqzW6dq6fCHpxfBFf8iXQseuII0SmpJ
-	 ELW2g1Poqq7TWGFq7dpz6b+hmpMOb01uYCH5sPoLR4UFs1F3gfs5SU97SRkUFyNuAtxaw
-	 KkOgyuiwR7iBCRvoxvdKq70TlkHcLkx/MffGin3YrG0Qi622nf+bYD/Bb2t/0zXDLOo6B
-	 amAZZvZSU584ghNH3eBioVZILgrxUbju+BqdwznQO7c9A93IcoDMQB3tOqlvzWO13zyak
-	 ldyLr06JPEyrtd00mpuIC8Xldnnn7wrpXx4lgqiOTOk70ePs0sAfl96r7GxuqpDdRGQ==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793711289;
-	h=DMARC-Filter:DKIM-Signature:Received:Received:Message-ID:Date:
-	 User-Agent:Subject:To:Cc:References:Content-Language:From:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:X-ClientProxiedBy:MIME-Version:
-	 X-MS-Exchange-MessageSentRepresentingType:X-MS-PublicTrafficType:
-	 X-MS-TrafficTypeDiagnostic:X-MS-Office365-Filtering-Correlation-Id:
-	 X-MS-Exchange-SharedMailbox-RoutingAgent-Processed:X-LD-Processed:
-	 X-MS-Exchange-SenderADCheck:X-MS-Exchange-AntiSpam-Relay:
-	 X-Microsoft-Antispam:X-Microsoft-Antispam-Message-Info:
-	 X-Forefront-Antispam-Report:
-	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
-	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
-	 X-MS-Exchange-CrossTenant-Network-Message-Id:
-	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
-	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
-	 X-MS-Exchange-CrossTenant-FromEntityHeader:
-	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
-	 X-MS-Exchange-CrossTenant-UserPrincipalName:
-	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=1fBCpV361Ghq70htxPInxWG74L4nJhRQLrY4+iilsEg=;
-	b=yJf/8bhh8kEmXG4HXBPVqADsHTuRGcS90oT3EXfxVvFdsiv0u8CFYaPxQs7yY5nxlW0N
-	 FtO9+z42PC+2/VSd9LTUMVjmc/SlRgxuHJMCUMipU6BrLKqCbqWS1JcBMHi9di5FaZgyG
-	 HDEvb6Rs9Nkg+7zn4dxlU+YiZFjVzwB9960/jL9o8JPC88qpDj0JzYFx3SwTMlKWyOat1
-	 sRLIJ2kPxgF5btLteWY2qYpGMTPDnNfXsXWcLgbPT8ehTWEGPNkZigmMjZkSQYDl2J1Iq
-	 lNKaPUepkmgQSYHb50WYjMQgyTo/UGF3aR9yYmn5wwd0Z5lgwC4JZN1BlOHgxpy1tfA==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=oss.nxp.com;
-	spf=pass smtp.mailfrom=oss.nxp.com;
-	dkim=pass header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.a=rsa-sha256 header.s=selector1-NXP1-onmicrosoft-com header.b=df5WcpEj;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.69.33
-Received: from AM0PR83CU005.outbound.protection.outlook.com (mail-westeuropeazon11010033.outbound.protection.outlook.com [52.101.69.33])
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.129.124
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1793711298;
+	b=Qa1uJNuePSBFNmmlbD5vbrn9rBAN+7AUg/2yrhhRkaACx7s371Dilmai9ADFlee3zbLe
+	 4tkoVrQx2t0WHW9CDRX8K1j7P2c/dIkmsQTUA1qq+cA3oEn0tAtv+EXqP7SNyOfWN6ZcA
+	 M0JoLBL++j+hEpuufEWZiOXeTKTXGax+T69CJRqD4ICazZY7IwNMalm63Om78pEZfIAPQ
+	 vVS+pFfLIy86gtIpxRI+HAXnTU542flaR4hfNlLlMcEY50jenbDayOWN80JLvPjGsZEkk
+	 vY8AbbGaoFxwbmU/Cx0lbzQkZ5aAuBBkuA0kRalJdLZgFd4vstNETZQDlpghr3MZptA==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793711298;
+	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
+	 X-Mimecast-MFC-AGG-ID:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
+	 X-Received:Received:Message-ID:Subject:From:To:Cc:Date:In-Reply-To:
+	 References:Content-Type:Content-Transfer-Encoding:User-Agent:
+	 MIME-Version;
+	bh=JweHxHOgQQEqqfkoSADQQDEsVhp2wjrIIS3nJ/SiuXQ=;
+	b=fZ7sBEg7POFU+ilTRDUwMfjC7QaNn7aW0cM/s5SgNYan4+oY8czcYCnuaB2k9XZFJ+Pi
+	 HXlI/oHiX+mY/g+/JGD/A47wsk/EmqCTME0QTDp7xQ72bafWl1JwC4eZx1OrLDN+pEtns
+	 0HFV4LgjWjdn/RbzvUaULlXCM81m9vbvrVOWqydVtF0Csi/5E9O5S+ejQhOhpQMxfKDUW
+	 BdzuxIZkqPrM/c1Pv56gt+DNz8CkcANsSCaX/SDhkvuswrn5sHbu/2ZELIEqr72Vav+0I
+	 6poUvzXv28i/u4TqwiBWY3nC2oNIQDVd0a5pVEURm7OeSurUBLeBNdSvCcEuom6Z1iQ==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=redhat.com;
+	spf=pass smtp.mailfrom=redhat.com;
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=UFaKxwSv;
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=dUodlXJe;
+	arc=none smtp.remote-ip=170.10.129.124
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7731D606D82A;
-	Tue,  3 Nov 2026 13:08:08 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7731D606D82A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C88B60A2602
+	for <linux-scsi@vger.kernel.org>; Tue,  3 Nov 2026 13:08:17 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9C88B60A2602
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.a=rsa-sha256 header.s=selector1-NXP1-onmicrosoft-com header.b=df5WcpEj
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=brbPBZiCKj4qmCDOoeG9s8rjjOwmixMC5IepiXavsyWdMe9Z2YCTeqe0gShrTaVKQs0gmccs/D5YGE3XLZFk9a6UQaaeBwTMVj23lHZy6pFuhGlxhmTuEquPTKl1cb7KK7Yp0uQNPLOt2LrgGv1IuTLrOEr/D0bk/yo0bonEn6U2xfNWszHiHc7flqrQ+nt2QTeVrGZzIt6UdCIW1lew4Yo/Q4vFOG1Ic2Qm8U4oqZQnVaEZHiyX4NoVkk4H1Cp6ql2RljqXL9tCBN1AQklceIjqUYagKRKgxBMX8nEbuw2vnBlTyg9FxXEBc7fi/uLLMDckEYVDfSpkmG+pzG0gqw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=1fBCpV361Ghq70htxPInxWG74L4nJhRQLrY4+iilsEg=;
- b=kHqz/Gl1IsNt+9rcA1DXqgRsalDQyJFk4StaT1+WR54z7uOmYsWjDRjJrokNIFScG8LaTha3zh+OBfYkHvI5OGPdTWhoErOiBC7M0EbKulvYawonbTczJzPBiSajgi61SwbDyZVdeUW3GEWCr/MPYQbeICVR3DRopxmP07eNEq1vYzl/uOmMYc6NZ4205+bbbHBVyFKs8LdV2e6o5iGJAJvaEpSWVDnUGR3jPMhADKOQ7nuj+diuzFsGelEUODovo0fc5vW9MBKDlTMZECfQ195DF/edwJLS3agVXhZXmTn/4KQiPTeUKGQ20ZQ8Z+cyOUv41eQPM62gkQ/MY/2EUw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
- dkim=pass header.d=oss.nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
- s=selector1-NXP1-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=1fBCpV361Ghq70htxPInxWG74L4nJhRQLrY4+iilsEg=;
- b=df5WcpEjnyBY3J5rXYwFF8h19AlMk6BxkJbMhKVzhg0NyLujwyM803Fjn9Jrccq81D5LWZjN93NFvokzl+30TdkCDaEZCk64IipNoBjs2v5BjvA6n08HFu865blUapVgrOOMLyTOJWnr9SMOmtnx7meXf7lR2jVdYe3d5GAy3dhgHvgYoT0C/jpVWqKC2zh9MaW2lA75DJw1GGTYOnBVP51hyQHg5UBhtit49jrBVvY8nfoBFNRAZs6tRVBgnetrRGGaEm1gTnDYxSjUaBqYTu0YzBBrCKcrLSsFRR3kntvIdiUIS+T6OSFtoSWbwq98SnIjMqTbc2/Yn1FNGeMoJw==
-Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=oss.nxp.com;
-Received: from GV2PR04MB12558.eurprd04.prod.outlook.com
- (2603:10a6:150:368::10) by AS8PR04MB8007.eurprd04.prod.outlook.com
- (2603:10a6:20b:2aa::7) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.569.12; Tue, 3 Nov
- 2026 13:08:04 +0000
-Received: from GV2PR04MB12558.eurprd04.prod.outlook.com
- ([fe80::cd9f:102:ea58:4c49]) by GV2PR04MB12558.eurprd04.prod.outlook.com
- ([fe80::cd9f:102:ea58:4c49%6]) with mapi id 15.21.0592.007; Tue, 3 Nov 2026
- 13:08:04 +0000
-Message-ID: <68497fe2-c347-48c2-8faa-8c07924e8305@oss.nxp.com>
-Date: Tue, 3 Nov 2026 15:07:59 +0200
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 07/10] dt-bindings: ufs: Add NXP S32N79 UFS host
- controller
-To: Krzysztof Kozlowski <krzk@kernel.org>
-Cc: NXP S32 Linux Team <s32@nxp.com>, Alim Akhtar <alim.akhtar@samsung.com>,
- Avri Altman <avri.altman@sandisk.com>, Bart Van Assche <bvanassche@acm.org>,
- Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>,
- Conor Dooley <conor+dt@kernel.org>,
- "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
- "Martin K. Petersen" <mkp@kernel.org>,
- Sai Krishna Potthuri <sai.krishna.potthuri@amd.com>,
- Ajay Neeli <ajay.neeli@amd.com>, Manivannan Sadhasivam <mani@kernel.org>,
- Pedro Sousa <pedrom.sousa@synopsys.com>, Joao Pinto
- <Joao.Pinto@synopsys.com>, Hannes Reinicke <hare@suse.de>,
- Pengutronix Kernel Team <kernel@pengutronix.de>,
- Fabio Estevam <festevam@gmail.com>, linux-scsi@vger.kernel.org,
- devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
- imx@lists.linux.dev, linux-arm-kernel@lists.infradead.org,
- linux-arm-msm@vger.kernel.org, clizzi@redhat.com, aruizrui@redhat.com,
- eballetb@redhat.com, echanude@redhat.com, Frank Li <Frank.Li@nxp.com>
-References: <20261024122533.3609180-1-larisa.grigore@oss.nxp.com>
- <20261024122533.3609180-8-larisa.grigore@oss.nxp.com>
- <20261026-beneficial-authentic-bonobo-a59b7c@quoll>
-Content-Language: en-US
-From: Larisa Ileana Grigore <larisa.grigore@oss.nxp.com>
-In-Reply-To: <20261026-beneficial-authentic-bonobo-a59b7c@quoll>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: AS4PR10CA0023.EURPRD10.PROD.OUTLOOK.COM
- (2603:10a6:20b:5d8::15) To GV2PR04MB12558.eurprd04.prod.outlook.com
- (2603:10a6:150:368::10)
+	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=UFaKxwSv;
+	dkim=pass (2048-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=dUodlXJe
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1793711296;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=JweHxHOgQQEqqfkoSADQQDEsVhp2wjrIIS3nJ/SiuXQ=;
+	b=UFaKxwSvQ2i06ocyjAV+G20PaK85H8vx4CyrErCH7+Aj/jABJecH5jRDEPzhsKdmVguxTz
+	DJfpz2UgBlP7gNtMXV8SuYq4Stt5ge4wYNkLkQB6C7mCKbvmM7oGEXoFHBSOTbPBQh3U5A
+	LPx6ZOqCkD6xW1iqVKjE8TjU6iEeLHA=
+Received: from mail-qk1-f197.google.com (mail-qk1-f197.google.com
+ [209.85.222.197]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-171-wpDTkF_JNM2rrZCp9q73ng-1; Tue, 03 Nov 2026 08:08:15 -0500
+X-MC-Unique: wpDTkF_JNM2rrZCp9q73ng-1
+X-Mimecast-MFC-AGG-ID: wpDTkF_JNM2rrZCp9q73ng_1793711295
+Received: by mail-qk1-f197.google.com with SMTP id af79cd13be357-93cb71b1443so859185185a.2
+        for <linux-scsi@vger.kernel.org>; Tue, 03 Nov 2026 05:08:15 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1793711295; x=1794316095; darn=vger.kernel.org;
+        h=mime-version:user-agent:content-transfer-encoding:content-type
+         :references:in-reply-to:date:cc:to:from:subject:message-id:from:to
+         :cc:subject:date:message-id:reply-to:content-type;
+        bh=JweHxHOgQQEqqfkoSADQQDEsVhp2wjrIIS3nJ/SiuXQ=;
+        b=dUodlXJeH1mtjhklU9OYb+ab+2VpHsQ3JmQ0Nm+HpzmkcAjdZAEMVIuXUeBLty604y
+         5/0fg5bA/d37fsI9nvaRzdr01aASYkb95wpxZmQLuqLEmQAW8BjRIgQI9/9F2oZwgaOv
+         TZuhz1nStvdq9ftevqGmcYDFTLeL969wvH2EHKxYQdY2d2P+p75LpFS2oPw+G1WVWaee
+         /5c2e8Zmko24JKNUaSffKdPhI26QyvQdxHFymzVfZeExHjOAuurvEzS85DcCrOq6AoOQ
+         1NCRaHGoqYXD4j5tcZOmpPMv0PQfz1YfSa00izSaErLKKZFYjYViIbZo2swPHbsw7R9C
+         Iy2w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793711295; x=1794316095;
+        h=mime-version:user-agent:content-transfer-encoding:content-type
+         :references:in-reply-to:date:cc:to:from:subject:message-id:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=JweHxHOgQQEqqfkoSADQQDEsVhp2wjrIIS3nJ/SiuXQ=;
+        b=fc1wV+FUZisgaAlqTI24VN3/oUtflhgbyS+Wr0CyNKR+8O/eERHGb9MciauTqQaMoc
+         fNXvI+Cyh/lJProlLvXguSivWc4Y+DPnDgtCQixm8mqZ76lEKv9jWij2sWia4ERIjuPm
+         z+RUALk4QIayAW2hW7jekX0zS/85yn9B6tlqEhy0jHa+H9DzWZIfbAbwIoGCgFWUnZin
+         5bJP/zol9zHKnZL0XHM+/vzxki0oM1u1gbxJAqp5YJgP5iZ2Cx4a7WlMoCJCVpq02Qfg
+         rI22cLq9UyQDejKCYBmCvMzWiC6TNErFzF9Z/bfxX5VISz8l0eZezr56fs6b0iZ76B4z
+         Rn1g==
+X-Forwarded-Encrypted: i=1; AKwUvByMESFW37Gz4BKLVtx0FZinJwbGARTypz/Z1rk8YU4j+GUS+nBgfyHhzcTavFof7CCiQRWkg8k+QNqt@vger.kernel.org
+X-Gm-Message-State: APuU4Z+qZKA0rynQ/ghfgZSv2xyXUDSxmSnCC5FauJCXxh/mpVTVcrr5
+	ynQDPhYcPtQSTIhQxHenPZlsCyhEs5KdMrfSB/H0YSv8HCDbhfuZry/GOZRa0joLkkycwG1tORu
+	3KWSUXjKNIhviU7uHzxgBr/O4fA/yuwKgiB4InGqYGk3oFHIrfpQS8efpMzKsSwU=
+X-Gm-Gg: AYBFou1lwT8X0VygsIAO6p3lCsDihhWWgv27ZWSaPH0VfQtpuaZZZm97X8vEOB4I4K2
+	uUS5reAb0Q/coy8yvL+s7B+oD/Y/WyfFoDFiM381+DD5HNn3UYo3mypgqe/gFwyyGDsxLOWAzg3
+	LwkxB4nmgicb8KvOVGXtITsFDzLcSBvWkchJLaoUZDnJbxqKumlCMGoF0GLvoqr1mNv8LA+SE9E
+	2XRoRrheiNUtGN2SVqOZ1ENr204VsmPyQ2jXNRRK294/WagAmKwoZpFR24JLeYHOoR5kQXsxAJn
+	+IAFjlWeO1VchOw+37Js90ND0WGsxPkwvM5ac2och9rVQfa9UzoexYwtVb+iizwbkGqWh+4ocGX
+	+Odp5Iziw/WsoXcbmQqCdXlTcVoUPuXg0o5+pNU+KcO1Es7dj3AiPTbrY+CU21o2GO1ocJlcenj
+	eeVlXdZdJRLGBmLk7dShcych+CBeKfbiXV9gjSMPdfqwFtzp6V3Haq5gWTfdbYrCtK1IAKq+4=
+X-Received: by 2002:ac8:5d14:0:b0:533:4da1:b5d1 with SMTP id d75a77b69052e-542b659318bmr211569811cf.23.1793711294294;
+        Tue, 03 Nov 2026 05:08:14 -0800 (PST)
+X-Received: by 2002:ac8:5d14:0:b0:533:4da1:b5d1 with SMTP id d75a77b69052e-542b659318bmr211568931cf.23.1793711293406;
+        Tue, 03 Nov 2026 05:08:13 -0800 (PST)
+Received: from loberman-thinkpadp16gen3.rmtusma.csb ([2600:6c65:2440:d8c:aa2b:ddff:fe88:da74])
+        by smtp.gmail.com with ESMTPSA id d75a77b69052e-5498b49d829sm25499641cf.8.2026.11.03.05.08.12
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 03 Nov 2026 05:08:12 -0800 (PST)
+Message-ID: <7e08a1f08defd24b42722ce0ad52326ff59236cd.camel@redhat.com>
+Subject: Re: [PATCH 0/2] target: iscsi: fix hanged WRITE_PENDING commands
+From: Laurence Oberman <loberman@redhat.com>
+To: Dmitry Bogdanov <d.bogdanov@yadro.com>
+Cc: Martin Petersen <martin.petersen@oracle.com>, Maurizio Lombardi
+	 <mlombard@redhat.com>, target-devel@vger.kernel.org, 
+	michael.christie@oracle.com, linux-scsi@vger.kernel.org, linux@yadro.com
+Date: Tue, 03 Nov 2026 08:08:10 -0500
+In-Reply-To: <f4cbbca9e8b743da07902e97b09e49ac7e1cc5fb.camel@redhat.com>
+References: <20261027180123.13163-1-d.bogdanov@yadro.com>
+		 <d7a1701ddc2e7c976ad8ff9ec071d9bfdc86a7e2.camel@redhat.com>
+		 <20261028140221.GB32229@yadro.com>
+	 <f4cbbca9e8b743da07902e97b09e49ac7e1cc5fb.camel@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.60.2 (3.60.2-2.fc44) 
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -116,168 +125,200 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: GV2PR04MB12558:EE_|AS8PR04MB8007:EE_
-X-MS-Office365-Filtering-Correlation-Id: 3853fa50-786a-4f16-d991-08df39ab7eaa
-X-MS-Exchange-SharedMailbox-RoutingAgent-Processed: True
-X-LD-Processed: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635,ExtAddr
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
- BCL:0;ARA:13230040|7416014|19092799006|376014|366016|1800799024|23010399003|10067099003|22082099003|261102123227099003|18002099003|3023799007|56012099006|4143699003|11063799006|261026140227099003|261026121527099003|261022075727099003|261021121427099003|261022105027099003|261009223027099003|261028144727099003;
-X-Microsoft-Antispam-Message-Info:
- wbyOEhaq4aM6zG/6f/6r04cdIN60dghCNowHtW8NBvmwmhCPs3RekcJtgzJIO7JhkAGZYFqPe20qV4gs1TzrabGmeV5lUaAU2w6fU1T6dQ4+bbQPfSgZ+hiorp06RlRrFxUWZfGl5XIddDBIqJcyvPjSENxw0XY8zoedJkc5ZrgUjQpA9aWNXTfrDc68sRodCU/e0eukCV1I7jTtV0jncrn+FBxvLgllKyisnGIdDI33FCVFJ9tfUNMGKI2TEfJ5cD+x5ZzCZLCoVBdP17pJLs5at5sIZN6lfqtyyieCWioPLqOTFM1haNQzIGO+JW/8JlJ8rk98C65r3uuZsL7z53zrFbBulQtRh8Oh6v2wKlVunVAOIWG31L9zoJDyIfLF1rExm7yuAgU1JA2FEeUeAqsYpIZ4lcDFMA0cqjoefJjwQ4247P6y9Io7tyNjdiCfOG3uN2j8NI/bdekuLPNPoCtaj6B8nS/lM3LeKpiQrt1RP3Gz4z6PmKleiuVv+EaeZIzATUspIZJEsZlRqcIrRI1w5u0ThuUfFd42K03aGRsjv953W/1xG84S4ifHZensa/Jgdzxe+3IVW9VoBFYafis/uVHK+Lo2UIt38k5g9ywfYqL99Y5hiaql5dXcbkAq
-X-Forefront-Antispam-Report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:GV2PR04MB12558.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(19092799006)(376014)(366016)(1800799024)(23010399003)(10067099003)(22082099003)(261102123227099003)(18002099003)(3023799007)(56012099006)(4143699003)(11063799006)(261026140227099003)(261026121527099003)(261022075727099003)(261021121427099003)(261022105027099003)(261009223027099003)(261028144727099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
- =?utf-8?B?cWQ5NG1HVnNoZm1WQ1UvQWhiVS81a2MxbitTS3NaNEdOKy9MWGFadVY0UGZG?=
- =?utf-8?B?bDR3aGI4S0RHd0ZZQmYzSWl6WUpUS1A4YlR4KzFaSDlPMWZaUnZLZjM0M3lj?=
- =?utf-8?B?Zis0SFJ0YmhRelgrQ2tYSTdFWTJocm5uYk14NktSZFdiMEhMMWNiTWQ0RW00?=
- =?utf-8?B?SlN2aW1oczVYcDgwbjVTOHN4YUl0V3kyUGdKTVJWdUk2UUk4NEUzVUVCSndn?=
- =?utf-8?B?UThpVDdpTW9XVDlLK2ZvZGNsRzc4UG5LRytNZG43RVBFZnRLMXY5ZVdzY1dW?=
- =?utf-8?B?aFlhQjNWckJ6RWsrYzJHK0E5M2liMGpvc2M0dVJJUHo2NFRWR0lxVkRNU29G?=
- =?utf-8?B?UHF0RDNuc2RVQjd1c0p5VnhmL0pZaC96TVFOODBxZnNNRjdCWlZMemxEWGtC?=
- =?utf-8?B?SjZ3RUpieUZIUk5pMmVDZ2VSSHppL3YrWTBoMGNtci9UZTRkQzRTZlQ3QXl2?=
- =?utf-8?B?T0xMUkw3a0htZDJaSFZSN0loaHlncEhlZ1RHRUpFMjRrZzdmRjRHT1d4c1hP?=
- =?utf-8?B?UGFCNFg5ajhXQjliRDF2YmVxR09NYUpqOUx1WmFoUlhTeXN3bDRac09JcGwz?=
- =?utf-8?B?YmI1b3V6VElVTWwrYTJnN3JTdnZ1dEFuRGVlRWI0UWZRaW00Vzh0RUdhbVlS?=
- =?utf-8?B?ZGc5ZEZUNkZuUXY0UVM0R3kra1ZIYTBMMW1PTisyZzhYM0VOQkFORU1SdFp2?=
- =?utf-8?B?UEx1Z1JkV3E0TUxWZ1l3NDZMR1kzSzlndXBHbitxMjREWFE1emlkdVVJK1Az?=
- =?utf-8?B?SUFLS2M1QUJHMFFwQndjQUh3dmxRYnVKRzZPWWpQeUtETEFYa0twMU45QU1y?=
- =?utf-8?B?ZkxMSmtEMjMxanNWRU1nb2xranIvVHpmcG5VWWRwNEFGWkZWTEJyOWxLNHZX?=
- =?utf-8?B?U0tMMCs0Zk84bnZYM3hBc29uWXczMktMNHZWQmhqK1FwT1lhRS9Od3BBRHUy?=
- =?utf-8?B?WWM4b0RkazlxS0U3UitVblhSaFNObTJUWWtEUkdTcXpPNUppdko2MmJmczJM?=
- =?utf-8?B?blR6L1VjMEQ4NWtJZ0sxTmVVNWFtaVRDcWgwM0RBcHIvMVgzVTIzOTdRdGVU?=
- =?utf-8?B?c0lDR29sOUFsK1ZHU2lqa2Q0ajdiZFZzNXl5c215T0tTcGNPbkhVZ09FOU9t?=
- =?utf-8?B?MXQ5N215bm1reDY1b2cvRVVNTk50OC93K0gvVE9KWWhYUlVmaHYySlJtY0VQ?=
- =?utf-8?B?MUtSSndQazV2aE1CUklXelNyZXVxclh1U3hNOTY2OC9adzIwbjFYQVZqSklp?=
- =?utf-8?B?VlNOUm10RGEwb0pkdGVWbVRSekF4MFVIVU5xeDF5L2thdkdXN05HeVZBNmRZ?=
- =?utf-8?B?ZlZnVFhMczdCRnBpeUVwTmtUTG82WVZnVUJuaGhxU0FlenpMaGtrM2dYeS8x?=
- =?utf-8?B?SVJhcXJLdEhRdTNOYzNsY29XZ0FlaUxwUlVORGNlV0tpeENFVGFNWmEzMzQy?=
- =?utf-8?B?UXZ6QVFmbzdROXlGUGFmRnNJQzB6cDBWL09UUHphMDdYSmxPdXQ1Y0VVSCto?=
- =?utf-8?B?UjZ4ZnFaVTVsNnExYmhuM0ZONGptNlFTd1MwQ3FrZFZPeG9VdWxjQ09jRWZ5?=
- =?utf-8?B?akpPSGh6QWJWMGtxWXcvNWYrdzI2c0g4VmF6UHAwbUVxdG0rV3VBMDZrTXZJ?=
- =?utf-8?B?MVhzOHRnWTI4WTdDcG1FVU1OaU5xZ256L3JrOHpaM2p4Qk03bDEvM2ppZ1RC?=
- =?utf-8?B?ZWNQbG05Y0o2SG1YamJla1dDMVRZZ3Z1MGVqMkFKNEVpSGpPd1BSWGRGQnIy?=
- =?utf-8?B?RjlWOWo3SmFyUGRBdHFDanRUanNFWHphQUxZRExzblBKQjk5NDJVZnp1andZ?=
- =?utf-8?B?dWt6U3JzandvYzRHUWlnNU1MRmhDdWRKblY0OEpoZ0l5VENHTWlnYlpMeDRs?=
- =?utf-8?B?MFQ1SXV6ZmkxRjByT09QRVVqVlJiUkVEbVhicUZRYnRJays0SjN0N3prd3hN?=
- =?utf-8?B?QTBpZXJjdTZlQURwNE1lemkveUtLVFZkekMrOXJxTlg3ZnlIWHJIRVJiODhu?=
- =?utf-8?B?NGUyK0UwNlVVYktkdTN5aWVldHpUK0JwTzl3MGJsMnpxNGY2WTBGdzZIVEQy?=
- =?utf-8?B?MmlPMWNmVGNMQW8yN3ZVTUM1VS9va0UzNjlBU2hvMFJFMzNuRWQ0K29qTW1r?=
- =?utf-8?B?WE9PNkxWTWZHYTJSRERiR2FHNzJZb2VlT2lpY3pSeEVwekcxN3crb0MwME5O?=
- =?utf-8?B?ODBGdXBCbFRTRTdnTVBDZkVjVkNKUmJ4NUNZb2lEQlVMMGlxRzd6OFJYTi9T?=
- =?utf-8?B?Mnk1RFE3VDVtWU1wcTM1ZmJBYXZYQ2hoZWhyYTVUWDlvQ1paUzdNMjlnc0tF?=
- =?utf-8?B?cGxBMU1CWGNzVm1OS2RZUWMzWU9oNEZycXlQYjVzSzQ3c2M2QS9TbGFqVzFT?=
- =?utf-8?Q?27SwzsGphfe3tMdA=3D?=
-X-OriginatorOrg: oss.nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 3853fa50-786a-4f16-d991-08df39ab7eaa
-X-MS-Exchange-CrossTenant-AuthSource: GV2PR04MB12558.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 03 Nov 2026 13:08:03.9852
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: AK2a5FUofBKA89s/Ce/Ak4uknvMeIQ+XFjKUmdwezJRS7VJR/zCEHl/hu6K2+OI3IVYSnVJTz37gnGURiK2i+A==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AS8PR04MB8007
 
-On 10/26/2026 1:11 PM, Krzysztof Kozlowski wrote:
-> On Sat, Oct 24, 2026 at 02:25:30PM +0200, Larisa Grigore wrote:
->> Document the UFS host controller on the NXP S32N79 SoC.
->>
->> Signed-off-by: Larisa Grigore <larisa.grigore@oss.nxp.com>
->> Reviewed-by: Frank Li <Frank.Li@nxp.com>
-> 
-> How this could appear in v1?
-> 
-> Also, your SoB is the last one.
-> 
+On Wed, 2026-10-28 at 10:30 -0400, Laurence Oberman wrote:
+> On Wed, 2026-10-28 at 17:02 +0300, Dmitry Bogdanov wrote:
+> > Hi Laurence,
+> >=20
+> > On Tue, Oct 27, 2026 at 04:08:08PM -0400, Laurence Oberman wrote:
+> > >=20
+> > > On Tue, 2026-10-27 at 21:01 +0300, Dmitry Bogdanov wrote:
+> > > > ISCSI has some old leftovers in the code that prevents passing
+> > > > the
+> > > > aborted
+> > > > command to the target core to make the actual abort. Such
+> > > > commands
+> > > > hang
+> > > > until connection is closed.
+> > > > So remove those leftovers.
+> > > >=20
+> > > > Dmitry Bogdanov (2):
+> > > > =C2=A0 Revert "scsi: target: iscsi: Fix hang for aborted
+> > > > WRITE_PENDING
+> > > > =C2=A0=C2=A0=C2=A0 commands"
+> > > > =C2=A0 scsi: target: iscsi: fix hanging WRITE_PENDING commands
+> > > >=20
+> > > > =C2=A0drivers/target/iscsi/iscsi_target.c=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0 | 19 ----------------
+> > > > --
+> > > > -
+> > > > =C2=A0drivers/target/iscsi/iscsi_target_erl1.c |=C2=A0 8 --------
+> > > > =C2=A02 files changed, 27 deletions(-)
+> > >=20
+> > > Hello Dmitri
+> > > Thanks for posting this. I have a series in flight for the same
+> > > hang:
+> > >=20
+> > > https://lore.kernel.org/linux-scsi/20261027122837.2148074-1-loberman@=
+redhat.com/
+> >=20
+> > I know, that is why both you and Maurizio in To: field. I want from
+> > you some comments. Thank you for review.
+> >=20
+> > >=20
+> > > Is the revert maybe aimed at the wrong layer, and the sashiko
+> > > review of
+> > > your 2/2 makes the case better than I can: with the fabric check
+> > > removed, an aborted command reaches target_execute_cmd(),
+> > > target_cmd_interrupted() queues target_abort_work and returns
+> > > without
+> > > changing t_state, the command stays on conn_cmd_list in
+> > > TRANSPORT_WRITE_PENDING, and iscsit_release_commands_from_conn()
+> > > completes it a second time if the connection closes.
+> >=20
+> > As I said in response to sashiko-bot, that is the current (always
+> > be)
+> > behavior.
+> > It is not introduced by my patch.
+> >=20
+> > > That is the same double completion you are reverting d5869dae5080
+> > > for.
+> > > It
+> > > is not a defect in Maurizio's patch and it will not be fixed by
+> > > replacing
+> > > it -- target_cmd_interrupted() records nothing when it queues an
+> > > abort,
+> > > so
+> > > any site that completes an aborted WRITE_PENDING command can be
+> > > followed
+> > > by another one. I found this from vmcores on a customer system
+> > > before
+> > > either of us posted, so no argument from me that it is real.
+> >=20
+> > Not the same, d5869dae5080 greatly increases the probability of the
+> > double completion by calling target_complete_cmd() which is allowed
+> > to be
+> > called only once for the cmd. Calling it twice is wrong by nature.
+> > Fabric
+> > module shall call either target_execute_cmd() either
+> > transport_generic_request_failure(). target_complete_cmd() is for
+> > backstore modules. That target_complete_cmd() at the iscsi
+> > connection release is not so good too. But it was intended to be
+> > the
+> > last(and the only) call from fabric driver for the command never be
+> > in
+> > the target core.
+> >=20
+> > >=20
+> > > Patch 3 of my series fixes it there, under t_state_lock, for both
+> > > queueing sites in target_core_transport.c and for every fabric.
+> > > With
+> > > that
+> > > in place your 2/2 is safe and d5869dae5080 does not need
+> > > reverting
+> > > for
+> > > this reason -- which matters, because the revert is not free:
+> > > that
+> > > commit
+> > > carries CVE-2026-97951 and is in 5.10.y, 5.15.y, 6.1.y, 6.6.y,
+> > > 6.12.y,
+> > > 6.18.y and 7.2.y.
+> >=20
+> > My intention is to not create a situation when there a race is
+> > possible
+> > instead of fixing those races.=20
+> >=20
+> > > Two questions on 2/2 independent of all that.
+> > >=20
+> > > Removing the sense_reason early return in iscsit_execute_cmd()
+> > > means
+> > > transport_send_check_condition_and_sense() now runs for an
+> > > aborted
+> > > command. It guards only on SCF_SENT_CHECK_CONDITION, never checks
+> > > CMD_T_ABORTED, and ends in queue_status(); target_handle_abort()
+> > > also
+> > > calls queue_status() for a CMD_T_TAS command, and each drops a
+> > > reference.
+> > > Can an aborted command with a sense reason send both a CHECK
+> > > CONDITION
+> > > and a TASK ABORTED, and drop two references?
+> >=20
+> > No, transport_send_check_condition_and_sense will change t_state,
+> > send
+> > status and decrease cmd->refcnt and then unblock
+> > wait_for_completion
+> > of
+> > ABORT/LUN_RESET. Both the commnand and ABORT of that command will
+> > be
+> > completed sucessfully.
+> > Noone calls target_handle_abort().
+> >=20
+> > > And with the early return gone, a LUN_RESET aborting a large
+> > > WRITE
+> > > waits in target_put_cmd_and_wait() for the whole remaining data
+> > > transfer. That is bounded where today it is not, but on a large
+> > > transfer it may still trip the hung task timeout that made this
+> > > visible.
+> > =C2=A0
+> > That is a idea for a future discussion and improvmens. This
+> > patchset
+> > is
+> > narrowed to just to fix the stuck of WRITE_PENDING commands.
+> >=20
+> > The abort of WRITE_PENDIG command in the state waiting for DataOuts
+> > currently will wait for the data completion. So, my patch again
+> > does
+> > not
+> > do worse.
+> >=20
+> > > On the overlap: your 2/2 and patch 4 of my series touch the same
+> > > lines,
+> > > so only one can apply, and I have no attachment to mine if yours
+> > > is
+> > > the
+> > > better shape. Patches 1 to 3 are core-side and conflict with
+> > > nothing
+> > > you have posted.
+> > >=20
+> > > Martin, would you prefer those three as their own series,
+> > > given both candidate iSCSI fixes need patch 3 to be correct?
+> > >=20
+> > > I am happy to test either or both: I have a reporter's
+> > > environment
+> > > that
+> > > reproduces this reliably and 300-cycle runs on it.
+> >=20
+> > My patch is more than 2 years old in customers setups, but
+> > certainly
+> > it would be great to test it in other environments too.
+> >=20
+> > BR,
+> > =C2=A0Dmitry
+>=20
+> OK Great, reverting d5869dae5080 and applying yours and getting it
+> tested. If it passes than we can revisit my patches 1-3 for a later
+> series.
+>=20
+> On testing: I will build revert + your 2/2 on a RHEL9.8 based distro
+> kernel and put it through the reporter's environment -- an Oracle RAC
+> cluster where this reproduces reliably and where the earlier
+> candidate
+> fixes failed at 95 and 196 LUN_RESET cycles. The pass mark is 300
+> cycles, which is what my patch 4 cleared twice. I will deliberately
+> leave my core patches out of that build so the result is about your
+> series alone.
+>=20
+> Thanks for all your reviews and assistance.
+> Laurence
+Hello Dmitry
 
-Apologies for the confusion. This was intended to be v9. I will send v10.
+OK, your series looks great, we passed 3000 reset loops so we should
+take your series in ASAP.
 
-Regards,
-Larisa
->> ---
->>   .../bindings/ufs/nxp,s32n79-ufshc.yaml        | 65 +++++++++++++++++++
->>   1 file changed, 65 insertions(+)
->>   create mode 100644 Documentation/devicetree/bindings/ufs/nxp,s32n79-ufshc.yaml
->>
->> diff --git a/Documentation/devicetree/bindings/ufs/nxp,s32n79-ufshc.yaml b/Documentation/devicetree/bindings/ufs/nxp,s32n79-ufshc.yaml
->> new file mode 100644
->> index 000000000000..14291c5506f1
->> --- /dev/null
->> +++ b/Documentation/devicetree/bindings/ufs/nxp,s32n79-ufshc.yaml
->> @@ -0,0 +1,65 @@
->> +# SPDX-License-Identifier: GPL-2.0-only OR BSD-2-Clause
->> +%YAML 1.2
->> +---
->> +$id: http://devicetree.org/schemas/ufs/nxp,s32n79-ufshc.yaml#
->> +$schema: http://devicetree.org/meta-schemas/core.yaml#
->> +
->> +title: NXP S32N79 Universal Flash Storage (UFS) Controller
->> +
->> +maintainers:
->> +  - Larisa Grigore <larisa.grigore@oss.nxp.com>
->> +
->> +properties:
->> +  compatible:
->> +    const: nxp,s32n79-ufshc
->> +
->> +  reg:
->> +    items:
->> +      - description: UFS Host Controller registers
->> +      - description: System Control Module registers
->> +
->> +  reg-names:
->> +    items:
->> +      - const: ufshc
->> +      - const: scm
->> +
->> +  clocks:
->> +    maxItems: 1
->> +
->> +  clock-names:
->> +    items:
->> +      - const: core
->> +
->> +required:
->> +  - compatible
->> +  - reg
->> +  - reg-names
->> +  - clocks
->> +  - clock-names
->> +  - operating-points-v2
->> +
->> +allOf:
->> +  - $ref: ufs-common.yaml
->> +
->> +unevaluatedProperties: false
->> +
->> +examples:
->> +  - |
->> +    ufshc@4ac80000 {
->> +        compatible = "nxp,s32n79-ufshc";
->> +        reg = <0x4ac80000 0x1000>, <0x4ac40000 0x1000>;
->> +        reg-names = "ufshc", "scm";
->> +        interrupt-parent = <&irqsteer_coss>;
->> +        interrupts = <211>;
->> +        clocks = <&clks 0x92>;
->> +        clock-names = "core";
->> +        operating-points-v2 = <&ufs_opp_table>;
->> +
->> +        ufs_opp_table: opp-table {
->> +            compatible = "operating-points-v2";
->> +
->> +            opp-0 {
->> +                opp-hz = /bits/ 64 <0>;
-> 
-> Why is this empty?
-> 
-> 
-> Best regards,
-> Krzysztof
-> 
+For the series:
+Reviewed-by: Laurence Oberman <loberman@redhat.com>
+Tested-by:   Laurence Oberman <loberman@redhat.com>
+
+Regards
+Laurence Oberman
 
