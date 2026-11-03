@@ -1,68 +1,53 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=183.62.165.209
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793719138;
-	b=wfiYz7NMOp+OtBffRsiV6XEtUlPhtGjEtriBF4pmcnCtLBQu+c2x/b71C6m6YHmv76Ox
-	 czygbAAuMwXIzkI0QxedagoHm8cp0DRFD7w7hgwUmN/7sVHHAWlCy+ty7zYOonuiZkXIj
-	 gV4oUXjxYsnXVNzSQ7wYrYN+d4AyuEexU5lmCx6r6aUnGuQRKdmKCnTm0msAUFs8UWUii
-	 2M6MmFUPjGM40ro9DA5ym1yPdHoPPXS8Q/g8KVuVSa1mSTwhOGsTVQ39WmFC8JGaEkA+U
-	 KPUxnT9yREUDaxO0iEBlfjUt7kzTm3UAp4L4npqUL0Lr+dCcu7ggGMaPmI2wMzzZX5Q==
+	t=1793721384;
+	b=RCp0kcFxWOmWgRnTEu/s2LNtWKht8JDBvj5E3CdnVyRLcg2PhSoupq/ynjaYItoejfCC
+	 S7EKT/4CJj1uN+L6HdmCjopHuXz0W45uYyKey0g02erOHYgt9y9guCTHoVegATvaEXBk4
+	 w3BLdv5fWXT4PwbxpiSv6tWp3qqQaUiRlYKH3cQBVUq3X7QQkdk2VnyN+yJ7ZMExt5MiH
+	 +oDzuWNXUGdTOO1LBjQFmd0oxmceWNd+JmRfWPHc94mqUikL09fuL3mxyR+Vk7eZoydgi
+	 A6IE6vHsmuc0D/SB18fxVsGD3bMU2bur41y+0yKXuPkq01WxRhJuuTIJa/HjVAFvuDw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793719138;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=pXYmXnE4YnSZAwVsghhJ8qwzD8WHMLT3acK3fEE1c5w=;
-	b=VRVzrOzKHjuke7e/KwRA7aIJ0pYm/yiqZHO3k6XSPmnKTcpReF1kk4SR0/o6y9X39NFZ
-	 7336z3pxLK2WKSQM9SvRc1iOwsDjNR9lEkBU/0OdOshY0EL5+ZeIU6Qpmx/f3ghtOfCMx
-	 MQ82En/FnxNNdnwReTczJ6UAfmjmLhvNTfviE2WV2D79SlmTAEbhp9TLyFrMrjjv0FOE6
-	 mQuqf1Gu7vdyV9v8gfzY3SuGQMajzqEO+aTqqibQHGJ+HKqO2OQmOEGKbfQ/Ti1yF9awy
-	 +vJfXhOUmmLLlYjIztkJSQt+XVdcrC+b7n+/JzlrAjseUKDHsszd4++fLHdXEhKPNNw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793721384;
+	h=DMARC-Filter:Received:Received:Received:X-Zmail-TransId:X-Mailer:
+	 Message-ID:Date:Mime-Version:From:To:Cc:Subject:Content-Type:X-MAIL:
+	 X-TLS:X-ENVELOPE-SENDER:X-SOURCE-IP:X-CLEAN:
+	 X-Fangmail-Anti-Spam-Filtered:X-Fangmail-MID-QID;
+	bh=KrELEAwJpNCkeUSFIEEA9iPaXTDlTgbejvk4WwmN6J4=;
+	b=STH7kY15tR2lHT74Kliy6WUUC4nkNJAtMopKof3IYi1TBnnlbc9AIAhjNK6BUuorSCQp
+	 AiV8Adr5/mWdeuGkVKsssWrelQHpJE1H5X0GSt4exCPjofKMILTMD0laBvLl/Ih8SqeUM
+	 5lxacjkbggUiQBE3HzVMQds34YgzIapKS6TqW1Mn1O+kBy0BoxNwLqXOgHPRl6hySBfzp
+	 6e4jMANgS4Q0K/SnJbkWWJ6cXdP1b4UVJpxp0PQ4HI+FJONmgp+uUQKX/kPfX7ZB4Z2e+
+	 n/KAi2z4O1+Lk4DQTwM+RJj6LU0BNzXB+XGG9U4W6CmFN9E4XIDtlfZTO32PNRmY2tg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lt7kWY0w;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=zte.com.cn;
+	spf=pass smtp.mailfrom=zte.com.cn;
+	arc=none smtp.remote-ip=183.62.165.209
+Received: from mxct.zte.com.cn (mxct.zte.com.cn [183.62.165.209])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5E5C6082BFE;
-	Tue,  3 Nov 2026 15:18:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lt7kWY0w
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 224A01F00A2C;
-	Tue,  3 Nov 2026 15:18:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793719137;
-	bh=pXYmXnE4YnSZAwVsghhJ8qwzD8WHMLT3acK3fEE1c5w=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=lt7kWY0w9ieExJiXhsRbswLZTk4I62Ut15H6kMqjEztfFu4VGWWEAsyq1h1RunGi7
-	 quYJ9gon1XZinTxL/vkjGOaRSh41+Spy89HkKrIkDLVlyQ2DPkr57UTA8uNv7ZJQPX
-	 Gkb+9Ork4a09lK3yz7JxXHSWqFcBarBUl6xpojcbcZ6LCj9+K0W6f0I8igzSlL1ee7
-	 HOzooULSEPo6yfs5dQxOzgo+Ck2+yelQJNljZ0d/RFz7CfzGvoYCRRMJGyc+UGPBSP
-	 xmtleTQuYNol2touf60/WN8WAXQ5Y7pfGj4AOYhP5EA7RtetswDsaHw6Wd78ymD48r
-	 5m+hEjoe7SkUg==
-Message-ID: <sashiko-outbox-195594@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH RFC 14/23] scsi: esas2r: let procfs copy the ioctl
- argument of the ATTONode file
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Christian Brauner" <brauner@kernel.org>
-Cc: "Linus Torvalds" <torvalds@linux-foundation.org>, "Jann Horn" <jannh@google.com>, "Josef
- Bacik" <josef@toxicpanda.com>, "Chris Mason" <mason@kernel.org>, "Jeff
- Layton" <jlayton@kernel.org>, NeilBrown <neil@brown.name>, "Eric Dumazet" <edumazet@kernel.org>, "Thomas
- Gleixner" <tglx@kernel.org>, "Al Viro" <viro@zeniv.linux.org.uk>, "Jonathan
- Corbet" <corbet@lwn.net>, "Christoph Hellwig" <hch@lst.de>, "Greg
- Kroah-Hartman" <gregkh@suse.de>, "Joel Granados" <joel.granados@kernel.org>, "Kees
- Cook" <kees@kernel.org>, "Jan Kara" <jack@suse.cz>, "Jan Kara" <jack@suse.com>, linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, coreteam@netfilter.org, kexec@lists.infradead.org, linux-pci@vger.kernel.org, linux-sound@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-hwmon@vger.kernel.org, linux-mm@kvack.org, linux-usb@vger.kernel.org, samba-technical@lists.samba.org, sparclinux@vger.kernel.org, linux-m68k@lists.linux-m68k.org, linux-serial@vger.kernel.org, "Takashi
- Iwai" <tiwai@suse.de>, linux-input@vger.kernel.org, linux-raid@vger.kernel.org, linux-ext4@vger.kernel.org, linux-modules@vger.kernel.org, "Chuck
- Lever" <cel@kernel.org>, tytso@mit.edu, dmitry.torokhov@gmail.com, "Petr
- Pavlu" <petr.pavlu@suse.com>, "Anna Schumaker" <anna@kernel.org>, yukuai@fygo.io, "Heiko
- Carstens" <hca@linux.ibm.com>, "Vasily Gorbik" <gor@linux.ibm.com>, "Alexander
- Gordeev" <agordeev@linux.ibm.com>, "Christian Borntraeger" <borntraeger@linux.ibm.com>
-In-Reply-To: <20261102-work-procfs-drivers-v1-14-a994bd4d3b1a@kernel.org>
-References: <20261102-work-procfs-drivers-v1-0-a994bd4d3b1a@kernel.org>
- <20261102-work-procfs-drivers-v1-14-a994bd4d3b1a@kernel.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 03 Nov 2026 15:18:54 +0000
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7DAF7606D813;
+	Tue,  3 Nov 2026 15:56:22 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7DAF7606D813
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zte.com.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zte.com.cn
+Received: from mse-fl1.zte.com.cn (unknown [10.5.228.132])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mxct.zte.com.cn (FangMail) with ESMTPS id 4jJtTq2T8xz5B14p;
+	Tue, 03 Nov 2026 23:56:15 +0800 (CST)
+Received: from xaxapp04.zte.com.cn ([10.99.98.157])
+	by mse-fl1.zte.com.cn with SMTP id 6A3Fu8UA003138;
+	Tue, 3 Nov 2026 23:56:08 +0800 (+08)
+	(envelope-from shao.mingyin@zte.com.cn)
+Received: from mapi (xaxapp05[null])
+	by mapi (Zmail) with MAPI id mid32;
+	Tue, 3 Nov 2026 23:56:10 +0800 (CST)
+X-Zmail-TransId: 2afc6aea041af0d-24502
+X-Mailer: Zmail v1.0
+Message-ID: <20261103235610554mYM6cfXrrF3RpQowmPUzD@zte.com.cn>
+Date: Tue, 3 Nov 2026 23:56:10 +0800 (CST)
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -71,69 +56,108 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
+Mime-Version: 1.0
+From: <shao.mingyin@zte.com.cn>
+To: <mkp@kernel.org>, <James.Bottomley@HansenPartnership.com>,
+        <linux-scsi@vger.kernel.org>
+Cc: <linux-kernel@vger.kernel.org>
+Subject: =?UTF-8?B?W1BBVENIIHYyXSBzY3NpOiBjb3JlOiByZWplY3Qgc2hvcnQgUkVQT1JUIExVTlMgcmVzcG9uc2Vz?=
+Content-Type: text/plain;
+	charset="UTF-8"
+X-MAIL:mse-fl1.zte.com.cn 6A3Fu8UA003138
+X-TLS: YES
+X-ENVELOPE-SENDER: shao.mingyin@zte.com.cn
+X-SOURCE-IP: 10.5.228.132 unknown Tue, 03 Nov 2026 23:56:15 +0800
+X-CLEAN: YES
+X-Fangmail-Anti-Spam-Filtered: true
+X-Fangmail-MID-QID: 6AEA041F.000/4jJtTq2T8xz5B14p
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [Low] scsi: esas2r: split declaration and initialization of __free() vari=
-able in esas2r_ioctl_handler()
---
+scsi_report_lun_scan() reads the LUN list length from a buffer that was
+allocated with kmalloc() and that the device may not have filled in
+completely.  scsi_execute_cmd() zeroes the part of the buffer that the
+host reported as not transferred, but only when the host reports a
+residual at all, and it cannot tell whether a transfer that stopped in
+the middle of the eight byte LUN list header left a usable length
+field.
 
-commit 0fd79b7040b09fc840e0499afbc88e68b34a3e18
-Author: Christian Brauner <brauner@kernel.org>
+A host that completes the command without reporting a residual leaves
+the kmalloc()ed contents in place, so stale heap data is parsed as a
+length.  A host that reports the residual but stopped inside the header
+leaves the bytes it did transfer to be read as that length, and neither
+the retry allocation nor the number of descriptors to scan is then
+bounded by what was actually transferred.
 
-scsi: esas2r: let procfs copy the ioctl argument of the ATTONode file
+Allocate the buffer with kzalloc() so that a host which reports no
+residual and transfers nothing cannot hand back stale heap data, and
+ask for the residual so that a transfer which stopped inside the header
+is rejected before its length is trusted.
 
-This commit factors the core logic of esas2r_ioctl_handler() into
-esas2r_ioctl_buf() operating on a kernel copy of struct atto_express_ioctl,
-and converts the procfs ATTONode file to use .proc_ioctl_buf and
-.proc_ioctl_args so procfs handles copying the ioctl buffer in and out.
+The check requires the full eight byte LUN list header (the four byte
+length plus the four reserved bytes), not just the length field, so a
+transfer that stopped anywhere inside the header is rejected.  It also
+rejects a length that cannot hold the header at all: the retry path
+derives the length from the device-reported value with an addition that
+can wrap below sizeof(struct scsi_lun), and the residual comparison
+would then underflow.
 
-> diff --git a/drivers/scsi/esas2r/esas2r_ioctl.c b/drivers/scsi/esas2r/esa=
-s2r_ioctl.c
-> index f99318f61c934..eb39ba8263b31 100644
-> --- a/drivers/scsi/esas2r/esas2r_ioctl.c
-> +++ b/drivers/scsi/esas2r/esas2r_ioctl.c
+Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+Cc: stable@vger.kernel.org
+Signed-off-by: Shao Mingyin <shao.mingyin@zte.com.cn>
+---
+v2:
+  - allocate the buffer with kzalloc() instead of kmalloc().
+  - reword the commit message: scsi_execute_cmd() zeroes the residual
+    tail, so the buffer is not simply left uninitialized.
+  - keep the residual check, which is what catches a transfer that
+    stopped inside the LUN list header.
+  - also reject a length that cannot hold the LUN header, so the
+    residual comparison cannot underflow when the device-reported
+    length wraps on the retry path.
+  - spell out that the check requires the full eight byte header.
 
-[ ... ]
-
-> @@ -1515,19 +1501,43 @@ int esas2r_ioctl_handler(void *hostdata, unsigned=
- int cmd, void __user *arg)
-> =20
->  	}
-> =20
-> +	return 0;
-> +}
-> +
-> +int esas2r_ioctl_handler(void *hostdata, unsigned int cmd, void __user *=
-arg)
-> +{
-> +	struct atto_express_ioctl *ioctl __free(kfree) =3D NULL;
-> +	int err;
-> +
-> +	esas2r_log(ESAS2R_LOG_DEBG, "ioctl (%p, %x, %p)", hostdata, cmd, arg);
-> +
-> +	if ((arg =3D=3D NULL)
-> +	    || (cmd < EXPRESS_IOCTL_MIN)
-> +	    || (cmd > EXPRESS_IOCTL_MAX))
-> +		return -ENOTSUPP;
-> +
-> +	ioctl =3D memdup_user(arg, sizeof(struct atto_express_ioctl));
-
-[Severity: Low]
-This isn't a bug, but in esas2r_ioctl_handler() in
-drivers/scsi/esas2r/esas2r_ioctl.c, ioctl is declared with __free(kfree) =3D
-NULL at the top of the function before the argument validation check and
-assigned later via memdup_user().
-
-Per the Cleanup API conventions, could the __free(kfree) variable definition
-and initialization be combined into a single statement at the point of
-allocation:
-
-	struct atto_express_ioctl *ioctl __free(kfree) =3D
-		memdup_user(arg, sizeof(struct atto_express_ioctl));
-
-after the early return check?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261102-work-procf=
-s-drivers-v1-0-a994bd4d3b1a@kernel.org?part=3D14
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 52f3b525d2fd..e6aac7310537 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -1475,10 +1475,11 @@ static int scsi_report_lun_scan(struct Scsi_Host *shost,
+ 		.total_allowed = 3,
+ 		.failure_definitions = failure_defs,
+ 	};
++	int ret = 0, resid = 0;
+ 	const struct scsi_exec_args exec_args = {
++		.resid = &resid,
+ 		.failures = &failures,
+ 	};
+-	int ret = 0;
+ 
+ 	/*
+ 	 * Only support SCSI-3 and up devices if BLIST_NOREPORTLUN is not set.
+@@ -1516,7 +1517,7 @@ static int scsi_report_lun_scan(struct Scsi_Host *shost,
+ 	 */
+ 	length = (511 + 1) * sizeof(struct scsi_lun);
+ retry:
+-	lun_data = kmalloc(length, GFP_KERNEL);
++	lun_data = kzalloc(length, GFP_KERNEL);
+ 	if (!lun_data) {
+ 		printk(ALLOC_FAILURE_MSG, __func__);
+ 		goto out;
+@@ -1567,6 +1568,19 @@ static int scsi_report_lun_scan(struct Scsi_Host *shost,
+ 		goto out_err;
+ 	}
+ 
++	/*
++	 * Reject a transfer that did not fill in the whole LUN list header.
++	 * Also reject a length that cannot even hold the header: the retry
++	 * path computes it from the device-reported value with an addition
++	 * that can wrap below sizeof(struct scsi_lun), in which case the
++	 * residual comparison below would underflow.
++	 */
++	if (length < sizeof(struct scsi_lun) ||
++	    resid > length - sizeof(struct scsi_lun)) {
++		ret = 1;
++		goto out_err;
++	}
++
+ 	/*
+ 	 * Get the length from the first four bytes of lun_data.
+ 	 */
