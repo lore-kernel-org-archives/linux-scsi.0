@@ -1,82 +1,75 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793831158;
-	b=oEGo7ydGifkA+f1m/Q3Qq6vq2xQWe25Yu0gKwb3fRX6qP+GoMyQbd7EdBiwwem0sPciv
-	 uMr/asZZrj3UXMnXotfgxqyx7sKGbPvo0VvbetGOom2pLj7CifTV7qmMHUVVpKbEXEtuD
-	 fLa+Z7goIVrzwYyxHpl9eE3U/wnWFBC2zOwWdVcevzpuYY9UgK+xvFto70HgdbBasRrPt
-	 2JdSTaotHJ7BldZWCzj4gR1IuE1iDQakX4Y5pZyfkH3mmY3BgVYDEN0IZtOjTv6IPUoD5
-	 ZTA73wG3L03BYTT/VOU8cuVHGFf9kV/GBhPVjZmKmQ59eoIwRZdI4NC+40+7iKmikVw==
+	t=1793832370;
+	b=GiPJj/b5IETTgaiAxC956zQaYbDdSyZGCxNYuLZCFetISqeOrO3uXvnnxHK/YH+Y5AdN
+	 4y8iWiN+H2uWkXG5NYIeMWDex1F6hAD7Iiwz8nY+Y/tgL3WlQEzCOoYI9bNEtMBe9C1VJ
+	 Z9NOIQQ9aeTnjEUWkEV93rwBqp+0i4UklS/GTPjExFt6z7o5tIVZHumYX25qS1/VXXXZo
+	 W/t6qH6hbIPDpGauq8KUwS60tWoCyzSZyhrKape3UE6/6HA5ZCLzUWE5ww0+Gbs2PdKIw
+	 bfE8s5rueKgjC9MAVHCQX4l3CO3W0PJYEIeu5pCJ7/8DoJ43V/TWU8KY+Kgw6AoKxOw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793831158;
-	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
-	 X-Mimecast-MFC-AGG-ID:Received:Received:From:To:Cc:Subject:Date:
-	 Message-ID:MIME-Version:Content-Transfer-Encoding:X-Scanned-By;
-	bh=RqrFAViIXrjiourMrnhARQFUmFJOsUN3fk+kD/PpH0c=;
-	b=iv7c8G81J+QTYeYfyOghQPK38l6aZrunc83XX1xYTcxtxxHyTQXrsFbfJmH3njKH0JFS
-	 j2dcd4+JasuG+znl6OnfFBmcqZlvETbMs4nD391edwGSm8+sFo8+9GRKcjlKhEGNtwMui
-	 57XejHa6iOa4gxIFPS9aY0BqrKjsY6lnu0eQ4PEP52si8nIKJpJYD4BtwD7cldoZLP7EG
-	 oXefze9NsC9sjuv/UfSOGqeL2R5v0YjbK3sivGEyOO7n5yDB9NprO9VF2wjawwCV2QFxm
-	 UDIyxHMD6932nh1StUjRW/tHs3vbl3qo+Jc/G5B2Bgk6jRrCmqMZL6RmUA33xQQFIBw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793832370;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=XBOw8umZc0PSygGL6ZhSsNEhyMPfzoczgqWFX+5YDNY=;
+	b=Re/6Rg9jSD9Xebvi70a84ZeMmu/I2lfDULXQp8gVW/rAcQgEQo7H7Bm2B45i/4cWD2Qz
+	 bA5PiYIc9GvM4LsvRra4bsZTC675SEPOrg8kMw2nb505Tv9nEXMOEXBmWOA2oIxYMgmqJ
+	 +lHWOwBIftcc35KCKzB0hLHvHE/OhEFsHLfPgbhC0Ts/pbORmj97PoUbWtjBounXmDjiB
+	 mQfvZZDBX4X96/9TtFlVhx528WLd9pGG+gUaWMkQQO/cRYvFd1uTPq/NWJKxb2Q0AZYRH
+	 dcHEjS7kMdFBNNoIBuEl1SVfzq//hK+nG7BkfvMxHJqFrp/DW75GAm8UPQXw5VfKfrw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=redhat.com;
-	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=dZsfB+7O;
-	arc=none smtp.remote-ip=170.10.129.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Y+guEyix;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B68E606D83D
-	for <linux-scsi@vger.kernel.org>; Wed,  4 Nov 2026 22:25:57 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9B68E606D83D
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F24D4606A31B;
+	Wed,  4 Nov 2026 22:46:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=dZsfB+7O
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1793831156;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=RqrFAViIXrjiourMrnhARQFUmFJOsUN3fk+kD/PpH0c=;
-	b=dZsfB+7Of5uttp5x/CwczGi/p78VyOJJ9idj+0XF9Cfrn9xpWUZJyHM4ZawaJjnBjGehbU
-	6mWLjHNa360fKeVrhMsARuatwm6uuscWnA0tW8ObkqV/puWdXWFAOWHkErMsLZvXyS1gKt
-	UgjPr6q8ir95d6YKKhn8/l44wMhyo1k=
-Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-463-ty3QX41dNgqrG3pXvAa2xg-1; Wed,
- 04 Nov 2026 17:25:51 -0500
-X-MC-Unique: ty3QX41dNgqrG3pXvAa2xg-1
-X-Mimecast-MFC-AGG-ID: ty3QX41dNgqrG3pXvAa2xg_1793831149
-Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id C26C41956041;
-	Wed,  4 Nov 2026 22:25:48 +0000 (UTC)
-Received: from loberman-thinkpadp16gen3.redhat.corp (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
-	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 904451956087;
-	Wed,  4 Nov 2026 22:25:46 +0000 (UTC)
-From: Laurence Oberman <loberman@redhat.com>
-To: njavali@marvell.com,
-	martin.petersen@oracle.com
-Cc: GR-QLogic-Storage-Upstream@marvell.com,
-	James.Bottomley@HansenPartnership.com,
-	kys@microsoft.com,
-	haiyangz@microsoft.com,
-	wei.liu@kernel.org,
-	decui@microsoft.com,
-	longli@microsoft.com,
-	mhklinux@outlook.com,
-	sbhat@linux.ibm.com,
-	kmahlkuc@linux.ibm.com,
-	linux-scsi@vger.kernel.org,
-	linux-hyperv@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [RFC PATCH] scsi: qla2xxx: Use the real INTx pin for the port number on Hyper-V guests
-Date: Wed,  4 Nov 2026 17:25:41 -0500
-Message-ID: <20261104222541.2675051-1-loberman@redhat.com>
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Y+guEyix
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C6C1B1F000C1;
+	Wed,  4 Nov 2026 22:45:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793832369;
+	bh=XBOw8umZc0PSygGL6ZhSsNEhyMPfzoczgqWFX+5YDNY=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=Y+guEyixDVYqpS8g3d4FmlRYq/qp1tQeGL16K2BSxNthPOaRsDL0VFTK+tjHByNf5
+	 UG3G3TR4IbDk5BaZwlgwVySr0HiRvL1WeYdDEujyS+zzG35LMJqu1Pm8BzfQ5Z+w4F
+	 3DGZwBGiTOYlKSVRIgaBstWj6LtjUlnMrGUfTY6AgB7LPx3pVl/0nxTfWzl1eRWVeu
+	 9SzZPPQ7yLUIbBzvzOD5olkzaVc7Od6fJQ93jvoDvEvbyLIezG28vK5PJuGqQJ/Zu+
+	 C/TFnkMniWMHftytXgdebgJiyvQu099dnGFvQXlwnwRKY6VGKt0bkFzVDUexAPr+Sm
+	 GvRbuyQmKti0Q==
+Date: Wed, 4 Nov 2026 23:45:55 +0100
+From: Christian Brauner <brauner@kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-fsdevel@vger.kernel.org, Jann Horn <jannh@google.com>, 
+	Josef Bacik <josef@toxicpanda.com>, Chris Mason <mason@kernel.org>, Jeff Layton <jlayton@kernel.org>, 
+	NeilBrown <neil@brown.name>, Eric Dumazet <edumazet@kernel.org>, 
+	Thomas Gleixner <tglx@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, 
+	Jonathan Corbet <corbet@lwn.net>, Christoph Hellwig <hch@lst.de>, 
+	Greg Kroah-Hartman <gregkh@suse.de>, Joel Granados <joel.granados@kernel.org>, 
+	Kees Cook <kees@kernel.org>, Jan Kara <jack@suse.cz>, Jan Kara <jack@suse.com>, 
+	linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-acpi@vger.kernel.org, 
+	linux-kselftest@vger.kernel.org, linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	linux-um@lists.infradead.org, linux-wireless@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, 
+	netdev@vger.kernel.org, ntfs3@lists.linux.dev, platform-driver-x86@vger.kernel.org, 
+	coreteam@netfilter.org, kexec@lists.infradead.org, linux-pci@vger.kernel.org, 
+	linux-sound@vger.kernel.org, netfilter-devel@vger.kernel.org, dri-devel@lists.freedesktop.org, 
+	ibm-acpi-devel@lists.sourceforge.net, jfs-discussion@lists.sourceforge.net, 
+	linux-alpha@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-cifs@vger.kernel.org, 
+	linux-fbdev@vger.kernel.org, linux-hwmon@vger.kernel.org, linux-mm@kvack.org, 
+	linux-sh@vger.kernel.org, linux-usb@vger.kernel.org, samba-technical@lists.samba.org, 
+	sparclinux@vger.kernel.org, linux-m68k@lists.linux-m68k.org, linux-doc@vger.kernel.org, 
+	linux-serial@vger.kernel.org, linux-atm-general@lists.sourceforge.net, 
+	Takashi Iwai <tiwai@suse.de>, linux-input@vger.kernel.org, linux-raid@vger.kernel.org, 
+	linux-ext4@vger.kernel.org, linux-modules@vger.kernel.org, linux-debuggers@vger.kernel.org, 
+	Chuck Lever <cel@kernel.org>
+Subject: Re: [PATCH RESEND v2 00/30] proc: convert the fs, kernel and mm
+ entries (Part 5/7)
+Message-ID: <20261104-allein-bepacken-hitzig-5e517d3c129f@brauner>
+References: <20261104-work-procfs-v2-0-b45cd5789ac5@brauner>
+ <20261104-work-procfs-fs-v2-0-319e0f9a8aae@kernel.org>
+ <CAHk-=wj9Y9NcOesBBm+jhPjYa7qO00fD7g7uwX+H-k0-R2difA@mail.gmail.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -86,140 +79,20 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <CAHk-=wj9Y9NcOesBBm+jhPjYa7qO00fD7g7uwX+H-k0-R2difA@mail.gmail.com>
 
-qla2x00_set_isp_flags() derives the physical port number from
-PCI_INTERRUPT_PIN, and the port number selects the per-port VPD, NVRAM,
-NPIV and FCP priority flash regions.
+On Wed, Nov 04, 2026 at 12:05:08PM -0800, Linus Torvalds wrote:
+> On Wed, 4 Nov 2026 at 11:49, Christian Brauner <brauner@kernel.org> wrote:
+> >
+> > Part 5/7 of "proc: move procfs to what kernfs does", on top of part 2
+> 
+> Christian - way too many patches, re-sent much too often, cc'd to way
+> too many people.
+> 
+> Nobody is going to read these repeated resends, and all you are doing
+> is clogging up peoples mailboxes.
 
-On Hyper-V guests, pci-hyperv returns 0 for byte and word reads of
-PCI_INTERRUPT_PIN since commit fea93a3e5d5e ("PCI: hv: Return zero, not
-garbage, when reading PCI_INTERRUPT_PIN"). Commit 7268e509b43a ("scsi:
-qla2xxx: Handle INTx not connected while passing through") then falls
-back to PCI_FUNC(). With Discrete Device Assignment (DDA), each function
-of a multi-port HBA is presented as function 0 in its own PCI domain, so
-every port gets port_no 0. All ports read port 0's NVRAM, pass the
-checksum and register the same WWPN, and nothing is logged.
-
-Without that commit, port_no underflows to 255, no flash region is
-selected and every port fails with "Inconsistent NVRAM checksum" and
-falls back to the default WWPN.
-
-pci-hyperv only zeroes byte and word accesses within 0x3c-0x3d. A dword
-read at PCI_INTERRUPT_LINE reaches the device's config space and returns
-the real pin in bits 15:8. On Hyper-V guests, use that when the byte
-read returns 0, and warn if the pin is still 0 so that duplicate WWPNs
-are not silent. Bare metal, KVM/vfio and other hypervisors are
-unchanged.
-
-Tested with an equivalent change on a RHEL 9 (5.14-based) guest with a
-dual-port QLE2692 (ISP2261) assigned through DDA (Hyper-V host
-10.0.17763):
-
-  before: both ports "Inconsistent NVRAM checksum=0xffffffc0 id=NGKP",
-          both WWPN 0x210000e08b1c5586
-  after:  port_no 1 and 0, NVRAM valid, WWPN 0x210034800d7065bd and
-          0x210034800d7065bc, fabric login and FC-NVMe localport
-          registration on both ports
-
-Also tested on bare metal (ISP2031): the new path is not taken and port
-numbers and WWPNs are unchanged.
-
-Signed-off-by: Laurence Oberman <loberman@redhat.com>
----
-RFC: this relies on pci-hyperv not virtualizing dword reads at 0x3c,
-which is an implementation detail rather than an interface. It is posted
-as the smallest working fix and to start the discussion. Feedback wanted
-on cleaner alternatives:
-
- - Hyper-V (linux-hyperv): could pci-hyperv expose the real
-   PCI_INTERRUPT_PIN, or provide the physical function number, for DDA
-   devices? Some drivers use the pin for port identity, not only for
-   interrupt routing.
-
- - Marvell: is there a firmware or register source for the physical
-   port that does not depend on PCI config space? CSRX_FUNCTION in
-   ctrl_status is a single bit and would not cover quad-port
-   27xx/28xx/29xx.
-
- - The check is x86-only (hypervisor_is_type()). pci-hyperv also
-   supports arm64 guests; a better way to detect a pci-hyperv bus is
-   welcome.
-
-This has not yet been tested on a 7.3 kernel in the DDA guest; testing
-was on a RHEL 9.8 backport. The upstream behaviour without this patch
-(duplicate WWPNs with no warning) follows from the code and has not yet
-been reproduced on 7.3.
-
- drivers/scsi/qla2xxx/qla_os.c | 40 ++++++++++++++++++++++++++++++++++-
- 1 file changed, 39 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 3c412c7fb6fe..4180d3f15231 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -24,6 +24,10 @@
- #include <scsi/scsi_transport.h>
- #include <scsi/scsi_transport_fc.h>
- 
-+#ifdef CONFIG_X86
-+#include <asm/hypervisor.h>
-+#endif
-+
- #include "qla_target.h"
- 
- /*
-@@ -2704,6 +2708,40 @@ static struct isp_operations qla29xx_isp_ops = {
- 	.initialize_adapter	= qla2x00_initialize_adapter,
- };
- 
-+/*
-+ * Read the INTx pin used to derive the physical port number.
-+ *
-+ * pci-hyperv hard-wires byte and word reads of PCI_INTERRUPT_PIN to zero.
-+ * With Hyper-V Discrete Device Assignment every function is also presented
-+ * as function 0 in its own PCI domain, so the PCI_FUNC() fallback gives
-+ * port 0 for every port and they all report port 0's WWPN. A dword read at
-+ * PCI_INTERRUPT_LINE is not virtualized by pci-hyperv and returns the
-+ * device's pin in bits 15:8, so use that on Hyper-V guests.
-+ */
-+static u8
-+qla2x00_get_intx_pin(struct qla_hw_data *ha)
-+{
-+	u8 pin;
-+
-+	pci_read_config_byte(ha->pdev, PCI_INTERRUPT_PIN, &pin);
-+#ifdef CONFIG_X86
-+	if (!pin && hypervisor_is_type(X86_HYPER_MS_HYPERV)) {
-+		u32 val = 0;
-+
-+		pci_read_config_dword(ha->pdev, PCI_INTERRUPT_LINE, &val);
-+		pin = (val >> 8) & 0xff;
-+		if (pin)
-+			ql_log_pci(ql_log_info, ha->pdev, 0xffff,
-+				   "Hyper-V: INTx pin reads 0, config dword 0x%08x gives pin %u.\n",
-+				   val, pin);
-+		else
-+			ql_log_pci(ql_log_warn, ha->pdev, 0xffff,
-+				   "Hyper-V: unable to determine physical port, ports may report duplicate WWPNs.\n");
-+	}
-+#endif
-+	return pin;
-+}
-+
- static inline void
- qla2x00_set_isp_flags(struct qla_hw_data *ha)
- {
-@@ -2887,7 +2925,7 @@ qla2x00_set_isp_flags(struct qla_hw_data *ha)
- 		ha->port_no = ha->portnum & 1;
- 	else {
- 		/* Get adapter physical port no from interrupt pin register. */
--		pci_read_config_byte(ha->pdev, PCI_INTERRUPT_PIN, &ha->port_no);
-+		ha->port_no = qla2x00_get_intx_pin(ha);
- 		if (ha->port_no == 0) {
- 			/* None of INT[A|B|C|D] may be virtualized by vfio */
- 			ha->port_no = PCI_FUNC(ha->pdev->devfn);
--- 
-2.56.0
-
+I resent once after I cleaned things up post RFC and I don't plan on
+resending (one failed attempt due to my network dropping).
