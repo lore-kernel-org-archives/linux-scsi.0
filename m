@@ -1,56 +1,70 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=124.126.103.232
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793781703;
-	b=NN8Tq2DJEhoW9BOk+qjQC4Oem977Yf+LvaS6OXojFEwaVQyfCCCCdIg3ghVr+JOrsKEJ
-	 2ZrH4TdjznMGvh9wW0ODcDX9fn1Tq4fAEPgzWbH6KHFfxQk+6k+i5bWYkKgpjacn6leJ9
-	 cmQjDiySfWpZ0WOmomnfUGXqfxAFPGbWY5mCugl4Z7oFH3loLjomqejGdA9+uv/2M7v22
-	 9IQRIlSkEnA2Dmrwm3KGrK/7ZDaUz74Wo6Kjq3fWmoEjIexUstUaukh3HccqOKPvnVrKH
-	 fIciP8QVJYmArZm1grIQ98azwPOQX9y/+VZa7ZDm3+4O8Dulp1glYP5wWvN81ZUb9xQ==
+	t=1793782666;
+	b=ZQ0Bh1h4RVJq6V31NFZ64L4MWtWiJBI1fqdqkDso9g/FYwoAZbTCSrDJMlm1gF5jvjGh
+	 M746p2ibWE+XA25X/qCRLw9bKZ/4NDJmNtPIOtY/SaV6BeQUbV0Y/V7LWsagBSJw6Q4ug
+	 L1n6PHU7kk+kPAqsVS51ANvlWFubBCJqvDLh2FENGzyG78g+rP4eHy284Jmbh/v9Y2TR5
+	 FeN4cc9jnVBv21ujk3KSrI0+p090CaL5/lVZkYQS1JyEaTPO+s5ukrn418hhHXNur6lZ/
+	 zm4cYiWtjMvaqe54BB7IMv0Caw9YHuGzvwyMwCQwWUS25dZEz/056N8pWO9bDNlqgoQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793781703;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:
-	 Content-Transfer-Encoding:In-Reply-To;
-	bh=HxBxe+zVox6fEP5byfjPEJNTREH8M4lYzABxTwwXNEE=;
-	b=4XePP8EIMnRJBW0rP/OBZgaPIxuMTTCos+3H4tL0eXYD1HWcCIkQjTc/Zxs3HWc0fQlk
-	 rot46nj80LMa1PTTg+ErAeZeL0N1yXUJm+1uh44NfG6GEH85n7f9eXJWyAQMc90cdMFBp
-	 Y2RUACPE52E6hRdoVgEe+pz7lvialynHU0NQotGeecqzaLqv3FNr3CbfH2v+XDbZBpg83
-	 /KwY+lW0gWdLQAJ08b0r3wEElIKTDL0TM1w8PuDBduYm92zKsAtOHlelPU28BZjhqRkvD
-	 mdzrDLvWtvj1dyWqwPtfkSi5pQO9kKUZ0MZ1/aEMEYG9LFn86ud95RWtvXfW7zK8QdA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793782666;
+	h=DMARC-Filter:X-UUID:X-CID-P-RULE:X-CID-O-INFO:X-CID-META:X-CID-BVR:
+	 X-CID-BAS:X-CID-FACTOR:X-CID-RHF:X-UUID:X-User:Received:From:To:Cc:
+	 Subject:Date:Message-Id:X-Mailer:In-Reply-To:References:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=vw5aK09NPKd7FOOrgUdgSm82KhVxdYZAKL4Caolp2W0=;
+	b=DXvGhivF01gV0uR8TRPa2pw7FetGoquD3CkXf0J//GjtSGY8YzWZVRi3yhaqXLmkVasX
+	 ev7yLnS/HUlQLHpxJDj8ej/Z680LInIJ5ArD05Y/v8MQZ0i8ImNS02PwKZK1NSppieS5d
+	 nWycKccX24iney8nGXxd8cEy7mhP5ix0pUJPoomwqnoluBDMNDQClUWqt9guVTqWdfiAy
+	 ho7LCaRJEyJnv10HEvo6WNqD+d9RTiUsRcrAbp1J1njUckrxNw/bBYqDLcRTRi9os+gTH
+	 F4e0skmB8K/l5h4hb8x5sZc/eLEHAj7HuaOIWK9WPa9BIxouAc5Z6s+iCam0izy3Zaw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lEQqQEO+;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=none header.from=kylinos.cn;
+	spf=pass smtp.mailfrom=kylinos.cn;
+	arc=none smtp.remote-ip=124.126.103.232
+Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AEBEA606A326
-	for <linux-scsi@vger.kernel.org>; Wed,  4 Nov 2026 08:41:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lEQqQEO+
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BE31D1F00919;
-	Wed,  4 Nov 2026 08:41:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793781702;
-	bh=HxBxe+zVox6fEP5byfjPEJNTREH8M4lYzABxTwwXNEE=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=lEQqQEO+ECac2o6ggGJ3t5Ii715n3JasZks60xns3KvN3Vcwei2f3tYR9abFbt4o3
-	 CeXEdguKwwRuqqeFcKNEknCsPJMqSRChFWqEoF7wfiN9hiClBrvWP8Yz2aaEruKfPV
-	 kuitu6Kh2W5h8b4a5TM7lDG4H/bNLOigoBDIHELVoY1UGWEShCn5HCbKQ6TErqroLZ
-	 AOMw07qPv82m/eS32Fy0D/I2Y6n17bFmBn0j5L27Fyoac1gAkKbPGw6rR5HE/P9VOI
-	 iYDGS76v1+DIz0QFxdLAKc1+BjcaQJVWssVfu4Ag5JpN1RzU4bIc5J8/C0p8XFXE6B
-	 0jZsDttpIwz+g==
-Date: Wed, 4 Nov 2026 09:41:39 +0100
-From: Krzysztof Kozlowski <krzk@kernel.org>
-To: Jinpu Wang <jinpu.wang@cloud.ionos.com>
-Cc: Wentao Liang <vulab@iscas.ac.cn>, 
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, "Martin K. Petersen" <mkp@kernel.org>, 
-	linux-scsi@vger.kernel.org
-Subject: Re: [PATCH] scsi: pm8001: unwind the probe on ccb tag allocation
- failure
-Message-ID: <20261104-fragrant-fascinating-civet-9c5cd8@quoll>
-References: <20261104021411.1467970-1-vulab@iscas.ac.cn>
- <CAMGffEkj=rzCiiek=p+9Qc2AjJ1Nkk00H8wFReQ9-0ptWHKobw@mail.gmail.com>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 174F9606A338;
+	Wed,  4 Nov 2026 08:57:43 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 174F9606A338
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
+X-UUID: c9108994d82d11f19a56ed5b684f684d-20261104
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.19,REQID:bf6115f2-216e-4c01-85cd-6a138d47c120,IP:0,U
+	RL:0,TC:0,Content:-5,EDM:0,RT:4,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
+	:release,TS:-1
+X-CID-META: VersionHash:7db8b62,CLOUDID:c1ddf5b89e3c9d8e64892d54341d5a00,BulkI
+	D:nil,BulkQuantity:0,SF:81|82|83|102|865|898,TC:nil,Content:0|15|50|99,EDM
+	:-3,IP:nil,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0
+	,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: c9108994d82d11f19a56ed5b684f684d-20261104
+X-User: lijiayi@kylinos.cn
+Received: from thinksys.. [(10.44.16.150)] by mailgw.kylinos.cn
+	(envelope-from <lijiayi@kylinos.cn>)
+	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
+	with ESMTP id 4631866; Wed, 04 Nov 2026 16:57:38 +0800
+From: Jiayi Li <lijiayi@kylinos.cn>
+To: Oliver Neukum <oneukum@suse.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>,
+	Michal Pecio <michal.pecio@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-usb@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	usb-storage@lists.one-eyed-alien.net,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3] usb: uas: wait for pending commands before unbinding
+Date: Wed,  4 Nov 2026 16:57:18 +0800
+Message-Id: <20261104085718.3300303-1-lijiayi@kylinos.cn>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20261028092153.1481202-1-lijiayi@kylinos.cn>
+References: <20261028092153.1481202-1-lijiayi@kylinos.cn>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -60,38 +74,17 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-In-Reply-To: <CAMGffEkj=rzCiiek=p+9Qc2AjJ1Nkk00H8wFReQ9-0ptWHKobw@mail.gmail.com>
+Content-Transfer-Encoding: 8bit
 
-On Wed, Nov 04, 2026 at 09:33:55AM +0100, Jinpu Wang wrote:
-> On Wed, Nov 4, 2026 at 3:14=E2=80=AFAM Wentao Liang <vulab@iscas.ac.cn> w=
-rote:
-> >
-> > pm8001_init_ccb_tag() is called after the Scsi_Host, the sas_ha and the
-> > driver's private data have been allocated, and after the PCI regions
-> > have been requested.  When it fails, pm8001_pci_probe() jumps to
-> > err_out_enable, which only returns the error: the Scsi_Host, sas_ha and
-> > private data are leaked, the PCI regions stay requested and the device
-> > stays enabled.
-> >
-> > Jump to err_out_ha_free instead, which releases all of those resources.
-> >
-> > Fixes: 5a141315ed7c ("scsi: pm80xx: Increase the number of outstanding =
-I/O supported to 1024")
-> > Cc: stable@vger.kernel.org
-> > Assisted-by: DeepSeek-V4.1-Flash and OpenAI Codex
-> > Signed-off-by: Wentao Liang <vulab@iscas.ac.cn>
-> Acked-by: Jack Wang <jinpu.wang@cloud.ionos.com>
+Hi,
 
-Are you sure? Sashiko reports introduced UAF (and/or other bugs).
+On Wed, 28 Oct 2026 at 09:48:15 +0100, Oliver Neukum wrote:
+> Why? What is it waiting for? And why do you think we can skip
+> that wait safely?
 
-Mind that vulab@iscas.ac.cn is a bot with spams with tons of patches
-which looks exactly like previous hypocrite commit approach - some
-security vulnerability intentionally added in between of thousands of
-valid patches.
+A gentle ping on my previous reply about the scan_work cancellation
+ordering. Please let me know if any further clarification or changes
+are needed.
 
-Best regards,
-Krzysztof
-
+Thanks,
+Jiayi
