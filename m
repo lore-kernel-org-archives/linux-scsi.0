@@ -1,66 +1,82 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=199.89.1.16
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.129.124
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793828053;
-	b=GcfdflqI+98i6Sgy6MrSCMp2s3+9bZNn9t4JKjErh5HeAicg3bqYqsh6634VRa9tTuX1
-	 vj872Qz88rJvTvGWwAkfoHta0TLc+KiXhMs65qtRegUN6HgDi/07vrBdxa6pe28VoxsCN
-	 k/s91Sdf4DYtGFImfBeLOe1S4Ejko/39BwOf7J5osWoOEqdAzoCtNE2urbSePUunVvGIR
-	 drugCYLPfYcnrI0nCiQImgI+uSKV6GPAIoa94IbqG+mp2qaWOPGbNROCYIAUvH0caalbG
-	 9nNZVgcPiR0qXLUq9IP0W22Ky0ezRLF8y1zsdLWh5yyLA7PjD7DvWAL628JhzpbR3kA==
+	t=1793831158;
+	b=oEGo7ydGifkA+f1m/Q3Qq6vq2xQWe25Yu0gKwb3fRX6qP+GoMyQbd7EdBiwwem0sPciv
+	 uMr/asZZrj3UXMnXotfgxqyx7sKGbPvo0VvbetGOom2pLj7CifTV7qmMHUVVpKbEXEtuD
+	 fLa+Z7goIVrzwYyxHpl9eE3U/wnWFBC2zOwWdVcevzpuYY9UgK+xvFto70HgdbBasRrPt
+	 2JdSTaotHJ7BldZWCzj4gR1IuE1iDQakX4Y5pZyfkH3mmY3BgVYDEN0IZtOjTv6IPUoD5
+	 ZTA73wG3L03BYTT/VOU8cuVHGFf9kV/GBhPVjZmKmQ59eoIwRZdI4NC+40+7iKmikVw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793828053;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Virus-Scanned:Received:
-	 Received:Message-ID:Date:MIME-Version:User-Agent:Subject:To:Cc:
-	 References:Content-Language:From:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=FH6Ed6uXwagBrJj5nKpBfnX8VXTtOJ7yhG1753pBTbo=;
-	b=4Ju4zGovqNIt7Q1PFAu88dzRwVoSReROyj5c+h18R3j4xA3MZwkxoIpnx/5cN35Wcc6c
-	 LdCky9F64zWCZHPC5rPcKwI9QOGumIUVH7g8YhlUnb1CSJfvF7JU/fH1cKVJe4g5Emlea
-	 66hkBgRcCwxaMYpQd2mjpezYOoAk4IdMkBdqbOo2gr1dUbdmT1H+WZmPeVCYFAFDrjs52
-	 5xV81gCMN8egsqyk7oYCq2AnzxXjeNxF+dgr4+6O6Vsn2Yq4tStCi7CubiIoWgYit++Y+
-	 MErKKM7zVmP/VaRAtlxovCUn+LbCjNCKp5ChbGlSE4WgswECDQDrueklNn6yD5ERxww==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793831158;
+	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
+	 X-Mimecast-MFC-AGG-ID:Received:Received:From:To:Cc:Subject:Date:
+	 Message-ID:MIME-Version:Content-Transfer-Encoding:X-Scanned-By;
+	bh=RqrFAViIXrjiourMrnhARQFUmFJOsUN3fk+kD/PpH0c=;
+	b=iv7c8G81J+QTYeYfyOghQPK38l6aZrunc83XX1xYTcxtxxHyTQXrsFbfJmH3njKH0JFS
+	 j2dcd4+JasuG+znl6OnfFBmcqZlvETbMs4nD391edwGSm8+sFo8+9GRKcjlKhEGNtwMui
+	 57XejHa6iOa4gxIFPS9aY0BqrKjsY6lnu0eQ4PEP52si8nIKJpJYD4BtwD7cldoZLP7EG
+	 oXefze9NsC9sjuv/UfSOGqeL2R5v0YjbK3sivGEyOO7n5yDB9NprO9VF2wjawwCV2QFxm
+	 UDIyxHMD6932nh1StUjRW/tHs3vbl3qo+Jc/G5B2Bgk6jRrCmqMZL6RmUA33xQQFIBw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=acm.org;
-	spf=pass smtp.mailfrom=acm.org;
-	dkim=pass header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=ZHRNeaU5;
-	arc=none smtp.remote-ip=199.89.1.16
-Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
+	dmarc=pass header.from=redhat.com;
+	spf=pass smtp.mailfrom=redhat.com;
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=dZsfB+7O;
+	arc=none smtp.remote-ip=170.10.129.124
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9AE6606D15D;
-	Wed,  4 Nov 2026 21:34:12 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A9AE6606D15D
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B68E606D83D
+	for <linux-scsi@vger.kernel.org>; Wed,  4 Nov 2026 22:25:57 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9B68E606D83D
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=ZHRNeaU5
-Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4jKdxJ14hYzlfvqH;
-	Wed,  4 Nov 2026 21:34:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1793828050; x=1796420051; bh=FH6Ed6uXwagBrJj5nKpBfnX8
-	VXTtOJ7yhG1753pBTbo=; b=ZHRNeaU5FGdEbIAgkUhj72kvt2ThOfqxCvCCFdvA
-	1kUjUJY4N0XzvyV9pAkHy5qCTSu2onu05kmGX+IURsIvq3zQ3ezCBq2kH7xl+IaG
-	sigyMKnlxjbNPh92Xjf6JSbwQZZDfdhF3cVn0/OU/28JJowjj0NaMn5P406WZZni
-	uqz/n+FYALAXT7swAP53hoaNFHZGA5oI+T1jucwPPndo19hJHQBxOmPJ0IAuADS0
-	j0yGBiAjH3vRamJ3dK8GDg1FqXmggQXGgjSV6rNv66lQCqsKa9omYuNPCi52qVdS
-	Ffnt145jE/JVbSkL7BTn7CkLvOVHHQlIwrGxTYB4j8Tuow==
-X-Virus-Scanned: by MailRoute
-Received: from 013.lax.mailroute.net ([127.0.0.1])
- by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id u-4KdqZzh3jD; Wed,  4 Nov 2026 21:34:10 +0000 (UTC)
-Received: from [IPV6:2a00:79e0:2ed2:d:3e34:690f:8410:3e04] (unknown [104.135.182.40])
+	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=dZsfB+7O
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1793831156;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=RqrFAViIXrjiourMrnhARQFUmFJOsUN3fk+kD/PpH0c=;
+	b=dZsfB+7Of5uttp5x/CwczGi/p78VyOJJ9idj+0XF9Cfrn9xpWUZJyHM4ZawaJjnBjGehbU
+	6mWLjHNa360fKeVrhMsARuatwm6uuscWnA0tW8ObkqV/puWdXWFAOWHkErMsLZvXyS1gKt
+	UgjPr6q8ir95d6YKKhn8/l44wMhyo1k=
+Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-463-ty3QX41dNgqrG3pXvAa2xg-1; Wed,
+ 04 Nov 2026 17:25:51 -0500
+X-MC-Unique: ty3QX41dNgqrG3pXvAa2xg-1
+X-Mimecast-MFC-AGG-ID: ty3QX41dNgqrG3pXvAa2xg_1793831149
+Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4jKdxF6GYkzlfvq9;
-	Wed,  4 Nov 2026 21:34:09 +0000 (UTC)
-Message-ID: <d6b1da22-2a18-4966-83df-86cb9031fdde@acm.org>
-Date: Wed, 4 Nov 2026 13:34:08 -0800
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id C26C41956041;
+	Wed,  4 Nov 2026 22:25:48 +0000 (UTC)
+Received: from loberman-thinkpadp16gen3.redhat.corp (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
+	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 904451956087;
+	Wed,  4 Nov 2026 22:25:46 +0000 (UTC)
+From: Laurence Oberman <loberman@redhat.com>
+To: njavali@marvell.com,
+	martin.petersen@oracle.com
+Cc: GR-QLogic-Storage-Upstream@marvell.com,
+	James.Bottomley@HansenPartnership.com,
+	kys@microsoft.com,
+	haiyangz@microsoft.com,
+	wei.liu@kernel.org,
+	decui@microsoft.com,
+	longli@microsoft.com,
+	mhklinux@outlook.com,
+	sbhat@linux.ibm.com,
+	kmahlkuc@linux.ibm.com,
+	linux-scsi@vger.kernel.org,
+	linux-hyperv@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [RFC PATCH] scsi: qla2xxx: Use the real INTx pin for the port number on Hyper-V guests
+Date: Wed,  4 Nov 2026 17:25:41 -0500
+Message-ID: <20261104222541.2675051-1-loberman@redhat.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -70,34 +86,140 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 2/2] ufs: mcq: poll OCS after sq cleanup for device
- management commands
-To: Bean Huo <beanhuo@iokpp.de>, Kiwoong Kim <kwmad.kim@samsung.com>,
- linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
- alim.akhtar@samsung.com, jejb@linux.ibm.com, martin.petersen@oracle.com,
- kwangwon.min@samsung.com, hy50.seo@samsung.com, cpgs@samsung.com,
- h10.kim@samsung.com
-Cc: stable@vger.kernel.org, stanleyjhu@google.com
-References: <20261104094914.180788-1-kwmad.kim@samsung.com>
- <CGME20261104094925epcas2p1f25905de00c2548e1e1349fba5f18551@epcas2p1.samsung.com>
- <20261104094914.180788-3-kwmad.kim@samsung.com>
- <41f787035d4a5d68b403bb0f443fe6ab533ff1ca.camel@iokpp.de>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <41f787035d4a5d68b403bb0f443fe6ab533ff1ca.camel@iokpp.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-On 11/4/26 12:17 PM, Bean Huo wrote:
-> READ_ONCE() is enough to read OCS, but the lock also is to make sure
-> ufshcd_compl_one_cqe() has finished?  the window is very small, and the lock
-> only costs something on this error handling path.
+qla2x00_set_isp_flags() derives the physical port number from
+PCI_INTERRUPT_PIN, and the port number selects the per-port VPD, NVRAM,
+NPIV and FCP priority flash regions.
 
-I overlooked that lrbp->utr_descriptor_ptr->header.ocs is what is being
-polled instead of the OCS field in the CQE. Kiwoong, can you please
-restore the code that obtains hwq->cq_lock?
+On Hyper-V guests, pci-hyperv returns 0 for byte and word reads of
+PCI_INTERRUPT_PIN since commit fea93a3e5d5e ("PCI: hv: Return zero, not
+garbage, when reading PCI_INTERRUPT_PIN"). Commit 7268e509b43a ("scsi:
+qla2xxx: Handle INTx not connected while passing through") then falls
+back to PCI_FUNC(). With Discrete Device Assignment (DDA), each function
+of a multi-port HBA is presented as function 0 in its own PCI domain, so
+every port gets port_no 0. All ports read port 0's NVRAM, pass the
+checksum and register the same WWPN, and nothing is logged.
 
-Thanks,
+Without that commit, port_no underflows to 255, no flash region is
+selected and every port fails with "Inconsistent NVRAM checksum" and
+falls back to the default WWPN.
 
-Bart.
+pci-hyperv only zeroes byte and word accesses within 0x3c-0x3d. A dword
+read at PCI_INTERRUPT_LINE reaches the device's config space and returns
+the real pin in bits 15:8. On Hyper-V guests, use that when the byte
+read returns 0, and warn if the pin is still 0 so that duplicate WWPNs
+are not silent. Bare metal, KVM/vfio and other hypervisors are
+unchanged.
+
+Tested with an equivalent change on a RHEL 9 (5.14-based) guest with a
+dual-port QLE2692 (ISP2261) assigned through DDA (Hyper-V host
+10.0.17763):
+
+  before: both ports "Inconsistent NVRAM checksum=0xffffffc0 id=NGKP",
+          both WWPN 0x210000e08b1c5586
+  after:  port_no 1 and 0, NVRAM valid, WWPN 0x210034800d7065bd and
+          0x210034800d7065bc, fabric login and FC-NVMe localport
+          registration on both ports
+
+Also tested on bare metal (ISP2031): the new path is not taken and port
+numbers and WWPNs are unchanged.
+
+Signed-off-by: Laurence Oberman <loberman@redhat.com>
+---
+RFC: this relies on pci-hyperv not virtualizing dword reads at 0x3c,
+which is an implementation detail rather than an interface. It is posted
+as the smallest working fix and to start the discussion. Feedback wanted
+on cleaner alternatives:
+
+ - Hyper-V (linux-hyperv): could pci-hyperv expose the real
+   PCI_INTERRUPT_PIN, or provide the physical function number, for DDA
+   devices? Some drivers use the pin for port identity, not only for
+   interrupt routing.
+
+ - Marvell: is there a firmware or register source for the physical
+   port that does not depend on PCI config space? CSRX_FUNCTION in
+   ctrl_status is a single bit and would not cover quad-port
+   27xx/28xx/29xx.
+
+ - The check is x86-only (hypervisor_is_type()). pci-hyperv also
+   supports arm64 guests; a better way to detect a pci-hyperv bus is
+   welcome.
+
+This has not yet been tested on a 7.3 kernel in the DDA guest; testing
+was on a RHEL 9.8 backport. The upstream behaviour without this patch
+(duplicate WWPNs with no warning) follows from the code and has not yet
+been reproduced on 7.3.
+
+ drivers/scsi/qla2xxx/qla_os.c | 40 ++++++++++++++++++++++++++++++++++-
+ 1 file changed, 39 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 3c412c7fb6fe..4180d3f15231 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -24,6 +24,10 @@
+ #include <scsi/scsi_transport.h>
+ #include <scsi/scsi_transport_fc.h>
+ 
++#ifdef CONFIG_X86
++#include <asm/hypervisor.h>
++#endif
++
+ #include "qla_target.h"
+ 
+ /*
+@@ -2704,6 +2708,40 @@ static struct isp_operations qla29xx_isp_ops = {
+ 	.initialize_adapter	= qla2x00_initialize_adapter,
+ };
+ 
++/*
++ * Read the INTx pin used to derive the physical port number.
++ *
++ * pci-hyperv hard-wires byte and word reads of PCI_INTERRUPT_PIN to zero.
++ * With Hyper-V Discrete Device Assignment every function is also presented
++ * as function 0 in its own PCI domain, so the PCI_FUNC() fallback gives
++ * port 0 for every port and they all report port 0's WWPN. A dword read at
++ * PCI_INTERRUPT_LINE is not virtualized by pci-hyperv and returns the
++ * device's pin in bits 15:8, so use that on Hyper-V guests.
++ */
++static u8
++qla2x00_get_intx_pin(struct qla_hw_data *ha)
++{
++	u8 pin;
++
++	pci_read_config_byte(ha->pdev, PCI_INTERRUPT_PIN, &pin);
++#ifdef CONFIG_X86
++	if (!pin && hypervisor_is_type(X86_HYPER_MS_HYPERV)) {
++		u32 val = 0;
++
++		pci_read_config_dword(ha->pdev, PCI_INTERRUPT_LINE, &val);
++		pin = (val >> 8) & 0xff;
++		if (pin)
++			ql_log_pci(ql_log_info, ha->pdev, 0xffff,
++				   "Hyper-V: INTx pin reads 0, config dword 0x%08x gives pin %u.\n",
++				   val, pin);
++		else
++			ql_log_pci(ql_log_warn, ha->pdev, 0xffff,
++				   "Hyper-V: unable to determine physical port, ports may report duplicate WWPNs.\n");
++	}
++#endif
++	return pin;
++}
++
+ static inline void
+ qla2x00_set_isp_flags(struct qla_hw_data *ha)
+ {
+@@ -2887,7 +2925,7 @@ qla2x00_set_isp_flags(struct qla_hw_data *ha)
+ 		ha->port_no = ha->portnum & 1;
+ 	else {
+ 		/* Get adapter physical port no from interrupt pin register. */
+-		pci_read_config_byte(ha->pdev, PCI_INTERRUPT_PIN, &ha->port_no);
++		ha->port_no = qla2x00_get_intx_pin(ha);
+ 		if (ha->port_no == 0) {
+ 			/* None of INT[A|B|C|D] may be virtualized by vfio */
+ 			ha->port_no = PCI_FUNC(ha->pdev->devfn);
+-- 
+2.56.0
+
