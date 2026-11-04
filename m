@@ -1,72 +1,75 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.215.200
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.199
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793805414;
-	b=GberpOqeuGrJ+TAGha6qkiBP8KXuEYgQQwLGoiiUerHinGb8cBgj+31WRpAMZZNRaFnG
-	 A4y0mLFmWeywhWjUfnzA23OXSXx8Moo63Gl3W5b1dmPUSocBRv29QAbQPi/Tli03TdTKt
-	 agNNYJ+ra0f54wfpRz+plbh+bxefJpkIUOfyT/t2Gf4Pt5if+SCeeZOVbYTOiL3I+/7EB
-	 RJzBkaWqNMxZy2q+0hlCKPHTbUXazShtKToTFLZz6N8Ju9SaI6FsYiAO3yH/5G/deBuE3
-	 Za6x9NKvjY+X31eYqHDvKmKwr8xj0mIf59akpxHIL+2iwmZuxIv8FIKCAoKc+b/vRZw==
+	t=1793806058;
+	b=sLGJ7wNJ+zK33mlAOB6pEhjY2uwnlInQIIQXjU6OD8y6XrX+9ie0A62k2jvpDHv4q89U
+	 DmWaG2WDZ8x2sqY7GCuTruFkMidSHaBknpnKGwthWgMywwqeJfF2s2r2x+Y7ZdTetyJlm
+	 kqC71ZLPwRBZ6gAZ+kHYNDIzKVthCm++AkEtpiOW/+0BriE2AVM7eW0xuZ9/4UjgKa+VP
+	 7yLiJ9B6/n7lM9AoZk1bTp9GAZRRdJxDw1MtCvgseLWuJiy04ttS//EDavFL9N//qk3Cy
+	 K3Fm5s8/3K2dc31HZ5Xnway9W0lewB2XDJN6EUdSgVATZjVDZ7JRArvap9tXaBMytzw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793805414;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793806058;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:Mime-Version:
-	 X-Mailer:Message-ID:Subject:From:To:Cc:Content-Type;
-	bh=Uq1e7jWuoceT2x7ZhYRUZ6C4jiC0NbfgYNrjkiRron4=;
-	b=ulwbt3crhn1lzb4dcFwwFz+/M6PowIeWx90P+22b1uxZxM4U8UMSh5y54OaKTa5ezeNZ
-	 Gm2gfoPrykLbW4YymSIP0MCP3NE6tr2xWhL5AWOtGUkY4/GVJBMfHuxTnVjEQXWYa/GqG
-	 ySrUsvc8caP7rpKG4Rsjk+ZYg6MwhGEHan9qB324RUr8SirDVzk/ND8OUR8TSz8Fk2EbX
-	 CS3HEt/Dp3iwEvyCb9QSkg1y+NzVKG5hSQwNGdpmdAzdGKSjLSIW86ikhbhVQIbaB6YYS
-	 CB2jpKWNh+KsE4URfvxKu03nNW0i5hUduk++U9iazen2xPS2wcJbfw2wO0A5ih0zxgQ==
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:In-Reply-To:
+	 Mime-Version:References:X-Mailer:Message-ID:Subject:From:To:Cc:
+	 Content-Type;
+	bh=CIpKMto3juCBWIXYogyz/kuSz8z9yPBH98tdVVEJ+Nw=;
+	b=1ct7FOesPDH8cuscf/Bumt+l02rSTS7+5PNilBg8rn+W156CQxPVk3DHdQc0ikqpI4G/
+	 qglvBcB/p/ybIYujYsvykzJYJPN9EMvseSXYWwNx/vlPcOyJDokHrrY4IJ4Wx+2XH4WPH
+	 u2vKtpOBJRr1H3xoddJjCK8HLOJDN+KHvxOhQbhEWVfeM7RFOSzkQGR2ioAzLQMquRDje
+	 d7DV8OqtbMeWY7TxLNPk3gw7FeXxgLHFN4wrZ8GpaxNXtYE7gndXKdM/EIJxDxjuYW+tU
+	 flhgIPebkKZaNexgGsXriSg8iTZBrzuMEjMilYiCFWQJEqfsqLhuI9RSlZ/PrUr1x4A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=google.com;
 	spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=V5qxMC8i;
-	arc=none smtp.remote-ip=209.85.215.200
-Received: from mail-pg1-f200.google.com (mail-pg1-f200.google.com [209.85.215.200])
+	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=LJl5RNQ5;
+	arc=none smtp.remote-ip=74.125.82.199
+Received: from mail-dy1-f199.google.com (mail-dy1-f199.google.com [74.125.82.199])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F62B606A32E
-	for <linux-scsi@vger.kernel.org>; Wed,  4 Nov 2026 15:16:54 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8F62B606A32E
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7DCCF606EEA9
+	for <linux-scsi@vger.kernel.org>; Wed,  4 Nov 2026 15:27:33 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7DCCF606EEA9
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=V5qxMC8i
-Received: by mail-pg1-f200.google.com with SMTP id 41be03b00d2f7-cc4ac5feaa4so581097a12.1
-        for <linux-scsi@vger.kernel.org>; Wed, 04 Nov 2026 07:16:54 -0800 (PST)
+	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=LJl5RNQ5
+Received: by mail-dy1-f199.google.com with SMTP id 5a478bee46e88-30bcb065bfdso1527094eec.0
+        for <linux-scsi@vger.kernel.org>; Wed, 04 Nov 2026 07:27:33 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20260707; t=1793805414; x=1794410214; darn=vger.kernel.org;
-        h=content-type:cc:to:from:subject:message-id:mime-version:date:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=Uq1e7jWuoceT2x7ZhYRUZ6C4jiC0NbfgYNrjkiRron4=;
-        b=V5qxMC8iNZRNUbCry/IYAuCXjsz2S2to3mmREdQL2kfZUuTj1juBWz+30iE/aIiyVh
-         Nh6k0qHuKdq+p6gJXqz6NIGfOsBjLQKw79EaJ/OFVsblemYIH++/duGw4REg3H9mixk1
-         zxavgu7KdB/IYCfpdOYnKLcTq68HP92rwv63DXx8ZHX7QkjG2P6rtA4BNv8Ek3NGyS4C
-         6OU1A4wocJ7FZPg8DdyqykUFYoaD4mcsUva/MaMFM4gAzua4Ep7Nwy0VuZrP1NPCMghs
-         mCmGUnGcPA6PrSFj+pn6r3qe2Izap8G51Jh6+OOB7pKI5eQWRYz8e5KvGAOBe/t6oime
-         mZOg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793805414; x=1794410214;
-        h=content-type:cc:to:from:subject:message-id:mime-version:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+        d=google.com; s=20260707; t=1793806053; x=1794410853; darn=vger.kernel.org;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=Uq1e7jWuoceT2x7ZhYRUZ6C4jiC0NbfgYNrjkiRron4=;
-        b=O4t2XFPF/FveJKXWvrAVkPBWHUXNyvA9LHuG8BW70X/6YoeBKtAJFNEnwMevDw49aa
-         Mkb7W7SH+FpJftcSJcb9LQykWuniFSyoMZVPpjvH3X0j4nalT727yGW3lu36kiZZK4El
-         JTuqectv9/QNQ25Iojxnxju+zmHg0MwBM9Oag3jvA/46SZnKOq7u5QguqDcWV4kfFKpg
-         SbFqtBb8zYHHlSaeDV7VE/S9/EMZHOSZ/iu0OkTV+4cbgECPBTV3VxNMNL9V416+89D0
-         uvNwT8VHAZ06883oPDDwU8RWGNhF7BLL+PHuxuaIy09QmAVstH1fdXfd67SqHmUAUUfW
-         DnnA==
-X-Forwarded-Encrypted: i=1; AKwUvBzVdGi7LQujlLDpmZtPS/mD/FDFwSfOe1ANHSqzYTELsOz8xEIB2tySFOdUnyhEdL5UGPtcEXysttUv@vger.kernel.org
-X-Gm-Message-State: APuU4Z8Yz90l4600o0nXIBCnS2zmRKZTAS/YfOSgOtDGVLA8hPCCe7mK
-	NRrdChll4KVzcpSga5bAaj1ZTF4USuORC09Qx8ik7CiRlrLjFxsFNNgFGHMFNKIqX2mjh2ukloj
-	ES67BZXnEnNCsmzeG207pQQ==
-X-Received: from pfblt3.prod.google.com ([2002:a05:6a00:7443:b0:89f:6242:b2d2])
+        bh=CIpKMto3juCBWIXYogyz/kuSz8z9yPBH98tdVVEJ+Nw=;
+        b=LJl5RNQ5b7c50OYJXgxlRs5H5LxDFdVXsRyml3D92U9/ULyM26t4vzd5tEZjDmhgN5
+         S9P9RQ/lPI5015Q+QPS8ja7fGIy7ddh53e4tPbW0ZXa+b6Xqj50UufcjriYjVxqgwgYZ
+         ybQy95yMR4ZKpTLszyt+tjRYf0FsDqFXqDLqKj2nUN/lmiFQSrP0EfTaPf0TGrwURsg/
+         qtFgzOyC+9pQ+GP3bcLTSKy2RogBXRzXCn7lOK7BrNmsuIUSmR8cmjeitjasVBLNSkWs
+         y041Uuls6bE+MJII7SrNxXR7rStb/j9x7o+jlyQJqHkOBOj5+q5qvHsxvCQoJ5z/bdS/
+         L1Yg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793806053; x=1794410853;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=CIpKMto3juCBWIXYogyz/kuSz8z9yPBH98tdVVEJ+Nw=;
+        b=LDf0ZXM9ovzwZxT/do7yPGL40dPx+a+xc2zgeMM8bhcholaUdDoCOCAzAcQiDbViWE
+         4/CWtHE4is1aUDrr6zCIEtknkSkJK3TVqwscpRiTpzxYbaF2YF6fKh2loZ1qhmB0PTUG
+         TM79F1UpSqkAhWzWgxj4PyU0Jyul3x1DO3JArQEHRJSXhO04Egi7UyUE4W19yHzhQ/Yl
+         jyrs4I0ISBAR4vbURlDgZqVA58qxoTP6Ar6ftUYjUwyj0qmOYPdc7G1G3h/bdQx0YJeH
+         855sSEtT51FRF6ovKYIVEPem0pcL3K0OS1v6zqQnBcOdcRxm43p6RhKAb4nSs3eWA/Hz
+         QYvw==
+X-Forwarded-Encrypted: i=1; AKwUvBwkc5zPgHCYEE4YXc8PMwlTGUC95pLo/JyV6jkucnFXWvWYvNZNIpRcICTxuXzsb6PxsDBr9DGfnmtQ@vger.kernel.org
+X-Gm-Message-State: APuU4Z8v4UFssistblKH1w4GtJQtKR3yvY33CKmmG0NHMsO3E5Ivz+o/
+	a5hMJW6zQ3Gw1cTCxU59vDQycti3b/tskare05vuqg7+NLdpcbWYcfnJQQia+OT8Lrhykr+t1vI
+	Nra/nqGnD6DImf7w4P971uQ==
+X-Received: from dyjm35.prod.google.com ([2002:a05:7300:16a3:b0:358:f250:485f])
  (user=stanleyjhu job=prod-delivery.src-stubby-dispatcher) by
- 2002:a05:6a20:a107:b0:3e2:117a:6307 with SMTP id adf61e73a8af0-3e928d4476cmr14928062637.22.1793805413627;
- Wed, 04 Nov 2026 07:16:53 -0800 (PST)
-Date: Wed,  4 Nov 2026 23:16:51 +0800
+ 2002:a05:693c:88d2:20b0:36a:6d52:e16c with SMTP id 5a478bee46e88-36a6d52e261mr13279550eec.12.1793806051988;
+ Wed, 04 Nov 2026 07:27:31 -0800 (PST)
+Date: Wed,  4 Nov 2026 23:27:30 +0800
+In-Reply-To: <auo6bvjDtwAMKOid@google.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -76,84 +79,38 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 Mime-Version: 1.0
+References: <20261029040005.2100005-1-stanleyjhu@google.com> <auo6bvjDtwAMKOid@google.com>
 X-Mailer: git-send-email 2.56.0.385.gac671c819a-goog
-Message-ID: <20261104151651.3035537-1-stanleyjhu@google.com>
-Subject: [PATCH v2] PM: runtime: Update runtime_pm.rst for non-fatal resume errors
+Message-ID: <20261104152730.3102376-1-stanleyjhu@google.com>
+Subject: Re: [PATCH] PM: runtime: Update runtime_pm.rst for non-fatal resume errors
 From: Stanley Jhu <stanleyjhu@google.com>
-To: "Rafael J . Wysocki" <rafael@kernel.org>
-Cc: Brian Norris <briannorris@chromium.org>, Len Brown <lenb@kernel.org>, 
-	Pavel Machek <pavel@kernel.org>, Praveen Talari <praveen.talari@oss.qualcomm.com>, 
-	Jonathan Corbet <corbet@lwn.net>, Mark Brown <broonie@kernel.org>, 
-	Alan Stern <stern@rowland.harvard.edu>, Jens Axboe <axboe@kernel.dk>, 
-	Bart Van Assche <bvanassche@acm.org>, linux-pm@vger.kernel.org, linux-doc@vger.kernel.org, 
-	linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, Stanley Jhu <stanleyjhu@google.com>
+To: Brian Norris <briannorris@chromium.org>
+Cc: "Rafael J . Wysocki" <rafael@kernel.org>, Len Brown <lenb@kernel.org>, Pavel Machek <pavel@kernel.org>, 
+	Praveen Talari <praveen.talari@oss.qualcomm.com>, Jonathan Corbet <corbet@lwn.net>, 
+	Mark Brown <broonie@kernel.org>, Alan Stern <stern@rowland.harvard.edu>, 
+	Jens Axboe <axboe@kernel.dk>, Bart Van Assche <bvanassche@acm.org>, linux-pm@vger.kernel.org, 
+	linux-doc@vger.kernel.org, linux-block@vger.kernel.org, 
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	Stanley Jhu <stanleyjhu@google.com>
 Content-Type: text/plain; charset="UTF-8"
 
-Since commit eef1d74bf88f ("PM: runtime: Only set runtime_error on
-suspend callback failures"), rpm_callback() no longer sets
-dev->power.runtime_error when ->runtime_resume() returns an error.
-However, Documentation/power/runtime_pm.rst still states in both the
-resume callback rules and the ->runtime_idle() comparison that the PM
-core treats ->runtime_resume() errors as fatal device errors and blocks
-runtime PM helper functions until the status is manually reset.
+On Tue, Nov 03, 2026 at 11:47:58AM -0800, Brian Norris wrote:
+> Those need a close eye, as the code involved is a bit subtle. I tried to
+> review, but I'm not really an expert in those subsystems. (I'm also not
+> quite sure the second one was 100% a regression, vs further exposing an
+> existing underlying problem.)
 
-Update the resume callback semantics bullet to state that on error the
-PM core resets the runtime PM status to 'suspended', returns the error
-code from synchronous resume helpers, and unlike with the suspend
-callback never treats resume failures as fatal, leaving the Section 4
-runtime PM helpers unblocked so a subsequent resume request can run
-->runtime_resume() again. Also drop ->runtime_resume() from the
-->runtime_idle() fatal-error comparison.
+Agreed on the UFS clock-gating hold release. Keeping the hold until
+resume succeeds was cleaner regardless of retry behavior. That fix has
+been applied to 7.4/scsi-fixes. I have also sent v2 of the block-layer
+q->pm_only fix.
 
-Fixes: eef1d74bf88f ("PM: runtime: Only set runtime_error on suspend callback failures")
-Fixes: aedc51762a0d ("PM: runtime: Clarify ->runtime_idle() callback return value handling")
-Signed-off-by: Stanley Jhu <stanleyjhu@google.com>
----
-Differences from v1:
-- Contrast resume failures with the suspend callback instead of citing
-  -EBUSY, -EAGAIN, or power.runtime_error (Brian Norris)
-- Add Fixes tag for commit aedc51762a0d covering ->runtime_idle()
-- Link to v1: https://lore.kernel.org/r/20261029040005.2100005-1-stanleyjhu@google.com
+> I think it would be better to flip the comparison to the other
+> direction, and deemphasize power.runtime_error. For example:
+>
+>   "Unlike with the suspend callback, failures in the resume callback are
+>   never considered fatal, [...]"
 
- Documentation/power/runtime_pm.rst | 17 +++++++++--------
- 1 file changed, 9 insertions(+), 8 deletions(-)
-
-diff --git a/Documentation/power/runtime_pm.rst b/Documentation/power/runtime_pm.rst
-index 40a5c23d5259..09072c576087 100644
---- a/Documentation/power/runtime_pm.rst
-+++ b/Documentation/power/runtime_pm.rst
-@@ -222,11 +222,12 @@ what to do to handle the device).
-     I/O operations as needed.  The runtime PM status of the device is then
-     'active'.
- 
--  * If the resume callback returns an error code, the PM core regards this as a
--    fatal error and will refuse to run the helper functions described in
--    `Section 4`_ for the device, until its status is directly set to either
--    'active', or 'suspended' (by means of special helper functions provided by
--    the PM core for this purpose).
-+  * If the resume callback returns an error code, the PM core sets the
-+    device's runtime PM status back to 'suspended' and returns the error
-+    code from synchronous resume helpers.  Unlike with the suspend
-+    callback, failures in the resume callback are never considered fatal,
-+    so the helper functions described in `Section 4`_ are not blocked and
-+    a subsequent resume request can run the resume callback again.
- 
- The idle callback (a subsystem-level one, if present, or the driver one) is
- executed by the PM core whenever the device appears to be idle, which is
-@@ -250,9 +251,9 @@ call to pm_runtime_autosuspend().
- To prevent this suspension (for example, if the callback routine has scheduled
- a delayed suspend or determined the device cannot be idle), the routine must
- return a non-zero value (typically -EBUSY or -EAGAIN).  Unlike
--->runtime_suspend() and ->runtime_resume(), the PM core does not treat negative
--return codes from ->runtime_idle() as a fatal device error; any non-zero value
--simply stops the PM core from suspending the device.
-+->runtime_suspend(), the PM core does not treat negative return codes from
-+->runtime_idle() as a fatal device error, and any non-zero value simply stops
-+the PM core from suspending the device.
- 
- Core Guarantees and Synchronization Rules
- -----------------------------------------
--- 
-2.56.0.385.gac671c819a-goog
-
+I have sent v2 using that comparison, without mentioning -EBUSY,
+-EAGAIN, or power.runtime_error, and added Fixes for commit
+aedc51762a0d covering the ->runtime_idle() paragraph.
