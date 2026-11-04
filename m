@@ -1,100 +1,78 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.218.54
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793785402;
-	b=KUOHvnHlaQVnFqLUCtTsGA20TqNmpp+lxTX7bk4A70M9720SZrMecLzCm7VeV04txkcO
-	 Z4wyVWPzWIWvWjJXHtl0oBMgXkOtbQ2JbybHRbq94vKQ25AzwmVS3IYA0IyNn1cLopfI1
-	 45qafCHdu8HP6y5ZlYzuIz2Hmi8SOrCmckSAjmrDUDH4Bz9fYiFA6TbWxoiuYi8D1x7F2
-	 5buG6CT2xs0LV/t3WVAxSxYi6DNtzgkGl8QWE/IwPnHDxyj2s1jQlQUALT1xbI3oO8/9o
-	 XJdsP4RY9v+7Yc0ger3/UsOGbXn2Z5cbsP4WIgTD2XWwroT+0P7j09wLRXx6fwULtnQ==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793785402;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
-	 Message-ID:Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
-	bh=QiBV51YSsvAhVbkuD5G3dwy2wbYhE77P1hdgw6UX+wY=;
-	b=sJGXfSGzT5rGO9+ln31vn+vZTJuHalnMERWrxlQMHsJmoPNYQ0CDrKEeT6qAMb/Vo6PO
-	 eut1ym26Lfyy23dKhoOR15CKkJaOEA7sc2iOEKwInnGwhCys3v5JkncxrP92FIsYnqJfl
-	 qtOU34vyMi8rBAi2RNlPUg6AZY68Vm8qc04YvnXrjunDpAAZ3mFLJg0s1sPDrn+dq2GVc
-	 8s098EdlcZ/FvGR1Wl6KP+pEEMbtc7BFa9JYWYxvucvqblk6PmLP9p67wBfp6e4oN8tmu
-	 VKWLFSAeXFfr0J9gXPldlYTxwWAJzUQdUOxEjCBlQFAvAIvLGcBNPqhhVY9XxgTuC2Q==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=cloud.ionos.com;
-	spf=pass smtp.mailfrom=ionos.com;
-	dkim=pass header.d=cloud.ionos.com header.i=@cloud.ionos.com header.a=rsa-sha256 header.s=google header.b=dsixcZ1v;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.218.54
-Received: from mail-ej1-f54.google.com (mail-ej1-f54.google.com [209.85.218.54])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=203.254.224.24
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1793785769;
+	b=hihnJQps1QLAGiBDyyWxpt97KjslKl1oB/iFc+x9DVgGjUzzShzoX6GAbORFguqHRIPy
+	 Og5vsMjoTja//OER+/hVM64g47FKcJvuVnSgvo9rOZ/uZlnZXSc7h7qLCkW+5y74jkoHZ
+	 e3IpK+fWKP49aHacoeBLY/GMkk3YNtpE+cAJc5FsidncsrK5VpMHXgHW4oW6B0xpWR3Yt
+	 EDwMkTIEU/BcUTTbsWdqeQfZwEFZRDWdWwDsgi52EqgBrbkoT1MBi782XJ5kQGlce1okc
+	 N4bLa9DL8CgZFbmNxWQB3CvINhboZpMZlKhTH1zoK622yE+QrFtxPg2zzmrcugEMPQA==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793785769;
+	h=DMARC-Filter:Received:DKIM-Filter:DKIM-Signature:Received:Received:
+	 Received:Received:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
+	 In-Reply-To:MIME-Version:Content-Transfer-Encoding:X-CMS-MailID:
+	 X-Msg-Generator:Content-Type:X-Sendblock-Type:CMS-TYPE:X-CPGSPASS:
+	 cpgsPolicy:X-CFilter-Loop:X-CMS-RootMailID:References;
+	bh=TRvgzI3qXoA2HIsl7Zv36AwD/K99XeT08hxCxLH0B9A=;
+	b=qYlbZe5wsJR2xhY6i5KW/2IH6rxg2fhXLFW3xSZ9kmv2XJ5JNUBxYpPLZBsy87e6Y3rG
+	 ijypa2R7w86dzxv3lV02nutqlQPnsvbLfZ3D1wBJEmn43cvzM/6lNxOr6OqhnoKJHYMtr
+	 Tvvxx8ilGbbkve0LYRsJ8JYTZPWlPFW4wAT+rEZGPbJsk9tByFHzcDOARkuNOI91l8yPB
+	 YrKtTaoiosFiuK6Pb0FbdrUll0MnBMSEhpZyX56TzgpPM4QeefxRxkdwBm1FNz7TfzxDe
+	 YKbGWfWLMD5lFAEmFsEOgCHUKff1E2viqb4BUn2IqtWoijB9G8DJ+qgu2/XnrQ/MRpA==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=samsung.com;
+	spf=pass smtp.mailfrom=samsung.com;
+	dkim=pass header.d=samsung.com header.i=@samsung.com header.a=rsa-sha256 header.s=mail20170921 header.b="Enuw6Be/";
+	arc=none smtp.remote-ip=203.254.224.24
+Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E94D606D805
-	for <linux-scsi@vger.kernel.org>; Wed,  4 Nov 2026 09:43:21 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5E94D606D805
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cloud.ionos.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ionos.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41DBB606A31B
+	for <linux-scsi@vger.kernel.org>; Wed,  4 Nov 2026 09:49:28 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 41DBB606A31B
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=cloud.ionos.com header.i=@cloud.ionos.com header.a=rsa-sha256 header.s=google header.b=dsixcZ1v
-Received: by mail-ej1-f54.google.com with SMTP id a640c23a62f3a-c411b7a2710so8704966b.3
-        for <linux-scsi@vger.kernel.org>; Wed, 04 Nov 2026 01:43:21 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1793785400; cv=none;
-        d=google.com; s=arc-20260327;
-        b=aVqQgSXsRO+XYDFadMnf1AkK+xpxYhpU4+qd61U0Nfmpl197Lh0WRst5oSZawVtzEL
-         cxGe2YJe4cPNTwjjtIvLk49myuNhYuWtyK9mKOKclOfk4ZifZbHOke1bnrhik4XWqIo8
-         +GgvzTyzZR4I7wStTMyL9auMzerp3RUWo7pxP9yc9ZNs7a7LEmrmtxCs9FmanKNXu0F2
-         LcwY47CB8Z5H6hed8xQqjcMXgt4Q01GIsHKuPd7XBI7ETK59KE2ZetrL8EsNVPdaxOvA
-         Cj4czLKDn0Gr1HigGskpDLBB6fT1/MRamf39LotDJ+j3Y+bHT6UgL+62FvjoGn5S59qI
-         UETA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=QiBV51YSsvAhVbkuD5G3dwy2wbYhE77P1hdgw6UX+wY=;
-        fh=mt4aJNvQjwPh/lY12GVGsmjznPTk12t7igeAGpd/lyI=;
-        b=pdH3KmxpSdzJkZ07glsvcZCnJiaxzTdHBX7b1RSUqkWQ4YC8uz2j1aLfOMVyBB8mhe
-         /0Xe6fkUYit2WJ3sK4UuWKB+iNNFB817qx5lkV/XivD9GbWE2u2uMiznctVr2lexnMme
-         8bz38LzXAdDXTqyBVUQ4bmGjvSSoYmGvOtz9jCuMFrt9olVRrSgN6+cbdGHFkCH4Eu7+
-         EEuZdwxp7pjqGTo/Giiw/HtDpMtfq0htj9jLaFUJ+UJyYbYvR1CdO3Luy2yEsoN9zAak
-         DyniXDRygFqFlvqPZ68XKzP6+pxM/o++ci1XPzbQUwjtvBy0r+nIacwWyqAjAO82XiIp
-         hkBw==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cloud.ionos.com; s=google; t=1793785400; x=1794390200; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=QiBV51YSsvAhVbkuD5G3dwy2wbYhE77P1hdgw6UX+wY=;
-        b=dsixcZ1vkB9iD8z8soG/VDexrD7EqOEe9fCxrDv+eB4rXsY/GfaX8OjFMNBWmin/RP
-         7TJtiRDJDeXLtyBfmIu+nsxpwtZPeadxAZtmMOUOAINd+95eRSmkn2LwR7uK3tzFnR1D
-         RkPv22G441RYpBEFaSn7Cd/uGV/DXNygrl7URm+hGWpedUCeyM9FCMbPHbDF3kwbR3WB
-         EDG/c5BK2Yea8/qInNrXu8mXWwpxiHXaG5XpTMS/+aCV7ihei9YQuL/y36gWKIiOGPjV
-         jT163fOj7cr3CxM2RiYT/Yu4WwxpQSe9eNv4R7/9R5PawjsVu0Zlw4QUu0GyTr+vhoXt
-         4Zxg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793785400; x=1794390200;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=QiBV51YSsvAhVbkuD5G3dwy2wbYhE77P1hdgw6UX+wY=;
-        b=pTk5blVk91vK4ntqQPd2Woi5kTEl3sljeLqUkyhOItb5OvQa/QCtBjNvmWQ4ZAjQEf
-         c6umFO7H/hcqxsTq7DV42JiC4QH9Jckn9GMo5IHEZ2HjIXK806mQrfsDitMLO2et3bDQ
-         anjWdq0lbWZ7YEOJm8Vk5ZmM9jII/kJ0Ol/jDM1FEY0la1CZNWEz47kxJ/R6BMtmGOAx
-         HLfgyfZm2JClkSe9GJeFIZ/0RNGWRgYV8hVRsquNbqYyboKVOdRvnBcHLVL5O4RvoPGF
-         MHRPveQF5L4dxpyia21IWsvZFt6ccCPyTscUHXzinhPLuFeQdZ0Lilz8WIcBfRD+H8/y
-         4iow==
-X-Forwarded-Encrypted: i=1; AKwUvBwj6GU4G87ATC5dCeSw/n2cMLFvxAnpgr4os3JnmBeL1yD95UUnC1JOCRrBB6D6BjY4sGLk0nphlnHl@vger.kernel.org
-X-Gm-Message-State: APuU4Z9HietOBnDBwhw/ajgeXNtHK47nqTe+mFqsGLtUx1ke+kdo06w9
-	5KvjupwM6XKP5AlFxSgkmQnnRcrYt88JiasgHIltpd7/e4/YsPMHcNahIISXoE+0x0/mGkIEg1K
-	jEUnRyVo+HdnutX8ya2Twvb2C9kpJVIHbMJsZ4XD5ZV5faWgWEmsWZmM=
-X-Gm-Gg: AYBFou0nK1OV783+AwpHuvQ4XvZlGoqmpFI5TQ57GadYqtJ6R6uphbcGszzrlU6fKhY
-	wrwqXe2kUYp2Xx0OLr5Eb017E/LU6aPNfQh7Q8SOPkSYX/NYm7jwteMPeh82z74ys1rpTefUvwm
-	/ObMagDk/oDIhbYWL3WFTlH+0iZlbCzxkH1gV7f0jdymwfes1NAdoTwOjDT5gyUfEmPTErG5Wdk
-	ui13baCcODQeg0FClhpquo2UJWbHuFA3mmj/Ed5s/tC7kaXc5GpR0sO5C33XvYFPHjhRKx9GHyn
-	AqeWxjRquzwViHpdXd7KG9odGukiVJSgaE93qUhB2DyMSYqOzf7w60PcVjZ9qG0t39puuQO6UFK
-	v+KNkoV4HOM8UbjQrVoC1eBujshEeGqEo5E85
-X-Received: by 2002:a17:907:bd88:b0:c4c:b03f:11ed with SMTP id
- a640c23a62f3a-c4cb03f132dmr1510037566b.0.1793785399624; Wed, 04 Nov 2026
- 01:43:19 -0800 (PST)
+	dkim=pass (1024-bit key, unprotected) header.d=samsung.com header.i=@samsung.com header.a=rsa-sha256 header.s=mail20170921 header.b=Enuw6Be/
+Received: from epcas2p2.samsung.com (unknown [182.195.41.54])
+	by mailout1.samsung.com (KnoxPortal) with ESMTP id 20261104094926epoutp01ff2fcebe48fc04aa87bc4b9ba6e3c289~kzqaDnJXN2908729087epoutp01s
+	for <linux-scsi@vger.kernel.org>; Wed,  4 Nov 2026 09:49:26 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20261104094926epoutp01ff2fcebe48fc04aa87bc4b9ba6e3c289~kzqaDnJXN2908729087epoutp01s
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1793785766;
+	bh=TRvgzI3qXoA2HIsl7Zv36AwD/K99XeT08hxCxLH0B9A=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=Enuw6Be/L+mBjg2oVC5+RSVFKOJwQQccVwFBHQH0k4gaPLc70afM/6qI+AhMXzWup
+	 3e6HMBG16SLZHcJyMyxqwVTJnL0HOKl3PRWJ+4cnPkM0iIxjrKU2RzS0t7ejXhYGh8
+	 GrjzzIbnxfDJcYg71aLmmYpcQLIKnzvXvs++Lcho=
+Received: from epsnrtp04.localdomain (unknown [182.195.42.156]) by
+	epcas2p1.samsung.com (KnoxPortal) with ESMTPS id
+	20261104094925epcas2p1e0a2e776fff768fdd0843272e1111a98~kzqZdRQRs2536525365epcas2p19;
+	Wed,  4 Nov 2026 09:49:25 +0000 (GMT)
+Received: from epcas2p4.samsung.com (unknown [182.195.38.199]) by
+	epsnrtp04.localdomain (Postfix) with ESMTP id 4jKLJ50ynNz6B9m6; Wed,  4 Nov
+	2026 09:49:25 +0000 (GMT)
+Received: from epsmtip1.samsung.com (unknown [182.195.34.30]) by
+	epcas2p2.samsung.com (KnoxPortal) with ESMTPA id
+	20261104094924epcas2p2318e84e3593e6e77e4c933dd3e4adfc6~kzqYNm1OW0383403834epcas2p27;
+	Wed,  4 Nov 2026 09:49:24 +0000 (GMT)
+Received: from apsw.samsungds.net (unknown [12.80.211.160]) by
+	epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
+	20261104094924epsmtip1c5ccc89e3fc1e99c0ce0e3ac43ad2fdb~kzqYIF6UC0106301063epsmtip1C;
+	Wed,  4 Nov 2026 09:49:24 +0000 (GMT)
+From: Kiwoong Kim <kwmad.kim@samsung.com>
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	alim.akhtar@samsung.com, jejb@linux.ibm.com, martin.petersen@oracle.com,
+	bvanassche@acm.org, kwangwon.min@samsung.com, hy50.seo@samsung.com,
+	cpgs@samsung.com, h10.kim@samsung.com
+Cc: stable@vger.kernel.org, stanleyjhu@google.com, Kiwoong Kim
+	<kwmad.kim@samsung.com>, Bean Huo <beanhuo@micron.com>
+Subject: [PATCH v5 1/2] ufs: core: skip ABORT TASK for device management
+ commands
+Date: Wed,  4 Nov 2026 18:49:13 +0900
+Message-ID: <20261104094914.180788-2-kwmad.kim@samsung.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20261104094914.180788-1-kwmad.kim@samsung.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -104,57 +82,64 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261104021411.1467970-1-vulab@iscas.ac.cn> <CAMGffEkj=rzCiiek=p+9Qc2AjJ1Nkk00H8wFReQ9-0ptWHKobw@mail.gmail.com>
- <20261104-fragrant-fascinating-civet-9c5cd8@quoll>
-In-Reply-To: <20261104-fragrant-fascinating-civet-9c5cd8@quoll>
-From: Jinpu Wang <jinpu.wang@cloud.ionos.com>
-Date: Wed, 4 Nov 2026 10:43:08 +0100
-X-Gm-Features: AclHuK8EAqHptojAMedX7xZPLBxLBGDBVB0uhtjpy1fDRpkJASdh3EyQ4EMSZYA
-Message-ID: <CAMGffEma9iNEFWSJX4o845CRcpk2U3A6=Y6NisANmhrAQ_riRA@mail.gmail.com>
-Subject: Re: [PATCH] scsi: pm8001: unwind the probe on ccb tag allocation failure
-To: Krzysztof Kozlowski <krzk@kernel.org>
-Cc: Wentao Liang <vulab@iscas.ac.cn>, 
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
-	"Martin K. Petersen" <mkp@kernel.org>, linux-scsi@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-CMS-MailID: 20261104094924epcas2p2318e84e3593e6e77e4c933dd3e4adfc6
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+X-CPGSPASS: Y
+cpgsPolicy: CPGSC10-234,Y
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20261104094924epcas2p2318e84e3593e6e77e4c933dd3e4adfc6
+References: <20261104094914.180788-1-kwmad.kim@samsung.com>
+	<CGME20261104094924epcas2p2318e84e3593e6e77e4c933dd3e4adfc6@epcas2p2.samsung.com>
 
-On Wed, Nov 4, 2026 at 9:41=E2=80=AFAM Krzysztof Kozlowski <krzk@kernel.org=
-> wrote:
->
-> On Wed, Nov 04, 2026 at 09:33:55AM +0100, Jinpu Wang wrote:
-> > On Wed, Nov 4, 2026 at 3:14=E2=80=AFAM Wentao Liang <vulab@iscas.ac.cn>=
- wrote:
-> > >
-> > > pm8001_init_ccb_tag() is called after the Scsi_Host, the sas_ha and t=
-he
-> > > driver's private data have been allocated, and after the PCI regions
-> > > have been requested.  When it fails, pm8001_pci_probe() jumps to
-> > > err_out_enable, which only returns the error: the Scsi_Host, sas_ha a=
-nd
-> > > private data are leaked, the PCI regions stay requested and the devic=
-e
-> > > stays enabled.
-> > >
-> > > Jump to err_out_ha_free instead, which releases all of those resource=
-s.
-> > >
-> > > Fixes: 5a141315ed7c ("scsi: pm80xx: Increase the number of outstandin=
-g I/O supported to 1024")
-> > > Cc: stable@vger.kernel.org
-> > > Assisted-by: DeepSeek-V4.1-Flash and OpenAI Codex
-> > > Signed-off-by: Wentao Liang <vulab@iscas.ac.cn>
-> > Acked-by: Jack Wang <jinpu.wang@cloud.ionos.com>
->
-> Are you sure? Sashiko reports introduced UAF (and/or other bugs).
->
-> Mind that vulab@iscas.ac.cn is a bot with spams with tons of patches
-> which looks exactly like previous hypocrite commit approach - some
-> security vulnerability intentionally added in between of thousands of
-> valid patches.
-oh, didn't notice the report, thanks for the reminder.
-I take back my ack.
->
-> Best regards,
-> Krzysztof
->
+In MCQ mode, ufshcd_mcq_abort() falls through to ufshcd_try_to_abort_task()
+for all timed-out commands. However, device management commands (query, NOP)
+use reserved requests and are not SCSI I/O commands. The ABORT TASK task
+management function is designed for SCSI I/O UPIUs and is not applicable to
+device management UPIUs.
+
+This is only reachable since device management commands were converted to
+scsi_get_internal_cmd(); before that, a timed-out query was handled by
+ufshcd_wait_for_dev_cmd() -> ufshcd_clear_cmd() and never reached
+ufshcd_try_to_abort_task().
+
+Fix this by checking ufshcd_is_scsi_cmd() in ufshcd_try_to_abort_task(). When
+the request is a reserved (device management) command, skip the TM path and
+call ufshcd_clear_cmd() directly instead.
+
+Fixes: 08b12cda6c44 ("scsi: ufs: core: Switch to scsi_get_internal_cmd()")
+Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
+Reviewed-by: Bean Huo <beanhuo@micron.com>
+Reported-by: Bart Van Assche <bvanassche@acm.org>
+---
+ drivers/ufs/core/ufshcd.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index bcc2512bf34b..7fc80926eeec 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -8046,6 +8046,9 @@ int ufshcd_try_to_abort_task(struct ufs_hba *hba, int tag)
+ 
+ 	lrbp = scsi_cmd_priv(cmd);
+ 
++	if (!ufshcd_is_scsi_cmd(cmd))
++		goto clear_cmd;
++
+ 	for (poll_cnt = 100; poll_cnt; poll_cnt--) {
+ 		err = ufshcd_issue_tm_cmd(hba, lrbp->lun, tag, UFS_QUERY_TASK,
+ 					  &resp);
+@@ -8091,6 +8094,7 @@ int ufshcd_try_to_abort_task(struct ufs_hba *hba, int tag)
+ 		return err;
+ 	}
+ 
++clear_cmd:
+ 	err = ufshcd_clear_cmd(hba, tag);
+ 	if (err)
+ 		dev_err(hba->dev, "%s: Failed clearing cmd at tag %d, err %d\n",
+-- 
+2.43.0
+
