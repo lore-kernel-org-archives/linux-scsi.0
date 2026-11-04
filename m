@@ -1,57 +1,99 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793786925;
-	b=iLPpgKB6rvjV+YUhy0bgYSVnRrUFTTCNTiMs1vdG0nvrKc/Q6NoiP16ulx73UfMcjBLO
-	 o5aSFF0N8YdoIYszLdZmU+A9+xG9NSklbAiPgg2mKCxhdBZ2wtIPBRvGjc7Eo9XeNxDhv
-	 ehqDq4w2dSnpb+u/FacWnB+LgURp9Uxhr2SgH8JZQAIe9hAO9Wxf/Zxqf7fDU+nAeARLa
-	 8mH7ym+XFRGHMFeEE8xlg+QGzFCAgKlsjOP2aOdWC12oKPEH6XbQrk/OgMCALOaebfAIS
-	 sepBBMrrYYQ3uBzTLACVVy1fnO7dfoHW+xxHZ7fITp5tug8xhqA6vVirohxoBEvsjgg==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793786925;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=bE/pwDRc2r+YrNMGE4xA1pKIJKsP/W+IX+PWi2kt8YY=;
-	b=OdFMhreNiV3ZLNWSQReeMfk7T3SNJj96HjBJMToPGbhch/vsAqkAhI7lm3b2exrXhTyW
-	 zYj9ympKjjtesC36vlTEOw/lKR6P6pNIKSJFbATRGqAoYZNR1pFZLFC6xzmcws6mqsUcb
-	 mpooBU7OGQaCzxM9jsjyUGAm11Ees8CW24lOdwNw4a2b2gqxvU4xUMYYtQeOmdhCkFAyQ
-	 f7MI7dYDUd/usd2dkmvmSYO6UQa3LxaOAhZpMqS06egyMRaG3v06A6qIDxVzeHmgFUxSq
-	 jpZ/RDjUVvDYs8CbL3l2plkZo3Jk6eSizErIY4s0XGo97tWoyOtngHFUPhyFr8c+3pA==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=eL3gyWbn;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.208.179
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1793787882;
+	b=OLl4lm3Z2vZbLT3Gk8Z5uzVeX+4lFinXJlSmfN5u3W9p5zdLPhsJ7zEMMCQBywzD18yz
+	 G1scDCyfSsL0m3n6QMX66/i/sgJOLNiNedGk59R31wTugWhQ+UTPnmCvM4+UYhsAPoONO
+	 idb4VGzk95RRno6lU3aNFq4ZSv+eL8qskx6MMQRJMMx3YF29j5RD1pjW52Vv4xV0INKsx
+	 CfsvyJi+UTMzI7wTaMXqCTZ+SJxv/838x/fykqdXPKRtSZvWxHBm+fNvDQUcOE3k5PoCQ
+	 vY10AHZqWuUEsvlmUzr7NWY59WE2itS1CMR+xon8XFBwDjnOGeIx1H2z6x+ymfH5pdg==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793787882;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:Received:MIME-Version:
+	 From:Date:X-Gm-Features:Message-ID:Subject:To:Cc:Content-Type;
+	bh=+dcl/erqXSVMqWlciMAxF0/KBcxrMf17dIv8kW6c+wM=;
+	b=i0d4nA6d5YDQxGQ66wtdWXOwbj5JTqEg3WbNWTJxAkxgCmrA3mlLOFkw/sJcp+1rhvfF
+	 AhYfbyW/cL/hYb3oyW40OYRkhdMuS3QOB0elPbBbk65TMcLm5LrXIDXBEnT/UkO9eRNL7
+	 8lwToYieY9XcZGmR+J56lNCreRRI7RNKxj1lv4Ad04q8jOXC/APbYvLQbzQn5sIZ9ltPt
+	 zSmWIp/c0TlUrhE8Zj97CiPm7bRs6wgy1LbeBRJ3dL+GOr6x3bPgjctD5hysfjUQuhL9f
+	 JqWrRc0zkNYip9KE+lnsdk0JV3qA0TJ5rBZK23I4AEtG2nw3kC5xBA4wt3Tgvh+OqFQ==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=B179lsik;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.208.179
+Received: from mail-lj1-f179.google.com (mail-lj1-f179.google.com [209.85.208.179])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E252C606A31B
-	for <linux-scsi@vger.kernel.org>; Wed,  4 Nov 2026 10:08:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 71EF1606A326
+	for <linux-scsi@vger.kernel.org>; Wed,  4 Nov 2026 10:24:42 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 71EF1606A326
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=eL3gyWbn
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6BD031F000C1;
-	Wed,  4 Nov 2026 10:08:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793786924;
-	bh=bE/pwDRc2r+YrNMGE4xA1pKIJKsP/W+IX+PWi2kt8YY=;
-	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
-	b=eL3gyWbnaE20nLNKHPtu5uqT+801QuHQMG+sE1HlVtbpiHBdQnklDY2FsSw/NrkHV
-	 0rk62Frlw09kpm2Uaw/ywswxEZif2rIEHkWjkikg/OKCUSV+5f6VHWND2R1CN/oxnA
-	 r65/RcV8j8qoy3NcFrWiBjiZ/bJFbkvcz/tO+DQok1Kt6+8Zl8G8gCPaHJoIel5VCT
-	 Pz0bzxuzYYp4rBY6JH0UkJaZxI5Ji+T0dzL3tXoVupMZyDogn5+TYdKWzfIFYj/0p2
-	 jhCw3+H3Bz+EDEjw8nlusff1BbNFh5yXsztxrpDuRZldgiEXE1IApPtkyuxYmbwF6x
-	 2LfCHTRmIhnfw==
-Message-ID: <sashiko-outbox-197046@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 2/2] ufs: mcq: poll OCS after sq cleanup for device
- management commands
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Kiwoong Kim" <kwmad.kim@samsung.com>, linux-scsi@vger.kernel.org
-In-Reply-To: <20261104094914.180788-3-kwmad.kim@samsung.com>
-References: <20261104094914.180788-1-kwmad.kim@samsung.com>
- <CGME20261104094925epcas2p1f25905de00c2548e1e1349fba5f18551@epcas2p1.samsung.com>
- <20261104094914.180788-3-kwmad.kim@samsung.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 04 Nov 2026 10:08:44 +0000
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=B179lsik
+Received: by mail-lj1-f179.google.com with SMTP id 38308e7fff4ca-3aae7df0971so3881281fa.1
+        for <linux-scsi@vger.kernel.org>; Wed, 04 Nov 2026 02:24:42 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1793787881; cv=none;
+        d=google.com; s=arc-20260327;
+        b=L/rixAvnh2jHDaxTLXcKoktZDE9m/4Ywxdqd+yV9vfrhqwZzTM08SovzRo7HdDv7HZ
+         ED/3TGmJZvO+1HT1CCcN9wv6+MU47Uv5scqpW5ZTLJkIt41zD2xSGL+tlW9b3fq6rX1j
+         gBEnC/1Ja/MdTVToQM5a6thXBlVn/XyUbwJ77mhvJJ7lwkO8sdW6IIpAB1kUfDtGUpFA
+         t8VbewS8vJ+qf5Gl+jjVwR77mId+kp/SxZsncJTLT8ZnhvQ0pmoqroS6ETe5w2MzSDue
+         VE5dlG7m0jGFPbCCRIbWPK7s1TB9IDdgBUrwXxVDNCfIisXUM16xv9/Ok2Xisebbsk6V
+         4PGw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=cc:to:subject:message-id:date:from:mime-version:dkim-signature;
+        bh=+dcl/erqXSVMqWlciMAxF0/KBcxrMf17dIv8kW6c+wM=;
+        fh=8xRMN/hc1vTixGpPt3QhOfDnb0NYtkSrdKpQFJapZoM=;
+        b=FG/MT5GrNi6uU2dCFhnluHYSx46yGBQkltogyEi7sr22jdA4Wu25YKWqlvwECn90qz
+         s0h+aZRpR8SJKKlb3NXZ8rCpAT4cyGerYUNv1zcePJSH03UmLprrP+XZC1v/GMnZ4Urf
+         tVhOXenJkkNuTcywKwZZUACgzpNHPLl+HvdHbVgG4vAtykfU5t3+lUNhsjWzyurCKiZr
+         KelCYPm1FDqRb6EE+w+PKZ8zQx/Ijkz1fDo8VvgmF8GW/QEUC0J1yGWaJmp2/oY1nU7x
+         DliCKoQcdKu90+Uezl1evB5BnT0oljfVrmlu2mdzB1ILSZrR9HYTsroSV6vXkXPLTYJw
+         ca9w==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1793787881; x=1794392681; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:from:mime-version:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=+dcl/erqXSVMqWlciMAxF0/KBcxrMf17dIv8kW6c+wM=;
+        b=B179lsikAo3MCoRa+xYIU4+cZtrZXD43+xWjXxmmK7EU5jzixchIfy30KlADnrT861
+         iOvQoQm6BBNZdCJEH0Q4WhyLpdI8kZdvfbbQNXoluGnrGFoHLA1WtHksMSh5Z9uI3/N5
+         ClWvmr/7fzJhhdoPSfUrsEdt2Vms6hp0PmDFXu9ly9n+lduev3vRRHwF0h0+YmYTcai4
+         1mysWtx6OwwvhVco8qHIUWDnpfCe25Ijst9ZbEymg41mIAehVIGkIL/PVYWeT+FnL5zw
+         H64u/RUyB3pt8ygIkFMF/DJdsTmn9Q0smb1O8dPO1Ya6tWfIYpkI/Y00oMahoPSz5fH1
+         r5SA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793787881; x=1794392681;
+        h=content-type:cc:to:subject:message-id:date:from:mime-version
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=+dcl/erqXSVMqWlciMAxF0/KBcxrMf17dIv8kW6c+wM=;
+        b=gyyOKoGmP7VUre8+9RLkezyDbnGYJ5VtS5oai5By7WL5AfpDIekrwiw0eaw3oKsuWU
+         fPNWXlcqT5lMnGhvIFi34h4WpmrF7fHN6H9I3kjlix/NUJ5/hXa808+35FF+YHFscqR5
+         oZd9iiUMM0UNm8rQPtGGw+16jTYF5ivkTwIgKsCPEFo/7EC/4uVoahLDrIWc3weXPav+
+         hrVRG8OHvjQQWVyFhShvK5TqjaM792nIIWDdVu4f1ZNgcMh72JAzV3iE+XfiGD1yG9nl
+         QqmyP5fs42Uj0Mwmurr+iaQxtYgAvoct+i6UZ5UB0348+4H2Leg8V2iQCtutHuxbmAWV
+         6xDA==
+X-Gm-Message-State: APuU4Z96IaTyLqOJjV2elOw8XzZSw/jPzXct2pUerSjNVLtmdakyZ/l+
+	rfaOhPiITAG1p0VablRWDdEW74U63+j3NTcg1raYgV6zpkEINdr8C3I/IkqzUpE2CAc6phKVE1w
+	69BUmw022bGKRYsx9usO9UqmZ18tbWdO0Vj7DwpUX8g==
+X-Gm-Gg: AYBFou2UnnRWZ0de/b1nTb2K60tgppARDHeD8hQjV7d81Rmv+KjLxvRvue3uvvZEAYl
+	6cEOHz1fsRH7FCV+pbZiosIgepaqY9QRukpeKlBZUJN+An8pIIVf+Q+GESHdfDKUFWuwnaiyfao
+	pLvMIKzSfBumCgKPdp/9XlvfWnpWOA95YNXqxivAoKuqbqogVS1ZKM/K49CoXfGSTWqaEAiHk3c
+	uYDEcP+G2OwC+jzffvbeP2I22EWxytQcd4iXRyLll70XqKXiUpAUZ9KEGYOJoT3jLUkF9fCfUBB
+	01uk6+czuQNUV+m+5Q+wh0JroX+/lrB2Jbw0gHDuDfor7Wg/63+NvoPr5SXsmegNcVMKhMpgDR0
+	QS13deQvrSLS7Skqi/py8RYpx7TxcaApWREWH5AZwAWkykkWz5p+qNbhMpDj6xX4kkw==
+X-Received: by 2002:a05:651c:a345:b0:3ab:3f60:51be with SMTP id
+ 38308e7fff4ca-3acb7b52404mr37108141fa.28.1793787880322; Wed, 04 Nov 2026
+ 02:24:40 -0800 (PST)
+Received: from 77377267392 named unknown by gmailapi.google.com with HTTPREST;
+ Wed, 4 Nov 2026 05:24:39 -0500
+Received: from 77377267392 named unknown by gmailapi.google.com with HTTPREST;
+ Wed, 4 Nov 2026 05:24:39 -0500
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -60,115 +102,76 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+From: zhang san <shunsheng1218@gmail.com>
+Date: Wed, 4 Nov 2026 05:24:39 -0500
+X-Gm-Features: AclHuK8mKYrOLw55T5M7eaMYFOVlEhEP6K_xnwt_-B3_tP11Fu0SQdsrg4zyZZ4
+Message-ID: <CAGTEBTZ5teYJyMk3o8-FZ897OsSgwVdFDpvKoKdfA9vR=Bi=-g@mail.gmail.com>
+Subject: [BUG/RFC] target: PR ALL_TG_PT traversal can dereference freed LUN
+ during removal
+To: mkp@kernel.org
+Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] ufs: mcq: race between OCS poll in ufshcd_mcq_sq_cleanup() and CQE=
- completion
---
+Hello,
 
-commit ed08af75bc0d7555962a67f5dd8315bda77ee7a4
-Author: Kiwoong Kim <kwmad.kim@samsung.com>
+We found a use-after-free in __core_scsi3_alloc_registration() when a
+PR REGISTER AND IGNORE with ALL_TG_PT=1 races a concurrent LUN removal
+via configfs.
 
-ufs: mcq: poll OCS after sq cleanup for device management commands
+Problem description:
 
-This commit extends ufshcd_mcq_sq_cleanup() to poll the UTRD header.ocs
-field for reserved (device management) requests after SQ_CUS is set, so
-that cleanup waits for the OCS update before returning.
+The function iterates dev->dev_sep_list with
+list_for_each_entry_safe() while dropping se_port_lock inside each
+iteration body. The current element (lun_tmp) is protected by a
+percpu_ref_tryget_live() reference, but the iterator's cached next
+pointer is not: if the next se_lun is removed and freed during the
+unlocked body, the loop's next iteration dereferences freed memory
+through the cached pointer. This manifests as a general protection
+fault on a non-canonical address (list poison).
 
-> diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
-> index 25e392f8ede2b..8857775586311 100644
-> --- a/drivers/ufs/core/ufs-mcq.c
-> +++ b/drivers/ufs/core/ufs-mcq.c
-> @@ -613,6 +613,24 @@ int ufshcd_mcq_sq_cleanup(struct ufs_hba *hba, int t=
-ask_tag)
->  			 __func__, id,
->  			 FIELD_GET(SQ_ICU_ERR_CODE_MASK, readl(reg)));
-> =20
-> +	/*
-> +	 * For device management commands, there is no order guaranteed between
-> +	 * OCS update and CUS update, which is why we need to wait here. SCSI
-> +	 * commands are excluded because the OCS in their UTRD is not updated
-> +	 * from the CQE.
-> +	 */
-> +	if (!err && blk_mq_is_reserved_rq(rq)) {
-> +		enum utp_ocs ocs;
-> +
-> +		err =3D read_poll_timeout(READ_ONCE, ocs,
-> +					ocs !=3D OCS_INVALID_COMMAND_STATUS, 20,
-> +					MCQ_POLL_US, false,
-> +					lrbp->utr_descriptor_ptr->header.ocs);
-> +		if (err)
-> +			dev_err(hba->dev, "%s: OCS not updated. hwq=3D%d, tag=3D%d err=3D%d\n=
-",
-> +				__func__, id, task_tag, err);
-> +	}
+We reproduced this on mainline 6628e7d4c6b2 (v7.4-rc1) with a
+KASAN-enabled kernel: a GPF in __core_scsi3_alloc_registration() when
+the PR registration races a configfs port deletion. The reproducer
+uses controlled timing to expose the interleaving and is available on
+request; control runs were clean.
 
-[Severity: High]
-Can polling lrbp->utr_descriptor_ptr->header.ocs without synchronizing
-with hwq->cq_lock race with ufshcd_compl_one_cqe()?
+Attempted fix and design question:
 
-In MCQ mode, the UFS controller writes the CQE to hwq->cqe_base_addr
-rather than updating lrbp->utr_descriptor_ptr->header.ocs in host memory.
-The UTRD header.ocs field is updated in software by the CQ completion
-handler under hwq->cq_lock:
+We explored taking a percpu_ref_tryget_live() reference on the next
+entry before dropping the lock, and releasing it when the iteration
+advances. This prevented the observed use-after-free in the tested
+interleaving.
 
-drivers/ufs/core/ufshcd.c:ufshcd_compl_one_cqe() {
-	...
-	if (blk_mq_is_reserved_rq(scsi_cmd_to_rq(cmd))) {
-		if (cqe) {
-			ocs =3D cqe->overall_status & MASK_OCS;
-			lrbp->utr_descriptor_ptr->header.ocs =3D ocs;
-		} else {
-			ocs =3D lrbp->utr_descriptor_ptr->header.ocs;
-		}
-		ufshcd_add_query_upiu_trace(
-			hba,
-			ocs =3D=3D OCS_SUCCESS ? UFS_QUERY_COMP : UFS_QUERY_ERR,
-			(struct utp_upiu_req *)lrbp->ucd_rsp_ptr);
-		cmd->result =3D 0;
-	}
-	/* Do not touch lrbp after scsi_done() has been called. */
-	scsi_done(cmd);
-}
+However, when the next entry's tryget fails (the LUN is dying and
+being removed), there is a functional tradeoff:
 
-Because ufshcd_compl_one_cqe() writes lrbp->utr_descriptor_ptr->header.ocs
-before tracing lrbp->ucd_rsp_ptr, setting cmd->result =3D 0, and calling
-scsi_done(cmd), ufshcd_mcq_sq_cleanup() can observe the updated ocs and
-return 0 to scmd_eh_abort_handler() while ufshcd_compl_one_cqe() is still
-running on another CPU.
+  - We cannot safely carry that pointer across the lock drop without a
+lifetime guarantee.
+  - We cannot obtain a live reference with tryget in this case.
+  - Our prototype stops the traversal (break), which may skip later
+LUNs that are still valid and should receive ALL_TG_PT registrations.
 
-When scmd_eh_abort_handler() receives SUCCESS from the abort path:
+We therefore do not consider the prototype ready to submit as a fix.
 
-drivers/scsi/scsi_error.c:scmd_eh_abort_handler() {
-	...
-	set_host_byte(scmd, DID_TIME_OUT);
-	...
-	scsi_finish_command(scmd);
-}
+We would appreciate guidance on the correct approach:
 
-Two races can then occur against the in-progress ufshcd_compl_one_cqe():
+  1. Is stopping the iteration when a dying LUN is encountered
+acceptable under the target core's PR registration semantics?
+  2. Should the traversal instead restart under se_port_lock, using a
+safe way to identify and avoid already processed LUNs?
+  3. Is there an existing target-core lifetime or traversal mechanism
+that should be used instead?
 
-1. If ufshcd_compl_one_cqe() executes cmd->result =3D 0 after
-   scmd_eh_abort_handler() calls set_host_byte(scmd, DID_TIME_OUT), the
-   timeout status in cmd->result is overwritten with 0 before
-   scsi_io_completion() inspects it, causing blk_execute_rq() in
-   ufshcd_issue_dev_cmd() to see BLK_STS_OK instead of a timeout.
+We can provide the prototype patch, KASAN traces, kernel
+configuration, and test setup privately if useful. If a fix is
+proposed, please CC me so I can test the exact revision and provide a
+Tested-by tag if it passes.
 
-2. If scsi_finish_command() completes the request first,
-   ufshcd_exec_dev_cmd() releases the reserved command via
-   ufshcd_put_dev_mgmt_cmd() and a retry loop such as
-   ufshcd_query_flag_retry() can immediately reallocate the single
-   reserved request and submit the retry via blk_execute_rq(), which
-   clears SCMD_STATE_COMPLETE in scsi_prepare_cmd(). When the delayed
-   ufshcd_compl_one_cqe() from the first command then reaches
-   scsi_done(cmd), it can prematurely complete the newly submitted retry
-   command while it is still in flight in hardware.
+This finding comes from an AI-assisted source audit; the source
+analysis and injection-assisted tests were reviewed by us.
 
-Should ufshcd_mcq_sq_cleanup() synchronize with hwq->cq_lock (or poll CQEs
-under hwq->cq_lock) so that ufshcd_compl_one_cqe() has completely finished
-before cleanup returns?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261104094914.1807=
-88-1-kwmad.kim@samsung.com?part=3D2
+Best regards,
+Yaohan Li
+shunsheng1218@gmail.com
