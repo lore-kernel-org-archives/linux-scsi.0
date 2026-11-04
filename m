@@ -1,49 +1,48 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793813443;
-	b=Th5xZuGLLeX64a9hKMF994ajblvrQV7PgRqrGrcn52fYGbB64Fgg8ItJLULZHY0Nptzl
-	 ibyM6OgDzbiZB1YAHwh2NaP/RQv7nJa0Md4eGnrviEsHDMQjNyvjJFY2EDbdyoNzkDLIQ
-	 UxiLiLkziZr671NvtB/fO9nvRufPSkvC9n9KRj8mihQ1GasxQyiZ6nCaq/ppZmXGuCcyG
-	 Dc+ts+ll0mRcBB2r/zj/Qou4AKrwBnnzQzH8vjO5VIhBBfge+nngcZnMw8onVWwovWsg8
-	 4FvtSwZmQk5cO/0NTPMNAeD0prBi58wgK36aqVBDfE7gGnBT8XXg6ePqECxYHJIc2lA==
+	t=1793813470;
+	b=VSjWUUTKasgAvyxwLb5hCOJHeiy8BqABuxhS5mHZBxQrxNriMjW8z/Ohk6CXVSBPtJpA
+	 oe3mPQc4ofbtaRddaLISY4E6GbhKcpn3NLaGkUf26aGl0PesIjjNQyiF/eY4IHVaO+WWd
+	 jF9JUNd2SuEjFmlZn18MQRASUfst1rOd+SwKE91X2T/8Yw3hbgzrcZiAdGhqsJ4N9ezXe
+	 H1bygdcW0edPto2WsUydpIxBjM4LU7K56oiMLAqX+s2hQSxav2+4ipWaf3+IVrMMEK3RT
+	 g0O5O/4gE9FMqjjgmSg3n7+vSbGGOYFCm/rjIR/rBq+Bqbl8wrRIJfIqizmTiBaziig==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793813443;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793813470;
 	h=Received:DKIM-Signature:From:Date:Subject:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding:Message-Id:References:In-Reply-To:To:Cc:
 	 X-Mailer:X-Developer-Signature:X-Developer-Key;
-	bh=axjAzDMxe/T5Kt/VR9558Sdu9PB/HLdF+q053OKTtnM=;
-	b=tkx9AHqYmwHt4gxAunJ6+y3j3zBUZa+tWlxAIryqOoaxkV5kt8f8KXplONjhnkp/pDZx
-	 oMAtpd0NHRdnxUDdZYrceCKThKhGlgdEq6tIarnc3c1axl9BTHOe+rBzHWxIBdCedtlGi
-	 Soun+sMaCQ7QrtF1ykQUY72y1M5XOoSPsxkSUOJMX3IavWzEz1JaeaEj5GIU8Dnl/Hsmx
-	 ycaXEQPtcaNPUopzv9jp4TiWt5mgz65AEpE03o2DKGXHaYp/dDkQ1mG5G1mLdpzPl7d5Y
-	 N0DQjajdn1xBmXT9DKCctgSjQHunXKrFv71oiw+wB+uxUYpgkKHPXuTRc87VMaVhY/w==
+	bh=88D9snc5Fvfzc1+bIGylCXCzBagXIGxBtzK0BL7vNTc=;
+	b=CUZCU8dXTJ0mVKU2okASl3XxgJDnlZDhSm38CX1Sz6+v/qKtiNyqgMWDxPLd/QIdC15R
+	 7qyLbh9yt3QIKDYLA5d7WmccAGPkjWs4Vf6i76TcAbdMIGX4wx84oI+M/zWNVy9240lc9
+	 9LsLLwNjS4ObAhvXi+TK7S7KYt1iZ6bYqZXvtlkrf/564642msTvZAm03EILTokkNbGAN
+	 1WkAD/T8AUMYmQDMQBBhCWJRQOd+mYk1C6ezv50dxomu6fP/TAjOjUGWvSYLVdwEysZAv
+	 xU16PgauFiz0dUryV6yUcsRBBSSNq1XgquLgCHiPtnzrMd3qUeYwHKm3jDx6Q9EmsDA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BpyBwaL0;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=iXWQB5YV;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 78C69608363D;
-	Wed,  4 Nov 2026 17:30:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB6A5606D82C;
+	Wed,  4 Nov 2026 17:31:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BpyBwaL0
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 318C11F0093A;
-	Wed,  4 Nov 2026 17:30:29 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=iXWQB5YV
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B4B1D1F00A1A;
+	Wed,  4 Nov 2026 17:30:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793813443;
-	bh=axjAzDMxe/T5Kt/VR9558Sdu9PB/HLdF+q053OKTtnM=;
+	s=k20260515; t=1793813469;
+	bh=88D9snc5Fvfzc1+bIGylCXCzBagXIGxBtzK0BL7vNTc=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=BpyBwaL0/aYVXoHwq05IXwkJfbiN+sH/NMlrIciQjG65t4BqcyIJFg2nSk8XDCCkV
-	 c7rAC5Gwt0eJ+/2lGcpbp0ALBTDjeOzJXNQqmnuVDle4iduB5dvN2rzhDckY+qtIzb
-	 gs1CNuM6mGLr4omD5X5lb2yIJHjoEFVFY17i90YDIqHEiBZHsPoN/pZZJkVTJ0KPFp
-	 EUeGwANAMrg4AicMXKhoLnEodEFkU0cutq7m4urrRAjYhUQUJ5q8o2+x5TkfWHjCPD
-	 i91uDDI+3s3/ZTdD9a7P2TXIzuGYqpzF7L202zVk0SuzYL1uXQEo7tJ52MN1ssXopq
-	 kuzwiBlPYX93w==
+	b=iXWQB5YV7Kg3RUIa93AFETN1SWavnlv7A2+KZO2N+8yOFr8Nxzd0awnAdzvrIJxvb
+	 iwsd7/OXYpIIPoZK/zUDKbVBITgvtCbvRQFx8uTJc/yHlxoEsUDPjmLWXFVoYRwB+8
+	 bO30Hh/TGyjWLlo74Zlkba+soU5l3Xz8vC5ijD1rLCYQM6eOaon/FPI6bnSWWK8jej
+	 tu9UAUvRhODWIvMSMgtdBEbC7EPtC8P3EjAe6KdJiEatnSukLFtVejwpJye5oyaiRy
+	 wq31IKuon20SWlj10PyNweaP+Lu1uhJgSBnAqLcp9bykPHQNRISX1eYd4dr2KLd0HB
+	 SFAF9fcqUvWgQ==
 From: Christian Brauner <brauner@kernel.org>
-Date: Wed, 04 Nov 2026 18:27:26 +0100
-Subject: [PATCH v2 09/51] profiling: report it when /proc/profile can't be
- created
+Date: Wed, 04 Nov 2026 18:27:28 +0100
+Subject: [PATCH v2 11/51] sparc: led: consume the whole write
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -55,7 +54,7 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261104-work-procfs-bugfixes-v2-9-bbf7d5546809@kernel.org>
+Message-Id: <20261104-work-procfs-bugfixes-v2-11-bbf7d5546809@kernel.org>
 References: <20261104-work-procfs-bugfixes-v2-0-bbf7d5546809@kernel.org>
 In-Reply-To: <20261104-work-procfs-bugfixes-v2-0-bbf7d5546809@kernel.org>
 To: linux-fsdevel@vger.kernel.org
@@ -91,50 +90,47 @@ Cc: Linus Torvalds <torvalds@linux-foundation.org>,
  "Christian Brauner (Amutable)" <brauner@kernel.org>, 
  Chuck Lever <cel@kernel.org>
 X-Mailer: b4 0.17-dev
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1225; i=brauner@kernel.org;
- h=from:subject:message-id; bh=tYIXM5EjsYRFpz3d9CdZ23LhMvzI2JA5U8qSrxldqzY=;
- b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9zmb5c+HYnPYns6fufFrw5b7Y3/kPP5ytKnep0a7Jn
- RU85ZS3VkcpC4MYF4OsmCKLQ7tJuNxynorNRpkaMHNYmUCGMHBxCsBEDoUzMjw1q1TdWGx2OGny
- nwfxD9yf9a1xbZhUXGz4leXXTAWLvycZ/tmE5T+0eFcqb8S9dXuWRJTqOn+e0/UWz2+d/yn/trX
- 0PxsA
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1161; i=brauner@kernel.org;
+ h=from:subject:message-id; bh=5p0zMz40BbKdivFQo1NNbyIz4tkvEi3yC5tXL4aXaeU=;
+ b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9zmaz+l255/dcMbeVTrFanCknSsvkc1YVB3m43Lw5N
+ drx0iaxjlIWBjEuBlkxRRaHdpNwueU8FZuNMjVg5rAygQxh4OIUgIkI32BkeHvU6KWe6gWDSokM
+ AXPh+UdezXsoZMqyb+L5Puufyec6zBkZ1nYtn1J1+eNm5X8arkoP+O5vXXg4NDqzfr7dM//7HjX
+ /+QA=
 X-Developer-Key: i=brauner@kernel.org; a=openpgp;
  fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 
-create_proc_profile() returns 0 whether proc_create() worked or not, so
-a write to /sys/kernel/profiling that turned profiling on but didn't
-get the file reports success and there is no file to read the profile
-from. Return -ENOMEM like the other failures of that write do.
+led_proc_write() looks at the first eight bytes of a write and returns
+that many, so a writer that loops until everything is written, stdio
+does, sends the rest as a second command. That one is unknown and
+switches the LED off. Return the whole count, the rest is ignored.
 
-Fixes: 22b8ce94708f ("profiling: dynamically enable readprofile at runtime")
+Fixes: ee1858d3122d ("[SPARC]: Add sun4m LED driver.")
 Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
- kernel/profile.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ arch/sparc/kernel/led.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/kernel/profile.c b/kernel/profile.c
-index e7defa90a34c..820d5ec909d4 100644
---- a/kernel/profile.c
-+++ b/kernel/profile.c
-@@ -216,15 +216,15 @@ static const struct proc_ops profile_proc_ops = {
- int __ref create_proc_profile(void)
+diff --git a/arch/sparc/kernel/led.c b/arch/sparc/kernel/led.c
+index 9b53ac1fe533..a1478de9fe5d 100644
+--- a/arch/sparc/kernel/led.c
++++ b/arch/sparc/kernel/led.c
+@@ -68,6 +68,7 @@ static int led_proc_open(struct inode *inode, struct file *file)
+ static ssize_t led_proc_write(struct file *file, const char __user *buffer,
+ 			      size_t count, loff_t *ppos)
  {
- 	struct proc_dir_entry *entry;
--	int err = 0;
++	size_t len = count;
+ 	char *buf = NULL;
  
- 	if (!prof_on)
- 		return 0;
- 	entry = proc_create("profile", S_IWUSR | S_IRUGO,
- 			    NULL, &profile_proc_ops);
--	if (entry)
--		proc_set_size(entry, (1 + prof_len) * sizeof(atomic_t));
--	return err;
-+	if (!entry)
-+		return -ENOMEM;
-+	proc_set_size(entry, (1 + prof_len) * sizeof(atomic_t));
-+	return 0;
+ 	if (count > LED_MAX_LENGTH)
+@@ -102,7 +103,7 @@ static ssize_t led_proc_write(struct file *file, const char __user *buffer,
+ 
+ 	kfree(buf);
+ 
+-	return count;
++	return len;
  }
- subsys_initcall(create_proc_profile);
- #endif /* CONFIG_PROC_FS */
+ 
+ static const struct proc_ops led_proc_ops = {
 
 -- 
 2.53.0
