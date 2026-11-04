@@ -1,71 +1,57 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=45.254.49.207
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793784488;
-	b=OFbDLGEKO5C0VRb0b4uA72Fv0zsf52AzTGbsK41H2ytW09B40uv0gpmGIiCvhFmmhXuS
-	 vbLosMX2EuxrrzsUgCJmrgIuK9yOS8BI53xAAbtuhJcqltCxM0fB7Kgu3mRtAhrQp3YvL
-	 6kdvGqQZ2ToOekE+uWjTeHhBjl0TduCbaIZJHNhTHpjEhJseLYf5apVgiTkjbHc1sbb4z
-	 ebfhXRjE30sx323GYCKzh4tNy8IfJHsLhMrhlRHBp9A7/cKofw3NaNUydlPaw+WfYrhjh
-	 JmqWqOiQzGpx1WdOKKm8B5YMYtjuGYfLF2yDGzDquLfhP62q0KCLbkmP4KXa+rPFPQg==
+	t=1793784500;
+	b=QzAH/LNMErZFuAzxRYhB9S/H26m95+QrZqnI7mG3R0sdgYu2e6oDNH1jRq3PJxbpKjo2
+	 2hcfLzgMrGk+NuXBybLpdQV0b3G6/bEIiZTcuAu3s+8fkKUV0CKdsrPpFPMTmE5NHejzM
+	 +Ozd/6OYNan6tKL1b+RW6EziyQ7S4QI46DBwAdqJRIljTroTusESwl7pBF4lcTMBY81J8
+	 WF7zemgLN2XgX4Ep2rpwo/kI2LmBDamENXPdnakr2vqqTFq+0I68+8In3AsM1KKxl1siq
+	 3vSdO2OEZT31Bj8FQ8Ly9jZj6wUvgSt38VUp4Ik4h6cPLoqur4dKMMKyaesRXaxloWw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793784488;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=Gr7svhS/YSc9d7laFr7PXJQ2SsJ994DEnu6A9NyzDrI=;
-	b=26LhLGj+Rg1JwdlYr08PYOFu+bzuHxDZewFwZB//M9NJs0u2SE7gyBq+/Y0wHNTB5AlA
-	 Fn1rK53pQ37UZaapzqa+khB3h02wKb3CmPuj3UqFJCN8sitwZFSDryHFRRkNc8jYwHH2V
-	 rBAyo4Hi0dxmo/bw7nYtV275Jm2Fr8jK6jIGVVBGiuPhrIFUUEKTA/R4U5dhc3pDpN4ka
-	 6FAowAkGgXmPylDJm9dE/BUCcyLvsXQvUBnVkrmqJ3ZOden4PHGJAPVTjoajpANIjhlp+
-	 iMU9s6f7k/UsSlZIpXOHcFi7Bg4vL0HxFDMVgMjLmGsgXVTQv/324zM6rzGJ2635wQw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793784500;
+	h=DMARC-Filter:Received:From:To:Cc:Subject:Date:Message-Id:X-Mailer:
+	 MIME-Version:Content-Transfer-Encoding:X-HM-Tid:X-HM-MType:
+	 X-HM-Spam-Status:DKIM-Signature;
+	bh=/tZlYIvGbzLcUIVFqkO0wDdyza8BS1AZcDos/cWKlXg=;
+	b=PVhtaJqDNc+WlrT5RzyMbGbG8KKrH9rpAffVj7BMPMQO3XhBnp5kbrj8Kxm9RI08YWlb
+	 T93zCeN5rxI+/HdiVxqD4C5Mt1p/TLr6sq9iteWWv1k3si3yjYzbA/f8KbabAl0NfiydG
+	 GdAvzaNyu2QgY1C65S5bcnPpjqJcRjjDwUsjtBSai/9i3wgIMrRoJapy8uURUddLyEv4K
+	 U88O5XL+PkXcULOaZnDl0lL1lcZudM64789x6Euvy33Zl0fcBLbxOJOlMEiBwskQnsVJy
+	 nt5u8xkqfYwRav5cUeTtI4PTIR1ggV7xgkhQKmsIpYf3CNz5/OdbH4qOzctn1SXI+1A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=X1jgy3lG;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=leap-io-kernel.com;
+	spf=pass smtp.mailfrom=leap-io-kernel.com;
+	dkim=pass header.d=leap-io-kernel.com header.i=@leap-io-kernel.com header.a=rsa-sha256 header.s=default header.b=OtiB277D;
+	arc=none smtp.remote-ip=45.254.49.207
+Received: from mail-m49207.qiye.163.com (mail-m49207.qiye.163.com [45.254.49.207])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE458606A31B;
-	Wed,  4 Nov 2026 09:28:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C3A0606A32C
+	for <linux-scsi@vger.kernel.org>; Wed,  4 Nov 2026 09:28:17 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3C3A0606A32C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=leap-io-kernel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=leap-io-kernel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=X1jgy3lG
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9E4001F00A17;
-	Wed,  4 Nov 2026 09:27:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793784487;
-	bh=Gr7svhS/YSc9d7laFr7PXJQ2SsJ994DEnu6A9NyzDrI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=X1jgy3lGK+B8wHnMJmPUlW00+DythG+u8ZdEslw9l+mYGsCluF0yALGaeLj7ksrDg
-	 EcNjCUMoKMdxcyD0WsxPb4Cp4iKUAxNR9okqjQhF+09x5q+3kuYpexwXQlXsHIw+os
-	 TkFeMF2FhQ5UjzAqNfBp6xMNGmn825VDWt1gtK+nxiDDItHSDAD0XUEkYDsawNyiA7
-	 /4Xh7LGcOgeD7u3hApqggi+GDOh8nhBNcBO0pFhjuZykmUExXJEtisP76hRDnMqyNT
-	 NxfQEUBzADkSfaq0PsDOx4woXNhrClwQtQmsRawkfviLN+SXF+cZMarB1vamQDxvXp
-	 LI66cNBmM2ktw==
-Date: Wed, 4 Nov 2026 10:27:55 +0100
-From: Christian Brauner <brauner@kernel.org>
-To: sashiko-reviews@lists.linux.dev
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, 
-	Jann Horn <jannh@google.com>, Josef Bacik <josef@toxicpanda.com>, 
-	Chris Mason <mason@kernel.org>, Jeff Layton <jlayton@kernel.org>, NeilBrown <neil@brown.name>, 
-	Eric Dumazet <edumazet@kernel.org>, Thomas Gleixner <tglx@kernel.org>, 
-	Al Viro <viro@zeniv.linux.org.uk>, Jonathan Corbet <corbet@lwn.net>, Christoph Hellwig <hch@lst.de>, 
-	Greg Kroah-Hartman <gregkh@suse.de>, Joel Granados <joel.granados@kernel.org>, 
-	Kees Cook <kees@kernel.org>, Jan Kara <jack@suse.cz>, Jan Kara <jack@suse.com>, 
-	linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, coreteam@netfilter.org, 
-	kexec@lists.infradead.org, linux-pci@vger.kernel.org, linux-sound@vger.kernel.org, 
-	dri-devel@lists.freedesktop.org, linux-hwmon@vger.kernel.org, linux-mm@kvack.org, 
-	linux-usb@vger.kernel.org, samba-technical@lists.samba.org, sparclinux@vger.kernel.org, 
-	linux-m68k@lists.linux-m68k.org, linux-serial@vger.kernel.org, Takashi Iwai <tiwai@suse.de>, 
-	linux-input@vger.kernel.org, linux-raid@vger.kernel.org, linux-ext4@vger.kernel.org, 
-	linux-modules@vger.kernel.org, Chuck Lever <cel@kernel.org>, tytso@mit.edu, 
-	dmitry.torokhov@gmail.com, Petr Pavlu <petr.pavlu@suse.com>, 
-	Anna Schumaker <anna@kernel.org>, yukuai@fygo.io, Heiko Carstens <hca@linux.ibm.com>, 
-	Vasily Gorbik <gor@linux.ibm.com>, Alexander Gordeev <agordeev@linux.ibm.com>, 
-	Christian Borntraeger <borntraeger@linux.ibm.com>
-Subject: Re: [PATCH RFC 15/16] proc: let procfs copy ioctl arguments in and
- out
-Message-ID: <20261104-muskel-filmabend-parklandschaft-f02c910a4fb4@brauner>
-References: <20261102-work-procfs-core-v1-0-75df35e4f8b8@kernel.org>
- <20261102-work-procfs-core-v1-15-75df35e4f8b8@kernel.org>
- <sashiko-outbox-195542@kernel.org>
+	dkim=pass (2048-bit key, unprotected) header.d=leap-io-kernel.com header.i=@leap-io-kernel.com header.a=rsa-sha256 header.s=default header.b=OtiB277D
+Received: from localhost.localdomain (unknown [222.130.22.242])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 5377ea1ae;
+	Wed, 4 Nov 2026 17:28:08 +0800 (GMT+08:00)
+From: Dongdong Hao <doubled@leap-io-kernel.com>
+To: James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com
+Cc: dlemoal@kernel.org,
+	hare@kernel.org,
+	hare@suse.de,
+	doubled@leap-io-kernel.com,
+	yjzhang@leap-io-kernel.com,
+	kezijie@leap-io-kernel.com,
+	jzzhang@leap-io-kernel.com,
+	baikefan@leap-io-kernel.com,
+	linux-scsi@vger.kernel.org
+Subject: [PATCH v2] scsi: leapraid: Fix init_cmd_priv error handling
+Date: Wed,  4 Nov 2026 17:28:08 +0800
+Message-Id: <20261104092808.206067-1-doubled@leap-io-kernel.com>
+X-Mailer: git-send-email 2.25.1
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -75,18 +61,69 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <sashiko-outbox-195542@kernel.org>
+Content-Transfer-Encoding: 8bit
+X-HM-Tid: 0aa1a5e3237a03aekunm7a9c86c545ed53
+X-HM-MType: 1
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVkaTh5PVk1KThlPHx9CGkJMHVYVFA
+	kWGhdVEwETFhoSFyQUDg9ZV1kYEgtZQVlJSUlVSkhLVUlJVUlPSVlXWRYaDxIVHRRZQVlPS0hVSk
+	tJT09PSFVKS0tVSkJLS1kG
+DKIM-Signature: a=rsa-sha256;
+	b=OtiB277DC7DkNqa0pCJ9QVLsc9HkWvPLZYkxGBS9kRa4oczbw1TyHun+rgca2LsQ9YQQkEZjddZVYJZ3XiYPOhQN9TUq/cadMAXWlFPmnTZG7SiHfH6o+dM5AohuDTFGfuurU/g4Uy/1yFeN5HjoUiihleoXAMxOZKgS6MtWcjZZVHi2lsK1QPZXTbmQJevt2ihLpxOz4k2M60fbshwq9TcLsKwqg/YJ/qbLkZFAVepn0aS2fqWnQDhB5zbxzp2a2L7beQUFljYymkBle+ixq9nwwY49ZFNRb2sZiH3kv+eUnQ3ch2fg1atGL1xJv6O2XG+eeyO7pR5Cb3KbjPH+QQ==; c=relaxed/relaxed; s=default; d=leap-io-kernel.com; v=1;
+	bh=/tZlYIvGbzLcUIVFqkO0wDdyza8BS1AZcDos/cWKlXg=;
+	h=date:mime-version:subject:message-id:from;
 
-On Tue, Nov 03, 2026 at 03:01:36PM +0000, sashiko-bot@kernel.org wrote:
-> - [Medium] proc: unguarded zero-length user copies in pde_ioctl_buf()
+leapraid_init_cmd_priv() ignores the return value of
+leapraid_internal_init_cmd_priv() and always returns success. If
+dma_pool_alloc() fails, io_tracker->chain remains NULL, but the SCSI
+midlayer considers the command successfully initialized.
 
-Hm, a zero-length copy isn't a nop on every arch. Adventurous. It's
-skipped now.
+A subsequent I/O requiring more than LEAPRAID_SGL_INLINE_THRESHOLD
+DMA-mapped scatter-gather entries dereferences the NULL chain buffer
+while building the chained SGL, causing a kernel crash.
 
-> - [Low] proc: split declaration and initialization of __free() variable in pde_ioctl_buf()
+Return the result of leapraid_internal_init_cmd_priv() so that allocation
+failures propagate to the SCSI midlayer and abort initialization of the
+affected request.
 
-Intentional.
+Changes in v2:
+- Inline scsi_cmd_priv(scmd) and drop the io_tracker local variable.
 
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+Signed-off-by: Dongdong Hao <doubled@leap-io-kernel.com>
+---
+ drivers/scsi/leapraid/leapraid_os.c | 10 ++--------
+ 1 file changed, 2 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/scsi/leapraid/leapraid_os.c b/drivers/scsi/leapraid/leapraid_os.c
+index da597eb99377..749e50366dbc 100644
+--- a/drivers/scsi/leapraid/leapraid_os.c
++++ b/drivers/scsi/leapraid/leapraid_os.c
+@@ -935,22 +935,16 @@ static int leapraid_init_cmd_priv(struct Scsi_Host *shost,
+ 				  struct scsi_cmnd *scmd)
+ {
+ 	struct leapraid_adapter *adapter = shost_priv(shost);
+-	struct leapraid_io_req_tracker *io_tracker;
+ 
+-	io_tracker = scsi_cmd_priv(scmd);
+-	leapraid_internal_init_cmd_priv(adapter, io_tracker);
+-
+-	return 0;
++	return leapraid_internal_init_cmd_priv(adapter, scsi_cmd_priv(scmd));
+ }
+ 
+ static int leapraid_exit_cmd_priv(struct Scsi_Host *shost,
+ 				  struct scsi_cmnd *scmd)
+ {
+ 	struct leapraid_adapter *adapter = shost_priv(shost);
+-	struct leapraid_io_req_tracker *io_tracker;
+ 
+-	io_tracker = scsi_cmd_priv(scmd);
+-	leapraid_internal_exit_cmd_priv(adapter, io_tracker);
++	leapraid_internal_exit_cmd_priv(adapter, scsi_cmd_priv(scmd));
+ 
+ 	return 0;
+ }
 -- 
+2.25.1
+
