@@ -1,45 +1,45 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793819848;
-	b=ECI31XOGzY4YKONRoGeTfvEXPY17K1OA3PQG2dAFIHDUFuJSOFOPG/VOyduIkOam+P5h
-	 beveG6Xp5tez6ek8HMCVM+qXuoytbexlvpGwV/0LzakSQFeioErI5tnK1LAGDShqhnzje
-	 HabE/Q2ZuuaE+nQny0Xa1bI6vSe/qGsAxeUqPnJjM6WtpLyGs00ju1jnPj3Uiqg6B4oCj
-	 fSDSsEumtnqTdbFmI0tzzud99BzsMxOo3rOEoVK0c5nLpkoe0YrDknRTfJ+pFBW890cpJ
-	 VKpsjwDg7125+xkkzW1o0NqaoezOLu+PvzTT6NeNGLIun9gy1eJqq/b3yfUp5h/NrCw==
+	t=1793819877;
+	b=i6IwoLXOYGB9R0MzEU6gfsfciydFAJzdCF1JqM73AcLYi2aevhk+cg1mMrE43kKIgv5g
+	 ipeAvkGBbTn6oSIGFkKnT3Nw1FKW2qwHiDNBRZ7PAly/SQ1eRhnafp1aW2YQhve7BVKYq
+	 PaXdCWC90zcItTkWzQNWeZ2wcInyVdzqLr3wMRRsaj2RJBhPytMaDVXAqDT2aVR1rRmP6
+	 hzgMdztXgKXJ7ue0QF9Y3sE1X/3S1KuQkM6LTKkqy9IXpn/PDTpW3pJevo+D2Fg8DjNJh
+	 T6KYD03zXx5V9AXNaUQQtdAWpjxJ7/gLEeMw9zreHkLFl/kojLuQ6OlftGHbRlTLViQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793819848;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793819877;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:
 	 In-Reply-To:References:MIME-Version:Content-Type:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:Content-Transfer-Encoding;
-	bh=jP/hayhlpAKZdjJKk3r9BHeVVOYyvJcLU3d1z3kH9u8=;
-	b=Lx3Bm7LWmseZ+lEI55iTshoXZh/FGfTEpF75sbPnpohDHXggSqCAHwrS5JeSdtiqA6Xt
-	 /8drBxUJgoz/3wME6ulGCDqPX4GDh+g3zqyDZ1nWYACooU7SySVMWngwhf0RMHES2eM1c
-	 whNav5yFNntennYfzFzR1II/eNjs/h9KIr3ClAB7lr8hVciABvDUjehrtdyCV9LP9Xnua
-	 i9XIg0O4oe3GW4ij+sgLMUuzxKPKm9W1Pck8Pw+QaThe4emoYvfR6tO5e6qxXu13alZa6
-	 bvIz707cc0oNrM0sG32/inAWlte8syFf0BUTEvGL7kzIsXHdxLZKealfc7ClEfRZ0zw==
+	bh=Bp2DPgSMAVNPpocNHMMHSMxcgQhQwNKqaFQNAmEUdgU=;
+	b=OUDzRoUgvlJlHy8+hS3IX8VXzQGZ7hwVqij1GjH70oJCJMH2KJQn8gK9p1AwA3FAAX1I
+	 CeKVH49VRTUItuTc9jgeeKW0ViChP+RwW43A91o7b21BvHOfnKenlRq3w30rjF9iTEt44
+	 rFVw6W0nd4vdo9bIQLSLklod0kqtxXDJx2yeBBGAAHxtgxwR1oi3AZV99ZbtHxhKgP9ZA
+	 8B5mMe085cSdPyls/PiJ2jSRbn1dBpxM/LkXaC0W8RyrIomWfCMvlFDQ6RkfKXbe3koxx
+	 FO2il5XjAfTaEk0V9F9LiJFoJ08Y62Cw9zq3n7YZz4DjFyjCdmICm3pnhfC1mV451MQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=KpHzZpnF;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="onbfdV/H";
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E7626083638;
-	Wed,  4 Nov 2026 19:17:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30D4B606A334;
+	Wed,  4 Nov 2026 19:17:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=KpHzZpnF
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 79C9F1F00A24;
-	Wed,  4 Nov 2026 19:17:16 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=onbfdV/H
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 496051F000C1;
+	Wed,  4 Nov 2026 19:17:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793819848;
-	bh=jP/hayhlpAKZdjJKk3r9BHeVVOYyvJcLU3d1z3kH9u8=;
+	s=k20260515; t=1793819877;
+	bh=Bp2DPgSMAVNPpocNHMMHSMxcgQhQwNKqaFQNAmEUdgU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=KpHzZpnFwT6+C0q0yRCi5k/OA66tRS7eBzT8lt1HaWQE8e8svE3VZCRBnfRHdCzx7
-	 71y/CPv6HCeTe9zbap2gT5FJuzj5hekBtO1a4cjxKuetzIxGjHALxdRgkDffBvgqoN
-	 /aj76OWmFdznND17QWfa+CPtL2LoFKokFbuci0W4IBDDUUsoZwEUSEMsIoP5ROVtaD
-	 UYsfpJY8su6lg+vsurlkAT18SVCFHIc8HLWY3wDZz/GvQ7lhgYrpLIwR5WyV8knPdX
-	 rwvwNGe1ypF9HhdxdQGkkPDxlpkOU61C82qjywHhkl5yTgB9ONziIAgGKfFuFYu0iv
-	 y/71Zwy9XejIg==
+	b=onbfdV/HTacMnVbqXJ+FWmQQPtyp9R0J4UgJy9QwpRXMNAUpXq4U5MgLOpJJmdqil
+	 A0IpzV3lIP35dJV6mQZjczsBbIm16npn5PD8YgolOlJ1tMWq4drLkt1BRme9A6hdpk
+	 hU7if+GjyblRW+XhOHwJUvOM5bncZ4wy7T8dJkSSmoqVJFYODR5oteYh/K8C4sjSv7
+	 T90fJXFV4MCDOisGIN4JIrvvLoPWPs3/TneCCv2v3EeHxNcbD6g2Laj9xr6GhUYSzJ
+	 UbZZpN0HIrsvDaR+/nImX8hLuzR+la3jElQ0/AQag/TzZMVgu2cf2gdOENudtrxOC7
+	 u98wrpF2+gfGQ==
 From: Christian Brauner <brauner@kernel.org>
 To: linux-fsdevel@vger.kernel.org
 Cc: Linus Torvalds <torvalds@linux-foundation.org>,
@@ -99,11 +99,10 @@ Cc: Linus Torvalds <torvalds@linux-foundation.org>,
 	linux-modules@vger.kernel.org,
 	linux-debuggers@vger.kernel.org,
 	"Christian Brauner (Amutable)" <brauner@kernel.org>,
-	Chuck Lever <cel@kernel.org>,
-	stable@vger.kernel.org
-Subject: [PATCH RESEND v2 05/51] xtensa: simdisk: remove the proc entry before the disk
-Date: Wed,  4 Nov 2026 20:17:14 +0100
-Message-ID: <20261104-work-procfs-bugfixes-v2-5-021c84d852e0@kernel.org>
+	Chuck Lever <cel@kernel.org>
+Subject: [PATCH RESEND v2 07/51] lockd: don't hand out the terminator of nlm_end_grace
+Date: Wed,  4 Nov 2026 20:17:43 +0100
+Message-ID: <20261104-work-procfs-bugfixes-v2-7-021c84d852e0@kernel.org>
 In-Reply-To: <20261104-work-procfs-bugfixes-v2-0-021c84d852e0@kernel.org>
 References: <20261104-work-procfs-bugfixes-v2-0-021c84d852e0@kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -117,42 +116,33 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 X-Mailer: b4 0.17-dev
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1246; i=brauner@kernel.org; h=from:subject:message-id; bh=f7Qg/00vnZM3tuJ138yAFxD6JPv6/GBN+HDx2x0z8gg=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9brxQmmA/984KHvt9Xz1eFefxl8hqpieb9fosObahV 1Ne5l9gRwkLgxgXg6yYIotDu0m43HKeis1GmRowc1iZQIYwcHEKwERykxj+u2j/eB40M+7p2v17 /GMmXT/na+Ctz77txmH9Sb+NLH5yrWH4HpzAeT45SPnv5UMnF7jMebDmtMJKXyf/NT8uPWe+O7+ RBwA=
+X-Developer-Signature: v=1; a=openpgp-sha256; l=879; i=brauner@kernel.org; h=from:subject:message-id; bh=tKzHzMLxBoW/zY681xcBM67Jqe2y1s4JEAk9OycZ8F8=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9brz82W5pn1bu8jVTxGdEXE56r5qmzRPmKXZbfpl5N e9UmTVSHaUsDGJcDLJiiiwO7Sbhcst5KjYbZWrAzGFlAhnCwMUpABN5aMHwv1BmWTKrQaW1pau+ y7lc/V6hFSvly7z1GnL9Bfe/by3pYGSYdlT+a0yoMVdMgqbeooRHhxKrFq9gfqp47glfRsvFU/e YAQ==
 X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 Content-Transfer-Encoding: 8bit
 
-simdisk_teardown() frees the gendisk and only then removes
-/proc/simdisk/<n>. A write to that entry in between attaches the file
-that was written to the disk, and simdisk_attach() sets the capacity of
-the gendisk that is gone. Remove the entry first, remove_proc_entry()
-waits for a writer that is in the middle of that.
+nlm_end_grace_read() answers with "Y\n" or "N\n" from a three byte
+buffer and hands out all three bytes, the terminating NUL included.
+Leave the NUL out.
 
-Fixes: b6c7e873daf7 ("xtensa: ISS: add host file-based simulated disk")
-Cc: stable@vger.kernel.org
+Fixes: d68e3c4aa416 ("lockd: add a /proc/fs/lockd/nlm_end_grace file")
 Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
- arch/xtensa/platforms/iss/simdisk.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ fs/lockd/procfs.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/arch/xtensa/platforms/iss/simdisk.c b/arch/xtensa/platforms/iss/simdisk.c
-index a2ddb49c269d..e51edb8cf872 100644
---- a/arch/xtensa/platforms/iss/simdisk.c
-+++ b/arch/xtensa/platforms/iss/simdisk.c
-@@ -379,12 +379,13 @@ static void simdisk_teardown(struct simdisk *dev, int which,
- {
- 	char tmp[2] = { '0' + which, 0 };
+diff --git a/fs/lockd/procfs.c b/fs/lockd/procfs.c
+index a01f08c8c2f3..74f7ab77535a 100644
+--- a/fs/lockd/procfs.c
++++ b/fs/lockd/procfs.c
+@@ -57,7 +57,7 @@ nlm_end_grace_read(struct file *file, char __user *buf, size_t size,
+ 	resp[1] = '\n';
+ 	resp[2] = '\0';
  
-+	/* a write to the entry attaches a file to the disk, so it goes first */
-+	remove_proc_entry(tmp, procdir);
- 	simdisk_detach(dev);
- 	if (dev->gd) {
- 		del_gendisk(dev->gd);
- 		put_disk(dev->gd);
- 	}
--	remove_proc_entry(tmp, procdir);
+-	return simple_read_from_buffer(buf, size, pos, resp, sizeof(resp));
++	return simple_read_from_buffer(buf, size, pos, resp, sizeof(resp) - 1);
  }
  
- static void __exit simdisk_exit(void)
+ static const struct proc_ops lockd_end_grace_proc_ops = {
 
 -- 
 2.53.0
