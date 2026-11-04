@@ -1,45 +1,45 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793820362;
-	b=mtTMCazanCyplrDAP0A2RXRJ//Faq5QIecCZUdEmk4GvwpkklKReTqGdViK9vtKwDqlC
-	 y44G0aqLHa4i0y3QC2bEHr9uT1RNCLckT6yic6SLVTHPOe+7YwA0UOUdm997DOvxaZ+9y
-	 89qPtfxVGj6RFqIa0tQlxQ8tC/hsLXlqfpUzapLnGdVoZ/CSqpreHgpcSrs7IetDXAsHW
-	 otXyd4RKcJNAhSNLpmoUH1Ck8z/GJUGREmqcBnCIuq2eY0eUrFMFUShNFosXAx5innuWx
-	 jrd39TRJf/kYNVhWNcn/bicD5Nbyv9wFl0WJe1JsCPkwDJdlnKVzNc/bEFpbJcwXRFg==
+	t=1793820392;
+	b=AIsuhc1+JmKMjdjd/+H6n47YouyLRo6gqvAFFrE7FHU/gY4gyoLp6X+MJJTaXgf+XaWB
+	 zMXrk+tP2FLvdaXGXhuRSX7jyu9OWkPFyr03kT7Zp4seJeGLmF6ulsEzuTickOdyV6ut5
+	 stCmyMpKgEaDpyZfzIiuoxqZc+o/HX8bB/+J4uiQSIPG/legcuzKW09BD8/HcvERfCRi4
+	 XRPsmmVSoLzPMKROefa0xtI9i91YmnEWsqFMQEUP2lA4i052Zj4DK1MEZusfE4txSX1HK
+	 Dy6ceRlfPhe1zymwIOqjFK1yCrsKcUrVBZrVKTT6eOcmeEoF31ef20STtHbKgcmKIyA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793820362;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793820392;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:
 	 In-Reply-To:References:MIME-Version:Content-Type:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:Content-Transfer-Encoding;
-	bh=RXd/jlD2fYO+IzUitqn0Yxqt//n2gto42+U+qSH6QWU=;
-	b=nrtRLeQ947vKxo4DRLbxmpC11LjUQ2gdHLHwMvhhIPG7GnajiZan80NDr6Nht/vumd8x
-	 zJfkMCyTogUtyX5Et4hKElvCej3f3nnIyOxk4pA6C87MCV9XGcIsUpK43DU4chnXbvELz
-	 nWQ4beQ2iD5RoveDBVYd/fBiVfuD83+C2kw/MG6tHdAiJZL+OLzum9+WWj7807Uixhclt
-	 NnAHxvq0fatAOotZiwTofUtUaKRaSAjMeebmVn/5ptxKWIat3xu4qDwTAGEL7RdCmhdwD
-	 N1MbW6jzWtUuziRxxmyInaK7k6qEGcFeq/skv5CehrPrkIs0+Tu+Gfbnd1b4zVvieXA==
+	bh=KzL9ZYHhLfhD3DOSumSkk0Gb2fITAVoHxCDSq8u5ZOY=;
+	b=1NgyDDd58F9Whp7XTuYwdBbtM6L2eAkA1/ECqDCxbfMp5U4/AHl45sAo38q34C5RyfWW
+	 rRDq3iujDEh3yhZiI1puRNlb988JbvDmIheGinTwF4DuQu2bYUiNMwBxGyd+Pz7Zi03rN
+	 UqwkmL0yh7a91Q98J0MV8/gNGt7+8TqxyiuTiOpEPeIREzf1LjmYIDotiLLhyvrDpu9C4
+	 e2SpQA4vvtbeZGzKXmqm9fVxm7gFG/4raQ0GaH2mDAIOljL5XZ1sOLdw5hbHu5svmkpVy
+	 zEfmWYq3BP2C4mcIEMy/hdYBr0k0Yc9q2GXROdjLS4lLneDpOgd5vB3q7vqAcCvnn6w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GLlT6wTh;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="OZmY/n0G";
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 526896072643;
-	Wed,  4 Nov 2026 19:26:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B61646072F80;
+	Wed,  4 Nov 2026 19:26:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GLlT6wTh
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6879B1F000C1;
-	Wed,  4 Nov 2026 19:25:49 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=OZmY/n0G
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2A02B1F00A18;
+	Wed,  4 Nov 2026 19:26:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793820361;
-	bh=RXd/jlD2fYO+IzUitqn0Yxqt//n2gto42+U+qSH6QWU=;
+	s=k20260515; t=1793820391;
+	bh=KzL9ZYHhLfhD3DOSumSkk0Gb2fITAVoHxCDSq8u5ZOY=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=GLlT6wThOUa/KfNlTWuqZPz2Ih/LW2NYnzaWY0pki30umCZLIl1MRVBbUTMv9zOzQ
-	 KUvA2Y+BaOT4XHvhY/vbdRPf/ofxl4BOA7G2Cny/691CVbfE9SzJNG0H7841ayyiPW
-	 q1QKtzy42RoQEe16QVfbQhu1Trtg8T0HfuKYvU0jeicYSNp2+ODBxjEymSq0qmh803
-	 DkvXTDiylR93zfsmnmYdfkoSjx/mzTH9XVIFaqgxigm0SGf8nQQ7zg0Th1in/5RVHH
-	 UvwoKm7/7JzOhxW7xTQaC2jHyFnfQfIuSRDNs0GpztaoEROUElyxSGVsFyKXWU+016
-	 ZqAQCUwnhlOrQ==
+	b=OZmY/n0GXXd/waY5eO8CY5Onurst3JuvNiiWNIXcNO2ZuOFKp902BomvRAZeqhqov
+	 gVBa7tGTm8eGOA6FIqPzs+gKGb0cET9WaFFoJDGhKN+qiibaBT/bgrlsrKWepwCufy
+	 7xbZtg/lGvVf2Z6lEc3/gKQcCopkPYa2/MYuxGe78rFjMFuwi6sASyH6Jok98Wg17F
+	 cJ/qQVE/skC9zQGR9GKwMIm//f3mEfB8/4bBi4VeRM6Lw8lfYzjOtO7fBSGQY1KnwG
+	 yl+O33qpdvuGjSLboBidD8ILci0GW1gs7UGQ/cvvcbiCIna8PYu+uszQ30CIehYMR+
+	 tDP/eU01ohS5g==
 From: Christian Brauner <brauner@kernel.org>
 To: linux-fsdevel@vger.kernel.org
 Cc: Linus Torvalds <torvalds@linux-foundation.org>,
@@ -101,9 +101,9 @@ Cc: Linus Torvalds <torvalds@linux-foundation.org>,
 	"Christian Brauner (Amutable)" <brauner@kernel.org>,
 	Chuck Lever <cel@kernel.org>,
 	stable@vger.kernel.org
-Subject: [PATCH RESEND v2 40/51] sunrpc: make queue_wait a global wait queue again
-Date: Wed,  4 Nov 2026 20:25:47 +0100
-Message-ID: <20261104-work-procfs-bugfixes-v2-40-021c84d852e0@kernel.org>
+Subject: [PATCH RESEND v2 42/51] powerpc/pseries: bound the lengths in the ofdt property parser
+Date: Wed,  4 Nov 2026 20:26:17 +0100
+Message-ID: <20261104-work-procfs-bugfixes-v2-42-021c84d852e0@kernel.org>
 In-Reply-To: <20261104-work-procfs-bugfixes-v2-0-021c84d852e0@kernel.org>
 References: <20261104-work-procfs-bugfixes-v2-0-021c84d852e0@kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -117,125 +117,111 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 X-Mailer: b4 0.17-dev
-X-Developer-Signature: v=1; a=openpgp-sha256; l=4370; i=brauner@kernel.org; h=from:subject:message-id; bh=UZe+zvZ7uAQTPHkJMC5sa/e/J7N81e8hQB7K9CX6y/s=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9bvx78e/9TWXFnRv2n+0+Y7Bz41ZTh6+/N7u8dJn+Z vW+4nUTvnWUsjCIcTHIiimyOLSbhMst56nYbJSpATOHlQlkCAMXpwBMpO8Lw/8UM22Z1SoBq778 fmAYFTvHNOBq8s/y7Yt0nNzEbPj0c+UZGdbduHhO1LNCJf1l6qOLebn6Ed/D5rXesxVIOr3xlVR zNxcA
+X-Developer-Signature: v=1; a=openpgp-sha256; l=4036; i=brauner@kernel.org; h=from:subject:message-id; bh=1x5L5ygLqoH4QYrbzxN55G88uXTL5wNw5UNSw5/l5lQ=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9bvx/eMaUE0I+8x7uP2vLHsplqPp8Uf8cnbKLyd/ve zkpum1k6ChlYRDjYpAVU2RxaDcJl1vOU7HZKFMDZg4rE8gQBi5OAZjIciOGfwpWqRcLVdK6Yk+U 7Mjin33JpmbO+9ppHJaBzs+t3kx9ZcXwV37rzQebpE0czPNr1/Zo75BRluja0J3FW2zd03c/onQ XAwA=
 X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 Content-Transfer-Encoding: 8bit
 
-Since commit 552d0e17ea04 ("sunrpc: convert queue_wait from global to
-per-cache-detail waitqueue") poll() and epoll queue their waiters for a
-channel file on the queue_wait head in struct cache_detail. But the
-cache_detail can be freed while its channel file is still open and
-waited on.
+The commands for /proc/powerpc/ofdt that carry properties, "add_node",
+"add_property" and "update_property", can make the parser read past the
+buffer they were copied into:
 
-The procfs channel files of a network namespace are removed when the
-namespace goes away. Removing a procfs file waits for the callers that
-are in one of its methods right now and then calls ->release on every
-file that is still open (cf. close_pdeo()). The waiters that poll() and
-epoll left on the head stay queued until their file is really closed.
-So:
+(1) do_update_property() computes the end of the buffer after
+    parse_node() moved buf past the phandle. So the end is off by the
+    length of the phandle string, which can be padded with zeroes, and
+    parse_next_property() accepts a value that reaches that far past
+    the command. new_property() then copies those bytes into the
+    property, which everyone can read in /proc/device-tree.
 
-  sunrpc_exit_net()
-  -> ip_map_cache_destroy()
-     -> cache_unregister_net()
-        -> remove_cache_proc_entries()
-           -> proc_remove()      // ->release, the waiters stay queued
-     -> cache_destroy_net()      // kfree(cd)
+(2) parse_next_property() parses the length with simple_strtoul() into
+    an int and only rejects -1. A length above INT_MAX turns negative,
+    tmp += *length moves backwards and passes the check against the
+    end, so *tmp is read up to 2G in front of the buffer.
 
-and when poll() returns remove_wait_queue() writes to the freed
-cache_detail:
+(3) Updating "slb-size" or "ibm,slb-size" reads an int from the value
+    whatever its length.
 
-  BUG: KASAN: slab-use-after-free in _raw_spin_lock_irqsave+0x4b/0xa0
-  Read of size 1 at addr ff110001131bb570 by task sunrpc-poll-uaf/242
-  Call Trace:
-   remove_wait_queue+0x22/0x1c0
-   poll_freewait+0xc2/0x230
-   do_sys_poll+0x9ba/0xd50
-   __x64_sys_poll+0x165/0x470
-  Freed by task 12:
-   kfree+0x267/0x620
-   sunrpc_exit_net+0x34/0x80
-   ops_undo_list+0x271/0x8d0
-   cleanup_net+0x3f3/0x860
-
-Closing an epoll instance that watches the file gets there through
-ep_unregister_pollwait() instead.
-
-The channel files of a network namespace belong to the root of its
-user namespace and cache_open() doesn't check for a capability. So an
-unprivileged user can open the channel file of a namespace of its own
-from the outside, poll it and let the namespace die.
-
-Go back to a single static wait queue that never goes away. A wakeup
-for one cache wakes the waiters of all caches again but cache_poll()
-reports per cache_detail so that's just a spurious wakeup. procfs
-should really own the wait queue of its files like kernfs does but
-that's nothing for stable.
+Compute the end before parsing the phandle, reject lengths that don't
+fit into an int or into what is left of the buffer, and only take the
+slb size from a value that holds one. The file is root-only and
+refused under lockdown but the parser still shouldn't read past its
+input.
 
 Reported-by: Chris Mason <mason@kernel.org>
-Fixes: 552d0e17ea04 ("sunrpc: convert queue_wait from global to per-cache-detail waitqueue")
-Acked-by: Chuck Lever <cel@kernel.org>
+Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+Fixes: 610d91511f99 ("[PATCH] powerpc: Add support for changing properties from userspace")
+Fixes: 46db2f86a3b2 ("powerpc/pseries: Fix to handle slb resize across migration")
 Cc: stable@vger.kernel.org
 Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
- include/linux/sunrpc/cache.h |  1 -
- net/sunrpc/cache.c           | 12 +++++++++---
- 2 files changed, 9 insertions(+), 4 deletions(-)
+ arch/powerpc/platforms/pseries/reconfig.c | 18 ++++++++++--------
+ 1 file changed, 10 insertions(+), 8 deletions(-)
 
-diff --git a/include/linux/sunrpc/cache.h b/include/linux/sunrpc/cache.h
-index 2735c332ddb7..bf4fc543e1e5 100644
---- a/include/linux/sunrpc/cache.h
-+++ b/include/linux/sunrpc/cache.h
-@@ -119,7 +119,6 @@ struct cache_detail {
- 	struct list_head	requests;
- 	struct list_head	readers;
- 	spinlock_t		queue_lock;
--	wait_queue_head_t	queue_wait;
- 	u64			next_seqno;
- 
- 	atomic_t		writers;		/* how many time is /channel open */
-diff --git a/net/sunrpc/cache.c b/net/sunrpc/cache.c
-index 1bc04109d213..1ceaea7e01b9 100644
---- a/net/sunrpc/cache.c
-+++ b/net/sunrpc/cache.c
-@@ -404,7 +404,6 @@ void sunrpc_init_cache_detail(struct cache_detail *cd)
- 	INIT_LIST_HEAD(&cd->requests);
- 	INIT_LIST_HEAD(&cd->readers);
- 	spin_lock_init(&cd->queue_lock);
--	init_waitqueue_head(&cd->queue_wait);
- 	cd->next_seqno = 1;
- 	spin_lock(&cache_list_lock);
- 	cd->nextcheck = 0;
-@@ -965,13 +964,20 @@ out:
- 	return ret;
- }
- 
-+/*
-+ * Not in struct cache_detail: poll and epoll waiters stay queued until
-+ * their file is closed, but a channel file in procfs can stay open after
-+ * the cache_detail of its dying network namespace has been freed.
-+ */
-+static DECLARE_WAIT_QUEUE_HEAD(queue_wait);
-+
- static __poll_t cache_poll(struct file *filp, poll_table *wait,
- 			       struct cache_detail *cd)
+diff --git a/arch/powerpc/platforms/pseries/reconfig.c b/arch/powerpc/platforms/pseries/reconfig.c
+index 5a0c9c0b6253..b543afbc1efb 100644
+--- a/arch/powerpc/platforms/pseries/reconfig.c
++++ b/arch/powerpc/platforms/pseries/reconfig.c
+@@ -114,6 +114,7 @@ static void release_prop_list(const struct property *prop)
+ static char * parse_next_property(char *buf, char *end, char **name, int *length,
+ 				  unsigned char **value)
  {
- 	__poll_t mask;
- 	struct cache_reader *rp = filp->private_data;
++	unsigned long len;
+ 	char *tmp;
  
--	poll_wait(filp, &cd->queue_wait, wait);
-+	poll_wait(filp, &queue_wait, wait);
+ 	*name = buf;
+@@ -133,13 +134,13 @@ static char * parse_next_property(char *buf, char *end, char **name, int *length
+ 	}
  
- 	/* alway allow write */
- 	mask = EPOLLOUT | EPOLLWRNORM;
-@@ -1236,7 +1242,7 @@ static int cache_do_upcall(struct cache_detail *detail, struct cache_head *h)
- 	spin_unlock(&detail->queue_lock);
- 	if (ret != -EAGAIN && detail->cache_notify)
- 		detail->cache_notify(detail, h);
--	wake_up(&detail->queue_wait);
-+	wake_up(&queue_wait);
- 	if (ret == -EAGAIN) {
- 		kfree(buf);
- 		kfree(crq);
+ 	/* now we're on the length */
+-	*length = -1;
+-	*length = simple_strtoul(tmp, &tmp, 10);
+-	if (*length == -1) {
++	len = simple_strtoul(tmp, &tmp, 10);
++	if (len > INT_MAX) {
+ 		printk(KERN_ERR "property parse failed in %s at line %d\n",
+ 		       __func__, __LINE__);
+ 		return NULL;
+ 	}
++	*length = len;
+ 	if (*tmp != ' ' || ++tmp >= end) {
+ 		printk(KERN_ERR "property parse failed in %s at line %d\n",
+ 		       __func__, __LINE__);
+@@ -148,13 +149,13 @@ static char * parse_next_property(char *buf, char *end, char **name, int *length
+ 
+ 	/* now we're on the value */
+ 	*value = tmp;
+-	tmp += *length;
+-	if (tmp > end) {
++	if (len > end - tmp) {
+ 		printk(KERN_ERR "property parse failed in %s at line %d\n",
+ 		       __func__, __LINE__);
+ 		return NULL;
+ 	}
+-	else if (tmp < end && *tmp != ' ' && *tmp != '\0') {
++	tmp += len;
++	if (tmp < end && *tmp != ' ' && *tmp != '\0') {
+ 		printk(KERN_ERR "property parse failed in %s at line %d\n",
+ 		       __func__, __LINE__);
+ 		return NULL;
+@@ -320,8 +321,8 @@ static int do_update_property(char *buf, size_t bufsize)
+ 	char *name, *end, *next_prop;
+ 	int length;
+ 	struct property *newprop;
+-	buf = parse_node(buf, bufsize, &np);
+ 	end = buf + bufsize;
++	buf = parse_node(buf, bufsize, &np);
+ 
+ 	if (!np)
+ 		return -ENODEV;
+@@ -337,7 +338,8 @@ static int do_update_property(char *buf, size_t bufsize)
+ 	if (!newprop)
+ 		return -ENOMEM;
+ 
+-	if (!strcmp(name, "slb-size") || !strcmp(name, "ibm,slb-size"))
++	if ((!strcmp(name, "slb-size") || !strcmp(name, "ibm,slb-size")) &&
++	    length >= (int)sizeof(int))
+ 		slb_set_size(*(int *)value);
+ 
+ 	return of_update_property(np, newprop);
 
 -- 
 2.53.0
