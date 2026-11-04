@@ -1,45 +1,45 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793820831;
-	b=Wky6XSZwrR0FGTii9iNym2V6Erwjpbw+lUIKUcmaVLSnyzQCmfWzF2Q7hkhY8RvPZn9Z
-	 rQTSOZxGyCndpsdvLl4HX50zwmWjXHCVufF0XaapNG3hug0Jrww+U2g/aKWUx+dWPUItC
-	 WBZyuokIDOqQay8GrNzoLyo3B+n+4AruHEoMDemNO6QBowpSeU9gd8yqhi+xz48EkntCO
-	 6Y3MoIlW7kVvfYAGnvlthSINHM9gzf5mHyzlf5CQ+Nh3LPGTJYwc/0rvGUgsZws5Fr7YZ
-	 UC3vgOmOLUw5x8MaexQ2LR9Ut+6nHdUr0HTtRvqzcpqx5VWlvTYzRYFtR1Qx4yg5aIg==
+	t=1793820846;
+	b=BPuFfi777/g5qht4UJhGDJbbQ0JReoQ0M7WJS3qsrGZEQsDlmVRmTRUqal2NJnJIIZxY
+	 /16SHUVhczeFvg8vXWDuY+0PzihaenGhxHHuS5BgS2inG2n9os5TcXBumIWFr5ulSjc0D
+	 l1IWXnLvussH/5qvNgf6SSx8/KIv9j1D2h/Z/ee5RsZtUEzShCTpnDtz8NzUIaMD4yqNA
+	 61MABD5bmnwlRUOg5VpbCH5F8fn8N8qd5Mt5I76f7ROrysCZ+J3hYUl60Zp8PoPx4yl/4
+	 eDexXDowFpkAFEftzUxTEzRbyxNMqEE+NbpPT+Lh5p0wNhGzaJ5eiIxSJoYD4w9xJBg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793820831;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793820846;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:
 	 In-Reply-To:References:MIME-Version:Content-Type:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:Content-Transfer-Encoding;
-	bh=3MZo+TaiYyYx3tHsERSPy6nplvi8yhZWb/0lCcSs1KY=;
-	b=byocZKdTRi0J3mijnwSAt1xgW+WDGvyZt/BTcsjfhH7qu2sIb4kKzjEpiL1SdiyrMm9L
-	 RZ/GQ0FzUAnqLI2LqGnPCo52ZmsCJOLlQnZisYsq/3m4CH1ROzds30FaAtwry6WQpExLd
-	 ODhhDUUeDeCdnJaodFW7+KPsIDZ948R20qUcgAUSlE3Hn7AdIUfu1GlaAq00w+rCh0KlH
-	 Pi5pJYC2+11rvjkQyL2G5WxLV7N+i2Yf2lnaAT/A85EdeR1NISKgNH9xZ8CFxLQqhKqQL
-	 j4bDe3w2L/W4OJNEp4tdOIjs//tURpr3lzoDtPzbXJ36FYwnbr9VfuUvsmZg8F6hzZQ==
+	bh=wOiGbtXh+26P6cFgB3YXbnrWEhf8CPNBoutfZuqe0cI=;
+	b=TXXFHfctN89FmLpkmorhKCy7+CfMKXkEyIWmsqRIgvEwUFfAY8wvSaLrdjnsUilXnMTI
+	 EUzntCzx8GWeh8l1jz322iwCQSrGl2+2h66Q98+6n+wO5nUN7M9iEhqf8SHN4vt7GJaGE
+	 wAL7XmDT6YW5CF9BTS34AbBhSLDCIFA0YDLYEefYb/UUSw+Z4qFU5aIm1TsvcoC9arIcv
+	 9+zoA19xaMVzd0Uea5nVA5Ie8fkkktASW+Uyca3P+Zzc1WdCcOI5hiCPa35Mkiz4Qhnc1
+	 Wo7m1v0h+XhjOkEHygz6x6z7n9Rk4R4NTDskKis5mqP7eW2gg/tddbmsvqRR5yXspPQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fK9Y4ENF;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GAUi2SUu;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DDE3B606C930;
-	Wed,  4 Nov 2026 19:33:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5DD0F607A7D6;
+	Wed,  4 Nov 2026 19:34:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fK9Y4ENF
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BCEC01F00A1A;
-	Wed,  4 Nov 2026 19:33:38 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GAUi2SUu
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 156601F00A02;
+	Wed,  4 Nov 2026 19:33:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793820830;
-	bh=3MZo+TaiYyYx3tHsERSPy6nplvi8yhZWb/0lCcSs1KY=;
+	s=k20260515; t=1793820844;
+	bh=wOiGbtXh+26P6cFgB3YXbnrWEhf8CPNBoutfZuqe0cI=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=fK9Y4ENFCiPjlRhFU8wV0NlIbZT/hojlER6vttE1d9qa9+Jv04mjKNT/AdVjfLsvE
-	 pnHGuiqlLIith7DXpu2rldR7OZ4JXxOrF3FmGhZ+hcAyvIfnXydcAkEbt0rsRswpWF
-	 rMaHm/bA7eZaczpsr7CrwIIykA6o23RG46MLlTwRYMZdak300MMJqwwACovyeq+tKT
-	 2KyHlejSNd+u0EofNWzRGgxy+TfjN9hTb+ITqwbkSil+9AMAkMiwkrDOmrdHy0cXp2
-	 PK79oEUo50XZ3m9hxyac2iJx7pLZU9KofoEu1kaGXYc6KIzGZy/s8yLmMVee57H8VV
-	 DqTwfEsFuyXtA==
+	b=GAUi2SUug0UxPlfFUUONWwiBaqhW+CPwHi9ROt2tgHXEeUA5HnhKW49vg0h//eRek
+	 19VdBVnFuVj0FumboOxOLM8ZGbD/sXZJ18BizGNDqR7bU1rcpq9wqzj03DLTrZxycb
+	 xCZzycJdxDPLJft+HIdgBnsg1C2coUbbb6sFjgx+Z90PctyxTbRw87FiQL/EAfCnsD
+	 wiHtGkQ2vyZTUstIsghXbyaDluDmFswvpSimcZ+xR5fteGCZrQT/i14tZH1sOvmBSc
+	 l6QV3ryMIU8G+gcr/NG5UtajUyb9hEoWX8DYhdTOTtqkDHMl0qtdUHBBmVhxDrFDpD
+	 alh7bcK12D7bg==
 From: Christian Brauner <brauner@kernel.org>
 To: linux-fsdevel@vger.kernel.org
 Cc: Linus Torvalds <torvalds@linux-foundation.org>,
@@ -100,9 +100,9 @@ Cc: Linus Torvalds <torvalds@linux-foundation.org>,
 	linux-debuggers@vger.kernel.org,
 	"Christian Brauner (Amutable)" <brauner@kernel.org>,
 	Chuck Lever <cel@kernel.org>
-Subject: [PATCH RESEND v2 18/23] proc: let procfs copy ioctl arguments in and out
-Date: Wed,  4 Nov 2026 20:33:36 +0100
-Message-ID: <20261104-work-procfs-core-v2-18-76ace653a773@kernel.org>
+Subject: [PATCH RESEND v2 19/23] proc: pin the entry around the vm_operations of its mappings
+Date: Wed,  4 Nov 2026 20:33:50 +0100
+Message-ID: <20261104-work-procfs-core-v2-19-76ace653a773@kernel.org>
 In-Reply-To: <20261104-work-procfs-core-v2-0-76ace653a773@kernel.org>
 References: <20261104-work-procfs-core-v2-0-76ace653a773@kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -116,242 +116,300 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 X-Mailer: b4 0.17-dev
-X-Developer-Signature: v=1; a=openpgp-sha256; l=8290; i=brauner@kernel.org; h=from:subject:message-id; bh=UJky7Q6NDXKrSBAbJxpUbP7z2/GQ36tDnB+V6uTqjs0=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9bm8Lmszu7LBi/Z/Xwars1f7rHT980A4ojrtZa3O2N KVHpC+ro5SFQYyLQVZMkcWh3SRcbjlPxWajTA2YOaxMIEMYuDgFYCLFCxn+CrjcND2wQ6JooomG RMbSs1fLmHq7nM8uW2k3/Y2a8WUjBoZ/9hq8GtYe398fWWuQOuvVBq3ZJ7dbr55R7fgxIG7vlwl GnAA=
+X-Developer-Signature: v=1; a=openpgp-sha256; l=11693; i=brauner@kernel.org; h=from:subject:message-id; bh=1Gn60dKTBgMHLZNNt783bvPpMphe5Oyiwe1oBT0VS+Y=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9bu+QKEs7mSWU5xnOGc8epSacpjzTovXorKiOP1wfa q7krTrcUcrCIMbFICumyOLQbhIut5ynYrNRpgbMHFYmkCEMXJwCMJFbTYwMF/JeHn5hJ2XP5f3c W3fLzrrjN1YX6loYlbr2VRpwJ074xfCH43/Y586lty6++81yYZFC6JEJB84FLxQ6q3urlnveMrt 2bgA=
 X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 Content-Transfer-Encoding: 8bit
 
-proc_reg_unlocked_ioctl() pins the entry and calls ->proc_ioctl() which
-copies its argument from and to userspace itself. Like for reads and
-writes, an ioctl can make a page fault in those copies take as long as
-it wants and remove_proc_entry() waits for it.
+proc_reg_mmap() pins the entry around ->proc_mmap() and that's it. What
+the entry hands out lives on without the pin: the vm_operations it put
+on the mapping run on every fault, on every write to a read-only page
+and on every ptrace access with the entry unpinned, and the mapping
+itself survives remove_proc_entry(). For /proc/vmcore that means the
+fault handler runs after vmcore_cleanup() freed what it looks at, and a
+mapping of the old memory keeps pointing at it after fadump gave that
+memory back to the page allocator. /proc/bus/pci has the same problem
+when a device goes away.
 
-The command number doesn't reliably say what an ioctl copies. Some of
-the procfs ones aren't encoded at all, like the PCI ones or esas2r's,
-and i8k's encode the wrong sizes. So keep a table of the commands, like
-DRM keeps one of its ioctls, and let it say what each command copies.
-An entry that implements ->proc_ioctl_buf() lists its commands in
-->proc_ioctl_args with the number of bytes that go in and that come
-back out. procfs copies the argument in before it pins the entry, calls
-->proc_ioctl_buf() with that kernel copy and copies it back out after
-unpinning the entry if the ioctl succeeded. A command that copies
-neither gets its argument as is, a command that isn't in the table
-fails with -ENOTTY. PROC_IOCTL_IOC() fills in an entry from a command
-that encodes its argument.
+So do what kernfs does for the mappings of sysfs files. procfs puts
+vm_operations of its own on the mapping. They pin the entry around its
+->open(), ->fault(), ->page_mkwrite() and ->access() and fail with
+SIGBUS, or do nothing, once the entry is gone. The entry's
+vm_operations are kept in its open node, so every mapping of an entry
+has to use the same ones, like kernfs asks that of every mapping of an
+open file. ->close() can't be wrapped, it runs when the mapping goes
+away and that can be after the entry is gone, so a mapping that has
+one is refused.
 
-Note that, like for writes, procfs copies the argument in before the
-entry's own checks run, permission checks included. So a bad pointer
-fails with -EFAULT where the entry used to say -EPERM first.
+When the entry is removed procfs unmaps the mappings of every open file
+of an entry that has been mapped before it calls ->proc_release(), so a
+fault into one of them finds the entry gone. That unmaps the entry's
+own address space, the way kernfs_drain_open_files() does it.
+/proc/bus/pci maps through the iomem address space that /dev/mem and
+the sysfs resource files share, see iomem_get_mapping(), and
+unmapping that would take every /dev/mem and BAR mapping on the system
+with it. So those mappings are left alone, like the sysfs resource
+files leave theirs, and keep pointing at the BAR of a device that is
+gone. To know the files an entry that can be mapped gets an open node
+like an entry with a ->proc_release() has one. The mapping is linked
+into the file's address space only after ->mmap() returned, so a
+removal that runs in between doesn't find it. kernfs has the same
+window.
 
-The table lives with the proc_ops, which go away with the entry, so
-procfs pins the entry to look the command up and lets go of it again
-before it copies anything. 32-bit tasks go through the same table with
-their pointer converted by compat_ptr(). An entry that implements
-->proc_ioctl_buf() and still has a ->proc_ioctl() or a
-->proc_compat_ioctl() fails to register, and so does one that lists
-commands without implementing it or implements it without listing any.
+Entries that are never removed aren't wrapped, procfs never pins them.
 
-No users yet.
+Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
- fs/proc/generic.c       | 17 +++++++++++++++
- fs/proc/inode.c         | 58 +++++++++++++++++++++++++++++++++++++++++++++++++
- fs/proc/internal.h      |  5 +++++
- include/linux/proc_fs.h | 35 +++++++++++++++++++++++++++++
- 4 files changed, 115 insertions(+)
+ fs/proc/generic.c       |   6 +--
+ fs/proc/inode.c         | 126 ++++++++++++++++++++++++++++++++++++++++++++----
+ fs/proc/internal.h      |   9 ++--
+ include/linux/proc_fs.h |  15 ++++++
+ 4 files changed, 140 insertions(+), 16 deletions(-)
 
 diff --git a/fs/proc/generic.c b/fs/proc/generic.c
-index 2d503250de75..1bad3b068d53 100644
+index 1bad3b068d53..81a6cb560c75 100644
 --- a/fs/proc/generic.c
 +++ b/fs/proc/generic.c
-@@ -483,6 +483,23 @@ static int pde_set_flags(struct proc_dir_entry *pde)
- 		if (proc_ops->proc_flags & PROC_ENTRY_FULL_READS)
- 			pde->flags |= PROC_ENTRY_FULL_READS;
- 	}
-+	if (proc_ops->proc_ioctl_buf) {
-+		if (WARN_ON_ONCE(proc_ops->proc_ioctl))
-+			return -EINVAL;
-+#ifdef CONFIG_COMPAT
-+		/* 32-bit tasks go through the table as well */
-+		if (WARN_ON_ONCE(proc_ops->proc_compat_ioctl))
-+			return -EINVAL;
-+#endif
-+		/* the table says what procfs copies, see pde_ioctl_arg() */
-+		if (WARN_ON_ONCE(!proc_ops->proc_ioctl_args ||
-+				 !proc_ops->proc_nr_ioctl_args))
-+			return -EINVAL;
-+		pde->flags |= PROC_ENTRY_proc_ioctl_buf;
-+	} else if (WARN_ON_ONCE(proc_ops->proc_ioctl_args ||
-+				proc_ops->proc_nr_ioctl_args)) {
-+		return -EINVAL;
-+	}
- 	return 0;
+@@ -505,14 +505,14 @@ static int pde_set_flags(struct proc_dir_entry *pde)
+ 
+ /*
+  * procfs has to know the open files of an entry whose ->proc_release() it
+- * calls at removal. A permanent entry is never removed and skips all that,
+- * see proc_reg_open().
++ * calls at removal and whose mappings it undoes then. A permanent entry is
++ * never removed and skips all that, see proc_reg_open().
+  */
+ static bool pde_needs_open_node(const struct proc_dir_entry *pde)
+ {
+ 	if (!S_ISREG(pde->mode) || pde_is_permanent(pde))
+ 		return false;
+-	return pde->proc_ops->proc_release;
++	return pde->proc_ops->proc_release || pde->proc_ops->proc_mmap;
  }
  
+ /*
 diff --git a/fs/proc/inode.c b/fs/proc/inode.c
-index caa47933c233..717cbaad65df 100644
+index 717cbaad65df..5e423bcad278 100644
 --- a/fs/proc/inode.c
 +++ b/fs/proc/inode.c
-@@ -6,6 +6,7 @@
+@@ -312,7 +312,8 @@ static void pde_seq_release(struct proc_dir_entry *pde, struct inode *inode,
+  *
+  * PDE is locked on entry, unlocked on exit.
   */
+-static void close_pdeo(struct proc_dir_entry *pde, struct pde_opener *pdeo)
++static void close_pdeo(struct proc_dir_entry *pde, struct pde_opener *pdeo,
++		       bool rundown)
+ 	__releases(&pde->pde_unload_lock)
+ {
+ 	/*
+@@ -336,7 +337,17 @@ static void close_pdeo(struct proc_dir_entry *pde, struct pde_opener *pdeo)
+ 		spin_unlock(&pde->pde_unload_lock);
  
- #include <linux/cache.h>
-+#include <linux/compat.h>
- #include <linux/time.h>
- #include <linux/proc_fs.h>
- #include <linux/kernel.h>
-@@ -548,11 +549,66 @@ static long pde_ioctl(struct proc_dir_entry *pde, struct file *file, unsigned in
- 	return -ENOTTY;
- }
+ 		file = pdeo->file;
+-		pde->proc_ops->proc_release(file_inode(file), file);
++		/*
++		 * A mapping of a removed entry faults, see proc_vm_ops. Like
++		 * kernfs this unmaps the entry's own address space. A file
++		 * that maps through another one, /proc/bus/pci through the
++		 * iomem address space of /dev/mem, keeps its mappings like a
++		 * sysfs resource file does.
++		 */
++		if (rundown && pde->open->vm_ops)
++			unmap_mapping_range(file_inode(file)->i_mapping, 0, 0, 1);
++		if (pde->proc_ops->proc_release)
++			pde->proc_ops->proc_release(file_inode(file), file);
  
-+/* the table lives in proc_ops, which goes away with the entry */
-+static bool pde_ioctl_arg(struct proc_dir_entry *pde, unsigned int cmd,
-+			  struct proc_ioctl_arg *arg)
+ 		spin_lock(&pde->pde_unload_lock);
+ 		/* Strictly after ->proc_release, see above. */
+@@ -362,7 +373,7 @@ void proc_entry_rundown(struct proc_dir_entry *de)
+ 	while (!list_empty(&de->open->files)) {
+ 		struct pde_opener *pdeo;
+ 		pdeo = list_first_entry(&de->open->files, struct pde_opener, lh);
+-		close_pdeo(de, pdeo);
++		close_pdeo(de, pdeo, true);
+ 		spin_lock(&de->pde_unload_lock);
+ 	}
+ 	spin_unlock(&de->pde_unload_lock);
+@@ -642,12 +653,106 @@ static long proc_reg_compat_ioctl(struct file *file, unsigned int cmd, unsigned
+ #define proc_reg_compat_ioctl NULL
+ #endif
+ 
+-static int pde_mmap(struct proc_dir_entry *pde, struct file *file, struct vm_area_struct *vma)
++/*
++ * The vm_operations of an entry's mappings run with the entry pinned, like
++ * the entry's file methods do, and a mapping of a removed entry faults.
++ * proc_entry_rundown() unmaps the mappings of every open file and a fault
++ * after that finds the entry gone. Like kernfs_vm_ops, and like there only
++ * these four methods of the entry's vm_operations are called.
++ */
++static void proc_vma_open(struct vm_area_struct *vma)
 +{
-+	const struct proc_ops *proc_ops = pde->proc_ops;
-+	bool found = false;
++	struct proc_dir_entry *pde = PDE(file_inode(vma->vm_file));
++	const struct vm_operations_struct *vm_ops = pde->open->vm_ops;
 +
 +	if (!pde_pin(pde))
-+		return false;
-+	for (unsigned int i = 0; i < proc_ops->proc_nr_ioctl_args; i++) {
-+		if (proc_ops->proc_ioctl_args[i].cmd == cmd) {
-+			*arg = proc_ops->proc_ioctl_args[i];
-+			found = true;
-+			break;
-+		}
-+	}
++		return;
++	if (vm_ops->open)
++		vm_ops->open(vma);
 +	pde_unpin(pde);
-+	return found;
 +}
 +
-+/*
-+ * procfs copies the argument in before it pins the entry and copies it back
-+ * out after unpinning it. An ioctl that faults on its argument then doesn't
-+ * hold up remove_proc_entry().
-+ */
-+static long pde_ioctl_buf(struct proc_dir_entry *pde, struct file *file,
-+			  unsigned int cmd, void __user *uarg, unsigned long arg)
++static vm_fault_t proc_vma_fault(struct vm_fault *vmf)
 +{
-+	void *buf __free(kvfree) = NULL;
-+	struct proc_ioctl_arg a;
-+	size_t size;
-+	long rv;
-+
-+	if (!pde_ioctl_arg(pde, cmd, &a))
-+		return -ENOTTY;
-+	size = max(a.in, a.out);
-+	if (size) {
-+		buf = kvzalloc(size, GFP_KERNEL);
-+		if (!buf)
-+			return -ENOMEM;
-+		if (a.in && copy_from_user(buf, uarg, a.in))
-+			return -EFAULT;
-+	}
++	struct proc_dir_entry *pde = PDE(file_inode(vmf->vma->vm_file));
++	const struct vm_operations_struct *vm_ops = pde->open->vm_ops;
++	vm_fault_t ret = VM_FAULT_SIGBUS;
 +
 +	if (!pde_pin(pde))
-+		return -ENOTTY;
-+	rv = pde->proc_ops->proc_ioctl_buf(file, cmd, buf ?: (void *)arg);
++		return VM_FAULT_SIGBUS;
++	if (vm_ops->fault)
++		ret = vm_ops->fault(vmf);
 +	pde_unpin(pde);
-+	if (rv >= 0 && a.out && copy_to_user(uarg, buf, a.out))
-+		return -EFAULT;
-+	return rv;
++	return ret;
 +}
 +
- static long proc_reg_unlocked_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
- {
- 	struct proc_dir_entry *pde = PDE(file_inode(file));
- 	long rv;
- 
-+	if (pde_has_proc_ioctl_buf(pde))
-+		return pde_ioctl_buf(pde, file, cmd, (void __user *)arg, arg);
- 	if (!pde_pin(pde))
- 		return -ENOTTY;
- 	rv = pde_ioctl(pde, file, cmd, arg);
-@@ -574,6 +630,8 @@ static long proc_reg_compat_ioctl(struct file *file, unsigned int cmd, unsigned
- 	struct proc_dir_entry *pde = PDE(file_inode(file));
- 	long rv;
- 
-+	if (pde_has_proc_ioctl_buf(pde))
-+		return pde_ioctl_buf(pde, file, cmd, compat_ptr(arg), arg);
- 	if (!pde_pin(pde))
- 		return -ENOTTY;
- 	rv = pde_compat_ioctl(pde, file, cmd, arg);
-diff --git a/fs/proc/internal.h b/fs/proc/internal.h
-index b5c78f4f392c..ae0f9779cf1b 100644
---- a/fs/proc/internal.h
-+++ b/fs/proc/internal.h
-@@ -131,6 +131,11 @@ static inline bool pde_has_full_reads(const struct proc_dir_entry *pde)
- 	return pde->flags & PROC_ENTRY_FULL_READS;
- }
- 
-+static inline bool pde_has_proc_ioctl_buf(const struct proc_dir_entry *pde)
++static vm_fault_t proc_vma_page_mkwrite(struct vm_fault *vmf)
 +{
-+	return pde->flags & PROC_ENTRY_proc_ioctl_buf;
++	struct proc_dir_entry *pde = PDE(file_inode(vmf->vma->vm_file));
++	const struct vm_operations_struct *vm_ops = pde->open->vm_ops;
++	vm_fault_t ret = 0;
++
++	if (!pde_pin(pde))
++		return VM_FAULT_SIGBUS;
++	if (vm_ops->page_mkwrite)
++		ret = vm_ops->page_mkwrite(vmf);
++	else
++		file_update_time(vmf->vma->vm_file);
++	pde_unpin(pde);
++	return ret;
 +}
 +
- /* procfs owns the seq_file, see pde_seq_start() */
- static inline bool pde_is_seq_file(const struct proc_dir_entry *pde)
- {
-diff --git a/include/linux/proc_fs.h b/include/linux/proc_fs.h
-index 0f0997898ba3..2ba4e4a39e13 100644
---- a/include/linux/proc_fs.h
-+++ b/include/linux/proc_fs.h
-@@ -8,6 +8,7 @@
- #include <linux/compiler.h>
- #include <linux/types.h>
- #include <linux/fs.h>
-+#include <linux/ioctl.h>
- 
- struct proc_dir_entry;
- struct seq_file;
-@@ -45,8 +46,29 @@ enum {
- 	 * coming up short.
- 	 */
- 	PROC_ENTRY_FULL_READS		= 1U << 11,
-+	PROC_ENTRY_proc_ioctl_buf	= 1U << 12,
- };
- 
-+/*
-+ * How many bytes of the argument of @cmd procfs copies in before calling
-+ * ->proc_ioctl_buf() and copies back out after it. A command that copies
-+ * neither gets its argument as is.
-+ */
-+struct proc_ioctl_arg {
-+	unsigned int cmd;
-+	unsigned int in;
-+	unsigned int out;
++static int proc_vma_access(struct vm_area_struct *vma, unsigned long addr,
++			   void *buf, int len, int write)
++{
++	struct proc_dir_entry *pde = PDE(file_inode(vma->vm_file));
++	const struct vm_operations_struct *vm_ops = pde->open->vm_ops;
++	int ret = -EINVAL;
++
++	if (!pde_pin(pde))
++		return -EINVAL;
++	if (vm_ops->access)
++		ret = vm_ops->access(vma, addr, buf, len, write);
++	pde_unpin(pde);
++	return ret;
++}
++
++static const struct vm_operations_struct proc_vm_ops = {
++	.open		= proc_vma_open,
++	.fault		= proc_vma_fault,
++	.page_mkwrite	= proc_vma_page_mkwrite,
++	.access		= proc_vma_access,
 +};
 +
-+#define PROC_IOCTL_ARG(_cmd, _in, _out) \
-+	{ .cmd = (_cmd), .in = (_in), .out = (_out) }
++static int pde_mmap(struct proc_dir_entry *pde, struct file *file,
++		    struct vm_area_struct *vma)
+ {
+ 	const auto mmap = pde->proc_ops->proc_mmap;
+-	if (mmap)
+-		return mmap(file, vma);
+-	return -EIO;
++	struct pde_open_node *on = pde->open;
++	int rv;
 +
-+/* A command that encodes the size and direction of its argument. */
-+#define PROC_IOCTL_IOC(_cmd)						\
-+	PROC_IOCTL_ARG(_cmd,						\
-+		       (_IOC_DIR(_cmd) & _IOC_WRITE) ? _IOC_SIZE(_cmd) : 0, \
-+		       (_IOC_DIR(_cmd) & _IOC_READ) ? _IOC_SIZE(_cmd) : 0)
-+
- struct proc_ops {
- 	unsigned int proc_flags;
- 	int	(*proc_open)(struct inode *, struct file *);
-@@ -100,6 +122,19 @@ struct proc_ops {
- 	 */
- 	ssize_t	(*proc_read_buf)(struct file *, char *, size_t, loff_t *);
- 	unsigned int proc_read_size;
++	if (!mmap)
++		return -EIO;
++	rv = mmap(file, vma);
++	if (rv || pde_is_permanent(pde))
++		return rv;
++	/* the entry mapped something else, that isn't ours to wrap */
++	if (vma->vm_file != file)
++		return 0;
 +	/*
-+	 * procfs looks the command up in ->proc_ioctl_args, copies in what it
-+	 * passes before pinning the entry, calls ->proc_ioctl_buf() with that
-+	 * copy and copies out what it returns after unpinning the entry.
-+	 * Commands that aren't in the table fail with -ENOTTY. 32-bit tasks
-+	 * go through the same table. The copy is zeroed and as large as the
-+	 * larger of the two sizes, it only goes back out if the ioctl
-+	 * succeeded, and a command that copies neither gets its argument as
-+	 * is.
++	 * ->close() can't be wrapped, it runs when the mapping goes away and
++	 * that can be after the entry is gone, see close_pdeo().
 +	 */
-+	long	(*proc_ioctl_buf)(struct file *, unsigned int, void *);
-+	const struct proc_ioctl_arg *proc_ioctl_args;
-+	unsigned int proc_nr_ioctl_args;
++	if (!vma->vm_ops || vma->vm_ops->close)
++		return -EINVAL;
++
++	/* every mapping of an entry uses the same vm_operations, see above */
++	guard(spinlock)(&pde->pde_unload_lock);
++	if (on->vm_ops && on->vm_ops != vma->vm_ops)
++		return -EINVAL;
++	on->vm_ops = vma->vm_ops;
++	vma->vm_ops = &proc_vm_ops;
++	return 0;
+ }
+ 
+ static int proc_reg_mmap(struct file *file, struct vm_area_struct *vma)
+@@ -743,8 +848,9 @@ static int proc_reg_open(struct inode *inode, struct file *file)
+ 	 * 2) rmmod isn't blocked by opening file in /proc and sitting on
+ 	 *    the descriptor (including "rmmod foo </proc/foo" scenario).
+ 	 *
+-	 * Save every "struct file" with custom ->release hook. Those entries
+-	 * have an open node, see proc_register().
++	 * Save every "struct file" with custom ->release hook, and every
++	 * one that can be mapped, proc_entry_rundown() unmaps those. Those
++	 * entries have an open node, see proc_register().
+ 	 */
+ 	if (!use_pde(pde))
+ 		return -ENOENT;
+@@ -794,7 +900,7 @@ static int proc_reg_release(struct inode *inode, struct file *file)
+ 	spin_lock(&pde->pde_unload_lock);
+ 	list_for_each_entry(pdeo, &pde->open->files, lh) {
+ 		if (pdeo->file == file) {
+-			close_pdeo(pde, pdeo);
++			close_pdeo(pde, pdeo, false);
+ 			goto out;
+ 		}
+ 	}
+diff --git a/fs/proc/internal.h b/fs/proc/internal.h
+index ae0f9779cf1b..0b1c0585d6a6 100644
+--- a/fs/proc/internal.h
++++ b/fs/proc/internal.h
+@@ -373,12 +373,15 @@ struct pde_opener {
  } __randomize_layout;
  
- /* definitions for hide_pid field */
+ /*
+- * The open files of an entry whose ->proc_release() procfs has to call when
+- * the entry is removed while they are still open. Allocated with the entry,
+- * see proc_register().
++ * The open files of an entry whose ->proc_release() procfs has to call and
++ * whose mappings it has to undo when the entry is removed while they are
++ * still open, that is of an entry with a ->proc_release() or a
++ * ->proc_mmap(). Allocated with the entry, see proc_register().
+  */
+ struct pde_open_node {
+ 	struct list_head files;		/* who did ->open, but not ->release */
++	/* of its mappings, the same for all of them, see pde_mmap() */
++	const struct vm_operations_struct *vm_ops;
+ };
+ extern const struct inode_operations proc_link_inode_operations;
+ extern const struct inode_operations proc_pid_link_inode_operations;
+diff --git a/include/linux/proc_fs.h b/include/linux/proc_fs.h
+index 2ba4e4a39e13..5bf039d20990 100644
+--- a/include/linux/proc_fs.h
++++ b/include/linux/proc_fs.h
+@@ -86,6 +86,21 @@ struct proc_ops {
+ #ifdef CONFIG_COMPAT
+ 	long	(*proc_compat_ioctl)(struct file *, unsigned int, unsigned long);
+ #endif
++	/*
++	 * procfs pins the entry around ->proc_mmap() and wraps the
++	 * vm_operations of the mapping so that ->open(), ->fault(),
++	 * ->page_mkwrite() and ->access() run with the entry pinned as well.
++	 * Nothing else of them is called, like for a kernfs file. Every
++	 * mapping of an entry has to use the same vm_operations. A ->close()
++	 * can't be wrapped, it runs when the mapping goes away and that can
++	 * be after the entry is gone, so a mapping that has one is refused.
++	 * Removing the entry unmaps the mappings in its own address space,
++	 * like kernfs does, and a fault into one of them is SIGBUS from then
++	 * on. A file that maps through another address space, /proc/bus/pci
++	 * through the one of /dev/mem, keeps its mappings like a sysfs
++	 * resource file does. The mappings of a permanent entry are left
++	 * alone.
++	 */
+ 	int	(*proc_mmap)(struct file *, struct vm_area_struct *);
+ 	unsigned long (*proc_get_unmapped_area)(struct file *, unsigned long, unsigned long, unsigned long, unsigned long);
+ 	/*
 
 -- 
 2.53.0
