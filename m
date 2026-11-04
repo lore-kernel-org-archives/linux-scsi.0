@@ -1,45 +1,45 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793784334;
-	b=rgVDzLIZ4+lHZfrpQId+vs47N8BcCWq5uZKqhY7BM8zuKOQyCj8zoZ+AqdEgI6/ebG/6
-	 OVyw1JtDKiLpPiWjvpb+d5VjW0a7Wfp+7/wfnALpzbz56XGCoMOGp5roCO8u+Iaa7Qy7F
-	 BMe9rNYvW8amX7Kp9dQC52Bu/KQsMcqoXJNFYzURMYgO7CroadsVk9cnlDA2PxYkjZPwB
-	 5Bidw3HyD8y/MQdKhysPhLMzI7uIHoOIum1ojBDFHxxfKRAhVcmu6pmWpTedOnJnht46H
-	 OoPZ+nE7tos+p9mTDB3eAApMYI2fNpm6L1VOQr+FfyP9UKpF5D18kNx/VUWputWwN7A==
+	t=1793784441;
+	b=yqPjaBWfxJ5D1HDeDq1dXE2CQEDzFFIg7kRzdMMJ/JeCPPBo+pLu7B2rSh4mEhaHWBMO
+	 Zi5kCYk825wBrCdX0NlgtthGhYbMHOZjFkGRLj5L8fCx/mZuKX7iBWOSjogxXXgJ2mFDS
+	 iNeiO6FEhoSaNam/Ku9dYZjAi9DOFEcx5KMxUG+lsOtzKC1DMHfDSXkYeorq9yHAs8yKZ
+	 IVU2xnUboev0+5QgtE9YsYhpvVLDov7GZqXYQdwcVRkFXIgEAdmcH1Bj3NLF3k3DhS2S1
+	 wPnPhKWgCH5yx1vxF/rlmhp3mTwOf9qv0RNTC9riroLOAwbRTDZGfRMEOiMhKznRtDA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793784334;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793784441;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=6y/QB0A+W+6N3jiXZRGNY1xzzbI4566zJ/BaiNow5YE=;
-	b=H9vqTHr8Q+QPjaedgq54hgH8GA2EmF+Np+ZyVHFGGa0as2P6UhL5/Qt3vUX03/n090qz
-	 XD4uvXQzKEz2Y6a29yXF4yJ/GQAQOH64fbYzh8waICeGHiGUZxIHlzkfNIWji0CSWNgFN
-	 cONFsZbNG9V921mCyB5jp/1BUdngWA+ATAIcSq117cdjYcMtafJCD4CbQz/GDLkhYFXmb
-	 c37oN56tXhzen2Uym3BqDGGUyyt7foo4XMUDZqZ+tlQFxOfY1z2q56dCzQT3t+JNYER1/
-	 1T+RYm4OVyCQd+K8nZAB+psNmy/HjCtDOMRFFa88Eml90hOchkWdyboicUvdaiDTO3g==
+	bh=pha1RY94GjOtnqXrQOQE3qKs4iPAcIL8wQlgIsnD1VI=;
+	b=GdlYm1Mf7OH0RiIW3oqc5/TiqEeQT3peJqcNSt5XyoOK7uOb2OPLgSBTVQB1LHAYW3A8
+	 5HRBPm63Jfn/53F0ue6M1Z62Q4j3Ax/WJLj+5OBe6zW4rrkS61tuXRMPjIPypwd7zgaco
+	 iGVooeND/a3/3lUcF5aa35bXR0hvK750vdxIqXFqigZFbBVUAsrLLXl7FOZ4X0NvM15/Z
+	 riu0kwIb2IGRKdCNDdvOoo1xkyIMN/fXLfJ1dF2x55NsX2GsCOH/KjFnmCPEvzg9jk0CW
+	 Cn9oupJvq3m8riJK6+GsjgKzBmhd+XDV9xxKeT5EQzrEQBCkbO0BBZbiaB1T+OWHu4A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=blm3Fzks;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=hKMrkOmt;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9AAB5606A31B;
-	Wed,  4 Nov 2026 09:25:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D76BD606D807;
+	Wed,  4 Nov 2026 09:27:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=blm3Fzks
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3BF441F00A15;
-	Wed,  4 Nov 2026 09:25:24 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=hKMrkOmt
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E48201F000C1;
+	Wed,  4 Nov 2026 09:27:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793784334;
-	bh=6y/QB0A+W+6N3jiXZRGNY1xzzbI4566zJ/BaiNow5YE=;
+	s=k20260515; t=1793784440;
+	bh=pha1RY94GjOtnqXrQOQE3qKs4iPAcIL8wQlgIsnD1VI=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=blm3FzksIwmy/gfP+m6bQ3l19t8u+6D7VnMjx0mDrwJfI9yqkrKHuitgS+09MOaFB
-	 5IAfK41yIRysnuekyE6n0MoqHw1erKQfYIHd4bcxX9IzwZZwgAZVYki7z4Cj5AIA7/
-	 ZPGTgJBvsmIssHVAjO0+bxwX4CubbRT4ywfOYmYyDPmpCbFuRzICtnH6f+UaysQImg
-	 q7wpeNs4gNICgefy3SKpkaeX4BbxjIfO+vSSQmRySEd1imrt/h87R+LlDv4MuyR4ux
-	 lqn+1ClVwhwp9e3GHxStc7SnGYtfRsRPS5FsY3RelvLgIwBZIwrO2g2A54DZvsL3tG
-	 vhwB9M0WME18g==
-Date: Wed, 4 Nov 2026 10:25:21 +0100
+	b=hKMrkOmtm3B2gZiQeO5JvnZ9p2ma/4Ab4QoV2RY1r26cux4zCCLh9wEH2c33BbHXK
+	 fbNgj5kWSSvaYoEB4LaR958tQgbKkBQGFEq4mxLA85jgB1KOgLoszMSGVrY9Ha931r
+	 D0hMpbsmsCVo3Bmo207nmKQT+W9saDNTG/2QCtQUHOWdxFm2doY6iFV0wGD7GNxdFv
+	 FmgbHDeh91BIDzv96YPjHlswJc8awRukjfsVnSPjYTrsCRqLuc7lscOjkrPunvesMJ
+	 Tjwc/nSfJXhQ01Nzv2q6cSJ99acGT39x8EGT/eIVENZ4EHlmNUtg6FDEG8FGp/Kj5W
+	 DRZXkXKQhuqlg==
+Date: Wed, 4 Nov 2026 10:27:08 +0100
 From: Christian Brauner <brauner@kernel.org>
 To: sashiko-reviews@lists.linux.dev
 Cc: Linus Torvalds <torvalds@linux-foundation.org>, 
@@ -60,12 +60,12 @@ Cc: Linus Torvalds <torvalds@linux-foundation.org>,
 	Anna Schumaker <anna@kernel.org>, yukuai@fygo.io, Heiko Carstens <hca@linux.ibm.com>, 
 	Vasily Gorbik <gor@linux.ibm.com>, Alexander Gordeev <agordeev@linux.ibm.com>, 
 	Christian Borntraeger <borntraeger@linux.ibm.com>
-Subject: Re: [PATCH RFC 11/16] proc: let procfs copy in writes before pinning
- the entry
-Message-ID: <20261104-ankurbeln-gepflanzt-elegant-896e9dc995a2@brauner>
+Subject: Re: [PATCH RFC 13/16] proc: let procfs copy out reads that don't go
+ through seq_file
+Message-ID: <20261104-weswegen-magen-gezaubert-373ca765d28c@brauner>
 References: <20261102-work-procfs-core-v1-0-75df35e4f8b8@kernel.org>
- <20261102-work-procfs-core-v1-11-75df35e4f8b8@kernel.org>
- <sashiko-outbox-195538@kernel.org>
+ <20261102-work-procfs-core-v1-13-75df35e4f8b8@kernel.org>
+ <sashiko-outbox-195540@kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -77,9 +77,9 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <sashiko-outbox-195538@kernel.org>
+In-Reply-To: <sashiko-outbox-195540@kernel.org>
 
-On Tue, Nov 03, 2026 at 03:01:26PM +0000, sashiko-bot@kernel.org wrote:
-> - [Low] proc: split __free(kvfree) declaration and initialization in pde_write_buf()
+On Tue, Nov 03, 2026 at 03:01:30PM +0000, sashiko-bot@kernel.org wrote:
+> - [Low] proc: define and initialize __free(kvfree) variable buf in one statement in pde_read_buf()
 
 Intentional.
