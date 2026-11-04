@@ -1,45 +1,45 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793814562;
-	b=cmYJkqflVGgsdb4aTyAm4/aeq5sq2OtBeuSI3vXXqkcektKj401MhCtVHbkydhQjoevj
-	 9FV6q8b3SrP2atG/G2z9gTxm+vppP88wyCqqC4BpkAbdabg/II2iBD3xEv9yOpo2q5gfo
-	 9SrIfDn63YjC9eptK+qI/JGdnosAO4WNADFhAo6VP5K4GlKZq6TsXoUOlzhUAIv54zrM6
-	 Frtgnb2T578Z9fC6vP/vVe6QrhqDRheIUj3pQNGPD+gMBT6N/7z0f6DWIcgbVraEaPMR0
-	 eJ25gkQ/oVZ52CKVoQ8UiQrEVowBTsw/wNzlKSUXO2+omY62pusW1yhPmQ/NHIz6m0Q==
+	t=1793814580;
+	b=1DrsLBl52FlHlET8FZO8a24O3qfQN4SmQaxuXPnO1XohsYOKfwDPeEBws7wqr9t6Ppgy
+	 TH4OzOvj56Dtle7Y/9KOb4uK+TdhgQ0bj2sNmlLbKs30xOAe01LsxTYAi5xS9iK3y2Skm
+	 wkjJvLXmUoKOl7JvmpxMM0ydCUJDqrXOywkHwPahc1lS34pqzDjHV0kzh8eXjvidgcXAA
+	 7nkH3O7le4fv1QiKR7/FbC6ibLYN8VeN9Eea1b9EnlibfWKQGf4xoh0O1Qcw8wmCopQvs
+	 WPVQPLA2zeCqNcDefx2bFH3eX8iCZzZfqdzTntJQLZJQ9sA1x8gUmq8m7C3sRH7XmnA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793814562;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793814580;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:
 	 In-Reply-To:References:MIME-Version:Content-Type:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:Content-Transfer-Encoding;
-	bh=bDYBcNUn+VWuCpTwTZF6KvGO9475Dcj2RU9o+tvUNt0=;
-	b=5TLpe8cl+4HdsQng3lqVeffIXgdhFzTJk7RVbTHIFlkNQN9LYihNFWycA0IPL1fWBmCf
-	 32O7sqKxFpzzSiXnIcyrY9TZ52Ir01Jyjsb7eoxyMIu6Y40Eeozj8pILb/Yy+gPjfgyc4
-	 scGxy/P9NCAN3zl/CrVGbmPrpqP67XdlSKGKOZ5XnXGDSv7ZPf9FGu3/ARKVTbsRmA/RO
-	 DYF/pHwtH7c821XuFNOGSIoa40r39LO6oRgtW7ybBP7ozNUyKPVI9GmjmHNQ0C2/9um8/
-	 4dPe6Etd92dN1kGkb2XSa+xV+VfEDZ4mm47fL1oesvCV3sa5MqTCs1/CXFJ+knwyQOg==
+	bh=WXeWRtHDTvlcvQqGcGXKpHSOkC75TIYAS6cttW7V/+A=;
+	b=zbtpmK4GUlKSaPRyLg6OW0X//BpXYMvDA0dEKg4XqWK+JgOrhPeJZIf1siPqreHCWDHY
+	 uvaE82vMKsjse0jv0SFOkr2Hrz+4MZgFIGm8XR7hOvS+YinGs9UpkVuUJqcL57eRtloME
+	 NHR9X6vTRORkAvBxTvuB0ZPghva+cVoYXsx8j9hp0bXyqlss8goFNO0saeyDlgYgLqFfs
+	 ioUQag0AVa6nqCUFLfj3OsCe+HZFT7CVaY0UK8/srYt4vuuUN/vGItDgW+zwfFgT8ObdM
+	 IPKxyNoyEMyKGZ+ioQ64XJsU7GbO8nzbSOZekReFosHV2dW937E1zbf677MrChwJDUQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=L4z066t7;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Lt+YaIK4;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87006606D80F;
-	Wed,  4 Nov 2026 17:49:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B8B76082BFE;
+	Wed,  4 Nov 2026 17:49:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=L4z066t7
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 11ADA1F000C1;
-	Wed,  4 Nov 2026 17:49:04 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Lt+YaIK4
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DEBC01F00A02;
+	Wed,  4 Nov 2026 17:49:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793814562;
-	bh=bDYBcNUn+VWuCpTwTZF6KvGO9475Dcj2RU9o+tvUNt0=;
+	s=k20260515; t=1793814579;
+	bh=WXeWRtHDTvlcvQqGcGXKpHSOkC75TIYAS6cttW7V/+A=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=L4z066t7qk8SNBZ3qr8F1Dv4FM+zeL5UMqbVPpZhgdQRsqgneSAYM0s8mSty+AN6F
-	 uOpJwVDXNMcIMJN/l4FNHGQgvK/QCR0cqApE4XNvTdD9heJSFssRxRma5MIWbLp5q7
-	 KuStqfVc5Mi7/uCEtKU/XidV25HekngkokdSavKrGmFA9IR6yxAQ/fT2R/UVEXUpOV
-	 JshYWFM1jRBiauogMI9LETcKUpSEg7rlt/XCrsDvHcIcKKrKf+Lfu9grpGXEUlOUBw
-	 il1cziT3er+LG8IbGUfsHyBhUl9fEmWujhzvys7fEbuJMHuqJFLv3DIRlBTxlslyyu
-	 1lR419jEJXKMw==
+	b=Lt+YaIK4iwvhO88yz6f+jCVQ4EeVtRm3q99whbt1o/jNi7xtD4GqEdXZoJFzfX6Mp
+	 WhMZbYdWqf2DxTyriqyK8bk+1pkoMOeKNlWc1KnsmnTw9VPIopuCsvCi1M52TYyyYy
+	 mLRpfJ5+g7TTPX7fTPYeQh+RWFIoWO07NXukL0yXrI10YEQ4gET0I5LF9DVoDQmUfc
+	 lxhs2rswNnIdaIHeRhuWnBLDBlekuRGf9w/PHx4KPTJhR73a5GVIB+8eRNFo3DUyff
+	 XmvJcy95iTPua8zzn9tBaoG3qUN1vOZ1Duxa0Dj2HpRO0snpxh5ps1EWgqor16H8rg
+	 xLTK+rVahkKTw==
 From: Christian Brauner <brauner@kernel.org>
 To: linux-fsdevel@vger.kernel.org
 Cc: Linus Torvalds <torvalds@linux-foundation.org>,
@@ -101,9 +101,9 @@ Cc: Linus Torvalds <torvalds@linux-foundation.org>,
 	"Christian Brauner (Amutable)" <brauner@kernel.org>,
 	Chuck Lever <cel@kernel.org>,
 	stable@vger.kernel.org
-Subject: [PATCH v2 17/51] s390/dasd: don't look in front of the buffer on an empty write
-Date: Wed,  4 Nov 2026 18:47:03 +0100
-Message-ID: <20261104-work-procfs-bugfixes-v2-17-bbf7d5546809@kernel.org>
+Subject: [PATCH v2 18/51] platform/x86: toshiba_acpi: reject malformed brightness and fan writes
+Date: Wed,  4 Nov 2026 18:47:04 +0100
+Message-ID: <20261104-work-procfs-bugfixes-v2-18-bbf7d5546809@kernel.org>
 In-Reply-To: <20261104-work-procfs-bugfixes-v2-0-bbf7d5546809@kernel.org>
 References: <20261104-work-procfs-bugfixes-v2-0-bbf7d5546809@kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -117,34 +117,53 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 X-Mailer: b4 0.17-dev
-X-Developer-Signature: v=1; a=openpgp-sha256; l=952; i=brauner@kernel.org; h=from:subject:message-id; bh=vNxDJDpmoyfXJahneUuQ9vEH9eL70g/8w71rNTJgUxc=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9zrsssUymaabA31Var5avOM5bfCJp4gvZaynZy78sz mbbvsPjXUcpC4MYF4OsmCKLQ7tJuNxynorNRpkaMHNYmUCGMHBxCsBEJKczMuyYrr82Yt6rR8wV ngvXr6z7d1Hu7s13rzfk5t00zdb9H3OckeGStmp/GZ/E1KSXmfqdfP1HWkLun/hu9/dXSsq18Bl 8+mwA
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1850; i=brauner@kernel.org; h=from:subject:message-id; bh=dBPyRrfA4AE5uU+SDwP01KQAXBYhly7L9ZsRpXHhzrM=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9zruys4H5zATJQ56FL4QUZwrEz3fqPb76g29l8a1fL 34Us/t+6yhlYRDjYpAVU2RxaDcJl1vOU7HZKFMDZg4rE8gQBi5OAZjIpPMMf0V6J05hXXkg4U7m Il2PkyIVrevVp6rG3zbnfJ6waxtPdw/D/+K7i173sLVVenL7Mu5oFdvPFn8nM9t33dyDiXp7bPP NWAA=
 X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 Content-Transfer-Encoding: 8bit
 
-dasd_get_user_string() strips a trailing newline by looking at the last
-byte that was written. For an empty write that's the byte in front of
-the buffer it just allocated. Only look if something was written.
+When lcd_proc_write() and fan_proc_write() were refactored their checks
+were inverted but the && stayed. They only fail if sscanf() didn't
+parse anything and the value is out of range at the same time, and for
+the brightness value < 0 && value > levels can't be true at all. So an
+out of range brightness or fan setting is passed on to the hardware,
+and so is the uninitialized value if nothing could be parsed.
 
-Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+Restore the checks as they were before the refactoring.
+
+Fixes: e1a949c1b988 ("toshiba_acpi: Refactor *{get, set} functions return value")
+Fixes: 3e07e5baa2af ("toshiba_acpi: Add set_fan_status function")
 Cc: stable@vger.kernel.org
 Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
- drivers/s390/block/dasd.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/platform/x86/toshiba_acpi.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/s390/block/dasd.c b/drivers/s390/block/dasd.c
-index 2ffe404b890f..e97891e58957 100644
---- a/drivers/s390/block/dasd.c
-+++ b/drivers/s390/block/dasd.c
-@@ -933,7 +933,7 @@ char *dasd_get_user_string(const char __user *user_buf, size_t user_len)
- 		return ERR_PTR(-EFAULT);
- 	}
- 	/* got the string, now strip linefeed. */
--	if (buffer[user_len - 1] == '\n')
-+	if (user_len && buffer[user_len - 1] == '\n')
- 		buffer[user_len - 1] = 0;
- 	else
- 		buffer[user_len] = 0;
+diff --git a/drivers/platform/x86/toshiba_acpi.c b/drivers/platform/x86/toshiba_acpi.c
+index a0b8060836d0..9eb8f1e5aeda 100644
+--- a/drivers/platform/x86/toshiba_acpi.c
++++ b/drivers/platform/x86/toshiba_acpi.c
+@@ -1498,8 +1498,8 @@ static ssize_t lcd_proc_write(struct file *file, const char __user *buf,
+ 	cmd[len] = '\0';
+ 
+ 	levels = dev->backlight_dev->props.max_brightness + 1;
+-	if (sscanf(cmd, " brightness : %i", &value) != 1 &&
+-	    value < 0 && value > levels)
++	if (sscanf(cmd, " brightness : %i", &value) != 1 ||
++	    value < 0 || value >= levels)
+ 		return -EINVAL;
+ 
+ 	if (set_lcd_brightness(dev, value))
+@@ -1678,8 +1678,8 @@ static ssize_t fan_proc_write(struct file *file, const char __user *buf,
+ 		return -EFAULT;
+ 	cmd[len] = '\0';
+ 
+-	if (sscanf(cmd, " force_on : %i", &value) != 1 &&
+-	    value != 0 && value != 1)
++	if (sscanf(cmd, " force_on : %i", &value) != 1 ||
++	    value < 0 || value > 1)
+ 		return -EINVAL;
+ 
+ 	if (set_fan_status(dev, value))
 
 -- 
 2.53.0
