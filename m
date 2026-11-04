@@ -1,73 +1,47 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=203.254.224.33
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793769762;
-	b=gxFYcXI4Y9o2uHxtn7DSTMaDhps3ZDTWyVKicGC3ytRa1/vGiQV0MxA/rU//EmryvlHR
-	 LCoQ+pG9Ypd8dXeerea5Wf698ebRfADjP0P0TZuvURpWseWwcMBbxWZBeSI2Nw9EEa0qK
-	 VUvG76At39C/ALHFdZOyH+2Gso3twc+Ot6/bzwIlJduqaUNg9VSKktPMH5/+LutKxV/nW
-	 0aXGwnVr12GOTzJxmJDyzZHy8p3axRt2/vZGwTgwKVowUD3Br0uIsXZtnJRex1r6e78Mz
-	 oEOIVYL+QFpxMW69hUN6O6XhmWVVoZDSvHSn9B5NnRRdjglMGdm4CRyOp1ksXLaKnmQ==
+	t=1793774954;
+	b=bPYSp46DXFizxbHiv6RhAn7XIgGrPQRtLsbvKaXNHn/P0qO7jVdat5ViJwRdsribFWPI
+	 b0NqFlCFBdb+GcPoQCi/y9Q4ZpF8zM4e2ksfVTUhD1T6DClHUpRA8drIzcyOF8dQW/tkx
+	 ynMVDYeTW8asMYf3/bR7d6MIGtdZMFJ/Dw/mcroIpBvGQCVapl/nK/iXLEqtuFm5erBLC
+	 vChq1Y9lkQ4vPBZ5v3/LFx2VtOof+oNyiTf6SzK6n0A69K8uxJDap7tc0wIXX4YmlG4hV
+	 LfigQbwWgQ7+anelZWwer1mo80ngKYB7lY0qv00g58T0unNpEKYG3b0ZBhIITglElzQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793769762;
-	h=DMARC-Filter:Received:DKIM-Filter:DKIM-Signature:Received:Received:
-	 Received:Received:From:To:In-Reply-To:Subject:Date:Message-ID:
-	 MIME-Version:Content-Transfer-Encoding:X-Mailer:Thread-Index:
-	 Content-Language:X-CMS-MailID:X-Msg-Generator:Content-Type:
-	 X-Sendblock-Type:CMS-TYPE:cpgsPolicy:X-CFilter-Loop:X-CMS-RootMailID:
-	 References;
-	bh=HU4p+15+80Ye18LW21Qwrjg3TVjPohSwpa0SIJZNMDU=;
-	b=LttnffZZ/nQmWYuMuig2nIMcYFHFyFUkdp2ImuGEk1vzxapEmhq/lFOCKNnP2zQTfIfo
-	 plqE7g+2RrToN+lAOTFPTJ8mtR2vLKg15cXQZwBiBB/iPrNJTV7CseSZZi8muOTFJWobu
-	 i7uqdJd6IR32a8LZdvLEBF0k13aa1QeHaLVnpFHp8+bzrfusNqfaRfs7OdSvThPqJShfb
-	 CofZfrTBmW7fj84v5oPGuLextH+ozD5xJhS4BogA1fqnv4p7hE9jyQpaolUY/kR2pmt+D
-	 DCDC9WIHG5RzS+m/1+wcgDK170+RluuLUH+QWCPsg6VGnepW9DbjIQZUY51FGTjYlLw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793774954;
+	h=Received:DKIM-Signature:Message-ID:Date:MIME-Version:User-Agent:
+	 Subject:To:Cc:References:Content-Language:From:Organization:
+	 In-Reply-To:Content-Type:Content-Transfer-Encoding;
+	bh=EpQhE75YVAvBdui3HModYSzYsbjHI0aCHbluMxfA5v0=;
+	b=cCc4O16bwzIy0xBhw2o/GgQzNJyrhMW6RywNXx2odRdbT1/Yc5oiDLsLeWbnq8BoAz+5
+	 l86yL+K3hqME70QmWvUu5sU4bbGfjCt/7urF4bIVmVBUCXszjqtH+UsK/qAOF0RLCLesy
+	 PS1eGN9pCcs1/scfDZenHuyX1fjw+rWB5zjzhA/aEkx3loxBq/dlTSV2dEf8FqvqjszGw
+	 zKbX6t+IOTDsw/xh4rnTIilIyGqHjstozwnmzJceeIyi1TbJdrpxsLlMs/D4ljeJBkMko
+	 MXfBc3FiZ+ORbk4mJSlOeQZ2upst2Ta+n4PztF/8hMyIWKafqtFO6dOr7sItQ68cvXw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=samsung.com;
-	spf=pass smtp.mailfrom=samsung.com;
-	dkim=pass header.d=samsung.com header.i=@samsung.com header.a=rsa-sha256 header.s=mail20170921 header.b=ne4KdRHR;
-	arc=none smtp.remote-ip=203.254.224.33
-Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Cux0FP78;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B844606A31B
-	for <linux-scsi@vger.kernel.org>; Wed,  4 Nov 2026 05:22:40 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1B844606A31B
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53F43606A31B
+	for <linux-scsi@vger.kernel.org>; Wed,  4 Nov 2026 06:49:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=samsung.com header.i=@samsung.com header.a=rsa-sha256 header.s=mail20170921 header.b=ne4KdRHR
-Received: from epcas2p3.samsung.com (unknown [182.195.41.55])
-	by mailout3.samsung.com (KnoxPortal) with ESMTP id 20261104052232epoutp0339d93edffaae06b5d43493acef622939~kwBYQI-9P0086900869epoutp03r
-	for <linux-scsi@vger.kernel.org>; Wed,  4 Nov 2026 05:22:32 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20261104052232epoutp0339d93edffaae06b5d43493acef622939~kwBYQI-9P0086900869epoutp03r
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1793769752;
-	bh=HU4p+15+80Ye18LW21Qwrjg3TVjPohSwpa0SIJZNMDU=;
-	h=From:To:In-Reply-To:Subject:Date:References:From;
-	b=ne4KdRHRdNHBuNlaCaTaTx8Aoegx7pu5JNZQCCv2LUvOfq5TjrJYAJ0VB01R/iOOs
-	 hwnmhZD1oivbgnX2+ofucmTlvqh9zYnLRcLz5+KMCV8QVvQeT2QxC8iXCaiwpEkdYO
-	 eYdn76FDQ8/UpQwHzVFHB8MB6lCc1558PQsTlgmk=
-Received: from epsnrtp03.localdomain (unknown [182.195.42.155]) by
-	epcas2p1.samsung.com (KnoxPortal) with ESMTPS id
-	20261104052232epcas2p1d09ba275c71bd2de1affc73a56d614cc~kwBX7FEfR0568105681epcas2p1c;
-	Wed,  4 Nov 2026 05:22:32 +0000 (GMT)
-Received: from epcas2p2.samsung.com (unknown [182.195.38.210]) by
-	epsnrtp03.localdomain (Postfix) with ESMTP id 4jKDN76Sp2z3hhT4; Wed,  4 Nov
-	2026 05:22:31 +0000 (GMT)
-Received: from epsmtip1.samsung.com (unknown [182.195.34.30]) by
-	epcas2p2.samsung.com (KnoxPortal) with ESMTPA id
-	20261104052231epcas2p2f5795904d91eaef272b48e6e323242f2~kwBXJydhh0965009650epcas2p22;
-	Wed,  4 Nov 2026 05:22:31 +0000 (GMT)
-Received: from KORCO164647 (unknown [12.80.211.160]) by epsmtip1.samsung.com
-	(KnoxPortal) with ESMTPA id
-	20261104052231epsmtip12eefb7eb7b6fcfbc580539526a9a6945~kwBXG37VO0895008950epsmtip12;
-	Wed,  4 Nov 2026 05:22:31 +0000 (GMT)
-From: "Kiwoong Kim" <kwmad.kim@samsung.com>
-To: "'Bart Van Assche'" <bvanassche@acm.org>, <linux-scsi@vger.kernel.org>
-In-Reply-To: <703c41b5-537f-4897-b852-fed4097a0193@acm.org>
-Subject: RE: [PATCH v4 2/2] ufs: mcq: poll OCS after sq cleanup for device
- management commands
-Date: Wed, 4 Nov 2026 14:22:30 +0900
-Message-ID: <000a01dd6c1c$7d786830$78693890$@samsung.com>
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Cux0FP78
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A1BA11F000C1;
+	Wed,  4 Nov 2026 06:49:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793774953;
+	bh=EpQhE75YVAvBdui3HModYSzYsbjHI0aCHbluMxfA5v0=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=Cux0FP78i0us0LOgJg3o4y/+6nV3voVrSLISBMAn95fQp4js6nYh195V+O85HlRMW
+	 iwRUU/1s1y6D5GZrNTQBLKt/vEdEq0ReSiyWfuE+7l6hIX2NEb5vyiAu4srgs3GowV
+	 QA/9RwbaV5liismuAnkFQmdHVVkY4n6WJm1CxP+B0y0acrd6KgbWeCwDMpkqdU22wS
+	 SI4ZJLv9DcRnIPkZnyNfxEH6lXoIeP3XoScm6gP/7A6AvoRv6dbwapmpsLjRrU2yYL
+	 HUyMb1+mBSx7Lytd0iqGkOcWpsiG0cH2oXSK6udArG2T0tM0uUmWzY5frpmBN7S+Fs
+	 AfVPwET7VvjjA==
+Message-ID: <a161c75d-c8a2-4e44-8e33-30298622fc0c@kernel.org>
+Date: Wed, 4 Nov 2026 15:49:11 +0900
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -77,97 +51,69 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-X-Mailer: Microsoft Outlook 16.0
-Thread-Index: AQG/liA4KQmJMUor0I2rrPNxMaALVAGMm7eLAjQQascCmhUI4rcmFg7Q
-Content-Language: ko
-X-CMS-MailID: 20261104052231epcas2p2f5795904d91eaef272b48e6e323242f2
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-CMS-TYPE: 102P
-cpgsPolicy: CPGSC10-234,Y
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20261102055317epcas2p48b638d0c25fd024ce01960afd1e6dee6
-References: <cover.1793598099.git.kwmad.kim@samsung.com>
-	<CGME20261102055317epcas2p48b638d0c25fd024ce01960afd1e6dee6@epcas2p4.samsung.com>
-	<8c4bbbd746e7fc1d8c27b6b87b2d684abb74a3b3.1793598099.git.kwmad.kim@samsung.com>
-	<703c41b5-537f-4897-b852-fed4097a0193@acm.org>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi: leapraid: Fix init_cmd_priv error handling
+To: Dongdong Hao <doubled@leap-io-kernel.com>,
+ James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
+Cc: hare@kernel.org, hare@suse.de, yjzhang@leap-io-kernel.com,
+ kezijie@leap-io-kernel.com, jzzhang@leap-io-kernel.com,
+ baikefan@leap-io-kernel.com, linux-scsi@vger.kernel.org
+References: <20261104031823.198733-1-doubled@leap-io-kernel.com>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20261104031823.198733-1-doubled@leap-io-kernel.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-> > +static enum utp_ocs ufshcd_mcq_read_ocs(struct ufs_hw_queue *hwq,
-> > +					struct ufshcd_lrb *lrbp)
-> > +=7B
-> > +	guard(spinlock_irqsave)(&hwq->cq_lock);
-> > +	return READ_ONCE(lrbp->utr_descriptor_ptr->header.ocs);
-> > +=7D
->=20
-> READ_ONCE() is sufficient. I don't think that the spinlock helps here.
-> Additionally, if the spinlock operations are left out, the function
-> ufshcd_mcq_read_ocs() is no longer necessary and can be inlined in its
-> only caller.
->=20
+On 11/4/26 12:18, Dongdong Hao wrote:
+> leapraid_init_cmd_priv() ignores the return value of
+> leapraid_internal_init_cmd_priv() and always returns success. If
+> dma_pool_alloc() fails, io_tracker->chain remains NULL, but the SCSI
+> midlayer considers the command successfully initialized.
+> 
+> A subsequent I/O requiring more than LEAPRAID_SGL_INLINE_THRESHOLD
+> DMA-mapped scatter-gather entries dereferences the NULL chain buffer
+> while building the chained SGL, causing a kernel crash.
+> 
+> Return the result of leapraid_internal_init_cmd_priv() so that allocation
+> failures propagate to the SCSI midlayer and abort initialization of the
+> affected request.
+> 
+> Signed-off-by: Dongdong Hao <doubled@leap-io-kernel.com>
+> ---
+>  drivers/scsi/leapraid/leapraid_os.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/leapraid/leapraid_os.c b/drivers/scsi/leapraid/leapraid_os.c
+> index da597eb99377..0f3219c4f438 100644
+> --- a/drivers/scsi/leapraid/leapraid_os.c
+> +++ b/drivers/scsi/leapraid/leapraid_os.c
+> @@ -938,9 +938,8 @@ static int leapraid_init_cmd_priv(struct Scsi_Host *shost,
+>  	struct leapraid_io_req_tracker *io_tracker;
+>  
+>  	io_tracker = scsi_cmd_priv(scmd);
+> -	leapraid_internal_init_cmd_priv(adapter, io_tracker);
+>  
+> -	return 0;
+> +	return leapraid_internal_init_cmd_priv(adapter, io_tracker);
 
-It seems like your proposal works in terms of reading OCS,
-but I guess there could be a race at a nearly same time among different CPU=
-s
-because UFS driver uses the same tag =23 for device commands.
+	return leapraid_internal_init_cmd_priv(adapter, scsi_cmd_priv(scmd));
 
-Of course, it would take CPU C long to reach up to clearing cmd->state,
-so that what the timeline shows will be unlikely to happen, I think.
-I was just concerned about the possibility.
+and you can remove the io_tracker local variable.
 
-Anyway, let me take your proposal to revise this.
+With that,
 
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 
-WITHOUT cq_lock
+Note: when I sent out the SCSI ASC/ASCQ series rework, Sashiko had comments
+about pre-existing issues in the leapraid driver. See:
 
- CPU A: ISR                      CPU B: Error handler     CPU C: IO thread
- ----------                      ---------------           ----------------=
----
- set OCS=20
-                                   READ_ONCE sees OCS
-                                                                scsi_prepar=
-e_cmd()
-                                                                -> clears c=
-md->state
+https://sashiko.dev/#/message/20260831021810.235281F000E9%40smtp.kernel.org
 
- scsi_done(cmd)
- -> cmd->state is set to SCMD_STATE_COMPLETE and test_and_set_bit returns n=
-on zero
-(cmd->state is already set when the cmd is timed-out)
- -> blk_mq_complete_request called (Unexpected)
+You may want to check that.
 
 
-WITH cq_lock
-
- CPU A: ISR                      CPU B: Error handler     CPU C: IO thread
- --------------------------   ---------------           -------------------
- set OCS
-                                   lock(cq_lock) ...waits...
- scsi_done(cmd)
- -> cmd->state is set to SCMD_STATE_COMPLETE and test_and_set_bit returns 0
- -> just return
- unlock(cq_lock)=20
-                                   lock acquired
-                                   READ_ONCE sees OCS
-                                                                scsi_prepar=
-e_cmd()
-                                                                 -> clears =
-cmd->state
-
-> > +		err =3D read_poll_timeout(ufshcd_mcq_read_ocs, ocs,
-> > +					ocs =21=3D OCS_INVALID_COMMAND_STATUS, 20,
-> > +					MCQ_POLL_US, false, hwq, lrbp);
-> > +	=7D
->=20
-> An error message should be reported if the above loop times out.
-Got it.
-
->=20
-> Thanks,
->=20
-> Bart.
-
-Kiwoong Kim
-BRs.
-
+-- 
+Damien Le Moal
+Western Digital Research
