@@ -1,22 +1,22 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=159.226.251.21
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793758423;
-	b=oGUYBn7SZywufjzMYcaqOu00tMjE0ckDGKZ5Hrnm4q7LpIAf0l4K+wcs3QTwavrkzfX7
-	 4Yk0swcjGLgZozmT4jOXjHYMTY20UL8RQTB6GQml57tvZ+Tt3ovwSlOzDzOr53LcDopNs
-	 ffU1DcotQceJJ8TTHgc2yRvcMOjC+Im4n2XxtYm5Ex7p3D9WxfvjAF4nL1vyw929eVv/W
-	 gXJHsXfEHukoZKz3xKcEGmo5aHzFywVQ4zVoEzi9yVgAYgnrJ24o0nG/NgfaBneRF6V7T
-	 0fqZRz2eoGgI7avbVPe5DcKO7qeqmd+tsb5+L7UIZ2SdU3pOu4S/Q4+/FFnBENhOsNA==
+	t=1793758424;
+	b=maYUeUwzo0LLzbw9uZafZRntndnlPdG7atigimhM16lQDI+6Ohk2qO8k2eJMuWQgJ9zD
+	 hiJEEnZV1MXGpPfyjlS5imDGdXDpDppvYRlQn4RGbyoqukXWldTXitttNGp76l9idShD/
+	 bPyWUjp35UZ6+s+5S1M6hzA1RkDzvdNy0UVzbnOD6kngESM1E1Ubepbf5iQDxWglZt3Gx
+	 0OSMA4F/qW01uyExhbacoOhDkbkveQsk4DS83nvTquDRdmfokpB1Zexcnou5IXVcPrRmc
+	 +ClSbjQDbg9K6/A8/xTQQK+kxwgtH7XxZuQSRZD4Tz9Kbqyh9PBtA81JRfyhh1L2zzQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793758423;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793758424;
 	h=DMARC-Filter:Received:From:To:Cc:Subject:Date:Message-Id:X-Mailer:
 	 MIME-Version:Content-Transfer-Encoding:X-CM-TRANSID:
 	 X-Coremail-Antispam:X-Originating-IP:X-CM-SenderInfo;
-	bh=AYwHYrBIsZYpT07WJAsRuVFvb+sLAwX69e5/YNYE4rM=;
-	b=CAq8+q6Fngyscs5ZV+0gja2Cba2EdwGbGrx1SWthsnHzd4QT8JMIRJk3Vi4l86NcEdk+
-	 63FDBBhT/ThQXlMaXEtYSbESK099D9iUXzw8FL46xuiUydRGL8i3MhB1fejaudsypP81q
-	 d/5K23L6PIxpbOHYA2HdzIBIFXXwbOBqtGd+qN+gxcGzyw31oeR0nuYbasKPUER1k/MnV
-	 dbl6ZZ6KHZBPGpl/ivoYqSHyKKgvNZb+CIWiUY3xBnPROIJVFFX5c8WaNxx4K6lcVwsis
-	 T0/nS/PutL46gmXY+n/X67b8V2+ft4k1JJZJdyBuGiW8FFzKGLFb2Y1V1NyIWzCcZLw==
+	bh=pi4Xz5fobJJSzl7MrHyJf0G66H2lu7cnO9U03j+2M98=;
+	b=TOyNO4jwedyuT6XB1C7vEC3QTNYp/Ugf5qbTPVuOAHLBhOtrSSWuxBJdLIk923w+Bn5Z
+	 IjGkaPT0fgNE8MCzWqo5g5xZxLJ/IRWtlC6RvOF2ripXSitaZaiPINXQmpaMkfs/EVLyB
+	 5wNpMFTyF8SQwEfRMmKuXY/fGuLAwdSOeKMqxKdP/fIeOHSc3Bxe4DrMZA77d/mvd/LvW
+	 K8UvVr2kOhQpDt7WpksaPOXgkG6GpsI7oeGxoofTNCP3v+ibnTtk8OqXMYbfGisAm94JJ
+	 r/pfMh/GKHHT6aGZabxyqR3kRcBVNrU3in4XC+eM5iJf9VI3QT3HizrJa2Zymn3Mj4w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=none header.from=iscas.ac.cn;
 	spf=pass smtp.mailfrom=iscas.ac.cn;
@@ -25,22 +25,23 @@ Received: from cstnet.cn (smtp21.cstnet.cn [159.226.251.21])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46B78606A326
-	for <linux-scsi@vger.kernel.org>; Wed,  4 Nov 2026 02:13:40 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 46B78606A326
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21E72606A328;
+	Wed,  4 Nov 2026 02:13:42 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 21E72606A328
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
 Received: from dfae2b116770.home.arpa (unknown [36.110.52.2])
-	by APP-01 (Coremail) with SMTP id qwCowAAXQfvJlOpq8XI+AA--.27353S2;
-	Wed, 04 Nov 2026 10:13:29 +0800 (CST)
+	by APP-01 (Coremail) with SMTP id qwCowACXwvzSlOpqRXM+AA--.4833S2;
+	Wed, 04 Nov 2026 10:13:38 +0800 (CST)
 From: Wentao Liang <vulab@iscas.ac.cn>
-To: Hannes Reinecke <hare@suse.com>,
+To: Ram Vegesna <ram.vegesna@broadcom.com>,
 	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
 	"Martin K. Petersen" <mkp@kernel.org>
-Cc: linux-scsi@vger.kernel.org
-Subject: [PATCH] scsi: aic79xx: fix a reference leak in ahd_dump_target_state
-Date: Wed,  4 Nov 2026 02:13:38 +0000
-Message-Id: <20261104021338.1467647-1-vulab@iscas.ac.cn>
+Cc: linux-scsi@vger.kernel.org,
+	target-devel@vger.kernel.org
+Subject: [PATCH] scsi: efct: release the Scsi_Host on vport creation failure
+Date: Wed,  4 Nov 2026 02:13:47 +0000
+Message-Id: <20261104021347.1467701-1-vulab@iscas.ac.cn>
 X-Mailer: git-send-email 2.34.1
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -52,51 +53,54 @@ List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:qwCowAAXQfvJlOpq8XI+AA--.27353S2
-X-Coremail-Antispam: 1UD129KBjvdXoWrKF45Cr1kXFyxAw47CrWxZwb_yoWDKrc_ur
-	WS93s7Wry8Ga1xKry7ArsIva4fKFWqgw40y3WFqrsYyayFqFW0q3yUurZ8Cr1DZa1fAw1q
-	q347trWF9r17WjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUb28YjsxI4VWkKwAYFVCjjxCrM7CY07I20VC2zVCF04k26cxKx2IY
-	s7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4
-	kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Xr0_Ar1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_
-	Cr0_Gr1UM28EF7xvwVC2z280aVAFwI0_Cr1j6rxdM28EF7xvwVC2z280aVCY1x0267AKxV
-	WxJr0_GcWle2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2Wl
-	Yx0E2Ix0cI8IcVAFwI0_Jw0_WrylYx0Ex4A2jsIE14v26r4UJVWxJr1lOx8S6xCaFVCjc4
-	AY6r1j6r4UM4x0Y48IcxkI7VAKI48JMxAIw28IcxkI7VAKI48JMxAIw28IcVCjz48v1sIE
-	Y20_Gr43Wr1UJr1l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGw
-	C20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r126r1DMIIYrxkI7VAKI48J
-	MIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMI
-	IF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E
-	87Iv6xkF7I0E14v26r1j6r4UYxBIdaVFxhVjvjDU0xZFpf9x07be3ktUUUUU=
-X-CM-SenderInfo: pyxotu46lvutnvoduhdfq/1tbiCRQBA2rqY-m2ugAAsJ
+X-CM-TRANSID:qwCowACXwvzSlOpqRXM+AA--.4833S2
+X-Coremail-Antispam: 1UD129KBjvJXoW7Cr1kKr1DKw1xJw13Kw4rKrg_yoW8Jw43pa
+	9Fg3y5urWUGr4UKr47Gr4rXF1Fva1xt3yDGaykK3y3u395Xryftan8KayruFy5Cr4kK345
+	tF4Dta48Xw4kAFDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUvSb7Iv0xC_Kw4lb4IE77IF4wAFc2x0x2IEx4CE42xK8VAvwI8I
+	cIk0rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2
+	AK021l84ACjcxK6xIIjxv20xvE14v26ryj6F1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v2
+	6F4j6r4UJwA2z4x0Y4vEx4A2jsIE14v26F4UJVW0owA2z4x0Y4vEx4A2jsIEc7CjxVAFwI
+	0_Cr1j6rxdM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xf
+	McIj6xIIjxv20xvE14v26r1q6rW5McIj6I8E87Iv67AKxVW8Jr0_Cr1UMcvjeVCFs4IE7x
+	kEbVWUJVW8JwACjcxG0xvY0x0EwIxGrwCY1x0262kKe7AKxVWUAVWUtwCF04k20xvY0x0E
+	wIxGrwCF04k20xvE74AGY7Cv6cx26r48ZrWUJr1UMxC20s026xCaFVCjc4AY6r1j6r4UMI
+	8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AK
+	xVWUAVWUtwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI
+	8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280
+	aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43
+	ZEXa7IU5gZ2DUUUUU==
+X-CM-SenderInfo: pyxotu46lvutnvoduhdfq/1tbiBgYBA2rqY4K6JQAAs8
 
-scsi_device_lookup_by_target() returns the device with an extra
-reference that the caller has to drop with scsi_device_put().  The
-procfs target dump never released it, so every read of the file leaked
-one reference for each LUN that has an attached device, preventing the
-scsi_device from ever being freed.
+efct_scsi_new_vport() allocates the Scsi_Host with scsi_host_alloc(),
+which leaves the caller owning a reference.  On success the reference is
+transferred to vport->shost and dropped later by efct_scsi_del_vport(),
+but when scsi_add_host_with_dma() fails the function returns NULL
+without releasing it.  scsi_add_host_with_dma() only rolls back the
+references it took itself, so the host and its resources are leaked
+whenever adding the host fails.
 
-Drop the reference after the device state has been printed.
+Drop the reference before returning.
 
-Fixes: f89d0a4e1d01 ("[SCSI] aic79xx: remove slave_destroy")
+Fixes: 32ddbad5b61e ("scsi: elx: efct: Transport class host interface support")
 Cc: stable@vger.kernel.org
 Assisted-by: DeepSeek-V4.1-Flash and OpenAI Codex
 Signed-off-by: Wentao Liang <vulab@iscas.ac.cn>
 ---
- drivers/scsi/aic7xxx/aic79xx_proc.c | 1 +
+ drivers/scsi/elx/efct/efct_xport.c | 1 +
  1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/aic7xxx/aic79xx_proc.c b/drivers/scsi/aic7xxx/aic79xx_proc.c
-index aa37838b78a6..da8f2afdf405 100644
---- a/drivers/scsi/aic7xxx/aic79xx_proc.c
-+++ b/drivers/scsi/aic7xxx/aic79xx_proc.c
-@@ -185,6 +185,7 @@ ahd_dump_target_state(struct ahd_softc *ahd, struct seq_file *m,
- 			continue;
- 
- 		ahd_dump_device_state(m, dev);
-+		scsi_device_put(dev);
+diff --git a/drivers/scsi/elx/efct/efct_xport.c b/drivers/scsi/elx/efct/efct_xport.c
+index 9dcaef6fc188..88e7ebbbb8f8 100644
+--- a/drivers/scsi/elx/efct/efct_xport.c
++++ b/drivers/scsi/elx/efct/efct_xport.c
+@@ -930,6 +930,7 @@ efct_scsi_new_vport(struct efct *efct, struct device *dev)
+ 	error = scsi_add_host_with_dma(shost, dev, &efct->pci->dev);
+ 	if (error) {
+ 		efc_log_debug(efct, "failed scsi_add_host_with_dma\n");
++		scsi_host_put(shost);
+ 		return NULL;
  	}
- }
  
 -- 
 2.34.1
