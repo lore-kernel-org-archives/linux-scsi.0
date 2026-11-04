@@ -1,56 +1,56 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793759161;
-	b=fyHWWAZIwCL0es6NwWYpgDrlyLOuBCkI8SC8ajfw3ymRjJg9clodsyG2mDRbz3ux/HxA
-	 y5Z0IMwUqhgkhlQmfefBp+ccw2leFzdrdGjM2PHCgXAjteST5NYACJcP48yLiOLAkJOUW
-	 l3fNU8wf4KqM8w5OesUkzOJKQPmt/6LYPlgk6WeAwyvJLibbOsLPOqNgkgp2fRvXLZOWn
-	 oMQS86aW3DB5AMvkpMbgLbmBunRKUCFo1pK5TOsdPy8WopeqNF7Gr/nHXfsTgCfmON6+z
-	 zUtZWwRSfk8rzKL0Bla2SohRTx5/Vs+c8AAdBI8hGd9myuaPAPYIncQ/V9irbUDaRvQ==
+	t=1793759256;
+	b=3BdscvFcpzoI6QUDoYd3vacfSTyqS3t4KSm8UGIMI1mpRgztLgEIB9QGa54TDFNPOn0P
+	 4//ctk5ERevgcd63VueXTE1wtWFZzVJntfde1sIyytIoatGJx1DDwA2qq1g64+RdDsuIO
+	 D76047FQTI0qHsmFg1XhmrlYz4i8x6ISeNWAMwnSwVjWxjotnYEIExhxAhwpI45Yb0oM6
+	 dobrLS1vVc52AKOH6/mZ6wdUVD05xvFkrxb0G39Y6LbDmt3ZA4P2F1q9ujJtdNh0hiPOL
+	 o3R300QMa6w7qGpozeWcmGcqnlpwIpngdBDcleJr2INbmybGo/U+1yu01pGJ4a1RCtQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793759161;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793759256;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=A13Bw1HFMytSYoyHHGxC/miljqDeX5CTomtPscoqxhQ=;
-	b=oSE/gVOhiMFlH5M7GjVVL/GuY7J6b1xYXQATLlxb6+ZEmDQ9jIshbT0jVhSBlEM6o4QH
-	 LKDBjBILoFGjtLsfyogT5PGOWWfQC4zE9R8xnD2TcoFMWI4Q+maNGdrmpYYVmlLHXQ0cw
-	 jALBelZjTZ7oxhYJRdmtZoSF/G1YYHz20uvL5+CAj9Qujg86rkNLTSHqttzwmeHvRRXxo
-	 dGu4G/nXcy9xRTv0JoehO4fXER9PLztLaQ72JH7LRJkK5FzTEnL3kgt1E5kAXBm7B2pfv
-	 IFSEbr8m1gEyUCpvpejqOJbJH6maq8e9gowTNwS7TAJoJHprEPPR7qbx+668akhsC7Q==
+	bh=clmuDIq+119PXjzT1KDgdqeM8MiNOxU/YIG6asCzbsE=;
+	b=XF/eMLrOF3lf+/F8WyFwHgWQajvuKcgPoYAoFvNe7KPrxxUOYhmEAVNGdqetwTrYZ/0i
+	 zvPatJPDntvQ61Jlo9TVSvzSEJ6tflOt0FERm3+U660+IY3HsV7BUkV9dyrHCk9weyD5H
+	 rXwIUEIebIO/2JYRLHVHlHYH43X2hmucPnSmub/sLlN5bbxsS4gA0B/A4jZsj4b5qQI+I
+	 mdVpyFNBfYKdwpML0w9XCkLtKRhocbV2WAzTtWMt2UPALn3sdUtAzhZJ7X8YhPd8TzDnQ
+	 0L1AG9uWucOQB1kNgRDFDpxNSFI8Xt8yUjh19gRIDMAtlBcjlpbI6SmIBfu5Zop+UMw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=FAmQYOXN;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="hlY2/VAq";
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 955F6606A329
-	for <linux-scsi@vger.kernel.org>; Wed,  4 Nov 2026 02:26:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19614606A31B
+	for <linux-scsi@vger.kernel.org>; Wed,  4 Nov 2026 02:27:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=FAmQYOXN
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4D8D11F000C1;
-	Wed,  4 Nov 2026 02:26:01 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=hlY2/VAq
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7DC091F000C1;
+	Wed,  4 Nov 2026 02:27:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793759161;
-	bh=A13Bw1HFMytSYoyHHGxC/miljqDeX5CTomtPscoqxhQ=;
+	s=k20260515; t=1793759255;
+	bh=clmuDIq+119PXjzT1KDgdqeM8MiNOxU/YIG6asCzbsE=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=FAmQYOXNHK5gNKYaLOMDM/lpiH0pyn9NuCUODCQRp73g2xlWfU37qgRrxmwUKsS5w
-	 LKjD3Q/i1nj9Qn0MJqLT3S0JLhfVgZWYzfv/rzOTENNm+oyap9S4Jm3mVheyZ8No0T
-	 qlQwsjZjhCL3wS6Qylt1CDTa4jiwHLVSrSQs+j0JnCnr6czZ1+F0uzRI3v1QLoID7G
-	 Zu6EObOUD3NdtCp3jP66UdUiRU/vhZz2HczHZBRDquVTwmpPN4dmYQjlHqTJPQJ8Fo
-	 xoui4rLcdz5fO3HzxtfDXjkouCPi3UhGne4rcZmhadUy6twWM0tzW4hmcL11/XMy6A
-	 TZSxuLfEJvotg==
-Message-ID: <sashiko-outbox-196457@kernel.org>
+	b=hlY2/VAqNjxU8n3YxPTMLlRGYJ2nA1No8Zh3FJOMmherW3h3tGrCY/vlUTGoBg5Ne
+	 GAC7h/K79+m7flEqBEWyf92pxY4eexQte6K1ZMw8WL6eVeipY4o9zalejJI0Tz+b64
+	 ehc3hL9K8v/OfWazjYaMSsDyuNN1nLzLYZ7UtaXNbfR3glJnxX5VJUyVRIMGZ3Zcp5
+	 KUoVP9Dm0iWou0CGGkgQQcKKW3dwGN9TenHy05iyF8jMddMATG5tVxi+GKKim3XIL/
+	 cEnQLP7Tkl9RslpnRLouoO57bcYKdVc6aF28bWpzRu7OqR7ioaCi4Egk8Bbhj91s1V
+	 EJjgp9H1BjLSg==
+Message-ID: <sashiko-outbox-196464@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] scsi: pm8001: unwind the probe on ccb tag allocation
- failure
+Subject: Re: [PATCH] scsi: mpt3sas: drop the sas_device reference on port
+ add failure
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Wentao Liang" <vulab@iscas.ac.cn>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20261104021411.1467970-1-vulab@iscas.ac.cn>
-References: <20261104021411.1467970-1-vulab@iscas.ac.cn>
+In-Reply-To: <20261104021352.1467740-1-vulab@iscas.ac.cn>
+References: <20261104021352.1467740-1-vulab@iscas.ac.cn>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 04 Nov 2026 02:26:00 +0000
+Date: Wed, 04 Nov 2026 02:27:35 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -60,168 +60,67 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] scsi: pm8001: use-after-free via active IRQs in pm8001_pci_probe()
-- [High] scsi: pm8001: DMA regions freed while MPI is active in pm8001_pci_=
-probe()
-- [Medium] scsi: pm8001: memory leaks on ccb tag failure unwind in pm8001_p=
-ci_probe()
+- [Medium] scsi: mpt3sas: dangling sas_device->rphy in mpt3sas_transport_po=
+rt_add()
 --
 
-commit 06b680982a72c843fb06984b05c4494852d0cf98
+commit 513fa7a846ccb03a4cae94cd2a076f29098310d8
 Author: Wentao Liang <vulab@iscas.ac.cn>
 
-scsi: pm8001: unwind the probe on ccb tag allocation failure
+scsi: mpt3sas: drop the sas_device reference on port add failure
 
-This commit changes the error handling path in pm8001_pci_probe() when
-pm8001_init_ccb_tag() fails, jumping to err_out_ha_free instead of
-err_out_enable to release previously allocated resources.
+This commit fixes a sas_device reference leak and clears pend_sas_rphy_add
+in the out_fail error path of mpt3sas_transport_port_add() when adding a
+SAS end device port fails.
 
-> diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm80=
-01_init.c
-> index 5af81c73a8f87..389649b36aabd 100644
-> --- a/drivers/scsi/pm8001/pm8001_init.c
-> +++ b/drivers/scsi/pm8001/pm8001_init.c
-> @@ -1178,7 +1178,7 @@ static int pm8001_pci_probe(struct pci_dev *pdev,
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_transport.c b/drivers/scsi/mpt3=
+sas/mpt3sas_transport.c
+> index e74a526efa8db..38259dae91093 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_transport.c
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_transport.c
+> @@ -866,6 +866,10 @@ mpt3sas_transport_port_add(struct MPT3SAS_ADAPTER *i=
+oc, u16 handle,
+>  	sas_port_delete(port);
 > =20
->  	rc =3D pm8001_init_ccb_tag(pm8001_ha);
->  	if (rc)
-> -		goto err_out_enable;
-> +		goto err_out_ha_free;
-
-[Severity: High]
-Can jumping to err_out_ha_free here leave active interrupt handlers
-registered with dangling pointers into freed pm8001_ha and sha memory?
-
-Before pm8001_init_ccb_tag() runs, pm8001_pci_probe() calls
-pm8001_pci_alloc() -> pm8001_init_tasklet() and pm8001_alloc() ->
-pm8001_request_irq().
-
-In MSI-X mode, pm8001_request_msix() registers IRQ handlers pointing into
-pm8001_ha:
-
-drivers/scsi/pm8001/pm8001_init.c:pm8001_request_msix() {
-	...
-		rc =3D request_irq(pci_irq_vector(pm8001_ha->pdev, i),
-			pm8001_interrupt_handler_msix, flag,
-			pm8001_ha->intr_drvname[i],
-			&(pm8001_ha->irq_vector[i]));
-	...
-}
-
-In INT-X mode, pm8001_request_irq() registers a shared IRQ handler with
-pm8001_ha->name and sha:
-
-drivers/scsi/pm8001/pm8001_init.c:pm8001_request_irq() {
-	...
-	return request_irq(pdev->irq, pm8001_interrupt_handler_intx,
-			   IRQF_SHARED, pm8001_ha->name,
-			   SHOST_TO_SAS_HA(pm8001_ha->shost));
-}
-
-When pm8001_init_ccb_tag() fails, the err_out_ha_free path calls
-pm8001_free(pm8001_ha) and kfree(sha) without calling
-pm8001_free_irq(pm8001_ha) or pm8001_kill_tasklet(pm8001_ha) (unlike
-pm8001_pci_remove()):
-
-drivers/scsi/pm8001/pm8001_init.c:pm8001_pci_probe() {
-	...
-err_out_ha_free:
-	pm8001_free(pm8001_ha);
-err_out_free:
-	kfree(sha);
-	...
-}
-
-If a shared INT-X interrupt fires afterwards, pm8001_interrupt_handler_intx=
-()
-will dereference the freed sha and pm8001_ha structures and read unmapped M=
-MIO
-registers, and reading /proc/interrupts will dereference the freed devname
-strings in pm8001_ha->intr_drvname[i] or pm8001_ha->name.
-
-[Severity: High]
-Also on the err_out_ha_free path, does pm8001_free() release coherent DMA
-memory while the controller MPI engine is still active?
-
-In pm8001_pci_probe(), PM8001_CHIP_DISP->chip_init(pm8001_ha) succeeds right
-before pm8001_init_ccb_tag() is called, which programs the physical DMA
-addresses of pm8001_ha->memoryMap.region[] (inbound/outbound queues,
-producer/consumer indices, and firmware event logs) into the controller and
-enables the firmware MPI state machine via mpi_init_check().
-
-When pm8001_init_ccb_tag() fails and jumps to err_out_ha_free, pm8001_free()
-immediately frees those DMA regions without first calling
-PM8001_CHIP_DISP->chip_soft_rst(pm8001_ha) to uninitialize the MPI engine a=
-nd
-reset the chip (as pm8001_pci_remove() does before calling pm8001_free()):
-
-drivers/scsi/pm8001/pm8001_init.c:pm8001_free() {
-	...
-	for (i =3D 0; i < USI_MAX_MEMCNT; i++) {
-		if (pm8001_ha->memoryMap.region[i].virt_ptr !=3D NULL) {
-			dma_free_coherent(&pm8001_ha->pdev->dev,
-				(pm8001_ha->memoryMap.region[i].total_len +
-				pm8001_ha->memoryMap.region[i].alignment),
-				pm8001_ha->memoryMap.region[i].virt_ptr,
-				pm8001_ha->memoryMap.region[i].phys_addr);
-			}
-	}
-	PM8001_CHIP_DISP->chip_iounmap(pm8001_ha);
-	...
-}
-
-Should chip_soft_rst() be called before pm8001_free() so the controller can=
-not
-DMA into the freed memoryMap.region[] buffers?
+>  out_fail:
+> +	if (sas_device) {
+> +		sas_device->pend_sas_rphy_add =3D 0;
+> +		sas_device_put(sas_device);
+> +	}
 
 [Severity: Medium]
-Finally, does unwinding to err_out_ha_free on pm8001_init_ccb_tag() failure
-still leak sha->sas_phy, sha->sas_port, pm8001_ha->devices,
-pm8001_ha->ccb_info, and partially allocated pm8001_ha->ccb_info[i].buf_prd
-DMA buffers?
+Should this cleanup block in mpt3sas_transport_port_add() also reset
+sas_device->rphy to NULL?
 
-Inside pm8001_init_ccb_tag(), if bitmap_zalloc() for pm8001_ha->rsvd_tags
-fails, or if dma_alloc_coherent() for pm8001_ha->ccb_info[i].buf_prd fails =
-at
-iteration i, it jumps to err_out:
+Earlier in mpt3sas_transport_port_add(), when adding a SAS_END_DEVICE,
+sas_device->rphy is assigned before sas_rphy_add() is called:
 
-drivers/scsi/pm8001/pm8001_init.c:pm8001_init_ccb_tag() {
-	...
-	pm8001_ha->rsvd_tags =3D bitmap_zalloc(PM8001_RESERVE_SLOT, GFP_KERNEL);
-	if (!pm8001_ha->rsvd_tags)
-		goto err_out;
-	...
-	for (i =3D 0; i < ccb_count; i++) {
-		pm8001_ha->ccb_info[i].buf_prd =3D dma_alloc_coherent(dev,
-				sizeof(struct pm8001_prd) * PM8001_MAX_DMA_SG,
-				&pm8001_ha->ccb_info[i].ccb_dma_handle,
-				GFP_KERNEL);
-		if (!pm8001_ha->ccb_info[i].buf_prd) {
-			pm8001_dbg(pm8001_ha, FAIL,
-				   "ccb prd memory allocation error\n");
-			goto err_out;
-		}
+	if (mpt3sas_port->remote_identify.device_type =3D=3D SAS_END_DEVICE) {
+		rphy =3D sas_end_device_alloc(port);
+		sas_device->rphy =3D rphy;
 		...
 	}
+	...
+	if ((sas_rphy_add(rphy))) {
+		ioc_err(ioc, "failure at %s:%d/%s()!\n",
+			__FILE__, __LINE__, __func__);
+		sas_rphy_free(rphy);
+		rphy =3D NULL;
+		goto out_delete_port;
+	}
 
-	return 0;
+If sas_rphy_add() fails, rphy is freed via sas_rphy_free(rphy), and only
+the local rphy variable is cleared before jumping to out_delete_port and
+out_fail.
 
-err_out_noccb:
-	kfree(pm8001_ha->devices);
-err_out:
-	return -ENOMEM;
-}
-
-Jumping to err_out bypasses kfree(pm8001_ha->devices) (allocated in
-pm8001_alloc()) and leaves pm8001_ha->ccb_info and any already allocated
-pm8001_ha->ccb_info[0..i-1].buf_prd buffers unfreed. Neither pm8001_free() =
-nor
-err_out_free frees those allocations, nor do they free sha->sas_phy and
-sha->sas_port (allocated in pm8001_prep_sas_ha_init()) before kfree(sha) is
-called.
+Because sas_device remains on ioc->sas_device_list or
+ioc->sas_device_init_list (and is also held by the caller),
+sas_device_put(sas_device) in out_fail does not free sas_device, leaving
+sas_device->rphy as a dangling pointer that __mpt3sas_get_sdev_by_rphy()
+can match against a reallocated sas_rphy at the same address.
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261104021411.1467=
-970-1-vulab@iscas.ac.cn?part=3D1
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261104021352.1467=
+740-1-vulab@iscas.ac.cn?part=3D1
