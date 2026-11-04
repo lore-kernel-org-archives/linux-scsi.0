@@ -1,56 +1,55 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793795317;
-	b=o1U+74g4GXYOmJvphJwtMUHtZ/mIP2Y09d3RCZLv9AxvZJ3tmGSusmC15n+2irnoPQ5e
-	 8C2RjO5WOcyvwCeJO/XgUglzaNZeMhlvFhQDZbwZIWHIpwc1MKklc+H0OdbJgLhWLBAAO
-	 c118ssb1exhDlrvLT0ytd/VsyaeiOGqswmgOLvJbVMkRq5fAlkstn6O3ElnJjcdq2iqNl
-	 a05F34BUU8zwkHMgdjxA/dKbQ2mzbj+IGzux0R8mRxVmbuY+AHJw/Xn0+9UsjKmxbSkjd
-	 mCs+ujAwqISAq5IAshqIolYicSsXz8vPHm/jGlfmvFfPmP0vlgoYTTXyIqMdpZgSdSw==
+	t=1793802883;
+	b=TW72iZ21R9iOJ1tmDa0s55fa9f673SBoSPM4AvUGuuHaAqDB3vbLsOUzRC/3UGRu2Dtk
+	 ScwBVRVL4yUY5+QfIuwl/a3BQ7wJ9m9/si92T8jBBrl+2bjSFqH35kDUbl/AQ1QuSPjLh
+	 DmdIGUAKaRddFUnDjfQrd9T0OXB0uVuWlQnStU/dv6K/RrF6iwBCEhrMl79ZwuBKABvFf
+	 Arfq9hwneIisPLEBXC0ZdaqGMM6qxWOARrvl/D4n4QvcCqbZ3ytelYHPiqmzVLFScnMJY
+	 lxJvmpy/qfoojCwMU1usVA8V/p5Kna/sfHqdPX873T7Tu3PuZVijp9ELT0nkNddbodQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793795317;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=5v4DTozgqP3R32Jw/5tSc+0RVUjrJFY2m6diOtnoGbE=;
-	b=GxFYt62MaetQfBAVN0mfLOocYkKZvFZtGYRNE9GNRWl7g0qDtolkdRULXLIluhJLhQNx
-	 J19igJxAmEtXcDpPlz4PhK9KfbysFLwtEsk1JRZqT1il0yMChFKY7drm79GlL/WJLGf7h
-	 yBjSvlF6PqVyzwqKBWmhsBFN7mMVW5yMSIJwC2pMDA/1MFNDW1E3TR51YBqo1zBveXaF/
-	 FjDzRbp5/oWlypaN73mC8IcBbLp7KPPKoy/BiS026MH1FtRBlboqhJFZzA4vAAbBXQGmn
-	 HqKCRRqoGqVw4JVwleQCLrtrAgYJ0tukfxgllhXssJl8cvzMwp5nSfkCdYQtxuUOiig==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793802883;
+	h=Received:DKIM-Signature:Received:X-Forwarded-Encrypted:
+	 X-Gm-Message-State:X-Received:MIME-Version:References:In-Reply-To:
+	 From:Date:X-Gmail-Original-Message-ID:X-Gm-Features:Message-ID:
+	 Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
+	bh=miceYdDB+7PLPC/J0qgYQmDdAc3qF6Ff3jq4UUQkwZY=;
+	b=J7ByKJmD1zE6KouK6UIwe+FfOiXcREywpPYYF9KjbsAvEWach23Joc7vlNbQaaqaCx6x
+	 RTKysSUZ7RVvKPHnyrDsxX6GduehIgLkIrznoYixqVNJwQr5cQ7bX3HEcIMqT8QUostYZ
+	 +hgE1LaQCFGF1zDvLZGFjjHg0B1+26JGsPm98zklegpO+gumNmob0L6xEIxyLvzGaauv8
+	 TZ7Vm7z6NUz/XuhCW4Tc/t/O+HNevBMGvuyNmxLawLETHuiCdY7bqHjXrtOYbRDRL+5s8
+	 VzERPY2OgRNEzftUNM1dXqmWhBaOfaPYpfEXzFbF/u192Vlg0PGJnOboLZsBk8MV8HQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DL4pKpX5;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ZCQew7J4;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E96D2606A328
-	for <linux-scsi@vger.kernel.org>; Wed,  4 Nov 2026 12:28:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4F15606A329
+	for <linux-scsi@vger.kernel.org>; Wed,  4 Nov 2026 14:34:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DL4pKpX5
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 575341F0093A;
-	Wed,  4 Nov 2026 12:28:36 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ZCQew7J4
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 99B841F00A1D
+	for <linux-scsi@vger.kernel.org>; Wed,  4 Nov 2026 14:34:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793795316;
-	bh=5v4DTozgqP3R32Jw/5tSc+0RVUjrJFY2m6diOtnoGbE=;
-	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
-	b=DL4pKpX56XGj++CXLvDsQf2dAxvACks47w2czgTMH/PfHMW8pMDC+ZRVlke4EFNei
-	 SI8ehXLds3relrXBHn03IlAkSjv8e7mZEaEno02+wE8av6z5QIimHIOrt9ya+6q+33
-	 kY7r+8lgKFkVhUHSTI34x8WXdqJuH2psyR7JMt1F0IToLQ0h2x1gn0YbK8mB8BNai4
-	 wWmYcOlJUBRFaK+sgWbdWFlz7b4BT5DtwNG+9HAHZFubXxM5yP4oinpeb2aaet6rX9
-	 daWl63Y2Ha1oPHKJr8TxbhfgbP6NX2AifO0F2NFfaQ9k3AM4+ZBtNZHCUZKNsC/mlb
-	 3k8NH01NtBNEA==
-Message-ID: <sashiko-outbox-197252@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 15/21] scsi: mpi3mr: Fix block_io accounting when a
- target is re-created during BSG
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Ranjan Kumar" <ranjan.kumar@broadcom.com>, linux-scsi@vger.kernel.org
-In-Reply-To: <20261104120103.503871-16-ranjan.kumar@broadcom.com>
-References: <20261104120103.503871-1-ranjan.kumar@broadcom.com>
- <20261104120103.503871-16-ranjan.kumar@broadcom.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 04 Nov 2026 12:28:35 +0000
+	s=k20260515; t=1793802882;
+	bh=miceYdDB+7PLPC/J0qgYQmDdAc3qF6Ff3jq4UUQkwZY=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc;
+	b=ZCQew7J4C0cPbpFciKAO29xWInbT/Z9mDi4MngzVubYoiE/NbzT2woeIcapJeMO1d
+	 rOxhLT3GseRScwA22F7gUErzJFnWneWR8ELJ4/+aPneT3avjJDYLsymfA0og2a61Aw
+	 Td+crMWeYN2V0NTkV/ksXQvBalTAv6ZQDIpc32Z7ZlILQ7DaeMklE5gyS51OD4Ffqv
+	 y9ubd4J1tRS6KMYaJyiqAp1Nqd9tnk5Ly2DkSshSP5pAirdKjminDIUmG61Qar+l0w
+	 olOrzA9NoVYOWDFEIRj32Zj7BhbgBwa6xveznllTlS8//zKtVwUNIXIkBjzvW439Hr
+	 8pm9c2skhrRpg==
+Received: by mail-lf1-f53.google.com with SMTP id 2adb3069b0e04-5bfc346401aso558009e87.0
+        for <linux-scsi@vger.kernel.org>; Wed, 04 Nov 2026 06:34:42 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AKwUvBzR2m9RaGxLZSlFFQ1+XrFxiarU2NGMmr5fgYNYn9tIZXKHe25qXqmIyDVsKxKNBdeO63rs2k7DSWW9@vger.kernel.org
+X-Gm-Message-State: APuU4Z+X8NYcR07CDhGXMOjofwY77cRkqZGzinCCG2YFHmKIVNM4YCgx
+	mWYWnDMhCwKZPp8D/5Z7V/got3vgbXSt2yLtXTofZad2W482o5Hc7ue8kpd6zfIevYY+VE67+qy
+	3dKa4FFy1er40GkGLTdBpz7qZ/+JpCNY=
+X-Received: by 2002:ac2:4c4e:0:b0:5be:605c:fca2 with SMTP id
+ 2adb3069b0e04-5bfd954bf17mr5907232e87.4.1793802880980; Wed, 04 Nov 2026
+ 06:34:40 -0800 (PST)
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -59,179 +58,135 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+References: <20261104112744.1630864-1-stanleyjhu@google.com>
+In-Reply-To: <20261104112744.1630864-1-stanleyjhu@google.com>
+From: "Rafael J. Wysocki (Intel)" <rafael@kernel.org>
+Date: Wed, 4 Nov 2026 15:34:28 +0100
+X-Gmail-Original-Message-ID: <CAJZ5v0gWGVXeN9nq=cUe=ufeX5jC3oWpdms-2Eus13dFNxqxAw@mail.gmail.com>
+X-Gm-Features: AclHuK8_mlawzHb7grWA4pMsKYYbWB0rPIQSUSQOlRdZy4jfzqgdM01VFchXEqs
+Message-ID: <CAJZ5v0gWGVXeN9nq=cUe=ufeX5jC3oWpdms-2Eus13dFNxqxAw@mail.gmail.com>
+Subject: Re: [PATCH v2] block: Keep RPM_ACTIVE in blk_pre_runtime_resume()
+ when already active
+To: Stanley Jhu <stanleyjhu@google.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Bart Van Assche <bvanassche@acm.org>, 
+	Brian Norris <briannorris@chromium.org>, "Rafael J . Wysocki" <rafael@kernel.org>, 
+	Praveen Talari <praveen.talari@oss.qualcomm.com>, Alan Stern <stern@rowland.harvard.edu>, 
+	linux-block@vger.kernel.org, linux-pm@vger.kernel.org, 
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	stable@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [Medium] scsi: mpi3mr: leaked block_io count in mpi3mr_tgtdev_block_io_de=
-c()
-- [Low] scsi: mpi3mr: undocumented seq member in struct mpi3mr_stgt_priv_da=
-ta
---
+On Wed, Nov 4, 2026 at 12:27=E2=80=AFPM Stanley Jhu <stanleyjhu@google.com>=
+ wrote:
+>
+> Since commit eef1d74bf88f ("PM: runtime: Only set runtime_error on
+> suspend callback failures"), a failed runtime resume leaves
+> dev->power.runtime_error at 0 with runtime_status set to RPM_SUSPENDED,
+> so later runtime resume requests run sdev_runtime_resume() again:
+>
+> 1. A runtime suspend increments q->pm_only from 0 to 1 and sets
+>    q->rpm_status to RPM_SUSPENDED.
+> 2. The first runtime resume fails in the driver callback, and
+>    blk_post_runtime_resume() sets q->rpm_status to RPM_ACTIVE and calls
+>    blk_clear_pm_only(), decrementing q->pm_only from 1 to 0 so recovery
+>    commands can enter the queue (intended since
+>    commit 6e1fcab00a23 ("scsi: block: pm: Always set request queue
+>    runtime active in blk_post_runtime_resume()")).
+> 3. A retried runtime resume calls blk_pre_runtime_resume(), which
+>    overwrites q->rpm_status from RPM_ACTIVE to RPM_RESUMING, so
+>    blk_post_runtime_resume() sees old_status !=3D RPM_ACTIVE and calls
+>    blk_clear_pm_only() a second time without a matching
+>    blk_set_pm_only().
+> 4. q->pm_only underflows from 0 to -1 (triggering WARN_ON_ONCE in
+>    blk_clear_pm_only()), blocking non-PM requests in blk_queue_enter()
+>    and __bio_queue_enter() while the device is RPM_ACTIVE, and the next
+>    runtime suspend increments q->pm_only from -1 to 0, letting non-PM
+>    requests dispatch while RPM_SUSPENDED. This hits the UFS device
+>    well-known LUN by default and SCSI disks with
+>    manage_runtime_start_stop enabled (ATA and FireWire sbp2 defaults).
+>
+> Transition q->rpm_status to RPM_RESUMING in blk_pre_runtime_resume()
+> only when it is RPM_SUSPENDED, and call blk_clear_pm_only() in
+> blk_post_runtime_resume() only when old_status is RPM_RESUMING, pairing
+> each clear with a completed runtime suspend.
+>
+> Tested on QEMU ARM64 UFS in SDB and MCQ modes by injecting
+> runtime-resume START STOP UNIT failures on the UFS device well-known
+> LUN, confirming zero pm_only underflows and balanced runtime PM cycles.
+>
+> Fixes: eef1d74bf88f ("PM: runtime: Only set runtime_error on suspend call=
+back failures")
+> Cc: stable@vger.kernel.org # v7.3+
+> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+> Signed-off-by: Stanley Jhu <stanleyjhu@google.com>
 
-commit 23e409e23e8d123d95d4c65a026b00b68a047101
-Author: Ranjan Kumar <ranjan.kumar@broadcom.com>
+LGTM
 
-scsi: mpi3mr: Fix block_io accounting when a target is re-created during BSG
+Acked-by: Rafael J. Wysocki (Intel) <rafael@kernel.org>
 
-This commit introduces a 64-bit sequence number on struct
-mpi3mr_stgt_priv_data so that mpi3mr_tgtdev_block_io_dec() only decrements
-block_io if the target private data matches the instance that was
-incremented by mpi3mr_tgtdev_block_io_inc() when the BSG task management
-command started.
-
-> diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
-> index da47100d895e7..8738fc2ce7e77 100644
-> --- a/drivers/scsi/mpi3mr/mpi3mr.h
-> +++ b/drivers/scsi/mpi3mr/mpi3mr.h
-> @@ -847,6 +847,7 @@ struct mpi3mr_stgt_priv_data {
->  	u16 perst_id;
->  	u32 num_luns;
->  	atomic_t block_io;
-> +	u64 seq;
-
-[Severity: Low]
-This isn't a bug, but struct mpi3mr_stgt_priv_data has a kernel-doc comment
-block describing all of its members. Should a @seq entry be added there as
-well so W=3D1 builds and scripts/kernel-doc do not warn about an undocument=
-ed
-struct member?
-
-[ ... ]
-
-> diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr=
-_os.c
-> index e7833b24c5097..67d41e4a0a0ab 100644
-> --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
-> +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-> @@ -788,6 +788,8 @@ struct mpi3mr_tgt_dev *mpi3mr_get_tgtdev_by_handle(
->  	return tgtdev;
->  }
-> =20
-> +static atomic64_t mpi3mr_stgt_seq =3D ATOMIC64_INIT(0);
-> +
->  /**
->   * mpi3mr_tgtdev_block_io_inc - Block I/O on the SCSI target of a tgtdev
->   * @mrioc: Adapter instance reference
-> @@ -797,46 +799,52 @@ struct mpi3mr_tgt_dev *mpi3mr_get_tgtdev_by_handle(
->   * increment are done under tgtdev_lock, which mpi3mr_target_destroy hol=
-ds
->   * while it frees the private data.
+> ---
+> Differences from v1:
+> - Move SUSPENDED -> RESUMING explicitly in blk_pre_runtime_resume() and
+>   clear pm_only only for RPM_RESUMING in blk_post_runtime_resume()
+> - Describe the QEMU UFS test coverage in the commit message
+> - Link to v1: https://lore.kernel.org/r/20261029040001.2100001-1-stanleyj=
+hu@google.com
+>
+>  block/blk-pm.c | 13 ++++++++-----
+>  1 file changed, 8 insertions(+), 5 deletions(-)
+>
+> diff --git a/block/blk-pm.c b/block/blk-pm.c
+> index 8d3e052f91da..34cc7c5ca04e 100644
+> --- a/block/blk-pm.c
+> +++ b/block/blk-pm.c
+> @@ -142,7 +142,8 @@ EXPORT_SYMBOL(blk_post_runtime_suspend);
 >   *
-> - * Return: The private data that was incremented, only to be handed back=
- to
-> - * mpi3mr_tgtdev_block_io_dec. NULL if the tgtdev has no SCSI target.
-> + * Return: Sequence number of the private data that was incremented, to =
-be
-> + * handed back to mpi3mr_tgtdev_block_io_dec. 0 if the tgtdev has no SCSI
-> + * target.
->   */
-> -struct mpi3mr_stgt_priv_data *mpi3mr_tgtdev_block_io_inc(struct mpi3mr_i=
-oc *mrioc,
-> -							 struct mpi3mr_tgt_dev *tgtdev)
-> +u64 mpi3mr_tgtdev_block_io_inc(struct mpi3mr_ioc *mrioc,
-> +			       struct mpi3mr_tgt_dev *tgtdev)
->  {
-> -	struct mpi3mr_stgt_priv_data *stgt_priv =3D NULL;
-> +	struct mpi3mr_stgt_priv_data *stgt_priv;
->  	unsigned long flags;
-> +	u64 seq =3D 0;
-> =20
->  	spin_lock_irqsave(&mrioc->tgtdev_lock, flags);
->  	if (tgtdev->starget && tgtdev->starget->hostdata) {
->  		stgt_priv =3D tgtdev->starget->hostdata;
->  		atomic_inc(&stgt_priv->block_io);
-> +		seq =3D stgt_priv->seq;
->  	}
->  	spin_unlock_irqrestore(&mrioc->tgtdev_lock, flags);
-> -	return stgt_priv;
-> +	return seq;
->  }
-> =20
->  /**
->   * mpi3mr_tgtdev_block_io_dec - Undo mpi3mr_tgtdev_block_io_inc
->   * @mrioc: Adapter instance reference
->   * @tgtdev: Target device reference, held by the caller
-> - * @stgt_priv: Value returned by mpi3mr_tgtdev_block_io_inc
-> + * @seq: Value returned by mpi3mr_tgtdev_block_io_inc
+>   * Description:
+>   *    Update the queue's runtime status to RESUMING in preparation for t=
+he
+> - *    runtime resume of the device.
+> + *    runtime resume of the device if the queue is runtime suspended, or=
+ keep
+> + *    RPM_ACTIVE if a previous failed runtime resume already reactivated=
+ it.
 >   *
-> - * Decrement block_io only if the SCSI target still has the same private
-> - * data. If the target was removed meanwhile the private data is gone
-> - * and there is nothing to undo.
-> + * Decrement block_io only if the SCSI target still has the private data
-> + * that was incremented. A private data allocated later at the same addr=
-ess
-> + * has a different sequence number and is left alone.
->   */
->  void mpi3mr_tgtdev_block_io_dec(struct mpi3mr_ioc *mrioc,
-> -				struct mpi3mr_tgt_dev *tgtdev,
-> -				struct mpi3mr_stgt_priv_data *stgt_priv)
-> +				struct mpi3mr_tgt_dev *tgtdev, u64 seq)
->  {
-> +	struct mpi3mr_stgt_priv_data *stgt_priv;
->  	unsigned long flags;
-> =20
-> -	if (!stgt_priv)
-> +	if (!seq)
->  		return;
-> =20
->  	spin_lock_irqsave(&mrioc->tgtdev_lock, flags);
-> -	if (tgtdev->starget && tgtdev->starget->hostdata =3D=3D stgt_priv)
-> -		atomic_dec_if_positive(&stgt_priv->block_io);
-> +	if (tgtdev->starget && tgtdev->starget->hostdata) {
-> +		stgt_priv =3D tgtdev->starget->hostdata;
-> +		if (stgt_priv->seq =3D=3D seq)
-> +			atomic_dec_if_positive(&stgt_priv->block_io);
-> +	}
->  	spin_unlock_irqrestore(&mrioc->tgtdev_lock, flags);
+>   *    This function should be called near the start of the device's
+>   *    runtime_resume callback.
+> @@ -153,7 +154,9 @@ void blk_pre_runtime_resume(struct request_queue *q)
+>                 return;
+>
+>         spin_lock_irq(&q->queue_lock);
+> -       q->rpm_status =3D RPM_RESUMING;
+> +       /* Keep RPM_ACTIVE if a prior failed resume reactivated the queue=
+. */
+> +       if (q->rpm_status =3D=3D RPM_SUSPENDED)
+> +               q->rpm_status =3D RPM_RESUMING;
+>         spin_unlock_irq(&q->queue_lock);
 >  }
-
-[Severity: Medium]
-Can stgt_priv->block_io remain permanently elevated on a live scsi_target if
-a BSG task management request completes while scsi_tgt_priv_data->num_luns
-is temporarily zero?
-
-In mpi3mr_sdev_destroy(), tgt_dev->starget is cleared whenever num_luns
-reaches zero, even though the scsi_target and its hostdata (stgt_priv)
-remain alive while starget->reap_ref is held:
-
-drivers/scsi/mpi3mr/mpi3mr_os.c:mpi3mr_sdev_destroy() {
-	...
-	scsi_tgt_priv_data->num_luns--;
-	...
-	if (tgt_dev && (!scsi_tgt_priv_data->num_luns))
-		tgt_dev->starget =3D NULL;
-	...
-}
-
-And when another LUN is initialized on that same scsi_target,
-mpi3mr_sdev_init() sets tgt_dev->starget back to starget:
-
-drivers/scsi/mpi3mr/mpi3mr_os.c:mpi3mr_sdev_init() {
-	...
-	if (tgt_dev) {
-		if (tgt_dev->starget =3D=3D NULL)
-			tgt_dev->starget =3D starget;
-	...
-}
-
-This happens during __scsi_scan_target() (which holds starget->reap_ref)
-when probing LUN 0 in scsi_probe_and_add_lun() returns
-SCSI_SCAN_TARGET_PRESENT (such as when LUN 0 has peripheral qualifier 3) and
-calls __scsi_remove_device() -> mpi3mr_sdev_destroy() before
-scsi_report_lun_scan() or scsi_sequential_lun_scan() adds the remaining LUNs
-on the same starget. It can also happen if the last LUN on a target is
-removed via scsi_remove_device() while a concurrent __scsi_add_device() has
-already acquired starget->reap_ref via scsi_alloc_target() and is waiting on
-shost->scan_mutex.
-
-If mpi3mr_bsg_process_mpt_cmds() calls mpi3mr_tgtdev_block_io_inc() while
-LUN 0 exists, and then calls mpi3mr_tgtdev_block_io_dec() during the window
-where tgt_dev->starget is NULL, mpi3mr_tgtdev_block_io_dec() sees
-tgtdev->starget =3D=3D NULL and skips the decrement. Once mpi3mr_sdev_init()
-re-attaches tgt_dev->starget to that same starget, wouldn't
-stgt_priv->block_io stay elevated and cause mpi3mr_qcmd() to return
-SCSI_MLQUEUE_DEVICE_BUSY indefinitely for all commands to that target?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261104120103.5038=
-71-1-ranjan.kumar@broadcom.com?part=3D15
+>  EXPORT_SYMBOL(blk_pre_runtime_resume);
+> @@ -168,8 +171,8 @@ EXPORT_SYMBOL(blk_pre_runtime_resume);
+>   *    driver or error handler will need to communicate with the device.
+>   *
+>   *    This function should be called near the end of the device's
+> - *    runtime_resume callback to correct queue runtime PM status and re-=
+enable
+> - *    peeking requests from the queue.
+> + *    runtime_resume callback to mark the queue runtime active and clear
+> + *    pm_only if the queue was resuming.
+>   */
+>  void blk_post_runtime_resume(struct request_queue *q)
+>  {
+> @@ -185,7 +188,7 @@ void blk_post_runtime_resume(struct request_queue *q)
+>         pm_request_autosuspend(q->dev);
+>         spin_unlock_irq(&q->queue_lock);
+>
+> -       if (old_status !=3D RPM_ACTIVE)
+> +       if (old_status =3D=3D RPM_RESUMING)
+>                 blk_clear_pm_only(q);
+>  }
+>  EXPORT_SYMBOL(blk_post_runtime_resume);
+> --
+> 2.56.0.385.gac671c819a-goog
+>
