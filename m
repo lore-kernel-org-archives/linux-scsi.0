@@ -1,45 +1,45 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793821218;
-	b=L4C1EroY5doNStlN7REalePt1UKH5qj75ITDy1An2uY262iyexLEjTloNhfOQvAnnJLP
-	 kMZD6kChEn5m4ExeKheivR6GrXiNq9oKwnD+cmoqaF2wweR5DVwEgBdQZ83VROz3gg9A8
-	 J1VvMYtj51eh+9KALGs5ZquB4SEHvXLFf7fc3jX1oL+81HUs1tcIDUnA7bBMb99Gc26QK
-	 GckQgZAOnxIeNuxzQFkZ9qMZFeh5pbMDKYR5AktLc0YlkCHdN5jh78JgP2GJXoiz0JYeB
-	 9ET1xzRvuQ220vpEjYWGHOVFBcEB7SbRayK6fMrqRsW+1MTvhvgInABQeHE1BKovtqA==
+	t=1793821248;
+	b=wjTYA/BFerLikYV2AqZatlkDESU/8Ga+7SW2wzDNUu+5MPNSfwiNpf0dcssJoceYjX7Z
+	 X/njJX+8UlqB45//cwqVRhcB+z07HM/Gn7Z/51J5kRsSk9h0JNDO4oYq/Ku/kzkt3C5Lu
+	 Rc7esj3Xut/tIoX494l7Ky/w83K07mhswbaErpL+6lMchmMzsG9PH4PkHxmq+wU+NQ+IJ
+	 MkfrhWf95Py1SZvF9lKTQ48cW+sTKCueYdtw0YRb1DeOn8WgoBFLBNNW1GTwwwbm45WEs
+	 WUrI0uM1cnDPstxSRe2VQm0EWbXLdwzsDuL/DVqyRizCG68KWLzgwLJCYRZdv/BqPgw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793821218;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793821248;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:
 	 In-Reply-To:References:MIME-Version:Content-Type:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:Content-Transfer-Encoding;
-	bh=Jqve5dom8G0YagWg0DUi21Qt2CUJnz11dMCfHhOCDkM=;
-	b=HMr+jJmKiHvzfXHZnFMVW5+qxT27uo55DVdWVSYZ0WyBUSj8uyZs4CWQ4e+4taSRasHn
-	 9a2z/EBStMiL3fo25o31c4aAXRhdvxxbDLwchI8KZPD3P9a8hM+UlREFE6jlrfNkWlxdw
-	 nYY8UezF1f3PZunRQvdABbDq12iXQp9ye5w2dHOr1HArZ7wQ507uj0al0E212wSEQLPnX
-	 l3rhexC6Q5rqXSv0UqPTn3ntSguTezm8DAnKC0ESDdhRLgJrX5yi6ixvAbMpg3IOtzkfM
-	 N/Dx3vQCaeMqgUe23Bp4rBcD6qqVxbU3nggpqzq4O5GnIgy6F/SbNW9WKiWAzn5z7cA==
+	bh=ljglEsXifce2qfRBf9KQz9o848Hwgwzekl8g5JPLaig=;
+	b=oxpMo+4K+GOqTFTUe3tku8uVY3YEvWcN6VawhTiU6GQQx7pymfM1OnD+pI9SH9b07sYM
+	 FiQ8XCRsT1oZ+fYg6NNGazhuAWcHvmYrpUI8r6FhlVR/tvwa1mDdliLy372qfsNhsjdDj
+	 Ubsq4Pn+Rlva4VilQlcj/8A56YDwn7CkoBvhlOBWCNwuFAlj75gC96gPLOEydFqJwudjr
+	 XVAAkeyXrNMmR0znBOkuHVQI9zQ5wZYhiyV05Aya5jubJHrTL1qXpxKDtyeMtzGCU2ibV
+	 Q2w8PGEPmhPYAZfmou1PJ/XmNHJyxNMkuciCR+rHGJB9aWhqmE1fce7TEEn6TIvcxGA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DS3z8fo4;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Wy0boZ5z;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A2596071A18;
-	Wed,  4 Nov 2026 19:40:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 448136071A0E;
+	Wed,  4 Nov 2026 19:40:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DS3z8fo4
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 224F31F000C1;
-	Wed,  4 Nov 2026 19:40:05 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Wy0boZ5z
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9FC2E1F0093A;
+	Wed,  4 Nov 2026 19:40:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793821218;
-	bh=Jqve5dom8G0YagWg0DUi21Qt2CUJnz11dMCfHhOCDkM=;
+	s=k20260515; t=1793821247;
+	bh=ljglEsXifce2qfRBf9KQz9o848Hwgwzekl8g5JPLaig=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=DS3z8fo4+XcVun7qDjz2NB285oy50w37ZhabVQ+2KTyYBD2yK9k0cv1ydfdyDbb2G
-	 F2kOHfTeVzmbTPa9e/WdAD70pmv8wAUop1Anni0EzwRVSbumICFkMK1x1F9P4tYZIC
-	 c3MZ0Kd/4HbFldytGX1vHUsdhINZ5NpZWDpvM+t0Z5wHT/E+VFr+t/6p+AttFRpI6Z
-	 mwCDXmDky64VEy6slIdAHdiThaCm746BEvz4eDgLL3BHUTx/IA08z0BMxgO0LJmQyT
-	 NF1MhcwXbC2axzqG1STp/J698+gtyVKqI7HYsWuCQMJlP4fOePGgiGm6vAX9LAFZim
-	 TqL2Dw1DliqSQ==
+	b=Wy0boZ5zanG430YNSID9PvLo8Hz+/29VvJoJ9WySCgaVz1GS+M9Ng0mKTlmCR6Sp3
+	 Wy6SgMb3/VqyekYQ/1cR/jjtPSaurM/Udr3bvNEYMuoz7g7KxSi3hffidsqtPL6rT+
+	 kNwUs9q+tNP6NBKx59NYF9AsYxVfTGuDi6XKbhHh4hcUsnEviZrGiHrP56E4+mGRvY
+	 JVVBJqh6UNVAz2b97ZBb5pcE8f/kvEg6BQoxsArkq6nlESYRlG+raNwuWLjBL5Fegx
+	 ogU0jkHe5zezEzx7v8f9ltgbWRNKY/tsEAVwKI2tVEh2fNgrnaN9ng+jA/EICHiT9S
+	 CNdt1XlVegAtA==
 From: Christian Brauner <brauner@kernel.org>
 To: linux-fsdevel@vger.kernel.org
 Cc: Linus Torvalds <torvalds@linux-foundation.org>,
@@ -100,9 +100,9 @@ Cc: Linus Torvalds <torvalds@linux-foundation.org>,
 	linux-debuggers@vger.kernel.org,
 	"Christian Brauner (Amutable)" <brauner@kernel.org>,
 	Chuck Lever <cel@kernel.org>
-Subject: [PATCH RESEND v2 18/23] ACPI: proc: let procfs copy in writes to /proc/acpi/wakeup
-Date: Wed,  4 Nov 2026 20:40:03 +0100
-Message-ID: <20261104-work-procfs-arch-v2-18-2aeb952c9597@kernel.org>
+Subject: [PATCH RESEND v2 20/23] platform/x86: thinkpad_acpi: let procfs copy in writes
+Date: Wed,  4 Nov 2026 20:40:33 +0100
+Message-ID: <20261104-work-procfs-arch-v2-20-2aeb952c9597@kernel.org>
 In-Reply-To: <20261104-work-procfs-arch-v2-0-2aeb952c9597@kernel.org>
 References: <20261104-work-procfs-arch-v2-0-2aeb952c9597@kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -116,51 +116,58 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 X-Mailer: b4 0.17-dev
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1423; i=brauner@kernel.org; h=from:subject:message-id; bh=IJsID2u9MwR2UWiBoMaBlflke6dvKtZBVcAIKZfI9/A=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS97mTSWXVefuGeEyelmfYp78ycWKUkyn49ZGWQk+eRL 0tjb5df7ShlYRDjYpAVU2RxaDcJl1vOU7HZKFMDZg4rE8gQBi5OAZjIXhmGf+a115bOnrtr8gHR +0o1t4SK21/t283HxHqtW0P5SrNTrxYjQ6Pi/sVHc5622fk3Tnk5Q7znZtAi0aS07pWzZjY9Od9 YwQ0A
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1670; i=brauner@kernel.org; h=from:subject:message-id; bh=B1JM/SyKlO95qrS7p0kfKzr/VxkM25eIJbDMnht8OJo=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS97mSx1F3VulFfxXnpV5EtBz+raF7cItzSzr37e8o/J X1NniM3O0pZGMS4GGTFFFkc2k3C5ZbzVGw2ytSAmcPKBDKEgYtTACZydikjw5J2aZXovIq/n3/0 ZQtu+2Fn9/PUc5+zb7fMOXwlwMPtzzxGhsertpXcs3gT5Xh92pP36mKWQvHOiqu49M5OudX+dnL TCTYA
 X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 Content-Transfer-Encoding: 8bit
 
-Implement ->proc_write_buf() so procfs copies in what is written before
-it pins the entry, and take the device name from that copy. Writes
-larger than PAGE_SIZE - 1 bytes fail with -EINVAL now.
+Implement ->proc_write_buf() so procfs copies in what is written to
+/proc/acpi/ibm/* before it pins the entry, and hand that copy to
+->write(). procfs already rejects writes larger than PAGE_SIZE - 1
+bytes.
 
 Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
- drivers/acpi/proc.c | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+ drivers/platform/x86/lenovo/thinkpad_acpi.c | 12 +++---------
+ 1 file changed, 3 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/acpi/proc.c b/drivers/acpi/proc.c
-index b8a0bd4580e0..feb8283fd855 100644
---- a/drivers/acpi/proc.c
-+++ b/drivers/acpi/proc.c
-@@ -86,7 +86,7 @@ static void physical_device_enable_wakeup(struct acpi_device *adev)
+diff --git a/drivers/platform/x86/lenovo/thinkpad_acpi.c b/drivers/platform/x86/lenovo/thinkpad_acpi.c
+index 2ee208c82801..8287b36bd90d 100644
+--- a/drivers/platform/x86/lenovo/thinkpad_acpi.c
++++ b/drivers/platform/x86/lenovo/thinkpad_acpi.c
+@@ -882,7 +882,7 @@ static int dispatch_proc_show(struct seq_file *m, void *v)
+ }
  
- static ssize_t
- acpi_system_write_wakeup_device(struct file *file,
--				const char __user * buffer,
-+				char *buffer,
- 				size_t count, loff_t * ppos)
+ static ssize_t dispatch_proc_write(struct file *file,
+-			const char __user *userbuf,
++			char *buf,
+ 			size_t count, loff_t *pos)
  {
- 	struct acpi_device *dev, *tmp;
-@@ -96,8 +96,7 @@ acpi_system_write_wakeup_device(struct file *file,
- 	if (count > 4)
- 		count = 4;
+ 	struct ibm_struct *ibm = pde_data(file_inode(file));
+@@ -890,14 +890,8 @@ static ssize_t dispatch_proc_write(struct file *file,
  
--	if (copy_from_user(strbuf, buffer, count))
--		return -EFAULT;
-+	memcpy(strbuf, buffer, count);
- 	strbuf[count] = '\0';
- 	sscanf(strbuf, "%s", str);
+ 	if (!ibm || !ibm->write)
+ 		return -EINVAL;
+-	if (count > PAGE_SIZE - 1)
+-		return -EINVAL;
+-
+-	char *kernbuf __free(kfree) = memdup_user_nul(userbuf, count);
+-	if (IS_ERR(kernbuf))
+-		return PTR_ERR(kernbuf);
  
-@@ -123,7 +122,7 @@ acpi_system_write_wakeup_device(struct file *file,
+-	ret = ibm->write(kernbuf);
++	ret = ibm->write(buf);
+ 	if (ret)
+ 		return ret;
  
- static const struct proc_ops acpi_system_wakeup_device_proc_ops = {
- 	.proc_show	= acpi_system_wakeup_device_seq_show,
--	.proc_write	= acpi_system_write_wakeup_device,
-+	.proc_write_buf	= acpi_system_write_wakeup_device,
+@@ -906,7 +900,7 @@ static ssize_t dispatch_proc_write(struct file *file,
+ 
+ static const struct proc_ops dispatch_proc_ops = {
+ 	.proc_show	= dispatch_proc_show,
+-	.proc_write	= dispatch_proc_write,
++	.proc_write_buf	= dispatch_proc_write,
  };
  
- void __init acpi_sleep_proc_init(void)
+ /****************************************************************************
 
 -- 
 2.53.0
