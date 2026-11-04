@@ -1,56 +1,55 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793759256;
-	b=3BdscvFcpzoI6QUDoYd3vacfSTyqS3t4KSm8UGIMI1mpRgztLgEIB9QGa54TDFNPOn0P
-	 4//ctk5ERevgcd63VueXTE1wtWFZzVJntfde1sIyytIoatGJx1DDwA2qq1g64+RdDsuIO
-	 D76047FQTI0qHsmFg1XhmrlYz4i8x6ISeNWAMwnSwVjWxjotnYEIExhxAhwpI45Yb0oM6
-	 dobrLS1vVc52AKOH6/mZ6wdUVD05xvFkrxb0G39Y6LbDmt3ZA4P2F1q9ujJtdNh0hiPOL
-	 o3R300QMa6w7qGpozeWcmGcqnlpwIpngdBDcleJr2INbmybGo/U+1yu01pGJ4a1RCtQ==
+	t=1793759261;
+	b=vtMfWJxFwZmKsfMa9inBnPy/h02dWQrX6T99+HgOcppgnjtKqheseBt/AUB9jl1AWB6M
+	 viDbJfEmjeh5rLf0oSJaDMCrarsVZZ+knoGE01N79YSvHxlQ0x9byU8sK3yhdklkpxXgC
+	 UXIPcroeARO9zt21jz8r4wdYPIGWc5K1qOHRVhfiesP07wLR7/kMKT/eSeM9EcQQS6oiq
+	 R9uH1X+uxM6V3Xzjh0ZfE8VC1zMsMyqO2XwC7aHvrbh0Be4jLGcFLTb3P3I4x0xV5ChEw
+	 57iQlkxHMU69ziQCu3kc53kY6hzNRsKkDKa7NJyXgqZKtF9VlgsbH9nbLjlsTR5t2Fg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793759256;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793759261;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=clmuDIq+119PXjzT1KDgdqeM8MiNOxU/YIG6asCzbsE=;
-	b=XF/eMLrOF3lf+/F8WyFwHgWQajvuKcgPoYAoFvNe7KPrxxUOYhmEAVNGdqetwTrYZ/0i
-	 zvPatJPDntvQ61Jlo9TVSvzSEJ6tflOt0FERm3+U660+IY3HsV7BUkV9dyrHCk9weyD5H
-	 rXwIUEIebIO/2JYRLHVHlHYH43X2hmucPnSmub/sLlN5bbxsS4gA0B/A4jZsj4b5qQI+I
-	 mdVpyFNBfYKdwpML0w9XCkLtKRhocbV2WAzTtWMt2UPALn3sdUtAzhZJ7X8YhPd8TzDnQ
-	 0L1AG9uWucOQB1kNgRDFDpxNSFI8Xt8yUjh19gRIDMAtlBcjlpbI6SmIBfu5Zop+UMw==
+	bh=qSlp0oMN0bPD8t0wCUaRwnVwKnhbMr7y0AurpAqa0zI=;
+	b=OuFlqcHpfeGVD06eHAje+7l6qdfbDJ78FXXy3srWy5euddj+BfsYSNs/gONsZxCTXuFg
+	 bm6AbmbYzSOMbD4UWQ2pUTkcQfTO6di9EboczPH+4U7hm6AMYHSetQSLze+g3XgQ0GfM3
+	 qJKhIXmPfhbVPzFnNshCwhg0cGXSbuPhnNMqYZQrXyl+8yzmolpWjtHS9vrZQNg6aavdd
+	 E+xSBEUmkwMCVTU+aOYbDOWmqvqiYQcbtKTQUSCS0bEB6E9zQZpf9mICRpwM6RLnbQesr
+	 uJbctNJYVJqq+hz4xaMaYsKwpBj9yHs09Bc99k+Zfz+wK4n1gnoxX9XcvPIs7GMsRpw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="hlY2/VAq";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="lruYq/nG";
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19614606A31B
-	for <linux-scsi@vger.kernel.org>; Wed,  4 Nov 2026 02:27:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C14E606A31B
+	for <linux-scsi@vger.kernel.org>; Wed,  4 Nov 2026 02:27:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=hlY2/VAq
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7DC091F000C1;
-	Wed,  4 Nov 2026 02:27:35 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lruYq/nG
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1E8BF1F000C1;
+	Wed,  4 Nov 2026 02:27:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793759255;
-	bh=clmuDIq+119PXjzT1KDgdqeM8MiNOxU/YIG6asCzbsE=;
+	s=k20260515; t=1793759261;
+	bh=qSlp0oMN0bPD8t0wCUaRwnVwKnhbMr7y0AurpAqa0zI=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=hlY2/VAqNjxU8n3YxPTMLlRGYJ2nA1No8Zh3FJOMmherW3h3tGrCY/vlUTGoBg5Ne
-	 GAC7h/K79+m7flEqBEWyf92pxY4eexQte6K1ZMw8WL6eVeipY4o9zalejJI0Tz+b64
-	 ehc3hL9K8v/OfWazjYaMSsDyuNN1nLzLYZ7UtaXNbfR3glJnxX5VJUyVRIMGZ3Zcp5
-	 KUoVP9Dm0iWou0CGGkgQQcKKW3dwGN9TenHy05iyF8jMddMATG5tVxi+GKKim3XIL/
-	 cEnQLP7Tkl9RslpnRLouoO57bcYKdVc6aF28bWpzRu7OqR7ioaCi4Egk8Bbhj91s1V
-	 EJjgp9H1BjLSg==
-Message-ID: <sashiko-outbox-196464@kernel.org>
+	b=lruYq/nGTJcq5gQiGJ9HGDXZDMDbBDktnlIzJR/XFYQgk32gIYRGehB4A7xgtXwK2
+	 9n7tBPr5n2eVomY/A4E9bbe1a1zhPR+b7UvSD+qXNwVX3U31BJHnWRSl0f/UGoJK8p
+	 6E8N1cnx/c08k/Gybi+sVBfQWMvbjl8RbQjsU23eadCbBNiwsFvGTzqp9FDNXFtQyW
+	 nOzh3tIPhQHGZxnLJavBl655uds/bPk2+kY2oor7N9yednTq1rQhKVhpa1rYS1/7k9
+	 4q/tiMpyRF0R8+yh02JUsOCw+HxCG+6EZ0OJyWkPX5DYxpWNaHdyaczhhCNRKzQY53
+	 fo/isEwEX2lcA==
+Message-ID: <sashiko-outbox-196465@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] scsi: mpt3sas: drop the sas_device reference on port
- add failure
+Subject: Re: [PATCH] scsi: mvsas: put the Scsi_Host when host setup fails
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Wentao Liang" <vulab@iscas.ac.cn>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20261104021352.1467740-1-vulab@iscas.ac.cn>
-References: <20261104021352.1467740-1-vulab@iscas.ac.cn>
+In-Reply-To: <20261104021440.1468339-1-vulab@iscas.ac.cn>
+References: <20261104021440.1468339-1-vulab@iscas.ac.cn>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 04 Nov 2026 02:27:35 +0000
+Date: Wed, 04 Nov 2026 02:27:40 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -62,65 +61,67 @@ Precedence: list
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [Medium] scsi: mpt3sas: dangling sas_device->rphy in mpt3sas_transport_po=
-rt_add()
+- [High] scsi: mvsas: use-after-free in mvs_pci_init() when scsi_add_host()=
+ fails
 --
 
-commit 513fa7a846ccb03a4cae94cd2a076f29098310d8
+commit 6788dffec70edd91c99d1078d3e86b6a8d604507
 Author: Wentao Liang <vulab@iscas.ac.cn>
 
-scsi: mpt3sas: drop the sas_device reference on port add failure
+scsi: mvsas: put the Scsi_Host when host setup fails
 
-This commit fixes a sas_device reference leak and clears pend_sas_rphy_add
-in the out_fail error path of mpt3sas_transport_port_add() when adding a
-SAS end device port fails.
+This commit adds a call to scsi_host_put() after scsi_remove_host() in the
+mvs_pci_init() error unwind path so that the Scsi_Host allocation reference
+is dropped when probing fails.
 
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_transport.c b/drivers/scsi/mpt3=
-sas/mpt3sas_transport.c
-> index e74a526efa8db..38259dae91093 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_transport.c
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_transport.c
-> @@ -866,6 +866,10 @@ mpt3sas_transport_port_add(struct MPT3SAS_ADAPTER *i=
-oc, u16 handle,
->  	sas_port_delete(port);
-> =20
->  out_fail:
-> +	if (sas_device) {
-> +		sas_device->pend_sas_rphy_add =3D 0;
-> +		sas_device_put(sas_device);
-> +	}
+> diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
+> index 5abc17a2e2610..9210cb0bb2c11 100644
+> --- a/drivers/scsi/mvsas/mv_init.c
+> +++ b/drivers/scsi/mvsas/mv_init.c
+> @@ -571,6 +571,7 @@ static int mvs_pci_init(struct pci_dev *pdev, const s=
+truct pci_device_id *ent)
+>  	sas_unregister_ha(SHOST_TO_SAS_HA(shost));
+>  err_out_shost:
+>  	scsi_remove_host(mvi->shost);
+> +	scsi_host_put(shost);
 
-[Severity: Medium]
-Should this cleanup block in mpt3sas_transport_port_add() also reset
-sas_device->rphy to NULL?
+[Severity: High]
+Does this cause a use-after-free on shost when scsi_add_host() fails in
+mvs_pci_init()?
 
-Earlier in mpt3sas_transport_port_add(), when adding a SAS_END_DEVICE,
-sas_device->rphy is assigned before sas_rphy_add() is called:
+Earlier in drivers/scsi/mvsas/mv_init.c:mvs_pci_init(), a failed
+scsi_add_host() jumps to err_out_shost:
 
-	if (mpt3sas_port->remote_identify.device_type =3D=3D SAS_END_DEVICE) {
-		rphy =3D sas_end_device_alloc(port);
-		sas_device->rphy =3D rphy;
-		...
-	}
-	...
-	if ((sas_rphy_add(rphy))) {
-		ioc_err(ioc, "failure at %s:%d/%s()!\n",
-			__FILE__, __LINE__, __func__);
-		sas_rphy_free(rphy);
-		rphy =3D NULL;
-		goto out_delete_port;
-	}
+	rc =3D scsi_add_host(shost, &pdev->dev);
+	if (rc)
+		goto err_out_shost;
 
-If sas_rphy_add() fails, rphy is freed via sas_rphy_free(rphy), and only
-the local rphy variable is cleared before jumping to out_delete_port and
-out_fail.
+When scsi_add_host_with_dma() fails, it rolls back any partial registration
+and leaves shost->shost_gendev with only the single initial allocation
+reference from scsi_host_alloc().
 
-Because sas_device remains on ioc->sas_device_list or
-ioc->sas_device_init_list (and is also held by the caller),
-sas_device_put(sas_device) in out_fail does not free sas_device, leaving
-sas_device->rphy as a dangling pointer that __mpt3sas_get_sdev_by_rphy()
-can match against a reallocated sas_rphy at the same address.
+Jumping to err_out_shost then calls scsi_remove_host(mvi->shost) on a host
+that was not added. Because scsi_host_set_state(shost, SHOST_CANCEL) allows
+the transition from SHOST_CREATED to SHOST_CANCEL, scsi_remove_host()
+proceeds to unregister shost->shost_dev:
+
+drivers/scsi/hosts.c:scsi_remove_host()
+  device_unregister(&shost->shost_dev)
+    put_device(&shost->shost_dev)
+      scsi_host_cls_release()
+        put_device(&shost->shost_gendev)
+
+Depending on where scsi_add_host_with_dma() failed, scsi_remove_host() eith=
+er
+waits on an uninitialized shost->tagset_freed completion or drops the sole
+reference on shost->shost_gendev and frees shost, after which the newly add=
+ed
+scsi_host_put(shost) accesses the already-freed Scsi_Host.
+
+Should a failed scsi_add_host() bypass scsi_remove_host() and jump directly=
+ to
+a label that only calls scsi_host_put(shost)?
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261104021352.1467=
-740-1-vulab@iscas.ac.cn?part=3D1
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261104021440.1468=
+339-1-vulab@iscas.ac.cn?part=3D1
