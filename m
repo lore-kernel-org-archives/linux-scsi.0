@@ -1,95 +1,95 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.99
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793794264;
-	b=lhv+CYqj1bPQ0P5BUE0V1X9M5eDOJF85QlhXKoZmDibU+2uopZfbufNccJoH5EJ6Cm2J
-	 rXJRDXbJEiEPA/Oun4iCx7xA+Ih2v+5uOOZbOtHR8q2rpfczWv223WPMGO8gf3J3Q39Oh
-	 b7xjdpJoBNzD2nfJ92U8ldQl5UlX0VyWtmyvNC+C1Qhx6xP3vCPCzkmyECjZ5O7q1Wpox
-	 B1gEffe4QVCFWGrNvXkH9mm3z5P5Fk8UtML/+B8rKQr1nWD6RR6y5EBnhBDSWZuiztC6f
-	 AhxcP9ZdFxxZceEUbikdgzBjQZt+c1nO0jMgOuJ1dwKfT473hjvo8cG+BZmdvQdJ9Zg==
+	t=1793794267;
+	b=sa8QwvROueVPo3mbNfxEipoYImz9p9d7Nb/ipdGvVLMWCytH8E0jQJ7gXaXAHIHACnBw
+	 XGYygtcvh7BCWjNXNACy+rysKKr97qXiGEZG1cMT6MT4Pogfg3XC+eZ/4GL4N9uDmFkyD
+	 MvgSCYLNcLEaxRVXHCBwftB9ZSLsqDuE+Cdq/Qh9YWrbbEuaHejHuQ4Ocihl4CXKAQhVS
+	 tyzpOUSZInCnwAj+7qgjXelVxn9H1OK5b2vheKLujUkUh93Sc/z+DWY1chIjonStj6x8k
+	 qJJoMTRH//L5OIQ+3xCHXO5XNhcSMhRfnPzTUf9mzKRn9GwWzOKmxfqq2YdYO9NiWWA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793794264;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793794267;
 	h=DMARC-Filter:Received:X-Google-DKIM-Signature:X-Gm-Message-State:
 	 X-Gm-Gg:X-Received:Received:X-Relaying-Domain:X-CFilter-Loop:Received:
 	 DKIM-Signature:X-Received:X-Received:Received:From:To:Cc:Subject:Date:
 	 Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding:X-DetectorID-Processed;
-	bh=w75GAwmmcBJZkL+Y3QiXlPAr1f2IZbUzKoF9FLKRNSw=;
-	b=YVtM2gjixqQO3pwRe2dCuHApbe5cdCAaioaG5EgkOZaKSBCJJd0horf7nydolLu5Um0w
-	 PVBD3h701WUWPyhm7av9nBd0p9Imj8NZQjPIMTl04kOfb2msSFTIo6jAy69UQHW5nONcd
-	 +0Ew66wE1egvRMan5/OuzTIW0frJjXGvcoSqR1Xma7UNVlkT4uwKVKfxqGL7Eho8w0DmN
-	 RbyV50c+JoHlUv24+4zFssXUvtUkcsnNY3EiqQ5NOVeqxOcwZ9mcB2Mft4XUyc64OfbUg
-	 HDk6WziUrAS0p+OUlRPLjHyP7nUsZr5xm+fQuKkA4FVhgxDOOWF24qJDhBOpl7kW7Rg==
+	bh=0hiz7PU5TjwG1X9hXrb5wkr6rJYnq4Oaw7ub9l8aGpQ=;
+	b=Q+CAZQ0dvevS1pDaa3lOP5xDEJJlhncIb/lEuwoQksvxfckMwbjxRHDDMzZO677JvDQ3
+	 E7o6CN928uLbB3p+gK8LvWkToF2D+UJYkr6uf1s0aU0BxcPkAsZalFksx9Z2UScVtjzWK
+	 209attSQDiMrKQxAHEPc6rzMFcABZK3FK0FIKa1i2+EDNcW7BJ4l13EZ/ZX0wr3BVm/6K
+	 cr/IQme9WdWHjMfemSqVpC0s/TKl5hwSrVknWboNa4gOv8Jk4hctM+iXxfw1nXBklPO7F
+	 dF8NLQNSaBit8niU3jdD8s3HYzmdIfKr/WcOJIM9x+vY12JeJbaLuVEWtLZNPHbUk/Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=broadcom.com;
 	spf=fail smtp.mailfrom=broadcom.com;
-	dkim=pass header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=OR4l45Xa;
+	dkim=pass header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=GUJuZbjY;
 	arc=none smtp.remote-ip=209.85.216.99
 Received: from mail-pj1-f99.google.com (mail-pj1-f99.google.com [209.85.216.99])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4214F606A337
-	for <linux-scsi@vger.kernel.org>; Wed,  4 Nov 2026 12:11:04 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4214F606A337
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 012CF606A32F
+	for <linux-scsi@vger.kernel.org>; Wed,  4 Nov 2026 12:11:06 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 012CF606A32F
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=OR4l45Xa
-Received: by mail-pj1-f99.google.com with SMTP id 98e67ed59e1d1-3ada4c06b7bso317726a91.2
-        for <linux-scsi@vger.kernel.org>; Wed, 04 Nov 2026 04:11:04 -0800 (PST)
+	dkim=pass (1024-bit key, unprotected) header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=GUJuZbjY
+Received: by mail-pj1-f99.google.com with SMTP id 98e67ed59e1d1-3b0a0d19a60so189426a91.0
+        for <linux-scsi@vger.kernel.org>; Wed, 04 Nov 2026 04:11:06 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793794263; x=1794399063;
+        d=1e100.net; s=20260707; t=1793794266; x=1794399066;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:dkim-signature:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=w75GAwmmcBJZkL+Y3QiXlPAr1f2IZbUzKoF9FLKRNSw=;
-        b=D1UM1KVR45k7V6G4BSdD/XAOcRXne3mWDwOBPgwg/R0lGkFIGCA5anc5fsQhlmXFqZ
-         6NoftoDeMV4ZEFfSi9zlr2bN1k7wO+Lpvz4ZfFullvpdSowsJ/CZ2JXCSZPi5znoV3k+
-         qJUp6LX906N6yiQLubCdJGaabcDg4JlVZ6onOQ2Hl7pPGRuPh8RFZ/oXydy3QpRL71be
-         R9+O9SDUaJi6NThtA0OCn+d0rjSg1JLyl85qqpHWuks4OKRS1NOgju/QpptPoeNN2Vho
-         zpAAkdmJ3sw4/C4C5eGrdwBxNRp/xX5AGWnfxMPzN6csR3IR8S+AGM9bPStqRPtHsPif
-         WoXw==
-X-Gm-Message-State: APuU4Z/BuD/6sZkjFrOMiBVsNCJVufjGhgevrF7qfZ8otMFXhGFqBVRi
-	hosuz2Tl46T7vOUEmWRaD3sErej3N3vQkKNb1BxhZpPLJBEA0yqULT7h+d3FH5fF2wkKCcGFqmO
-	75PEHxWvzzntjXYCFShnh2Youb+fcXKeyfO2Q1Wxd/JkRaW0G+sQEX5kidBZbmdXsKG1VI3u99Z
-	1nuN3z3PklFbXKjdzBt7LyYNJWzbttbX9pBn5HhxwC4HNQ2moGUWjTbtRagSwGmFSWKIhvE3vTq
-	LN0wb95XG4Ngr4y
-X-Gm-Gg: AYBFou1Y823HUlz0hBxoRBuYEPlQSmXjiRZuSnmAAgelhWqURyjbJx7YqhR5ErH/2CG
-	Lyo0izeQ8ghb+/7En9ruK2z9jRcdfL5IpVomFK27ScVyzWLOrQt8Pzytnit9PL4aUdyC8IFuHtN
-	er056k8Mt0tK0YeJamptTf3d9RVtQos/fdbHSxj6PfiwO1qNbQ7EKrZYJ53ON4KClYxvC0yX6tf
-	bAotltwgdjH+FIxWJHiseh4FILV7fMtUZQuINV4fANpqeKZ22qFQs/drZCSjf8ELEwf11nHFb80
-	w/Gy1XA/L3y+y3oVk+W+ZYolL0WGltTetxKz+8fffNCjdNcyALyB0YZkdUvAzbf0tDkiRlAZdUk
-	raHMu4GVm7dwmU2aCR00dpbpIfWBnDzeHzEqa4ctpCKwFZ9htl+nYDE5NThS7RaRSgaJU8ibP3A
-	cVHWC+nsQvaWir3g3iDiGJukf6iStw0k3o0LU=
-X-Received: by 2002:a17:90b:4b8a:b0:3a7:8350:3f7e with SMTP id 98e67ed59e1d1-3ae89771679mr12693229a91.44.1793794263455;
-        Wed, 04 Nov 2026 04:11:03 -0800 (PST)
+        bh=0hiz7PU5TjwG1X9hXrb5wkr6rJYnq4Oaw7ub9l8aGpQ=;
+        b=zwyQ4infebzgEUsB8e7T8LAUIEi2ZKi3MOWEaPaUPgQo/Kwh1/Gm5LrLA/XdTi0v95
+         nbvgtvtSrjNRGNyR/bR1SDtXbUnJDiX8SHGqyMQaH+lmJ+rZuRFm4L7f/2rYLRvlJoSf
+         8C0hQNBVjHf4Xe13+yMA0NBIyJxXy+32BBZCikUsmDED0ZTc5rcm6aQt08sj4fEEDczs
+         iJolGQ524II2QrVmLxduvMyWX2bF1WyVLBbrevZ+YJlKudtCi0/9W3gwCTUrMtMIlzZ8
+         rhDDbKdcSbeH757UHKxtwTxXF2Hh5c7O3qn6WAiiBtPB0N8cW/sxYBZZpjjI/+sQYu43
+         E+7g==
+X-Gm-Message-State: APuU4Z+EV0+JqyXmqBt13vHdHBenZfuW/2sUOS/1qgGtLTW/+b2CWYtj
+	FGtaAOy4rVS1sInayzop46edxJVh4l3qcwE1O2hzcCPGoFEZzBUUyht8KyjBG8E9ZSn2t7s8D9J
+	8Zi9hPeaWinpAv6d5+Rij5d0OZIaLxSjnqzrvjK3NHhbi8S+8gCt468ngAJirDMG+2sVxXpcm6N
+	mj20h7V6EkyKDlX2YAnwezw9Bj8Kb/u0SqAnUWcbF9TcqZhhS2SoJa6Xo5Dsa16q9Mp1ta1BSCR
+	srdPnFPAgofAsmw
+X-Gm-Gg: AYBFou1WzudACO4R6BtIngkG+Z0FTw7W6KI2l8WWehYfVB9pyFbkt90cvc53E3fUeNE
+	x52qa5pF8veXBPsP4t/j/ExlrXws5r6KO+3imiLb2+qjWfrKcuC80ce7QmVPhLYW8VM5Q1PXEaE
+	5ez0IBbb9swaIDSWwZK5YeYE+jO0mGCYuQvntwFf/pJptXvNDvE/8085qSK9WLebxF5Zj6VMxVL
+	XP0hUK7GSnsdZLAp3DWCqCERAJMvgbLLeweLX0SDKt36D+1ClvOE8LHCqqU8C4N+pmCi8tZFGDP
+	PgJkYPvl0rBzgFyzfaIvHzITNmoPj6O1yWFInD807mhpc8ZPy1ieTz0Iw45Jy05YSgjsCTRwtoU
+	TCGJqnCNBhhGErCsJeHbtPBQa8djo7oJrBeq/hZLn2xnPoe5IM+TaF3lj2dSnLfaaSXM+uYBmrX
+	KvCKhipF11JHm+bU2OGBlkd/bNYr2zwZk9MEU=
+X-Received: by 2002:a17:90b:184c:b0:3ac:452b:4a63 with SMTP id 98e67ed59e1d1-3ae897c4ea4mr12536732a91.55.1793794266178;
+        Wed, 04 Nov 2026 04:11:06 -0800 (PST)
 Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-13.dlp.protect.broadcom.com. [144.49.247.13])
-        by smtp-relay.gmail.com with ESMTPS id 98e67ed59e1d1-3b0946671b4sm1645409a91.5.2026.11.04.04.11.01
+        by smtp-relay.gmail.com with ESMTPS id 98e67ed59e1d1-3b0946671b4sm1645496a91.5.2026.11.04.04.11.05
         for <linux-scsi@vger.kernel.org>
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 04 Nov 2026 04:11:03 -0800 (PST)
+        Wed, 04 Nov 2026 04:11:06 -0800 (PST)
 X-Relaying-Domain: broadcom.com
 X-CFilter-Loop: Reflected
-Received: by mail-dy1-f198.google.com with SMTP id 5a478bee46e88-36c9e87d262so974234eec.0
-        for <linux-scsi@vger.kernel.org>; Wed, 04 Nov 2026 04:11:01 -0800 (PST)
+Received: by mail-dl1-f70.google.com with SMTP id a92af1059eb24-139b62317d0so497791c88.0
+        for <linux-scsi@vger.kernel.org>; Wed, 04 Nov 2026 04:11:05 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1793794260; x=1794399060; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1793794264; x=1794399064; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=w75GAwmmcBJZkL+Y3QiXlPAr1f2IZbUzKoF9FLKRNSw=;
-        b=OR4l45XaO8ZdSdStlZ4T0VQtWVjPmw+ZYyzdSYi5NVkv3vdFLawg9pFkrul2UjX8S/
-         J7EEjMXsxvqb89aAWM91YAoft3u1RvpTV4QFnHRl7Wq8Eco8D4OWghr4NPejiVeLAfA5
-         bNcyix76u8oukazuc+3/cX5Xw960lvY7Zh1SA=
-X-Received: by 2002:a05:701a:c96d:b0:17c:393d:a0c8 with SMTP id a92af1059eb24-1ac56c9ffc8mr19880098c88.5.1793794260337;
-        Wed, 04 Nov 2026 04:11:00 -0800 (PST)
-X-Received: by 2002:a05:701a:c96d:b0:17c:393d:a0c8 with SMTP id a92af1059eb24-1ac56c9ffc8mr19880056c88.5.1793794259487;
-        Wed, 04 Nov 2026 04:10:59 -0800 (PST)
+        bh=0hiz7PU5TjwG1X9hXrb5wkr6rJYnq4Oaw7ub9l8aGpQ=;
+        b=GUJuZbjYy0u6AlqQbkE2nKkRraOTT2Cl+Wj1Q94uX2MVYNOl9A7NXN2zCWitOdl43s
+         T0Kapx6FvKmCBcQCGT/LS/k18ZxDYfzW7HagoLSFKbmuNn2ZTwQV9yA/dLBGmX/BFwG0
+         iwg01Ioft4z7XjGg64DfS0maOvjfjiLCW2dYg=
+X-Received: by 2002:a05:701b:4208:10b0:1a3:116:848a with SMTP id a92af1059eb24-1ac5de5424dmr23681291c88.35.1793794264189;
+        Wed, 04 Nov 2026 04:11:04 -0800 (PST)
+X-Received: by 2002:a05:701b:4208:10b0:1a3:116:848a with SMTP id a92af1059eb24-1ac5de5424dmr23681251c88.35.1793794263297;
+        Wed, 04 Nov 2026 04:11:03 -0800 (PST)
 Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1b245c6f0dcsm9377095c88.21.2026.11.04.04.10.56
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1b245c6f0dcsm9377095c88.21.2026.11.04.04.11.00
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 04 Nov 2026 04:10:59 -0800 (PST)
+        Wed, 04 Nov 2026 04:11:02 -0800 (PST)
 From: Ranjan Kumar <ranjan.kumar@broadcom.com>
 To: linux-scsi@vger.kernel.org,
 	martin.petersen@oracle.com
@@ -98,11 +98,10 @@ Cc: sathya.prakash@broadcom.com,
 	sweeti.vandure@broadcom.com,
 	vishakhavc@google.com,
 	ipylypiv@google.com,
-	Ranjan Kumar <ranjan.kumar@broadcom.com>,
-	Sashiko <sashiko-bot@kernel.org>
-Subject: [PATCH 20/21] scsi: mpi3mr: Fix byte order of the BSG status reply
-Date: Wed,  4 Nov 2026 17:31:01 +0530
-Message-ID: <20261104120103.503871-21-ranjan.kumar@broadcom.com>
+	Ranjan Kumar <ranjan.kumar@broadcom.com>
+Subject: [PATCH 21/21] scsi: mpi3mr: Use the correct conversion for the diag buffer post request
+Date: Wed,  4 Nov 2026 17:31:02 +0530
+Message-ID: <20261104120103.503871-22-ranjan.kumar@broadcom.com>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <20261104120103.503871-1-ranjan.kumar@broadcom.com>
 References: <20261104120103.503871-1-ranjan.kumar@broadcom.com>
@@ -118,37 +117,32 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 
-The status reply returned for a BSG MPT command stores the IOC status and
-log info in little endian fields without converting them from CPU byte
-order, so a big endian host returns swapped values to the application.
+The diag buffer post request is filled in with le64_to_cpu and le32_to_cpu
+where cpu_to_le64 and cpu_to_le32 are meant. Both swap bytes the same way,
+so the result does not change, but sparse reports the wrong direction.
 
-Convert both values to little endian.
+Use the helpers that match the direction.
 
-Fixes: 506bc1a0d6ba ("scsi: mpi3mr: Add support for MPT commands")
-Reported-by: Sashiko <sashiko-bot@kernel.org>
-Closes: https://sashiko.dev/#/patchset/20260825210411.301535-1-chandrakanth.patil@broadcom.com?part=2
 Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
 ---
- drivers/scsi/mpi3mr/mpi3mr_app.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ drivers/scsi/mpi3mr/mpi3mr_app.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/mpi3mr/mpi3mr_app.c b/drivers/scsi/mpi3mr/mpi3mr_app.c
-index 2dc6fad7a37b..e38208241707 100644
+index e38208241707..792c34ab5bdf 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr_app.c
 +++ b/drivers/scsi/mpi3mr/mpi3mr_app.c
-@@ -2938,8 +2938,10 @@ static long mpi3mr_bsg_process_mpt_cmds(struct bsg_job *job)
- 				MPI3MR_BSG_MPI_REPLY_BUFTYPE_STATUS;
- 			status_desc = (struct mpi3_status_reply_descriptor *)
- 			    bsg_reply_buf->reply_buf;
--			status_desc->ioc_status = mrioc->bsg_cmds.ioc_status;
--			status_desc->ioc_log_info = mrioc->bsg_cmds.ioc_loginfo;
-+			status_desc->ioc_status =
-+			    cpu_to_le16(mrioc->bsg_cmds.ioc_status);
-+			status_desc->ioc_log_info =
-+			    cpu_to_le32(mrioc->bsg_cmds.ioc_loginfo);
- 		}
- 		tmplen = min(drv_buf_iter->kern_buf_len,
- 			drv_buf_iter->bsg_buf_len);
+@@ -266,8 +266,8 @@ int mpi3mr_issue_diag_buf_post(struct mpi3mr_ioc *mrioc,
+ 	diag_buf_post_req.host_tag = cpu_to_le16(MPI3MR_HOSTTAG_INITCMDS);
+ 	diag_buf_post_req.function = MPI3_FUNCTION_DIAG_BUFFER_POST;
+ 	diag_buf_post_req.type = diag_buffer->type;
+-	diag_buf_post_req.address = le64_to_cpu(diag_buffer->dma_addr);
+-	diag_buf_post_req.length = le32_to_cpu(diag_buffer->size);
++	diag_buf_post_req.address = cpu_to_le64(diag_buffer->dma_addr);
++	diag_buf_post_req.length = cpu_to_le32(diag_buffer->size);
+ 
+ 	if (diag_buffer->is_segmented)
+ 		diag_buf_post_req.msg_flags |= MPI3_DIAG_BUFFER_POST_MSGFLAGS_SEGMENTED;
 -- 
 2.47.3
 
