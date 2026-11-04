@@ -1,111 +1,66 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=199.89.1.16
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793815004;
-	b=j00OPdIO3SfSK9vENsw0WcmJwcmID1/ObKXINJ6jxFzemwHKrzrqahSrmsnVDz75DPoq
-	 cbZSkhdVEIZld+y1F+LeaeJKgjCkcBWLDuvMVkB2zBYBrE4f7t2hmb74odgtwidg8xHaG
-	 WzV5WTjIa1pcldpjHGZJiwYWc7qQOEs+ioHxS15PwO4H27fGZdbhox0FWbraTmLcqlPVg
-	 afNSjY6mcZRU7lmJs0oXjHMcwarkxAKn8tCw+UdG9cnulhd3qO7JJUqdSqbXtq0OPwonl
-	 gTC56klPyPl2Zm84YZONNtRuJGOLwTY48S2+9pL8mkVGWFORFmB5TYaUo0BZpqOCqnw==
+	t=1793817292;
+	b=AlfNIby6VGqCUE3AobOXEhKFSU2eNSB0g6gOLaarR82HuZSL43W01kY6l5djsRR3RJv1
+	 m0sU4SgAm2sQuMRvRpSjUAnPQOSLOfK3i+L19r7hPk+cjTpsIosaWgsa50sBp1qlIG4um
+	 iWLKHG9SZuk47PjE/sNrx83chBn4Hys1+Id7rkCY9UEs+lKSIVs1IsIXynqk/YSaoLmTb
+	 Z6YLao0k/uSYyMIf7GZymNq3hSf4bXSZBYLDYO54q1kbwXYjft0sT5B5oVCeJX8YQG8/H
+	 Z8F/lN/vnDIELYHvckKc8qw5h+cu8h9VwdibFuzih8L70lXMJ7s4pdvN9i5NvCyzhBA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793815004;
-	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:
-	 In-Reply-To:References:MIME-Version:Content-Type:X-Mailer:
-	 X-Developer-Signature:X-Developer-Key:Content-Transfer-Encoding;
-	bh=v5t8qKNo68SCWoforDimF8hL2ZYL+p0Okj8bWoZ1JT0=;
-	b=Xm6WSE5OiBHqeVQlqKdhHwTO19c6Wb9oggJcnvmYj86xWWMauWAudzEZWSdhR0YeMD+Q
-	 Tz7JEb3Xoqmg+IIRyhkxYJlHJwvidRPq8kk26QRVqT66CJRVASx2afTvGnm6DBrurjzg+
-	 VWbIDPDBIpqKVKzS0ACx5SzS2DXuP+tDoAtlLIPQ0cwLJAej4AfCo9T4NWVQrLPJ/ABuN
-	 kNV84K/LscGgzYNRMX/XD8hE7mCKg10wst3VHnISnlkogdpXkBZQA3QDLxIPpTiea+HqH
-	 j32gCPNWOWN2cHH8f/rTQ+lwid4Tmn+d49GY2RMPJ8PemPLutEj9yAiZ1MSnv67tYyw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793817292;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Virus-Scanned:Received:
+	 Received:Message-ID:Date:MIME-Version:User-Agent:Subject:To:Cc:
+	 References:Content-Language:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=NfxT0sqcleYaY8Ga2KzCjtCATlcCj9RfsbOGm3hC7pc=;
+	b=kmRn8GIrf3EZPYyl4NzwoEXyPgbCXGxi52l1a10zzS+EEseplLJfWK1wHcp17/5R0KxJ
+	 ODV3oqTKhufj+cVnCas/taTtCrbckQAh7D7K2hKbqfESwD/uckKW7PCCCWxVot4UTi/Hp
+	 rcF8cR0uhkll1KJU4A9HSwlTf+NyvJrghUxyS5iZbBmPbEje7kqT81MlqCdL1pYv/6MhA
+	 ny7SaOEd/BYkFQQHWTfl2x1WVw+08D9k95QvWB82k+5nt+90WJywdgET3moh35o2Txm4B
+	 O22L9lvozYU4/EoZGN3BZ8k/S4ToutJ78kRe9sJH2Aoyf4AI3k2/hMWv3uFBXxCXvYg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=dr8wSvAV;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=acm.org;
+	spf=pass smtp.mailfrom=acm.org;
+	dkim=pass header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=3I7Vj4tZ;
+	arc=none smtp.remote-ip=199.89.1.16
+Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2BC9606F6B6;
-	Wed,  4 Nov 2026 17:56:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1CF34606A33D;
+	Wed,  4 Nov 2026 18:34:51 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1CF34606A33D
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=dr8wSvAV
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F33CA1F00919;
-	Wed,  4 Nov 2026 17:56:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793815003;
-	bh=v5t8qKNo68SCWoforDimF8hL2ZYL+p0Okj8bWoZ1JT0=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=dr8wSvAVbxP/ZcIFTBwPH9dzXvhuBn9mA9nVh+Xgz7CJcVvdC39CZkNme4AyXP6YJ
-	 FWGyi7uuOUICVXiiTT/mIG9BdyZemGP4/ngMXLnrprJvuOVJflcC9gK/hPD0oGCWag
-	 aT5p1c3BKTvIpwJq4lWpELTuhZe/zgt3mUlYbqxRoekrxsz67uxzSSFqG5FXwM9E/o
-	 G1ugeyanFn0rXRDRijLJnbwzKap1acFDZxxJu4ignABfVoZxvW4pCLBHKwBhqj5cvl
-	 DjsJARsAA6SkUoD00o6dTzmSQNCeteiSTEpImZSPqwk0YU1IwQ0d1qUYo0SM+byxVD
-	 zCyAfk3cQXcsg==
-From: Christian Brauner <brauner@kernel.org>
-To: linux-fsdevel@vger.kernel.org
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Jann Horn <jannh@google.com>,
-	Josef Bacik <josef@toxicpanda.com>,
-	Chris Mason <mason@kernel.org>,
-	Jeff Layton <jlayton@kernel.org>,
-	NeilBrown <neil@brown.name>,
-	Eric Dumazet <edumazet@kernel.org>,
-	Thomas Gleixner <tglx@kernel.org>,
-	Al Viro <viro@zeniv.linux.org.uk>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Christoph Hellwig <hch@lst.de>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	Joel Granados <joel.granados@kernel.org>,
-	Kees Cook <kees@kernel.org>,
-	Jan Kara <jack@suse.cz>,
-	Jan Kara <jack@suse.com>,
-	linux-kernel@vger.kernel.org,
-	linux-nfs@vger.kernel.org,
-	linux-acpi@vger.kernel.org,
-	linux-kselftest@vger.kernel.org,
-	linux-s390@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	linux-um@lists.infradead.org,
-	linux-wireless@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org,
-	netdev@vger.kernel.org,
-	ntfs3@lists.linux.dev,
-	platform-driver-x86@vger.kernel.org,
-	coreteam@netfilter.org,
-	kexec@lists.infradead.org,
-	linux-pci@vger.kernel.org,
-	linux-sound@vger.kernel.org,
-	netfilter-devel@vger.kernel.org,
-	dri-devel@lists.freedesktop.org,
-	ibm-acpi-devel@lists.sourceforge.net,
-	jfs-discussion@lists.sourceforge.net,
-	linux-alpha@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-cifs@vger.kernel.org,
-	linux-fbdev@vger.kernel.org,
-	linux-hwmon@vger.kernel.org,
-	linux-mm@kvack.org,
-	linux-sh@vger.kernel.org,
-	linux-usb@vger.kernel.org,
-	samba-technical@lists.samba.org,
-	sparclinux@vger.kernel.org,
-	linux-m68k@lists.linux-m68k.org,
-	linux-doc@vger.kernel.org,
-	linux-serial@vger.kernel.org,
-	linux-atm-general@lists.sourceforge.net,
-	Takashi Iwai <tiwai@suse.de>,
-	linux-input@vger.kernel.org,
-	linux-raid@vger.kernel.org,
-	linux-ext4@vger.kernel.org,
-	linux-modules@vger.kernel.org,
-	linux-debuggers@vger.kernel.org,
-	"Christian Brauner (Amutable)" <brauner@kernel.org>,
-	Chuck Lever <cel@kernel.org>,
-	stable@vger.kernel.org
-Subject: [PATCH v2 38/51] powerpc/crash_dump: check ioremap_cache() in copy_oldmem_page()
-Date: Wed,  4 Nov 2026 18:47:24 +0100
-Message-ID: <20261104-work-procfs-bugfixes-v2-38-bbf7d5546809@kernel.org>
-In-Reply-To: <20261104-work-procfs-bugfixes-v2-0-bbf7d5546809@kernel.org>
-References: <20261104-work-procfs-bugfixes-v2-0-bbf7d5546809@kernel.org>
+	dkim=pass (2048-bit key, unprotected) header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=3I7Vj4tZ
+Received: from localhost (localhost [127.0.0.1])
+	by 013.lax.mailroute.net (Postfix) with ESMTP id 4jKYyM2nMFzlffvH;
+	Wed,  4 Nov 2026 18:34:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1793817289; x=1796409290; bh=NfxT0sqcleYaY8Ga2KzCjtCA
+	TlcCj9RfsbOGm3hC7pc=; b=3I7Vj4tZjRD5dWk+LQypRBd2dlG7y/f9/d/G3ndI
+	zzjbC7CmzfOsQhCpF9Wffqi91nVMzNDnIX+i4WeRYnGGOhdP3FCnAe3xE88qxqOA
+	+hJbfNbtDlovEiw0uGffeop7+Qo7f+lQCKu8jhymWj9VwfMc6OUF6M7LalcsgQGu
+	qdF3ogZHWTAhr6jqIMRGTHN7VtBW/q/J5CiiKgPRcVBBzmQAd0VMV1i+ZGtgwCzG
+	4rTZOY3cS2Vtxcr8w+PA3GauXfEiXkeYv8sD2HYHm+THrylQOrFLJBqY/naTily8
+	PI1sJEoJx5qGVtnoxtnYBPwso3tk8c/h9PlJEfER++rwGw==
+X-Virus-Scanned: by MailRoute
+Received: from 013.lax.mailroute.net ([127.0.0.1])
+ by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id miuA7hPYHUMx; Wed,  4 Nov 2026 18:34:49 +0000 (UTC)
+Received: from [IPV6:2a00:79e0:2ed2:d:cf61:6f8e:9bfc:37ad] (unknown [104.135.182.41])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4jKYyJ6Jd6zlfl5v;
+	Wed,  4 Nov 2026 18:34:48 +0000 (UTC)
+Message-ID: <5f523a2c-c2ef-4285-9501-44d373569f7f@acm.org>
+Date: Wed, 4 Nov 2026 10:34:47 -0800
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -115,43 +70,39 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-X-Mailer: b4 0.17-dev
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1312; i=brauner@kernel.org; h=from:subject:message-id; bh=2dbZnDPFapx3dAW5qeN54CL6hHWBvjsrs28L3h6tsIk=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9znt7V9L6ks/CitImMTaFT/P3tq0qmfiJVas86t5hC 6GvD3+pdJSyMIhxMciKKbI4tJuEyy3nqdhslKkBM4eVCWQIAxenAEwkXpbhf8Xs/zMjY/xX/2qd /0Cs7fedC69yp7xLetqeaik/5Q+3dQEjw6/vcxdp8XXWMTbHvTmdmR79flXw2aaoGkbuF4vOPfZ YwQ0A
-X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] block: Keep RPM_ACTIVE in blk_pre_runtime_resume()
+ when already active
+To: Stanley Jhu <stanleyjhu@google.com>, Jens Axboe <axboe@kernel.dk>
+Cc: Brian Norris <briannorris@chromium.org>,
+ "Rafael J . Wysocki" <rafael@kernel.org>,
+ Praveen Talari <praveen.talari@oss.qualcomm.com>,
+ Alan Stern <stern@rowland.harvard.edu>, linux-block@vger.kernel.org,
+ linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org, stable@vger.kernel.org
+References: <20261104112744.1630864-1-stanleyjhu@google.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20261104112744.1630864-1-stanleyjhu@google.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-copy_oldmem_page() maps a page of the old kernel that isn't in the
-linear mapping with ioremap_cache() and copies from it without checking
-whether the mapping worked. If it didn't, the copy reads from an offset
-into the NULL page. That oopses unless the copy happens to be a user
-copy, whose exception table entries turn the fault into a short copy.
+On 11/4/26 3:27 AM, Stanley Jhu wrote:
+> Differences from v1:
+> - Move SUSPENDED -> RESUMING explicitly in blk_pre_runtime_resume() and
+>    clear pm_only only for RPM_RESUMING in blk_post_runtime_resume()
 
-Return -ENOMEM like the other architectures do. read_from_oldmem()
-turns that into -EFAULT like any other short copy.
+Hi Stanley,
 
-Reported-by: Chris Mason <mason@kernel.org>
-Fixes: 54c32021eb6f ("[PATCH] powerpc: Add arch-dependent copy_oldmem_page")
-Cc: stable@vger.kernel.org
-Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
----
- arch/powerpc/kernel/crash_dump.c | 2 ++
- 1 file changed, 2 insertions(+)
+Thank you for having addressed my concerns. There is an existing
+issues that you may want to address with a future patch: Queue ACTIVE,
+device suspended: after a failed resume, the queue is ACTIVE with
+pm_only == 0 while the device is still RPM_SUSPENDED. So
+blk_pm_resume_queue() never asks for a resume, and normal I/O goes to
+a device the PM core thinks is suspended. A retry only happens if
+something else calls pm_runtime_get*(). Commit 6e1fcab00a23 introduced
+this behavior on purpose.
 
-diff --git a/arch/powerpc/kernel/crash_dump.c b/arch/powerpc/kernel/crash_dump.c
-index 103b6605dd68..1543917bd3e1 100644
---- a/arch/powerpc/kernel/crash_dump.c
-+++ b/arch/powerpc/kernel/crash_dump.c
-@@ -86,6 +86,8 @@ ssize_t copy_oldmem_page(struct iov_iter *iter, unsigned long pfn,
- 		csize = copy_to_iter(vaddr + offset, csize, iter);
- 	} else {
- 		vaddr = ioremap_cache(paddr, PAGE_SIZE);
-+		if (!vaddr)
-+			return -ENOMEM;
- 		csize = copy_to_iter(vaddr + offset, csize, iter);
- 		iounmap(vaddr);
- 	}
+Thanks,
 
--- 
-2.53.0
-
+Bart.
