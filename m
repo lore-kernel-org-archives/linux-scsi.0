@@ -1,45 +1,45 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793820392;
-	b=AIsuhc1+JmKMjdjd/+H6n47YouyLRo6gqvAFFrE7FHU/gY4gyoLp6X+MJJTaXgf+XaWB
-	 zMXrk+tP2FLvdaXGXhuRSX7jyu9OWkPFyr03kT7Zp4seJeGLmF6ulsEzuTickOdyV6ut5
-	 stCmyMpKgEaDpyZfzIiuoxqZc+o/HX8bB/+J4uiQSIPG/legcuzKW09BD8/HcvERfCRi4
-	 XRPsmmVSoLzPMKROefa0xtI9i91YmnEWsqFMQEUP2lA4i052Zj4DK1MEZusfE4txSX1HK
-	 Dy6ceRlfPhe1zymwIOqjFK1yCrsKcUrVBZrVKTT6eOcmeEoF31ef20STtHbKgcmKIyA==
+	t=1793820435;
+	b=xWhxCiki6OaHOwkl/n/xcBfaC9c/5F0FsmmBpm/G5rPqoKgC0BYqhYaBko/y+ZUty+FB
+	 fndWQHzz3+MoStvvLLYBTaMYlzeyfp8NrTjk0oVbAQQU03/JJojOl32jeFlVjns0dOaOH
+	 n1Ro106woeWZ6AhHwKJXe4KnvDbKpVKQJ2l8pC6gfKQPJ3uE7CIE8qn16BxhfYzI9Nwp+
+	 llQVyatp18GFiZ3USeYtpBLf3C7DvFYJbEuuLwYHMEnEnQuFYjJbpiLBQd0GXTxRr3Ca4
+	 4LBi5HnIGajEv+RW9zawFr3D7fuFCsJG1cT2fbEWfGU9KJ8ICdqgbltqKAIVexmQqbQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793820392;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793820435;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:
 	 In-Reply-To:References:MIME-Version:Content-Type:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:Content-Transfer-Encoding;
-	bh=KzL9ZYHhLfhD3DOSumSkk0Gb2fITAVoHxCDSq8u5ZOY=;
-	b=1NgyDDd58F9Whp7XTuYwdBbtM6L2eAkA1/ECqDCxbfMp5U4/AHl45sAo38q34C5RyfWW
-	 rRDq3iujDEh3yhZiI1puRNlb988JbvDmIheGinTwF4DuQu2bYUiNMwBxGyd+Pz7Zi03rN
-	 UqwkmL0yh7a91Q98J0MV8/gNGt7+8TqxyiuTiOpEPeIREzf1LjmYIDotiLLhyvrDpu9C4
-	 e2SpQA4vvtbeZGzKXmqm9fVxm7gFG/4raQ0GaH2mDAIOljL5XZ1sOLdw5hbHu5svmkpVy
-	 zEfmWYq3BP2C4mcIEMy/hdYBr0k0Yc9q2GXROdjLS4lLneDpOgd5vB3q7vqAcCvnn6w==
+	bh=r5+oZHp7BRrXwItSZJfGO9IDNpMhGDSeaixBJWzgZo8=;
+	b=4pz6gdVR9uZaroG8nEbej1ZP2W+9UonfAMEt8EJTxiDVpeCOtVbjv8RBoAFAjJXcYpmA
+	 GdVQKLRC4jnyuu3in0gTV3DNiC9RN+HZSuwbe69Rv5TJUzgmSNAlByqVfHfxXNzR2pZI+
+	 q5L0prlVivPPlAbS5TPVxosGWKJT+SC7ISsIoogyXYCf0YSTTP8AEfpedPgEyTgqwdonZ
+	 m50JX8EJzTXHJQ50YCl0N75PtAEJmgBJEhIHMCShGhTl+wIhFwk6Ginha7B6SYj9jHCPH
+	 zlEGb9DjeUbckxrZC3d49WbDSsPCQSF4ygyIsQNFADwFVmVpvgEvLyLIswrWgmw+dJw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="OZmY/n0G";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fZMD0huu;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B61646072F80;
-	Wed,  4 Nov 2026 19:26:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC5A1607264F;
+	Wed,  4 Nov 2026 19:27:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=OZmY/n0G
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2A02B1F00A18;
-	Wed,  4 Nov 2026 19:26:18 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fZMD0huu
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E0AAB1F00A02;
+	Wed,  4 Nov 2026 19:27:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793820391;
-	bh=KzL9ZYHhLfhD3DOSumSkk0Gb2fITAVoHxCDSq8u5ZOY=;
+	s=k20260515; t=1793820434;
+	bh=r5+oZHp7BRrXwItSZJfGO9IDNpMhGDSeaixBJWzgZo8=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=OZmY/n0GXXd/waY5eO8CY5Onurst3JuvNiiWNIXcNO2ZuOFKp902BomvRAZeqhqov
-	 gVBa7tGTm8eGOA6FIqPzs+gKGb0cET9WaFFoJDGhKN+qiibaBT/bgrlsrKWepwCufy
-	 7xbZtg/lGvVf2Z6lEc3/gKQcCopkPYa2/MYuxGe78rFjMFuwi6sASyH6Jok98Wg17F
-	 cJ/qQVE/skC9zQGR9GKwMIm//f3mEfB8/4bBi4VeRM6Lw8lfYzjOtO7fBSGQY1KnwG
-	 yl+O33qpdvuGjSLboBidD8ILci0GW1gs7UGQ/cvvcbiCIna8PYu+uszQ30CIehYMR+
-	 tDP/eU01ohS5g==
+	b=fZMD0huuUQp5LSr9n7+L0WCkQqKPzyWmpwqfqg+XzsqNRlIuKtlf3Iar8GeYyXaoh
+	 Duy1KTIkLZPd4wpyWSeEROyKAch5aD1WchnGy/bdzHJBKTDW5fUbZVdDqnccb3ML1S
+	 ynk82YbCOwpdp9OfHLn4Hk4TAslcNPy+3iNGpY8Onlv8nBJw5pFj50Y4poa5zyKxIw
+	 OVO6zjJj0L1s71YhuEz2nNM9sGb2RL+EkTlUz3tA5wau2YU3GduBQbxH1kPyHOemIX
+	 jzrV1tyP5WTyanlHmpiwciBJbTfxSsr8dPDlHohaL0lhPAdIlgdQvP+X/AxRNITsuF
+	 bSYKsfrnb9SrA==
 From: Christian Brauner <brauner@kernel.org>
 To: linux-fsdevel@vger.kernel.org
 Cc: Linus Torvalds <torvalds@linux-foundation.org>,
@@ -99,11 +99,10 @@ Cc: Linus Torvalds <torvalds@linux-foundation.org>,
 	linux-modules@vger.kernel.org,
 	linux-debuggers@vger.kernel.org,
 	"Christian Brauner (Amutable)" <brauner@kernel.org>,
-	Chuck Lever <cel@kernel.org>,
-	stable@vger.kernel.org
-Subject: [PATCH RESEND v2 42/51] powerpc/pseries: bound the lengths in the ofdt property parser
-Date: Wed,  4 Nov 2026 20:26:17 +0100
-Message-ID: <20261104-work-procfs-bugfixes-v2-42-021c84d852e0@kernel.org>
+	Chuck Lever <cel@kernel.org>
+Subject: [PATCH RESEND v2 45/51] selftests/proc: check a sysctl listing while entries come and go
+Date: Wed,  4 Nov 2026 20:27:00 +0100
+Message-ID: <20261104-work-procfs-bugfixes-v2-45-021c84d852e0@kernel.org>
 In-Reply-To: <20261104-work-procfs-bugfixes-v2-0-021c84d852e0@kernel.org>
 References: <20261104-work-procfs-bugfixes-v2-0-021c84d852e0@kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -117,111 +116,208 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 X-Mailer: b4 0.17-dev
-X-Developer-Signature: v=1; a=openpgp-sha256; l=4036; i=brauner@kernel.org; h=from:subject:message-id; bh=1x5L5ygLqoH4QYrbzxN55G88uXTL5wNw5UNSw5/l5lQ=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9bvx/eMaUE0I+8x7uP2vLHsplqPp8Uf8cnbKLyd/ve zkpum1k6ChlYRDjYpAVU2RxaDcJl1vOU7HZKFMDZg4rE8gQBi5OAZjIciOGfwpWqRcLVdK6Yk+U 7Mjin33JpmbO+9ppHJaBzs+t3kx9ZcXwV37rzQebpE0czPNr1/Zo75BRluja0J3FW2zd03c/onQ XAwA=
+X-Developer-Signature: v=1; a=openpgp-sha256; l=5901; i=brauner@kernel.org; h=from:subject:message-id; bh=PpkRsqulHaX8LI6MUrkW65va02k7nMeISt9l3ZnWEgo=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9bmK23C5Vd0CJeVXYmud2s9Pn+J3m37HmVpnFi7ow2 bTfWdpXOkpZGMS4GGTFFFkc2k3C5ZbzVGw2ytSAmcPKBDKEgYtTACYyeRLDfw/N+y99eaf/2OCk /PjiV39BNqFbYdWnZD3mCaZ8OpuwbArDb9buj/tfO6Qb3GbVUb7QsZ5hkv1nv0KD0viMIPmMExu SGQE=
 X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 Content-Transfer-Encoding: 8bit
 
-The commands for /proc/powerpc/ofdt that carry properties, "add_node",
-"add_property" and "update_property", can make the parser read past the
-buffer they were copied into:
+List /proc/sys/net/ipv4/conf of a new network namespace in two pieces:
 
-(1) do_update_property() computes the end of the buffer after
-    parse_node() moved buf past the phandle. So the end is off by the
-    length of the phandle string, which can be padded with zeroes, and
-    parse_next_property() accepts a value that reaches that far past
-    the command. new_property() then copies those bytes into the
-    property, which everyone can read in /proc/device-tree.
+- with a buffer that holds the dots and "all", register a tun device
+  whose name sorts first, finish the listing: "all" is listed once
 
-(2) parse_next_property() parses the length with simple_strtoul() into
-    an int and only rejects -1. A length above INT_MAX turns negative,
-    tmp += *length moves backwards and passes the check against the
-    end, so *tmp is read up to 2G in front of the buffer.
+- with that device registered and a buffer that holds the dots and it,
+  unregister it, finish the listing: "all" is still listed
 
-(3) Updating "slb-size" or "ibm,slb-size" reads an int from the value
-    whatever its length.
+Both fail without the fix, the first lists "all" twice, the second not
+at all.
 
-Compute the end before parsing the phandle, reject lengths that don't
-fit into an int or into what is left of the buffer, and only take the
-slb size from a value that holds one. The file is root-only and
-refused under lockdown but the parser still shouldn't read past its
-input.
-
-Reported-by: Chris Mason <mason@kernel.org>
-Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
-Fixes: 610d91511f99 ("[PATCH] powerpc: Add support for changing properties from userspace")
-Fixes: 46db2f86a3b2 ("powerpc/pseries: Fix to handle slb resize across migration")
-Cc: stable@vger.kernel.org
 Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
- arch/powerpc/platforms/pseries/reconfig.c | 18 ++++++++++--------
- 1 file changed, 10 insertions(+), 8 deletions(-)
+ tools/testing/selftests/proc/.gitignore            |   1 +
+ tools/testing/selftests/proc/Makefile              |   1 +
+ .../selftests/proc/proc-sysctl-readdir-churn.c     | 152 +++++++++++++++++++++
+ 3 files changed, 154 insertions(+)
 
-diff --git a/arch/powerpc/platforms/pseries/reconfig.c b/arch/powerpc/platforms/pseries/reconfig.c
-index 5a0c9c0b6253..b543afbc1efb 100644
---- a/arch/powerpc/platforms/pseries/reconfig.c
-+++ b/arch/powerpc/platforms/pseries/reconfig.c
-@@ -114,6 +114,7 @@ static void release_prop_list(const struct property *prop)
- static char * parse_next_property(char *buf, char *end, char **name, int *length,
- 				  unsigned char **value)
- {
-+	unsigned long len;
- 	char *tmp;
+diff --git a/tools/testing/selftests/proc/.gitignore b/tools/testing/selftests/proc/.gitignore
+index 8520c7878ea2..5b5e24e39cbd 100644
+--- a/tools/testing/selftests/proc/.gitignore
++++ b/tools/testing/selftests/proc/.gitignore
+@@ -25,4 +25,5 @@
+ /self
+ /setns-dcache
+ /setns-sysvipc
++/proc-sysctl-readdir-churn
+ /thread-self
+diff --git a/tools/testing/selftests/proc/Makefile b/tools/testing/selftests/proc/Makefile
+index e0c0d313f4d0..dae09f333455 100644
+--- a/tools/testing/selftests/proc/Makefile
++++ b/tools/testing/selftests/proc/Makefile
+@@ -30,6 +30,7 @@ TEST_GEN_PROGS += setns-sysvipc
+ TEST_GEN_PROGS += thread-self
+ TEST_GEN_PROGS += proc-multiple-procfs
+ TEST_GEN_PROGS += proc-fsconfig-hidepid
++TEST_GEN_PROGS += proc-sysctl-readdir-churn
+ TEST_GEN_PROGS += proc-pidns
  
- 	*name = buf;
-@@ -133,13 +134,13 @@ static char * parse_next_property(char *buf, char *end, char **name, int *length
- 	}
- 
- 	/* now we're on the length */
--	*length = -1;
--	*length = simple_strtoul(tmp, &tmp, 10);
--	if (*length == -1) {
-+	len = simple_strtoul(tmp, &tmp, 10);
-+	if (len > INT_MAX) {
- 		printk(KERN_ERR "property parse failed in %s at line %d\n",
- 		       __func__, __LINE__);
- 		return NULL;
- 	}
-+	*length = len;
- 	if (*tmp != ' ' || ++tmp >= end) {
- 		printk(KERN_ERR "property parse failed in %s at line %d\n",
- 		       __func__, __LINE__);
-@@ -148,13 +149,13 @@ static char * parse_next_property(char *buf, char *end, char **name, int *length
- 
- 	/* now we're on the value */
- 	*value = tmp;
--	tmp += *length;
--	if (tmp > end) {
-+	if (len > end - tmp) {
- 		printk(KERN_ERR "property parse failed in %s at line %d\n",
- 		       __func__, __LINE__);
- 		return NULL;
- 	}
--	else if (tmp < end && *tmp != ' ' && *tmp != '\0') {
-+	tmp += len;
-+	if (tmp < end && *tmp != ' ' && *tmp != '\0') {
- 		printk(KERN_ERR "property parse failed in %s at line %d\n",
- 		       __func__, __LINE__);
- 		return NULL;
-@@ -320,8 +321,8 @@ static int do_update_property(char *buf, size_t bufsize)
- 	char *name, *end, *next_prop;
- 	int length;
- 	struct property *newprop;
--	buf = parse_node(buf, bufsize, &np);
- 	end = buf + bufsize;
-+	buf = parse_node(buf, bufsize, &np);
- 
- 	if (!np)
- 		return -ENODEV;
-@@ -337,7 +338,8 @@ static int do_update_property(char *buf, size_t bufsize)
- 	if (!newprop)
- 		return -ENOMEM;
- 
--	if (!strcmp(name, "slb-size") || !strcmp(name, "ibm,slb-size"))
-+	if ((!strcmp(name, "slb-size") || !strcmp(name, "ibm,slb-size")) &&
-+	    length >= (int)sizeof(int))
- 		slb_set_size(*(int *)value);
- 
- 	return of_update_property(np, newprop);
+ include ../lib.mk
+diff --git a/tools/testing/selftests/proc/proc-sysctl-readdir-churn.c b/tools/testing/selftests/proc/proc-sysctl-readdir-churn.c
+new file mode 100644
+index 000000000000..b2ad097b464a
+--- /dev/null
++++ b/tools/testing/selftests/proc/proc-sysctl-readdir-churn.c
+@@ -0,0 +1,152 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * A listing of a /proc/sys directory that takes more than one getdents64()
++ * must not show an entry twice or skip one when an entry is registered or
++ * unregistered in between. /proc/sys/net/ipv4/conf/<dev> of a tun device
++ * comes and goes with the device.
++ */
++#define _GNU_SOURCE
++#include <dirent.h>
++#include <errno.h>
++#include <fcntl.h>
++#include <limits.h>
++#include <linux/if.h>
++#include <linux/if_tun.h>
++#include <sched.h>
++#include <string.h>
++#include <sys/ioctl.h>
++#include <sys/syscall.h>
++#include <unistd.h>
++
++#include "../kselftest_harness.h"
++
++#define CONF_DIR	"/proc/sys/net/ipv4/conf"
++#define TUN_NAME	"a0"		/* sorts before "all" */
++#define TUN_PATH	CONF_DIR "/" TUN_NAME
++#define SMALL_BUF	80		/* ".", ".." and one short name */
++#define NAMES		64
++
++static int tun_open(const char *name)
++{
++	struct ifreq ifr = {};
++	int fd;
++
++	fd = open("/dev/net/tun", O_RDWR | O_CLOEXEC);
++	if (fd < 0)
++		return -1;
++	strncpy(ifr.ifr_name, name, IFNAMSIZ - 1);
++	ifr.ifr_flags = IFF_TUN | IFF_NO_PI;
++	if (ioctl(fd, TUNSETIFF, &ifr)) {
++		close(fd);
++		return -1;
++	}
++	return fd;
++}
++
++/* one getdents64() into @buf, the names appended to @names */
++static int list(int fd, char *buf, size_t size, char names[][NAME_MAX + 1],
++		int *n)
++{
++	long ret, off;
++	int got = 0;
++
++	ret = syscall(__NR_getdents64, fd, buf, size);
++	if (ret < 0)
++		return -errno;
++	for (off = 0; off < ret;) {
++		struct dirent64 *d = (void *)(buf + off);
++
++		if (*n < NAMES)
++			strcpy(names[(*n)++], d->d_name);
++		got++;
++		off += d->d_reclen;
++	}
++	return got;
++}
++
++static int count(char names[][NAME_MAX + 1], int n, const char *name)
++{
++	int i, c = 0;
++
++	for (i = 0; i < n; i++)
++		if (!strcmp(names[i], name))
++			c++;
++	return c;
++}
++
++FIXTURE(sysctl_readdir) {
++	int dir;
++	int n;
++	char names[NAMES][NAME_MAX + 1];
++	char buf[65536];
++};
++
++FIXTURE_SETUP(sysctl_readdir)
++{
++	int tun;
++
++	if (unshare(CLONE_NEWNET))
++		SKIP(return, "unshare(CLONE_NEWNET): %s", strerror(errno));
++	tun = open("/dev/net/tun", O_RDWR | O_CLOEXEC);
++	if (tun < 0)
++		SKIP(return, "/dev/net/tun: %s", strerror(errno));
++	close(tun);
++	self->dir = open(CONF_DIR, O_RDONLY | O_DIRECTORY | O_CLOEXEC);
++	if (self->dir < 0)
++		SKIP(return, CONF_DIR ": %s", strerror(errno));
++	self->n = 0;
++}
++
++FIXTURE_TEARDOWN(sysctl_readdir)
++{
++	close(self->dir);
++}
++
++/* a device registered in front of the position doesn't repeat an entry */
++TEST_F(sysctl_readdir, register_in_front)
++{
++	int tun;
++
++	/* ".", ".." and "all", "default" doesn't fit */
++	ASSERT_EQ(list(self->dir, self->buf, SMALL_BUF, self->names, &self->n), 3);
++	ASSERT_EQ(count(self->names, self->n, "all"), 1);
++
++	tun = tun_open(TUN_NAME);
++	ASSERT_GE(tun, 0);
++	ASSERT_EQ(access(TUN_PATH, F_OK), 0);
++
++	while (list(self->dir, self->buf, sizeof(self->buf), self->names,
++		    &self->n) > 0)
++		;
++	EXPECT_EQ(count(self->names, self->n, "all"), 1);
++	EXPECT_EQ(count(self->names, self->n, "default"), 1);
++	EXPECT_EQ(count(self->names, self->n, "lo"), 1);
++	close(tun);
++}
++
++/* a device unregistered in front of the position doesn't skip an entry */
++TEST_F(sysctl_readdir, unregister_in_front)
++{
++	int tun;
++
++	tun = tun_open(TUN_NAME);
++	ASSERT_GE(tun, 0);
++	ASSERT_EQ(access(TUN_PATH, F_OK), 0);
++
++	/* ".", ".." and the device, "all" doesn't fit */
++	ASSERT_EQ(list(self->dir, self->buf, SMALL_BUF, self->names, &self->n), 3);
++	ASSERT_EQ(count(self->names, self->n, TUN_NAME), 1);
++
++	/* closing the device unregisters its sysctls under RTNL */
++	close(tun);
++	ASSERT_EQ(access(TUN_PATH, F_OK), -1);
++
++	while (list(self->dir, self->buf, sizeof(self->buf), self->names,
++		    &self->n) > 0)
++		;
++	EXPECT_EQ(count(self->names, self->n, "all"), 1);
++	EXPECT_EQ(count(self->names, self->n, "default"), 1);
++	EXPECT_EQ(count(self->names, self->n, "lo"), 1);
++}
++
++TEST_HARNESS_MAIN
 
 -- 
 2.53.0
