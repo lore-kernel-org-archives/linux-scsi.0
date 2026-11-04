@@ -1,105 +1,66 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=85.215.255.50
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793746534;
-	b=I+EVBAcRq6nJ0sJ0FpISMujtM4d6tg+25s1aEBlP33cIm0pApO3971WnSuK7cYIhknZj
-	 p1VbBX/Y+/ymUyp/G6QzXeAgx2e4GpQwDwkVoJE447hqPFn5OvFgJj45oLocMAlNsz9ii
-	 ZgRT9UiOt+EjFOJPm7gSGV0LS+kvNWT9CODgahbbDi/6V6K/lXplnwkTS+DNiIIzMaGJL
-	 AMlH9i34TqI+j3C5Q7wboGY5Z/UVTgW1mt3aHWayzQsNNipqtJ+FP3uGlPfRGYL34+mqU
-	 dXDx26t5VGgNzfgUQNrKPjVl7KfD93G2hEJxDHZDnwjNS7CfZ1ckKGwcfx6VDe53lvg==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793746534;
-	h=DMARC-Filter:X-RZG-CLASS-ID:DKIM-Signature:DKIM-Signature:X-RZG-AUTH:
-	 Received:Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:Content-Transfer-Encoding:User-Agent:MIME-Version;
-	bh=c7Qwu5HMJ4YQnRYiZoH48T5mka01qDfhnJmyLJShtmE=;
-	b=FLMUhSx+S06tckKx6MXgHImAPphHUdn0jzB/4lkObAcIG7lDlWT7p4csu7YsHy5IEV1G
-	 djKO6VyBucgYW63mvu8XTE+yx6RMVo7o0Bi0f0pUII0oHDzoZ4o0mZvTn4J2SVM/INYBf
-	 4zU1oMg4Tua+zptwE2HZlxRYDMcIPu4gi3Etb4rD2PfDHgDtIRy66TUU4z5ErjTHCRooy
-	 eiHQqLVAroObTXKBFNkmjQjxmqzO1kC57D63T7cceCw55Ayh+KGzgcvOmoWR7puXycG8K
-	 pn6d2uWnLHQOo9sO2yn/Aum2y+BqLCkZKgq/9MwgUwTLcvq3FRz4qjub24DQK8Y/SMQ==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=iokpp.de;
-	spf=none smtp.mailfrom=iokpp.de;
-	dkim=pass header.d=iokpp.de header.i=@iokpp.de header.a=rsa-sha256 header.s=strato-dkim-0002 header.b="AuTOxs/J";
-	dkim=pass header.d=iokpp.de header.i=@iokpp.de header.a=ed25519-sha256 header.s=strato-dkim-0003 header.b=iZfxCvbk;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=85.215.255.50
-Received: from mo4-p01-ob.smtp.rzone.de (mo4-p01-ob.smtp.rzone.de [85.215.255.50])
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=199.89.1.16
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1793756798;
+	b=WnWaaPVdel02taxW6EJ4KizQBq5aG5l8D9pNuEPQhqtzbjQljx8BJ/bPhyc+nT4Unv60
+	 kMaSUbZRaTc2/0VzpKQFBiKGkeqMBkPS0rWIe2qfM3TgPkm3Q/WWDe4YbQGSLNwMge1Sr
+	 YrNFEweQRxHl3kYtXzu4+5YhY7Mhiqulw4Px1PsOmKy1WN7XhwD6qx+7iFf12fe4jwnGp
+	 P45+7RoJ/W9ktuH1dXOlzSjcCOzVyNHf4CziGwI8F8Sg9dLLr+tELS6u1Obk9asPwzRmR
+	 nkxRbcykZ8x5B8X8WTWCUTu9/5Ewhvde5s4jnZlBgaF15IAvfX53pvFn4j/tFVjUNLA==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793756798;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Virus-Scanned:Received:
+	 Received:Message-ID:Date:MIME-Version:User-Agent:Subject:To:Cc:
+	 References:Content-Language:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=RXOjzv2ekKXMhRrGDhixdimxSCblG2FyP7f/BYRRsGo=;
+	b=lKDvcvAIXCoVXeSmdgZ+9G4603r68LeIW8XZJ81hDMBu9P8snLSRRuY2xQDGqYIHFaEa
+	 yu803P81Sj3lvhBKd6ieBlNJ9cISjckICs3EKwvtFnj7QdeCz140stllg7vGDikjFCu4O
+	 cwKZ3rTmvEVaMvcwIGWDg5mbYyuu5k3o+hiukWg3EBJQO/S92la9W6ilptv7Cwbeb04GO
+	 a/JiODjgguzuJOboQhAkur/MKt5ebWey0r3EPxIaFwBwtlpqPZFErLDvGzL7gxrCTqLfl
+	 LhoQ0RCywwM2LnF36zct1ZfINYeaI+OD4MZgF8/rASqrxysphA49u/lDnWfgfb0qYSw==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=acm.org;
+	spf=pass smtp.mailfrom=acm.org;
+	dkim=pass header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=aZpBjDda;
+	arc=none smtp.remote-ip=199.89.1.16
+Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B8176606A31B;
-	Tue,  3 Nov 2026 22:55:32 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B8176606A31B
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=iokpp.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0BEB0606A326;
+	Wed,  4 Nov 2026 01:46:37 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0BEB0606A326
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=iokpp.de header.i=@iokpp.de header.a=rsa-sha256 header.s=strato-dkim-0002 header.b=AuTOxs/J;
-	dkim=pass header.d=iokpp.de header.i=@iokpp.de header.a=ed25519-sha256 header.s=strato-dkim-0003 header.b=iZfxCvbk
-ARC-Seal: i=1; a=rsa-sha256; t=1793746513; cv=none;
-    d=strato.com; s=strato-dkim-0002;
-    b=lsj8QD4O++YQbUUNDFLaLfEesxzMFL95FDbqSJ20LfRUgk5AKYVM6BqxNJUCoBQ/FE
-    nIjvdhAyi6sEVrqJWs61GO1Qm3xtMcj8MQI4JVcFi9dLFVs+YpZmWC/qZmUhP+KKruc6
-    B6+BSgjub61+1hz4OVNuy/mBckphgG34EYBgRftBsWhOWNAeiY+7lzFJIlwgCzH9z0b1
-    LiYp8h45+XPKMFSDm+Fm5pMwW6ollhfkrzL7EAaoTGnJTpYBAwgt3t7t7mMr2sbgnvkp
-    efWTgXbn5jyf6WnlqxaqZ97/x4axuj+sWVllJ/0FEjR/6KBprrDh0KR20RAj+xhq+nJU
-    rqFA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1793746513;
-    s=strato-dkim-0002; d=strato.com;
-    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
-    From:Subject:Sender;
-    bh=c7Qwu5HMJ4YQnRYiZoH48T5mka01qDfhnJmyLJShtmE=;
-    b=ellDCkCJ/OS4yZRlT7lK0pHmuDihkpXmfd2xbcgHV6QrZuqIf6tpxtUh5nOotFfnNo
-    OVO44gn4TM5yQ5K/QMaTEN19SSD/AQHz4ZwYymPfBQMiKkaZHXzAXA7ZDazxD145S/+k
-    Uw5EBvKooSThQ5Yg2e2RJCsHMXHTYnVH0Hmzzyvlv1fmiLRhR9z3Z/gh38NJ2rpWnQG6
-    hJDoE+i2vCu2deySO3Ge/R1zwIdiU9FenVTt4DZc1Qiy0yiUUu1N6iTLfTNULE5ipfxF
-    aDWWQdQd6BAUMAgde/W62CMe0OUUyawp8e3yCOkBUcAzWOi1P3cPuHLFm5xEWSh9GxsX
-    W3Og==
-ARC-Authentication-Results: i=1; strato.com;
-    arc=none;
-    dkim=none
-X-RZG-CLASS-ID: mo01
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1793746513;
-    s=strato-dkim-0002; d=iokpp.de;
-    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
-    From:Subject:Sender;
-    bh=c7Qwu5HMJ4YQnRYiZoH48T5mka01qDfhnJmyLJShtmE=;
-    b=AuTOxs/JofVYcloCyQH9qn+lGZl5BfFuKsQKePxqLG9QDMK3PP4eBDzSOYtHDtX2Yx
-    9y5MENQYOBWrVOk1KsrSNp4xB/EFztSxurP40RTeelLzNImUNzw3W/Gv+z04DloZEUiU
-    Z7yVpZqNROdDQH343GJYzpHtTMEt4GqelS1vlWx7CcjYPBV3K1S2lhAH9Oy15LLIMUMR
-    BMhXXeFYMkuDaAzPq7qp6yI43xEpJK2h3q1WdMrKuv4PTTAyDlOedASgbMQqkwHEBOpu
-    1nquwsyqq6y4BPUAH1UhVBC+KXIC/OW3qLM+FpwQgd029n90W3rMe/dQ+mC/F7r2b713
-    Vqgg==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; t=1793746513;
-    s=strato-dkim-0003; d=iokpp.de;
-    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
-    From:Subject:Sender;
-    bh=c7Qwu5HMJ4YQnRYiZoH48T5mka01qDfhnJmyLJShtmE=;
-    b=iZfxCvbk/3Tli0c0HD9ACG5Dyd8Ptt8Y0aAEadj196VCCSBxi6yJhyek4msdVs4+r1
-    U2UoHxvz3uYR3z9KOkAw==
-X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSe9tgBDSDt0V0DpplXNpYf0i2235vA=="
-Received: from [10.93.0.228]
-    by smtp.strato.de (RZmta 55.6.3 AUTH)
-    with ESMTPSA id z831ad2A3MtDsNB
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
-	(Client did not present a certificate);
-    Tue, 3 Nov 2026 23:55:13 +0100 (CET)
-Message-ID: <32965373714362be3f3bf0b5960e0da4d743b6c6.camel@iokpp.de>
-Subject: Re: [PATCH v4 1/2] ufs: core: skip ABORT TASK for device management
- commands
-From: Bean Huo <beanhuo@iokpp.de>
-To: Kiwoong Kim <kwmad.kim@samsung.com>, linux-scsi@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, alim.akhtar@samsung.com, jejb@linux.ibm.com, 
-	martin.petersen@oracle.com, bvanassche@acm.org, kwangwon.min@samsung.com, 
-	hy50.seo@samsung.com, cpgs@samsung.com, h10.kim@samsung.com
-Cc: stable@vger.kernel.org, stanleyjhu@google.com
-Date: Tue, 03 Nov 2026 23:55:12 +0100
-In-Reply-To: <6e40b9a374f50616e84ce1f974da6ec27a79cbf5.1793598099.git.kwmad.kim@samsung.com>
-References: <cover.1793598099.git.kwmad.kim@samsung.com>
-	 <CGME20261102055315epcas2p4024322466144d1a59b4e8fdadfdbec2a@epcas2p4.samsung.com>
-	 <6e40b9a374f50616e84ce1f974da6ec27a79cbf5.1793598099.git.kwmad.kim@samsung.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.4-0ubuntu2.1 
+	dkim=pass (2048-bit key, unprotected) header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=aZpBjDda
+Received: from localhost (localhost [127.0.0.1])
+	by 013.lax.mailroute.net (Postfix) with ESMTP id 4jK7b12Jh4zljKMQ;
+	Wed,  4 Nov 2026 01:46:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1793756795; x=1796348796; bh=RXOjzv2ekKXMhRrGDhixdimx
+	SCblG2FyP7f/BYRRsGo=; b=aZpBjDdak5Ql9CoGeSJUEyupksMrvDe8XjeMyPXa
+	SshmvpFs+WINcchIU4NoS/0LmMaUgrtUpG/jP7tB4Z77Gd5XDMECXusGsClfCKkT
+	kwYs0zGlk0CaYmelyWX6yO2FEcTPhjD/GzN58C3SxJoBaks4y/7GHQ5kQIobmKXr
+	wJ9wheVYLCuWK6q/F1k/61j6Futb0sgz21ksDQECbc0i7DycJoo3rcWyJrX1Ph2z
+	aL+biQ/rsOtn4PkkyUN9dhzcQs+uVfEOM54pEQu8bYn4afM2DVlb5a9+1YWe2SKc
+	dEf8jaQHEk2U/eyzJFhRK5dRa9CjiaOeCZbTrCQGcP5hyQ==
+X-Virus-Scanned: by MailRoute
+Received: from 013.lax.mailroute.net ([127.0.0.1])
+ by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id 1DqThOFT3LrU; Wed,  4 Nov 2026 01:46:35 +0000 (UTC)
+Received: from [192.168.51.14] (c-24-6-239-25.hsd1.ca.comcast.net [24.6.239.25])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4jK7Zy6YGlzlffvQ;
+	Wed,  4 Nov 2026 01:46:34 +0000 (UTC)
+Message-ID: <703c41b5-537f-4897-b852-fed4097a0193@acm.org>
+Date: Tue, 3 Nov 2026 17:46:32 -0800
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -109,13 +70,52 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v4 2/2] ufs: mcq: poll OCS after sq cleanup for device
+ management commands
+To: Kiwoong Kim <kwmad.kim@samsung.com>, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org, alim.akhtar@samsung.com, jejb@linux.ibm.com,
+ martin.petersen@oracle.com, kwangwon.min@samsung.com, hy50.seo@samsung.com,
+ cpgs@samsung.com, h10.kim@samsung.com
+Cc: stable@vger.kernel.org, stanleyjhu@google.com
+References: <cover.1793598099.git.kwmad.kim@samsung.com>
+ <CGME20261102055317epcas2p48b638d0c25fd024ce01960afd1e6dee6@epcas2p4.samsung.com>
+ <8c4bbbd746e7fc1d8c27b6b87b2d684abb74a3b3.1793598099.git.kwmad.kim@samsung.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <8c4bbbd746e7fc1d8c27b6b87b2d684abb74a3b3.1793598099.git.kwmad.kim@samsung.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
+On 11/1/26 9:52 PM, Kiwoong Kim wrote:
+> +static enum utp_ocs ufshcd_mcq_read_ocs(struct ufs_hw_queue *hwq,
+> +					struct ufshcd_lrb *lrbp)
+> +{
+> +	guard(spinlock_irqsave)(&hwq->cq_lock);
+> +	return READ_ONCE(lrbp->utr_descriptor_ptr->header.ocs);
+> +}
 
-change looks correct to me. It makes mcq do what the scsi io path in
-ufshcd_abort() already does.
+READ_ONCE() is sufficient. I don't think that the spinlock helps here. 
+Additionally, if the spinlock operations are left out, the function
+ufshcd_mcq_read_ocs() is no longer necessary and can be inlined in its
+only caller.
 
-I read the spec, seems we cannot abort a query task, it is gap to fill this=
-.
+> +	/*
+> +	 * For device management commands, there is no order guaranteed between
+> +	 * OCS update and CUS update, which is why we need to wait here. SCSI
+> +	 * commands are excluded because the OCS in their UTRD is not updated
+> +	 * from the CQE.
+> +	 */
+> +	if (!err && blk_mq_is_reserved_rq(rq)) {
+> +		enum utp_ocs ocs;
+> +
+> +		err = read_poll_timeout(ufshcd_mcq_read_ocs, ocs,
+> +					ocs != OCS_INVALID_COMMAND_STATUS, 20,
+> +					MCQ_POLL_US, false, hwq, lrbp);
+> +	}
 
+An error message should be reported if the above loop times out.
 
-Reviewed-by: Bean Huo <beanhuo@micron.com>
+Thanks,
+
+Bart.
