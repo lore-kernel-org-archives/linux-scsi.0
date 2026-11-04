@@ -1,57 +1,53 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=47.88.81.144
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793762317;
-	b=nzTGtp7xrXf1Hw4CxxfK2livWXGDs0ifwRjvlOKo1ohKwvXHH2dRFgFFi2Cy3dxD+GHf
-	 GPZLDiicaaLWbrT0vjroi4AWdBbwRwj4wNtsiMCM+ygV6uw6nc7M22oG1NDtWKVcFPS9T
-	 SBDBDUb5Snqvaxj6wDR0y69MZ2Mbcb2KC/tBO2JmbJI1wwU6DSauvdDQv+7fJFc3JHvBn
-	 rxTPIxLdMgtemXs3gANDsjKhDA6D9HR/4borer5f2kF2r/F/Q2AguLlg+irHigaTh//3e
-	 TMbQw7aF85svwEtC1aEq8iWb+zJK/aGVVOvk2757dbGizWvfrUP7IAyKW4h2xR1BDtQ==
+	t=1793763219;
+	b=0CYAruCixDH7rDszMBSAzNQR75kn8L4t+PU3t3lLMowTguQH6CX2YEGKdWseWN8wbZN8
+	 u5gNnL9TXRWjU9Aem4zQTlSCPiCwJVTP6FxdVS+DtL7/WWGX/mfu19XFOgy+4sfAh9p7m
+	 1I7VbbVPRHjz5JSMG7QIbdGleL+8pt8LqrmB2DPWX/hYB5n1sFLgd7tDVNo6XkJvQGL2P
+	 pjKgVH0kmSF3CypSF6dDz8dOd+NjVb+xn9r7+4STTlS4yOpbzL8ekxsa7IGcMM2ohpjPt
+	 17ojxK0fjhsbwAU4HGpK+GdO1SmFv62aIqinq/SSTWT+di5Cg5TFW9XkA1PtVy4Z8mw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793762317;
-	h=DMARC-Filter:Received:From:To:Cc:Subject:Date:Message-Id:X-Mailer:
-	 MIME-Version:Content-Transfer-Encoding:X-HM-Tid:X-HM-MType:
-	 X-HM-Spam-Status:DKIM-Signature;
-	bh=H9pyR4Jxa+2vB2d3/CN/QgRIWGA9Oobvr0fdD8bWXvA=;
-	b=vPq4bWOyGS+uLfg0up09mTksdCv98xdlUSJFkdfY4cgJ6i8nqoTREcaJ9JY6rySTNaNk
-	 mE35tSntyjAMEsBnDEAsxkdmx2galFl3mMfu7IBdlkq8it8vkYGTtvoQPlarb025f4uoS
-	 BeCy06x5amHweUi8c/25nO1ts7rs+sCLl/bYZcj65lU4a0v2oNPXzHLRDgLfMyWszo/Rj
-	 sQZei6yYCibHXGyXccrAmjEWzHn7LFKG9XUGUWjqYaOlz7siCeaYWEqvBPH8odoODCkaZ
-	 18OhP064c4m2R9k0oRqjJUAlQiBu5vZnyskBSVG+WQwE7qKwAa7IfVsrdtliutP/1BQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793763219;
+	h=Received:DKIM-Signature:To:Cc:Subject:From:In-Reply-To:Message-ID:
+	 References:Date:MIME-Version:Content-Type;
+	bh=ceplu2oppQPensG9AZykMphuy6zcdHZhji9fasLS54I=;
+	b=23z2FjcEEsgvWSZ/Ri0wg+bWtzZRPj3VMNnd5P9EJT78x+5TonAPLsvouN9xFK3LYF0v
+	 Uvnr9HwXK34HCPY6wYKHuxb7TZqWpNb1M5G3lIDEHv4RjNKxp5BqpaA41E9lPrxCyhuj/
+	 p9WeM5nUsU/L9nCUhFGFot+S9h3k7DlIsF6gQfC80PbjfpUYPuc65Xrh4CqzrVXSJwgVy
+	 0sxMzFcOAwBfWqzv43BYGPm7XvY0vujDuZzgEFJuCjsYOKVn8m30Uk1kHoN/3+qbmnP5t
+	 RSYBzWYGjyD9juNGvWemW49BgzfqCB60IzHcCW+xWDMtKcdh2PfGP8WQJVrE/20iT7Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=leap-io-kernel.com;
-	spf=pass smtp.mailfrom=leap-io-kernel.com;
-	dkim=pass header.d=leap-io-kernel.com header.i=@leap-io-kernel.com header.a=rsa-sha256 header.s=default header.b=jxAAko3U;
-	arc=none smtp.remote-ip=47.88.81.144
-Received: from mail-m81144.netease.com (mail-m81144.netease.com [47.88.81.144])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="TF8/JiTE";
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86FF5606A31B
-	for <linux-scsi@vger.kernel.org>; Wed,  4 Nov 2026 03:18:32 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 86FF5606A31B
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=leap-io-kernel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=leap-io-kernel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F6E0606A31B
+	for <linux-scsi@vger.kernel.org>; Wed,  4 Nov 2026 03:33:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=leap-io-kernel.com header.i=@leap-io-kernel.com header.a=rsa-sha256 header.s=default header.b=jxAAko3U
-Received: from localhost.localdomain (unknown [222.130.22.242])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 536a2cd3e;
-	Wed, 4 Nov 2026 11:18:23 +0800 (GMT+08:00)
-From: Dongdong Hao <doubled@leap-io-kernel.com>
-To: James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com
-Cc: dlemoal@kernel.org,
-	hare@kernel.org,
-	hare@suse.de,
-	doubled@leap-io-kernel.com,
-	yjzhang@leap-io-kernel.com,
-	kezijie@leap-io-kernel.com,
-	jzzhang@leap-io-kernel.com,
-	baikefan@leap-io-kernel.com,
-	linux-scsi@vger.kernel.org
-Subject: [PATCH] scsi: leapraid: Fix init_cmd_priv error handling
-Date: Wed,  4 Nov 2026 11:18:23 +0800
-Message-Id: <20261104031823.198733-1-doubled@leap-io-kernel.com>
-X-Mailer: git-send-email 2.25.1
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=TF8/JiTE
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 52D9C1F000C1;
+	Wed,  4 Nov 2026 03:33:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793763218;
+	bh=ceplu2oppQPensG9AZykMphuy6zcdHZhji9fasLS54I=;
+	h=To:Cc:Subject:From:In-Reply-To:References:Date;
+	b=TF8/JiTEI6ENgd4mp4nRn0ubTzuCzY9vduKSihsdftrdYWtbzjsBx+JNaTBc657KM
+	 ay8Q2NvAbMVmTPzbCKiFhnwn3j9ndwKK+0n0JqkvXNF7u5AA/ka1f3ZE2spaWQrfjy
+	 GtOSmBjlXZvyM5YKwgWhm4e6B/HrtU6ihhUnmu/rVlr9ArobYYVe4JArquCHTHHe1L
+	 QIH2I3DmFuO64/o9nzpCvbiW0Y5s7dj8/oYgJMDWLzl1Vqa8AohfD764ybXGoJzuzJ
+	 IHGcuJaZj+nmBCYGr9PD+vSAjL8ItFW06Oxpf1cX3Q1u6w0EmsEORUGgCLL2nK0Tbp
+	 LudA202w8bRAw==
+To: Matt Wang <matt.wang@broadcom.com>
+Cc: vishal.bhakta@broadcom.com,  bcm-kernel-feedback-list@broadcom.com,
+  linux-scsi@vger.kernel.org
+Subject: Re: scsi: vmw_pvscsi: add boundary check for cmd_map access.
+From: "Martin K. Petersen" <mkp@kernel.org>
+In-Reply-To: <20260929231459.630938-1-matt.wang@broadcom.com>
+Message-ID: <yq1wlqt1d9y.fsf@mail.kernel.org>
+References: <20260929231459.630938-1-matt.wang@broadcom.com>
+Date: Tue, 03 Nov 2026 22:33:37 -0500
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -61,51 +57,17 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-HM-Tid: 0aa1a4909f3c03aekunm9b50e10641d831
-X-HM-MType: 1
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVkZTEJLVh1MGUJOTRodTkwZHVYVFA
-	kWGhdVEwETFhoSFyQUDg9ZV1kYEgtZQVlJSUlVSkhLVUlJVUlPSVlXWRYaDxIVHRRZQVlPS0hVSk
-	tJT09PSFVKS0tVSkJLS1kG
-DKIM-Signature: a=rsa-sha256;
-	b=jxAAko3UAjk2PYa5KkjsYrQf4qgRTGb+Azcm6igG8gOEcP06afyU9L1JuR6hyhNSqR5jhBdrix0wnonzTwqSbLhDVjg7gAlSNYjkakF/02uL0Py2qqvURxoKJRgJMMhNYd9RY9KU5j0KTT76fLh0PSwd7KrSKMQ5hhUIWo//8oGJpqZHI0OE/k3ewRL+ikAn0Xn7ElfXdD8v5sKJgeuCjIe6dqxFEGfWjE21CF7u0v4dJwiABxzs37xsQa76ea8yICgZz9omF5Qt49IyDcQWVPFlH2zD7vtJ243AZdiWFC0EBSwaTsKIPJdm0NnPnQzxhQQr77OzHTYjhJMI8XbVWQ==; c=relaxed/relaxed; s=default; d=leap-io-kernel.com; v=1;
-	bh=H9pyR4Jxa+2vB2d3/CN/QgRIWGA9Oobvr0fdD8bWXvA=;
-	h=date:mime-version:subject:message-id:from;
+Content-Type: text/plain
 
-leapraid_init_cmd_priv() ignores the return value of
-leapraid_internal_init_cmd_priv() and always returns success. If
-dma_pool_alloc() fails, io_tracker->chain remains NULL, but the SCSI
-midlayer considers the command successfully initialized.
 
-A subsequent I/O requiring more than LEAPRAID_SGL_INLINE_THRESHOLD
-DMA-mapped scatter-gather entries dereferences the NULL chain buffer
-while building the chained SGL, causing a kernel crash.
+Matt,
 
-Return the result of leapraid_internal_init_cmd_priv() so that allocation
-failures propagate to the SCSI midlayer and abort initialization of the
-affected request.
+> The context value provided by the device in a completion is used to
+> index into cmd_map to find the command that was completed. To prevent
+> out of bounds access or completion of an inactive context, check that
+> the context value is in-bounds and that it maps to an active context.
 
-Signed-off-by: Dongdong Hao <doubled@leap-io-kernel.com>
----
- drivers/scsi/leapraid/leapraid_os.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+Applied to 7.5/scsi-staging, thanks!
 
-diff --git a/drivers/scsi/leapraid/leapraid_os.c b/drivers/scsi/leapraid/leapraid_os.c
-index da597eb99377..0f3219c4f438 100644
---- a/drivers/scsi/leapraid/leapraid_os.c
-+++ b/drivers/scsi/leapraid/leapraid_os.c
-@@ -938,9 +938,8 @@ static int leapraid_init_cmd_priv(struct Scsi_Host *shost,
- 	struct leapraid_io_req_tracker *io_tracker;
- 
- 	io_tracker = scsi_cmd_priv(scmd);
--	leapraid_internal_init_cmd_priv(adapter, io_tracker);
- 
--	return 0;
-+	return leapraid_internal_init_cmd_priv(adapter, io_tracker);
- }
- 
- static int leapraid_exit_cmd_priv(struct Scsi_Host *shost,
 -- 
-2.25.1
-
+Martin K. Petersen
