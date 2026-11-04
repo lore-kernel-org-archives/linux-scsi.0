@@ -1,104 +1,44 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=156.224.83.230
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793778858;
-	b=gsNzk4U8asO3DtJx0j1jlzR7DH6g5jfc8pexAGSsQxbH8u04i9JxxFqCEapArQW3/WGs
-	 1+F9e0ZHN29F/DYSJjJzvdKYfj9I1ik2lZcZw5zt3Gh/r9S6zwZw1qUC+Cftvobcmygr/
-	 Y/mV4rp4h2PZsSnbLzidQcS+Pl8/KPMeyeYaFe79J3B2PkaWayO1PjhTpuqCgIiOqicU4
-	 MsN0GLb1EEVgE+GKhuX0n+bhwHNz4sTZYtMlW9r7rHFvqKwgTQXxR8UDvj9JmJhV0Tawf
-	 A5J4YrkCkOehxV4V1ERcV2Gt92+jVWMXor1mb7IOUdXpmvGNW7UVXJBiqNY+xEV8uRA==
+	t=1793781097;
+	b=vN0xN7Wm8Eq0HwawagjRk/bKGsE1642Yqjw/kT2dGPlPWU3wSgrVd+ZtrSiTOVGFM3p/
+	 RX1cFYe0UC50KU7iKnHRGBEMti17tdNzXYrHZHRIzaD2kg4KsQ+K2anADMzW7y8GTbdIE
+	 IsIbCkpuRzgY5LCH/yjfeaZrldYmDB5TNhordE9nno4vzT0aLXgY/71TayDmzIVLwwNAk
+	 4cgdubFg9EIjIs8hihF94OylEmwg4f1CO2/03yvWIJOhaKOFw0uOUr9CEqU4w4o8aW04b
+	 CYRSh8b2LjDLIzfIdqpwZPe5Y34m2thL2GPiY2/smKhDnWSi6OwJq3SvkObWEwjtJ5w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793778858;
-	h=DMARC-Filter:Received:DKIM-Signature:DKIM-Signature:DKIM-Signature:
-	 DKIM-Signature:Received:Received:Message-ID:Date:MIME-Version:
-	 User-Agent:Subject:To:Cc:References:Content-Language:From:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:X-Rspamd-Queue-Id:X-Spam-Level:
-	 X-Rspamd-Server:X-Rspamd-Action:X-Spam-Flag:X-Spamd-Result:
-	 X-Spam-Score;
-	bh=Rg9aAIu7FhuRa6Kpy4JuF4wN/YRyRuW/Q+hnaS20ifI=;
-	b=bgjoD9uWg7gcN6QQ6wzvWn6oHkdRKDsJEMUD4cHEuuXcTrozjyzPId8smF+BMDikjML8
-	 ZuV7zWQQxqShYBo2pFt395jvvkIEmDOmJNWCOj9vZF+jvDzAZgeMmLLvxJaY/dY2/4or3
-	 qnR3QGi1GaZElrq6ic6YIAoz0WKtOJ/tNERQIk7O/s4tHMvZw97gDscX9W+Z6qD5pBJwe
-	 ggYWo4Mu1qRlZMRKnvuycvQ9UfdYzwMKQHi/rAwhYTjDWyjsw5P6wN9dnOYWdaa6Zf8RL
-	 azhHdpxSrAz4ICzvP3+w50RwenYuLrnZKDaJPmIucDkow2Wgr5wTN8jNxTMiCfz4ldQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793781097;
+	h=DMARC-Filter:Received:Message-ID:Date:MIME-Version:User-Agent:
+	 Subject:To:Cc:References:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding:X-HM-Tid:X-HM-MType:X-HM-Spam-Status:
+	 DKIM-Signature;
+	bh=4Soui1oevHHOpNf6Ld09yGq9KiYJXTE+lAiRJ+e+lPw=;
+	b=2/sTq0U24TKsPlnI9O5GwFaJdY494fzZMBeG71xRBHRTHUGW/8az2YkbTfw+4oUEHrDW
+	 m3IuR9dFQivXEyI+pkEkcnDKV1nmyVZG/DhzNnYt9W1BXU2+ul9x+TOst8X7W7Xsy6NiA
+	 BMbSSNRSV5zXwyII6A6vAyHxQosMQGV1jVPLNSqyudDCasLetnULpjOMM3McwJvMMNZEh
+	 2yQUDcr4MPtQ7ChU6bXw9QyEvbA8kVdJaofMTCRRnTJCM+gOpJxCvd+ygEc5IpfoSHnF5
+	 kRCQcvcmicuIUFDYy71606NyKazcupBUCguWv4xgdGWzZEDwQiPu0BseIH59A4GHwdQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=suse.de;
-	spf=pass smtp.mailfrom=suse.de;
-	dkim=pass header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=AvH9HUq9;
-	dkim=pass header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=1mxo8ZPH;
-	dkim=pass header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=AvH9HUq9;
-	dkim=neutral header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=1mxo8ZPH;
-	arc=none smtp.remote-ip=195.135.223.130
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	dmarc=pass header.from=leap-io-kernel.com;
+	spf=pass smtp.mailfrom=leap-io-kernel.com;
+	dkim=pass header.d=leap-io-kernel.com header.i=@leap-io-kernel.com header.a=rsa-sha256 header.s=default header.b="f/JkH2L0";
+	arc=none smtp.remote-ip=156.224.83.230
+Received: from mail-m83230.xmail.ntesmail.com (mail-m83230.xmail.ntesmail.com [156.224.83.230])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2BCA4606A329
-	for <linux-scsi@vger.kernel.org>; Wed,  4 Nov 2026 07:54:17 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2BCA4606A329
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4EA4D606A338
+	for <linux-scsi@vger.kernel.org>; Wed,  4 Nov 2026 08:31:34 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4EA4D606A338
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=leap-io-kernel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=leap-io-kernel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=AvH9HUq9;
-	dkim=pass header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=1mxo8ZPH;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=AvH9HUq9;
-	dkim=neutral header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=1mxo8ZPH
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 7723D21F26;
-	Wed,  4 Nov 2026 07:54:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1793778856; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=Rg9aAIu7FhuRa6Kpy4JuF4wN/YRyRuW/Q+hnaS20ifI=;
-	b=AvH9HUq9+BHSMfL2y72LwuylmstfrwDXpFBKJol5uvGnii1G7psKbl+VXvmDW+2p7rHGRI
-	GaAWCdUaQkLYEm4LfUO81kquYgU3YvNIFFVuvElQ1v3wEbTHjejFKpHMLw4ayqffxyuc0q
-	6bvcMlLkSKTxDx+CS8sIVW0RNqmpWhA=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1793778856;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=Rg9aAIu7FhuRa6Kpy4JuF4wN/YRyRuW/Q+hnaS20ifI=;
-	b=1mxo8ZPHGM/0fWt1qle+2QgN3q69+f4nU1TP+ycrM/YOHc5bzmhxlS/fJ9vcp29g+8OKBW
-	ihSTYyLi3LouEhDg==
-Authentication-Results: smtp-out1.suse.de;
-	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=AvH9HUq9;
-	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=1mxo8ZPH
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1793778856; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=Rg9aAIu7FhuRa6Kpy4JuF4wN/YRyRuW/Q+hnaS20ifI=;
-	b=AvH9HUq9+BHSMfL2y72LwuylmstfrwDXpFBKJol5uvGnii1G7psKbl+VXvmDW+2p7rHGRI
-	GaAWCdUaQkLYEm4LfUO81kquYgU3YvNIFFVuvElQ1v3wEbTHjejFKpHMLw4ayqffxyuc0q
-	6bvcMlLkSKTxDx+CS8sIVW0RNqmpWhA=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1793778856;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=Rg9aAIu7FhuRa6Kpy4JuF4wN/YRyRuW/Q+hnaS20ifI=;
-	b=1mxo8ZPHGM/0fWt1qle+2QgN3q69+f4nU1TP+ycrM/YOHc5bzmhxlS/fJ9vcp29g+8OKBW
-	ihSTYyLi3LouEhDg==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 0FBE9134A5;
-	Wed,  4 Nov 2026 07:54:16 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id OF5SNafk6mouVAAAD6G6ig
-	(envelope-from <hare@suse.de>); Wed, 04 Nov 2026 07:54:16 +0000
-Message-ID: <cb17860c-5388-431a-8734-b66dd1efffc4@suse.de>
-Date: Wed, 4 Nov 2026 08:54:15 +0100
+	dkim=pass (2048-bit key, unprotected) header.d=leap-io-kernel.com header.i=@leap-io-kernel.com header.a=rsa-sha256 header.s=default header.b=f/JkH2L0
+Received: from [10.0.66.4] (unknown [222.130.22.242])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 5375794e3;
+	Wed, 4 Nov 2026 16:31:24 +0800 (GMT+08:00)
+Message-ID: <88014df3-4d08-4cfd-a6ce-629a672fb791@leap-io-kernel.com>
+Date: Wed, 4 Nov 2026 16:31:24 +0800
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -109,89 +49,82 @@ List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: myrb: unregister the SCSI host on remove
-To: Wentao Liang <vulab@iscas.ac.cn>, Hannes Reinecke <hare@kernel.org>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <mkp@kernel.org>
-Cc: linux-scsi@vger.kernel.org
-References: <20261104021419.1468133-1-vulab@iscas.ac.cn>
-Content-Language: en-US
-From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20261104021419.1468133-1-vulab@iscas.ac.cn>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Subject: Re: [PATCH] scsi: leapraid: Fix init_cmd_priv error handling
+To: Damien Le Moal <dlemoal@kernel.org>,
+ James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
+Cc: hare@kernel.org, hare@suse.de, yjzhang@leap-io-kernel.com,
+ kezijie@leap-io-kernel.com, jzzhang@leap-io-kernel.com,
+ baikefan@leap-io-kernel.com, linux-scsi@vger.kernel.org
+References: <20261104031823.198733-1-doubled@leap-io-kernel.com>
+ <a161c75d-c8a2-4e44-8e33-30298622fc0c@kernel.org>
+From: Hao Dongdong <doubled@leap-io-kernel.com>
+In-Reply-To: <a161c75d-c8a2-4e44-8e33-30298622fc0c@kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-Rspamd-Queue-Id: 7723D21F26
-X-Spam-Level: 
-X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
-X-Rspamd-Action: no action
-X-Spam-Flag: NO
-X-Spamd-Result: default: False [-13.50 / 50.00];
-	SUSE_INTERNAL_BYPASS(-9.00)[];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	XM_UA_NO_VERSION(0.01)[];
-	MX_GOOD(-0.01)[];
-	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
-	TO_DN_SOME(0.00)[];
-	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	MIME_TRACE(0.00)[0:+];
-	ARC_NA(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	RCPT_COUNT_FIVE(0.00)[5];
-	RCVD_COUNT_TWO(0.00)[2];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	MID_RHS_MATCH_FROM(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[iscas.ac.cn:email,suse.de:dkim,suse.de:email,imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo];
-	DNSWL_BLOCKED(0.00)[2a07:de40:b281:106:10:150:64:167:received,2a07:de40:b281:104:10:150:64:97:from];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	DKIM_TRACE(0.00)[suse.de:+]
-X-Spam-Score: -13.50
+X-HM-Tid: 0aa1a5af320a03aekunm32509a8d45435b
+X-HM-MType: 1
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVkZT0xCVk1CQxgYS0NJHkpJHlYVFA
+	kWGhdVEwETFhoSFyQUDg9ZV1kYEgtZQVlJSUlVSkhLVUlJVUlPSVlXWRYaDxIVHRRZQVlPS0hVSk
+	tISkpCTVVKS0tVSkJZBg++
+DKIM-Signature: a=rsa-sha256;
+	b=f/JkH2L0ZZ9Q2JrmGyMvifM/Hl+GROeo12IYitkmyXkkPuJcvbtAgZjBF0+HAetZuRQwGszOoioJ/dn+XCY2e7SZW+q5QvxNTJh2CiV4VTDfJN7/xqgk/w78MWftDiLNXT4BI6dMkGRVX9OJjFmHIJmF7p4cui7eITpyr9NMwVGSkNwUu4C18OTjaRGyLqAiMpHeWJxfaQLZMVL3frCaX2hRfJmwpfZ50Cee9sVJi1l4ardj0tT4rhv4iF1Z0n8Sz/wbOQk//XE5Q/uxXYAOiVSHRkJkvwJsRy2ZG1NacLD5AuJmNG9ahTo0P01Rt7I0sYimP8JM+JFCrVZpH7am1w==; c=relaxed/relaxed; s=default; d=leap-io-kernel.com; v=1;
+	bh=4Soui1oevHHOpNf6Ld09yGq9KiYJXTE+lAiRJ+e+lPw=;
+	h=date:mime-version:subject:message-id:from;
 
-On 11/4/26 3:14 AM, Wentao Liang wrote:
-> scsi_add_host() takes a reference on the host device that is only
-> dropped by scsi_remove_host() when the host and its children are
-> unregistered.  myrb_remove() goes straight to myrb_cleanup(), which only
-> drops the reference taken by scsi_host_alloc(), so the host stays
-> registered after the PCI device is removed and the memory behind it is
-> leaked.
+在 2026/11/4 14:49, Damien Le Moal 写道:
+> On 11/4/26 12:18, Dongdong Hao wrote:
+>> leapraid_init_cmd_priv() ignores the return value of
+>> leapraid_internal_init_cmd_priv() and always returns success. If
+>> dma_pool_alloc() fails, io_tracker->chain remains NULL, but the SCSI
+>> midlayer considers the command successfully initialized.
+>>
+>> A subsequent I/O requiring more than LEAPRAID_SGL_INLINE_THRESHOLD
+>> DMA-mapped scatter-gather entries dereferences the NULL chain buffer
+>> while building the chained SGL, causing a kernel crash.
+>>
+>> Return the result of leapraid_internal_init_cmd_priv() so that allocation
+>> failures propagate to the SCSI midlayer and abort initialization of the
+>> affected request.
+>>
+>> Signed-off-by: Dongdong Hao <doubled@leap-io-kernel.com>
+>> ---
+>>  drivers/scsi/leapraid/leapraid_os.c | 3 +--
+>>  1 file changed, 1 insertion(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/scsi/leapraid/leapraid_os.c b/drivers/scsi/leapraid/leapraid_os.c
+>> index da597eb99377..0f3219c4f438 100644
+>> --- a/drivers/scsi/leapraid/leapraid_os.c
+>> +++ b/drivers/scsi/leapraid/leapraid_os.c
+>> @@ -938,9 +938,8 @@ static int leapraid_init_cmd_priv(struct Scsi_Host *shost,
+>>  	struct leapraid_io_req_tracker *io_tracker;
+>>  
+>>  	io_tracker = scsi_cmd_priv(scmd);
+>> -	leapraid_internal_init_cmd_priv(adapter, io_tracker);
+>>  
+>> -	return 0;
+>> +	return leapraid_internal_init_cmd_priv(adapter, io_tracker);
 > 
-> Call scsi_remove_host() before tearing the controller down so that no
-> new commands are queued and the host is unregistered.
+> 	return leapraid_internal_init_cmd_priv(adapter, scsi_cmd_priv(scmd));
 > 
-> Fixes: 081ff398c56c ("scsi: myrb: Add Mylex RAID controller (block interface)")
-> Cc: stable@vger.kernel.org
-> Assisted-by: DeepSeek-V4.1-Flash and OpenAI Codex
-> Signed-off-by: Wentao Liang <vulab@iscas.ac.cn>
-> ---
->   drivers/scsi/myrb.c | 1 +
->   1 file changed, 1 insertion(+)
+> and you can remove the io_tracker local variable.
 > 
-> diff --git a/drivers/scsi/myrb.c b/drivers/scsi/myrb.c
-> index 95df6e5345f7..e43d86f139c1 100644
-> --- a/drivers/scsi/myrb.c
-> +++ b/drivers/scsi/myrb.c
-> @@ -3496,6 +3496,7 @@ static void myrb_remove(struct pci_dev *pdev)
->   {
->   	struct myrb_hba *cb = pci_get_drvdata(pdev);
->   
-> +	scsi_remove_host(cb->host);
->   	shost_printk(KERN_NOTICE, cb->host, "Flushing Cache...");
->   	myrb_exec_type3(cb, MYRB_CMD_FLUSH, 0);
->   	myrb_cleanup(cb);
+> With that,
+> 
+> Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+> 
 
-Reviewed-by: Hannes Reinecke <hare@kernel.org>
+Thanks, v2 is on the way.
 
-Cheers,
+> Note: when I sent out the SCSI ASC/ASCQ series rework, Sashiko had comments
+> about pre-existing issues in the leapraid driver. See:
+> 
+> https://sashiko.dev/#/message/20260831021810.235281F000E9%40smtp.kernel.org
+> 
+> You may want to check that.
+> 
 
-Hannes
--- 
-Dr. Hannes Reinecke                  Kernel Storage Architect
-hare@suse.de                                +49 911 74053 688
-SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
-HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
+As for the SCSI ASC/ASCQ series, we checked the report, but both
+scsi_build_sense() and scsi_set_sense() already set scmd->result to
+SAM_STAT_CHECK_CONDITION, so it looks like a false positive.
+
