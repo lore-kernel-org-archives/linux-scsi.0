@@ -1,55 +1,50 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=159.226.251.21
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793759261;
-	b=vtMfWJxFwZmKsfMa9inBnPy/h02dWQrX6T99+HgOcppgnjtKqheseBt/AUB9jl1AWB6M
-	 viDbJfEmjeh5rLf0oSJaDMCrarsVZZ+knoGE01N79YSvHxlQ0x9byU8sK3yhdklkpxXgC
-	 UXIPcroeARO9zt21jz8r4wdYPIGWc5K1qOHRVhfiesP07wLR7/kMKT/eSeM9EcQQS6oiq
-	 R9uH1X+uxM6V3Xzjh0ZfE8VC1zMsMyqO2XwC7aHvrbh0Be4jLGcFLTb3P3I4x0xV5ChEw
-	 57iQlkxHMU69ziQCu3kc53kY6hzNRsKkDKa7NJyXgqZKtF9VlgsbH9nbLjlsTR5t2Fg==
+	t=1793759287;
+	b=n34FXLVT4XwguVGPLYSTBRn2lIqO/y3bbJOXEXR6tX9U5YbhWWmmYqn3YXdasxOPsaAl
+	 cHlTtyT6HZ0W+Qm+8TJf+BlLWaMZCdAmMbuFkjLLP0ufdWTYiDMAer/nD+VWiYhNEMkLi
+	 lwMBZF3hFx4mPFqoDCSiAdSEsk9AMjLEZ9iLnb8+UsfLGPBR76pHhC6X4ctzE2wfQAsh4
+	 i1TuzuwdnWwDleCpZEIlPmFhOrwKU+p/0px5VcG3T5p1Llxb9PEpr2yZ1hHmTz0GXElSi
+	 q5L3GFP319ccyLKjHsYLmnG8xR18Ert0O77W86XVL0Sd87UDU4Lu7e1Wmsa5Vnr6AgA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793759261;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=qSlp0oMN0bPD8t0wCUaRwnVwKnhbMr7y0AurpAqa0zI=;
-	b=OuFlqcHpfeGVD06eHAje+7l6qdfbDJ78FXXy3srWy5euddj+BfsYSNs/gONsZxCTXuFg
-	 bm6AbmbYzSOMbD4UWQ2pUTkcQfTO6di9EboczPH+4U7hm6AMYHSetQSLze+g3XgQ0GfM3
-	 qJKhIXmPfhbVPzFnNshCwhg0cGXSbuPhnNMqYZQrXyl+8yzmolpWjtHS9vrZQNg6aavdd
-	 E+xSBEUmkwMCVTU+aOYbDOWmqvqiYQcbtKTQUSCS0bEB6E9zQZpf9mICRpwM6RLnbQesr
-	 uJbctNJYVJqq+hz4xaMaYsKwpBj9yHs09Bc99k+Zfz+wK4n1gnoxX9XcvPIs7GMsRpw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793759287;
+	h=DMARC-Filter:Received:From:To:Cc:Subject:Date:Message-Id:X-Mailer:
+	 MIME-Version:Content-Transfer-Encoding:X-CM-TRANSID:
+	 X-Coremail-Antispam:X-Originating-IP:X-CM-SenderInfo;
+	bh=uYZxoAtzUyUJccl93uV1S+BTZFTI/6A3Feb99I+0lRI=;
+	b=rnIkUB0MYGWS9CgIFcoaeKxs5n1UMsyK8M1ycTA2ioR2I8oboM8anlhqkp7ZTFhZcDMK
+	 LBcdDWWSPZEu2bi02/3XVW1tfFPvKIro+orc7OZgQ4etUcM61SsHmeNZIhYI9ToY7NAdB
+	 TSwItCfyLT4829pA1khGcrJDF2Gm4cwUY5DPBlr4P28cGPVHmCt713Dg0TqgMa9YCeq5G
+	 d3UEkO8xioxt0Rohsh+Kk8HSVFxXrn0J/3Xx14qF8OqCV1eXOw9s/NUEUrOZD4A/fPts7
+	 LKbyWw7zQAKN4fUooYo4l0m68b8Ddd9bh7fNNw6RR2BRd6n0pMP261EshiFyaeKRQtg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="lruYq/nG";
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=none header.from=iscas.ac.cn;
+	spf=pass smtp.mailfrom=iscas.ac.cn;
+	arc=none smtp.remote-ip=159.226.251.21
+Received: from cstnet.cn (smtp21.cstnet.cn [159.226.251.21])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C14E606A31B
-	for <linux-scsi@vger.kernel.org>; Wed,  4 Nov 2026 02:27:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lruYq/nG
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1E8BF1F000C1;
-	Wed,  4 Nov 2026 02:27:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793759261;
-	bh=qSlp0oMN0bPD8t0wCUaRwnVwKnhbMr7y0AurpAqa0zI=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=lruYq/nGTJcq5gQiGJ9HGDXZDMDbBDktnlIzJR/XFYQgk32gIYRGehB4A7xgtXwK2
-	 9n7tBPr5n2eVomY/A4E9bbe1a1zhPR+b7UvSD+qXNwVX3U31BJHnWRSl0f/UGoJK8p
-	 6E8N1cnx/c08k/Gybi+sVBfQWMvbjl8RbQjsU23eadCbBNiwsFvGTzqp9FDNXFtQyW
-	 nOzh3tIPhQHGZxnLJavBl655uds/bPk2+kY2oor7N9yednTq1rQhKVhpa1rYS1/7k9
-	 4q/tiMpyRF0R8+yh02JUsOCw+HxCG+6EZ0OJyWkPX5DYxpWNaHdyaczhhCNRKzQY53
-	 fo/isEwEX2lcA==
-Message-ID: <sashiko-outbox-196465@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] scsi: mvsas: put the Scsi_Host when host setup fails
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Wentao Liang" <vulab@iscas.ac.cn>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C44F9606A335
+	for <linux-scsi@vger.kernel.org>; Wed,  4 Nov 2026 02:28:06 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C44F9606A335
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
+Received: from dfae2b116770.home.arpa (unknown [36.110.52.2])
+	by APP-01 (Coremail) with SMTP id qwCowAD3H_osmOpqeZs+AA--.29135S2;
+	Wed, 04 Nov 2026 10:27:57 +0800 (CST)
+From: Wentao Liang <vulab@iscas.ac.cn>
+To: Alim Akhtar <alim.akhtar@samsung.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	Bean Huo <beanhuo@micron.com>,
+	Stanley Jhu <stanleyjhu@google.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <mkp@kernel.org>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20261104021440.1468339-1-vulab@iscas.ac.cn>
-References: <20261104021440.1468339-1-vulab@iscas.ac.cn>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 04 Nov 2026 02:27:40 +0000
+Subject: [PATCH] scsi: ufs: core: drop the runtime PM reference when probe fails
+Date: Wed,  4 Nov 2026 02:28:05 +0000
+Message-Id: <20261104022805.1484063-1-vulab@iscas.ac.cn>
+X-Mailer: git-send-email 2.34.1
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -58,70 +53,96 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:qwCowAD3H_osmOpqeZs+AA--.29135S2
+X-Coremail-Antispam: 1UD129KBjvJXoW7uFyftr43trW8GF1xZw4fXwb_yoW5Jr1UpF
+	4vg3yYvF1fWF4Utw12qw109FWFqa1fK343Gr4vya4xGw15KF9xX34kKF1FvF4kGrWfZayU
+	XFy7t3WDXFykArJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUvGb7Iv0xC_Kw4lb4IE77IF4wAFc2x0x2IEx4CE42xK8VAvwI8I
+	cIk0rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2
+	AK021l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v2
+	6r4UJVWxJr1l84ACjcxK6I8E87Iv67AKxVWxJr0_GcWl84ACjcxK6I8E87Iv6xkF7I0E14
+	v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xf
+	McIj6xIIjxv20xvE14v26Fy26r45twAv7VC2z280aVAFwI0_Gr1j6F4UJwAm72CE4IkC6x
+	0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lc7CjxVAaw2AFwI0_JF0_Jw1l42xK82IYc2Ij
+	64vIr41l42xK82IY6x8ErcxFaVAv8VW8GFyrJr1UJwCFx2IqxVCFs4IE7xkEbVWUJVW8Jw
+	C20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAF
+	wI0_JF0_Jw1lIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVW7JVWDJwCI42IY6xIIjx
+	v20xvEc7CjxVAFwI0_Gr1j6F4UJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2
+	z280aVAFwI0_Cr0_Gr1UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr1j6F4UJbIYCTnIWIevJa
+	73UjIFyTuYvjxUknaBUUUUU
+X-CM-SenderInfo: pyxotu46lvutnvoduhdfq/1tbiCRQBA2rqY-nHQQABsC
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] scsi: mvsas: use-after-free in mvs_pci_init() when scsi_add_host()=
- fails
---
+ufshcd_init() takes a runtime PM reference on the controller device
+before it brings up the link, and ufshcd_async_scan() drops that
+reference once the asynchronous scan has finished.  If link setup or
+device initialization fails afterwards, the function returns through
+out_release without dropping the reference, leaving the controller
+permanently marked as busy and unable to runtime suspend.
 
-commit 6788dffec70edd91c99d1078d3e86b6a8d604507
-Author: Wentao Liang <vulab@iscas.ac.cn>
+Send the failures that occur after the reference is taken through a new
+label that drops the reference before the existing cleanup.  Failures
+before the reference is taken keep their current path.
 
-scsi: mvsas: put the Scsi_Host when host setup fails
+Fixes: 62694735ca95 ("[SCSI] ufs: Add runtime PM support for UFS host controller driver")
+Cc: stable@vger.kernel.org
+Assisted-by: DeepSeek-V4.1-Flash and OpenAI Codex
+Signed-off-by: Wentao Liang <vulab@iscas.ac.cn>
+---
+ drivers/ufs/core/ufshcd.c | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
 
-This commit adds a call to scsi_host_put() after scsi_remove_host() in the
-mvs_pci_init() error unwind path so that the Scsi_Host allocation reference
-is dropped when probing fails.
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index ee643830a57a..c098f51020d6 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -11424,7 +11424,7 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+ 
+ 	err = ufshcd_link_startup(hba);
+ 	if (err)
+-		goto out_release;
++		goto out_rpm_put;
+ 
+ 	if (hba->mcq_enabled)
+ 		ufshcd_config_mcq(hba);
+@@ -11441,23 +11441,23 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+ 	/* Verify device initialization by sending NOP OUT UPIU */
+ 	err = ufshcd_verify_dev_init(hba);
+ 	if (err)
+-		goto out_release;
++		goto out_rpm_put;
+ 
+ 	/* Initiate UFS initialization, and waiting until completion */
+ 	err = ufshcd_complete_dev_init(hba);
+ 	if (err)
+-		goto out_release;
++		goto out_rpm_put;
+ 
+ 	err = ufshcd_device_params_init(hba);
+ 	if (err)
+-		goto out_release;
++		goto out_rpm_put;
+ 
+ 	err = ufshcd_post_device_init(hba);
+ 
+ initialized:
+ 	ufshcd_process_probe_result(hba, probe_start, err);
+ 	if (err)
+-		goto out_release;
++		goto out_rpm_put;
+ 
+ 	ufs_sysfs_add_nodes(hba->dev);
+ 	hba->dme_qos_sysfs_handle = sysfs_get_dirent(hba->dev->kobj.sd,
+@@ -11468,6 +11468,8 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+ 	ufshcd_pm_qos_init(hba);
+ 	return 0;
+ 
++out_rpm_put:
++	pm_runtime_put_sync(dev);
+ out_release:
+ 	ufshcd_release(hba);
+ out_disable:
+-- 
+2.34.1
 
-> diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
-> index 5abc17a2e2610..9210cb0bb2c11 100644
-> --- a/drivers/scsi/mvsas/mv_init.c
-> +++ b/drivers/scsi/mvsas/mv_init.c
-> @@ -571,6 +571,7 @@ static int mvs_pci_init(struct pci_dev *pdev, const s=
-truct pci_device_id *ent)
->  	sas_unregister_ha(SHOST_TO_SAS_HA(shost));
->  err_out_shost:
->  	scsi_remove_host(mvi->shost);
-> +	scsi_host_put(shost);
-
-[Severity: High]
-Does this cause a use-after-free on shost when scsi_add_host() fails in
-mvs_pci_init()?
-
-Earlier in drivers/scsi/mvsas/mv_init.c:mvs_pci_init(), a failed
-scsi_add_host() jumps to err_out_shost:
-
-	rc =3D scsi_add_host(shost, &pdev->dev);
-	if (rc)
-		goto err_out_shost;
-
-When scsi_add_host_with_dma() fails, it rolls back any partial registration
-and leaves shost->shost_gendev with only the single initial allocation
-reference from scsi_host_alloc().
-
-Jumping to err_out_shost then calls scsi_remove_host(mvi->shost) on a host
-that was not added. Because scsi_host_set_state(shost, SHOST_CANCEL) allows
-the transition from SHOST_CREATED to SHOST_CANCEL, scsi_remove_host()
-proceeds to unregister shost->shost_dev:
-
-drivers/scsi/hosts.c:scsi_remove_host()
-  device_unregister(&shost->shost_dev)
-    put_device(&shost->shost_dev)
-      scsi_host_cls_release()
-        put_device(&shost->shost_gendev)
-
-Depending on where scsi_add_host_with_dma() failed, scsi_remove_host() eith=
-er
-waits on an uninitialized shost->tagset_freed completion or drops the sole
-reference on shost->shost_gendev and frees shost, after which the newly add=
-ed
-scsi_host_put(shost) accesses the already-freed Scsi_Host.
-
-Should a failed scsi_add_host() bypass scsi_remove_host() and jump directly=
- to
-a label that only calls scsi_host_put(shost)?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261104021440.1468=
-339-1-vulab@iscas.ac.cn?part=3D1
