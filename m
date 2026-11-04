@@ -1,52 +1,52 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793783736;
-	b=heY8DZfjs596eoeBD5Z2sDOUU9B1ozsiyIw9Ub5j5NN18cL3ACo/mUb+8fdUQxz5eknT
-	 AGHLKCBcM82NzD0fuSMaukcw6smbGvzmBLwxSSuq5fKTgnyFK3wIgZtHAwOfjsyOLGNUl
-	 EiCrjnO3XhFFGMySJ3xCOCLWogk3C1BrrMYba4ksBCT8888DurqYn6Vt6hFNjwvkESbOU
-	 /ilzQS+Bmzpgc8XaQVtUdl3qH0LHiLromofkdHAcDZgzYez5ObWIz+6D+m3kF3Mt6fzkT
-	 kzuU+alJ51HWmnUBCnfr72czmjbMxJZizh+ZFsMPXlAwFP7C4rrf0/Ct+Mu9O4f6a7Q==
+	t=1793783863;
+	b=Mp/cCq9dDUkW6x5kXXovUkU7J2Ex+2BqH69nJ8KhkeNbPD/7prSSk650FUwGrH8lOyLp
+	 DLUKUJJGIMlfk2qSqAmZ/79JddkC6q2vyUYRZMho57P0tgyJb5IbwLTDrbszeDlWXNztD
+	 Gja1FcEBx3NRAJSk+p5KUFPBlfef033sxwY0NreKWyNSaJuJGbZDdwIiB3L7duz0On+6C
+	 615q4ErCCEnxaZzLq9savxhB882DouhijwqN1Nfgxo170QqtMIzPKK5exJfPjdn+LmbV6
+	 SlJLqer8eJaJHAFTkyouKkld5rcONdezwYqmvMHy9LU8sNBpddBCF2OVfjO9cBOD4Qg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793783736;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793783863;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=tun3DxnivT6n8ykyvHDle1jgjloMyn9wMMyaVwUBJtE=;
-	b=xmcr7yec+WPhYpeNieSszKshZJXr/3jZlrcW8PLnr+8Zh4T2kyeXJvf1i/aGPlwa+qVS
-	 R6xPzgd1Ro2Z+SaMXtkyN6ZxEdLAAtVN6DqR2QjzGXvdlwahqdhv6qUOiaQl1kLdUMPPo
-	 svBQYusftCZ8mNsJ9Le9tpJsm1Jf6NSf+sX3zXiHp5gTlqJVORtB3x1oNI6PIm6r1kdGV
-	 PolVhj4xUkvFWlKwY7Lk1oM+acc8YBO0v7qi0n7xFCNGfHNKesXbXw7JqXVKcphP3VWel
-	 PHCWI5ukpuhM5nNOHoVBztxqRAXPCZbK895HWGrw28um8DVKOXnYgI8YqQOODf7vdeA==
+	bh=vFLCfIpQzvj87maXuJncKjZMHxfbMjkVEErOwSrEMzQ=;
+	b=sFWKpBwLggaRTm8knp6AldUbYKl9CFDvHYpYxQ0aIYOK66knpWkwBJGQ6MrbCws4tUW5
+	 /9wYQlWzbbdct9yJklGSVNfw1Qeq5cFbORaIa5K5rluZFtqQOTrVIPaSU4CZtYHG0jcb+
+	 xMaxR5g4+0UmnzCKSr1qjjRNJN3steQAoDhNvG2fi2N/XYXPYtmBGpgeA06dgoa1P/1iT
+	 g+uT2q5j3TNWVFjsOSYaNjz0fftSURMmT1Jn/EFO7OnjczO9MBjHSYgydQl8PmosW8/m6
+	 dEDYZPS0Ljyow+DwVy65NwlNnPA2quntRu/FjrvBzizeDghFWwhhmsSlf+NdH31xglA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=QF98rpjB;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=AkGIp68v;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C1070606A31B;
-	Wed,  4 Nov 2026 09:15:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54C20606A31B;
+	Wed,  4 Nov 2026 09:17:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=QF98rpjB
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 786C51F000C1;
-	Wed,  4 Nov 2026 09:15:21 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=AkGIp68v
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9461A1F000C1;
+	Wed,  4 Nov 2026 09:17:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793783735;
-	bh=tun3DxnivT6n8ykyvHDle1jgjloMyn9wMMyaVwUBJtE=;
+	s=k20260515; t=1793783862;
+	bh=vFLCfIpQzvj87maXuJncKjZMHxfbMjkVEErOwSrEMzQ=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=QF98rpjBzH7nX1jmz4Zo8ykeu0WPbxz0HGt6XxCXrOQ4V4PB3P/wbn5sluIzZ3bgP
-	 woOpkCVq06Ek6V7bKkHEP2phdvrGGARxXAl1OBE0IhgkRUa/IQ935AFbXxh1YUY5bJ
-	 utfjbIjp7LtybAhtZNGHqFcIoDw2mhpfxaUaUe5IHuBCvHt5tgYAPu/YfrtEAf4jWd
-	 v5zbJS1rE1Hby/io2vM2SNwmccLVR3w7pjdFYCtf7rR4Wu4skeBeZ5GH0Q1ajKmHHR
-	 yetiYqpJqieJOdcKUSYdWCjNW5p22mqd+bHsoVYbOTO4y8Ft2ybe6f5kRc5h/hiSzc
-	 /PiiXfUYZ7Gcw==
-Date: Wed, 4 Nov 2026 10:15:18 +0100
+	b=AkGIp68vobiZwB2XixXdCJHgtF8bS2InhigVuwsdqp6n5/W+M82eXJQmgMDIXncGQ
+	 ZsgLev6upKoTph4wRGMw/6Rt8tdd4yiEe0QTNTPemQ626tgZDkM1GcZGQlIINcGmX1
+	 rweyg/M+elK322suBIlSSUF7Ca/phJp24NGzpraEYkCKjrptZL+chTq0rR5ps9q2f2
+	 buSjg3t9Zzbjt9a55NJ2t3tMIsF7dtK6fdeAh04poa02hll2Rco50kbc8I+oEfsxAS
+	 NzUPxVvIxDSaOzz7ERaAm3QpoNHvfOUNEKEQothQH0rTaYd4IAl0SGRh52pJdJDENe
+	 eaiECSjcPGAaQ==
+Date: Wed, 4 Nov 2026 10:17:28 +0100
 From: Christian Brauner <brauner@kernel.org>
-To: Florian Westphal <fw@strlen.de>
-Cc: linux-fsdevel@vger.kernel.org, 
-	Linus Torvalds <torvalds@linux-foundation.org>, Jann Horn <jannh@google.com>, Josef Bacik <josef@toxicpanda.com>, 
-	Chris Mason <mason@kernel.org>, Jeff Layton <jlayton@kernel.org>, NeilBrown <neil@brown.name>, 
-	Eric Dumazet <edumazet@kernel.org>, Thomas Gleixner <tglx@kernel.org>, 
-	Al Viro <viro@zeniv.linux.org.uk>, Jonathan Corbet <corbet@lwn.net>, Christoph Hellwig <hch@lst.de>, 
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-fsdevel@vger.kernel.org, Jann Horn <jannh@google.com>, 
+	Josef Bacik <josef@toxicpanda.com>, Chris Mason <mason@kernel.org>, Jeff Layton <jlayton@kernel.org>, 
+	NeilBrown <neil@brown.name>, Eric Dumazet <edumazet@kernel.org>, 
+	Thomas Gleixner <tglx@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, 
+	Jonathan Corbet <corbet@lwn.net>, Christoph Hellwig <hch@lst.de>, 
 	Greg Kroah-Hartman <gregkh@suse.de>, Joel Granados <joel.granados@kernel.org>, 
 	Kees Cook <kees@kernel.org>, Jan Kara <jack@suse.cz>, Jan Kara <jack@suse.com>, 
 	linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-acpi@vger.kernel.org, 
@@ -64,12 +64,12 @@ Cc: linux-fsdevel@vger.kernel.org,
 	Takashi Iwai <tiwai@suse.de>, linux-input@vger.kernel.org, linux-raid@vger.kernel.org, 
 	linux-ext4@vger.kernel.org, linux-modules@vger.kernel.org, linux-debuggers@vger.kernel.org, 
 	Chuck Lever <cel@kernel.org>, stable@vger.kernel.org
-Subject: Re: [PATCH RFC 03/38] netfilter: xt_recent: don't remove the proc
- entries under a spinlock
-Message-ID: <20261104-entgangen-nettigkeiten-intuitiv-f39521735261@brauner>
+Subject: Re: [PATCH RFC 01/38] PCI/proc: don't truncate the position of
+ config space accesses
+Message-ID: <20261104-beugt-kapern-geehrt-19e2e2dd58f6@brauner>
 References: <20261102-work-procfs-bugfixes-v1-0-59422ed3e465@kernel.org>
- <20261102-work-procfs-bugfixes-v1-3-59422ed3e465@kernel.org>
- <auig_zhd3L0HEis3@strlen.de>
+ <20261102-work-procfs-bugfixes-v1-1-59422ed3e465@kernel.org>
+ <CAHk-=wiSA7-mqmAjTQDaU7UjUyWt0TxYwXHafL8ZAPudy+B_uQ@mail.gmail.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -81,10 +81,26 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <auig_zhd3L0HEis3@strlen.de>
+In-Reply-To: <CAHk-=wiSA7-mqmAjTQDaU7UjUyWt0TxYwXHafL8ZAPudy+B_uQ@mail.gmail.com>
 
-On Mon, Nov 02, 2026 at 03:41:03PM +0100, Florian Westphal wrote:
-> Yes, but note that this change is already part of a pending nf -> net
-> merge request.
+On Mon, Nov 02, 2026 at 09:58:51AM -0800, Linus Torvalds wrote:
+> I think this would actually be better with rw_verify_area() just
+> checking a per-file maxbytes.
+>
+> We already have that logic for lseek and friends - using that fairly
+> hacky combination of s_maxbytes and !unsigned_offsets().
+>
+> We should combine s_maxbytes and unsigned_offsets() at file open time
+> into f_maxbytes and check that not just at lseek but in
+> rw_verify_area.
+>
+> And then things like proc_bus_pci could set it's size limit in one single place.
 
-Dropped.
+Yeah, I like that.
+
+Hm, maybe we should keep this and the isapnp thing small and do that
+change on top.
+
+This also might mean a change in behavior. Because a read past the end
+returns 0 for proc_bus_pci and for a regular file past s_maxbytes. So
+that would potentially need some more changes.
