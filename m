@@ -1,105 +1,110 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=85.215.255.82
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793823622;
-	b=j6B/X7F7ZPHV73qk507EnqjhlveOlCaw4XSmqH7U82gx2N2rlzYLJODbxyB46sqRT720
-	 7KaQIwW2ToJ2SfsGyajPxBAFdsg+zyJwCN48/QKNtHiitSy3LHORbrud1cBrk+Qs4a3Nu
-	 4xRwWpFwiktkLCuLs1qi1YL+WknUZi5205rpOhIUj1wHWHf6Aj58KpMBcZBwsMyrVB2T3
-	 cuDdK4IUFmZAEIdIZpf9wvII7QEAlyX0zKlrX8VQG04P0FTiYSrlM+cAY///txsJ0ihR5
-	 aNzyXumQzQTGfoocIdRrlYz8tlhYjNBbm6ySqGuS7hLlN2jLvaODe9H/q7ErRayi5HA==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793823622;
-	h=DMARC-Filter:X-RZG-CLASS-ID:DKIM-Signature:DKIM-Signature:X-RZG-AUTH:
-	 Received:Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:Content-Transfer-Encoding:User-Agent:MIME-Version;
-	bh=eWatbsidhM8+RZoEGH8Yx69Y7BE5vGVsN2BWpIstpSI=;
-	b=AB9ZWdqTdZSCBbSXdNY/j4GwRWQ/2BZnxvsmrgXLlfj4cTuZohp0hcRtf0snGCtXM/eP
-	 kQwjclXHj7OHYEt3dPjyysXzymnXUQRHvLlY31+Ph9RCNztXL+VP/o8zih1Lje4hDxYy9
-	 adl6ZHRS9gu0l1EOMba7l/0DrkP3ZZYrO4c/spNNxbeG1LNbsuGXVupJ+HZaExET1tjfE
-	 zLjHSstJj4h9Fc5Xdd+tkRi8KjH6JUr95LpDTgeQeZozZPy0w0/7aOV2kt5sd5w8moV0R
-	 kfhPnyznynq56ZAntXt2OqvyI3DAmZkqx5TQ5Y5xFodocFMslQi4wFkOu7y4ijTP8NA==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=iokpp.de;
-	spf=none smtp.mailfrom=iokpp.de;
-	dkim=pass header.d=iokpp.de header.i=@iokpp.de header.a=rsa-sha256 header.s=strato-dkim-0002 header.b=SyXBDCFH;
-	dkim=pass header.d=iokpp.de header.i=@iokpp.de header.a=ed25519-sha256 header.s=strato-dkim-0003 header.b=f+Xehvpn;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=85.215.255.82
-Received: from mo4-p02-ob.smtp.rzone.de (mo4-p02-ob.smtp.rzone.de [85.215.255.82])
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1793826818;
+	b=iqnGXupxUviPY33zD1FStVk1VbklsJlNPmE2dcB5ghAM/EayDDG484DcqZ145NmQUzc5
+	 SvKHFiI/usLpwrK3ASDLRNgOlB5Ko6IbrvKGWJzjV26Bx4IEMrRNLwNavinG1q3IPCFmT
+	 hPxdQGv0MiQihLfOTbXL+P+HFXfdEhz7rkytigDiWh4ZEGQLHoVpvteMZKdgVLbkO5xvQ
+	 P5KloNFQfebP8yaVQMezRc0kML+Alylswhg1URIKfGXvYfUZEhJoo59PkLRuD/ynO9WRu
+	 FryAhV8Ndu489sXcgEJfrOi+fZUcxlFTf1dVshtTWmFIQnLFmCVq7E5tq3JK/lxPEBw==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793826818;
+	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:
+	 In-Reply-To:References:MIME-Version:Content-Type:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:Content-Transfer-Encoding;
+	bh=jcn7jVvcEygiBPhKNySOIoE9F539N91xJ4TgqDQUCP0=;
+	b=xce7UO9Ek68T2WDZy46lxQ9ZbL/7rTxo9NcksIk0g2NIiPdKgfb4kPS8aG/r+M4iCs+A
+	 x0bXNcoqWn6cxxtBQPBlXDFOIFdlH1AnmLj9047bXZvOIfx5+A3xKkGhKkhogD9jUwiwi
+	 g9fKVtx0bFI4CXN8xBt3KwB5/jifga0mVw77MkD36djqDo91rH+4yCwV5afE2dx+63od9
+	 Y4J4HBEkUFCgwpZo1EqHoruz3VXAmXVsAxfLvA1oRlIdHatl86FDD8vNWfSZuyVdn0j4k
+	 jhCJYe0eLpjjM4QAcMC9v9A4m8bmPdmumA5DzPimuFHzjrdJHEJf21D3KTEnsUmPNBQ==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=V7uflGoo;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F9F46070302;
-	Wed,  4 Nov 2026 20:20:21 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9F9F46070302
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=iokpp.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 963DD6070300;
+	Wed,  4 Nov 2026 21:13:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=iokpp.de header.i=@iokpp.de header.a=rsa-sha256 header.s=strato-dkim-0002 header.b=SyXBDCFH;
-	dkim=pass header.d=iokpp.de header.i=@iokpp.de header.a=ed25519-sha256 header.s=strato-dkim-0003 header.b=f+Xehvpn
-ARC-Seal: i=1; a=rsa-sha256; t=1793823594; cv=none;
-    d=strato.com; s=strato-dkim-0002;
-    b=bUA5qHKWv+CU7CnwycwrlyekDd+YBEiWVmX+DUVcFu5u0AOv7s7YKT2LQlK78nWwin
-    RdOHHBlO1lursyDbDwQp+n/lpyR1gyJj0uvfb5yAWvCFgM8T341XFWl9BKNW+4tvaBAH
-    jEbdowB4D3IDaT/kzWp5yoYD2br8+LCHMbWnYS53la4XUw7/I+3tCQyAWKkunLHqkAsC
-    0XAWSpqENJVWyINkhc6GrhMpAnOiRBMT7A731J7vCSDtIjlt2V9m1nS7qNbYYTcEg481
-    I91ULyUG24Udu21jFWZt70cEZ6SBd/bkz4HtZ3/kVm4teNnNJ0cT32Nh4DG8WPY3UKz4
-    N6Sw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1793823594;
-    s=strato-dkim-0002; d=strato.com;
-    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
-    From:Subject:Sender;
-    bh=eWatbsidhM8+RZoEGH8Yx69Y7BE5vGVsN2BWpIstpSI=;
-    b=AhA1dID1VZWzoqW0AGBtw+s2Xqlrwsi0pY2bfO+Ve6GsO6wR8N+jB3WZId07UW9Igg
-    ZH7jXGlB8t5DRBDdLi+m+lhZhvHXqSjxaN6L5fehhqbGvEkWVkxo1lnhajlSJuEmJRcu
-    J9N0ffU6LyBKxHgTXsLX7jpmjY5j4fIKFQwJOCxiX1LCNGu2xC3BOjM6KrR8kHtSw1Ha
-    3en9JmCa11qmDbFV8nTc6fOClO8KTcEQ9mW2ypb8Z9E+QRSnL2GGdDhU1jmbF3rW63rq
-    g30bTCBql930gF8Kuxibllnfu25a1SjJNSMDDm38kRmhp56G6S4gt6yttXWl2i1rD9kX
-    ig/Q==
-ARC-Authentication-Results: i=1; strato.com;
-    arc=none;
-    dkim=none
-X-RZG-CLASS-ID: mo02
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1793823594;
-    s=strato-dkim-0002; d=iokpp.de;
-    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
-    From:Subject:Sender;
-    bh=eWatbsidhM8+RZoEGH8Yx69Y7BE5vGVsN2BWpIstpSI=;
-    b=SyXBDCFH/2cixXKS96WSUv2N17PdAdcp2KxlDNE8B4SDL+jHziQ+b7tbokRsgTi1Pt
-    RxVHlGNLMx/qEiqYg2nc5DIoIM89vI1aBGS/aOaX+pZVP05pH6C8jTaqseVt1gq1RxP+
-    O3XehsDpopviA0WvUFnW+lAsa+y1JLUb62L5RY9KyqnyO5MkljEceFa3mIor1NUvoI7m
-    L+V58hkOlD2BqiMlap74eATGW3iWYN2TzOPFjodl2DLHwJYatDsYedptT06p2+lzhVBp
-    EDNuG8NN/BBTnuGNV2c+WXO+l+c/WPmaM+MaRNeI3aqrOr2g0UwTiPwGJqhZdJif9eH8
-    ttdQ==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; t=1793823594;
-    s=strato-dkim-0003; d=iokpp.de;
-    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
-    From:Subject:Sender;
-    bh=eWatbsidhM8+RZoEGH8Yx69Y7BE5vGVsN2BWpIstpSI=;
-    b=f+XehvpnTDe8xPswDvPvFc21a350TyMKzqbRQcURecDNK+CZksczVVhy9KRhYuCWFq
-    yIU750hOCbQ9wZVse+BQ==
-X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSe9tgBDSDt0V0DpplXNpYf0i2235vA=="
-Received: from [10.93.1.84]
-    by smtp.strato.de (RZmta 55.6.3 AUTH)
-    with ESMTPSA id z831ad2A4KJr1Yl
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
-	(Client did not present a certificate);
-    Wed, 4 Nov 2026 21:19:53 +0100 (CET)
-Message-ID: <187fd663f0db83b29ab90acbe1d9e0b300eba5f3.camel@iokpp.de>
-Subject: Re: [PATCH v5 2/2] ufs: mcq: poll OCS after sq cleanup for device
- management commands
-From: Bean Huo <beanhuo@iokpp.de>
-To: Kiwoong Kim <kwmad.kim@samsung.com>, linux-scsi@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, alim.akhtar@samsung.com, jejb@linux.ibm.com, 
-	martin.petersen@oracle.com, bvanassche@acm.org, kwangwon.min@samsung.com, 
-	hy50.seo@samsung.com, cpgs@samsung.com, h10.kim@samsung.com
-Cc: stable@vger.kernel.org, stanleyjhu@google.com
-Date: Wed, 04 Nov 2026 21:19:53 +0100
-In-Reply-To: <20261104094914.180788-3-kwmad.kim@samsung.com>
-References: <20261104094914.180788-1-kwmad.kim@samsung.com>
-	 <CGME20261104094925epcas2p1f25905de00c2548e1e1349fba5f18551@epcas2p1.samsung.com>
-	 <20261104094914.180788-3-kwmad.kim@samsung.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: base64
-User-Agent: Evolution 3.44.4-0ubuntu2.1 
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=V7uflGoo
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 890731F000C1;
+	Wed,  4 Nov 2026 21:13:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793826817;
+	bh=jcn7jVvcEygiBPhKNySOIoE9F539N91xJ4TgqDQUCP0=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=V7uflGoo2J6W0Pkam2p2NQ2ygDWILS85YrEGrtDhRX9LSpjax7FTdN9yNxg/1nr/F
+	 V+6mFIzh3/JJOAXY6DVlJDG4EpV1IqKbiDMaZqe2+mP/VD4uYvDHSHZdC+YPnvDk4p
+	 B+fx/mBspdALJuO5S6++QQQg+yaKZfyhFe96p7DkhDOmjrSDCUkzL7D2l6jIRx9hog
+	 t02UJbdl2o8LcfstRp/uZbtHAIBJlVxjfK6tVrDPho366mZ6VCIHILqfMZVkkl7EFn
+	 VcPqHyjXoZJ1/HnO4R2TW6BDouO7Vr2s8cHixo92YGxXCqi5rLrqQLQrblFCpmhTUC
+	 1HY2L3LLxnrag==
+From: Christian Brauner <brauner@kernel.org>
+To: linux-fsdevel@vger.kernel.org
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Jann Horn <jannh@google.com>,
+	Josef Bacik <josef@toxicpanda.com>,
+	Chris Mason <mason@kernel.org>,
+	Jeff Layton <jlayton@kernel.org>,
+	NeilBrown <neil@brown.name>,
+	Eric Dumazet <edumazet@kernel.org>,
+	Thomas Gleixner <tglx@kernel.org>,
+	Al Viro <viro@zeniv.linux.org.uk>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Christoph Hellwig <hch@lst.de>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	Joel Granados <joel.granados@kernel.org>,
+	Kees Cook <kees@kernel.org>,
+	Jan Kara <jack@suse.cz>,
+	Jan Kara <jack@suse.com>,
+	linux-kernel@vger.kernel.org,
+	linux-nfs@vger.kernel.org,
+	linux-acpi@vger.kernel.org,
+	linux-kselftest@vger.kernel.org,
+	linux-s390@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	linux-um@lists.infradead.org,
+	linux-wireless@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org,
+	netdev@vger.kernel.org,
+	ntfs3@lists.linux.dev,
+	platform-driver-x86@vger.kernel.org,
+	coreteam@netfilter.org,
+	kexec@lists.infradead.org,
+	linux-pci@vger.kernel.org,
+	linux-sound@vger.kernel.org,
+	netfilter-devel@vger.kernel.org,
+	dri-devel@lists.freedesktop.org,
+	ibm-acpi-devel@lists.sourceforge.net,
+	jfs-discussion@lists.sourceforge.net,
+	linux-alpha@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-cifs@vger.kernel.org,
+	linux-fbdev@vger.kernel.org,
+	linux-hwmon@vger.kernel.org,
+	linux-mm@kvack.org,
+	linux-sh@vger.kernel.org,
+	linux-usb@vger.kernel.org,
+	samba-technical@lists.samba.org,
+	sparclinux@vger.kernel.org,
+	linux-m68k@lists.linux-m68k.org,
+	linux-doc@vger.kernel.org,
+	linux-serial@vger.kernel.org,
+	linux-atm-general@lists.sourceforge.net,
+	Takashi Iwai <tiwai@suse.de>,
+	linux-input@vger.kernel.org,
+	linux-raid@vger.kernel.org,
+	linux-ext4@vger.kernel.org,
+	linux-modules@vger.kernel.org,
+	linux-debuggers@vger.kernel.org,
+	"Christian Brauner (Amutable)" <brauner@kernel.org>,
+	Chuck Lever <cel@kernel.org>
+Subject: [PATCH RESEND v2 09/13] SUNRPC: drop the ioctl of the procfs channel files
+Date: Wed,  4 Nov 2026 22:13:23 +0100
+Message-ID: <20261104-work-procfs-net-v2-9-221e2437fed1@kernel.org>
+In-Reply-To: <20261104-work-procfs-net-v2-0-221e2437fed1@kernel.org>
+References: <20261104-work-procfs-net-v2-0-221e2437fed1@kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -109,31 +114,55 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+X-Mailer: b4 0.17-dev
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1562; i=brauner@kernel.org; h=from:subject:message-id; bh=I+ev37oI2qOnQB50E4hs4C0vKquyHn0mn+uzhhuE9es=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS97tO7MzO6bl7rnYiJS+98LnRI2rB8SW+2zhcm6VmdL mnzZE2COkpZGMS4GGTFFFkc2k3C5ZbzVGw2ytSAmcPKBDKEgYtTACaimsHIsCL/pkeQ2tMV86Sm GCnwci6xzri2a8OqYh1BgwP67+/djmP4Z6MoeGKi/4+z3/fFeyZzP/p6Min5j4995fEbyvr+l0+ ZMwEA
+X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
+Content-Transfer-Encoding: 8bit
 
-T24gV2VkLCAyMDI2LTExLTA0IGF0IDE4OjQ5ICswOTAwLCBLaXdvb25nIEtpbSB3cm90ZToKPiBT
-aWduZWQtb2ZmLWJ5OiBLaXdvb25nIEtpbSA8a3dtYWQua2ltQHNhbXN1bmcuY29tPgo+IC0tLQo+
-IMKgZHJpdmVycy91ZnMvY29yZS91ZnMtbWNxLmMgfCAxOCArKysrKysrKysrKysrKysrKysKPiDC
-oDEgZmlsZSBjaGFuZ2VkLCAxOCBpbnNlcnRpb25zKCspCj4gCj4gZGlmZiAtLWdpdCBhL2RyaXZl
-cnMvdWZzL2NvcmUvdWZzLW1jcS5jIGIvZHJpdmVycy91ZnMvY29yZS91ZnMtbWNxLmMKPiBpbmRl
-eCA4MTA2ZDU1ZjQwNDEuLjEwMDI5NWQwMmM2MiAxMDA2NDQKPiAtLS0gYS9kcml2ZXJzL3Vmcy9j
-b3JlL3Vmcy1tY3EuYwo+ICsrKyBiL2RyaXZlcnMvdWZzL2NvcmUvdWZzLW1jcS5jCj4gQEAgLTYw
-OSw2ICs2MDksMjQgQEAgaW50IHVmc2hjZF9tY3Ffc3FfY2xlYW51cChzdHJ1Y3QgdWZzX2hiYSAq
-aGJhLCBpbnQKPiB0YXNrX3RhZykKPiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqAgX19mdW5jX18sIGlkLAo+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoCBGSUVMRF9HRVQoU1FfSUNVX0VSUl9DT0RFX01BU0ssIHJl
-YWRsKHJlZykpKTsKPiDCoAo+ICvCoMKgwqDCoMKgwqDCoC8qCj4gK8KgwqDCoMKgwqDCoMKgICog
-Rm9yIGRldmljZSBtYW5hZ2VtZW50IGNvbW1hbmRzLCB0aGVyZSBpcyBubyBvcmRlciBndWFyYW50
-ZWVkCj4gYmV0d2Vlbgo+ICvCoMKgwqDCoMKgwqDCoCAqIE9DUyB1cGRhdGUgYW5kIENVUyB1cGRh
-dGUsIHdoaWNoIGlzIHdoeSB3ZSBuZWVkIHRvIHdhaXQgaGVyZS4gU0NTSQo+ICvCoMKgwqDCoMKg
-wqDCoCAqIGNvbW1hbmRzIGFyZSBleGNsdWRlZCBiZWNhdXNlIHRoZSBPQ1MgaW4gdGhlaXIgVVRS
-RCBpcyBub3QgdXBkYXRlZAo+ICvCoMKgwqDCoMKgwqDCoCAqIGZyb20gdGhlIENRRS4KPiArwqDC
-oMKgwqDCoMKgwqAgKi8KPiArwqDCoMKgwqDCoMKgwqBpZiAoIWVyciAmJiBibGtfbXFfaXNfcmVz
-ZXJ2ZWRfcnEocnEpKSB7Cj4gK8KgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoGVudW0gdXRw
-X29jcyBvY3M7Cj4gKwo+ICvCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqBlcnIgPSByZWFk
-X3BvbGxfdGltZW91dChSRUFEX09OQ0UsIG9jcywKCkJhcnQswqAKClJFQURfT05DRSgpIGlzIGVu
-b3VnaCB0byByZWFkIE9DUywgYnV0IHRoZSBsb2NrIGFsc28gaXMgdG8gbWFrZSBzdXJlICAgCnVm
-c2hjZF9jb21wbF9vbmVfY3FlKCkgaGFzIGZpbmlzaGVkPyAgdGhlIHdpbmRvdyBpcyB2ZXJ5IHNt
-YWxsLCBhbmQgdGhlIGxvY2sKb25seSBjb3N0cyBzb21ldGhpbmcgb24gdGhpcyBlcnJvciBoYW5k
-bGluZyBwYXRoLsKgCgp0ZWxsIG1lIGlmIEkgbWlzc2VkIHNvbWV0aGluZy4KCktpbmQgcmVnYXJk
-cywgCkJlYW4KCgoKCg==
+do_vfs_ioctl() answers FIONREAD for regular files with i_size - f_pos
+before it gets to the file's ->unlocked_ioctl(). The channel files are
+regular files, so cache_ioctl_procfs() has never seen FIONREAD and only
+ever failed other commands with -EINVAL. Drop it. Other commands fail
+with -ENOTTY now.
+
+The rpc_pipefs channel files are regular files as well.
+
+Acked-by: Chuck Lever <cel@kernel.org>
+Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
+---
+ net/sunrpc/cache.c | 10 ----------
+ 1 file changed, 10 deletions(-)
+
+diff --git a/net/sunrpc/cache.c b/net/sunrpc/cache.c
+index 81a3f0068f36..d242b6f33cbc 100644
+--- a/net/sunrpc/cache.c
++++ b/net/sunrpc/cache.c
+@@ -1596,15 +1596,6 @@ static __poll_t cache_poll_procfs(struct file *filp, poll_table *wait)
+ 	return cache_poll(filp, wait, cd);
+ }
+ 
+-static long cache_ioctl_procfs(struct file *filp,
+-			       unsigned int cmd, unsigned long arg)
+-{
+-	struct inode *inode = file_inode(filp);
+-	struct cache_detail *cd = pde_data(inode);
+-
+-	return cache_ioctl(inode, filp, cmd, arg, cd);
+-}
+-
+ static int cache_open_procfs(struct inode *inode, struct file *filp)
+ {
+ 	struct cache_detail *cd = pde_data(inode);
+@@ -1624,7 +1615,6 @@ static const struct proc_ops cache_channel_proc_ops = {
+ 	.proc_write_buf	= cache_write_procfs,
+ 	.proc_write_size = CACHE_DOWNCALL_MAX,
+ 	.proc_poll	= cache_poll_procfs,
+-	.proc_ioctl	= cache_ioctl_procfs, /* for FIONREAD */
+ 	.proc_open	= cache_open_procfs,
+ 	.proc_release	= cache_release_procfs,
+ };
+
+-- 
+2.53.0
 
