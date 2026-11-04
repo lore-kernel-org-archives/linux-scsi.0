@@ -1,50 +1,48 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=101.71.155.101
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=159.226.251.21
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793759629;
-	b=zeuuyUIgD/xycxtx7+7j4nPaSsAZ/reP8/O32MR1E1o/vXu5x5s+rAYRVsJ8+xG0+WBZ
-	 ZkfhSfvg1isyZpoR9Im4Z2A9S4mvb/1K195SAwtPVOeujzE8fccMJJ5LojrUFwIN/LqM+
-	 svRyLs1vilLtG5q0QLv42KLXBzgJG+EQpvFYLUpwJb/uD2pOrDTqVwfsYyGTet1LWRzV7
-	 yBGYtijQA2RjSvnXJ6w7EbEQt+HAClEjhC1Nuo4Mf6E/GGzP2UFYVR7OBx6zkqzGfBzBT
-	 96huX+Gn7k56t9lUdULvgJBjsyci1mIw3KJmRfMUJDqyD3m0H/h0ylsefu3XfgENDBw==
+	t=1793760826;
+	b=VGpzxI43sYh9HKNfFG5bv3SgPBD3SZ/lcyVpiZGbWsfWWRaBlhxb07Fbq97Gi98ucd1a
+	 T1CatP26ztum69dS7bt681PUCQtEPPMK16UvJ4rHhKVCRfo16oBPrs7VEzkAUmPIRwxzQ
+	 ok/QVQnXb47FGqRDkrMaw/aEF44v0Oa7mIWPegr3iT1qLeJGZCmG3Im3XYJH2w0Oeh+ZO
+	 cFJG99fsjboSZdE/jkJFcJwCcs6Fvu54S6rypa0UDqKwDSAB+A1pILmLB4MKK+TFLsYa9
+	 iwdC0DxUCPfIB6nI6iPNYRumm8RPQh6DUyl6Z4pymCtq3Zty+FAOMslulxb5x9S5rNQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793759629;
-	h=DMARC-Filter:Received:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
-	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding:
-	 X-HM-Tid:X-HM-MType:X-HM-Spam-Status:DKIM-Signature;
-	bh=n8FC+Qn6Qlj3nN2Gcvt4qw5dYKTjMMS9AmK8c9IblsI=;
-	b=De0Ni5oZ55158FRwbf8LMn5YZa7lySL4YojuS4IqXS6VDz3LD7xcg+qtsgSG6rSt7OK5
-	 XO5ZY29ciOco/9xU37Qu69yECDbsk9AeJ/4gq9C+dwHklNST9eDWMcV4ORCp3oAqAteEX
-	 OkzFm4DB8XdVxecVHNmh8L8Eeb79Y5T2gWWLnoxgeygXufiWqob7cZv7Mj4QymMNqiwug
-	 oI/+MpzOv94nWfyCnNy14JQB8DFXdxeBSXS+ri+oXPUC/agx/8qs9Ov+MhsQPRwxD6+mk
-	 4be5arJ1nHrWjnwXM1CLOI4j6Hwv/BKELyN56VVJl1uFmJcsD092MHcMFtCasqXQPGQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793760826;
+	h=DMARC-Filter:Received:From:To:Cc:Subject:Date:Message-Id:X-Mailer:
+	 MIME-Version:Content-Transfer-Encoding:X-CM-TRANSID:
+	 X-Coremail-Antispam:X-Originating-IP:X-CM-SenderInfo;
+	bh=4YJH+GPw8HudDz2iohgu7Qv0ds5bGh76uAwDDejUQbc=;
+	b=hGX7WtJZO7BmIKBB6XSBFjtE/9gOA4RXmZhNvEJCWktpGHzHmXhMZptEErLkLayY0rmc
+	 NH1vZqBmteuOn2W7utj8olAHJn7sykE8/u2j+Rv6BqVPyDpDSzUEWON28rbrEkC3ny72T
+	 NfcucNNeeSZ9eZKbgxEgCTIiEohHM2NiHGPUNESB2u1PXa/sPk3rssdbSpx4TQ3WDdRiU
+	 8zg918kKvxkc+J4f72p0ev394WDMJycBWZstpj6PfM5l6lrGMfP+PNSEgg5QpxwydiJA4
+	 Xz4MBJtJK6cb57mdkFNJzZkfue0NuhVyv4L1sKrikj4pkF0q6y1nAXw5dGuNkSOkddg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=mail.sdu.edu.cn;
-	spf=pass smtp.mailfrom=mail.sdu.edu.cn;
-	arc=none smtp.remote-ip=101.71.155.101
-Received: from mail-m155101.qiye.163.com (mail-m155101.qiye.163.com [101.71.155.101])
+	dmarc=none header.from=iscas.ac.cn;
+	spf=pass smtp.mailfrom=iscas.ac.cn;
+	arc=none smtp.remote-ip=159.226.251.21
+Received: from cstnet.cn (smtp21.cstnet.cn [159.226.251.21])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 12C53606A32F;
-	Wed,  4 Nov 2026 02:33:42 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 12C53606A32F
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mail.sdu.edu.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mail.sdu.edu.cn
-Received: from lgs.. (unknown [101.76.249.61])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 5367d073d;
-	Wed, 4 Nov 2026 10:33:39 +0800 (GMT+08:00)
-From: Guangshuo Li <liguangshuo@mail.sdu.edu.cn>
-To: Hannes Reinecke <hare@suse.com>,
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AAEDF606D821
+	for <linux-scsi@vger.kernel.org>; Wed,  4 Nov 2026 02:53:45 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org AAEDF606D821
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
+Received: from dfae2b116770.home.arpa (unknown [36.110.52.2])
+	by APP-01 (Coremail) with SMTP id qwCowACXvvgynupqJOU+AA--.10143S2;
+	Wed, 04 Nov 2026 10:53:39 +0800 (CST)
+From: Wentao Liang <vulab@iscas.ac.cn>
+To: Justin Tee <justin.tee@broadcom.com>,
+	Paul Ely <paul.ely@broadcom.com>,
 	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
 	"Martin K. Petersen" <mkp@kernel.org>
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 2/2] scsi: aic79xx: Fix potential critical section table leak
-Date: Wed,  4 Nov 2026 10:33:36 +0800
-Message-ID: <20261104-db9e3c75b3-scsi-aic7xxx-2@mail.sdu.edu.cn>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20261104-db9e3c75b3-scsi-aic7xxx-0@mail.sdu.edu.cn>
-References: <20261104-db9e3c75b3-scsi-aic7xxx-0@mail.sdu.edu.cn>
+Cc: linux-scsi@vger.kernel.org
+Subject: [PATCH] scsi: lpfc: fix ndlp use-after-free in RLS accept callback
+Date: Wed,  4 Nov 2026 02:53:48 +0000
+Message-Id: <20261104025348.1527601-1-vulab@iscas.ac.cn>
+X-Mailer: git-send-email 2.34.1
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -55,44 +53,78 @@ List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-HM-Tid: 0aa1a467ab2703a1kunm4ff2f44e1636e6
-X-HM-MType: 10
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVkaSUNNVklJTU8dQ04aTBlITVYeHw
-	5VEwETFhoSFyQUDg9ZV1kYEgtZQVlKS0pVTE1VSU9CVU1KWVdZFhoPEhUdFFlBWU9LSFVKS0hKTE
-	1DVUpLS1VKQktLWQY+
-DKIM-Signature: a=rsa-sha256;
-	b=HeiF4OO7YZ19go173iRKrEVo5K8uJb7p+OmfITpJjeOyY+E/WmksnWivzFMYRUTjGFwLjDjIFJdcYvUQ78KQCc5skbJs3QinGz1A49GNb3Wa3RlpdZDBJYoVB6qIbQPegPaMdDouNaU9mN1vHTB8bVQSo+wlgNx+1nrLVPIp+lg=; s=default; c=relaxed/relaxed; d=mail.sdu.edu.cn; v=1;
-	bh=n8FC+Qn6Qlj3nN2Gcvt4qw5dYKTjMMS9AmK8c9IblsI=;
-	h=date:mime-version:subject:message-id:from;
+X-CM-TRANSID:qwCowACXvvgynupqJOU+AA--.10143S2
+X-Coremail-Antispam: 1UD129KBjvJXoW7CFWrAw4UXFWUZFWkWw1xZrb_yoW8ZFyrpw
+	s8JFWjkwn8JF47Krsagr48Zas0yw4xJrZakayqy34kur93WFy2yryjvry8XrWDZan7t3y2
+	yw1qqFy7W3WDZFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUB0b7Iv0xC_Kw4lb4IE77IF4wAFc2x0x2IEx4CE42xK8VAvwI8I
+	cIk0rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2
+	AK021l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v2
+	6r4UJVWxJr1l84ACjcxK6I8E87Iv67AKxVWxJr0_GcWl84ACjcxK6I8E87Iv6xkF7I0E14
+	v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xf
+	McIj6xIIjxv20xvE14v26rWY6Fy7McIj6I8E87Iv67AKxVW8Jr0_Cr1UMcvjeVCFs4IE7x
+	kEbVWUJVW8JwACjcxG0xvY0x0EwIxGrwACjcxG6xCI17CEII8vrVW3JVW8Jr1lc7CjxVAa
+	w2AFwI0_JF0_Jw1l42xK82IYc2Ij64vIr41l42xK82IY6x8ErcxFaVAv8VW8GFyrJr1UJw
+	CFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE
+	14v26r106r1rMI8E67AF67kF1VAFwI0_JF0_Jw1lIxkGc2Ij64vIr41lIxAIcVC0I7IYx2
+	IY67AKxVW5JVW7JwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJwCI42IY6xAIw20E
+	Y4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Gr1j6F4UJwCI42IY6I8E87Iv6xkF7I
+	0E14v26F4UJVW0obIYCTnIWIevJa73UjIFyTuYvjxUHubkDUUUU
+X-CM-SenderInfo: pyxotu46lvutnvoduhdfq/1tbiDAEBA2rqY+TkUAAAs8
 
-ahd_loadseq() allocates a critical section table, but ahd_free()
-does not release it. Free the table after shutting down the
-controller and releasing its platform resources.
+lpfc_els_rcv_rls() takes a reference on the ndlp for the pending
+MBX_READ_LNK_STAT command.  lpfc_els_rsp_rls_acc() drops that
+reference right after building the ACC IOCB, but then keeps
+dereferencing ndlp in the trace message and takes a fresh reference
+for the IOCB.
 
-This issue was found by our static analysis tool under development.
+The node can be removed from the nodelist while the mailbox is
+pending, so the put may be the last one and release ndlp through
+lpfc_nlp_release().  The later ndlp->vport, ndlp->nlp_DID and
+lpfc_nlp_get() calls then touch freed memory.
 
-Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
-Signed-off-by: Guangshuo Li <liguangshuo@mail.sdu.edu.cn>
+Move the put after the reference for the IOCB has been acquired, and
+release it on the paths that bail out before that point.
+
+Fixes: 12265f68ae92 ("[SCSI] lpfc 8.3.18: Add support of received ELS commands")
+Cc: stable@vger.kernel.org
+Assisted-by: DeepSeek-V4.1-Flash and OpenAI Codex
+Signed-off-by: Wentao Liang <vulab@iscas.ac.cn>
 ---
-Build-tested the changed object with x86_64 GCC W=1, using defconfig
-with the driver dependencies enabled. No hardware/kernel runtime test or full linked-kernel
-build.
-OpenAI Codex assisted with source review, patch implementation and
-commit-message drafting. The submitter has reviewed the changes.
+ drivers/scsi/lpfc/lpfc_els.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
- drivers/scsi/aic7xxx/aic79xx_core.c | 1 +
- 1 file changed, 1 insertion(+)
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index 804aa7509b69..0bd706b1520f 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -8778,10 +8778,8 @@ lpfc_els_rsp_rls_acc(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
+ 				     lpfc_max_els_tries, ndlp,
+ 				     ndlp->nlp_DID, ELS_CMD_ACC);
+ 
+-	/* Decrement the ndlp reference count from previous mbox command */
+-	lpfc_nlp_put(ndlp);
+-
+ 	if (!elsiocb) {
++		lpfc_nlp_put(ndlp);
+ 		mempool_free(pmb, phba->mbox_mem_pool);
+ 		return;
+ 	}
+@@ -8821,10 +8819,14 @@ lpfc_els_rsp_rls_acc(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
+ 	phba->fc_stat.elsXmitACC++;
+ 	elsiocb->ndlp = lpfc_nlp_get(ndlp);
+ 	if (!elsiocb->ndlp) {
++		lpfc_nlp_put(ndlp);
+ 		lpfc_els_free_iocb(phba, elsiocb);
+ 		return;
+ 	}
+ 
++	/* Decrement the ndlp reference count from previous mbox command */
++	lpfc_nlp_put(ndlp);
++
+ 	rc = lpfc_sli_issue_iocb(phba, LPFC_ELS_RING, elsiocb, 0);
+ 	if (rc == IOCB_ERROR) {
+ 		lpfc_els_free_iocb(phba, elsiocb);
+-- 
+2.34.1
 
-diff --git a/drivers/scsi/aic7xxx/aic79xx_core.c b/drivers/scsi/aic7xxx/aic79xx_core.c
-index 3602a1fc40e4..1ef088b54a28 100644
---- a/drivers/scsi/aic7xxx/aic79xx_core.c
-+++ b/drivers/scsi/aic7xxx/aic79xx_core.c
-@@ -6167,6 +6167,7 @@ ahd_free(struct ahd_softc *ahd)
- 	kfree(ahd->name);
- 	kfree(ahd->seep_config);
- 	kfree(ahd->saved_stack);
-+	kfree(ahd->critical_sections);
- 	kfree(ahd);
- 	return;
- }
