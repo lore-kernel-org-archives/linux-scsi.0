@@ -1,50 +1,56 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=159.226.251.21
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793759287;
-	b=n34FXLVT4XwguVGPLYSTBRn2lIqO/y3bbJOXEXR6tX9U5YbhWWmmYqn3YXdasxOPsaAl
-	 cHlTtyT6HZ0W+Qm+8TJf+BlLWaMZCdAmMbuFkjLLP0ufdWTYiDMAer/nD+VWiYhNEMkLi
-	 lwMBZF3hFx4mPFqoDCSiAdSEsk9AMjLEZ9iLnb8+UsfLGPBR76pHhC6X4ctzE2wfQAsh4
-	 i1TuzuwdnWwDleCpZEIlPmFhOrwKU+p/0px5VcG3T5p1Llxb9PEpr2yZ1hHmTz0GXElSi
-	 q5L3GFP319ccyLKjHsYLmnG8xR18Ert0O77W86XVL0Sd87UDU4Lu7e1Wmsa5Vnr6AgA==
+	t=1793759498;
+	b=HOM3UnU1et6Qh39UGPwp7TNGgJDtoIrC59mABUx+nD9Nk30/us7RonqCsPHSrjkwSC0C
+	 x87ETWW6tvOeuJxjsr5hJPbfnsxQVZqmm7VYvDSASxl75W6vI++yUPGZdzQPSpvuqwZCj
+	 jyn1GdKgDu/ae2C5n6Oxd9sqn79sNFrCjCu73DM0KfyuDUbJLM/qGqLO/cC3vF4MJcgsx
+	 etpYlbMbcTBBuViMTalQnql8hn+YQF/rC/joOQ+uwxPFxLQSG+ro53/tGe7IEg6avI9MV
+	 +eYvF1rBP7zmjYFRuDtc0i22Zmxv1wrLDjYRpiCYtNx0GCndzzlD3vPswq/s2gzndhQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793759287;
-	h=DMARC-Filter:Received:From:To:Cc:Subject:Date:Message-Id:X-Mailer:
-	 MIME-Version:Content-Transfer-Encoding:X-CM-TRANSID:
-	 X-Coremail-Antispam:X-Originating-IP:X-CM-SenderInfo;
-	bh=uYZxoAtzUyUJccl93uV1S+BTZFTI/6A3Feb99I+0lRI=;
-	b=rnIkUB0MYGWS9CgIFcoaeKxs5n1UMsyK8M1ycTA2ioR2I8oboM8anlhqkp7ZTFhZcDMK
-	 LBcdDWWSPZEu2bi02/3XVW1tfFPvKIro+orc7OZgQ4etUcM61SsHmeNZIhYI9ToY7NAdB
-	 TSwItCfyLT4829pA1khGcrJDF2Gm4cwUY5DPBlr4P28cGPVHmCt713Dg0TqgMa9YCeq5G
-	 d3UEkO8xioxt0Rohsh+Kk8HSVFxXrn0J/3Xx14qF8OqCV1eXOw9s/NUEUrOZD4A/fPts7
-	 LKbyWw7zQAKN4fUooYo4l0m68b8Ddd9bh7fNNw6RR2BRd6n0pMP261EshiFyaeKRQtg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793759498;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=8rZ2YzNVQiRnwRcikROPeCGl6R5x5zb65FtvNtgrm/0=;
+	b=RTGRlngG9WFMrKiYGAUIO/RLHnVxbqEx5AJx6hDjbKxXtUPY/R7uh/GaeVZhh5EvKZUV
+	 sWJt/cpldBu0/z1lZPytq6aT+P2g3QIdHt9E/sVpDbitK/jJyMRQ00JfNvWcbXJ2sbLPd
+	 q8WCZV2K4jgxmv/lMkxmAJGBq73LJL+wYzYIWlP+LPLexhNBSLQ1+N+MFxAXGQVWQuLpw
+	 muCHmvpzmSzrFRJUo4ZBl5f5oQYngB79aYmiYIorTMe35QBAzamEOVuUNcHz1srZV8u/8
+	 gpmCL9lnMfl4alipW+7gsAaCUivBlWsDPiUpd9TdoR7xfjX6jGyYfK7JUmTg3KBLSgw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=iscas.ac.cn;
-	spf=pass smtp.mailfrom=iscas.ac.cn;
-	arc=none smtp.remote-ip=159.226.251.21
-Received: from cstnet.cn (smtp21.cstnet.cn [159.226.251.21])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=QBh18cbn;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C44F9606A335
-	for <linux-scsi@vger.kernel.org>; Wed,  4 Nov 2026 02:28:06 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C44F9606A335
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
-Received: from dfae2b116770.home.arpa (unknown [36.110.52.2])
-	by APP-01 (Coremail) with SMTP id qwCowAD3H_osmOpqeZs+AA--.29135S2;
-	Wed, 04 Nov 2026 10:27:57 +0800 (CST)
-From: Wentao Liang <vulab@iscas.ac.cn>
-To: Alim Akhtar <alim.akhtar@samsung.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	Bean Huo <beanhuo@micron.com>,
-	Stanley Jhu <stanleyjhu@google.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <mkp@kernel.org>
-Cc: linux-scsi@vger.kernel.org
-Subject: [PATCH] scsi: ufs: core: drop the runtime PM reference when probe fails
-Date: Wed,  4 Nov 2026 02:28:05 +0000
-Message-Id: <20261104022805.1484063-1-vulab@iscas.ac.cn>
-X-Mailer: git-send-email 2.34.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C049F606A326;
+	Wed,  4 Nov 2026 02:31:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=QBh18cbn
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D2A421F000C1;
+	Wed,  4 Nov 2026 02:31:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793759497;
+	bh=8rZ2YzNVQiRnwRcikROPeCGl6R5x5zb65FtvNtgrm/0=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=QBh18cbnaMkic88QlVT24I4y4DeB4a5v/NFF6UY0v1f7nEDT3dc4ffV4CZ9XRU0Ea
+	 TMBWqjeKK+kO4PcWYYtprIMiZLELW6krtbzFnrXTNhLRs8gHuwuNCmAYGkBVhaCnmJ
+	 7AgFKoyl7tqVSKHPOHsmbIL9QLd8uBcWzm7yj7I3l5lpM0yGm6sQgwlyQIjdc/HFDO
+	 dxEA6Bbb8Mfe3d/jP9eYM3VEcTmScbU+rcZUC3M/HnOM/n0s6Dmdy9BxK0QampTdMS
+	 ZVFPW4qbNAOEzLl+4Evd5JEjzp+khU8oAT9vYFfg0OI+J/YPGPD0IjXfUjIi7Tb6if
+	 UHuF/TI76BfbA==
+Message-ID: <sashiko-outbox-196478@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] scsi: cxgbit: drop the cnp reference when the close
+ reply never comes
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Wentao Liang" <vulab@iscas.ac.cn>
+Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+In-Reply-To: <20261104021448.1468404-1-vulab@iscas.ac.cn>
+References: <20261104021448.1468404-1-vulab@iscas.ac.cn>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 04 Nov 2026 02:31:36 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -53,96 +59,91 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:qwCowAD3H_osmOpqeZs+AA--.29135S2
-X-Coremail-Antispam: 1UD129KBjvJXoW7uFyftr43trW8GF1xZw4fXwb_yoW5Jr1UpF
-	4vg3yYvF1fWF4Utw12qw109FWFqa1fK343Gr4vya4xGw15KF9xX34kKF1FvF4kGrWfZayU
-	XFy7t3WDXFykArJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUvGb7Iv0xC_Kw4lb4IE77IF4wAFc2x0x2IEx4CE42xK8VAvwI8I
-	cIk0rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2
-	AK021l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v2
-	6r4UJVWxJr1l84ACjcxK6I8E87Iv67AKxVWxJr0_GcWl84ACjcxK6I8E87Iv6xkF7I0E14
-	v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xf
-	McIj6xIIjxv20xvE14v26Fy26r45twAv7VC2z280aVAFwI0_Gr1j6F4UJwAm72CE4IkC6x
-	0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lc7CjxVAaw2AFwI0_JF0_Jw1l42xK82IYc2Ij
-	64vIr41l42xK82IY6x8ErcxFaVAv8VW8GFyrJr1UJwCFx2IqxVCFs4IE7xkEbVWUJVW8Jw
-	C20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAF
-	wI0_JF0_Jw1lIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVW7JVWDJwCI42IY6xIIjx
-	v20xvEc7CjxVAFwI0_Gr1j6F4UJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2
-	z280aVAFwI0_Cr0_Gr1UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr1j6F4UJbIYCTnIWIevJa
-	73UjIFyTuYvjxUknaBUUUUU
-X-CM-SenderInfo: pyxotu46lvutnvoduhdfq/1tbiCRQBA2rqY-nHQQABsC
 
-ufshcd_init() takes a runtime PM reference on the controller device
-before it brings up the link, and ufshcd_async_scan() drops that
-reference once the asynchronous scan has finished.  If link setup or
-device initialization fails afterwards, the function returns through
-out_release without dropping the reference, leaving the controller
-permanently marked as busy and unable to runtime suspend.
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [Critical] scsi: cxgbit: double cxgbit_put_cnp() and UAF in __cxgbit_free=
+_cdev_np()
+--
 
-Send the failures that occur after the reference is taken through a new
-label that drops the reference before the existing cleanup.  Failures
-before the reference is taken keep their current path.
+commit 6bb8ef7c81c63dadb738bb34808599917602fb9c
+Author: Wentao Liang <vulab@iscas.ac.cn>
 
-Fixes: 62694735ca95 ("[SCSI] ufs: Add runtime PM support for UFS host controller driver")
-Cc: stable@vger.kernel.org
-Assisted-by: DeepSeek-V4.1-Flash and OpenAI Codex
-Signed-off-by: Wentao Liang <vulab@iscas.ac.cn>
----
- drivers/ufs/core/ufshcd.c | 12 +++++++-----
- 1 file changed, 7 insertions(+), 5 deletions(-)
+scsi: cxgbit: drop the cnp reference when the close reply never comes
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index ee643830a57a..c098f51020d6 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -11424,7 +11424,7 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
- 
- 	err = ufshcd_link_startup(hba);
- 	if (err)
--		goto out_release;
-+		goto out_rpm_put;
- 
- 	if (hba->mcq_enabled)
- 		ufshcd_config_mcq(hba);
-@@ -11441,23 +11441,23 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
- 	/* Verify device initialization by sending NOP OUT UPIU */
- 	err = ufshcd_verify_dev_init(hba);
- 	if (err)
--		goto out_release;
-+		goto out_rpm_put;
- 
- 	/* Initiate UFS initialization, and waiting until completion */
- 	err = ufshcd_complete_dev_init(hba);
- 	if (err)
--		goto out_release;
-+		goto out_rpm_put;
- 
- 	err = ufshcd_device_params_init(hba);
- 	if (err)
--		goto out_release;
-+		goto out_rpm_put;
- 
- 	err = ufshcd_post_device_init(hba);
- 
- initialized:
- 	ufshcd_process_probe_result(hba, probe_start, err);
- 	if (err)
--		goto out_release;
-+		goto out_rpm_put;
- 
- 	ufs_sysfs_add_nodes(hba->dev);
- 	hba->dme_qos_sysfs_handle = sysfs_get_dirent(hba->dev->kobj.sd,
-@@ -11468,6 +11468,8 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
- 	ufshcd_pm_qos_init(hba);
- 	return 0;
- 
-+out_rpm_put:
-+	pm_runtime_put_sync(dev);
- out_release:
- 	ufshcd_release(hba);
- out_disable:
--- 
-2.34.1
+This commit attempts to fix a reference leak on struct cxgbit_np in
+__cxgbit_free_cdev_np() when cxgbit_wait_for_reply() returns an error before
+a firmware reply arrives, using completion_done() to check whether
+cxgbit_close_listsrv_rpl() already handled the reply and dropped the
+reference.
 
+> diff --git a/drivers/target/iscsi/cxgbit/cxgbit_cm.c b/drivers/target/isc=
+si/cxgbit/cxgbit_cm.c
+> index 146705845fa3e..91787bca3ff10 100644
+> --- a/drivers/target/iscsi/cxgbit/cxgbit_cm.c
+> +++ b/drivers/target/iscsi/cxgbit/cxgbit_cm.c
+> @@ -558,6 +558,15 @@ __cxgbit_free_cdev_np(struct cxgbit_device *cdev, st=
+ruct cxgbit_np *cnp)
+> =20
+>  	cxgb4_free_stid(cdev->lldi.tids, stid,
+>  			cnp->com.local_addr.ss_family);
+> +
+> +	/*
+> +	 * A reply carrying an error status also returns -EIO, but that reply
+> +	 * has already dropped the reference taken above.  Only a wait that
+> +	 * bailed out before any reply arrived still holds it.
+> +	 */
+> +	if (ret && !completion_done(&cnp->com.wr_wait.completion))
+> +		cxgbit_put_cnp(cnp);
+
+[Severity: Critical]
+Does completion_done() work as expected here after
+wait_for_completion_timeout() has returned?
+
+When CPL_CLOSE_LISTSRV_RPL arrives with a non-zero status,
+cxgbit_close_listsrv_rpl() wakes the waiter and unconditionally drops the
+reference taken by __cxgbit_free_cdev_np():
+
+drivers/target/iscsi/cxgbit/cxgbit_cm.c:cxgbit_close_listsrv_rpl() {
+	...
+	cxgbit_wake_up(&cnp->com.wr_wait, __func__, rpl->status);
+	cxgbit_put_cnp(cnp);
+}
+
+Inside cxgbit_wake_up(), wr_waitp->ret is set to -EIO and complete()
+(rather than complete_all()) increments completion.done from 0 to 1:
+
+drivers/target/iscsi/cxgbit/cxgbit_cm.c:cxgbit_wake_up() {
+	if (ret =3D=3D CPL_ERR_NONE)
+		wr_waitp->ret =3D 0;
+	else
+		wr_waitp->ret =3D -EIO;
+	...
+	complete(&wr_waitp->completion);
+}
+
+When wait_for_completion_timeout() in cxgbit_wait_for_reply() wakes up,
+do_wait_for_common() consumes that completion by decrementing completion.do=
+ne
+back to 0 before returning -EIO. Because completion.done is 0 again,
+completion_done(&cnp->com.wr_wait.completion) always returns false on this
+path.
+
+Wouldn't __cxgbit_free_cdev_np() then call cxgbit_put_cnp(cnp) a second tim=
+e,
+dropping the caller's reference and freeing cnp before cxgbit_free_np()
+accesses cnp->np_accept_lock, drains cnp->np_accept_list, and calls
+cxgbit_put_cnp(cnp) again?
+
+Also, if CDEV_STATE_UP is cleared while the CPL_CLOSE_LISTSRV_REQ is already
+in flight, cxgbit_wait_for_reply() returns -EIO immediately without waiting.
+If cxgbit_close_listsrv_rpl() on another CPU looks up cnp via lookup_stid()
+just before cxgb4_free_stid() clears the stid entry, can
+__cxgbit_free_cdev_np() observe !completion_done() before
+cxgbit_close_listsrv_rpl() reaches complete(), causing both paths to call
+cxgbit_put_cnp(cnp) and triggering a use-after-free in
+cxgbit_close_listsrv_rpl() and cxgbit_free_np()?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261104021448.1468=
+404-1-vulab@iscas.ac.cn?part=3D1
