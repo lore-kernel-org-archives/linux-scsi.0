@@ -1,99 +1,72 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.208.179
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793787882;
-	b=OLl4lm3Z2vZbLT3Gk8Z5uzVeX+4lFinXJlSmfN5u3W9p5zdLPhsJ7zEMMCQBywzD18yz
-	 G1scDCyfSsL0m3n6QMX66/i/sgJOLNiNedGk59R31wTugWhQ+UTPnmCvM4+UYhsAPoONO
-	 idb4VGzk95RRno6lU3aNFq4ZSv+eL8qskx6MMQRJMMx3YF29j5RD1pjW52Vv4xV0INKsx
-	 CfsvyJi+UTMzI7wTaMXqCTZ+SJxv/838x/fykqdXPKRtSZvWxHBm+fNvDQUcOE3k5PoCQ
-	 vY10AHZqWuUEsvlmUzr7NWY59WE2itS1CMR+xon8XFBwDjnOGeIx1H2z6x+ymfH5pdg==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793787882;
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.200
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1793791668;
+	b=uv2PFokJUqPcmiN/Gas5qTrYi66orcgTmdpcCACw4fvlN3m9wAiVFcA9fWMOuAQnlw+O
+	 yjLUfEowhg+kRdgct9aLiZx05QurT/pDZbUYgLGUZZYVrMB40yv/R3TQPW7AOTOlo1KDr
+	 8D3d+d6wzZWX/mbHsqfd0j8dYDHZd4HyiewK94CX+z0bTyYfjLBPaw/CprAF+GOrCHPAC
+	 Hb1ZYrTf89DTuCa3ZnGlJbA/RYiD0Gb/rIA6m1hk+VABot1jaWhWE1vfgwWMqubSs3GvQ
+	 nQDCBUoAsX9lrwNz4VM7QGv3F12A1ikrzhKE0uQCr5BJPCLybe4gJY5EI9gPdBZwe8Q==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793791668;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:Received:MIME-Version:
-	 From:Date:X-Gm-Features:Message-ID:Subject:To:Cc:Content-Type;
-	bh=+dcl/erqXSVMqWlciMAxF0/KBcxrMf17dIv8kW6c+wM=;
-	b=i0d4nA6d5YDQxGQ66wtdWXOwbj5JTqEg3WbNWTJxAkxgCmrA3mlLOFkw/sJcp+1rhvfF
-	 AhYfbyW/cL/hYb3oyW40OYRkhdMuS3QOB0elPbBbk65TMcLm5LrXIDXBEnT/UkO9eRNL7
-	 8lwToYieY9XcZGmR+J56lNCreRRI7RNKxj1lv4Ad04q8jOXC/APbYvLQbzQn5sIZ9ltPt
-	 zSmWIp/c0TlUrhE8Zj97CiPm7bRs6wgy1LbeBRJ3dL+GOr6x3bPgjctD5hysfjUQuhL9f
-	 JqWrRc0zkNYip9KE+lnsdk0JV3qA0TJ5rBZK23I4AEtG2nw3kC5xBA4wt3Tgvh+OqFQ==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=B179lsik;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.208.179
-Received: from mail-lj1-f179.google.com (mail-lj1-f179.google.com [209.85.208.179])
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:Mime-Version:
+	 X-Mailer:Message-ID:Subject:From:To:Cc:Content-Type;
+	bh=pyY2wj3cJVqfa/dTdmvd0ISos1ijTzTPDWm7P9keHwc=;
+	b=VqyMiMgKznYA8DQv6+EOI+44GqfBogLgC/2wETfMqVmvpKocyttBrSiWu0HZzdcvprfW
+	 xdfiEWTIzcq0wh+c7k7FrsGn0eSqXD6hK1kcO11U0s02vByqsAJ4asEfltzXn2maLMAbl
+	 okfWDCLaClsmw83r7uOVRwpXkWlTiZ9BkSZMfMdiCMiuPp//NwLFPskiGSTj3Vp0uIqcz
+	 7Ywk5jXMJeels247B2h7b1A5QGq/198EnlKPaEjlvIPVC3P+IrkK4yRtgLYDEzZOxSfLl
+	 QibAeP+D1B0h5jnoTHbsCkj/DuQGSz6Su1/LezWU/9bTwN+wScsYJZAUqaOEa5xhwIg==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=google.com;
+	spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com;
+	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=fXk1BHcc;
+	arc=none smtp.remote-ip=74.125.82.200
+Received: from mail-dy1-f200.google.com (mail-dy1-f200.google.com [74.125.82.200])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 71EF1606A326
-	for <linux-scsi@vger.kernel.org>; Wed,  4 Nov 2026 10:24:42 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 71EF1606A326
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D35BD606A328
+	for <linux-scsi@vger.kernel.org>; Wed,  4 Nov 2026 11:27:47 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D35BD606A328
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=B179lsik
-Received: by mail-lj1-f179.google.com with SMTP id 38308e7fff4ca-3aae7df0971so3881281fa.1
-        for <linux-scsi@vger.kernel.org>; Wed, 04 Nov 2026 02:24:42 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1793787881; cv=none;
-        d=google.com; s=arc-20260327;
-        b=L/rixAvnh2jHDaxTLXcKoktZDE9m/4Ywxdqd+yV9vfrhqwZzTM08SovzRo7HdDv7HZ
-         ED/3TGmJZvO+1HT1CCcN9wv6+MU47Uv5scqpW5ZTLJkIt41zD2xSGL+tlW9b3fq6rX1j
-         gBEnC/1Ja/MdTVToQM5a6thXBlVn/XyUbwJ77mhvJJ7lwkO8sdW6IIpAB1kUfDtGUpFA
-         t8VbewS8vJ+qf5Gl+jjVwR77mId+kp/SxZsncJTLT8ZnhvQ0pmoqroS6ETe5w2MzSDue
-         VE5dlG7m0jGFPbCCRIbWPK7s1TB9IDdgBUrwXxVDNCfIisXUM16xv9/Ok2Xisebbsk6V
-         4PGw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=cc:to:subject:message-id:date:from:mime-version:dkim-signature;
-        bh=+dcl/erqXSVMqWlciMAxF0/KBcxrMf17dIv8kW6c+wM=;
-        fh=8xRMN/hc1vTixGpPt3QhOfDnb0NYtkSrdKpQFJapZoM=;
-        b=FG/MT5GrNi6uU2dCFhnluHYSx46yGBQkltogyEi7sr22jdA4Wu25YKWqlvwECn90qz
-         s0h+aZRpR8SJKKlb3NXZ8rCpAT4cyGerYUNv1zcePJSH03UmLprrP+XZC1v/GMnZ4Urf
-         tVhOXenJkkNuTcywKwZZUACgzpNHPLl+HvdHbVgG4vAtykfU5t3+lUNhsjWzyurCKiZr
-         KelCYPm1FDqRb6EE+w+PKZ8zQx/Ijkz1fDo8VvgmF8GW/QEUC0J1yGWaJmp2/oY1nU7x
-         DliCKoQcdKu90+Uezl1evB5BnT0oljfVrmlu2mdzB1ILSZrR9HYTsroSV6vXkXPLTYJw
-         ca9w==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=fXk1BHcc
+Received: by mail-dy1-f200.google.com with SMTP id 5a478bee46e88-36d69ab3c2bso173583eec.0
+        for <linux-scsi@vger.kernel.org>; Wed, 04 Nov 2026 03:27:47 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793787881; x=1794392681; darn=vger.kernel.org;
-        h=content-type:cc:to:subject:message-id:date:from:mime-version:from
+        d=google.com; s=20260707; t=1793791667; x=1794396467; darn=vger.kernel.org;
+        h=content-type:cc:to:from:subject:message-id:mime-version:date:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=+dcl/erqXSVMqWlciMAxF0/KBcxrMf17dIv8kW6c+wM=;
-        b=B179lsikAo3MCoRa+xYIU4+cZtrZXD43+xWjXxmmK7EU5jzixchIfy30KlADnrT861
-         iOvQoQm6BBNZdCJEH0Q4WhyLpdI8kZdvfbbQNXoluGnrGFoHLA1WtHksMSh5Z9uI3/N5
-         ClWvmr/7fzJhhdoPSfUrsEdt2Vms6hp0PmDFXu9ly9n+lduev3vRRHwF0h0+YmYTcai4
-         1mysWtx6OwwvhVco8qHIUWDnpfCe25Ijst9ZbEymg41mIAehVIGkIL/PVYWeT+FnL5zw
-         H64u/RUyB3pt8ygIkFMF/DJdsTmn9Q0smb1O8dPO1Ya6tWfIYpkI/Y00oMahoPSz5fH1
-         r5SA==
+        bh=pyY2wj3cJVqfa/dTdmvd0ISos1ijTzTPDWm7P9keHwc=;
+        b=fXk1BHccVFgFL2XcIFK6TH7HehutMBNeWYP7scpQtF10DBbnkfjU9vEeP2Lyeb3JVf
+         aWgvXyVKWpfgm8PcYjhDbp/pWFpgUqmg0N64KdFw3ujsvWyKJgkd1aVc97gU/36coh6F
+         dO04GJ1Am/hsPTFUGv3yxntdeN/g+pASqWYCBkuclbq/rLyll8ckuhZuIIgsNWmFXTx7
+         30VPsrGWE95BTqmWa/vsSvEG+yhcpiQZOPzL0nWx6dK67jQ0aXbWZ4StHt0jIV87/RIN
+         45M7NgACwqrJfKeN2Eez6hvyh7s4zBqAW1jGlEfkLh69N9WTJEsrA+og0e5iGPAr2Au/
+         yxNA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793787881; x=1794392681;
-        h=content-type:cc:to:subject:message-id:date:from:mime-version
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=+dcl/erqXSVMqWlciMAxF0/KBcxrMf17dIv8kW6c+wM=;
-        b=gyyOKoGmP7VUre8+9RLkezyDbnGYJ5VtS5oai5By7WL5AfpDIekrwiw0eaw3oKsuWU
-         fPNWXlcqT5lMnGhvIFi34h4WpmrF7fHN6H9I3kjlix/NUJ5/hXa808+35FF+YHFscqR5
-         oZd9iiUMM0UNm8rQPtGGw+16jTYF5ivkTwIgKsCPEFo/7EC/4uVoahLDrIWc3weXPav+
-         hrVRG8OHvjQQWVyFhShvK5TqjaM792nIIWDdVu4f1ZNgcMh72JAzV3iE+XfiGD1yG9nl
-         QqmyP5fs42Uj0Mwmurr+iaQxtYgAvoct+i6UZ5UB0348+4H2Leg8V2iQCtutHuxbmAWV
-         6xDA==
-X-Gm-Message-State: APuU4Z96IaTyLqOJjV2elOw8XzZSw/jPzXct2pUerSjNVLtmdakyZ/l+
-	rfaOhPiITAG1p0VablRWDdEW74U63+j3NTcg1raYgV6zpkEINdr8C3I/IkqzUpE2CAc6phKVE1w
-	69BUmw022bGKRYsx9usO9UqmZ18tbWdO0Vj7DwpUX8g==
-X-Gm-Gg: AYBFou2UnnRWZ0de/b1nTb2K60tgppARDHeD8hQjV7d81Rmv+KjLxvRvue3uvvZEAYl
-	6cEOHz1fsRH7FCV+pbZiosIgepaqY9QRukpeKlBZUJN+An8pIIVf+Q+GESHdfDKUFWuwnaiyfao
-	pLvMIKzSfBumCgKPdp/9XlvfWnpWOA95YNXqxivAoKuqbqogVS1ZKM/K49CoXfGSTWqaEAiHk3c
-	uYDEcP+G2OwC+jzffvbeP2I22EWxytQcd4iXRyLll70XqKXiUpAUZ9KEGYOJoT3jLUkF9fCfUBB
-	01uk6+czuQNUV+m+5Q+wh0JroX+/lrB2Jbw0gHDuDfor7Wg/63+NvoPr5SXsmegNcVMKhMpgDR0
-	QS13deQvrSLS7Skqi/py8RYpx7TxcaApWREWH5AZwAWkykkWz5p+qNbhMpDj6xX4kkw==
-X-Received: by 2002:a05:651c:a345:b0:3ab:3f60:51be with SMTP id
- 38308e7fff4ca-3acb7b52404mr37108141fa.28.1793787880322; Wed, 04 Nov 2026
- 02:24:40 -0800 (PST)
-Received: from 77377267392 named unknown by gmailapi.google.com with HTTPREST;
- Wed, 4 Nov 2026 05:24:39 -0500
-Received: from 77377267392 named unknown by gmailapi.google.com with HTTPREST;
- Wed, 4 Nov 2026 05:24:39 -0500
+        d=1e100.net; s=20260707; t=1793791667; x=1794396467;
+        h=content-type:cc:to:from:subject:message-id:mime-version:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=pyY2wj3cJVqfa/dTdmvd0ISos1ijTzTPDWm7P9keHwc=;
+        b=Z4dNJ+Ydk14llYBqF+bW47EgBrSuImyAT91qcvbuQlB6nPCrNf6C5Y1zeyhJnQshLV
+         cNa/NmF4xUpwfswxKFyB/na4011f5u5981x53IV9ngS833tZ3r7dqZochGFji46cQZnI
+         fIRNAxpO3LtEs/cloOE2+T6uY29EgxQB6cOZmNB905UiNyWZmd+tWA9ielHCx5oGUlnP
+         nrwKsZbOsE5YfflgK8EuvHZLrgq4kPv8Vr0cm5qqtePV9FlI4A8eg/a8rxKj/9BbjRm7
+         xtzYexcDoPdasV0QVytgkoK0WBrBzpzlu+XHITh3C/jbo75qaNABUsayBoAQ+NYkpLjp
+         NwZA==
+X-Forwarded-Encrypted: i=1; AKwUvBzjm4O1Zsv8mItjC2rkZp88I7irKQ+JvB5EhysXiVy3lOUv8Clq9/juhwXtvaO80xICpP9/wrPD8Cty@vger.kernel.org
+X-Gm-Message-State: APuU4Z+CVNDGeibDUQokNEAmpt43eFcyuPP0p7OUjCRpG9R69j0ddFtq
+	91d62dqa3h/csCn6TofsQ0cxcqUZKveeudtyZlgacfkBz4npDiU4hNgwgs1/SEuNiy2MKUHr+52
+	J6l2k8ur7t2OUq12n+nRrNg==
+X-Received: from dybpl4.prod.google.com ([2002:a05:7301:4304:b0:369:dd6b:ac5c])
+ (user=stanleyjhu job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a05:693c:65d2:b0:369:1401:c5c2 with SMTP id 5a478bee46e88-36a423bf43fmr21671592eec.26.1793791666553;
+ Wed, 04 Nov 2026 03:27:46 -0800 (PST)
+Date: Wed,  4 Nov 2026 19:27:44 +0800
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -102,76 +75,115 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-From: zhang san <shunsheng1218@gmail.com>
-Date: Wed, 4 Nov 2026 05:24:39 -0500
-X-Gm-Features: AclHuK8mKYrOLw55T5M7eaMYFOVlEhEP6K_xnwt_-B3_tP11Fu0SQdsrg4zyZZ4
-Message-ID: <CAGTEBTZ5teYJyMk3o8-FZ897OsSgwVdFDpvKoKdfA9vR=Bi=-g@mail.gmail.com>
-Subject: [BUG/RFC] target: PR ALL_TG_PT traversal can dereference freed LUN
- during removal
-To: mkp@kernel.org
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.56.0.385.gac671c819a-goog
+Message-ID: <20261104112744.1630864-1-stanleyjhu@google.com>
+Subject: [PATCH v2] block: Keep RPM_ACTIVE in blk_pre_runtime_resume() when
+ already active
+From: Stanley Jhu <stanleyjhu@google.com>
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Bart Van Assche <bvanassche@acm.org>, Brian Norris <briannorris@chromium.org>, 
+	"Rafael J . Wysocki" <rafael@kernel.org>, Praveen Talari <praveen.talari@oss.qualcomm.com>, 
+	Alan Stern <stern@rowland.harvard.edu>, linux-block@vger.kernel.org, 
+	linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, stable@vger.kernel.org, 
+	Stanley Jhu <stanleyjhu@google.com>
 Content-Type: text/plain; charset="UTF-8"
 
-Hello,
+Since commit eef1d74bf88f ("PM: runtime: Only set runtime_error on
+suspend callback failures"), a failed runtime resume leaves
+dev->power.runtime_error at 0 with runtime_status set to RPM_SUSPENDED,
+so later runtime resume requests run sdev_runtime_resume() again:
 
-We found a use-after-free in __core_scsi3_alloc_registration() when a
-PR REGISTER AND IGNORE with ALL_TG_PT=1 races a concurrent LUN removal
-via configfs.
+1. A runtime suspend increments q->pm_only from 0 to 1 and sets
+   q->rpm_status to RPM_SUSPENDED.
+2. The first runtime resume fails in the driver callback, and
+   blk_post_runtime_resume() sets q->rpm_status to RPM_ACTIVE and calls
+   blk_clear_pm_only(), decrementing q->pm_only from 1 to 0 so recovery
+   commands can enter the queue (intended since
+   commit 6e1fcab00a23 ("scsi: block: pm: Always set request queue
+   runtime active in blk_post_runtime_resume()")).
+3. A retried runtime resume calls blk_pre_runtime_resume(), which
+   overwrites q->rpm_status from RPM_ACTIVE to RPM_RESUMING, so
+   blk_post_runtime_resume() sees old_status != RPM_ACTIVE and calls
+   blk_clear_pm_only() a second time without a matching
+   blk_set_pm_only().
+4. q->pm_only underflows from 0 to -1 (triggering WARN_ON_ONCE in
+   blk_clear_pm_only()), blocking non-PM requests in blk_queue_enter()
+   and __bio_queue_enter() while the device is RPM_ACTIVE, and the next
+   runtime suspend increments q->pm_only from -1 to 0, letting non-PM
+   requests dispatch while RPM_SUSPENDED. This hits the UFS device
+   well-known LUN by default and SCSI disks with
+   manage_runtime_start_stop enabled (ATA and FireWire sbp2 defaults).
 
-Problem description:
+Transition q->rpm_status to RPM_RESUMING in blk_pre_runtime_resume()
+only when it is RPM_SUSPENDED, and call blk_clear_pm_only() in
+blk_post_runtime_resume() only when old_status is RPM_RESUMING, pairing
+each clear with a completed runtime suspend.
 
-The function iterates dev->dev_sep_list with
-list_for_each_entry_safe() while dropping se_port_lock inside each
-iteration body. The current element (lun_tmp) is protected by a
-percpu_ref_tryget_live() reference, but the iterator's cached next
-pointer is not: if the next se_lun is removed and freed during the
-unlocked body, the loop's next iteration dereferences freed memory
-through the cached pointer. This manifests as a general protection
-fault on a non-canonical address (list poison).
+Tested on QEMU ARM64 UFS in SDB and MCQ modes by injecting
+runtime-resume START STOP UNIT failures on the UFS device well-known
+LUN, confirming zero pm_only underflows and balanced runtime PM cycles.
 
-We reproduced this on mainline 6628e7d4c6b2 (v7.4-rc1) with a
-KASAN-enabled kernel: a GPF in __core_scsi3_alloc_registration() when
-the PR registration races a configfs port deletion. The reproducer
-uses controlled timing to expose the interleaving and is available on
-request; control runs were clean.
+Fixes: eef1d74bf88f ("PM: runtime: Only set runtime_error on suspend callback failures")
+Cc: stable@vger.kernel.org # v7.3+
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Signed-off-by: Stanley Jhu <stanleyjhu@google.com>
+---
+Differences from v1:
+- Move SUSPENDED -> RESUMING explicitly in blk_pre_runtime_resume() and
+  clear pm_only only for RPM_RESUMING in blk_post_runtime_resume()
+- Describe the QEMU UFS test coverage in the commit message
+- Link to v1: https://lore.kernel.org/r/20261029040001.2100001-1-stanleyjhu@google.com
 
-Attempted fix and design question:
+ block/blk-pm.c | 13 ++++++++-----
+ 1 file changed, 8 insertions(+), 5 deletions(-)
 
-We explored taking a percpu_ref_tryget_live() reference on the next
-entry before dropping the lock, and releasing it when the iteration
-advances. This prevented the observed use-after-free in the tested
-interleaving.
+diff --git a/block/blk-pm.c b/block/blk-pm.c
+index 8d3e052f91da..34cc7c5ca04e 100644
+--- a/block/blk-pm.c
++++ b/block/blk-pm.c
+@@ -142,7 +142,8 @@ EXPORT_SYMBOL(blk_post_runtime_suspend);
+  *
+  * Description:
+  *    Update the queue's runtime status to RESUMING in preparation for the
+- *    runtime resume of the device.
++ *    runtime resume of the device if the queue is runtime suspended, or keep
++ *    RPM_ACTIVE if a previous failed runtime resume already reactivated it.
+  *
+  *    This function should be called near the start of the device's
+  *    runtime_resume callback.
+@@ -153,7 +154,9 @@ void blk_pre_runtime_resume(struct request_queue *q)
+ 		return;
+ 
+ 	spin_lock_irq(&q->queue_lock);
+-	q->rpm_status = RPM_RESUMING;
++	/* Keep RPM_ACTIVE if a prior failed resume reactivated the queue. */
++	if (q->rpm_status == RPM_SUSPENDED)
++		q->rpm_status = RPM_RESUMING;
+ 	spin_unlock_irq(&q->queue_lock);
+ }
+ EXPORT_SYMBOL(blk_pre_runtime_resume);
+@@ -168,8 +171,8 @@ EXPORT_SYMBOL(blk_pre_runtime_resume);
+  *    driver or error handler will need to communicate with the device.
+  *
+  *    This function should be called near the end of the device's
+- *    runtime_resume callback to correct queue runtime PM status and re-enable
+- *    peeking requests from the queue.
++ *    runtime_resume callback to mark the queue runtime active and clear
++ *    pm_only if the queue was resuming.
+  */
+ void blk_post_runtime_resume(struct request_queue *q)
+ {
+@@ -185,7 +188,7 @@ void blk_post_runtime_resume(struct request_queue *q)
+ 	pm_request_autosuspend(q->dev);
+ 	spin_unlock_irq(&q->queue_lock);
+ 
+-	if (old_status != RPM_ACTIVE)
++	if (old_status == RPM_RESUMING)
+ 		blk_clear_pm_only(q);
+ }
+ EXPORT_SYMBOL(blk_post_runtime_resume);
+-- 
+2.56.0.385.gac671c819a-goog
 
-However, when the next entry's tryget fails (the LUN is dying and
-being removed), there is a functional tradeoff:
-
-  - We cannot safely carry that pointer across the lock drop without a
-lifetime guarantee.
-  - We cannot obtain a live reference with tryget in this case.
-  - Our prototype stops the traversal (break), which may skip later
-LUNs that are still valid and should receive ALL_TG_PT registrations.
-
-We therefore do not consider the prototype ready to submit as a fix.
-
-We would appreciate guidance on the correct approach:
-
-  1. Is stopping the iteration when a dying LUN is encountered
-acceptable under the target core's PR registration semantics?
-  2. Should the traversal instead restart under se_port_lock, using a
-safe way to identify and avoid already processed LUNs?
-  3. Is there an existing target-core lifetime or traversal mechanism
-that should be used instead?
-
-We can provide the prototype patch, KASAN traces, kernel
-configuration, and test setup privately if useful. If a fix is
-proposed, please CC me so I can test the exact revision and provide a
-Tested-by tag if it passes.
-
-This finding comes from an AI-assisted source audit; the source
-analysis and injection-assisted tests were reviewed by us.
-
-Best regards,
-Yaohan Li
-shunsheng1218@gmail.com
