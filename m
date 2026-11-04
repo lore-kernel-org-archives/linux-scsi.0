@@ -1,45 +1,45 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793820406;
-	b=arFUJcQz48TkIaHwUy+T8uwujsF3LlTBtqAXLBtNcJQcGbUpwhMAGENz+KndOuY4B0gA
-	 XUI7pZqrYkkZTARDG/lHjye1ak3Xyr56ULeK/IcCIxCYzU9xVVvFD7XfMjxG6vSbK3hMk
-	 WhXbIIADc25TSBq8lwZvlcmtQTEJ4A7Bjr4zpm2lrlLox5kwJN+AAVdj0BwV5qRUPp2a9
-	 L9Otg31c8emD3hO5a52RSYrPBys6WPu5JKlzvpdqZINnJZJYyTnmOPrYmDIwir2T8lm4T
-	 eEWScJrmkSDQP+e9ULGjd2A442hAAjHCpCsmJLbtcsinzrZ1xTr1AJCLMevlfWua2Wg==
+	t=1793820449;
+	b=sxw6YTDjxR4QqcLDQhpNozflSt7LvF/W+BUnr1c2gkxC8K76nM528Q6awU25tWYDzHmY
+	 lJAVMnFBs5etVUe/C2TEOwk3fVSam2ZVdmAEtW1QQYQuLq+NUezKq7cYsUcjneJNblKpC
+	 YA2IM/SfZTkSTwelsDK2HcajuQbX3ZAh2/kjRyL2pHUSCw2KnsG9xzfqDDsiVuptUERGy
+	 YDVGm5Yygu4dr34AA2kQsBtytJR1aKzagRbaJCNQQpkq7Sa6vqgRh5QLbRCIahIpyZtri
+	 aDTlXaVMeAQ0IcI+HliobsOmG8RhN/O+yP4Jsh+b5fGWYIr87xMMHEreuZBBm5CvR/A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793820406;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793820449;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:
 	 In-Reply-To:References:MIME-Version:Content-Type:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:Content-Transfer-Encoding;
-	bh=cd2dCZjA0tUhyc+igqHnY6+9OAULLk3Gm7203fq742M=;
-	b=tahlq7FxQm7LIj2vBJ6IBHQq+LmPg5DgXVeqqAzlvD8gZVWLUoDCL5/mOroZA7G8BS02
-	 ZqjP+e4Uy4XlQJQ7Tgbo2HcZZ1Ow3/I7kH9Ik4mrpe51A4qm2yEO9s0lyghax86YIHXvu
-	 DuJzU8mhalpNtVU1qhU7bLwmjYEj+UC4jK2u65IzNFHiP8XegglWwegzW85JuDId0CMQe
-	 F7P3o3yyYe/+lCxA+e03KkF/8pPIP/6XBncppsTEXMngy5Et0eM7qPSFMKuWo7znAE4to
-	 E1RWvTx9VhI+V8ZjwGDL7KXQxjYYbWggriW+NiSTSBBpLIZ43suhrsKQvyFdJobzL0g==
+	bh=SGZXtenDzDnzN/hAwCoJvR7nlijFBob6FQl7GJGEPCo=;
+	b=neHCgjLOGUft3PDS8S9WRcdTtx2usB0WBbt272+c9/sHu3+cj8YKV7hMUsGGJS93lQkU
+	 MFNRpkhFd+wB4/4lVmL1bBSqjLqBgsCU4lDJbLROVXFFwTFUs7NrPp1eUAfWXASwT4YvW
+	 7nEcYb3BziVL4m6dGIfxIK/HMc1fJzOdAMvBJKnJA6RfyC7MckoJP9zOjXdNu18jn+/Zr
+	 tw65J3nXmdpWe1ulq5p9363xJmD8iuX5dUcM/jF8iUFYNyBhHE31t4gs0+m8iBVbIA/mG
+	 GBc2da/oK/DYROevIkOvZ5hhMjRiGzLg5l1HIRUtLMy21hJ2MKvJHjT3z9SSgAH5/OQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Ok0iN6uZ;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=WTvTLYti;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C145607030B;
-	Wed,  4 Nov 2026 19:26:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 362176070A80;
+	Wed,  4 Nov 2026 19:27:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Ok0iN6uZ
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E5BE81F000C1;
-	Wed,  4 Nov 2026 19:26:33 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=WTvTLYti
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 47E111F000C1;
+	Wed,  4 Nov 2026 19:27:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793820405;
-	bh=cd2dCZjA0tUhyc+igqHnY6+9OAULLk3Gm7203fq742M=;
+	s=k20260515; t=1793820449;
+	bh=SGZXtenDzDnzN/hAwCoJvR7nlijFBob6FQl7GJGEPCo=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=Ok0iN6uZQVSYaoCJ8QVSJT8l0lXYmNP35ncQljCwM9H9v59k+rKBWDwXyFuH6JO+M
-	 V+A/kQXQfWgbGohORmoO87IV8G5a3EeicQ9/77UKK7TnPSNtklntEWp/u4+8ZixD0c
-	 bRD3pYtw6zhIWR1FS+A6aVjGwZINr1WSqex7QK4NXh4aMIjo3IjIJsUG8/xkIzVtfH
-	 6o2/KO4Dtfl777uLHIT6W89DNE9MAKgRdxN0CGLmaTZrAGaPjU++EC952vB7Nwp+HX
-	 +JJQg7IqWsBi5yUZmEzjETxgVGZ58lqdaOlqsnXdyQP64dFRJssogaTbhl3zVphWpc
-	 sA8Q19qZfKV8A==
+	b=WTvTLYtifxKVDAKFEwxAEpP+KqKkmbss0O3FvCVjbPGqXrJpDoCPGQ5oGFz8SBrvF
+	 tD4WfYtmmvZefQl5gXXU+H6104nXZB3j0cHwCa26xKcGLASKW04PHQjju0x3TofBoF
+	 S79TIjcYh1lweJqcaNbaT/pbmq+p2weA2MdCekZKRls0X/Ylguuocf58PMZMsqe6iU
+	 WvCIu6r2l53iIdxnn8bil7C8dwL66KwhqW+O2kINiXOW3Ed+Ri+kkytDZR5IK/8kso
+	 n+9Fdzr9qEImJtKrDVp1BycV7REVcXz7sk4DiO2Lwzvv9u/aZkCNq9czsaCkPV2+GQ
+	 KdO70U2m2nATw==
 From: Christian Brauner <brauner@kernel.org>
 To: linux-fsdevel@vger.kernel.org
 Cc: Linus Torvalds <torvalds@linux-foundation.org>,
@@ -101,9 +101,9 @@ Cc: Linus Torvalds <torvalds@linux-foundation.org>,
 	"Christian Brauner (Amutable)" <brauner@kernel.org>,
 	Chuck Lever <cel@kernel.org>,
 	stable@vger.kernel.org
-Subject: [PATCH RESEND v2 43/51] powerpc/pseries/lparcfg: return h_get_ppp()'s status as a long
-Date: Wed,  4 Nov 2026 20:26:31 +0100
-Message-ID: <20261104-work-procfs-bugfixes-v2-43-021c84d852e0@kernel.org>
+Subject: [PATCH RESEND v2 46/51] proc: sysctl: copy to and from userspace without holding the table
+Date: Wed,  4 Nov 2026 20:27:15 +0100
+Message-ID: <20261104-work-procfs-bugfixes-v2-46-021c84d852e0@kernel.org>
 In-Reply-To: <20261104-work-procfs-bugfixes-v2-0-021c84d852e0@kernel.org>
 References: <20261104-work-procfs-bugfixes-v2-0-021c84d852e0@kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -117,45 +117,121 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 X-Mailer: b4 0.17-dev
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1751; i=brauner@kernel.org; h=from:subject:message-id; bh=sCHTY4Gek8l3mLAy0sLNwHA69+qK9OBjRO3AuZdnaeo=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9bmJIPL5OsslnfcA9hxcbt6X7Pli9ZcIKN0trZ+9tW 8ub7XmfdpSyMIhxMciKKbI4tJuEyy3nqdhslKkBM4eVCWQIAxenAEykQojhn5Lb2YKPu5tvWS/Q sTtlvpG7vLPqxuJNXEniS7v7VbrqjRkZ/oRc3st548nj6x0rtvtHXl6Vli/7IVk4c/HNJ0nM2So V7AA=
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3702; i=brauner@kernel.org; h=from:subject:message-id; bh=+LAd81fwJIRlW5EjEhH8yOMnOBiQOQqVJycA7u6Pdz8=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS9bmJ1eDRjm+PEc3vLTC2v/lkZcX9ytWi95Scpc5nVn y74amrGd5SyMIhxMciKKbI4tJuEyy3nqdhslKkBM4eVCWQIAxenAEzEMJzhvx/PlO0lwpvb3J5V fmKL8G+eIrrAz/ZQTsb51hX150VF7Rj+abVIqjzO1EzVz7t77eLZC5a9v0xatB6dWHvCQsyFq2M 7IwA=
 X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 Content-Transfer-Encoding: 8bit
 
-h_get_ppp() returns the status of the H_GET_PPP hcall as an unsigned
-int. update_ppp() hands it on as its ssize_t result, and
-lparcfg_write() turns the hcall statuses it knows into an errno and
-returns anything else as it is. So when H_GET_PPP fails, say with
-H_PARAMETER (-4), the status comes back as 4294967292 and a write to
-/proc/powerpc/lparcfg reports that many bytes written.
+proc_sys_call_handler() grabs the table, copies in what is written,
+calls the handler and copies what it produced out to userspace before
+it lets go of the table again. Unregistering a table waits until nobody
+uses it anymore. So a reader or writer whose copy faults for as long as
+it wants, with userfaultfd or a stalled FUSE mapping, keeps
+unregister_sysctl_table() waiting, and its callers like to hold locks
+while they do that. addrconf unregisters the ipv6 sysctls of a device
+with RTNL held, so a stalled read of /proc/sys/net/ipv6/conf/<dev>/mtu
+holds up every RTNL user until the reader gives up.
 
-Return the status as the long it is. lparcfg_write() then treats it
-like the status of H_SET_PPP: an unknown error status is at least
-negative, and one of the positive long-busy statuses comes back as a
-byte count, as it does for H_SET_PPP already. Before commit
-11529396ea31 ("powerpc/pseries: Split processor entitlement retrieval
-and gathering to helper routines") a failed H_GET_PPP turned into -EIO.
+Copy in before grabbing the table and copy out after letting go of it,
+like procfs and kernfs do for their files. The buffer is ours, nothing
+needs the table for the copies.
 
-Reported-by: Chris Mason <mason@kernel.org>
-Fixes: 11529396ea31 ("powerpc/pseries: Split processor entitlement retrieval and gathering to helper routines")
+That moves the allocation and the copy in before the permission check.
+A write that can't be copied in, or a request that is too large, now
+fails with -EFAULT or -ENOMEM where it used to fail with -EPERM.
+
+Fixes: 330d57fb98a9 ("[PATCH] Fix sysctl unregistration oops (CVE-2005-2709)")
 Cc: stable@vger.kernel.org
 Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
- arch/powerpc/platforms/pseries/lparcfg.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/proc/proc_sysctl.c | 50 ++++++++++++++++++++++++++++----------------------
+ 1 file changed, 28 insertions(+), 22 deletions(-)
 
-diff --git a/arch/powerpc/platforms/pseries/lparcfg.c b/arch/powerpc/platforms/pseries/lparcfg.c
-index 9882f98c0efb..4f6b2975c6e9 100644
---- a/arch/powerpc/platforms/pseries/lparcfg.c
-+++ b/arch/powerpc/platforms/pseries/lparcfg.c
-@@ -113,7 +113,7 @@ struct hvcall_ppp_data {
-  *	          XXXXXX - Entitled procs capacity % available to the
-  *			   partitions pool.
-  */
--static unsigned int h_get_ppp(struct hvcall_ppp_data *ppp_data)
-+static long h_get_ppp(struct hvcall_ppp_data *ppp_data)
+diff --git a/fs/proc/proc_sysctl.c b/fs/proc/proc_sysctl.c
+index ba52f13eb8f3..f5c9f04e8509 100644
+--- a/fs/proc/proc_sysctl.c
++++ b/fs/proc/proc_sysctl.c
+@@ -602,14 +602,36 @@ static ssize_t proc_sys_call_handler(struct kiocb *iocb, struct iov_iter *iter,
+ 		int write)
  {
- 	unsigned long retbuf[PLPAR_HCALL9_BUFSIZE] = {0};
- 	long rc;
+ 	struct inode *inode = file_inode(iocb->ki_filp);
+-	struct ctl_table_header *head = grab_header(inode);
+ 	const struct ctl_table *table = PROC_I(inode)->sysctl_entry;
++	struct ctl_table_header *head;
+ 	size_t count = iov_iter_count(iter);
+ 	char *kbuf;
+ 	ssize_t error;
+ 
+-	if (IS_ERR(head))
+-		return PTR_ERR(head);
++	/* don't even try if the size is too large */
++	if (count >= KMALLOC_MAX_SIZE)
++		return -ENOMEM;
++	kbuf = kvzalloc(count + 1, GFP_KERNEL);
++	if (!kbuf)
++		return -ENOMEM;
++
++	/*
++	 * Copy in before grabbing the table and copy out after letting go of
++	 * it. Unregistering the table waits for us and a copy that faults can
++	 * take as long as userspace wants.
++	 */
++	if (write) {
++		error = -EFAULT;
++		if (!copy_from_iter_full(kbuf, count, iter))
++			goto out_free_buf;
++		kbuf[count] = '\0';
++	}
++
++	head = grab_header(inode);
++	if (IS_ERR(head)) {
++		error = PTR_ERR(head);
++		goto out_free_buf;
++	}
+ 
+ 	/*
+ 	 * At this point we know that the sysctl was not unregistered
+@@ -624,28 +646,15 @@ static ssize_t proc_sys_call_handler(struct kiocb *iocb, struct iov_iter *iter,
+ 	if (!table->proc_handler)
+ 		goto out;
+ 
+-	/* don't even try if the size is too large */
+-	error = -ENOMEM;
+-	if (count >= KMALLOC_MAX_SIZE)
+-		goto out;
+-	kbuf = kvzalloc(count + 1, GFP_KERNEL);
+-	if (!kbuf)
+-		goto out;
+-
+-	if (write) {
+-		error = -EFAULT;
+-		if (!copy_from_iter_full(kbuf, count, iter))
+-			goto out_free_buf;
+-		kbuf[count] = '\0';
+-	}
+-
+ 	error = BPF_CGROUP_RUN_PROG_SYSCTL(head, table, write, &kbuf, &count,
+ 					   &iocb->ki_pos);
+ 	if (error)
+-		goto out_free_buf;
++		goto out;
+ 
+ 	/* careful: calling conventions are nasty here */
+ 	error = table->proc_handler(table, write, kbuf, &count, &iocb->ki_pos);
++out:
++	sysctl_head_finish(head);
+ 	if (error)
+ 		goto out_free_buf;
+ 
+@@ -658,9 +667,6 @@ static ssize_t proc_sys_call_handler(struct kiocb *iocb, struct iov_iter *iter,
+ 	error = count;
+ out_free_buf:
+ 	kvfree(kbuf);
+-out:
+-	sysctl_head_finish(head);
+-
+ 	return error;
+ }
+ 
 
 -- 
 2.53.0
