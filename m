@@ -1,45 +1,45 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793784020;
-	b=a0chEMFdAakNV95mH1tEBqLncM1Vn4nXwyWHxO/AbGqWY7Rbc5CI9DZgFVkGenrJlAdT
-	 LlbNFVqJ4D0AAgAV4t3b2+ViBp52XQ8GbUokiQ5XUoUJnVQDZNhmllD2bOnn3M0DpdG4R
-	 xbKhSmhOPjLV5q+1AdfxZDlLhSANmT4ZV/sKCT0or/UmD5m9uNU46+kiPiEwWsJpRa57V
-	 QKJPAiACbFdCHFF5ZtGmORXjc1pu23MV/7YxOAnZZz0SoJdYWSNWTlOm54xeEj7CfuRZY
-	 bbSq1nGeQFEIszc08ruX3TMnufqm687Fq1CVVrcJXR9obhd5QTSuqdF/ohvPE4gUhQg==
+	t=1793784049;
+	b=LrMvFjHf8HoLCnOS71QtmFONYcNjyIy6Xslk+cYUw5p24Nrc/0JygcI5OOui5sbfrG4z
+	 LFP5cvvXmdhLB/Rm5aGiMjyjlHDQWxnhSSdWqdxTqn7hSNW6A/+LvcOM+yuRxb3Zy9z2b
+	 PUdhfmwtWzzzxlFjM6Q2fFGm78Qn8d/NCiAjBTWDM2RMP6P8rvHtVSRQpw1K5qkvX64nF
+	 D3pNT+ZHaWFHZwdrcMOd6Cw2FXZ6D0YjrhuKk4KnGFqW9+VjBWrKDtKLmz3cmFUdcOtZj
+	 HVQf1IO4BWppdH40BtSoVvrS2V5x+qpRlNBJm1st4W/u7pm/l99GVrIAc+4/cW+O2Sw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793784020;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793784049;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=BqLsI51xXE9XvqQwrewS8kVZYOVybuvhFSYA9nKiQ5w=;
-	b=5Q5gtPiYk8gn3nUjx4Y6+5L4MqZA5km6gawV+F1ZR6k6bdfVzqPVR7K2zIk1OCQCqq+m
-	 WGGDTUHJwpkKAMWYl9cBrcyeNmrg9lBYeprMqEvkjeQghdt9qn4aSEKagEEaM3q7qIpxj
-	 4upHh3gS+iG0HwduWX54gx2lsFW3E6ZaPJHxEPTHLgdgibmmtlDW+OzFAXEdtqn5X6jAN
-	 hJQozqVQ3nkkitaXFoOKDxgQ0zY9Na+yLO5buyRf5nr8WqI9RDiHZvWyBuo75k1mhxDG2
-	 OuT56JZTnli6o71R46YVaaJxXQBnOVsOJUCYpDMTY8Tb/OEL/FcSKgW2WzzlTg3Z0ZA==
+	bh=O/cNspokMh0UNXOA6wOkvv54jlnPVAhKOKNo3zScL80=;
+	b=Fud28JmyJmVj2PWjXvjOLegk+EOWcBZPD+rn5kdJPg/RyiUacz9pAG2M+t7pJu9OFq3G
+	 qfSV5ob3R/h5iPvdUj3oXHUadstR4T92mgUnlnx6BqgSk+3nsM8y0ar2CLwR3eyLLyCck
+	 c4dsdTAwb3mit2pReaU8ihzoQR9759Id7R4aP3C5njIVbdG5FPI1Fjn15QytfYRE90ci5
+	 ZAYPfM3T1niTrIWLiOLp/V6rAg+y9WvuiX5hp059fBkURk5oLH/asL+j+7Cqq42NWBLSk
+	 17mAW4wDue/qsHWWxETlFZeFYAi+9qPC2njS838qLFhCmI/OSIEske+z1NPIi9hpkDQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=RI03ExhV;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BcEaKSaA;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F7BF606A32C;
-	Wed,  4 Nov 2026 09:20:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 366F8606A326;
+	Wed,  4 Nov 2026 09:20:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=RI03ExhV
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B14201F000C1;
-	Wed,  4 Nov 2026 09:20:09 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BcEaKSaA
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 884BF1F000C1;
+	Wed,  4 Nov 2026 09:20:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793784019;
-	bh=BqLsI51xXE9XvqQwrewS8kVZYOVybuvhFSYA9nKiQ5w=;
+	s=k20260515; t=1793784048;
+	bh=O/cNspokMh0UNXOA6wOkvv54jlnPVAhKOKNo3zScL80=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=RI03ExhVHW+vXW50GI/z1t5fOv/JldWAfo3PTbpnjtH9ZHo58Lc2AcPxXJ5PtbXAX
-	 8g4KSTO5fOZQCtpyjjL/bJvrwiezCM9YEtZIA/HFUZUjXdYaQqcpF0TeHFBMUlhQKU
-	 cwV4vnKJXipMsVWc69bizj8nAauOCKTGcIiZij9G7eWxZ3rmj4e0CBFYHzcKtXnQSl
-	 AJB/iwP2dB6oj6qGqoWsBFGeMkJxlpj4mX3YlYJ3ZSSJ9f+IEjQkqzGNq+iWXf8V9P
-	 ITxx8RHhN/lsRkk2i0dJRQVWI5FBwtmizQ/MBQbxSu+48ni+gfhGCNjOwQDZHYMP7B
-	 rmF7LwmTvp1Aw==
-Date: Wed, 4 Nov 2026 10:20:07 +0100
+	b=BcEaKSaAGlv24CwtAidx4vgcs6qvpVaJft+GsrdUwgsUzcXrxh3uKvNOUoNaojM0u
+	 zeaAufJdghxwNsRVYbDAL/xLeKpNsJ3Qayq8R/yEjD/hXG6tybWAoeeY/Tcg+J2REY
+	 2VHx7FHMLCTTzYzu20RNN6+W/eGKH3XQSxBPLu21a3FQK4L4xV10mVduwGQuGwRq6Y
+	 1A0ZHeMOGLNd3RiETXNw1XPlv0+sn3aHbmYt6VyuIs0KUjdL9KaF/E0tjXUuJZvvKv
+	 OzKIqB04C/jh70SwJGTPrT4CcqF9fgN0yPVMCzRgZsEpdaIpp/2cLp+CNRnZLAYstK
+	 OnLeMUpNmqPkw==
+Date: Wed, 4 Nov 2026 10:20:35 +0100
 From: Christian Brauner <brauner@kernel.org>
 To: sashiko-reviews@lists.linux.dev
 Cc: Linus Torvalds <torvalds@linux-foundation.org>, 
@@ -60,12 +60,12 @@ Cc: Linus Torvalds <torvalds@linux-foundation.org>,
 	Anna Schumaker <anna@kernel.org>, yukuai@fygo.io, Heiko Carstens <hca@linux.ibm.com>, 
 	Vasily Gorbik <gor@linux.ibm.com>, Alexander Gordeev <agordeev@linux.ibm.com>, 
 	Christian Borntraeger <borntraeger@linux.ibm.com>
-Subject: Re: [PATCH RFC 35/38] proc: sysctl: don't hold the tables while
- readdir copies to userspace
-Message-ID: <20261104-getreide-fallpauschalen-uralt-d366f2bf03b0@brauner>
+Subject: Re: [PATCH RFC 36/38] selftests/proc: check that faulting sysctl
+ accesses don't hold up removal
+Message-ID: <20261104-aktionen-endlich-ruhmreich-92f35a0ee397@brauner>
 References: <20261102-work-procfs-bugfixes-v1-0-59422ed3e465@kernel.org>
- <20261102-work-procfs-bugfixes-v1-35-59422ed3e465@kernel.org>
- <sashiko-outbox-195507@kernel.org>
+ <20261102-work-procfs-bugfixes-v1-36-59422ed3e465@kernel.org>
+ <sashiko-outbox-195508@kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -77,20 +77,9 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <sashiko-outbox-195507@kernel.org>
+In-Reply-To: <sashiko-outbox-195508@kernel.org>
 
-On Tue, Nov 03, 2026 at 02:48:38PM +0000, sashiko-bot@kernel.org wrote:
-> - [Medium] proc: sysctl: premature EOF and lost errors in proc_sys_readdir()
+On Tue, Nov 03, 2026 at 02:48:40PM +0000, sashiko-bot@kernel.org wrote:
+> - [Medium] selftests/proc: getdents test faults in dir_emit_dots() before entry lookup
 
-This is pre-existing. proc_sys_make_inode() refuses a table that is
-being unregistered since ace0c791e6c3 ("proc/sysctl: Don't grab i_lock
-under sysctl_lock."). The old proc_sys_readdir() stops at an entry the
-same way.
-
-We can fix this by skpping the entry.
-
-> - [Low] proc: sysctl: unused mode field in struct sysctl_dirent
-
-Dropped.
-
--- 
+Fixed.
