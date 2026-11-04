@@ -1,45 +1,45 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793821406;
-	b=GpBhvyw1uZGmtJDOn0adG/H3ia3bZ60COLXGjDqz4RIHRpNzRKTgmFPJ1RS3xojYT3l+
-	 cC0l391fWyBoDNfSWlGjxzaUDZ0p3+M4Aa8jxDruCNFIalh9ODtXwNwIHN+zfe4XQ0X4x
-	 LzD96/ivgWhvfZxoklGstVqN2XTrc1S1zMjCCTn1geqAam9E9SXgB3K9QKqZuGJvh1nNE
-	 88fiUDm3cyeaDRrN+wyIcKudb4ilBbpFWM5GlxRhd6qxUo1+7/vjlX82UHQEwbUWzyALf
-	 cfjWHzovGbSdfn6tF1Ue1ylRsD2HTN/+8KaGbDKGvRwb6uZDxIoaEi/DG8LoZKnzv6w==
+	t=1793821436;
+	b=bZHO1F/cIs5BhjVt0Zf0lL3SuyB9gv61UtSoKvueY3p5qbd1Oc1u2EbYFDFQ1NOtqW5I
+	 rdar/X4daUScVge0Q/Mb8z0KS1W2c0xc29kL+r+cLXxEqJwizlnblmzHuoCY+xL31jsWI
+	 KCnYp7n9xPKK9+tWqZnX3bc4DGqDbCv/SZ7eWt3dVegegG2z/OxFje0pCgyVj7BNLDG55
+	 aJTWwvAgGUxPRFUvb6nPN0H+vRAD1qpIdzrUULWOIi0swWDsm83Xgk1suqTT/TQmLv0Ag
+	 3BAkcSkxlPnBGvkGH3ti3eK/LNLXK7jbLnQl2T/TUWJYfQ1EquBqaNFPrGcdZlrlr0Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793821406;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793821436;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:
 	 In-Reply-To:References:MIME-Version:Content-Type:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:Content-Transfer-Encoding;
-	bh=Veri64uIgSpvDnn8LOw8Zp4yMSBZFCckYlFRYYQC2Vw=;
-	b=iMgCSHBW74FYOqsmOvY10yqnhE52RcnqqJSCgSMtxAvCh4hGXCRVlWUFZaw0Aazbh36i
-	 vvzBHv0j/5TNkuCaOOhUhv+tk0DASMZEf1nLlz8HMEPXHsyfsLMxUUMBsGOWkHpm+LukW
-	 jel1fIcD+UmK9ykMwfMrSEYmoi67xuJBhoczdl8pmMCNmsLDOJRdAt6mZEoQKT+et9Eer
-	 Nx3p9f7A96zRRI9fNamExZi9t2uhoYxFxqyTsoylEOz1KUn15fi1i5/NsXYSf5OlbQ5MC
-	 0cnEM6cJU4HLz4I8bAR2t0f0Z9grMcE8Xv4SJY9Iy0swCdud3zd04MbK31hSjNulX1g==
+	bh=MXDP9fyzpcc9X8/ROQgrmtpQySITyZcOubu0QYlfW0Q=;
+	b=A0dBn8KwWhr7WW3G7KSQwEoGYpqcJtDBWbcaQ9JnOxJ2nwbnSgOda/ceDdppGWGQE8RC
+	 jPTsSwxKLj+d3V2sJC29/m5sJXo5yP4VrcyRVYgQHvjIMIhd5BSLznjBMu9lV179eG8oE
+	 TuwvOQapTwkYgwb0y3mAepLlWDiKP2Z9lwejE00+fQ9OA9yiGKXv6CSQMYh5oUXnmmbP8
+	 VQ8+PPtcu5v1itGkg621HE7re6xk/Tx9OmHNfSpmzkUv7n9IE92144dzgwFKi/oMdAUGX
+	 DTdTLnCgB6Tj+X0sah+wbRbGLWhGcv6J26MYKn9XgBxyXqi8slud7EvGGERz1X6xq8A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=SusEQFRX;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=HvxkwJrE;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFF946073521;
-	Wed,  4 Nov 2026 19:43:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8068A607076C;
+	Wed,  4 Nov 2026 19:43:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=SusEQFRX
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6561F1F000C1;
-	Wed,  4 Nov 2026 19:43:13 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=HvxkwJrE
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EC5111F000C1;
+	Wed,  4 Nov 2026 19:43:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793821405;
-	bh=Veri64uIgSpvDnn8LOw8Zp4yMSBZFCckYlFRYYQC2Vw=;
+	s=k20260515; t=1793821435;
+	bh=MXDP9fyzpcc9X8/ROQgrmtpQySITyZcOubu0QYlfW0Q=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=SusEQFRX0vw00hvdflsRFt4PdmrzgmGzhuUGY+Rl3VnhWNBf9hDomdph1bbV0F8YD
-	 /dCAYJhqS+MxZGuEFhMqoCKGxoVbNjBfabzq287i+cKDNtU8pg4W1SVc1GRk6DBVXt
-	 3A+QcfkxH6hyhy0K4QTMOeX42qB7Nx5dwHLbBtihrIDS9uJHsRW2OnODxddayGpgPm
-	 rFI3vYy6V9qWvpH3sT0FL5q1c9mQH3+TpkhRf0GW6ZchNR1bazcOQ86K/l5/HEgCzN
-	 T/Ch/TUPZ0qqMdy6fO0LWFN5yzZLB4RRivSIYxPK8aIOEmXpZE3jTdEOFQMZUCGw6q
-	 0wH0f/TZnjGfQ==
+	b=HvxkwJrE6yZiYOxFcQMcjejW88ZaW29hTOWaJR9YO5Tvs3/8Ku/knORgdhrkWEZnm
+	 FqlvED7tkZyaWujkmmUucC82ygg0xRZPT8t1WYaFWGOQCbuZ5npn6/psp1WJsopeBc
+	 /Ip4YEzyI9/mkYahhPxRdv4RqwBmNw3bGEqLSFKH7xSvANy2+6tMJK3oeMT/j06KPr
+	 aV1SaTvwJyNaQmYfmPPmd7MRi8vEfKFW5IekI7JTcT9yV8aBpWOQ57VRcmy0cEhZAb
+	 MM7IMfpEqYVYfJYvfiLY5AP2A/DDKBQ+DAROllTXi16lENKuE4ydpoDCGxpGPMHxZe
+	 bfR3jntxCFu+g==
 From: Christian Brauner <brauner@kernel.org>
 To: linux-fsdevel@vger.kernel.org
 Cc: Linus Torvalds <torvalds@linux-foundation.org>,
@@ -100,9 +100,9 @@ Cc: Linus Torvalds <torvalds@linux-foundation.org>,
 	linux-debuggers@vger.kernel.org,
 	"Christian Brauner (Amutable)" <brauner@kernel.org>,
 	Chuck Lever <cel@kernel.org>
-Subject: [PATCH RESEND v2 04/26] PCI/proc: let procfs copy out config space reads
-Date: Wed,  4 Nov 2026 20:43:11 +0100
-Message-ID: <20261104-work-procfs-drivers-v2-4-245e54e87116@kernel.org>
+Subject: [PATCH RESEND v2 06/26] md: let procfs own the seq_file of /proc/mdstat
+Date: Wed,  4 Nov 2026 20:43:40 +0100
+Message-ID: <20261104-work-procfs-drivers-v2-6-245e54e87116@kernel.org>
 In-Reply-To: <20261104-work-procfs-drivers-v2-0-245e54e87116@kernel.org>
 References: <20261104-work-procfs-drivers-v2-0-245e54e87116@kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -116,100 +116,56 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 X-Mailer: b4 0.17-dev
-X-Developer-Signature: v=1; a=openpgp-sha256; l=3228; i=brauner@kernel.org; h=from:subject:message-id; bh=jf9xs+FhfBfS3vas7oIWufWfAbP2hJLFKyaoEXyHsWk=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS97qpw3WZuPMmzd+/cU6veZXP0/fl7uP4DT+TNmE93Z qU6pl7911HKwiDGxSArpsji0G4SLrecp2KzUaYGzBxWJpAhDFycAjCRlc8ZGZ5OS1D6xS/6MK30 z2qjpysyUk/pmdocFd+pL/M6x8MkqpThf+i2B9puJe4mcxcX7OJ8w14/ub53b/aCHp9Irvn7HsX X8QAA
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1303; i=brauner@kernel.org; h=from:subject:message-id; bh=rdu1kmejfqc5NG4cwcsJAI4WSVobA0+Qk8YSn4PPNtc=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWS97qq6MLvj4dWlPlW/Lu/K/95xU/V2xNJbCyWiD8o4T U+5uk0tsKOUhUGMi0FWTJHFod0kXG45T8Vmo0wNmDmsTCBDGLg4BWAim4wZGb7tvCDdyFbA2D3h xbQ1r407Cl4f1/C3fFQsYPDizr8HIumMDFP6U2beWjP1wmONNb84O1vnWbE1dPszPL6aGeZe9b+ wjBUA
 X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 Content-Transfer-Encoding: 8bit
 
-Implement ->proc_read_buf() so procfs copies what is read to userspace
-after it unpinned the entry, and read the config space into procfs'
-buffer with put_unaligned_le16() and put_unaligned_le32() instead of
-put_user(). A read into a buffer that can't be written used to report
-success. It fails with -EFAULT now. A page holds all of the config
-space, so a single read of it still works, libpci treats a short read as
-an error.
+Declare the seq_operations and let procfs open and free the seq_file.
+->proc_open() only records the event count for ->proc_poll() now.
 
 Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
- drivers/pci/proc.c | 19 ++++++++-----------
- 1 file changed, 8 insertions(+), 11 deletions(-)
+ drivers/md/md.c | 15 ++++-----------
+ 1 file changed, 4 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/pci/proc.c b/drivers/pci/proc.c
-index d420353ee2b3..a8d7469f222b 100644
---- a/drivers/pci/proc.c
-+++ b/drivers/pci/proc.c
-@@ -29,8 +29,8 @@ static loff_t proc_bus_pci_lseek(struct file *file, loff_t off, int whence)
- 	return fixed_size_llseek(file, off, whence, dev->cfg_size);
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 03e35386a802..64abf1743e41 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -9167,18 +9167,13 @@ static const struct seq_operations md_seq_ops = {
+ 	.show   = md_seq_show,
+ };
+ 
++/* procfs opens the seq_file */
+ static int md_seq_open(struct inode *inode, struct file *file)
+ {
+-	struct seq_file *seq;
+-	int error;
+-
+-	error = seq_open(file, &md_seq_ops);
+-	if (error)
+-		return error;
++	struct seq_file *seq = file->private_data;
+ 
+-	seq = file->private_data;
+ 	seq->poll_event = atomic_read(&md_event_count);
+-	return error;
++	return 0;
  }
  
--static ssize_t proc_bus_pci_read(struct file *file, char __user *buf,
--				 size_t nbytes, loff_t *ppos)
-+static ssize_t proc_bus_pci_read(struct file *file, char *buf, size_t nbytes,
-+				 loff_t *ppos)
- {
- 	struct pci_dev *dev = pde_data(file_inode(file));
- 	unsigned int pos, cnt, size;
-@@ -60,15 +60,12 @@ static ssize_t proc_bus_pci_read(struct file *file, char __user *buf,
- 		nbytes = size - pos;
- 	cnt = nbytes;
+ static int md_unloading;
+@@ -9200,10 +9195,8 @@ static __poll_t mdstat_poll(struct file *filp, poll_table *wait)
+ }
  
--	if (!access_ok(buf, cnt))
--		return -EINVAL;
--
- 	pci_config_pm_runtime_get(dev);
+ static const struct proc_ops mdstat_proc_ops = {
++	.proc_seq_ops	= &md_seq_ops,
+ 	.proc_open	= md_seq_open,
+-	.proc_read	= seq_read,
+-	.proc_lseek	= seq_lseek,
+-	.proc_release	= seq_release,
+ 	.proc_poll	= mdstat_poll,
+ };
  
- 	if ((pos & 1) && cnt) {
- 		unsigned char val;
- 		pci_user_read_config_byte(dev, pos, &val);
--		put_user(val, buf);
-+		*buf = val;
- 		buf++;
- 		pos++;
- 		cnt--;
-@@ -77,7 +74,7 @@ static ssize_t proc_bus_pci_read(struct file *file, char __user *buf,
- 	if ((pos & 3) && cnt > 2) {
- 		unsigned short val;
- 		pci_user_read_config_word(dev, pos, &val);
--		put_user(cpu_to_le16(val), (__le16 __user *) buf);
-+		put_unaligned_le16(val, buf);
- 		buf += 2;
- 		pos += 2;
- 		cnt -= 2;
-@@ -86,7 +83,7 @@ static ssize_t proc_bus_pci_read(struct file *file, char __user *buf,
- 	while (cnt >= 4) {
- 		unsigned int val;
- 		pci_user_read_config_dword(dev, pos, &val);
--		put_user(cpu_to_le32(val), (__le32 __user *) buf);
-+		put_unaligned_le32(val, buf);
- 		buf += 4;
- 		pos += 4;
- 		cnt -= 4;
-@@ -96,7 +93,7 @@ static ssize_t proc_bus_pci_read(struct file *file, char __user *buf,
- 	if (cnt >= 2) {
- 		unsigned short val;
- 		pci_user_read_config_word(dev, pos, &val);
--		put_user(cpu_to_le16(val), (__le16 __user *) buf);
-+		put_unaligned_le16(val, buf);
- 		buf += 2;
- 		pos += 2;
- 		cnt -= 2;
-@@ -105,7 +102,7 @@ static ssize_t proc_bus_pci_read(struct file *file, char __user *buf,
- 	if (cnt) {
- 		unsigned char val;
- 		pci_user_read_config_byte(dev, pos, &val);
--		put_user(val, buf);
-+		*buf = val;
- 		pos++;
- 	}
- 
-@@ -327,7 +324,7 @@ static int proc_bus_pci_release(struct inode *inode, struct file *file)
- static const struct proc_ops proc_bus_pci_ops = {
- 	.proc_flags	= PROC_ENTRY_SHORT_WRITES,
- 	.proc_lseek	= proc_bus_pci_lseek,
--	.proc_read	= proc_bus_pci_read,
-+	.proc_read_buf	= proc_bus_pci_read,
- 	.proc_write_buf	= proc_bus_pci_write,
- 	.proc_write_size = PCI_CFG_SPACE_EXP_SIZE,
- 	.proc_ioctl	= proc_bus_pci_ioctl,
 
 -- 
 2.53.0
