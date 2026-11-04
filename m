@@ -1,22 +1,22 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=159.226.251.21
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793758439;
-	b=43biJLjUrMFUrQ85xo3rapa0ka4sxgSYcRLuR2i6b33PC0F0W64EbGGhjZKQK3ZPgVZG
-	 B9QgAY1PIoLwhITOrzK2Y00UqTVf2YP/4OwtEa/8InWTCfr3XwPqdwAMma2CrM1vQGsIX
-	 mjdbB762KKhQXS0F6LYl1FxGQo/RqSpoQ6z81HuDC0JWB9kC12YWGu2/gWgvROGlYQzE+
-	 5tkTd/jyXesRFcHoqqHZSY8nAw6pOPy01V1xfVaEz/zvkPJeFRrTnsKsE45JS1hJxkTK1
-	 sqqO+M7vpU7GJc8dzZ8I68RqQd4wvDqEGgSZP5GEfFb1oFSTQs2euCieHvjEmP17ZZw==
+	t=1793758448;
+	b=gm3lkA4KiW7vxeI3zKBbJqIBzih1EsA6fY+RtgRtFjG32Wn5SrkOgLm70mH5PunIT5ip
+	 zjx5CZa9L9LUpuWZeCAr2mFxA2qFCeCCgSiG/V2vn8IwQFT93XsI79qvcsAXWnb8WxeJr
+	 plcrEkq3tA28QiVIJ13g2WUFOOdusKnCk7BkSqxZ88YIDX9/17Qq4kbDyjzPH4AhG4Hj7
+	 BdTVik8Vcq4ECtgzjM/aS/xKVBq6Exo/s/8Kzopa+Pd7Q9e/y2fth506NIMOc0Sfi5dbs
+	 b9D4TokfDOgNar+B3Z0jzEHNtBC9wXysTuhlnzZn/NP48qfrw82UVysnYxv56X4Rjkg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793758439;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793758448;
 	h=DMARC-Filter:Received:From:To:Cc:Subject:Date:Message-Id:X-Mailer:
 	 MIME-Version:Content-Transfer-Encoding:X-CM-TRANSID:
 	 X-Coremail-Antispam:X-Originating-IP:X-CM-SenderInfo;
-	bh=6fxF1v/kNV1G7zMS99AnJKojlG0hQhFV5f4zlpmQ+YU=;
-	b=5ToutZSkgpWoETi25lk12CZ0uFy4tznoz6rCxHzN/YIUFI/ExPsnHJslXFt3XEeo4Og8
-	 R7t++baxtxZ3yy9FkaGxByEck1kJ8FFU9NIn+5A6fVQ4jJ5rfd36tZr/j97+ahxiM7tSZ
-	 rTkgfoTKzhIYua39G08dmKb1HCaMNchZ93sOaGKu4hgn65hdvb1mHEcE2XfH1U/r5vBm5
-	 UMpMG0bpUrcyIY8nJ1pQLN+Lq0/X8Rg2I8zqq5wShZuoy6StsUGSJJOO8GTUlKOAuflsu
-	 vDTqsuUmICy/MmPKJJhByMgljwkd0YqAgXDEtCUEl1cVqtC/U85bj4P0z2C04aaOntQ==
+	bh=8/wENszwVTerEBWGoAA15O8YOYTpYlOlXBukAart7y4=;
+	b=DH87Ig/168PemCsPZsaLWmdkC/TtC5Yr/g76mheOQQL9D1fC9OGqeeM3CtHEaFgJrOiB
+	 EW2J5WdWWJf3WY+RrsiZef0/5Ma9JOqS1jpOfJmkwc+S6sStKePLwbeZ8fPw0LHZk3lZ4
+	 EZIhscYZ7DUH+EeowE67zh/YQy83ezj6JXyj+Y7csd7mYo/l95aOiIgbbsuX4YwU4mxim
+	 WGBfGY0FnVhKDTVepfH3zHpaRg4l4fH4BIFioYrS1kVua5kmspcTfAbMkmW9nR+bvBxEp
+	 m0XGI0IAcsoqaFQkLdfg5fRrD/ZBz/1PP3Ac95JWFwmSTo70Uh7hHYWMk15d13e50uw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=none header.from=iscas.ac.cn;
 	spf=pass smtp.mailfrom=iscas.ac.cn;
@@ -25,23 +25,22 @@ Received: from cstnet.cn (smtp21.cstnet.cn [159.226.251.21])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 705C4606A328
-	for <linux-scsi@vger.kernel.org>; Wed,  4 Nov 2026 02:13:58 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 705C4606A328
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA0CD606A31B
+	for <linux-scsi@vger.kernel.org>; Wed,  4 Nov 2026 02:14:07 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org DA0CD606A31B
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
 Received: from dfae2b116770.home.arpa (unknown [36.110.52.2])
-	by APP-01 (Coremail) with SMTP id qwCowADnD_rflOpq03M+AA--.28995S2;
-	Wed, 04 Nov 2026 10:13:51 +0800 (CST)
+	by APP-01 (Coremail) with SMTP id qwCowABXf_nqlOpqPnQ+AA--.27349S2;
+	Wed, 04 Nov 2026 10:14:02 +0800 (CST)
 From: Wentao Liang <vulab@iscas.ac.cn>
-To: Justin Tee <justin.tee@broadcom.com>,
-	Paul Ely <paul.ely@broadcom.com>,
+To: Jack Wang <jinpu.wang@cloud.ionos.com>,
 	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
 	"Martin K. Petersen" <mkp@kernel.org>
 Cc: linux-scsi@vger.kernel.org
-Subject: [PATCH] scsi: lpfc: release the RLS node reference when the mailbox fails
-Date: Wed,  4 Nov 2026 02:14:00 +0000
-Message-Id: <20261104021400.1467797-1-vulab@iscas.ac.cn>
+Subject: [PATCH] scsi: pm8001: unwind the probe on ccb tag allocation failure
+Date: Wed,  4 Nov 2026 02:14:11 +0000
+Message-Id: <20261104021411.1467970-1-vulab@iscas.ac.cn>
 X-Mailer: git-send-email 2.34.1
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -53,56 +52,54 @@ List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:qwCowADnD_rflOpq03M+AA--.28995S2
-X-Coremail-Antispam: 1UD129KBjvJXoW7CF1UXF17KrykGF1rJFWUurg_yoW8Jw15pF
-	WUGayYy3s8J3W2kr17Zw1UZF90y3Z3trZ2ka1Iy3s5uF95XFy3ArWFv348XryDA3Wvga4U
-	tasrKryUuFyDArJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUvqb7Iv0xC_Kw4lb4IE77IF4wAFc2x0x2IEx4CE42xK8VAvwI8I
+X-CM-TRANSID:qwCowABXf_nqlOpqPnQ+AA--.27349S2
+X-Coremail-Antispam: 1UD129KBjvJXoW7XrW7uw1fKFy8Jr43CF1xXwb_yoW8JrW7pr
+	WUGryjkrW5Xr4jkFsxZF1UX3Wqya93GrW7CFWUX340gr4Y9rW8JFyxAFWavFy7trWkGFs8
+	tr1kJrnrWFWDArDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUkSb7Iv0xC_Kw4lb4IE77IF4wAFc2x0x2IEx4CE42xK8VAvwI8I
 	cIk0rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2
 	AK021l84ACjcxK6xIIjxv20xvE14v26ryj6F1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v2
 	6r4UJVWxJr1l84ACjcxK6I8E87Iv67AKxVWxJr0_GcWl84ACjcxK6I8E87Iv6xkF7I0E14
 	v26F4UJVW0owAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80
 	ewAv7VC0I7IYx2IY67AKxVWUtVWrXwAv7VC2z280aVAFwI0_Gr1j6F4UJwAm72CE4IkC6x
-	0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lc7CjxVAaw2AFwI0_JF0_Jw1l42xK82IYc2Ij
-	64vIr41l42xK82IY6x8ErcxFaVAv8VW8GFyrJr1UJwCFx2IqxVCFs4IE7xkEbVWUJVW8Jw
-	C20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAF
-	wI0_JF0_Jw1lIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUCVW8JwCI42IY6xIIjx
-	v20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2
-	jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0x
-	ZFpf9x07b5lk3UUUUU=
-X-CM-SenderInfo: pyxotu46lvutnvoduhdfq/1tbiBwIBA2rqZFi3YQAAst
+	0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41l42xK82IYc2Ij64vIr41l42xK82IY6x8ErcxF
+	aVAv8VW8GFyrJr1UJwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r
+	18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_JF0_Jw1lIxkGc2Ij64vI
+	r41lIxAIcVC0I7IYx2IY67AKxVW8JVW5JwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Cr0_Gr
+	1UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVW8JVWxJwCI42IY
+	6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjxUqZYwUUUUU
+X-CM-SenderInfo: pyxotu46lvutnvoduhdfq/1tbiBwQBA2rqZFi3nAAAsW
 
-lpfc_els_rcv_rls() takes a reference on the ndlp before issuing the
-MBX_READ_LNK_STAT mailbox command and hands it to
-lpfc_els_rsp_rls_acc(), which is expected to drop it once the command
-completes.  The callback drops the reference on the normal path, but
-when the mailbox completes with a non-zero mbxStatus it frees the
-mailbox and returns without calling lpfc_nlp_put().  A failed read link
-status command therefore leaks a node reference and keeps the
-corresponding rport alive forever.
+pm8001_init_ccb_tag() is called after the Scsi_Host, the sas_ha and the
+driver's private data have been allocated, and after the PCI regions
+have been requested.  When it fails, pm8001_pci_probe() jumps to
+err_out_enable, which only returns the error: the Scsi_Host, sas_ha and
+private data are leaked, the PCI regions stay requested and the device
+stays enabled.
 
-Release the reference on the error path as well.
+Jump to err_out_ha_free instead, which releases all of those resources.
 
-Fixes: 329f9bc735b4 ("[SCSI] lpfc 8.1.12 : Reference count node structures for node lifetime management")
+Fixes: 5a141315ed7c ("scsi: pm80xx: Increase the number of outstanding I/O supported to 1024")
 Cc: stable@vger.kernel.org
 Assisted-by: DeepSeek-V4.1-Flash and OpenAI Codex
 Signed-off-by: Wentao Liang <vulab@iscas.ac.cn>
 ---
- drivers/scsi/lpfc/lpfc_els.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/scsi/pm8001/pm8001_init.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index 804aa7509b69..ef9c68d382a0 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -8769,6 +8769,7 @@ lpfc_els_rsp_rls_acc(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
- 	pmb->ctx_ndlp = NULL;
+diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
+index 5af81c73a8f8..389649b36aab 100644
+--- a/drivers/scsi/pm8001/pm8001_init.c
++++ b/drivers/scsi/pm8001/pm8001_init.c
+@@ -1178,7 +1178,7 @@ static int pm8001_pci_probe(struct pci_dev *pdev,
  
- 	if (mb->mbxStatus) {
-+		lpfc_nlp_put(ndlp);
- 		mempool_free(pmb, phba->mbox_mem_pool);
- 		return;
- 	}
+ 	rc = pm8001_init_ccb_tag(pm8001_ha);
+ 	if (rc)
+-		goto err_out_enable;
++		goto err_out_ha_free;
+ 
+ 
+ 	PM8001_CHIP_DISP->chip_post_init(pm8001_ha);
 -- 
 2.34.1
 
