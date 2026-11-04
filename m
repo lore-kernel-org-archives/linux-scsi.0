@@ -1,48 +1,57 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=159.226.251.21
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=47.88.81.144
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793760826;
-	b=VGpzxI43sYh9HKNfFG5bv3SgPBD3SZ/lcyVpiZGbWsfWWRaBlhxb07Fbq97Gi98ucd1a
-	 T1CatP26ztum69dS7bt681PUCQtEPPMK16UvJ4rHhKVCRfo16oBPrs7VEzkAUmPIRwxzQ
-	 ok/QVQnXb47FGqRDkrMaw/aEF44v0Oa7mIWPegr3iT1qLeJGZCmG3Im3XYJH2w0Oeh+ZO
-	 cFJG99fsjboSZdE/jkJFcJwCcs6Fvu54S6rypa0UDqKwDSAB+A1pILmLB4MKK+TFLsYa9
-	 iwdC0DxUCPfIB6nI6iPNYRumm8RPQh6DUyl6Z4pymCtq3Zty+FAOMslulxb5x9S5rNQ==
+	t=1793762317;
+	b=nzTGtp7xrXf1Hw4CxxfK2livWXGDs0ifwRjvlOKo1ohKwvXHH2dRFgFFi2Cy3dxD+GHf
+	 GPZLDiicaaLWbrT0vjroi4AWdBbwRwj4wNtsiMCM+ygV6uw6nc7M22oG1NDtWKVcFPS9T
+	 SBDBDUb5Snqvaxj6wDR0y69MZ2Mbcb2KC/tBO2JmbJI1wwU6DSauvdDQv+7fJFc3JHvBn
+	 rxTPIxLdMgtemXs3gANDsjKhDA6D9HR/4borer5f2kF2r/F/Q2AguLlg+irHigaTh//3e
+	 TMbQw7aF85svwEtC1aEq8iWb+zJK/aGVVOvk2757dbGizWvfrUP7IAyKW4h2xR1BDtQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793760826;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793762317;
 	h=DMARC-Filter:Received:From:To:Cc:Subject:Date:Message-Id:X-Mailer:
-	 MIME-Version:Content-Transfer-Encoding:X-CM-TRANSID:
-	 X-Coremail-Antispam:X-Originating-IP:X-CM-SenderInfo;
-	bh=4YJH+GPw8HudDz2iohgu7Qv0ds5bGh76uAwDDejUQbc=;
-	b=hGX7WtJZO7BmIKBB6XSBFjtE/9gOA4RXmZhNvEJCWktpGHzHmXhMZptEErLkLayY0rmc
-	 NH1vZqBmteuOn2W7utj8olAHJn7sykE8/u2j+Rv6BqVPyDpDSzUEWON28rbrEkC3ny72T
-	 NfcucNNeeSZ9eZKbgxEgCTIiEohHM2NiHGPUNESB2u1PXa/sPk3rssdbSpx4TQ3WDdRiU
-	 8zg918kKvxkc+J4f72p0ev394WDMJycBWZstpj6PfM5l6lrGMfP+PNSEgg5QpxwydiJA4
-	 Xz4MBJtJK6cb57mdkFNJzZkfue0NuhVyv4L1sKrikj4pkF0q6y1nAXw5dGuNkSOkddg==
+	 MIME-Version:Content-Transfer-Encoding:X-HM-Tid:X-HM-MType:
+	 X-HM-Spam-Status:DKIM-Signature;
+	bh=H9pyR4Jxa+2vB2d3/CN/QgRIWGA9Oobvr0fdD8bWXvA=;
+	b=vPq4bWOyGS+uLfg0up09mTksdCv98xdlUSJFkdfY4cgJ6i8nqoTREcaJ9JY6rySTNaNk
+	 mE35tSntyjAMEsBnDEAsxkdmx2galFl3mMfu7IBdlkq8it8vkYGTtvoQPlarb025f4uoS
+	 BeCy06x5amHweUi8c/25nO1ts7rs+sCLl/bYZcj65lU4a0v2oNPXzHLRDgLfMyWszo/Rj
+	 sQZei6yYCibHXGyXccrAmjEWzHn7LFKG9XUGUWjqYaOlz7siCeaYWEqvBPH8odoODCkaZ
+	 18OhP064c4m2R9k0oRqjJUAlQiBu5vZnyskBSVG+WQwE7qKwAa7IfVsrdtliutP/1BQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=iscas.ac.cn;
-	spf=pass smtp.mailfrom=iscas.ac.cn;
-	arc=none smtp.remote-ip=159.226.251.21
-Received: from cstnet.cn (smtp21.cstnet.cn [159.226.251.21])
+	dmarc=pass header.from=leap-io-kernel.com;
+	spf=pass smtp.mailfrom=leap-io-kernel.com;
+	dkim=pass header.d=leap-io-kernel.com header.i=@leap-io-kernel.com header.a=rsa-sha256 header.s=default header.b=jxAAko3U;
+	arc=none smtp.remote-ip=47.88.81.144
+Received: from mail-m81144.netease.com (mail-m81144.netease.com [47.88.81.144])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AAEDF606D821
-	for <linux-scsi@vger.kernel.org>; Wed,  4 Nov 2026 02:53:45 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org AAEDF606D821
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
-Received: from dfae2b116770.home.arpa (unknown [36.110.52.2])
-	by APP-01 (Coremail) with SMTP id qwCowACXvvgynupqJOU+AA--.10143S2;
-	Wed, 04 Nov 2026 10:53:39 +0800 (CST)
-From: Wentao Liang <vulab@iscas.ac.cn>
-To: Justin Tee <justin.tee@broadcom.com>,
-	Paul Ely <paul.ely@broadcom.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <mkp@kernel.org>
-Cc: linux-scsi@vger.kernel.org
-Subject: [PATCH] scsi: lpfc: fix ndlp use-after-free in RLS accept callback
-Date: Wed,  4 Nov 2026 02:53:48 +0000
-Message-Id: <20261104025348.1527601-1-vulab@iscas.ac.cn>
-X-Mailer: git-send-email 2.34.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86FF5606A31B
+	for <linux-scsi@vger.kernel.org>; Wed,  4 Nov 2026 03:18:32 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 86FF5606A31B
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=leap-io-kernel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=leap-io-kernel.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key, unprotected) header.d=leap-io-kernel.com header.i=@leap-io-kernel.com header.a=rsa-sha256 header.s=default header.b=jxAAko3U
+Received: from localhost.localdomain (unknown [222.130.22.242])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 536a2cd3e;
+	Wed, 4 Nov 2026 11:18:23 +0800 (GMT+08:00)
+From: Dongdong Hao <doubled@leap-io-kernel.com>
+To: James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com
+Cc: dlemoal@kernel.org,
+	hare@kernel.org,
+	hare@suse.de,
+	doubled@leap-io-kernel.com,
+	yjzhang@leap-io-kernel.com,
+	kezijie@leap-io-kernel.com,
+	jzzhang@leap-io-kernel.com,
+	baikefan@leap-io-kernel.com,
+	linux-scsi@vger.kernel.org
+Subject: [PATCH] scsi: leapraid: Fix init_cmd_priv error handling
+Date: Wed,  4 Nov 2026 11:18:23 +0800
+Message-Id: <20261104031823.198733-1-doubled@leap-io-kernel.com>
+X-Mailer: git-send-email 2.25.1
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -53,78 +62,50 @@ List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:qwCowACXvvgynupqJOU+AA--.10143S2
-X-Coremail-Antispam: 1UD129KBjvJXoW7CFWrAw4UXFWUZFWkWw1xZrb_yoW8ZFyrpw
-	s8JFWjkwn8JF47Krsagr48Zas0yw4xJrZakayqy34kur93WFy2yryjvry8XrWDZan7t3y2
-	yw1qqFy7W3WDZFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUB0b7Iv0xC_Kw4lb4IE77IF4wAFc2x0x2IEx4CE42xK8VAvwI8I
-	cIk0rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2
-	AK021l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v2
-	6r4UJVWxJr1l84ACjcxK6I8E87Iv67AKxVWxJr0_GcWl84ACjcxK6I8E87Iv6xkF7I0E14
-	v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xf
-	McIj6xIIjxv20xvE14v26rWY6Fy7McIj6I8E87Iv67AKxVW8Jr0_Cr1UMcvjeVCFs4IE7x
-	kEbVWUJVW8JwACjcxG0xvY0x0EwIxGrwACjcxG6xCI17CEII8vrVW3JVW8Jr1lc7CjxVAa
-	w2AFwI0_JF0_Jw1l42xK82IYc2Ij64vIr41l42xK82IY6x8ErcxFaVAv8VW8GFyrJr1UJw
-	CFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE
-	14v26r106r1rMI8E67AF67kF1VAFwI0_JF0_Jw1lIxkGc2Ij64vIr41lIxAIcVC0I7IYx2
-	IY67AKxVW5JVW7JwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJwCI42IY6xAIw20E
-	Y4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Gr1j6F4UJwCI42IY6I8E87Iv6xkF7I
-	0E14v26F4UJVW0obIYCTnIWIevJa73UjIFyTuYvjxUHubkDUUUU
-X-CM-SenderInfo: pyxotu46lvutnvoduhdfq/1tbiDAEBA2rqY+TkUAAAs8
+X-HM-Tid: 0aa1a4909f3c03aekunm9b50e10641d831
+X-HM-MType: 1
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVkZTEJLVh1MGUJOTRodTkwZHVYVFA
+	kWGhdVEwETFhoSFyQUDg9ZV1kYEgtZQVlJSUlVSkhLVUlJVUlPSVlXWRYaDxIVHRRZQVlPS0hVSk
+	tJT09PSFVKS0tVSkJLS1kG
+DKIM-Signature: a=rsa-sha256;
+	b=jxAAko3UAjk2PYa5KkjsYrQf4qgRTGb+Azcm6igG8gOEcP06afyU9L1JuR6hyhNSqR5jhBdrix0wnonzTwqSbLhDVjg7gAlSNYjkakF/02uL0Py2qqvURxoKJRgJMMhNYd9RY9KU5j0KTT76fLh0PSwd7KrSKMQ5hhUIWo//8oGJpqZHI0OE/k3ewRL+ikAn0Xn7ElfXdD8v5sKJgeuCjIe6dqxFEGfWjE21CF7u0v4dJwiABxzs37xsQa76ea8yICgZz9omF5Qt49IyDcQWVPFlH2zD7vtJ243AZdiWFC0EBSwaTsKIPJdm0NnPnQzxhQQr77OzHTYjhJMI8XbVWQ==; c=relaxed/relaxed; s=default; d=leap-io-kernel.com; v=1;
+	bh=H9pyR4Jxa+2vB2d3/CN/QgRIWGA9Oobvr0fdD8bWXvA=;
+	h=date:mime-version:subject:message-id:from;
 
-lpfc_els_rcv_rls() takes a reference on the ndlp for the pending
-MBX_READ_LNK_STAT command.  lpfc_els_rsp_rls_acc() drops that
-reference right after building the ACC IOCB, but then keeps
-dereferencing ndlp in the trace message and takes a fresh reference
-for the IOCB.
+leapraid_init_cmd_priv() ignores the return value of
+leapraid_internal_init_cmd_priv() and always returns success. If
+dma_pool_alloc() fails, io_tracker->chain remains NULL, but the SCSI
+midlayer considers the command successfully initialized.
 
-The node can be removed from the nodelist while the mailbox is
-pending, so the put may be the last one and release ndlp through
-lpfc_nlp_release().  The later ndlp->vport, ndlp->nlp_DID and
-lpfc_nlp_get() calls then touch freed memory.
+A subsequent I/O requiring more than LEAPRAID_SGL_INLINE_THRESHOLD
+DMA-mapped scatter-gather entries dereferences the NULL chain buffer
+while building the chained SGL, causing a kernel crash.
 
-Move the put after the reference for the IOCB has been acquired, and
-release it on the paths that bail out before that point.
+Return the result of leapraid_internal_init_cmd_priv() so that allocation
+failures propagate to the SCSI midlayer and abort initialization of the
+affected request.
 
-Fixes: 12265f68ae92 ("[SCSI] lpfc 8.3.18: Add support of received ELS commands")
-Cc: stable@vger.kernel.org
-Assisted-by: DeepSeek-V4.1-Flash and OpenAI Codex
-Signed-off-by: Wentao Liang <vulab@iscas.ac.cn>
+Signed-off-by: Dongdong Hao <doubled@leap-io-kernel.com>
 ---
- drivers/scsi/lpfc/lpfc_els.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+ drivers/scsi/leapraid/leapraid_os.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index 804aa7509b69..0bd706b1520f 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -8778,10 +8778,8 @@ lpfc_els_rsp_rls_acc(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
- 				     lpfc_max_els_tries, ndlp,
- 				     ndlp->nlp_DID, ELS_CMD_ACC);
+diff --git a/drivers/scsi/leapraid/leapraid_os.c b/drivers/scsi/leapraid/leapraid_os.c
+index da597eb99377..0f3219c4f438 100644
+--- a/drivers/scsi/leapraid/leapraid_os.c
++++ b/drivers/scsi/leapraid/leapraid_os.c
+@@ -938,9 +938,8 @@ static int leapraid_init_cmd_priv(struct Scsi_Host *shost,
+ 	struct leapraid_io_req_tracker *io_tracker;
  
--	/* Decrement the ndlp reference count from previous mbox command */
--	lpfc_nlp_put(ndlp);
--
- 	if (!elsiocb) {
-+		lpfc_nlp_put(ndlp);
- 		mempool_free(pmb, phba->mbox_mem_pool);
- 		return;
- 	}
-@@ -8821,10 +8819,14 @@ lpfc_els_rsp_rls_acc(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
- 	phba->fc_stat.elsXmitACC++;
- 	elsiocb->ndlp = lpfc_nlp_get(ndlp);
- 	if (!elsiocb->ndlp) {
-+		lpfc_nlp_put(ndlp);
- 		lpfc_els_free_iocb(phba, elsiocb);
- 		return;
- 	}
+ 	io_tracker = scsi_cmd_priv(scmd);
+-	leapraid_internal_init_cmd_priv(adapter, io_tracker);
  
-+	/* Decrement the ndlp reference count from previous mbox command */
-+	lpfc_nlp_put(ndlp);
-+
- 	rc = lpfc_sli_issue_iocb(phba, LPFC_ELS_RING, elsiocb, 0);
- 	if (rc == IOCB_ERROR) {
- 		lpfc_els_free_iocb(phba, elsiocb);
+-	return 0;
++	return leapraid_internal_init_cmd_priv(adapter, io_tracker);
+ }
+ 
+ static int leapraid_exit_cmd_priv(struct Scsi_Host *shost,
 -- 
-2.34.1
+2.25.1
 
