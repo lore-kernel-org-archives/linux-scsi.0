@@ -1,46 +1,55 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=159.226.251.21
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793758482;
-	b=QXB0X4OOQqC3dd2x1JEheYCL7rj3SlU7xL43r5SovRI0GvUi7jVwaLJ9sfXUxx6QQ9Sl
-	 sf3yvVJWnj52HXn7w3p+BbmzU7rDVUWQzMuv/7GLYDB+oSrcUaDnr8YVojnyJyh+EWJs9
-	 QYG7DSI+0UMsoVc6gCagFBxQUXGb++DBwWWlpYBrSmiHzxmZX9K2e5BjS8iRYDxzFFU2u
-	 aEDhUqciYdV5GMfOexQFL3+BVjwQzM1gPROkLrHfZc8DU/WhsEL9Y1cJwcanKMsCyO6NG
-	 iYwjnE2ziUFc++Z0Tir1lK5brFEqXt5es2vBAtlcwuffss3xVR3RAbQLDhqIcNzKGZg==
+	t=1793759022;
+	b=FmVW5UxCGwpNEhhcZQF6yFUFnKIWJKARi18OVan1BfZxEkXtUQe419viwkGVa+iPyNaE
+	 QWZb08m2qv6D3XIn+D4qojPjXmMgBBI6Osz9yIURcRDpc2eXNXjm0dv7UTkAehJaiZklE
+	 2xpQXLEUbxsHIExEi/m6IMhOPvhl8dPmlawXshdo2V9KwWazfnHtynmunJmx452HyboZA
+	 QOtI1Nh7+G8UzHPdlasH5vWYTxbsKYrXKa0LZ9ZrMCCnDU7SVCBkuW7qquxe3CvErsYNL
+	 uFRwUntTFSj41c3WExCCehUfvQkdK7VmvQ418mM+6K5XwB1rK5jQMfvkaDU8gNEqf5Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793758482;
-	h=DMARC-Filter:Received:From:To:Cc:Subject:Date:Message-Id:X-Mailer:
-	 MIME-Version:Content-Transfer-Encoding:X-CM-TRANSID:
-	 X-Coremail-Antispam:X-Originating-IP:X-CM-SenderInfo;
-	bh=odk/mzR0xsHPTAbLVck69u08+bRdzQx3gTTydRhw0HM=;
-	b=yuMJ0V7kBn+MF9ynX6GuzmjmrU957r8NhR76ks7biQFgKUzJ6COOhkdtUALmS7TINVOr
-	 qCVctqy3srgROWuOBaA6JWyYTRR5Yp2zvlsS0Nx2C91d8S2Hc5PtwlKQ7PnsdLiERGgj+
-	 9Vysub6ujZZMuM4P9bKFXPXqH/+kOP7RuEVXkGXzFFBRxf3D2Qyg8EXaQC7FC4HRbsuQQ
-	 /NufkoJ+naBxCncu6LfQLzDBDBEyfYlrtHHuaiZCdcpIv4SP/euPzsOll25BnIqID1k/P
-	 5CtFT6P9uXabV6+DKUfm+5slBZeCWbPTqQUGqOOTABE2L5ZRVPJq1ceXrRgR10t69/g==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793759022;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=lnPsgEQKjA7wi9W+n5dDO3+mkOKz+j6v6gVd5OU9Wu0=;
+	b=EYuqLKHwZ9Q0af1fAyVg+rKS2ORaRxbUA796xGLqQY+zHC0Vw9NZC2q5c5LlQdTc4ls/
+	 D4lhH2FGLgrS99e6OC/JP8cSRzlK/wLc7FYmJJaqvE4S+8Grw84NNQuuD83APIjan+02E
+	 OqznrnpeYD6885FqDIyIGnBp490NF8oCfiAiBWLEtA53Db1kYGFU6YITdd+6hNKogc1jD
+	 /e/ku22MVSCmfs2cWuIXak6FV4BMDUqKSobFVLx62d7RbWZwzy5Nn6Ov6Tg2VBz2gxlE0
+	 hKhYTCAlrNFMwyp/RyKg87BeHq3wyuWDZ9faHU66D6zGCjlMbHrQPcHx7S4t6PJgjmw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=iscas.ac.cn;
-	spf=pass smtp.mailfrom=iscas.ac.cn;
-	arc=none smtp.remote-ip=159.226.251.21
-Received: from cstnet.cn (smtp21.cstnet.cn [159.226.251.21])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=EIhiiRKg;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31C6B606A326;
-	Wed,  4 Nov 2026 02:14:40 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 31C6B606A326
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
-Received: from dfae2b116770.home.arpa (unknown [36.110.52.2])
-	by APP-01 (Coremail) with SMTP id qwCowACXvvgPlepqwnU+AA--.9648S2;
-	Wed, 04 Nov 2026 10:14:39 +0800 (CST)
-From: Wentao Liang <vulab@iscas.ac.cn>
-To: "Martin K. Petersen" <mkp@kernel.org>
-Cc: linux-scsi@vger.kernel.org,
-	target-devel@vger.kernel.org
-Subject: [PATCH] scsi: cxgbit: drop the cnp reference when the close reply never comes
-Date: Wed,  4 Nov 2026 02:14:48 +0000
-Message-Id: <20261104021448.1468404-1-vulab@iscas.ac.cn>
-X-Mailer: git-send-email 2.34.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 503B5606A31B
+	for <linux-scsi@vger.kernel.org>; Wed,  4 Nov 2026 02:23:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=EIhiiRKg
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BBF091F000C1;
+	Wed,  4 Nov 2026 02:23:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793759021;
+	bh=lnPsgEQKjA7wi9W+n5dDO3+mkOKz+j6v6gVd5OU9Wu0=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=EIhiiRKgagcvnT5U18Qt9P/cBxcZJ5Eg2GEi9w5U0yZRA44dIjLzA8Si++YA2UZvl
+	 pegpKOArV7tIDbbORzTMJ7XYg408NgjRTJd214r7rlI9GQYsYr6D3xAtn9SDEbHclt
+	 LNbUzmbku6Ag79vMf610BvvVqtBzcYw5/3kGz0NlUQTA2Y93Ch8fKnLnj3LUFEN8dp
+	 XMi4xW/qpTXrJuuKk0aBlIF1Dea2D8yV0AG76XbQJUyyaWQsCQPzxgQ85gMDKV5P1C
+	 G7JYQkU5G1CKNN8Gem7kILk0nl+fJJ9I33xKvn3IraXsitLAsfm9slk2IxI5X2bXqU
+	 CvFYETXqLF/gw==
+Message-ID: <sashiko-outbox-196449@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] scsi: myrb: unregister the SCSI host on remove
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Wentao Liang" <vulab@iscas.ac.cn>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20261104021419.1468133-1-vulab@iscas.ac.cn>
+References: <20261104021419.1468133-1-vulab@iscas.ac.cn>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 04 Nov 2026 02:23:41 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -49,71 +58,99 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:qwCowACXvvgPlepqwnU+AA--.9648S2
-X-Coremail-Antispam: 1UD129KBjvJXoW7urWrGry3Kr4kWw1DtF13Jwb_yoW8ZFyfpF
-	sYkry5AryDGrWUtr18Jws29rySvanayry3Cr95Cw4kuw4Yv3yqyr10yw12q3y5u34vgr12
-	qF4DZF1xX3yqy37anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUkqb7Iv0xC_Kw4lb4IE77IF4wAFc2x0x2IEx4CE42xK8VAvwI8I
-	cIk0rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2
-	AK021l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v2
-	6r4UJVWxJr1l84ACjcxK6I8E87Iv67AKxVWxJr0_GcWl84ACjcxK6I8E87Iv6xkF7I0E14
-	v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xf
-	McIj6xIIjxv20xvE14v26rWY6Fy7McIj6I8E87Iv67AKxVW8Jr0_Cr1UMcvjeVCFs4IE7x
-	kEbVWUJVW8JwACjcxG0xvY0x0EwIxGrwCF04k20xvY0x0EwIxGrwCF04k20xvE74AGY7Cv
-	6cx26r48ZrWUJr1UMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr
-	4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUXVWUAwCIc40Y0x0EwIxG
-	rwCI42IY6xIIjxv20xvE14v26ryj6F1UMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8Jr0_Cr
-	1UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVW8JVWxJwCI42IY
-	6I8E87Iv6xkF7I0E14v26r4UJVWxJrUvcSsGvfC2KfnxnUUI43ZEXa7IU5EQ6tUUUUU==
-X-CM-SenderInfo: pyxotu46lvutnvoduhdfq/1tbiDAMBA2rqY+S58gAAsB
 
-__cxgbit_free_cdev_np() takes a reference on the cxgbit_np before asking
-firmware to remove the server socket, and cxgbit_close_listsrv_rpl()
-drops it when the reply arrives.  cxgbit_wait_for_reply() can also give
-up before any reply is received: it returns -EIO straight away when
-CXGB4_STATE_START_RECOVERY or CXGB4_STATE_DETACH has cleared
-CDEV_STATE_UP while the request was in flight.  That path is not the
--ETIMEDOUT path, so the function continues, frees the server TID and
-returns without dropping the reference.  As the TID is gone, the reply
-handler can no longer look the cxgbit_np up and the reference is leaked,
-keeping the np allocation alive forever.
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [Critical] scsi: myrb: UAF of cb and active monitor_work in myrb_remove()=
+ teardown
+--
 
-Tell the two -EIO sources apart with completion_done():
-cxgbit_close_listsrv_rpl() completes wr_wait before it drops the
-reference, so a finished completion means the reply owns it.  If the
-wait gave up without a reply, drop the reference locally once the TID
-has been freed.
+commit b7fd5614b253ea1ce6d98ee7d37937a94b3e4183
+Author: Wentao Liang <vulab@iscas.ac.cn>
 
-Fixes: 9730ffcb8957 ("cxgbit: add files for cxgbit.ko")
-Cc: stable@vger.kernel.org
-Assisted-by: DeepSeek-V4.1-Flash and OpenAI Codex
-Signed-off-by: Wentao Liang <vulab@iscas.ac.cn>
----
- drivers/target/iscsi/cxgbit/cxgbit_cm.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
+scsi: myrb: unregister the SCSI host on remove
 
-diff --git a/drivers/target/iscsi/cxgbit/cxgbit_cm.c b/drivers/target/iscsi/cxgbit/cxgbit_cm.c
-index 146705845fa3..91787bca3ff1 100644
---- a/drivers/target/iscsi/cxgbit/cxgbit_cm.c
-+++ b/drivers/target/iscsi/cxgbit/cxgbit_cm.c
-@@ -558,6 +558,15 @@ __cxgbit_free_cdev_np(struct cxgbit_device *cdev, struct cxgbit_np *cnp)
- 
- 	cxgb4_free_stid(cdev->lldi.tids, stid,
- 			cnp->com.local_addr.ss_family);
-+
-+	/*
-+	 * A reply carrying an error status also returns -EIO, but that reply
-+	 * has already dropped the reference taken above.  Only a wait that
-+	 * bailed out before any reply arrived still holds it.
-+	 */
-+	if (ret && !completion_done(&cnp->com.wr_wait.completion))
-+		cxgbit_put_cnp(cnp);
-+
- 	return 0;
- }
- 
--- 
-2.34.1
+This commit adds a call to scsi_remove_host() in myrb_remove() so that the
+SCSI host is unregistered and its device registration references are dropped
+when the PCI device is removed.
 
+> diff --git a/drivers/scsi/myrb.c b/drivers/scsi/myrb.c
+> index 95df6e5345f7a..e43d86f139c12 100644
+> --- a/drivers/scsi/myrb.c
+> +++ b/drivers/scsi/myrb.c
+> @@ -3496,6 +3496,7 @@ static void myrb_remove(struct pci_dev *pdev)
+>  {
+>  	struct myrb_hba *cb =3D pci_get_drvdata(pdev);
+> =20
+> +	scsi_remove_host(cb->host);
+>  	shost_printk(KERN_NOTICE, cb->host, "Flushing Cache...");
+>  	myrb_exec_type3(cb, MYRB_CMD_FLUSH, 0);
+>  	myrb_cleanup(cb);
+
+[Severity: Critical]
+Does calling scsi_remove_host(cb->host) here trigger a use-after-free of cb
+when myrb_remove() subsequently calls myrb_destroy_mempools(cb)?
+
+In drivers/scsi/myrb.c:myrb_detect(), struct myrb_hba *cb is allocated inli=
+ne
+within struct Scsi_Host via scsi_host_alloc() and obtained with
+shost_priv(shost):
+
+drivers/scsi/myrb.c:myrb_detect() {
+	shost =3D scsi_host_alloc(&myrb_template, sizeof(struct myrb_hba));
+	if (!shost) {
+		dev_err(&pdev->dev, "Unable to allocate Controller\n");
+		return NULL;
+	}
+	shost->max_cmd_len =3D 12;
+	shost->max_lun =3D 256;
+	cb =3D shost_priv(shost);
+}
+
+Now that scsi_remove_host(cb->host) drops the device registration references
+taken by scsi_add_host(), the scsi_host_put(cb->host) call at the end of
+myrb_cleanup(cb) drops the final reference on shost->shost_gendev and frees
+both shost and cb via scsi_host_dev_release():
+
+drivers/scsi/myrb.c:myrb_cleanup() {
+	...
+	pci_set_drvdata(pdev, NULL);
+	pci_disable_device(pdev);
+	scsi_host_put(cb->host);
+}
+
+Immediately after myrb_cleanup(cb) returns, myrb_remove() calls
+myrb_destroy_mempools(cb), which dereferences the freed cb pointer:
+
+drivers/scsi/myrb.c:myrb_remove() {
+	struct myrb_hba *cb =3D pci_get_drvdata(pdev);
+
+	scsi_remove_host(cb->host);
+	shost_printk(KERN_NOTICE, cb->host, "Flushing Cache...");
+	myrb_exec_type3(cb, MYRB_CMD_FLUSH, 0);
+	myrb_cleanup(cb);
+	myrb_destroy_mempools(cb);
+}
+
+drivers/scsi/myrb.c:myrb_destroy_mempools() {
+	cancel_delayed_work_sync(&cb->monitor_work);
+	destroy_workqueue(cb->work_q);
+
+	dma_pool_destroy(cb->sg_pool);
+	dma_pool_destroy(cb->dcdb_pool);
+}
+
+In addition, because cb->monitor_work and cb->work_q are only stopped in
+myrb_destroy_mempools(), running myrb_cleanup() first leaves myrb_monitor()
+able to run concurrently while myrb_cleanup() -> myrb_unmap() frees the DMA
+buffers and mailboxes (cb->enquiry, cb->err_table, cb->ldev_info_buf,
+cb->first_stat_mbox, cb->first_cmd_mbox), unmaps cb->mmio_base, and frees t=
+he
+IRQ.
+
+Should myrb_destroy_mempools(cb) be called before myrb_cleanup(cb), matching
+the order used in the myrb_probe() error path and in myrs_remove()?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261104021419.1468=
+133-1-vulab@iscas.ac.cn?part=3D1
