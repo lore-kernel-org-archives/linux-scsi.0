@@ -1,57 +1,126 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=205.220.168.131
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793866497;
-	b=FxABSYYX3FODxHjsZaQV5H8dfNptbPgqsGWlbF3ylcQXKTEDcEuWn2Rxc+WnssXc44iH
-	 5/E1LKyNmE09xY5PTDFIOKNHd4DCcKNCJ9lIN9A6j2PTD8X/z7nlAMGDBCLtiA37YwzmA
-	 GQUetykvv7iomvy/r5bq4pRRi8gDX2rkNWs9PNQ+utgVUF2eEXV3UAhXdB6UnukwTlNYo
-	 G9/SFtm+WNninuFcicC6PLTzZZarIDaNyp1EZ+Ma0TvG61UDr0HgeFlr6X1k1gPUPj8s1
-	 KcfeKZLaT+zt8LXq6MsDOtWNmQ0KMPEnrXM3k6D+kfx1TQOLKy+kkUeeRwv+FVuKRRg==
+	t=1793869012;
+	b=rORbVmx7JfKkcJaMmIki7XVb/oPtMHZM+6sA9TVtfvxMts//4Wg+suYAyTPyN0hNYAvB
+	 HxTaBjjcwZ7NNqRC4Dnz0JUspXkjt1yILabXyPXfpRGbvRg1J544zsjjgL6pKVmQIzrJO
+	 TytxvhoI2r5kjO6v+2jIzhhMtiW0Wl9PHHSPFpEjlvdO8k7WWGA+XCE2KaRo0fFrApgvT
+	 iMuRreWbKf2FA3hiU+gEH6nKthHXVpc9pQTzlX96TwrFQGteVe9btSI7H3Ia5SArF8m45
+	 PJjl9N6vHGmb5wwggjSwj9ZmpZ4Oi/DFbYHVfDwFNfgHdweboOHSo8LjFNnIwo69+MQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793866497;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=JcAczxu2azSf6vSehFHEoLS0jfURhcRXBp3y1FZA7RU=;
-	b=XMEBuwg1rBi1/gWj5o24mlDEalsTEWRTc4+vZlV/TSo0snw9lSViAQRnz0thhjX0gwdi
-	 gwB8zzP1sPDaegGctshWHBNQhwan9MjKtqv/K0KVVde9GRcqaqelIAuNIKWLgY0AF98nb
-	 WnatRRlotxnLZ6vc0PJl8SmxbRFuQRjDsva+lihHhAd2mKZfpD33nMGMVSZjWFo6quDqW
-	 PP3AfGHbuO2BZzinOoVT406o9+Uq8+qHBf20K0hUp6Nd3beMOyFjxLli4Jm8sCyZ/nGp7
-	 5oFpUl1Pad2wC5z2CWY5Lje9aIPInLs6eyciHANDm8HtgB0KcA44wMJlSBgorvohuvw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793869012;
+	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
+	 DKIM-Signature:X-Google-DKIM-Signature:X-Forwarded-Encrypted:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:X-Received:Received:Date:From:
+	 To:Cc:Subject:Message-ID:References:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To:X-Proofpoint-Spam-Details-Enc:
+	 X-Proofpoint-Spam-Info:X-Proofpoint-GUID:X-Proofpoint-ORIG-GUID:
+	 X-Authority-Analysis:X-Proofpoint-Virus-Version:
+	 X-Proofpoint-Spam-Details;
+	bh=FB1C5WDv2k0g4VMhoAfgN9Y85xhLplp0at8UMrU44m4=;
+	b=3wnqT2Hhi84MtRcWAtpcYVnyLAmfEAQhEuvg8tD5M5qijRYMqYDiOLz9VSMR5SaPXiZ6
+	 HP7nuftG/LLU1HzgrMKgbQSLEjsymsqRlkHXWR6ss3O0sW4h/iHi02aWLxpi9QFaEozox
+	 WnZp4dUgqSOukni6eZBD/rVEL7vlt+yUyN34hkXFnpDYkD0fdhddheqj4I/dJkPjxrCJb
+	 YhUMCTDVpdRzRQawsJnOvLG20taJk/Ssxp8A1TUGBcBn+UAFwDrI2ppc4Rpn6mESXB/xF
+	 ycVAM8CQqA9Z4oegAuSqeUG7X8mY9WJB8A2XLi2S04UI4n0q0Id/tVm/3aN7vRnx8NA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jvOG+hVi;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=oss.qualcomm.com;
+	spf=pass smtp.mailfrom=oss.qualcomm.com;
+	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=jj4jpRyU;
+	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=TjIkJ5Ag;
+	arc=none smtp.remote-ip=205.220.168.131
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9FA99606A31B
-	for <linux-scsi@vger.kernel.org>; Thu,  5 Nov 2026 08:14:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4986606A31B
+	for <linux-scsi@vger.kernel.org>; Thu,  5 Nov 2026 08:56:51 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D4986606A31B
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jvOG+hVi
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1C7B21F000C1;
-	Thu,  5 Nov 2026 08:14:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793866497;
-	bh=JcAczxu2azSf6vSehFHEoLS0jfURhcRXBp3y1FZA7RU=;
-	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
-	b=jvOG+hViefBetfUE59JCXi1+WKA+oneLA5PIOZ27bP0yop1Rv8/aRB11cij6m8JKR
-	 vlDk2EjooYtMhwkiVa8r9+m5UCmXSvI8hBLdGYTE7trE3X9T/DqH0MbK5pZAJ1AlFT
-	 IFhBMNkwJ8NFJYywkl4E9Mx67fnpL77VW/mztpRUOqzwGOVP4f52ldqLQn4d8MgMu7
-	 arvOBqYmKSF3q5y7fYjQai70omTrRphPJmr0BwDFl7mbqnd52Zdes0+Wxj9FvD1PgV
-	 orHBKDiCSCq1JDsu6XShUORNeK9aCKeu4RP6692caT0MPKX4mEROFtWzgZAu+dOYKo
-	 4geFf+Blsp3Rg==
-Message-ID: <sashiko-outbox-198714@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 2/2] scsi: ufs: core: Do not recover the link early
- in the error handler during system PM
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "HOYOUNG SEO" <hy50.seo@samsung.com>, linux-scsi@vger.kernel.org
-In-Reply-To: <acafa54491e27cab79150be04bd7dc91b6b352ad.1793865172.git.hy50.seo@samsung.com>
-References: <cover.1793865172.git.hy50.seo@samsung.com>
- <CGME20261105080101epcas2p4c40f0278beb94d27c7de0621f54f91fd@epcas2p4.samsung.com>
- <acafa54491e27cab79150be04bd7dc91b6b352ad.1793865172.git.hy50.seo@samsung.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 05 Nov 2026 08:14:56 +0000
+	dkim=pass (2048-bit key, unprotected) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=jj4jpRyU;
+	dkim=pass (2048-bit key, unprotected) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=TjIkJ5Ag
+Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6A56Uatt3624872
+	for <linux-scsi@vger.kernel.org>; Thu, 5 Nov 2026 08:56:51 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-type:date:from:in-reply-to:message-id:mime-version
+	:references:subject:to; s=qcppdkim1; bh=FB1C5WDv2k0g4VMhoAfgN9Y8
+	5xhLplp0at8UMrU44m4=; b=jj4jpRyUuJ2OeSTNxPibUFA/SC0e81ThCh4vngr7
+	KVcr0qIwm++o/H86jrwL67Vl/VdAojkju1WbO+ucBsy2uDDMz6tITOZ2Nh+ylE77
+	qY/eSZRSv3Rp/gGe5TkAJcfiZmTyINYEYKEHTkNQHQBdIBKj0XfZLbjjp9gJOf6r
+	XstmM5Fu10D5b2vKO3wZUcsbwumOdyHlKHjuS/UFe1aHdCfJ8O3swxIqkUIWmzE8
+	Bpow4jsCBqMNLIjwQxKK6DGffIe0JF9MMaFzOPMbfAAceQjp+qCyEukvCE9h1KST
+	aWILXma1Ln1zMFZtBajr45rH3GE6FelUJnBWVXJK4lhfVg==
+Received: from mail-qk1-f199.google.com (mail-qk1-f199.google.com [209.85.222.199])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4hr6br445g-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Thu, 05 Nov 2026 08:56:50 +0000 (GMT)
+Received: by mail-qk1-f199.google.com with SMTP id af79cd13be357-93f6f4fe531so302660785a.0
+        for <linux-scsi@vger.kernel.org>; Thu, 05 Nov 2026 00:56:50 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1793869010; x=1794473810; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=FB1C5WDv2k0g4VMhoAfgN9Y85xhLplp0at8UMrU44m4=;
+        b=TjIkJ5AgEe3MW3K9GASPJKsvRdkY2SwhOswYkdpAFjgrzxXbRMsmjeiw2zPJvxJWai
+         Lr5s9ggZ1USbr918AjaoRSWCTz/FWVjBOXHLwwfaeTyarZdQdt14x3FjcFEvxpYEw1Ea
+         +k0HmM4LeeC5AhK2BBc9jM0PWx0vTOSl2KN/Qf0RImJyoggyzp8PvH4+8IvZF/ivOOnj
+         cweAv2HMpSgdp6NepmFzXDzwa3UUqz8bkHaDjH2WLCRMtJrBlv5C6wu6+5SrE+IXeHBx
+         fEoMP0WS5S5TfgoocXn6egCsc9goUpcI2i2JJRVSaWNN3NFmqP1r1RSAXoMwYUM4H3lk
+         QeBw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793869010; x=1794473810;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=FB1C5WDv2k0g4VMhoAfgN9Y85xhLplp0at8UMrU44m4=;
+        b=nHxE9UxewatbQN3avRiLCgczMW0qYZRLy3IAo3gpsj7q/Pm0CyF1NUhSu2syWXiXIp
+         9uho9dwvY3Qw+Ask5M89uqDFuJ5lpEcMothFEdt+7q3Q68Z+oj9HRjhXP4NGoYXxht1O
+         WsCtth7AUVrARqHslcvVl542GPzWBFKdXltRSZrwFpKIzqZNl1NmyVohwz0YGOWV/m7R
+         MfUAhaVF+6hUaXa8rz1gLisrOlT/Hg2ObYYGkfSGDDRNjQVPjdmjOlEtiDtNS8AUwl0m
+         STfcU5MBoqQ2ifiGnp/5BzirkdFn0eiCi0tD4d+p3XdnUGzz8AgfFTFR8tQf+RNN75Jr
+         YXtQ==
+X-Forwarded-Encrypted: i=1; AKwUvBz5N4UjXrGuL0BUvosIDQZ/57CbFA7W6gDArw/ellLYS2zbaM+ecukKMDynJEAzuiO94Je81nKDWVTq@vger.kernel.org
+X-Gm-Message-State: APuU4Z+Tp32P751x/DqzYTzivv0lkRHXkM+9fMfRppXZt9KgaQ3EK1Yu
+	uhTI7jtz8FeFwfacipTfJs9Rhl4ip0fHXvwxjbbuR7Im3peJ+boPJeJ/97t6rUa5MAJDWrj+nmf
+	rf6BKIEicIHiLR2k/tR8SRixao5kxQ6eb0xrLw7bPGyqgpnJIqBHzYefh0KGXDJwF
+X-Gm-Gg: AYBFou3g5NF++EzxNqp7gR3N5jchUeHKWPNLIZHbVdKp+dPtnz3c7zoq0WuPikhoofV
+	lDmpmWRLhl+yTZKJoMRyZ1TIfVYWR4VjXoLdiSlXWMtWoQYVq2PpYZ8GgcuKYoA/j2THYyVnIFJ
+	RMCERQ0gC+562ILA/zYZoj3n14rQVzCjMb93qIwJenQyiRs+wv+RKKra/xSUPQeLsa2muoFCN0b
+	hAJqoP51bW+t9PUNZ1GYCq2mCcwCq+NpBM/j3tl/tPuqPV3P+Pij1BQdnBlU/ap9sMuBinHdwXC
+	50qgrvEN86bsDHf0DHEQpttccnZtrThr2D4HS6xWCfixapIRj4VeUa/sWsSEkdmFJJW06Z2IwUr
+	mGai/mxSC4Ji0rY5XjeC5R8pWCbKSDdkzZrt7EUrmJx1sdRVmkN7/ohfBzhiN+J0=
+X-Received: by 2002:a05:620a:6483:b0:93e:c12c:4408 with SMTP id af79cd13be357-944217cd92fmr2720753185a.68.1793869009912;
+        Thu, 05 Nov 2026 00:56:49 -0800 (PST)
+X-Received: by 2002:a05:620a:6483:b0:93e:c12c:4408 with SMTP id af79cd13be357-944217cd92fmr2720751385a.68.1793869009420;
+        Thu, 05 Nov 2026 00:56:49 -0800 (PST)
+Received: from oss.qualcomm.com ([188.27.161.77])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4b56ef2e968sm58629445e9.8.2026.11.05.00.56.47
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 05 Nov 2026 00:56:48 -0800 (PST)
+Date: Thu, 5 Nov 2026 10:56:47 +0200
+From: Abel Vesa <abel.vesa@oss.qualcomm.com>
+To: Andrew Gigena <mail@andrewgigena.dev>
+Cc: Abel Vesa <abelvesa@kernel.org>, Herbert Xu <herbert@gondor.apana.org.au>,
+        "David S. Miller" <davem@davemloft.net>, Rob Herring <robh@kernel.org>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        Conor Dooley <conor+dt@kernel.org>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Bart Van Assche <bvanassche@acm.org>, Bean Huo <beanhuo@micron.com>,
+        Stanley Jhu <stanleyjhu@google.com>,
+        Bjorn Andersson <andersson@kernel.org>, Andy Gross <agross@kernel.org>,
+        Konrad Dybcio <konradybcio@kernel.org>, linux-arm-msm@vger.kernel.org,
+        linux-crypto@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH v2 2/2] arm64: dts: qcom: sm8150: Use standalone ICE node
+ for UFS
+Message-ID: <dxb7s2d25ixowmfifhvetctpckj7h4y5puiai7orhkimgj7uxu@ekhwvpm536mk>
+References: <20261104-sm8150-ice-rfc-v2-0-d697bbce0278@andrewgigena.dev>
+ <20261104-sm8150-ice-rfc-v2-2-d697bbce0278@andrewgigena.dev>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -60,128 +129,51 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261104-sm8150-ice-rfc-v2-2-d697bbce0278@andrewgigena.dev>
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMTA1MDAzNSBTYWx0ZWRfXyKf3bxZTsylh
+ w/fo5kJzxWjxLTG/tUoDR5U/qels69n4oKp82eCS6KNEHne8MO4sXf1Dn5NefpHFAnTIPr/MrXk
+ Cfnwvj9GMOwo/UETQ1jYP4N6RcK5Fecmq99nkqo3+M6YwzBQ8lrI7wcqbee2ZJcCX4r0Ducetyt
+ H6f3ac+PbN1YuFLS2XyjdejxXcKaJRM/Maf2n3GwolMlWr3wTIdPxRQyDFJeTH1Av+8dSVV3XTZ
+ tmmRh9gq/5AxZk581syWZnRR6N2kHeaWi0JZEzn4wOn0F3MFK8wfdHNajunIrEgAegazI19LbB2
+ f2aojnWmNHgTCkhEH1SXh7qSNMR47ordLKIW/+oyjxa8dwTpjGUFCMGJOF7rHnTIlIBf5JTNzrF
+ q6XUUz7LNaLkfwt38AxOuK8SzG8FMqUbvN/RH6X+ZObdLd6TDcmubEL0oD5SeOm8EVHzHziu0fZ
+ HSkkZhNf8KuMDQt9xwg==
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMTA1MDAzNSBTYWx0ZWRfX3UIBCPmYUqKv
+ OCFoBsKnN3KNf0PjMtTKDH1NaTys1ZPdhdtPIFT4Pl4UAtys4JyAQ2/1sGauqJcSKd0DccXSLV5
+ olt67r3yJD0v9aDCvl/yNcS2zi4sdNo=
+X-Proofpoint-GUID: Zh8F0nb4rK4qpM6KPc5RThtkFbObGJ2Q
+X-Proofpoint-ORIG-GUID: Zh8F0nb4rK4qpM6KPc5RThtkFbObGJ2Q
+X-Authority-Analysis: v=2.4 cv=futJ914f c=1 sm=1 tr=0 ts=6aec44d3 cx=c_pps
+ a=HLyN3IcIa5EE8TELMZ618Q==:117 a=asF+/XNaGoxFafzDDLC1GQ==:17
+ a=kj9zAlcOel0A:10 a=zJRp6_cAMcgA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=_K5XuSEh1TEqbUxoQ0s3:22
+ a=Bg7KoihMCtH8JNtkfXEA:9 a=CjuIK1q_8ugA:10 a=bTQJ7kPSJx9SKPbeHEYW:22
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
+ definitions=2026-11-05_02,2026-11-04_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ priorityscore=1501 phishscore=0 lowpriorityscore=0 malwarescore=0
+ clxscore=1015 suspectscore=0 bulkscore=0 spamscore=0 impostorscore=0
+ adultscore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2610300000
+ definitions=main-2611050035
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [Medium] scsi: ufs: core: race on system_pm_in_progress in ufshcd_err_han=
-dler()
---
+On 26-11-04 18:38:13, Andrew Gigena wrote:
+> Convert SM8150 UFS to use a standalone ICE node.
+> 
+> Move the ICE register region and clock from the UFS controller node
+> into a dedicated ICE node. Reference the new node from the UFS
+> controller using the qcom,ice property.
+> 
+> This brings the SM8150 device tree in line with the standalone ICE
+> representation used on newer Qualcomm platforms.
+> 
+> Signed-off-by: Andrew Gigena <mail@andrewgigena.dev>
+> Tested-by: Andrew Gigena <mail@andrewgigena.dev>
 
-commit 991f616e0ee805a5ba3aa9d0edc90a319abd06b6
-Author: HOYOUNG SEO <hy50.seo@samsung.com>
+Tested-by tag should come from someone else, other than the author.
 
-scsi: ufs: core: Do not recover the link early in the error handler during =
-system PM
-
-This commit adds hba->system_pm_in_progress so that ufshcd_err_handler()
-skips its early unlocked ufshcd_link_recovery() path during system suspend
-and system resume, waiting on hba->host_sem instead.
-
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index 3b5580ac390cb..761ffc8f0a32a 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -7091,9 +7091,13 @@ static void ufshcd_err_handler(struct work_struct =
-*work)
->  		 * runtime resume. This avoids potential deadlocks that could
->  		 * happen if we tried to resume the device while a PM operation
->  		 * is already in progress.
-> +		 *
-> +		 * Do not do this for system PM. The system PM callbacks hold
-> +		 * host_sem, so the regular path below runs after them instead
-> +		 * of resetting the link concurrently.
->  		 */
->  		ufshcd_rpm_get_noresume(hba);
-> -		if (hba->pm_op_in_progress) {
-> +		if (hba->pm_op_in_progress && !hba->system_pm_in_progress) {
->  			ufshcd_link_recovery(hba);
->  			ufshcd_rpm_put(hba);
->  			return;
-> @@ -10393,6 +10397,7 @@ static int __ufshcd_wl_suspend(struct ufs_hba *hb=
-a, enum ufs_pm_op pm_op)
->  	enum uic_link_state req_link_state;
-> =20
->  	hba->pm_op_in_progress =3D true;
-> +	hba->system_pm_in_progress =3D (pm_op =3D=3D UFS_SYSTEM_PM);
->  	if (pm_op !=3D UFS_SHUTDOWN_PM) {
->  		pm_lvl =3D pm_op =3D=3D UFS_RUNTIME_PM ?
->  			 hba->rpm_lvl : hba->spm_lvl;
-> @@ -10565,6 +10570,7 @@ static int __ufshcd_wl_suspend(struct ufs_hba *hb=
-a, enum ufs_pm_op pm_op)
->  		hba->clk_gating.is_suspended =3D false;
->  		ufshcd_release(hba);
->  	}
-> +	hba->system_pm_in_progress =3D false;
->  	hba->pm_op_in_progress =3D false;
->  	return ret;
->  }
-> @@ -10576,6 +10582,7 @@ static int __ufshcd_wl_resume(struct ufs_hba *hba=
-, enum ufs_pm_op pm_op)
->  	enum uic_link_state old_link_state =3D hba->uic_link_state;
-> =20
->  	hba->pm_op_in_progress =3D true;
-> +	hba->system_pm_in_progress =3D (pm_op =3D=3D UFS_SYSTEM_PM);
-> =20
->  	/*
->  	 * Call vendor specific resume callback. As these callbacks may access
-> @@ -10666,6 +10673,7 @@ static int __ufshcd_wl_resume(struct ufs_hba *hba=
-, enum ufs_pm_op pm_op)
->  		ufshcd_update_evt_hist(hba, UFS_EVT_WL_RES_ERR, (u32)ret);
->  	hba->clk_gating.is_suspended =3D false;
->  	ufshcd_release(hba);
-> +	hba->system_pm_in_progress =3D false;
->  	hba->pm_op_in_progress =3D false;
->  	return ret;
->  }
-
-[Severity: Medium]
-Can ufshcd_err_handler() still observe hba->pm_op_in_progress =3D=3D true a=
-nd
-hba->system_pm_in_progress =3D=3D false during system suspend or system res=
-ume?
-
-ufshcd_err_handler() reads both flags without holding hba->host_sem or any
-other lock shared with __ufshcd_wl_suspend() and __ufshcd_wl_resume().
-
-At the entry of __ufshcd_wl_suspend() and __ufshcd_wl_resume(),
-hba->pm_op_in_progress =3D true is written before hba->system_pm_in_progres=
-s is
-set, and at exit hba->system_pm_in_progress =3D false is cleared before
-hba->pm_op_in_progress =3D false, without barriers or READ_ONCE()/WRITE_ONC=
-E().
-
-In particular, when __ufshcd_wl_suspend() encounters an error during
-UFS_SYSTEM_PM, it calls ufshcd_force_error_recovery() (which immediately
-queues hba->eh_work) and jumps to out:
-
-drivers/ufs/core/ufshcd.c:__ufshcd_wl_suspend() {
-	...
-	if (ret && pm_op !=3D UFS_SHUTDOWN_PM) {
-		ufshcd_force_error_recovery(hba);
-		ret =3D -EBUSY;
-	}
-	...
-out:
-	...
-	if (ret) {
-		ufshcd_update_evt_hist(hba, UFS_EVT_WL_SUSP_ERR, (u32)ret);
-		hba->clk_gating.is_suspended =3D false;
-		ufshcd_release(hba);
-	}
-	hba->system_pm_in_progress =3D false;
-	hba->pm_op_in_progress =3D false;
-	return ret;
-}
-
-If ufshcd_err_handler() evaluates the condition in the entry or exit window
-(or due to compiler/CPU reordering), it will enter the early
-ufshcd_link_recovery() path without hba->host_sem or a clock-gating hold and
-return early without running the regular error handling path (such as
-ufshcd_err_handling_prepare() and ufshcd_recover_pm_error()).
-
-Would ordering the updates (or encoding the active PM operation in a single
-variable accessed with READ_ONCE()/WRITE_ONCE()) avoid this race window?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1793865172.gi=
-t.hy50.seo@samsung.com?part=3D2
+Authors are expected to test their patches by default.
