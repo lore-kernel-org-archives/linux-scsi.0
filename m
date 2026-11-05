@@ -1,57 +1,56 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793901658;
-	b=HZdyU689ih+x8tjxfAs98/y1r6nh2Rqr6FzouyrivImrkYA5r2dC9NDtFAozJDzmG0Aw
-	 GRTlDDK/sh2K36Brkh82y5HbJEZdlm2C7nE3vOPwBcQ8tELreCn/HwgIzu5FOnZm3aYq3
-	 5Vl01rHsONY51pEKsPnW7z3cGGx7/Voj1zX3Fg0dJqm502WlTm69+JyMQZYqIoEyRn86M
-	 m0DPAwkFLraSe95Fm+05Aj8J7g7kffK1yzeePX/p0JuaOEMORI93heXK3LL64FNAptrXI
-	 ewOwH0WUxb5t1AjKYOeGtUWrBXDqL9c4qfXhtiL6Akja9vSz6QtsoASVee4oHtVV1zw==
+	t=1793902141;
+	b=Kjz9dd69qG32SYRjCUhNRTZytbeKQefpP8eZSrCvxC26E+HBY2BOQHKCkuAGyJ9kelAr
+	 tmHCb9XRFn+xbTQcNMyqMgZ/L9qdjVXccI7zzXwVSbsU8klldw53nA0sxXiwYDuIVI0UP
+	 0K5ufVI9vOahYmlCpoWnZiTlVW/6zE89f0UV64k5Wf3JzD1aoR5HVynvgUj3ddnMVs6lc
+	 IDmGsk/AqaTJsFGAHxHUt8X1pTantmV4RzAXXPfUz2zYCPngDvnGmkDSkVOmqLJFFop7P
+	 VKxdtI2SPS5fbIy7GxPTTlUauQNmKQtVBgESqCXgKaBTan44LIjz0vNvO7qpc67z7Xg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793901658;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793902141;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=g6a/eCAlhdtD/I49/xiv15gnKI+R1B4m1qDsdvESCg8=;
-	b=Gvl5H2pz+n/ttbxlHDTeWKluaHQ5EBbw80rsOJfo1RuDcdtLyAw91nmWOJIt02QYtGhA
-	 qU9SMYjlGcIEtoNH15wzF1GhKYTBFklHcUtRb5P5sZUdoKxgiqPp9knbIxrQPTTf7glRt
-	 I+DYvVKqE0pMOD8yWVrr7V3UPMzIQ1yl2Amc0Wf8bhCU+v6KfSTiPv6GNRaMwd1U4l68D
-	 we+G2La7A01/rhBO5XKrhfph95rcR4OVIAO0KH420MSU0wGv5yrebLjIFKTHQL1GtuiSW
-	 Smw2vEALOvBnEmHMzqYn4Crfl/3Udt4Eff/m8G7gI5kskBOKBxhTfqA1GPOCVMJDzWw==
+	bh=M5SiIj+fBRN52LyQheSCWAl/ZpF12uGftXSG8ptTpF8=;
+	b=r44anFu5DzHD0+cGcdgf3veEhHc+UscF3tZfy1M3TpFKSjjBKhLslGnWMeRztmdShtJq
+	 nAcHW6EQGq13iKuKGMf0T86rO9HmhLolYJEinHERtEPAW8c780vSLFYvSG/1paGmQXbnT
+	 Lpxat/OoMpS4n8oeoGLQ+SpkAulmS3MFREuhIEninZ9/moBIfttPqIve7Q9Qrg+Waup7w
+	 VaIvX3SZoslHbIpmvPHF4mNSP6qODuQ0NPzThGdM5x3t/PQ4fJsedVL9Kiscp/CL777xa
+	 9XyfCZ3O8BhLJofzrdxMo9d40Y8AMU1NTad4FSUoQmR7EQHZYFI40t6cpfPwqXDhWTg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=VVeNF2eW;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=IAnuzGzk;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 423D1606A31B
-	for <linux-scsi@vger.kernel.org>; Thu,  5 Nov 2026 18:00:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1A87606A332
+	for <linux-scsi@vger.kernel.org>; Thu,  5 Nov 2026 18:09:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=VVeNF2eW
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 038731F000C1;
-	Thu,  5 Nov 2026 18:00:57 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=IAnuzGzk
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 931691F00919;
+	Thu,  5 Nov 2026 18:09:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793901658;
-	bh=g6a/eCAlhdtD/I49/xiv15gnKI+R1B4m1qDsdvESCg8=;
+	s=k20260515; t=1793902140;
+	bh=M5SiIj+fBRN52LyQheSCWAl/ZpF12uGftXSG8ptTpF8=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=VVeNF2eWArDBaKSY2ERSKabZTrlf0q/GFKJDA4zaL7CNCFFnsQTn9DuZBmDFZ5M7E
-	 7AIb0I2uW/6OzigQ+4rvqvZB+n5F2TNLjZvXG2WnOAZ5dTLFHdDuNspGQzefUwpE4S
-	 Z2dQv3eaIBp948keJbV6QmZdPW2kOHHZupv8ULlAjyjVgWejo/pbS13FJrIyaIqTEX
-	 u2OdL1tLAak3z0wk50MwxBPjBhZRvZHTF3RFfDXOhMLN66VHaYkZS6ZFltaUWihmhz
-	 KTYTOwRrVGWDhLt5EO2BHpIp+yoLQE8DPhXOYupflx22ifunuFyORYRws4VMfoeSsy
-	 ZrrRff03ph7uQ==
-Message-ID: <sashiko-outbox-199681@kernel.org>
+	b=IAnuzGzkLlPMLC3EoCyKUARzezA9BLRJj12IqAsKOpQo87J1CCvRAYXE2Atav2SnO
+	 z0MJQrlCp03+yO5DCXaRxJzsTwIlqM19Cr3XZ6STqOk/jIPDdCZg8eu+M1qasGLLJX
+	 CPafMRf/yKyDJ4MUcX19ZV6W9p35IQyP2DYaaY3/I4u7v5g2uH79kTX1hdd9eg3+HH
+	 4eSGRJ8zunoNdBrkYZEg+l68j1I8hrZyTs8I2lz2q0VRP/XrCIuoTbLa/aOIVz3//K
+	 lT7M1pKFSLB5J1niMBCGLHjw0OmHnN7qTS17Pk2Xu/YIa9fr8BKuhCjWW7VkrO9cLV
+	 7znNe+qvPkEcw==
+Message-ID: <sashiko-outbox-199695@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v18 05/13] scsi: ibmvfc: fix resource leaks on partial
- queue allocation failure
+Subject: Re: [PATCH v18 06/13] scsi: ibmvfc: add basic FPIN support
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Dave Marquardt" <davemarq@linux.ibm.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20261105-ibmvfc-fpin-support-v18-5-d683b74736a3@linux.ibm.com>
+In-Reply-To: <20261105-ibmvfc-fpin-support-v18-6-d683b74736a3@linux.ibm.com>
 References: <20261105-ibmvfc-fpin-support-v18-0-d683b74736a3@linux.ibm.com>
- <20261105-ibmvfc-fpin-support-v18-5-d683b74736a3@linux.ibm.com>
+ <20261105-ibmvfc-fpin-support-v18-6-d683b74736a3@linux.ibm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 05 Nov 2026 18:00:57 +0000
+Date: Thu, 05 Nov 2026 18:09:00 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -63,127 +62,124 @@ Precedence: list
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] scsi: ibmvfc: stale evt_pool state in ibmvfc_free_queue() on parti=
-al alloc
+- [Critical] scsi: ibmvfc: uninitialized tgt and fpin in ibmvfc_process_asy=
+nc_work()
 --
 
-commit 226240ace51c2767f2bb52b147409116cfbb8d78
+commit f3f5aed7c70a8803eed36bba7b018020fbce24fa
 Author: Dave Marquardt <davemarq@linux.ibm.com>
 
-scsi: ibmvfc: fix resource leaks on partial queue allocation failure
+scsi: ibmvfc: add basic FPIN support
 
-This commit guards dma_unmap_single() and free_page() in ibmvfc_free_queue()
-under a queue->msgs.handle check and adds ibmvfc_free_event_pool() calls on
-the error paths of ibmvfc_alloc_queue() after ibmvfc_init_event_pool()
-succeeds.
+This commit adds basic Fabric Performance Impact Notification (FPIN) support
+to the ibmvfc driver, offloading IBMVFC_AE_FPIN async events to a per-adapt=
+er
+ordered workqueue and converting them into fc_els_fpin descriptors for
+fc_host_fpin_rcv(). It also adds a KUnit test suite to validate FPIN event
+handling and statistics updates.
 
 > diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/=
 ibmvfc-core.c
-> index 77c685f6f959b..e04c80050b981 100644
+> index e04c80050b981..a87beaeca13c8 100644
 > --- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
 > +++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
-> @@ -914,9 +914,11 @@ static void ibmvfc_free_queue(struct ibmvfc_host *vh=
-ost,
->  {
->  	struct device *dev =3D vhost->dev;
-> =20
-> -	dma_unmap_single(dev, queue->msg_token, PAGE_SIZE, DMA_BIDIRECTIONAL);
-> -	free_page((unsigned long)queue->msgs.handle);
-> -	queue->msgs.handle =3D NULL;
-> +	if (queue->msgs.handle) {
-> +		dma_unmap_single(dev, queue->msg_token, PAGE_SIZE, DMA_BIDIRECTIONAL);
-> +		free_page((unsigned long)queue->msgs.handle);
-> +		queue->msgs.handle =3D NULL;
+
+[ ... ]
+
+> @@ -3264,6 +3268,277 @@ static const char *ibmvfc_get_link_state(enum ibm=
+vfc_ae_link_state state)
+
+[ ... ]
+
+> +/**
+> + * ibmvfc_process_async_work - Process IBMVFC_AE_FPIN async CRQ from wor=
+k queue
+> + * @work: pointer to work_struct
+> + */
+> +VISIBLE_IF_KUNIT void ibmvfc_process_async_work(struct work_struct *work)
+> +{
+> +	struct ibmvfc_async_work *aw;
+> +	struct ibmvfc_async_crq *crq;
+> +	struct ibmvfc_target *tgt;
+> +	struct ibmvfc_host *vhost;
+> +	struct fc_els_fpin *fpin;
+> +	unsigned long flags;
+> +
+> +	aw =3D container_of_const(work, struct ibmvfc_async_work, async_work_s);
+> +	vhost =3D aw->vhost;
+> +	crq =3D &aw->crq;
+> +
+> +	if (!crq->scsi_id && !crq->wwpn && !crq->node_name) {
+> +		if (crq->fpin_status =3D=3D IBMVFC_AE_FPIN_LINK_CONGESTED ||
+> +		    crq->fpin_status =3D=3D IBMVFC_AE_FPIN_CONGESTION_CLEARED)
+> +			fpin =3D ibmvfc_basic_fpin_to_desc(crq,
+> +					cpu_to_be64(fc_host_port_name(vhost->host)), 0);
+> +		goto send_fpin;
 > +	}
-> =20
->  	ibmvfc_free_event_pool(vhost, queue);
->  }
-> @@ -6303,8 +6305,10 @@ static int ibmvfc_alloc_queue(struct ibmvfc_host *=
-vhost,
->  	}
-> =20
->  	queue->msgs.handle =3D (void *)get_zeroed_page(GFP_KERNEL);
-> -	if (!queue->msgs.handle)
-> +	if (!queue->msgs.handle) {
-> +		ibmvfc_free_event_pool(vhost, queue);
->  		return -ENOMEM;
+> +
+> +	spin_lock_irqsave(&vhost->host->host_lock, flags);
+> +	tgt =3D ibmvfc_find_target(&vhost->scsi_scrqs.targets, crq->scsi_id,
+> +				 crq->wwpn, crq->node_name);
+> +	if (!tgt) {
+> +		/* Target not found in scsi_scrqs, search nvme_scrqs */
+> +		tgt =3D ibmvfc_find_target(&vhost->nvme_scrqs.targets,
+> +					 crq->scsi_id, crq->wwpn,
+> +					 crq->node_name);
 > +	}
-> =20
->  	queue->msg_token =3D dma_map_single(dev, queue->msgs.handle, PAGE_SIZE,
->  					  DMA_BIDIRECTIONAL);
-> @@ -6312,6 +6316,7 @@ static int ibmvfc_alloc_queue(struct ibmvfc_host *v=
-host,
->  	if (dma_mapping_error(dev, queue->msg_token)) {
->  		free_page((unsigned long)queue->msgs.handle);
->  		queue->msgs.handle =3D NULL;
-> +		ibmvfc_free_event_pool(vhost, queue);
->  		return -ENOMEM;
->  	}
+> +
+> +	if (tgt) {
+> +		kref_get(&tgt->kref);
+> +		spin_unlock_irqrestore(&vhost->host->host_lock, flags);
+> +	} else {
+> +		spin_unlock_irqrestore(&vhost->host->host_lock, flags);
+> +		dev_err_ratelimited(vhost->dev, "Invalid target for FPIN\n");
+> +		goto free;
+> +	}
+> +
+> +	fpin =3D ibmvfc_basic_fpin_to_desc(crq,
+> +				cpu_to_be64(fc_host_port_name(vhost->host)),
+> +				tgt->wwpn);
+> +send_fpin:
+> +	if (fpin) {
+> +		fc_host_fpin_rcv(vhost->host,
+> +				 sizeof(*fpin) + be32_to_cpu(fpin->desc_len),
+> +				 (char *)fpin, 0);
+> +		kfree(fpin);
+> +	} else
+> +		dev_err_ratelimited(vhost->dev, "FPIN event received, unable to proces=
+s\n");
+> +
+> +	if (tgt)
+> +		kref_put(&tgt->kref, ibmvfc_release_tgt);
 
-[Severity: High]
-The commit message states that guarding dma_unmap_single() and free_page()
-under queue->msgs.handle makes ibmvfc_free_queue() safe to call on a
-partially initialized queue. However, does calling ibmvfc_free_queue() after
-a partial queue allocation failure still trigger a use-after-free,
-double-free, or NULL pointer dereference in ibmvfc_free_event_pool()?
+[Severity: Critical]
+In ibmvfc_process_async_work() in drivers/scsi/ibmvscsi/ibmvfc-core.c, both
+tgt and fpin are declared on the stack without being initialized to NULL.
 
-In drivers/scsi/ibmvscsi/ibmvfc-core.c, ibmvfc_init_event_pool() sets
-pool->size before allocating pool->events and pool->iu_storage, and does not
-reset pool->size or clear pool->events on failure:
+When crq->scsi_id, crq->wwpn, and crq->node_name are all zero, the function
+jumps directly to the send_fpin label without ever initializing tgt. At
+send_fpin, checking if (tgt) and calling kref_put(&tgt->kref,
+ibmvfc_release_tgt) will operate on an uninitialized stack pointer on every
+zero-identifier FPIN event, including valid host-scope
+IBMVFC_AE_FPIN_LINK_CONGESTED and IBMVFC_AE_FPIN_CONGESTION_CLEARED events.
 
-drivers/scsi/ibmvscsi/ibmvfc-core.c:ibmvfc_init_event_pool() {
-	...
-	pool->size =3D queue->total_depth;
-	pool->events =3D kzalloc_objs(*pool->events, pool->size);
-	if (!pool->events)
-		return -ENOMEM;
+Furthermore, if crq->fpin_status on that zero-identifier path is neither
+IBMVFC_AE_FPIN_LINK_CONGESTED nor IBMVFC_AE_FPIN_CONGESTION_CLEARED (such as
+the zero-identifier IBMVFC_AE_FPIN_PORT_CONGESTED case exercised by
+ibmvfc_async_fpin_test() in drivers/scsi/ibmvscsi/ibmvfc_kunit.c), fpin is
+also left uninitialized before jumping to send_fpin. If the uninitialized
+fpin pointer on the stack is non-zero, send_fpin will dereference
+fpin->desc_len, pass the garbage pointer to fc_host_fpin_rcv(), and pass it
+to kfree(fpin).
 
-	pool->iu_storage =3D dma_alloc_coherent(vhost->dev,
-					      pool->size * sizeof(*pool->iu_storage),
-					      &pool->iu_token, 0);
+Note that while the subsequent commit 6abed589f0fb ("scsi: ibmvfc: extend
+async event handlers for async sub-CRQ events") initializes fpin to NULL, t=
+gt
+still remains uninitialized on the zero-identifier goto send_fpin path.
 
-	if (!pool->iu_storage) {
-		kfree(pool->events);
-		return -ENOMEM;
-	}
-	...
-}
-
-Similarly, when ibmvfc_alloc_queue() fails at get_zeroed_page() or
-dma_mapping_error() and calls ibmvfc_free_event_pool(), pool->events and
-pool->iu_storage are freed, but pool->size, pool->events, and
-pool->iu_storage are left with their old values:
-
-drivers/scsi/ibmvscsi/ibmvfc-core.c:ibmvfc_free_event_pool() {
-	...
-	for (i =3D 0; i < pool->size; ++i) {
-		list_del(&pool->events[i].queue_list);
-		BUG_ON(atomic_read(&pool->events[i].free) !=3D 1);
-		if (pool->events[i].ext_list)
-			dma_pool_free(vhost->sg_pool,
-				      pool->events[i].ext_list,
-				      pool->events[i].ext_list_token);
-	}
-
-	kfree(pool->events);
-	dma_free_coherent(vhost->dev,
-			  pool->size * sizeof(*pool->iu_storage),
-			  pool->iu_storage, pool->iu_token);
-	LEAVE;
-}
-
-Because ibmvfc_free_queue() still calls ibmvfc_free_event_pool()
-unconditionally outside the if (queue->msgs.handle) check, calling
-ibmvfc_free_queue() on a queue after ibmvfc_alloc_queue() fails (for
-IBMVFC_CRQ_FMT or IBMVFC_SUB_CRQ_FMT where queue->total_depth is non-zero)
-will iterate over the stale pool->size and either dereference a NULL
-pool->events pointer or access and free pool->events and pool->iu_storage a
-second time.
-
-Should ibmvfc_free_event_pool() also be guarded or reset pool->size,
-pool->events, and pool->iu_storage so that ibmvfc_free_queue() is safe on a
-partially initialized queue?
+Should both tgt and fpin be initialized to NULL at declaration in
+ibmvfc_process_async_work()?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261105-ibmvfc-fpi=
-n-support-v18-0-d683b74736a3@linux.ibm.com?part=3D5
+n-support-v18-0-d683b74736a3@linux.ibm.com?part=3D6
