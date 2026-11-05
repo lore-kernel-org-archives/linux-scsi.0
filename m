@@ -1,48 +1,48 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793907345;
-	b=5hHMucWssVAYVNV6zALyjnTRRj8/HAO18owKDXF2KrRBloiSMs9UcvT8oPlSKN9c2R0a
-	 ONBatJepbmmc8SKUWGuzPnL45halhZYg12Fe2YW79xEqBF63CC6iPPYIDPS+R1XSAgiGp
-	 Zl8SjpYpGjv+v3qR+0Tsc+6U49W8dJslmV55qYyMAmfCcd78+RfozWNv5yVnRdnzv2vrz
-	 yGYlNa3MdcBo+ALrw0KEz+8j0g1/kjXjLE53nsUO07gaaNlbf1Aexr67EtPtzLL8wXBur
-	 gikiUEzwdbMO69W3aV4G6kIC8TtEeUwZz52LhtxGI6gbqnE3uSrKIRdjbcqe+f3UqpQ==
+	t=1793907348;
+	b=cO6Y2A1Fz1hdZ1ap3g2S0S5fmPUdlh2K7VmL41oiCRPZeR+C8zVX0TXkmTiGUnZ8iYna
+	 XF6gc1ZHH1RLQ56ffBSshjhTBSw6adf9DycIeSJtMkBPZ4v0mpf335/eeKB4LsSHBIspL
+	 M/8T4Ctvi6s0AxbFZ/WGxRaTyOgEKLy9jYTqMyYk93iSn8R4Ha3ZsxjqY0R1IakjYdk+G
+	 NUvaiUQsYFX6IeBS63s6VRYEv8kAXpjuL/xuDxLxmLEHLbEnK99PkWoJaKD69x2KOXbKW
+	 TpBZORLz7/u2QtYtW7e4JBHfxynNGIDq9FosC1DyQ/sHG9Aud/XNhyYEgorCYxy8qYg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793907345;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793907348;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=alsXUfuEo/F1zePFVRl45Ndme/OflhiQcp41SPItDb0=;
-	b=Ey6hVcbp7BFwAOJhn4jNKvkoWI7Afq+2zwIzIXpIi/alSUo1mMj9e/L5/b8ULBw4tffS
-	 lLUQQ2DUqqAwmFI0I/ZwgVdvk3L1elzAKyXYfBDHyrrXqXvrG6mAYTObxp5iYmf9nLyLg
-	 6j7Hrlz45Ny3qsZmph9z3WhAWbb8hJTXAy1rwzWFIl4dB/PR/68ciaOhPWrpMmrITkUit
-	 wa74kjP8b+QKSXrzJvFcpq21RUMUy5aulG43zDpxG1WTtZxlUJm2e4DWHfhbqOVkObdH2
-	 xFAD0YvIfryO22v3JZqQM/akIUVxvMlYd+nhsjiRV/kJJ0KL3BspzH9+1W18lKqt38A==
+	bh=1MugNV8TCf3DcwhciMioHkCDdfBEvJqmJegZE7T3Anc=;
+	b=InNX0+epFldCpEeGNpurNV1NXTAAgoLkEF6Wga0NjjcyHMFiCHKE9E8JTVFOHn3U4Ki/
+	 qSoB6JlI49gwS1dNIZ/DgXjIUnwNPoEF1DzMWpcx7OnGQhYZxbYVHiesp+T8S4fJ3osoP
+	 oaWrE40xiqxCwJtCLzHN1XujqHib3h7pzOFZ/BgQaQiuaTG5T8dG/R1HKrhUVmAz3eulM
+	 pdLtpwfUULN0jJyLJlHdY3f5b4J9/3qm5P7tWsHLYJNlnwvtjPwlS0qsvq4xRZHJLXAjc
+	 Tdt++riBVcqVsMiqU2jeUDmCn9bnfy8Hk0Yl6rbaHZWfl9CJnL9KSDMDLbH0mn9ZoRQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="dW/11WUL";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=JxUDwRLS;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2365B6077B6B;
-	Thu,  5 Nov 2026 19:35:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44D60607956B;
+	Thu,  5 Nov 2026 19:35:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=dW/11WUL
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D6CEB1F0089E;
-	Thu,  5 Nov 2026 19:35:41 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=JxUDwRLS
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2B6371F0089E;
+	Thu,  5 Nov 2026 19:35:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793907343;
-	bh=alsXUfuEo/F1zePFVRl45Ndme/OflhiQcp41SPItDb0=;
+	s=k20260515; t=1793907348;
+	bh=1MugNV8TCf3DcwhciMioHkCDdfBEvJqmJegZE7T3Anc=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=dW/11WULePWBsogqlKJCGC7JYPbCbnYXRV+C/X7JOVxLXj5zOAba52zQpFTgNc3SU
-	 VqxLxyGyN/7wF0BTtfNixYDyxmB3E86QX9Ux9RGZ1zXR/EzZ2ZJyrhkPfunyxJJIZl
-	 un+xpBbQSiFaF0jJ6u/VW8rXe40ajptsRa6PjrbVxC7gTAonFrr3x4gk/kvpjOE5P1
-	 HarizfUM9JcPoR6EP40r+AaFcc6yhKBRuZw/KiwaBzFcWGsYWpC0CK/E6jNjHZpgDM
-	 EXhNA7+mREaW+iD5ECYOta1cjbh7H74x/1uUayMthsMGSyY9SbGLuxXinygzr+5A4r
-	 a3NkeRuyCBiAg==
-Message-ID: <sashiko-outbox-199944@kernel.org>
+	b=JxUDwRLS659AKy9L6EF/sMAUNJPV9IWLdEGgYT37J3Q3xoM9Rgl+/f5tJog9D28GT
+	 YMaZHCMQxAz8Q/YhL7D2HkKgLdWMS13ODeIvOVS2cO3Xyt1UiWgXthVq8iKNCfiwYC
+	 CBZKMuWNvUYO3GRSHNobx37W6/E4wT6vFZKwM2U+b9rd+Q0o+xU/Q/0vCpfhxieJT7
+	 F6OAqSTAk8K2MFcN+drjgRiXeceRcYXDu/MhOHTrRoTOf/Jcy6qlsQJs6CLNabmhUG
+	 q0HrKvIx+/XHSn3ssmSRL1+tCAkBs5GI7/FQwPFk1on24fvEEyzBWmsp3oEib+CbCf
+	 nnIC8BG7tI46Q==
+Message-ID: <sashiko-outbox-199946@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH RESEND v2 14/23] proc: let procfs copy in writes before
- pinning the entry
+Subject: Re: [PATCH RESEND v2 16/23] proc: let procfs copy out reads that
+ don't go through seq_file
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Christian Brauner" <brauner@kernel.org>
 Cc: "Linus Torvalds" <torvalds@linux-foundation.org>, "Jann Horn" <jannh@google.com>, "Josef
@@ -57,12 +57,12 @@ Cc: "Linus Torvalds" <torvalds@linux-foundation.org>, "Jann Horn" <jannh@google.
  Pavlu" <petr.pavlu@suse.com>, "Anna Schumaker" <anna@kernel.org>, yukuai@fygo.io, "Heiko
  Carstens" <hca@linux.ibm.com>, "Vasily Gorbik" <gor@linux.ibm.com>, "Alexander
  Gordeev" <agordeev@linux.ibm.com>, "Christian Borntraeger" <borntraeger@linux.ibm.com>
-In-Reply-To: <20261104-work-procfs-core-v2-14-76ace653a773@kernel.org>
+In-Reply-To: <20261104-work-procfs-core-v2-16-76ace653a773@kernel.org>
 References: <20261104-work-procfs-core-v2-0-76ace653a773@kernel.org>
- <20261104-work-procfs-core-v2-14-76ace653a773@kernel.org>
+ <20261104-work-procfs-core-v2-16-76ace653a773@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 05 Nov 2026 19:35:41 +0000
+Date: Thu, 05 Nov 2026 19:35:45 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -74,65 +74,67 @@ Precedence: list
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [Low] proc: split __free(kvfree) declaration and initialization in pde_wr=
-ite_buf()
+- [Low] proc: define and initialize __free(kvfree) variable buf in pde_read=
+_buf()
 --
 
-commit e52627c4b4d80d32822781f143a8c1245bd64a2c
+commit 19cf278eb9fee57b90ee19764f6b076d9cab553d
 Author: Christian Brauner <brauner@kernel.org>
 
-proc: let procfs copy in writes before pinning the entry
+proc: let procfs copy out reads that don't go through seq_file
 
-This commit introduces a ->proc_write_buf() callback in struct proc_ops so
-that procfs can copy write data from userspace into a NUL-terminated kernel
-buffer before pinning the proc_dir_entry. This prevents userspace page
-faults during write copies from blocking remove_proc_entry().
+This commit adds ->proc_read_buf() and PROC_ENTRY_FULL_READS to proc_ops so
+that non-seq_file procfs entries can fill a kernel buffer while pinned and
+let procfs copy it to userspace after unpinning the entry.
 
 > diff --git a/fs/proc/inode.c b/fs/proc/inode.c
-> index d51ab7548b117..df1caa0f238df 100644
+> index df1caa0f238df..caa47933c233d 100644
 > --- a/fs/proc/inode.c
 > +++ b/fs/proc/inode.c
-> @@ -417,11 +417,44 @@ static ssize_t pde_write(struct proc_dir_entry *pde=
-, struct file *file, const ch
->  	return -EIO;
+[ ... ]
+> @@ -377,11 +379,67 @@ static loff_t proc_reg_llseek(struct file *file, lo=
+ff_t offset, int whence)
+>  	return rv;
 >  }
 > =20
 > +/*
-> + * procfs copies in what is written before it pins the entry. A writer t=
-hat
-> + * faults on its buffer then doesn't hold up remove_proc_entry().
+> + * The entry fills a kernel buffer and procfs copies that to userspace a=
+fter
+> + * unpinning the entry. A reader that faults on its buffer then doesn't =
+hold
+> + * up remove_proc_entry().
 > + */
-> +static ssize_t pde_write_buf(struct proc_dir_entry *pde, struct file *fi=
-le,
-> +			     const char __user *ubuf, size_t count, loff_t *ppos)
+> +static ssize_t pde_read_buf(struct proc_dir_entry *pde, struct kiocb *io=
+cb,
+> +			    struct iov_iter *iter)
 > +{
+> +	struct file *file =3D iocb->ki_filp;
 > +	char *buf __free(kvfree) =3D NULL;
-> +	size_t size;
-> +	ssize_t rv;
+> +	ssize_t rv, done =3D 0;
+> +	size_t len, count;
+> +	loff_t pos;
 > +
-> +	size =3D pde->write_size;
-> +	if (count > size) {
-> +		if (!pde_has_short_writes(pde))
-> +			return -EINVAL;
-> +		count =3D size;
-> +	}
-> +	buf =3D kvmalloc(count + 1, GFP_KERNEL);
+> +	if (!iov_iter_count(iter))
+> +		return 0;
+> +	/* neither the allocation nor the entry can honor IOCB_NOWAIT */
+> +	if ((iocb->ki_flags & IOCB_NOWAIT) && !(file->f_flags & O_NONBLOCK))
+> +		return -EAGAIN;
+> +	len =3D min_t(size_t, iov_iter_count(iter), pde->read_size);
+> +	buf =3D kvmalloc(len, GFP_KERNEL);
 
 [Severity: Low]
-As reported by Sashiko on RFC [1], this isn't a bug, but in pde_write_buf()
-(called from proc_reg_write()), buf is declared with __free(kvfree) =3D NULL
-at the top of the function and assigned later with kvmalloc() after the
-count > size check.
+As reported by Sashiko on RFC [1], this isn't a bug, but in pde_read_buf()
+in fs/proc/inode.c, buf is declared with __free(kvfree) =3D NULL at the top
+of the function before the early returns and then assigned later at the
+kvmalloc() call. Could buf be defined and initialized in a single statement
+at the allocation site:
 
-Per the Cleanup API conventions in include/linux/cleanup.h, should buf be
-defined and initialized in a single statement at the allocation site:
+	char *buf __free(kvfree) =3D kvmalloc(len, GFP_KERNEL);
 
-	char *buf __free(kvfree) =3D kvmalloc(count + 1, GFP_KERNEL);
+to follow the cleanup.h conventions?
 
-after validating count?
-
-[1] https://lore.kernel.org/r/sashiko-outbox-195538@kernel.org
+[1] https://lore.kernel.org/r/sashiko-outbox-195540@kernel.org
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261104-work-procf=
-s-core-v2-0-76ace653a773@kernel.org?part=3D14
+s-core-v2-0-76ace653a773@kernel.org?part=3D16
