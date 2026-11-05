@@ -1,13 +1,13 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=2 smtp.remote-ip=52.101.70.53
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=2 smtp.remote-ip=52.101.84.20
 ARC-Seal: i=3; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793899077;
-	b=gUF398OVP7BpasXI8in53N2VoXKfyFVgxiogu6LJR2hkxUSOFraNj7Q2vmEEUSWIXXW3
-	 v0mjvkHlc44SQZ512UauF3ncou29w00XY6zaswbRfKTrGtJJmSxJ3K6bVLDco4xaBgpXn
-	 g5hms7LXARGbFo8qv8ZGS0FUynofz7ZfFfX1TeRgWD1F5zr+9VC4pC/1xHNyV9DTpnaZO
-	 lDKxhNEMVRXYJQt9cDgXwnDZ7wXjhR8HNmZWuXT4Rf4Wx1puy8ybuemvWYQqs3fIaIc/A
-	 0rB2DSfb55inUyv1t15pgXbbhtquBV8ipOOdbsKgsGRLXDLzGCYNHpb8KP9MzoLDpsQ==
+	t=1793899080;
+	b=TBSa3CIiEzd5VRimCbr8ewp+LQqoQJ/LV8UfvL2/X5oNbMemCk32HOmwcq5hIe12ArxI
+	 P+hzWU2XBCRN9nuzdkp/Ibxh+2bIRM78nocGU1WfT0mbr1YsBd6TMl+t4w5ogk6ORwaOZ
+	 JjquKKDfpG1UKIWutWXSVuZbZbIi+v2sSU+dJkcGrYLxi48AN+KB5L8lxor6XwwLxTSh0
+	 2cdY/H5yt1WR7I4u1SOeJunxd9TZbLyqKKeql/OEnmEg4/xJVx+4wYrxXRte6xCtcSZa8
+	 gyHceJFoZ9/bSJaWu1l6dRXyquirj35QyBH3WBVceboaHCl30EelppW0f6eV+vFH45Q==
 ARC-Message-Signature: i=3; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793899077;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793899080;
 	h=DMARC-Filter:DKIM-Signature:Received:Received:
 	 X-MS-Exchange-Authentication-Results:Received-SPF:Received:
 	 DKIM-Signature:Authentication-Results-Original:Received:Received:From:
@@ -33,37 +33,37 @@ ARC-Message-Signature: i=3; d=subspace.kernel.org; s=arc20261015;
 	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
 	 X-MS-Exchange-CrossTenant-FromEntityHeader:
 	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=f/TaJi9SnqmwvhFyBrHMq9Y3vPQStOAFo/IUZNNvXGQ=;
-	b=xyVqhE9K3uOjlA5U8+jyq02usjSt2ZA4mjoJlWmRY2nuSpZcgg3i0ksKqAHCtrZK9JtX
-	 00Gnbrq6dAmWmvYm4kvYaZNPJDufJt7QtmQ8BMbmWdKI9zbeQu+dsfROM9Pv1tFGzofcx
-	 BRFz+k63r4KnsYfEK0TwHC+/G9mJpstQloFM1znny++qjfRj/T2iFQJZp6oszCOvU1hEP
-	 rFO6z8eTzkYAozOLCLXNoBtMGM6bTbvKlaeutr2ryrIAVArvNr+3/Vsai0neeq3G4UVR9
-	 K5Ul7iududWl8Qa6S35emMhVtQEk+8ssWCbW5Y/d8MF7TKzRAgQv3ezyaFGndvA6Y/Q==
+	bh=nXTsHjQcnnMdoXEbEGISSMv9ToXiMyeq9T2Li3jSvgg=;
+	b=jX9BT5hDpVkY2fgjTlU/NZBQ/vUoP9ANvh0u7wHc6ltU+ZGSZuNPmivn6cBoKGtSM44a
+	 k/QGUDZBHKkn6xwBWkMzcyR28J0ARgutDyeoMwxAhjYt9a5Ohb84pAgs0nvs/4YCkmtTp
+	 EQgTmL5lcLLrEHsA9/tmi4L5k/nq7M9rjeaEVcX7T0ss5FHeIIZ+pn5keNPLCbcb68w16
+	 zi0NLRsCecXu85/CVay2pNKqeNHVZHsYwRxYS3BkcYjaHzBxUYwfogfmlwG1Zm3xhuD/g
+	 tcUHgdTSltVO/osqdit3zbcXTqQBdhrGxgXm7HoXaGyjqKSuqEKB5qn7vuafCWf6TNA==
 ARC-Authentication-Results: i=3; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=arm.com;
 	spf=pass smtp.mailfrom=arm.com;
-	dkim=pass header.d=arm.com header.i=@arm.com header.a=rsa-sha256 header.s=selector1 header.b=FSAvztfE;
-	dkim=pass header.d=arm.com header.i=@arm.com header.a=rsa-sha256 header.s=selector1 header.b=FSAvztfE;
-	arc=pass header.oldest-pass=2 smtp.remote-ip=52.101.70.53
-Received: from AS8PR04CU009.outbound.protection.outlook.com (mail-westeuropeazon11011053.outbound.protection.outlook.com [52.101.70.53])
+	dkim=pass header.d=arm.com header.i=@arm.com header.a=rsa-sha256 header.s=selector1 header.b=b+EBxRGG;
+	dkim=pass header.d=arm.com header.i=@arm.com header.a=rsa-sha256 header.s=selector1 header.b=b+EBxRGG;
+	arc=pass header.oldest-pass=2 smtp.remote-ip=52.101.84.20
+Received: from DB3PR0202CU003.outbound.protection.outlook.com (mail-northeuropeazon11010020.outbound.protection.outlook.com [52.101.84.20])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B468160A3822;
-	Thu,  5 Nov 2026 17:17:56 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B468160A3822
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4ED660A3838;
+	Thu,  5 Nov 2026 17:17:59 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B4ED660A3838
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=arm.com header.i=@arm.com header.a=rsa-sha256 header.s=selector1 header.b=FSAvztfE;
-	dkim=pass (1024-bit key) header.d=arm.com header.i=@arm.com header.a=rsa-sha256 header.s=selector1 header.b=FSAvztfE
+	dkim=pass (1024-bit key, unprotected) header.d=arm.com header.i=@arm.com header.a=rsa-sha256 header.s=selector1 header.b=b+EBxRGG;
+	dkim=pass (1024-bit key) header.d=arm.com header.i=@arm.com header.a=rsa-sha256 header.s=selector1 header.b=b+EBxRGG
 ARC-Seal: i=2; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=pass;
- b=mM2RsxXH5Gvo4wDjWTh2iT8vysvkksHuaqyzoKkAHO08sPgqkzJ1i+d8v3o2PkA9hTH5BoTC/C0LRVoo+MhMfVsBAWJgkitk1WqvvAyXk3uosHmzoioner9fGO9XnqK4+EUeL0ZrRNAe18bL4ziKXDTHeV68GDb3Op+SlIYWgOc9SVmcL/YHOoux8FbU4mMmPqGpbx1VYdrJQb7C8a6rSQtTUfWP/dMkFdT4Rwvu1/tbT0+gyO9NORnfsum7g26mmAzsRWBp24JeYvjppuseeWSRDJbB28PqfLr7vbR1DFHx+ouRp/9BaP8BU4xe896NoewDOXEXAxtrZRfY28oV/A==
+ b=EKs6IX7u9KW12NwrfQaUjCrgvA7ZDdiIfXiZ9K9b+O0fWwVtbe4Qbvnb6G9V67UiTl+xavjG4b7KYwotjgBegh1S3NeCxeO68Dm8AUetWgy8Cb4WatbfKjOHoH45+h8oirznMfyrkrhe05TEBahi93YEyS2dDi/TCFyZNYBJr1149dhvmszYr5RsdBaHGURbEvVtMFTuPDQorOU7l0rU2Lpr8uLPoELu4mCvVUGkmN7rA3jID+E1+suWa4VrEQzCUq9fJ3nlNT8PaRqSTNMmyU2EjcwVuebLAdLC2JDlwE4WonSMQQZUuandaOUYPLfnqwZcc9Dk0A7o7WGNurWw2g==
 ARC-Message-Signature: i=2; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=f/TaJi9SnqmwvhFyBrHMq9Y3vPQStOAFo/IUZNNvXGQ=;
- b=aW/a0Mp1u5MXKpVqmK1hE2A3Ovx4bgvz8RxuLI6iC7STUEtuklUWluap1+ml1QExyxsDXpvbYXvvT8MronfvRtDHq2XaTLaTG9COI2H6M/VOnz0ZRmcSUnJquI6y3aUOE+baG7sEQjV6dQ5iW7NlFOC4S0nFEq9bOl1TNFSoZjTSw3dNXBtDtRsKdqM98y9nrH8bU4iZ6Eo4moHeynaCkcqSIIqsuuJxr+mzh43a2zgZJ55DhNthiADGCgQwwYIbbC2cdh9x73JWwhR55KpoAFlEpvcw7a47CuRtUbqVzP2A4PX23cOV/EtyuI16CEiMjQti+6/u3M9b/yAL9hHPbQ==
+ bh=nXTsHjQcnnMdoXEbEGISSMv9ToXiMyeq9T2Li3jSvgg=;
+ b=wTYbbA+3gRl/dzUGGFDdGCPdMg8O+vOLM64x4X1ekxaeyzLVFBgbVLu9QemM15ptXrWMH3WjGQ/FTIeGnMYxWrupNaEiy5mVPl1VF2EcRN5lozReOH26JBIoZOmYC6eEvVjsZhJj3wnR7ZWzyoeAqZoCiq48d5LceZsWbSvSxyXA/5emXUNjx+9zFAJFCG3FZaU6ZbWwygVW5oqEqnUf9KlPGJbEScBx0xRIoNOuDiieC9oXmaCXNqqwkXvI+8UrMRLQHSzLMm3J/OIo2jo9I71GdQz6Xvan7qDCHs2TIYgc183B21pja7u1aphOyzglFKtxjGF9jnIcPp5pCnsv9g==
 ARC-Authentication-Results: i=2; mx.microsoft.com 1; spf=pass (sender ip is
  4.158.2.129) smtp.rcpttodomain=broadcom.com smtp.mailfrom=arm.com; dmarc=pass
  (p=none sp=none pct=100) action=none header.from=arm.com; dkim=pass
@@ -72,18 +72,17 @@ ARC-Authentication-Results: i=2; mx.microsoft.com 1; spf=pass (sender ip is
  dmarc=[1,1,header.from=arm.com])
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=arm.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=f/TaJi9SnqmwvhFyBrHMq9Y3vPQStOAFo/IUZNNvXGQ=;
- b=FSAvztfEPnknaC/TMy3ESjhRBjjRXq/zp74UI0MrAnJj7FITg+55aSuRjoVG4owmEIiL0L3oE0wVskuug2uVtjVZjaEWIXiy0LgDR7UC1xFLYYON2o9oqNdV8uI1m8QGdPPKCWSgH/9fYPHdSEuApIdfPjc0KxYkFGmREC1m3zY=
-Received: from PA7P264CA0022.FRAP264.PROD.OUTLOOK.COM (2603:10a6:102:2df::10)
- by BR0PR08MB637335.eurprd08.prod.outlook.com (2603:10a6:2c8:64::14) with
+ bh=nXTsHjQcnnMdoXEbEGISSMv9ToXiMyeq9T2Li3jSvgg=;
+ b=b+EBxRGGNUugQiZgKExrNKX/wZHJwS8Ikal0IIf+H30uAPr+dFGexrE32CQpHyy5//0ejYNv0mjLRrpnICwC46igN+sgNsT+LRqPH5BLItMh6yqJjVLBQbFA87eqGdzwLD9XLd+JT0IyRvphRkZ8NfYtUoqnpskdM+JKSm82TVs=
+Received: from MI1PEPF00000AD1.ITAP293.PROD.OUTLOOK.COM (2603:10a6:298:1::4b7)
+ by PA4PR08MB6207.eurprd08.prod.outlook.com (2603:10a6:102:f2::13) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.592.10; Thu, 5 Nov
- 2026 17:17:50 +0000
-Received: from MI3PEPF00008491.eurprd03.prod.outlook.com
- (2603:10a6:102:2df:cafe::12) by PA7P264CA0022.outlook.office365.com
- (2603:10a6:102:2df::10) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.21.592.10 via Frontend Transport; Thu, 5
- Nov 2026 17:17:50 +0000
+ 2026 17:17:51 +0000
+Received: from MI3PEPF00008494.eurprd03.prod.outlook.com (2603:10a6:298:1::5b)
+ by MI1PEPF00000AD1.outlook.office365.com (2603:10a6:298:1::4b7) with
+ Microsoft SMTP Server (version=TLS1_3, cipher=TLS_AES_256_GCM_SHA384) id
+ 15.21.592.10 via Frontend Transport; Thu, 5 Nov 2026 17:17:51 +0000
 X-MS-Exchange-Authentication-Results: mx.microsoft.com 1; spf=pass (sender IP
  is 4.158.2.129) smtp.mailfrom=arm.com; dkim=pass (signature was verified)
  header.d=arm.com;dmarc=pass action=none header.from=arm.com;
@@ -91,41 +90,40 @@ Received-SPF: Pass (protection.outlook.com: domain of arm.com designates
  4.158.2.129 as permitted sender) receiver=protection.outlook.com;
  client-ip=4.158.2.129; helo=outbound-uk1.az.dlp.m.darktrace.com; pr=C
 Received: from outbound-uk1.az.dlp.m.darktrace.com (4.158.2.129) by
- MI3PEPF00008491.mail.protection.outlook.com (10.167.240.152) with Microsoft
+ MI3PEPF00008494.mail.protection.outlook.com (10.167.240.155) with Microsoft
  SMTP Server (version=TLS1_3, cipher=TLS_AES_256_GCM_SHA384) id 15.21.592.5
- via Frontend Transport; Thu, 5 Nov 2026 17:17:50 +0000
+ via Frontend Transport; Thu, 5 Nov 2026 17:17:51 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=ylgddM04/VpwnH9LjtAmsAH9Y8XtIOv3v882jdIzqIFg288FgiJWlYx0C8n3SGvCiRsqR0sxvX4K276CApFuox/5K5cH2L4igyP1FnF+QUqDRyd7h9/aYumPr9sQdWtU3uzKfx/0dNhuYDkNbvv0qnmBfbWnfgtRDYVnzAm/1k4uSHyDuw6WVcp8laiZUxT5A9t5Z29Y5xvSSfNrf0c3BG0eZhY3SEbdZTNdvWSLUlLhgr1XbTqZa0VLWIExoCxxIgefTOe/V4ZIPDC0oZcq4zlcioZAXqjJwiQsca4dn/9BeSL80tKS6mfrSLfXrkIRJ446uupm6/aFC5dLDlxerw==
+ b=jqFHE1hrIpud2bkDR3aFFjt7lE5VjDN/bqqxI+ia3CIrKGrgaq/zoNbe0+OiY0KKfqpw5QrJ4006JIFEdppyTUvtYE0o3Cx2Gl4W6oCcW5QcEhMOHHmhHZx/FMNDo8jjCJjIs59t26V5vG1wJ3e/xRQOS+ExP3V9Y64RCX/S/8miLvgva6ihEYXIb5H/a1Mmq2yPMHhRn7YYW+f5IHeUkI3H777cPvBt2JV+Lwl1YANw7hVgGO3MFtD3Hi87D9ddwcYzZfsb2dql/a8fL9FeFJIa+8shjQCSPblFgjzQRraDy1KyTUXBWe3V/8SgbXxWksJkzUpZdFvgdqGt71+idg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=f/TaJi9SnqmwvhFyBrHMq9Y3vPQStOAFo/IUZNNvXGQ=;
- b=XuwnLGQDwL7b0bd9imEGYO+LROwrlwX68atkLYWusea1mgDRNtXFGqvpom8Q3zP2/OaL9Njkppu13XdpwEwiPewguLwDVeBPzeeBQlGS89/R2AAs2nQZ4jlq6UFbkW8WKXWE4oAtQg59bbsp5Dul3XAG4onbNnfF0wV85ODW600rM+CvAx1iL+x0M2tP5J3av5KX9H73M3JWBWwPNrKsoGWo6GFLRRTYDUxpYe6JrEVoAwSfpOpI6FvDwh4f5vvrN7GAJSVmBM5wYQ4i+n/HquK41ppHRczPar2uV4NwnA4KoCTngFbMHCQLWcNPX6u8+zXCdLD8ECQbe5KJjxo3/g==
+ bh=nXTsHjQcnnMdoXEbEGISSMv9ToXiMyeq9T2Li3jSvgg=;
+ b=vI8TtUQa/IsE6ZlSiRm86q4fhCxDImit/M3FkR1AFJwFjpakVUVPStXV6mLLNz4WJa6ESnrw6Foakfth8uAkugBktW0r95AgH2l2OejeMFqrrGEMKR3Aq9eUMeqOzfidOCwo30edw8VJWBpPrAwpy62zLIWSBwCTXx2HiKe2l7lyyT9i/F4ZdzVMZp7Izlyk7qz1Ojilm2Gg0ivgSxc2/2gpiWDiZTMIRbL+j7TnGFu6XSUwumGIXyL4EJ1bk+j8TnANJ4FMta2imxOEhurcZR6GaeyjZirumNKheK41xxD8uvE98V0ueczSMUsaDALoGOOS7BkRN8jdT/9ivYLNBw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=arm.com; dmarc=pass action=none header.from=arm.com; dkim=pass
  header.d=arm.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=arm.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=f/TaJi9SnqmwvhFyBrHMq9Y3vPQStOAFo/IUZNNvXGQ=;
- b=FSAvztfEPnknaC/TMy3ESjhRBjjRXq/zp74UI0MrAnJj7FITg+55aSuRjoVG4owmEIiL0L3oE0wVskuug2uVtjVZjaEWIXiy0LgDR7UC1xFLYYON2o9oqNdV8uI1m8QGdPPKCWSgH/9fYPHdSEuApIdfPjc0KxYkFGmREC1m3zY=
+ bh=nXTsHjQcnnMdoXEbEGISSMv9ToXiMyeq9T2Li3jSvgg=;
+ b=b+EBxRGGNUugQiZgKExrNKX/wZHJwS8Ikal0IIf+H30uAPr+dFGexrE32CQpHyy5//0ejYNv0mjLRrpnICwC46igN+sgNsT+LRqPH5BLItMh6yqJjVLBQbFA87eqGdzwLD9XLd+JT0IyRvphRkZ8NfYtUoqnpskdM+JKSm82TVs=
 Authentication-Results-Original: mx.microsoft.com 1; dkim=none (message not
  signed) header.d=none;dmarc=none action=none header.from=arm.com;
 Received: from AS8PR08MB10291.eurprd08.prod.outlook.com
- (2603:10a6:20b:629::15) by PAWPR08MB10897.eurprd08.prod.outlook.com
- (2603:10a6:102:46a::8) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.592.9; Thu, 5 Nov 2026
- 17:17:07 +0000
+ (2603:10a6:20b:629::15) by AS4PR08MB7556.eurprd08.prod.outlook.com
+ (2603:10a6:20b:4fe::22) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.569.12; Thu, 5 Nov
+ 2026 17:17:11 +0000
 Received: from AS8PR08MB10291.eurprd08.prod.outlook.com
  ([fe80::9f01:508:17aa:279c]) by AS8PR08MB10291.eurprd08.prod.outlook.com
  ([fe80::9f01:508:17aa:279c%6]) with mapi id 15.21.0592.007; Thu, 5 Nov 2026
- 17:17:06 +0000
+ 17:17:11 +0000
 From: Bence Csokas <bence.csokas@arm.com>
-Date: Thu, 05 Nov 2026 18:16:16 +0100
-Subject: [PATCH 1/3] stddef: Add offsetofp() and offsetofendp() for pointer
- arithmetic
+Date: Thu, 05 Nov 2026 18:16:17 +0100
+Subject: [PATCH 2/3] treewide: Use offsetofendp()
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261105-offsetof-v1-1-4153f5c10edc@arm.com>
+Message-Id: <20261105-offsetof-v1-2-4153f5c10edc@arm.com>
 References: <20261105-offsetof-v1-0-4153f5c10edc@arm.com>
 In-Reply-To: <20261105-offsetof-v1-0-4153f5c10edc@arm.com>
 To: Chengchang Tang <tangchengchang@huawei.com>, 
@@ -217,89 +215,306 @@ List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 X-MS-TrafficTypeDiagnostic:
-	AS8PR08MB10291:EE_|PAWPR08MB10897:EE_|MI3PEPF00008491:EE_|BR0PR08MB637335:EE_
-X-MS-Office365-Filtering-Correlation-Id: c95f7fac-fa98-4f15-103a-08df3b60b84c
+	AS8PR08MB10291:EE_|AS4PR08MB7556:EE_|MI3PEPF00008494:EE_|PA4PR08MB6207:EE_
+X-MS-Office365-Filtering-Correlation-Id: 961308bf-bca2-4f17-66bd-08df3b60b90c
 x-checkrecipientrouted: true
 NoDisclaimer: true
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam-Untrusted:
- BCL:0;ARA:13230040|23010399003|7416014|376014|366016|1800799024|18002099003|22082099003|10067099003|921020|11063799006|261028144727099003|261022105027099003|56012099006|261102123227099003|261026140227099003|261021121427099003;
+ BCL:0;ARA:13230040|23010399003|1800799024|366016|376014|7416014|56012099006|261022105027099003|261021123027099003|261021121427099003|261009223027099003|921020|261026140227099003|261028144727099003|11063799006|10067099003|260925022911599003|260925021911599003|260925021311599003|22082099003|18002099003|261102123227099003;
 X-Microsoft-Antispam-Message-Info-Original:
- mr5OB7YJkX4sA+UAoD5rIJy3VTvVYYdViPg9GzAW7Tq5jQNBv5IpbZJMaV/vr4lw6bNREXCtAuvO23wv5lboaGb2iyHxKueczHoZaLQruXjnJ4YsCWbLpTEYbaLN2b3JvrgYbeggZrgBqdNLIpGvM0KDUI/1Y2SuF4oHsDFUPNwtOd/2FLXh1QbEv73jXLyrVk7IWKQRsxMQyKYZF5QyCPh2HS3n1cmt4i6rX7DLoZNf9ln06GSM9GUJZzgZ9bqKU/aX5Y7Kop665I4/c4mR/yqeN6QA/MtQ4AHgb6wdpXFSZyraqBC11X7fdax/7ceQntHlN9bu9h0G4M85891n9S/oHiGnfiA+SwRWOJIEYH9ht3/94aPp8GdFObuFMlJjR9WRsVwhddQCTzRxi6NoJYQPREiL0F6SmYlaL5uwXNcrhzCeKzLeUTKfj4Fw3AL7XHfiCwpX9Jf/ZHlovSnr6Kg8NeVaS1won8b6DFaSYRRFdbvViur7VcgJphgovJ5nBuCAkXqOE0Z4lMc09/q5khyBH98Zu4ffavRIyp5gqu/c0oWEcxjDv3FpUyVNkzPANuxvwxTF6b2vxulqsbgGivqeVmRNSqfUlFyr7hL3hNZbvJums5toHYZtNQYVdZFx5mbIctvTAZoX7OmZbmBex426aM+aO0s8jTJNsdnA5fLXxFg2wvIN0XC1qJh8+wQi9EH5FRzWFRAL2zpsu+jvug==
+ WF4Gfekt5TE7hUIy5BEk55160yV11Vhz6McZmVNQI016ZTr1MN0Rqd66rWFJLHUjaKwl+MvvIG1SXd5eUrY55ovMpFTFhL3v0ipt/VNSn2StuLOS9q15Uj5eIxBJ1Zjkqr8x9Hl6JljvISbRl4bGwJ+DxOJ7zLcK2Z2DqAvFT/sc37J7GGTXkIas/N2/OE88UIX3Gz+YUiZrPMnw5q5EzUkb8/IyVPmnoAuZUmNxCjSQHMwbV/laeJj0JSaI3BxV/v2sQ/D9GnSs/I+vYd2QDdu96Qy6cSbIi/jXbalkZIV+EkSr/UJvVAxeLvIcXlBJJqti7Cg6c1hZeoKHWNT/kH6DepXcZNzxZBkIM9zcXIzjfDGHSmWjb57cqQJvxMKnkXWMZvyQ5Ql+/6pOD3J/cXskKbXUmzDLEubbwvpRDXBv+rWvDLDlC3ZXdPYLHitG52FPx/mS8+Onc8OB3+qV9K8Sp/f/pBmycKQW9tmhThmcx9dAcFcdYNSwqGoEWybccZ/7a6Uy/Vtz+WdFV1tOSKDllXWtG5v7BcyJYEAtF+oXHkF+7lwdHLmh0SUvP/7RBzKN+b2T05nHJeFwMbDt2m7C5JLkRKNHANMiYDZMWr606q5TPpoqdvlwYRnWsOQGpLGudwZ+YcuHSatDAmiJIDPt6fa7oFlM/8TZDJhb8PFn5Ago9QwLQYTIpDJngeyBUKChR+R4hNCD/9id5FrVnw==
 X-Forefront-Antispam-Report-Untrusted:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AS8PR08MB10291.eurprd08.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(7416014)(376014)(366016)(1800799024)(18002099003)(22082099003)(10067099003)(921020)(11063799006)(261028144727099003)(261022105027099003)(56012099006)(261102123227099003)(261026140227099003)(261021121427099003);DIR:OUT;SFP:1101;
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AS8PR08MB10291.eurprd08.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(1800799024)(366016)(376014)(7416014)(56012099006)(261022105027099003)(261021123027099003)(261021121427099003)(261009223027099003)(921020)(261026140227099003)(261028144727099003)(11063799006)(10067099003)(260925022911599003)(260925021911599003)(260925021311599003)(22082099003)(18002099003)(261102123227099003);DIR:OUT;SFP:1101;
 X-Exchange-RoutingPolicyChecked:
- ET/QPDjVBSYkB8BUfVvcUDBeNRCOk2q3Cf2mO3C0HiuTAFVggj+y8VTqq6VaDo9mhlFYEEM4ZKPI5OCip1bcAZaPjBdAfEGNZKkBeeI4/g8jDco4K3dFDZ68IgTGyXZFh70/3fz4tfUqbMN9OLpR6s0kwCdHgaYyHjyJMJCqjFHz6mwxuLnanowdZomKxYxXNMKPdIdVgT0/PowPWsbP+M//dYvR2MIfHFaoeRUHiZaHcXqhixWJvo57kZjhyJCpZrE1WXDjjIhOHdXt+iT+2cpJ7P1DskNvUgaqafnjFSIhNLZNth9Z36G1pOdK2ZnP9Yx46uPe5cq4WiF3Rdz5CQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PAWPR08MB10897
+ mBY/MOAhuNr81hr8LztTgQ+08lGKmUY8Cd6lhy2UQijkULaLb8jxeCFYxViYn+EjKjGXx6sS3eLzUUuvtY/3wDSo33Bo0dBEyKneVXrUHAXEDVHjf4n9Qj6Tut1KKog4u9GmnIc9RO+6ovZ52ghAm4WVQ4vY5W9lQmhTmdxLuHGUcOIfySEeG3gxch8S5Jk7LZfsO/JIKqm4eXkpwi3pH0OGLbFg9cqPN0Mbz7trqzf8AvOJAO0edmPNLppyLrdtScoY8dmPOaZtoMXXQ2T6WnEKGrNVOTOrHDM1SvFGqWLg+Q4O88+tkRHVXSjae+Iw3E4rbIUsfgpxXDGY1JlBAw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AS4PR08MB7556
 X-EOPAttributedMessage: 0
 X-MS-Exchange-Transport-CrossTenantHeadersStripped:
- MI3PEPF00008491.eurprd03.prod.outlook.com
+ MI3PEPF00008494.eurprd03.prod.outlook.com
 X-MS-PublicTrafficType: Email
 X-MS-Office365-Filtering-Correlation-Id-Prvs:
-	a755c22f-cf8f-446b-21f1-08df3b609e27
+	ed70a0bf-e17f-4a66-95b5-08df3b60a0a0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|23010399003|7416014|35042699022|376014|14060799003|1800799024|82310400026|36860700016|921020|11063799006|56012099006|261022105027099003|261021121427099003|261102123227099003|261026140227099003|261028144727099003|10067099003|18002099003|22082099003;
+	BCL:0;ARA:13230040|82310400026|36860700016|376014|7416014|23010399003|14060799003|1800799024|35042699022|22082099003|18002099003|921020|56012099006|11063799006|261026140227099003|261021121427099003|261028144727099003|10067099003|261102123227099003|261022105027099003|261009223027099003|261021123027099003|260925021911599003|260925021311599003|260925022911599003;
 X-Microsoft-Antispam-Message-Info:
-	FVxtmx0RVhe2Oz7PMTgsAQd5MQUsMtxuvogiub8A5ICAemH/vngvqLe/+4hiBXm9ylYOxneIikN10c03I1ilTby+yAML+b6Bk311xtrFDKsAJpOi0fW1prdcTYsXOlenotkxNO+kViv4ZjVD0b4LjcwWWmKwW1z6HDtgp2OVRs+hh9t14lr8RVVrq3gsSDQr0zcqxlOcp4v/JI2WmjIH9apa/C3QOPvNPHuJ/oLzAQWk1e8spxTrDU6HyPiS+4M4yUOrygmMM26Qssz2fZD4hLu9AiimSeFrxOJKQpgJVN6QGtMhwGjCMZUBki5rfl0x6rsy1NiyGapS0G3Oy6SAv7jUPjbStlkQJuPfT5uG49o99aXSPVleD3pnYqpO5upRh6tuYIovPOGcay+Ro9obt/tnB2oCOb+x7AHcMLTh97ESY9NHHE1gITFO5qgaApTxpWVXJELN+n5iATf8Cg1rzv8nJy62YaljDVJutgbPykgr7yROC3E/kr56emjnDNT0p/XSX/9VG9x1CTxME+ICF//H1WqoA7ZADyVljJYvyT93LiREePT4Fw+vPVb4rop6n9+FBUbnxC7MpOqvhI2DlCdp0av0MSNJbM4aM6Wr2DM4U0dF/EX0l9UgiZ/lAIJ3o1rFVe31O6fd0Cx9y/k1ElkkzZIUQ7ygvrLsotXeNJD1YP5E1iMzTCAaXF97Zrh31ZYBQWHRupULediEFQoVax4KMZc6isF0AoRI2RCicx2uAcbMOqkPhj8ehEc456Dm
+	30vxGvg4+CzrJ9w30csliaEfA/1lotic1kyphNMX4oIJqMQQJ4OIjyyxBpJuu+YlY2CU2Ylwe8oPD9w9roBX1dbZl/p012RQ2p+/IeB/nG0IhXnAGMvJmzIAX3GobcuitZGRvGlKsqwoHAfMgka6nOWOYAkydYaDluHpA56oyUBPaPplqeibQEPb8yzuSDUUAN7yTan18/GntB4g1C/y1pQONsG/jTMaLF2rk2HQQS0+hx0yCr/vLxzZB5YWSP57f5Cpnve6hfuUfLo1ARRxVLmk/lUeaOiHcLtUOFbIGeEKoQoV8vf9ScdMFHy+kJcPuJM12nlb8X9w/TNaKVIi0xHw7t+j+ryPSTxWGdR0v3lDufKgsnnXLYKp6Gga5S+WR/FjLRsDZQQjqUPOYfS/oVv0mS7pxpTIw9B3lO9RsYf5gDHIJWlpgkDUpxiYdJAVba+4q3WBPgu4itIerkxYFHz4PCzh4oebI1eQdDloRNivZZWTB0hDVRcJ614aiQOk7TfAEmobtx3SGSWoUmgcUUzoWMJF3QNxaZrXSwNyKWPYBIsIxy7RSQPU/J1bDJ5e93J4a7tHdXv2gB1EKOqO9p2heEvb7t8ezhhRcejWZQGf7gF2iH4QCNDtc0YWo1M6rSUy4u8JScY7SQ5JRdzoi6+8nqXkEp10TIsP3KjM+uzxZvTDrd72rrwOPCc3Wd0P4iI/1Y0GcvJwP7MjLT2a4TZwo8rfwyucQYi93U9rUIU+wzCG4SQOcnk8q7kC0zXj
 X-Forefront-Antispam-Report:
-	CIP:4.158.2.129;CTRY:GB;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:outbound-uk1.az.dlp.m.darktrace.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(23010399003)(7416014)(35042699022)(376014)(14060799003)(1800799024)(82310400026)(36860700016)(921020)(11063799006)(56012099006)(261022105027099003)(261021121427099003)(261102123227099003)(261026140227099003)(261028144727099003)(10067099003)(18002099003)(22082099003);DIR:OUT;SFP:1101;
+	CIP:4.158.2.129;CTRY:GB;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:outbound-uk1.az.dlp.m.darktrace.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(82310400026)(36860700016)(376014)(7416014)(23010399003)(14060799003)(1800799024)(35042699022)(22082099003)(18002099003)(921020)(56012099006)(11063799006)(261026140227099003)(261021121427099003)(261028144727099003)(10067099003)(261102123227099003)(261022105027099003)(261009223027099003)(261021123027099003)(260925021911599003)(260925021311599003)(260925022911599003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	doEdW0Ovwo/fozcW/icqAlvMqQIY4P39gqyuCIcktJZ4E8dxSg8hjxdqGP58ApxS5EtLzaJ8g6ozIkaIYukSVK9KXiCc2xzbwkwkBnZEex2QPXPpniJTjYPLbBqJh/1jW6e0szpHxdqptIdJdku0y+PJsVNMrmf6x/FbskrN8L6r+oYpUZyrqWjSQ/23x1+ac85ni5qWZDcKiLZfTRDuumNkFWuxF7Z6RVt0uuiNiuFUUcjdv7Jg4fSz6bmjQoyJYONw7via7NaFIpjfQvD4uehSLxojXsDi0PWVxkVOZQ3Yo2vdKdFLWevQ/BBk+Di7LK6RzeC7O3qLAqxGNB61Ga5yq7XBgZ3yCRHsaCWd5tISEnSaP7Gtn7vTERjVgagDMa8x9wV/2HtaivXIzlMxPNoEU37s8v3GAX7GSkpd1igKo9e329GalsMWQti/fJvi
+	9+2Z7hUYb9gmql8TbgxWsaf5lYPB2ygy6YkWC1ApAbUdR4mdXWt5KpDRHpFLPpn52p9Ke9sMn1AguJwHWwQ48/thFuoJYUHTtEHKINaLyKdzQ6JHyJvyHOEtrBk0kh9dup1heIDsY0wVGeIFbO3EFYHMY2zen8nbC77qwEFEr6qNgLXgN166D685/hPy4yEQaDVNfFugAhp+dtyQfssNrD6rwup0vgTurrtYqZE44qqZnfQZ9sk1LUh9n/WRLvP9sZuGX+RehePAPwcaEdqNtqLzr9CQelCbxWk3+R14gFnmb0QMn86XDBdYdW6uj2sUvHCOjI7LSy8KjkrgIp6hGNdrbIimr/Mf7g62N5SoD5zlOgV6MzTGn7b9dGKmf+LT4qEmyjJDYogi3Zw8KpnIl6dm9bY+rwtrOahJgAEnbNhIjFPHFi09i1l3dhvNxPaa
 X-OriginatorOrg: arm.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Nov 2026 17:17:50.3134
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Nov 2026 17:17:51.5677
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: c95f7fac-fa98-4f15-103a-08df3b60b84c
+X-MS-Exchange-CrossTenant-Network-Message-Id: 961308bf-bca2-4f17-66bd-08df3b60b90c
 X-MS-Exchange-CrossTenant-Id: f34e5979-57d9-4aaa-ad4d-b122a662184d
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=f34e5979-57d9-4aaa-ad4d-b122a662184d;Ip=[4.158.2.129];Helo=[outbound-uk1.az.dlp.m.darktrace.com]
 X-MS-Exchange-CrossTenant-AuthSource:
-	MI3PEPF00008491.eurprd03.prod.outlook.com
+	MI3PEPF00008494.eurprd03.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BR0PR08MB637335
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PA4PR08MB6207
 
-Many call sites of offsetof() use it for the purpose of pointer
-artihmetic. Thus, a common usage pattern is:
+Generated with the following simple Coccinelle patch:
 
-  offsetof(typeof(*ptr), member)
-
-Capturing this in one macro helps keep lines short and terse, while
-still making the purpose clear. It also helps discourage spelling out
-the type name on every callsite, leading to more maintainable code.
+@@
+expression ptr, member;
+@@
+- offsetofend(typeof(*ptr), member)
++ offsetofendp(ptr, member)
 
 Signed-off-by: Bence Csokas <bence.csokas@arm.com>
 ---
- include/linux/stddef.h | 16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
+ drivers/infiniband/hw/hns/hns_roce_cq.c                | 4 ++--
+ drivers/infiniband/hw/hns/hns_roce_qp.c                | 6 +++---
+ drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-v2.c | 5 ++---
+ drivers/net/wireless/realtek/rtl8xxxu/core.c           | 2 +-
+ drivers/net/wireless/realtek/rtw88/fw.c                | 2 +-
+ drivers/net/wireless/realtek/rtw89/fw.c                | 8 ++++----
+ drivers/net/wireless/virtual/mac80211_hwsim_main.c     | 4 ++--
+ net/bpf/test_run.c                                     | 2 +-
+ net/key/af_key.c                                       | 2 +-
+ net/wireless/nl80211.c                                 | 2 +-
+ net/wireless/reg.c                                     | 2 +-
+ net/wireless/scan.c                                    | 2 +-
+ security/landlock/net.c                                | 4 ++--
+ 13 files changed, 22 insertions(+), 23 deletions(-)
 
-diff --git a/include/linux/stddef.h b/include/linux/stddef.h
-index e1851c50c89b..87f0e131d235 100644
---- a/include/linux/stddef.h
-+++ b/include/linux/stddef.h
-@@ -32,6 +32,22 @@ enum {
- #define offsetofend(TYPE, MEMBER) \
- 	(offsetof(TYPE, MEMBER)	+ sizeof_field(TYPE, MEMBER))
+diff --git a/drivers/infiniband/hw/hns/hns_roce_cq.c b/drivers/infiniband/hw/hns/hns_roce_cq.c
+index 7dfaa01cda67..0755f365873d 100644
+--- a/drivers/infiniband/hw/hns/hns_roce_cq.c
++++ b/drivers/infiniband/hw/hns/hns_roce_cq.c
+@@ -287,7 +287,7 @@ static int alloc_cq_db(struct hns_roce_dev *hr_dev, struct hns_roce_cq *hr_cq,
  
-+/**
-+ * offsetofp() - Get the offset of a struct field from a pointer to the struct
-+ *
-+ * @P: Pointer to the structure
-+ * @MEMBER: The member within the structure to get the start offset of
-+ */
-+#define offsetofp(P, MEMBER) offsetof(typeof(*(P)), MEMBER)
-+
-+/**
-+ * offsetofendp() - Get the end of a struct field from a pointer to the struct
-+ *
-+ * @P: Pointer to the structure
-+ * @MEMBER: The member within the structure to get the end offset of
-+ */
-+#define offsetofendp(P, MEMBER) offsetofend(typeof(*(P)), MEMBER)
-+
- /**
-  * struct_group() - Wrap a set of declarations in a mirrored struct
-  *
+ 	if (udata) {
+ 		if (has_db &&
+-		    udata->outlen >= offsetofend(typeof(*resp), cap_flags)) {
++		    udata->outlen >= offsetofendp(resp, cap_flags)) {
+ 			uctx = rdma_udata_to_drv_context(udata,
+ 					struct hns_roce_ucontext, ibucontext);
+ 			err = hns_roce_db_map_user(uctx, addr, &hr_cq->db);
+@@ -378,7 +378,7 @@ static int set_cqe_size(struct hns_roce_cq *hr_cq, struct ib_udata *udata,
+ 		return 0;
+ 	}
+ 
+-	if (udata->inlen >= offsetofend(typeof(*ucmd), cqe_size)) {
++	if (udata->inlen >= offsetofendp(ucmd, cqe_size)) {
+ 		if (ucmd->cqe_size != HNS_ROCE_V2_CQE_SIZE &&
+ 		    ucmd->cqe_size != HNS_ROCE_V3_CQE_SIZE) {
+ 			ibdev_err(&hr_dev->ib_dev,
+diff --git a/drivers/infiniband/hw/hns/hns_roce_qp.c b/drivers/infiniband/hw/hns/hns_roce_qp.c
+index c6c0dfdbdbc3..55781c1833e5 100644
+--- a/drivers/infiniband/hw/hns/hns_roce_qp.c
++++ b/drivers/infiniband/hw/hns/hns_roce_qp.c
+@@ -836,9 +836,9 @@ static inline bool user_qp_has_sdb(struct hns_roce_dev *hr_dev,
+ 				   struct hns_roce_ib_create_qp *ucmd)
+ {
+ 	return ((hr_dev->caps.flags & HNS_ROCE_CAP_FLAG_QP_RECORD_DB) &&
+-		udata->outlen >= offsetofend(typeof(*resp), cap_flags) &&
++		udata->outlen >= offsetofendp(resp, cap_flags) &&
+ 		hns_roce_qp_has_sq(init_attr) &&
+-		udata->inlen >= offsetofend(typeof(*ucmd), sdb_addr));
++		udata->inlen >= offsetofendp(ucmd, sdb_addr));
+ }
+ 
+ static inline bool user_qp_has_rdb(struct hns_roce_dev *hr_dev,
+@@ -847,7 +847,7 @@ static inline bool user_qp_has_rdb(struct hns_roce_dev *hr_dev,
+ 				   struct hns_roce_ib_create_qp_resp *resp)
+ {
+ 	return ((hr_dev->caps.flags & HNS_ROCE_CAP_FLAG_QP_RECORD_DB) &&
+-		udata->outlen >= offsetofend(typeof(*resp), cap_flags) &&
++		udata->outlen >= offsetofendp(resp, cap_flags) &&
+ 		hns_roce_qp_has_rq(init_attr));
+ }
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-v2.c b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-v2.c
+index 0009a05511af..533b41fcd1c2 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-v2.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-v2.c
+@@ -241,7 +241,7 @@ int iwl_pcie_ctxt_info_v2_alloc(struct iwl_trans *trans,
+ 	 * optional; old devices _should_ be fine with a bigger size,
+ 	 * but in simulation we check the size more precisely.
+ 	 */
+-	BUILD_BUG_ON(offsetofend(typeof(*prph_scratch), dram.common) +
++	BUILD_BUG_ON(offsetofendp(prph_scratch, dram.common) +
+ 		     sizeof(prph_scratch->dram.fseq_img) !=
+ 		     sizeof(*prph_scratch));
+ 	if (control_flags_ext & IWL_PRPH_SCRATCH_EXT_EXT_FSEQ)
+@@ -249,8 +249,7 @@ int iwl_pcie_ctxt_info_v2_alloc(struct iwl_trans *trans,
+ 			cpu_to_le32(sizeof(*prph_scratch));
+ 	else
+ 		ctxt_info_v2->prph_scratch_size =
+-			cpu_to_le32(offsetofend(typeof(*prph_scratch),
+-						dram.common));
++			cpu_to_le32(offsetofendp(prph_scratch, dram.common));
+ 
+ 	ctxt_info_v2->cr_head_idx_arr_base_addr =
+ 		cpu_to_le64(trans_pcie->rxq->rb_stts_dma);
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/core.c b/drivers/net/wireless/realtek/rtl8xxxu/core.c
+index 3d0c22db30a8..289e0068d7eb 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/core.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/core.c
+@@ -6167,7 +6167,7 @@ static void rtl8xxxu_c2hcmd_callback(struct work_struct *work)
+ 		case C2H_8723B_RA_REPORT:
+ 			bw = rarpt->txrate.bw;
+ 
+-			if (skb->len >= offsetofend(typeof(*c2h), ra_report.bw)) {
++			if (skb->len >= offsetofendp(c2h, ra_report.bw)) {
+ 				if (c2h->ra_report.bw == RTL8XXXU_CHANNEL_WIDTH_40)
+ 					bw = RATE_INFO_BW_40;
+ 				else
+diff --git a/drivers/net/wireless/realtek/rtw88/fw.c b/drivers/net/wireless/realtek/rtw88/fw.c
+index 945fedcd375b..f3b45666fcb5 100644
+--- a/drivers/net/wireless/realtek/rtw88/fw.c
++++ b/drivers/net/wireless/realtek/rtw88/fw.c
+@@ -159,7 +159,7 @@ static void rtw_fw_ra_report_iter(void *data, struct ieee80211_sta *sta)
+ 
+ 	rate = u8_get_bits(ra_rpt->rate_sgi, RTW_C2H_RA_RPT_RATE);
+ 	sgi = u8_get_bits(ra_rpt->rate_sgi, RTW_C2H_RA_RPT_SGI);
+-	if (ra_data->length >= offsetofend(typeof(*ra_rpt), bw))
++	if (ra_data->length >= offsetofendp(ra_rpt, bw))
+ 		bw = ra_rpt->bw;
+ 	else
+ 		bw = si->bw_mode;
+diff --git a/drivers/net/wireless/realtek/rtw89/fw.c b/drivers/net/wireless/realtek/rtw89/fw.c
+index ea7dba077f5d..91f8cefc0226 100644
+--- a/drivers/net/wireless/realtek/rtw89/fw.c
++++ b/drivers/net/wireless/realtek/rtw89/fw.c
+@@ -8067,11 +8067,11 @@ int rtw89_fw_h2c_scan_list_offload_be(struct rtw89_dev *rtwdev, int ch_num,
+ 
+ 	if (RTW89_CHK_FW_FEATURE(CH_INFO_BE_V0, &rtwdev->fw)) {
+ 		ver = 0;
+-		elem_size = offsetofend(typeof(*elem), w7);
++		elem_size = offsetofendp(elem, w7);
+ 		used_len = sizeof(*h2c) + elem_size * ch_num;
+ 	} else if (RTW89_CHK_FW_FEATURE(CH_INFO_BE_V1, &rtwdev->fw)) {
+ 		ver = 1;
+-		elem_size = offsetofend(typeof(*elem), w7);
++		elem_size = offsetofendp(elem, w7);
+ 		used_len = sizeof(*h2c) + elem_size * ch_num;
+ 	}
+ 
+@@ -8350,10 +8350,10 @@ int rtw89_fw_h2c_scan_offload_be(struct rtw89_dev *rtwdev,
+ 	rtw89_scan_get_6g_disabled_chan(rtwdev, option);
+ 
+ 	if (RTW89_CHK_FW_FEATURE(SCAN_OFFLOAD_BE_V0, &rtwdev->fw)) {
+-		cfg_len = offsetofend(typeof(*h2c), w8);
++		cfg_len = offsetofendp(h2c, w8);
+ 		scan_offload_ver = 0;
+ 	} else if (RTW89_CHK_FW_FEATURE(SCAN_OFFLOAD_BE_V1, &rtwdev->fw)) {
+-		cfg_len = offsetofend(typeof(*h2c), w9);
++		cfg_len = offsetofendp(h2c, w9);
+ 		scan_offload_ver = 1;
+ 	} else if (RTW89_CHK_FW_FEATURE(SCAN_OFFLOAD_BE_V2, &rtwdev->fw)) {
+ 		scan_offload_ver = 2;
+diff --git a/drivers/net/wireless/virtual/mac80211_hwsim_main.c b/drivers/net/wireless/virtual/mac80211_hwsim_main.c
+index e53714b81ec2..8679c8758ee8 100644
+--- a/drivers/net/wireless/virtual/mac80211_hwsim_main.c
++++ b/drivers/net/wireless/virtual/mac80211_hwsim_main.c
+@@ -1622,12 +1622,12 @@ static void mac80211_hwsim_write_tsf(struct mac80211_hwsim_data *data,
+ 	if (txrate)
+ 		bitrate = txrate->bitrate;
+ 
+-	if (skb->len >= offsetofend(typeof(*mgmt), u.probe_resp.timestamp) &&
++	if (skb->len >= offsetofendp(mgmt, u.probe_resp.timestamp) &&
+ 	    ieee80211_is_probe_resp(hdr->frame_control)) {
+ 		mgmt->u.probe_resp.timestamp =
+ 			cpu_to_le64(sim_time + data->tsf_offset +
+ 				    24 * 8 * 10 / bitrate);
+-	} else if (skb->len >= offsetofend(typeof(*mgmt), u.beacon.timestamp) &&
++	} else if (skb->len >= offsetofendp(mgmt, u.beacon.timestamp) &&
+ 		   ieee80211_is_beacon(mgmt->frame_control)) {
+ 		mgmt->u.beacon.timestamp = cpu_to_le64(sim_time +
+ 						       data->tsf_offset +
+diff --git a/net/bpf/test_run.c b/net/bpf/test_run.c
+index d6c9dc62182e..3862cfa041fe 100644
+--- a/net/bpf/test_run.c
++++ b/net/bpf/test_run.c
+@@ -1613,7 +1613,7 @@ int bpf_prog_test_run_sk_lookup(struct bpf_prog *prog, const union bpf_attr *kat
+ 	if (user_ctx->sk)
+ 		goto out;
+ 
+-	if (!range_is_zero(user_ctx, offsetofend(typeof(*user_ctx), local_port), sizeof(*user_ctx)))
++	if (!range_is_zero(user_ctx, offsetofendp(user_ctx, local_port), sizeof(*user_ctx)))
+ 		goto out;
+ 
+ 	if (user_ctx->local_port > U16_MAX) {
+diff --git a/net/key/af_key.c b/net/key/af_key.c
+index d215b33b7492..736f42e37fb1 100644
+--- a/net/key/af_key.c
++++ b/net/key/af_key.c
+@@ -384,7 +384,7 @@ static int verify_address_len(const void *p)
+ 	int len;
+ 
+ 	if (sp->sadb_address_len <
+-	    DIV_ROUND_UP(sizeof(*sp) + offsetofend(typeof(*addr), sa_family),
++	    DIV_ROUND_UP(sizeof(*sp) + offsetofendp(addr, sa_family),
+ 			 sizeof(uint64_t)))
+ 		return -EINVAL;
+ 
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index d790e204aee3..31fe2e78762d 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -333,7 +333,7 @@ static int validate_beacon_head(const struct nlattr *attr,
+ 	unsigned int fixedlen, hdrlen;
+ 	bool s1g_bcn;
+ 
+-	if (len < offsetofend(typeof(*mgmt), frame_control))
++	if (len < offsetofendp(mgmt, frame_control))
+ 		goto err;
+ 
+ 	s1g_bcn = ieee80211_is_s1g_beacon(mgmt->frame_control);
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 50f50e768f01..51d2c2052d88 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -704,7 +704,7 @@ static bool valid_country(const u8 *data, unsigned int size,
+ 	unsigned int i;
+ 
+ 	/* make sure we can read len/n_rules */
+-	if ((u8 *)coll + offsetofend(typeof(*coll), n_rules) > data + size)
++	if ((u8 *)coll + offsetofendp(coll, n_rules) > data + size)
+ 		return false;
+ 
+ 	/* make sure base struct and all rules fit */
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index ac56338f0f43..0afdab4722c1 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -587,7 +587,7 @@ static int cfg80211_parse_ap_info(struct cfg80211_colocated_ap *entry,
+ 		bss_params = tbtt_info->bss_params;
+ 
+ 		/* Ignore disabled links */
+-		if (length >= offsetofend(typeof(*tbtt_info), mld_params)) {
++		if (length >= offsetofendp(tbtt_info, mld_params)) {
+ 			if (le16_get_bits(tbtt_info->mld_params.params,
+ 					  IEEE80211_RNR_MLD_PARAMS_DISABLED_LINK))
+ 				return -EINVAL;
+diff --git a/security/landlock/net.c b/security/landlock/net.c
+index 8fd73cf4bd15..b7405327630c 100644
+--- a/security/landlock/net.c
++++ b/security/landlock/net.c
+@@ -93,7 +93,7 @@ static int current_check_access_socket(struct socket *const sock,
+ 		return 0;
+ 
+ 	/* Checks for minimal header length to safely read sa_family. */
+-	if (addrlen < (int)offsetofend(typeof(*address), sa_family))
++	if (addrlen < (int) offsetofendp(address, sa_family))
+ 		return -EINVAL;
+ 
+ 	/*
+@@ -382,7 +382,7 @@ static int hook_socket_connect(struct socket *const sock,
+ 	 * should never be restricted.
+ 	 */
+ 	if (ret == 0 && sk_is_udp(sock->sk) &&
+-	    addrlen >= offsetofend(typeof(*address), sa_family) &&
++	    addrlen >= offsetofendp(address, sa_family) &&
+ 	    address->sa_family != AF_UNSPEC)
+ 		ret = current_check_autobind_udp_socket(sock);
+ 
 
 -- 
 2.56.0
