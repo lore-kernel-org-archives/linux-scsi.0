@@ -1,53 +1,55 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=183.62.165.209
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=160.30.148.34
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
 	t=1793878421;
-	b=Zj+yNWeYsgdqMAw45eCj5nQrQzV3wT1iGdCX8oaAl3+x8+5FAagWPMFD49ig09vHZgOF
-	 MJhAEBGM4eeBYgikOTGDGGy2fil8GtzPMn38InYZZzcdF5aC0FbsPYwlC63sTRDKi+U5h
-	 dtWc6JhFEgKQ60BPBv0QDYajtYvZkNPL7F5Jw3n9IUp7M3tY6tPXx3Toga0P7j/7Aob4h
-	 nJVKomXfYRPPyT+/EXfo9vw0zkLnAR8bqfxwxcHtLY7L58qbXnDWDamtz7XpGr0GX5j6A
-	 pKRwOImSCmquANEDx5731TIulM5MVQom6s9BvYfzRbgTaUcclv2l14kLERlNMdgxLMw==
+	b=DX7QvZGEz0MskjwHjqPy0NDJWf73UM29W6MrgRQfwWSBEWQ32A6bn8zNuzPYBUj7ALR3
+	 6YMS7RZUjMPhMh4o2x2XC7i1O5S4Hli6+xS65oe3fzN1PXIgybbfqZMxF02IXW7kPKzrH
+	 w12Zgfiky3maEGO0SwXXrUIPKeV9wdyUmgEUO6PWNkSkzHVThKDh68hb+vFljBHREttgN
+	 EC/h2Fx4M8YDawaP1kCcYL4sJqv1v+eVrdSrfdqAg1NRXzZgmHtMF4mfLA0AAL1HW6Gqp
+	 XLYVWNGFPv5s9MwppJeFreKDhXfdzarmARWwQGEG/s8sQPY9jZuzhhKCDMCN3SRtXcQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
 	a=rsa-sha256; c=relaxed/relaxed; t=1793878421;
 	h=DMARC-Filter:Received:Received:Received:X-Zmail-TransId:X-Mailer:
-	 Message-ID:Date:Mime-Version:From:To:Cc:Subject:Content-Type:X-MAIL:
-	 X-TLS:X-ENVELOPE-SENDER:X-SOURCE-IP:X-CLEAN:
-	 X-Fangmail-Anti-Spam-Filtered:X-Fangmail-MID-QID;
-	bh=RPMqxkipOxYkESVnKdtHt0CqeQ8C1S9Y+Y8T7HhpEyo=;
-	b=DA2VhX0kagU/qUQVAAzdEaKqJ3/qrw7iy592Zn5z7Y9MlxRJJ+KzJNl4bEsUO0WqCD4q
-	 6StoefzPfkuX3HrIAMA5hTPtfvrvOVYLdOmBEL1eV7NZnO0fKYbumRzwjpmrO2Pu25EzZ
-	 0u5KkfwKxvJx0itpbp8si00S60o5/0zqBKKHwV1iHlydxauBLr0LMhHQrXHu7fl5VzxFW
-	 0pbwyY0gPHt39+/ueQBr1tw/oXylxN/CtSUVaIBtTgdSi6XrFSrNIBkNGhEHqa6cBWCLt
-	 BpKWhkJ9xuaeY8jzR8nCV0eBOfmyQIchzbHasEL3xquH1bxvbxJeMIJ3YfqdDt+8yUA==
+	 Message-ID:In-Reply-To:References:Date:Mime-Version:From:To:Cc:
+	 Subject:Content-Type:X-MAIL:X-TLS:X-ENVELOPE-SENDER:X-SOURCE-IP:
+	 X-CLEAN:X-Fangmail-Anti-Spam-Filtered:X-Fangmail-MID-QID;
+	bh=pKVJ/KyOYaycs0ZR8YVdSd/eRwZCMXN4pRXKGwCrB/I=;
+	b=ASeFgxJrh+HrBIXD0IUQpb7osqRChuh6aW97UcjHZi1TTaVL2m8bnllMW9n0Z24ZSMmm
+	 sVPf8WeIqhVuiaRPAX+hDloxDTNSJjGit5MUBcwmVs/uhBwFLwIBSXDZz5ufUU5zeoFeT
+	 IuRzaM0jTHtVQZ0TIkPLaT9q8qtrtRzqBZIUGptnutB0eKlzh3ULkMSU/XaJVUYO8PLzr
+	 DCZk8Ah6WZrWTZg5AL5XsjXR2lv1ksEiKb6YUr300xH8ii0hzgm0/H6G78xdsP7QSN4ex
+	 A9U2cP78txld8x138OJuPTaumur1vjaDQPEhE24RU4CKPGB00sxryKebqY0E5eputHg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=zte.com.cn;
 	spf=pass smtp.mailfrom=zte.com.cn;
-	arc=none smtp.remote-ip=183.62.165.209
-Received: from mxct.zte.com.cn (mxct.zte.com.cn [183.62.165.209])
+	arc=none smtp.remote-ip=160.30.148.34
+Received: from mxhk.zte.com.cn (mxhk.zte.com.cn [160.30.148.34])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8CA66606A32D;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A32EA606A31B;
 	Thu,  5 Nov 2026 11:33:40 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8CA66606A32D
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A32EA606A31B
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zte.com.cn
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zte.com.cn
-Received: from mse-fl2.zte.com.cn (unknown [10.5.228.133])
+Received: from mse-fl1.zte.com.cn (unknown [10.5.228.132])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mxct.zte.com.cn (FangMail) with ESMTPS id 4jL0Yk4fJWz5B13Y;
-	Thu, 05 Nov 2026 19:33:30 +0800 (CST)
-Received: from xaxapp05.zte.com.cn ([10.99.98.109])
-	by mse-fl2.zte.com.cn with SMTP id 6A5BXPU9068064;
-	Thu, 5 Nov 2026 19:33:25 +0800 (+08)
+	by mxhk.zte.com.cn (FangMail) with ESMTPS id 4jL0Yt1msnz5B0rZ;
+	Thu, 05 Nov 2026 19:33:38 +0800 (CST)
+Received: from xaxapp01.zte.com.cn ([10.88.99.176])
+	by mse-fl1.zte.com.cn with SMTP id 6A5BXVNA036268;
+	Thu, 5 Nov 2026 19:33:31 +0800 (+08)
 	(envelope-from shao.mingyin@zte.com.cn)
-Received: from mapi (xaxapp04[null])
+Received: from mapi (xaxapp05[null])
 	by mapi (Zmail) with MAPI id mid32;
-	Thu, 5 Nov 2026 19:33:28 +0800 (CST)
-X-Zmail-TransId: 2afb6aec69887dd-14fee
+	Thu, 5 Nov 2026 19:33:33 +0800 (CST)
+X-Zmail-TransId: 2afc6aec698da52-10268
 X-Mailer: Zmail v1.0
-Message-ID: <20261105193328462jmyNd656AIL6fPlbEJ1Ki@zte.com.cn>
-Date: Thu, 5 Nov 2026 19:33:28 +0800 (CST)
+Message-ID: <20261105193333968SpAtZ8KtfXSeTZlDpuSOO@zte.com.cn>
+In-Reply-To: <20261105193328462jmyNd656AIL6fPlbEJ1Ki@zte.com.cn>
+References: 20261105193328462jmyNd656AIL6fPlbEJ1Ki@zte.com.cn
+Date: Thu, 5 Nov 2026 19:33:33 +0800 (CST)
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -63,42 +65,46 @@ Cc: <James.Bottomley@HansenPartnership.com>, <alim.akhtar@samsung.com>,
         <bvanassche@acm.org>, <beanhuo@micron.com>, <stanleyjhu@google.com>,
         <loberman@redhat.com>, <jmeneghi@redhat.com>,
         <linux-kernel@vger.kernel.org>
-Subject: =?UTF-8?B?W1BBVENIIDAvNV0gc2NzaTogcmVtb3ZlIGRlYWQgY29kZSBhbmQgcmVkdW5kYW50IGNoZWNrcw==?=
+Subject: =?UTF-8?B?W1BBVENIIDEvNV0gc2NzaTogdWZzOiBkcm9wIHRoZSB1bnJlYWNoYWJsZSBvZmZzZXQgY2hlY2s=?=
 Content-Type: text/plain;
 	charset="UTF-8"
-X-MAIL:mse-fl2.zte.com.cn 6A5BXPU9068064
+X-MAIL:mse-fl1.zte.com.cn 6A5BXVNA036268
 X-TLS: YES
 X-ENVELOPE-SENDER: shao.mingyin@zte.com.cn
-X-SOURCE-IP: 10.5.228.133 unknown Thu, 05 Nov 2026 19:33:30 +0800
+X-SOURCE-IP: 10.5.228.132 unknown Thu, 05 Nov 2026 19:33:38 +0800
 X-CLEAN: YES
 X-Fangmail-Anti-Spam-Filtered: true
-X-Fangmail-MID-QID: 6AEC698A.000/4jL0Yk4fJWz5B13Y
+X-Fangmail-MID-QID: 6AEC6992.001/4jL0Yt1msnz5B0rZ
 
-This series removes checks that the surrounding code already guarantees and
-one store that is overwritten a few lines later.  It was found while reading
-the SCSI midlayer and the UFS, sd and st drivers.  There is no functional
-change intended; every patch is independent and can be applied on its own or
-as any subset.
+From: Shao Mingyin <shao.mingyin@zte.com.cn>
 
-Patch 1 removes a repeated offset check in ufshcd_read_desc_param().  The
-function already rejects param_offset >= buff_len before it reaches the
-is_kmalloc block, so the inner test can never be true.
+ufshcd_read_desc_param() rejects param_offset >= buff_len before it
+reaches the is_kmalloc block, so the repeated check there can never be
+true.  Keep only the memcpy().
 
-Patch 2 drops the "result < SCSI_VPD_HEADER_SIZE" branch in
-scsi_get_vpd_size().  scsi_vpd_inquiry() returns the page length plus the
-four-byte header, and returns -EIO when the length is zero, so the value is
-always at least 5.
-
-Patch 3 removes the first of two identical nr_blocks stores in
-sd_setup_atomic_cmnd().  The second store, after the boundary field, wins.
-
-Patch 4 drops two -EOVERFLOW branches in sd_read_capacity().  Neither
-read_capacity_10() nor read_capacity_16() returns that value any more.
-
-Patch 5 factors the duplicated end-of-medium test in st.c into a helper.
-The similar test in write_behind_check() is intentionally left alone: it has
-different remainder handling and only uses EOM to turn -EIO into -ENOSPC.
+No functional change.
 
 Signed-off-by: Shao Mingyin <shao.mingyin@zte.com.cn>
 ---
-base-commit: 7649ba73f9e7e1e04d0b46213e39c79ae09dd55c
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index fd52deb72d21..8f89ce52921d 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -3895,14 +3895,9 @@ int ufshcd_read_desc_param(struct ufs_hba *hba,
+ 		goto out;
+ 	}
+ 
+-	if (is_kmalloc) {
+-		/* Make sure we don't copy more data than available */
+-		if (param_offset >= buff_len)
+-			ret = -EINVAL;
+-		else
+-			memcpy(param_read_buf, &desc_buf[param_offset],
+-			       min_t(u32, param_size, buff_len - param_offset));
+-	}
++	if (is_kmalloc)
++		memcpy(param_read_buf, &desc_buf[param_offset],
++		       min_t(u32, param_size, buff_len - param_offset));
+ out:
+ 	if (is_kmalloc)
+ 		kfree(desc_buf);
