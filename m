@@ -1,72 +1,57 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.69
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793862922;
-	b=OUA21w6O1eM8PC4UmCAtJFdI9wDtp0cSNA/y8jdvqPuzHFYexwodaqlX/xj1QfZ85eLK
-	 bNNOW4sogEbkdxmfedrCjgfOxge/9CqyiO+DNglsLQUkl3wzuEAHIgzuNqBWtsIG9S3Ha
-	 rqkl+NAA0dc1mW/SVRVTf9EYFaDr+115nV88gQ5zBXD6qej6v1P8Pgu0qyLY0xn90VSfE
-	 9moIM6xen0hv0u80gZZWrOZUuLb/3D6KVB9fb6Nb0ab8CMBeycMdIPmr3vK7UbO8aBRxH
-	 5OPUJuyyLtkibBTLcn/uPMnNsRSp2lRNnizcvGfXBluFGuOzo1jNsBUr5DF6B8yLWCA==
+	t=1793864550;
+	b=dA+Bbz/J59ULoI8joYATWKFErvbVWtzTkfhWKUvB/5nZqbnmc86+aMq7fZ3YCyrbdIrt
+	 jsJEkzCJEEMk41vwArebWSBCQGT8WFqU99s/3kykHdNZvaDMDCdiIia532ecBzkcNIVKS
+	 x/Qiiqh0eT+5C01C/PGv00Yu+xEg2fcAAP4BAFgQENOoZfBSBSNLzcQ+ceVxvroC+avw0
+	 StpvH6a189wQomavQlnL4RMqnstAnCqHDw5rKIGBe7TbF0WRZsrvKK7QOLrJQJt5Siz1h
+	 tD96Y3fnhpbyehC1RImGBogabZCExM7Zobibouvcj9J2toSYphNs/qZBoa/vaGVVblg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793862922;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:Mime-Version:
-	 X-Mailer:Message-ID:Subject:From:To:Cc:Content-Type;
-	bh=SW9ZPipNuscFWkNo5bCucZS2yHxtHk2aYOPHX7h5/6s=;
-	b=jaSZ4WNapl47rhGouLsGGrewPILEONYwpFTERnJZGYstAS3fvYx6SbrKOGB15FTh3xQv
-	 wUj0Zt2z8tGXxnToHIuaGQXU58R1uDavRbqKcpf8fpa4110CBpwULcy7GNCULKaot5ya0
-	 CJsPqcGYqPEQ7eaGU9p3xqxLx0yXcYbb4Q+HI1ropmB3so8y30yZeFzo6PfOdyBmfq0ps
-	 h7vXu7vbvbB7rpqn2+OM0PMifUCCLninnh2M3Zgc2cA43Na2xE0BM9Gbxi9mlHWGPZvjb
-	 JLPwqHn2rIDCBtk8v7hJ1YnICkHUV/v4gt+dlTWsm5nDEZDBYh4OR6DihhtVIQGa3iA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793864550;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=9pRlxeSne2aVpGYm6JwtKYwWXDsu0D+NpAQ6dRaR6aA=;
+	b=ABMmxfvTpJRT/F9/1R8JLQXQV/8kYwTSN/MV2SP53qHBN94UeFC3IVdz9pB5IY5eZ7zX
+	 tPw5pGj7wNzKVGyX3t6SDNGsJdZ03KsFK6c0O93YAchxDtm/TLu84HF77mj6yJquElGo2
+	 XXwio1jCTxq3426AB7yrapibgGUUCePzE4o9ALONL6SzLg62n4eeVb/LTBplTVxhuxEJ+
+	 WIXq5/Co6R/tW22O4MUQEG21Npg/yQIjUFk+uHTZ/7L2/0yEg7umF8oppB0FDW9CW2hyL
+	 zrow3yWMinR1zERwqiVZeSJL8E7YFKBeqmCTMmkWQwlQB4QocjsBiuMln2cnP7cynHg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=google.com;
-	spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=gR3EVBc5;
-	arc=none smtp.remote-ip=74.125.82.69
-Received: from mail-dl1-f69.google.com (mail-dl1-f69.google.com [74.125.82.69])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=IRaDoTd7;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20CA6606A328
-	for <linux-scsi@vger.kernel.org>; Thu,  5 Nov 2026 07:15:22 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 20CA6606A328
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F7E9606A31B
+	for <linux-scsi@vger.kernel.org>; Thu,  5 Nov 2026 07:42:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=gR3EVBc5
-Received: by mail-dl1-f69.google.com with SMTP id a92af1059eb24-14373747468so3462709c88.1
-        for <linux-scsi@vger.kernel.org>; Wed, 04 Nov 2026 23:15:22 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20260707; t=1793862921; x=1794467721; darn=vger.kernel.org;
-        h=content-type:cc:to:from:subject:message-id:mime-version:date:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=SW9ZPipNuscFWkNo5bCucZS2yHxtHk2aYOPHX7h5/6s=;
-        b=gR3EVBc5cwBFGiZJEZhn3p+sOuzdvOSrBVvARK2Q7ODF9k4n8HTazz+zu3CQgwr2Nq
-         eeMf+dAHqvSP0dr4/5ZPNxMJUYR9z1nIZLBwjIJuAnhyf88TF8VJg/7Ky8kkqqPIxuIE
-         vkmHjbdPpPEX1pEayx/o8z+UOiZzqsyTmSjwPfiDYVvO3TAbhgqc9LgqofOVWHi5zbiS
-         7JrKr4MAd7U2sFAYUfUQ3bpzAGgx3+cil8Bx1q71UFnfeuy7po/D6xamRP4yFPCZCoNm
-         sEdjdaCpY7+Jw0g2rqw0pDiUS13ZIUh9sZgYu+o0UZJiye0FjEHXXTeGR0Yec4rA70dS
-         LzXQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793862921; x=1794467721;
-        h=content-type:cc:to:from:subject:message-id:mime-version:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=SW9ZPipNuscFWkNo5bCucZS2yHxtHk2aYOPHX7h5/6s=;
-        b=Z5Vvdb+lnHnNJHkcS9BQXfMSYEXHguavnnG3fuWKk7J0aRniCbcib7sKWrpP+ufcHs
-         gyIpD4BJOMoYzEhXAE1oJk0SNT/hCd+FvbPD2sPSJa5mwB33zbfreOTjaeAE/qhR5nl1
-         cofaN1B08MYyJZUQ0CVeSaRQFlPN9wdtYBjwD7JILGxxUYV/eOo5c23ZyftJoT+Z7oJP
-         gIV5iLgBkoaYj9muR2/nWMyvI3Xt4UAxKQlqDmvqngwJtO0FbA68x/7gPZb+drrnFJ9p
-         WjlCQC4LlqeNDNXFtM2bEafgDeG6fop20FchickQEtjhy2lDIiPc2BsD53IDsRS81D5i
-         RdpA==
-X-Forwarded-Encrypted: i=1; AKwUvBxZLQHbs+yIk7GGwwB0kiae+3XeLapDIRujx42OuCsAwwOYrk2nOF0sFqSGTGnf58p1xf0mf7gPoH6C@vger.kernel.org
-X-Gm-Message-State: APuU4Z/v6d+sxIO08CAxZ+4Hq2q/GCt6FA+TdRBDb2LM1Lzylq+UtU3b
-	wLpnZRe044q6qUDz9iEWZ0HqTKsPKwoZPoCfdse9V78ssvgbfA5Z8ySqukvuK6kO+qIvxDrEzKn
-	kCKDCyfIzfFyMeL+y7Kyt+g==
-X-Received: from dldyr6-n2.prod.google.com ([2002:a05:701b:4506:20b0:1b2:48db:23f6])
- (user=stanleyjhu job=prod-delivery.src-stubby-dispatcher) by
- 2002:a05:701b:2702:b0:143:5cb4:30 with SMTP id a92af1059eb24-1ac5577508cmr25171030c88.3.1793862920763;
- Wed, 04 Nov 2026 23:15:20 -0800 (PST)
-Date: Thu,  5 Nov 2026 15:15:16 +0800
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=IRaDoTd7
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 12C9B1F00A15;
+	Thu,  5 Nov 2026 07:42:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793864550;
+	bh=9pRlxeSne2aVpGYm6JwtKYwWXDsu0D+NpAQ6dRaR6aA=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=IRaDoTd7fQLloziT0NbNfRXewAGsdLGYrlG/Dvdv9/Vq01Qx2uA9XjC4Auw7dEUdJ
+	 vZQRlbiH56f8461ltZDp8jFO2fkivKDvWm7dz7UuxmD2adHzqpeTn/GLiyIt17mqyC
+	 AXlAP3Q15Xl2Gb1TFfnUNlzBW9GHnPChktYJARtyWPpRMaOVDXFrmYS5FlE8xK8J9z
+	 0RSx7VVRFffys6/mdbLG4+1ZrrhPcKesud0K6mveqVi6sk2Mh+mHJgHuaEnuIHoPHc
+	 XfFtFvsey/SRS0YO5/IEzd71EEe1SgpnF5+2PSP+xvXXVXPpP66K1eYzRGjgqwabKs
+	 hahHmnvT2utug==
+Message-ID: <sashiko-outbox-198692@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH 1/2] scsi: ufs: core: Skip redundant variant resume
+ after error recovery power-up
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Stanley Jhu" <stanleyjhu@google.com>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20261105071518.1458428-2-stanleyjhu@google.com>
+References: <20261105071518.1458428-1-stanleyjhu@google.com>
+ <20261105071518.1458428-2-stanleyjhu@google.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 05 Nov 2026 07:42:29 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -75,69 +60,135 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0
-X-Mailer: git-send-email 2.56.0.398.g882cbad275-goog
-Message-ID: <20261105071518.1458428-1-stanleyjhu@google.com>
-Subject: [PATCH 0/2] scsi: ufs: core: Fix post-reset runtime PM recovery after eef1d74bf88f
-From: Stanley Jhu <stanleyjhu@google.com>
-To: "Martin K . Petersen" <mkp@kernel.org>, 
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>
-Cc: Alim Akhtar <alim.akhtar@samsung.com>, Bart Van Assche <bvanassche@acm.org>, 
-	Bean Huo <beanhuo@micron.com>, Brian Norris <briannorris@chromium.org>, 
-	Can Guo <can.guo@oss.qualcomm.com>, Peter Wang <peter.wang@mediatek.com>, 
-	John Garry <john.garry@linux.dev>, "Rafael J . Wysocki" <rafael@kernel.org>, 
-	Praveen Talari <praveen.talari@oss.qualcomm.com>, linux-scsi@vger.kernel.org, 
-	linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	stable@vger.kernel.org, Stanley Jhu <stanleyjhu@google.com>
-Content-Type: text/plain; charset="UTF-8"
 
-Since commit eef1d74bf88f ("PM: runtime: Only set runtime_error on
-suspend callback failures"), rpm_resume() resets ufs_device_wlun to
-RPM_SUSPENDED and leaves power.runtime_error at 0 when W-LUN runtime
-resume fails. When error handling subsequently resets and restores the
-host and link, two runtime PM recovery gaps are exposed:
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [High] scsi: ufs: core: W-LUN left RPM_SUSPENDED after error recovery res=
+et
+--
 
-1. ufshcd_err_handling_prepare() calls ufshcd_vops_resume() while
-   ufs_device_wlun remains RPM_SUSPENDED, so the next ufs_device_wlun
-   runtime resume calls ufshcd_vops_resume() a second consecutive time
-   without an intervening ufshcd_vops_suspend(), leaking core_clk and
-   iface_clk enable counts in ufs_qcom_resume() via qcom_ice_resume().
-2. ufshcd_recover_pm_error() checks only power.runtime_error and skips
-   consumer queue recovery, leaving waking I/O blocked in
-   __bio_queue_enter() until another request touches the same queue.
+commit 2e7bb517d17be41f390aa16033a12c2fb8953c6f
+Author: Stanley Jhu <stanleyjhu@google.com>
 
-Patch 1 tracks POST_CHANGE variant suspend state in
-hba->is_vops_suspended so ufshcd_vops_resume() pairs 1:1 with
-ufshcd_vops_suspend() across error recovery. Patch 2 wakes consumer
-request queues when ufs_device_wlun is runtime-suspended in
-ufshcd_recover_pm_error() so consumer pm_request_resume() resumes
-ufs_device_wlun via the runtime PM device link.
+scsi: ufs: core: Skip redundant variant resume after error recovery power-up
 
-This series applies on top of two prerequisite patches so repeated
-post-failure W-LUN runtime resumes keep wlun q->pm_only and
-clk_gating.active_reqs balanced:
-- Message-ID: <20261104112744.1630864-1-stanleyjhu@google.com>
-  ("[PATCH v2] block: Keep RPM_ACTIVE in blk_pre_runtime_resume() when
-  already active")
-- Message-ID: <20261029040002.2100002-1-stanleyjhu@google.com>
-  ("scsi: ufs: core: Keep clock-gating hold on failed W-LUN runtime
-  resume")
+This commit tracks POST_CHANGE variant suspend state in
+hba->is_vops_suspended so ufshcd_vops_resume() is skipped if the variant is
+already resumed when ufs_device_wlun remains RPM_SUSPENDED across error
+recovery.
 
-Tested: QEMU ARM64 UFS in SDB and MCQ modes with injected W-LUN
-runtime-resume START STOP UNIT and fatal UIC error recovery, verifying
-immediate consumer wake, 1:1 variant suspend/resume pairing, and idle
-clock gating.
+> diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-pri=
+v.h
+> index e55c2a02c1f50..9e4d8174a0f08 100644
+> --- a/drivers/ufs/core/ufshcd-priv.h
+> +++ b/drivers/ufs/core/ufshcd-priv.h
+> @@ -236,20 +236,31 @@ static inline void ufshcd_vops_fixup_dev_quirks(str=
+uct ufs_hba *hba)
+>  }
+> =20
+>  static inline int ufshcd_vops_suspend(struct ufs_hba *hba, enum ufs_pm_o=
+p op,
+> -				enum ufs_notify_change_status status)
+> +				      enum ufs_notify_change_status status)
+>  {
+> +	int ret =3D 0;
+> +
+>  	if (hba->vops && hba->vops->suspend)
+> -		return hba->vops->suspend(hba, op, status);
+> +		ret =3D hba->vops->suspend(hba, op, status);
+> +	if (!ret && status =3D=3D POST_CHANGE)
+> +		hba->is_vops_suspended =3D true;
+> =20
+> -	return 0;
+> +	return ret;
+>  }
+> =20
+>  static inline int ufshcd_vops_resume(struct ufs_hba *hba, enum ufs_pm_op=
+ op)
+>  {
+> +	int ret =3D 0;
+> +
+> +	if (!hba->is_vops_suspended)
+> +		return 0;
 
-Stanley Jhu (2):
-  scsi: ufs: core: Skip redundant variant resume after error recovery
-    power-up
-  scsi: ufs: core: Wake consumer queues on suspended W-LUN recovery
+[Severity: High]
+Does skipping ufshcd_vops_resume() here leave ufs_device_wlun out of sync
+with the actual hardware and clock-gating state when error recovery resets
+and restores the host after a failed W-LUN runtime resume?
 
- drivers/ufs/core/ufshcd-priv.h | 21 ++++++++++++++++-----
- drivers/ufs/core/ufshcd.c      |  4 +++-
- include/ufs/ufshcd.h           |  2 ++
- 3 files changed, 21 insertions(+), 6 deletions(-)
+When __ufshcd_wl_suspend() suspends the W-LUN, it calls ufshcd_hold(hba)
+(incrementing hba->clk_gating.active_reqs) and sets
+hba->clk_gating.is_suspended =3D true. If a subsequent __ufshcd_wl_resume()
+fails (for example, in ufshcd_set_dev_pwr_mode()), it rolls back to
+vendor_suspend: and exits through out:, which clears is_suspended and drops
+the clock-gating hold without a matching ufshcd_hold(hba) on future resume
+attempts:
 
--- 
-2.56.0.385.gac671c819a-goog
+drivers/ufs/core/ufshcd.c:__ufshcd_wl_resume() {
+	...
+vendor_suspend:
+	ufshcd_vops_suspend(hba, pm_op, POST_CHANGE);
+out:
+	if (ret)
+		ufshcd_update_evt_hist(hba, UFS_EVT_WL_RES_ERR, (u32)ret);
+	hba->clk_gating.is_suspended =3D false;
+	ufshcd_release(hba);
+	hba->pm_op_in_progress =3D false;
+	return ret;
+}
 
+Because commit eef1d74bf88f ("PM: runtime: Only set runtime_error on
+suspend callback failures") leaves ufs_device_wlun->sdev_gendev in
+RPM_SUSPENDED with power.runtime_error =3D=3D 0, every subsequent call to
+__ufshcd_wl_resume() without an intervening __ufshcd_wl_suspend() (first
+from ufshcd_err_handling_prepare() -> ufshcd_rpm_get_sync(), and again on
+the next runtime resume after recovery) calls ufshcd_release(hba) without
+a matching ufshcd_hold(hba), underflowing hba->clk_gating.active_reqs.
+
+Furthermore, during ufshcd_err_handler(), ufshcd_err_handling_prepare()
+powers on the regulators, clocks, and variant, and ufshcd_reset_and_restore=
+()
+restores the controller, setting hba->uic_link_state =3D UIC_LINK_ACTIVE_ST=
+ATE
+and hba->curr_dev_pwr_mode =3D UFS_ACTIVE_PWR_MODE. However,
+ufshcd_recover_pm_error() only marks ufs_device_wlun active if
+power.runtime_error is set:
+
+drivers/ufs/core/ufshcd.c:ufshcd_recover_pm_error() {
+	...
+	if (hba->ufs_device_wlun->sdev_gendev.power.runtime_error) {
+		pm_runtime_get_sync(&starget->dev);
+		pm_runtime_set_active(&hba->ufs_device_wlun->sdev_gendev);
+		pm_runtime_put_sync(&starget->dev);
+		resume_sdev_queues =3D true;
+	}
+	...
+}
+
+With power.runtime_error =3D=3D 0, ufs_device_wlun, starget->dev, and
+shost->shost_gendev remain in RPM_SUSPENDED (and consumer SCSI device
+queues are not resumed here, though a later commit wakes consumer queues).
+When ufshcd_err_handling_unprepare() then finishes:
+
+drivers/ufs/core/ufshcd.c:ufshcd_err_handling_unprepare() {
+	...
+	if (ufshcd_is_clkscaling_supported(hba))
+		ufshcd_clk_scaling_suspend(hba, false);
+	ufshcd_rpm_put(hba);
+	pm_runtime_put(hba->dev);
+}
+
+ufshcd_rpm_put(hba) will not run __ufshcd_wl_suspend() because
+ufs_device_wlun is already RPM_SUSPENDED, and pm_runtime_put(hba->dev) can
+runtime suspend hba->dev via ufshcd_suspend() while the UFS device is in
+UFS_ACTIVE_PWR_MODE, the UniPro link is in UIC_LINK_ACTIVE_STATE, devfreq
+clock scaling is active, and the variant is resumed.
+
+Should ufshcd_recover_pm_error() instead transition ufs_device_wlun back to
+RPM_ACTIVE when ufshcd_reset_and_restore() has powered up the device and
+link, rather than leaving ufs_device_wlun in RPM_SUSPENDED with the hardware
+and variant resumed?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261105071518.1458=
+428-1-stanleyjhu@google.com?part=3D1
