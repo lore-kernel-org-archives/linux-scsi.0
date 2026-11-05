@@ -1,77 +1,90 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.167.50
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=148.163.158.5
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793915535;
-	b=WUmPIoqYFeTDKEZ/FiNXaD2gr7+AS8UD0CzMa3nrNwJW9kHPNNi7DPOZ9srT8qKuwAj+
-	 44Uf27FOswvMFZ4mcts5wU+2aIF5PFwBZO6KG/yKQLaZw75dzVb4wKt7ZARzjtVuqpcEt
-	 AgOwTnvzLpY+6QzTaSbZZTfTXLShgbFm13yVL3Rwho2rBuPSjwys5IM/wEx078rHYn6Te
-	 0HWSu8GhyI6k1Z2LfAnMEPDipMRYv6ir6S6jK9ZsTQUXSUNdYS3E6kjof4cm9lTf1gHF8
-	 zBv+i4H2DTdzqe8P3HsULWaQmx4ggykEqM2UX52vP7C2iX0E8UsCEQs7xyrGUs2ppyQ==
+	t=1793917466;
+	b=erEt5BrHjUTbkEUdkH6wzYYG7TpgsAONuRaxouz73tO2mIxF5MS1zr/K/niPo96wXUER
+	 tATZt7H43tGD9AR1rKJhBUTHWF8eqJv4dVUv3vc1i8MlF7P8Wb5Z7XDN7Q+fd/+sxbhc4
+	 WDIK2Iv2RQ2OcYO2uBIknhR7qZQmWCV4uDbnMuzPt4vtxmXQuxEa6wOn3ynT6kWuZcBsR
+	 4rvj2hYORAaJ36dmeCFHz343JwKFicDoAvlGL1Umgh6JEkYyuKCLoxYI9JOYCSxB1s96k
+	 JtUxjtKn064FiSgFsG2H4CRry2xem3l+uZxwVPIh0yUm8lAlMrG2OnJFVHhNdJfUhxw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793915535;
-	h=DMARC-Filter:Received:X-Google-DKIM-Signature:X-Forwarded-Encrypted:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:Received:
-	 X-Forwarded-Encrypted:X-Received:MIME-Version:References:In-Reply-To:
-	 From:Date:X-Gmail-Original-Message-ID:X-Gm-Features:Message-ID:
-	 Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
-	bh=f5e+r6C+Y+boKKU1c+tSb6Bf3yIjeJVK+Xx6iJaNfGA=;
-	b=O88QlE0W/tRVhlIFybcitZrXutbA0h1VSqgyW02KYVfWY39bSCoiz7apqD4CpewOmHJO
-	 nO4MNxtmZ90M09t83fTh3IQ9A0Tclys2OuV5VUBBCslcY/39GLQzYzpZS/D4rxqb94FuT
-	 IbVMbX0nmAmEwXDrl1Os68Xl5ixHTeRAyrCczFvHFS7/AS6Lc0PQbMDfN5ZOtb3q5TtF/
-	 IM/6qHAkf5szqnhHql0FfQ6oqs9UDgS9mZ4AGtLGcQ3PBzkPu7M0mqcLv01Oe3WyVDwzN
-	 j8OAQarFDBLQQTXoV8/wPJxAAKheZuVVWIZHHakuXAzltxCKUcackNatm57sOYZr65Q==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793917466;
+	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:Received:
+	 Received:Received:Received:Received:From:To:Cc:Subject:In-Reply-To:
+	 References:Date:Message-ID:User-Agent:MIME-Version:Content-Type:
+	 X-TM-AS-GCONF:X-Proofpoint-GUID:X-Proofpoint-Spam-Details-Enc:
+	 X-Proofpoint-Spam-Info:X-Authority-Analysis:X-Proofpoint-ORIG-GUID:
+	 X-Proofpoint-Virus-Version:X-Proofpoint-Spam-Details;
+	bh=yDULY1xTv/isLT5cXPK8DfkKRCZzzCeddznnkpD1CDg=;
+	b=N1gkU14CmqdPDv3pJkrUfKjqDaZtRH1VHjOBLRqLROpqYUMmMKXv4/aQsYeQSWzreGpY
+	 kNtCGocl2hBTVRL8tchNuBK2qy1uZgnSPlW4AOJoA4OHdr0JDpo3neKkHgBvHUczjdWfk
+	 M6sYkHeM5rKUhLJJ65rnT5NSd72EUQihz8MAXPvAVYo7H8RiRuXiqiR6egL78xLRLDGOE
+	 /BgvkT+lIsb+EMMi9l/1NG9P6S6oonXHoi5x4pEs3rIgj/Qg5aX6QnmoqT6kDI+TJhSzu
+	 ba65vQ/SYQmXDsODNMBw3uY2JvokNjKlMzxm0jDUKp3gJSf0H6DG7kt2bzYgQ8w5+JA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=fail header.from=andrewgigena.dev;
-	spf=pass smtp.mailfrom=gmail.com;
-	arc=none smtp.remote-ip=209.85.167.50
-Received: from mail-lf1-f50.google.com (mail-lf1-f50.google.com [209.85.167.50])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=pass header.from=linux.ibm.com;
+	spf=pass smtp.mailfrom=linux.ibm.com;
+	dkim=pass header.d=ibm.com header.i=@ibm.com header.a=rsa-sha256 header.s=pp1 header.b="WhxhbXH/";
+	arc=none smtp.remote-ip=148.163.158.5
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC11B606A33D
-	for <linux-scsi@vger.kernel.org>; Thu,  5 Nov 2026 21:52:14 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org DC11B606A33D
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=andrewgigena.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-lf1-f50.google.com with SMTP id 2adb3069b0e04-5be42ae8eadso7368e87.3
-        for <linux-scsi@vger.kernel.org>; Thu, 05 Nov 2026 13:52:14 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793915533; x=1794520333;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=f5e+r6C+Y+boKKU1c+tSb6Bf3yIjeJVK+Xx6iJaNfGA=;
-        b=iajmTsdoDmXB0tDBV0vYzgccd67cy2QAMMhrIYI7nSOCRDWb9etmGlgpUKVOuxvWZX
-         9iDn4rTG4rHNmpO2icyHCpQnX0saOvsxJMyd7mkYR7nQ+OSC1hyVtycrtjk4nSp6UtRB
-         JyvWGHxdCtcKM54+f0QWOAvxmYPrbUCXeKFiqs5QUkJhQDv9YrXwlyiK1KVQPnwpYQ4N
-         7K3vsVvRZHLjsvrYkdIaX6CJvUb/gQ+kt9Ift0XTuJRawRDA0VDsXLVIrkR0WIaxzpOk
-         V8aVm5HSrPQriCHwirvDlzaxhUeynhA4g24wMVHoPqNsee5pDxaCI5hE2qR3SP6kiyqD
-         cTxw==
-X-Forwarded-Encrypted: i=1; AKwUvBxlc1K5icWpGHUeytzGmMW9CyEp8Vo7X5d4T5YtnnJaKn9y3abi0ctyEymWkY6FWPBZCv4+tLG53DM3@vger.kernel.org
-X-Gm-Message-State: APuU4Z/eIFchAHcTSak3NHXpPmOhsUFrewDlyAeY/we0oosCMqCAyFep
-	g882y0SFteex67hFXfyBkJ+VsnBF6EZ0SaHg33ZKSoovW9HiJuLH1mHelcNvi40K5I5Ceg==
-X-Gm-Gg: AYBFou3LfpQS4GGpVTNvxRrvw1ToBeZeWSD/vJDJvu6qUNqmWPURfaBnAD9fg/aztcA
-	NIhyvcvf1fqF7FkBwnHIBxwEPKxe4YpqT1Rt7I9J3M1WHP3oiKvwZf+z0g2pfe2JXKRbGlLdTR7
-	WGNb8NDggNY7Eiy9Dls2xAJGdtM7gpBq0VgXhZUJhHymSKVtEB6LhvbfS0DhXnlu/4r9raZfhzB
-	lGg+rzvAKNaJMKS947IbCx8FeaErYMZSgUxGxkS+OuOLC1zbOiZrd9LxTObPDfK8bjR18CkkPup
-	uGqQWfLMjfVSE0XsTLWlMI96zPxhedavfxoBbv6wJzdPQeCbqBLZTGqxPF7YWJdXgwiUM6S6vJG
-	6QNLY6auLu2skAYj/nYV4u7Ql0OTMLrkP8KofNF6qZYHSysniXNreyOIWvQenVKintUkpQB6CW0
-	UA6lvsAvCtjH/yQvHFB4NmDHPcHMGK2Z2VzT8/c0PxUVPzC9ZaDqqJoqnoNltpLmfrTGGJ/RBeg
-	LZcuDJ0tjaKGPYNHqRiuAI4QsWR1ZOhZL/74vzzHZ7uBOm25i31uEz7QCRHEmklmeMmUerOZEWa
-	SCZ9Q45ovh76mI3O5IOS2Sh9oggDz+EK2ocWH3/V5FR/yrJGNYVwOMUrQc8fLbEd6CbQEei0
-X-Received: by 2002:a05:6512:2524:b0:5bf:a363:3392 with SMTP id 2adb3069b0e04-5c0037c305cmr128239e87.2.1793915533019;
-        Thu, 05 Nov 2026 13:52:13 -0800 (PST)
-Received: from mail-lj1-f182.google.com (mail-lj1-f182.google.com. [209.85.208.182])
-        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-5c0030aa956sm67091e87.83.2026.11.05.13.52.12
-        for <linux-scsi@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 05 Nov 2026 13:52:12 -0800 (PST)
-Received: by mail-lj1-f182.google.com with SMTP id 38308e7fff4ca-3acd304b5fbso18645011fa.2
-        for <linux-scsi@vger.kernel.org>; Thu, 05 Nov 2026 13:52:12 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AKwUvBwBYB9FGfxqNyVczMpbBGOoGWckEJCl+k7FFZXS/RZJzeprkxjBAdze8bEMQ0FR3Unmj8vmeyEqj1jp@vger.kernel.org
-X-Received: by 2002:a05:651c:a14c:b0:3ac:ddd9:7820 with SMTP id
- 38308e7fff4ca-3acf3b201eemr1185331fa.15.1793915531874; Thu, 05 Nov 2026
- 13:52:11 -0800 (PST)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE73A606A31B;
+	Thu,  5 Nov 2026 22:24:25 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CE73A606A31B
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key, unprotected) header.d=ibm.com header.i=@ibm.com header.a=rsa-sha256 header.s=pp1 header.b=WhxhbXH/
+Received: from pps.filterd (m0353725.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6A5LEOOc3455024;
+	Thu, 5 Nov 2026 22:24:23 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-type:date:from:in-reply-to:message-id:mime-version
+	:references:subject:to; s=pp1; bh=yDULY1xTv/isLT5cXPK8DfkKRCZzzC
+	eddznnkpD1CDg=; b=WhxhbXH/7lmZHRLGz2dXqVd2Y/eJcdtK5Pbt8xXbynU77n
+	L8szgQe8igVLBrX3fG5o9CyF2FwuIhycz6BvoEMH6lj0F8YRDxGZvts1t/ZaVcYU
+	+g0rbu20scJ3lr35774UuXXnLSE7K+tNHE9sarQl680La1+F4mmX5kk7bcH8pHdU
+	xp9MlX79uaz7o0o0b2X5HayT07acgtbTuEBhhaF2+dUR3j3x7mXaxgL5jjhASQ0T
+	KsKxLUMcHGTIKIzuMVfebnPTWh+B9tZ5VYbwqF6vuNqLtyL6JVn9bnPNe6SM7Q/x
+	43KwrjWkL1DqSkPWh7Ha6WO5TETOkgRNScofKpzw==
+Received: from ppma12.dal12v.mail.ibm.com (dc.9e.1632.ip4.static.sl-reverse.com [50.22.158.220])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4hn6rdmus8-1
+	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
+	Thu, 05 Nov 2026 22:24:22 +0000 (GMT)
+Received: from pps.filterd (ppma12.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma12.dal12v.mail.ibm.com (8.18.1.11/8.18.1.11) with ESMTP id 6A5L5t6O2215496;
+	Thu, 5 Nov 2026 22:24:22 GMT
+Received: from smtprelay03.dal12v.mail.ibm.com ([172.16.1.5])
+	by ppma12.dal12v.mail.ibm.com (PPS) with ESMTPS id 4hrk9mmmqd-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 05 Nov 2026 22:24:22 +0000 (GMT)
+Received: from smtpav02.dal12v.mail.ibm.com (smtpav02.dal12v.mail.ibm.com [10.241.53.101])
+	by smtprelay03.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 6A5MOLOv31654448
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 5 Nov 2026 22:24:21 GMT
+Received: from smtpav02.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id AF2E15805A;
+	Thu,  5 Nov 2026 22:24:21 +0000 (GMT)
+Received: from smtpav02.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 92E0158051;
+	Thu,  5 Nov 2026 22:24:21 +0000 (GMT)
+Received: from e (unknown [9.16.46.225])
+	by smtpav02.dal12v.mail.ibm.com (Postfix) with ESMTPS;
+	Thu,  5 Nov 2026 22:24:21 +0000 (GMT)
+From: Dave Marquardt <davemarq@linux.ibm.com>
+To: sashiko-bot@kernel.org
+Cc: sashiko-reviews@lists.linux.dev, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH v18 09/13] scsi: ibmvfc: extend async event handlers for
+ async sub-CRQ events
+In-Reply-To: <sashiko-outbox-199759@kernel.org> (sashiko-bot@kernel.org's
+	message of "Thu, 05 Nov 2026 18:25:37 +0000")
+References: <20261105-ibmvfc-fpin-support-v18-0-d683b74736a3@linux.ibm.com>
+	<20261105-ibmvfc-fpin-support-v18-9-d683b74736a3@linux.ibm.com>
+	<sashiko-outbox-199759@kernel.org>
+Date: Thu, 05 Nov 2026 16:24:21 -0600
+Message-ID: <875wya9asq.fsf@linux.ibm.com>
+User-Agent: Gnus/5.13 (Gnus v5.13)
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -81,51 +94,150 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261104-sm8150-ice-rfc-v2-0-d697bbce0278@andrewgigena.dev>
- <20261104-sm8150-ice-rfc-v2-2-d697bbce0278@andrewgigena.dev> <dxb7s2d25ixowmfifhvetctpckj7h4y5puiai7orhkimgj7uxu@ekhwvpm536mk>
-In-Reply-To: <dxb7s2d25ixowmfifhvetctpckj7h4y5puiai7orhkimgj7uxu@ekhwvpm536mk>
-From: Andrew Gigena <mail@andrewgigena.dev>
-Date: Thu, 5 Nov 2026 18:51:44 -0300
-X-Gmail-Original-Message-ID: <CANn8UmeS0Fvdkamzu0Cgbv25+WdjHsXvCLMpsL98QSo-Gd731g@mail.gmail.com>
-X-Gm-Features: AclHuK9TNVNMsMH-gS3LyhmcwXP0L8JEpTnOqnWuyNklory8rcuhuvvX8_jSoFw
-Message-ID: <CANn8UmeS0Fvdkamzu0Cgbv25+WdjHsXvCLMpsL98QSo-Gd731g@mail.gmail.com>
-Subject: Re: [PATCH v2 2/2] arm64: dts: qcom: sm8150: Use standalone ICE node
- for UFS
-To: Abel Vesa <abel.vesa@oss.qualcomm.com>
-Cc: Andrew Gigena <mail@andrewgigena.dev>, Abel Vesa <abelvesa@kernel.org>, 
-	Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, 
-	Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Manivannan Sadhasivam <mani@kernel.org>, Alim Akhtar <alim.akhtar@samsung.com>, 
-	Bart Van Assche <bvanassche@acm.org>, Bean Huo <beanhuo@micron.com>, 
-	Stanley Jhu <stanleyjhu@google.com>, Bjorn Andersson <andersson@kernel.org>, 
-	Andy Gross <agross@kernel.org>, Konrad Dybcio <konradybcio@kernel.org>, 
-	linux-arm-msm@vger.kernel.org, linux-crypto@vger.kernel.org, 
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-scsi@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: lO8K-BvgehNDl10SXMYf1wfEy-VdwMs1
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMTA1MDA4OCBTYWx0ZWRfX3Znl9Nhp1APZ
+ RHUhPwSO372IV/EtAZIOz2QxQnH2/PS4F3DInvX+dCA8Rtr3mcyZQmrwiS6KzR7OZ9oTqz37Rty
+ vBvvm7pndWZPnelcYufM1NM6OHOh+WVMHu5SbEoKhdZwMWu+OqaqmkVFBPYanOvgwat084xC2Rt
+ 6nj2RPiwUSiIdZyjwfZCtMELv/kpAFAr6qDKfl6jOQsvleQmPBQYS/1nl/Cab/Lnivou8xAC5/D
+ 2iX+b6jQfRiuibPXTHhNxcu6qBKMorLSWbbCmsCWsLlZYU6SFKqszYU46Yuru8fuJshIwSH2Q/Z
+ hk6v/NiUQl8sUiovNc8W5dm8p3KXwk5iyEqsHSBi3TLJfHzgYmFWOXcAs4V+YB+RXKU4SS+sqGY
+ I1VnyvLC+KdVldk8FHWrfUOTspl/+pPriQC3knAONGiWnkNsH+N78Y/iHRru8x36eOxFcs64uEo
+ lz6RNb2bk1pMbyIwv/Q==
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMTA1MDA4OCBTYWx0ZWRfX/KhNaZR8aaJl
+ 1SxuOKE3ueWPAIwqwRt+i3ePqGf6zpi1cYI3KBa37ZjvZyfapzrBkrJD4M9tQxDt3G0s2oZhXun
+ el5u4Grgfus1diL0r1P54+h6TmjgagU=
+X-Authority-Analysis: v=2.4 cv=QK391QLL c=1 sm=1 tr=0 ts=6aed0216 cx=c_pps
+ a=bLidbwmWQ0KltjZqbj+ezA==:117 a=bLidbwmWQ0KltjZqbj+ezA==:17
+ a=zJRp6_cAMcgA:10 a=VkNPw1HP01LnGYTKEx00:22 a=RnoormkPH1_aCDwRdu11:22
+ a=V8glGbnc2Ofi9Qvn3v5h:22 a=VwQbUJbxAAAA:8 a=yvJfJh92zy_7So4gnYEA:9
+X-Proofpoint-ORIG-GUID: lO8K-BvgehNDl10SXMYf1wfEy-VdwMs1
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
+ definitions=2026-11-05_06,2026-11-04_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ spamscore=0 malwarescore=0 suspectscore=0 phishscore=0 bulkscore=0
+ impostorscore=0 clxscore=1015 lowpriorityscore=0 adultscore=0
+ priorityscore=1501 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2610300000
+ definitions=main-2611050088
 
-I understand, I'll keep that in mind for future patches. Should I
-release patch v3 removing the "Tested-By" now, or wait for other
-reviews?
+sashiko-bot@kernel.org writes:
 
-El jue, 5 nov 2026 a la(s) 5:56=E2=80=AFa.m., Abel Vesa
-(abel.vesa@oss.qualcomm.com) escribi=C3=B3:
+>> diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/ibmvfc-core.c
+>> index b9b571db44649..7406e7182777c 100644
+>> --- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
+>> +++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
+> [ ... ]
+>> @@ -3483,33 +3528,59 @@ static struct ibmvfc_target *ibmvfc_find_target(struct list_head *target_list,
+>>   */
+>>  VISIBLE_IF_KUNIT void ibmvfc_process_async_work(struct work_struct *work)
+>>  {
+>> +	struct ibmvfc_async_sub_crq *subq = NULL;
+>>  	struct ibmvfc_async_work *aw;
+>> -	struct ibmvfc_async_crq *crq;
+>> +	struct ibmvfc_async_crq *crq = NULL;
+>>  	struct ibmvfc_target *tgt;
 >
-> On 26-11-04 18:38:13, Andrew Gigena wrote:
-> > Convert SM8150 UFS to use a standalone ICE node.
-> >
-> > Move the ICE register region and clock from the UFS controller node
-> > into a dedicated ICE node. Reference the new node from the UFS
-> > controller using the qcom,ice property.
-> >
-> > This brings the SM8150 device tree in line with the standalone ICE
-> > representation used on newer Qualcomm platforms.
-> >
-> > Signed-off-by: Andrew Gigena <mail@andrewgigena.dev>
-> > Tested-by: Andrew Gigena <mail@andrewgigena.dev>
+> [Severity: High]
+> Should tgt be initialized to NULL here?
 >
-> Tested-by tag should come from someone else, other than the author.
+> When scsi_id, wwpn, node_name, and assoc_id are all zero,
+> ibmvfc_process_async_work() jumps directly to the send_fpin label before
+> tgt is assigned by ibmvfc_find_target():
 >
-> Authors are expected to test their patches by default.
+> 	if (!scsi_id && !wwpn && !node_name && !assoc_id) {
+> 		if (fpin_status == IBMVFC_AE_FPIN_LINK_CONGESTED ||
+> 		    fpin_status == IBMVFC_AE_FPIN_CONGESTION_CLEARED)
+> 			fpin = ibmvfc_basic_fpin_to_desc(crq,
+> 					cpu_to_be64(fc_host_port_name(vhost->host)), 0);
+> 		goto send_fpin;
+> 	}
 >
+> At the end of send_fpin, the cleanup checks:
+>
+> 	if (tgt)
+> 		kref_put(&tgt->kref, ibmvfc_release_tgt);
+>
+> Wouldn't that evaluate and potentially dereference an uninitialized tgt
+> pointer on the zero-identifier path?
+
+This will be fixed in patch 6, as discussed in the response to patch 6.
+
+>>  	struct ibmvfc_host *vhost;
+>> -	struct fc_els_fpin *fpin;
+>> +	struct fc_els_fpin *fpin = NULL;
+>>  	unsigned long flags;
+>> +	__be64 assoc_id;
+>> +	__be64 node_name;
+>> +	__be64 scsi_id;
+>> +	__be64 wwpn;
+>> +	u8 fpin_status;
+>>  
+>>  	aw = container_of_const(work, struct ibmvfc_async_work, async_work_s);
+>>  	vhost = aw->vhost;
+>> -	crq = &aw->crq;
+>> +	if (aw->event.type == IBMVFC_ASYNC_CRQ_SUB) {
+>> +		subq = &aw->event.subq;
+>> +		scsi_id = 0;
+>> +		wwpn = subq->wwpn;
+>> +		fpin_status = subq->fpin_status;
+>> +		if (subq->flags & IBMVFC_ASYNC_ID_IS_ASSOC_ID) {
+>> +			node_name = 0;
+>> +			assoc_id = subq->id.assoc_id;
+>> +		} else if (subq->flags & IBMVFC_ASYNC_IS_FPIN_EXT) {
+>> +			node_name = 0;
+>> +			assoc_id = 0;
+>> +		} else {
+>> +			node_name = subq->id.node_name;
+>> +			assoc_id = 0;
+>> +		}
+>> +	} else {
+>> +		crq = &aw->event.async_crq;
+>> +		scsi_id = crq->scsi_id;
+>> +		wwpn = crq->wwpn;
+>> +		node_name = crq->node_name;
+>> +		fpin_status = crq->fpin_status;
+>> +		assoc_id = 0;
+>> +	}
+>>  
+>> -	if (!crq->scsi_id && !crq->wwpn && !crq->node_name) {
+>> -		if (crq->fpin_status == IBMVFC_AE_FPIN_LINK_CONGESTED ||
+>> -		    crq->fpin_status == IBMVFC_AE_FPIN_CONGESTION_CLEARED)
+>> +	if (!scsi_id && !wwpn && !node_name && !assoc_id) {
+>> +		if (fpin_status == IBMVFC_AE_FPIN_LINK_CONGESTED ||
+>> +		    fpin_status == IBMVFC_AE_FPIN_CONGESTION_CLEARED)
+>>  			fpin = ibmvfc_basic_fpin_to_desc(crq,
+>>  					cpu_to_be64(fc_host_port_name(vhost->host)), 0);
+>>  		goto send_fpin;
+>>  	}
+>
+> [Severity: High]
+> Can this dereference a NULL crq pointer when handling an async sub-CRQ
+> event?
+>
+> When aw->event.type is IBMVFC_ASYNC_CRQ_SUB, subq is populated and crq
+> remains NULL. If scsi_id, wwpn, node_name, and assoc_id are all zero for a
+> host-scope IBMVFC_AE_FPIN_LINK_CONGESTED or
+> IBMVFC_AE_FPIN_CONGESTION_CLEARED event, this block unconditionally calls
+> ibmvfc_basic_fpin_to_desc(crq, ...), which immediately dereferences
+> crq->fpin_status:
+>
+> static struct fc_els_fpin *
+> ibmvfc_basic_fpin_to_desc(struct ibmvfc_async_crq *crq, __be64 detecting_wwpn,
+> 			  u64 wwpn)
+> {
+> 	__be16 type;
+>
+> 	switch (crq->fpin_status) {
+>
+> Should this path check if (crq) and dispatch to
+> ibmvfc_full_fpin_to_desc(subq, ...) when crq is NULL, matching the target
+> fallback path further down in ibmvfc_process_async_work()?
+
+Yes, this is problem. For the next revision the code will check whether
+crq is NULL before calling ibmvfc_basic_fpin_to_desc(). If crq is NULL,
+the else clause will call ibmvfc_full_fpin_to_desc() with subq.
+
+-Dave
