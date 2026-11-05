@@ -1,129 +1,56 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793882195;
-	b=Ou+2wGsVzn7Z6SNv9XPpgKZIcN4U1wCJG1VpAOKi1SmWp5onJbrGNZdJEvozkLm2NwVJ
-	 NpHGpQsTMZGRHi4ADPfAKQvrcEhKQbFjGBaVmg1JUtGEWMo2zu+h7AxBN+gLL1mWAtDDT
-	 169ZyhpNwZYSCnh9w9AiiHBx6AM90dRM8ZOFb7WcqSSKl7PemKOC32SkSFDGSU3Jxuf1h
-	 voH4dC8CwY92b2w589oImM1bTcipbX2SpeFWKVYazstzKprfDt/nRMwE2QKBXGWoiSoHQ
-	 DPDcrbPHjRjb+VR/9vTr7B4zZVy8Af+/UEMlBYa8Fk8LBTLMI2aHlZYbImZez4Fkj8Q==
+	t=1793882741;
+	b=r5Clqb2mC1L6ZDPv916EPTqSpvd1G5+89hm2JsoNQPttonyBYip+GHStdWCcoBZ76rDU
+	 J5gYYKr2GwW4KLsaQYGjXz0xbNLUr2WYGXs/9GKvZ0q5u1s2utQwqYPlurwDcJ0S0shOf
+	 ueI/Q3W7en6aiLZ+esBlQB91octxIIBbWYMRpxdFSSimHzxIAJC4aNysx5DOwmgIivHUP
+	 IgvU9DgObCqXG4RfIbvWRfSnHrbOwjV/HSClYzoIQdvRqxinFO60qJEF/sAyO3vpQmlNc
+	 8KAXeAyxV4TDVCo/ZP7DnjOT2fQl6XOcqRr1N3JrQOV6onWS0RvMyeU/PfbVhKk78Qg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793882195;
-	h=DMARC-Filter:Received:DKIM-Signature:DKIM-Signature:DKIM-Signature:
-	 DKIM-Signature:Received:Received:Received:Date:From:To:Cc:Subject:
-	 Message-ID:References:MIME-Version:Content-Type:Content-Disposition:
-	 In-Reply-To:X-Spamd-Result:X-Rspamd-Server:X-Rspamd-Action:
-	 X-Spam-Flag:X-Spam-Score:X-Spam-Level:X-Rspamd-Queue-Id;
-	bh=DpjKnWhAHhajlU0N8yPm40hOORTtvriSHlYmNC33ga8=;
-	b=RbwwUhaA/Pii3DB2MbvmPooi4HQozb4wv93GyhL9w+1mnuIb53SNMAUg1+J7Ub9sdHaz
-	 pKeQzuU9CADjko+4nANGHQ+oWT1OMVqSmE/H8rCk/pQbYNq2eh8m6mBcktqa35lqVWxU2
-	 HVATF+zwWkgiWxoBSE9V06eqXPQaE3KdYT0l53Kigfxn7K4fBiLDDn8NTPA3fOgsOhUBn
-	 2lKQgpfotvuXrQW3D/mdYxVIawB0R2ayTyO0b865LzEdAMWEa0BKdq7QlcUZqqUj8yBim
-	 JLj5dZhvsnMzJlrvWJ6eVT9JgUbWlKqPC8I9E8pOYhvCiV1AjB5e8AQj49ftC74O7cQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793882741;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=1jRkRvfkrF5d6iUlRfiexdt9rYgsoBZUv6KEqzmjqoI=;
+	b=xbQFksDfaNd2PG+xTxfR+j00FJ47wXWtTGWKfWH7vaR8dl3VxK3WahuLSJQrsNWa1Byx
+	 v3ya2ErIY3PkIVYy51I0Ex63dhUaY5KkUf8K3F3p7wV3HWl0dejSBHRx/QzOJujqFREPY
+	 22znhva0hnzXHSwyQ+ev84ZVANs/oaKZ7BU0pt2a7fKP+6RF8e2KOgrlVQWRmzN1BxG22
+	 +wpPMp0qvR0stZxK+0y2S4NK8M+IGoRyTAZ3gOTwoWTRf0Gspk3TZM65c/CIHXZxrZhaQ
+	 AaEGAwxzDWDEkMkBxbza8PlDJ1scS2C6/0tgqkYzI4HzyzYRyVZfs6nSp9DRjac4cBQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=suse.cz;
-	spf=pass smtp.mailfrom=suse.cz;
-	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=JZx76L+g;
-	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b="8/5XD6W9";
-	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=T3Jse+8w;
-	dkim=neutral header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=BYgAZw+U;
-	arc=none smtp.remote-ip=195.135.223.130
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jtY5EAvl;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 212C9606A32F;
-	Thu,  5 Nov 2026 12:36:34 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 212C9606A32F
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD851606A329
+	for <linux-scsi@vger.kernel.org>; Thu,  5 Nov 2026 12:45:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=JZx76L+g;
-	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=8/5XD6W9;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=T3Jse+8w;
-	dkim=neutral header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=BYgAZw+U
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 2C5F621E5A;
-	Thu,  5 Nov 2026 12:36:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1793882193; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=DpjKnWhAHhajlU0N8yPm40hOORTtvriSHlYmNC33ga8=;
-	b=JZx76L+ggOq++v50JrM+txlftOOqxJaKF/tK8uhPwld5Q9GnNQfLXM1whyLb1DsMeHXH/C
-	/uTr5WEx4MoDADem0Lt2IRl8UnJCEvNjej74YyT5VZBSM782Vk2aNTEZTgyxnuBLnPZ/fS
-	Mhf/U17g3frl5lC6gN/6C/6ftmbFF2E=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1793882193;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=DpjKnWhAHhajlU0N8yPm40hOORTtvriSHlYmNC33ga8=;
-	b=8/5XD6W9JBZBD7IT0Gng8T7errG+mfSR55zIjyH58gQPHLQ3a+6mBXLPeQK6OumZ9O/ASJ
-	a0+wPfZoC8vZgnDQ==
-Authentication-Results: smtp-out1.suse.de;
-	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b=T3Jse+8w;
-	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=BYgAZw+U
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1793882192; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=DpjKnWhAHhajlU0N8yPm40hOORTtvriSHlYmNC33ga8=;
-	b=T3Jse+8wWvU2m0agalLdcO3u4gc4aSPygpqteqhLhNd/aBjFrhyiDCC1i0Lv+iYh3z1s6e
-	fnA2+Jf6Yg0jKvkbvYGo3ERh6eFq09U2ijwb8SlUT+DSbyddzL3tu06qm3Tz++uFh8zr+9
-	+TrYzUca/b6bladItMQ0Kk0+pK0H3fw=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1793882192;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=DpjKnWhAHhajlU0N8yPm40hOORTtvriSHlYmNC33ga8=;
-	b=BYgAZw+Ujm4L/dnuxqWK1yrVNISlV/1cL+J702exe7XcXF17FVJLhwkbWz39x0ZpRyHhhI
-	iDaH9TFqNTx9SSCA==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 05AD3133F6;
-	Thu,  5 Nov 2026 12:36:32 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id AKP0Nk947Go1MAAAD6G6ig
-	(envelope-from <jack@suse.cz>); Thu, 05 Nov 2026 12:36:32 +0000
-Received: by quack.suse.cz (Postfix, from userid 1000)
-	id 9532FB6E6; Thu, 05 Nov 2026 13:36:31 +0100 (CET)
-Date: Thu, 5 Nov 2026 13:36:31 +0100
-From: Jan Kara <jack@suse.cz>
-To: Christian Brauner <brauner@kernel.org>
-Cc: linux-fsdevel@vger.kernel.org, 
-	Linus Torvalds <torvalds@linux-foundation.org>, Jann Horn <jannh@google.com>, Josef Bacik <josef@toxicpanda.com>, 
-	Chris Mason <mason@kernel.org>, Jeff Layton <jlayton@kernel.org>, NeilBrown <neil@brown.name>, 
-	Eric Dumazet <edumazet@kernel.org>, Thomas Gleixner <tglx@kernel.org>, 
-	Al Viro <viro@zeniv.linux.org.uk>, Jonathan Corbet <corbet@lwn.net>, Christoph Hellwig <hch@lst.de>, 
-	Greg Kroah-Hartman <gregkh@suse.de>, Joel Granados <joel.granados@kernel.org>, 
-	Kees Cook <kees@kernel.org>, Jan Kara <jack@suse.cz>, Jan Kara <jack@suse.com>, 
-	linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-acpi@vger.kernel.org, 
-	linux-kselftest@vger.kernel.org, linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	linux-um@lists.infradead.org, linux-wireless@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, 
-	netdev@vger.kernel.org, ntfs3@lists.linux.dev, platform-driver-x86@vger.kernel.org, 
-	coreteam@netfilter.org, kexec@lists.infradead.org, linux-pci@vger.kernel.org, 
-	linux-sound@vger.kernel.org, netfilter-devel@vger.kernel.org, dri-devel@lists.freedesktop.org, 
-	ibm-acpi-devel@lists.sourceforge.net, jfs-discussion@lists.sourceforge.net, 
-	linux-alpha@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-cifs@vger.kernel.org, 
-	linux-fbdev@vger.kernel.org, linux-hwmon@vger.kernel.org, linux-mm@kvack.org, 
-	linux-sh@vger.kernel.org, linux-usb@vger.kernel.org, samba-technical@lists.samba.org, 
-	sparclinux@vger.kernel.org, linux-m68k@lists.linux-m68k.org, linux-doc@vger.kernel.org, 
-	linux-serial@vger.kernel.org, linux-atm-general@lists.sourceforge.net, 
-	Takashi Iwai <tiwai@suse.de>, linux-input@vger.kernel.org, linux-raid@vger.kernel.org, 
-	linux-ext4@vger.kernel.org, linux-modules@vger.kernel.org, linux-debuggers@vger.kernel.org, 
-	Chuck Lever <cel@kernel.org>, stable@vger.kernel.org
-Subject: Re: [PATCH RFC 37/38] proc: don't pin a symlink's entry while
- readlink() copies it out
-Message-ID: <krgvwwpug6brspfpubssohr6cknwd2wtkrxo6uqaoalfi2ay4v@3dtbsctwca3n>
-References: <20261102-work-procfs-bugfixes-v1-0-59422ed3e465@kernel.org>
- <20261102-work-procfs-bugfixes-v1-37-59422ed3e465@kernel.org>
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jtY5EAvl
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4D9F71F000C1;
+	Thu,  5 Nov 2026 12:45:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793882740;
+	bh=1jRkRvfkrF5d6iUlRfiexdt9rYgsoBZUv6KEqzmjqoI=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=jtY5EAvlLXX/ckRqLJxQ6EXms731Owxepv2vJAM9DaYj3tbBGPtsRop3sV/PpRK8l
+	 mF94jSJRv7pYuMTJOWq9s+GQrdpuX9Rz99LZ8J6eP0uarAwpia0hkArUwfL1UCDwZR
+	 KfEIBWihzNcDyFyglKpfPEaoJnG6apvzvRuziID9Mtwws4AM9WQlmDPCejWAXI46zt
+	 GhEaUAm1GoDmNwZuIElJNxABdXQ3IFVmJoQsZvkUaFHS+4qrgQoyrzm3pYR3DNA+ib
+	 2nQ8CAPEOd6BbC+UcUitdiRVmui662Zj3E4iXrbEizGcVy68SK2mTPrrxes7tyg9dR
+	 LZwoNGSTe3ySQ==
+Message-ID: <sashiko-outbox-199052@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v2] scsi: mpi3mr: Validate reply frame size bounds
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Milan P. Gandhi" <mgandhi@redhat.com>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20261105122401.266559-1-mgandhi@redhat.com>
+References: <20261103123316.223917-1-mgandhi@redhat.com>
+ <20261105122401.266559-1-mgandhi@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 05 Nov 2026 12:45:39 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -132,108 +59,131 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261102-work-procfs-bugfixes-v1-37-59422ed3e465@kernel.org>
-X-Spamd-Result: default: False [-11.51 / 50.00];
-	SUSE_INTERNAL_BYPASS(-9.00)[];
-	BAYES_HAM(-3.00)[100.00%];
-	SUSPICIOUS_RECIPS(1.50)[];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	MID_RHS_NOT_FQDN(0.50)[];
-	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	RCVD_COUNT_THREE(0.00)[3];
-	MIME_TRACE(0.00)[0:+];
-	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	RCVD_TLS_LAST(0.00)[];
-	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	ARC_NA(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	DKIM_TRACE(0.00)[suse.cz:+];
-	R_RATELIMIT(0.00)[to_ip_from(RLpnapcpkwxdkc5mopt1ezhhna)];
-	TO_MATCH_ENVRCPT_SOME(0.00)[];
-	FROM_EQ_ENVFROM(0.00)[];
-	TO_DN_SOME(0.00)[];
-	RCPT_COUNT_GT_50(0.00)[60];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
-	MISSING_XM_UA(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.cz:email,suse.cz:dkim,suse.com:email,imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo]
-X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
-X-Rspamd-Action: no action
-X-Spam-Flag: NO
-X-Spam-Score: -11.51
-X-Spam-Level: 
-X-Rspamd-Queue-Id: 2C5F621E5A
 
-On Mon 02-11-26 15:43:28, Christian Brauner wrote:
-> proc_get_link() pins the entry with use_pde() and the delayed call
-> unpins it. vfs_readlink() copies the link to userspace in between. So a
-> page fault in that copy holds up remove_proc_entry() just like the
-> copies of reads and writes do, and the callers hold locks while they
-> wait. /proc/asound/<id> is removed with snd_card_mutex and info_mutex
-> held when a card changes its id.
-> 
-> The pin doesn't keep anything alive. proc_symlink() copies the target
-> and pde_free() frees it with the entry, and the inode holds a reference
-> to the entry. What the pin does is keep a removed symlink from being
-> followed. So check ->in_use instead and drop the delayed call. That
-> also takes an atomic pair off every traversal of /proc/net and
-> /proc/mounts.
-> 
-> Fixes: 7e0e953bb0cf ("procfs: fix race between symlink removals and traversals")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [High] scsi: mpi3mr: MPI3MR_MIN_REPLY_FRAME_SZ_DWORDS too small for devic=
+e events
+--
 
-Looks good. Feel free to add:
+commit d0d39880e8d702685fdb1265ca4630cc2c3c1e34
+Author: Milan P. Gandhi <mgandhi@redhat.com>
 
-Reviewed-by: Jan Kara <jack@suse.cz>
+scsi: mpi3mr: Validate reply frame size bounds
 
-								Honza
+This commit validates that the firmware-reported reply_frame_size in
+mpi3mr_issue_iocfacts() falls within [16, U16_MAX / 4] dwords to prevent
+integer overflow when computing facts.reply_sz and underflow when sizing
+logdata entries.
 
-> ---
->  fs/proc/inode.c | 14 +++++++-------
->  1 file changed, 7 insertions(+), 7 deletions(-)
-> 
-> diff --git a/fs/proc/inode.c b/fs/proc/inode.c
-> index 9933f03ab9fb..2d65f3c8ec03 100644
-> --- a/fs/proc/inode.c
-> +++ b/fs/proc/inode.c
-> @@ -629,19 +629,19 @@ static const struct file_operations proc_iter_file_ops_compat = {
->  };
->  #endif
->  
-> -static void proc_put_link(void *p)
-> -{
-> -	unuse_pde(p);
-> -}
-> -
->  static const char *proc_get_link(struct dentry *dentry,
->  				 struct inode *inode,
->  				 struct delayed_call *done)
+> diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
+> index d6e16707fd97c..e78383df619c3 100644
+> --- a/drivers/scsi/mpi3mr/mpi3mr.h
+> +++ b/drivers/scsi/mpi3mr/mpi3mr.h
+> @@ -83,6 +83,7 @@ extern atomic64_t event_counter;
+>  #define MPI3MR_ADMIN_REPLY_Q_SIZE	(8 * MPI3MR_PAGE_SIZE_4K)
+>  #define MPI3MR_ADMIN_REQ_FRAME_SZ	128
+>  #define MPI3MR_ADMIN_REPLY_FRAME_SZ	16
+> +#define MPI3MR_MIN_REPLY_FRAME_SZ_DWORDS	16	/* 64 bytes */
+> =20
+>  /* Operational queue management definitions */
+>  #define MPI3MR_OP_REQ_Q_QD		512
+> diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr=
+_fw.c
+> index f0d3cd398dd00..60a92366e5904 100644
+> --- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
+> +++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+> @@ -3261,6 +3261,7 @@ static int mpi3mr_issue_iocfacts(struct mpi3mr_ioc =
+*mrioc,
+>  	struct mpi3_ioc_facts_data *facts_data)
 >  {
->  	struct proc_dir_entry *pde = PDE(inode);
-> -	if (!use_pde(pde))
+>  	struct mpi3_ioc_facts_request iocfacts_req;
+> +	u16 reply_frame_size;
+>  	void *data =3D NULL;
+>  	dma_addr_t data_dma;
+>  	u32 data_len =3D sizeof(*facts_data);
+> @@ -3318,6 +3319,23 @@ static int mpi3mr_issue_iocfacts(struct mpi3mr_ioc=
+ *mrioc,
+>  		goto out_unlock;
+>  	}
+>  	memcpy(facts_data, (u8 *)data, data_len);
 > +
+> +	reply_frame_size =3D le16_to_cpu(facts_data->reply_frame_size);
 > +	/*
-> +	 * No pin. The link lives with the entry, which the inode holds, and a
-> +	 * reader could fault while vfs_readlink() copies it out. Just don't
-> +	 * follow a removed one.
+> +	 * Validate reply_frame_size:
+> +	 * - Must be at least 16 dwords (64 bytes) to accommodate fixed reply
+> +	 *   structures and avoid underflow/divide-by-zero in logdata sizing.
+> +	 * - Must not exceed U16_MAX / 4 to prevent integer overflow.
 > +	 */
-> +	if (unlikely(atomic_read(&pde->in_use) < 0))
->  		return ERR_PTR(-EINVAL);
-> -	set_delayed_call(done, proc_put_link, pde);
->  	return pde->data;
->  }
->  
-> 
-> -- 
-> 2.53.0
-> 
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+> +	if (reply_frame_size < MPI3MR_MIN_REPLY_FRAME_SZ_DWORDS ||
+> +	    reply_frame_size > (U16_MAX / 4)) {
+> +		ioc_err(mrioc, "Invalid reply_frame_size %u (must be %u..%u dwords)\n",
+> +			reply_frame_size, MPI3MR_MIN_REPLY_FRAME_SZ_DWORDS,
+> +			(unsigned int)(U16_MAX / 4));
+> +		retval =3D -EINVAL;
+> +		goto out_unlock;
+> +	}
+
+[Severity: High]
+Is a minimum of 16 dwords (64 bytes) for MPI3MR_MIN_REPLY_FRAME_SZ_DWORDS
+sufficient for event notification replies that carry struct
+mpi3_device_page0?
+
+Event notification replies (struct mpi3_event_notification_reply) are
+delivered in the mrioc->reply_buf frames of size mrioc->reply_sz
+(reply_frame_size * 4), where the event_data payload starts at byte offset
+24 (6 dwords). For MPI3_EVENT_DEVICE_ADDED, the event_data payload is
+struct mpi3_device_page0 (64 bytes / 16 dwords), which requires a reply
+frame of at least 24 + 64 =3D 88 bytes (22 dwords).
+
+When reply_frame_size is between 16 and 21 dwords (64 to 84 bytes),
+mpi3mr_issue_iocfacts() accepts it, and an incoming MPI3_EVENT_DEVICE_ADDED
+event in drivers/scsi/mpi3mr/mpi3mr_os.c:mpi3mr_os_handle_events() casts
+event_reply->event_data to struct mpi3_device_page0:
+
+	case MPI3_EVENT_DEVICE_ADDED:
+	{
+		struct mpi3_device_page0 *dev_pg0 =3D
+		    (struct mpi3_device_page0 *)event_reply->event_data;
+		if (mpi3mr_create_tgtdev(mrioc, dev_pg0))
+			...
+
+mpi3mr_create_tgtdev() -> mpi3mr_update_tgtdev() then reads dev_pg0->
+device_specific fields up to offset 59 of dev_pg0 (offset 83 of
+event_reply), reading past a 64..84 byte reply frame and past the end of
+mrioc->reply_buf when using the last frame in the pool.
+
+In addition, when mpi3mr_os_handle_events() allocates fwevt for the bottom
+half, it clamps the event_data allocation size sz to avail_reply_room
+(mrioc->reply_sz - 24, which is 40..48 bytes for 16..18 dwords):
+
+	if (mrioc->reply_sz > offsetof(struct mpi3_event_notification_reply, event=
+_data))
+		avail_reply_room =3D mrioc->reply_sz -
+		    offsetof(struct mpi3_event_notification_reply, event_data);
+	else
+		avail_reply_room =3D 0;
+	sz =3D min_t(u16, event_reply->event_data_length * 4, avail_reply_room);
+	fwevt =3D mpi3mr_alloc_fwevt(sz);
+
+When drivers/scsi/mpi3mr/mpi3mr_os.c:mpi3mr_fwevt_bh() later processes
+MPI3_EVENT_DEVICE_ADDED with persistent_id =3D=3D
+MPI3_DEVICE0_PERSISTENTID_INVALID and sas_transport_enabled set for a
+SAS/SATA device:
+
+	dev_pg0 =3D (struct mpi3_device_page0 *)fwevt->event_data;
+	perst_id =3D le16_to_cpu(dev_pg0->persistent_id);
+	handle =3D le16_to_cpu(dev_pg0->dev_handle);
+	if (perst_id !=3D MPI3_DEVICE0_PERSISTENTID_INVALID)
+		mpi3mr_report_tgtdev_to_host(mrioc, perst_id);
+	else if (mrioc->sas_transport_enabled &&
+	    (dev_pg0->device_form =3D=3D MPI3_DEVICE_DEVFORM_SAS_SATA)) {
+		sasinf =3D &dev_pg0->device_specific.sas_sata_format;
+		dev_info =3D le16_to_cpu(sasinf->device_info);
+
+can reading sasinf->device_info at offset 50..51 of fwevt->event_data read
+out of bounds of the slab object when only 40..48 bytes were allocated?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261105122401.2665=
+59-1-mgandhi@redhat.com?part=3D1
