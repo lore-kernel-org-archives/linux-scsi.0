@@ -1,127 +1,122 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.129.124
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793883360;
-	b=X1q48c49GJRMjUAi+wIutBnzs077jkruGVnkuzWf81Nt/wu7Kqu47KAIvKMJjWv9JBAu
-	 iKCIIbBBURlm501OwcvrogK56qdOsAElJU43yx+ipbG9hG6SAX1fuKIolKX3OvoYo0Se6
-	 2wAQrJTrc525wdFg6pJyFM6elmETN1J7N/6UcwD+gf8CQMTfXCIc3LCrgPS4dCzd7zOzc
-	 vy5fc5oQFc/4TxjY5cFOgsXHbxs6Fq5F+HML+zXE1pukFUtLgpoAqlUi9nqs2P7RrdFAL
-	 /h5Kh2ACnf/Cq0SZx2E4S/HakyN7YIgPyVpOi4g/RUSRAOXbeRV60n9HHoxW5t3ivnQ==
+	t=1793884632;
+	b=Rrme9BL583214U/kL/kNtoidBdbMckLOCIGn+GThRrtEy+RENI+GZOd3CJ/Sbudf/7+z
+	 6/v086e0tFmsjRnBN23jA18OyjU9rtQ3EDcEih43a8mexjd69hZE6kQPU1tfu1JYgohFn
+	 yj8NXkgcodyl/4hR1bPaRIOXwd+YAuw+ExZbBO+XVMMVA4c2/l+tGjSi0tkCppv+10OtM
+	 TI0YS3intDUZlLwn1fFmRac3TbcoKrg2weRifM7Ww9mzAXDKxn9ZMvewCerK13p7GOlG1
+	 8SDSzD8cdjma4bFM17K9i5w+CtApllfJvwEUT+3cLERCeBqsCqpjxqk5x8QbC6/2d5A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793883360;
-	h=DMARC-Filter:Received:DKIM-Signature:DKIM-Signature:DKIM-Signature:
-	 DKIM-Signature:Received:Received:Received:Date:From:To:Cc:Subject:
-	 Message-ID:References:MIME-Version:Content-Type:Content-Disposition:
-	 In-Reply-To:X-Spam-Flag:X-Spam-Level:X-Spamd-Result:X-Spam-Score;
-	bh=cmUgot10we4d03XqL3f7g9G8JJVHefvFl9Pm7WwDa7c=;
-	b=Y/gMkq9ezHbQmBNRgTYu/ZVNMl8bNis+U+/TO3mZ/vqOILpvPaJeQzDaBv8gKFt+iF7D
-	 cN6BIY9tvN/xQ+n/cPDGALLZ+4vURRU1Cz9Lrb47PdDBLJl+kFxkWes0ZyHaEh8eHskOf
-	 CNtae+lwyqAczJ1j0lhhI1EUGdT4PChbWYp/lcS1t4oMU+X+eHBODSBguE/ODWgap4uZy
-	 4znrlGJUUnNp38OPW9sIb1t2Gioy9pRZOiGz8uoz6Ha8CEfXct7bkhpQXuvtHtED+vMIT
-	 Zk51fBfp0Va3Jibvk1R8IFs/Oh0AAKxsYM18WE6ceHqdBqtD3Y4gjuQQVLeZ9s1atHw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793884632;
+	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
+	 X-Mimecast-MFC-AGG-ID:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
+	 X-Received:Received:Message-ID:Subject:From:To:Cc:Date:In-Reply-To:
+	 References:Content-Type:Content-Transfer-Encoding:User-Agent:
+	 MIME-Version;
+	bh=TVN4qqEOEmUzptSUX7FyaNSftImC/cckkBEy4eaZCfg=;
+	b=Chlu5Kmlv7KmODS0bgkcJeudqCmmRxK1p2sWlPt4ICYhw2rRPta8s4zhhrTQQwHBagrO
+	 d+VVY1KmWbapl7/Cb0pMxhW9I/AjVm/QjYWnwured4EPXPGd2Bv6FVo4eyo2uFCSE9CEv
+	 UFEUer949/m5FhtKsyISKwnMoBjzmW07ixOu6GkrKyZaKfGfhTxfGaEvRrspucxJQaA0L
+	 1UPG5WcbWpgUM04jRcHIdvU1ofE7HuPFRLZIIZ+01fCnhBAFBh4W8Z+ZM4nsb3dxV1XVy
+	 yum1oYvoBInwpdQnot5ImEzA3680kYOfwPLp3DLT6Efg80HTyHA6xBNaoyXiVnz1G0w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=suse.cz;
-	spf=pass smtp.mailfrom=suse.cz;
-	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=HMq2PGgc;
-	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=MNxFmIWW;
-	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=HMq2PGgc;
-	dkim=neutral header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=MNxFmIWW;
-	arc=none smtp.remote-ip=195.135.223.130
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	dmarc=pass header.from=redhat.com;
+	spf=pass smtp.mailfrom=redhat.com;
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=C3fTSWsB;
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=ZnPw8rAT;
+	arc=none smtp.remote-ip=170.10.129.124
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7AED4606A329;
-	Thu,  5 Nov 2026 12:55:59 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7AED4606A329
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42582606A31B
+	for <linux-scsi@vger.kernel.org>; Thu,  5 Nov 2026 13:17:10 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 42582606A31B
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=HMq2PGgc;
-	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=MNxFmIWW;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=HMq2PGgc;
-	dkim=neutral header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=MNxFmIWW
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id A593F21E32;
-	Thu,  5 Nov 2026 12:55:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1793883357; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
+	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=C3fTSWsB;
+	dkim=pass (2048-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=ZnPw8rAT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1793884629;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=cmUgot10we4d03XqL3f7g9G8JJVHefvFl9Pm7WwDa7c=;
-	b=HMq2PGgctUwaIqMWa/t6KS8Y0eDcx5+iVAbPBEmlA4XLOKQTFUHYY3Wu2G9HFi2gsM87lD
-	aMzBxa/v0FwGnVsOPESaie+6I8l5/g4k60NYU2DibVe12MrjUAc1fkTQmxmfgcgcng/l+U
-	h4BfEyEohAE+lhFRUtA1oPBHFGrAOjE=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1793883357;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=cmUgot10we4d03XqL3f7g9G8JJVHefvFl9Pm7WwDa7c=;
-	b=MNxFmIWW2W0N1wEahhCRtu1bRho1DiR+JlZKUGHHI6elu6vobHwCbHYra5eCjH34Mdn1Y0
-	kStFvwQIy0XlegCA==
-Authentication-Results: smtp-out1.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1793883357; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=cmUgot10we4d03XqL3f7g9G8JJVHefvFl9Pm7WwDa7c=;
-	b=HMq2PGgctUwaIqMWa/t6KS8Y0eDcx5+iVAbPBEmlA4XLOKQTFUHYY3Wu2G9HFi2gsM87lD
-	aMzBxa/v0FwGnVsOPESaie+6I8l5/g4k60NYU2DibVe12MrjUAc1fkTQmxmfgcgcng/l+U
-	h4BfEyEohAE+lhFRUtA1oPBHFGrAOjE=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1793883357;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=cmUgot10we4d03XqL3f7g9G8JJVHefvFl9Pm7WwDa7c=;
-	b=MNxFmIWW2W0N1wEahhCRtu1bRho1DiR+JlZKUGHHI6elu6vobHwCbHYra5eCjH34Mdn1Y0
-	kStFvwQIy0XlegCA==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 6652B133F6;
-	Thu,  5 Nov 2026 12:55:57 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id 7NjCD9187Gp+RAAAD6G6ig
-	(envelope-from <jack@suse.cz>); Thu, 05 Nov 2026 12:55:57 +0000
-Received: by quack.suse.cz (Postfix, from userid 1000)
-	id E76F9B6F2; Thu, 05 Nov 2026 13:55:56 +0100 (CET)
-Date: Thu, 5 Nov 2026 13:55:56 +0100
-From: Jan Kara <jack@suse.cz>
-To: Christian Brauner <brauner@kernel.org>
-Cc: linux-fsdevel@vger.kernel.org, 
-	Linus Torvalds <torvalds@linux-foundation.org>, Jann Horn <jannh@google.com>, Josef Bacik <josef@toxicpanda.com>, 
-	Chris Mason <mason@kernel.org>, Jeff Layton <jlayton@kernel.org>, NeilBrown <neil@brown.name>, 
-	Eric Dumazet <edumazet@kernel.org>, Thomas Gleixner <tglx@kernel.org>, 
-	Al Viro <viro@zeniv.linux.org.uk>, Jonathan Corbet <corbet@lwn.net>, Christoph Hellwig <hch@lst.de>, 
-	Greg Kroah-Hartman <gregkh@suse.de>, Joel Granados <joel.granados@kernel.org>, 
-	Kees Cook <kees@kernel.org>, Jan Kara <jack@suse.cz>, Jan Kara <jack@suse.com>, 
-	linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-acpi@vger.kernel.org, 
-	linux-kselftest@vger.kernel.org, linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	linux-um@lists.infradead.org, linux-wireless@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, 
-	netdev@vger.kernel.org, ntfs3@lists.linux.dev, platform-driver-x86@vger.kernel.org, 
-	coreteam@netfilter.org, kexec@lists.infradead.org, linux-pci@vger.kernel.org, 
-	linux-sound@vger.kernel.org, netfilter-devel@vger.kernel.org, dri-devel@lists.freedesktop.org, 
-	ibm-acpi-devel@lists.sourceforge.net, jfs-discussion@lists.sourceforge.net, 
-	linux-alpha@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-cifs@vger.kernel.org, 
-	linux-fbdev@vger.kernel.org, linux-hwmon@vger.kernel.org, linux-mm@kvack.org, 
-	linux-sh@vger.kernel.org, linux-usb@vger.kernel.org, samba-technical@lists.samba.org, 
-	sparclinux@vger.kernel.org, linux-m68k@lists.linux-m68k.org, linux-doc@vger.kernel.org, 
-	linux-serial@vger.kernel.org, linux-atm-general@lists.sourceforge.net, 
-	Takashi Iwai <tiwai@suse.de>, linux-input@vger.kernel.org, linux-raid@vger.kernel.org, 
-	linux-ext4@vger.kernel.org, linux-modules@vger.kernel.org, linux-debuggers@vger.kernel.org, 
-	Chuck Lever <cel@kernel.org>, stable@vger.kernel.org
-Subject: Re: [PATCH RFC 35/38] proc: sysctl: don't hold the tables while
- readdir copies to userspace
-Message-ID: <ntnca5ndnjaoi7bvfh346zek2jphi4kfmaxv7yd4bqfrfcwjl6@2wdnnptu4igg>
-References: <20261102-work-procfs-bugfixes-v1-0-59422ed3e465@kernel.org>
- <20261102-work-procfs-bugfixes-v1-35-59422ed3e465@kernel.org>
+	bh=TVN4qqEOEmUzptSUX7FyaNSftImC/cckkBEy4eaZCfg=;
+	b=C3fTSWsB8YqgsuUw3BKo0gXo1jHmgoAE69J3xOBD813wJr/i48YkX6CFPVlSrpTU2HV/7B
+	3p8XWCHlySUSwPzvuM7tRLGFA3SA2z+FaE8hRTCUQ6AvB76xzl4QTZVgccbdSwLSBBmjBa
+	gsVL4JTiIw+4kehHDaIdPMRUfWSBQnc=
+Received: from mail-yw1-f198.google.com (mail-yw1-f198.google.com
+ [209.85.128.198]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-91-FQNhh6cfNxKeNEBTHAPm8w-1; Thu, 05 Nov 2026 08:17:05 -0500
+X-MC-Unique: FQNhh6cfNxKeNEBTHAPm8w-1
+X-Mimecast-MFC-AGG-ID: FQNhh6cfNxKeNEBTHAPm8w_1793884625
+Received: by mail-yw1-f198.google.com with SMTP id 00721157ae682-8b109c28fcaso15928267b3.1
+        for <linux-scsi@vger.kernel.org>; Thu, 05 Nov 2026 05:17:05 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1793884625; x=1794489425; darn=vger.kernel.org;
+        h=mime-version:user-agent:content-transfer-encoding:content-type
+         :references:in-reply-to:date:cc:to:from:subject:message-id:from:to
+         :cc:subject:date:message-id:reply-to:content-type;
+        bh=TVN4qqEOEmUzptSUX7FyaNSftImC/cckkBEy4eaZCfg=;
+        b=ZnPw8rATyVk09jGWCji0No6Sit10PBgDRBs1zQ2M5QFbBTEMo0qmq/6ehvxWToBU/T
+         TwTq2ApGW2gV5dJzUZqIFFm0suGIX/4W2q82mvRL/d4i7dySsqAKFatdmLRbc717/qT/
+         uWjPVF36VdoVJK95L9KDeDp+uBxc9xo950LjxY5oy3SQvA09xA0MhRlKl7VRCbyCdVoo
+         sSmxTS/WD3AQAOkqTFt8BdsErsD9HQnLbqlIbWDflUxInuUxldbABSD025opIF9CFvz4
+         G8QQ4ecnig2Mu6v8XX8NUCZGbyx8pqLnzXbxL/t1Gs4Vc1B6kQ9zILprvMyBRHqZplz0
+         xdDw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793884625; x=1794489425;
+        h=mime-version:user-agent:content-transfer-encoding:content-type
+         :references:in-reply-to:date:cc:to:from:subject:message-id:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=TVN4qqEOEmUzptSUX7FyaNSftImC/cckkBEy4eaZCfg=;
+        b=MloKI3SxAO7S0yt3T0GtVZ6twOgL0VP79WG/0xxUOsJHKAttVOts+bLQ1wi8f8Jdw6
+         ytTNaoaCq0jaD+FKl9HeIcAjysaXTUU2swLxZzjPUN9JLOpCcfwjH0Ob49mVoDpIxENn
+         IFXu1uowlZDq68FQlEwE7lAP3Tth4UEbinJWaPtB7KhO0Z4Pe7AWisthZsn7YPfdjaFL
+         fX/h8TyPTBDccgLsPPjAh4Sq2glmdx1h/stzm/7vEO2lOIiociMDXlPgvrSuSLunfim0
+         DH8rDbqSGDKpqv9VuYjWQUe1qec9SxdP2zzYckBofp3ahqmd+o1eniYXUbstPKpn2ca6
+         Mq/g==
+X-Forwarded-Encrypted: i=1; AKwUvBxGTfomwAaGQ0NleFyOQFbfHvAvv+2lfmAvzQFBodL7ozOAjDxcjAFhnf5pHvUJvjSs7mC79SlMgMWw@vger.kernel.org
+X-Gm-Message-State: APuU4Z+jin1p2bXNrchTkpSVey79SoMZw6GecJkRq3SQd6331D2jmF/S
+	IM0280KH0p6dcO5gM6am4pH0xMjILpYnYDSYOVz9ZIe8WmRS6Vo/8TOmyc5r2HN6kbHT8jz1L7D
+	hheL6sw8vk8cVjk1fGaJ5OTjWhj34DkbtCoGPp2vk/F4yOZQVN13Jz3URa7pCC2s=
+X-Gm-Gg: AYBFou3GQrd9406muZWuOpK+hE0pEyGwxq0AxfaqCPH2dp9HreuvGxE27GYeu4ew+3N
+	jK4YydKF7h4MqkzYcu9BF2rLTWeZmfcc20VzEZD+4KDvnz7OIr7RKcr3krJ6nNM8E4iLa2vtfl1
+	GL2WEJJwiw6GbGQFrdndMX9fBV05WJAtVt70gOlC9L5mb6mXoPbMRCe1cSfnZw6jf1GJZPp+57T
+	CkywC3RIdFnj786p7be/ER+YKKSOQBbeX+umCOOyQMvvl51exhjOsy301rjsqyHf51qHpVqFh0y
+	1mRHQGLbeSWvj7+SfVfntZIexmkhK408iRQ0nBvkp53OomVWyfrX+hBmyY+J0v8uFfdjcV0gppu
+	4jdxqXdeVSfOcGKG62LQYP0OdOampZnAb5PMcRkHDUGof/Lu6RukO3N70yHTqD80UkczLzA+XQA
+	ZFZTOPfT4e0SbRllGMMcWIOp2I4QaflG1rZmyPRKyyGJiKJCvvaquZbRx6j4m0jVDb3P6hpbU=
+X-Received: by 2002:a05:690e:2046:b0:675:6f9d:dd53 with SMTP id 956f58d0204a3-67ba4c90a38mr8239517d50.8.1793884624729;
+        Thu, 05 Nov 2026 05:17:04 -0800 (PST)
+X-Received: by 2002:a05:690e:2046:b0:675:6f9d:dd53 with SMTP id 956f58d0204a3-67ba4c90a38mr8239506d50.8.1793884624188;
+        Thu, 05 Nov 2026 05:17:04 -0800 (PST)
+Received: from loberman-thinkpadp16gen3.rmtusma.csb ([2600:6c65:2440:d8c:aa2b:ddff:fe88:da74])
+        by smtp.gmail.com with ESMTPSA id 956f58d0204a3-67bedc40ac4sm3479221d50.0.2026.11.05.05.17.02
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 05 Nov 2026 05:17:03 -0800 (PST)
+Message-ID: <0e12bf8de941ab70a7eb2136fb794cf1dc4bfd8d.camel@redhat.com>
+Subject: Re: [PATCH 0/2] target: iscsi: fix hanged WRITE_PENDING commands
+From: Laurence Oberman <loberman@redhat.com>
+To: Dmitry Bogdanov <d.bogdanov@yadro.com>
+Cc: Martin Petersen <martin.petersen@oracle.com>, Maurizio Lombardi
+	 <mlombard@redhat.com>, target-devel@vger.kernel.org, 
+	michael.christie@oracle.com, linux-scsi@vger.kernel.org, linux@yadro.com
+Date: Thu, 05 Nov 2026 08:17:01 -0500
+In-Reply-To: <7e08a1f08defd24b42722ce0ad52326ff59236cd.camel@redhat.com>
+References: <20261027180123.13163-1-d.bogdanov@yadro.com>
+			 <d7a1701ddc2e7c976ad8ff9ec071d9bfdc86a7e2.camel@redhat.com>
+			 <20261028140221.GB32229@yadro.com>
+		 <f4cbbca9e8b743da07902e97b09e49ac7e1cc5fb.camel@redhat.com>
+	 <7e08a1f08defd24b42722ce0ad52326ff59236cd.camel@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.60.2 (3.60.2-2.fc44) 
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -131,502 +126,227 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261102-work-procfs-bugfixes-v1-35-59422ed3e465@kernel.org>
-X-Spam-Flag: NO
-X-Spam-Level: 
-X-Spamd-Result: default: False [-11.30 / 50.00];
-	SUSE_INTERNAL_BYPASS(-9.00)[];
-	BAYES_HAM(-3.00)[100.00%];
-	SUSPICIOUS_RECIPS(1.50)[];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	MID_RHS_NOT_FQDN(0.50)[];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	ARC_NA(0.00)[];
-	MISSING_XM_UA(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	TO_DN_SOME(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	RCVD_COUNT_THREE(0.00)[3];
-	TO_MATCH_ENVRCPT_SOME(0.00)[];
-	FROM_EQ_ENVFROM(0.00)[];
-	R_RATELIMIT(0.00)[to_ip_from(RL63fqwwx8ot6gmekemcs76f9d)];
-	RCVD_TLS_LAST(0.00)[];
-	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	RCPT_COUNT_GT_50(0.00)[60];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:email,imap1.dmz-prg2.suse.org:helo]
-X-Spam-Score: -11.30
 
-On Mon 02-11-26 15:21:50, Christian Brauner wrote:
-> proc_sys_readdir() holds the directory's table for the whole readdir
-> and the table of each entry while dir_emit() copies its name to
-> userspace. Unregistering a table waits until nobody uses it anymore. So
-> a getdents64() whose buffer faults for as long as it wants keeps
-> unregister_sysctl_table() waiting, just like a stalled read() does.
-> Listing /proc/sys/net/ipv6/conf/<dev>/ that way holds up the removal of
-> the device under RTNL.
-> 
-> So don't take any table into use for a listing. A header counts what
-> refers to its memory, the inodes made for it, and unregistering doesn't
-> wait for those. readdir takes one of those references on the entry it
-> is at instead, which keeps the header around and nothing else. Under
-> sysctl_lock, where unregistering erases an entry, it finds the entry,
-> copies its name and mode, follows a link to the entry it stands for and
-> pins that. Then it looks the dentry up, creates the inode if there is
-> none, which checks for itself under sysctl_lock that the table is still
-> registered, and emits the entry with nothing held at all. The next
-> entry is the first live one after that name, which is where a listing
-> resumes between calls since "proc: sysctl: resume readdir after the
-> last name it returned" anyway. kernfs_fop_readdir() and
-> proc_readdir_de() work the same way, a reference on the entry and the
-> lock only to find the next one.
-> 
-> While the entry is still registered its node is still in the tree and
-> the next one is right behind it, like kernfs_dir_next_pos() continues
-> from the node it holds. Only once it went away, and to resume, is the
-> next entry found by name. That's one trip through sysctl_lock per entry
-> like before, and the link entries of /proc/sys/net no longer take two
-> more. The directory isn't
-> taken into use either, an entry keeps its directory registered while
-> it is used and readdir looks at the directory under the lock. So the
-> dots don't wait for anything, a directory that went away lists them and
-> then fails with -ENOENT. A seek to an arbitrary position counts the
-> entries from the start like before, one trip per entry.
-> 
-> Fixes: 77b14db502cb ("[PATCH] sysctl: reimplement the sysctl proc support")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
+On Tue, 2026-11-03 at 08:08 -0500, Laurence Oberman wrote:
+> On Wed, 2026-10-28 at 10:30 -0400, Laurence Oberman wrote:
+> > On Wed, 2026-10-28 at 17:02 +0300, Dmitry Bogdanov wrote:
+> > > Hi Laurence,
+> > >=20
+> > > On Tue, Oct 27, 2026 at 04:08:08PM -0400, Laurence Oberman wrote:
+> > > >=20
+> > > > On Tue, 2026-10-27 at 21:01 +0300, Dmitry Bogdanov wrote:
+> > > > > ISCSI has some old leftovers in the code that prevents
+> > > > > passing
+> > > > > the
+> > > > > aborted
+> > > > > command to the target core to make the actual abort. Such
+> > > > > commands
+> > > > > hang
+> > > > > until connection is closed.
+> > > > > So remove those leftovers.
+> > > > >=20
+> > > > > Dmitry Bogdanov (2):
+> > > > > =C2=A0 Revert "scsi: target: iscsi: Fix hang for aborted
+> > > > > WRITE_PENDING
+> > > > > =C2=A0=C2=A0=C2=A0 commands"
+> > > > > =C2=A0 scsi: target: iscsi: fix hanging WRITE_PENDING commands
+> > > > >=20
+> > > > > =C2=A0drivers/target/iscsi/iscsi_target.c=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0 | 19 --------------
+> > > > > --
+> > > > > --
+> > > > > -
+> > > > > =C2=A0drivers/target/iscsi/iscsi_target_erl1.c |=C2=A0 8 --------
+> > > > > =C2=A02 files changed, 27 deletions(-)
+> > > >=20
+> > > > Hello Dmitri
+> > > > Thanks for posting this. I have a series in flight for the same
+> > > > hang:
+> > > >=20
+> > > > https://lore.kernel.org/linux-scsi/20261027122837.2148074-1-loberma=
+n@redhat.com/
+> > >=20
+> > > I know, that is why both you and Maurizio in To: field. I want
+> > > from
+> > > you some comments. Thank you for review.
+> > >=20
+> > > >=20
+> > > > Is the revert maybe aimed at the wrong layer, and the sashiko
+> > > > review of
+> > > > your 2/2 makes the case better than I can: with the fabric
+> > > > check
+> > > > removed, an aborted command reaches target_execute_cmd(),
+> > > > target_cmd_interrupted() queues target_abort_work and returns
+> > > > without
+> > > > changing t_state, the command stays on conn_cmd_list in
+> > > > TRANSPORT_WRITE_PENDING, and
+> > > > iscsit_release_commands_from_conn()
+> > > > completes it a second time if the connection closes.
+> > >=20
+> > > As I said in response to sashiko-bot, that is the current (always
+> > > be)
+> > > behavior.
+> > > It is not introduced by my patch.
+> > >=20
+> > > > That is the same double completion you are reverting
+> > > > d5869dae5080
+> > > > for.
+> > > > It
+> > > > is not a defect in Maurizio's patch and it will not be fixed by
+> > > > replacing
+> > > > it -- target_cmd_interrupted() records nothing when it queues
+> > > > an
+> > > > abort,
+> > > > so
+> > > > any site that completes an aborted WRITE_PENDING command can be
+> > > > followed
+> > > > by another one. I found this from vmcores on a customer system
+> > > > before
+> > > > either of us posted, so no argument from me that it is real.
+> > >=20
+> > > Not the same, d5869dae5080 greatly increases the probability of
+> > > the
+> > > double completion by calling target_complete_cmd() which is
+> > > allowed
+> > > to be
+> > > called only once for the cmd. Calling it twice is wrong by
+> > > nature.
+> > > Fabric
+> > > module shall call either target_execute_cmd() either
+> > > transport_generic_request_failure(). target_complete_cmd() is for
+> > > backstore modules. That target_complete_cmd() at the iscsi
+> > > connection release is not so good too. But it was intended to be
+> > > the
+> > > last(and the only) call from fabric driver for the command never
+> > > be
+> > > in
+> > > the target core.
+> > >=20
+> > > >=20
+> > > > Patch 3 of my series fixes it there, under t_state_lock, for
+> > > > both
+> > > > queueing sites in target_core_transport.c and for every fabric.
+> > > > With
+> > > > that
+> > > > in place your 2/2 is safe and d5869dae5080 does not need
+> > > > reverting
+> > > > for
+> > > > this reason -- which matters, because the revert is not free:
+> > > > that
+> > > > commit
+> > > > carries CVE-2026-97951 and is in 5.10.y, 5.15.y, 6.1.y, 6.6.y,
+> > > > 6.12.y,
+> > > > 6.18.y and 7.2.y.
+> > >=20
+> > > My intention is to not create a situation when there a race is
+> > > possible
+> > > instead of fixing those races.=20
+> > >=20
+> > > > Two questions on 2/2 independent of all that.
+> > > >=20
+> > > > Removing the sense_reason early return in iscsit_execute_cmd()
+> > > > means
+> > > > transport_send_check_condition_and_sense() now runs for an
+> > > > aborted
+> > > > command. It guards only on SCF_SENT_CHECK_CONDITION, never
+> > > > checks
+> > > > CMD_T_ABORTED, and ends in queue_status();
+> > > > target_handle_abort()
+> > > > also
+> > > > calls queue_status() for a CMD_T_TAS command, and each drops a
+> > > > reference.
+> > > > Can an aborted command with a sense reason send both a CHECK
+> > > > CONDITION
+> > > > and a TASK ABORTED, and drop two references?
+> > >=20
+> > > No, transport_send_check_condition_and_sense will change t_state,
+> > > send
+> > > status and decrease cmd->refcnt and then unblock
+> > > wait_for_completion
+> > > of
+> > > ABORT/LUN_RESET. Both the commnand and ABORT of that command will
+> > > be
+> > > completed sucessfully.
+> > > Noone calls target_handle_abort().
+> > >=20
+> > > > And with the early return gone, a LUN_RESET aborting a large
+> > > > WRITE
+> > > > waits in target_put_cmd_and_wait() for the whole remaining data
+> > > > transfer. That is bounded where today it is not, but on a large
+> > > > transfer it may still trip the hung task timeout that made this
+> > > > visible.
+> > > =C2=A0
+> > > That is a idea for a future discussion and improvmens. This
+> > > patchset
+> > > is
+> > > narrowed to just to fix the stuck of WRITE_PENDING commands.
+> > >=20
+> > > The abort of WRITE_PENDIG command in the state waiting for
+> > > DataOuts
+> > > currently will wait for the data completion. So, my patch again
+> > > does
+> > > not
+> > > do worse.
+> > >=20
+> > > > On the overlap: your 2/2 and patch 4 of my series touch the
+> > > > same
+> > > > lines,
+> > > > so only one can apply, and I have no attachment to mine if
+> > > > yours
+> > > > is
+> > > > the
+> > > > better shape. Patches 1 to 3 are core-side and conflict with
+> > > > nothing
+> > > > you have posted.
+> > > >=20
+> > > > Martin, would you prefer those three as their own series,
+> > > > given both candidate iSCSI fixes need patch 3 to be correct?
+> > > >=20
+> > > > I am happy to test either or both: I have a reporter's
+> > > > environment
+> > > > that
+> > > > reproduces this reliably and 300-cycle runs on it.
+> > >=20
+> > > My patch is more than 2 years old in customers setups, but
+> > > certainly
+> > > it would be great to test it in other environments too.
+> > >=20
+> > > BR,
+> > > =C2=A0Dmitry
+> >=20
+> > OK Great, reverting d5869dae5080 and applying yours and getting it
+> > tested. If it passes than we can revisit my patches 1-3 for a later
+> > series.
+> >=20
+> > On testing: I will build revert + your 2/2 on a RHEL9.8 based
+> > distro
+> > kernel and put it through the reporter's environment -- an Oracle
+> > RAC
+> > cluster where this reproduces reliably and where the earlier
+> > candidate
+> > fixes failed at 95 and 196 LUN_RESET cycles. The pass mark is 300
+> > cycles, which is what my patch 4 cleared twice. I will deliberately
+> > leave my core patches out of that build so the result is about your
+> > series alone.
+> >=20
+> > Thanks for all your reviews and assistance.
+> > Laurence
+> Hello Dmitry
+>=20
+> OK, your series looks great, we passed 3000 reset loops so we should
+> take your series in ASAP.
+>=20
+> For the series:
+> Reviewed-by: Laurence Oberman <loberman@redhat.com>
+> Tested-by:=C2=A0=C2=A0 Laurence Oberman <loberman@redhat.com>
+>=20
+> Regards
+> Laurence Oberman
 
-So I didn't really carefully check all the details but overall this looks
-sane to me. Just one thing that was confusing me is: Why is sysctl_dirent
-separate from sysctl_cursor? Wouldn't it be more logical for sysctl_cursor
-itself to start what it needs to pin the entry it wants to restart from?
+Gentle ping on this one, I really needing Dmitry's series to be taken.=C2=
+=A0
+A large customer is waiting so we can include this in RHEL.
+I did lots of testing and due diligence on this issue.
+Thanks as always=20
+Laurence
 
-								Honza
-
-> ---
->  fs/proc/proc_sysctl.c | 307 +++++++++++++++++++++++++++-----------------------
->  1 file changed, 166 insertions(+), 141 deletions(-)
-> 
-> diff --git a/fs/proc/proc_sysctl.c b/fs/proc/proc_sysctl.c
-> index a1242247f492..0b7a1e487ed6 100644
-> --- a/fs/proc/proc_sysctl.c
-> +++ b/fs/proc/proc_sysctl.c
-> @@ -91,6 +91,8 @@ static void drop_sysctl_table(struct ctl_table_header *header);
->  static int sysctl_follow_link(struct ctl_table_header **phead,
->  	const struct ctl_table **pentry);
->  static int insert_links(struct ctl_table_header *head);
-> +static struct ctl_table_set *lookup_header_set(struct ctl_table_root *root);
-> +static struct ctl_dir *xlate_dir(struct ctl_table_set *set, struct ctl_dir *dir);
->  static void put_links(struct ctl_table_header *header);
->  
->  static void sysctl_print_dir(struct ctl_dir *dir)
-> @@ -367,86 +369,97 @@ static const struct ctl_table *lookup_entry(struct ctl_table_header **phead,
->  	return entry;
->  }
->  
-> -static struct ctl_node *first_usable_entry(struct rb_node *node)
-> -{
-> -	struct ctl_node *ctl_node;
-> +/*
-> + * What readdir takes along for an entry between the trips through
-> + * sysctl_lock: the header pinned, which keeps its memory and nothing else,
-> + * the entry, its name and mode. For a link the header and entry are the
-> + * ones it stands for in the caller's set.
-> + */
-> +struct sysctl_dirent {
-> +	struct ctl_table_header *head;
-> +	const struct ctl_table *table;
-> +	struct ctl_node *node;		/* the entry's node in the directory, NULL for a link */
-> +	ino_t ino;
-> +	unsigned int type;
-> +	umode_t mode;
-> +	bool skip;
-> +	int len;
-> +	char name[NAME_MAX + 1];
-> +};
->  
-> -	for (;node; node = rb_next(node)) {
-> -		ctl_node = rb_entry(node, struct ctl_node, node);
-> -		if (use_table(ctl_node->header))
-> -			return ctl_node;
-> -	}
-> -	return NULL;
-> +/* A reference on the memory of @head, like an inode made for it holds. */
-> +static void sysctl_pin(struct ctl_table_header *head)
-> +{
-> +	lockdep_assert_held(&sysctl_lock);
-> +	head->count++;
->  }
->  
-> -static void first_entry(struct ctl_dir *dir,
-> -	struct ctl_table_header **phead, const struct ctl_table **pentry)
-> +static void sysctl_unpin(struct ctl_table_header *head)
->  {
-> -	struct ctl_table_header *head = NULL;
-> -	const struct ctl_table *entry = NULL;
-> -	struct ctl_node *ctl_node;
-> -
-> -	spin_lock(&sysctl_lock);
-> -	ctl_node = first_usable_entry(rb_first(&dir->root));
-> -	spin_unlock(&sysctl_lock);
-> -	if (ctl_node) {
-> -		head = ctl_node->header;
-> -		entry = &head->ctl_table[ctl_node - head->node];
-> -	}
-> -	*phead = head;
-> -	*pentry = entry;
-> +	lockdep_assert_held(&sysctl_lock);
-> +	if (!--head->count)
-> +		kfree_rcu(head, rcu);
->  }
->  
-> -static void next_entry(struct ctl_table_header **phead, const struct ctl_table **pentry)
-> +/* the first entry from @node on whose table isn't being unregistered */
-> +static struct ctl_node *first_live_entry(struct rb_node *node)
->  {
-> -	struct ctl_table_header *head = *phead;
-> -	const struct ctl_table *entry = *pentry;
-> -	struct ctl_node *ctl_node = &head->node[entry - head->ctl_table];
-> -
-> -	spin_lock(&sysctl_lock);
-> -	unuse_table(head);
-> +	struct ctl_node *ctl_node;
->  
-> -	ctl_node = first_usable_entry(rb_next(&ctl_node->node));
-> -	spin_unlock(&sysctl_lock);
-> -	head = NULL;
-> -	if (ctl_node) {
-> -		head = ctl_node->header;
-> -		entry = &head->ctl_table[ctl_node - head->node];
-> +	lockdep_assert_held(&sysctl_lock);
-> +	for (; node; node = rb_next(node)) {
-> +		ctl_node = rb_entry(node, struct ctl_node, node);
-> +		if (!ctl_node->header->unregistering)
-> +			return ctl_node;
->  	}
-> -	*phead = head;
-> -	*pentry = entry;
-> +	return NULL;
->  }
->  
->  /*
-> - * The first usable entry of @dir after @name, or the first one at all for a
-> - * NULL @name. The entries are sorted by name, so that is where a listing
-> - * resumes when entries in front of it came or went in between. -ENOENT if
-> - * the directory is being unregistered.
-> + * Fill @d with the entry of @dir behind the one it holds, letting go of that
-> + * one, or with the first live entry after @name, or the first one at all for
-> + * a NULL @name. While the entry @d holds is still registered its node is
-> + * still in the tree and the next one is right behind it. Once it is gone the
-> + * entries are found by name, they are sorted by it, so that is also where a
-> + * listing resumes when entries in front of it came or went in between.
-> + * 1 with the next entry pinned in @d, 0 at the end of the directory and
-> + * -ENOENT once @dir itself is being unregistered.
-> + *
-> + * Everything that reads the tables happens under sysctl_lock, where an entry
-> + * is erased when it is unregistered, since nothing holds the tables in use.
->   */
-> -static int entry_after(struct ctl_dir *dir, const char *name, int namelen,
-> -		       struct ctl_table_header **phead,
-> -		       const struct ctl_table **pentry)
-> +static int sysctl_dir_next(struct ctl_dir *dir, struct sysctl_dirent *d,
-> +			   const char *name, int namelen)
->  {
-> -	struct ctl_table_header *head = NULL;
-> -	const struct ctl_table *entry = NULL;
->  	struct rb_node *node, *after = NULL;
-> +	struct ctl_table_header *head;
-> +	const struct ctl_table *entry;
->  	struct ctl_node *ctl_node;
-> +	bool by_name = true;
-> +	int ret = 0;
->  
->  	spin_lock(&sysctl_lock);
-> +	if (d->head) {
-> +		if (d->node && !d->head->unregistering) {
-> +			after = rb_next(&d->node->node);
-> +			by_name = false;
-> +		}
-> +		sysctl_unpin(d->head);
-> +		d->head = NULL;
-> +	}
->  	if (unlikely(dir->header.unregistering)) {
-> -		spin_unlock(&sysctl_lock);
-> -		return -ENOENT;
-> +		ret = -ENOENT;
-> +		goto out;
->  	}
-> -	if (!name) {
-> +	if (!by_name) {
-> +		/* behind the entry @d held */
-> +	} else if (!name) {
->  		after = rb_first(&dir->root);
->  	} else for (node = dir->root.rb_node; node;) {
-> -		const struct ctl_table *table;
-> -		struct ctl_table_header *h;
-> -
->  		ctl_node = rb_entry(node, struct ctl_node, node);
-> -		h = ctl_node->header;
-> -		table = &h->ctl_table[ctl_node - h->node];
-> -		if (namecmp(table->procname, strlen(table->procname),
-> +		head = ctl_node->header;
-> +		entry = &head->ctl_table[ctl_node - head->node];
-> +		if (namecmp(entry->procname, strlen(entry->procname),
->  			    name, namelen) > 0) {
->  			after = node;
->  			node = node->rb_left;
-> @@ -454,15 +467,56 @@ static int entry_after(struct ctl_dir *dir, const char *name, int namelen,
->  			node = node->rb_right;
->  		}
->  	}
-> -	ctl_node = first_usable_entry(after);
-> -	spin_unlock(&sysctl_lock);
-> -	if (ctl_node) {
-> -		head = ctl_node->header;
-> -		entry = &head->ctl_table[ctl_node - head->node];
-> +	ctl_node = first_live_entry(after);
-> +	if (!ctl_node)
-> +		goto out;
-> +	head = ctl_node->header;
-> +	entry = &head->ctl_table[ctl_node - head->node];
-> +
-> +	d->len = strlen(entry->procname);
-> +	if (d->len > NAME_MAX) {
-> +		ret = -ENAMETOOLONG;
-> +		goto out;
->  	}
-> -	*phead = head;
-> -	*pentry = entry;
-> -	return 0;
-> +	memcpy(d->name, entry->procname, d->len);
-> +	d->mode = entry->mode;
-> +	d->skip = false;
-> +	d->node = ctl_node;
-> +	if (unlikely(S_ISLNK(entry->mode))) {
-> +		/* the entry it stands for in the caller's set, or nothing */
-> +		struct ctl_table_root *root = entry->data;
-> +		struct ctl_table_set *set = lookup_header_set(root);
-> +		struct ctl_dir *xdir = xlate_dir(set, head->parent);
-> +		struct ctl_table_header *xhead = NULL;
-> +		const struct ctl_table *xentry = NULL;
-> +
-> +		if (!IS_ERR(xdir))
-> +			xentry = find_entry(&xhead, xdir, d->name, d->len);
-> +		if (!xentry || xhead->unregistering) {
-> +			d->skip = true;
-> +		} else {
-> +			head = xhead;
-> +			entry = xentry;
-> +		}
-> +		d->node = NULL;
-> +	}
-> +	sysctl_pin(head);
-> +	d->head = head;
-> +	d->table = entry;
-> +	ret = 1;
-> +out:
-> +	spin_unlock(&sysctl_lock);
-> +	return ret;
-> +}
-> +
-> +static void sysctl_dir_done(struct sysctl_dirent *d)
-> +{
-> +	if (!d->head)
-> +		return;
-> +	spin_lock(&sysctl_lock);
-> +	sysctl_unpin(d->head);
-> +	spin_unlock(&sysctl_lock);
-> +	d->head = NULL;
->  }
->  
->  /*
-> @@ -765,29 +819,29 @@ static void sysctl_cursor_set(struct file *file, const char *name, int len,
->  	memcpy(cursor->name, name, len);
->  }
->  
-> -static bool proc_sys_fill_cache(struct file *file,
-> -				struct dir_context *ctx,
-> -				struct ctl_table_header *head,
-> -				const struct ctl_table *table)
-> +/*
-> + * The inode number and type of the entry @d holds, instantiating its dentry
-> + * if there is none. Needs the header pinned, proc_sys_make_inode() checks
-> + * for itself that the table is still registered.
-> + */
-> +static int proc_sys_fill_dirent(struct file *file, struct sysctl_dirent *d)
->  {
->  	struct dentry *child, *dir = file->f_path.dentry;
->  	struct inode *inode;
->  	struct qstr qname;
-> -	ino_t ino = 0;
-> -	unsigned type = DT_UNKNOWN;
->  
-> -	qname.name = table->procname;
-> -	qname.len  = strlen(table->procname);
-> +	qname.name = d->name;
-> +	qname.len  = d->len;
->  	qname.hash = full_name_hash(dir, qname.name, qname.len);
->  
->  	child = d_lookup(dir, &qname);
->  	if (!child) {
->  		child = d_alloc_parallel(dir, &qname);
->  		if (IS_ERR(child))
-> -			return false;
-> +			return PTR_ERR(child);
->  		if (d_in_lookup(child)) {
->  			struct dentry *res;
-> -			inode = proc_sys_make_inode(dir->d_sb, head, table);
-> +			inode = proc_sys_make_inode(dir->d_sb, d->head, d->table);
->  			res = d_splice_alias_ops(inode, child,
->  						 &proc_sys_dentry_operations);
->  			d_lookup_done(child);
-> @@ -795,79 +849,41 @@ static bool proc_sys_fill_cache(struct file *file,
->  				dput(child);
->  
->  				if (IS_ERR(res))
-> -					return false;
-> +					return PTR_ERR(res);
->  
->  				child = res;
->  			}
->  		}
->  	}
->  	inode = d_inode(child);
-> -	ino  = inode->i_ino;
-> -	type = inode->i_mode >> 12;
-> +	d->ino = inode->i_ino;
-> +	d->type = inode->i_mode >> 12;
->  	dput(child);
-> -	return dir_emit(ctx, qname.name, qname.len, ino, type);
-> -}
-> -
-> -static bool proc_sys_link_fill_cache(struct file *file,
-> -				    struct dir_context *ctx,
-> -				    struct ctl_table_header *head,
-> -				    const struct ctl_table *table)
-> -{
-> -	bool ret = true;
-> -
-> -	head = sysctl_head_grab(head);
-> -	if (IS_ERR(head))
-> -		return false;
-> -
-> -	/* It is not an error if we can not follow the link ignore it */
-> -	if (sysctl_follow_link(&head, &table))
-> -		goto out;
-> -
-> -	ret = proc_sys_fill_cache(file, ctx, head, table);
-> -out:
-> -	sysctl_head_finish(head);
-> -	return ret;
-> -}
-> -
-> -static int scan(struct ctl_table_header *head, const struct ctl_table *table,
-> -		unsigned long *pos, struct file *file,
-> -		struct dir_context *ctx)
-> -{
-> -	bool res;
-> -
-> -	if ((*pos)++ < ctx->pos)
-> -		return true;
-> -
-> -	if (unlikely(S_ISLNK(table->mode)))
-> -		res = proc_sys_link_fill_cache(file, ctx, head, table);
-> -	else
-> -		res = proc_sys_fill_cache(file, ctx, head, table);
-> -
-> -	if (res) {
-> -		ctx->pos = *pos;
-> -		sysctl_cursor_set(file, table->procname, strlen(table->procname),
-> -				  ctx->pos);
-> -	}
-> -
-> -	return res;
-> +	return 0;
->  }
->  
-> +/*
-> + * Unregistering a table waits until nobody uses it anymore and a copy to
-> + * userspace can take as long as userspace wants. So a listing doesn't take
-> + * any table into use. It pins the memory of the entry it is at, finds the
-> + * next one under sysctl_lock and emits with nothing held, like
-> + * kernfs_fop_readdir() and proc_readdir_de() do. Between calls a listing
-> + * resumes after the name of the last entry it emitted.
-> + */
->  static int proc_sys_readdir(struct file *file, struct dir_context *ctx)
->  {
-> -	struct ctl_table_header *head = grab_header(file_inode(file));
-> +	struct ctl_table_header *head = PROC_I(file_inode(file))->sysctl;
->  	struct sysctl_cursor *cursor = file->private_data;
-> -	struct ctl_table_header *h = NULL;
-> -	const struct ctl_table *entry;
-> +	struct sysctl_dirent d = {};
->  	struct ctl_dir *ctl_dir;
-> -	unsigned long pos;
-> -
-> -	if (IS_ERR(head))
-> -		return PTR_ERR(head);
-> +	int err;
->  
-> +	if (!head)
-> +		head = &sysctl_table_root.default_set.dir.header;
->  	ctl_dir = container_of(head, struct ctl_dir, header);
->  
->  	if (!dir_emit_dots(file, ctx))
-> -		goto out;
-> +		return 0;
->  
->  	/*
->  	 * Resume after the last entry the previous call emitted. Only a seek
-> @@ -875,21 +891,30 @@ static int proc_sys_readdir(struct file *file, struct dir_context *ctx)
->  	 * seeking to an arbitrary position always did.
->  	 */
->  	if (cursor && cursor->pos == ctx->pos) {
-> -		entry_after(ctl_dir, cursor->name, cursor->len, &h, &entry);
-> -		pos = ctx->pos;
-> +		err = sysctl_dir_next(ctl_dir, &d, cursor->name, cursor->len);
->  	} else {
-> -		first_entry(ctl_dir, &h, &entry);
-> -		pos = 2;
-> +		loff_t pos = 2;
-> +
-> +		err = sysctl_dir_next(ctl_dir, &d, NULL, 0);
-> +		while (err > 0 && pos++ < ctx->pos)
-> +			err = sysctl_dir_next(ctl_dir, &d, d.name, d.len);
->  	}
-> +	if (err < 0)
-> +		return err;
->  
-> -	for (; h; next_entry(&h, &entry)) {
-> -		if (!scan(h, entry, &pos, file, ctx)) {
-> -			sysctl_head_finish(h);
-> -			break;
-> +	while (err > 0) {
-> +		if (!d.skip) {
-> +			err = proc_sys_fill_dirent(file, &d);
-> +			if (err)
-> +				break;
-> +			if (!dir_emit(ctx, d.name, d.len, d.ino, d.type))
-> +				break;
->  		}
-> +		ctx->pos++;
-> +		sysctl_cursor_set(file, d.name, d.len, ctx->pos);
-> +		err = sysctl_dir_next(ctl_dir, &d, d.name, d.len);
->  	}
-> -out:
-> -	sysctl_head_finish(head);
-> +	sysctl_dir_done(&d);
->  	return 0;
->  }
->  
-> 
-> -- 
-> 2.53.0
-> 
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
