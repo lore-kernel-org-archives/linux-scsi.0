@@ -1,114 +1,75 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.198
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793885873;
-	b=qbDhWxuupuUWN1hjNHSlIoYtwzQyR84xdIrGm6AcoyAyYe2iiZ9ba8b36lIYpJC7mWGG
-	 YR2ZAHQV4P+1UcR0jXhWpJD26JrhY5B7pHKZrbQHC5QUmflnWqs+08uVajLdL88LizyyC
-	 w8NiQtCbjcHZvL3s/ieiEaMwkrVYnv0xtPILkg6Uj8h+v13H5Ceno5gEUlTvfiCcF9Zsw
-	 G+fpBg1pwQbnfSWQdHFEftTj6N53YYLuFWFYBISv2Ik3qw++FkFMg6EXZh8oJSSaFmBIu
-	 PLKlDy+SpP1ODOp8BBNfHFZVRyT1El7Cvx3LiPsHiv3Z9wjidnXwHlxkrmZ85q3gluQ==
+	t=1793889799;
+	b=LqG0ANTAJL/MpSTBGXqG4a5MOtNXsd47G+0I/apYixJMxOAJzT4rgNJ6JCVK1RQ1/2Pz
+	 say/UOAdIrXWzEJqNJ5xBJT9n6wi1GyLdSDkPzQBOR0GamLSbMJpLQ/5vBnGTRzB6EA74
+	 /XkYJhydsBEyAjUumpb+dkRa3HMBIrwahkuV6qCD9jZC5rhcp2U+hKaftp3lRO6ERWB3Q
+	 eMfsCXoDStGq6nwnKuB/PV8XHe0osUkKmv2NAjsJ8bd8l2UiNIHeua0OfGP/4E56Y56IF
+	 atayXQwJcP7rco3uhNnywdmHyPZIlriIlCr9iiXTxN9RaILD/0LlUtvY2c5kkwu8ByQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793885873;
-	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
-	 X-Mimecast-MFC-AGG-ID:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:X-Received:Received:Date:From:
-	 To:Cc:Subject:Message-ID:References:MIME-Version:Content-Type:
-	 Content-Disposition:Content-Transfer-Encoding:In-Reply-To;
-	bh=YNS6rAKby8LR/Cbc4BYoT1/kR2X+t0J+rzMsMWD0wNU=;
-	b=tL5cSglm5zhc0XsWQDU41mr4VM54L0dFGrFnDqAdyXFzj9UjsEoV2AeN0uqsxEDMDeDW
-	 4OVhrQr14r06dRiXAHfsy/u7Zs04oCxzhC9O3elAMqria9PiP/1FNpzNO1SwyfsNRaPNA
-	 GW7QHySUeSskCWvVf0U4R5Agzgx7Dv/GLZHD8o4kIh5FgQKzUdbc2fA3yABuWwiu69xxS
-	 FppZeE5hZpE94LSth1OFgfOzfz3/ANKN1grVaSR6ES/V0xxr+2Mrm64G1gWMmfsF6+zuz
-	 mQfleVJ6if/YFgHKbOgzt2jIwYU6RGmuvz45PvnQzsBEcpraIdlCv6QOVHhaPjazl/w==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793889799;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:In-Reply-To:
+	 Mime-Version:References:X-Mailer:Message-ID:Subject:From:To:Cc:
+	 Content-Type;
+	bh=wk/So20xr62QzWata5h+JuMn7QiKllnw4EsB0QPRdZA=;
+	b=ZSPxnQn3RkC7PlA3PNp6CstzP0xJb5W8i+YXK5AkpqIz0O0qztbc6EYvo7aYIKnD0WO4
+	 tFOx6NO90TPJ9R9z/lF4gc9mvM/YCyOvQz4kiZryvp4JXO0/HMjnhn0RD1ndRiSIGns02
+	 DRr7PD0y4F63FcDHH3Ri/CTxjQFq3/ksUb6qiXxW9g8Rh/7LM+FRVYGbUfdESvo7lLUYJ
+	 Be+nEDjTaKQg7p/qSsaXlVAPb5DrtAXdrRZ/pN7IDvoJTCu/BS2bjbkUYurmfdI+EeHvn
+	 02adZiVrHHOO15QhR9SMoTrLp+K7T+clGl876CdeuNmUoP/OCHRjDfFFYEZ4Ax3wPaQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=redhat.com;
-	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=A6oMGa2H;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=Z1PE9Oce;
-	arc=none smtp.remote-ip=170.10.133.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=google.com;
+	spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com;
+	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=NiU6VXsz;
+	arc=none smtp.remote-ip=74.125.82.198
+Received: from mail-dy1-f198.google.com (mail-dy1-f198.google.com [74.125.82.198])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D658606A326
-	for <linux-scsi@vger.kernel.org>; Thu,  5 Nov 2026 13:37:52 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8D658606A326
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 06919606A32C
+	for <linux-scsi@vger.kernel.org>; Thu,  5 Nov 2026 14:43:13 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 06919606A32C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=A6oMGa2H;
-	dkim=pass (2048-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=Z1PE9Oce
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1793885871;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=YNS6rAKby8LR/Cbc4BYoT1/kR2X+t0J+rzMsMWD0wNU=;
-	b=A6oMGa2HMFBtcTyB56Rh00KW5mvLpPm1iGyZl4Q4Ls9WLwi/OIfX4orka7CA5Ma4e/Lqaj
-	NsxlX12fZvOeXPJyFwGQAYQ37hUQJbihjhRm1cUDGSN4w5VPMghEe0T/Udmsjme8SKaqYQ
-	MJSeTArUVlhKHOaho0nak6y7c5GT9Xs=
-Received: from mail-oo1-f71.google.com (mail-oo1-f71.google.com
- [209.85.161.71]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-136-Toy3c7xMOWWeE2e4CsXCVA-1; Thu, 05 Nov 2026 08:37:50 -0500
-X-MC-Unique: Toy3c7xMOWWeE2e4CsXCVA-1
-X-Mimecast-MFC-AGG-ID: Toy3c7xMOWWeE2e4CsXCVA_1793885869
-Received: by mail-oo1-f71.google.com with SMTP id 006d021491bc7-70b8894d6c1so947204eaf.0
-        for <linux-scsi@vger.kernel.org>; Thu, 05 Nov 2026 05:37:50 -0800 (PST)
+	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=NiU6VXsz
+Received: by mail-dy1-f198.google.com with SMTP id 5a478bee46e88-36a3451ea93so2735551eec.1
+        for <linux-scsi@vger.kernel.org>; Thu, 05 Nov 2026 06:43:13 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1793885869; x=1794490669; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :content-type:mime-version:references:message-id:subject:cc:to:from
-         :date:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=YNS6rAKby8LR/Cbc4BYoT1/kR2X+t0J+rzMsMWD0wNU=;
-        b=Z1PE9OcejKAtV/cAgi8lvo1166NWWcJt+P/Ybmz7nI7Cu/1VDklXsGxZMwC2lH+Rh8
-         sbuKdbj2UP3y+CeujWRzaRaHD20pXVY6itmu+Hirxh6msR85iIkgPjt914qWP6TdiEJ0
-         ykuiaBtm+iFj1drWXcAlnrj+p35CH2dMIBQEi9unBTKuNQEBpiJHvEpXI3f5OmVNvRUk
-         R4MUAvlIogeN2C4WkRHZY8yJ3pE+fC/q4rl/rMcn9WOXLhGjQzPMVHNkz0nJ6r+DWgt7
-         PUiOWOZG7+Jvu6q7JPUhEQ7TNbPlKpS8OReaXrf0AkMdfF7hYvfFKwgzaXq6YYcMgrxq
-         zJwQ==
+        d=google.com; s=20260707; t=1793889793; x=1794494593; darn=vger.kernel.org;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=wk/So20xr62QzWata5h+JuMn7QiKllnw4EsB0QPRdZA=;
+        b=NiU6VXszwSfPXrvc0ev7LGdQIIoSNzyClwMenodgW9tHkL7rHggh1SXl0iWN7QHbyR
+         T7wqatl/b7ghNIDvQjtQP2wfCu/Z5qTCeLEOJ4b9a2zOkEljQsMQ3velrPbzt9xPQD+D
+         YuHJm/G+1LGKZY4T6ymn2AFQMNrzJLyhH22hDELC5IAIlodZ8vw7JspNG9VR0s6h9ip/
+         lCPlLIjXqPfDHI4Cr7ZW4z0d+dw+u13ff5R/laSywid6YhxqMGrG1liqG9CkOqhGFcfb
+         IBABQDwHDmm1eSNB/msmmRVJmLsfBGD1V2pfRpPkrdmAkT0vFlJ8hrPWmaRaEhulaY2E
+         zkgg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793885869; x=1794490669;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :content-type:mime-version:references:message-id:subject:cc:to:from
-         :date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=YNS6rAKby8LR/Cbc4BYoT1/kR2X+t0J+rzMsMWD0wNU=;
-        b=wxkRsS+fZtGGoiCuq6P7AanJjIikGCJrwA1U4Ywflb/0tQvrF3U57yUTFVSEjGr8hQ
-         Jkbq6adF23YI5IKV3xY/bXqZLPAYatrz/SOn06kp+Y8IdPvtupAxD5tMWA6wfUJh48xQ
-         l/KLchF0oHNPFHV5oU+8Y99xnrJvI0dVfyam1wlSLqRxUAMQzcOF5XqXMjUpxHK3vwHe
-         aayKEvtXgfJZwGy5ZnP/dvNsdOt3ZSyLMUa0celM33mwYsMl1plOkqNVWAgLaT4Ckva3
-         D7kFh/PQ4jtb4QQQMlfbLXnQAoSv9u7fFriGsyjEwPME6UeB6pCxm1z7gltYcbdPjZBI
-         LNDw==
-X-Gm-Message-State: APuU4Z9F99asTvGBd62KS9lf8EQUv8dUpWjXyMOeSIje4+By2Xzd+GSZ
-	BPSmrOOt2a1ip6KPCQBT4Dg9C52g5KHKVZ58FJttgqw43Tcvs/SI+a8QfTFTIxVfXghMFOYizre
-	9JY/RKp14dy5JOIqoBGT9QitNr+pV7lZEA0fA8/8bAy002qkCsEmrO5LvUP1KzNw=
-X-Gm-Gg: AYBFou11ZGeLxw4IVUTb+TLWbkI50V9AecAADWDMQRHAo9Bl8s6zDXUgaxLT2WKrGV5
-	/tJPj5lAgj6eWtNMcYIFfVjeDwkhDuIEM8TDW4n2ERRp6LAjC8bFUQZ2fjvhZffNms4uw6HksaA
-	WnV8Tgm0yHHRi/7+v6TS1zQI/y/KCOj9fRBy4v0tZs3y+UczEnawPfwHCRWFMuqSnU1zi2Ccy4a
-	f0hssD/P6ux/nRGxm821ukKCRbXhO/VSgqXEqGa4iJ28qY9v+YGks1L9+5Tx7EoLotFdUaJPQFu
-	9jpzkXAJh2ZSyI9Y9LrkD/SapQncp2EYo4dWGQWRsRpvodcrYhnUqMBruPZTy03XuLjUPg2mJLS
-	z9ZBs5OXx7VGZUM2eQF9FjYrIuSwe2KFGWLesmQkhq4moglBrXN5tPMtAzL2LaYm/4ZYRgdSs+I
-	gUQ51125oFiORk2Jrspm/RDPiy6DNgUUp0pkO6Vg==
-X-Received: by 2002:a05:6820:60a:b0:716:c870:7eb9 with SMTP id 006d021491bc7-716d1ed0d87mr1387474eaf.17.1793885869472;
-        Thu, 05 Nov 2026 05:37:49 -0800 (PST)
-X-Received: by 2002:a05:6820:60a:b0:716:c870:7eb9 with SMTP id 006d021491bc7-716d1ed0d87mr1387460eaf.17.1793885869035;
-        Thu, 05 Nov 2026 05:37:49 -0800 (PST)
-Received: from mgandhi-thinkpadp16vgen1.punetw6.csb ([2401:4900:88fb:e4bc:f699:bfa1:8ae:63f7])
-        by smtp.gmail.com with ESMTPSA id 006d021491bc7-716c12b7d84sm4066366eaf.7.2026.11.05.05.37.45
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 05 Nov 2026 05:37:47 -0800 (PST)
-Date: Thu, 5 Nov 2026 19:07:42 +0530
-From: "Milan P. Gandhi" <mgandhi@redhat.com>
-To: sashiko-reviews@lists.linux.dev, sathya.prakash@broadcom.com,
-	kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
-	sreekanth.reddy@broadcom.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org
-Subject: Re: [PATCH v2] scsi: mpi3mr: Validate reply frame size bounds
-Message-ID: <auyGpgpDR_SJ_7UM@mgandhi-thinkpadp16vgen1.punetw6.csb>
-References: <20261103123316.223917-1-mgandhi@redhat.com>
- <20261105122401.266559-1-mgandhi@redhat.com>
- <sashiko-outbox-199052@kernel.org>
+        d=1e100.net; s=20260707; t=1793889793; x=1794494593;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=wk/So20xr62QzWata5h+JuMn7QiKllnw4EsB0QPRdZA=;
+        b=mJQ8qzqL21Wd0YZ1p6gcyzBJ7JOAvQCImwbTvXBH41NIMBthgiC2QIRVdEQMcq7wxI
+         j1xP6CXT61qhtaddkw/UN+rjPDr5copAQgbqdURrMR2ww5IQAWVYZVS6kwY8aHxrPyrH
+         qw+KviWxSp6s3q1zoEvACkqfIuO+nsBwFqwCJgWw5jMbFbBhjipmA/c70JLSlaBVNrox
+         MzcAc3K4cHUE9CUxayp13430O/r0U1d2z1O07+/vVS+j3UjhJ+PI7zh5GlLU8GCSjt32
+         XZnhrswtZQPRfYbO50ljlzIq6YP50vkEsUKDKv5dLPaz0h5o1jldCUXcU2A+6xsi35yU
+         ZPbA==
+X-Forwarded-Encrypted: i=1; AKwUvBz8s1aAg6kgenQE68+H8gcYgS/aJnPOn0q/WGRc0OfVuxyUNoN8dgnGoZZfV8NzRbeqAtH326NJYeaw@vger.kernel.org
+X-Gm-Message-State: APuU4Z8zuPH9ltRet67CqU6B2J+HtM9yR51pO+pJB0eQHmEK2g8wvKQI
+	/O8ZLqEpQF5L+3otezl12HvxTk8uOzCPKKWCMUipOMpeNFmIJLTp2dO3+JWjO4LaBp3CgZWPLx4
+	nAHpUX7rn8qbLukgte9f3cg==
+X-Received: from dyu28.prod.google.com ([2002:a05:693c:811c:b0:36a:15cf:f589])
+ (user=stanleyjhu job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a05:7301:618b:20b0:35f:2858:aa4b with SMTP id 5a478bee46e88-36a4241b070mr26273635eec.30.1793889792660;
+ Thu, 05 Nov 2026 06:43:12 -0800 (PST)
+Date: Thu,  5 Nov 2026 22:43:10 +0800
+In-Reply-To: <sashiko-outbox-198692@kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -117,27 +78,40 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <sashiko-outbox-199052@kernel.org>
+Mime-Version: 1.0
+References: <20261105071518.1458428-1-stanleyjhu@google.com>
+ <20261105071518.1458428-2-stanleyjhu@google.com> <sashiko-outbox-198692@kernel.org>
+X-Mailer: git-send-email 2.56.0.398.g882cbad275-goog
+Message-ID: <20261105144310.2626473-1-stanleyjhu@google.com>
+Subject: Re: [PATCH 1/2] scsi: ufs: core: Skip redundant variant resume after
+ error recovery power-up
+From: Stanley Jhu <stanleyjhu@google.com>
+To: sashiko-reviews@lists.linux.dev
+Cc: "Martin K . Petersen" <mkp@kernel.org>, 
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>, 
+	Alim Akhtar <alim.akhtar@samsung.com>, Bart Van Assche <bvanassche@acm.org>, 
+	Bean Huo <beanhuo@micron.com>, Brian Norris <briannorris@chromium.org>, 
+	Can Guo <can.guo@oss.qualcomm.com>, Peter Wang <peter.wang@mediatek.com>, 
+	John Garry <john.garry@linux.dev>, "Rafael J . Wysocki" <rafael@kernel.org>, 
+	Praveen Talari <praveen.talari@oss.qualcomm.com>, linux-scsi@vger.kernel.org, 
+	linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	stable@vger.kernel.org, Stanley Jhu <stanleyjhu@google.com>
+Content-Type: text/plain; charset="UTF-8"
 
-On Thu, Nov 05, 2026 at 12:45:39PM +0000, sashiko-bot@kernel.org wrote:
-> [Severity: High]
-> Is a minimum of 16 dwords (64 bytes) for MPI3MR_MIN_REPLY_FRAME_SZ_DWORDS
-> sufficient for event notification replies that carry struct
-> mpi3_device_page0?
+On Thu, Nov 05, 2026 at 07:42:29AM +0000, sashiko-bot@kernel.org wrote:
+> If a subsequent __ufshcd_wl_resume()
+> fails (for example, in ufshcd_set_dev_pwr_mode()), it rolls back to
+> vendor_suspend: and exits through out:, which clears is_suspended and drops
+> the clock-gating hold without a matching ufshcd_hold(hba) on future resume
+> attempts:
 
-The intent of this patch is specifically to establish baseline firmware 
-interface sanity in mpi3mr_issue_iocfacts()—preventing the integer overflow 
-on reply_sz, accommodating standard fixed reply frames, and avoiding 
-underflows in logdata sizing calculations.
+This review was run without the prerequisite listed in the cover
+letter, "scsi: ufs: core: Keep clock-gating hold on failed W-LUN
+runtime resume". With it applied, a failed runtime resume keeps
+is_suspended and the hold, so active_reqs does not underflow.
 
-Event notification payload validation touches a broader set of event types 
-and handling paths, which would expand the scope of this targeted fix. 
-That can be addressed in a separate follow-up patch.
+> However,
+> ufshcd_recover_pm_error() only marks ufs_device_wlun active if
+> power.runtime_error is set:
 
-Thanks,
-Milan
-
+Agreed. This will be fixed in v2.
