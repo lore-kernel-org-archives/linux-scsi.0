@@ -1,48 +1,48 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793907323;
-	b=bVEQmDf6aU1MwsnAIYY+rnGe5qI38cCEXBnXdQlIbY8j1j4LCoDfga7486cHuiqGdtZb
-	 WTbBTkvObKmj6neR5RUhyWLbgM0tQjolgsk6eRZmtll9aejWdUtcGzRYhddoYLa01aVG7
-	 wrvQvqBSXCHw1AYkg5lmTvrWvjy1JVNRDVxeUi0JvHlxQekeaIIz+HyxJ35373BPd0QaF
-	 oivknYB5YVUDe1CSkcegVY2gdoAFTq4OlVH/gaKR4VpZ7S90W4tbM+iC6Y/xYZAUqfqaf
-	 mdvDqeSWT1UW9vyvQ4zr5rSXy6l1Ah3KnUBR11ZKe/jaemYqpqH9xXo2yTfptB8gLbw==
+	t=1793907345;
+	b=5hHMucWssVAYVNV6zALyjnTRRj8/HAO18owKDXF2KrRBloiSMs9UcvT8oPlSKN9c2R0a
+	 ONBatJepbmmc8SKUWGuzPnL45halhZYg12Fe2YW79xEqBF63CC6iPPYIDPS+R1XSAgiGp
+	 Zl8SjpYpGjv+v3qR+0Tsc+6U49W8dJslmV55qYyMAmfCcd78+RfozWNv5yVnRdnzv2vrz
+	 yGYlNa3MdcBo+ALrw0KEz+8j0g1/kjXjLE53nsUO07gaaNlbf1Aexr67EtPtzLL8wXBur
+	 gikiUEzwdbMO69W3aV4G6kIC8TtEeUwZz52LhtxGI6gbqnE3uSrKIRdjbcqe+f3UqpQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793907323;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793907345;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=5h8pyB6ckh/Fez925GIOXUwCgLju8hiN+2v5AZq1zRc=;
-	b=X9FtLxquos9+vyMno0ngtrCPgdxTBLITtB+V1xGi8cXp033fV4NiFZvNwtldsnzk5nnl
-	 93tc59VUxs3YMe9NosgE+IjMG7+WHfhamky/iAgvP1XzDsdFAbN9sbE0UHj3yWMhYlSiC
-	 aYvALTQUiX293hnJd4zP5ABMMuC0yI2wmXIcwGz4phkpar3a3+d7ArU021GgepPn/eVOk
-	 hR6iIx4PKmMY2EuxVDQljpMuypxgmstZWTB/s1YZL6GcLG+W9BjAiBFinJlOZYDIQ7mUm
-	 CL4U386xhD6D+Mk80Qek1MZB2qnTYp+VRkuJ8oVetQ5MZlkQoF+RRBSLv2VMS7KCX/g==
+	bh=alsXUfuEo/F1zePFVRl45Ndme/OflhiQcp41SPItDb0=;
+	b=Ey6hVcbp7BFwAOJhn4jNKvkoWI7Afq+2zwIzIXpIi/alSUo1mMj9e/L5/b8ULBw4tffS
+	 lLUQQ2DUqqAwmFI0I/ZwgVdvk3L1elzAKyXYfBDHyrrXqXvrG6mAYTObxp5iYmf9nLyLg
+	 6j7Hrlz45Ny3qsZmph9z3WhAWbb8hJTXAy1rwzWFIl4dB/PR/68ciaOhPWrpMmrITkUit
+	 wa74kjP8b+QKSXrzJvFcpq21RUMUy5aulG43zDpxG1WTtZxlUJm2e4DWHfhbqOVkObdH2
+	 xFAD0YvIfryO22v3JZqQM/akIUVxvMlYd+nhsjiRV/kJJ0KL3BspzH9+1W18lKqt38A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jO6fHT46;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="dW/11WUL";
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB6FA60772B8;
-	Thu,  5 Nov 2026 19:35:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2365B6077B6B;
+	Thu,  5 Nov 2026 19:35:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jO6fHT46
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 914A31F0089F;
-	Thu,  5 Nov 2026 19:35:20 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=dW/11WUL
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D6CEB1F0089E;
+	Thu,  5 Nov 2026 19:35:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793907322;
-	bh=5h8pyB6ckh/Fez925GIOXUwCgLju8hiN+2v5AZq1zRc=;
+	s=k20260515; t=1793907343;
+	bh=alsXUfuEo/F1zePFVRl45Ndme/OflhiQcp41SPItDb0=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=jO6fHT46k3cC0x6jpyWBno3seAJmOL41FS/48htjx/g/4KS0/AOvvTQNDrK+N2tPn
-	 eSg4IyWf4G4FhYkE6vVJAuVVPft1L/scrcZOgLSXExy1eZXqRymthLKJHvCZEjshCQ
-	 FspK+EGuUBwYnyZw5GP5uQusSuenS6tchWvoKCkW0w6oxWb8XCS/IIeZBRu2cLLxh9
-	 nBalMctIah8ehQC7+J0mGQu5fUWTHREU0FPypSNk4wCDvlkwmfvT2GL0NdosSNP/Lg
-	 beYsluA0YIqlRpFoO5FkXTCF87+/0zOHnBlziRvMNQSTcpA2DxXltjclWi+UeZDyvx
-	 KCSkb1a4yeLIA==
-Message-ID: <sashiko-outbox-199934@kernel.org>
+	b=dW/11WULePWBsogqlKJCGC7JYPbCbnYXRV+C/X7JOVxLXj5zOAba52zQpFTgNc3SU
+	 VqxLxyGyN/7wF0BTtfNixYDyxmB3E86QX9Ux9RGZ1zXR/EzZ2ZJyrhkPfunyxJJIZl
+	 un+xpBbQSiFaF0jJ6u/VW8rXe40ajptsRa6PjrbVxC7gTAonFrr3x4gk/kvpjOE5P1
+	 HarizfUM9JcPoR6EP40r+AaFcc6yhKBRuZw/KiwaBzFcWGsYWpC0CK/E6jNjHZpgDM
+	 EXhNA7+mREaW+iD5ECYOta1cjbh7H74x/1uUayMthsMGSyY9SbGLuxXinygzr+5A4r
+	 a3NkeRuyCBiAg==
+Message-ID: <sashiko-outbox-199944@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH RESEND v2 04/23] proc: wait for the last user of an
- entry with wait_var_event()
+Subject: Re: [PATCH RESEND v2 14/23] proc: let procfs copy in writes before
+ pinning the entry
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Christian Brauner" <brauner@kernel.org>
 Cc: "Linus Torvalds" <torvalds@linux-foundation.org>, "Jann Horn" <jannh@google.com>, "Josef
@@ -57,12 +57,12 @@ Cc: "Linus Torvalds" <torvalds@linux-foundation.org>, "Jann Horn" <jannh@google.
  Pavlu" <petr.pavlu@suse.com>, "Anna Schumaker" <anna@kernel.org>, yukuai@fygo.io, "Heiko
  Carstens" <hca@linux.ibm.com>, "Vasily Gorbik" <gor@linux.ibm.com>, "Alexander
  Gordeev" <agordeev@linux.ibm.com>, "Christian Borntraeger" <borntraeger@linux.ibm.com>
-In-Reply-To: <20261104-work-procfs-core-v2-4-76ace653a773@kernel.org>
+In-Reply-To: <20261104-work-procfs-core-v2-14-76ace653a773@kernel.org>
 References: <20261104-work-procfs-core-v2-0-76ace653a773@kernel.org>
- <20261104-work-procfs-core-v2-4-76ace653a773@kernel.org>
+ <20261104-work-procfs-core-v2-14-76ace653a773@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 05 Nov 2026 19:35:20 +0000
+Date: Thu, 05 Nov 2026 19:35:41 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -74,74 +74,65 @@ Precedence: list
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [Medium] proc: missing acquire ordering in proc_entry_rundown() wait_var_=
-event()
+- [Low] proc: split __free(kvfree) declaration and initialization in pde_wr=
+ite_buf()
 --
 
-commit 983e734e20cf0803ce3936df6614c8375020b212
+commit e52627c4b4d80d32822781f143a8c1245bd64a2c
 Author: Christian Brauner <brauner@kernel.org>
 
-proc: wait for the last user of an entry with wait_var_event()
+proc: let procfs copy in writes before pinning the entry
 
-This commit replaces the per-entry pde_unload_completion pointer in
-struct proc_dir_entry with wait_var_event() and wake_up_var() on
-pde->in_use during proc_entry_rundown().
+This commit introduces a ->proc_write_buf() callback in struct proc_ops so
+that procfs can copy write data from userspace into a NUL-terminated kernel
+buffer before pinning the proc_dir_entry. This prevents userspace page
+faults during write copies from blocking remove_proc_entry().
 
 > diff --git a/fs/proc/inode.c b/fs/proc/inode.c
-> index 66a3688757dd7..8795add1898dc 100644
+> index d51ab7548b117..df1caa0f238df 100644
 > --- a/fs/proc/inode.c
 > +++ b/fs/proc/inode.c
-
-[ ... ]
-
-> @@ -266,11 +267,9 @@ static void close_pdeo(struct proc_dir_entry *pde, s=
-truct pde_opener *pdeo)
+> @@ -417,11 +417,44 @@ static ssize_t pde_write(struct proc_dir_entry *pde=
+, struct file *file, const ch
+>  	return -EIO;
+>  }
 > =20
->  void proc_entry_rundown(struct proc_dir_entry *de)
->  {
-> -	DECLARE_COMPLETION_ONSTACK(c);
->  	/* Wait until all existing callers into module are done. */
-> -	de->pde_unload_completion =3D &c;
->  	if (atomic_add_return(BIAS, &de->in_use) !=3D BIAS)
-> -		wait_for_completion(&c);
-> +		wait_var_event(&de->in_use, atomic_read(&de->in_use) =3D=3D BIAS);
+> +/*
+> + * procfs copies in what is written before it pins the entry. A writer t=
+hat
+> + * faults on its buffer then doesn't hold up remove_proc_entry().
+> + */
+> +static ssize_t pde_write_buf(struct proc_dir_entry *pde, struct file *fi=
+le,
+> +			     const char __user *ubuf, size_t count, loff_t *ppos)
+> +{
+> +	char *buf __free(kvfree) =3D NULL;
+> +	size_t size;
+> +	ssize_t rv;
+> +
+> +	size =3D pde->write_size;
+> +	if (count > size) {
+> +		if (!pde_has_short_writes(pde))
+> +			return -EINVAL;
+> +		count =3D size;
+> +	}
+> +	buf =3D kvmalloc(count + 1, GFP_KERNEL);
 
-[Severity: Medium]
-Should the condition in wait_var_event() use atomic_read_acquire(&de->in_us=
-e)
-instead of atomic_read(&de->in_use)?
+[Severity: Low]
+As reported by Sashiko on RFC [1], this isn't a bug, but in pde_write_buf()
+(called from proc_reg_write()), buf is declared with __free(kvfree) =3D NULL
+at the top of the function and assigned later with kvmalloc() after the
+count > size check.
 
-When remove_proc_entry(), remove_proc_subtree(), or proc_remove() calls
-proc_entry_rundown(de) while another CPU is executing an in-flight proc
-callback, atomic_add_return(BIAS, &de->in_use) returns a value not equal to
-BIAS. If that callback finishes and executes atomic_dec_return(&pde->in_use)
-in unuse_pde() before proc_entry_rundown() evaluates the wait condition,
-wait_var_event() takes its initial fast path:
+Per the Cleanup API conventions in include/linux/cleanup.h, should buf be
+defined and initialized in a single statement at the allocation site:
 
-include/linux/wait_bit.h:
-#define wait_var_event(var, condition)					\
-do {									\
-	might_sleep();							\
-	if (condition)							\
-		break;							\
-	__wait_var_event(var, condition);				\
-} while (0)
+	char *buf __free(kvfree) =3D kvmalloc(count + 1, GFP_KERNEL);
 
-Because atomic_read() is relaxed, breaking out on the initial check neither
-takes the waitqueue lock nor issues an acquire barrier. On weakly-ordered
-architectures, memory accesses performed after proc_entry_rundown() (such as
-freeing or reading private data after remove_proc_entry() returns, especial=
-ly
-once the subsequent patch in this series skips pde_unload_lock when
-!de->open) could be reordered before memory accesses made by the proc
-callback prior to unuse_pde().
+after validating count?
 
-Previously, complete() and wait_for_completion() unconditionally provided
-release-acquire ordering via the completion waitqueue lock, and the
-documentation for wait_var_event() notes that the condition should use
-smp_load_acquire() or a similarly ordered access so memory changes made
-before the condition became true are visible after the wait completes.
+[1] https://lore.kernel.org/r/sashiko-outbox-195538@kernel.org
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261104-work-procf=
-s-core-v2-0-76ace653a773@kernel.org?part=3D4
+s-core-v2-0-76ace653a773@kernel.org?part=3D14
