@@ -1,54 +1,56 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793893927;
-	b=f1xeVbSFPK+qGQE0PRAqru2V0jL76UNRWTgpCHBk6lt21MBztG4XOJA6W1PYS6Qc1+yK
-	 axScAEb7xS2pAsZQ2BGOWoN9+9bBKv7Cb+YOv13EDQH6C0Eqi4B9+JWPsOHUWGWDfyNt/
-	 OLV/2Eyl0c6RyQHoKCCFQT0qMHF1LOoeZ4Oby1Hy+scPFkuKgEVS+Fp9ThjDKyERRYynY
-	 lbeVZIfTdtHwY8Wc++ey64bL2b2V/pcKZyUCscK2W4V9ETSjt6QucJ8PEyiZW56kuM79m
-	 e3z17bh92JICY7YSLdvr7rqVPhlBweTFEVOKUzzcWmW45mbzCiwl5dHU2wFUduXOjXA==
+	t=1793894536;
+	b=eWqtXJ28VLYt30O/c4EoXUwRbjxcw3VK9DnyWyX7G0UlgkidbmBpYNDvvaq7W4u4sHxi
+	 6L2iGm1ph5pUdn1dfQUCyanuiODOHd1Z8PvQ0mH56gbwb8Z1FI2hfvLFkZdZl29XrWbRu
+	 GskWr1CwrXYnEANy+7qeQp06U/stLqziN4dcY3xhq1YN84NenbgBy9+ULvch//38BzhLa
+	 mw0vl+8bJykwTGOjOJ74VGJhTRKzC2MwOM47H4O+bQEqVJLZnI7HbddbADrJHyj+zTOOT
+	 LAB1AdS8j52Z4RbFSqbOOdhDdZswC9zg9lPySop14J7LUGziyHkHH3ZgQuT1cenYH5w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793893927;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
+	a=rsa-sha256; c=relaxed/relaxed; t=1793894536;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=hW9HS+EEWkHNCPj+p4Gl3a6W3rV7V3ETg7/nPVbyL8U=;
-	b=2wsjbUULPrmsGQ8/1yL8G4qQKLX62t9DnFPEhFfloZn0O88s4W4ib2OYdivMGuTQTifG
-	 dxJMDK+qCGhZrAayhQVkfI0cxsPMfHvUsCX434NOZcBxOVoOBzOFu/rP+qFpEBd0L9YkT
-	 tjdmaa+CrM5nLPs6LuZv9xCSES05D2haE6jVTWAPCDfwIMZglnmdw3S9Hf/oj0JgrRmWc
-	 XHkTsezD2cAhqctFPnI0f7D8UpMeowRrcwDrI2X/ZssmchhOzsbtii00ql5q7YhqZYqCp
-	 pHZnsK5vsMEDLAJ+PofJ3bsFwcleGTebqYPTVtXI2hyik1x65pWTpSCuSPS/Vid9Jig==
+	bh=aqCzNdwdFXbkiMBNueOzUtHr/O5k6VyeO9VmVzV7WAE=;
+	b=0n+zsZnuemsboxVNeCs64meBWnuXWqvN0/bUayXZJf1HhkYAZ08HQPwz0AlfGM/3wS0p
+	 wr3ndBQm8eA6mxIZBqK+jzDXhVUMuHs+7xjsmtmyT9wG0eQ0mXTkC81V4gGs4klKAwAdj
+	 CAif2OLSWw7KowAmb3HBsSl6M38oOP8nNcFwjUoYUeacblZUQ3aoZhLUnKrKF6y0YohT7
+	 3fJetnq2rGyZW8pzXoyEV4xTz89vopxQaYMDm6Q92gxN6qXYN9ANmGV5Ixg7IB5mmC0sJ
+	 PV7opmBehkFTDJfrFKjCC8jFfwDI0TzE5Ybf6eVQB8yiXxLYyzKCQ0ivrBPuhAcLhGA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=UpmKmfTp;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="n4+f/j9F";
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 983CD606A333
-	for <linux-scsi@vger.kernel.org>; Thu,  5 Nov 2026 15:52:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B982606F940
+	for <linux-scsi@vger.kernel.org>; Thu,  5 Nov 2026 16:02:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=UpmKmfTp
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ED73B1F00919;
-	Thu,  5 Nov 2026 15:52:06 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=n4+f/j9F
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E92371F00919;
+	Thu,  5 Nov 2026 16:02:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793893927;
-	bh=hW9HS+EEWkHNCPj+p4Gl3a6W3rV7V3ETg7/nPVbyL8U=;
-	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
-	b=UpmKmfTp5mCF45LHzfIrbqH8LX/vULHOhJKIL+DWApo+kfgTys9//OHtmxwwdQXL/
-	 xZbs+i68s9bRQaTDX0nJJB3JWtPDuvl6N2dIBWY6z5HYgKW9aRim4yfIwe0vJLsuSu
-	 mYsFUIQ+PmSHxBcoBZ6Ciyl0wgqIYfwVnEK29DORduB4MzMiKB814jBXgwKl2rit2L
-	 SpEWtImI3Fu60uI6TvjLbqBQ1NUJzNhSYPtE2DrhdOy9XH/oGD/97D0fPw53bBIjYz
-	 vO9EnQOgMgMBxA1HvMTjp3W8Qpu8KkhYPNooQ4dQrs+AxhpIKdE4yIvAWTSj8R5Sg4
-	 RiGR8W5cNicHA==
-Message-ID: <sashiko-outbox-199356@kernel.org>
+	s=k20260515; t=1793894536;
+	bh=aqCzNdwdFXbkiMBNueOzUtHr/O5k6VyeO9VmVzV7WAE=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=n4+f/j9FRQbdex8rpGrOu1/VSzFnNy2L6ZK/rKIm1qOC1buwmrM+jrqhtf7PrThxB
+	 RWquUTsrdU0pUafZ7/xmNDO5eyimwJZFnJx0tnvYZcx7HfApo0OpgL/TSKqJorZWar
+	 in3ZnPudZSRsfaA3LtZavFW88CYpdzDZZ2HI8ZDsHklz61yA3Fkat3P8hIYNawgX29
+	 PapZrKhCPyrnYNiT0nMpTAIwsxYacgZL9WpIMyrzJVw84ARE/16b3XCgCMHjFgnSvT
+	 nbRMWM2hKiEQs5Xdbrlv9azZ/RDL+IfSCOz/aubkRIfFERefAuiEVNsOA5xDhgfHwy
+	 2/kjXw6vTgR0A==
+Message-ID: <sashiko-outbox-199397@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2] scsi: core: reject short REPORT LUNS responses
+Subject: Re: [PATCH] scsi: lpfc: fix ndlp use-after-free in RLS accept
+ callback
 Reply-To: sashiko-reviews@lists.linux.dev
-To: shao.mingyin@zte.com.cn, linux-scsi@vger.kernel.org
-In-Reply-To: <20261103235610554mYM6cfXrrF3RpQowmPUzD@zte.com.cn>
-References: <20261103235610554mYM6cfXrrF3RpQowmPUzD@zte.com.cn>
+To: "Wentao Liang" <vulab@iscas.ac.cn>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20261104025348.1527601-1-vulab@iscas.ac.cn>
+References: <20261104025348.1527601-1-vulab@iscas.ac.cn>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 05 Nov 2026 15:52:06 +0000
+Date: Thu, 05 Nov 2026 16:02:15 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -58,138 +60,62 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] scsi: core: length wrap check in scsi_report_lun_scan() fails on 3=
-2-bit
-- [Medium] scsi: core: scsi_report_lun_scan() ignores resid for LUN list pa=
-yload
+- [Low] scsi: lpfc: inaccurate Fixes tag in commit message for lpfc_els_rsp=
+_rls_acc()
 --
 
-commit 2885be16f82e8adaba8635ec48148cc769b349f4
-Author: shao.mingyin@zte.com.cn <shao.mingyin@zte.com.cn>
+commit 8109741dc29cffda7f87382c25b20f6a9dd30b92
+Author: Wentao Liang <vulab@iscas.ac.cn>
 
-scsi: core: reject short REPORT LUNS responses
+scsi: lpfc: fix ndlp use-after-free in RLS accept callback
 
-This commit allocates the REPORT LUNS buffer in scsi_report_lun_scan() with
-kzalloc() instead of kmalloc() and checks the transfer residual and buffer
-length so that responses shorter than the eight-byte LUN list header are
-rejected.
+This commit fixes a use-after-free of ndlp in lpfc_els_rsp_rls_acc() by
+delaying lpfc_nlp_put(ndlp) until after the IOCB reference on ndlp has
+been acquired, and releasing it on earlier error paths.
 
-> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-> index 52f3b525d2fda..e6aac73105375 100644
-> --- a/drivers/scsi/scsi_scan.c
-> +++ b/drivers/scsi/scsi_scan.c
-> @@ -1475,10 +1475,11 @@ static int scsi_report_lun_scan(struct Scsi_Host =
-*shost,
->  		.total_allowed =3D 3,
->  		.failure_definitions =3D failure_defs,
->  	};
-> +	int ret =3D 0, resid =3D 0;
->  	const struct scsi_exec_args exec_args =3D {
-> +		.resid =3D &resid,
->  		.failures =3D &failures,
->  	};
-> -	int ret =3D 0;
-> =20
->  	/*
->  	 * Only support SCSI-3 and up devices if BLIST_NOREPORTLUN is not set.
-> @@ -1516,7 +1517,7 @@ static int scsi_report_lun_scan(struct Scsi_Host *s=
-host,
->  	 */
->  	length =3D (511 + 1) * sizeof(struct scsi_lun);
->  retry:
-> -	lun_data =3D kmalloc(length, GFP_KERNEL);
-> +	lun_data =3D kzalloc(length, GFP_KERNEL);
->  	if (!lun_data) {
->  		printk(ALLOC_FAILURE_MSG, __func__);
->  		goto out;
-> @@ -1567,6 +1568,19 @@ static int scsi_report_lun_scan(struct Scsi_Host *=
-shost,
->  		goto out_err;
->  	}
-> =20
-> +	/*
-> +	 * Reject a transfer that did not fill in the whole LUN list header.
-> +	 * Also reject a length that cannot even hold the header: the retry
-> +	 * path computes it from the device-reported value with an addition
-> +	 * that can wrap below sizeof(struct scsi_lun), in which case the
-> +	 * residual comparison below would underflow.
-> +	 */
-> +	if (length < sizeof(struct scsi_lun) ||
-> +	    resid > length - sizeof(struct scsi_lun)) {
-> +		ret =3D 1;
-> +		goto out_err;
-> +	}
+>     scsi: lpfc: fix ndlp use-after-free in RLS accept callback
+>    =20
+>     lpfc_els_rcv_rls() takes a reference on the ndlp for the pending
+>     MBX_READ_LNK_STAT command.  lpfc_els_rsp_rls_acc() drops that
+>     reference right after building the ACC IOCB, but then keeps
+>     dereferencing ndlp in the trace message and takes a fresh reference
+>     for the IOCB.
+>    =20
+>     The node can be removed from the nodelist while the mailbox is
+>     pending, so the put may be the last one and release ndlp through
+>     lpfc_nlp_release().  The later ndlp->vport, ndlp->nlp_DID and
+>     lpfc_nlp_get() calls then touch freed memory.
+>    =20
+>     Move the put after the reference for the IOCB has been acquired, and
+>     release it on the paths that bail out before that point.
+>    =20
+>     Fixes: 12265f68ae92 ("[SCSI] lpfc 8.3.18: Add support of received ELS=
+ commands")
+>     Cc: stable@vger.kernel.org
+>     Assisted-by: DeepSeek-V4.1-Flash and OpenAI Codex
+>     Signed-off-by: Wentao Liang <vulab@iscas.ac.cn>
 
-[Severity: High]
-Does the length < sizeof(struct scsi_lun) check in scsi_report_lun_scan()
-in drivers/scsi/scsi_scan.c work on 32-bit architectures, or happen early
-enough on 64-bit architectures, when the device-reported LUN list length is
-in the range 0xfffffff8..0xffffffff?
+[Severity: Low]
+In commit 12265f68ae92 ("[SCSI] lpfc 8.3.18: Add support of received ELS
+commands"), lpfc_prep_els_iocb() itself acquired the IOCB reference on
+ndlp via elsiocb->context1 =3D lpfc_nlp_get(ndlp) before returning elsiocb.
+Calling lpfc_nlp_put(ndlp) right after lpfc_prep_els_iocb() in
+lpfc_els_rsp_rls_acc() kept the IOCB's reference live when elsiocb was
+non-NULL, and returned immediately without dereferencing ndlp when
+elsiocb was NULL.
 
-Immediately after this check, scsi_report_lun_scan() inspects the reported
-length and decides whether to retry:
+Commit 4430f7fd09ec ("scsi: lpfc: Rework locations of ndlp reference
+taking") later removed lpfc_nlp_get(ndlp) from lpfc_prep_els_iocb() and
+moved it to the end of lpfc_els_rsp_rls_acc(), while leaving the
+lpfc_nlp_put(ndlp) call immediately after lpfc_prep_els_iocb().
 
-	if (get_unaligned_be32(lun_data->scsi_lun) +
-	    sizeof(struct scsi_lun) > length) {
-		length =3D get_unaligned_be32(lun_data->scsi_lun) +
-			 sizeof(struct scsi_lun);
-		kfree(lun_data);
-		goto retry;
-	}
-	length =3D get_unaligned_be32(lun_data->scsi_lun);
+Should the Fixes tag instead be:
 
-	num_luns =3D (length / sizeof(struct scsi_lun));
-	...
-	for (lunp =3D &lun_data[1]; lunp <=3D &lun_data[num_luns]; lunp++) {
-
-On 32-bit architectures, get_unaligned_be32(lun_data->scsi_lun) (u32),
-sizeof(struct scsi_lun) (size_t, 8), and length (unsigned int) are all
-32-bit unsigned values. If a target responds to the initial 4096-byte
-REPORT LUNS command with a LUN list length in 0xfffffff8..0xffffffff, the
-addition in the if condition wraps modulo 2^32 to 0..7. Since 0..7 > 4096
-is false, the retry branch is not taken and the length < sizeof(struct
-scsi_lun) check is never reached. Execution falls through with length set
-to 0xfffffff8..0xffffffff and num_luns set to 0x1fffffff, causing the scan
-loop to read far past the end of the 4096-byte lun_data buffer.
-
-On 64-bit architectures, sizeof(struct scsi_lun) is a 64-bit size_t, so the
-if condition evaluates to true without wrapping, but assigning the sum to
-the 32-bit unsigned int length truncates it to 0..7 before jumping to
-retry. Because the length < sizeof(struct scsi_lun) check is placed after
-kzalloc() and scsi_execute_cmd(), the retry pass calls kzalloc(0..7,
-GFP_KERNEL) (returning ZERO_SIZE_PTR when length is 0) and sends a bogus
-0..7 byte REPORT LUNS command to the target before rejecting length.
-
-Would it be better to check for overflow when adding sizeof(struct
-scsi_lun) to get_unaligned_be32(lun_data->scsi_lun) (for example via
-check_add_overflow()) before comparing against length and jumping to retry?
-
-[Severity: Medium]
-As reported by Sashiko on v1 [1], what happens in scsi_report_lun_scan() in
-drivers/scsi/scsi_scan.c when a target transfers the full 8-byte LUN list
-header (so resid <=3D length - sizeof(struct scsi_lun)), but stops
-transferring before sending all of the LUN descriptors reported in that
-header?
-
-After the header residual check and retry check pass, scsi_report_lun_scan()
-computes num_luns directly from the header value without checking or
-bounding against the number of payload bytes actually transferred (length -
-resid - sizeof(struct scsi_lun)):
-
-	length =3D get_unaligned_be32(lun_data->scsi_lun);
-
-	num_luns =3D (length / sizeof(struct scsi_lun));
-
-If the transfer stopped mid-descriptor or before the end of the reported
-list, the untransferred tail is zeroed by kzalloc() and scsi_execute_cmd().
-Doesn't the scan loop then decode a partially transferred descriptor with
-zeroed trailing bytes into a corrupted LUN number via scsilun_to_int(), and
-decode all remaining untransferred descriptors as LUN 0?
-
-[1] https://lore.kernel.org/r/sashiko-outbox-195103@kernel.org
+  Fixes: 4430f7fd09ec ("scsi: lpfc: Rework locations of ndlp reference taki=
+ng")
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261103235610554mY=
-M6cfXrrF3RpQowmPUzD@zte.com.cn?part=3D1
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261104025348.1527=
+601-1-vulab@iscas.ac.cn?part=3D1
