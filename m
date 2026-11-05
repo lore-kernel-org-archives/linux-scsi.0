@@ -1,75 +1,99 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.69
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=148.163.158.5
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793889796;
-	b=Fe3T/WckLjudFzOciue9tY+bPGehDAR+eiGD505mhM+KInkrw52C3E/s0Fax8s9TpmoD
-	 Xa/gUsmzRF6GSbWZ0iX9yOtnlen4LVvFziOdXp2qZuT9xvhpfmTHpks9b4Orlp1ijN7b6
-	 wCCGCbnk68/AuaWoZfPdsGSHTbmYpbo5V3+2df1kRMKvL4Fijsz/Rh7J9rj8o52yXNUSs
-	 KhjIrqxZx7rNqRmB37ADmMwrrmDWiVJYREaftxLUTG2xE1AVuJL2hGfUkbZe5/o5+kXpo
-	 ECegplX/8fYHtfqX/Sj2q/TyexFCgp+l8SrmQ1iayX3htMMEmhMr+BEjG5I+y9p5ccw==
+	t=1793890803;
+	b=ugrWCcPut3ZmOBSiyc1p/Rw3PrZaQwL3RfqH2rCCMIGOh2DGCJh5mmGGIP+BrISCRgKb
+	 KIT0jA2sWUNZ99bCstNLZcvwcVM2stX3u57r4FWRSZ5L5z8ygGQl2+88N7IOKbfhcWzA1
+	 DolAiyh44N7KhZ80T7izZsxMNTiemqTo6RFdFEdT2HBS+fmP7IpgJrQQJsPRcdSJQadLw
+	 zAlW8r0O2qgVv9SzcKjDWHu7mzkZQ+TT+o2wRK2OSRpFwCvxHIPrnXRiMTi5HkjOBn/tY
+	 FxjNGSXaqMmIogfXzIviliN2w/9LTDLDld7efc2Pu/UOXawffjpI0kMEXgh1/dQbbgQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793889796;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:In-Reply-To:
-	 Mime-Version:References:X-Mailer:Message-ID:Subject:From:To:Cc:
-	 Content-Type;
-	bh=MnyLKUfg5ufAqKiT0oKE83kexAXeCPTLKjrnMiWI+IU=;
-	b=K/epi7z7CQw9GeNQoOP1qf3FibI+o9X33gxg+5p3z+RuhJLT40TGfglmu6x254D42zdA
-	 ZGo4/jAAEaFHJi8aJ3CnhNV8N7+4/3I7E/1PTcuV+PidVBgcei+arJF1CBmmZUijqKsrf
-	 +vWBXrze/X2zJdE9sO/VcVzMR2CptRtTexhnOMwDJGr8GnqHQunmEUMtSQ35sxMhly2hQ
-	 d2rCNfUg3r2WahLyHzNponzR35tSJdEoY7NkRY8oT8ZNgM0lMRBcF5f5NuehsrC7qMSd2
-	 d8hb2pmr6eCOeIHaYHkNT/O96Uf6R1TvdI+HeOYbEIc3lU1b2yYYD7INyoUJhSMiAQg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793890803;
+	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:Received:
+	 Received:Received:Received:Received:From:To:Cc:Subject:In-Reply-To:
+	 References:Date:Message-ID:User-Agent:MIME-Version:Content-Type:
+	 X-TM-AS-GCONF:X-Proofpoint-Reinject:X-Proofpoint-GUID:
+	 X-Proofpoint-Spam-Details-Enc:X-Proofpoint-Spam-Info:
+	 X-Authority-Analysis:X-Proofpoint-ORIG-GUID:
+	 X-Proofpoint-Virus-Version:X-Proofpoint-Spam-Details;
+	bh=lFDPT0oaNH/zvfvIcUK9rsDJdNG9sPVoATFrcaQax9Y=;
+	b=jKQb1F7Q84yopJgOl6FNWG/Sx0MDi5Ui4b4pL0RP9rJ7JawfjCGnGcZSUeNpbg/3ZCdJ
+	 CG2+xbcpAHfUsacxDbMTWut9aktsEFv9TThT5OIWG+6gsRxsblXuA3VAAGRCGnm+TQVrV
+	 U8dQxTUdabaBDLtc04crynnVlaXAodePIfAYgL2b3ytyINuGOPsYSCqExbgZl0vl9bE78
+	 iPXyint9XjTtJ1OIWgNpgY9IgvkNVvYfW34njh9j9ZIpn5yx6yAk+4lXqlOuLKTbCD4HA
+	 wjnoRiayCPCLld/q9Ob6tKSQUQpkgC+vf2uPIqI2KnAveQLwLhsfwuL5PZSDM++f/ZQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=google.com;
-	spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=Y9rOLmAK;
-	arc=none smtp.remote-ip=74.125.82.69
-Received: from mail-dl1-f69.google.com (mail-dl1-f69.google.com [74.125.82.69])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=pass header.from=linux.ibm.com;
+	spf=pass smtp.mailfrom=linux.ibm.com;
+	dkim=pass header.d=ibm.com header.i=@ibm.com header.a=rsa-sha256 header.s=pp1 header.b=hiIOyBnB;
+	arc=none smtp.remote-ip=148.163.158.5
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A7B1606A333
-	for <linux-scsi@vger.kernel.org>; Thu,  5 Nov 2026 14:43:16 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7A7B1606A333
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB4ED606EE99;
+	Thu,  5 Nov 2026 15:00:02 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org AB4ED606EE99
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=Y9rOLmAK
-Received: by mail-dl1-f69.google.com with SMTP id a92af1059eb24-139b62317d0so4374113c88.0
-        for <linux-scsi@vger.kernel.org>; Thu, 05 Nov 2026 06:43:16 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20260707; t=1793889796; x=1794494596; darn=vger.kernel.org;
-        h=content-type:cc:to:from:subject:message-id:references:mime-version
-         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=MnyLKUfg5ufAqKiT0oKE83kexAXeCPTLKjrnMiWI+IU=;
-        b=Y9rOLmAKjBVdrCp02W76hV9kicaJEHdhvzHUIzJyOlft0uebcy41X9U7JkYqpM3u8q
-         VL8urorwkYTTjsajE8Q6hWl4PKlKi/MwLuZMh2e93cdqV9O5Dui0f8lpZCWuGV3JtFU+
-         OXO3WQxJrY287dJdKczTEy56tpb6KictYEZk6C4AJoTrrtLGm/9OrLX9uh0J12MP8vD6
-         JPkOq6r5Kzb0gH2oU3QWpT/ZzUrQNc6jk+Ip3V75fCGmdeFuMvhM30+erX7Hg/Ma/R+a
-         w3JnHwr7WopHxD0f39mTIe3FivrSHbA8Jem3SBEYdWC6CP3qi6A+aN7FqrC1A7ZjfCSV
-         EZnQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793889796; x=1794494596;
-        h=content-type:cc:to:from:subject:message-id:references:mime-version
-         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=MnyLKUfg5ufAqKiT0oKE83kexAXeCPTLKjrnMiWI+IU=;
-        b=gUYNzG/GHXuydu9jshMfl/1T1QUzElozVbQfDlME7rVkAMuxjD9Ul5fEFwllnVPuKe
-         uYMMkLJDu3+yI2fMiBHoIoF5vM/WhxkZLUG6RoFgLdXe/gHdyyleY+DENNqXwEUxfmwO
-         PK2spoQMI4V21lPIhOCiUYFkF4TVUcLqTqRd9wt+hJvbw409BGK7liS2mzCSJXORXJis
-         XCFbzjTh+SLhgXe9Xiax1R3PVTvGqZOeziFyLnEz2JMiIiNC3hSsn6Dt8+EWvh3dNSgE
-         y43ODJEYgBFSqMY3Zm1CQNT/E9jJAaL5tgY00H1GXt1G7fhAh3J/jS22wa/d5HH4vt1m
-         8O3w==
-X-Forwarded-Encrypted: i=1; AKwUvBwPO/Z1foyHqcO8piwkFIRRrY985lz32VGku7kZJe85LZ6IQ9u9xfTcSidZKrysd0nYTMtfsrVu8tcy@vger.kernel.org
-X-Gm-Message-State: APuU4Z/mJZBUFILhjgFVzdfE2YixzWop7LmuX6pK9S5MsuCZXG8U5mLh
-	GrBgbsvQKzKzoV9UNFFzE2wwg1MbjxvlGjgIRsez54JuVH6gsccPUrFz/+Wgssgl2osPZFA3GQb
-	TAp0LMWHg5cDU44dW5wmszA==
-X-Received: from dldz11-n1.prod.google.com ([2002:a05:701b:418b:10b0:1a1:3ce6:560b])
- (user=stanleyjhu job=prod-delivery.src-stubby-dispatcher) by
- 2002:a05:7022:b047:20b0:1a3:bfb6:44ad with SMTP id a92af1059eb24-1ac5da797d4mr31199827c88.32.1793889795206;
- Thu, 05 Nov 2026 06:43:15 -0800 (PST)
-Date: Thu,  5 Nov 2026 22:43:13 +0800
-In-Reply-To: <sashiko-outbox-198693@kernel.org>
+	dkim=pass (2048-bit key, unprotected) header.d=ibm.com header.i=@ibm.com header.a=rsa-sha256 header.s=pp1 header.b=hiIOyBnB
+Received: from pps.filterd (m0353725.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6A5EiHD62627300;
+	Thu, 5 Nov 2026 14:59:49 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-type:date:from:in-reply-to:message-id:mime-version
+	:references:subject:to; s=pp1; bh=lFDPT0oaNH/zvfvIcUK9rsDJdNG9sP
+	VoATFrcaQax9Y=; b=hiIOyBnBG8zF5ri+rtwFsTlw+pu1uzZZ+Fv0V/TvlMKtmq
+	WrP/GiIO+2G+VrDzSJB9UqQmlHxrg8viVK3ZDrQptyBYI86UqK217otEIDTF6M1u
+	f+szl3PGHM92AZ/LKucBQgHtzs7W+wXfmTI7xqXDpJpa/sgiry0U32YD795Y2tfb
+	6A3uP7UmTxqF78b83LWUICoRsGGnSi2IjW9zDJlcMQtQC1O0UMLYzg8fJdDS+cry
+	MOcaJJh7j6MIxJUiG0nUL23iXBojQyWJQVgoETIENihJl5hya3s53z3hy/xMAITZ
+	M0V+NjtDUfL5Fmgk2pblLCuYmxU+wg2Lc7M1M5kw==
+Received: from ppma21.wdc07v.mail.ibm.com (5b.69.3da9.ip4.static.sl-reverse.com [169.61.105.91])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4hn6rdjk2q-1
+	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
+	Thu, 05 Nov 2026 14:59:48 +0000 (GMT)
+Received: from pps.filterd (ppma21.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma21.wdc07v.mail.ibm.com (8.18.1.11/8.18.1.11) with ESMTP id 6A5EZ0Bk1685738;
+	Thu, 5 Nov 2026 14:59:48 GMT
+Received: from smtprelay07.wdc07v.mail.ibm.com ([172.16.1.74])
+	by ppma21.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4hrmrej6um-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 05 Nov 2026 14:59:48 +0000 (GMT)
+Received: from smtpav04.wdc07v.mail.ibm.com (smtpav04.wdc07v.mail.ibm.com [10.39.53.231])
+	by smtprelay07.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 6A5Exk8a20120120
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 5 Nov 2026 14:59:46 GMT
+Received: from smtpav04.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id BCB6C58045;
+	Thu,  5 Nov 2026 14:59:46 +0000 (GMT)
+Received: from smtpav04.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 2A15758052;
+	Thu,  5 Nov 2026 14:59:46 +0000 (GMT)
+Received: from e (unknown [9.16.46.225])
+	by smtpav04.wdc07v.mail.ibm.com (Postfix) with ESMTPS;
+	Thu,  5 Nov 2026 14:59:46 +0000 (GMT)
+From: Dave Marquardt <davemarq@linux.ibm.com>
+To: "Martin K. Petersen" <mkp@kernel.org>
+Cc: Madhavan Srinivasan <maddy@linux.ibm.com>,
+        Michael Ellerman
+ <mpe@ellerman.id.au>,
+        Nicholas Piggin <npiggin@gmail.com>,
+        "Christophe
+ Leroy (CS GROUP)" <chleroy@kernel.org>,
+        "James E.J. Bottomley"
+ <James.Bottomley@HansenPartnership.com>,
+        Tyrel Datwyler
+ <tyreld@linux.ibm.com>, linux-scsi@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v17 00/13] scsi: ibmvfc: make ibmvfc support FPIN messages
+In-Reply-To: <yq18q38ym3n.fsf@mail.kernel.org> (Martin K. Petersen's message
+	of "Wed, 04 Nov 2026 22:52:46 -0500")
+References: <20261102-ibmvfc-fpin-support-v17-0-9ee5f195ac91@linux.ibm.com>
+	<yq18q38ym3n.fsf@mail.kernel.org>
+Date: Thu, 05 Nov 2026 08:59:45 -0600
+Message-ID: <87qzgz8gta.fsf@linux.ibm.com>
+User-Agent: Gnus/5.13 (Gnus v5.13)
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -78,33 +102,47 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0
-References: <20261105071518.1458428-1-stanleyjhu@google.com>
- <20261105071518.1458428-3-stanleyjhu@google.com> <sashiko-outbox-198693@kernel.org>
-X-Mailer: git-send-email 2.56.0.398.g882cbad275-goog
-Message-ID: <20261105144313.2627198-1-stanleyjhu@google.com>
-Subject: Re: [PATCH 2/2] scsi: ufs: core: Wake consumer queues on suspended
- W-LUN recovery
-From: Stanley Jhu <stanleyjhu@google.com>
-To: sashiko-reviews@lists.linux.dev
-Cc: "Martin K . Petersen" <mkp@kernel.org>, 
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>, 
-	Alim Akhtar <alim.akhtar@samsung.com>, Bart Van Assche <bvanassche@acm.org>, 
-	Bean Huo <beanhuo@micron.com>, Brian Norris <briannorris@chromium.org>, 
-	Can Guo <can.guo@oss.qualcomm.com>, Peter Wang <peter.wang@mediatek.com>, 
-	John Garry <john.garry@linux.dev>, "Rafael J . Wysocki" <rafael@kernel.org>, 
-	Praveen Talari <praveen.talari@oss.qualcomm.com>, linux-scsi@vger.kernel.org, 
-	linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	stable@vger.kernel.org, Stanley Jhu <stanleyjhu@google.com>
-Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
+Content-Type: text/plain
+X-TM-AS-GCONF: 00
+X-Proofpoint-Reinject: loops=2 maxloops=12
+X-Proofpoint-GUID: DyQQh8tTjtKJ30E5dPBoRwGquZwbbWwT
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMTA1MDA1OCBTYWx0ZWRfX5DBV24jkie24
+ Nb3RvCk1eYaqH2TTLjNn3FiG05Gy+Zb+m+X/Qv+8mwUY+CKTwBCSy7S7CnMLsX9NNWVGr13mGXj
+ XHoptb0gFgCpOpYBQijZ1KOSveAEancSW37I4lkLdTbgEVmSjQKbiqNcoZ5lVGHVlTNv13wkubL
+ mZ7+yJZF4VVMQ91WXmEiB7+oOqJQ816W5rzX5iGdaxOoHEb0wIXncFyNE7hI3yF0LgLlRqU+/hS
+ wSVr33H8JL8yvRR2lktRDIuIk7jV7pTEiTlBaJgCSeGdgHT6TPhLdZeob5wO2iV5111KgdOJ3w6
+ 5nM7KZBtzDu3gM5N0tdqZjCWFOkb+Tl71gvSUKrKjenmCp1coc4SLy3h0BFWEctGqOkMm4cDNj0
+ lg4Mr9yOzQsYpdlQ8fNN7S/40QI4UzeoBG3nAiadIaEH41kDfwOTex0Bc7FUBqILOu0RwKr4+FY
+ NRIIRH/8Adt1YnYuhnA==
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMTA1MDA1OCBTYWx0ZWRfX5ZlK/mOpb3UI
+ QlikIp9p+XTXfBV7UA3wqf69B3fKGsjSb3om1BqqLsSad4WfWh2sFinhlRAO5tLVObqq/V7sKiN
+ HQezDdj+/ORJ/eHCplxzzZTJyBECQmg=
+X-Authority-Analysis: v=2.4 cv=QK391QLL c=1 sm=1 tr=0 ts=6aec99e4 cx=c_pps
+ a=GFwsV6G8L6GxiO2Y/PsHdQ==:117 a=GFwsV6G8L6GxiO2Y/PsHdQ==:17
+ a=zJRp6_cAMcgA:10 a=VkNPw1HP01LnGYTKEx00:22 a=RnoormkPH1_aCDwRdu11:22
+ a=V8glGbnc2Ofi9Qvn3v5h:22 a=VwQbUJbxAAAA:8 a=kPyA1ZOQVYL41U-xMvUA:9
+X-Proofpoint-ORIG-GUID: cegMXEoSwNwjXKYYnXaD69cVs0Zx-jPG
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
+ definitions=2026-11-05_04,2026-11-04_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ spamscore=0 malwarescore=0 suspectscore=0 phishscore=0 bulkscore=0
+ impostorscore=0 clxscore=1015 lowpriorityscore=0 adultscore=0
+ priorityscore=1501 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2610300000
+ definitions=main-2611050058
 
-On Thu, Nov 05, 2026 at 07:43:05AM +0000, sashiko-bot@kernel.org wrote:
-> Can leaving ufs_device_wlun in RPM_SUSPENDED here cause hba->dev to
-> prematurely runtime-suspend before the asynchronous consumer resume work runs?
+"Martin K. Petersen" <mkp@kernel.org> writes:
 
-Agreed. This will be fixed in v2.
+> Dave,
+>
+> A malformed patch 12 in this series meant Sashiko failed to apply it and
+> therefore could not provide feedback.
+>
+> We are getting close. However, a manually triggered analysis identifies
+> lingering issues in patches 6, 9, and 13.
 
-> Wouldn't that leave resume_sdev_queues false and
-> leave the consumer queue stuck in __bio_queue_enter()?
+Thanks! I'll take another look.
 
-Agreed. This will also be fixed in v2.
+-Dave
