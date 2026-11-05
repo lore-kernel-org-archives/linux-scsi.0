@@ -1,57 +1,118 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.133.124
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793903839;
-	b=vMA/0mqpoufmizigWbnyXvRKVLVOqIIIl/xiM8r3ObDp4nQ3u8a/TgVs6M2ElBKWfS/G
-	 c5xrbpTHblbKZsmhwG/5Rxa+kymhHKs2Pe7iPHBTKcO7SNcMzzQyIeT1qtoMb0OCa4RhZ
-	 bPskNgBgG/VaEsznMucQO8Eqq96Whw+v1k+ONP7jxZhXKZ8hwkn3K1m5WA3GSk0dNYBrQ
-	 KtPz4gszpQg+ccND20skwyCxLfTuT2Si1q9C+btoQf/EPomg1s5rkr7dqzjgUzePKL7jY
-	 JRfwfYk6m5H6t8Xhug24qzMaIzSgdYnXTt8gUrLTGWpxbjx2erhagmJgBwP7v1zPO3w==
+	t=1793905144;
+	b=lNGAGtWEyZ3wvVAdmj7EGJzXhFHSilHnexFVuuLMkwGPXmZA3S2migaIxoPOqeAFQ8Yr
+	 vUS8N8RKZL1kWK3QMDqiMiTvKqnL2llL3xPP/N1P+Tiy2QGPiF//RdBmJJXtLKRAuld55
+	 wId2pIKuY2vZkGWiBZIWJq4mP+09/2ipBtmYIDIvsnYMJOo0vLSJAGa1BV4lBdN+v5Yg6
+	 a7Uw1T38hTdleOa4SL3uvTFtkSRbhmt6yWlV8DxWy1toVXDBg+TctrLsSb9ZragZi7Akh
+	 PdiS3NGgHqSXttyK0jUbxr2bJjCzpILAcTrg7V44IlnLWRu082xKLend7/Qx/AKuhiQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793903839;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=zvCUf1GZo2zKrKTQz7xTJbL1JhsB9mlvSUzOLxlaM/M=;
-	b=0t/BcGNVZqgxl/5LPPW/gMC8XzEkGSXoY2As5sbTkgnBCIwH3BJYhORaV1/pA2W2q9DD
-	 fL21lJRu+xosAdRghLImX/TK0rwtg22moUj9A4KmBDjnrKvjgAyfLEewNb4RA2WFDfiIj
-	 PwrFBudxW2+A035X7/9Ufx9l6+FuWmcYsCsbn76G/hglx9n7HL+lzPeCQ1c6X+PYyB0q5
-	 0aC6RTs++UfX5oJFk9bgAFI2HCCCGolZzc0TnzEfaxoCo/HcGiU9fJMbvwF9ck2BTRNsb
-	 u29rE0C+S7u5ylQaacESNw/7FYGwVCQKRuMRU5LoGDSJ+/rtckoUPegtJ5/eXN7+NRQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793905144;
+	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
+	 X-Mimecast-MFC-AGG-ID:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
+	 X-Received:Received:Message-ID:Subject:From:To:Cc:Date:In-Reply-To:
+	 References:Content-Type:Content-Transfer-Encoding:User-Agent:
+	 MIME-Version;
+	bh=GtVJ5fDzJs7dwdJ7kQ13zFePN7w2DrejpnY2Ytkrdiw=;
+	b=DPqIPpYTOtJr/9WkaSOnZFlxsukpl273zu+gkjrWJC49nk/D5sflbVjejH0j26ltQi06
+	 oRNC5o3gaGv47VbtH4bFUKENtIr6UbHolNfe+ucuvxrX2NIcNKjSyde21CEfq8hMV8EtR
+	 vlsoM1yP5HJ53UHsGsR8SDMomf69TFUkrq3sH56/x8FgW6gLCfkaW3Hw6rVuizLcDAlAb
+	 I8US/E0bmYEzgSD8GOJ5grl6iESj53PbuUxbvJ9qQNXSly2K9DjH0L7Q4r6T/fD8fEUIu
+	 Uq/6YkfaXBym31Ux2l+Pp8K6ljAu6TGeV3ndf3Nk6llkd9BQTCMjy1HLf6wuJIAwFyA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jJxTZ1No;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=redhat.com;
+	spf=pass smtp.mailfrom=redhat.com;
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=b3Acq52A;
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=L6B5jDV+;
+	arc=none smtp.remote-ip=170.10.133.124
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9CD3A606A31B
-	for <linux-scsi@vger.kernel.org>; Thu,  5 Nov 2026 18:37:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EABB6606A328
+	for <linux-scsi@vger.kernel.org>; Thu,  5 Nov 2026 18:59:03 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org EABB6606A328
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jJxTZ1No
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 18C261F00919;
-	Thu,  5 Nov 2026 18:37:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793903839;
-	bh=zvCUf1GZo2zKrKTQz7xTJbL1JhsB9mlvSUzOLxlaM/M=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=jJxTZ1NoiSIyzTMHSbINgaDbrQZjJgoFKk94cUJ1gix+ISZIVYHjpn5LRr/0S3EoR
-	 SLKlVBSbz3Gw3oi8MY0n1YiJ7nsmfUAuiploOrMQpwA3N7xju4Vs7iB6FvK+5EIuzp
-	 mpMJSHdMK6ga9pP7+wxaU4ENyXgnwkiIOHMJJSD0ChgXIQ1uomiZ/NSx0N3HsSg71U
-	 nG+csn9I2+PVbuEzIUGfc1lk9ieREcqc3CaO+S8129xOUEwpbeGOLiUV7fIei0uo45
-	 8aFm7FKsqMREfb7np3L7TZOlJq3ps1yH+j6jx76kMvqdbmtEfT+gf4RNM3PsP5Vk9k
-	 Snja3aChpQpZA==
-Message-ID: <sashiko-outbox-199779@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v18 10/13] scsi: ibmvfc: add interrupt routine for
- asynchronous sub CRQ
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Dave Marquardt" <davemarq@linux.ibm.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20261105-ibmvfc-fpin-support-v18-10-d683b74736a3@linux.ibm.com>
-References: <20261105-ibmvfc-fpin-support-v18-0-d683b74736a3@linux.ibm.com>
- <20261105-ibmvfc-fpin-support-v18-10-d683b74736a3@linux.ibm.com>
-Content-Type: text/plain; charset=utf-8
+	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=b3Acq52A;
+	dkim=pass (2048-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=L6B5jDV+
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1793905143;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=GtVJ5fDzJs7dwdJ7kQ13zFePN7w2DrejpnY2Ytkrdiw=;
+	b=b3Acq52A9nBxZyLUw1PdT2vejSKyyY4951g3C9KIKJEryj7ARZrPcvw57i2S0amRAvswOt
+	DIZP0Hytgq2pNlWl9K7YHYbKz7jpgsATQ8g7zyjpPYX1loGRhAlGzz9uygapU9CYtdchKq
+	xnoRWIgL1hcycTEuN8JYfQk96wYROtU=
+Received: from mail-yw1-f200.google.com (mail-yw1-f200.google.com
+ [209.85.128.200]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-348-QLSdQCA3OImP73ST4pdNrw-1; Thu, 05 Nov 2026 13:59:02 -0500
+X-MC-Unique: QLSdQCA3OImP73ST4pdNrw-1
+X-Mimecast-MFC-AGG-ID: QLSdQCA3OImP73ST4pdNrw_1793905140
+Received: by mail-yw1-f200.google.com with SMTP id 00721157ae682-869553205a7so35591617b3.1
+        for <linux-scsi@vger.kernel.org>; Thu, 05 Nov 2026 10:59:01 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1793905140; x=1794509940; darn=vger.kernel.org;
+        h=mime-version:user-agent:content-transfer-encoding:content-type
+         :references:in-reply-to:date:cc:to:from:subject:message-id:from:to
+         :cc:subject:date:message-id:reply-to:content-type;
+        bh=GtVJ5fDzJs7dwdJ7kQ13zFePN7w2DrejpnY2Ytkrdiw=;
+        b=L6B5jDV+fhmnDVZIKwO414AEnkdbC1y9UlWdyY1sY+9FXLp/OIb2pRQKxf8LxNGfqR
+         GKsAe/hXDkpUfK5VNDRnXJmryWsxw4i3rPhyfLYDkfBXhj8qJMkwvLyJt0DDza48mJ5p
+         7nDNabYytCLVRcEqiofEIXUIxj0yjn7JU/ecb9LxCxFmzdp0rvHikgCwEepns6xLUfey
+         OPTw0xywPSbGwfIwQ3LaAQk27GwQ7KyzZGgqezX16MuU6g46/LL70JH6hhPbA7h1f2JX
+         HkBXVHFq0TsHZ8t3xZRAC0rr4L0d8gymrARfhz3q5ZCa+ogTQAiTSR5nuFSLHCcGJRdq
+         tYlg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793905140; x=1794509940;
+        h=mime-version:user-agent:content-transfer-encoding:content-type
+         :references:in-reply-to:date:cc:to:from:subject:message-id:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=GtVJ5fDzJs7dwdJ7kQ13zFePN7w2DrejpnY2Ytkrdiw=;
+        b=YG87bbKnS1qGsroNkvZv5E7RYs9bNUwo6TbXaZq1PcKhYqI1nfmihNPQCtvELfbGxB
+         CFmGmNPRZf3An4DWPMe0lNSTeQ3wKl0Cq27DJ62owhBnB6NpX4L4obn26Pc0Sj19PsL2
+         vM/1xfypkBgrX++11vmfoGBuyYGQPAaKXNhS5FV39Hm3NO0fjWnfpy2Q5B6rMWmpT5Gg
+         QV4Roh6gXpTnWzjAjdyJmbQx4uweuIbflsKsHo2OqysF97I7xmg4HmPBjuhbI+9fSTnB
+         EEu78IfsMDCcaeMxgUdCCKnk/AAl8Iw52fX5Pbcys83SvJVB0p1c6Kif3p0EbSHIDG52
+         8GlA==
+X-Forwarded-Encrypted: i=1; AL+hErHLlM5aMxLNbEfxHZNA1k4w8RKS91nGro5FX6dIQTnUpbdlEKvkbHroi3aYBTv49hmWqMe7sYJD2NYb@vger.kernel.org
+X-Gm-Message-State: APuU4Z9qTkIx0+SkmyeDsiukVgkogyM6baHwQZTc6hK+ITjnIgNlT3Df
+	Z3BMb/IsJjXLLG0K0lxregCTc5ok9ouDxFI4sUdjgXkhROczDbE7wBikVPbcbO64O2t9u8sbgFV
+	saLzI2WU58e2CHAl/p97ViYQxZMU94dMEbaMFRPIxZh1+/ibw7OOttCg8pxcDrMo=
+X-Gm-Gg: AYBFou1MJ9NcUDzn9bMiBFqpRak5rNpy32FywhrskknVtTGAOlsVi+vXKBjMx3vYoD/
+	hw+wcoykHZ0tohUckMUamLsLggcIpsudPiJCdbrGPtLDSNFFBMIRs3LQlYYwlGGyKODTRRvJERn
+	t4wy4MKUPpdRX6vb5Pv5qMX3f6t6u7nTK3d+AOcBCmXjHOoxrY2v5FzUw5tpTsCACwMrSYeGR+K
+	gKDJQdTBSTCT3IYEAJWbShzF2/zmlHWBr/NrJAiLdHZUlygwXjMk6VRmZ43Y0t4Egwy4r9S3QyZ
+	GD9owjvxhlXRHnknoqCbvk6BFqvzK1ZYUQCO/SM92fo62OZo+rnDEk2F0tKom6TmzfsJWfGXJQr
+	23CGMMwhT0RaPWPLqWmDt9CKbTBgdNi6XsE3oh5Mhs9uouoKmUmYl49EI1V/iclwbZDwQl+hoA6
+	JkVyoymNfWhtBv451/zL9ZDebD0QfvOflsBNh8yFX3O9HNqc7KHDKUQj4ZdPrfetEaarrnVdw=
+X-Received: by 2002:a53:bd83:0:b0:679:887f:a2bf with SMTP id 956f58d0204a3-67c142c35eamr78961d50.36.1793905140282;
+        Thu, 05 Nov 2026 10:59:00 -0800 (PST)
+X-Received: by 2002:a53:bd83:0:b0:679:887f:a2bf with SMTP id 956f58d0204a3-67c142c35eamr78942d50.36.1793905139634;
+        Thu, 05 Nov 2026 10:58:59 -0800 (PST)
+Received: from loberman-thinkpadp16gen3.rmtusma.csb ([2600:6c65:2440:d8c:aa2b:ddff:fe88:da74])
+        by smtp.gmail.com with ESMTPSA id 956f58d0204a3-67c135e8d5esm242675d50.19.2026.11.05.10.58.58
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 05 Nov 2026 10:58:58 -0800 (PST)
+Message-ID: <7dccd24b8dc18be694ffca063cd4c13655ff1c9a.camel@redhat.com>
+Subject: Re: [PATCH 1/2] target: iblock: drop the dead kmap() NULL check
+From: Laurence Oberman <loberman@redhat.com>
+To: shao.mingyin@zte.com.cn, mkp@kernel.org, linux-scsi@vger.kernel.org, 
+	target-devel@vger.kernel.org
+Cc: James.Bottomley@HansenPartnership.com, linux-kernel@vger.kernel.org
+Date: Thu, 05 Nov 2026 13:58:57 -0500
+In-Reply-To: <20261105193351820CRZfBnzFE8zZm2DrNx0T_@zte.com.cn>
+References: 
+	20261105193346452uAUQ3LtGtsQ_d_O9gjAw5@zte.com.cn <20261105193351820CRZfBnzFE8zZm2DrNx0T_@zte.com.cn>
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 05 Nov 2026 18:37:18 +0000
+User-Agent: Evolution 3.60.2 (3.60.2-2.fc44) 
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -60,131 +121,33 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [High] scsi: ibmvfc: NULL crq dereference in ibmvfc_process_async_work()
-- [High] scsi: ibmvfc: uninitialized tgt pointer in ibmvfc_process_async_wo=
-rk()
---
+On Thu, 2026-11-05 at 19:33 +0800, shao.mingyin@zte.com.cn wrote:
+> From: Shao Mingyin <shao.mingyin@zte.com.cn>
+>=20
+> kmap() never returns NULL, so the check after it is dead code.
+>=20
+> No functional change.
+>=20
+> Signed-off-by: Shao Mingyin <shao.mingyin@zte.com.cn>
+> ---
+> diff --git a/drivers/target/target_core_iblock.c
+> b/drivers/target/target_core_iblock.c
+> index ea65d39fef88..604fca959f2e 100644
+> --- a/drivers/target/target_core_iblock.c
+> +++ b/drivers/target/target_core_iblock.c
+> @@ -461,8 +461,6 @@ iblock_execute_zero_out(struct block_device
+> *bdev, struct se_cmd *cmd)
+> =C2=A0	int ret;
+> =C2=A0
+> =C2=A0	buf =3D kmap(sg_page(sg)) + sg->offset;
+> -	if (!buf)
+> -		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+> =C2=A0	/*
+> =C2=A0	 * Fall back to block_execute_write_same() slow-path if
+> =C2=A0	 * incoming WRITE_SAME payload does not contain zeros.
 
-commit e623a6d56430928cd690d92425a90ffd4dc7ba74
-Author: Dave Marquardt <davemarq@linux.ibm.com>
+Looks good.
+Reviewed-by: Laurence Oberman <loberman@redhat.com>
 
-scsi: ibmvfc: add interrupt routine for asynchronous sub CRQ
-
-This commit adds ibmvfc_interrupt_async_subq() and supporting helpers to
-drain asynchronous sub-CRQ entries onto a temporary list and dispatch them
-through ibmvfc_handle_async().
-
-> diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/=
-ibmvfc-core.c
-> index 7406e7182777c..5dba084086d5f 100644
-> --- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
-> +++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
-> @@ -4456,6 +4456,106 @@ static struct ibmvfc_crq *ibmvfc_next_scrq(struct=
- ibmvfc_queue *scrq)
-
-[ ... ]
-
-> +static void ibmvfc_queue_async_subq_entry(struct ibmvfc_host *vhost,
-> +					  struct ibmvfc_async_sub_crq *crq,
-> +					  struct list_head *doneq)
-> +{
-> +	struct ibmvfc_async_drain_entry *entry;
-> +
-> +	entry =3D kzalloc_obj(*entry, GFP_ATOMIC);
-> +	if (entry) {
-> +		entry->event.type =3D IBMVFC_ASYNC_CRQ_SUB;
-> +		entry->event.subq =3D *crq;
-
-[Severity: High]
-Can dispatching an IBMVFC_ASYNC_CRQ_SUB FPIN event here lead to a NULL
-pointer dereference in ibmvfc_process_async_work()?
-
-When ibmvfc_drain_async_subq() passes entry->event to ibmvfc_handle_async()
-for an IBMVFC_AE_FPIN event, it queues ibmvfc_process_async_work() with
-aw->event.type =3D=3D IBMVFC_ASYNC_CRQ_SUB.
-
-In drivers/scsi/ibmvscsi/ibmvfc-core.c:ibmvfc_process_async_work(), crq is
-initialized to NULL and remains NULL on the IBMVFC_ASYNC_CRQ_SUB branch:
-
-	struct ibmvfc_async_sub_crq *subq =3D NULL;
-	struct ibmvfc_async_work *aw;
-	struct ibmvfc_async_crq *crq =3D NULL;
-	...
-	if (aw->event.type =3D=3D IBMVFC_ASYNC_CRQ_SUB) {
-		subq =3D &aw->event.subq;
-		scsi_id =3D 0;
-		wwpn =3D subq->wwpn;
-		...
-	}
-
-If the sub-CRQ FPIN event has all-zero target identifiers (for example, a
-host-scope IBMVFC_AE_FPIN_LINK_CONGESTED or
-IBMVFC_AE_FPIN_CONGESTION_CLEARED event with zero wwpn and zero
-node_name/assoc_id, or with IBMVFC_ASYNC_IS_FPIN_EXT set and wwpn =3D=3D 0),
-ibmvfc_process_async_work() unconditionally calls ibmvfc_basic_fpin_to_desc=
-()
-with crq =3D=3D NULL instead of ibmvfc_full_fpin_to_desc(subq, ...):
-
-	if (!scsi_id && !wwpn && !node_name && !assoc_id) {
-		if (fpin_status =3D=3D IBMVFC_AE_FPIN_LINK_CONGESTED ||
-		    fpin_status =3D=3D IBMVFC_AE_FPIN_CONGESTION_CLEARED)
-			fpin =3D ibmvfc_basic_fpin_to_desc(crq,
-					cpu_to_be64(fc_host_port_name(vhost->host)), 0);
-		goto send_fpin;
-	}
-
-ibmvfc_basic_fpin_to_desc() then immediately dereferences crq->fpin_status.
-Should this path check if (crq) vs else ibmvfc_full_fpin_to_desc(subq, ...)
-in the same way as the !tgt fallback below it?
-
-> +		list_add_tail(&entry->list, doneq);
-> +	} else
-> +		dev_err_ratelimited(vhost->dev,
-> +				    "Couldn't allocate async drain entry\n");
-> +	crq->valid =3D 0;
-> +	wmb();	/* complete write */
-> +}
-> +
-> +static void ibmvfc_drain_async_subq(struct ibmvfc_queue *scrq)
-> +{
-
-[ ... ]
-
-> +	list_for_each_entry_safe(entry, temp, &doneq, list) {
-> +		list_del(&entry->list);
-> +		spin_lock_irqsave(&vhost->host->host_lock, flags);
-> +		ibmvfc_handle_async(&entry->event, vhost);
-
-[Severity: High]
-When ibmvfc_handle_async() queues ibmvfc_process_async_work() for an
-IBMVFC_AE_FPIN event with all-zero target identifiers, can tgt be used
-uninitialized at the send_fpin label?
-
-In drivers/scsi/ibmvscsi/ibmvfc-core.c:ibmvfc_process_async_work(), tgt is
-declared without initialization, and the all-zero identifier check jumps
-over ibmvfc_find_target() directly to send_fpin:
-
-	struct ibmvfc_target *tgt;
-	...
-	if (!scsi_id && !wwpn && !node_name && !assoc_id) {
-		if (fpin_status =3D=3D IBMVFC_AE_FPIN_LINK_CONGESTED ||
-		    fpin_status =3D=3D IBMVFC_AE_FPIN_CONGESTION_CLEARED)
-			fpin =3D ibmvfc_basic_fpin_to_desc(crq,
-					cpu_to_be64(fc_host_port_name(vhost->host)), 0);
-		goto send_fpin;
-	}
-	...
-send_fpin:
-	...
-	if (tgt)
-		kref_put(&tgt->kref, ibmvfc_release_tgt);
-
-Wouldn't that evaluate if (tgt) and call kref_put() on an uninitialized
-stack pointer?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261105-ibmvfc-fpi=
-n-support-v18-0-d683b74736a3@linux.ibm.com?part=3D10
