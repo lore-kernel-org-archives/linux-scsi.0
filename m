@@ -1,66 +1,66 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=199.89.1.16
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=199.89.1.14
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793899112;
-	b=32cmJ5+re9GNEDIyFI57KrV9p9m/w/97jD9JiD0/Xr2BY7WHlyZTQE002qByTlAuUCMf
-	 1PM6bEmsu+WJiLz4elze/4wl9w/U2/G3gYqJRzfwVfZECw+GDbR4nnGA+2np6GCaVj8Fa
-	 LxC+cf08gkZzkw/MaB8AP2St6mJOyuvIAmh0tDSTl1wrsxFcUn1CCZrAQdlNWUkkaUIJH
-	 UrQZoPzPp9H3G/+1KLrzn5xFOlQvx6z0tQxK78YIyIE2UQiCqB6KlOmIDYaoDNLvGEslb
-	 Nz0Ls8Q5dgbL+ePnRnjFKnFRE/HQDoq9j4q9aVxH4m70cPcUgBkI9wNyP4OhSfgfkcg==
+	t=1793899143;
+	b=S2WkZ6ijdHhLLX4YfaoIhNeIBWX9aAlwjGuWK1AyiwGdl79nrSUT8r518ExLHymXJ2LQ
+	 31bgrau5NBmWvY7JT5v4o5y6NmglVgMv8A2FzYUJjZ4UH3xWlvl0++S0LC95hlhXIhAHv
+	 LwQ3UOyPs0hc6Cfy5K0RqS7icar+UVtvTDkj/Iiis1u5QF6qJAuWyFYlt7iRTyqXOq8cU
+	 BYcPcEPcx+U1jd2hPx8qdGHz05fhuXM5GpcsKd9nxtBKxb8bD/a5jC3Lc0l5WdAzWDi/z
+	 DNrZf+dJdfqA6v2JBZWonBxl8B86624vzqkYHQ/lyzhBzAzOhiV018aEmsXdAX5rWGQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793899112;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793899143;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Virus-Scanned:Received:
 	 Received:Message-ID:Date:MIME-Version:User-Agent:Subject:To:Cc:
 	 References:Content-Language:From:In-Reply-To:Content-Type:
 	 Content-Transfer-Encoding;
-	bh=n0wp3nqIJF1XDBxHlZQWmEsvfb5rDdiG3Oe+tSS7WYY=;
-	b=pNFHe7S7gLGcni/Xyj9qkgX/5iRjMm21lCckCYR1La2VkVdzYL4Ke2VELsve/9SfQJJV
-	 U/8rDO7T/j+YrX7tiaUlwLskm/JkguSdOqVTmPksPs+iaGyGu2BgqUxnF25xdswKnDEO3
-	 bzNwNipH0X4f4aHTrZFJk3W8uPOcw9lwW9Blnt7V6jwI55jcjmiu3kkxsOAS/ngVTIkbn
-	 o9WgkLvUfgW2eVyu3CzE2Zq/Wutn4aprxG4tb4cbFAmsQd86nEpyLjlYrVQLx/4JSZlrG
-	 BokoA+Gx+ws9TuUaHmR3kVxF+uTcxM+Xuc9yZvM51eYmc/QPRxAstOZEKZ4pbGP1rYA==
+	bh=JGggIEGEOwu3Nw2bLrU9kheGZtf7KE0FxtQIBKlyEmk=;
+	b=3EtPduBBLkaTzrBhA+yCAqtFWq8i2wYU2LHQiiRhrYWIIctZMl4YByNro4hBhKnUPaV4
+	 mMZFkYATToX2H2jWEO7v52eVOz4weH+bV89qjaa52XToVng0WPKRf/GSRB8zZ1qWxofw6
+	 0R4JDhhHfT74lmvNFk76yxyIHGG28ppMT5LPJPm4cP/LUoarHhBjsdbfoxHlY0YOFuygq
+	 DUzZ9GfolI0PP5/36GXdi+38WFYqG0NYDpIGofVpXePt3dXLWqa9J4pqwmlMvnGVji3Ka
+	 bGOKUyTEbslxddan5bQgmWi5Zr0yshRJ3sFYiOa7ZJBIPzGc4W6vT+8xn2m8DbKVmLA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=acm.org;
 	spf=pass smtp.mailfrom=acm.org;
-	dkim=pass header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=QlRNRUSv;
-	arc=none smtp.remote-ip=199.89.1.16
-Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
+	dkim=pass header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=ovl1ITO+;
+	arc=none smtp.remote-ip=199.89.1.14
+Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 67F13606A338;
-	Thu,  5 Nov 2026 17:18:32 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 67F13606A338
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 161FB606A339;
+	Thu,  5 Nov 2026 17:19:02 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 161FB606A339
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=QlRNRUSv
+	dkim=pass (2048-bit key, unprotected) header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=ovl1ITO+
 Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4jL8Ck2TbKzlfvpH;
-	Thu,  5 Nov 2026 17:18:26 +0000 (UTC)
+	by 011.lax.mailroute.net (Postfix) with ESMTP id 4jL8DQ3zmhz1XMYJZ;
+	Thu,  5 Nov 2026 17:19:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:content-language:references:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1793899104; x=1796491105; bh=n0wp3nqIJF1XDBxHlZQWmEsv
-	fb5rDdiG3Oe+tSS7WYY=; b=QlRNRUSvNNkGtz6+MwXHuIDYDOiTOE2ejyQTxeYE
-	hYehS38iXKz0S/nfsDVpzeYadsj+Nc7yYxopUoVxvo+GTavVsz5KrxgWkzAfbCZ7
-	uhEep7BXJ2LFTnTL8z1XqDJPSUWOhwK5nQkpGdWPIEE5c2VrBE48/rKqx68t68rE
-	SPB7cFAzB04Ry3gcuRxlN5gpOy17SRYHfTMQkRWFBQLv9Aeoq1RtFcbF2Il8HTRE
-	koNjNtFEYkeT+9MWG4jATBhbRngGdvhoCHAga/quD9ZxX1wtF0ZjQpQG0FsJ71Z4
-	cOmGs4gONrYvfAOjU1G8Hx6oZvscJTAOem9o82dfVxns4g==
+	 s=mr01; t=1793899140; x=1796491141; bh=JGggIEGEOwu3Nw2bLrU9kheG
+	Ztf7KE0FxtQIBKlyEmk=; b=ovl1ITO+ocQwTUFYnSvPpmXFiPy1ryUb81CjCs6E
+	Ltz+W5UDMhEwIsIZmSuJ5FbedUwBHcYTfQO3FG/Ii9QMoVAldlsokjXlsT162yRz
+	R7bCG34wFU41CcPAB8SM34XO70S40f8A9km2uURvDJKz7X2du3AEizYG2WYsTlUO
+	3X5oUvylO6InS3RQF6tgF3eXM7pOOXyQpwijwkWKFUW8yMBpgn5xEouwg1TYDNCo
+	QsvYekK4SJPzoSZz9JlQYSWKcw4ueg3raB3QHxkOPVJTryDDWSnf1xNdrbeyhz1n
+	q/10zzLRYOlDBQ/iW7yAJnbQiKAE1PttPebpAcsYFbAHKQ==
 X-Virus-Scanned: by MailRoute
-Received: from 013.lax.mailroute.net ([127.0.0.1])
- by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id hL7zpPmZ0FIO; Thu,  5 Nov 2026 17:18:24 +0000 (UTC)
+Received: from 011.lax.mailroute.net ([127.0.0.1])
+ by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id b2Im_TIEkGfw; Thu,  5 Nov 2026 17:19:00 +0000 (UTC)
 Received: from [100.80.231.125] (unknown [104.135.182.41])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4jL8Cg6ktkzlgyGg;
-	Thu,  5 Nov 2026 17:18:23 +0000 (UTC)
-Message-ID: <09f06fcf-d118-4440-8712-ed0ed19735b4@acm.org>
-Date: Thu, 5 Nov 2026 09:18:23 -0800
+	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4jL8DM6sM7z1XMYJP;
+	Thu,  5 Nov 2026 17:18:59 +0000 (UTC)
+Message-ID: <b9263599-28df-4b1d-8e37-1f1567d71d55@acm.org>
+Date: Thu, 5 Nov 2026 09:18:59 -0800
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -71,21 +71,23 @@ List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/5] scsi: ufs: drop the unreachable offset check
+Subject: Re: [PATCH 2/5] scsi: core: drop the dead VPD size check
 To: shao.mingyin@zte.com.cn, mkp@kernel.org, linux-scsi@vger.kernel.org
 Cc: James.Bottomley@HansenPartnership.com, alim.akhtar@samsung.com,
  beanhuo@micron.com, stanleyjhu@google.com, loberman@redhat.com,
  jmeneghi@redhat.com, linux-kernel@vger.kernel.org
-References: <20261105193333968SpAtZ8KtfXSeTZlDpuSOO@zte.com.cn>
+References: <202611051933353749X0R8jRBz5_ukO3ZdKD6t@zte.com.cn>
 Content-Language: en-US
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20261105193333968SpAtZ8KtfXSeTZlDpuSOO@zte.com.cn>
+In-Reply-To: <202611051933353749X0R8jRBz5_ukO3ZdKD6t@zte.com.cn>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
 On 11/5/26 3:33 AM, shao.mingyin@zte.com.cn wrote:
-> ufshcd_read_desc_param() rejects param_offset >= buff_len before it
-> reaches the is_kmalloc block, so the repeated check there can never be
-> true.  Keep only the memcpy().
+> scsi_vpd_inquiry() returns result + 4 where result is the page length
+> and is non-zero (otherwise it returns -EIO), so the returned value is at
+> least 5 bytes and the "result < SCSI_VPD_HEADER_SIZE" branch can never be
+> taken.
+
 Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 
