@@ -1,47 +1,48 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793907360;
-	b=M4qA1mx2kY+mGlogUUXq2B/s3jD8Hn1jdLsGnxx7RUPsKchx2U+Ml6CSLOnJ2FwY1RDW
-	 gQp4WVlnA9AgvKRn3HfHjsMKLNfdb8BtEcw89WfnVDkSUZgQV2sssv4Ldm5OlI5yCnlts
-	 sivp4GRwUn0EcOf37nLzRIvEP6FyshjhT8p1luSGjXawjbm75AiyjAYCmL6Bol9puyksC
-	 w0BFopuObpQ8tpR0h+dWzR/AAnrqPDXAlALJ9v5aZl441Iu2ga+oAEtGnAauoMAHTIw7T
-	 Y6TOxznj4Z7Ov+tY2Qcif6MJopbxP9f9Rth9kWluMHoxcF1NbciEhUQHakOaT+5kHWQ==
+	t=1793907353;
+	b=yEpFvzB2fAC80BExuTyQiPVieeL0dBUb/HHuHJh9WzwWJS80GuXzBlmlXedQSGLlyB91
+	 M2+c3mjxQeP2zWLkK5A+/+NLcAN6v+BEtUABZIAlBQpWBW/ArdaFin8gxdK0zk7KLPgF8
+	 38Bs4GlVfimyJbJ8ssb7sGspOpaETspW3UIckdPNp8VBFj7yTCrxvMB1m/Ne4kHZpLR6E
+	 qf85CKBopQN6olBXaENJ3elN7KVDXF5NioEPzxDzqF2sXr2p3OX/HdM3APZO3aCkr3C1+
+	 Oc2GCQxXWhBUxwVuIZb3vcglk6Y1/6FQIE3dSfBu7MS4dpFk3EXOA6T+rif+lrgT2hQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793907360;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793907353;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=f7pbLgB+bOANV7ZH7bSfet1egKll+CXGNKYzJQU3Yrk=;
-	b=haJn/pwekRyTyY2x8MgY8XyGVhTJe4Nswqyzdc+JTxZ1h6mCc7kURtkkw5UiJ6z4EVh2
-	 KWUGXOCofRjp6sSGOmoZdo61B4qez1UO7k9j6tqZbbWOsbEpIyoC2OQoV4kizbHdaZ7fO
-	 MbOAbI2x6WzZJtEQyf57LejpSlvumj9g5AP5eKg7QgHGYif5b1izcRMjzxUg9/3jHY5xI
-	 38CdWIWRZ45xdUTQP7c2UcpHzo8FQVdbqxNbtFckX9vXMOPlHSy6r1cscQazv/ewnwr/N
-	 Ef+z2IdkhujdJ+EMm5GslWywHqqL+xkLC7Dl3tuevg7n5WD+an3EpL5W5snjuC6mUiA==
+	bh=eiSLs4tpW5+ooQETfUAsv7SD2u+8vxBZSNTA/E9JPSA=;
+	b=jOc0J9vnIU1voHfOBvssWczFLxvdj8mDG+IeGXOafQ3E/u0R4OSfxZbbtXoJ3RGlZO/i
+	 9coeOLtCCDWTBlPyBcAhHCeMqEJcPtwTGJyQrO3R35hwi1NS2Sr7JjJlGdzGmoPVMsJ+5
+	 eZPzEeEBWWg74R4M7gRoR8DL0mLCY4yutEA4pmp68P5FnqAeE6XBkNhf7SqB5nnQee4lR
+	 SiP+M7TD686Ipz+Uyi7u/iBn2pas7D0PzExUsjRq+/tHH3dctiCyUE6z9+9nwy8vshRU6
+	 Ftromdw1p86U3DPYONTkxAL+ZcCFJhwmm8h6ayCzDn+a2991m2v6OR2ECBLA6uesj/g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=iMGngCoO;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=QRVwl1Yw;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2347A606D811;
-	Thu,  5 Nov 2026 19:35:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8E9A606C884;
+	Thu,  5 Nov 2026 19:35:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=iMGngCoO
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B4E9A1F008A3;
-	Thu,  5 Nov 2026 19:35:57 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=QRVwl1Yw
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A24731F008A1;
+	Thu,  5 Nov 2026 19:35:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793907359;
-	bh=f7pbLgB+bOANV7ZH7bSfet1egKll+CXGNKYzJQU3Yrk=;
+	s=k20260515; t=1793907352;
+	bh=eiSLs4tpW5+ooQETfUAsv7SD2u+8vxBZSNTA/E9JPSA=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=iMGngCoOl/U4CYIB1rTzS3RguQRqLRp2sKfBp3odJCcMgrP4Y2V8PmtfZZo1x5Xkv
-	 FLC9VNWmdujwFQtrFCf8Mg1QUR9V0cBoPIZOnqaamHivU1nhWiKlmj37JQBwx8Nw4V
-	 gnJGb6AJHKNc0HghHI9fJU1uQS16q3fA1JPSybQgU9VxlezkJg9W+I3Lt4LPHuBS+G
-	 M91zjKny9mmSeWhknnqhOUNYocrnIZ20lXgBv1WbhSSK7LtbVS4MpUGhBLakgtch3v
-	 NiR+5uPctDAbSjOlOz7BSSMrEU1NCpxJBHKCCILKG0ymIlPQ81348+1c7a3Gat7yd+
-	 kdKHITt2fXI3g==
-Message-ID: <sashiko-outbox-199951@kernel.org>
+	b=QRVwl1Ywon7MS2C+OemnpnnRZyhhY3OqsfkA0hDxdTc+rduK6mkVEdlJDGNIGqSYy
+	 a1NLTQZZqowxlMpgmKyOfh8BBgOzgFAHydYWKlFfry5yNMxiI/UD8ldqZYx8WMm7ez
+	 QNVP0ICID7Qj8TKSjz1zNuhOdyu+/wENB2Pe+KXsAcn/SDnE1f4VadXGr2TU1yn/I4
+	 kSqEUN6UAmPa8USnYhqhq+djAtPsBeI0nhvEXQeRMsO17pEiCgKx17axw4dL2BiiBh
+	 F88Gi+dRDEKECFbv6g4fiHem3PZPjp3QB2HUifdGFOqWgr8pWyiCoUmeRakhBgXvWb
+	 R9lZgeMwuUEfw==
+Message-ID: <sashiko-outbox-199948@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH RESEND v2 21/23] proc: let lockdep check the pin
+Subject: Re: [PATCH RESEND v2 18/23] proc: let procfs copy ioctl arguments
+ in and out
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Christian Brauner" <brauner@kernel.org>
 Cc: "Linus Torvalds" <torvalds@linux-foundation.org>, "Jann Horn" <jannh@google.com>, "Josef
@@ -56,12 +57,12 @@ Cc: "Linus Torvalds" <torvalds@linux-foundation.org>, "Jann Horn" <jannh@google.
  Pavlu" <petr.pavlu@suse.com>, "Anna Schumaker" <anna@kernel.org>, yukuai@fygo.io, "Heiko
  Carstens" <hca@linux.ibm.com>, "Vasily Gorbik" <gor@linux.ibm.com>, "Alexander
  Gordeev" <agordeev@linux.ibm.com>, "Christian Borntraeger" <borntraeger@linux.ibm.com>
-In-Reply-To: <20261104-work-procfs-core-v2-21-76ace653a773@kernel.org>
+In-Reply-To: <20261104-work-procfs-core-v2-18-76ace653a773@kernel.org>
 References: <20261104-work-procfs-core-v2-0-76ace653a773@kernel.org>
- <20261104-work-procfs-core-v2-21-76ace653a773@kernel.org>
+ <20261104-work-procfs-core-v2-18-76ace653a773@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 05 Nov 2026 19:35:57 +0000
+Date: Thu, 05 Nov 2026 19:35:50 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -73,65 +74,61 @@ Precedence: list
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [Low] proc: kernel-doc mismatch on __proc_create_net_single_write()
+- [Low] proc: __free() variable buf declared at top of pde_ioctl_buf()
 --
 
-commit 095fce4c95ecbe25e644f1a3fe90061f695e9271
+commit 56830294f9ddc9f5679014810e7198455a39f42c
 Author: Christian Brauner <brauner@kernel.org>
 
-proc: let lockdep check the pin
+proc: let procfs copy ioctl arguments in and out
 
-This commit adds lockdep tracking to proc_dir_entry pinning so lockdep can
-detect deadlocks between proc entry methods and removal under held locks.
-Entries created via proc_create_single() and related helpers receive a
-per-registration-site lock_class_key via wrapper macros.
+This commit adds support for ->proc_ioctl_buf() and ->proc_ioctl_args in
+struct proc_ops so that procfs can copy ioctl arguments from and to
+userspace without holding the proc_dir_entry pinned across user copies.
 
-> diff --git a/fs/proc/proc_net.c b/fs/proc/proc_net.c
-> index b78d627b024f8..9ddd7c323dfcd 100644
-> --- a/fs/proc/proc_net.c
-> +++ b/fs/proc/proc_net.c
+> diff --git a/fs/proc/inode.c b/fs/proc/inode.c
+> index caa47933c233d..717cbaad65df2 100644
+> --- a/fs/proc/inode.c
+> +++ b/fs/proc/inode.c
 
 [ ... ]
 
-> @@ -232,11 +233,12 @@ EXPORT_SYMBOL_GPL(proc_create_net_single);
->   * pde_data() on the file inode.  The network namespace must be accessed=
- by
->   * calling seq_file_single_net() on the seq_file struct.
->   */
-> -struct proc_dir_entry *proc_create_net_single_write(const char *name, um=
-ode_t mode,
-> -						    struct proc_dir_entry *parent,
-> -						    int (*show)(struct seq_file *, void *),
-> -						    proc_write_t write,
-> -						    void *data)
-> +struct proc_dir_entry *__proc_create_net_single_write(const char *name, =
-umode_t mode,
-> +						      struct proc_dir_entry *parent,
-> +						      int (*show)(struct seq_file *, void *),
-> +						      proc_write_t write,
-> +						      void *data,
-> +						      struct lock_class_key *key)
+> @@ -548,11 +549,66 @@ static long pde_ioctl(struct proc_dir_entry *pde, s=
+truct file *file, unsigned in
+>  	return -ENOTTY;
+>  }
+> =20
+
+[ ... ]
+
+> +static long pde_ioctl_buf(struct proc_dir_entry *pde, struct file *file,
+> +			  unsigned int cmd, void __user *uarg, unsigned long arg)
+> +{
+> +	void *buf __free(kvfree) =3D NULL;
+> +	struct proc_ioctl_arg a;
+> +	size_t size;
+> +	long rv;
+> +
+> +	if (!pde_ioctl_arg(pde, cmd, &a))
+> +		return -ENOTTY;
+> +	size =3D max(a.in, a.out);
+> +	if (size) {
+> +		buf =3D kvzalloc(size, GFP_KERNEL);
 
 [Severity: Low]
-When proc_create_net_single_write() in fs/proc/proc_net.c is renamed to
-__proc_create_net_single_write() and given the new key parameter, the
-preceding kernel-doc block still documents the old name and omits @key:
+As reported by Sashiko on RFC [1], this isn't a bug, but in
+pde_ioctl_buf() in fs/proc/inode.c, buf is declared with
+__free(kvfree) =3D NULL at the top of the function and assigned later when
+size is non-zero.
 
-/**
- * proc_create_net_single_write - Create a writable net_ns-specific proc fi=
-le
- * @name: The name of the file.
- * @mode: The file's access mode.
- * @parent: The parent directory in which to create.
- * @show: The seqfile show method with which to read the file.
- * @write: The write method with which to 'modify' the file.
- * @data: Data for retrieval by pde_data().
+Since the cleanup API convention prefers defining and initializing __free()
+variables in a single statement rather than initializing them to NULL at
+the top of the function and assigning them later, could buf be defined and
+initialized once size is known (for example via size ? kvzalloc(size,
+GFP_KERNEL) : NULL)?
 
-Should this kernel-doc comment be updated to match
-__proc_create_net_single_write() and document @key (or moved to the
-proc_create_net_single_write() macro in include/linux/proc_fs.h) to avoid
-scripts/kernel-doc warnings when building with W=3D1?
+[1] https://lore.kernel.org/r/sashiko-outbox-195542@kernel.org
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261104-work-procf=
-s-core-v2-0-76ace653a773@kernel.org?part=3D21
+s-core-v2-0-76ace653a773@kernel.org?part=3D18
