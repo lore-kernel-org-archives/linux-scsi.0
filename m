@@ -1,57 +1,53 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=159.226.251.81
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793853654;
-	b=v5FRQxH7mJ7lrRNiyx0lDOqxEYfDmK8idcfcrhQaU+0aS2oIu/0rrwEegweBzPW7LSCn
-	 WECy1eV410XcOWyW0ROqodmV7povLbQp5nGAHFQGSrmzA1HUIbpV0/8Ojg/9JKQcYQNlc
-	 Wmf3j9g0Yl2Sh/Fbff80Tmdmc1kLFgQH2yPXkyy6JdgpmFu0778Q8muNTmsxGtoMMen09
-	 Ru+EW4pa5x8+XYn4rRqaGOy9BN+cppiETQTu9jatg/TAZabb0Aby6EXKT+wXTkvkwDdxj
-	 b9WJNGsB57lcm0D7dZN5+F3J2fByUXcdObCaq6rmWcOV9J+/uetrY2VFypFQMIs2feA==
+	t=1793857869;
+	b=zKe2IHTeWN97Z3/XAPDyOiBlXD/8lAVcEIfjuyEKsKx4iCtT+OVQo5LoLybLZ5saFDp4
+	 vzzXGy3fhsPxEt5JZZ1ajFqEZ5BQRFcfHFdPrx48M+7pFSpenxLJpZklLFRRHqiiMV+WD
+	 DS/nrO53a8e9V88GmscXGBlYYCZtQgYmXC1XaUNInMvCo3VnKmFwwhSF2JBEhUZe55psg
+	 BNedCLHozAwzHLwG3LkNQyw2rZ/39LNYc30JafRcohGyc9n/X9KAeq3TfDCKxySWdt9B4
+	 TTZkFMdHzPBGqxjZjzz9LK5TWjrH6epCMm0O7EAffNkr3XDwv+K8owBUwWJZ2B7klag==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793853654;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=8aj/OTXK6mfSDZHsGQDxhL38sFRSrOIcRiYO0l4GYDM=;
-	b=VfvnGAdkFzoMmU2je03Kaux1nSLcPjXppmECI/8TESVzywQcoNTR9A2V8r3rutDZPqL3
-	 pbH2Ya4stQWEkHEVud7XBYrS0R333MPsiGNti0UcFnapsMuyI+HCjOlfZyC3UGi2BkZMG
-	 YLeHhv8bRfAfXkg4GYBwaCzaGEug8doiszWDlhHfv8kZXFwgqaDbHaANwI04fnjirY7uO
-	 ZTbOpvYumR0NKZ28mMcU9vU4b3MEXezLTJXw38TMdqB4M6bFOZ6Zfq6NyrSdaLODbxpD0
-	 r+R6oUlbjpFhtGvDV1fCQfArS9fkUa2RNumrRor/Lnm+hxMtTnGnpuB53GQmSSeXIeA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793857869;
+	h=DMARC-Filter:Received:From:Subject:Date:Message-ID:In-Reply-To:
+	 References:To:Cc:Content-Type:Content-Transfer-Encoding:MIME-Version:
+	 X-CM-TRANSID:X-Coremail-Antispam:X-Originating-IP:X-CM-SenderInfo;
+	bh=GdStonyp7Sj2fAw+HeddqwyrhIi5pFh7iyxBgjQwIFE=;
+	b=H780IGVZ332cetaUZx+yLfOoZLC1O3AeeeHP4powwhkhN4yd7atWfMGN5vyszKPE3F8i
+	 vtoKVIkwk14t3ycROya27G3rWQBFjje8GpF9X44sQ2JZ8diX5wBoNYDNf5IP814iGWE/a
+	 bDuUVnXQCbFsKzp0WxBPjAkCUdGQaez1gAWTEjOPZA/Cn1Ijc+0pKBU8yY9Tun+5TxTNw
+	 8husrIyGKEHpy3msJYFshiSkiBQ8g5RAoNFLl0gf5Y/R0zO/yxWUwLT7dPcLIbeVZ/vIh
+	 8qg/Y85g6jEuaNvhNRY5O/D1Ddg6YMX2l6/STc766OobF22qqff4X82ej+kudVB9mDA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=oZPzGHGM;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=none header.from=iscas.ac.cn;
+	spf=pass smtp.mailfrom=iscas.ac.cn;
+	arc=none smtp.remote-ip=159.226.251.81
+Received: from cstnet.cn (smtp81.cstnet.cn [159.226.251.81])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A8F29606A32D
-	for <linux-scsi@vger.kernel.org>; Thu,  5 Nov 2026 04:40:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=oZPzGHGM
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1A2271F00A1A;
-	Thu,  5 Nov 2026 04:40:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793853653;
-	bh=8aj/OTXK6mfSDZHsGQDxhL38sFRSrOIcRiYO0l4GYDM=;
-	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
-	b=oZPzGHGMVh/A1p5U38dgzWg/u2dA2o6eRCiBuitzCORrbzd9RqONOTh/3+OdlCzuT
-	 S5Ms+BsideEBZ9T95s2N42xdKLNBhBUUBnMlUf1QBeWDoDcMfZpuQ02WxM1+LLLyzC
-	 opLte/NikxwTPWu8Kl24YDtYVUfrbUYQ2zLtTzmy7UHYyyUqmbdetllnRsE0GwckCS
-	 UQzsvdhY2cuwgw9qWbTUjmPKVIl8xLyVnOtgzG8bbuJgetZH0xF3PP3J9GsLYYkMxj
-	 hbQUNR+fNCSvsM73a/lUxqtsOjOxxx5cw3iU5HpodDHb8O+zGG+DmZa9Bsxe9OJ1HH
-	 Hn4dH81mAbILA==
-Message-ID: <sashiko-outbox-198555@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 2/2] scsi: ufs: core: Limit early link recovery in
- the error handler to runtime PM
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "HOYOUNG SEO" <hy50.seo@samsung.com>, linux-scsi@vger.kernel.org
-In-Reply-To: <a5f3b13e7c2ae3cb39dfd078e637fd6c4424356e.1793851432.git.hy50.seo@samsung.com>
-References: <cover.1793851432.git.hy50.seo@samsung.com>
- <CGME20261105042043epcas2p2b8a95dde8509fcf59aebad3be2116bce@epcas2p2.samsung.com>
- <a5f3b13e7c2ae3cb39dfd078e637fd6c4424356e.1793851432.git.hy50.seo@samsung.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 05 Nov 2026 04:40:52 +0000
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D834606A328
+	for <linux-scsi@vger.kernel.org>; Thu,  5 Nov 2026 05:51:06 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9D834606A328
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
+Received: from [172.100.0.8] (unknown [36.110.52.2])
+	by APP-03 (Coremail) with SMTP id rQCowACXoZI+GexqUUdTAA--.12628S2;
+	Thu, 05 Nov 2026 13:50:54 +0800 (CST)
+From: Wentao Liang <vulab@iscas.ac.cn>
+Subject:
+ Re: [PATCH] scsi: pm8001: unwind the probe on ccb tag allocation failure
+Date: Thu, 05 Nov 2026 05:51:03 -0000
+Message-ID: <179385786361.1679257.8918146954526006640@iscas.ac.cn>
+In-Reply-To: <20261104-fragrant-fascinating-civet-9c5cd8@quoll>
+References: <20261104021411.1467970-1-vulab@iscas.ac.cn>
+ <CAMGffEkj=rzCiiek=p+9Qc2AjJ1Nkk00H8wFReQ9-0ptWHKobw@mail.gmail.com>
+ <20261104-fragrant-fascinating-civet-9c5cd8@quoll>
+To: Krzysztof Kozlowski <krzk@kernel.org>,
+ Jinpu Wang <jinpu.wang@cloud.ionos.com>
+Cc: "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+ "Martin K. Petersen" <mkp@kernel.org>, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -60,79 +56,56 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+X-CM-TRANSID:rQCowACXoZI+GexqUUdTAA--.12628S2
+X-Coremail-Antispam: 1UD129KBjvJXoW7WFW3uw4xKFWxur1xArW8JFb_yoW8XFWfpF
+	ZxKwn0y3srAF1Iyrs7Z3W8tFy0vayrJ3yrJF98WryUA3Z8Xw4IvrWvya18Z3W3W3Z3Gr4a
+	vw4S93WDZF4YvaDanT9S1TB71UUUUUDqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUvjb7Iv0xC_Kw4lb4IE77IF4wAFc2x0x2IEx4CE42xK8VAvwI8I
+	cIk0rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2
+	AK021l84ACjcxK6xIIjxv20xvE14v26ryj6F1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v2
+	6r4j6F4UM28EF7xvwVC2z280aVAFwI0_Cr1j6rxdM28EF7xvwVC2z280aVCY1x0267AKxV
+	W0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv
+	7VC0I7IYx2IY67AKxVWUtVWrXwAv7VC2z280aVAFwI0_Cr1j6rxdMcvjeVCFs4IE7xkEbV
+	WUJVW8JwACjcxG0xvEwIxGrwCY1x0262kKe7AKxVWUtVW8ZwCF04k20xvY0x0EwIxGrwCF
+	04k20xvE74AGY7Cv6cx26r48ZrWUJr1UMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I
+	8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUAVWU
+	twCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x
+	0267AKxVWUJVW8JwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_
+	Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVWUJVW8JbIYCTnIWIevJa73UjIFyTuYvjxUDd
+	gADUUUU
+X-CM-SenderInfo: pyxotu46lvutnvoduhdfq/1tbiBwgCA2rr-KhhaQAAsT
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] scsi: ufs: core: concurrent error recovery during ufshcd_wl_powero=
-ff()
---
+Hi Krzysztof, Jack, all,
 
-commit 6f60eb14bc24b472557f86d1f4db1435491fade7
-Author: HOYOUNG SEO <hy50.seo@samsung.com>
+I am very sorry for the consequences of these submissions. You are right
+to question the safety of this patch and the way we have handled these
+submissions. I apologize for the inadequate validation, the volume of
+patches, and our failure to respond to earlier feedback. That has wasted
+reviewers' time and damaged trust in our contributions. I take
+responsibility for my submissions.
 
-scsi: ufs: core: Limit early link recovery in the error handler to runtime =
-PM
+I want to state clearly that there was no malicious intent behind these
+patches. Our intention was to fix bugs, and we did not intend to insert
+security vulnerabilities or deceive reviewers. I understand why the
+combination of potentially unsafe changes, repeated submissions, and
+unanswered feedback raised this concern. Intent alone does not make an
+unsafe patch acceptable.
 
-This commit restricts the early link recovery path in ufshcd_err_handler()
-to runtime PM operations by introducing hba->runtime_pm_in_progress, so
-that system PM and shutdown use the regular error handling path instead of
-resetting the link concurrently.
+We did use AI assistance, but the responsibility for understanding and
+checking the changes remains with us. We should not have treated a
+single local reference-counting change as sufficient evidence that a
+patch was safe.
 
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index 3b5580ac390cb..e3908d6af3ae4 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -7089,11 +7089,15 @@ static void ufshcd_err_handler(struct work_struct=
- *work)
->  		 * Use ufshcd_rpm_get_noresume() here to safely perform link
->  		 * recovery even if an error occurs during runtime suspend or
->  		 * runtime resume. This avoids potential deadlocks that could
-> -		 * happen if we tried to resume the device while a PM operation
-> -		 * is already in progress.
-> +		 * happen if we tried to resume the device while a runtime PM
-> +		 * operation is already in progress.
-> +		 *
-> +		 * Do not do this for system PM and shutdown. The system PM
-> +		 * callbacks hold host_sem, so the regular path below runs
-> +		 * after them instead of resetting the link concurrently.
->  		 */
->  		ufshcd_rpm_get_noresume(hba);
-> -		if (hba->pm_op_in_progress) {
-> +		if (hba->runtime_pm_in_progress) {
->  			ufshcd_link_recovery(hba);
->  			ufshcd_rpm_put(hba);
->  			return;
+Once again, I am sorry for my actions, and I will do everything I can to
+address the harm caused by these submissions. I promise to respect the
+requested posting pause and will not send further batches during this
+period. I will personally reply to all of the feedback I have left
+unanswered over the past month or two. Until I have completed those
+replies and received your permission to resume, I will not submit any
+new patches. I hope you will give me the opportunity to make things
+right.
 
-[Severity: High]
-Can this allow ufshcd_err_handler() to run regular error recovery
-concurrently with hibernation poweroff in ufshcd_wl_poweroff()?
+Best regards,
+Wentao Liang
 
-During hibernation, the PM core runs .freeze (ufshcd_wl_suspend(), which
-takes hba->host_sem) followed by .thaw (ufshcd_wl_resume(), which releases
-hba->host_sem) before writing the hibernation image, and then invokes
-.poweroff:
-
-drivers/ufs/core/ufshcd.c:ufshcd_wl_poweroff() {
-	struct scsi_device *sdev =3D to_scsi_device(dev);
-	struct ufs_hba *hba =3D shost_priv(sdev->host);
-
-	__ufshcd_wl_suspend(hba, UFS_SHUTDOWN_PM);
-	return 0;
-}
-
-When ufshcd_wl_poweroff() calls __ufshcd_wl_suspend(hba, UFS_SHUTDOWN_PM),
-hba->runtime_pm_in_progress is set to false. However, unlike
-ufshcd_wl_suspend(), ufshcd_wl_poweroff() does not hold hba->host_sem, and
-unlike ufshcd_wl_shutdown(), it does not set hba->shutting_down =3D true.
-
-If an error interrupt schedules hba->eh_work while ufshcd_wl_poweroff() is
-running, ufshcd_err_handler() will skip the early return because
-hba->runtime_pm_in_progress is false, acquire the uncontended
-hba->host_sem, see ufshcd_err_handling_should_stop(hba) return false, and
-proceed with ufshcd_err_handling_prepare() and ufshcd_reset_and_restore()
-at the same time __ufshcd_wl_suspend() is powering down the device and
-link.
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1793851432.gi=
-t.hy50.seo@samsung.com?part=3D2
