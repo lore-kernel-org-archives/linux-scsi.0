@@ -1,58 +1,55 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793849031;
-	b=JqSX+IRCn7Ea/efWgKKprNX6U43J7VGhuA3ZhtxDhB8I/mCmR2qzVfPle9AzKSk3w9m0
-	 CkOeTq+hq8GBbq+VOEOdkWrYO2jz4L0j6CN/9Tn01PH1KL9QC3Z0+A8LJAw7Mp2uvV/YB
-	 Nx8hVpFTIXM06fvUDykf5mXcToKfNZ3wt7bXa2G4sQOjGxiqS64DzYDizLvrBmjEfkvqb
-	 isufKhI7JwWm0eO80OAFfw3WJ/mW/5O/fJpLaabl78qgrNDwIJxfeQVlGcz2yyWrCuzU3
-	 MWL6VhdP3qIvmZyWmYe/90KmiBccL7FANVE3lx0PtPoxVlJtUOLVBqfd/noGpKkuaig==
+	t=1793849178;
+	b=JN8y74Ukm0+u3M32XRSB94K30kYPB2meVZAjfadfzz4vm18jAtrVKWwh6voiFZpmpay5
+	 nnnEznu7uzn3meq+igvyKpE/8RT3CHyIFVtQNmIpxvv4nDXlAeg189TH6RDhfPaj3/gfH
+	 Qs4HdG+VPgXJ/sLeZMo7w+9q2yJSNRp13SBKiIvvQRwBZ1euSJviFjo7rm2agK3MeiERW
+	 g9L0ppFhT4N3oCmDbtlckzc0e8hhmxcaVjeWBz6+5hF7+FEWRbBAHLrevqR48gBSi2LP2
+	 cIv1u9izjHD6A0ndh+Is8H9y74K+RIeoCnaOeGLBNCLWZWcWO9mmBm+kcre+d37EuKQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793849031;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793849178;
 	h=Received:DKIM-Signature:To:Cc:Subject:From:In-Reply-To:Message-ID:
 	 References:Date:MIME-Version:Content-Type;
-	bh=mIk5VhBNepuksZFeyzjzGMSh3zqdxjJnepD62bUDK80=;
-	b=juZhlqvDlEhJhk/+e7Zn5pp+KwxjQdCzlpcKtl2qtUdVqYXDIHqfQm8bbUbzXSp8NQFm
-	 //79TzElncm3Dn6Qy/nqY6A8Md+IUngQCp2eQPkgMgH7U6EQNmJSTdQSbASj+F9Z2zMED
-	 wU77GV4FQlbmnQgEU/NrtK3CW0jTWqm6mqjG2S9Ddm9k+3fYCU2ksxt+aruUIYr3y5bV8
-	 HAzKdjQSzSidfisXQ9NOnZpPY8mV5cS4OL3ep+MrIW342mXg5LucoqHK8s3TxrAtNRhSg
-	 5dKNaCaGeDp0XFVONHcLjdNwxtYfvSpKF+AeSlaTg8VdihiEKgnbmQTV+1pjPnxmtdg==
+	bh=Fpu2k0HmKxZttwGHEPl9JAza7xUeO4Q39YGMtAjSdGI=;
+	b=m+KoDxJG96zJKwZkwLQ52tUtOTIGXf1pYLl0OmbLZ6sF0iRr0RDZDlpGeMvA+tjxt8qp
+	 yJZkjewiyPZgZGsBJhKuaSYVEuxIVSwker5X9t8ra57gqkxza8u90pa3FQpf2157Eb9jH
+	 HybDo0WlLgLWDXH0DpXUXHTigX8Tz04m5e1XwhGeunNEpGpb/KWcRhj8mPOckAITjYEpo
+	 nr+ptBLVB/k53vpfxj1OVYqWRuvIJUJ/Kq8YkrIWr6/4BE4RkDZb6L0ZLw9ebxxSlY5AC
+	 C8OWwH7FaX9FDdkgSIm9q0gBYhrs24K8y54Mr4KzmA605pzw732FPfQ5tYUNXW/h/UA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=HgnCBHW1;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=g83VSZWY;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22B59606A31B;
-	Thu,  5 Nov 2026 03:23:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9CBF606A31B
+	for <linux-scsi@vger.kernel.org>; Thu,  5 Nov 2026 03:26:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=HgnCBHW1
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 789251F000C1;
-	Thu,  5 Nov 2026 03:23:50 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=g83VSZWY
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0BB5C1F000C1;
+	Thu,  5 Nov 2026 03:26:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793849030;
-	bh=mIk5VhBNepuksZFeyzjzGMSh3zqdxjJnepD62bUDK80=;
+	s=k20260515; t=1793849177;
+	bh=Fpu2k0HmKxZttwGHEPl9JAza7xUeO4Q39YGMtAjSdGI=;
 	h=To:Cc:Subject:From:In-Reply-To:References:Date;
-	b=HgnCBHW1LyIjX3UR38PqIl3Stf20fgHU2dftsXKzmTGefDm/2EP1EJqrczu9GN0sv
-	 J+KsXc/jCvPQThv3QZ2ZBXMWxUuQq2VDijdxUuqj0EMPnLCtVwKK3PrLug8oqBtLYe
-	 yga9i+WjzAJFqRy7ZDvIhKhl4t/EEHgBprR91rzcxJZ9lsIH2+nTzn/MB3X5f64AX7
-	 1TaQrHIgVEKHAOBjVUP3oeAghF0iAAYfqJWGGQOpFnAKqeR69Sc0zLutXcqe0VhMv/
-	 e8qzA9KHaxw3R5zZvVhetOWu49f7VJKssSCHDZ3VlXVygsCP3d0d+lstKcE4ej62ls
-	 Ybk9n74ipw1HQ==
-To: Stanley Jhu <stanleyjhu@google.com>
-Cc: "Martin K . Petersen" <mkp@kernel.org>,  "James E . J . Bottomley"
- <James.Bottomley@HansenPartnership.com>,  Alim Akhtar
- <alim.akhtar@samsung.com>,  Bart Van Assche <bvanassche@acm.org>,  Bean
- Huo <beanhuo@micron.com>,  Can Guo <can.guo@oss.qualcomm.com>,  Peter Wang
- <peter.wang@mediatek.com>,  linux-scsi@vger.kernel.org,
-  linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 0/5] scsi: ufs: Fix device management timeouts and
- runtime PM errors
+	b=g83VSZWYitfSyIrZ0IaeFKQplFLGUG1iqo/2nYF2zo7uoVm/TYBAGEZrDXzKSgNgY
+	 F2Myt5/ZQSUVn3IK2wxGXLuFI0YuI+AaPQv1vpWwdGyhtdcclxmVpnfEX/X+6TKoDd
+	 b18Gn/231Re3xMYdlxp013NIMw0bAAGa1oNpdmxFOaOkEd7EK6A1yJTKckjxUBS/10
+	 1/anNwQrkdXt6msGFLeYH1CF3Vnl4Yp5mY+e+DNH2hRFzLeV1jClWtI63Br6T+YdKm
+	 J3lhgkZwZC5Iv9W5LHIhSAILKIE428iNPv6wzpaZewqmL4087g6Gjz5YTXqijrVUIl
+	 AWFvdsWO25lgw==
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+  "Martin K . Petersen" <mkp@kernel.org>,  Heiko Stuebner
+ <heiko@sntech.de>,  linux-rockchip@lists.infradead.org,
+  linux-scsi@vger.kernel.org
+Subject: Re: [PATCH] scsi: ufs: rockchip: Improve RX noise immunity
 From: "Martin K. Petersen" <mkp@kernel.org>
-In-Reply-To: <20261029040003.2100003-1-stanleyjhu@google.com>
-Message-ID: <yq1pkwkyn9f.fsf@mail.kernel.org>
-References: <20261029040003.2100003-1-stanleyjhu@google.com>
-Date: Wed, 04 Nov 2026 22:23:49 -0500
+In-Reply-To: <20261029151030.1.I61cd43e660b146e49d4380a754e936270e5fb6a1@changeid>
+Message-ID: <yq1jymsyn6a.fsf@mail.kernel.org>
+References: <20261029151030.1.I61cd43e660b146e49d4380a754e936270e5fb6a1@changeid>
+Date: Wed, 04 Nov 2026 22:26:16 -0500
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -65,10 +62,11 @@ MIME-Version: 1.0
 Content-Type: text/plain
 
 
-Stanley,
+Shawn,
 
-> This series fixes two problems in UFS core entry points that issue
-> device management commands or touch host registers.
+> Program VND_RX_SAVE_DET_CTRL for each RX lane to raise the receiver's
+> tolerance against short transients on the incoming signal, as recommended
+> by the Rockchip PHY team.
 
 Applied to 7.4/scsi-fixes, thanks!
 
