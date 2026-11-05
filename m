@@ -1,56 +1,66 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=199.89.1.16
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793899947;
-	b=0UzeAUE2hMU6YzaHSsmSKsCuSWj/UNPkSXjnGUkvwmUQtlDGdSDlo0BrNJxvuJBbKTU3
-	 j/RAz47pV8AhuCmo5xhdwo2UfooKEVGsBWoLGDM9fU72X2SGEkWvo5IIGGl3lHebWtVhe
-	 cqc71EigjOmxBFl5t1UpxhxvrHnhq9sgQmXHR33CT/vHE9A/G3RBZPUvIB9aK6isAzCZQ
-	 zdfaVhDBNfhUzYj/Qyg+VIKzNvK1I/J5+/lhUqA6xmFPVUHN8fTeyZWXeDkYiCNpYOqAB
-	 pIkh+lAE1T0M4ugROwioTnwvN4YZFwZ2HmvZC52VmBo4XkILuc/wyk/tdsFcPWbebAA==
+	t=1793901226;
+	b=exeIBwpJWigqnVm6u5JG7v5R1B4taB6CG7RkewU4Pjbzyu5E4dLaohc8e+AYqNPmP1AH
+	 K/RSumXL35Fr1sffDQdMWAq3irO0H4uzQnfi5Vx195LJ7JpCvTI1mQ8EmzPRG9axARPsO
+	 bTVKTVOMLLCfLkW8TU0VGZhIBtANWmiIc3CU21RBQeytReQM+WDempngKl3sgms8WWj8/
+	 06zI52/+DsFQJ2jhl9VkKkSphWYfGdJa8jA8lI2CdUqCIcSlwPK52XV7yLp5b1h39ltdb
+	 ZXvgW90oDEBz7T42j/dZZWZOpRxnL5/S9mtZ0wE9XmSkl4Xi2OgH5WCUu3ekakPMtZQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793899947;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=lp0NGZovHOZFgM8Bydql0MxHwiduWzL/2fD0i5iRoF0=;
-	b=OmZdNsmZYzh2ErVOU3IRFnD5Ygi5/ubiVUEUGp1dRpaii9GdRubadkNpkg/OI1DfzA8C
-	 3KihSIn0TLsGPpfGudEFxYSvQL6T8++AEso48XQ9tQ+HkJHiMpCPeO55w+wXUs8jFc2Qc
-	 ERvr7+ycS+dnXJ9NYPDzsjzjSRXsinkW2Z9upEuooJV6NmsbtrMys+r6y0/JIA0qRjX7X
-	 +rfcQm37M1VNtfouxTUP+YCr0QvpdyCWbjYXC1puVqNyvX4wO170w+NTFcnxexJra5yet
-	 fmRlXPDueNrHByb96HdIQg427HQc9lLYaykn+THnAZyjVVrDzJQTnBkr71wVwlK73Jw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793901226;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Virus-Scanned:Received:
+	 Received:Message-ID:Date:MIME-Version:User-Agent:Subject:To:Cc:
+	 References:Content-Language:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=24DN6uReOLKC7T3rnRPsFJ0vyMkgerb5nS+GghuFNvU=;
+	b=ma3oZXigOYvigKTiSjBg8wuXTdUDHyfCi0RgUKTvMXjBvPpmYXVACVVE0n8rloQm9LZd
+	 6YtEyB5IgXaBMtrLzyvCClOINaHwS9UC+QK93llsRygpS7v7sYWUeEoi2M3sdhdAhCfVV
+	 6ydGU9o9a7XiDGc5jfI/wg6YH6HxfcGqlB8mcteCKsreRSIoWy4xU7ffPX8L+kitIeEKU
+	 Fp6IbCToC5ryKLtBFCPVry0b+xuyTjqxgU9L9GWEjNOUeP1fWSU05gM5tISwRGtphLh8v
+	 JTqJOC1hxl4FbsMz2Tm5SUllTC+MCFEXeT1yPVQsBkfP4eIUMVl7849xe+kWL/vEYFg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=S5naOIGa;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=acm.org;
+	spf=pass smtp.mailfrom=acm.org;
+	dkim=pass header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=QiRPOTJs;
+	arc=none smtp.remote-ip=199.89.1.16
+Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8EDE8606A328;
-	Thu,  5 Nov 2026 17:32:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA182606A31B;
+	Thu,  5 Nov 2026 17:53:45 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org AA182606A31B
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=S5naOIGa
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AAE191F000C1;
-	Thu,  5 Nov 2026 17:32:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793899947;
-	bh=lp0NGZovHOZFgM8Bydql0MxHwiduWzL/2fD0i5iRoF0=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=S5naOIGaaD2J0fiVVP8ceihDTb/hSIh1mWM1o667RDtp6/+xObpwQBZ19kvzL/RkW
-	 qJvNF0ER9qNGrIGt7dLJ8x/P/cPn9xBkYktmFMHojSuE9woerIFFDaHcQW0MY91/Zt
-	 uzfrlmSm6xgmbxCPVVyF8RZniWRputBS3ZZlAjIS3fzwDrg3H1Bd76xqI+1ADuFZ0D
-	 eZYLdlYiVzSAb9SZLJWFL1IQn60UG2llt4BhU+PNWCj8KdMvnyGTGREglZHswG+uFI
-	 3SzLukV9JdXhlkAxIcVYaMvYsREHcqd99Y0a+HKQjx0+uDjQb9hSTqShILpb0d33sD
-	 Q5pyDXzzvOK9w==
-Message-ID: <sashiko-outbox-199628@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 3/3] treewide: Use offsetofp()
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Bence Csokas" <bence.csokas@arm.com>
-Cc: linux-rdma@vger.kernel.org, bpf@vger.kernel.org, linux-security-module@vger.kernel.org, dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, linux-hyperv@vger.kernel.org, linux-scsi@vger.kernel.org, linux-sound@vger.kernel.org, media-ci@linuxtv.org
-In-Reply-To: <20261105-offsetof-v1-3-4153f5c10edc@arm.com>
-References: <20261105-offsetof-v1-0-4153f5c10edc@arm.com>
- <20261105-offsetof-v1-3-4153f5c10edc@arm.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 05 Nov 2026 17:32:26 +0000
+	dkim=pass (2048-bit key, unprotected) header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=QiRPOTJs
+Received: from localhost (localhost [127.0.0.1])
+	by 013.lax.mailroute.net (Postfix) with ESMTP id 4jL90T1SgHzlgyGZ;
+	Thu,  5 Nov 2026 17:53:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1793901222; x=1796493223; bh=24DN6uReOLKC7T3rnRPsFJ0v
+	yMkgerb5nS+GghuFNvU=; b=QiRPOTJsNHIAH4NkS0k/ca9hP0Q42YeS5wUwg5MU
+	rAh+DarQds8lONUK/jd6pH4hc/1k2SC84UcK+bPZcf6/5/hlMtl8fuJ3VntrHNb/
+	Udso7jdU3w36Fg6rMb++24eX+CR9tal6iHJZ6LRPcoXIa9AbwBLNDofz2NHtdcB5
+	Mvfvn2qiNYpqTF4Y0SqQs0P4cTE9TkApuK2AUmkwjtv84MEWVpiN75kO2SVTiI8w
+	7pt4FMQLos5hZOmDwMXxMZbv5/xgC4PzOdCUZyNnOTt2nmC+tlHfi6AjuznmZs2n
+	CCrDcZCbSlBl8T2rVwklJFE+WgpB+qH4lVIvOcGeoX2xZw==
+X-Virus-Scanned: by MailRoute
+Received: from 013.lax.mailroute.net ([127.0.0.1])
+ by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id ehe7uoKOOPA2; Thu,  5 Nov 2026 17:53:42 +0000 (UTC)
+Received: from [100.80.231.125] (unknown [104.135.182.41])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4jL90Q2KzlzlfcTl;
+	Thu,  5 Nov 2026 17:53:42 +0000 (UTC)
+Message-ID: <ec1d1fd7-b832-4ea8-b3f3-87ff3d361d80@acm.org>
+Date: Thu, 5 Nov 2026 09:53:41 -0800
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -59,53 +69,53 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v6 2/2] ufs: mcq: poll OCS after sq cleanup for device
+ management commands
+To: Kiwoong Kim <kwmad.kim@samsung.com>, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org, alim.akhtar@samsung.com, jejb@linux.ibm.com,
+ martin.petersen@oracle.com, kwangwon.min@samsung.com, hy50.seo@samsung.com,
+ cpgs@samsung.com, h10.kim@samsung.com
+Cc: stable@vger.kernel.org, stanleyjhu@google.com
+References: <20261105004333.1097899-1-kwmad.kim@samsung.com>
+ <CGME20261105004353epcas2p1bd2370dd10156570c69f8f80da3cbcfd@epcas2p1.samsung.com>
+ <20261105004333.1097899-3-kwmad.kim@samsung.com>
+ <8939a53e-1b21-4dd9-b65c-cbe03b8b72ce@acm.org>
+ <003701dd6cea$c396cd10$4ac46730$@samsung.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <003701dd6cea$c396cd10$4ac46730$@samsung.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [Low] treewide: offsetofp() duplicates existing struct_offset() helper
---
+On 11/4/26 9:59 PM, Kiwoong Kim wrote:
+>> The SQ is still stopped at this point, so this loop can stop fetching from
+>> the hardware queue for up to MCQ_POLL_US (500 ms). Please move the OCS
+>> poll after the ufshcd_mcq_sq_start() call.
+> 
+> I didn't get what you meant. The loop just reads updated OCS periodically
+> and from what I know, it's based on the assumption that when a task
+> is cleaned up by setting SQRTCy.ICU to one and it's successfully
+> done, the host updates OCS, even if SQ is stopped. If you feel I get
+> your comment wrong, please let me know.
+Let's start with the approach that you proposed. Making the change I
+proposed is probably unnecessary.
 
-commit d78220885af6984fafc359340778dba58aea1b73
-Author: Bence Csokas <bence.csokas@arm.com>
+>> This code also waits for the interrupt handler to process the CQE. Why not
+>> reap the CQE from this function? ufshcd_clear_lu_cmds() already does that
+>> by calling ufshcd_mcq_poll_cqe_lock(hba, hwq) after ufshcd_clear_cmd().
+>> Calling ufshcd_mcq_poll_cqe_lock() before reading the OCS would remove the
+>> dependency on interrupt delivery and match the existing code.
+> 
+> Because a successful SQ cleanup leads to OCS update,
+> which subsequently leads to raising IS.CQES when MCQ is enabled. I
+> understand your idea with ufshcd_clear_lu_cmds, then do you intend 
+> Ignoring IS.CQES event in this case?
+That's not what I meant. An interrupt is generated after the status has 
+been changed to OCS_ABORTED, isn't it? Has it been considered to wait 
+for that interrupt instead of polling the OCS status?
 
-treewide: Use offsetofp()
+Thanks,
 
-This commit converts treewide uses of offsetof(typeof(*ptr), member) to the
-newly introduced offsetofp(ptr, member) macro via Coccinelle.
-
-> diff --git a/drivers/dma-buf/dma-resv.c b/drivers/dma-buf/dma-resv.c
-> index 2365a6d8ca15f..83c204458d409 100644
-> --- a/drivers/dma-buf/dma-resv.c
-> +++ b/drivers/dma-buf/dma-resv.c
-> @@ -108,7 +108,7 @@ static struct dma_resv_list *dma_resv_list_alloc(unsi=
-gned int max_fences)
->  		return NULL;
-> =20
->  	/* Given the resulting bucket size, recalculated max_fences. */
-> -	list->max_fences =3D (size - offsetof(typeof(*list), table)) /
-> +	list->max_fences =3D (size - offsetofp(list, table)) /
->  		sizeof(*list->table);
-
-[Severity: Low]
-This isn't a bug, but include/linux/overflow.h already provides
-struct_offset() with the exact same definition (introduced in commit
-f6ed9c5d3190 ("overflow: Introduce struct_offset() to get offset of
-member")):
-
-    #define struct_offset(p, member) (offsetof(typeof(*(p)), member))
-
-While include/linux/stddef.h now defines:
-
-    #define offsetofp(P, MEMBER) offsetof(typeof(*(P)), MEMBER)
-
-For example, dma_resv_list_alloc() in drivers/dma-buf/dma-resv.c already
-uses struct_size(list, table, max_fences) from include/linux/overflow.h just
-a few lines above.
-
-Could these conversions across the 39 modified files reuse struct_offset(),
-or should struct_offset() and offsetofp() be consolidated instead of keeping
-two identical macros?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261105-offsetof-v=
-1-0-4153f5c10edc@arm.com?part=3D3
+Bart.
