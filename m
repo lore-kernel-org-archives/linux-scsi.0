@@ -1,66 +1,68 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=111.22.67.137
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=111.22.67.139
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793934582;
-	b=cvXZro6rRuOzlFkT89NJt/HR22jfjA8W49c4BFBHKLZJ4bHA0Ab2DC/CD1afRwifDhSu
-	 M9MsINvSVYhHd2A9rDs9X14yq5ak8UrnHDIFiGn2sPrHTH+x44zZjWREwcggdYCAg1RiN
-	 Sz3Q4oj9fECMnXn78KOqapp/a9SLc0A7DPVrYcyvJJVCnf0iPkrkLpYI0Ilc7MYrnBR5y
-	 QFQ7cGaIUbL3tK/h+/LH0MAk28EslrQ/EGdiX1Zteyp42trxXyng9xmE+OoDV/Wnl8Bly
-	 5VVLUy381EGj1cU0EcQdBiD1J9w7Emjv/kwL/uxUGI0ae0akV1FW8fnKGC+gHd0+m0g==
+	t=1793936887;
+	b=qQADSnzEZlJ2tWiClzJMKInlpjNXgAPpYkFPJ4LhHTZpVZUCr9NJFTG6ks/YTnjfgaK/
+	 z3dUwaLNBBKgdfRwMzwobzI19ZcmJ7VB095cusWdVSEtI8v0PkOtTNOHDs0jBpkStUK0z
+	 DI/J1LNiSQaJHKmVObJJp3bNXixXKvOHrsC3fQo2lCrKzdPhemLDVOyceHeE7p7SK/tgA
+	 FQchA6I4KUXEOzxxjbWqRVFHglDLKh2fSAbMfgXINJbkJPQOkmmdOKfbNaxiQy3PuV0Hw
+	 5hUu3facO/rgGlMJQ4gC9uJ32uyV2DlgkfpxHk/C3ZBuPzUszlu3K7oyClTXmRimu8Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793934582;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793936887;
 	h=DMARC-Filter:DKIM-Signature:X-RM-TagInfo:X-RM-SPAM-FLAG:Received:
 	 X-RM-TRANSID:X-RM-TagInfo:X-RM-SPAM-FLAG:Received:X-RM-TRANSID:From:
 	 To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=KYBPtrlIi9gXAazDdsBPDTstOux0YKUL3iELrqvYDFI=;
-	b=EvAGlfrENuHTWvRGGmruh7VFcyJnXeo5JZIfDpbppP6OMZgGqsg8m6yXAfB2+79ryKST
-	 F8VNYf6plgeXjZphcG5zYvE3fg9Qhd7NOolKZZIKGPYTcT4BELBscBEotx511tkNT9qre
-	 ywOhs2g3VOHxCNlJj4meH5KB9V5SRfKmLjGa7XNrHg0xrKOkAqQm6hh9RjcnOf1jMRYBE
-	 07CTL/mHEHwMwLIKGZFnBhmNMn4vbH7r/3uNhSGiwHjIYD7R5UJginNZ9cMjgqs+2YxqH
-	 Pwi/qqgKJvnC/ZrCe22y87UiMXlGBPZrElYXsZTh0SBMXC3TOiQPvp4f35oRAeYQcGQ==
+	bh=mp9vc2fmA8WolxnJVR0p5IkNg2jUdofuz1rHIL/6RxM=;
+	b=4wjNlr3SR7BRwPpjun11eu1o4j4feEkBjXAIHVNUZXX0oxt7e7DNe9pDDAavvev7+U+j
+	 IN8cmuEQCzlB/HB1jeQ8c/JXa8N2H/tFo98WotKjYw/0Xc6X2qByENmYODquSNGhQdnqq
+	 tpkqMZJjxXKS/Bd7SdvbDgBFPhFlRfPjrB/tmulL8FYgqs7YS0HQnz7VeOGqQNGMTd3H8
+	 M/SF3IbjE7R4nwW1PjDE83H85/SYQWiGMeuHhQCSfUG+OfdYfMVmdXsiB9dIlpxK4iAOV
+	 gOB+4S/lHbELMY1NODMwq6Twtsd7VEdS086AiCpLEbv3l6vVlx9ItzuLAtM8C4vMoGA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=cmss.chinamobile.com;
 	spf=pass smtp.mailfrom=cmss.chinamobile.com;
-	dkim=pass header.d=cmss.chinamobile.com header.i=@cmss.chinamobile.com header.a=rsa-sha256 header.s=default header.b="wX/K9WBl";
-	arc=none smtp.remote-ip=111.22.67.137
-Received: from cmccmta4.chinamobile.com (cmccmta4.chinamobile.com [111.22.67.137])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id B7766606A31B;
-	Fri,  6 Nov 2026 03:09:40 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B7766606A31B
+	dkim=pass header.d=cmss.chinamobile.com header.i=@cmss.chinamobile.com header.a=rsa-sha256 header.s=default header.b=LifHQXQw;
+	arc=none smtp.remote-ip=111.22.67.139
+Received: from cmccmta6.chinamobile.com (cmccmta6.chinamobile.com [111.22.67.139])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id B840D606A326;
+	Fri,  6 Nov 2026 03:48:05 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B840D606A326
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmss.chinamobile.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cmss.chinamobile.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=cmss.chinamobile.com header.i=@cmss.chinamobile.com header.a=rsa-sha256 header.s=default header.b=wX/K9WBl
+	dkim=pass (1024-bit key, unprotected) header.d=cmss.chinamobile.com header.i=@cmss.chinamobile.com header.a=rsa-sha256 header.s=default header.b=LifHQXQw
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
 	d=cmss.chinamobile.com; s=default; l=0;
 	h=from:subject:message-id:to:cc:mime-version;
 	bh=47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=;
-	b=wX/K9WBl6nrLO6n6xfx2eC02EaWs9eN2Jysxzqrm1Gg2qLrJUeHZG01hyRwwWeR+AAx2l2xGUXE35
-	 PwDVX7YrLBjoUt6UwuI9gsEn6nPYkNlJwpV8l3qsjK/n2UZVjlfaVvhlz7DXf4/wSVv1h1UlqDdJXa
-	 HHC5Z6707AR0Y00I=
+	b=LifHQXQweKN+ISzLsUpQPSXjn5ddMHnC6idVzyCIcMyR3RvTsTrE7oCgyvQXKrLpdsuIFI7mAVELb
+	 2OS4sfDzpuUOr9N4TlZ/2XDio/Jgcz7G0U1KI1ZSMRRMDmHJrsh0p8L2AS9Wq0lgChVroQBbt682I7
+	 vrR2WvV95dwqbbnw=
 X-RM-TagInfo: emlType=0                                       
 X-RM-SPAM-FLAG:00000000
 Received:from spf.mail.chinamobile.com (unknown[10.188.0.87])
-	by rmmx-syy-dmz-app04-12004 (RichMail) with SMTP id 2ee46aed44f2bc2-4b693;
-	Fri, 06 Nov 2026 11:09:38 +0800 (CST)
-X-RM-TRANSID:2ee46aed44f2bc2-4b693
+	by rmmx-syy-dmz-app05-12005 (RichMail) with SMTP id 2ee56aed4df0a0a-a9cf8;
+	Fri, 06 Nov 2026 11:48:00 +0800 (CST)
+X-RM-TRANSID:2ee56aed4df0a0a-a9cf8
 X-RM-TagInfo: emlType=0                                       
 X-RM-SPAM-FLAG:00000000
 Received:from [25.255.2.225] (unknown[10.55.1.70])
-	by rmsmtp-syy-appsvr07-12007 (RichMail) with SMTP id 2ee76aed44f163e-0f789;
-	Fri, 06 Nov 2026 11:09:38 +0800 (CST)
-X-RM-TRANSID:2ee76aed44f163e-0f789
+	by rmsmtp-syy-appsvr10-12010 (RichMail) with SMTP id 2eea6aed4def955-10b04;
+	Fri, 06 Nov 2026 11:48:00 +0800 (CST)
+X-RM-TRANSID:2eea6aed4def955-10b04
 From: xujiahao <xujiahao@cmss.chinamobile.com>
-To: Laurence Oberman <loberman@redhat.com>,
-	John Meneghini <jmeneghi@redhat.com>
-Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+To: Kashyap Desai <kashyap.desai@broadcom.com>,
+	Sumit Saxena <sumit.saxena@broadcom.com>
+Cc: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+	Chandrakanth patil <chandrakanth.patil@broadcom.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
 	"Martin K. Petersen" <mkp@kernel.org>,
 	linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	xujiahao <xujiahao@cmss.chinamobile.com>
-Subject: [PATCH] scsi: st: Avoid truncating the tape name for large tape numbers
-Date: Fri,  6 Nov 2026 10:17:30 +0800
-Message-ID: <20261106021730.3409119-1-xujiahao@cmss.chinamobile.com>
+Subject: [PATCH] scsi: megaraid: Fix firmware version truncation
+Date: Fri,  6 Nov 2026 11:44:44 +0800
+Message-ID: <20261106034444.3443214-1-xujiahao@cmss.chinamobile.com>
 X-Mailer: git-send-email 2.43.0
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -73,49 +75,56 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-create_one_cdev() builds the class device name in a 10-byte buffer as
-"n" (no-rewind devices) + tape->name + a one-character mode suffix.
-tape->name is a DISK_NAME_LEN (32) byte array holding "st%d", and the
-tape index comes from an idr with an upper bound of ST_MAX_TAPES - 1
-(131071, six digits), so "n" + "st131071" + suffix + terminator needs
-11 bytes.  Names of tapes with large index numbers are truncated today
-and lose the mode suffix, which leaves the rewind modes of such a tape
-with the same name.
+The HP firmware encoding writes "%c%d%d.%d%d" into adapter->fw_version
+and adapter->bios_version, which are 7-byte buffers.  The format can
+produce 8 characters plus the terminator, so revisions with larger
+field values would be truncated, and gcc reports it in a W=1 build:
 
-Size the buffer after the actual requirement, DISK_NAME_LEN + 2, and
-pass sizeof(name) to snprintf() so the two cannot drift apart again.
+  drivers/scsi/megaraid.c:317:36: warning: '%d' directive output may be truncated writing between 1 and 2 bytes into a region of size between 1 and 2 [-Wformat-truncation=]
+  drivers/scsi/megaraid.c:324:36: warning: '%d' directive output may be truncated writing between 1 and 2 bytes into a region of size between 1 and 2 [-Wformat-truncation=]
 
-GCC reports with -Wformat-truncation=2:
+Size both buffers to 16 bytes, the same size struct mega_adapinfo uses
+for the same strings, and pass the size of the buffer being written
+when formatting bios_version.
 
-  drivers/scsi/st.c:4393:31: warning: '%s' directive output may be truncated writing up to 31 bytes into a region of size between 9 and 10 [-Wformat-truncation=]
+The non-HP path copies 4 bytes into the buffers and terminates them at
+[4], and all consumers print them with %s or compare them with
+strcmp(), so the larger buffers change nothing else.
 
 Signed-off-by: xujiahao <xujiahao@cmss.chinamobile.com>
 ---
- drivers/scsi/st.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/megaraid.c | 2 +-
+ drivers/scsi/megaraid.h | 4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-index e9d41e3cc..311781987 100644
---- a/drivers/scsi/st.c
-+++ b/drivers/scsi/st.c
-@@ -4366,7 +4366,7 @@ static int create_one_cdev(struct scsi_tape *tape, int mode, int rew)
- 	struct cdev *cdev;
- 	struct device *dev;
- 	struct st_modedef *STm = &(tape->modes[mode]);
--	char name[10];
-+	char name[DISK_NAME_LEN + 2];
- 	int dev_num = tape->index;
+diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
+index a4079866f..a4995078f 100644
+--- a/drivers/scsi/megaraid.c
++++ b/drivers/scsi/megaraid.c
+@@ -320,7 +320,7 @@ mega_query_adapter(adapter_t *adapter)
+ 			 adapter->product_info.fw_version[1] & 0x0f,
+ 			 0,
+ 			 adapter->product_info.fw_version[0] & 0x0f);
+-		snprintf(adapter->bios_version, sizeof(adapter->fw_version),
++		snprintf(adapter->bios_version, sizeof(adapter->bios_version),
+ 			 "%c%d%d.%d%d",
+ 			 adapter->product_info.bios_version[2],
+ 			 0,
+diff --git a/drivers/scsi/megaraid.h b/drivers/scsi/megaraid.h
+index ecbaa0a0a..e95d99e83 100644
+--- a/drivers/scsi/megaraid.h
++++ b/drivers/scsi/megaraid.h
+@@ -830,8 +830,8 @@ typedef struct {
  
- 	cdev_devno = MKDEV(SCSI_TAPE_MAJOR, TAPE_MINOR(dev_num, mode, rew));
-@@ -4390,7 +4390,7 @@ static int create_one_cdev(struct scsi_tape *tape, int mode, int rew)
- 	}
+ 	/* Host adapter parameters */
+ 	u8	numldrv;
+-	u8	fw_version[7];
+-	u8	bios_version[7];
++	u8	fw_version[16];
++	u8	bios_version[16];
  
- 	i = mode << (4 - ST_NBR_MODE_BITS);
--	snprintf(name, 10, "%s%s%s", rew ? "n" : "",
-+	snprintf(name, sizeof(name), "%s%s%s", rew ? "n" : "",
- 		 tape->name, st_formats[i]);
- 
- 	dev = device_create(&st_sysfs_class, &tape->device->sdev_gendev,
+ #ifdef CONFIG_PROC_FS
+ 	struct proc_dir_entry	*controller_proc_dir_entry;
 -- 
 2.43.0
 
