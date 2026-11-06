@@ -1,107 +1,56 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.215.226
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793926812;
-	b=E0U51KjJbEi+0YQtSr6RKVhV78pK0fm4bIvuHnNSa8A038ig/WPZ2e3eoDhAnqNTnqSm
-	 iEDktUaITy5sgn81HmoLXjKP6ze6yOsX4+JLGEP3oxMlL2IVLQvrQoYBeO2hhG8Bjl6Om
-	 1w8yi3u8Ci3U+CPhyNtdZzXmELY3EyzVEFd4GXqAZJ/wvGZNeo3RiU5h08LkhoDCpPRGI
-	 7VM2BHcNLPlvqDzxiKYOQ84mXYtBGmz5yERNQcKrVr868G66GrXCswEXnM/ZNZpmcrsJ/
-	 hkG3cr9j45Bl3OvgOVCxI/tCYDPsrygeOjezFLCVVjDVfePMbth4H16xhHnp7KPlUzQ==
+	t=1793927398;
+	b=DK70Lxzo0h9HosK39xKj3zXq+bpyZ7BiY1Qz50mZUPTaI5MjvbZgXPiCFkLiwwH2+MGC
+	 /tqXT6uaIvynG/vfeOSgqxiZtJsuRAiVF4BN6UUHnI9Xx1UZBC09MhjTM2w7ikYtvgUDm
+	 F6ieywLl0fIYKM+7hKvZ/609uMKvaymqjJvMsQsVhq/WgzHFxGC7DIrkJ52j2QVomJUS7
+	 8cN/N5ffy/lWU5lqIfS6RQXxpNkV7HI1cMMhFNA1CDma8mZH5VFOJz80oseK8jc9CVK2p
+	 /iiaoz7/0Q+1IF76Mv4fKrdJhm0Qowgy/RLHXqGoQPL1ntrPWcp0jPJPgLmePdpsrNg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793926812;
-	h=DMARC-Filter:Received:X-Google-DKIM-Signature:X-Gm-Message-State:
-	 X-Gm-Gg:X-Received:Received:X-Relaying-Domain:X-CFilter-Loop:Received:
-	 DKIM-Signature:X-Received:X-Received:Received:From:To:Cc:Subject:Date:
-	 Message-Id:X-Mailer:In-Reply-To:References:X-DetectorID-Processed;
-	bh=6nGmi9N83o9GwRS0B2nx1iaHiH3QtOEKlDYmEo39YXg=;
-	b=dYH40dyjK80Qn5BHP5Ut0Paq3PqKo/ZVNMFFDDtm66VJYrGCbt7RJFdIrH8LuHYjzT74
-	 9BT1GPf0QGGrxA4rqBkRouU1OfdaGfw0VWEJ/N632C0L8pTJcVEZb5Ye/rEXclA2eNXN5
-	 AlP7LHeLKSGGONbrFjE/OrfwDcyohuQaf/KLx8HjRUTnCiIw0eNj0fTmk7l17TJKx1Hvg
-	 IWMWXofSjUqxsdc7ADvmQR90UcUJsUxouL/Ws3wwnOmO8AM6WKZMYbdNeAldA0rzq9eQT
-	 Tsl/yM7puCE91hsmu/Mc3jQYilGViBBU2lWz5ruWc2KVdSF5B/+pg81BrfDFGcUMNvg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793927398;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=d6Po/4S41WwS28gBYvglr8QXYVbUgRIen02+PqloiBw=;
+	b=5bnDQmRxKOkeEZi2wXfkKnZlZ95NxX6Htxwf46slhO7APISK96xPtLqWjO+b6SRxUY2C
+	 3Yk0ZKaAWpANd8nDsAfmh/944z9agDWfYUFGZCf4XE/aoWmaN5RWh6FiGuK2n5wDa7Ily
+	 fo0fbLMXVdy9jT3JQHQka6voUBzlHXgvJC/xBWBSKVMKlSBwGku8EjuctTEtOJMFb32TH
+	 WFQRQ98c0FIXH+Wbw9opa39BDTR9LFx3J3ypYtZB2kxw9DQ5QKsO4j3Gy3Sb5PBl9dfSn
+	 K7lzS5IpShaB+QX5PqjD4LQWTU8B9RIE2P4PGfcGMcWWcWtsl17SIy/HGN2mKhjLgvA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=broadcom.com;
-	spf=fail smtp.mailfrom=broadcom.com;
-	dkim=pass header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=I3TrB42I;
-	arc=none smtp.remote-ip=209.85.215.226
-Received: from mail-pg1-f226.google.com (mail-pg1-f226.google.com [209.85.215.226])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=LlyuAKW7;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6759B606A326
-	for <linux-scsi@vger.kernel.org>; Fri,  6 Nov 2026 01:00:12 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6759B606A326
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D92B1606A31B
+	for <linux-scsi@vger.kernel.org>; Fri,  6 Nov 2026 01:09:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=I3TrB42I
-Received: by mail-pg1-f226.google.com with SMTP id 41be03b00d2f7-cc147d86bebso112108a12.0
-        for <linux-scsi@vger.kernel.org>; Thu, 05 Nov 2026 17:00:12 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793926812; x=1794531612;
-        h=references:in-reply-to:message-id:date:subject:cc:to:from
-         :dkim-signature:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=6nGmi9N83o9GwRS0B2nx1iaHiH3QtOEKlDYmEo39YXg=;
-        b=Fbd+yAo0TZvw6KJtBiTKKGJqGiycrjGI7TvKpdX5SXRiSsjLL54dFC7MwEtOH9luO6
-         GcRFlvtTKd9s3eKcEVbKYQUxuJJlcbQ3ZCrJEQ2XYLWV7aa3AVixeomh8+b1gYa+r0/e
-         dQ8qOFTh9U0y5FFQsHOlsgl/NKi+cAXLZvqudcPfzUorLXpReMwMOqpGy6vUV+u9Y3i5
-         LEGMlyuxBjbYWQrLI88yvvmnTkw3Ts26Cb0n2dz0vq11lNfBH0rJcX5aDU49+AFxNFhE
-         qhkN4mNhEyn3bfOtK01hEKjXL43Uz6UO3Kk8IPQTNAiaWQpH5h8w7qjVXuK9rn3cLbh5
-         XMVw==
-X-Gm-Message-State: APuU4Z/9uUPfOwDxhi6wzEOG61yyJHNph3SU7yem4PWfUhMAoiAA+O4/
-	XJesfu/IkJHKZFSEJvUYSyezLIAVFOXbI/9bm171AbbUKCujPXr5DtwVizC//+T1NyfCzef7SjU
-	4phoOc6T7ZqU3WkJw019i5R6hw+4XZp7qs5aVvgKGQu5Ni0NyEiq1k5bY6EV7+cybasZ8SyTctK
-	i3/Y06NaYiADc0JLfvNrDJoaBnxuSITwq8yHSp/EHPeCddQNmnVzg1FEMo2P3LNTSulrS3l/zOH
-	bTttTmBbefNSFMos5qwUSAlSqk7o8JJyK8=
-X-Gm-Gg: AYBFou1g1bCOqJ1mk3UsQ9FzjCe5H73SB5NURF6ZXvSV7skV/n1xwh+IeXaPLBFEBqY
-	qBbynNNQO8D9gKKiZK5anGr9yjgbXWgZgPlj8UFngP8226Bz2djfCqhG2tzzbfdOvZTQQ4zwNYM
-	xc0R+kLB3cZNyQlEJEK1WTe2Qg1p9QlWgBi1eSsckgE/Scp8eNyKsoCEh89FYFoG+/w4rr4222y
-	xG1GMA6R1MroW3+6ILzG/HbnOmkQO8JRSPbgvjScZtqMG1Y4BLcT9R0ycqjcWw6htH5mU5aHZgo
-	I/QTUq8WVr9vAxcHsogtfHNpVG/Vw2Y/YU7/FJFIewFZbKjGwHz5kmVZlNi2p1+PjAaZ7H8+8bh
-	eeRv8BPE2Duu4I+8BtGt+WEFKwxetoSoI1ULsawdlpaef4jSXGB/6pZjn0sBDPthZmPNHp2V5ZV
-	G7ytxi/eVFCnuhXUIyv0+slXdNSFnuHLvMLEQ5nGF0YmReEHGiiS/Qmw==
-X-Received: by 2002:a17:90b:2684:b0:3ac:9ad9:6afe with SMTP id 98e67ed59e1d1-3b0db70db18mr490648a91.39.1793926811612;
-        Thu, 05 Nov 2026 17:00:11 -0800 (PST)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-28.dlp.protect.broadcom.com. [144.49.247.28])
-        by smtp-relay.gmail.com with ESMTPS id 98e67ed59e1d1-3b09451ee93sm2330036a91.0.2026.11.05.17.00.11
-        for <linux-scsi@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 05 Nov 2026 17:00:11 -0800 (PST)
-X-Relaying-Domain: broadcom.com
-X-CFilter-Loop: Reflected
-Received: by mail-pl1-f199.google.com with SMTP id d9443c01a7336-2ed216ed20dso1157965ad.1
-        for <linux-scsi@vger.kernel.org>; Thu, 05 Nov 2026 17:00:10 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1793926810; x=1794531610; darn=vger.kernel.org;
-        h=references:in-reply-to:message-id:date:subject:cc:to:from:from:to
-         :cc:subject:date:message-id:reply-to:content-type;
-        bh=6nGmi9N83o9GwRS0B2nx1iaHiH3QtOEKlDYmEo39YXg=;
-        b=I3TrB42I7H8mUrG/BLPRsyJ2wlrdaTYTT5l140/Y/lqOKelpTf5E9DX/XMFwcwZgPC
-         SBGB5DULNtB0EewcAbru1sMiMgQWVjtZanhyuv30l5JIJLWPFsGQHrL803Em+0y5o3+2
-         spZLiGyXiib482BRquE+MchkONMMTK/w0f8bg=
-X-Received: by 2002:a17:902:e80f:b0:2ed:3e82:c43e with SMTP id d9443c01a7336-2ed40c1b5b0mr8380685ad.19.1793926809792;
-        Thu, 05 Nov 2026 17:00:09 -0800 (PST)
-X-Received: by 2002:a17:902:e80f:b0:2ed:3e82:c43e with SMTP id d9443c01a7336-2ed40c1b5b0mr8380445ad.19.1793926809090;
-        Thu, 05 Nov 2026 17:00:09 -0800 (PST)
-Received: from dhcp-135-24-192-142.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2ed47d7b8cfsm450745ad.57.2026.11.05.17.00.06
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 05 Nov 2026 17:00:08 -0800 (PST)
-From: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-To: linux-scsi@vger.kernel.org,
-	martin.petersen@oracle.com
-Cc: sathya.prakash@broadcom.com,
-	ranjan.kumar@broadcom.com,
-	chandrakanth.patil@broadcom.com,
-	sweeti.vandure@broadcom.com,
-	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-Subject: [PATCH 37/37] scsi: mpt3sas: Update driver version to 59.100.00.00
-Date: Thu,  5 Nov 2026 16:42:52 -0800
-Message-Id: <1793925772-1303-38-git-send-email-shivasharan.srikanteshwara@broadcom.com>
-X-Mailer: git-send-email 2.4.3
-In-Reply-To: <1793925772-1303-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=LlyuAKW7
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5E5F81F0089F;
+	Fri,  6 Nov 2026 01:09:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793927397;
+	bh=d6Po/4S41WwS28gBYvglr8QXYVbUgRIen02+PqloiBw=;
+	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
+	b=LlyuAKW7gLul33N/H6EVQiIR9nMHvKc+zS6Ahz5lPKvQTyz51wQeAotaym1VCS8c0
+	 k6653jG3rHX1TNVDmS66QTcirDN99CW1uetagmZaPNIqd9uuNDXx6tvSgyEhPj/rf0
+	 ytkI6doykyCrl2Qb2FocD+1zEdn+pyjc1C9xIrPyHMARhtDVFJ0TMYcyExFq28CzUT
+	 n4OGZu093cev5xTLQpAVjz79Ow8RD7jMWlXI6RtX4+U6lspqP7DdAQBRnguvHFSzqd
+	 2W0hyCGJGFuwjMehfQNqO6gzR7XBb9+ywRuSSSU+DbXRINCu3hjcMzSU0rTQlQlgEh
+	 nAhLBx3fmzQ+w==
+Message-ID: <sashiko-outbox-200482@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH 17/37] scsi: mpt3sas: Clamp ValidEntries in driver
+ trigger page update helpers
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Shivasharan S" <shivasharan.srikanteshwara@broadcom.com>, linux-scsi@vger.kernel.org
+In-Reply-To: <1793925772-1303-18-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 References: <1793925772-1303-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
-X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
+ <1793925772-1303-18-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Fri, 06 Nov 2026 01:09:56 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -111,28 +60,95 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 
-Updated driver version to 59.100.00.00.
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [Medium] scsi: mpt3sas: signed count bypasses clamp in trigger update hel=
+pers
+--
 
-Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
----
- drivers/scsi/mpt3sas/mpt3sas_base.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+commit ae22d6dc5a3a1081272d193a5d2d62df9244f533
+Author: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index 192b8e8a5b4d..f88f85b054cb 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -77,8 +77,8 @@
- #define MPT3SAS_DRIVER_NAME		"mpt3sas"
- #define MPT3SAS_AUTHOR "Avago Technologies <MPT-FusionLinux.pdl@avagotech.com>"
- #define MPT3SAS_DESCRIPTION	"LSI MPT Fusion SAS 3.0 Device Driver"
--#define MPT3SAS_DRIVER_VERSION		"54.100.00.00"
--#define MPT3SAS_MAJOR_VERSION		54
-+#define MPT3SAS_DRIVER_VERSION		"59.100.00.00"
-+#define MPT3SAS_MAJOR_VERSION		59
- #define MPT3SAS_MINOR_VERSION		100
- #define MPT3SAS_BUILD_VERSION		00
- #define MPT3SAS_RELEASE_VERSION		00
--- 
-2.53.0
+scsi: mpt3sas: Clamp ValidEntries in driver trigger page update helpers
 
+This commit clamps ValidEntries to NUM_VALID_ENTRIES in the pg2, pg3, and
+pg4 driver trigger update helpers before using it as a loop bound and trigg=
+er
+count.
+
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_config.c b/drivers/scsi/mpt3sas=
+/mpt3sas_config.c
+> index 75312d43e3862..ddbccbac69b34 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_config.c
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_config.c
+> @@ -2278,6 +2278,8 @@ mpt3sas_config_update_driver_trigger_pg2(struct MPT=
+3SAS_ADAPTER *ioc,
+> =20
+>  	if (set) {
+>  		count =3D event_tg->ValidEntries;
+> +		if (count > NUM_VALID_ENTRIES)
+> +			count =3D NUM_VALID_ENTRIES;
+>  		tg_pg2.NumMPIEventTrigger =3D cpu_to_le16(count);
+>  		for (i =3D 0; i < count; i++) {
+>  			tg_pg2.MPIEventTriggers[i].MPIEventCode =3D
+> @@ -2437,6 +2439,8 @@ mpt3sas_config_update_driver_trigger_pg3(struct MPT=
+3SAS_ADAPTER *ioc,
+> =20
+>  	if (set) {
+>  		count =3D scsi_tg->ValidEntries;
+> +		if (count > NUM_VALID_ENTRIES)
+> +			count =3D NUM_VALID_ENTRIES;
+>  		tg_pg3.NumSCSISenseTrigger =3D cpu_to_le16(count);
+>  		for (i =3D 0; i < count; i++) {
+>  			tg_pg3.SCSISenseTriggers[i].ASCQ =3D
+> @@ -2595,6 +2599,8 @@ mpt3sas_config_update_driver_trigger_pg4(struct MPT=
+3SAS_ADAPTER *ioc,
+> =20
+>  	if (set) {
+>  		count =3D mpi_tg->ValidEntries;
+> +		if (count > NUM_VALID_ENTRIES)
+> +			count =3D NUM_VALID_ENTRIES;
+>  		tg_pg4.NumIOCStatusLogInfoTrigger =3D cpu_to_le16(count);
+
+[Severity: Medium]
+Can a ValidEntries value with bit 31 set (>=3D 0x80000000) bypass this clam=
+p in
+mpt3sas_config_update_driver_trigger_pg2(),
+mpt3sas_config_update_driver_trigger_pg3(), and
+mpt3sas_config_update_driver_trigger_pg4()?
+
+In drivers/scsi/mpt3sas/mpt3sas_trigger_diag.h, ValidEntries is declared as
+uint32_t in struct SL_WH_EVENT_TRIGGERS_T, struct SL_WH_SCSI_TRIGGERS_T, and
+struct SL_WH_MPI_TRIGGERS_T, whereas count in these three helpers in
+drivers/scsi/mpt3sas/mpt3sas_config.c is a signed int:
+
+	int rc, i, count;
+
+The sysfs store handlers diag_trigger_event_store(),
+diag_trigger_scsi_store(), and diag_trigger_mpi_store() in
+drivers/scsi/mpt3sas/mpt3sas_ctl.c copy user data into event_tg, scsi_tg, or
+mpi_tg and call these update helpers before clamping ValidEntries:
+
+	memcpy(event_tg, buf, sz);
+	if (!event_tg->ValidEntries)
+		set =3D 0;
+	if (mpt3sas_config_update_driver_trigger_pg2(ioc, event_tg,
+	    set)) {
+
+When a user passes ValidEntries >=3D 0x80000000, assigning it to the signed=
+ int
+count makes count negative. The signed comparison count > NUM_VALID_ENTRIES
+then evaluates to false, the for (i =3D 0; i < count; i++) loop copies zero
+entries, and cpu_to_le16(count) writes the truncated unclamped u16 value in=
+to
+tg_pg2.NumMPIEventTrigger, tg_pg3.NumSCSISenseTrigger, or
+tg_pg4.NumIOCStatusLogInfoTrigger before committing the page to the
+controller.
+
+Should count (and i) be unsigned, or should event_tg->ValidEntries,
+scsi_tg->ValidEntries, and mpi_tg->ValidEntries be clamped using min_t(u32,
+..., NUM_VALID_ENTRIES) before assigning to count?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/1793925772-1303-1-g=
+it-send-email-shivasharan.srikanteshwara@broadcom.com?part=3D17
