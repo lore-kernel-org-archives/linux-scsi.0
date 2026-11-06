@@ -1,56 +1,56 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793927850;
-	b=cjkpsY5WNw63DYN2+NuhEPQ1eqq2wqINWWmW0ZCL4vs+GyCiM9gai2EIC1ylPPfgyzCD
-	 W5tsCiRm3rhS91fFp8qTyTBOJ1na1SDaVeXW6aQ4q4uNeS+Nn+5Fp2de8WX5u0vZGzPQi
-	 285/vgzrhIxfZzJdqNz7zF02CfbrtsentPGWGy4NF9WWaFdZcKcnXGI8E07Dqorh2lclw
-	 f2GjCohJsfKrzocK69kkunkzsNBwboc2XLom9KkDXS1MGzuG37KSKmoofrcxmAtVBI3hi
-	 06+hnYTrguGT/5bbX8Ncvuk7M8jJMQZ3MoIxHKFg3pzywgKYax610po/H0ujUznCo1Q==
+	t=1793927856;
+	b=QD3gvAu98fiG0zd4r+8SGtbPnldZr0Ti6y5vRPwt5mIpoJyKAzDJyJnQC83ZYuybO1uS
+	 4La71PfbJMj1R7weD4fbcejcYnury4KCwvakajynASTvdm4Z+qnG0cJpfrLslZGdDkth9
+	 N4CA7qjazJpKFVlrblKMtna/ELOBDnDkDik6Kg0svtKtF3OqvzoXW1ae1nVYzDln9jmmP
+	 ucityLj/pjnHO7aJu0G7FgRTSFpEWq3eKsRTalSm/TxnxZAXevPIEUF3NDTJNwo6y/Ee9
+	 sn5/RJf8Zl+pgMP3MRwQVLacFGq/H9X4/EvUGatd2x80i0vmJaZqrYTVliKEXbHzVdQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793927850;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793927856;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=XQZoDasU8RFEBJ3yfXOEOcuOZg8rBfbXi1pZ/QrxbMw=;
-	b=NmwdO0pvqnXaB8KWCJ6gDLWNtKJ/qrjCIr7m/cUu78uXsLSSdKSNGOFLQILUzwZYOdPW
-	 xosnxZmNF8CuZ6aEV7ZboLMLA8HGpl8vgob69CV/2rvk3IbIt88ucNLh6hLMt4Tut8y0J
-	 rZmcX0ujXrme7avR0d2Ks5HfysoiYnbKbAex+0h6qTC6klh+UbOSg7ah52/ydkfwO0/DZ
-	 LEBWI3gOHXdw0Zj9n4zgsMF3dpU4H2+pvJVuXOB5QjKpEDqUjrWtlLN05FMEbB6blY6tN
-	 LNlqErj+chtsGjSvVcsv7QrCe66kB/knBaj4g2upm8j0wb/hLdAf0bwjrwFHGuq2TYg==
+	bh=1cWaegeEzBQXDhMcs7bfvoDb5SUdgm0F4yysGyu2qAA=;
+	b=CJmvXNgXNQZrtBkBJ0rSexGpiiOBYQ/Z2zQOmBSHM4hGQsHR9veBeF3JkXMK6Y988sXV
+	 uZ4ev2fHbPm7ijxXCCJ6b9LOI1lMnlev5lKnsc5h69jgtpwD06aSa7HN8IlqUITgR5XJw
+	 xkWUJmmkMH3q1U1v1eWRPkUOK5svN/jotAbM3+r9wqJJVUg7NoAFdcmS2XuvSMLvBQVb/
+	 XPaTxmuhIOkCDuFGG9VxYNqsst5WL7otXVDBO+AQ9AUhD8FoaYIMAXGRynK9Sl6oYbIwl
+	 CPoYcqNl0gZoVUCu2KeqRS68m1di8QGDz9eJphPxyh6kFwfeXDyPlLzpAc44En8wncA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=EyRo++8w;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Ea858LDY;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4457F606A329
-	for <linux-scsi@vger.kernel.org>; Fri,  6 Nov 2026 01:17:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF51C606A31B
+	for <linux-scsi@vger.kernel.org>; Fri,  6 Nov 2026 01:17:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=EyRo++8w
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 03DC01F008A1;
-	Fri,  6 Nov 2026 01:17:29 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Ea858LDY
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9D3C81F0089F;
+	Fri,  6 Nov 2026 01:17:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793927850;
-	bh=XQZoDasU8RFEBJ3yfXOEOcuOZg8rBfbXi1pZ/QrxbMw=;
+	s=k20260515; t=1793927855;
+	bh=1cWaegeEzBQXDhMcs7bfvoDb5SUdgm0F4yysGyu2qAA=;
 	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
-	b=EyRo++8wWIr77VavJiffCcFdqYv5h4Oa4+bB4z3Rj6fhPY09hPmtXT7TrsF5f04ww
-	 ByXl+f9kSBLQIkm3fHXC58Z1b+8rsBfE2Kw1AHX6Y+aOKxsLPK7gk8ocP9ZyA3E/sd
-	 kxx09ap7/3ETSD4UF2qjwQuJKhBTMjsCOqZYJY+xgYs+3401Z5ItIxmqgWA2Lz9HBR
-	 wsdd+2C4qhjVDYmRlxFyfWrm2aQkqgDqklcoskChUsOO9MAaG+HFcGinnsg0tp7Bc0
-	 qecJryd8v158kjzjORQ8qXEJC6n22N6vIM2VJKVOQemBwcEEiz3z7Od2PnzTlslkXw
-	 83Jl/y2H9u4GQ==
-Message-ID: <sashiko-outbox-200501@kernel.org>
+	b=Ea858LDYZKpd+qjHnXheUGbotPchZ8tuU36/tz8w7bqNQ4cHdjuTt8fr4pjLDfIVZ
+	 DJ+Dz5GczK+LbYIqC5/Xj5tr3gDJ6lzDcmxQg3R9CAXYDJISU+//gsW/7c7wZGy2fy
+	 bmEqCp6BzmKYrMSCP403cuQHQVnAbnZbXPnlpLD30sF7Ux2a+zasn0VWrVdacPjWnK
+	 /oaCK4dWsKWT/x8tCRIPky2MdC1jSuD8XQL21SKasEj5I5VRoa+mjkqQN2LsvE0pd5
+	 LP410a//0OL6etLMUdhx+GGh8dpb9fiW5zbu9MY46IqZ7DRCfKcdq71igqD79cI8Wu
+	 4RH1MyQ7i6OHg==
+Message-ID: <sashiko-outbox-200502@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 19/37] scsi: mpt3sas: Reject implausibly small
- MaxReplyDescriptorPostQueueDepth
+Subject: Re: [PATCH 07/37] scsi: mpt3sas: Validate SMP request/response
+ length in bsg handler
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Shivasharan S" <shivasharan.srikanteshwara@broadcom.com>, linux-scsi@vger.kernel.org
-In-Reply-To: <1793925772-1303-20-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+In-Reply-To: <1793925772-1303-8-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 References: <1793925772-1303-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
- <1793925772-1303-20-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+ <1793925772-1303-8-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 06 Nov 2026 01:17:29 +0000
+Date: Fri, 06 Nov 2026 01:17:35 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -62,122 +62,79 @@ Precedence: list
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] scsi: mpt3sas: scsiio_depth underflow in _base_allocate_memory_poo=
-ls()
+- [Medium] scsi: mpt3sas: zero-length SGE in _transport_smp_handler() for 4=
+-byte buffers
 --
 
-commit 3982113aa57710616a39847fb5922b95a8b805cf
+commit 64327b5ec9fbcb353b873461686c34d1c93bb8da
 Author: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 
-scsi: mpt3sas: Reject implausibly small MaxReplyDescriptorPostQueueDepth
+scsi: mpt3sas: Validate SMP request/response length in bsg handler
 
-This commit adds a minimum bound check on MaxReplyDescriptorPostQueueDepth =
-in
-_base_allocate_memory_pools() to prevent an unsigned underflow when computi=
-ng
-ioc->hba_queue_depth.
+This commit adds a length check in _transport_smp_handler() to reject SMP
+requests whose mapped request or response buffer is smaller than 4 bytes,
+preventing a length underflow when subtracting the 4-byte CRC.
 
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/m=
-pt3sas_base.c
-> index 4e2cee2e13fc2..12295ab544ad5 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-> @@ -6452,6 +6452,13 @@ _base_allocate_memory_pools(struct MPT3SAS_ADAPTER=
- *ioc)
->  				(ioc->reply_post_queue_depth % 16);
->  	}
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_transport.c b/drivers/scsi/mpt3=
+sas/mpt3sas_transport.c
+> index e74a526efa8db..abb46a5e1c1af 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_transport.c
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_transport.c
+> @@ -2095,6 +2095,13 @@ _transport_smp_handler(struct bsg_job *job, struct=
+ Scsi_Host *shost,
+>  	if (rc)
+>  		goto unmap_out;
 > =20
-> +	if (facts->MaxReplyDescriptorPostQueueDepth <
-> +	    MPT3SAS_MIN_REPLY_POST_QUEUE_DEPTH) {
-> +		ioc_err(ioc, "MaxReplyDescriptorPostQueueDepth is too small (%u)\n",
-> +			facts->MaxReplyDescriptorPostQueueDepth);
-> +		return -EINVAL;
+> +	if (dma_len_out < 4 || dma_len_in < 4) {
+> +		ioc_err(ioc, "%s: SMP request or response too small\n",
+> +			__func__);
+> +		rc =3D -EINVAL;
+> +		goto unmap_in;
 > +	}
-> +
->  	if (ioc->reply_post_queue_depth >
->  	    facts->MaxReplyDescriptorPostQueueDepth) {
->  		ioc->reply_post_queue_depth =3D
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/m=
-pt3sas_base.h
-> index 47255bf9cdda1..192b8e8a5b4d4 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-> @@ -145,6 +145,15 @@
->  #define MPT_MAX_HBA_NUM_PHYS		32
-> =20
->  #define INTERNAL_CMDS_COUNT		10	/* reserved cmds */
-> +
-> +/*
-> + * Minimum reply post queue depth for hba_queue_depth to stay non-negati=
-ve.
-> + * Values 66-79 floor to 64 after 16-alignment, making ((64-64)/2)-1 =3D=
- -1
-> + * which wraps to 65535 as u16. The smallest value whose aligned floor e=
-xceeds
-> + * 64 is 80 (80 % 16 =3D=3D 0, giving ((80-64)/2)-1 =3D=3D 7).
-> + */
-> +#define MPT3SAS_MIN_REPLY_POST_QUEUE_DEPTH	80
 
-[Severity: High]
-Does a minimum of 80 for MPT3SAS_MIN_REPLY_POST_QUEUE_DEPTH still leave
-ioc->scsiio_depth and ioc->shost->can_queue vulnerable to underflow in
-_base_allocate_memory_pools()?
+[Severity: Medium]
+What happens if dma_len_out =3D=3D 4 or dma_len_in =3D=3D 4?
 
-Earlier in _base_allocate_memory_pools(), ioc->internal_depth and
-ioc->hi_priority_depth are initialized as:
+Later in _transport_smp_handler(), 4 bytes are subtracted for the trailing
+CRC when setting RequestDataLength and calling ioc->build_sg():
 
-	ioc->internal_depth =3D min_t(int, (facts->HighPriorityCredit + (5)),
-		(facts->RequestCredit / 4));
-	if (ioc->internal_depth < INTERNAL_CMDS_COUNT) {
+drivers/scsi/mpt3sas/mpt3sas_transport.c:_transport_smp_handler() {
+	...
+	mpi_request->RequestDataLength =3D cpu_to_le16(dma_len_out - 4);
+	psge =3D &mpi_request->SGL;
+
+	ioc->build_sg(ioc, psge, dma_addr_out, dma_len_out - 4, dma_addr_in,
+			dma_len_in - 4);
+	...
+}
+
+When either buffer is exactly 4 bytes, data_out_sz or data_in_sz is passed =
+as
+0 to _base_build_sg() or _base_build_sg_ieee() in
+drivers/scsi/mpt3sas/mpt3sas_base.c:
+
+	if (!data_out_sz && !data_in_sz) {
+		_base_build_zero_len_sge_ieee(ioc, psge);
+		return;
+	}
+
+	if (data_out_sz && data_in_sz) {
 		...
-		ioc->internal_depth =3D 10;
 	}
 
-	ioc->hi_priority_depth =3D ioc->internal_depth - (5);
+Because both _base_build_sg() and _base_build_sg_ieee() only construct the
+two-element (outbound request + inbound response) SGL required by
+MPI2_FUNCTION_SMP_PASSTHROUGH when both sizes are non-zero, a 4-byte buffer
+skips the two-SGE branch and submits a single SGE to the firmware (for
+example, placing the inbound response SGE into the first outbound request S=
+GE
+slot when dma_len_out =3D=3D 4 and dma_len_in > 4).
 
-So ioc->internal_depth is at least 10 and ioc->hi_priority_depth is at least
-5 (and both can be larger when facts->HighPriorityCredit > 5).
-
-When facts->MaxReplyDescriptorPostQueueDepth is between 80 and 95, it passes
-the MPT3SAS_MIN_REPLY_POST_QUEUE_DEPTH check and clamps ioc->hba_queue_depth
-to 7:
-
-	if (ioc->reply_post_queue_depth >
-	    facts->MaxReplyDescriptorPostQueueDepth) {
-		ioc->reply_post_queue_depth =3D
-				facts->MaxReplyDescriptorPostQueueDepth -
-		    (facts->MaxReplyDescriptorPostQueueDepth % 16);
-		ioc->hba_queue_depth =3D
-				((ioc->reply_post_queue_depth - 64) / 2) - 1;
-		ioc->reply_free_queue_depth =3D ioc->hba_queue_depth + 64;
-	}
-
-Later in _base_allocate_memory_pools(), ioc->hi_priority_depth and
-ioc->internal_depth are subtracted from ioc->hba_queue_depth:
-
-	ioc->scsiio_depth =3D ioc->hba_queue_depth -
-	    ioc->hi_priority_depth - ioc->internal_depth;
-
-	/* set the scsi host can_queue depth
-	 * with some internal commands that could be outstanding
-	 */
-	ioc->shost->can_queue =3D ioc->scsiio_depth - INTERNAL_SCSIIO_CMDS_COUNT;
-
-With ioc->hba_queue_depth =3D=3D 7, subtracting ioc->hi_priority_depth (>=
-=3D 5) and
-ioc->internal_depth (>=3D 10) underflows the u16 ioc->scsiio_depth to at mo=
-st
-65528, setting ioc->shost->can_queue to 65525 and sizing the request and
-lookup allocations for ~65k entries. Similarly, if
-facts->MaxReplyDescriptorPostQueueDepth is in 96..111, ioc->hba_queue_depth
-becomes 15, which yields ioc->scsiio_depth =3D=3D 0 and a negative
-ioc->shost->can_queue of -3 (or underflows ioc->scsiio_depth if
-ioc->internal_depth > 10).
-
-Should _base_allocate_memory_pools() also verify that the resulting
-ioc->hba_queue_depth is greater than ioc->hi_priority_depth +
-ioc->internal_depth + INTERNAL_SCSIIO_CMDS_COUNT?
+Should this check reject buffers with <=3D 4 bytes (or < 8 bytes to account=
+ for
+the 4-byte SMP header and 4-byte CRC) so that a zero-length SGE is never
+passed to ioc->build_sg()?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/1793925772-1303-1-g=
-it-send-email-shivasharan.srikanteshwara@broadcom.com?part=3D19
+it-send-email-shivasharan.srikanteshwara@broadcom.com?part=3D7
