@@ -1,56 +1,56 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793927556;
-	b=LOB1QsAGd5i2u0n+R1EODkqglrDFBG31lz7C+iDhcMGstfboodTPC/7RkwlFzh3XAnyT
-	 0qfUW+eg8fW+wgLdzSKBBkNQdJn8ZpkRcRORNbsdsDUClCKPTHmvPpJRWJNQGKJwFoJWB
-	 aAtrnimEWMqnu6Y1y/epDGdXQx0yM80jqKvDnHxkhUdIKS8VjCJrMmXqfMxdaB9PRbWsB
-	 cVO+D5YqG96vXAHIjZdEYieUnK+2pPjTW5+XIKdqpHPO38F8HPv6H7rB5J9UbkObfNhkX
-	 9p0Ab5TN7X+HHG/EThy7k8wrkMEo8MRPOVJQ+ROza+aTVlAztb29oG/I1FL59FNcQCA==
+	t=1793927587;
+	b=cZyBzoUj3+8EvIfGeXAe9FfTDc642Yq2hPrNRByNSW8faGZ7hf9R+cXZfUFocEES69/m
+	 xMCuymcHx4jsIbNTN6GW5cc85m/ltBCfjL2QdeySYTszGi/Z2xpp4ZPcY+EgwrXFXCmn7
+	 +MFrg44SR3UpKNloRuvuuFsJDtESfh6vbVbEwzffBlHO/jxDeZ7ae4gndWspkq/baQJUm
+	 OBcX81XP9VnMHWcJcBxmi7DnkP8BzlX3S0Lyn6Km9QhJJVxyoaQ1/zIY5+fIFXSjV+fgr
+	 Mk9WA2XDY52npI0JJ4AhAfbFK5QCBrQUK2wReWqOfdXU2CeHFK/ELC1yi8iIl9Ldqxw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793927556;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793927587;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=DpTnHEK6+eXF0ju6p4zY5wXwO8IBOnUqaDPMt0c4zfw=;
-	b=UmfWdTryxd5mCBKWeAGfOffOpWaaVNRJzf/k68u4lc302zU5T5DmRcuBIMR8EmMW8mCs
-	 6wz/QcisL7VBuIzgNWShBWkmxPC1BfVaJiX/Ftd7m+qiE07rHnkR6QToNYmPMoJMBrgXk
-	 qOnFYQADP9DAvLODZJemW0blFLNvRSHjJ/yLcomJwBj085UinBBY53rzl6egVXcm8lXUH
-	 HwL+UGdgjtbamRyxpVkmxTW5poygv+00YesFKb6qBO4OWl4UqSBx2xgJA0M4ogeGY0ojg
-	 8Buzlza+tSiD8n9iemiygbA3lr7XOmJOcNAhMiZ1VAPy/uoAgoJP2KHtAGTRkqP6nOQ==
+	bh=dVgHSuqDYRQ1XL5E/3l9azFjj/AjmX7vBjQaysMBknI=;
+	b=YncbYM7IsycHI9ipGe1rZZ1mTlDql5aCIqoxnFkkM7fIsZXJBal3HzIWG5XclgH22HYP
+	 k2G/cDFHZN9dzdBkbOeSp3CtcFQBBRD+HKVkKq0rWyA/t5PI0WnsfZrmfeWfqL33TtNL+
+	 ekdWHVOWVt2q49Ud07gY31Bjyz7qWHQVRqcQGHk9XB9TqlZbjzKBONxe6ZL6OE3htnmrS
+	 ULNR6VaJIodTzgzids12bxDZ/S/fGfDddQqFbJihHks/IVDdhMQW/u/QHxdfj8hd7uFKC
+	 tb6A35B35Hf/igXjOAkm9cfACLKeKFCVGipGsFIyKJOWILP344fO88wr5Kqkf39qwFw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=J72TYXfA;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kqPbKqeL;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 177AF606A328
-	for <linux-scsi@vger.kernel.org>; Fri,  6 Nov 2026 01:12:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC781606A326
+	for <linux-scsi@vger.kernel.org>; Fri,  6 Nov 2026 01:13:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=J72TYXfA
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 799061F008A5;
-	Fri,  6 Nov 2026 01:12:35 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kqPbKqeL
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2C4A21F0089F;
+	Fri,  6 Nov 2026 01:13:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793927555;
-	bh=DpTnHEK6+eXF0ju6p4zY5wXwO8IBOnUqaDPMt0c4zfw=;
+	s=k20260515; t=1793927586;
+	bh=dVgHSuqDYRQ1XL5E/3l9azFjj/AjmX7vBjQaysMBknI=;
 	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
-	b=J72TYXfAqfS0Q9BwnvaE9MhOuTKDrs9W2KYwoCnMc76M50wPUGIBEm50msXfxjLm8
-	 BUhgf8Gzc8XgsIFl+7/lx8ALxfnLp5Aocmn+N77HpR4xF+myGDT9KUqJ06VTwipumB
-	 IBUN8mur2B209lItKYE3JxzvHTkz8hHSVk/Mq4Atzjx+1Q3ba7MbOXUKLsBX/7Y3Mc
-	 O3i02lvrgp3UUb3HCkr6uQL1jijO6+RAlejxG2gwZhImQ0VRF0eXcDaXnFzLJG3Ol4
-	 oz1+MOqCSsXQnyC4rYtfJ71bhJrmroTu+6KV+KSOUagFOw81PuJz+XTkKBXm4H3MSn
-	 rfn+cFiBIHBgg==
-Message-ID: <sashiko-outbox-200486@kernel.org>
+	b=kqPbKqeLjfd5Va8TQEPvyHt7NZUS3PArnUcWBemYDGDDI/eht3Ac96iyPy+npRd/c
+	 2YeW+hKAvM5JYlgPvfu3X0giO2ULJLTM6mnUmp1ZWWo2pdCBaFfILTxAVf/wEHThkO
+	 KljE+L/bP6F66Hxz0QOdoDDvVV4WArJWb+l9BdVkdY9T7Alb3tJVS0SGkJrTHd0ywW
+	 3S5QBhWiuRJD/bWhb/ToEXOhJ+uR73htMJKShVKae5ABjpI8bfnMwxDLiekcis2m+f
+	 +Mm9pZN+G8ppS01mE1pynX845HJqp3tzxF7lbuEy//lKD1oCUrAnng2d/QI5nKU+XZ
+	 mS4f+1lHDfylw==
+Message-ID: <sashiko-outbox-200489@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 20/37] scsi: mpt3sas: Validate CurrentHostPageSize
- before using it as a shift amount
+Subject: Re: [PATCH 09/37] scsi: mpt3sas: Clamp topology/IR event entry
+ counts to EventDataLength
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Shivasharan S" <shivasharan.srikanteshwara@broadcom.com>, linux-scsi@vger.kernel.org
-In-Reply-To: <1793925772-1303-21-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+In-Reply-To: <1793925772-1303-10-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 References: <1793925772-1303-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
- <1793925772-1303-21-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+ <1793925772-1303-10-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 06 Nov 2026 01:12:35 +0000
+Date: Fri, 06 Nov 2026 01:13:05 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -60,114 +60,113 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [Medium] scsi: mpt3sas: signed shift overflow and bad bound in _base_get_=
-ioc_facts()
+- [High] scsi: mpt3sas: u16 sz truncation bypasses u32 data_len clamp in mp=
+t3sas_scsih_event_callback()
+- [High] scsi: mpt3sas: out-of-bounds access when EventDataLength is smalle=
+r than hdr_size
 --
 
-commit b31d1219a60f67ee63fd2b46be49926f2f8e49c3
+commit 6f4d73dbcac7a66faf3928944f8f083832f7bc3b
 Author: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 
-scsi: mpt3sas: Validate CurrentHostPageSize before using it as a shift amou=
-nt
+scsi: mpt3sas: Clamp topology/IR event entry counts to EventDataLength
 
-This commit validates facts->CurrentHostPageSize read from the IOCFacts rep=
-ly
-in _base_get_ioc_facts() and falls back to MPT3SAS_HOST_PAGE_SIZE_4K if it =
-is
-outside the allowed range before computing ioc->page_size.
+This commit clamps NumEntries and NumElements in SAS topology, PCIe topolog=
+y,
+and IR configuration change events to the maximum number of entries that fit
+within EventDataLength.
 
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/m=
-pt3sas_base.c
-> index 12295ab544ad5..3622d8a42725b 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-> @@ -7532,8 +7532,15 @@ _base_get_ioc_facts(struct MPT3SAS_ADAPTER *ioc)
->  	facts->CurrentHostPageSize =3D mpi_reply.CurrentHostPageSize;
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/=
+mpt3sas_scsih.c
+> index a697200844078..4730e2d344f00 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> @@ -12212,9 +12212,21 @@ mpt3sas_scsih_event_callback(struct MPT3SAS_ADAP=
+TER *ioc, u8 msix_index,
+>  	}
 > =20
->  	/*
-> -	 * Get the Page Size from IOC Facts. If it's 0, default to 4k.
-> +	 * Get the Page Size from IOC Facts. If it's 0 or too large to be a
-> +	 * valid shift amount, default to 4k.
->  	 */
-> +	if ((facts->CurrentHostPageSize >=3D 32) ||
-> +	    (facts->CurrentHostPageSize !=3D 0 && facts->CurrentHostPageSize < =
-12)) {
-> +		ioc_warn(ioc, "CurrentHostPageSize(%d) is invalid: Setting default hos=
-t page size to 4k\n",
-> +			 facts->CurrentHostPageSize);
-> +		facts->CurrentHostPageSize =3D MPT3SAS_HOST_PAGE_SIZE_4K;
-> +	}
->  	ioc->page_size =3D 1 << facts->CurrentHostPageSize;
+>  	case MPI2_EVENT_SAS_TOPOLOGY_CHANGE_LIST:
+> -		_scsih_check_topo_delete_events(ioc,
+> +	{
+> +		Mpi2EventDataSasTopologyChangeList_t *topo_data =3D
+>  		    (Mpi2EventDataSasTopologyChangeList_t *)
+> -		    mpi_reply->EventData);
+> +		    mpi_reply->EventData;
+> +		u32 data_len =3D le16_to_cpu(mpi_reply->EventDataLength) * 4;
 
-[Severity: Medium]
-Can facts->CurrentHostPageSize =3D=3D 31 still trigger a signed 32-bit shift
-overflow here, and can values in 13..31 break downstream page_size consumer=
-s?
+[Severity: High]
+Can a 16-bit truncation of sz later in mpt3sas_scsih_event_callback() bypass
+this u32 data_len clamp and still overflow fw_event->event_data[]?
 
-Because the left operand of 1 << facts->CurrentHostPageSize is a signed 32-=
-bit
-int literal (rather than 1U or BIT()), a value of 31 passes the >=3D 32 che=
-ck
-and shifts 1 into the sign bit, which is undefined behavior in C and still
-triggers UBSAN shift-out-of-bounds.
+Here and in the MPI2_EVENT_PCIE_TOPOLOGY_CHANGE_LIST and
+MPI2_EVENT_IR_CONFIGURATION_CHANGE_LIST cases, data_len is computed as a u3=
+2,
+whereas sz used for allocating and populating fw_event->event_data is decla=
+red
+as a u16 in mpt3sas_scsih_event_callback():
 
-In addition, _base_send_ioc_init() always programs the controller for a 4 K=
-iB
-host page size:
-
-drivers/scsi/mpt3sas/mpt3sas_base.c:_base_send_ioc_init() {
+	u16 event;
+	u16 sz;
 	...
-	mpi_request.HostPageSize =3D MPT3SAS_HOST_PAGE_SIZE_4K;
+	sz =3D le16_to_cpu(mpi_reply->EventDataLength) * 4;
+	fw_event =3D alloc_fw_event_work(sz);
 	...
-}
+	memcpy(fw_event->event_data, mpi_reply->EventData, sz);
 
-Allowing CurrentHostPageSize values up to 31 produces ioc->page_size values=
- up
-to 0x80000000U (2 GiB). During probe in _base_allocate_memory_pools(), this
-can overflow 32-bit pool sizing arithmetic and cause
-_base_allocate_pcie_sgl_pool() to fail in dma_pool_create() with -ENOMEM
-instead of falling back to 4 KiB:
+If EventDataLength is >=3D 0x4000 (for example, 0x4003), data_len is 65548,=
+ so
+max_entries is 8192 and an 8-bit NumEntries or NumElements value (up to 255)
+is not clamped. However, sz truncates modulo 65536 to 12 bytes, so
+alloc_fw_event_work(sz) allocates only 12 bytes for fw_event->event_data and
+copies the header containing the unclamped NumEntries or NumElements. When
+_mpt3sas_fw_work() later runs _scsih_sas_topology_change_event(),
+_scsih_pcie_topology_change_event(), or _scsih_sas_ir_config_change_event(),
+won't the loops over PHY[], PortEntry[], or ConfigElement[] read and write
+past the end of fw_event->event_data?
 
-drivers/scsi/mpt3sas/mpt3sas_base.c:_base_allocate_memory_pools() {
+> +		size_t hdr_size =3D
+> +		    offsetof(Mpi2EventDataSasTopologyChangeList_t, PHY);
+> +		u16 max_entries =3D 0;
+> +
+> +		if (data_len > hdr_size)
+> +			max_entries =3D (data_len - hdr_size) /
+> +			    sizeof(Mpi2EventSasTopoPhyEntry_t);
+> +		if (topo_data->NumEntries > max_entries)
+> +			topo_data->NumEntries =3D max_entries;
+> +		_scsih_check_topo_delete_events(ioc, topo_data);
+
+[Severity: High]
+What happens if EventDataLength is smaller than hdr_size (for example,
+EventDataLength is 0 or 1, so data_len < 12 for SAS/PCIe topology events or
+data_len < 8 for IR configuration change events)?
+
+When data_len < hdr_size, max_entries (or max_elements) is 0, but the event=
+ is
+not rejected before calling _scsih_check_topo_delete_events(),
+_scsih_check_pcie_topo_remove_events(), or
+_scsih_check_ir_config_unhide_events(), and execution continues to allocate
+and queue fw_event with sz =3D data_len:
+
+	sz =3D le16_to_cpu(mpi_reply->EventDataLength) * 4;
+	fw_event =3D alloc_fw_event_work(sz);
 	...
-		sz =3D nvme_blocks_needed * ioc->page_size;
-		rc =3D _base_allocate_pcie_sgl_pool(ioc, sz);
-		if (rc =3D=3D -ENOMEM)
-			return -ENOMEM;
-		else if (rc =3D=3D -EAGAIN)
-			goto try_32bit_dma;
-		total_sz +=3D sz * ioc->scsiio_depth;
-	...
-}
+	memcpy(fw_event->event_data, mpi_reply->EventData, sz);
 
-If a controller reset via
-mpt3sas_base_hard_reset_handler()->_base_get_ioc_facts() updates
-ioc->page_size to 0x80000000U after pools are already allocated,
-base_make_prp_nvme() subtracts u32 nvme_pg_size (ioc->page_size) from signed
-int data_len and sge_len:
-
-drivers/scsi/mpt3sas/mpt3sas_base.c:base_make_prp_nvme() {
-	...
-		sge_addr +=3D nvme_pg_size;
-		sge_len -=3D nvme_pg_size;
-		data_len -=3D nvme_pg_size;
-
-		if (data_len <=3D 0)
-			break;
-	...
-}
-
-When nvme_pg_size is 0x80000000U, subtracting it wraps negative signed 32-b=
-it
-values back to positive, which can walk sg_next(sg_scmd) past the end of the
-scatterlist and overrun the 4 KiB pcie_sgl DMA buffer.
-
-Should this use 1U << facts->CurrentHostPageSize (or BIT()) and restrict
-CurrentHostPageSize to MPT3SAS_HOST_PAGE_SIZE_4K (or a safe upper bound that
-cannot overflow DMA pool and NVMe PRP calculations)?
+Because memcpy() only copies sz bytes into fw_event->event_data, fixed head=
+er
+fields such as ExpStatus/SwitchStatus (at offset 10), NumEntries (at offset=
+ 8),
+or Flags (at offset 4) lie beyond the copied payload and, when sz is 0 or 4,
+beyond the end of the fw_event slab allocation. When
+_scsih_sas_topology_change_event(), _scsih_pcie_topology_change_event(), or
+_scsih_sas_ir_config_change_event() (as well as the fw_event_list walks in
+_scsih_check_topo_delete_events() and _scsih_check_pcie_topo_remove_events(=
+))
+access those header fields in fw_event->event_data, can this read out of
+bounds past fw_event->event_data?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/1793925772-1303-1-g=
-it-send-email-shivasharan.srikanteshwara@broadcom.com?part=3D20
+it-send-email-shivasharan.srikanteshwara@broadcom.com?part=3D9
