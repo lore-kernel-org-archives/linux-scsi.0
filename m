@@ -1,92 +1,92 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.219.100
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.100
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793926789;
-	b=JeihCxIV24Ze6TAUBI+qWXQDjSSF2P+8xZdgqSAlYSYqd8GSM0MxNQR1N+YoFNWkKrGW
-	 kzW8itPLfHvph93Kr3M0EWMdhOcsXGGBjoe3AuVHJwpFwo0ZXGmGy0r9knz5vGBDcQ5Ja
-	 3KnzqvBmMpfVzojm50dPUBn4bAAwnTWOfAxRcGh8DZjQ0uCMsLJCiR54CzN5NvMWf8xsZ
-	 j1occxA3YlPrR3QlyAKy6Mioay6HVmEAlIhv9z00PnvlPMwV8CwZZMKPuMItvBKR1JK+x
-	 aB07LQbirZrmPKBeOGA0aGrf62Abv8a0J+M2HLTaUvx/P1KhIO8QPwUjq7H8PFehYnA==
+	t=1793926792;
+	b=QgffRb9SeiK8g90txNshDDW7nbdQ1sasZVCQucL6CBQtgFUeusjL3kx8dRp0Obu8Fw3T
+	 bJppAygHXfqlW0i8noStqOdOZVDyAVWdXN14hlrmvc+WXrPIRVVq1Onba63PnDFhz5Opb
+	 lpI1LERF/GNKGZA3goTa2rWQ7LzfGaS9XT1BykbLYlT2zczu0H3xJWxK8t90SbqWJVpdc
+	 FnTD6NUaCt9C8TByz1p3XC9Lg5OWmhR80DdDUgklihLFwpmcmryPt/PxMmBhIfBpZI3AL
+	 zsmtP7AdlHfhLiVvvY2SV27yIgiLMCLJKpT971rcmj1bEY5Ax5mOFIwU9eWEyDnTHeQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793926789;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793926792;
 	h=DMARC-Filter:Received:X-Google-DKIM-Signature:X-Gm-Message-State:
 	 X-Gm-Gg:X-Received:Received:X-Relaying-Domain:X-CFilter-Loop:Received:
 	 DKIM-Signature:X-Received:X-Received:Received:From:To:Cc:Subject:Date:
 	 Message-Id:X-Mailer:In-Reply-To:References:X-DetectorID-Processed;
-	bh=KPYxRgLXMjD90AfKQ4TTDP62resPAc3vl0b+d4YSlss=;
-	b=QTBpVm7QybeRqAX0cRONcwpcBurF4awzTUsQTdmu2PbQt4yAn4EUoihSY9f2Y598+5R/
-	 E1a/h4k0vpyE3pXQkP2RmiwE+7zKtzGckWQ0b2Z41WgoCUwShtXrWqK1pEzeEOObWko5g
-	 e5ruM3bJKY2gybBqcJmD17oABoKzJcv10vPW3msNW1VtcvZp+jlz44nhdleeu5NKLlsQU
-	 zV3esDv+xi0Kz9tgu0OV+0CST2nXYuv1RbKWzWCtB2xRY3M4rh/pN506b8acOjFgotTVV
-	 WcJjad3E0fpC6bmddDd8RrvtWcQB7giJJwrK3kY0NngU1eHb1yewbsy7vhTJHJzk0ZA==
+	bh=kFQAsS+oG7VocM70ea3QRG0BRfeZovsJ/Z/tJ1SpMEo=;
+	b=dB21vufLAej8QPZ3x7r5z9VT5un8/eMmGSJC8U1jO11mlF48AbUe4w4NdBdXjLIXIv9v
+	 wuHvR3oiU+3iLYGN6uX9zc+odRYIhOQSKXeP1R22erqd0peSxvq1qpVTliryiLs3siYgM
+	 Yu7ts/hZcrMJDMrbdvbpJ/5O4IM2XmEXe9urOVg04PlX0Sygp8EppnTj+hNrd8Il7lTkg
+	 pZJRZZxv8wFsjXCPu1jGXTertZTt8f6gkTbUUrV9NQp28lJoaQ94EPHWCx+YlOrzbDo9z
+	 rfFwLp6zelHrdUH57W8AffSu8n5YL6WlOgj5isCkpUVMppLXZqmMkBAQSLHucjlUsHg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=broadcom.com;
 	spf=fail smtp.mailfrom=broadcom.com;
-	dkim=pass header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=BLFWzFd5;
-	arc=none smtp.remote-ip=209.85.219.100
-Received: from mail-qv1-f100.google.com (mail-qv1-f100.google.com [209.85.219.100])
+	dkim=pass header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=eMIo5SCy;
+	arc=none smtp.remote-ip=209.85.216.100
+Received: from mail-pj1-f100.google.com (mail-pj1-f100.google.com [209.85.216.100])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 980A1606A31B
-	for <linux-scsi@vger.kernel.org>; Fri,  6 Nov 2026 00:59:48 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 980A1606A31B
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A31CA606A31B
+	for <linux-scsi@vger.kernel.org>; Fri,  6 Nov 2026 00:59:51 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A31CA606A31B
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=BLFWzFd5
-Received: by mail-qv1-f100.google.com with SMTP id 6a1803df08f44-91791ec1b83so525316d6.1
-        for <linux-scsi@vger.kernel.org>; Thu, 05 Nov 2026 16:59:48 -0800 (PST)
+	dkim=pass (1024-bit key, unprotected) header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=eMIo5SCy
+Received: by mail-pj1-f100.google.com with SMTP id 98e67ed59e1d1-3adac5c10e3so78186a91.0
+        for <linux-scsi@vger.kernel.org>; Thu, 05 Nov 2026 16:59:51 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793926787; x=1794531587;
+        d=1e100.net; s=20260707; t=1793926791; x=1794531591;
         h=references:in-reply-to:message-id:date:subject:cc:to:from
          :dkim-signature:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=KPYxRgLXMjD90AfKQ4TTDP62resPAc3vl0b+d4YSlss=;
-        b=ssssWYsKTD5XuayTwwM4M3P46COZDq9YQxNfblKXXxspEYAxgvB0o2xlFTKgMe2LAU
-         ncYIimfUAeArnBjgleY1RXiOqwIhOZztyd+SdJ/6ftKtWwrXFobpSfokxbR3bIvJPTeA
-         oh9Y43H3WwFDETpIJN97FSXW42G/1juSq3MWCi4bFq1BY9XrXJikJC54fF/ewGifaLDt
-         5hC3uh2dtXQoUS5y+CCYAhfcTPsaf3UzzBY2icqhSNVooGfVIl1jdRiXoataqZqox4b8
-         e9eamqM5eggxbopCWs7rcO/yeK8eBIBctyZi/ibm0bJB5EimfeuhFhehPUARx0U1HJBC
-         M9ZA==
-X-Gm-Message-State: APuU4Z/90i71671YGwCIw7kGiWzTbIz7Cho4v36WKOsckHazt25KHAxf
-	n2cRfDKXAago+udsjRHOOQjgxXGHEMM1TvnPhjmH/e+Q+bpvVfKxx+qAnTS4KU7DbF+Ir2zmb+N
-	rLLlyenb4oWWxxi3lj2aAVi0TKauGELB/4gQglKhIrXFzlWox+z+X6ap77sjQJ9be4bLSMMpqHU
-	+BZUywEQHzkeKR//HXDy6zzV/NgNYnIod5KQX1bit1K9QSdIUdLMwrAGODRz3vrJgB6eVDt8l9t
-	EWTKhBta7gv7JlTDDFMNq+Mu94Ncf71FU8=
-X-Gm-Gg: AYBFou28sz7QwAU/HRftqzEnxliP2iOQxxD9lkHW3GAvOXUxlV8Un2UgwYdxoz12Z6G
-	wV7GecMZEpB6qFsYr/hwQW8rOVAlEq5am8Fa28CCUFzX47E1g4ayf58CvuyVfZ7xJ335nIHpkJf
-	fSD7/8TrDeSiEmeyrCcfCvra+FeO6fLlbNU/FQxrCW8oFEAAABuhX6w51o/4GBxuIJiKlNY/hDw
-	Cq/wfNw6Cg04kIppsqeZoaqMa4db4x5MORsDdv3jwlO/ZZJHEIrQZwqBSDyrqPydfc6R9wDux35
-	dRkjTCdhziizdbQ6LZyTK5zcr9lPCCL7qRix8E7UCBPa6c2QdU/1AlwXNBb3Wc2LFZHcn7LYbUO
-	q+0KPaCn+5y4zMd67XmfAPHm6acybPUvaNp8u3JTTG+sMPsdRSip8rLu6LRJKq/iJJ3U2/XUKEd
-	Nb6UnnQwi3Sbo1SF7hSMJHukOp/bz73WpQ869hdXesL479dSXhPILOSQ==
-X-Received: by 2002:ad4:594c:0:b0:91c:6258:ec97 with SMTP id 6a1803df08f44-91ea974cb18mr10863876d6.11.1793926787498;
-        Thu, 05 Nov 2026 16:59:47 -0800 (PST)
+        bh=kFQAsS+oG7VocM70ea3QRG0BRfeZovsJ/Z/tJ1SpMEo=;
+        b=Ehb04YkXXSeUSyZKrsLZBznrzu1UJPf29RtBYfEKyoTI9dg5G4pne8hfV8JfknPu06
+         402uYVmkmsutj/+S04iTPIsuRZizxp3vU/nR4Vk7PCn36S/vKhzGpBkcEakb3+a1ezcA
+         0TMq1z9T90OM+JMJY7TYuEiIxpvMVPjDimGTINo5DtlB+JiYaa/+EHHes4vjwfZyhG81
+         BXms7NyHwUQ/6+z/ualst0tuiGa9oWJskPnoP96Iv07WNo7kEsXZpFReI6BN8uZCtbDB
+         +s2BhD5VHeiNZt1QfRW4YQf2Db0HMPm18+cnZBC2Tui3Ez6CXK6t1gemPkg8kTf6vHo3
+         7TYw==
+X-Gm-Message-State: APuU4Z+XVHwttDY4HP8OrsmklG+pDrhCU5El01JtKtJxx2a7p8ID+vCZ
+	pWPI3kFlsZomEuRahmQey6GauWh3/7ggkmgFkualGwA312+fm4toFtyGxMlkhnmxQuX0x5GyMlQ
+	jNOU7kdwqhlpPnhEOFGeQsyz0cDRsHww+vFJkaBfWh8pfsvt2Y93TkZVMg+kOr9CtHnxrjFLE8S
+	A+PcwEwkpPV5YY2A13gPIpBgjIAYEqfGad3E5uv5DM6ljkAaDg4VzT2PU9iRypnvijXb+EpuHk/
+	0hCPz9W0MEEuXZDVKYkrSDIMR6BS6F2DWI=
+X-Gm-Gg: AYBFou1NX+ZLqfkef4YpRbOnjDsTBrSALFZbpSfHS3Bw2NaWlsrOOB5VBVlbPtzOPLO
+	lO1nUxW5TUxfQ+R0C8TcuhG3mu9Nsfnpvw3TN7xrNYarCTdna677adZngWmtgRQbSuf3Y6SGhrP
+	FK6U8MolCyEhg8a9aS3s0/PieJl8uciQiC63UnzqfauhXnqNQa0GcB9zw97jJZxiVNXbdw9iLuh
+	OEGS/KMQdNH/VQv9zgfiVlTDFkvPPQQWrqqvu0S5byc1E1VjyZSjtxZE8G4v9N3a4hR2EVR1Pd8
+	EAwpdGDozxeapbSWQpBoaPAkYjy9+IjOz/sC4+8AIUQV7GSVlZYPXNBzMMWE4gf7O3oI7EomZre
+	oc6M83f2swp33d5SahiQCBenIyCdfV4oFeydJh7ixM+GXDbvYa7D79n5CMtMwv8VHt6LBkga+Fv
+	UZVIpG/HUy6pQveZGVV+oZ5ReaduppasGFCf9UT5g887yx0Jl4l6+QDQ==
+X-Received: by 2002:a17:90b:39ab:b0:3ae:a531:4e73 with SMTP id 98e67ed59e1d1-3b0db6210b3mr759943a91.7.1793926791100;
+        Thu, 05 Nov 2026 16:59:51 -0800 (PST)
 Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-13.dlp.protect.broadcom.com. [144.49.247.13])
-        by smtp-relay.gmail.com with ESMTPS id 6a1803df08f44-91ea69d31f0sm170806d6.25.2026.11.05.16.59.47
+        by smtp-relay.gmail.com with ESMTPS id 98e67ed59e1d1-3b0d7ddf641sm693989a91.5.2026.11.05.16.59.50
         for <linux-scsi@vger.kernel.org>
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 05 Nov 2026 16:59:47 -0800 (PST)
+        Thu, 05 Nov 2026 16:59:51 -0800 (PST)
 X-Relaying-Domain: broadcom.com
 X-CFilter-Loop: Reflected
-Received: by mail-pl1-f197.google.com with SMTP id d9443c01a7336-2ed08be1c84so1730275ad.3
-        for <linux-scsi@vger.kernel.org>; Thu, 05 Nov 2026 16:59:47 -0800 (PST)
+Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-2e987ec84afso1244025ad.3
+        for <linux-scsi@vger.kernel.org>; Thu, 05 Nov 2026 16:59:50 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1793926786; x=1794531586; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1793926789; x=1794531589; darn=vger.kernel.org;
         h=references:in-reply-to:message-id:date:subject:cc:to:from:from:to
          :cc:subject:date:message-id:reply-to:content-type;
-        bh=KPYxRgLXMjD90AfKQ4TTDP62resPAc3vl0b+d4YSlss=;
-        b=BLFWzFd5/9LNDH6TIUNCKybJ3tQQv53QZX1AkQgZpx+IAAXK2xMDJZfb3huj/vH4Gq
-         55qZ/EVJZbjFibgGK8yZniBKJziNVRgNLwEGZWH+c3AnELYScyi1ZuLQL3qzhKa0VPpa
-         S5sbhV+gQDhZ8kEj5a6laFFWdRlBCDJoOmX8w=
-X-Received: by 2002:a17:903:1b68:b0:2ed:3c61:bb83 with SMTP id d9443c01a7336-2ed40abb2e0mr16101205ad.16.1793926786332;
-        Thu, 05 Nov 2026 16:59:46 -0800 (PST)
-X-Received: by 2002:a17:903:1b68:b0:2ed:3c61:bb83 with SMTP id d9443c01a7336-2ed40abb2e0mr16101065ad.16.1793926785846;
-        Thu, 05 Nov 2026 16:59:45 -0800 (PST)
+        bh=kFQAsS+oG7VocM70ea3QRG0BRfeZovsJ/Z/tJ1SpMEo=;
+        b=eMIo5SCypPy79PhlUetmkSsTelcavde85FL5UNPHx0RHOkNHVdVlB/jHfUkSjo37Qg
+         6ud5eTPGeXdjcZoAs801rxeeq0c9EtXxmz982RIRhotC0JyJ9keVMcTfNY9udtR0wHVZ
+         AWUuEvkADhgoAW6wu0XuPx+gQ5F0sHzws73PU=
+X-Received: by 2002:a17:902:ea0a:b0:2ed:2494:df85 with SMTP id d9443c01a7336-2ed40e2b5f4mr14574845ad.52.1793926789422;
+        Thu, 05 Nov 2026 16:59:49 -0800 (PST)
+X-Received: by 2002:a17:902:ea0a:b0:2ed:2494:df85 with SMTP id d9443c01a7336-2ed40e2b5f4mr14574595ad.52.1793926788900;
+        Thu, 05 Nov 2026 16:59:48 -0800 (PST)
 Received: from dhcp-135-24-192-142.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2ed47d7b8cfsm450745ad.57.2026.11.05.16.59.42
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2ed47d7b8cfsm450745ad.57.2026.11.05.16.59.46
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 05 Nov 2026 16:59:44 -0800 (PST)
+        Thu, 05 Nov 2026 16:59:48 -0800 (PST)
 From: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 To: linux-scsi@vger.kernel.org,
 	martin.petersen@oracle.com
@@ -95,9 +95,9 @@ Cc: sathya.prakash@broadcom.com,
 	chandrakanth.patil@broadcom.com,
 	sweeti.vandure@broadcom.com,
 	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-Subject: [PATCH 30/37] scsi: mpt3sas: Add _ctl_diag_buffer_reset() helper to clear diag buffer state
-Date: Thu,  5 Nov 2026 16:42:45 -0800
-Message-Id: <1793925772-1303-31-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+Subject: [PATCH 31/37] scsi: mpt3sas: Restrict ioc_dump debugfs and replace raw ioc dump with text
+Date: Thu,  5 Nov 2026 16:42:46 -0800
+Message-Id: <1793925772-1303-32-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 X-Mailer: git-send-email 2.4.3
 In-Reply-To: <1793925772-1303-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 References: <1793925772-1303-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
@@ -111,81 +111,106 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 
-Consolidate open-coded diag buffer teardown sequences across
-_ctl_diag_register_2(), _ctl_diag_unregister(), and
-_ctl_host_trace_buffer_enable_store() into a single helper that clears
-the pointer, size, DMA address, status, and unique ID together.
+The ioc_dump debugfs file previously exposed raw MPT3SAS_ADAPTER bytes,
+leaking kernel addresses, and was world-readable.
+
+Create the file with mode 0400 instead of 0444, replace the raw dump
+with a small human-readable text summary of key adapter properties, and
+fix the memory leak in the release path.
 
 Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_ctl.c | 32 +++++++++++++++++++++++-------
- 1 file changed, 25 insertions(+), 7 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_debugfs.c | 49 +++++++++++++++++++++++---
+ 1 file changed, 45 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-index a8e92a786265..6870172c5ebb 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-@@ -1651,6 +1651,28 @@ _ctl_diag_get_bufftype(struct MPT3SAS_ADAPTER *ioc, u32 unique_id)
- 	return MPT3_DIAG_UID_NOT_FOUND;
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_debugfs.c b/drivers/scsi/mpt3sas/mpt3sas_debugfs.c
+index 183391f6b8d1..432e120ac81d 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_debugfs.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_debugfs.c
+@@ -49,22 +49,62 @@ _debugfs_iocdump_read(struct file *filp, char __user *ubuf, size_t cnt,
+ 	return simple_read_from_buffer(ubuf, cnt, ppos, debug->buf, debug->len);
  }
  
-+/**
-+ * _ctl_diag_buffer_reset - clear every field describing a diag buffer
-+ * @ioc: per adapter object
-+ * @buffer_type: diag buffer type
-+ *
-+ * Call this wherever a diag buffer's DMA memory is freed, so its size and
-+ * DMA address never outlive the pointer that describes them.
-+ */
-+static void
-+_ctl_diag_buffer_reset(struct MPT3SAS_ADAPTER *ioc, u8 buffer_type)
-+{
-+	ioc->diag_buffer[buffer_type] = NULL;
-+	ioc->diag_buffer_sz[buffer_type] = 0;
-+	ioc->diag_buffer_dma[buffer_type] = 0;
-+	ioc->diag_buffer_status[buffer_type] = 0;
-+	ioc->unique_id[buffer_type] = 0;
-+	if (buffer_type == MPI2_DIAG_BUF_TYPE_TRACE) {
-+		ioc->ring_buffer_sz = 0;
-+		ioc->ring_buffer_offset = 0;
-+	}
-+}
++/* Buffer size for the text dump */
++#define MPT3SAS_IOCDUMP_BUF_SZ 1024
 +
- /**
-  * _ctl_diag_register_2 - wrapper for registering diag buffer support
-  * @ioc: per adapter object
-@@ -1904,9 +1926,7 @@ _ctl_diag_register_2(struct MPT3SAS_ADAPTER *ioc,
- 	if (rc && request_data) {
- 		dma_free_coherent(&ioc->pdev->dev, request_data_sz,
- 		    request_data, request_data_dma);
--		ioc->diag_buffer[buffer_type] = NULL;
--		ioc->diag_buffer_status[buffer_type] &=
--		    ~MPT3_DIAG_BUFFER_IS_DRIVER_ALLOCATED;
-+		_ctl_diag_buffer_reset(ioc, buffer_type);
- 	}
+ /*
+- * _debugfs_iocdump_open :	open the ioc_dump debugfs attribute file
++ * _debugfs_iocdump_open: open the ioc_dump debugfs attribute file.
++ * Populates the debugfs buffer with a summary of key adapter properties.
+  */
+ static int
+ _debugfs_iocdump_open(struct inode *inode, struct file *file)
+ {
+ 	struct MPT3SAS_ADAPTER *ioc = inode->i_private;
+ 	struct mpt3sas_debugfs_buffer *debug;
++	char *buf;
++	size_t len = 0;
  
- 	ioc->ctl_cmds.status = MPT3_CMD_NOT_USED;
-@@ -2127,8 +2147,7 @@ _ctl_diag_unregister(struct MPT3SAS_ADAPTER *ioc, void __user *arg)
- 		request_data_dma = ioc->diag_buffer_dma[buffer_type];
- 		dma_free_coherent(&ioc->pdev->dev, request_data_sz,
- 				request_data, request_data_dma);
--		ioc->diag_buffer[buffer_type] = NULL;
--		ioc->diag_buffer_status[buffer_type] = 0;
-+		_ctl_diag_buffer_reset(ioc, buffer_type);
- 	}
+ 	debug = kzalloc_obj(struct mpt3sas_debugfs_buffer);
+ 	if (!debug)
+ 		return -ENOMEM;
+ 
+-	debug->buf = (void *)ioc;
+-	debug->len = sizeof(struct MPT3SAS_ADAPTER);
++	buf = kzalloc(MPT3SAS_IOCDUMP_BUF_SZ, GFP_KERNEL);
++	if (!buf) {
++		kfree(debug);
++		return -ENOMEM;
++	}
++
++	len += scnprintf(buf + len, MPT3SAS_IOCDUMP_BUF_SZ - len,
++	    "name:           %s\n", ioc->name);
++	len += scnprintf(buf + len, MPT3SAS_IOCDUMP_BUF_SZ - len,
++	    "fw_version:     %02d.%02d.%02d.%02d\n",
++	    (ioc->facts.FWVersion.Word & 0xFF000000) >> 24,
++	    (ioc->facts.FWVersion.Word & 0x00FF0000) >> 16,
++	    (ioc->facts.FWVersion.Word & 0x0000FF00) >> 8,
++	    ioc->facts.FWVersion.Word & 0x000000FF);
++	len += scnprintf(buf + len, MPT3SAS_IOCDUMP_BUF_SZ - len,
++	    "request_sz:     %d\n", ioc->request_sz);
++	len += scnprintf(buf + len, MPT3SAS_IOCDUMP_BUF_SZ - len,
++	    "reply_sz:       %d\n", ioc->reply_sz);
++	len += scnprintf(buf + len, MPT3SAS_IOCDUMP_BUF_SZ - len,
++	    "chain_segment_sz: %d\n", ioc->chain_segment_sz);
++	len += scnprintf(buf + len, MPT3SAS_IOCDUMP_BUF_SZ - len,
++	    "hba_queue_depth: %d\n", ioc->hba_queue_depth);
++	len += scnprintf(buf + len, MPT3SAS_IOCDUMP_BUF_SZ - len,
++	    "scsiio_depth:   %d\n", ioc->scsiio_depth);
++	len += scnprintf(buf + len, MPT3SAS_IOCDUMP_BUF_SZ - len,
++	    "max_dev_handle: %d\n", ioc->facts.MaxDevHandle);
++	len += scnprintf(buf + len, MPT3SAS_IOCDUMP_BUF_SZ - len,
++	    "shost_recovery: %d\n", ioc->shost_recovery);
++	len += scnprintf(buf + len, MPT3SAS_IOCDUMP_BUF_SZ - len,
++	    "pci_error_recovery: %d\n", ioc->pci_error_recovery);
++	len += scnprintf(buf + len, MPT3SAS_IOCDUMP_BUF_SZ - len,
++	    "remove_host:    %d\n", ioc->remove_host);
++
++	debug->buf = buf;
++	debug->len = len;
+ 	file->private_data = debug;
++
  	return 0;
  }
-@@ -3862,8 +3881,7 @@ host_trace_buffer_enable_store(struct device *cdev,
- 						  ioc->diag_buffer_sz[MPI2_DIAG_BUF_TYPE_TRACE],
- 						  ioc->diag_buffer[MPI2_DIAG_BUF_TYPE_TRACE],
- 						  ioc->diag_buffer_dma[MPI2_DIAG_BUF_TYPE_TRACE]);
--				ioc->diag_buffer[MPI2_DIAG_BUF_TYPE_TRACE] =
--				    NULL;
-+				_ctl_diag_buffer_reset(ioc, MPI2_DIAG_BUF_TYPE_TRACE);
- 			}
  
- 			diag_register.requested_buffer_size = (1024 * 1024);
+@@ -82,6 +122,7 @@ _debugfs_iocdump_release(struct inode *inode, struct file *file)
+ 		return 0;
+ 
+ 	file->private_data = NULL;
++	kfree(debug->buf);
+ 	kfree(debug);
+ 	return 0;
+ }
+@@ -132,7 +173,7 @@ mpt3sas_setup_debugfs(struct MPT3SAS_ADAPTER *ioc)
+ 	}
+ 
+ 	snprintf(name, sizeof(name), "ioc_dump");
+-	ioc->ioc_dump =	debugfs_create_file(name, 0444,
++	ioc->ioc_dump =	debugfs_create_file(name, 0400,
+ 	    ioc->debugfs_root, ioc, &mpt3sas_debugfs_iocdump_fops);
+ 	if (!ioc->ioc_dump) {
+ 		dev_err(&ioc->pdev->dev,
 -- 
 2.53.0
 
