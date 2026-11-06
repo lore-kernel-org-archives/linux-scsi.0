@@ -1,56 +1,56 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793927724;
-	b=C5T1m5aezbDbml4JnvkjKWJCdPz50v/MMK4kqIhlY4qgTvHlelLJ+Ujsn4XKR1tcpw0X
-	 pkLCwMCh1eOnoF5Wr1PJCQVuxY59rTQxdMapmEAyx+w3EWPA/G8SoovudFHH86r7mSa2R
-	 QUMH0FjHXZBEWbpRaizMcsDTcKJnCgKVWKwJ55mdvlBgIKwPfA9i4RJX2/0aVmXCPW1Hk
-	 O1HJ/M1+w9KU7Bdav6TlvwGSVMLWEX6JceBd3xoIWsun8TOfjjHJE+fUm2y6FCsn3Onqx
-	 /O5CzDOFwCOsvylFvZpFrwHKJ/Ul8H9WQ6QxyVY8KM4KbJaOhi2mvMg+2j/CzXnH/JA==
+	t=1793927850;
+	b=FB9z+AQvi/hkRgUkOu7xPcPIIu6vsmcEg8nRTGjwf8VUGHqGeKTQWSxi4lKY/9FactK9
+	 UMDNqLH5Ji6J6yx8IYuZ/3i2Kw1WL5g6F9Kelj0HVNRV0dCKAmrE87qOdhsVfITQzQ80s
+	 UVdfhkMnwsxbAE7UMVQjN8SBvPv6jN9BU/tbb47Aocl7/t8qTx4YUoG1IDPTSWUBNwhL3
+	 cSdiHnOwEkkeSyqXIDS8n0xF4Ux0UuwPwnA/gdRY9mda68J0tbt1Qj/t64nvprzO5S1DC
+	 a5QWJwbi82NgSYSnzOQa48LvKi58qQLTlgKTKPojAEXWA1bRfVRCIuFbN0W6HWvPwMg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793927724;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793927850;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=CT1o7u+CFcHlbgxTFbymWAKOAQgR6++tP4iAUgvJ+2Y=;
-	b=PyawVUALRvpMWAsAZqtKwkbAV4bOFC04AKfmltL32lhgdmyN7G12YDLainPimFiz0JvR
-	 gEqcxfXUyV+KERYdqtaoTzvNhh9a8DR6hzIIvqR0BDQcrn1QKgVv92KnN3mLmytdzerIX
-	 pHxg3Ai7zyFG2b5B9hJZnEtF3Oy2UHbKceWqpId89U2pU5aXNI0OY4+gf5m0kS9EkvEdL
-	 rQEfh49BPjozT+4F0aNlyYFQXK0tMLp/S0nnlLLhL8deVVWmhl8z4wmKmnsQLiKp6XH8U
-	 TAhWCdT+BivQFardTMOnBw1kbfZ0IuwUssj72zg+SY08awshK5QT1Rd6XPZ7KlL4QDA==
+	bh=GlGRboalFMwXFbIwhIZdGgD57g5LSeRBxr8v7hZl1l4=;
+	b=D1FDSzo3jOIfmLBB/HUhYqnVc+EjRQWmMnq0yWjDJV1Nqwjt5i+fJ7T8wglszkd3s1Hr
+	 g/+PFeKb7fFgigQG8I1ahTHoqDjHkojilFcwoKO6B6GcpFC1THwxl/WQBAyXh+4/t4A4+
+	 GD9mT3LjnaJTb+7bAYxIRkiCoSnYCs9FOo/TXVjO7jf4KBNI41OSV/08pndXaumint1Ny
+	 ah/mkrtO3G7LwRCF/EjW/GB6Vik5vBOoaEH188cj/WkvP4g85mJrXux44Tu9j+OzZIEuv
+	 eruP79wfYDQekPpWkiSQb2k4HOXmxSZJ5CXy86D7tHnQqxzDp9RI07u+jgU3Hpf0zdA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=cbzjRxPV;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BUncCdD9;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C37D9606A31B
-	for <linux-scsi@vger.kernel.org>; Fri,  6 Nov 2026 01:15:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A8BD1606A31B
+	for <linux-scsi@vger.kernel.org>; Fri,  6 Nov 2026 01:17:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=cbzjRxPV
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 238E61F0089F;
-	Fri,  6 Nov 2026 01:15:23 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BUncCdD9
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 648331F0089F;
+	Fri,  6 Nov 2026 01:17:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793927723;
-	bh=CT1o7u+CFcHlbgxTFbymWAKOAQgR6++tP4iAUgvJ+2Y=;
+	s=k20260515; t=1793927849;
+	bh=GlGRboalFMwXFbIwhIZdGgD57g5LSeRBxr8v7hZl1l4=;
 	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
-	b=cbzjRxPVAeW31/XhZUCXH4PaWPeoXqhBkpp5gauu03fUZd826clP4bfvqmiucejUO
-	 6nnyZCr92+q+7yhq9qdtGKgWwIgnNZEOpkUbU4GmHtz6wyPwFw90MGQ3w9cfaL25Jy
-	 uRDk7PWgqiC9xfMmxq3Ptnyz9wSRHxA5548LeepZh9UZJlsS0Yo5m90ZuX8B89BFBW
-	 zH27eaLyAQDcAAdiEFhbWiuX0Qj+NfM6QrU+9qOpEJ0y5wDtEbPROvNQfNapnRsSaD
-	 dJldt0wQEyxhePHKFlvItFS/DrG55DhcuKoEDzWzmlFKG7n98VDyT4z1f4FDpopt+j
-	 DhnoQnnArBFmw==
-Message-ID: <sashiko-outbox-200495@kernel.org>
+	b=BUncCdD9FjwWZBzV+pUFmDOb5QoR6jP2GwxWSnsuh4vzNG6wdUH1nvuwMZGwdsf3z
+	 2h1xK/si7BTuHvFgfglIhQOYGwiRhudRCNhtDJr08ROfLwBpK5oSecDS3GEUdUdpsB
+	 mYA7rY/0FpTMbeK8kvnubB6l1EKJV/459To5ez0n5TABRNc/3xw1lhEiDVbbd5eoqa
+	 ckln5Qizi7mjS0smwh5d7wTZK3h4KtP7fE/1c/lgRDIBpauBx9wJVYe8za0H9dj+aR
+	 amVh7I5XGojORAizkKgklIxxXg0UYJzh0I+oMyxxFdJY5srt6A8kJbFDWXlsnENU9E
+	 P4hPW0WHN5h9A==
+Message-ID: <sashiko-outbox-200500@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 02/37] scsi: mpt3sas: Validate RAID configuration page
- length
+Subject: Re: [PATCH 01/37] scsi: mpt3sas: Validate firmware-reported
+ IOCRequestFrameSize
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Shivasharan S" <shivasharan.srikanteshwara@broadcom.com>, linux-scsi@vger.kernel.org
-In-Reply-To: <1793925772-1303-3-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+In-Reply-To: <1793925772-1303-2-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 References: <1793925772-1303-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
- <1793925772-1303-3-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+ <1793925772-1303-2-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 06 Nov 2026 01:15:22 +0000
+Date: Fri, 06 Nov 2026 01:17:28 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -62,112 +62,120 @@ Precedence: list
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [Medium] scsi: mpt3sas: u16 truncation of config_page_sz in _config_reque=
-st()
+- [High] scsi: mpt3sas: incomplete request_sz check in _base_allocate_memor=
+y_pools()
 --
 
-commit c2be3bad5af4de88c7b5227eeaab81b3e61723ef
+commit 015ed87d797e7b26a7948ede1e5410c663e3fefb
 Author: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 
-scsi: mpt3sas: Validate RAID configuration page length
+scsi: mpt3sas: Validate firmware-reported IOCRequestFrameSize
 
-This commit validates that the RAID configuration page length is large enou=
-gh
-to hold Mpi2RaidConfigurationPage0_t before allocating the buffer, and boun=
-ds
-the element loop by the number of elements that fit in the allocated buffer.
+This patch validates the IOCFacts-reported request frame size in
+_base_allocate_memory_pools() and rejects values smaller than
+sizeof(Mpi25SCSIIORequest_t) to prevent adjacent memory corruption.
 
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_config.c b/drivers/scsi/mpt3sas=
-/mpt3sas_config.c
-> index b0d5ef8936008..75312d43e3862 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_config.c
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_config.c
-> @@ -2655,6 +2655,7 @@ mpt3sas_config_get_volume_handle(struct MPT3SAS_ADA=
-PTER *ioc, u16 pd_handle,
->  	int config_num;
->  	u16 element_type;
->  	u16 phys_disk_dev_handle;
-> +	int max_num_elements;
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/m=
+pt3sas_base.c
+> index 1af25a22611a1..9bf92c4a14b7a 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+> @@ -6373,6 +6373,12 @@ _base_allocate_memory_pools(struct MPT3SAS_ADAPTER=
+ *ioc)
 > =20
->  	*volume_handle =3D 0;
->  	memset(&mpi_request, 0, sizeof(Mpi2ConfigRequest_t));
-> @@ -2672,6 +2673,13 @@ mpt3sas_config_get_volume_handle(struct MPT3SAS_AD=
-APTER *ioc, u16 pd_handle,
-> =20
->  	mpi_request.Action =3D MPI2_CONFIG_ACTION_PAGE_READ_CURRENT;
->  	config_page_sz =3D (le16_to_cpu(mpi_reply.ExtPageLength) * 4);
-> +	if (config_page_sz < offsetof(Mpi2RaidConfigurationPage0_t,
-> +				      ConfigElement)) {
-> +		ioc_err(ioc, "%s: RAID configuration page length (%d) is too small\n",
-> +			__func__, config_page_sz);
-> +		r =3D -EIO;
-> +		goto out;
+>  	/* request frame size */
+>  	ioc->request_sz =3D facts->IOCRequestFrameSize * 4;
+> +	if (ioc->request_sz < sizeof(Mpi25SCSIIORequest_t)) {
+> +		ioc_err(ioc,
+> +			"IOCFacts reported invalid RequestFrameSize (%u bytes)\n",
+> +			ioc->request_sz);
+> +		return -EINVAL;
 > +	}
->  	config_page =3D kmalloc(config_page_sz, GFP_KERNEL);
->  	if (!config_page) {
->  		r =3D -1;
-> @@ -2692,7 +2700,11 @@ mpt3sas_config_get_volume_handle(struct MPT3SAS_AD=
-APTER *ioc, u16 pd_handle,
->  		    MPI2_IOCSTATUS_MASK;
->  		if (ioc_status !=3D MPI2_IOCSTATUS_SUCCESS)
->  			goto out;
-> -		for (i =3D 0; i < config_page->NumElements; i++) {
-> +		max_num_elements =3D (config_page_sz -
-> +		    offsetof(Mpi2RaidConfigurationPage0_t, ConfigElement)) /
-> +		    sizeof(config_page->ConfigElement[0]);
-> +		for (i =3D 0; i < config_page->NumElements &&
-> +		     i < max_num_elements; i++) {
 
-[Severity: Medium]
-Can this read uninitialized heap memory from config_page when ExtPageLength=
- is
-0x4000 or larger?
+[Severity: High]
+Is checking against sizeof(Mpi25SCSIIORequest_t) sufficient to prevent
+out-of-bounds writes into adjacent request frames?
 
-In mpt3sas_config_get_volume_handle(), config_page_sz is a 32-bit int compu=
-ted
-as le16_to_cpu(mpi_reply.ExtPageLength) * 4, which can reach up to 262140.
-The new check only enforces a lower bound before calling kmalloc(), which
-allocates uninitialized memory.
+In drivers/scsi/mpt3sas/mpi/mpi2_init.h, Mpi25SCSIIORequest_t has a 96-byte
+header followed by a single 16-byte SGE union (MPI25_SGE_IO_UNION), so
+sizeof(Mpi25SCSIIORequest_t) is 112 bytes rather than 128 bytes. If IOCFacts
+reports IOCRequestFrameSize between 28 and 31 dwords (or a value >=3D 0x4000
+where the u16 multiplication facts->IOCRequestFrameSize * 4 wraps modulo
+65536 to >=3D 112), ioc->request_sz is 112..124 bytes and passes this check.
 
-When mpt3sas_config_get_volume_handle() then calls _config_request(), the
-size is truncated to u16 both in the parameter list and in mem.sz:
+Just below in _base_allocate_memory_pools(), the driver reserves one SGE
+slot in the main frame for a chain element:
 
-drivers/scsi/mpt3sas/mpt3sas_config.c:_config_request() {
+drivers/scsi/mpt3sas/mpt3sas_base.c:_base_allocate_memory_pools() {
 	...
-	static int
-	_config_request(struct MPT3SAS_ADAPTER *ioc, Mpi2ConfigRequest_t
-		*mpi_request, Mpi2ConfigReply_t *mpi_reply, int timeout,
-		void *config_page, u16 config_page_sz)
+	max_sge_elements =3D ioc->request_sz - ((sizeof(Mpi2SCSIIORequest_t) -
+	    sizeof(Mpi2SGEIOUnion_t)) + sge_size);
+	ioc->max_sges_in_main_message =3D max_sge_elements/sge_size;
 	...
-		if (mpi_request->Header.PageLength)
-			mem.sz =3D mpi_request->Header.PageLength * 4;
-		else
-			mem.sz =3D le16_to_cpu(mpi_reply->ExtPageLength) * 4;
 }
 
-Inside _config_request(), only (u16)config_page_sz bytes of config_page are
-zeroed with memset() and populated with memcpy().
+When ioc->request_sz is 112..124 bytes and sge_size is 16, max_sge_elements
+is less than sge_size, leaving ioc->max_sges_in_main_message =3D=3D 0.
 
-If ExtPageLength is between 0x4000 and 0x400b, (u16)config_page_sz wraps to
-between 0 and 44 bytes, so _config_request() never initializes
-config_page->NumElements, config_page->ConfigElement[], or (when wrapped to
-11 bytes or less) config_page->ConfigNum. Even for larger values where
-ExtPageLength >=3D 0x400c, max_num_elements is computed from the untruncated
-32-bit config_page_sz, allowing the loop to read ConfigElement[i] entries
-beyond the (u16)config_page_sz bytes actually populated by _config_request(=
-).
+Furthermore, several paths unconditionally write up to 128 bytes (two SGE
+slots after the 96-byte header, or sizeof(Mpi2DiagBufferPostRequest_t)) into
+a request frame allocated from ioc->request:
 
-Also, because _config_request() overwrites mpi_reply on each iteration of t=
-he
-while (1) loop and recomputes mem.sz from the new mpi_reply.ExtPageLength on
-the next pass, a smaller ExtPageLength on a subsequent iteration would copy
-fewer bytes than the initial config_page_sz used for max_num_elements.
+1. base_make_prp_nvme() places the chain element in the second SGE entry at
+bytes 112..127:
 
-Should mpt3sas_config_get_volume_handle() also reject config_page_sz > U16_=
-MAX
-(or allocate with kzalloc()) so that config_page_sz cannot truncate when
-passed to _config_request()?
+drivers/scsi/mpt3sas/mpt3sas_base.c:base_make_prp_nvme() {
+	...
+	main_chain_element =3D (pMpi25IeeeSgeChain64_t)&mpi_request->SGL;
+	/*
+	 * For NVMe the chain element needs to be the 2nd SG entry in the main
+	 * message.
+	 */
+	main_chain_element =3D (Mpi25IeeeSgeChain64_t *)
+		((u8 *)main_chain_element + sizeof(MPI25_IEEE_SGE_CHAIN64));
+	...
+}
+
+2. _base_build_sg_ieee() and _base_build_sg() write two SGEs starting at
+&mpi_request->SGL (up to byte 128 for 16-byte IEEE SGEs, or byte 120 for
+12-byte 64-bit MPI SGEs) when both data_out_sz and data_in_sz are non-zero:
+
+drivers/scsi/mpt3sas/mpt3sas_base.c:_base_build_sg_ieee() {
+	...
+	if (data_out_sz && data_in_sz) {
+		/* WRITE sgel first */
+		sgl_flags =3D MPI2_IEEE_SGE_FLAGS_SIMPLE_ELEMENT |
+		    MPI2_IEEE_SGE_FLAGS_SYSTEM_ADDR;
+		_base_add_sg_single_ieee(psge, sgl_flags, 0, data_out_sz,
+		    data_out_dma);
+
+		/* incr sgel */
+		psge +=3D ioc->sge_size_ieee;
+
+		/* READ sgel last */
+		sgl_flags |=3D MPI25_IEEE_SGE_FLAGS_END_OF_LIST;
+		_base_add_sg_single_ieee(psge, sgl_flags, 0, data_in_sz,
+		    data_in_dma);
+	...
+}
+
+3. _ctl_diag_register_2() and _ctl_diag_read_buffer() populate a
+128-byte Mpi2DiagBufferPostRequest_t in a frame from
+mpt3sas_base_get_msg_frame():
+
+drivers/scsi/mpt3sas/mpt3sas_ctl.c:_ctl_diag_register_2() {
+	...
+	for (i =3D 0; i < MPT3_PRODUCT_SPECIFIC_DWORDS; i++)
+		mpi_request->ProductSpecific[i] =3D
+			cpu_to_le32(ioc->product_specific[buffer_type][i]);
+	...
+}
+
+Should this validate that ioc->request_sz is at least 128 bytes (ensuring at
+least two SGE slots in the main message frame and covering
+Mpi2DiagBufferPostRequest_t) while also guarding against u16 overflow in
+facts->IOCRequestFrameSize * 4?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/1793925772-1303-1-g=
-it-send-email-shivasharan.srikanteshwara@broadcom.com?part=3D2
+it-send-email-shivasharan.srikanteshwara@broadcom.com?part=3D1
