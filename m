@@ -1,48 +1,51 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.62
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.89
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793971178;
-	b=sh3BP0E6+DzlOEmTUTMMZjnoI7kccBd9Ghsd3wQLYCaSKFFXaJKTIKqDz+aFIbJHZfSv
-	 +NqCPkOMxFz0lc+nJNdiPGM5e5tDYvLEz+O7UR60lyTL3++gkKtPTKbIkLCCPf950GymW
-	 LraxzfjDa5NJ9/uxGCTLcgh9iF9P6OR4bnkXLpSkIG5HEbCd6zOX/AH/add40w9cbJZ5P
-	 i58nlvxg+UdFNTctGw/7T3u4tiPPWkLWI3LUfRqQDB7aU85wUBY3vzU9KcuxZ3iQRnQQ1
-	 wHoC1tI9e+QBMSPycEJXDe1qe9CCr20wWDWT34xEPXbqe3KkoZRm+7RB1qZitzpg1Hg==
+	t=1793971195;
+	b=NlAovdn+hdQETzmgAu02+hOA/sAge3BRGuiDjqPhMZWfKtWRtsUgbF5c27xSoVSc2Wnk
+	 Myiai6niXMXyiKM3WUZdtXfzA/zK8K7448GveMMs/Jqyut3BFxojFewoF/eKoJGA4V1g8
+	 Mxc5pjrc5jbMADHvkqPBIpBys12dyLVNS3uy21j+cQCGCk11tVNGY6dvCW9jCKcbUcjzD
+	 OmpbPI+aCUA3ySR7V7u7+zMpvqwYm//ATaOlBH2Bh5Savx6dwErpUtcbaTtJoIbmbihku
+	 m02UbKtPb0fTBQRwqidcFJxRj2Q26wG6IZot94bku1xu1BeW+rR6mJMLAGvw9OMz3jg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793971178;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793971195;
 	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
 	 X-Mizu-Trace-ID:X-Migadu-Flow:From:To:Cc:Subject:Date:Message-ID:
 	 X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=OjxbtrTpVECakggq3aaOcAKtXEWGwtyTzHqRGiNRk7Q=;
-	b=LW5I+A9fsuPp2f+F9rvfzcRXdANIaaOzI6fhFCo/YJAnTFjuvuFzrUwsDEJpIfAFopUd
-	 0WWB5HgUE93EWSwhW2kJdkLi2WjZXDZOsaqnp8oaExTkwVrLxu9wGR5F+VGKDqN6kXttK
-	 mnvxX3Wz+WGHarph5TlVu2F9AI9WNb0e265XgavAuHTEUXb7FHdQhR6sroH4EnKm2Nr/1
-	 Xl4Y7R4/w4+MvrfMR5SdYkxQHffhl/QHKOV1cUTPWJWSs3bk4icGKkFY8L88rjSFRabMk
-	 /H8j6Q/qMv8Dq6bp4VqXg4vm1dfAhpP26sZGmasWaHTpC1ym4y8NPDFeqwIy1lFsZgQ==
+	bh=CYfB1FwPouVvSzabiejXQPBqorI59dDF0aM5IPAqcsI=;
+	b=BZihZu5/4Nl+1ri8nZhx6bmY0bazqNWtJdJnbyW5+5OKt07fXuGFmbN9++n0hDDrLLT7
+	 U6uhjjRKZ2ofv/9nAZ7wrX/i+cwcialZDlqi+HYSh7yJk/+UVaTn9+o7Wo4kehU2mI1m6
+	 R2S9xdyCIgrz7vNyklyo5Qjj+kSehxc5/Hyp2ntyTIlEZRGR/ETxYCecy5gXro10A4aUt
+	 f7mIKsocAlog6uk7r++UMPXzc3hy2PLto1DMoW0vka1tU2uooDUWjCjemrNmGKn8EM8Xf
+	 4Il1ZOPFziMZjsrEoA446dzu8UEqTeuQ2jVyIIHFXCvZ8b3QuS4VnLU+c9BebkkFSHw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linux.dev;
 	spf=pass smtp.mailfrom=linux.dev;
-	arc=none smtp.remote-ip=95.215.58.62
-Received: from mta1.migadu.com (out-62.mta1.migadu.com [95.215.58.62])
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=OBh2yzfS;
+	arc=none smtp.remote-ip=91.218.175.89
+Received: from mta0.migadu.com (out-89.mta0.migadu.com [91.218.175.89])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 06623606A32E
-	for <linux-scsi@vger.kernel.org>; Fri,  6 Nov 2026 13:19:26 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 06623606A32E
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59311606D802
+	for <linux-scsi@vger.kernel.org>; Fri,  6 Nov 2026 13:19:54 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 59311606D802
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=OBh2yzfS
 X-Envelope-To: linux-scsi@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=KO2+Pw/HQKx0a4JyoCFPhhmUGDsn7IBoIsdjd3UIB1k=;
+DKIM-Signature: a=rsa-sha256; bh=73QCibDvpuaBGtRTNbIkxL+btURCG2VkLUsjiT9bmAg=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1793971165; v=1; x=1794575965;
- b=jeFNHfv5f4zmg3psPVOfCRejiIcbH0mRSeUBXfYvbsOUUduFnoh4Xb/lFO75h7OZwr3xb52j
- hl5asAf3vpi1tP7ZCwkufcg0keAVYJ9DH3vunUx+P7OTGGe6hcvnkzOe8I6jXRUX5LbI2tCx1XU
- DqQcY5Z6CBplWlVJlLCwbnXY=
+ t=1793971192; v=1; x=1794575992;
+ b=OBh2yzfS4sOkxhGkT+JBPca55NoqbHEL9VIcAcbEj1J1rXgOoQHQgV3Mcnc02kQNXVO902W+
+ noDVT/X6o8QePW+IXif0wVhRtAIt7pCstFsBd5LRqmTL17bi9HehYz49UEdj6gHklLbJYcIOxCM
+ FPVWpW0g4r5YYg1Ao8bNZ4dk=
 X-Envelope-To: linux-scsi@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 99a7a9ba11e11fd9;
-	Fri, 06 Nov 2026 13:19:24 +0000
-X-Mizu-Trace-ID: 99a7a9ba11e11fd9
+Received: by smtp.migadu.com with ESMTPS id b2c073d8feb08521;
+	Fri, 06 Nov 2026 13:19:52 +0000
+X-Mizu-Trace-ID: b2c073d8feb08521
 X-Migadu-Flow: FLOW_OUT
 From: Tao Cui <cui.tao@linux.dev>
 To: akpm@linux-foundation.org,
@@ -90,9 +93,9 @@ Cc: linux-mm@kvack.org,
 	vbabka@suse.cz,
 	cui.tao@linux.dev,
 	cuitao@kylinos.cn
-Subject: [PATCH 1/7] scsi: sg and st: account the command buffer memory to memcg
-Date: Fri,  6 Nov 2026 21:18:23 +0800
-Message-ID: <20261106131829.3228926-2-cui.tao@linux.dev>
+Subject: [PATCH 3/7] vhost: account the per-device kernel allocations to memcg
+Date: Fri,  6 Nov 2026 21:18:25 +0800
+Message-ID: <20261106131829.3228926-4-cui.tao@linux.dev>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20261106131829.3228926-1-cui.tao@linux.dev>
 References: <20261106131829.3228926-1-cui.tao@linux.dev>
@@ -109,118 +112,140 @@ Content-Transfer-Encoding: 8bit
 
 From: Tao Cui <cuitao@kylinos.cn>
 
-The sg data buffers are unaccounted: the per-fd reserved buffer, the
-scatter-gather page array, and the order-0..N pages behind it, plus the
-per-device tape buffer in st.  All of it is user controllable.  The
-reserved size is capped only by the device max_sectors, SG_MAX_QUEUE
-(16) commands can be in flight per fd, and the fd count is bounded by
-RLIMIT_NOFILE.  Nothing is charged to the memcg of the process driving
-it.  The September 2026 fixes in sg_build_indirect reshaped the element
-sizing and left the accounting alone.
+Everything except the worker struct is allocated with plain GFP_KERNEL:
+the per-vq iovec and log arrays at VHOST_SET_OWNER, the memory table at
+VHOST_SET_MEM_TABLE whose size follows the user supplied region count,
+the pending message nodes, and the vhost_net/vhost_vsock device structs
+with their fallback to vmalloc.  The worker has been accounted since the
+vhost_task conversion.
 
-Mark these allocations __GFP_ACCOUNT so the driving process pays for
-the memory it induces.
+A container that can open /dev/vhost-net or /dev/vhost-vsock, which
+device plugins hand out with passthrough, holds roughly 150KB of
+resident kernel memory per device after SET_OWNER.  Charge the rest the
+same way the worker already is.
 
 Signed-off-by: Tao Cui <cuitao@kylinos.cn>
 ---
- drivers/scsi/sg.c | 23 ++++++++++++++++++++---
- drivers/scsi/st.c |  7 ++++---
- 2 files changed, 24 insertions(+), 6 deletions(-)
+ drivers/vhost/net.c   | 14 ++++++++------
+ drivers/vhost/vhost.c | 16 ++++++++++------
+ drivers/vhost/vsock.c |  5 +++--
+ 3 files changed, 21 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 6551f1284d44..9c1414479b21 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -911,6 +911,19 @@ static int put_compat_request_table(struct compat_sg_req_info __user *o,
- }
- #endif
- 
-+/*
-+ * The sg passthrough of the blktrace ioctls has the same exposure as the
-+ * block device path: holding the node is the only requirement today, and
-+ * a created trace outlives the fd.  Must match the gate in
-+ * blk_trace_ioctl().
-+ */
-+static bool sg_is_blktrace_cmd(unsigned int cmd)
-+{
-+	return cmd == BLKTRACESETUP || cmd == BLKTRACESETUP2 ||
-+	       cmd == BLKTRACESTART || cmd == BLKTRACESTOP ||
-+	       cmd == BLKTRACETEARDOWN;
-+}
-+
- static long
- sg_ioctl_common(struct file *filp, Sg_device *sdp, Sg_fd *sfp,
- 		unsigned int cmd_in, void __user *p)
-@@ -920,6 +933,9 @@ sg_ioctl_common(struct file *filp, Sg_device *sdp, Sg_fd *sfp,
- 	Sg_request *srp;
- 	unsigned long iflags;
- 
-+	if (sg_is_blktrace_cmd(cmd_in) && !capable(CAP_SYS_ADMIN))
-+		return -EPERM;
-+
- 	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sdp,
- 				   "sg_ioctl: cmd=0x%x\n", (int) cmd_in));
- 	read_only = (O_RDWR != (filp->f_flags & O_ACCMODE));
-@@ -1829,7 +1845,7 @@ static int
- sg_build_sgat(Sg_scatter_hold * schp, const Sg_fd * sfp, int tablesize)
- {
- 	int sg_bufflen = tablesize * sizeof(struct page *);
--	gfp_t gfp_flags = GFP_ATOMIC | __GFP_NOWARN;
-+	gfp_t gfp_flags = GFP_ATOMIC | __GFP_NOWARN | __GFP_ACCOUNT;
- 
- 	schp->pages = kzalloc(sg_bufflen, gfp_flags);
- 	if (!schp->pages)
-@@ -1844,7 +1860,8 @@ sg_build_indirect(Sg_scatter_hold * schp, Sg_fd * sfp, int buff_size)
- 	int ret_sz = 0, i, k, rem_sz, num, mx_sc_elems;
- 	int sg_tablesize = sfp->parentdp->sg_tablesize;
- 	int blk_size = buff_size, order;
--	gfp_t gfp_mask = GFP_ATOMIC | __GFP_COMP | __GFP_NOWARN | __GFP_ZERO;
-+	gfp_t gfp_mask = GFP_ATOMIC | __GFP_COMP | __GFP_NOWARN |
-+			 __GFP_ACCOUNT | __GFP_ZERO;
- 
- 	if (blk_size < 0)
- 		return -EFAULT;
-@@ -2134,7 +2151,7 @@ sg_add_sfp(Sg_device * sdp)
- 	unsigned long iflags;
- 	int bufflen;
- 
--	sfp = kzalloc_obj(*sfp, GFP_ATOMIC | __GFP_NOWARN);
-+	sfp = kzalloc_obj(*sfp, GFP_ATOMIC | __GFP_NOWARN | __GFP_ACCOUNT);
- 	if (!sfp)
+diff --git a/drivers/vhost/net.c b/drivers/vhost/net.c
+index 4570a4ffbab2..bab6597c696d 100644
+--- a/drivers/vhost/net.c
++++ b/drivers/vhost/net.c
+@@ -249,7 +249,7 @@ vhost_net_ubuf_alloc(struct vhost_virtqueue *vq, bool zcopy)
+ 	/* No zero copy backend? Nothing to count. */
+ 	if (!zcopy)
+ 		return NULL;
+-	ubufs = kmalloc_obj(*ubufs);
++	ubufs = kmalloc_obj(*ubufs, GFP_KERNEL_ACCOUNT);
+ 	if (!ubufs)
  		return ERR_PTR(-ENOMEM);
+ 	atomic_set(&ubufs->refcount, 1);
+@@ -302,7 +302,8 @@ static int vhost_net_set_ubuf_info(struct vhost_net *n)
+ 		if (!zcopy)
+ 			continue;
+ 		n->vqs[i].ubuf_info =
+-			kmalloc_objs(*n->vqs[i].ubuf_info, UIO_MAXIOV);
++			kmalloc_objs(*n->vqs[i].ubuf_info, UIO_MAXIOV,
++				     GFP_KERNEL_ACCOUNT);
+ 		if  (!n->vqs[i].ubuf_info)
+ 			goto err;
+ 	}
+@@ -1344,17 +1345,18 @@ static int vhost_net_open(struct inode *inode, struct file *f)
+ 	struct xdp_buff *xdp;
+ 	int i;
  
-diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-index e9d41e3cc2dd..b92633ab2757 100644
---- a/drivers/scsi/st.c
-+++ b/drivers/scsi/st.c
-@@ -4074,7 +4074,7 @@ static struct st_buffer *new_tape_buffer(int max_sg)
+-	n = kvmalloc_obj(*n, GFP_KERNEL | __GFP_RETRY_MAYFAIL);
++	n = kvmalloc_obj(*n, GFP_KERNEL | __GFP_RETRY_MAYFAIL |
++			 __GFP_ACCOUNT);
+ 	if (!n)
+ 		return -ENOMEM;
+-	vqs = kmalloc_objs(*vqs, VHOST_NET_VQ_MAX);
++	vqs = kmalloc_objs(*vqs, VHOST_NET_VQ_MAX, GFP_KERNEL_ACCOUNT);
+ 	if (!vqs) {
+ 		kvfree(n);
+ 		return -ENOMEM;
+ 	}
+ 
+ 	queue = kmalloc_array(VHOST_NET_BATCH, sizeof(void *),
+-			      GFP_KERNEL);
++			      GFP_KERNEL_ACCOUNT);
+ 	if (!queue) {
+ 		kfree(vqs);
+ 		kvfree(n);
+@@ -1362,7 +1364,7 @@ static int vhost_net_open(struct inode *inode, struct file *f)
+ 	}
+ 	n->vqs[VHOST_NET_VQ_RX].rxq.queue = queue;
+ 
+-	xdp = kmalloc_objs(*xdp, VHOST_NET_BATCH);
++	xdp = kmalloc_objs(*xdp, VHOST_NET_BATCH, GFP_KERNEL_ACCOUNT);
+ 	if (!xdp) {
+ 		kfree(vqs);
+ 		kvfree(n);
+diff --git a/drivers/vhost/vhost.c b/drivers/vhost/vhost.c
+index ea127af58ada..d1274106ad5d 100644
+--- a/drivers/vhost/vhost.c
++++ b/drivers/vhost/vhost.c
+@@ -526,11 +526,14 @@ static long vhost_dev_alloc_iovecs(struct vhost_dev *dev)
+ 
+ 	for (i = 0; i < dev->nvqs; ++i) {
+ 		vq = dev->vqs[i];
+-		vq->indirect = kmalloc_objs(*vq->indirect, UIO_MAXIOV);
+-		vq->log = kmalloc_objs(*vq->log, dev->iov_limit);
+-		vq->heads = kmalloc_objs(*vq->heads, dev->iov_limit);
++		vq->indirect = kmalloc_objs(*vq->indirect, UIO_MAXIOV,
++					    GFP_KERNEL_ACCOUNT);
++		vq->log = kmalloc_objs(*vq->log, dev->iov_limit,
++				       GFP_KERNEL_ACCOUNT);
++		vq->heads = kmalloc_objs(*vq->heads, dev->iov_limit,
++					 GFP_KERNEL_ACCOUNT);
+ 		vq->nheads = kmalloc_array(dev->iov_limit, sizeof(*vq->nheads),
+-					   GFP_KERNEL);
++					   GFP_KERNEL_ACCOUNT);
+ 		if (!vq->indirect || !vq->log || !vq->heads || !vq->nheads)
+ 			goto err_nomem;
+ 	}
+@@ -2053,7 +2056,8 @@ static long vhost_set_memory(struct vhost_dev *d, struct vhost_memory __user *m)
+ 		return -E2BIG;
+ 	if (max_iotlb_entries <= 0)
+ 		return -EINVAL;
+-	newmem = kvzalloc_flex(*newmem, regions, mem.nregions);
++	newmem = kvzalloc_flex(*newmem, regions, mem.nregions,
++			       GFP_KERNEL_ACCOUNT);
+ 	if (!newmem)
+ 		return -ENOMEM;
+ 
+@@ -3405,7 +3409,7 @@ EXPORT_SYMBOL_GPL(vhost_disable_notify);
+ struct vhost_msg_node *vhost_new_msg(struct vhost_virtqueue *vq, int type)
  {
- 	struct st_buffer *tb;
- 
--	tb = kzalloc_obj(struct st_buffer);
-+	tb = kzalloc_obj(struct st_buffer, GFP_KERNEL_ACCOUNT);
- 	if (!tb) {
- 		printk(KERN_NOTICE "st: Can't allocate new tape buffer.\n");
+ 	/* Make sure all padding within the structure is initialized. */
+-	struct vhost_msg_node *node = kzalloc_obj(*node);
++	struct vhost_msg_node *node = kzalloc_obj(*node, GFP_KERNEL_ACCOUNT);
+ 	if (!node)
  		return NULL;
-@@ -4083,7 +4083,8 @@ static struct st_buffer *new_tape_buffer(int max_sg)
- 	tb->use_sg = max_sg;
- 	tb->buffer_size = 0;
  
--	tb->reserved_pages = kzalloc_objs(struct page *, max_sg);
-+	tb->reserved_pages = kzalloc_objs(struct page *, max_sg,
-+					  GFP_KERNEL_ACCOUNT);
- 	if (!tb->reserved_pages) {
- 		kfree(tb);
- 		return NULL;
-@@ -4109,7 +4110,7 @@ static int enlarge_buffer(struct st_buffer * STbuffer, int new_size)
+diff --git a/drivers/vhost/vsock.c b/drivers/vhost/vsock.c
+index 0cb87971d749..600daeb05e7b 100644
+--- a/drivers/vhost/vsock.c
++++ b/drivers/vhost/vsock.c
+@@ -721,11 +721,12 @@ static int vhost_vsock_dev_open(struct inode *inode, struct file *file)
+ 	/* This struct is large and allocation could fail, fall back to vmalloc
+ 	 * if there is no other way.
+ 	 */
+-	vsock = kvmalloc_obj(*vsock, GFP_KERNEL | __GFP_RETRY_MAYFAIL);
++	vsock = kvmalloc_obj(*vsock, GFP_KERNEL | __GFP_RETRY_MAYFAIL |
++			     __GFP_ACCOUNT);
+ 	if (!vsock)
+ 		return -ENOMEM;
  
- 	max_segs = STbuffer->use_sg;
- 
--	priority = GFP_KERNEL | __GFP_NOWARN;
-+	priority = GFP_KERNEL | __GFP_NOWARN | __GFP_ACCOUNT;
- 
- 	if (STbuffer->cleared)
- 		priority |= __GFP_ZERO;
+-	vqs = kmalloc_objs(*vqs, ARRAY_SIZE(vsock->vqs));
++	vqs = kmalloc_objs(*vqs, ARRAY_SIZE(vsock->vqs), GFP_KERNEL_ACCOUNT);
+ 	if (!vqs) {
+ 		ret = -ENOMEM;
+ 		goto out;
 -- 
 2.43.0
 
