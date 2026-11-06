@@ -1,92 +1,92 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.219.97
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.214.228
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793926774;
-	b=VUrGGAjXdZeN18uyzKvVUKeiEJtpikawVAGN49ZXQRRs+KGMvfJCOhRfX8UsFT1d8rmd
-	 HJ+3UaePDPL9iFUtiuc2DGdFlLlDa+9GSxspEczAflVfVFISKIGmvo0TlW+fdq85tDoqZ
-	 3Su9YJ1KnMWI/LAJTrvHg81SNiGNnErLelJ/UT1Z5XS71XsOIyl6tiWkcv73hDmGs3jF9
-	 tVWDEFDKFkakL5emQTLgeJGPz9P/uCGsCK8C0hdEgp0bNapUIfJB+K3aN1IFFytTHRdPz
-	 MFpaZd+egpctB6afoarXN7ZNsgmF2psd0OFpQUMaZ5tQfkUc7Vbe2iazMmNWpCsjM8Q==
+	t=1793926778;
+	b=ZO59ZKnodirmiliklwjbJpVd9hMVA1e7Y2F/AGo1n6r7k8vrPTTrb1V57ZWBh3B8I5mI
+	 JRJZHQMo2in6V9270Nhb5HHQhTG0xgH07ExgOww9CvL6FfHoI/FsihVkQN37MfFoE/qwB
+	 q3M7C5rziT6Ip3zmApsKUfMPnX6r1+iFIjcJAr7nEhzGPNpPq9T8xqTsGxZs5kkzuZlzG
+	 KEZW8zQ/PjOs/9Y6RiiODwzDziRRelv2DxHmoClppaWcGwArzmPnoe+nqDzg3Fv4jUQLW
+	 NYF2wkdgwf+D07TqLQWn2SGDKE5Xv+6yh0gqdid5aYCL1a6UZWtTFwNDGT3ThUc/GSA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793926774;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793926778;
 	h=DMARC-Filter:Received:X-Google-DKIM-Signature:X-Gm-Message-State:
 	 X-Gm-Gg:X-Received:Received:X-Relaying-Domain:X-CFilter-Loop:Received:
 	 DKIM-Signature:X-Received:X-Received:Received:From:To:Cc:Subject:Date:
 	 Message-Id:X-Mailer:In-Reply-To:References:X-DetectorID-Processed;
-	bh=0mJF7ligDKQWNKCZhhB+1JEIBLoVoXwcMC9yxU3LEtg=;
-	b=O94HOHbz2dYiwS5ooJt1xDfZTYqrfviMbikOIuY6ETbAc//ksu54JCzeIfCywcBT/kX4
-	 8dtv4LxqqeGqYwJV/QctUCCVPQo1COZKvTr45l5EN3EzO/0ombNL1Oo6FJheBQEMYdrbc
-	 tEiwOBepJ8v6BTnmHcswKTbRoWpsSdcb9zZRvQcAbyjVMx6RD8EtiAJ4E7mDy9Pa2jwii
-	 GV7gJDLkM9Wou9wfS9f6lORyzSyffq6GghFM56f1sadOBVT38kmVqxwQNNrEt3kHV2EKT
-	 Lfk689q+P8gFNUdGjCCGK6Ur+RsRKlTrmohtnz4F/9KCTCF30GIXstXGtheH6F4tX6g==
+	bh=vih7m2czqLEAdlEJPQb+Iua3nat6BYhP8RN+soGKBCw=;
+	b=2jHsV1qGVa3bCPoayyfd1LljKzEiEYn2olp8fUtddApxYJpYuAYN+SZutRB7Vuxdh6i7
+	 WkV6OJNPInnKrM2v65QTFpGX2gzhpWJu8TMYqj/rEHwYZqIFfOHDP7TXWSgaddW2MxVM/
+	 n3W4l3EJgnTPhrMPYJzsIKPXjIyGWCYxWecvlJG+0lqbI+ZO3c6rVystuk8XG5C+Z2myS
+	 0A+6k3zeA0PMJtAuJrSSgQavbqtmIvG63xGPdwuL6/0joZtLWyVDe9vEz689KZGwewS+k
+	 D6gDtEtWRbbzKCnxjey6pOPpbtf9c3UUjjf3yFErsgDDf3v3b1mTXfbjVwP8qIWsUNQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=broadcom.com;
 	spf=fail smtp.mailfrom=broadcom.com;
-	dkim=pass header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=grBx4X3D;
-	arc=none smtp.remote-ip=209.85.219.97
-Received: from mail-qv1-f97.google.com (mail-qv1-f97.google.com [209.85.219.97])
+	dkim=pass header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=fLH0wx3K;
+	arc=none smtp.remote-ip=209.85.214.228
+Received: from mail-pl1-f228.google.com (mail-pl1-f228.google.com [209.85.214.228])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 81AFA606A31B
-	for <linux-scsi@vger.kernel.org>; Fri,  6 Nov 2026 00:59:33 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 81AFA606A31B
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 280C3606A31B
+	for <linux-scsi@vger.kernel.org>; Fri,  6 Nov 2026 00:59:38 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 280C3606A31B
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=grBx4X3D
-Received: by mail-qv1-f97.google.com with SMTP id 6a1803df08f44-91c75267b0fso781716d6.3
-        for <linux-scsi@vger.kernel.org>; Thu, 05 Nov 2026 16:59:33 -0800 (PST)
+	dkim=pass (1024-bit key, unprotected) header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=fLH0wx3K
+Received: by mail-pl1-f228.google.com with SMTP id d9443c01a7336-2e9d1114320so731245ad.3
+        for <linux-scsi@vger.kernel.org>; Thu, 05 Nov 2026 16:59:38 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793926772; x=1794531572;
+        d=1e100.net; s=20260707; t=1793926777; x=1794531577;
         h=references:in-reply-to:message-id:date:subject:cc:to:from
          :dkim-signature:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=0mJF7ligDKQWNKCZhhB+1JEIBLoVoXwcMC9yxU3LEtg=;
-        b=C+L9lJQ7Mm8Mdb2J+lDgs0mr+BHzmR26mDN455KLf2i375h8WLZMDahEXnkSGkzo/e
-         4MmTwQlYh5H5nl/qEWypNAwnLTcclVdc55PQrPMRt6tlUE2700HiLZfXzFZX8lip3veO
-         4m1aYqfFE+69jOROmOPUI53SSF+EN9ZQBfm3/i27mGbbPyYoBCVBx8B3HgPdMF4ABc+7
-         oX91rzBtsf3sST2KTvS1Q3AZMzMzkA+jjh1qPIvgG2/fSnxdtJtHqj6u9IVNM9fgr4V8
-         davSUhFHoBiR+5pXA4CKVP39VeKkmx2hsJnRxj2t3nYm7wGbQbV2Y2s57nZ95hftypQT
-         x13w==
-X-Gm-Message-State: APuU4Z/GI6FD/l7Ytkut7YoF30hru3Bt5+Csk5F/wk6uQ6yJyM6lOHTl
-	fbjLP29p+9JIfQV8OAcopGoZvZoB6XL8hsxT92EmbpbePs5VU3f/UQQc36117HMNCvudLlfRlCu
-	65b0cV6M7CCr0P9OAhRaqT1QKGoKRmCvJf1ZF7MUZh+cU1yOaD+V6PsD9mmYore1SRjmw1EEe8a
-	YSN0kKT0Yz5rtGQtu5rBTED8KCcu1SA4BiOhO7M4TvMrHD8U2LRdOGc4qUgMCxkJTp/Qt+F0TcC
-	5e8Tik2AjUQhoNeBKRJtDEyhoZXtvSCGkA=
-X-Gm-Gg: AYBFou04GBtDcUaWZ+7N320/5aklCuZzm8/fz1S6uwqTBOwS78KiI/Zoemn6RA9JGHE
-	w2VQj8O7FR9+s3dF048kmqOuW9WJKrHTOQf+UahQ2VqNphZv1eM+N+373IM1qJowi5GpVMpWBSV
-	HwdV57Bypkrc3XWbRgS+vipcE6WlzdK59Qq39hUY7Yt3KBoZSYhfyPloI3kUScyyQdyZ/TrPc9d
-	0He2XazZ79BxNVDXtx3ywc7XkJjHSchj/WZ7uGx6SeJcRl5AB/wyOjd8jfTRNQmbROIOVmVSR1I
-	wkH2aP3ycTKBpPjVwQVTsZ4Jnzs0rspInZHmS3FmJRwb2UbBobzKuvo8GoI5sA5OBRZzApsAxH6
-	6LCdgLYny3H8J5992gVk/pAl87Apq8otyTMLEkLyVql+iSJIr29JsWZfQqPjtXe/x86VCrVTiOr
-	0+Y13v3LsLKAZMksrOe4WbZGFnL4aic1+Qqw9D5LvoLcwc+2jYZSrTNg==
-X-Received: by 2002:a05:6214:4a03:b0:91c:708a:6da9 with SMTP id 6a1803df08f44-91ea98631ebmr11273046d6.42.1793926772377;
-        Thu, 05 Nov 2026 16:59:32 -0800 (PST)
+        bh=vih7m2czqLEAdlEJPQb+Iua3nat6BYhP8RN+soGKBCw=;
+        b=YWFSnsiEaaCDpT/msGzAo85tJe0AhgX/yrE7pdgOK3GQWN/HGEufW17PMNs8qsVUZT
+         pf1DRBDDnUbDBfJm6Z+ELhfU8oEknqanIrzGAxrgh20nGVZ8kOA8tHmiZ/kkXzPIhkA+
+         LQhhagWkPNg6BOxHnHZO0l8X3J57A1hAgkoE18I1yGEDTJsDahIi5ekGuY0IWnuXT1Dk
+         RN3BB5jqGObjfyQ3kMmlI7XhZn6KHMfg7h5HCvEyaFv3+ZiChl6mGMoJGmsvV8WUYmwA
+         HiFxCIvZjw3CeCTNjCHO3VSfZSzpUYhW0lWI9yYXXbaP1kiYuSPoqJuA/sXfMr3/yksu
+         L/6Q==
+X-Gm-Message-State: APuU4Z9pFLhC8RYUFn699MAXVEBzDH9P3gc+DJBG5zIufOFl4TzZgOby
+	UlXXf4o3h9loPhjBd+9JXUorIH8SdCu72b/dRYf7lg+spjOZ2CkrysS9BZUg8Gan9bYoiwRnfCZ
+	zc3TD7fRA00kAE/r01oZhFSjlBg36L8vJcx0SdVs4VKTbVyRoX0EV5jonortuMb15KBv6hsbuNf
+	Bd4xlqHESrfSF24C28jZo9RDP5RK1P8LtC7TqDyGPhBXrbkxrOy+qvgFwy6RzePuz/XCOmuHX1H
+	H2E2gGlgxkTgHICwfmOaIsCybFBzlOnTuo=
+X-Gm-Gg: AYBFou3aupKuRbOZI4Tf/2vtBdX2bbqYgwReNc6UCjTrOjvRGn8zTXEUY3N1j8GV83B
+	+ENvDPbqPJBKYVnfajwxfrioK7mJmP/3ZCw0LN0hLtw2m1dKVpFQPy2QPy6sqkWJrYPvG3ouwaU
+	ojt76IdHUli5rNP9H1VqxgckogvBVlThh7KAlEAZhLW728MMpPyiPYGrjeWSCmrLyDEb+lQu7qu
+	dPT5kSC1Xk4iHou5XpH4T49dYPn3GakJuOwR3IyFDJL96oZx3dIdsNnO13W1MiWe7tjKeMZX9rs
+	802Xi/kJVgtDhIosY/sbq+skEBFn4S8nO3LLwiW+/3du/qK3pwSDLF0dtvnyPa5+pCAJRPJEdLO
+	dL6NgyFvMAl/OoiHxr+Srpvpm5nQQScLbFN3N3Ra05vf1KsSrA1CyksXKmRWSSAyU5t7R70f29Y
+	sVJpuSHhT7IuEhNqKzBnzgpunHO6Ay+Tp03kXD1yd4XiX6JssLH+GaTg==
+X-Received: by 2002:a17:90b:564f:b0:3ad:c4e9:7beb with SMTP id 98e67ed59e1d1-3b0db6e0315mr772970a91.43.1793926777340;
+        Thu, 05 Nov 2026 16:59:37 -0800 (PST)
 Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-13.dlp.protect.broadcom.com. [144.49.247.13])
-        by smtp-relay.gmail.com with ESMTPS id 6a1803df08f44-91ea69b0b40sm193686d6.12.2026.11.05.16.59.32
+        by smtp-relay.gmail.com with ESMTPS id 98e67ed59e1d1-3b0a7d138d4sm1678364a91.2.2026.11.05.16.59.36
         for <linux-scsi@vger.kernel.org>
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 05 Nov 2026 16:59:32 -0800 (PST)
+        Thu, 05 Nov 2026 16:59:37 -0800 (PST)
 X-Relaying-Domain: broadcom.com
 X-CFilter-Loop: Reflected
-Received: by mail-pl1-f197.google.com with SMTP id d9443c01a7336-2ed05900df7so1234075ad.1
-        for <linux-scsi@vger.kernel.org>; Thu, 05 Nov 2026 16:59:31 -0800 (PST)
+Received: by mail-pl1-f197.google.com with SMTP id d9443c01a7336-2ed2c307e62so1769865ad.0
+        for <linux-scsi@vger.kernel.org>; Thu, 05 Nov 2026 16:59:36 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1793926771; x=1794531571; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1793926775; x=1794531575; darn=vger.kernel.org;
         h=references:in-reply-to:message-id:date:subject:cc:to:from:from:to
          :cc:subject:date:message-id:reply-to:content-type;
-        bh=0mJF7ligDKQWNKCZhhB+1JEIBLoVoXwcMC9yxU3LEtg=;
-        b=grBx4X3D7e48IegbbRD40uXxyr8JUSdFEOIERwLDrfXuXsVhrjX/LjKPdSkRR4Ubq+
-         wYsE/2CiukZ71xM2W9U02JDJY64UVi634KDvNx/YIj3qIDKW4rbo6HKGLPXdr94dddDi
-         4IXhlVkhc6mpTEip/9orCcyF02kFgS8oc+rko=
-X-Received: by 2002:a17:903:2f4e:b0:2e9:4f7b:affd with SMTP id d9443c01a7336-2ed4128283dmr12907765ad.6.1793926771177;
-        Thu, 05 Nov 2026 16:59:31 -0800 (PST)
-X-Received: by 2002:a17:903:2f4e:b0:2e9:4f7b:affd with SMTP id d9443c01a7336-2ed4128283dmr12907675ad.6.1793926770671;
-        Thu, 05 Nov 2026 16:59:30 -0800 (PST)
+        bh=vih7m2czqLEAdlEJPQb+Iua3nat6BYhP8RN+soGKBCw=;
+        b=fLH0wx3KA9ysID+nAHUxcwO1+fOBXP/Vn4qWXVVBds1YVOaCS2tkgASAGYuHNydQgH
+         Xa866zrMqXBMPUZhXqLZauXP22CdOG3gZSOggr3bpa9jMdiKvTs2yfnZPtFoTixG6XIW
+         sHihvNXMNdC/Yo7T2MsHJ1VUQtpTDZ2c63wCo=
+X-Received: by 2002:a17:903:3c64:b0:2ed:f9c:3e5b with SMTP id d9443c01a7336-2ed41c6a865mr13538365ad.52.1793926775362;
+        Thu, 05 Nov 2026 16:59:35 -0800 (PST)
+X-Received: by 2002:a17:903:3c64:b0:2ed:f9c:3e5b with SMTP id d9443c01a7336-2ed41c6a865mr13538175ad.52.1793926774819;
+        Thu, 05 Nov 2026 16:59:34 -0800 (PST)
 Received: from dhcp-135-24-192-142.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2ed47d7b8cfsm450745ad.57.2026.11.05.16.59.27
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2ed47d7b8cfsm450745ad.57.2026.11.05.16.59.31
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 05 Nov 2026 16:59:30 -0800 (PST)
+        Thu, 05 Nov 2026 16:59:34 -0800 (PST)
 From: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 To: linux-scsi@vger.kernel.org,
 	martin.petersen@oracle.com
@@ -95,9 +95,9 @@ Cc: sathya.prakash@broadcom.com,
 	chandrakanth.patil@broadcom.com,
 	sweeti.vandure@broadcom.com,
 	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-Subject: [PATCH 26/37] scsi: mpt3sas: Enforce minimum reply frame size and validate chain segment size
-Date: Thu,  5 Nov 2026 16:42:41 -0800
-Message-Id: <1793925772-1303-27-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+Subject: [PATCH 27/37] scsi: mpt3sas: Replace panic() with error return in hard_reset_handler
+Date: Thu,  5 Nov 2026 16:42:42 -0800
+Message-Id: <1793925772-1303-28-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 X-Mailer: git-send-email 2.4.3
 In-Reply-To: <1793925772-1303-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 References: <1793925772-1303-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
@@ -111,74 +111,37 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 
-In _base_allocate_memory_pools(), reject a firmware-reported ReplyFrameSize
-smaller than MPI2DefaultReply_t and validate IOCMaxChainSegmentSize to avoid
-integer overflow and out-of-bounds access during SGL construction.
+When rdpq_array_capable is cleared after a firmware flash, replace the
+panic() call with an ioc_err() log and a graceful -EFAULT return.
 
 Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.c | 39 +++++++++++++++++++++++------
- 1 file changed, 32 insertions(+), 7 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 3622d8a42725..1af9dc241666 100644
+index 1af9dc241666..7cc849dbf706 100644
 --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
 +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -6395,21 +6395,46 @@ _base_allocate_memory_pools(struct MPT3SAS_ADAPTER *ioc)
- 	/* reply frame size */
- 	ioc->reply_sz = facts->ReplyFrameSize * 4;
- 
-+	/* Enforce minimum reply frame size */
-+	if (ioc->reply_sz < sizeof(MPI2DefaultReply_t)) {
+@@ -9069,10 +9069,13 @@ mpt3sas_base_hard_reset_handler(struct MPT3SAS_ADAPTER *ioc,
+ 		    " image and it requires system reboot\n");
+ 		goto out;
+ 	}
+-	if (ioc->rdpq_array_enable && !ioc->rdpq_array_capable)
+-		panic("%s: Issue occurred with flashing controller firmware."
+-		      "Please reboot the system and ensure that the correct"
+-		      " firmware version is running\n", ioc->name);
++	if (ioc->rdpq_array_enable && !ioc->rdpq_array_capable) {
 +		ioc_err(ioc,
-+			"Firmware reported an invalid ReplyFrameSize (%d bytes). Cannot safely attach.\n",
-+			ioc->reply_sz);
-+		return -EINVAL;
-+	}
-+
-+	/* calculate the max scatter element size */
-+	sge_size = max_t(u16, ioc->sge_size, ioc->sge_size_ieee);
-+
- 	/* chain segment size */
- 	if (ioc->hba_mpi_version_belonged != MPI2_VERSION) {
--		if (facts->IOCMaxChainSegmentSize)
--			ioc->chain_segment_sz =
--					facts->IOCMaxChainSegmentSize *
-+		if (facts->IOCMaxChainSegmentSize) {
-+			/* compute in 32 bits so the product cannot wrap the u16 field */
-+			u32 chain_sz = (u32)facts->IOCMaxChainSegmentSize *
- 					MAX_CHAIN_ELEMT_SZ;
--		else
--		/* set to 128 bytes size if IOCMaxChainSegmentSize is zero */
-+
-+			/* reject values that wrap or leave < 2 SGEs per chain */
-+			if (chain_sz < 2 * sge_size || chain_sz > 0xFFFF) {
-+				ioc_err(ioc,
-+					"IOCMaxChainSegmentSize (%u) is out of range, cannot safely attach\n",
-+					facts->IOCMaxChainSegmentSize);
-+				return -EINVAL;
-+			}
-+			ioc->chain_segment_sz = chain_sz;
-+		} else
-+			/* set to 128 bytes size if IOCMaxChainSegmentSize is zero */
- 			ioc->chain_segment_sz = DEFAULT_NUM_FWCHAIN_ELEMTS *
- 						    MAX_CHAIN_ELEMT_SZ;
- 	} else
- 		ioc->chain_segment_sz = ioc->request_sz;
- 
--	/* calculate the max scatter element size */
--	sge_size = max_t(u16, ioc->sge_size, ioc->sge_size_ieee);
-+	/* every branch above must yield a usable chain segment size */
-+	if (ioc->chain_segment_sz < 2 * sge_size) {
-+		ioc_err(ioc,
-+			"invalid chain segment size (%u), cannot safely attach\n",
-+			ioc->chain_segment_sz);
-+		return -EINVAL;
++			"%s: Issue occurred with flashing controller firmware. Please reboot the system and ensure that the correct firmware version is running\n",
++		    __func__);
++		r = -EFAULT;
++		goto out;
 +	}
  
-  retry_allocation:
- 	total_sz = 0;
+ 	r = _base_make_ioc_operational(ioc);
+ 	if (!r)
 -- 
 2.53.0
 
