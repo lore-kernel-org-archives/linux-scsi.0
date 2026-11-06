@@ -1,56 +1,56 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793927713;
-	b=iaqj7xYpyoPzAy2ZA/108vGpVz5dYC8YV0be4NIkpy21GMYiwU+VocqruR8ns38WZZ0d
-	 aJv5W51KEBlfjxmTph0JpfSXRiCQEB85pvivW4sv+dfNu7YjHg2kMXyfNcECWH+8jwG7X
-	 I0CHwHJAADSRp1kRKDhl2+rYSy0VcKXK58dhVq+it6eUS2FEstH4uiGNxdY9aAzUfiRts
-	 G7QWGsEsCQ2cgFATVtHwDPUWi9BM2pkxt0699uODcdgKSAdS/2+F6l1hoTRULcFI6VNv1
-	 HtpLj64pMdVExwanDCOsiHxQwsSzaAguwuxr4qjO6BzrEZX72jf0IvZR6apcZfdupzQ==
+	t=1793927724;
+	b=C5T1m5aezbDbml4JnvkjKWJCdPz50v/MMK4kqIhlY4qgTvHlelLJ+Ujsn4XKR1tcpw0X
+	 pkLCwMCh1eOnoF5Wr1PJCQVuxY59rTQxdMapmEAyx+w3EWPA/G8SoovudFHH86r7mSa2R
+	 QUMH0FjHXZBEWbpRaizMcsDTcKJnCgKVWKwJ55mdvlBgIKwPfA9i4RJX2/0aVmXCPW1Hk
+	 O1HJ/M1+w9KU7Bdav6TlvwGSVMLWEX6JceBd3xoIWsun8TOfjjHJE+fUm2y6FCsn3Onqx
+	 /O5CzDOFwCOsvylFvZpFrwHKJ/Ul8H9WQ6QxyVY8KM4KbJaOhi2mvMg+2j/CzXnH/JA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793927713;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793927724;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=ECEeT0Vyc8Y8GDRj65+KO1GKP7eIYYGLAu/vRiKk+Cc=;
-	b=1oi87LEDSoMYPoZL2FoA3QL4iFAH7NaWoalA10WDK7zhpLQ2V2culnqGZ/UV322Kuh/Y
-	 I9vJcVccu4URhXUQMYBGgs3FcmZG4NsoEDSXoZOy+k6eW0AHP175NMn1UO3gm3K3xaMx2
-	 AXzaOrWxE6hzXYo1S5O6UbkKfOiF8Cfw3JKxchG1HznX+px6RzIFn0hCypL2lrZ+M8BS2
-	 mL1o+QiXkXAiuGr4Jm3h3B2trqF/cBQm5QSoQtp1rmAxRfRsz23DoQ44s30ZhqgvT6ejz
-	 AIxHTi/Dn1AXWwsqrTItPNRYjACIMksN2r1kZP4lhz9nu/OhpJyXGQ9IYTjC880gNhQ==
+	bh=CT1o7u+CFcHlbgxTFbymWAKOAQgR6++tP4iAUgvJ+2Y=;
+	b=PyawVUALRvpMWAsAZqtKwkbAV4bOFC04AKfmltL32lhgdmyN7G12YDLainPimFiz0JvR
+	 gEqcxfXUyV+KERYdqtaoTzvNhh9a8DR6hzIIvqR0BDQcrn1QKgVv92KnN3mLmytdzerIX
+	 pHxg3Ai7zyFG2b5B9hJZnEtF3Oy2UHbKceWqpId89U2pU5aXNI0OY4+gf5m0kS9EkvEdL
+	 rQEfh49BPjozT+4F0aNlyYFQXK0tMLp/S0nnlLLhL8deVVWmhl8z4wmKmnsQLiKp6XH8U
+	 TAhWCdT+BivQFardTMOnBw1kbfZ0IuwUssj72zg+SY08awshK5QT1Rd6XPZ7KlL4QDA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=T4DMbMr8;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=cbzjRxPV;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1012606A31B
-	for <linux-scsi@vger.kernel.org>; Fri,  6 Nov 2026 01:15:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C37D9606A31B
+	for <linux-scsi@vger.kernel.org>; Fri,  6 Nov 2026 01:15:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=T4DMbMr8
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4C1BA1F0089F;
-	Fri,  6 Nov 2026 01:15:12 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=cbzjRxPV
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 238E61F0089F;
+	Fri,  6 Nov 2026 01:15:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793927712;
-	bh=ECEeT0Vyc8Y8GDRj65+KO1GKP7eIYYGLAu/vRiKk+Cc=;
+	s=k20260515; t=1793927723;
+	bh=CT1o7u+CFcHlbgxTFbymWAKOAQgR6++tP4iAUgvJ+2Y=;
 	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
-	b=T4DMbMr8rMAE/KBVLcHaX90+Ta9dw4GChmy7pAe4cf+ntdg7cUnu4igSxvV9VKceb
-	 NQv5jnKAb6j13qdaf9tfJjByThEtcl3pE6TS0k2v+yMfd6J/O2QRoaeYQGEnCEUaJy
-	 5C8kbNsbh25yz7oSbAr+bQyfFJTPJ4K9x4RKbTgNnaozeskljB0DzDNanO92cbzR6F
-	 rLdFS5Kg/1a0fX6n6dm8RAuMTPbt7hP2sj7CXptnKMf/J69mG49An2qNG+T0rPCW2p
-	 6PtiE10l+JpFT3QJS60Z27lkQlpxsEWK/t9e2n9wwuiMnl9nyd0mDiroiiNQnnbWbS
-	 SThCTSFGAxuGA==
-Message-ID: <sashiko-outbox-200494@kernel.org>
+	b=cbzjRxPVAeW31/XhZUCXH4PaWPeoXqhBkpp5gauu03fUZd826clP4bfvqmiucejUO
+	 6nnyZCr92+q+7yhq9qdtGKgWwIgnNZEOpkUbU4GmHtz6wyPwFw90MGQ3w9cfaL25Jy
+	 uRDk7PWgqiC9xfMmxq3Ptnyz9wSRHxA5548LeepZh9UZJlsS0Yo5m90ZuX8B89BFBW
+	 zH27eaLyAQDcAAdiEFhbWiuX0Qj+NfM6QrU+9qOpEJ0y5wDtEbPROvNQfNapnRsSaD
+	 dJldt0wQEyxhePHKFlvItFS/DrG55DhcuKoEDzWzmlFKG7n98VDyT4z1f4FDpopt+j
+	 DhnoQnnArBFmw==
+Message-ID: <sashiko-outbox-200495@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 08/37] scsi: mpt3sas: Validate firmware/user supplied
- device handles against MaxDevHandle
+Subject: Re: [PATCH 02/37] scsi: mpt3sas: Validate RAID configuration page
+ length
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Shivasharan S" <shivasharan.srikanteshwara@broadcom.com>, linux-scsi@vger.kernel.org
-In-Reply-To: <1793925772-1303-9-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+In-Reply-To: <1793925772-1303-3-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 References: <1793925772-1303-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
- <1793925772-1303-9-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+ <1793925772-1303-3-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 06 Nov 2026 01:15:11 +0000
+Date: Fri, 06 Nov 2026 01:15:22 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -62,78 +62,112 @@ Precedence: list
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] scsi: mpt3sas: infinite retry loop when _scsih_add_device() return=
-s -1
+- [Medium] scsi: mpt3sas: u16 truncation of config_page_sz in _config_reque=
+st()
 --
 
-commit 366cf2a2a69371d1bf988949aa77181dfdc2bddd
+commit c2be3bad5af4de88c7b5227eeaab81b3e61723ef
 Author: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 
-scsi: mpt3sas: Validate firmware/user supplied device handles against MaxDe=
-vHandle
+scsi: mpt3sas: Validate RAID configuration page length
 
-This commit validates firmware-supplied and ioctl-supplied device handles
-against ioc->facts.MaxDevHandle across event handling, device discovery,
-post-reset scanning, and task management/control completion paths. It also
-changes the passthrough handle boundary check in _ctl_do_mpt_command() from
-> to >=3D.
+This commit validates that the RAID configuration page length is large enou=
+gh
+to hold Mpi2RaidConfigurationPage0_t before allocating the buffer, and boun=
+ds
+the element loop by the number of elements that fit in the allocated buffer.
 
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/=
-mpt3sas_scsih.c
-> index 8dcbe60db542e..a697200844078 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-
-[ ... ]
-
-> @@ -8399,6 +8418,12 @@ _scsih_add_device(struct MPT3SAS_ADAPTER *ioc, u16=
- handle, u8 retry_count,
->  	u8 connector_name[5];
->  	u8 port_id;
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_config.c b/drivers/scsi/mpt3sas=
+/mpt3sas_config.c
+> index b0d5ef8936008..75312d43e3862 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_config.c
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_config.c
+> @@ -2655,6 +2655,7 @@ mpt3sas_config_get_volume_handle(struct MPT3SAS_ADA=
+PTER *ioc, u16 pd_handle,
+>  	int config_num;
+>  	u16 element_type;
+>  	u16 phys_disk_dev_handle;
+> +	int max_num_elements;
 > =20
-> +	if (handle >=3D ioc->facts.MaxDevHandle) {
-> +		ioc_err(ioc, "handle(0x%04x) out of bounds in %s\n",
-> +			handle, __func__);
-> +		return -1;
+>  	*volume_handle =3D 0;
+>  	memset(&mpi_request, 0, sizeof(Mpi2ConfigRequest_t));
+> @@ -2672,6 +2673,13 @@ mpt3sas_config_get_volume_handle(struct MPT3SAS_AD=
+APTER *ioc, u16 pd_handle,
+> =20
+>  	mpi_request.Action =3D MPI2_CONFIG_ACTION_PAGE_READ_CURRENT;
+>  	config_page_sz =3D (le16_to_cpu(mpi_reply.ExtPageLength) * 4);
+> +	if (config_page_sz < offsetof(Mpi2RaidConfigurationPage0_t,
+> +				      ConfigElement)) {
+> +		ioc_err(ioc, "%s: RAID configuration page length (%d) is too small\n",
+> +			__func__, config_page_sz);
+> +		r =3D -EIO;
+> +		goto out;
 > +	}
+>  	config_page =3D kmalloc(config_page_sz, GFP_KERNEL);
+>  	if (!config_page) {
+>  		r =3D -1;
+> @@ -2692,7 +2700,11 @@ mpt3sas_config_get_volume_handle(struct MPT3SAS_AD=
+APTER *ioc, u16 pd_handle,
+>  		    MPI2_IOCSTATUS_MASK;
+>  		if (ioc_status !=3D MPI2_IOCSTATUS_SUCCESS)
+>  			goto out;
+> -		for (i =3D 0; i < config_page->NumElements; i++) {
+> +		max_num_elements =3D (config_page_sz -
+> +		    offsetof(Mpi2RaidConfigurationPage0_t, ConfigElement)) /
+> +		    sizeof(config_page->ConfigElement[0]);
+> +		for (i =3D 0; i < config_page->NumElements &&
+> +		     i < max_num_elements; i++) {
 
-[Severity: High]
-Does returning -1 here cause an infinite retry loop in callers that treat
-any non-zero return from _scsih_add_device() as a retryable condition?
+[Severity: Medium]
+Can this read uninitialized heap memory from config_page when ExtPageLength=
+ is
+0x4000 or larger?
 
-In _scsih_scan_for_devices_after_reset(), the SAS end-device scan loop
-reads handle =3D le16_to_cpu(sas_device_pg0.DevHandle) without checking it
-against ioc->facts.MaxDevHandle before calling _scsih_add_device():
+In mpt3sas_config_get_volume_handle(), config_page_sz is a 32-bit int compu=
+ted
+as le16_to_cpu(mpi_reply.ExtPageLength) * 4, which can reach up to 262140.
+The new check only enforces a lower bound before calling kmalloc(), which
+allocates uninitialized memory.
 
-	retry_count =3D 0;
-	/* This will retry adding the end device.
-	 * _scsih_add_device() will decide on retries and
-	 * return "1" when it should be retried
-	 */
-	while (_scsih_add_device(ioc, handle, retry_count++,
-	    0)) {
-		ssleep(1);
-	}
+When mpt3sas_config_get_volume_handle() then calls _config_request(), the
+size is truncated to u16 both in the parameter list and in mem.sz:
 
-Similarly, _scsih_sas_topology_change_event() checks the return value when
-handling MPI2_EVENT_SAS_TOPO_RC_TARG_ADDED:
+drivers/scsi/mpt3sas/mpt3sas_config.c:_config_request() {
+	...
+	static int
+	_config_request(struct MPT3SAS_ADAPTER *ioc, Mpi2ConfigRequest_t
+		*mpi_request, Mpi2ConfigReply_t *mpi_reply, int timeout,
+		void *config_page, u16 config_page_sz)
+	...
+		if (mpi_request->Header.PageLength)
+			mem.sz =3D mpi_request->Header.PageLength * 4;
+		else
+			mem.sz =3D le16_to_cpu(mpi_reply->ExtPageLength) * 4;
+}
 
-	rc =3D _scsih_add_device(ioc, handle,
-	    fw_event->retries[i], 0);
-	if (rc) {/* retry due to busy device */
-		fw_event->retries[i]++;
-		requeue_event =3D 1;
-	} else {/* mark entry vacant */
-		event_data->PHY[i].PhyStatus |=3D
-	    MPI2_EVENT_SAS_TOPO_PHYSTATUS_VACANT;
-	}
+Inside _config_request(), only (u16)config_page_sz bytes of config_page are
+zeroed with memset() and populated with memcpy().
 
-Because _scsih_add_device() returns -1 at the start of the function before
-retry_count is checked in _scsih_wait_for_target_to_become_ready(),
-wouldn't an out-of-bounds handle cause _scsih_scan_for_devices_after_reset()
-to loop forever holding ioc->reset_in_progress_mutex, and cause
-_scsih_sas_topology_change_event() to requeue fw_event indefinitely?
+If ExtPageLength is between 0x4000 and 0x400b, (u16)config_page_sz wraps to
+between 0 and 44 bytes, so _config_request() never initializes
+config_page->NumElements, config_page->ConfigElement[], or (when wrapped to
+11 bytes or less) config_page->ConfigNum. Even for larger values where
+ExtPageLength >=3D 0x400c, max_num_elements is computed from the untruncated
+32-bit config_page_sz, allowing the loop to read ConfigElement[i] entries
+beyond the (u16)config_page_sz bytes actually populated by _config_request(=
+).
+
+Also, because _config_request() overwrites mpi_reply on each iteration of t=
+he
+while (1) loop and recomputes mem.sz from the new mpi_reply.ExtPageLength on
+the next pass, a smaller ExtPageLength on a subsequent iteration would copy
+fewer bytes than the initial config_page_sz used for max_num_elements.
+
+Should mpt3sas_config_get_volume_handle() also reject config_page_sz > U16_=
+MAX
+(or allocate with kzalloc()) so that config_page_sz cannot truncate when
+passed to _config_request()?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/1793925772-1303-1-g=
-it-send-email-shivasharan.srikanteshwara@broadcom.com?part=3D8
+it-send-email-shivasharan.srikanteshwara@broadcom.com?part=3D2
