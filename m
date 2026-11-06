@@ -1,92 +1,92 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.97
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.222.100
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793926745;
-	b=jbtebF6/RMUJ4btJr7jSfOAmWG1JUotzSVgIdHPL5yvOwfoG/KP6c1B04wof5gSzkmE3
-	 uptoT6cj960An7lKlIMP67LH0Vy08/edN4NAsoZwM6cHUW55HyRLcV3Z4E9dpLRj77uIp
-	 U+q+vzMmYkV7KIxvt7nhGgGM274BzheweKPY9pcQLT7SdMFFH+UxW7eiECRS9H86lZawr
-	 4QZK6OrT/GOHx4hFHb3tW6I/nlGoB/IRhzI+l3yGCN1vt3TFtLTepU91iN34qNuZtP2LO
-	 bW8FMFxwyr35eTVkMTBrHbzaKaexu4gCVtqAW+/2SP9pNl8T8BdJkzNJDJYAnfJverw==
+	t=1793926752;
+	b=JZ5DKOC1js2c0Uk1J8QGXPBsmpNui+RjLzyuGO+p2j7X0EXVAQDRlTEzuRSjW0LmBAZq
+	 tKPicysOuBNJ5zxjidJKQPX/DcbBAT8vKmCRH0TN6mfYjVITVaf1/fSWGrMhWgi2yRgB4
+	 KqplQxvTohwehQaZuxlIBBYIPxZ4e0G3giWu4EKwNlVHqf5rspt9gU8DB07SbVO5rGok5
+	 W6Uyv6OkDvNWOSbOa7MxqmnHr/AN2BxHa7I5zEM1q3Lp5BCf3zbmbcutbDCLFgMjOSu+p
+	 9CQFWkKebslETsVEIFpIV/PV/ht/6FYUiz1PtQI57jurdkfNbSOTd30UJPIt2cHtC4w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793926745;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793926752;
 	h=DMARC-Filter:Received:X-Google-DKIM-Signature:X-Gm-Message-State:
 	 X-Gm-Gg:X-Received:Received:X-Relaying-Domain:X-CFilter-Loop:Received:
 	 DKIM-Signature:X-Received:X-Received:Received:From:To:Cc:Subject:Date:
 	 Message-Id:X-Mailer:In-Reply-To:References:X-DetectorID-Processed;
-	bh=UqhK1fSKYW4KXqV/Z4DRH/PaK/Vparw14oEL5YsYzKc=;
-	b=prXtbbA0DR+vFFIjP6XJYaxV8W/cbJP3BwrFGcDOWOmFzGzurnZuCqBfRQ7dcwZgg4+P
-	 xMrXPnXtaeICkH+A7Lkru7Pf/UxOc77JqxzYsVy7px7Z8W64fYtRo+qYkiCNiVWGryqhr
-	 Ya4s3vBbknTjTh/9fGsC4Vm5QjgeL9u8KctMUZvIjy1zuM+hInSzAMAmJxHqM26fa+yaj
-	 luCJEs1JhWAOblL61/Yv0wtTmEzQ3USdn0tvBlYr40CH3dFUmPQWkrw3D2MUsDTGrkWZb
-	 //ScmZTLYu4ZB8wytLEp7nWOmpLTZ1WM4FAywJE5fo/N57YIkimDXDPjzMpeUYUWR6g==
+	bh=nc3xYTUdVskb8cAI+3wJE0wixc20N7ndgApW8fYSpXQ=;
+	b=5ANhtkazSRh0BzDZ6Cz82j+s+gKJ54KlBMar15/ERbw3urP7Wpi3+gdcmjfTk3wqLDo6
+	 wiP+lSPr7+zTQJ2B2Fj8zqXPOsrmYYr58hHzZ9fuHyiy+4UwA+CPSE/35HFPxGIAAe+OR
+	 9cSSFnITBXnW3mAuGdZQ0uR6XXdGrPliHB8kz5BorIrOZ/SsFjZWwEOTnbO06thBAEhj4
+	 qv0Hjcd7O5TzLuxTvxqxrzKiPhGB7H4kqhSPwn/XUXPoWgtLOcElpq8OKCumNN/tu8zLg
+	 gJu3O/vOw8iiorEbO7Nh1XAHCV32Dc/w7ZiHeoA8UnP8mhrBJD31dkjKf1Z8gd030xA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=broadcom.com;
 	spf=fail smtp.mailfrom=broadcom.com;
-	dkim=pass header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=exmYJlov;
-	arc=none smtp.remote-ip=209.85.216.97
-Received: from mail-pj1-f97.google.com (mail-pj1-f97.google.com [209.85.216.97])
+	dkim=pass header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b="E/bn/FOF";
+	arc=none smtp.remote-ip=209.85.222.100
+Received: from mail-ua1-f100.google.com (mail-ua1-f100.google.com [209.85.222.100])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4B94606A331
-	for <linux-scsi@vger.kernel.org>; Fri,  6 Nov 2026 00:59:04 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B4B94606A331
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B78E606A31B
+	for <linux-scsi@vger.kernel.org>; Fri,  6 Nov 2026 00:59:11 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9B78E606A31B
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=exmYJlov
-Received: by mail-pj1-f97.google.com with SMTP id 98e67ed59e1d1-3ae1d0caaedso58890a91.2
-        for <linux-scsi@vger.kernel.org>; Thu, 05 Nov 2026 16:59:04 -0800 (PST)
+	dkim=pass (1024-bit key, unprotected) header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=E/bn/FOF
+Received: by mail-ua1-f100.google.com with SMTP id a1e0cc1a2514c-998d151f441so14707241.2
+        for <linux-scsi@vger.kernel.org>; Thu, 05 Nov 2026 16:59:11 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793926744; x=1794531544;
+        d=1e100.net; s=20260707; t=1793926750; x=1794531550;
         h=references:in-reply-to:message-id:date:subject:cc:to:from
          :dkim-signature:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=UqhK1fSKYW4KXqV/Z4DRH/PaK/Vparw14oEL5YsYzKc=;
-        b=yNVjZ/AW62shdGLWs0ZKydTegO7SEQMTxHQbHTGgmLbDx5CKkt8hvJGazmkrAXgr4z
-         n1t76FHhb2da9TyN1GtG4REU6e5yC/swkpc4vNMyP508qkov/HEmSKPXsA6u7CfrjdFI
-         LU/bOX3zEN9woSC/ywcN9ZVuqJSblRAVVIuv/GcwNsEuFX6B4/wDTUdNQkZozXfD9l83
-         GW9eyG3HWPf3pq1up2CxE7SH/WzGsWEdUoLI5Em53iuo8PF24MRFQWgmeucV5qJX2lUq
-         zHyCKAeCH3in2U40+HhNCiMy5tg7CXIM9hOaVUaXZTvda/g5pLOYlvdcaw0HXsTUdANK
-         +6SA==
-X-Gm-Message-State: APuU4Z8eM+b2whcRDpx+UVXHYKyTRLDV0oCf46tz9XmLUHicg/urZKy1
-	6UWDYAGoWthPhhCC13Pv99eQ0RoOMG6dBIFG9dBwLxkFvFzwZL/mO/DnQ5oJ/m6M8a1dyS8x7R0
-	NycwDjTAQmYo1J1yu2lGJkhGLbFMYCR4wb4TrF426cbLs7mMUFepjG/pg7vTcc8w/Z+3N0E0w5X
-	VTB/z6zpu10zDkFSLz6ePS9ILALZhAEHZELMtcc09QJ/4w6fOa3pCnn/XZlG8YC77s1njsNpfVY
-	NB/nJGbfdd4czVFdiGo1ySbI2ItpBuhrWM=
-X-Gm-Gg: AYBFou1PPd1+5m/HztQ5L/5pRDkIaba4K6sQuEVTM2HD0vV22vT8Yx0j8KGz0ITMmU5
-	fCOqum2dRaPDnAletUHwuhuPY4G7A/LERMgNxulDkFxwUkqUUlipJNv9YsPqWk+8mLpfSpHuib3
-	PZDkyuO3b4rYADyHax7asBx4gkbh1uA3hb3/zXYmXR+BOp08I8SXwZcUSr5Zb1Zc+JOpZddqii4
-	f+t5GUIwa/hU5iYliaPw7D5s3qYWjUodFu7ON11WpetiZAQlIVW/G7p6SMvJm9s+iNem0Ra4Omh
-	JuFxJAZVWhqSkQUft743lF4ATV0ECFhMCiLfQudDldfchCg4NviJWJGoWPYDe6YcYOt8U+h6Hi7
-	36jI3RMLngznPFMR9ug0MbQxb9Rsoqab+oZ4zwmq0tMpbOakpVJSsvZzVExjS0F8Ous/OaMgJFV
-	zQnq15Sztn+YgebUg4MKd0jRqGhRzlvzJMRfSRy9zxM9wfU9cvSSnexw==
-X-Received: by 2002:a17:90b:4988:b0:3b0:ad59:7199 with SMTP id 98e67ed59e1d1-3b0db703cedmr790366a91.32.1793926743909;
-        Thu, 05 Nov 2026 16:59:03 -0800 (PST)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-28.dlp.protect.broadcom.com. [144.49.247.28])
-        by smtp-relay.gmail.com with ESMTPS id 98e67ed59e1d1-3b094cf3bdesm1841549a91.0.2026.11.05.16.59.03
+        bh=nc3xYTUdVskb8cAI+3wJE0wixc20N7ndgApW8fYSpXQ=;
+        b=BXg3zhOSgMycYbWuMez+w639YVv7OA8XBqxRFOzWv+nfLZSOShQNI90Dq6fcCgoSmb
+         0eH3HmzENzOOd7uRQfIt0CbnF8EaEMB8qdDaroCd3lSUQ3JJK5IiLFxttycU9Uc+EIPz
+         C3ghNieSEYh87MqWmB04RDTwhZcmCnbtwI/HUHDpUhHc4fhXF5q5YlsXBrfYNQXB2Pzb
+         eHAi4YJPP4pEO4cE0xmPHrfRR//fEv7EOp/Ym6/LXCa+54saP+k05MfGNq/JGkkHYYEt
+         mcCINitGq4OEOV3ofOE4MlFa7awQQRA5DBheeLCI+SViMM3/N0iUU35V0FV54qhbP8H9
+         c0CQ==
+X-Gm-Message-State: APuU4Z/u6gBdGHTPE0+h2nX39Y+0cSjo0Lddf9C65KHDEnHSA4xPfGbQ
+	mTQFsDna0WAebfAOqVIuepGOosdeGJry30t1FKgGhxMSlsMq154jgwqIWD6gUsWMatRoKxZwYK7
+	De92z188sY6u7wf6YozQEAQQ0nMEvnRDEN7jeSYifjLDj013sbWgIvBu5K8pDNKrqqTcxcQwS2b
+	JhwtqA5MOqZcGG9l2U5yGWRI41kSKDad60LAorvx/+X4d09NuZl2OAQw6c4Sjbiv2783yWWUgZu
+	1jggwx9M+StcfbKkkWb8Kb3h7joSFTNv2w=
+X-Gm-Gg: AYBFou0hKgkjzVqllSVLAda4I+5gG3QmxPy8AJDr8zJfXl0oK0RF43DtrQ4yBty3n5i
+	BZMVuTVuXymuGDwx/ZU4N0P4WGzajQ/6eXCxPUYpWEQF6zYqyw+R0tm6xA6W82VDx/FgpM9bmeQ
+	wBrzV1dh8HsrkHzPz87Sk1g6YJivpQGl63FQup5BnvBzDm/bgl3PjKjzA+wABa8VfqqB3XlX3wN
+	+5b0hP6uo5JDETy+RItTpQPccSgSYX2nE36KXtTqsgjg3cC3Zmk8MeYdGmiZpzjEWpQLN1RNzh3
+	jxs8S6QeLd95zOX0Eglx13qijnwngUTqqyyFd5Gpz8zLd58wiqKBzZhpBwFehIFrmg5PGLtu6Dp
+	bfw8/qjzGsVLu8y/6K491nABUnf6ny2kOeczB4Hvl+YN4jfPRYj/TlnEJjQj4jWdBvxdHdybOhV
+	Dcx40MX8fIzILz/cT4h9vjBFSb3ibB8mX+a75bMX7Ew7jC6kuOdwltnA==
+X-Received: by 2002:a05:6102:604e:b0:7d2:840b:b064 with SMTP id ada2fe7eead31-7d2a130dc30mr665357137.3.1793926750372;
+        Thu, 05 Nov 2026 16:59:10 -0800 (PST)
+Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-13.dlp.protect.broadcom.com. [144.49.247.13])
+        by smtp-relay.gmail.com with ESMTPS id ada2fe7eead31-7d2a88c065fsm2954137.5.2026.11.05.16.59.10
         for <linux-scsi@vger.kernel.org>
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 05 Nov 2026 16:59:03 -0800 (PST)
+        Thu, 05 Nov 2026 16:59:10 -0800 (PST)
 X-Relaying-Domain: broadcom.com
 X-CFilter-Loop: Reflected
-Received: by mail-pl1-f199.google.com with SMTP id d9443c01a7336-2eced5a4cb9so926295ad.2
-        for <linux-scsi@vger.kernel.org>; Thu, 05 Nov 2026 16:59:02 -0800 (PST)
+Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-2e8e16d22d8so1735515ad.1
+        for <linux-scsi@vger.kernel.org>; Thu, 05 Nov 2026 16:59:10 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1793926742; x=1794531542; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1793926749; x=1794531549; darn=vger.kernel.org;
         h=references:in-reply-to:message-id:date:subject:cc:to:from:from:to
          :cc:subject:date:message-id:reply-to:content-type;
-        bh=UqhK1fSKYW4KXqV/Z4DRH/PaK/Vparw14oEL5YsYzKc=;
-        b=exmYJlovY9Lb3Irg/00AmaMS8r2tZOUaJXEvJ6lJThiFdv4K1xb95Iu9NxZQj06V6s
-         rAeUFGSbPOWTYd5M2gWEoirCiT3WjqHhbNlkr0CoPyNYwBk4cId+OkAaMXfepJvCaT9u
-         dgPu6Lh8VDpyU/Cq81aHbILkqvrCmLbahiFmw=
-X-Received: by 2002:a17:902:e545:b0:2dd:ad73:5b68 with SMTP id d9443c01a7336-2ed4098828fmr12564875ad.24.1793926741921;
-        Thu, 05 Nov 2026 16:59:01 -0800 (PST)
-X-Received: by 2002:a17:902:e545:b0:2dd:ad73:5b68 with SMTP id d9443c01a7336-2ed4098828fmr12564665ad.24.1793926741407;
-        Thu, 05 Nov 2026 16:59:01 -0800 (PST)
+        bh=nc3xYTUdVskb8cAI+3wJE0wixc20N7ndgApW8fYSpXQ=;
+        b=E/bn/FOF16oWAJKWsuiUnXZ9ZjU5peZeYRfVlyIhtVxRN1rhdteAo2jEwvarDwEISV
+         MOCKyih9h8ILF9Uy69/sexFAfJzk8Qz4q3ITFml14OzRhFeR66Y3lS/83KXjEdOYkTIF
+         Y8umvCPzWPA21TJitTAqjPKC2wPD/ogJ6zTs0=
+X-Received: by 2002:a17:903:1b0b:b0:2e5:a355:56d8 with SMTP id d9443c01a7336-2ed40daea89mr14481415ad.42.1793926749161;
+        Thu, 05 Nov 2026 16:59:09 -0800 (PST)
+X-Received: by 2002:a17:903:1b0b:b0:2e5:a355:56d8 with SMTP id d9443c01a7336-2ed40daea89mr14481255ad.42.1793926748668;
+        Thu, 05 Nov 2026 16:59:08 -0800 (PST)
 Received: from dhcp-135-24-192-142.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2ed47d7b8cfsm450745ad.57.2026.11.05.16.58.58
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2ed47d7b8cfsm450745ad.57.2026.11.05.16.59.05
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 05 Nov 2026 16:59:00 -0800 (PST)
+        Thu, 05 Nov 2026 16:59:07 -0800 (PST)
 From: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 To: linux-scsi@vger.kernel.org,
 	martin.petersen@oracle.com
@@ -95,9 +95,9 @@ Cc: sathya.prakash@broadcom.com,
 	chandrakanth.patil@broadcom.com,
 	sweeti.vandure@broadcom.com,
 	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-Subject: [PATCH 17/37] scsi: mpt3sas: Clamp ValidEntries in driver trigger page update helpers
-Date: Thu,  5 Nov 2026 16:42:32 -0800
-Message-Id: <1793925772-1303-18-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+Subject: [PATCH 19/37] scsi: mpt3sas: Reject implausibly small MaxReplyDescriptorPostQueueDepth
+Date: Thu,  5 Nov 2026 16:42:34 -0800
+Message-Id: <1793925772-1303-20-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 X-Mailer: git-send-email 2.4.3
 In-Reply-To: <1793925772-1303-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 References: <1793925772-1303-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
@@ -111,46 +111,54 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 
-Clamp ValidEntries to NUM_VALID_ENTRIES in the pg2/pg3/pg4 trigger
-update helpers before it's used as a copy count.
+Avoid an unsigned underflow in the hba_queue_depth calculation when
+firmware reports a too-small queue depth.
 
 Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_config.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 7 +++++++
+ drivers/scsi/mpt3sas/mpt3sas_base.h | 9 +++++++++
+ 2 files changed, 16 insertions(+)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_config.c b/drivers/scsi/mpt3sas/mpt3sas_config.c
-index 75312d43e386..ddbccbac69b3 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_config.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_config.c
-@@ -2278,6 +2278,8 @@ mpt3sas_config_update_driver_trigger_pg2(struct MPT3SAS_ADAPTER *ioc,
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index 4e2cee2e13fc..12295ab544ad 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -6452,6 +6452,13 @@ _base_allocate_memory_pools(struct MPT3SAS_ADAPTER *ioc)
+ 				(ioc->reply_post_queue_depth % 16);
+ 	}
  
- 	if (set) {
- 		count = event_tg->ValidEntries;
-+		if (count > NUM_VALID_ENTRIES)
-+			count = NUM_VALID_ENTRIES;
- 		tg_pg2.NumMPIEventTrigger = cpu_to_le16(count);
- 		for (i = 0; i < count; i++) {
- 			tg_pg2.MPIEventTriggers[i].MPIEventCode =
-@@ -2437,6 +2439,8 @@ mpt3sas_config_update_driver_trigger_pg3(struct MPT3SAS_ADAPTER *ioc,
++	if (facts->MaxReplyDescriptorPostQueueDepth <
++	    MPT3SAS_MIN_REPLY_POST_QUEUE_DEPTH) {
++		ioc_err(ioc, "MaxReplyDescriptorPostQueueDepth is too small (%u)\n",
++			facts->MaxReplyDescriptorPostQueueDepth);
++		return -EINVAL;
++	}
++
+ 	if (ioc->reply_post_queue_depth >
+ 	    facts->MaxReplyDescriptorPostQueueDepth) {
+ 		ioc->reply_post_queue_depth =
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
+index 47255bf9cdda..192b8e8a5b4d 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.h
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
+@@ -145,6 +145,15 @@
+ #define MPT_MAX_HBA_NUM_PHYS		32
  
- 	if (set) {
- 		count = scsi_tg->ValidEntries;
-+		if (count > NUM_VALID_ENTRIES)
-+			count = NUM_VALID_ENTRIES;
- 		tg_pg3.NumSCSISenseTrigger = cpu_to_le16(count);
- 		for (i = 0; i < count; i++) {
- 			tg_pg3.SCSISenseTriggers[i].ASCQ =
-@@ -2595,6 +2599,8 @@ mpt3sas_config_update_driver_trigger_pg4(struct MPT3SAS_ADAPTER *ioc,
- 
- 	if (set) {
- 		count = mpi_tg->ValidEntries;
-+		if (count > NUM_VALID_ENTRIES)
-+			count = NUM_VALID_ENTRIES;
- 		tg_pg4.NumIOCStatusLogInfoTrigger = cpu_to_le16(count);
- 		for (i = 0; i < count; i++) {
- 			tg_pg4.IOCStatusLoginfoTriggers[i].IOCStatus =
+ #define INTERNAL_CMDS_COUNT		10	/* reserved cmds */
++
++/*
++ * Minimum reply post queue depth for hba_queue_depth to stay non-negative.
++ * Values 66-79 floor to 64 after 16-alignment, making ((64-64)/2)-1 = -1
++ * which wraps to 65535 as u16. The smallest value whose aligned floor exceeds
++ * 64 is 80 (80 % 16 == 0, giving ((80-64)/2)-1 == 7).
++ */
++#define MPT3SAS_MIN_REPLY_POST_QUEUE_DEPTH	80
++
+ /* reserved for issuing internally framed scsi io cmds */
+ #define INTERNAL_SCSIIO_CMDS_COUNT	3
+ #define INTERNAL_SCSIIO_FOR_DISCOVERY	2
 -- 
 2.53.0
 
