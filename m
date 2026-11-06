@@ -1,101 +1,66 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.128.46
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793985930;
-	b=2UiVBDuNfaarEWuzAa3F9EFmHiVQYtrjSOMORMte0J9f59TWG2s9oklNySBu0rxUg14E
-	 ztZ/1VwYxIvL3i3AbzFH1+ulNfkpZCrx7C3OZkP8vOHweBvu+Ed6GC7/GAx9kNt2EWBV9
-	 HDtL9fmy0XiI44Ui/br1BabkLi5u81aCJQTzn9l/0jI5OoUMrDDr9N2GaHJOMYdS3uiii
-	 dX7gmyMGjdSqRZlNY7cxiKL5yJEvkc0xp5dcLdZOq23X5LJVIRewIedFX8i2BWAI4ixm/
-	 y2nF0ROvg09poB18fDv5LKKu0fDIDmDbK7jvyNDUxQ0KMs45+p0fYZWwis8ggioMGGw==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793985930;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
-	 Message-ID:Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
-	bh=fUrJNblI2O1hZNjcXmW6nSh+tuR5hYmiGJK5WvnJCM8=;
-	b=Xl1BAAb8IVeKVCw7OMs0y8yzv1Goqpg5SaNQApGdMmVoGRxl14nb3BshlLhj5VZl8Ft3
-	 MFhEAoD8HKrfhD3Lq5tUtXDgiYBHY/INf5PHXA1v/yoCrQBvMZIXfGirK2N1mFKQUIDbJ
-	 cT00xn1Iip0lP7LorFa3Uz1AI8213QmdUHnDSLY45n6iJ244b7YQm9X1eqAVsEqqE8MO8
-	 NourHm6NY7oo8zCGW0ldSSIE/P00E5t+mlzVHODD5UgsiT4Nihkm8Hgcv3c28TP/UIEgr
-	 VltszBjJn+iV8sM7mHuzUTqwOaA72o7tCbeMPEEdmYWGQ3MDWzhHKg2lyDGCQzVm/tQ==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=google.com;
-	spf=pass smtp.mailfrom=google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b="ewlCk/lT";
-	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.128.46
-Received: from mail-wm1-f46.google.com (mail-wm1-f46.google.com [209.85.128.46])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=199.89.1.14
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1793992522;
+	b=R5Sg2XczuJHmu1EFL6lcdPHMuD2TM51WMuquOSgU7FtF9xkbQSqmvI9/jNnr477tXRM1
+	 FudaPBFA15+/uqEEzHCGH2QLxyXxPYL5voXProyvvaEOXs0eIxkYLfbBcTeVsR7u4Tl5O
+	 4xHo2qmXkWQEUY8n0pCFvxo1ER1R7z9bFm63mMdmYIEOi+X6tIyqruphoRitu0ChzTjMk
+	 N3O9pOsZBn+qEcqILIdeoySQyzblJ6VPp+caLRzU8jA3b3OInJFwm7SaH2y3ztdPH+DQW
+	 8AC5xwi01VDUTkoxDmmEPo4HdCwEtI1v2Vso5KgB5oiuPDpFjnISG2GvAJ7u07OElHQ==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793992522;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Virus-Scanned:Received:
+	 Received:Message-ID:Date:MIME-Version:User-Agent:Subject:To:
+	 References:Content-Language:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=AkdqsjtQkb3Ww5oyO2ZLIDViEQqd5ixRR1a/1p6zFQE=;
+	b=OrPgqmI8Fh6WKfGobeLv3DT0z/4/2MSjtyWl4kyjwmonuE8IMztxwFLOlvbp8x+1tVdY
+	 e6MVRlA42mLlmvKEdnX3t+7Ota/pSRQrsuDl5JCMfaLvqJd5S0gC1QvDAhYyLBimXfXwa
+	 gLX6UoeKlPrzgpEq0NKD2CZpzumHQ4cYcFq3uweDqYoU07Me7reXYLjaBnDgVjCXAbMgB
+	 AVsakjLe3+Q8gIJG4anOLq5dJ/39i7VKst9QFE5ui8W7oB9JfH4zInbORs+sHreuvIsYs
+	 1p2Uom7IOoKreyr/ATibFl9AIZhoAnyLqUvMQUXx/YA6mDElkcb71phQVCZrEXNQSCA==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=acm.org;
+	spf=pass smtp.mailfrom=acm.org;
+	dkim=pass header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=yQcttygg;
+	arc=none smtp.remote-ip=199.89.1.14
+Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5376B606A32E
-	for <linux-scsi@vger.kernel.org>; Fri,  6 Nov 2026 17:25:30 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5376B606A32E
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9EBC5606A326;
+	Fri,  6 Nov 2026 19:15:21 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9EBC5606A326
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=ewlCk/lT
-Received: by mail-wm1-f46.google.com with SMTP id 5b1f17b1804b1-4b6266b5bc4so1365e9.1
-        for <linux-scsi@vger.kernel.org>; Fri, 06 Nov 2026 09:25:30 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1793985929; cv=none;
-        d=google.com; s=arc-20260327;
-        b=CfHt19f1tmfIsVjX28XeJMdLOLWXuWQ8loqTBXbtN6JhrD5dq8vQRlWYhIW66/klWG
-         Ui4T+o7qnqbYZbqw9iTFUWeKL7V7TN/h6UkuL/XJKqew2qcNVseh/el4xLSWy68Is57z
-         f6b2dUC0tQaCfdd1KJjRuavddennlH+cmX4HqHtn0uLsqTEkW9ldwz2bxNv9ryS0xE6K
-         BkauyTfZEDS9srNtDHhprOqU6OAfs9FtPgllYkoW0702jdPM/jEdcYa0xa8YUyozIAiX
-         W6XAmKrWRULiaekjmUozIg8Jo4c80/m+oroGL8VOVlgHse8zghibCBv+J23rY1bGplrF
-         nERw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=fUrJNblI2O1hZNjcXmW6nSh+tuR5hYmiGJK5WvnJCM8=;
-        fh=LrJ3+hXLm4tK3NmNkHn8nLwsLsq726SwCgCFa6ijDWM=;
-        b=PKVwajmWU2bbRdSWarJ4Td1spV/PBnJtzuVVTo6DUWT5z9hOA+nxAmXvl8nsTS2kd+
-         yHks/HwVInYFQHarnM9MbKDc8lPGh/SL8La203kY9fYP3b2kGCf3Dh7qAx2eD9dJ3Vqy
-         ykvCK48Bc2l1cG5quadXVpcUQZ5eBHagWlpoL9ST69uHRNH/5Bv8HyGvTiczzpT7zMXI
-         +zA7BSGhQ8N/ut1+l1vIsoS4Nb/jNXY9wynYtDaekNDX97kAWmAlEHHU93Gyk275wOqT
-         7F5EnlFgnWpSBLb2pIWlhWg/cNJzXf4r+ce5+nEyMXCSuWTV7wXUlhas6iYy78vpfH63
-         Q1Lg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20260707; t=1793985929; x=1794590729; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=fUrJNblI2O1hZNjcXmW6nSh+tuR5hYmiGJK5WvnJCM8=;
-        b=ewlCk/lTPeKUbMBQjEFxdvXeSJcIPNy2WZqd3RMZR0f4utguz18d1I/25cveVMzzFo
-         RT7lseKNhSlQDjNcDMIS/DhwPwUeEMuf3p3QA2SuaR2YWynu3cJ86aMi1V+rohgW/ueU
-         wdYBRPMGl9NpfqRBybmsYTfqpJAAsq2YUA3wBescnBCrmLOck2h5FL8JtaVfjtntUhMa
-         atBGAqnYj6CPAyn1iWAem1TaZV6cbQ3Ry89bYsb3Y3ddSg87IS5+y0t3k5n/93i7MVsR
-         kOjiJQAHUQ9kOMLGGhlfbBtqgDPKlex2gLuJNJ4aUDDAFXSR7PLhJYKjThP1OZfQlk1U
-         nw6g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793985929; x=1794590729;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=fUrJNblI2O1hZNjcXmW6nSh+tuR5hYmiGJK5WvnJCM8=;
-        b=dZJwxXO7mItLmhcKsNoLldT9FJlAe9IKsnkuNwR+L7F3XDWL4L9MvmkwhD6TtguiqZ
-         l1RXd05aaa/PoxAs8a6b1AdAIuQVil1+vIPtrFJ/H8Gbp5a3FMCZBjEk6pixPacBIeLW
-         a61SAwbgwUcTugcdmC0q1LNlVfuNqEwJoAO9ycSfFMpZG01+Geb0MGCf17ZesohoTHg3
-         MYUaq6NFr3cuPLoIP9CIXgFPNDzESr70W/Ky0AaNEm61/jZq6ckqsDL25iAznNznmRCz
-         46v7TcHfy2DGlK5S8df3FJAfsvoJLQtCMyh7ki+KCiYoGzPHSl2JBdVnxXz7pHBd9Cnh
-         sfTQ==
-X-Forwarded-Encrypted: i=1; AKwUvBzeRrT1xbEAHE5gyHG2gepB9JxHufNWURo4cUt1TqbBFp3bZko5KoKW+ALPAKeqQStdCmJw7jXC3c5Z@vger.kernel.org
-X-Gm-Message-State: APuU4Z95X+yHpjzRaRBOkqR5RRRQDKe9FvgNqNwQ34qUoTsXbPxHlf7J
-	BWAn/7YtRwWJ1bE1feAARcGCYZqQrgiWMjrOjbQp18NO5O5FEYtaJcwqOwd58ZYIQVodXYYQEgb
-	tX6Hk3LZ5x4rMLPkCZLvO+dX5zO+whQfDPmix4CM7
-X-Gm-Gg: AYBFou1CvtI6cRsS175H1P+7plOpYsLvuzw1TDcYX28jafw6RhDiHWdBr42q4kauvKb
-	bcE+HhgYWhzKpgN4vgieecVkvL9dTd7Z/g0dXsiL9z6YKXL4SsY2EFv0ShBb8QnrQw00LUCerDj
-	RkvEwmmn6jWIcic3PkUFDwII5HPOxOAjtu5PiMxffNLhssk6m4LIepqds4GeGmDAJn0RewwU8Xv
-	mRzTC1Z995sw5hWg/KwVlFTslw55nJKJnMqYtxsUwiGmtIcEeJtbAACMQJwirNTs0tATsN8y5xM
-	iPjOceysKBLj4IsvsFpz63QdIe/r2j4RUyXGnr/DgBkpL89+kK94sZUy9LSBWXb1DvJiVLpxTbQ
-	BBB9q2u/sCBzqAn3OgVMt9jLOqKbF6feLHf/iE3HHwcg3Dzur1e8QXg9fkKxRpP2XEEj8cGYrQJ
-	6m7hBKTvw4HsAHplG+Pd1jrIcf/RdTueC/wvZqQLINHlJO
-X-Received: by 2002:a05:600d:644f:20b0:4a2:a8c:22ae with SMTP id
- 5b1f17b1804b1-4b78a315689mr14125e9.12.1793985928307; Fri, 06 Nov 2026
- 09:25:28 -0800 (PST)
+	dkim=pass (2048-bit key, unprotected) header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=yQcttygg
+Received: from localhost (localhost [127.0.0.1])
+	by 011.lax.mailroute.net (Postfix) with ESMTP id 4jLpm91CBlz1XM0ns;
+	Fri,  6 Nov 2026 19:15:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1793992517; x=1796584518; bh=AkdqsjtQkb3Ww5oyO2ZLIDVi
+	EQqd5ixRR1a/1p6zFQE=; b=yQcttyggJRmI0DbdlsRojPzmrGQ1zedcxWtJKzlO
+	QOYpWW7mKXtMYU2HueA5h48HX1bo23aW1uagga9HZjZ8HXyg5cz8Sb69mJE7fEgi
+	sFX2KQqOyO8Z5gmIwrAq+iVde9LMG57CcWUcJ0fEE/lL4AgrW9M9i4BHXBAc+p3x
+	mQFP/6JyVpClW9Bh8kAFzCyemjS+KzNaVqD6HusPGZ9Yw7mvWgeITkJKU1/5+hQR
+	itJjbd53ydM1sgmfQQnVhJMuQigmfnSWYIBHnII4TOMhQNGhm88KwE43L7Ued0t0
+	a06i2iAVsC3QHOEKQDNyjkDvZ6hyJ1OYOewrNT0ilJMuhA==
+X-Virus-Scanned: by MailRoute
+Received: from 011.lax.mailroute.net ([127.0.0.1])
+ by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id OVJt1Y8yFTGn; Fri,  6 Nov 2026 19:15:17 +0000 (UTC)
+Received: from [IPV6:2a00:79e0:2ed2:d:b897:dbb8:6fd6:6bb8] (unknown [104.135.182.40])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4jLpm51JZ5z1XLwXP;
+	Fri,  6 Nov 2026 19:15:17 +0000 (UTC)
+Message-ID: <762e1686-eacf-46a5-a8fd-62acba002fdc@acm.org>
+Date: Fri, 6 Nov 2026 11:15:16 -0800
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -105,88 +70,77 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261106131829.3228926-1-cui.tao@linux.dev> <20261106131829.3228926-3-cui.tao@linux.dev>
- <1e18fcfd-785d-43cc-afd6-d181bf8305eb@amd.com>
-In-Reply-To: <1e18fcfd-785d-43cc-afd6-d181bf8305eb@amd.com>
-From: "T.J. Mercier" <tjmercier@google.com>
-Date: Fri, 6 Nov 2026 09:25:16 -0800
-X-Gm-Features: AclHuK_zmhBLd-fBLwMoqE-7QVB_DAT0nisVVyTe7VWHd67XlQDn1ECR61povKo
-Message-ID: <CABdmKX0nCB2hT+iMh=BB-nC=fUBPof8YvjvO-gtEw+zcHZgvZA@mail.gmail.com>
-Subject: Re: [PATCH 2/7] dma-buf/udmabuf: account the page array metadata to memcg
-To: =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>
-Cc: Tao Cui <cui.tao@linux.dev>, akpm@linux-foundation.org, dgilbert@interlog.com, 
-	mkp@kernel.org, loberman@redhat.com, jmeneghi@redhat.com, kraxel@redhat.com, 
-	vivek.kasireddy@intel.com, mst@redhat.com, jasowangio@gmail.com, 
-	eperezma@redhat.com, stefanha@redhat.com, sgarzare@redhat.com, 
-	rostedt@goodmis.org, vdonnefort@google.com, mhiramat@kernel.org, jgg@ziepe.ca, 
-	kevin.tian@intel.com, axboe@kernel.dk, linux-mm@kvack.org, 
-	James.Bottomley@hansenpartnership.com, sumit.semwal@linaro.org, 
-	phasta@kernel.org, joro@8bytes.org, will@kernel.org, 
-	linux-scsi@vger.kernel.org, dri-devel@lists.freedesktop.org, 
-	linux-media@vger.kernel.org, linaro-mm-sig@lists.linaro.org, 
-	kvm@vger.kernel.org, virtualization@lists.linux.dev, 
-	linux-trace-kernel@vger.kernel.org, iommu@lists.linux.dev, 
-	io-uring@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	bobbyeshleman@meta.com, mathieu.desnoyers@efficios.com, robin.murphy@arm.com, 
-	mason@kernel.org, aesteve@redhat.com, harry@kernel.org, vbabka@suse.cz, 
-	cuitao@kylinos.cn
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v6 2/3] scsi: ufs: core: Limit early link recovery in the
+ error handler to runtime PM
+To: Peter Wang <peter.wang@mediatek.com>, hoyoung seo <hy50.seo@samsung.com>,
+ linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, mkp@kernel.org,
+ martin.petersen@oracle.com, stanleyjhu@google.com, alim.akhtar@samsung.com,
+ kwangwon.min@samsung.com, kwmad.kim@samsung.com, cpgs@samsung.com,
+ h10.kim@samsung.com
+References: <cover.1793931113.git.hy50.seo@samsung.com>
+ <CGME20261106022020epcas2p2af29bc4d81ede559c5a74076721aba7f@epcas2p2.samsung.com>
+ <e25861e1983785d6d96e4db40f6c175bc3d091d1.1793931113.git.hy50.seo@samsung.com>
+ <9cf963e66f0e08efa9996b53d6b2f38eacd9c98a.camel@mediatek.com>
+ <973576304.21793952182671.JavaMail.epsvc@epcpadp2new>
+ <f2d51c2730a748f8ae1f01d8328119ccea12d6ea.camel@mediatek.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <f2d51c2730a748f8ae1f01d8328119ccea12d6ea.camel@mediatek.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Fri, Nov 6, 2026 at 5:23=E2=80=AFAM Christian K=C3=B6nig <christian.koen=
-ig@amd.com> wrote:
->
-> On 11/6/26 14:18, Tao Cui wrote:
-> > From: Tao Cui <cuitao@kylinos.cn>
-> >
-> > udmabuf pins the pages of a memfd and hands them out as a dma-buf.  The
-> > data pages keep the accounting of the memfd they were instantiated in,
-> > but the bookkeeping around them does not: the page pointer array and
-> > the pinned_folios array, both sized by the buffer page count, plus the
-> > transient folios array sized by the memfd folio count, are plain
-> > GFP_KERNEL.  A 1GB buffer costs about 4MB of uncharged SUnreclaim
-> > memory, and size_limit_mb defaults to INT_MAX.
-> >
-> > Charge the three kvmalloc allocations so the creator pays for the
-> > metadata it induces.  The system heap in the same subsystem already
-> > accounts its buffer allocation;
+On 11/6/26 1:44 AM, Peter Wang wrote:
+ > Yes, but now error handler recovery will be handled first, so it won't
+ > reach ufshcd_err_handling_prepare. So, there should be no deadlock
+ > concern, right?
 
-Only if the mem_accounting param is set to true. We (Android)
-currently depend on it being disabled because system heap buffers
-don't have a single owner for their entire lifetime (ownership often
-changes immediately after they are allocated), and the kernel doesn't
-have the ability to switch who is charged for the buffer memory quite
-yet. Albert is working hard on it at the moment.
+Hi Peter,
 
-Could you update the message to note the mem_accounting param pls?
+I don't think that's guaranteed. ufshcd_err_handler() tests
+hba->pm_op_in_progress only once, when it starts, and without holding
+any lock. An error handler that started before that flag was set skips
+the early path. For runtime PM it then blocks in ufshcd_rpm_get_sync()
+in ufshcd_err_handling_prepare(), waiting for the runtime resume that
+is in progress. If __ufshcd_wl_resume() waits for that error handler
+with flush_work(), neither can proceed. This is the deadlock that
+commit 35dabf4503b9 addressed and that the comment in
+ufshcd_eh_timed_out() describes.
 
-> > the data pages here stay with the
-> > memfd.
+System PM has a similar problem. __ufshcd_wl_suspend() clears
+hba->pm_op_in_progress before it returns, but host_sem stays held
+until ufshcd_wl_resume() returns. An error handler that runs between
+system suspend and system resume therefore takes the regular path and
+blocks in down(&hba->host_sem). A flush_work() call from
+__ufshcd_wl_resume() would then never return.
 
-memfd / udmabuf is a little special because it uses shmem for the
-backing store, which is already tracked by memcg under all conditions
-(except hugetlb). We don't currently use udmabuf, so the lack of memcg
-charge transfer for udmabuf is not an issue. But once we get charge
-transfer working for the system heap it'd be good to follow up with
-udmabuf.
+Additionally, ufshcd_schedule_eh_work() does not queue the error
+handler if the HBA state is UFSHCD_STATE_ERROR. In that case
+queue_work() + flush_work() would not perform any recovery, and
+__ufshcd_wl_resume() would have no way to find out whether recovery
+succeeded.
 
-> T.J. needs to take a look here, but I fear that this might break uAPI.
+ > 1. When wl resume fails, having different error handling would confuse
+ > me.
 
-Thanks for looping me in Christian. The buffer allocations cost
-gigabytes, but these metadata arrays are only 4MB per 1GB of buffer,
-so I don't expect charging them to break anyone. Leaving them
-uncharged is an accounting gap though, since someone could spam many
-udmabufs from the same memfd and only pay for the memfd pages once. So
-this change is ok with me.
+The resume path is not modified by this series: __ufshcd_wl_resume()
+calls ufshcd_link_recovery() for both runtime and system PM. What
+changes is that the error handler no longer takes the early path, which
+does not hold host_sem, during system PM. That path is a workaround for
+a runtime PM deadlock. During system PM the error handler can simply
+wait for host_sem, which serializes it against the PM callbacks. Doing
+that is easier to reason about than letting two concurrent link
+recoveries race.
 
-> A lot of the DMA-buf resources are intentionally not charged against memc=
-g.
->
-> Regards,
-> Christian.
->
-> >
-> > Signed-off-by: Tao Cui <cuitao@kylinos.cn>
+ > 2. Does the runtime resume error path still have a chance of concurrent
+ > recovery?
 
-With the commit message updated to mention the mem_accounting param:
-Reviewed-by: T.J. Mercier <tjmercier@google.com>
+Yes. The cover letter mentions this. That issue predates this series,
+and I think it should be addressed separately instead of holding up
+these fixes.
+
+Hence, I prefer the approach of v7 of this series.
+
+Thanks,
+
+Bart.
