@@ -1,57 +1,85 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=210.61.82.184
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793946788;
-	b=LGHR94hhnrObMlDuyB1lq4FSqZ6NB+cnhME3yvJ7q9A8PnHuKtyN3G0qlBGXcGGHJCj/
-	 V/Mg7zgUtrhMfgLnlft2evOlDC7H2O+USYjrT0eH7pUNiMtDeccPbTK1tc5H7411Ico5j
-	 1cAjd8bWJe49/+Aqkl30zqe2+paTtZZ3KZPO3k0frc2YXCAe4VFS0ny1JOilOihX+LgES
-	 1de+q3Tk+51DvkqxM8kE9E/Y+omaclXLSLjVrX0fpY+7FeIMjBkAZyFECGC2XqShbkOnb
-	 Cp/axO9VP2lx69HtlDGvgCeADuB7U9KagO19U5cEM0mFIhG2D/TfIUvrhZsMT5hZz1A==
+	t=1793948955;
+	b=Eyh9AIyhgOmq4+HxFPhSX1ZAEgOcX25fBw8y7wXoNADw6c+Yor+srYmKpU0F2jsdYNWI
+	 41U3S5Vddgp8ecN0m33oRNHqCNrHMjrFq4HQExmElTg2wdyMB96KxPzV5sp29fuB9iXZk
+	 KUV19pCczmgu1ltP4RMejQFrHrvzHY+cSl7FqKdSI+3l0/FtJXB9ZQn7cyZvxSDYP5Gl7
+	 TrjvxSNQ4MJ/m10jjQ04NjKFkO8gmHBcqQBrSt+kk7zi/cY6zHmVgeSPcGfl7sVQL2pNS
+	 LMnMEHzcMfn3cLG2/bXPhAhgTNKojYlrRi3WVJhKTzjGYWt6Zm3HEoEH5J2QRpvOsTg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793946788;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=vi26vPv5btpjKVdCOc/d7TJeCoFZq8IUhNrxGCiqYeM=;
-	b=JRPIRHpEHmj987JUsNAilRjJ++ktiTw3BG7fWsUc0t1+7kM95VWfjOLfCqFRM9Kv5nVD
-	 kaTiG6zRMfbxvzwaW9oCCpkOCnjn72XTdqUojy8F4KRIkw7llhcS4S5/wyrsO70rysu2+
-	 m+DNX8nSpJIh8Z7N9HSqfrlutZfPUjXIm7khfr47er5Y61V6xg4sTwEYOcSrLjnpqHcLr
-	 M8wfmAvG2FzNr6LADd1HSa3alN5cmxgfjtyP6PEaeJX0OaZtrUb4LCOyh7poEKJL/akC3
-	 j6S8ZwZg8URmTdXe+4sfqPxuDK9E26iyrWI+xkWZLWcfX05FPV5V4j6x0rxQ25zA9aQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793948955;
+	h=DMARC-Filter:X-UUID:DKIM-Signature:X-CID-P-RULE:X-CID-O-INFO:
+	 X-CID-META:X-CID-BVR:X-CID-BAS:X-CID-FACTOR:X-CID-RHF:X-UUID:Received:
+	 Received:Received:Message-ID:Subject:From:To:Date:In-Reply-To:
+	 References:Content-Type:Content-Transfer-Encoding:User-Agent:
+	 MIME-Version:X-MTK;
+	bh=uSP1e8tjhRCF2yov9TbbHsNIAFeukBIuVHEfqVmWF8k=;
+	b=5i3grTVH8tSq8TPTPqakZhiS0bOMovaKtxp7Rj+i6bsMlRuMmUGk5RX5cfEmW1YqwviT
+	 lp9eATMTOw5e33xr320gnfd0/q/IJQDu05ZUeg31nhwwDFiuCJPkveZgSS5nYQR0QH4vB
+	 puWrMeXzSo1MCCurIIChIftVnR9tieka4v1jJ/MSTi+9vSNLsIhNF/Zfg2BCbPFBPYPVb
+	 fjqL5jc8tCd8lqFifHYSJ6T0vtNSk2GWfNDZ5Y6DofHImP3sKy1tRI5cmPmKfH6Ni2+jI
+	 fBlSoKLx3BgJDGkZjqLOFbXVZ1DJ4gKGvemcOoxBJH71OX3ee6e7u/UochnlnTTHwpQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=gwMIlTeq;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=mediatek.com;
+	spf=pass smtp.mailfrom=mediatek.com;
+	dkim=pass header.d=mediatek.com header.i=@mediatek.com header.a=rsa-sha256 header.s=dk header.b=H9k2j5Nx;
+	arc=none smtp.remote-ip=210.61.82.184
+Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9313606A326
-	for <linux-scsi@vger.kernel.org>; Fri,  6 Nov 2026 06:33:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 103AA606A32E;
+	Fri,  6 Nov 2026 07:09:12 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 103AA606A32E
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=gwMIlTeq
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1C93E1F0089F;
-	Fri,  6 Nov 2026 06:33:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793946787;
-	bh=vi26vPv5btpjKVdCOc/d7TJeCoFZq8IUhNrxGCiqYeM=;
-	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
-	b=gwMIlTeqBm2RtnsIFdXrozlEjzHcmu3CApyGrBNQ0+FzoRIRJLrmloFcx59IP6/XE
-	 YVht6DpLSL/www6ZN0aHe+SHYN3s3jkf9w04kNJ5uQkAfIbOedwVxqihHSElIeQDaC
-	 NJEKfXuMaMd3yoIU6sNvJUGGaM1nEA9XcEYoNE/vpBGOp/tS0yLMhAi7mIraa7v3dc
-	 7HUC6evK/RWPmD4MS2dei1cNfOGVJic4nRN3+zbQ+IfjNppn5rYb0BAzc8TBmxMAus
-	 CrOwVj3Mxkx8kp/AS0X2jtFNFMb6oaKvvEQX6qvbsM/3zdLhVsf2Wls2MHp5JMMQuE
-	 yP4XapXJS0dqA==
-Message-ID: <sashiko-outbox-200897@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v7 2/3] scsi: ufs: core: Hold host_sem in
- ufshcd_wl_poweroff()
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "HOYOUNG SEO" <hy50.seo@samsung.com>, linux-scsi@vger.kernel.org
-In-Reply-To: <c408e7a7167984a07dc714f43273d029b8904939.1793943246.git.hy50.seo@samsung.com>
-References: <cover.1793943246.git.hy50.seo@samsung.com>
- <CGME20261106061546epcas2p3b0d54ffe9fcea407f7d0e27ed579de0d@epcas2p3.samsung.com>
- <c408e7a7167984a07dc714f43273d029b8904939.1793943246.git.hy50.seo@samsung.com>
-Content-Type: text/plain; charset=utf-8
+	dkim=pass (1024-bit key, unprotected) header.d=mediatek.com header.i=@mediatek.com header.a=rsa-sha256 header.s=dk header.b=H9k2j5Nx
+X-UUID: f0d1dad0d9b011f18dc8c9802ae25ab1-20261106
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+	h=MIME-Version:Content-Transfer-Encoding:Content-Type:References:In-Reply-To:Date:To:From:Subject:Message-ID; bh=uSP1e8tjhRCF2yov9TbbHsNIAFeukBIuVHEfqVmWF8k=;
+	b=H9k2j5Nx4VV9iSFTFhmHLoqoEZvz4dk5nYMGH5Ts1G8qfaQDzFUQtBXI4AWaRF6gqyDDpp9nwX33gF+B0ga44GgebwCdFarCEoKXPGwnZZ5IHPXhlafdRXx9D1umZER7nV0IIAtOO1UHdZR5ZnBIHlfPPLy6VlSOnLNLgNwf6MM=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.21,REQID:e185a437-5967-4853-8447-8aa1cda2ad72,IP:0,U
+	RL:0,TC:0,Content:2,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+	release,TS:2
+X-CID-META: VersionHash:b0318ac,CLOUDID:4dded750-c3c8-4d20-8dd5-7bb1d154dc26,B
+	ulkID:nil,BulkQuantity:0,SF:80|81|82|83|102|136|836|865|888|898,TC:-5,Cont
+	ent:4|15|50|99,EDM:-3|-100,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:
+	nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: f0d1dad0d9b011f18dc8c9802ae25ab1-20261106
+Received: from mtkmbs11n2.mediatek.inc [(172.21.101.187)] by mailgw02.mediatek.com
+	(envelope-from <peter.wang@mediatek.com>)
+	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+	with ESMTP id 828544094; Fri, 06 Nov 2026 15:09:00 +0800
+Received: from mtkmbs13n2.mediatek.inc (172.21.101.108) by
+ mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.29; Fri, 6 Nov 2026 15:08:59 +0800
+Received: from [10.233.130.16] (10.233.130.16) by mtkmbs13n2.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.2.2562.29 via Frontend
+ Transport; Fri, 6 Nov 2026 15:08:59 +0800
+Message-ID: <95e5b0daac7835593c35755ed948ed8cec1dfcde.camel@mediatek.com>
+Subject: Re: [PATCH v6 1/3] scsi: ufs: core: Clear saved errors in
+ ufshcd_link_recovery()
+From: Peter Wang <peter.wang@mediatek.com>
+To: HOYOUNG SEO <hy50.seo@samsung.com>, <linux-scsi@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <bvanassche@acm.org>, <mkp@kernel.org>,
+	<martin.petersen@oracle.com>, <stanleyjhu@google.com>,
+	<alim.akhtar@samsung.com>, <kwangwon.min@samsung.com>,
+	<kwmad.kim@samsung.com>, <cpgs@samsung.com>, <h10.kim@samsung.com>
+Date: Fri, 6 Nov 2026 15:08:58 +0800
+In-Reply-To: <a0b59fb709e8c53a72e2839bb6b1635a4a20f395.1793931113.git.hy50.seo@samsung.com>
+References: <cover.1793931113.git.hy50.seo@samsung.com>
+	 <CGME20261106022020epcas2p397f84c634df3397fcb1c98d1837bb83f@epcas2p3.samsung.com>
+	 <a0b59fb709e8c53a72e2839bb6b1635a4a20f395.1793931113.git.hy50.seo@samsung.com>
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 06 Nov 2026 06:33:06 +0000
+User-Agent: Evolution 3.52.3-0ubuntu1.1 
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -60,78 +88,37 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+X-MTK: N
 
-Thank you for your contribution! Sashiko AI review found 1 potential
-issue to consider:
-- [Medium] scsi: ufs: core: missing error and RPM handling in
-  ufshcd_wl_poweroff()
---
+On Fri, 2026-11-06 at 11:15 +0900, HOYOUNG SEO wrote:
+> ufshcd_link_recovery() resets both the device and the host and then
+> re-establishes the link. Unlike ufshcd_reset_and_restore(), however,
+> it
+> does not clear hba->saved_err, hba->saved_uic_err and hba-
+> >force_reset,
+> so the errors latched before the recovery remain pending after the
+> link
+> has already been recovered.
+>=20
+> When ufshcd_err_handler() runs afterwards,
+> ufshcd_err_handling_should_stop() sees these stale errors. The error
+> handler then quiesces all queues and, depending on the latched errors
+> (e.g. a fatal error or UFSHCD_UIC_DL_PA_INIT_ERROR), performs another
+> full ufshcd_reset_and_restore() on a link that is already
+> operational.
+>=20
+> Cache and clear the saved errors before the reset, as
+> ufshcd_reset_and_restore() does, so that only errors raised during or
+> after the recovery are left to the error handler. Put them back if
+> the
+> recovery fails.
+>=20
+> Fixes: 35dabf4503b9 ("scsi: ufs: core: Use link recovery when h8 exit
+> fails during runtime resume")
+> Signed-off-by: HOYOUNG SEO <hy50.seo@samsung.com>
+> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+> ---
 
-commit 9a163b2c91f3c9901825d9d544ee48c174c9b6c6
-Author: HOYOUNG SEO <hy50.seo@samsung.com>
+Reviewed-by: Peter Wang <peter.wang@mediatek.com>
 
-scsi: ufs: core: Hold host_sem in ufshcd_wl_poweroff()
-
-This commit acquires hba->host_sem in ufshcd_wl_poweroff() before calling
-__ufshcd_wl_suspend(hba, UFS_SHUTDOWN_PM) so that error recovery is
-serialized against hibernation poweroff and hba->host_sem remains balanced
-if hibernation is aborted and ufshcd_wl_resume() runs.
-
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index 5a3ca3b4e6666..c2c34b044c3ec 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -11583,6 +11583,8 @@ static int ufshcd_wl_poweroff(struct device *dev)
->  	struct scsi_device *sdev =3D to_scsi_device(dev);
->  	struct ufs_hba *hba =3D shost_priv(sdev->host);
-> =20
-> +	/* Released by ufshcd_wl_resume() if hibernation is aborted. */
-> +	down(&hba->host_sem);
->  	__ufshcd_wl_suspend(hba, UFS_SHUTDOWN_PM);
->  	return 0;
->  }
-
-[Severity: Medium]
-What happens if __ufshcd_wl_suspend() fails here or if dev is already
-runtime-suspended?
-
-When __ufshcd_wl_suspend() fails, it drops its initial ufshcd_hold(hba)
-via ufshcd_release(hba) before returning:
-
-drivers/ufs/core/ufshcd.c:__ufshcd_wl_suspend() {
-    ...
-	if (ret) {
-		ufshcd_update_evt_hist(hba, UFS_EVT_WL_SUSP_ERR, (u32)ret);
-		hba->clk_gating.is_suspended =3D false;
-		ufshcd_release(hba);
-	}
-    ...
-}
-
-Unlike ufshcd_wl_suspend(), ufshcd_wl_poweroff() ignores that failure,
-leaves hba->host_sem held (blocking ufshcd_err_handler()), and returns 0
-so the parent controller suspends while the UFS device and link are still
-active.  If hibernation is then aborted, ufshcd_wl_resume() calls
-__ufshcd_wl_resume(hba, UFS_SYSTEM_PM), which calls ufshcd_release(hba) a
-second time and underflows hba->clk_gating.active_reqs.
-
-In addition, ufshcd_suspend_prepare() leaves ufs_device_wlun
-runtime-suspended when ufshcd_rpm_ok_for_spm(hba) is true, but
-ufshcd_wl_poweroff() does not check pm_runtime_suspended(dev) (unlike
-ufshcd_wl_suspend() and ufshcd_wl_resume()): if the device is in
-UFS_SLEEP_PWR_MODE or UIC_LINK_HIBERN8_STATE, __ufshcd_wl_suspend() hits
-!ufshcd_is_ufs_dev_active(hba) || !ufshcd_is_link_active(hba), schedules
-ufshcd_force_error_recovery(hba) (which blocks on hba->host_sem), and
-clears hba->clk_gating.is_suspended; if it is already in
-UFS_POWERDOWN_PWR_MODE and UIC_LINK_OFF_STATE, __ufshcd_wl_suspend() takes
-a second ufshcd_hold(hba) that ufshcd_wl_resume() never releases because
-pm_runtime_suspended(dev) is true.
-
-Finally, ufshcd_wl_poweroff() does not set hba->is_sys_suspended =3D true on
-success like ufshcd_wl_suspend() does, so if __ufshcd_wl_resume() fails
-during restore, ufshcd_err_handling_prepare() will skip re-enabling
-regulators, clocks, and IRQs.
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1793943246.gi=
-t.hy50.seo@samsung.com?part=3D2
