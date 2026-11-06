@@ -1,56 +1,56 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793927489;
-	b=1vJ/k993/m/9POKmSCRoORBMecmdRn3DhZX0trrT+qug7+dtqBBIzLtx4j/IX3Q/Gyx9
-	 1tN0BV+X+V2/+j21OD5p4bWNoMCEUo50fdz/uB/alaJqjq3Rq2f4YRWV7BplQ+fcRPPnq
-	 29NIGyaBu9swujXaBwefis8QHKL1+VfiG8gpXWIbbZJX5wlnhP/k4dfn6ZVwcWfOi8+o+
-	 cT8mAK5ElkXxVNP8Lk0kIA/dgUvFiuPEdF5UNsNvpSkzJrt84yBFe61Oot9SUp3lHaASP
-	 dUdHVj4a4ecm6Nqd5trKTQZmkZzn/yysLF0xERFi5B6709SeCNu1uY0hMWOUFV/8yVQ==
+	t=1793927556;
+	b=LOB1QsAGd5i2u0n+R1EODkqglrDFBG31lz7C+iDhcMGstfboodTPC/7RkwlFzh3XAnyT
+	 0qfUW+eg8fW+wgLdzSKBBkNQdJn8ZpkRcRORNbsdsDUClCKPTHmvPpJRWJNQGKJwFoJWB
+	 aAtrnimEWMqnu6Y1y/epDGdXQx0yM80jqKvDnHxkhUdIKS8VjCJrMmXqfMxdaB9PRbWsB
+	 cVO+D5YqG96vXAHIjZdEYieUnK+2pPjTW5+XIKdqpHPO38F8HPv6H7rB5J9UbkObfNhkX
+	 9p0Ab5TN7X+HHG/EThy7k8wrkMEo8MRPOVJQ+ROza+aTVlAztb29oG/I1FL59FNcQCA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793927489;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793927556;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=kzx1BjMEl1JiBDa4VLIswVuq1A+EOL6hX187jBkZYyc=;
-	b=F/CKUVl3kRghi/yS0Di0K/WzIPelTuhU6Lg16q2eWRuNy+IOCRhyiC9dAftkVSZKDVxz
-	 WB0COI/UBB/ekL7wTbl1K3u3G9TAPkTPTHzMWhwUWnML0OE99PsPrnxOPWB/5JgcWMlWJ
-	 cPnM3fcp6o185BnP5LGg6euLhT8pem2PL2HjCfmLRkNmeiQ6pIEt4cekXgri+W4Wz4yOs
-	 WJTEWSg4FJIyB3Vd224CBkiTWVGoTKcPODXg20kQ8WRWBj1jmzhG57yMBtQK++/0qqaPx
-	 yLTZgO+CQsm7CYd5Er4Q0ymFBKIHqMZ6zxGObzVRW3AcuHuFAszAv/ai9Jb9o46butg==
+	bh=DpTnHEK6+eXF0ju6p4zY5wXwO8IBOnUqaDPMt0c4zfw=;
+	b=UmfWdTryxd5mCBKWeAGfOffOpWaaVNRJzf/k68u4lc302zU5T5DmRcuBIMR8EmMW8mCs
+	 6wz/QcisL7VBuIzgNWShBWkmxPC1BfVaJiX/Ftd7m+qiE07rHnkR6QToNYmPMoJMBrgXk
+	 qOnFYQADP9DAvLODZJemW0blFLNvRSHjJ/yLcomJwBj085UinBBY53rzl6egVXcm8lXUH
+	 HwL+UGdgjtbamRyxpVkmxTW5poygv+00YesFKb6qBO4OWl4UqSBx2xgJA0M4ogeGY0ojg
+	 8Buzlza+tSiD8n9iemiygbA3lr7XOmJOcNAhMiZ1VAPy/uoAgoJP2KHtAGTRkqP6nOQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=PdlunCmz;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=J72TYXfA;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 10AF7606A31B
-	for <linux-scsi@vger.kernel.org>; Fri,  6 Nov 2026 01:11:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 177AF606A328
+	for <linux-scsi@vger.kernel.org>; Fri,  6 Nov 2026 01:12:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=PdlunCmz
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5F5BC1F0089F;
-	Fri,  6 Nov 2026 01:11:28 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=J72TYXfA
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 799061F008A5;
+	Fri,  6 Nov 2026 01:12:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793927488;
-	bh=kzx1BjMEl1JiBDa4VLIswVuq1A+EOL6hX187jBkZYyc=;
+	s=k20260515; t=1793927555;
+	bh=DpTnHEK6+eXF0ju6p4zY5wXwO8IBOnUqaDPMt0c4zfw=;
 	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
-	b=PdlunCmzQAng8cMSsG1DoxqJIFElFOyIFGqCNmrDHcvRyo9rKnNs8JpxFijWPhzPc
-	 /FNCMBfcCdVXWT1pyGXOaUQ8JHZZZo+QlP7EWLrSbgDBum+up/FxLSDOxijOF6gCP3
-	 2o9ZJKljC3JIjtwjPbvBmDJuTK2nWAcRHYKXxAnOEyqgIV79croOmjstnnQEseW+9O
-	 DtFKnddI/Ot5GXk1ssrMGKx/0/hunppqSt9EP1EiqPvmi8B6zCdiTYVX9AiyVKyDs6
-	 XBgVrbzxmeq1NgPTcyaPp7C6zWYuUvZ8ZtBPShzDWfLIS/5456QcxjZ5dFzpIJ2rRO
-	 b4fEWopu3IyJw==
-Message-ID: <sashiko-outbox-200483@kernel.org>
+	b=J72TYXfAqfS0Q9BwnvaE9MhOuTKDrs9W2KYwoCnMc76M50wPUGIBEm50msXfxjLm8
+	 BUhgf8Gzc8XgsIFl+7/lx8ALxfnLp5Aocmn+N77HpR4xF+myGDT9KUqJ06VTwipumB
+	 IBUN8mur2B209lItKYE3JxzvHTkz8hHSVk/Mq4Atzjx+1Q3ba7MbOXUKLsBX/7Y3Mc
+	 O3i02lvrgp3UUb3HCkr6uQL1jijO6+RAlejxG2gwZhImQ0VRF0eXcDaXnFzLJG3Ol4
+	 oz1+MOqCSsXQnyC4rYtfJ71bhJrmroTu+6KV+KSOUagFOw81PuJz+XTkKBXm4H3MSn
+	 rfn+cFiBIHBgg==
+Message-ID: <sashiko-outbox-200486@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 23/37] scsi: mpt3sas: Validate phy_number in
- mpt3sas_transport_update_links
+Subject: Re: [PATCH 20/37] scsi: mpt3sas: Validate CurrentHostPageSize
+ before using it as a shift amount
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Shivasharan S" <shivasharan.srikanteshwara@broadcom.com>, linux-scsi@vger.kernel.org
-In-Reply-To: <1793925772-1303-24-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+In-Reply-To: <1793925772-1303-21-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 References: <1793925772-1303-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
- <1793925772-1303-24-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+ <1793925772-1303-21-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 06 Nov 2026 01:11:27 +0000
+Date: Fri, 06 Nov 2026 01:12:35 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -62,88 +62,112 @@ Precedence: list
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] scsi: mpt3sas: nr_phys_allocated check breaks mpt3sas_transport_up=
-date_links()
+- [Medium] scsi: mpt3sas: signed shift overflow and bad bound in _base_get_=
+ioc_facts()
 --
 
-commit 228d8378247f2aec196daebe40235a2011620814
+commit b31d1219a60f67ee63fd2b46be49926f2f8e49c3
 Author: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 
-scsi: mpt3sas: Validate phy_number in mpt3sas_transport_update_links
+scsi: mpt3sas: Validate CurrentHostPageSize before using it as a shift amou=
+nt
 
-This commit adds a bounds check on phy_number in
-mpt3sas_transport_update_links() before indexing sas_node->phy.
+This commit validates facts->CurrentHostPageSize read from the IOCFacts rep=
+ly
+in _base_get_ioc_facts() and falls back to MPT3SAS_HOST_PAGE_SIZE_4K if it =
+is
+outside the allowed range before computing ioc->page_size.
 
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_transport.c b/drivers/scsi/mpt3=
-sas/mpt3sas_transport.c
-> index 32db07ed808a9..1041ee7591bfb 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_transport.c
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_transport.c
-> @@ -1176,6 +1176,11 @@ mpt3sas_transport_update_links(struct MPT3SAS_ADAP=
-TER *ioc,
->  		return;
->  	}
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/m=
+pt3sas_base.c
+> index 12295ab544ad5..3622d8a42725b 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+> @@ -7532,8 +7532,15 @@ _base_get_ioc_facts(struct MPT3SAS_ADAPTER *ioc)
+>  	facts->CurrentHostPageSize =3D mpi_reply.CurrentHostPageSize;
 > =20
-> +	if (phy_number >=3D sas_node->nr_phys_allocated) {
-> +		spin_unlock_irqrestore(&ioc->sas_node_lock, flags);
-> +		return;
+>  	/*
+> -	 * Get the Page Size from IOC Facts. If it's 0, default to 4k.
+> +	 * Get the Page Size from IOC Facts. If it's 0 or too large to be a
+> +	 * valid shift amount, default to 4k.
+>  	 */
+> +	if ((facts->CurrentHostPageSize >=3D 32) ||
+> +	    (facts->CurrentHostPageSize !=3D 0 && facts->CurrentHostPageSize < =
+12)) {
+> +		ioc_warn(ioc, "CurrentHostPageSize(%d) is invalid: Setting default hos=
+t page size to 4k\n",
+> +			 facts->CurrentHostPageSize);
+> +		facts->CurrentHostPageSize =3D MPT3SAS_HOST_PAGE_SIZE_4K;
 > +	}
+>  	ioc->page_size =3D 1 << facts->CurrentHostPageSize;
 
-[Severity: High]
-Should this check against sas_node->num_phys (as described in the commit
-message) instead of sas_node->nr_phys_allocated?
+[Severity: Medium]
+Can facts->CurrentHostPageSize =3D=3D 31 still trigger a signed 32-bit shift
+overflow here, and can values in 13..31 break downstream page_size consumer=
+s?
 
-In mpt3sas_transport_update_links(), _transport_sas_node_find_by_sas_addres=
-s()
-returns either &ioc->sas_hba or an expander struct _sas_node:
+Because the left operand of 1 << facts->CurrentHostPageSize is a signed 32-=
+bit
+int literal (rather than 1U or BIT()), a value of 31 passes the >=3D 32 che=
+ck
+and shifts 1 into the sign bit, which is undefined behavior in C and still
+triggers UBSAN shift-out-of-bounds.
 
-drivers/scsi/mpt3sas/mpt3sas_transport.c:_transport_sas_node_find_by_sas_ad=
-dress()
-	if (ioc->sas_hba.sas_address =3D=3D sas_address)
-		return &ioc->sas_hba;
-	else
-		return mpt3sas_scsih_expander_find_by_sas_address(ioc,
-		    sas_address, port);
+In addition, _base_send_ioc_init() always programs the controller for a 4 K=
+iB
+host page size:
 
-For expander nodes allocated in _scsih_expander_add(), the phy array is siz=
-ed
-using sas_expander->num_phys, while nr_phys_allocated is never initialized =
-and
-remains 0:
-
-drivers/scsi/mpt3sas/mpt3sas_scsih.c:_scsih_expander_add()
-	sas_expander->num_phys =3D expander_pg0.NumPhys;
+drivers/scsi/mpt3sas/mpt3sas_base.c:_base_send_ioc_init() {
 	...
-	sas_expander->phy =3D kzalloc_objs(struct _sas_phy,
-					 sas_expander->num_phys);
-
-Because phy_number is unsigned, phy_number >=3D sas_node->nr_phys_allocated=
- is
-always true for expanders, causing callers such as
-_scsih_refresh_expander_links() and _scsih_sas_topology_change_event() to
-return early without updating expander phy links or adding ports for attach=
-ed
-devices.
-
-Additionally, for ioc->sas_hba, _scsih_sas_host_add() sets nr_phys_allocated
-to at least MPT_MAX_HBA_NUM_PHYS (32) while only initializing num_phys
-entries:
-
-drivers/scsi/mpt3sas/mpt3sas_scsih.c:_scsih_sas_host_add()
-	ioc->sas_hba.nr_phys_allocated =3D max_t(u8,
-	    MPT_MAX_HBA_NUM_PHYS, num_phys);
-	ioc->sas_hba.phy =3D kzalloc_objs(struct _sas_phy,
-					ioc->sas_hba.nr_phys_allocated);
+	mpi_request.HostPageSize =3D MPT3SAS_HOST_PAGE_SIZE_4K;
 	...
-	ioc->sas_hba.num_phys =3D num_phys;
+}
 
-Would a phy_number between ioc->sas_hba.num_phys and
-ioc->sas_hba.nr_phys_allocated index an uninitialized _sas_phy entry where
-mpt3sas_phy->phy is NULL, leading to a NULL pointer dereference in
-mpt3sas_transport_add_phy_to_an_existing_port() -> _transport_add_phy() or =
-in
-the MPT_DEBUG_TRANSPORT dev_printk() call?
+Allowing CurrentHostPageSize values up to 31 produces ioc->page_size values=
+ up
+to 0x80000000U (2 GiB). During probe in _base_allocate_memory_pools(), this
+can overflow 32-bit pool sizing arithmetic and cause
+_base_allocate_pcie_sgl_pool() to fail in dma_pool_create() with -ENOMEM
+instead of falling back to 4 KiB:
+
+drivers/scsi/mpt3sas/mpt3sas_base.c:_base_allocate_memory_pools() {
+	...
+		sz =3D nvme_blocks_needed * ioc->page_size;
+		rc =3D _base_allocate_pcie_sgl_pool(ioc, sz);
+		if (rc =3D=3D -ENOMEM)
+			return -ENOMEM;
+		else if (rc =3D=3D -EAGAIN)
+			goto try_32bit_dma;
+		total_sz +=3D sz * ioc->scsiio_depth;
+	...
+}
+
+If a controller reset via
+mpt3sas_base_hard_reset_handler()->_base_get_ioc_facts() updates
+ioc->page_size to 0x80000000U after pools are already allocated,
+base_make_prp_nvme() subtracts u32 nvme_pg_size (ioc->page_size) from signed
+int data_len and sge_len:
+
+drivers/scsi/mpt3sas/mpt3sas_base.c:base_make_prp_nvme() {
+	...
+		sge_addr +=3D nvme_pg_size;
+		sge_len -=3D nvme_pg_size;
+		data_len -=3D nvme_pg_size;
+
+		if (data_len <=3D 0)
+			break;
+	...
+}
+
+When nvme_pg_size is 0x80000000U, subtracting it wraps negative signed 32-b=
+it
+values back to positive, which can walk sg_next(sg_scmd) past the end of the
+scatterlist and overrun the 4 KiB pcie_sgl DMA buffer.
+
+Should this use 1U << facts->CurrentHostPageSize (or BIT()) and restrict
+CurrentHostPageSize to MPT3SAS_HOST_PAGE_SIZE_4K (or a safe upper bound that
+cannot overflow DMA pool and NVMe PRP calculations)?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/1793925772-1303-1-g=
-it-send-email-shivasharan.srikanteshwara@broadcom.com?part=3D23
+it-send-email-shivasharan.srikanteshwara@broadcom.com?part=3D20
