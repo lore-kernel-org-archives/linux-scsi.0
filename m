@@ -1,50 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793996989;
-	b=ngr7OfFNF3rK3yzqq3msD/BSXteQ7IrXaNNHW0jh+BJgbZ1NyOxaQ4p2pR42sxtjgDy2
-	 VN1KvrT4WmUM4xfRg1rpmrlb7BmKmcc9TfV1pOwrReeaRgL7kWMjvHsO4i97giYLeZvwt
-	 dj4nxtoBZ6QIy1tZVpSAjhtKZIiR4DGxBJWAhh3A79YN74nUe2LIhdYXjdPRyZHsgxcD7
-	 lDPEonnV4HrKiIXNfIrmotB9nHRtXc1ldqUzgx8aszMzEPEX6zh86OdwBZ6Sfo0Qbv/Iv
-	 aS6YUVfcAZmFYJkBsC7ek/zZbtMJsUhWUTbu48j2SPa2yLIlu1thTDsWswpxJv405xw==
+	t=1793998660;
+	b=wnSwFkBrSM3uMWQakMAytGW0tsz7jyVSvmuehJRLmsQgWSs46JsysQttvflyKHADM29C
+	 T67BrnypTJuka3DrTuVXaUDSsW6fhoNUR6DpKSxs56/hmAlGL117hGAt2xnci9CpY2HwA
+	 EjPt5szfLIfMUqyrgsJNKhHuFeFdSYKcu1retL/Kiiam8BuV3Jvf0GwaJArApTWelDwno
+	 0ct29KTEfIp0W1MwhWrwUPSszlx33+PnrDRR9ytXYxlz1uWo2X24cp3JWxyBMox/HuMqJ
+	 BBNCwZmBQJOnJNGxSHsWIbz0pGlt+f+lQ3uDxXQjfYrrTE7Cx4Bk+URj6a+3EbMpjZg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793996989;
-	h=Received:DKIM-Signature:From:Subject:Date:Message-Id:MIME-Version:
-	 Content-Type:Content-Transfer-Encoding:X-B4-Tracking:X-Change-ID:To:
-	 Cc:X-Mailer:X-Developer-Signature:X-Developer-Key;
-	bh=yFkuY78U7mNDn1bmgLyjLlr/7s0mrmUmQYJZsbo144c=;
-	b=CQ1mD0CHWS+8HI8/f4gsFt+fc0Swf5KZzAdChQalEpTHk7FyHjhVpjU0VylsyRGE/rcB
-	 Bv5qoY39MyvuE9TubB3KtQdH6UVKEzEqiescNY4Q1B6i4GMPLqthovqNGqVzel0Byh7Sy
-	 tvOFmAXyK1QNDwBmPTfhPL8NxDYem1N6uzxbJtySBE7VG6anhv2KZisE+NVRUzqt/AI27
-	 jb84tk/LIzEeZuS6yWsk8p2sSTb4RhJW2VJbcbVUpqa3t8N4Ie4fkvdYor93uKarqw5sc
-	 1ubA9oYUs93q3TK5ErqIlIQZJ0paY3uzO4awCwQTJMzk6ghIFkeIIZuc9M0vlhwEOOw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793998660;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=uzNJh4xzbLQhnLZB/iqsaePvPCruCIgzW2R1EL5YIWk=;
+	b=pWQOqHz7mEDMZDzq80dSmmouxTzMMoG5KbnVAeR3qIluIrwy85iiTti0DbhRBRYeMtc6
+	 Bv6xA+HsgJUrO0dlkS9n8I2yBnVFQcULBPEbAfhet2niym0dWp73hokO8kFZY/bAPTfWM
+	 FEw998wb8xLSMkyBsOYSWg1FCHfxSIIHDarprRBhLgzGfkC858+AIj8YOjSe9JO18H7hx
+	 1fagz58XRRwfgxEgAg9NY/q5SPkD9DkjGFJFs9GxXliNNdMk/v5MF24caX9JS3vZkMaUK
+	 5m4zzbuu8u2oBGdDEINGMAZGEwvYdNcF8do/MUjziHD+/4wlpZlvcJxC7csTmTG/oig==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=WpXwaXhi;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jkkCKGRA;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17C36606A326;
-	Fri,  6 Nov 2026 20:29:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0B8C606A329
+	for <linux-scsi@vger.kernel.org>; Fri,  6 Nov 2026 20:57:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=WpXwaXhi
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 11F781F008BC;
-	Fri,  6 Nov 2026 20:29:48 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jkkCKGRA
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7410A1F0089F;
+	Fri,  6 Nov 2026 20:57:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793996988;
-	bh=yFkuY78U7mNDn1bmgLyjLlr/7s0mrmUmQYJZsbo144c=;
-	h=From:Subject:Date:To:Cc;
-	b=WpXwaXhiEjrSUMt4RxxxgWYuM+7qCiptSl5qt3Qqv4R+ZRL+9hcMMlkKEjfcwnxe0
-	 tFbxdojdvvqIQnCK1HJxsI1nse3cbvfi28VdRndtY5t7MG4BWhmzkWtZDAf70aDQz5
-	 Z9/H7WjlGFeVKHbBe03onC3S+1tgBosuWuDb+T5eFE4UNyQFqpbWMr14Cx9+sXqBgf
-	 icWwB0xuA0x2T2g4/WBpIChXtHsb699G9geC1juX6ElfPFNt6ayvqXpgRIB4C1QD1H
-	 RnYksbBP/oidaAVveblpnXEUgviIhIVa3Gyw6lcG3APRHxWyXhZkmPDEnhTGedGXgT
-	 wXbWkGe/1pCmQ==
-From: Jeff Layton <jlayton@kernel.org>
-Subject: [PATCH v3 0/2] scsi: mpt3sas: Fix delayed not-responding sdev
- block handling
-Date: Fri, 06 Nov 2026 15:29:25 -0500
-Message-Id: <20261106-sas-abba-v3-0-571b854594aa@kernel.org>
+	s=k20260515; t=1793998659;
+	bh=uzNJh4xzbLQhnLZB/iqsaePvPCruCIgzW2R1EL5YIWk=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=jkkCKGRA6ci2r47+YSXI8AFwta2BGbzD8bVdFF1ksAHZDRU/pFRn0pY/Tc0FF+wre
+	 Kreb2gUtEg0Fxq18nX1tzwdhwbCgPeYns12p77bFDTjeyWxO/yhHVi4OdPDsDw+2P9
+	 Jn2tX99vQZ+sfhLeciFmj20n+Cg1io+No610SopRoKBH79v+91lgSDjfHi8LEZe2ns
+	 tEGWy62dS2jQXBubTEF/BfqZoeGaoG3niIKjvbnuJce2U4xirmwNrgAIDismOXSU7o
+	 UKkfK7eISh+LE+KEIu+Q+4PhASUaa5jY6DoCc9HGzVojLui2Bmef+u534Z4pNo9bbC
+	 5MC0cKSeR1I4w==
+Message-ID: <sashiko-outbox-202261@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v3 2/2] scsi: mpt3sas: Time out delayed not-responding
+ device blocks
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Jeff Layton" <jlayton@kernel.org>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20261106-sas-abba-v3-2-571b854594aa@kernel.org>
+References: <20261106-sas-abba-v3-0-571b854594aa@kernel.org>
+ <20261106-sas-abba-v3-2-571b854594aa@kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Fri, 06 Nov 2026 20:57:39 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -53,94 +60,286 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIAAAAAAAC/22MywrCMBBFf6XM2pE8+tKV/yEuJum0DUojiQSl9
- N9Nu1HB5bncc2aIHBxHOBYzBE4uOj9l0LsC7EjTwOi6zKCEqqXQAiNFJGMImWxvbVn1rGvI93v
- g3j231PmSeXTx4cNrKye5rn8iSaJE09qua2RJurGnK4eJb3sfBlgrSX1MKdSXqVCg0eZgqG1KU
- 9GPuSzLG0xwCMrbAAAA
-X-Change-ID: 20261030-sas-abba-eacfcc45fe36
-To: Sathya Prakash <sathya.prakash@broadcom.com>, 
- Sreekanth Reddy <sreekanth.reddy@broadcom.com>, 
- Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, 
- Ranjan Kumar <ranjan.kumar@broadcom.com>, 
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
- "Martin K. Petersen" <mkp@kernel.org>, 
- Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>
-Cc: Keith Busch <kbusch@kernel.org>, MPT-FusionLinux.pdl@broadcom.com, 
- linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
- Jeff Layton <jlayton@kernel.org>
-X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2204; i=jlayton@kernel.org;
- h=from:subject:message-id; bh=xsOdkWXlaL+BC8vXFypsq8J+1VT0Ki6qqi9Om7Mvy0E=;
- b=owEBbQKS/ZANAwAKAQAOaEEZVoIVAcsmYgBq7ji1HG/B4arNvIMUmwU46kRTeF6AQvTjG69PI
- kQXHyORZsSJAjMEAAEKAB0WIQRLwNeyRHGyoYTq9dMADmhBGVaCFQUCau44tQAKCRAADmhBGVaC
- FSFnEADW7nD3SLDrAFLjCo2Qd4y9zrfKgj0jlIBh+EhVObO9m+/lge6e2SogOI3JogcYTXZeWTQ
- lil6/g5844DxUaHK1Li/uKPRyRfxE7kUdyyE+9/LCDbF9/0UyJb5xhwhRCM/3oLp41eRWb+8D+k
- 5lXnY+Lh70JCAIGyh6p+5U+wjbM5MoziH/+0pT8PK1laOeeK3+3RzQlthu+2FRZ25roKx0lv0HM
- 1TytdpP3BChrQpiHlHao34X0VmEnuaHsdXBvgqP9CuNz0SeCo8am5SZHc8BKFkmsdrPk87b316m
- pYpycnlVx6s1X5VELoi1u4vnKvXbG+5abk3teddypZo+aIoFiGaS1emMtBPPmwPc6mNaaAz1hcm
- VzmlLyTYHN+K8tPT3HSxRbYs06GhWA4wRo/GD4RmqCa1O0Gc7EP1XP0M10DEhsKQdKYKaaq/k36
- wnt36pG6zrb7DQTGNvsej041nHhhXLf5wuQiCp8wCOcfuO+Bl92JJkymeuNH3h3bRtO84qFNEzp
- Xqxq9Q3sfGKptE2hD1lE2wbROt6Hy8vKY5KGxfbPac6ECw7EPhIKvfZXDF2lwv/CdgcEu1LxemD
- sr9e88VVU41ebfAXWeGWDLfCGy3VTMBFB75+yYZSJqKHsVkOxg+a6RqVcNFO7csfzn3c+FE4sIg
- klvtmy1RiLTZ0xg==
-X-Developer-Key: i=jlayton@kernel.org; a=openpgp;
- fpr=4BC0D7B24471B2A184EAF5D3000E684119568215
 
-v3 fixes a yet more issues that Sashiko pointed out.
+Thank you for your contribution! Sashiko AI review found 3 potential
+issues to consider:
+- [High] scsi: mpt3sas: use-after-free of sdev->hostdata in unblock
+  helpers
+- [Medium] scsi: mpt3sas: race setting SDEV_OFFLINE outside block_lock
+  on unblock failure
+- [Medium] scsi: mpt3sas: _scsih_block_io_all_device() leaves sdevs
+  blocked without deadline
+--
 
-This fix is for a deadlock that we see regularly in Meta's fleet. The
-idea is to break the deadlock by unblocking sdevs after a timeout.
+commit ba9687a8025a542963a3bc4d91c8e8b094a21e74
+Author: Jeff Layton <jlayton@kernel.org>
 
-I don't do a lot of SCSI driver work, but this one fell in my lap. I
-leaned heavily on agentic help for this series.
+scsi: mpt3sas: Time out delayed not-responding device blocks
 
-If this looks good, it'd be nice to see this in linux-next soon.
+This commit adds a delayed work item and per-device deadline to release
+delayed not-responding sdev blocks after the firmware's device missing
+delay plus 30 seconds, preventing scans from deadlocking on sas_host->lock.
 
-Thanks,
-Jeff
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/=
+mpt3sas_scsih.c
+> index 60c9cf679a8a7..acdeece20140f 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
 
-Signed-off-by: Jeff Layton <jlayton@kernel.org>
----
-Changes in v3:
-- Patch 1: publish sdev->hostdata under ioc->block_lock in
-  scsih_sdev_init(), so the interrupt-time block can't see it before
-  its sas_target store
-- Clear block_deadline on all affected sdevs, under ioc->block_lock,
-  before the fw event worker starts TUR polling, not per-sdev mid-poll
-- Take ioc->block_lock in _scsih_block_io_all_device() and clear
-  block_deadline on already-blocked sdevs, so dnr_unblock_work can't
-  unblock them during broadcast primitive TM
-- Defer dnr_unblock_work while scsi_host_in_recovery(), and use
-  mod_delayed_work() for the retry
-- Link to v2: https://lore.kernel.org/r/20261102-sas-abba-v2-0-b3b9ba874b5a@kernel.org
+[ ... ]
 
-Changes in v2:
-- New patch 1: serialize the interrupt-time sdev block with hostdata
-  teardown in scsih_sdev_destroy() via new ioc->block_lock (fixes a
-  pre-existing UAF)
-- Do the timed unblock under ioc->block_lock, so it can't race with an
-  interrupt-time block
-- Clear block_deadline before the fw event worker polls a returning
-  device with TURs, so dnr_unblock_work can't unblock it mid-poll
-- Link to v1: https://lore.kernel.org/r/20261030-sas-abba-v1-1-b8cdd714a37c@kernel.org
+> @@ -3958,7 +3989,20 @@ _scsih_ublock_io_all_device(struct MPT3SAS_ADAPTER=
+ *ioc, u8 no_turs)
+>  	int count =3D 0;
+>  	u8 tr_method =3D 0;
+>  	u8 tr_timeout =3D 30;
+> +	unsigned long flags;
+> =20
+> +	/* polling one device can outlast another's deadline */
+> +	if (!no_turs && issue_scsi_cmd_to_bringup_drive) {
+> +		shost_for_each_device(sdev, ioc->shost) {
+> +			spin_lock_irqsave(&ioc->block_lock, flags);
+> +			sas_device_priv_data =3D sdev->hostdata;
+> +			if (sas_device_priv_data &&
+> +			    sas_device_priv_data->sas_target &&
+> +			    !sas_device_priv_data->sas_target->deleted)
+> +				sas_device_priv_data->block_deadline =3D 0;
+> +			spin_unlock_irqrestore(&ioc->block_lock, flags);
+> +		}
+> +	}
+> =20
+>  	shost_for_each_device(sdev, ioc->shost) {
+>  		sas_device_priv_data =3D sdev->hostdata;
+> @@ -3975,10 +4019,18 @@ _scsih_ublock_io_all_device(struct MPT3SAS_ADAPTE=
+R *ioc, u8 no_turs)
+>  		if ((no_turs) || (!issue_scsi_cmd_to_bringup_drive)) {
+>  			sdev_printk(KERN_WARNING, sdev, "device_unblocked handle(0x%04x)\n",
+>  				sas_device_priv_data->sas_target->handle);
+> -			_scsih_internal_device_unblock(sdev, sas_device_priv_data);
+> +			spin_lock_irqsave(&ioc->block_lock, flags);
+> +			/* dnr_unblock_work may have released it */
+> +			if (sas_device_priv_data->block)
+> +				_scsih_internal_device_unblock(sdev,
+> +				    sas_device_priv_data);
+> +			spin_unlock_irqrestore(&ioc->block_lock, flags);
+>  			continue;
+>  		}
+> =20
+> +		/* may have been blocked since the first pass */
+> +		if (!_scsih_claim_block(ioc, sdev))
+> +			continue;
+>  		do {
+>  			pcie_device =3D mpt3sas_get_pdev_by_handle(ioc, sas_target->handle);
+>  			if (pcie_device && (!ioc->tm_custom_handling) &&
+> @@ -3997,11 +4049,13 @@ _scsih_ublock_io_all_device(struct MPT3SAS_ADAPTE=
+R *ioc, u8 no_turs)
+>  		} while ((rc =3D=3D DEVICE_RETRY || rc =3D=3D DEVICE_START_UNIT ||
+>  		    rc =3D=3D DEVICE_STOP_UNIT || rc =3D=3D DEVICE_RETRY_UA)
+>  			&& count++ < command_retry_count);
+> +		spin_lock_irqsave(&ioc->block_lock, flags);
+>  		sas_device_priv_data->block =3D 0;
+>  		if (rc !=3D DEVICE_READY)
+>  			sas_device_priv_data->deleted =3D 1;
+> =20
+>  		_scsih_internal_device_unblock(sdev, sas_device_priv_data);
+> +		spin_unlock_irqrestore(&ioc->block_lock, flags);
+> =20
+>  		if (rc !=3D DEVICE_READY) {
+>  			sdev_printk(KERN_WARNING, sdev, "%s: device_offlined,\n"
 
----
-Jeff Layton (2):
-      scsi: mpt3sas: Serialize interrupt-time sdev block with hostdata teardown
-      scsi: mpt3sas: Time out delayed not-responding device blocks
+[Severity: High]
+Can _scsih_ublock_io_all_device() and _scsih_ublock_io_device_wait() cause a
+use-after-free on sas_device_priv_data and sas_target?
 
- drivers/scsi/mpt3sas/mpt3sas_base.c  |  13 ++
- drivers/scsi/mpt3sas/mpt3sas_base.h  |  10 ++
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 245 ++++++++++++++++++++++++++++++++---
- 3 files changed, 247 insertions(+), 21 deletions(-)
----
-base-commit: 8b7179210b22f8e48a82c5ceacb9d56a9c4cfec4
-change-id: 20261030-sas-abba-eacfcc45fe36
+shost_for_each_device() only holds a reference on sdev, not sdev->hostdata.
+When _scsih_dnr_unblock_work() unblocks an sdev that was blocked during a
+concurrent sysfs scan and its probe fails in scsi_probe_and_add_lun(), or
+when a device is removed via sysfs, __scsi_remove_device() calls
+scsih_sdev_destroy(), which clears sdev->hostdata under ioc->block_lock and
+frees sas_device_priv_data:
 
-Best regards,
--- 
-Jeff Layton <jlayton@kernel.org>
+CPU0 (firmware_event_thread)      CPU1 (scan / device removal)
+_scsih_ublock_io_all_device()
+  sas_device_priv_data =3D
+    sdev->hostdata;
+  _scsih_claim_block(ioc, sdev)
+  _scsih_wait_for_device_...()
+                                  __scsi_remove_device(sdev)
+                                    scsih_sdev_destroy(sdev)
+                                      spin_lock_irqsave(&ioc->block_lock)
+                                      sdev->hostdata =3D NULL;
+                                      spin_unlock_irqrestore(&ioc->block_lo=
+ck)
+                                      kfree(sas_device_priv_data);
+  spin_lock_irqsave(&ioc->block_lock)
+  sas_device_priv_data->block =3D 0;  <-- use-after-free
 
+Both functions also read sdev->hostdata and dereference
+sas_device_priv_data->sas_target at the top of their second
+shost_for_each_device() loops without holding ioc->block_lock, and in the
+no_turs branch _scsih_ublock_io_all_device() takes ioc->block_lock and
+accesses the cached sas_device_priv_data pointer without re-checking
+sdev->hostdata.  Re-fetching sdev->hostdata (and sas_target) under
+ioc->block_lock before each access and after the polling loop would avoid
+touching freed hostdata.
+
+> @@ -4060,24 +4114,30 @@ _scsih_ublock_io_device_wait(struct MPT3SAS_ADAPT=
+ER *ioc, u64 sas_address,
+>  	u8 tr_timeout =3D 30;
+>  	u8 tr_method =3D 0;
+>  	int count =3D 0;
+> +	unsigned long flags;
+> =20
+>  	/* moving devices from SDEV_OFFLINE to SDEV_BLOCK */
+>  	shost_for_each_device(sdev, ioc->shost) {
+> +		spin_lock_irqsave(&ioc->block_lock, flags);
+>  		sas_device_priv_data =3D sdev->hostdata;
+>  		if (!sas_device_priv_data)
+> -			continue;
+> +			goto next;
+>  		sas_target =3D sas_device_priv_data->sas_target;
+>  		if (!sas_target)
+> -			continue;
+> +			goto next;
+>  		if (sas_target->sas_address !=3D sas_address ||
+>  		    sas_target->port !=3D port)
+> -			continue;
+> +			goto next;
+> +		/* polling one device can outlast another's deadline */
+> +		sas_device_priv_data->block_deadline =3D 0;
+>  		if (sdev->sdev_state =3D=3D SDEV_OFFLINE) {
+>  			sas_device_priv_data->block =3D 1;
+>  			sas_device_priv_data->deleted =3D 0;
+>  			scsi_device_set_state(sdev, SDEV_RUNNING);
+>  			scsi_internal_device_block_nowait(sdev);
+>  		}
+> +next:
+> +		spin_unlock_irqrestore(&ioc->block_lock, flags);
+>  	}
+> =20
+>  	/* moving devices from SDEV_BLOCK to SDEV_RUNNING state */
+> @@ -4091,7 +4151,7 @@ _scsih_ublock_io_device_wait(struct MPT3SAS_ADAPTER=
+ *ioc, u64 sas_address,
+>  		if (sas_target->sas_address !=3D sas_address ||
+>  		    sas_target->port !=3D port)
+>  			continue;
+> -		if (!sas_device_priv_data->block)
+> +		if (!_scsih_claim_block(ioc, sdev))
+>  			continue;
+> =20
+>  		do {
+> @@ -4129,10 +4189,12 @@ _scsih_ublock_io_device_wait(struct MPT3SAS_ADAPT=
+ER *ioc, u64 sas_address,
+>  		    rc =3D=3D DEVICE_STOP_UNIT || rc =3D=3D DEVICE_RETRY_UA)
+>  			&& count++ <=3D command_retry_count);
+> =20
+> +		spin_lock_irqsave(&ioc->block_lock, flags);
+>  		sas_device_priv_data->block =3D 0;
+>  		if (rc !=3D DEVICE_READY)
+>  			sas_device_priv_data->deleted =3D 1;
+>  		scsi_internal_device_unblock_nowait(sdev, SDEV_RUNNING);
+> +		spin_unlock_irqrestore(&ioc->block_lock, flags);
+> =20
+>  		if (rc !=3D DEVICE_READY) {
+>  			sdev_printk(KERN_WARNING, sdev,
+
+[Severity: Medium]
+When rc !=3D DEVICE_READY in _scsih_ublock_io_device_wait() (and in
+_scsih_ublock_io_all_device()), can dropping ioc->block_lock before calling
+scsi_device_set_state(sdev, SDEV_OFFLINE) race with _scsih_block_io_device(=
+)?
+
+CPU0 (firmware_event_thread)      CPU1 (<hardirq>)
+_scsih_ublock_io_device_wait()
+  spin_lock_irqsave(&ioc->block_lock)
+  sas_device_priv_data->block =3D 0;
+  scsi_internal_device_unblock_nowait(
+    sdev, SDEV_RUNNING)
+  spin_unlock_irqrestore(&ioc->block_lock)
+                                  _scsih_block_io_device()
+                                    spin_lock_irqsave(&ioc->block_lock)
+                                    /* sdev_state is SDEV_RUNNING */
+                                    _scsih_internal_device_block(sdev, ...)
+                                    sas_device_priv_data->block_deadline =
+=3D ...;
+                                    spin_unlock_irqrestore(&ioc->block_lock)
+  ...
+  scsi_device_set_state(sdev,
+    SDEV_OFFLINE)  <-- overwrites SDEV_BLOCK; queue stays stopped
+
+Because sdev->sdev_state is SDEV_RUNNING while ioc->block_lock is dropped,
+_scsih_block_io_device() does not see SDEV_OFFLINE and stops the request
+queue, sets block =3D 1, and arms block_deadline.  CPU0 then sets
+sdev->sdev_state to SDEV_OFFLINE with the queue still stopped (so
+scsi_queue_rq() cannot fail queued I/O with BLK_STS_IOERR) and an active
+block_deadline that will later transition the offline device back to
+SDEV_RUNNING without a TUR check.  Setting SDEV_OFFLINE before releasing
+ioc->block_lock would close this window.
+
+[ ... ]
+
+> @@ -4213,21 +4279,119 @@ _scsih_block_io_all_device(struct MPT3SAS_ADAPTE=
+R *ioc)
+>  {
+>  	struct MPT3SAS_DEVICE *sas_device_priv_data;
+>  	struct scsi_device *sdev;
+> +	unsigned long flags;
+> =20
+>  	shost_for_each_device(sdev, ioc->shost) {
+> +		spin_lock_irqsave(&ioc->block_lock, flags);
+>  		sas_device_priv_data =3D sdev->hostdata;
+>  		if (!sas_device_priv_data)
+> -			continue;
+> -		if (sas_device_priv_data->block)
+> -			continue;
+> +			goto next;
+> +		if (sas_device_priv_data->block) {
+> +			/* the caller unblocks it; dnr_unblock_work must not */
+> +			sas_device_priv_data->block_deadline =3D 0;
+> +			goto next;
+> +		}
+>  		if (sas_device_priv_data->ignore_delay_remove) {
+>  			sdev_printk(KERN_INFO, sdev,
+>  			"%s skip device_block for SES handle(0x%04x)\n",
+>  			__func__, sas_device_priv_data->sas_target->handle);
+> -			continue;
+> +			goto next;
+>  		}
+>  		_scsih_internal_device_block(sdev, sas_device_priv_data);
+> +next:
+> +		spin_unlock_irqrestore(&ioc->block_lock, flags);
+>  	}
+> +}
+
+[Severity: Medium]
+Can _scsih_block_io_all_device() leave devices blocked with
+block_deadline =3D=3D 0 so that neither the caller nor _scsih_dnr_unblock_w=
+ork()
+unblocks them before device removal?
+
+_scsih_block_io_all_device() blocks every sdev (or clears its
+block_deadline) without checking sas_target->deleted, whereas its paired
+_scsih_ublock_io_all_device() skips targets with sas_target->deleted set.
+In addition, its caller _scsih_sas_broadcast_primitive_event() skips
+_scsih_ublock_io_all_device() altogether when host recovery starts:
+
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:_scsih_sas_broadcast_primitive_event()=
+ {
+    ...
+	ioc->broadcast_aen_busy =3D 0;
+	if (!ioc->shost_recovery)
+		_scsih_ublock_io_all_device(ioc, 1);
+	mutex_unlock(&ioc->tm_cmds.mutex);
+}
+
+After host reset, _scsih_remove_unresponding_devices() runs on
+firmware_event_thread and removes unresponding devices (taking
+sas_host->lock and shost->scan_mutex) before it reaches
+_scsih_ublock_io_all_device(ioc, 0).  If a concurrent sysfs scan holds
+sas_host->lock and waits on I/O to one of these sdevs whose block_deadline
+was cleared to 0, _scsih_dnr_unblock_work() will not unblock it and the scan
+deadlock recurs.
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261106-sas-abba-v=
+3-0-571b854594aa@kernel.org?part=3D2
