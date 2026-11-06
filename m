@@ -1,56 +1,56 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793927398;
-	b=DK70Lxzo0h9HosK39xKj3zXq+bpyZ7BiY1Qz50mZUPTaI5MjvbZgXPiCFkLiwwH2+MGC
-	 /tqXT6uaIvynG/vfeOSgqxiZtJsuRAiVF4BN6UUHnI9Xx1UZBC09MhjTM2w7ikYtvgUDm
-	 F6ieywLl0fIYKM+7hKvZ/609uMKvaymqjJvMsQsVhq/WgzHFxGC7DIrkJ52j2QVomJUS7
-	 8cN/N5ffy/lWU5lqIfS6RQXxpNkV7HI1cMMhFNA1CDma8mZH5VFOJz80oseK8jc9CVK2p
-	 /iiaoz7/0Q+1IF76Mv4fKrdJhm0Qowgy/RLHXqGoQPL1ntrPWcp0jPJPgLmePdpsrNg==
+	t=1793927489;
+	b=1vJ/k993/m/9POKmSCRoORBMecmdRn3DhZX0trrT+qug7+dtqBBIzLtx4j/IX3Q/Gyx9
+	 1tN0BV+X+V2/+j21OD5p4bWNoMCEUo50fdz/uB/alaJqjq3Rq2f4YRWV7BplQ+fcRPPnq
+	 29NIGyaBu9swujXaBwefis8QHKL1+VfiG8gpXWIbbZJX5wlnhP/k4dfn6ZVwcWfOi8+o+
+	 cT8mAK5ElkXxVNP8Lk0kIA/dgUvFiuPEdF5UNsNvpSkzJrt84yBFe61Oot9SUp3lHaASP
+	 dUdHVj4a4ecm6Nqd5trKTQZmkZzn/yysLF0xERFi5B6709SeCNu1uY0hMWOUFV/8yVQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793927398;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793927489;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=d6Po/4S41WwS28gBYvglr8QXYVbUgRIen02+PqloiBw=;
-	b=5bnDQmRxKOkeEZi2wXfkKnZlZ95NxX6Htxwf46slhO7APISK96xPtLqWjO+b6SRxUY2C
-	 3Yk0ZKaAWpANd8nDsAfmh/944z9agDWfYUFGZCf4XE/aoWmaN5RWh6FiGuK2n5wDa7Ily
-	 fo0fbLMXVdy9jT3JQHQka6voUBzlHXgvJC/xBWBSKVMKlSBwGku8EjuctTEtOJMFb32TH
-	 WFQRQ98c0FIXH+Wbw9opa39BDTR9LFx3J3ypYtZB2kxw9DQ5QKsO4j3Gy3Sb5PBl9dfSn
-	 K7lzS5IpShaB+QX5PqjD4LQWTU8B9RIE2P4PGfcGMcWWcWtsl17SIy/HGN2mKhjLgvA==
+	bh=kzx1BjMEl1JiBDa4VLIswVuq1A+EOL6hX187jBkZYyc=;
+	b=F/CKUVl3kRghi/yS0Di0K/WzIPelTuhU6Lg16q2eWRuNy+IOCRhyiC9dAftkVSZKDVxz
+	 WB0COI/UBB/ekL7wTbl1K3u3G9TAPkTPTHzMWhwUWnML0OE99PsPrnxOPWB/5JgcWMlWJ
+	 cPnM3fcp6o185BnP5LGg6euLhT8pem2PL2HjCfmLRkNmeiQ6pIEt4cekXgri+W4Wz4yOs
+	 WJTEWSg4FJIyB3Vd224CBkiTWVGoTKcPODXg20kQ8WRWBj1jmzhG57yMBtQK++/0qqaPx
+	 yLTZgO+CQsm7CYd5Er4Q0ymFBKIHqMZ6zxGObzVRW3AcuHuFAszAv/ai9Jb9o46butg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=LlyuAKW7;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=PdlunCmz;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D92B1606A31B
-	for <linux-scsi@vger.kernel.org>; Fri,  6 Nov 2026 01:09:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 10AF7606A31B
+	for <linux-scsi@vger.kernel.org>; Fri,  6 Nov 2026 01:11:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=LlyuAKW7
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5E5F81F0089F;
-	Fri,  6 Nov 2026 01:09:57 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=PdlunCmz
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5F5BC1F0089F;
+	Fri,  6 Nov 2026 01:11:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793927397;
-	bh=d6Po/4S41WwS28gBYvglr8QXYVbUgRIen02+PqloiBw=;
+	s=k20260515; t=1793927488;
+	bh=kzx1BjMEl1JiBDa4VLIswVuq1A+EOL6hX187jBkZYyc=;
 	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
-	b=LlyuAKW7gLul33N/H6EVQiIR9nMHvKc+zS6Ahz5lPKvQTyz51wQeAotaym1VCS8c0
-	 k6653jG3rHX1TNVDmS66QTcirDN99CW1uetagmZaPNIqd9uuNDXx6tvSgyEhPj/rf0
-	 ytkI6doykyCrl2Qb2FocD+1zEdn+pyjc1C9xIrPyHMARhtDVFJ0TMYcyExFq28CzUT
-	 n4OGZu093cev5xTLQpAVjz79Ow8RD7jMWlXI6RtX4+U6lspqP7DdAQBRnguvHFSzqd
-	 2W0hyCGJGFuwjMehfQNqO6gzR7XBb9+ywRuSSSU+DbXRINCu3hjcMzSU0rTQlQlgEh
-	 nAhLBx3fmzQ+w==
-Message-ID: <sashiko-outbox-200482@kernel.org>
+	b=PdlunCmzQAng8cMSsG1DoxqJIFElFOyIFGqCNmrDHcvRyo9rKnNs8JpxFijWPhzPc
+	 /FNCMBfcCdVXWT1pyGXOaUQ8JHZZZo+QlP7EWLrSbgDBum+up/FxLSDOxijOF6gCP3
+	 2o9ZJKljC3JIjtwjPbvBmDJuTK2nWAcRHYKXxAnOEyqgIV79croOmjstnnQEseW+9O
+	 DtFKnddI/Ot5GXk1ssrMGKx/0/hunppqSt9EP1EiqPvmi8B6zCdiTYVX9AiyVKyDs6
+	 XBgVrbzxmeq1NgPTcyaPp7C6zWYuUvZ8ZtBPShzDWfLIS/5456QcxjZ5dFzpIJ2rRO
+	 b4fEWopu3IyJw==
+Message-ID: <sashiko-outbox-200483@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 17/37] scsi: mpt3sas: Clamp ValidEntries in driver
- trigger page update helpers
+Subject: Re: [PATCH 23/37] scsi: mpt3sas: Validate phy_number in
+ mpt3sas_transport_update_links
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Shivasharan S" <shivasharan.srikanteshwara@broadcom.com>, linux-scsi@vger.kernel.org
-In-Reply-To: <1793925772-1303-18-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+In-Reply-To: <1793925772-1303-24-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 References: <1793925772-1303-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
- <1793925772-1303-18-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+ <1793925772-1303-24-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 06 Nov 2026 01:09:56 +0000
+Date: Fri, 06 Nov 2026 01:11:27 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -62,93 +62,88 @@ Precedence: list
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [Medium] scsi: mpt3sas: signed count bypasses clamp in trigger update hel=
-pers
+- [High] scsi: mpt3sas: nr_phys_allocated check breaks mpt3sas_transport_up=
+date_links()
 --
 
-commit ae22d6dc5a3a1081272d193a5d2d62df9244f533
+commit 228d8378247f2aec196daebe40235a2011620814
 Author: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 
-scsi: mpt3sas: Clamp ValidEntries in driver trigger page update helpers
+scsi: mpt3sas: Validate phy_number in mpt3sas_transport_update_links
 
-This commit clamps ValidEntries to NUM_VALID_ENTRIES in the pg2, pg3, and
-pg4 driver trigger update helpers before using it as a loop bound and trigg=
-er
-count.
+This commit adds a bounds check on phy_number in
+mpt3sas_transport_update_links() before indexing sas_node->phy.
 
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_config.c b/drivers/scsi/mpt3sas=
-/mpt3sas_config.c
-> index 75312d43e3862..ddbccbac69b34 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_config.c
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_config.c
-> @@ -2278,6 +2278,8 @@ mpt3sas_config_update_driver_trigger_pg2(struct MPT=
-3SAS_ADAPTER *ioc,
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_transport.c b/drivers/scsi/mpt3=
+sas/mpt3sas_transport.c
+> index 32db07ed808a9..1041ee7591bfb 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_transport.c
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_transport.c
+> @@ -1176,6 +1176,11 @@ mpt3sas_transport_update_links(struct MPT3SAS_ADAP=
+TER *ioc,
+>  		return;
+>  	}
 > =20
->  	if (set) {
->  		count =3D event_tg->ValidEntries;
-> +		if (count > NUM_VALID_ENTRIES)
-> +			count =3D NUM_VALID_ENTRIES;
->  		tg_pg2.NumMPIEventTrigger =3D cpu_to_le16(count);
->  		for (i =3D 0; i < count; i++) {
->  			tg_pg2.MPIEventTriggers[i].MPIEventCode =3D
-> @@ -2437,6 +2439,8 @@ mpt3sas_config_update_driver_trigger_pg3(struct MPT=
-3SAS_ADAPTER *ioc,
-> =20
->  	if (set) {
->  		count =3D scsi_tg->ValidEntries;
-> +		if (count > NUM_VALID_ENTRIES)
-> +			count =3D NUM_VALID_ENTRIES;
->  		tg_pg3.NumSCSISenseTrigger =3D cpu_to_le16(count);
->  		for (i =3D 0; i < count; i++) {
->  			tg_pg3.SCSISenseTriggers[i].ASCQ =3D
-> @@ -2595,6 +2599,8 @@ mpt3sas_config_update_driver_trigger_pg4(struct MPT=
-3SAS_ADAPTER *ioc,
-> =20
->  	if (set) {
->  		count =3D mpi_tg->ValidEntries;
-> +		if (count > NUM_VALID_ENTRIES)
-> +			count =3D NUM_VALID_ENTRIES;
->  		tg_pg4.NumIOCStatusLogInfoTrigger =3D cpu_to_le16(count);
+> +	if (phy_number >=3D sas_node->nr_phys_allocated) {
+> +		spin_unlock_irqrestore(&ioc->sas_node_lock, flags);
+> +		return;
+> +	}
 
-[Severity: Medium]
-Can a ValidEntries value with bit 31 set (>=3D 0x80000000) bypass this clam=
-p in
-mpt3sas_config_update_driver_trigger_pg2(),
-mpt3sas_config_update_driver_trigger_pg3(), and
-mpt3sas_config_update_driver_trigger_pg4()?
+[Severity: High]
+Should this check against sas_node->num_phys (as described in the commit
+message) instead of sas_node->nr_phys_allocated?
 
-In drivers/scsi/mpt3sas/mpt3sas_trigger_diag.h, ValidEntries is declared as
-uint32_t in struct SL_WH_EVENT_TRIGGERS_T, struct SL_WH_SCSI_TRIGGERS_T, and
-struct SL_WH_MPI_TRIGGERS_T, whereas count in these three helpers in
-drivers/scsi/mpt3sas/mpt3sas_config.c is a signed int:
+In mpt3sas_transport_update_links(), _transport_sas_node_find_by_sas_addres=
+s()
+returns either &ioc->sas_hba or an expander struct _sas_node:
 
-	int rc, i, count;
+drivers/scsi/mpt3sas/mpt3sas_transport.c:_transport_sas_node_find_by_sas_ad=
+dress()
+	if (ioc->sas_hba.sas_address =3D=3D sas_address)
+		return &ioc->sas_hba;
+	else
+		return mpt3sas_scsih_expander_find_by_sas_address(ioc,
+		    sas_address, port);
 
-The sysfs store handlers diag_trigger_event_store(),
-diag_trigger_scsi_store(), and diag_trigger_mpi_store() in
-drivers/scsi/mpt3sas/mpt3sas_ctl.c copy user data into event_tg, scsi_tg, or
-mpi_tg and call these update helpers before clamping ValidEntries:
+For expander nodes allocated in _scsih_expander_add(), the phy array is siz=
+ed
+using sas_expander->num_phys, while nr_phys_allocated is never initialized =
+and
+remains 0:
 
-	memcpy(event_tg, buf, sz);
-	if (!event_tg->ValidEntries)
-		set =3D 0;
-	if (mpt3sas_config_update_driver_trigger_pg2(ioc, event_tg,
-	    set)) {
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:_scsih_expander_add()
+	sas_expander->num_phys =3D expander_pg0.NumPhys;
+	...
+	sas_expander->phy =3D kzalloc_objs(struct _sas_phy,
+					 sas_expander->num_phys);
 
-When a user passes ValidEntries >=3D 0x80000000, assigning it to the signed=
- int
-count makes count negative. The signed comparison count > NUM_VALID_ENTRIES
-then evaluates to false, the for (i =3D 0; i < count; i++) loop copies zero
-entries, and cpu_to_le16(count) writes the truncated unclamped u16 value in=
-to
-tg_pg2.NumMPIEventTrigger, tg_pg3.NumSCSISenseTrigger, or
-tg_pg4.NumIOCStatusLogInfoTrigger before committing the page to the
-controller.
+Because phy_number is unsigned, phy_number >=3D sas_node->nr_phys_allocated=
+ is
+always true for expanders, causing callers such as
+_scsih_refresh_expander_links() and _scsih_sas_topology_change_event() to
+return early without updating expander phy links or adding ports for attach=
+ed
+devices.
 
-Should count (and i) be unsigned, or should event_tg->ValidEntries,
-scsi_tg->ValidEntries, and mpi_tg->ValidEntries be clamped using min_t(u32,
-..., NUM_VALID_ENTRIES) before assigning to count?
+Additionally, for ioc->sas_hba, _scsih_sas_host_add() sets nr_phys_allocated
+to at least MPT_MAX_HBA_NUM_PHYS (32) while only initializing num_phys
+entries:
+
+drivers/scsi/mpt3sas/mpt3sas_scsih.c:_scsih_sas_host_add()
+	ioc->sas_hba.nr_phys_allocated =3D max_t(u8,
+	    MPT_MAX_HBA_NUM_PHYS, num_phys);
+	ioc->sas_hba.phy =3D kzalloc_objs(struct _sas_phy,
+					ioc->sas_hba.nr_phys_allocated);
+	...
+	ioc->sas_hba.num_phys =3D num_phys;
+
+Would a phy_number between ioc->sas_hba.num_phys and
+ioc->sas_hba.nr_phys_allocated index an uninitialized _sas_phy entry where
+mpt3sas_phy->phy is NULL, leading to a NULL pointer dereference in
+mpt3sas_transport_add_phy_to_an_existing_port() -> _transport_add_phy() or =
+in
+the MPT_DEBUG_TRANSPORT dev_printk() call?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/1793925772-1303-1-g=
-it-send-email-shivasharan.srikanteshwara@broadcom.com?part=3D17
+it-send-email-shivasharan.srikanteshwara@broadcom.com?part=3D23
