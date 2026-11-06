@@ -1,50 +1,48 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.30
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.62
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793971143;
-	b=NsXQ8WMtRd1TEVsfRbVD7ctxUda0A+Wbqmv4dOh+lKFgvF/O1w4hjmM98WWOrb+xHgYL
-	 PNEEb8CfNFXIPJk7DAA+kJRvvOfth0t967nu9z/HXAoLRq8pJtFAGpzY9QAOO2Tl0iGHl
-	 G3Xhyzbu1EMf29AbT9SHHoVYgPs/emj5RGjFgihj08IY7gcqaeRiMMHSeVJ2bxDlDAPlP
-	 4lzfULO7Y4odQf435pmEii9pV51Eg2iCYDeV8YOew2mwwSNvTygD+fX1ES+KPogOAm6Qu
-	 LuXEKOngsSAlOq6gluph70QSe3awnprv8PLWWiXozaLTg9/NdbDzXqU71sp6RZVZwww==
+	t=1793971178;
+	b=sh3BP0E6+DzlOEmTUTMMZjnoI7kccBd9Ghsd3wQLYCaSKFFXaJKTIKqDz+aFIbJHZfSv
+	 +NqCPkOMxFz0lc+nJNdiPGM5e5tDYvLEz+O7UR60lyTL3++gkKtPTKbIkLCCPf950GymW
+	 LraxzfjDa5NJ9/uxGCTLcgh9iF9P6OR4bnkXLpSkIG5HEbCd6zOX/AH/add40w9cbJZ5P
+	 i58nlvxg+UdFNTctGw/7T3u4tiPPWkLWI3LUfRqQDB7aU85wUBY3vzU9KcuxZ3iQRnQQ1
+	 wHoC1tI9e+QBMSPycEJXDe1qe9CCr20wWDWT34xEPXbqe3KkoZRm+7RB1qZitzpg1Hg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793971143;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793971178;
 	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
 	 X-Mizu-Trace-ID:X-Migadu-Flow:From:To:Cc:Subject:Date:Message-ID:
-	 X-Mailer:MIME-Version:Content-Transfer-Encoding;
-	bh=q5je5xTRpjfx4LjGIZHPjYuGaotAGI4cWt3i0iD11+Y=;
-	b=yo2vGOtUaC9iBI0MSLd/CIQvVqiMit1dO9JGa3+CnoNyn2Jo71fF5GTVC/JMA0D0TBIw
-	 uShI87Eua1+2XvX9EszqaU4m/3jpyXSBgA/10aPQHWLVeykUod5UUtNR0yq54xbcx7gvY
-	 QelJ3Rta7sd+nIcD+A0yOnEd9kH2szcshL9Z0XRjrpD8m7F2dO+8VJtFxCh9hJgNwp5Pk
-	 kDYs0jkvE+6b7i3xYpTjzWYPh8kPW7AkJeGMYfsCF1xwCohrX7nHMP1/BVTPxdPmTkxKd
-	 LZ6fjo5A++SBCSr6egllTT1FMD5xCleTYJ+32hj2bxUeIu70ZsXo9CT4Af+VIn0j+0w==
+	 X-Mailer:In-Reply-To:References:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=OjxbtrTpVECakggq3aaOcAKtXEWGwtyTzHqRGiNRk7Q=;
+	b=LW5I+A9fsuPp2f+F9rvfzcRXdANIaaOzI6fhFCo/YJAnTFjuvuFzrUwsDEJpIfAFopUd
+	 0WWB5HgUE93EWSwhW2kJdkLi2WjZXDZOsaqnp8oaExTkwVrLxu9wGR5F+VGKDqN6kXttK
+	 mnvxX3Wz+WGHarph5TlVu2F9AI9WNb0e265XgavAuHTEUXb7FHdQhR6sroH4EnKm2Nr/1
+	 Xl4Y7R4/w4+MvrfMR5SdYkxQHffhl/QHKOV1cUTPWJWSs3bk4icGKkFY8L88rjSFRabMk
+	 /H8j6Q/qMv8Dq6bp4VqXg4vm1dfAhpP26sZGmasWaHTpC1ym4y8NPDFeqwIy1lFsZgQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linux.dev;
 	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=b3PIHqeQ;
-	arc=none smtp.remote-ip=91.218.175.30
-Received: from mta0.migadu.com (out-30.mta0.migadu.com [91.218.175.30])
+	arc=none smtp.remote-ip=95.215.58.62
+Received: from mta1.migadu.com (out-62.mta1.migadu.com [95.215.58.62])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 607A0606A326
-	for <linux-scsi@vger.kernel.org>; Fri,  6 Nov 2026 13:19:02 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 607A0606A326
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 06623606A32E
+	for <linux-scsi@vger.kernel.org>; Fri,  6 Nov 2026 13:19:26 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 06623606A32E
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=b3PIHqeQ
 X-Envelope-To: linux-scsi@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=4zwexF7Wz01Eu+onBHbqwklyRz49GNwu5fYWiMpNDo0=;
+DKIM-Signature: a=rsa-sha256; bh=KO2+Pw/HQKx0a4JyoCFPhhmUGDsn7IBoIsdjd3UIB1k=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1793971140; v=1; x=1794575940;
- b=b3PIHqeQrojtLU4Y4VNCZ8rRt61bMFIDsLuTUcbsprTA2BhGn7Ms48fbXm2i4k5LuneFaPZL
- efns+y5W7XbtNLWmXja8lX760spiEjNqVLTfDK+0ec9BwB0YmskmQOe7C4oP0x7xojKGDPefOnz
- x3cM79fsW0CNI8761sGgxJNA=
+ t=1793971165; v=1; x=1794575965;
+ b=jeFNHfv5f4zmg3psPVOfCRejiIcbH0mRSeUBXfYvbsOUUduFnoh4Xb/lFO75h7OZwr3xb52j
+ hl5asAf3vpi1tP7ZCwkufcg0keAVYJ9DH3vunUx+P7OTGGe6hcvnkzOe8I6jXRUX5LbI2tCx1XU
+ DqQcY5Z6CBplWlVJlLCwbnXY=
 X-Envelope-To: linux-scsi@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 26aa00f910ee51dc;
-	Fri, 06 Nov 2026 13:19:00 +0000
-X-Mizu-Trace-ID: 26aa00f910ee51dc
+Received: by smtp.migadu.com with ESMTPS id 99a7a9ba11e11fd9;
+	Fri, 06 Nov 2026 13:19:24 +0000
+X-Mizu-Trace-ID: 99a7a9ba11e11fd9
 X-Migadu-Flow: FLOW_OUT
 From: Tao Cui <cui.tao@linux.dev>
 To: akpm@linux-foundation.org,
@@ -92,10 +90,12 @@ Cc: linux-mm@kvack.org,
 	vbabka@suse.cz,
 	cui.tao@linux.dev,
 	cuitao@kylinos.cn
-Subject: [PATCH 0/7] memcg: account the remaining uncharged kernel allocations
-Date: Fri,  6 Nov 2026 21:18:22 +0800
-Message-ID: <20261106131829.3228926-1-cui.tao@linux.dev>
+Subject: [PATCH 1/7] scsi: sg and st: account the command buffer memory to memcg
+Date: Fri,  6 Nov 2026 21:18:23 +0800
+Message-ID: <20261106131829.3228926-2-cui.tao@linux.dev>
 X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20261106131829.3228926-1-cui.tao@linux.dev>
+References: <20261106131829.3228926-1-cui.tao@linux.dev>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -109,82 +109,118 @@ Content-Transfer-Encoding: 8bit
 
 From: Tao Cui <cuitao@kylinos.cn>
 
-Kernel memory that scales with user controlled input is supposed to be
-charged to the memcg of the task that induces it, so that memory.max
-contains the damage and the accounting is honest.  Sweeping the
-interfaces that let unprivileged or delegated users drive kernel
-allocations turned up seven more places where the charge is missing.
-Every fix is one flag; the interesting part is who can pull the lever
-and how much a pull buys.
+The sg data buffers are unaccounted: the per-fd reserved buffer, the
+scatter-gather page array, and the order-0..N pages behind it, plus the
+per-device tape buffer in st.  All of it is user controllable.  The
+reserved size is capped only by the device max_sectors, SG_MAX_QUEUE
+(16) commands can be in flight per fd, and the fd count is bounded by
+RLIMIT_NOFILE.  Nothing is charged to the memcg of the process driving
+it.  The September 2026 fixes in sg_build_indirect reshaped the element
+sizing and left the accounting alone.
 
-An open sg fd reserves up to max_sectors worth of buffer, SG_MAX_QUEUE
-(16) commands can be in flight per fd, and the fd count is bounded only
-by RLIMIT_NOFILE.  udmabuf metadata costs about 4MB of SUnreclaim per
-GB of buffer with size_limit_mb defaulting to INT_MAX.  vhost holds
-roughly 150KB of resident kernel memory per SET_OWNER, and
-/dev/vhost-net is handed to containers by device plugins.  A ftrace
-instance allocates two full sets of per-cpu ring buffers the moment it
-is created, about 1.375MB per cpu per set, gated by tracefs permissions
-alone.  iommufd's hw_queue contiguity check allocates an array sized by
-a u64 from userspace, frees it when the check fails, and can be
-repeated in a tight loop.  io_uring still leaves the ring context, the
-SQPOLL thread data, io-wq, the alloc cache arrays, the kbuf iovecs and
-the registered eventfds uncharged.  The rsrc and tctx surfaces are
-already charged by commit 075d5837bafc ("io_uring/rsrc: charge buffer
-arrays and nodes to memcg") and commit 0b34e7b20a48 ("io_uring: charge
-tctx nodes and personalities"); patches 6-7 pick up what those did not.
+Mark these allocations __GFP_ACCOUNT so the driving process pays for
+the memory it induces.
 
-Verified on next-20261104 under qemu, same config with and without the
-series, everything builtin: eight sg fds with 1MB reserved buffers
-charge 8MB with the series and nothing without; resizing the global
-trace buffer to 16MB per cpu charges 67MB against 0 before; four 512MB
-udmabuf buffers charge around 8MB of metadata; sixteen vhost SET_OWNER
-calls charge 4MB; 1000 io_uring rings charge 7.6MB on top of what the
-in-tree charging already accounts.  All slab allocations in the series
-are served by kmalloc caches, so they keep charging under the
-SLAB_MAY_ACCOUNT opt-in rule queued in slab/for-next; the tracing patch
-accounts page allocations, which are not affected by it.
+Signed-off-by: Tao Cui <cuitao@kylinos.cn>
+---
+ drivers/scsi/sg.c | 23 ++++++++++++++++++++---
+ drivers/scsi/st.c |  7 ++++---
+ 2 files changed, 24 insertions(+), 6 deletions(-)
 
-Two in-flight series overlap but do not collide.  The dma-heap explicit
-memcg charging series moves dma-buf data page charging to an explicit
-path and removes __GFP_ACCOUNT from the system heap, while patch 2 here
-accounts udmabuf metadata only, which that series does not see; if it
-lands first, the system heap reference in patch 2 wants dropping.  The
-io_uring patches sit on top of the charging Mason and Jens already
-merged, and cite those commits as the in-tree predecessors.
-
-I am sending these in one thread so the class is visible in one place.
-If any of you would rather take your piece through your own tree, an
-ack is all I need and I will split the series.
-
-Tao Cui (7):
-  scsi: sg and st: account the command buffer memory to memcg
-  dma-buf/udmabuf: account the page array metadata to memcg
-  vhost: account the per-device kernel allocations to memcg
-  tracing: account ring buffer pages and trace_array metadata to memcg
-  iommufd: account the hw_queue page array to memcg
-  io_uring: account the ring context and SQPOLL thread data to memcg
-  io_uring: account the remaining per-object allocations to memcg
-
- drivers/dma-buf/udmabuf.c      |  7 ++++---
- drivers/iommu/iommufd/viommu.c |  3 ++-
- drivers/scsi/sg.c              | 23 ++++++++++++++++++++---
- drivers/scsi/st.c              |  7 ++++---
- drivers/vhost/net.c            | 14 ++++++++------
- drivers/vhost/vhost.c          | 16 ++++++++++------
- drivers/vhost/vsock.c          |  5 +++--
- io_uring/alloc_cache.c         |  3 ++-
- io_uring/eventfd.c             |  2 +-
- io_uring/io-wq.c               |  4 ++--
- io_uring/io_uring.c            |  2 +-
- io_uring/kbuf.c                |  2 +-
- io_uring/rsrc.c                |  3 ++-
- io_uring/sqpoll.c              |  2 +-
- io_uring/tctx.c                |  4 ++--
- kernel/trace/ring_buffer.c     |  8 +++++++-
- kernel/trace/trace.c           |  6 +++---
- 17 files changed, 73 insertions(+), 38 deletions(-)
-
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index 6551f1284d44..9c1414479b21 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -911,6 +911,19 @@ static int put_compat_request_table(struct compat_sg_req_info __user *o,
+ }
+ #endif
+ 
++/*
++ * The sg passthrough of the blktrace ioctls has the same exposure as the
++ * block device path: holding the node is the only requirement today, and
++ * a created trace outlives the fd.  Must match the gate in
++ * blk_trace_ioctl().
++ */
++static bool sg_is_blktrace_cmd(unsigned int cmd)
++{
++	return cmd == BLKTRACESETUP || cmd == BLKTRACESETUP2 ||
++	       cmd == BLKTRACESTART || cmd == BLKTRACESTOP ||
++	       cmd == BLKTRACETEARDOWN;
++}
++
+ static long
+ sg_ioctl_common(struct file *filp, Sg_device *sdp, Sg_fd *sfp,
+ 		unsigned int cmd_in, void __user *p)
+@@ -920,6 +933,9 @@ sg_ioctl_common(struct file *filp, Sg_device *sdp, Sg_fd *sfp,
+ 	Sg_request *srp;
+ 	unsigned long iflags;
+ 
++	if (sg_is_blktrace_cmd(cmd_in) && !capable(CAP_SYS_ADMIN))
++		return -EPERM;
++
+ 	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sdp,
+ 				   "sg_ioctl: cmd=0x%x\n", (int) cmd_in));
+ 	read_only = (O_RDWR != (filp->f_flags & O_ACCMODE));
+@@ -1829,7 +1845,7 @@ static int
+ sg_build_sgat(Sg_scatter_hold * schp, const Sg_fd * sfp, int tablesize)
+ {
+ 	int sg_bufflen = tablesize * sizeof(struct page *);
+-	gfp_t gfp_flags = GFP_ATOMIC | __GFP_NOWARN;
++	gfp_t gfp_flags = GFP_ATOMIC | __GFP_NOWARN | __GFP_ACCOUNT;
+ 
+ 	schp->pages = kzalloc(sg_bufflen, gfp_flags);
+ 	if (!schp->pages)
+@@ -1844,7 +1860,8 @@ sg_build_indirect(Sg_scatter_hold * schp, Sg_fd * sfp, int buff_size)
+ 	int ret_sz = 0, i, k, rem_sz, num, mx_sc_elems;
+ 	int sg_tablesize = sfp->parentdp->sg_tablesize;
+ 	int blk_size = buff_size, order;
+-	gfp_t gfp_mask = GFP_ATOMIC | __GFP_COMP | __GFP_NOWARN | __GFP_ZERO;
++	gfp_t gfp_mask = GFP_ATOMIC | __GFP_COMP | __GFP_NOWARN |
++			 __GFP_ACCOUNT | __GFP_ZERO;
+ 
+ 	if (blk_size < 0)
+ 		return -EFAULT;
+@@ -2134,7 +2151,7 @@ sg_add_sfp(Sg_device * sdp)
+ 	unsigned long iflags;
+ 	int bufflen;
+ 
+-	sfp = kzalloc_obj(*sfp, GFP_ATOMIC | __GFP_NOWARN);
++	sfp = kzalloc_obj(*sfp, GFP_ATOMIC | __GFP_NOWARN | __GFP_ACCOUNT);
+ 	if (!sfp)
+ 		return ERR_PTR(-ENOMEM);
+ 
+diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
+index e9d41e3cc2dd..b92633ab2757 100644
+--- a/drivers/scsi/st.c
++++ b/drivers/scsi/st.c
+@@ -4074,7 +4074,7 @@ static struct st_buffer *new_tape_buffer(int max_sg)
+ {
+ 	struct st_buffer *tb;
+ 
+-	tb = kzalloc_obj(struct st_buffer);
++	tb = kzalloc_obj(struct st_buffer, GFP_KERNEL_ACCOUNT);
+ 	if (!tb) {
+ 		printk(KERN_NOTICE "st: Can't allocate new tape buffer.\n");
+ 		return NULL;
+@@ -4083,7 +4083,8 @@ static struct st_buffer *new_tape_buffer(int max_sg)
+ 	tb->use_sg = max_sg;
+ 	tb->buffer_size = 0;
+ 
+-	tb->reserved_pages = kzalloc_objs(struct page *, max_sg);
++	tb->reserved_pages = kzalloc_objs(struct page *, max_sg,
++					  GFP_KERNEL_ACCOUNT);
+ 	if (!tb->reserved_pages) {
+ 		kfree(tb);
+ 		return NULL;
+@@ -4109,7 +4110,7 @@ static int enlarge_buffer(struct st_buffer * STbuffer, int new_size)
+ 
+ 	max_segs = STbuffer->use_sg;
+ 
+-	priority = GFP_KERNEL | __GFP_NOWARN;
++	priority = GFP_KERNEL | __GFP_NOWARN | __GFP_ACCOUNT;
+ 
+ 	if (STbuffer->cleared)
+ 		priority |= __GFP_ZERO;
 -- 
 2.43.0
 
