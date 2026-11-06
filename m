@@ -1,92 +1,92 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.215.225
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.98
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793926719;
-	b=dmDN9+uRXS4mjNeOd2Jldj8mmyNPKb1s1rrmLPScX4wEIYSud5IMmJRWBk3IDWZA4jfu
-	 OTRHRYhOnOkc9FpsBlfyVP5L9tWygEeJrX+DGLvvldV15FC+Qlz5lVKCAVhCO/i9niVLH
-	 0a/ldpIoke7/vXQMQOTnHXQl0/L5C625pKdKrFv7Jn12oqj0HL4OGsKJkWmAiwaM9RUip
-	 3OvUdcCkwfVDDq20s9c+kK3JG2iZzeeYfJjFJ00IZgGqdF8iWY+UmraJU/TCTxatXnTnJ
-	 K5cVM02+EFrxn5PsWeX1Kza5nS4dtyFoYxbW6FQUNPRU4J+hAopIpEDycHI37vn/nxA==
+	t=1793926725;
+	b=IPVeY+4/ifKn3UvTprDySXGpv4E/lUY1uegqf2T48IDdOLocN2rQJ8V8NzxU4DCo1b4M
+	 +EWhQU8crVFy3QUjxcUtr55htvCSLKeNkDmWvV5nUkiGdkTLlqevCYAsg54lJHL6W95sA
+	 2dRlPag43B1GviGRAqUFIbrZnT4cFP1GubwIgS/Cb7zAzMiI4s6h0dQnACCUOxpFIxkJj
+	 OHvtvyEEpFHq8fY/psouwxbtFFIpnGqxOUTcHz5UQAP6CFsf8bME9LlS5/9My/PAKXaYV
+	 CNItXDN9FlDkCl83HQKrbMW0z7PnPiOTliVSW840K4jos1qYWxOPeBj0S43S9W8eewQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793926719;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793926725;
 	h=DMARC-Filter:Received:X-Google-DKIM-Signature:X-Gm-Message-State:
 	 X-Gm-Gg:X-Received:Received:X-Relaying-Domain:X-CFilter-Loop:Received:
 	 DKIM-Signature:X-Received:X-Received:Received:From:To:Cc:Subject:Date:
 	 Message-Id:X-Mailer:In-Reply-To:References:X-DetectorID-Processed;
-	bh=4LULYwV2o4UhZi047H7Od7ERxR+6CtHJJrbkdyK+pms=;
-	b=T/6EI4BKvTHDPCO66vl3q733zA+B36aX5M6TRCggw/bBpbSVj+46BEkuEWbmJRutDAJk
-	 f5PQgOqZ67xCnGt3bbLlj9RoYS+HsNN5QK/UKMrwV/Y6mGGJBJomP57hZVckrYfeyYWpj
-	 4EZFpQE9fhehaoFRtYDl+lYATt4QyF9YUI+YzSq0r2miWi+LFlLu3T9wRWC4s6GV9WKmM
-	 sluCsogrsaWwa0zkDBQqL1XWbJyJ+bHTgV3BUfcjmEl7PpQZPKI3MZKLF3tDCkQY4kdh5
-	 ZvlRW7m9fMzCEbe2uPg1kXctKTTVc2v/r8e064vX/qKSGabvHDl/L7yJtzXAqrOUduw==
+	bh=p1WmhQkQy1gvk1oH4pFKIZ9uYFADakeViRXEe+vNixo=;
+	b=Npgtgnv8sFzbIfGyauMX4wwLuF6tgzJ/chYq6r/y9sRt6nVgxn+rkHm2hiLX4CIHvJJn
+	 c6+cfxKh0ilSVr8OFiJ4KyI+DMogvNOHGURwxIRbFOO7aLP+S2G9BXRJOMegnjcpMagDk
+	 08zvgeuMh624r+9t7Hke71SsmCJHKnr7VdLGSgfIyvzjPFwr9He0OcfNju+jXeNXV9bJH
+	 TSKVSWsshdkQRS0trjOjSKg/9r38NE3eNBCtVydGOdE0awGoEsHmKYwu0i6FE2Y0vfuWC
+	 l4aXl1/ObYMCuabfUWMvX/JnyBqynTUS9flUDe9eSjYylGFrxhohFTJLx4f9PS6/tQw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=broadcom.com;
 	spf=fail smtp.mailfrom=broadcom.com;
-	dkim=pass header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=XBGIO+Mg;
-	arc=none smtp.remote-ip=209.85.215.225
-Received: from mail-pg1-f225.google.com (mail-pg1-f225.google.com [209.85.215.225])
+	dkim=pass header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b="BW/SF3fg";
+	arc=none smtp.remote-ip=209.85.216.98
+Received: from mail-pj1-f98.google.com (mail-pj1-f98.google.com [209.85.216.98])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F198C606A326
-	for <linux-scsi@vger.kernel.org>; Fri,  6 Nov 2026 00:58:38 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org F198C606A326
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 06F5A606A328
+	for <linux-scsi@vger.kernel.org>; Fri,  6 Nov 2026 00:58:44 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 06F5A606A328
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=XBGIO+Mg
-Received: by mail-pg1-f225.google.com with SMTP id 41be03b00d2f7-cdb684859cbso66652a12.1
-        for <linux-scsi@vger.kernel.org>; Thu, 05 Nov 2026 16:58:38 -0800 (PST)
+	dkim=pass (1024-bit key, unprotected) header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=BW/SF3fg
+Received: by mail-pj1-f98.google.com with SMTP id 98e67ed59e1d1-3ace1f3897cso64279a91.0
+        for <linux-scsi@vger.kernel.org>; Thu, 05 Nov 2026 16:58:44 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793926718; x=1794531518;
+        d=1e100.net; s=20260707; t=1793926724; x=1794531524;
         h=references:in-reply-to:message-id:date:subject:cc:to:from
          :dkim-signature:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=4LULYwV2o4UhZi047H7Od7ERxR+6CtHJJrbkdyK+pms=;
-        b=apMsHeq+1JLWMKN8iA8LoMIeEG+Dxif/uNzbVHTZynmajobZ+hrOnsRuWYiufX9iMK
-         CmN/tQ02ROhEwdfxC0pcgx1D61dlbAld8sGi39OwZwt42c9OFpUh/7lDNZLmEfQt/0wU
-         GzoAl+1aPyOFt2CkLg2VXmBdqeEYiQdeLj+1WFlbe8laj1/mxi4QVbn64fTq1VDshtaz
-         towNFVS8IdZ6SdYldsDWdq43Rh+3cGZ4lhug+HJG1gATXjqW/nHETtTaC76hSEeAV3s0
-         CdE9jFTMZyg9elFWJnNZGCU/JFcc0AO3bZSkn0YdXsfCRqhCB1hRUzZqHEnIU66GHRC6
-         dNcg==
-X-Gm-Message-State: APuU4Z+0O6n6PqGfkOdjuUU/xLZw9CKg+w5rVSzP7GW1W2mGqJZBNzx2
-	+PFwE/L+4LPjbVzyD5rr1MlqTNPue7qtRyvVC3hOoqSS3jM7fC7hVsk2jF/v4kC2OX+U3LIjCcV
-	NMbEdVakyW6wk7KQLdriARFU0+egJvpzxuYyHsAHExCDagydp/Y3h1Up8XL1CyhZsoS1repR734
-	yLWHK4wlKTxH2ZEBhpmwo28O3GnbDHBM3w0IlWRhkS2BaOLc0T6BR/llUPOfBx3mfTsBjyiXcVu
-	GudnOguB3yXPfmj5RiIMPHDaL12+nHYpMI=
-X-Gm-Gg: AYBFou28lhtc2YEPldu3fTNwILjQKyPIMLIv8/LudF5yiREZwq/ZeKggUusBOkj2j6d
-	mENlgeHqUObWf0H6w4UtRC8hvOBHhFDEpZfwwdYe/6ZoCU0s+QYRM39iefoupaQiih0GT6CwTbv
-	CP3Xcb6eRL5zNkBcAV1/a8tNslZl1PuuWThfKaCsV1TYcdRYvhJDCaciVAaKzJsG9trQ8B8P2yu
-	/RXWeoPkxqGF+E45DeSlFzQNyTT9AodxMom58VE+LFSrPLYLKWbH3ZGzw/DEsnAG0mEkOF056Vv
-	zqwTFZY+yb4xHfZUKEglblUvJtEDKglsrfHF6zSZmvEJgGUFkbdddL9Zu3afessXI8ldas9CpkS
-	ZSZGTU3p7ogjQ1Sg6PsXykGumvs8EMytUHwcDANteeVRemNw9SwdhH1lEYVPJkktqrrvNd2W8u3
-	seSyygp+sQTE3PeVO75X8KjCNIq/mTHSk3QVtGG9jSMF2G0wXmFNf0Kg==
-X-Received: by 2002:a17:90b:1c0d:b0:3a4:f8da:2478 with SMTP id 98e67ed59e1d1-3b0db6c33fdmr792996a91.29.1793926718235;
-        Thu, 05 Nov 2026 16:58:38 -0800 (PST)
+        bh=p1WmhQkQy1gvk1oH4pFKIZ9uYFADakeViRXEe+vNixo=;
+        b=vXt8UXalPwj9KvMueI5EHnOcMcGuuPfFwPkVLq5pGqPpFFWYmMrCqAzBaFxZn7KPC8
+         REBgmtNOFwwEvuuF3tHO0X2w4743IMLMRkYu3+A5bl7qxXiZ5pC7IAWMeYXEba9kMJ3r
+         otqJbu6P+K6Xt2CY+VHfgE6HYzt+Dye9IshLSAKlmf2oL5onZc1YBU8bJJG7NHT1GARr
+         AoWjq63to17TX8SeH59WFy7AgzNplkswng7ntzbNs3GCaLtkySr5MH/U420dBN67DSVd
+         N4qt80sA47AT9falps98+KEW1LKDuILxgnYijEN57rrlp76rjOBBc521/c11h/21+S+i
+         qS6A==
+X-Gm-Message-State: APuU4Z9dNuUVWVQip+cISoHLn0nfKPzhdbQZodSz2vWnWCmxxqwePWBx
+	aM8z9OtFbF+SEQDGDN54J2TKOrmFOyGSeWrEHTKb3P4uTuXDSXPsbxd2h5DBd2SkEZejwJoldbb
+	f0C5RMwIhjVU2doyE/aucPi+7GeneQuxtOI0amZaPoyimDUmIT2uSMAPcfdguFPAqG4N4hsaw0x
+	807cL4/Et53ZzcZY/aLOsLCRNC6NdI9e7koKiT1kcgo/bM6bh3Pz7frWVJhnWxCz2GsjnDc4fV/
+	Hxto6UN6kAs9bqbCZwIduGSEKAZtMrwb/w=
+X-Gm-Gg: AYBFou2kZyqdfXeAk7JHc5R/MHv5Orh3ABKDw8hR7zDE4b+NcOgQ8yg8sNEqovsw2kq
+	4uxB6pkFpLFbN88F4382ILltCeaZbnImAlwrIIQTd0EnY9Jm8OpxoaxcavWMKX8Emo8GyPzCeum
+	+eS6jqdG+y82lUklWgvlvmcjDPJpl8CPvm9fZvNapbOuo+cw5vfUky8nW6LiBl61DM/RHCpbfq+
+	N3Pb5OvRwkAtYjAMJ2jAJeucKoRYYodLHt7GFdo2hNJOSNqB+WRQ2YS5n4N3v/MDh+/0cG2E7Wt
+	pkpmYxsSEZKa4DB4j3QJp59pKu19Gu4L4dqvXEFgZCtw95qJY421EejVRuOOM/msdTz502odgkG
+	m3H6L0/g6F6X3xRnUjAY8OAQSbbZzyhoDfDW1K8fILHuPQgfEOYnXNyZXgDo3aBPAcIIdwQZgdE
+	6pfTEa1Ge+BhaLjkHtzIG5iLAZHrKMGA27TT4h2CbiO9cBpIA2F7vcmg==
+X-Received: by 2002:a17:90b:2c8f:b0:3ac:8897:7ba5 with SMTP id 98e67ed59e1d1-3b0db713f11mr805527a91.59.1793926724273;
+        Thu, 05 Nov 2026 16:58:44 -0800 (PST)
 Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-13.dlp.protect.broadcom.com. [144.49.247.13])
-        by smtp-relay.gmail.com with ESMTPS id 98e67ed59e1d1-3b0b315a756sm2907253a91.2.2026.11.05.16.58.36
+        by smtp-relay.gmail.com with ESMTPS id 98e67ed59e1d1-3b0b32a5585sm2872300a91.8.2026.11.05.16.58.43
         for <linux-scsi@vger.kernel.org>
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 05 Nov 2026 16:58:38 -0800 (PST)
+        Thu, 05 Nov 2026 16:58:44 -0800 (PST)
 X-Relaying-Domain: broadcom.com
 X-CFilter-Loop: Reflected
-Received: by mail-pg1-f200.google.com with SMTP id 41be03b00d2f7-cd67d4bbdffso92598a12.3
-        for <linux-scsi@vger.kernel.org>; Thu, 05 Nov 2026 16:58:35 -0800 (PST)
+Received: by mail-pl1-f199.google.com with SMTP id d9443c01a7336-2ed077a15c3so1317065ad.0
+        for <linux-scsi@vger.kernel.org>; Thu, 05 Nov 2026 16:58:43 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1793926715; x=1794531515; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1793926722; x=1794531522; darn=vger.kernel.org;
         h=references:in-reply-to:message-id:date:subject:cc:to:from:from:to
          :cc:subject:date:message-id:reply-to:content-type;
-        bh=4LULYwV2o4UhZi047H7Od7ERxR+6CtHJJrbkdyK+pms=;
-        b=XBGIO+MgaAeON7kis/XhW8DReIpD0LdWmBQwq9BhNqgb3Za2eBDKfrlkMahHP8AJxy
-         BxZXHfQj4r3VZQj5o3v6NXIjjeNoRNjG+Ad7kT0cnwWmlr20I0zqJnK2FR+Z1j5R1TWC
-         PID17+I9G0CcpLUqx8cOPf9SJULeknThzp1FY=
-X-Received: by 2002:a17:902:ce0c:b0:2ed:2d16:ceac with SMTP id d9443c01a7336-2ed41bfad84mr12817725ad.36.1793926714955;
-        Thu, 05 Nov 2026 16:58:34 -0800 (PST)
-X-Received: by 2002:a17:902:ce0c:b0:2ed:2d16:ceac with SMTP id d9443c01a7336-2ed41bfad84mr12817515ad.36.1793926714467;
-        Thu, 05 Nov 2026 16:58:34 -0800 (PST)
+        bh=p1WmhQkQy1gvk1oH4pFKIZ9uYFADakeViRXEe+vNixo=;
+        b=BW/SF3fgfKe+GJyK71Rrx5EdE3HFG9/uQBiZgFmXUawkC+UL2y4mnxrOghycahmkm2
+         kuOeqsmzSmKibO89kEQxE5bjgbBsGbuks4tbZtECH6fDhhrROb3cmGn7agxISYPhNqHW
+         7IOobIKshFURhruVH2JwDXy5l0QY+FWtwgOZs=
+X-Received: by 2002:a17:902:cf05:b0:2e8:79d:15ec with SMTP id d9443c01a7336-2ed404dd1e5mr15761225ad.6.1793926722291;
+        Thu, 05 Nov 2026 16:58:42 -0800 (PST)
+X-Received: by 2002:a17:902:cf05:b0:2e8:79d:15ec with SMTP id d9443c01a7336-2ed404dd1e5mr15761045ad.6.1793926721725;
+        Thu, 05 Nov 2026 16:58:41 -0800 (PST)
 Received: from dhcp-135-24-192-142.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2ed47d7b8cfsm450745ad.57.2026.11.05.16.58.31
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2ed47d7b8cfsm450745ad.57.2026.11.05.16.58.37
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 05 Nov 2026 16:58:33 -0800 (PST)
+        Thu, 05 Nov 2026 16:58:41 -0800 (PST)
 From: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 To: linux-scsi@vger.kernel.org,
 	martin.petersen@oracle.com
@@ -95,9 +95,9 @@ Cc: sathya.prakash@broadcom.com,
 	chandrakanth.patil@broadcom.com,
 	sweeti.vandure@broadcom.com,
 	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-Subject: [PATCH 09/37] scsi: mpt3sas: Clamp topology/IR event entry counts to EventDataLength
-Date: Thu,  5 Nov 2026 16:42:24 -0800
-Message-Id: <1793925772-1303-10-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+Subject: [PATCH 11/37] scsi: mpt3sas: Fix port_table memory leak in _scsih_sas_port_refresh
+Date: Thu,  5 Nov 2026 16:42:26 -0800
+Message-Id: <1793925772-1303-12-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 X-Mailer: git-send-email 2.4.3
 In-Reply-To: <1793925772-1303-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 References: <1793925772-1303-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
@@ -111,93 +111,37 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 
-Clamp NumEntries/NumElements in SAS/PCIe topology and IR config
-change events to what EventDataLength actually covers.
+Free port_table on every exit path, including the early return when
+no ports are found.
 
 Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 51 ++++++++++++++++++++++++----
- 1 file changed, 45 insertions(+), 6 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index aaab6c4673c1..1d483a560d75 100644
+index 1d483a560d75..788b611c7c52 100644
 --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
 +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -12210,9 +12210,21 @@ mpt3sas_scsih_event_callback(struct MPT3SAS_ADAPTER *ioc, u8 msix_index,
+@@ -6783,7 +6783,7 @@ _scsih_sas_port_refresh(struct MPT3SAS_ADAPTER *ioc)
+ 
+ 	port_count = _scsih_get_port_table_after_reset(ioc, port_table);
+ 	if (!port_count)
+-		return;
++		goto out;
+ 
+ 	drsprintk(ioc, ioc_info(ioc, "New Port table\n"));
+ 	for (j = 0; j < port_count; j++)
+@@ -6846,6 +6846,8 @@ _scsih_sas_port_refresh(struct MPT3SAS_ADAPTER *ioc)
  	}
  
- 	case MPI2_EVENT_SAS_TOPOLOGY_CHANGE_LIST:
--		_scsih_check_topo_delete_events(ioc,
-+	{
-+		Mpi2EventDataSasTopologyChangeList_t *topo_data =
- 		    (Mpi2EventDataSasTopologyChangeList_t *)
--		    mpi_reply->EventData);
-+		    mpi_reply->EventData;
-+		u32 data_len = le16_to_cpu(mpi_reply->EventDataLength) * 4;
-+		size_t hdr_size =
-+		    offsetof(Mpi2EventDataSasTopologyChangeList_t, PHY);
-+		u16 max_entries = 0;
-+
-+		if (data_len > hdr_size)
-+			max_entries = (data_len - hdr_size) /
-+			    sizeof(Mpi2EventSasTopoPhyEntry_t);
-+		if (topo_data->NumEntries > max_entries)
-+			topo_data->NumEntries = max_entries;
-+		_scsih_check_topo_delete_events(ioc, topo_data);
- 		/*
- 		 * No need to add the topology change list
- 		 * event to fw event work queue when
-@@ -12224,18 +12236,45 @@ mpt3sas_scsih_event_callback(struct MPT3SAS_ADAPTER *ioc, u8 msix_index,
- 		if (ioc->shost_recovery)
- 			return 1;
- 		break;
-+	}
- 	case MPI2_EVENT_PCIE_TOPOLOGY_CHANGE_LIST:
--	_scsih_check_pcie_topo_remove_events(ioc,
-+	{
-+		Mpi26EventDataPCIeTopologyChangeList_t *pcie_topo_data =
- 		    (Mpi26EventDataPCIeTopologyChangeList_t *)
--		    mpi_reply->EventData);
-+		    mpi_reply->EventData;
-+		u32 data_len = le16_to_cpu(mpi_reply->EventDataLength) * 4;
-+		size_t hdr_size =
-+		    offsetof(Mpi26EventDataPCIeTopologyChangeList_t, PortEntry);
-+		u16 max_entries = 0;
-+
-+		if (data_len > hdr_size)
-+			max_entries = (data_len - hdr_size) /
-+			    sizeof(MPI26_EVENT_PCIE_TOPO_PORT_ENTRY);
-+		if (pcie_topo_data->NumEntries > max_entries)
-+			pcie_topo_data->NumEntries = max_entries;
-+		_scsih_check_pcie_topo_remove_events(ioc, pcie_topo_data);
- 		if (ioc->shost_recovery)
- 			return 1;
- 		break;
-+	}
- 	case MPI2_EVENT_IR_CONFIGURATION_CHANGE_LIST:
--		_scsih_check_ir_config_unhide_events(ioc,
-+	{
-+		Mpi2EventDataIrConfigChangeList_t *ir_config_data =
- 		    (Mpi2EventDataIrConfigChangeList_t *)
--		    mpi_reply->EventData);
-+		    mpi_reply->EventData;
-+		u32 data_len = le16_to_cpu(mpi_reply->EventDataLength) * 4;
-+		size_t hdr_size =
-+		    offsetof(Mpi2EventDataIrConfigChangeList_t, ConfigElement);
-+		u16 max_elements = 0;
-+
-+		if (data_len > hdr_size)
-+			max_elements = (data_len - hdr_size) /
-+			    sizeof(MPI2_EVENT_IR_CONFIG_ELEMENT);
-+		if (ir_config_data->NumElements > max_elements)
-+			ir_config_data->NumElements = max_elements;
-+		_scsih_check_ir_config_unhide_events(ioc, ir_config_data);
- 		break;
-+	}
- 	case MPI2_EVENT_IR_VOLUME:
- 		_scsih_check_volume_delete_events(ioc,
- 		    (Mpi2EventDataIrVolume_t *)
+ 	port_table_entry = NULL;
++out:
++	kfree(port_table);
+ }
+ 
+ /**
 -- 
 2.53.0
 
