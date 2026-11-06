@@ -1,71 +1,71 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.14
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793963839;
-	b=aFiJEOlSH8HMrxqEQQkX3wrWyzDJ+UpylhXCHO3IpirMbjUwM1GYcT4I2Qf4T4VuRjO8
-	 8bUvNza/5D9/8JG5lQ7VZPGSC/o/AbrIadgxOe5pMVap4U+w/Min3B7R2xOKjLBe4T1z0
-	 1T8PcV82OUCtON7uUeVFcV24mtFda660qfLpOxraGk59gbufL6CglFiXb3H3RREA8l+pY
-	 qoA44z4OnrZqB7uVGdjrJ0NjVI9ljNN2pIYX6MqPYuTmldhe+OoGfK1Vdihp+XFp8SrkN
-	 FGfr4USEH9Vuc8V/FE+1xFNZvZ40+dsAZc/ENO5QhuCoLSX8xD5tiS4R7Af53vYEAHA==
+	t=1793964681;
+	b=cYIiAt8qak7V1p5sSBgJB85wEWLjT6PTYljPpx6Cke5t5jOqeqdVJMjlTPLePwp8XBQC
+	 QAey0iQOyvdMg7FvhOf+n22pjsdbkhcfR0HaLJiCZ5NMxd3hBzD3DIo9KXfkVNtVyxeXG
+	 +cKFasfzymL2TRrBcKqNsTwaU24ANTzV/PC1hlIfn+5PGz0kBOlUy+laGoljVrO2LP2Vz
+	 Qc5BCem4lmRsCBSbIGAFY/+cULRyL8G0MA3cFqkMU0JlnuA29QZKzSbYRyjCQnBkP7TUA
+	 4fmAdo4xpMNdycbm91IwmLVhmIg3d0VyZTAAVQdGdHqwIKGVVTtTXf5t8aommuLFzig==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793963839;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793964681;
 	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
 	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
 	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Received:Date:From:To:
 	 Cc:Subject:Message-ID:References:MIME-Version:Content-Type:
 	 Content-Disposition:In-Reply-To;
-	bh=hxL1iVBaG6hwUVKEhgHaKHpDUD8qfac1W5n0kFQw2s4=;
-	b=5tidV+p2TsLt1if7fjO17IXEQyR82Paip8rrRrR/NP5pMJf9pn0dhTCo3GPA5vSgWJGC
-	 DUvNsP128RQesC27YzWsgf/r0P1mAvNlMVHQz70/UZQtOh2wbFQxkp6yggazMKGrgyUzA
-	 MPb7Ku2FubfFocYZnCXIFBIb7PEB3yigKB/bDKUqIU3fZPJVdWk1G4MOPWG6lEODjvhQy
-	 nsGB6F7/EArRuuinYGz94BjlOBwSTITIeKddMSv/YJ7Hm7n1dJq5yT2/V93T7O+FF8EeB
-	 xEqse+EibDVrXihr+XNqVLYeXYYdQE51SWpN3mUbf+yAMiAOD4GxdFjGVZfMZSsbfTQ==
+	bh=bIhVi7DqLa2KqhdxEJjUtsluGlm+9jNdA8ypyX5JrRg=;
+	b=L4LHaeMTI1wCXQX0xRCGt5ukPsoWftxgBtgIyCjznaKtW9HTiKECAPpZkIJYNBLC55Cz
+	 QI7ZXuzf7gwWXbuqbF17xVRAWeEgv3/r6uvVNVypN9LKZNcTrYRyVhba2JfCcRgNVi/Oj
+	 YpwDzQyI3rvDwTx4AXmFXaFZ4XGU5l9vihP2bJ/akWAV8h6K4ly9ZOEyTisJIRTzPLkfF
+	 0IEenCKYtjwD/Q57x8yA5pBXOEN/SO6/+UeePzBUubom8rYfERDe96hwdSIIiAMNb9e2E
+	 l8h2hpGfj0IT5x+IP45K+EoM2+R7HJtNt7wCWmFSJDc7F9Akib3EpFZxzmvqDx3KXVQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=intel.com;
 	spf=pass smtp.mailfrom=intel.com;
-	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b="D//efSgl";
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=A1s7jVa5;
 	arc=none smtp.remote-ip=198.175.65.14
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.14])
 	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8EC1C606A331
-	for <linux-scsi@vger.kernel.org>; Fri,  6 Nov 2026 11:17:18 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8EC1C606A331
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90B19606D817
+	for <linux-scsi@vger.kernel.org>; Fri,  6 Nov 2026 11:31:20 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 90B19606D817
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=D//efSgl
+	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=A1s7jVa5
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1793963839; x=1825499839;
+  t=1793964680; x=1825500680;
   h=date:from:to:cc:subject:message-id:references:
    mime-version:in-reply-to;
-  bh=Q/WtCSS+AL6IhXq70hvx/58YjcENJi6qF9Lu+biaK9c=;
-  b=D//efSglZ+ArdBf9cIjYbRMmJVAVuMntqd60eCpR6YnK1XZ++ujfJgnN
-   C5glfp9VpqfhSSHxFcrp//o3f8CfW3ev9Of6R1xhlxe2UvLtMMvnGZg9Y
-   9Afj36zy2FkxFeuFtVjNNYggz25Ou1nPD4NS/vFOSWqVIEgQWRd0eOPok
-   9JGeMDILDLhX0+5LJ1Ywbc48W+veyU2xcWZrHAx2gYqkksdzss2pil8nt
-   3gCzgofLRxJadnS5SjqH6Cja4buIJiBy4b4bFaVqH6qtE7/toBDll4DL+
-   JBBr99JYEfhtUEsZbNKRvzGXYszBnNotpPGF+q/jkNxCOaRwbGdhcPYym
-   g==;
-X-CSE-ConnectionGUID: csAj7oItR7a+8TuJiv79Fw==
-X-CSE-MsgGUID: 72mcVomxRdKkX5A70L04KQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11957"; a="2668517"
+  bh=yjMSt5jgTuR/kLdo96ZTXNuUTiM+hXQL8bHFGBygnxg=;
+  b=A1s7jVa5PXWo5wyVmQ2ALbFxypmUuduxsM+SqwQX1deOcBCAPHLIuBbY
+   OOyiPllCcH8x+nmP/RcCyfjqTTfzV7qwTWrfoWaw0/VDA/fMKuArElKNQ
+   W/2SemBGX0DdsUdBdbDkXJm7xaXvcUPpw945Mgd/oKlnO1YFYxBjMNdCO
+   KKDBBP6KQblbdmhICYVo4b70QlJjH1AYMCqeQRpIEebnZoiGqNIX6USeH
+   jrkIhBFHEAg2AVh2yaPYdeqj3nVqdHLSE75W6MCQuMfLaQfPAoj7Mmhhx
+   HoFsTX+l/w7zLJXV3U/Iq+YXSgwlHXBRnmvVS5vULqRk/lXrCOTDficNw
+   Q==;
+X-CSE-ConnectionGUID: ox34QWwUQriR/0QV3LS+OQ==
+X-CSE-MsgGUID: rDrI8+jFQS+N/OeMU5kC4w==
+X-IronPort-AV: E=McAfee;i="6800,10657,11957"; a="2669504"
 X-IronPort-AV: E=Sophos;i="6.27,197,1787036400"; 
-   d="scan'208";a="2668517"
+   d="scan'208";a="2669504"
 Received: from fmviesa008.fm.intel.com ([10.60.135.148])
-  by orvoesa106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Nov 2026 03:17:18 -0800
-X-CSE-ConnectionGUID: xHfFkK4kQaipfD1Cuf2xaA==
-X-CSE-MsgGUID: Z8foR4A6TBKV4yw7SKGIOg==
+  by orvoesa106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Nov 2026 03:31:20 -0800
+X-CSE-ConnectionGUID: bgkCM0fZRwqbcApYRo4TUQ==
+X-CSE-MsgGUID: Nj00MerhRPuZWjE0IX/TzQ==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.27,197,1787036400"; 
-   d="scan'208";a="7575563"
+   d="scan'208";a="7577342"
 Received: from lkp-server01.sh.intel.com (HELO 0caa9d2d175c) ([10.239.97.150])
-  by fmviesa008.fm.intel.com with ESMTP; 06 Nov 2026 03:17:15 -0800
+  by fmviesa008.fm.intel.com with ESMTP; 06 Nov 2026 03:31:18 -0800
 Received: from kbuild by 0caa9d2d175c with local (Exim 4.98.2)
 	(envelope-from <lkp@intel.com>)
-	id 1xPHwX-00000000p75-19MG;
-	Fri, 06 Nov 2026 11:17:13 +0000
-Date: Fri, 6 Nov 2026 19:16:17 +0800
+	id 1xPIA7-00000000p7z-1ojC;
+	Fri, 06 Nov 2026 11:31:15 +0000
+Date: Fri, 6 Nov 2026 19:30:48 +0800
 From: kernel test robot <lkp@intel.com>
 To: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
 	linux-scsi@vger.kernel.org, martin.petersen@oracle.com
@@ -75,7 +75,7 @@ Cc: oe-kbuild-all@lists.linux.dev, sathya.prakash@broadcom.com,
 	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 Subject: Re: [PATCH 14/37] scsi: mpt3sas: Fix buffer overflow in
  _scsih_scsi_ioc_info
-Message-ID: <202611061833.3AceeVtV-lkp@intel.com>
+Message-ID: <202611061924.PaXwZZ0x-lkp@intel.com>
 References: <1793925772-1303-15-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -104,47 +104,44 @@ url:    https://github.com/intel-lab-lkp/linux/commits/Shivasharan-S/scsi-mpt3sa
 base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
 patch link:    https://lore.kernel.org/r/1793925772-1303-15-git-send-email-shivasharan.srikanteshwara%40broadcom.com
 patch subject: [PATCH 14/37] scsi: mpt3sas: Fix buffer overflow in _scsih_scsi_ioc_info
-config: arm-randconfig-1000-20261106 (https://download.01.org/0day-ci/archive/20261106/202611061833.3AceeVtV-lkp@intel.com/config)
-compiler: arm-linux-gnueabi-gcc (GCC) 10.5.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20261106/202611061833.3AceeVtV-lkp@intel.com/reproduce)
+config: x86_64-rhel-9.4 (https://download.01.org/0day-ci/archive/20261106/202611061924.PaXwZZ0x-lkp@intel.com/config)
+compiler: gcc-14 (Debian 14.2.0-19) 14.2.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20261106/202611061924.PaXwZZ0x-lkp@intel.com/reproduce)
 
 If you fix the issue in a separate patch/commit (i.e. not just a new version of
 the same patch/commit), kindly add following tags
 | Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202611061833.3AceeVtV-lkp@intel.com/
+| Closes: https://lore.kernel.org/oe-kbuild-all/202611061924.PaXwZZ0x-lkp@intel.com/
 
 All warnings (new ones prefixed by >>):
 
-   drivers/scsi/mpt3sas/mpt3sas_scsih.c: In function '_scsih_scsi_ioc_info.constprop':
->> drivers/scsi/mpt3sas/mpt3sas_scsih.c:5783:57: warning: '%s' directive output may be truncated writing 16 bytes into a region of size between 6 and 64 [-Wformat-truncation=]
-    5783 |   snprintf(desc_scsi_state, MPT_STRING_LENGTH, "%s%s%s%s%s",
-         |                                                         ^~
-   ......
-    5793 |     "autosense valid " : "");
-         |     ~~~~~~~~~~~~~~~~~~                                   
-   drivers/scsi/mpt3sas/mpt3sas_scsih.c:5783:3: note: 'snprintf' output between 17 and 75 bytes into a destination of size 64
-    5783 |   snprintf(desc_scsi_state, MPT_STRING_LENGTH, "%s%s%s%s%s",
-         |   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    5784 |     (scsi_state & MPI2_SCSI_STATE_RESPONSE_INFO_VALID) ?
-         |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    5785 |     "response info " : "",
-         |     ~~~~~~~~~~~~~~~~~~~~~~
-    5786 |     (scsi_state & MPI2_SCSI_STATE_TERMINATED) ?
-         |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    5787 |     "state terminated " : "",
-         |     ~~~~~~~~~~~~~~~~~~~~~~~~~
-    5788 |     (scsi_state & MPI2_SCSI_STATE_NO_SCSI_STATUS) ?
-         |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    5789 |     "no status " : "",
-         |     ~~~~~~~~~~~~~~~~~~
-    5790 |     (scsi_state & MPI2_SCSI_STATE_AUTOSENSE_FAILED) ?
-         |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    5791 |     "autosense failed " : "",
-         |     ~~~~~~~~~~~~~~~~~~~~~~~~~
-    5792 |     (scsi_state & MPI2_SCSI_STATE_AUTOSENSE_VALID) ?
-         |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    5793 |     "autosense valid " : "");
-         |     ~~~~~~~~~~~~~~~~~~~~~~~~
+   drivers/scsi/mpt3sas/mpt3sas_scsih.c: In function '_scsih_scsi_ioc_info':
+>> drivers/scsi/mpt3sas/mpt3sas_scsih.c:5783:71: warning: '%s' directive output may be truncated writing up to 16 bytes into a region of size between 6 and 64 [-Wformat-truncation=]
+    5783 |                 snprintf(desc_scsi_state, MPT_STRING_LENGTH, "%s%s%s%s%s",
+         |                                                                       ^~
+   drivers/scsi/mpt3sas/mpt3sas_scsih.c:5783:17: note: 'snprintf' output between 1 and 75 bytes into a destination of size 64
+    5783 |                 snprintf(desc_scsi_state, MPT_STRING_LENGTH, "%s%s%s%s%s",
+         |                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    5784 |                          (scsi_state & MPI2_SCSI_STATE_RESPONSE_INFO_VALID) ?
+         |                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    5785 |                          "response info " : "",
+         |                          ~~~~~~~~~~~~~~~~~~~~~~
+    5786 |                          (scsi_state & MPI2_SCSI_STATE_TERMINATED) ?
+         |                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    5787 |                          "state terminated " : "",
+         |                          ~~~~~~~~~~~~~~~~~~~~~~~~~
+    5788 |                          (scsi_state & MPI2_SCSI_STATE_NO_SCSI_STATUS) ?
+         |                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    5789 |                          "no status " : "",
+         |                          ~~~~~~~~~~~~~~~~~~
+    5790 |                          (scsi_state & MPI2_SCSI_STATE_AUTOSENSE_FAILED) ?
+         |                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    5791 |                          "autosense failed " : "",
+         |                          ~~~~~~~~~~~~~~~~~~~~~~~~~
+    5792 |                          (scsi_state & MPI2_SCSI_STATE_AUTOSENSE_VALID) ?
+         |                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    5793 |                          "autosense valid " : "");
+         |                          ~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 vim +5783 drivers/scsi/mpt3sas/mpt3sas_scsih.c
