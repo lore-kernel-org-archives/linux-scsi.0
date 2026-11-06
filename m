@@ -1,92 +1,92 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.100
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.215.228
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793926796;
-	b=T5VAHxNxuH9VykD5A1MEwNy+OYlZd+nMlB0opBi09UNr60LHNJezc1SVX66g74lL/3W/
-	 qtD5qz+sbHuVSN0nfj6AltYaP1JcJzh4tIyzHlITtmjTA7Ci3h65JqpmcU4LlE9cn2i31
-	 ShD6UeyYychu4Q4n5tjljSxyXonTcXNen1D2mAtBCoF/sc0HKKnIY++KJ8FWSkoOaC+K4
-	 5PXKDcyxgqtQt94asWGN9C1qIsVLsjScZlhnMUQX2A9+ycBeIznYa9Qf0FDS8yDGeh+s+
-	 JIJG2m62sL/XmpbDKq8gwf7niejE99ChzssnFd1F1MXwjHRBF5c5JlZJgeN+thN5NfA==
+	t=1793926800;
+	b=Dld47m8+UCQeDaLEVreeB1gHbBsBLV4TwHNCjC5GSDSIeBPZuCMIOGBiWX1elOujAo16
+	 VxbGfyCaXIs1AJZW8AukIPwef82ueetbZEvzIUV/hXd5hVzqZ7aUJ+L6frTszRSGJSvOH
+	 gp7L0yPzih5UNOsU2HPDkHPq4YK5+s6peb8niAufSNA44x9agUvReEyEgSNEyfGOH0mzR
+	 Hvo1LnBebh3nfmbArQdESJkHmPYG+fJigNKbSdVoNupgiqeVi4dYxNtgDIRWMPDEf5vbT
+	 gRAeSOZg691lvEtQ6AbcLDXsULosDSPI2bXmaVRF23yMVfK+yb5NDyYJbPI+J9RXovw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793926796;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793926800;
 	h=DMARC-Filter:Received:X-Google-DKIM-Signature:X-Gm-Message-State:
 	 X-Gm-Gg:X-Received:Received:X-Relaying-Domain:X-CFilter-Loop:Received:
 	 DKIM-Signature:X-Received:X-Received:Received:From:To:Cc:Subject:Date:
 	 Message-Id:X-Mailer:In-Reply-To:References:X-DetectorID-Processed;
-	bh=eZflmuxCz3/oyHmtYXQTRIYFDIEaj/wtsw8S3v58x8Q=;
-	b=T45muSNcHwZ/OgYi8GUG2G/VDNLRt3RZvbYNg7JkDVx91wKMQxXvMV1MeAuMF5XoaAxm
-	 ++Uo6B9lHvUw/TXeiNXD8Q3/PD0LRzmnbzeamfnFNDSAnm6w1swvzEW+4EvD5HTvbHvoT
-	 l7XSwn3FCm5zXXFRUlFF5MivNVHHxOif2Tg6lxCd+ppdSJrMGVlrILnvOaOWsXXJQBXFY
-	 W2wLCsGboIUbRVYWbg2FOygCh4lzMVKkdtlziRh+6hDJtzN+C754i9p9LXt9UhJkC5w75
-	 +lmgurTJZmiOGyMw8tnn/Zf7xkYIvXMJXCvjnBL1jeeBktiZ8RLqAh46BzQ3dNRQhZQ==
+	bh=hpbj2Z6Hey8c7UXTGlAyb8NrTtG+XksSDakpyKREAZs=;
+	b=fwB7oSnBkfcMLGPdarDqaxC69iesbtpnVqjwnOMdk0gUDcxhsj9CXTclyLlzSoybrMWI
+	 wch5Ih+mjTgj2AkkaH063btkj353r1DjIQiGDM00RnIS3CAYBQAHXYTfcQybkzC8EhLxA
+	 uzdBqgKr0UPDGH7tDVu1O0F9bRi5fUafqpRi8/ns68K7sZWv7cFiWQfDKkbgQ6c/jIXDS
+	 imlYlhC6B/9TDAtrl10SwhR60BmYPhYNKi9fJlxKQac2v4ZAjKQmKQzTslNKLo0uzmBL5
+	 c2RfkRQGClyEAl5UZxp6b+j5dC88hmQvHRfkaQuIArFUo9Dm/sDAXbCh+vHF1yqtthg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=broadcom.com;
 	spf=fail smtp.mailfrom=broadcom.com;
-	dkim=pass header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=eeiEllNR;
-	arc=none smtp.remote-ip=209.85.216.100
-Received: from mail-pj1-f100.google.com (mail-pj1-f100.google.com [209.85.216.100])
+	dkim=pass header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=QnVazPqI;
+	arc=none smtp.remote-ip=209.85.215.228
+Received: from mail-pg1-f228.google.com (mail-pg1-f228.google.com [209.85.215.228])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9548B606A31B
-	for <linux-scsi@vger.kernel.org>; Fri,  6 Nov 2026 00:59:55 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9548B606A31B
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 075EC606A31B
+	for <linux-scsi@vger.kernel.org>; Fri,  6 Nov 2026 00:59:59 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 075EC606A31B
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=eeiEllNR
-Received: by mail-pj1-f100.google.com with SMTP id 98e67ed59e1d1-3acb11973c3so108204a91.3
-        for <linux-scsi@vger.kernel.org>; Thu, 05 Nov 2026 16:59:55 -0800 (PST)
+	dkim=pass (1024-bit key, unprotected) header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=QnVazPqI
+Received: by mail-pg1-f228.google.com with SMTP id 41be03b00d2f7-cdb628232d2so64390a12.0
+        for <linux-scsi@vger.kernel.org>; Thu, 05 Nov 2026 16:59:59 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793926795; x=1794531595;
+        d=1e100.net; s=20260707; t=1793926799; x=1794531599;
         h=references:in-reply-to:message-id:date:subject:cc:to:from
          :dkim-signature:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=eZflmuxCz3/oyHmtYXQTRIYFDIEaj/wtsw8S3v58x8Q=;
-        b=sXGeIanFH4NJsrgH25U1MU+LEGgJgO6RezCDfY0/pPQzzN4Uf1tdDZGbGY400sAlQZ
-         4+6RF4crEig8vlh5iYVSY0OmqqENChNv7P3d57zeBDSKIz7VTQkJLY4AbMDriDCuuI7t
-         F4+jrcS1NzgkX+tfyUdE/aH3n8juBYH69B+C1faSAut8JC0h+/3wmysWMLfv/7z1UnL8
-         J2DLLssJ4noZkmGOou1ktEJYBYEMWTr2H52YgISi7W4JgWKRk7Pc8cxxxNCoysp5K5i6
-         7aCPneVDzMokbQFZB6AnFbaVMzhaIuhnH39Qgnjp9TEwdiLOoMZLnhgwyra5wBvKxP0t
-         3N7Q==
-X-Gm-Message-State: APuU4Z+K6hHKfe+1/DneJXFLVaA8K85bAWhE3M/cWq6437ezpFCRpAGe
-	TMLp6NWWIq5HbDLxOx++pyLgiV2sgIBAZ/AdOPZML8tQi/RH6vPkliB8ffRKjTpTYx3pqB7s4mI
-	qpCI4OuIgFwxkVJyS+hsXg+1gCavQfqsq+AmiZBOo1IMykz1oMOx3n01NXWJ2UWsi9UTHR4ZGnE
-	CO7oZaNt+z6e5T453ixylh6LQyjuo7jvK4pqhASknGjdv+xxdI0umJFEbpS84W4SFxVKTlkKTwX
-	ZOmaeFv/vV1bFBU2pHLd3of3OfeTl+s7Ig=
-X-Gm-Gg: AYBFou1upUnNk5LT64uHN4GaSglHaW5Q9r1n6UTDtA+lvq3P4yKEBpFFNpM2RPg3a1x
-	7nLQnwDpyNLbu8Y0/AztlM5rTm546OWPxYlbkGpndGMwq9oFKlmdTa9P9HoKt0lDgfFFus9RTjN
-	W0xJE8INcN6+rW7IdNsx/KbkBhqlqG4YWj4oQWAmsZ0UvgmuiR+QhAKy0F7K6GMXihsfB3DxGkX
-	X5n+hHveyPVJG+DA5UusBO/ULhvPF9lLiWy5HZQGHm9IJZ5WDdS58fwZ7awgI7i+yVckR0iHxfW
-	BIXb68SBROaua7HSl6UJ8/1KkWUWptRDYzWiKGVqUkN4bp9299aT7C6DL0GK9XBz/nryoE+Awn8
-	ZwtzaXyD6uMEWiNvvYUUQ/g4AKwWXNv9dYT+/y40qaQmnuxnWGV5R4hdIwgbsP3keCx2U/2UeLE
-	dM0g0SrLdWTwx7BHgziK+gg1PHec+qLIv+BXNhKRgu2eTgC2v6kRyKrg==
-X-Received: by 2002:a17:90b:52cf:b0:3b0:ae41:2706 with SMTP id 98e67ed59e1d1-3b0db5f60efmr903472a91.4.1793926795019;
-        Thu, 05 Nov 2026 16:59:55 -0800 (PST)
+        bh=hpbj2Z6Hey8c7UXTGlAyb8NrTtG+XksSDakpyKREAZs=;
+        b=WKC1SNdgE0xSDTD4ozqKjKpJ298WCy2yGQyk/FXrXWi01j5nK90yVwGVjODXGIBDbv
+         ze+Dgto9omVZo2rjJ/2sQ8MUgSouegedeFKRug5up5srsqd9Ebe8InsvgPH5SaPPQiSU
+         yZJSTmlT2pr+pIsx4moJhUY/sMXzFx83/RNuGDbVeZUKpbF4yKbhmCbA+Cm0tITz+wRE
+         etUNFJB3PshBN1yjakpSo5lwnDZDeRd7HpHG7P9m3iXhCw76sHAUU8C03e3HLEbpwH+w
+         oSEnagJcRwiYIxVdHU06luMNfVfgD+ptjJlbc0ti+Sx2c6C2wAwS4nHXrEtsWAo9bP/R
+         e4Xw==
+X-Gm-Message-State: APuU4Z8pKXIuhxQ0KjhVvOOVsmrYhI+qMSWd7Tdh3M0KLOcq9sLtq8S2
+	Vw8bCGKmTQdtzhZrz+rBI8KwVXDBAmQ9A96SEediuQJawFsJPuRZxXZHbAnrYBgwRMmbQ9Vpgri
+	KKfao/cOWciLnPBDOb0WD7CRUAns/+Xr0ASAyLuv29A5ESYnoeP3JbViFeub2o+0lkpjyMXgKBK
+	M7HyuKAZqgweEvfsFx0zyhM0dFR9BYuBDUD63NEjOA5I4Ok0bYNlmxAbMBhLFnzfNfInmVPx9TD
+	4TQS8eX/uROnF4jqhb4mns3MznpiFpl5Jk=
+X-Gm-Gg: AYBFou2tvnDe/gYuQtEJ4EF0e4XE+yJZCxvQAGpN2fyc5k1cwhhO6Yuh+9tizeXoGQe
+	pl2rE45QKAUqNUstIPNKTti8UUy0rD+oNYkWP2Z9XjOw5U8wH/OH15E3CHxuSJpeuk0Emzo44Ey
+	xEUH/ykA1yqRcXKH8O4pmReFew4dorjPVtNN+PViaKaVDaGDzbf2fEwif0zm+trgY1dt79stT8M
+	zAIogUwZYlAN6pEZNuCpmCqm8fDXjj3WLTEzynPXTPOamX0kE9XnuXuVqIBsSSzmSwuxoLyJs08
+	loKPY76LYRu6XEfZhepQ8W5yVWsGQaFrarUc/PSbW9q6aSgY6U9wAXUuXk1hyt+9CSpJC2/qXLt
+	k+jTPOYU7s2o5MLds4Jv0J3Sjh1akRjkvdd4H9gJz2MzunYltq9oCI1ibVQDLuoqYNmt7ywxGAj
+	CXbH6BqopNaIdmYtF+64WEW9gvlFlL0gpP1EWfYq3cmCnQsutXdSPo6g==
+X-Received: by 2002:a17:90b:2ccf:b0:3b0:a757:4f85 with SMTP id 98e67ed59e1d1-3b0db6057b7mr814622a91.2.1793926799140;
+        Thu, 05 Nov 2026 16:59:59 -0800 (PST)
 Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-28.dlp.protect.broadcom.com. [144.49.247.28])
-        by smtp-relay.gmail.com with ESMTPS id 98e67ed59e1d1-3b096bd2672sm1911836a91.2.2026.11.05.16.59.54
+        by smtp-relay.gmail.com with ESMTPS id 98e67ed59e1d1-3b094d2f3b2sm2327138a91.1.2026.11.05.16.59.58
         for <linux-scsi@vger.kernel.org>
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 05 Nov 2026 16:59:55 -0800 (PST)
+        Thu, 05 Nov 2026 16:59:59 -0800 (PST)
 X-Relaying-Domain: broadcom.com
 X-CFilter-Loop: Reflected
-Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-2ed276af91dso1814295ad.3
-        for <linux-scsi@vger.kernel.org>; Thu, 05 Nov 2026 16:59:54 -0800 (PST)
+Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-2ed08be1c84so1731365ad.3
+        for <linux-scsi@vger.kernel.org>; Thu, 05 Nov 2026 16:59:58 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1793926793; x=1794531593; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1793926797; x=1794531597; darn=vger.kernel.org;
         h=references:in-reply-to:message-id:date:subject:cc:to:from:from:to
          :cc:subject:date:message-id:reply-to:content-type;
-        bh=eZflmuxCz3/oyHmtYXQTRIYFDIEaj/wtsw8S3v58x8Q=;
-        b=eeiEllNRn/tcJTeyoUQdSx0jzFIFwp8Ut1yrsAzZsKvBl28B2kX79MXHQX28hZb+0v
-         x7hfJP728UL3ILyFLcq3dqokWlMxYtWohsocQCQE7W6R6R9bbv1SsPuVY3R1B9Px31Mc
-         PdBKnOLu5bytYF0iq9sdf/wicj+TEFMgkW4u8=
-X-Received: by 2002:a17:902:ce90:b0:2ed:1b02:f6f2 with SMTP id d9443c01a7336-2ed412fc84dmr13904255ad.6.1793926793375;
-        Thu, 05 Nov 2026 16:59:53 -0800 (PST)
-X-Received: by 2002:a17:902:ce90:b0:2ed:1b02:f6f2 with SMTP id d9443c01a7336-2ed412fc84dmr13904085ad.6.1793926792862;
-        Thu, 05 Nov 2026 16:59:52 -0800 (PST)
+        bh=hpbj2Z6Hey8c7UXTGlAyb8NrTtG+XksSDakpyKREAZs=;
+        b=QnVazPqIYW8wswWxoVAXxx6OP2ZSUR9fqH/fg7iTemKKprtfYqnT2lBMfppqzv+by7
+         Qy6hkBvBYlHjaFlxbA9KVTHRWvidQPEaQgLcCSIi+PR+ocSmcBZxxQJSSMZA6OvnRqkg
+         DqupFCmfqszuKr+gZDe+OfvxAYF50gCK0X9+Q=
+X-Received: by 2002:a17:903:37c6:b0:2ed:2a1d:e36d with SMTP id d9443c01a7336-2ed40c7b5e1mr13881295ad.36.1793926797278;
+        Thu, 05 Nov 2026 16:59:57 -0800 (PST)
+X-Received: by 2002:a17:903:37c6:b0:2ed:2a1d:e36d with SMTP id d9443c01a7336-2ed40c7b5e1mr13881095ad.36.1793926796811;
+        Thu, 05 Nov 2026 16:59:56 -0800 (PST)
 Received: from dhcp-135-24-192-142.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2ed47d7b8cfsm450745ad.57.2026.11.05.16.59.49
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2ed47d7b8cfsm450745ad.57.2026.11.05.16.59.53
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 05 Nov 2026 16:59:52 -0800 (PST)
+        Thu, 05 Nov 2026 16:59:55 -0800 (PST)
 From: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 To: linux-scsi@vger.kernel.org,
 	martin.petersen@oracle.com
@@ -95,9 +95,9 @@ Cc: sathya.prakash@broadcom.com,
 	chandrakanth.patil@broadcom.com,
 	sweeti.vandure@broadcom.com,
 	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-Subject: [PATCH 32/37] scsi: mpt3sas: Fix out-of-bounds bit operation in _scsih_check_topo_delete_events
-Date: Thu,  5 Nov 2026 16:42:47 -0800
-Message-Id: <1793925772-1303-33-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+Subject: [PATCH 33/37] scsi: mpt3sas: Bound SMP passthrough buffer reads to actual buffer size
+Date: Thu,  5 Nov 2026 16:42:48 -0800
+Message-Id: <1793925772-1303-34-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 X-Mailer: git-send-email 2.4.3
 In-Reply-To: <1793925772-1303-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 References: <1793925772-1303-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
@@ -111,32 +111,51 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 
-When find_first_bit() returns a value >= MaxDevHandle (no bit set), the
-loop called test_and_clear_bit() with the out-of-range index. Break out
-immediately when the returned position is >= MaxDevHandle.
+The SMP passthrough handler reads bytes at offsets 1 and 10 of the data
+buffer to detect link-reset commands without checking the buffer length.
+Guard each read against the actual buffer size to prevent out-of-bounds
+access on undersized non-inline buffers.
 
 Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_ctl.c | 11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index df5f16db8f48..4585b666d4bb 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -5016,8 +5016,9 @@ _scsih_check_topo_delete_events(struct MPT3SAS_ADAPTER *ioc,
- 		do {
- 			handle = find_first_bit(ioc->blocking_handles,
- 			    ioc->facts.MaxDevHandle);
--			if (handle < ioc->facts.MaxDevHandle)
--				_scsih_block_io_device(ioc, handle);
-+			if (handle >= ioc->facts.MaxDevHandle)
-+				break;
-+			_scsih_block_io_device(ioc, handle);
- 		} while (test_and_clear_bit(handle, ioc->blocking_handles));
- 	} else if (event_data->ExpStatus == MPI2_EVENT_SAS_TOPO_ES_RESPONDING)
- 		_scsih_block_io_to_children_attached_directly(ioc, event_data);
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+index 6870172c5ebb..c80bb2e7c240 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+@@ -996,13 +996,15 @@ _ctl_do_mpt_command(struct MPT3SAS_ADAPTER *ioc, struct mpt3_ioctl_command karg,
+ 		Mpi2SmpPassthroughRequest_t *smp_request =
+ 		    (Mpi2SmpPassthroughRequest_t *)mpi_request;
+ 		u8 *data;
++		bool inline_data;
+ 
+ 		if (!ioc->multipath_on_hba) {
+ 			/* ioc determines which port to use */
+ 			smp_request->PhysicalPort = 0xFF;
+ 		}
+-		if (smp_request->PassthroughFlags &
+-		    MPI2_SMP_PT_REQ_PT_FLAGS_IMMEDIATE)
++		inline_data = smp_request->PassthroughFlags &
++		    MPI2_SMP_PT_REQ_PT_FLAGS_IMMEDIATE;
++		if (inline_data)
+ 			data = (u8 *)&smp_request->SGL;
+ 		else {
+ 			if (unlikely(data_out == NULL)) {
+@@ -1015,7 +1017,10 @@ _ctl_do_mpt_command(struct MPT3SAS_ADAPTER *ioc, struct mpt3_ioctl_command karg,
+ 			data = data_out;
+ 		}
+ 
+-		if (data[1] == 0x91 && (data[10] == 1 || data[10] == 2)) {
++		/* Bound the read below to the caller-supplied buffer size. */
++		if ((inline_data || data_out_sz > 1) && data[1] == 0x91 &&
++		    (inline_data || data_out_sz > 10) &&
++		    (data[10] == 1 || data[10] == 2)) {
+ 			ioc->ioc_link_reset_in_progress = 1;
+ 			ioc->ignore_loginfos = 1;
+ 		}
 -- 
 2.53.0
 
