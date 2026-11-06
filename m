@@ -1,92 +1,92 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.98
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.215.226
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793926729;
-	b=dpPW9DsxSgDjHSCPBUJmy4cn3qjJHwNBX8SHg4t/Yh2o25wIB6nWah3EyUqOr/A9vSQU
-	 sDxpzbEhakxq+hE44nuznGNj1iWjaHGSljJTx25DHZJjl6IoEyImYmmja7/qCMfKi2oh/
-	 C856knRSMt5rQjy1247NV61At5YIjSdnGNGNI233JP7Ky0wrg0IkuApGX77QuXeFz3BOx
-	 w6MT5GHicUlkWEeF0rEU6N6K5cJfl0NczivNn9GR0knO5w66Zyb3+A05lDtF01FOb+1Ti
-	 rkG8pDoe65+dleWFrHTdGWltvZ9mpFwCMqbj3gbnNMKzMs3qiocfuNdpqA2Ug00jWjw==
+	t=1793926732;
+	b=tg6v66Ev4WvJwf6tK2GhGJxvW+IY/NhcRlhNhf3P37ChzvNVvWY3Z3FoFtUBKhQwByOp
+	 f1yrXiov4yr4kukQm+vd2PNomsvPQMkAWVXsm+xFBVjCDxEGqvFrjedoTJFk217YufQcj
+	 7D3eIw+X/Few3+ik+gWDzA32hqNSYpilyfrX4gmEQsGrsiXXo7KLJydd7Je6vmACsYU5l
+	 AfbExLP9EoPHyR/qXMz32pIHSveL0QCe/rHDjKqfBff9pysE3F4RZaT3ZqJwuhy19Dmli
+	 9mbmpATu+ycLVsE4NDfmwQwnNkEwwKWQYIRVvKDBhkWpTf0pJf5yC3rnBr+ldAOT9pQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793926729;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793926732;
 	h=DMARC-Filter:Received:X-Google-DKIM-Signature:X-Gm-Message-State:
 	 X-Gm-Gg:X-Received:Received:X-Relaying-Domain:X-CFilter-Loop:Received:
 	 DKIM-Signature:X-Received:X-Received:Received:From:To:Cc:Subject:Date:
 	 Message-Id:X-Mailer:In-Reply-To:References:X-DetectorID-Processed;
-	bh=7QcqjmwFhGnwAvS1KYbq8Pn200oJzoQDmFAU4qnG3zk=;
-	b=mCNs0OCKPL9rOYQgOrTiZvACjZG8DGKUZ85SXZTpzO9Bfs33aaX7PsPHhCrA6EweTemJ
-	 C2kYIxoio7gIv0Egob2BrzJgJf+3sGIRk8pGL13XG5g+d6FO2LwGyDH9/tb0LiW7e/Idt
-	 08YilNiPbBf3NnqgAUEX5gDlIa6zo9CKp6rxrQuJ1vPsvHOEG2YiRkaAvMVVDbX2Y8tY8
-	 9CFcybXqH6MALyeVOqLPJq1kHNImM1xJ5rYjXJGdrf0QmtsbdKCavh7AWDb7QypnjGH4t
-	 nUZ+2VJsFaKZ8nIGVRKdGGuzrmVRCuXf12ErI42t9w3c8OzaaCtwBBBo1/T7W06WvOQ==
+	bh=w17RreLHBPCNCqYy7QZTruV5pvMfAMcS59hHCb1oW0Q=;
+	b=j0M8iG4uJrmfyJLt2ug4h0cON5b80/mtRtNypHOE1SIO6aX9zWkhYMygq6OMceeS2YEk
+	 icFfEcK2pntNAjZ13t1b8M302njzSsN1cod3pU1eX9lURXJtCw/9Hp84Mjiedx0oPW1Ck
+	 /bMYOH/y5zrrh/aKvfdZ3jt24DVWlaSu653v90/GE6TH5uWBbY6DPER5tXZqQgUWGO5HZ
+	 oMoPaUGGk3K+Oxhr/V8ULY+d99o+02kiwZ1v7u9CsspBak8HD7iJTMxqAel6CK8tTEis8
+	 FcqOJkzwKlv1vX74kZ0T1gt0wz+Y13QENX9/wWPPvNuC0Xbl+3maishY4psm+NmQJ2g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=broadcom.com;
 	spf=fail smtp.mailfrom=broadcom.com;
-	dkim=pass header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=h5L0VnsW;
-	arc=none smtp.remote-ip=209.85.216.98
-Received: from mail-pj1-f98.google.com (mail-pj1-f98.google.com [209.85.216.98])
+	dkim=pass header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b="d/n1kk7v";
+	arc=none smtp.remote-ip=209.85.215.226
+Received: from mail-pg1-f226.google.com (mail-pg1-f226.google.com [209.85.215.226])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C6F24606A326
-	for <linux-scsi@vger.kernel.org>; Fri,  6 Nov 2026 00:58:48 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C6F24606A326
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC9FD606A31B
+	for <linux-scsi@vger.kernel.org>; Fri,  6 Nov 2026 00:58:51 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BC9FD606A31B
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=h5L0VnsW
-Received: by mail-pj1-f98.google.com with SMTP id 98e67ed59e1d1-3ae6b4c669fso704299a91.0
-        for <linux-scsi@vger.kernel.org>; Thu, 05 Nov 2026 16:58:48 -0800 (PST)
+	dkim=pass (1024-bit key, unprotected) header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=d/n1kk7v
+Received: by mail-pg1-f226.google.com with SMTP id 41be03b00d2f7-cdb2dfcca94so43880a12.1
+        for <linux-scsi@vger.kernel.org>; Thu, 05 Nov 2026 16:58:51 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793926728; x=1794531528;
+        d=1e100.net; s=20260707; t=1793926731; x=1794531531;
         h=references:in-reply-to:message-id:date:subject:cc:to:from
          :dkim-signature:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=7QcqjmwFhGnwAvS1KYbq8Pn200oJzoQDmFAU4qnG3zk=;
-        b=LF9RT6bTwb+0mXZn5lSK9WlDDHdMailKh6o1owFZy+sEJr5/XC2r/EE3M+ijfi8fV7
-         P878F9H6VU/wnPqslJ6i6HP/QS/ZJ1fyYaSeBc3lo+kaPx96eyMSIkTgmHigst0nl/ro
-         cbO9M2s5YYyiY6kn4c3Ivk7vGzYKaejp1dOjP8knrxWOxtFD0mQzlft6M3vCV12BKQqc
-         U6KQahHFFQtzFouHYYc0Cus7A4yTe7bQeKj6haRxjot+xYsEeKk1N5gM9e4GtZ6l6IXt
-         OeUFhzoY4Dz8xjBSJSTuEm1K3ECV9kQJvZIi0kH1mAInrmsHVF3czGDYzMrFtRQdlohf
-         cgoA==
-X-Gm-Message-State: APuU4Z9r3C4WpMvrEDOkDM1Y8j0jBpZVIrmUMichP2LAJluHjADqc0SU
-	hAGf+vKTTFVNVkTVAWkqLVdR6tJ3OfeL0YWjvmQsUF5iXE8ftpOy+alYWnq/ds+qpCSNejEnxFd
-	TXSqmDPw6mTIVk226wWIjs8OxbBd/6yMAUwkmU8Poxr3Q7j9DR/p8pm98p1Pl6H6KpyUWN8hIBA
-	5kqez+PGPesvlWx7qDlH/NiSKgeR18H7DnShCgPiiZMqWW0hnx47f7aVky3CZy/5AAY8PBkyOkC
-	celpXidzNm4Te3Wh4O0+UjAwUzGcQCKrJk=
-X-Gm-Gg: AYBFou2turxFs+eo2FMZnGqRjW6RZ2Wm2LZZ0Ch6VRdqN7aYwuOZ8L64WH81+CSYTmZ
-	eEAYoIoNMl08Z57or5PC7lDgSStPMU0Pm89oM/T1r9BYE5OVK8b9dvfxsfKvoc/Ml9ciBWta4Nf
-	vO4S2/PwgC0WmJXma3P/hsCmEYjFMc+w3W3SkiSRozkgM9VsYitFCEMiVF3PaXBlCdODypOB3h9
-	QJQP8Mbas5lLxTipkhH9FFoFhTK42GwJbPY72pUCdTP6G684HLs/nW+ZhccKnlJo8iOj3BuGPd2
-	ZmYkPuT1jt9KZUkHBhLFvggFb8d+yssq+GLX8GTzDTGdIP9A4qg+T2hgPkIS7iQfuMix65Rrdlx
-	gm5eXyLxht19WIpAeCsBaccVwP61hYlgc3ALo1P+n7DK39V4uhLhaqZLb/RmTnxfl2OED+U7Rnd
-	PRdDcrroL3pdC8x23v+HbSnun+AF5Yq3Tcmp9zvjjwBlgUvOJVuOuv8g==
-X-Received: by 2002:a17:90b:518f:b0:3a6:d850:bf16 with SMTP id 98e67ed59e1d1-3b0db6e1f9emr483846a91.23.1793926727940;
-        Thu, 05 Nov 2026 16:58:47 -0800 (PST)
+        bh=w17RreLHBPCNCqYy7QZTruV5pvMfAMcS59hHCb1oW0Q=;
+        b=XVYGIEA0HUkka5E/vtpF7mdpma1LkCj+UXdGJq5ZbjHEfkjMm31jqELNIB4iThjg+x
+         D2DVmrZucdQBzy7AghkIM0OJAuDUZb9ea606x7jw4PwC7J6/CkifM6me4tXo9JUZJKwh
+         nRDfElLTYIMLmgX06pD4d0odnhvdJXVBXMFHfK0tVtcbFne0w2FeEVZzSu5KTeC85bgN
+         XwDZnNUfJMqKhnbTuQziFQ2TNe9PYJu2613zN9Dqs7A+S5liOq0SUamNzwqCu+8DxmUW
+         G9Fk2agLZWKMPjSDXlGD4KZDrIl6r1POe4R6Ar2tKzfGpQwHQxAPaOvdsnNPkb26g2Ic
+         Qj+A==
+X-Gm-Message-State: APuU4Z+vdorWC21Sz2JW9aut0guUqzEHa59UH/qRDvuIMMeLfitfm0Av
+	NwY77MIFiMNUZ5d6ES4O7nJfo3qaEFCMKBls3XJCmTKJpPnLpaFKqc0yAVW+p88thW/6U58uBhA
+	XF0olAAoVxki746Azx/MdIwbUxfMUJgsHSOUbi0ZWUw8pKbsqs4CQglRiVNBirNnssW0+tX3JGz
+	ef8tmxlZYTc6y6HwRcjyFcrDsSyiuggXd1upoNceFvbwkKeRtaVwfQGEREHJ0MYQJ4y0LO6ZVki
+	lPdsi4/Z9IIY5HM0I4Srvxovou7nhjnVus=
+X-Gm-Gg: AYBFou2Dkbt9vhXr2dkMQfWq+zHc7VC97/XFOq6Uyo4Bl43aBoPhY82oej87bWVELPB
+	jR/7XjxDepSXY53fKFx9pmLq11awmZVQLvgsHwjvw85Fx8W5JlQWA6yF/Y/E+w2vx6VfdgmZB7f
+	IDeOedvXU1l17UI8vz1qwbdYTD0i6MAAWeWA8UyZYRkFLNN/3JV19fgBhHzr1+fIaCV2fqxvIeO
+	nY/k7rPeMV78xBBsIY89Qxxg/7qfBg5MgrbZxgYg2zrtrIAPbdbjwUaeiOZ7yZJa1CvueQrSu+n
+	6D4Lzsb5kVy9IFfMS/qbdb9x9v5IWgTeYclFcBxDLgA6WuKPAiQQBxlGFlZVOQdbWP0kWxLuUdf
+	RQbNEGgka2cH79F3HVj5tddcFfG+arFG/58QK5BVcTOmlleDKZkIh1b3UiIB2k/yK8mYpWaU6CX
+	Rgs/xwV30zHlQIDa5drqz7tITgNsZiRMvRfWvyHdbJPWfVIFyFqInzTQ==
+X-Received: by 2002:a17:90b:4b89:b0:3a6:f1d2:57f8 with SMTP id 98e67ed59e1d1-3b0db5edb65mr783161a91.2.1793926731130;
+        Thu, 05 Nov 2026 16:58:51 -0800 (PST)
 Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-13.dlp.protect.broadcom.com. [144.49.247.13])
-        by smtp-relay.gmail.com with ESMTPS id 98e67ed59e1d1-3b0b315a756sm2907568a91.2.2026.11.05.16.58.47
+        by smtp-relay.gmail.com with ESMTPS id 98e67ed59e1d1-3b0b315a756sm2907641a91.2.2026.11.05.16.58.50
         for <linux-scsi@vger.kernel.org>
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 05 Nov 2026 16:58:47 -0800 (PST)
+        Thu, 05 Nov 2026 16:58:51 -0800 (PST)
 X-Relaying-Domain: broadcom.com
 X-CFilter-Loop: Reflected
-Received: by mail-pl1-f197.google.com with SMTP id d9443c01a7336-2ea381ce04fso2476055ad.0
-        for <linux-scsi@vger.kernel.org>; Thu, 05 Nov 2026 16:58:47 -0800 (PST)
+Received: by mail-pl1-f199.google.com with SMTP id d9443c01a7336-2e9d52f684fso1092875ad.2
+        for <linux-scsi@vger.kernel.org>; Thu, 05 Nov 2026 16:58:50 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1793926726; x=1794531526; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1793926729; x=1794531529; darn=vger.kernel.org;
         h=references:in-reply-to:message-id:date:subject:cc:to:from:from:to
          :cc:subject:date:message-id:reply-to:content-type;
-        bh=7QcqjmwFhGnwAvS1KYbq8Pn200oJzoQDmFAU4qnG3zk=;
-        b=h5L0VnsWM+txQcuAGuGc099Kpl8P4z4EmBTaJ1knDbDG2GTwIjjWTgVbu6RS1LjGRh
-         W8Kl1uI8UrIfWHvkhNblP6i+sYbBK+MGvkGQqnc0WCkerzShr5k0uXFMKe3+ZHLcVK4G
-         r9R99oz8JtBcUmNa0bkJCRVnfCACuTuXCVAfE=
-X-Received: by 2002:a17:902:f78c:b0:2e9:484d:693 with SMTP id d9443c01a7336-2ed23e53d15mr28740645ad.5.1793926726353;
-        Thu, 05 Nov 2026 16:58:46 -0800 (PST)
-X-Received: by 2002:a17:902:f78c:b0:2e9:484d:693 with SMTP id d9443c01a7336-2ed23e53d15mr28740485ad.5.1793926725809;
-        Thu, 05 Nov 2026 16:58:45 -0800 (PST)
+        bh=w17RreLHBPCNCqYy7QZTruV5pvMfAMcS59hHCb1oW0Q=;
+        b=d/n1kk7v0ov+uUYvrvGTVFQV2H4WWRYzzIgdkUCstqEktPDA9wFtHS9kKjSHfk98It
+         2OpdEtVQhk/ft62OgoQtEw++S8pRSQUbzPPeiLTrOD0z6nmvkOzkqoLvG+MwHTtgYlen
+         O6FcUDgb7kXccATg/Hf56vHGXxoF49KMEhTqU=
+X-Received: by 2002:a17:903:2304:b0:2e9:cd03:b432 with SMTP id d9443c01a7336-2ed40e6cbaamr13534295ad.60.1793926729533;
+        Thu, 05 Nov 2026 16:58:49 -0800 (PST)
+X-Received: by 2002:a17:903:2304:b0:2e9:cd03:b432 with SMTP id d9443c01a7336-2ed40e6cbaamr13534025ad.60.1793926728910;
+        Thu, 05 Nov 2026 16:58:48 -0800 (PST)
 Received: from dhcp-135-24-192-142.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2ed47d7b8cfsm450745ad.57.2026.11.05.16.58.42
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2ed47d7b8cfsm450745ad.57.2026.11.05.16.58.46
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 05 Nov 2026 16:58:45 -0800 (PST)
+        Thu, 05 Nov 2026 16:58:48 -0800 (PST)
 From: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 To: linux-scsi@vger.kernel.org,
 	martin.petersen@oracle.com
@@ -95,9 +95,9 @@ Cc: sathya.prakash@broadcom.com,
 	chandrakanth.patil@broadcom.com,
 	sweeti.vandure@broadcom.com,
 	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-Subject: [PATCH 12/37] scsi: mpt3sas: Fix leak and dangling pointer for io_uring_poll_queues
-Date: Thu,  5 Nov 2026 16:42:27 -0800
-Message-Id: <1793925772-1303-13-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+Subject: [PATCH 13/37] scsi: mpt3sas: Validate max_data_size in MPT3EVENTREPORT ioctl
+Date: Thu,  5 Nov 2026 16:42:28 -0800
+Message-Id: <1793925772-1303-14-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 X-Mailer: git-send-email 2.4.3
 In-Reply-To: <1793925772-1303-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 References: <1793925772-1303-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
@@ -111,36 +111,29 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 
-Free ioc->io_uring_poll_queues on the legacy-IRQ fallback path and
-NULL it after freeing.
+Reject a max_data_size smaller than the ioctl header size before
+using it in size arithmetic.
 
 Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.c | 3 +++
+ drivers/scsi/mpt3sas/mpt3sas_ctl.c | 3 +++
  1 file changed, 3 insertions(+)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 40624b3c972c..060482ba20ae 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -3362,6 +3362,7 @@ mpt3sas_base_disable_msix(struct MPT3SAS_ADAPTER *ioc)
- 	pci_free_irq_vectors(ioc->pdev);
- 	ioc->msix_enable = 0;
- 	kfree(ioc->io_uring_poll_queues);
-+	ioc->io_uring_poll_queues = NULL;
- }
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+index a3d725e5f640..4866b3c7d1c1 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+@@ -1367,6 +1367,9 @@ _ctl_eventreport(struct MPT3SAS_ADAPTER *ioc, void __user *arg)
+ 	dctlprintk(ioc, ioc_info(ioc, "%s: enter\n",
+ 				 __func__));
  
- /**
-@@ -3541,6 +3542,8 @@ _base_enable_msix(struct MPT3SAS_ADAPTER *ioc)
- 
- /* failback to io_apic interrupt routing */
-  try_ioapic:
-+	kfree(ioc->io_uring_poll_queues);
-+	ioc->io_uring_poll_queues = NULL;
- 	ioc->high_iops_queues = 0;
- 	ioc_info(ioc, "High IOPs queues : disabled\n");
- 	ioc->reply_queue_count = 1;
++	if (karg.hdr.max_data_size < sizeof(struct mpt3_ioctl_header))
++		return -EINVAL;
++
+ 	number_bytes = karg.hdr.max_data_size -
+ 	    sizeof(struct mpt3_ioctl_header);
+ 	max_events = number_bytes/sizeof(struct MPT3_IOCTL_EVENTS);
 -- 
 2.53.0
 
