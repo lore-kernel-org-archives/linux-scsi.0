@@ -1,56 +1,56 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793928281;
-	b=U3Of4fE4eYNlKNQCtlEIE0AHSUf7EgjuCe4Psh1aD4NWQhZQWpLQG4frjPpTtAGPzgI7
-	 Oc56RreB+BAPGgulyrdpMVAG+MeTwAvtfreBEOvTXajY/2lBtojVZQtm730NX8Qy0nsr2
-	 BTrtcbtwdbMtJe0RBz+qD+eXXD1Y4NPACUXmmuBY34tqTJ1WyqPNIyI8qKn8d86O42cF+
-	 QvCImni9qWBhzrtjemHdrioNY8fQoT/GY8SQ6k2BCJ2eODMCmWdyiluNB9nnVrJbAjya8
-	 islqb99VC5e4EpOwuWhceS+TaKiF0zw4S3xyrihudljLUhZG3hZtBzrPkb+FotOJN6A==
+	t=1793928347;
+	b=tbqLVPIASJOnozJl6GU/kPWOsZ+iLgWDbHsX5L0/RtrjVMkS+416aYACETo1bwIc2drE
+	 kXekPzlQw5ckZ4R3yZedo1jX8n2uRDCo+gyIUlB/FHh7MLKlRTSut5reakD9KkI7kVIsz
+	 D/ozQYNH1rgQOU0Oj0b3zQ6Caz0WpZ8qpAmXlv2m7h07UX2JTaQ3EW5aqWyz1dzQOKLMa
+	 SXrcPiARTXzGHDJ8TFs4GO+qGigFdFS2N1CaTiApkyv5hBzl11p3314P6mHYHtV/+pGKv
+	 j9Nzu0jH9FmYNXzg5cGPLbWAZLxgyiPIZ+i3D9w90/Z+6HnIC5YgJqjGc17yOl/GcUQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793928281;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793928347;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=jdn2pxdwkluuRAAeA/MBVW6TXU/ae8GB/9Bz6FaEiAg=;
-	b=TfiIdCDT5W2EeM6dlQ8bdV6V3G4eSsnkuP4YvyPQjtewKDteg0zJ5lZwBE/3u3NZF7to
-	 d1oUzPCaIIZacIE7KJsW/RPsSO86U1rZKPTwJzuKB/G8Mj8e0oi8WGWT+2uvC2wloMaAN
-	 oSIzRrqXZE7Za64UGoM1BAUfGobSZcNngEFK1qg9OicGWy0sKL2OOjYeV/ZpySruRbQX4
-	 7aRSlr+/SBKVkxYstu4GfCmrn/dK1DIz9mS8WrJ7aIKalGp0GqsYVKe5ZMEzztDBFaB6d
-	 kjmP4FlZYphUPMoKdOuFPlxtMNhqrW/NHbNZVGbx2BZeAUpOEh+h7lSQ0xDbijdFJCg==
+	bh=kwBYRx4ESGf2HI6w8eM3SpQHO7+okGsmweyzgVaadno=;
+	b=OIW4b6/X6+/SCFfeb/HZdAoilYYtMY6QnOXLIHmMt5bY4eW/FYWOssp+LrrP5n79CpL+
+	 MEXziEP4s72qROH/D6rTxEU6/dYVQVqcnXKpHnPvw2Cz8Pv7eLD5OOC0ATYz037B1RgDE
+	 7rz2NE4K0cc1uzoqYtugoKHmchpkSrdEGB48eg7GF4fWytd39N3olQ/9AcZ8GoBdMXxsq
+	 04O1/OX2pnYhhfpNTFEecXXcVTkB5NL4uZtWIQkHTIifi9u6HylGDpn678whlVAQzuk7u
+	 0Apv5WjwYbjYipxmINv38zoBrAHjFOHXca0zuLpzEN/6Dvv1lON9K7Ux9FHtf690Yog==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ecudvydK;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=FVotNU14;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ACEA8606A31B
-	for <linux-scsi@vger.kernel.org>; Fri,  6 Nov 2026 01:24:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0F4A606A31B
+	for <linux-scsi@vger.kernel.org>; Fri,  6 Nov 2026 01:25:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ecudvydK
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 61D8E1F0089F;
-	Fri,  6 Nov 2026 01:24:40 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=FVotNU14
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 19C821F0089F;
+	Fri,  6 Nov 2026 01:25:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793928280;
-	bh=jdn2pxdwkluuRAAeA/MBVW6TXU/ae8GB/9Bz6FaEiAg=;
+	s=k20260515; t=1793928346;
+	bh=kwBYRx4ESGf2HI6w8eM3SpQHO7+okGsmweyzgVaadno=;
 	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
-	b=ecudvydKb1db7dZ5UQg0dvlifnfJp4POJmPxFoUJsQ0c0RPmphuxQQalyZBQ2cuB/
-	 gFwAA0OvpJJR2va136fo9Mp25iO9S1wpHCA035FE5j1oJNZw1rsEolIW5CFWYoKLUC
-	 FWYLlzPHOesUFIOgMkhZVZEY7EtLx6VbnSWLEmCRQf5FJn7KweVZxMc5Wn4D/q3Lvd
-	 PglSSTdv53B5AEyZn0CpmtrPJrwj0UHw47SvbXvpOgQzfQcG2zNK6vZrSg9edjwJr3
-	 Lk994tgeYCpq7c5PYpRrBpbmMhx68quoc3v3TlzO+mZNMgiJWdj2hKdZF+loOZEJq4
-	 4Bl2oJlobz+Aw==
-Message-ID: <sashiko-outbox-200512@kernel.org>
+	b=FVotNU14eCdwRuIhWWQrCPO1eYkcLjmkQTVHNq5cgP0xs5z6nJEvRSUc9QNR3ZYai
+	 S6n2nSu28apLNMFIiV4Z2m+LfX5stlyp6hUP7UlXTYD55KddwqySon5V7Jl16+W2Wk
+	 /t0FZHe5+/NoVki+spYJ5sKYFVdSERjDQrOoJHFDazkrVxnac8ziwVjVUpmPv0ZPQD
+	 iwMJjA6sqF7JHPJPESf8MlSYW3m5RlWKLLGm7kqKkfP7bgwUsntbezmmlyaYPCWfcX
+	 8Zcm7g4dB74OjDnMuYwqA/P7YzIJuh+wRXhuUH97kSKU+fT7h8u9RkTFuSMD53ZQQA
+	 BJW5KgGubLiHg==
+Message-ID: <sashiko-outbox-200513@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 26/37] scsi: mpt3sas: Enforce minimum reply frame size
- and validate chain segment size
+Subject: Re: [PATCH 04/37] scsi: mpt3sas: Fix locking and bounds checks on
+ host_trace_buffer sysfs files
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Shivasharan S" <shivasharan.srikanteshwara@broadcom.com>, linux-scsi@vger.kernel.org
-In-Reply-To: <1793925772-1303-27-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+In-Reply-To: <1793925772-1303-5-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 References: <1793925772-1303-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
- <1793925772-1303-27-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+ <1793925772-1303-5-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 06 Nov 2026 01:24:39 +0000
+Date: Fri, 06 Nov 2026 01:25:45 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -60,173 +60,221 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 4 potential issue(=
 s) to consider:
-- [High] scsi: mpt3sas: minimum reply_sz check in _base_allocate_memory_poo=
-ls() too small
-- [Medium] scsi: mpt3sas: chain_sz bound in _base_allocate_memory_pools() t=
-runcates u8
+- [High] scsi: mpt3sas: deadlock acquiring ctl_cmds.mutex in mpt3sas_proces=
+s_trigger_data()
+- [Medium] scsi: mpt3sas: unlocked ioc->htb_rel update in mpt3sas_process_t=
+rigger_data()
+- [Medium] scsi: mpt3sas: stale ring_buffer_offset on buffer reuse in _ctl_=
+diag_register_2()
+- [Medium] scsi: mpt3sas: missing ctl_cmds.mutex lock in host_trace_buffer_=
+enable_show()
 --
 
-commit a651558740938275a089ff4ceac26e9d6bedfb39
+commit 020572df8e7bd5fcadc7efc81cf505f0aa5bf7b5
 Author: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 
-scsi: mpt3sas: Enforce minimum reply frame size and validate chain segment =
-size
+scsi: mpt3sas: Fix locking and bounds checks on host_trace_buffer sysfs fil=
+es
 
-This commit adds validation in _base_allocate_memory_pools() to enforce a
-minimum reply frame size based on MPI2DefaultReply_t and to bounds-check
-IOCMaxChainSegmentSize when calculating chain_segment_sz.
+This commit serializes the host_trace_buffer sysfs handlers and diagnostic
+trigger release path on ctl_cmds.mutex, and clamps the trace buffer size and
+read bounds to the allocated DMA buffer size.
 
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/m=
-pt3sas_base.c
-> index 3622d8a42725b..1af9dc241666c 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-> @@ -6395,21 +6395,46 @@ _base_allocate_memory_pools(struct MPT3SAS_ADAPTE=
-R *ioc)
->  	/* reply frame size */
->  	ioc->reply_sz =3D facts->ReplyFrameSize * 4;
-> =20
-> +	/* Enforce minimum reply frame size */
-> +	if (ioc->reply_sz < sizeof(MPI2DefaultReply_t)) {
-> +		ioc_err(ioc,
-> +			"Firmware reported an invalid ReplyFrameSize (%d bytes). Cannot safel=
-y attach.\n",
-> +			ioc->reply_sz);
-> +		return -EINVAL;
-> +	}
-
-[Severity: High]
-Is sizeof(MPI2DefaultReply_t) (20 bytes) large enough to prevent out-of-bou=
-nds
-reads and writes on the reply buffers when ReplyFrameSize is between 5 and =
-12
-dwords (20 to 48 bytes)?
-
-In mpt3sas_base_attach(), the internal command reply buffers and DMA reply
-frames are allocated using ioc->reply_sz:
-
-drivers/scsi/mpt3sas/mpt3sas_base.c:mpt3sas_base_attach() {
-	...
-	ioc->base_cmds.reply =3D kzalloc(ioc->reply_sz, GFP_KERNEL);
-	ioc->port_enable_cmds.reply =3D kzalloc(ioc->reply_sz, GFP_KERNEL);
-	ioc->transport_cmds.reply =3D kzalloc(ioc->reply_sz, GFP_KERNEL);
-	ioc->scsih_cmds.reply =3D kzalloc(ioc->reply_sz, GFP_KERNEL);
-	ioc->tm_cmds.reply =3D kzalloc(ioc->reply_sz, GFP_KERNEL);
-	ioc->config_cmds.reply =3D kzalloc(ioc->reply_sz, GFP_KERNEL);
-	ioc->ctl_cmds.reply =3D kzalloc(ioc->reply_sz, GFP_KERNEL);
-	...
-}
-
-However, command submission and completion paths unconditionally zero, copy,
-or dereference larger reply structures from these buffers without checking
-ioc->reply_sz. For example, during mpt3sas_base_attach() ->
-_base_make_ioc_operational(), _base_display_fwpkg_version() copies 24 bytes
-(sizeof(Mpi2FWUploadReply_t)) from ioc->base_cmds.reply:
-
-drivers/scsi/mpt3sas/mpt3sas_base.c:_base_display_fwpkg_version() {
-	...
-			memcpy(&mpi_reply, ioc->base_cmds.reply,
-					sizeof(Mpi2FWUploadReply_t));
-	...
-}
-
-And _base_static_config_pages() -> _config_request() writes 24 bytes
-(sizeof(Mpi2ConfigReply_t)) into ioc->config_cmds.reply:
-
-drivers/scsi/mpt3sas/mpt3sas_config.c:_config_request() {
-	...
-	memset(ioc->config_cmds.reply, 0, sizeof(Mpi2ConfigReply_t));
-	...
-}
-
-Other paths access even larger reply structures, such as
-mpt3sas_scsih_issue_tm() writing sizeof(Mpi2SCSITaskManagementReply_t) (28
-bytes) to ioc->tm_cmds.reply, _transport_smp_handler() copying
-sizeof(Mpi2SmpPassthroughReply_t) (28 bytes) from ioc->transport_cmds.reply,
-mpt3sas_base_scsi_enclosure_processor() copying sizeof(Mpi2SepReply_t) (32
-bytes) from ioc->base_cmds.reply, and _scsi_send_scsi_io(), _scsih_io_done(=
-),
-and mpt3sas_ctl_done() casting reply buffers to Mpi2SCSIIOReply_t (52 bytes=
-):
-
-drivers/scsi/mpt3sas/mpt3sas_scsih.c:_scsi_send_scsi_io() {
-	...
-		mpi_reply =3D ioc->scsih_cmds.reply;
-		transfer_packet->sense_length =3D
-		   min_t(u32, le32_to_cpu(mpi_reply->SenseCount),
-			 sizeof(transfer_packet->sense));
-	...
-}
-
-Should the minimum ioc->reply_sz check require at least enough space for the
-largest reply structure accessed by the driver, such as Mpi2SCSIIOReply_t?
-
-> +
-> +	/* calculate the max scatter element size */
-> +	sge_size =3D max_t(u16, ioc->sge_size, ioc->sge_size_ieee);
-> +
->  	/* chain segment size */
->  	if (ioc->hba_mpi_version_belonged !=3D MPI2_VERSION) {
-> -		if (facts->IOCMaxChainSegmentSize)
-> -			ioc->chain_segment_sz =3D
-> -					facts->IOCMaxChainSegmentSize *
-> +		if (facts->IOCMaxChainSegmentSize) {
-> +			/* compute in 32 bits so the product cannot wrap the u16 field */
-> +			u32 chain_sz =3D (u32)facts->IOCMaxChainSegmentSize *
->  					MAX_CHAIN_ELEMT_SZ;
-> -		else
-> -		/* set to 128 bytes size if IOCMaxChainSegmentSize is zero */
-> +
-> +			/* reject values that wrap or leave < 2 SGEs per chain */
-> +			if (chain_sz < 2 * sge_size || chain_sz > 0xFFFF) {
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mp=
+t3sas_ctl.c
+> index f254e9984da80..d696cb12047ce 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+> @@ -1791,6 +1791,10 @@ _ctl_diag_register_2(struct MPT3SAS_ADAPTER *ioc,
+>  	if (request_data =3D=3D NULL) {
+>  		ioc->diag_buffer_sz[buffer_type] =3D 0;
+>  		ioc->diag_buffer_dma[buffer_type] =3D 0;
+> +		if (buffer_type =3D=3D MPI2_DIAG_BUF_TYPE_TRACE) {
+> +			ioc->ring_buffer_sz =3D 0;
+> +			ioc->ring_buffer_offset =3D 0;
+> +		}
+>  		request_data =3D dma_alloc_coherent(&ioc->pdev->dev,
+>  				request_data_sz, &request_data_dma, GFP_KERNEL);
+>  		if (request_data =3D=3D NULL) {
 
 [Severity: Medium]
-Can allowing chain_sz up to 0xFFFF truncate chain_offset when building
-multi-chain IEEE scatter-gather lists in _base_build_sg_scmd_ieee()?
+What happens when a previously allocated trace buffer is released and then
+re-posted with the same size, such as through host_trace_buffer_enable_stor=
+e()
+or the MPT3DIAGREGISTER ioctl?
 
-If facts->IOCMaxChainSegmentSize is between 257 and 4095, chain_sz is betwe=
-en
-4112 and 65520 bytes, which passes this check and sets
-ioc->max_sges_in_chain_message to facts->IOCMaxChainSegmentSize - 1 (256 to
-4094).
+In _ctl_diag_register_2(), when ioc->diag_buffer[MPI2_DIAG_BUF_TYPE_TRACE] =
+is
+already allocated and request_data_sz matches
+ioc->diag_buffer_sz[MPI2_DIAG_BUF_TYPE_TRACE]:
 
-When _base_build_sg_scmd_ieee() constructs an SGL that spans multiple chain
-segments (sges_left > ioc->max_sges_in_chain_message), it sets chain_offset=
- to
-ioc->max_sges_in_chain_message and passes it to _base_add_sg_single_ieee():
-
-drivers/scsi/mpt3sas/mpt3sas_base.c:_base_build_sg_scmd_ieee() {
+	request_data =3D ioc->diag_buffer[buffer_type];
+	request_data_sz =3D diag_register->requested_buffer_size;
 	...
-		sges_in_segment =3D (sges_left <=3D
-		    ioc->max_sges_in_chain_message) ? sges_left :
-		    ioc->max_sges_in_chain_message;
-		chain_offset =3D (sges_left =3D=3D sges_in_segment) ?
-		    0 : sges_in_segment;
-		chain_length =3D sges_in_segment * ioc->sge_size_ieee;
-		if (chain_offset)
-			chain_length +=3D ioc->sge_size_ieee;
-		_base_add_sg_single_ieee(sg_local, chain_sgl_flags,
-		    chain_offset, chain_length, chain_dma);
+	if (request_data) {
+		request_data_dma =3D ioc->diag_buffer_dma[buffer_type];
+		if (request_data_sz !=3D ioc->diag_buffer_sz[buffer_type]) {
+			dma_free_coherent(&ioc->pdev->dev,
+					ioc->diag_buffer_sz[buffer_type],
+					request_data, request_data_dma);
+			request_data =3D NULL;
+		}
+	}
+
+request_data remains non-NULL and the existing DMA buffer is reused without
+entering the request_data =3D=3D NULL block. Would that leave ioc->ring_buf=
+fer_sz
+and ioc->ring_buffer_offset with stale values from the previous trace captu=
+re
+when reading host_trace_buffer?
+
+[ ... ]
+
+> @@ -3755,13 +3782,17 @@ host_trace_buffer_enable_store(struct device *cde=
+v,
+>  	struct mpt3_diag_register diag_register;
+>  	u8 issue_reset =3D 0;
+> =20
+> +	if (sscanf(buf, "%9s", str) !=3D 1)
+> +		return -EINVAL;
+> +
+> +	mutex_lock(&ioc->ctl_cmds.mutex);
+
+[Severity: Medium]
+The commit message notes that this change serializes the host_trace_buffer*
+sysfs handlers on ctl_cmds.mutex, and host_trace_buffer_enable_store() now
+acquires ioc->ctl_cmds.mutex before modifying
+ioc->diag_buffer[MPI2_DIAG_BUF_TYPE_TRACE] and
+ioc->diag_buffer_status[MPI2_DIAG_BUF_TYPE_TRACE].
+
+However, host_trace_buffer_enable_show() in drivers/scsi/mpt3sas/mpt3sas_ct=
+l.c
+still reads those fields without holding ioc->ctl_cmds.mutex:
+
+	if ((!ioc->diag_buffer[MPI2_DIAG_BUF_TYPE_TRACE]) ||
+	   ((ioc->diag_buffer_status[MPI2_DIAG_BUF_TYPE_TRACE] &
+	    MPT3_DIAG_BUFFER_IS_REGISTERED) =3D=3D 0))
+		return snprintf(buf, PAGE_SIZE, "off\n");
+
+Since host_trace_buffer_enable_store() clears
+ioc->diag_buffer_status[MPI2_DIAG_BUF_TYPE_TRACE] =3D 0 and then sleeps in
+_ctl_diag_register_2() waiting for firmware command completion before setti=
+ng
+MPT3_DIAG_BUFFER_IS_REGISTERED, can a concurrent read of
+host_trace_buffer_enable race with post/release operations and observe
+transient state? Should host_trace_buffer_enable_show() also acquire
+ioc->ctl_cmds.mutex?
+
+[ ... ]
+
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_trigger_diag.c b/drivers/scsi/m=
+pt3sas/mpt3sas_trigger_diag.c
+> index d9b7d0ee25b0f..bda404a3ff3db 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_trigger_diag.c
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_trigger_diag.c
+> @@ -118,6 +118,7 @@ mpt3sas_process_trigger_data(struct MPT3SAS_ADAPTER *=
+ioc,
+>  	dTriggerDiagPrintk(ioc, ioc_info(ioc, "%s: enter\n", __func__));
+> =20
+>  	/* release the diag buffer trace */
+> +	mutex_lock(&ioc->ctl_cmds.mutex);
+>  	if ((ioc->diag_buffer_status[MPI2_DIAG_BUF_TYPE_TRACE] &
+>  	    MPT3_DIAG_BUFFER_IS_RELEASED) =3D=3D 0) {
+>  		/*
+
+[Severity: High]
+Can acquiring ioc->ctl_cmds.mutex in mpt3sas_process_trigger_data() cause an
+ABBA deadlock with controller reset paths?
+
+mpt3sas_process_trigger_data() runs on the ioc->firmware_event_thread
+workqueue via:
+
+  _firmware_event_work() -> _mpt3sas_fw_work() -> mpt3sas_process_trigger_d=
+ata()
+
+Taking ioc->ctl_cmds.mutex here establishes the lock order:
+
+  (&fw_event->work) -> (&ioc->ctl_cmds.mutex)
+
+Conversely, several paths in drivers/scsi/mpt3sas/mpt3sas_ctl.c hold
+ioc->ctl_cmds.mutex while calling mpt3sas_base_hard_reset_handler(), includ=
+ing
+_ctl_do_reset(), _ctl_do_mpt_command(), _ctl_diag_register_2() (called from
+_ctl_diag_register() and host_trace_buffer_enable_store()),
+_ctl_diag_release(), _ctl_diag_read_buffer(), and
+mpt3sas_send_mctp_passthru_req(). In particular, _ctl_do_mpt_command() queu=
+es
+a MPT3SAS_PROCESS_TRIGGER_DIAG work item via mpt3sas_trigger_master() and c=
+an
+immediately jump to issue_host_reset while still holding ioc->ctl_cmds.mute=
+x:
+
+	mpt3sas_trigger_master(ioc, MASTER_TRIGGER_TASK_MANAGMENT);
 	...
-}
+	if (!(ioc->ctl_cmds.status & MPT3_CMD_COMPLETE)) {
+		mpt3sas_check_cmd_timeout(ioc,
+		    ioc->ctl_cmds.status, mpi_request,
+		    karg.data_sge_offset, issue_reset);
+		goto issue_host_reset;
+	}
 
-In _base_add_sg_single_ieee(), chain_offset is a u8 parameter written into
-Mpi25IeeeSgeChain64_t::NextChainOffset (an 8-bit field in 16-byte SGE units,
-with a maximum value of 255):
+Inside mpt3sas_base_hard_reset_handler(), the reset path flushes the firmwa=
+re
+event queue while ioc->ctl_cmds.mutex is held:
 
-drivers/scsi/mpt3sas/mpt3sas_base.c:_base_add_sg_single_ieee() {
-	Mpi25IeeeSgeChain64_t *sgel =3D paddr;
+  mpt3sas_base_hard_reset_handler()
+    -> _base_clear_outstanding_commands()
+      -> mpt3sas_scsih_clear_outstanding_scsi_tm_commands()
+        -> _scsih_fw_event_cleanup_queue()
+          -> cancel_work_sync(&fw_event->work)
 
-	sgel->Flags =3D flags;
-	sgel->NextChainOffset =3D chain_offset;
-	...
-}
+This establishes the reverse lock order:
 
-Should IOCMaxChainSegmentSize (or ioc->max_sges_in_chain_message) be bounded
-so that chain_offset fits in the u8 NextChainOffset field?
+  (&ioc->ctl_cmds.mutex) -> (&fw_event->work)
+
+If a MPT3SAS_PROCESS_TRIGGER_DIAG work item has started executing
+_firmware_event_work() when _scsih_fw_event_cleanup_queue() dequeues it and
+calls cancel_work_sync(&fw_event->work), won't _scsih_fw_event_cleanup_queu=
+e()
+block waiting for fw_event->work to finish while
+mpt3sas_process_trigger_data() blocks waiting for ioc->ctl_cmds.mutex?
+
+> @@ -131,6 +132,7 @@ mpt3sas_process_trigger_data(struct MPT3SAS_ADAPTER *=
+ioc,
+>  		mpt3sas_send_diag_release(ioc, MPI2_DIAG_BUF_TYPE_TRACE,
+>  		    &issue_reset);
+>  	}
+> +	mutex_unlock(&ioc->ctl_cmds.mutex);
+> =20
+>  	ioc->htb_rel.buffer_rel_condition =3D MPT3_DIAG_BUFFER_REL_TRIGGER;
+>  	if (event_data) {
+
+[Severity: Medium]
+Should the update to ioc->htb_rel also be protected by ioc->ctl_cmds.mutex?
+
+Here in mpt3sas_process_trigger_data(), ioc->ctl_cmds.mutex is unlocked rig=
+ht
+after mpt3sas_send_diag_release() sets MPT3_DIAG_BUFFER_IS_RELEASED, before
+ioc->htb_rel.buffer_rel_condition, ioc->htb_rel.trigger_type, and
+ioc->htb_rel.trigger_info_dwords are populated.
+
+Other readers and writers of ioc->htb_rel in drivers/scsi/mpt3sas/mpt3sas_c=
+tl.c
+access it under ioc->ctl_cmds.mutex: _ctl_addnl_diag_query() checks
+MPT3_DIAG_BUFFER_IS_RELEASED and copies ioc->htb_rel to userspace,
+_ctl_diag_register_2() zeroes ioc->htb_rel with memset(), and
+host_trace_buffer_enable_store() sets
+ioc->htb_rel.buffer_rel_condition =3D MPT3_DIAG_BUFFER_REL_SYSFS.
+
+Because the lock is dropped before ioc->htb_rel is populated, could a
+concurrent _ctl_addnl_diag_query() ioctl observe MPT3_DIAG_BUFFER_IS_RELEAS=
+ED
+and copy incomplete or stale ioc->htb_rel data, or could a concurrent buffer
+re-registration in _ctl_diag_register_2() zero ioc->htb_rel only for
+mpt3sas_process_trigger_data() to overwrite it immediately afterward?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/1793925772-1303-1-g=
-it-send-email-shivasharan.srikanteshwara@broadcom.com?part=3D26
+it-send-email-shivasharan.srikanteshwara@broadcom.com?part=3D4
