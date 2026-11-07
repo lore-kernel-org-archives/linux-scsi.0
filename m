@@ -1,92 +1,73 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.215.181
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794069333;
-	b=fUfb0iEzY5nwQAxGrAXPXdlhaIivFRE4C5CnEmvPxdOcBnfjkfni9bjVQZvzI18Vq8HJ
-	 ilszZklHW+v8DXcYKiCT5fgxaDSaAIv7NvPs96W4JcpxHGe9YIo7fxPEV69x2peAeJCmB
-	 Tzg71IkcHKsY/WAuCJZKpopKR1tasJFc0mv/+xdpFRGCkQYNb3eJm1mgwTLYcxKQiEEbm
-	 l/5F3xeqGanlLsXy9eSo4CaO8pAn3kU5XUg+eQXfKMf3O0HGU4YDNL6ZIi+/TQTzQRcS7
-	 kC3GeP06Ry2XFABLAzZG0Dponl6IW4uw0sr8zsm+XN+jt6qNLrIyWHoHO7yWB/WastQ==
+	t=1794069814;
+	b=X8nlDF0sXANpnSLfuYz/k39R8H7gKb44F1WYLef+2FDZ1qkebDKTj8wUw6QRtbf+tDSH
+	 cZbL4wyceg9fDcMCOGhutmdkoCbar2I8/jdV8cqXaxZI6tCCIQAdzyCh2E7i9sdCUgy0R
+	 cHOzJpEWSDGmPfhW0YIVT4zdd9hRQnp7fx4FsTggj692gvb7vF5MzvMnDK8dJ2xuTH3Uv
+	 F+3EzPw01CssFYHFdr9HZMG1MZDIrGU/XmLQfM1vuub6MhFCU0i46OuG+wI8Zlck8i3iO
+	 Vc1h7ymCPibi+sNc/ndUFXdbvHd4J666O/Z/1ulk7Th1CV9VhhR2F6qA5s87BNwbsHg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794069333;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To:User-Agent;
-	bh=vpx8jpvZit1mrMnK53mn6lvyf/Hr8HxBYVCEMXEzzdI=;
-	b=rdN35LXUn8HFdFcnjq1nzqKANzBeB90qeQhAwC6bjKH5rKgXci0Q4gpGOJ0dz+6rch2p
-	 uYSGhbCOna0Vgme2kBkyMYqC8tYGJFLELQswmIHmbweBy3ejBx4HDTWaVOI4TK5gNvoED
-	 aXrt0sTOsA41il6O2HIl+puRO6RCsYbxv5tHWVxyNJnz6T9zU+o3CrZcrGCBta8mBECDj
-	 NMrnLL3c+rvefyshMNdXNNxXvGw+4Ig0XnEGUUuqTPQIjsElbHOJNkTxy+fSPL53tCkZI
-	 9iamxWVpEmcOm+jEfgggE/Y1a3gt9o0kjcOGA7tCQKC08TRNj3V6FRAIx8sAzFwXe3A==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794069814;
+	h=Received:DKIM-Signature:Received:Received:X-ME-Sender:
+	 X-ME-Proxy-Cause:X-ME-Proxy:Feedback-ID:Received:X-Mailer:
+	 MIME-Version:X-ThreadId:Date:From:To:Cc:Message-Id:In-Reply-To:
+	 References:Subject:Content-Type:Content-Transfer-Encoding;
+	bh=vJlfnNqej/LkG6MaOOq3+jKdNMX9ZNsvcUBYJfUwMpw=;
+	b=cwBUHQ3tWJICORqVVwDzxCaGx2d5eeErnvq03OxGKh3BQ/uUb0ZjBK8LjAY3oIUSzFtS
+	 7b8GllKh4SSjqYUjkOcdcxdJNSscnP+bKRybu2SecM8YrhWm2NWfyYk8ih37qvDJzMhGp
+	 tco7caG3+NE71auliAI9ZYO/nan+fvFEztvTgMTf8YJeyzoP9CzHOnD3j8y6tHxy0ulcE
+	 1tlFB7Q+R35Hi67esCtRlVAGhJE9zdBSMuSG7SJ/XW/WrbMMp7hk1AeNBtd3zIanG+P6c
+	 4X/n2SKh+7gBgAEmDox/KCfjGjVYSXNooD86kj+Eonz01JJA4OgyMYEfoFDug+3m2iQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=chrisdown.name;
-	spf=pass smtp.mailfrom=chrisdown.name;
-	dkim=pass header.d=chrisdown.name header.i=@chrisdown.name header.a=rsa-sha256 header.s=google header.b=TbrZZA1B;
-	arc=none smtp.remote-ip=209.85.215.181
-Received: from mail-pg1-f181.google.com (mail-pg1-f181.google.com [209.85.215.181])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Ec9OinBL;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B968C606A32C
-	for <linux-scsi@vger.kernel.org>; Sat,  7 Nov 2026 16:35:32 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B968C606A32C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=chrisdown.name
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chrisdown.name
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6888E606D807;
+	Sat,  7 Nov 2026 16:43:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=chrisdown.name header.i=@chrisdown.name header.a=rsa-sha256 header.s=google header.b=TbrZZA1B
-Received: by mail-pg1-f181.google.com with SMTP id 41be03b00d2f7-cdadf7e248aso600296a12.3
-        for <linux-scsi@vger.kernel.org>; Sat, 07 Nov 2026 08:35:32 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chrisdown.name; s=google; t=1794069332; x=1794674132; darn=vger.kernel.org;
-        h=user-agent:in-reply-to:content-disposition:content-type
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to:content-type;
-        bh=vpx8jpvZit1mrMnK53mn6lvyf/Hr8HxBYVCEMXEzzdI=;
-        b=TbrZZA1BRm+Sy0qn7deY4UysaYGNgo1OVyYeTt9YSwGUJ/2DYx7c1Gr/1QE7k9t5Nz
-         PXOuh2OiqSfIzKcXXK3vUPjfWm6tqfhuQ3TONFWqVyhrIPTGA9XeXsbi+8yGvUBOkNkP
-         CquXDLXGxoUU0NvXIh3t7f9fqE10jnZCV3sWc=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794069332; x=1794674132;
-        h=user-agent:in-reply-to:content-disposition:content-type
-         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=vpx8jpvZit1mrMnK53mn6lvyf/Hr8HxBYVCEMXEzzdI=;
-        b=QpnT5cMHzdD6g6ac4DmD4ztDgAixeiWQKP9CASSccZe2imeJ44jUteAxByUBrIAXgD
-         6jobHPkZBRyj5SwOZ2k+EvhFNod9qTaAf3YjrYNsYOmIO4WO3He9WPKAVk7ZDOp7Yh8X
-         gkE41mDEfY/VdB4EiJOck9i6GSfMVJylrr3RDqObuBXPZLA7Xc0zlAxTP6W/sW7Axsxh
-         KYtZ3f3cdjWU+sT8Wq+RSLUQCmKOXybnDeeEG92w8biFWvNMG/M+0/iQ9NL3sD1iVZVf
-         7g5SZE/werpX8oGLtu89LRnbsrTCN/3R8HumZrWitvSun3FYaWr0St8wGQWjfurQ1ffD
-         DQJw==
-X-Forwarded-Encrypted: i=1; AL+hErEMbwycgkUQYRniq5Ni4l1DkjbFQRDjjTPtjRH61ih7l2Ob9wz6Z6u6UojHJg2EFaQbJDUXXK1EcJM0@vger.kernel.org
-X-Gm-Message-State: APuU4Z+5XTUuSvgU9o6f6MDXxj0dXorpVsIieFsEKZ+NulVNw5D2KOqz
-	vnsBLcuazENk/VusE/FRjcmT1gWyluH4TL90FihYw9XT0DEM2qW/uaReBq2zD/+rbf8=
-X-Gm-Gg: AYBFou3UswKYAIXS3UTiYwU43vXk8WRLV00DlFRvayXwWHoIDubK5UIFX5sZgrZq0aS
-	sPdM/AugGgLmWqD5Qtlm/jKdmss7hICZ2eZQvVoykxf+U2z46QTsfgG2dYfe11CYkAoaFt+Fuh/
-	LETdNvIOO1QWVMcyDTN16BpNAcJYzpxjjcW07ZrKSBfGql9aCe78pQr2bFVvQ9MjxWTVmMASTJZ
-	byfp4xFqSunimRd1DvgrlJbdOt7Q12J5KfQiDfMzHLpO5efxi99BQIlCj4eP4SaGqO4HHQeklCG
-	eLx/KYIbfo3nHUufT3PMPh7uniHv0TfUnDpZ+V8of8kkhMAXh9R6+h+AvifgXmsoRNB0/+xggZW
-	R7vKMe/FK21l1Va9rWN6tXWDIetGnGms5kpsOpR0BV2+boq1CRtPHJA27TNGMpihOhco2aH+cVC
-	qrS1B1BOJ+b93LDr2JChsTsFytzP5dtNk/U/6qMmFZpzyRTdZL3MRDGaq1Gux/a5zX5UyPE/uA3
-	kTsbPVYV0hsyL3OHnwp3JZJbPqTNJzhJMdF+pLxY9hro2ayaMG181w3l7zTIxSsMkThW2xOFgri
-	mU3qZi+A32jA+OSngA6yXiknNgESQBIXgJ1peuU1Mp+CE+J/IQ2vN7bSurpq957RwT2kdWvZa1V
-	7gLhg2JQKG09E63JZx+FT3PJEs5PpEUEHin6x2ZfrDtNqwusKDN22gz4jO1+iDUhh4TTt8rMd9c
-	8hvrLRfDN7CrQ77cQitOf++o24DsrP13AY+kBUxnMrcWk59m2LQUCL
-X-Received: by 2002:a17:90b:4b0f:b0:39e:4c81:6c5f with SMTP id 98e67ed59e1d1-3b0db6e5c68mr6010349a91.26.1794069331989;
-        Sat, 07 Nov 2026 08:35:31 -0800 (PST)
-Received: from localhost ([50.175.87.158])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b10588225asm3741301a91.8.2026.11.07.08.35.30
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 07 Nov 2026 08:35:30 -0800 (PST)
-Date: Sat, 7 Nov 2026 08:35:29 -0800
-From: Chris Down <chris@chrisdown.name>
-To: "Martin K. Petersen" <mkp@kernel.org>,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, kernel-team@meta.com
-Subject: [PATCH 2/2] scsi: sd: Fix data corruption in WRITE SAME(10) discards
-Message-ID: <c58578f870580f92d1acd6cb73b59b7a7867d80b.1794069087.git.chris@chrisdown.name>
-References: <cover.1794069087.git.chris@chrisdown.name>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Ec9OinBL
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D87E21F008A3;
+	Sat,  7 Nov 2026 16:43:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794069813;
+	bh=vJlfnNqej/LkG6MaOOq3+jKdNMX9ZNsvcUBYJfUwMpw=;
+	h=Date:From:To:Cc:In-Reply-To:References:Subject;
+	b=Ec9OinBLTdERos6h50EC0xUMTn77I2eH+sW83Lh5kwSY9BvV2OOVa/KNof0GP2Q58
+	 RS4VV3vBrJ/LJog1T9lg0D2JE4OoyqUja1mYU0rh9TBbXyPIEhQRpsuojcmq8ZMIA4
+	 CCDIxEY1vZFYI7ppfT5M0lTExZ07bRV7cMY147urYKAEBYKJp+dYFF+px+uccoSGQJ
+	 uVAe3HJmFJqNBLzSUpkpxl6XM/ygvvEBAxQusxKpDQigosD1nBGLgkLmP/DR4y72y1
+	 LgnZYxUr+IR4Egl8rgUGA8KwMUI2eGvYxK8dwEAUy7fQvT097QujPauhtAAp8a8K3u
+	 wRcc9px1LLfNQ==
+Received: from phl-compute-10.internal (phl-compute-10.internal [10.202.2.50])
+	by mailfauth.phl.internal (Postfix) with ESMTP id 1E9E1F40067;
+	Sat,  7 Nov 2026 11:43:31 -0500 (EST)
+Received: from phl-imap-15 ([10.202.2.104])
+  by phl-compute-10.internal (MEProxy); Sat, 07 Nov 2026 11:43:31 -0500
+X-ME-Sender: <xms:MlXvakDJz2aoRG_Q0Tr3dYW0eo4APQUabQqIttoZFPRFZ-x9snzIqw>
+    <xme:MlXvahUE11fMZOXF9JjGlaXmovQ63rXPe9CVrxbGMz01XC2UXZ8Ub-s6v11mUcT7K
+    6EUgoab8dJTWAHO_c14xHkS1kUKnJq9SFX4dojoicG37nrqW8Y-SchLZQ>
+X-ME-Proxy-Cause: dmFkZTF47JQfJLdRdMge2GMs+GugpouQhIspgU7BDymJQjozGtWeayorP8T8qJjOJtez5n
+    Mu6YVQMuTAuQf8dNPbyiJidY6z5iDchqOk/rPreMnFBsaZEyFLA1xNLvX2+sRgAAEV6CpA
+    18n7d+taVvJebv5vU6jJPdclNeeGqwUnruqBfjOVpjA4xXpT5GCaWy76JSn+teNqAA0ny2
+    vVmyqvtCRPIMNOkOlHDxwf2R+IqqtIN68NFJGnHnqmIyGIjD3zNX0zKaDGqEk7Ze2onYqy
+    9RdgDPRA3PikGN1W/7nDb8NiYp8Q9/+7zqfHAJcBEVt9DgwuHrHPFfmetOJuJSFKJUDZpN
+    mbRzObrxaiH+VuPVfFTvBWVxOAq7xc3fchnSigBQCyM4PA4HDuL1vAF5IoeXrMQk2aUW21
+    59Pn6Ph8ElZIblHku0CFRDKCKdVU/6BJGsrAIobO6f/CRmXPwJZ+FZIWnzEq4zHbFnFSj5
+    2GavxWreHaI/dkosMa1/Hz50DzNovuOurQwGdhu5YM7nZSIaOcaigZUM86iQpTNPvFE5q8
+    X0RucoetdeEG7ZlTg0zjUFsHpRlOfhY/tCKI3ix9kioMo32DZjUgaL6ky8l30WUfX53owO
+    FaUB1P+IyjUQnKRpIIcJTsmMD1HsAXSFOSlEcd18MZD9Rox3fmXGxCSSzMdg
+X-ME-Proxy: <xmx:M1Xvarm_GuLHtdhc-beslZ2ZxZoqr1pVXnXixSSL7TSDZnhBDdRW2w>
+    <xmx:M1XvakuXdXodbZzwSGhXpuZDbgbK4xmWfFZIJTq2PW_KgUkMPLhQ2w>
+    <xmx:M1XvakHt6uhcrYM_XDobstbNvikecMWxKGRyUkZcuWV3Fx0M6IIITQ>
+    <xmx:M1XvakswcIzGwK3QU4AniovTIpZY-XUd3Ibq2iA0mAnVEdW_mDFClQ>
+    <xmx:M1XvaqI_u5j39OfSlUWtLpJlRc3Dik8eKjcfeQJUyBgtS0utAvmxR5za>
+Feedback-ID: ifa6e4810:Fastmail
+Received: by mailuser.phl.internal (Postfix, from userid 501)
+	id DFD31782738; Sat,  7 Nov 2026 11:43:30 -0500 (EST)
+X-Mailer: MessagingEngine.com Webmail Interface
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -96,40 +77,66 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <cover.1794069087.git.chris@chrisdown.name>
-User-Agent: Mutt/2.3.3 (9073d26d) (2026-06-12)
+X-ThreadId: AE4uiykVHNXw
+Date: Sat, 07 Nov 2026 11:43:10 -0500
+From: "Chuck Lever" <cel@kernel.org>
+To: "Christian Brauner" <brauner@kernel.org>, linux-fsdevel@vger.kernel.org
+Cc: "Linus Torvalds" <torvalds@linux-foundation.org>,
+ "Jann Horn" <jannh@google.com>, "Josef Bacik" <josef@toxicpanda.com>,
+ "Chris Mason" <mason@kernel.org>, "Jeff Layton" <jlayton@kernel.org>,
+ NeilBrown <neil@brown.name>, "Eric Dumazet" <edumazet@kernel.org>,
+ "Thomas Gleixner" <tglx@kernel.org>,
+ "Alexander Viro" <viro@zeniv.linux.org.uk>,
+ "Jonathan Corbet" <corbet@lwn.net>, "Christoph Hellwig" <hch@lst.de>,
+ "Greg Kroah-Hartman" <gregkh@suse.de>,
+ "Joel Granados" <joel.granados@kernel.org>, "Kees Cook" <kees@kernel.org>,
+ "Jan Kara" <jack@suse.cz>, "Jan Kara" <jack@suse.com>,
+ linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org,
+ linux-acpi@vger.kernel.org, linux-kselftest@vger.kernel.org,
+ linux-s390@vger.kernel.org,
+ "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+ linux-um@lists.infradead.org, linux-wireless@vger.kernel.org,
+ "Linuxppc Dev" <linuxppc-dev@lists.ozlabs.org>, netdev@vger.kernel.org,
+ ntfs3@lists.linux.dev, platform-driver-x86@vger.kernel.org,
+ coreteam@netfilter.org, kexec@lists.infradead.org, linux-pci@vger.kernel.org,
+ linux-sound@vger.kernel.org, netfilter-devel@vger.kernel.org,
+ dri-devel@lists.freedesktop.org, ibm-acpi-devel@lists.sourceforge.net,
+ jfs-discussion@lists.sourceforge.net, linux-alpha@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org, linux-cifs@vger.kernel.org,
+ linux-fbdev@vger.kernel.org, linux-hwmon@vger.kernel.org, linux-mm@kvack.org,
+ linux-sh@vger.kernel.org, linux-usb@vger.kernel.org,
+ samba-technical@lists.samba.org, sparclinux@vger.kernel.org,
+ linux-m68k@lists.linux-m68k.org, linux-doc@vger.kernel.org,
+ linux-serial@vger.kernel.org, linux-atm-general@lists.sourceforge.net,
+ "Takashi Iwai" <tiwai@suse.de>, linux-input@vger.kernel.org,
+ linux-raid@vger.kernel.org, linux-ext4@vger.kernel.org,
+ linux-modules@vger.kernel.org, linux-debuggers@vger.kernel.org
+Message-Id: <39d3364c-d4d1-4919-86c0-695f75946c95@app.fastmail.com>
+In-Reply-To: <20261104-work-procfs-net-v2-7-221e2437fed1@kernel.org>
+References: <20261104-work-procfs-net-v2-0-221e2437fed1@kernel.org>
+ <20261104-work-procfs-net-v2-7-221e2437fed1@kernel.org>
+Subject: Re: [PATCH RESEND v2 07/13] SUNRPC: let procfs copy in writes
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 
-We already cap the discard length in writesame_10 and writesame_zero
-mode, but we still truncate the starting LBA to 32 bits. A discard at
-or above block 2^32 can corrupt live data near the start of the disk
-and still report success.
 
-Discard is advisory, so return BLK_STS_NOTSUPP if the request won't
-fit in WRITE SAME(10). Discards that fit can still go through.
 
-Fixes: c98a0eb0e90d ("[SCSI] sd: Logical Block Provisioning update")
-Cc: <stable@vger.kernel.org>
-Signed-off-by: Chris Down <chris@chrisdown.name>
----
- drivers/scsi/sd.c | 3 +++
- 1 file changed, 3 insertions(+)
+On Wed, Nov 4, 2026, at 2:59 PM, Christian Brauner wrote:
+> Implement ->proc_write_buf() for the procfs channel, flush and
+> use-gss-proxy files so procfs copies in what is written before it pins
+> the entry. The channel file parses the downcall from that copy and the
+> flush files share the parsing with rpc_pipefs in do_write_flush(). The
+> rpc_pipefs files keep copying in themselves.
+>
+> CACHE_DOWNCALL_MAX and CACHE_FLUSH_MAX name the limits both sides
+> enforce, procfs through ->proc_write_size. The procfs files are removed
+> when the network namespace goes away and that no longer waits for a
+> writer that faults on its buffer.
+>
+> Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index a28d11886aca..9b8530267b4a 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1131,6 +1131,9 @@ static blk_status_t sd_setup_write_same10_cmnd(struct scsi_cmnd *cmd,
- 	u32 data_len = sdp->sector_size;
- 	blk_status_t ret;
- 
-+	if (lba > 0xffffffff || nr_blocks > 0xffff)
-+		return BLK_STS_NOTSUPP;
-+
- 	if (!sd_set_special_bvec(cmd, data_len))
- 		return BLK_STS_RESOURCE;
- 
+Acked-by: Chuck Lever <cel@kernel.org>
+
+
 -- 
-2.54.0
-
+Chuck Lever (Come to NFS bake-a-thon! https://nfsv4bat.org)
