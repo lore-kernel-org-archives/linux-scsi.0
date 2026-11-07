@@ -1,22 +1,22 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=159.226.251.81
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794068212;
-	b=JHMzMp9BFYQVX90q2Ky/55DNwJ1Jom75bWH3Jpkn8s7yQkWcyVr71mEc4CDEu15h6+KN
-	 cjPwGDgASO7jGCxHkmWfHekAPLcfQdZNvz4JJ0fvnlScMWkQAsMnsCLP1iFLyh/ynFeYO
-	 YorltYxqhpE0ei6Hfb8jfatVF06OgZdUBRsMPGFTs3jwBlvnmlT4WrSGYqlLyi0/KieWR
-	 V5TNFmFet3agb464KHXoc8lb6IcEq2YMkSAa/Ok6FPixJHrXoRRBMCZrh7GNuriNlkJ/8
-	 OqBC6YMHeGO1ACFW/g0/Zb2HdC/S0EGFy3XShI26BNCABJRY/krwQHlUOI1C7dSEc8w==
+	t=1794068214;
+	b=Av+VhIKlbc4femQCeC7890REcwQEox4RUV5hRiaTZQGc0nSwcX0Vr6/2e84nO/hcG7kM
+	 QjoWqP7wojYRW7UYdgB640EH/Ghn1nzYLIkoGbilTfdfBvdNS0ha2kGQ7nLPADpdc1i/x
+	 UAOPQfB0LIL5MaL0jaMrxqJi1vuGkGBE1JP0Uox+K5112lbe9RTPSJFlw63oTYZh7cSy3
+	 dardQa8nLZ+vUXBQM6TlOTPnqf08vlEk/m1QZyz4Yo2T/yfLkkiIyEIEiwI2qlX2dLzaP
+	 jFxCEcMHfdyR9XyWESSrDlfxNsOg4EBsj+VcH4j55jiwQrNIzlMgGFz+1Re3GSh//Kw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794068212;
-	h=DMARC-Filter:Received:From:To:Cc:Subject:Date:Message-ID:In-Reply-To:
-	 References:MIME-Version:Content-Type:Content-Transfer-Encoding:
+	a=rsa-sha256; c=relaxed/relaxed; t=1794068214;
+	h=DMARC-Filter:Received:From:To:Cc:Subject:Date:Message-Id:X-Mailer:
+	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding:
 	 X-CM-TRANSID:X-Coremail-Antispam:X-Originating-IP:X-CM-SenderInfo;
-	bh=PHKaxEtEKqXJj1LIGfyb8yoAsVA22m4oUNU2OaxDya4=;
-	b=BKxMqMULzz9PFCtCxnwwIg3dE8V0qxDQ8YNcK5SyIGCDCfflTQzsZ4GeHoMC9JHjWwDe
-	 dVbMo+OoksTDs4UTu89/d6uDupsOqng+tfLB0Z8sWTeIsNz/YZDWxIuEKjLuXuEieqRaK
-	 PL1T5TViQbqm12nWFIlM1VvyIWPcE1FNiqen3dUR8dwGFOx4KrG/LviVXOBDJ2id8YV14
-	 p9J6DRKDLA61Bs6mhZsq1Ckmvklea0+gOJjNu20x7EqyCcWifmosfhbVse6zPi1CaEFKf
-	 rSU3GJNDRNUAbNgA9Y+58CAaanI5eEPO6J9gFxREEYM3Ja8aseOJW0crc9JtMXtpzTQ==
+	bh=K4YnwhhJnc1W435Ar0gljAF3AGrQ4+jD6hnF5J5AmqM=;
+	b=uKt6lSGDe4HwO2+P+25doglCoUbp9sD0hvRgBo0LP68QPnjFKpwjyquVGiJP9vaeC71l
+	 gi+Fde/tLK9/jXDEMlA5Tb9TaKcnUwoJ9hBk8igob3RFIqB1RmemtJaWI+uFiPnge+IIo
+	 m8l4m3oIKbPdAQ4Ae1NRYTIGTQHDlTqjmdHGEjjcWR4Dsn4ZXMQTGrE9itCnKIP8Qx5gG
+	 RfZCE8fHYSPCSoZY/flZ+IbwOEAYqTPRzRpsS04XA5Ip15WivSLhCo+3yNLtOw2MZWX6l
+	 6wvyPxeWBdTO+I9JigNCG4Uhn6qgIcleO6aOolmXeSVsZCGuJxc6/zzOPfScs9Fjlmg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=none header.from=iscas.ac.cn;
 	spf=pass smtp.mailfrom=iscas.ac.cn;
@@ -25,32 +25,31 @@ Received: from cstnet.cn (smtp81.cstnet.cn [159.226.251.81])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21ABA606D3C9;
-	Sat,  7 Nov 2026 16:16:49 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 21ABA606D3C9
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C788D606D3D1;
+	Sat,  7 Nov 2026 16:16:51 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C788D606D3D1
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
-Received: from [172.100.0.8] (unknown [36.110.52.2])
-	by APP-03 (Coremail) with SMTP id rQCowABHWJnpTu9q752BAA--.3713S2;
-	Sun, 08 Nov 2026 00:16:41 +0800 (CST)
+Received: from dfae2b116770.home.arpa (unknown [36.110.52.2])
+	by APP-03 (Coremail) with SMTP id rQCowADn9ZbtTu9qIJ6BAA--.24761S2;
+	Sun, 08 Nov 2026 00:16:45 +0800 (CST)
 From: Wentao Liang <vulab@iscas.ac.cn>
-To: Paul Ely <paul.ely@broadcom.com>
-Cc: Justin Tee <justin.tee@broadcom.com>,
- James Bottomley <James.Bottomley@hansenpartnership.com>,
- James Smart <james.smart@broadcom.com>,
- Martin K. Petersen <mkp@kernel.org>,
- Nigel Kirkland <nigel.kirkland@broadcom.com>,
- linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org,
- stable@vger.kernel.org
-Subject: Re: [PATCH] scsi: lpfc: Fix ndlp reference leak in lpfc_release_rpi()
-Date: Sat, 07 Nov 2026 15:17:28 +0000
-Message-ID: <1794064648.2620604.vulab@iscas.ac.cn>
-In-Reply-To:
- <CAEQnVQn7fpgpm5zY=8ne0G5M_KXWg4qjecMK6smk-q+_0j1PEw@mail.gmail.com>
-References: <20260917144758.2157707-1-vulab@iscas.ac.cn>
- <CAEQnVQnWk2ADAvLEVCrgNE=dtf3D4DJ-UcosUQgGDj8=AMnA2A@mail.gmail.com>
- <CAEQnVQn7fpgpm5zY=8ne0G5M_KXWg4qjecMK6smk-q+_0j1PEw@mail.gmail.com>
+To: Justin Tee <justin.tee@broadcom.com>,
+	Paul Ely <paul.ely@broadcom.com>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>,
+	James Smart <james.smart@broadcom.com>,
+	"Martin K . Petersen" <mkp@kernel.org>,
+	Nigel Kirkland <nigel.kirkland@broadcom.com>,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Wentao Liang <vulab@iscas.ac.cn>,
+	stable@vger.kernel.org
+Subject: [PATCH v2 1/3] scsi: lpfc: Fix ndlp reference leak in lpfc_release_rpi()
+Date: Sat,  7 Nov 2026 16:16:53 +0000
+Message-Id: <20261107161655.2628796-1-vulab@iscas.ac.cn>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <CAEQnVQn7fpgpm5zY=8ne0G5M_KXWg4qjecMK6smk-q+_0j1PEw@mail.gmail.com>
+References: <CAEQnVQn7fpgpm5zY=8ne0G5M_KXWg4qjecMK6smk-q+_0j1PEw@mail.gmail.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -60,75 +59,67 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:rQCowABHWJnpTu9q752BAA--.3713S2
-X-Coremail-Antispam: 1UD129KBjvJXoW7trW8tw15tr4xKF4fAw4ruFg_yoW8Kw1xp3
-	ykKFnFyrs8t3Wxu3WxJa1Uta4S9F93GFW5Ary8KryDAFs0gF15JrWFqFs0gr9rGrnaq3y7
-	Xa1Fgas8JF48Z3JanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUkEb7Iv0xC_Kw4lb4IE77IF4wAFc2x0x2IEx4CE42xK8VAvwI8I
-	cIk0rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2
-	AK021l84ACjcxK6xIIjxv20xvE14v26r4j6ryUM28EF7xvwVC0I7IYx2IY6xkF7I0E14v2
-	6r4j6F4UM28EF7xvwVC2z280aVAFwI0_Gr0_Cr1l84ACjcxK6I8E87Iv6xkF7I0E14v26r
-	4j6r4UJwAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv
-	7VC0I7IYx2IY67AKxVWUtVWrXwAv7VC2z280aVAFwI0_Gr0_Cr1lOx8S6xCaFVCjc4AY6r
-	1j6r4UM4x0Y48IcVAKI48JMxkF7I0En4kS14v26r1q6r43MxAIw28IcxkI7VAKI48JMxAI
-	w28IcVCjz48v1sIEY20_Gr43Wr1UJr1l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4
-	xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43
-	MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I
-	0E14v26r1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWU
-	JVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r1j6r4UYxBIdaVFxhVjvjDU0xZFpf9x07bO_M
-	-UUUUU=
-X-CM-SenderInfo: pyxotu46lvutnvoduhdfq/1tbiCRMEA2rvPcsZdAAAsD
+X-CM-TRANSID:rQCowADn9ZbtTu9qIJ6BAA--.24761S2
+X-Coremail-Antispam: 1UD129KBjvJXoW7AFW7ZFy3tFW5uF4kWr4kJFb_yoW8Aw45p3
+	95Ga4Yyr95GF1SkrW7Ar1xZas0kan7Jryqkayvk34xZrZ5Xry3tF4Yqa1rXryUJF48t3y7
+	t3yDKa45WF15ZF7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU9C1xkIjI8I6I8E6xAIw20EY4v20xvaj40_Wr0E3s1l1IIY67AE
+	w4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxSw2x7M28EF7xvwVC0I7IYx2
+	IY67AKxVW8JVW5JwA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwA2z4x0Y4vEx4A2
+	jsIE14v26r4j6F4UM28EF7xvwVC2z280aVCY1x0267AKxVW8JVW8Jr1le2I262IYc4CY6c
+	8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jw0_
+	WrylYx0Ex4A2jsIE14v26r4j6F4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvY0x0EwI
+	xGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc7CjxVAa
+	w2AFwI0_Jw0_GFyl42xK82IYc2Ij64vIr41l42xK82IY6x8ErcxFaVAv8VW8GFyrJr1UJw
+	CFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE
+	14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2
+	IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxK
+	x2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI
+	0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUDOz3UUUUU=
+X-CM-SenderInfo: pyxotu46lvutnvoduhdfq/1tbiCRMEA2rvPcsZdAABsC
 
-Hi Paul,
+lpfc_release_rpi() only drops the node reference and frees the mailbox
+memory it took when lpfc_sli_issue_mbox() returns MBX_NOT_FINISHED.  The
+SLI-4 issue path can also return -EIO for a command it refuses to
+submit, in which case the completion handler never runs and both the
+reference and the mailbox are leaked.
 
-Sorry for answering so late.  You asked me about the -EIO return a month
-ago and I am only getting back to it now; that delay is on me.
+Clean up whenever the command was not handed to the port.
 
-You are right about it.  lpfc_release_rpi() cannot tell a negative errno
-from a mailbox status, and the value was outside the MBX_* code space the
-rest of the function returns.  lpfc_sli_issue_mbox_s4() now returns
-MBXERR_ERROR for the non-polled command it cannot issue while interrupts
-are disabled, which is also what lpfc_sli4_post_sync_mbox() returns when
-it cannot post a command.
+The candidate came from a static analysis tool we run over the tree.
+DeepSeek and GPT-6.1 Sol were used to audit the finding and to help
+write the fix; I reviewed the result line by line and I am responsible
+for it.
 
-While going through the callers for that change I found one that does
-depend on the sign: lpfc_bsg_issue_mbox() passes the raw result to bsg,
-and bsg-lib only reports a negative result as an error, so a positive MBX
-status reaches the ioctl caller as success.  That is already true for
-MBX_NOT_FINISHED today; 2/3 fixes it so that 3/3 does not add another way
-to hit it.
+Fixes: 4430f7fd09ec ("scsi: lpfc: Rework locations of ndlp reference taking")
+Cc: stable@vger.kernel.org
+Signed-off-by: Wentao Liang <vulab@iscas.ac.cn>
+---
+Changes in v2:
+ - Rebased on v7.4-rc1.
+ - Reworded the comment above the check so that it does not depend on the
+   SLI-4 return value.  The check itself is unchanged.
+ - Sorry for the month it took me to answer the review.
 
-The series is:
+ drivers/scsi/lpfc/lpfc_nportdisc.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-  [PATCH v2 1/3] scsi: lpfc: Fix ndlp reference leak in lpfc_release_rpi()
-  [PATCH v2 2/3] scsi: lpfc: Report bsg mailbox failures as an errno
-  [PATCH v2 3/3] scsi: lpfc: Return MBX status when a non-polled mbox cannot be issued
-
-1/3 is the patch you were testing.  The check itself is unchanged; it is
-still `rc != MBX_SUCCESS && rc != MBX_BUSY`, the test
-lpfc_config_port_post() and lpfc_issue_hb_mbox() already use for the same
-purpose, and it covers both -EIO and MBXERR_ERROR.  I only rewrote the
-comment above it.  3/3 is the change you asked for.  I kept 1/3 apart
-because it is the leak fix I would like in stable; 2/3 and 3/3 are not
-stable candidates.
-
-One thing I saw and did not touch: NLP_UNREG_INP is set before the issue
-and is not cleared when the command is not handed to the port, so a later
-lpfc_release_rpi() for the same node returns early at the "1435
-release_rpi SKIP UNREG" message.  That is pre-existing on the
-MBX_NOT_FINISHED path too.  Clearing it would make a second unreg possible
-for the same NPort, so I would rather ask than guess - tell me if you want
-it in this series.
-
-Testing: I have no lpfc adapter, so this is build tested only.  Mainline
-at d48723711bae, drivers/scsi/lpfc/ builds with W=1 and no warnings.
-checkpatch.pl --strict reports nothing on the three patches except
-"unknown commit id" on the Fixes tag, which is an artifact of my shallow
-checkout - 4430f7fd09ec is in mainline.  I could not run it on hardware,
-and the changelogs say so.
-
-Thanks,
-Wentao
+diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
+index fb8844c69491..fbe3c97723b2 100644
+--- a/drivers/scsi/lpfc/lpfc_nportdisc.c
++++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
+@@ -1155,7 +1155,11 @@ lpfc_release_rpi(struct lpfc_hba *phba, struct lpfc_vport *vport,
+ 				 ndlp->nlp_rpi, ndlp->nlp_DID, ndlp->nlp_flag);
+ 
+ 		rc = lpfc_sli_issue_mbox(phba, pmb, MBX_NOWAIT);
+-		if (rc == MBX_NOT_FINISHED) {
++		/* The completion handler frees the mailbox and drops the node
++		 * reference, and it only runs when the command was queued or
++		 * already completed.
++		 */
++		if (rc != MBX_SUCCESS && rc != MBX_BUSY) {
+ 			lpfc_nlp_put(ndlp);
+ 			mempool_free(pmb, phba->mbox_mem_pool);
+ 		}
 
