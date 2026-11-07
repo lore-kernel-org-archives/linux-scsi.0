@@ -1,94 +1,56 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.37.111.173
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=159.226.251.81
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794068205;
-	b=1GVN8igKG7oSkluRHlUDwzniV99F87UYMN+yPo0cbONYgdJGkB+sbErQAPdY2TXYxwe9
-	 RMqbQ0l4LzQMj33eGDrZPaku6qIvuNVa4xy2RHazo2b1SOiR8kMaw2XBeAbSVf7eV513L
-	 u/RUOTT/cvZNGXHvL7Od0mxo8EQNSG94hI7g4cpYYnHHaks7YxlwUI/muA6Fw8KVVz5r9
-	 hs2XXXwBqDEtO20iDjlX+oj0HwM+AenQ/KXNrXXp1NoY1nkOUT41x5Ep44Tb4mNvqUDG2
-	 yDH7Y2xPYdwxXGk79ocJQLNvBi0qKtRB21zyNucGh29TeNPMiaya1Rng8UbKJwUR7Og==
+	t=1794068212;
+	b=JHMzMp9BFYQVX90q2Ky/55DNwJ1Jom75bWH3Jpkn8s7yQkWcyVr71mEc4CDEu15h6+KN
+	 cjPwGDgASO7jGCxHkmWfHekAPLcfQdZNvz4JJ0fvnlScMWkQAsMnsCLP1iFLyh/ynFeYO
+	 YorltYxqhpE0ei6Hfb8jfatVF06OgZdUBRsMPGFTs3jwBlvnmlT4WrSGYqlLyi0/KieWR
+	 V5TNFmFet3agb464KHXoc8lb6IcEq2YMkSAa/Ok6FPixJHrXoRRBMCZrh7GNuriNlkJ/8
+	 OqBC6YMHeGO1ACFW/g0/Zb2HdC/S0EGFy3XShI26BNCABJRY/krwQHlUOI1C7dSEc8w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794068205;
-	h=DMARC-Filter:DKIM-Signature:Received:Message-ID:Subject:From:To:Cc:
-	 Date:In-Reply-To:References:Autocrypt:Content-Type:
-	 Content-Transfer-Encoding:User-Agent:MIME-Version;
-	bh=6Y7Yo6Oqe/ga/aZg1xfbYcTINik1UzbgbEYeh9sbfEM=;
-	b=J4bxnKF90usPwK25JFvx7c/Y/VEJ32J8YtT6UTVaRFTFxDlJU3ZrOphsGIKmYdFeeqKY
-	 btDuLcVrRhCypTaFrFZN3P0uxFZ5vZDbeobnGcPUYKiDMaQ3LorsV4ToFIgYgXHPXmDXa
-	 Qm5b2Aqv2UnPXqLimWozMtm0jI8EcsVsz6bYMvR/mPDpgUA7NaPrVY8yj3IohmeV23KoF
-	 SWh7zUqFVZOyS+l0/sH0g4pyKlv9AKbCObsqvkqWe5XdzBFduoXQI1AXwlGNui3NCG3oK
-	 tXDV2ym/B2BAR0bFvAIQ15RepgaQEsz/9CEvw7Bpo2Vp9dZ/uqEUTFVWhiQyJfzu3Nw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794068212;
+	h=DMARC-Filter:Received:From:To:Cc:Subject:Date:Message-ID:In-Reply-To:
+	 References:MIME-Version:Content-Type:Content-Transfer-Encoding:
+	 X-CM-TRANSID:X-Coremail-Antispam:X-Originating-IP:X-CM-SenderInfo;
+	bh=PHKaxEtEKqXJj1LIGfyb8yoAsVA22m4oUNU2OaxDya4=;
+	b=BKxMqMULzz9PFCtCxnwwIg3dE8V0qxDQ8YNcK5SyIGCDCfflTQzsZ4GeHoMC9JHjWwDe
+	 dVbMo+OoksTDs4UTu89/d6uDupsOqng+tfLB0Z8sWTeIsNz/YZDWxIuEKjLuXuEieqRaK
+	 PL1T5TViQbqm12nWFIlM1VvyIWPcE1FNiqen3dUR8dwGFOx4KrG/LviVXOBDJ2id8YV14
+	 p9J6DRKDLA61Bs6mhZsq1Ckmvklea0+gOJjNu20x7EqyCcWifmosfhbVse6zPi1CaEFKf
+	 rSU3GJNDRNUAbNgA9Y+58CAaanI5eEPO6J9gFxREEYM3Ja8aseOJW0crc9JtMXtpzTQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=HansenPartnership.com;
-	spf=pass smtp.mailfrom=HansenPartnership.com;
-	dkim=pass header.d=hansenpartnership.com header.i=@hansenpartnership.com header.a=rsa-sha256 header.s=20151216 header.b=dppFUTCR;
-	arc=none smtp.remote-ip=198.37.111.173
-Received: from lamorak.hansenpartnership.com (lamorak.hansenpartnership.com [198.37.111.173])
+	dmarc=none header.from=iscas.ac.cn;
+	spf=pass smtp.mailfrom=iscas.ac.cn;
+	arc=none smtp.remote-ip=159.226.251.81
+Received: from cstnet.cn (smtp81.cstnet.cn [159.226.251.81])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6AD6C606AC36;
-	Sat,  7 Nov 2026 16:16:44 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6AD6C606AC36
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.a=rsa-sha256 header.s=20151216 header.b=dppFUTCR
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-	d=hansenpartnership.com; s=20151216; t=1794068203;
-	bh=6Y7Yo6Oqe/ga/aZg1xfbYcTINik1UzbgbEYeh9sbfEM=;
-	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-	b=dppFUTCRuiebk817IGUGOfEX+qqm9ka2EfsTqm5Lp9V6Hniv7iQc0tyR/FmJs2581
-	 UImzaZahBuPmsou+Vmv+tQ8if/G/LSdOMJS1IIvfD1eeEMB8FuP8z1Vd7sbGH+Nr1+
-	 YvKl4uCgUj29AkD1TWUFV4gXMLq9yFmdBr16bDaQ=
-Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4300:d341::8309])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519MLKEM768 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by lamorak.hansenpartnership.com (Postfix) with ESMTPSA id 0866D1C022F;
-	Sat, 07 Nov 2026 11:16:43 -0500 (EST)
-Message-ID: <22c5ee29302b8deac001fec78942eae91ead557b.camel@HansenPartnership.com>
-Subject: Re: [PATCH v2] scsi: libsas: Fix use-after-free in
- sas_eh_handle_resets()
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-To: Wentao Liang <vulab@iscas.ac.cn>, John Garry <john.garry@linux.dev>
-Cc: "Martin K.Petersen" <martin.petersen@oracle.com>, Jason Yan	
- <yanaijie@huawei.com>, linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org, 	stable@vger.kernel.org
-Date: Sat, 07 Nov 2026 11:16:42 -0500
-In-Reply-To: <20261107145323.314159-1-vulab@iscas.ac.cn>
-References: <20260917143946.2157366-1-vulab@iscas.ac.cn>
-	 <085fcc2e-112f-4d4c-a07d-9d0962936e44@linux.dev>
-	 <20261107145323.314159-1-vulab@iscas.ac.cn>
-Autocrypt: addr=James.Bottomley@HansenPartnership.com;
- keydata=mQENBE58FlABCADPM714lRLxGmba4JFjkocqpj1/6/Cx+IXezcS22azZetzCXDpm2MfNE
- lecY3qkFjfnoffQiw5rrOO0/oRSATOh8+2fmJ6el7naRbDuh+i8lVESfdlkoqX57H5R8h/UTIp6gn
- 1mpNlxjQv6QSZbl551zQ1nmkSVRbA5TbEp4br5GZeJ58esmYDCBwxuFTsSsdzbOBNthLcudWpJZHU
- RfMc0ew24By1nldL9F37AktNcCipKpC2U0NtGlJjYPNSVXrCd1izxKmO7te7BLP+7B4DNj1VRnaf8
- X9+VIApCi/l4Kdx+ZR3aLTqSuNsIMmXUJ3T8JRl+ag7kby/KBp+0OpotABEBAAG0N0phbWVzIEJvd
- HRvbWxleSA8SmFtZXMuQm90dG9tbGV5QEhhbnNlblBhcnRuZXJzaGlwLmNvbT6JAVgEEwEIAEICGw
- MGCwkIBwMCBhUIAgkKCwQWAgMBAh4BAheAAhkBFiEE1WBuc8i0YnG+rZrfgUrkfCFIVNYFAml2ZBI
- FCS3GUMIACgkQgUrkfCFIVNZKjQf/deRzlXZClKxTC/Ee2yEPqqS7mm/INUA49KdQQ5oIhSxkUBy0
- 9J4qjMIo5F8ZFkFTqikBqeL35LKu7O7rn8WETfX8Bxvos3HUsl3jHo34DES4MUFIpoQPgtiLRGwLb
- K0cVCAArR2u2qj4ABmTRrs1I1kvdjEw6gatOuXtEe/j5O2fvfzTq9GBr0Q3n2IAsFXi4hLlx6VPE8
- tyWUZ8BWJKtih3JAeUiXFvASL3McV0rV9RnU0VbjEQEhSE7PMYhWpnDC9AyBb0lXJllQRvC3NSkUB
- 8KVQgNNxRPss0WE/nBoZ4dFA42jTyzTz8lNylxZoAWV7WJb3QxVg4oCodRVrxxrQhSmFtZXMgQm90
- dG9tbGV5IDxqZWpiQGtlcm5lbC5vcmc+iQFVBBMBCAA/AhsDBgsJCAcDAgYVCAIJCgsEFgIDAQIeA
- QIXgBYhBNVgbnPItGJxvq2a34FK5HwhSFTWBQJgS5mYBQkbNYS9AAoJEIFK5HwhSFTWBpwIAL5Bk3
- 5FB34U6iHmDzzgdCbxLTs43T/YQyJpcGIvopBvnI/fDY8oSG6Df64/O6B+1R+A8TDp6ZG5ysUWnCC
- 6GuIaEHemBYkitMPglR6+sGCMQY7O0mlsPvdssvKK1KI9Bno4VU6ogaF2qVzefSqg1Djmf/DcsxWP
- rI/jdJ8FB5AYR2rjIdDFc+zRdAJuavo1/anyY2wgpFh/3R8IOYAEfWV9nGgYkf9+tA4EIn1sxE0I3
- L5oW2N3mbyRrkzuBwO8ztMCwqEPk7moWzhokcZqMXiAIahaZdkashJC+s2X2RZSGCy+g+pvY5NN4B
- BVG5XwLgVBqbHMTcxE0fbmPqz+q6O0LEphbWVzIEJvdHRvbWxleSA8amVqYkBoYW5zZW5wYXJ0bmV
- yc2hpcC5jb20+iQFXBBMBCABBFiEE1WBuc8i0YnG+rZrfgUrkfCFIVNYFAmODZ5ACGwMFCRs1hL0F
- CwkIBwICIgIGFQoJCAsCBBYCAwECHgcCF4AACgkQgUrkfCFIVNZu0Af/TzvL2/NdgAcw9uN3x60H8
- jc4QUq14VpxcFEFEMpcj1morkX/G93V+56HBBaXZj+yK8PhxIA/SIz+sU7C/0YvKuvzakP8ZX/7WJ
- e32SOUtjfr/VTaqjIBzNj6OxLvZpmNbBw7s6DwhhNpHOWqJ/1ml+PtDRDV71IB58yVqQjp1xlNKVl
- ZppcJ5908EJzsFnRIVjiQiDSKoppqB2BCibBbrWcln7CiWMyOC/cco6SIn6twH+f7+aivJ3xGcOE2
- a9gBKF5rNi9TBoX9oyPmshv/TDmnohsVrH7AYXlGYfZTk15SWEiROh1QX8/uD9wl/gcIv5EDUpT/F
- L2jzOsA5663bw==
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.56.2 
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21ABA606D3C9;
+	Sat,  7 Nov 2026 16:16:49 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 21ABA606D3C9
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
+Received: from [172.100.0.8] (unknown [36.110.52.2])
+	by APP-03 (Coremail) with SMTP id rQCowABHWJnpTu9q752BAA--.3713S2;
+	Sun, 08 Nov 2026 00:16:41 +0800 (CST)
+From: Wentao Liang <vulab@iscas.ac.cn>
+To: Paul Ely <paul.ely@broadcom.com>
+Cc: Justin Tee <justin.tee@broadcom.com>,
+ James Bottomley <James.Bottomley@hansenpartnership.com>,
+ James Smart <james.smart@broadcom.com>,
+ Martin K. Petersen <mkp@kernel.org>,
+ Nigel Kirkland <nigel.kirkland@broadcom.com>,
+ linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org,
+ stable@vger.kernel.org
+Subject: Re: [PATCH] scsi: lpfc: Fix ndlp reference leak in lpfc_release_rpi()
+Date: Sat, 07 Nov 2026 15:17:28 +0000
+Message-ID: <1794064648.2620604.vulab@iscas.ac.cn>
+In-Reply-To:
+ <CAEQnVQn7fpgpm5zY=8ne0G5M_KXWg4qjecMK6smk-q+_0j1PEw@mail.gmail.com>
+References: <20260917144758.2157707-1-vulab@iscas.ac.cn>
+ <CAEQnVQnWk2ADAvLEVCrgNE=dtf3D4DJ-UcosUQgGDj8=AMnA2A@mail.gmail.com>
+ <CAEQnVQn7fpgpm5zY=8ne0G5M_KXWg4qjecMK6smk-q+_0j1PEw@mail.gmail.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -98,31 +60,75 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:rQCowABHWJnpTu9q752BAA--.3713S2
+X-Coremail-Antispam: 1UD129KBjvJXoW7trW8tw15tr4xKF4fAw4ruFg_yoW8Kw1xp3
+	ykKFnFyrs8t3Wxu3WxJa1Uta4S9F93GFW5Ary8KryDAFs0gF15JrWFqFs0gr9rGrnaq3y7
+	Xa1Fgas8JF48Z3JanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUkEb7Iv0xC_Kw4lb4IE77IF4wAFc2x0x2IEx4CE42xK8VAvwI8I
+	cIk0rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2
+	AK021l84ACjcxK6xIIjxv20xvE14v26r4j6ryUM28EF7xvwVC0I7IYx2IY6xkF7I0E14v2
+	6r4j6F4UM28EF7xvwVC2z280aVAFwI0_Gr0_Cr1l84ACjcxK6I8E87Iv6xkF7I0E14v26r
+	4j6r4UJwAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv
+	7VC0I7IYx2IY67AKxVWUtVWrXwAv7VC2z280aVAFwI0_Gr0_Cr1lOx8S6xCaFVCjc4AY6r
+	1j6r4UM4x0Y48IcVAKI48JMxkF7I0En4kS14v26r1q6r43MxAIw28IcxkI7VAKI48JMxAI
+	w28IcVCjz48v1sIEY20_Gr43Wr1UJr1l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4
+	xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43
+	MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I
+	0E14v26r1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWU
+	JVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r1j6r4UYxBIdaVFxhVjvjDU0xZFpf9x07bO_M
+	-UUUUU=
+X-CM-SenderInfo: pyxotu46lvutnvoduhdfq/1tbiCRMEA2rvPcsZdAAAsD
 
-On Sat, 2026-11-07 at 14:53 +0000, Wentao Liang wrote:
-> sas_eh_handle_resets() drops the reference it took on the domain
-> device with sas_put_device() and then accesses dev->state again while
-> holding ha->lock. The put may release the last reference, so the
-> clear_bit() can touch freed memory.
->=20
-> Clear the pending flag before dropping the reference.
->=20
-> The candidate was found with static analysis tools; DeepSeek and GPT-
-> 6.1 Sol were used to audit it and to help prepare this fix.
->=20
-> Fixes: 5db45bdc87ce ("[SCSI] libsas: enforce eh strategy handlers
-> only in eh context")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Wentao Liang <vulab@iscas.ac.cn>
+Hi Paul,
 
-You just adopted the patch John sent wholesale, so the signoff above is
-now wrong and you either need his signoff or at least a Co-developed-
-by.
+Sorry for answering so late.  You asked me about the -EIO return a month
+ago and I am only getting back to it now; that delay is on me.
 
-I get that this change is likely too small to have copyright
-implications, but you want to make sure your process works in cases
-where it does matter.
+You are right about it.  lpfc_release_rpi() cannot tell a negative errno
+from a mailbox status, and the value was outside the MBX_* code space the
+rest of the function returns.  lpfc_sli_issue_mbox_s4() now returns
+MBXERR_ERROR for the non-polled command it cannot issue while interrupts
+are disabled, which is also what lpfc_sli4_post_sync_mbox() returns when
+it cannot post a command.
 
-Regards,
+While going through the callers for that change I found one that does
+depend on the sign: lpfc_bsg_issue_mbox() passes the raw result to bsg,
+and bsg-lib only reports a negative result as an error, so a positive MBX
+status reaches the ioctl caller as success.  That is already true for
+MBX_NOT_FINISHED today; 2/3 fixes it so that 3/3 does not add another way
+to hit it.
 
-James
+The series is:
+
+  [PATCH v2 1/3] scsi: lpfc: Fix ndlp reference leak in lpfc_release_rpi()
+  [PATCH v2 2/3] scsi: lpfc: Report bsg mailbox failures as an errno
+  [PATCH v2 3/3] scsi: lpfc: Return MBX status when a non-polled mbox cannot be issued
+
+1/3 is the patch you were testing.  The check itself is unchanged; it is
+still `rc != MBX_SUCCESS && rc != MBX_BUSY`, the test
+lpfc_config_port_post() and lpfc_issue_hb_mbox() already use for the same
+purpose, and it covers both -EIO and MBXERR_ERROR.  I only rewrote the
+comment above it.  3/3 is the change you asked for.  I kept 1/3 apart
+because it is the leak fix I would like in stable; 2/3 and 3/3 are not
+stable candidates.
+
+One thing I saw and did not touch: NLP_UNREG_INP is set before the issue
+and is not cleared when the command is not handed to the port, so a later
+lpfc_release_rpi() for the same node returns early at the "1435
+release_rpi SKIP UNREG" message.  That is pre-existing on the
+MBX_NOT_FINISHED path too.  Clearing it would make a second unreg possible
+for the same NPort, so I would rather ask than guess - tell me if you want
+it in this series.
+
+Testing: I have no lpfc adapter, so this is build tested only.  Mainline
+at d48723711bae, drivers/scsi/lpfc/ builds with W=1 and no warnings.
+checkpatch.pl --strict reports nothing on the three patches except
+"unknown commit id" on the Fixes tag, which is an artifact of my shallow
+checkout - 4430f7fd09ec is in mainline.  I could not run it on hardware,
+and the changelogs say so.
+
+Thanks,
+Wentao
+
