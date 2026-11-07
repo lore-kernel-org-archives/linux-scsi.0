@@ -1,111 +1,83 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.133.124
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794237134;
-	b=VyNTfOSFLEHRJ3W4pucK48LjbCzZeBW59nSUyINpx8K5P0iFrcWX8fRH9s0rHAX5Awvj
-	 T7oYunrCdacDlTPOuDarh5JY6eX4nYVpQ/CQEAW+kKqu9/yu18MIchKxNGpbS8Pxzk8MU
-	 +jlvl19AWaysOWqxyBSQbza8qPF9lSJOHhnfJSoQonX8rTLQ3YYXVB0XB2yDZc0f0XGsB
-	 v8AoS0PoLR46D11ocQnr8sG/Wsc9fmLCauW9IZxa+8y1ki5QW7j2/82gtrMX8uZi6XqgK
-	 J/vJ3xcPkAR/6wqaxsXIm0SOlTgZk3QhVjjRibcjZ+d+Zwwgof4VV0i4Wcnu5jqRC5Q==
+	t=1794237269;
+	b=rAQ6IW2EQLrxYg8Wj/Bezox5OX5+Jq6G5fm6WAPH6pTFQy5z8hdL+cX6SmztHce+1q9M
+	 n6pc3XJBSb/5L6SQjU2eeNcJ1HaNAwKz79h1PGIR0EywVOARLVBgauHChPglCv+q/us0n
+	 bV2k8/HFlFmNxj7+xvSRNu15ymEx3Y0IhKgJrCi7qSIjkrS8u7OE/b6XlHhYHrE49JeQX
+	 QMEfJoyMApbgoR+zE0hRZq8jLv2ib3mb9jdlOErRCGLK9sGfPl+OtHk9wxyDSpTwD8pbn
+	 A+eeipI5E54vSCPKlLXcoMWZrRXAYYtKPaRovR2F5EJ2QUxKhjcUnjRHQIeqhuxLuGA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794237134;
-	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
-	 DKIM-Signature:X-Google-DKIM-Signature:X-Forwarded-Encrypted:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:X-Received:Received:Message-ID:
-	 Date:MIME-Version:User-Agent:Subject:To:Cc:References:
-	 Content-Language:From:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding:X-Proofpoint-Spam-Details-Enc:
-	 X-Proofpoint-GUID:X-Proofpoint-ORIG-GUID:X-Proofpoint-Spam-Info:
-	 X-Authority-Analysis:X-Proofpoint-Virus-Version:
-	 X-Proofpoint-Spam-Details;
-	bh=PUsDu0OkTgaKjQcZBPcirXMHnRarKrGJneMxp5gNekI=;
-	b=x24YvxXweMKMZrIxXtYelDvwIlbrQiOipJRww6ZaeEee6KcxPHURNlvcZXOImCM66z1a
-	 xnL96pP9KH8WkHLCcApdqvXScMfda5+TXRGUPXW8S5402ItwIqacNCTKgASi5gWuS9eC5
-	 DV+0r5fK7ldQ8Ztxw0+YLd8ZsjXZsD36GaV+TM831kW+xBS92cM5bmteZhk9kmQc8ib9R
-	 goK0tq9qAKCyA94CJ/pZC+1X/G/fklUnsbjKsLnA9jLSRzNNrTMw6deLszWh2JW2BwF0R
-	 /bop0rMoRhSjN95WxGjudfMBDU9NPgmlVT6OR2qosfudIJCGplzth0vjjHa7k5Mf+mw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794237269;
+	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
+	 X-Mimecast-MFC-AGG-ID:Received:Received:Date:From:To:Cc:Subject:
+	 Message-ID:References:MIME-Version:Content-Type:Content-Disposition:
+	 In-Reply-To:X-Scanned-By;
+	bh=p66YjuZUERp8DvJZY4JdqHSsqpUZEslDN4DOOe6L+lA=;
+	b=SSBiK0iQUcq9kjPpCuNSEWBXoMQaT75YqftrZSNqhUyO4U23PbfGuLgs9bbkDDeE4gnL
+	 94QmfC9pgvUv7qLh0kIm6yM8HbBpNwHouNnnR6tFppQBJlkordwMXmmhtUCL2/jDk/Phh
+	 sbMR9KGl7+nUCfNqM/76zky9qUWFl64dQkBMgtu2Y5qvyqyADA16dE+tzLSzn8uTd32kN
+	 oWQ8eRSs6OXFseHkWu3ObY8x4NE3zrLyLZPXzhcXQiJjTlOjnmkVXcp7xzH9IMxcY3ues
+	 zqS7nshjKcA4EqIsTO89m2TFgnGCkZr4R95Mlbt5o7YxwjUKyf8UTMCeFdCA526I8EA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=oss.qualcomm.com;
-	spf=pass smtp.mailfrom=oss.qualcomm.com;
-	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=JVHA+WmS;
-	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=bIrSQFS5;
-	arc=none smtp.remote-ip=205.220.168.131
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+	dmarc=pass header.from=redhat.com;
+	spf=pass smtp.mailfrom=redhat.com;
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=U9h54ba5;
+	arc=none smtp.remote-ip=170.10.133.124
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7372E606A332
-	for <linux-scsi@vger.kernel.org>; Mon,  9 Nov 2026 15:12:14 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7372E606A332
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22C81606A321
+	for <linux-scsi@vger.kernel.org>; Mon,  9 Nov 2026 15:14:27 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 22C81606A321
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=JVHA+WmS;
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=bIrSQFS5
-Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6A9DF0n22927803
-	for <linux-scsi@vger.kernel.org>; Mon, 9 Nov 2026 15:12:14 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	PUsDu0OkTgaKjQcZBPcirXMHnRarKrGJneMxp5gNekI=; b=JVHA+WmS28WTu51A
-	alo4QMvr0WoiXI1XjKsBEXyVuK1q94o60sR1tEhkiY2tviOamIxSXbW2e4SvWI0B
-	FTkucu81+2EXGVGJ5suaNaLkGLtqVzxKWtq5ruWvOOwNBDZI8/88FOsPRUA5JBHv
-	JACpPjvZIITH3FJcqZnm9Bm/J0R+cyiE6IYGLJFK8oO7l309Hp1OjCX0HhYMm7Po
-	btMjZ1ALCHvtYmQq86wiBt9nEtv5ydZzL5OQA1dARTOb2/BpGIxuc2TxWsSA0U8s
-	SRIa4+tiSHSiIPRLKDBLsxrgw25FmtzCpVrDJlCpin4RqaRpkTqQZu+KTy5h/1ec
-	MSZ0kw==
-Received: from mail-vs1-f72.google.com (mail-vs1-f72.google.com [209.85.217.72])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4hubt8s43n-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Mon, 09 Nov 2026 15:12:13 +0000 (GMT)
-Received: by mail-vs1-f72.google.com with SMTP id ada2fe7eead31-7cc781089b9so17137137.0
-        for <linux-scsi@vger.kernel.org>; Mon, 09 Nov 2026 07:12:13 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1794237133; x=1794841933; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=PUsDu0OkTgaKjQcZBPcirXMHnRarKrGJneMxp5gNekI=;
-        b=bIrSQFS54jIdF4P6guxFfiAzGIywaL3HcI2CYKiZk5KShXVQ6LHaUI2qAuwOyPWpRw
-         xzfuvK2o0r67SnIflhrl9zw16CC67EqRne8OQFuU5E3F2mnYa7/4IlAf3C5Ho221FobL
-         MUwgyGtBjh4n6LF/d9m/JQ357ZnuHtLaD7Cq1EMyjDyZfTd5B+EhzTgX+uPhK5gG6Ftk
-         iKdSSKA+NDnD/Ck74XrYb7w0tldFtDH471GRhN14JPzJrq4cg6ae6XdIVK8uI9S1qoOh
-         fa2WzJoIQKQpdigRZRTw7drea02PGQV8R/jN/nPrkpNaYuTnO5sCoXD++Xie7/gJLWME
-         g4TA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794237133; x=1794841933;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=PUsDu0OkTgaKjQcZBPcirXMHnRarKrGJneMxp5gNekI=;
-        b=rzN2EmyKfstgG9qH2B0TN1ji3Yuz3XYRE2OrDktWGP2yzNDzFziCBDpz7bWje1uZ3h
-         hBbzeqzMLS5nPrvdgcta0ZJ3ADK28u1eeSfYWetpIsLZ5ibjnYL8iY4z4Vkdz+fTrkmM
-         2+2XDmYCngoy7gGQ/cXkLSxv0/bP5Dse5k98EH9Jxld1Fi9iyeS7FSr7MQwjS0FLcpGa
-         9VZDvhPl4bE5/8664nLU/1K4LHhsAJZ2sOyeHbz26JhmrG23SEk/1wBlq7JYMDXjW6y+
-         AV/PauHJID/ccPt9m5s/HAiG9NE9s2Icg1oqg1W4lUvWUFFRdjM3kpfbFd6iNWH65cZd
-         4+fA==
-X-Forwarded-Encrypted: i=1; AL+hErGl2Th+50XEGRfuIGU8DQpUYlKKitLKbr1TS5vF/YKee0vuH+59aEjrSWbS6SvdBNDAIs4NWQ3Sryt8@vger.kernel.org
-X-Gm-Message-State: APuU4Z9W55SDil4J1ck9GBdrIWB5n1GKkApOV1IphSVYzakF83v/Or6Y
-	/ZgzT7HXdFCHxiDckKqdI1j1LjNGUCG2vsTy97NRQFsUjd76ATrG82jA+5t1AkvlYhW/uT2AOn4
-	t60JsIKklo59XKoUXFNT5nLnxH2e7ffibrvL5xvuXEgDWVwANTmThCmZ4jMeeUphY
-X-Gm-Gg: AYBFou3Jp9ZB10SDuXvraVfQahQStDPPwUjYyWxq/DGZa8I3YUb8Y0MSeFZUY+jJ4pK
-	0tI4jw3VzO7MR8JoMq/PisgfrQU4MN2qGme2YSvQbSjmBNX+Lsp44EhZs8aP4RZPZCWyuzfrEwv
-	l0vkJquVjwNNBPwCv2HDUxmAu8MboCkvup0pGccb+Tncgy4z3zCs0x56lx2GMVjQOjsf+2PI59W
-	x3eCdVnyq70Cn5u2bQr1uWkmEBA8bB6PmCR7GzdTn2pDkltjbwBTFrMIpV5MmnSn8oKxE7UFbuy
-	+uCxBQCmlniLQm9lpdxyXrTaR28LbVxAkfg/rrRTj06EN8CBRSInrpaBe5JeuCqVY9joQ/+3K32
-	RsL0kaSAf5Ppvn/2v6INZvKPlcnY43jsy2Mxzm0red4vcS+UkOTbiIVQloiVdkJ84NTyO+w==
-X-Received: by 2002:a05:6102:301a:b0:7cc:1137:9d98 with SMTP id ada2fe7eead31-7d2da6343d3mr1229155137.0.1794237132578;
-        Mon, 09 Nov 2026 07:12:12 -0800 (PST)
-X-Received: by 2002:a05:6102:301a:b0:7cc:1137:9d98 with SMTP id ada2fe7eead31-7d2da6343d3mr1229073137.0.1794237131982;
-        Mon, 09 Nov 2026 07:12:11 -0800 (PST)
-Received: from [192.168.226.72] ([178.235.128.140])
-        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-6b721ed95desm1765456a12.26.2026.11.09.07.12.06
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 09 Nov 2026 07:12:11 -0800 (PST)
-Message-ID: <3ddaacfd-59c0-4d87-9b8c-2caa85143393@oss.qualcomm.com>
-Date: Mon, 9 Nov 2026 16:12:05 +0100
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=U9h54ba5
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1794237267;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=p66YjuZUERp8DvJZY4JdqHSsqpUZEslDN4DOOe6L+lA=;
+	b=U9h54ba5kh6eMTiHWVDyfsP4JD/QBOWMm/37xE+CVtUiAqORHpL2pRhQQy2Xp/LqQh5soB
+	wkLp93nnLVlX/9taZ+FUqyVM3v0xQ4NLoy4P+cnKrnM/DLbbXVoLoMaHwXkc+BwUj34N+R
+	eDMHAa/7rPZN3+RMsrBTlvZcfzVSwWE=
+Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-178-rwOSsI06N2GlokMiHUUWcQ-1; Mon,
+ 09 Nov 2026 10:14:21 -0500
+X-MC-Unique: rwOSsI06N2GlokMiHUUWcQ-1
+X-Mimecast-MFC-AGG-ID: rwOSsI06N2GlokMiHUUWcQ_1794237259
+Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id A25231955F1A;
+	Mon,  9 Nov 2026 15:14:18 +0000 (UTC)
+Received: from localhost (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
+	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 9DE4318004FC;
+	Mon,  9 Nov 2026 15:14:17 +0000 (UTC)
+Date: Sat, 7 Nov 2026 08:17:14 -0500
+From: Stefan Hajnoczi <stefanha@redhat.com>
+To: Mike Christie <michael.christie@oracle.com>
+Cc: Hannes Reinecke <hare@suse.de>,
+	Nguyen Ngoc Thang <ngocthang2710.1999@gmail.com>, mst@redhat.com,
+	jasowangio@gmail.com, mkp@kernel.org,
+	James.Bottomley@hansenpartnership.com, pbonzini@redhat.com,
+	eperezma@redhat.com, virtualization@lists.linux.dev,
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	sashiko-bot@kernel.org, kwolf@redhat.com
+Subject: Re: [PATCH v2] scsi: virtio_scsi: implement eh_host_reset_handler
+Message-ID: <20261107131714.GA379875@shajnocz.csb>
+References: <20260911164417.33860-1-ngocthang2710.1999@gmail.com>
+ <28865bba-ac60-4c6e-aec8-64b1fcdb1c8f@suse.de>
+ <20260914133144.15509-1-ngocthang2710.1999@gmail.com>
+ <20261102200615.GC1738758@shajnocz.csb>
+ <c5460180-e134-423a-b67f-a58a00106eb8@suse.de>
+ <20261103135156.GB2072598@shajnocz.csb>
+ <92a8e5e4-2729-476f-82e5-e73e51a010e6@oracle.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -115,96 +87,117 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 17/17] arm64: dts: qcom: Add Samsung Galaxy XR
-To: Stanislav Aleksandrov <lightofmysoul@gmail.com>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konradybcio@kernel.org>,
-        Abel Vesa <abelvesa@kernel.org>, Rob Herring <robh@kernel.org>,
-        Krzysztof Kozlowski <krzk+dt@kernel.org>,
-        Conor Dooley <conor+dt@kernel.org>, Robert Marko <robimarko@gmail.com>,
-        Guru Das Srinagesh <linux@gurudas.dev>,
-        Thomas Gleixner <tglx@kernel.org>, Radu Rendec <radu@rendec.net>,
-        Lee Jones <lee@kernel.org>, Will Deacon <will@kernel.org>,
-        Robin Murphy <robin.murphy@arm.com>,
-        "Joerg Roedel (AMD)" <joro@8bytes.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Wesley Cheng <wesley.cheng@oss.qualcomm.com>,
-        Vinod Koul <vkoul@kernel.org>,
-        Neil Armstrong <neil.armstrong@linaro.org>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Bart Van Assche <bvanassche@acm.org>, Bean Huo <beanhuo@micron.com>,
-        Stanley Jhu <stanleyjhu@google.com>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        "David S. Miller" <davem@davemloft.net>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Viresh Kumar <viresh.kumar@linaro.org>,
-        Amit Kucheria <amitk@kernel.org>,
-        Thara Gopinath <thara.gopinath@gmail.com>,
-        Daniel Lezcano <daniel.lezcano@kernel.org>,
-        Zhang Rui <rui.zhang@intel.com>, Lukasz Luba <lukasz.luba@arm.com>,
-        Georgi Djakov <djakov@kernel.org>,
-        Sibi Sankar <sibi.sankar@oss.qualcomm.com>
-Cc: linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, mfd@lists.linux.dev,
-        linux-arm-kernel@lists.infradead.org, iommu@lists.linux.dev,
-        linux-usb@vger.kernel.org, linux-phy@lists.infradead.org,
-        linux-scsi@vger.kernel.org, linux-crypto@vger.kernel.org,
-        linux-pm@vger.kernel.org
-References: <20261109-halliday-dts-v1-0-289114ab8197@gmail.com>
- <20261109-halliday-dts-v1-17-289114ab8197@gmail.com>
-Content-Language: en-US
-From: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
-In-Reply-To: <20261109-halliday-dts-v1-17-289114ab8197@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMTA5MDA2MCBTYWx0ZWRfX7VCQ1S1VuEcU
- KZBDSn+Q6alrg3DGeNuvLV9m+SITORYX66JMrM8/pyAoJAjskJ5L97tNbz87fZCsfCpU0tuA0Ch
- LGlNh5TgVcEj9YbJz3P5uyZP7OrCbPzHp0C1LckJem5QTOD+//D2mYsyJsUNpBbC/36ESgieJvu
- W3cPB3IaUFrBbhCURv5sQw1nGetJw14gx8qSvWo9E3w1ZXtg85lgSFrur8pzVWmLoXXXyTJ8Av4
- mtzwNUFbPRKZRKXxOloX5WcURmNfZQ+yLhpoyUZqXoRvT3zuBQg64WbkKRDPUtN086rcUKFOQzU
- tioIxn5Uqd+7jVnupqwpMbMPmsJoDM3tnD/l7sXuBlIjrt8kaHaPt4+A77xzOF0gRVRLOwVm76z
- E0xzX6i2Hfuk+hnIn0uJ8FtwCUd9tWOwHeuH8oiq+DNuWouvJTzoeTgwsZv3uPW5OGaYS7c0Nxg
- ZD4OkhnJyVrlXfSxdvQ==
-X-Proofpoint-GUID: x20pYp4rvzwU_TgnExGJrWOOvAIbU1Lq
-X-Proofpoint-ORIG-GUID: x20pYp4rvzwU_TgnExGJrWOOvAIbU1Lq
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMTA5MDA2MCBTYWx0ZWRfX/4p3DQnLCqtZ
- 4RrWKbWcoBgSrsur/jgKZTjGB+CqqrrC6xB61G9MUhBmwlPrmcuFKELcreyz+FuKhB8fnPEulOM
- /PSNydV+uxenqUPV2wUO8pJQC925mJk=
-X-Authority-Analysis: v=2.4 cv=Yr+a1IYX c=1 sm=1 tr=0 ts=6af1e2cd cx=c_pps
- a=DUEm7b3gzWu7BqY5nP7+9g==:117 a=PRfkaYvzSr8QmIIGAkY2Sg==:17
- a=IkcTkHD0fZMA:10 a=zJRp6_cAMcgA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=DJpcGTmdVt4CTyJn9g5Z:22
- a=pGLkceISAAAA:8 a=Xzw-RmQiYhs1fFvV6_MA:9 a=QEXdDO2ut3YA:10
- a=-aSRE8QhW-JAV6biHavz:22
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
- definitions=2026-11-09_05,2026-11-06_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- adultscore=0 phishscore=0 clxscore=1015 priorityscore=1501 bulkscore=0
- suspectscore=0 malwarescore=0 lowpriorityscore=0 impostorscore=0 spamscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2611040001 definitions=main-2611090060
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <92a8e5e4-2729-476f-82e5-e73e51a010e6@oracle.com>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
 
-On 11/9/26 1:33 AM, Stanislav Aleksandrov wrote:
-> Add the device tree for the Samsung Galaxy XR headset, which is based on
-> the Qualcomm Halliday SoC (SXR2250P).
+On Fri, Nov 06, 2026 at 02:12:19PM -0600, Mike Christie wrote:
+> On 11/3/26 7:51 AM, Stefan Hajnoczi wrote:
+> > On Tue, Nov 03, 2026 at 08:27:52AM +0100, Hannes Reinecke wrote:
+> >> On 11/2/26 9:06 PM, Stefan Hajnoczi wrote:
+> >>> On Mon, Sep 14, 2026 at 08:31:44PM +0700, Nguyen Ngoc Thang wrote:
+> >>>> Once virtscsi_eh_timed_out() lets SCSI EH run on an unresponsive host,
+> >>>> abort and device reset both fail the same way (same dead ctrl vq), and
+> >>>> since virtio_scsi implements neither target nor bus reset, EH falls
+> >>>> through to scsi_eh_offline_sdevs(), which frees the stuck commands' DMA
+> >>>> buffers without any guarantee the device has actually stopped touching
+> >>>> them. If bus mastering (or whatever broke the transport) comes back
+> >>>> later, the device can still write into memory the kernel has already
+> >>>> reused.
+> >>>>
+> >>>> Add a real eh_host_reset_handler instead. virtio_reset_device() is the
+> >>>> guarantee scsi_eh_offline_sdevs() was missing: once it returns, the
+> >>>> device will not touch guest memory again, so it is safe to hand
+> >>>> outstanding commands' buffers back. Reuse virtscsi_remove_vqs() +
+> >>>> virtscsi_init() -- the exact sequence already used across
+> >>>> suspend/resume -- to tear the virtqueues down and rebuild them.
+> >>>>
+> >>>> Verified with a QEMU virtio-scsi repro (PCI_COMMAND_MASTER cleared
+> >>>> mid-write): EH now runs abort -> device reset -> host reset -> abort ->
+> >>>> device reset -> host reset -> offline, then dd's stuck fsync returns
+> >>>> EIO and D-state drains to 0, in ~244s total. No task remains
+> >>>> uninterruptibly blocked.
+> >>> By the way, there is a known limitation in the QEMU virtio-scsi
+> >>> implementation where some reset-related operations are implemented
+> >>> synchronously (can block vCPUs and QEMU activity while waiting for I/O
+> >>> to drain in some situations) instead of asynchronously. Recently there
+> >>> has been work in QEMU to make VIRTIO device reset asynchronous, for
+> >>> example, but it needs to be implemented on a per-device basis and
+> >>> virtio-scsi hasn't taken advantage of it yet.
+> >>>
+> >>> Please let me know if you'd like to discuss or contribute. It's
+> >>> something that is on my radar but not until 2027.
+> >>>
+> >>>> Suggested-by: Hannes Reinecke <hare@suse.de>
+> >>>> Signed-off-by: Nguyen Ngoc Thang <ngocthang2710.1999@gmail.com>
+> >>>> ---
+> >>>> v1 -> v2: implemented eh_host_reset_handler as suggested by Hannes
+> >>>> Reinecke in review of the original RFC, instead of relying solely on
+> >>>> the EH loop falling through to offline.
+> >>>> ---
+> >>>>   drivers/scsi/virtio_scsi.c | 24 ++++++++++++++++++++++++
+> >>>>   1 file changed, 24 insertions(+)
+> >>>>
+> >>>> diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+> >>>> index b4f20c487718..9698f4f91cc6 100644
+> >>>> --- a/drivers/scsi/virtio_scsi.c
+> >>>> +++ b/drivers/scsi/virtio_scsi.c
+> >>>> @@ -833,6 +833,8 @@ static enum scsi_timeout_action virtscsi_eh_timed_out(struct scsi_cmnd *scmnd)
+> >>>>   	return SCSI_EH_NOT_HANDLED;
+> >>>>   }
+> >>>> +static int virtscsi_host_reset(struct scsi_cmnd *sc);
+> >>>> +
+> >>>>   static const struct scsi_host_template virtscsi_host_template = {
+> >>>>   	.module = THIS_MODULE,
+> >>>>   	.name = "Virtio SCSI HBA",
+> >>>> @@ -846,6 +848,7 @@ static const struct scsi_host_template virtscsi_host_template = {
+> >>>>   	.eh_abort_handler = virtscsi_abort,
+> >>>>   	.eh_device_reset_handler = virtscsi_device_reset,
+> >>>>   	.eh_timed_out = virtscsi_eh_timed_out,
+> >>>> +	.eh_host_reset_handler = virtscsi_host_reset,
+> >>>>   	.sdev_init = virtscsi_device_alloc,
+> >>>>   	.dma_boundary = UINT_MAX,
+> >>>> @@ -947,6 +950,27 @@ static int virtscsi_init(struct virtio_device *vdev,
+> >>>>   	return err;
+> >>>>   }
+> >>>> +/*
+> >>>> + * No bus/target reset in virtio-scsi, so EH lands here after device
+> >>> The choice to use the VIRTIO device reset in virtscsi_host_reset() looks
+> >>> good to me, but I would like clarification on this comment. virtio-scsi
+> >>> does have I_T_NEXUS_RESET and I believe this is the modern equivalent to
+> >>> the pre-SCSI-6 TARGET RESET. Is it really the case that virtio-scsi
+> >>> doesn't have target reset? And do you want to go ahead and implement
+> >>> .eh_target_reset_handler() using I_T_NEXUS_RESET?
+> >>>
+> >> Would probably not a bad idea to use I_T_NEXUS_RESET here.
+> >> Not sure what it does internally, though; _is_ there a nexus
+> >> to reset?
+> > Whether there is any benefit to I_T_NEXUS_RESET may depend on the device
+> > implementation. In QEMU:
+> > - LOGICAL_UNIT_RESET resets just 1 LUN
+> > - I_T_NEXUS_RESET resets all LUNs
+> > - VIRTIO device reset also resets the HBA itself
+> > 
+> > In practice QEMU's I_T_NEXUS_RESET is unlikely to fix things if
+> > LOGICAL_UNIT_RESET wasn't sufficient. Maybe it will help on other device
+> > implementations though.
+> > 
+> > I think the Linux driver mapping should be:
+> > - .eh_device_reset_handler() -> LOGICAL_UNIT_RESET
+> > - .eh_target_reset_handler() -> I_T_NEXUS_RESET
+> > - .eh_host_reset_handler() -> VIRTIO device reset
 > 
-> Supported so far: the PMICs and their regulators, the power and volume
-> down keys, USB in high-speed peripheral mode and UFS storage.
+> How are vhost drivers notified of the device reset? For qemu virtio-scsi
+> this would call virtio_scsi_reset right?
 > 
-> Signed-off-by: Stanislav Aleksandrov <lightofmysoul@gmail.com>
-> ---
+> For vhost-scsi though, do we need to add a similar reset function?
 
-[...]
+VIRTIO device reset is handled by vhost_scsi's VHOST_SCSI_CLEAR_ENDPOINT
+and VHOST_SCSI_SET_ENDPOINT ioctls called from QEMU's
+hw/scsi/vhost-scsi.c:vhost_scsi_set_status(). The Linux vhost_scsi code
+flushes requests and resets the device, so I don't think code changes
+are needed.
 
+Stefan
 
-> +&usb_1 {
-> +	dr_mode = "peripheral";
-> +	maximum-speed = "high-speed";
-> +	qcom,select-utmi-as-pipe-clk;
-
-Is there no superspeed / dp altmode in hardware?
-
-Konrad
