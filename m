@@ -1,49 +1,51 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=128.116.240.228
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=159.226.251.25
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794135010;
-	b=DnHOCjSpZ0huoJ+86/Vcpz0L330rtf7gijfocRmYUEpvckp4cvGtAOSrJZJ5m1FXrSUt
-	 KAwxDrv2m++g0tNRagmSmTgBG1TOAGcgHYrOPNE3QBZoDUkcE+Z8sIlrTX/Npby+1IZCy
-	 49n0GRff6npvVEh+HB3ptwirapKEpMGASmNdoDYlKBkwAwNtZOIRFN8tjODMDt882IPEN
-	 e81yRVDbM046DIoev57ZnTl6XPyKFQqXe3g3dpbh6DdPfDF7ahSCrHxKwP4cVMS5NL10i
-	 lH9F/OazT98sqdzYFbMTihrZvwGn/zGaW5+R+spIymLk9PxPcDT5WIfDtmWFDP4HVkQ==
+	t=1794140619;
+	b=HdNPqGtXIWbKIz/kqnZb1Px0IvlekyajbSmRvDYuKaqde5cbKHSWxGMkGlLFOg4PKiTH
+	 rZlxBWKNnQxkZ34ISxrrBF5m6BFTxvWZk6oGx40dEaAuV3h+tMnTkpOV1dDsBDPFsRSTq
+	 FIg4xPwzs8FXNG5Uuaz1kg0oLWr2U+WkGhDNgIgJwAw1/eH3AYOPfvGyXTIOwmUH2iGaV
+	 LpeUtNAN/+Xo280rA40c5Mscg0JPm55n2CeAJD4DLLEbKmzPvpXDCU/YIWxaWIsily56g
+	 kGpDOCXqMbUFAzOUYVRMInWbux8kMCnxHB17oqJ0jxGRp+/GxNZmrOb4CDiHj5ZbeWw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794135010;
-	h=DMARC-Filter:DKIM-Signature:Received:Mime-Version:
-	 Content-Transfer-Encoding:Content-Type:Date:Message-Id:Cc:Subject:
-	 From:To:X-Mailer:References:In-Reply-To;
-	bh=8pq/IDSCY4LBixR6A7q8Ut/Zwku91AwAfepkFX7dr7A=;
-	b=RwB0fByIODtbA0RBkWancp8G1ak6Rqki3iP2No6U7Dqsf1J88t1mWyfa6HhnX9Ngj25V
-	 dQJx7tjH1zH+SRqXF7yN/cWaTB+W2fAYP0pXtkV1YN9HcT1EH15NW+oCP2h2GD4MlBgre
-	 ehk0SheZqiZUmqy+x8tcsVtlPniaNUVlodtPXcXEfvCpu8lvlBXFEuku//awOvOoUOyRn
-	 xcfWhCnmLLAUqezFHt54aTfjWEEpNgUJlPmMWBwJxkryNFxSfMGwHwbBqjNtukETwYB5G
-	 PdEaQZhBMXMfhgPw8WVmn3pgrs/THMlXBsJP1ZkPhabnMYExNM4mAuoenhht8/xBaUg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794140619;
+	h=DMARC-Filter:Received:From:To:Cc:Subject:In-Reply-To:References:
+	 MIME-Version:Content-Type:Content-Transfer-Encoding:Date:Message-ID:
+	 X-CM-TRANSID:X-Coremail-Antispam:X-Originating-IP:X-CM-SenderInfo;
+	bh=wMWfc48sTUNJRn/nNYZ9jY2KnhRGW3QJ4wa2Hej3SaE=;
+	b=U+fzyYlxz1Fj2RILZbZdlqIV1ORaXqmSw/3yM8/XZRQ+wMRLGkxZnN5D2PlaDlxgenNm
+	 y3Jk7/FMdwYeVX1jtl5IgX8dPd32AXMZj9yDF4y7qiY604s0/UOCis8gC4oaBlRRlVF0f
+	 uOLRA1U/gWwLfHyrFqK92nak4ilgbS2k6wIfuLO7GjkKaN1ihTMojWbJw9KPqpv6ZsX/c
+	 nkcYYAvo3v8z1NrqQ+yjaplOLgnHStWdGB5kPpjzzsIHVosfPcf6yF0zbl2riWzspCp2i
+	 PBG8x44fy4Yv3lGMWUCp7s+/hlMr83j4/9AeslVKaH86mdZUwf+xuH4TlS3CY8JMbdg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=arkamax.eu;
-	spf=pass smtp.mailfrom=arkamax.eu;
-	dkim=pass header.d=arkamax.eu header.i=@arkamax.eu header.a=rsa-sha256 header.s=mail1 header.b=l6JqTey+;
-	arc=none smtp.remote-ip=128.116.240.228
-Received: from arkamax.eu (128-116-240-228.dyn.eolo.it [128.116.240.228])
+	dmarc=none header.from=iscas.ac.cn;
+	spf=pass smtp.mailfrom=iscas.ac.cn;
+	arc=none smtp.remote-ip=159.226.251.25
+Received: from cstnet.cn (smtp25.cstnet.cn [159.226.251.25])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C93BC606A31C;
-	Sun,  8 Nov 2026 10:50:08 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C93BC606A31C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=arkamax.eu
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arkamax.eu
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=arkamax.eu header.i=@arkamax.eu header.a=rsa-sha256 header.s=mail1 header.b=l6JqTey+
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; s=mail1; bh=0acOCyvV6JrPcx
-	ohfcRhMPkj9sEYJAZOtcKos1dv26U=; h=in-reply-to:references:to:from:
-	subject:cc:date; d=arkamax.eu; b=l6JqTey+gSc2m70BjbSxBgD7zMF0t0DV4LBvM
-	o1pqJIOCm3IMx47zpfjkDJrA4vBVWdOx3MCk9an8r3TtOHPXndgiMJbwA5WpCwTDE/T8k2
-	STjen5tnqUfRj/yTPK/P+cQME4JUZBw6hLv6gcz+OcCItbsHU43DR6G8uD2KddBjx0O4I7
-	Mv0++t2IPByKWaxU9NTz/oSd9yUpdxEOTS237OOO7HwurXZ31IvHARGyfl+6bi7GcQXgx/
-	3DOOOkRpZ/rYX2GEvBaKcT/FHSTjH8AFD4QSUr8FQ7Mw4OqKCXYslV/p2PvLg030AS7bHC
-	yFu+hOZop+mH7jB9XF3tewung==
-Received: from localhost (128-116-240-228.dyn.eolo.it [128.116.240.228])
-	by arkamax.eu (OpenSMTPD) with ESMTPSA id 8c21eb9d (TLSv1.3:TLS_AES_256_GCM_SHA384:256:NO);
-	Sun, 8 Nov 2026 11:50:00 +0100 (CET)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D37EC606A31C;
+	Sun,  8 Nov 2026 12:23:38 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D37EC606A31C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
+Received: from [172.100.0.8] (unknown [36.110.52.2])
+	by APP-05 (Coremail) with SMTP id zQCowAAnwrfCafBqcz6bAA--.39862S2;
+	Sun, 08 Nov 2026 20:23:30 +0800 (CST)
+From: Wentao Liang <vulab@iscas.ac.cn>
+To: John Garry <john.garry@linux.dev>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>,
+ Dan Williams <djbw@kernel.org>,
+ Martin K. Petersen <martin.petersen@oracle.com>,
+ Jason Yan <yanaijie@huawei.com>,
+ linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org,
+ vulab@iscas.ac.cn
+Subject: Re: [PATCH] scsi: libsas: Fix use-after-free in sas_suspend_devices()
+In-Reply-To: <b0e2de23-7421-4217-bd37-e98e59bef873@linux.dev>
+References: <20260917143800.2157286-1-vulab@iscas.ac.cn>
+ <b0e2de23-7421-4217-bd37-e98e59bef873@linux.dev>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -52,42 +54,40 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Sun, 08 Nov 2026 11:50:00 +0100
-Message-Id: <DMPRS0MF3KC3.1H1C97P5ES18@arkamax.eu>
-Cc: <michael.christie@oracle.com>, <linux-scsi@vger.kernel.org>,
- <linux@yadro.com>
-Subject: Re: [PATCH 0/2] target: iscsi: fix hanged WRITE_PENDING commands
-From: "Maurizio Lombardi" <mlombard@arkamax.eu>
-To: "Dmitry Bogdanov" <d.bogdanov@yadro.com>, "Martin Petersen"
- <martin.petersen@oracle.com>, "Maurizio Lombardi" <mlombard@redhat.com>,
- "Laurence Oberman" <loberman@redhat.com>, <target-devel@vger.kernel.org>
-X-Mailer: aerc 0.20.0
-References: <20261027180123.13163-1-d.bogdanov@yadro.com>
-In-Reply-To: <20261027180123.13163-1-d.bogdanov@yadro.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Date: Sun, 08 Nov 2026 11:40:40 +0000
+Message-ID: <20261108114040.216100-vulab@iscas.ac.cn>
+X-CM-TRANSID:zQCowAAnwrfCafBqcz6bAA--.39862S2
+X-Coremail-Antispam: 1UD129KBjDUn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73
+	VFW2AGmfu7bjvjm3AaLaJ3UjIYCTnIWjp_UUUYS7CY07I20VC2zVCF04k26cxKx2IYs7xG
+	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
+	A2z4x0Y4vE2Ix0cI8IcVAFwI0_JFI_Gr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr0_
+	Cr1l84ACjcxK6I8E87Iv67AKxVWxJr0_GcWl84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s
+	0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xII
+	jxv20xvE14v26r1q6rW5McIj6I8E87Iv67AKxVWxJr0_GcWlOx8S6xCaFVCjc4AY6r1j6r
+	4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCF04k20xvY0x0EwIxGrwCF
+	04k20xvE74AGY7Cv6cx26r48ZrWUJr1UMxAqzxv26xkF7I0En4kS14v26r126r1DMxC20s
+	026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_
+	JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14
+	v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xva
+	j40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Gr0_Cr1lIxAIcVC2z280aVCY1x0267AKxVW8Jr
+	0_Cr1UYxBIdaVFxhVjvjDU0xZFpf9x0JjUgAwUUUUU=
+X-CM-SenderInfo: pyxotu46lvutnvoduhdfq/1tbiBwUFA2rv42DS9AAAsk
 
-On Tue Oct 27, 2026 at 7:01 PM CET, Dmitry Bogdanov wrote:
-> ISCSI has some old leftovers in the code that prevents passing the aborte=
-d
-> command to the target core to make the actual abort. Such commands hang
-> until connection is closed.
-> So remove those leftovers.
->
-> Dmitry Bogdanov (2):
->   Revert "scsi: target: iscsi: Fix hang for aborted WRITE_PENDING
->     commands"
->   scsi: target: iscsi: fix hanging WRITE_PENDING commands
->
->  drivers/target/iscsi/iscsi_target.c      | 19 -------------------
->  drivers/target/iscsi/iscsi_target_erl1.c |  8 --------
->  2 files changed, 27 deletions(-)
+Hi John,
 
-Sorry for the late reply, I was on vacation.
+Sorry for the very late reply.
 
-I like this solution and since Laurence tested it and confirmed that it wor=
-ks
-then I am completely ok with reverting my patch.
+You are right: the reference held while the device sits on port->dev_list
+keeps it alive, and an LLD never owns such a reference, so
+list_for_each_entry_safe() would not fix anything. Please drop this patch;
+I am withdrawing it and will not send a v2.
 
-Reviewed-by: Maurizio Lombardi <mlombard@redhat.com>
+The candidate came from a static-analysis run audited with DeepSeek and
+GPT-6.1 Sol, and it is a false positive on our side.
+
+Thanks for taking the time to review the patch,
+Wentao
+
