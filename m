@@ -1,71 +1,56 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.91
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794170910;
-	b=O8QlS3eZUQ2b4JHL5Q17h+8HbE7bTZl6dZKBfZ9ZpXPi0GjhndxRgc5FW6+sA1ImZBaU
-	 TJVCKXRBThbI4ihcVFFJ1P8jpYND3Yw3nK7I7tvu31bGDz9WXAjvWE+t46dQHICwlT6Fg
-	 VoCN9pQkVfNJGAE5SomU5lxO4MvZRnGXPAuTruFEZMY+Z0QCLUoONT3E+Lq86Xl8S0Vrb
-	 cCi20Lb5/XSlF9rDLQ5me+ttrNVDDV+M4TQGbd52RM3FZZkZIUhpaRSzTDlIiamma9Bc4
-	 Rzhq5sRzJOBpgRsl8yLPGEbTRnHZkVZ1LYIuwta9rnrw4L6GaYsmL995l37PE6Xoa6g==
+	t=1794171757;
+	b=U9QxI0wUSEzb5oShfMMIvji+fbITcj7bSr182ewBsxCx0G2h1Hp8rwDhsP7ZPkudtniT
+	 TXCRujAvgcv5rkJtLRtSSwNlwCYARqaXAqIVmw+xQZtXgnbPSlqlqK6TVpnvC6Bq9oUkk
+	 l1Tqt5j7+ftN1UVUYcyDJk2t3VUyBN5uSHgxSFp8s4I96hPI0f1iIhHb5wRNgcNPfU2AO
+	 JnX0cxGKqVYpRPGZvkcLpZ74bMHnuDZF5lG1YYdpElls1U3cZfKMObgmpOpEYEmRQjI9G
+	 h5Ntl+GJzmAZQuyY+gEy15YOUQGx1zkq3lT6pgbrn6DNtObJbTv8CH61JJ49mhjF5gA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794170910;
-	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:From:To:Cc:Subject:Date:Message-ID:
-	 X-Mailer:In-Reply-To:References:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=U2xG8uBDS3ZX6a/oBks6CKUJxumAGYWP5iIhTx2myFE=;
-	b=Er7yRx4vcOgqX6y2Phl0p8H0mXMUCBmqhJaL+E3ni3wvx/9T3KV7XmlOwcM/WdOKKdiu
-	 +0xnHgRhOL5wIcJb2GODsKpl4vD+GlFOJ3RbqyQJjXTJGxNENZWeb+Ddt0ZSEysuqEyoU
-	 DPtiTBpOQOdbRmxKPTCEw+zNbz4ErxYzXHbjL5CrC0q6bhf4fEFHcaVpPt90IFC8Ybbhm
-	 yK8Bmk1LcKl13k+zUIz2v7/bJOrTui5XiEikFf+FoODqssZHFuPTZLtxCootvATjQw+wI
-	 AIK5cIl17nz6rW5QGwjy6v32QOAu5Z7ArhbeIGOlGwNEDk5PWHHySkti1BQ8yD14WtA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794171757;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=+EZH2jyGgPaBdWe8HIIwVmJ0BqWFPii6GucH24sJEzA=;
+	b=NLmRSmW2Tf+5KTiMyL9NyxkNzxT1uBrS5pqwd63LMx4v98TYIiBlJX/1LzimCTO/MWLC
+	 H/Wtgg1HuWzfDAChe/gn3UoLetVM9xdz1apio5c8PE0GxGSn9AOi+3BuZZLz5lTbTjXwi
+	 PmClVixeV3x83EBRWZ3zuNyAJ3piMoIeWj3Wi3dplcpLxMUS5G6PeZ0KkXZbh7VMiFJyX
+	 ICuER7jc/Qg4rnpWy2t54bhmRbvaLrTMYx17yzITzrcTQqNICP4CHg9v7H/ymnLALb2ul
+	 w3K9ZwUj+oen06Iyo5u9qwQVW05nilOO1zCZ0gLc39odAd7BOM2+u+c72mTx5JTHBWw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.dev;
-	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=BBtI6KRw;
-	arc=none smtp.remote-ip=91.218.175.91
-Received: from mta0.migadu.com (out-91.mta0.migadu.com [91.218.175.91])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=bjnJiKhm;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0FE08606D810
-	for <linux-scsi@vger.kernel.org>; Sun,  8 Nov 2026 20:48:29 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0FE08606D810
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC4CE606A321;
+	Sun,  8 Nov 2026 21:02:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=BBtI6KRw
-X-Envelope-To: linux-scsi@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=H0+4Td4UmVtpFq6ZyOOwjEU0diM7bm7DIDQy7pV4k4k=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1794170908; v=1; x=1794775708;
- b=BBtI6KRwD+LgJiIsK0tbzEbJR7XsAlORonJND3gVANNlrjgRXyd1H+m32fr7hZVUC4xoDS1p
- i4s7LfzLzOygTVkWCc25DuTs6H8vBPkpEKrrMR1Hypwz05btOwR/atXuAINj2ux4LsaHuQPWduz
- eYvMAEqwCdrmO6J9UfsKowEk=
-X-Envelope-To: linux-scsi@vger.kernel.org
-Received: by mta10.migadu.com with ESMTPS id a74b715b38ffa497;
-	Sun, 08 Nov 2026 20:48:26 +0000
-X-Mizu-Trace-ID: a74b715b38ffa497
-X-Migadu-Flow: FLOW_OUT
-From: John Garry <john.garry@linux.dev>
-To: james.bottomley@hansenpartnership.com,
-	mkp@kernel.org
-Cc: hare@suse.com,
-	linux-nvme@lists.infradead.org,
-	linux-scsi@vger.kernel.org,
-	snitzer@kernel.org,
-	jmeneghi@redhat.com,
-	bmarzins@redhat.com,
-	dm-devel@lists.linux.dev,
-	hch@lst.de,
-	michael.christie@oracle.com,
-	John Garry <john.garry@linux.dev>
-Subject: [PATCH v9 29/29] scsi: sd: add mpath_queue_depth dev attribute
-Date: Sun,  8 Nov 2026 20:47:33 +0000
-Message-ID: <20261108204733.557995-30-john.garry@linux.dev>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20261108204733.557995-1-john.garry@linux.dev>
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=bjnJiKhm
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B75A31F008A3;
+	Sun,  8 Nov 2026 21:02:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794171756;
+	bh=+EZH2jyGgPaBdWe8HIIwVmJ0BqWFPii6GucH24sJEzA=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=bjnJiKhmfKUiXf+7eTtV+4QKUh7nnChW7x8e0DwrWPPUbrh+hs+VoC4IixpXAhbQV
+	 9MIgOxk5DHHoc863hMhcvLwhGh5ZfDk4Qwg8/B9fl44dUReY5MSDUxis6SkjwR42V9
+	 enRbasVgu3VRU+As6VMvMYQl+xlTgvxU5u2dU4UYNR5lpCqmPvLRgeAryTGiamA9hT
+	 TzlVIWcuqnavdHYkrasGZZmCi1FwOsUbcyeSHx9Rihy/8OBhloNtyWhwQaxky2FqIb
+	 fVjEUlgpYNYyR4mDnghrtjwGnYTewWW78jcrk2wTU6qfnSKoABtuKB+IVfwmiQQKOD
+	 UBzbZCHePNA/Q==
+Message-ID: <sashiko-outbox-204044@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v9 08/29] libmultipath: Add sysfs helpers
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "John Garry" <john.garry@linux.dev>, james.bottomley@hansenpartnership.com, mkp@kernel.org
+Cc: hare@suse.com, linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org, snitzer@kernel.org, jmeneghi@redhat.com, bmarzins@redhat.com, dm-devel@lists.linux.dev, hch@lst.de, michael.christie@oracle.com
+In-Reply-To: <20261108204733.557995-9-john.garry@linux.dev>
 References: <20261108204733.557995-1-john.garry@linux.dev>
+ <20261108204733.557995-9-john.garry@linux.dev>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Sun, 08 Nov 2026 21:02:35 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -74,50 +59,75 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-Add a queue_depth file so that the multipath dynamic queue depth can be
-looked up from per-path gendisk (scsi_disk) directory.
+Thank you for your contribution! Sashiko AI review found 1 potential
+issue to consider:
+- [Low] libmultipath: duplicate parser and ambiguous return in
+  mpath_iopolicy_store()
+--
 
-Signed-off-by: John Garry <john.garry@linux.dev>
----
- drivers/scsi/sd.c | 19 +++++++++++++++++++
- 1 file changed, 19 insertions(+)
+commit 12aacc0c8ac98ed4ae873a73979622db40d4f52b
+Author: John Garry <john.garry@linux.dev>
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 5ea604c4bbb0..29ac1ee806c5 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -4178,9 +4178,28 @@ static ssize_t sd_mpath_numa_nodes_show(struct device *dev,
- }
- static DEVICE_ATTR(mpath_numa_nodes, 0444, sd_mpath_numa_nodes_show, NULL);
- 
-+static ssize_t sd_mpath_queue_depth_show(struct device *dev,
-+		struct device_attribute *attr, char *buf)
-+{
-+	struct gendisk *gd = dev_to_disk(dev);
-+	struct scsi_disk *sdkp = gd->private_data;
-+	struct scsi_device *sdev = sdkp->device;
-+	struct scsi_mpath_device *scsi_mpath_dev = sdev->scsi_mpath_dev;
-+	struct scsi_mpath_head *scsi_mpath_head =
-+				scsi_mpath_dev->scsi_mpath_head;
-+	struct Scsi_Host *shost = sdev->host;
-+
-+	if (!mpath_qd_iopolicy(&scsi_mpath_head->iopolicy))
-+		return 0;
-+
-+	return sysfs_emit(buf, "%d\n", atomic_read(&shost->mpath_nr_active));
-+}
-+static DEVICE_ATTR(mpath_queue_depth, 0444, sd_mpath_queue_depth_show, NULL);
-+
- static struct attribute *sd_mpath_dev_attrs[] = {
- 	&dev_attr_mpath_dev.attr,
- 	&dev_attr_mpath_numa_nodes.attr,
-+	&dev_attr_mpath_queue_depth.attr,
- 	NULL
- };
- 
--- 
-2.43.0
+libmultipath: Add sysfs helpers
 
+This commit adds sysfs helpers and attribute group definitions for showing
+and updating the multipath I/O policy and displaying per-NUMA-node device
+paths.
+
+> diff --git a/lib/multipath.c b/lib/multipath.c
+> index cdf8fbc5105b3..ae5a73d570b33 100644
+> --- a/lib/multipath.c
+> +++ b/lib/multipath.c
+> @@ -620,6 +620,100 @@ void mpath_device_set_live(struct mpath_device *mpa=
+th_device)
+
+[ ... ]
+
+> +static void mpath_iopolicy_update(enum mpath_iopolicy_e *iopolicy,
+> +		int new)
+> +{
+> +	int old =3D READ_ONCE(*iopolicy);
+> +
+> +	if (old =3D=3D new)
+> +		return;
+> +
+> +	WRITE_ONCE(*iopolicy, new);
+> +
+> +	pr_info("iopolicy changed from %s to %s\n",
+> +		mpath_iopolicy_names[old],
+> +		mpath_iopolicy_names[new]);
+> +}
+> +
+> +bool mpath_iopolicy_store(enum mpath_iopolicy_e *iopolicy, const char *b=
+uf)
+> +{
+> +	int i;
+> +
+> +	for (i =3D 0; i < ARRAY_SIZE(mpath_iopolicy_names); i++) {
+> +		if (sysfs_streq(buf, mpath_iopolicy_names[i])) {
+> +			mpath_iopolicy_update(iopolicy, i);
+> +			return true;
+> +		}
+> +	}
+> +
+> +	return false;
+> +}
+> +EXPORT_SYMBOL_GPL(mpath_iopolicy_store);
+
+[Severity: Low]
+Can mpath_iopolicy_store() reuse mpath_iopolicy_parse(), and how can callers
+tell whether the policy actually changed?
+
+lib/multipath.c already defines mpath_iopolicy_parse() using
+__sysfs_match_string() to match against mpath_iopolicy_names[].  Also,
+because mpath_iopolicy_store() returns a bool that is true for any valid
+policy name even when old =3D=3D new in mpath_iopolicy_update(), a sysfs st=
+ore
+caller cannot both reject invalid strings with -EINVAL and avoid clearing
+cached paths and flushing requeue_work when the existing policy is written
+again.
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261108204733.5579=
+95-1-john.garry@linux.dev?part=3D8
