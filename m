@@ -1,51 +1,51 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.58
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.143
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794170903;
-	b=OV4YddGj/D74TdTR9FaMkfy9Hy/VTILQgHwCZInfdB9RlMv8vm6cavE/BclMf/2Gbc/x
-	 iu1oxSwy/qiBFU8nDRXFfCIeUaI9on2Ry/0xEA9gnF+9D0RkFuqa7dxSjo7ul6uGMcRXM
-	 dn2cgofKSWlBQCTFjHCHA2TblpQ+0MmSF5aJoU5lSSGqOnbeplNYwrbu2Kd7DVmcn+3FQ
-	 5coCPunQxwQ5H9iYK0+s/alMCGtL04h1tGJpRaqGkonnLgnQYsBPreJQpnio0Fn6xBqZ1
-	 r6yNIJbc8L2Ek0Ld3QdW9/KnzJXrAQgj0UGwrp5EoUDrMAx2DLwMOsHRQrJlQKKWnGw==
+	t=1794170904;
+	b=avwM/typ7qwRf63aw1QyCtL/7dSLoMAmZCv6hwMSV7NUBpFabEjpXO+so8FX45sN1lju
+	 zttxcmZFdmboSIPsLEnVCJ+FNGlSPIz1KNYHQL32GTH5eIMdKmTndvKOIUtsyTzraGhe5
+	 8Y6ViwD35SOqeQG7pEVuh/2+1OciP861yDS4pfjACUiuOxF/HySVTtqXg8uZD6K5+/VDm
+	 olammL0Wl1caHgHuZvqNGIJeCOTl1Q4anypDDJi2U2zZ+OwkfrfHymII4iG9PlJKFe7y6
+	 dbQ48TO+cNY4lLEoG50p2C5M9guYnYDBh3GoAQedRMamAbXbX7pOwNaBPnsnA7UqFrA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794170903;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794170904;
 	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
 	 X-Mizu-Trace-ID:X-Migadu-Flow:From:To:Cc:Subject:Date:Message-ID:
 	 X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=djFhY6HrcugeDpQwTBeqH0wZRhMZ8g8NzZbKP0h6x10=;
-	b=EnjVNUbjWSAyrqjYS7Rv/jm9r331+UIjt0O/P4dRktAjKyutrciE5SqWF6BPz59aHX9I
-	 smi+pD+FCHK/WX7RYPEDtieU/ArNpT93lnRWvznP/+KF14N1XOZ7xtytW3kz8U0KxnBXA
-	 e/PfvABht1P85HgvhU6dv4thanAeECBq2eJKTREwsC873m1MkPYSLMRbV9uQO+kjbYnoR
-	 Ln4ot2lh2H0WOwrmsFPuUWZlCAAfv8B/eJP8WdaMVNYTPcB7a0tO+C49UIgIGkexb1aaj
-	 OmRN3gDUNu1A5Mxr1JQF+P1qOibqgqUbne0nXzHBimxsT52TnVo5QG1iwq/wynicvdw==
+	bh=hCwRFUq2iDoZLi7clY/PuGBmmvq7M0hE+90qPhgsKN4=;
+	b=y0DKM+8OHFq1yBJ/fqw6njyAXJGYo/IjQUh2Z1ikd9QyAxY96S2Cd9/mNfAR+KJppKw1
+	 xXKQtqvmecM1qEuD8i/SXhzDHo771bJFYKUGDnthsRKqwwjq4RWWzmUhAqhmM2SWeEljs
+	 vJlL3Z/tGWoJNuWQa3pTLdht0SLxN/ve1edCk1WoTRh6eGhHSeGujJWS4i/vYV1pXxqYM
+	 0EoBj3R7oPv91e151MGuuT7t/G2Jiis8hFeIcWm3t/dI0MpVyPN1QkzChc3fyIXJ1SCvq
+	 +SdF0cyAlduaJ44YbbVWj7JUnZKHOKC/hRFF9loEeT8L7DaDq2R2FfcRW/DbhYYY0qA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linux.dev;
 	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=LWvEao3h;
-	arc=none smtp.remote-ip=91.218.175.58
-Received: from mta0.migadu.com (out-58.mta0.migadu.com [91.218.175.58])
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=bxX8Kb77;
+	arc=none smtp.remote-ip=95.215.58.143
+Received: from mta1.migadu.com (out-143.mta1.migadu.com [95.215.58.143])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2DA9F606D81B
-	for <linux-scsi@vger.kernel.org>; Sun,  8 Nov 2026 20:48:22 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2DA9F606D81B
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2235F606D815
+	for <linux-scsi@vger.kernel.org>; Sun,  8 Nov 2026 20:48:23 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2235F606D815
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=LWvEao3h
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=bxX8Kb77
 X-Envelope-To: linux-scsi@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=VPDIuqnyTg2xDal4wGmjULrT9obL2CYqMohvVopWv8o=;
+DKIM-Signature: a=rsa-sha256; bh=yrAIksUYEXTflpjgfac/bXgq6WaL9u4UCyIJD0wmCl0=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1794170901; v=1; x=1794775701;
- b=LWvEao3hU1X6wjvd723ICY/1A3hYV3FwBCHkaeL5hzX7UfEQYXS/oOS1VfzGv43oUBHzkevb
- /HoflbrEqLXqQsgRMQpEbLcXE7d/bwnkMuxZGjvtwO7AKMg67A5bjiukviY3IRwNRhm/YEsMPVq
- Nd8yw/tb/X6eFdL3+0MlQr9Y=
+ t=1794170902; v=1; x=1794775702;
+ b=bxX8Kb77ZDouS+L26RbpayQDxxmDsZkvPde/WUsTfOoG8SGWhRz5qS6FkGJl9nKmsKebbo5O
+ y9Wh1LQZ5SvMN6+1kjU1L29H5QX7m4tk+bCHpqRJLUJ5spkRHR36evIR9nDlUIw/gvdg/sMhqYM
+ 1lnTF+VP4Mlu2VDTjOIuBr4Q=
 X-Envelope-To: linux-scsi@vger.kernel.org
-Received: by mta10.migadu.com with ESMTPS id d9db4c546fa1030a;
-	Sun, 08 Nov 2026 20:48:21 +0000
-X-Mizu-Trace-ID: d9db4c546fa1030a
+Received: by mta10.migadu.com with ESMTPS id 126689d4dbf56e8a;
+	Sun, 08 Nov 2026 20:48:22 +0000
+X-Mizu-Trace-ID: 126689d4dbf56e8a
 X-Migadu-Flow: FLOW_OUT
 From: John Garry <john.garry@linux.dev>
 To: james.bottomley@hansenpartnership.com,
@@ -60,9 +60,9 @@ Cc: hare@suse.com,
 	hch@lst.de,
 	michael.christie@oracle.com,
 	John Garry <john.garry@linux.dev>
-Subject: [PATCH v9 22/29] scsi-multipath: update request for terminal request queuing error
-Date: Sun,  8 Nov 2026 20:47:26 +0000
-Message-ID: <20261108204733.557995-23-john.garry@linux.dev>
+Subject: [PATCH v9 23/29] scsi-multipath: add delayed disk removal support
+Date: Sun,  8 Nov 2026 20:47:27 +0000
+Message-ID: <20261108204733.557995-24-john.garry@linux.dev>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20261108204733.557995-1-john.garry@linux.dev>
 References: <20261108204733.557995-1-john.garry@linux.dev>
@@ -77,103 +77,84 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-If we cannot queue a request in scsi_queue_rq(), then we may error out
-with an error code which means that the block layer ends the request (and
-does not requeue). Such an error scenario would be scsi_device transport
-offline.
+Add support in core code for delayed disk removal support. In this, the
+callback calls into the scsi_driver to do the necessary removal work.
 
-In this case, we should update the request to deal with when
-SCMD_MPATH_IO_STATS and SCMD_MPATH_IO_STATS flags have been set.
+The scsi_disk driver (sd) must ensure that the scsi_mpath_device does not
+go away while the delayed removal work is active, i.e. it must keep a
+reference.
+
+No reference to the scsi_disk multipath structures are kept outside that
+driver, so that driver needs to provide a scsi_driver.mpath_remove_head
+callback to do the necessary work.
 
 Signed-off-by: John Garry <john.garry@linux.dev>
 ---
- drivers/scsi/scsi_lib.c       |  3 +++
- drivers/scsi/scsi_multipath.c | 35 +++++++++++++++++++++++++++++++++++
- include/scsi/scsi_multipath.h |  5 +++++
- 3 files changed, 43 insertions(+)
+ drivers/scsi/scsi_multipath.c | 27 +++++++++++++++++++++++++++
+ include/scsi/scsi_driver.h    |  4 ++++
+ 2 files changed, 31 insertions(+)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 13562c0ab48b..a5a2967d17a2 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1996,6 +1996,9 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
- 			cmd->result = DID_NO_CONNECT << 16;
- 		else
- 			cmd->result = DID_ERROR << 16;
-+
-+		if (sdev->scsi_mpath_dev && is_mpath_request(req))
-+			scsi_mpath_end_request_no_update(req, ret);
- 		/*
- 		 * Make sure to release all allocated resources when
- 		 * we hit an error, as we will never see this command
 diff --git a/drivers/scsi/scsi_multipath.c b/drivers/scsi/scsi_multipath.c
-index 93a4545f1dbf..bec6dd94f3be 100644
+index bec6dd94f3be..58b0be88a952 100644
 --- a/drivers/scsi/scsi_multipath.c
 +++ b/drivers/scsi/scsi_multipath.c
-@@ -614,6 +614,41 @@ bool scsi_mpath_end_request(struct request *req, blk_status_t error,
+@@ -344,7 +344,34 @@ static bool scsi_mpath_available_path(struct mpath_device *mpath_device)
  	return false;
  }
  
-+void scsi_mpath_end_request_no_update(struct request *req, blk_status_t error)
++static int scsi_mpath_remove_head_drv(struct device_driver *drv, void *data)
 +{
-+	struct scsi_cmnd *scmd = blk_mq_rq_to_pdu(req);
-+	struct scsi_device *sdev = scmd->device;
-+	struct bio *clone = req->bio, *master = clone->bi_private;
-+	struct block_device *bi_bdev = master->bi_bdev;
-+	unsigned int nr_bytes;
++	struct scsi_mpath_head *scsi_mpath_head = data;
++	struct scsi_driver *scsi_driver = to_scsi_driver(drv);
 +
-+	/* Don't generate error logs if we are going to try another path */
-+	if (blk_path_error(error))
-+		req->rq_flags |= RQF_QUIET;
++	if (scsi_driver->mpath_remove_head)
++		scsi_driver->mpath_remove_head(scsi_mpath_head);
 +
-+	if (scmd->flags & SCMD_MPATH_CNT_ACTIVE) {
-+		struct Scsi_Host *shost = sdev->host;
++	return 0;
++}
 +
-+		atomic_dec_if_positive(&shost->mpath_nr_active);
-+	}
-+
-+	if (!(scmd->flags & SCMD_MPATH_IO_STATS))
-+		return;
++static void scsi_mpath_remove_head_work(struct mpath_head *mpath_head)
++{
++	struct scsi_mpath_head *scsi_mpath_head = to_scsi_mpath_head(mpath_head);
 +
 +	/*
-+	 * blk_rq_bytes() value should never exceed start_bytes, but check in
-+	 * case.
++	 * scsi_mpath_remove_head_drv() could drop the final reference to
++	 * scsi_mpath_head, meaning that we pass a free'd pointer further
++	 * drivers - take a reference so that won't happen.
 +	 */
-+	if (scmd->start_bytes > blk_rq_bytes(req))
-+		nr_bytes = scmd->start_bytes - blk_rq_bytes(req);
-+	else
-+		nr_bytes = 0;
-+
-+	bdev_end_io_acct(bi_bdev, req_op(req),
-+			 nr_bytes >> SECTOR_SHIFT,
-+			 scmd->start_time);
++	scsi_mpath_get_head(scsi_mpath_head);
++	bus_for_each_drv(&scsi_bus_type, NULL, scsi_mpath_head,
++		scsi_mpath_remove_head_drv);
++	scsi_mpath_put_head(scsi_mpath_head);
 +}
 +
- int __init scsi_multipath_init(void)
- {
- 	return class_register(&scsi_mpath_device_class);
-diff --git a/include/scsi/scsi_multipath.h b/include/scsi/scsi_multipath.h
-index dca1307c9fa4..72ad109a9a81 100644
---- a/include/scsi/scsi_multipath.h
-+++ b/include/scsi/scsi_multipath.h
-@@ -60,6 +60,7 @@ void scsi_mpath_revalidate_paths(struct scsi_mpath_device *scsi_mpath_dev);
- void scsi_mpath_start_request(struct request *req);
- bool scsi_mpath_end_request(struct request *req, blk_status_t error,
- 			       unsigned int nr_bytes);
-+void scsi_mpath_end_request_no_update(struct request *req, blk_status_t error);
- #else /* CONFIG_SCSI_MULTIPATH */
+ static struct mpath_head_template smpdt = {
++	.remove_head = scsi_mpath_remove_head_work,
+ 	.is_disabled = scsi_mpath_is_disabled,
+ 	.is_optimized = scsi_mpath_is_optimized,
+ 	.available_path = scsi_mpath_available_path,
+diff --git a/include/scsi/scsi_driver.h b/include/scsi/scsi_driver.h
+index 249cea724abd..d92b63d357f2 100644
+--- a/include/scsi/scsi_driver.h
++++ b/include/scsi/scsi_driver.h
+@@ -8,6 +8,7 @@
  
- struct scsi_mpath_head {
-@@ -120,5 +121,9 @@ static inline bool scsi_mpath_end_request(struct request *req, blk_status_t erro
- {
- 	return false;
- }
-+static inline void scsi_mpath_end_request_no_update(struct request *req,
-+				blk_status_t error)
-+{
-+}
- #endif /* CONFIG_SCSI_MULTIPATH */
- #endif /* _SCSI_SCSI_MULTIPATH_H */
+ struct module;
+ struct request;
++struct scsi_mpath_head;
+ 
+ struct scsi_driver {
+ 	struct device_driver	gendrv;
+@@ -22,6 +23,9 @@ struct scsi_driver {
+ 	int (*done)(struct scsi_cmnd *);
+ 	int (*eh_action)(struct scsi_cmnd *, int);
+ 	void (*eh_reset)(struct scsi_cmnd *);
++	#ifdef CONFIG_SCSI_MULTIPATH
++	void (*mpath_remove_head)(struct scsi_mpath_head *);
++	#endif
+ };
+ #define to_scsi_driver(drv) \
+ 	container_of((drv), struct scsi_driver, gendrv)
 -- 
 2.43.0
 
