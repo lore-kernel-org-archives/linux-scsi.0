@@ -1,103 +1,78 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.172
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794120472;
-	b=XVGKEetwAl5RIBGQdOTeB52E3wTuQYs1/FO8lQ2D0dj40nUeQhLzYKerq79GFOOerNLu
-	 2h2ETG9BnZclOqaMBNyoXhW9AaenTxf+CafduOcVqrxwa2RimlIGlM1W+0EciR6s+53Xo
-	 Tu+VopSd/OXBy9YR3fGLo9JVIUsA+C9+lkZ7l1+P4zXAekN2sl5jBh7HYo4XjJev0gR6n
-	 zIDqYTRRLl8FpFRiQAFx3o5nfphtJcCrd5YJFs5cWDflzIIli8Py/gmGhlLpehXykRVjz
-	 OgdbjyMZdYrPbzrjiJf7Quyg7GY4pigJ8vDg7ihlNgIlZkaECiOjFzg+JYzUfMPfoTw==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794120472;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
-	 MIME-Version:Content-Transfer-Encoding;
-	bh=cKZVAumh7VUy5yuq+U1sG3RMnUiZQTey/FtdDJ1Gal4=;
-	b=VK5e5/U0TeVwkDMwJ8Ufd0L3x52yRfgNcTf4kHMF+fw7bKv/QP70STjj5V+xYPd+1TbM
-	 9YdwdODb4PffGIJeqND/kTY6NJl1MP4kHQdxkTFm/+qz8gR1T58XcAY6ciitYaNIdZzLu
-	 pCLM/KwTY4hW7YkOvJ+/mULk70QV1vhCR9rWNz82Z5o0jotMQBrqaZ3u9KLpOQmJIlOkg
-	 OYk6huHSMbPHmmCuiWZsr+gs8j8M+xBQ7MxO76q8L92IfZ3P7Etv42m0TjcBTNdue/8Uh
-	 343m7K8yWB3MJq7egKfxegZJO0rIW2F+myOH8NHKdUUuX5C3xigUe9C6j1cwrWfQYbA==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=yKM0CFgs;
-	arc=none smtp.remote-ip=74.125.82.172
-Received: from mail-dy1-f172.google.com (mail-dy1-f172.google.com [74.125.82.172])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1794128490;
+	b=Jp85bq/zqIuaCJsaMqWNuRQTHQ33EwOnzqko59pPxb6JsooaVLJ9H67bejKGjJwDc+Rv
+	 IIQg7UXHS/D223QWbUcTESuR+8kfLf0aq07NC5Dq89pUNBXjPLI8naTNVIQABkk5jdg8z
+	 T/fTyKwdCbVtNjkkP/gR1VhR1PYJdwgjLt7HlYOXnhynRwpMifnUpN3e0C595Qc6aDF8V
+	 J1OwBkotCCIWW2oXMT7WUbMJiYFOzzDLt+r0IGa7usLjcc/ksdPXJ3CGsxAgWCwsr2Cl6
+	 yw45Ad8U/WxqDhpyUWDBuk0oepmMoiJnNDIwu3AOBtfH51wjnPnXd5CSqKcbx0HZJNA==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794128490;
+	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
+	 Content-Type:Message-Id:X-B4-Tracking:X-Change-ID:To:Cc:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To:Content-Transfer-Encoding;
+	bh=GpRg0VY2yJJLJAO/hhT5l5/PBAi7YUoiPdqyzPaVAWE=;
+	b=KBAEaSjmxw4UMUrbVv+Vc2khPa0SJaTbCZI9ev2d/E4Cy/Fz/QftTa24ZLpt4a8qEiwH
+	 DC3KXUhE2dwauEjXGMS5oHOscrOSv9Da1iksFPl3C/KiTOOHfp8etpXNjzxYoO3oMNi//
+	 s8aU6q1uE0WZCojTqbFQP09a075cjt5B5jNpwTa2QLlw8AWPkKvuypkJGAxPjJzBtX6t3
+	 +Un5LFF1HpEHKqItPolqE9XiO+KPR5tbAdbXoOfoN0jCPzk59SBGJc0+V1KVbXAanCjTU
+	 jHSDE4quo+ehdd3xEMcdkXMx5zvAhWQpWMIlumlt05/Nkr5N+KosQvac3gU0iC+MGKQ==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="k/zMcDFa";
+	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E93E606A320;
+	Sun,  8 Nov 2026 09:01:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=k/zMcDFa
+Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
+ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
+	t=1794128489;
+	b=mQuTy7BYlghJ4xYVljfVdwDDF/yJPgfLkhDGElto1JnXhUU01/tiE+ljeuE4bkkQjlby
+	 GpGguOqq3hkE6ijSrVo/P4eKGHt8TDsWx0nxwObkzPkbUZVGDoUzkAZb49uIajumAQ8l2
+	 IHOniExmhHGvRjWmisKnD+c9td1+koNkq85yVO4l9ZKtTLZtXTxyxNkidBBNTVTuXvdtP
+	 JAcz4di3QT+I+7ugdC5Gp6HiDbNF4LcnLaZIHz4jzuJD+BV/2nJBbw8fGxOtLS/ixIXhg
+	 aNpz2BiTvDk2uicDdCJCJsZ6JkdvLljl5gFOxwTGFkygivwbqzdrk6fUWsE4FBgVFmA==
+ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
+	c=relaxed/relaxed; t=1794128489;
+	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
+	 Message-Id:X-B4-Tracking:X-Change-ID:To:Cc:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To:Content-Transfer-Encoding;
+	bh=GpRg0VY2yJJLJAO/hhT5l5/PBAi7YUoiPdqyzPaVAWE=;
+	b=dlapjvgQ+Mae6G5M+0oR33ef759lyoGpoBvPOgY/xGcYgi0L9B8YDV0uT6dmDrniEg9t
+	 fHbbZqAyaiTz5qQC3tipKIoqvR3lJ7zyam2x+AhGz1eEvEMSvMoPhBBePp19wpoMrxbTT
+	 N17M4K4qMd2zPUWoKHhnaiYjnxWZzOGt/Fgt/TqHOPgBLYyV/4iI392G7w65IMNyjULkW
+	 9m9z7Zj5n2ScZu5SIqemW+yCjBVyQj9ZMulDhDebsTOuOeimcBTCsgH0ZUNs1sOFF+xMD
+	 MsfPY3lcuoTzonIntEs49n1EZs5/6RVUbn1f+QsAOVIdmt64MwrAcT7Ph+KdfexieUw==
+ARC-Authentication-Results: i=1; smtp.kernel.org; 
+	arc=none smtp.remote-ip=100.80.115.77
+Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 623A3606A31A
-	for <linux-scsi@vger.kernel.org>; Sun,  8 Nov 2026 06:47:52 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 623A3606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=yKM0CFgs
-Received: by mail-dy1-f172.google.com with SMTP id 5a478bee46e88-33fb4680717so600030eec.1
-        for <linux-scsi@vger.kernel.org>; Sat, 07 Nov 2026 22:47:52 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1794120471; x=1794725271; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=cKZVAumh7VUy5yuq+U1sG3RMnUiZQTey/FtdDJ1Gal4=;
-        b=yKM0CFgsy3uOk0v7hg0qZnjSn0Ndk4B798CoyjTJAdcGju0+LCU7fVjHLF4GcPSQ26
-         RXEYTrlsy5c2MftfSL6Ha65ta3uGXbCYR77lhkFFj6hTV+Or0XorCRHRl9dPeGEuAWgY
-         mKNjdwFL5koQjaaA0FaI5gKyNB+rUTfyfdmxBbbaVDaty3Yj0EMdzI3QbAiIEdwRjm8g
-         w6xhKwdRXLOMpoBRgu2iB4icwo7kNGHJ7Ag8m8krRQ3+cgvmsPRo5pvlD4QF9E+NKozm
-         zsptjvz+3HAOP5IQL4vF2ezAOozp10sNF43zz9vAErXMLgcnpDS15PpJtCoCTx9Of0CD
-         Vn9g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794120471; x=1794725271;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=cKZVAumh7VUy5yuq+U1sG3RMnUiZQTey/FtdDJ1Gal4=;
-        b=R43xGT1D/j2v1LU07SyvW6WwIxoN5h/4H658/qH+bMRZh1SHZNx34pbiAkNk/VySDt
-         4f00xfezfWk7iY7xVar9FL7NzvOl9o1MS7YtP4M/EHYUCmMaLYMZlJt0POxVFm8Y9Odd
-         hTPR0XkoqFmJDiYI2ziB9p1RFYpodC63uivk1v4i13ojP/ZmXQlZ7MBjZ7GBuYZ6TCLk
-         Ig+eL7ghcIWI+3jUSPdqzvThTRQu+TKEuqyYDju3KxpWHol1MOpdYNXD4IYXmsDmsOO1
-         +WO2A4PX5FmbWrG9JMq2MLaAhe4IJnotld9PT7yNq3AINEVjV0MUtvA2cUHiadc6zN7C
-         0SPg==
-X-Forwarded-Encrypted: i=1; AL+hErE1rsbc0MKrCXVWn87gLhVi7q0TjfGISpj3NTiGZ/gFI+wHVYClWkZXn/aqzVtTmskKFSHgXff1fekT@vger.kernel.org
-X-Gm-Message-State: APuU4Z9qCxQ/pT6WmFB6VuRhwOJEzUxU+xSsILZLgspRoBUJ2yjFwCUX
-	/2oj70BFvCMZW/Nnd4JkDwYypPcax5SV5cIaTlLL49+OPK4HDucDdXyw
-X-Gm-Gg: AYBFou2mCoLjtSSR0oM0pFDYeXm6HLTi2nkDlpZl7RIhyS3xTXZoZbW3Pxlu2k+/1ni
-	BTRNfuAJTkv9CH9GQpFdvOXvEhKcck/ph5DI/ui0t3yxkkfpnOl5z3Vmb5J51YrQJwCznnXFW0j
-	P6kYhIQbhedM2PRTdWvcxajmFnaTrr0hVs0aPtNnLPuaDK9Nxii7x+dayvxumT0Zy4iyvIUmXW3
-	bXq2btZ/ayO8Q7CRRSY/JT10E0L/FRBl73qetrLwNOcaUinQrFSFtGN1jNLkQsTL5u+mcAmvBOf
-	dJmdksjktdXkOa8jbLb5pQuL7b4u0krdNcnDEtklarKPoNCIdBcRAF7FSNp620MNl/ws3Wimwc8
-	My2kNMt7FIrWFNZmDCGmo7PnO0VBn7AE40gN6sfntgQ5i9tdM1q4Qxlrcureg8N19hBQbSfQyh8
-	v5u7MLvMDrR0QCnXKoM3yCzz3Ue33uWTT/Uyy2wZGQY1/bAJN53Dvk4XA2WP8Oq3/iVfWGYA1Jv
-	PYC/0TaWE1+M+qr1oaNHbRoQQnhqO/ilPkeGrZek3427xncX5bEdc2bzUMhlSTwd75HH8q1I360
-	wZIupQzVygwRG1OT2pf7lw6ohK8MRSgS8jju4C2BbYyBzlCArSRuqktxVMcZjNaCj2BCIUIdvNA
-	KLGjit+gBCM/RG59r+I0Q+oZbpQ==
-X-Received: by 2002:a05:7301:7305:b0:369:d779:bcb8 with SMTP id 5a478bee46e88-3724fd69ac0mr1973804eec.0.1794120471293;
-        Sat, 07 Nov 2026 22:47:51 -0800 (PST)
-Received: from localhost.localdomain ([2406:b400:d4:acc8:a024:59b8:c312:eefd])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3726039c635sm3190224eec.0.2026.11.07.22.47.44
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 07 Nov 2026 22:47:50 -0800 (PST)
-From: Torra Sowmya <sowmyatorra@gmail.com>
-To: James.Bottomley@HansenPartnership.com,
-	mkp@kernel.org
-Cc: johannes.thumshirn@wdc.com,
-	axboe@kernel.dk,
-	dlemoal@kernel.org,
-	bvanassche@acm.org,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	outreachy@lists.linux.dev,
-	rostedt@goodmis.org,
-	julianbraha@gmail.com,
-	julia.lawall@inria.fr
-Subject: [PATCH] scsi: sd: Remove unused zone append tracepoints
-Date: Sun,  8 Nov 2026 12:16:26 +0530
-Message-ID: <20261108064626.5539-1-sowmyatorra@gmail.com>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20261025151702.13434-1-sowmyatorra@gmail.com>
-References: <20261025151702.13434-1-sowmyatorra@gmail.com>
+	by smtp.kernel.org (Postfix) with ESMTPS id 4B2AB1F008A1;
+	Sun,  8 Nov 2026 09:01:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794128489;
+	bh=GpRg0VY2yJJLJAO/hhT5l5/PBAi7YUoiPdqyzPaVAWE=;
+	h=From:Date:Subject:To:Cc:Reply-To;
+	b=k/zMcDFasnTEINl1VjKcWEMRTjm5Jh0P8/CRIXuf6jX3TzWaTmApeW48wuXKXGST3
+	 IcqcpL3PBc1lm7Fc9Y88opbh0aMS2jXZwyCjwuLXtALsJZ08bMl4rAgH32EeCuB4aV
+	 lLgVRiZW7taoWoTVjdylaaUnceNwBm7BtnQeFqG6kZe3AHY18VNXOD9i69J3a+O0G1
+	 E/RHmO4pUKfsvlZVakRNhsCpXH3gV6iBzV8LVjQ5iqWHzHF8xHZZLg707jrzZzhYJ6
+	 7sv/gs0U9Zr1S0MYqVVdoBJTnrbDL2ORmG8MK+sxKRmlJ64EoeqLwgBFWbCWp8uhnq
+	 x8hm23wspqq1A==
+Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
+	by lkml.kernel.org (Postfix) with ESMTP id 9C70047E8B;
+	Sun,  8 Nov 2026 09:01:28 +0000 (UTC)
+From: Weidong Wang via B4 Relay <devnull+weidongw.illinois.edu@kernel.org>
+Date: Sun, 08 Nov 2026 03:01:08 -0600
+Subject: [PATCH] scsi: libfc: Fix rport kref leak in fc_rport_enter_ready()
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -107,130 +82,109 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Message-Id: <20261108-h123-send-v1-1-b7672ff849f0@illinois.edu>
+X-B4-Tracking: v=1; b=H4sIAFQ68GoC/yXMTQ5AMBBA4avIrDVpK62fq4gFNRiLkg4iEXdXL
+ L/k5V3AGAgZquSCgAcxLT5CpQm4qfUjCuqjQUttlZKFmJTOBKPvRa6zFjtjjLQlxH4NOND5ver
+ mN+/djG57B3DfD6dLQpptAAAA
+X-Change-ID: 20261108-h123-send-723aeb555069
+To: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <mkp@kernel.org>
+Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+ linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ stable@vger.kernel.org, Weidong Wang <weidongw@illinois.edu>
+X-Mailer: b4 0.16.0
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1794128488; l=3067;
+ i=weidongw@illinois.edu; s=20261108; h=from:subject:message-id;
+ bh=xRn4o4Xo2uz0/atqmK0OD/T0n88c9mKnmN8e3Rc+YrY=;
+ b=ngBmio2Hk2lkCkJjxTpsOfHS9AbXORBCnJtDD9yLk5LY7hbmvytIqliR2ttZ/XpS895htJMUv
+ dse4I3xbIYjAOwbCFYb3gErrliNJKx5rQ1Es4Ysza6RL/Hu/WnCgjLQ
+X-Developer-Key: i=weidongw@illinois.edu; a=ed25519;
+ pk=DR2S1xPEa5sELrWPfOpvUphJQ2VHC+MDc/wJavE/ifg=
+X-Endpoint-Received: by B4 Relay for weidongw@illinois.edu/20261108 with
+ auth_id=1449
+X-Original-From: Weidong Wang <weidongw@illinois.edu>
+Reply-To: weidongw@illinois.edu
+Content-Transfer-Encoding: 7bit
 
-Commit 1846f308d66f ("scsi: sd: Use the block layer zone append
-emulation") removed the calls to scsi_prepare_zone_append and
-scsi_zone_wp_update, but left their definitions in sd_trace.h.
-Consequently, sd_zbc.c still generates code and data for events
-that have no remaining callers.
+From: Weidong Wang <weidongw@illinois.edu>
 
-Remove sd_trace.h, which contains only these two events, and
-remove its include and CREATE_TRACE_POINTS definition from
-sd_zbc.c.
+fc_rport_enter_ready() takes a reference on the rport unconditionally,
+but only queues event_work, whose handler drops that reference, when no
+event is pending. If rdata->event is already set, the && short-circuits
+past both queue_work() and the compensating kref_put(), so the reference
+is leaked and the fc_rport_priv is never freed.
 
-Fixes: 1846f308d66f ("scsi: sd: Use the block layer zone append emulation")
-Signed-off-by: Torra Sowmya <sowmyatorra@gmail.com>
+This is reachable from the wire: a PLOGI from a well-known address goes
+straight to fc_rport_enter_ready(), and a second PLOGI for the same
+S_ID while RPORT_EV_READY is still pending enters it again. After the
+rport is logged out, kmemleak reports:
+
+  unreferenced object 0xffff888... (size 512):
+  backtrace:
+    __kmalloc_noprof
+    fc_rport_create
+    fc_rport_recv_req
+    fc_lport_recv_els_req
+    fc_lport_recv
+    fcoe_receive_work
+
+Commit 823a65409c89 ("scsi: libfc: Skip additional kref updating work
+event") fixed the same pattern in fc_rport_enter_delete(). Do the same
+here: only take the reference when no event is pending, i.e. when the
+work is actually going to be queued.
+
+The issue was found with an LLM-based bug-finding tool; the reproducer,
+fix and changelog were drafted with AI assistance (Claude), then
+reviewed and tested by the submitter.
+
+Fixes: 4d2095cc42a2 ("scsi: libfc: Revisit kref handling")
+Cc: stable@vger.kernel.org
+Signed-off-by: Weidong Wang <weidongw@illinois.edu>
 ---
- drivers/scsi/sd_trace.h | 84 -----------------------------------------
- drivers/scsi/sd_zbc.c   |  3 --
- 2 files changed, 87 deletions(-)
- delete mode 100644 drivers/scsi/sd_trace.h
+Tested on v7.4-rc1 (05441d697f7f), x86_64, KASAN + kmemleak, QEMU/KVM.
+Reproducer: software FCoE instance on lo; raw FCoE ELS frames injected
+with AF_PACKET (PLOGI from well-known S_IDs 0xfffc01.., a second PLOGI
+for the same S_ID while RPORT_EV_READY is pending, then LOGO), 120 rports.
 
-diff --git a/drivers/scsi/sd_trace.h b/drivers/scsi/sd_trace.h
-deleted file mode 100644
-index cba3c0b825ba..000000000000
---- a/drivers/scsi/sd_trace.h
-+++ /dev/null
-@@ -1,84 +0,0 @@
--/* SPDX-License-Identifier: GPL-2.0 */
--/*
-- * Copyright (C) 2022 Western Digital Corporation or its affiliates.
-- */
--#undef TRACE_SYSTEM
--#define TRACE_SYSTEM sd
--
--#undef TRACE_INCLUDE_FILE
--#define TRACE_INCLUDE_FILE sd_trace
--
--#if !defined(_SD_TRACE_H) || defined(TRACE_HEADER_MULTI_READ)
--#include <scsi/scsi_cmnd.h>
--#include <scsi/scsi_host.h>
--#include <linux/tracepoint.h>
--
--TRACE_EVENT(scsi_prepare_zone_append,
--
--	    TP_PROTO(struct scsi_cmnd *cmnd, sector_t lba,
--		     unsigned int wp_offset),
--
--	    TP_ARGS(cmnd, lba, wp_offset),
--
--	    TP_STRUCT__entry(
--		     __field( unsigned int, host_no )
--		     __field( unsigned int, channel )
--		     __field( unsigned int, id )
--		     __field( unsigned int, lun )
--		     __field( sector_t,     lba )
--		     __field( unsigned int, wp_offset )
--	    ),
--
--	    TP_fast_assign(
--		__entry->host_no	= cmnd->device->host->host_no;
--		__entry->channel	= cmnd->device->channel;
--		__entry->id		= cmnd->device->id;
--		__entry->lun		= cmnd->device->lun;
--		__entry->lba		= lba;
--		__entry->wp_offset	= wp_offset;
--	    ),
--
--	    TP_printk("host_no=%u, channel=%u id=%u lun=%u lba=%llu wp_offset=%u",
--		      __entry->host_no, __entry->channel, __entry->id,
--		      __entry->lun, __entry->lba, __entry->wp_offset)
--);
--
--TRACE_EVENT(scsi_zone_wp_update,
--
--	    TP_PROTO(struct scsi_cmnd *cmnd, sector_t rq_sector,
--		     unsigned int wp_offset, unsigned int good_bytes),
--
--	    TP_ARGS(cmnd, rq_sector, wp_offset, good_bytes),
--
--	    TP_STRUCT__entry(
--		     __field( unsigned int, host_no )
--		     __field( unsigned int, channel )
--		     __field( unsigned int, id )
--		     __field( unsigned int, lun )
--		     __field( sector_t,     rq_sector )
--		     __field( unsigned int, wp_offset )
--		     __field( unsigned int, good_bytes )
--	    ),
--
--	    TP_fast_assign(
--		__entry->host_no	= cmnd->device->host->host_no;
--		__entry->channel	= cmnd->device->channel;
--		__entry->id		= cmnd->device->id;
--		__entry->lun		= cmnd->device->lun;
--		__entry->rq_sector	= rq_sector;
--		__entry->wp_offset	= wp_offset;
--		__entry->good_bytes	= good_bytes;
--	    ),
--
--	    TP_printk("host_no=%u, channel=%u id=%u lun=%u rq_sector=%llu" \
--		      " wp_offset=%u good_bytes=%u",
--		      __entry->host_no, __entry->channel, __entry->id,
--		      __entry->lun, __entry->rq_sector, __entry->wp_offset,
--		      __entry->good_bytes)
--);
--#endif /* _SD_TRACE_H */
--
--/* This part must be outside protection */
--#undef TRACE_INCLUDE_PATH
--#define TRACE_INCLUDE_PATH ../../drivers/scsi
--#include <trace/define_trace.h>
-diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
-index 56e455fb5add..a7bdf089e142 100644
---- a/drivers/scsi/sd_zbc.c
-+++ b/drivers/scsi/sd_zbc.c
-@@ -20,9 +20,6 @@
+                   2nd enter_ready with    kmemleak unreferenced
+                   event pending           fc_rport_priv (512 B)
+  unpatched        116                     99
+  patched          104                     0
+
+READY/delete work events are processed the same with and without the
+patch; no KASAN/UBSAN/WARN splats. checkpatch clean, no new W=1 warnings.
+The reproducer can be shared on request.
+---
+ drivers/scsi/libfc/fc_rport.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
+index c25979d96..7b0938544 100644
+--- a/drivers/scsi/libfc/fc_rport.c
++++ b/drivers/scsi/libfc/fc_rport.c
+@@ -550,10 +550,11 @@ static void fc_rport_enter_ready(struct fc_rport_priv *rdata)
  
- #include "sd.h"
+ 	FC_RPORT_DBG(rdata, "Port is Ready\n");
  
--#define CREATE_TRACE_POINTS
--#include "sd_trace.h"
--
- /* Whether or not a SCSI zone descriptor describes a gap zone. */
- static bool sd_zbc_is_gap_zone(const u8 buf[64])
- {
--- 
-2.47.3
+-	kref_get(&rdata->kref);
+-	if (rdata->event == RPORT_EV_NONE &&
+-	    !queue_work(rport_event_queue, &rdata->event_work))
+-		kref_put(&rdata->kref, fc_rport_destroy);
++	if (rdata->event == RPORT_EV_NONE) {
++		kref_get(&rdata->kref);
++		if (!queue_work(rport_event_queue, &rdata->event_work))
++			kref_put(&rdata->kref, fc_rport_destroy);
++	}
+ 
+ 	rdata->event = RPORT_EV_READY;
+ }
+
+---
+base-commit: 05441d697f7f9a927264f4058cbbc6a03dfcac9d
+change-id: 20261108-h123-send-723aeb555069
+
+Best regards,
+--  
+Weidong Wang <weidongw@illinois.edu>
+
 
