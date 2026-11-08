@@ -1,111 +1,132 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=216.71.154.45
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1794143291;
-	b=Z4Szxc8LuLZMP22FfUD7jf9GqYwLp1+dvp5lGjR98Am0Oc5uIS3hgyg6x+pQ6WSoncRp
-	 28qRVFwOciaUaRUAc2KwgvdTPZ41vEXjnW3tY+RuCcaLktt2WJV2mAFfvLVMR/+DIdR38
-	 Ljb1jAqry6PnvU9glx4XVMkCKP2yTZo/M1HXcN0mni9WbI/IT1kw/UeYH5aoOnUczN/lJ
-	 sjv0bWjOuvScxiu21VULI9OEXw81ie3uMZOJ8+IujpUS9/U77zrpKoNrho4MM9nhi0bbS
-	 AiX/p+R/JjOCKtcjwQ2E9djNQtvXuEw+HWhFl1kH1/CbwOu/RUxJm7jQAEIVD8AzhEw==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794143291;
-	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
-	 X-IronPort-AV:Received:DKIM-Signature:Received:Received:Date:From:To:
-	 Subject:Message-ID:Content-Type:Content-Disposition:X-ClientProxiedBy:
-	 MIME-Version:X-MS-PublicTrafficType:X-MS-TrafficTypeDiagnostic:
-	 X-MS-Office365-Filtering-Correlation-Id:WDCIPOUTBOUND:
-	 X-MS-Exchange-SenderADCheck:X-MS-Exchange-AntiSpam-Relay:
-	 X-Microsoft-Antispam:X-Microsoft-Antispam-Message-Info:
-	 X-Forefront-Antispam-Report:
-	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
-	 X-MS-Exchange-AntiSpam-MessageData-0:X-Exchange-RoutingPolicyChecked:
-	 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount:
-	 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:X-OriginatorOrg:
-	 X-MS-Exchange-CrossTenant-Network-Message-Id:
-	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
-	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
-	 X-MS-Exchange-CrossTenant-FromEntityHeader:
-	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
-	 X-MS-Exchange-CrossTenant-UserPrincipalName:
-	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=XuOpCGStdqP6saibhZVYx9/3/yVAFhW23UR2yrzxiNs=;
-	b=wX8ZibdJX39k6ChaNf+yxIrmt5nJuZg0Gva+84Uu0CCsjhSOGUZXSn4A5I0GWWtfLRQo
-	 69EjrSyd26QNGAMSGyTV14Gx7BZENm7Qc5xL+FXLlFaMVBjpjApCIR481WyObBIkngY+l
-	 1beH9pIDKYVBqgr1kPTPVO5jtgV6QkrjndLSNBw1ASE98CNIPlbzEmtPU80Lev+t5KeNx
-	 VALktWW7+18M7SCmlWO/XTDBqrNgJBTKZoTS0D15Lr/avO8Bmz0yIaFxU+HOJAlCDfrCy
-	 XB0g/btZap955S99qv5bt+FdTqbzoI2xRRkmq7LVlvUH2kDD4s/udUfouzkPLXBK86Q==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=wdc.com;
-	spf=pass smtp.mailfrom=wdc.com;
-	dkim=pass header.d=wdc.com header.i=@wdc.com header.a=rsa-sha256 header.s=dkim.wdc.com header.b="jd69/sGs";
-	dkim=pass header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.a=rsa-sha256 header.s=selector2-sharedspace-onmicrosoft-com header.b=B6B8wRCC;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=216.71.154.45
-Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.129.124
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1794156954;
+	b=Mey0US8D02uI2t7jD0fg6s8NW312c7HG0H5Jminb5KQvshclQfweMLfDxHXp5ww2V8/g
+	 /Mb1EUOD2MPOsAVS9F12f/B0R6Hb4Yu4FUIAl4u3B4iDY81on9bTX4+dDISJcfAkQAfdA
+	 /YQC13rq6ij3ES370IaI524adLTrnicZRHgh/olYzyb1yu6UoSPTk3uWbnDvvd8YfrQPM
+	 FnaNfyjBqw/53kxRLBu10aUYDbMbQLUNGTrO5QVSaykChBkpZSx7NoJYSuvOpRdxYB6gH
+	 KSsTBWDYXc/FIYNAhU0KF8xUmZF/VWWBW1+2b5Eutd5z5j6tXGQ1b2yM0dxWSQ7XcTg==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794156954;
+	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
+	 X-Mimecast-MFC-AGG-ID:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
+	 X-Received:Received:Message-ID:Subject:From:To:Cc:Date:In-Reply-To:
+	 References:Content-Type:Content-Transfer-Encoding:User-Agent:
+	 MIME-Version;
+	bh=5clIn+ab69f599ujad42Koar5tkf18xn+pTKzRnZxkc=;
+	b=kV8UPO6MbPW2GIEhmUg172jEJpQNB5MNe6iFJZDHzCabO4ucteT85Rvkzr7cLAMEKhW1
+	 HPEU60pLXYSQyY/9h5wNcc9Q35v4OiXQMlVMuTChxrvoIpdNO0Z42bs7IhiI7xs7Ip3tZ
+	 8VqSm00QsepZTrVALOPB/otRwCr3sBEG4nMiSZUbT7UWvONS30pANKYpECxRlua3IMdeZ
+	 79jkDrd0VZy0TV8OnQN5a0psa6OJSYFAFNm5q66iUwbIWHhZHcFaycVdcmr15fL+LLhhR
+	 m8W1u9iQ0VVzFHQubKlJJmRaXvyWdkEIN3TMvaAejpZ+H7UmlP3egRTXGStWHhN7oPA==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=redhat.com;
+	spf=pass smtp.mailfrom=redhat.com;
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=NsqPxGrV;
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=hbCm5wxD;
+	arc=none smtp.remote-ip=170.10.129.124
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC789606A31C;
-	Sun,  8 Nov 2026 13:08:10 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org DC789606A31C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B184606A320
+	for <linux-scsi@vger.kernel.org>; Sun,  8 Nov 2026 16:55:53 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9B184606A320
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=wdc.com header.i=@wdc.com header.a=rsa-sha256 header.s=dkim.wdc.com header.b=jd69/sGs;
-	dkim=pass (1024-bit key, unprotected) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.a=rsa-sha256 header.s=selector2-sharedspace-onmicrosoft-com header.b=B6B8wRCC
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1794143290; x=1825679290;
-  h=date:from:to:subject:message-id:mime-version;
-  bh=33hZiLVGSk4X9IrkhrEMHPj+c/qTu/ht9FLxTKGIWSs=;
-  b=jd69/sGslPlFBJf9j5PB2jDNNBga4xGaXpOFakJw1hR0boVu2MBMQWag
-   syFGPmzaizWMdtovCoMPOl+yCy5prubbfY0abLyEB9qhPBjZLnua2mhBG
-   4lVGweeK617kgComEekaUlbSczjc6Wg5J8CCtQucXz+9O7Bb1S6e53PkE
-   CyxLgNWJnfqkDdSOR0Dcc//VfG1yyOR/w9XWigHbPew9hR5z0FNg2CG55
-   X94Rds/+1Bo866acIzfiqC5eLGNo8IScBGwW311ccJXzgkYheP1AbIcas
-   LWjLuzyCTuJ5hLv5cRj55ZHrxSpslH63qLAn706dJNbD67BUxcdShh+xK
-   w==;
-X-CSE-ConnectionGUID: eHxu+nhgQK+1I/xWQhPFCg==
-X-CSE-MsgGUID: jW9voZmnQwu8Mtl7Gk0BmA==
-X-IronPort-AV: E=Sophos;i="6.27,202,1786982400"; 
-   d="scan'208";a="158627367"
-Received: from mail-westus3azon11011009.outbound.protection.outlook.com (HELO PH0PR06CU001.outbound.protection.outlook.com) ([40.107.208.9])
-  by ob1.hgst.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 08 Nov 2026 21:08:10 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=kp64+L90GN1i+UngZmb7/raQNqbGCuSG6sKJzSxRwYNHcllhhUR4KCzl/yLHCi2tJzPaOMnuNZxPtLPdZGxhzGgZth7QwFbLdm6Hv42yz72jtCxPgOSxy3RcMq/8ujP2c+vtfPG14McfUmzVQRGcIhqAuZ1O62mD4U9Py5D8EGSqX1j8SS5AnwjX2VIBLVPcPetdrlyLnZ7n+znOiPn2g74cMo9bKOv5DucQGD+D1kEJtv9/kB3H/WvUAPanm8KtlECxwX7Zrtgyi5QUkYfYUYQzZw2AJyXTalm0IuM+zaDCUn8lh/Tc7lTb84dp4oRxxeG78pGNb1VbFCQbC6TXxw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=XuOpCGStdqP6saibhZVYx9/3/yVAFhW23UR2yrzxiNs=;
- b=hfqz8FTad79gN+Kcp8yqAhe4B+53fSysK8BZMAPr9+Pwi+jMUzQtFMfiZGKyzStUGjykJBZKeGjyeRWSYas9r0PLA38qSt2KdgsyH5Lnec6MJyZcMLxyLMZtYselzKKDpwl7bmxC2FLgFly1iX2S2Gtr0rnPTNeZR7WtMKIBsPiwEQO3aFYsi7kSqYFdNxXW40T5lUMxJEMCgIMZtHDGKPPhor4+aUzz2zkhrgQJ/ZhI5TCUzzbFxR5vNxnbtVCWhSnsqLUPb0WqfcC26YWSkfDqP+6mDhJkny4UGu7L0H4MBkJ/TJ0hXdgfkZOWZlKiKNNfxbJGYG9IGfPTafIe5w==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=NsqPxGrV;
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=hbCm5wxD
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1794156952;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=5clIn+ab69f599ujad42Koar5tkf18xn+pTKzRnZxkc=;
+	b=NsqPxGrVQJsYLfFXHR9KSa8uhJNA17swjEhsNA1CCPBbXMBO0Kt0V6EHAv9zU1dFifl8KH
+	xvzy8GjxfuJbMdWoNc2Lp2UYAaJsdvyG79qJM2QeN029X9eYFV5u2MIcVvUKad1x2b2jpi
+	fwhcWkQbbe3auJo7cfGqtYU4wLah06A=
+Received: from mail-qk1-f200.google.com (mail-qk1-f200.google.com
+ [209.85.222.200]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-675--nguIcrrM16fvcING0qNRQ-1; Sun, 08 Nov 2026 11:55:51 -0500
+X-MC-Unique: -nguIcrrM16fvcING0qNRQ-1
+X-Mimecast-MFC-AGG-ID: -nguIcrrM16fvcING0qNRQ_1794156951
+Received: by mail-qk1-f200.google.com with SMTP id af79cd13be357-93f37c94ceeso45271085a.1
+        for <linux-scsi@vger.kernel.org>; Sun, 08 Nov 2026 08:55:51 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=XuOpCGStdqP6saibhZVYx9/3/yVAFhW23UR2yrzxiNs=;
- b=B6B8wRCCLeDcJ3pYoWAytowC4MORtl7SVP8cMbmNwhDeoqP0GHtLu3LvenyZAnF9cW/HhVohoVyy+7z+TX+DoD6pFSdxJ0fq/bfU+7qfZJUoJz6sW1c470DV3CpR/NSBmFtYYVZ44VitRPD1iQpJzy6XyCYFX4/jd2oIN9F9B28=
-Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=wdc.com;
-Received: from SA1PR04MB10065.namprd04.prod.outlook.com
- (2603:10b6:806:4dd::14) by PH0PR04MB7525.namprd04.prod.outlook.com
- (2603:10b6:510:5f::9) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.592.12; Sun, 8 Nov
- 2026 13:08:08 +0000
-Received: from SA1PR04MB10065.namprd04.prod.outlook.com
- ([fe80::9b98:bf8a:b0b1:ef85]) by SA1PR04MB10065.namprd04.prod.outlook.com
- ([fe80::9b98:bf8a:b0b1:ef85%5]) with mapi id 15.21.0592.010; Sun, 8 Nov 2026
- 13:08:08 +0000
-Date: Sun, 8 Nov 2026 22:08:03 +0900
-From: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-To: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, 
-	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, 
-	nbd@other.debian.org, linux-rdma@vger.kernel.org
-Subject: blktests failures with v7.4-rc1 kernel
-Message-ID: <avBz7uOGYo2y426_@shinmob>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-X-ClientProxiedBy: TYWPR01CA0016.jpnprd01.prod.outlook.com
- (2603:1096:400:a9::21) To SA1PR04MB10065.namprd04.prod.outlook.com
- (2603:10b6:806:4dd::14)
+        d=redhat.com; s=google; t=1794156951; x=1794761751; darn=vger.kernel.org;
+        h=mime-version:user-agent:content-transfer-encoding:content-type
+         :references:in-reply-to:date:cc:to:from:subject:message-id:from:to
+         :cc:subject:date:message-id:reply-to:content-type;
+        bh=5clIn+ab69f599ujad42Koar5tkf18xn+pTKzRnZxkc=;
+        b=hbCm5wxDrXfgqKa/QGGbAD1Qh4yBpwoRN64DpO4NVqJuHJ37RMZ7hwhnwHznKIFoGN
+         dGWC96rX4gO9cjy4Ir/IoPDkS7fviQvS91g3nROM8W5uH1dwBWkqn8b2TSu5ZdnEdC/H
+         SgVk58mU+awxkC4GAUDfVamnbBfQ+x9+LZ5lBI7AHE7s+faNvrlzgsaOE8RiyhCiZRaL
+         7xyW1hVETqvC9Q1hPkrn+9fD2cPH+z8REN8K1bnt75CNniVaEm9cFTjBZVwtAfdjpfSN
+         i0Mdz/U9DFu/15BzcXjFijypIRZpRmpe1KXh3ggLcT+Tj8W2GlFBsvTNdkusO25w8EvZ
+         Jepw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1794156951; x=1794761751;
+        h=mime-version:user-agent:content-transfer-encoding:content-type
+         :references:in-reply-to:date:cc:to:from:subject:message-id:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=5clIn+ab69f599ujad42Koar5tkf18xn+pTKzRnZxkc=;
+        b=cgwZ+Teh7/xvYXSC3P84/K2M39KA9eDSF8dtLxaLIFZkQdnRt2eehrY1W3G3KMxYff
+         65f66FOZWpez0ODnNZIzZv1OgvqNkT8mNt1KvMa3JKUTc+tvljhJknHhRcfeJ/uXaqzQ
+         ptngcRaX6dTMOlAbGc0N9k33W3z/z2OOjs0LE5c9xUGpJc1na9w5g9BLyWVb07Tyq4iT
+         Uqi9Pda7ypZ3HWuJmPXaMj+qX5b4qYqs92hboZVpPxw6X3Il8wKY8DBMsnuCkNZh9/BR
+         EGYruxKFQByi0gCtp+IK7+7UpHdSkJ/W6vLQ975uFYh+g9bl50wT1O4RlU7hRcMzOWMp
+         5Wnw==
+X-Forwarded-Encrypted: i=1; AL+hErFzdNAfMYcGMhJpsipDP/6enIWaogCqX1hyZf9GD5VUuhtXbUfJGeyuCqMYD9MU0CPNorLKvycO/g8F@vger.kernel.org
+X-Gm-Message-State: APuU4Z+x7B7lPmsy/XPMB/4FRmguNbEmQRkA/9J6PN08feqMRAW7S5fy
+	TsLuwJq436VusOsLd05JD8BfjxYho+LAc9CEy6AA6g72DXsMxXLncx+7oNaibdlY0R93kIyO0hd
+	O5VmTAV7niWpRywkLtzQ4JMBWDtTNBDTAX5Zw/q/v4Szue26nOLi38ZwFg2xsxYo=
+X-Gm-Gg: AYBFou2BJuqVvP2MYSHOdGSjPjgGSOJclvg0lI18gtxKGgFsjXZkZO243IZDvXh88DR
+	sqLtDGNIR4NCzTMXBVjx77BOVCMeeUbCeEUxexG3jkxYy0Cax6gwCQsAjALRgQrdmyzSzUo/mnp
+	8SL6WDjmvmsssMKADoQXC9hl1AI8zoxFgb9o7kCw4vk0euUza76c9C9UFCe5NGc9wjDz8lnzAAj
+	x9AlOccTmwOhDDuR5nr/jrqLEqYMTHSxZmU9YX3QdqYr53UlFtO5B9uUhEry3ugfGURVa61umNG
+	/OfNlnmqYidJmbY0Ex5xmHOeG43VvWqUY0rntC172hEVzSymxMyyaXP5NDNV25ygOqSzBGB4Uam
+	o0oA6rSyGmZyIKT2bQIfTk+ZP1MqIUTQ/D1WPrJ4sfmpH1HJn3CTR34CKVS++h7KC4OtX7TQs6G
+	Ipe5o21pmDy+kf4r3BmLfKEE7madGtsGsRBqFNluaXE+WvGfYrmJuDaP6hGZXgP7TPHcjh8g==
+X-Received: by 2002:a05:620a:1724:b0:93f:1789:8359 with SMTP id af79cd13be357-94604dd4bc2mr725762885a.31.1794156950619;
+        Sun, 08 Nov 2026 08:55:50 -0800 (PST)
+X-Received: by 2002:a05:620a:1724:b0:93f:1789:8359 with SMTP id af79cd13be357-94604dd4bc2mr725760485a.31.1794156950063;
+        Sun, 08 Nov 2026 08:55:50 -0800 (PST)
+Received: from loberman-thinkpadp1gen5.rmtusma.csb ([2600:6c65:2440:d8c:929c:b769:6def:faa3])
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-94782ccaea3sm250464985a.4.2026.11.08.08.55.48
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 08 Nov 2026 08:55:49 -0800 (PST)
+Message-ID: <b6b39c415514de821d8a71cefda41f3d4f53405a.camel@redhat.com>
+Subject: Re: [RFC PATCH] scsi: qla2xxx: Use the real INTx pin for the port
+ number on Hyper-V guests
+From: Laurence Oberman <loberman@redhat.com>
+To: Michael Kelley <mhklinux@outlook.com>, "njavali@marvell.com"	
+ <njavali@marvell.com>, "martin.petersen@oracle.com"
+ <martin.petersen@oracle.com>,  "wei.liu@kernel.org"	 <wei.liu@kernel.org>,
+ Mukesh R <mrathor@linux.microsoft.com>
+Cc: "GR-QLogic-Storage-Upstream@marvell.com"
+	 <GR-QLogic-Storage-Upstream@marvell.com>, 
+ "James.Bottomley@HansenPartnership.com"
+	 <James.Bottomley@HansenPartnership.com>, "haiyangz@microsoft.com"
+	 <haiyangz@microsoft.com>, "decui@microsoft.com" <decui@microsoft.com>, 
+ "sbhat@linux.ibm.com"
+	 <sbhat@linux.ibm.com>, "kmahlkuc@linux.ibm.com" <kmahlkuc@linux.ibm.com>, 
+ "linux-scsi@vger.kernel.org"
+	 <linux-scsi@vger.kernel.org>, "linux-hyperv@vger.kernel.org"
+	 <linux-hyperv@vger.kernel.org>, "linux-kernel@vger.kernel.org"
+	 <linux-kernel@vger.kernel.org>
+Date: Sun, 08 Nov 2026 11:55:47 -0500
+In-Reply-To: <080f3cc7097c9a8191e4fa2f03ff2d67d0640f40.camel@redhat.com>
+References: <20261104222541.2675051-1-loberman@redhat.com>
+		 <MN2PR02MB68634FAAFE0BA7C4DB3153D9D4772@MN2PR02MB6863.namprd02.prod.outlook.com>
+	 <080f3cc7097c9a8191e4fa2f03ff2d67d0640f40.camel@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.60.2 (3.60.2-3.fc44) 
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -115,142 +136,274 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SA1PR04MB10065:EE_|PH0PR04MB7525:EE_
-X-MS-Office365-Filtering-Correlation-Id: 7d10faec-c4cf-4381-f8ed-08df3d99558d
-WDCIPOUTBOUND: EOP-TRUE
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|366016|19092799006|23010399003|376014|18002099003|6133799003|10067099003|11063799006|261028144727099003|261102123227099003|261022105027099003|261022075727099003|56012099006|261021135927099003|261021121427099003|261026140227099003|261009223027099003|260925021311599003|260925021911599003|260925022911599003;
-X-Microsoft-Antispam-Message-Info:
-	ZdWbAXH5/s8IPLtx9HvywsjDXpW+IOKCGtygN+xoQu+98Jm0YsVdBETo4MB2b0ka71r2OTJcrSBzCf6QHlSE8gB3vQ4s7knztZG/1bMXMOEEJCWkRj+0PC/eFHA86MRaPuQWjp/HkiNRGaNw+j4Y8aGBja2SxKM9KAKllkATKaTYg/irn6/sV474i4NNS+JJMPRBcuGF2xNJqevA6gOOCMfNur5hxm21vD7JnBrlMoUA0X/NTnSjvfrRM2lmNUgh2SuAmkwpe7mc9wicrY/Br/w6bZrp97fQJnw8aSiSXsE6+BN9ZAnRjjzEbVzm1ym3keZy4O5TnMCfMLjWkUrrkyWVr8c/7viECvJ3JP8Lk6WHs/M+O21pGkqRvM2yj3Ax7uvg4AYgYYABznXCeop30SyFusmRTn9eRt7lWVuF+8wpbsnjkTKlKeJf6cRUK+HiI5A09xbwHAHN/JsNS2JpVtzLu+F0m5YAyxqDUtVZ8g6rpD9OmyaEAnPEsfswoLnHgSpuFODbxRv01bF2Mi/ex8+oTTa8rV7rzotEj+osFCj6YaVEviuaUNnJ8JhdkUkmxkHs+jhocoEQzz3MdITrgNFmyfGBUFJtOupmpDqoHKuLhpwK4z/NJyQcKcR/cX1T
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR04MB10065.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(19092799006)(23010399003)(376014)(18002099003)(6133799003)(10067099003)(11063799006)(261028144727099003)(261102123227099003)(261022105027099003)(261022075727099003)(56012099006)(261021135927099003)(261021121427099003)(261026140227099003)(261009223027099003)(260925021311599003)(260925021911599003)(260925022911599003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?OIBiJEQUZc0xfKA2MvyFJBjlzAJWuDJrr3Tp767MJVcpWL23+nJTTfK5WnKm?=
- =?us-ascii?Q?CFlsea/I5inJ2tyW64AcqrJruA9/ibLplKNrBUEt7ViKjF9EOs+Y/tbnU7aV?=
- =?us-ascii?Q?7uaA9PpqFx3ZEs87vhjwkaBMs+mHG7k2fwxkKDwy+STZ/Gr8sSGyZlQNWuER?=
- =?us-ascii?Q?HXtxm3xlJZjmTX6HNz4mWRSWfnyd7iGrCLJ5728KZ4WfW5huhyzr4UWb7+fu?=
- =?us-ascii?Q?sMqq/pcSQcMs7alpjfcob7fukHatorOGjCK2R4s7GS9HwoG5u9o3jctud/od?=
- =?us-ascii?Q?v3v2gQU3YNqUFgkPlQ3ixz4gXq7TfWTIV2cVdg9DQ0IplR5O/e1iblOlytaN?=
- =?us-ascii?Q?WbcMZIsV3LYBR6aj+VqrqqOuIc0OBYrCKVfu8xJenURu8abHOMg3bpVq1eFO?=
- =?us-ascii?Q?hz2+/UerKAA85YDlkuxeQtLFGzYeI0l7XN4QZ/ITpJFOtcyvmu8X3fUJxrVO?=
- =?us-ascii?Q?MnXHit8SrmWU8jpaKnuNJ3GI4LgSMIlHUjJGxzGy26f6mQwvudRDSCyWmwnJ?=
- =?us-ascii?Q?08Z/PZP8K3mGxA0PQaY83WFLUFGi+PXMuGY07VvRiNiJD62zYQRgWEwwxCto?=
- =?us-ascii?Q?O/WHZCVR6AdQ4Gx5S7MsbRXVQJpAIDi8lUOlFKDd/55rdfWJPWuBdvLAXL1J?=
- =?us-ascii?Q?GJGEv34Q0ozb4G2Tav9Tt52K/jC1VHRLzWK8QWDTqbQMg4k6Kb+VBVeVs46i?=
- =?us-ascii?Q?pt9pZnIBfNZ39f2nk3jySogKycWDI1H/fCfRf+Mas24FNylWAZkxLfOIpQZu?=
- =?us-ascii?Q?bFWRmFj6POI1HxDHt+UUmfQaN1QEcXmcPamek4tob1nMy2EXLKru+HgWGyO3?=
- =?us-ascii?Q?GUfc6pOXSS5UnWTv3sxExaIx7CooJ+qWTNWtlku6ugk94Kw/NhhAhFhOhHy5?=
- =?us-ascii?Q?Ea7quRIXCTME2M1mie4pWja6QTvn2GdF7D8hy+RpxmgG2ei1nCNmmfRkJUNM?=
- =?us-ascii?Q?BmcUTM6C7xLB9oA+Mzr4h2UzxyBh3xX6K3FxdIMYykLuewawZPfNxz/EwX1l?=
- =?us-ascii?Q?/N9ECsHKNRJd9Gr73oDP5Vcdru0oB4vMzBIbPlalL3hBkxFvbljxcYtwwxP2?=
- =?us-ascii?Q?qRE6aUFFOciuC79Pcdk1ucmWLCz5S9zzVMXAB2lv7990aMNAaCHYXSH8PsOJ?=
- =?us-ascii?Q?ORRoEw8mF+kPhFHDfvs/44cYInrNsgKE6AeN0N0dJbj/A4xoMa0S/di8emU2?=
- =?us-ascii?Q?JBEzFpFxhIfjreLEcpMOCOA6BT2wOhS7vDS9xEGlaQoyAkttLeIXzYw2znKT?=
- =?us-ascii?Q?7BEx11RDaOEEJSGFnf60D2LZvZHYX1djGniu7GB51idHtVRr/riidIQjrJev?=
- =?us-ascii?Q?gqMLVWtHnDGyJInHhokKdYbi1/P13zg3v/ajD+r995BEs74LB3MF4d59pc1V?=
- =?us-ascii?Q?sialMRnX4cyuuacmsT+UwPhTW5Y4//0Z3kCKRHpN21+r8yJML9pcV1ojZHy5?=
- =?us-ascii?Q?Wr1lSwS4VhBqzWpYH9M7FFLT6yCRE2Ikb3Q0/JXBmPFao+Xzu2YUYXUwkJVp?=
- =?us-ascii?Q?pp82ZogWTDkYVHamDIupeP+h8bdjIn+0QtOi106d8dceoIIWDEDnH9G09dhO?=
- =?us-ascii?Q?6JnTxvrJdV4OZYgj3xqOZHuz/bemjB2RaJeeKNuLsPi4lD5ByZFOfHMdXXzX?=
- =?us-ascii?Q?zZgwWz5BO+zA+xbj8E0D8lfhnuI62ijOp4NfpX3hZJZ0ryT27JKQVDNZCSwx?=
- =?us-ascii?Q?u3PVOH79ohuSTAC+uLhRcGF9YmpTkBC+DbdWNiERhBMDoOxQtj+YHNs2Zx18?=
- =?us-ascii?Q?h+0iTHGqX1mUpu/SiWvPk9oM1jEIwyQ=3D?=
-X-Exchange-RoutingPolicyChecked:
-	VWzcxdJG2emPZPtKmNXXEeub9wlfOYjG+B/J3EznzZUf0j98mdh2ClHeibTw504h715QUR+xEUIO2QyRdAAjadn9aAIgpdGpac9WTOrR2EMa2pb+7W8DWzN5yoNDmu/esj4Ila0SaS/jlVHx4Nnx3lGn/89PV8BEw7CRWG5SUDa56o6Bjh8nvhsPtWKCvjRhfgVNw/EtL2633qmhF6S6EtzyIC/FdWMuMya4+bu7HyTwHlEkiywHhTAtFfjdF6tyXsm65NclC3LQzgrxPPjjoDaqxDlhMncP1YZx8hKJFAqhAo1HOMUpInddd4cOIqveU23NDcNdPMe4fHns++j0OA==
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	+EHkki3BNDtmXDMCQ6Vnyuj54htqNS9mn5yDCnnKjSuch6fuzAnFkNU2+dqx+Joh4No/+z8RNKgffyfVB5+Zf0NzS3Ri84b0p6RYrsyJ8gxPQTYHpTioFJ/jY4X9yNSLIsIpM0W/2jBxLE2aLQ8C6McTnp0aDOUvw6k984mB89t7TeugePMtTiZ+I9ovzi4FNiqT4I+7LCubkERduA4GggMdX6FS0mQP9OpKeTEh1rqqrCI8X3OhhLE+4cPAkZjIXLFzyGffijGwL1SF5WGssKsmmkHjUndLkmIlEEkzS5NLyz1CpVMzYZdBJDKz4LZgxcqAzRfU/SZ8Vlyf4ke/K0lqn8dIWvmdc8YDHmBBqb8UjFvlMLf7j78MA6tFuG45EU7b4LWO9/qIfS1mK5d07RbyZ59jAG44fqe58+1rLqA1eqcOynHPoJVyQHEidEr28JcHjyakqIGBhC+ixzyUi0bCrpBFxJi6iT4Dgt1tZjRS1aZcrrTjYUHRZEjL24+/xrsnFvHjNVRsuqMO+zMCa5/xMpGj+0UTccAEhCXP29Dic0/utBGqdLC6juM62/wD0TF2Wn1pBwysmDzgOmYe7jk125J6Ql3vYruYefqfoEZrhVrpT+axVvzo5f72x0/P
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 7d10faec-c4cf-4381-f8ed-08df3d99558d
-X-MS-Exchange-CrossTenant-AuthSource: SA1PR04MB10065.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 08 Nov 2026 13:08:08.5565
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: xyZx8szrURZY9F0k0zAC66bPRTXU+rNPg47w9Ywz2k9o6bNixHfAbjyleVkSsmSAoXFv/lNX0/NlLur8eFRmmAVuPLpogU0Bgdv+ronezWk=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR04MB7525
 
-Hi all,
+On Sat, 2026-11-07 at 10:14 -0500, Laurence Oberman wrote:
+> On Thu, 2026-11-05 at 00:46 +0000, Michael Kelley wrote:
+> > From: Laurence Oberman <loberman@redhat.com> Sent: Wednesday,
+> > November 4, 2026 2:26 PM
+> > >=20
+> > > qla2x00_set_isp_flags() derives the physical port number from
+> > > PCI_INTERRUPT_PIN, and the port number selects the per-port VPD,
+> > > NVRAM,
+> > > NPIV and FCP priority flash regions.
+> > >=20
+> > > On Hyper-V guests, pci-hyperv returns 0 for byte and word reads
+> > > of
+> > > PCI_INTERRUPT_PIN since commit fea93a3e5d5e ("PCI: hv: Return
+> > > zero,
+> > > not
+> > > garbage, when reading PCI_INTERRUPT_PIN"). Commit 7268e509b43a
+> > > ("scsi:
+> > > qla2xxx: Handle INTx not connected while passing through") then
+> > > falls
+> > > back to PCI_FUNC(). With Discrete Device Assignment (DDA), each
+> > > function
+> > > of a multi-port HBA is presented as function 0 in its own PCI
+> > > domain, so
+> > > every port gets port_no 0. All ports read port 0's NVRAM, pass
+> > > the
+> > > checksum and register the same WWPN, and nothing is logged.
+> > >=20
+> > > Without that commit, port_no underflows to 255, no flash region
+> > > is
+> > > selected and every port fails with "Inconsistent NVRAM checksum"
+> > > and
+> > > falls back to the default WWPN.
+> > >=20
+> > > pci-hyperv only zeroes byte and word accesses within 0x3c-0x3d. A
+> > > dword
+> > > read at PCI_INTERRUPT_LINE reaches the device's config space and
+> > > returns
+> > > the real pin in bits 15:8. On Hyper-V guests, use that when the
+> > > byte
+> > > read returns 0, and warn if the pin is still 0 so that duplicate
+> > > WWPNs
+> > > are not silent. Bare metal, KVM/vfio and other hypervisors are
+> > > unchanged.
+> >=20
+> > There's a patch in flight [1] that kills the behavior that your
+> > patch
+> > takes
+> > advantage of. I don't have knowledge of the full details that
+> > motivated [1],
+> > so maybe Mukesh Rathor or Wei Liu can add some info, as well as
+> > comment on the validity of what you are observing as a possible
+> > work-around to the qla2xxx problem.
+> >=20
+> > Michael
+> >=20
+> > [1]
+> > https://lore.kernel.org/linux-hyperv/20260913232255.2801797-1-wei.liu@k=
+ernel.org/
+> >=20
+> > >=20
+> > > Tested with an equivalent change on a RHEL 9 (5.14-based) guest
+> > > with a
+> > > dual-port QLE2692 (ISP2261) assigned through DDA (Hyper-V host
+> > > 10.0.17763):
+> > >=20
+> > > =C2=A0 before: both ports "Inconsistent NVRAM checksum=3D0xffffffc0
+> > > id=3DNGKP",
+> > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 both WWPN 0x21=
+0000e08b1c5586
+> > > =C2=A0 after:=C2=A0 port_no 1 and 0, NVRAM valid, WWPN 0x210034800d70=
+65bd
+> > > and
+> > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 0x210034800d70=
+65bc, fabric login and FC-NVMe localport
+> > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 registration o=
+n both ports
+> > >=20
+> > > Also tested on bare metal (ISP2031): the new path is not taken
+> > > and
+> > > port
+> > > numbers and WWPNs are unchanged.
+> > >=20
+> > > Signed-off-by: Laurence Oberman <loberman@redhat.com>
+> > > ---
+> > > RFC: this relies on pci-hyperv not virtualizing dword reads at
+> > > 0x3c,
+> > > which is an implementation detail rather than an interface. It is
+> > > posted
+> > > as the smallest working fix and to start the discussion. Feedback
+> > > wanted
+> > > on cleaner alternatives:
+> > >=20
+> > > =C2=A0- Hyper-V (linux-hyperv): could pci-hyperv expose the real
+> > > =C2=A0=C2=A0 PCI_INTERRUPT_PIN, or provide the physical function numb=
+er,
+> > > for
+> > > DDA
+> > > =C2=A0=C2=A0 devices? Some drivers use the pin for port identity, not=
+ only
+> > > for
+> > > =C2=A0=C2=A0 interrupt routing.
+> > >=20
+> > > =C2=A0- Marvell: is there a firmware or register source for the
+> > > physical
+> > > =C2=A0=C2=A0 port that does not depend on PCI config space? CSRX_FUNC=
+TION
+> > > in
+> > > =C2=A0=C2=A0 ctrl_status is a single bit and would not cover quad-por=
+t
+> > > =C2=A0=C2=A0 27xx/28xx/29xx.
+> > >=20
+> > > =C2=A0- The check is x86-only (hypervisor_is_type()). pci-hyperv also
+> > > =C2=A0=C2=A0 supports arm64 guests; a better way to detect a pci-hype=
+rv bus
+> > > is
+> > > =C2=A0=C2=A0 welcome.
+> > >=20
+> > > This has not yet been tested on a 7.3 kernel in the DDA guest;
+> > > testing
+> > > was on a RHEL 9.8 backport. The upstream behaviour without this
+> > > patch
+> > > (duplicate WWPNs with no warning) follows from the code and has
+> > > not
+> > > yet
+> > > been reproduced on 7.3.
+> > >=20
+> > > =C2=A0drivers/scsi/qla2xxx/qla_os.c | 40
+> > > ++++++++++++++++++++++++++++++++++-
+> > > =C2=A01 file changed, 39 insertions(+), 1 deletion(-)
+> > >=20
+> > > diff --git a/drivers/scsi/qla2xxx/qla_os.c
+> > > b/drivers/scsi/qla2xxx/qla_os.c
+> > > index 3c412c7fb6fe..4180d3f15231 100644
+> > > --- a/drivers/scsi/qla2xxx/qla_os.c
+> > > +++ b/drivers/scsi/qla2xxx/qla_os.c
+> > > @@ -24,6 +24,10 @@
+> > > =C2=A0#include <scsi/scsi_transport.h>
+> > > =C2=A0#include <scsi/scsi_transport_fc.h>
+> > >=20
+> > > +#ifdef CONFIG_X86
+> > > +#include <asm/hypervisor.h>
+> > > +#endif
+> > > +
+> > > =C2=A0#include "qla_target.h"
+> > >=20
+> > > =C2=A0/*
+> > > @@ -2704,6 +2708,40 @@ static struct isp_operations
+> > > qla29xx_isp_ops
+> > > =3D {
+> > > =C2=A0	.initialize_adapter	=3D qla2x00_initialize_adapter,
+> > > =C2=A0};
+> > >=20
+> > > +/*
+> > > + * Read the INTx pin used to derive the physical port number.
+> > > + *
+> > > + * pci-hyperv hard-wires byte and word reads of
+> > > PCI_INTERRUPT_PIN
+> > > to zero.
+> > > + * With Hyper-V Discrete Device Assignment every function is
+> > > also
+> > > presented
+> > > + * as function 0 in its own PCI domain, so the PCI_FUNC()
+> > > fallback
+> > > gives
+> > > + * port 0 for every port and they all report port 0's WWPN. A
+> > > dword read at
+> > > + * PCI_INTERRUPT_LINE is not virtualized by pci-hyperv and
+> > > returns
+> > > the
+> > > + * device's pin in bits 15:8, so use that on Hyper-V guests.
+> > > + */
+> > > +static u8
+> > > +qla2x00_get_intx_pin(struct qla_hw_data *ha)
+> > > +{
+> > > +	u8 pin;
+> > > +
+> > > +	pci_read_config_byte(ha->pdev, PCI_INTERRUPT_PIN, &pin);
+> > > +#ifdef CONFIG_X86
+> > > +	if (!pin && hypervisor_is_type(X86_HYPER_MS_HYPERV)) {
+> > > +		u32 val =3D 0;
+> > > +
+> > > +		pci_read_config_dword(ha->pdev,
+> > > PCI_INTERRUPT_LINE, &val);
+> > > +		pin =3D (val >> 8) & 0xff;
+> > > +		if (pin)
+> > > +			ql_log_pci(ql_log_info, ha->pdev,
+> > > 0xffff,
+> > > +				=C2=A0=C2=A0 "Hyper-V: INTx pin reads 0,
+> > > config dword 0x%08x
+> > > gives pin %u.\n",
+> > > +				=C2=A0=C2=A0 val, pin);
+> > > +		else
+> > > +			ql_log_pci(ql_log_warn, ha->pdev,
+> > > 0xffff,
+> > > +				=C2=A0=C2=A0 "Hyper-V: unable to determine
+> > > physical port, ports
+> > > may report duplicate WWPNs.\n");
+> > > +	}
+> > > +#endif
+> > > +	return pin;
+> > > +}
+> > > +
+> > > =C2=A0static inline void
+> > > =C2=A0qla2x00_set_isp_flags(struct qla_hw_data *ha)
+> > > =C2=A0{
+> > > @@ -2887,7 +2925,7 @@ qla2x00_set_isp_flags(struct qla_hw_data
+> > > *ha)
+> > > =C2=A0		ha->port_no =3D ha->portnum & 1;
+> > > =C2=A0	else {
+> > > =C2=A0		/* Get adapter physical port no from interrupt
+> > > pin
+> > > register. */
+> > > -		pci_read_config_byte(ha->pdev,
+> > > PCI_INTERRUPT_PIN,
+> > > &ha->port_no);
+> > > +		ha->port_no =3D qla2x00_get_intx_pin(ha);
+> > > =C2=A0		if (ha->port_no =3D=3D 0) {
+> > > =C2=A0			/* None of INT[A|B|C|D] may be
+> > > virtualized
+> > > by vfio */
+> > > =C2=A0			ha->port_no =3D PCI_FUNC(ha->pdev->devfn);
+> > > --
+> > > 2.56.0
+> > >=20
+> Hello Michael,
+>=20
+> Thanks very much for the information. I will follow the thread.=C2=A0
+> Our main pressing issue is any guest on HYPER-V with DDA moving to
+> RHEL9 from RHEL8 loses functionality for the pass-through qla2xxx
+> ports
+>=20
+> Regards
+> Laurence
+Hi Michael,
 
-I ran the latest blktests (git hash: a65cf6bdca19) with the v7.4-rc1 kernel. I
-observed 4 failures listed below. Compared with the previous report for v7.3
-kernel [1], 2 new failure was observed. The failure #4 nvme/059 needs further
-work. Help for it will be appreciated.
+Thanks, that settles it. With "PCI: hv: hardwire PCI_INTERRUPT_PIN to
+0"
+any read covering 0x3d returns 0, so qla2xxx cannot use the pin under
+DDA at all. Please consider this RFC withdrawn.
 
+The qla2xxx problem itself remains. The driver uses the pin, not for
+interrupts, but as its only indication of which physical port a
+function
+is on. That selects the per-port VPD, NVRAM, NPIV and FCP priority
+flash
+regions. Under DDA each function is presented as function 0 in its own
+domain, so PCI_FUNC() cannot tell the ports apart either, and every
+port
+of a dual-port QLE2692 comes up with port 0's WWPN.
 
-[1] https://lore.kernel.org/linux-block/atgwg4i6C1zGi1HU@shinmob/
+Wei, Mukesh: if there is a supported way for a guest to learn the
+physical function of a DDA-assigned device, qla2xxx could use it.
+Otherwise I think this has to be solved in the driver.
 
+Nilesh: on the same guest, the -1015 mailbox dump logged by the Marvell
+out-of-tree driver at init differs between the two ports only in
+mb[15]:
 
-List of failures
-================
-#1: nvme/004,031  (rdma transport)
-#2: nvme/037 hang  (new)(rdma transport)
-#3: nvme/052
-#4: nvme/059  (new)(fc transport)(kmemleak)
+  pin A port: mb[8-15] 0003h 0001h 0001h 0001h f080h 0000h 0008h 0000h
+  pin B port: mb[8-15] 0003h 0001h 0001h 0001h f080h 0000h 0008h 4001h
 
+Is that firmware reporting the physical function? If so, and if it is
+available on ISP25xx/27xx/28xx/29xx before the flash regions are
+selected, it would give qla2xxx a port number that does not depend on
+PCI config space, under any hypervisor. I am happy to test a patch on
+the customer's DDA guest.
 
-Failure description
-===================
+Thanks,
+Laurence
 
-#1: nvme/004,031 (rdma transport)
-
-    The test cases nvme/004 and nvme/031 fail occasionally for rdma transport
-    due to the lockdep WARN related to the two locks nvmet_config_sem and
-    &id_priv->handler_mutex. It is easier to recreate with rxe driver. It is
-    rather rare, but the failure is observed with siw driver also.
-
-    The trigger commit was
-
-     2a8513091d2f ("nvme-rdma: parallelize I/O queue allocation and startup")
-
-    in v7.3-rc1. I posted fix patch candidate [2].
-
-    [2] https://lore.kernel.org/linux-nvme/20261108120154.148824-1-shinichiro.kawasaki@wdc.com/
-
-#2: nvme/037 hang  (rdma transport)
-
-    When the test case nvme/037 is repeated several times for rdma transport,
-    it hangs [3]. Nilay provided a fix patch, which was already applied for
-    v7.4-rcX [4].
-
-    [3] https://lore.kernel.org/linux-nvme/auhpmq499RVE9YpC@shinmob/
-    [4] https://lore.kernel.org/linux-nvme/20261105123642.2120548-2-nilay@linux.ibm.com/
-
-#3: nvme/052
-
-    When it is repeated several times, the test case nvme/052 fails [5]. Nilay
-    provided a fix patch [6].
-
-    [5] https://lore.kernel.org/all/ar30Q5H1fuyFtDwM@shinmob/
-    [6] https://lore.kernel.org/linux-nvme/20261002070249.338225-1-nilay@linux.ibm.com/
-
-#4: nvme/059  (fc transport)(kmemleak)
-
-    When the test cases nvme/057, 058 and 059 are repeated several times for
-    fc transport, a kmemleak was reported at the test case nvme/059:
-
-    unreferenced object 0xffff88812a768000 (size 512):
-      comm "kworker/1:3H", pid 92985, jiffies 4301970763
-      hex dump (first 32 bytes):
-        40 cd f8 4b 81 88 ff ff 00 00 00 00 00 00 00 00  @..K............
-        00 00 00 00 ad 4e ad de ff ff ff ff 00 00 00 00  .....N..........
-      backtrace (crc 3cd92a37):
-        __kmalloc_cache_noprof+0x4c1/0x6d0
-        fcloop_fcp_req+0xc4/0x650 [nvme_fcloop]
-        nvme_fc_start_fcp_op.part.0+0x642/0x17a0 [nvme_fc]
-        nvme_fc_queue_rq+0x392/0x6e0 [nvme_fc]
-        blk_mq_dispatch_rq_list+0x3e0/0x2400
-        __blk_mq_sched_dispatch_requests+0x20a/0x15d0
-        blk_mq_sched_dispatch_requests+0xab/0x150
-        blk_mq_run_work_fn+0x1dc/0x2e0
-        process_one_work+0x944/0x1760
-        worker_thread+0x5fd/0xfe0
-        kthread+0x36d/0x470
-        ret_from_fork+0x653/0x9d0
-        ret_from_fork_asm+0x1a/0x30
