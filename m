@@ -1,51 +1,51 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.101
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.109
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794170896;
-	b=gEjPDPS1KX84DeNZUT5MB7PMZCc4BBWylsoGRkFqri7JiJVmwPwvyNJ+lKwD+VH6iQHI
-	 cDalemZ7UH3FhV0vWl8dl7QKoWycla/iCKyfOMEIIfmNfSfRCibTAEwllkybJKzJb7QhK
-	 EFqt0YwpEKsRYFsQIPNDLiaVykPqzb/VpfXnyROkXLc3H8OdUNF5yIzTu0J7FmfqvPcBy
-	 aKRmC+3B44BJr6xGyzRxe++kakVH8szwPTqeD0xztm0ysB3NVv6EH/VGxMI9fM8Fb4doU
-	 Z8awS9lRZYPlR1EjG7ML7q+xAUJ9iRxNdS6lbKAwdJylNhnRT85GxRBW4VNgeBSzoWw==
+	t=1794170897;
+	b=a4Gou3sVfXufZtBKDLzVVYNVTRU/2vLgQ633oy2wTYimzE7e/UVUpVDeCihP5Lp4HAhh
+	 4223VQlxxmDTUc7qQih5JpTFF4JhM49+CrUm1dcfH5yPc59GoED0gz8cT73kFOZfOdh11
+	 FKECP2nHWOGxj6uyROdMCoKO7t8M/KQ2azX5NCkBj5/14crXo4vCz5aJVPSy7sxYbcIjL
+	 QXsYgAlfHECP6wQNCNeriGaw/NG9FlBE7TsKu5LqX8KOqQlXbVWlr5TlIODtzhSynoqTT
+	 GcTVpohmby5d/3X/F0pHdC2KfluPgDVfoWrLgPQsvgSrVcKWMfyYxj8LNwvKAykla2w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794170896;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794170897;
 	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
 	 X-Mizu-Trace-ID:X-Migadu-Flow:From:To:Cc:Subject:Date:Message-ID:
 	 X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=wUNj3zcErgaPzyJWqZg0hX16vWl0qpJJmvLNO3XQBUs=;
-	b=AgdeSq+yWJwPz+pTd47r3TI90x5TDTtf8MlLyLsQAiQ6SD6R9Nk0KMnt7WzZoqBIuhDS
-	 ZaukKXJz48mV8Pwb1Mu7aALL+kF7rRIxmk8HCM0bR3xlMWaKVlDDz3E1NG4nrhbpvN+S1
-	 GOdmq6I5rX0qlGeh3JzugYBbmE+tEXKTDoE6XGKt80qgEUYGBQySmBczIaOq7LxLNUgpX
-	 WCpU6qkbGfbfk0Lh0xApzjXiv9T4x7NDrab2bS5LWCZpP004vP5jPyw48Ukv7pWB2V9FI
-	 PehQLefYxVHpzrVsbsD+7UBZCfA6ZppHET2dh6qpvW8XCGGrPWWHxDl4ry7xSFG7QtA==
+	bh=D+bQhpD+WSSIraJnCjz2Iq12MaRnWIXb3SJNp+9C77c=;
+	b=tIyVAog9kPE7Q7J6WWS6Y3xDAxHToITHzYtKqSUgd+B1Lgq5gM1TD6MS0cBi/cZNbmar
+	 cWw053XOBqbX9NnHnDksZ344U8YWZWXQGzH4BmEMPXdlTbQthdtHYNEqbHGWRKrt9VH85
+	 lu+06xgTuhzrH/AGypL3pVMbf9jmAZRaeexruwEIb00KsyDvvdX8aT21RbYq+K6ts5oBL
+	 tPLzmUiuTve5WjxtkIdTJNpWGCPv2xWVOR3yeJr3+eQVOaJgv44rqNWO/rAtxgYGlVDcs
+	 J02DK7pW+crEA/3D4zm4uK/Y9pmyeFaKl7oyOalui0VOEiPGsV0H2+HSBnS/u78lvLg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linux.dev;
 	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=JoCP8mSk;
-	arc=none smtp.remote-ip=95.215.58.101
-Received: from mta1.migadu.com (out-101.mta1.migadu.com [95.215.58.101])
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=cIGgOEoy;
+	arc=none smtp.remote-ip=95.215.58.109
+Received: from mta1.migadu.com (out-109.mta1.migadu.com [95.215.58.109])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1FB0606D805
-	for <linux-scsi@vger.kernel.org>; Sun,  8 Nov 2026 20:48:15 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A1FB0606D805
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21EC1606D80B
+	for <linux-scsi@vger.kernel.org>; Sun,  8 Nov 2026 20:48:16 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 21EC1606D80B
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=JoCP8mSk
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=cIGgOEoy
 X-Envelope-To: linux-scsi@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=pn2Yu/uIIBg3kKaM6bVH+66C04F3rhaZVDPZfB5P3mM=;
+DKIM-Signature: a=rsa-sha256; bh=YyW1RuL9yvQgmJEET/4NGirmk+hqjG05wn7wJajP8N4=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1794170893; v=1; x=1794775693;
- b=JoCP8mSkZajjXQrlA+PQu8uVatkwBDgTURkfM5QEdlXUt66/zi9cx9goYvmCloHvEFGEegpH
- mCi9ag8zub8hANZd+jMaZG4AmkE1yIRRAi714xkQVxrhYh5zhEvLrdPaFwlx670npjtvxAtXLZe
- HuSBhzAdU3uWGXo+nZLqHXDU=
+ t=1794170895; v=1; x=1794775695;
+ b=cIGgOEoy1ufqEv1YU0oMqMHdURHor9uWsg9yfLGSzxb1+8wuZOxyQYjl/+mJ0byfLzgqnYqf
+ 9X17K191+HjMh8TgVMs9vUdICWj2hBWxZSkyQWW0HAyLPBKOvNyhzJQHsUJIPseeG9zHJs/2R6X
+ nb8Ql9bf69JXzocE4vsbkBA4=
 X-Envelope-To: linux-scsi@vger.kernel.org
-Received: by mta10.migadu.com with ESMTPS id c491654f1496b39a;
-	Sun, 08 Nov 2026 20:48:13 +0000
-X-Mizu-Trace-ID: c491654f1496b39a
+Received: by mta10.migadu.com with ESMTPS id c1e933660bf6bd0f;
+	Sun, 08 Nov 2026 20:48:15 +0000
+X-Mizu-Trace-ID: c1e933660bf6bd0f
 X-Migadu-Flow: FLOW_OUT
 From: John Garry <john.garry@linux.dev>
 To: james.bottomley@hansenpartnership.com,
@@ -60,9 +60,9 @@ Cc: hare@suse.com,
 	hch@lst.de,
 	michael.christie@oracle.com,
 	John Garry <john.garry@linux.dev>
-Subject: [PATCH v9 16/29] scsi-multipath: clone each bio
-Date: Sun,  8 Nov 2026 20:47:20 +0000
-Message-ID: <20261108204733.557995-17-john.garry@linux.dev>
+Subject: [PATCH v9 17/29] scsi-multipath: clear path when device is blocked
+Date: Sun,  8 Nov 2026 20:47:21 +0000
+Message-ID: <20261108204733.557995-18-john.garry@linux.dev>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20261108204733.557995-1-john.garry@linux.dev>
 References: <20261108204733.557995-1-john.garry@linux.dev>
@@ -77,99 +77,80 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-For failover handling, we will take the approach to resubmit each
-bio.
-
-However, unlike NVMe, for SCSI there is no guarantee that any bio submitted
-is either all or none completed.
-
-As such, for SCSI, for failover handling we will take the approach to
-just re-submit the original bio. For this, clone and submit each bio.
+Add scsi_mpath_dev_clear_path() to clear a device path when it becomes
+blocked.
 
 Signed-off-by: John Garry <john.garry@linux.dev>
 ---
- drivers/scsi/scsi_multipath.c | 33 +++++++++++++++++++++++++++++++++
- include/scsi/scsi_multipath.h |  1 +
- 2 files changed, 34 insertions(+)
+ drivers/scsi/scsi_lib.c       |  3 +++
+ drivers/scsi/scsi_multipath.c | 10 ++++++++++
+ include/scsi/scsi_multipath.h |  5 +++++
+ 3 files changed, 18 insertions(+)
 
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 36bc995e4e25..1950034f580f 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -35,6 +35,7 @@
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_transport.h> /* scsi_init_limits() */
+ #include <scsi/scsi_dh.h>
++#include <scsi/scsi_multipath.h>
+ 
+ #include <trace/events/scsi.h>
+ 
+@@ -3037,6 +3038,8 @@ static void scsi_device_block(struct scsi_device *sdev, void *data)
+ 		scsi_stop_queue(sdev);
+ 
+ 	mutex_unlock(&sdev->state_mutex);
++	if ((err == 0) && sdev->scsi_mpath_dev)
++		scsi_mpath_dev_clear_path(sdev->scsi_mpath_dev);
+ 
+ 	WARN_ONCE(err, "%s: failed to block %s in state %d\n",
+ 		  __func__, dev_name(&sdev->sdev_gendev), state);
 diff --git a/drivers/scsi/scsi_multipath.c b/drivers/scsi/scsi_multipath.c
-index baf4ca73f8c9..8e229357e62c 100644
+index 8e229357e62c..67e9010d5478 100644
 --- a/drivers/scsi/scsi_multipath.c
 +++ b/drivers/scsi/scsi_multipath.c
-@@ -101,6 +101,7 @@ static void scsi_mpath_head_release(struct device *dev)
- 		container_of(dev, struct scsi_mpath_head, dev);
- 	struct mpath_head *mpath_head = &scsi_mpath_head->mpath_head;
- 
-+	bioset_exit(&scsi_mpath_head->bio_pool);
- 	ida_free(&scsi_multipath_dev_ida, scsi_mpath_head->index);
- 	ida_destroy(&scsi_mpath_head->ida);
- 	mpath_head_uninit(mpath_head);
-@@ -239,7 +240,34 @@ static int scsi_multipath_sdev_init(struct scsi_device *sdev)
+@@ -240,6 +240,16 @@ static int scsi_multipath_sdev_init(struct scsi_device *sdev)
  	return 0;
  }
  
-+static void scsi_mpath_clone_end_io(struct bio *clone)
++void scsi_mpath_dev_clear_path(struct scsi_mpath_device *scsi_mpath_dev)
 +{
-+	struct bio *master_bio = clone->bi_private;
++       struct mpath_device *mpath_device = &scsi_mpath_dev->mpath_device;
++       struct scsi_mpath_head *scsi_mpath_head = scsi_mpath_dev->scsi_mpath_head;
++       struct mpath_head *mpath_head = &scsi_mpath_head->mpath_head;
 +
-+	master_bio->bi_status = clone->bi_status;
-+	bio_put(clone);
-+	bio_endio(master_bio);
++       if (mpath_clear_current_path(mpath_device))
++               mpath_synchronize(mpath_head);
 +}
 +
-+static struct bio *scsi_mpath_clone_bio(struct bio *bio)
-+{
-+	struct mpath_head *mpath_head = bio->bi_bdev->bd_disk->private_data;
-+	struct scsi_mpath_head *scsi_mpath_head = to_scsi_mpath_head(mpath_head);
-+	struct bio *clone;
-+
-+	clone = bio_alloc_clone(bio->bi_bdev, bio, GFP_NOIO,
-+				&scsi_mpath_head->bio_pool);
-+	if (!clone)
-+		return NULL;
-+
-+	clone->bi_end_io = scsi_mpath_clone_end_io;
-+	clone->bi_private = bio;
-+
-+	return clone;
-+}
-+
- static struct mpath_head_template smpdt = {
-+	.clone_bio = scsi_mpath_clone_bio,
- };
- 
- static struct scsi_mpath_head *scsi_mpath_alloc_head(char *vpd_id)
-@@ -265,6 +293,9 @@ static struct scsi_mpath_head *scsi_mpath_alloc_head(char *vpd_id)
- 	scsi_mpath_head->index = ida_alloc(&scsi_multipath_dev_ida, GFP_KERNEL);
- 	if (scsi_mpath_head->index < 0)
- 		goto out_uninit_head;
-+	if (bioset_init(&scsi_mpath_head->bio_pool, BIO_POOL_SIZE,
-+			0, BIOSET_PERCPU_CACHE))
-+		goto out_ida_free;
- 	kref_init(&scsi_mpath_head->ref);
- 
- 	device_initialize(&scsi_mpath_head->dev);
-@@ -284,6 +315,8 @@ static struct scsi_mpath_head *scsi_mpath_alloc_head(char *vpd_id)
- 
- 	return scsi_mpath_head;
- 
-+out_ida_free:
-+	ida_free(&scsi_multipath_dev_ida, scsi_mpath_head->index);
- out_uninit_head:
- 	mpath_head_uninit(&scsi_mpath_head->mpath_head);
- out_free:
+ static void scsi_mpath_clone_end_io(struct bio *clone)
+ {
+ 	struct bio *master_bio = clone->bi_private;
 diff --git a/include/scsi/scsi_multipath.h b/include/scsi/scsi_multipath.h
-index d6f290b84f7f..d2ef94ebd29a 100644
+index d2ef94ebd29a..2064a3e92274 100644
 --- a/include/scsi/scsi_multipath.h
 +++ b/include/scsi/scsi_multipath.h
-@@ -26,6 +26,7 @@ struct scsi_mpath_head {
- 	struct ida		ida;
- 	struct kref		ref;
- 	enum mpath_iopolicy_e	iopolicy;
-+	struct bio_set		bio_pool;
- 	struct device		dev;
- 	int			index;
- };
+@@ -55,6 +55,7 @@ int scsi_mpath_try_get_head(struct scsi_mpath_head *scsi_mpath_head);
+ void scsi_mpath_put_head(struct scsi_mpath_head *scsi_mpath_head);
+ void scsi_mpath_add_sysfs_link(struct scsi_device *sdev);
+ void scsi_mpath_remove_sysfs_link(struct scsi_device *sdev);
++void scsi_mpath_dev_clear_path(struct scsi_mpath_device *scsi_mpath_dev);
+ #else /* CONFIG_SCSI_MULTIPATH */
+ 
+ struct scsi_mpath_head {
+@@ -99,5 +100,9 @@ static inline void scsi_mpath_add_sysfs_link(struct scsi_device *sdev)
+ static inline void scsi_mpath_remove_sysfs_link(struct scsi_device *sdev)
+ {
+ }
++static inline
++void scsi_mpath_dev_clear_path(struct scsi_mpath_device *scsi_mpath_dev)
++{
++}
+ #endif /* CONFIG_SCSI_MULTIPATH */
+ #endif /* _SCSI_SCSI_MULTIPATH_H */
 -- 
 2.43.0
 
