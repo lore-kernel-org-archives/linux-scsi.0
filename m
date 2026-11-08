@@ -1,57 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794171943;
-	b=UPOqx5zzNQAXPL189mLBufoDjubBYnAK0mqpYYiuHR0hggtiP9pAPhTdE08Nl3beUytA
-	 MFFT0vmlqWkV6ZEOcylBAiyaDYdFkiFMhyfpi0IH2bqTHjtoxTYOM5sG1Y0lWmLhiVYwN
-	 WOKlVqW6baIgG3iiaDBfRvhAO5pFlIPzN7khH/Bflc1axVZ4ad4LfdotSIky54gXeoLi9
-	 cfnJnQ7eJrfExOb1OFxwSMpPPWbV5tDhriWyD3E36AcLxIu3gIfUnYiNzWoGiJxxdHaD3
-	 YB984l5CLpwE4Zy8kCKlCGJ2p4YJfz14/QotndIv7JRlxljfZZS5qU3MAjBxmFr9eFA==
+	t=1794171991;
+	b=LVCCwC6WKSv/nf6galqilacVhIzmYq6Eymvz6yt2PiNPqYH2po40w5+VqwB1x0wRAIFc
+	 c0I5uu7q4oNgeyzEhsIN1oVymfXiy95g9ll5ooit8fXSB70/n/zXiJYd+nTv9cQybZpWI
+	 22d+rEJuMHd+RedqyHaJzHcfoIUL4ywajcUtF3ZofjEys+RLUab50NF6fpLZkTN2JDuJL
+	 8jWlaY7bjdgui8jaWEeLCT9u5XbM2pXsU0uGv/NxJWlgN3WJZauWs/++9/06II2YiqlMS
+	 t7UWjj0HE8VcvtJjfPe7OP3iD42W5LJ5YUoF3FF9yXYG3XZEB854vtCF5iNySLSjs0Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794171943;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794171991;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=ZS/+9RoeC/5ysy9/4XL0GzlvzEZI1ShMbYQDvBVHstM=;
-	b=OZMHjfBTgE+qckI2cyEAe4QjkX8zsKNM9ItbA7lzGeKrIgpF+xR7GxcU4RkpdiXLtBRz
-	 i1Ve8aE5E4IHoqlp5Qd2NZJsHD330aHORC6a2LkzbOgqk9RFAtf9Lc015OT0MKIYdPCnT
-	 NqOHUCkbeFS0VOIqRMnMbE0jJIEMzw1qsMlVEYAhjIpc5pVCVRYnK4HcLqdPksuY9YO6Y
-	 73/h7lY/GGZih8iG33keuYH1APgMk8TIAsE0hsO2wfElsVt1bOfbWcw/JlAsooEe16492
-	 FaMA2EF/6+NyEIIyokqhruCkyAlqltS/9rnzbwEjAtJZkjasEkwaKJu3hiNfIAzQR+Q==
+	bh=Nx8NbrxCZOch5TiFRdnylBkuk4A6CeRjyr0fvH0GKvc=;
+	b=2odSs6sxBmoMapkRVNVR7zl753UiZefxmUxL6uhbeW/FthuA4PACBZ1X2y9FbhHXcld7
+	 xeHP4Pa1Kj8OONHLcX26ITWDybPw9gq/Iqo98Me6rxyNqzMD8S5ZZ2iM//iEq2erqz+h6
+	 4FnLKoTpZe9DAJMU17rZNJvlyEA5O7uwg2XtrR0bYYxUdQ6MYf9s6LK/rbhC5/X9XA+vj
+	 EuvLPpBamt9SirVSBXWK2FmgpS0++zeIocNqtKXqxOuO84nHB5kUMP5di7d8siqAvasCr
+	 65jj98XFEDqpLCe7Rb9Uh4pZ8w5P0YX/pBcr3qe9p6Gldo5j9DIYG4FaECkJWHJpJNQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=YfjmgAZc;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="I++kCRa/";
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4450606A32A;
-	Sun,  8 Nov 2026 21:05:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29FFB606A320;
+	Sun,  8 Nov 2026 21:06:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=YfjmgAZc
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E061D1F0089F;
-	Sun,  8 Nov 2026 21:05:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=I++kCRa/
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 08FF11F0089F;
+	Sun,  8 Nov 2026 21:06:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794171942;
-	bh=ZS/+9RoeC/5ysy9/4XL0GzlvzEZI1ShMbYQDvBVHstM=;
+	s=k20260515; t=1794171990;
+	bh=Nx8NbrxCZOch5TiFRdnylBkuk4A6CeRjyr0fvH0GKvc=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=YfjmgAZcN+KTHtaJb+IOc4fpE2cEcSNRbs+lXm0dyiKNSvElj8xbcRZ9BpGKuZVGU
-	 I66byZGB+n6Q78sn0EEh/dnAmIpFSiHjU7ihfKb2yw7Fn0LVCoWWsl+5dG0DW9S1LV
-	 nL6nKV/0TDijp06VZYnFRVXMl7kj+ozBQ4tpdswEU6t+iqSaSIGcE+RMxLkyphXmtY
-	 FiixpQLdo1jqY3PTS72Y+BTtMgOundtsZZjurmFW9ZUkBoqQyOS4pLG8Lk9qLCbgww
-	 8fBunvLUzmbrf5+ygTyhGvJTokKL+VfgG82VKCFELbq2iuCKvVz5l8+5kwJose9F3+
-	 /eIeR7GTLgU2A==
-Message-ID: <sashiko-outbox-204050@kernel.org>
+	b=I++kCRa/bVOn81OGy5QqhKx6oH7GMCaJAG9ji53gMP6iYeuL2OsrG/2o8uxUvopNj
+	 ZdE6IHHv+tD3E2S8EGx3iqguu1LFFH1vAEwCwwzCpIblM1Afkdasptx1xFh44tc7m2
+	 r4F5/AcmFdUASdI0I+eS2bmTlmhJp7bDFp5S5AVUH+LP5cRB+vxp09ujWrTDw1TJ4P
+	 2vhgXGMGppHSTzMW9LSZjBiAmVGh89qSID3ciWrC21dujQORWyA/CUN1S7ZkRXlPPn
+	 iZkutQ6m+wsEjXHKR6rT3FMPoACDuiak/6+9vLWOa/VS3qFKfYvQ8YUCwtWg1g7/zy
+	 4D1KEbNnkQjxg==
+Message-ID: <sashiko-outbox-204054@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v9 20/29] scsi-multipath: provide callbacks for path
- state
+Subject: Re: [PATCH v9 17/29] scsi-multipath: clear path when device is
+ blocked
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "John Garry" <john.garry@linux.dev>, james.bottomley@hansenpartnership.com, mkp@kernel.org
 Cc: hare@suse.com, linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org, snitzer@kernel.org, jmeneghi@redhat.com, bmarzins@redhat.com, dm-devel@lists.linux.dev, hch@lst.de, michael.christie@oracle.com
-In-Reply-To: <20261108204733.557995-21-john.garry@linux.dev>
+In-Reply-To: <20261108204733.557995-18-john.garry@linux.dev>
 References: <20261108204733.557995-1-john.garry@linux.dev>
- <20261108204733.557995-21-john.garry@linux.dev>
+ <20261108204733.557995-18-john.garry@linux.dev>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Sun, 08 Nov 2026 21:05:41 +0000
+Date: Sun, 08 Nov 2026 21:06:28 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -63,116 +63,129 @@ Precedence: list
 
 Thank you for your contribution! Sashiko AI review found 2 potential
 issues to consider:
-- [High] scsi: scsi_multipath: scsi_mpath_available_path() ignores
-  sdev->access_state
-- [Medium] scsi: scsi_multipath: mpath_device access_state never updated
+- [High] scsi: multipath: UAF and NULL deref in scsi_device_block() on
+  removal race
+- [High] scsi: multipath: NULL deref and UAF in scsi_device_block()
+  during LUN scan
 --
 
-commit 6f83cc4eccb483172140b55837b87755b4421b91
+commit 6f23ec119648804e57ce4572c175483a5109ea7a
 Author: John Garry <john.garry@linux.dev>
 
-scsi-multipath: provide callbacks for path state
+scsi-multipath: clear path when device is blocked
 
-This commit implements the .is_disabled, .is_optimized, and .available_path
-multipath callbacks for SCSI multipath devices using sdev_state and
-access_state.
+This commit introduces scsi_mpath_dev_clear_path() and calls it from
+scsi_device_block() to clear the active multipath device path when a SCSI
+device is blocked.
 
-> diff --git a/drivers/scsi/scsi_multipath.c b/drivers/scsi/scsi_multipath.c
-> index 4c965650c2bd3..2f47c39d82936 100644
-> --- a/drivers/scsi/scsi_multipath.c
-> +++ b/drivers/scsi/scsi_multipath.c
-> @@ -298,7 +298,56 @@ static struct bio *scsi_mpath_clone_bio(struct bio *=
-bio)
->  	return clone;
->  }
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 36bc995e4e250..1950034f580f4 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+[ ... ]
+> @@ -3037,6 +3038,8 @@ static void scsi_device_block(struct scsi_device *s=
+dev, void *data)
+>  		scsi_stop_queue(sdev);
 > =20
-> +static bool scsi_mpath_is_disabled(struct mpath_device *mpath_device)
-> +{
-> +	struct scsi_mpath_device *scsi_mpath_dev =3D
-> +				to_scsi_mpath_device(mpath_device);
-> +	struct scsi_device *sdev =3D scsi_mpath_dev->sdev;
-> +	unsigned char access_state =3D READ_ONCE(sdev->access_state) &
-> +					SCSI_ACCESS_STATE_MASK;
-> +
-> +	if (READ_ONCE(sdev->sdev_state) !=3D SDEV_RUNNING)
-> +		return true;
-> +
-> +	if (access_state =3D=3D SCSI_ACCESS_STATE_OPTIMAL ||
-> +	    access_state =3D=3D SCSI_ACCESS_STATE_ACTIVE)
-> +		return false;
-> +
-> +	return true;
-> +}
-> +
-> +static bool scsi_mpath_is_optimized(struct mpath_device *mpath_device)
-> +{
-> +	struct scsi_mpath_device *scsi_mpath_dev =3D
-> +				to_scsi_mpath_device(mpath_device);
-> +	struct scsi_device *sdev =3D scsi_mpath_dev->sdev;
-> +	unsigned char access_state =3D READ_ONCE(sdev->access_state) &
-> +					SCSI_ACCESS_STATE_MASK;
-> +
-> +	if (READ_ONCE(sdev->sdev_state) !=3D SDEV_RUNNING)
-> +		return false;
-> +
-> +	return access_state =3D=3D SCSI_ACCESS_STATE_OPTIMAL;
-> +}
-
-[Severity: Medium]
-Does scsi_mpath_is_optimized() disagree with mpath_device->access_state for
-active/non-optimized paths?
-
-scsi_multipath_sdev_init() initializes mpath_device->access_state to
-MPATH_STATE_OPTIMIZED, and nothing updates it when sdev->access_state
-changes:
-
-lib/multipath.c:__mpath_find_path() {
-	...
-		switch(mpath_device->access_state) {
-		case MPATH_STATE_OPTIMIZED:
-		    if (distance < found_distance) {
-			    found_distance =3D distance;
-			    found =3D mpath_device;
-		    }
-		    break;
-		case MPATH_STATE_NONOPTIMIZED:
-	...
-}
-
-Because __mpath_find_path(), mpath_round_robin_path(), and
-mpath_queue_depth_path() select paths using mpath_device->access_state
-rather than mpdt->is_optimized(), an active/non-optimized path is still
-treated as optimized during path selection.  Under the NUMA policy,
-mpath_numa_path() then checks scsi_mpath_is_optimized() on every bio, sees
-false, and calls __mpath_find_path() to rescan dev_list and pick the same
-non-optimized path again on every I/O.
-
-> +
-> +static bool scsi_mpath_available_path(struct mpath_device *mpath_device)
-> +{
-> +	struct scsi_mpath_device *scsi_mpath_dev =3D
-> +				to_scsi_mpath_device(mpath_device);
-> +	struct scsi_device *sdev =3D scsi_mpath_dev->sdev;
-> +	enum scsi_device_state sdev_state =3D READ_ONCE(sdev->sdev_state);
-> +
-> +	if (sdev_state =3D=3D SDEV_RUNNING || sdev_state =3D=3D SDEV_QUIESCE ||
-> +	    sdev_state =3D=3D SDEV_BLOCK || sdev_state =3D=3D SDEV_CREATED_BLOC=
-K)
-> +		return true;
-> +
-> +	return false;
-> +}
+>  	mutex_unlock(&sdev->state_mutex);
+> +	if ((err =3D=3D 0) && sdev->scsi_mpath_dev)
+> +		scsi_mpath_dev_clear_path(sdev->scsi_mpath_dev);
+> =20
+>  	WARN_ONCE(err, "%s: failed to block %s in state %d\n",
+>  		  __func__, dev_name(&sdev->sdev_gendev), state);
 
 [Severity: High]
-Should scsi_mpath_available_path() also check sdev->access_state?
+Can calling scsi_mpath_dev_clear_path() after dropping sdev->state_mutex
+race with __scsi_remove_device() and cause a use-after-free or NULL
+pointer dereference on the multipath head?
 
-When all paths are in SDEV_RUNNING with an unusable ALUA state such as
-standby, unavailable, or offline, scsi_mpath_is_disabled() returns true for
-every path and mpath_find_path() returns NULL.  Because
-scsi_mpath_available_path() still returns true for any SDEV_RUNNING device,
-mpath_bdev_submit_bio() queues bios onto mpath_head->requeue_list instead
-of failing them with bio_io_error(), leaving I/O stuck on requeue_list.
+scsi_block_targets() iterates target devices via starget_for_each_device()
+without holding shost->scan_mutex.  Once scsi_device_block() unlocks
+sdev->state_mutex, __scsi_remove_device() can transition sdev->sdev_state
+from SDEV_BLOCK to SDEV_DEL and tear down the multipath head while
+starget_for_each_device() still holds a reference to sdev:
+
+CPU0                                  CPU1
+scsi_device_block()
+  mutex_lock(&sdev->state_mutex)
+  __scsi_internal_device_block_nowait()
+  mutex_unlock(&sdev->state_mutex)
+                                      __scsi_remove_device()
+                                        mutex_lock(&sdev->state_mutex)
+                                        sdev->sdev_state =3D SDEV_DEL
+                                        mutex_unlock(&sdev->state_mutex)
+                                        ...
+                                        scsi_mpath_remove_device()
+                                          scsi_mpath_remove_head()
+                                            scsi_mpath_put_head()
+                                            scsi_mpath_dev->scsi_mpath_head=
+ =3D NULL
+  scsi_mpath_dev_clear_path()
+    mpath_clear_current_path()        <-- use-after-free on mpath_head
+    mpath_synchronize(mpath_head)     <-- NULL deref or use-after-free
+
+Because scsi_mpath_remove_head() drops the reference on scsi_mpath_head
+and sets scsi_mpath_dev->scsi_mpath_head to NULL while leaving
+mpath_device.mpath_head dangling, mpath_clear_current_path() reads the
+freed mpath_device->mpath_head and mpath_synchronize() dereferences a NULL
+or freed mpath_head.
+
+> diff --git a/drivers/scsi/scsi_multipath.c b/drivers/scsi/scsi_multipath.c
+> index 8e229357e62c5..67e9010d54782 100644
+> --- a/drivers/scsi/scsi_multipath.c
+> +++ b/drivers/scsi/scsi_multipath.c
+> @@ -240,6 +240,16 @@ static int scsi_multipath_sdev_init(struct scsi_devi=
+ce *sdev)
+>  	return 0;
+>  }
+> =20
+> +void scsi_mpath_dev_clear_path(struct scsi_mpath_device *scsi_mpath_dev)
+> +{
+> +       struct mpath_device *mpath_device =3D &scsi_mpath_dev->mpath_devi=
+ce;
+> +       struct scsi_mpath_head *scsi_mpath_head =3D scsi_mpath_dev->scsi_=
+mpath_head;
+> +       struct mpath_head *mpath_head =3D &scsi_mpath_head->mpath_head;
+> +
+> +       if (mpath_clear_current_path(mpath_device))
+> +               mpath_synchronize(mpath_head);
+> +}
+> +
+>  static void scsi_mpath_clone_end_io(struct bio *clone)
+>  {
+>  	struct bio *master_bio =3D clone->bi_private;
+
+[Severity: High]
+What prevents scsi_device_block() from calling scsi_mpath_dev_clear_path()
+while scsi_mpath_dev_alloc() is still initializing or freeing
+sdev->scsi_mpath_dev during LUN scanning?
+
+sdev is already linked onto starget->devices and set to SDEV_RUNNING in
+scsi_add_lun() before scsi_mpath_dev_alloc() runs.  Inside
+scsi_mpath_dev_alloc(), scsi_multipath_sdev_init() publishes
+sdev->scsi_mpath_dev before scsi_mpath_head and mpath_device.mpath_head
+are populated, and the error path in scsi_multipath_sdev_uninit() frees
+sdev->scsi_mpath_dev before clearing the pointer:
+
+CPU0                                  CPU1
+scsi_add_lun()
+  scsi_mpath_dev_alloc()
+    scsi_multipath_sdev_init()
+      sdev->scsi_mpath_dev =3D ...
+                                      scsi_block_targets()
+                                        ...
+                                        scsi_device_block()
+                                          scsi_mpath_dev_clear_path()
+                                            mpath_clear_current_path()
+                                              mpath_head->current_path[node]
+                                              <-- NULL pointer dereference
+    ...
+    sdev->scsi_mpath_dev->mpath_device.mpath_head =3D ...
+
+If scsi_mpath_dev_alloc() fails (for example when a LUN has no VPD page 83
+device ID) and calls scsi_multipath_sdev_uninit(), a concurrent
+scsi_device_block() also risks a use-after-free on sdev->scsi_mpath_dev.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261108204733.5579=
-95-1-john.garry@linux.dev?part=3D20
+95-1-john.garry@linux.dev?part=3D17
