@@ -1,51 +1,51 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.116
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.127
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794170900;
-	b=nmF2fw2BHgauIHm8+sVXK3w3HyvPwMkHV76AQrN5293MozaATUpzncnz+fC6W+qo+Qdl
-	 QkfTVHgrWcnvq4t5jpvl6/ulH8Z0z+e48Lz++ym2/zpKOx/Z7f0JHsM1IIqguO4jkiEhv
-	 GB8+uOl04UnqnVBVJfJr/3aC8twbTLSWAAyhT8hmJhhmYXYT8uCFNjaoT1qUwJntUGJ9Z
-	 skHRjqFY0Re48AAbKO/NtHTJbHaC2mqCeca7BPLQCknOmd7Z5iGcfiy1pYhOFXxNCG2m0
-	 h6xiuPF0pkPh3wJD+K0hMKkl15tusmhLvcHVBQcNpo2eQNsWHheBPJH2EGRNPu/Xp3Q==
+	t=1794170902;
+	b=J1kIzSTJwJIqxoApvePvGVjUt0iGo6a50u9+tjUHS6omLNu39x156EuUL8DRKKW6nG6Y
+	 m2YnCtTdvPGEgDXs0EQvAcPdG3MYGsNULL81iCrLdBj86mFqq516gGhLx/c1l8eiHdd8h
+	 KcO5uIBm/jy4Ii3gPJdpwv9xwhxIVNKaZ2WkL/2NTpHnKB9uQVjPzqXbZIB5eS2vjyfWq
+	 kLyRVHl/fAVzlxnPgiRkoHT0GGO0oTAKVJNU/XLj0zBrQ8Xgm/smJKJP/ljIYJ3M191TU
+	 8gDw1viibn/XNOpGpdq54Hqtt9TEmOn1U5v4AtRdalERHlBPHL/SZvAdTHQROwS/tNw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794170900;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794170902;
 	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
 	 X-Mizu-Trace-ID:X-Migadu-Flow:From:To:Cc:Subject:Date:Message-ID:
 	 X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=Hx91sDACoJ7abAEOBHgQJI8JsvMH0QoUw+b4k5ePTNA=;
-	b=1hHBVtgPsebHANlvQjbw+DTDMRhrmolvqLjfVMn5+JKfGpEl9vip2LqY5YzlYuffKwQ2
-	 XrXh6G23r329x44cYbHItybWZXqAYZ9xPc9zpbyZrP8eetSthykUhmA7dN4y4zK61snit
-	 VXcDrzSajyQjAS8cB1oEPCLT7lrxPtE6k5tyXHqHHaOH8fuV9Bqc+5Nww0StsHKHY3Wsb
-	 7VTM2ueLQ0SCqFoF54qs5H4BbKSZ507+XKM3YYOR3dRoqxRgHHnZH3bCQKcZFVydRxBI3
-	 HSVXg8AdKulW/BjWMpnnOh9XWTY0iRY4q7DigBewjkqcsdNatHH3EyuohZEgljdVQ9g==
+	bh=2nnhEenE0/1GT2EDac2uSW/ypInHmlgcoWTshjS2obA=;
+	b=XGZM0r0+TDyPeLETTrd4+7sOf2DLAPXvlXhwsxlyyqX0VR0ZE8zWlA2+cEwTDZQ3+L5k
+	 jqYG2SnsvkLzF3+3nvc/K+GNHieufQYKvezr0X9l2rn8p9ezltoR8PWSIaoptBfOqcUss
+	 b8W5RVnNtp8HCkb04ebwZ9FuuLswr61KCHOJ1lwG8+SBxP8qaDbeurGU48INtl7YLVzn5
+	 qTiyWicKbYl0ZWuNSjr+Y1kYvy7w9JjkpzieiKUjMW06I/bl2STLh+aT5/3oJh71yCPmw
+	 Nf5N/sxDlKd3vUnAbNBXkI5Sqwm6ZaivFkD22K+EFpo/ZrroSNPkVxp1sW31awV/few==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linux.dev;
 	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=CENeaFWz;
-	arc=none smtp.remote-ip=95.215.58.116
-Received: from mta1.migadu.com (out-116.mta1.migadu.com [95.215.58.116])
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=STCqHCKo;
+	arc=none smtp.remote-ip=95.215.58.127
+Received: from mta1.migadu.com (out-127.mta1.migadu.com [95.215.58.127])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09033606A32A
-	for <linux-scsi@vger.kernel.org>; Sun,  8 Nov 2026 20:48:19 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 09033606A32A
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D669606A32A
+	for <linux-scsi@vger.kernel.org>; Sun,  8 Nov 2026 20:48:21 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8D669606A32A
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=CENeaFWz
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=STCqHCKo
 X-Envelope-To: linux-scsi@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=9d0oDkXwv97bvGSfI+N7Mhx767pQo6f0Hyy+dkcnP7c=;
+DKIM-Signature: a=rsa-sha256; bh=pPiJo5YvvZwz+FSuNCP5LV5980zfLh166gCKBgUb8TU=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1794170898; v=1; x=1794775698;
- b=CENeaFWz7VxpzbrU1DAKXWhTzDiaftiZeLA5RF7qqWvYfDUgJb5y0A4GgEp+eh2+k5P8eUO2
- TwGPy2L6zHGFn9FdJBw3WzNFFOzX0QSJyBwYO/Y8r3qAruL0mZ/cQvd2+k3kZslCE1418SlWCoR
- x5QyaghTmlSp0koGvoNZHDo4=
+ t=1794170899; v=1; x=1794775699;
+ b=STCqHCKooXiP/JFm9tRgW3k2K0EZRgZUzYpfsWJ/nZhmOi1NZ+x+eFysdDpxd0X+TvipCHrv
+ /gW4YuE/qvdJCueQetYDDEYzWfKaUaAP3QmXi/e15EnooO37axtULx7Bs0syB5feEUrZaibzjFn
+ +62QjsWOhnbO4EDrHG2uAPaY=
 X-Envelope-To: linux-scsi@vger.kernel.org
-Received: by mta10.migadu.com with ESMTPS id 83e0669b2846038b;
-	Sun, 08 Nov 2026 20:48:18 +0000
-X-Mizu-Trace-ID: 83e0669b2846038b
+Received: by mta10.migadu.com with ESMTPS id 3d3bbd98ebe99174;
+	Sun, 08 Nov 2026 20:48:19 +0000
+X-Mizu-Trace-ID: 3d3bbd98ebe99174
 X-Migadu-Flow: FLOW_OUT
 From: John Garry <john.garry@linux.dev>
 To: james.bottomley@hansenpartnership.com,
@@ -60,9 +60,9 @@ Cc: hare@suse.com,
 	hch@lst.de,
 	michael.christie@oracle.com,
 	John Garry <john.garry@linux.dev>
-Subject: [PATCH v9 18/29] scsi-multipath: revalidate paths upon device unblock
-Date: Sun,  8 Nov 2026 20:47:22 +0000
-Message-ID: <20261108204733.557995-19-john.garry@linux.dev>
+Subject: [PATCH v9 20/29] scsi-multipath: provide callbacks for path state
+Date: Sun,  8 Nov 2026 20:47:24 +0000
+Message-ID: <20261108204733.557995-21-john.garry@linux.dev>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20261108204733.557995-1-john.garry@linux.dev>
 References: <20261108204733.557995-1-john.garry@linux.dev>
@@ -77,70 +77,80 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-When a scsi_device is unblocked, we need revalidate paths which means that
-we clear paths and requeue any queued bios.
+Provide callbacks for .is_disabled, .is_optimized, and .available_path.
+
+These all use scsi_device.sdev_state and scsi_device.access_state.
+
+Member scsi_device.access_state will be driven by ALUA. Currently
+only device handlers support this, and in future we will have core
+SCSI support for implicit ALUA (not relying on device handlers).
 
 Signed-off-by: John Garry <john.garry@linux.dev>
 ---
- drivers/scsi/scsi_lib.c       | 2 ++
- drivers/scsi/scsi_multipath.c | 8 ++++++++
- include/scsi/scsi_multipath.h | 5 +++++
- 3 files changed, 15 insertions(+)
+ drivers/scsi/scsi_multipath.c | 49 +++++++++++++++++++++++++++++++++++
+ 1 file changed, 49 insertions(+)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 1950034f580f..4dbd01484b4a 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -3121,6 +3121,8 @@ static int scsi_internal_device_unblock(struct scsi_device *sdev,
- 	mutex_lock(&sdev->state_mutex);
- 	ret = scsi_internal_device_unblock_nowait(sdev, new_state);
- 	mutex_unlock(&sdev->state_mutex);
-+	if ((ret == 0) && sdev->scsi_mpath_dev)
-+		scsi_mpath_revalidate_paths(sdev->scsi_mpath_dev);
- 
- 	return ret;
- }
 diff --git a/drivers/scsi/scsi_multipath.c b/drivers/scsi/scsi_multipath.c
-index 67e9010d5478..008bcafe73ad 100644
+index 4c965650c2bd..2f47c39d8293 100644
 --- a/drivers/scsi/scsi_multipath.c
 +++ b/drivers/scsi/scsi_multipath.c
-@@ -240,6 +240,14 @@ static int scsi_multipath_sdev_init(struct scsi_device *sdev)
- 	return 0;
+@@ -298,7 +298,56 @@ static struct bio *scsi_mpath_clone_bio(struct bio *bio)
+ 	return clone;
  }
  
-+void scsi_mpath_revalidate_paths(struct scsi_mpath_device *scsi_mpath_dev)
++static bool scsi_mpath_is_disabled(struct mpath_device *mpath_device)
 +{
-+       struct scsi_mpath_head *scsi_mpath_head = scsi_mpath_dev->scsi_mpath_head;
-+       struct mpath_head *mpath_head = &scsi_mpath_head->mpath_head;
++	struct scsi_mpath_device *scsi_mpath_dev =
++				to_scsi_mpath_device(mpath_device);
++	struct scsi_device *sdev = scsi_mpath_dev->sdev;
++	unsigned char access_state = READ_ONCE(sdev->access_state) &
++					SCSI_ACCESS_STATE_MASK;
 +
-+       mpath_revalidate_paths(mpath_head);
++	if (READ_ONCE(sdev->sdev_state) != SDEV_RUNNING)
++		return true;
++
++	if (access_state == SCSI_ACCESS_STATE_OPTIMAL ||
++	    access_state == SCSI_ACCESS_STATE_ACTIVE)
++		return false;
++
++	return true;
 +}
 +
- void scsi_mpath_dev_clear_path(struct scsi_mpath_device *scsi_mpath_dev)
- {
-        struct mpath_device *mpath_device = &scsi_mpath_dev->mpath_device;
-diff --git a/include/scsi/scsi_multipath.h b/include/scsi/scsi_multipath.h
-index 2064a3e92274..6e50da94fc5d 100644
---- a/include/scsi/scsi_multipath.h
-+++ b/include/scsi/scsi_multipath.h
-@@ -56,6 +56,7 @@ void scsi_mpath_put_head(struct scsi_mpath_head *scsi_mpath_head);
- void scsi_mpath_add_sysfs_link(struct scsi_device *sdev);
- void scsi_mpath_remove_sysfs_link(struct scsi_device *sdev);
- void scsi_mpath_dev_clear_path(struct scsi_mpath_device *scsi_mpath_dev);
-+void scsi_mpath_revalidate_paths(struct scsi_mpath_device *scsi_mpath_dev);
- #else /* CONFIG_SCSI_MULTIPATH */
++static bool scsi_mpath_is_optimized(struct mpath_device *mpath_device)
++{
++	struct scsi_mpath_device *scsi_mpath_dev =
++				to_scsi_mpath_device(mpath_device);
++	struct scsi_device *sdev = scsi_mpath_dev->sdev;
++	unsigned char access_state = READ_ONCE(sdev->access_state) &
++					SCSI_ACCESS_STATE_MASK;
++
++	if (READ_ONCE(sdev->sdev_state) != SDEV_RUNNING)
++		return false;
++
++	return access_state == SCSI_ACCESS_STATE_OPTIMAL;
++}
++
++static bool scsi_mpath_available_path(struct mpath_device *mpath_device)
++{
++	struct scsi_mpath_device *scsi_mpath_dev =
++				to_scsi_mpath_device(mpath_device);
++	struct scsi_device *sdev = scsi_mpath_dev->sdev;
++	enum scsi_device_state sdev_state = READ_ONCE(sdev->sdev_state);
++
++	if (sdev_state == SDEV_RUNNING || sdev_state == SDEV_QUIESCE ||
++	    sdev_state == SDEV_BLOCK || sdev_state == SDEV_CREATED_BLOCK)
++		return true;
++
++	return false;
++}
++
+ static struct mpath_head_template smpdt = {
++	.is_disabled = scsi_mpath_is_disabled,
++	.is_optimized = scsi_mpath_is_optimized,
++	.available_path = scsi_mpath_available_path,
+ 	.clone_bio = scsi_mpath_clone_bio,
+ };
  
- struct scsi_mpath_head {
-@@ -104,5 +105,9 @@ static inline
- void scsi_mpath_dev_clear_path(struct scsi_mpath_device *scsi_mpath_dev)
- {
- }
-+static inline
-+void scsi_mpath_revalidate_paths(struct scsi_mpath_device *scsi_mpath_dev)
-+{
-+}
- #endif /* CONFIG_SCSI_MULTIPATH */
- #endif /* _SCSI_SCSI_MULTIPATH_H */
 -- 
 2.43.0
 
