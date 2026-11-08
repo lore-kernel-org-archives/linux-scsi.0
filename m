@@ -1,51 +1,51 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.87
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.91
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794170909;
-	b=HGsE7JDjn0KXJhGQemFpBAHL0r9F7QpyeMsjsE7eP2VeLrdoLRfq+6hnsGIhojx9PvJs
-	 yNFbu63dUumX7kAnxAWTt/0qifmJ8M7hd/KRdECc0i0rPk6RG02sObQoxzwy9Sh6RQhSK
-	 mZ4qAbMDPGi442DsiZSIzM3bZeEYAco8jV1bJoLXNRGzZw40XcvE9tUS3qbxS5+H247JV
-	 xmG0rStyKKZSBgqN6Twc49XArPNpFo6on4xbHMbWMwn34NHnXbO+9wMY3lh0NvmdiJnHh
-	 W2XKTQkaBbYq7Nf6nIJO7/XbuCPfe56bUfaTjYDLJKfEB8RRmjW23wEfMERSXkleT+g==
+	t=1794170910;
+	b=O8QlS3eZUQ2b4JHL5Q17h+8HbE7bTZl6dZKBfZ9ZpXPi0GjhndxRgc5FW6+sA1ImZBaU
+	 TJVCKXRBThbI4ihcVFFJ1P8jpYND3Yw3nK7I7tvu31bGDz9WXAjvWE+t46dQHICwlT6Fg
+	 VoCN9pQkVfNJGAE5SomU5lxO4MvZRnGXPAuTruFEZMY+Z0QCLUoONT3E+Lq86Xl8S0Vrb
+	 cCi20Lb5/XSlF9rDLQ5me+ttrNVDDV+M4TQGbd52RM3FZZkZIUhpaRSzTDlIiamma9Bc4
+	 Rzhq5sRzJOBpgRsl8yLPGEbTRnHZkVZ1LYIuwta9rnrw4L6GaYsmL995l37PE6Xoa6g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794170909;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794170910;
 	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
 	 X-Mizu-Trace-ID:X-Migadu-Flow:From:To:Cc:Subject:Date:Message-ID:
 	 X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=aLBSphUPpkQSmk/BQU8w4WnHJtgwOWRaiwq4m3R70Zc=;
-	b=FCwAgbehYPQ5Z7Ag4SMez8rAVdtya4qwrebFZXu+iKuVK74SEiGDJCkA+KAYWpgfaM2P
-	 mFWyGNotl+13SjMGLCLFXDj6IMQBfRDeN3zhEj1u+ohIUxMel/+moVwTtNDrPDVgmANfD
-	 Zmz4YqAQo/rNJTAKnxblse2DO+PyxrSNN0Q+3hTQJheUueo/2p7FIApXKEXjM6j0iRduu
-	 mIBLWkSfs1niD1twDpuQXvJPqnCK7dlHA4RrQtlSOxwkhuuqDjl3NFKyqz46YteKeidWQ
-	 yCb252MbRQtSwrxC+AjnGTI7TXt1+JmBAlreGBY6i1apiHNIg++aqD0OKV2jUruOpyg==
+	bh=U2xG8uBDS3ZX6a/oBks6CKUJxumAGYWP5iIhTx2myFE=;
+	b=Er7yRx4vcOgqX6y2Phl0p8H0mXMUCBmqhJaL+E3ni3wvx/9T3KV7XmlOwcM/WdOKKdiu
+	 +0xnHgRhOL5wIcJb2GODsKpl4vD+GlFOJ3RbqyQJjXTJGxNENZWeb+Ddt0ZSEysuqEyoU
+	 DPtiTBpOQOdbRmxKPTCEw+zNbz4ErxYzXHbjL5CrC0q6bhf4fEFHcaVpPt90IFC8Ybbhm
+	 yK8Bmk1LcKl13k+zUIz2v7/bJOrTui5XiEikFf+FoODqssZHFuPTZLtxCootvATjQw+wI
+	 AIK5cIl17nz6rW5QGwjy6v32QOAu5Z7ArhbeIGOlGwNEDk5PWHHySkti1BQ8yD14WtA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linux.dev;
 	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=CuTd5rkN;
-	arc=none smtp.remote-ip=91.218.175.87
-Received: from mta0.migadu.com (out-87.mta0.migadu.com [91.218.175.87])
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=BBtI6KRw;
+	arc=none smtp.remote-ip=91.218.175.91
+Received: from mta0.migadu.com (out-91.mta0.migadu.com [91.218.175.91])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5FC3D606D82A
-	for <linux-scsi@vger.kernel.org>; Sun,  8 Nov 2026 20:48:28 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5FC3D606D82A
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0FE08606D810
+	for <linux-scsi@vger.kernel.org>; Sun,  8 Nov 2026 20:48:29 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0FE08606D810
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=CuTd5rkN
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=BBtI6KRw
 X-Envelope-To: linux-scsi@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=yUyDco5Tbx6PoduIOfYi9iHiRgOj0lG9rUJG6HkMHEY=;
+DKIM-Signature: a=rsa-sha256; bh=H0+4Td4UmVtpFq6ZyOOwjEU0diM7bm7DIDQy7pV4k4k=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1794170906; v=1; x=1794775706;
- b=CuTd5rkNsbW27Id7uZBFk7XgMqScOKbnoGAu7ZTJ1i8d3IwtTjQcEBSRZF/H5PRAafYOBKeM
- DpAataKvwRUoeSPFfJ2MmuQRaTtAPwKYJExNrI3K/BmZ2naPhy1q3jS/NLuNdGnNTC7RZ/684hF
- i7ZnqS3BmMmF3c2x+cv6ohYk=
+ t=1794170908; v=1; x=1794775708;
+ b=BBtI6KRwD+LgJiIsK0tbzEbJR7XsAlORonJND3gVANNlrjgRXyd1H+m32fr7hZVUC4xoDS1p
+ i4s7LfzLzOygTVkWCc25DuTs6H8vBPkpEKrrMR1Hypwz05btOwR/atXuAINj2ux4LsaHuQPWduz
+ eYvMAEqwCdrmO6J9UfsKowEk=
 X-Envelope-To: linux-scsi@vger.kernel.org
-Received: by mta10.migadu.com with ESMTPS id 37ce54ce466a1928;
-	Sun, 08 Nov 2026 20:48:25 +0000
-X-Mizu-Trace-ID: 37ce54ce466a1928
+Received: by mta10.migadu.com with ESMTPS id a74b715b38ffa497;
+	Sun, 08 Nov 2026 20:48:26 +0000
+X-Mizu-Trace-ID: a74b715b38ffa497
 X-Migadu-Flow: FLOW_OUT
 From: John Garry <john.garry@linux.dev>
 To: james.bottomley@hansenpartnership.com,
@@ -60,9 +60,9 @@ Cc: hare@suse.com,
 	hch@lst.de,
 	michael.christie@oracle.com,
 	John Garry <john.garry@linux.dev>
-Subject: [PATCH v9 28/29] scsi: sd: add mpath_numa_nodes dev attribute
-Date: Sun,  8 Nov 2026 20:47:32 +0000
-Message-ID: <20261108204733.557995-29-john.garry@linux.dev>
+Subject: [PATCH v9 29/29] scsi: sd: add mpath_queue_depth dev attribute
+Date: Sun,  8 Nov 2026 20:47:33 +0000
+Message-ID: <20261108204733.557995-30-john.garry@linux.dev>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20261108204733.557995-1-john.garry@linux.dev>
 References: <20261108204733.557995-1-john.garry@linux.dev>
@@ -77,46 +77,44 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Add an attribute to show multipath NUMA node per-path (scsi_disk).
-
-The following is an example of reading the file:
-
-$ cat /sys/devices/platform/host8/session1/target8:0:0/8:0:0:0/block/sdc:0/numa_
-mpath_numa_nodes
-0-3
-$ cat /sys/devices/platform/host9/session2/target9:0:0/9:0:0:0/block/sdc:1/numa_
-mpath_numa_nodes
-$
+Add a queue_depth file so that the multipath dynamic queue depth can be
+looked up from per-path gendisk (scsi_disk) directory.
 
 Signed-off-by: John Garry <john.garry@linux.dev>
 ---
- drivers/scsi/sd.c | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+ drivers/scsi/sd.c | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
 
 diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 8469feb9ba5f..5ea604c4bbb0 100644
+index 5ea604c4bbb0..29ac1ee806c5 100644
 --- a/drivers/scsi/sd.c
 +++ b/drivers/scsi/sd.c
-@@ -4165,8 +4165,22 @@ static ssize_t sd_mpath_dev_show(struct device *dev,
+@@ -4178,9 +4178,28 @@ static ssize_t sd_mpath_numa_nodes_show(struct device *dev,
  }
- static DEVICE_ATTR(mpath_dev, 0444, sd_mpath_dev_show, NULL);
+ static DEVICE_ATTR(mpath_numa_nodes, 0444, sd_mpath_numa_nodes_show, NULL);
  
-+static ssize_t sd_mpath_numa_nodes_show(struct device *dev,
++static ssize_t sd_mpath_queue_depth_show(struct device *dev,
 +		struct device_attribute *attr, char *buf)
 +{
 +	struct gendisk *gd = dev_to_disk(dev);
 +	struct scsi_disk *sdkp = gd->private_data;
 +	struct scsi_device *sdev = sdkp->device;
 +	struct scsi_mpath_device *scsi_mpath_dev = sdev->scsi_mpath_dev;
-+	struct mpath_device *mpath_device = &scsi_mpath_dev->mpath_device;
++	struct scsi_mpath_head *scsi_mpath_head =
++				scsi_mpath_dev->scsi_mpath_head;
++	struct Scsi_Host *shost = sdev->host;
 +
-+	return mpath_numa_nodes_show(mpath_device, buf);
++	if (!mpath_qd_iopolicy(&scsi_mpath_head->iopolicy))
++		return 0;
++
++	return sysfs_emit(buf, "%d\n", atomic_read(&shost->mpath_nr_active));
 +}
-+static DEVICE_ATTR(mpath_numa_nodes, 0444, sd_mpath_numa_nodes_show, NULL);
++static DEVICE_ATTR(mpath_queue_depth, 0444, sd_mpath_queue_depth_show, NULL);
 +
  static struct attribute *sd_mpath_dev_attrs[] = {
  	&dev_attr_mpath_dev.attr,
-+	&dev_attr_mpath_numa_nodes.attr,
+ 	&dev_attr_mpath_numa_nodes.attr,
++	&dev_attr_mpath_queue_depth.attr,
  	NULL
  };
  
