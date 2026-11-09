@@ -1,94 +1,89 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.210.171
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=60.244.123.138
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794216549;
-	b=WGNnkzPxVTswPagiQOAx2neyUlOkxjTQnAzWpht9jg2T+pX9B7rFqlRZiu3lCTSPduKp
-	 FxLmNql0ipAg4Y3ogaIoMMPu2eMyvy+UbvsfEkwnU2slbllzIEoz8FimHt9FI5YDlTTg1
-	 9tdFi6Fpu3crUh9LUY9BXkiuUbJtNMaqjQNYmDLu6wFQ01k4FRxIpQivAefOsfHtbGTyq
-	 Nt7kyVKUlbcdIvRV6/270M+46UzbXlgx98aqmG1C3IWL+CPkB7IMqqRQwNQz6w9ZORwbS
-	 p5EjKJguPd8rzY9I+xURpZ1ZsO3KnTlRaqJJO4eWEpu/f4Y5UThOE3jzNxijWoT+mhw==
+	t=1794216584;
+	b=VsN7VOaSPHXVSwHtKlZcvkx/iNh4Pr82B18RYUnJo4LNhAjzmcPj4JeXzDBtxvmC6Wb4
+	 5BhV14CvWudnGNj3FTXgW9g6+k07PeyG0Io1J4SB/xNvZAdv41Z+xI8AfAJHlq/4I8bz1
+	 OTANLCPIHyEX7OFrsjv6GoIvoUrnVbk6fqcIkaR+9aaCzx3pGA8iEIBESC97EkQBVHCsL
+	 ij6VP+cq1a0VwcAFKTqDx36aJwgcP5GI1BlGMBvC0pE+QSKGrh+jWnu0Io/Wp7vpF2ewH
+	 xvKycPR/6DpExeahh+nYwhLtJzD/jF0xqYgaKJ1umJHpO57D7ShTZH9CrPeVSnrVQgA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794216549;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
-	 Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=MlPpXHGQmMTRzRR6JQE6PvYGk6NnpKFFc4r+AoGuyFM=;
-	b=Gdu2YBz0R9uVErShOnAkwdh538+GPNy7VVlT3SF2h1Qr9AADXKpHSzHgmJfDYIWRm6N1
-	 FKVMaEj8CnJhZ3ATJjwz44RpVXlj8nlv/BUAFJn0Lwd5yqp5GoseShFX3e1d57TNPvPs4
-	 NcR9rrCeLdjwjLUk4ZlsOdH09IUAQfx1LRmtSzx77Z+TTvgkJ3/Z9ZQHqx+QfqMDg8aX+
-	 JcUyzZHZDU/yWLhMj/q8dlJLkI6NyBYD3bsY2dNHYDSek4vD76rUIMvi8e5DEaC8JMa7H
-	 mk/AMjIHpNeDoyrSHbSt0fqxOB8d95bs4EAiuiMpXXHLOrQPd3hkkbK/RRgI10TOtmg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794216584;
+	h=DMARC-Filter:X-UUID:DKIM-Signature:X-CID-P-RULE:X-CID-O-INFO:
+	 X-CID-META:X-CID-BVR:X-CID-BAS:X-CID-FACTOR:X-CID-RHF:X-UUID:Received:
+	 Received:Received:Message-ID:Subject:From:To:Date:In-Reply-To:
+	 References:Content-Type:Content-Transfer-Encoding:User-Agent:
+	 MIME-Version:X-MTK;
+	bh=4shBtDYiQZmdYbTA4PysIE1ShY1jUiCpZkoBe53ww9s=;
+	b=MpyBaKEhEO+YKrufIJFKjcZ7SdKenQuffWjHzvw9TKnR3M+ANL4Y2TIJmcAg3gj8WXEh
+	 J0+tqBRJUUh3poJnxe4E5DUE3bStlnn7ZxpYUyKxw48a3x2t6LVXF3PGGBayyubKKFNeJ
+	 afRI/ArBMhyrIyehB7urf8c7Gzh1DuHLcBxWc6gAmBRUHfodzjYHLMYTaW9Tz85B/bpMp
+	 SVLX9twKV6oSDmW+iokeFPyTOb/fJM2ElmsaFStDPuP4IfHSBUzT7XFF+nHhi8pt0oN3c
+	 baYVCIMsFN2lXYaQqyauSqL/zt3OYpp55KLWdfDaZx2ZqMoEaXERzUNczbp/S/0oSXw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=VeDMrrGP;
-	arc=none smtp.remote-ip=209.85.210.171
-Received: from mail-pf1-f171.google.com (mail-pf1-f171.google.com [209.85.210.171])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=pass header.from=mediatek.com;
+	spf=pass smtp.mailfrom=mediatek.com;
+	dkim=pass header.d=mediatek.com header.i=@mediatek.com header.a=rsa-sha256 header.s=dk header.b=MMWrvwNH;
+	arc=none smtp.remote-ip=60.244.123.138
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C213A60A5BD7
-	for <linux-scsi@vger.kernel.org>; Mon,  9 Nov 2026 09:29:08 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C213A60A5BD7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D3A5D606D803;
+	Mon,  9 Nov 2026 09:29:42 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D3A5D606D803
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=VeDMrrGP
-Received: by mail-pf1-f171.google.com with SMTP id d2e1a72fcca58-8b3577deeb0so250046b3a.3
-        for <linux-scsi@vger.kernel.org>; Mon, 09 Nov 2026 01:29:08 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1794216548; x=1794821348; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=MlPpXHGQmMTRzRR6JQE6PvYGk6NnpKFFc4r+AoGuyFM=;
-        b=VeDMrrGPFDw3Ukg5QkZBevZ7ryDTXO/KoaQ82CprffedrPD95w+liomfeUNXGv39YJ
-         9kN7Hhc6Hf8N3Oiod/8nmzJYaV/5+Yf11Af/sPoWf8KYgri5UEBsnJYIJu555UFN8ary
-         CbExgPkfvUymOFthnbocOVvddYtUO+O0kuDsAEItYBsXDfEeVIIRrdHxzvWXd0oeRVQT
-         NHKCpB1U3Tf5aKrc0vropD+0vVgBo8KsAzUpqXIhAWn9ozX+40dvi5xp9CJ4+b5UcOj6
-         OHhFzixk58HURo9bgAbQXfhCr4MrE01A3FnoHCKZlV6Sj2KoDT3Yz560DbdMA7kedj7C
-         PHbg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794216548; x=1794821348;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=MlPpXHGQmMTRzRR6JQE6PvYGk6NnpKFFc4r+AoGuyFM=;
-        b=upHjJ4cYAWyMEUg5CeGM6EWDRy7aQZYcXcMeXx6x0jIkASQLTzUS7LV1ugj3HkkhIN
-         t0PV07seNXvTBD7vIFdjl4kpjM9yyEvQR2mr7AHcpfH1GqB3niqbZuAk90ZBmDCJ4xam
-         okBoNEi824rXePutUFyTRKz8lwuMxAserQVSDVfw7MBCFP8Zc8vCDLmMVxs6bl1w4Aov
-         d5cQJTU2sQwwuhWOJvx2HFjyrbIrEPAagJxQ8elxDBvecLYluqjaMIoAWBWsz7hx0x0v
-         OxhS9ChMXvIdyq/TUnQw1fgqLqHvD8Rwsg+PZtfHx/rgrvFC9QcxqNiC9TUI7wVknKmC
-         H8ww==
-X-Gm-Message-State: APuU4Z8aRsVGqeG8VIV/BH1MV0/sXvg0Kl0xDd7s6GsjTpsgB9+Jao5h
-	ViL6qyIrV1flLfXrQ1u9UpfOUZup/rZjBVQvMG416aOYlWfCCeGv8th9
-X-Gm-Gg: AYBFou1uYb3X1VTyqmdlHn7k2OR0YgQL5MhYx9byAJTqDAfcrgC9vFV7F4VGIOKZq3a
-	c4VsjCSXsEbTr4lxQoOYCvEIxz5Wvp0mgzWsxe8cGEc4xm7NV9UbUoq1ppK1EkMrr/Pc33zALJy
-	HU2dpm5p2KsqvadKy83NG+8vgqc8Vai3725ViT9iBpTq6+hPsJusxDeqBQrRd1gci+2rAuc/yhJ
-	eCXaLVTuUngsD0rGWzfQk4NNxJajRZmeIwu041yUTYgTJ5OCwjlAUGEeF2mJ0NiojnBUKrVvdVN
-	8BSRtSv1h7AmCTJSPMNLnCFEHnIBU64CwKw0OukHNHOrMj5DtG1/ceaNXbJseYoOPxLEZWR2OFY
-	dWhG/iPOApiR9GYPJNIaeTcCcnGLmFfsH5uCF7ayPCIvQ2glb7Vj1N8fdm4fPtzIr4Bl7TqTrAG
-	stCRsEMBx847jPLFbLLS8nRCy9qI0RjAE3KikWt1fMAzLATxeOgU7cdbv9bX0zd7CPMScknffiM
-	rz4IdDMzkd45i0SSNN4gZE1dAWDxAd5h0LRBHedIzfkhmQEjACSYbAEHpkenEKWoyTJKDglNEhb
-	ve9LTXGZOB1Bp2cMPWnyNN/VsJ0k9E6cQasPdbxF3roDuQzOZrNtnfXUVYc/3QA=
-X-Received: by 2002:a05:6a00:13a1:b0:890:bd5c:5710 with SMTP id d2e1a72fcca58-8b6717aef6dmr2691634b3a.41.1794216548030;
-        Mon, 09 Nov 2026 01:29:08 -0800 (PST)
-Received: from localhost.localdomain ([183.62.176.219])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-8b648e55e85sm1103778b3a.17.2026.11.09.01.29.05
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 09 Nov 2026 01:29:07 -0800 (PST)
-From: liuyong <pkfxxxing@gmail.com>
-To: "Martin K. Petersen" <mkp@kernel.org>
-Cc: linux-scsi@vger.kernel.org,
-	target-devel@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	security@kernel.org
-Subject: [PATCH 1/1] scsi: target: Skip zero-length protection SG allocation
-Date: Mon,  9 Nov 2026 17:27:36 +0800
-Message-ID: <20261109092744.822646-2-pkfxxxing@gmail.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20261109092744.822646-1-pkfxxxing@gmail.com>
-References: <20261109092744.822646-1-pkfxxxing@gmail.com>
+	dkim=pass (1024-bit key, unprotected) header.d=mediatek.com header.i=@mediatek.com header.a=rsa-sha256 header.s=dk header.b=MMWrvwNH
+X-UUID: 15549a98dc2011f1b1788b6acf885367-20261109
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+	h=MIME-Version:Content-Transfer-Encoding:Content-Type:References:In-Reply-To:Date:To:From:Subject:Message-ID; bh=4shBtDYiQZmdYbTA4PysIE1ShY1jUiCpZkoBe53ww9s=;
+	b=MMWrvwNHlVLVSKQucqVlGd7hSvE03wY9DnP0fs0jy3czrTibv6Yq5tGB5qd3sQ3o1J/0DgrDJAgcKvTq4O7bQhSyrwlqbcRvbI0FfpuFxL3053MW8ohQxhhWHEFlMltst/wYbTSJD8PoZXMPxaLwLd8qYIpRAWW8jc3FXUnDsV4=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.21,REQID:ac9d6d01-032c-4730-9f56-dad679bc4c84,IP:0,U
+	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+	release,TS:0
+X-CID-META: VersionHash:b0318ac,CLOUDID:dded7e8d-b3e7-4795-ae33-b1b4d51e21d7,B
+	ulkID:nil,BulkQuantity:0,SF:80|81|82|83|102|136|836|865|888|898,TC:-5,Cont
+	ent:0|15|50|99,EDM:-3|-100,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:
+	nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: 15549a98dc2011f1b1788b6acf885367-20261109
+Received: from mtkmbs11n2.mediatek.inc [(172.21.101.187)] by mailgw01.mediatek.com
+	(envelope-from <peter.wang@mediatek.com>)
+	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+	with ESMTP id 817843880; Mon, 09 Nov 2026 17:29:38 +0800
+Received: from mtkmbs13n2.mediatek.inc (172.21.101.108) by
+ mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.29; Mon, 9 Nov 2026 17:29:36 +0800
+Received: from [10.233.130.16] (10.233.130.16) by mtkmbs13n2.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.2.2562.29 via Frontend
+ Transport; Mon, 9 Nov 2026 17:29:36 +0800
+Message-ID: <4bbfec04002d51bb8364abcad78bb139b2a964c0.camel@mediatek.com>
+Subject: Re: [PATCH v6 2/3] scsi: ufs: core: Limit early link recovery in
+ the error handler to runtime PM
+From: Peter Wang <peter.wang@mediatek.com>
+To: Bart Van Assche <bvanassche@acm.org>, hoyoung seo <hy50.seo@samsung.com>,
+	<linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<mkp@kernel.org>, <martin.petersen@oracle.com>, <stanleyjhu@google.com>,
+	<alim.akhtar@samsung.com>, <kwangwon.min@samsung.com>,
+	<kwmad.kim@samsung.com>, <cpgs@samsung.com>, <h10.kim@samsung.com>
+Date: Mon, 9 Nov 2026 17:29:36 +0800
+In-Reply-To: <762e1686-eacf-46a5-a8fd-62acba002fdc@acm.org>
+References: <cover.1793931113.git.hy50.seo@samsung.com>
+	 <CGME20261106022020epcas2p2af29bc4d81ede559c5a74076721aba7f@epcas2p2.samsung.com>
+	 <e25861e1983785d6d96e4db40f6c175bc3d091d1.1793931113.git.hy50.seo@samsung.com>
+	 <9cf963e66f0e08efa9996b53d6b2f38eacd9c98a.camel@mediatek.com>
+	 <973576304.21793952182671.JavaMail.epsvc@epcpadp2new>
+	 <f2d51c2730a748f8ae1f01d8328119ccea12d6ea.camel@mediatek.com>
+	 <762e1686-eacf-46a5-a8fd-62acba002fdc@acm.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.52.3-0ubuntu1.1 
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -98,44 +93,60 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-MTK: N
 
-A READ(10) command with its TRANSFER LENGTH field set to zero, sent to a
-LUN with protection information enabled, can select TARGET_PROT_DIN_STRIP
-while leaving cmd->prot_length at zero. transport_generic_new_cmd() then
-passes that zero length to target_alloc_sgl(). This reaches
-sg_init_table() with no entries, so sg_init_marker() accesses an invalid
-last entry and causes a target-side Oops, which can also lead to
-use-after-free during subsequent iSCSI connection cleanup. A logged-in
-iSCSI initiator can trigger this on a FILEIO LUN with protection
-information enabled.
+On Fri, 2026-11-06 at 11:15 -0800, Bart Van Assche wrote:
+> Hi Peter,
+>=20
+> I don't think that's guaranteed. ufshcd_err_handler() tests
+> hba->pm_op_in_progress only once, when it starts, and without holding
+> any lock. An error handler that started before that flag was set
+> skips
+> the early path. For runtime PM it then blocks in
+> ufshcd_rpm_get_sync()
+> in ufshcd_err_handling_prepare(), waiting for the runtime resume that
+> is in progress. If __ufshcd_wl_resume() waits for that error handler
+> with flush_work(), neither can proceed. This is the deadlock that
+> commit 35dabf4503b9 addressed and that the comment in
+> ufshcd_eh_timed_out() describes.
 
-Require a nonzero protection length before allocating its SG list,
-allowing commands with no protection payload to proceed without an
-empty allocation.
+Hi Bart,=20
 
-These issues were discovered and fixed by Qihoo 360's Tulongfeng
-multi-agent system.
+Agreed, there is still a race window. But in practice, the
+issue happens when wl suspend/resume sends a command.
+But we cannot guarantee that there are no issues with=20
+power/clock on/off.
 
-Fixes: 5835812f13e5 ("target: ensure se_cmd->t_prot_sg is allocated when required")
-Cc: stable@vger.kernel.org
-Signed-off-by: liuyong <pkfxxxing@gmail.com>
----
- drivers/target/target_core_transport.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+>=20
+> System PM has a similar problem. __ufshcd_wl_suspend() clears
+> hba->pm_op_in_progress before it returns, but host_sem stays held
+> until ufshcd_wl_resume() returns. An error handler that runs between
+> system suspend and system resume therefore takes the regular path and
+> blocks in down(&hba->host_sem). A flush_work() call from
+> __ufshcd_wl_resume() would then never return.
+>=20
 
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 927861c30..4cda1e610 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -2841,7 +2841,7 @@ transport_generic_new_cmd(struct se_cmd *cmd)
- 	int ret = 0;
- 	bool zero_flag = !(cmd->se_cmd_flags & SCF_SCSI_DATA_CDB);
- 
--	if (cmd->prot_op != TARGET_PROT_NORMAL &&
-+	if (cmd->prot_length && cmd->prot_op != TARGET_PROT_NORMAL &&
- 	    !(cmd->se_cmd_flags & SCF_PASSTHROUGH_PROT_SG_TO_MEM_NOALLOC)) {
- 		ret = target_alloc_sgl(&cmd->t_prot_sg, &cmd->t_prot_nents,
- 				       cmd->prot_length, true, false);
+Yes, unless we refine the system PM flow.
 
-base-commit: f66469d9905b39d2c260a15d7d6db450f4db67c1
+> Additionally, ufshcd_schedule_eh_work() does not queue the error
+> handler if the HBA state is UFSHCD_STATE_ERROR. In that case
+> queue_work() + flush_work() would not perform any recovery, and
+> __ufshcd_wl_resume() would have no way to find out whether recovery
+> succeeded.
+>=20
+
+Agreed, it looks like there are still more scenarios to
+consider. And it is also complex too.
+
+> Yes. The cover letter mentions this. That issue predates this series,
+> and I think it should be addressed separately instead of holding up
+> these fixes.
+>=20
+> Hence, I prefer the approach of v7 of this series.
+>=20
+
+Sorry, I missed the cover letter. Thanks for the reminder.
+Let=E2=80=99s move this patch series forward.
+
+Thanks
+Peter
