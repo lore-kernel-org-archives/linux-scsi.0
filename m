@@ -1,63 +1,60 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794196543;
-	b=irzRI7MeTDVwUv1sHmrqzxj7cyluYYoAlQEXrRED3wFHSvzZm6dsdOj57dHhZF3zYIG4
-	 GHFnz0L4sADAmnFz/2jpcYob2mqNbjrg6SmWnBJrOZ71NujcYPhDsEPYb6l0JU+yaYWG5
-	 1myUtVwoZ1VX4c90uSrO4cJ3K3Dml5sd6ohKBNR9zyLAoviGCME6hhSIaC2ifOV/O0nOn
-	 te0sWCLUZpfm/re9VRHELsd8ncxmNdTsfavoThFunMBJCWqrogT8fPHwexqSDm4hhqYK1
-	 XfdAqW+EVMb7DiXXVjwojW4LeIE/sBDdPMhsPZS6rBFwTtYsf5dEzy6zQ6UjRyZzfqw==
+	t=1794196546;
+	b=y7Zgf3VaO6gyMnnsNGnsju3HO70dg0xa90K1l3ab3IiEcxnfViEPf752fZcZNaQruxhY
+	 ToQA3gzyegsvUedlUyXIvSvhrNwrHiQPZ4E2Pog8nEco0Wqh08HiWvV+ekmx7CbLngXbI
+	 jZYVjGJnQ0Y/tlxJ9BEnPOX+TM9Ht08fRok40h+Hd760X9baPr7Q/RIgPgQfnPtd+whpH
+	 +Z2K48yn2Nwy+6wZVa5drF3zzb/Y/OpxliHYTjIDd0/IM7mp+0UPCuDEHCaGhlO5O2iWM
+	 +ZjXTV9uFnpVoH6OF4YNnDkCVHuhjCpOezXtk4kwMAYRQ8/dobFvmoG/ZpKjaoOVAjg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794196543;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794196546;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding;
-	bh=JEVJBhPy/V4deCNOg24XuS4U2E56XDFsn/acO2RWXIc=;
-	b=nSIwi1I9tHhIzEcV7D0ktJNuvx1bVV4XvfQTenv6o1UJCkBlieFhFR/o1KXJQ+Z18T5h
-	 6r8cFhvgL/salcTSSiiEqLCafbjH/vvtNN+kWBea7/8+KaABlTS5UvA7GmJV64IJFe7/D
-	 HjcV9hFV1cTMVkogD6+XdZQLmHp8PRKKi1Ps+i5t7SDfOK7HCVSNNXTFWH/QYGA77FHOk
-	 Yxq1GpFa1Jl/4JjNZPEiG+NGYrCIAmgVeKllf+vWTWRTEZLGsUKpHWAAXxnCQs+oqQfHt
-	 jB1zrOQCsWzLRqRgEC49zVd4324QYsb6EGjTtl0+pFEqj7GqBfjrhWyp/Oi9TiYgNPw==
+	bh=2Hhffl64yBNN25IaNaa/RCK/SwEV54eln5oc5w+qX2E=;
+	b=5EkGKahiYJRudhBsVTi7HEadB7H2tD2al9MtexxYFJ287Y1QLB++fWLPg6DQhMBY9cyr
+	 e+Mt90rkUG15uQjOh9xsKiGRL5fCL2/QrlxEytZJghYs80iMsTYuww5v8LCg8egjK2kLT
+	 OQV6VZJSb2Vy/OZIYXTPK1m/GZLyq6+r04qGouN9EeHyKHK31IrTG+S1xCY8M3qAUFUJ7
+	 raq2biZIeFowrOAFNSVRLtsQo03aCNhxF/jqtEQtZhK7gNT9T8p6YNBvdqlJ6QaPYTZ+s
+	 Dugll6FCW9w1EIv5zU21q3iWcZK0bP2aIqo5bPqJLMxzrsJES6EKGKfJwATJhDuldiQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=YuXqcH+K;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=aqkMQrMk;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 76E27606D81D
-	for <linux-scsi@vger.kernel.org>; Mon,  9 Nov 2026 03:55:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2B34606A33A;
+	Mon,  9 Nov 2026 03:55:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=YuXqcH+K
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4DAAD1F008A6;
-	Mon,  9 Nov 2026 03:55:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=aqkMQrMk
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F06111F00902;
+	Mon,  9 Nov 2026 03:55:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794196543;
-	bh=JEVJBhPy/V4deCNOg24XuS4U2E56XDFsn/acO2RWXIc=;
+	s=k20260515; t=1794196545;
+	bh=2Hhffl64yBNN25IaNaa/RCK/SwEV54eln5oc5w+qX2E=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=YuXqcH+KAPVD0cJ1l3WvJcEzrP8LdexVZQofgS+gUxHOSWJBfv7lAT70C//rUfuKE
-	 04EBcU8WfFAu/FdYr9gr7c4laix+PDAnOMK8YRrOSZER8RtRrte/aLnrrwq5by6rso
-	 dNwg+RbvoC/TkU0NY+eKuSpad8PLVIX8EMNO62fVc30GVhuQ5mFDfjthMWem0mo3qL
-	 FYC6T+3LWqCNuVjbHK1OIMmoFhcCGwWWBMQVLMxx0Vld8Mj+ZzZ49m28h4v0bHp2bJ
-	 4bJViGNRcJZcxeTSesBnIxfh0U3UMtKph54vig2MHRJ1dPXHXREgg73nEn+ASfhUN5
-	 gvj+rHsOtcFYQ==
+	b=aqkMQrMk8aimyTm29gZ5sTznqObxHcjn7VVB1WnL50PA4V3HxUXA1HToxtX1PjgCj
+	 NrXhG1pmcnswlT27LpkPQvY3UJIwG+Q0tMEp2A1WHgUEwkRZOOstUGP6lFS2x0CnPS
+	 D2gWxMmUW3a5z3wyynNWgAvYMJ+5D5QOopwncaos/ZPwx09AqK0H1bq3jVKF0I7e7O
+	 bU3l7Tv6NNIL1YQ34CykZkI3jk/ciZaI6tDqSc5DULMrnAYjws57WVgPD+7n4NePTq
+	 f5/rlpql7R8XWAv1mK8JWZQMOkBptaLt7zUKBmElP0CNaZiPgt1wz9TYysIf3bO2xT
+	 atjmX54vykZAg==
 From: "Martin K. Petersen (Oracle)" <mkp@kernel.org>
-To: James.Bottomley@HansenPartnership.com,
+To: sathya.prakash@broadcom.com,
+	kashyap.desai@broadcom.com,
+	sumit.saxena@broadcom.com,
+	sreekanth.reddy@broadcom.com,
 	"Martin K. Petersen" <mkp@kernel.org>,
-	Dongdong Hao <doubled@leap-io-kernel.com>
-Cc: dlemoal@kernel.org,
-	hare@kernel.org,
-	hare@suse.de,
-	yjzhang@leap-io-kernel.com,
-	kezijie@leap-io-kernel.com,
-	jzzhang@leap-io-kernel.com,
-	baikefan@leap-io-kernel.com,
-	linux-scsi@vger.kernel.org
-Subject: Re: [PATCH v2] scsi: leapraid: Fix init_cmd_priv error handling
-Date: Sun,  8 Nov 2026 22:55:24 -0500
-Message-ID: <179419615229.1941224.3635462012519013734.b4-ty@b4>
+	"Milan P. Gandhi" <mgandhi@redhat.com>
+Cc: linux-scsi@vger.kernel.org,
+	stable@vger.kernel.org
+Subject: Re: [PATCH v2] scsi: mpi3mr: Validate reply frame size bounds
+Date: Sun,  8 Nov 2026 22:55:26 -0500
+Message-ID: <179419615243.1941224.17714090451921058754.b4-ty@b4>
 X-Mailer: git-send-email 2.56.0
-In-Reply-To: <20261104092808.206067-1-doubled@leap-io-kernel.com>
-References: <20261104092808.206067-1-doubled@leap-io-kernel.com>
+In-Reply-To: <20261105122401.266559-1-mgandhi@redhat.com>
+References: <20261105122401.266559-1-mgandhi@redhat.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -70,23 +67,25 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 
-On Wed, 04 Nov 2026 17:28:08 +0800, Dongdong Hao wrote:
+On Thu, 05 Nov 2026 17:54:01 +0530, Milan P. Gandhi wrote:
 
-> leapraid_init_cmd_priv() ignores the return value of
-> leapraid_internal_init_cmd_priv() and always returns success. If
-> dma_pool_alloc() fails, io_tracker->chain remains NULL, but the SCSI
-> midlayer considers the command successfully initialized.
+> Firmware provides reply_frame_size in dwords, which the driver multiplies
+> by 4 to compute facts.reply_sz (u16). If the reported size exceeds
+> U16_MAX / 4, the multiplication overflows u16 before assignment, causing
+> under-allocated DMA reply buffers.
 > 
-> A subsequent I/O requiring more than LEAPRAID_SGL_INLINE_THRESHOLD
-> DMA-mapped scatter-gather entries dereferences the NULL chain buffer
-> while building the chained SGL, causing a kernel crash.
+> Furthermore, several paths assume a minimal reply frame size:
+> - logdata_entry_sz calculations underflow or hit zero when reply_sz <= 20
+>   bytes, leading to zero-size allocations and divide-by-zero crashes.
+> - Unsolicited status descriptors and fixed replies (such as struct
+>   mpi3_iounit_control_reply, 64 bytes) require at least 16 dwords.
 > 
 > [...]
 
 Applied to 7.4/scsi-fixes, thanks!
 
-[1/1] scsi: leapraid: Fix init_cmd_priv error handling
-      https://git.kernel.org/mkp/scsi/c/04feb5fd2c23
+[1/1] scsi: mpi3mr: Validate reply frame size bounds
+      https://git.kernel.org/mkp/scsi/c/e550f2b2b4aa
 
 -- 
 Martin K. Petersen
