@@ -1,66 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=183.62.165.209
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794195507;
-	b=iiKdmBOLz3oi4z8OH+R+BgId7PSR4UoKBte2T6aZIT7eQ4C5Sjhzx8ffRo01mo33Fnx0
-	 dbAIkFgppeW2+lfMNKkR7QGyNTyxKaiP3hxPhcxaJUeXkJnhyuzJn6dwohNbJ8PzXgR9P
-	 4Pame+mRUKt9OlEKB8b9Nc1Cgbn+S2s9C5jEEHQzOh/j6XHnCc4MZ8mlp64iDBeVLmdJj
-	 e4aC+7qrI5yX23rRqZgnNLPoAu+pNsV0U0ZiRCGSzNZ1xM5GpxoLzfIQUQ0uoj+s8UYxp
-	 XyGuoyD+iaP/3Ion95tgv13g1uSFoWWbwy+PEfY9mPRKv1CccUFyEapDcDmUodGcAxw==
+	t=1794196011;
+	b=znJcIOdsdUbyCmJm0sfdPhao4vo+86DtnaO/QlDmCZkoJuOr117x6nRBKotrGmB/PdQy
+	 8+3aCsG6+1E4h59OIDGRzxeBlMe+98O78bWueeut71VZmkZpWE/dyB+Sqrm7y8WRzsAIh
+	 37tPqH9lEvW5INFjOsdypQvI+Vv+l3xhGRepuyerrI0xHRrnQQsacfmwFvFYcS5lrr7GR
+	 04tdTQHgHa8A9QVCMWFxNbOljAE7js11dN2Dtiomo2E9V/mq//ETfVBCVv+8/4At9ckxG
+	 7U9lzVzN65HIjpErDzoHtoPH1Q9K5sA6b7oJvAsZ1JCQBJkvpC33RDFq7j08KOCp08Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794195507;
-	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
-	 X-Zmail-TransId:X-Mailer:Message-ID:Date:Mime-Version:From:To:Cc:
-	 Subject:Content-Type:X-MAIL:X-TLS:X-ENVELOPE-SENDER:X-SOURCE-IP:
-	 X-CLEAN:X-Fangmail-Anti-Spam-Filtered:X-Fangmail-MID-QID;
-	bh=bjmpd2GsLVB9bI9oKuc5xotaF+hmV+/J9JTe1SBkGe4=;
-	b=LpeWKpZmXkMByPDNh14gmj1oGnf+W1+jO8jLaMHGFCxGl8IFwjQNCp/1VY8ZSn33gbsU
-	 2s4OJcSWI1tU6zL4EAsaN/Z+9LjHWiBWGLE6/PjFLbgrkWyW7647HsjG+yLrFp5iEXyU7
-	 JwZI32lRq9wDQwcU1mtwVeBI6qyFc3MGjJv9F4HlYOtfFySJ1mG+UMv6/t5o9CFgq/l0L
-	 VZ86QaFkkBeaTTDA1u85SCS+dsY25z2ukIMaMa/TsAvziv4JeDgIk121xDpJvxx9uOeyb
-	 GHN1kQ3ztiB6VjpUwDSFFqB+TAmALiKszAOq4gTi8sJrvKFSJwU9sfzndFi3YSZoUfw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794196011;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=BgB5QET9sg/ELwc76MYFHaGW8l1f2bvLx8aXluE4l1k=;
+	b=34wjhjPB1/f9iUcbobi/wNRbHHni+4Dtzh4Z2w+VDEz/h35cs1//EqbjsON95VpLqBQO
+	 qh03KPoV4ZPKbHU72rcvXAFB0qNjsqRnjvJz5n9in0uuMfkYr205qqRRubs3pDSegrUxJ
+	 dpR5qec6NtAyf+KzJTAswbOwu/kVRH9QCzHpxw3viwst5wYIEgsujsPZViVtaPnWQlpjM
+	 dMG/bqfsmc7T6DfCFwIkV8OCSQpAbRSy23gSVcDCKumiFEWWAFH8fjom6JmcGZQwUtblW
+	 9ozzlU0mfXU5A36iumsWR/XgSaoj2YrDf/HemQvYjg0pnIxuL5g/b1YDb+TtygAQ2lA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=zte.com.cn;
-	spf=pass smtp.mailfrom=zte.com.cn;
-	dkim=pass header.d=zte.com.cn header.i=@zte.com.cn header.a=rsa-sha256 header.s=z202610 header.b=itdM0Tu5;
-	arc=none smtp.remote-ip=183.62.165.209
-Received: from mxct.zte.com.cn (mxct.zte.com.cn [183.62.165.209])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=MpTMxGZL;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E14F7606A323;
-	Mon,  9 Nov 2026 03:38:26 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E14F7606A323
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zte.com.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zte.com.cn
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22F94606A31C
+	for <linux-scsi@vger.kernel.org>; Mon,  9 Nov 2026 03:46:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=zte.com.cn header.i=@zte.com.cn header.a=rsa-sha256 header.s=z202610 header.b=itdM0Tu5
-Received: from mse-fl2.zte.com.cn (unknown [10.5.228.133])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mxct.zte.com.cn (FangMail) with ESMTPS id 4jNFqX16SSz58fdG;
-	Mon, 09 Nov 2026 11:38:16 +0800 (CST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=zte.com.cn;
-	s=z202610; t=1794195496;
-	bh=5c/92VOtsWXXbGQih7pTvetR3SZsjmzamqI04YkK4t0=;
-	h=Date:From:To:Cc:Subject;
-	b=itdM0Tu5wcHA78l5hQUwg3J4MAOA2zxW5k4Y5dKwHrDDlsVdrP7LlPrceMfuAdO3/
-	 3/NFW8VGNQzMcmKp+CuX9PL1DmEYKOU8GEL4ys4s3EBuijZeNdWMc9F5guD92vz5kC
-	 yE2mU7Mp00Br7tjn9W83MWr5O2H70HEzhp5TkTz8zqfOyjF/UJAoh1sGWKMLsyO/ms
-	 8VBHxu6QPqXLkZJFGjr45wfgy9yrXXi08iinTOZi5SSSNzZGsqOs686c7Ce81/3HvX
-	 53U84kzWjFfPUdHch7mW0fhKa/0bltIIy54ddkWie+Db3rPAkixMnBO4uedlYytJ8z
-	 AWuGyTSR1181w==
-Received: from xaxapp01.zte.com.cn ([10.88.99.176])
-	by mse-fl2.zte.com.cn with SMTP id 6A93c80H063932;
-	Mon, 9 Nov 2026 11:38:09 +0800 (+08)
-	(envelope-from shao.mingyin@zte.com.cn)
-Received: from mapi (xaxapp05[null])
-	by mapi (Zmail) with MAPI id mid32;
-	Mon, 9 Nov 2026 11:38:10 +0800 (CST)
-X-Zmail-TransId: 2afc6af140227ff-419f8
-X-Mailer: Zmail v1.0
-Message-ID: <20261109113810258gK5WuYWQKt0HsI2ikxmHo@zte.com.cn>
-Date: Mon, 9 Nov 2026 11:38:10 +0800 (CST)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=MpTMxGZL
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 709A41F0089F;
+	Mon,  9 Nov 2026 03:46:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794196010;
+	bh=BgB5QET9sg/ELwc76MYFHaGW8l1f2bvLx8aXluE4l1k=;
+	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
+	b=MpTMxGZL5f3oTYDcv5AMMRFJsRKoT2IW9HTsYyKoqQ4XYCyx7PJCnCmRh3rrRCI28
+	 ztOaBfwKXWZCgvYcfB4XZiNRBHj+1XPdpCd1kkGmlJ+UXNRmgmT3bGsY5RJ3tx64Zs
+	 sH41mh2wuAePSpjIbefiqFozvzs1ufJBNEgnt0c9qvx1sw94Jjg+2zUKMC5i9rns7W
+	 fJETEVlzQPDr09PvqUhudE44q9phuxs3HUQhG7Wt1ZFx7EZBC8AfaZrHuTTvJi5e45
+	 tKt9dqGi2rjzm64EoSbmxhX31QDXrvXBSYbOyRSc84sPAfEeRLJXppbtYELhjLa0HY
+	 2HizPcZr4V4CQ==
+Message-ID: <sashiko-outbox-204381@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] scsi: proc: use snprintf() for the host name
+Reply-To: sashiko-reviews@lists.linux.dev
+To: shao.mingyin@zte.com.cn, linux-scsi@vger.kernel.org
+In-Reply-To: <20261109113810258gK5WuYWQKt0HsI2ikxmHo@zte.com.cn>
+References: <20261109113810258gK5WuYWQKt0HsI2ikxmHo@zte.com.cn>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 09 Nov 2026 03:46:49 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -69,49 +57,56 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0
-From: <shao.mingyin@zte.com.cn>
-To: <mkp@kernel.org>, <linux-scsi@vger.kernel.org>
-Cc: <James.Bottomley@HansenPartnership.com>, <linux-kernel@vger.kernel.org>
-Subject: =?UTF-8?B?W1BBVENIXSBzY3NpOiBwcm9jOiB1c2Ugc25wcmludGYoKSBmb3IgdGhlIGhvc3QgbmFtZQ==?=
-Content-Type: text/plain;
-	charset="UTF-8"
-X-MAIL:mse-fl2.zte.com.cn 6A93c80H063932
-X-TLS: YES
-X-ENVELOPE-SENDER: shao.mingyin@zte.com.cn
-X-SOURCE-IP: 10.5.228.133 unknown Mon, 09 Nov 2026 11:38:16 +0800
-X-CLEAN: YES
-X-Fangmail-Anti-Spam-Filtered: true
-X-Fangmail-MID-QID: 6AF14028.000/4jNFqX16SSz58fdG
 
-From: Shao Mingyin <shao.mingyin@zte.com.cn>
+Thank you for your contribution! Sashiko AI review found 1 potential
+issue to consider:
+- [Medium] scsi: proc: host_no truncation in scsi_proc_host_add() and
+  scsi_proc_host_rm()
+--
 
-scsi_proc_host_add() and scsi_proc_host_rm() format host_no into a
-10-byte buffer with sprintf().  host_no is an unsigned int, and once
-it grows past nine digits the %d output plus the terminator no longer
-fits; use snprintf().
+commit 3f018a4fb0e8a43b35d69140bbb854cdcd245155
+Author: Shao Mingyin <shao.mingyin@zte.com.cn>
 
-Signed-off-by: Shao Mingyin <shao.mingyin@zte.com.cn>
----
-diff --git a/drivers/scsi/scsi_proc.c b/drivers/scsi/scsi_proc.c
-index fdc355d783da..d1f474c28720 100644
---- a/drivers/scsi/scsi_proc.c
-+++ b/drivers/scsi/scsi_proc.c
-@@ -230,7 +230,7 @@ void scsi_proc_host_add(struct Scsi_Host *shost)
- 	if (!e)
- 		goto err;
- 
--	sprintf(name,"%d", shost->host_no);
-+	snprintf(name, sizeof(name), "%d", shost->host_no);
- 	p = proc_create_data(name, S_IRUGO | S_IWUSR, e->proc_dir,
- 			     &proc_scsi_ops, shost);
- 	if (!p)
-@@ -260,7 +260,7 @@ void scsi_proc_host_rm(struct Scsi_Host *shost)
- 	if (!e)
- 		return;
- 
--	sprintf(name,"%d", shost->host_no);
-+	snprintf(name, sizeof(name), "%d", shost->host_no);
- 	remove_proc_entry(name, e->proc_dir);
- }
- /**
+scsi: proc: use snprintf() for the host name
+
+This commit replaces sprintf() with snprintf() when formatting
+shost->host_no into the 10-byte name buffer in scsi_proc_host_add() and
+scsi_proc_host_rm().
+
+> diff --git a/drivers/scsi/scsi_proc.c b/drivers/scsi/scsi_proc.c
+> index fdc355d783da3..d1f474c287206 100644
+> --- a/drivers/scsi/scsi_proc.c
+> +++ b/drivers/scsi/scsi_proc.c
+> @@ -230,7 +230,7 @@ void scsi_proc_host_add(struct Scsi_Host *shost)
+>  	if (!e)
+>  		goto err;
+> =20
+> -	sprintf(name,"%d", shost->host_no);
+> +	snprintf(name, sizeof(name), "%d", shost->host_no);
+>  	p =3D proc_create_data(name, S_IRUGO | S_IWUSR, e->proc_dir,
+>  			     &proc_scsi_ops, shost);
+>  	if (!p)
+> @@ -260,7 +260,7 @@ void scsi_proc_host_rm(struct Scsi_Host *shost)
+>  	if (!e)
+>  		return;
+> =20
+> -	sprintf(name,"%d", shost->host_no);
+> +	snprintf(name, sizeof(name), "%d", shost->host_no);
+>  	remove_proc_entry(name, e->proc_dir);
+>  }
+>  /**
+
+[Severity: Medium]
+Does keeping char name[10] still truncate 10-digit shost->host_no values to
+9 digits?  Once shost->host_no reaches 10 digits, proc_create_data()
+collides with the existing 9-digit procfs entry, and later calling
+scsi_proc_host_rm() removes that active host's entry instead.
+
+Formatting a 32-bit int with %d into a 10-byte buffer via an unchecked
+snprintf() also triggers -Wformat-truncation warnings under W=3D1 builds.
+Sizing name[] to at least 11 bytes and using %u for the unsigned int
+shost->host_no avoids both truncation and the compiler warning.
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261109113810258gK=
+5WuYWQKt0HsI2ikxmHo@zte.com.cn?part=3D1
