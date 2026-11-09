@@ -1,59 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794188745;
-	b=vOaIEu9UVa2Ocr4+a7oPmVzbTtzGYFxqy4FMFnat4w1E4hKZjId6RjoxGuPmSHI98Pvt
-	 FbJu5a+iGnRsqC/VKAjjGikAaCzbXS9Dat93pD+6UxSY1UXYG7grIWbVI/C5cLmWffb1O
-	 yYzmgQ3cPQcjbPWB4wQ8GOspucCf1BBMLafOwV70RdheTMwXmFuExjyDISvfpzpcwXPI0
-	 BrdcFEpbvLoHSMv9sKwZRQTbLtdtnTsv3WEncorzRicOd9YIh8tz/LSO9PEb7nMEihouH
-	 xjaoYWNMtXU9IFtXQ1yCRfvzIyID5sX+pYW68haL84h7jvVzWH7XdlySD1c9XfkYpIA==
+	t=1794189405;
+	b=5tLP48dZwMYF730fKORZTn4rC6Jd95rVCvlnif7vUP/lTAFXS78Mcjx/tSu3+FOrGAD8
+	 eJzFBclJ9Kg+xjSwLadBK2Q1tqxF3lDIodtW0/2uZzn6RHAuB38Rq0Y95jiikkMUJX0TA
+	 qYKPtStQXrjsISF/BzGcu7gplqgkJ21w+ppm4o2hoZ4Tzd5uRda5u49a7dvnLQzOwFYtL
+	 fIgp6RmH1DOEoPssvoMY88L1ZF53ZoCRZmgmapSg6XUi0M6j13b5qnReu9e1C7UzSU9fd
+	 H5BX4sKdi0MPan0RhcDqZq0IvBVVLm0V1d6m9vUW5pm5qGzAdY8S77qJSpWkgELYsFQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794188745;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794189405;
 	h=Received:DKIM-Signature:To:Cc:Subject:From:In-Reply-To:Message-ID:
 	 References:Date:MIME-Version:Content-Type;
-	bh=/3oD/voQY7oS/fisfpwP1Btaj9r2Y4l36G9k37HEMU4=;
-	b=SkE/nzQOl8+hJTEySHzTtcQOE4lklVV7ymyNWQFHW+1tYUJsOZyAZcCVAbzq2x11kil2
-	 d0CjRjB05ARDO1oAO5zvRhnnnuE5EKdFcs4fYrYHKcq3nR1r1XdQig78/KyXDuQpVV8Nz
-	 joBv/3i2yLp+GHDx6FkDen4UjAxx+FPRW2sZ/TG0DW6uqYj2Knd2sV6ywRPNAL5dXgT3R
-	 Rh2qYBRJRXDK+0RDOZ9x7dFtIKUeuKe3GKZ+koIb6WeJlz70USj2iOIGd/PiacKkBOZAp
-	 P79rXoerQfsrYjmbclmlwQmNsErOSHUMFfOXseoXrWMu+aI6e5TCewqaBTuEDuSzMJA==
+	bh=oI88OX4vDmmafFVqCML7GZSmRUf5G0yckOIMQjJnQSQ=;
+	b=B3++iNJPd/lzHqw8A6eTIzm3NS1V49ooHeIM/1dqcI1j5Q9vpZz1/uYggjIFdw5vyPAu
+	 PDlBUzcCkstMDM5LvvqPEI25qN1NUi52X8hPFRBDFkkHUNeTdNgzClEuRpa5izqVfzqb4
+	 6vX2sSTE26BuydV+DG03Kl31L9MS9clKFZGvDpEdiwvfnQK8F/2VkHCZAoYF5PRDIDwH0
+	 0itRBsu9qXbNptsP2Pm+SwaKeyaxtEsyHWfza0RT5G3/Og2OK3hST2ApLI+RPthXWDIEg
+	 cP/ZGXUeJCbtejSYPBJC4fVBKFEqfYoApjQbKvxATYQy5FlvBbu6iNqtmXbCgXmLp8Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=FH7sRyIv;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="l/noCWx6";
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF557606A33B;
-	Mon,  9 Nov 2026 01:45:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE428606A325;
+	Mon,  9 Nov 2026 01:56:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=FH7sRyIv
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 87E061F0089F;
-	Mon,  9 Nov 2026 01:45:44 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=l/noCWx6
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 295161F0089F;
+	Mon,  9 Nov 2026 01:56:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794188744;
-	bh=/3oD/voQY7oS/fisfpwP1Btaj9r2Y4l36G9k37HEMU4=;
+	s=k20260515; t=1794189404;
+	bh=oI88OX4vDmmafFVqCML7GZSmRUf5G0yckOIMQjJnQSQ=;
 	h=To:Cc:Subject:From:In-Reply-To:References:Date;
-	b=FH7sRyIvpjx3JsXUgvWYE4gqeJ3AQ7JFmkcf4r+kYqw23Gf0/13klBq9VI/OhCf7i
-	 R/LOYzms07ykyp7ohMoPjfOqvBSCq6AbeBiATDFR2iQOzlUHN0RH43RhaO0hIAL+1q
-	 GHTfcHJvgSqC+CEVHOhNg1OG7XCfF+9hRMgmlAu/vK3NcrZ6Q7kn5YHXOzjZodEpAK
-	 RmITNuInWLs8476Tr69fpyD1F9QlrYwgDNZasFEIEqbay6kIiBB2ZuDyZOlJ9aZGYT
-	 zsUsbBKdXu1az5lxl392LN9EOeIYXCkN867jT00I0jzJkcFRIBQ/I9tFZQlR4DU8LJ
-	 BuIlxNmh2N2bw==
-To: Laurence Oberman <loberman@redhat.com>
-Cc: Martin Petersen <martin.petersen@oracle.com>,  Maurizio Lombardi
- <mlombard@redhat.com>,  target-devel@vger.kernel.org,
-  michael.christie@oracle.com,  linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 0/2] target: iscsi: fix hanged WRITE_PENDING commands
+	b=l/noCWx6I+dgBGuMSZ6Z9LG6ApOMQEmd+7cnliGmFsesZziVTo3BsrDLtme63xiY0
+	 JE7cZ8WuhIG4VP3m2JKQeS0Rqk70vCq3IRSPwsuIoAHEmbl90wgus9NQ2guWTZp97S
+	 O6oINiObYewrtgwr1sYdXGHjNaZeSP/ZwW41rLF/6OHw2DmyyxOzfxYmPZ0Fq/NltW
+	 80WH67d1vqP1t4sFINoUMa0G80G4rOZZuAb5IE8FWUJg+dM+9wsvysFLnD3YRj9eKS
+	 fRVffCJbhUNJdTY2YyugRXplS3X0qylcKoyzrd+/mWutIXiz3oTlYRh1CDHS1KD5W5
+	 hKvgQOMiXYCyA==
+To: Torra Sowmya <sowmyatorra@gmail.com>
+Cc: James.Bottomley@HansenPartnership.com,  mkp@kernel.org,
+  johannes.thumshirn@wdc.com,  axboe@kernel.dk,  dlemoal@kernel.org,
+  bvanassche@acm.org,  linux-scsi@vger.kernel.org,
+  linux-kernel@vger.kernel.org,  outreachy@lists.linux.dev,
+  rostedt@goodmis.org,  julianbraha@gmail.com,  julia.lawall@inria.fr
+Subject: Re: [PATCH] scsi: sd: Remove unused zone append tracepoints
 From: "Martin K. Petersen" <mkp@kernel.org>
-In-Reply-To: <0e12bf8de941ab70a7eb2136fb794cf1dc4bfd8d.camel@redhat.com>
-Message-ID: <yq1eccuye0n.fsf@mail.kernel.org>
-References: <20261027180123.13163-1-d.bogdanov@yadro.com>
-	<d7a1701ddc2e7c976ad8ff9ec071d9bfdc86a7e2.camel@redhat.com>
-	<20261028140221.GB32229@yadro.com>
-	<f4cbbca9e8b743da07902e97b09e49ac7e1cc5fb.camel@redhat.com>
-	<7e08a1f08defd24b42722ce0ad52326ff59236cd.camel@redhat.com>
-	<0e12bf8de941ab70a7eb2136fb794cf1dc4bfd8d.camel@redhat.com>
-Date: Sun, 08 Nov 2026 20:45:43 -0500
+In-Reply-To: <20261108064626.5539-1-sowmyatorra@gmail.com>
+Message-ID: <yq18q32ydm2.fsf@mail.kernel.org>
+References: <20261025151702.13434-1-sowmyatorra@gmail.com>
+	<20261108064626.5539-1-sowmyatorra@gmail.com>
+Date: Sun, 08 Nov 2026 20:56:42 -0500
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -66,13 +64,12 @@ MIME-Version: 1.0
 Content-Type: text/plain
 
 
-Laurence,
+Torra,
 
-> Gentle ping on this one, I really needing Dmitry's series to be taken.
-> A large customer is waiting so we can include this in RHEL. I did lots
-> of testing and due diligence on this issue.
+> Remove sd_trace.h, which contains only these two events, and remove
+> its include and CREATE_TRACE_POINTS definition from sd_zbc.c.
 
-It's been sitting in fixes for a few days.
+Applied to 7.5/scsi-staging, thanks!
 
 -- 
 Martin K. Petersen
