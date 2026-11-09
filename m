@@ -1,54 +1,65 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.142
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=117.135.210.4
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794191873;
-	b=AKg/fBcLSrHgd1gctlEex+wmWGCqIMdeOnzBWqlQgIkm5biklNmSLsxuedri0Zoo89x6
-	 0+szSwKnOREyKx+fFqAuyjfsZfSmpc5HyuFwO1lyLvjGl2VDDgbf7bwbwCfH7Cj6qwg9C
-	 pOBs3lZQ+uYhLv7G8AtoAjyaMIckFfUxJZnkKLETznpo5pjhk20wp4AzODtl+ghMV7cXH
-	 Z83OtTZ/X80N0QybL/6Ov+eLzXr33IzkNvuIa+bM3BVUmkXOteV3mRXFUFNvXay//DAF2
-	 LnyT3zviSrGFjDXOiGO4S3AwdbX5SWF3gzC5cgE5NZdRv7CkOmyGLVTdvR516JD8k3Q==
+	t=1794192725;
+	b=ZKtB/hRRzZ5lqv00cgNwFcHdYVktO3ELWQFSKuz7B1rfIRbi4VDWttcet3qWL3nh/mKF
+	 0cb9h7ao/kBF37yFHg2KZfjySdBltYPnDDm5dcwOhgCd8QmmyEADS8cm7pXGxXFDyO7h6
+	 Fb/MAjgucmegrrQuf/YQNa2Si6XPUSmCq8c+e/5lNLYsAHTKb1QMa1kaztUpfEXdMdX6a
+	 /8P5d19Qu/8HvpYiAQz7jBRftDHE9hcteRQuMsZ8sHX1QmKTrcLnAi4sj3YP9fxsK/Dv6
+	 4MeETKXtf/fW9IGmlJUG5ddbHGKoztsUXzabR3bQ2pHuH/KPkUd6526ZwUwHjLBvU5Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794191873;
-	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
-	 Cc:Subject:To:References:From:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=AEGX0/KL7mXbSaJY8zHxrw7A5L4IFOgbizn++kyw2IE=;
-	b=wJyvGOpIfIn1TVTm9WAsrAi///5yOgmMyoFHAkzexV8v3xrJ7oDB2TKfS4uVyw3IJWxO
-	 +tzObwbCtqp25OOOyFEliHCOyWwSK0it0yFvfKsEC6hs7fnbEXX/N4iysDEUIAIIOYuHB
-	 3HaRzv1hH5C7GaZ3A1d4kZJ9D27MANehvLidiY1/gQTwpoIFeaY3HYYVIzO8HdtaUf7WJ
-	 oKrZlu2MkYif3qppw6czoly0GWMOK4KYBOFCoPPVc4H15swD8s40MED3GTMfnAxvSfdXP
-	 R/dput/4v5N8AFcC0gh0k8SzSndVUGqljxPV5BPlR+jLmkxq5cQRs3jbClgT+roJ8pg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794192725;
+	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
+	 Message-Id:X-Mailer:In-Reply-To:References:MIME-Version:
+	 Content-Transfer-Encoding:X-CM-TRANSID:X-Coremail-Antispam:Sender:
+	 X-CM-SenderInfo;
+	bh=0IVgJm9SwBtqm3JEH4p4DgqeS4PG7F4ayQmUO2+CLgM=;
+	b=ONgTQcWk5acFEzmOIJKCELU9CxJ2dGQGc/Oyvb/LMUpbc1xGIZuKCS+ie0qnMP8ZUmji
+	 4a5CMpHUECyuCKTSGdmfHRdnk9ds+wMre2Mr7unZ9/ZsTzvDsZiPNXu+N+jNEeNktNegg
+	 KYftyFSoGKte23gna7WBoJB43jfexjfIss/vE3w9+D7BglQIIi4ScwpQt/uGegT9NbXXs
+	 WeRiyRF4sfGv5uzm57uUsUTnXSb/jqTM0Slp/2kIBY4jFjBkV+DCz0NLfrU9nnSgbIlUp
+	 15Z2Hxx77JYOwmPj8t7qXuR3YIROIIH6EGNO9kyc861xYkZzXH+oX276wV22Y33NFxA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.dev;
-	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=XL2WHWTD;
-	arc=none smtp.remote-ip=91.218.175.142
-Received: from mta0.migadu.com (out-142.mta0.migadu.com [91.218.175.142])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=none header.from=kylinos.cn;
+	spf=pass smtp.mailfrom=163.com;
+	dkim=pass header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b="hh/ehNtT";
+	arc=none smtp.remote-ip=117.135.210.4
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.4])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7C51606A325
-	for <linux-scsi@vger.kernel.org>; Mon,  9 Nov 2026 02:37:52 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E7C51606A325
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A96BA606A325;
+	Mon,  9 Nov 2026 02:52:01 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A96BA606A325
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=XL2WHWTD
-X-Envelope-To: linux-scsi@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=BSLLWUjqysUniWqaKos+1oTfbUDYuJJnNJuIc0pgFwo=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1794191871; v=1; x=1794796671;
- b=XL2WHWTDldq8dc4J+S5VCwQikjlgRsEG8sCdf/g6J4yLzejet5DgbiFD8IVyo9je8po4cF2p
- Jw0384EKoWqB18dC453JHT0pAHeiO2yXJCNMIF2qCFTC5OabTZPbEg7Hh2R6YOb90xpbTCYbOwD
- wx+r2xZlOW1wCBc0dsFb6yJU=
-X-Envelope-To: linux-scsi@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id d646f8317d3d17bd;
-	Mon, 09 Nov 2026 02:37:50 +0000
-X-Mizu-Trace-ID: d646f8317d3d17bd
-X-Migadu-Flow: FLOW_OUT
-Message-ID: <16b5464d-d4a2-420e-9de0-2ccddb860e3b@linux.dev>
-Date: Mon, 9 Nov 2026 10:37:34 +0800
+	dkim=pass (1024-bit key, unprotected) header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=hh/ehNtT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=0I
+	VgJm9SwBtqm3JEH4p4DgqeS4PG7F4ayQmUO2+CLgM=; b=hh/ehNtTirXnykZrAB
+	F+Zj+3J3BVQ0bh/uAmJ7M9vNjUv/idcL4jYPwdmmgMi71gSgrdW0IbMXa4Jdp03M
+	fYcbQ1Ie8RxklmVUHRhIFiiw7+KLx254o8Y6MaoKrvExXH/Yx3mOkXuUbrF57YER
+	ZNqTnCC4saGC9xeZHwIuQ3FuI=
+Received: from localhost.localdomain (unknown [])
+	by gzsmtp4 (Coremail) with SMTP id PygvCgCX2nMiNfFq6L9SEw--.17801S2;
+	Mon, 09 Nov 2026 10:51:15 +0800 (CST)
+From: Yang Xiuwei <yangxiuwei@kylinos.cn>
+To: x-professor@outlook.com
+Cc: mkp@kernel.org,
+	James.Bottomley@HansenPartnership.com,
+	axboe@kernel.dk,
+	linux-scsi@vger.kernel.org,
+	bvanassche@acm.org,
+	jthoughton@google.com,
+	asml.silence@gmail.com,
+	io-uring@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [RFC PATCH v3 5/6] io_uring/cmd: allow reusing SQE storage for completion data
+Date: Mon,  9 Nov 2026 10:51:14 +0800
+Message-Id: <20261109025114.433681-1-yangxiuwei@kylinos.cn>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <a4ec8431c2f36172348449b872faf26d7d6d4d7a.1794045010.git.x-professor@outlook.com>
+References: <cover.1794045010.git.x-professor@outlook.com> <a4ec8431c2f36172348449b872faf26d7d6d4d7a.1794045010.git.x-professor@outlook.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -58,101 +69,31 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Cc: cui.tao@linux.dev, linux-mm@kvack.org,
- James.Bottomley@HansenPartnership.com, sumit.semwal@linaro.org,
- christian.koenig@amd.com, phasta@kernel.org, joro@8bytes.org,
- will@kernel.org, linux-scsi@vger.kernel.org,
- dri-devel@lists.freedesktop.org, kvm@vger.kernel.org,
- virtualization@lists.linux.dev, linux-trace-kernel@vger.kernel.org,
- bobbyeshleman@meta.com, mathieu.desnoyers@efficios.com,
- robin.murphy@arm.com, mason@kernel.org, aesteve@redhat.com,
- tjmercier@google.com, harry@kernel.org, vbabka@suse.cz, cuitao@kylinos.cn,
- media-ci@linuxtv.org
-Subject: Re: [PATCH 6/7] io_uring: account the ring context and SQPOLL thread
- data to memcg
-To: sashiko-reviews@lists.linux.dev, akpm@linux-foundation.org,
- dgilbert@interlog.com, mkp@kernel.org, loberman@redhat.com,
- jmeneghi@redhat.com, kraxel@redhat.com, vivek.kasireddy@intel.com,
- mst@redhat.com, jasowangio@gmail.com, eperezma@redhat.com,
- stefanha@redhat.com, sgarzare@redhat.com, rostedt@goodmis.org,
- vdonnefort@google.com, mhiramat@kernel.org, jgg@ziepe.ca,
- kevin.tian@intel.com, axboe@kernel.dk
-References: <20261106131829.3228926-1-cui.tao@linux.dev>
- <20261106131829.3228926-7-cui.tao@linux.dev>
- <sashiko-outbox-202923@kernel.org>
-From: Tao Cui <cui.tao@linux.dev>
-In-Reply-To: <sashiko-outbox-202923@kernel.org>
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:PygvCgCX2nMiNfFq6L9SEw--.17801S2
+X-Coremail-Antispam: 1Uf129KBjvdXoWrurW8KFyrCFyrJF1DWFW3Wrg_yoWxuFX_Cr
+	Z8tr1xArW3G3Z3KwsxKFZavw4qgay5Cr1kW395ur9xX343uas5CryDJr4Fk3Waqa12qFs8
+	Gr93Z34xJrnrGjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUvcSsGvfC2KfnxnUUI43ZEXa7IUUZ2-7UUUUU==
+Sender: yangxiuwei2025@163.com
+X-CM-SenderInfo: p1dqw55lxzvxisqskqqrwthudrp/xtbC6QRt-WrxNSTgVgAA3B
 
-Hi,
+Hi Yingjie,
 
-在 2026/11/7 21:27, sashiko-bot@kernel.org 写道:
-> Thank you for your contribution! Sashiko AI review found 1 potential
-> issue to consider:
-> - [Low] io_uring: commit message omits rsrc and tctx changes and
->   uncharged allocs
-Thanks for catching this.
+On Sat, 7 Nov 2026 at 09:50, Yingjie Wang wrote:
+> uring_cmd requests already allocate enough asynchronous state to hold a
+> copied 128-byte SQE. Once a driver has consumed every SQE field and
+> committed to asynchronous completion, that storage is no longer needed.
 
-You're right that the changelog should better match the actual changes.
-Besides io_ring_ctx and io_sq_data, this patch also switches the
-allocations in io_coalesce_buffer(), io_init_wq_offload(), and
-io_uring_alloc_task_context() to GFP_KERNEL_ACCOUNT.  I'll mention
-those explicitly in v2.
+> Add a helper that transfers the storage to the driver until command
+> completion without growing the request or adding an allocation.
 
-You're also right that "the last per-ring allocations" overstates the
-current state.  Patch 7 still leaves some infrastructure allocations,
-such as the percpu pieces and the io-wq cpumask, unchanged.  I'll drop
-that wording and instead describe what this patch accounts and what
-remains.
+io_async_cmd is io_uring's own async state. sqes[] is what
+io_uring_cmd_sqe_copy() points ioucmd->sqe at. Giving that buffer to
+scsi_bsg couples the driver to the io_uring layout and lifetime.
 
-As for commits 075d5837bafc and 0b34e7b20a48, this series is based on
-linux-next (next-20261104), which already includes the
-io_uring-7.4-20261029 tag containing those commits.  If the review is
-performed against a tree without that tag, those objects will indeed
-still appear uncharged.
+Preallocating the buffer in bsg itself may be a better fit.
 
 Thanks,
-Tao
-> --
-> 
-> commit 3d47975c4208930279f98824279734ca99b5e9bd
-> Author: Tao Cui <cuitao@kylinos.cn>
-> 
->> io_uring: account the ring context and SQPOLL thread data to memcg
->>
->> The io_ring_ctx and the SQPOLL io_sqd are the last per-ring allocations
->> made with plain GFP_KERNEL.  The larger surfaces around them are
->> already charged: io_mapped_ubuf and io_rsrc_node since commit
->> 075d5837bafc ("io_uring/rsrc: charge buffer arrays and nodes to memcg"),
->> the tctx node and its XArrays since commit 0b34e7b20a48 ("io_uring:
->> charge tctx nodes and personalities").
->>
->> Charge the context and the SQPOLL thread data the same way.
->>
->> Signed-off-by: Tao Cui <cuitao@kylinos.cn>
-> 
-> [Severity: Low]
-> Does the commit message match the actual changes and current tree state?
-> 
-> Alongside io_ring_ctx and io_sq_data, the patch also switches new_array in
-> io_coalesce_buffer(), ctx->hash_map in io_init_wq_offload(), and
-> io_uring_task in io_uring_alloc_task_context() to GFP_KERNEL_ACCOUNT without
-> mentioning them in the subject or changelog.
-> 
-> The changelog also says these are the last per-ring GFP_KERNEL allocations.
-> While commit "io_uring: account the remaining per-object allocations to
-> memcg" later in the series converts io_alloc_cache_init() and io_wq_create(),
-> percpu_ref_init(&ctx->refs, ...) in io_ring_ctx_alloc(),
-> percpu_counter_init(&tctx->inflight, ...) in io_uring_alloc_task_context(),
-> and alloc_cpumask_var(&wq->cpu_mask, ...) in io_wq_create() still use plain
-> GFP_KERNEL.
-> 
-> Finally, the cited commits 075d5837bafc ("io_uring/rsrc: charge buffer
-> arrays and nodes to memcg") and 0b34e7b20a48 ("io_uring: charge tctx nodes
-> and personalities") are not present in the base tree, so io_alloc_imu(),
-> io_rsrc_node_alloc(), io_tctx_install_node(), tctx->xa, and
-> ctx->personalities remain uncharged.
-> 
+Yang Xiuwei
 
