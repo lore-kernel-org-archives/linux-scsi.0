@@ -1,136 +1,105 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.208.47
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794243864;
-	b=n6+ui8QQZvv/orYg1IAXH8KAGnYoRM/8heCkeXRhR1YVcWKX5Mxsi9h3e+gP3Chkq541
-	 Hm3byrqsx1Pd4zbtePHgZZmTpAhyHxjuxdpgi24jDfHkNsT2R9aTg1Tzu4IWFS6+62YB5
-	 j4oecFqswfQ+9ILZwc6Di+ZRinUAruIEghcJV7toFHhgv0U8donPtg4QlKuUiwkPuguVZ
-	 U4wdEzurAMxT0RQ601y7o2ndIck6fp2xnMoGD443coxAY4sgL9INlPk8oCYwch09rz6IN
-	 7JSzHRBdOS3rV1LLAyuBiYKVbJtckMs24ai4TwDGlquyDRcUKTrLPFPvX4HA/pe49yg==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794243864;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
-	 MIME-Version:Content-Transfer-Encoding;
-	bh=VmhgsZdfI41q6bSk6Ws0aoyQukpnInOpVRPvZF0DgoY=;
-	b=OiPQG/O8iVDbE6gYhmkFlfv+lRe/HEqL7PvyJxVTFwrcpIJb/j0I/+sCfSX+dwB1yY98
-	 MoroBk6XFlc4h2nSYzKI5oPxZeRDnM8O+8vGYZKfg4pSb018KO5ov+qwWo7m6Md670B+y
-	 QEeM7Lhkz5S3oY8m8u48L3m8cvxVsa1EmnCiyNXpkCWH6q3+evF9aUCIzWyOEt92KbnNT
-	 wj5z+52pEpum1TmXCl9gxn78Bn4QMT2AA+q033Y4+XtB2/OaGDfgKb8tT577TxBU7K1X+
-	 0EXsmbStm9ugaTkHMxgt4eqKcNoOQ6hC7Q1b5RpPPid1HIoLNtoiKAUB6j/PVEboSHQ==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=INMhwymN;
-	arc=none smtp.remote-ip=209.85.208.47
-Received: from mail-ed1-f47.google.com (mail-ed1-f47.google.com [209.85.208.47])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=81.169.146.167
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1794244163;
+	b=SoXU6gdDq5fkLvYVPgU2TPnY9F0fX9XeUuPuvxvB07nwOikLtHuPvKsdxJ0poZiVFkg5
+	 z0egV1egRVZjdgNjrp7yorGI2/QIMmW7hEFPKw1yP7MWOmI3jBVvkIkIJrOM3TV5a6MXV
+	 ItCotMhkHcSCeZUt7mPFEqPsGz+QAsHt6bkOc+LHBz9ovZ9FS1ajWaoIr/Yr3/uXuuoBx
+	 12xqZMBXB9PJWnZGC+7U0ahxb0A9ANPvHdA08WqbfBgtwJq3uwb0M80b3fhDswajO5waE
+	 VKPsRLxS2cwPExrikLCnkQNemKiI1SyV4JLtb7/cqvPzlkv17Il9QahPgngoYV3necw==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794244163;
+	h=DMARC-Filter:X-RZG-CLASS-ID:DKIM-Signature:DKIM-Signature:X-RZG-AUTH:
+	 Received:Message-ID:Subject:From:To:Date:In-Reply-To:References:
+	 Content-Type:Content-Transfer-Encoding:User-Agent:MIME-Version;
+	bh=bLdW7+Mr9Zewlw32rr6lzio8Qz/uXoQyW69NFHyfIbc=;
+	b=0fd1vIBuRuTv0Y1vP5p+y8LLBWT46pJlB6y18ylkNQQqWIA6v+SeEdjFk0JjZiyOwQWZ
+	 beqO6u4Eb91VgsU0E3EuzfTbNRR7c2/48/h0jS8zylNFBzc+31k5yyvG/TXoq/SmUYafF
+	 u41hn14G10vGcf/a4Y4wp+qqT1TUNIUVV33bqQYRgFvkUaSDRoeME2EyqFq7UO5lOJifI
+	 E9wYlhC3JXm+woN8lXZWJ7CCw5PdTi/icadhfnCvYqHslShZiFe0e4J8MJbqL3K7ZW4Lr
+	 /epLGawAKnESmqwxS/AjydnanycOU4qkMl+0aw5G5vywFXdK4yJsXzhzX5sABgYBsXg==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=iokpp.de;
+	spf=none smtp.mailfrom=iokpp.de;
+	dkim=pass header.d=iokpp.de header.i=@iokpp.de header.a=rsa-sha256 header.s=strato-dkim-0002 header.b=lbmhEReZ;
+	dkim=pass header.d=iokpp.de header.i=@iokpp.de header.a=ed25519-sha256 header.s=strato-dkim-0003 header.b=f8qbJOTa;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=81.169.146.167
+Received: from mo4-p01-ob.smtp.rzone.de (mo4-p01-ob.smtp.rzone.de [81.169.146.167])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44380606A330
-	for <linux-scsi@vger.kernel.org>; Mon,  9 Nov 2026 17:04:24 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 44380606A330
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EEFD5606A321;
+	Mon,  9 Nov 2026 17:09:21 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org EEFD5606A321
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=iokpp.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=INMhwymN
-Received: by mail-ed1-f47.google.com with SMTP id 4fb4d7f45d1cf-6ae305e3bd9so1831272a12.0
-        for <linux-scsi@vger.kernel.org>; Mon, 09 Nov 2026 09:04:24 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1794243863; x=1794848663; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=VmhgsZdfI41q6bSk6Ws0aoyQukpnInOpVRPvZF0DgoY=;
-        b=INMhwymNUoXRa1HYjajYs2VDNOXoDzVIp/an3nVGMwTgqTKKIXcrYlToz3KguYeb2w
-         0JSHPrAS4tp1u64diFxx98ot8r0Zd994Q5w09w9Wo7hRC/DtQLXBMMh5MnMbGm5sg/9+
-         bfSbd1NNz976A12xlmIC5rBcyt2zgrNxYngASmeZZcCyhLh9b9uOIuPyOYnguxqTaeNR
-         9hUslwRJlODcmrjO84K/MqZr6AW6G7obz3aQhSgpfQbvfDlBiGQqmaSqVNfiSLuoobIb
-         SEhjw+R7G4bUMif5HGg+3AGlsX3R7zQQDPntqdP45khUAZLh8+Utt3l4+Gfo8W0GMqsn
-         XheA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794243863; x=1794848663;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=VmhgsZdfI41q6bSk6Ws0aoyQukpnInOpVRPvZF0DgoY=;
-        b=XgWcONq2MEctlAK39kXorD0+O/Bbi7g2V1ho8HDozhHjscESSiEzAAPvuuV6pSU8Cq
-         LqDX5UmuKcoQbh+r7uoCku6jNEfObI1D11NquG2SkiBm6skKqldK8OG1sZPU+zzDlKl9
-         GdHV0gMYJEWBgJJfbv8GZaPl5lTIAFOECHceRCEO3O+vbQv1ya8+rz3Coyiy7XP8cfRf
-         7dgi/3cEGruwKWLtTNmVsRqWofNu2NtzlQhvNzJjisvjdwg5MeoUb8C/oowsSJosN/s2
-         90XYVNYXYO8ZYQrdlJJxy51W4GYofyIfspdgbceKgL/2JjItiUQRHAFqu+UpXme38SCU
-         Rv8Q==
-X-Forwarded-Encrypted: i=1; AL+hErEcnX/jUgFP/9Tdf8bD9hkDv+LBxyt+QGbN9HdtLrb81odIfsv3f2LWEopiz3Efo47F7dJwQemUK/BM@vger.kernel.org
-X-Gm-Message-State: APuU4Z9fgNQFiea9V4u4IyPGuTmMqyo1MVt9amvE8SZoe4i7Vgt4YyRb
-	rLuhNgdvk/GXx0f7cNDRYZSTuYfOv35Y+VDLiCVGl6aeAr5GrpWgsZFY
-X-Gm-Gg: AYBFou3W0bfDnsucMDYsvKEgsVKwJ/ldXzgCOeyhlamG74rrJnOM265uh7Jph9gjbPL
-	aRJtQGs0g8iLc77wL/19cWwx0+nAAeVoq4vu757OGrpVKOHv9bEXtnFKeIfydbc2uduXr3zFCm4
-	HO9UVNP6QLGLXf2YMMeTaIOwpIqlzWS2PHhKnUpVVSkfxSK8NkmfKyi/uik1IQayeSUSosaGICB
-	A4HgL/caO/7h4bPLe3qBZ2HaEaTNcOo1NlUo3I/z7abmLu5rUL+EoB/8HoNbbr/8R4P8iP/CIvz
-	AVN5i4aj/LERQVKwsPJKOSXfTLtaVw17kdhWdGi6nKwZ+qoiRsDU98Zaosfuoeuy/NljrLPVjdm
-	yi8g2Ao6yhQIr2qWfhIaKgequzCDIjPRoMRXW+9uyOStDPX4ZpNpFDVhddVndqs66iyjrw21mIy
-	UL4XPBTs3SHvNjiSXu23bp2NMCoYdJSF9qICFvNKdxRxfsjd+H7bbST88r5xHw0RJ/C0JqU9F0S
-	osuQEYq9uyW1HAmy3bufXMAN4VDMpVRDJUKPz2OXf7jge9mGyugwvnIzVM8Eq5BHgDu3dkxX16K
-	Req9ljdrmm4DXX+8ZEmEUsoXlW8=
-X-Received: by 2002:a05:6402:2356:b0:6b5:7792:d82c with SMTP id 4fb4d7f45d1cf-6b756ad7482mr185305a12.16.1794243862514;
-        Mon, 09 Nov 2026 09:04:22 -0800 (PST)
-Received: from flare5 ([212.58.121.92])
-        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-6b721ebe31csm1878937a12.16.2026.11.09.09.04.17
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 09 Nov 2026 09:04:21 -0800 (PST)
-From: Stanislav Aleksandrov <lightofmysoul@gmail.com>
-To: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
-Cc: Bjorn Andersson <andersson@kernel.org>,
-	Konrad Dybcio <konradybcio@kernel.org>,
-	Abel Vesa <abelvesa@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Robert Marko <robimarko@gmail.com>,
-	Guru Das Srinagesh <linux@gurudas.dev>,
-	Thomas Gleixner <tglx@kernel.org>,
-	Radu Rendec <radu@rendec.net>,
-	Lee Jones <lee@kernel.org>,
-	Will Deacon <will@kernel.org>,
-	Robin Murphy <robin.murphy@arm.com>,
-	"Joerg Roedel (AMD)" <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Wesley Cheng <wesley.cheng@oss.qualcomm.com>,
-	Vinod Koul <vkoul@kernel.org>,
-	Neil Armstrong <neil.armstrong@linaro.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Alim Akhtar <alim.akhtar@samsung.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	Bean Huo <beanhuo@micron.com>,
-	Stanley Jhu <stanleyjhu@google.com>,
-	Herbert Xu <herbert@gondor.apana.org.au>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Viresh Kumar <viresh.kumar@linaro.org>,
-	Amit Kucheria <amitk@kernel.org>,
-	Thara Gopinath <thara.gopinath@gmail.com>,
-	Daniel Lezcano <daniel.lezcano@kernel.org>,
-	Zhang Rui <rui.zhang@intel.com>,
-	Lukasz Luba <lukasz.luba@arm.com>,
-	Georgi Djakov <djakov@kernel.org>,
-	Sibi Sankar <sibi.sankar@oss.qualcomm.com>,
-	linux-arm-msm@vger.kernel.org,
-	devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	mfd@lists.linux.dev,
-	linux-arm-kernel@lists.infradead.org,
-	iommu@lists.linux.dev,
-	linux-usb@vger.kernel.org,
-	linux-phy@lists.infradead.org,
-	linux-scsi@vger.kernel.org,
-	linux-crypto@vger.kernel.org,
-	linux-pm@vger.kernel.org
-Subject: Re: [PATCH 17/17] arm64: dts: qcom: Add Samsung Galaxy XR
-Date: Mon,  9 Nov 2026 17:04:07 +0000
-Message-ID: <20261109170407.2073295-1-lightofmysoul@gmail.com>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <3ddaacfd-59c0-4d87-9b8c-2caa85143393@oss.qualcomm.com>
-References: <20261109-halliday-dts-v1-0-289114ab8197@gmail.com> <20261109-halliday-dts-v1-17-289114ab8197@gmail.com> <3ddaacfd-59c0-4d87-9b8c-2caa85143393@oss.qualcomm.com>
+	dkim=pass (2048-bit key, unprotected) header.d=iokpp.de header.i=@iokpp.de header.a=rsa-sha256 header.s=strato-dkim-0002 header.b=lbmhEReZ;
+	dkim=pass header.d=iokpp.de header.i=@iokpp.de header.a=ed25519-sha256 header.s=strato-dkim-0003 header.b=f8qbJOTa
+ARC-Seal: i=1; a=rsa-sha256; t=1794244133; cv=none;
+    d=strato.com; s=strato-dkim-0002;
+    b=g1ALZzJfzQC4GA+MGkZTLh3dYu+y2L59jQj98FzdhZyFL5PPThZL/5ZRbHEbUHhzOn
+    bh6XazE/jI9wSwpZ+sgtnO+3Il9yw1RUz9hUwB5FfiGj/SkGLKdV7JB+LUuJ/CAH9+mV
+    EZX4F9HevJ61xrmkmRlzGEYl6Y+DjV6dfCIt489NqMk5ROqNSHKPPHi0EAjtZR86FdS/
+    rS6L1c8p43ltaAMOrCRTNCpYfL11d7SqCDQVj3FtVA/2agaeehpuCQs7i1l8BdylDZ/i
+    SGnqJzLHYzSj8biplq/UZ4rm397V9W6qUDVRb6TuiekDAQ3Ri/HI4kF2Wap86w16ksb5
+    vAEQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1794244133;
+    s=strato-dkim-0002; d=strato.com;
+    h=References:In-Reply-To:Date:To:From:Subject:Message-ID:Cc:Date:From:
+    Subject:Sender;
+    bh=bLdW7+Mr9Zewlw32rr6lzio8Qz/uXoQyW69NFHyfIbc=;
+    b=VyF+Kf4mMFJvICe+f0WtCWAY51r0uN5iJy+b/F+DYOwM+AEfTUQCiL38GvjvJHlDxx
+    RFjaSTAlysA8uQpD71wxOQ/zsnpgxsegHAJy12+II+Y6N97smqQPiN8z6pQOAdWhUIAy
+    WNx9TOaccgEpxyVHQfIiX186WzWa7MGwbOBvyOUra+23wlygYkmJevGUb4RVXcUVsc13
+    QM+gRbEGwyJ9+OcJ704fidV0sbLeaEhqOy/iM9FZwEF1fuCZ+8WGzKWdwCqCbtOZWaDF
+    rtXIBDDd22OahPx7li+0QIZx0VkPZP+iezoSMgt9jzwTYxDCXUHSqsLZOf5Qjj0RlLc1
+    2GJw==
+ARC-Authentication-Results: i=1; strato.com;
+    arc=none;
+    dkim=none
+X-RZG-CLASS-ID: mo01
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1794244133;
+    s=strato-dkim-0002; d=iokpp.de;
+    h=References:In-Reply-To:Date:To:From:Subject:Message-ID:Cc:Date:From:
+    Subject:Sender;
+    bh=bLdW7+Mr9Zewlw32rr6lzio8Qz/uXoQyW69NFHyfIbc=;
+    b=lbmhEReZ2hwUGH/U4T7YGQQu5NM79cQMmEsVtz/+YFgI7Nkikq4YSuqUDexr/Kunxv
+    lRhpoW/WUUbv26rNz7KC20AAP9q5Pot+nnbWUPLUr2jWY2Ha8F+3Ls3F6VIkG+KG/t8N
+    Fn+o3rVPuZuTDXdxhRTB9NjjN3ZwliCEsPqCb3F3qOpCgJTnnvIijA74sNGsKQtdFt69
+    bj1M1Om26eILCFaKkzhKgoZ5s5Oh2Tb9Zi7aJKZMFED2rMClT5Z9V73eUVs57AOcdgUx
+    pe/cCK0P83lJRs025XWTmahYPZxXiv83JBmHQkQ04LpEOUxlaoPJWvoOkxYLPEA8XQmw
+    G/1w==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; t=1794244133;
+    s=strato-dkim-0003; d=iokpp.de;
+    h=References:In-Reply-To:Date:To:From:Subject:Message-ID:Cc:Date:From:
+    Subject:Sender;
+    bh=bLdW7+Mr9Zewlw32rr6lzio8Qz/uXoQyW69NFHyfIbc=;
+    b=f8qbJOTaVoTjDFVtGgXbPmQyJoF6Xr/qxgELTfSdEDRL0ROEdKIe3uBHz+Yx52RAL+
+    V/8lQwCTNN4UPLyDv2BA==
+X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSe9tgBDSDt0V0DBslXBtZUxPOub3IZuk"
+Received: from [10.176.237.78]
+    by smtp.strato.de (RZmta 55.6.3 AUTH)
+    with ESMTPSA id z831ad2A9H8rX6q
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
+	(Client did not present a certificate);
+    Mon, 9 Nov 2026 18:08:53 +0100 (CET)
+Message-ID: <26fb0dedfe5348270bf38c8f7ced1d49f1103d0a.camel@iokpp.de>
+Subject: Re: [PATCH v8 3/3] scsi: ufs: core: Limit early link recovery in
+ the error handler to runtime PM
+From: Bean Huo <beanhuo@iokpp.de>
+To: HOYOUNG SEO <hy50.seo@samsung.com>, linux-scsi@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, bvanassche@acm.org, mkp@kernel.org, 
+ martin.petersen@oracle.com, stanleyjhu@google.com, peter.wang@mediatek.com,
+  alim.akhtar@samsung.com, kwangwon.min@samsung.com, kwmad.kim@samsung.com, 
+ cpgs@samsung.com, h10.kim@samsung.com
+Date: Mon, 09 Nov 2026 18:08:52 +0100
+In-Reply-To: <2052256418.81794200283664.JavaMail.epsvc@epcpadp2new>
+References: <cover.1794196863.git.hy50.seo@samsung.com>
+	 <CGME20261109041348epcas2p1a8518c19bea8a58c57e8538809d2a947@epcas2p1.samsung.com>
+	 <2052256418.81794200283664.JavaMail.epsvc@epcpadp2new>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.44.4-0ubuntu2.1 
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -140,19 +109,52 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-On 09/11/2026 16:12, Konrad Dybcio wrote:
-> On 11/9/26 1:33 AM, Stanislav Aleksandrov wrote:
->> +&usb_1 {
->> +	dr_mode = "peripheral";
->> +	maximum-speed = "high-speed";
->> +	qcom,select-utmi-as-pipe-clk;
->
-> Is there no superspeed / dp altmode in hardware?
+On Mon, 2026-11-09 at 13:09 +0900, HOYOUNG SEO wrote:
+> diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-pri=
+v.h
+> index e55c2a02c1f5..ae3eaf5ab017 100644
+> --- a/drivers/ufs/core/ufshcd-priv.h
+> +++ b/drivers/ufs/core/ufshcd-priv.h
+> @@ -413,6 +413,19 @@ static inline void ufshcd_rpm_put(struct ufs_hba *hb=
+a)
+> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0pm_runtime_put(&hba->ufs_=
+device_wlun->sdev_gendev);
+> =C2=A0}
+> =C2=A0
+> +/* Whether a runtime suspend or resume of the WLUN is in progress. */
+> +static inline bool ufshcd_rpm_transition_in_progress(struct ufs_hba *hba=
+)
+> +{
+> +#ifdef CONFIG_PM
+> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0enum rpm_status status =3D
+> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0READ_ONCE(hba->ufs_device_wlun-
+> >sdev_gendev.power.runtime_status);
+> +
+> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0return status =3D=3D RPM_SUSPE=
+NDING || status =3D=3D RPM_RESUMING;
 
-The headset supports USB SuperSpeed and DisplayPort via its USB Type-C
-port, I just haven't brought them up yet. It seems we need a new driver
-for the Type-C controller.
 
-Stanislav
+
+should the helper also check pm_op_in_progress?
+
+return hba->pm_op_in_progress && (status =3D=3D RPM_SUSPENDING || status =
+=3D=3D
+RPM_RESUMING);
+
+
+checking (status =3D=3D RPM_SUSPENDING || status =3D=3D RPM_RESUMING) fixes=
+ for system
+PM;=C2=A0
+
+Checking pm_op_in_progress limits the early path to __ufshcd_wl_suspend() a=
+nd
+__ufshcd_wl_resume() during runtime PM, it was before this patch.
+
+Or what else I missed?
+
+Kind regards,
+Bean
+
+
