@@ -1,57 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794201484;
-	b=ygiUJ2KjdP+jewKTkt5313hDdWEXu2lVpRH6gd0crELT2ZOnfnn+Egx6H9jXe+C3nqIA
-	 vOA9tQ7gcxd8BtyWcNRVIVFrxU5Mm0rsbeRSaA9WarflqL2LqqODyfBSuUI6v4CIzldwf
-	 9gl6kocbB1HiMCRarGi/1rMOpEp6UCcdD/sWcBeUTalFyUhOy+g5mf4w+hly5j0sJqcZx
-	 GEhGQ4TE2QwC3JmUzlHRiULKL4sYEmdQk16I5BtHUqOqDwBpjxWDNTH2JGJKSIVReHKu6
-	 aKysqVN/HdCvyre7ca8eKF0VkH9oXWjcl9EZLCQirMiNJXxcrHS3Q6bYl936u11worA==
+	t=1794201689;
+	b=qL8tRRrcgldGIAbEv68KDFE0cWQq42WAV9Jk9/MAlrWl2w/mdaM2zAzs3dxhNrUD+zHw
+	 lzYhEAkxCZKsrbDCwgbnknDDoRdjL1WlG0YJ7VNnW9hNHmuLCS/ktmuzNl7t5/0TffKMB
+	 11NYDvw2kuVl03E0I+v4G2o1R9PtJd5CLOtBdwD3Vdvm4KcXMAYYg8e9iKJHygusdlQbt
+	 WhoF6ePbO3lAQ1yA5OpSNGOzZXhxMLaCMX/tfEkPKvMVrXcH4EKIVmOTzRbyc2fUZE3du
+	 qhSFTlGHYLGxXgZwYMVEWfijLRoBU/Z68/AQVOQDc9FhPML+/qTD85YmALmnkyVyARQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794201484;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794201689;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=fmbJWbR9m2JVChwONL6mJAeLQ3qC+17EalfJS207f+8=;
-	b=Ka5n6Vet5+bEro01MOoErF94qbZiS2A+0BPNc2F/3bUS4pL+XmdOl/TV4956ea4RyXUl
-	 tsBpyPVBzMaaUngG8IIdoFCKvKuHqHnk5H6rpCZ8a1/vo1EBiXY0VOrT+F6s8ROzcz00k
-	 0q1p/0ePPgng3Jxr6WQ1mLbqumUcgj6U9muL33iY/gIwc6yfrMh2h1o08TFb8nlMeEatT
-	 hLCv2lbyrU1yuMGml8j6lg2Ds4A6uGBhrA0nwe4T5KZab18LdzJE36aB7TD/uch2WTYPG
-	 3PABwNlhy+Kn//W5ZYTJLpuDTVzbiLluCU66yvqCCI2Sg/dS1brbUk7nVqRzGFJ5EwQ==
+	bh=8ZRn7U6LbXLrkeFcE23kRiYP3n6k52W7uC06jPGezt0=;
+	b=DgrqJwou0vrlbWXLgXWBmC2cUDfcEmhqjrkprb9yZU9/E1t+KfjdO+RsHHkiHDaiDxHo
+	 yBGJpT66IngJ8A6B80WW4aqzbs5KypHbg6BWd2sRFXNmLF2kGpl6wPqe5iXwHH5EhBs7q
+	 jU4C/9kDX7QEgKJCkDpXNns2fPjKbE4IfnFxHDCkyJ2oDfg+8mR0bXHaAMM/FZTWMXLy4
+	 JZxD8lDardF/bPJdc7j3xsE/Ax1XxRRmiXPU/e4rXJ7uCTpLfLazQci90pcsoKWkC3X/g
+	 CfKZ0yj61IY5ZbOmkNgyh6Qovwnks6rKhccg9BOBc770tOXgV/hRV5nPQ+ht+NE/7iA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=CXyMQoAy;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=FIw95C5e;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB080606A31C
-	for <linux-scsi@vger.kernel.org>; Mon,  9 Nov 2026 05:18:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9AAD606A322
+	for <linux-scsi@vger.kernel.org>; Mon,  9 Nov 2026 05:21:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=CXyMQoAy
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 09C5D1F0089F;
-	Mon,  9 Nov 2026 05:18:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=FIw95C5e
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 77D511F008A1;
+	Mon,  9 Nov 2026 05:21:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794201483;
-	bh=fmbJWbR9m2JVChwONL6mJAeLQ3qC+17EalfJS207f+8=;
+	s=k20260515; t=1794201688;
+	bh=8ZRn7U6LbXLrkeFcE23kRiYP3n6k52W7uC06jPGezt0=;
 	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
-	b=CXyMQoAyljKJ8oBkrH9CfSAiPSqXsjMZ0U+WF6j/H6FePIZ4URoM3lEjC25DoK6Pu
-	 3J9iyvUlHgWk7+zio9i08GFfst1xWwN3JRpxk+JXBi/vhCEKZH8UyqnF42qoRVFAHL
-	 BOXkH1ISaFMsoiUZdLCfRSGTlVh7glMYBYJg6SOOYOFgw91mvN1OU+kJ+yHLjyhylp
-	 Hbsu/hS3p41+LvhSBYIqWWceurEYKYDAodt8iKldPK4Ne9CD9Epv4EbiPwKzxjaU+7
-	 H+2KYt/44qUj1WgAp3CeyVS42tE6h3gbOpx2hCwJJ34XKGneD9tZ6uky053r2vcr7w
-	 wGakJH8Iw/xag==
-Message-ID: <sashiko-outbox-204426@kernel.org>
+	b=FIw95C5eT0icfD1LWg+q1Gt9whg+6TbsBZTl37PMrnhytCIaKziTCpkhJ8y2N65+n
+	 y0OwzSaK4k8yfrD1aBqOqVDwMqEuAhr+c4swfAoXMKc5Fgvj1xopOReSzmuW4ts1bV
+	 fmRqejxSLVsW4AZjdV4glEkRnHwMy8LR1AaOQ2V6u2KC2+lkaf7rm8BSaOUvVdogjG
+	 +23dw4BLomx6OPapGaCa7C2RP8CHKhbmZUDlL+lEUP6Z2rX8oF5i8xMLkEUas32D78
+	 HahZxuIx9DZpNI9aA6xmOyA4aW2sPq05Gib0pIpc7jwXIINoxRjphlQasJcioD1HKJ
+	 AChP/waRfiLbA==
+Message-ID: <sashiko-outbox-204431@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v8 2/3] scsi: ufs: core: Hold host_sem in
- ufshcd_wl_poweroff()
+Subject: Re: [PATCH v8 3/3] scsi: ufs: core: Limit early link recovery in
+ the error handler to runtime PM
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "HOYOUNG SEO" <hy50.seo@samsung.com>, linux-scsi@vger.kernel.org
-In-Reply-To: <973576304.21794200282836.JavaMail.epsvc@epcpadp2new>
+In-Reply-To: <2052256418.81794200283664.JavaMail.epsvc@epcpadp2new>
 References: <cover.1794196863.git.hy50.seo@samsung.com>
- <CGME20261109041347epcas2p17b5c0fd7b693f92eb2af35b12a24de31@epcas2p1.samsung.com>
- <973576304.21794200282836.JavaMail.epsvc@epcpadp2new>
+ <CGME20261109041348epcas2p1a8518c19bea8a58c57e8538809d2a947@epcas2p1.samsung.com>
+ <2052256418.81794200283664.JavaMail.epsvc@epcpadp2new>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 09 Nov 2026 05:18:00 +0000
+Date: Mon, 09 Nov 2026 05:21:28 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -63,65 +63,116 @@ Precedence: list
 
 Thank you for your contribution! Sashiko AI review found 1 potential
 issue to consider:
-- [High] scsi: ufs: core: unhandled __ufshcd_wl_suspend() error in
-  ufshcd_wl_poweroff()
+- [High] scsi: ufs: core: unsynchronized link recovery in
+  ufshcd_err_handler()
 --
 
-commit 3da1cf6f30fec549f078cc8184c250d266766b37
+commit bf85ee52f6ee7c2e7ab3e9f87aa7985d6566f949
 Author: HOYOUNG SEO <hy50.seo@samsung.com>
 
-scsi: ufs: core: Hold host_sem in ufshcd_wl_poweroff()
+scsi: ufs: core: Limit early link recovery in the error handler to runtime =
+PM
 
-This commit acquires hba->host_sem in ufshcd_wl_poweroff() so that
-hibernation poweroff serializes with the error handler and balances the
-up(&hba->host_sem) in ufshcd_wl_resume() if hibernation is aborted.
+This commit replaces the hba->pm_op_in_progress check in
+ufshcd_err_handler() with ufshcd_rpm_transition_in_progress() so that early
+link recovery without hba->host_sem only runs when the WLUN runtime PM
+status is RPM_SUSPENDING or RPM_RESUMING.
 
+> diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-pri=
+v.h
+> index 99f654b79035f..c576f648f242d 100644
+> --- a/drivers/ufs/core/ufshcd-priv.h
+> +++ b/drivers/ufs/core/ufshcd-priv.h
+> @@ -418,6 +418,19 @@ static inline void ufshcd_rpm_put(struct ufs_hba *hb=
+a)
+>  	pm_runtime_put(&hba->ufs_device_wlun->sdev_gendev);
+>  }
+> =20
+> +/* Whether a runtime suspend or resume of the WLUN is in progress. */
+> +static inline bool ufshcd_rpm_transition_in_progress(struct ufs_hba *hba)
+> +{
+> +#ifdef CONFIG_PM
+> +	enum rpm_status status =3D
+> +		READ_ONCE(hba->ufs_device_wlun->sdev_gendev.power.runtime_status);
+> +
+> +	return status =3D=3D RPM_SUSPENDING || status =3D=3D RPM_RESUMING;
+> +#else
+> +	return false;
+> +#endif
+> +}
+> +
+>  /**
+>   * ufs_is_valid_unit_desc_lun - checks if the given LUN has a unit descr=
+iptor
+>   * @dev_info: pointer of instance of struct ufs_dev_info
 > diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index 5a3ca3b4e6666..c2c34b044c3ec 100644
+> index c2c34b044c3ec..1608a856cac71 100644
 > --- a/drivers/ufs/core/ufshcd.c
 > +++ b/drivers/ufs/core/ufshcd.c
-> @@ -11583,6 +11583,8 @@ static int ufshcd_wl_poweroff(struct device *dev)
->  	struct scsi_device *sdev =3D to_scsi_device(dev);
->  	struct ufs_hba *hba =3D shost_priv(sdev->host);
-> =20
-> +	/* Released by ufshcd_wl_resume() if hibernation is aborted. */
-> +	down(&hba->host_sem);
->  	__ufshcd_wl_suspend(hba, UFS_SHUTDOWN_PM);
->  	return 0;
->  }
+> @@ -7094,9 +7094,14 @@ static void ufshcd_err_handler(struct work_struct =
+*work)
+>  		 * runtime resume. This avoids potential deadlocks that could
+>  		 * happen if we tried to resume the device while a PM operation
+>  		 * is already in progress.
+> +		 *
+> +		 * Do this only while a runtime PM operation is in progress. The
+> +		 * system PM and poweroff callbacks hold host_sem, and
+> +		 * shutting_down makes the regular path below stop, so it does
+> +		 * not reset the link concurrently with them.
+>  		 */
+>  		ufshcd_rpm_get_noresume(hba);
+> -		if (hba->pm_op_in_progress) {
+> +		if (ufshcd_rpm_transition_in_progress(hba)) {
+>  			ufshcd_link_recovery(hba);
+>  			ufshcd_rpm_put(hba);
+>  			return;
 
 [Severity: High]
-Does ignoring the return value of __ufshcd_wl_suspend() here leave
-hba->host_sem held when __ufshcd_wl_suspend() fails?
+Does checking runtime_status here widen the window for unsynchronized
+ufshcd_link_recovery() outside the ufshcd_hold() region of
+__ufshcd_wl_suspend() and __ufshcd_wl_resume()?
 
-drivers/ufs/core/ufshcd.c:ufshcd_wl_suspend() {
-	...
-	ret =3D __ufshcd_wl_suspend(hba, UFS_SYSTEM_PM);
-	if (ret) {
-		dev_err(&sdev->sdev_gendev, "%s failed: %d\n", __func__,  ret);
-		up(&hba->host_sem);
-	}
+The runtime PM core sets runtime_status to RPM_SUSPENDING before
+sdev_runtime_suspend() runs blk_pre_runtime_suspend(), and keeps
+RPM_SUSPENDING or RPM_RESUMING until after sdev_runtime_suspend() or
+sdev_runtime_resume() returns.  That window spans before
+__ufshcd_wl_suspend() calls ufshcd_hold() and after __ufshcd_wl_suspend() or
+__ufshcd_wl_resume() calls ufshcd_release() and clears
+hba->pm_op_in_progress:
 
-out:
-	if (!ret)
-		hba->is_sys_suspended =3D true;
-	return ret;
-}
+CPU0                                  CPU1 (eh_wq)
+rpm_suspend()
+  runtime_status =3D RPM_SUSPENDING
+  ...
+  __ufshcd_wl_suspend()
+    ufshcd_hold(hba)
+    ufshcd_link_state_transition()
+      /* fails */
+    ufshcd_force_error_recovery(hba)
+      queue_work(..., &hba->eh_work)
+    ...
+    ufshcd_release(hba)
+    hba->pm_op_in_progress =3D false
+                                      ufshcd_err_handler()
+                                        ufshcd_rpm_transition_in_progress()
+                                          /* still RPM_SUSPENDING */
+                                        ufshcd_link_recovery(hba)
+                                          /* runs without ufshcd_hold() */
+  blk_post_runtime_suspend()
+  runtime_status =3D RPM_ACTIVE
 
-If __ufshcd_wl_suspend() fails (for example, when the device or link is not
-active and it schedules hba->eh_work via ufshcd_force_error_recovery()),
-ufshcd_err_handler() will block forever on down(&hba->host_sem).  Because
-__ufshcd_wl_suspend() already calls ufshcd_release(hba) on error while
-ufshcd_wl_poweroff() still returns 0, aborting hibernation later also causes
-ufshcd_wl_resume() -> __ufshcd_wl_resume() to call ufshcd_release(hba) a
-second time and underflow hba->clk_gating.active_reqs.
+Because ufshcd_link_recovery() runs in this window without ufshcd_hold(),
+hba->host_sem, or ufshcd_err_handling_prepare(), it can access controller
+MMIO registers while clocks are gated off (for example, during
+blk_pre_runtime_suspend() or after ufshcd_release()), or reset and activate
+the host and link after a successful __ufshcd_wl_suspend() right before
+rpm_suspend() marks the WLUN RPM_SUSPENDED.
 
-In addition, ufshcd_wl_poweroff() does not set hba->is_sys_suspended =3D tr=
-ue
-on success, so if .restore (ufshcd_wl_resume()) fails,
-ufshcd_err_handling_prepare() will skip re-enabling regulators, clocks, and
-IRQs.
+Also, during runtime PM itself, if a UIC error schedules eh_work while
+__ufshcd_wl_resume() fails ufshcd_uic_hibern8_exit(), or while
+__ufshcd_wl_suspend() rolls back at set_dev_active, ufshcd_err_handler() and
+the runtime PM callback still run ufshcd_link_recovery() concurrently.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/728258269.417942002=
-83102.JavaMail.epsvc@epcpadp2new?part=3D2
+83102.JavaMail.epsvc@epcpadp2new?part=3D3
