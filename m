@@ -1,72 +1,59 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794185826;
-	b=SKfUbROtKzwiB5s/96Hf/47lxvNGh/pEUtpnEKKOfCtmxegs+tbTdSXbFJtXnQgRzR9m
-	 zaR/l9rWb8TEGXx8FWacL9lVRXN4qpe9hPB6mLBSNGXKTehip7pLZLhkRg06/qx51ESM2
-	 f5Do5xwomRrI+R+Wv7285j0H2ZqVKfnY8DkGKmxynrJ8eI0CDcUKmRmde7hQDHpn32AEo
-	 qjrCduojldnrooBt+CcauUKCoec66WNLEhE/tbGEhtlR7baeLeSeNiJnbKo5np2jD1k4V
-	 f8NGt0duX3AJ+GkmsSrMaIqp7zz66/UiJY13L3J0Nk7DJhLq+yihU7uuxySGzBKHNEA==
+	t=1794188745;
+	b=vOaIEu9UVa2Ocr4+a7oPmVzbTtzGYFxqy4FMFnat4w1E4hKZjId6RjoxGuPmSHI98Pvt
+	 FbJu5a+iGnRsqC/VKAjjGikAaCzbXS9Dat93pD+6UxSY1UXYG7grIWbVI/C5cLmWffb1O
+	 yYzmgQ3cPQcjbPWB4wQ8GOspucCf1BBMLafOwV70RdheTMwXmFuExjyDISvfpzpcwXPI0
+	 BrdcFEpbvLoHSMv9sKwZRQTbLtdtnTsv3WEncorzRicOd9YIh8tz/LSO9PEb7nMEihouH
+	 xjaoYWNMtXU9IFtXQ1yCRfvzIyID5sX+pYW68haL84h7jvVzWH7XdlySD1c9XfkYpIA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794185826;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=UgV8KA7Cu5ZAaXYWYDbHu7HAyaZ/X9DN4CiRecqVryU=;
-	b=aLdUk17uPBWBXdS5sEQp3J9GLCyz9+6sjdNfqpAkFFURhSLZxyLM7rMzdMqGV8qQOIqS
-	 cklxu2j8Pe7lJFugibXVWH/DzeYW8hWQpoUlO8nZaYpF+Jp3YTDgwi12iJchTvBZXIYdY
-	 XTRS/W8eQ3ZRcpUA8n885zM+ty6g/Y8PC0TO+LoJhpL6AKICwCqASxtTLrT3Wf9lKtARX
-	 83Pxrg07Ikix4fyBW/MJyCiLyoWlcFhJric5rhYsiF66Q4PCn8MBW/9TInr9FiwLAXoyy
-	 UlmEWCEghMFmVKbzaNBNt0rbWhtleY0a8DG6SXk9Z8isd27IksogEK4QUtYBullHR5A==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794188745;
+	h=Received:DKIM-Signature:To:Cc:Subject:From:In-Reply-To:Message-ID:
+	 References:Date:MIME-Version:Content-Type;
+	bh=/3oD/voQY7oS/fisfpwP1Btaj9r2Y4l36G9k37HEMU4=;
+	b=SkE/nzQOl8+hJTEySHzTtcQOE4lklVV7ymyNWQFHW+1tYUJsOZyAZcCVAbzq2x11kil2
+	 d0CjRjB05ARDO1oAO5zvRhnnnuE5EKdFcs4fYrYHKcq3nR1r1XdQig78/KyXDuQpVV8Nz
+	 joBv/3i2yLp+GHDx6FkDen4UjAxx+FPRW2sZ/TG0DW6uqYj2Knd2sV6ywRPNAL5dXgT3R
+	 Rh2qYBRJRXDK+0RDOZ9x7dFtIKUeuKe3GKZ+koIb6WeJlz70USj2iOIGd/PiacKkBOZAp
+	 P79rXoerQfsrYjmbclmlwQmNsErOSHUMFfOXseoXrWMu+aI6e5TCewqaBTuEDuSzMJA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="aCLHo9/6";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=FH7sRyIv;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42F38606A320;
-	Mon,  9 Nov 2026 00:57:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF557606A33B;
+	Mon,  9 Nov 2026 01:45:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=aCLHo9/6
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BB0461F008A6;
-	Mon,  9 Nov 2026 00:57:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=FH7sRyIv
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 87E061F0089F;
+	Mon,  9 Nov 2026 01:45:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794185825;
-	bh=UgV8KA7Cu5ZAaXYWYDbHu7HAyaZ/X9DN4CiRecqVryU=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=aCLHo9/66kPxeQ3IlSV3ZYw9X11Y8ElsAX6H6zq2gRhS8i5w9QzUtaTRIqcLj2c50
-	 wNcZ4HApf8c6WjEaVg23WQXbHYNl8X46GGcsTFdfb6z8xL0XwRFd0J+psV6dMO79/O
-	 29Pfb3DCr22DF0WYm5d5fSq1p2OfWoH/5R2VwlwCchRLYS3qrMsut9/Ly1LALQRaE/
-	 ZT7EdN53KZ7DzAn7nuB0As9a6t9BGPo4vMoa44LJhlNwRTzQ5Bgu3qZhDQFXAM0PFd
-	 /bFuGsUALoDM0/f5WnN/BWYUh+vnJF4STVtD2OLic8D//ycbHylWRDxUpBqWSSME/W
-	 t3ai4PjYZ5fWg==
-Message-ID: <sashiko-outbox-204265@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 17/17] arm64: dts: qcom: Add Samsung Galaxy XR
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Stanislav Aleksandrov" <lightofmysoul@gmail.com>, "Bjorn Andersson" <andersson@kernel.org>, "Konrad
- Dybcio" <konradybcio@kernel.org>, "Abel Vesa" <abelvesa@kernel.org>, "Rob
- Herring" <robh@kernel.org>, "Krzysztof Kozlowski" <krzk+dt@kernel.org>, "Conor
- Dooley" <conor+dt@kernel.org>, "Robert Marko" <robimarko@gmail.com>, "Guru
- Das Srinagesh" <linux@gurudas.dev>, "Thomas Gleixner" <tglx@kernel.org>, "Radu
- Rendec" <radu@rendec.net>, "Lee Jones" <lee@kernel.org>, "Will Deacon" <will@kernel.org>, "Robin
- Murphy" <robin.murphy@arm.com>, =?utf-8?b?Sm9lcmcgUm9lZGVsIChBTUQp?= <joro@8bytes.org>, "Greg
- Kroah-Hartman" <gregkh@linuxfoundation.org>, "Wesley Cheng" <wesley.cheng@oss.qualcomm.com>, "Vinod
- Koul" <vkoul@kernel.org>, "Neil Armstrong" <neil.armstrong@linaro.org>, "Manivannan
- Sadhasivam" <mani@kernel.org>, "Alim Akhtar" <alim.akhtar@samsung.com>, "Bart
- Van Assche" <bvanassche@acm.org>, "Bean Huo" <beanhuo@micron.com>, "Stanley
- Jhu" <stanleyjhu@google.com>, "Herbert Xu" <herbert@gondor.apana.org.au>, "David
- S. Miller" <davem@davemloft.net>, "Rafael J. Wysocki" <rafael@kernel.org>, "Viresh
- Kumar" <viresh.kumar@linaro.org>, "Amit Kucheria" <amitk@kernel.org>, "Thara
- Gopinath" <thara.gopinath@gmail.com>, "Daniel Lezcano" <daniel.lezcano@kernel.org>, "Zhang
- Rui" <rui.zhang@intel.com>, "Lukasz Luba" <lukasz.luba@arm.com>, "Georgi
- Djakov" <djakov@kernel.org>, "Sibi Sankar" <sibi.sankar@oss.qualcomm.com>
-Cc: devicetree@vger.kernel.org, mfd@lists.linux.dev, linux-usb@vger.kernel.org, linux-phy@lists.infradead.org, linux-scsi@vger.kernel.org, linux-crypto@vger.kernel.org, olteanv@gmail.com
-In-Reply-To: <20261109-halliday-dts-v1-17-289114ab8197@gmail.com>
-References: <20261109-halliday-dts-v1-0-289114ab8197@gmail.com>
- <20261109-halliday-dts-v1-17-289114ab8197@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 09 Nov 2026 00:57:03 +0000
+	s=k20260515; t=1794188744;
+	bh=/3oD/voQY7oS/fisfpwP1Btaj9r2Y4l36G9k37HEMU4=;
+	h=To:Cc:Subject:From:In-Reply-To:References:Date;
+	b=FH7sRyIvpjx3JsXUgvWYE4gqeJ3AQ7JFmkcf4r+kYqw23Gf0/13klBq9VI/OhCf7i
+	 R/LOYzms07ykyp7ohMoPjfOqvBSCq6AbeBiATDFR2iQOzlUHN0RH43RhaO0hIAL+1q
+	 GHTfcHJvgSqC+CEVHOhNg1OG7XCfF+9hRMgmlAu/vK3NcrZ6Q7kn5YHXOzjZodEpAK
+	 RmITNuInWLs8476Tr69fpyD1F9QlrYwgDNZasFEIEqbay6kIiBB2ZuDyZOlJ9aZGYT
+	 zsUsbBKdXu1az5lxl392LN9EOeIYXCkN867jT00I0jzJkcFRIBQ/I9tFZQlR4DU8LJ
+	 BuIlxNmh2N2bw==
+To: Laurence Oberman <loberman@redhat.com>
+Cc: Martin Petersen <martin.petersen@oracle.com>,  Maurizio Lombardi
+ <mlombard@redhat.com>,  target-devel@vger.kernel.org,
+  michael.christie@oracle.com,  linux-scsi@vger.kernel.org
+Subject: Re: [PATCH 0/2] target: iscsi: fix hanged WRITE_PENDING commands
+From: "Martin K. Petersen" <mkp@kernel.org>
+In-Reply-To: <0e12bf8de941ab70a7eb2136fb794cf1dc4bfd8d.camel@redhat.com>
+Message-ID: <yq1eccuye0n.fsf@mail.kernel.org>
+References: <20261027180123.13163-1-d.bogdanov@yadro.com>
+	<d7a1701ddc2e7c976ad8ff9ec071d9bfdc86a7e2.camel@redhat.com>
+	<20261028140221.GB32229@yadro.com>
+	<f4cbbca9e8b743da07902e97b09e49ac7e1cc5fb.camel@redhat.com>
+	<7e08a1f08defd24b42722ce0ad52326ff59236cd.camel@redhat.com>
+	<0e12bf8de941ab70a7eb2136fb794cf1dc4bfd8d.camel@redhat.com>
+Date: Sun, 08 Nov 2026 20:45:43 -0500
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -75,41 +62,17 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Type: text/plain
 
-Thank you for your contribution! Sashiko AI review found 1 potential
-issue to consider:
-- [Low] arm64: dts: qcom: invalid chassis-type value in
-  halliday-samsung-xrvst2.dts
---
 
-commit d2d9cbc7744fd9c3d95a63b1d3df85d5cbe99afb
-Author: Stanislav Aleksandrov <lightofmysoul@gmail.com>
+Laurence,
 
-arm64: dts: qcom: Add Samsung Galaxy XR
+> Gentle ping on this one, I really needing Dmitry's series to be taken.
+> A large customer is waiting so we can include this in RHEL. I did lots
+> of testing and due diligence on this issue.
 
-This commit adds the device tree for the Samsung Galaxy XR headset based
-on the Qualcomm Halliday SoC (SXR2250P).
+It's been sitting in fixes for a few days.
 
-> diff --git a/arch/arm64/boot/dts/qcom/halliday-samsung-xrvst2.dts b/arch/=
-arm64/boot/dts/qcom/halliday-samsung-xrvst2.dts
-> new file mode 100644
-> index 0000000000000..6fcc1aaafd59c
-> --- /dev/null
-> +++ b/arch/arm64/boot/dts/qcom/halliday-samsung-xrvst2.dts
-> @@ -0,0 +1,218 @@
-[ ... ]
-> +/ {
-> +	model =3D "Samsung Galaxy XR";
-> +	compatible =3D "samsung,xrvst2", "qcom,halliday";
-> +	chassis-type =3D "headset";
-
-[Severity: Low]
-Is "headset" a valid value for chassis-type in the root node?  The
-Devicetree Specification and dtschema (schemas/root-node.yaml) only permit
-desktop, laptop, convertible, server, tablet, handset, watch, embedded,
-television, and all-in-one, so dtbs_check fails on this DTB unless a
-standard value (such as "embedded") is used or chassis-type is omitted.
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261109-halliday-d=
-ts-v1-0-289114ab8197@gmail.com?part=3D17
+-- 
+Martin K. Petersen
