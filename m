@@ -1,56 +1,136 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.208.47
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794243546;
-	b=GbbaJWuElnqG10tTVz73v5jYXgj/rpwhvGhSD9wm7IsueH7bvw4ckisaoBTGhp3m64oe
-	 B5XHegR3xuASlR2vZgznE3g5V+M9ruQoye5013Y85xdRaoOAbkHkGUv1IninlAgcrzJrU
-	 jEDxStlNfOsPRLHP3oupZM0o0arqDbQ/izrFLH44FJT7KlTrkJr0SkubwpX/hb1+Zma8A
-	 5fqrplhPlDHfRj05fSlN33fttwraMQZvLue65pOoysj0H1S3dIm1RlduoLQpS+225hKkA
-	 DN7HYUJGpG/89csXooAhSRwNbQAXdnRr38oVKbmlSslyghkfVTt8KejeZ7QDd7klbSw==
+	t=1794243864;
+	b=n6+ui8QQZvv/orYg1IAXH8KAGnYoRM/8heCkeXRhR1YVcWKX5Mxsi9h3e+gP3Chkq541
+	 Hm3byrqsx1Pd4zbtePHgZZmTpAhyHxjuxdpgi24jDfHkNsT2R9aTg1Tzu4IWFS6+62YB5
+	 j4oecFqswfQ+9ILZwc6Di+ZRinUAruIEghcJV7toFHhgv0U8donPtg4QlKuUiwkPuguVZ
+	 U4wdEzurAMxT0RQ601y7o2ndIck6fp2xnMoGD443coxAY4sgL9INlPk8oCYwch09rz6IN
+	 7JSzHRBdOS3rV1LLAyuBiYKVbJtckMs24ai4TwDGlquyDRcUKTrLPFPvX4HA/pe49yg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794243546;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=WYdmfI7bVay5rHSRxixMK14CB+up5qwSvYWPH3fTx8U=;
-	b=NRZrfpUX7JEMklXTuUrXO+6dkbUoCOhy0XeHG5mZMdpbmp5dwG2jYmJMLhyYcjI3+uRa
-	 1n9APFXcVrH6ajuZ02d4AnsoN9cFPWhyjhbNl3mV3UMscg4vjQoST19rIkogovu9qlxDG
-	 i8RwgkEkpBhqDvaTIHN+hBuAEUc9g7THsGQw/DfRXe0TeBcc6JWkUVhRP0sjj403QkLxu
-	 OJiEK6Y/Jpod+rIx4A8aF8nVAuHcOYZVdcja3DxTsDJ3YMiA56jBEvhs66eWaXDh8UkWK
-	 CIqFudZ+VPN3qooBBmyuO+7uuPaHH87EGwrCTT4YvR62CmnY53RJN1okGS0ChcH4ZZA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794243864;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
+	 MIME-Version:Content-Transfer-Encoding;
+	bh=VmhgsZdfI41q6bSk6Ws0aoyQukpnInOpVRPvZF0DgoY=;
+	b=OiPQG/O8iVDbE6gYhmkFlfv+lRe/HEqL7PvyJxVTFwrcpIJb/j0I/+sCfSX+dwB1yY98
+	 MoroBk6XFlc4h2nSYzKI5oPxZeRDnM8O+8vGYZKfg4pSb018KO5ov+qwWo7m6Md670B+y
+	 QEeM7Lhkz5S3oY8m8u48L3m8cvxVsa1EmnCiyNXpkCWH6q3+evF9aUCIzWyOEt92KbnNT
+	 wj5z+52pEpum1TmXCl9gxn78Bn4QMT2AA+q033Y4+XtB2/OaGDfgKb8tT577TxBU7K1X+
+	 0EXsmbStm9ugaTkHMxgt4eqKcNoOQ6hC7Q1b5RpPPid1HIoLNtoiKAUB6j/PVEboSHQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=QnW5Ie3g;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=INMhwymN;
+	arc=none smtp.remote-ip=209.85.208.47
+Received: from mail-ed1-f47.google.com (mail-ed1-f47.google.com [209.85.208.47])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9C2B606A325
-	for <linux-scsi@vger.kernel.org>; Mon,  9 Nov 2026 16:59:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44380606A330
+	for <linux-scsi@vger.kernel.org>; Mon,  9 Nov 2026 17:04:24 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 44380606A330
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=QnW5Ie3g
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5D5331F008A1;
-	Mon,  9 Nov 2026 16:59:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794243545;
-	bh=WYdmfI7bVay5rHSRxixMK14CB+up5qwSvYWPH3fTx8U=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=QnW5Ie3gUiHUHhW+/XS6ZbOPSUZvmIUyW3q72kYGe+D6Vefa8y/V1h9rWp3MWnCdl
-	 AaazcpbirgmBBm7rmyzHUOBMV+jgVNvVw5Z/vr0bdoJpOLFNIp+3YyNOb5kD68F6Jp
-	 gwLpn129ZVWxtOr8fwZH9+9L9q+naRGdupDj94dz0R64rTDiSBTXuEZ4h2BlJ+nHx0
-	 SwqHpwqR5OH82/PE3XOtpOCZwmiVTrhdPvLwDUfp/4a2VMGbO/OSbHACvwIw7y3HLy
-	 tDx9f6USqWGxkpltvfd+pGWlJsJpZfDwuR2ld/7dt8bkLbDYPACQnltxjyJcp2G7we
-	 S2FsLYLhhXxUQ==
-Message-ID: <sashiko-outbox-205259@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] scsi: iscsi: Remove the endpoint ID only once when
- device_register() fails
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Changyul Lee" <lcy8047@gmail.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20261109163649.1092897-1-lcy8047@gmail.com>
-References: <20261109163649.1092897-1-lcy8047@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 09 Nov 2026 16:59:04 +0000
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=INMhwymN
+Received: by mail-ed1-f47.google.com with SMTP id 4fb4d7f45d1cf-6ae305e3bd9so1831272a12.0
+        for <linux-scsi@vger.kernel.org>; Mon, 09 Nov 2026 09:04:24 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1794243863; x=1794848663; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=VmhgsZdfI41q6bSk6Ws0aoyQukpnInOpVRPvZF0DgoY=;
+        b=INMhwymNUoXRa1HYjajYs2VDNOXoDzVIp/an3nVGMwTgqTKKIXcrYlToz3KguYeb2w
+         0JSHPrAS4tp1u64diFxx98ot8r0Zd994Q5w09w9Wo7hRC/DtQLXBMMh5MnMbGm5sg/9+
+         bfSbd1NNz976A12xlmIC5rBcyt2zgrNxYngASmeZZcCyhLh9b9uOIuPyOYnguxqTaeNR
+         9hUslwRJlODcmrjO84K/MqZr6AW6G7obz3aQhSgpfQbvfDlBiGQqmaSqVNfiSLuoobIb
+         SEhjw+R7G4bUMif5HGg+3AGlsX3R7zQQDPntqdP45khUAZLh8+Utt3l4+Gfo8W0GMqsn
+         XheA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1794243863; x=1794848663;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=VmhgsZdfI41q6bSk6Ws0aoyQukpnInOpVRPvZF0DgoY=;
+        b=XgWcONq2MEctlAK39kXorD0+O/Bbi7g2V1ho8HDozhHjscESSiEzAAPvuuV6pSU8Cq
+         LqDX5UmuKcoQbh+r7uoCku6jNEfObI1D11NquG2SkiBm6skKqldK8OG1sZPU+zzDlKl9
+         GdHV0gMYJEWBgJJfbv8GZaPl5lTIAFOECHceRCEO3O+vbQv1ya8+rz3Coyiy7XP8cfRf
+         7dgi/3cEGruwKWLtTNmVsRqWofNu2NtzlQhvNzJjisvjdwg5MeoUb8C/oowsSJosN/s2
+         90XYVNYXYO8ZYQrdlJJxy51W4GYofyIfspdgbceKgL/2JjItiUQRHAFqu+UpXme38SCU
+         Rv8Q==
+X-Forwarded-Encrypted: i=1; AL+hErEcnX/jUgFP/9Tdf8bD9hkDv+LBxyt+QGbN9HdtLrb81odIfsv3f2LWEopiz3Efo47F7dJwQemUK/BM@vger.kernel.org
+X-Gm-Message-State: APuU4Z9fgNQFiea9V4u4IyPGuTmMqyo1MVt9amvE8SZoe4i7Vgt4YyRb
+	rLuhNgdvk/GXx0f7cNDRYZSTuYfOv35Y+VDLiCVGl6aeAr5GrpWgsZFY
+X-Gm-Gg: AYBFou3W0bfDnsucMDYsvKEgsVKwJ/ldXzgCOeyhlamG74rrJnOM265uh7Jph9gjbPL
+	aRJtQGs0g8iLc77wL/19cWwx0+nAAeVoq4vu757OGrpVKOHv9bEXtnFKeIfydbc2uduXr3zFCm4
+	HO9UVNP6QLGLXf2YMMeTaIOwpIqlzWS2PHhKnUpVVSkfxSK8NkmfKyi/uik1IQayeSUSosaGICB
+	A4HgL/caO/7h4bPLe3qBZ2HaEaTNcOo1NlUo3I/z7abmLu5rUL+EoB/8HoNbbr/8R4P8iP/CIvz
+	AVN5i4aj/LERQVKwsPJKOSXfTLtaVw17kdhWdGi6nKwZ+qoiRsDU98Zaosfuoeuy/NljrLPVjdm
+	yi8g2Ao6yhQIr2qWfhIaKgequzCDIjPRoMRXW+9uyOStDPX4ZpNpFDVhddVndqs66iyjrw21mIy
+	UL4XPBTs3SHvNjiSXu23bp2NMCoYdJSF9qICFvNKdxRxfsjd+H7bbST88r5xHw0RJ/C0JqU9F0S
+	osuQEYq9uyW1HAmy3bufXMAN4VDMpVRDJUKPz2OXf7jge9mGyugwvnIzVM8Eq5BHgDu3dkxX16K
+	Req9ljdrmm4DXX+8ZEmEUsoXlW8=
+X-Received: by 2002:a05:6402:2356:b0:6b5:7792:d82c with SMTP id 4fb4d7f45d1cf-6b756ad7482mr185305a12.16.1794243862514;
+        Mon, 09 Nov 2026 09:04:22 -0800 (PST)
+Received: from flare5 ([212.58.121.92])
+        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-6b721ebe31csm1878937a12.16.2026.11.09.09.04.17
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 09 Nov 2026 09:04:21 -0800 (PST)
+From: Stanislav Aleksandrov <lightofmysoul@gmail.com>
+To: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+Cc: Bjorn Andersson <andersson@kernel.org>,
+	Konrad Dybcio <konradybcio@kernel.org>,
+	Abel Vesa <abelvesa@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Robert Marko <robimarko@gmail.com>,
+	Guru Das Srinagesh <linux@gurudas.dev>,
+	Thomas Gleixner <tglx@kernel.org>,
+	Radu Rendec <radu@rendec.net>,
+	Lee Jones <lee@kernel.org>,
+	Will Deacon <will@kernel.org>,
+	Robin Murphy <robin.murphy@arm.com>,
+	"Joerg Roedel (AMD)" <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Wesley Cheng <wesley.cheng@oss.qualcomm.com>,
+	Vinod Koul <vkoul@kernel.org>,
+	Neil Armstrong <neil.armstrong@linaro.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Alim Akhtar <alim.akhtar@samsung.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	Bean Huo <beanhuo@micron.com>,
+	Stanley Jhu <stanleyjhu@google.com>,
+	Herbert Xu <herbert@gondor.apana.org.au>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Viresh Kumar <viresh.kumar@linaro.org>,
+	Amit Kucheria <amitk@kernel.org>,
+	Thara Gopinath <thara.gopinath@gmail.com>,
+	Daniel Lezcano <daniel.lezcano@kernel.org>,
+	Zhang Rui <rui.zhang@intel.com>,
+	Lukasz Luba <lukasz.luba@arm.com>,
+	Georgi Djakov <djakov@kernel.org>,
+	Sibi Sankar <sibi.sankar@oss.qualcomm.com>,
+	linux-arm-msm@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	mfd@lists.linux.dev,
+	linux-arm-kernel@lists.infradead.org,
+	iommu@lists.linux.dev,
+	linux-usb@vger.kernel.org,
+	linux-phy@lists.infradead.org,
+	linux-scsi@vger.kernel.org,
+	linux-crypto@vger.kernel.org,
+	linux-pm@vger.kernel.org
+Subject: Re: [PATCH 17/17] arm64: dts: qcom: Add Samsung Galaxy XR
+Date: Mon,  9 Nov 2026 17:04:07 +0000
+Message-ID: <20261109170407.2073295-1-lightofmysoul@gmail.com>
+X-Mailer: git-send-email 2.55.0
+In-Reply-To: <3ddaacfd-59c0-4d87-9b8c-2caa85143393@oss.qualcomm.com>
+References: <20261109-halliday-dts-v1-0-289114ab8197@gmail.com> <20261109-halliday-dts-v1-17-289114ab8197@gmail.com> <3ddaacfd-59c0-4d87-9b8c-2caa85143393@oss.qualcomm.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -59,73 +139,20 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 1 potential
-issue to consider:
-- [Medium] scsi: iscsi: failed ep left in iscsi_ep_idr in
-  iscsi_create_endpoint()
---
+On 09/11/2026 16:12, Konrad Dybcio wrote:
+> On 11/9/26 1:33 AM, Stanislav Aleksandrov wrote:
+>> +&usb_1 {
+>> +	dr_mode = "peripheral";
+>> +	maximum-speed = "high-speed";
+>> +	qcom,select-utmi-as-pipe-clk;
+>
+> Is there no superspeed / dp altmode in hardware?
 
-commit bcf1b2eaf3554e78f33bb71b87b333ff7a9501a1
-Author: Changyul Lee <lcy8047@gmail.com>
+The headset supports USB SuperSpeed and DisplayPort via its USB Type-C
+port, I just haven't brought them up yet. It seems we need a new driver
+for the Type-C controller.
 
-scsi: iscsi: Remove the endpoint ID only once when device_register() fails
-
-This commit drops the explicit idr_remove() from the device_register()
-error path in iscsi_create_endpoint() so that iscsi_endpoint_release()
-removes the endpoint ID once.
-
-> diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_tran=
-sport_iscsi.c
-> index b094af7c997e2..6e38fbfd5a9de 100644
-> --- a/drivers/scsi/scsi_transport_iscsi.c
-> +++ b/drivers/scsi/scsi_transport_iscsi.c
-> @@ -246,9 +246,6 @@ iscsi_create_endpoint(int dd_size)
->  	return NULL;
-> =20
->  put_dev:
-> -	mutex_lock(&iscsi_ep_idr_mutex);
-> -	idr_remove(&iscsi_ep_idr, id);
-> -	mutex_unlock(&iscsi_ep_idr_mutex);
->  	put_device(&ep->dev);
->  	return NULL;
->  free_ep:
-
-[Severity: Medium]
-Does leaving ep in iscsi_ep_idr here allow iscsi_lookup_endpoint() to
-find the failed endpoint after put_device() drops its reference count to
-zero?
-
-iscsi_create_endpoint() publishes ep in iscsi_ep_idr before calling
-device_register(&ep->dev) and before setting ep->dd_data:
-
-CPU0                                  CPU1
-iscsi_create_endpoint()
-  idr_alloc(&iscsi_ep_idr, ep, ...)
-  device_register(&ep->dev) -> fails
-  put_device(&ep->dev)
-    kref_put(&kobj->kref, ...)
-      /* kref reaches 0 */
-                                      iscsi_lookup_endpoint()
-                                        ep =3D idr_find(&iscsi_ep_idr, ...)
-                                        get_device(&ep->dev)  <-- use-after=
--free
-      iscsi_endpoint_release()
-        mutex_lock(&iscsi_ep_idr_mutex)
-        idr_remove(&iscsi_ep_idr, ep->id)
-        kfree(ep)
-
-In addition to the refcount addition on zero and use-after-free on ep,
-ep->dd_data is still NULL because the error path skipped its
-initialization, so callers of iscsi_lookup_endpoint() such as
-iscsi_if_ep_disconnect() -> transport->ep_disconnect() will dereference a
-NULL pointer.
-
-Replacing the pointer with NULL via idr_replace(&iscsi_ep_idr, NULL, id)
-under iscsi_ep_idr_mutex before put_device(&ep->dev) would hide the
-failed endpoint from lookups while keeping the ID reserved until
-iscsi_endpoint_release() removes it.
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261109163649.1092=
-897-1-lcy8047@gmail.com?part=3D1
+Stanislav
