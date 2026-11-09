@@ -1,133 +1,94 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.172
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794235572;
-	b=3HVsa5p5gkfYKizNEjigFJn0AxrtjK4OBlXNjO6+gW1CyslunSX+bF/+QsC1G9e67yh1
-	 X/5H6lqqIMUeHwlLToNSuP44iQ7fectVAbW7EjRsDdTNkXG7CVzoFDfdKUJmDkXChiKDd
-	 wv8GAtECkAQPzRRsmcVBRFydYI9kXIWFfrm2lYm4towBQ1ZtbhrUzrBvhTF2cTXmbE0CZ
-	 el6kAA3+NP07X9bh/ZLigS4Oz2YcL4vYQWLWi+nnbP8ZuhUtf1g+ZPluNgBA2mPeO89ht
-	 PfzaDEJV7ASkNnsrHgnBVV+Y7iARTh77AKjn4GnGIUa0K9uC0IjBcX6fh70jnyAcWqA==
+	t=1794236237;
+	b=s+BWUSFPdbxyToUTwqEyZg++oxPzrGs5xrWAo6512yiRowR3hWQkPNByKj7nk0acp+cd
+	 DJPNo7jJdygS9qfEo1xZVo7wEbOVDWLDz9+TMV78RWRkKEXqyFot8zIHjHEIa2ltmVpNe
+	 8vsG+7MlSp8mtypCLF7f2IopRkiNdthXht3ntSfBQxoZNaTN41rzMZrwAre2f2E0arrrW
+	 vRAfseHS010SMw66Y8G9AzwPPwcDQTcEvdlq1SQ/idvG8FzmKol0mK60AAryJYweiXs8o
+	 0y1X9dwihescF5vsBGeTrbgD0CxbkD1YU4Iho+U7uhBgfNqE7bc69hdJ7qpbrstxvAw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794235572;
-	h=Received:DKIM-Signature:Message-ID:Subject:From:To:Cc:Date:
-	 In-Reply-To:References:Autocrypt:Content-Type:
-	 Content-Transfer-Encoding:User-Agent:MIME-Version;
-	bh=U38oIzy9ynukowewNbbmFO6Q973bbaus1qUM3U7jCMc=;
-	b=C5LUaflUh4OfOnUHeoNn+V9mxjrm6LbYwNd+c1Mbd6T0jq6W6TUEnbF/y7QDWfuaBfv9
-	 4JB29ML/bv/hzPBi4yM6pzUReL2fi62G+OQeRye8oVfp3w3Tz+0ZItt09Aeue85eQXW0I
-	 62KgKFj/PyCpHvkcE0F+J5lgTukkF+KDt24GjqXzdpwLLRY0ZBKzQoyLkatrbY5geTfiT
-	 m1xWq8fB7xSmFWCtjNmxG4CYUzbHKaQu2Wrzhvj5dF+udEeeP8ex2l3zwass11b94ORKK
-	 fDR11HNa8kaKo1tdjIjmSHHwTcRExDVRqF4PH1JZL7wZP9smdeLxj17MTXb2H1PANCw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794236237;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 Sender:From:To:Cc:In-Reply-To:References:Subject:Date:Message-ID:
+	 MIME-Version:Content-Type:Content-Transfer-Encoding;
+	bh=WnGcSIDD8xsihnvux7kQF612pALMJnteuiV/uKYZ0Nc=;
+	b=OQjdmjPmcOYFBr9ewKBXwv0tXqOietCCIIKXSDm4XOLcqTLapoIanPfc78EUd+55Owbm
+	 BqrGQ1XYgU7SVN1rREYdhjDWTvsA2VHiXuhrD5CENyOkZZhRmMPgNqko4QaOJO2UkmFmQ
+	 w017HYYbUyNdbaea8nJOE3cXayHHKMXURi6tf971ySEV8jtl4W24H/a46LW4zL2B/wqOY
+	 HJMI3gteSA5XMzNbdVAX+uAelabUYbOQJUlMBeb5I1IVKsLfhgtZZcLaA8xxOAX9DTwNR
+	 TNNDTRDHMR5NoYbAb3aoOlrZfeG44M8nG5Dl/nXlsBfbr2fkatC1Y4OEXuK6HBpKu7Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=E5B4FYqU;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=sgWDoxDB;
+	arc=none smtp.remote-ip=209.85.128.172
+Received: from mail-yw1-f172.google.com (mail-yw1-f172.google.com [209.85.128.172])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73775606A31C;
-	Mon,  9 Nov 2026 14:46:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91921606A31C
+	for <linux-scsi@vger.kernel.org>; Mon,  9 Nov 2026 14:57:16 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 91921606A31C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=E5B4FYqU
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CE8EA1F0089F;
-	Mon,  9 Nov 2026 14:46:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794235572;
-	bh=U38oIzy9ynukowewNbbmFO6Q973bbaus1qUM3U7jCMc=;
-	h=Subject:From:To:Cc:Date:In-Reply-To:References;
-	b=E5B4FYqUVHY7YQk9y4esnIpxkVbSGGOpieAt8gmeiIUW8a1fQzRwwbWw1b1w2Mc3Z
-	 Oil32O3MrICQ+QJWVG1+Drdar8/P/XS+VZBLnZTbecR/VeMzFf96GGh5MDz2osIHTO
-	 yiqjj49XutUelhwhuaNKYydOR+fs+glaJ9vbaYWqZlWTRb8wYMql1wWhUu08qZU2Ba
-	 TrJdhfzQPkryw3UoDRi5JkkeANo4+yLnNIsy2/T+OxTJ2oaZbloJu3TuLJRLfwff3n
-	 q3f1AoLDz226B5be5mc/I4eQXZMewXbookq3qSPCptWKmkSAC4D1/FKrVBJZ7iZrRj
-	 uNMXH0tliCrsw==
-Message-ID: <eb243163db8e99c0c2db72eceb5d1fd9990e7d7d.camel@kernel.org>
-Subject: Re: [PATCH v3 2/2] scsi: mpt3sas: Time out delayed not-responding
- device blocks
-From: Jeff Layton <jlayton@kernel.org>
-To: sashiko-reviews@lists.linux.dev
-Cc: linux-scsi@vger.kernel.org
-Date: Mon, 09 Nov 2026 09:46:08 -0500
-In-Reply-To: <sashiko-outbox-202261@kernel.org>
-References: <20261106-sas-abba-v3-0-571b854594aa@kernel.org>
-	 <20261106-sas-abba-v3-2-571b854594aa@kernel.org>
-	 <sashiko-outbox-202261@kernel.org>
-Autocrypt: addr=jlayton@kernel.org; prefer-encrypt=mutual;
- keydata=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
- QZIQXVeAA+smfTT0tDrisj1U5x6ZB9b3nBg65kc=
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.60.2 (3.60.2-3.fc44) 
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=sgWDoxDB
+Received: by mail-yw1-f172.google.com with SMTP id 00721157ae682-8b305d38bafso6373117b3.3
+        for <linux-scsi@vger.kernel.org>; Mon, 09 Nov 2026 06:57:16 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1794236235; x=1794841035; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:message-id:date
+         :subject:references:in-reply-to:cc:to:from:sender:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=WnGcSIDD8xsihnvux7kQF612pALMJnteuiV/uKYZ0Nc=;
+        b=sgWDoxDB9GBkZ5cRKpqIm9Car53R0jvltFnT3c93vi7tnQMMfsvSx8ddfcb2gmfwe9
+         gK8kJUSV5QcvTGlLUq/i8fzhND/XKrxbI/VWOXEl6YPFn4HCEre2ftX4gwtD4ww5EoVZ
+         JMqXr0sWdOG7hUu+1z3yq9fUMO9Bf1qQlCz2xDvnRFwIJu1UhPhSufztgH/UfDDfZqNk
+         rlpLPs330hEvuM55M0W6DNIl7xL60CJEpcn3PfuOpTQn+tkDnUJcCMaJw/CHlERZiLd3
+         ZVMnSQEqed7CVjyJwY6g6N7Fc7Yu/l6seM2eY+mqzEERpH9BvhxQ6Ud85AVLQGZ/uK96
+         CZ2g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1794236235; x=1794841035;
+        h=content-transfer-encoding:content-type:mime-version:message-id:date
+         :subject:references:in-reply-to:cc:to:from:sender:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=WnGcSIDD8xsihnvux7kQF612pALMJnteuiV/uKYZ0Nc=;
+        b=Bp23Rjfh3js41J2ZhdtVtgQvphLSVxsfWelDDrVGdJhJo9ozc8iSr7PiXLQN1vJ6CZ
+         z4I2uEwte7jIwwqLxE/EagebSgl4HeXh2lG8jjj18d6oFrWm3KL6vpLfxwsRWQ+83I3S
+         dHWMgqwsXOtXEg0/sNFGZUScj8I4Slj4Gu8nEo02Z3mlaO852gjEAjdEdtXP1RwwrveD
+         eBEjmP9+gNXyDFgbowNBc42TDaWi6MXuveMrKgEk9ijrygFHCPk6xheyP6e9tV7NHF/s
+         G/uxQFUXfGBJO889XmI7aKRI293g/SiBMNCBkoKHlcfsH4Q8jBRbNtzZ6WTN2mWgDrNu
+         N18w==
+X-Forwarded-Encrypted: i=1; AL+hErElcTfNeOYg7NjR//dGN6GJPnOBp8zPyduuIy6EGgjnUZBcFLeL9Ez3xko9NMZ8Z1ysuaK+EP4xjEzy@vger.kernel.org
+X-Gm-Message-State: APuU4Z9Q6A/et8vTz+4oAqRyySJkHh8dy58BLvETG9wZ+5ygiHbKO/r+
+	dhCB04iQPq+MjzDq9ULV4SCG625WWWPTTdK1Inck0VLyyIc35LjlTOU3AOcgJ89k
+X-Gm-Gg: AYBFou2WsMdF3hyBmmN9SO+Ys5lt4l2HwnDPOPr+6pvnC7swX/EB6rFulaYSDrWzP7z
+	jlKlHqEkA209Q8IV2O2vNnEugWNc91q55WCLsfu+OaAiG1mhnDYZ6Oylk+FS4B0lKDjJlwrtRxm
+	LIkTMRJjBb4HnFajqfbN48+tBRjXDpF8IVRYbBdplUmo7AfqGqauIW7J7x/anMh3eWhGWxBaJsj
+	ab4q5N+gecmzTwVa8gUedpSSMWWk4i2C2gudmXZxp+Qu77QuUjdA4YOHnd3VDjyWvJZC3E2apEr
+	7CYD6KUp/kvGk8DED3EOvpffc7W7+R9iiuUXYg9sWgQHCOo6eHx96SyMKczbt8ShFyGA+DLNoz+
+	+9yK71/8fv0TAxqFL3H2HEU4gTOsUOdO0WE61hVmTaahuZt8dUxMVDYOSRC3itzPiMGoNGgmcIX
+	CLS4QpudkY8cDAUX1hQE10qEupudkrjXgnc6vZFzJ+FxRXhag9J71tcE+5a2ojqvXAeSduhfT49
+	ZAjeDpdQBlcSQxhDQKTi347jwoNdTxMi7X4k1qT0M2r44c7ONNq6frpQzQaSYi2ns6HEOFJTOpi
+	GyVFEs4FV8j5QcPelEjUUDeY15rfr8Ocx0a6jTtEGy7kxYg+4SSCd4G6nAWjHbsphJmyvPemFA=
+	=
+X-Received: by 2002:a05:690c:399:b0:8b3:90db:a7d3 with SMTP id 00721157ae682-8b390dbcf9emr105627b3.40.1794236235307;
+        Mon, 09 Nov 2026 06:57:15 -0800 (PST)
+Received: from nb-x1-03 ([181.120.144.175])
+        by smtp.gmail.com with ESMTPSA id 00721157ae682-8b36bbe8ce7sm37040637b3.25.2026.11.09.06.57.13
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 09 Nov 2026 06:57:14 -0800 (PST)
+Sender: Ciro Iriarte <ciro.iriarte@gmail.com>
+From: Ciro Iriarte <ciro.iriarte+software@gmail.com>
+To: "Martin K. Petersen" <mkp@kernel.org>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, stable@vger.kernel.org
+In-Reply-To: <591ac67a-fa1e-4395-9573-2d9405cfe0b6@gmail.com>
+References: <591ac67a-fa1e-4395-9573-2d9405cfe0b6@gmail.com>
+Subject: [PATCH v2] scsi: target: compare all six ISID bytes when identifying a nexus
+Date: Mon, 09 Nov 2026 11:31:01 -0300
+Message-ID: <8b1ac7d9-b0e4-42ac-b8a2-c4c70cccdddc@gmail.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -137,313 +98,226 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-On Fri, 2026-11-06 at 20:57 +0000, sashiko-bot@kernel.org wrote:
-> Thank you for your contribution! Sashiko AI review found 3 potential
-> issues to consider:
-> - [High] scsi: mpt3sas: use-after-free of sdev->hostdata in unblock
->   helpers
-> - [Medium] scsi: mpt3sas: race setting SDEV_OFFLINE outside block_lock
->   on unblock failure
-> - [Medium] scsi: mpt3sas: _scsih_block_io_all_device() leaves sdevs
->   blocked without deadline
-> --
->=20
-> commit ba9687a8025a542963a3bc4d91c8e8b094a21e74
-> Author: Jeff Layton <jlayton@kernel.org>
->=20
-> scsi: mpt3sas: Time out delayed not-responding device blocks
->=20
-> This commit adds a delayed work item and per-device deadline to release
-> delayed not-responding sdev blocks after the firmware's device missing
-> delay plus 30 seconds, preventing scans from deadlocking on sas_host->loc=
-k.
->=20
-> > diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sa=
-s/mpt3sas_scsih.c
-> > index 60c9cf679a8a7..acdeece20140f 100644
-> > --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> > +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
->=20
-> [ ... ]
->=20
-> > @@ -3958,7 +3989,20 @@ _scsih_ublock_io_all_device(struct MPT3SAS_ADAPT=
-ER *ioc, u8 no_turs)
-> >  	int count =3D 0;
-> >  	u8 tr_method =3D 0;
-> >  	u8 tr_timeout =3D 30;
-> > +	unsigned long flags;
-> > =20
-> > +	/* polling one device can outlast another's deadline */
-> > +	if (!no_turs && issue_scsi_cmd_to_bringup_drive) {
-> > +		shost_for_each_device(sdev, ioc->shost) {
-> > +			spin_lock_irqsave(&ioc->block_lock, flags);
-> > +			sas_device_priv_data =3D sdev->hostdata;
-> > +			if (sas_device_priv_data &&
-> > +			    sas_device_priv_data->sas_target &&
-> > +			    !sas_device_priv_data->sas_target->deleted)
-> > +				sas_device_priv_data->block_deadline =3D 0;
-> > +			spin_unlock_irqrestore(&ioc->block_lock, flags);
-> > +		}
-> > +	}
-> > =20
-> >  	shost_for_each_device(sdev, ioc->shost) {
-> >  		sas_device_priv_data =3D sdev->hostdata;
-> > @@ -3975,10 +4019,18 @@ _scsih_ublock_io_all_device(struct MPT3SAS_ADAP=
-TER *ioc, u8 no_turs)
-> >  		if ((no_turs) || (!issue_scsi_cmd_to_bringup_drive)) {
-> >  			sdev_printk(KERN_WARNING, sdev, "device_unblocked handle(0x%04x)\n"=
-,
-> >  				sas_device_priv_data->sas_target->handle);
-> > -			_scsih_internal_device_unblock(sdev, sas_device_priv_data);
-> > +			spin_lock_irqsave(&ioc->block_lock, flags);
-> > +			/* dnr_unblock_work may have released it */
-> > +			if (sas_device_priv_data->block)
-> > +				_scsih_internal_device_unblock(sdev,
-> > +				    sas_device_priv_data);
-> > +			spin_unlock_irqrestore(&ioc->block_lock, flags);
-> >  			continue;
-> >  		}
-> > =20
-> > +		/* may have been blocked since the first pass */
-> > +		if (!_scsih_claim_block(ioc, sdev))
-> > +			continue;
-> >  		do {
-> >  			pcie_device =3D mpt3sas_get_pdev_by_handle(ioc, sas_target->handle)=
-;
-> >  			if (pcie_device && (!ioc->tm_custom_handling) &&
-> > @@ -3997,11 +4049,13 @@ _scsih_ublock_io_all_device(struct MPT3SAS_ADAP=
-TER *ioc, u8 no_turs)
-> >  		} while ((rc =3D=3D DEVICE_RETRY || rc =3D=3D DEVICE_START_UNIT ||
-> >  		    rc =3D=3D DEVICE_STOP_UNIT || rc =3D=3D DEVICE_RETRY_UA)
-> >  			&& count++ < command_retry_count);
-> > +		spin_lock_irqsave(&ioc->block_lock, flags);
-> >  		sas_device_priv_data->block =3D 0;
-> >  		if (rc !=3D DEVICE_READY)
-> >  			sas_device_priv_data->deleted =3D 1;
-> > =20
-> >  		_scsih_internal_device_unblock(sdev, sas_device_priv_data);
-> > +		spin_unlock_irqrestore(&ioc->block_lock, flags);
-> > =20
-> >  		if (rc !=3D DEVICE_READY) {
-> >  			sdev_printk(KERN_WARNING, sdev, "%s: device_offlined,\n"
->=20
-> [Severity: High]
-> Can _scsih_ublock_io_all_device() and _scsih_ublock_io_device_wait() caus=
-e a
-> use-after-free on sas_device_priv_data and sas_target?
->=20
-> shost_for_each_device() only holds a reference on sdev, not sdev->hostdat=
-a.
-> When _scsih_dnr_unblock_work() unblocks an sdev that was blocked during a
-> concurrent sysfs scan and its probe fails in scsi_probe_and_add_lun(), or
-> when a device is removed via sysfs, __scsi_remove_device() calls
-> scsih_sdev_destroy(), which clears sdev->hostdata under ioc->block_lock a=
-nd
-> frees sas_device_priv_data:
->=20
-> CPU0 (firmware_event_thread)      CPU1 (scan / device removal)
-> _scsih_ublock_io_all_device()
->   sas_device_priv_data =3D
->     sdev->hostdata;
->   _scsih_claim_block(ioc, sdev)
->   _scsih_wait_for_device_...()
->                                   __scsi_remove_device(sdev)
->                                     scsih_sdev_destroy(sdev)
->                                       spin_lock_irqsave(&ioc->block_lock)
->                                       sdev->hostdata =3D NULL;
->                                       spin_unlock_irqrestore(&ioc->block_=
-lock)
->                                       kfree(sas_device_priv_data);
->   spin_lock_irqsave(&ioc->block_lock)
->   sas_device_priv_data->block =3D 0;  <-- use-after-free
->=20
-> Both functions also read sdev->hostdata and dereference
-> sas_device_priv_data->sas_target at the top of their second
-> shost_for_each_device() loops without holding ioc->block_lock, and in the
-> no_turs branch _scsih_ublock_io_all_device() takes ioc->block_lock and
-> accesses the cached sas_device_priv_data pointer without re-checking
-> sdev->hostdata.  Re-fetching sdev->hostdata (and sas_target) under
-> ioc->block_lock before each access and after the polling loop would avoid
-> touching freed hostdata.
->=20
+lio_sess_get_initiator_sid() reports the ISID as twelve hex digits, and
+iSCSI TransportIDs carry the same digits. __transport_register_session(),
+__core_scsi3_do_alloc_registration() and
+core_scsi3_alloc_aptpl_registration() turn that text into
+sess_bin_isid and pr_reg_bin_isid with get_unaligned_be64(), which takes
+the first eight characters, i.e. the first four ISID bytes.
 
-Real issue. Still, worth fixing while we're in here.
+open-iscsi ISIDs start with 00023d00 and differ only in the qualifier in
+the last two bytes, so every session of one initiator gets the same
+binary ISID. target_scsi2_reservation_check() and
+target_scsi3_pr_reservation_check() then treat any session of the
+reservation holder's initiator as the holder:
 
-> > @@ -4060,24 +4114,30 @@ _scsih_ublock_io_device_wait(struct MPT3SAS_ADA=
-PTER *ioc, u64 sas_address,
-> >  	u8 tr_timeout =3D 30;
-> >  	u8 tr_method =3D 0;
-> >  	int count =3D 0;
-> > +	unsigned long flags;
-> > =20
-> >  	/* moving devices from SDEV_OFFLINE to SDEV_BLOCK */
-> >  	shost_for_each_device(sdev, ioc->shost) {
-> > +		spin_lock_irqsave(&ioc->block_lock, flags);
-> >  		sas_device_priv_data =3D sdev->hostdata;
-> >  		if (!sas_device_priv_data)
-> > -			continue;
-> > +			goto next;
-> >  		sas_target =3D sas_device_priv_data->sas_target;
-> >  		if (!sas_target)
-> > -			continue;
-> > +			goto next;
-> >  		if (sas_target->sas_address !=3D sas_address ||
-> >  		    sas_target->port !=3D port)
-> > -			continue;
-> > +			goto next;
-> > +		/* polling one device can outlast another's deadline */
-> > +		sas_device_priv_data->block_deadline =3D 0;
-> >  		if (sdev->sdev_state =3D=3D SDEV_OFFLINE) {
-> >  			sas_device_priv_data->block =3D 1;
-> >  			sas_device_priv_data->deleted =3D 0;
-> >  			scsi_device_set_state(sdev, SDEV_RUNNING);
-> >  			scsi_internal_device_block_nowait(sdev);
-> >  		}
-> > +next:
-> > +		spin_unlock_irqrestore(&ioc->block_lock, flags);
-> >  	}
-> > =20
-> >  	/* moving devices from SDEV_BLOCK to SDEV_RUNNING state */
-> > @@ -4091,7 +4151,7 @@ _scsih_ublock_io_device_wait(struct MPT3SAS_ADAPT=
-ER *ioc, u64 sas_address,
-> >  		if (sas_target->sas_address !=3D sas_address ||
-> >  		    sas_target->port !=3D port)
-> >  			continue;
-> > -		if (!sas_device_priv_data->block)
-> > +		if (!_scsih_claim_block(ioc, sdev))
-> >  			continue;
-> > =20
-> >  		do {
-> > @@ -4129,10 +4189,12 @@ _scsih_ublock_io_device_wait(struct MPT3SAS_ADA=
-PTER *ioc, u64 sas_address,
-> >  		    rc =3D=3D DEVICE_STOP_UNIT || rc =3D=3D DEVICE_RETRY_UA)
-> >  			&& count++ <=3D command_retry_count);
-> > =20
-> > +		spin_lock_irqsave(&ioc->block_lock, flags);
-> >  		sas_device_priv_data->block =3D 0;
-> >  		if (rc !=3D DEVICE_READY)
-> >  			sas_device_priv_data->deleted =3D 1;
-> >  		scsi_internal_device_unblock_nowait(sdev, SDEV_RUNNING);
-> > +		spin_unlock_irqrestore(&ioc->block_lock, flags);
-> > =20
-> >  		if (rc !=3D DEVICE_READY) {
-> >  			sdev_printk(KERN_WARNING, sdev,
->=20
-> [Severity: Medium]
-> When rc !=3D DEVICE_READY in _scsih_ublock_io_device_wait() (and in
-> _scsih_ublock_io_all_device()), can dropping ioc->block_lock before calli=
-ng
-> scsi_device_set_state(sdev, SDEV_OFFLINE) race with _scsih_block_io_devic=
-e()?
->=20
-> CPU0 (firmware_event_thread)      CPU1 (<hardirq>)
-> _scsih_ublock_io_device_wait()
->   spin_lock_irqsave(&ioc->block_lock)
->   sas_device_priv_data->block =3D 0;
->   scsi_internal_device_unblock_nowait(
->     sdev, SDEV_RUNNING)
->   spin_unlock_irqrestore(&ioc->block_lock)
->                                   _scsih_block_io_device()
->                                     spin_lock_irqsave(&ioc->block_lock)
->                                     /* sdev_state is SDEV_RUNNING */
->                                     _scsih_internal_device_block(sdev, ..=
-.)
->                                     sas_device_priv_data->block_deadline =
-=3D ...;
->                                     spin_unlock_irqrestore(&ioc->block_lo=
-ck)
->   ...
->   scsi_device_set_state(sdev,
->     SDEV_OFFLINE)  <-- overwrites SDEV_BLOCK; queue stays stopped
->=20
-> Because sdev->sdev_state is SDEV_RUNNING while ioc->block_lock is dropped=
-,
-> _scsih_block_io_device() does not see SDEV_OFFLINE and stops the request
-> queue, sets block =3D 1, and arms block_deadline.  CPU0 then sets
-> sdev->sdev_state to SDEV_OFFLINE with the queue still stopped (so
-> scsi_queue_rq() cannot fail queued I/O with BLK_STS_IOERR) and an active
-> block_deadline that will later transition the offline device back to
-> SDEV_RUNNING without a TUR check.  Setting SDEV_OFFLINE before releasing
-> ioc->block_lock would close this window.
->=20
-> [ ... ]
->=20
+- after RESERVE(6) on one session, another session of the same
+  initiator can still write;
+- with a Write Exclusive persistent reservation, another session that
+  is not registered, or registered but not the holder, can still write.
 
-There's a real race window here, but I think the claimed result is
-wrong. Still, this is simple to fix.
+Reproduced with two open-iscsi sessions (ifaces default and if2) to a
+ramdisk LUN: on v6.12.113 every TEST UNIT READY, READ(10) and WRITE(10)
+the test sent from the second session completed with GOOD, under
+RESERVE(6) and under each persistent reservation type, whether or not
+that session was registered.
 
-> > @@ -4213,21 +4279,119 @@ _scsih_block_io_all_device(struct MPT3SAS_ADAP=
-TER *ioc)
-> >  {
-> >  	struct MPT3SAS_DEVICE *sas_device_priv_data;
-> >  	struct scsi_device *sdev;
-> > +	unsigned long flags;
-> > =20
-> >  	shost_for_each_device(sdev, ioc->shost) {
-> > +		spin_lock_irqsave(&ioc->block_lock, flags);
-> >  		sas_device_priv_data =3D sdev->hostdata;
-> >  		if (!sas_device_priv_data)
-> > -			continue;
-> > -		if (sas_device_priv_data->block)
-> > -			continue;
-> > +			goto next;
-> > +		if (sas_device_priv_data->block) {
-> > +			/* the caller unblocks it; dnr_unblock_work must not */
-> > +			sas_device_priv_data->block_deadline =3D 0;
-> > +			goto next;
-> > +		}
-> >  		if (sas_device_priv_data->ignore_delay_remove) {
-> >  			sdev_printk(KERN_INFO, sdev,
-> >  			"%s skip device_block for SES handle(0x%04x)\n",
-> >  			__func__, sas_device_priv_data->sas_target->handle);
-> > -			continue;
-> > +			goto next;
-> >  		}
-> >  		_scsih_internal_device_block(sdev, sas_device_priv_data);
-> > +next:
-> > +		spin_unlock_irqrestore(&ioc->block_lock, flags);
-> >  	}
-> > +}
->=20
-> [Severity: Medium]
-> Can _scsih_block_io_all_device() leave devices blocked with
-> block_deadline =3D=3D 0 so that neither the caller nor _scsih_dnr_unblock=
-_work()
-> unblocks them before device removal?
->=20
-> _scsih_block_io_all_device() blocks every sdev (or clears its
-> block_deadline) without checking sas_target->deleted, whereas its paired
-> _scsih_ublock_io_all_device() skips targets with sas_target->deleted set.
-> In addition, its caller _scsih_sas_broadcast_primitive_event() skips
-> _scsih_ublock_io_all_device() altogether when host recovery starts:
->=20
-> drivers/scsi/mpt3sas/mpt3sas_scsih.c:_scsih_sas_broadcast_primitive_event=
-() {
->     ...
-> 	ioc->broadcast_aen_busy =3D 0;
-> 	if (!ioc->shost_recovery)
-> 		_scsih_ublock_io_all_device(ioc, 1);
-> 	mutex_unlock(&ioc->tm_cmds.mutex);
-> }
->=20
-> After host reset, _scsih_remove_unresponding_devices() runs on
-> firmware_event_thread and removes unresponding devices (taking
-> sas_host->lock and shost->scan_mutex) before it reaches
-> _scsih_ublock_io_all_device(ioc, 0).  If a concurrent sysfs scan holds
-> sas_host->lock and waits on I/O to one of these sdevs whose block_deadlin=
-e
-> was cleared to 0, _scsih_dnr_unblock_work() will not unblock it and the s=
-can
-> deadlock recurs.
+Convert all six bytes. Text that is not exactly twelve hex digits keeps
+the old conversion of its first eight characters, now copied into a
+zeroed buffer so that a shorter string, such as an initiator_sid written
+to res_aptpl_metadata, is not read past its end.
 
-Real issue, but this predates the set AFAICT. Still it's also worth
-fixing.
+An all-zero ISID now converts to 0, which
+target_scsi2_reservation_reserve() took to mean "no ISID". Set
+DRF_SPC2_RESERVATIONS_WITH_ISID when the fabric reports ISIDs instead.
+Also update the TransportID parser comment that referred to the
+get_unaligned_be64() read.
 
-There's also another issue here, I think where repeated DNRs can extend
-the block indefinitely and still cause a hang. We should just bound the
-timeout instead.
+With distinct ISIDs, target_scsi3_pr_reservation_check() now sets
+isid_mismatch for the holder initiator's other sessions, and
+core_scsi3_pr_seq_non_holder() treated every such session as
+unregistered: DEF_PR_REG_ACTIVE is kept per se_dev_entry, which all
+sessions of the initiator share, so it cannot tell them apart. A
+session that registered its own key would then get RESERVATION
+CONFLICT for writes under a Registrants Only or All Registrants
+reservation, and for PREEMPT, CLEAR and RELEASE. Look up that session's
+own registration with core_scsi3_locate_pr_reg() instead.
 
-I'll send a v4.
---=20
-Jeff Layton <jlayton@kernel.org>
+With this patch, TEST UNIT READY and WRITE(10) from the second session
+under RESERVE(6) return RESERVATION CONFLICT. Under Write Exclusive,
+WRITE(10) from the second session conflicts whether or not it is
+registered, and READ(10) is allowed. Under the Registrants Only and All
+Registrants types, WRITE(10) from the second session conflicts until it
+registers, as does READ(10) under the Exclusive Access types; once
+registered it has access and can PREEMPT the holder.
+
+Initiators that relied on the old behaviour, reserving through one
+session and writing through another without registering it, will now
+see RESERVATION CONFLICT, as SPC requires.
+
+Fixes: c66ac9db8d4a ("[SCSI] target: Add LIO target core v4.0.0-rc6")
+Cc: stable@vger.kernel.org
+Signed-off-by: Ciro Iriarte <ciro.iriarte+software@gmail.com>
+---
+v2:
+- core_scsi3_pr_seq_non_holder(): on an ISID mismatch, look up the
+  session's own registration instead of treating it as unregistered.
+  v1 made that path reachable for the holder initiator's other sessions,
+  so a registered second session got RESERVATION CONFLICT under the
+  Registrants Only / All Registrants types and for PREEMPT, CLEAR and
+  RELEASE (Sashiko review). Re-tested on v6.12.113 with types 1, 5-8
+  and PREEMPT/RELEASE/CLEAR from the second session.
+- Fixes: now points at c66ac9db8d4a, which added the get_unaligned_be64()
+  conversion; e48354ce078c only made it reachable (Sashiko review).
+- Reworded the TransportID parser comment.
+
+v1: https://lore.kernel.org/r/591ac67a-fa1e-4395-9573-2d9405cfe0b6@gmail.com
+ drivers/target/target_core_fabric_lib.c |  9 ++---
+ drivers/target/target_core_pr.c         | 46 ++++++++++++++++++++++---
+ drivers/target/target_core_pr.h         |  1 +
+ drivers/target/target_core_transport.c  |  2 +-
+ 4 files changed, 49 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/target/target_core_fabric_lib.c b/drivers/target/target_core_fabric_lib.c
+index ad024009d..ccfeba645 100644
+--- a/drivers/target/target_core_fabric_lib.c
++++ b/drivers/target/target_core_fabric_lib.c
+@@ -372,10 +372,11 @@ static bool iscsi_parse_pr_out_transport_id(
+ 			return false;
+ 		}
+ 		/*
+-		 * The registration code reads the ISID as a C string,
+-		 * and its first 8 bytes with get_unaligned_be64(), so
+-		 * require 8 bytes after the separator and a NUL inside
+-		 * the rest of the descriptor.
++		 * The registration code reads the ISID as a C string, so
++		 * require a NUL inside the rest of the descriptor.  Keep the
++		 * existing minimum of 8 bytes after the separator: a valid
++		 * ISID is twelve hex digits, and target_isid_to_bin() falls
++		 * back to the first eight characters of anything else.
+ 		 */
+ 		if (buf + tid_len - p < 8 || !memchr(p, '\0', buf + tid_len - p)) {
+ 			pr_err("Incomplete or unterminated ISID in iSCSI Initiator port TransportID\n");
+diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
+index ca1a2802a..0f2ff9d42 100644
+--- a/drivers/target/target_core_pr.c
++++ b/drivers/target/target_core_pr.c
+@@ -19,6 +19,7 @@
+ #include <linux/fcntl.h>
+ #include <linux/fs.h>
+ #include <linux/fs_struct.h>
++#include <linux/hex.h>
+ #include <scsi/scsi_proto.h>
+ #include <linux/unaligned.h>
+ 
+@@ -30,6 +31,28 @@
+ #include "target_core_pr.h"
+ #include "target_core_ua.h"
+ 
++/*
++ * lio_sess_get_initiator_sid() prints the six ISID bytes as twelve hex
++ * digits, and iSCSI TransportIDs carry the same digits.  Convert all six
++ * bytes: reading the first eight digits as a big-endian u64 keeps only the
++ * first four ISID bytes, so two sessions of one initiator that differ only
++ * in the qualifier, the usual case, would compare equal.  Text in any other
++ * format keeps the old conversion of its first eight characters, without
++ * reading past the end of a shorter string.
++ */
++u64 target_isid_to_bin(const char *isid)
++{
++	u8 bin[6];
++	char raw[8] = {};
++
++	if (strnlen(isid, 2 * sizeof(bin) + 1) == 2 * sizeof(bin) &&
++	    !hex2bin(bin, isid, sizeof(bin)))
++		return get_unaligned_be48(bin);
++
++	memcpy(raw, isid, strnlen(isid, sizeof(raw)));
++	return get_unaligned_be64(raw);
++}
++
+ /*
+  * Used for Specify Initiator Ports Capable Bit (SPEC_I_PT)
+  */
+@@ -285,7 +308,11 @@ target_scsi2_reservation_reserve(struct se_cmd *cmd)
+ 
+ 	dev->reservation_holder = sess;
+ 	dev->dev_reservation_flags |= DRF_SPC2_RESERVATIONS;
+-	if (sess->sess_bin_isid != 0) {
++	/*
++	 * An all-zero ISID converts to 0, so test whether the fabric has
++	 * ISIDs rather than the value.
++	 */
++	if (tpg->se_tpg_tfo->sess_get_initiator_sid) {
+ 		dev->dev_res_bin_isid = sess->sess_bin_isid;
+ 		dev->dev_reservation_flags |= DRF_SPC2_RESERVATIONS_WITH_ISID;
+ 	}
+@@ -323,7 +350,18 @@ static int core_scsi3_pr_seq_non_holder(struct se_cmd *cmd, u32 pr_reg_type,
+ 			 * RESERVATION CONFLICT on some CDBs */
+ 
+ 	if (isid_mismatch) {
+-		registered_nexus = 0;
++		struct t10_pr_registration *pr_reg;
++
++		/*
++		 * Another I_T nexus of the holder's initiator.  DEF_PR_REG_ACTIVE
++		 * is shared by all of its sessions, so look for a registration
++		 * made through this one.
++		 */
++		pr_reg = core_scsi3_locate_pr_reg(cmd->se_dev, nacl, se_sess);
++		if (pr_reg) {
++			registered_nexus = 1;
++			core_scsi3_put_pr_reg(pr_reg);
++		}
+ 	} else {
+ 		struct se_dev_entry *se_deve;
+ 
+@@ -674,7 +712,7 @@ static struct t10_pr_registration *__core_scsi3_do_alloc_registration(
+ 	 * save it to the registration now.
+ 	 */
+ 	if (isid != NULL) {
+-		pr_reg->pr_reg_bin_isid = get_unaligned_be64(isid);
++		pr_reg->pr_reg_bin_isid = target_isid_to_bin(isid);
+ 		snprintf(pr_reg->pr_reg_isid, PR_REG_ISID_LEN, "%s", isid);
+ 		pr_reg->isid_present_at_reg = 1;
+ 	}
+@@ -866,7 +904,7 @@ int core_scsi3_alloc_aptpl_registration(
+ 	 * SCSI Initiator Port, restore it now.
+ 	 */
+ 	if (isid != NULL) {
+-		pr_reg->pr_reg_bin_isid = get_unaligned_be64(isid);
++		pr_reg->pr_reg_bin_isid = target_isid_to_bin(isid);
+ 		snprintf(pr_reg->pr_reg_isid, PR_REG_ISID_LEN, "%s", isid);
+ 		pr_reg->isid_present_at_reg = 1;
+ 	}
+diff --git a/drivers/target/target_core_pr.h b/drivers/target/target_core_pr.h
+index b793c9963..4debfe4be 100644
+--- a/drivers/target/target_core_pr.h
++++ b/drivers/target/target_core_pr.h
+@@ -72,6 +72,7 @@ extern void core_scsi3_free_pr_reg_from_nacl(struct se_device *,
+ 					     struct se_node_acl *);
+ extern void core_scsi3_free_all_registrations(struct se_device *);
+ extern unsigned char *core_scsi3_pr_dump_type(int);
++u64 target_isid_to_bin(const char *isid);
+ 
+ extern sense_reason_t target_scsi3_emulate_pr_in(struct se_cmd *);
+ extern sense_reason_t target_scsi3_emulate_pr_out(struct se_cmd *);
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index 927861c30..4629c9343 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -419,7 +419,7 @@ void __transport_register_session(
+ 			memset(&buf[0], 0, PR_REG_ISID_LEN);
+ 			se_tpg->se_tpg_tfo->sess_get_initiator_sid(se_sess,
+ 					&buf[0], PR_REG_ISID_LEN);
+-			se_sess->sess_bin_isid = get_unaligned_be64(&buf[0]);
++			se_sess->sess_bin_isid = target_isid_to_bin(buf);
+ 		}
+ 
+ 		spin_lock_irqsave(&se_nacl->nacl_sess_lock, flags);
+-- 
+2.55.0
+
