@@ -1,56 +1,96 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.160.182
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794241114;
-	b=bsnd2RparjVgwS66GZUD7frhtKHAURd/aEshxVJHtGKwxEKLOR/+BiyeeyrRIVzc8Fdn
-	 F6hT3YMR4vRErkynoR6YPFg5tNTgNDPHCqEPHlTwVoarwkC55MluoQYTWrkkY+BbND8oK
-	 Hw0+asjZsNq7+4hPNNz1QFy8BgEhGWLYWgI5NKmiQOHf6T2r4mib8lsJpn9EaZwOgdW3F
-	 MyMjI5KTVIBP0ihiWDa4M9dF1l3JJg5+uqJvoU6gSvLfk7RKY98M0AJM0oPkMszkq95qD
-	 KqXBG/Ji+dPunqOV1K7TLQ/5DMpRBTRfk1mD1eYilC2jLCdcm1DYOkY8VtyHTOtnBig==
+	t=1794242214;
+	b=G41srD7bPgH3bBuYY6lWWZt3TF0XLcepzOBR+Wzio6TJrNgwDvgC+xbOr7pRCG/S40/O
+	 uzX0KMJr6VjZHis8ljjogcvWiqQdUAUnibWLNAMO9FpW2SwFlV9bGLp0YfLt+YsRtN0/7
+	 a+Gh5x02Htv5bJGO5jV2sI2dXtfNH+T6k5dSu+i39Y6CIRbJgb/ekv3Z8Z6pKzrPoYyMg
+	 N2OesfsbhPZZ2ZWAk54FUCNu+SvQXbaZJ+50HDxbDnHtQFiEqUvVsY7cpQknDdD3DB2F4
+	 /2p87akcewonCLlvPVT+Ri6MrQK36lqMarKVnVnYbYtBPQsHZS6PNEaoM6ENDmmaoOA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794241114;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=IWbDuYEasfe3duSQwlmxTT3tk1/PpDubL/YsSJmCQz0=;
-	b=kTZTnuhot6xHf4dStWOCLSsbeZ2y33ISR//sqlK0Dh9I8LXxoiX5KP+gvxRHYOxqWrAi
-	 Mguw/3flWGPTovgbGCqaLNK/nBQVtIaGsV4Likk2KggXfZ211C2nK7gOnTJq9gqp5AoJH
-	 zrJYoDCJqG87Ny/+WO9iirhChe1+H1YIsqWXQXF1uRTZi+1TOhULgIIOGbSPf4qKrZxpo
-	 /zPhn0FvdAohYBRWql4s8Tmfy5coK0Rq+/XtjG8CmDrEknK329xk+ZrRRIfic2vZsq5CL
-	 WXdNyrmcNwkX5Oj1fY3ELluLO6Lv+Z42hUFFR6Tt9+IR8P+6MuaxkyqKpaP45dcLqjQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794242214;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=+i1MwDM3O2yhOtvhcZrVhI/0oNqRtv4EvJtbPIkjNXA=;
+	b=fn+E5+4bWMYpfAruXc2FGRjXLX7+NJ8rwFuzad2TEh/fx71I3pzbJwXLpsHYAfmqitQv
+	 oanZKF3s5maEgkl43G4vMsd+uklLwBF4WG+9rt9jejSBGli28FaRJgbvQtHoWNTPQ51X0
+	 sNK9Dt/xf73qNfdsbwkpqbG7547hIFcS3VjOwgZYHSaeQOGCJgaga9KO2qFWCBPYHV/qS
+	 vQRma21kg+p7LMrFOLEhZ3dcn4nWhy6baq6FUiTw1C6+hjY2qq8RqbyMB/Uue/s/kv/V7
+	 g+N6yTS4DuFpc1EvT6r4hc3eOqcbsqaJ/b8KqaHqcU2ZyHCEAfIIWQaA+16fD+Gwl4w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=VczI4T0p;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=FoIzAwNj;
+	arc=none smtp.remote-ip=209.85.160.182
+Received: from mail-qt1-f182.google.com (mail-qt1-f182.google.com [209.85.160.182])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C2B2606A330
-	for <linux-scsi@vger.kernel.org>; Mon,  9 Nov 2026 16:18:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C2B460A6F55
+	for <linux-scsi@vger.kernel.org>; Mon,  9 Nov 2026 16:36:54 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6C2B460A6F55
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=VczI4T0p
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E7C461F008A1;
-	Mon,  9 Nov 2026 16:18:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794241114;
-	bh=IWbDuYEasfe3duSQwlmxTT3tk1/PpDubL/YsSJmCQz0=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=VczI4T0pIApyEBQkkMOfCXgNKo+t2IU93UOq3bBYDWCjzX70jT4p+p2pqxE7dNJwz
-	 tXTL1dUdCjFa/uYTQH5u2mEKowfQeX+zX9nO9T62kdaCkcXMh8VYstIqoJX5GQU0Li
-	 bBPrHJSrkQMtKZkVZiOHeR/JVGK83s3o9bq82lz28FOn80mvnXM2226jUEx/QHvcwK
-	 v8NWs1u4/rmh2QImhuDt7GFJMiBcOiRO3DTbLCh7i1kTA3BECL4xS8mIm1PdIhndGY
-	 ojgIuruZXOkcwUlErJIeNAMOSXzlYYd7fXGLTfBYKkv1U/vZ31sq3T89p/LXG/16rP
-	 8CNXI1P56HgTQ==
-Message-ID: <sashiko-outbox-205221@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] scsi: ch: Remove the minor from ch_index_idr after
- device_destroy()
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Changyul Lee" <lcy8047@gmail.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20261109160651.986356-1-lcy8047@gmail.com>
-References: <20261109160651.986356-1-lcy8047@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 09 Nov 2026 16:18:33 +0000
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=FoIzAwNj
+Received: by mail-qt1-f182.google.com with SMTP id d75a77b69052e-53bb57f1310so11533611cf.2
+        for <linux-scsi@vger.kernel.org>; Mon, 09 Nov 2026 08:36:54 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1794242213; x=1794847013; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=+i1MwDM3O2yhOtvhcZrVhI/0oNqRtv4EvJtbPIkjNXA=;
+        b=FoIzAwNjbA8Th3jeM5HQIAMdkEjsi4l+IETeNlmZjX0H7yKQ5UlCYjP9aZSanbN02b
+         lSkEqTWyIYFpn0odRR3V16lY9j89BjQ1AkCfhWHi/LAf3EaSESFbTSSvYAv0ryOgqnQ6
+         rDlVBClRe8MPuwinpJsXvREiBYqPqZPdc2lyRKLXurFxL+IHtNH+tuiRkstSTvAl9ytJ
+         fdDeQs7Cl02lXbISyjiHKTZVDtmsxY4r/HJqjJo0y8w6MTFioKF+mAU+RQFwXUSrnst+
+         +EwqDtnuRq4NrECFuA9uxXzYFg/cjXfgzDylF09QI6/azYaH/5nVVeUpz1xOgEZnTGBb
+         GGDw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1794242213; x=1794847013;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=+i1MwDM3O2yhOtvhcZrVhI/0oNqRtv4EvJtbPIkjNXA=;
+        b=t7WK1ZYB3H9vgbh6TaMVjh/OLzmWVBbgx9igkG5ZH06kx/ELNj+7mXA8MzIiPcXnEB
+         xULUXWpJgT7pYZREDBvolSLX67aKD6T3G4DThE8SP8dVAPCj0bBQI3RohxG8rW9Sm1Aq
+         rqkA1YjlWz+8ylz3q8XZKYO+tVHvUOsj63bm5sBLtPG5MkiKQ2AtoOH1bp0jVlmbzloa
+         jeGNUPcullXrvotfU+P2b0j0/MNTJWAw4wV4UM+Uxd2HkrZnggx1OrlQvFbiQ3HIGBPc
+         zSbO0vefetsc/A24kA4FYVSOoZvBNU5GWRzBoHJtR3WCJmUoc6XMA7HPFzLuO//gxxFi
+         Ilfg==
+X-Forwarded-Encrypted: i=1; AL+hErEcVmU51vSqZ9Z1HAQ5qPou9rKe/8AuPGWpfz5Y558gGXL5ytfqVdP9ch7o96cmpsrUowLeCSrQpOSp@vger.kernel.org
+X-Gm-Message-State: APuU4Z8Jr6dMan1axAFUusyiJvpH7B2EYbFobv85dTVHhxbNru7pwLpg
+	ZM8Y5fW59GW2TjxZ57uUfnNcIFRCfW7WCXobTlKjJMGPFNU1BXyTyFoY
+X-Gm-Gg: AYBFou2yQehgS/0HUm+Bq/XvaFtUBLRzusajeZjYInwPqHFrfCzzxDwMKEMQ1nYKWak
+	Vn/5RKhGCZcB1ySsh8Ix6NMEl/wduYwFv6zjDotuexFp2aSBvlXWBfz8mR/gh/qopDyCDkLfIAG
+	pXTpQbRewCBVXecmlFOw+T8vNsaMpH8vuRbditrayWbq9E5sl/5q5l9MN+V5sNgZnoPpS+dg2kP
+	LsIP5+PTulpa8h2XxidM/jlBy/qwLz0DQHIcvpf1QQ1lYKfRWEVp3Zu1umpQjSzyFq7Ht07PPYs
+	5yfHPPlypWnW6+UeC5jYLjJfhNGrnJzx10uexmnyie4Vtx4j71Pt3DINReFWpQ8RM++2aq+YbLX
+	lpJSAkH1V/8Lyuvbjy/EyBT828ey+JehE8iUO7PUHYgPPnpaIresP9IS/beJ4TJXUwsuLMqqpGX
+	hzmazdH0BB/awNe/oE4RCuFkguq6Cu38tscQd6SccAEHZMlfT5CZipKJUOJ0nB3KbQslt3J/ifa
+	m2GdC+ibZ5CurnMhXHpw4WYt08LGoykw7R4KUJVGxSTRRy596CCz/5LfqFZeMwUf9KiJhCUGMNP
+	84LnKbMVz/0X+nG86g==
+X-Received: by 2002:a05:622a:5505:b0:535:a5fb:6446 with SMTP id d75a77b69052e-552a604f9ffmr71709701cf.64.1794242213378;
+        Mon, 09 Nov 2026 08:36:53 -0800 (PST)
+Received: from linux.. ([8.34.174.240])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-91eced95d91sm45729516d6.9.2026.11.09.08.36.52
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 09 Nov 2026 08:36:52 -0800 (PST)
+From: Changyul Lee <lcy8047@gmail.com>
+To: Lee Duncan <lduncan@suse.com>,
+	Chris Leech <cleech@redhat.com>,
+	Mike Christie <michael.christie@oracle.com>
+Cc: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K . Petersen" <mkp@kernel.org>,
+	open-iscsi@googlegroups.com,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Changyul Lee <lcy8047@gmail.com>
+Subject: [PATCH] scsi: iscsi: Remove the endpoint ID only once when device_register() fails
+Date: Mon,  9 Nov 2026 11:36:49 -0500
+Message-ID: <20261109163649.1092897-1-lcy8047@gmail.com>
+X-Mailer: git-send-email 2.43.0
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -59,95 +99,55 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found no new issues
-in this patch, but noticed 1 related pre-existing issue it does not
-introduce:
-- [Critical] scsi: ch: use-after-free in ch_probe() [1]
---
+When device_register() fails, iscsi_create_endpoint() removes the
+endpoint ID from iscsi_ep_idr, drops iscsi_ep_idr_mutex and then calls
+put_device(). put_device() runs iscsi_endpoint_release(), which removes
+the same ID again. If another endpoint gets that ID in between, its
+entry is removed and iscsi_lookup_endpoint() no longer finds it. The
+next endpoint then gets the same ID and fails to register:
 
-commit 170bbda8f45c76e2fbb5ceaccd99874da50253d8
-Author: Changyul Lee <lcy8047@gmail.com>
+[    6.689361] sysfs: cannot create duplicate filename '/devices/virtual/iscsi_endpoint/ep-1'
 
-scsi: ch: Remove the minor from ch_index_idr after device_destroy()
+Leave the removal to iscsi_endpoint_release().
 
-This commit replaces the minor's entry in ch_index_idr with NULL before
-calling device_destroy() in ch_remove() and removes the minor from the
-IDR only afterward so a concurrent probe cannot reuse the minor while the
-sysfs device still exists.
+Fixes: f014165faa7b ("scsi: iscsi: Fix possible memory leak when device_register() failed")
+Signed-off-by: Changyul Lee <lcy8047@gmail.com>
+---
+Found with a static analysis tool we are developing. Sashiko AI review
+also pointed it out as a pre-existing issue.
+https://lore.kernel.org/all/20260617204203.91A3B1F000E9@smtp.kernel.org/
 
-> diff --git a/drivers/scsi/ch.c b/drivers/scsi/ch.c
-> index b2c9fb71c9e0a..390425671a3a7 100644
-> --- a/drivers/scsi/ch.c
-> +++ b/drivers/scsi/ch.c
-> @@ -952,11 +952,15 @@ static void ch_remove(struct scsi_device *sd)
->  	scsi_changer *ch =3D dev_get_drvdata(dev);
-> =20
->  	spin_lock(&ch_index_lock);
-> -	idr_remove(&ch_index_idr, ch->minor);
-> +	idr_replace(&ch_index_idr, NULL, ch->minor);
->  	dev_set_drvdata(dev, NULL);
->  	spin_unlock(&ch_index_lock);
-> =20
->  	device_destroy(&ch_sysfs_class, MKDEV(SCSI_CHANGER_MAJOR, ch->minor));
-> +
-> +	spin_lock(&ch_index_lock);
-> +	idr_remove(&ch_index_idr, ch->minor);
-> +	spin_unlock(&ch_index_lock);
->  	scsi_device_put(ch->device);
->  	kref_put(&ch->ref, ch_destroy);
->  }
+Reproduced in QEMU (x86_64) with CONFIG_DEBUG_KOBJECT_RELEASE, which
+delays iscsi_endpoint_release() by 1-4 seconds, and a test module. The
+module makes device_register() fail with fail-nth (an allocation in
+device_add()), creates a second endpoint and looks it up after the
+delayed release. Without this patch, the second endpoint gets the same
+ID 1 and is not found, and a third endpoint fails with the error above.
+With it, the second endpoint gets ID 2 and is found, and the third gets
+ID 1 after the release.
 
-[Severity: Critical]
-This problem wasn't introduced by this patch, but can ch_probe() trigger
-a use-after-free on ch [1] if an error occurs after ch is published
-in ch_index_idr?
+ drivers/scsi/scsi_transport_iscsi.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-ch_probe() inserts ch directly into ch_index_idr and initializes ch->ref
-before calling device_create() and ch_readconfig(), and its error path
-frees ch with kfree(ch) instead of kref_put():
+diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+index b094af7c997e..6e38fbfd5a9d 100644
+--- a/drivers/scsi/scsi_transport_iscsi.c
++++ b/drivers/scsi/scsi_transport_iscsi.c
+@@ -246,9 +246,6 @@ iscsi_create_endpoint(int dd_size)
+ 	return NULL;
+ 
+ put_dev:
+-	mutex_lock(&iscsi_ep_idr_mutex);
+-	idr_remove(&iscsi_ep_idr, id);
+-	mutex_unlock(&iscsi_ep_idr_mutex);
+ 	put_device(&ep->dev);
+ 	return NULL;
+ free_ep:
 
-drivers/scsi/ch.c:ch_probe() {
-	...
-	ret =3D idr_alloc(&ch_index_idr, ch, 0, CH_MAX_DEVS + 1, GFP_NOWAIT);
-	...
-	kref_init(&ch->ref);
-	...
-	ret =3D ch_readconfig(ch);
-	if (ret) {
-		mutex_unlock(&ch->lock);
-		goto destroy_dev;
-	}
-	...
-destroy_dev:
-	device_destroy(&ch_sysfs_class, MKDEV(SCSI_CHANGER_MAJOR, ch->minor));
-put_device:
-	scsi_device_put(sd);
-remove_idr:
-	idr_remove(&ch_index_idr, ch->minor);
-free_ch:
-	kfree(ch);
-	return ret;
-}
+base-commit: 6628e7d4c6b25c8d18f1345e3a20d21829aae7e4
+-- 
+2.43.0
 
-If ch_readconfig() fails after a concurrent ch_open() looks up ch in
-ch_index_idr and takes a reference, ch_open() dereferences freed memory:
-
-CPU0                              CPU1
-ch_probe()
-  idr_alloc(&ch_index_idr, ch, ...)
-  kref_init(&ch->ref)
-                                  ch_open()
-                                    ch =3D idr_find(&ch_index_idr, minor)
-                                    kref_get(&ch->ref)
-  ch_readconfig(ch) /* fails */
-  idr_remove(&ch_index_idr, ch->minor)
-  kfree(ch)
-                                    mutex_lock(&ch->lock)  <-- use-after-fr=
-ee
-
-[1] https://sashiko.dev/#/bug/linux-f4be7a8e-e1b8-4f47-9f47-c6a01d983399
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261109160651.9863=
-56-1-lcy8047@gmail.com?part=3D1
