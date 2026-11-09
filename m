@@ -1,102 +1,102 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=195.135.223.130
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794222819;
-	b=2vZdFt5ThAalU1SFkDts4964+TUlgfGMNPltwrIu7y4S9JscXvdUFsUJqDneiHAbmGkf
-	 8jTQ+W89zsECHXgtvP7XHI625ka7UwEWJR4UtJaN/pb0gZ3jCtsXgHYoVk4NCddH7PWqT
-	 s9+fenmvQ7ASMc9zZV131oFKdv+REwrm6FWiMvUXABWbU0lyJUkvgHIZnVRMYGh9EhQhZ
-	 KYAeo96t72Mv9H0nLTfJa0YePSN6VM3A6DraOPEz2o8MAhYBoNlBedFI+SdaBsEGCg3SK
-	 O4Qebl87ShFN1PSBwlbKx40nStuobmjkP5A+k3ZSLNP2gQaJVh/xfenZSQ0Bl6glG2A==
+	t=1794222858;
+	b=x7MTuHHHgYG7QER8P6lsiPKCXzp9rAl6mA09+dlrshKZtL+cNkK6A6iUf8abE1YD2aHw
+	 4GtHAgtfom21VbG7okS8+rJAHGAnLtL9YAaq9K1cvgknTeMov868gM/Q5T4x85OoIXCiD
+	 cuI+ffG/I1D1QBuANXkNEZ+oeWF5xy29cgdSdJR7x0lS7+fBOXI21T0NpODUh2NTJwChR
+	 iQ+KtzNiDpTp8HTekhRdo9irOhD9I3VunTnnAIIzPENGAsT7+fmMuXFwN3px0vO/d4+Qu
+	 2YjWQB2xLry+3iZnvtOm4fB0TbgmO7s+N/BSLBHpEAMeK3Te2lh1tsajco9ETJ3mF9A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794222819;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794222858;
 	h=DMARC-Filter:Received:DKIM-Signature:DKIM-Signature:DKIM-Signature:
 	 DKIM-Signature:Received:Received:Message-ID:Date:MIME-Version:
 	 User-Agent:Subject:To:References:Content-Language:From:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:X-Spam-Flag:X-Spam-Level:
-	 X-Spamd-Result:X-Spam-Score;
-	bh=VG1cHE8Rjx6TPVkGBhtu7tTczzTnVFpfGPeEKAndecY=;
-	b=dcTjhDbxJZQkmmHk4ZuCTBVSrfCrAArpXgszRgfZ8fUcjIPnPSXSf7tVL8S3NKjwFxsn
-	 fqpCZY+edkJm2UlgyMlldo59GJvS0B0Z0+DoREEvcvKmELUGHFRtEMV0cp5AUNIB2DvLY
-	 i87Mg2jqktSibATBPPRz/86VsznR6GbUQEuhxIyag+MrPiVq7l2wgDyNYh4txZqkwDWMf
-	 6Ieowf62HWUJZYoJiFLFm/9/yD0Aqlf/7jAqKoNTaifc4JSkQkYOlHADNJvwrfE/ZxJoB
-	 5m8Wrf8w7HP0nfnmfUwMBZ5PbtuQzmjTyAQWJDJHuMXFYkggno95/S4dbY3XmC3Q+iQ==
+	 Content-Type:Content-Transfer-Encoding:X-Spamd-Result:X-Spam-Score:
+	 X-Spam-Level:X-Spam-Flag;
+	bh=WAmWIdEsqoUgWiOzogeCTmQOgEAbUo40d3Bmp9qpOhg=;
+	b=knbL2q4RSQvXrxwUzKLOZiHTrvxrf0ohmRxXiTYKBzIUA+5aNojRiT0D50bZ5VbGmp8q
+	 B7XqEnh0bAgoh078pjKD6dZiV1bzMtWoV9XSG4M0GY4BRgSOTij2k9Q0J+DLvdWzLlgCb
+	 1DQ1pmvD/4B5qvt7Me+ik7aO96S+SZAfDmTniZHk3OL2lJgecUeFyLVN7s49FVSmG1aeJ
+	 Oxs80npYuOKBkRZBR7p6We+eKHaf0KMCxh5a/XVorMV65HfAnCb4GM/8KgvDy7K/Oa8cb
+	 nZ4RTSzW8Mx2nM/6VevGRyTr7rb0HDlVexuqX+KqqPqbx2GIJycCthJ2i+GryP02lnA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=suse.de;
 	spf=pass smtp.mailfrom=suse.de;
-	dkim=pass header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=mIpzqmr1;
-	dkim=pass header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=8Raaz30z;
-	dkim=pass header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=mIpzqmr1;
-	dkim=neutral header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=8Raaz30z;
-	arc=none smtp.remote-ip=195.135.223.131
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=KR4aCGqU;
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=WYi5dFrH;
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=KR4aCGqU;
+	dkim=neutral header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=WYi5dFrH;
+	arc=none smtp.remote-ip=195.135.223.130
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B78C606A322;
-	Mon,  9 Nov 2026 11:13:38 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8B78C606A322
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 12E53606A31C;
+	Mon,  9 Nov 2026 11:14:17 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 12E53606A31C
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=mIpzqmr1;
-	dkim=pass header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=8Raaz30z;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=mIpzqmr1;
-	dkim=neutral header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=8Raaz30z
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=KR4aCGqU;
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=WYi5dFrH;
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=KR4aCGqU;
+	dkim=neutral header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=WYi5dFrH
 Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 76BD11F7F0;
-	Mon,  9 Nov 2026 11:13:36 +0000 (UTC)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 25A8021ECA;
+	Mon,  9 Nov 2026 11:14:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1794222816; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	t=1794222856; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=VG1cHE8Rjx6TPVkGBhtu7tTczzTnVFpfGPeEKAndecY=;
-	b=mIpzqmr1D2B5ZvUcN1TPVaV33ud5moSvc1tGDDgkRf3mqaUDxhep4fyfJ5HCZdh/lQVEKq
-	2YTzp3SI+7IVHcYnyCrd/BkKcWUeg8kwu+vsLyloymlklXAbuB5RMstOxyug8OSv5/mQNZ
-	8JL+KWPg+X5UgLZUJYQd4E4W8tbpXSs=
+	bh=WAmWIdEsqoUgWiOzogeCTmQOgEAbUo40d3Bmp9qpOhg=;
+	b=KR4aCGqUIP+OMqzbzIhYjkd6HzW/WHVGpCaAVEemNMJELuJZR10Anoo9O/OJ6GXvpoywup
+	cWaBS2EbGpL0gYrCgB5pZG2J8HoDnTZjcqlwcxDpUlBEANfDupe78WRjR+SNUkRbGvNbLE
+	cIrQBNtvTkJaRm1eblSBhqyJ0xMg46g=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1794222816;
+	s=susede2_ed25519; t=1794222856;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=VG1cHE8Rjx6TPVkGBhtu7tTczzTnVFpfGPeEKAndecY=;
-	b=8Raaz30zHT70Hw1+SEflfMR7+6kq+NwKitUF5r7hlaisIPzhAp/qHBrhVeNq81g4I5g9n2
-	YzqxqDeZF+8euBDA==
-Authentication-Results: smtp-out2.suse.de;
+	bh=WAmWIdEsqoUgWiOzogeCTmQOgEAbUo40d3Bmp9qpOhg=;
+	b=WYi5dFrHUca0XJ2RLRjaz/UJOk4kLx/bNaXooGujwonxq9uDuMLjiqED0Hf1v5Y8PZNcp+
+	4q0PqQgHKNcKAMDw==
+Authentication-Results: smtp-out1.suse.de;
 	none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1794222816; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	t=1794222856; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=VG1cHE8Rjx6TPVkGBhtu7tTczzTnVFpfGPeEKAndecY=;
-	b=mIpzqmr1D2B5ZvUcN1TPVaV33ud5moSvc1tGDDgkRf3mqaUDxhep4fyfJ5HCZdh/lQVEKq
-	2YTzp3SI+7IVHcYnyCrd/BkKcWUeg8kwu+vsLyloymlklXAbuB5RMstOxyug8OSv5/mQNZ
-	8JL+KWPg+X5UgLZUJYQd4E4W8tbpXSs=
+	bh=WAmWIdEsqoUgWiOzogeCTmQOgEAbUo40d3Bmp9qpOhg=;
+	b=KR4aCGqUIP+OMqzbzIhYjkd6HzW/WHVGpCaAVEemNMJELuJZR10Anoo9O/OJ6GXvpoywup
+	cWaBS2EbGpL0gYrCgB5pZG2J8HoDnTZjcqlwcxDpUlBEANfDupe78WRjR+SNUkRbGvNbLE
+	cIrQBNtvTkJaRm1eblSBhqyJ0xMg46g=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1794222816;
+	s=susede2_ed25519; t=1794222856;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=VG1cHE8Rjx6TPVkGBhtu7tTczzTnVFpfGPeEKAndecY=;
-	b=8Raaz30zHT70Hw1+SEflfMR7+6kq+NwKitUF5r7hlaisIPzhAp/qHBrhVeNq81g4I5g9n2
-	YzqxqDeZF+8euBDA==
+	bh=WAmWIdEsqoUgWiOzogeCTmQOgEAbUo40d3Bmp9qpOhg=;
+	b=WYi5dFrHUca0XJ2RLRjaz/UJOk4kLx/bNaXooGujwonxq9uDuMLjiqED0Hf1v5Y8PZNcp+
+	4q0PqQgHKNcKAMDw==
 Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 460F613319;
-	Mon,  9 Nov 2026 11:13:36 +0000 (UTC)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id D66D313319;
+	Mon,  9 Nov 2026 11:14:15 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
 	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id LgZACOCq8Wp+GAAAD6G6ig
-	(envelope-from <hare@suse.de>); Mon, 09 Nov 2026 11:13:36 +0000
-Message-ID: <7ff234cd-f7d3-468d-8c27-2c51ee7bacc6@suse.de>
-Date: Mon, 9 Nov 2026 12:13:35 +0100
+	id GojYKger8WokGQAAD6G6ig
+	(envelope-from <hare@suse.de>); Mon, 09 Nov 2026 11:14:15 +0000
+Message-ID: <d22682f4-a83c-4870-a9b2-21f6de064606@suse.de>
+Date: Mon, 9 Nov 2026 12:14:15 +0100
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -107,21 +107,18 @@ List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v8 03/12] block: allow dropping all zone write plugs on
- revalidation
+Subject: Re: [PATCH v8 04/12] block: introduce storage element management
 To: Damien Le Moal <dlemoal@kernel.org>, Jens Axboe <axboe@kernel.dk>,
  linux-block@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
  linux-scsi@vger.kernel.org, "Martin K . Petersen"
  <martin.petersen@oracle.com>
 References: <20261109095144.819709-1-dlemoal@kernel.org>
- <20261109095144.819709-4-dlemoal@kernel.org>
+ <20261109095144.819709-5-dlemoal@kernel.org>
 Content-Language: en-US
 From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20261109095144.819709-4-dlemoal@kernel.org>
+In-Reply-To: <20261109095144.819709-5-dlemoal@kernel.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Spam-Flag: NO
-X-Spam-Level: 
 X-Spamd-Result: default: False [-13.29 / 50.00];
 	SUSE_INTERNAL_BYPASS(-9.00)[];
 	BAYES_HAM(-3.00)[100.00%];
@@ -143,25 +140,69 @@ X-Spamd-Result: default: False [-13.29 / 50.00];
 	RCVD_COUNT_TWO(0.00)[2];
 	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,suse.de:email]
 X-Spam-Score: -13.29
+X-Spam-Level: 
+X-Spam-Flag: NO
 
 On 11/9/26 10:51 AM, Damien Le Moal wrote:
-> In preparation for supporting storage element depopulation, modify the
-> function disk_revalidate_zones() to take an additional boolean parameter
-> drop_all_zwplugs to force removing all zone write plugs from a disk hash
-> table.  Removing all zone write plugs is done in the same manner as for a
-> capacity change, using the function disk_drop_zone_wplug() applied to all
-> hashed zone write plugs.
+> Recent SCSI (SBC) and ATA (ACS) standards define the storage element
+> depopulation feature. This feature is intended for managing hard-disks
+> heads, either combined read-write heads or pairs of read and write heads,
+> allowing to keep disks with defective heads longer in production by
+> allowing "depopulating" (removing) defective heads.
 > 
-> Calls to disk_revalidate_zones() with the argument drop_all_zwplugs set to
-> true will be used when restoring depopulated storage elements as such
-> operation clears all sequential zones, modifying them to be empty.
+> This feature comes in two different flavors:
+>   - A destructive version which removes a head and reformats the disk at a
+>     lower capacity point, restoring a fully functional contiguous LBA
+>     address space.
+>   - A data preserving version restricted to host-managed zoned disks, which
+>     marks the zones served by a removed head as offline or read-only.
+> 
+> In preparation for using the data-preserving flavor of the depopulation
+> feature in file systems natively supporting zoned block devices, introduce
+> a set of storage element management operations and functions to define
+> generic calls into block device drivers for managing storage elements.
+> 
+> The set of operations is defined with struct blk_se_ops and includes three
+> operations:
+>   - report_elements: get information on a device storage elements state
+>     reported with the new struct blk_se.
+>   - remove_element: depopulate a defective storage element, blocking until
+>     the operation completes.
+>   - restore_elements: restore depopulated storage elements, blocking until
+>     the operation completes.
+> 
+> Each operation is called from the functions
+> bdev_report_storage_elements(), bdev_remove_storage_element() and
+> bdev_restore_storage_elements() respectively.
+> 
+> Removing a healthy storage element from a device is possible and useful
+> for testing. The storage element restoration operation restore_elements
+> allows repopulating such healthy element. Repopulating defective storage
+> elements is generally not allowed by devices.
+> 
+> The remove_element and restore_elements operations are executed under the
+> zone revalidation lock so that they are serialized against each other and
+> also serialized against user initiated device revalidation, thus allowing
+> to always have a consistent view of the device zone conditions after
+> executing these operations. In case of failure, zone revalidation is still
+> executed, which may give an unstable view of the zone states. In such
+> case, stable zone states will be recovered with zone access error handling
+> or later zone revalidation.
+> 
+> The device drivers of zoned block devices can indicate support for the
+> storage element depopulation feature by specifying the storage element
+> management operations with the se_ops field of struct
+> block_device_operations.
 > 
 > Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 > ---
->   block/blk-zoned.c | 7 +++++--
->   1 file changed, 5 insertions(+), 2 deletions(-)
->
-
+>   block/blk-zoned.c             | 205 ++++++++++++++++++++++++++++++++++
+>   block/blk.h                   |   5 +
+>   block/genhd.c                 |   4 +
+>   include/linux/blkdev.h        |  55 +++++++++
+>   include/uapi/linux/blkzoned.h |  65 +++++++++++
+>   5 files changed, 334 insertions(+)
+> 
 Reviewed-by: Hannes Reinecke <hare@kernel.org>
 
 Cheers,
