@@ -1,57 +1,69 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=160.30.148.35
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794201689;
-	b=qL8tRRrcgldGIAbEv68KDFE0cWQq42WAV9Jk9/MAlrWl2w/mdaM2zAzs3dxhNrUD+zHw
-	 lzYhEAkxCZKsrbDCwgbnknDDoRdjL1WlG0YJ7VNnW9hNHmuLCS/ktmuzNl7t5/0TffKMB
-	 11NYDvw2kuVl03E0I+v4G2o1R9PtJd5CLOtBdwD3Vdvm4KcXMAYYg8e9iKJHygusdlQbt
-	 WhoF6ePbO3lAQ1yA5OpSNGOzZXhxMLaCMX/tfEkPKvMVrXcH4EKIVmOTzRbyc2fUZE3du
-	 qhSFTlGHYLGxXgZwYMVEWfijLRoBU/Z68/AQVOQDc9FhPML+/qTD85YmALmnkyVyARQ==
+	t=1794203805;
+	b=bGhomlu4pJnT6gOVipXQye9GtmNjEKtNSEeJy4i35Zt87hDdGgVF1E1ZNsu1uWbE1RUz
+	 axe4LZ1XAGzqfMMalA66jYJ33SXHX9hMHN7orj3GzY+vvkCM2h7bA/zxUVGc4Jo/Ywk5m
+	 97XJx5n6jg/v6OLTdeCmrJphmGfoY1lOFd+4TmFjaBiKnxtmoH90vtW1iYj0KsE3RoZlG
+	 N3ueDx8BzJ0Crom0LJRish/oOJBWGpQ0LChRx0VncLMvldKf8s3PGN+QesBLB880DAocQ
+	 njVijL+BfUGq4/W/6RuX8Zgz6sLO1Ia4oZx/hxlcu4Q3y2YfJJY5fdAosafz2mwwLtw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794201689;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=8ZRn7U6LbXLrkeFcE23kRiYP3n6k52W7uC06jPGezt0=;
-	b=DgrqJwou0vrlbWXLgXWBmC2cUDfcEmhqjrkprb9yZU9/E1t+KfjdO+RsHHkiHDaiDxHo
-	 yBGJpT66IngJ8A6B80WW4aqzbs5KypHbg6BWd2sRFXNmLF2kGpl6wPqe5iXwHH5EhBs7q
-	 jU4C/9kDX7QEgKJCkDpXNns2fPjKbE4IfnFxHDCkyJ2oDfg+8mR0bXHaAMM/FZTWMXLy4
-	 JZxD8lDardF/bPJdc7j3xsE/Ax1XxRRmiXPU/e4rXJ7uCTpLfLazQci90pcsoKWkC3X/g
-	 CfKZ0yj61IY5ZbOmkNgyh6Qovwnks6rKhccg9BOBc770tOXgV/hRV5nPQ+ht+NE/7iA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794203805;
+	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
+	 X-Zmail-TransId:X-Mailer:Message-ID:In-Reply-To:References:Date:
+	 Mime-Version:From:To:Cc:Subject:Content-Type:X-MAIL:X-TLS:
+	 X-ENVELOPE-SENDER:X-SOURCE-IP:X-CLEAN:X-Fangmail-Anti-Spam-Filtered:
+	 X-Fangmail-MID-QID;
+	bh=83qiyGR/mdNGmDZogj1X7fCDBnM7EuT7FI2pwbBVqPs=;
+	b=UmZQ+pXxAjB3qiVuUs7TLYzgqScSwO1graqOZRjkO9+GNwhRoCne2cU3uXktLgm8QYhK
+	 Xae6Xb4v8BUN7hdPyTo3Aak5chZEMaietRL0LZvCsKRWZ1Vn3tZro9gOLd9zArxqIH90J
+	 VqbT0ix3x0gkDMIBGMY9x6qieMDEHAQtwPtC1GFd0elTbktT1CQ449V1GiDQ6+ANZtRg3
+	 ScVdghYfWz0b5uCSx7/iCQvu6pNkIoBuRzvbHGpdcofkPX897I3de7CNb2XPjcOUEiCbt
+	 xLQTdBJiL0YMcqJQKLPTU6kd7YW12V2OwjaV8QyYFcAOR2kdN25QZqBr0WIra1sJLgg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=FIw95C5e;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=zte.com.cn;
+	spf=pass smtp.mailfrom=zte.com.cn;
+	dkim=pass header.d=zte.com.cn header.i=@zte.com.cn header.a=rsa-sha256 header.s=z202610 header.b=rM+lN30L;
+	arc=none smtp.remote-ip=160.30.148.35
+Received: from mxhk.zte.com.cn (mxhk.zte.com.cn [160.30.148.35])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9AAD606A322
-	for <linux-scsi@vger.kernel.org>; Mon,  9 Nov 2026 05:21:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE5BD606A322
+	for <linux-scsi@vger.kernel.org>; Mon,  9 Nov 2026 05:56:43 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CE5BD606A322
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zte.com.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zte.com.cn
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=FIw95C5e
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 77D511F008A1;
-	Mon,  9 Nov 2026 05:21:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794201688;
-	bh=8ZRn7U6LbXLrkeFcE23kRiYP3n6k52W7uC06jPGezt0=;
-	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
-	b=FIw95C5eT0icfD1LWg+q1Gt9whg+6TbsBZTl37PMrnhytCIaKziTCpkhJ8y2N65+n
-	 y0OwzSaK4k8yfrD1aBqOqVDwMqEuAhr+c4swfAoXMKc5Fgvj1xopOReSzmuW4ts1bV
-	 fmRqejxSLVsW4AZjdV4glEkRnHwMy8LR1AaOQ2V6u2KC2+lkaf7rm8BSaOUvVdogjG
-	 +23dw4BLomx6OPapGaCa7C2RP8CHKhbmZUDlL+lEUP6Z2rX8oF5i8xMLkEUas32D78
-	 HahZxuIx9DZpNI9aA6xmOyA4aW2sPq05Gib0pIpc7jwXIINoxRjphlQasJcioD1HKJ
-	 AChP/waRfiLbA==
-Message-ID: <sashiko-outbox-204431@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v8 3/3] scsi: ufs: core: Limit early link recovery in
- the error handler to runtime PM
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "HOYOUNG SEO" <hy50.seo@samsung.com>, linux-scsi@vger.kernel.org
-In-Reply-To: <2052256418.81794200283664.JavaMail.epsvc@epcpadp2new>
-References: <cover.1794196863.git.hy50.seo@samsung.com>
- <CGME20261109041348epcas2p1a8518c19bea8a58c57e8538809d2a947@epcas2p1.samsung.com>
- <2052256418.81794200283664.JavaMail.epsvc@epcpadp2new>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 09 Nov 2026 05:21:28 +0000
+	dkim=pass (2048-bit key, unprotected) header.d=zte.com.cn header.i=@zte.com.cn header.a=rsa-sha256 header.s=z202610 header.b=rM+lN30L
+Received: from mse-fl2.zte.com.cn (unknown [10.5.228.133])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mxhk.zte.com.cn (FangMail) with ESMTPS id 4jNJvF0kfMz8Xrrf;
+	Mon, 09 Nov 2026 13:56:41 +0800 (CST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=zte.com.cn;
+	s=z202610; t=1794203801;
+	bh=rNWwUQQoGwqW0NWrOMEuVPwA61ZJpcSU2Vmmk7SQf5Y=;
+	h=In-Reply-To:References:Date:From:To:Cc:Subject;
+	b=rM+lN30LeBiXuoh9qLNFt4tAc5MmidSOQhkv39QAHnXeTCe6QDbGRthbMgQMWPFkv
+	 bxwWauolH4KMtGbWZPNEVYwXPQKuPvla5dpNXcwO36ALQJNnSxrI9FW5yHsh0m/rI5
+	 unj4yBcDxBJ1R4oaFwB2WQtt56QQXBa/PFWWznT5slwA1kZdP0K5RhEuSafv71KFoU
+	 QoA14nwlB+sxE+44gOZigP5sf8soECZv8UFJSPWGl1Wyxs+iPukSpo3OBtDHrBtgEv
+	 TiUgt1u4aoBXPYOocWSxvqHprm10zfyE4pv8irGEugEVXZqWzi51G/KWmFrBoaMrtI
+	 MuyArkfrGrF8g==
+Received: from xaxapp04.zte.com.cn ([10.99.98.157])
+	by mse-fl2.zte.com.cn with SMTP id 6A95uZre056914;
+	Mon, 9 Nov 2026 13:56:36 +0800 (+08)
+	(envelope-from shao.mingyin@zte.com.cn)
+Received: from mapi (xaxapp02[null])
+	by mapi (Zmail) with MAPI id mid32;
+	Mon, 9 Nov 2026 13:56:37 +0800 (CST)
+X-Zmail-TransId: 2afa6af16095048-12171
+X-Mailer: Zmail v1.0
+Message-ID: <20261109135637666O3DiZDXCvYaX9_wQNXOmj@zte.com.cn>
+In-Reply-To: <sashiko-outbox-204381@kernel.org>
+References: 20261109113810258gK5WuYWQKt0HsI2ikxmHo@zte.com.cn,sashiko-outbox-204381@kernel.org
+Date: Mon, 9 Nov 2026 13:56:37 +0800 (CST)
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -60,119 +72,34 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
+Mime-Version: 1.0
+From: <shao.mingyin@zte.com.cn>
+To: <linux-scsi@vger.kernel.org>
+Cc: <mkp@kernel.org>, <James.Bottomley@HansenPartnership.com>,
+        <sashiko-bot@kernel.org>
+Subject: =?UTF-8?B?UmU6IFtQQVRDSF0gc2NzaTogcHJvYzogdXNlIHNucHJpbnRmKCkgZm9yIHRoZSBob3N0IG5hbWU=?=
+Content-Type: text/plain;
+	charset="UTF-8"
+X-MAIL:mse-fl2.zte.com.cn 6A95uZre056914
+X-TLS: YES
+X-ENVELOPE-SENDER: shao.mingyin@zte.com.cn
+X-SOURCE-IP: 10.5.228.133 unknown Mon, 09 Nov 2026 13:56:41 +0800
+X-CLEAN: YES
+X-Fangmail-Anti-Spam-Filtered: true
+X-Fangmail-MID-QID: 6AF16099.000/4jNJvF0kfMz8Xrrf
 
-Thank you for your contribution! Sashiko AI review found 1 potential
-issue to consider:
-- [High] scsi: ufs: core: unsynchronized link recovery in
-  ufshcd_err_handler()
---
+> Does keeping char name[10] still truncate 10-digit shost->host_no values to
+> 9 digits?  Once shost->host_no reaches 10 digits, proc_create_data()
+> collides with the existing 9-digit procfs entry, and later calling
+> scsi_proc_host_rm() removes that active host's entry instead.
+>
+> Formatting a 32-bit int with %d into a 10-byte buffer via an unchecked
+> snprintf() also triggers -Wformat-truncation warnings under W=1 builds.
+> Sizing name[] to at least 11 bytes and using %u for the unsigned int
+> shost->host_no avoids both truncation and the compiler warning.
 
-commit bf85ee52f6ee7c2e7ab3e9f87aa7985d6566f949
-Author: HOYOUNG SEO <hy50.seo@samsung.com>
-
-scsi: ufs: core: Limit early link recovery in the error handler to runtime =
-PM
-
-This commit replaces the hba->pm_op_in_progress check in
-ufshcd_err_handler() with ufshcd_rpm_transition_in_progress() so that early
-link recovery without hba->host_sem only runs when the WLUN runtime PM
-status is RPM_SUSPENDING or RPM_RESUMING.
-
-> diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-pri=
-v.h
-> index 99f654b79035f..c576f648f242d 100644
-> --- a/drivers/ufs/core/ufshcd-priv.h
-> +++ b/drivers/ufs/core/ufshcd-priv.h
-> @@ -418,6 +418,19 @@ static inline void ufshcd_rpm_put(struct ufs_hba *hb=
-a)
->  	pm_runtime_put(&hba->ufs_device_wlun->sdev_gendev);
->  }
-> =20
-> +/* Whether a runtime suspend or resume of the WLUN is in progress. */
-> +static inline bool ufshcd_rpm_transition_in_progress(struct ufs_hba *hba)
-> +{
-> +#ifdef CONFIG_PM
-> +	enum rpm_status status =3D
-> +		READ_ONCE(hba->ufs_device_wlun->sdev_gendev.power.runtime_status);
-> +
-> +	return status =3D=3D RPM_SUSPENDING || status =3D=3D RPM_RESUMING;
-> +#else
-> +	return false;
-> +#endif
-> +}
-> +
->  /**
->   * ufs_is_valid_unit_desc_lun - checks if the given LUN has a unit descr=
-iptor
->   * @dev_info: pointer of instance of struct ufs_dev_info
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index c2c34b044c3ec..1608a856cac71 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -7094,9 +7094,14 @@ static void ufshcd_err_handler(struct work_struct =
-*work)
->  		 * runtime resume. This avoids potential deadlocks that could
->  		 * happen if we tried to resume the device while a PM operation
->  		 * is already in progress.
-> +		 *
-> +		 * Do this only while a runtime PM operation is in progress. The
-> +		 * system PM and poweroff callbacks hold host_sem, and
-> +		 * shutting_down makes the regular path below stop, so it does
-> +		 * not reset the link concurrently with them.
->  		 */
->  		ufshcd_rpm_get_noresume(hba);
-> -		if (hba->pm_op_in_progress) {
-> +		if (ufshcd_rpm_transition_in_progress(hba)) {
->  			ufshcd_link_recovery(hba);
->  			ufshcd_rpm_put(hba);
->  			return;
-
-[Severity: High]
-Does checking runtime_status here widen the window for unsynchronized
-ufshcd_link_recovery() outside the ufshcd_hold() region of
-__ufshcd_wl_suspend() and __ufshcd_wl_resume()?
-
-The runtime PM core sets runtime_status to RPM_SUSPENDING before
-sdev_runtime_suspend() runs blk_pre_runtime_suspend(), and keeps
-RPM_SUSPENDING or RPM_RESUMING until after sdev_runtime_suspend() or
-sdev_runtime_resume() returns.  That window spans before
-__ufshcd_wl_suspend() calls ufshcd_hold() and after __ufshcd_wl_suspend() or
-__ufshcd_wl_resume() calls ufshcd_release() and clears
-hba->pm_op_in_progress:
-
-CPU0                                  CPU1 (eh_wq)
-rpm_suspend()
-  runtime_status =3D RPM_SUSPENDING
-  ...
-  __ufshcd_wl_suspend()
-    ufshcd_hold(hba)
-    ufshcd_link_state_transition()
-      /* fails */
-    ufshcd_force_error_recovery(hba)
-      queue_work(..., &hba->eh_work)
-    ...
-    ufshcd_release(hba)
-    hba->pm_op_in_progress =3D false
-                                      ufshcd_err_handler()
-                                        ufshcd_rpm_transition_in_progress()
-                                          /* still RPM_SUSPENDING */
-                                        ufshcd_link_recovery(hba)
-                                          /* runs without ufshcd_hold() */
-  blk_post_runtime_suspend()
-  runtime_status =3D RPM_ACTIVE
-
-Because ufshcd_link_recovery() runs in this window without ufshcd_hold(),
-hba->host_sem, or ufshcd_err_handling_prepare(), it can access controller
-MMIO registers while clocks are gated off (for example, during
-blk_pre_runtime_suspend() or after ufshcd_release()), or reset and activate
-the host and link after a successful __ufshcd_wl_suspend() right before
-rpm_suspend() marks the WLUN RPM_SUSPENDED.
-
-Also, during runtime PM itself, if a UIC error schedules eh_work while
-__ufshcd_wl_resume() fails ufshcd_uic_hibern8_exit(), or while
-__ufshcd_wl_suspend() rolls back at set_dev_active, ufshcd_err_handler() and
-the runtime PM callback still run ufshcd_link_recovery() concurrently.
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/728258269.417942002=
-83102.JavaMail.epsvc@epcpadp2new?part=3D3
+Agreed, and thanks for catching it.  snprintf() alone stops the buffer
+overflow but still truncates a ten-digit host_no to nine digits, which
+would collide with an existing nine-digit procfs entry.  I'll widen the
+buffer to 11 bytes, use %u (host_no is an unsigned int), and repost the
+patch as v2.
