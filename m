@@ -1,120 +1,115 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.133.124
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794255580;
-	b=JkN4LfANLxpB+wQCnwt10wut1CHRavkLIpSnobDEGlJO5wdd54yKCaXNvvdYQZ7IFk1z
-	 qESleUy4qAIDW0HR3IwUpo3Y54n+g+ljsGYIzPKYSaf5824FzVoomvbji3zBoCk1Yna08
-	 a+8oAbrHGrZouMPGmzWPKowWP/Z2T97M3jSw/XVF7VxxU3OCAKKtN8jLnYnBJTNL7Q/dh
-	 bF7AT/jkNasa6TlLh+7Qm5C6c+shP1Y0sCHrcXLWnRFYlrvFQQIfMDttjJpxt1vU7fayj
-	 buQhir8rhMRp/jrlKhez2d2Oy61by2BfxEBIQnh2Bqlla4RX1sngJc0F1IhiJXttDsA==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794255580;
-	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
-	 X-Mimecast-MFC-AGG-ID:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 X-Received:Received:Message-ID:Subject:From:To:Cc:Date:In-Reply-To:
-	 References:Content-Type:Content-Transfer-Encoding:User-Agent:
-	 MIME-Version;
-	bh=cr6YGRe9Ov6g/VRUB3PYrERXuhR5Chhj/ZhidIfJ8oc=;
-	b=VdoRD9NszL5NfBkM1xMPSHkjtv4pCFizbUQ4iWhDsATPoEZlR8DczjzCx9Zyx2eVNoPU
-	 h3UYqCbhxAb7KeilTvJArdkSPLDcBssvzRoh/H2U/QMX64zVt3s4N/OUDsZ0rc3EMGxFO
-	 u3IfChyRAaqc/WYKSS1YQabMzX2XQjnNMX+xryhofLawQyR6e0Br0cYCByQMwGiKyf2mJ
-	 +qka2/XiwTQnS/a8RhrcM8U5KXcxwqIzM3ysas3GQJb6jsLPsN3nYBe04ERl4UArTxV8b
-	 rwcubeRyVpFxLA7hmtuKdwzxDHXBVGM0tut9TeVTMBWBg8bChX3pRBjGPHmxjkIIDnw==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=redhat.com;
-	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=Fd8aybzt;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=dqozIK6v;
-	arc=none smtp.remote-ip=170.10.133.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=40.107.159.54
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1794257255;
+	b=beNwu/NZuWn64SGPgNOMhETmkMFMGl5ErwpnE8+GVb32c1X/4v3770uaYQB4x+JWyQcv
+	 aTGb3Vg+L55RQOUvODHzQWL3s5AxrW3zZvIRq2qB3FhiAXBUc3qhVufD2Si7jA6g0SQ1P
+	 GV9TcVUt1iHAHfNhuRSLxwFhA8DHjtNFD98NhlCP+/ZHJMnBLthmHxLMx4QUBS2SIfSTo
+	 SoY8qYV37xPaEkJg/FhelUbN3lhZAHg3BkPTWZ8FX1ltrPaDryvbYuD8RxbroMzs+tFOX
+	 frFRL2x1vOdUn95rS6SA9LNKvMvAYMEUlFN/D5Ch1i0+Q/shpsAShU50/WCemEP0OHQ==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794257255;
+	h=DMARC-Filter:DKIM-Signature:Received:Received:Message-ID:Date:
+	 User-Agent:Subject:To:Cc:References:Content-Language:From:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:X-ClientProxiedBy:MIME-Version:
+	 X-MS-Exchange-MessageSentRepresentingType:X-MS-PublicTrafficType:
+	 X-MS-TrafficTypeDiagnostic:X-MS-Office365-Filtering-Correlation-Id:
+	 X-MS-Exchange-SharedMailbox-RoutingAgent-Processed:X-LD-Processed:
+	 X-MS-Exchange-SenderADCheck:X-MS-Exchange-AntiSpam-Relay:
+	 X-Microsoft-Antispam:X-Microsoft-Antispam-Message-Info:
+	 X-Forefront-Antispam-Report:
+	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
+	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
+	 X-MS-Exchange-CrossTenant-Network-Message-Id:
+	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
+	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
+	 X-MS-Exchange-CrossTenant-FromEntityHeader:
+	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
+	 X-MS-Exchange-CrossTenant-UserPrincipalName:
+	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
+	bh=3fktfSnbONW1pBYDfqxavVMcQZ0ONRl0Taf94gPS0KA=;
+	b=wGC/NfG+7DKIIPjGOSBxzkbGdS0klxdSaxIZSmeJDAE3SRR0TV2kkdOcIWauc4iQrVs1
+	 550sihdMFi4EsElnlCrAxww+QQ13R5yUFFsVvVBvShZIy85xU2AZsHaU5x/C3tTb0mOA8
+	 xX+8/tYm+CBJ+zT8vdjxdE5ZoK3B8ZV826Jf6dy2f09kfYcNEX1Y8WAur0pWEcMUjsv2n
+	 pOXqUg+FUMkGniR6NQndA+ix4zfY8QC1VkFZoOeuSXCRuUM2PMcuTJTiHgFc+jUUxzJ5i
+	 8D/gaACnhqPYQjwiUzVfVUDRpVswMCy0NSv+hS0z7KMcH5Rij5PK3vicCYFxa+wDCVg==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=oss.nxp.com;
+	spf=pass smtp.mailfrom=oss.nxp.com;
+	dkim=pass header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.a=rsa-sha256 header.s=selector1-NXP1-onmicrosoft-com header.b=pxEyvftf;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=40.107.159.54
+Received: from OSPPR02CU001.outbound.protection.outlook.com (mail-norwayeastazon11013054.outbound.protection.outlook.com [40.107.159.54])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF826606A321
-	for <linux-scsi@vger.kernel.org>; Mon,  9 Nov 2026 20:19:38 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org EF826606A321
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E5BF606A31C;
+	Mon,  9 Nov 2026 20:47:34 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8E5BF606A31C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=Fd8aybzt;
-	dkim=pass (2048-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=dqozIK6v
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1794255577;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=cr6YGRe9Ov6g/VRUB3PYrERXuhR5Chhj/ZhidIfJ8oc=;
-	b=Fd8aybzttt/QZ9dVEVecm8hyfbg4b5GHiFRwR9OdozUQBtGYRF6RjHiHl661rWRk331UQZ
-	QvwaIDrLvuEe2dcrai8bKq0OzX+oCgWjfTDjia+k0xopi2k6xUnlhdtElav/a74+iEeG8T
-	Wv3jTc7vfjPibA/4Y80lmnwTTYo2fi0=
-Received: from mail-qk1-f200.google.com (mail-qk1-f200.google.com
- [209.85.222.200]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-80-7GZZ1jR8NLKG6_jHond2Ww-1; Mon, 09 Nov 2026 15:19:36 -0500
-X-MC-Unique: 7GZZ1jR8NLKG6_jHond2Ww-1
-X-Mimecast-MFC-AGG-ID: 7GZZ1jR8NLKG6_jHond2Ww_1794255576
-Received: by mail-qk1-f200.google.com with SMTP id af79cd13be357-93f32050e72so249930785a.1
-        for <linux-scsi@vger.kernel.org>; Mon, 09 Nov 2026 12:19:36 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1794255576; x=1794860376; darn=vger.kernel.org;
-        h=mime-version:user-agent:content-transfer-encoding:content-type
-         :references:in-reply-to:date:cc:to:from:subject:message-id:from:to
-         :cc:subject:date:message-id:reply-to:content-type;
-        bh=cr6YGRe9Ov6g/VRUB3PYrERXuhR5Chhj/ZhidIfJ8oc=;
-        b=dqozIK6vw4fxBMWDvbpiosgApMY6MbkcPnmwEi3vB3P+8QLKm8Kjp7DnqgGuYdvvbW
-         IggMKvBKe8K3ewVnTyNvkxKW7EP5g28GxyeQP8yBvjTDWLG1ve980XtXaM0msPFUHTF/
-         JazgoUmzScTcvite18JpfzEr7fpAn9c2oamd3JhV6KAOcy4JoBnxGce+TOe4URQ5uDQw
-         GUNrihnSw6F2BxKhen5os0pcB30HKD8pRPY9v1RIcPrjWQr3udlKQ+GZKTAPRS0WF2Gd
-         oLtcisl1eYy6FGSfKZNe2xLj5sy7pU0v9h/I3BvO6AiorDkR7nvG+1njh8dNUPJMBXOF
-         Fdpg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794255576; x=1794860376;
-        h=mime-version:user-agent:content-transfer-encoding:content-type
-         :references:in-reply-to:date:cc:to:from:subject:message-id:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=cr6YGRe9Ov6g/VRUB3PYrERXuhR5Chhj/ZhidIfJ8oc=;
-        b=bF2+0muYguQtS4FfZBtRiX1A9wGWP5Fd8jR9T6Kjpzu61z5BdhkcX+U3iJfYI9zp2V
-         4+xgTZLSjlo6iC2gwbPjVxrXJTgH8Rlo/OGRzk0mHUapY90NNxb3ixt5KwpmbSZ2aAXo
-         /0WHEcYSI+Zi8ciIKMatCK8MCiuwiENSEI40HWzV5+Hmn7NHuTECKRDwe2dfhoIYgBZw
-         zbMQzpsH8MUrs//K1mUgW4biDUOH/NZxF+oExRauyH2Ocjl9bh+YCyaLvCiMj0mDNxky
-         Qs2hq/vCT6ksaky7yY+svQEOOnv0I5w97UIHl2WVqhxNA0K8BhD1+2Zjp7f3u79OPjH/
-         KImA==
-X-Forwarded-Encrypted: i=1; AL+hErESFI2cjDC/wycKqqZQf2xQKJPMd64VI6BL+JUW7bw2df0oAfrJc3KCpkJBBfoRiN2La1cdPnGuo1/d@vger.kernel.org
-X-Gm-Message-State: APuU4Z/PkGU+Lb3G/Izki2lKoao6rL1cm14aVQH5eddPNiZCeWd2H+VF
-	snEHojVHdRFIH9sswbGS9qlKFRQuKNZE0VprSRCLjtRtjWwPgFLhojsh/87jAczD3uyBcWfPtpc
-	TTI+WZXWOGcREW59//BXfzK5021WiNQ+GwaD3LRllHhCeuz0OjEi4FJj1UD69tUQ=
-X-Gm-Gg: AYBFou1BnG9UlOeBcuRhiEXpMR6PofemSTqVFOnGk3wZ/liifWzdpVRIwkd0uk5Ue6N
-	XBnHpgS8zwd8S8OTFt6KY/TnCSfe3a7pKGToFuiiUltyEnNE7/OOD/34JDxu3Ftrh/eHDdGnMTM
-	krkT2ycJomJlBLTI1E2Ck8YuGLezemCySGzKHa0n2iW3TKWorV44a75Nz1737vB87M1ZplMAAiy
-	GTUl1JkCdYopi8s692NietT1H90u5J/nAlpfriia3yGcIDSGqnvwBXpGv4eRmTEw/oiFA7zTWnf
-	SaMyboM+6HKf/vswKDiqRLGSaxXrAP/uvefVVxjCj2InGpqRoUVaEKqFaQ0zDnLWifPMnrXbpku
-	TvVch9+Vpreaqg3lXQ8wjTin9SOYrhhv32PX3D8xfb6YZ2b/dWavUpigI1kvBTpOak6gzduNZdq
-	CUMa+P+xG+y3j1CckpZ0nwJkWeHl7PdejgpPY6q5fmB88MkF9h0l8K6y3A9S54nxvFZT4Qtno=
-X-Received: by 2002:a05:620a:4886:b0:946:2a0:a11b with SMTP id af79cd13be357-9479f32f250mr105888385a.35.1794255575332;
-        Mon, 09 Nov 2026 12:19:35 -0800 (PST)
-X-Received: by 2002:a05:620a:4886:b0:946:2a0:a11b with SMTP id af79cd13be357-9479f32f250mr105881985a.35.1794255574608;
-        Mon, 09 Nov 2026 12:19:34 -0800 (PST)
-Received: from loberman-thinkpadp16gen3.rmtusma.csb ([2600:6c65:2440:d8c:aa2b:ddff:fe88:da74])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-9479e7d10c4sm54455085a.32.2026.11.09.12.19.33
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 09 Nov 2026 12:19:33 -0800 (PST)
-Message-ID: <9b90edc29d5b3be49f5bd0e0ecec5f1701e089bf.camel@redhat.com>
-Subject: Re: [PATCH v9 00/29] Native SCSI Multipath support
-From: Laurence Oberman <loberman@redhat.com>
-To: John Garry <john.garry@linux.dev>,
- james.bottomley@hansenpartnership.com, 	mkp@kernel.org
-Cc: hare@suse.com, linux-nvme@lists.infradead.org,
- linux-scsi@vger.kernel.org, 	snitzer@kernel.org, jmeneghi@redhat.com,
- bmarzins@redhat.com, 	dm-devel@lists.linux.dev, hch@lst.de,
- michael.christie@oracle.com
-Date: Mon, 09 Nov 2026 15:19:32 -0500
-In-Reply-To: <20261108204733.557995-1-john.garry@linux.dev>
-References: <20261108204733.557995-1-john.garry@linux.dev>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.60.2 (3.60.2-3.fc44) 
+	dkim=pass (2048-bit key, unprotected) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.a=rsa-sha256 header.s=selector1-NXP1-onmicrosoft-com header.b=pxEyvftf
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=YUbnz7YvmUusT3Fzv7p+F2ahwgglotk+tDoHdPTfgYBxmpNjqZtUJJ+xkRy2sNjuKTG9l5wFBNRsicAHuY+yBi5uqK9pOJBANidM3bWZp6C3s2kbFBjqQFOXOYzbNwGfLIm8fLJOc/BL/wDRk3y5BTLwsaVTi/mz37TlJCDMd+FFxjWhWVXpuGgH5vawdE5YxA10crrJDA8gT+QBn02d1ehijRSilRHJqVxN0MHbaj+niVbDkE6rXAXUOYs/kuehNB1ggYWqR4HsYVTMbpTzPf2Yk5DgUiGTqlk7q4VsezRzkTVzALvRu2skQ+/fI5/a7b6V7L4jYaDFCxBFZcm1Og==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=3fktfSnbONW1pBYDfqxavVMcQZ0ONRl0Taf94gPS0KA=;
+ b=pCi6OzT4Donzf2qLOqsZ/aBVCZI7nUz3PcMZ4EqxTMhwKh2rCAMv2N6E8MyRIP//rn8hgSR2Ubik060BkUXgXH35u+fc5ZOL0wt1WQlAm9P5WTwT83OzgOedFDHZ3d3Inm/Nnu4hqi5QfGJCK/cJxNfyTtRRa4puXFR2GcY1qQmjTjHzPm0IrcUGeF+WavgVGT5NnH8oQN/Vxtt6lZBSGAm7oAF0sZfBt8KSrzTDE9mAQ8KOdBYAlacQBxj2jb2ShMSjO7tV6zsEcf63juJ38Z4sPqT6E7cf8627opT0iU8h12JCRcqL0/dVvDVHO+axmFCnvk4dedZepf2/PKAVAw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
+ dkim=pass header.d=oss.nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
+ s=selector1-NXP1-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=3fktfSnbONW1pBYDfqxavVMcQZ0ONRl0Taf94gPS0KA=;
+ b=pxEyvftfyn6GMR1eDiegCTHi6/GdNRfpNiVN7RRSCXBhafv/sgpqVfQfVV5zoFSKXsB+pNJUzPEgfjgAV0iFTphmjzS3VBO4hdfjT9AdCD0+Dimlm29o6P0JOtKCy0NO4k+X4EfUDrsOLBBOked3IQWo99JQzMBQQzHn/kmkyLE91mCkN2nytvdwPY+y1wHMAg8xkZV5y5K5ra6V+7nxlfY2XGU/TkXbC9m8GlYFvGwE2/YzPctdcAPH8b17qE2kCmF4VEGLmjRk8+Pxru+HvUhnpsWHmwYgLtlhvWDbt3hqkXN/ZbGmLc29xRzW7dR1M4J7FpM0GRPJwks1pshY8A==
+Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=oss.nxp.com;
+Received: from GV2PR04MB12558.eurprd04.prod.outlook.com
+ (2603:10a6:150:368::10) by MA6PR04MB189634.eurprd04.prod.outlook.com
+ (2603:10a6:250:56::20) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.592.13; Mon, 9 Nov
+ 2026 20:47:28 +0000
+Received: from GV2PR04MB12558.eurprd04.prod.outlook.com
+ ([fe80::cd9f:102:ea58:4c49]) by GV2PR04MB12558.eurprd04.prod.outlook.com
+ ([fe80::cd9f:102:ea58:4c49%6]) with mapi id 15.21.0592.012; Mon, 9 Nov 2026
+ 20:47:27 +0000
+Message-ID: <02fb96e2-391f-4fc3-8d41-ab8364a9b07b@oss.nxp.com>
+Date: Mon, 9 Nov 2026 22:47:23 +0200
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v10 08/11] dt-bindings: ufs: Add NXP S32N79 UFS host
+ controller
+To: Krzysztof Kozlowski <krzk@kernel.org>
+Cc: NXP S32 Linux Team <s32@nxp.com>, Alim Akhtar <alim.akhtar@samsung.com>,
+ Bart Van Assche <bvanassche@acm.org>, Bean Huo <beanhuo@micron.com>,
+ Stanley Jhu <stanleyjhu@google.com>, Rob Herring <robh@kernel.org>,
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
+ <conor+dt@kernel.org>,
+ "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+ "Martin K. Petersen" <mkp@kernel.org>,
+ Sai Krishna Potthuri <sai.krishna.potthuri@amd.com>,
+ Ajay Neeli <ajay.neeli@amd.com>, Manivannan Sadhasivam <mani@kernel.org>,
+ Pedro Sousa <pedrom.sousa@synopsys.com>,
+ Adrian Hunter <adrian.hunter@intel.com>, Can Guo <quic_cang@quicinc.com>,
+ Asutosh Das <quic_asutoshd@quicinc.com>, imx@lists.linux.dev,
+ linux-scsi@vger.kernel.org, devicetree@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+ clizzi@redhat.com, aruizrui@redhat.com, eballetb@redhat.com,
+ echanude@redhat.com, Frank Li <Frank.Li@nxp.com>
+References: <20261103133215.1385823-1-larisa.grigore@oss.nxp.com>
+ <20261103133215.1385823-9-larisa.grigore@oss.nxp.com>
+ <20261104-holistic-loon-of-agreement-db7b8f@quoll>
+ <4e82a4bf-e2db-4a3b-bebd-9f9c473817a3@kernel.org>
+ <17b24b80-c3bb-40a1-ad12-06242ca09c22@oss.nxp.com>
+ <0820de78-679a-45c2-baf1-2905490ea926@kernel.org>
+Content-Language: en-US
+From: Larisa Ileana Grigore <larisa.grigore@oss.nxp.com>
+In-Reply-To: <0820de78-679a-45c2-baf1-2905490ea926@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: AM8P251CA0008.EURP251.PROD.OUTLOOK.COM
+ (2603:10a6:20b:21b::13) To GV2PR04MB12558.eurprd04.prod.outlook.com
+ (2603:10a6:150:368::10)
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -124,507 +119,117 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
+X-MS-Exchange-MessageSentRepresentingType: 1
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: GV2PR04MB12558:EE_|MA6PR04MB189634:EE_
+X-MS-Office365-Filtering-Correlation-Id: 419f214e-faa9-46db-ac42-08df3ea2aa1d
+X-MS-Exchange-SharedMailbox-RoutingAgent-Processed: True
+X-LD-Processed: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635,ExtAddr
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+ BCL:0;ARA:13230040|23010399003|376014|7416014|366016|1800799024|19092799006|10067099003|4143699003|11063799006|56012099006|261022105027099003|261026140227099003|261028144727099003|22082099003|18002099003;
+X-Microsoft-Antispam-Message-Info:
+ HRlPz35wut3SPlMKUZs1nvIvQRt+egEPT97wgbubdW9sbk9WDkTe2baoWlaeaVIf3Fd4hTCJ3CIducDZ/h4iAfTL4s+IUTMoyQLsYB5SHNvP/lHAXrkyANN9+2JBiIOC41QWck4aht6n6ThybGc7KMETnsk7aKbgtrtmKWe+t/qBnpY49stB/1t6qi4+wJWVBOTduofI9I/fXhaaTg2qXhVY6+wWXiuBxEvY5wmMoNSRu8suojJBhPxc0+OAyQHBh7DeJy8r/nmkW+bE1NnImL0kAodWuCUdq3XhEf30TBpldCwpAfYSt0u4hEC9taBRA0mA0D7AcvvIa1QXKLjQC2NPYeopdfdZCa+mo4RDUt1vTJw9x2o6hOD5wxIEd3G/1yWmegykZrvfb+eqthZPVGtt1VTZ5MbMsL1F1uzWaVvQLFK9b4xK6oUDyeKWy3iQh4pY6KaoQhQjIvXnfuhdYbLPkk5Flidk49tIWkOn1Gr5ixCd4tAWtk3z5aLF98ejwIm9aW82O+Jz/WPHxD2TDEuPFqQaZtTGjqcHhaeplvXy7fSBB6Sw2ulu+8DqqGttC0ZAYMMAJYIcz+oTwM55fp0ErtZ5nYWe4pe9MBSy80jub1uSqxcVWc1k9mfd2tsX
+X-Forefront-Antispam-Report:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:GV2PR04MB12558.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(376014)(7416014)(366016)(1800799024)(19092799006)(10067099003)(4143699003)(11063799006)(56012099006)(261022105027099003)(261026140227099003)(261028144727099003)(22082099003)(18002099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+ =?utf-8?B?c3hpSGxuOVRQa3BYSnlWc2lNWDZkQnVlZmF2NVJSd2o2TTArYmlURkJtT0d1?=
+ =?utf-8?B?bmwzNkZyRlNWSFlGSzNCTE03eTNEV01QMVlEVmpjNjU2VGZieGF2QTIwTXhS?=
+ =?utf-8?B?cjJDckt5eUswaXNDZzZMblpvVVpXbVlGVDlYcURGZWhtZjVDa2FaZTV5czVq?=
+ =?utf-8?B?NXduYXVMcW1iZnZZSDE3R1h1YytKWEU0SjRtNUVhby9yMWVqelFpUFBrUmMy?=
+ =?utf-8?B?aE44Rk9CNm9ldS9PNXVlNnJ0bFRxclNFbFVBQ2pCUzdUcEp3TmFHaGs0SGVn?=
+ =?utf-8?B?NUovakZCeDhMdXJ5REdvcnduMW54dzhpSDhNamlWRy9OSlFtOHlRL29reDUy?=
+ =?utf-8?B?Z0ZCQnhuVFZiN1Z1WDhlY2ZBRHR2bWdkN2RRTjJ3TStZd3hXWU40T0VrUFkv?=
+ =?utf-8?B?NUMxUzV2Y290cHJ2bXdDQndrdWx4U0NjUXVYc2hvVXNXZDFXZisvMGhXL2JK?=
+ =?utf-8?B?ZldnTmNVOHJrb1cyMUI0WXV6Z1JHZFNIUzZVckZsVWwwWEYvUnpyYkd1SExC?=
+ =?utf-8?B?clpjR2hjOGZBT1Y1ektIekZ5YStkT3RBaEVBb0FsaDFWNU81MWpmSEQxU29I?=
+ =?utf-8?B?b2RvYUthQi93TUhvQXI3ZmhZY0llYlhqVDFHck95NXJKc2tyM0RJeDhVaUhB?=
+ =?utf-8?B?ekFnemhYeGxOWXhkUTNSYURHUXdKdytvaStOTC9vZTBFREU4V0VibkNoMTlJ?=
+ =?utf-8?B?akpad2tGK0V4U0x6ZUpQY0JGZk81bmh3WFc2ZzlSRzAvQjE0RVMrMDdxYlgr?=
+ =?utf-8?B?cDloVUN0dFl2bzJ2WkhZQm5mMzdtOVo0OGlFSkVTb3BGTzVGMzgvMTVYS3Z0?=
+ =?utf-8?B?ejhRMHUweDhKcVhuTUVzbXo1VU95NnNpU1Z6TWhLM1JzOThhd05OcjF5NEYx?=
+ =?utf-8?B?WTZ6RjhHYnF4V1Zacm1SUTlKTU9tWGk0Q2hjc1dCWERhTUtDVWZFLytCcnp5?=
+ =?utf-8?B?QzNPaEFKVDBhTGFBQ0pKcUp5SXBHc2hzRk5vT3NKRFYxTmFNbzhzV2hHdkN4?=
+ =?utf-8?B?RHlML2VaU1kwRnNFUndvaGRGbEUxTURzdDE1dlZhcFRnRzgrQytQNXZmVzh2?=
+ =?utf-8?B?YjArMTVHZEFJVkt4cnVaR1BiN1NIeit3VEFQTStWYkNySkQrbnNFQjhaN1h6?=
+ =?utf-8?B?dFM0dCtQRisyaUlMb25oTENGeG9RdlZLNGFXSHB5eWFJQzZnSWRsUEpIREN6?=
+ =?utf-8?B?RVRqenp4dnlNTnVIN2Y5QWtQZTFtRDZHZ3QvaDlFUk5PRHk2akV5Q3F5cDRF?=
+ =?utf-8?B?R3E3OWI4V0FQdk1NeEFidFpKdkR3enpvQW9VNE1ramNaN0RneThyR2VKTXpX?=
+ =?utf-8?B?NnZnemc5SkNlNzdTNVN5OFRBV1JDNXdydUF4cXFBWEZzekp3M1VNL2Q4WG9V?=
+ =?utf-8?B?NGtOQ3lzZC9qa0tmTm5reEVFSHdKc3ZScnNmWGxqR0gxS0FTbWswUCswZm5L?=
+ =?utf-8?B?eHRYZ0o5cmJicjlsS0s1TEttVDh5SlNhdkI5WHZIZVllR2czdVdxendhei9G?=
+ =?utf-8?B?elQrUHNqeVNLa2ZTd3ArNTN0Q0ZiSk5pZmZMcWZ4TXZBeHl6RThFdFJ0UzZI?=
+ =?utf-8?B?OUxIZlNoMmEwQmg1UzhiQ0ljNy9HZWVIOUJmMUdYVW9jUXBTOU1aaXJSZ28w?=
+ =?utf-8?B?RmE1MHpjWTV5YlIvYUVBSTY3Z1V4bzhPZGd5N3VlcmxJTVgrbTZqZk5vcncy?=
+ =?utf-8?B?cUNSKzVKSmczMERWV0xDMlAvdnhiZ3FURkVOWTdxVzJLajI5NDhtYWx0aFUv?=
+ =?utf-8?B?YjFhWDJTUXhhLzI1MDhGVHFQZktxeHkvcS9NTXhvK2xNYVRJL2ZWTW9ZNWY3?=
+ =?utf-8?B?VHdXbVhid01lYTVJV0s1SUU1aVhzNkRlR2U3Y3dWRzVVNFA4Q05mTWNpanZT?=
+ =?utf-8?B?TU9sRFNxbHFKM2U1Sk5SdFNhajBCcGt6RFFVUXVzaGVwUFRhYWJDQ2hqelQw?=
+ =?utf-8?B?S0VJV3hyUktGeW8xWEtjMTE0dEpQMXJQSWl6UE5IYlhPUVU1bnZNdDZPWGcw?=
+ =?utf-8?B?M3hBVml5L2dFUE4vaFJBNkFjVjVIZzhiRVpOekZxdC9yeXRHTzZ1RTNXeVE4?=
+ =?utf-8?B?NGNBcTNveXF4d3pENkZzcWpmU2xtaUFDaWVPbHY1K3RSUnZkK0dGdHBCZjAz?=
+ =?utf-8?B?aTBHZytKQUQra3JocndUZmUxSytqelJYTlJ2eFp1U1I1QVRMenV3QUliOE9n?=
+ =?utf-8?B?Zm9rYWFkVWtpZUpGcjBIanFha3hLY1VZOU1hQ2JWQ2gwYnhBdUlhUE50VE1N?=
+ =?utf-8?B?TW1QaXg5OXcrTzF3Y0JRTmpVNEtiLzUwM2gxSGlLNjRWRXdhcXR1QWh6amRT?=
+ =?utf-8?B?SURLVG1xVitkUERXczdaMDZBbHdFU2pxYlQ5YkxtRUhpT3RpZFpIUT09?=
+X-OriginatorOrg: oss.nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 419f214e-faa9-46db-ac42-08df3ea2aa1d
+X-MS-Exchange-CrossTenant-AuthSource: GV2PR04MB12558.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Nov 2026 20:47:27.4440
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: uHMQYUueGrzT3+HVaZ4duIAqmb+wxZlbTh2JTr6Uny3golWgDBIEemxCzDdxpN5EBYlO1/z2hYDWc23CSkXKJg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MA6PR04MB189634
 
-On Sun, 2026-11-08 at 20:47 +0000, John Garry wrote:
-> NATIVE SCSI MULTIPATH:
->=20
-> This series introduces native SCSI multipath support. It is intended
-> as
-> an alternative to dm-mpath.
->=20
-> This support aims to provide a multipath-enabled SCSI block device/
-> gendisk.
->=20
-> For a SCSI device to support native multipath, either of the
-> following
-> conditions must be satisfied:
-> a. unique ID in VPD page 83 and ALUA support and scsi_multipath
-> modparam
-> =C2=A0=C2=A0 enabled
-> b. unique ID in VPD page 83 and scsi_multipath_always modparam
-> enabled
->=20
-> This series relies on reading sdev->access_state to get path
-> information.
-> This path information would be provided by ALUA. ALUA support which
-> does
-> not rely on device handlers has already been discussed at
-> https://lore.kernel.org/linux-scsi/7755e98f-5619-48ba-bcfc-b64eec930c40@o=
-racle.com/
-> and support will be added in the next phase.
->=20
-> New classes of devices are added:
-> - scsi_mpath_device
-> - scsi_mpath_disk
->=20
-> These are required since a multipath scsi_device has no common scsi
-> host.
-> An example of the sysfs files and directories for these new classes
-> is as
-> follows:
->=20
-> $ ls -l /sys/class/scsi_mpath_device/scsi_mpath_device0/
-> total 0
-> -rw-r--r--=C2=A0=C2=A0=C2=A0 1 root=C2=A0=C2=A0=C2=A0=C2=A0 root=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 4096 Feb 25 11:59 iopolicy
-> drwxr-xr-x=C2=A0=C2=A0=C2=A0 2 root=C2=A0=C2=A0=C2=A0=C2=A0 root=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 0 Feb 25 11=
-:59 multipath
-> drwxr-xr-x=C2=A0=C2=A0=C2=A0 2 root=C2=A0=C2=A0=C2=A0=C2=A0 root=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 0 Feb 25 11=
-:59 power
-> lrwxrwxrwx=C2=A0=C2=A0=C2=A0 1 root=C2=A0=C2=A0=C2=A0=C2=A0 root=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 0 Feb 25 11=
-:59 subsystem ->
-> ../../../../class/scsi_mpath_device
-> -rw-r--r--=C2=A0=C2=A0=C2=A0 1 root=C2=A0=C2=A0=C2=A0=C2=A0 root=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 4096 Feb 25 11:58 uevent
-> -r--r--r--=C2=A0=C2=A0=C2=A0 1 root=C2=A0=C2=A0=C2=A0=C2=A0 root=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 4096 Feb 25 11:59 vpd_id
-> $ ls -l /sys/class/scsi_mpath_device/scsi_mpath_device0/multipath/
-> total 0
-> lrwxrwxrwx=C2=A0=C2=A0=C2=A0 1 root=C2=A0=C2=A0=C2=A0=C2=A0 root=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 0 Feb 25 11=
-:59 8:0:0:0 ->
-> ../../../../platform/host8/session1/target8:0:0/8:0:0:0
-> lrwxrwxrwx=C2=A0=C2=A0=C2=A0 1 root=C2=A0=C2=A0=C2=A0=C2=A0 root=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 0 Feb 25 11=
-:59 9:0:0:0 ->
-> ../../../../platform/host9/session2/target9:0:0/9:0:0:0
-> $ cat /sys/class/scsi_mpath_device/scsi_mpath_device0/vpd_id
-> naa.600140505200a986f0043c9afa1fd077
-> $ cat /sys/class/scsi_mpath_device/scsi_mpath_device0/iopolicy
-> numa
-> $
->=20
-> $ ls -l /sys/class/scsi_mpath_disk/scsi_mpath_disk0/
-> total 0
-> drwxr-xr-x=C2=A0=C2=A0=C2=A0 2 root=C2=A0=C2=A0=C2=A0=C2=A0 root=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 0 Feb 25 12=
-:00 power
-> drwxr-xr-x=C2=A0=C2=A0 11 root=C2=A0=C2=A0=C2=A0=C2=A0 root=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 0 Feb 25 11:58=
- sdc
-> lrwxrwxrwx=C2=A0=C2=A0=C2=A0 1 root=C2=A0=C2=A0=C2=A0=C2=A0 root=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 0 Feb 25 11=
-:58 subsystem ->
-> ../../../../class/scsi_mpath_disk
-> -rw-r--r--=C2=A0=C2=A0=C2=A0 1 root=C2=A0=C2=A0=C2=A0=C2=A0 root=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 4096 Feb 25 11:58 uevent
-> $ ls -l /sys/class/scsi_mpath_disk/scsi_mpath_disk0/sdc/multipath/
-> total 0
-> lrwxrwxrwx=C2=A0=C2=A0=C2=A0 1 root=C2=A0=C2=A0=C2=A0=C2=A0 root=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 0 Feb 25 12=
-:00 sdc:0 ->
-> ../../../../../platform/host8/session1/target8:0:0/8:0:0:0/block/sdc:
-> 0
-> lrwxrwxrwx=C2=A0=C2=A0=C2=A0 1 root=C2=A0=C2=A0=C2=A0=C2=A0 root=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 0 Feb 25 12=
-:00 sdc:1 ->
-> ../../../../../platform/host9/session2/target9:0:0/9:0:0:0/block/sdc:
-> 1
->=20
-> $ ls -l /dev/sdc
-> brw-rw----=C2=A0=C2=A0=C2=A0 1 root=C2=A0=C2=A0=C2=A0=C2=A0 disk=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 8,=C2=A0 32 Feb 25 11:58 /dev/sdc
->=20
-> The scsi_device and scsi_disk classes otherwise remain unmodified.
-> However, the per-path block device is hidden in /dev/. Furthermore,
-> multipathed block devices have a new naming scheme, sdX:Y, where
-> X is the scsi multipath device index and Y is the path index.
->=20
-> No multipath sg support is added. We still have a per-path sg device.
-> Since the SCSI block device is multipath enabled, we can access
-> multipathed scsi_ioctl() through that block device.
->=20
-> For failover, we take the approach of cloning bio's and re-submitting
-> them
-> in full (for failover errors).
->=20
-> LIBMULTIPATH:
->=20
-> This series introduces also libmultipath. It is essentially a
-> refactoring
-> of NVME multipath support, so we can have a common library to also
-> support
-> native SCSI multipath.
->=20
-> Much of the code is taken directly from the NVMe multipath code.
-> However,
-> NVMe specifics are removed. A template structure is provided so the
-> driver
-> -may provide callbacks for driver specifics, like ANA support for
-> NVMe.
->=20
-> Important new structures introduced include:
->=20
-> - mpath_head
-> These contain much of the multipath-specific functionality from
-> nvme_ns_head, including a pointer to the gendisk structure and
-> a path SRCU-based array.
->=20
-> - mpath_device
-> This is the per-path structure, and contains much the same
-> multipath-specific functionality in nvme_ns
->=20
-> libmultipath provides functionality for path management, path
-> selection,
-> data path, and failover handling.
->=20
-> Full series also available at
-> https://github.com/johnpgarry/linux/tree/scsi-multipath-v7.4-v9
->=20
-> Differences to v8:
-> - Rebase
-> - Hardening changes advised by sashiko, including "Clear cmd->flags"
-> =C2=A0 change
->=20
-> Differences to v7:
-> - rebase
-> - simplify scsi_mpath_clone_end_io() (sashiko)
-> - rename bio_list_add_clone() -> bio_list_add_master()
-> - rework checks in mpath_alloc_disk_head() (sashiko)
->=20
-> John Garry (29):
-> =C2=A0 scsi: core: Clear cmd->flags for terminal queuing error
-> =C2=A0 libmultipath: Add initial framework
-> =C2=A0 libmultipath: Add basic gendisk support
-> =C2=A0 libmultipath: Add path selection support
-> =C2=A0 libmultipath: Add bio handling
-> =C2=A0 libmultipath: Add support for mpath_device management
-> =C2=A0 libmultipath: Add delayed removal support
-> =C2=A0 libmultipath: Add sysfs helpers
-> =C2=A0 libmultipath: Add support for block device IOCTL
-> =C2=A0 libmultipath: Add mpath_bdev_getgeo()
-> =C2=A0 libmultipath: Add mpath_bdev_get_unique_id()
-> =C2=A0 scsi-multipath: introduce basic SCSI device support
-> =C2=A0 scsi-multipath: introduce scsi_device head structure
-> =C2=A0 scsi-multipath: provide sysfs link from to scsi_device
-> =C2=A0 scsi-multipath: support iopolicy
-> =C2=A0 scsi-multipath: clone each bio
-> =C2=A0 scsi-multipath: clear path when device is blocked
-> =C2=A0 scsi-multipath: revalidate paths upon device unblock
-> =C2=A0 scsi-multipath: failover handling
-> =C2=A0 scsi-multipath: provide callbacks for path state
-> =C2=A0 scsi-multipath: add scsi_mpath_{start,end}_request()
-> =C2=A0 scsi-multipath: update request for terminal request queuing error
-> =C2=A0 scsi-multipath: add delayed disk removal support
-> =C2=A0 scsi: sd: add multipath disk class
-> =C2=A0 scsi: sd: add multipath disk attr groups
-> =C2=A0 scsi: sd: support multipath disk
-> =C2=A0 scsi: sd: add mpath_dev file
-> =C2=A0 scsi: sd: add mpath_numa_nodes dev attribute
-> =C2=A0 scsi: sd: add mpath_queue_depth dev attribute
->=20
-> =C2=A0drivers/scsi/Kconfig=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0 |=C2=A0 10 +
-> =C2=A0drivers/scsi/Makefile=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0 |=C2=A0=C2=A0 1 +
-> =C2=A0drivers/scsi/scsi.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0 |=C2=A0=C2=A0 8 +-
-> =C2=A0drivers/scsi/scsi_lib.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 |=C2=A0=
- 20 +-
-> =C2=A0drivers/scsi/scsi_multipath.c | 691 +++++++++++++++++++++++++
-> =C2=A0drivers/scsi/scsi_scan.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 |=C2=A0=C2=
-=A0 4 +
-> =C2=A0drivers/scsi/scsi_sysfs.c=C2=A0=C2=A0=C2=A0=C2=A0 |=C2=A0 10 +
-> =C2=A0drivers/scsi/sd.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0 | 611 +++++++++++++++++++++-
-> =C2=A0drivers/scsi/sd.h=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0 |=C2=A0=C2=A0 3 +
-> =C2=A0include/linux/multipath.h=C2=A0=C2=A0=C2=A0=C2=A0 | 156 ++++++
-> =C2=A0include/scsi/scsi_cmnd.h=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 |=C2=A0=C2=
-=A0 9 +-
-> =C2=A0include/scsi/scsi_device.h=C2=A0=C2=A0=C2=A0 |=C2=A0=C2=A0 2 +
-> =C2=A0include/scsi/scsi_driver.h=C2=A0=C2=A0=C2=A0 |=C2=A0=C2=A0 4 +
-> =C2=A0include/scsi/scsi_host.h=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 |=C2=A0=C2=
-=A0 4 +
-> =C2=A0include/scsi/scsi_multipath.h | 129 +++++
-> =C2=A0lib/Kconfig=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 |=C2=A0=C2=A0 6 +
-> =C2=A0lib/Makefile=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 |=C2=A0=C2=A0 2 +
-> =C2=A0lib/multipath.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 | 948
-> ++++++++++++++++++++++++++++++++++
-> =C2=A018 files changed, 2592 insertions(+), 26 deletions(-)
-> =C2=A0create mode 100644 drivers/scsi/scsi_multipath.c
-> =C2=A0create mode 100644 include/linux/multipath.h
-> =C2=A0create mode 100644 include/scsi/scsi_multipath.h
-> =C2=A0create mode 100644 lib/multipath.c
->=20
->=20
->=20
-On 08/11/2026 20:47, John Garry wrote:
-> This series relies on reading sdev->access_state to get path
-information.
-> This path information would be provided by ALUA. ALUA support which
-does
-> not rely on device handlers has already been discussed at
+On 11/5/2026 8:28 PM, Krzysztof Kozlowski wrote:
+> On 04/11/2026 10:41, Larisa Ileana Grigore wrote:
+>> On 11/4/2026 10:40 AM, Krzysztof Kozlowski wrote:
+>> v8:
+>> https://lore.kernel.org/all/20261013103003.373156-1-larisa.grigore@oss.nxp.com/
+>> v9:
+>> https://lore.kernel.org/all/20261024122533.3609180-1-larisa.grigore@oss.nxp.com/
+>> v10:
+>> https://lore.kernel.org/all/20261103133215.1385823-1-larisa.grigore@oss.nxp.com
+>>
+>> Regarding your comments on v9:
+>>
+>> Frank's Reviewed-by was given publicly on v8 [1]. The series only looked
+>> like a v1 because of the wrong version number.
+>> The tag ordering was changed in v10 since the patch was changed.
+>> The single 0 Hz OPP entry: as discussed on v8 [2][3], the clock rate is
+>> set outside Linux and is not scaled. The OPP table lets the UFS core
+> 
+> That is not the purpose of OPP table. OPP defines performance point.
+> Performance point of 0 makes no sense. You cannot use Linux limitations
+> as reason to add some DTS, because answer is simple: fix your Linux
+> limitations.
 >
-https://lore.kernel.org/linux-scsi/7755e98f-5619-48ba-bcfc-b64eec930c40@ora=
-cle.com/
-> and support will be added in the next phase.
 
-Hi John,
+Hi Krzysztof,
 
-I have been testing v9 (your scsi-multipath-v7.4-v9 branch, on
-7.4-rc1) on real hardware and found two problems with ALUA arrays,
-one in scsi_dh_alua and one in the series itself.
+Thanks for the clarification. I understand that an OPP table is not 
+appropriate here.
 
-Setup:
-- HP P2000 G3 FC array, implicit ALUA, two port groups (one per
-  controller)
-- 2 FC HBAs, 2 target ports each, 30 LUNs with 4 paths per LUN
-- scsi_mod.multipath=3Don, dm-multipath not in use
-- Under dm-multipath, the same LUNs show port group 1 at prio 50
-  (active/optimized) and port group 0 at prio 10
-  (active/non-optimized)
+Existing platform DTs, such as Hi3660 and MT8195, define freq-table-hz 
+containing only <0 0> pairs. This allows the UFS core to manage clock 
+enable/disable without setting their rates. With freq-table-hz 
+deprecated, there seems to be a gap for this use case, beyond S32N.
 
-1. sdev->access_state is wrong after boot (scsi_dh_alua, not this
-   series)
+Could you please advise on the preferred way to address this?
 
-After boot, every path read active/optimized in
-/sys/class/scsi_device/H:C:T:L/device/access_state, while sg_rtpg
-reports port group 0 as active/non-optimized. No
-"alua: port group XX state ..." message was logged at all.
+Regards,
+Larisa
 
-Since 50759b881e1d ("scsi: device_handler: alua: Call
-scsi_device_put() from non-atomic context"), alua_rtpg_queue() only
-queues an RTPG if sdev->handler_data is set, but alua_bus_attach()
-sets handler_data after alua_initialize() has tried to queue the
-initial RTPG. That RTPG is dropped, and access_state stays at its
-zeroed default (active/optimized) until something calls
-scsi_dh_activate(). dm-multipath hides this through pg_init; native
-multipath never calls activate, so the series sees every path as
-optimized.
-
-I have sent a separate fix for this to linux-scsi:
-https://lore.kernel.org/linux-scsi/20261109201120.1067815-1-loberman@redhat=
-.com/
-It is independent of your series, but without it, native multipath
-on ALUA arrays has no correct path state.
-
-2. ANO paths are ranked the same as AO paths
-
-With the ALUA state corrected (by writing "activate" to dh_state, or
-with the fix above), I/O still went to active/non-optimized paths.
-scsi_multipath_sdev_init() sets mpath_device->access_state to
-MPATH_STATE_OPTIMIZED and nothing updates it, while
-__mpath_find_path(), mpath_round_robin_path() and
-mpath_queue_depth_path() rank paths by that field. Only
-scsi_mpath_is_optimized()/is_disabled() read sdev->access_state.
-
-With numa, the first path in dev_list wins for every node, and
-dev_list order follows sd probe completion, so for about a third of
-the LUNs the current path was an ANO path. Example, LUN sdn, reads
-completed per path for a 2000 x 1M O_DIRECT dd (:0/:3 AO, :1/:2 ANO
-at the time):
-
-  sdn:0 0   sdn:1 2000   sdn:2 0   sdn:3 0
-
-Every read went through the non-owning controller. From the code, for
-these LUNs the numa recheck of is_optimized() fails on every I/O and
-__mpath_find_path() picks the same ANO path again.
-
-With the change below (a template callback so the selectors use the
-live state), plus the scsi_dh_alua fix, all 30 LUNs pick an AO
-current path at boot, and on LUN sdl (:0/:2 AO, :1/:3 ANO):
-
-  numa         2000     0     0     0
-  round-robin  1000     0  1000     0
-  queue-depth 18039     0 13961     0   (8 parallel dd, 64k)
-
-No I/O reached the ANO paths under any policy. This is a test patch to
-show the problem, not a polished change - feel free to fold it in or
-do it differently.
-
-3. Smaller points
-
-- numa with equal NUMA distance uses one path per LUN, so with two AO
-  paths through two HBAs, half the optimized bandwidth is idle (sdl:2
-  above under numa). That matches NVMe, but users coming from
-  dm-multipath service-time will notice. Would round-robin or
-  queue-depth be a better default for SCSI?
-
-- There are no Documentation/ABI entries for the new sysfs attributes
-  (scsi_mpath_device vpd_id/iopolicy/multipath, delayed_removal_secs,
-  mpath_dev, mpath_numa_nodes, mpath_queue_depth), and the
-  scsi_mod.multipath and multipath_iopolicy parameters are not in
-  kernel-parameters.txt. I have a draft ABI file if useful.
-
-- There is no userspace tool yet to show heads, paths and ALUA state
-  (the equivalent of multipath -ll or nvme list-subsys). I used a
-  small sysfs script for this testing. Ben, is native SCSI multipath
-  support in multipath-tools planned?
-
-- CONFIG_SCSI_MULTIPATH/CONFIG_LIBMULTIPATH are only enabled in your
-  branch's x86_64_defconfig, so building from a distro config leaves
-  them off, and scsi_mod.multipath=3D is silently ignored. Maybe worth a
-  note in the cover letter.
-
-I have not tested failover or path loss yet; I will follow up with
-that and a Tested-by once done.
-
-Thanks,
-Laurence
-
--- >8 --
-From: Laurence Oberman <loberman@redhat.com>
-Subject: [PATCH TEST] libmultipath/scsi-multipath: rank paths by live
-ALUA access state
-
-mpath_device->access_state is set to MPATH_STATE_OPTIMIZED in
-scsi_multipath_sdev_init() and never updated, so the path selectors
-rank active/non-optimized paths equal to active/optimized ones.
-
-Add an optional mpath_head_template.access_state() callback, used by
-the selectors in place of the cached field when provided, and
-implement it for SCSI by mapping the live sdev->access_state.
-
-No change notification is needed: numa rechecks is_optimized() per
-I/O and re-runs __mpath_find_path() when the current path is no
-longer optimized; round-robin and queue-depth walk the list per I/O.
-
-Signed-off-by: Laurence Oberman <loberman@redhat.com>
----
-diff --git a/drivers/scsi/scsi_multipath.c
-b/drivers/scsi/scsi_multipath.c
-index 58b0be88a..bdae08ecd 100644
---- a/drivers/scsi/scsi_multipath.c
-+++ b/drivers/scsi/scsi_multipath.c
-@@ -330,6 +330,23 @@ static bool scsi_mpath_is_optimized(struct
-mpath_device *mpath_device)
- 	return access_state =3D=3D SCSI_ACCESS_STATE_OPTIMAL;
- }
-=20
-+static enum mpath_access_state scsi_mpath_access_state(
-+			struct mpath_device *mpath_device)
-+{
-+	struct scsi_mpath_device *scsi_mpath_dev =3D
-+				to_scsi_mpath_device(mpath_device);
-+	struct scsi_device *sdev =3D scsi_mpath_dev->sdev;
-+
-+	switch (READ_ONCE(sdev->access_state) &
-SCSI_ACCESS_STATE_MASK) {
-+	case SCSI_ACCESS_STATE_OPTIMAL:
-+		return MPATH_STATE_OPTIMIZED;
-+	case SCSI_ACCESS_STATE_ACTIVE:
-+		return MPATH_STATE_NONOPTIMIZED;
-+	default:
-+		return MPATH_STATE_OTHER;
-+	}
-+}
-+
- static bool scsi_mpath_available_path(struct mpath_device
-*mpath_device)
- {
- 	struct scsi_mpath_device *scsi_mpath_dev =3D
-@@ -374,6 +391,7 @@ static struct mpath_head_template smpdt =3D {
- 	.remove_head =3D scsi_mpath_remove_head_work,
- 	.is_disabled =3D scsi_mpath_is_disabled,
- 	.is_optimized =3D scsi_mpath_is_optimized,
-+	.access_state =3D scsi_mpath_access_state,
- 	.available_path =3D scsi_mpath_available_path,
- 	.clone_bio =3D scsi_mpath_clone_bio,
- };
-diff --git a/include/linux/multipath.h b/include/linux/multipath.h
-index 7a3708ff3..b47785804 100644
---- a/include/linux/multipath.h
-+++ b/include/linux/multipath.h
-@@ -39,6 +39,7 @@ struct mpath_head_template {
- 	void (*remove_head)(struct mpath_head *);
- 	bool (*is_disabled)(struct mpath_device *);
- 	bool (*is_optimized)(struct mpath_device *);
-+	enum mpath_access_state (*access_state)(struct mpath_device
-*);
- 	struct bio *(*clone_bio)(struct bio *);
- 	const struct attribute_group **device_groups;
- };
-diff --git a/lib/multipath.c b/lib/multipath.c
-index b03080afb..3ddb7296a 100644
---- a/lib/multipath.c
-+++ b/lib/multipath.c
-@@ -142,6 +142,19 @@ static bool mpath_path_is_disabled(struct
-mpath_head *mpath_head,
- 	return mpath_head->mpdt->is_disabled(mpath_device);
- }
-=20
-+/*
-+ * Use the driver's live view of the path access state if it provides
-one,
-+ * otherwise fall back to the cached mpath_device->access_state.
-+ */
-+static enum mpath_access_state mpath_path_access_state(
-+			struct mpath_head *mpath_head,
-+			struct mpath_device *mpath_device)
-+{
-+	if (mpath_head->mpdt->access_state)
-+		return mpath_head->mpdt->access_state(mpath_device);
-+	return mpath_device->access_state;
-+}
-+
- static struct mpath_device *__mpath_find_path(struct mpath_head
-*mpath_head,
- 					int node)
- {
-@@ -161,7 +174,7 @@ static struct mpath_device
-*__mpath_find_path(struct mpath_head *mpath_head,
- 		else
- 			distance =3D LOCAL_DISTANCE;
-=20
--		switch(mpath_device->access_state) {
-+		switch (mpath_path_access_state(mpath_head,
-mpath_device)) {
- 		case MPATH_STATE_OPTIMIZED:
- 		    if (distance < found_distance) {
- 			    found_distance =3D distance;
-@@ -206,7 +219,7 @@ static struct mpath_device *mpath_round_robin_path(
- {
- 	struct mpath_device *mpath_device, *found =3D NULL;
- 	int node =3D numa_node_id();
--	enum mpath_access_state access_state_old;
-+	enum mpath_access_state access_state_old, state;
- 	struct mpath_device *old =3D
- 			srcu_dereference(mpath_head-
->current_path[node],
- 				&mpath_head->srcu);
-@@ -226,11 +239,12 @@ static struct mpath_device
-*mpath_round_robin_path(
-=20
- 		if (mpath_path_is_disabled(mpath_head, mpath_device))
- 			continue;
--		if (mpath_device->access_state =3D=3D
-MPATH_STATE_OPTIMIZED) {
-+		state =3D mpath_path_access_state(mpath_head,
-mpath_device);
-+		if (state =3D=3D MPATH_STATE_OPTIMIZED) {
- 			found =3D mpath_device;
- 			goto out;
- 		}
--		if (mpath_device->access_state =3D=3D
-MPATH_STATE_NONOPTIMIZED)
-+		if (state =3D=3D MPATH_STATE_NONOPTIMIZED)
- 			found =3D mpath_device;
- 	}
-=20
-@@ -240,7 +254,7 @@ static struct mpath_device *mpath_round_robin_path(
- 	 *  - no other optimized path found and current is optimized,
- 	 *  - no other usable path found and current is usable.
- 	 */
--	access_state_old =3D old->access_state;
-+	access_state_old =3D mpath_path_access_state(mpath_head, old);
- 	if (!mpath_path_is_disabled(mpath_head, old) &&
- 	    (access_state_old =3D=3D MPATH_STATE_OPTIMIZED ||
- 	    (!found && access_state_old =3D=3D MPATH_STATE_NONOPTIMIZED)))
-@@ -270,7 +284,7 @@ static struct mpath_device *mpath_queue_depth_path(
-=20
- 		depth =3D atomic_read(mpath_device->nr_active);
-=20
--		switch (mpath_device->access_state) {
-+		switch (mpath_path_access_state(mpath_head,
-mpath_device)) {
- 		case MPATH_STATE_OPTIMIZED:
- 			if (depth < min_depth_opt) {
- 				min_depth_opt =3D depth;
+>> enable and gate the clock. As you suggested, v10 explains this in the
+>> commit message. Let me know if you would like more details there.
+> 
+> 
+> 
+> Best regards,
+> Krzysztof
 
