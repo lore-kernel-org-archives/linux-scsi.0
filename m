@@ -1,56 +1,120 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794231019;
-	b=FjVbbc6DW4QLeLSqyGXRhWGqwHht61JWv20AOvSGThIZcsMoqICjh9ZwgkcTMB5w6dDL
-	 pV6F1Fd5+AbjiKFX6qkmgV69VqcrRczXTBUlTUAx7UtYEFZJXNabGJpXx2UxrNemORBny
-	 RjzIugCjXQDC8OdpY5fdRkfBdeVt9octrKqWBDMDP949i5goM+2TpCFZMWEOp/D34nyKO
-	 2EdHzg1JhNuRoP1CXPRw6VS4koKVY9pAwJbnhW0iCUpDDLF4MI+Lg2kUQQ9HhI96+3ws+
-	 jpMyol6PZ/NyLvQiOQ4X5pDdFH41ajtIQ3kX4Uw87iDoQvwetOxgkzMucmIHD5s6e1g==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794231019;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=4AjcU1FUDctPdLuxyd6QfNQ2IjyX6psvc9JdDRSfm+o=;
-	b=lIxlY0iM5wl6t9dFjZ/uXqKHVvhx28hOCW2DtYk8kdHuiRKu6Cic1dV1u2oClWlul/Gb
-	 ueetpHqvYD/sKEUqwL5SApKLa+uKLvSN9ptr3N5fTJEIHjaOEe9OVIKaNsk4wka9z5Waf
-	 n5u2x3iC8iQfECrLq1YOeKmjr7R2mvIQi8ZMP+OOFgp1xyph330F7PtjDVpbeZfqSSlYh
-	 vhRKtIPE6mVS0jImybOno01Cr+m8RnyIbh98IpBewbaSuYNzz2MmjlI7HyTuFudntTiSq
-	 gvCy9inrA4onebTbeOiV7pY1aDWDbE51qUMRPbpGJBUp1PsCZxL4J9vAbF+bdQ77Cdw==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=b0XIu05+;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=170.10.133.124
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1794231874;
+	b=OXXUjtz+vkjGKlQsyTDfCFm5F0CD5h5o4Wwkr6YX4Kcx1HYBw1j9VN6B4qx2H88HN0ev
+	 4M1LbI8dtarmZPkv+7BQjWwpm7Ba3Phpavl/FcFUO787vVMTdXk3xH7sBwiviN9Fta2T8
+	 pi/4RKhp91A//ku0tVwNWM/MDzxXQzBP/M7ZfbTVK4B2tNL56yBIQxPa+hl5HV3RxaHim
+	 2Xoo1bARnA0N/OfRP5q4IgMRjeUA7M6GLMa2RenO3Zv8i1f5kFfIRnUzahFuSRpXUoYwN
+	 FbwYr6QMeWql1lXgTtHIyqJHlX7oyyQSb+bmleVDPmTJ34SP6EoTn4tYW2RKa5N/2rw==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794231874;
+	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
+	 X-Mimecast-MFC-AGG-ID:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
+	 X-Received:MIME-Version:References:In-Reply-To:From:Date:
+	 X-Gm-Features:Message-ID:Subject:To:Cc:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=bghOY7pp4PqTwolmTpdD1zvT8+4Tek4EN2nSOV+gjQQ=;
+	b=moy97/HU79b+oQ1/wEZ2vHlBFpmHagMElxziG5Ra+yoUoQEyLeDpLdztFEAEG/PmOx3x
+	 s1L7aBvFSZsNWkDzZXG6Ydr2iBWaUmIa3mXYekHnOIooYxFrbwK9N52yOeFrnNylhEZVv
+	 JnXjedC3jiC5uiF6JlMhGACvChGG5GQrMMDnPWY45mqYtj2rXWGGhQIXEM5XWETBxSiPQ
+	 n3zvZrfbcjLRFq+5qtHiS7l8CpGM//5Wzgr/ksjV3H7h+oCFt4VyXhnYeMNuQlXeZi3DV
+	 wAmNg4EMmEhEMEQ4uMwUPUs6xT/QfEMOYuL2JZ8TEjwMVvB3wQZMY1Bd9/7oYcLnhxg==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=redhat.com;
+	spf=pass smtp.mailfrom=redhat.com;
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=TImMvHFX;
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=YvJeU9XV;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=170.10.133.124
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E5D59606A322;
-	Mon,  9 Nov 2026 13:30:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3DEB606D832
+	for <linux-scsi@vger.kernel.org>; Mon,  9 Nov 2026 13:44:33 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B3DEB606D832
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=b0XIu05+
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5B13A1F008A1;
-	Mon,  9 Nov 2026 13:30:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794231018;
-	bh=4AjcU1FUDctPdLuxyd6QfNQ2IjyX6psvc9JdDRSfm+o=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=b0XIu05+lUG8jnPVDff1Va7xAfNAQqzBTV94L6hXO9bEEDc54jiktEhwN29sg5bRy
-	 Ncmx8ckaKcKnGQ8WlyIduHZJfxtoc/quFHraLgG7VvLyig40KUMZ7Z7PHpk4049E6u
-	 KqmtFKoRoJx5k4OLhO7vu8YxHuUIBQ5CuSe4LPiL3clVgRipnrYvvYnLUtyMADsBoA
-	 Xdp+lUzNp0g10WnppLmdtE31Opqx83u4rsNcoAMKghmQGmyC4wUzwu4FvtRyC5hxLF
-	 0/qShefdahzGnkg7OA3XRm6RC1A3D7ulcMLXJDlYC7BjzKAgR7rK+a0NYn9tsVA0FJ
-	 tgoC5kZnpMu0w==
-Message-ID: <sashiko-outbox-205011@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] scsi: target: compare all six ISID bytes when
- identifying a nexus
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Ciro Iriarte" <ciro.iriarte+software@gmail.com>
-Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
-In-Reply-To: <591ac67a-fa1e-4395-9573-2d9405cfe0b6@gmail.com>
-References: <591ac67a-fa1e-4395-9573-2d9405cfe0b6@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 09 Nov 2026 13:30:17 +0000
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=TImMvHFX;
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=YvJeU9XV
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1794231872;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=bghOY7pp4PqTwolmTpdD1zvT8+4Tek4EN2nSOV+gjQQ=;
+	b=TImMvHFXpxlE3RZ/IESRjzXY1Bz3uz7xYgDzlWTn5NUo4sYbsDhB250NNUtPlMXxdG6DBc
+	WGLwO6SrQB9OF8tN3uQs4q77tBIalQZPSuzMxkuyVzd/PCVOY7m+CBdrO/4kVUtIPdziQv
+	zULBqgLEhzg8pLONbEyJmnj8v9psdCA=
+Received: from mail-oa1-f71.google.com (mail-oa1-f71.google.com
+ [209.85.160.71]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-190-q04kBqwMMhqbrudzl3_UeQ-1; Mon, 09 Nov 2026 08:44:31 -0500
+X-MC-Unique: q04kBqwMMhqbrudzl3_UeQ-1
+X-Mimecast-MFC-AGG-ID: q04kBqwMMhqbrudzl3_UeQ_1794231871
+Received: by mail-oa1-f71.google.com with SMTP id 586e51a60fabf-4ad9bc6aa91so1150776fac.3
+        for <linux-scsi@vger.kernel.org>; Mon, 09 Nov 2026 05:44:31 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1794231871; cv=none;
+        d=google.com; s=arc-20260327;
+        b=pxwh8SlydNq5lUqEQ0/sdHnlcwmSLadumyWTZoje6X+xvydSktTm2uESdLZ60ccx4z
+         dUTlZq0Ii4EvxhjkAg7zVF5YNSPiALqbcEwcBniodIdtx9Nzz85LaAwVRvIKY1w2B+Dy
+         5LZ6+87dTtIM0aT+hV6vU0wCk/BmMdsunFx99XtCEdQhHI8dRCAUqRwpKC9woOICmUxj
+         3/sARRHDzuPeZYAlnPfcJC2QJ6ZxUEcvQ4HHM1Oc1JAoHF9c7qVyaH+vF/DUVRU1IVj3
+         mikSWbEABgsd992AyOL5rcrkrfIbB4uAgrOsCmRtxPZcap/sh3KTNQu5a8s4DGfJJFY8
+         I4Rw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=bghOY7pp4PqTwolmTpdD1zvT8+4Tek4EN2nSOV+gjQQ=;
+        fh=DXa3jz1VeJPrsU7kwbfKVCgAp6Jw5Vgr8qXjJwh/AhE=;
+        b=LlPQfUnXVsVLciCCz6JMw2XXpNzC4yBsMh8imT/K4cU0DUpb1XHkITqKFK85eNUcjF
+         v2D3IemtmzA12zhqD9aoTr40ApzI0uSVq+Oe243Kb6U+z9mPe8xk+sQYkiFOORA0rpVf
+         dOrVowLYCHeKoTXaAnwJ06hhfr3Ip5y+PP4ORsj7ppJcJM9P/REy0WaBJh/5S1IHmDt2
+         UBU7Ct7XGIV7ruo3IRijDOwx08ZfkTqxNIRNnLPSsWoeSnEnkipsBHfOxS1wLc3wGb1m
+         PpLTI1tNMqbOgoe1kKaCTJZ/7kzzl2qOhlzxnuJtqBlILhfGn0evaGfz3S4DKUFQNPfW
+         pNJw==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1794231871; x=1794836671; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=bghOY7pp4PqTwolmTpdD1zvT8+4Tek4EN2nSOV+gjQQ=;
+        b=YvJeU9XVwfRisHtjyrCD+g+YGGD92Y4vF2X6jtfhy6ghLt1eFKkMwEPTldRNTAcYwI
+         GItFYO/P+dcWYTGtr8Jy81fAkwVcwgfbfg96bG+xjrb/OnsMZLb+hZW5MN3U/ZKjDpC0
+         BOcktFnfPUXucHdwF1+UR4tDqvpRyDMezw8t4YfkxvDhMjaakRyGd2bAZ87J4j/v9ugf
+         hJ2UzlhDvtuOcRc/LSpuVIkVHAqmBkkuIvITMWlo8AhVzCCkUw0C8YPHftpTxw4nf6N3
+         L7byH35l6GMhiO9yNgS5JmHr9mlH1MPlA50sUGYgHyc+7k5qS/eYAJOO66qnWTunj81x
+         ywUA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1794231871; x=1794836671;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=bghOY7pp4PqTwolmTpdD1zvT8+4Tek4EN2nSOV+gjQQ=;
+        b=WyJtHiBLbgbg/c9OQianjqu/D938ZzVdfxqvlkB3C49nfPcXB+ZF715xR+UqBGUCho
+         GkLGmEE8Z1zjEjzCDr5oE7c7CZobvz/zPc3yOCTp592uAXMmPAnWcDYdvekrpkS7f+BD
+         yWlAJpElmJmREUBrFoZ7jRDvIgGS7JdJbof6f5H6dxdonUEwOPgeQmIsOvGN6QeY2FZp
+         FzITrTfByTzaJqBUBgx+nvD4yQglFba2rvhw40j3sdyoEq4QnjLuHTGwOrMYtJ9nwgue
+         I8PdISizt/FIcHZBr990y/qorA6B1geJHJwrqh16IFH9AQc6UHbC7GU8k1IOi7ypgA1S
+         bu3A==
+X-Forwarded-Encrypted: i=1; AL+hErE9ZB3RT7nw+QFYuL3AYhc354ll3GpwvGYVnxdc5AUiE58L6NhQIxTRUOgQkc7am48EQIstq+LEqCrF@vger.kernel.org
+X-Gm-Message-State: APuU4Z/hTs27qpx2KaSgfg2i/mNTYp9jwmJknyaok0kOlM0ngnsluqdT
+	gZWnd5kxt61+XvmGYi/VYyHgkiZuUgqWKAnl4MrE5oXJZ+ZLDPgUsJNakiOqeyVyLCxUtzMpp4O
+	INbhqzYypccvTjkA36eWzXqdpOUdAiav8j+W3MOczOqKfUHt4TImTw4RCFzwAVV3e2aWo7z+o6m
+	77YIK1rlbYBDFV7Jil6p4AYDpdBadKYsJ6UhbDbg==
+X-Gm-Gg: AYBFou0DOoQrr8XWuGvhXB1TYxhaDW8t37611sjrOHpQmtgLIb7UfjJp0PdXodOmUOR
+	azs07ReCxRDBESYqWfkWRG1E7IszHZgO+UigOhBb9Hinx4febq9o3lZgTN9cZPerPgGy5JK832n
+	tI8NzizNSALtD0HrEO1spfgFaAf1cJ2Z7Nd8Mqlikq0vZLST+kYm9vVFNc
+X-Received: by 2002:a05:6808:4fe9:b0:4d7:17d5:6c9b with SMTP id 5614622812f47-56814022659mr2709804b6e.9.1794231870764;
+        Mon, 09 Nov 2026 05:44:30 -0800 (PST)
+X-Received: by 2002:a05:6808:4fe9:b0:4d7:17d5:6c9b with SMTP id
+ 5614622812f47-56814022659mr2709756b6e.9.1794231870169; Mon, 09 Nov 2026
+ 05:44:30 -0800 (PST)
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -59,206 +123,132 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+References: <20261106131829.3228926-1-cui.tao@linux.dev> <20261106131829.3228926-3-cui.tao@linux.dev>
+ <1e18fcfd-785d-43cc-afd6-d181bf8305eb@amd.com> <CABdmKX0nCB2hT+iMh=BB-nC=fUBPof8YvjvO-gtEw+zcHZgvZA@mail.gmail.com>
+ <b0f530ef-bbfd-4112-aa51-82fdad6c4ba2@amd.com>
+In-Reply-To: <b0f530ef-bbfd-4112-aa51-82fdad6c4ba2@amd.com>
+From: Albert Esteve <aesteve@redhat.com>
+Date: Mon, 9 Nov 2026 14:44:17 +0100
+X-Gm-Features: AclHuK-kxgj3T37bjFOZ7HtSClpdxsaDMPyjW53dccz7zE1_ZSRFcURRmSZwzSI
+Message-ID: <CADSE00L3AfcnfcboK1TdPQiW7ZW1KpxG70b1oyWFqpLciOG6ng@mail.gmail.com>
+Subject: Re: [PATCH 2/7] dma-buf/udmabuf: account the page array metadata to memcg
+To: =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>
+Cc: "T.J. Mercier" <tjmercier@google.com>, Tao Cui <cui.tao@linux.dev>, akpm@linux-foundation.org, 
+	dgilbert@interlog.com, mkp@kernel.org, loberman@redhat.com, 
+	jmeneghi@redhat.com, kraxel@redhat.com, vivek.kasireddy@intel.com, 
+	mst@redhat.com, jasowangio@gmail.com, eperezma@redhat.com, 
+	stefanha@redhat.com, sgarzare@redhat.com, rostedt@goodmis.org, 
+	vdonnefort@google.com, mhiramat@kernel.org, jgg@ziepe.ca, 
+	kevin.tian@intel.com, axboe@kernel.dk, linux-mm@kvack.org, 
+	James.Bottomley@hansenpartnership.com, sumit.semwal@linaro.org, 
+	phasta@kernel.org, joro@8bytes.org, will@kernel.org, 
+	linux-scsi@vger.kernel.org, dri-devel@lists.freedesktop.org, 
+	linux-media@vger.kernel.org, linaro-mm-sig@lists.linaro.org, 
+	kvm@vger.kernel.org, virtualization@lists.linux.dev, 
+	linux-trace-kernel@vger.kernel.org, iommu@lists.linux.dev, 
+	io-uring@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	bobbyeshleman@meta.com, mathieu.desnoyers@efficios.com, robin.murphy@arm.com, 
+	mason@kernel.org, harry@kernel.org, vbabka@suse.cz, cuitao@kylinos.cn
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Thank you for your contribution! Sashiko AI review found 2 potential
-issues to consider:
-- [High] scsi: target: core_scsi3_pr_seq_non_holder() rejects registered
-  sessions
-- [Low] scsi: target: inaccurate Fixes trailer for target_isid_to_bin()
-  changes
-It also noticed 1 related pre-existing issue this patch does not
-introduce:
-- [Critical] scsi: target: unlocked list insertion in
-  core_scsi3_alloc_aptpl_registration() [1]
---
-
-commit 3cb145890f871c3538fab6da7b3f3187cbc5c48e
-Author: Ciro Iriarte <ciro.iriarte+software@gmail.com>
-
-> scsi: target: compare all six ISID bytes when identifying a nexus
+On Mon, Nov 9, 2026 at 11:56=E2=80=AFAM Christian K=C3=B6nig
+<christian.koenig@amd.com> wrote:
 >
-> lio_sess_get_initiator_sid() reports the ISID as twelve hex digits, and
-> iSCSI TransportIDs carry the same digits. __transport_register_session(),
-> __core_scsi3_do_alloc_registration() and
-> core_scsi3_alloc_aptpl_registration() turn that text into
-> sess_bin_isid and pr_reg_bin_isid with get_unaligned_be64(), which takes
-> the first eight characters, i.e. the first four ISID bytes.
+> On 11/6/26 18:25, T.J. Mercier wrote:
+> > On Fri, Nov 6, 2026 at 5:23=E2=80=AFAM Christian K=C3=B6nig <christian.=
+koenig@amd.com> wrote:
+> >>
+> >> On 11/6/26 14:18, Tao Cui wrote:
+> >>> From: Tao Cui <cuitao@kylinos.cn>
+> >>>
+> >>> udmabuf pins the pages of a memfd and hands them out as a dma-buf.  T=
+he
+> >>> data pages keep the accounting of the memfd they were instantiated in=
+,
+> >>> but the bookkeeping around them does not: the page pointer array and
+> >>> the pinned_folios array, both sized by the buffer page count, plus th=
+e
+> >>> transient folios array sized by the memfd folio count, are plain
+> >>> GFP_KERNEL.  A 1GB buffer costs about 4MB of uncharged SUnreclaim
+> >>> memory, and size_limit_mb defaults to INT_MAX.
+> >>>
+> >>> Charge the three kvmalloc allocations so the creator pays for the
+> >>> metadata it induces.  The system heap in the same subsystem already
+> >>> accounts its buffer allocation;
+> >
+> > Only if the mem_accounting param is set to true. We (Android)
+> > currently depend on it being disabled because system heap buffers
+> > don't have a single owner for their entire lifetime (ownership often
+> > changes immediately after they are allocated), and the kernel doesn't
+> > have the ability to switch who is charged for the buffer memory quite
+> > yet. Albert is working hard on it at the moment.
 >
-> open-iscsi ISIDs start with 00023d00 and differ only in the qualifier in
-> the last two bytes, so every session of one initiator gets the same
-> binary ISID. target_scsi2_reservation_check() and
-> target_scsi3_pr_reservation_check() then treat any session of the
-> reservation holder's initiator as the holder:
+> Good point, making sure that Albert is on CC as well.
 >
-> - after RESERVE(6) on one session, another session of the same
->   initiator can still write;
-> - with a Write Exclusive persistent reservation, another session that
->   is not registered, or registered but not the holder, can still write.
+> So basically we not only need to charge the backing store of a DMA-buf to=
+ somebody else, but also the housekeeping overhead.
+
+For system heaps the housekeeping size is fixed at creation so it
+kindof fits the reservation model nicely. We'd only need it to account
+for the overhead (as part of the MEMCG_DMABUF stat probably).
+
 >
-> Reproduced with two open-iscsi sessions (ifaces default and if2) to a
-> ramdisk LUN: on v6.12.113 every command from the second session
-> completes with GOOD; with this patch TEST UNIT READY and WRITE(10)
-> under RESERVE(6), and WRITE(10) under Write Exclusive, return
-> RESERVATION CONFLICT, and READ(10) is still allowed.
+> Mhm, this here also complicates the charge transfer Albert is working on.
+
+The transfer would just move the charge as a single unit. But yeah,
+the complexity will come from lazy exporters or any other exporter
+where the bookkeeping grows or changes.
+
 >
-> Convert all six bytes. Text that is not exactly twelve hex digits keeps
-> the old conversion of its first eight characters, now copied into a
-> zeroed buffer so that a shorter string, such as an initiator_sid written
-> to res_aptpl_metadata, is not read past its end.
+> @Albert not something we need to take care about now, but please keep tha=
+t in mind while working on that stuff.
+
+Noted. The issue already exists so my series does not make it worse. I
+will note this for a follow up series.
+
+Thanks for tagging me!
+
+BR,
+Albert
+
 >
-> An all-zero ISID now converts to 0, which
-> target_scsi2_reservation_reserve() took to mean "no ISID". Set
-> DRF_SPC2_RESERVATIONS_WITH_ISID when the fabric reports ISIDs instead.
-> Also update the TransportID parser comment that referred to the
-> get_unaligned_be64() read.
+> Regards,
+> Christian.
 >
-> Initiators that relied on the old behaviour, reserving through one
-> session and writing through another without registering it, will now
-> see RESERVATION CONFLICT, as SPC requires.
+> >
+> > Could you update the message to note the mem_accounting param pls?
+> >
+> >>> the data pages here stay with the
+> >>> memfd.
+> >
+> > memfd / udmabuf is a little special because it uses shmem for the
+> > backing store, which is already tracked by memcg under all conditions
+> > (except hugetlb). We don't currently use udmabuf, so the lack of memcg
+> > charge transfer for udmabuf is not an issue. But once we get charge
+> > transfer working for the system heap it'd be good to follow up with
+> > udmabuf.
+> >
+> >> T.J. needs to take a look here, but I fear that this might break uAPI.
+> >
+> > Thanks for looping me in Christian. The buffer allocations cost
+> > gigabytes, but these metadata arrays are only 4MB per 1GB of buffer,
+> > so I don't expect charging them to break anyone. Leaving them
+> > uncharged is an accounting gap though, since someone could spam many
+> > udmabufs from the same memfd and only pay for the memfd pages once. So
+> > this change is ok with me.
+> >
+> >> A lot of the DMA-buf resources are intentionally not charged against m=
+emcg.
+> >>
+> >> Regards,
+> >> Christian.
+> >>
+> >>>
+> >>> Signed-off-by: Tao Cui <cuitao@kylinos.cn>
+> >
+> > With the commit message updated to mention the mem_accounting param:
+> > Reviewed-by: T.J. Mercier <tjmercier@google.com>
 >
-> Fixes: e48354ce078c ("iscsi-target: Add iSCSI fabric support for target v=
-4.1")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Ciro Iriarte <ciro.iriarte+software@gmail.com>
 
-[Severity: Low]
-e48354ce078c ("iscsi-target: Add iSCSI fabric support for target v4.1")
-added drivers/target/iscsi/ and did not touch any of these files.  The
-get_unaligned_be64() ISID conversion and sess_bin_isid checks in target
-core were introduced in c66ac9db8d4a ("[SCSI] target: Add LIO target core
-v4.0.0-rc6").
-
-[ ... ]
-
-> diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core=
-_pr.c
-> index ca1a2802aa228..c59032228f3ab 100644
-> --- a/drivers/target/target_core_pr.c
-> +++ b/drivers/target/target_core_pr.c
-> @@ -19,6 +19,7 @@
->  #include <linux/fcntl.h>
->  #include <linux/fs.h>
->  #include <linux/fs_struct.h>
-> +#include <linux/hex.h>
->  #include <scsi/scsi_proto.h>
->  #include <linux/unaligned.h>
-> =20
-> @@ -30,6 +31,28 @@
->  #include "target_core_pr.h"
->  #include "target_core_ua.h"
-> =20
-> +/*
-> + * lio_sess_get_initiator_sid() prints the six ISID bytes as twelve hex
-> + * digits, and iSCSI TransportIDs carry the same digits.  Convert all six
-> + * bytes: reading the first eight digits as a big-endian u64 keeps only =
-the
-> + * first four ISID bytes, so two sessions of one initiator that differ o=
-nly
-> + * in the qualifier, the usual case, would compare equal.  Text in any o=
-ther
-> + * format keeps the old conversion of its first eight characters, without
-> + * reading past the end of a shorter string.
-> + */
-> +u64 target_isid_to_bin(const char *isid)
-> +{
-> +	u8 bin[6];
-> +	char raw[8] =3D {};
-> +
-> +	if (strnlen(isid, 2 * sizeof(bin) + 1) =3D=3D 2 * sizeof(bin) &&
-> +	    !hex2bin(bin, isid, sizeof(bin)))
-> +		return get_unaligned_be48(bin);
-> +
-> +	memcpy(raw, isid, strnlen(isid, sizeof(raw)));
-> +	return get_unaligned_be64(raw);
-> +}
-
-[Severity: High]
-Does converting all six ISID bytes here cause
-core_scsi3_pr_seq_non_holder() to treat other registered sessions of the
-reservation holder's initiator as unregistered?
-
-When an initiator opens two iSCSI sessions with different ISID qualifiers,
-registers both, and acquires a persistent reservation on the first
-session, a command on the second session reaches
-target_scsi3_pr_reservation_check() with pr_reg_nacl =3D=3D sess->se_node_a=
-cl
-and pr_reg_bin_isid !=3D sess->sess_bin_isid:
-
-drivers/target/target_core_pr.c:target_scsi3_pr_reservation_check() {
-    ...
-	if (dev->dev_pr_res_holder->isid_present_at_reg) {
-		if (dev->dev_pr_res_holder->pr_reg_bin_isid !=3D
-		    sess->sess_bin_isid) {
-			isid_mismatch =3D true;
-			goto check_nonholder;
-		}
-	}
-    ...
-}
-
-drivers/target/target_core_pr.c:core_scsi3_pr_seq_non_holder() {
-    ...
-	if (isid_mismatch) {
-		registered_nexus =3D 0;
-	} else {
-		struct se_dev_entry *se_deve;
-
-		rcu_read_lock();
-		se_deve =3D target_nacl_find_deve(nacl, cmd->orig_fe_lun);
-		if (se_deve)
-			registered_nexus =3D test_bit(DEF_PR_REG_ACTIVE,
-						    &se_deve->deve_flags);
-		rcu_read_unlock();
-	}
-    ...
-}
-
-Because DEF_PR_REG_ACTIVE is tracked per se_dev_entry (shared across all
-sessions of the initiator) rather than per session, the isid_mismatch
-branch unconditionally forces registered_nexus =3D 0 instead of checking
-whether cmd->se_sess has its own registration in
-dev->t10_pr.registration_list.  In a multipath setup where both sessions
-are registered, writes on the second session under Registrants Only or All
-Registrants reservations (as well as PREEMPT, CLEAR, or RELEASE from that
-session) will now fail with TCM_RESERVATION_CONFLICT.
-
-[ ... ]
-
-> @@ -866,7 +893,7 @@ int core_scsi3_alloc_aptpl_registration(
->  	 * SCSI Initiator Port, restore it now.
->  	 */
->  	if (isid !=3D NULL) {
-> -		pr_reg->pr_reg_bin_isid =3D get_unaligned_be64(isid);
-> +		pr_reg->pr_reg_bin_isid =3D target_isid_to_bin(isid);
->  		snprintf(pr_reg->pr_reg_isid, PR_REG_ISID_LEN, "%s", isid);
->  		pr_reg->isid_present_at_reg =3D 1;
->  	}
-
-[Severity: Critical]
-This problem wasn't introduced by this patch, but can
-core_scsi3_alloc_aptpl_registration() corrupt pr_tmpl->aptpl_reg_list
-[1] by calling list_add_tail() without holding
-pr_tmpl->aptpl_reg_lock?
-
-target_pr_res_aptpl_metadata_store() calls
-core_scsi3_alloc_aptpl_registration() without taking aptpl_reg_lock:
-
-CPU0                                  CPU1
-target_pr_res_aptpl_metadata_store()  __core_scsi3_check_aptpl_registration=
-()
-  core_scsi3_alloc_aptpl_registration() spin_lock(&pr_tmpl->aptpl_reg_lock)
-    list_add_tail(...,                  list_del(&pr_reg->pr_reg_aptpl_list)
-      &pr_tmpl->aptpl_reg_list)           <-- list corruption / use-after-f=
-ree
-
-Concurrent configfs writes through separate file descriptors, or a
-configfs write racing with LUN export in
-__core_scsi3_check_aptpl_registration() or teardown in
-core_scsi3_free_all_registrations(), manipulate pr_tmpl->aptpl_reg_list at
-the same time and can corrupt the list.
-
-[1] https://sashiko.dev/#/bug/linux-620bb3ae-6c71-4e47-b64f-f502f2ef27c0
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/591ac67a-fa1e-4395-=
-9573-2d9405cfe0b6@gmail.com?part=3D1
