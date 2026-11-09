@@ -1,120 +1,66 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=199.89.1.14
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794247167;
-	b=vln/R8jrt8RqSxVf0Zf8q6hP16egVD6a5dxh4QD68aCnH8y55D/HDYuA0DcXJUERJcpx
-	 ywp10oncmHYcmwjyBTS63f3ZlX2uX+p7wBpS0SihFhF/rEsxwu5Np5gSemhsoErVNYlb8
-	 4O/dkvkfO8sTkZN/S0W6TDSu3LNhMphZ1AXDYrJONazCWWXzjxu62/GuM/v9OQothmv4M
-	 f+KrRiqyxrMYA3WSsoJnbt9SBAEu9u0r1HyCZKBj1la0Cmjr6J+q8fWsAr9OMHrkrGpW+
-	 ULwCndmmr4lKCgW0GqF2wvwjijShC+ncji091ZE0KTR2Efjqu6WTC8bSaSsYx9shzvQ==
+	t=1794248400;
+	b=NLE7pm5sP1rkVgGOSBEYThb6Qf9SuLBuC7Mgcgapp72qtVlHh/SRI04bvwG+jIyW2IeD
+	 C4SiDzuxLqmRUqR0Q0P3fNfnuOYMpgpzB8u4Te6OrHyvmrebeMh/79XrMLR+xc3xoDPnv
+	 PYs50Te2ush07gyUfLtRKHRABkYzmvhpjplufxYQ2DE+/eYdo5WidzvQOiRm89I9wIqxI
+	 8JQBPfjMx8K+fuNPf2rDhjk6iPXH6E89q4Q64d/XWkLghQXD1ddklQ9uhDEZWFWlUruGQ
+	 7uhEtFQ+ml9hbJANgkNy4l8gG1USM1cXu38GZJZ7CXr4wqLcqsTaoYg6+eDu7KjN+YA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794247167;
-	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
-	 X-Mimecast-MFC-AGG-ID:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 X-Received:Received:Message-ID:Subject:From:To:Cc:Date:In-Reply-To:
-	 References:Content-Type:Content-Transfer-Encoding:User-Agent:
-	 MIME-Version;
-	bh=5dqNClxJY2X/ydhuoqmWfWtFVn8+jew8N2sUbCuLKyM=;
-	b=CHiA7UuYaSP3rlBB5o2368fPdC31MTSHYRAbojr3eAQYb6t2JCHn6gFHlVT495fLGlOr
-	 y88jLlIv6kb33EiXfXE+uGtCkT1CK/Xp5fu1eO142I2mk5KOSsHtIH0PMoupZ+Ur9j7vf
-	 ObB3jBeZjGCq5kAWSgGFTKzpcTSQjedT3kWnsxEqVYL4owX6b1CSqfPnU6mdAtpjQojts
-	 OOx1p0Q8g8VI6w1V7ceKNWjkd/MCy3ajWG8dY1wW+4A+YQwg6aot9qye6fY4ABkP9d0SQ
-	 HGrmXk+ZcKRv/iHA2SL8mmD6i+zWojKrsv9SU4c5ZXY8lDLdr2HQ/NBTMRmFjoYYc3Q==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794248400;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Virus-Scanned:Received:
+	 Received:Message-ID:Date:MIME-Version:User-Agent:Subject:To:
+	 References:Content-Language:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=t6KaJjDKYgdsxCn/x+DcOuRyLRSrJHR5bZ1fNs67esU=;
+	b=JtGEsGaOnwbxsD+PJSLtKcG5hqCYE/WUL0kXRBHwtip9A5adrJxk/U7gRg9D7q69s5Bz
+	 PMFUlCpEv+ZY+oUnIxmgnkOXwHXMg4b4ZLxbuyCpPKkFyrSRIggBWtmxqRxGeu8QVzDjW
+	 PkaA256MEBMh/eefEM4kl3h57qdC/WUSTzbkzZFVPrg+WMqx+PO58qN9fYecfDwZmXAyF
+	 KdBEnBI3NCidt76lsJLBXCN7z51hHj6UtfwCp0TbU1BN1UVmTjW5T6bPM+Mr6/YMjWg/W
+	 Eyf4Rdsibvh/7nd6IFjv7hoi1PL4O8YmHBOepFvtbI9/HX6InbCqF7S+JDnjbx43S+w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=redhat.com;
-	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=HAoTm5oP;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=M28fVnkQ;
-	arc=none smtp.remote-ip=170.10.129.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	dmarc=pass header.from=acm.org;
+	spf=pass smtp.mailfrom=acm.org;
+	dkim=pass header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b="r/SqOy+3";
+	arc=none smtp.remote-ip=199.89.1.14
+Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF0F6606A326
-	for <linux-scsi@vger.kernel.org>; Mon,  9 Nov 2026 17:59:26 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org EF0F6606A326
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91E27606A325;
+	Mon,  9 Nov 2026 18:19:59 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 91E27606A325
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=HAoTm5oP;
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=M28fVnkQ
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1794247165;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=5dqNClxJY2X/ydhuoqmWfWtFVn8+jew8N2sUbCuLKyM=;
-	b=HAoTm5oPw/njpG0+kDsy7rhsGLw+Km98sjG1UsmW2hi4qyLHoD9BYL0oj4pE30COdLosQf
-	K3Igs5U16/RsRZTyi8PoqGMvKI6uTcklJoclIUxMqO8CAXDxcqZ/JMk58P+HCf05XofDs/
-	pf17jmGUWCv7MOUhMWGUpPqSq04z4Dk=
-Received: from mail-qt1-f198.google.com (mail-qt1-f198.google.com
- [209.85.160.198]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-479-k9CJE2TEPzWbQI0aqddmcg-1; Mon, 09 Nov 2026 12:59:24 -0500
-X-MC-Unique: k9CJE2TEPzWbQI0aqddmcg-1
-X-Mimecast-MFC-AGG-ID: k9CJE2TEPzWbQI0aqddmcg_1794247164
-Received: by mail-qt1-f198.google.com with SMTP id d75a77b69052e-5351f1b26e6so18723251cf.2
-        for <linux-scsi@vger.kernel.org>; Mon, 09 Nov 2026 09:59:24 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1794247164; x=1794851964; darn=vger.kernel.org;
-        h=mime-version:user-agent:content-transfer-encoding:content-type
-         :references:in-reply-to:date:cc:to:from:subject:message-id:from:to
-         :cc:subject:date:message-id:reply-to:content-type;
-        bh=5dqNClxJY2X/ydhuoqmWfWtFVn8+jew8N2sUbCuLKyM=;
-        b=M28fVnkQl3GwR5BKgo2Obry2k8F49tDasgUl27g0x352ZUIlkAfp6J9G8ZiV/iPChX
-         fIhIhxbE+S9Ug1onDYbPPz/bv4ujUwIrbEYVmVFB+P0FRLVVgtdMIgWBwe2zSrXd9Lfw
-         v0XkthfEW3BUCHHp4VGHuliARRZoqMjjy4hmZtmNbh2Qr83lioZLDxJdhmUw1atqSQC/
-         15X5icSeq/5Q6yS4tjZgntaNdAsMObl449Jrpee3fYiFARvJNHOPZak2ny+JWfIFSi1F
-         dSuKY4q5j6c7WQsQJsesLQdtLuIO+dFp0PHYWWspW02aD2fhp6XcgVL1l6vI973vlIVV
-         6iBg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794247164; x=1794851964;
-        h=mime-version:user-agent:content-transfer-encoding:content-type
-         :references:in-reply-to:date:cc:to:from:subject:message-id:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=5dqNClxJY2X/ydhuoqmWfWtFVn8+jew8N2sUbCuLKyM=;
-        b=bTOOzW9JnrVGS3cXrkykjDWpbP4Z9rUqbkuZgHb3GbnMrGXShsfAFsRN99MxCwNrJV
-         Djh3/lhLlpqyHjh3bVkdGOA3mo/uYs+0p37PEefZVYect5vdG8iboqY5QkBFHd+PAw18
-         bSOdgdPEoOSC2drYiARsZNC9vhCJ+Vu0wtvpr6yxfeemHNOgXvkCO3skmKMiB4QBIRAa
-         stMpxd+7dxc17RMnQeel5BpTqCXp7szBMtm6dRNOquJx4plbtEo7YQR7fjG5vExFZyLu
-         nJML0+37b02mdO6QkO6NucESw+qS5OVpaq38Rtd+v3/Uk0XvN1ZdbnDMPBrvwGijYRla
-         6d9A==
-X-Forwarded-Encrypted: i=1; AL+hErG5fX3kt/r5NXCijluLBwWC0pBwD6MgGUHBRLUra1AiYwGLj6jvX4CdJRKjOOBH1ZCqM5Ka9F/UObCR@vger.kernel.org
-X-Gm-Message-State: APuU4Z91zf8GESOJ4sAcqZjTv7IN8hfmkdVhH9PmD2k+v8OAIfXTfq/o
-	kk311grJDmPO1JU3F45N6BrVn9FisKbO66KPaL9zp2DVtBEWXu8zdgq9xE6w6PieV70cXajpFaO
-	2B2miyqOJkYAunI5CP0Bsfs24RWbGQQ0zZaC54JCrzHSGQz67HefOnZqP4aeYbk4=
-X-Gm-Gg: AYBFou2K0eJapW1XpqYb3RLBx0GTFW4M7Cg4ygZGV4rhTG5DScFnZJHc/F7ONNGnrKI
-	5x0d7sr76l8X5EWSLybMpIsF17TsYGIM4oDaFpuQrj18yQyjKi/Pel3DyLkJf5nUxFSPKeQU740
-	gl2hwFH8+2QR04tzdfhYff2dUIuBvtK/wq3wDnU1VMLa47LS2QXyWWb1cs7UVZPav8sYEi+H/V1
-	d8JX9sbPXmcVp4mg+H1ZD1FtauCxpSeTTFvSdfPqiVfsf/gfhOvvIkXI224AqnlLIeSVuVTI2YQ
-	YMUVe2y12gQMhR5tnwXFTsNkRiJNuDurKnuIMWN+G/fcFqBKCkoEjoyfMm+YtOcQVEMzH42DtjY
-	cp1WXUyzXTpCeOZMPbuK6PZM+V5e/JiASl6daT0cVsq2NPOQnTWgGvnpybzbUZM2pTyD15JNpf6
-	RWMrR9q2lYVT+zherO1q4jW9XfFCy0ZYz6zskewrWYEow66VG/3dVPmPU1OyjCojzs3A3Qnbk=
-X-Received: by 2002:ac8:598d:0:b0:535:2763:16a2 with SMTP id d75a77b69052e-555294b79e2mr804921cf.43.1794247163856;
-        Mon, 09 Nov 2026 09:59:23 -0800 (PST)
-X-Received: by 2002:ac8:598d:0:b0:535:2763:16a2 with SMTP id d75a77b69052e-555294b79e2mr804571cf.43.1794247163360;
-        Mon, 09 Nov 2026 09:59:23 -0800 (PST)
-Received: from loberman-thinkpadp16gen3.rmtusma.csb ([2600:6c65:2440:d8c:aa2b:ddff:fe88:da74])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-5550af5f09fsm2892451cf.6.2026.11.09.09.59.21
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 09 Nov 2026 09:59:21 -0800 (PST)
-Message-ID: <23fa65c5e6296ddae57135658f7b24942f1ee534.camel@redhat.com>
-Subject: Re: [PATCH] scsi: ch: Remove the minor from ch_index_idr after
- device_destroy()
-From: Laurence Oberman <loberman@redhat.com>
-To: Changyul Lee <lcy8047@gmail.com>, "James E . J . Bottomley"	
- <James.Bottomley@HansenPartnership.com>, "Martin K . Petersen"
- <mkp@kernel.org>
-Cc: FUJITA Tomonori <fujita.tomonori@gmail.com>, linux-scsi@vger.kernel.org,
- 	linux-kernel@vger.kernel.org
-Date: Mon, 09 Nov 2026 12:59:20 -0500
-In-Reply-To: <20261109160651.986356-1-lcy8047@gmail.com>
-References: <20261109160651.986356-1-lcy8047@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.60.2 (3.60.2-3.fc44) 
+	dkim=pass (2048-bit key, unprotected) header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=r/SqOy+3
+Received: from localhost (localhost [127.0.0.1])
+	by 011.lax.mailroute.net (Postfix) with ESMTP id 4jNdNn56z4z1XM30h;
+	Mon,  9 Nov 2026 18:19:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1794248391; x=1796840392; bh=t6KaJjDKYgdsxCn/x+DcOuRy
+	LRSrJHR5bZ1fNs67esU=; b=r/SqOy+3CO2pEJ1RMWjgQgxEuel2MYJip54GsQFg
+	tmfkpuwReDEz4wLFwcjGjW03owqNJf06qcpJrWMt9mPZPmRJJPAOdx20qzXL3wtQ
+	O6wHv0pNWtn0MGStu2vxeUiZKyUVgkJ38nUWuod0OEFqZXvskCJUSgjuD1uL3S+2
+	p4V36MlBi/yJsfhtbmBZNVGC5bZsCG3XSrpP6vvOzpS4Vno0QM55ONaAuz5euT96
+	Dn+nwbiVW7HzyIHl4sKUIorH4W4taJvH/SZAhfHvczs1RhZfYAhoZK8Y81C//SZ8
+	PIEwqcsBLGOZgnpPt9KQHxWV/XqoupAU+vsT18XfBvxtFA==
+X-Virus-Scanned: by MailRoute
+Received: from 011.lax.mailroute.net ([127.0.0.1])
+ by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id y0eBIHRfhNv2; Mon,  9 Nov 2026 18:19:51 +0000 (UTC)
+Received: from [100.80.231.125] (unknown [104.135.182.41])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4jNdNl2Kjwz1XM5kD;
+	Mon,  9 Nov 2026 18:19:51 +0000 (UTC)
+Message-ID: <ad6c8019-15b1-42a6-8bea-bf74533522b9@acm.org>
+Date: Mon, 9 Nov 2026 10:19:50 -0800
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -124,63 +70,40 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v8 2/3] scsi: ufs: core: Hold host_sem in
+ ufshcd_wl_poweroff()
+To: Peter Wang <peter.wang@mediatek.com>, HOYOUNG SEO <hy50.seo@samsung.com>,
+ linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, mkp@kernel.org,
+ martin.petersen@oracle.com, stanleyjhu@google.com, alim.akhtar@samsung.com,
+ kwangwon.min@samsung.com, kwmad.kim@samsung.com, cpgs@samsung.com,
+ h10.kim@samsung.com
+References: <cover.1794196863.git.hy50.seo@samsung.com>
+ <CGME20261109041347epcas2p17b5c0fd7b693f92eb2af35b12a24de31@epcas2p1.samsung.com>
+ <973576304.21794200282836.JavaMail.epsvc@epcpadp2new>
+ <5fef4ff73511a2613beaa7accdf635a1c634c449.camel@mediatek.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <5fef4ff73511a2613beaa7accdf635a1c634c449.camel@mediatek.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Mon, 2026-11-09 at 11:06 -0500, Changyul Lee wrote:
-> ch_remove() removes the minor from ch_index_idr before
-> device_destroy()
-> removes the "sch<N>" device. A changer probed in between can get the
-> same minor, and its device_create() fails:
->=20
-> =C2=A0 sysfs: cannot create duplicate filename '/class/scsi_changer/sch0'
-> =C2=A0 ...
-> =C2=A0 ch 1:0:0:0: ch0: device_create failed
->=20
-> The new changer is then not attached.
->=20
-> Replace the IDR entry with NULL instead, so that ch_open() still
-> fails
-> with -ENXIO for the changer being removed, and remove the minor after
-> device_destroy().
->=20
-> Fixes: da707c54c342 ("[SCSI] ch: fix device minor number management
-> bug")
-> Signed-off-by: Changyul Lee <lcy8047@gmail.com>
-> ---
-> Reproduced in QEMU (x86_64) with scsi_debug (ptype=3D8, add_host=3D2),
-> which gives two changers on two hosts. Two threads, one per host,
-> delete the changer through sysfs and rescan the host in a loop for 20
-> seconds. Without this patch, device_create() failed 992 to 1151 times
-> per run in three runs. With it, it never failed in two runs, and
-> /dev/sch0 can still be opened before and after a delete and rescan.
->=20
-> =C2=A0drivers/scsi/ch.c | 6 +++++-
-> =C2=A01 file changed, 5 insertions(+), 1 deletion(-)
->=20
-> diff --git a/drivers/scsi/ch.c b/drivers/scsi/ch.c
-> index b2c9fb71c9e0..390425671a3a 100644
-> --- a/drivers/scsi/ch.c
-> +++ b/drivers/scsi/ch.c
-> @@ -952,11 +952,15 @@ static void ch_remove(struct scsi_device *sd)
-> =C2=A0	scsi_changer *ch =3D dev_get_drvdata(dev);
-> =C2=A0
-> =C2=A0	spin_lock(&ch_index_lock);
-> -	idr_remove(&ch_index_idr, ch->minor);
-> +	idr_replace(&ch_index_idr, NULL, ch->minor);
-> =C2=A0	dev_set_drvdata(dev, NULL);
-> =C2=A0	spin_unlock(&ch_index_lock);
-> =C2=A0
-> =C2=A0	device_destroy(&ch_sysfs_class, MKDEV(SCSI_CHANGER_MAJOR,
-> ch->minor));
-> +
-> +	spin_lock(&ch_index_lock);
-> +	idr_remove(&ch_index_idr, ch->minor);
-> +	spin_unlock(&ch_index_lock);
-> =C2=A0	scsi_device_put(ch->device);
-> =C2=A0	kref_put(&ch->ref, ch_destroy);
-> =C2=A0}
->=20
-> base-commit: 6628e7d4c6b25c8d18f1345e3a20d21829aae7e4
+On 11/9/26 1:34 AM, Peter Wang wrote:
+ > Although not checking the return value was an original
+ > mistake, this patch would make the previous mistake worse
+ > and cause a system hang. Could we at least add a check
+ > to release the lock?
+ >
+ > +	ret = __ufshcd_wl_suspend(hba, UFS_SHUTDOWN_PM);
+ > +	if (ret)
+ > +		up(&hba->host_sem);
 
-Looks good to me:
-Reviewed-by: Laurence Oberman <loberman@redhat.com>
 
+I agree with Peter. If __ufshcd_wl_suspend() fails, host_sem must be
+released so that ufshcd_err_handler() does not deadlock waiting on
+down(&hba->host_sem). Also, please propagate 'ret' instead of returning
+0 on failure.
+
+Thanks,
+
+Bart.
