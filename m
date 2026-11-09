@@ -1,67 +1,58 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794196552;
-	b=ZyqWxEo/39Om8FE9tR2evJWmJiViXErQDDClmNJPnN9MwtltR4PRw3LhhuBcbHnttk+I
-	 FWQJxCff4odTdmJGB+oU4rVWp1WNLO7rtH4AzZ5dZ/N4HcRVG89c1hdSTjzCJK2NWKAzM
-	 +17FQGE0mvHFPtJeObuCGJBA5TCa8iKpJhNhBojTFaKhE9HOJdNaM7iq1eAd+2sv3xeFt
-	 PDULUtq7MgcF9VUT1g5xtsijVVEMswLv7TohT/Q0m1YKzeezkDV1MkwmIu80uYKR7X5t/
-	 jDfm0ihKGizix8EbTwQyViwpEA/8PaA7ds1KTlaiGwdichDWRhGhJLBJhpANtP5LNIA==
+	t=1794196548;
+	b=xt4CJp0aQjDxZlEqey2VPY75ryFZcKfZjqL55pbYp1J8fDBWAap+gFg8Aq4h/R123BZw
+	 +0dK/rICZd0NpwGf9uZz2XuvZRpOX755CAqo5rIizqw1Xt+74GVdOIo9AfFtq/PmgLTwJ
+	 KN9utAxR3PiLYH1RAvlGy8sRA2NCCR26T2BiYfqbXZWwwdanS3bvppfMRlxexiZEvObXo
+	 9yUqpiFQgcPtCLsinO/BAd76TrLK6OBLqr0ivpHme6cjSZr150s5BnBWhj6CXhuLQlezA
+	 CcjWXaUbKlGyTudHOwC//odbIMJgD+5G5IZ6KHNzplQuVackwQDjkR5+uPNMCZIYvUA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794196552;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794196548;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding;
-	bh=ejd605WTFGp3aSTusQoaXr/J+wa+gRW4X9mBYWraq28=;
-	b=XW9ZZ9iTqBurDNE0OJBiC9c1YdSv59YgjFWeg2t+HpbhxdxyFJMYorI5hjegMkhDRiDV
-	 MqvOosXzZmlZi3h/5tPDUMJGJZ0PJLPkQAZwEIkJsbg9XEsmAA7F2qPSQLNTJskoOjyr1
-	 GQIa5soSJZcMtTZFHfwjJKMfbk+h1E4zIgAwAFn2ZtHL7wrLHePHx+9kCZrvmcsbzQB/R
-	 fwz2+ik4ji7GwWYSXfH3v9zKz5wIS394pdeA4dePhIEdrLHKY7hWtC0husK8vlHFZjFv6
-	 DKRx6fdO4ABIMdPKLY0R637/aLWFaccZLYAUXdtlmrsKWD7MhLeoUIMTuf5uwi2pOtA==
+	bh=Ea+LYLLAL84+aWPcNA3JvxhkUDjjeUjD4ajVVBAr+YE=;
+	b=ToI0csKEVscvJhFkM7RlzaMcsSnJHf0lBQXfqdpq3CYOOgEDy79lnLAbqhvN/rr5bIK2
+	 9QUQ7I1XJWQ0oj21NhEvzMWPo+enTHekFzwGhISJL72XexxesuGiAnpsRB2PDZZv9h1JQ
+	 weKCDyEeppKQQOQhl3kUUfEmE4bjl6pnFwZ/p/JzCWlq4dLkU8W0KbB/3LOVooA1u9kcD
+	 m5PO9LilYYm0zTQvbsaJJzO4eJsGyH+dPL+4k57cR0T4Oc6qxnSIzZLrtY28P5DQR3hU1
+	 GS1UWDHDZgoZnTgMDjTm+4YMujuhWQA7TCcypt2qttko/jG6ENDA40+NYfvPAR+xu5g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=B3tOIT3Q;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Zncl3CT2;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 589D1606A32A;
-	Mon,  9 Nov 2026 03:55:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01A4B606EE94;
+	Mon,  9 Nov 2026 03:55:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=B3tOIT3Q
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9CAE91F008A1;
-	Mon,  9 Nov 2026 03:55:50 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Zncl3CT2
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F02CA1F008A1;
+	Mon,  9 Nov 2026 03:55:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794196551;
-	bh=ejd605WTFGp3aSTusQoaXr/J+wa+gRW4X9mBYWraq28=;
+	s=k20260515; t=1794196547;
+	bh=Ea+LYLLAL84+aWPcNA3JvxhkUDjjeUjD4ajVVBAr+YE=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=B3tOIT3QPFsLBxHfhfTluWvzOfBSs1dDhdHbOCaXR8Z6pUcHGsYxl04ypMBRDV7FY
-	 CzNmx7KOWvHyeETAuol59C6Y8LX1ZQfhHjrq4HDbyNwYibRAIATFeKuig9KelJkBUx
-	 cUwCJGkMi5mT5XRMBS9HR3Om/a3WCcT7kblus401DAzgR9E4CCLdRUNt76AkiX0SS3
-	 uLOGKhFnTdnl/5WEd/E5QIwd93/0UdblblhsOxkbCJTTpVt2GJvN9nU4FmavRPA5yP
-	 Vu7KGNX8yiTz8MeNT5V5zzrp2LgHDJvy7gfj7dEdlmPJxKv62epedun/nZ/rL6nwTG
-	 qv1KJbqTqsArg==
+	b=Zncl3CT2Wm24BOpJbjhvbWqscQ4ozTt789VlDk8XEuL5TvI/vsstMYpBNfocJIqT+
+	 Ii+4l5Yp3IxBr941VBXbNvL0DHUPaypQQdI1wdEmiR4JHop+j6t26cHeP3vCwVT0Xa
+	 j23jdjXSvwBufi88t3Qt7GurzVQoS+Rix5O1eZ9kfyk/9KxhFZvR6IG9TjbQbQ20Jc
+	 ConPDLn9MKJLB8W7P3O7qOKM/0eNVG2+rAYmRpppA4gGTfzPYHC6KchVukCv1R37al
+	 XEq6CZ9E5SzT3OttTPFOyFLD2YMyVwEBUHpN92OIkluRk+CIknBJKLGbN0guEDYp2Q
+	 WOvTfoCqr5VGA==
 From: "Martin K. Petersen (Oracle)" <mkp@kernel.org>
-To: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	Alim Akhtar <alim.akhtar@samsung.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	Bean Huo <beanhuo@micron.com>,
-	Stanley Jhu <stanleyjhu@google.com>
+To: linux-scsi@vger.kernel.org,
+	shao.mingyin@zte.com.cn
 Cc: "Martin K . Petersen" <mkp@kernel.org>,
-	"Rafael J . Wysocki" <rafael@kernel.org>,
-	Praveen Talari <praveen.talari@oss.qualcomm.com>,
-	Peter Wang <peter.wang@mediatek.com>,
-	Can Guo <can.guo@oss.qualcomm.com>,
-	John Garry <john.garry@linux.dev>,
-	linux-scsi@vger.kernel.org,
-	linux-pm@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org
-Subject: Re: [PATCH] scsi: ufs: core: Keep clock-gating hold on failed W-LUN runtime resume
-Date: Sun,  8 Nov 2026 22:55:32 -0500
-Message-ID: <179419615219.1941224.17339194202779263652.b4-ty@b4>
+	bvanassche@acm.org,
+	hare@suse.com,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] scsi: rdac: Keep the error status when controller lookup fails
+Date: Sun,  8 Nov 2026 22:55:28 -0500
+Message-ID: <179419615237.1941224.1371295334998705297.b4-ty@b4>
 X-Mailer: git-send-email 2.56.0
-In-Reply-To: <20261029040002.2100002-1-stanleyjhu@google.com>
-References: <20261029040002.2100002-1-stanleyjhu@google.com>
+In-Reply-To: <20261026195409354OWEI2b6HO7swSphvv1FOc@zte.com.cn>
+References: <20261026195409354OWEI2b6HO7swSphvv1FOc@zte.com.cn>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -74,28 +65,25 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 
-On Thu, 29 Oct 2026 15:08:30 +0800, Stanley Jhu wrote:
+On Mon, 26 Oct 2026 19:54:09 +0800, shao.mingyin@zte.com.cn wrote:
 
-> 1. __ufshcd_wl_suspend() takes one ufshcd_hold() reference and sets
->    hba->clk_gating.is_suspended while the UFS device W-LUN enters
->    RPM_SUSPENDED.
-> 2. Since commit eef1d74bf88f ("PM: runtime: Only set runtime_error on
->    suspend callback failures"), a failed runtime resume (for example
->    START STOP UNIT completing with an error) leaves the W-LUN in
->    RPM_SUSPENDED with power.runtime_error == 0, while
->    __ufshcd_wl_resume() already clears hba->clk_gating.is_suspended and
->    calls ufshcd_release().
-> 3. The next W-LUN runtime resume runs __ufshcd_wl_resume() again without
->    an intervening suspend and calls ufshcd_release() a second time,
->    dropping a reference it does not own and underflowing
->    hba->clk_gating.active_reqs on UFSHCD_CAP_CLK_GATING hosts.
+> initialize_controller() records SCSI_DH_RES_TEMP_UNAVAIL when
+> get_controller() fails, but then overwrites it with SCSI_DH_OK
+> unconditionally. It therefore reports success with h->ctlr == NULL and
+> rdac_bus_attach() continues with check_ownership(), which dereferences
+> h->ctlr:
+> 
+>   BUG: kernel NULL pointer dereference, address: 0000000000000000
+>   ...
+>   check_ownership
+>   rdac_bus_attach
 > 
 > [...]
 
 Applied to 7.4/scsi-fixes, thanks!
 
-[1/1] scsi: ufs: core: Keep clock-gating hold on failed W-LUN runtime resume
-      https://git.kernel.org/mkp/scsi/c/6da1bc55c060
+[1/1] scsi: rdac: Keep the error status when controller lookup fails
+      https://git.kernel.org/mkp/scsi/c/46846939d5f3
 
 -- 
 Martin K. Petersen
