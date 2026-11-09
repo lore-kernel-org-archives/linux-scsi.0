@@ -1,65 +1,58 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794196545;
-	b=U88gKhhkgpAOP7GY22HViR4QN4DuJTkiQFOqth7Sha/jHuPqVIJ+QN1lG/zMJVA+6Hiq
-	 iRGIJtpEtFwFbm4du8WSFEeEMgsFjY7/pG3j10jkgOonM+V9F3Ud87SzooNpUS68S9qZB
-	 8SKc4HV7QLskHW5WaGVV3tFXmaCpc37MMYVxvbrf3TyFD31HWy9iiz7HQewexXN7CLPiB
-	 1e75yGV6mb4j28AwMGBm9TDGFiL5GUEn7uixcZ5uAyUNpd928qWJuU+ZU/HCgK3qcR6U5
-	 Fxw3h7Hh1/FzonZZM3/6WpbiKZXuUYPYguWWFUG4AoPd3DMDpiwto+CSH6JFTH8pV/Q==
+	t=1794196551;
+	b=xxSesolTFAlaQ+/Z636fA/yCS4lK2V45wFQvqCGNXcsh8sNE6VJwcyc2HdYJLAlInWZe
+	 vrwBJRgWOY55nVtuu+MhyM6jYzYeuuFOW9r6Ar4JUeEHARe4cF2DhsoHt6dYoS1B3hep1
+	 1vDotAFoxDsmw/D9RfoqRYCXE221S6QiUlNabsmOI0yxE72m4aKB95mKPJRT8O5K2D2ls
+	 9CYoWjI1xK1LthGBobNIElp3RFVFdkgRIYyHMPI4d9Y5YsBxmFAvAiWrfSuvoifcvFX/J
+	 PGi+MaD5F7wZpHJsPlkPaIXaWKRJjqVOn0E96ud5xVgbdSeZnVVTw09R2/57dZp6a6w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794196545;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794196551;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding;
-	bh=LETuMPa26i6sdaOmtniE0RZ4Ar7sk6ZdHV8owkJvnbo=;
-	b=gyvOSz9qNXOddKLcFyNM8YN/7sawqdWaAR1VtuHGZWzb78JHp5fcpUhpA8VyfIrxCNn6
-	 53SNoxydrrd3h1Zc8daUeRAO0oLjEeBR1ltHgxFHM3twlmL6wF4VNbwQQq5Y/oY4jDRZy
-	 FoHntBcYFxfG3/7984+ERO9PT/JAN04l2fF6ePwPCt7o8gHj4u47Hz8qZ51rpjyKF8w0J
-	 w8L9zGQheA3GbpXIgAAFJWhavI/gzyBGuDxWVeKnRBZz4u6yQ1VPD7fCqVQDImvAjf32A
-	 H/vIb/4vrOfTKCO+CR18hUF7Nya7AldIR8kPOqD/lz3lo4ujoTkKtFQqrVnaTvT8hKA==
+	bh=yl0cWu9LSM4Hk1hkiEXe0iDaWO1AMImJZAKH5kG2YLk=;
+	b=VBZp0BeCkd2Q5HGQGh3avjb+Ijm2Dbtg59TK2Lxz8O0ZstNE2Udp/YUXJcF/kBG0cO+f
+	 cbYbJHiKTf93nuQJXQnO9jUB0WK0AxbeIOtHhqVHQlPhhn4BpTfFUMeU2FHGdZ7FdHzwy
+	 CHe8lLFq191zRLa1Fk/R/twBNnlb8fVasP7xosfPqTpVKE3lvbIODgf3CfFJ7A2FY7+Ns
+	 unlKsAYqqNz5PJ3hl+rHPQfo2AP/gTIHVBkqq8H94AeAVpxkSEj/DeO1zg5gOCFgZKL2v
+	 nchScOOtl7Ewb05PrTEhiECpsYIgFgFUiUmuR7oxXx3KBSaBWXXGT11kfQgRCYiE/TA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lIpsnzIf;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=NvG8DIbf;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6D5F606D830;
-	Mon,  9 Nov 2026 03:55:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B802A606EE99
+	for <linux-scsi@vger.kernel.org>; Mon,  9 Nov 2026 03:55:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lIpsnzIf
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 90ACB1F008A1;
-	Mon,  9 Nov 2026 03:55:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=NvG8DIbf
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B96781F008A3;
+	Mon,  9 Nov 2026 03:55:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794196544;
-	bh=LETuMPa26i6sdaOmtniE0RZ4Ar7sk6ZdHV8owkJvnbo=;
+	s=k20260515; t=1794196550;
+	bh=yl0cWu9LSM4Hk1hkiEXe0iDaWO1AMImJZAKH5kG2YLk=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=lIpsnzIfOp7wexlLwrA9UvJRObTQzlCFQmOCbN5czrcfCoJQN4He0tp2NZOVif1Lk
-	 mURKppX8X8mDGOsMgLvPywMPI+i9Svi9hAbFFJFpEmKEboRBmU6EdyQ7Pz+i1838Tb
-	 E0EYVlCc/eFOuFqaDyqcPXtEbkuOgkyXmdXz1pd1sHNbFs1tR/rwdjCwUSJt2JXaK3
-	 FQVwXHkx0Kz9WdDzdIvUGNGxcYO9EiRR2Og/QTPhxynJpXbyYQ9ZPKb7EH+ClG7sdm
-	 57s8gebd2AjKEXLaZi3g2LQtw3rDevTXgu1Hc4QIukvS0r+pR72DbadwYDAFS4NEhN
-	 BHhdNpv1q6VMg==
+	b=NvG8DIbfnBPyzmILgsdKqCT7Gp/waww2aP4aFnUenQChZKmhqqri7fKo/djgrEPKb
+	 OeAFZeuP5t5Z2Z4bd+bORzxIRzWqHIuN3BBIi82EWzhVTQI5SdHzo3IsccsQEZbYYi
+	 CVAMl8cZV6LASWkQQN2y+b1pHC6PhzLT+UrXVbhXxDDj7dvGrpqb65SO9x1evvYCqa
+	 cnrKGlOWNAPSZq18imP+lTz8lwlvVU3E75GWMVyGfUY85wWai38Ayq0T56P46o6C3K
+	 dSIR6Cmt/U3iw0gR6g1YQZGcYOC+b0B3AtewDaGN+OYcrk70GBCI9FvXOzIvzpDiWI
+	 jmneZSCOd+PGg==
 From: "Martin K. Petersen (Oracle)" <mkp@kernel.org>
-To: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	alim.akhtar@samsung.com,
-	jejb@linux.ibm.com,
-	bvanassche@acm.org,
-	kwangwon.min@samsung.com,
-	hy50.seo@samsung.com,
-	cpgs@samsung.com,
-	h10.kim@samsung.com,
-	"Martin K. Petersen" <mkp@kernel.org>,
-	Kiwoong Kim <kwmad.kim@samsung.com>
-Cc: stable@vger.kernel.org,
-	stanleyjhu@google.com
-Subject: Re: [PATCH v7 0/2] scsi: ufs: fix the abort path of device management commands in MCQ mode
-Date: Sun,  8 Nov 2026 22:55:25 -0500
-Message-ID: <179419615231.1941224.10886487867480018133.b4-ty@b4>
+To: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+	Shawn Lin <shawn.lin@rock-chips.com>
+Cc: "Martin K . Petersen" <mkp@kernel.org>,
+	Heiko Stuebner <heiko@sntech.de>,
+	linux-rockchip@lists.infradead.org,
+	linux-scsi@vger.kernel.org
+Subject: Re: [PATCH] scsi: ufs: rockchip: Improve RX noise immunity
+Date: Sun,  8 Nov 2026 22:55:31 -0500
+Message-ID: <179419615225.1941224.6496447799725433464.b4-ty@b4>
 X-Mailer: git-send-email 2.56.0
-In-Reply-To: <cover.1793938245.git.kwmad.kim@samsung.com>
-References: <cover.1793938245.git.kwmad.kim@samsung.com>
+In-Reply-To: <20261029151030.1.I61cd43e660b146e49d4380a754e936270e5fb6a1@changeid>
+References: <20261029151030.1.I61cd43e660b146e49d4380a754e936270e5fb6a1@changeid>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -72,26 +65,16 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 
-On Fri, 06 Nov 2026 13:12:45 +0900, Kiwoong Kim wrote:
+On Thu, 29 Oct 2026 15:24:55 +0800, Shawn Lin wrote:
 
-> This series fixes how a timed-out device management command (query, NOP)
-> is aborted in MCQ mode.
-> 
-> Patch 1 makes ufshcd_try_to_abort_task() skip the task management path
-> for device management commands and clear them with ufshcd_clear_cmd()
-> directly. ufshcd_mcq_abort() sends these commands to
-> the QUERY TASK / ABORT TASK path, which is meant for SCSI I/O commands.
-> With this change, the SDB path in ufshcd_abort() no longer needs
-> its own branch for reserved requests, so that branch is removed.
-> 
-> [...]
+> Program VND_RX_SAVE_DET_CTRL for each RX lane to raise the receiver's
+> tolerance against short transients on the incoming signal, as recommended
+> by the Rockchip PHY team.
 
 Applied to 7.4/scsi-fixes, thanks!
 
-[1/2] scsi: ufs: core: skip ABORT TASK for device management commands
-      https://git.kernel.org/mkp/scsi/c/30bdadc9aa3a
-[2/2] scsi: ufs: mcq: poll OCS after sq cleanup for device management commands
-      https://git.kernel.org/mkp/scsi/c/e510b597d8af
+[1/1] scsi: ufs: rockchip: Improve RX noise immunity
+      https://git.kernel.org/mkp/scsi/c/c84374cf4d2c
 
 -- 
 Martin K. Petersen
