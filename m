@@ -1,47 +1,47 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794212772;
-	b=GNv3x1D9kaeenyLj9c5M5P/i4RmNBXAiaSaJq6gfq2uYDUcGMnHLA2beXeT0wO7MjzXV
-	 7eY6ktzdZTBS9aSGT4ExsA02sc98rwJL2wzNU0DDAP67msm7Csozub8gy8aBG/e4qgzAN
-	 FmfcuEXt27t9l8FmZlh9OC1/3LR/xoVwMfsb5ejwAqOjPx1ezdfX9GmnSJVUa0xs9XbPM
-	 eI1M5SSp6Ej++rc53i22CwVmENRngAOLDDxr654Fzjg8kzAjL6mXv4xi7P3nHQmOLTACC
-	 vA+ikRSBEpKGRwVymcloFE9LF+uzLCUwkIRcbGDS+zAfnvmW4Ldr+IRlgFaFDqhmaUw==
+	t=1794212992;
+	b=qVHUvIt1ryeCw+4TLo3CCQ4HVqyXxeO8jWiGPZJP/MEHNqF/D5mIztFPfGlIfovzUe3t
+	 C6Fk2i1MVnvToGI7pZ3LMPjNRMxhqQ1+fov6ojpwdnwQUHAri3OmqwxVL65rApki3z2Js
+	 RSPG81EZboLpS4c3nPVHvbWk979CzcByaoV0s2XhKXkkpWwr+nsQV0zyFjHGGRXKNwL6S
+	 4kuPxSXZihyPunL2K+CThImB9QdH71r+SRFQfjhmN/fAOz2f6op9mH+CLscyXFfU8bzMj
+	 IZbt2sFdYUxZPInwDMmre4EneTzgAECMevRiBLf3As7G6YbmscT4DW5/EVeP1VuruEA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794212772;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794212992;
 	h=Received:DKIM-Signature:Message-ID:Date:MIME-Version:User-Agent:
 	 Subject:To:Cc:References:From:Content-Language:Autocrypt:In-Reply-To:
 	 Content-Type:Content-Transfer-Encoding;
-	bh=zWuQ3p27UIemdCXPGPIrkkPUH0IJBHZ4roQ2dSRcIvo=;
-	b=0M+WayD4pHw1nBwmicSO+0AmrQ2yYHLnggw6pU2+yJcn02hbiwExpuhxLK7lNcrGpVOZ
-	 72w2LScu2eraeBsU4Ztorzh+PrljMfyMrfIXmklzg3gwR8aE0Gh78h2FCxzvw+uB6weOx
-	 R0eIuu2x5pC/YmCAjzNt5bi7zjsk7hXQlgM93IEcrPD3uHEkcQ2gj/nZ6ccAzbbDTSACU
-	 wq0vWKpBsEDcRVJXYyomrJZ8IRSZGlfNzizvD2KuuFOR7DTMSQD7KhjtPVZXQRmdpZJRK
-	 NmS7qjbs4mdu02rwTAhRqP6+JbanXz00nujexnycEcywpbuIMjpOpvHxCnPGeI3OCFQ==
+	bh=ySwcpEO/v0qQJdUqN0WTogHzx91HMoo5Nvn5a1Zm8QY=;
+	b=glW44CA2ZA0Gwb/r7YUoz6WgNukHiCo+Nw3nxNJor3qke1V27+ZXsr+T9Reij6vpd3+P
+	 IVOHvQcM633SlsNYJ0Lx7kHlAX39U3atSh5bFQlSt2eQhi5gLEBtOIeXfB4fMDNhjMBOK
+	 rGahWpq4i7ukn0JZ+vq9/3MwkURWgO5jMR2hbm2QUitzwOxswHGevAG5Y4Ii8n1MluY0O
+	 9qKQg42Nk5Dni1A8GkSc4E7eYL634UGK4qxmLRzJ9T37Tgj06BjITijJMAJy5e5XzuxhX
+	 Xuv24vdqOh/V8tLFVsv40bBrkYinS+arDateVGfN4e+wFFPSYJvLgQlJVX9q+t+GEwA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DDJzs3gM;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BkWfwYQv;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9351606A322;
-	Mon,  9 Nov 2026 08:26:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 740C4606A31C;
+	Mon,  9 Nov 2026 08:29:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DDJzs3gM
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 21B6F1F0089F;
-	Mon,  9 Nov 2026 08:25:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BkWfwYQv
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B9C0A1F0089F;
+	Mon,  9 Nov 2026 08:29:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794212771;
-	bh=zWuQ3p27UIemdCXPGPIrkkPUH0IJBHZ4roQ2dSRcIvo=;
+	s=k20260515; t=1794212992;
+	bh=ySwcpEO/v0qQJdUqN0WTogHzx91HMoo5Nvn5a1Zm8QY=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=DDJzs3gMF7pz5Mlv0wt7rZUXIIuiPDhYBkLsRf+HANOIyMcGMt1c+pAjW5PHIyYKi
-	 nYCeMjGIa3MyTCqLn6eDYpsweHwQxjHZNL/M8lS2nGf8TCjOhjMQl9XRkDnzhZU0hM
-	 jWz+hHslZDUnc/E3j470EUFJ7majXC/rON+kq1NckUlowF1ZIzNTN9TQj4jTu4x8IY
-	 Gc0WhTLaPb80aUSREr1NcMxqLYxL2225xVi9FzQB4wCTwmqQHaXQCrNBuLaf6IVN/Q
-	 WUNSX0ejaKQUcZGSLsWUWjb18W4W7wKvWkSob988ZtEoNY1jJm7764VwIWIBDym5kE
-	 D+0TzXxZRVepQ==
-Message-ID: <78a88d4d-11af-40c1-b063-b6a4d4298ecd@kernel.org>
-Date: Mon, 9 Nov 2026 09:25:54 +0100
+	b=BkWfwYQvEfkQobIuzw0xP0ZaLAcRnBRVr8KzoheGOqbZEz8snt70rmqcKKXp3M+SJ
+	 wpy49Q08GLpHiTWcOx3QE0Dzi6xyQvhGtqan+5P+xOAdVGNYQmuffByOu2rn68b5Py
+	 vmBSUqtbc8y168j/q2vmI2HrPOTUalT1w3j2alERGDL2bWcf2r/c3K1MBcyKVx5u++
+	 o3/KD4FQ8ZsLhs7vbmfK9vWjCkom/lV0arnFCp053gge0oXnfveKYvt6YbJcdlPcEB
+	 UvTRpPsl+6+pMM/ZwYQP9/YHscgqgiDmCFT71GdiSTZLohRM+bEsF9pQN7NPMcCIsi
+	 KjoTSssf6zc3g==
+Message-ID: <9dbfc665-089c-45f7-bca2-74caee322885@kernel.org>
+Date: Mon, 9 Nov 2026 09:29:37 +0100
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -52,7 +52,7 @@ List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 01/17] dt-bindings: arm: qcom-soc: Add Halliday
+Subject: Re: [PATCH 16/17] arm64: dts: qcom: Add initial Halliday dtsi
 To: Stanislav Aleksandrov <lightofmysoul@gmail.com>,
  Bjorn Andersson <andersson@kernel.org>,
  Konrad Dybcio <konradybcio@kernel.org>, Abel Vesa <abelvesa@kernel.org>,
@@ -83,7 +83,7 @@ Cc: linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
  linux-scsi@vger.kernel.org, linux-crypto@vger.kernel.org,
  linux-pm@vger.kernel.org
 References: <20261109-halliday-dts-v1-0-289114ab8197@gmail.com>
- <20261109-halliday-dts-v1-1-289114ab8197@gmail.com>
+ <20261109-halliday-dts-v1-16-289114ab8197@gmail.com>
 From: Krzysztof Kozlowski <krzk@kernel.org>
 Content-Language: en-US
 Autocrypt: addr=krzk@kernel.org; keydata=
@@ -129,22 +129,98 @@ Autocrypt: addr=krzk@kernel.org; keydata=
  K9bCVaboTA2T77QYkRcRJYSsO1alGX0ome/hMLD1daXlkrNUp1HWa3K4iytLRXjCSIorWiGs
  n+q3krnpXu3TFkA8qtOFZMdnIiFuiq1yLT8hptsV5xh1TA2nsVvSYiaCr3q4s4BKjS/KrLDb
  qoxzw8ISjdUp4pA85vb6YLCmb39NgidD+7PmAr65lBNveIFynTgsja1rRQ4=
-In-Reply-To: <20261109-halliday-dts-v1-1-289114ab8197@gmail.com>
+In-Reply-To: <20261109-halliday-dts-v1-16-289114ab8197@gmail.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 09/11/2026 01:33, Stanislav Aleksandrov wrote:
-> Add Halliday to the SoC codenames allowed in Qualcomm compatibles.
+> Add the device tree for the Qualcomm Halliday SoC
+> (SXR2250P / Snapdragon XR2+ Gen 2).
+> 
+> It describes the CPUs with their idle states, cpufreq and OPP tables,
+> the GIC and the PDC, the timers, SCM, SMEM, RPMh with its clocks, power
+> domains and interconnects, TLMM, GCC, SPMI, the apps SMMU, USB, UFS
+> with ICE, TSENS with the thermal zones and the PMU.
 > 
 > Signed-off-by: Stanislav Aleksandrov <lightofmysoul@gmail.com>
 > ---
->  Documentation/devicetree/bindings/arm/qcom-soc.yaml | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
+>  arch/arm64/boot/dts/qcom/halliday.dtsi | 1859 ++++++++++++++++++++++++++++++++
+>  1 file changed, 1859 insertions(+)
+> 
+> diff --git a/arch/arm64/boot/dts/qcom/halliday.dtsi b/arch/arm64/boot/dts/qcom/halliday.dtsi
+> new file mode 100644
+> index 000000000000..c891913e3cc1
+> --- /dev/null
+> +++ b/arch/arm64/boot/dts/qcom/halliday.dtsi
+> @@ -0,0 +1,1859 @@
+> +// SPDX-License-Identifier: BSD-3-Clause
 
-This should be squashed with patch #15. Also, there is no benefit in
-organizing patches within patchset where patches to the SAME subsystem
-are split all over. #1 and #2 targets SoC, then there is a break and
-again we are at SoC at #15.
+Odd license, suggests you copied it.
+
+> +/*
+> + * Copyright (c) 2026, Stanislav Aleksandrov <lightofmysoul@gmail.com>
+
+You should retain original copyrights as well.
+
+> + */
+> +
+> +#include <dt-bindings/clock/qcom,halliday-gcc.h>
+> +#include <dt-bindings/clock/qcom,rpmh.h>
+> +#include <dt-bindings/interconnect/qcom,halliday-rpmh.h>
+> +#include <dt-bindings/interconnect/qcom,icc.h>
+> +#include <dt-bindings/interconnect/qcom,osm-l3.h>
+> +#include <dt-bindings/interrupt-controller/arm-gic.h>
+> +#include <dt-bindings/power/qcom,rpmhpd.h>
+> +#include <dt-bindings/soc/qcom,rpmh-rsc.h>
+> +
+> +/ {
+> +	interrupt-parent = <&intc>;
+> +
+> +	#address-cells = <2>;
+> +	#size-cells = <2>;
+> +
+> +	chosen {
+> +	};
+
+Drop node.
+
+
+> +
+> +	clocks {
+> +		sleep_clk: sleep-clk {
+> +			compatible = "fixed-clock";
+> +			#clock-cells = <0>;
+> +		};
+> +
+> +		xo_board: xo-board {
+> +			compatible = "fixed-clock";
+> +			#clock-cells = <0>;
+> +		};
+> +	};
+> +
+
+...
+
+> +
+> +	thermal-zones {
+> +		aoss0-thermal {
+> +			thermal-sensors = <&tsens0 0>;
+> +
+> +			trips {
+> +				aoss0-critical {
+> +					temperature = <115000>;
+> +					hysteresis = <0>;
+> +					type = "critical";
+> +				};
+> +
+> +				aoss0-hot {
+> +					temperature = <110000>;
+> +					hysteresis = <1000>;
+> +					type = "hot";
+
+Oddly ordered. These are sorted by temperature, even if dt-check-style
+disagrees.
+
 
 Best regards,
 Krzysztof
