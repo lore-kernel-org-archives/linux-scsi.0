@@ -1,96 +1,56 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.160.182
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794242214;
-	b=G41srD7bPgH3bBuYY6lWWZt3TF0XLcepzOBR+Wzio6TJrNgwDvgC+xbOr7pRCG/S40/O
-	 uzX0KMJr6VjZHis8ljjogcvWiqQdUAUnibWLNAMO9FpW2SwFlV9bGLp0YfLt+YsRtN0/7
-	 a+Gh5x02Htv5bJGO5jV2sI2dXtfNH+T6k5dSu+i39Y6CIRbJgb/ekv3Z8Z6pKzrPoYyMg
-	 N2OesfsbhPZZ2ZWAk54FUCNu+SvQXbaZJ+50HDxbDnHtQFiEqUvVsY7cpQknDdD3DB2F4
-	 /2p87akcewonCLlvPVT+Ri6MrQK36lqMarKVnVnYbYtBPQsHZS6PNEaoM6ENDmmaoOA==
+	t=1794243546;
+	b=GbbaJWuElnqG10tTVz73v5jYXgj/rpwhvGhSD9wm7IsueH7bvw4ckisaoBTGhp3m64oe
+	 B5XHegR3xuASlR2vZgznE3g5V+M9ruQoye5013Y85xdRaoOAbkHkGUv1IninlAgcrzJrU
+	 jEDxStlNfOsPRLHP3oupZM0o0arqDbQ/izrFLH44FJT7KlTrkJr0SkubwpX/hb1+Zma8A
+	 5fqrplhPlDHfRj05fSlN33fttwraMQZvLue65pOoysj0H1S3dIm1RlduoLQpS+225hKkA
+	 DN7HYUJGpG/89csXooAhSRwNbQAXdnRr38oVKbmlSslyghkfVTt8KejeZ7QDd7klbSw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794242214;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=+i1MwDM3O2yhOtvhcZrVhI/0oNqRtv4EvJtbPIkjNXA=;
-	b=fn+E5+4bWMYpfAruXc2FGRjXLX7+NJ8rwFuzad2TEh/fx71I3pzbJwXLpsHYAfmqitQv
-	 oanZKF3s5maEgkl43G4vMsd+uklLwBF4WG+9rt9jejSBGli28FaRJgbvQtHoWNTPQ51X0
-	 sNK9Dt/xf73qNfdsbwkpqbG7547hIFcS3VjOwgZYHSaeQOGCJgaga9KO2qFWCBPYHV/qS
-	 vQRma21kg+p7LMrFOLEhZ3dcn4nWhy6baq6FUiTw1C6+hjY2qq8RqbyMB/Uue/s/kv/V7
-	 g+N6yTS4DuFpc1EvT6r4hc3eOqcbsqaJ/b8KqaHqcU2ZyHCEAfIIWQaA+16fD+Gwl4w==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794243546;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=WYdmfI7bVay5rHSRxixMK14CB+up5qwSvYWPH3fTx8U=;
+	b=NRZrfpUX7JEMklXTuUrXO+6dkbUoCOhy0XeHG5mZMdpbmp5dwG2jYmJMLhyYcjI3+uRa
+	 1n9APFXcVrH6ajuZ02d4AnsoN9cFPWhyjhbNl3mV3UMscg4vjQoST19rIkogovu9qlxDG
+	 i8RwgkEkpBhqDvaTIHN+hBuAEUc9g7THsGQw/DfRXe0TeBcc6JWkUVhRP0sjj403QkLxu
+	 OJiEK6Y/Jpod+rIx4A8aF8nVAuHcOYZVdcja3DxTsDJ3YMiA56jBEvhs66eWaXDh8UkWK
+	 CIqFudZ+VPN3qooBBmyuO+7uuPaHH87EGwrCTT4YvR62CmnY53RJN1okGS0ChcH4ZZA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=FoIzAwNj;
-	arc=none smtp.remote-ip=209.85.160.182
-Received: from mail-qt1-f182.google.com (mail-qt1-f182.google.com [209.85.160.182])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=QnW5Ie3g;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C2B460A6F55
-	for <linux-scsi@vger.kernel.org>; Mon,  9 Nov 2026 16:36:54 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6C2B460A6F55
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9C2B606A325
+	for <linux-scsi@vger.kernel.org>; Mon,  9 Nov 2026 16:59:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=FoIzAwNj
-Received: by mail-qt1-f182.google.com with SMTP id d75a77b69052e-53bb57f1310so11533611cf.2
-        for <linux-scsi@vger.kernel.org>; Mon, 09 Nov 2026 08:36:54 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1794242213; x=1794847013; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=+i1MwDM3O2yhOtvhcZrVhI/0oNqRtv4EvJtbPIkjNXA=;
-        b=FoIzAwNjbA8Th3jeM5HQIAMdkEjsi4l+IETeNlmZjX0H7yKQ5UlCYjP9aZSanbN02b
-         lSkEqTWyIYFpn0odRR3V16lY9j89BjQ1AkCfhWHi/LAf3EaSESFbTSSvYAv0ryOgqnQ6
-         rDlVBClRe8MPuwinpJsXvREiBYqPqZPdc2lyRKLXurFxL+IHtNH+tuiRkstSTvAl9ytJ
-         fdDeQs7Cl02lXbISyjiHKTZVDtmsxY4r/HJqjJo0y8w6MTFioKF+mAU+RQFwXUSrnst+
-         +EwqDtnuRq4NrECFuA9uxXzYFg/cjXfgzDylF09QI6/azYaH/5nVVeUpz1xOgEZnTGBb
-         GGDw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794242213; x=1794847013;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=+i1MwDM3O2yhOtvhcZrVhI/0oNqRtv4EvJtbPIkjNXA=;
-        b=t7WK1ZYB3H9vgbh6TaMVjh/OLzmWVBbgx9igkG5ZH06kx/ELNj+7mXA8MzIiPcXnEB
-         xULUXWpJgT7pYZREDBvolSLX67aKD6T3G4DThE8SP8dVAPCj0bBQI3RohxG8rW9Sm1Aq
-         rqkA1YjlWz+8ylz3q8XZKYO+tVHvUOsj63bm5sBLtPG5MkiKQ2AtoOH1bp0jVlmbzloa
-         jeGNUPcullXrvotfU+P2b0j0/MNTJWAw4wV4UM+Uxd2HkrZnggx1OrlQvFbiQ3HIGBPc
-         zSbO0vefetsc/A24kA4FYVSOoZvBNU5GWRzBoHJtR3WCJmUoc6XMA7HPFzLuO//gxxFi
-         Ilfg==
-X-Forwarded-Encrypted: i=1; AL+hErEcVmU51vSqZ9Z1HAQ5qPou9rKe/8AuPGWpfz5Y558gGXL5ytfqVdP9ch7o96cmpsrUowLeCSrQpOSp@vger.kernel.org
-X-Gm-Message-State: APuU4Z8Jr6dMan1axAFUusyiJvpH7B2EYbFobv85dTVHhxbNru7pwLpg
-	ZM8Y5fW59GW2TjxZ57uUfnNcIFRCfW7WCXobTlKjJMGPFNU1BXyTyFoY
-X-Gm-Gg: AYBFou2yQehgS/0HUm+Bq/XvaFtUBLRzusajeZjYInwPqHFrfCzzxDwMKEMQ1nYKWak
-	Vn/5RKhGCZcB1ySsh8Ix6NMEl/wduYwFv6zjDotuexFp2aSBvlXWBfz8mR/gh/qopDyCDkLfIAG
-	pXTpQbRewCBVXecmlFOw+T8vNsaMpH8vuRbditrayWbq9E5sl/5q5l9MN+V5sNgZnoPpS+dg2kP
-	LsIP5+PTulpa8h2XxidM/jlBy/qwLz0DQHIcvpf1QQ1lYKfRWEVp3Zu1umpQjSzyFq7Ht07PPYs
-	5yfHPPlypWnW6+UeC5jYLjJfhNGrnJzx10uexmnyie4Vtx4j71Pt3DINReFWpQ8RM++2aq+YbLX
-	lpJSAkH1V/8Lyuvbjy/EyBT828ey+JehE8iUO7PUHYgPPnpaIresP9IS/beJ4TJXUwsuLMqqpGX
-	hzmazdH0BB/awNe/oE4RCuFkguq6Cu38tscQd6SccAEHZMlfT5CZipKJUOJ0nB3KbQslt3J/ifa
-	m2GdC+ibZ5CurnMhXHpw4WYt08LGoykw7R4KUJVGxSTRRy596CCz/5LfqFZeMwUf9KiJhCUGMNP
-	84LnKbMVz/0X+nG86g==
-X-Received: by 2002:a05:622a:5505:b0:535:a5fb:6446 with SMTP id d75a77b69052e-552a604f9ffmr71709701cf.64.1794242213378;
-        Mon, 09 Nov 2026 08:36:53 -0800 (PST)
-Received: from linux.. ([8.34.174.240])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-91eced95d91sm45729516d6.9.2026.11.09.08.36.52
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 09 Nov 2026 08:36:52 -0800 (PST)
-From: Changyul Lee <lcy8047@gmail.com>
-To: Lee Duncan <lduncan@suse.com>,
-	Chris Leech <cleech@redhat.com>,
-	Mike Christie <michael.christie@oracle.com>
-Cc: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K . Petersen" <mkp@kernel.org>,
-	open-iscsi@googlegroups.com,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Changyul Lee <lcy8047@gmail.com>
-Subject: [PATCH] scsi: iscsi: Remove the endpoint ID only once when device_register() fails
-Date: Mon,  9 Nov 2026 11:36:49 -0500
-Message-ID: <20261109163649.1092897-1-lcy8047@gmail.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=QnW5Ie3g
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5D5331F008A1;
+	Mon,  9 Nov 2026 16:59:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794243545;
+	bh=WYdmfI7bVay5rHSRxixMK14CB+up5qwSvYWPH3fTx8U=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=QnW5Ie3gUiHUHhW+/XS6ZbOPSUZvmIUyW3q72kYGe+D6Vefa8y/V1h9rWp3MWnCdl
+	 AaazcpbirgmBBm7rmyzHUOBMV+jgVNvVw5Z/vr0bdoJpOLFNIp+3YyNOb5kD68F6Jp
+	 gwLpn129ZVWxtOr8fwZH9+9L9q+naRGdupDj94dz0R64rTDiSBTXuEZ4h2BlJ+nHx0
+	 SwqHpwqR5OH82/PE3XOtpOCZwmiVTrhdPvLwDUfp/4a2VMGbO/OSbHACvwIw7y3HLy
+	 tDx9f6USqWGxkpltvfd+pGWlJsJpZfDwuR2ld/7dt8bkLbDYPACQnltxjyJcp2G7we
+	 S2FsLYLhhXxUQ==
+Message-ID: <sashiko-outbox-205259@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] scsi: iscsi: Remove the endpoint ID only once when
+ device_register() fails
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Changyul Lee" <lcy8047@gmail.com>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20261109163649.1092897-1-lcy8047@gmail.com>
+References: <20261109163649.1092897-1-lcy8047@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 09 Nov 2026 16:59:04 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -99,55 +59,73 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-When device_register() fails, iscsi_create_endpoint() removes the
-endpoint ID from iscsi_ep_idr, drops iscsi_ep_idr_mutex and then calls
-put_device(). put_device() runs iscsi_endpoint_release(), which removes
-the same ID again. If another endpoint gets that ID in between, its
-entry is removed and iscsi_lookup_endpoint() no longer finds it. The
-next endpoint then gets the same ID and fails to register:
+Thank you for your contribution! Sashiko AI review found 1 potential
+issue to consider:
+- [Medium] scsi: iscsi: failed ep left in iscsi_ep_idr in
+  iscsi_create_endpoint()
+--
 
-[    6.689361] sysfs: cannot create duplicate filename '/devices/virtual/iscsi_endpoint/ep-1'
+commit bcf1b2eaf3554e78f33bb71b87b333ff7a9501a1
+Author: Changyul Lee <lcy8047@gmail.com>
 
-Leave the removal to iscsi_endpoint_release().
+scsi: iscsi: Remove the endpoint ID only once when device_register() fails
 
-Fixes: f014165faa7b ("scsi: iscsi: Fix possible memory leak when device_register() failed")
-Signed-off-by: Changyul Lee <lcy8047@gmail.com>
----
-Found with a static analysis tool we are developing. Sashiko AI review
-also pointed it out as a pre-existing issue.
-https://lore.kernel.org/all/20260617204203.91A3B1F000E9@smtp.kernel.org/
+This commit drops the explicit idr_remove() from the device_register()
+error path in iscsi_create_endpoint() so that iscsi_endpoint_release()
+removes the endpoint ID once.
 
-Reproduced in QEMU (x86_64) with CONFIG_DEBUG_KOBJECT_RELEASE, which
-delays iscsi_endpoint_release() by 1-4 seconds, and a test module. The
-module makes device_register() fail with fail-nth (an allocation in
-device_add()), creates a second endpoint and looks it up after the
-delayed release. Without this patch, the second endpoint gets the same
-ID 1 and is not found, and a third endpoint fails with the error above.
-With it, the second endpoint gets ID 2 and is found, and the third gets
-ID 1 after the release.
+> diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_tran=
+sport_iscsi.c
+> index b094af7c997e2..6e38fbfd5a9de 100644
+> --- a/drivers/scsi/scsi_transport_iscsi.c
+> +++ b/drivers/scsi/scsi_transport_iscsi.c
+> @@ -246,9 +246,6 @@ iscsi_create_endpoint(int dd_size)
+>  	return NULL;
+> =20
+>  put_dev:
+> -	mutex_lock(&iscsi_ep_idr_mutex);
+> -	idr_remove(&iscsi_ep_idr, id);
+> -	mutex_unlock(&iscsi_ep_idr_mutex);
+>  	put_device(&ep->dev);
+>  	return NULL;
+>  free_ep:
 
- drivers/scsi/scsi_transport_iscsi.c | 3 ---
- 1 file changed, 3 deletions(-)
+[Severity: Medium]
+Does leaving ep in iscsi_ep_idr here allow iscsi_lookup_endpoint() to
+find the failed endpoint after put_device() drops its reference count to
+zero?
 
-diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index b094af7c997e..6e38fbfd5a9d 100644
---- a/drivers/scsi/scsi_transport_iscsi.c
-+++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -246,9 +246,6 @@ iscsi_create_endpoint(int dd_size)
- 	return NULL;
- 
- put_dev:
--	mutex_lock(&iscsi_ep_idr_mutex);
--	idr_remove(&iscsi_ep_idr, id);
--	mutex_unlock(&iscsi_ep_idr_mutex);
- 	put_device(&ep->dev);
- 	return NULL;
- free_ep:
+iscsi_create_endpoint() publishes ep in iscsi_ep_idr before calling
+device_register(&ep->dev) and before setting ep->dd_data:
 
-base-commit: 6628e7d4c6b25c8d18f1345e3a20d21829aae7e4
--- 
-2.43.0
+CPU0                                  CPU1
+iscsi_create_endpoint()
+  idr_alloc(&iscsi_ep_idr, ep, ...)
+  device_register(&ep->dev) -> fails
+  put_device(&ep->dev)
+    kref_put(&kobj->kref, ...)
+      /* kref reaches 0 */
+                                      iscsi_lookup_endpoint()
+                                        ep =3D idr_find(&iscsi_ep_idr, ...)
+                                        get_device(&ep->dev)  <-- use-after=
+-free
+      iscsi_endpoint_release()
+        mutex_lock(&iscsi_ep_idr_mutex)
+        idr_remove(&iscsi_ep_idr, ep->id)
+        kfree(ep)
 
+In addition to the refcount addition on zero and use-after-free on ep,
+ep->dd_data is still NULL because the error path skipped its
+initialization, so callers of iscsi_lookup_endpoint() such as
+iscsi_if_ep_disconnect() -> transport->ep_disconnect() will dereference a
+NULL pointer.
+
+Replacing the pointer with NULL via idr_replace(&iscsi_ep_idr, NULL, id)
+under iscsi_ep_idr_mutex before put_device(&ep->dev) would hide the
+failed endpoint from lookups while keeping the ID reserved until
+iscsi_endpoint_release() removes it.
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261109163649.1092=
+897-1-lcy8047@gmail.com?part=3D1
