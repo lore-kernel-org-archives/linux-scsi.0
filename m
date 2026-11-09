@@ -1,89 +1,88 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.54
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.221.46
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794184447;
-	b=QbaITh1oEebjhHjN7BLaTj+qk9sc8gxzDKBOCj9HDe4KQYEGni3buhlUUXsUp9sIuu6a
-	 hyqu418P3ihWikFavOGNBRiHC3QQvAPiRa7wPqL73PqdzxdCG5zrScR+EmBpMKQrgXBU/
-	 LzEm73LyD8kKKyy7zoHOxLjBfkShcBm+WTQmGU/H2q3pSHJo23tw/7Fju/VZ68f/rvUqG
-	 0cboIZq1SueI/soKZzqHwQAFb4r1u7UkdjyCD1quwAKt9xSEsC1um62Pfh1rsgcq2h/Ie
-	 y8F1wBvbXUaf1YZv3ASIBjMk85/gHYKVyu0I9m2i7ClmX3nuUAOmIeFv5Z1GgfZIHcQ==
+	t=1794184452;
+	b=1EO8iAiWtc8jwuzx6YBG3/22MeT1h/yWT/VFHCYlc6r+3cr5s9wp8RKVBj8q2RBp0xJL
+	 +VRts/Uom6shQm1ybPyw2vUfO7+Sq5LUGKXN+KNgYk1aV/ixE93R/Mwyk/lTLQDDqylYJ
+	 TkNGPjlUQzYWEUc5mBUdXaz8dsArJgNvzoVQgL1MmEfCV5UeyAU7IPRAyrUhhqkxHv0ea
+	 Ev62fUzgHJHkbDt9/Kfsp1w7Z7dCiNrxwzViiel/PIR7It0XqU3QRNS/jKD7bLds2QUor
+	 m4DQfccf5nNPOwHPLmMhO/IpMd/kbEp2ig+VC+qoQVruZHXawqtlsE/73q7zFwz+axA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794184447;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794184452;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
 	 From:Date:Subject:MIME-Version:Content-Type:Content-Transfer-Encoding:
 	 Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key;
-	bh=3GDSoMHQsxRWl9RceBND7eXD7fNs4JK2UCz+AN9Gniw=;
-	b=LbHnZ8FnBjaO3oLqOjuTyC+YPl3l02FgDiqcyO/MEK3YWhE5/HsJPNoENTRwRiqxSjk8
-	 kE9eOp0M0ZbYllVMqny+21jd4AxeKWPPg6qVLRSZaJ+dyucjixw95BljUB1SgJ81FzR2E
-	 iwm/C+5RURJF2ivsf7QL6k2BQukRchuI83QRxNvpka4tkqVx7LDuNcnNcS15Q4QsN7YfW
-	 cYL14T/3tI/GYcxih4WKAHRs/bPFSpBiVMphzCirW32Bwu97JgTsVp4fQsOHojkoENiSJ
-	 WdJc5boTsWrJ34g0zfUM8WoHy24b5lwf4sXNNUelHxMufjDUXPl0xSdePp1WSwi1f6w==
+	bh=ro51FgAwM27DOCsfxJX1DqcXySD2o72+3qO5nSN9dQg=;
+	b=HBmm1Vp6WJFRY+yRh3izKvrIrUcS/xvHZetP+nodC0a7Eb8O+F30dAWQuGmxnQ06oIRy
+	 +4trlBO2o+EE06cbEbF1eybxeJkBRxbzmNIxqhLqjdXAxaQ0OEZZfLAjTFx7R0OGbMqcy
+	 z9a31XDTYhHnizZigua7SxDnfqqRTKWcTjSYWXXbdWtpsl/y3EyfTIleFRGkEl2qfMdcv
+	 Kr0qmdADicRrYIqX9yydoD7nRyIfsKFZxvRW0gjcod+OFkyi13EhYHn7GeOXPOWT7dsu4
+	 1hShkrTDRy3APsiYYhrbW1YhL0UL21ISUEQG3nmzmtFAHPSYchaeypApUnSkwRpMelw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=qSlqzKjX;
-	arc=none smtp.remote-ip=209.85.128.54
-Received: from mail-wm1-f54.google.com (mail-wm1-f54.google.com [209.85.128.54])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=ULEuYnxb;
+	arc=none smtp.remote-ip=209.85.221.46
+Received: from mail-wr1-f46.google.com (mail-wr1-f46.google.com [209.85.221.46])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B2FA606D811
-	for <linux-scsi@vger.kernel.org>; Mon,  9 Nov 2026 00:34:07 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4B2FA606D811
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4263B606EE86
+	for <linux-scsi@vger.kernel.org>; Mon,  9 Nov 2026 00:34:12 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4263B606EE86
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=qSlqzKjX
-Received: by mail-wm1-f54.google.com with SMTP id 5b1f17b1804b1-4a5177d78c7so2506125e9.2
-        for <linux-scsi@vger.kernel.org>; Sun, 08 Nov 2026 16:34:07 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=ULEuYnxb
+Received: by mail-wr1-f46.google.com with SMTP id ffacd0b85a97d-490c3ae81d3so187544f8f.2
+        for <linux-scsi@vger.kernel.org>; Sun, 08 Nov 2026 16:34:12 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1794184446; x=1794789246; darn=vger.kernel.org;
+        d=gmail.com; s=20260707; t=1794184439; x=1794789239; darn=vger.kernel.org;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :content-type:mime-version:subject:date:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=3GDSoMHQsxRWl9RceBND7eXD7fNs4JK2UCz+AN9Gniw=;
-        b=qSlqzKjX/7sPDCZRvmng2Fd7M44NFkTn1QnTKlon15ILFRt36QNjsrqLJYYai8FaJT
-         xqdBUzCmut3CjikZFdWRXcM18asXALumcNCoDZ8wkDUy/vLNU2Yu18uXCs9ENs9OPJGu
-         nTOZcCyszK4wAzAPo3RgIbwzygxedCHuazWjHdx+F6NUU18zcCBMt/igNH+VXF7b6oYH
-         qlTinMkSbUjNgaZL5pqDSb6HsOSqrLuMpY53PyfJXRmWyJcmK2xZiyNp6qhlx0aMWWyk
-         XD5wvPWvs0D8+P9xSygLy6qITW/i8jKmud5s6HzgGS2nR4vlHSyW1pd61/CmzpTA+ZFX
-         bwfw==
+        bh=ro51FgAwM27DOCsfxJX1DqcXySD2o72+3qO5nSN9dQg=;
+        b=ULEuYnxb9uEPYMVwaCZFAhBSr3XRRf7x47G6eugQCaMON9WlvKKlg8odFviJChKVQz
+         L5ivnacejg1JFvAECb3CXO3G4CGlkXkRUf5nvRqM76uVba7f3AbCgFEyfN//93jXlobk
+         RRpUD1wxP334PPruCEBCm7XnO4U67yem2Q++cYePF+tA6Ll3cXA7KHUYpVW7bHGXPv3W
+         01KWH5s+I/rChWyEAC4I/nugfLSJhWg9sy7NvKigj0oOHHQWEH6RZ1gw31QBj3pWz3YO
+         YoqU83BPVVunbYylhg8fGTfC+v6UuQYbRsQ69PfH+mnbpLdKnjMRZknNIjNiF3iaLp2o
+         JADQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794184446; x=1794789246;
+        d=1e100.net; s=20260707; t=1794184439; x=1794789239;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :content-type:mime-version:subject:date:from:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=3GDSoMHQsxRWl9RceBND7eXD7fNs4JK2UCz+AN9Gniw=;
-        b=frQZeNFL8YPDvLHxkab/TqicMtW4b47mURasU06B5phWUlJix/Yw4EaK2hIyhDw5kv
-         lNn4nQMx5K8r6k4zXbmiYxhAWiS6IJKdSRA2aWQBlxohbN8ABOLX8d0qGBOxwUIPTOoU
-         djr0jOAAznlRRbmRAnOYfqyJCCeMQPBsLnEUXm9or2gQMVYAsvE5haLvlquVlLLX2/hl
-         RC7e/m5sSG/TjwzjWpThL8cNYtvn1lfkqxqtxafhfuCedudkNHDMv1CEolc1txeK0c/t
-         yyVSe7VR3dNtQ/FaozwJSWfYYwBCxNG/L+r/M2ViKK3rHqcoou4ZNWe8mg5OlKcqFMHa
-         r13Q==
-X-Forwarded-Encrypted: i=1; AL+hErHNrpk7XC928d3Sgs0ix27Wa+GhnawherN0d7aHIlLeIDfVbSGxv70kLEX44WHBYP3h7vAfSlOE8f+A@vger.kernel.org
-X-Gm-Message-State: APuU4Z/N1xMgE5s1X+pTOqdDpAbPDxb26a6uCX5bu+o/kdofrPVkv/I6
-	5FRbNs7qvXirQFpfhEzRxXWNBm5Xu4G8m3ewFOJ6l/+JGeQOCObVphHTURO1tXfdU+0=
-X-Gm-Gg: AYBFou3FnE1v5MEHEbQgA3AOTrQTky03a5jDDKhMz921+dz5TRcpgm2UrCtjvW9V3Hy
-	i1BD9qyjNv9NZJprQt4fgnaUwND4GWOOLIm4/FPhH4U8pgnMvCa4KdEhapN8GheLuKKUjun6n5Z
-	I2+hi67XRlPDFbknvI+BJzwJB5qM7Hhadz58lgAB+MBosIAUhAuGGMN6J5pJcYEjOdM2bezFAsG
-	5lWIet4pK0li8Ocqn3ND7A5H+xVEiGwUZ4Bkfzj/Q898dq0JXfRf82EkkKjDrxdauhGcY7O6192
-	88pukMu1QWaXVlGdd5oZw2xIuPvHsB0Z2ooPxgVAi+vwHLOvQRdI9rCVayKiEcaU/MtI9C25El2
-	m3sj6XvD1oVAtufx9P4Z6mywf14ZRidj4nfwAWrSNxWmBRuvCYyiV9ddUTfMt8p95nrnO8v1EEJ
-	WV+5vPAjzGlflqjkFery8xr/5FVN1MZSGIZGel0yBBKtdT9ev3B0Vq3tXzCgGwkqrNd+Gd2QwY5
-	62aObxYOv4QZN8hHTGzslxXCNdBPv6PP/yAArgvuDyW6k6iO36ZdmhjtqaQiNJiQiWjHeEJWqYE
-	U2MHBzAWI8X30es/M9VISgvDRcX+XyxrJ1tDmJTQ
-X-Received: by 2002:a05:600c:a010:b0:4a1:c5eb:b445 with SMTP id 5b1f17b1804b1-4b963ca3a7cmr51069905e9.35.1794184445733;
-        Sun, 08 Nov 2026 16:34:05 -0800 (PST)
+        bh=ro51FgAwM27DOCsfxJX1DqcXySD2o72+3qO5nSN9dQg=;
+        b=x3rWbIMDHnNS9z5L63h1nhJ5s658SCQCYZse1n8yPuYQLJekdxvi860rpT9b0Q0oe4
+         7oO4PM9zgQLQtwD1VQ+m8Jl5RpeJoPGqBO/JH6AnOdws49fnLzDbcIOlSXHusfQj9HvY
+         nUFhZvi3moJrWSg7XcO/xW2+MSiggS6VM16jXVgNyhaT5OoakgNb6gURi8NNOqYA0w4P
+         l+hR9xq7XqCcyVAKcLqDE5SXISxeepmIG4W0mZ/poA2kQmKKpbBfyDfd8fLY5j31Avtq
+         Dt0Y/EOsFZu0qij+ZG5O6yxGpJEXZ256uyAonE7zqgtGRwVCnX481mwcwsRsUCikNwPd
+         dU+Q==
+X-Forwarded-Encrypted: i=1; AL+hErHJ+UBGXDhJ6FFDoS7a9iPSm5fJtSZtLb9FK7Kxl9crQ2bHSAh/1ZiwrwvWZha+v1oc1xVHEGJqh5No@vger.kernel.org
+X-Gm-Message-State: APuU4Z8T0oG7vjYrkl79WOpOcbGqA5Lnhxcsc+VAvlKYI4sRdyoYh6s1
+	4x4AD6tjLgbd/qfhGf98cwwx2T0k5OcH+RT6D2U4Sg2LKsrUa0VUwhT8SwZOA0Iefwg=
+X-Gm-Gg: AYBFou1c9F6T7ZTm8B+exz/gQTtJAHkxC/BpejLZGG551X3zDWIFazAYbyboQow+S0i
+	X+RvH/rp/OVNRnp1GT3F3p9Z4gbHwzMVAdrSczfhkoqBWdxHp89zY2oNK115W2yJ1K84LkwdU5S
+	33voNiwZFjPwdwQ1ZmjUqpBHDfNsHagTFzJAuPAAIPZEykTJp/MUv3Nh2SG6Q6+VA2BykG9GO/z
+	zd1yEaK9Ix5mlMrlAW1vLI+eJQIke050gCHuZAK8lSHqIzvepg/8AdvchZtfmS1/eGYSQZLkOyE
+	NZi78SLHIxjs0AWbsvgrPLYzG6t+jpwHBMRzMLt7wTqWOnJsjoJu9gI70H2MfP0VaTkaVzLHPbw
+	LezNLNJOWNpIYj9O6ekwwLNtGewV1Cvvqi3xG4evUa4ePeXw1z/64qsx2WtGJ5Btx53Q3ueI6Rk
+	A1iO6riBfJrF0aQ6fIQFN2EgE/BKmQpffq4JjPq5d6E6U+jYnTiOfMyI0z/kEy/ourKQY/qlTWZ
+	DuRxCksc9rri8dAQZ1gkkPzYWnPOU+8/J9UJweNV5C2FTHn1/wRxiktfSsu5WV43pghlWDlpGId
+	ssLn2dQPNQRuJ/dMf+1AbY5wQwBd/MAVe+p69/pqrBrp0MDxYyRDzQAUZxY1Yw==
+X-Received: by 2002:a05:6000:3c5:b0:493:2376:81b7 with SMTP id ffacd0b85a97d-49588ecc152mr4851434f8f.27.1794184439552;
+        Sun, 08 Nov 2026 16:33:59 -0800 (PST)
 Received: from [192.168.10.105] ([212.58.121.92])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-49592f39c8asm6541675f8f.7.2026.11.08.16.33.59
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-49592f39c8asm6541675f8f.7.2026.11.08.16.33.54
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 08 Nov 2026 16:34:04 -0800 (PST)
+        Sun, 08 Nov 2026 16:33:59 -0800 (PST)
 From: Stanislav Aleksandrov <lightofmysoul@gmail.com>
-Date: Mon, 09 Nov 2026 00:33:20 +0000
-Subject: [PATCH 08/17] dt-bindings: phy: qcom,usb-snps-femto-v2: Add
- Halliday HS PHY
+Date: Mon, 09 Nov 2026 00:33:19 +0000
+Subject: [PATCH 07/17] dt-bindings: usb: qcom,snps-dwc3: Add Halliday
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -95,7 +94,7 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261109-halliday-dts-v1-8-289114ab8197@gmail.com>
+Message-Id: <20261109-halliday-dts-v1-7-289114ab8197@gmail.com>
 References: <20261109-halliday-dts-v1-0-289114ab8197@gmail.com>
 In-Reply-To: <20261109-halliday-dts-v1-0-289114ab8197@gmail.com>
 To: Bjorn Andersson <andersson@kernel.org>, 
@@ -127,34 +126,49 @@ Cc: linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
  linux-scsi@vger.kernel.org, linux-crypto@vger.kernel.org, 
  linux-pm@vger.kernel.org, Stanislav Aleksandrov <lightofmysoul@gmail.com>
 X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1794184395; l=891;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1794184395; l=1289;
  i=lightofmysoul@gmail.com; s=20261108; h=from:subject:message-id;
- bh=iomST/Qr961He4Ne7crBcxin7EtHuKLr8auNEsY1c6w=;
- b=4DxRuDlo3Sv6o3VM377FCKNLzrNNMHf6FsM5TYa93t66FIlBhCp/mgcC4QeOncc3ZgmuRzx3Y
- hjxDAxOeJv2BA5u50QEvvg0b3XgcZ1hYXm30qFoJ+yx+NwOICn4vuuC
+ bh=cCyX7eu7E67i1+mb+zFb+/V3MZ2Z8Bvs+BbDvfy8HQI=;
+ b=HQwzvS1g9UbQKH8v0/XpwTYPPGyIcJ129Y8yti74NjNwgnbgo8LwZJmaOxKeuHMuvgkZ+EP/2
+ IP5h1J7SLhzC0/e/TSquB9CwBZEDq02qBgUbIWpMHDatD8Y+sZaCkxU
 X-Developer-Key: i=lightofmysoul@gmail.com; a=ed25519;
  pk=jeRUlfmkhE53CJPoeIIXgu7rTE0ybDRH0HQrEwbydzg=
 
-Document the Synopsys femto USB high-speed PHY on the Qualcomm Halliday
-SoC.
+Document the DWC3 USB controller on the Qualcomm Halliday SoC.
 
 Signed-off-by: Stanislav Aleksandrov <lightofmysoul@gmail.com>
 ---
- Documentation/devicetree/bindings/phy/qcom,usb-snps-femto-v2.yaml | 1 +
- 1 file changed, 1 insertion(+)
+ Documentation/devicetree/bindings/usb/qcom,snps-dwc3.yaml | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/phy/qcom,usb-snps-femto-v2.yaml b/Documentation/devicetree/bindings/phy/qcom,usb-snps-femto-v2.yaml
-index 661759b25064..8ff1db4a1d79 100644
---- a/Documentation/devicetree/bindings/phy/qcom,usb-snps-femto-v2.yaml
-+++ b/Documentation/devicetree/bindings/phy/qcom,usb-snps-femto-v2.yaml
-@@ -22,6 +22,7 @@ properties:
-           - const: qcom,usb-snps-hs-5nm-phy
-       - items:
-           - enum:
-+              - qcom,halliday-usb-hs-phy
-               - qcom,qcs8300-usb-hs-phy
-               - qcom,qdu1000-usb-hs-phy
-               - qcom,sc7280-usb-hs-phy
+diff --git a/Documentation/devicetree/bindings/usb/qcom,snps-dwc3.yaml b/Documentation/devicetree/bindings/usb/qcom,snps-dwc3.yaml
+index b77c02c64d45..7a8b72d2929d 100644
+--- a/Documentation/devicetree/bindings/usb/qcom,snps-dwc3.yaml
++++ b/Documentation/devicetree/bindings/usb/qcom,snps-dwc3.yaml
+@@ -27,6 +27,7 @@ properties:
+           - qcom,eliza-dwc3
+           - qcom,glymur-dwc3
+           - qcom,glymur-dwc3-mp
++          - qcom,halliday-dwc3
+           - qcom,hawi-dwc3
+           - qcom,ipq4019-dwc3
+           - qcom,ipq5018-dwc3
+@@ -209,6 +210,7 @@ allOf:
+         compatible:
+           contains:
+             enum:
++              - qcom,halliday-dwc3
+               - qcom,hawi-dwc3
+               - qcom,ipq5210-dwc3
+               - qcom,ipq5424-dwc3
+@@ -570,6 +572,7 @@ allOf:
+           contains:
+             enum:
+               - qcom,eliza-dwc3
++              - qcom,halliday-dwc3
+               - qcom,hawi-dwc3
+               - qcom,ipq4019-dwc3
+               - qcom,ipq8064-dwc3
 
 -- 
 2.55.0
