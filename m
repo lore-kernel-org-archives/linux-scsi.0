@@ -1,58 +1,60 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794196551;
-	b=xxSesolTFAlaQ+/Z636fA/yCS4lK2V45wFQvqCGNXcsh8sNE6VJwcyc2HdYJLAlInWZe
-	 vrwBJRgWOY55nVtuu+MhyM6jYzYeuuFOW9r6Ar4JUeEHARe4cF2DhsoHt6dYoS1B3hep1
-	 1vDotAFoxDsmw/D9RfoqRYCXE221S6QiUlNabsmOI0yxE72m4aKB95mKPJRT8O5K2D2ls
-	 9CYoWjI1xK1LthGBobNIElp3RFVFdkgRIYyHMPI4d9Y5YsBxmFAvAiWrfSuvoifcvFX/J
-	 PGi+MaD5F7wZpHJsPlkPaIXaWKRJjqVOn0E96ud5xVgbdSeZnVVTw09R2/57dZp6a6w==
+	t=1794196541;
+	b=beW5QEefVeRFB3tE/4oBHgkRBiu9c1IGwvT9Ya1bxnFg3apDF0gT+E5pROvqAPEpckHb
+	 g3aij7XMiDkni+fVtcAxGYIZYQiCmfB0av6xyOCImQAuGbBlmY4RDZOHoayEXkm5VD09k
+	 70t9a+yKa5dvbicm4F36r88532MyQMWaLtX4RqbTWx/GLRDRlSJPFJO6XeeMN5rAtpXOD
+	 caMxYnZvl+sa5Hkh2+cVGymbrMkvDB1H/9w4i8ANCdsX4jMZug4Ap4cov6500WpZMWgfb
+	 tR0a99w72T4v5ICZNPcD8kYRXQi3BSrFHLnebF7r+X5LujDYjhY1/ldB/sz7LfmIhsw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794196551;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794196541;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding;
-	bh=yl0cWu9LSM4Hk1hkiEXe0iDaWO1AMImJZAKH5kG2YLk=;
-	b=VBZp0BeCkd2Q5HGQGh3avjb+Ijm2Dbtg59TK2Lxz8O0ZstNE2Udp/YUXJcF/kBG0cO+f
-	 cbYbJHiKTf93nuQJXQnO9jUB0WK0AxbeIOtHhqVHQlPhhn4BpTfFUMeU2FHGdZ7FdHzwy
-	 CHe8lLFq191zRLa1Fk/R/twBNnlb8fVasP7xosfPqTpVKE3lvbIODgf3CfFJ7A2FY7+Ns
-	 unlKsAYqqNz5PJ3hl+rHPQfo2AP/gTIHVBkqq8H94AeAVpxkSEj/DeO1zg5gOCFgZKL2v
-	 nchScOOtl7Ewb05PrTEhiECpsYIgFgFUiUmuR7oxXx3KBSaBWXXGT11kfQgRCYiE/TA==
+	bh=9DZrYBou0wg/1Gb6dnwG2jGA12oGBL9l4V7OLZB2URM=;
+	b=bkmjSzIhEZT0oBS2crf+LrDnwSEZpv52sgTJC8m5QtAROINjwuSq0rbBvy9nSPRqNIfN
+	 rXS0c32UiRu6W2BOMxfDzXexQZjwSlncvXuDL6zAkgJ+vCgGX0nLoQuvOAuTx4TSKUlp2
+	 k0gayb5ntKWFqjV5KiwLnRTxwDNyutHaZj3U7hTfRBL0xWJNMt1XHVJ0ZqS+bgAtze4rY
+	 gxluMr3AjAOgRXQ+Q7yC7fDW0tGKMdCHR0N4m5tuYgJWc6qbgdLKgggzijzO9CQVf88NP
+	 c0xnDxlrUwi/Zk6/6SdD/vWE02/HAzkJw303sKyihu7syldSCouumdnfkd1LLtbjI2Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=NvG8DIbf;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=OKsWuHLw;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B802A606EE99
-	for <linux-scsi@vger.kernel.org>; Mon,  9 Nov 2026 03:55:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 89CBD606A336;
+	Mon,  9 Nov 2026 03:55:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=NvG8DIbf
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B96781F008A3;
-	Mon,  9 Nov 2026 03:55:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=OKsWuHLw
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5C0D91F0089F;
+	Mon,  9 Nov 2026 03:55:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794196550;
-	bh=yl0cWu9LSM4Hk1hkiEXe0iDaWO1AMImJZAKH5kG2YLk=;
+	s=k20260515; t=1794196541;
+	bh=9DZrYBou0wg/1Gb6dnwG2jGA12oGBL9l4V7OLZB2URM=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=NvG8DIbfnBPyzmILgsdKqCT7Gp/waww2aP4aFnUenQChZKmhqqri7fKo/djgrEPKb
-	 OeAFZeuP5t5Z2Z4bd+bORzxIRzWqHIuN3BBIi82EWzhVTQI5SdHzo3IsccsQEZbYYi
-	 CVAMl8cZV6LASWkQQN2y+b1pHC6PhzLT+UrXVbhXxDDj7dvGrpqb65SO9x1evvYCqa
-	 cnrKGlOWNAPSZq18imP+lTz8lwlvVU3E75GWMVyGfUY85wWai38Ayq0T56P46o6C3K
-	 dSIR6Cmt/U3iw0gR6g1YQZGcYOC+b0B3AtewDaGN+OYcrk70GBCI9FvXOzIvzpDiWI
-	 jmneZSCOd+PGg==
+	b=OKsWuHLwF1a4++WPxUlKfVMHDeeuRXFptf5fU0hG2huagtkYbv3QjiKs/ZgEsW4oK
+	 FdcatqkYAoL5gfNOOR7GTFCoZaDv+WdzFIP+6UZapovQlHDveIaNp5elP4zWf9IAqB
+	 yns+eUv4R2sBOps4jUkMAqmOzz42VsoLrOvSVqXlvQOEONmyHtJQsmoFGxQkKbIe4t
+	 GBUJWW1nrJnnvc+LTrkuIn/MbML2wC/9fE+RPMu2sGp3B1cHXVEYixXXp5i3h+DvsY
+	 DEKLVH6ZczYkHypWalWT+vF7Y2DivtpjyhXRXNroUngFuvgYNw5TuQrAj2T32yUUJ5
+	 IS6098zGRrq6w==
 From: "Martin K. Petersen (Oracle)" <mkp@kernel.org>
-To: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	Shawn Lin <shawn.lin@rock-chips.com>
+To: mani@kernel.org,
+	Joonhoe Kim <26rote@gmail.com>
 Cc: "Martin K . Petersen" <mkp@kernel.org>,
-	Heiko Stuebner <heiko@sntech.de>,
-	linux-rockchip@lists.infradead.org,
-	linux-scsi@vger.kernel.org
-Subject: Re: [PATCH] scsi: ufs: rockchip: Improve RX noise immunity
-Date: Sun,  8 Nov 2026 22:55:31 -0500
-Message-ID: <179419615225.1941224.6496447799725433464.b4-ty@b4>
+	James.Bottomley@HansenPartnership.com,
+	bvanassche@acm.org,
+	linux-arm-msm@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] scsi: ufs: qcom: Reprogram ESI after a host controller reset
+Date: Sun,  8 Nov 2026 22:55:22 -0500
+Message-ID: <179419615233.1941224.7749122326945889734.b4-ty@b4>
 X-Mailer: git-send-email 2.56.0
-In-Reply-To: <20261029151030.1.I61cd43e660b146e49d4380a754e936270e5fb6a1@changeid>
-References: <20261029151030.1.I61cd43e660b146e49d4380a754e936270e5fb6a1@changeid>
+In-Reply-To: <20261022165006.1275-1-26rote@gmail.com>
+References: <20261022165006.1275-1-26rote@gmail.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -65,16 +67,24 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 
-On Thu, 29 Oct 2026 15:24:55 +0800, Shawn Lin wrote:
+On Fri, 23 Oct 2026 01:50:06 +0900, Joonhoe Kim wrote:
 
-> Program VND_RX_SAVE_DET_CTRL for each RX lane to raise the receiver's
-> tolerance against short transients on the incoming signal, as recommended
-> by the Rockchip PHY team.
+> ufs_qcom_config_esi() returns early once the ESI interrupts are set up.
+> ufshcd_config_mcq() also calls it after every host controller reset,
+> which clears the ESI base address, the vector mask and ESI enable. After
+> the error handler has reset the controller, the completions then arrive
+> only on the legacy interrupt while mcq_esi_enabled stays set.
+> 
+> Allocate the MSIs and request their interrupts only once, but program
+> the ESI registers on every call. The MSI message is not cached for
+> platform MSIs, so keep the one written at allocation.
+> 
+> [...]
 
 Applied to 7.4/scsi-fixes, thanks!
 
-[1/1] scsi: ufs: rockchip: Improve RX noise immunity
-      https://git.kernel.org/mkp/scsi/c/c84374cf4d2c
+[1/1] scsi: ufs: qcom: Reprogram ESI after a host controller reset
+      https://git.kernel.org/mkp/scsi/c/b3da73f09499
 
 -- 
 Martin K. Petersen
