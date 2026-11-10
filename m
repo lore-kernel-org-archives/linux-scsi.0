@@ -1,49 +1,49 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794302411;
-	b=gRhd+L/0kpcOtABgnt2TM6dP8AhGqQt+NmKwlnYcfG0BG+UrJK6c2Szsiklfl8e5cEE+
-	 FlFC2bM9amI5z5OxNBtnCx0xnObJPS8JUJHdafdqMR1gj8YPNu8pq8a2HPrQ0HanQDYC3
-	 yFJQMDUD4SrVlza8y9q0u9y9aJGI6EU9hitvxtm+jCWI0/eWjuukVhT62AlsKuPhTkPNA
-	 dbyqVT4BnHJygq05KBWHkz2FjG0fpO5NIX5KAuadlzmlQ8dmss3rs/BQyiAzxWcoLZ6j/
-	 zLCd+iriti4i59EPgAxN5kjZZkwzaO9J0KZQ/GsEb1sFtZuOb1pdezlsopCiDYbQ2TQ==
+	t=1794302418;
+	b=hP/KG4ErhxhlNBWtQep65SBJoSFkQuM0+dLZE8IGjxn2B3zUJODJlAsNbz3La7kSDmHd
+	 zoGfaE7kpHq587ogjgSCMRiWZBEjukQULsXpLjCRvuADe1rYycAUSBsPhu56G87qKP6BN
+	 GJuIRyW03dQh5dTAze294JmNOr1a0bD/Q9rnMbxE34j0bK/8pitx/B/g9ZsSTRLXZHL/m
+	 5MlQhJX0h+YRauZnpk7ngURm5zHHgHT0MGXbVY+DvfYbfYrdfqT6CHRq1AaH280ITDty9
+	 qxrjPABNuhSHR5+/s6rBnkweklAiyfAP3u3Yj9TDTF/GIwVyk5byl/r+8gKCq1GAdbQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794302411;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794302418;
 	h=Received:DKIM-Signature:From:Date:Subject:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding:Message-Id:References:In-Reply-To:To:Cc:
 	 X-Mailer:X-Developer-Signature:X-Developer-Key;
-	bh=wvcrRKkVitwBIHc8bsc86Ap1TkghVmPhKT6D7YPBbwY=;
-	b=micBf6BzPCTfrdTIuI5m5QfLqV2O7AkAdg5WO2sSBZTTqyYKuoUxb1uEJHyGbXX3vzql
-	 K3YgEFs1Dq25y/qAkMtggPxy+RhOodLntj2SuVQOVNDsUccUvCJ78F877TsRDpq5Y46Ev
-	 wBCsmQ8ZJ0KO2JMg/s6HMWSMSLPS6s8s1xfLbv6EKWFTI1QSuG6wzO9wfYiXsS+GBDP91
-	 WeiC/Hsf+0Z4WmYgE2B/uVDEjTSsNCjD20ucH3+1DhlovXQDVjB3bFT91WMCdqYqM1OF9
-	 VwW88kS2UIKa/LA0fueHlIs+nTLnFhsWNJLk2parNT8bZKY2wTmNc49TnBEsvAitcWQ==
+	bh=Ed8TTuJF+sB6Lawh6bnyp4GQ+ni/YzFsRx+ZLMEdz+g=;
+	b=t9FS38LyPAB/RwGuOwScL9g9V+ScGSWHQTdS8BNifit6Tu2cRwmFMkadLlk95IUmUTCq
+	 T8Y7ZoRJsFa0B+j461780x1b+/RzTEOi5AfoNT7Ds3N7/htqUerfHQ++LxnINVbzEEGK+
+	 lSoNfXwvE9l/1gZlCnsp4oddEBrHJYo6by4M7TZwWKnakB5kbiq0jMnXu2Md4asuP4rgv
+	 0sryYT3TVwFy8TdBPhlIYpudRfaL3yt7GI363kKlODEJ7J6wKNKxMVFHuRWeJo3qT7wYz
+	 FmmvpkfcmDHfOx8/9IDsj7jgCIS1MkUYwRsj0tniTh3tMk6hCa3mj08cfUUWBnFP2AA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lugfFYds;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="fljzn/eV";
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F1D6607C095;
-	Tue, 10 Nov 2026 09:20:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03DE4606DA02;
+	Tue, 10 Nov 2026 09:20:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lugfFYds
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 61E501F008A1;
-	Tue, 10 Nov 2026 09:20:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fljzn/eV
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 712051F008A2;
+	Tue, 10 Nov 2026 09:20:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794302410;
-	bh=wvcrRKkVitwBIHc8bsc86Ap1TkghVmPhKT6D7YPBbwY=;
+	s=k20260515; t=1794302417;
+	bh=Ed8TTuJF+sB6Lawh6bnyp4GQ+ni/YzFsRx+ZLMEdz+g=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=lugfFYdsp+5acpRZ62DrLNSRpPTqwD6ALObkR4htZDZ7jJ4CwxnL+J31LlzQBLdHg
-	 S3Q6wKQ8rLKVDvOjaO/7i9LdpOAAGQkJVKTTZnDkbfMZ0mXM3yVItsw5AH/x4JgMCS
-	 r17kh6jTusP0FcEnEBzFzqzJtQ746vPtMKO+E1iLTHLZ7PgzOBIB9SrMppxD4aMf6g
-	 ++c6vcWP0wgZ4rHVjr+6Av5KOdeAceVogEGD1LonYdJsm5MlecXYdFkPg3OEFOR0DA
-	 l4vCIncvJpwPXykOZGsC4m66wbdnnjiMUoL8mSoluVAzhYGK1Oc9EGsTAAgpOcHIVj
-	 fpmwuommLUy7A==
+	b=fljzn/eVvhxziu7rpDchbBxswirw38dG5Hh8oraieWnFAikJKROz9NNo3QUniq7JH
+	 k0pna/SGi6vkmSevbTXH/7hF6ngRgBZPZ2ZczHXlmyUuIpK7skK0i+Do5u+0rc1eoM
+	 1QCt2YoDQYnkiJfUqROif2D9EGzsXbQfijTNIK8+ganjoCxI02/hoEZKq3MGmCMO0h
+	 I4/M12qrVolo7dcfHz+wl17JewslqYT+EnXNgtBY6b3e8843u68sorNH4ya/h/+lAY
+	 VJNr41AO+Mw+z1GcGf7nSnH75QEpkg5/KlZsgid6ulxGcD7CIdFmk46YH/y/seTdPS
+	 T75fjFnSWG6Bg==
 From: Christian Brauner <brauner@kernel.org>
-Date: Tue, 10 Nov 2026 10:14:53 +0100
-Subject: [PATCH RFC 37/41] target: fileio: refuse files on pseudo
- filesystems as backing files
+Date: Tue, 10 Nov 2026 10:14:54 +0100
+Subject: [PATCH RFC 38/41] fuse: refuse files on pseudo filesystems as
+ passthrough backing files
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -55,7 +55,7 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261110-work-loop-pseudo-v1-37-4c998976c6c7@kernel.org>
+Message-Id: <20261110-work-loop-pseudo-v1-38-4c998976c6c7@kernel.org>
 References: <20261110-work-loop-pseudo-v1-0-4c998976c6c7@kernel.org>
 In-Reply-To: <20261110-work-loop-pseudo-v1-0-4c998976c6c7@kernel.org>
 To: linux-fsdevel@vger.kernel.org
@@ -76,43 +76,41 @@ Cc: Jann Horn <jannh@google.com>, Chris Mason <mason@kernel.org>,
  linux-kselftest@vger.kernel.org, 
  "Christian Brauner (Amutable)" <brauner@kernel.org>
 X-Mailer: b4 0.17-dev-ce4c1
-X-Developer-Signature: v=1; a=openpgp-sha256; l=995; i=brauner@kernel.org;
- h=from:subject:message-id; bh=BDYGZBkzpJOf0luK2Iqx3jSxHLpIeW6e4aOnDtryI1I=;
- b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWR9erDf6mtMEqNwmyJbTeSGX/PXP05KecQy9ejD6kOb9
- /3cf9Hkd0cpC4MYF4OsmCKLQ7tJuNxynorNRpkaMHNYmUCGMHBxCsBETl9m+F99+X7Ky605zSv7
- GErvWk1zaPix/Pxk04Q9+p1/0oTy/pgx/JXbprm34uPtr4v2Ll0y0cL+SOu1/dVOakafmv0qqj/
- fj+YCAA==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1037; i=brauner@kernel.org;
+ h=from:subject:message-id; bh=rMGXR6zdtbG+6yYmwIdklnSltQxsfLzPwY1iGb1IBiw=;
+ b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWR9enDgUfStKvuJ/w6Jptq+5PlSbP9KPn63MV/6gs8ZA
+ ckpeuf/d5SyMIhxMciKKbI4tJuEyy3nqdhslKkBM4eVCWQIAxenAExEcisjw4GLdt6JSusi2NxU
+ 1iey9qUufZbz//uNFbOOedou29eyzJjhf+TaNUei0tLOZd18O98+VMavi+/sDjvd9a28azc/0L9
+ 1nxkA
 X-Developer-Key: i=brauner@kernel.org; a=openpgp;
  fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 
-fd_dev_name can name any file including files on procfs or sysfs. The
-initiator then gets to read and write kernel interfaces through the LUN
-with kernel credentials. Refuse files on pseudo filesystems just like
-loop does.
+The fuse server can register any regular file as a backing file. procfs
+and binfmt_misc files are already refused by the stacking depth check as
+both set s_stack_depth to FILESYSTEM_MAX_STACK_DEPTH. sysfs and the
+other pseudo filesystems aren't. Reads and writes of the fuse file would
+then be done on the pseudo file with the fuse server's credentials.
+Refuse files on pseudo filesystems just like loop does.
 
 Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
- drivers/target/target_core_file.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+ fs/fuse/backing.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/target/target_core_file.c b/drivers/target/target_core_file.c
-index a5391e57e9aa..7a3cf63dc979 100644
---- a/drivers/target/target_core_file.c
-+++ b/drivers/target/target_core_file.c
-@@ -152,6 +152,13 @@ static int fd_configure_device(struct se_device *dev)
- 		goto fail;
- 	}
+diff --git a/fs/fuse/backing.c b/fs/fuse/backing.c
+index 8c21a8a74efb..4e4fb810ddaa 100644
+--- a/fs/fuse/backing.c
++++ b/fs/fuse/backing.c
+@@ -147,6 +147,9 @@ static int fuse_backing_open_file(struct fuse_conn *fc, struct fuse_backing *fb,
+ 		if (inode->i_sb->s_stack_depth >= fc->max_stack_depth)
+ 			return -ELOOP;
  
-+	if (file_is_pseudo(file)) {
-+		pr_err("FILEIO: %s is on a pseudo filesystem\n",
-+		       fd_dev->fd_dev_name);
-+		ret = -EINVAL;
-+		goto fail;
-+	}
++		if (file_is_pseudo(file))
++			return -EINVAL;
 +
- 	/*
- 	 * If using a block backend with this struct file, we extract
- 	 * fd_dev->fd_[block,dev]_size from struct block_device.
+ 		fb->type = FUSE_BACKING_PATH;
+ 		fb->path = file->f_path;
+ 		path_get(&fb->path);
 
 -- 
 2.53.0
