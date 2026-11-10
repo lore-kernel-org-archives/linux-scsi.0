@@ -1,48 +1,48 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794302274;
-	b=z+93YwyRZJcm0HWWvHj6jWfNlHKKzJYK+vLXSB/TLa9VCgBHxnvpCjtmpv2LvfkvOokQ
-	 sEKq9TfVQmE95hKmHHrluJCiH/pyunJT5dZa1eib/Aa3nv4ENJcZGxnHjv8PBacQV7SOP
-	 4bdimYCgiMW3My04fb+3paURRu+6Q/AMIh/OuxBGefTw3scQGXT+3/Wq3w2dAsgCjWFY1
-	 HNPelHNvE4Ro9vtAF+50i3NXGiW25kN5M2J9uDZC8V+TCvU78U1eIMVTqe1Kn8vAvR3Mi
-	 XWWck3C31BuTUx7cKRFSDK2/hxYCbGDlvQTV6w6QGkbtq20CB9D0tG2RsPsGBpy8TRQ==
+	t=1794302288;
+	b=ELITagRWkV6xtbo1oax9mUu52btMkhYkVzITiuBj/G8AaZkmkru+IkfBxtAGW5Tw5mbR
+	 9bsOst7wzjTVDm+9XzD+vOLqj9AcsbvQm1Qzojbk62MolA3mbg1kFQ/iWiR0OJw3YkTVt
+	 xfOqBW3UWBOX60oo4d6H5KjiobI4+gvp1rwsfKb9+W0+yHgUL8U5EqVXyJSUeWPXuNvvQ
+	 6smwn57uUnXOcIlBSsxop9mCcJr9XNVqarKIl5hYTHwYtDYjJzeoFsnBeBPGh9TvZJoEa
+	 i5AeSyhf3kSqDR1pHv/A05jMXqTY+5Ff7Zdb8PFRU95gmm92lBjaEn2A+d+YUkg1nFQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794302274;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794302288;
 	h=Received:DKIM-Signature:From:Date:Subject:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding:Message-Id:References:In-Reply-To:To:Cc:
 	 X-Mailer:X-Developer-Signature:X-Developer-Key;
-	bh=V5BWJw5fa84POo80x3ibKreEFrHi8L/+0M4nKiAomaU=;
-	b=VclSOr2dlNZE167D39tWkq0uk546uucxrFTC3/M74w22urDXeCNZxo0K3aYfLWvbuPP7
-	 APYpKbonzJnc9Ssf6PmhX/ggKsV0FVFcEkvEPq1yEwPxPFh4K4Y1Sud3T5aV1APlwSRZu
-	 KheqkeQlk3n3VL7K0b3D2TTHlZrBfSGump4pv1vh6CVn0Wqtu3TDIye3AsrPDFwkcgMD6
-	 AWmtSNW4PczDVmi6ADqBgeLvWMykq44TR3KxUez65Tj9zvVfmIt/UlCpl/tIRo7ZEyFR+
-	 uIFta06uPp14YsdI3l23a+BWZQPxuhKe7z2bxt4QDn8tsBeZDg0vyEg9hfSP2lV4Jew==
+	bh=NCl9sz2+KP+iZeUL45ewnMArN+IoDGg4CzU35zEH9JM=;
+	b=igebBmLmTrmwPvPQNrcS4FEKgLK8h0XqdSD+pUEruf3n8g8xnNFxSbNyRxAxSmFr/d20
+	 2CnDPvepIUE4lOMACPeZTrRU6R05sB+BfRk6GXVJUrcwlbiNq/Zrh+A2+F7CyFYo4LxOX
+	 f9WfqggxUNk29Ac766HJpw7kd25QyMlcVj6Jf8KO9RnCfzay1j+e3e+XH40aXnSkm8/DU
+	 eGGOeLJVOYSuSN/B3o3oS5mqbRVbtqrHw0KZizF17gawQQ+lfGKwZN1B+0lAakqmCSeUi
+	 4S1BkEzSwk7enoFIY9JWXjQjJnqZq/Y018g5BoKIWXpKH0On+3ARprEpHL5SAAtnM9g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=KN56aSxE;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=AKiKVGQv;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32A4B6070B05;
-	Tue, 10 Nov 2026 09:17:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC77A6071E45;
+	Tue, 10 Nov 2026 09:18:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=KN56aSxE
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 58BC01F0089F;
-	Tue, 10 Nov 2026 09:17:47 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=AKiKVGQv
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0B6791F008A5;
+	Tue, 10 Nov 2026 09:18:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794302273;
-	bh=V5BWJw5fa84POo80x3ibKreEFrHi8L/+0M4nKiAomaU=;
+	s=k20260515; t=1794302287;
+	bh=NCl9sz2+KP+iZeUL45ewnMArN+IoDGg4CzU35zEH9JM=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=KN56aSxEcIL4HezFtJpqamXDQkWCizrnZgnkUMIpPJsU7rRuUGbPuKCmoeZKs9Z8T
-	 KX8yIwO5M/hIAuohYYoYuaalWbYYVGCWyj3OPI2eTlBmHabq5gQXT0Q9S0rZ4F3ut5
-	 C4zEnhc+UMJ2cgIQGGeaEL+qrQxNqtC4KAdzr1uwPXxDiu2A5V9MYGtecJfiijcWEU
-	 2ZNMp5ydhnhMaivDafrR5m7QBhsQux+h3Tx/1FbSjFTpvpg7tD2QL9hYdoAqvzBL6y
-	 XALD9so6bBSasGgjOreqMXh2TJ7gKHcAOMhp27y+3npGTFNV3GX8PCI5KY5SzKdsrT
-	 HZkVBu2EyzxNA==
+	b=AKiKVGQv0VSeP3wz5if0whUbSvt8YZc7Rh/UCgNkZ5tAH/0Cn0M1DyPvV4tLz3iRR
+	 G++AKQ+OJy0M5xoApzZVJUGfdnk89qWIzjAeHEzQ0VsM3A9XZIXAidiDTQzcrQeU+R
+	 3rWxkhJkXNAubBNR1QnfHf9O2vWsnxzfQrCYIbzpO8jnSSwVS8AHsMvUUDUcP3yr1C
+	 GP65RCivYHVcDBwaFck+SBpAEkBxDBlfFtPEB9HKpyoLRJ7YlEMMxyxLgDLGnXyKsO
+	 jMd1X4p2pDleOJUsA8gNdHxO88FTvsmiSbxXo2XRHLCCB0IkrdjNF9sWn589dFrNxg
+	 b3gptLSM2NQag==
 From: Christian Brauner <brauner@kernel.org>
-Date: Tue, 10 Nov 2026 10:14:33 +0100
-Subject: [PATCH RFC 17/41] securityfs: use fc_init_pseudo()
+Date: Tue, 10 Nov 2026 10:14:35 +0100
+Subject: [PATCH RFC 19/41] smack: use fc_init_pseudo() for smackfs
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -54,7 +54,7 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261110-work-loop-pseudo-v1-17-4c998976c6c7@kernel.org>
+Message-Id: <20261110-work-loop-pseudo-v1-19-4c998976c6c7@kernel.org>
 References: <20261110-work-loop-pseudo-v1-0-4c998976c6c7@kernel.org>
 In-Reply-To: <20261110-work-loop-pseudo-v1-0-4c998976c6c7@kernel.org>
 To: linux-fsdevel@vger.kernel.org
@@ -75,45 +75,42 @@ Cc: Jann Horn <jannh@google.com>, Chris Mason <mason@kernel.org>,
  linux-kselftest@vger.kernel.org, 
  "Christian Brauner (Amutable)" <brauner@kernel.org>
 X-Mailer: b4 0.17-dev-ce4c1
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1036; i=brauner@kernel.org;
- h=from:subject:message-id; bh=MwHP9YE6cjEfGAuH1dNASl/A50wevLh7f7bfLWi2WsQ=;
- b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWR9erD8krTE09Ofz2cIRrPJrvxZXfW5i2mz60HLaz3/t
- aacvaGV01HKwiDGxSArpsji0G4SLrecp2KzUaYGzBxWJpAhDFycAjAR0ceMDF3dd12/pYZrKTE8
- Ycgt3jlH/vK/wh9r1zpfPu+pqC78O4rhJ+MXzsV8icqCDBsCp8j+vcN8x+XyLeYvblvbTnJ6hSb
- MZgMA
+X-Developer-Signature: v=1; a=openpgp-sha256; l=905; i=brauner@kernel.org;
+ h=from:subject:message-id; bh=A5eRYdoLLChIDmTrXY0x54/6SOLidXbGtpe0eaaqmts=;
+ b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWR9erDq4LSrtvN2M7bp7Emc1fTAaOdWf5uWkMcflm/7d
+ +7rollKKzpKWRjEuBhkxRRZHNpNwuWW81RsNsrUgJnDygQyhIGLUwAm0ufE8E+zd0p+T0Hsa+uF
+ Mw++mb+hj4txpnJKwWSB7PycaYbfRW4z/DO+trk2+ZWHe8aRvdM3b9Wd4OG8aVvniUtcPdF/ba1
+ FclkB
 X-Developer-Key: i=brauner@kernel.org; a=openpgp;
  fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 
-Initialize securityfs as a pseudo filesystem. This raises SB_I_PSEUDO and
-also SB_I_NOEXEC and SB_I_NODEV. securityfs never holds executables or
+Initialize smackfs as a pseudo filesystem. This raises SB_I_PSEUDO and
+also SB_I_NOEXEC and SB_I_NODEV. smackfs never holds executables or
 device nodes.
-
-AppArmor puts a .null device node into securityfs but only ever opens
-it via dentry_open() which doesn't care about SB_I_NODEV.
 
 Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
- security/inode.c | 2 ++
+ security/smack/smackfs.c | 2 ++
  1 file changed, 2 insertions(+)
 
-diff --git a/security/inode.c b/security/inode.c
-index 080402367674..93997a9f16fc 100644
---- a/security/inode.c
-+++ b/security/inode.c
-@@ -14,6 +14,7 @@
- #include <linux/kobject.h>
- #include <linux/fs.h>
+diff --git a/security/smack/smackfs.c b/security/smack/smackfs.c
+index a72bc7fabea9..4a56bbeaeca3 100644
+--- a/security/smack/smackfs.c
++++ b/security/smack/smackfs.c
+@@ -25,6 +25,7 @@
+ #include <linux/magic.h>
+ #include <linux/mount.h>
  #include <linux/fs_context.h>
 +#include <linux/pseudo_fs.h>
- #include <linux/mount.h>
- #include <linux/pagemap.h>
- #include <linux/init.h>
-@@ -64,6 +65,7 @@ static const struct fs_context_operations securityfs_context_ops = {
+ #include "smack.h"
  
- static int securityfs_init_fs_context(struct fs_context *fc)
+ #define BEBITS	(sizeof(__be32) * 8)
+@@ -2880,6 +2881,7 @@ static const struct fs_context_operations smk_context_ops = {
+  */
+ static int smk_init_fs_context(struct fs_context *fc)
  {
 +	fc_init_pseudo(fc);
- 	fc->ops = &securityfs_context_ops;
+ 	fc->ops = &smk_context_ops;
  	return 0;
  }
 
