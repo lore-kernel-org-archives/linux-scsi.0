@@ -1,108 +1,53 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.218.46
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794305680;
-	b=QBNQhYY6+GbLYZ0Cw1foQXoYMybEA3ZQf5hOeeOXV6FRTiwIwIFM060i3gHsSel9bMEY
-	 O4Q4yU6RQ1bPvmzNQ02CaQ2vrCh64XImxh2Mwvs7RGL2tUOO1UCH/ZKnnwwOdiBZL7gmg
-	 nLknqndP45PLzMH+swyxSzJt7Dz+oDw0FYG70gtZC553m0lhUfN3dv6oHrxbbwUXYI30S
-	 r9NxA0J2qZ7HCcdksVw7a1aR0b3Z0rIRT0W8TuUfpYQ60f3fshRMTr5hzJttr8pmIcfbu
-	 UzBtWi8i8ieYgpQU7UQVTV6UXDUzBCIStwCdt6AJhyq9nx7nUQMvNmLCcGdTlNaKmog==
+	t=1794307997;
+	b=4JN9ZUvKAJYYsYZPH7yY+rEE2b4aj0ko8Ly+wJkjB0AzatZmqBJzZ2aelLmlQXM6ZQkn
+	 +jTY79/KLAM1wRYy5GNwT+p3Kp/kHvLjPyfZ8hdrzeTG7TKBDIuAJv/X6oiCZP0/P2RV1
+	 uQ5rsbSdiHzFxQ8amOosMV3D4w+bl/zWZjduqcvCmkMImywZebzwuHdim0rQrLXItcSei
+	 /t227uGXgHvYZHkKQT7H24qnPWzwjH5flpf88FlV12l+49DsD6PgFV83JvPRSPUGy5FOV
+	 dNCUZomS9tgPpoiOwxYR5LQADiVvbTh0K9SViVZm50OS0C17DsptPeTQjWOuDX29oVw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794305680;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To;
-	bh=9WFltYRvNkpM0HMxRLJxGiCTEiP83WtKPHu+oXy3KTg=;
-	b=ajOTVZf4YEIGiK/CRJabg5Yplu9aZ6YRV3VmSrSFkmDPsCFy3QgoqhB9isZJ0sBL33dM
-	 xCQANiq3jK2jzcel5v4vO0iHnNlZfjfn6fL79CQlBXH9wmkHTt2jcfZ/B1MK3X9VebhcS
-	 Q54rWKy/92mPqp2VdfNDgfv011LDMep4whDupF8GoDr38nNqEoaH1rzJbWMKi1rBj9do1
-	 upf+k8X+1PjYHQVUHMr8lGEO8kJQbnWtgnublwAGU//JgF/5KiEoAVV2TIpjc35maPrsG
-	 e52hXbJGA7ZE8oUgvp0rSJRFVwuxlQLzIgoGvmy4OWjFmeiTZOWkkGxh4TJL0ixLqmQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794307997;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=XvZzxhH1tJfaFa9xLjcAjvvdEgxtHDpQlkyGqk3MqEo=;
+	b=iT+F8zSGAhJ4h5R0twvUepSjjEbRAWBuHcMUB+PnTWHvGgrOu5yh/PLSvrqHsj0nq6Wk
+	 3i9pxRPmSoIS+mi5xWNhib5CdmVTrWMHUOSMwvCvfZ94yc6jB2Mem8ekV+n+mzmOwAse/
+	 tfWmB0KNAnHtxnhI95gHY5O0TsPAWmkUq7p/ib6GYgOqDactKkQhnF5vHotHOXBc0lNzM
+	 pHSSXjTW5/8XiWBuMWBPWEMHbTWYQRjMutYG16xjQ+H3GvbOX5G/iua3c4whinC/Xc37q
+	 toaIIYvSmM+5uFDktxXTrqjiYqjUOV8Ezelpt9KjspGNsUdvGIRv9vek7s2YqY3v7Rw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=DrlQYRb4;
-	arc=none smtp.remote-ip=209.85.218.46
-Received: from mail-ej1-f46.google.com (mail-ej1-f46.google.com [209.85.218.46])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=a7rpRKie;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 800CF606A331
-	for <linux-scsi@vger.kernel.org>; Tue, 10 Nov 2026 10:14:39 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 800CF606A331
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE87B606A31C;
+	Tue, 10 Nov 2026 10:53:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=DrlQYRb4
-Received: by mail-ej1-f46.google.com with SMTP id a640c23a62f3a-c4203bbb1e9so271061866b.3
-        for <linux-scsi@vger.kernel.org>; Tue, 10 Nov 2026 02:14:39 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1794305678; x=1794910478; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=9WFltYRvNkpM0HMxRLJxGiCTEiP83WtKPHu+oXy3KTg=;
-        b=DrlQYRb4d+FJBQLFk4gip1vdMb9pZcbFm0QRoW/O9nsnnIGk5B/dcI7komCKzkv/uM
-         Uz0TTkL3EB0XOLA2v0TTxwYvqDOvah1wiwbB4uUsiRRXfj1OcdvtnHWnMQS6yfKTNN5Y
-         2S+sbZpFj/oUd6OIfB1K+t4luOgmpm8MRta8dNUBz+XdEb16ui6jztHrAySR2QYDDBtW
-         UcH7ksMk3kyTCuhLg24n4RSbgP43bR1MD63YWBBHbNHKba+s6Adtgd3r0iiTavTYgvkx
-         vCBmyxhjfzRfUpjuhY0K7x1CK/3uUIf/0FzbTbFW5bHu/k5G1xko0Cr6O3LrrObY61iA
-         y+ww==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794305678; x=1794910478;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=9WFltYRvNkpM0HMxRLJxGiCTEiP83WtKPHu+oXy3KTg=;
-        b=C/qM93d1d71EBnxhB1+9fyqWEJRlEXl19V+XnJnUWENpcuePIBo6HF4lvVAQQzlHSa
-         a+Tb6uyej5cgv8+3fN8kbNtjegMqy4Ncy4YC2ZlrPy1mn5GabiyqsvscSVpmXC8wu30N
-         qxOq2VV5GxQCMNizFI1CDfR/AKf7FL6acKK6zF9MsDRyYnKgiYRIpOPH6OS74v/F/AqV
-         vXVsw8tUu+jT7pZ6LyexsGa/Cc6sXB/ISE2J7v+Ia2pKro84YThZqp/anelXMLkGIq1g
-         gzIJJ2djKLlwrjONDRbHtt/3I757Z49vkh5jmt4KO677GMg3jSGj/hBHgfT6iGoGnlIY
-         1VXw==
-X-Forwarded-Encrypted: i=1; AL+hErEtJqG5kXGW+xhCj39ilzW02Y4HXIPHAF042mqayTI5iqjv7Kxsmjfvw4CfJSRBeQnDdi1ggL80zyCG@vger.kernel.org
-X-Gm-Message-State: APuU4Z/E0VVe7Wn4Pe4iRQuJedD291/ssJoMx6ZMkepPJnpfWWIl2awn
-	7qhSVT8o224Iam9+gFB/YQwZwX0ujNMgrYsdD63TMhv5XhPER7Lj1K/P
-X-Gm-Gg: AYBFou2d9zlpipwY2fA7nWaK0u13B4q0N+nxJJPp7glJyHBObMzYzIpFSNlzvLFC8gL
-	UhTY4t4dmvCbELOx64b1QbJbtOpTIcwVtGz6GF9KzxVl70EYG10z1PDGoJIXHJL6oLZbb4nMvUg
-	wSIJINamHd1/3O/d4lPbcklhZMoQjpuXrYhqT2tSKwJ6PQIG52KvbYJImyLg+q1ky4KoWJNPLlH
-	KjktHIw88njM5smaegil1wFzGrcXF/7A/xFNlwwDfLk/S5IO9MZPRMvWdvi3jqvXCt0nOAyzJMS
-	tlCXsByPnofXNFIm2TBji18zcdMY4FjYuskSqDFOvuuUhOj8sSOP4QqY2ugzcerka8fHruguArc
-	32S/xWvcOKq8TnonLafpu27Xlxu0QmCJC0sERfXPvhX5hUEc11wDGG5rlcX3/GusnqnSNJ4DPOZ
-	l4lUrXElSpH3hPvoIqaIbst8WWVJxLjIvUZj1O+TuEI6IobAoVOmy1YJeTGOZTal4JCdNo0rnw1
-	KGo4q8R1HavedCfMD2fN8KxPAZJqNTQvVAV4oi7FhEVx7AotBY5+G2ZAY5yh9EJhs+O416WmD3S
-	kqyD/4mOFWnSBaH99gfpKpJsGuHCJIcGKLqlUrJJYst90mp0MDwvWncJXT/S4M/R+8bBg2FzHoT
-	OKd6ONyA2N41D
-X-Received: by 2002:a17:907:944d:b0:c41:4c20:5a80 with SMTP id a640c23a62f3a-c504963ce05mr189793966b.44.1794305677695;
-        Tue, 10 Nov 2026 02:14:37 -0800 (PST)
-Received: from localhost (178-84-201-199.dynamic.upc.nl. [178.84.201.199])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c504a593eacsm90433466b.36.2026.11.10.02.14.36
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 10 Nov 2026 02:14:36 -0800 (PST)
-Date: Tue, 10 Nov 2026 11:14:35 +0100
-From: Amir Goldstein <amir73il@gmail.com>
-To: Christian Brauner <brauner@kernel.org>
-Cc: linux-fsdevel@vger.kernel.org, Jann Horn <jannh@google.com>,
-	Chris Mason <mason@kernel.org>, Josef Bacik <josef@toxicpanda.com>,
-	Christoph Hellwig <hch@lst.de>, linux-block@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
-	Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>,
-	linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-	driver-core@lists.linux.dev, linux-mm@kvack.org,
-	bpf@vger.kernel.org, linux-security-module@vger.kernel.org,
-	selinux@vger.kernel.org, apparmor@lists.ubuntu.com,
-	linux-nfs@vger.kernel.org, netdev@vger.kernel.org,
-	fuse-devel@lists.linux.dev, linux-efi@vger.kernel.org,
-	xen-devel@lists.xenproject.org, ocfs2-devel@lists.linux.dev,
-	linux-s390@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-usb@vger.kernel.org, linux-erofs@lists.ozlabs.org,
-	linux-kselftest@vger.kernel.org
-Subject: Re: [PATCH RFC 38/41] fuse: refuse files on pseudo filesystems as
- passthrough backing files
-Message-ID: <avLui6Mpf8GbKbtc@amir-ThinkPad-T480>
-References: <20261110-work-loop-pseudo-v1-0-4c998976c6c7@kernel.org>
- <20261110-work-loop-pseudo-v1-38-4c998976c6c7@kernel.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=a7rpRKie
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BE1391F0089F;
+	Tue, 10 Nov 2026 10:53:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794307996;
+	bh=XvZzxhH1tJfaFa9xLjcAjvvdEgxtHDpQlkyGqk3MqEo=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=a7rpRKieOLdLRCHlux/v2v3q1OPL379DSZCfBOKVMnMkNjBc7lUcTyI4IylD7zYmn
+	 OXz9/qvSrCgKw/VX+neh3X8jFxLI9eGwlPc8cabK7Qu7QkbD3iMBsiNV5J8xNO8a1F
+	 niHxvoFUalD8kHu7/XVXvJPPIdBD1A/K1rquiv9KEpA6M/LkSJvVnnF27IrHQYEzfH
+	 gaeH+pHC6jtOt1Os9NchErQn8BIc5GhcWT5YSsorwQOdUdV1wmkVIH1QGDKpZFeA7D
+	 RblFM7R/IUu4zj5K7TPeBIPY5Xfnfyr7RE3k1OCG1aTMAhVDgEO9w4rX+lZdeTGeL4
+	 8tT+cbF61316A==
+Date: Tue, 10 Nov 2026 11:53:10 +0100
+From: Alejandro Colomar <alx+linux-hardening@kernel.org>
+To: Mariia Nikitash <nikitash.mariiaw@gmail.com>
+Cc: mkp@kernel.org, linux-scsi@vger.kernel.org, 
+	target-devel@vger.kernel.org, linux-kernel@vger.kernel.org, morbo@google.com, 
+	justinstitt@google.com, kees@kernel.org, linux-hardening@vger.kernel.org
+Subject: Re: [PATCH] scsi: target: iscsi: Replace strlcat() with snprintf()
+Message-ID: <avL2aQq9oSun177S@devuan>
+References: <20261110093137.37744-1-nikitash.mariiaw@gmail.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -112,41 +57,116 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="c5b4bwq2tilhrcqr"
 Content-Disposition: inline
-In-Reply-To: <20261110-work-loop-pseudo-v1-38-4c998976c6c7@kernel.org>
+In-Reply-To: <20261110093137.37744-1-nikitash.mariiaw@gmail.com>
 
-On Tue, Nov 10, 2026 at 10:14:54AM +0100, Christian Brauner wrote:
-> The fuse server can register any regular file as a backing file. procfs
-> and binfmt_misc files are already refused by the stacking depth check as
-> both set s_stack_depth to FILESYSTEM_MAX_STACK_DEPTH. sysfs and the
-> other pseudo filesystems aren't. Reads and writes of the fuse file would
-> then be done on the pseudo file with the fuse server's credentials.
-> Refuse files on pseudo filesystems just like loop does.
-> 
-> Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
+
+--c5b4bwq2tilhrcqr
+Content-Type: text/plain; protected-headers=v1; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+From: Alejandro Colomar <alx+linux-hardening@kernel.org>
+To: Mariia Nikitash <nikitash.mariiaw@gmail.com>
+Cc: mkp@kernel.org, linux-scsi@vger.kernel.org, 
+	target-devel@vger.kernel.org, linux-kernel@vger.kernel.org, morbo@google.com, 
+	justinstitt@google.com, kees@kernel.org, linux-hardening@vger.kernel.org
+Subject: Re: [PATCH] scsi: target: iscsi: Replace strlcat() with snprintf()
+Message-ID: <avL2aQq9oSun177S@devuan>
+References: <20261110093137.37744-1-nikitash.mariiaw@gmail.com>
+MIME-Version: 1.0
+In-Reply-To: <20261110093137.37744-1-nikitash.mariiaw@gmail.com>
+
+Hi Mariia,
+
+> Date: 2026-11-10 01:31:37-0800
+> From: Mariia Nikitash <nikitash.mariiaw@gmail.com>
+>
+> In preparation for removing the deprecated strlcat() API[1], replace
+> the strlcat() call with snprintf() to construct the AuthMethod value
+> directly from param->value.
+>=20
+> Since buf1 contains unmodified copy of param->value, formatting
+> original value and suffix together preserves the NUL-terminated
+> output, including partial or omitted ",None" suffixes when the
+> 256-byte buffer is too small.
+>=20
+> Link: https://github.com/KSPP/linux/issues/370 [1]
+> Signed-off-by: Mariia Nikitash <nikitash.mariiaw@gmail.com>
 > ---
->  fs/fuse/backing.c | 3 +++
->  1 file changed, 3 insertions(+)
-> 
-> diff --git a/fs/fuse/backing.c b/fs/fuse/backing.c
-> index 8c21a8a74efb..4e4fb810ddaa 100644
-> --- a/fs/fuse/backing.c
-> +++ b/fs/fuse/backing.c
-> @@ -147,6 +147,9 @@ static int fuse_backing_open_file(struct fuse_conn *fc, struct fuse_backing *fb,
->  		if (inode->i_sb->s_stack_depth >= fc->max_stack_depth)
->  			return -ELOOP;
->  
-> +		if (file_is_pseudo(file))
-> +			return -EINVAL;
-> +
->  		fb->type = FUSE_BACKING_PATH;
->  		fb->path = file->f_path;
->  		path_get(&fb->path);
-> 
-> -- 
-> 2.53.0
-> 
+>  drivers/target/iscsi/iscsi_target_tpg.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>=20
+> diff --git a/drivers/target/iscsi/iscsi_target_tpg.c b/drivers/target/isc=
+si/iscsi_target_tpg.c
+> index 99772364c88e..aad82a37538f 100644
+> --- a/drivers/target/iscsi/iscsi_target_tpg.c
+> +++ b/drivers/target/iscsi/iscsi_target_tpg.c
+> @@ -624,7 +624,7 @@ int iscsit_ta_authentication(struct iscsi_portal_grou=
+p *tpg, u32 authentication)
+>  		none =3D strstr(buf1, NONE);
+>  		if (none)
+>  			goto out;
+> -		strlcat(buf1, "," NONE, sizeof(buf1));
+> +		snprintf(buf1, sizeof(buf1), "%s," NONE, param->value);
 
-Reviewed-by: Amir Goldstein <amir73il@gmail.com>
+This rewrites the string written a few lines above.  It seems rather
+confusing.  I very much prefer strlcat(3) here.  Of course, an
+strscpy_at() would be better, but snprintf(3) seems wrong.
 
+For other readers, here's the same diff with some more context:
+
+	@@ -622,11 +622,11 @@ int iscsit_ta_authentication(struct iscsi_portal_gro=
+up *tpg, u32 authentication)
+		} else {
+			snprintf(buf1, sizeof(buf1), "%s", param->value);
+			none =3D strstr(buf1, NONE);
+			if (none)
+				goto out;
+	-               strlcat(buf1, "," NONE, sizeof(buf1));
+	+               snprintf(buf1, sizeof(buf1), "%s," NONE, param->value);
+			if (iscsi_update_param_value(param, buf1) < 0)
+				return -EINVAL;
+		}
+	=20
+	 out:
+
+So far, NAK by me.
+
+
+Have a lovely day!
+Alex
+
+>  		if (iscsi_update_param_value(param, buf1) < 0)
+>  			return -EINVAL;
+>  	}
+> --=20
+> 2.43.0
+>=20
+>=20
+
+--=20
+<https://www.alejandro-colomar.es>
+
+--c5b4bwq2tilhrcqr
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEES7Jt9u9GbmlWADAi64mZXMKQwqkFAmry95AACgkQ64mZXMKQ
+wqnUbA/+Ia9sO6kZ0dpmQ4E0viH2C2QAzQRKSibUxXeS1zti2iFaedYh/Vw3Utht
+a6fXGGjGweK3rKojZBnHOxrUt4w3GE6PWyM2dIocDFMEJ2cZhDF3JCHWR3rrhQT/
+wrDBL0yyD1o6DvVr/aDhbRsqsO1r2DZVnplhlQVn88IK+T/iZEBWLwIfVsHqJK0S
+zLEvcoxI2POaQgmLZy6N+KBQhNVP3/4z/NKwB6DYbh85HfwS6vYQHnyG05d5rQNg
+n82yfjdWGGvr0mmm2Mxqw7rzkfHfS2xosuQlmuTpq+738HRQvYAHqJMBByjFI6Dz
+yBgLfHLOnMSDrmmKJRZJiGg7GT3KS9ei++hs5g9rvmtpKVMO9UPv1pRIwMMXlGBd
+FGl98AGVIR2qU1/fSiQ0hKzFXXHLtPBxr0nAre19m5A4nSmbtJn8s7/l+a1N9cZD
+mFXX12060/dsfShGnvrpK/VghnJ4SJ4SOi2xhTghon8e5VVy7lWWygR5oWbMd36g
+5Ow91ClNM3X5MijgCtGXTHhQpJGH6J0be7qD9uLGNZ5G9wZyeCvQ82f1wMnVwkUV
+0Xt7JYD7px1uV3Y/xROSBBA4jKUZE02jDVXjKpiTOPGlJvmYTJZYX/rFYF8HBiBU
+/9OvzwMJS6qrAZ27UkPIORHOyryskiXJ147e5Wa2m1R16eEcHr8=
+=lpk1
+-----END PGP SIGNATURE-----
+
+--c5b4bwq2tilhrcqr--
