@@ -1,112 +1,113 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=148.163.139.74
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=148.163.135.74
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794335350;
-	b=wKVyjc56ANFV9/DpPI7On6BBezEpdLxve//vQ28GEb4xKRAe8hpbuKXBXuM+PYMkQeMD
-	 WV6FNW3vvb7ITCdLHDIyNpwmYYCHYsjTdfcTHjjDghFBbv1iDDE1XoNApw4H5h2REch3W
-	 2WhQlJE/uZXPbG7cwAaty6zAet8Bmq14aYM1bJVQKV/KEGjK3HeOXfqguwmy1TMg2kBfK
-	 GZ5f2aI4rxjbkTouciE7p91MsJ/p9UUy0E74ctFHRSBQdTF65qrZI4E9HtvmhjSjf9a+G
-	 PNYK7eIBWNDvfCVSVNpSMaHaFP43N090401Wzh39edZemT4ctSyAOGmpG8SgYm9DY8A==
+	t=1794335352;
+	b=tRh0aQFwuOsu9asHM+C7gAaxtf28+4OEubxgmNJ/w85PsV5GXVRqaTztLgtnunLVJKzW
+	 9Q7eemilJJRO01/riZMvhmcSoifIjoSnREu/zChIG9S2QT3XX6vynjbWtJVx/SVIch6xP
+	 H2prLYdEQxx4tzlLOtn2yw8DPBVSus040SkK/6Ys1F6askAsAJwTkkCQFOlqYcXUF7ik/
+	 dOs9OxZtxwr9xI9bAU6x/6rOekoZ4SKumYw3cj8qDdb+5361FU3GI/eWczSJCGth9X6nH
+	 el8LcJZkfSZFQa6nHJ9oiesFs7aPzTUc5tA8q2j10MciZknkCreVc940yK9kKaqCwow==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794335350;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794335352;
 	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
 	 DKIM-Signature:X-Google-DKIM-Signature:X-Forwarded-Encrypted:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:X-Received:Received:From:
-	 Subject:Date:Message-Id:MIME-Version:Content-Type:
-	 Content-Transfer-Encoding:X-B4-Tracking:X-Change-ID:To:Cc:X-Mailer:
-	 X-Developer-Signature:X-Developer-Key:X-Proofpoint-Spam-Details-Enc:
-	 X-Proofpoint-Spam-Info:X-Authority-Analysis:X-Proofpoint-ORIG-GUID:
-	 X-Proofpoint-GUID:X-Proofpoint-Virus-Version:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:X-Received:Received:From:Date:
+	 Subject:MIME-Version:Content-Type:Content-Transfer-Encoding:
+	 Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Proofpoint-Spam-Info:
+	 X-Proofpoint-ORIG-GUID:X-Proofpoint-Spam-Details-Enc:
+	 X-Authority-Analysis:X-Proofpoint-GUID:X-Proofpoint-Virus-Version:
 	 X-Proofpoint-Spam-Details;
-	bh=9w1TbN1dvve0swdMnEQBNdtFLKErrDV4D/BBl+8lzPA=;
-	b=JdQ6RJNGOZ0o1Y+06SDiFlpb61k9Hbt932M5UbGQQP4JjyQ7H3iGZXbnvSwZvdyBl1J+
-	 g1m7oGPnIDZLSoCfB+wK93DO4HAfiHgPRsczPMOyj/kgBL0P3K8K6g829wmHsW3BMAB0h
-	 3nFFN4zvsVTENKbKx+BT16NoOIZ6YUgpT3ZE1Q876wG0pwWA2O55w3BN9yBVY7+Htdj11
-	 VGuqYFID2nBz0ZeIWao+O0hmHGhYm4abwkzj6b5f6XFTD4ysgQgkM3ULGCZxs/5r99EuP
-	 0svy6kuMy5uZFFxAtVkojpjpgIDpMeTU0f5hBZgQZG4arTxRKJGbMdAHMv4PFZ003cg==
+	bh=nOvo/M04E2I6xkzAUOHPFcPB0rs6jwLGU2nA3+JtmUc=;
+	b=gcDkNMewZ+NOFBXgJy1wG/t7hEseqAaYybFHFLLkCGKKUExgHq2NEcJaJ3bwhXi4jGsM
+	 YFWnC8WiHSr4itoVreeAYXYdurGhF/xVIOMEan3ruxsAZJtCHPdtMMq3iEOtF35AlmzCB
+	 uZJAto9HabmmZGNEGRyJrnKKK/5f2HIYCUVSMkgNmZmIRH9s1/P785pt2a3q1urYr70C6
+	 rUY27oi5omH7TRu6wXgkAC+w4bj6uu+rOBxtT6guhMzGFCf+zCkeAd+CCOCumTX9NXk/w
+	 EyP0XGQ0K1+Mw3BcVyFqUc9EzHkEJKWdPAfZSBFHWi1HCEDxmgWt0crzpgPocGrabHA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=columbia.edu;
 	spf=pass smtp.mailfrom=columbia.edu;
-	dkim=pass header.d=columbia.edu header.i=@columbia.edu header.a=rsa-sha256 header.s=pps01 header.b=pW17WZOI;
-	dkim=pass header.d=columbia.edu header.i=@columbia.edu header.a=rsa-sha256 header.s=lionmail header.b=z2eizeha;
-	arc=none smtp.remote-ip=148.163.139.74
-Received: from mx0b-00364e01.pphosted.com (mx0b-00364e01.pphosted.com [148.163.139.74])
+	dkim=pass header.d=columbia.edu header.i=@columbia.edu header.a=rsa-sha256 header.s=pps01 header.b=ilehM0CG;
+	dkim=pass header.d=columbia.edu header.i=@columbia.edu header.a=rsa-sha256 header.s=lionmail header.b=C96d0oEA;
+	arc=none smtp.remote-ip=148.163.135.74
+Received: from mx0a-00364e01.pphosted.com (mx0a-00364e01.pphosted.com [148.163.135.74])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F418606A332
-	for <linux-scsi@vger.kernel.org>; Tue, 10 Nov 2026 18:29:03 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0F418606A332
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7DD5860A2636
+	for <linux-scsi@vger.kernel.org>; Tue, 10 Nov 2026 18:29:11 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7DD5860A2636
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=columbia.edu
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=columbia.edu
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=columbia.edu header.i=@columbia.edu header.a=rsa-sha256 header.s=pps01 header.b=pW17WZOI;
-	dkim=pass (2048-bit key) header.d=columbia.edu header.i=@columbia.edu header.a=rsa-sha256 header.s=lionmail header.b=z2eizeha
-Received: from pps.filterd (m0167076.ppops.net [127.0.0.1])
-	by mx0b-00364e01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6AAHZ37t2980473
-	for <linux-scsi@vger.kernel.org>; Tue, 10 Nov 2026 13:29:02 -0500
+	dkim=pass (2048-bit key) header.d=columbia.edu header.i=@columbia.edu header.a=rsa-sha256 header.s=pps01 header.b=ilehM0CG;
+	dkim=pass (2048-bit key) header.d=columbia.edu header.i=@columbia.edu header.a=rsa-sha256 header.s=lionmail header.b=C96d0oEA
+Received: from pps.filterd (m0167068.ppops.net [127.0.0.1])
+	by mx0a-00364e01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6AAHYkvV1907256
+	for <linux-scsi@vger.kernel.org>; Tue, 10 Nov 2026 13:29:05 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=columbia.edu; h=
-	cc:content-transfer-encoding:content-type:date:from:message-id
-	:mime-version:subject:to; s=pps01; bh=9w1TbN1dvve0swdMnEQBNdtFLK
-	ErrDV4D/BBl+8lzPA=; b=pW17WZOIAJDOkkRCu349/N41d5Lc822vyMbuu+6fWn
-	5ewEeYbVwLKGA8aRWKufjAg8XaeecDUfw3fyTODwHfFxiEn5WJxmXuun07vl3GZM
-	F4rTEngoXebZ2IBT8kEZXBDcJ7jbawltSb6zoEoKqgsOWhstcWaLH79gRhFKI1zO
-	1le0pyYcSnHJ0TnXe4yGMiMFtsSCqskYMLEiNrT7iWFh6n9Pi2tCseuzaD69a/oM
-	aXBwXHI9DITWYhOxAh9MqpITdFRWwQjoeopKh16NfkJV1XRvyQa5YAhGuENHqyQF
-	VdxgAS/Af/lEtZ6mWPvpBkqZB/QwoXNZjkuD/OxFeK3Q==
-Received: from mail-qv1-f72.google.com (mail-qv1-f72.google.com [209.85.219.72])
-	by mx0b-00364e01.pphosted.com (PPS) with ESMTPS id 4hv2xebc0w-1
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pps01; bh=nOvo
+	/M04E2I6xkzAUOHPFcPB0rs6jwLGU2nA3+JtmUc=; b=ilehM0CGRfTOU9vGCzjQ
+	m95IRNQXDmJnGlFjejrk1u2gRirLYm2cY7dy61M/hgWlaibYTORfQN5XvtnbwN3J
+	kvMl5nTDPiClv3bMAC9c/dqv7ol+0KWVW4p9uNqSF3Wu0OSOBT/+ijFC8ZUYkscy
+	nUE7HdhEaDufVt5a9qRQpLClhx9ervurGywYEyJJf4oCY6Kcg35tj0M3RMraPKoE
+	y4dVv6b6i7crkI/NXMJIiDxuWAgkvV9hrdVUaC+Y+WyXBRv9Chpr902CV+L7v/Gj
+	mrn0HSx30uf+6HsZjjPbItEg6KmItpF4qtVzvRTUM0HAvxicG+PgJsGpEDyWNURX
+	IA==
+Received: from mail-qt1-f198.google.com (mail-qt1-f198.google.com [209.85.160.198])
+	by mx0a-00364e01.pphosted.com (PPS) with ESMTPS id 4hv7nyrjn3-1
 	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Tue, 10 Nov 2026 13:29:02 -0500 (EST)
-Received: by mail-qv1-f72.google.com with SMTP id 6a1803df08f44-91eb16ea5c3so64320476d6.2
-        for <linux-scsi@vger.kernel.org>; Tue, 10 Nov 2026 10:29:02 -0800 (PST)
+	for <linux-scsi@vger.kernel.org>; Tue, 10 Nov 2026 13:29:04 -0500 (EST)
+Received: by mail-qt1-f198.google.com with SMTP id d75a77b69052e-542fc61841eso51326761cf.0
+        for <linux-scsi@vger.kernel.org>; Tue, 10 Nov 2026 10:29:04 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=columbia.edu; s=lionmail; t=1794335342; x=1794940142; darn=vger.kernel.org;
-        h=cc:to:content-transfer-encoding:content-type:mime-version
-         :message-id:date:subject:from:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=9w1TbN1dvve0swdMnEQBNdtFLKErrDV4D/BBl+8lzPA=;
-        b=z2eizehaGSXWA0nKtLIF6vnX2eQun9l7oJnukU7pPO+5NM93HSV2o+QipE78Lb2T7F
-         iGmICx2b6aSWGe9ztnDmVqt5jtMETPu7cbIe0buWMUZBhj9ed1ohHBjqyQvbDE+GQ2kL
-         9ggTcR6eCrMs+GG+jY/MVEKFNzYeYoL6AjX3W0/zYrfSZW0c5If3KIfP5eSX0MTluoy/
-         CfYZCYtY5yZ5WWFsS5q1MU0ZyHWR/oEY4cmnEthdqMqcKszDjLHlrtFbAF+FglscLKrX
-         ixrmqm9PYLtMShXqqrViSH9sqFH+0QljJEpVk/5kOA6siX1HyRJlipHUzfsXXMO5GkbC
-         67LA==
+        d=columbia.edu; s=lionmail; t=1794335344; x=1794940144; darn=vger.kernel.org;
+        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
+         :content-type:mime-version:subject:date:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=nOvo/M04E2I6xkzAUOHPFcPB0rs6jwLGU2nA3+JtmUc=;
+        b=C96d0oEAnMkE8Hw0jhWqyZP70E4jI47QGWY4+pA6K/iHQOpMgaFcLyg+9Pld2pITX2
+         MOil4C+Yp9GPAchUT8752g/3Jp+yz+PnRDH+tTZ5DeVgvvOsc5Ub4D68bBUlbTizfsYw
+         u0deJHiUYzA7bxEBJ4rlAyNoN9hRqpMaBzxWGfofU7NRlKlcFrvl8kejqdCdHz9dCutJ
+         NU+EnookF/N8JDbxNB8yHFXTRb3Hgcz6tMlP1wRKA5+5mMUkfnoyg8fbXSPNwKHF4OrA
+         hwdO+P5/USWwVrErdiSwBcWIR5R4O83JnJqJGBvuV0jVsbMtbbz2uvUHRqPgWvoam7fR
+         4tFw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794335342; x=1794940142;
-        h=cc:to:content-transfer-encoding:content-type:mime-version
-         :message-id:date:subject:from:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=9w1TbN1dvve0swdMnEQBNdtFLKErrDV4D/BBl+8lzPA=;
-        b=ydQ3xLFBfEZ/RzHQAEWtq44eQpoCciXwXlx8CGTqj6kgZ5TX40ohmUQNMjiQuIiyv+
-         rRWuCgJz2mrSUfQTz0Jsn415XqIkSxfMwVSggzcR5Rxgt8wMg23GlgtrFhCgJ6unkq3t
-         zLUTLoEYOFr44c2EhJkveBc38zID2Fbl12upRwYZj9nf7uV1lHSAAUGZOEi5ISQUKN18
-         EDVwm5KPp29kL2W9+gIYcx0kNx0Q4z/yKAxkEo2Rs6qMeU5YFJgKWlJuKtL+JJE5dsXa
-         DxnUyrPD1bpkp6Onm+zswp84oj/eVI1Q7zc7KKTXYOxEdG9X6DAHWb5n/id0IvqgyBmI
-         TFqg==
-X-Forwarded-Encrypted: i=1; AL+hErHe4pgNx1hcewZ4Eksz073zsgkph8pukUxlLx679N5PfAR0u6Go2zHy6Dp6FEP0GmOFo9os699FqLmK@vger.kernel.org
-X-Gm-Message-State: APuU4Z/xQEWSq8MLYR8iZUfmox4MwVLX+vrFtW/U9ze6M3rXQlIRSkzi
-	49mPNxqp50ylm/LHOqrbDDAYsX16RlWcSvz6xj8rRNPbXjSC1PnjRdVpyqpROpV8CYXF6N1/gLi
-	ccm2wPA1iplLEY3xEUW/9d69bI5QS8eiP5C1SPCddsHybH7wVGCIOEAvhpEk=
-X-Gm-Gg: AYBFou2rKGfNPf/4YvSHs/UqMbdnwlKj2am/YTqEuNWJM99HTJ5jeyztECU4ko/H7Cf
-	saVJYC/SMBD+NM5UXeDfz2qwMMLfa2n6gfbqpjj7yK5/Pai1U0wYvnH60vFxluYdCX73gOcLprf
-	g8Ol5kA52hdcYQOTIAjYZpFfnklplPc6+7hkjWE11yGdClVDYrb7J0/HDbJYxj3fs2vbYfijdOe
-	Y24QoCQrM244Z4SbO6GtLD21mF9vlAZPPI42KrywvAY6diUGY2/9L7EGOJ//a+3v3YLe8UBM5Ee
-	DEUjkXXYyU+eEWe03gHdy9oaFet4NcuaF6epnd/Vz71RYXCEheXtRFoS9RaviORFhH18hdFP6I9
-	ABO2amnMeIee/FD2EsFLI69yZeBA9aIN/tuUNBYCXUXsMyFXWnkFEs7XdB5CDnQo1il/cp73YhC
-	EWTtNPxf2IAsrXy8RNF2X/
-X-Received: by 2002:a05:6214:62b:b0:91c:6701:161e with SMTP id 6a1803df08f44-91f04195981mr1970946d6.53.1794335342018;
-        Tue, 10 Nov 2026 10:29:02 -0800 (PST)
-X-Received: by 2002:a05:6214:62b:b0:91c:6701:161e with SMTP id 6a1803df08f44-91f04195981mr1970486d6.53.1794335341480;
-        Tue, 10 Nov 2026 10:29:01 -0800 (PST)
+        d=1e100.net; s=20260707; t=1794335344; x=1794940144;
+        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
+         :content-type:mime-version:subject:date:from:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=nOvo/M04E2I6xkzAUOHPFcPB0rs6jwLGU2nA3+JtmUc=;
+        b=HuNVWkCr3qYi+5S72WbL/OmZR+fgkksWEWpxo3DW7QfAwGqYu+TAvGGL13eOnj1shN
+         rMHnYPPXSm/PCIuz0iSPuD+FQ/WKAce2z5aKmIAxPjaV6x0D7eVPd7kIf8hr1DQnDkS7
+         h9O8InPT6pmXXMS2/9pHLFVwMFcRC43dadnG09isimPETr1e/wrNO87cRexjVlw0Hcns
+         3cVl72JSwuAHgkFTfFn0eJz4uDW2vAvpq1j6woG2AKFWmrtPg4IqgU+EU0nqDyqlEydg
+         NnDAUKyCeKKIAea12jvt8Et+rPaj4OrzCEQdkTn4V6IwzQcyTMrcmtBkoXcWNFayhqno
+         9Ygw==
+X-Forwarded-Encrypted: i=1; AL+hErHLzWAWGe7eDkY+Kt+fQ9Chq0zEBD9Mol20RrQcRx7EMHT0a+6Unn+3IYmJ4Wm3JRqp3uRZObnRpLDj@vger.kernel.org
+X-Gm-Message-State: APuU4Z+lYPYp5cxGX6FKC0IjD931vsIlIJEgiCCC8x00tp1I23aL9lJY
+	YmgQcZnv4d6SZlF0fTMX5mgZsgE8tbf1BOa3bhliei8yT1u5TiXJ9m7JHQhtxFnKX5G0wXS7YNI
+	xr4IPx/CZO0lugl88/Zo/BC8PreiM8bAcza1MFhNZk/Tpu6I7iWkyjlxn7Xk=
+X-Gm-Gg: AYBFou1pcOC3PP5lMw2OqmcSNJ5TyVsNntfC/FtQadQwncdYYek1O7J5eyILfKHkCQo
+	dkTeQi4tL6EA4hkBliVNssP9lCSca5Q2ZZM4cMtmkOPlnNhGLVTOTiHKZx+rUviV6bpBV+nDQyB
+	S2ohwUs/1D1UZNzhUx/DaKl+qxvZBJtWa0XM7CDtGjBZ62YqfxFg3v9Pftklju2LC3Tpx8Imut4
+	3bp8EqE19obD1xXLfofs8LA/UhBa7mxw6Z6fgfn4Y6ASk/pSMTnA/ndhNI+UycJyYCytI9aaHq2
+	AonMjEW5r2AaTRUnPUZQ9zHAZ27V0JjwjwhEdRA+x1auNnbIokKlcH6u8Lywtp1NFex3uItTLv6
+	KQa2o21d/d2kXjiCHYGQ6Dl+2ncewn8UsC/UUxhKkFc+Ld4vB97ViWgc0CKqIO2xbEX25iuNDl5
+	p81lqyTea3bb17u1GwSlYM
+X-Received: by 2002:a05:622a:5e0d:b0:536:719d:7974 with SMTP id d75a77b69052e-555283f3c18mr53051991cf.55.1794335343911;
+        Tue, 10 Nov 2026 10:29:03 -0800 (PST)
+X-Received: by 2002:a05:622a:5e0d:b0:536:719d:7974 with SMTP id d75a77b69052e-555283f3c18mr53051681cf.55.1794335343498;
+        Tue, 10 Nov 2026 10:29:03 -0800 (PST)
 Received: from [127.0.1.1] (nat-128-59-177-200.net.columbia.edu. [128.59.177.200])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-91ef05493desm26986666d6.45.2026.11.10.10.29.00
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-91ef05493desm26986666d6.45.2026.11.10.10.29.02
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 10 Nov 2026 10:29:01 -0800 (PST)
+        Tue, 10 Nov 2026 10:29:02 -0800 (PST)
 From: Tal Zussman <tz2294@columbia.edu>
-Subject: [PATCH 0/2] scsi: scsi_debug: fix protection information for
- writes
-Date: Tue, 10 Nov 2026 13:28:53 -0500
-Message-Id: <20261110-scsi-debug-pi-v1-0-539829902b3a@columbia.edu>
+Date: Tue, 10 Nov 2026 13:28:55 -0500
+Subject: [PATCH 2/2] scsi: scsi_debug: generate protection information for
+ writes without it
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -118,10 +119,9 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIAGZi82oC/yXMTQ5AQAxA4atI15pMJX6vIhZjFLVApohE3N1g+
- S3eu0DZCytU0QWeD1FZ5gCKI3CjnQdG6YIhMUlGZHJUp4Idt/uAq2CfkqHSFWVhDYRm9dzL+f3
- q5rfu7cRueydw3w8/G3uhcQAAAA==
-X-Change-ID: 20261107-scsi-debug-pi-f51019c898a0
+Message-Id: <20261110-scsi-debug-pi-v1-2-539829902b3a@columbia.edu>
+References: <20261110-scsi-debug-pi-v1-0-539829902b3a@columbia.edu>
+In-Reply-To: <20261110-scsi-debug-pi-v1-0-539829902b3a@columbia.edu>
 To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
         "Martin K. Petersen" <mkp@kernel.org>,
         "Darrick J. Wong" <djwong@kernel.org>,
@@ -131,67 +131,186 @@ To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
 Cc: Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org,
         linux-kernel@vger.kernel.org, Tal Zussman <tz2294@columbia.edu>
 X-Mailer: b4 0.17-dev
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1794335340; l=1202;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1794335340; l=5749;
  i=tz2294@columbia.edu; s=20250528; h=from:subject:message-id;
- bh=9b9GbfhcF9wn/lxnEZX2ahoKHWp6i22V5f6J5qILpZY=;
- b=VGKW5qZjJ/w1czSJV7zYJIKlmO9VoB351Y8x4uLA5/s94RM8BRq+lheeXPdXlZikdPeZDXniI
- 9iK+Okgw1BsB79HRVj1fW6ltvrTusWYowHYzvoTAjdzGZnceF0/fwYp
+ bh=VgRQqft2zbITDi2ZsgnRKYYve9Lrz8zjT/nqRz1KLos=;
+ b=njvoi41HfYrlp7Ui/zKsZ12J/XPShGBhooy2lqbImM53+QcyI85oyztIBStwTFX+reZvxSOC3
+ Q+aF2hmbSp8D5qoR4hG9TpTxGm727wDFpsP7XOmO3rGO0lHy+/d4ZdB
 X-Developer-Key: i=tz2294@columbia.edu; a=ed25519;
  pk=BIj5KdACscEOyAC0oIkeZqLB3L94fzBnDccEooxeM5Y=
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMTEwMDA3MyBTYWx0ZWRfXzYUtcC+Y+f7Q
- ZHNuAc5UpH1BjbqFN8PkXj/ZWcEKs31F/HXms9mTFTZTnc7m5m4YGPvFFJPfHeYVXlfg0uuKCzM
- MzJc4BUVh0HqrwptK9MmxLeh0vPkagCwe8mwk7GPVCJpXixwhuGLTNCM1ssXgq+aAnPZaIb4tLt
- 5sbF0OAurahJvm3yROg1+A9W1erd7KYygJqqOV32AdgaFjdCQKeN0RDOH6r7ehwdDDjm5NViswN
- DymRlO+H0XdD2+E+2d4QWQswnzFMBcnjluLuUqZsHzjl2hliWQy2RQfkNPp2+rB+Lmm69Xux+4q
- DZlwQLLPOPebKBn8Ejdkdclxd1j84fzOpIrr+tSgU7/Z28CUFjQG70lAVhJLhr/xCC4xur7/89/
- aa19RRD2Lk+PVZ0bIiZzN+/LZ6HyebRiO27jfUL79aH2gNDjRpdqXxT+9+fXM1yZz+zVv/xGo8G
- HXW1vL+ZtkqNIRjOpew==
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMTEwMDA3MyBTYWx0ZWRfX8pouhxMjoy8A
- 2IpMIGo8lulYqhHMc61VZIF3u+wqAwLKKzVNHhW8nuGHtjrcG2Rw5QPOzUEU4n+yl5w0vJtYnR5
- AUfAzc3fWhWSTYuD2T8P2UM7FhDtJeTygrNd/jJniZ4ZR7YSOHqT
-X-Authority-Analysis: v=2.4 cv=cvcOAF4i c=1 sm=1 tr=0 ts=6af3626e cx=c_pps
- a=7E5Bxpl4vBhpaufnMqZlrw==:117 a=OksKZPe/0gFw8ujXGPm25g==:17
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMTEwMDA3MyBTYWx0ZWRfXyMd0ntNp0tWl
+ GfIXxcnXfw78suEqJtpl4os9C8sGJzruVeNGhwqKfHZ7fJu004NIH82XcSv6KDOyUC0lGrN+oeV
+ MMIuwyornQT1A+pcTi/HukSGDfWLNDwXCZ8GTKPLBE3eyh4GEhKP
+X-Proofpoint-ORIG-GUID: sViZQu-c_VKgUkxYorRc3uyNgvfmbtyP
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMTEwMDA3MyBTYWx0ZWRfX5nHkgDNeY3kh
+ iV3ux/AHh7OhDyqg3tY+2Qtej1xK4a1qJClYX/eQrwzVBh9QB9gsZW3w79sCIeLlEYgTFHk2IcQ
+ rzGFLFCfacw1y2fc1Y7uyDkJBh/dt+0J00JBM8fx1yDW76r6b/z3tBlaE+rNHzdEuBJNCMtnonZ
+ Ggoob+/jKudgWUkzVozq6o74xJBxQ8aQLry3FJErxJNm9zoNzdGn6vV8jIP73YbWYv5SWCCOjx+
+ nLJxLUNqJFYsEE42VXRe0kZtwiLx/fGxoaxEeJXHcdvImrVO8fF0WVS/3+3DcwI4KL41Uq5HEVE
+ LjOJ/x4WDxYFbCmF7T9R/YKwq5jnxEmGEyf3E/mxWjHx/fpV94OGMOmjSzrlQB5sOFiHScHtsQU
+ +74Xllk04w5MSBtdStwXEqb8j+uawTx5vfGmUnR5mOMBfIu03SjotuESUjlJILtQZjR5Jkv9tQc
+ vHCjGrmC1XmokVZiR0Q==
+X-Authority-Analysis: v=2.4 cv=Vc5ir1p9 c=1 sm=1 tr=0 ts=6af36270 cx=c_pps
+ a=mPf7EqFMSY9/WdsSgAYMbA==:117 a=OksKZPe/0gFw8ujXGPm25g==:17
  a=IkcTkHD0fZMA:10 a=zJRp6_cAMcgA:10 a=x7bEGLp0ZPQA:10 a=A0y_DWxS2BwA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=Da8U98TiO7q1upZEImrf:22 a=Qm0qsxP7aFY2tkT6R2MF:22
- a=VwQbUJbxAAAA:8 a=rWoZ2Wt58CihLohAb7IA:9 a=QEXdDO2ut3YA:10
- a=pJ04lnu7RYOZP9TFuWaZ:22
-X-Proofpoint-ORIG-GUID: zXzwe6c5sO6oQl4dyGi7h7XJZyJFPhDZ
-X-Proofpoint-GUID: zXzwe6c5sO6oQl4dyGi7h7XJZyJFPhDZ
+ a=VkNPw1HP01LnGYTKEx00:22 a=Da8U98TiO7q1upZEImrf:22 a=usPcmh10W0ubT8QP8_c3:22
+ a=VFRM4yhJdAcL9415qCAA:9 a=QEXdDO2ut3YA:10 a=dawVfQjAaf238kedN5IG:22
+X-Proofpoint-GUID: sViZQu-c_VKgUkxYorRc3uyNgvfmbtyP
 X-Proofpoint-Virus-Version: vendor=nai engine=6900 definitions=11962
  signatures=596817
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1011 phishscore=0 bulkscore=10 suspectscore=0 priorityscore=1501
- lowpriorityscore=10 impostorscore=10 malwarescore=0 spamscore=0 adultscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2611040001 definitions=main-2611100073
+ clxscore=1011 priorityscore=1501 impostorscore=10 lowpriorityscore=10
+ adultscore=0 phishscore=0 suspectscore=0 bulkscore=10 spamscore=0
+ malwarescore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2611040001
+ definitions=main-2611100073
 
-With DIX enabled, blocks written by WRITE SAME or WRITE ATOMIC(16) on
-scsi_debug fail the guard check when they are read back. A filesystem
-made by mkfs.xfs on a previously formatted device can't be mounted, and
-xfstests generic/770 fails on XFS.
+With DIX enabled, scsi_debug only updates the protection information of
+blocks written by a command that carries it. Any other write leaves the
+tags of the blocks' previous contents in place, so reading them back
+fails the guard check. A real device formatted with protection
+information generates it for such writes.
 
-The first patch makes WRITE ATOMIC(16) verify and store the protection
-information it is sent, like WRITE. The second patch generates
-protection information for writes that come without it, such as WRITE
-SAME, as a device formatted with protection information does.
+sd never sends protection information with WRITE SAME, so a BLKZEROOUT
+over previously written blocks makes them unreadable. mkfs.xfs zeroes
+the log this way, so formatting a device a second time leaves a
+filesystem that can't be mounted:
 
-This was found while testing the atomic write bounce series [1]. The
-fixes were proposed by an LLM.
+  # modprobe scsi_debug sector_size=4096 dev_size_mb=1024 dif=1 dix=1
+  # mkfs.xfs -f /dev/sda && mount /dev/sda /mnt && umount /mnt
+  # mkfs.xfs -f /dev/sda && mount /dev/sda /mnt
+  mount: /mnt: mount(2) system call failed: Invalid or incomplete multibyte or wide character.
 
-[1] https://lore.kernel.org/r/20261107-blkdev-atomic-bounce-v1-0-f66344262096@columbia.edu
+The guard tag is still that of the log the first filesystem wrote,
+while the block now holds zeroes:
 
+scsi_debug:dif_verify: GUARD check failed on sector 131593 rcvd 0xe313, data 0x0000
+XFS (sda): log recovery read I/O error at daddr 0xff8 len 8 error -84
+XFS (sda): log mount failed
+
+COMPARE AND WRITE has the same problem, as do WRITE, WRITE SCATTERED
+and WRITE ATOMIC(16) when they are sent without protection
+information.
+
+Generate the protection information for these writes: the guard tag
+from the data, the LBA as the reference tag and an application tag of
+FFFFh. scsi_debug does not check a block with that application tag when
+it is read back.
+
+WRITE SAME writes the same data to every block, so compute its guard
+tag only once. Take the meta write lock whenever DIX is enabled, so
+generating the tags is serialized with the reads that verify and return
+them.
+
+Fixes: c6a44287417d ("[SCSI] scsi_debug: DIF/DIX support")
+Signed-off-by: Tal Zussman <tz2294@columbia.edu>
 ---
-Tal Zussman (2):
-      scsi: scsi_debug: handle protection information for WRITE ATOMIC(16)
-      scsi: scsi_debug: generate protection information for writes without it
+ drivers/scsi/scsi_debug.c | 42 ++++++++++++++++++++++++++++++++++++++----
+ 1 file changed, 38 insertions(+), 4 deletions(-)
 
- drivers/scsi/scsi_debug.c | 61 +++++++++++++++++++++++++++++++++++++----------
- 1 file changed, 49 insertions(+), 12 deletions(-)
----
-base-commit: 6628e7d4c6b25c8d18f1345e3a20d21829aae7e4
-change-id: 20261107-scsi-debug-pi-f51019c898a0
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 7d5065039637..2c7afdd2846b 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -4434,6 +4434,32 @@ static __be16 dif_compute_csum(const void *buf, int len)
+ 	return csum;
+ }
+ 
++/*
++ * Generate the protection information for blocks written without any, as a
++ * device formatted with protection information does. The guard tag is only
++ * computed once if @same says that the blocks all hold the same data.
++ */
++static void dif_generate(struct sdeb_store_info *sip, u64 lba, u32 num,
++			 bool same)
++{
++	__be16 guard = 0;
++	u32 i;
++
++	if (!sip->dif_storep)
++		return;
++
++	for (i = 0; i < num; i++) {
++		struct t10_pi_tuple *sdt = dif_store(sip, lba + i);
++
++		if (!same || !i)
++			guard = dif_compute_csum(lba2fake_store(sip, lba + i),
++						 sdebug_sector_size);
++		sdt->guard_tag = guard;
++		sdt->app_tag = T10_PI_APP_ESCAPE;
++		sdt->ref_tag = cpu_to_be32(lower_32_bits(lba + i));
++	}
++}
++
+ static int dif_verify(struct t10_pi_tuple *sdt, const void *data,
+ 		      sector_t sector, u32 ei_lba)
+ {
+@@ -5195,6 +5221,9 @@ static int __resp_write_dt0(struct scsi_cmnd *scp,
+ 	ret = do_device_access(sip, scp, 0, lba, num, group, true, atomic);
+ 	if (ret < 0)
+ 		*scsi_status = DID_ERROR << 16;
++	else if (!scsi_prot_sg_count(scp))
++		dif_generate(sip, lba, DIV_ROUND_UP(ret, sdebug_sector_size),
++			     false);
+ 
+ 	if (unlikely(lbp))
+ 		map_region(sip, lba, num);
+@@ -5283,8 +5312,7 @@ static int resp_write_dt0(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 				    "to DIF device\n");
+ 	}
+ 
+-	if (sdebug_dev_is_zoned(devip) ||
+-	    (sdebug_dix && scsi_prot_sg_count(scp)) || lbp) {
++	if (sdebug_dev_is_zoned(devip) || sdebug_dix || lbp) {
+ 		sdeb_meta_write_lock(sip);
+ 		ret = __resp_write_dt0(scp, devip, sip, lba, num, ei_lba, group,
+ 				       lbp, false, &scsi_status);
+@@ -5473,6 +5501,10 @@ static int resp_write_scat(struct scsi_cmnd *scp,
+ 			sdev_printk(KERN_INFO, scp->device,
+ 			    "%s: write: cdb indicated=%llu, IO sent=%d bytes\n",
+ 			    my_name, num_by, ret);
++		if (!scsi_prot_sg_count(scp))
++			dif_generate(sip, lba,
++				     DIV_ROUND_UP(ret, sdebug_sector_size),
++				     false);
+ 
+ 		if (unlikely((sdebug_opts & SDEBUG_OPT_RECOV_DIF_DIX) &&
+ 			     atomic_read(&sdeb_inject_pending))) {
+@@ -5564,6 +5596,7 @@ static int __resp_write_same(struct scsi_cmnd *scp, u64 lba, u32 num,
+ 		block = do_div(lbaa, sdebug_store_sectors);
+ 		memmove(fsp + (block * lb_size), fs1p, lb_size);
+ 	}
++	dif_generate(sip, lba, num, true);
+ 	if (lbp)
+ 		map_region(sip, lba, num);
+ 	/* If ZBC zone then bump its write pointer */
+@@ -5584,7 +5617,7 @@ static int resp_write_same(struct scsi_cmnd *scp, u64 lba, u32 num, u32 ei_lba,
+ 	const bool lbp = scsi_debug_lbp();
+ 	int ret;
+ 
+-	if (sdebug_dev_is_zoned(devip) || lbp) {
++	if (sdebug_dev_is_zoned(devip) || sdebug_dix || lbp) {
+ 		sdeb_meta_write_lock(sip);
+ 		ret = __resp_write_same(scp, lba, num, ei_lba, unmap, ndob,
+ 					lbp);
+@@ -5753,6 +5786,7 @@ static int resp_comp_write(struct scsi_cmnd *scp,
+ 		retval = check_condition_result;
+ 		goto cleanup_unlock;
+ 	}
++	dif_generate(sip, lba, num, false);
+ 
+ 	/* Cover sip->map_storep (which map_region() sets) with the meta lock */
+ 	if (scsi_debug_lbp())
+@@ -6386,7 +6420,7 @@ static int resp_atomic_write(struct scsi_cmnd *scp,
+ 	if (scsi_bufflen(scp) < len * sdebug_sector_size)
+ 		return DID_ERROR << 16;
+ 
+-	if ((sdebug_dix && scsi_prot_sg_count(scp)) || lbp) {
++	if (sdebug_dix || lbp) {
+ 		sdeb_meta_write_lock(sip);
+ 		ret = __resp_write_dt0(scp, devip, sip, lba, len, 0, 0, lbp,
+ 				       true, &scsi_status);
 
-Best regards,
---  
-Tal Zussman <tz2294@columbia.edu>
+-- 
+2.39.5
 
