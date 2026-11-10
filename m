@@ -1,90 +1,78 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.208.54
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=203.254.224.25
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794273637;
-	b=qQF9smh1XGIdflZAHQFfmxYlTr+qTrbInkiisMSdzn+V1Vd0mxnAHogN4uVULGJ1lKCN
-	 EDnEooX0U1YTmFP4IaobndMyVLzgSdMRD7lMuHJQQSXmVMg2kaOEbgtZiKxJSeM/LIS7L
-	 IXrtmLa3gdgHiggJbldXSTUN1vrGWGrj/lYLmPnPlOnSzzuxyZxB6pL2/4J1YSQfTC9fJ
-	 teD5bs2s96Fyw6LsjIYWSTn8zpt6mOi+0Mqfl9hCJk71gg+GGw2onprr/m2JzDCdkIp2a
-	 mHZFTHssrYBEljhai+UVc7I/I063ejLD1goi6MkbTnLjoAH/SacIBFc80BBKIWfhIhw==
+	t=1794277207;
+	b=urBp3RQMklz46OPrZkpM/U0j1mEc76shhMgt++izLGVf+ct5Y0cNthPznXflRF3Kwo/W
+	 c9c2ERMTpYKh/8Q5fe3rnM6HkumF7fdJ5VN8nX/v4wtzRnFB3MJea1w/m1Aqca1/U5Tme
+	 5XPk2hZ5UN7s8DVTL/m7h8ZTL/5KNAVQR/looT5gzhg7p28H7c50Dhxz0MNmPXDA8cKes
+	 BI5jhNFEGKzqRoSfHW8XhvB0ASlMiDfRK0EoNDVUXze2mhTb0oEa9zrgmPrAJm0nql6xw
+	 RigU8AWyfZ3m282yK+21M8XqyGy4/T0sAUIBIh8u9pqsZYPBTdWrRpKVW/8P5U2+ZRQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794273637;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Received:X-Forwarded-Encrypted:X-Received:MIME-Version:References:
-	 In-Reply-To:From:Date:X-Gmail-Original-Message-ID:X-Gm-Features:
-	 Message-ID:Subject:To:Cc:Content-Type;
-	bh=m2qXctBTC0OPADf0V2KkMb6r2GA0JgabIuFAMe6ERzQ=;
-	b=ZHyzw4j/8k8wN0NGMCEK/QIe0JFsY8j+DYWTb4NcRBPoWJuF8qX8raypvZwFS7Omie0V
-	 V7KTJNC0E3/gH1w0J78CkQbDFZX0AWKlMZIlwdv/LmPjIn90OM/o9QrgvPX17Bc9YfTpK
-	 HBqRlCThU0MM+5rarcOdLSfWN6FTEwNXn2BeCXdSD2cHM2BWwleZL2P6cjZQZixA8Wxmo
-	 OKlzQrJiqjRddU/dM0g7Lp901EzzwjeveOEoo1lDgweQd/swClmhUSelLl96sd153FhIW
-	 6R53zj3tJ2UTU7wfqmSc62VUzjGSv4ewOS/KWy9+laqlylTnXS9BCGHXycwqeesDzNg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794277207;
+	h=DMARC-Filter:Received:DKIM-Filter:DKIM-Signature:Received:Received:
+	 Received:Received:From:To:Cc:Subject:Date:Message-Id:X-Mailer:
+	 In-Reply-To:MIME-Version:Content-Transfer-Encoding:X-CMS-MailID:
+	 X-Msg-Generator:Content-Type:X-Sendblock-Type:CMS-TYPE:X-Hop-Count:
+	 X-CMS-RootMailID:References;
+	bh=nbkF1pft43e3+J7+NhK3lBDPkT3lRk1WKx0TxFdqD9w=;
+	b=IFj0kQ2IBEGfJdQitXx5U766tvTLpn2q2LBlEefynijgOWbCC+488d6ZA6fWxXq5a7YH
+	 TZ4yTW53Gf49MAA+OGbfOvHsCkW4dRJB/bM+0JjqJP3JCtEB8wsPK89OceiIcEFXC/mVH
+	 X3Jo2H9yK45akQ6hlSUwmyuXQUAgRuYiOa5Tlhmxf+4S9qOXSzHtV+2lntj8KH9RHClV+
+	 AUAgPmoBcxJp7jN+OE6A8tGaIEK8aN196XexHH7X4+3I5mnPOcP/Hk8YiNoUPusrolLpm
+	 18ExCTFVI/fFJYcuAM2HATR+l7uAzpsq85Yjye9LAq2uqmQQF9XPUT4bpDFvSwaPTGw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=linux-foundation.org;
-	spf=pass smtp.mailfrom=linuxfoundation.org;
-	dkim=pass header.d=linux-foundation.org header.i=@linux-foundation.org header.a=rsa-sha256 header.s=google header.b=hcZPL2al;
-	arc=none smtp.remote-ip=209.85.208.54
-Received: from mail-ed1-f54.google.com (mail-ed1-f54.google.com [209.85.208.54])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dmarc=pass header.from=samsung.com;
+	spf=pass smtp.mailfrom=samsung.com;
+	dkim=pass header.d=samsung.com header.i=@samsung.com header.a=rsa-sha256 header.s=mail20170921 header.b=Sb1j3B1o;
+	arc=none smtp.remote-ip=203.254.224.25
+Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB3C1606A333
-	for <linux-scsi@vger.kernel.org>; Tue, 10 Nov 2026 01:20:36 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BB3C1606A333
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linuxfoundation.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFA6C606A321
+	for <linux-scsi@vger.kernel.org>; Tue, 10 Nov 2026 02:20:05 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org DFA6C606A321
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.a=rsa-sha256 header.s=google header.b=hcZPL2al
-Received: by mail-ed1-f54.google.com with SMTP id 4fb4d7f45d1cf-6b577addee9so2036747a12.1
-        for <linux-scsi@vger.kernel.org>; Mon, 09 Nov 2026 17:20:36 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linux-foundation.org; s=google; t=1794273635; x=1794878435; darn=vger.kernel.org;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=m2qXctBTC0OPADf0V2KkMb6r2GA0JgabIuFAMe6ERzQ=;
-        b=hcZPL2alXf5NNTzoMJCI4/C3R9UHgONwDCN3X/odbKN1C7VBUSK5MBOfSsw0Dz4qAB
-         gFl6FPqcKNhpdKxKjwJdDYxEDJFPNtCMBVtRg83hCZlpK1ZQDdOmNaUk8+gvKHt7nn4J
-         RFtVQQNW5QuuGl1iCLkphFleuoM2N1/RX2I9A=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794273635; x=1794878435;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=m2qXctBTC0OPADf0V2KkMb6r2GA0JgabIuFAMe6ERzQ=;
-        b=iHpfISUDnJkViZkfe2impXHRv8L32To6XdIZuEhiRAvQZhGzaG3Q77KpP6MuJ8x0qv
-         l7t8jaH1vqVsA0N7VHjtRw1yX9OpiI0KVKploT0AwltRSehA9XiW/+vYaKHY9PM0HAXz
-         ukIrC0005OItHfFZuqCePT1S4CQS5ZJiGGrgO2ZUYXQvueBjTVaDFrfFBK0SaqUvO96g
-         C2OpOWY9EfWk0vKSzod6jZK3wbOQbjlZUprF0ckjVy2tqSpE3EtK5+ZEXIMr/oHL4q9L
-         kWfRqUR8rZtN3YnRUCgoyCHLKOJaB0RUYagdmIWVug/ZnaBOKUSslWY7j4I8TvNoFNaY
-         FSJw==
-X-Forwarded-Encrypted: i=1; AL+hErGqDUftxVQyAjhXXX3oPK3DQI2jlPEYvt92jFmT6SPkPmnz+5449iyOn2n9erXBqhExS4OZ4knxOZLg@vger.kernel.org
-X-Gm-Message-State: APuU4Z95WuOJDRnNfCdlTMvr0+hqTUnqlKxaPAg6CsW8CDvkBQka1S+F
-	Jeg7R40x4gu6g4/ymGazAuEl4gbVIMAkasBIJW5QN4nWr1RH06Aod/vma9/ujCoEZra6TmiRTpP
-	cddv+0FaSUQ==
-X-Gm-Gg: AYBFou1zkfz2/eOJuNJoGg92f4qaN4cjGGdJH4AxetS3szFV80qfBzbKSNoyyI8FE8O
-	DhRtyfc04UKaon1fB5H0blSqWzTBHq4OLUzFekNLWx8kGTfAZZiaLiV3POX4QZVbKoUe81sQGRu
-	zlYEK3MOq6jd5T0zdAMk89i8q/gYhf73zTRaOt5Rwn9LWBCigjf5l3b61CYKx4jGcUWYYuH/VQC
-	UfvYHruJ3ZzHZZ99B6QT/fKp5Fi8+rnONQfX1jgcVkC2LRa9RH6X/lyh+Y5jb25l3LR1s17XHF5
-	UvKxxOCNfUvdML6UH83eThK4pbyGo5yAcUyED8y9KhG4wNjSIYff0sT3YPTvFa0yqZlywBVD1zo
-	bLswWNQ6TT10+p2GFVsCeS23/Fj5tpVIv0CERtP1Vg5HROrLycleaw5rJtqQilCz2rw32IPE+dY
-	hAkmdqBo9LDvyBimPbB+7eo66iOHgi55wJNFRTi6cx/yjncWwt6+1O07aGsWHlUHoGa5SwEdU7C
-	5wvYD+ry4tS0BjImiXAOeLbNY52U21xq/pPbSClbFGq9InF4MEi5IzDYJrbsrb6LYZw8qFLQOK+
-	xzcFNUyt/oQezr4+RxKHllM+58x9CMMUh0/cJ4w1JcXguleOrT8XnMYD9DiL2tATJ6SmSTP5ReO
-	yow==
-X-Received: by 2002:aa7:d896:0:b0:6b7:2969:a2b4 with SMTP id 4fb4d7f45d1cf-6b756aeeca3mr634252a12.39.1794273635110;
-        Mon, 09 Nov 2026 17:20:35 -0800 (PST)
-Received: from mail-ej1-f49.google.com (mail-ej1-f49.google.com. [209.85.218.49])
-        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-6b7578d2508sm441329a12.14.2026.11.09.17.20.35
-        for <linux-scsi@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 09 Nov 2026 17:20:35 -0800 (PST)
-Received: by mail-ej1-f49.google.com with SMTP id a640c23a62f3a-c4d2b741ed9so242308966b.2
-        for <linux-scsi@vger.kernel.org>; Mon, 09 Nov 2026 17:20:35 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AL+hErEkZB8m0EncJv1kWx60ZlKn04+1wURzaxv5wpYzwB3ZyTHYWcutbOvGKgA6WLfa9Yv3QDcqSYm9Vzsi@vger.kernel.org
-X-Received: by 2002:a17:907:9451:b0:c41:1750:59a2 with SMTP id
- a640c23a62f3a-c50495dfbd5mr87253466b.12.1794273275844; Mon, 09 Nov 2026
- 17:14:35 -0800 (PST)
+	dkim=pass (1024-bit key, unprotected) header.d=samsung.com header.i=@samsung.com header.a=rsa-sha256 header.s=mail20170921 header.b=Sb1j3B1o
+Received: from epcas2p3.samsung.com (unknown [182.195.41.55])
+	by mailout2.samsung.com (KnoxPortal) with ESMTP id 20261110022003epoutp02ffe1631d441a4cd632c6fd8cb49e353a~mjZxFljzP0423504235epoutp02W
+	for <linux-scsi@vger.kernel.org>; Tue, 10 Nov 2026 02:20:03 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20261110022003epoutp02ffe1631d441a4cd632c6fd8cb49e353a~mjZxFljzP0423504235epoutp02W
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1794277203;
+	bh=nbkF1pft43e3+J7+NhK3lBDPkT3lRk1WKx0TxFdqD9w=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=Sb1j3B1opXZW6luLUgWzuSP5pXW3AbW56+P/XgmvxjPsOzA+wKk5itSs9gKntdfyc
+	 r86AXFKkksgiKs1wCdNR3nlii+mLN02RDY8QESOHAEEHBtupGJWqsKUhTAdQl1wRJM
+	 0SmpS4ZHAkh30bSKjQSIRtt+XAT8lzER0CcGlqBM=
+Received: from epsnrtp01.localdomain (unknown [182.195.42.153]) by
+	epcas2p1.samsung.com (KnoxPortal) with ESMTPS id
+	20261110022003epcas2p12fa7c1b7c60d7fe197dc881100689f44~mjZwhmNTG1253412534epcas2p1H;
+	Tue, 10 Nov 2026 02:20:03 +0000 (GMT)
+Received: from epcpadp1new (unknown [182.195.40.141]) by
+	epsnrtp01.localdomain (Postfix) with ESMTP id 4jNr2q1gYTz6B9mJ; Tue, 10 Nov
+	2026 02:20:03 +0000 (GMT)
+Received: from epsmtip1.samsung.com (unknown [182.195.34.30]) by
+	epcas2p2.samsung.com (KnoxPortal) with ESMTPA id
+	20261110020746epcas2p2ed2c3b150d2ecbf810658264841e790e~mjPB__SSz0304203042epcas2p29;
+	Tue, 10 Nov 2026 02:07:46 +0000 (GMT)
+Received: from ubuntu.dsn.sec.samsung.com (unknown [12.81.221.204]) by
+	epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
+	20261110020746epsmtip158b3314fda4c896e6b02213d2d0096f5~mjPB5n3kR3236632366epsmtip1Q;
+	Tue, 10 Nov 2026 02:07:46 +0000 (GMT)
+From: HOYOUNG SEO <hy50.seo@samsung.com>
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	bvanassche@acm.org, mkp@kernel.org, martin.petersen@oracle.com,
+	stanleyjhu@google.com, peter.wang@mediatek.com, alim.akhtar@samsung.com,
+	kwangwon.min@samsung.com, kwmad.kim@samsung.com, cpgsproxy1@samsung.com,
+	h10.kim@samsung.com
+Cc: HOYOUNG SEO <hy50.seo@samsung.com>, Bean Huo <beanhuo@micron.com>
+Subject: [PATCH v9 1/3] scsi: ufs: core: Clear saved errors in
+ ufshcd_link_recovery()
+Date: Tue, 10 Nov 2026 11:03:13 +0900
+Message-Id: <1582071873.61794277203231.JavaMail.epsvc@epcpadp1new>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <cover.1794275305.git.hy50.seo@samsung.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -94,56 +82,82 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261104-work-procfs-core-v2-14-76ace653a773@kernel.org>
- <CAMuHMdVfakapgBK6TBhO1iWX8qzvLDk8jzRS=t2MVa5G=MCUeg@mail.gmail.com>
- <20261107-akteur-gemieden-eckdaten-21304d085e35@brauner> <20261108185953.28054fb3@pumpkin>
- <alpine.DEB.2.21.2611090504170.17804@angie.orcam.me.uk> <20261109214558.0d9d5228@pumpkin>
-In-Reply-To: <20261109214558.0d9d5228@pumpkin>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Mon, 9 Nov 2026 17:14:19 -0800
-X-Gmail-Original-Message-ID: <CAHk-=whsA3tKcUCBJDj_vmJ11rVGT9rivgnKjGRgMO21CPmCxg@mail.gmail.com>
-X-Gm-Features: AclHuK-x8jcOOQUqd2amGoGEAKER9jIFGaeL4LxxWAd0cGV7dz_RR64PtDogpPU
-Message-ID: <CAHk-=whsA3tKcUCBJDj_vmJ11rVGT9rivgnKjGRgMO21CPmCxg@mail.gmail.com>
-Subject: Re: [PATCH RESEND v2 14/23] proc: let procfs copy in writes before
- pinning the entry
-To: David Laight <david.laight.linux@gmail.com>
-Cc: "Maciej W. Rozycki" <macro@orcam.me.uk>, Christian Brauner <brauner@kernel.org>, 
-	Geert Uytterhoeven <geert@linux-m68k.org>, linux-fsdevel@vger.kernel.org, 
-	Jann Horn <jannh@google.com>, Josef Bacik <josef@toxicpanda.com>, Chris Mason <mason@kernel.org>, 
-	Jeff Layton <jlayton@kernel.org>, NeilBrown <neil@brown.name>, Eric Dumazet <edumazet@kernel.org>, 
-	Thomas Gleixner <tglx@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, 
-	Jonathan Corbet <corbet@lwn.net>, Christoph Hellwig <hch@lst.de>, Greg Kroah-Hartman <gregkh@suse.de>, 
-	Joel Granados <joel.granados@kernel.org>, Kees Cook <kees@kernel.org>, Jan Kara <jack@suse.cz>, 
-	Jan Kara <jack@suse.com>, linux-kernel@vger.kernel.org, linux-nfs@vger.kernel.org, 
-	linux-acpi@vger.kernel.org, linux-kselftest@vger.kernel.org, 
-	linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	linux-um@lists.infradead.org, linux-wireless@vger.kernel.org, 
-	linuxppc-dev@lists.ozlabs.org, netdev@vger.kernel.org, ntfs3@lists.linux.dev, 
-	platform-driver-x86@vger.kernel.org, coreteam@netfilter.org, 
-	kexec@lists.infradead.org, linux-pci@vger.kernel.org, 
-	linux-sound@vger.kernel.org, netfilter-devel@vger.kernel.org, 
-	dri-devel@lists.freedesktop.org, ibm-acpi-devel@lists.sourceforge.net, 
-	jfs-discussion@lists.sourceforge.net, linux-alpha@vger.kernel.org, 
-	linux-arm-kernel@lists.infradead.org, linux-cifs@vger.kernel.org, 
-	linux-fbdev@vger.kernel.org, linux-hwmon@vger.kernel.org, linux-mm@kvack.org, 
-	linux-sh@vger.kernel.org, linux-usb@vger.kernel.org, 
-	samba-technical@lists.samba.org, sparclinux@vger.kernel.org, 
-	linux-m68k@lists.linux-m68k.org, linux-doc@vger.kernel.org, 
-	linux-serial@vger.kernel.org, linux-atm-general@lists.sourceforge.net, 
-	Takashi Iwai <tiwai@suse.de>, linux-input@vger.kernel.org, linux-raid@vger.kernel.org, 
-	linux-ext4@vger.kernel.org, linux-modules@vger.kernel.org, 
-	linux-debuggers@vger.kernel.org, Chuck Lever <cel@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+X-CMS-MailID: 20261110020746epcas2p2ed2c3b150d2ecbf810658264841e790e
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+X-Hop-Count: 3
+X-CMS-RootMailID: 20261110020746epcas2p2ed2c3b150d2ecbf810658264841e790e
+References: <cover.1794275305.git.hy50.seo@samsung.com>
+	<CGME20261110020746epcas2p2ed2c3b150d2ecbf810658264841e790e@epcas2p2.samsung.com>
 
-On Mon, 9 Nov 2026 at 13:46, David Laight <david.laight.linux@gmail.com> wrote:
->
-> Just that the cast would have to be:
->         u8 *foo = (u8 *)bar;
-> where 'bar' is 'char *', and I don't think you need a cast there when
-> char is unsigned.
+ufshcd_link_recovery() resets both the device and the host and then
+re-establishes the link. Unlike ufshcd_reset_and_restore(), however, it
+does not clear hba->saved_err, hba->saved_uic_err and hba->force_reset,
+so the errors latched before the recovery remain pending after the link
+has already been recovered.
 
-.. and just to clarify: 'char' is always unsigned in the kernel on all
-architectures since commit 3bc753c06dd0 ("kbuild: treat char as always
-unsigned") back four years ago...
+When ufshcd_err_handler() runs afterwards,
+ufshcd_err_handling_should_stop() sees these stale errors. The error
+handler then quiesces all queues and, depending on the latched errors
+(e.g. a fatal error or UFSHCD_UIC_DL_PA_INIT_ERROR), performs another
+full ufshcd_reset_and_restore() on a link that is already operational.
 
-            Linus
+Cache and clear the saved errors before the reset, as
+ufshcd_reset_and_restore() does, so that only errors raised during or
+after the recovery are left to the error handler. Put them back if the
+recovery fails.
+
+Fixes: 35dabf4503b9 ("scsi: ufs: core: Use link recovery when h8 exit fails during runtime resume")
+Signed-off-by: HOYOUNG SEO <hy50.seo@samsung.com>
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Reviewed-by: Peter Wang <peter.wang@mediatek.com>
+Reviewed-by: Bean Huo <beanhuo@micron.com>
+---
+ drivers/ufs/core/ufshcd.c | 15 ++++++++++++++-
+ 1 file changed, 14 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index fd52deb72d21..3b5580ac390c 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -4695,10 +4695,20 @@ EXPORT_SYMBOL_GPL(ufshcd_uic_change_pwr_mode);
+ 
+ int ufshcd_link_recovery(struct ufs_hba *hba)
+ {
++	u32 saved_err, saved_uic_err;
+ 	int ret;
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(&hba->host->host_lock, flags);
++	/*
++	 * The errors saved so far are handled by this full reset, so cache and
++	 * clear them first, in case new errors are generated during recovery.
++	 */
++	saved_err = hba->saved_err;
++	saved_uic_err = hba->saved_uic_err;
++	hba->saved_err = 0;
++	hba->saved_uic_err = 0;
++	hba->force_reset = false;
+ 	hba->ufshcd_state = UFSHCD_STATE_RESET;
+ 	ufshcd_set_eh_in_progress(hba);
+ 	spin_unlock_irqrestore(&hba->host->host_lock, flags);
+@@ -4709,8 +4719,11 @@ int ufshcd_link_recovery(struct ufs_hba *hba)
+ 	ret = ufshcd_host_reset_and_restore(hba);
+ 
+ 	spin_lock_irqsave(&hba->host->host_lock, flags);
+-	if (ret)
++	if (ret) {
+ 		hba->ufshcd_state = UFSHCD_STATE_ERROR;
++		hba->saved_err |= saved_err;
++		hba->saved_uic_err |= saved_uic_err;
++	}
+ 	ufshcd_clear_eh_in_progress(hba);
+ 	spin_unlock_irqrestore(&hba->host->host_lock, flags);
+ 
+-- 
+2.34.1
+
+
