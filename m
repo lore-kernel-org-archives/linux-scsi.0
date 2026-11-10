@@ -1,57 +1,98 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.52
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794346585;
-	b=qUbPVcttIaf/3a8vY63m0bw8VmEK/zRyWr5LIhPACgeMHFqExs8b8go9uTV68quJMOFx
-	 KilW4tSnDjIWBcs7VlD08ADwty04qqxQrdWvQy+5o6EtxBluoLhZt6MfBho0IyR9+/jPC
-	 2KmiCOYe2l5xbplLqF5wHK8GvzEBLT6or20yaZsBe6qSlgPEEz4OmKU3W6iMJEHZlIm8a
-	 hjaJZmjwEvQzzm9U+5/LWRso79CgkMRU9lXmDmRpShE8/iALQSMt7VvK8j2KReD2Y/dHb
-	 CjsAKEqS2nLrLHLN7gz+BUqnAIsj5aAHHCEclXBBAUzRSzTYee2FoGhN6nnajkw0PMw==
+	t=1794349455;
+	b=zcT5CFUSQ2azcuCsC0g2pKW3x/6w11fPX72ZogsazL+qDNp1HQvgvM0oEf0sQXRAabh6
+	 N4paUiOOxJtq6z61BumeYwytKZ021ltnEO0dVn5xDdyixWyKgC5UaeC4P2h/nIHmVlnET
+	 9Xme5xLF0GkD9hyM/zQmWIsC/xDvxhiHrCr4sRQ082BZJOYnQO4Y4FPlUQ3HPWGgj8fLS
+	 54VafKLKowM6Oy1Sy737Dr3e6cxtHpkIiCD4P28qWWmDxKPTBk7GIh6Q11jAlF3Il1S+d
+	 d4iqn8vMwrhsKCbV+b25LRe3D2Dj8cuOJJiWCRKqqNxZhRjWZfVcjd9ANF1JOlBOAdA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794346585;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=Gb4pVxRyq1FY6eMZso1l64hf79xL7qEopdEwkYxVoEw=;
-	b=tTUtgrflB53rw+UnSgWTSB8PYOkzN92mwuN4WVm49f8M1YmIPhFQzvOgaxkfHf/GaF7r
-	 qpKtAePaqOnYWT2yJML95GQ7Ansm2FWKfQjVk+KxmHiV5cZwmKgb2llLCGPeWO+hB21Wa
-	 Whx+toKi7OiXq8ApGu3ZLyDBZrq1pTYhqN2b5TDTb7U7Q/xGe+nAfi0Tds+i0VY7P3dzp
-	 HJr8SLjBmAj9v6yrF2IkuWukLZHeu4i4J71uFbYUWhsa6vyTIzV3JsVdjdzguoWh+t4MI
-	 +Ddknrej8DAQjcJeMIsHMuRb6d62Iuf6Xs1bmbQgtPzH6en0sgJVh33sZEnImcX6j4A==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794349455;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:X-Google-Original-From:To:Cc:Subject:Date:Message-Id:X-Mailer:
+	 MIME-Version:Content-Transfer-Encoding;
+	bh=5VGH+8AVAlrWwk+iBkQMQ4d2lmEyzdJub4xNIMW5F28=;
+	b=st/4Ac7clDXX0ygQoHy/MsrQhkRvOVNoqrowdiADTWZbjX5tr4F0lertGr+GpBr9BdcN
+	 //U18bSQg7gM8nxmwrLC7PMqmdZ6H6cbSv2JPgSspbOOW0+jmXixWbsMIdN+rjT9IRtwg
+	 cxZZeR06VsNaxcW4xNGx99KN0vBowQj/U/AUW9IKAwQ6QUYO8IIdiQ5Qt0Zo3MreqxtZf
+	 l7Gm7fhExxSucf1FgAB5YCxPOmHb/H/fMvthT9HIngjzfPnUrBR/xDJ7HNto0oD7Oh+/P
+	 pBCbE+DxyCu1ecieRU56o4vvjn2a/R9pHtnr/cqJOHZUa9x/ynOvtXxeuvXiYSCK8NQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="LGUl+h/f";
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=xz2B1zuG;
+	arc=none smtp.remote-ip=74.125.82.52
+Received: from mail-dl1-f52.google.com (mail-dl1-f52.google.com [74.125.82.52])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E3553606A321
-	for <linux-scsi@vger.kernel.org>; Tue, 10 Nov 2026 21:36:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0BB48606A321
+	for <linux-scsi@vger.kernel.org>; Tue, 10 Nov 2026 22:24:14 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0BB48606A321
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=LGUl+h/f
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 955E81F0089F;
-	Tue, 10 Nov 2026 21:36:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794346584;
-	bh=Gb4pVxRyq1FY6eMZso1l64hf79xL7qEopdEwkYxVoEw=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=LGUl+h/fw4FFVBvX+yNAqxQEliVemBH/malLcqBohlWp6T9fhKyjGO6INb/mwfAu4
-	 OOQtU8R4ILXDHtBmZ4X42YfvDN+pGhsNf6OT/tBjLmnJHL4pa/vmph8Qf6YZF0rV/R
-	 eedYgXs3MQvZu2mj8UkSesap54WSstLwFOAb1l5vo0tF66Wvf0AjZ/eT6Vj1/VPY/a
-	 zKu0anVpiN4iTHbejYy8mu0QtaOUv7hHVCzt04R//NvLH6GrHSZqHb46qSiVxQcu3J
-	 K6vYb2OF5QWXZ1SQIf6UxxBcXyuqrp2PncR70sypXvNtlSHF5jNIv9LjDQmE065mtK
-	 oiQegb0VxKziQ==
-Message-ID: <sashiko-outbox-207774@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 1/2] scsi: scsi_debug: wrap around the store when
- zeroing a reset zone
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Tal Zussman" <tz2294@columbia.edu>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20261110-scsi-debug-zone-reset-v1-1-28cb9184b5ea@columbia.edu>
-References: <20261110-scsi-debug-zone-reset-v1-0-28cb9184b5ea@columbia.edu>
- <20261110-scsi-debug-zone-reset-v1-1-28cb9184b5ea@columbia.edu>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 10 Nov 2026 21:36:24 +0000
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=xz2B1zuG
+Received: by mail-dl1-f52.google.com with SMTP id a92af1059eb24-1a8cc11ac42so2546239c88.0
+        for <linux-scsi@vger.kernel.org>; Tue, 10 Nov 2026 14:24:14 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1794349454; x=1794954254; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=5VGH+8AVAlrWwk+iBkQMQ4d2lmEyzdJub4xNIMW5F28=;
+        b=xz2B1zuGmegeSZMDCqovYzUH4V7UWmjgS1jy33CXEthDGKsL20CtXrVMTuy/oFw/Hc
+         ys9awCsiB9470wbVB1uulspA8O7rAcwvo+xKFZKibnlSCcxyQ29+tfh2QipcYruKHkQG
+         EWrYPhllOWo87R+ZGBEdHslgkazYFM8WbR9e+eU7awVm/gHpbaSUt05ivkS6rZK4bEnL
+         T7GV9Ht/CsU+YZofjK981aZlTwO5ukZhYEuJjCufgiq1qNi4zQbRHff2CxpP2DIM1A2g
+         bpUoyk0y/hjhmYizcSmMLlvIGFqeqw1yYVGPvJ03Ty06Qbu5vaGk5QL27BN/4SQrdkQ7
+         BkSA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1794349454; x=1794954254;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=5VGH+8AVAlrWwk+iBkQMQ4d2lmEyzdJub4xNIMW5F28=;
+        b=ABH0lUshUI+DrPirOCzZd+TE1n/xxjG2RrpfrWMEGbt8GEUgsFrxom2h4DQBb60M+C
+         Rz3hE6enZsQaMvIS29jwcKzBgemTmeJAcOCVubCsCsDRUs4/ZnKIycaJ5jf6QEnO54M3
+         Swo6b12KH2eaZ5l4vhMET2xrLHtR1YsUE/CRhYWe1/RML6/k0Le5RsOa/HZ+xDLzAiiq
+         WccXlBl98Hb42G8S4CVQM9FA6R/3uMg8wf6R3Oekr8dTSNRGj2BFPQQPNNYXpRpGHyLS
+         6nNHWLTyudgVzTzCHnWMIit6+K5r0U4FhA2NcCqtPpvyJT454T7WiTncQnxRPd9BksLK
+         Eqag==
+X-Forwarded-Encrypted: i=1; AL+hErFvewBFluJ9c0GH0Ag88G1ZLrRttrFieCDyqL4lg6jjJ2CkpNx8G5cWVCEsk9aMIz4aD3/58J/9oUpO@vger.kernel.org
+X-Gm-Message-State: APuU4Z+BbU1MTu9xwhtEh3EiCwZMvIasmsrvtUfP3C74GhE639Ocyf9o
+	i0gQKw4UA9K1M8B3TplvQzRJkOXmhmlwgQC0qLAfYHS3QkFIv/MwKnwh
+X-Gm-Gg: AYBFou0zLlyX/FDhXgirVVS+vNvNi8NuE40s01uW3nwOZzv4JSFH1yW217m1ezOcybn
+	PeIDxCnilD802x1VY/LLAXUB/fSb/c4ddMrN9B1ukhm7/OU9WH7qlZCvIz7qKpApYUUZTNBiwA6
+	ncGUFbmHKtRxkeM9M7Nc7OVCLyTNI5nA2GLlDQ63IYfNP/DEiLt3n1ARjhdBEQdvsLpWpXuVgSH
+	wv/BKzE0fjH0cT/9iPd8Zra7BbwBJbX78Z4BJ7doU+32BRwmf1SOFkbLfUlvf8vAPqfHRwEMkDm
+	Xr/V0fhu3eTSCYdISEXvrT3Aw7bBj9EXLBkYopDcYZfZl2XXo3M4AUqSDN4MuUYqamzj3wTyOvl
+	oz+l/R3xVhw9yNs4P+Djg4brIb2DNXryKrHF+0Mxen4CU/vHcbliSrYlsne1c/FbUH9BCM5qdPQ
+	F9FoyTdrErtcmsXlLanKw1ia7h9Hb0/EdmQRHIaOrFPkUnNHECZee41FmDvbvsfBU0xcEBGWPWx
+	MJLSEI2MYrpYCVOmFxIjQQGTU39xdCMKWYZkfV0zc0f6fgTGFrvcazFbb9Aw5yFCsG330C0ax8l
+	wPb3YG43Onp8mDetwMDjbdAkmTOxwiiH8RTQkSq19pPtze91RxGGnbSLeRtR
+X-Received: by 2002:a05:701b:455a:10b0:185:fd0c:4585 with SMTP id a92af1059eb24-1b3c034aa22mr354963c88.33.1794349453933;
+        Tue, 10 Nov 2026 14:24:13 -0800 (PST)
+Received: from localhost.localdomain (wood.seclab.cs.ucsb.edu. [128.111.49.37])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1b3b56c4e88sm8661009c88.0.2026.11.10.14.24.13
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 10 Nov 2026 14:24:13 -0800 (PST)
+From: Praneeth Balasubramanian <praneethb2002@gmail.com>
+X-Google-Original-From: Praneeth Balasubramanian <praneeth@ucsb.edu>
+To: Lee Duncan <lduncan@suse.com>,
+	Chris Leech <cleech@redhat.com>,
+	Mike Christie <michael.christie@oracle.com>
+Cc: "Martin K . Petersen" <mkp@kernel.org>,
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+	open-iscsi@googlegroups.com,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Praneeth Balasubramanian <praneeth@ucsb.edu>,
+	stable@vger.kernel.org
+Subject: [PATCH] scsi: iscsi_tcp: Don't read sk_user_data from the recv work
+Date: Tue, 10 Nov 2026 14:24:03 -0800
+Message-Id: <20261110222403.205332-1-praneeth@ucsb.edu>
+X-Mailer: git-send-email 2.25.1
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -60,141 +101,111 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 1 potential
-issue to consider:
-- [Low] scsi: scsi_debug: Fixes trailer cites f0d1cf9378bd instead of
-  2d62253eb1b6
-It also noticed 1 related pre-existing issue this patch does not
-introduce:
-- [Critical] scsi: scsi_debug: out-of-bounds read in map_state() [1]
---
+With recv_from_iscsi_q=1, iscsi_sw_tcp_data_ready() queues
+conn->recvwork, and iscsi_sw_tcp_recv_data_work() runs the receive path
+under lock_sock() only. At the end of iscsi_sw_tcp_recv_data(),
+iscsi_sw_sk_state_check() reads the connection from sk->sk_user_data.
+Its comment says it must be called with sk_callback_lock, which the work
+does not hold.
 
-commit fffdafa6f420e79758f4780228f5ace2090a7a92
-Author: Tal Zussman <tz2294@columbia.edu>
+On teardown, iscsi_sw_tcp_release_conn() first calls
+iscsi_sw_tcp_conn_restore_callbacks(), which sets sk->sk_user_data to
+NULL, and only then flushes recvwork in iscsi_suspend_rx(). If queued
+work runs in between and the socket is in TCP_CLOSE or TCP_CLOSE_WAIT,
+iscsi_sw_sk_state_check() dereferences NULL->session. With a delay
+added at the start of the work to widen this window, a target-side
+connection close gives:
 
-> scsi: scsi_debug: wrap around the store when zeroing a reset zone
->
-> zbc_rwp_zone() zeroes the blocks of a zone that is reset, using the
-> start of the zone as an offset into the store. With virtual_gb set, the
-> device and its zones can extend past the end of the store, which is
-> only dev_size_mb in size. Writes wrap around in do_device_access(), but
-> the memset() doesn't, so resetting a zone that has been written to can
-> write past the end of the store.
->
-> On a device whose fifth zone starts exactly at the end of the store,
-> write to that zone and reset it:
->
->   # modprobe scsi_debug zbc=3Dmanaged sector_size=3D4096 dev_size_mb=3D16=
- \
->         virtual_gb=3D1 zone_size_mb=3D4
->   # dd if=3D/dev/urandom of=3D/dev/sda bs=3D1M count=3D1 seek=3D16 oflag=
-=3Ddirect
->   # blkzone reset -o 32768 -c 1 /dev/sda
->
-> The memset() starts at the first byte past the store, in the guard page
-> after the vmalloc'ed area, for the 1 MiB that was written:
->
-> BUG: unable to handle page fault for address: ffffc90002c00000
-> Oops: Oops: 0002 [#1] SMP KASAN NOPTI
-> RIP: 0010:memset_orig+0x33/0xb0
-> RDX: 0000000000100000 RSI: 0000000000000000 RDI: ffffc90002c00000
-> Call Trace:
->  zbc_rwp_zone+0x1a7/0x2a0 [scsi_debug]
->  resp_rwp_zone+0x19c/0x450 [scsi_debug]
->  schedule_resp+0x2dd/0xbc0 [scsi_debug]
->  scsi_debug_queuecommand+0x1286/0x2950 [scsi_debug]
->  scsi_queue_rq+0x1d74/0x3200
->  blk_mq_dispatch_rq_list+0x3ad/0x23c0
->
-> The command never completes, so the reset returns EIO to userspace and
-> the device is unusable afterwards.
->
-> Zero the blocks in a helper that wraps around at the end of the store,
-> and that stops after one pass over it for a zone that is larger than
-> the store.
->
-> Fixes: f0d1cf9378bd ("scsi: scsi_debug: Add ZBC zone commands")
-> Signed-off-by: Tal Zussman <tz2294@columbia.edu>
+  Oops: general protection fault, probably for non-canonical address ...
+  KASAN: null-ptr-deref in range [0x0000000000000010-0x0000000000000017]
+  Workqueue: iscsi_q_3 iscsi_sw_tcp_recv_data_work
+  RIP: 0010:iscsi_sw_tcp_recv_data+0x219/0x420
 
-[Severity: Low]
-In commit f0d1cf9378bd ("scsi: scsi_debug: Add ZBC zone commands"),
-zbc_rwp_zone() only reset z_wp and z_cond without touching sip->storep.
-The non-wrapping memset() was added later by commit 2d62253eb1b6 ("scsi:
-scsi_debug: Zero clear zones at reset write pointer"), so should the Fixes
-tag point there instead?
+Both callers already have the connection. iscsi_sw_tcp_recv_data() gets
+it as an argument, and iscsi_sw_tcp_state_change() reads it under
+sk_callback_lock. Pass it in instead of reading sk_user_data again. The
+connection stays valid until iscsi_suspend_rx() has flushed the work.
 
-  Fixes: 2d62253eb1b6 ("scsi: scsi_debug: Zero clear zones at reset write p=
-ointer")
+The unlocked read was found with an LLM-based tool that checks callers
+against the locking rules stated in kernel comments.
 
-> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-> index a922c8318a2fb..1c27ea0f9b694 100644
-> --- a/drivers/scsi/scsi_debug.c
-> +++ b/drivers/scsi/scsi_debug.c
-> @@ -6612,6 +6612,29 @@ static int resp_finish_zone(struct scsi_cmnd *scp,
->  	return res;
->  }
-> =20
-> +/*
-> + * Zero the blocks of a zone that is being reset. The store can be small=
-er
-> + * than the device, so wrap around at its end like do_device_access() do=
-es.
-> + */
-> +static void zbc_zero_blocks(struct sdeb_store_info *sip, sector_t lba,
-> +			    sector_t num)
-> +{
-> +	/* One pass over the store zeroes all of it */
-> +	num =3D min_t(sector_t, num, sdebug_store_sectors);
-> +
-> +	while (num) {
-> +		sector_t block =3D lba;
-> +		u32 n;
-> +
-> +		block =3D sector_div(block, sdebug_store_sectors);
-> +		n =3D min_t(sector_t, num, sdebug_store_sectors - block);
-> +		memset(sip->storep + block * sdebug_sector_size, 0,
-> +		       (size_t)n * sdebug_sector_size);
-> +		lba +=3D n;
-> +		num -=3D n;
-> +	}
-> +}
-> +
->  static void zbc_rwp_zone(struct sdebug_dev_info *devip,
->  			 struct sdeb_zone_state *zsp)
->  {
-> @@ -6629,8 +6652,7 @@ static void zbc_rwp_zone(struct sdebug_dev_info *de=
-vip,
->  		devip->nr_closed--;
-> =20
->  	if (zsp->z_wp > zsp->z_start)
-> -		memset(sip->storep + zsp->z_start * sdebug_sector_size, 0,
-> -		       (zsp->z_wp - zsp->z_start) * sdebug_sector_size);
-> +		zbc_zero_blocks(sip, zsp->z_start, zsp->z_wp - zsp->z_start);
-> =20
->  	zsp->z_non_seq_resource =3D false;
->  	zsp->z_wp =3D zsp->z_start;
+Fixes: f1d269765ee2 ("scsi: iscsi: Run recv path from workqueue")
+Cc: stable@vger.kernel.org
+Signed-off-by: Praneeth Balasubramanian <praneeth@ucsb.edu>
+---
 
-[Severity: Critical]
-This problem wasn't introduced by this patch, but can map_state() read past
-the end of sip->map_storep when virtual_gb is set [1]?
+Notes:
+    This was found by an LLM-based static analysis (GPT-5.6) that checks
+    kernel code against the rules stated in its comments, as part of research
+    at UCSB SecLab. The patch and changelog were drafted with Claude Opus 5.5.
+    I reviewed the patch and take responsibility for it.
+    
+    recv_from_iscsi_q is off by default, and setting up the session needs
+    root on the initiator, so I am sending this as a regular fix rather than
+    a security report.
+    
+    Testing: two QEMU VMs on next-20261023, an LIO target and an open-iscsi
+    initiator booted with iscsi_tcp.recv_from_iscsi_q=1, using CHAP and
+    continuous reads. The initiator kernel had a 20 ms msleep() added at the
+    start of iscsi_sw_tcp_recv_data_work(). Closing the TCP connection from
+    the target side produced the oops above. I have only seen it with the
+    added delay. 
+    
+    The patch applies to mainline 9ba46df34488 and to next-20261109.
 
-drivers/scsi/scsi_debug.c:map_state() {
-    ...
-	index =3D lba_to_map_index(lba);
-	mapped =3D test_bit(index, sip->map_storep);
-    ...
-}
+ drivers/scsi/iscsi_tcp.c | 14 ++++++++------
+ 1 file changed, 8 insertions(+), 6 deletions(-)
 
-sip->map_storep is sized for sdebug_store_sectors (map_size), whereas
-resp_get_lba_status() validates the LBA against the larger virtual
-sdebug_capacity before calling map_state().  A GET LBA STATUS command for
-an LBA above sdebug_store_sectors produces an index past map_size, causing
-test_bit() to read out of bounds of the vcalloc-allocated bitmap and
-potentially panic or disclose kernel memory.
+diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
+index 9260b1c9b0e0..88b1f255ae9b 100644
+--- a/drivers/scsi/iscsi_tcp.c
++++ b/drivers/scsi/iscsi_tcp.c
+@@ -104,18 +104,20 @@ static int iscsi_sw_tcp_recv(read_descriptor_t *rd_desc, struct sk_buff *skb,
+ 
+ /**
+  * iscsi_sw_sk_state_check - check socket state
++ * @conn: iscsi connection the socket belongs to
+  * @sk: socket
+  *
+  * If the socket is in CLOSE or CLOSE_WAIT we should
+  * not close the connection if there is still some
+  * data pending.
+  *
+- * Must be called with sk_callback_lock.
++ * The caller passes @conn rather than having it read from
++ * sk->sk_user_data. The recv work runs without sk_callback_lock,
++ * and connection teardown may already have cleared sk_user_data.
+  */
+-static inline int iscsi_sw_sk_state_check(struct sock *sk)
++static inline int iscsi_sw_sk_state_check(struct iscsi_conn *conn,
++					  struct sock *sk)
+ {
+-	struct iscsi_conn *conn = sk->sk_user_data;
+-
+ 	if ((sk->sk_state == TCP_CLOSE_WAIT || sk->sk_state == TCP_CLOSE) &&
+ 	    (conn->session->state != ISCSI_STATE_LOGGING_OUT) &&
+ 	    !atomic_read(&sk->sk_rmem_alloc)) {
+@@ -148,7 +150,7 @@ static void iscsi_sw_tcp_recv_data(struct iscsi_conn *conn)
+ 	 * unmap it now. */
+ 	iscsi_tcp_segment_unmap(&tcp_conn->in.segment);
+ 
+-	iscsi_sw_sk_state_check(sk);
++	iscsi_sw_sk_state_check(conn, sk);
+ }
+ 
+ static void iscsi_sw_tcp_recv_data_work(struct work_struct *work)
+@@ -202,7 +204,7 @@ static void iscsi_sw_tcp_state_change(struct sock *sk)
+ 		return;
+ 	}
+ 
+-	iscsi_sw_sk_state_check(sk);
++	iscsi_sw_sk_state_check(conn, sk);
+ 
+ 	tcp_conn = conn->dd_data;
+ 	tcp_sw_conn = tcp_conn->dd_data;
+-- 
+2.25.1
 
-[1] https://sashiko.dev/#/bug/linux-be69a5e8-c8ca-4d89-b06c-a23fccc84744
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261110-scsi-debug=
--zone-reset-v1-0-28cb9184b5ea@columbia.edu?part=3D1
