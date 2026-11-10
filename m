@@ -1,56 +1,57 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.123
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794317388;
-	b=vh8A8sYUk5x9iVyCFIL3uy5T+27VXicx95gvkVoZxc7r7Ib+M621AVsnvKoenTf678mt
-	 yoxdTFsDu/EkZqq8PMHv4ID0a94pwpBHhfFwMTTGWAVWap9OtoFI8o2UJmCh8k8lj0HrQ
-	 SRre5PP9+inAiKWqbKfyjqKHLelQ22g8Xk5OM6BjAyeEGd/a7FWsvLp1MXOZJF7b+x68b
-	 Flw8CQe0lu5vH0F8DxNTkzU+JwANZs5+R//5XbPYl3jPKsV67lTx9FJpPopUTZ2QVTgxc
-	 FkzuYzGJq6im6Hi95m/BtEHcJRLUmMc/rePQhE0ZmlaX9+6AgU7XvkjAAolXbV8uqsw==
+	t=1794317894;
+	b=bem2JLVgAhcCLtqaW5GiBzin8OBh0qjiL5j9gqX5bhnvTe0R1jI8dRlxSClOxHBWRyvz
+	 YQX9BOp8G4a76MSlO/N/Y6kptj0VrYM9YBsCl+IOc8ELP4eeV7NkHm5Nh0vfzWCRGZD9F
+	 iuvE2aUWZj0EV/kWIUNkzfB5XmUQx9xTFuxOmENT3fU3FFzzawLIKsN0xwGkMyma/6UhS
+	 lMXD8dl9b8Q8BFe5w7AKbHJGoYFvuNg6hbToR/RJmZAU6svppFipsnFbDSY1uiZaN5oYq
+	 +p5RHee+hzAbAAGUwwJmFPsx4AmNTVzpzfcYnfrp3TUV9M+N+2FiblVXen8DGg/+zJQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794317388;
-	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:From:Date:Subject:MIME-Version:
-	 Content-Type:Content-Transfer-Encoding:Message-Id:References:
-	 In-Reply-To:To:Cc:X-Mailer;
-	bh=BDc1IvI6OsHXdrQ8x74AtWRkft+aXE3pPjEVY606+KI=;
-	b=g7a40iBmC5GdEjTWtD/oPsaSDUDMj6GevkcQkfzSarxBP9YMWH52t4qCWBMj6qEfnvsH
-	 utJiZesLi8UZawPhd95II32U+a8KjbrobZZpPTmtMc7lI51ZkCcnemDMtwirVpbFxkjCR
-	 JpHfstd+H5kRcbnwUhdNFMYDc+2u+f5+6nYsePfXy4dSLNealqAoC16LORqPSWDf8QyXs
-	 FoCkuxYDKwIlobnkF2FcXjXUatREBAL0a6LquVEufrE+hSgR43l4lZMIW0zyJWK5qO1dq
-	 dgtU6+OWwEMpHwhEXB9vtbL0qo3mmjgV9ODja2uNzG+07JOJMnwKOeulsbIzo0dygqQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794317894;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=Cn7rda/fsN+gsxd4ZiE/OhKc1bG+wmGdaNrMQHresz8=;
+	b=ZWZgf/cYr2fCAgC2yasyMYQGNJjoxqLxl3YkPO3UX2cD8MJY5thCyuA9o30tj7CQzAqP
+	 I4GWNOEsMqbDw+3onzV0utBC1kutN4XU8XNiCaEOQI0nIy8+QOJ0qG+SBmEH0DmK0cPGz
+	 4turrLWcxRygmBBb5ZUNm2QwBZ2IFZkOdIl3MPoJe0sLg5Eu0B7ws1O8Z2OX18UHIrHbb
+	 voZp7ETWthG4CHDnyRa6ituHm7kGhs+Td/WgmQQFDhBWZh0dPSap0rtD7/y1LO/WSsbkQ
+	 DvuswW7nkpJtpHMAMkYJNiwr2IvX91feelChK9c4pIypvt3SZk1cSTsTm9yXOHFvurg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.dev;
-	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=TuAh6bOa;
-	arc=none smtp.remote-ip=95.215.58.123
-Received: from mta1.migadu.com (out-123.mta1.migadu.com [95.215.58.123])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=mQpBzkYu;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 740A9606AF21
-	for <linux-scsi@vger.kernel.org>; Tue, 10 Nov 2026 13:29:47 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 740A9606AF21
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B92A4606A326;
+	Tue, 10 Nov 2026 13:38:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=TuAh6bOa
-X-Envelope-To: linux-scsi@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=t58bLFbopiLhye+XA8VecW5nbJtFNFWoJdVnDP5nc/A=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1794317385; v=1; x=1794922185;
- b=TuAh6bOaCEJ+qkh32W6hcLuO20vUvAF91Oks8v1acJWAjGdr2C4BnhO8Np4CiVaRofvfposs
- upwDnqSTXrBYcFYcPZqMuz63UQ4snMxiLv7deeLjiPHLPfWHyyouTzygsE7rpia5QQW9tq9fNHh
- MX/gp9GA19pV3zoLK1ZjpTZI=
-X-Envelope-To: linux-scsi@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id a77828bfa05a4d54;
-	Tue, 10 Nov 2026 13:29:45 +0000
-X-Mizu-Trace-ID: a77828bfa05a4d54
-X-Migadu-Flow: FLOW_OUT
-From: Qiliang Yuan <qiliang.yuan@linux.dev>
-Date: Tue, 10 Nov 2026 08:29:34 -0500
-Subject: [PATCH 2/2] scsi: target: alua: Drop the grace period wait from
- LUN detach
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=mQpBzkYu
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 156051F0089F;
+	Tue, 10 Nov 2026 13:38:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794317893;
+	bh=Cn7rda/fsN+gsxd4ZiE/OhKc1bG+wmGdaNrMQHresz8=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=mQpBzkYumykchN03D31lRIN+Dr0GCc2y73yqPW68adnSWOdvXUyj1JFofKGwJFMN7
+	 nTW5MD3SRKoO/0U/flHU/XrwWhFhru4G8zBag0BKnx/qizjLIjFBRnIgyWrHVzomh6
+	 6uNP6r2sSGOE/aGW79caIT4Be29levtGuUcetbeHftpqootrfLZYamu+MUypFGuJ5t
+	 OEMuYtcKQnZ1cP1rlFlCJp0ZDx+RYz1Q76nU9BFYkyPqyNsYfBeBjDLTaaWC6f/9XR
+	 WfYmonGYbE0Dk+mFRc+4ij2hWm3MIVGfmbGcs//y5hUQ73nNgKupPutE9OuZMGPjDg
+	 A+umPGH/DNUjQ==
+Message-ID: <sashiko-outbox-207137@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH 1/2] scsi: target: alua: Don't wait for a grace period
+ when attaching a LUN
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Qiliang Yuan" <qiliang.yuan@linux.dev>
+Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+In-Reply-To: <20261110-bug-target-alua-lun-gp-v1-1-127a46efdae9@linux.dev>
+References: <20261110-bug-target-alua-lun-gp-v1-0-127a46efdae9@linux.dev>
+ <20261110-bug-target-alua-lun-gp-v1-1-127a46efdae9@linux.dev>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 10 Nov 2026 13:38:12 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -59,54 +60,94 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20261110-bug-target-alua-lun-gp-v1-2-127a46efdae9@linux.dev>
-References: <20261110-bug-target-alua-lun-gp-v1-0-127a46efdae9@linux.dev>
-In-Reply-To: <20261110-bug-target-alua-lun-gp-v1-0-127a46efdae9@linux.dev>
-To: "Martin K. Petersen" <mkp@kernel.org>
-Cc: Mike Christie <michael.christie@oracle.com>, linux-scsi@vger.kernel.org, 
- target-devel@vger.kernel.org, linux-kernel@vger.kernel.org, 
- Qiliang Yuan <qiliang.yuan@linux.dev>
-X-Mailer: b4 0.13.0
 
-core_tpg_remove_lun() detaches a LUN from its ALUA target port group
-once transport_clear_lun_ref() has drained its I/O, and
-target_detach_tg_pt_gp() then waits for an RCU grace period.
+Thank you for your contribution! Sashiko AI review found no new issues
+in this patch, but noticed 1 related pre-existing issue it does not
+introduce:
+- [Critical] target: out-of-bounds write in
+  target_emulate_report_target_port_groups() [1]
+--
 
-Nothing that wait could protect is freed here: the group lives on until
-core_alua_free_tg_pt_gp(), which waits for a grace period of its own
-before freeing it, and the se_lun is freed with call_rcu(). Every LUN
-removed through configfs still pays a grace period for it.
+commit 2f412f4b4c4324ed81aac0037066698113367ec3
+Author: Qiliang Yuan <qiliang.yuan@linux.dev>
 
-Remove the synchronize_rcu() call.
+scsi: target: alua: Don't wait for a grace period when attaching a LUN
 
-Removing 256 LUNs from an iSCSI TPG through configfs, five rounds
-alternating with and without this patch, takes (median, min-max in
-parentheses):
+This commit removes the synchronize_rcu() call from target_attach_tg_pt_gp()
+when attaching a newly created LUN to the default ALUA target port group.
 
-  LUNs  before (ms)       after (ms)        change
-   256  5222 (5165-5244)  3551 (3436-3810)    -32%
+> diff --git a/drivers/target/target_core_alua.c b/drivers/target/target_co=
+re_alua.c
+> index 140154d93c430..35d36cd36db6c 100644
+> --- a/drivers/target/target_core_alua.c
+> +++ b/drivers/target/target_core_alua.c
+> @@ -1833,7 +1833,6 @@ void target_attach_tg_pt_gp(struct se_lun *lun,
+>  	spin_lock(&lun->lun_tg_pt_gp_lock);
+>  	__target_attach_tg_pt_gp(lun, tg_pt_gp);
+>  	spin_unlock(&lun->lun_tg_pt_gp_lock);
+> -	synchronize_rcu();
+>  }
+> =20
+>  static void __target_detach_tg_pt_gp(struct se_lun *lun,
 
-Signed-off-by: Qiliang Yuan <qiliang.yuan@linux.dev>
----
- drivers/target/target_core_alua.c | 1 -
- 1 file changed, 1 deletion(-)
+[Severity: Critical]
+This problem wasn't introduced by this patch, but can concurrent calls to
+target_attach_tg_pt_gp() and target_emulate_report_target_port_groups() cau=
+se
+an out-of-bounds write to buf[] [1]?
 
-diff --git a/drivers/target/target_core_alua.c b/drivers/target/target_core_alua.c
-index 35d36cd36db6c..4e22f988bb83f 100644
---- a/drivers/target/target_core_alua.c
-+++ b/drivers/target/target_core_alua.c
-@@ -1858,7 +1858,6 @@ void target_detach_tg_pt_gp(struct se_lun *lun)
- 		rcu_assign_pointer(lun->lun_tg_pt_gp, NULL);
- 	}
- 	spin_unlock(&lun->lun_tg_pt_gp_lock);
--	synchronize_rcu();
- }
- 
- static void target_swap_tg_pt_gp(struct se_lun *lun,
+drivers/target/target_core_alua.c:target_emulate_report_target_port_groups(=
+) {
+    ...
+		if ((off + 8 + (tg_pt_gp->tg_pt_gp_members * 4)) >
+		     cmd->data_length) {
+			rd_len +=3D 8 + (tg_pt_gp->tg_pt_gp_members * 4);
+			continue;
+		}
+    ...
+		spin_lock(&tg_pt_gp->tg_pt_gp_lock);
+		list_for_each_entry(lun, &tg_pt_gp->tg_pt_gp_lun_list,
+				lun_tg_pt_gp_link) {
+			off +=3D 2; /* Skip over Obsolete */
+			put_unaligned_be16(lun->lun_tpg->tpg_rtpi, &buf[off]);
+			off +=3D 2;
+			rd_len +=3D 4;
+		}
+		spin_unlock(&tg_pt_gp->tg_pt_gp_lock);
+    ...
+}
 
--- 
-2.43.0
+target_emulate_report_target_port_groups() checks whether the descriptors f=
+or
+a port group fit within cmd->data_length using tg_pt_gp->tg_pt_gp_members
+without holding tg_pt_gp->tg_pt_gp_lock:
 
+CPU0                                  CPU1
+target_emulate_report_target_port_groups()
+  if ((off + 8 +
+       (tg_pt_gp->tg_pt_gp_members * 4)) >
+      cmd->data_length)
+                                      target_attach_tg_pt_gp()
+                                        __target_attach_tg_pt_gp()
+                                          spin_lock(&tg_pt_gp->tg_pt_gp_loc=
+k)
+                                          list_add_tail(...,
+                                            &tg_pt_gp->tg_pt_gp_lun_list)
+                                          tg_pt_gp->tg_pt_gp_members++
+                                          spin_unlock(&tg_pt_gp->tg_pt_gp_l=
+ock)
+  spin_lock(&tg_pt_gp->tg_pt_gp_lock)
+  list_for_each_entry(lun, ...)
+    put_unaligned_be16(..., &buf[off])  <-- out-of-bounds write
+
+When a concurrent configfs operation attaches a LUN to the same port group
+between the size check and acquiring tg_pt_gp->tg_pt_gp_lock,
+tg_pt_gp_lun_list grows past the validated count and the loop writes past t=
+he
+end of the mapped command buffer.
+
+[1] https://sashiko.dev/#/bug/linux-9cff51b1-852e-4bef-94e2-6d7c000ddc21
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261110-bug-target=
+-alua-lun-gp-v1-0-127a46efdae9@linux.dev?part=3D1
