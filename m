@@ -1,54 +1,49 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.35
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794301548;
-	b=UwYJWdlagwcK0NYbfNN48cNJY99LE2J1wamodbhsgiRrmNySk51bA6QjmvMgFHIdyTxF
-	 5N2/R3bvqQee0LfwWEHLxvqtFejvlgmW24t3AuQ1T/bOyGATYLgxNyjEZfm/kSM763kA0
-	 wiMCNJZiPGNVyQVwwGNH6N1wcc+vg9UL+77cOAY/HocuU1KAYm0EmH2JYoma4KZ888hRv
-	 zOQeesywAeZ02q1UrGLFtav7kO9N8aNMfQpRITnF8lZCsUaalwHeSrviO3Oe4i0s4hn5W
-	 EGunvpNYJ7ftqxU+1Wphli50Pi0fEc++OqSNWnY5mq+YZUGbn4yZdWeD+ybr16H3vbg==
+	t=1794302158;
+	b=0zv7/Dgh8pSlneqhC72WhVX24TtxuBgXn3ZzNiG+vqilvBaQedHthC+PQHsqham3x9iz
+	 BJZGgXBymJ/Fj7D3K2BzH/Pi03hcN5DFGqy5120TwJ6beShyNA6YmtPZ5X4tbUk8V+Q2o
+	 iHoPtb74a1nvY5136NDlyiLE794xynvupG52j+VjVgRqK2Z0iuZPteDIBsPVsq8qF8VRP
+	 bnYjFNGUQNyfZRJL2Im2xqvV0iJiA3OWmzYNl2plB3YTkfH0Gv3Ujh7D/rE5JRMmQB/UL
+	 R4AEm4Frmlw+X/AWm3n6UfXWsZ6+4wO2fCxXJa01aT0/j6rqJbfGDz5ftOLNkQubL2w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794301548;
-	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
-	 Subject:To:Cc:References:Content-Language:From:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding;
-	bh=OK9denJsYmTCyLolpT52rwyfXM56TL7yf+QKigAqDXY=;
-	b=Y/ZF1i42QnHG6KzDAjgRQTeTe8sEhKONDMtOl02VRNXsEY52TADzlT5SmjCc+XNmnSuQ
-	 kXbjHWhp3/zXpBDzvYkzJ7m3QWw862bm+cBe7UvFOc1zztOvIyDA+BQRm6wapxNSKJ+tw
-	 c9bpVbG2SdzypWH7C03PSFUaYDD2w36TS/gFmMLVUiVhU5iGEtuRSe2vCjXwHok1h78Qy
-	 pN3BlwuZmy5SwNmXqiM01w3Fbbx70gabUK9cUA1bkdIhD+v5e3YBNlaKG/mq8y0yHaLDp
-	 Wmdva6mSBZEf9SJj5yuY2+4SSMHtRG+v7rdp9NUkapJzwwLGdYmG2mY3HJhqXaWuKLw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794302158;
+	h=Received:DKIM-Signature:From:Subject:Date:Message-Id:MIME-Version:
+	 Content-Type:Content-Transfer-Encoding:X-B4-Tracking:X-Change-ID:To:
+	 Cc:X-Mailer:X-Developer-Signature:X-Developer-Key;
+	bh=PuZuHEnsND00fHRoxO3q8GjJUd6kGJ0dXTi/U306um4=;
+	b=Rf1yyJVwBdY9vkQoPfbJy7zET1ym1qPFDbc//9rofl1EDV0A/VmK0XhbDph9GIDBqfH6
+	 5lMq2wIzgC4wRPgZQz4B21xjaH2MnQthAMVBQfw/dWlbf4bpCtAiriSiVQ9eQzl2cD5cl
+	 WY+Qu3Ld2XLlPxEymSj0+Y1IP7aeyGGxtU9OXuoeyGs0tHedTR3Pz2hus7w5Gj0qc5iDx
+	 E9ErdbBqIPO/9zy46XsNb8/pCOlTUPLpNRRcgAGYoc95uY30iIMweHZdj79jQG7jEkrRH
+	 M8/qKVnmvddbKYBX2999KR5YKr8lWt3/lp5GbOyFgUOUc7cj4gkVtHjo5Q5o0cVMgxg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.dev;
-	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=rTp6QS1p;
-	arc=none smtp.remote-ip=95.215.58.35
-Received: from mta1.migadu.com (out-35.mta1.migadu.com [95.215.58.35])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=iJREp1Nw;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 67B0E606A32E
-	for <linux-scsi@vger.kernel.org>; Tue, 10 Nov 2026 09:05:46 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 67B0E606A32E
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2BC9606A31C;
+	Tue, 10 Nov 2026 09:15:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=rTp6QS1p
-X-Envelope-To: linux-scsi@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=HDOxu6zXX3pmMziswx/K9hIQGw+W8txU+GPPJxltLSk=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1794301545; v=1; x=1794906345;
- b=rTp6QS1prJKB5Qj5y/Mp4lDGTaRPWcKvcniGGrcSc0SSgUolCKSmVtFl9ibXjqw9fQuzFtye
- eoL5CKE8x9D/2Svur2RS5rg6p05LcxsB3Ccwda1PLI+m5iBHOwFSjCukCrZj55ydRC/GaCtAhZV
- BAthYGUuEVW4khx7Iay8KJRI=
-X-Envelope-To: linux-scsi@vger.kernel.org
-Received: by mta10.migadu.com with ESMTPS id 711b39cf1d6a3c7d;
-	Tue, 10 Nov 2026 09:05:45 +0000
-X-Mizu-Trace-ID: 711b39cf1d6a3c7d
-X-Migadu-Flow: FLOW_OUT
-Message-ID: <3332329d-b922-45a4-8333-e8353e983885@linux.dev>
-Date: Tue, 10 Nov 2026 09:05:43 +0000
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=iJREp1Nw
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0CCE11F008A1;
+	Tue, 10 Nov 2026 09:15:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794302157;
+	bh=PuZuHEnsND00fHRoxO3q8GjJUd6kGJ0dXTi/U306um4=;
+	h=From:Subject:Date:To:Cc;
+	b=iJREp1NwHp3BdNh6YhirQMz3aLkdMJad9SaoqicwlHouUofyAaOyHUxlQAMyZlF7r
+	 dxoDogK7Z/SmQMPjvGb107aIw98Hug2c7nyD4DMV9g1SOQKjCPLz3oKAbIbpZoqTaD
+	 pZrbqTndD5C37PARA3QH+ymdbAjgpqhVM8lgzWc8vdrxfAWdPiJr4Zuz7epLK6TvTH
+	 K8+0uuv2p91CoV2BZDxur21nCPhrfDd3bYEfgv9CR8OaiC0kdRmQmvH415KgWFHkQX
+	 DEVbxCY/pgx0ga6OIRh+WS9KothVO+G1SwN3cmU1cAxe1h0Acn2ceEg6DAhgL9k4pG
+	 roZHSfl8QE69g==
+From: Christian Brauner <brauner@kernel.org>
+Subject: [PATCH RFC 00/41] fs: don't use pseudo filesystem files as storage
+Date: Tue, 10 Nov 2026 10:14:16 +0100
+Message-Id: <20261110-work-loop-pseudo-v1-0-4c998976c6c7@kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -58,161 +53,250 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v9 00/29] Native SCSI Multipath support
-To: Laurence Oberman <loberman@redhat.com>,
- james.bottomley@hansenpartnership.com, mkp@kernel.org
-Cc: hare@suse.com, linux-nvme@lists.infradead.org,
- linux-scsi@vger.kernel.org, snitzer@kernel.org, jmeneghi@redhat.com,
- bmarzins@redhat.com, dm-devel@lists.linux.dev, hch@lst.de,
- michael.christie@oracle.com
-References: <20261108204733.557995-1-john.garry@linux.dev>
- <9b90edc29d5b3be49f5bd0e0ecec5f1701e089bf.camel@redhat.com>
-Content-Language: en-US
-From: John Garry <john.garry@linux.dev>
-In-Reply-To: <9b90edc29d5b3be49f5bd0e0ecec5f1701e089bf.camel@redhat.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAAAAAAAC/yXMQQ6CMBAF0KuQWTtNSwgpbk08AFvjoi2DVE3bd
+ ERNCHeXyvL/+fMWYMqeGI7VApnenn0MW1CHCtxkwo3QD1uGWtatUrLDT8wPfMaYMDHNQ0TdSd0
+ 0qtU0KtjeUqbRf//kBfrzCa57ybO9k3sVrMysYUKbTXBTqQorCit2VpQ7rOsPZFHYQaEAAAA=
+X-Change-ID: 20261109-work-loop-pseudo-890844168ef1
+To: linux-fsdevel@vger.kernel.org
+Cc: Jann Horn <jannh@google.com>, Chris Mason <mason@kernel.org>, 
+ Josef Bacik <josef@toxicpanda.com>, Christoph Hellwig <hch@lst.de>, 
+ linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linux-nvme@lists.infradead.org, Alexander Viro <viro@zeniv.linux.org.uk>, 
+ Jan Kara <jack@suse.cz>, linux-scsi@vger.kernel.org, 
+ target-devel@vger.kernel.org, driver-core@lists.linux.dev, 
+ linux-mm@kvack.org, bpf@vger.kernel.org, 
+ linux-security-module@vger.kernel.org, selinux@vger.kernel.org, 
+ apparmor@lists.ubuntu.com, linux-nfs@vger.kernel.org, 
+ netdev@vger.kernel.org, fuse-devel@lists.linux.dev, 
+ linux-efi@vger.kernel.org, xen-devel@lists.xenproject.org, 
+ ocfs2-devel@lists.linux.dev, linux-s390@vger.kernel.org, 
+ linuxppc-dev@lists.ozlabs.org, linux-usb@vger.kernel.org, 
+ Amir Goldstein <amir73il@gmail.com>, linux-erofs@lists.ozlabs.org, 
+ linux-kselftest@vger.kernel.org, 
+ "Christian Brauner (Amutable)" <brauner@kernel.org>, stable@vger.kernel.org
+X-Mailer: b4 0.17-dev-ce4c1
+X-Developer-Signature: v=1; a=openpgp-sha256; l=10223; i=brauner@kernel.org;
+ h=from:subject:message-id; bh=WAx5V1LxGhR1UvA5SWC4CADg+JxO9oBzu81M/1sMo5Y=;
+ b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWR9ejD52Vp9Rt+JU9PPyLRYcDzr9thcK9op63nkT0XG0
+ 9tVb6tZO0pZGMS4GGTFFFkc2k3C5ZbzVGw2ytSAmcPKBDKEgYtTACbiG8XI8J1572stqcqPZ3dm
+ znK65z3nlUlHTqE/T8hKpkDxSwpWsgz/FKwaX6+8IPBNt3Ftpf31vw35c90UOxbdS3Dp+3xJ6N0
+ RDgA=
+X-Developer-Key: i=brauner@kernel.org; a=openpgp;
+ fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 
-On 11/9/26 20:19, Laurence Oberman wrote:
-> I have been testing v9 (your scsi-multipath-v7.4-v9 branch, on
-> 7.4-rc1) on real hardware 
+Loop happily takes any regular file with ->read_iter() as a backing
+file and any file that also has ->write_iter() as a writable one. A few
+examples:
 
-Good to know.
+* /proc/kcore attaches read-only as a loop device the size of the
+  kernel's virtual address space (64 PiB with 5-level paging)
+* sysfs attributes attach read-write as 4096 byte loop devices
+* using /sys/kernel/mm/transparent_hugepage/enabled for the loop device
+  and writing a block to the loop device changes the THP setting
 
-> and found two problems with ALUA arrays,
-> one in scsi_dh_alua and one in the series itself.
-> 
-> Setup:
-> - HP P2000 G3 FC array, implicit ALUA, two port groups (one per
->    controller)
-> - 2 FC HBAs, 2 target ports each, 30 LUNs with 4 paths per LUN
-> - scsi_mod.multipath=on, dm-multipath not in use
-> - Under dm-multipath, the same LUNs show port group 1 at prio 50
->    (active/optimized) and port group 0 at prio 10
->    (active/non-optimized)
-> 
-> 1. sdev->access_state is wrong after boot (scsi_dh_alua, not this
->     series)
-> 
-> After boot, every path read active/optimized in
-> /sys/class/scsi_device/H:C:T:L/device/access_state, while sg_rtpg
-> reports port group 0 as active/non-optimized. No
-> "alua: port group XX state ..." message was logged at all.
+It's not just silly. It's abusable (is that a word?). Loop calls
+->read_iter() and ->write_iter() of the backing file directly from its
+kworker which runs with kernel credentials.
 
-In this series, ALUA state really has been ignored. It was felt that 
-driving ALUA state and sdev->access_state by device handler ALUA driver 
-should should not be relied on for Native SCSI multipath. There had been 
-considerable discussion on this on list. I already have the work done 
-for ALUA support from some time ago and can be posted once this series 
-is accepted.
+But pseudo files enforce part of their access rules at read and write
+against the caller. So dozens of sysfs ->show() and ->store() methods
+call capable().
 
-> 
-> Since 50759b881e1d ("scsi: device_handler: alua: Call
-> scsi_device_put() from non-atomic context"), alua_rtpg_queue() only
-> queues an RTPG if sdev->handler_data is set, but alua_bus_attach()
-> sets handler_data after alua_initialize() has tried to queue the
-> initial RTPG. That RTPG is dropped, and access_state stays at its
-> zeroed default (active/optimized) until something calls
-> scsi_dh_activate(). dm-multipath hides this through pg_init; native
-> multipath never calls activate, so the series sees every path as
-> optimized.
-> 
-> I have sent a separate fix for this to linux-scsi:
-> https://lore.kernel.org/linux-scsi/20261109201120.1067815-1- 
-> loberman@redhat.com/
-> It is independent of your series, but without it, native multipath
-> on ALUA arrays has no correct path state.
+But setting up a loop device requires no capabilities. It only requires
+access to the device nodes. So whoever has a loop device skips all of
+the capable() checks.
 
-Ack
+A couple of fun examples:
 
-> 
-> 2. ANO paths are ranked the same as AO paths
-> 
-> With the ALUA state corrected (by writing "activate" to dh_state, or
-> with the fix above), I/O still went to active/non-optimized paths.
-> scsi_multipath_sdev_init() sets mpath_device->access_state to
-> MPATH_STATE_OPTIMIZED and nothing updates it, while
-> __mpath_find_path(), mpath_round_robin_path() and
-> mpath_queue_depth_path() rank paths by that field. Only
-> scsi_mpath_is_optimized()/is_disabled() read sdev->access_state.
-> 
-> With numa, the first path in dev_list wins for every node, and
-> dev_list order follows sd probe completion, so for about a third of
-> the LUNs the current path was an ANO path. Example, LUN sdn, reads
-> completed per path for a 2000 x 1M O_DIRECT dd (:0/:3 AO, :1/:2 ANO
-> at the time):
-> 
->    sdn:0 0sdn:1 2000sdn:2 0sdn:3 0
-> 
-> Every read went through the non-owning controller. From the code, for
-> these LUNs the numa recheck of is_optimized() fails on every I/O and
-> __mpath_find_path() picks the same ANO path again.
-> 
-> With the change below (a template callback so the selectors use the
-> live state), plus the scsi_dh_alua fix, all 30 LUNs pick an AO
-> current path at boot, and on LUN sdl (:0/:2 AO, :1/:3 ANO):
-> 
->    numa         2000     0     0     0
->    round-robin  1000     0  1000     0
->    queue-depth 18039     0 13961     0   (8 parallel dd, 64k)
-> 
-> No I/O reached the ANO paths under any policy. This is a test patch to
-> show the problem, not a polished change - feel free to fold it in or
-> do it differently.
+On v7.4-rc1 uid 0 without any capabilities can't kill a process of uid
+1000 and can't poison its memory either:
 
-I'll check it. Sounds like a real problem.
+    $ grep CapEff /proc/self/status
+    CapEff: 0000000000000000
+    $ kill -9 327
+    bash: kill: (327) - Operation not permitted
+    $ echo 0x220689000 > /sys/devices/system/memory/hard_offline_page
+    bash: echo: write error: Operation not permitted
 
-As you may know, this code is really a refactoring of the NVMe multipath 
-code. The ambition was to have NVMe use libmultipath eventually, so it 
-would be good for any change to work for both NVMe and SCSI.
+But put hard_offline_page behind a loop device, write a block
+containing 0x220689000 to the loop device and the loop worker happily
+does it:
 
-> 
-> 3. Smaller points
-> 
-> - numa with equal NUMA distance uses one path per LUN, so with two AO
->    paths through two HBAs, half the optimized bandwidth is idle (sdl:2
->    above under numa). That matches NVMe, but users coming from
->    dm-multipath service-time will notice. Would round-robin or
->    queue-depth be a better default for SCSI?
+    Memory failure: 0x220689: recovery action for dirty LRU page: Recovered
+    MCE: Killing victim:327 due to hardware memory corruption fault at 7f468e972000
 
-Maybe, but round-robin may not be always ideal considering only a bio 
-mode of operation is supported and no merging like dm-mpath RQ mode.
+That hard_offline_page is a write-only file doesn't stop loop from
+using it as a writable backing file either.
 
-> 
-> - There are no Documentation/ABI entries for the new sysfs attributes
->    (scsi_mpath_device vpd_id/iopolicy/multipath, delayed_removal_secs,
->    mpath_dev, mpath_numa_nodes, mpath_queue_depth), and the
->    scsi_mod.multipath and multipath_iopolicy parameters are not in
->    kernel-parameters.txt. I have a draft ABI file if useful.
+Other fun examples:
 
-Cool, I would suggest to post if and when this is merged. I would rather 
-not post another version of this series. It is just "experimental".
+(1) soft-block radios via /sys/class/rfkill/rfkill*/soft
+    (CAP_NET_ADMIN)
 
-> 
-> - There is no userspace tool yet to show heads, paths and ALUA state
->    (the equivalent of multipath -ll or nvme list-subsys). I used a
->    small sysfs script for this testing. Ben, is native SCSI multipath
->    support in multipath-tools planned?
+(2) change the reboot mode via /sys/kernel/reboot/mode (CAP_SYS_BOOT)
 
-Well, the whole point is that we don't need userspace tools. However, I 
-appreciate that there is no general SCSI tooling which could help here. 
-I know that Himanshu M did work on a SCSI version of nvme-cli tool 
-previously. Martin may know the status of that.
+(3) reconfigure md arrays via /sys/block/md*/md/. md_attr_store()
+    requires CAP_SYS_ADMIN for every md attribute.
 
-> 
-> - CONFIG_SCSI_MULTIPATH/CONFIG_LIBMULTIPATH are only enabled in your
->    branch's x86_64_defconfig, so building from a distro config leaves
->    them off, and scsi_mod.multipath= is silently ignored. Maybe worth a
->    note in the cover letter.
+(4) reconfigure scsi disks via /sys/class/scsi_disk/*/allow_restart and
+    friends (CAP_SYS_ADMIN)
 
-I thought that the kernel warns of unrecognised params (which would 
-happen for a relevant module disabled).
+(5) read dmi-sysfs attributes (CAP_SYS_ADMIN)
 
-> 
-> I have not tested failover or path loss yet; I will follow up with
-> that and a Tested-by once done.
+And an unprivileged container that was handed a loop device can change
+gro_flush_timeout of its own network devices. That usually requires
+CAP_NET_ADMIN in the initial user namespace (via sysfs and via netlink).
 
-ok.
+I've reproduced that all on v7.4-rc1.
 
-Thanks
+Aaaand zloop, the nvme target's file backend, the scsi target's fileio
+backend, fuse passthrough and the usb mass storage gadget have the same
+problem. erofs takes pseudo files as images for file-backed mounts as
+well. It reads them with the mounter's credentials though so that's just
+silly and not abusable.
+
+Fwiw, device mapper doesn't need anything. It only takes block devices.
+md's deprecated bitmap file is fine as well. It maps the file with
+bmap() which no pseudo filesystem implements.
+
+So this series adds SB_I_PSEUDO to state that the regular files of a
+filesystem are kernel interfaces and not storage and makes all seven
+refuse such files.
+
+I didn't want to sprinkle SB_I_PSEUDO over all pseudo filesystems one by
+one. Instead there's now a common initialization point for all of them
+via fc_init_pseudo().
+
+init_pseudo() uses it for the internal pseudo filesystems and all
+mountable pseudo filesystems call it from their ->init_fs_context().
+
+kernfs does it once in kernfs_get_tree(). It raises SB_I_PSEUDO,
+SB_I_NOEXEC and SB_I_NODEV. Pseudo filesystems never hold executables or
+device nodes. Some of them raised SB_I_NOEXEC and SB_I_NODEV already,
+most didn't.
+
+I went through every single one of them. None of them needs to execute
+anything. The files that can be mmap()ed map data and the tracing ring
+buffer refuses VM_EXEC anyway.
+
+SB_I_NODEV is cleared again by devpts, binderfs and selinuxfs. The first
+two did that already. selinuxfs needs it because Android init opens
+/sys/fs/selinux/null by path as /dev/null doesn't exist yet at that
+point. Note that systemd mounts most of these filesystems with noexec
+and nodev already.
+
+file_is_pseudo() looks at d_real_inode(). overlayfs happily stacks on
+top of sysfs, cgroup2, debugfs, tracefs, configfs and securityfs and
+reads of such overlayfs files are served by the pseudo file. Only procfs
+and binfmt_misc are refused as they set s_stack_depth to
+FILESYSTEM_MAX_STACK_DEPTH.
+
+Whether all pseudo filesystems should refuse stacking is a separate
+discussion. overlayfs reads the lower file with the mounter's
+credentials so a root-mounted overlayfs on top of a sysfs directory
+hands capability gated reads to every reader. With SB_I_PSEUDO overlayfs
+could easily refuse them.
+
+The first three patches are independent fixes. Loop never checked
+whether its backing file is open for reading. It relied on
+vfs_iter_read() refusing such files. Direct I/O never went through
+vfs_iter_read() and since v6.15 buffered I/O doesn't either. So whoever
+has a loop device can read files they could only open for writing. And
+the nvme target's file backend and the scsi target's fileio backend call
+->read_iter() and ->write_iter() without checking that they exist.
+
+Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
+---
+Christian Brauner (41):
+      loop: refuse backing files that aren't open for reading
+      nvmet: check that the file backend supports ->{read,write}_iter
+      target: fileio: check that the backing file supports ->{read,write}_iter
+      fs: add SB_I_PSEUDO
+      kernfs: use fc_init_pseudo()
+      proc: use fc_init_pseudo()
+      binfmt_misc: use fc_init_pseudo()
+      mqueue: use fc_init_pseudo()
+      bpf: use fc_init_pseudo() for bpffs
+      nullfs: use fc_init_pseudo()
+      failfs: use fc_init_pseudo()
+      rust_binderfs: use fc_init_pseudo()
+      devpts: use fc_init_pseudo()
+      debugfs: use fc_init_pseudo()
+      tracefs: use fc_init_pseudo()
+      configfs: use fc_init_pseudo()
+      securityfs: use fc_init_pseudo()
+      selinux: use fc_init_pseudo() for selinuxfs
+      smack: use fc_init_pseudo() for smackfs
+      apparmor: use fc_init_pseudo() for apparmorfs
+      nfsd: use fc_init_pseudo()
+      sunrpc: use fc_init_pseudo() for rpc_pipefs
+      fuse: use fc_init_pseudo() for fusectl
+      efivarfs: use fc_init_pseudo()
+      pstore: use fc_init_pseudo()
+      xenfs: use fc_init_pseudo()
+      openpromfs: use fc_init_pseudo()
+      ocfs2: use fc_init_pseudo() for dlmfs
+      s390/hypfs: use fc_init_pseudo()
+      powerpc/spufs: use fc_init_pseudo()
+      usb: gadget: f_fs: use fc_init_pseudo()
+      usb: gadget: gadgetfs: use fc_init_pseudo()
+      fs: add file_is_pseudo()
+      loop: refuse files on pseudo filesystems as backing files
+      zloop: refuse zone files on pseudo filesystems
+      nvmet: refuse files on pseudo filesystems as namespace backing files
+      target: fileio: refuse files on pseudo filesystems as backing files
+      fuse: refuse files on pseudo filesystems as passthrough backing files
+      usb: gadget: f_mass_storage: refuse files on pseudo filesystems
+      erofs: refuse files on pseudo filesystems as backing files
+      selftests/filesystems: add backing file tests for pseudo files
+
+ arch/powerpc/platforms/cell/spufs/inode.c          |   2 +
+ arch/s390/hypfs/inode.c                            |   2 +
+ drivers/android/binder/rust_binderfs.c             |   3 +-
+ drivers/block/loop.c                               |   6 +
+ drivers/block/zloop.c                              |   5 +
+ drivers/nvme/target/io-cmd-file.c                  |  10 +
+ drivers/target/target_core_file.c                  |  15 ++
+ drivers/usb/gadget/function/f_fs.c                 |   2 +
+ drivers/usb/gadget/function/storage_common.c       |   5 +
+ drivers/usb/gadget/legacy/inode.c                  |   2 +
+ drivers/xen/xenfs/super.c                          |   2 +
+ fs/binfmt_misc.c                                   |   5 +-
+ fs/configfs/mount.c                                |   2 +
+ fs/debugfs/inode.c                                 |   2 +
+ fs/devpts/inode.c                                  |   2 +
+ fs/efivarfs/super.c                                |   2 +
+ fs/erofs/super.c                                   |   6 +-
+ fs/failfs.c                                        |   3 +-
+ fs/fuse/backing.c                                  |   3 +
+ fs/fuse/control.c                                  |   2 +
+ fs/kernfs/mount.c                                  |   4 +-
+ fs/libfs.c                                         |   2 +-
+ fs/nfsd/nfsctl.c                                   |   2 +
+ fs/nullfs.c                                        |   3 +-
+ fs/ocfs2/dlmfs/dlmfs.c                             |   2 +
+ fs/openpromfs/inode.c                              |   2 +
+ fs/proc/root.c                                     |   4 +-
+ fs/pstore/inode.c                                  |   2 +
+ fs/tracefs/inode.c                                 |   2 +
+ include/linux/fs.h                                 |  12 +
+ include/linux/fs/super_types.h                     |   1 +
+ include/linux/pseudo_fs.h                          |  11 +
+ ipc/mqueue.c                                       |   3 +-
+ kernel/bpf/inode.c                                 |   4 +-
+ net/sunrpc/rpc_pipe.c                              |   2 +
+ security/apparmor/apparmorfs.c                     |   2 +
+ security/inode.c                                   |   2 +
+ security/selinux/selinuxfs.c                       |   5 +
+ security/smack/smackfs.c                           |   2 +
+ tools/testing/selftests/filesystems/.gitignore     |   1 +
+ tools/testing/selftests/filesystems/Makefile       |   2 +-
+ tools/testing/selftests/filesystems/config         |   9 +
+ .../selftests/filesystems/pseudo_backing_test.c    | 274 +++++++++++++++++++++
+ 43 files changed, 419 insertions(+), 15 deletions(-)
+---
+base-commit: 6628e7d4c6b25c8d18f1345e3a20d21829aae7e4
+change-id: 20261109-work-loop-pseudo-890844168ef1
+
