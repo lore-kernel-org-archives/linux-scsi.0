@@ -1,98 +1,56 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.52
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794349455;
-	b=zcT5CFUSQ2azcuCsC0g2pKW3x/6w11fPX72ZogsazL+qDNp1HQvgvM0oEf0sQXRAabh6
-	 N4paUiOOxJtq6z61BumeYwytKZ021ltnEO0dVn5xDdyixWyKgC5UaeC4P2h/nIHmVlnET
-	 9Xme5xLF0GkD9hyM/zQmWIsC/xDvxhiHrCr4sRQ082BZJOYnQO4Y4FPlUQ3HPWGgj8fLS
-	 54VafKLKowM6Oy1Sy737Dr3e6cxtHpkIiCD4P28qWWmDxKPTBk7GIh6Q11jAlF3Il1S+d
-	 d4iqn8vMwrhsKCbV+b25LRe3D2Dj8cuOJJiWCRKqqNxZhRjWZfVcjd9ANF1JOlBOAdA==
+	t=1794353884;
+	b=ulEyMHUKdN+/5EqB80edP1lcphzKZCeRwVPfF78u4S1F+cUI0ZK04nWtyI/Ps5rYQ48d
+	 9HpexQE0hkm7oSQTnWZwixO7LggjbhH7RwT+aqpDeUP3lxWLM1/VDaW5tlLYBvQbP04nE
+	 VrYfC+SQ/te/ppoX/3CA5Xu3TQmI8MCWryW9SofPxiiuHGH6Wc2QL3Ani+3uTwy45++38
+	 4L2ey06HG3mYYrLejsoyB4SQHA1OaKFrqr8WehFWgTtOdEb0cp4loKtoB+v1o0Zz7glfx
+	 Kidayxy+f8f42af/PEx+kQt1MNw3wxqVAFewlQb6qKp6lJ+8tH9AvLRipYlIqxMgAMQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794349455;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:X-Google-Original-From:To:Cc:Subject:Date:Message-Id:X-Mailer:
-	 MIME-Version:Content-Transfer-Encoding;
-	bh=5VGH+8AVAlrWwk+iBkQMQ4d2lmEyzdJub4xNIMW5F28=;
-	b=st/4Ac7clDXX0ygQoHy/MsrQhkRvOVNoqrowdiADTWZbjX5tr4F0lertGr+GpBr9BdcN
-	 //U18bSQg7gM8nxmwrLC7PMqmdZ6H6cbSv2JPgSspbOOW0+jmXixWbsMIdN+rjT9IRtwg
-	 cxZZeR06VsNaxcW4xNGx99KN0vBowQj/U/AUW9IKAwQ6QUYO8IIdiQ5Qt0Zo3MreqxtZf
-	 l7Gm7fhExxSucf1FgAB5YCxPOmHb/H/fMvthT9HIngjzfPnUrBR/xDJ7HNto0oD7Oh+/P
-	 pBCbE+DxyCu1ecieRU56o4vvjn2a/R9pHtnr/cqJOHZUa9x/ynOvtXxeuvXiYSCK8NQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794353884;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=3Zo3v4U+Gczwr3NvRXT1n0ItnwpM98u0Wts2kT0FvuI=;
+	b=Cn49tn7OxPfSmcRpatLq6MRGQnoDvDc5XdmtyfG061U8uT+wb5qxNrIJaAhFjou3KuG7
+	 UoDsbtFf7EqHAkVhoiVRGWOAB6fmuu36tiNECpGXcpkg+gQllLdg27NScjg1RRuFLWMJ9
+	 lpeFbnjHS4PFy60SeetSrhQVmmNsVzpLRjTbfBdKsXuaWj1ZsXPbNFLqGE+mYEYLi6wd0
+	 6qSGPFFn4wFb/kJFYvhBcZurxtoEbDbExslId3nMkuFIGqnqsubJ9PyAocdp50n6Erl1Z
+	 rYr2KMEbNsCnGirshbJ/ggQxbQyfAB/3JFuPrj6IDfBrYOLNGCIaWSQjRQqJy0Mye6Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=xz2B1zuG;
-	arc=none smtp.remote-ip=74.125.82.52
-Received: from mail-dl1-f52.google.com (mail-dl1-f52.google.com [74.125.82.52])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ndV6lIEg;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0BB48606A321
-	for <linux-scsi@vger.kernel.org>; Tue, 10 Nov 2026 22:24:14 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0BB48606A321
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9ED5A606A31C
+	for <linux-scsi@vger.kernel.org>; Tue, 10 Nov 2026 23:38:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=xz2B1zuG
-Received: by mail-dl1-f52.google.com with SMTP id a92af1059eb24-1a8cc11ac42so2546239c88.0
-        for <linux-scsi@vger.kernel.org>; Tue, 10 Nov 2026 14:24:14 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1794349454; x=1794954254; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=5VGH+8AVAlrWwk+iBkQMQ4d2lmEyzdJub4xNIMW5F28=;
-        b=xz2B1zuGmegeSZMDCqovYzUH4V7UWmjgS1jy33CXEthDGKsL20CtXrVMTuy/oFw/Hc
-         ys9awCsiB9470wbVB1uulspA8O7rAcwvo+xKFZKibnlSCcxyQ29+tfh2QipcYruKHkQG
-         EWrYPhllOWo87R+ZGBEdHslgkazYFM8WbR9e+eU7awVm/gHpbaSUt05ivkS6rZK4bEnL
-         T7GV9Ht/CsU+YZofjK981aZlTwO5ukZhYEuJjCufgiq1qNi4zQbRHff2CxpP2DIM1A2g
-         bpUoyk0y/hjhmYizcSmMLlvIGFqeqw1yYVGPvJ03Ty06Qbu5vaGk5QL27BN/4SQrdkQ7
-         BkSA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794349454; x=1794954254;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=5VGH+8AVAlrWwk+iBkQMQ4d2lmEyzdJub4xNIMW5F28=;
-        b=ABH0lUshUI+DrPirOCzZd+TE1n/xxjG2RrpfrWMEGbt8GEUgsFrxom2h4DQBb60M+C
-         Rz3hE6enZsQaMvIS29jwcKzBgemTmeJAcOCVubCsCsDRUs4/ZnKIycaJ5jf6QEnO54M3
-         Swo6b12KH2eaZ5l4vhMET2xrLHtR1YsUE/CRhYWe1/RML6/k0Le5RsOa/HZ+xDLzAiiq
-         WccXlBl98Hb42G8S4CVQM9FA6R/3uMg8wf6R3Oekr8dTSNRGj2BFPQQPNNYXpRpGHyLS
-         6nNHWLTyudgVzTzCHnWMIit6+K5r0U4FhA2NcCqtPpvyJT454T7WiTncQnxRPd9BksLK
-         Eqag==
-X-Forwarded-Encrypted: i=1; AL+hErFvewBFluJ9c0GH0Ag88G1ZLrRttrFieCDyqL4lg6jjJ2CkpNx8G5cWVCEsk9aMIz4aD3/58J/9oUpO@vger.kernel.org
-X-Gm-Message-State: APuU4Z+BbU1MTu9xwhtEh3EiCwZMvIasmsrvtUfP3C74GhE639Ocyf9o
-	i0gQKw4UA9K1M8B3TplvQzRJkOXmhmlwgQC0qLAfYHS3QkFIv/MwKnwh
-X-Gm-Gg: AYBFou0zLlyX/FDhXgirVVS+vNvNi8NuE40s01uW3nwOZzv4JSFH1yW217m1ezOcybn
-	PeIDxCnilD802x1VY/LLAXUB/fSb/c4ddMrN9B1ukhm7/OU9WH7qlZCvIz7qKpApYUUZTNBiwA6
-	ncGUFbmHKtRxkeM9M7Nc7OVCLyTNI5nA2GLlDQ63IYfNP/DEiLt3n1ARjhdBEQdvsLpWpXuVgSH
-	wv/BKzE0fjH0cT/9iPd8Zra7BbwBJbX78Z4BJ7doU+32BRwmf1SOFkbLfUlvf8vAPqfHRwEMkDm
-	Xr/V0fhu3eTSCYdISEXvrT3Aw7bBj9EXLBkYopDcYZfZl2XXo3M4AUqSDN4MuUYqamzj3wTyOvl
-	oz+l/R3xVhw9yNs4P+Djg4brIb2DNXryKrHF+0Mxen4CU/vHcbliSrYlsne1c/FbUH9BCM5qdPQ
-	F9FoyTdrErtcmsXlLanKw1ia7h9Hb0/EdmQRHIaOrFPkUnNHECZee41FmDvbvsfBU0xcEBGWPWx
-	MJLSEI2MYrpYCVOmFxIjQQGTU39xdCMKWYZkfV0zc0f6fgTGFrvcazFbb9Aw5yFCsG330C0ax8l
-	wPb3YG43Onp8mDetwMDjbdAkmTOxwiiH8RTQkSq19pPtze91RxGGnbSLeRtR
-X-Received: by 2002:a05:701b:455a:10b0:185:fd0c:4585 with SMTP id a92af1059eb24-1b3c034aa22mr354963c88.33.1794349453933;
-        Tue, 10 Nov 2026 14:24:13 -0800 (PST)
-Received: from localhost.localdomain (wood.seclab.cs.ucsb.edu. [128.111.49.37])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1b3b56c4e88sm8661009c88.0.2026.11.10.14.24.13
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 10 Nov 2026 14:24:13 -0800 (PST)
-From: Praneeth Balasubramanian <praneethb2002@gmail.com>
-X-Google-Original-From: Praneeth Balasubramanian <praneeth@ucsb.edu>
-To: Lee Duncan <lduncan@suse.com>,
-	Chris Leech <cleech@redhat.com>,
-	Mike Christie <michael.christie@oracle.com>
-Cc: "Martin K . Petersen" <mkp@kernel.org>,
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	open-iscsi@googlegroups.com,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Praneeth Balasubramanian <praneeth@ucsb.edu>,
-	stable@vger.kernel.org
-Subject: [PATCH] scsi: iscsi_tcp: Don't read sk_user_data from the recv work
-Date: Tue, 10 Nov 2026 14:24:03 -0800
-Message-Id: <20261110222403.205332-1-praneeth@ucsb.edu>
-X-Mailer: git-send-email 2.25.1
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ndV6lIEg
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AD68C1F0093C;
+	Tue, 10 Nov 2026 23:38:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794353883;
+	bh=3Zo3v4U+Gczwr3NvRXT1n0ItnwpM98u0Wts2kT0FvuI=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=ndV6lIEgcYeRkK9AuBHt8COzUIroxFDdUqqVlDrUD+X5Mfz7u0AjN7swaetE9CXEf
+	 jwsl8hEqzfiY5XE7UTZsQVmS8s7CGGQgi6M0wutiINKoAysOITVHj4dkEedpycHbSV
+	 kjMO+AJyiqVjjhYN6f5x1Pquq83CodpzQhCT8EBf7AInI2BaDXlyErmgiK4ylBclLp
+	 eXJVPX7waWsnEi691VDwCKLvPPNikfkkB51H25TpMs8te/Eri7jKK5bdeXxks0dVe8
+	 2iMOh9Dz7MnhJjcZWNUxMGqDUe7qzKBMDBPD5z6mKzUPlksy0hrY7YCY3ifTOyx5TF
+	 F6zNGvyUCSJxA==
+Message-ID: <sashiko-outbox-207945@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] xen/scsiback: unbind the IRQ before draining in-flight
+ requests
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Yehyeong Lee" <yhlee@isslab.korea.ac.kr>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20261109122654.30859-1-yhlee@isslab.korea.ac.kr>
+References: <20261109122654.30859-1-yhlee@isslab.korea.ac.kr>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 10 Nov 2026 23:38:03 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -101,111 +59,94 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-With recv_from_iscsi_q=1, iscsi_sw_tcp_data_ready() queues
-conn->recvwork, and iscsi_sw_tcp_recv_data_work() runs the receive path
-under lock_sock() only. At the end of iscsi_sw_tcp_recv_data(),
-iscsi_sw_sk_state_check() reads the connection from sk->sk_user_data.
-Its comment says it must be called with sk_callback_lock, which the work
-does not hold.
+Thank you for your contribution! Sashiko AI review found 1 potential
+issue to consider:
+- [High] xen/scsiback: premature IRQ unbind in scsiback_disconnect()
+  races with responses
+--
 
-On teardown, iscsi_sw_tcp_release_conn() first calls
-iscsi_sw_tcp_conn_restore_callbacks(), which sets sk->sk_user_data to
-NULL, and only then flushes recvwork in iscsi_suspend_rx(). If queued
-work runs in between and the socket is in TCP_CLOSE or TCP_CLOSE_WAIT,
-iscsi_sw_sk_state_check() dereferences NULL->session. With a delay
-added at the start of the work to widen this window, a target-side
-connection close gives:
+commit 3923ae443e53c8e678c6827dafcd0fcc2ee96487
+Author: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
 
-  Oops: general protection fault, probably for non-canonical address ...
-  KASAN: null-ptr-deref in range [0x0000000000000010-0x0000000000000017]
-  Workqueue: iscsi_q_3 iscsi_sw_tcp_recv_data_work
-  RIP: 0010:iscsi_sw_tcp_recv_data+0x219/0x420
+xen/scsiback: unbind the IRQ before draining in-flight requests
 
-Both callers already have the connection. iscsi_sw_tcp_recv_data() gets
-it as an argument, and iscsi_sw_tcp_state_change() reads it under
-sk_callback_lock. Pass it in instead of reading sk_user_data again. The
-connection stays valid until iscsi_suspend_rx() has flushed the work.
+This commit moves unbind_from_irqhandler() and clearing info->irq ahead of
+waiting for nr_unreplied_reqs to reach zero in scsiback_disconnect() so the
+threaded IRQ handler cannot admit new requests after the drain finishes.
 
-The unlocked read was found with an LLM-based tool that checks callers
-against the locking rules stated in kernel comments.
+> diff --git a/drivers/xen/xen-scsiback.c b/drivers/xen/xen-scsiback.c
+> index c7036e0e41bda..647a3c7e2a2b3 100644
+> --- a/drivers/xen/xen-scsiback.c
+> +++ b/drivers/xen/xen-scsiback.c
+> @@ -603,11 +603,13 @@ static int scsiback_gnttab_data_map(struct vscsiif_=
+request *ring_req,
+> =20
+>  static void scsiback_disconnect(struct vscsibk_info *info)
+>  {
+> +	/* Stop admitting requests before draining the in-flight ones. */
+> +	unbind_from_irqhandler(info->irq, info);
+> +	info->irq =3D 0;
+> +
+>  	wait_event(info->waiting_to_free,
+>  		atomic_read(&info->nr_unreplied_reqs) =3D=3D 0);
+> =20
+> -	unbind_from_irqhandler(info->irq, info);
+> -	info->irq =3D 0;
+>  	xenbus_unmap_ring_vfree(info->dev, info->ring.sring);
+>  }
 
-Fixes: f1d269765ee2 ("scsi: iscsi: Run recv path from workqueue")
-Cc: stable@vger.kernel.org
-Signed-off-by: Praneeth Balasubramanian <praneeth@ucsb.edu>
----
+[Severity: High]
+Does unbinding and zeroing info->irq before wait_event() introduce a
+regression where scsiback_send_response() races with delayed_free_irq()
+or notifies IRQ 0 while in-flight requests are still draining?
 
-Notes:
-    This was found by an LLM-based static analysis (GPT-5.6) that checks
-    kernel code against the rules stated in its comments, as part of research
-    at UCSB SecLab. The patch and changelog were drafted with Claude Opus 5.5.
-    I reviewed the patch and take responsibility for it.
-    
-    recv_from_iscsi_q is off by default, and setting up the session needs
-    root on the initiator, so I am sending this as a regular fix rather than
-    a security report.
-    
-    Testing: two QEMU VMs on next-20261023, an LIO target and an open-iscsi
-    initiator booted with iscsi_tcp.recv_from_iscsi_q=1, using CHAP and
-    continuous reads. The initiator kernel had a 20 ms msleep() added at the
-    start of iscsi_sw_tcp_recv_data_work(). Closing the TCP connection from
-    the target side produced the oops above. I have only seen it with the
-    added delay. 
-    
-    The patch applies to mainline 9ba46df34488 and to next-20261109.
+In-flight commands complete on target_completion workqueues via
+scsiback_cmd_done(), which calls scsiback_do_resp_with_sense() ->
+scsiback_send_response() before scsiback_put(info) decrements
+info->nr_unreplied_reqs.  In scsiback_send_response(), info->irq is read
+outside info->ring_lock and passed to notify_remote_via_irq() in
+preemptible context without RCU protection:
 
- drivers/scsi/iscsi_tcp.c | 14 ++++++++------
- 1 file changed, 8 insertions(+), 6 deletions(-)
+CPU0                              CPU1 (kworker)
+scsiback_disconnect()             scsiback_cmd_done()
+                                    ...
+                                    scsiback_send_response()
+                                      irq =3D info->irq;
+  unbind_from_irqhandler(...)
+    ...
+    xen_free_irq(irq)
+      queue_rcu_work(..., &rwork)
+  info->irq =3D 0;
+  wait_event(..., nr_unreplied_reqs =3D=3D 0)
+  [RCU grace period elapses]
+  delayed_free_irq()
+    set_info_for_irq(irq, NULL)
+    kfree(irq_info)
+    xen_irq_free_desc(irq)
+                                      notify_remote_via_irq(irq)
+                                        evtchn_from_irq(irq)
+                                          irq_info->evtchn <-- use-after-fr=
+ee
+                                    scsiback_put(info)
 
-diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
-index 9260b1c9b0e0..88b1f255ae9b 100644
---- a/drivers/scsi/iscsi_tcp.c
-+++ b/drivers/scsi/iscsi_tcp.c
-@@ -104,18 +104,20 @@ static int iscsi_sw_tcp_recv(read_descriptor_t *rd_desc, struct sk_buff *skb,
- 
- /**
-  * iscsi_sw_sk_state_check - check socket state
-+ * @conn: iscsi connection the socket belongs to
-  * @sk: socket
-  *
-  * If the socket is in CLOSE or CLOSE_WAIT we should
-  * not close the connection if there is still some
-  * data pending.
-  *
-- * Must be called with sk_callback_lock.
-+ * The caller passes @conn rather than having it read from
-+ * sk->sk_user_data. The recv work runs without sk_callback_lock,
-+ * and connection teardown may already have cleared sk_user_data.
-  */
--static inline int iscsi_sw_sk_state_check(struct sock *sk)
-+static inline int iscsi_sw_sk_state_check(struct iscsi_conn *conn,
-+					  struct sock *sk)
- {
--	struct iscsi_conn *conn = sk->sk_user_data;
--
- 	if ((sk->sk_state == TCP_CLOSE_WAIT || sk->sk_state == TCP_CLOSE) &&
- 	    (conn->session->state != ISCSI_STATE_LOGGING_OUT) &&
- 	    !atomic_read(&sk->sk_rmem_alloc)) {
-@@ -148,7 +150,7 @@ static void iscsi_sw_tcp_recv_data(struct iscsi_conn *conn)
- 	 * unmap it now. */
- 	iscsi_tcp_segment_unmap(&tcp_conn->in.segment);
- 
--	iscsi_sw_sk_state_check(sk);
-+	iscsi_sw_sk_state_check(conn, sk);
- }
- 
- static void iscsi_sw_tcp_recv_data_work(struct work_struct *work)
-@@ -202,7 +204,7 @@ static void iscsi_sw_tcp_state_change(struct sock *sk)
- 		return;
- 	}
- 
--	iscsi_sw_sk_state_check(sk);
-+	iscsi_sw_sk_state_check(conn, sk);
- 
- 	tcp_conn = conn->dd_data;
- 	tcp_sw_conn = tcp_conn->dd_data;
--- 
-2.25.1
+Once info->irq =3D 0 becomes visible during wait_event(), every completing
+request calls notify_remote_via_irq(0).  IRQ 0 is a valid Xen IRQ number:
+xen_allocate_irq_dynamic() allocates descriptors via
+irq_alloc_desc_from(0, -1), so on platforms where nr_legacy_irqs() is 0
+(such as ARM64 or x86 Xen PV domains with null_legacy_pic, where
+VIRQ_TIMER binds to IRQ 0 at boot), info_for_irq(0) is non-NULL with a
+valid event channel and notify_remote_via_irq(0) sends spurious
+notifications to that channel.
 
+Unbinding before wait_event() also closes the event channel via
+xen_evtchn_close() before in-flight responses are pushed to the ring,
+dropping completion notifications during the drain.  Calling
+disable_irq(info->irq) before wait_event() and keeping
+unbind_from_irqhandler(info->irq, info) after wait_event() would stop
+scsiback_irq_fn() synchronously while keeping info->irq valid until all
+in-flight requests have completed.
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261109122654.3085=
+9-1-yhlee@isslab.korea.ac.kr?part=3D1
