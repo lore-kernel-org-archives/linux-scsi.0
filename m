@@ -1,57 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794336007;
-	b=zTNPWB+QFhK47VMIPzcqDfc1PWw70nAddwQ/ZhpLePE/080aQGmRaEjnlpbWtiX9Aljh
-	 HXfJpkPkD0DLMBLmbRM3pHLMwBAKlKY0moZ9TF24zD9oyKg7Rmvs+8Q04tntoyQsQQA0M
-	 Rx3/o6vmHj9rDEt+myhRvvETq5PpBci0q16KrmFe7e0hWfdnTqpA7v/BIPkNFgLGzy4Fk
-	 7ZMtIIV8uDmIxCAGLeBpOGfEQfHNo8VwomT3ciw/HPNCu7+4TMvh1H61/ajj2eqmN3mO/
-	 gb9mamBr8p6QCa+TZdfBX0hAIFVoELczXnUXfR4Hs//sGdy16FRJRgTUFMTd0Sp12ng==
+	t=1794336085;
+	b=ngtEwaQGWQl10d/z4L7SNbnkJd1XhyF3PKYT/QjejgECJQ6gWkMuEQzYtFMrKd9uyp8N
+	 8ATo0dGhaOlhIXOgySaoRRAHIQCdR0KoA8/0s7fflAeQqBiC9+jpmXH53GWfwmt5wSr0g
+	 WAw98N5JZhnPMomHPNad5NxREzZCwIJ2TdA3c/oYhoT1OF5VUM+L93mgrcLO3y/1hIP0B
+	 a77yNYMsluxmltGgDxoh1iLFyVQeuswn6Jt6vlka03mFUXeRG1QOBJuYR8n8okFhM0own
+	 KthW7BNEHPH5Gy4Hv89oXpR03+JJhJ9UCXfygJcPq85Ljn8yrOYFhl0ZIii9vEuYCrA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794336007;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794336085;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=GVR8k0QD4pCJ9sK5CZbcvTqjo4RC8k2y6IEjNs7VSek=;
-	b=bKuuh67Jh/v7dHG/3/G645tip3YVjguz1iPuSU0L4GJuWT8BAVQ29G6eWuD/jhn/0pxp
-	 DIpU3jddtkkqRv6XmNkffiH8xt6E2qy0+NjMu6UUzgGqaYlo7DshpiuooC/rvExEr3tqm
-	 d/L+mr+43i+MWeRCMcS/KgesTUFcwDidXxzjoBwV5deivwmFgLH0aLlhdq8jAagMpUtW8
-	 dj+w7YQTWLtlyQwjY4lewJzjX77QCcRA5WMSVKdcrpuTndDRtvzCO1IcEYI5vzf0LNG3U
-	 KkR1CEvdb5UW0kG5HAjbCdrGR5WUpi1nhTKnJROiHEdy9vh2z4xZSor09Zu9A7tF4mQ==
+	bh=7xSEW5uWr9UnIv5TGOgrVSYOU9dUgA1c9jabSiDAXV4=;
+	b=31Z5tI7UrFzgMDyiiDH01HcMKLtY09yuwFihXlNNf79AgxAxFKH8Jnh2x/Ug0cJg77sb
+	 hZ+PWSQrAcvfOrBsb0h+B5I5WSQsCPAKcCKCJakAfnxQkdXawlo2qpu2v7J+8eMT/Ey2o
+	 mnhCYUzhcXftMnZPPMLtkE9CpYJhgQB+1YBwnrvD2YFjABDb5C5+Am4iDYsBZaoWJ3fME
+	 lYTiDwJ7djJFNpqeEYKiDhYU3NsXZXOkQnppWkQbrfT+jBiAGyAIlRzH9nTNyacFxQAAr
+	 IdV3y/XoZDKsqJeB+ELEwgbWjLWIpjoe9ohyU3a5JQxJasbLaNa8t25Ou8HiMnOpdqg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Nn6sya8V;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=LzdXvnzP;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33A6960A3833
-	for <linux-scsi@vger.kernel.org>; Tue, 10 Nov 2026 18:40:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B0B2606C6C1
+	for <linux-scsi@vger.kernel.org>; Tue, 10 Nov 2026 18:41:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Nn6sya8V
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B77771F008A5;
-	Tue, 10 Nov 2026 18:40:06 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=LzdXvnzP
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A8A5C1F008A1;
+	Tue, 10 Nov 2026 18:41:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794336006;
-	bh=GVR8k0QD4pCJ9sK5CZbcvTqjo4RC8k2y6IEjNs7VSek=;
+	s=k20260515; t=1794336084;
+	bh=7xSEW5uWr9UnIv5TGOgrVSYOU9dUgA1c9jabSiDAXV4=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Nn6sya8VErU9FcMXVzK8ODsL7hFYgQIqRXkY4B2SJ6MopAfifmYLnXwWs1dwB6QAA
-	 rGhNKor2YqiCBuYSnxdq+oUX/XJxtsGGoTDpKUBDoO9+QcOg4qFfRNsFDKjzrtRneM
-	 8Bu6yuTNJms/+nFp+R7n8p+EzQAf1tqRW+M8VdC/s9Ku2P7RpCpbU3SklsuwYD3dzf
-	 Q0UShs0HQCUH9U8xncvKt2W2+eysE9pIEcuKxihdzhs1AXBLO2IU6g/1JsK8hxeTNU
-	 FH4dP4wh1wm5PGN6zVIcM14Dzm81Sou7AYsSTwvB/O2l6xOxbcdho8ffvlyfgu9TDQ
-	 ZRuCbbIdHeWEg==
-Message-ID: <sashiko-outbox-207594@kernel.org>
+	b=LzdXvnzP8C5QJ7mHYYMSi93UQnekQHMQo9kPjB1Zgw/kGv0v+fq9QQj6nSjlQQTAy
+	 2OwEaPYq+KpBws+VjcCBldpYmejs2KeQ0AhMUVy40r0f8HvfO15/yIFtt/dsEb7Fzv
+	 YijdZe9P7MyG25mKHBYY9Nl8bdHF/21GseOfhqJE0EBJ+V9X2a5u17VEnLbLZt5jn3
+	 vW8tIptYB4OB/f62lys8K9PWfzxyzmFxRGU4iv2hZr0MRaZPyx0sqSUQ/OBwW53j+Y
+	 Fg9UgUN+Z1FGWRdxfZkYZ1aQj/IdNXkL/BZGnUiXDYDbIo2OCfQ/8t/W0unLypG54v
+	 DBKYSPmxvrCaQ==
+Message-ID: <sashiko-outbox-207599@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 1/2] scsi: scsi_debug: handle protection information for
- WRITE ATOMIC(16)
+Subject: Re: [PATCH 2/2] scsi: scsi_debug: generate protection information
+ for writes without it
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Tal Zussman" <tz2294@columbia.edu>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20261110-scsi-debug-pi-v1-1-539829902b3a@columbia.edu>
+In-Reply-To: <20261110-scsi-debug-pi-v1-2-539829902b3a@columbia.edu>
 References: <20261110-scsi-debug-pi-v1-0-539829902b3a@columbia.edu>
- <20261110-scsi-debug-pi-v1-1-539829902b3a@columbia.edu>
+ <20261110-scsi-debug-pi-v1-2-539829902b3a@columbia.edu>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 10 Nov 2026 18:40:06 +0000
+Date: Tue, 10 Nov 2026 18:41:24 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -62,59 +62,83 @@ List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 
 Thank you for your contribution! Sashiko AI review found no new issues
-in this patch, but noticed 1 related pre-existing issue it does not
+in this patch, but noticed 2 related pre-existing issues it does not
 introduce:
-- [Medium] scsi: scsi_debug: incorrect CDB byte offset in
-  resp_atomic_write() [1]
+- [Critical] scsi: scsi_debug: LBP and protection state corruption on
+  partial writes [1]
+- [Critical] scsi: scsi_debug: write protection bypass in
+  resp_comp_write() [2]
 --
 
-commit 48252d9d72a1d4d7e89b4f529cfc1af6aee082f9
+commit 6d076bfd0f944479df3df26a58ea22111f72afc1
 Author: Tal Zussman <tz2294@columbia.edu>
 
-scsi: scsi_debug: handle protection information for WRITE ATOMIC(16)
+scsi: scsi_debug: generate protection information for writes without it
 
-This commit routes resp_atomic_write() through __resp_write_dt0() so that
-protection information is verified and stored for WRITE ATOMIC(16)
-commands.
+This commit generates T10 protection information in scsi_debug for write
+commands submitted without protection scatterlists, and extends the metadata
+write lock in write handlers to cover DIX updates.
 
 > diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-> index a922c8318a2fb..7d50650396377 100644
+> index 7d50650396377..2c7afdd2846b1 100644
 > --- a/drivers/scsi/scsi_debug.c
 > +++ b/drivers/scsi/scsi_debug.c
 [ ... ]
-> @@ -6328,6 +6329,7 @@ static int resp_atomic_write(struct scsi_cmnd *scp,
->  	u16 boundary, len;
->  	u64 lba, lba_tmp;
->  	bool lbp =3D scsi_debug_lbp();
-> +	int scsi_status =3D DID_ERROR << 16;
->  	int ret;
+> @@ -5195,6 +5221,9 @@ static int __resp_write_dt0(struct scsi_cmnd *scp,
+>  	ret =3D do_device_access(sip, scp, 0, lba, num, group, true, atomic);
+>  	if (ret < 0)
+>  		*scsi_status =3D DID_ERROR << 16;
+> +	else if (!scsi_prot_sg_count(scp))
+> +		dif_generate(sip, lba, DIV_ROUND_UP(ret, sdebug_sector_size),
+> +			     false);
 > =20
->  	if (!scsi_debug_atomic_write()) {
+>  	if (unlikely(lbp))
+>  		map_region(sip, lba, num);
 
-[Severity: Medium]
-This problem wasn't introduced by this patch, but does resp_atomic_write()
-report the wrong CDB byte offset [1] when boundary exceeds
-sdebug_atomic_wr_max_bndry?
+[Severity: Critical]
+This problem wasn't introduced by this patch, but can a failed or short
+write in __resp_write_dt0() and resp_write_scat() corrupt the LBP and DIX
+metadata [1]?
 
-drivers/scsi/scsi_debug.c:resp_atomic_write() {
+While dif_generate() uses the actual byte count returned by
+do_device_access(), map_region() right below it (and __resp_write_dt0_dix()
+or prot_verify_write() before the transfer) still operates on the full
+requested sector count num.  If do_device_access() fails or transfers fewer
+bytes than requested, unwritten sectors are marked as mapped in
+sip->map_storep and have their protection tags overwritten in
+sip->dif_storep, desynchronizing the metadata from the backing store and
+causing subsequent reads of those sectors to fail verification.
+
+[ ... ]
+> @@ -5753,6 +5786,7 @@ static int resp_comp_write(struct scsi_cmnd *scp,
+>  		retval =3D check_condition_result;
+>  		goto cleanup_unlock;
+>  	}
+> +	dif_generate(sip, lba, num, false);
+> =20
+>  	/* Cover sip->map_storep (which map_region() sets) with the meta lock */
+>  	if (scsi_debug_lbp())
+
+[Severity: Critical]
+This problem wasn't introduced by this patch, but does resp_comp_write()
+bypass device write protection by passing false for the write argument to
+check_device_access_params() [2]?
+
+drivers/scsi/scsi_debug.c:resp_comp_write() {
 	...
-	boundary =3D get_unaligned_be16(cmd + 10);
-	len =3D get_unaligned_be16(cmd + 12);
-	...
-	if (boundary > 0) {
-		if (boundary > sdebug_atomic_wr_max_bndry) {
-			mk_sense_invalid_fld(scp, SDEB_IN_CDB, 12, -1);
-			return check_condition_result;
-		}
+	ret =3D check_device_access_params(scp, lba, num, false);
+	if (ret)
+		return ret;
 	...
 }
 
-boundary is parsed from CDB byte 10, while byte 12 is the transfer length
-field, so the sense data points the initiator at the transfer length
-instead of the atomic boundary field.
+Because write is false, check_device_access_params() skips the sdebug_wp
+check, allowing COMPARE AND WRITE to modify data and protection metadata on
+a write-protected device.
 
-[1] https://sashiko.dev/#/bug/linux-0276b62a-b78e-4b07-bc67-b1a9f88dc08e
+[1] https://sashiko.dev/#/bug/linux-5ff253b7-5155-4709-ae8b-55ff4a1eb98f
+[2] https://sashiko.dev/#/bug/linux-0b24b1f8-28c0-4efa-915b-66147893a0f1
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261110-scsi-debug=
--pi-v1-0-539829902b3a@columbia.edu?part=3D1
+-pi-v1-0-539829902b3a@columbia.edu?part=3D2
