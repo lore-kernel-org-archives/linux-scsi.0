@@ -1,66 +1,66 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=160.30.148.34
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=199.89.1.14
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794323493;
-	b=V7BnDeCnKqcu6tbDuhqVlsS7rIupJV5xkhDvpnS89dLk1AtEM+NTd8Rj2KFVse3U3ZZA
-	 qQyQKC4PgXesYHex5W3NSQRjPh/IXqOywkKtnD+fAVy9qejjpZmIhxOUsDHKk62FHyVDk
-	 vn9w/S+w5wgeR5Sz6lfBQ1R4DzBfHENJIKTFHitBD6MdGWP/kY3gTS1VSIqEkN32GqtP1
-	 pkbNpkq69t0J3KZNufRUHE7udEFaQNTtH2vmHZUn6G6ktIy85D/LEw836pt9Bf33oXXtM
-	 1/77pjj42B7zga3xaq299l9vEAb9yoQs1XaI+VQfnw+oUU6x47nNi2VqTOVuVq9lFQA==
+	t=1794333204;
+	b=hGG8Ch+4I9CoICWNLpkgpiUDXIg/UFqpUY8vkWf8lwHpTsE3fH8JnHRwvpo+dRUjkj75
+	 OlFRcS5UjQM89nph4M2uWLxNYIXTWLnbhZ49ubbL7qk4e8CHqrnpgUNKcfWo6sLSBwpe1
+	 J8a7SZwUGnZW5t4eEFuQG20iVRKZxnJ5MutODuSs4XdxJmbHe0FRqSVrh22nrmbva/QK/
+	 uffkFu7Kkdr+73YsMYkeRcx9+Ld2DeaU4Grscfo3HWowNGnPMHT6MMwC6Va7Vpfiv1aB9
+	 A55XZo4HxvU63DU7rgnks8kkFjmhXFE6VGQRU6Opqjc23WtF+pKR5v/CRZTIZxJG8dA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794323493;
-	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
-	 X-Zmail-TransId:X-Mailer:Message-ID:Date:Mime-Version:From:To:Cc:
-	 Subject:Content-Type:X-MAIL:X-TLS:X-ENVELOPE-SENDER:X-SOURCE-IP:
-	 X-CLEAN:X-Fangmail-Anti-Spam-Filtered:X-Fangmail-MID-QID;
-	bh=8/Zl3PTvKJJWZps1rabn4MLPWpxfNyPYBrECr2jn2Pk=;
-	b=aiWrvzuUdvhY72bMYmdbUVGrPk16Jlfx+E/dk5BbdCf9lQpc6XZi5tMhOgLDjmVv7bNp
-	 fMpLRQf0hQQ2cH/UQWF2EdILuiaCPBCW7DtLf5TYjrd5pxEdjDBwydI++rw1iZq9Gjreg
-	 /Wk31dJN9qpw7FpBmZS5fqK9I4WW/Xwms00Z2LvEZ0X5qX9JX8Pa0talK8Al+s1bDg7oH
-	 J1gBTwUt6t3yexxuXhpQIimzO8V3D4uVeJVDMXwne8jvdud46XosOundY2ynk8+periQN
-	 cd6adtF+je8qM9HD94RpHMO/uW3UIFUmr+TwSv796TFu9a2HvXnMcWj9+wOSmzFgL0Q==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794333204;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Virus-Scanned:Received:
+	 Received:Message-ID:Date:MIME-Version:User-Agent:Subject:To:
+	 References:Content-Language:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=GnvtK+3U/RcfwTnmG6gFTC36hd5/sy2S2GrhJPZTnBc=;
+	b=pQ9E9U+i/X55PYxZHoZylJyF939gzQ178y9M6+RgO7WCVp5bZqQ3TS4OxSo/RbjxCAzI
+	 p0stseqkmokxZ3Hvs/y1eNEJtZ2Nh2Z8pYIJ8bFC/pHX5Ns5KJozNduF7pDejFjDDrJt/
+	 x+uPuaVWojmpfY447UtsiKadzqE5cUGH4ZMDDOEU2aOMrCVPpqQgGCFALpfumyu7/90EZ
+	 B8/sIFtWABDEVK1VM/dupdXwg0q4jh/U2glFSPvunezy52zs0aJkPNM1hzCJzQAc/pKlx
+	 5mtZIMzJIzZxLJ+MTJ+Ty5AIcYsKD4lhf2DJ6IpeTDBpOcKoMmgGHG+oQ6xB0McFiZA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=zte.com.cn;
-	spf=pass smtp.mailfrom=zte.com.cn;
-	dkim=pass header.d=zte.com.cn header.i=@zte.com.cn header.a=rsa-sha256 header.s=z202610 header.b=B2jKpzdO;
-	arc=none smtp.remote-ip=160.30.148.34
-Received: from mxhk.zte.com.cn (mxhk.zte.com.cn [160.30.148.34])
+	dmarc=pass header.from=acm.org;
+	spf=pass smtp.mailfrom=acm.org;
+	dkim=pass header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=4hVxK9ZW;
+	arc=none smtp.remote-ip=199.89.1.14
+Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08C41606A320;
-	Tue, 10 Nov 2026 15:11:31 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 08C41606A320
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zte.com.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zte.com.cn
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9352C606A333;
+	Tue, 10 Nov 2026 17:53:23 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9352C606A333
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=zte.com.cn header.i=@zte.com.cn header.a=rsa-sha256 header.s=z202610 header.b=B2jKpzdO
-Received: from mse-fl2.zte.com.cn (unknown [10.5.228.133])
+	dkim=pass (2048-bit key, unprotected) header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=4hVxK9ZW
+Received: from localhost (localhost [127.0.0.1])
+	by 011.lax.mailroute.net (Postfix) with ESMTP id 4jPDlk6wWDz1XM6J6;
+	Tue, 10 Nov 2026 17:53:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1794333200; x=1796925201; bh=GnvtK+3U/RcfwTnmG6gFTC36
+	hd5/sy2S2GrhJPZTnBc=; b=4hVxK9ZWLaiRmHsnHuaHVDUjBPYv9GL1LJWY6GfM
+	DJEIMHWv5A6Wh/wvwRAZ/9EdRxXvYnnvp5b0tXWXslgay8hZGds4s9t15fu6FVbg
+	T+Vd53NmDaqhErAJOa/P5tKjxyQJVjI+la8j/Ar9pI6Bnd0pkIw+WmVb427zE5dw
+	xL9XUnTNZFWSpxerE9GsfK+TWMjxCt6C379d8KQy8LceR1MPy2s/qtFKTxDSXjFG
+	EQJYV4K0K2lpmZaQf+Cl1xcEvsPIFOe0KRo6FlxYa6DXNH3kChf+eP/Ccg6sYP1B
+	FtDxz36TVry8l0t/Z1n0eR4VgNqMHmWja9fHjuVBLgIvOA==
+X-Virus-Scanned: by MailRoute
+Received: from 011.lax.mailroute.net ([127.0.0.1])
+ by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id Rr6yJ-zkMksr; Tue, 10 Nov 2026 17:53:20 +0000 (UTC)
+Received: from [100.80.231.125] (unknown [104.135.182.41])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mxhk.zte.com.cn (FangMail) with ESMTPS id 4jP98y1JBJz5BNS0;
-	Tue, 10 Nov 2026 23:11:30 +0800 (CST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=zte.com.cn;
-	s=z202610; t=1794323490;
-	bh=qxQwU7fPNHyXKf8ie/RVJscAvIYr85HLCTBWhrfda50=;
-	h=Date:From:To:Cc:Subject;
-	b=B2jKpzdOXk+ewm8wHZn8M+ZQwklInlIOkhb5963biyYB9PKeFbvary234vHar0+ZX
-	 eRox4teG6Q487IlnXqb+ZBxB2710FljlAEM27iARFrKH8BZVRSEIo6D+SOKgnlCvq9
-	 oU3P8ZfgvtIPsXt/TuKPO4fLMHipb9WqBYp8smEdKF7KJ4ZhmD2mhSwv6352pUL50j
-	 oleuM0XEokRPeDWS/8rJjbLWeJiaxqBexachFe9srKSYu5mcXEFL6gjpoVdDXyz1up
-	 sKvhrn4VGcASFALfvWZhEOmS+UMkzu+0eWFWCcIMZfh4Qks1ip4ZCdYIxubYjnyYtN
-	 QdrHWDz+gLUEw==
-Received: from xaxapp02.zte.com.cn ([10.88.97.241])
-	by mse-fl2.zte.com.cn with SMTP id 6AAFBMOK034831;
-	Tue, 10 Nov 2026 23:11:23 +0800 (+08)
-	(envelope-from shao.mingyin@zte.com.cn)
-Received: from mapi (xaxapp02[null])
-	by mapi (Zmail) with MAPI id mid32;
-	Tue, 10 Nov 2026 23:11:26 +0800 (CST)
-X-Zmail-TransId: 2afa6af3341e41e-25a3e
-X-Mailer: Zmail v1.0
-Message-ID: <20261110231126279OKrUUjTUMgoJ1kpbNZrCV@zte.com.cn>
-Date: Tue, 10 Nov 2026 23:11:26 +0800 (CST)
+	(Authenticated sender: bvanassche@acm.org)
+	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4jPDlg61BWz1XM311;
+	Tue, 10 Nov 2026 17:53:19 +0000 (UTC)
+Message-ID: <caf069e4-2a44-47f7-9e04-2a0713011dbe@acm.org>
+Date: Tue, 10 Nov 2026 09:53:19 -0800
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -69,85 +69,60 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0
-From: <shao.mingyin@zte.com.cn>
-To: <mkp@kernel.org>, <linux-scsi@vger.kernel.org>
-Cc: <James.Bottomley@HansenPartnership.com>, <linux-kernel@vger.kernel.org>
-Subject: =?UTF-8?B?W1BBVENIIHYyXSBzY3NpOiBwcm9jOiB1c2Ugc25wcmludGYoKSBmb3IgdGhlIGhvc3QgbmFtZQ==?=
-Content-Type: text/plain;
-	charset="UTF-8"
-X-MAIL:mse-fl2.zte.com.cn 6AAFBMOK034831
-X-TLS: YES
-X-ENVELOPE-SENDER: shao.mingyin@zte.com.cn
-X-SOURCE-IP: 10.5.228.133 unknown Tue, 10 Nov 2026 23:11:30 +0800
-X-CLEAN: YES
-X-Fangmail-Anti-Spam-Filtered: true
-X-Fangmail-MID-QID: 6AF33422.000/4jP98y1JBJz5BNS0
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v9 2/3] scsi: ufs: core: Hold host_sem in
+ ufshcd_wl_poweroff()
+To: HOYOUNG SEO <hy50.seo@samsung.com>, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org, mkp@kernel.org, martin.petersen@oracle.com,
+ stanleyjhu@google.com, peter.wang@mediatek.com, alim.akhtar@samsung.com,
+ kwangwon.min@samsung.com, kwmad.kim@samsung.com, cpgsproxy1@samsung.com,
+ h10.kim@samsung.com
+References: <cover.1794275305.git.hy50.seo@samsung.com>
+ <CGME20261110020747epcas2p20410190486c9b48b4b2a4e9d8a4c2292@epcas2p2.samsung.com>
+ <973576304.21794277202839.JavaMail.epsvc@epcpadp1new>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <973576304.21794277202839.JavaMail.epsvc@epcpadp1new>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-From: Shao Mingyin <shao.mingyin@zte.com.cn>
+On 11/9/26 6:03 PM, HOYOUNG SEO wrote:
+ > -	__ufshcd_wl_suspend(hba, UFS_SHUTDOWN_PM);
+ > -	return 0;
+ > +	/* Released by ufshcd_wl_resume() if hibernation is aborted. */
+ > +	down(&hba->host_sem);
+ > +	ret = __ufshcd_wl_suspend(hba, UFS_SHUTDOWN_PM);
+ > +	if (ret)
+ > +		up(&hba->host_sem);
+ > +
+ > +	return ret;
 
-scsi_proc_host_add() and scsi_proc_host_rm() format shost->host_no into
-a 10-byte buffer with sprintf().  host_no is an unsigned int and can
-reach ten digits.  The %d output plus the terminator then overflows the
-buffer, and a bounded format would truncate a ten-digit number to nine
-digits, colliding with an existing procfs entry.
+Now that the __ufshcd_wl_suspend() return value is propagated, I think
+that the issues reported by Sashiko must be addressed:
 
-Widen the buffer to 11 bytes, use snprintf(), and print with %u to
-match the type.  Ten-digit host numbers are written in full, the
-overflow is gone, and W=1 no longer reports -Wformat-truncation.
+- If the WLUN is runtime suspended when .poweroff is called (this
+   happens if ufshcd_rpm_ok_for_spm() returned true in
+   __ufshcd_suspend_prepare(), e.g. with the default rpm_lvl ==
+   spm_lvl), __ufshcd_wl_suspend() triggers error recovery and returns
+   -EBUSY. power_down() in kernel/power/hibernate.c interprets -EBUSY
+   as a wakeup event and rolls back hibernation. ufshcd_wl_suspend()
+   checks pm_runtime_suspended(dev) and ufshcd_wl_shutdown() calls
+   ufshcd_rpm_get_sync(). ufshcd_wl_poweroff() does neither.
 
-Reported-by: Sashiko <sashiko-bot@kernel.org>
-Link: https://lore.kernel.org/all/sashiko-outbox-204381@kernel.org/
-Signed-off-by: Shao Mingyin <shao.mingyin@zte.com.cn>
----
-v2:
-  - widen name[] to 11 bytes so a ten-digit host_no is not truncated
-    to nine digits and cannot collide with an existing procfs entry
-  - print host_no with %u, matching its unsigned int type
-v1: https://lore.kernel.org/all/20261109113810258gK5WuYWQKt0HsI2ikxmHo@zte.com.cn/
+- For UFS_SHUTDOWN_PM, failures of ufshcd_set_dev_pwr_mode() and
+   ufshcd_link_state_transition() are not converted into -EBUSY, so a
+   positive SCSI or UIC status can be returned from a dev_pm_ops
+   callback.
 
- drivers/scsi/scsi_proc.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+- hba->is_sys_suspended is not set if .poweroff succeeds.
 
-diff --git a/drivers/scsi/scsi_proc.c b/drivers/scsi/scsi_proc.c
-index fdc355d783da366dcdce21949d9a20e43be474fa..6a4324c2e2b5d26c65b9860ca4048210e6044fb7 100644
---- a/drivers/scsi/scsi_proc.c
-+++ b/drivers/scsi/scsi_proc.c
-@@ -221,7 +221,7 @@ void scsi_proc_host_add(struct Scsi_Host *shost)
- 	const struct scsi_host_template *sht = shost->hostt;
- 	struct scsi_proc_entry *e;
- 	struct proc_dir_entry *p;
--	char name[10];
-+	char name[11];
- 
- 	if (!sht->show_info)
- 		return;
-@@ -230,7 +230,7 @@ void scsi_proc_host_add(struct Scsi_Host *shost)
- 	if (!e)
- 		goto err;
- 
--	sprintf(name,"%d", shost->host_no);
-+	snprintf(name, sizeof(name), "%u", shost->host_no);
- 	p = proc_create_data(name, S_IRUGO | S_IWUSR, e->proc_dir,
- 			     &proc_scsi_ops, shost);
- 	if (!p)
-@@ -251,7 +251,7 @@ void scsi_proc_host_rm(struct Scsi_Host *shost)
- {
- 	const struct scsi_host_template *sht = shost->hostt;
- 	struct scsi_proc_entry *e;
--	char name[10];
-+	char name[11];
- 
- 	if (!sht->show_info)
- 		return;
-@@ -260,7 +260,7 @@ void scsi_proc_host_rm(struct Scsi_Host *shost)
- 	if (!e)
- 		return;
- 
--	sprintf(name,"%d", shost->host_no);
-+	snprintf(name, sizeof(name), "%u", shost->host_no);
- 	remove_proc_entry(name, e->proc_dir);
- }
- /**
--- 
-2.27.0
+How about moving the body of ufshcd_wl_suspend() into a helper
+function that accepts a pm_op argument and calling that helper from
+both ufshcd_wl_suspend() and ufshcd_wl_poweroff()? That would make the
+poweroff path identical to the system suspend path except for the
+target power mode and link state.
+
+Thanks,
+
+Bart.
