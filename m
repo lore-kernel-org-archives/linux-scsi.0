@@ -1,89 +1,66 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.214.171
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=160.30.148.34
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794323278;
-	b=Dj3IImwLAX+qyJUn+bwLNh/Oz5wagY4JmGezNoEwBshF2NEfj3UfrLaqZv3jdemIwuCC
-	 m/DmnOoGdXuZlGsF9qtW8ei9UDqqshg3eG2Xmr+FbQ2lEIedWTHzm24NnO/Hxez6y8lPf
-	 U2sqBs4c0C1fyWhSIjXE4Us4wdQLCbNPGXB7f1fU5FzsKgRuIxlK3cerB+kt5sO2M2nFk
-	 NNEHwohQgkSJy89N9eERoBQir6kID5JOQ2tSon8Yy9/VaZcJ8DrEQ/AHPpOq9+ECbnCbE
-	 0yDOp6ZVZbmbU2LnW4zOJ1ZUqxqWcC1TRc/Wo/zOb6n3CDbIReIXgy3JT9SI97jrVRA==
+	t=1794323493;
+	b=V7BnDeCnKqcu6tbDuhqVlsS7rIupJV5xkhDvpnS89dLk1AtEM+NTd8Rj2KFVse3U3ZZA
+	 qQyQKC4PgXesYHex5W3NSQRjPh/IXqOywkKtnD+fAVy9qejjpZmIhxOUsDHKk62FHyVDk
+	 vn9w/S+w5wgeR5Sz6lfBQ1R4DzBfHENJIKTFHitBD6MdGWP/kY3gTS1VSIqEkN32GqtP1
+	 pkbNpkq69t0J3KZNufRUHE7udEFaQNTtH2vmHZUn6G6ktIy85D/LEw836pt9Bf33oXXtM
+	 1/77pjj42B7zga3xaq299l9vEAb9yoQs1XaI+VQfnw+oUU6x47nNi2VqTOVuVq9lFQA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794323278;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Message-ID:Date:MIME-Version:User-Agent:Subject:To:Cc:References:
-	 Content-Language:From:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=JtM9UtzYhAWCxTCfoBKbcmHIR3U4Wq7tzdw7gboBY64=;
-	b=aHD0VCCghb96ooarxQkytmHQI8PK4KRFF2C33bNPn9nkmanNxndiSCAzlF6i3If16aRQ
-	 ouSc79MthWi7jYVlLKyLI1SSXZpnNHFEX6Qw/4hHe6HUZVpdYSnucXnC3uwplS2MSmJfm
-	 omApx96fEQoT73iXIdQyn5gE2kk+1+N1SontjzuFS065TWSoxddmobTEv5m2G4gh8iu+6
-	 SqMHSp6RXI0GaCNYyAEWeofdyNGuvFxhgex0DNd3tikAUV8kYnjaiOVKSLh5dE2g5BSZr
-	 SkYQewFkgFO3nl01QYP3bfZ4mbYbKPfYUpb/M3LehEc0s1vCoWZSzbowO02hGaHTutg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794323493;
+	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
+	 X-Zmail-TransId:X-Mailer:Message-ID:Date:Mime-Version:From:To:Cc:
+	 Subject:Content-Type:X-MAIL:X-TLS:X-ENVELOPE-SENDER:X-SOURCE-IP:
+	 X-CLEAN:X-Fangmail-Anti-Spam-Filtered:X-Fangmail-MID-QID;
+	bh=8/Zl3PTvKJJWZps1rabn4MLPWpxfNyPYBrECr2jn2Pk=;
+	b=aiWrvzuUdvhY72bMYmdbUVGrPk16Jlfx+E/dk5BbdCf9lQpc6XZi5tMhOgLDjmVv7bNp
+	 fMpLRQf0hQQ2cH/UQWF2EdILuiaCPBCW7DtLf5TYjrd5pxEdjDBwydI++rw1iZq9Gjreg
+	 /Wk31dJN9qpw7FpBmZS5fqK9I4WW/Xwms00Z2LvEZ0X5qX9JX8Pa0talK8Al+s1bDg7oH
+	 J1gBTwUt6t3yexxuXhpQIimzO8V3D4uVeJVDMXwne8jvdud46XosOundY2ynk8+periQN
+	 cd6adtF+je8qM9HD94RpHMO/uW3UIFUmr+TwSv796TFu9a2HvXnMcWj9+wOSmzFgL0Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=LHozpx7Z;
-	arc=none smtp.remote-ip=209.85.214.171
-Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=pass header.from=zte.com.cn;
+	spf=pass smtp.mailfrom=zte.com.cn;
+	dkim=pass header.d=zte.com.cn header.i=@zte.com.cn header.a=rsa-sha256 header.s=z202610 header.b=B2jKpzdO;
+	arc=none smtp.remote-ip=160.30.148.34
+Received: from mxhk.zte.com.cn (mxhk.zte.com.cn [160.30.148.34])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A97E60A2629
-	for <linux-scsi@vger.kernel.org>; Tue, 10 Nov 2026 15:07:58 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2A97E60A2629
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08C41606A320;
+	Tue, 10 Nov 2026 15:11:31 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 08C41606A320
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zte.com.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zte.com.cn
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=LHozpx7Z
-Received: by mail-pl1-f171.google.com with SMTP id d9443c01a7336-2eb0f1b592bso8100475ad.1
-        for <linux-scsi@vger.kernel.org>; Tue, 10 Nov 2026 07:07:57 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1794323277; x=1794928077; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=JtM9UtzYhAWCxTCfoBKbcmHIR3U4Wq7tzdw7gboBY64=;
-        b=LHozpx7ZkQyIUBsAkv4C311vzxfheFN2pzrL9Y/FTHkEXQzaVUkMAz9U9wFUejAOr8
-         YATASi40x9WcOvyF4dkS6SJQ2bBJHO0yE68WsOT8oewufPXMhMYT6O7d4/5H33a+EMHR
-         jjCu1KqktdAA/9c8ZIpbjFjA/3BLyNbgEZc3fS3F9+PTZ5y3jCgkJQ9rhGft5ONP+cJO
-         aTEF5vn9sQP8UWqDXO8UszNcV0yZFTKvtrsUk25y1Sz/3h5njQt9uj1PBQLO+FuWPgpB
-         LsGoLTWDE/iFYFuKD+GJLya2PXFipxPXM8zYDthkWkjgd0549O004Xgoom3qc/ylK84T
-         vykg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794323277; x=1794928077;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=JtM9UtzYhAWCxTCfoBKbcmHIR3U4Wq7tzdw7gboBY64=;
-        b=aNlgOBrsIqCUjfmBj+hi/bgeWzXU/orq7zbZxpkTiK0jJocy8sYMfprWXKKmCqQHkV
-         MuzAZbdSrZ5764mI5FcFqXomKvMVL1Sh6FiQszzseXHbUxeVFVS98JeWbPfJ75jRYyQY
-         Aix8QQzXXCOGaT48FzGBpBi/XbkMJXLcFgRCSVpaqVpmhL45e2gsxonFFgkPJIP3z3no
-         IBpZavsbSEnlE7ZbMzlkLjibXRJYk57NgS6PAAv9BcQrudsPbEbCuqGFgaUgDo+bxcsK
-         I+jBMV6Y16vhsGOUXhnxLTfvPNgjOGzucbARQkQ66D8JpE/uubJ0c3blj1En4xg0QZx1
-         LWXg==
-X-Forwarded-Encrypted: i=1; AL+hErEz13ly8gWa/+vppRgKipT8TDUOMfnP+oErQdfZEQN9nbZyUmksPbV4jrB+77stXaI/+E8KQg2E1Gy9@vger.kernel.org
-X-Gm-Message-State: APuU4Z8O7CYHcn4BNk6/dr64RdOTP5NhhgkQR9YYrlzojpEhf35Vwa6L
-	LEKIgDB3QPvjb5fH56FOJp7ycNGDmmwKukO0IgiHmW7BhKMDbfggHvRl
-X-Gm-Gg: AYBFou2GtLmV6lMv//FXFmgORFtXbIHY4U5ahi1KR9rs00HmXRemlhgjVOZzRTvNGQm
-	+eg5c1znDb8taReUPc9gTij/Qu9ofLs3hTXTR4VNUdQJjwGfAyXNhoUS424c+tSEnky1ke+0jJY
-	pvA0pxtgnNtFlrsUuu1LKsOsVP8Jkod0X2NmDglOQJaFsI3LZsaVk+9ROvUa6QH4OIYJW+BToKN
-	lNLtKqpoXVvXPCTq+zgYb6d7/j9aFekIdrrFSFCvkUBDeo8pWeuekoViRuOPfc1cNmySTIpQOrk
-	4cehd2NLj9DKTK15KeOrE11uKnYXOaLCTsHJNXEqS++WdB1mPGw0LavY4jhEv8PoCbMO+U9aslm
-	spKu6vDO9DXfMv8VcoehC8ZwqtpyepuaCjUXFB0mFPH/4mFBYOUVYVU7rU3HYEq/eEZ6APIz7a1
-	X/3NTpf3vLxWnvg1poGZYnqWcwlO5lqX6guRwNaSEOek5rg2uB03wzIhwngI+iHdb6W098Vifwb
-	ceoubmT7smV0MxgwuZmKtiM4CdxrIyKe4y7slsFBSLzLkRnHNhNH4hecwdZr1RVBrW3j1d3qb2w
-	okL2CgL+yItdx8gD9bWR60hD3gfKoB8YJJRuTSEPru1jPqpG4qg7ugX3eePeUhh8TXZ5Nv5OSLT
-	jeCpWBsLj/Y0=
-X-Received: by 2002:a17:902:d481:b0:2ed:1ef3:9ec with SMTP id d9443c01a7336-2edb9172a2dmr26826345ad.14.1794323276968;
-        Tue, 10 Nov 2026 07:07:56 -0800 (PST)
-Received: from [192.168.2.6] ([27.75.101.24])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2edb6d78dbcsm10397575ad.27.2026.11.10.07.07.48
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 10 Nov 2026 07:07:56 -0800 (PST)
-Message-ID: <71f76e5e-ce24-4a71-863a-169ad262c510@gmail.com>
-Date: Tue, 10 Nov 2026 22:07:46 +0700
+	dkim=pass (2048-bit key, unprotected) header.d=zte.com.cn header.i=@zte.com.cn header.a=rsa-sha256 header.s=z202610 header.b=B2jKpzdO
+Received: from mse-fl2.zte.com.cn (unknown [10.5.228.133])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mxhk.zte.com.cn (FangMail) with ESMTPS id 4jP98y1JBJz5BNS0;
+	Tue, 10 Nov 2026 23:11:30 +0800 (CST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=zte.com.cn;
+	s=z202610; t=1794323490;
+	bh=qxQwU7fPNHyXKf8ie/RVJscAvIYr85HLCTBWhrfda50=;
+	h=Date:From:To:Cc:Subject;
+	b=B2jKpzdOXk+ewm8wHZn8M+ZQwklInlIOkhb5963biyYB9PKeFbvary234vHar0+ZX
+	 eRox4teG6Q487IlnXqb+ZBxB2710FljlAEM27iARFrKH8BZVRSEIo6D+SOKgnlCvq9
+	 oU3P8ZfgvtIPsXt/TuKPO4fLMHipb9WqBYp8smEdKF7KJ4ZhmD2mhSwv6352pUL50j
+	 oleuM0XEokRPeDWS/8rJjbLWeJiaxqBexachFe9srKSYu5mcXEFL6gjpoVdDXyz1up
+	 sKvhrn4VGcASFALfvWZhEOmS+UMkzu+0eWFWCcIMZfh4Qks1ip4ZCdYIxubYjnyYtN
+	 QdrHWDz+gLUEw==
+Received: from xaxapp02.zte.com.cn ([10.88.97.241])
+	by mse-fl2.zte.com.cn with SMTP id 6AAFBMOK034831;
+	Tue, 10 Nov 2026 23:11:23 +0800 (+08)
+	(envelope-from shao.mingyin@zte.com.cn)
+Received: from mapi (xaxapp02[null])
+	by mapi (Zmail) with MAPI id mid32;
+	Tue, 10 Nov 2026 23:11:26 +0800 (CST)
+X-Zmail-TransId: 2afa6af3341e41e-25a3e
+X-Mailer: Zmail v1.0
+Message-ID: <20261110231126279OKrUUjTUMgoJ1kpbNZrCV@zte.com.cn>
+Date: Tue, 10 Nov 2026 23:11:26 +0800 (CST)
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -92,67 +69,85 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH RFC 36/41] nvmet: refuse files on pseudo filesystems as
- namespace backing files
-To: Christian Brauner <brauner@kernel.org>, linux-fsdevel@vger.kernel.org
-Cc: Jann Horn <jannh@google.com>, Chris Mason <mason@kernel.org>,
- Josef Bacik <josef@toxicpanda.com>, Christoph Hellwig <hch@lst.de>,
- linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-nvme@lists.infradead.org, Alexander Viro <viro@zeniv.linux.org.uk>,
- Jan Kara <jack@suse.cz>, linux-scsi@vger.kernel.org,
- target-devel@vger.kernel.org, driver-core@lists.linux.dev,
- linux-mm@kvack.org, bpf@vger.kernel.org,
- linux-security-module@vger.kernel.org, selinux@vger.kernel.org,
- apparmor@lists.ubuntu.com, linux-nfs@vger.kernel.org,
- netdev@vger.kernel.org, fuse-devel@lists.linux.dev,
- linux-efi@vger.kernel.org, xen-devel@lists.xenproject.org,
- ocfs2-devel@lists.linux.dev, linux-s390@vger.kernel.org,
- linuxppc-dev@lists.ozlabs.org, linux-usb@vger.kernel.org,
- Amir Goldstein <amir73il@gmail.com>, linux-erofs@lists.ozlabs.org,
- linux-kselftest@vger.kernel.org
-References: <20261110-work-loop-pseudo-v1-0-4c998976c6c7@kernel.org>
- <20261110-work-loop-pseudo-v1-36-4c998976c6c7@kernel.org>
-Content-Language: en-US
-From: Bui Nguyen Nhu Quynh <kaylovefoss@gmail.com>
-In-Reply-To: <20261110-work-loop-pseudo-v1-36-4c998976c6c7@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Mime-Version: 1.0
+From: <shao.mingyin@zte.com.cn>
+To: <mkp@kernel.org>, <linux-scsi@vger.kernel.org>
+Cc: <James.Bottomley@HansenPartnership.com>, <linux-kernel@vger.kernel.org>
+Subject: =?UTF-8?B?W1BBVENIIHYyXSBzY3NpOiBwcm9jOiB1c2Ugc25wcmludGYoKSBmb3IgdGhlIGhvc3QgbmFtZQ==?=
+Content-Type: text/plain;
+	charset="UTF-8"
+X-MAIL:mse-fl2.zte.com.cn 6AAFBMOK034831
+X-TLS: YES
+X-ENVELOPE-SENDER: shao.mingyin@zte.com.cn
+X-SOURCE-IP: 10.5.228.133 unknown Tue, 10 Nov 2026 23:11:30 +0800
+X-CLEAN: YES
+X-Fangmail-Anti-Spam-Filtered: true
+X-Fangmail-MID-QID: 6AF33422.000/4jP98y1JBJz5BNS0
 
-On 11/10/2026 4:14 PM, Christian Brauner wrote:
-> The file backend takes any path that isn't a block device. With
-> buffered_io=1 that includes files on procfs or sysfs which then get read
-> and written by a kernel worker on behalf of the host. Refuse files on
-> pseudo filesystems just like loop does.
-> 
-> Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
-> ---
->  drivers/nvme/target/io-cmd-file.c | 5 +++++
->  1 file changed, 5 insertions(+)
-> 
-> diff --git a/drivers/nvme/target/io-cmd-file.c b/drivers/nvme/target/io-cmd-file.c
-> index dfa8aa46188c..71c69bac5394 100644
-> --- a/drivers/nvme/target/io-cmd-file.c
-> +++ b/drivers/nvme/target/io-cmd-file.c
-> @@ -52,6 +52,11 @@ int nvmet_file_ns_enable(struct nvmet_ns *ns)
->  		goto err;
->  	}
->  
-> +	if (file_is_pseudo(ns->file)) {
-> +		ret = -EINVAL;
-> +		goto err;
-> +	}
-> +
->  	nvmet_file_ns_revalidate(ns);
->  
->  	/*
-> 
+From: Shao Mingyin <shao.mingyin@zte.com.cn>
 
-I noticed patch 41/41 doesn't include a test for nvmet. Would it make
-sense to add one with buffered_io=1? The test would need a pseudo file
-that can be opened with O_RDWR and supports both read_iter and
-write_iter. Otherwise, it could pass without ever reaching the new
-file_is_pseudo() check.
+scsi_proc_host_add() and scsi_proc_host_rm() format shost->host_no into
+a 10-byte buffer with sprintf().  host_no is an unsigned int and can
+reach ten digits.  The %d output plus the terminator then overflows the
+buffer, and a bounded format would truncate a ten-digit number to nine
+digits, colliding with an existing procfs entry.
 
-Thanks.
+Widen the buffer to 11 bytes, use snprintf(), and print with %u to
+match the type.  Ten-digit host numbers are written in full, the
+overflow is gone, and W=1 no longer reports -Wformat-truncation.
+
+Reported-by: Sashiko <sashiko-bot@kernel.org>
+Link: https://lore.kernel.org/all/sashiko-outbox-204381@kernel.org/
+Signed-off-by: Shao Mingyin <shao.mingyin@zte.com.cn>
+---
+v2:
+  - widen name[] to 11 bytes so a ten-digit host_no is not truncated
+    to nine digits and cannot collide with an existing procfs entry
+  - print host_no with %u, matching its unsigned int type
+v1: https://lore.kernel.org/all/20261109113810258gK5WuYWQKt0HsI2ikxmHo@zte.com.cn/
+
+ drivers/scsi/scsi_proc.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/scsi/scsi_proc.c b/drivers/scsi/scsi_proc.c
+index fdc355d783da366dcdce21949d9a20e43be474fa..6a4324c2e2b5d26c65b9860ca4048210e6044fb7 100644
+--- a/drivers/scsi/scsi_proc.c
++++ b/drivers/scsi/scsi_proc.c
+@@ -221,7 +221,7 @@ void scsi_proc_host_add(struct Scsi_Host *shost)
+ 	const struct scsi_host_template *sht = shost->hostt;
+ 	struct scsi_proc_entry *e;
+ 	struct proc_dir_entry *p;
+-	char name[10];
++	char name[11];
+ 
+ 	if (!sht->show_info)
+ 		return;
+@@ -230,7 +230,7 @@ void scsi_proc_host_add(struct Scsi_Host *shost)
+ 	if (!e)
+ 		goto err;
+ 
+-	sprintf(name,"%d", shost->host_no);
++	snprintf(name, sizeof(name), "%u", shost->host_no);
+ 	p = proc_create_data(name, S_IRUGO | S_IWUSR, e->proc_dir,
+ 			     &proc_scsi_ops, shost);
+ 	if (!p)
+@@ -251,7 +251,7 @@ void scsi_proc_host_rm(struct Scsi_Host *shost)
+ {
+ 	const struct scsi_host_template *sht = shost->hostt;
+ 	struct scsi_proc_entry *e;
+-	char name[10];
++	char name[11];
+ 
+ 	if (!sht->show_info)
+ 		return;
+@@ -260,7 +260,7 @@ void scsi_proc_host_rm(struct Scsi_Host *shost)
+ 	if (!e)
+ 		return;
+ 
+-	sprintf(name,"%d", shost->host_no);
++	snprintf(name, sizeof(name), "%u", shost->host_no);
+ 	remove_proc_entry(name, e->proc_dir);
+ }
+ /**
+-- 
+2.27.0
