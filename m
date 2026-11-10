@@ -1,68 +1,102 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=111.22.67.135
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=195.135.223.131
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794293705;
-	b=oHk1NxTHPt1HPwrHaOY9bTezN0VFUaoyE2iRvoOTK2b3BOytTvi5kkWw5GZzKsuJ73Hu
-	 qWJa2E6qiomDPlA6WDGjn142kj01J1ARONydgC13I2kzfkBjFrFywRnKbxeHg8YgDCkCP
-	 cn0HUVj+rP3woBprM0MqAaIQUYJMWE0nzbxkR1ZrmJ3RRP7giUFkCfepXE+huM2iVesOs
-	 mZw8hyAaqHxCovDYNkyuOKe4Hv2wwZsA1Zx4yIxckfhpY0ROwXByLMNhzIK6w9ZU0gwCI
-	 ImI5iiFnd2utwSDTdYmgT4fXeID+a3af4Gu8NEd8ieHohAUvDjNfIC30lQVpk3nwOkA==
+	t=1794294521;
+	b=l90Nrj7nqqsiprGSZrabzyVltC/tjZW2tBU+JQG9rjyRZn7rDN7OqUvYvciOYHxojDex
+	 yq5j7hZndEcjRmEsYy1skmMRSyw5v388OYxVYdOeQVH1ROaooYPJR6cVqnoXE3GpYBvca
+	 8hIRWv8uDnF+pLIwtsNa8kxJYoWCj73rbhOyfHU3sVLLJVLEVrdMjnLyXT6UY1+y+JAP2
+	 2UgC1Xla1fVU96zYagHR1fAJAQCCF28Knm6alcU4dDk9Ql6GVQuPa8KHlHbTZt0OCrWPB
+	 pHFm7A0McnqsZf1fLPoRywWo+f8REwPwa4zrenCF/9VIOdWE2wnUxpmy2CUwmVxTlUw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794293705;
-	h=DMARC-Filter:DKIM-Signature:X-RM-TagInfo:X-RM-SPAM-FLAG:Received:
-	 X-RM-TRANSID:X-RM-TagInfo:X-RM-SPAM-FLAG:Received:X-RM-TRANSID:From:
-	 To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=r9by4dkuXGhbE2ZQBI/thU+h6fdez1PQv8BEe17vPo8=;
-	b=t3H8UP4g294jAC0ZK9DwE9fHXcv8zDUAT+l4q7iQATPV1MXdTEFzFBDnqxxUowmL0Y6g
-	 vVilt4nrLJFKIOuKYZZfMvsRp7PGwp9DDrHDwc6v9JW1nu6uC0/kaEsoCQjCjBkupGlWG
-	 eCVBgTTisWOxaRyxiZ94q1opR280nwUWjNrIY3/1yBdNvDVsK3Ljn1takbGOsdlNiA3zh
-	 lmlV5qOm8RH3hjsMRTIN0sKgBRZ2kwmQvyGyq3ic2pcZmpNQ/Z0UFGiQpm7HMOyGzJRKB
-	 FZKM0YqJvxOYEw4DgPZTP5NyCfjzCpzLFRMwhPQpNgB3unXsuvcJq95Dm+gxglEj3mQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794294521;
+	h=DMARC-Filter:Received:DKIM-Signature:DKIM-Signature:DKIM-Signature:
+	 DKIM-Signature:Received:Received:Message-ID:Date:MIME-Version:
+	 User-Agent:Subject:To:Cc:References:Content-Language:From:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:X-Spamd-Result:X-Spam-Score:
+	 X-Spam-Level:X-Spam-Flag;
+	bh=6sCa3I8uqBY+mwKPbmC2PKEeRslYE8O+JX9d1UmOmt0=;
+	b=KkpmG4P2h1rSv3Yg2smLE75ikKccxgztJ0Vr1bxy9WqGCnT4ZWgbhqfZqDXuqSHBsxXX
+	 PoqmUiAQ2P3BBaPPwvC0cQzrlCaJ7P9GAN648/insI+hul0CFxKNmkNjY5IJcXfVsSMS3
+	 ASOhRVWAQQMkRSnt4o/Ob5VVoZPoHZxxsf8v9rYMt1rPfZ94IhMom17Fe/3sOHNWHopCr
+	 pgEbBX8IEb38jHd4eyhGRsxxVJ0H24j7z6c/YHunP3TVbWr+otnAagT+UVf3l5llsbM7p
+	 W392IVg/FNypraGMotu7449BkVyG68s/qWYq8a4gmrdiW3KIJD+Scoj96vlehWqONBQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=cmss.chinamobile.com;
-	spf=pass smtp.mailfrom=cmss.chinamobile.com;
-	dkim=pass header.d=cmss.chinamobile.com header.i=@cmss.chinamobile.com header.a=rsa-sha256 header.s=default header.b="A/BUEZNv";
-	arc=none smtp.remote-ip=111.22.67.135
-Received: from cmccmta2.chinamobile.com (cmccmta2.chinamobile.com [111.22.67.135])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id DD51B606A326;
-	Tue, 10 Nov 2026 06:55:03 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org DD51B606A326
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmss.chinamobile.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cmss.chinamobile.com
+	dmarc=pass header.from=suse.de;
+	spf=pass smtp.mailfrom=suse.de;
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=K+8WGg1C;
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=OGdzpwF0;
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=K+8WGg1C;
+	dkim=neutral header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=OGdzpwF0;
+	arc=none smtp.remote-ip=195.135.223.131
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43AAB606A321;
+	Tue, 10 Nov 2026 07:08:41 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 43AAB606A321
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=cmss.chinamobile.com header.i=@cmss.chinamobile.com header.a=rsa-sha256 header.s=default header.b=A/BUEZNv
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=cmss.chinamobile.com; s=default; l=0;
-	h=from:subject:message-id:to:cc:mime-version;
-	bh=47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=;
-	b=A/BUEZNvFmJa+EjoRAvtpjobIk43NPvEehsPVB6aZ8+kfTx1zQnH3st+Ojzd1n9K7oYplOS7a0bJj
-	 eRLLCih179nAjwHg8bCbBeqaAshhKsFRx0rbP1C0YaNOpH07PVUA3ulCrXXVBqX/k2N0jFAKV/Hq4M
-	 yLrbjjnhp45HuYyU=
-X-RM-TagInfo: emlType=0                                       
-X-RM-SPAM-FLAG:00000000
-Received:from spf.mail.chinamobile.com (unknown[10.188.0.87])
-	by rmmx-syy-dmz-app03-12003 (RichMail) with SMTP id 2ee36af2bfc4654-97e00;
-	Tue, 10 Nov 2026 14:55:01 +0800 (CST)
-X-RM-TRANSID:2ee36af2bfc4654-97e00
-X-RM-TagInfo: emlType=0                                       
-X-RM-SPAM-FLAG:00000000
-Received:from DESKTOP-3K8GUTQ (unknown[223.108.79.98])
-	by rmsmtp-syy-appsvr05-12005 (RichMail) with SMTP id 2ee56af2bfc1a43-aab62;
-	Tue, 10 Nov 2026 14:55:01 +0800 (CST)
-X-RM-TRANSID:2ee56af2bfc1a43-aab62
-From: Xiangwu Lai <laixiangwu@cmss.chinamobile.com>
-To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <mkp@kernel.org>
-Cc: Orson Zhai <orsonzhai@gmail.com>,
-	Baolin Wang <baolin.wang@linux.alibaba.com>,
-	Chunyan Zhang <zhang.lyra@gmail.com>,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Xiangwu Lai <laixiangwu@cmss.chinamobile.com>
-Subject: [PATCH] scsi: ufs: ufs-sprd: Fix vdd-mphy regulator leak on probe failure and remove
-Date: Tue, 10 Nov 2026 14:54:57 +0800
-Message-ID: <20261110065457.1280-1-laixiangwu@cmss.chinamobile.com>
-X-Mailer: git-send-email 2.50.1.windows.1
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=K+8WGg1C;
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=OGdzpwF0;
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=K+8WGg1C;
+	dkim=neutral header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=OGdzpwF0
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 3A8DF1F457;
+	Tue, 10 Nov 2026 07:08:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1794294519; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=6sCa3I8uqBY+mwKPbmC2PKEeRslYE8O+JX9d1UmOmt0=;
+	b=K+8WGg1CV6bYfnxFH4W6t4xzeUFMUmmiQwagZA0P/InbAEbZmYUjsuRiVUErSLIRMJ/Hyt
+	LOkLtMrY5T+lIt1KL9GftvqfzqSC/OsdntBc9D/u2uYPhi8HyCcSYVTTWTEWz6CVypfCl8
+	u/elO9pFLx0Vk3Iaju0/lOGmP+Oh4cA=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1794294519;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=6sCa3I8uqBY+mwKPbmC2PKEeRslYE8O+JX9d1UmOmt0=;
+	b=OGdzpwF0SdzKJ1PaLGYF2+JuZS9q1jaMOqUe81ra00GH2K24TaU12qfPF9hNOpwFToRbna
+	l4sDBa/mxPM2bfCw==
+Authentication-Results: smtp-out2.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1794294519; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=6sCa3I8uqBY+mwKPbmC2PKEeRslYE8O+JX9d1UmOmt0=;
+	b=K+8WGg1CV6bYfnxFH4W6t4xzeUFMUmmiQwagZA0P/InbAEbZmYUjsuRiVUErSLIRMJ/Hyt
+	LOkLtMrY5T+lIt1KL9GftvqfzqSC/OsdntBc9D/u2uYPhi8HyCcSYVTTWTEWz6CVypfCl8
+	u/elO9pFLx0Vk3Iaju0/lOGmP+Oh4cA=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1794294519;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=6sCa3I8uqBY+mwKPbmC2PKEeRslYE8O+JX9d1UmOmt0=;
+	b=OGdzpwF0SdzKJ1PaLGYF2+JuZS9q1jaMOqUe81ra00GH2K24TaU12qfPF9hNOpwFToRbna
+	l4sDBa/mxPM2bfCw==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id C3CA31339F;
+	Tue, 10 Nov 2026 07:08:38 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id QRpwHvbC8mqjXAAAD6G6ig
+	(envelope-from <hare@suse.de>); Tue, 10 Nov 2026 07:08:38 +0000
+Message-ID: <41aae956-1ece-4af3-99e0-1e9ee1f840d3@suse.de>
+Date: Tue, 10 Nov 2026 08:08:38 +0100
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -72,50 +106,133 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi: libfc: Fix rport kref leak in
+ fc_rport_enter_ready()
+To: weidongw@illinois.edu, "Martin K. Petersen" <mkp@kernel.org>
+Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+ stable@vger.kernel.org
+References: <20261108-h123-send-v1-1-b7672ff849f0@illinois.edu>
+Content-Language: en-US
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20261108-h123-send-v1-1-b7672ff849f0@illinois.edu>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-Spamd-Result: default: False [-13.29 / 50.00];
+	SUSE_INTERNAL_BYPASS(-9.00)[];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-0.998];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	XM_UA_NO_VERSION(0.01)[];
+	FROM_HAS_DN(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	ARC_NA(0.00)[];
+	TO_DN_SOME(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	RCPT_COUNT_FIVE(0.00)[6];
+	RCVD_COUNT_TWO(0.00)[2];
+	MID_RHS_MATCH_FROM(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:email,imap1.dmz-prg2.suse.org:helo]
+X-Spam-Score: -13.29
+X-Spam-Level: 
+X-Spam-Flag: NO
 
-ufs_sprd_n6_init() enables the vdd-mphy regulator, but nothing ever
-disables it again: the driver has no .exit callback and no other path
-calls regulator_disable(), so the power rail stays enabled after a
-failed probe as well as after driver removal.
+On 11/8/26 10:01 AM, Weidong Wang via B4 Relay wrote:
+> From: Weidong Wang <weidongw@illinois.edu>
+> 
+> fc_rport_enter_ready() takes a reference on the rport unconditionally,
+> but only queues event_work, whose handler drops that reference, when no
+> event is pending. If rdata->event is already set, the && short-circuits
+> past both queue_work() and the compensating kref_put(), so the reference
+> is leaked and the fc_rport_priv is never freed.
+> 
+> This is reachable from the wire: a PLOGI from a well-known address goes
+> straight to fc_rport_enter_ready(), and a second PLOGI for the same
+> S_ID while RPORT_EV_READY is still pending enters it again. After the
+> rport is logged out, kmemleak reports:
+> 
+>    unreferenced object 0xffff888... (size 512):
+>    backtrace:
+>      __kmalloc_noprof
+>      fc_rport_create
+>      fc_rport_recv_req
+>      fc_lport_recv_els_req
+>      fc_lport_recv
+>      fcoe_receive_work
+> 
+> Commit 823a65409c89 ("scsi: libfc: Skip additional kref updating work
+> event") fixed the same pattern in fc_rport_enter_delete(). Do the same
+> here: only take the reference when no event is pending, i.e. when the
+> work is actually going to be queued.
+> 
+> The issue was found with an LLM-based bug-finding tool; the reproducer,
+> fix and changelog were drafted with AI assistance (Claude), then
+> reviewed and tested by the submitter.
+> 
+> Fixes: 4d2095cc42a2 ("scsi: libfc: Revisit kref handling")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Weidong Wang <weidongw@illinois.edu>
+> ---
+> Tested on v7.4-rc1 (05441d697f7f), x86_64, KASAN + kmemleak, QEMU/KVM.
+> Reproducer: software FCoE instance on lo; raw FCoE ELS frames injected
+> with AF_PACKET (PLOGI from well-known S_IDs 0xfffc01.., a second PLOGI
+> for the same S_ID while RPORT_EV_READY is pending, then LOGO), 120 rports.
+> 
+>                     2nd enter_ready with    kmemleak unreferenced
+>                     event pending           fc_rport_priv (512 B)
+>    unpatched        116                     99
+>    patched          104                     0
+> 
+> READY/delete work events are processed the same with and without the
+> patch; no KASAN/UBSAN/WARN splats. checkpatch clean, no new W=1 warnings.
+> The reproducer can be shared on request.
+> ---
+>   drivers/scsi/libfc/fc_rport.c | 9 +++++----
+>   1 file changed, 5 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
+> index c25979d96..7b0938544 100644
+> --- a/drivers/scsi/libfc/fc_rport.c
+> +++ b/drivers/scsi/libfc/fc_rport.c
+> @@ -550,10 +550,11 @@ static void fc_rport_enter_ready(struct fc_rport_priv *rdata)
+>   
+>   	FC_RPORT_DBG(rdata, "Port is Ready\n");
+>   
+> -	kref_get(&rdata->kref);
+> -	if (rdata->event == RPORT_EV_NONE &&
+> -	    !queue_work(rport_event_queue, &rdata->event_work))
+> -		kref_put(&rdata->kref, fc_rport_destroy);
+> +	if (rdata->event == RPORT_EV_NONE) {
+> +		kref_get(&rdata->kref);
+> +		if (!queue_work(rport_event_queue, &rdata->event_work))
+> +			kref_put(&rdata->kref, fc_rport_destroy);
+> +	}
+>   
+>   	rdata->event = RPORT_EV_READY;
+>   }
+> 
+> ---
+> base-commit: 05441d697f7f9a927264f4058cbbc6a03dfcac9d
+> change-id: 20261108-h123-send-723aeb555069
+> 
+> Best regards,
+> --
+> Weidong Wang <weidongw@illinois.edu>
+> 
+> 
+Reviewed-by: Hannes Reinecke <hare@kernel.org>
 
-The UFS core calls the vops .exit callback from ufshcd_hba_exit(),
-which runs on probe failure and on remove, so an .exit hook is the
-natural place to release the supply.  All other vendor drivers in
-drivers/ufs/host/ already provide one.
+Cheers,
 
-Fixes: df7320bac37e ("scsi: ufs: ufs-unisoc: Add support for Unisoc UFS host controller")
-Signed-off-by: laixiangwu <laixiangwu@cmss.chinamobile.com>
----
- drivers/ufs/host/ufs-sprd.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
-
-diff --git a/drivers/ufs/host/ufs-sprd.c b/drivers/ufs/host/ufs-sprd.c
-index 6862250c5..30acbfe6c 100644
---- a/drivers/ufs/host/ufs-sprd.c
-+++ b/drivers/ufs/host/ufs-sprd.c
-@@ -266,6 +266,13 @@ static int ufs_sprd_n6_init(struct ufs_hba *hba)
- 	return 0;
- }
- 
-+static void ufs_sprd_n6_exit(struct ufs_hba *hba)
-+{
-+	struct ufs_sprd_priv *priv = ufs_sprd_get_priv_data(hba);
-+
-+	regulator_disable(priv->vregi[SPRD_UFS_VDD_MPHY].vreg);
-+}
-+
- static int ufs_sprd_n6_phy_init(struct ufs_hba *hba)
- {
- 	int ret = 0;
-@@ -394,6 +401,7 @@ static struct ufs_sprd_priv n6_ufs = {
- 	.ufs_hba_sprd_vops = {
- 		.name = "sprd,ums9620-ufs",
- 		.init = ufs_sprd_n6_init,
-+		.exit = ufs_sprd_n6_exit,
- 		.hce_enable_notify = sprd_ufs_n6_hce_enable_notify,
- 		.pwr_change_notify = sprd_ufs_pwr_change_notify,
- 		.hibern8_notify = sprd_ufs_n6_h8_notify,
-
-
-
+Hannes
+-- 
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
