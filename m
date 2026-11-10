@@ -1,48 +1,49 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794302397;
-	b=UuCmnP1qjKwpPs+oV46MMbBbBFaojimi2zt3qX2+5V4KLen2M9rD6z6b0XbueOw1A8zT
-	 9/LutZ5J59UnqQNMTyZrwXQCO/y18f3zR6XiQ9mjE+M3Bp/gY4Zclg6qsxRY+5jND0Psa
-	 UWoSLytVmpSmqMudrFEkn5+wE+0ntjoRrAtaPjD7pHmX9k1Zk52FGLSWswLBvmp0NNSK6
-	 2CQC5yCNZMXcX/xKvhBdW2hU73KSX5eC/0FwTK04Vwj8i9Aa4fIiNXcV7tzYNwaIndSY4
-	 WSNBF7b0jXriarJ6/mz9+DE1gtQgf9oMD1BqzwQww/4d/rQb7bPE9U5fZ1pONezoZTQ==
+	t=1794302404;
+	b=5HQwyfr6SDL8Ki/iPzSTNdt6/uI8XzAAeYZekR4c/4HEkCJBHaXxZzNMpv6ANw+z8Ixb
+	 4ZORe18LPt1znEDeu6qPlSbWbgb3f2ZBkv8LQv1efE1+JkpSWvO3ZD1fGK/ZyrGqbwA6O
+	 Rd0b7oLQLALrbDhGLyznMOfU5x2EfOaBrcUi83QpCmjE6W98j/VEm0tgIcVykPEgruUkM
+	 yF0WNRtwr6Cpz2jQ0dtKqPIS7D/foPBPV5CU0FpgZvu+jYQIZvtu/lyGO/WSWoWa07Bak
+	 qjCTMQ2ZPs0C3ldGJzeGp+/rtHqtS6cw4yxP6drAnL9m4PuWdvHTemLTQDlj5enVLlQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794302397;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794302404;
 	h=Received:DKIM-Signature:From:Date:Subject:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding:Message-Id:References:In-Reply-To:To:Cc:
 	 X-Mailer:X-Developer-Signature:X-Developer-Key;
-	bh=qJiFf9w4hToXcclP9ppmON8B46ZerQobJ1F8sM9X2a8=;
-	b=Un35AGctUTmNLtwz27i+LwRjeQIprcH0Qnm4/FSiZ/smd3gySMZY9ucAZCgoWaY/b59Q
-	 ue5zqdtsVaMEVeCmTgfzU5Ql4Ppj21qtAlfcHxSOATWJhENkToBAByfyREJd4gR5tHKjs
-	 nhwVOVtsQOxViupPUsDdA79ih/yNSwy9RapJjikmM+t4SRNmVj1ll/iPIm/JkDh5vcYMN
-	 GYct2xyHvo67qB4ynduSa/2/IvARcLoYPBgItu5rugLMWHAhplyeKUnrCfhsuWmYq1iJs
-	 a1982/0/nqkOB0Lr4iZofuUSfLgJ5eKtgwcUUVgZoOw/LPUvhhS7n6VCk/jgxLf/RAQ==
+	bh=E+IOyvszTPpv67WVfApXcw8urPUkzwLhKXwxrxd5Q2U=;
+	b=jqnG59mLReAFTyf+vYQYb9HtoFxWppUtJh6evm6LHklriLxdDrPV3yt0ZlK67OIPJt00
+	 A09KcWOHLn/8tAybmk5iiaa0jxhtfyLSnWZ2NUUJGyhJlk5X3jIyYcpuQuvXmOjJJJ6Ur
+	 L2M8SLWrfoUzP+NSjnek+3nrydvsZIOUV/sJTRkrR0g4GwpPpB9oI+MJrujzfZLQKi51Q
+	 IFElsQrMdGxbdgEdHy+kXeiwPvf7Hl06Eelr7D5Z3LSri1wtqCcIG6j0kHA16Gp8EeABL
+	 UIbwznUImdDa6FgaiSCgvy308hGY0OLGU7nLePjhkKtxS+E4qH3/3Uf8lDPv0ckJTww==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=YSj0RR1a;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GRiIgHwN;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E6DB607B02E;
-	Tue, 10 Nov 2026 09:19:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54D82606C66C;
+	Tue, 10 Nov 2026 09:20:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=YSj0RR1a
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7F39D1F008A1;
-	Tue, 10 Nov 2026 09:19:50 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GRiIgHwN
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5968D1F0089F;
+	Tue, 10 Nov 2026 09:19:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794302396;
-	bh=qJiFf9w4hToXcclP9ppmON8B46ZerQobJ1F8sM9X2a8=;
+	s=k20260515; t=1794302403;
+	bh=E+IOyvszTPpv67WVfApXcw8urPUkzwLhKXwxrxd5Q2U=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=YSj0RR1aG6qNPyxHpaLvknjLVj91ILD+92zWFulNcS/9GzuRoaQHatZawU0nYbR8y
-	 wus7ohgAGQBai1txsuKrJnXmIbOHGPu8ofJJf/FVDtHI8ClyJKzU7qfsjBbW0aZ+ce
-	 zWv3AeSLtwvY+Mjd5A9NqJjMByywMDui/mH5eL6dgY9srHxtjNOSh4WuAXPTmUK3oc
-	 rj74FmSQAg97IU/fPvixOSTy1hGHbrW8yJHlHbDd2o5Lngy9Nmbmsk6Ah2dyvn2OaD
-	 xaVAA8ELW3uvaLp+l18HV1m2/38wuA8CuBANF9a3ezWOwggIRGtvqG3gki5e2MoaKT
-	 vZL834m+QNo/A==
+	b=GRiIgHwNZvImcyL7ZrhwcHTim1Tcg8ha0BAVLvCt63eibDuBdqoGnn3+IZ3T7OBIq
+	 kT6r8YMuTD7me3jVVO4LuvwQYkPqosPEVX8f4q9eZuJZsQvKrNsIgO5JMMLqqeNIuC
+	 5Cpr1r58rbzBBX6KMjeREg5OUsa/9eOU65Z5i70WZg176K2uk1tQ1kAhA4U0o0Rctw
+	 xZ/y1A7h5XbjDTP8H3oewDpTzB4kJ0kw8bjZG9JUpDxnNRmZc91S3mqwbwSIu6bKQ1
+	 710KWpylBRJOXcVv5bGIBzE03omQg/l6rlLylLNvB6cAWjRRFZkeN1M+920TaGjY0B
+	 2UXvy+J5ImDmQ==
 From: Christian Brauner <brauner@kernel.org>
-Date: Tue, 10 Nov 2026 10:14:51 +0100
-Subject: [PATCH RFC 35/41] zloop: refuse zone files on pseudo filesystems
+Date: Tue, 10 Nov 2026 10:14:52 +0100
+Subject: [PATCH RFC 36/41] nvmet: refuse files on pseudo filesystems as
+ namespace backing files
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -54,7 +55,7 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261110-work-loop-pseudo-v1-35-4c998976c6c7@kernel.org>
+Message-Id: <20261110-work-loop-pseudo-v1-36-4c998976c6c7@kernel.org>
 References: <20261110-work-loop-pseudo-v1-0-4c998976c6c7@kernel.org>
 In-Reply-To: <20261110-work-loop-pseudo-v1-0-4c998976c6c7@kernel.org>
 To: linux-fsdevel@vger.kernel.org
@@ -75,40 +76,41 @@ Cc: Jann Horn <jannh@google.com>, Chris Mason <mason@kernel.org>,
  linux-kselftest@vger.kernel.org, 
  "Christian Brauner (Amutable)" <brauner@kernel.org>
 X-Mailer: b4 0.17-dev-ce4c1
-X-Developer-Signature: v=1; a=openpgp-sha256; l=822; i=brauner@kernel.org;
- h=from:subject:message-id; bh=li+gC8cc0Mt1bD1j4gMcmL8SOHESlN2++n5Uf9tP8Fo=;
- b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWR9erDHcu21pTOZuhx19nwxdyrrCmUMb3503015p6SPw
- 76FMcqxHaUsDGJcDLJiiiwO7Sbhcst5KjYbZWrAzGFlAhnCwMUpABN5bMvwv9AwrjaFoTvl5SXZ
- U7d+5SbufCNqdW372nkxojHPVJnq7Rn+R03u+RT9ITNnZY8fx/JF32OmNseuuiD0fVMyz/+nq9X
- nMAAA
+X-Developer-Signature: v=1; a=openpgp-sha256; l=834; i=brauner@kernel.org;
+ h=from:subject:message-id; bh=agqenJdWQq7gypo76jkCFbW4mXy4h6l0lNCXX+ASm3g=;
+ b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWR9erDvm3yLxwpNhn3Vf/xC/LZIi53fJ7yLL7tHITliz
+ 91kU4+kjlIWBjEuBlkxRRaHdpNwueU8FZuNMjVg5rAygQxh4OIUgIm8FmJk6Auyf5jNeWOi0OnH
+ C2RnbHW9nXtha/oTsYTE2efzD909cIzhf93azF97BBdfrrbP5nki8XXrjrDbU/+oPHgTKJzVsWp
+ jPzcA
 X-Developer-Key: i=brauner@kernel.org; a=openpgp;
  fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 
-zloop opens its zone files by name below the base directory but a bind
-mount can put any file there, including a procfs or sysfs file. Refuse
-files on pseudo filesystems as zone files just like loop does.
+The file backend takes any path that isn't a block device. With
+buffered_io=1 that includes files on procfs or sysfs which then get read
+and written by a kernel worker on behalf of the host. Refuse files on
+pseudo filesystems just like loop does.
 
 Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
- drivers/block/zloop.c | 5 +++++
+ drivers/nvme/target/io-cmd-file.c | 5 +++++
  1 file changed, 5 insertions(+)
 
-diff --git a/drivers/block/zloop.c b/drivers/block/zloop.c
-index 65634a39b0bf..dcc06dd47b04 100644
---- a/drivers/block/zloop.c
-+++ b/drivers/block/zloop.c
-@@ -1137,6 +1137,11 @@ static int zloop_init_zone(struct zloop_device *zlo, struct zloop_options *opts,
- 		goto out_fput;
+diff --git a/drivers/nvme/target/io-cmd-file.c b/drivers/nvme/target/io-cmd-file.c
+index dfa8aa46188c..71c69bac5394 100644
+--- a/drivers/nvme/target/io-cmd-file.c
++++ b/drivers/nvme/target/io-cmd-file.c
+@@ -52,6 +52,11 @@ int nvmet_file_ns_enable(struct nvmet_ns *ns)
+ 		goto err;
  	}
  
-+	if (file_is_pseudo(zone->file)) {
++	if (file_is_pseudo(ns->file)) {
 +		ret = -EINVAL;
-+		goto out_fput;
++		goto err;
 +	}
 +
- 	if (zlo->block_size) {
- 		ret = zloop_get_block_size(zlo, zone);
- 		if (ret)
+ 	nvmet_file_ns_revalidate(ns);
+ 
+ 	/*
 
 -- 
 2.53.0
