@@ -1,119 +1,117 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=195.135.223.130
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794314343;
-	b=i7KKTLtOM1x6mzIcp2AEzsoZsgUojKPso14SRMxxm+RD+geRAv7TkHxNmsAUDIheFVl0
-	 UI67qZMQk0aNAioiXAlAhs7g4AYsAOhmmGTg7fTcWx/jOBE1ZrE0l8tzNha71s2tb3IY3
-	 UNgI8bA3o6SzTfwUt8bO7bzQjke0+XQUmWam0uK23Eoc2pUAiEkWUTW+igRvpDJfrYl/t
-	 Oa4lwFB9GgN6xxHtuyKz+bEZVcoWZT6RN/7X9zzLx9D/G03v6V5NuXL53Enpv8XWX9a57
-	 hiJ9+oSaTV1JeJ3XGc1xnZQnepIw6/qMfwZ2A8PdxY0JQHTddBYxSojZzIhrcvRJ2ug==
+	t=1794315213;
+	b=cOATsLTEcpsSTvJlb3roeQuEb6VQc0HUNnbhDgbUqlKF3soEpdByh+EDXN2Q7Sd3Jd6P
+	 kNEnfptX/zhCNUFPd2pK7R7ZmKaoWvNWsmC+AxARS9GCrfOWkhFQ5EZ/SPh0PRfbvPKe4
+	 npVn65vNkfA82VOYfcsge0/vBhDgatWVi/nP9+7G9AY803CkjjGWVbMETv+EZ6dGtMr72
+	 eNMSbi0SEHOsgEGHIZ8H8pDVVBdN2CfGsZeQzTikW/J13BeuxMRkDYhtYVZZnMXHK3tqZ
+	 EROUzIeKbUI7uzTIFsu2OWxNf4attzw93XiZF1WVZ+jLHQM6ffkGpWtlYzQmEIWMw7w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794314343;
-	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
-	 X-Mimecast-MFC-AGG-ID:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 X-Received:Received:Message-ID:Subject:From:To:Cc:Date:In-Reply-To:
-	 References:Content-Type:Content-Transfer-Encoding:User-Agent:
-	 MIME-Version;
-	bh=8B6P+nC3/DhYkZRyIwUpOtQEzwhLB9wHUHWGEVELp1w=;
-	b=YidviqNgDqQBE6fquDm1MUc1UEW2j9G8S2hUvGIeFC9Gem8HQj0F+PNyXHZkOJn6FjjL
-	 w0u4rDvx5m0pw63yysXFSkowa0suiixELLOI+7rVtA345RyPgKSQfPEhjjNWLMUtEMQkY
-	 v5ncoxKZLBvDipJv/hGrFRKeRIcZRIq+5gv9eDjwuL/VCa31OyAPDfQpmDsuDnQkgBCVJ
-	 dMaDBLdLocpTcn0RsTS1449Ecd5lFNgFic/4EN9xDYSguat3kdHKFM2urzKowTaDss9DI
-	 hU89aVcomasjF8DiD2dOfwvIN1LpTPcqv2c2h03AH4Y7dFGUB6DlG3ZRR7K1+UY/g1A==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794315213;
+	h=DMARC-Filter:Received:DKIM-Signature:DKIM-Signature:DKIM-Signature:
+	 DKIM-Signature:Received:Received:Received:Date:From:To:Cc:Subject:
+	 Message-ID:References:MIME-Version:Content-Type:Content-Disposition:
+	 In-Reply-To:X-Spamd-Result:X-Spam-Score:X-Spam-Level:X-Spam-Flag;
+	bh=5gAW8eIWGI8HOfwWvZQs68yC+wpRbirnAYyZ2bTJ9+E=;
+	b=sQVVHnfkGWb1RN+IqVuDeJZQNxrKjwPrm0gQDDA4hGQTJU17ZJ+oCMzms/aZtdRW8ikt
+	 +9AAs1z+YZ8D82f5Pm0ZAD1WqkC1Q/hbWS2Qh4QUkp0P5CwWnMOhH9jDjTC+BFMI3vMgg
+	 MD6smJvCy4fA1pdw9GOU+d3/zQc9eO9tRsOPlchw5gdvCOrFW3TdlBmwzPPYzbVSPuHdZ
+	 t1YrHmf63oL/eHw6scUlsO7lJTDNJcAjH8YPuEkxFI+o78xLsJvkXzgwewJ50GSH7gV/1
+	 vnC8K7Moh+hGq8BHuKGhGTQJoE1JcfX3UJjRQOdWgJoic2SeBGJY3wZlw3S18PaG04g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=redhat.com;
-	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=VQJg7ekj;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=Yt+AjHVq;
-	arc=none smtp.remote-ip=170.10.129.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	dmarc=none header.from=suse.cz;
+	spf=pass smtp.mailfrom=suse.cz;
+	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=KXGDllpg;
+	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=02akHxQo;
+	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=KXGDllpg;
+	dkim=neutral header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=02akHxQo;
+	arc=none smtp.remote-ip=195.135.223.130
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 688CF606A326
-	for <linux-scsi@vger.kernel.org>; Tue, 10 Nov 2026 12:39:02 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 688CF606A326
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0EA11606A321;
+	Tue, 10 Nov 2026 12:53:33 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0EA11606A321
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=VQJg7ekj;
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=Yt+AjHVq
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1794314341;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=KXGDllpg;
+	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=02akHxQo;
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=KXGDllpg;
+	dkim=neutral header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=02akHxQo
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 470B421F57;
+	Tue, 10 Nov 2026 12:53:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1794315211; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=8B6P+nC3/DhYkZRyIwUpOtQEzwhLB9wHUHWGEVELp1w=;
-	b=VQJg7ekjwyrKDFGl+vk+EEUkhTInjylkY3tbJyyyoawPyz0WFJw6xc8Mxofo7hTeWHO2u+
-	dU2M37/MXoXD89lRiXQuB7dp46aWf06wgApwrM4p64FYaGZ2bOe2IMCRDoZb14xrv+fga2
-	wwtJ/xeh0KTsp5XU69oOrOxrS959VUc=
-Received: from mail-qt1-f200.google.com (mail-qt1-f200.google.com
- [209.85.160.200]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-465-vzPxepurNEuw6H5TxHpwHw-1; Tue, 10 Nov 2026 07:39:00 -0500
-X-MC-Unique: vzPxepurNEuw6H5TxHpwHw-1
-X-Mimecast-MFC-AGG-ID: vzPxepurNEuw6H5TxHpwHw_1794314339
-Received: by mail-qt1-f200.google.com with SMTP id d75a77b69052e-5363b06bcb2so43030551cf.2
-        for <linux-scsi@vger.kernel.org>; Tue, 10 Nov 2026 04:39:00 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1794314339; x=1794919139; darn=vger.kernel.org;
-        h=mime-version:user-agent:content-transfer-encoding:content-type
-         :references:in-reply-to:date:cc:to:from:subject:message-id:from:to
-         :cc:subject:date:message-id:reply-to:content-type;
-        bh=8B6P+nC3/DhYkZRyIwUpOtQEzwhLB9wHUHWGEVELp1w=;
-        b=Yt+AjHVq7RHo8lm/veWGZuOeavyeKKDsHpGFL0oGubw/G33dLSPLFNaZT9AaVCkDhm
-         QjCpd4tsqT/I411nhwhe9QvzEqx/a4evqFl26+enin5GMtvLE7zh1Ptki4vwxXrNMtUl
-         g+VTOiYRptHtfJSyxKGyT6uYPkZ9PdsMDPw75K0M8e8xKC0ELydqqwUEvhFCP67P/CuQ
-         zm6Mq6qUuwCVfzwDuYrBvL6hoGF7hBPi1zeF6QsgC2VQBnumcAXh+KVwu5twj0E2yFeG
-         /h2uuWLpS0vaqRBfGDhg+IyHgR6ZNoP3+VWWl0XvNm2kwN0hnk2hE1lRItjEoR/30zut
-         /KNQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794314339; x=1794919139;
-        h=mime-version:user-agent:content-transfer-encoding:content-type
-         :references:in-reply-to:date:cc:to:from:subject:message-id:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=8B6P+nC3/DhYkZRyIwUpOtQEzwhLB9wHUHWGEVELp1w=;
-        b=SrWvkl/eZkFKuGF7pU6NzjL1zqY9QlGtkEbVVTIXRlumHCadTZZuHE4idKay5g8kC0
-         kH01PXAJR3S/VUrdiFKLLtQg08TRbodb9hMbYDpojKI//bdpdrRAsUBCHdPme5TvkYmh
-         6L0Xz1Vl/Bb+56hKzfxr1ple5KT50gXuNgymXi7PMx4qyOOjeVbQsrfEKT6p9s13RVeB
-         ODipmoUSJvS6dTEkSGxXQ0d7z9mTb73yS2aGg4jJ38eCvKXx5vgu63CJG5vpCGdmBrGC
-         mI6Zq1qxXBtRARlZ5Yt1g0ZURBwkOnQEcrUtm94XAF0y7qeL0P+0z0NkVhooFsKkYoF8
-         BK8w==
-X-Forwarded-Encrypted: i=1; AL+hErEe7Pum4N4L/PIAKMjLSwFdQ1RGfSwlaog1MmHM31x6okSgROmIjWJTjRetVGPDsa/O65z1QAIsBJwG@vger.kernel.org
-X-Gm-Message-State: APuU4Z9m+hDZ2n8LmwfRMoEx+r5f/SA4lIkRIDtkEHcPTbdyQdAXoZb/
-	qBL1xFdUfUDR7ycaJa99/RiaaKa3fP+n9GVdW+LqBzprdcLTZYsI1RyG+OzcezB8ltLOcxXCfjK
-	pPNjTh2pdlzOznt+WlHHMcT3Mq2KNeQbRIOlHpw5Wxlvdcqwp2zrbdfSx9kycDcfMI2mMSiU=
-X-Gm-Gg: AYBFou2B2goz6hMpAtDkV4HedMiP6/KsLjtHcMrZftB2gve8XTN10U/OkChJBCfLkzV
-	Vz4bOgU4T8mSUdKwRqQ88nn2qq9A4dj/a06Eu0OS22Z5WIGdYH236C4OFq1RLegcHySncsscBRP
-	YI7PdHxv7cSzyv2DGnYSx/y5FnMOhS3cVpkR4rBDEEVnnaujVZQlY6yIX8vy43tMQ6zhDyEtOcx
-	rqZPlKgcUS8GRtQm7Noh6NcnybQarPh2m8vECUSJ5ZaNFIADCy6EYVTrpi9GEPCdTr82AO2Fkt9
-	xsdO3IvTK0BPifrRE9kZBSVw8bCTxClCdojxhSNlCW1Ls575GLl6RcImglfD2Sw0Yn2ucNu7gMe
-	fuwxR1YR/K404CTc90Cvpby3mhHLBo8pfhFnNtHTwtyr+KO/BzqxlTZlG6zc3Bl8dOsxxn9xdGO
-	wp6rUVTccdsM5qbfjwL5Pp0J1n8LiAnTwbl+L09F43aED95X4J0648K3SNL7IWP1171/RiSrw=
-X-Received: by 2002:a05:622a:343:b0:536:725f:588 with SMTP id d75a77b69052e-5552b93e67bmr33006511cf.76.1794314339407;
-        Tue, 10 Nov 2026 04:38:59 -0800 (PST)
-X-Received: by 2002:a05:622a:343:b0:536:725f:588 with SMTP id d75a77b69052e-5552b93e67bmr33006111cf.76.1794314338725;
-        Tue, 10 Nov 2026 04:38:58 -0800 (PST)
-Received: from loberman-thinkpadp16gen3.rmtusma.csb ([2600:6c65:2440:d8c:aa2b:ddff:fe88:da74])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-5550bd33340sm22952721cf.21.2026.11.10.04.38.56
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 10 Nov 2026 04:38:57 -0800 (PST)
-Message-ID: <4a028851191efe6a45f746bc65754a50503c330b.camel@redhat.com>
-Subject: Re: [PATCH 0/2] target: iscsi: fix hanged WRITE_PENDING commands
-From: Laurence Oberman <loberman@redhat.com>
-To: Maurizio Lombardi <mlombard@arkamax.eu>, Dmitry Bogdanov
-	 <d.bogdanov@yadro.com>, Martin Petersen <martin.petersen@oracle.com>, 
- Maurizio Lombardi <mlombard@redhat.com>, target-devel@vger.kernel.org
-Cc: michael.christie@oracle.com, linux-scsi@vger.kernel.org, linux@yadro.com
-Date: Tue, 10 Nov 2026 07:38:56 -0500
-In-Reply-To: <DMPRS0MF3KC3.1H1C97P5ES18@arkamax.eu>
-References: <20261027180123.13163-1-d.bogdanov@yadro.com>
-	 <DMPRS0MF3KC3.1H1C97P5ES18@arkamax.eu>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.60.2 (3.60.2-3.fc44) 
+	bh=5gAW8eIWGI8HOfwWvZQs68yC+wpRbirnAYyZ2bTJ9+E=;
+	b=KXGDllpgGiBBAdkJ+94+hx57x3NvF+B6wVf1VJPhzu/vdFL2qD1xN8ea3AfxZRuIEQrDNG
+	h6ARgN9r6E1Tp0L3/IOetfpivMPJgdCx8gDCmnuEUwvvykOGvRJ3e4L8lAmSVM7Bzl5Sdl
+	8yjrsZoBB4KbKRgxMsQEsJpHPQKPfVY=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1794315211;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=5gAW8eIWGI8HOfwWvZQs68yC+wpRbirnAYyZ2bTJ9+E=;
+	b=02akHxQolbaeDkTqzMuoQ9qEenO8KZzqbD3pshHw2P9mLxjD414sxUGp3r+0OsfEjYG8bh
+	6lagVVxrNyrhB8AQ==
+Authentication-Results: smtp-out1.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1794315211; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=5gAW8eIWGI8HOfwWvZQs68yC+wpRbirnAYyZ2bTJ9+E=;
+	b=KXGDllpgGiBBAdkJ+94+hx57x3NvF+B6wVf1VJPhzu/vdFL2qD1xN8ea3AfxZRuIEQrDNG
+	h6ARgN9r6E1Tp0L3/IOetfpivMPJgdCx8gDCmnuEUwvvykOGvRJ3e4L8lAmSVM7Bzl5Sdl
+	8yjrsZoBB4KbKRgxMsQEsJpHPQKPfVY=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1794315211;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=5gAW8eIWGI8HOfwWvZQs68yC+wpRbirnAYyZ2bTJ9+E=;
+	b=02akHxQolbaeDkTqzMuoQ9qEenO8KZzqbD3pshHw2P9mLxjD414sxUGp3r+0OsfEjYG8bh
+	6lagVVxrNyrhB8AQ==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 197071339F;
+	Tue, 10 Nov 2026 12:53:31 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id HDDqOMoT82qhQAAAD6G6ig
+	(envelope-from <jack@suse.cz>); Tue, 10 Nov 2026 12:53:31 +0000
+Received: by quack.suse.cz (Postfix, from userid 1000)
+	id 94F1F224D8; Tue, 10 Nov 2026 13:53:26 +0100 (CET)
+Date: Tue, 10 Nov 2026 13:53:26 +0100
+From: Jan Kara <jack@suse.cz>
+To: Christian Brauner <brauner@kernel.org>
+Cc: linux-fsdevel@vger.kernel.org, Jann Horn <jannh@google.com>, 
+	Chris Mason <mason@kernel.org>, Josef Bacik <josef@toxicpanda.com>, 
+	Christoph Hellwig <hch@lst.de>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-nvme@lists.infradead.org, Alexander Viro <viro@zeniv.linux.org.uk>, 
+	Jan Kara <jack@suse.cz>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, 
+	driver-core@lists.linux.dev, linux-mm@kvack.org, bpf@vger.kernel.org, 
+	linux-security-module@vger.kernel.org, selinux@vger.kernel.org, apparmor@lists.ubuntu.com, 
+	linux-nfs@vger.kernel.org, netdev@vger.kernel.org, fuse-devel@lists.linux.dev, 
+	linux-efi@vger.kernel.org, xen-devel@lists.xenproject.org, ocfs2-devel@lists.linux.dev, 
+	linux-s390@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, linux-usb@vger.kernel.org, 
+	Amir Goldstein <amir73il@gmail.com>, linux-erofs@lists.ozlabs.org, linux-kselftest@vger.kernel.org, 
+	stable@vger.kernel.org
+Subject: Re: [PATCH RFC 01/41] loop: refuse backing files that aren't open
+ for reading
+Message-ID: <yiiin5howot4r3fgcqkqfnreblloazpfatuuqzpjpqshpvphit@zirpwlmklj3d>
+References: <20261110-work-loop-pseudo-v1-0-4c998976c6c7@kernel.org>
+ <20261110-work-loop-pseudo-v1-1-4c998976c6c7@kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -123,35 +121,89 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261110-work-loop-pseudo-v1-1-4c998976c6c7@kernel.org>
+X-Spamd-Result: default: False [-12.80 / 50.00];
+	SUSE_INTERNAL_BYPASS(-9.00)[];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	MID_RHS_NOT_FQDN(0.50)[];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	ARC_NA(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	TO_DN_SOME(0.00)[];
+	MISSING_XM_UA(0.00)[];
+	RCPT_COUNT_TWELVE(0.00)[32];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	FREEMAIL_ENVRCPT(0.00)[gmail.com];
+	R_RATELIMIT(0.00)[to_ip_from(RLdu9otajk16idfrkma9mbkf9b)];
+	FROM_HAS_DN(0.00)[];
+	FREEMAIL_CC(0.00)[vger.kernel.org,google.com,kernel.org,toxicpanda.com,lst.de,lists.infradead.org,zeniv.linux.org.uk,suse.cz,lists.linux.dev,kvack.org,lists.ubuntu.com,lists.xenproject.org,lists.ozlabs.org,gmail.com];
+	RCVD_COUNT_THREE(0.00)[3];
+	FROM_EQ_ENVFROM(0.00)[];
+	RCVD_TLS_LAST(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:email,imap1.dmz-prg2.suse.org:helo,suse.cz:email]
+X-Spam-Score: -12.80
+X-Spam-Level: 
+X-Spam-Flag: NO
 
-On Sun, 2026-11-08 at 11:50 +0100, Maurizio Lombardi wrote:
-> On Tue Oct 27, 2026 at 7:01 PM CET, Dmitry Bogdanov wrote:
-> > ISCSI has some old leftovers in the code that prevents passing the
-> > aborted
-> > command to the target core to make the actual abort. Such commands
-> > hang
-> > until connection is closed.
-> > So remove those leftovers.
-> >=20
-> > Dmitry Bogdanov (2):
-> > =C2=A0 Revert "scsi: target: iscsi: Fix hang for aborted WRITE_PENDING
-> > =C2=A0=C2=A0=C2=A0 commands"
-> > =C2=A0 scsi: target: iscsi: fix hanging WRITE_PENDING commands
-> >=20
-> > =C2=A0drivers/target/iscsi/iscsi_target.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
- | 19 -------------------
-> > =C2=A0drivers/target/iscsi/iscsi_target_erl1.c |=C2=A0 8 --------
-> > =C2=A02 files changed, 27 deletions(-)
->=20
-> Sorry for the late reply, I was on vacation.
->=20
-> I like this solution and since Laurence tested it and confirmed that
-> it works
-> then I am completely ok with reverting my patch.
->=20
-> Reviewed-by: Maurizio Lombardi <mlombard@redhat.com>
-Hello Mike,=C2=A0
-Gentle ping for an ACK for this so I can move it along into RHEL.
-Thanks as always
-Laurence
+On Tue 10-11-26 10:14:17, Christian Brauner wrote:
+> loop_configure() takes any file as long as it implements ->read_iter().
+> Loop itself never checked whether the file was actually opened for
+> reading. Buffered I/O went through vfs_iter_read() which refuses files
+> without FMODE_READ. Direct I/O has called ->read_iter() of the backing
+> file directly ever since loop grew support for it.
+> 
+> Since commit f2fed441c69b ("loop: stop using vfs_iter_{read,write} for
+> buffered I/O") buffered I/O calls ->read_iter() directly as well. That
+> commit was about O_DIRECT handling and the FMODE_READ check went away
+> as a side effect.
+> 
+> So whoever can set up a loop device can read a file it was only allowed
+> to open for writing. Open the file O_WRONLY, configure a loop device
+> with it and read the contents through the loop device.
+> 
+> Refuse backing files that aren't open for reading. Loop always reads
+> from its backing file so a write-only backing file never made sense in
+> the first place.
+> 
+> Fixes: bc07c10a3603 ("block: loop: support DIO & AIO")
+> Fixes: f2fed441c69b ("loop: stop using vfs_iter_{read,write} for buffered I/O")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 
+Looks good. Feel free to add:
+
+Reviewed-by: Jan Kara <jack@suse.cz>
+
+								Honza
+
+> ---
+>  drivers/block/loop.c | 3 +++
+>  1 file changed, 3 insertions(+)
+> 
+> diff --git a/drivers/block/loop.c b/drivers/block/loop.c
+> index a3325ceab484..c96e35c3ef42 100644
+> --- a/drivers/block/loop.c
+> +++ b/drivers/block/loop.c
+> @@ -528,6 +528,9 @@ static void loop_assign_backing_file(struct loop_device *lo, struct file *file)
+>  
+>  static int loop_check_backing_file(struct file *file)
+>  {
+> +	if (!(file->f_mode & FMODE_READ))
+> +		return -EBADF;
+> +
+>  	if (!file->f_op->read_iter)
+>  		return -EINVAL;
+>  
+> 
+> -- 
+> 2.53.0
+> 
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
