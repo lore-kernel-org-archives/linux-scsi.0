@@ -1,77 +1,47 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=203.254.224.25
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794387796;
-	b=zwsbmqGO1bd3GkjOmWNOmbs6hw963zfoARS4+qom+xiGOuvt1jwSXNiPJnkmOLEYunf4
-	 3soI8V4zDqV7HoXY0XaU8BRfuys5gHa0Ow+XzGnSN5KFDfi/yGhxzZXkwbQXAZsnfiznm
-	 227uPtEgOfqlcbp/VIDV/iWEF7isRU8q3rsGOakB+AO3PTnGFDK3QHT2GyQ0HkXgdNCkG
-	 X8ViR/1dpUWiop9GubA8+EIn01sofU78cjOIYhBrLYaG34J4aiBXAPIeP8kpCSo6h8SZl
-	 hPXYd3qYtUiL5iwrzIdo6Mf39roD0AT+0f8lY6d+yByDpkwwp0kQHCmVGyyflwTcLZA==
+	t=1794387882;
+	b=N7HxAIi5YbB3rqBK/UYhxyesHfqmAn45AQLs7W1pBV0njmRuH5ZOZPPEesxNg7pBudRD
+	 GtZf7ysB6J96rUxtqX7f8t5mZm/S1KXlc1Vi+a3e6q53HKsCByt21btPLMhhHYiYF9/6Y
+	 5GjwOwSxzq5bFRuwBdSgaYq40HSs2Ri4bYg7kQ17iK5UOEeEtc84yNa486/Z1imo/ePc6
+	 FOd6EXpNIXGlYUWTdM7C50vBHbUf/HANcUEZbuPOuTelQG9FcwFU+aWpVguMxodaVMYl+
+	 Fhy6W0gnrfg5Oshrs8My2h4MpeHb3DsQtJbI5eqIJp46UWRxhgpSo8Sd8duUetb/OKQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794387796;
-	h=DMARC-Filter:Received:DKIM-Filter:DKIM-Signature:Received:Received:
-	 Received:Received:From:To:Cc:Subject:Date:Message-Id:X-Mailer:
-	 MIME-Version:Content-Transfer-Encoding:X-CMS-MailID:X-Msg-Generator:
-	 Content-Type:X-Sendblock-Type:CMS-TYPE:X-Hop-Count:X-CMS-RootMailID:
-	 References;
-	bh=R8gjkRE1IcDx2bNy/NxQyJAvYqaX3SEZSKAM03VXgsI=;
-	b=LRpVevXJFjXpQ8VI5xSSaz9FJRhCJeUJwU5inHFCeq0FXWTxHJnkTxkaivAlrlR/pWTA
-	 VIsyPi9ikH1Jm/PUQNeM+0NhSkaLurPgxvxS8CaGTd/S0yh7Yjlzi5hGFUDsX6KHyQ7ya
-	 Xus/GghlTzQ5huj2gJFxL7yH0IHiT32V6FwyEZQCU5uBCmVeus6rybYMLzj5or9OCXTxH
-	 oIE8bg4z+ScU+E8Rp2BM3iW+TW2skb5PwbbTfrGppv830oETn+nLMHz9peFM4YELluHqy
-	 zWz6TY9kg8IIA89s8+iocDQM10LejEoRRku+NbQvxT76cvu9YLmWW81bNQcu8QmFcjw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794387882;
+	h=Received:DKIM-Signature:Message-ID:Date:MIME-Version:User-Agent:
+	 Subject:To:Cc:References:From:Content-Language:Organization:
+	 In-Reply-To:Content-Type:Content-Transfer-Encoding;
+	bh=DV1OgHHTBAF1XctG06F7SeDucSGx6hal8QEtfbslYV8=;
+	b=1SPlzLZiTHYTSV5TN0LaMolU+O9wYSMH0157C+Wp/qIeEaGJ8cIDxrmICVQHamfgr4gh
+	 r3J2ump7lbxjBIPc4OX/6kJZsJPYPf6x5yvmJEbvQC4DyFbXZe9g+GnmQ7BObrMrYEPSG
+	 GVOscYokJEj856MJD9OEfhnt9UmIxCT4iAx+rt9a4WE8Z0IcTbROyc+ka9rcqWSUyrFM+
+	 JJKYwYdygmYq+qEtN8tN50+MKIukqgSPTAqMpY/vpU/8qwRa05rV0kFYbSSYjR2H1Rmzm
+	 6NQIW46goaDqx4+ePRBFJHyprlbbFUEPU2QR3Pxq5BGnAUCdD6MXbvQsb7XRdRLqIgQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=samsung.com;
-	spf=pass smtp.mailfrom=samsung.com;
-	dkim=pass header.d=samsung.com header.i=@samsung.com header.a=rsa-sha256 header.s=mail20170921 header.b=nK39PK2S;
-	arc=none smtp.remote-ip=203.254.224.25
-Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Y9Mco97l;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7502E60A3806
-	for <linux-scsi@vger.kernel.org>; Wed, 11 Nov 2026 09:03:15 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7502E60A3806
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DDB0B606A33F;
+	Wed, 11 Nov 2026 09:04:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.a=rsa-sha256 header.s=mail20170921 header.b=nK39PK2S
-Received: from epcas2p1.samsung.com (unknown [182.195.41.53])
-	by mailout2.samsung.com (KnoxPortal) with ESMTP id 20261111090308epoutp02679a71ab433e75f6328e5499e00abcdc~m8i_pY6E42406324063epoutp02J
-	for <linux-scsi@vger.kernel.org>; Wed, 11 Nov 2026 09:03:08 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20261111090308epoutp02679a71ab433e75f6328e5499e00abcdc~m8i_pY6E42406324063epoutp02J
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1794387788;
-	bh=R8gjkRE1IcDx2bNy/NxQyJAvYqaX3SEZSKAM03VXgsI=;
-	h=From:To:Cc:Subject:Date:References:From;
-	b=nK39PK2SjvmJWvgQo2YDf2ogxF0Hzx2/46Wpkaqdjc9juvkmn1azol27lhoVPuhDH
-	 JwTJvREjueu/ihoI0Rf+2edT7bgQIlQj0pxjJR++c2Z1mURZKmVpljuUcisMKqqF+3
-	 dhWLF+zSAoAOIOqZ22QPiw6AnEKogE3QI4OTDM7o=
-Received: from epsnrtp04.localdomain (unknown [182.195.42.156]) by
-	epcas2p4.samsung.com (KnoxPortal) with ESMTPS id
-	20261111090307epcas2p408e90b03f96a3c64fa2de1feeb3c04f7~m8i98urRf1585815858epcas2p4U;
-	Wed, 11 Nov 2026 09:03:07 +0000 (GMT)
-Received: from epcpadp2new (unknown [182.195.40.142]) by
-	epsnrtp04.localdomain (Postfix) with ESMTP id 4jPcxR23mRz6B9mB; Wed, 11 Nov
-	2026 09:03:07 +0000 (GMT)
-Received: from epsmtip2.samsung.com (unknown [182.195.34.31]) by
-	epcas2p1.samsung.com (KnoxPortal) with ESMTPA id
-	20261111082303epcas2p180a7cf157dedd181634550630fe78df5~m7-_-JeMR0143401434epcas2p1N;
-	Wed, 11 Nov 2026 08:23:03 +0000 (GMT)
-Received: from ubuntu.dsn.sec.samsung.com (unknown [12.81.221.204]) by
-	epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
-	20261111082303epsmtip2d30515ca4dbc97624c0bfea3ee3409ac~m7-_zm7nK1487814878epsmtip23;
-	Wed, 11 Nov 2026 08:23:03 +0000 (GMT)
-From: HOYOUNG SEO <hy50.seo@samsung.com>
-To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	bvanassche@acm.org, mkp@kernel.org, martin.petersen@oracle.com,
-	stanleyjhu@google.com, peter.wang@mediatek.com, alim.akhtar@samsung.com,
-	kwangwon.min@samsung.com, kwmad.kim@samsung.com, cpgsproxy1@samsung.com,
-	h10.kim@samsung.com
-Cc: HOYOUNG SEO <hy50.seo@samsung.com>
-Subject: [PATCH v10 0/4] scsi: ufs: core: Avoid redundant link recovery from
- the error handler during PM
-Date: Wed, 11 Nov 2026 17:18:30 +0900
-Message-Id: <2052256418.81794387787276.JavaMail.epsvc@epcpadp2new>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Y9Mco97l
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 857961F00A0A;
+	Wed, 11 Nov 2026 09:04:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794387882;
+	bh=DV1OgHHTBAF1XctG06F7SeDucSGx6hal8QEtfbslYV8=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=Y9Mco97l5r6HnLH80/GNgE1rsFu6Fc5lbV15PBYbIjMxkDAEHkVDeKsQrrcjw2Zor
+	 TSETIfBeNGGIdTWSVAVJNFEFH0h/4oViwcWg3w63EOy9rIAnt1YFkzgO2k5Ss5Dm7b
+	 Kf3Ul/4tvynDJ7P3DbUAeSbY/UFDURMaNWC97bucH/RvdOEtZCGDqkWNeHHifIaido
+	 lkY7DBwfw84CoWysrSNYotCDgtZnbwKvIOurTBSycoPfjf61a1owoxLk1huzYJZdlK
+	 yUGEi1CT/9WJHUfWJX4nHH8unsQonqFXmgdQuT0FZZJNjjf8MpT8D50SXYhgnYrJza
+	 RLCinMABTWLZA==
+Message-ID: <23a6d8be-d4af-4cf9-bf48-8ab7272abc1e@kernel.org>
+Date: Wed, 11 Nov 2026 18:04:40 +0900
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -81,132 +51,118 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CMS-MailID: 20261111082303epcas2p180a7cf157dedd181634550630fe78df5
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-CMS-TYPE: 102P
-X-Hop-Count: 3
-X-CMS-RootMailID: 20261111082303epcas2p180a7cf157dedd181634550630fe78df5
-References: <CGME20261111082303epcas2p180a7cf157dedd181634550630fe78df5@epcas2p1.samsung.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/2] scsi: scsi_debug: wrap around the store when zeroing
+ a reset zone
+To: Tal Zussman <tz2294@columbia.edu>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <mkp@kernel.org>,
+ Douglas Gilbert <dgilbert@interlog.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20261110-scsi-debug-zone-reset-v1-0-28cb9184b5ea@columbia.edu>
+ <20261110-scsi-debug-zone-reset-v1-1-28cb9184b5ea@columbia.edu>
+From: Damien Le Moal <dlemoal@kernel.org>
+Content-Language: en-US
+Organization: Western Digital Research
+In-Reply-To: <20261110-scsi-debug-zone-reset-v1-1-28cb9184b5ea@columbia.edu>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-If a LINERESET is reported and the hibern8 exit fails during system
-resume, both ufshcd_err_handler() and __ufshcd_wl_resume() call
-ufshcd_link_recovery(), and the two recoveries are not serialized.
+On 2026/11/11 6:23, Tal Zussman wrote:
+> zbc_rwp_zone() zeroes the blocks of a zone that is reset, using the
+> start of the zone as an offset into the store. With virtual_gb set, the
+> device and its zones can extend past the end of the store, which is
+> only dev_size_mb in size. Writes wrap around in do_device_access(), but
+> the memset() doesn't, so resetting a zone that has been written to can
+> write past the end of the store.
+> 
+> On a device whose fifth zone starts exactly at the end of the store,
+> write to that zone and reset it:
+> 
+>   # modprobe scsi_debug zbc=managed sector_size=4096 dev_size_mb=16 \
+>         virtual_gb=1 zone_size_mb=4
+>   # dd if=/dev/urandom of=/dev/sda bs=1M count=1 seek=16 oflag=direct
+>   # blkzone reset -o 32768 -c 1 /dev/sda
+> 
+> The memset() starts at the first byte past the store, in the guard page
+> after the vmalloc'ed area, for the 1 MiB that was written:
+> 
+> BUG: unable to handle page fault for address: ffffc90002c00000
+> Oops: Oops: 0002 [#1] SMP KASAN NOPTI
+> RIP: 0010:memset_orig+0x33/0xb0
+> RDX: 0000000000100000 RSI: 0000000000000000 RDI: ffffc90002c00000
+> Call Trace:
+>  zbc_rwp_zone+0x1a7/0x2a0 [scsi_debug]
+>  resp_rwp_zone+0x19c/0x450 [scsi_debug]
+>  schedule_resp+0x2dd/0xbc0 [scsi_debug]
+>  scsi_debug_queuecommand+0x1286/0x2950 [scsi_debug]
+>  scsi_queue_rq+0x1d74/0x3200
+>  blk_mq_dispatch_rq_list+0x3ad/0x23c0
+> 
+> The command never completes, so the reset returns EIO to userspace and
+> the device is unusable afterwards.
+> 
+> Zero the blocks in a helper that wraps around at the end of the store,
+> and that stops after one pass over it for a zone that is larger than
+> the store.
+> 
+> Fixes: f0d1cf9378bd ("scsi: scsi_debug: Add ZBC zone commands")
+> Signed-off-by: Tal Zussman <tz2294@columbia.edu>
+> ---
+>  drivers/scsi/scsi_debug.c | 26 ++++++++++++++++++++++++--
+>  1 file changed, 24 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+> index a922c8318a2f..1c27ea0f9b69 100644
+> --- a/drivers/scsi/scsi_debug.c
+> +++ b/drivers/scsi/scsi_debug.c
+> @@ -6612,6 +6612,29 @@ static int resp_finish_zone(struct scsi_cmnd *scp,
+>  	return res;
+>  }
+>  
+> +/*
+> + * Zero the blocks of a zone that is being reset. The store can be smaller
+> + * than the device, so wrap around at its end like do_device_access() does.
+> + */
+> +static void zbc_zero_blocks(struct sdeb_store_info *sip, sector_t lba,
+> +			    sector_t num)
+> +{
+> +	/* One pass over the store zeroes all of it */
+> +	num = min_t(sector_t, num, sdebug_store_sectors);
 
-Patch 1 makes ufshcd_link_recovery() clear the saved errors like
-ufshcd_reset_and_restore() does, so the error handler does not act on
-errors that have already been recovered.
+Why do you need to do this in a loop?
+You can certainly calculate the total number of blocks that need zeroing and do
+a single memset, no? What am I missing here?
+> +
+> +	while (num) {
+> +		sector_t block = lba;
+> +		u32 n;
+> +
+> +		block = sector_div(block, sdebug_store_sectors);
+> +		n = min_t(sector_t, num, sdebug_store_sectors - block);
+> +		memset(sip->storep + block * sdebug_sector_size, 0,
+> +		       (size_t)n * sdebug_sector_size);
+> +		lba += n;
+> +		num -= n;
+> +	}
+> +}
+> +
+>  static void zbc_rwp_zone(struct sdebug_dev_info *devip,
+>  			 struct sdeb_zone_state *zsp)
+>  {
+> @@ -6629,8 +6652,7 @@ static void zbc_rwp_zone(struct sdebug_dev_info *devip,
+>  		devip->nr_closed--;
+>  
+>  	if (zsp->z_wp > zsp->z_start)
+> -		memset(sip->storep + zsp->z_start * sdebug_sector_size, 0,
+> -		       (zsp->z_wp - zsp->z_start) * sdebug_sector_size);
+> +		zbc_zero_blocks(sip, zsp->z_start, zsp->z_wp - zsp->z_start);
+>  
+>  	zsp->z_non_seq_resource = false;
+>  	zsp->z_wp = zsp->z_start;
+> 
 
-Patches 2 and 3 make ufshcd_wl_poweroff() behave like
-ufshcd_wl_suspend() by sharing its implementation. In particular it now
-holds host_sem, so that the error handler waits for it, and the release
-of host_sem is balanced if hibernation is aborted.
-
-Patch 4 restricts the early link recovery in ufshcd_err_handler(), which
-does not hold host_sem, to runtime PM. For system PM and poweroff the
-error handler now waits for host_sem, and for shutdown it stops.
-
-The early link recovery is kept for runtime suspend and runtime resume.
-During runtime resume it can still run concurrently with
-__ufshcd_wl_resume(). Removing it there needs a closer look at the
-deadlock that it avoids.
-
-Changes in v10:
-- Patch 1: no change.
-- Patches 2 and 3 (were v9 patch 2): move the body of
-  ufshcd_wl_suspend() into a helper that takes the PM operation and call
-  it from ufshcd_wl_poweroff() too, as suggested by Bart Van Assche.
-  This also handles a runtime suspended WLUN, sets hba->is_sys_suspended
-  and converts a positive status into -EBUSY (Sashiko review of v9).
-  Drop the Reviewed-by tag of Peter Wang because the code changed.
-- Patch 4 (was v9 patch 3): make the check a static function in
-  ufshcd.c named ufshcd_in_wl_rpm_callback(), and use READ_ONCE() and
-  WRITE_ONCE() for hba->pm_op_in_progress, as suggested by Bart Van
-  Assche. The Reviewed-by tag of Peter Wang is kept; the functional
-  change is the same as in v9.
-
-Changes in v9:
-- Patch 1: add Reviewed-by: Bean Huo.
-- Patch 2: if __ufshcd_wl_suspend() fails, release host_sem and return
-  the error, as ufshcd_wl_suspend() does, so that the error handler does
-  not block forever, as suggested by Peter Wang and Bart Van Assche.
-- Patch 3: also require hba->pm_op_in_progress for the early link
-  recovery, as suggested by Bean Huo and Bart Van Assche. The runtime
-  status alone is also set during the block layer steps before and after
-  the runtime PM callbacks (Sashiko review of v8).
-
-Changes in v8:
-- Patch 1: add Reviewed-by: Peter Wang.
-- Patch 3: use the runtime PM status of the WLUN (RPM_SUSPENDING or
-  RPM_RESUMING) instead of the new member hba->runtime_pm_in_progress, as
-  suggested by Bart Van Assche.
-
-Changes in v7:
-- Patch 1: add Reviewed-by: Bart Van Assche.
-- Hold host_sem in ufshcd_wl_poweroff() until ufshcd_wl_resume()
-  releases it, instead of setting hba->shutting_down, as suggested by
-  Bart Van Assche. This fixes the failure of ufs_mtk_system_suspend() and
-  the state left behind when hibernation is aborted. Add a Fixes: tag
-  and move the patch before the one that depends on it.
-- Use READ_ONCE() and WRITE_ONCE() for hba->runtime_pm_in_progress, and
-  describe the behavior change during shutdown in the commit message.
-
-Changes in v6:
-- Go back to a single flag instead of the system PM flag of v5, and set
-  it in the runtime PM callbacks (Sashiko review of v5).
-- Add a patch that sets hba->shutting_down in ufshcd_wl_poweroff()
-  (Sashiko review of v4).
-
-Changes in v5:
-- Patch 2: track system PM (hba->system_pm_in_progress) instead of
-  runtime PM, so that the early link recovery is only skipped where
-  host_sem is held.
-
-Changes in v4 (as suggested by Bart Van Assche):
-- Replace the is_sys_suspended check of v3 patch 2 with a flag set in
-  __ufshcd_wl_suspend() and __ufshcd_wl_resume(), which also covers a
-  system suspend failure.
-- Add Fixes: tags.
-- Do not serialize ufshcd_link_recovery() with a mutex: it calls
-  ufshcd_probe_hba(), and a device command timing out inside it ends up
-  in ufshcd_eh_timed_out(), which calls ufshcd_link_recovery() again.
-
-Changes in v3:
-- Patch 2: reword the commit message only, no code change (Sashiko
-  review).
-- Patch 1: no change.
-
-Changes in v2:
-- Add patch 1. As pointed out by the Sashiko review, saved_err and
-  saved_uic_err are still set after the resume path recovered the link,
-  so with v1 alone ufshcd_err_handler() would run a redundant recovery
-  once host_sem is released.
-- Patch 2: describe the race and the system/runtime PM difference in
-  the commit message, and add a comment.
-
-v9: https://lore.kernel.org/linux-scsi/728258269.41794277203059.JavaMail.epsvc@epcpadp1new/
-v8: https://lore.kernel.org/linux-scsi/1582071873.61794200283414.JavaMail.epsvc@epcpadp2new/
-v7: https://lore.kernel.org/linux-scsi/cover.1793943246.git.hy50.seo@samsung.com/
-v6: https://lore.kernel.org/linux-scsi/cover.1793931113.git.hy50.seo@samsung.com/
-v5: https://lore.kernel.org/linux-scsi/cover.1793865172.git.hy50.seo@samsung.com/
-v4: https://lore.kernel.org/linux-scsi/cover.1793851432.git.hy50.seo@samsung.com/
-v3: https://lore.kernel.org/linux-scsi/cover.1792989286.git.hy50.seo@samsung.com/
-v2: https://lore.kernel.org/linux-scsi/cover.1792755091.git.hy50.seo@samsung.com/
-
-HOYOUNG_SEO (4):
-  scsi: ufs: core: Clear saved errors in ufshcd_link_recovery()
-  scsi: ufs: core: Add a helper for the system suspend callbacks
-  scsi: ufs: core: Make ufshcd_wl_poweroff() behave like
-    ufshcd_wl_suspend()
-  scsi: ufs: core: Limit early link recovery in the error handler to
-    runtime PM
-
- drivers/ufs/core/ufshcd.c | 65 +++++++++++++++++++++++++++++++--------
- 1 file changed, 52 insertions(+), 13 deletions(-)
 
 -- 
-2.34.1
-
-
+Damien Le Moal
+Western Digital Research
