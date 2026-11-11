@@ -1,71 +1,64 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.169
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794371036;
-	b=Q8ObL53GhDjK/JQp2gCg7RDP9edD0gzekvL3wx9fUZ/kWJULZHNJ4LYo7O+y12AJXS2s
-	 5kCvdEaEdrSYPwoVfwUFMhgmEo9ufi3IpNFlJvh9Sj1zk6xNYZRp4AEGxVqXi8HAwPyON
-	 ZVD7KI6uMZLRYm1+TejX+r09lugDqUxHb4DEl52Tty6f3fsSjxDkoDJIq246P524+w9iB
-	 Z+n+moi38YCFuPa+Sr2uKcRXjBlOuKWj1f3imn5NCRH28Kf3LybInvQurE0ix1n539WG0
-	 FuD44UeOl1YbnOBJ9M8/M39W03fh3my1N10+LLMMpG2pbU4gH2b+WBcz9kuo30Pyn7A==
+	t=1794371724;
+	b=bjyBNtC1UknCshrob84PevOwpghWMjYJ9ZgZedIKFbzh1lACn9S5+BbHLvuEhvGkk4XI
+	 fjFNs4RPyJ6dcTc7hTX00c6eavprnjOwKKDksycbwlg+PxGrUSTOPwSxFRK5bV83Uavxg
+	 Nt8/HPkhdamVJO6H6Xv2CZlxGsDCyBqU/XYk8UBXZBaO90lw3X6zikW5DJEF2ay01ntx7
+	 LsFQfdx+wkzXnC8IY/WINbjCInYTJAMLEmw3Rf6+lhSwFPL5TQbyKaO0K3Ep3SrctVut4
+	 oX85scQXFmTwseM6WsKnEVjCICrCBlqORDVEboW/0X7jo+ksFf4N6MJyaDoPW4jjN7g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794371036;
-	h=DMARC-Filter:Received:X-Google-DKIM-Signature:X-Forwarded-Encrypted:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:Message-ID:Date:
-	 MIME-Version:User-Agent:Subject:To:Cc:References:Content-Language:
-	 From:In-Reply-To:Content-Type:Content-Transfer-Encoding;
-	bh=3/oMUvfjnRDqTYECREY0yvKf+oNzhYCqjwUaHTL4kiI=;
-	b=yQkLBu4MSVhVteKMXp1DR25j974d9unCAlVNrljzNCXZuftKdprHUI2OUakwo4Fc9h8u
-	 hTCSfMP3H8DBAseDxe2t1zet653ctkJEtQrJicFu4X+1MhYrODihTuFXxMxUgBmMQFRme
-	 q989gLr6FUphBDfZfNpRSRPOk5QlPPe0O0Y92VWEKTDRo+HXCMtV3yr+GBFzDWmdTP7bo
-	 9I8HHLRtkQl+jVh/X6dQdjOQnzXv6Mpp0Jc/Vo4IKxfyelczSLKqfVfokgxKum97S8wed
-	 3ZfhbGRSuUHj47yOnL9HiMsiqugGF/ljaAPPEu6bKtG/XgFiZD0HLCLc+KrrKtPuOMQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794371724;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=aqhm8xM2X96PqIZ9tqXE+P+Q89EVeGW8jdqalCMQXBo=;
+	b=w2MPa3t3y6wNDsvY5ipjpJ6wXvT4SVpe8gOjXH2AAxxqNgfl9NeHDOPZFQ/BWrLI/x8l
+	 5RQBN6qa1QvcSHzHKubfiuh6wm0i7Lr0M5Bfo7ErNldGSPiW1tBvWAH1uuRtUWCTQu4y6
+	 LKFpcP/Th+VLlcmOqAjLEoeWVRzw4NsT/dO/h5bYGLTvIRW0B0REJU6uZxkEXWOmUn7WV
+	 8nQyoPFSgVMIj9aXFi+mjRMQpSGA/awJePFs0+tCJUSro2c9nWtadMj3BsoYaNkZQlSAv
+	 rck1usnMNuYDVBZDljMrekppRmgXFDpCo226hA46JdM7ywsuY8ngwtf7BZi88oN3hxA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=fail header.from=andrewgigena.dev;
-	spf=pass smtp.mailfrom=gmail.com;
-	arc=none smtp.remote-ip=209.85.128.169
-Received: from mail-yw1-f169.google.com (mail-yw1-f169.google.com [209.85.128.169])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=B1jQgEio;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D7B1606A324
-	for <linux-scsi@vger.kernel.org>; Wed, 11 Nov 2026 04:23:56 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5D7B1606A324
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=andrewgigena.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-yw1-f169.google.com with SMTP id 00721157ae682-8b37c7d767aso21872557b3.3
-        for <linux-scsi@vger.kernel.org>; Tue, 10 Nov 2026 20:23:56 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794371035; x=1794975835;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=3/oMUvfjnRDqTYECREY0yvKf+oNzhYCqjwUaHTL4kiI=;
-        b=y8383Uw6MCOYZTsgm/H8+22ARLB6QMqmyyOie9nYEc1hzTVNKb0h8U1oF0HwMH7Igi
-         jmytJq2I+Nhi8LpHNSxyz5TIq9fKokI+yvewVzvwgqUAI1E2MwLrhBh5NLL/E6MUT2qd
-         VzQEkg9MFW7gBn9xAbMJ3aHfXpYEn/pILPzrH78xuCtHoMorWvlAlBy2/MW8BO5O7ngN
-         9VRWoyDtHb5U26I6hBSa+g3+9XQ5IDWeEiUbe2+qVifFzCDiOLP1gnR07TRosY+2JGaH
-         lbKbbhtxFzA4sUOx47+kEVylhRY6PQoiVxC4iMCgwxUG1Rf3xL96gXT9zDxWXrL4UjcZ
-         ca4w==
-X-Forwarded-Encrypted: i=1; AL+hErHQrJzH9SpK7cA7FqIIEmfLg6adP5+jmWSDUHM2rKoHuUy6Up2JBkYmtdkHm+mbeROYU4rQuwoj/9LG@vger.kernel.org
-X-Gm-Message-State: APuU4Z9xlpA1stfpjfCdN+Ob4s4bLQhSeOrPWggf2Samb0KQJzodKCDJ
-	uKOcfOtH6h2m2j3TkK3EYA06mek0atyJrgHG5OgWW9Vq+fTGmcepz3lJ
-X-Gm-Gg: AYBFou3rDcNsj/KvAqeEy7fWNj+9FgSaGV1Tj5JWEoeJ+EpZC3WvNDqw2VUAXwyvRc4
-	yxnoHVO+qxp45SewOtOwBBH+fBpgePwv0Gpg9oBsGv4Jzdk/t5SylQLO0Dlc423YvSfe0ViqH0G
-	y6Y4o+Nps3hoXGgchzeVwcdiCZWSnHm3T6k5EYVm4S8KrUlUAo8MZWB9q6pxO7eC/l2+pOyCRrW
-	/NYwtcnKAV2A/40BkMHI4y+6OGVLAJKEHGrR8geKbgcIIwK7sRlrRMETTTvzZAJo8jVohpFIV4Q
-	LGbiRCyAJUfjwuelq6lzuU2PvCuTJgvwg40K8VR1F5CrRWHgxiCNq59eF9sBC3jfTZyHAG20VAE
-	+8cOHX2tGfNujIDV3brwzXV0O7K/gfJkuMwvT5AyzBMLFIDssuweuGex0r2sAgl7kvWm4ZcjZ9/
-	ZGwzSKyl+YLAx+Xgb1iC7vql3PWUh+TmABEDDWVQv3bCgmOAlOIxPS0n6f3B1f9V7lzRdLjc1oD
-	cTEAF3PjSTFRbb0cqXxnrPVyTgeDt55GBFROm085Ad6VgXePg7A1mE2X0gLtcOS8R/bT0ZGe8ub
-	EHt72pkYez0in5XeirDawl39nAn7fUKNI5zgvZpVpTdWq57gW02Dwj2+sLaoJUMwskYVgFCU
-X-Received: by 2002:a05:690c:7342:b0:8b3:23f3:134d with SMTP id 00721157ae682-8b3a80ee26emr9648857b3.42.1794371035274;
-        Tue, 10 Nov 2026 20:23:55 -0800 (PST)
-Received: from ?IPV6:2800:a4:806:ef00:6378:bcd1:64fa:19e3? ([2800:a4:806:ef00:6378:bcd1:64fa:19e3])
-        by smtp.gmail.com with ESMTPSA id 00721157ae682-8b3933a165csm36073107b3.14.2026.11.10.20.23.49
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 10 Nov 2026 20:23:54 -0800 (PST)
-Message-ID: <fb4d03b3-eb35-4aeb-baa1-f4df54653192@andrewgigena.dev>
-Date: Wed, 11 Nov 2026 04:23:48 +0000
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D40F606A31C;
+	Wed, 11 Nov 2026 04:35:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=B1jQgEio
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C60021F0089F;
+	Wed, 11 Nov 2026 04:35:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794371723;
+	bh=aqhm8xM2X96PqIZ9tqXE+P+Q89EVeGW8jdqalCMQXBo=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=B1jQgEioZO6F0Zq8tMe/+Sax/zKz9Msn6hHOez2aNiPqsj9FIGmmSkVHv3/+yC6t0
+	 j2C8A6gsmx48q20hqGLau+6Tj4qGPTBQqKCiXYDiR2ES4mDYukpV3v2aEBmxpvsRT3
+	 8+2XYzSu86hgHGUJGA701VYhQCcpM4nBubhRtuFrzA8zLUjJbu/K5kI72ysUlBqy3b
+	 EC7JzmQSXxqUeGWWFiLYJ4WowCnw/oAQXq+5BfNvocRps/pFbm9ngHGyxTqsQVIaNq
+	 0yHolvsdjij0FHD+Z4STOOL1PoZ1f4jHsFbxOKY9381ChnDM/t07Ulcs1KTncEywes
+	 p/nLLa+mQWF/w==
+Message-ID: <sashiko-outbox-208298@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v3 2/3] dt-bindings: ufs: qcom: classify sm8150-ufshc as
+ standalone ICE
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Andrew Gigena" <mail@andrewgigena.dev>, "Abel Vesa" <abelvesa@kernel.org>, "Herbert
+ Xu" <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, "Rob
+ Herring" <robh@kernel.org>, "Krzysztof Kozlowski" <krzk+dt@kernel.org>, "Conor
+ Dooley" <conor+dt@kernel.org>, "Manivannan Sadhasivam" <mani@kernel.org>, "Alim
+ Akhtar" <alim.akhtar@samsung.com>, "Bart Van Assche" <bvanassche@acm.org>, "Bean
+ Huo" <beanhuo@micron.com>, "Stanley Jhu" <stanleyjhu@google.com>, "Bjorn
+ Andersson" <andersson@kernel.org>, "Andy Gross" <agross@kernel.org>, "Konrad
+ Dybcio" <konradybcio@kernel.org>
+Cc: linux-crypto@vger.kernel.org, devicetree@vger.kernel.org, linux-scsi@vger.kernel.org
+In-Reply-To: <20261111-sm8150-ice-rfc-v3-2-f9d5a806fc95@andrewgigena.dev>
+References: <20261111-sm8150-ice-rfc-v3-0-f9d5a806fc95@andrewgigena.dev>
+ <20261111-sm8150-ice-rfc-v3-2-f9d5a806fc95@andrewgigena.dev>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 11 Nov 2026 04:35:22 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -74,41 +67,62 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 1/2] dt-bindings: crypto: ice: Document sm8150 inline
- crypto engine
-To: Krzysztof Kozlowski <krzk@kernel.org>
-Cc: Abel Vesa <abelvesa@kernel.org>, Herbert Xu
- <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>,
- Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>,
- Conor Dooley <conor+dt@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>,
- Alim Akhtar <alim.akhtar@samsung.com>, Bart Van Assche <bvanassche@acm.org>,
- Bean Huo <beanhuo@micron.com>, Stanley Jhu <stanleyjhu@google.com>,
- Bjorn Andersson <andersson@kernel.org>, Andy Gross <agross@kernel.org>,
- Konrad Dybcio <konradybcio@kernel.org>, linux-arm-msm@vger.kernel.org,
- linux-crypto@vger.kernel.org, devicetree@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-References: <20261104-sm8150-ice-rfc-v2-0-d697bbce0278@andrewgigena.dev>
- <20261104-sm8150-ice-rfc-v2-1-d697bbce0278@andrewgigena.dev>
- <20261106-offbeat-hawk-of-purring-50a8aa@quoll>
-Content-Language: en-US
-From: Andrew Gigena <mail@andrewgigena.dev>
-In-Reply-To: <20261106-offbeat-hawk-of-purring-50a8aa@quoll>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
 
-> This part should be a separate commit.
+Thank you for your contribution! Sashiko AI review found 1 potential
+issue to consider:
+- [Medium] dt-bindings: ufs: qcom: moving sm8150-ufshc breaks existing
+  2-reg/9-clock DTs
+--
 
-I splitted it into two commits in v3:
-1. Add qcom,sm8150-inline-crypto-engine compatible.
-2. Move qcom,sm8150-ufshc to the standalone-ICE UFS binding.
+commit 830241ce50cfd60c40fb1ab69965eff9ecfda73c
+Author: Andrew Gigena <mail@andrewgigena.dev>
 
-> And what about eight clock? All existing DTS will report warning? I
-> don't quite get the need of this move.
+dt-bindings: ufs: qcom: classify sm8150-ufshc as standalone ICE
 
-After the move, SM8150 UFS no longer provides the ICE register region or
-ice_core_clk; those live in the standalone ICE node. The only in-tree
-user of qcom,sm8150-ufshc is arch/arm64/boot/dts/qcom/sm8150.dtsi, which
-is converted in the DTS patch, so there are no leftover users of the
-embedded-ICE binding for this compatible and no schema warnings.
+This commit moves the qcom,sm8150-ufshc compatible from
+Documentation/devicetree/bindings/ufs/qcom,ufs.yaml to
+Documentation/devicetree/bindings/ufs/qcom,sc7180-ufshc.yaml and updates
+the example in qcom,ufs.yaml to use qcom,sdm845-ufshc.
+
+> diff --git a/Documentation/devicetree/bindings/ufs/qcom,sc7180-ufshc.yaml=
+ b/Documentation/devicetree/bindings/ufs/qcom,sc7180-ufshc.yaml
+> index 3c407426d6972..572eec814a604 100644
+> --- a/Documentation/devicetree/bindings/ufs/qcom,sc7180-ufshc.yaml
+> +++ b/Documentation/devicetree/bindings/ufs/qcom,sc7180-ufshc.yaml
+> @@ -23,6 +23,7 @@ select:
+>            - qcom,sc7280-ufshc
+>            - qcom,sc8180x-ufshc
+>            - qcom,sc8280xp-ufshc
+> +          - qcom,sm8150-ufshc
+>            - qcom,sm8250-ufshc
+>            - qcom,sm8350-ufshc
+>            - qcom,sm8450-ufshc
+> @@ -48,6 +49,7 @@ properties:
+>                - qcom,sc7280-ufshc
+>                - qcom,sc8180x-ufshc
+>                - qcom,sc8280xp-ufshc
+> +              - qcom,sm8150-ufshc
+>                - qcom,sm8250-ufshc
+>                - qcom,sm8350-ufshc
+>                - qcom,sm8450-ufshc
+
+[Severity: Medium]
+As reported by Krzysztof Kozlowski on v2 [1], does moving
+qcom,sm8150-ufshc to qcom,sc7180-ufshc.yaml break dtbs_check for existing
+SM8150 and SA8155P device trees?
+
+qcom,sc7180-ufshc.yaml restricts reg to maxItems: 1 and clocks to
+maxItems: 8, rejecting the second ice register region and the ninth
+ice_core_clk clock used by the embedded-ICE representation (supported
+since 462c5c0aa798 ("dt-bindings: ufs: qcom,ufs: convert to dtschema")).
+Later commit "arm64: dts: qcom: sm8150: use standalone ICE for UFS" in
+this series converts the in-tree sm8150.dtsi to use a standalone ICE node,
+but dtbs_check fails at this commit (and across subsystem trees if UFS
+bindings and QCOM DTS changes are merged separately) and schema backwards
+compatibility with existing 2-reg/9-clock DTBs is broken.
+
+[1] https://lore.kernel.org/r/20261106-offbeat-hawk-of-purring-50a8aa@quoll
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261111-sm8150-ice=
+-rfc-v3-0-f9d5a806fc95@andrewgigena.dev?part=3D2
