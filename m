@@ -1,79 +1,94 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1794361737;
-	b=e5TXi8fIw8Kqc68ayWB2fDp3aNZ6SZzDnW8CofU1lPAEJcag4QL3xOrbWY5F3UNB6Skg
-	 80FJHuYIb9oqfAYktJKJuyrDV876tRk3ElLGtWDfWrFmEAUVAybChTOPnKEf0TwWEB5EH
-	 RuKfUBiz8/LH+T+1DNEmYvwGXAJ6LsSGXD1mph2LPjS6jRth9HdIxJ4Xzne1R+fc4+T3B
-	 hTlrCsFghzuyzTQjnCxat/z438SukA2UewAzFNEMMRZxBf0MZlI8WtTonxdlcVzEOrTfv
-	 VD4AZduTeBBZ78Oj0veyYwjlCuR0/Xveo86qLaaIgJyqAitMZkIjc5og2lTVVaCX4Jg==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794361737;
-	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
-	 Content-Type:Message-Id:X-B4-Tracking:X-Change-ID:To:Cc:X-Mailer:
-	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
-	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=33WJWI75AX3YWacDJW2bzE3Ity7fXYUwNoTbBEoJL7o=;
-	b=G/TEs5oMAVjpfS18Foc/RKzcFp8qAaiL2MONNbZ/k9vt98T3KWSp15q2GvP45QE9GAwT
-	 kt4QYS1sMkPN+OXu49xIzLHM6GOjILdlPgxa3V4YoBKNnG5xCJXJURZwfDYyTrjSF3AeA
-	 CVfXgDL/BLAJkL9jkfgJcPiZcARtOMaonxI68MpWFcvbCVNFqLedwUX1QB/HsQsIuR6Qc
-	 gdryonRPDLs2Ejt2kN6uTO8mFCl0pH8GqGD6R5jRZtwKRx83wlBJMTx5hiil33Bq5plYO
-	 rDHudO87YGk605dsOSxKkR0Ipt0Rxc56stOLAnd4KL9lAO8pLU+4T3fhkoJt8SKjy0A==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DjTJLgA+;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82B9D606A31C;
-	Wed, 11 Nov 2026 01:48:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DjTJLgA+
-Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
-ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
-	t=1794361737;
-	b=hxtEcRMm67qDgcXRy2hBozdOR2rsbnOQB2qgXMmdo01UOckobD8Iesw9tF1YrELVYYHi
-	 6bRTFDsN1j/2G+3FMWmYb5fS+OSG7fTiY9epYO2/NeK/2iriLasz9ZGfYdfgrtzURrrSQ
-	 Wy5PBVztrEZXg8m7YPB3buuKQ7QBOtUKEVtHOXOX/YRMzkC3gf+EoE5xfvNn15CJkdraE
-	 wy7fhgA4uu9t8mfEProJphrGCNsu/x9BDZ6GBx8Qn60BTRuJbHuDAc0Po0liZdg+lil1i
-	 cfpimW33BJNekRTza0YDaFt3AB3YiAicv6EafHIbZPuuAV8kdvvrI2I1e5G/yvUqRoA==
-ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
-	c=relaxed/relaxed; t=1794361737;
-	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
-	 Message-Id:X-B4-Tracking:X-Change-ID:To:Cc:X-Mailer:
-	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
-	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=33WJWI75AX3YWacDJW2bzE3Ity7fXYUwNoTbBEoJL7o=;
-	b=SqIpMUmN5Ubt6KB/SfTbWMCEhQdNZzzu2eG+HX0QqMZsc1ppRhn0TcMVBLzOUN/7OuP/
-	 0sU8q+Jh+1ufSdFNucFuQ9lgqmAMiLcJtw/1uAdccNWev7ru2MbkP0OOrcN8Kn2uK/Cag
-	 70dfzE7XdIKZt+UV0iNRj7R8NLcwbiw9LyulzXbf3J511PgthkhqSLmTYcaddQhXH70bW
-	 aVEy7M3ED7tns3bI4Tf/5ifjeKCYKFp6ZLko9CxZ8BdlIexjwv7XwJmqWpQQ32qFvGd1a
-	 +foGsTBAwWX0JEBSOPfRd380OIxeEYYi91QTMgHD2a1/yNM5qvRYRxcZft34n6G1Ykw==
-ARC-Authentication-Results: i=1; smtp.kernel.org; 
-	arc=none smtp.remote-ip=100.80.115.77
-Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.48
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1794366404;
+	b=ctmkdf53zV1UKG4p/SQgGDMCcRgC76VFYI92E5SsGGWG8rwgEkTUyC4L3ybms18WF3jR
+	 IiAJaOa0t1fq5yvmRdd3OjNl6vlhv6i4duBEs19WoEbG49JhAqv510W65XUYAna/WoViH
+	 46n5WvpvD3ES3Or61LtVIgPrHhfNrjvO01GD+0ZWVBPBH8PDMKjsbXIdY8BfowTTyelFU
+	 0qOI7pXtNjK7+xTtrVQ83AtDK2s63pE1cV+ezuM+jC1zVvIymnYSYzGxIaddvtco2jMPV
+	 pJ976pI8tVU7flgBcSyhsJ0YHA1TSZAkUA7qDJWI/9g/7XYAc5HlcHBOPtv3jvNgXjg==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794366404;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
+	 Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=mLhyYGCVTORdd4WihP4IIQfVXI++QSCchObfVqbadWA=;
+	b=eCzWIXfaxPDhQwXD+BraduF088lW5MuTeNVyt9a7S/qb8j9nEe3SQ+KhvBDrflxjYLzz
+	 nlaaPJcrCREse7K9dhUZsPl497KaewcnCF4yuBtOhzGAtXQHq16Fhf5imhqHAFMqf7qvP
+	 kWBfLCF9PGeG58W9bVbEx4SITiVS7605gArlhR70CahATR/Ug/Or4bhGGsAt3MoizAmDQ
+	 8pJNUGjo77rpsjXXIyIiHAKahQFgIF4zpg4KN6OoONVL4JlpgX9MMKhRliMU448ZjcIjS
+	 LwXa+k6z1Hok8zCV238yVoFVcjknJu61rnp+INeRssFjbaov7rGxNSornXf148w+VBA==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=W7W0MsWh;
+	arc=none smtp.remote-ip=209.85.216.48
+Received: from mail-pj1-f48.google.com (mail-pj1-f48.google.com [209.85.216.48])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.kernel.org (Postfix) with ESMTPS id 736EE1F0089F;
-	Wed, 11 Nov 2026 01:48:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794361737;
-	bh=33WJWI75AX3YWacDJW2bzE3Ity7fXYUwNoTbBEoJL7o=;
-	h=From:Date:Subject:To:Cc:Reply-To;
-	b=DjTJLgA+2iwpvBYpTUDBD8zNvU2wvqJXS/8sUN/RG9gpKEtn2V07wIWJde4n4h+/r
-	 HpmeNQDVyBi2DnnnpYnBNER2YJ7NYbE1/xLoQmP4mS2BN8q1XOH88PpOK0aLXfQ1gZ
-	 yW+U4Tr6FGz9aZ78FkV21uZc+fjoaKU0jNzigtVPswkh5ZQufxRSlMUxn4fo4tpSmN
-	 rUc+Fu8lMx80Wx7PtHLdzkDhTDhsaMPxEFO33cmSJJP0ELipU7rL6S0qlqKw+nEHn9
-	 ZrP9v4D69+yCDgWFZBaCFMwQLGXmoIUwyo2l5Ha5p/PSIs240qyR4ADjESfSjs6eKr
-	 AjVxbwHQ0i9DQ==
-Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
-	by lkml.kernel.org (Postfix) with ESMTP id DFEBF48D0B;
-	Wed, 11 Nov 2026 01:48:55 +0000 (UTC)
-From: Charlie Jenkins via B4 Relay <devnull+charjenkins.tesla.com@kernel.org>
-Date: Tue, 10 Nov 2026 17:48:05 -0800
-Subject: [PATCH] scsi: ufs: exynos: Access HCI regs only while core_clk is
- enabled
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 815F2606A321
+	for <linux-scsi@vger.kernel.org>; Wed, 11 Nov 2026 03:06:44 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 815F2606A321
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=W7W0MsWh
+Received: by mail-pj1-f48.google.com with SMTP id 98e67ed59e1d1-3b16896b8ceso861209a91.1
+        for <linux-scsi@vger.kernel.org>; Tue, 10 Nov 2026 19:06:44 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1794366404; x=1794971204; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=mLhyYGCVTORdd4WihP4IIQfVXI++QSCchObfVqbadWA=;
+        b=W7W0MsWhl2pdpNVYjWLOyyPFheedfMFbCq2aybaSoFL5RextMQgVc6pOy/1WqmlFDC
+         K0TPARUDnzD3ilY7LHrBTMS+oRCi0LKl1GOYON41ft9nx3sGcLgCr2hfXJLs15eAaBJq
+         SWv5ExgvJDJZQJwicIW/PRABJsVsET3o6my4ONLHK3o2KbKrHUkmwIOeYIxp78YSNXqN
+         XPjkS5kjqi7LOivq2fbzhJNsBq3wT0SIumqqiIqk3qVDaOCMiji/Zm8lnydN2S+CK4bR
+         bF5jRkco1p8NJgeeqW8Ahy6T5OlbhmIJ7n9rMUqvdKqHKozwmPyY7Zgs9QJigdXuRhoP
+         4yZw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1794366404; x=1794971204;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=mLhyYGCVTORdd4WihP4IIQfVXI++QSCchObfVqbadWA=;
+        b=2JUJLbzD8QWwto2aCL7j57Rm/P4zVSIjg/ECeJz5rNjS+dldpBk2VjKYxXblQMUHd2
+         ao65kNjDCeJ3egvRp5gASYD6ObeCyJXPOW62wMacebakTz8AyFPPXTluPyEZRpXspS4n
+         SsfxlX1/FD2GNnRxvWFKwI103JU1isRmQLEM1RE38SM/TiGk84bVZ++EejY3QYXfqmCM
+         0jqezkECkcrQdEmyoWpbIIaUmMMLYykF+kRaY6c8rc+zQSvcLPkUu8fc3vMFc4x84UHW
+         JdflUe2n2gD10HLk5KCFMjx+3g3NfuJBFtU0epy+lM/ZCb2K75BxTjbrweL7joPEsBSg
+         1XLA==
+X-Gm-Message-State: APuU4Z9K4JJOK3AuMyTL1vj+SBXHZqk/U1671kdYVyGAx8Yf4SZDe8h3
+	ttLN3+j0hnD586ENuARg/4mR+CGvREVW/0s4eOGNcuwINmJGqr3k1Y/1
+X-Gm-Gg: AYBFou37ktkZPXgXHPIoCHNMwBf3GQ2Fo8s+dWF79PW5IvWnZtFvviXnOqdEQVHeD0G
+	4qE+2T2Zls9/fvWhDTYAYYWe22amE7MjVH5s9Po+X4jIRRYhOiJvHqvjNZFoGwoNsXuNC32VsCN
+	eFAKxD3oYv834iLHAWJ2qCrQiT+o/2klDKYDXMlKe/FLUBCVIi54YnEAAeBUo1psbShrQaiTSjT
+	lfgXY/KgAf1MZ6J7Aoq+yZuWGcB7RTFFuPTyr0EVfR78ZMJNyj1T8X4cizUF+JplpatvemJw6fn
+	QP13fHostnSq3q16+WoZGWTniz4fiIenzpiY/6JImUW58hx2ME6qULP3e0R9RKAVuyIPvUh4cBH
+	EVx5tFDnY1futXwwR8SgD3yd38AHIKlIYBlCfm2ml5Zy5J23LaHex8Iw6KTEFittYnAvK1+vO6V
+	+DelmLfZ7qd1SytZB499AhmpfB2mQBxHUgAqqydrNfPUz5FCtp5F3I5se+uUoOvQgqYIXggvPa9
+	0FohW5ShTqVsxdRLCpTqMbB+ekc4OLPy6bvqABRmIV4oDuFxbllExxsxQF9em+gR9K2Bh5SN5FR
+	eXLQRMY+n8HC0BnzwllwqHeqYCjNVpJTIBmitgQfnw==
+X-Received: by 2002:a17:90b:2584:b0:3ac:ffb8:1809 with SMTP id 98e67ed59e1d1-3b182f3eec3mr934352a91.39.1794366403744;
+        Tue, 10 Nov 2026 19:06:43 -0800 (PST)
+Received: from localhost.localdomain ([183.62.176.219])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b181f9873csm667757a91.1.2026.11.10.19.06.40
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 10 Nov 2026 19:06:43 -0800 (PST)
+From: yong liu <pkfxxxing@gmail.com>
+To: "Martin K. Petersen" <mkp@kernel.org>
+Cc: linux-scsi@vger.kernel.org,
+	target-devel@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	security@kernel.org
+Subject: [PATCH v2] scsi: target: Disable protection processing for zero-block commands
+Date: Wed, 11 Nov 2026 11:05:43 +0800
+Message-ID: <20261111030544.1216434-1-pkfxxxing@gmail.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20261109092744.822646-2-pkfxxxing@gmail.com>
+References: <20261109092744.822646-1-pkfxxxing@gmail.com> <20261109092744.822646-2-pkfxxxing@gmail.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -83,109 +98,57 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Message-Id: <20261110-ufs_exynos_hci_order-v1-1-ce3cf68a74d5@tesla.com>
-X-B4-Tracking: v=1; b=H4sIAFTJ82oC/yXMyw6CMBBG4Vchs7ZJC95fhZgGyl8ZF62ZEYIhv
- LtVl9/inJUUwlC6VisJZlbOqcDtKgpjl+4wPBRTbeujc86aKarH8k5Z/RjYZxkgxqK79GfbHOL
- +RCV9CiIvv217+1un/oHw+r5o2z7Z+44JeAAAAA==
-X-Change-ID: 20261110-ufs_exynos_hci_order-0ea9b8035f47
-To: Alim Akhtar <alim.akhtar@samsung.com>, 
- Peter Griffin <peter.griffin@linaro.org>, 
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
- "Martin K. Petersen" <mkp@kernel.org>, 
- Krzysztof Kozlowski <krzk@kernel.org>, 
- Chanho Park <chanho61.park@samsung.com>
-Cc: linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org, 
- linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, 
- Charlie Jenkins <charjenkins@tesla.com>
-X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1794361735; l=2641;
- i=charjenkins@tesla.com; s=20261111; h=from:subject:message-id;
- bh=LAh4uxWJEJlM8NfNlEbxljfVuT2qoU7HqStq10W2Hns=;
- b=haIPNM/jxHhhj/GSLWYwPRTnUfCL/f3zCVGefXGiNVccdK//pUwTS3Lc0hUuzWhloFIVkRzL2
- GZ1rf3a9tJkDF7Dr5ZTJtqe18buZ0G92aaoVtxpEGl/wjADim/B72k5
-X-Developer-Key: i=charjenkins@tesla.com; a=ed25519;
- pk=UcHY2MxMlGrG4OWEpbHAPZ2iB7xhVAktL8U7+7y1MhU=
-X-Endpoint-Received: by B4 Relay for charjenkins@tesla.com/20261111 with
- auth_id=1484
-X-Original-From: Charlie Jenkins <charjenkins@tesla.com>
-Reply-To: charjenkins@tesla.com
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-From: Charlie Jenkins <charjenkins@tesla.com>
+A READ(10) with its TRANSFER LENGTH field set to zero on a PI-enabled
+LUN can select TARGET_PROT_DIN_STRIP while leaving cmd->prot_length at
+zero. transport_generic_new_cmd() then allocates an empty protection
+scatterlist, causing a target-side Oops, which can also lead to
+use-after-free during subsequent iSCSI connection cleanup. A logged-in
+iSCSI initiator can trigger this on a FILEIO LUN with protection
+information enabled.
 
-The current clock setup attempts to program the HCI clock-stop registers
-after the core clock has already been brought down. With this ordering
-on a reboot, the HCI bus clock is stopped before the clock-stop
-accesses, triggering an SError on the power-down path.
+After validating PROTECT, reset the protection operation, type and
+checks for zero-block commands in sbc_check_prot(). This avoids the
+empty allocation and prevents backends and fabrics from selecting PI
+processing without a protection payload. Preserve the existing
+data-length adjustment for commands carrying PI over the wire.
 
-SError Interrupt on CPU5, code 0x00000000bf000002 -- SError
-pc : readl+0x4/0x18
-lr : hci_readl.isra.0+0x14/0x20
-Kernel panic - not syncing: Asynchronous SError Interrupt
-Call trace:
- readl+0x4/0x18
- exynos_ufs_ctrl_clkstop+0x30/0xac
- exynos_ufs_setup_clocks+0x8c/0xa4
- ufshcd_setup_clocks+0x1c8/0x2a0
- ufshcd_suspend+0x4c/0xa8
- ufshcd_wl_shutdown+0x88/0xd4
- device_shutdown+0x158/0x1d8
- kernel_restart_prepare+0x40/0x4c
- kernel_restart+0x20/0x88
- __do_sys_reboot+0x198/0x218
+The issue was discovered and fixed by Qihoo 360's Tulongfeng multi-agent
+system.
 
-This is visible on FSD, where the CMU gates are in manual mode so
-disabling core_clk really stops the clock.
-
-Ungate in POST_CHANGE when turning clocks on and gate in PRE_CHANGE
-when turning them off, so the HCI registers are only accessed while
-core_clk is running.
-
-Fixes: 91c49e7e82d7 ("scsi: ufs: ufs-exynos: Add setup_clocks callback")
-Signed-off-by: Charlie Jenkins <charjenkins@tesla.com>
+Fixes: 5835812f13e5 ("target: ensure se_cmd->t_prot_sg is allocated when required")
+Cc: stable@vger.kernel.org
+Signed-off-by: yong liu <pkfxxxing@gmail.com>
 ---
-Found on a Tesla FSD board.
----
- drivers/ufs/host/ufs-exynos.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+Changes in v2 (addressing sashiko-bot's protection-state review):
+- Replace the allocation-only guard with a zero-block protection state fix
+  in sbc_check_prot(), so backends and fabrics do not select PI processing
+  without a protection payload.
+- Preserve PROTECT validation and the existing data-length adjustment.
 
-diff --git a/drivers/ufs/host/ufs-exynos.c b/drivers/ufs/host/ufs-exynos.c
-index 3bcbc9ebbb283..d2a79ebf193e3 100644
---- a/drivers/ufs/host/ufs-exynos.c
-+++ b/drivers/ufs/host/ufs-exynos.c
-@@ -1116,11 +1116,11 @@ static int exynos_ufs_setup_clocks(struct ufs_hba *hba, bool on,
- 	if (!ufs)
- 		return 0;
+Developed against f66469d9905b39d2c260a15d7d6db450f4db67c1 (7.4-rc1).
+
+ drivers/target/target_core_sbc.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
+index 21f5cb86d7..560e62cef7 100644
+--- a/drivers/target/target_core_sbc.c
++++ b/drivers/target/target_core_sbc.c
+@@ -721,6 +721,12 @@ sbc_check_prot(struct se_device *dev, struct se_cmd *cmd, unsigned char protect,
+ 	if (sbc_set_prot_op_checks(protect, fabric_prot, pi_prot_type, is_write, cmd))
+ 		return TCM_INVALID_CDB_FIELD;
  
--	if (on && status == PRE_CHANGE) {
-+	if (on && status == POST_CHANGE) {
- 		if (ufs->opts & EXYNOS_UFS_OPT_BROKEN_AUTO_CLK_CTRL)
- 			exynos_ufs_disable_auto_ctrl_hcc(ufs);
- 		exynos_ufs_ungate_clks(ufs);
--	} else if (!on && status == POST_CHANGE) {
-+	} else if (!on && status == PRE_CHANGE) {
- 		exynos_ufs_gate_clks(ufs);
- 		if (ufs->opts & EXYNOS_UFS_OPT_BROKEN_AUTO_CLK_CTRL)
- 			exynos_ufs_enable_auto_ctrl_hcc(ufs);
-@@ -1139,7 +1139,9 @@ static int exynos_ufs_pre_link(struct ufs_hba *hba)
- 	exynos_ufs_config_intr(ufs, DFES_DEF_L4_ERRS, UNIPRO_L4);
- 	exynos_ufs_set_unipro_pclk_div(ufs);
++	if (!sectors) {
++		cmd->prot_op = TARGET_PROT_NORMAL;
++		cmd->prot_checks = 0;
++		pi_prot_type = TARGET_DIF_TYPE0_PROT;
++	}
++
+ 	cmd->prot_type = pi_prot_type;
+ 	cmd->prot_length = dev->prot_length * sectors;
  
--	exynos_ufs_setup_clocks(hba, true, PRE_CHANGE);
-+	if (ufs->opts & EXYNOS_UFS_OPT_BROKEN_AUTO_CLK_CTRL)
-+		exynos_ufs_disable_auto_ctrl_hcc(ufs);
-+	exynos_ufs_ungate_clks(ufs);
- 
- 	/* unipro */
- 	exynos_ufs_config_unipro(ufs);
-
----
-base-commit: e550f2b2b4aab4c5f12db89d04d8978ce4ed7b4e
-change-id: 20261110-ufs_exynos_hci_order-0ea9b8035f47
-
-Best regards,
---  
-Charlie Jenkins <charjenkins@tesla.com>
-
+-- 
+2.43.0
 
