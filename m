@@ -1,85 +1,56 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=60.244.123.138
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.8
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794401446;
-	b=FgQ9jsge8W8RQp0gKIB5t3O9FdiFP1K+INaoUp0+alWR+7poYTg/WBM8nwsLN4ToSRb4
-	 rdjOUsOL1JlOjUZaKEhrStitVoJqQ03Ut6KorW3tvXeaNTtILIXiQ+g/5NIDHocdj3zTR
-	 wVPCuWS2F0FNVFjHI8uP8fUAxaUto5kb/9YpVDm2meaGxoyVM73B9DumjkLxWJxCM+oUc
-	 R3jkRMo1yaAHhSeAjRRIREGNjw4/jcugcY6NIGWljGwdA0TSpWd4UwPRTeq2u0ihGVdej
-	 lhGJ1MwiSpQJtySi1/bmzHNqsX9rn57LTDkMu3UO2s42nSeTUilMeeenzBo/ICqI6oA==
+	t=1794404847;
+	b=zoeH8D6r+BgsN8tWgoORmB4Yse5retu0ns0161ug+k/D13H/2yOW5Q9mfoQ8RF2Qbgg7
+	 4Qy2mdVXTd39UVgP0iIk+GGeU8uVP7qIISltrtEG9XWG65OxG2JAzFWqJ9hr+kxlKx+Rn
+	 A6FOTThVzXhMNKyjRbiIihxbMB2sXfTA8x32BnfRF65QXZ9563nJ30xrXUnrgNSs09FQO
+	 uBe4F188VCrbMw7NTO31MB0XAoKrM7kC2YWRFZBN9Ogs/0FR9gaBpuSYiSXQGld6Ekzay
+	 5dtauwGsnpbzsYYQKfg5PMv7N2dJmwXwgv2D+3PzZZLM+4psiCMY624QadRbfSXz2/Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794401446;
-	h=DMARC-Filter:X-UUID:DKIM-Signature:X-CID-P-RULE:X-CID-O-INFO:
-	 X-CID-META:X-CID-BVR:X-CID-BAS:X-CID-FACTOR:X-CID-RHF:X-UUID:Received:
-	 Received:Received:Message-ID:Subject:From:To:Date:In-Reply-To:
-	 References:Content-Type:Content-Transfer-Encoding:User-Agent:
-	 MIME-Version:X-MTK;
-	bh=1d8r9KQbng6ph5F2BsQrdbPHx89gTkMAPbPsgYLnobk=;
-	b=r2K79Rfa6/5G9z19zzdcmV3gnSFuvMKa8VOX4caq3M4QIWxwsc/MlGv/3RtZ6fjCDWk2
-	 FiDutFMnqEiqcOn17IsA3egyfi8EtdjuAiXlhfFo5gdWYptURUew1v463pgsenpOU710F
-	 6IW4VCONZCX8QIZTESYf4BohxIqIKfcN9/m8rO5KyZP+5n0AyM2NBH1JSi0Att21I8DLX
-	 aFQENffPXRvB7cdrbbk7wwU2ORUnncOmVGkJW1MiAvOK/9qnC+V+4c8uU0i9iq4uJ9iVM
-	 3ZCAPZB9qzG0gB+7F0PkJR72lGMd+4zsfeLe0zIMhiVwzwkEbTmiL/o9m08hecVmvQA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794404847;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:From:Date:Subject:MIME-Version:
+	 Content-Type:Content-Transfer-Encoding:Message-Id:X-B4-Tracking:To:Cc:
+	 X-Mailer;
+	bh=1BizE5bm2337kNlpzWkzdIe8Co2mGkxHMEG1w5RSHWo=;
+	b=Bs3OT47HKGORNXD8iH/sVzrIdMiV5pos7SNlSi26QLK5+qLhHG34Ji+pfaADcWIlktN5
+	 9COb9qtnxlS/SvkcU4g/dXQcv60HC9Ex5dLjtBul8s2Cfi+F3EB3LYkDkokDIjYtnEZyB
+	 WY4iFuxQg6PzKvqmevrPCMM8Yn8Zv6NdrPcuBaW/qNUdNDr9TKjuBop1St0Mkg9pYRQ7Y
+	 qFhkY+8GRHWK16tozQEeXAUYLaiborLNV4p/WVdYTGCROvp9el1/N1ISwX97PDdmp9HX6
+	 zQGNJ0KPL3iuh8hyk75ySURLn2FC47SopY708FdXWZHsY+X0qLqaQAwzQaNWYpIsd/A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=mediatek.com;
-	spf=pass smtp.mailfrom=mediatek.com;
-	dkim=pass header.d=mediatek.com header.i=@mediatek.com header.a=rsa-sha256 header.s=dk header.b=ZCHkfhK6;
-	arc=none smtp.remote-ip=60.244.123.138
-Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=linux.dev;
+	spf=pass smtp.mailfrom=linux.dev;
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=Sq9mFaZd;
+	arc=none smtp.remote-ip=95.215.58.8
+Received: from mta1.migadu.com (out-8.mta1.migadu.com [95.215.58.8])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6003C606A31C;
-	Wed, 11 Nov 2026 12:50:45 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6003C606A31C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B54C4606A32D
+	for <linux-scsi@vger.kernel.org>; Wed, 11 Nov 2026 13:47:26 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B54C4606A32D
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.a=rsa-sha256 header.s=dk header.b=ZCHkfhK6
-X-UUID: 7f2a89dcddce11f1b1788b6acf885367-20261111
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=MIME-Version:Content-Transfer-Encoding:Content-Type:References:In-Reply-To:Date:To:From:Subject:Message-ID; bh=1d8r9KQbng6ph5F2BsQrdbPHx89gTkMAPbPsgYLnobk=;
-	b=ZCHkfhK6aD4pojJUclrCx4D0wl2I+a0BDWFj6vCiblDUWYlDXJk5N9DVG78srqQSAsNU7IPFyKjZjRyeMM5cW43XutLyr4QVLlBbbTSAjsn0hylC1Ys+8fQSvekpOFYBPOsd40pCG+M7LJA5Q6jG7qGpb5LFjBGFgimUtLQl3xs=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.21,REQID:5fc85684-c72d-4c1a-8f7b-1f9997a1bdd8,IP:0,U
-	RL:0,TC:0,Content:2,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-	release,TS:2
-X-CID-META: VersionHash:b0318ac,CLOUDID:088cb530-f289-4656-bb36-27baf4489f11,B
-	ulkID:nil,BulkQuantity:0,SF:80|81|82|83|102|836|865|888|898,TC:-5,Content:
-	4|15|50|99,EDM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:nil,COL:0
-	,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 7f2a89dcddce11f1b1788b6acf885367-20261111
-Received: from mtkmbs10n1.mediatek.inc [(172.21.101.34)] by mailgw01.mediatek.com
-	(envelope-from <peter.wang@mediatek.com>)
-	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 1865187912; Wed, 11 Nov 2026 20:50:39 +0800
-Received: from mtkmbs13n2.mediatek.inc (172.21.101.108) by
- MTKMBS14N1.mediatek.inc (172.21.101.75) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.29; Wed, 11 Nov 2026 20:50:37 +0800
-Received: from [10.233.130.16] (10.233.130.16) by mtkmbs13n2.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.2.2562.29 via Frontend
- Transport; Wed, 11 Nov 2026 20:50:37 +0800
-Message-ID: <5e0d0879bb4af87db4a64a2ce6b5740efedefcfa.camel@mediatek.com>
-Subject: Re: [PATCH v10 3/4] scsi: ufs: core: Make ufshcd_wl_poweroff()
- behave like ufshcd_wl_suspend()
-From: Peter Wang <peter.wang@mediatek.com>
-To: HOYOUNG SEO <hy50.seo@samsung.com>, <linux-scsi@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <bvanassche@acm.org>, <mkp@kernel.org>,
-	<martin.petersen@oracle.com>, <stanleyjhu@google.com>,
-	<alim.akhtar@samsung.com>, <kwangwon.min@samsung.com>,
-	<kwmad.kim@samsung.com>, <cpgsproxy1@samsung.com>, <h10.kim@samsung.com>
-Date: Wed, 11 Nov 2026 20:50:37 +0800
-In-Reply-To: <603443293.161794387787869.JavaMail.epsvc@epcpadp2new>
-References: <cover.1794384665.git.hy50.seo@samsung.com>
-	 <CGME20261111082306epcas2p21456a0a7d81ed5328ec01f022b87ee32@epcas2p2.samsung.com>
-	 <603443293.161794387787869.JavaMail.epsvc@epcpadp2new>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.52.3-0ubuntu1.1 
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=Sq9mFaZd
+X-Envelope-To: linux-scsi@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=VdMYcUi7XPWWy7iGCRQJnDkZk3T3knnACfUGqAi7Z1w=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1794404844; v=1; x=1795009644;
+ b=Sq9mFaZd7V6ryc7f0aRbOR9KaP+B+bn+Ot+Vu67lxIiKn+756DO83Zgt1lSyvJhzuTRuup6T
+ eMO0Mpbu7d2EL0rr/jQmZYzZNZ13euWK+1QM4QaHZDGgKIGmkDI7nJDHllijpftJESBf5Mfrrgf
+ k64WGpIMEYKUzHDlAsMB1pJQ=
+X-Envelope-To: linux-scsi@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 1d625bdf92d81dfe;
+	Wed, 11 Nov 2026 13:47:24 +0000
+X-Mizu-Trace-ID: 1d625bdf92d81dfe
+X-Migadu-Flow: FLOW_OUT
+From: Qiliang Yuan <qiliang.yuan@linux.dev>
+Date: Wed, 11 Nov 2026 08:47:18 -0500
+Subject: [PATCH] scsi: target: alua: Free target port groups with
+ kfree_rcu()
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -89,64 +60,75 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-X-MTK: N
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20261111-bug-target-alua-free-gp-v1-1-d1e692ae8694@linux.dev>
+X-B4-Tracking: v=1; b=H4sIAOVx9GoC/x3MQQqEMAxA0atI1gZM1YJzlcFF1FgD4khqRRDvP
+ sXlW/x/QxRTifApbjA5Nepvy6CygHHhLQjqlA2ucp6IKhxSwIMtyIG8JsbZRDDsSI1v27pj5zu
+ GXO8ms17v+ds/zx8vWtVmaQAAAA==
+To: "Martin K. Petersen" <mkp@kernel.org>
+Cc: Mike Christie <michael.christie@oracle.com>, linux-scsi@vger.kernel.org, 
+ target-devel@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ Qiliang Yuan <qiliang.yuan@linux.dev>
+X-Mailer: b4 0.13.0
 
-On Wed, 2026-11-11 at 17:18 +0900, HOYOUNG SEO wrote:
-> ufshcd_wl_poweroff(), the hibernation poweroff callback, calls
-> __ufshcd_wl_suspend(hba, UFS_SHUTDOWN_PM) directly and ignores the
-> result. Unlike ufshcd_wl_suspend() it:
->=20
-> =C2=A0- does not take hba->host_sem. An error handler that runs in the
-> =C2=A0=C2=A0 meantime can reset the link concurrently with
-> __ufshcd_wl_suspend().
-> =C2=A0=C2=A0 It also leaves host_sem unbalanced: if hibernation is aborte=
-d
-> after
-> =C2=A0=C2=A0 ufshcd_wl_poweroff() has been called, ufshcd_wl_resume() is =
-called
-> as
-> =C2=A0=C2=A0 the .restore callback and releases host_sem, which was not
-> acquired;
-> =C2=A0- does not check pm_runtime_suspended(dev).
-> __ufshcd_suspend_prepare()
-> =C2=A0=C2=A0 leaves the WLUN runtime suspended if ufshcd_rpm_ok_for_spm()=
- is
-> true,
-> =C2=A0=C2=A0 which is the case if rpm_lvl and spm_lvl are equal. Then
-> =C2=A0=C2=A0 __ufshcd_wl_suspend() triggers error recovery and returns -E=
-BUSY;
-> =C2=A0- does not set hba->is_sys_suspended, so
-> ufshcd_err_handling_prepare()
-> =C2=A0=C2=A0 does not restore the clocks and regulators if the .restore
-> callback
-> =C2=A0=C2=A0 fails;
-> =C2=A0- ignores errors.
->=20
-> Call ufshcd_wl_system_suspend() with UFS_SHUTDOWN_PM from
-> ufshcd_wl_poweroff() to fix all of these, as suggested by Bart Van
-> Assche. host_sem is held until ufshcd_wl_resume() releases it if
-> hibernation is aborted, and released if the suspend fails. For
-> UFS_SHUTDOWN_PM, __ufshcd_wl_suspend() does not convert failures into
-> -EBUSY, so a positive SCSI or UIC status can be returned. A
-> dev_pm_ops
-> callback has to return a negative error code, so convert it.
->=20
-> This changes the behavior of ufshcd_wl_poweroff(): an error is now
-> returned from the .poweroff callback, which aborts hibernation,
-> instead
-> of being ignored, and a runtime suspended WLUN is left as it is like
-> in
-> ufshcd_wl_suspend().
->=20
-> Do not use hba->shutting_down to stop the error handler: it makes
-> ufs_mtk_system_suspend(), which is also the .poweroff callback of the
-> MediaTek host controller, fail with -EBUSY, and nothing clears it
-> when
-> hibernation is aborted.
->=20
-> Fixes: b294ff3e3449 ("scsi: ufs: core: Enable power management for
-> wlun")
-> Suggested-by: Bart Van Assche <bvanassche@acm.org>
-> Signed-off-by: HOYOUNG SEO <hy50.seo@samsung.com>
+core_alua_free_tg_pt_gp() frees a target port group when its configfs
+group goes away, including the default group of every device when its
+backstore is deleted. Readers of lun->lun_tg_pt_gp may still hold the
+group, so it waits for an RCU grace period before freeing it.
 
-Reviewed-by: Peter Wang <peter.wang@mediatek.com>
+The wait is synchronous, so deleting a backstore spends most of its time
+in synchronize_rcu(), which adds up when tearing down many of them.
+
+Free the group with kfree_rcu() instead. Nothing else in the function
+needs the grace period to have elapsed, and kmem_cache_destroy() waits
+for pending kfree_rcu() calls on module unload.
+
+Deleting 256 rd_mcp backstores through configfs, five rounds
+alternating with and without this patch, takes (median, min-max in
+parentheses):
+
+  backstores  before (ms)       after (ms)     change
+         256  2108 (2105-2127)  692 (675-700)    -67%
+
+Signed-off-by: Qiliang Yuan <qiliang.yuan@linux.dev>
+---
+ drivers/target/target_core_alua.c | 3 +--
+ include/target/target_core_base.h | 1 +
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/target/target_core_alua.c b/drivers/target/target_core_alua.c
+index 140154d93c430..4ef243ae843bb 100644
+--- a/drivers/target/target_core_alua.c
++++ b/drivers/target/target_core_alua.c
+@@ -1771,8 +1771,7 @@ void core_alua_free_tg_pt_gp(
+ 	}
+ 	spin_unlock(&tg_pt_gp->tg_pt_gp_lock);
+ 
+-	synchronize_rcu();
+-	kmem_cache_free(t10_alua_tg_pt_gp_cache, tg_pt_gp);
++	kfree_rcu(tg_pt_gp, rcu_head);
+ }
+ 
+ static struct t10_alua_tg_pt_gp *core_alua_get_tg_pt_gp_by_name(
+diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
+index 002b0fc575876..cec29cbec1643 100644
+--- a/include/target/target_core_base.h
++++ b/include/target/target_core_base.h
+@@ -331,6 +331,7 @@ struct t10_alua_tg_pt_gp {
+ 	struct list_head tg_pt_gp_lun_list;
+ 	struct se_lun *tg_pt_gp_alua_lun;
+ 	struct se_node_acl *tg_pt_gp_alua_nacl;
++	struct rcu_head rcu_head;
+ };
+ 
+ struct t10_vpd {
+
+---
+base-commit: b3dfbde62cf1981c4638939c159dfd087b7a72e9
+change-id: 20261110-bug-target-alua-free-gp-1465539a269a
+
+Best regards,
+-- 
+Qiliang Yuan <qiliang.yuan@linux.dev>
+
