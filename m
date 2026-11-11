@@ -1,64 +1,105 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794371724;
-	b=bjyBNtC1UknCshrob84PevOwpghWMjYJ9ZgZedIKFbzh1lACn9S5+BbHLvuEhvGkk4XI
-	 fjFNs4RPyJ6dcTc7hTX00c6eavprnjOwKKDksycbwlg+PxGrUSTOPwSxFRK5bV83Uavxg
-	 Nt8/HPkhdamVJO6H6Xv2CZlxGsDCyBqU/XYk8UBXZBaO90lw3X6zikW5DJEF2ay01ntx7
-	 LsFQfdx+wkzXnC8IY/WINbjCInYTJAMLEmw3Rf6+lhSwFPL5TQbyKaO0K3Ep3SrctVut4
-	 oX85scQXFmTwseM6WsKnEVjCICrCBlqORDVEboW/0X7jo+ksFf4N6MJyaDoPW4jjN7g==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794371724;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=aqhm8xM2X96PqIZ9tqXE+P+Q89EVeGW8jdqalCMQXBo=;
-	b=w2MPa3t3y6wNDsvY5ipjpJ6wXvT4SVpe8gOjXH2AAxxqNgfl9NeHDOPZFQ/BWrLI/x8l
-	 5RQBN6qa1QvcSHzHKubfiuh6wm0i7Lr0M5Bfo7ErNldGSPiW1tBvWAH1uuRtUWCTQu4y6
-	 LKFpcP/Th+VLlcmOqAjLEoeWVRzw4NsT/dO/h5bYGLTvIRW0B0REJU6uZxkEXWOmUn7WV
-	 8nQyoPFSgVMIj9aXFi+mjRMQpSGA/awJePFs0+tCJUSro2c9nWtadMj3BsoYaNkZQlSAv
-	 rck1usnMNuYDVBZDljMrekppRmgXFDpCo226hA46JdM7ywsuY8ngwtf7BZi88oN3hxA==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=B1jQgEio;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.48.21
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1794371942;
+	b=H12Nbg2nU+FRPjpGLLX1A2PP9GvpxqmQlJVfg3GkyzS9CiA9oBt/ZueYHIWykCLqyL3q
+	 Q0MxwP7hugDJTLsckkb0ibKLem4Gkg6jVllzYdPsRn5dldL+sCppwdqM5E4XUEHKfkha2
+	 S/5sQq7J04pPdofT8VLO50ST3Ve6liCwTuTlZ/QbX5YUK6i2cIoXH28eNrwxvDoX6ELGJ
+	 PZP8VWTPKHi73tMDMnAWSw/yqBZox5UpebU1kriu0mWFLVgmuEXgUxPkItOwygX0cJUjf
+	 Bz0Fgx38eGTMXfk/vvRrpeBABGfKUfdMSDc/mKcsHhF85+KZ4VX8AZVcaoLpzqN57Rw==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794371942;
+	h=DMARC-Filter:DKIM-Signature:Received:Received:
+	 X-MS-Exchange-Authentication-Results:Received-SPF:Received:Received:
+	 Received:From:To:CC:Subject:Date:Message-ID:X-Mailer:MIME-Version:
+	 Content-Transfer-Encoding:Content-Type:X-EOPAttributedMessage:
+	 X-MS-PublicTrafficType:X-MS-TrafficTypeDiagnostic:
+	 X-MS-Office365-Filtering-Correlation-Id:X-MS-Exchange-SenderADCheck:
+	 X-MS-Exchange-AntiSpam-Relay:X-Microsoft-Antispam:
+	 X-Microsoft-Antispam-Message-Info:X-Forefront-Antispam-Report:
+	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
+	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
+	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
+	 X-MS-Exchange-CrossTenant-Network-Message-Id:
+	 X-MS-Exchange-CrossTenant-Id:
+	 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp:
+	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
+	 X-MS-Exchange-CrossTenant-FromEntityHeader:
+	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
+	bh=gaNeE5fMhBNC4kLC5Iqncl0C68vaDQbtYP4485AbZ/g=;
+	b=tEdoH2qV92Lm0KRt9lZbzn8iRUeuiokTS/5Yx8XwKE0D9Th/cPQENQxgIHu5vBAD40jI
+	 RdsB/0SlY40+JF6vVdsgX7dEOQR9wDr7jILt6IjQmE3odaLYU5Y/SmrLszee7bnc8rHD+
+	 dZEk+rthYG9soubfcCR0ucjSjx+EUrnsSAO3AVwCuU89ivYWfz6DB1mYGDFA5ErLvU2qx
+	 kbUBBQVEAycI2TMfRqKKc9IniIGr1PwhhSR6bkFHozCJ2D/Tmr74i9d+QVTXUG261OYlu
+	 J196zuC9ZP7WtbGM5MSbzGoWft1+d6HC7NmwDVTP/nX4DtZ3yTJmHcxMlyMdKD3jqkQ==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=amd.com;
+	spf=fail smtp.mailfrom=amd.com;
+	dkim=pass header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b="g7l7abw/";
+	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.48.21
+Received: from MW6PR02CU001.outbound.protection.outlook.com (mail-westus2azon11012021.outbound.protection.outlook.com [52.101.48.21])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D40F606A31C;
-	Wed, 11 Nov 2026 04:35:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7AD13606A31C;
+	Wed, 11 Nov 2026 04:39:01 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7AD13606A31C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=B1jQgEio
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C60021F0089F;
-	Wed, 11 Nov 2026 04:35:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794371723;
-	bh=aqhm8xM2X96PqIZ9tqXE+P+Q89EVeGW8jdqalCMQXBo=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=B1jQgEioZO6F0Zq8tMe/+Sax/zKz9Msn6hHOez2aNiPqsj9FIGmmSkVHv3/+yC6t0
-	 j2C8A6gsmx48q20hqGLau+6Tj4qGPTBQqKCiXYDiR2ES4mDYukpV3v2aEBmxpvsRT3
-	 8+2XYzSu86hgHGUJGA701VYhQCcpM4nBubhRtuFrzA8zLUjJbu/K5kI72ysUlBqy3b
-	 EC7JzmQSXxqUeGWWFiLYJ4WowCnw/oAQXq+5BfNvocRps/pFbm9ngHGyxTqsQVIaNq
-	 0yHolvsdjij0FHD+Z4STOOL1PoZ1f4jHsFbxOKY9381ChnDM/t07Ulcs1KTncEywes
-	 p/nLLa+mQWF/w==
-Message-ID: <sashiko-outbox-208298@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 2/3] dt-bindings: ufs: qcom: classify sm8150-ufshc as
- standalone ICE
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Andrew Gigena" <mail@andrewgigena.dev>, "Abel Vesa" <abelvesa@kernel.org>, "Herbert
- Xu" <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, "Rob
- Herring" <robh@kernel.org>, "Krzysztof Kozlowski" <krzk+dt@kernel.org>, "Conor
- Dooley" <conor+dt@kernel.org>, "Manivannan Sadhasivam" <mani@kernel.org>, "Alim
- Akhtar" <alim.akhtar@samsung.com>, "Bart Van Assche" <bvanassche@acm.org>, "Bean
- Huo" <beanhuo@micron.com>, "Stanley Jhu" <stanleyjhu@google.com>, "Bjorn
- Andersson" <andersson@kernel.org>, "Andy Gross" <agross@kernel.org>, "Konrad
- Dybcio" <konradybcio@kernel.org>
-Cc: linux-crypto@vger.kernel.org, devicetree@vger.kernel.org, linux-scsi@vger.kernel.org
-In-Reply-To: <20261111-sm8150-ice-rfc-v3-2-f9d5a806fc95@andrewgigena.dev>
-References: <20261111-sm8150-ice-rfc-v3-0-f9d5a806fc95@andrewgigena.dev>
- <20261111-sm8150-ice-rfc-v3-2-f9d5a806fc95@andrewgigena.dev>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 11 Nov 2026 04:35:22 +0000
+	dkim=pass (1024-bit key, unprotected) header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=g7l7abw/
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=mlEpkGLhJx2WmHegSP8qQiTM20eNtMgNWObbpQ172dVmzP+Yla86W3JZk8Yvpa1fwLWTWG24RahPLLko0MrURTy+ErnzV8HJ/trYRU7anmyepeuCbKWZmZ54bQrOI0dmm6GMm1LED1DC13VVAwbWCqN/HrJa9MpdHAdspl8EY3JuXjHbaeUilbxE73i7u2aAVg9PaP7zuQv888zrbt2ynBfLRT6oJtpmmwlGWEySPiJCBBtlNjipS0MQHTzNDeHTsBSTpIir9xp/fkUBCjm5V+RYA6yVwZonoMMTYWVtRx3FdGJP1tt47y7FLVz24T2bC2IjjWSspTy/lQJNFSh8gA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=gaNeE5fMhBNC4kLC5Iqncl0C68vaDQbtYP4485AbZ/g=;
+ b=OT9tcUgBlLfm8VJ8U1nIvMW+ry1Vt6EXdP1Af6f8IwmIP/IJNwK9eLAuJtsOx/6U0dhnG6vHr7JFYNd6WF8sSmAHS3hg9WlvT/PGHh7ZKXqzyxeBGTrOZtazZzGNdCpW74XzzgLxWzXlpv4JilPoHTPNrIOl+AmCQM0vXYsbG0wbDoFkDlwF/n0p2pWV6DnC09UmHP18/e5KyHjX9WmEcvVfWben3FGvlHtz+iiU0LoRzpRrsRN7DewdVgPlEU/yfQLvVI+u/EOk5akVbVyaWSHQ+QjkvOCdDoL4KGXlwbI6E3cvmTJ4/C9fgvxf62f/QokcaJkjUnCFtK+7YkyJGg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 165.204.84.17) smtp.rcpttodomain=kernel.org smtp.mailfrom=amd.com; dmarc=pass
+ (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
+ dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=gaNeE5fMhBNC4kLC5Iqncl0C68vaDQbtYP4485AbZ/g=;
+ b=g7l7abw/M0OQQyVmbRUevYbOIdT6LE45DL98MX6ZLgnvFhNhNMSSKydJvDZle6FQ/F2MiXTlFWcwpSM6IhqSREqtd88/LYs/ODRjxkjfCwLKvOe8KntzsbDfRT/mn2jNz2Ln29xtXLWlu5pjJurBDpbXCjiB3Sxcmht4+liiOJE=
+Received: from BN9PR03CA0546.namprd03.prod.outlook.com (2603:10b6:408:138::11)
+ by CH2PR12MB9520.namprd12.prod.outlook.com (2603:10b6:610:280::15) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.592.13; Wed, 11 Nov
+ 2026 04:38:58 +0000
+Received: from BN7PEPF00000093.namprd03.prod.outlook.com
+ (2603:10b6:408:138:cafe::ae) by BN9PR03CA0546.outlook.office365.com
+ (2603:10b6:408:138::11) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.592.12 via Frontend Transport; Wed,
+ 11 Nov 2026 04:38:58 +0000
+X-MS-Exchange-Authentication-Results: mx.microsoft.com 1; spf=pass (sender IP
+ is 165.204.84.17) smtp.mailfrom=amd.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=amd.com;
+Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
+ 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
+ client-ip=165.204.84.17; helo=satlexmb08.amd.com; pr=C
+Received: from satlexmb08.amd.com (165.204.84.17) by
+ BN7PEPF00000093.mail.protection.outlook.com (10.167.245.71) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.21.615.4 via Frontend Transport; Wed, 11 Nov 2026 04:38:58 +0000
+Received: from satlexmb08.amd.com (10.181.42.217) by satlexmb08.amd.com
+ (10.181.42.217) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.53; Tue, 10 Nov
+ 2026 22:38:57 -0600
+Received: from xhdsivadur40.xilinx.com (10.180.168.240) by satlexmb08.amd.com
+ (10.181.42.217) with Microsoft SMTP Server id 15.2.2562.53 via Frontend
+ Transport; Tue, 10 Nov 2026 22:38:53 -0600
+From: Ajay Neeli <ajay.neeli@amd.com>
+To: <robh@kernel.org>, <krzk+dt@kernel.org>, <conor+dt@kernel.org>
+CC: <sai.krishna.potthuri@amd.com>, <alim.akhtar@samsung.com>,
+	<bvanassche@acm.org>, <beanhuo@micron.com>, <linux-scsi@vger.kernel.org>,
+	<devicetree@vger.kernel.org>, <git@amd.com>, <michal.simek@amd.com>,
+	<srinivas.goud@amd.com>, <radhey.shyam.pandey@amd.com>, Ajay Neeli
+	<ajay.neeli@amd.com>
+Subject: [PATCH] dt-bindings: ufs: amd,versal2-ufs: Add ref_clk clock property
+Date: Wed, 11 Nov 2026 10:08:40 +0530
+Message-ID: <20261111043840.906301-1-ajay.neeli@amd.com>
+X-Mailer: git-send-email 2.25.1
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -67,62 +108,87 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: BN7PEPF00000093:EE_|CH2PR12MB9520:EE_
+X-MS-Office365-Filtering-Correlation-Id: 24e35e30-dbd6-4436-edc3-08df3fadb39e
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|376014|23010399003|1800799024|82310400026|36860700016|56012099006|261009223027099003|11063799006|261022075727099003|261021123027099003|261021121427099003|261022105027099003|261026140227099003|261028144727099003|261102123227099003|261026121527099003|10067099003|18002099003|6133799003;
+X-Microsoft-Antispam-Message-Info:
+	JjsvmIn0Qnj7FT//wE13DorX4yUkgYvjZueYZJFGZOiBMAhSHRZ90A/Cyt/lb4mP03oIe+f+d6hpT4awfqk4tZ9GuaMMoZTr4GbPyluoaV9SbzeqS+Cpp6tjVQyYvCbv2HDNhLYx1gB/gJi/btMoRcZRp+L3PRjYlZbxR/3TEqd9cC2mhU7hIfSIMxzRHcr1rRPwNTJV9haBJGmtnLHD02zzPadjFKW5go/MKNzVU1KMktIK93gSOP/AvKp/1b2w800G3tpHRmCARxIlcWddTeSf1xryFGMWO2IzpZQ0CbNPH2mqIdpA942YjroP1aFYOV7nBXnZex8tq0vbwjie0Q6chvFyIaV62Uy04VjXn+4i0/L98oJCWtzF3EvOMC1UVwf4ksYNSivQbDtITXFXNtrUIQ0JtUpG7ByH4kUWvip4HKuZZVUtiX5U/bZWWUyedtszdcNW1LT9UuEuabtQ/Z56C818eRTGNRs9MD4DR6ISTiDAZ/ciFIU8IZJDCeJJ6TSZ+bhddFujjSh3M81S/mV6N4q2dx9lyiuTMybXSYzIHZvndK/+nKa/cJFl+iAKaoe8YTL6cZIBefuTYJEIQJ20aBg02N3MZU4fpajrZvZv/K1ZiDaaJmCbOetn1y9NGFOisKdj03pFe+QbpaUtTHSWlF7eBX8OR6eULQiZu6c5nU1o9X0/CFLQ39LPb2xPg828fyACztSBB0lMkwCuAQ==
+X-Forefront-Antispam-Report:
+	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:satlexmb08.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(376014)(23010399003)(1800799024)(82310400026)(36860700016)(56012099006)(261009223027099003)(11063799006)(261022075727099003)(261021123027099003)(261021121427099003)(261022105027099003)(261026140227099003)(261028144727099003)(261102123227099003)(261026121527099003)(10067099003)(18002099003)(6133799003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	WDNEF/CJ6W+nZusEDIjx+aytVbJP2jfC+s3RYdJlO5NFY7mWMeQGD50PTFTeqP5RGibjE/LU1yQViYMlcf9N+H6x2rNaDt8JJ8mx3R1LyU4uk6Y55EH12+sLJUVFO2nF/AwHFkSFTAaAK4Xpuuh4atmrnZOPr6XxaTncl/d4UiWc0NYk382n1NiBIXaMWIIQKSPXh20TBdflVuk4wLhv78uS4iOIIfXMiolWKiFIIzjzmPozH0CcbgZS5P2Xxj5EGczoSKXUUVk9etviksyNkFf8D0aRr0UwtBInlLgg+n3ui6cPXRD/Na1LI77Zm0uA7JnArfrF06MdSmLn0UHzJAW2WgzDv1Y62sw6vPhMfhbm/JNbqWPcde6XumJox3X80czeuykyKwDFeT4KGIneVHku2Z91mY59GXpngxbBjeRheDAGIstbpSi8MP6ittzI
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Nov 2026 04:38:58.4896
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 24e35e30-dbd6-4436-edc3-08df3fadb39e
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[satlexmb08.amd.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	BN7PEPF00000093.namprd03.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH2PR12MB9520
 
-Thank you for your contribution! Sashiko AI review found 1 potential
-issue to consider:
-- [Medium] dt-bindings: ufs: qcom: moving sm8150-ufshc breaks existing
-  2-reg/9-clock DTs
---
+Add ref_clk clock property to specify the reference clock frequency
+supplied to the UFS device.
 
-commit 830241ce50cfd60c40fb1ab69965eff9ecfda73c
-Author: Andrew Gigena <mail@andrewgigena.dev>
+The AMD Versal2 UFS controller operates with a 26 MHz reference clock.
+UFS 3.x devices default their bRefClkFreq attribute to 26 MHz, matching
+the controller, so no explicit configuration is needed. However, UFS 4.0
+and later devices default bRefClkFreq to 52 MHz, expecting a 52 MHz
+reference clock. This mismatch causes timing violations and link
+instability.
 
-dt-bindings: ufs: qcom: classify sm8150-ufshc as standalone ICE
+Adding the ref_clk property allows the UFS driver to read the actual
+reference clock frequency from the devicetree and program the device
+bRefClkFreq attribute accordingly during initialization.
 
-This commit moves the qcom,sm8150-ufshc compatible from
-Documentation/devicetree/bindings/ufs/qcom,ufs.yaml to
-Documentation/devicetree/bindings/ufs/qcom,sc7180-ufshc.yaml and updates
-the example in qcom,ufs.yaml to use qcom,sdm845-ufshc.
+Signed-off-by: Ajay Neeli <ajay.neeli@amd.com>
+---
+ .../devicetree/bindings/ufs/amd,versal2-ufs.yaml         | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-> diff --git a/Documentation/devicetree/bindings/ufs/qcom,sc7180-ufshc.yaml=
- b/Documentation/devicetree/bindings/ufs/qcom,sc7180-ufshc.yaml
-> index 3c407426d6972..572eec814a604 100644
-> --- a/Documentation/devicetree/bindings/ufs/qcom,sc7180-ufshc.yaml
-> +++ b/Documentation/devicetree/bindings/ufs/qcom,sc7180-ufshc.yaml
-> @@ -23,6 +23,7 @@ select:
->            - qcom,sc7280-ufshc
->            - qcom,sc8180x-ufshc
->            - qcom,sc8280xp-ufshc
-> +          - qcom,sm8150-ufshc
->            - qcom,sm8250-ufshc
->            - qcom,sm8350-ufshc
->            - qcom,sm8450-ufshc
-> @@ -48,6 +49,7 @@ properties:
->                - qcom,sc7280-ufshc
->                - qcom,sc8180x-ufshc
->                - qcom,sc8280xp-ufshc
-> +              - qcom,sm8150-ufshc
->                - qcom,sm8250-ufshc
->                - qcom,sm8350-ufshc
->                - qcom,sm8450-ufshc
+diff --git a/Documentation/devicetree/bindings/ufs/amd,versal2-ufs.yaml b/Documentation/devicetree/bindings/ufs/amd,versal2-ufs.yaml
+index c00ec342d574..e294c0f1b0ce 100644
+--- a/Documentation/devicetree/bindings/ufs/amd,versal2-ufs.yaml
++++ b/Documentation/devicetree/bindings/ufs/amd,versal2-ufs.yaml
+@@ -20,11 +20,12 @@ properties:
+     maxItems: 1
+ 
+   clocks:
+-    maxItems: 1
++    maxItems: 2
+ 
+   clock-names:
+     items:
+       - const: core
++      - const: ref_clk
+ 
+   power-domains:
+     maxItems: 1
+@@ -52,10 +53,10 @@ examples:
+     ufs@f10b0000 {
+         compatible = "amd,versal2-ufs";
+         reg = <0xf10b0000 0x1000>;
+-        clocks = <&ufs_core_clk>;
+-        clock-names = "core";
++        clocks = <&ufs_core_clk>, <&ufs_ref_clk>;
++        clock-names = "core", "ref_clk";
+         resets = <&scmi_reset 4>, <&scmi_reset 35>;
+         reset-names = "host", "phy";
+         interrupts = <GIC_SPI 234 IRQ_TYPE_LEVEL_HIGH>;
+-        freq-table-hz = <0 0>;
++        freq-table-hz = <0 0>, <26000000 26000000>;
+     };
+-- 
+2.43.7
 
-[Severity: Medium]
-As reported by Krzysztof Kozlowski on v2 [1], does moving
-qcom,sm8150-ufshc to qcom,sc7180-ufshc.yaml break dtbs_check for existing
-SM8150 and SA8155P device trees?
-
-qcom,sc7180-ufshc.yaml restricts reg to maxItems: 1 and clocks to
-maxItems: 8, rejecting the second ice register region and the ninth
-ice_core_clk clock used by the embedded-ICE representation (supported
-since 462c5c0aa798 ("dt-bindings: ufs: qcom,ufs: convert to dtschema")).
-Later commit "arm64: dts: qcom: sm8150: use standalone ICE for UFS" in
-this series converts the in-tree sm8150.dtsi to use a standalone ICE node,
-but dtbs_check fails at this commit (and across subsystem trees if UFS
-bindings and QCOM DTS changes are merged separately) and schema backwards
-compatibility with existing 2-reg/9-clock DTBs is broken.
-
-[1] https://lore.kernel.org/r/20261106-offbeat-hawk-of-purring-50a8aa@quoll
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261111-sm8150-ice=
--rfc-v3-0-f9d5a806fc95@andrewgigena.dev?part=3D2
