@@ -1,77 +1,102 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=195.135.223.131
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794383935;
-	b=fM77Vz/6HIFERt9QUef8RzWbPJqsuMNdr/TDowC4EPxIZvtE1iHJ0hvZmMeFnjBUL+uU
-	 aD61mmZULqOiN3HEFSepktvaVYz5A+dxqNSVGCWaHzs4//ZO+fojT6vcZcT79ZoXbcScW
-	 15Av/8R7IJhg1GltV7jr1K7nYGgDayZQDFEsw48Sx9GcPHxmxKWuyr3SngJ0SJoEEDiL4
-	 imAz+l90WJRCKb2538e8Pu+4HlDbqU/Neq2sJJBgF+TpXYgCX+d7BfluL5P8WaVqjZsWG
-	 bmW1GDNtunBDE1/lejdjsOEGy+ppXmAC7zCt0CQOzhe2YBgwANW2oCJ6kK0ViKAve6A==
+	t=1794386003;
+	b=3bsEIyDDv7i7NlzKOJ9NnG3kMK5E9OiJBoR9RR9o5bkdjTUbvC3MC8R0/I7ww4zEASpF
+	 iM8Xifompwgzr7SYAtnihRYxXYk9JkVaNqPjBk1Z92f2y1F2i7gQb8yIfY+HVUHqzi8tZ
+	 QfxEUqndkVt+OI/sGTkFUIDN8VqUlGK7kJB594sRbZ5z/GEoK7iAas6KD5Bcmf2eEGDFA
+	 rBI+BWISp/VKUXbdduwB/aXiKsCXIx7d+oVk3VY/6TRRGqDa/ObkILbAoJrQfUbj9tG8f
+	 iMCXLYfb6Tj2NTJQdJTzElwHJXpww5GUXjy6kih4JrhR48wce1LfoUR6Vxw0MXbuMGg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794383935;
-	h=DMARC-Filter:Received:DKIM-Signature:DKIM-Signature:Received:
-	 Received:Message-ID:Date:MIME-Version:User-Agent:Subject:To:Cc:
-	 References:Content-Language:From:Autocrypt:In-Reply-To:Content-Type:
-	 X-Spam-Flag:X-Spam-Level:X-Spamd-Result:X-Spam-Score;
-	bh=XDG6basHzxkilEUcwbulHoyH0xra7DSJQosb/MDBTsE=;
-	b=FvcZElqNascsoUVErUIBuX7sITv0A9CQagdW1JoOtXKfLlfAYUl47FkrggBn6MRbYbLF
-	 KykOi1nP6kNpNZWik8YSUnBgZnRQQ8I2FaF8hkQdZYL1ozB5nhLhB2VNOf5mAPBxya3PF
-	 dNENrpW9kTP/S7bbomXBWlLRs+CBft2JtdNob1T/AOiXkdK2bXzFTaRACbE8UhuSTubmY
-	 gbZsWys/+zYGgfRBA5tVF4TTperTW708IEbZZj0QIg5zzSLGdfE2EeX6lP61icl/i9Yln
-	 UMcCD/L93UJO6eoZ/ZadyW+LKQbItoLKeeOnqX6yGNtPARf0OIEdrndq6BYxVhCpVdw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794386003;
+	h=DMARC-Filter:Received:DKIM-Signature:DKIM-Signature:DKIM-Signature:
+	 DKIM-Signature:Received:Received:Message-ID:Date:MIME-Version:
+	 User-Agent:Subject:To:Cc:References:Content-Language:From:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:X-Spamd-Result:X-Spam-Score:
+	 X-Spam-Level:X-Spam-Flag;
+	bh=H0M5fe4rX4y34P5lBmCgNpazH6znzrtF06bCILqdQ8c=;
+	b=uBmq2/mB1fEPkGf3vWtxCEZJ5884d8KQ+1d9a6MZMUpOveccOAfC0lQrFLb9J6CSCduv
+	 sPZP+WiaMJEYea67eGURL5JB6Azloi8drTOWtfBhkWwlVwfd0MTR+2+1/g/g+gJSn8n3h
+	 +j1vyhBoqhSmRfa/K3pPAnLhAyB4ZpGDAOW2S6NyZKVzflfyysViOmcjJbN608nXAHXXa
+	 X6kckpEskQjIySuKWsNRhwc4NeXRhyv1QxClq2CPqhgiLjksXd8GDeP5CPbPt0IeYuXHs
+	 qg4WNz1lK0fySRgPPgJ6UPxQ12+buDjR7JwZ4Rpv6XH/yq5rCJc4EiYkGAKf9RJOuYQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=suse.com;
-	spf=pass smtp.mailfrom=suse.com;
-	dkim=pass header.d=suse.com header.i=@suse.com header.a=rsa-sha256 header.s=susede1 header.b="hZKvS5/g";
-	dkim=pass header.d=suse.com header.i=@suse.com header.a=rsa-sha256 header.s=susede1 header.b="hZKvS5/g";
-	arc=none smtp.remote-ip=195.135.223.130
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	dmarc=pass header.from=suse.de;
+	spf=pass smtp.mailfrom=suse.de;
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b="NevRc/mE";
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=qFJWrNmv;
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=SGhWk30V;
+	dkim=neutral header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b="/6xDbCJy";
+	arc=none smtp.remote-ip=195.135.223.131
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5BDAA606A320;
-	Wed, 11 Nov 2026 07:58:54 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5BDAA606A320
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 25F06606A31C;
+	Wed, 11 Nov 2026 08:33:22 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 25F06606A31C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.a=rsa-sha256 header.s=susede1 header.b=hZKvS5/g;
-	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.a=rsa-sha256 header.s=susede1 header.b=hZKvS5/g
+	dkim=pass (1024-bit key, unprotected) header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=NevRc/mE;
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=qFJWrNmv;
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=SGhWk30V;
+	dkim=neutral header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=/6xDbCJy
 Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 6B47521E1A;
-	Wed, 11 Nov 2026 07:58:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-	t=1794383932; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	by smtp-out2.suse.de (Postfix) with ESMTPS id D979A1F7D0;
+	Wed, 11 Nov 2026 08:33:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1794386001; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
-	bh=XDG6basHzxkilEUcwbulHoyH0xra7DSJQosb/MDBTsE=;
-	b=hZKvS5/gINNgUiyHsS1Ie7DeAUUdW60Evm43EGjtaCV5qv3foZJkeJBMCxQJ7mmQi9tiiE
-	tZ8HyoCeeNnjkiLOjotFUtkYdzz3d5qFM4xMkU+5JuuQO6LYbmUOOpCScg0ULmzRY8age8
-	3s/aiIZMS3ZoSM1jFG4yoCzL97mV2To=
-Authentication-Results: smtp-out1.suse.de;
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=H0M5fe4rX4y34P5lBmCgNpazH6znzrtF06bCILqdQ8c=;
+	b=NevRc/mEi8ZJc3hliO0mG1FBmlSzwoNOz2jEZ2JyqtRKzYMSVcAMtmCMmrbE6qW6zWYpMe
+	xnWs9KBAZwJK66ZCnEg9REglAVysp+z52XHkXSdJSGUq5J4jC2DP8aWzUGkd2IkoiI5Zwd
+	GNAC9KDWX0pfeemYwAum5FoyG7OxVLs=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1794386001;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=H0M5fe4rX4y34P5lBmCgNpazH6znzrtF06bCILqdQ8c=;
+	b=qFJWrNmv4CLe/5C1SQvxs3QndTRPbrKd69B9QVwsSVOH8uVseyUywKGc6V+ov17kvEO+Dg
+	8MHkrBGzOyhvnJBA==
+Authentication-Results: smtp-out2.suse.de;
 	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-	t=1794383932; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1794386000; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
-	bh=XDG6basHzxkilEUcwbulHoyH0xra7DSJQosb/MDBTsE=;
-	b=hZKvS5/gINNgUiyHsS1Ie7DeAUUdW60Evm43EGjtaCV5qv3foZJkeJBMCxQJ7mmQi9tiiE
-	tZ8HyoCeeNnjkiLOjotFUtkYdzz3d5qFM4xMkU+5JuuQO6LYbmUOOpCScg0ULmzRY8age8
-	3s/aiIZMS3ZoSM1jFG4yoCzL97mV2To=
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=H0M5fe4rX4y34P5lBmCgNpazH6znzrtF06bCILqdQ8c=;
+	b=SGhWk30VBhd62jpddglsk19NkKL0M5KwwJBNZweS+cug8L6uMAgErfqbX3d5gqjiuitLbH
+	GYxMF1Pb1lGwweUZgxfw3t8r2Cf9NPA8hVkCHMPB46pmealNYNw4n/yAW4zGgyJFtsJnFM
+	x0K34uWGdLIHzlmsEO7AjvUyIQ0/9XY=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1794386000;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=H0M5fe4rX4y34P5lBmCgNpazH6znzrtF06bCILqdQ8c=;
+	b=/6xDbCJyNCGkwW1qFbsULEYdx5bNT3YbMvyc+YajRon3Pgw2cplfgjfFU/CCZLRFdrGAKE
+	KT5a/GKlQtrpj3Bg==
 Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 09683134E5;
-	Wed, 11 Nov 2026 07:58:52 +0000 (UTC)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 7ACFB134E5;
+	Wed, 11 Nov 2026 08:33:20 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
 	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id WLIYMzsg9GradgAAD6G6ig
-	(envelope-from <jgross@suse.com>); Wed, 11 Nov 2026 07:58:52 +0000
-Message-ID: <353a0b62-0396-48c4-9e5d-fae5351d6abd@suse.com>
-Date: Wed, 11 Nov 2026 08:58:51 +0100
+	id vhiNFFAo9Gp0GgAAD6G6ig
+	(envelope-from <hare@suse.de>); Wed, 11 Nov 2026 08:33:20 +0000
+Message-ID: <c0fff7fe-e23b-4161-a25c-dfd74e89201c@suse.de>
+Date: Wed, 11 Nov 2026 09:33:19 +0100
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -82,284 +107,161 @@ List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] xen/scsiback: unbind the IRQ before draining in-flight
- requests
-To: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
-Cc: sstabellini@kernel.org, oleksandr_tyshchenko@epam.com,
- xen-devel@lists.xenproject.org, linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org, martin.petersen@oracle.com,
- stable@vger.kernel.org
-References: <20261109122654.30859-1-yhlee@isslab.korea.ac.kr>
+Subject: Re: [PATCH v3] scsi: lpfc: Fix race conditions in ELS retry handling
+To: Kyle Mahlkuch <kmahlkuc@linux.ibm.com>, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org, mkp@kernel.org
+Cc: Paul Ely <paul.ely@broadcom.com>, msmurthy@linux.ibm.com
+References: <e893d431-79ef-4fae-bca4-38903fc8f49d@linux.ibm.com>
 Content-Language: en-US
-From: Juergen Gross <jgross@suse.com>
-Autocrypt: addr=jgross@suse.com; keydata=
- xsBNBFOMcBYBCACgGjqjoGvbEouQZw/ToiBg9W98AlM2QHV+iNHsEs7kxWhKMjrioyspZKOB
- ycWxw3ie3j9uvg9EOB3aN4xiTv4qbnGiTr3oJhkB1gsb6ToJQZ8uxGq2kaV2KL9650I1SJve
- dYm8Of8Zd621lSmoKOwlNClALZNew72NjJLEzTalU1OdT7/i1TXkH09XSSI8mEQ/ouNcMvIJ
- NwQpd369y9bfIhWUiVXEK7MlRgUG6MvIj6Y3Am/BBLUVbDa4+gmzDC9ezlZkTZG2t14zWPvx
- XP3FAp2pkW0xqG7/377qptDmrk42GlSKN4z76ELnLxussxc7I2hx18NUcbP8+uty4bMxABEB
- AAHNH0p1ZXJnZW4gR3Jvc3MgPGpncm9zc0BzdXNlLmNvbT7CwHkEEwECACMFAlOMcK8CGwMH
- CwkIBwMCAQYVCAIJCgsEFgIDAQIeAQIXgAAKCRCw3p3WKL8TL8eZB/9G0juS/kDY9LhEXseh
- mE9U+iA1VsLhgDqVbsOtZ/S14LRFHczNd/Lqkn7souCSoyWsBs3/wO+OjPvxf7m+Ef+sMtr0
- G5lCWEWa9wa0IXx5HRPW/ScL+e4AVUbL7rurYMfwCzco+7TfjhMEOkC+va5gzi1KrErgNRHH
- kg3PhlnRY0Udyqx++UYkAsN4TQuEhNN32MvN0Np3WlBJOgKcuXpIElmMM5f1BBzJSKBkW0Jc
- Wy3h2Wy912vHKpPV/Xv7ZwVJ27v7KcuZcErtptDevAljxJtE7aJG6WiBzm+v9EswyWxwMCIO
- RoVBYuiocc51872tRGywc03xaQydB+9R7BHPzsBNBFOMcBYBCADLMfoA44MwGOB9YT1V4KCy
- vAfd7E0BTfaAurbG+Olacciz3yd09QOmejFZC6AnoykydyvTFLAWYcSCdISMr88COmmCbJzn
- sHAogjexXiif6ANUUlHpjxlHCCcELmZUzomNDnEOTxZFeWMTFF9Rf2k2F0Tl4E5kmsNGgtSa
- aMO0rNZoOEiD/7UfPP3dfh8JCQ1VtUUsQtT1sxos8Eb/HmriJhnaTZ7Hp3jtgTVkV0ybpgFg
- w6WMaRkrBh17mV0z2ajjmabB7SJxcouSkR0hcpNl4oM74d2/VqoW4BxxxOD1FcNCObCELfIS
- auZx+XT6s+CE7Qi/c44ibBMR7hyjdzWbABEBAAHCwF8EGAECAAkFAlOMcBYCGwwACgkQsN6d
- 1ii/Ey9D+Af/WFr3q+bg/8v5tCknCtn92d5lyYTBNt7xgWzDZX8G6/pngzKyWfedArllp0Pn
- fgIXtMNV+3t8Li1Tg843EXkP7+2+CQ98MB8XvvPLYAfW8nNDV85TyVgWlldNcgdv7nn1Sq8g
- HwB2BHdIAkYce3hEoDQXt/mKlgEGsLpzJcnLKimtPXQQy9TxUaLBe9PInPd+Ohix0XOlY+Uk
- QFEx50Ki3rSDl2Zt2tnkNYKUCvTJq7jvOlaPd6d/W0tZqpyy7KVay+K4aMobDsodB3dvEAs6
- ScCnh03dDAFgIq5nsB11j3KPKdVoPlfucX2c7kGNH+LUMbzqV6beIENfNexkOfxHfw==
-In-Reply-To: <20261109122654.30859-1-yhlee@isslab.korea.ac.kr>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="------------DYT4LtVi7lOHSSaAYUc4WYme"
-X-Spam-Flag: NO
-X-Spam-Level: 
-X-Spamd-Result: default: False [-9.80 / 50.00];
-	SUSE_INTERNAL_BYPASS(-9.00)[];
-	NEURAL_SPAM_LONG(3.49)[0.996];
-	BAYES_HAM(-3.00)[100.00%];
-	SIGNED_PGP(-2.00)[];
-	MIME_BASE64_TEXT_BOGUS(1.00)[];
-	MIME_GOOD(-0.20)[multipart/signed,multipart/mixed,text/plain];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_BASE64_TEXT(0.10)[];
-	XM_UA_NO_VERSION(0.01)[];
-	MID_RHS_MATCH_FROM(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	MIME_TRACE(0.00)[0:+,1:+,2:+,3:~];
-	ARC_NA(0.00)[];
-	RCPT_COUNT_SEVEN(0.00)[8];
-	RCVD_TLS_ALL(0.00)[];
-	TO_DN_SOME(0.00)[];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	DKIM_SIGNED(0.00)[suse.com:s=susede1];
-	RCVD_COUNT_TWO(0.00)[2];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo];
-	HAS_ATTACHMENT(0.00)[]
-X-Spam-Score: -9.80
-
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---------------DYT4LtVi7lOHSSaAYUc4WYme
-Content-Type: multipart/mixed; boundary="------------6MHWeXlZpmNFcy2heHyg8pAR";
- protected-headers="v1"; hp="clear"
-Message-ID: <353a0b62-0396-48c4-9e5d-fae5351d6abd@suse.com>
-Date: Wed, 11 Nov 2026 08:58:51 +0100
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] xen/scsiback: unbind the IRQ before draining in-flight
- requests
-To: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
-Cc: sstabellini@kernel.org, oleksandr_tyshchenko@epam.com,
- xen-devel@lists.xenproject.org, linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org, martin.petersen@oracle.com,
- stable@vger.kernel.org
-References: <20261109122654.30859-1-yhlee@isslab.korea.ac.kr>
-Content-Language: en-US
-From: Juergen Gross <jgross@suse.com>
-Autocrypt: addr=jgross@suse.com; keydata=
- xsBNBFOMcBYBCACgGjqjoGvbEouQZw/ToiBg9W98AlM2QHV+iNHsEs7kxWhKMjrioyspZKOB
- ycWxw3ie3j9uvg9EOB3aN4xiTv4qbnGiTr3oJhkB1gsb6ToJQZ8uxGq2kaV2KL9650I1SJve
- dYm8Of8Zd621lSmoKOwlNClALZNew72NjJLEzTalU1OdT7/i1TXkH09XSSI8mEQ/ouNcMvIJ
- NwQpd369y9bfIhWUiVXEK7MlRgUG6MvIj6Y3Am/BBLUVbDa4+gmzDC9ezlZkTZG2t14zWPvx
- XP3FAp2pkW0xqG7/377qptDmrk42GlSKN4z76ELnLxussxc7I2hx18NUcbP8+uty4bMxABEB
- AAHNH0p1ZXJnZW4gR3Jvc3MgPGpncm9zc0BzdXNlLmNvbT7CwHkEEwECACMFAlOMcK8CGwMH
- CwkIBwMCAQYVCAIJCgsEFgIDAQIeAQIXgAAKCRCw3p3WKL8TL8eZB/9G0juS/kDY9LhEXseh
- mE9U+iA1VsLhgDqVbsOtZ/S14LRFHczNd/Lqkn7souCSoyWsBs3/wO+OjPvxf7m+Ef+sMtr0
- G5lCWEWa9wa0IXx5HRPW/ScL+e4AVUbL7rurYMfwCzco+7TfjhMEOkC+va5gzi1KrErgNRHH
- kg3PhlnRY0Udyqx++UYkAsN4TQuEhNN32MvN0Np3WlBJOgKcuXpIElmMM5f1BBzJSKBkW0Jc
- Wy3h2Wy912vHKpPV/Xv7ZwVJ27v7KcuZcErtptDevAljxJtE7aJG6WiBzm+v9EswyWxwMCIO
- RoVBYuiocc51872tRGywc03xaQydB+9R7BHPzsBNBFOMcBYBCADLMfoA44MwGOB9YT1V4KCy
- vAfd7E0BTfaAurbG+Olacciz3yd09QOmejFZC6AnoykydyvTFLAWYcSCdISMr88COmmCbJzn
- sHAogjexXiif6ANUUlHpjxlHCCcELmZUzomNDnEOTxZFeWMTFF9Rf2k2F0Tl4E5kmsNGgtSa
- aMO0rNZoOEiD/7UfPP3dfh8JCQ1VtUUsQtT1sxos8Eb/HmriJhnaTZ7Hp3jtgTVkV0ybpgFg
- w6WMaRkrBh17mV0z2ajjmabB7SJxcouSkR0hcpNl4oM74d2/VqoW4BxxxOD1FcNCObCELfIS
- auZx+XT6s+CE7Qi/c44ibBMR7hyjdzWbABEBAAHCwF8EGAECAAkFAlOMcBYCGwwACgkQsN6d
- 1ii/Ey9D+Af/WFr3q+bg/8v5tCknCtn92d5lyYTBNt7xgWzDZX8G6/pngzKyWfedArllp0Pn
- fgIXtMNV+3t8Li1Tg843EXkP7+2+CQ98MB8XvvPLYAfW8nNDV85TyVgWlldNcgdv7nn1Sq8g
- HwB2BHdIAkYce3hEoDQXt/mKlgEGsLpzJcnLKimtPXQQy9TxUaLBe9PInPd+Ohix0XOlY+Uk
- QFEx50Ki3rSDl2Zt2tnkNYKUCvTJq7jvOlaPd6d/W0tZqpyy7KVay+K4aMobDsodB3dvEAs6
- ScCnh03dDAFgIq5nsB11j3KPKdVoPlfucX2c7kGNH+LUMbzqV6beIENfNexkOfxHfw==
-In-Reply-To: <20261109122654.30859-1-yhlee@isslab.korea.ac.kr>
-
---------------6MHWeXlZpmNFcy2heHyg8pAR
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <e893d431-79ef-4fae-bca4-38903fc8f49d@linux.ibm.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 8bit
+X-Spamd-Result: default: False [-13.27 / 50.00];
+	SUSE_INTERNAL_BYPASS(-9.00)[];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-0.98)[-0.985];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	XM_UA_NO_VERSION(0.01)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	TO_DN_SOME(0.00)[];
+	ARC_NA(0.00)[];
+	MID_RHS_MATCH_FROM(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FROM_HAS_DN(0.00)[];
+	RCPT_COUNT_FIVE(0.00)[6];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:email,imap1.dmz-prg2.suse.org:helo]
+X-Spam-Score: -13.27
+X-Spam-Level: 
+X-Spam-Flag: NO
 
-T24gMDkuMTEuMjYgMTM6MjYsIFllaHllb25nIExlZSB3cm90ZToNCj4gc2NzaWJhY2tfZGlz
-Y29ubmVjdCgpIGRyYWlucyB0aGUgaW4tZmxpZ2h0IGNvdW50IGJlZm9yZSBzdG9wcGluZyB0
-aGUgb25seQ0KPiB0aGluZyB0aGF0IGNhbiByYWlzZSBpdC4gIHNjc2liYWNrX2NtZF9leGVj
-KCkgKHhlbi1zY3NpYmFjay5jOjQyNikgcnVucyBpbg0KPiB0aGUgYmFja2VuZCdzIHRocmVh
-ZGVkIElSUSBoYW5kbGVyLCBzbyBhIHJlcXVlc3QgY2FuIGJlIGFkbWl0dGVkIGp1c3QgYWZ0
-ZXINCj4gd2FpdF9ldmVudCgpIGhhcyBzZWVuIHplcm8sIGFuZCBpdHMgcmVzcG9uc2UgaXMg
-d3JpdHRlbiBsYXRlciBmcm9tIHRhcmdldA0KPiBjb3JlIGNvbnRleHQgYnkgc2NzaWJhY2tf
-c2VuZF9yZXNwb25zZSgpICg6MzQ3KSAtIGFmdGVyIHRoZSByaW5nIGhhcyBiZWVuDQo+IHVu
-bWFwcGVkLCBhbmQgb24gdGhlIHNjc2liYWNrX3JlbW92ZSgpIHBhdGggKDoxMjY4LTEyODAp
-IGFmdGVyIGtmcmVlKGluZm8pLg0KPiANCj4geGVuLWJsa2JhY2sgYW5kIHhlbi1uZXRiYWNr
-IHN0b3AgdGhlaXIgcmVxdWVzdCBwcm9jZXNzaW5nIGZpcnN0Og0KPiBrdGhyZWFkX3N0b3Ao
-KSBiZWZvcmUgcmVhZGluZyByaW5nLT5pbmZsaWdodA0KPiAoeGVuLWJsa2JhY2sveGVuYnVz
-LmM6MjkwLTMwNCksIGFuZCB0aGUga3RocmVhZHMgYW5kIG5hcGkgYmVmb3JlDQo+IHVuYmlu
-ZGluZyBhbmQgdW5tYXBwaW5nICh4ZW4tbmV0YmFjay9pbnRlcmZhY2UuYzo2NzMtNzAwKS4N
-Cj4gDQo+IFVuYmluZCBhbmQgY2xlYXIgaW5mby0+aXJxIGJlZm9yZSB0aGUgZHJhaW46IG5v
-dGhpbmcgaXMgYWRtaXR0ZWQgb25jZSB0aGUNCj4gaGFuZGxlciBpcyBnb25lLCBhbmQgdGhl
-IHJpbmcgc3RheXMgbWFwcGVkIHVudGlsIHRoZSBkcmFpbiBmaW5pc2hlcy4gIFRoZQ0KPiBu
-b3RpZnkgYXQgdGhlIGVuZCBvZiBzY3NpYmFja19zZW5kX3Jlc3BvbnNlKCkgaXMgdGhlbiBh
-IG5vLW9wLCBiZWNhdXNlDQo+IG5vdGlmeV9yZW1vdGVfdmlhX2lycSgpIHJlc29sdmVzIGly
-cSAwIHRocm91Z2ggZXZ0Y2huX2Zyb21faXJxKCkgdG8gcG9ydCAwLA0KPiB3aGljaCBWQUxJ
-RF9FVlRDSE4oKSByZWplY3RzIChldmVudHNfYmFzZS5jOjUzOS01NDUsIDo0MTEtNDIxKS4N
-Cj4gDQo+IFJlcHJvZHVjZWQgaW4gYSBuZXN0ZWQtWGVuIGxhYiB3aXRoIEtBU0FOLiAgUmVh
-Y2hpbmcgdGhlIHdpbmRvdyBuZWVkZWQgdHdvDQo+IHRlc3Qtb25seSB1c2xlZXBfcmFuZ2Uo
-KSBkZWxheXMsIG9uZSBhZnRlciB3YWl0X2V2ZW50KCkgcmV0dXJucyBhbmQgb25lIGF0DQo+
-IHRoZSB0b3Agb2Ygc2NzaWJhY2tfZG9fcmVzcF93aXRoX3NlbnNlKCkgb25jZSB0aGUgdGVh
-cmRvd24gaGFzIHN0YXJ0ZWQuDQo+IFdpdGggYm90aCBvZmYgbmVpdGhlciBhcm0gcHJvZHVj
-ZWQgYW55dGhpbmcgaW4gNCByb3VuZHMgZWFjaDsgd2l0aCBib3RoIG9uDQo+IHRoZSB1bnBh
-dGNoZWQgZHJpdmVyIGNyYXNoZWQgaW4gNiBvZiA2IHZhbGlkIGNlbGxzLCB0aGUgcGF0Y2hl
-ZCBpbiAwIG9mIDc6DQo+IA0KPiBbICAxNjguNTQ2NzA5XSBCVUc6IEtBU0FOOiB2bWFsbG9j
-LW91dC1vZi1ib3VuZHMgaW4gc2NzaWJhY2tfc2VuZF9yZXNwb25zZSsweDUxNi8weDVkMA0K
-PiBbICAxNjguNTUxMDEyXSBXcml0ZSBvZiBzaXplIDQgYXQgYWRkciBmZmZmYzkwMDAwMDIz
-MGE0IGJ5IHRhc2sga3dvcmtlci8wOjEvMTENCj4gWyAgMTY4LjU1NDc1N10NCj4gWyAgMTY4
-LjU1NTkwOF0gQ1BVOiAwIFVJRDogMCBQSUQ6IDExIENvbW06IGt3b3JrZXIvMDoxIE5vdCB0
-YWludGVkIDcuMy4wLWtDVExibGsyLTE1NDgyLWcyMWE3ZjQ0ZmQwNzYtZGlydHkgIzEwIFBS
-RUVNUFQoZnVsbCkNCj4gWyAgMTY4LjU1NTkxNF0gSGFyZHdhcmUgbmFtZTogUUVNVSBTdGFu
-ZGFyZCBQQyAoUTM1ICsgSUNIOSwgMjAwOSksIEJJT1MgMS4xNi4zLWRlYmlhbi0xLjE2LjMt
-MiAwNC8wMS8yMDE0DQo+IFsgIDE2OC41NTU5MThdIFdvcmtxdWV1ZTogdGFyZ2V0X2NvbXBs
-ZXRpb24gdGFyZ2V0X2NvbXBsZXRlX29rX3dvcmsNCj4gWyAgMTY4LjU1NTkzOV0gQ2FsbCBU
-cmFjZToNCj4gWyAgMTY4LjU1NTk0Nl0gIDxUQVNLPg0KPiBbICAxNjguNTU1OTQ5XSAgZHVt
-cF9zdGFja19sdmwrMHg2NC8weDgwDQo+IFsgIDE2OC41NTU5NThdICBwcmludF9yZXBvcnQr
-MHhkMC8weDYzMA0KPiBbICAxNjguNTU1OTY2XSAgPyBfX3BmeF9fcmF3X3NwaW5fbG9ja19p
-cnFzYXZlKzB4MTAvMHgxMA0KPiBbICAxNjguNTU1OTc4XSAgPyBzY3NpYmFja19zZW5kX3Jl
-c3BvbnNlKzB4NTE2LzB4NWQwDQo+IFsgIDE2OC41NTU5ODNdICBrYXNhbl9yZXBvcnQrMHhj
-ZS8weDEwMA0KPiBbICAxNjguNTU1OTg4XSAgPyBzY3NpYmFja19zZW5kX3Jlc3BvbnNlKzB4
-NTE2LzB4NWQwDQo+IFsgIDE2OC41NTU5OTJdICBzY3NpYmFja19zZW5kX3Jlc3BvbnNlKzB4
-NTE2LzB4NWQwDQo+IFsgIDE2OC41NTU5OTddICA/IF9fcGZ4X3Njc2liYWNrX3NlbmRfcmVz
-cG9uc2UrMHgxMC8weDEwDQo+IFsgIDE2OC41NTYwMDFdICBzY3NpYmFja19kb19yZXNwX3dp
-dGhfc2Vuc2UrMHg4Ny8weDIzMA0KPiBbICAxNjguNTU2MDA3XSAgc2NzaWJhY2tfY21kX2Rv
-bmUrMHhjMC8weDI5MA0KPiBbICAxNjguNTU2MDExXSAgPyB1cGRhdGVfY2ZzX3JxX2xvYWRf
-YXZnKzB4NWEvMHg1NjANCj4gWyAgMTY4LjU1NjAyM10gIHNjc2liYWNrX3F1ZXVlX3N0YXR1
-cysweGQzLzB4MTAwDQo+IFsgIDE2OC41NTYwMjhdICB0YXJnZXRfY29tcGxldGVfb2tfd29y
-aysweDQ2Ny8weGMzMA0KPiBbICAxNjguNTU2MDMyXSAgPyBfX3BmeF90YXJnZXRfY29tcGxl
-dGVfb2tfd29yaysweDEwLzB4MTANCj4gWyAgMTY4LjU1NjAzNl0gID8gcHV0X3ByZXZfdGFz
-a19mYWlyKzB4NDRkLzB4YTMwDQo+IFsgIDE2OC41NTYwMzldICA/IGZpbmlzaF90YXNrX3N3
-aXRjaC5pc3JhLjArMHgxZDkvMHhhNzANCj4gWyAgMTY4LjU1NjA0N10gIHByb2Nlc3Nfb25l
-X3dvcmsrMHg2OTcvMHgxMDYwDQo+IFsgIDE2OC41NTYwNTJdICA/IF9fcGZ4X19fc2NoZWR1
-bGUrMHgxMC8weDEwDQo+IFsgIDE2OC41NTYwNThdICA/IF9fcGZ4X3Byb2Nlc3Nfb25lX3dv
-cmsrMHgxMC8weDEwDQo+IFsgIDE2OC41NTYwNjFdICA/IF9yYXdfc3Bpbl9sb2NrX2lycSsw
-eDg2LzB4ZTANCj4gWyAgMTY4LjU1NjA2NV0gID8gX19wZnhfdGFyZ2V0X2NvbXBsZXRlX29r
-X3dvcmsrMHgxMC8weDEwDQo+IFsgIDE2OC41NTYwNjldICA/IGFzc2lnbl93b3JrKzB4MTFk
-LzB4MzcwDQo+IFsgIDE2OC41NTYwNzRdICB3b3JrZXJfdGhyZWFkKzB4NDViLzB4ZDEwDQo+
-IFsgIDE2OC41NTYwNzhdICA/IF9fcGZ4X3dvcmtlcl90aHJlYWQrMHgxMC8weDEwDQo+IFsg
-IDE2OC41NTYwODFdICA/IF9fcGZ4X3dvcmtlcl90aHJlYWQrMHgxMC8weDEwDQo+IFsgIDE2
-OC41NTYwODNdICBrdGhyZWFkKzB4MmM4LzB4M2IwDQo+IFsgIDE2OC41NTYwOTBdICA/IHJl
-Y2FsY19zaWdwZW5kaW5nKzB4MTVjLzB4MWUwDQo+IFsgIDE2OC41NTYwOTRdICA/IF9fcGZ4
-X2t0aHJlYWQrMHgxMC8weDEwDQo+IFsgIDE2OC41NTYwOThdICByZXRfZnJvbV9mb3JrKzB4
-MzczLzB4NWIwDQo+IFsgIDE2OC41NTYxMDRdICA/IF9fcGZ4X3JldF9mcm9tX2ZvcmsrMHgx
-MC8weDEwDQo+IFsgIDE2OC41NTYxMDddICA/IF9fc3dpdGNoX3RvKzB4M2M0LzB4YjQwDQo+
-IFsgIDE2OC41NTYxMTVdICA/IF9fcGZ4X2t0aHJlYWQrMHgxMC8weDEwDQo+IFsgIDE2OC41
-NTYxMjBdICByZXRfZnJvbV9mb3JrX2FzbSsweDFhLzB4MzANCj4gWyAgMTY4LjU1NjEyN10g
-IDwvVEFTSz4NCj4gWyAgMTY4LjU1NjEyOV0NCj4gWyAgMTY4LjYzOTcwNF0gVGhlIGJ1Z2d5
-IGFkZHJlc3MgYmVsb25ncyB0byBhIHZtYWxsb2MgdmlydHVhbCBtYXBwaW5nDQo+IFsgIDE2
-OC42NDIzMjRdIE1lbW9yeSBzdGF0ZSBhcm91bmQgdGhlIGJ1Z2d5IGFkZHJlc3M6DQo+IFsg
-IDE2OC42NDQ0MzldICBmZmZmYzkwMDAwMDIyZjgwOiBmOCBmOCBmOCBmOCBmOCBmOCBmOCBm
-OCBmOCBmOCBmOCBmOCBmOCBmOCBmOCBmOA0KPiBbICAxNjguNjQ3Njk4XSAgZmZmZmM5MDAw
-MDAyMzAwMDogZjggZjggZjggZjggZjggZjggZjggZjggZjggZjggZjggZjggZjggZjggZjgg
-ZjgNCj4gWyAgMTY4LjY1MDk1MV0gPmZmZmZjOTAwMDAwMjMwODA6IGY4IGY4IGY4IGY4IGY4
-IGY4IGY4IGY4IGY4IGY4IGY4IGY4IGY4IGY4IGY4IGY4DQo+IFsgIDE2OC42NjkxOTldICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICBeDQo+IFsgIDE2OC42NzEwNTZdICBmZmZm
-YzkwMDAwMDIzMTAwOiBmOCBmOCBmOCBmOCBmOCBmOCBmOCBmOCBmOCBmOCBmOCBmOCBmOCBm
-OCBmOCBmOA0KPiBbICAxNjguNjc0MDUwXSAgZmZmZmM5MDAwMDAyMzE4MDogZjggZjggZjgg
-ZjggZjggZjggZjggZjggZjggZjggZjggZjggZjggZjggZjggZjgNCj4gWyAgMTY4LjY3Njk3
-NF0gPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09DQo+IA0KPiBbICAxNjguNjgyMTE3XSBCVUc6IHVuYWJsZSB0byBo
-YW5kbGUgcGFnZSBmYXVsdCBmb3IgYWRkcmVzczogZmZmZmM5MDAwMDAyMzBhNA0KPiBbICAx
-NjguNjg0Nzg0XSAjUEY6IHN1cGVydmlzb3Igd3JpdGUgYWNjZXNzIGluIGtlcm5lbCBtb2Rl
-DQo+IFsgIDE2OC42ODY3OTddICNQRjogZXJyb3JfY29kZSgweDAwMDIpIC0gbm90LXByZXNl
-bnQgcGFnZQ0KPiBbICAxNjguNjg4Nzk3XSBQR0QgMTAwMDAwMDY3IFA0RCAxMDAwMDAwNjcg
-UFVEIDEwMDE5YzA2NyBQTUQgMTAwMWExMDY3IFBURSAwDQo+IFsgIDE2OC42OTEzMTldIE9v
-cHM6IE9vcHM6IDAwMDIgWyMxXSBTTVAgS0FTQU4gTk9QVEkNCj4gWyAgMTY4LjY5MzI0Nl0g
-Q1BVOiAwIFVJRDogMCBQSUQ6IDExIENvbW06IGt3b3JrZXIvMDoxIFRhaW50ZWQ6IEcgICAg
-QiAgICAgICAgICAgICAgICA3LjMuMC1rQ1RMYmxrMi0xNTQ4Mi1nMjFhN2Y0NGZkMDc2LWRp
-cnR5ICMxMCBQUkVFTVBUKGZ1bGwpDQo+IFsgIDE2OC42OTkxNDJdIFRhaW50ZWQ6IFtCXT1C
-QURfUEFHRQ0KPiBbICAxNjguNzAwODk2XSBIYXJkd2FyZSBuYW1lOiBRRU1VIFN0YW5kYXJk
-IFBDIChRMzUgKyBJQ0g5LCAyMDA5KSwgQklPUyAxLjE2LjMtZGViaWFuLTEuMTYuMy0yIDA0
-LzAxLzIwMTQNCj4gWyAgMTY4LjcwNTA1Nl0gV29ya3F1ZXVlOiB0YXJnZXRfY29tcGxldGlv
-biB0YXJnZXRfY29tcGxldGVfb2tfd29yaw0KPiBbICAxNjguNzA3NzAxXSBSSVA6IDAwMTA6
-c2NzaWJhY2tfc2VuZF9yZXNwb25zZSsweDFiNi8weDVkMA0KPiBbICAxNjguNzEwMTQ3XSBD
-b2RlOiA0OCA4OSBmOCA4MyBlMCAwNyA4MyBjMCAwMyA0MCAzOCBmMCA3YyAwOSA0MCA4NCBm
-NiAwZiA4NSA2MCAwMyAwMCAwMCA0OCA4OSBkOCA0OCBjMSBlMCAwNiA0OCAyOSBkOCA0OCBj
-MSBlMCAwMiA0OCA4ZCA3YyAwMSA0MCA8ODk+IDk0IDAxIGE0IDAwIDAwIDAwIDQ4IGI4IDAw
-IDAwIDAwIDAwIDAwIGZjIGZmIGRmIDQ4IDg5IGZhIDQ4IGMxDQo+IFsgIDE2OC43MTg4ODNd
-IFJTUDogMDAxODpmZmZmYzkwMDAwMGJmYWEwIEVGTEFHUzogMDAwMTAwNDYNCj4gWyAgMTY4
-LjcyMTQ0N10gUkFYOiAwMDAwMDAwMDAwMDAwMDAwIFJCWDogMDAwMDAwMDAwMDAwMDAwMCBS
-Q1g6IGZmZmZjOTAwMDAwMjMwMDANCj4gWyAgMTY4LjcyNDc4NV0gUkRYOiAwMDAwMDAwMDAw
-MDAwMDAwIFJTSTogMDAwMDAwMDAwMDAwMDAwOCBSREk6IGZmZmZjOTAwMDAwMjMwNDANCj4g
-WyAgMTY4LjcyNzkxM10gUkJQOiBmZmZmODg4MTBhNGE3MjM4IFIwODogMDAwMDAwMDAwMDAw
-MDI0NiBSMDk6IGZmZmZmYmZmZjBkZTI2MzgNCj4gWyAgMTY4LjczMDkzOF0gUjEwOiBmZmZm
-ZmZmZjg2ZjEzMWM3IFIxMTogZmZmZjg4ODEwMDA3NzMyMCBSMTI6IDFmZmZmOTIwMDAwMTdm
-NTkNCj4gWyAgMTY4LjczMzkwMl0gUjEzOiAwMDAwMDAwMDAwMDAwMDAwIFIxNDogMDAwMDAw
-MDAwMDAwMDAwMCBSMTU6IGZmZmY4ODgxMGE2ZGUyMDANCj4gWyAgMTY4LjczNjg3NF0gRlM6
-ICAwMDAwMDAwMDAwMDAwMDAwKDAwMDApIEdTOmZmZmY4ODgxYjAzNGQwMDAoMDAwMCkga25s
-R1M6MDAwMDAwMDAwMDAwMDAwMA0KPiBbICAxNjguNzQwMTcxXSBDUzogIDAwMTAgRFM6IDAw
-MDAgRVM6IDAwMDAgQ1IwOiAwMDAwMDAwMDgwMDUwMDMzDQo+IFsgIDE2OC43NDI0OTBdIENS
-MjogZmZmZmM5MDAwMDAyMzBhNCBDUjM6IDAwMDAwMDAxMDMyNzEwMDUgQ1I0OiAwMDAwMDAw
-MDAwNzcwZWYwDQo+IFsgIDE2OC43NDUzNTBdIFBLUlU6IDU1NTU1NTU0DQo+IFsgIDE2OC43
-NDY1NzddIENhbGwgVHJhY2U6DQo+IFsgIDE2OC43NDc3NzJdICA8VEFTSz4NCj4gWyAgMTY4
-Ljc0ODg3Ml0gID8gX19wZnhfc2NzaWJhY2tfc2VuZF9yZXNwb25zZSsweDEwLzB4MTANCj4g
-WyAgMTY4Ljc1MTAyMl0gIHNjc2liYWNrX2RvX3Jlc3Bfd2l0aF9zZW5zZSsweDg3LzB4MjMw
-DQo+IFsgIDE2OC43NTMxMDldICBzY3NpYmFja19jbWRfZG9uZSsweGMwLzB4MjkwDQo+IFsg
-IDE2OC43NTQ4NDddICA/IHVwZGF0ZV9jZnNfcnFfbG9hZF9hdmcrMHg1YS8weDU2MA0KPiBb
-ICAxNjguNzU2NzgyXSAgc2NzaWJhY2tfcXVldWVfc3RhdHVzKzB4ZDMvMHgxMDANCj4gWyAg
-MTY4Ljc1ODYzMF0gIHRhcmdldF9jb21wbGV0ZV9va193b3JrKzB4NDY3LzB4YzMwDQo+IFsg
-IDE2OC43NjA1NTZdICA/IF9fcGZ4X3RhcmdldF9jb21wbGV0ZV9va193b3JrKzB4MTAvMHgx
-MA0KPiBbICAxNjguNzYyNjQ0XSAgPyBwdXRfcHJldl90YXNrX2ZhaXIrMHg0NGQvMHhhMzAN
-Cj4gWyAgMTY4Ljc2NDUxMl0gID8gZmluaXNoX3Rhc2tfc3dpdGNoLmlzcmEuMCsweDFkOS8w
-eGE3MA0KPiBbICAxNjguNzY2NTg0XSAgcHJvY2Vzc19vbmVfd29yaysweDY5Ny8weDEwNjAN
-Cj4gWyAgMTY4Ljc2ODI4Ml0gID8gX19wZnhfX19zY2hlZHVsZSsweDEwLzB4MTANCj4gWyAg
-MTY4Ljc2OTk3M10gID8gX19wZnhfcHJvY2Vzc19vbmVfd29yaysweDEwLzB4MTANCj4gWyAg
-MTY4Ljc3MTg4MF0gID8gX3Jhd19zcGluX2xvY2tfaXJxKzB4ODYvMHhlMA0KPiBbICAxNjgu
-NzczNTk5XSAgPyBfX3BmeF90YXJnZXRfY29tcGxldGVfb2tfd29yaysweDEwLzB4MTANCj4g
-WyAgMTY4Ljc3NTcyMV0gID8gYXNzaWduX3dvcmsrMHgxMWQvMHgzNzANCj4gWyAgMTY4Ljc3
-NzMyNF0gIHdvcmtlcl90aHJlYWQrMHg0NWIvMHhkMTANCj4gWyAgMTY4Ljc3ODg5OV0gID8g
-X19wZnhfd29ya2VyX3RocmVhZCsweDEwLzB4MTANCj4gWyAgMTY4Ljc4MDY0OF0gID8gX19w
-Znhfd29ya2VyX3RocmVhZCsweDEwLzB4MTANCj4gWyAgMTY4Ljc4MjQxNV0gIGt0aHJlYWQr
-MHgyYzgvMHgzYjANCj4gWyAgMTY4Ljc4Mzg3N10gID8gcmVjYWxjX3NpZ3BlbmRpbmcrMHgx
-NWMvMHgxZTANCj4gWyAgMTY4Ljc4NTY5N10gID8gX19wZnhfa3RocmVhZCsweDEwLzB4MTAN
-Cj4gWyAgMTY4Ljc4NzIxOF0gIHJldF9mcm9tX2ZvcmsrMHgzNzMvMHg1YjANCj4gWyAgMTY4
-Ljc4ODc1Ml0gID8gX19wZnhfcmV0X2Zyb21fZm9yaysweDEwLzB4MTANCj4gWyAgMTY4Ljc5
-MDUwMF0gID8gX19zd2l0Y2hfdG8rMHgzYzQvMHhiNDANCj4gWyAgMTY4Ljc5MjAyOV0gID8g
-X19wZnhfa3RocmVhZCsweDEwLzB4MTANCj4gWyAgMTY4Ljc5MzU1NV0gIHJldF9mcm9tX2Zv
-cmtfYXNtKzB4MWEvMHgzMA0KPiBbICAxNjguNzk1MTgwXSAgPC9UQVNLPg0KPiBbICAxNjgu
-Nzk2MjA1XSBNb2R1bGVzIGxpbmtlZCBpbjoNCj4gWyAgMTY4Ljc5NzU5Nl0gQ1IyOiBmZmZm
-YzkwMDAwMDIzMGE0DQo+IFsgIDE2OC43OTkwODRdIC0tLVsgZW5kIHRyYWNlIDAwMDAwMDAw
-MDAwMDAwMDAgXS0tLQ0KPiANCj4gRml4ZXM6IGQ5ZDY2MGY2ZTU2MiAoInhlbi1zY3NpYmFj
-azogQWRkIFhlbiBQViBTQ1NJIGJhY2tlbmQgZHJpdmVyIikNCj4gQ2M6IHN0YWJsZUB2Z2Vy
-Lmtlcm5lbC5vcmcNCj4gU2lnbmVkLW9mZi1ieTogWWVoeWVvbmcgTGVlIDx5aGxlZUBpc3Ns
-YWIua29yZWEuYWMua3I+DQpSZXZpZXdlZC1ieTogSnVlcmdlbiBHcm9zcyA8amdyb3NzQHN1
-c2UuY29tPg0KDQoNCkp1ZXJnZW4NCg==
+On 11/10/26 9:16 PM, Kyle Mahlkuch wrote:
+> This patch addresses a race condition in the lpfc driver's ELS retry
+> event handling that can lead to a use-after-free in the
+> lpfc_cancel_retry_delay_tmo(), where the NLP_DELAY_TMO flag is cleared
+> before acquiring the lock to check if the retry event is queued. This
+> creates a window where the timer can be rescheduled and fire, causing
+> both the cancel path and the worker thread to release the same reference,
+> resulting in a double-put and use-after-free.
+> 
+> Moved capture ndlp and clear evt_arg1 under hbalock while dequeuing
+> LPFC_EVT_ELS_RETRY in lpfc_work_list_done().
+> 
+> Signed-off-by: Kyle Mahlkuch <kmahlkuc@linux.ibm.com>
+> ---
+> Changes since v2:
+> - Capture ndlp and clear evt_arg1 under hbalock while dequeuing
+>    LPFC_EVT_ELS_RETRY in lpfc_work_list_done(). A requeue by
+>    lpfc_els_retry_delay() could cause a NULL dereference in the worker.
+>    (AI review)
+> - Whitespace and line-wrapping cleanup.
+> 
+> Link: https://lore.kernel.org/lkml/29073ebc-b616-475b- 
+> bc05-384da09fbb54@linux.ibm.com/T/#u
+> 
+> Changes since v1:
+> - Leave test_and_clear_bit op and timer_delete_sync at the beginning of
+>    lpfc_cancel_retry_delay_tmo() outside of lock. (Paul Ely)
+> 
+> Link: https://lore.kernel.org/lkml/1c8a764c-fce1-4ce1- 
+> b797-47ac328cf3f2@linux.ibm.com/T/#u
+> ---
+>   drivers/scsi/lpfc/lpfc_els.c     | 29 +++++++++++++++++++++++------
+>   drivers/scsi/lpfc/lpfc_hbadisc.c | 11 ++++++++++-
+>   2 files changed, 33 insertions(+), 7 deletions(-)
+> 
+> diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+> index 6f6394a0047c..98d1824aefe1 100644
+> --- a/drivers/scsi/lpfc/lpfc_els.c
+> +++ b/drivers/scsi/lpfc/lpfc_els.c
+> @@ -4477,18 +4477,35 @@ lpfc_issue_els_edc(struct lpfc_vport *vport, 
+> uint8_t retry)
+>   void
+>   lpfc_cancel_retry_delay_tmo(struct lpfc_vport *vport, struct 
+> lpfc_nodelist *nlp)
+>   {
+> -    struct lpfc_work_evt *evtp;
+> +    struct lpfc_hba *phba = vport->phba;
+> +    struct lpfc_work_evt *evtp = &nlp->els_retry_evt;
+> +    struct lpfc_nodelist *arg_ndlp = NULL;
+> +    unsigned long flags;
+> 
+>       if (!test_and_clear_bit(NLP_DELAY_TMO, &nlp->nlp_flag))
+>           return;
+>       timer_delete_sync(&nlp->nlp_delayfunc);
+>       nlp->nlp_last_elscmd = 0;
+> -    if (!list_empty(&nlp->els_retry_evt.evt_listp)) {
+> -        list_del_init(&nlp->els_retry_evt.evt_listp);
+> -        /* Decrement nlp reference count held for the delayed retry */
+> -        evtp = &nlp->els_retry_evt;
+> -        lpfc_nlp_put((struct lpfc_nodelist *)evtp->evt_arg1);
+> +
+> +    /*
+> +     * If retry event is queued, remove it under lock and consume
+> +     * its payload to prevent double-put. The event holds a reference
+> +     * to the nodelist that must be released exactly once.
+> +     */
+> +    spin_lock_irqsave(&phba->hbalock, flags);
+> +    if (!list_empty(&evtp->evt_listp)) {
+> +        list_del_init(&evtp->evt_listp);
+> +        /* Take local copy and clear to prevent reuse */
+> +        arg_ndlp = (struct lpfc_nodelist *)evtp->evt_arg1;
+> +        evtp->evt_arg1 = NULL;
+> +        smp_wmb(); /* Ensure NULL visible before unlock */
+>       }
+> +    spin_unlock_irqrestore(&phba->hbalock, flags);
+> +
+> +    /* Drop the event-held reference outside the lock */
+> +    if (arg_ndlp)
+> +        lpfc_nlp_put(arg_ndlp);
+> +
+>       if (test_and_clear_bit(NLP_NPR_2B_DISC, &nlp->nlp_flag)) {
+>           if (vport->num_disc_nodes) {
+>               if (vport->port_state < LPFC_VPORT_READY) {
+> diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/ 
+> lpfc_hbadisc.c
+> index 4c673dffa671..75457f19d4ea 100644
+> --- a/drivers/scsi/lpfc/lpfc_hbadisc.c
+> +++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
+> @@ -840,12 +840,21 @@ lpfc_work_list_done(struct lpfc_hba *phba)
+>       while (!list_empty(&phba->work_list)) {
+>           list_remove_head((&phba->work_list), evtp, typeof(*evtp),
+>                    evt_listp);
+> +        /*
+> +         * The ELS retry event can be requeued by lpfc_els_retry_delay()
+> +         * as soon as hbalock is dropped. Consume the payload within the
+> +         * hbalock to prevent reuse or double-put.
+> +         */
+> +        if (evtp->evt == LPFC_EVT_ELS_RETRY) {
+> +            ndlp = (struct lpfc_nodelist *)(evtp->evt_arg1);
+> +            evtp->evt_arg1 = NULL;
+> +        }
+>           spin_unlock_irq(&phba->hbalock);
+>           hba_pci_err = test_bit(HBA_PCI_ERR, &phba->bit_flags);
+>           free_evt = 1;
+>           switch (evtp->evt) {
+>           case LPFC_EVT_ELS_RETRY:
+> -            ndlp = (struct lpfc_nodelist *) (evtp->evt_arg1);
+> +            /* ndlp was already captured under hbalock */
+>               if (!hba_pci_err) {
+>                   lpfc_els_retry_delay_handler(ndlp);
+>                   free_evt = 0; /* evt is part of ndlp */
 
---------------6MHWeXlZpmNFcy2heHyg8pAR--
+Good catch.
 
---------------DYT4LtVi7lOHSSaAYUc4WYme
-Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="OpenPGP_signature.asc"
+Reviewed-by: Hannes Reinecke <hare@kernel.org>
 
------BEGIN PGP SIGNATURE-----
+Cheers,
 
-wsB5BAABCAAjFiEEhRJncuj2BJSl0Jf3sN6d1ii/Ey8FAmr0IDsFAwAAAAAACgkQsN6d1ii/Ey9a
-JQf/cw9cOj+gYUgg2BTLkDOavGCZN638L2cDk3CYAufjwuJJhAjfrepgJ3NwOz6cHDT8hqUuk1Ow
-D+PLt2bL2zhKj0qWwNi93yooi4YXr6L3Awtb35+CMhW3oMfytGT2TtMszKRvfNiIClkz5xtQHATQ
-JyiazEaFYTIbW03PWOh7CBedk7uds+TerKFqsbeabq37wD6ti48MeTTHSdMNcwIkCFHK+VsAUeVm
-V4oi9L0xs3huJY7LiEVBtMgKRerDfZFCEz1PG95kOlqd1EwGOHpvS3g8a0f8jDpNOBa5U6dAIwmz
-o3a1uDgMccDNUCNN72C5Y7fbj3pKWIvQ2NTUWJVWfQ==
-=P4sL
------END PGP SIGNATURE-----
-
---------------DYT4LtVi7lOHSSaAYUc4WYme--
+Hannes
+-- 
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
