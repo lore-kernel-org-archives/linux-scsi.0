@@ -1,56 +1,56 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=213.95.11.211
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794409325;
-	b=aHdvdeKJjNmEeCLXmCcPX16C1I8JzdjEj2uf6XOSJAxLjGh4aEcLRHx+gPcy3hiDV4Du
-	 +4tGtkctKb3x+ravTADO/5kvwl+eGn6c99b8UfOza7YG9dJ/PY/OGVIlaHmYEWz2Xdglu
-	 4IGzOxRBtB72HxzaUz8e/HU+3+U6R7TWidjj6lRM7Mj0rmW85gQAk9Y4JwN+zoOf33UYB
-	 hUfE8m3U9NDYetPNXKlJde5zgn6oy+GsREVOpfGnOPQjL1NrweoeIMj5y5c8n1t+USTYQ
-	 akxZuiOye0elzfTEt6Swmol9nRDh2fRLWrcCp/wHMs7rKIxntJrxUtPG987ON+943RA==
+	t=1794409468;
+	b=uV6IaHeur+XV8s41e4abmU3xpiJDAnJO1Q3UEiR77JlQRLXgVWlhqE1fWFqaHLZE/S4Y
+	 HBOomD9N6+1/kzYH8cj1LXqhdPgy/nOlApjrtOUE1Hd+IdSvmvARSL0N8ktCW2yhQYjs/
+	 U3vT9chpY907vKq7wqJGgSjjvm4Ka4tUA1NflJpY4ioMgVmT/lj69U3Eonr1cErbTW9Xz
+	 TOy/xD4Q0Cj4I13hIk5F6PVlhRf+4UvvhG8tNzHvlv8ISI9Ac73Ik4QHhAgu/nL0gsCGk
+	 5+FVzc7SvNHK8hvPXaiZ5Usq9A4MQ0YSkqF/i/eRypBUaFV66re/ORNzPf/+liJFLsw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794409325;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=b6SvGB8kKqPUOQP26F4ZdFDXmmxIL4Ia8xZRcT+x4Wo=;
-	b=EbRuH/21QLPGt3mGxbWGM2+yMMnWWMXr/8r4InbByJsx6uLXCPp4TD1d86Debmaq6CQc
-	 ZltWR/V9moZlGOYAOVlMT/IqoP+UOWrogIzQDdJKGhKNjklCv+hI4VdOT9OuKsNaKRgVY
-	 8wBjkOyEyeMppJ6/1bOffZ18TEJDE7/zVbbHEU5sgeFOP22vkCtkQ2prZ98mF+D2fxVsD
-	 rXz9d+0pleei+9l84xNYZmJCRtcq1yB0weeM8F32l6GEdsmSUzgcofVSGhS2ozUgdy2AC
-	 z7RD11zIgy1rnjULgzgYz/corvTx1OCaL8fzx4h2Rj3HhovWAGdPqQSpyGq5GNJxypg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794409468;
+	h=DMARC-Filter:Received:Date:From:To:Cc:Subject:Message-ID:References:
+	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To:User-Agent;
+	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
+	b=uwmwluH+XglHcST8XlEdABuodfKjhsfuYf1tFKPh9HyH4JlGnlyj+ADjtU+alkUYrNuM
+	 h8Hd97hJf/vB1Bucfpy5EuliO/w+ezvau9AgjSB/ChMihuj22VC6IPAqrpXfQLyQtl8k9
+	 GQ0aknav3DqtVHk95yWA5jw/oght6CHa9viaKUSzAfVZFFBo7k7V7R0HMdNKIMjowoopQ
+	 j2xr5naxQaSHdzoVdfXijtioPwI7Ys7PXJam9QjX4aO7VuEbcJJno3WGqqf60w8o+E1wd
+	 POAHD2Uv96SDkuPnkdRig/E6jvyWqW1nP47hcCYxTEzGZjg4BOLjqt4B9/T29bi8uDg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Ap3Jhk+b;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=lst.de;
+	spf=pass smtp.mailfrom=lst.de;
+	arc=none smtp.remote-ip=213.95.11.211
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1529F606A321
-	for <linux-scsi@vger.kernel.org>; Wed, 11 Nov 2026 15:02:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Ap3Jhk+b
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6F5661F00A06;
-	Wed, 11 Nov 2026 15:02:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794409324;
-	bh=b6SvGB8kKqPUOQP26F4ZdFDXmmxIL4Ia8xZRcT+x4Wo=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Ap3Jhk+bQAWN9PMTHH/C33CYwcnpbgRHkWt0vGDYclnvL/DEqFA/0QXaseuMakaut
-	 1E/zFurtIqM3odzZ1LG+H578dl99QUVJTFkaBDBRU0kTvixmyIk5tHza4CQ/iABVgp
-	 +/ka13n/Vnx7PuN5hniute6vXL7E1rAbn6B/CshBRBI4tRsLhSXMvGsRQRXfomczIk
-	 X3u+xArsbZrfFkGB/webOoj9MyeduCs7jHBdnsjcOy/b+wREZxO6oYT8hNHhY4nUw/
-	 p1nepJkwEW3sIUk9gptVjO11cBeLDHgqO2igvXasgs/36idqJ86Qf2eMxiiBdgxo2i
-	 MTZswhhPJ2zOw==
-Message-ID: <sashiko-outbox-209211@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] scsi: ufs: core: Register the RPMB bus before adding
- devices to it
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Alexey Charkov" <alchark@flipper.net>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20261111-ufs-rpmb-bus-v1-1-b07100e53f6c@flipper.net>
-References: <20261111-ufs-rpmb-bus-v1-1-b07100e53f6c@flipper.net>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 11 Nov 2026 15:02:04 +0000
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9787D606A334;
+	Wed, 11 Nov 2026 15:04:27 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9787D606A334
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 9B6F068D0A; Wed, 11 Nov 2026 16:04:20 +0100 (CET)
+Date: Wed, 11 Nov 2026 16:04:19 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: Christian Brauner <brauner@kernel.org>
+Cc: linux-fsdevel@vger.kernel.org, Jann Horn <jannh@google.com>,
+	Chris Mason <mason@kernel.org>, Josef Bacik <josef@toxicpanda.com>,
+	Christoph Hellwig <hch@lst.de>, linux-block@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+	Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>,
+	linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+	driver-core@lists.linux.dev, linux-mm@kvack.org,
+	bpf@vger.kernel.org, linux-security-module@vger.kernel.org,
+	selinux@vger.kernel.org, apparmor@lists.ubuntu.com,
+	linux-nfs@vger.kernel.org, netdev@vger.kernel.org,
+	fuse-devel@lists.linux.dev, linux-efi@vger.kernel.org,
+	xen-devel@lists.xenproject.org, ocfs2-devel@lists.linux.dev,
+	linux-s390@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux-usb@vger.kernel.org, Amir Goldstein <amir73il@gmail.com>,
+	linux-erofs@lists.ozlabs.org, linux-kselftest@vger.kernel.org
+Subject: Re: [PATCH RFC 04/41] fs: add SB_I_PSEUDO
+Message-ID: <20261111150419.GA10644@lst.de>
+References: <20261110-work-loop-pseudo-v1-0-4c998976c6c7@kernel.org> <20261110-work-loop-pseudo-v1-4-4c998976c6c7@kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -59,57 +59,13 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261110-work-loop-pseudo-v1-4-4c998976c6c7@kernel.org>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-Thank you for your contribution! Sashiko AI review found 1 potential
-issue to consider:
-- [Medium] scsi: ufs: core: bus device name collision in
-  ufs_rpmb_probe()
---
+Looks good:
 
-commit d7d8b8a6fbcbb4705a5d1c464cb5ca946759c72a
-Author: Alexey Charkov <alchark@flipper.net>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-scsi: ufs: core: Register the RPMB bus before adding devices to it
-
-This commit registers ufs_rpmb_bus_type during ufshcd-core initialization
-and unregisters it on exit so that RPMB region devices can be added to the
-bus.
-
-> diff --git a/drivers/ufs/core/ufs-rpmb.c b/drivers/ufs/core/ufs-rpmb.c
-> index 7566733376480..591e7f2e14740 100644
-> --- a/drivers/ufs/core/ufs-rpmb.c
-> +++ b/drivers/ufs/core/ufs-rpmb.c
-> @@ -276,5 +276,15 @@ void ufs_rpmb_remove(struct ufs_hba *hba)
->  	dev_info(hba->dev, "All UFS RPMB devices unregistered\n");
->  }
-> =20
-> +int __init ufs_rpmb_bus_init(void)
-> +{
-> +	return bus_register(&ufs_rpmb_bus_type);
-> +}
-
-[Severity: Medium]
-With ufs_rpmb_bus_type registered, can ufs_rpmb_probe() fail with -EEXIST
-on systems with more than one UFS host controller?
-
-ufs_rpmb_probe() names each device using only the per-controller region
-index:
-
-drivers/ufs/core/ufs-rpmb.c:ufs_rpmb_probe() {
-	...
-		dev_set_name(&ufs_rpmb->dev, "ufs_rpmb%d", region);
-	...
-		ret =3D device_register(&ufs_rpmb->dev);
-	...
-}
-
-Because bus_add_device() creates a symlink named dev_name(dev) in the
-shared /sys/bus/ufs_rpmb/devices/ directory, the second controller's
-"ufs_rpmb0" collides with the first controller's and leaves OP-TEE RPMB
-unavailable on additional controllers.  Including hba->host->host_no in
-the device name (as ufs_bsg_probe() does) would keep the names unique
-across controllers.
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261111-ufs-rpmb-b=
-us-v1-1-b07100e53f6c@flipper.net?part=3D1
