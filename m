@@ -1,94 +1,79 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.48
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794366404;
-	b=ctmkdf53zV1UKG4p/SQgGDMCcRgC76VFYI92E5SsGGWG8rwgEkTUyC4L3ybms18WF3jR
-	 IiAJaOa0t1fq5yvmRdd3OjNl6vlhv6i4duBEs19WoEbG49JhAqv510W65XUYAna/WoViH
-	 46n5WvpvD3ES3Or61LtVIgPrHhfNrjvO01GD+0ZWVBPBH8PDMKjsbXIdY8BfowTTyelFU
-	 0qOI7pXtNjK7+xTtrVQ83AtDK2s63pE1cV+ezuM+jC1zVvIymnYSYzGxIaddvtco2jMPV
-	 pJ976pI8tVU7flgBcSyhsJ0YHA1TSZAkUA7qDJWI/9g/7XYAc5HlcHBOPtv3jvNgXjg==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794366404;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
-	 Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=mLhyYGCVTORdd4WihP4IIQfVXI++QSCchObfVqbadWA=;
-	b=eCzWIXfaxPDhQwXD+BraduF088lW5MuTeNVyt9a7S/qb8j9nEe3SQ+KhvBDrflxjYLzz
-	 nlaaPJcrCREse7K9dhUZsPl497KaewcnCF4yuBtOhzGAtXQHq16Fhf5imhqHAFMqf7qvP
-	 kWBfLCF9PGeG58W9bVbEx4SITiVS7605gArlhR70CahATR/Ug/Or4bhGGsAt3MoizAmDQ
-	 8pJNUGjo77rpsjXXIyIiHAKahQFgIF4zpg4KN6OoONVL4JlpgX9MMKhRliMU448ZjcIjS
-	 LwXa+k6z1Hok8zCV238yVoFVcjknJu61rnp+INeRssFjbaov7rGxNSornXf148w+VBA==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=W7W0MsWh;
-	arc=none smtp.remote-ip=209.85.216.48
-Received: from mail-pj1-f48.google.com (mail-pj1-f48.google.com [209.85.216.48])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1794370674;
+	b=oZs4zQ7Fgoq5uTUaabpYdBKFHwWZOtU4ZaXgpOOLzlDrjypEAN6kmLjc3pV6sanaz0C+
+	 IRXMi08WWy5G+Bb4BIcMTYeX/81KrPYYK2qYekzoRDir/3eUyzbpLEywxibLGPC20nk7b
+	 3SSiBRai+NVtz7viLcHg1XPmWSlp0Io1WmhBVdInVXL4tL3UVdhF16pMhHOmGO4EOHOnT
+	 2Z3Qb+Xl14qNa7CIqSD9mqNS7R85wC+0r4IMsx6Rv4si6yeUwvdffUbqixB05nDKDvvei
+	 HWd7wf4nzK0EzlWFNuig/3VYnJsMHoy7ZtDE3M3QO9zC6gPPUSa0i7iwVQQSyIu8IAA==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794370674;
+	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
+	 Content-Type:Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To:Content-Transfer-Encoding;
+	bh=NuefdyGrdEGI4G6kB8HaGwrhpuI/tyFukRQfwK0mqeE=;
+	b=CNXLEfnjd9zJIdweiVZMQ4E8w6lnuB21jenLX882E1/AR0iFBkJbC41Y4zwy1BA1A2jm
+	 4vCApw+6DSlT8PM1qxWPlcd3Bb6le9tcE1MmPURryc+zr86wAWof/IoS7v8tjcV1/VYBm
+	 NCSHaB5ucKd4+fSgTiGmrPg2LVsfOGoWHH3XoZ9e1nri2VLjb7DdLf0B9FCiljvApm18T
+	 N1T+NpKNyU/W575OBuLt8CYzPraDKh6QJKFrLTJeon+dn69iL9l+2FTmX0sUd2+ITQVD/
+	 c4NJOZm6nV6a59KiqJ8mXpVrNV5xFpYJs5F3JVWkIxGze2C7OmoE7nV6HGX2Dg1VH/g==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=VCAfuxm6;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53033606A32D;
+	Wed, 11 Nov 2026 04:17:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=VCAfuxm6
+Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
+ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
+	t=1794370674;
+	b=oyuHYYaNq0y2eAeq3NQEI9MOObmgu3/ZjGnHpXXKO3Qa/vSGcXbu8e6prwqxkPxKRvWz
+	 jm/uOPSsfP9m5m/upxpaQcmmS2Qy++lYevUEW5rmWPRy4AaOzCzlD9yCSKxV1w5FuDAo9
+	 YheuYWKfhmMNkRRMX4fAPThFQ1MHu4cJy/r76x/zFbKAeM/evTSOPBEU3yUINiqXBPSee
+	 GC7Kg+IplkCI2crTSiAJ1GGEfuNUW52bl517TPU3VM5/YGBkjHWvEXdMddOtQkq81T6qm
+	 NZo2WTU52L6hk6doXIvBrgrBnmir6S1pEzQ4IWM4R3PCoPBL5v1wQ5jrR+WaTYHKjIg==
+ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
+	c=relaxed/relaxed; t=1794370674;
+	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
+	 Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To:Content-Transfer-Encoding;
+	bh=NuefdyGrdEGI4G6kB8HaGwrhpuI/tyFukRQfwK0mqeE=;
+	b=LSrp3uhUA+dYfycAlkRt108kpTfd+6UAB91XoIsrOXBzN09kMSv7j/HvTk4DW6YAfWqA
+	 crtw7YYJplvSoot1Qv3fX9M9AXurK3/2n/DtfPxAI6dWrQpS6Rwix7comC2bIKYIVlgLq
+	 5tVM6SU7dTxDSDRBi/bEG3eV3+1jo0cW1loPlnJ1WVzKV6mhmVo9vfA3G14uGPi2xQkhS
+	 kUuQTrLimZv0e4OQwRgBcEo9xSzb3pO/tWkPek7by1bzxwtF3niJFLxDShFf+r4MOA9yn
+	 WQSEIRES6AZzWCOyS7fe1N7Oby14rJOYsiLys8YB21hJxGYcNJF+ah+g1iXdnfTg4XA==
+ARC-Authentication-Results: i=1; smtp.kernel.org; 
+	arc=none smtp.remote-ip=100.80.115.77
+Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 815F2606A321
-	for <linux-scsi@vger.kernel.org>; Wed, 11 Nov 2026 03:06:44 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 815F2606A321
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=W7W0MsWh
-Received: by mail-pj1-f48.google.com with SMTP id 98e67ed59e1d1-3b16896b8ceso861209a91.1
-        for <linux-scsi@vger.kernel.org>; Tue, 10 Nov 2026 19:06:44 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1794366404; x=1794971204; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=mLhyYGCVTORdd4WihP4IIQfVXI++QSCchObfVqbadWA=;
-        b=W7W0MsWhl2pdpNVYjWLOyyPFheedfMFbCq2aybaSoFL5RextMQgVc6pOy/1WqmlFDC
-         K0TPARUDnzD3ilY7LHrBTMS+oRCi0LKl1GOYON41ft9nx3sGcLgCr2hfXJLs15eAaBJq
-         SWv5ExgvJDJZQJwicIW/PRABJsVsET3o6my4ONLHK3o2KbKrHUkmwIOeYIxp78YSNXqN
-         XPjkS5kjqi7LOivq2fbzhJNsBq3wT0SIumqqiIqk3qVDaOCMiji/Zm8lnydN2S+CK4bR
-         bF5jRkco1p8NJgeeqW8Ahy6T5OlbhmIJ7n9rMUqvdKqHKozwmPyY7Zgs9QJigdXuRhoP
-         4yZw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794366404; x=1794971204;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=mLhyYGCVTORdd4WihP4IIQfVXI++QSCchObfVqbadWA=;
-        b=2JUJLbzD8QWwto2aCL7j57Rm/P4zVSIjg/ECeJz5rNjS+dldpBk2VjKYxXblQMUHd2
-         ao65kNjDCeJ3egvRp5gASYD6ObeCyJXPOW62wMacebakTz8AyFPPXTluPyEZRpXspS4n
-         SsfxlX1/FD2GNnRxvWFKwI103JU1isRmQLEM1RE38SM/TiGk84bVZ++EejY3QYXfqmCM
-         0jqezkECkcrQdEmyoWpbIIaUmMMLYykF+kRaY6c8rc+zQSvcLPkUu8fc3vMFc4x84UHW
-         JdflUe2n2gD10HLk5KCFMjx+3g3NfuJBFtU0epy+lM/ZCb2K75BxTjbrweL7joPEsBSg
-         1XLA==
-X-Gm-Message-State: APuU4Z9K4JJOK3AuMyTL1vj+SBXHZqk/U1671kdYVyGAx8Yf4SZDe8h3
-	ttLN3+j0hnD586ENuARg/4mR+CGvREVW/0s4eOGNcuwINmJGqr3k1Y/1
-X-Gm-Gg: AYBFou37ktkZPXgXHPIoCHNMwBf3GQ2Fo8s+dWF79PW5IvWnZtFvviXnOqdEQVHeD0G
-	4qE+2T2Zls9/fvWhDTYAYYWe22amE7MjVH5s9Po+X4jIRRYhOiJvHqvjNZFoGwoNsXuNC32VsCN
-	eFAKxD3oYv834iLHAWJ2qCrQiT+o/2klDKYDXMlKe/FLUBCVIi54YnEAAeBUo1psbShrQaiTSjT
-	lfgXY/KgAf1MZ6J7Aoq+yZuWGcB7RTFFuPTyr0EVfR78ZMJNyj1T8X4cizUF+JplpatvemJw6fn
-	QP13fHostnSq3q16+WoZGWTniz4fiIenzpiY/6JImUW58hx2ME6qULP3e0R9RKAVuyIPvUh4cBH
-	EVx5tFDnY1futXwwR8SgD3yd38AHIKlIYBlCfm2ml5Zy5J23LaHex8Iw6KTEFittYnAvK1+vO6V
-	+DelmLfZ7qd1SytZB499AhmpfB2mQBxHUgAqqydrNfPUz5FCtp5F3I5se+uUoOvQgqYIXggvPa9
-	0FohW5ShTqVsxdRLCpTqMbB+ekc4OLPy6bvqABRmIV4oDuFxbllExxsxQF9em+gR9K2Bh5SN5FR
-	eXLQRMY+n8HC0BnzwllwqHeqYCjNVpJTIBmitgQfnw==
-X-Received: by 2002:a17:90b:2584:b0:3ac:ffb8:1809 with SMTP id 98e67ed59e1d1-3b182f3eec3mr934352a91.39.1794366403744;
-        Tue, 10 Nov 2026 19:06:43 -0800 (PST)
-Received: from localhost.localdomain ([183.62.176.219])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b181f9873csm667757a91.1.2026.11.10.19.06.40
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 10 Nov 2026 19:06:43 -0800 (PST)
-From: yong liu <pkfxxxing@gmail.com>
-To: "Martin K. Petersen" <mkp@kernel.org>
-Cc: linux-scsi@vger.kernel.org,
-	target-devel@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	security@kernel.org
-Subject: [PATCH v2] scsi: target: Disable protection processing for zero-block commands
-Date: Wed, 11 Nov 2026 11:05:43 +0800
-Message-ID: <20261111030544.1216434-1-pkfxxxing@gmail.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20261109092744.822646-2-pkfxxxing@gmail.com>
-References: <20261109092744.822646-1-pkfxxxing@gmail.com> <20261109092744.822646-2-pkfxxxing@gmail.com>
+	by smtp.kernel.org (Postfix) with ESMTPS id 307121F00A03;
+	Wed, 11 Nov 2026 04:17:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794370674;
+	bh=NuefdyGrdEGI4G6kB8HaGwrhpuI/tyFukRQfwK0mqeE=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To;
+	b=VCAfuxm6eIeGSd68SugJrU8z6gZaBE9THS0xUJhjiByYhJtjSfw3HVosDWrzZaeZW
+	 vuU5Ly0yHKxcZCov0iTeWGYuJOkIMa+gdR7rWu9bEXxrtjISz8dw5NZTM5lNP5s6/o
+	 COABjdQh3bu3CpAO/1ze8U0Q10zKoc26qwodAFzLF5VdXwRAtBWBuBsbhQ3xZiogUM
+	 mw1xSs8OEPnbM5FrnTVr8EOo6K2RAL8Vk6iZN/FzOpSC7QMXJG97Vlr1T4Xy0kDAR5
+	 ABRbJk9b2ulTMvZP6QdI+/tNDsyE+sO9l2rQy1hYZ2VA7qxnd1hVjX1Yi1uq11KzM/
+	 imghhKGiVBy4g==
+Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
+	by lkml.kernel.org (Postfix) with ESMTP id B03C048D7C;
+	Wed, 11 Nov 2026 04:17:52 +0000 (UTC)
+From: Andrew Gigena via B4 Relay <devnull+mail.andrewgigena.dev@kernel.org>
+Date: Wed, 11 Nov 2026 04:17:51 +0000
+Subject: [PATCH v3 3/3] arm64: dts: qcom: sm8150: use standalone ICE for
+ UFS
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -98,57 +83,112 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Message-Id: <20261111-sm8150-ice-rfc-v3-3-f9d5a806fc95@andrewgigena.dev>
+References: <20261111-sm8150-ice-rfc-v3-0-f9d5a806fc95@andrewgigena.dev>
+In-Reply-To: <20261111-sm8150-ice-rfc-v3-0-f9d5a806fc95@andrewgigena.dev>
+To: Abel Vesa <abelvesa@kernel.org>, 
+ Herbert Xu <herbert@gondor.apana.org.au>, 
+ "David S. Miller" <davem@davemloft.net>, Rob Herring <robh@kernel.org>, 
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+ Conor Dooley <conor+dt@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>, 
+ Alim Akhtar <alim.akhtar@samsung.com>, Bart Van Assche <bvanassche@acm.org>, 
+ Bean Huo <beanhuo@micron.com>, Stanley Jhu <stanleyjhu@google.com>, 
+ Bjorn Andersson <andersson@kernel.org>, Andy Gross <agross@kernel.org>, 
+ Konrad Dybcio <konradybcio@kernel.org>
+Cc: linux-arm-msm@vger.kernel.org, linux-crypto@vger.kernel.org, 
+ devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linux-scsi@vger.kernel.org, Andrew Gigena <mail@andrewgigena.dev>
+X-Mailer: b4 0.15.2
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1794370671; l=2347;
+ i=mail@andrewgigena.dev; s=20261104; h=from:subject:message-id;
+ bh=5ojOLo8hWLDK0hV2yglUJhrUv/sb3CLr9di70RGzFCA=;
+ b=fYh/wnOjTAhn9em3DNVhlUH56Virjz5sZPm4HyxwD2C0/aw3IssZBPyFgRnsaQITow4T7Ovq8
+ 3+M+kZvHIPjCyalquq6BFaIzxHn8MJ6Hzp0XNvakSNUYBWfy2DrPmIG
+X-Developer-Key: i=mail@andrewgigena.dev; a=ed25519;
+ pk=OMhlYIBaOEC8g4mJ4JCKy7kbg+lrwRxuujieZF8Ne6U=
+X-Endpoint-Received: by B4 Relay for mail@andrewgigena.dev/20261104 with
+ auth_id=1402
+X-Original-From: Andrew Gigena <mail@andrewgigena.dev>
+Reply-To: mail@andrewgigena.dev
+Content-Transfer-Encoding: 7bit
 
-A READ(10) with its TRANSFER LENGTH field set to zero on a PI-enabled
-LUN can select TARGET_PROT_DIN_STRIP while leaving cmd->prot_length at
-zero. transport_generic_new_cmd() then allocates an empty protection
-scatterlist, causing a target-side Oops, which can also lead to
-use-after-free during subsequent iSCSI connection cleanup. A logged-in
-iSCSI initiator can trigger this on a FILEIO LUN with protection
-information enabled.
+From: Andrew Gigena <mail@andrewgigena.dev>
 
-After validating PROTECT, reset the protection operation, type and
-checks for zero-block commands in sbc_check_prot(). This avoids the
-empty allocation and prevents backends and fabrics from selecting PI
-processing without a protection payload. Preserve the existing
-data-length adjustment for commands carrying PI over the wire.
+Align SM8150 with the standalone ICE representation used on newer
+platforms instead of embedding ICE registers in the UFS node.
 
-The issue was discovered and fixed by Qihoo 360's Tulongfeng multi-agent
-system.
-
-Fixes: 5835812f13e5 ("target: ensure se_cmd->t_prot_sg is allocated when required")
-Cc: stable@vger.kernel.org
-Signed-off-by: yong liu <pkfxxxing@gmail.com>
+Signed-off-by: Andrew Gigena <mail@andrewgigena.dev>
 ---
-Changes in v2 (addressing sashiko-bot's protection-state review):
-- Replace the allocation-only guard with a zero-block protection state fix
-  in sbc_check_prot(), so backends and fabrics do not select PI processing
-  without a protection payload.
-- Preserve PROTECT validation and the existing data-length adjustment.
+ arch/arm64/boot/dts/qcom/sm8150.dtsi | 25 ++++++++++++++++---------
+ 1 file changed, 16 insertions(+), 9 deletions(-)
 
-Developed against f66469d9905b39d2c260a15d7d6db450f4db67c1 (7.4-rc1).
-
- drivers/target/target_core_sbc.c | 6 ++++++
- 1 file changed, 6 insertions(+)
-
-diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
-index 21f5cb86d7..560e62cef7 100644
---- a/drivers/target/target_core_sbc.c
-+++ b/drivers/target/target_core_sbc.c
-@@ -721,6 +721,12 @@ sbc_check_prot(struct se_device *dev, struct se_cmd *cmd, unsigned char protect,
- 	if (sbc_set_prot_op_checks(protect, fabric_prot, pi_prot_type, is_write, cmd))
- 		return TCM_INVALID_CDB_FIELD;
+diff --git a/arch/arm64/boot/dts/qcom/sm8150.dtsi b/arch/arm64/boot/dts/qcom/sm8150.dtsi
+index 293fcbacff34..b3d6f3d92395 100644
+--- a/arch/arm64/boot/dts/qcom/sm8150.dtsi
++++ b/arch/arm64/boot/dts/qcom/sm8150.dtsi
+@@ -2071,9 +2071,7 @@ pcie1_phy: phy@1c0e000 {
+ 		ufs_mem_hc: ufshc@1d84000 {
+ 			compatible = "qcom,sm8150-ufshc", "qcom,ufshc",
+ 				     "jedec,ufs-2.0";
+-			reg = <0 0x01d84000 0 0x2500>,
+-			      <0 0x01d90000 0 0x8000>;
+-			reg-names = "std", "ice";
++			reg = <0 0x01d84000 0 0x2500>;
+ 			interrupts = <GIC_SPI 265 IRQ_TYPE_LEVEL_HIGH>;
+ 			phys = <&ufs_mem_phy>;
+ 			phy-names = "ufsphy";
+@@ -2092,8 +2090,7 @@ ufs_mem_hc: ufshc@1d84000 {
+ 				"ref_clk",
+ 				"tx_lane0_sync_clk",
+ 				"rx_lane0_sync_clk",
+-				"rx_lane1_sync_clk",
+-				"ice_core_clk";
++				"rx_lane1_sync_clk";
+ 			clocks =
+ 				<&gcc GCC_UFS_PHY_AXI_CLK>,
+ 				<&gcc GCC_AGGRE_UFS_PHY_AXI_CLK>,
+@@ -2102,8 +2099,7 @@ ufs_mem_hc: ufshc@1d84000 {
+ 				<&rpmhcc RPMH_CXO_CLK>,
+ 				<&gcc GCC_UFS_PHY_TX_SYMBOL_0_CLK>,
+ 				<&gcc GCC_UFS_PHY_RX_SYMBOL_0_CLK>,
+-				<&gcc GCC_UFS_PHY_RX_SYMBOL_1_CLK>,
+-				<&gcc GCC_UFS_PHY_ICE_CORE_CLK>;
++				<&gcc GCC_UFS_PHY_RX_SYMBOL_1_CLK>;
+ 			freq-table-hz =
+ 				<37500000 300000000>,
+ 				<0 0>,
+@@ -2112,8 +2108,8 @@ ufs_mem_hc: ufshc@1d84000 {
+ 				<0 0>,
+ 				<0 0>,
+ 				<0 0>,
+-				<0 0>,
+-				<0 300000000>;
++				<0 0>;
++			qcom,ice = <&ice>;
  
-+	if (!sectors) {
-+		cmd->prot_op = TARGET_PROT_NORMAL;
-+		cmd->prot_checks = 0;
-+		pi_prot_type = TARGET_DIF_TYPE0_PROT;
-+	}
+ 			status = "disabled";
+ 		};
+@@ -2139,6 +2135,17 @@ ufs_mem_phy: phy@1d87000 {
+ 			status = "disabled";
+ 		};
+ 
++		ice: crypto@1d90000 {
++			compatible = "qcom,sm8150-inline-crypto-engine",
++				     "qcom,inline-crypto-engine";
++			reg = <0 0x01d90000 0 0x8000>;
++			clocks = <&gcc GCC_UFS_PHY_ICE_CORE_CLK>,
++				 <&gcc GCC_UFS_PHY_AHB_CLK>;
++			clock-names = "core",
++				      "iface";
++			power-domains = <&gcc UFS_PHY_GDSC>;
++		};
 +
- 	cmd->prot_type = pi_prot_type;
- 	cmd->prot_length = dev->prot_length * sectors;
- 
+ 		cryptobam: dma-controller@1dc4000 {
+ 			compatible = "qcom,bam-v1.7.4", "qcom,bam-v1.7.0";
+ 			reg = <0 0x01dc4000 0 0x24000>;
+
 -- 
-2.43.0
+2.56.0
+
 
