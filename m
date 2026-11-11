@@ -1,57 +1,56 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794409171;
-	b=jOnfSOxyh5onXHCJhScZoJLkavGU8+S5JKfcVkOOLlp2Bw8OThgGMNX4t51pPzfZVG9I
-	 L8j2I7crUx7/7fxDJSDUZBbLsbQm8VY6cQEHlWl+WKak51c0nfUmdYlFeJfb/5v+pIEV5
-	 tFK9GEuYMMPFL+atWQ9hwlTam95x2VNVpqDSqTRVd3hp6w3lkDGbV7wB5q+ybsjs/ZvmA
-	 X/LU1fDllJCfNDb6BoZVC8a2sUcPc6DNYT/t8LpRYkFPe5yXoj3vmcvX6YXL/IqVrPpof
-	 Hpo2KZaIBFQBG7pbmWcAFy852LVEmZSMhtk13WfxFW6P0dkTEJrwZTCYl5EhQHU8QLA==
+	t=1794409325;
+	b=aHdvdeKJjNmEeCLXmCcPX16C1I8JzdjEj2uf6XOSJAxLjGh4aEcLRHx+gPcy3hiDV4Du
+	 +4tGtkctKb3x+ravTADO/5kvwl+eGn6c99b8UfOza7YG9dJ/PY/OGVIlaHmYEWz2Xdglu
+	 4IGzOxRBtB72HxzaUz8e/HU+3+U6R7TWidjj6lRM7Mj0rmW85gQAk9Y4JwN+zoOf33UYB
+	 hUfE8m3U9NDYetPNXKlJde5zgn6oy+GsREVOpfGnOPQjL1NrweoeIMj5y5c8n1t+USTYQ
+	 akxZuiOye0elzfTEt6Swmol9nRDh2fRLWrcCp/wHMs7rKIxntJrxUtPG987ON+943RA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794409171;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794409325;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=J2NaWGJ0wvvwiWu1IEV9ZvmpEEt43mEP+GR6BSBmiBc=;
-	b=SlxyV3HXj8wc5m+JJLMGEZxOKvgn+brpl2QvczjA4w9LcH8AehtLAurQ3srbsnF4wG9j
-	 J6QkjMoHMSxMSY/5l9XASqrW/SD4nRMx3SkuaGhSp9PpjAzinYoLdcxi8nOjr8kzssKKQ
-	 XfF2uFYrVMP9srkZ1GzpS52EY4nmaqA1BqSc1oY8T7gFI1htxLLQX3+u3a8j7dhe6LMH2
-	 fMQn1UvJdN/IHy9PJI2HBqYhtcYSDzIBcpvlEeaojhE6Ppw1df6PmvdTbicBTSpfo9nyQ
-	 /7r7FP0y8K/A2e3kJP2EShygX8Owt8P/FFG4bTsxNOdjjXrbodMMUo7KiTr2iYkrRgg==
+	bh=b6SvGB8kKqPUOQP26F4ZdFDXmmxIL4Ia8xZRcT+x4Wo=;
+	b=EbRuH/21QLPGt3mGxbWGM2+yMMnWWMXr/8r4InbByJsx6uLXCPp4TD1d86Debmaq6CQc
+	 ZltWR/V9moZlGOYAOVlMT/IqoP+UOWrogIzQDdJKGhKNjklCv+hI4VdOT9OuKsNaKRgVY
+	 8wBjkOyEyeMppJ6/1bOffZ18TEJDE7/zVbbHEU5sgeFOP22vkCtkQ2prZ98mF+D2fxVsD
+	 rXz9d+0pleei+9l84xNYZmJCRtcq1yB0weeM8F32l6GEdsmSUzgcofVSGhS2ozUgdy2AC
+	 z7RD11zIgy1rnjULgzgYz/corvTx1OCaL8fzx4h2Rj3HhovWAGdPqQSpyGq5GNJxypg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=nJng3xyO;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Ap3Jhk+b;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5F7B606A32A;
-	Wed, 11 Nov 2026 14:59:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1529F606A321
+	for <linux-scsi@vger.kernel.org>; Wed, 11 Nov 2026 15:02:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=nJng3xyO
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 38FC71F00A05;
-	Wed, 11 Nov 2026 14:59:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Ap3Jhk+b
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6F5661F00A06;
+	Wed, 11 Nov 2026 15:02:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794409171;
-	bh=J2NaWGJ0wvvwiWu1IEV9ZvmpEEt43mEP+GR6BSBmiBc=;
+	s=k20260515; t=1794409324;
+	bh=b6SvGB8kKqPUOQP26F4ZdFDXmmxIL4Ia8xZRcT+x4Wo=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=nJng3xyO1tiZAdt5zftMGaW/g3b7hnrmhpfTWVup0mBIGiuqFxNDnGlZCI46+rlvO
-	 0M3RaaMiyuYRzr4q+jKcM0k1vK+2rBXTCJGmNn0Sp7z9WyYCdQjEqmHH8/fXj8E5by
-	 w4LrbQvldx7NRGxurQShgOpBxF4MaBklr7CR/loYUCBRE1IrzebSXLIcOsNy+Fr66l
-	 xNcaebqZ/9nozK9XquoJFO4HZYUrvmmShgGMsRY/bvOlFEYWyEOHdwDBTlgeaff/N5
-	 rE4Tf+asJqiiTwIdx0WV9TQ2OmSmoNv3F5NMW3tmidynSUB3ghT5eMx3Cn89+y1bYC
-	 ziPxXep0JbwnA==
-Message-ID: <sashiko-outbox-209207@kernel.org>
+	b=Ap3Jhk+bQAWN9PMTHH/C33CYwcnpbgRHkWt0vGDYclnvL/DEqFA/0QXaseuMakaut
+	 1E/zFurtIqM3odzZ1LG+H578dl99QUVJTFkaBDBRU0kTvixmyIk5tHza4CQ/iABVgp
+	 +/ka13n/Vnx7PuN5hniute6vXL7E1rAbn6B/CshBRBI4tRsLhSXMvGsRQRXfomczIk
+	 X3u+xArsbZrfFkGB/webOoj9MyeduCs7jHBdnsjcOy/b+wREZxO6oYT8hNHhY4nUw/
+	 p1nepJkwEW3sIUk9gptVjO11cBeLDHgqO2igvXasgs/36idqJ86Qf2eMxiiBdgxo2i
+	 MTZswhhPJ2zOw==
+Message-ID: <sashiko-outbox-209211@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 2/2] scsi: sg: Require CAP_SYS_ADMIN for BLKTRACE
- passthrough ioctls
+Subject: Re: [PATCH] scsi: ufs: core: Register the RPMB bus before adding
+ devices to it
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Tao Cui" <cui.tao@linux.dev>
-Cc: linux-scsi@vger.kernel.org, linux-trace-kernel@vger.kernel.org
-In-Reply-To: <20261111145034.248717-3-cui.tao@linux.dev>
-References: <20261111145034.248717-1-cui.tao@linux.dev>
- <20261111145034.248717-3-cui.tao@linux.dev>
+To: "Alexey Charkov" <alchark@flipper.net>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20261111-ufs-rpmb-bus-v1-1-b07100e53f6c@flipper.net>
+References: <20261111-ufs-rpmb-bus-v1-1-b07100e53f6c@flipper.net>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 11 Nov 2026 14:59:30 +0000
+Date: Wed, 11 Nov 2026 15:02:04 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -63,54 +62,54 @@ Precedence: list
 
 Thank you for your contribution! Sashiko AI review found 1 potential
 issue to consider:
-- [Low] scsi: sg: duplicate BLKTRACE ioctl command check in
-  sg_ioctl_common()
+- [Medium] scsi: ufs: core: bus device name collision in
+  ufs_rpmb_probe()
 --
 
-commit 245abdd71d86c36b043cbaf6080f0c6a16895527
-Author: Tao Cui <cuitao@kylinos.cn>
+commit d7d8b8a6fbcbb4705a5d1c464cb5ca946759c72a
+Author: Alexey Charkov <alchark@flipper.net>
 
-scsi: sg: Require CAP_SYS_ADMIN for BLKTRACE passthrough ioctls
+scsi: ufs: core: Register the RPMB bus before adding devices to it
 
-This commit requires CAP_SYS_ADMIN in sg_ioctl_common() before handling
-the four blktrace passthrough ioctl commands.
+This commit registers ufs_rpmb_bus_type during ufshcd-core initialization
+and unregisters it on exit so that RPMB region devices can be added to the
+bus.
 
-> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-> index 5408f002e6c01..36a1fb7343607 100644
-> --- a/drivers/scsi/sg.c
-> +++ b/drivers/scsi/sg.c
-> @@ -910,6 +910,13 @@ static int put_compat_request_table(struct compat_sg=
-_req_info __user *o,
+> diff --git a/drivers/ufs/core/ufs-rpmb.c b/drivers/ufs/core/ufs-rpmb.c
+> index 7566733376480..591e7f2e14740 100644
+> --- a/drivers/ufs/core/ufs-rpmb.c
+> +++ b/drivers/ufs/core/ufs-rpmb.c
+> @@ -276,5 +276,15 @@ void ufs_rpmb_remove(struct ufs_hba *hba)
+>  	dev_info(hba->dev, "All UFS RPMB devices unregistered\n");
 >  }
->  #endif
 > =20
-> +/* keep in sync with the commands blk_trace_ioctl() gates */
-> +static bool sg_is_blktrace_cmd(unsigned int cmd)
+> +int __init ufs_rpmb_bus_init(void)
 > +{
-> +	return cmd =3D=3D BLKTRACESETUP || cmd =3D=3D BLKTRACESTART ||
-> +	       cmd =3D=3D BLKTRACESTOP || cmd =3D=3D BLKTRACETEARDOWN;
+> +	return bus_register(&ufs_rpmb_bus_type);
 > +}
-> +
->  static long
->  sg_ioctl_common(struct file *filp, Sg_device *sdp, Sg_fd *sfp,
->  		unsigned int cmd_in, void __user *p)
-> @@ -921,6 +928,9 @@ sg_ioctl_common(struct file *filp, Sg_device *sdp, Sg=
-_fd *sfp,
-> =20
->  	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sdp,
->  				   "sg_ioctl: cmd=3D0x%x\n", (int) cmd_in));
-> +	if (IS_ENABLED(CONFIG_BLK_DEV_IO_TRACE) &&
-> +	    sg_is_blktrace_cmd(cmd_in) && !capable(CAP_SYS_ADMIN))
-> +		return -EPERM;
 
-[Severity: Low]
-This isn't a bug, but sg_ioctl_common() already matches BLKTRACESETUP,
-BLKTRACESTART, BLKTRACESTOP, and BLKTRACETEARDOWN in switch (cmd_in)
-immediately below.  Checking sg_is_blktrace_cmd() before the switch
-duplicates the four command constants and runs up to four extra comparisons
-on every ioctl call, including the SG_IO path.  Could the capability check
-be done inside the existing blktrace switch cases instead?
+[Severity: Medium]
+With ufs_rpmb_bus_type registered, can ufs_rpmb_probe() fail with -EEXIST
+on systems with more than one UFS host controller?
+
+ufs_rpmb_probe() names each device using only the per-controller region
+index:
+
+drivers/ufs/core/ufs-rpmb.c:ufs_rpmb_probe() {
+	...
+		dev_set_name(&ufs_rpmb->dev, "ufs_rpmb%d", region);
+	...
+		ret =3D device_register(&ufs_rpmb->dev);
+	...
+}
+
+Because bus_add_device() creates a symlink named dev_name(dev) in the
+shared /sys/bus/ufs_rpmb/devices/ directory, the second controller's
+"ufs_rpmb0" collides with the first controller's and leaves OP-TEE RPMB
+unavailable on additional controllers.  Including hba->host->host_no in
+the device name (as ufs_bsg_probe() does) would keep the names unique
+across controllers.
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261111145034.2487=
-17-1-cui.tao@linux.dev?part=3D2
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261111-ufs-rpmb-b=
+us-v1-1-b07100e53f6c@flipper.net?part=3D1
