@@ -1,129 +1,73 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=216.40.44.13
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794424959;
-	b=o576ov3wE6NE5VtA6/QEVazlRPD3suF8cah2bzNcEoRuyspBWbRFRHefWu02b2lpF8xG
-	 WYIZDq9NRlIZGlnADqUxvQWrMF4Vyq59RwTDSWlQRC47sSpECrcFfXXLodiu+4/PaiTaq
-	 F5mCPNK2SwBzU8Y/VvV1VwfVEdnjd4qBOmizpmkaNoOQmKzUdq/o8wvftNfwegTHyCv9F
-	 CzHC35lv18ORGy6uB6QLggL4x1kErajhsC+bc9U3zW3sV/E+RJrvlAot5/DvWRw6OGmBK
-	 wxkGvHG83W2UocPqRu2XUSqo4f3ENQAzsznjn6d7I4EljaQKTkGcDu3UZE//ee/s8jg==
+	t=1794438928;
+	b=Lw8P8O3u9gaU8fWvOPyk9qW14uvyTOSu6DJ3vzWimedSkcVPXAKtl+t17+VJldYvzsKp
+	 1VEVrA4HCCbMjczMpXDEaOyaU8DmlLaW9gsOYMhK19piujBEYlOSZxmV31Z/eY1ZdSIN4
+	 LQrvTl3/+E0VUleUhhozc4oelCihZFs9RUfNcgjo/NPQdpEq4UhPc4KTeR4PIdXZGqaYC
+	 QPgPYR/5Ck5NKIb5AU0G3CuVMugf6qziLWfxh9CzzdmUq0jZHHAR+rucny4dPlBVuqzHL
+	 gZ2BaG+WVmqfi1Hf3DmmfbFj/SeC2Y2LJ21Ee1B71ZoPfO8AllHEBJs6WPJpo47IQvQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794424959;
-	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
-	 DKIM-Signature:X-Google-DKIM-Signature:X-Forwarded-Encrypted:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:X-Received:Received:Date:From:
-	 To:Cc:Subject:Message-ID:References:MIME-Version:Content-Type:
-	 Content-Disposition:Content-Transfer-Encoding:In-Reply-To:
-	 X-Proofpoint-Spam-Details-Enc:X-Proofpoint-ORIG-GUID:
-	 X-Authority-Analysis:X-Proofpoint-GUID:X-Proofpoint-Spam-Info:
-	 X-Proofpoint-Virus-Version:X-Proofpoint-Spam-Details;
-	bh=ReekrPpGktMFuSDQYs4o53/ZO85RZPgLvI6NpbtxPhc=;
-	b=JN0i3nxvZsmfjpVZSehBBTkLRcAEN5aOMbw/hH+zkieSPsk9q9pqsImbpYAbWqHcdci/
-	 JUzl7Req5qnUiiI+5owJW5qqeWe8rnq2kmTEhTTNGtUVwoQDygVxiBCy+F5bgUHKV+A9l
-	 f+NnGKxTURLJy8LRKmoEpqQKI2m6rtZ0bTY9/zLxEvLMbgpmWnlh+Zu/O1acQPBSkYxFi
-	 IgE7RWkBSsIXEEElYOvh84CRdc5atS2esIcyzqosmHcCeiJHrDMU3lM8+s2jgXtfo+vKI
-	 D8lIqkm7TvhATW+qz3stRDgepu4sJLErAJoYZv8XZoSyprlPeemO3TnkNrAWSe8Huvw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794438928;
+	h=DMARC-Filter:Received:Received:Date:From:To:Cc:Subject:Message-ID:
+	 In-Reply-To:References:X-Mailer:MIME-Version:Content-Type:
+	 Content-Transfer-Encoding:X-Rspamd-Server:X-Rspamd-Queue-Id:
+	 X-Stat-Signature:X-Spam-Status:X-Session-Marker:X-Session-ID:
+	 DKIM-Signature:X-HE-Tag:X-HE-Meta;
+	bh=gmDNsQ8h2wciKasKQCbqVP3maaL4qbrw5sZmT7BnjeA=;
+	b=ad9zTcEOvfB01rrFDqzazNxSbDqW5SUq7SpYouQB1u89uZuRuGAOl7YC+VGvuPf0XwLU
+	 CIqcT5VwHPvB3dbKyDeZps9xMPhjGaiw5Y0e6eD7JLJyQ/SuR8lnBUcxnTl4FCE9wIT6r
+	 cNnLaEtoNtIvPhNkfgrP744QDeIax2z8pDSRutZka5ShTD/KclMgLfG6CKHzZhlhb1gbR
+	 Xesxi7Pabh2fAlqoYnCj2kLj7uU1sqTUNAIgRQNyregfAGqWanzUNVVLf8G27Lwp3SPQe
+	 0jVMhALLKRQ9hIwUa5j1Fv5zKNeh7ztpxgtZs5fGxeKD7iG8jw2WtgkjGIBlG9HylIw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=oss.qualcomm.com;
-	spf=pass smtp.mailfrom=oss.qualcomm.com;
-	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=a6cnb6rt;
-	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=Bcsk+ogP;
-	arc=none smtp.remote-ip=205.220.180.131
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+	dmarc=pass header.from=goodmis.org;
+	spf=pass smtp.mailfrom=goodmis.org;
+	dkim=pass header.d=goodmis.org header.i=@goodmis.org header.a=rsa-sha256 header.s=dkim1 header.b="7BpeV/CN";
+	arc=none smtp.remote-ip=216.40.44.13
+Received: from relay.hostedemail.com (smtprelay0013.hostedemail.com [216.40.44.13])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3EDF606A32A
-	for <linux-scsi@vger.kernel.org>; Wed, 11 Nov 2026 19:22:38 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B3EDF606A32A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1E69606A337;
+	Wed, 11 Nov 2026 23:15:26 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E1E69606A337
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=goodmis.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=goodmis.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=a6cnb6rt;
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=Bcsk+ogP
-Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6ABIp5AF1141750
-	for <linux-scsi@vger.kernel.org>; Wed, 11 Nov 2026 19:22:37 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	ReekrPpGktMFuSDQYs4o53/ZO85RZPgLvI6NpbtxPhc=; b=a6cnb6rtjgtl9v5k
-	zwR8A7DkvUbAkut5S7wJvi8kO4xkz7knxYDT1LfMk8y33eE4Ip1dh0ufrudEFW7S
-	UEAgl/+waZYamYSv/1vNP87MnWieZVH6sJHzayXjf81wM3SyuP8hF/OXnF3GtfgV
-	c6RUbaupg9tfyaPFjJFVO3eN0TCuuo2XD8WGZo2YekeSEQc9IehNGDaHD3gzF0Kf
-	nBEkl4zkEvaLE4/emMURa3So9/KiwroM2gkPwUm4oUVUIlk49vQl6RMVuuXQdr/Q
-	LT4EgY/TAIimtftkQavM+XsX6SB/JZ+vxoehs89OUisn05V2iC7S0NElPjjf/Lw8
-	NI9ReA==
-Received: from mail-dy1-f198.google.com (mail-dy1-f198.google.com [74.125.82.198])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4hvpjjta83-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Wed, 11 Nov 2026 19:22:37 +0000 (GMT)
-Received: by mail-dy1-f198.google.com with SMTP id 5a478bee46e88-36f26e6abe9so5301568eec.0
-        for <linux-scsi@vger.kernel.org>; Wed, 11 Nov 2026 11:22:37 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1794424956; x=1795029756; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :content-type:mime-version:references:message-id:subject:cc:to:from
-         :date:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=ReekrPpGktMFuSDQYs4o53/ZO85RZPgLvI6NpbtxPhc=;
-        b=Bcsk+ogPcLGsWWSpFpv0eCRKYpYWl7WHrlDhu6DeXQpi6y9wlxkFaez2xxLrwBVvwj
-         wRGg0jIg4nWyti8wlhlwwEZE4yScWgv2oU4xVhfrg/HoUjaAhuV8ZdkScqvaLIr9lA9J
-         Ziuvvb1t1zbj7ScuMaJt5uipvQKudHhNdONNDr6+qagJ56l4lnOegkxR/SCg+aum/OYh
-         PznXbmam2/XqHIXW73uEDeVp+BTWJLiSX8BP3IboFh4zNsvEhNB2zPyEGgn5AvZrujFI
-         pxHhlXWBaR6Ha7T+ku9lGm9i/E3uXxisdSBDxeHBV2Nx0yLd55TUFPXGdyOe7uYAWUwY
-         KHww==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794424956; x=1795029756;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :content-type:mime-version:references:message-id:subject:cc:to:from
-         :date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=ReekrPpGktMFuSDQYs4o53/ZO85RZPgLvI6NpbtxPhc=;
-        b=VbYnSQCL6dxh8cUd6Nazxqorjrg6y+tIuCOGO5nZMDLTOZYZkPNo2vS5dnOBEFnmLE
-         vVCP/G/WyYClMnHAgL1zD6ZFJR6me0ihZTV1k2h+QHlk2l3Ao1rwgWNl3CbW3Xxv+gAB
-         KSHZaeKOoB3MKM6tg67xlxZzEQZgWuIjTLHKd1FDLGzsxVaM6WtcAX7XB4lZXNQzM6Dz
-         NUCrGvnpx94V9UgeNuAFOnqi3rr52JY6ac0chsRbhC/Q/NI9W62bUR1KU+pptZ1WOBdM
-         bIpzD4YYC6+Iu7wQFdHF9zBUDc9ZLO45v43yF0OCOQabSmqF5FOcrdcngG0+gZFJWxNK
-         b4NA==
-X-Forwarded-Encrypted: i=1; AL+hErEgEWYrGDQMt6nrziXsqorkLsTgeEJdw+sh3IduWy8ATzL6ZMur0glrqPokfgKSjwwBG3OWF0dFjoyy@vger.kernel.org
-X-Gm-Message-State: APuU4Z8yPAxQ1q5YWx30NuWZ3HqSgDfT0oawBADfEHadNzpFf/xYOb8m
-	UU8AFebQQc2jR9Gu2A35RwpKe2BCIy7Nj8aCG/4bE2PAhEl6xklMH40nrP1odCI3aCL+cIB2IZQ
-	UQ4X30lXR4T5F1e5uZGwmJNZSsqzFp+i2i1qzwefJx6DDedhvIi8vcYN2w/907Vtx
-X-Gm-Gg: AYBFou2EVrKTLjFX1YjRO3pF1av9rGrgBWi2qig9G8Kn64mD/DbVexhDqvOTFqcWG8f
-	dlY1np+2Vxw4khpDOVyFPR1rmz93QEBvNKUpKkimTth+iln06VIp5wgLz3/gAxhOGtwMFXhmCoj
-	Lg+QrxzTnqFkbKmX/TDDUOyFEuRZY9vTvw9QUi7cxC808D5Fq32P4spwm5Ma8OhdhGyQS/SckYo
-	CAzdEpc7GmdSPw+mkuWvzkBsUHfvfpECbnvWvU0McL47EJtA6jLIHM6kISOc+fYvD5LdYVLosFG
-	eH66DPx3fTv3ayLAgBEAAPhAxxEYjZhNm8XgplIji2M6BYiFXRNAYPpH/VaOQadW6VMGQhkDAeb
-	DGykbPnEHTaa9AGMOJch1uXSPtCIVo9i5+qdCP6jfe/PrANU7U1GYY+FiPnDTS5JeyWz+KPs1l6
-	f/GjwU0xqqKTI=
-X-Received: by 2002:a05:693c:87c4:10b0:36f:9d8:4a33 with SMTP id 5a478bee46e88-376867551b7mr3870116eec.31.1794424956329;
-        Wed, 11 Nov 2026 11:22:36 -0800 (PST)
-X-Received: by 2002:a05:693c:87c4:10b0:36f:9d8:4a33 with SMTP id 5a478bee46e88-376867551b7mr3870085eec.31.1794424955755;
-        Wed, 11 Nov 2026 11:22:35 -0800 (PST)
-Received: from hu-arakshit-hyd.qualcomm.com ([202.46.22.19])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-37520512ec1sm17793328eec.12.2026.11.11.11.22.29
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 11 Nov 2026 11:22:35 -0800 (PST)
-Date: Thu, 12 Nov 2026 00:52:27 +0530
-From: Abhinaba Rakshit <abhinaba.rakshit@oss.qualcomm.com>
-To: Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konradybcio@kernel.org>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Adrian Hunter <adrian.hunter@intel.com>, Ulf Hansson <ulfh@kernel.org>,
-        Rob Herring <robh@kernel.org>,
-        Krzysztof Kozlowski <krzk+dt@kernel.org>,
-        Conor Dooley <conor+dt@kernel.org>,
-        Neeraj Soni <neeraj.soni@oss.qualcomm.com>,
-        Harshal Dev <harshal.dev@oss.qualcomm.com>,
-        Kuldeep Singh <kuldeep.singh@oss.qualcomm.com>
-Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-mmc@vger.kernel.org,
-        devicetree@vger.kernel.org,
-        Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
-Subject: Re: [PATCH v12 0/6] Enable ICE clock scaling
-Message-ID: <avTAcw+DZtJ7bSTG@hu-arakshit-hyd.qualcomm.com>
-References: <20260824-enable-ice-clock-scaling-v12-0-09271f583dc6@oss.qualcomm.com>
+	dkim=pass (1024-bit key) header.d=goodmis.org header.i=@goodmis.org header.a=rsa-sha256 header.s=dkim1 header.b=7BpeV/CN
+Received: from omf12.hostedemail.com (lb01a-stub [10.200.18.249])
+	by unirelay05.hostedemail.com (Postfix) with ESMTP id 42BF340216;
+	Wed, 11 Nov 2026 23:15:15 +0000 (UTC)
+Received: from [HIDDEN] (Authenticated sender: rostedt@goodmis.org) by omf12.hostedemail.com (Postfix) with ESMTPA id 7DEE41A;
+	Wed, 11 Nov 2026 23:14:54 +0000 (UTC)
+Date: Wed, 11 Nov 2026 18:14:47 -0500
+From: Steven Rostedt <rostedt@goodmis.org>
+To: Vincent Donnefort <vdonnefort@google.com>
+Cc: Tao Cui <cui.tao@linux.dev>, akpm@linux-foundation.org,
+ dgilbert@interlog.com, mkp@kernel.org, loberman@redhat.com,
+ jmeneghi@redhat.com, kraxel@redhat.com, vivek.kasireddy@intel.com,
+ mst@redhat.com, jasowangio@gmail.com, eperezma@redhat.com,
+ stefanha@redhat.com, sgarzare@redhat.com, mhiramat@kernel.org,
+ jgg@ziepe.ca, kevin.tian@intel.com, axboe@kernel.dk, linux-mm@kvack.org,
+ James.Bottomley@hansenpartnership.com, sumit.semwal@linaro.org,
+ christian.koenig@amd.com, phasta@kernel.org, joro@8bytes.org,
+ will@kernel.org, linux-scsi@vger.kernel.org,
+ dri-devel@lists.freedesktop.org, linux-media@vger.kernel.org,
+ linaro-mm-sig@lists.linaro.org, kvm@vger.kernel.org,
+ virtualization@lists.linux.dev, linux-trace-kernel@vger.kernel.org,
+ iommu@lists.linux.dev, io-uring@vger.kernel.org,
+ linux-kernel@vger.kernel.org, bobbyeshleman@meta.com,
+ mathieu.desnoyers@efficios.com, robin.murphy@arm.com, mason@kernel.org,
+ aesteve@redhat.com, tjmercier@google.com, harry@kernel.org, vbabka@suse.cz,
+ cuitao@kylinos.cn
+Subject: Re: [PATCH 4/7] tracing: account ring buffer pages and trace_array
+ metadata to memcg
+Message-ID: <20261111181447.3c483a50@fedora>
+In-Reply-To: <avScKhR22kFOQ1z4@google.com>
+References: <20261106131829.3228926-1-cui.tao@linux.dev>
+	<20261106131829.3228926-5-cui.tao@linux.dev>
+	<avScKhR22kFOQ1z4@google.com>
+X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-redhat-linux-gnu)
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -133,97 +77,88 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260824-enable-ice-clock-scaling-v12-0-09271f583dc6@oss.qualcomm.com>
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMTExMDA3NyBTYWx0ZWRfXyIg+mOkq2m69
- oWYgN+epII/3MsSZoMSQTNaMJb0+Bjje5kVKYH8maGiFlUUAEE1N4AMRln4wq+6Wi9UcA5iPlKI
- BWofpi330Vqi4RjkZgpVa/pd5rxcXuOLx8UTlFGTGSdJG+C1Mxl0hlPFI48CWfYEa7PtPShrHsf
- a586R1dJmTgw1khWnKzHQDw0k7Nhudkx8rdtHZxpiATN1zQX4v/lkS8P/fSmY7jvek9pP182RP2
- EVot36piHiTThEnO5JvQwzM65eZN7BhoKgHhBMt831QtW81INUJ7CXzWMr7cosHD1aobCMHbW7D
- 6jxgAh1ARZsp6PMH8GIQRmxw/4uJWGtMritTEI3rt4tkCDvp2KUy7ZDy+p6fQyh3utQjVXhd7B9
- HArelyzwfYU4JQFkg1MQS7aWj2mL67V9Xh/LjXowHumz3rf8hH3kvd6kLUozdGaARheW/5pzSBN
- heqdWNiFwlFx+SiwTAg==
-X-Proofpoint-ORIG-GUID: CKGWsAcJPJYSqw8be65qgC-93TOsWR0H
-X-Authority-Analysis: v=2.4 cv=FeuiV5+6 c=1 sm=1 tr=0 ts=6af4c07d cx=c_pps
- a=wEP8DlPgTf/vqF+yE6f9lg==:117 a=fChuTYTh2wq5r3m49p7fHw==:17
- a=IkcTkHD0fZMA:10 a=zJRp6_cAMcgA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=rJkE3RaqiGZ5pbrm-msn:22
- a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8 a=FeIq2xlXlOKQ0BwA5tkA:9 a=3ZKOabzyN94A:10
- a=QEXdDO2ut3YA:10 a=bBxd6f-gb0O0v-kibOvt:22
-X-Proofpoint-GUID: CKGWsAcJPJYSqw8be65qgC-93TOsWR0H
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMTExMDA3NyBTYWx0ZWRfXy1dpvMJarPn6
- GCQ/tUzPkQESLormoDN4aya+VJOGJS+7OFXVMDbxgPBPeEH0eHy2H5BXmKpfaIK6UW0pI4te3z+
- sP7h44Sl2ij0MQz5Q93S3Uw2qkrUQZY=
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
- definitions=2026-11-11_05,2026-11-11_03,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- spamscore=0 phishscore=0 priorityscore=1501 lowpriorityscore=0 adultscore=0
- clxscore=1015 bulkscore=0 impostorscore=0 malwarescore=0 suspectscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2611040001 definitions=main-2611110077
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+X-Rspamd-Server: rspamout05
+X-Rspamd-Queue-Id: 7DEE41A
+X-Stat-Signature: d4cfzmoxk13pg5m5ihp4akmy4hyu64j7
+X-Session-Marker: 726F737465647440676F6F646D69732E6F7267
+X-Session-ID: U2FsdGVkX18kGGg1w/ZySP1UptBt2yyJGC8WbNBioPU=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=goodmis.org; h=date:from:to:cc:subject:message-id:in-reply-to:references:mime-version:content-type:content-transfer-encoding; s=dkim1; bh=gmDNsQ8h2wciKasKQCbqVP3maaL4qbrw5sZmT7BnjeA=; b=7BpeV/CNBK0xn7L5qTZRDTfRvQV7U2cQp/mCdojV1+x96AlRZ9rtulOhbTPnbSonEkl9dmgz3eGjHb8p+E0h3XDjeebpimn+FH/g477dsAXlpcaBL9IKpa4sWBqls3LUz3Nl8QeSDhvVfF3uaAU+FhhTMPtyWJPI5tA4IvX91lQ=
+X-HE-Tag: 1794438894-129449
+X-HE-Meta: U2FsdGVkX1+FAoSScfo676HReBJlhh89iBeR1SRWVaCqtKRtwKahRcTeRtp0PW6X+8tP0+cIcuPmi2dveZHq+M/PfpnjBQfOKdRrGrE6L6XJMKcHrkYMPwWfT5W0HZpH0ZA4Tjcgp99PZuSv7mPL4a7u5MFDGa5PSeaKjEeGZ88gtDz4qBX9Zmj8tooxKlDTcIzzVtZdHTNqYaysHU8krqFFZhQV25li+r73imgz99krf7wx8TB68OGyy17GR6OQunJdYHkV2EjKXilR7+DL4H7NvH48tc6IGNBrCqnO6wIQzDRZ3F+KJfPb6Hec+mdDc+COvRxaHejVamxGg/o8L4iQ0lpkg48J
 
-On Mon, Aug 24, 2026 at 01:17:37AM +0530, Abhinaba Rakshit wrote:
-> Introduce support for dynamic clock scaling of the ICE (Inline Crypto Engine)
-> using the OPP framework. During ICE device probe, the driver now attempts to
-> parse an optional OPP table from the ICE-specific device tree node for 
-> DVFS-aware operations. API qcom_ice_scale_clk is exposed by ICE driver
-> and is invoked by UFS host controller driver in response to clock scaling
-> requests, ensuring coordination between ICE and host controller.
-> 
-> For MMC controllers that do not support clock scaling, the ICE clock frequency
-> is kept aligned with the MMC controller’s clock rate (TURBO) to ensure
-> consistent operation.
-> 
-> Dynamic clock scaling based on OPP tables enables better power-performance
-> trade-offs. By adjusting ICE clock frequencies according to workload and power
-> constraints, the system can achieve higher throughput when needed and 
-> reduce power consumption during idle or low-load conditions.
-> 
-> The OPP table remains optional, absence of the table will not cause
-> probe failure. However, in the absence of an OPP table, ICE clocks will
-> remain at their default rates, which may limit performance under
-> high-load scenarios or prevent performance optimizations during idle periods.
-> 
-> Testing:
-> * dtbs_check
-> * Validated on Rb3Gen2, qcs8300-ride-sx and LeMans-evk
-> 
-> Merge Order and Dependencies
-> ============================
-> 
-> Patch 2 is dependent on patch 1 for the qcom_ice_scale_clk() API to be available.
-> Patch 3 is dependent on patch 1 for the qcom_ice_scale_clk() API to be available.
-> 
-> Due to dependency, all patches should go through Qcom SoC tree.
-> 
-> This patchset supersedes earlier ICE clock scaling series (v1–v11) with updated dependencies.
-> Hence, this patchset also *Depends-On* the following patchseries:
-> 
-> [1] Enable sdhc inline crypto engine for kodiak and monaco
->     https://lore.kernel.org/all/20260707-ice_emmc_support-v9-0-701c86f3c25b@oss.qualcomm.com/
-> 
-> Similar to patchset v11, patchset v12 is rebased on top of latest changes picked onto linux-next.
-> 
-> Signed-off-by: Abhinaba Rakshit <abhinaba.rakshit@oss.qualcomm.com>
+On Wed, 11 Nov 2026 16:47:38 +0000
+Vincent Donnefort <vdonnefort@google.com> wrote:
 
-Hello Bjorn,
+> On Fri, Nov 06, 2026 at 09:18:26PM +0800, Tao Cui wrote:
+> > From: Tao Cui <cuitao@kylinos.cn>
+> > 
+> > Creating an instance immediately allocates two full sets of per-cpu
+> > ring buffers, array buffer plus snapshot, about 1.375MB per cpu per set
+> > on the default config, plus the trace_array and its name.  None of it
+> > is charged: neither trace.c nor ring_buffer.c passes __GFP_ACCOUNT,
+> > while user_events in the same directory accounts everything it
+> > allocates.
 
-This series has been posted for a while now and I don't see any outstanding review comments on it.
-Could you pick it up into your tree for next RC?
+As the name suggests, "user_events" are for users and are special.
 
-Although the series reads as a feature enablement, it's addressing a real regression: on several chipsets,
-turning on the Inline Crypto Engine today causes a significant storage throughput drop without this
-series applied.
+> > 
+> > Instance creation is currently gated by tracefs file permissions
+> > alone, so a
+> > rootful container with the host tracefs bound in can create instances
+> > until the host runs out of memory.
 
-For example:
-Without ICE:         Sequential Read:  220 MB/s,     Sequential Write: 310 MB/s
-With ICE enabled:    Sequential Read:  143.717 MB/s, Sequential Write: 126.762 MB/s
+You mean, "works as expected"?
 
-That's roughly a 35-60% drop in throughput (averaging ~50%). This series is what makes ICE usable without
-that penalty, so merging it would let anyone enabling ICE today actually get the performance it's meant
-to provide.
+>  Charge the ring buffer pages and
+> > the trace_array metadata to the creating cgroup.
+> > 
+> > Signed-off-by: Tao Cui <cuitao@kylinos.cn>
+> > ---
+> >  kernel/trace/ring_buffer.c | 8 +++++++-
+> >  kernel/trace/trace.c       | 6 +++---
+> >  2 files changed, 10 insertions(+), 4 deletions(-)
+> > 
+> > diff --git a/kernel/trace/ring_buffer.c b/kernel/trace/ring_buffer.c
+> > index 1fd28a72e6ee..676c059c112c 100644
+> > --- a/kernel/trace/ring_buffer.c
+> > +++ b/kernel/trace/ring_buffer.c
+> > @@ -441,7 +441,13 @@ static struct buffer_data_page *alloc_cpu_data(int cpu, int order)
+> >  	 * gracefully without invoking oom-killer and the system is not
+> >  	 * destabilized.
+> >  	 */
+> > -	mflags = GFP_KERNEL | __GFP_RETRY_MAYFAIL | __GFP_COMP | __GFP_ZERO;
+> > +	/*
+> > +	 * The subbuffers are charged to the memcg of whoever caused the
+> > +	 * allocation: the creator of a trace instance, or root at boot for
+> > +	 * the global trace.
+> > +	 */
+> > +	mflags = GFP_KERNEL | __GFP_RETRY_MAYFAIL | __GFP_COMP | __GFP_ZERO |
+> > +		  __GFP_ACCOUNT;
+> >  
+> >  	page = alloc_pages_node(cpu_to_node(cpu), mflags, order);
+> >  	if (!page)  
+> 
+> Hum, by default tracefs is root only. 
+> 
+> And even if made accessible to other users: 
+> 
+>   1. The life span of a trace instance is not tied to the caller.
+>   2. The ring buffer is shared by multiple users.
 
-Abhinaba Rakshit
+Right. Is there a use case out there that allows non-admin to create an
+instance? Tracing ring buffers can expose a lot and should not be given
+to unprivileged users.
+
+What exactly is this trying to achieve?
+
+-- Steve
+
+
+> 
+> Overall I am not convinced charging the creator makes much sense.
+> 
+> Eventually a few allocations for iterators could be GFP_ACCOUNT.
+> 
+
