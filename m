@@ -1,109 +1,81 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.42
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=148.163.158.5
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794415664;
-	b=nQUfNEmg2uwZv6j8H+7bkHfM6SVf6HAq7EGYj9lASP0gV/8IFVfjCMtHtlcf0+2uy3XI
-	 L7VHQprBTGyZ48HR8Ia5tPiOmy++OfkRbV38r+ZA2jIDkSdW7fQimxaNjNpeKWbjUKTPi
-	 wFHKgskCvUyeJl6JN5FPK13iYvcvCEC5ZjCjpejWK/RrR6ANljy+bEC8JQWQQkwf3C05u
-	 vWVXFAmTTNDXwNT/04CzWyXjm2PMNOK2owevlJKoday0OpH7Q1BpTVnc9D++HKqZVpiMB
-	 1HpijQhiH6115MhJ0skadMC1XS59ZGtNf46EKS4fmsS8OIb8UBBvzw33+C8ETbT/lUA==
+	t=1794418978;
+	b=zSNLugO0cmuTGBaCZSRbrvkP/VnxWtxtBe5gohBXbk+pXk5tpQ1ykc1XucyJ1noAz6F7
+	 0PgIKmTM+C2kegning60i7y6u8+Ii2Z5Wz2yOLtzgsrSyOIVtX7s+d9+1daWpYz/y7xzA
+	 aHRZF2Y+Lzvo6obAqN4weDJ77C+u2K19HkU9ywRPSeOUhY3Amjv3LZR1ZHD0k4pJ0aYsd
+	 6pyXgSJTD/M3XSwKqjdoFhszJc58POPs//P8JdqULPVP2TRPrJ099fFHkcr9YnAXfKlu5
+	 hU/Pn6UP1R59rLtj/9d0XGJXI3327qoSSZeE8wwR3ybPN/6BsDtSH0sOp/3dqga3bmw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794415664;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To;
-	bh=JEN1we3zUbJ34wQgamBpttlVbDethKWGuPURScqYgfU=;
-	b=ghfr3btmS/aod6BMQT1CAcWou+sy+krPrMSkP+BstDxXwnmVe56W2qSpwgFgyCA40ew0
-	 WofPe4n+BQSVr1Xny/9b8YHaQZ4w/phPr4Pw4mniqOKoq0O2kpVm+OO8+wE4N2j/BDpZI
-	 i6zgqj5uTIUO8/mtQMgnJiAHsCnixvXD8REATBWUoEiIFplR8AXiyCS1P2QYi63mVQcBr
-	 yXlKlFv4M2Hz2onzu9BGCwAeNv2CxuCJXtyf236tiNIpDP74RQ+MESLJU+1u2MVNiT8HP
-	 sc0z9l7ooIDI5zunTiYTXsKEJkCJEjBMEviZttCzQkpFgC5miFC+2kHnDjTN35Uc2lQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794418978;
+	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:Received:
+	 Received:Received:Received:Received:Message-ID:Date:MIME-Version:
+	 User-Agent:Subject:To:Cc:References:Content-Language:From:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:X-TM-AS-GCONF:
+	 X-Proofpoint-Spam-Info:X-Authority-Analysis:X-Proofpoint-GUID:
+	 X-Proofpoint-Spam-Details-Enc:X-Proofpoint-ORIG-GUID:
+	 X-Proofpoint-Virus-Version:X-Proofpoint-Spam-Details;
+	bh=f9mUOKIBmwwH/CNGCaFVoqEC8uoxFYGFzSa6o8OHDjc=;
+	b=LWGuH2kV6iAacKHBBr0tP9S9TqoP+7Lggaw3pHRzei2NNUoBlTiIFxH9QcklZMozV9Hf
+	 sT8jWMGe1xCHdixIkcUlBsFuiewvjglpzvUTawArfCMDUq21vLSeL8EhwwdKUORny0Vqb
+	 xcOgdJun3kcHuEjjYI6/0RWuJVUJywkVQQ5M1Xk5EE6DuzFozmtTT0+Mr1oQhzbPCNv6E
+	 iOA08y3lyu5QczMuZYGH2wq2hTQDYGuJly/Ehz8p824TASjhllzhKUbDCxGx5nBaoCO6O
+	 r7Q/KNcPLPCP62RbbNa5FoBNDEk0k6cH797Ar1dXTDNAhThe5cOF+MYV+r+EZVb9FKg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=google.com;
-	spf=pass smtp.mailfrom=google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=Arhv0r+C;
-	arc=none smtp.remote-ip=209.85.128.42
-Received: from mail-wm1-f42.google.com (mail-wm1-f42.google.com [209.85.128.42])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=pass header.from=linux.ibm.com;
+	spf=pass smtp.mailfrom=linux.ibm.com;
+	dkim=pass header.d=ibm.com header.i=@ibm.com header.a=rsa-sha256 header.s=pp1 header.b=EQdOdijX;
+	arc=none smtp.remote-ip=148.163.158.5
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7337E606A335
-	for <linux-scsi@vger.kernel.org>; Wed, 11 Nov 2026 16:47:44 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7337E606A335
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48CD2606B4D4;
+	Wed, 11 Nov 2026 17:42:58 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 48CD2606B4D4
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=Arhv0r+C
-Received: by mail-wm1-f42.google.com with SMTP id 5b1f17b1804b1-4a9a8d6cea8so239025e9.1
-        for <linux-scsi@vger.kernel.org>; Wed, 11 Nov 2026 08:47:44 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20260707; t=1794415663; x=1795020463; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=JEN1we3zUbJ34wQgamBpttlVbDethKWGuPURScqYgfU=;
-        b=Arhv0r+CzJ6kd+TulLavcwx/mGrglYS422JYKTdbpa5un1a18rj23MyxqxLhddkmnB
-         gNcaXJ2IrojyJbxM+OgBPEAeEpsNpzWgOGqEgdEdfbdQsuKembFEQ+6KhZaeIYR30gze
-         IooSZe2fNj/7K3ZNeH8x15dEsu+UQLaI/m1IWuoX86P9po90K2PyeQK2TvubNwe2um3L
-         oa28twmLTolBcK1wc4TjQY120ADR9pALZ4st9GAliG4qO1r6wi1yEW2L29tlSgZjmr2h
-         E0qSshK5f4Tgf9M06nnSpMmyfbMbMx74mcpO6fx0yDufhfISeijTTqV/EjmW0IdaeTyH
-         ahNw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794415663; x=1795020463;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=JEN1we3zUbJ34wQgamBpttlVbDethKWGuPURScqYgfU=;
-        b=ua9i0J92l4tkEZEY6dyBegmrH0TYI3OV1wkX0Kk54+Akudb0Q8a5kK3l+LjPc0lffi
-         Z7rzVIBfbEQ555n5a6xH5yqkS1yh4cJhczgaEb9gK+6SHtHH6K9PqaNyN4oo3fxFZFSi
-         mTrKlREPk3sH9bTslbkB7pOG2mLmgNvu0/chSZuOql7cknhNWGl3asGPGZw0+CHuzlHE
-         GUjfMaIqr9Q6qxkwltLbsLXrCZhBKQvdbINzEguN8/Qa/rYZ0Rem3Ncq7UqMyGwFBk3x
-         vO1NmefW3R/89wTOgl2RdHNuc3e72LB47AUprtebOnSY78sYldFO5oJc6v0lYuinXq2s
-         UbvQ==
-X-Forwarded-Encrypted: i=1; AL+hErHtyXfLC3/Fxdxkq3gc4c/HQuzp+SrvMJve3pGtNS8hCOb/nYBeCf7oa+81gGFk4E59Wnyz/ayMm0Gd@vger.kernel.org
-X-Gm-Message-State: APuU4Z8Mnjh29vFiILsZ5eGYGaORrSUWoyP8v/fO51GUnB+OYKdsv2Pj
-	286Q9I4Ar0pUf4aNCxSjNDJT5wVWzuoDWmSUrAZM0fmqbIUxiVEojWdeozmDg6hnDA==
-X-Gm-Gg: AYBFou0fCZShES2v7RmNZHY99+wV9N59UmGE7TEqX4RlAYm2ZGvNY3C6cY6MVRSJvJe
-	jiaMiII+6tBFv9MkNvusqanEqj7faX1OtkDKqPZ2zkLEkChXgTCHWK0kp0twDjhg53EWVEk/F/j
-	W6UdxQ6sRGj/qi73XuONp/LmfRT6Yez9vU7dlolHUV+WseUZWgoff1F+gmr41GhPj7so0ATIz0P
-	7itu8+zjbqvJJ9ZnKB6/B2aylzh7YSLt7FXbvLXQuex2bOSpJ8xAko9NdnXDOuxsZvBpUD5OBRQ
-	CeW6HjkNm7a7HSqzxyG/bGNQCPc1Dp3snN8PYx+1vOKQrRvX9csEORoD1DikIx/wuujv/GBIMOw
-	1a4g6LN8X6N3mkIOsw+EP9+zWogPFwMc/wC7NrW9+UV12J9cvWB/WQFs0iPq5H1mUR3yawSc0VC
-	yJNjSpTCvu4w2RLdO9zFr8UNy+RvYYOOT22uzO+yoZxrWOrILG1Z+6AkVwl2FpkFkuapg9rKZKv
-	ClQxytCxl3dVOLuNAdZFul5vOzvvlzVsNhKUlzghzUg0dIhDXhE4oKU8SGoMo5+uG5PCrU1Doru
-	XLpbCTEpc3wrrBfBKrH2D4dxMdus09g5ZV1GCvbCQQqvwDcM3qeNsFoTVW8RVSzO3w==
-X-Received: by 2002:a05:600c:3f07:b0:4a2:18c4:61a5 with SMTP id 5b1f17b1804b1-4bb4e27994emr1100895e9.6.1794415662004;
-        Wed, 11 Nov 2026 08:47:42 -0800 (PST)
-Received: from google.com (0.182.34.34.bc.googleusercontent.com. [34.34.182.0])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-498365cd06fsm11724877f8f.40.2026.11.11.08.47.41
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 11 Nov 2026 08:47:41 -0800 (PST)
-Date: Wed, 11 Nov 2026 16:47:38 +0000
-From: Vincent Donnefort <vdonnefort@google.com>
-To: Tao Cui <cui.tao@linux.dev>
-Cc: akpm@linux-foundation.org, dgilbert@interlog.com, mkp@kernel.org,
-	loberman@redhat.com, jmeneghi@redhat.com, kraxel@redhat.com,
-	vivek.kasireddy@intel.com, mst@redhat.com, jasowangio@gmail.com,
-	eperezma@redhat.com, stefanha@redhat.com, sgarzare@redhat.com,
-	rostedt@goodmis.org, mhiramat@kernel.org, jgg@ziepe.ca,
-	kevin.tian@intel.com, axboe@kernel.dk, linux-mm@kvack.org,
-	James.Bottomley@hansenpartnership.com, sumit.semwal@linaro.org,
-	christian.koenig@amd.com, phasta@kernel.org, joro@8bytes.org,
-	will@kernel.org, linux-scsi@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, linux-media@vger.kernel.org,
-	linaro-mm-sig@lists.linaro.org, kvm@vger.kernel.org,
-	virtualization@lists.linux.dev, linux-trace-kernel@vger.kernel.org,
-	iommu@lists.linux.dev, io-uring@vger.kernel.org,
-	linux-kernel@vger.kernel.org, bobbyeshleman@meta.com,
-	mathieu.desnoyers@efficios.com, robin.murphy@arm.com,
-	mason@kernel.org, aesteve@redhat.com, tjmercier@google.com,
-	harry@kernel.org, vbabka@suse.cz, cuitao@kylinos.cn
-Subject: Re: [PATCH 4/7] tracing: account ring buffer pages and trace_array
- metadata to memcg
-Message-ID: <avScKhR22kFOQ1z4@google.com>
-References: <20261106131829.3228926-1-cui.tao@linux.dev>
- <20261106131829.3228926-5-cui.tao@linux.dev>
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.a=rsa-sha256 header.s=pp1 header.b=EQdOdijX
+Received: from pps.filterd (m0360072.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6ABFEklL1457124;
+	Wed, 11 Nov 2026 17:42:52 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pp1; bh=f9mUOK
+	IBmwwH/CNGCaFVoqEC8uoxFYGFzSa6o8OHDjc=; b=EQdOdijXrbaQRTGF2Ik6uB
+	Hmy7XkjVPnGBMuI+JtpfR/RcnyCKokMeH+UPwGX7gQoVue41QK1nQCxqpb4cig6X
+	k4c4XBWYLdxp4ADix4v7jBBZ6GHvWEKmP6VVsmd2Ll5tEjav9aE7GxqpDVUkNe6K
+	k0NND0VIXiN3Y0Jo7XTXekOLFJ3wM4WJEBoIyP6ELb7iVX0R729pVvs8i4lNB9fY
+	0LdB5XLfwcmBhD5gzEVG5LiX8FvldqBNROTbPKkfzcxyUmCaP//M/rsQ699HVMtV
+	jzJ10txRiCXvJgRLlh4xC0iVUDyoFMU/qO2OVPOlNpunMo0R6uh7PYgi+pBB9nqA
+	==
+Received: from ppma21.wdc07v.mail.ibm.com (5b.69.3da9.ip4.static.sl-reverse.com [169.61.105.91])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4hsumv2n16-1
+	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
+	Wed, 11 Nov 2026 17:42:52 +0000 (GMT)
+Received: from pps.filterd (ppma21.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma21.wdc07v.mail.ibm.com (8.18.1.11/8.18.1.11) with ESMTP id 6ABF50rV3451799;
+	Wed, 11 Nov 2026 17:42:51 GMT
+Received: from smtprelay03.wdc07v.mail.ibm.com ([172.16.1.70])
+	by ppma21.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4hv3325fka-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 11 Nov 2026 17:42:51 +0000 (GMT)
+Received: from smtpav02.dal12v.mail.ibm.com (smtpav02.dal12v.mail.ibm.com [10.241.53.101])
+	by smtprelay03.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 6ABHg1E330540356
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 11 Nov 2026 17:42:01 GMT
+Received: from smtpav02.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id E61865805A;
+	Wed, 11 Nov 2026 17:42:50 +0000 (GMT)
+Received: from smtpav02.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 68FE558051;
+	Wed, 11 Nov 2026 17:42:50 +0000 (GMT)
+Received: from [9.61.45.73] (unknown [9.61.45.73])
+	by smtpav02.dal12v.mail.ibm.com (Postfix) with ESMTP;
+	Wed, 11 Nov 2026 17:42:50 +0000 (GMT)
+Message-ID: <7d02a309-52e4-4b50-b27e-c6295fd25d8b@linux.ibm.com>
+Date: Wed, 11 Nov 2026 11:42:49 -0600
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -113,93 +85,56 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261106131829.3228926-5-cui.tao@linux.dev>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3] scsi: lpfc: Fix race conditions in ELS retry handling
+To: Paul Ely <paul.ely@broadcom.com>, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc: msmurthy@linux.ibm.com, mkp@kernel.org, Hannes Reinecke <hare@suse.de>
+References: <CAEQnVQ=uT+zMiF_mPD6j2g6qrpUL1Eufw=QNabJFEOz_wwLVRg@mail.gmail.com>
+Content-Language: en-US
+From: Kyle Mahlkuch <kmahlkuc@linux.ibm.com>
+In-Reply-To: <CAEQnVQ=uT+zMiF_mPD6j2g6qrpUL1Eufw=QNabJFEOz_wwLVRg@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMTExMDA2OCBTYWx0ZWRfXzTPjPCIO1d5Q
+ I6hgbWOg1NiOkvJx5YW1VhRFqEaCqILOkWw8FGVVt5UTvVtVPN45IS7yDYmLZpvDZ4gfews9moU
+ BvJ8O1btBCxWDsDGBhQNs4YxdWGkgCk=
+X-Authority-Analysis: v=2.4 cv=GISdgeNK c=1 sm=1 tr=0 ts=6af4a91c cx=c_pps
+ a=GFwsV6G8L6GxiO2Y/PsHdQ==:117 a=GFwsV6G8L6GxiO2Y/PsHdQ==:17
+ a=IkcTkHD0fZMA:10 a=zJRp6_cAMcgA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=RnoormkPH1_aCDwRdu11:22 a=RzCfie-kr_QcCd8fBx8p:22 a=E_2tHj-O1oUf7s_NJO8A:9
+ a=QEXdDO2ut3YA:10
+X-Proofpoint-GUID: aJLwOjoTNRAjU3ALlAbZ5n9qWZhpHMKl
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMTExMDA2OCBTYWx0ZWRfXy52qBdeG9Upn
+ L9XEfEJhInopOP/axmIxUU4mc89ZSdMuimawdHqkSajVjArw06Un1oubV5tWNSkhDYHrMetWvGg
+ s58fsMNLNvlcNWUIfwTgoqGFL/RSPHbSXWp+vwgwc9M+6CLrp6srptYByWwYFawFojrT2GTbeDb
+ wnZfpZBjQaJKL5tZVK8FhKwC6La0iDhyU2I3/cr3ZQt2CwJlVvUs2N7EUARUK990Ggxmi60T7MC
+ wVqOJWFlhu2y2skRqLUFTNmFvOWoYO7kt596SUCgkxlGagH6m95ifAk0/I4DnGhoxUVLttrPm8I
+ 0ldvRLijC75BQ5E4XuHYSiPpD8RCTtBdhBxx4vZ5LJGJmDZ9UA8/q40qTbvd1igSqKhCO3DTp4X
+ jyf+B2NzjmeMIlxzybuWAFwkWRo+dqtgRkpmcfGGpu4maVkK57zVea5PuSPluL/yRfosFo9OQgF
+ iryiG7uj14jiWGy+HsQ==
+X-Proofpoint-ORIG-GUID: aJLwOjoTNRAjU3ALlAbZ5n9qWZhpHMKl
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
+ definitions=2026-11-11_04,2026-11-11_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ suspectscore=0 bulkscore=0 impostorscore=0 clxscore=1015 adultscore=0
+ priorityscore=1501 phishscore=0 spamscore=0 malwarescore=0 lowpriorityscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2611040001 definitions=main-2611110068
 
-On Fri, Nov 06, 2026 at 09:18:26PM +0800, Tao Cui wrote:
-> From: Tao Cui <cuitao@kylinos.cn>
+> Hello Kyle, the patch would not apply.  There is an extra space here
+> in lpfc_els.c:
+
+> lpfc_hbadisc.c also has a white-space issue as well.
+> --ignore-whitespace allows the hunk.  I looked quickly but didn't see
+> it.
 > 
-> Creating an instance immediately allocates two full sets of per-cpu
-> ring buffers, array buffer plus snapshot, about 1.375MB per cpu per set
-> on the default config, plus the trace_array and its name.  None of it
-> is charged: neither trace.c nor ring_buffer.c passes __GFP_ACCOUNT,
-> while user_events in the same directory accounts everything it
-> allocates.
+> The patch still looks good -
 > 
-> Instance creation is currently gated by tracefs file permissions
-> alone, so a
-> rootful container with the host tracefs bound in can create instances
-> until the host runs out of memory.  Charge the ring buffer pages and
-> the trace_array metadata to the creating cgroup.
-> 
-> Signed-off-by: Tao Cui <cuitao@kylinos.cn>
-> ---
->  kernel/trace/ring_buffer.c | 8 +++++++-
->  kernel/trace/trace.c       | 6 +++---
->  2 files changed, 10 insertions(+), 4 deletions(-)
-> 
-> diff --git a/kernel/trace/ring_buffer.c b/kernel/trace/ring_buffer.c
-> index 1fd28a72e6ee..676c059c112c 100644
-> --- a/kernel/trace/ring_buffer.c
-> +++ b/kernel/trace/ring_buffer.c
-> @@ -441,7 +441,13 @@ static struct buffer_data_page *alloc_cpu_data(int cpu, int order)
->  	 * gracefully without invoking oom-killer and the system is not
->  	 * destabilized.
->  	 */
-> -	mflags = GFP_KERNEL | __GFP_RETRY_MAYFAIL | __GFP_COMP | __GFP_ZERO;
-> +	/*
-> +	 * The subbuffers are charged to the memcg of whoever caused the
-> +	 * allocation: the creator of a trace instance, or root at boot for
-> +	 * the global trace.
-> +	 */
-> +	mflags = GFP_KERNEL | __GFP_RETRY_MAYFAIL | __GFP_COMP | __GFP_ZERO |
-> +		  __GFP_ACCOUNT;
->  
->  	page = alloc_pages_node(cpu_to_node(cpu), mflags, order);
->  	if (!page)
+> Paul
 
-Hum, by default tracefs is root only. 
+Thanks Paul. My mail client was very misconfigured... I caught both issues. v4 on it's way! 
 
-And even if made accessible to other users: 
-
-  1. The life span of a trace instance is not tied to the caller.
-  2. The ring buffer is shared by multiple users.
-
-Overall I am not convinced charging the creator makes much sense.
-
-Eventually a few allocations for iterators could be GFP_ACCOUNT.
-
--- 
-Vincent
-
-> diff --git a/kernel/trace/trace.c b/kernel/trace/trace.c
-> index e8c4efa8107b..04b60b9cc4f5 100644
-> --- a/kernel/trace/trace.c
-> +++ b/kernel/trace/trace.c
-> @@ -8693,11 +8693,11 @@ trace_array_create_systems(const char *name, const char *systems,
->  	int ret;
->  
->  	ret = -ENOMEM;
-> -	tr = kzalloc_obj(*tr);
-> +	tr = kzalloc_obj(*tr, GFP_KERNEL_ACCOUNT);
->  	if (!tr)
->  		return ERR_PTR(ret);
->  
-> -	tr->name = kstrdup(name, GFP_KERNEL);
-> +	tr->name = kstrdup(name, GFP_KERNEL_ACCOUNT);
->  	if (!tr->name)
->  		goto out_free_tr;
->  
-> @@ -8708,7 +8708,7 @@ trace_array_create_systems(const char *name, const char *systems,
->  		goto out_free_tr;
->  
->  	if (systems) {
-> -		tr->system_names = kstrdup_const(systems, GFP_KERNEL);
-> +		tr->system_names = kstrdup_const(systems, GFP_KERNEL_ACCOUNT);
->  		if (!tr->system_names)
->  			goto out_free_tr;
->  	}
-> -- 
-> 2.43.0
-> 
+Kyle
