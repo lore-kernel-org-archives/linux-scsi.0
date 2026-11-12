@@ -1,103 +1,54 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794503876;
-	b=mUqnESIeq/ymsAmp8Q4KAGKk07Bmpd6Z6c9p9p8EN7IBF4ObEBZzP83DhzeHfaHCyx/D
-	 ce5HqslU5MDrJnCm71C6sfElkLD9ZgNnelNCTVb+7iLZMWaRKhE+Pugb1KTAD1V+SwWPL
-	 jf+tNW7yZkB69RvijNtWqc795etdUa3p4AiaflBNf/7a4l4HtCcNZ91EWbtyzb5MDqTdK
-	 L6g75FSwo6PUBOuKcvXHrVL9Ce/LmPNUF5eyBaT8wmQ0NNy1k2cmySvFGiC2MWBOBUwis
-	 PhzxLqkfTWL2nCBcZLFxCjHmaSvFoWXRdHw6c3WJlsRMgMuzyxSpqPWXa4iICvlg4uQ==
+	t=1794507728;
+	b=ON3NlfpzBxpy+BxLyjqZS+OSlJfSfd2tAQbrJ5uxnZHZW6YkBc28E9Bzq3OFbjExrI0n
+	 rBl8AMJcQlYZEVWC8SA5MlYK46ZyGdbs6SiiVcGbJrF2kpcKlWh2Rruf2og03RO5ys2GP
+	 fKhNPEcd4uH15N+NOzvwOWSOqJfBzAGEBo5bunAP0T/15ABU4nUBE5BXFEhn2Qe4ASwtY
+	 mF0lRWkqVr7qZAhJiRqtGs99UU6G8H/TcldepZEnEOrffCAjpk1mWZ31BI4gK5l6DBCMv
+	 HE9ZJF/65yBJUsdXa9jGIhVh1nJIG0lgMKOfY9TYmvbuX+6rtNp8T2KdsjmctKj6low==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794503876;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794507728;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:
-	 Content-Transfer-Encoding:In-Reply-To;
-	bh=VMi+hIkLWXT7siLEN9ATyCll+A1V4GrHFAEeCBcDPio=;
-	b=25EheIKy2mCkG8KJlAlZepDJWxlqrKr+5BN9JIO/HMNByML0t0lLkBu4Zaf+7kH51Lny
-	 DYkTXFwlZAsxwcsi6YduH5D+XS8Cwdq0kv1PlDhwN855MVJSaJKkXLjBdPgdRQJLN2vBG
-	 r8eaGZpfhZWDUlNj50PVceX+1SYrhFq0+W6oaO2XHMr7+IvXMfoNo9xTuD67DEyKFI4cc
-	 t/hPuGPnNt48OnmjFSR//Min+O/yId5ZzT7zdZc3v+1wT8ayhWQ4tKB0h70EOEV/tvaj5
-	 B5kL53GbKUfL5e3XjxkJAlyDyBkN5VKE1prug4a3OFXHrhXPTY941KK7co0zesIKq3g==
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=oLqDOK1wn++paaGO0cvuM15nLhAeIY/Tb/2qpBfiiSk=;
+	b=WqlCL+MJ87u4tAzMUigxYE9xwHYNvfeQI9n5V/ukSsqGdNZUwXJkGG/kfS1TyabXOnt3
+	 MiOItyJWYU0eROW9Eolp+DR/FsTGQTiVXhr4iao1z9U8ak3UOVyO40qoJB9H2sSXoEGh2
+	 429DM9LWSM1IqvjlWoyYNGvakwV4yN1oKxUx+a421BBs+1qofAZKctHHINyCKNTZjgP5l
+	 oHUYMS4po1F/oE9ivDNcKK3UqOsEOW/T9Ng03sGhsV0la1lrAUQWN/3nRsoSVroAdF04l
+	 Gw+7/asuymyIx40O3o5jBk6+rFT33LMnKTmAUU6yG0kbVTaBent6zIfkiT7yjeZ9Q3Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Xi1M0Wrq;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=QzdwkSyJ;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82F8A606A321;
-	Thu, 12 Nov 2026 17:17:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82386606A323;
+	Thu, 12 Nov 2026 18:22:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Xi1M0Wrq
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1B9171F000C5;
-	Thu, 12 Nov 2026 17:17:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=QzdwkSyJ
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0A2531F000C5;
+	Thu, 12 Nov 2026 18:22:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794503876;
-	bh=VMi+hIkLWXT7siLEN9ATyCll+A1V4GrHFAEeCBcDPio=;
+	s=k20260515; t=1794507728;
+	bh=oLqDOK1wn++paaGO0cvuM15nLhAeIY/Tb/2qpBfiiSk=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=Xi1M0WrqH5bMvx0n0pi4w5v7a8qJzrxjW4xzgjyJBTk4w5Ha9LDFHd8Q2SIO4bI0/
-	 R1AH44wKcxNJXbaWLeAun1BY623lBE7mWeM8MlocaX0VT4oGCtm1o/G3AsbPIXS1Ln
-	 HAfe4Gi1tJJQuDHDrzTAcmJcvP7xkP9KNg6uFt8kIbAQS0k0mQOiMe1zrTRcGbMEAP
-	 QjV4y8GkI+IFa+IR6J9g75IGth5ijUGZ2Wd4tjx81In8/mDCI0Hl19n37GOo0mpyES
-	 RMm1owYYSjXmybNXysJzMRsSMwbMIAEWBzrarLAWP33yYlnJBqzwDlRjfOGVF8svjx
-	 eUQ0ymv8EqhZg==
-Date: Thu, 12 Nov 2026 09:17:55 -0800
+	b=QzdwkSyJepQlosvHP+r8r+gkxkNnnUB2w29n2MC59zPKguX96IhdSOe3OtW7+ZfZ0
+	 zvqQ342AOVVFYCKaz1bno2D5aJ65HZpK59Pd9LmkYIy+T2Vt1paxCPvfX30GnLQc9N
+	 yL6/SbYxTtC8Pr+1etcpI2H6U+Tn5n5omwheMbj7i0vAKjVMQ8jBRmFI2Qn1S7BDmo
+	 mTwo0x2O6IWMFYi3y8Lr+XU8LtggRNwRPCoGHglLsMtmWOWJYV4tbHT8OQ2uvTR9w1
+	 Itr2cuT6Oq0pbrO/AKZqe3V47CgWxE/azj9tx6292EZ8yuFqjaCTS4gjIozmWkBsB0
+	 v4wvtuAC4PIOg==
+Date: Thu, 12 Nov 2026 10:22:07 -0800
 From: Kees Cook <kees@kernel.org>
-To: Bence Csokas <bence.csokas@arm.com>
-Cc: "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
-	Sumit Semwal <sumit.semwal@linaro.org>,
-	Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
-	Philipp Stanner <phasta@kernel.org>,
-	Sudeep Holla <sudeep.holla@kernel.org>,
-	Cristian Marussi <cristian.marussi@arm.com>,
-	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
-	Maxime Ripard <mripard@kernel.org>,
-	Thomas Zimmermann <tzimmermann@suse.de>,
-	David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>,
-	Jani Nikula <jani.nikula@linux.intel.com>,
-	Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
-	Rodrigo Vivi <rodrigo.vivi@intel.com>,
-	Tvrtko Ursulin <tursulin@ursulin.net>,
-	Lyude Paul <lyude@redhat.com>, Danilo Krummrich <dakr@kernel.org>,
-	Zack Rusin <zack.rusin@broadcom.com>,
-	Broadcom internal kernel review list <bcm-kernel-feedback-list@broadcom.com>,
-	Selvin Xavier <selvin.xavier@broadcom.com>,
-	Kalesh AP <kalesh-anakkur.purayil@broadcom.com>,
-	Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>,
-	Chengchang Tang <tangchengchang@huawei.com>,
-	Junxian Huang <huangjunxian6@hisilicon.com>,
-	Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
-	Hans de Goede <hansg@kernel.org>,
-	Mauro Carvalho Chehab <mchehab@kernel.org>,
-	Haiyang Zhang <haiyangz@microsoft.com>,
-	Wei Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>,
-	Andrew Lunn <andrew+netdev@lunn.ch>,
-	"David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@kernel.org>,
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
-	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
-	Jes Sorensen <Jes.Sorensen@gmail.com>,
-	Ping-Ke Shih <pkshih@realtek.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Benson Leung <bleung@chromium.org>,
-	Tzung-Bi Shih <tzungbi@kernel.org>,
-	Guenter Roeck <groeck@chromium.org>,
-	Nilesh Javali <njavali@marvell.com>,
-	GR-QLogic-Storage-Upstream@marvell.com,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K. Petersen" <mkp@kernel.org>,
-	linux-hardening@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-bluetooth@vger.kernel.org, linux-media@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org,
-	arm-scmi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	intel-gfx@lists.freedesktop.org, nouveau@lists.freedesktop.org,
-	linux-rdma@vger.kernel.org, linux-hyperv@vger.kernel.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	chrome-platform@lists.linux.dev, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH v2 0/2] Add struct_offsetofend() for pointer arithmetic
-Message-ID: <202611120916.3619B95@keescook>
-References: <20261112-offsetof-v2-0-276ede839967@arm.com>
+To: Mariia Nikitash <nikitash.mariiaw@gmail.com>
+Cc: mkp@kernel.org, linux-scsi@vger.kernel.org,
+	target-devel@vger.kernel.org, linux-kernel@vger.kernel.org,
+	morbo@google.com, justinstitt@google.com,
+	linux-hardening@vger.kernel.org
+Subject: Re: [PATCH] scsi: target: iscsi: Replace strlcat() with snprintf()
+Message-ID: <202611120959.62EE8ECF@keescook>
+References: <20261110093137.37744-1-nikitash.mariiaw@gmail.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -107,150 +58,165 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20261112-offsetof-v2-0-276ede839967@arm.com>
+In-Reply-To: <20261110093137.37744-1-nikitash.mariiaw@gmail.com>
 
-On Thu, Nov 12, 2026 at 10:29:32AM +0100, Bence Csokas wrote:
-> A common usage pattern for offsetof() is the following:
+On Tue, Nov 10, 2026 at 01:31:37AM -0800, Mariia Nikitash wrote:
+> In preparation for removing the deprecated strlcat() API[1], replace
+> the strlcat() call with snprintf() to construct the AuthMethod value
+> directly from param->value.
 > 
->   offsetof(typeof(*ptr), member)
+> Since buf1 contains unmodified copy of param->value, formatting
+> original value and suffix together preserves the NUL-terminated
+> output, including partial or omitted ",None" suffixes when the
+> 256-byte buffer is too small.
 > 
-> This is exactly the definition of struct_offset(). Some call sites use
-> offsetofend() instead of offsetof(). Add this variant, then replace all
-> call sites with the corresponding macros.
-
-Yeah, I think this is reasonable. I'd prefer to see the Coccinelle
-script explicitly added to tools/coccinelle/api/ though, so it can be
-trivially re-run as needed.
-
-Also, while Alejandro is right about the needless outer parens, I think
-I'd like to keep them just to match the other define, and they do no
-harm.
-
--Kees
-
-> 
-> Signed-off-by: Bence Csokas <bence.csokas@arm.com>
+> Link: https://github.com/KSPP/linux/issues/370 [1]
+> Signed-off-by: Mariia Nikitash <nikitash.mariiaw@gmail.com>
 > ---
-> Changes in v2:
-> - Use struct_offset() instead of reinventing it
-> - Rename offsetofendp() to struct_offsetofend()
-> - Merge the two treewide patches
-> - Link to v1: https://patch.msgid.link/20261105-offsetof-v1-0-4153f5c10edc@arm.com
+>  drivers/target/iscsi/iscsi_target_tpg.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> To: Kees Cook <kees@kernel.org>
-> To: "Gustavo A. R. Silva" <gustavoars@kernel.org>
-> To: Marcel Holtmann <marcel@holtmann.org>
-> To: Luiz Augusto von Dentz <luiz.dentz@gmail.com>
-> To: Sumit Semwal <sumit.semwal@linaro.org>
-> To: Christian König <christian.koenig@amd.com>
-> To: Philipp Stanner <phasta@kernel.org>
-> To: Sudeep Holla <sudeep.holla@kernel.org>
-> To: Cristian Marussi <cristian.marussi@arm.com>
-> To: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>
-> To: Maxime Ripard <mripard@kernel.org>
-> To: Thomas Zimmermann <tzimmermann@suse.de>
-> To: David Airlie <airlied@gmail.com>
-> To: Simona Vetter <simona@ffwll.ch>
-> To: Jani Nikula <jani.nikula@linux.intel.com>
-> To: Joonas Lahtinen <joonas.lahtinen@linux.intel.com>
-> To: Rodrigo Vivi <rodrigo.vivi@intel.com>
-> To: Tvrtko Ursulin <tursulin@ursulin.net>
-> To: Lyude Paul <lyude@redhat.com>
-> To: Danilo Krummrich <dakr@kernel.org>
-> To: Zack Rusin <zack.rusin@broadcom.com>
-> To: Broadcom internal kernel review list <bcm-kernel-feedback-list@broadcom.com>
-> To: Selvin Xavier <selvin.xavier@broadcom.com>
-> To: Kalesh AP <kalesh-anakkur.purayil@broadcom.com>
-> To: Jason Gunthorpe <jgg@ziepe.ca>
-> To: Leon Romanovsky <leon@kernel.org>
-> To: Chengchang Tang <tangchengchang@huawei.com>
-> To: Junxian Huang <huangjunxian6@hisilicon.com>
-> To: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
-> To: Hans de Goede <hansg@kernel.org>
-> To: Mauro Carvalho Chehab <mchehab@kernel.org>
-> To: Haiyang Zhang <haiyangz@microsoft.com>
-> To: Wei Liu <wei.liu@kernel.org>
-> To: Dexuan Cui <decui@microsoft.com>
-> To: Andrew Lunn <andrew+netdev@lunn.ch>
-> To: "David S. Miller" <davem@davemloft.net>
-> To: Eric Dumazet <edumazet@kernel.org>
-> To: Jakub Kicinski <kuba@kernel.org>
-> To: Paolo Abeni <pabeni@redhat.com>
-> To: Miri Korenblit <miriam.rachel.korenblit@intel.com>
-> To: Jes Sorensen <Jes.Sorensen@gmail.com>
-> To: Ping-Ke Shih <pkshih@realtek.com>
-> To: Johannes Berg <johannes@sipsolutions.net>
-> To: Benson Leung <bleung@chromium.org>
-> To: Tzung-Bi Shih <tzungbi@kernel.org>
-> To: Guenter Roeck <groeck@chromium.org>
-> To: Nilesh Javali <njavali@marvell.com>
-> To: GR-QLogic-Storage-Upstream@marvell.com
-> To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-> To: "Martin K. Petersen" <mkp@kernel.org>
-> Cc: linux-hardening@vger.kernel.org
-> Cc: linux-kernel@vger.kernel.org
-> Cc: linux-bluetooth@vger.kernel.org
-> Cc: linux-media@vger.kernel.org
-> Cc: dri-devel@lists.freedesktop.org
-> Cc: linaro-mm-sig@lists.linaro.org
-> Cc: arm-scmi@vger.kernel.org
-> Cc: linux-arm-kernel@lists.infradead.org
-> Cc: intel-gfx@lists.freedesktop.org
-> Cc: nouveau@lists.freedesktop.org
-> Cc: linux-rdma@vger.kernel.org
-> Cc: linux-hyperv@vger.kernel.org
-> Cc: netdev@vger.kernel.org
-> Cc: linux-wireless@vger.kernel.org
-> Cc: chrome-platform@lists.linux.dev
-> Cc: linux-scsi@vger.kernel.org
-> 
-> ---
-> Bence Csokas (2):
->       stddef: Add offsetofend() variant of struct_offset()
->       treewide: Use struct_offset()
-> 
->  drivers/bluetooth/btmrvl_main.c                    | 12 +++++-----
->  drivers/dma-buf/dma-resv.c                         |  2 +-
->  drivers/firmware/arm_scmi/base.c                   |  2 +-
->  drivers/gpu/drm/drm_edid.c                         | 26 +++++++++++-----------
->  drivers/gpu/drm/i915/gem/i915_gem_object.c         |  4 ++--
->  drivers/gpu/drm/i915/i915_active.c                 |  2 +-
->  drivers/gpu/drm/i915/i915_sw_fence_work.c          |  2 +-
->  .../gpu/drm/nouveau/nvkm/subdev/gsp/rm/r535/gsp.c  |  2 +-
->  drivers/gpu/drm/vmwgfx/vmwgfx_execbuf.c            | 12 +++++-----
->  drivers/infiniband/hw/bnxt_re/qplib_fp.c           |  2 +-
->  drivers/infiniband/hw/hns/hns_roce_cq.c            |  4 ++--
->  drivers/infiniband/hw/hns/hns_roce_qp.c            |  6 ++---
->  drivers/media/usb/uvc/uvc_v4l2.c                   |  4 ++--
->  drivers/net/hyperv/rndis_filter.c                  |  2 +-
->  drivers/net/wireless/intel/iwlwifi/iwl-drv.c       |  2 +-
->  drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c     |  2 +-
->  drivers/net/wireless/intel/iwlwifi/mvm/rs.c        |  2 +-
->  .../net/wireless/intel/iwlwifi/pcie/ctxt-info-v2.c |  5 ++---
->  drivers/net/wireless/realtek/rtl8xxxu/core.c       |  2 +-
->  drivers/net/wireless/realtek/rtw88/fw.c            |  2 +-
->  drivers/net/wireless/realtek/rtw89/core.c          |  2 +-
->  drivers/net/wireless/realtek/rtw89/fw.c            |  8 +++----
->  drivers/net/wireless/virtual/mac80211_hwsim_main.c |  4 ++--
->  drivers/platform/chrome/cros_ec_lightbar.c         |  4 ++--
->  drivers/scsi/qla2xxx/qla_gs.c                      |  2 +-
->  drivers/scsi/qla2xxx/qla_mbx.c                     |  2 +-
->  drivers/scsi/qla2xxx/qla_os.c                      |  2 +-
->  drivers/scsi/qla2xxx/qla_tmpl.c                    |  4 ++--
->  drivers/scsi/scsi_transport_fc.c                   |  2 +-
->  include/linux/overflow.h                           | 12 ++++++++++
->  30 files changed, 75 insertions(+), 64 deletions(-)
-> ---
-> base-commit: 9d66f26fefacebfeed15de31c1123451a17ff119
-> change-id: 20261105-offsetof-f62aa6348f0d
-> 
-> Best regards,
-> --  
-> Bence Csokas <bence.csokas@arm.com>
-> 
+> diff --git a/drivers/target/iscsi/iscsi_target_tpg.c b/drivers/target/iscsi/iscsi_target_tpg.c
+> index 99772364c88e..aad82a37538f 100644
+> --- a/drivers/target/iscsi/iscsi_target_tpg.c
+> +++ b/drivers/target/iscsi/iscsi_target_tpg.c
+> @@ -624,7 +624,7 @@ int iscsit_ta_authentication(struct iscsi_portal_group *tpg, u32 authentication)
+
+OMG this whole function makes me weep. Also, I think it has an out of
+bounds write in it too:
+
+  echo None > .../tpgt_1/param/AuthMethod
+  echo 1    > .../tpgt_1/attrib/authentication
+
+and I don't think it handles the truncation case. This is a good candidate
+for a full seq_buf rewrite, IMO.
+
+>  		none = strstr(buf1, NONE);
+>  		if (none)
+>  			goto out;
+> -		strlcat(buf1, "," NONE, sizeof(buf1));
+> +		snprintf(buf1, sizeof(buf1), "%s," NONE, param->value);
+>  		if (iscsi_update_param_value(param, buf1) < 0)
+>  			return -EINVAL;
+>  	}
+
+And doesn't need memset either. e.g.:
+
+diff --git a/drivers/target/iscsi/iscsi_target_parameters.h b/drivers/target/iscsi/iscsi_target_parameters.h
+index 38d2238dfe08..da720f6be5c1 100644
+--- a/drivers/target/iscsi/iscsi_target_parameters.h
++++ b/drivers/target/iscsi/iscsi_target_parameters.h
+@@ -41,7 +41,7 @@ extern int iscsi_change_param_value(char *, struct iscsi_param_list *, int);
+ extern void iscsi_release_param_list(struct iscsi_param_list *);
+ extern struct iscsi_param *iscsi_find_param_from_key(char *, struct iscsi_param_list *);
+ extern int iscsi_extract_key_value(char *, char **, char **);
+-extern int iscsi_update_param_value(struct iscsi_param *, char *);
++extern int iscsi_update_param_value(struct iscsi_param *, const char *);
+ extern int iscsi_decode_text_input(u8, u8, char *, u32, struct iscsit_conn *);
+ extern int iscsi_encode_text_output(u8, u8, char *, u32 *, u32,
+ 			struct iscsi_param_list *, bool);
+diff --git a/drivers/target/iscsi/iscsi_target_parameters.c b/drivers/target/iscsi/iscsi_target_parameters.c
+index 2b318b13268e..34846f5b641c 100644
+--- a/drivers/target/iscsi/iscsi_target_parameters.c
++++ b/drivers/target/iscsi/iscsi_target_parameters.c
+@@ -642,7 +642,7 @@ int iscsi_extract_key_value(char *textbuf, char **key, char **value)
+ 	return 0;
+ }
+ 
+-int iscsi_update_param_value(struct iscsi_param *param, char *value)
++int iscsi_update_param_value(struct iscsi_param *param, const char *value)
+ {
+ 	kfree(param->value);
+ 
+diff --git a/drivers/target/iscsi/iscsi_target_tpg.c b/drivers/target/iscsi/iscsi_target_tpg.c
+index 99772364c88e..6d2cdfa89be5 100644
+--- a/drivers/target/iscsi/iscsi_target_tpg.c
++++ b/drivers/target/iscsi/iscsi_target_tpg.c
+@@ -8,6 +8,7 @@
+  *
+  ******************************************************************************/
+ 
++#include <linux/seq_buf.h>
+ #include <linux/slab.h>
+ #include <target/target_core_base.h>
+ #include <target/target_core_fabric.h>
+@@ -579,8 +580,9 @@ int iscsit_tpg_del_network_portal(
+ 
+ int iscsit_ta_authentication(struct iscsi_portal_group *tpg, u32 authentication)
+ {
+-	unsigned char buf1[256], buf2[256], *none = NULL;
+-	int len;
++	DECLARE_SEQ_BUF(s, 256);
++	char old[256], *p = old, *tok;
++	const char *str;
+ 	struct iscsi_param *param;
+ 	struct iscsi_tpg_attrib *a = &tpg->tpg_attrib;
+ 
+@@ -590,44 +592,33 @@ int iscsit_ta_authentication(struct iscsi_portal_group *tpg, u32 authentication)
+ 		return -EINVAL;
+ 	}
+ 
+-	memset(buf1, 0, sizeof(buf1));
+-	memset(buf2, 0, sizeof(buf2));
+-
+ 	param = iscsi_find_param_from_key(AUTHMETHOD, tpg->param_list);
+ 	if (!param)
+ 		return -EINVAL;
+ 
+ 	if (authentication) {
+-		snprintf(buf1, sizeof(buf1), "%s", param->value);
+-		none = strstr(buf1, NONE);
+-		if (!none)
+-			goto out;
+-		if (!strncmp(none + 4, ",", 1)) {
+-			if (!strcmp(buf1, none))
+-				sprintf(buf2, "%s", none+5);
+-			else {
+-				none--;
+-				*none = '\0';
+-				len = sprintf(buf2, "%s", buf1);
+-				none += 5;
+-				sprintf(buf2 + len, "%s", none);
+-			}
+-		} else {
+-			none--;
+-			*none = '\0';
+-			sprintf(buf2, "%s", buf1);
+-		}
+-		if (iscsi_update_param_value(param, buf2) < 0)
++		/* Remove "None" from the list, unless it is the only entry. */
++		if (strscpy(old, param->value) < 0)
+ 			return -EINVAL;
++		while ((tok = strsep(&p, ","))) {
++			if (!strcmp(tok, NONE))
++				continue;
++			if (seq_buf_used(&s))
++				seq_buf_putc(&s, ',');
++			seq_buf_puts(&s, tok);
++		}
++		if (!seq_buf_used(&s))
++			goto out;
+ 	} else {
+-		snprintf(buf1, sizeof(buf1), "%s", param->value);
+-		none = strstr(buf1, NONE);
+-		if (none)
++		if (strstr(param->value, NONE))
+ 			goto out;
+-		strlcat(buf1, "," NONE, sizeof(buf1));
+-		if (iscsi_update_param_value(param, buf1) < 0)
+-			return -EINVAL;
++		seq_buf_printf(&s, "%s,%s", param->value, NONE);
+ 	}
++	if (seq_buf_has_overflowed(&s))
++		return -EINVAL;
++	str = seq_buf_str(&s);
++	if (strcmp(str, param->value) && iscsi_update_param_value(param, str) < 0)
++		return -EINVAL;
+ 
+ out:
+ 	a->authentication = authentication;
 
 -- 
 Kees Cook
