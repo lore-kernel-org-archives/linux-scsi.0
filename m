@@ -1,45 +1,45 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794479682;
-	b=o/StsA+gqzz76xRMx18YrRaeHxjwnFNEeQ+DHfchzkgCssPotz5dNUCX5Fm2yMUYvTZp
-	 7j8earlqcOzSDRx8MeTJQ2gRrz9Nv8zY2ktBpK9XFmI6Rqeb22poEbMK9qzLPCey7mlD9
-	 NLexLVTD/1PC3UHY9z1ohPVsqD0XUyVIUz4t1UZqvCtZjGM6UjULdembLKIaS8+nbhsZw
-	 vp/ilMIQZpKg0p+0OlZbV7lKKqmFfihWQw+uUx4lO/J6mKcjFaxcNNU+hYP9ll5v6cN3a
-	 GU1r1JWFrSuZ54gh/xCIw1rY6fRf46XGgu2JWf5YDc+rBynHt5sfkWVjv5O8dyymMYw==
+	t=1794479709;
+	b=AycCJlCqV2R3YOiKvEuReR45v1nm0GS4xfTx1kpLUIN/RfDFjPB4lMctfR8vg3cSthYB
+	 U9NVJy3+XihrIEA5C5uWWHHPXz08i9sTSJySJBjb9LG5/RK3XQxSyrRYgvKWa2VLZbAut
+	 n3942Vczg7KDcuxgV/TmKJufBImR4jZgF69uMroebARFUa7H+kSpbQ4SVc9FGqSBak0Lm
+	 LcIrf28qt8gnc7Qmu9l6ERjLKWcWUAiyQkJQeXpP/csALfRHixR8oVW3+76I3Pd4dBrI8
+	 xL6603k1vQm8p2qng+SwGLJy95efl3XJv239lLxKpfeypUDOsfIAfgEfPmP+7udaRjA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794479682;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794479709;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=ohpgN4+opjQnDjtSL+kSbaAiIz3YlR71cEfTblcDyGU=;
-	b=bvmHMRp9/zZIsxT+whx12bHIP8wgPPHyRU6WxTEjSjnJLYJa6EufRZJOIDKA4ei14uvU
-	 YZXpXw8jUxjcSwTBOMvB3sqTkfW9i2Kj0Klvf8oJxvTlfhLbXpMSLGpYknsz83ZVUJknI
-	 6RxolY7LvUNgROP9x1DyoKCwgkw2RiEWTFIWyubXZ12i4MA2OgZ5nKp2fH9n0AQabGVg8
-	 sOnR6rb3FOGNlhvqZqjCfwYeFCUYjYexrSBFBrH8cR0zMbNIfTQiZVy2J1r9YL4v9Izeb
-	 Xa91Xp9aSI9igjX2JIjgJo4qpW0J10CQsQHSy32OdZJh+K4e9HUEOALxuOSKe25Xm4A==
+	bh=ewwaBYICBsG0p5nqJ3R9zI8jsVipLJMbn+FUH/98X3E=;
+	b=YU9FDhtADKqVt1Rc2tnazUJ3naDG11wycNGBq0IXEKmmB4HPYSGEudANEasZVie7hml+
+	 KyndXR4k9u1OmxjE1VlGzm3n8TdP4qoYz1cWDOZHB/3jHTith98/Gtl/Au982l2/pVHsi
+	 wXkOxUGTOYj0YRYbgB0dPrzIapV3Alu48Ybeorokdax96Q7ufLFDEFIOOj5eR6YpvSgn3
+	 L3jxQLhbRqFSX7R/SXdPVwGL0wDlpk1Xi7RRgK3gwWnt4yO8oTINd0rg0gHS2U3EueKZJ
+	 XijHXK/aHEJsdzK+fuzC4LCL3Q7kQLwAkdzkwEeQIAaLnKHlcJm41mTwN6Gr2pRaP7w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="CFue/G6q";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=M81I7Xtd;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C60C1606A8A2;
-	Thu, 12 Nov 2026 10:34:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69D5A606A31C;
+	Thu, 12 Nov 2026 10:35:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=CFue/G6q
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A2D341F00A0A;
-	Thu, 12 Nov 2026 10:34:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=M81I7Xtd
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 48E931F00A05;
+	Thu, 12 Nov 2026 10:35:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794479682;
-	bh=ohpgN4+opjQnDjtSL+kSbaAiIz3YlR71cEfTblcDyGU=;
+	s=k20260515; t=1794479709;
+	bh=ewwaBYICBsG0p5nqJ3R9zI8jsVipLJMbn+FUH/98X3E=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=CFue/G6qToiYisnJ2e7yHgTPAbFFrs3f44e30ZRaYC6j16j7W1ZiN6889CpRNh1Fh
-	 jf4kw23HgdylMc88ZHQZm0Qidvuka+7yVN7A92p/WRsq7Z4LtxKy94sjriWom+xyTz
-	 X5uFbF7wNUMY/aZo8YbKEuj3lWnvglC+Mf+wJykuCb0IF0sAHWeHoUhvtohCv99GHV
-	 hCWKacLrtmwMIyF82MAj2Sop1CABqraBTFH3036Ps5eoqZRBy5pctjO/7GdJ1CqMFI
-	 xUo4TVAixgX2011W+Bfmyj2FRLND7NUHMb7WSBUeoaLqr2qSV/r7NMRlrPYfEQtVsR
-	 LmI/VaY3ymWOQ==
-Date: Thu, 12 Nov 2026 11:34:39 +0100
+	b=M81I7Xtd+G62VdeOad2AYpHmpvh90fXkXDUA/IPoVb1XsJDgDoB0ozVipb/lPfr1i
+	 pUFwO50HMHUUaAFRzevAnrozJa4PPBU3Vjf25QqjQ6/ZbZYymvLFA7IUNTNeKkSG/t
+	 6VhVsqasM9zVxDetxcluapJgRKNTo2OoUKC672/685XEOqG8wrxwJ+KYCACdIaJH68
+	 fuhomVaUay/J5kKXSuY6qbebKFG4tbV1pjHWjRCFZxcicC1rQ9Kmqs2XsTsYcrV6b5
+	 aoJqjZEHsRBJ4Cmfph91xrEvX/Ox13+Dt7CRlljF+hyQgpEYGf3+HOpMj8Jpddpq5w
+	 ZeJ1cZtbqCf4g==
+Date: Thu, 12 Nov 2026 11:35:05 +0100
 From: Krzysztof Kozlowski <krzk@kernel.org>
 To: Andrew Gigena <mail@andrewgigena.dev>
 Cc: Abel Vesa <abelvesa@kernel.org>, 
@@ -51,11 +51,11 @@ Cc: Abel Vesa <abelvesa@kernel.org>,
 	Bjorn Andersson <andersson@kernel.org>, Andy Gross <agross@kernel.org>, 
 	Konrad Dybcio <konradybcio@kernel.org>, linux-arm-msm@vger.kernel.org, linux-crypto@vger.kernel.org, 
 	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH v4 2/3] dt-bindings: ufs: qcom: classify sm8150-ufshc as
- standalone ICE
-Message-ID: <20261112-cautious-crimson-lyrebird-1ea53a@quoll>
+Subject: Re: [PATCH v4 3/3] arm64: dts: qcom: sm8150: use standalone ICE for
+ UFS
+Message-ID: <20261112-weightless-angelic-anaconda-60740b@quoll>
 References: <20261111-sm8150-ice-rfc-v4-0-0311eac35609@andrewgigena.dev>
- <20261111-sm8150-ice-rfc-v4-2-0311eac35609@andrewgigena.dev>
+ <20261111-sm8150-ice-rfc-v4-3-0311eac35609@andrewgigena.dev>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -67,23 +67,16 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20261111-sm8150-ice-rfc-v4-2-0311eac35609@andrewgigena.dev>
+In-Reply-To: <20261111-sm8150-ice-rfc-v4-3-0311eac35609@andrewgigena.dev>
 
-On Wed, Nov 11, 2026 at 05:53:22PM +0000, Andrew Gigena wrote:
-> SM8150 UFS uses a standalone ICE node, so its compatible belongs to the
-> standalone-ICE binding rather than the embedded-ICE one.
-> 
-> This tightens the schema for qcom,sm8150-ufshc: the standalone-ICE
-> binding allows one reg entry and eight clocks, while existing DTs
-> still use the embedded-ICE layout. This causes a transient,
-> validation-only dtbs_check warning until those DTs are converted
-> (sm8150.dtsi follows in the next patch); existing DTBs still boot.
+On Wed, Nov 11, 2026 at 05:53:23PM +0000, Andrew Gigena wrote:
+> Align SM8150 with the standalone ICE representation used on newer
+> platforms instead of embedding ICE registers in the UFS node.
 > 
 > Signed-off-by: Andrew Gigena <mail@andrewgigena.dev>
 > ---
->  Documentation/devicetree/bindings/ufs/qcom,sc7180-ufshc.yaml |  2 ++
->  Documentation/devicetree/bindings/ufs/qcom,ufs.yaml          | 11 ++++-------
->  2 files changed, 6 insertions(+), 7 deletions(-)
+>  arch/arm64/boot/dts/qcom/sm8150.dtsi | 25 ++++++++++++++++---------
+>  1 file changed, 16 insertions(+), 9 deletions(-)
 
 Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
 
