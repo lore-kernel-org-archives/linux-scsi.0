@@ -1,73 +1,73 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.199
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.210.199
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794460567;
-	b=DguQnz7zA6KUQVthD0+rLIG8vEws7kC5QK20ijp3n71hkPsXWIlGgR6ArWFMaFvnrfi2
-	 s0fd1dFVcTqAYYAJ8IJB4CdUHTSZWBc31rZ/0JPq/CWJZPsNpgSZeI+wZmxb3Mku64BVP
-	 4Qyo/pMnj0AmQGAixybl3MtuobFcMr6Vn0zQBU6mW6zN5WZ8cqvrE3CEQR+Y18S6sryPj
-	 r0wtkhWK5JLSazdK3fX38Ay/uq+AkREILjLhlLFEYzfgnXE8mxBEY06uEiNhP5L6lF/fr
-	 0TrSqp8w0idr8gJm/FWhAsnE/rWS/b2L+SrsMTdBxc2yrEv0KlW4rpzmY2aSaLol/yA==
+	t=1794460570;
+	b=40oa71aSMI2M9YA1n4KJ8COuN+bH/t4/Zp9fdHxuhCLrhuhD7SEdpF/qiEILGQ2EzOso
+	 I5ir+gN09IESmMuthzfHaVq2eFBDhtZpnKrlMnTX/QhPeSRhrYDLVsIInLKFbjEQ+gT03
+	 PdUroThquJ8f5bzAohflL6T6ZdGanZ1ZFP+N19mqJmDlhFY7/GEreZgS/tZYAw+MQZJpd
+	 hNGc+7UpeDIvB41kvx2x/N7o248EOXQT/Iw+TfvqmP24mFEg4rgAnUHN7BFKhLwTj7bfi
+	 vFYeDqRCv8U+/7kuhP0LtRsSHGlahuhqouhG+uEhiMJLzkL78YNeklkc45qloSFgxUQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794460567;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794460570;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Gm-Message-State:X-Received:Date:In-Reply-To:Mime-Version:
 	 References:X-Mailer:Message-ID:Subject:From:To:Cc:Content-Type;
-	bh=tZzg7ubUk+V+CIt/Huk6ufMRnWoRe/VHcAYk4H9izW4=;
-	b=wZk/LiVvxF1SI4URSPYVMLrMjrn4Jq8f6dT6S0rcsFDe7wxgmizBgHMtlwOETWPf9D4q
-	 TTBMR8cLGXkkPka8OCmMNnMJO7tdh4S4zH5HCGXU60t1HqYb8Gn64TKnthPn4N5SxxOMs
-	 Yr6b00tbKgfsCLRYJOhuvRD4XFnkIHWESAl622i9YLZV0KBmBzVwApdTKVz5OrY5yLNSY
-	 f/bB9SHiDwW3Cs/9aHgw0ACICbnvkp8k2ytSHkpRDXHbmng4g8Iy9cnNF1zfqrw9G7Xv2
-	 Omp6vFsVTSjbfOvli4jA7xI2W3eVEcX+djMlFRaDehCuV4wHiIGDXHUVRE37zYXDw3w==
+	bh=dZZYA4aJZW24rfHpvdxAeVS1QTPuYpP8ld4MwD2MKno=;
+	b=lsRjSYkQm/R1e1CZyzNEKBDAutUU+mGAbyRRiGZZg+Yl17SU94Whajq+ygvu+BA1YZ/f
+	 kmksi2ha8Ts/aA8m/i90M9Y/6h06cUpG7Zio1Jpqx3q8JI2fK7sEiJJvB1oe5W9NLcZSj
+	 XyurK4lVM5ZYMHAOVdiVx3Fm22+7u5osIHLyju1PPsrRQlswisYilLX3GAVfpIn/l05AI
+	 iLD8kVA4ViwEN9pAvOU+HIgnJ+fWzwnVskW2LNywJJ5xL+sGZY3bDrjd//jQMCfGS60Qf
+	 T4G/9JE/MO3/3fr24TN0GP/+mtSYpUdv1pv0sQYX6WeYu2sIudnjI2XdbZlGFgyM5Qw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=google.com;
 	spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=bjjP9L65;
-	arc=none smtp.remote-ip=74.125.82.199
-Received: from mail-dy1-f199.google.com (mail-dy1-f199.google.com [74.125.82.199])
+	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=YGZlFE86;
+	arc=none smtp.remote-ip=209.85.210.199
+Received: from mail-pf1-f199.google.com (mail-pf1-f199.google.com [209.85.210.199])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6DCD360A3817
-	for <linux-scsi@vger.kernel.org>; Thu, 12 Nov 2026 05:16:07 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6DCD360A3817
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F118F60A3824
+	for <linux-scsi@vger.kernel.org>; Thu, 12 Nov 2026 05:16:09 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org F118F60A3824
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=bjjP9L65
-Received: by mail-dy1-f199.google.com with SMTP id 5a478bee46e88-37628596fc9so348275eec.0
-        for <linux-scsi@vger.kernel.org>; Wed, 11 Nov 2026 21:16:07 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=YGZlFE86
+Received: by mail-pf1-f199.google.com with SMTP id d2e1a72fcca58-89f84753b43so3088910b3a.1
+        for <linux-scsi@vger.kernel.org>; Wed, 11 Nov 2026 21:16:09 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20260707; t=1794460567; x=1795065367; darn=vger.kernel.org;
+        d=google.com; s=20260707; t=1794460569; x=1795065369; darn=vger.kernel.org;
         h=content-type:cc:to:from:subject:message-id:references:mime-version
          :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=tZzg7ubUk+V+CIt/Huk6ufMRnWoRe/VHcAYk4H9izW4=;
-        b=bjjP9L65BHi2DRRxWa/M5aS8N2Ny7+VvgSbjWKE0TTrxDqJXArKisyhXL2wRkd0MS8
-         a67pYI1RxnoXbmfKUbsRh2hpSRgfqT4Mpw07Poc+meIEX2v8Md0HK7eOqhpeKO6wzcia
-         U/dvoIUeENAAkBjU0kAfMFdR8CsYBEieQBwFNLiuDRjD3YpCtxdu/ywZWeLfERt8JNjc
-         5k0Sf4pGk1TAmbMRar79jaUynhFU9872OgxnBen9aLm5fCUOJdg+tQivriQ1sJqObYbz
-         UQG8ejqnE9oyj1+CE9RXjU/vIvDaGEpEd3pBONFEhzPcI/RMwgH25y9vZLR2hk0K4cSy
-         NBaw==
+        bh=dZZYA4aJZW24rfHpvdxAeVS1QTPuYpP8ld4MwD2MKno=;
+        b=YGZlFE86oCC8gTSIurY4Bbc+mlwEbzfIBeVYT/JpedYaLTMsHLiUZDUSa6GVE8w8dV
+         0B0dW2Lp0x7o5s1LRP2jkD0hyTVMikf8S/iVC1SU60/7WR5wA1jwHMwSKGyls4p9mrhd
+         92h1tKySJMJ5i4U5mOrroXghsTnyhsKr55PTMwKNXkI8PtaWIwIXHD+9Np5F97Jpyz+a
+         NvLEZc+LszDp/F8BWxtFx08mZO5aHCJrNS24BCJHoBQfzw/W8KgZAr1LvUqKEXflpgH7
+         p1TtSTcV8nJGpdGN+i8Q6MfuEy/md8tvGKWJqcdUtmUNOVRti5//CToz/xemrMncfh2C
+         GiUg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794460567; x=1795065367;
+        d=1e100.net; s=20260707; t=1794460569; x=1795065369;
         h=content-type:cc:to:from:subject:message-id:references:mime-version
          :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=tZzg7ubUk+V+CIt/Huk6ufMRnWoRe/VHcAYk4H9izW4=;
-        b=DwKr5aIfMCdIr+ma5K7uSHwEHAv+eUbAyzoHBAK3lgQo4kn+1zFKE6a6BHh5vysYrH
-         5+EtSJDWOBmomDUYK0hOl/vNRO/FSkn9SWwwVX3PCZ6r4550cfU0ueLizDgBk5oat5lP
-         MITA+zPXSlrNsR85KfmxItyLXbrvTZz5H6banCPepeDvzoxnBDsM3IJ7f2xSKf5XpFfZ
-         d3Tqg5gFQzmUgVw3fhRw8fTPaLwzNZwcdto2CWGbmIAzhLTWqwrVnRZEVCnbVOPhJCjl
-         tX0XQnwv4S1vVrUK2zqeIewgMqYUMDxhzs/Zx+fyIaL2/OgbCwOO/fqIQmkWrBEfMn5d
-         EeeQ==
-X-Gm-Message-State: APuU4Z/XbJPE//04u3EHbbRNPRXXJ+3ePPyTNeen9mpy94G9ZGSq6gLz
-	nOU3c8S409kTuYpieMGdIHeK4l94xBGk9tLVFmDVV0kCGSu1Yb2DNpDBOQYw2zZif4qbtXhBL5j
-	Ziyeh0/gS/vXO6eRPeed4We4kPqOmjdecdwIbnwV+nBUpJE8lCXToxuAkLzQCE9yaeOS+NDEHU0
-	ahHXUdTJhAoLhmuN1RaTkly1ccavvyUaudQOFfuhRLpvFOToBs4l/nAi7wj7qF4JE=
-X-Received: from dybfc23.prod.google.com ([2002:a05:7300:3e97:b0:36d:3429:f79f])
+        bh=dZZYA4aJZW24rfHpvdxAeVS1QTPuYpP8ld4MwD2MKno=;
+        b=k32d2B1Id6j2/QzdpHvAwy6XciBA/tD0kT1EfK/s8SmCd/lFr2dN60Cy774+DxSybT
+         Jv/N79WISRLCMa+whmjV3TKwXCMzNJqT/q8PrEsLKUwsOcYeKJ1nS4t7SBx9Aqft207y
+         kfa72huAmn51wBOtKDfVeSPF+1G4vdygnWoS/k+TizfdK7VMpjn5BT0CV8K4z4Xwp5yX
+         o/knPamVt2sLSkHtJRlvVG01ZHG/MXSUM1jplnf45D1tOcL1mfH9uGU8JP9RZDhS2bzf
+         Qip6iVnixmo/g8DHoX6GgDYqKOD23QtbYzff/PuJZ8O52aFmjIpn3rciKeSXtkAtAbCY
+         6e+w==
+X-Gm-Message-State: APuU4Z9484dualgK1y29KxVwhJvxfFGR/CBb1X3OX/HKrQI08a6ytKzE
+	XfvPoWoORnQ5Vc1y3tYNo4I1/mI7PL1lIsBDF/tNj/lrtP8rA1sm0dlJK3NRmzF8LH5xnHAohlo
+	v/eSSNAIsRcf3U5VXzXI8Fqt3tTAsZdQBAiljrUCyYAqk0Fa/FKRVpO2a+p1KJqXjJ7vD6VgArC
+	cOSO+i7ulcE3CdhVKrmA3Fh6g/kRWhFZEUXeazbAd2vWlXEsIRlRQhrF2JBt2HgmE=
+X-Received: from pfbci8.prod.google.com ([2002:a05:6a00:28c8:b0:88f:dade:52e])
  (user=stanleyjhu job=prod-delivery.src-stubby-dispatcher) by
- 2002:a05:7301:e2c:b0:369:ff7d:840 with SMTP id 5a478bee46e88-376861744bamr6909025eec.21.1794460565966;
- Wed, 11 Nov 2026 21:16:05 -0800 (PST)
-Date: Thu, 12 Nov 2026 13:15:41 +0800
+ 2002:a05:6a00:428f:b0:886:73c9:89d7 with SMTP id d2e1a72fcca58-8bc1c499e3fmr4256425b3a.11.1794460568903;
+ Wed, 11 Nov 2026 21:16:08 -0800 (PST)
+Date: Thu, 12 Nov 2026 13:15:42 +0800
 In-Reply-To: <20261112051542.1539779-1-stanleyjhu@google.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -80,9 +80,9 @@ Precedence: list
 Mime-Version: 1.0
 References: <20261112051542.1539779-1-stanleyjhu@google.com>
 X-Mailer: git-send-email 2.56.0.567.gdb80ae8cd5-goog
-Message-ID: <20261112051542.1539779-9-stanleyjhu@google.com>
-Subject: [PATCH 8/9] scsi: ufs: core: Wake suspended consumer queues after
- host reset
+Message-ID: <20261112051542.1539779-10-stanleyjhu@google.com>
+Subject: [PATCH 9/9] scsi: ufs: core: Do not recover the link concurrently
+ with a PM callback
 From: Stanley Jhu <stanleyjhu@google.com>
 To: linux-scsi@vger.kernel.org, "Martin K. Petersen" <mkp@kernel.org>
 Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
@@ -97,143 +97,140 @@ Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
 	linux-kernel@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 
-ufshcd_err_handling_prepare() now disables runtime PM of the UFS device
-W-LUN, and ufshcd_err_handling_unprepare() enables it again and learns
-whether a host reset in the error handler run succeeded.
-ufshcd_recover_pm_error() wakes the runtime-suspended logical units
-after a host reset only when hba->dev or the W-LUN has
-power.runtime_error set, so I/O waiting on a runtime-suspended logical
-unit stays blocked when both flags are clear:
+From: Brian Kao <powenkao@google.com>
 
-1. I/O to a runtime-suspended logical unit blocks in
-   __bio_queue_enter() and queues a runtime resume of the logical unit.
-2. START STOP UNIT fails in the resume of the W-LUN supplier, and
-   rpm_resume() rolls the logical unit back to RPM_SUSPENDED with
-   power.runtime_error clear.
-3. A later W-LUN runtime resume succeeds.
-4. A fatal error makes ufshcd_err_handler() reset the host.
-5. ufshcd_recover_pm_error() finds power.runtime_error clear on both
-   devices and skips the wake loop.
-6. The I/O stays blocked in __bio_queue_enter() until another request
-   reaches the same queue.
+Commit f966e02ae521 ("scsi: ufs: core: Fix runtime suspend error
+deadlock") made ufshcd_err_handler() call ufshcd_link_recovery() and
+return early if hba->pm_op_in_progress is set. Commit e23ef4f22db3
+("scsi: ufs: core: Fix error handler host_sem issue") moved that check
+ahead of down(&hba->host_sem). The patch "scsi: ufs: core: Limit early
+link recovery in the error handler to runtime PM" restricts that early
+path to ufshcd_in_wl_rpm_callback() and notes in its cover
+letter that during runtime resume it can still run concurrently with
+__ufshcd_wl_resume(), and removing it there needs a closer look at the
+deadlock that it avoids.
 
-Request a runtime resume of every runtime-suspended logical unit from
-ufshcd_err_handling_unprepare() after every successful host reset,
-whether or not power.runtime_error is set. Waking an idle logical unit
-sends no SCSI command, and the logical unit returns to runtime suspend
-after its autosuspend delay.
+With this shortcut, when a fatal UIC error arrives while
+__ufshcd_wl_resume() is in ufshcd_bkops_ctrl(), ufshcd_err_handler()
+calls ufshcd_link_recovery() -> ufshcd_host_reset_and_restore() without
+holding host_sem or waiting for the PM callback, putting the host
+controller into a reset (non-working) state while ufshcd_issue_dev_cmd()
+on the resume thread is still sending query requests and accessing the
+controller:
 
-Requesting the resumes from ufshcd_err_handling_unprepare() needs two
-more changes. First, issue them after pm_runtime_enable() on the W-LUN.
-ufshcd_recover_pm_error() runs while W-LUN runtime PM is disabled, and
-rpm_get_suppliers() ignores -EACCES from a disabled supplier. A logical
-unit woken there resumes while its W-LUN supplier stays RPM_SUSPENDED.
-Second, also runtime resume the UFS device W-LUN, synchronously and
-before the logical units. ufshcd_err_handling_prepare() disables W-LUN
-runtime PM without resuming the W-LUN, so the W-LUN stays RPM_SUSPENDED
-after the reset when no logical unit is left runtime suspended to resume
-it through the runtime PM device link. pm_request_resume() takes no
-reference on hba->dev, so the pm_runtime_put(hba->dev) that follows
-can runtime suspend hba->dev while the link is active and every
-logical unit is runtime suspended.
+  Process A (PM callback, e.g. runtime resume):
+  __ufshcd_wl_resume()
+    -> ufshcd_bkops_ctrl()
+      -> ufshcd_query_attr_retry()
+        -> ufshcd_exec_dev_cmd()
+          -> ufshcd_issue_dev_cmd()
+            (accesses controller while in reset state)
 
-Fixes: eef1d74bf88f ("PM: runtime: Only set runtime_error on suspend callback failures")
+  Process B (UFS error handler, triggered by UIC error):
+  ufshcd_err_handler()
+    -> if (ufshcd_in_wl_rpm_callback(hba))
+      -> ufshcd_link_recovery()
+        -> ufshcd_host_reset_and_restore()
+          (puts controller into reset state)
+
+Remove the early link recovery shortcut and
+ufshcd_in_wl_rpm_callback() from ufshcd_err_handler() so that
+error handling waits in ufshcd_err_handling_prepare() for a runtime PM
+callback and on hba->host_sem for a system PM callback to finish before
+resetting the controller. This does not reintroduce the runtime suspend
+deadlock because:
+- If the state is UFSHCD_STATE_EH_SCHEDULED_FATAL, ufshcd_queuecommand()
+  fails SCSI commands such as START STOP UNIT sent from a PM callback
+  immediately with DID_BAD_TARGET, and ufshcd_issue_dev_cmd() fails
+  reserved device management commands immediately with -EIO, while any
+  already in-flight PM command timeout is completed by
+  ufshcd_eh_timed_out().
+- If the state is UFSHCD_STATE_EH_SCHEDULED_NON_FATAL,
+  ufshcd_queuecommand() still dispatches START STOP UNIT because
+  eh_in_progress is not set yet.
+- If a dispatched START STOP UNIT times out without a pending fatal
+  error, ufshcd_eh_timed_out() recovers the link directly and returns
+  SCSI_EH_DONE without waiting on eh_work.
+- Runtime suspend errors call ufshcd_force_error_recovery() and return
+  -EBUSY.
+- Runtime resume (__ufshcd_wl_resume()) does not wait on eh_work or
+  host_sem. A hibern8 exit failure recovers on the PM thread, a START
+  STOP UNIT failure returns an error, and query errors are ignored.
+
+Removing the shortcut relies on the companion patches in this series,
+which complete PM command timeouts in ufshcd_eh_timed_out() before
+reaching SCSI error handling and disable W-LUN runtime PM in
+ufshcd_err_handling_prepare().
+
+Fixes: f966e02ae521 ("scsi: ufs: core: Fix runtime suspend error deadlock")
+Fixes: e23ef4f22db3 ("scsi: ufs: core: Fix error handler host_sem issue")
 Cc: stable@vger.kernel.org # 7.3.x
+Signed-off-by: Brian Kao <powenkao@google.com>
+[stanleyjhu: rebased onto "scsi: ufs: core: Limit early link recovery
+ in the error handler to runtime PM", clarified the reserved command
+ path in the commit message, and limited Cc: stable to 7.3.x]
 Signed-off-by: Stanley Jhu <stanleyjhu@google.com>
 ---
- drivers/ufs/core/ufshcd.c | 51 +++++++++++++++++++++++----------------
- 1 file changed, 30 insertions(+), 21 deletions(-)
+ drivers/ufs/core/ufshcd.c | 39 ---------------------------------------
+ 1 file changed, 39 deletions(-)
 
 diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 286ffb44772d..87d475e323b1 100644
+index 87d475e323b1..1aecf55c0646 100644
 --- a/drivers/ufs/core/ufshcd.c
 +++ b/drivers/ufs/core/ufshcd.c
-@@ -6961,6 +6961,33 @@ static bool ufshcd_err_handling_prepare(struct ufs_hba *hba)
- 	return vops_resumed;
+@@ -7120,23 +7120,6 @@ static bool ufshcd_abort_all(struct ufs_hba *hba)
+ 	return ret != 0;
  }
  
-+#ifdef CONFIG_PM
-+/*
-+ * A logical unit whose runtime resume failed against the W-LUN may still have
-+ * bios waiting in blk_queue_enter(). Request a runtime resume for every
-+ * suspended logical unit to unblock them. Resume the W-LUN first and
-+ * synchronously. ufshcd_err_handling_prepare() disabled its runtime PM
-+ * without resuming it, and the caller drops its hba->dev reference next.
-+ */
-+static void ufshcd_resume_sdevs_after_reset(struct ufs_hba *hba)
-+{
-+	struct scsi_device *sdev;
-+	struct request_queue *q;
-+
-+	ufshcd_rpm_resume(hba);
-+	shost_for_each_device(sdev, hba->host) {
-+		q = sdev->request_queue;
-+		if (q->dev && (q->rpm_status == RPM_SUSPENDED ||
-+			       q->rpm_status == RPM_SUSPENDING))
-+			pm_request_resume(q->dev);
-+	}
-+}
-+#else
-+static inline void ufshcd_resume_sdevs_after_reset(struct ufs_hba *hba)
-+{
-+}
-+#endif
-+
- static void ufshcd_err_handling_unprepare(struct ufs_hba *hba,
- 					  bool vops_resumed, bool pm_recovered)
- {
-@@ -6981,6 +7008,9 @@ static void ufshcd_err_handling_unprepare(struct ufs_hba *hba,
- 	if (ufshcd_is_clkscaling_supported(hba))
- 		ufshcd_clk_scaling_suspend(hba, false);
- 	pm_runtime_enable(&hba->ufs_device_wlun->sdev_gendev);
-+	/* The W-LUN and logical units resume only after pm_runtime_enable(). */
-+	if (pm_recovered)
-+		ufshcd_resume_sdevs_after_reset(hba);
- 	ufshcd_rpm_put(hba);
- 	pm_runtime_put(hba->dev);
- }
-@@ -6998,10 +7028,6 @@ static inline bool ufshcd_err_handling_should_stop(struct ufs_hba *hba)
- static void ufshcd_recover_pm_error(struct ufs_hba *hba)
- {
- 	struct scsi_target *starget = hba->ufs_device_wlun->sdev_target;
--	struct Scsi_Host *shost = hba->host;
--	struct scsi_device *sdev;
--	struct request_queue *q;
--	bool resume_sdev_queues = false;
+-/*
+- * Whether a runtime PM callback of the WLUN runs __ufshcd_wl_suspend() or
+- * __ufshcd_wl_resume().
+- */
+-static bool ufshcd_in_wl_rpm_callback(struct ufs_hba *hba)
+-{
+-#ifdef CONFIG_PM
+-	enum rpm_status status =
+-		READ_ONCE(hba->ufs_device_wlun->sdev_gendev.power.runtime_status);
+-
+-	return READ_ONCE(hba->pm_op_in_progress) &&
+-	       (status == RPM_SUSPENDING || status == RPM_RESUMING);
+-#else
+-	return false;
+-#endif
+-}
+-
+ /**
+  * ufshcd_err_handler - handle UFS errors that require s/w attention
+  * @work: pointer to work structure
+@@ -7163,28 +7146,6 @@ static void ufshcd_err_handler(struct work_struct *work)
+ 		 hba->saved_uic_err, hba->force_reset,
+ 		 ufshcd_is_link_broken(hba) ? "; link is broken" : "");
  
- 	hba->is_sys_suspended = false;
- 
-@@ -7012,7 +7038,6 @@ static void ufshcd_recover_pm_error(struct ufs_hba *hba)
- 	if (hba->dev->power.runtime_error) {
- 		/* hba->dev has no functional parent thus simplily set RPM_ACTIVE */
- 		pm_runtime_set_active(hba->dev);
--		resume_sdev_queues = true;
- 	}
- 
- 	if (hba->ufs_device_wlun->sdev_gendev.power.runtime_error) {
-@@ -7023,22 +7048,6 @@ static void ufshcd_recover_pm_error(struct ufs_hba *hba)
- 		pm_runtime_get_sync(&starget->dev);
- 		pm_runtime_set_active(&hba->ufs_device_wlun->sdev_gendev);
- 		pm_runtime_put_sync(&starget->dev);
--		resume_sdev_queues = true;
+-	if (hba->ufs_device_wlun) {
+-		/*
+-		 * Use ufshcd_rpm_get_noresume() here to safely perform link
+-		 * recovery even if an error occurs during runtime suspend or
+-		 * runtime resume. This avoids potential deadlocks that could
+-		 * happen if we tried to resume the device while a PM operation
+-		 * is already in progress.
+-		 *
+-		 * Do this only while the PM callbacks run for a runtime PM
+-		 * operation. The system PM and poweroff callbacks hold
+-		 * host_sem, and shutting_down makes the regular path below
+-		 * stop, so it does not reset the link concurrently with them.
+-		 */
+-		ufshcd_rpm_get_noresume(hba);
+-		if (ufshcd_in_wl_rpm_callback(hba)) {
+-			ufshcd_link_recovery(hba);
+-			ufshcd_rpm_put(hba);
+-			return;
+-		}
+-		ufshcd_rpm_put(hba);
 -	}
 -
--	/*
--	 * If wlun device had runtime error, we also need to resume those
--	 * consumer scsi devices in case any of them has failed to be
--	 * resumed due to supplier runtime resume failure. This is to unblock
--	 * blk_queue_enter in case there are bios waiting inside it.
--	 */
--	if (resume_sdev_queues) {
--		shost_for_each_device(sdev, shost) {
--			q = sdev->request_queue;
--			if (q->dev && (q->rpm_status == RPM_SUSPENDED ||
--				       q->rpm_status == RPM_SUSPENDING))
--				pm_request_resume(q->dev);
--		}
- 	}
- }
- #else
+ 	down(&hba->host_sem);
+ 	spin_lock_irqsave(&hba->host->host_lock, flags);
+ 	if (ufshcd_err_handling_should_stop(hba)) {
 -- 
 2.56.0.567.gdb80ae8cd5-goog
 
