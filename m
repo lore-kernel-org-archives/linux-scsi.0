@@ -1,80 +1,72 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=66.163.188.212
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.215.197
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794448238;
-	b=uV7u/LlyAh4cOZD0uSdt0wmvL8WDGx8bfytKnTD/hU5ZZ3EnY5FHxDgTijKknMs+NSmu
-	 /AbHeNMzvYDfYNih3EdTewYwfkDdoimFqAqFXsepbZ5YB85BkjcgWJ3lu5XDjLahKmbD6
-	 qRvkZcwku+4Px+D4/jrpCz/FMCzs0/3zxWRit6jhQ4TFeoUDXt3J5U7T2Dhn4F2j0VH+U
-	 0xoV1/cM30TBCxBLg7hiRFxofo+dNCjEux9jL5w9/DtVlhY7XMWUn/YyWfK/PN2OzXz0S
-	 m1ZfEQdj+sQ0Wzwi5FGq3jhVc99gAD10wxCaMywqbgWnUItsnUH3EZd2la/xQnOSOwQ==
+	t=1794460546;
+	b=udb6QW4RNV29nAKA4Mlc2qZSR5CxkwqPg6yeewMD5ZarekuVTF1xUhnboZoAHMIDAbIn
+	 GYPs1dUkNfqIYxZ6WYTtf0cUkT9qbEX4U8s5nUPqrxNuH6r6f9NLW4qerMiNvm1cOUG71
+	 RARC/wrk3P9dZkUWUPaAmlubTAURxzDL79OXO1rUE6bcotdyuQyo2TNDOlccQ1Qsa7IEU
+	 h9n6KL4M/qf0K/sgqHYZC2ps7FzsaOBCFSDMG3LZPIWh+ExdNQT0HMYSWRzrx9JaZFE+l
+	 d8/RLPY7iTmz7bgMqOK9PkhnWP9d1J9hsHtweWR+nvcW934/rZlcLdrOtCeQMwtL0DA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794448238;
-	h=DMARC-Filter:DKIM-Signature:X-SONIC-DKIM-SIGN:X-YMail-OSG:X-Sonic-MF:
-	 X-Sonic-ID:Received:Received:Message-ID:Date:MIME-Version:User-Agent:
-	 Subject:To:Cc:References:Content-Language:From:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:X-Mailer;
-	bh=O8h9fybdyu+Al7CdWlfRBQ6LgqQutaBSF+Rc2HGjCVE=;
-	b=ktPcdo43am+ibrYA7Xmmiihtf7swbE6OknFIP6TAltu9eQa1l+YO0UezE28pR91qWJ9I
-	 OkS2CDFcYwcXjxurh3zimJuWu+wzSeS/01LOmmqPFMkkjn377keSrh53Lw5+/AOfzSC5R
-	 9fi3Xgue2tCxYZbCA4YvssYujQsYz3/g+KCUmvmZBI7y8bV5lxhlW5D75D69qap2Hpfn5
-	 af1VHP0nZ8UEEfg4uoP5a1t6Eh0KPkm3gL+xeFipvQYrPtxilXrw6WzlBgZo1DCPy6qG9
-	 jJvEEAaFqGsOSAaELm0SjS+kQwYMofBV/v6a0pMBb0RJshfBp1MwQhiOhExvt1AYyug==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794460546;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Gm-Message-State:X-Received:Date:Mime-Version:X-Mailer:Message-ID:
+	 Subject:From:To:Cc:Content-Type;
+	bh=uhCrUZrfKuI9xdGiRCa6me3H0RB/NgF8erfFCV58p0g=;
+	b=QYSYj7PljaMOHDMtIzmu+1kCXfFGx2c+olOM7GwkD3xKJQssFrRzMxH71p5IRhzhcziB
+	 dfx/H6kQA8dYiWNlI0Jyj089aUor9+rgvZ6ycw52s46m3Y1rF1pbHVRn8JIGVOcLo3lIo
+	 S+r39VQGZO3k+JWaH/Q8Ugi52S3twE2RIidqDwsXDmV2Vsi43EuiwDsSFN9HNLUvVGwRL
+	 8hJzEbSfqsvMh7iuX6ozSv/IFfHmDr3rQfVwTYd6YBl8vqK+YttO62dF7sz5SxaisNiTY
+	 EtYve7Hg4EzJA4absuhCu9KcHb1izBnrseNWtjGeizmaLt/68GerENXJBDBGFjwKzjw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=schaufler-ca.com;
-	spf=pass smtp.mailfrom=schaufler-ca.com;
-	dkim=pass header.d=yahoo.com header.i=@yahoo.com header.a=rsa-sha256 header.s=s2048 header.b=F+m434hx;
-	arc=none smtp.remote-ip=66.163.188.212
-Received: from sonic311-31.consmr.mail.ne1.yahoo.com (sonic311-31.consmr.mail.ne1.yahoo.com [66.163.188.212])
+	dmarc=pass header.from=google.com;
+	spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com;
+	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b="ayjKsB/S";
+	arc=none smtp.remote-ip=209.85.215.197
+Received: from mail-pg1-f197.google.com (mail-pg1-f197.google.com [209.85.215.197])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AEAA0606A326
-	for <linux-scsi@vger.kernel.org>; Thu, 12 Nov 2026 01:50:36 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org AEAA0606A326
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=schaufler-ca.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=schaufler-ca.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C6581606A327
+	for <linux-scsi@vger.kernel.org>; Thu, 12 Nov 2026 05:15:45 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C6581606A327
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=yahoo.com header.i=@yahoo.com header.a=rsa-sha256 header.s=s2048 header.b=F+m434hx
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s2048; t=1794448235; bh=O8h9fybdyu+Al7CdWlfRBQ6LgqQutaBSF+Rc2HGjCVE=; h=Date:Subject:To:Cc:References:From:In-Reply-To:Content-Type:From:Subject:Reply-To:Content-Type; b=F+m434hxnazo+znIsDN87b1q6q2BjDXrSK85l4sPO4/7/Nv6ouklEMGBpfrTHUnO8eGiNQoV5Bbw/uB3JZACliQBg8PtdTRYRP97HHZoegx3ArYwH69kAdVaUPkV7WcyNd89YKs91cZCwmWeziNsUM+FCRLahqzZW3a6Ku8pvIiJlMO/7XaKbdkzRicymfmmSk9XFsFNG+fkHI8UO70pZ1hFT9v2XQiwRrAslvpHUFbDR+3rpTT4Ikh/N/oSBL0qRMnhxDrBkdI0Mmku6tTsyJWpgcJjSTSvBuepznmh0kGiP8yElqSHRAm6ov8qvVTBbZJZj+71HtVfmpD+WAp7XA==
-X-SONIC-DKIM-SIGN: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s2048; t=1794448235; bh=cB6ms4YZu3OSr7Oj5Ktyy9vRYllWqlKKBSjCDtAOhd3=; h=X-Sonic-MF:Date:Subject:To:From:From:Subject; b=Wh5tO+A7k6l9RAB9CmF+7nFPpV+s7vwQOvHRCpB836zmpk+EmZdiT1obFQYb3eEYUV/ZZrDMNSGrpqiSFrVBvEAP1+BcX3bVXL8AkZe5aM0djERGyxVy+oivb40ItIA89tHRP/kW5BzO7GaPGZrOTfFkDQF1HHnKQVH/ifoH5PYTL/BXjLkbPViq5JKecTMlRIryhz3iU6NkOHkP1F3oliaijdeTD+Tk00HCA4w802Q1PFZvsZSndMk6hlb4A1wMRPh3z4tVeu12oZckS5JIJR1ywCFknBKWBE+hVxojbZ57Qr3RCaKJrua5vLBD1s/SnsdmRZ+/JLOhUlVDaAQyJw==
-X-YMail-OSG: zqmnDtkVM1n5t6ueog55b_vkFHSYM5E1qoECEJywzBr3UwiKAfUIVI_o6w7R9SH
- CQ1t93f4qyBpZEcVGjU2OBO9C0Of8.lRAD_UtcVdUMSf6_GiG98G7rNXb1ZhUGsyYLDyJE5oLG69
- MPpknxdoviNcfunvMa.q1ATsxUiRNZaaYFEtaSi7o3ARz3uzFbYwa4zXUFVTxVNR1M4yEm8E_vMu
- CX3lc6b1b0MWbnmh3DAeGebLmTpZwI12LuF9QH7MRRpV.Y7YkiPkkooycQl42qWPa_ZCsKSCVnTi
- cfYjzn7ZtEqmGYVjYEY1kEbVCA4JoS5GMMDKMoO39G5YhBugROnX2jrgGh0AwdwAby30.ZBxmd.l
- S62hS2hlPvIDoPxGhzS2whxCcIZrt8XbiUGRsBq2lfu8t9x.TIubZ4wIiRqzfDYoZIwioLDCjm6k
- .cljRFJEOnSix_ImX_sSyVP7eQAAEJ1GsHeUHb7atzAIHDlw0lV7YT_EQZaDbjuCghjYyGwMa7FJ
- LxdRDFOXlr05WMcbROqV0a4sd0J7UyT01rGVa2p8mqlfg_ZPSk1p0.zKLMJDr5A1o8n0sxe4LbiR
- qbREBgT6XAwECEJNbNHKO1YTM4iOmevp8GvnGDd6MDNapigfFoPwfu59SMy7zYd9LO3Z8_0VkIJt
- aPlGTgcyxBF.v1wQggIdb30_WaSmydGJlcGPdQ03irHq2wrwxiCoQO6IJUZEr0jypo3mUQnAGyDG
- k9vUUntKtCsyi.w0t_vFjR1T1M3Z6Xk5RLKDL9njS7LNW.CupQSEmNQ1GkX7kSwPFQP21HwmyMsp
- i9SdJowJ0s5y.bw2SrHxrP7sM6YbNToNL5ZVELMODpe5VuCBtDWl7VcCxYMmahr5455.ZE_hGmHs
- LrmFJx1uQ46OcZ2Ii956498sukETOy0INQsrtoq.ypS01I6QTO8GSI7rVFeq81ZNfcHhvUGJ06ME
- B8yJmeeVBase_8cBDx_Yk7y0xRppCWZz9S9bNwiHzQcmhSHJ99JaTf4E0zOIsgLWqU5tZh4wLZKp
- MnYneLIuBkBNwjBcYTuKXcpCwff8fTcsfan2g9ag6_HRqbKvb3lqTrnQRPIG.IGMBIXdu4D1HB2r
- Ygn65JHFmN1QF2ROBGshwilsGajQNSqHXHgx.co9RO5Evfjv8vx67t__1ew7rn3sc1C.7W_m4N4M
- cSR8SYdV43PcknGSee9yB1x8pWannWLYRUROzisZnoPLwDPX1S0a5pIeYojUo9jnHaAdfaOw5IJs
- bc0nB3tQZQ.0b782FrYX_n_pf05DxifKK1hrJ0OqXSo23BlRt.p63_4auT8X4tq9HTs9fxQLg0OA
- ydi2BtTIKopjFdQtWH0NOUC1U6_wILbgtZfZnlVsbVhHJ7Tk.UZGmAVff_vQl8b4id5D4T9jwtS9
- 8nKfk1Ghey2tqeZDF9SgVACRH_x6kJa81R1e4J_83TMyBY4Ays_MTt39YbFzXRfBMRqG0I92h9IS
- Xl4i4wMK_gUqmjpP0P_oaDsTzptxLp7NMOmOY3T81w3i60pQpmuYMvggEU3dv.ebRC4Brat.KcXq
- ZyjrZ4BouQUvapbNSNNP1Y253sBId7Ys37DryRT0fCsyFp6LIN0DYA1xElaICSH34S2v84muDGZe
- .CGRnjEo0Q2679LeUfRrG7eDmdHtGbtXa02kyQjntuOc7VrR9y8jRUHqkLiiITgSdxH1QGB5PWuQ
- ARpFP1xjX3OHKFGeQd7o8WX3xDhKeppcWAPJEhIosno79RY0IQ4.4JX7WCaXgDYbj6BL4okuPPnu
- 9CEiWKr_A1oRBHcXo_t2XyX1N2Jd1tPqjLAB1WY0vIGe1SVdGRdRloM6.RT24mU1pbFP4DjeRn1w
- _aXrAymHoztvd7BVNk78MI6f1URU2iBFJ6msmP6JgXQac5cfrtvlS9yn2eohnwEPfv__IKNy26n1
- mYs7i0yOvj6LH9jEvBJfejsFOAeuf8LBdL.MbTk8ZZiVorhzaxO81Zf4PRAQwZfM29CLtP5dAKbb
- klVicXy3HgsPrMZiM94qTb2yOlO2WSLEgrPS_2Vx31FNEHJNJpuKXHkfgTtKgjLPmpCr4Taq44yO
- KB8vbaoDybAHzNwFN22pWQG3NDp.x8aciLmMT8fUQgwMgW8NlLKb6ErL7ChYlwsHUhzhzMbUfvnT
- 2bA6QlHpoN4OcRsGeb2ygbIpUCMhvL1tqClAnkg41oGlCJa3crNRCKKeXXqZBarf9KzLHJa8i581
- 0YgHHROuHzbtZ8GRm6ggBoLbsrITMfTGKIshO9uwpGYYxl6nVscbC6LtZUsxlV5iP8t8XsYi.ga0
- EDsRWYHlK
-X-Sonic-MF: <casey@schaufler-ca.com>
-X-Sonic-ID: 4e6572e0-628c-4102-8309-f6caa349ac8e
-Received: from sonic.gate.mail.ne1.yahoo.com by sonic311.consmr.mail.ne1.yahoo.com with HTTP; Thu, 12 Nov 2026 01:50:35 +0000
-Received: by hermes--production-gq1-fd7994565-9vhlr (Yahoo Inc. Hermes SMTP Server) with ESMTPA ID 15d81e1a8a6348ae9dcd84771e3b8196;
-          Thu, 12 Nov 2026 01:50:33 +0000 (UTC)
-Message-ID: <41617b0a-90d9-484e-a143-78e2a92e872c@schaufler-ca.com>
-Date: Wed, 11 Nov 2026 17:50:30 -0800
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=ayjKsB/S
+Received: by mail-pg1-f197.google.com with SMTP id 41be03b00d2f7-cdba0aa55bcso2845a12.3
+        for <linux-scsi@vger.kernel.org>; Wed, 11 Nov 2026 21:15:45 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20260707; t=1794460545; x=1795065345; darn=vger.kernel.org;
+        h=content-type:cc:to:from:subject:message-id:mime-version:date:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=uhCrUZrfKuI9xdGiRCa6me3H0RB/NgF8erfFCV58p0g=;
+        b=ayjKsB/ST0f5tCKgVeMMt5bQM0zaGFl6+GjwRcvAdT2ZBsthuLmrsbNoQIsPBwViuL
+         xTDD1dKaIdGA64VUQrfsT9gUnpfPe/DZM2AShlOCRVY15SihFIr2VUIo/FmPCq2YkJva
+         RC2SykQsBBLCTLcF7fELfSkfRY869hYdLnlqwULsEIEZRB5SOZyihcnaDfsXqMut+6AJ
+         XlzVv20dUgBDWA2gfMQlRb5oLob8Q1ETJLsYihr8DJbELhITrKn+8jHrAFWqPu1O21/e
+         m9FzYq2KO3oDafCvePl5WOgXsRy4R9epRpOt6HsCoaPpht1oKFOsLrvPqrm+/l5CLJd+
+         jFAg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1794460545; x=1795065345;
+        h=content-type:cc:to:from:subject:message-id:mime-version:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=uhCrUZrfKuI9xdGiRCa6me3H0RB/NgF8erfFCV58p0g=;
+        b=HPfpdYAbPJSz2uO66H18SFD11SItDDxewOSNf9/+Q6ypUNgCUqDt2zglicXW3q0Bso
+         8QoGwrAOE6jEhdLSPZ6rSk3DgbjEV2KkI1bV3VPbk5NTppWEPcu51Fds1luE7EYeq6Of
+         7EUoEjdn1ASmzspgbgXQtX6OEvIE8zjrjAIW4abNQf5PJdNduKc/VjWx5WKED2q2ndWA
+         ZKzg+tb2jeQkdsxswX17Wll9fpDFU2MNlqxC5GJN5dMUsgijtF55oLKDs554Nz03R1Tl
+         /dNgU5xwPfMosZ3DCKLYQO0y0fru9mqmEl8GJM4JJapq1O59uKeB9brXGbD93usM0Vqp
+         41tg==
+X-Gm-Message-State: APuU4Z8nkZuG1YubV3IUOAbzRm4xG2COmjBhfkEqhkGEreG+9UG/DFfu
+	ecGuu+Yg0KoE4/aYHp5iW+EW2xkZKfi156cmVkeiwTdb1eChHtHU8vCpp4FCM8gnxAP9RxAZbOq
+	jbV0oQzppVX0/wP5BIEbbLLJB9EhR2vr2RktQIT0ja1fs39jQT2n5kh4AAHhWj4+apAiQnCL5wI
+	kP1sY704ARqIkU869SLtP9ljAz63OcVi8n74WFiECnXa4ksgP9DAWt4uo0i2BgHvY=
+X-Received: from pjbci22.prod.google.com ([2002:a17:90a:fc96:b0:3ae:d16c:c4c1])
+ (user=stanleyjhu job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a17:90b:4f45:b0:3a4:945e:bc33 with SMTP id 98e67ed59e1d1-3b182ff36acmr4347171a91.47.1794460544841;
+ Wed, 11 Nov 2026 21:15:44 -0800 (PST)
+Date: Thu, 12 Nov 2026 13:15:33 +0800
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -83,69 +75,86 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [apparmor] [PATCH RFC 19/41] smack: use fc_init_pseudo() for
- smackfs
-To: Christian Brauner <brauner@kernel.org>, linux-fsdevel@vger.kernel.org
-Cc: linux-efi@vger.kernel.org, Jan Kara <jack@suse.cz>,
- Amir Goldstein <amir73il@gmail.com>, linux-nvme@lists.infradead.org,
- fuse-devel@lists.linux.dev, linux-mm@kvack.org,
- target-devel@vger.kernel.org, linux-kselftest@vger.kernel.org,
- Chris Mason <mason@kernel.org>, Christoph Hellwig <hch@lst.de>,
- linux-s390@vger.kernel.org, linux-erofs@lists.ozlabs.org,
- linux-scsi@vger.kernel.org, xen-devel@lists.xenproject.org,
- driver-core@lists.linux.dev, Jann Horn <jannh@google.com>,
- selinux@vger.kernel.org, apparmor@lists.ubuntu.com,
- Josef Bacik <josef@toxicpanda.com>, linux-block@vger.kernel.org,
- ocfs2-devel@lists.linux.dev, Alexander Viro <viro@zeniv.linux.org.uk>,
- linux-nfs@vger.kernel.org, netdev@vger.kernel.org,
- linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-security-module@vger.kernel.org, bpf@vger.kernel.org,
- linuxppc-dev@lists.ozlabs.org, Casey Schaufler <casey@schaufler-ca.com>
-References: <20261110-work-loop-pseudo-v1-0-4c998976c6c7@kernel.org>
- <20261110-work-loop-pseudo-v1-19-4c998976c6c7@kernel.org>
-Content-Language: en-US
-From: Casey Schaufler <casey@schaufler-ca.com>
-In-Reply-To: <20261110-work-loop-pseudo-v1-19-4c998976c6c7@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-Mailer: WebService/1.1.26943 mail.backend.jedi.jws.acl:role.jedi.acl.token.atz.jws.hermes.yahoo
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.56.0.567.gdb80ae8cd5-goog
+Message-ID: <20261112051542.1539779-1-stanleyjhu@google.com>
+Subject: [PATCH 0/9] scsi: ufs: core: Fix device management and PM recovery
+From: Stanley Jhu <stanleyjhu@google.com>
+To: linux-scsi@vger.kernel.org, "Martin K. Petersen" <mkp@kernel.org>
+Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+	Bart Van Assche <bvanassche@acm.org>, Alim Akhtar <alim.akhtar@samsung.com>, 
+	Avri Altman <avri.altman@sandisk.com>, Bean Huo <beanhuo@micron.com>, 
+	Peter Wang <peter.wang@mediatek.com>, Stanley Chu <stanley.chu@mediatek.com>, 
+	Can Guo <quic_cang@quicinc.com>, "Bao D. Nguyen" <quic_nguyenb@quicinc.com>, 
+	Asutosh Das <quic_asutoshd@quicinc.com>, Hongjie Fang <hongjiefang@asrmicro.com>, 
+	Praveen Talari <praveen.talari@oss.qualcomm.com>, HOYOUNG SEO <hy50.seo@samsung.com>, 
+	Brian Kao <powenkao@google.com>, Jens Axboe <axboe@kernel.dk>, 
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, linux-block@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-On 11/10/2026 1:14 AM, Christian Brauner via AppArmor wrote:
-> Initialize smackfs as a pseudo filesystem. This raises SB_I_PSEUDO and
-> also SB_I_NOEXEC and SB_I_NODEV. smackfs never holds executables or
-> device nodes.
->
-> Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
+A UFS PM callback holds hba->dev_cmd.lock and the only reserved tag
+while it sends device management and START STOP UNIT commands. When
+one of these commands times out, ufshcd_eh_timed_out() resets the host
+inline, but the reset path needs the same lock and tag, so it
+deadlocks or fails. The error handler can also reset the host while
+the PM callback is still using it.
 
-Please include me at least as a CC on Smack patches.
-I ain't dead yet. Nonetheless,
+This series:
+- skips the MCQ completion queue poll when error handling preparation
+  left the queues unconfigured (patch 1/9).
+- hands PM command timeouts to ufshcd_err_handler() instead of
+  resetting the host inline, and fails later PM commands fast
+  (patches 2/9 to 4/9).
+- disables W-LUN runtime PM during error handling instead of calling
+  ufshcd_rpm_get_sync(), so the error handler powers up the host
+  itself (patches 5/9 and 6/9).
+- keeps the host variant power state balanced across error handling,
+  resumes the UFS device W-LUN and wakes suspended logical units after
+  a successful reset, and makes the error handler wait for a running
+  PM callback (patches 7/9 to 9/9).
 
-Acked-by: Casey Schaufler <casey@schaufler-ca.com>
+Based on mkp/scsi 7.4/scsi-fixes (e550f2b2b4aa) plus Hoyoung Seo's v10
+series [1]. On this base, its patch 4/4 needs a context fixup in
+__ufshcd_wl_resume() because of commit 6da1bc55c060 ("scsi: ufs: core:
+Keep clock-gating hold on failed W-LUN runtime resume").
 
-> ---
->  security/smack/smackfs.c | 2 ++
->  1 file changed, 2 insertions(+)
->
-> diff --git a/security/smack/smackfs.c b/security/smack/smackfs.c
-> index a72bc7fabea9..4a56bbeaeca3 100644
-> --- a/security/smack/smackfs.c
-> +++ b/security/smack/smackfs.c
-> @@ -25,6 +25,7 @@
->  #include <linux/magic.h>
->  #include <linux/mount.h>
->  #include <linux/fs_context.h>
-> +#include <linux/pseudo_fs.h>
->  #include "smack.h"
->  
->  #define BEBITS	(sizeof(__be32) * 8)
-> @@ -2880,6 +2881,7 @@ static const struct fs_context_operations smk_context_ops = {
->   */
->  static int smk_init_fs_context(struct fs_context *fc)
->  {
-> +	fc_init_pseudo(fc);
->  	fc->ops = &smk_context_ops;
->  	return 0;
->  }
->
+This series folds in [2] and supersedes [3].
+
+[1] https://lore.kernel.org/r/2052256418.81794387787276.JavaMail.epsvc@epcpadp2new
+[2] https://lore.kernel.org/r/20261104112744.1630864-1-stanleyjhu@google.com
+[3] https://lore.kernel.org/r/20261105071518.1458428-1-stanleyjhu@google.com
+
+Brian Kao (1):
+  scsi: ufs: core: Do not recover the link concurrently with a PM
+    callback
+
+Stanley Jhu (8):
+  scsi: ufs: core: Do not poll unconfigured MCQ queues in the error
+    handler
+  scsi: ufs: core: Defer link recovery on reserved PM command timeout
+  scsi: ufs: core: Wait for the reserved tag in
+    ufshcd_get_dev_mgmt_cmd()
+  scsi: ufs: core: Fail PM commands fast when fatal recovery is
+    scheduled
+  scsi: ufs: core: Disable W-LUN runtime PM in
+    ufshcd_err_handling_prepare()
+  block: Keep RPM_ACTIVE in blk_pre_runtime_resume() when already active
+  scsi: ufs: core: Unwind variant resume in EH when reset fails
+  scsi: ufs: core: Wake suspended consumer queues after host reset
+
+ block/blk-pm.c                 |  13 +-
+ drivers/ufs/core/ufshcd-priv.h |  19 ++-
+ drivers/ufs/core/ufshcd.c      | 244 ++++++++++++++++++++++-----------
+ include/ufs/ufshcd.h           |   3 +
+ 4 files changed, 189 insertions(+), 90 deletions(-)
+
+
+base-commit: e550f2b2b4aab4c5f12db89d04d8978ce4ed7b4e
+prerequisite-patch-id: 0c2cfc48bd97246e47ce689a3a8a364c18a56621
+prerequisite-patch-id: 9a413c053d618cedfc6a1a439469bc49a51e060a
+prerequisite-patch-id: 961b8b65ac8c9fd1b95d0901347cf504632531e4
+prerequisite-patch-id: 9f5c103bac288c258b541cff3742a69fd07892f1
+-- 
+2.56.0.506.g506a7eabc5-goog
+
