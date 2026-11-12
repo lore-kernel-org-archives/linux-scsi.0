@@ -1,73 +1,72 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=216.40.44.13
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.167.198
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794438928;
-	b=Lw8P8O3u9gaU8fWvOPyk9qW14uvyTOSu6DJ3vzWimedSkcVPXAKtl+t17+VJldYvzsKp
-	 1VEVrA4HCCbMjczMpXDEaOyaU8DmlLaW9gsOYMhK19piujBEYlOSZxmV31Z/eY1ZdSIN4
-	 LQrvTl3/+E0VUleUhhozc4oelCihZFs9RUfNcgjo/NPQdpEq4UhPc4KTeR4PIdXZGqaYC
-	 QPgPYR/5Ck5NKIb5AU0G3CuVMugf6qziLWfxh9CzzdmUq0jZHHAR+rucny4dPlBVuqzHL
-	 gZ2BaG+WVmqfi1Hf3DmmfbFj/SeC2Y2LJ21Ee1B71ZoPfO8AllHEBJs6WPJpo47IQvQ==
+	t=1794444078;
+	b=u8KhEp+WN4vXc6FEpMbHYVbBp1mRjFW6f7kOD4aEHnixq7FxIIdDMCZhtUOpGGaku/3c
+	 AXUer+9k4f+K6aIiHqYLf+eEHXtMykFh/QLudQfzAHtqwUWscdJdsozJ1R2W7W41yt7xg
+	 YBq6nUegGjUsZFFiRimvmk/R8BjLvq3wksUReSBiPJp9HC5y5/hEYH86W0c9Hdk9FNaWj
+	 BKbo0pyxOI5aR2y6IkGz8OzyfCVB0dw0AC/sycgwNvvfvgmDTh7xqBuHKjpTWTnjLVsNG
+	 4I0058n3YFSn7UPM7QlZCspqN97/0Jg8Bmz/pG7ZkOfqoHP3oau9ETl16DfAzsrLRiw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794438928;
-	h=DMARC-Filter:Received:Received:Date:From:To:Cc:Subject:Message-ID:
-	 In-Reply-To:References:X-Mailer:MIME-Version:Content-Type:
-	 Content-Transfer-Encoding:X-Rspamd-Server:X-Rspamd-Queue-Id:
-	 X-Stat-Signature:X-Spam-Status:X-Session-Marker:X-Session-ID:
-	 DKIM-Signature:X-HE-Tag:X-HE-Meta;
-	bh=gmDNsQ8h2wciKasKQCbqVP3maaL4qbrw5sZmT7BnjeA=;
-	b=ad9zTcEOvfB01rrFDqzazNxSbDqW5SUq7SpYouQB1u89uZuRuGAOl7YC+VGvuPf0XwLU
-	 CIqcT5VwHPvB3dbKyDeZps9xMPhjGaiw5Y0e6eD7JLJyQ/SuR8lnBUcxnTl4FCE9wIT6r
-	 cNnLaEtoNtIvPhNkfgrP744QDeIax2z8pDSRutZka5ShTD/KclMgLfG6CKHzZhlhb1gbR
-	 Xesxi7Pabh2fAlqoYnCj2kLj7uU1sqTUNAIgRQNyregfAGqWanzUNVVLf8G27Lwp3SPQe
-	 0jVMhALLKRQ9hIwUa5j1Fv5zKNeh7ztpxgtZs5fGxeKD7iG8jw2WtgkjGIBlG9HylIw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794444078;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:Mime-Version:
+	 X-Mailer:Message-ID:Subject:From:To:Cc:Content-Type;
+	bh=bJizSOfwaFLzrVg6LUbmeOKVBfUrTfo1+AD+ywf1vgo=;
+	b=Dvp4D1C69sG8cMf/ibOFXLB5q9EQh7CMh8rnM57Uid9ZIOgkPgTtwEj3HnIAHhhwZ5/f
+	 T0zVDHC47dRcDC+UF0ROcIJHAPt9jXsrYVg5OuDCMeP5PMizjZMjr6g1W3yU5ajJAKzQE
+	 XxRnLEUWyR0ogzPirJLWBUDtLKGsuvAqF5AycajjUfB66mYeDRNm1BeIjn+Wz62wyCHQE
+	 9/ga5CqJZIRzvWPxt3WL4Pd3AwEM6EgaflZhnRj8pLIaV6JAbpb57YNQ4PT+xtUboQtFD
+	 dh8Ll2PHwd66gi746fpxiKW2mj+YD2/FnK6iXfKmunbk7gcuR5jHkNkYAA+zwj2BeNA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=goodmis.org;
-	spf=pass smtp.mailfrom=goodmis.org;
-	dkim=pass header.d=goodmis.org header.i=@goodmis.org header.a=rsa-sha256 header.s=dkim1 header.b="7BpeV/CN";
-	arc=none smtp.remote-ip=216.40.44.13
-Received: from relay.hostedemail.com (smtprelay0013.hostedemail.com [216.40.44.13])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=google.com;
+	spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com;
+	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b="e2s32/Lj";
+	arc=none smtp.remote-ip=209.85.167.198
+Received: from mail-oi1-f198.google.com (mail-oi1-f198.google.com [209.85.167.198])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1E69606A337;
-	Wed, 11 Nov 2026 23:15:26 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E1E69606A337
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=goodmis.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=goodmis.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C1788606A332
+	for <linux-scsi@vger.kernel.org>; Thu, 12 Nov 2026 00:41:17 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C1788606A332
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=goodmis.org header.i=@goodmis.org header.a=rsa-sha256 header.s=dkim1 header.b=7BpeV/CN
-Received: from omf12.hostedemail.com (lb01a-stub [10.200.18.249])
-	by unirelay05.hostedemail.com (Postfix) with ESMTP id 42BF340216;
-	Wed, 11 Nov 2026 23:15:15 +0000 (UTC)
-Received: from [HIDDEN] (Authenticated sender: rostedt@goodmis.org) by omf12.hostedemail.com (Postfix) with ESMTPA id 7DEE41A;
-	Wed, 11 Nov 2026 23:14:54 +0000 (UTC)
-Date: Wed, 11 Nov 2026 18:14:47 -0500
-From: Steven Rostedt <rostedt@goodmis.org>
-To: Vincent Donnefort <vdonnefort@google.com>
-Cc: Tao Cui <cui.tao@linux.dev>, akpm@linux-foundation.org,
- dgilbert@interlog.com, mkp@kernel.org, loberman@redhat.com,
- jmeneghi@redhat.com, kraxel@redhat.com, vivek.kasireddy@intel.com,
- mst@redhat.com, jasowangio@gmail.com, eperezma@redhat.com,
- stefanha@redhat.com, sgarzare@redhat.com, mhiramat@kernel.org,
- jgg@ziepe.ca, kevin.tian@intel.com, axboe@kernel.dk, linux-mm@kvack.org,
- James.Bottomley@hansenpartnership.com, sumit.semwal@linaro.org,
- christian.koenig@amd.com, phasta@kernel.org, joro@8bytes.org,
- will@kernel.org, linux-scsi@vger.kernel.org,
- dri-devel@lists.freedesktop.org, linux-media@vger.kernel.org,
- linaro-mm-sig@lists.linaro.org, kvm@vger.kernel.org,
- virtualization@lists.linux.dev, linux-trace-kernel@vger.kernel.org,
- iommu@lists.linux.dev, io-uring@vger.kernel.org,
- linux-kernel@vger.kernel.org, bobbyeshleman@meta.com,
- mathieu.desnoyers@efficios.com, robin.murphy@arm.com, mason@kernel.org,
- aesteve@redhat.com, tjmercier@google.com, harry@kernel.org, vbabka@suse.cz,
- cuitao@kylinos.cn
-Subject: Re: [PATCH 4/7] tracing: account ring buffer pages and trace_array
- metadata to memcg
-Message-ID: <20261111181447.3c483a50@fedora>
-In-Reply-To: <avScKhR22kFOQ1z4@google.com>
-References: <20261106131829.3228926-1-cui.tao@linux.dev>
-	<20261106131829.3228926-5-cui.tao@linux.dev>
-	<avScKhR22kFOQ1z4@google.com>
-X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-redhat-linux-gnu)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=e2s32/Lj
+Received: by mail-oi1-f198.google.com with SMTP id 5614622812f47-4e778acdbc6so4456246b6e.3
+        for <linux-scsi@vger.kernel.org>; Wed, 11 Nov 2026 16:41:17 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20260707; t=1794444077; x=1795048877; darn=vger.kernel.org;
+        h=content-type:cc:to:from:subject:message-id:mime-version:date:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=bJizSOfwaFLzrVg6LUbmeOKVBfUrTfo1+AD+ywf1vgo=;
+        b=e2s32/LjJqSd4QF3avEKUsJ+6Dlb8TnWobQs+/yXGGC3sKqLbaPGdFa27kdYhjD1nj
+         A24CjvAOTc0LMhLUDqSVR8DMwcwxEnuQ18QIYln9FF+P4mCkXyyz58fpVkoPXpjJQyQZ
+         vDKIiM3r7rs7xFpS8imbPrS3k+IVVMYvVLCdJY6oxFAzmRq+MLyQ6cyGsDdOEEVgfDHT
+         UwmqvpsE/nfShXwZ3DLMQY18/G30m+lqAFQhtWHSNvpUg7gezqz1ZcZzRTDfWMn3PHMW
+         atNI3QauFSvM22voOw0GDxVystX8phe46NtCMToTqgp3vuwNBITJJJeHOarPOCi/0npx
+         L5sw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1794444077; x=1795048877;
+        h=content-type:cc:to:from:subject:message-id:mime-version:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=bJizSOfwaFLzrVg6LUbmeOKVBfUrTfo1+AD+ywf1vgo=;
+        b=JfkkXJ6TIKx4pCg/oq/C5XwafNuf1+j+NZsogG36rBfvlZtFqe9r8Emwe6uIlEmJPE
+         c32VZt+cfgQ/IqE8+bsNBS9pNh1Ge8GwUfRm+az5tobgk3rZd+A3B7tHFXhOvGaP0HnY
+         82TL4HRmDJWib0lP3CLXKxe5i3Vb0+ENlqR77kpM8OWitopZrKQEJGRN+h65SUmqF84w
+         Nv8Bs6FVvW4+IJRu5oX/SvchhdGllRzlk26/AEiQr52Yf7erI2VA5g7JaDBYdIKf5t6K
+         /nxtfTpBmMcPa91kYjwFzORiFn7tPAfDD/Mwyl3jM6/cS6RDll7cp0TY9pSpbtRy/b7z
+         6zDQ==
+X-Forwarded-Encrypted: i=1; AL+hErF8wbWiBIaA+s+o/ar5JZGLY3i6FyS4NddVdT9+ESgXWmIBcaILSEaz2ByNrQ/XvRDiV7HDb0i0htrU@vger.kernel.org
+X-Gm-Message-State: APuU4Z827+/9vY1+5Wi+KQu5Refdi/GrVD56kvFK8izjEmBU/vhOhzHa
+	yGggUi02TMrrjWfv1x5TDAbQL7EjWMM9sx8XJ0//WSPnKgp8MfEFlmNbw8BQpD4r45WznLKIQs8
+	OdkFQUM3oDoKEjbA7RkVrEg==
+X-Received: from iocy14.prod.google.com ([2002:a5d:96ee:0:b0:9c7:75ad:5e83])
+ (user=stanleyjhu job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a05:6808:c234:b0:4e7:3fd7:2752 with SMTP id 5614622812f47-56b96ff79c6mr4110185b6e.54.1794444076488;
+ Wed, 11 Nov 2026 16:41:16 -0800 (PST)
+Date: Thu, 12 Nov 2026 08:41:09 +0800
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -76,89 +75,53 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-X-Rspamd-Server: rspamout05
-X-Rspamd-Queue-Id: 7DEE41A
-X-Stat-Signature: d4cfzmoxk13pg5m5ihp4akmy4hyu64j7
-X-Session-Marker: 726F737465647440676F6F646D69732E6F7267
-X-Session-ID: U2FsdGVkX18kGGg1w/ZySP1UptBt2yyJGC8WbNBioPU=
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=goodmis.org; h=date:from:to:cc:subject:message-id:in-reply-to:references:mime-version:content-type:content-transfer-encoding; s=dkim1; bh=gmDNsQ8h2wciKasKQCbqVP3maaL4qbrw5sZmT7BnjeA=; b=7BpeV/CNBK0xn7L5qTZRDTfRvQV7U2cQp/mCdojV1+x96AlRZ9rtulOhbTPnbSonEkl9dmgz3eGjHb8p+E0h3XDjeebpimn+FH/g477dsAXlpcaBL9IKpa4sWBqls3LUz3Nl8QeSDhvVfF3uaAU+FhhTMPtyWJPI5tA4IvX91lQ=
-X-HE-Tag: 1794438894-129449
-X-HE-Meta: U2FsdGVkX1+FAoSScfo676HReBJlhh89iBeR1SRWVaCqtKRtwKahRcTeRtp0PW6X+8tP0+cIcuPmi2dveZHq+M/PfpnjBQfOKdRrGrE6L6XJMKcHrkYMPwWfT5W0HZpH0ZA4Tjcgp99PZuSv7mPL4a7u5MFDGa5PSeaKjEeGZ88gtDz4qBX9Zmj8tooxKlDTcIzzVtZdHTNqYaysHU8krqFFZhQV25li+r73imgz99krf7wx8TB68OGyy17GR6OQunJdYHkV2EjKXilR7+DL4H7NvH48tc6IGNBrCqnO6wIQzDRZ3F+KJfPb6Hec+mdDc+COvRxaHejVamxGg/o8L4iQ0lpkg48J
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.56.0.567.gdb80ae8cd5-goog
+Message-ID: <20261112004112.3059801-1-stanleyjhu@google.com>
+Subject: [PATCH v6 0/3] rpmb: Fix request serialisation and teardown races
+From: Stanley Jhu <stanleyjhu@google.com>
+To: "Martin K . Petersen" <mkp@kernel.org>, Jens Wiklander <jenswi@kernel.org>, linux-scsi@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Arnd Bergmann <arnd@arndb.de>, 
+	Bart Van Assche <bvanassche@acm.org>, Avri Altman <avri.altman@sandisk.com>, 
+	Alim Akhtar <alim.akhtar@samsung.com>, Bean Huo <beanhuo@iokpp.de>, 
+	Bean Huo <beanhuo@micron.com>, Alexey Charkov <alchark@flipper.net>, 
+	Can Guo <can.guo@oss.qualcomm.com>, Ulf Hansson <ulfh@kernel.org>, 
+	Linus Walleij <linusw@kernel.org>, Shyam Saini <shyamsaini@linux.microsoft.com>, 
+	"=?UTF-8?q?Alex=20Benn=C3=A9e?=" <alex.bennee@linaro.org>, 
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-On Wed, 11 Nov 2026 16:47:38 +0000
-Vincent Donnefort <vdonnefort@google.com> wrote:
+Jens, Martin,
 
-> On Fri, Nov 06, 2026 at 09:18:26PM +0800, Tao Cui wrote:
-> > From: Tao Cui <cuitao@kylinos.cn>
-> > 
-> > Creating an instance immediately allocates two full sets of per-cpu
-> > ring buffers, array buffer plus snapshot, about 1.375MB per cpu per set
-> > on the default config, plus the trace_array and its name.  None of it
-> > is charged: neither trace.c nor ring_buffer.c passes __GFP_ACCOUNT,
-> > while user_events in the same directory accounts everything it
-> > allocates.
+Patch 1/3 serializes requests and provider unregistration in
+drivers/misc/rpmb-core.c. Patches 2/3 and 3/3 fix UFS RPMB device
+lifetime and drop the unregistered bus in drivers/ufs/core/ufs-rpmb.c so
+regions register again after commit 36f35b8df697 ("driver core: reject
+devices with unregistered buses").
 
-As the name suggests, "user_events" are for users and are special.
+Patches 2/3 and 3/3 depend on 1/3 at runtime to avoid a use-after-free
+on host unbind. Jens, if 1/3 looks good to you, could you give an
+Acked-by so Martin can take all three patches in order through the SCSI
+tree?
 
-> > 
-> > Instance creation is currently gated by tracefs file permissions
-> > alone, so a
-> > rootful container with the host tracefs bound in can create instances
-> > until the host runs out of memory.
+Changes since v5:
+- Rebase onto mkp/scsi.git for-next.
+- 1/3: clear descr.route_frames under rdev->lock instead of dead flag.
+- 2/3: pin sdev_gendev via get_device(), drop Bean's tag on 1/3, 2/3.
+- v5: https://lore.kernel.org/r/20260914144910.931518-1-stanleyjhu@google.com
 
-You mean, "works as expected"?
+Stanley Jhu (3):
+  rpmb: core: Guard frame requests and teardown with mutex
+  scsi: ufs: rpmb: Decouple device lifecycle from devres to avoid UAF
+  scsi: ufs: rpmb: Drop the unregistered ufs_rpmb bus
 
->  Charge the ring buffer pages and
-> > the trace_array metadata to the creating cgroup.
-> > 
-> > Signed-off-by: Tao Cui <cuitao@kylinos.cn>
-> > ---
-> >  kernel/trace/ring_buffer.c | 8 +++++++-
-> >  kernel/trace/trace.c       | 6 +++---
-> >  2 files changed, 10 insertions(+), 4 deletions(-)
-> > 
-> > diff --git a/kernel/trace/ring_buffer.c b/kernel/trace/ring_buffer.c
-> > index 1fd28a72e6ee..676c059c112c 100644
-> > --- a/kernel/trace/ring_buffer.c
-> > +++ b/kernel/trace/ring_buffer.c
-> > @@ -441,7 +441,13 @@ static struct buffer_data_page *alloc_cpu_data(int cpu, int order)
-> >  	 * gracefully without invoking oom-killer and the system is not
-> >  	 * destabilized.
-> >  	 */
-> > -	mflags = GFP_KERNEL | __GFP_RETRY_MAYFAIL | __GFP_COMP | __GFP_ZERO;
-> > +	/*
-> > +	 * The subbuffers are charged to the memcg of whoever caused the
-> > +	 * allocation: the creator of a trace instance, or root at boot for
-> > +	 * the global trace.
-> > +	 */
-> > +	mflags = GFP_KERNEL | __GFP_RETRY_MAYFAIL | __GFP_COMP | __GFP_ZERO |
-> > +		  __GFP_ACCOUNT;
-> >  
-> >  	page = alloc_pages_node(cpu_to_node(cpu), mflags, order);
-> >  	if (!page)  
-> 
-> Hum, by default tracefs is root only. 
-> 
-> And even if made accessible to other users: 
-> 
->   1. The life span of a trace instance is not tied to the caller.
->   2. The ring buffer is shared by multiple users.
-
-Right. Is there a use case out there that allows non-admin to create an
-instance? Tracing ring buffers can expose a lot and should not be given
-to unprivileged users.
-
-What exactly is this trying to achieve?
-
--- Steve
+ drivers/misc/rpmb-core.c    | 20 ++++++++-
+ drivers/ufs/core/ufs-rpmb.c | 84 +++++++++++++++++++------------------
+ include/linux/rpmb.h        |  3 ++
+ 3 files changed, 65 insertions(+), 42 deletions(-)
 
 
-> 
-> Overall I am not convinced charging the creator makes much sense.
-> 
-> Eventually a few allocations for iterators could be GFP_ACCOUNT.
-> 
+base-commit: 0fc91e802801819a0c51d30b6eecac63ab4f85d2
+-- 
+2.56.0.567.gdb80ae8cd5-goog
 
