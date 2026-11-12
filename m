@@ -1,48 +1,48 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794524213;
-	b=Bkw2bELt/W9u8ixtqjTk/VVTwRTL60S4jXOOZryVb/QOEKgR1KF+B5eueI2zG2uJyNZn
-	 ncX9iUwGCXbh8jVMyu+pIC3FClSdazCKfdzUGGIkG71qL/U5XLY1XWG3bWu3awRPTRZZG
-	 sDOMvwRDBOdkOehXeIhbiGzqPoSlotGjkbK5jwNap+OJh5W1mYdko1DP+YuShMncBQzC9
-	 Q9NPRzazqU8Fh13CXvr5IdP9HuYdXox9hlk0YEeXGf+GTjnFCACocx6HB68op72Z0h+59
-	 s98+kaPVvdn/q1rXH3fWksJbbcPbo+d7gSk/CTBO2iVJlw5k7MEFaxeYhhC8+L2kvhA==
+	t=1794524669;
+	b=l+itygsd9Ao6w6LrVPnUplCF3wH3OBpoUOLvjzszWzSoE5zP0RLsVCph+C4VCx5cSsK9
+	 liBlt6aMLbqlfbipB8n/3pT3UgoV8kY0F+VZSfzWql3lub+d9xF8zOSXU7gEoLvl6JNxC
+	 oviySz1bHcNqLBeVXOvBlRE161Oddl0O7dpvOZa6+1xdVm8suozmIcq9lJYGALUL9GqQM
+	 BsbPZhDvyeTT20RMp6WiZ4UR1/TBkfKQYYwzVtxgFmvv3Bv1eqzlWIAuqtS6267UDwStr
+	 9cDX1mM3jA6CP1Iq3asPu0pw3f0UGbllBJnd+UXF+wE+6GG/ReSd1HoBxhPCfI32pQQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794524213;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794524669;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=eJhWTrmqLRqHBM4fVhRFrfaab4xR8zdIkxlqDM0Yiwc=;
-	b=4Rug215eyvpa1TgOCnjdMux83sbol8vm3TVNW5zgKzOPhfGKTdyLNS/gw6HbPNikofTY
-	 3QzrH03yUV5qyGXKBDTQLjhajjC5aN6ESahY6HqAQOWl/Z585twWmHMnHfE5wR5oNFrRP
-	 SmDoaG0Ux2OuGHRvPlEPwd4txz12vetWj9mG0SKHa+hjVEZPp0+0PO1tNKEUya/0C6SeW
-	 j3zXWXAi68H1kNtCP9eKax8E6gHGjeSJL+ji9vYISsJfoFEuBRH96M57/3MwS/nb/gE+c
-	 QBKw9hWYo15JQS8CbJXas0hIEcGUjM9n3qoNPqcqv0sfMAOBMPjZJyviHRsIJ//l7Jw==
+	bh=LBC5CqaXNjmx4Mk3+qdy585NZSSUhYZZJEC7EgbvyFQ=;
+	b=mXeCdNTM/pKAnGRE7Ibbzj3ywrxYnXwHUIKwlYboP+Np9CMnIeKMCJJQQv5XpIa4i/Vp
+	 BkDThczDdKrDzZdpKFnTOJXqljfsA9bbJcBiV/qHPJLiP7GO5QPP5U42/Dx1/w899rlcZ
+	 VYMb4YCYO571RI/aGSXT39eJcjtwiL91KDctma5BbFU5+AjZrWieoJ4hD8OlXNZ2lFZGh
+	 OeD8fsHkKM8kvsO/nwkPYcY14HNuZUQ3V2bsVRNoqtZfVJPP6g+uSZzaeIQx87b1rBqf3
+	 cyUqwI+dGXWcuWYjTymkysNMgP5WOE2q0sSO5kMkST4JKbPj7NglFw/G/uGsEJOIwHA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lC+hnXEw;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=XgTbs8Bp;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17161606A880;
-	Thu, 12 Nov 2026 22:56:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7FA8606A323;
+	Thu, 12 Nov 2026 23:04:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lC+hnXEw
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C56591F000C4;
-	Thu, 12 Nov 2026 22:56:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=XgTbs8Bp
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A3BCC1F000C4;
+	Thu, 12 Nov 2026 23:04:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794524212;
-	bh=eJhWTrmqLRqHBM4fVhRFrfaab4xR8zdIkxlqDM0Yiwc=;
+	s=k20260515; t=1794524669;
+	bh=LBC5CqaXNjmx4Mk3+qdy585NZSSUhYZZJEC7EgbvyFQ=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=lC+hnXEwnAgb8ctl9z7EYZYZpA3LWljHir0uNHCqqQNvO7/GiRwYeH5fP/luqTBSh
-	 roxpCn+jL4SEW6bY6hZWSPJAXnB7AYCm9VuQhQJWOmC0rcfmwAQDt6VmOF1Sfu7JT5
-	 vrWfGOmwSIsqe9KpwZ43Q93cVbU6xY+BllQ1ZjsD8j4VgPwxl7QzWlkqeW0V2xlZ0m
-	 9i+/7/p06n1KobxfInxpcV3oJj595tmatLtqNPBz90Kj7pItxo9os3Tyy3crl3OpS9
-	 7sKcLD3bor3Vn/UqbboN8+bi2UA4cLml8btLytpMoqjVdHHAre6Tv1CJyp0cAaHbcZ
-	 denjH/o8/PuFw==
-Message-ID: <sashiko-outbox-211928@kernel.org>
+	b=XgTbs8Bp0pOSGxIF4FdPFLqSLBtyXLhzqKNu7HUHZH4rtgTc+rba/0R/91b2BN8Ne
+	 D7I5tSCOTfsWW97aiX0xnQzg0gL3RkzOriXbTeR8pb/QkBEEyPjOSxs2xo8XlN2a3R
+	 5anaxLlvThUJeS6fxtax7OYg4Zx+kTzpvi1lWj0WmNREbgLcY2im2+klLRwT5kABqG
+	 xQ3TLavy3IU7YwAcaagLKPI0LVAd44Qefc3+vjUCqhwSH3xzd13ets0KXc8BD3zA2K
+	 hBJ/rP4YNJnarw80rUEUU6ytDKsLCIOGzR5ZavyB3Q2H+hh7NbSJQ/VsMC3mdouIJv
+	 v2mTFjCpowPJg==
+Message-ID: <sashiko-outbox-211931@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v13 2/6] ufs: host: Add ICE clock scaling during UFS
- clock changes
+Subject: Re: [PATCH v13 3/6] mmc: sdhci-msm: Set ICE clk to TURBO at sdhci
+ ICE init
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Abhinaba Rakshit" <abhinaba.rakshit@oss.qualcomm.com>, "Abel Vesa" <abelvesa@kernel.org>, "Bjorn
  Andersson" <andersson@kernel.org>, "Konrad Dybcio" <konradybcio@kernel.org>, "Manivannan
@@ -52,14 +52,14 @@ To: "Abhinaba Rakshit" <abhinaba.rakshit@oss.qualcomm.com>, "Abel Vesa" <abelves
  Kozlowski" <krzk+dt@kernel.org>, "Conor Dooley" <conor+dt@kernel.org>, "Neeraj
  Soni" <neeraj.soni@oss.qualcomm.com>, "Harshal Dev" <harshal.dev@oss.qualcomm.com>, "Kuldeep
  Singh" <kuldeep.singh@oss.qualcomm.com>
-Cc: linux-crypto@vger.kernel.org, linux-scsi@vger.kernel.org, devicetree@vger.kernel.org, "Abel
- Vesa" <abel.vesa@oss.qualcomm.com>
-In-Reply-To: <20261113-enable-ice-clock-scaling-v13-2-258dc817bd63@oss.qualcomm.com>
+Cc: linux-crypto@vger.kernel.org, linux-scsi@vger.kernel.org, devicetree@vger.kernel.org, "Konrad
+ Dybcio" <konrad.dybcio@oss.qualcomm.com>, "Abel Vesa" <abel.vesa@oss.qualcomm.com>
+In-Reply-To: <20261113-enable-ice-clock-scaling-v13-3-258dc817bd63@oss.qualcomm.com>
 References: <20261113-enable-ice-clock-scaling-v13-0-258dc817bd63@oss.qualcomm.com>
- <20261113-enable-ice-clock-scaling-v13-2-258dc817bd63@oss.qualcomm.com>
+ <20261113-enable-ice-clock-scaling-v13-3-258dc817bd63@oss.qualcomm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 12 Nov 2026 22:56:51 +0000
+Date: Thu, 12 Nov 2026 23:04:28 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -69,105 +69,100 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 
-Thank you for your contribution! Sashiko AI review found 3 potential
+Thank you for your contribution! Sashiko AI review found 2 potential
 issues to consider:
-- [High] ufs: ufs-qcom: inverted ICE clock rounding in
-  ufs_qcom_clk_scale_notify()
-- [Medium] ufs: ufs-qcom: ICE clock scaling skipped when HBA is inactive
-  on reset
-- [Medium] ufs: ufs-qcom: broken clock rollback on error in
-  ufs_qcom_clk_scale_notify()
+- [Medium] mmc: sdhci-msm: unreleased ICE OPP vote in
+  sdhci_msm_ice_init()
+- [Low] mmc: sdhci-msm: unused !CONFIG_MMC_CRYPTO stub for
+  sdhci_msm_ice_scale_clk()
 --
 
-commit 1e3a20c6222c6ad3d20e8e58d3a121e1fa7488c1
+commit a5619e66f640a05fe76cc365285b6b0e44623197
 Author: Abhinaba Rakshit <abhinaba.rakshit@oss.qualcomm.com>
 
-ufs: host: Add ICE clock scaling during UFS clock changes
+mmc: sdhci-msm: Set ICE clk to TURBO at sdhci ICE init
 
-This commit adds Inline Crypto Engine (ICE) clock scaling to
-ufs_qcom_clk_scale_notify() so the ICE clock scales alongside the UFS
-controller clock.
+This commit scales the Inline Crypto Engine (ICE) clock to its maximum
+frequency via qcom_ice_scale_clk() during sdhci_msm_ice_init() so that it
+matches the MMC controller clock rate.
 
-> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-> index 6afb8498b8c26..5019803a6aba4 100644
-> --- a/drivers/ufs/host/ufs-qcom.c
-> +++ b/drivers/ufs/host/ufs-qcom.c
-[ ... ]
-> @@ -1987,6 +2002,12 @@ static int ufs_qcom_clk_scale_notify(struct ufs_hb=
-a *hba, bool scale_up,
->  			return err;
->  		}
+> diff --git a/drivers/mmc/host/sdhci-msm.c b/drivers/mmc/host/sdhci-msm.c
+> index 32b1bcba47d6b..652c5cfc87bcc 100644
+> --- a/drivers/mmc/host/sdhci-msm.c
+> +++ b/drivers/mmc/host/sdhci-msm.c
+> @@ -1902,6 +1902,16 @@ static void sdhci_msm_set_clock(struct sdhci_host =
+*host, unsigned int clock)
 > =20
-> +		err =3D ufs_qcom_ice_scale_clk(host, target_freq, !scale_up);
-> +		if (err && err !=3D -EOPNOTSUPP) {
-> +			ufshcd_uic_hibern8_exit(hba);
-> +			return err;
-> +		}
+>  static const struct blk_crypto_ll_ops sdhci_msm_crypto_ops; /* forward d=
+ecl */
+> =20
+> +static int sdhci_msm_ice_scale_clk(struct sdhci_msm_host *msm_host,
+> +				   unsigned long target_freq,
+> +				   bool round_ceil)
+> +{
+> +	if (msm_host->mmc->caps2 & MMC_CAP2_CRYPTO)
+> +		return qcom_ice_scale_clk(msm_host->ice, target_freq, round_ceil);
 > +
->  		ufs_qcom_icc_update_bw(host);
->  		ufshcd_uic_hibern8_exit(hba);
->  	}
-
-[Severity: High]
-Is the round_ceil argument (!scale_up) inverted in this
-ufs_qcom_ice_scale_clk() call?
-
-qcom_ice_scale_clk() calls dev_pm_opp_find_freq_ceil() when round_ceil
-is true and dev_pm_opp_find_freq_floor() when round_ceil is false, while
-target_freq is the concrete UFS core_clk frequency in Hz.  On SoCs where
-ICE OPP rates are higher than the corresponding UFS core_clk rates for
-the same voltage corners (for example on QCS8300 or SM8550, where UFS
-core_clk OPPs are 75/150/300 MHz and ICE OPPs are 100/201.5/403 MHz),
-passing round_ceil =3D false during scale_up rounds 300 MHz down to
-201.5 MHz, so the ICE clock never reaches its 403 MHz nominal OPP.
-Scaling up to an intermediate OPP such as 150 MHz also picks 100 MHz
-while scaling down to 150 MHz picks 201.5 MHz, and scaling up to a
-frequency below the minimum ICE OPP (such as 75 MHz on SM8550) fails with
--ERANGE and aborts UFS clock scaling.
+> +	return 0;
+> +}
+> +
+>  static int sdhci_msm_ice_init(struct sdhci_msm_host *msm_host,
+>  			      struct cqhci_host *cq_host)
+>  {
+> @@ -1960,6 +1970,11 @@ static int sdhci_msm_ice_init(struct sdhci_msm_hos=
+t *msm_host,
+> =20
+>  	mmc->caps2 |=3D MMC_CAP2_CRYPTO;
+>  	mmc->caps2 |=3D MMC_CAP2_CRYPTO_NO_REPROG;
+> +
+> +	err =3D sdhci_msm_ice_scale_clk(msm_host, ULONG_MAX, false);
+> +	if (err && err !=3D -EOPNOTSUPP)
+> +		dev_warn(dev, "Unable to boost ICE clock to TURBO\n");
+> +
+>  	return 0;
+>  }
 
 [Severity: Medium]
-Does placing ufs_qcom_ice_scale_clk() after the !ufshcd_is_hba_active()
-early return in ufs_qcom_clk_scale_notify() skip ICE clock scaling during
-host reset and restore?
+As reported by Ulf Hansson on v12 [1], does this leave the OPP and
+power-domain performance vote on msm_host->ice->dev permanently asserted?
 
-ufshcd_host_reset_and_restore() stops the HBA before scaling the clocks
-back to maximum:
+On platforms with a standalone sdhc_ice device and an OPP table with
+required-opps (such as sc7280 and qcs8300), qcom_ice_scale_clk() calls
+dev_pm_opp_set_rate(ice->dev, ...), which votes on the shared CX power
+domain.  Because qcom_ice_probe() does not enable runtime PM on ice->dev,
+genpd never drops this performance state automatically.
 
-drivers/ufs/core/ufshcd.c:ufshcd_host_reset_and_restore() {
-    ...
-	ufshcd_hba_stop(hba);
-	hba->silence_err_logs =3D true;
-	ufshcd_complete_requests(hba, true);
-	hba->silence_err_logs =3D false;
+In sdhci_msm_runtime_suspend(), the driver drops the controller's own vote
+with dev_pm_opp_set_rate(dev, 0), but sdhci_msm_ice_suspend() only calls
+qcom_ice_suspend() to gate the ICE clocks.  The vote on ice->dev is also
+left active if cqhci_init() or __sdhci_add_host() fails after
+sdhci_msm_ice_init(), or when sdhci_msm_remove() unbinds the driver,
+keeping the shared CX rail elevated during idle and system suspend.
 
-	/* scale up clocks to max frequency before full reinitialization */
-	if (ufshcd_is_clkscaling_supported(hba))
-		ufshcd_scale_clks(hba, ULONG_MAX, true);
-    ...
-}
+> @@ -2160,6 +2175,13 @@ sdhci_msm_ice_suspend(struct sdhci_msm_host *msm_h=
+ost)
+>  static inline void sdhci_msm_ice_restore(struct sdhci_host *host)
+>  {
+>  }
+> +
+> +static inline int
+> +sdhci_msm_ice_scale_clk(struct sdhci_msm_host *msm_host, unsigned long t=
+arget_freq,
+> +			bool round_ceil)
+> +{
+> +	return 0;
+> +}
+>  #endif /* !CONFIG_MMC_CRYPTO */
 
-Because ufshcd_is_hba_active(hba) is false at that point,
-ufs_qcom_clk_scale_notify() returns 0 immediately to avoid sending UIC
-Hibern8 commands.  Unlike the UFS timers, UniPro clock control and
-interconnect bandwidth, the ICE clock is not reconfigured during the
-subsequent ufshcd_hba_enable() and link startup, leaving the ICE clock at
-its previous lower OPP while the UFS controller runs at maximum
-frequency.
+[Severity: Low]
+This isn't a bug, but sdhci_msm_ice_scale_clk() has no callers outside the
+CONFIG_MMC_CRYPTO block.  Its only caller is sdhci_msm_ice_init() right
+after setting mmc->caps2 |=3D MMC_CAP2_CRYPTO, so this stub is unused and
+sdhci_msm_ice_init() could call qcom_ice_scale_clk() directly.
 
-[Severity: Medium]
-If ufs_qcom_ice_scale_clk() returns an error here, does the error path
-leave the UFS timer and UniPro clock control registers out of sync with
-the reverted clock rate?
-
-By the time ufs_qcom_ice_scale_clk() runs in POST_CHANGE,
-ufs_qcom_clk_scale_up_pre_change() or
-ufs_qcom_clk_scale_down_post_change() has already programmed
-REG_UFS_SYS1CLK_1US, DME_VS_CORE_CLK_CTRL and PA_VS_CORE_CLK_40NS_CYCLES
-for target_freq.  On error, ufs_qcom_clk_scale_notify() exits Hibern8 and
-returns err, causing ufshcd_scale_clks() to roll the UFS clocks back to
-previous_freq while the link is active and without restoring those
-hardware registers to match previous_freq.
+[1] https://lore.kernel.org/r/CAPx+jO_Ltc6Q+VdUgOs81azTiM5Vx12GH1z+CXt6NW=
+=3DM601THQ@mail.gmail.com
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261113-enable-ice=
--clock-scaling-v13-0-258dc817bd63@oss.qualcomm.com?part=3D2
+-clock-scaling-v13-0-258dc817bd63@oss.qualcomm.com?part=3D3
