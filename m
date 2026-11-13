@@ -1,63 +1,59 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794542340;
-	b=QOLtD1VvtbTigHkW20Kf/Haoqsbo7lbIiXXNwxsYXr39/BVKRG1ZS7Mx2yR8HLKDnBBR
-	 zHR1AlmTQhzDjH6Vp9S7Beetl9lIj6+A63OPoX0PzDdQA1DfPPydP75hbYQMsvsDOvVbU
-	 LK+zCRfldFSCSsC39Fu/WsWr8zJ58p8/fEjNS9ipHFbyJgqD/Ruu/QXJ48mK/V3crXlBO
-	 7dagQvz19yoSWazM3Unpbqc2WA2cf0Amhb07S0+xt/eZwq4l9E1c8tGCcdtp86UGR8Pwe
-	 N8bBoe6Zj8L8v9A+6jeP8R6IzOOyg/COFbboyENyseMWWXau5tcsfnWKthquN5/8rQg==
+	t=1794542903;
+	b=puH4C1yq5oyr2Sagn+hG9ky3Tzvpuq+DoATwlmffiovBaeR+VNWgVxJiNGcBmWQ1zD17
+	 xg2o8qQd2a2kUvNZnMabovjOBnY5ESNrOrrNDOMfyrXUf1m/b9HTqz1ditojSdTxZiERx
+	 JBtBdJy3KlqzV8tWLHwnShIYt+cmaRsyzmlA+gu0hdfect88UikGxeQt6eSwo1JgPSGfj
+	 jJb3A3G9A23f3pYTtsL8ygoHPZpRvr6UC6OM2spO9n2PmVLfQ90ELqUJ4es9jwrsL0ntI
+	 1axToPiIVE7wTy9BQpZx5LLlZOGnmZ/GpzpmzsF4fQU7mbL+YJrwnyN0sdFB3LQ3MgQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794542340;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794542903;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=YNwftnnoDQaO1cbVmr7F7KU58HWyTpxMeoA5xvSqT3k=;
-	b=ngDnG/H94kIv7r8TAz3YMo6ev5FccFa2YN5qddLwhRVxiaB9Ry3pUsHHplZkipGxGPTU
-	 P0yEvLabpSNMD5cnkR7ekfVu/MFuRCc25i8NAkYOyqTFajtoXkyANDuHS6RruiBGY8a6+
-	 elyH0eP1iSN3T2iqY71gfY/UHM4rgPASHz0FwC0cMSRRbrxQVFfZQA+wVdZrhDrRXT+wL
-	 461vlwS81lAAIOxtTnBIK88VUiscf1VmfoGnWhdSERyyXQ3yYoG4b3FHwSbTuvNliJFAT
-	 zxAgnnKPPFc5+Ve8f5drSte4O2lYpoSogBfD5zVUjnV5UTzbAWW8F9dA9QLb/a13HrQ==
+	bh=8YARFsfshi83KcJAZu11qEFspbOUXOBNNkYtX280ZF4=;
+	b=ml04ySx3lp3gX6TkhY1YCnoWEald4wsy1iuIE2EAyaGJE6iiO0F9Ropr6Repl+a+3nat
+	 zH7yjaGIT1COatpg3rlKPHxbqW40Z8eaFG3OCaTd6LoqRS0StP5e3HGJZZQhosCKRlRS6
+	 wsLZNwaLX29Z8guCw3aujGCnqNOsLJZaqA0hFCylXyJf7ECkkPSekWSGdBvOzf/F7XGHT
+	 jhq32z5Nh0HEEGsy88ZLOoWXk4FVWP+JEohFdVknYE3fPh7rJMl26exye/CXPdiSc0Xoj
+	 JuU1tsQRMc5MtJNdn4BJdUS9QuFZ6Es204Wfj37cmFYFacFtYdp2wAZnYKgdq6R5BYA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BahpqMvX;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=iNlulHIL;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A02F8606A321;
-	Fri, 13 Nov 2026 03:59:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17D1F606A323;
+	Fri, 13 Nov 2026 04:08:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BahpqMvX
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9E0F01F000C4;
-	Fri, 13 Nov 2026 03:58:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=iNlulHIL
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 318871F000C4;
+	Fri, 13 Nov 2026 04:08:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794542340;
-	bh=YNwftnnoDQaO1cbVmr7F7KU58HWyTpxMeoA5xvSqT3k=;
+	s=k20260515; t=1794542902;
+	bh=8YARFsfshi83KcJAZu11qEFspbOUXOBNNkYtX280ZF4=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=BahpqMvXKdY1E7ojyt66ROo53+0AotY+niLlLRTwhYPOSjguOlEVRCO9MF6C1vwXN
-	 3SS9CQPC3FuRzw66vpdXvdCgOYkU7apaubFDPvp90mkjut6CcurUFg0fjJE+TiCK40
-	 w/Ymlq4hrjt6AoL6vurmaalsullWo0cyFledIqIsTbc+7eZudpy7K+NUXrFsqiOLFU
-	 HeZU14g8tRGAFm2DHJwIqNsyJKOU97qGamBCXw/dwK6K1wa969ejhOrpk050G8gWB6
-	 NQxyz9zjyG69dd3oVt3bZ+XV3Sk5yHF0FNfclQSSuIHAXiUim2fnWMQkdtI5i0tqKr
-	 WizazPJV0756A==
-Date: Thu, 12 Nov 2026 19:58:58 -0800
+	b=iNlulHIL2SCc/Ua0Dc/VeDfAjB02OCQvHD+MzXAmOhhxh+bZgS+UL96+x2DCtz1op
+	 264qXfZCs2EyN2TtlyLiDMruuz4hw2cNgl8y5RjXdjSy6kSGCM5C3R8Y6/jeBgjvlX
+	 hu5wQXOZ3CUF8bK7vd82ZaaDeBaI2Tr58/pnBQndI8uKpIvywufrXxRY2N9ykpFy9u
+	 MUWrdwXqo8TYz5kR6h8Q825vzr9LcUVa9oJlTsUajpP+rFujxdAMxV3XM3AW3NJ+BD
+	 1jyDoUy90T4f1LMR7Bhgmzref1+wEOAT6c2nTMqKC3NnCJx0d/FLlWMSe9Ftk4gTVS
+	 4seotPE5TqjcA==
+Date: Thu, 12 Nov 2026 20:08:20 -0800
 From: Eric Biggers <ebiggers@kernel.org>
 To: Kuldeep Singh <kuldeep.singh@oss.qualcomm.com>
 Cc: Adrian Hunter <adrian.hunter@intel.com>, Ulf Hansson <ulfh@kernel.org>,
 	Abel Vesa <abelvesa@kernel.org>,
 	Manivannan Sadhasivam <mani@kernel.org>,
 	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K. Petersen" <mkp@kernel.org>,
-	Bjorn Andersson <andersson@kernel.org>,
-	Konrad Dybcio <konradybcio@kernel.org>, linux-mmc@vger.kernel.org,
+	"Martin K. Petersen" <mkp@kernel.org>, linux-mmc@vger.kernel.org,
 	linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-scsi@vger.kernel.org, linux-crypto@vger.kernel.org
-Subject: Re: [PATCH 1/3] mmc: sdhci-msm: Enable ICE before enabling crypto
+	linux-scsi@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH v2 2/2] ufs: ufs-qcom: Enable ICE before enabling crypto
  support
-Message-ID: <20261113035858.GD1742@sol>
-References: <20261022-qcom_ice_pm_enable-v1-0-f7a84086c651@oss.qualcomm.com>
- <20261022-qcom_ice_pm_enable-v1-1-f7a84086c651@oss.qualcomm.com>
- <20261024182904.GD2553@quark>
- <172229a8-a4c5-4103-a38b-e4cce3f18718@oss.qualcomm.com>
+Message-ID: <20261113040820.GE1742@sol>
+References: <20261112-qcom_ice_pm_enable-v2-0-177e454d6f22@oss.qualcomm.com>
+ <20261112-qcom_ice_pm_enable-v2-2-177e454d6f22@oss.qualcomm.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -69,30 +65,45 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <172229a8-a4c5-4103-a38b-e4cce3f18718@oss.qualcomm.com>
+In-Reply-To: <20261112-qcom_ice_pm_enable-v2-2-177e454d6f22@oss.qualcomm.com>
 
-On Thu, Nov 12, 2026 at 05:00:56PM +0530, Kuldeep Singh wrote:
-> On 24-10-2026 23:59, Eric Biggers wrote:
-> > On Thu, Oct 22, 2026 at 03:21:50PM +0530, Kuldeep Singh wrote:
-> >> Remove ICE enable call from CQE path, since ICE is now enabled
-> >> during SDHCI crypto initialization only.
-> 
-> Sorry for delayed response as I was away on vacation for more than
-> 2weeks and hence couldn't catchup on the thread!!
-> 
-> > 
-> > This change makes the low-power and "optimization" settings in
-> > QCOM_ICE_REG_ADVANCED_CONTROL be set only once, during probe.  Is that
-> > correct?  Those settings never get lost at runtime?
-> 
-> Yes, the low-power and optimization settings are set once and are
-> retained over suspend/resume cycle.
+On Thu, Nov 12, 2026 at 06:48:18PM +0530, Kuldeep Singh wrote:
+> ufs-qcom currently exposes UFS crypto profile and sets UFSHCD_CAP_CRYPTO
+> before enabling ICE. This leaves a window where blk-crypto can issue
+> keyslot programming calls before ufs-qcom has explicitly enabled ICE.
 
-What about hibernation?  We recently went through this for keyslot
-reprogramming, and it was established that keyslots need to be
-reprogrammed after a hibernation image is restored.  See the commit
-https://git.kernel.org/linus/8b190e9c0b36aac5
-Doesn't the same apply to qcom_ice_enable()?  If so, this commit breaks
-ICE upon restoring a hibernation image.
+Please be more specific about what actually goes wrong, and why.  During
+probe, the crypto profile hasn't actually been registered with the block
+layer yet.  So the above seems inaccurate.  Likewise in the MMC patch.
+
+>  static int ufs_qcom_ice_init(struct ufs_qcom_host *host)
+>  {
+> @@ -188,6 +190,12 @@ static int ufs_qcom_ice_init(struct ufs_qcom_host *host)
+>  
+>  	host->ice = ice;
+>  
+> +	err = qcom_ice_enable(host->ice);
+
+Use the 'ice' local variable.
+
+> @@ -636,12 +645,15 @@ static int ufs_qcom_hce_enable_notify(struct ufs_hba *hba,
+>  		 * is initialized.
+>  		 */
+>  		err = ufs_qcom_enable_lane_clks(host);
+> +		if (err)
+> +			return err;
+> +
+> +		err = ufs_qcom_ice_enable(host);
+>  		break;
+>  	case POST_CHANGE:
+>  		/* check if UFS PHY moved from DISABLED to HIBERN8 */
+>  		err = ufs_qcom_check_hibern8(hba);
+>  		ufs_qcom_enable_hw_clk_gating(hba);
+> -		ufs_qcom_ice_enable(host);
+>  		ufs_qcom_config_ice_allocator(host);
+>  		break;
+
+Needs an explanation for why ufs_qcom_config_ice_allocator() and
+ufs_qcom_ice_enable() need to be called at different times.
 
 - Eric
