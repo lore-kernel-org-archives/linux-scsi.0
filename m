@@ -1,45 +1,45 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794565125;
-	b=sZAAa+yeGvKMotwaBCmdty6wFzmj/fsSH7DJzK6m+F28Bh5FH+QlbdVi+grJ3mh71c7i
-	 8VNrF+9ZUf68oaKkSEYC/tz9xVZgtSo86uHo8G274GyWr/dMPjytkFa1/KycQn03s9IQM
-	 CeLvlHsy+5ToN74RTpfvTuamYejXC0rJ83HNDJ0Oe+hT3GePHj4sfnq8n8Auh0YnCmMxd
-	 R2+6jHC4aOfdOLMub8YJSzqvmmqWeLW3Srn8PnI7Em4d3R7y6h14BSG82xLP7z55dp4QB
-	 OgCvO78VotSKSgVkQDgekO4k7kFMhZteONOErYUHVzzOlyhGpSbASNvdRSAJ9yVkicQ==
+	t=1794565174;
+	b=GoQepiphYKu+4Zcl6kV29jzpf9yS+lJfXbLnSPCxopYKJmyJ6ogr/GG8nlRR/+6I4r5H
+	 e7Hr2nk9JWrzgieCUhiS70OMZQHDtRY8Gt60rCDSPmJBTJdMFN4eyqowFbZIBaJdG9jYR
+	 H9ybM3gyzqB/raRmaEE90HwDEy3gbcgFzt5W70hF6Wi61WqJpyVTHl+xvlz/e31esoHUG
+	 SZ4mXb2qDsTV4Pg2mZ1cj3TaDste3rzWgGEeuRB1u493T3jVvJtjximajrwTyJjOjK6+u
+	 e4nAZ9PWwdSij+poqR850jFL8WEJ8aQFotJtVXCdFwGQ4ZSVQ2oVFaMH3Mcfm7ldc3w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794565125;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794565174;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=XTQp8SKrmmjGdaoj3cLoQpYxyDLtluff/URZttFHqVM=;
-	b=YH65eDMXtqStgDZ+oDywfAn2Fk89PYVPJdeXPhRME083BvYFwEFwRg+3WpltkgtKNnEX
-	 Nz7Okh/ZdIVsVm968ymHHnuiimYBvdw04RhWrqywNoaQNG6dXaj1zb6cbnRLkC9kMgV5V
-	 10+IRdZcHs2c76n3Nh70BYLzDduTECxU4XUZYGtKuWiczSK82Bu2GdrZHUxQVah7wRI0V
-	 u7HXLVgARbJNHt12W4TF8/yaREiIIj9gFEXbxHN8UrItLCOsk5ydfEXD3+l9GHKyMHF/C
-	 5auF3rlVIWG+NlK0AegDtbZ8a4o9b3zou/cCEqhvcNUP8unMj2NNCvAMMiHVY0HXBQg==
+	bh=gyAS678xyehwrSeqsPQSw9GBxZSkkiYhUUKHcjA2qv8=;
+	b=fL3StTS2VtjCRo97ke3Np8kwshVUMCHwev2rhcQg/hOESu4dB1AXst9USVFsc4ats2mC
+	 U5axGN/S+bevxVSq3RAbm0fIzZT7uahh0e7A0pW9aFFa5HBuy7Js5LyreEB9E/iaKZPFB
+	 4TO9k68cSYf1iIdf0uUITNXVHJZ5D7nrHTMQamYjWKA2+icPx521iRHwcXGaGihZz/MQa
+	 81Y0Um3B8UgKjCQ1x/A7WTLjSsOeSFfy/ou5/53j2+I1bh1oU/XuwLovogyn8Pv2mLY0M
+	 +7UuOQZJx9HyYsMiUfEFn3r2XONbP/u/CT7eJ4vQDhyGlqEw7NEggAW5AcE8IBa8T1w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=iLe85MkD;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=K7sXUvxS;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ABBAC606A323;
-	Fri, 13 Nov 2026 10:18:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75406606A321;
+	Fri, 13 Nov 2026 10:19:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=iLe85MkD
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5EB741F000C4;
-	Fri, 13 Nov 2026 10:18:44 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=K7sXUvxS
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E05871F000C4;
+	Fri, 13 Nov 2026 10:19:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794565125;
-	bh=XTQp8SKrmmjGdaoj3cLoQpYxyDLtluff/URZttFHqVM=;
+	s=k20260515; t=1794565174;
+	bh=gyAS678xyehwrSeqsPQSw9GBxZSkkiYhUUKHcjA2qv8=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=iLe85MkDwoT4kspMx2Xssew/DsC5s1mT3SeGP5/ZXBUTBs9e8mrQT2op29NIWNVT0
-	 sTmqKZeiq+pYwGCwkQJIqVUmVIkhUHRJwXoTXU+ShAQ8UybboJW4PPkxBtkZRzVYPP
-	 6dJ87JrYw5MC9q6qk63RPSXXrreyR6zFCC3bpLFZrUI9//O1kZeMcj9XhaUEVEhaek
-	 9ZECLY9buqOwwVW4j58jUXyuImWDrrVyamx91aqdw+vweHvzVf7Dt6GgKxd/xLDWOx
-	 XH4mH76ngEt7jxj2G5IZdXXdk4l08sJvCK0p1OQBdDB3DA+6FMEjIuS6QhYyBS1bKH
-	 j0DKveJvrz0uA==
-Date: Fri, 13 Nov 2026 11:18:42 +0100
+	b=K7sXUvxSeB2tYcx6aB8Y0Y+c2bYY9eXO3YUiOeAL+ePkDCJNuN4GNuygwCv6k0YvR
+	 SnH61/R2Pf3VijDTpLZ8D+gLRuNVXQ2d7XNq0TtYRtxrWdwwZ0r1h+vA+Tjq4lsMeO
+	 whgfswO/RjhT1FZItgMwEQy/Cm1wS1wTTWXqKXSkDwZgN46q73t2uUYLNgclxvfg1M
+	 IdceQi1bag68sn5ZdtghDVenDTCYYHVHBSXfVyYUDJOBp9Wd1DX7yO80Bd/5wH0QNz
+	 5+8pMruEIzDYDcobDS8812sBEievteaeZzJ01K+l9uDKAsM0MxLaCn9/3RdjF2JIUy
+	 DonlvfjBaYA/A==
+Date: Fri, 13 Nov 2026 11:19:30 +0100
 From: Krzysztof Kozlowski <krzk@kernel.org>
 To: Stanislav Aleksandrov <lightofmysoul@gmail.com>
 Cc: Bjorn Andersson <andersson@kernel.org>, 
@@ -62,11 +62,11 @@ Cc: Bjorn Andersson <andersson@kernel.org>,
 	linux-kernel@vger.kernel.org, mfd@lists.linux.dev, linux-arm-kernel@lists.infradead.org, 
 	iommu@lists.linux.dev, linux-usb@vger.kernel.org, linux-phy@lists.infradead.org, 
 	linux-scsi@vger.kernel.org, linux-crypto@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: Re: [PATCH 03/17] dt-bindings: interrupt-controller: qcom,pdc:
- Document Halliday PDC
-Message-ID: <20261113-accomplished-impressive-pillbug-c0811f@quoll>
+Subject: Re: [PATCH 04/17] dt-bindings: power: qcom,rpmpd: document the
+ Halliday RPMh Power Domains
+Message-ID: <20261113-remarkable-inescapable-llama-cbec8d@quoll>
 References: <20261109-halliday-dts-v1-0-289114ab8197@gmail.com>
- <20261109-halliday-dts-v1-3-289114ab8197@gmail.com>
+ <20261109-halliday-dts-v1-4-289114ab8197@gmail.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -78,17 +78,20 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20261109-halliday-dts-v1-3-289114ab8197@gmail.com>
+In-Reply-To: <20261109-halliday-dts-v1-4-289114ab8197@gmail.com>
 
-On Mon, Nov 09, 2026 at 12:33:15AM +0000, Stanislav Aleksandrov wrote:
-> Document the Power Domain Controller on the Qualcomm Halliday SoC.
+On Mon, Nov 09, 2026 at 12:33:16AM +0000, Stanislav Aleksandrov wrote:
+> Document the RPMh Power Domains on the Qualcomm Halliday SoC
+> (SXR2250P). Its command DB has the same power domains as SM8450
+> (CX, EBI, GFX, LCX, LMX, MMCX, MSS, MX and MXC), so use
+> qcom,sm8450-rpmhpd as the fallback compatible.
 > 
 > Signed-off-by: Stanislav Aleksandrov <lightofmysoul@gmail.com>
 > ---
->  Documentation/devicetree/bindings/interrupt-controller/qcom,pdc.yaml | 1 +
->  1 file changed, 1 insertion(+)
+>  Documentation/devicetree/bindings/power/qcom,rpmpd.yaml | 4 ++++
+>  1 file changed, 4 insertions(+)
 
-Acked-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
+Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
 
 Best regards,
 Krzysztof
