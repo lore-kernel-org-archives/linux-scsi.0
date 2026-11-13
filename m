@@ -1,81 +1,81 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.48
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.51
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794612219;
-	b=QGoj3+CUl/f1dr6DaBqmJi/BkwNfbMLctIiUNnTeaTJ66Yw2md2joHkNnzbru8rxfADQ
-	 QwUCd3KVuGXl+X1GOpkett+bRFQlubnRAcOAnho40xB42NL7cSSICyXTvdS3blEdUC1dw
-	 6TdgPkGgLWv+OVJ6b0FbbqAPVqTaLv6b7t+cM5c4D7WtY6Yvzz8fA7LF3s13utVwwi7Uv
-	 ixsh2PJTAgBcQDtS86lQvjUmBzJZn8AKEKXXAQqGthirJ08vCxNiG1hZLm+4oKbpHUpkd
-	 CVLZBaom6Vd+lFvhBmEI2dfpa4dY9bssj3px03Q9OvctCewODs167sa/YeIXClM42uA==
+	t=1794613190;
+	b=yngVcGCa3Dd0T/4gia4B58Qwr2BtCPDvsQLUSPXt80N+WtuV3uztEUG/FOVVbX+cK9rT
+	 E9BMETFmH7IfrGbQk+5b2odTcuqALStGD6A9rcjRFtiznvP4t0SkGx8szj7Z61YQ+gNJr
+	 /1lvsk4ePRLqJ3l/SMG5frBJWYCjI+5ZeMRH8ajEOY4TtxEMjBY+6FD5JceJeXzerFCOK
+	 fq69P07wcgdm4dtxpTAm3/OWLd5cTtVjj9uFng8JvWAyzbHYQk5wQjHxvKQEaMP5CqLFI
+	 CsTIcZg31r+UcZ0IIRhrzZo0CwnsVJCtL9W8zn+6a8rqmpuottqoD7LuBTxUCRLWx+Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794612219;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794613190;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
 	 Date:Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding;
-	bh=n1JnhbVBgueQUGPOfbMsicw9lgrwh0tLzLrH+3x5E3Q=;
-	b=Bi6n3dV9Z7QN8x8KUYkm3CUsksEZR29NJCa4+EpPiEjXl7Qcpb00WRQkeo/Eo13O44rm
-	 W1UAe89dhDUXPvsodR3GrjE/6gLzFuGiKCK7uCAP0B1dnoA6QJPYJiTTSeoNqO84mvT98
-	 B566010HTCmGvyVgA44t41QBCVkWis1N8O6fV+IrU6ufdjEYe3JGpN6uiUhFGS+ExAT0n
-	 avyXxy899gctp59bvsZZZh4df5nTNMYzGnxO51hjGKWHmI550R9pw//SJ4niPAMOsmP/D
-	 NpS/VgqK07T5hjXwq1IRINEwtnJP7CGSjDddXkuIHrO6JNmdD8KFnXakeOtjcS8YKZQ==
+	bh=GwKH1HHqdkQ7zt/Ah5+Ef0sT/6ecww8p/cC3kM3Mwew=;
+	b=QmaSHINGvTjye8t2K58f5ofZCZ/e6VZK03OKehnHXiAxpmnDLk2I7mzd7sruUDf1v1qu
+	 Ob2qG5Rdmt1rdrh33TaQ+VwX2Rqqs7G+CRaHFMUSBKFNGOL8en+hUOjBKH4zEnRtAUiju
+	 CxOHVFJeRRzZCHYOinM1Dc+OgBRpSmlTiQnpmJQwhfrgWG5Lixm2rapz3KcL8IhW9pzVK
+	 mpVN98Qy14dkBSP24FbbDKnXE59fGQoIp6+dLiRmecpo0Ug0koSPcch+Ghx2Ne1S79qHV
+	 RlJoahYQRWG604Ezjv40OAXr1OM9Dr0B5JOELWoX4jfCxEkXVq4J1VejfJ66kzNFQHw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=fail header.from=isslab.korea.ac.kr;
 	spf=none smtp.mailfrom=isslab.korea.ac.kr;
-	dkim=pass header.d=isslab-korea-ac-kr.20260707.gappssmtp.com header.i=@isslab-korea-ac-kr.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=tCbXW+Wr;
-	arc=none smtp.remote-ip=209.85.216.48
-Received: from mail-pj1-f48.google.com (mail-pj1-f48.google.com [209.85.216.48])
+	dkim=pass header.d=isslab-korea-ac-kr.20260707.gappssmtp.com header.i=@isslab-korea-ac-kr.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=s8OXfRrL;
+	arc=none smtp.remote-ip=209.85.216.51
+Received: from mail-pj1-f51.google.com (mail-pj1-f51.google.com [209.85.216.51])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B9F6606A882
-	for <linux-scsi@vger.kernel.org>; Fri, 13 Nov 2026 23:23:37 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1B9F6606A882
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9BBDC606A337
+	for <linux-scsi@vger.kernel.org>; Fri, 13 Nov 2026 23:39:49 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9BBDC606A337
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=isslab-korea-ac-kr.20260707.gappssmtp.com header.i=@isslab-korea-ac-kr.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=tCbXW+Wr
-Received: by mail-pj1-f48.google.com with SMTP id 98e67ed59e1d1-3b0a519049aso2202393a91.1
-        for <linux-scsi@vger.kernel.org>; Fri, 13 Nov 2026 15:23:37 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20260707.gappssmtp.com header.i=@isslab-korea-ac-kr.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=s8OXfRrL
+Received: by mail-pj1-f51.google.com with SMTP id 98e67ed59e1d1-3adac5c10e3so849135a91.0
+        for <linux-scsi@vger.kernel.org>; Fri, 13 Nov 2026 15:39:49 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=isslab-korea-ac-kr.20260707.gappssmtp.com; s=20260707; t=1794612217; x=1795217017; darn=vger.kernel.org;
+        d=isslab-korea-ac-kr.20260707.gappssmtp.com; s=20260707; t=1794613189; x=1795217989; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=n1JnhbVBgueQUGPOfbMsicw9lgrwh0tLzLrH+3x5E3Q=;
-        b=tCbXW+WrfPS1Agh2MeonhuC6upoaBbK35jLNXkGQwrd6gDEpdmtnqaswQkwQAt5vKJ
-         3PHKIutIkYVg+7OOEAXF4XxgGY+hYDvLEgbSEWGv5PQhLB52ZFqpDOlgCeV8OI19tZfG
-         Hd8+CxnEK+dW1qB/I7skybF6AuFIw+K8QuhO8ju8FyaCVfDuuF+FbrYIl7grWuJnhS/0
-         TpgWED1cEsdgz9gWPROfhxLo75oYb9//VFJtXeaj7TbBmki0mG3FXn3pwXakoZLTAEvu
-         GXOr3HMi+s1cODkY2yE0pdjVNomaUJCh759i8KElMqyYp1umr1PymGkLlkAncVh+gKIJ
-         9A2g==
+        bh=GwKH1HHqdkQ7zt/Ah5+Ef0sT/6ecww8p/cC3kM3Mwew=;
+        b=s8OXfRrL1L1xiJZcVdzuZEh8D9oRw8Av2IQr6sMv74zDxldJ2jLVpc4iusN47Q7Rxu
+         ATRyJBegvQ3fANP9vMwtdSF8FjyJQFaxgfWaULVq/MVh1yuK3AWi0rkx9SMCupiDJltz
+         ZmIRkYpzDYAHf9qXtSdG1UvTKm+Vl3kXv0QY8qWEYp0a1hNKbf44JegHvr5CnxM6QH7t
+         zk4klXgbl4j/fDlQV5UD9W/NWRB1dCa7Xk5HtW7bwoOLDZ+ZRrvpuh+EV03WBACcsLXy
+         KBXIR7lX8MdRc3BKjafGVGdOc+wZS9FR6UhalrUDixRTCpCqGHiUzNjw9mfZrktvlegJ
+         ra4w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794612217; x=1795217017;
+        d=1e100.net; s=20260707; t=1794613189; x=1795217989;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=n1JnhbVBgueQUGPOfbMsicw9lgrwh0tLzLrH+3x5E3Q=;
-        b=VSLDy8IH3tGf91paOzM0UqXv7H5J8w1OAB+CFMmOB2endzamyIOHtXEbMCwrEc2NB6
-         aLlsh3tN1Pryto9rWhmcv8nS/qB5DF5tWAQGX+OagrOTKCQ0r2Txn2NtOYCAbpyu/f1+
-         EEQrZ62/rBYAFP/jgpOxoOO9lg0kN79bL2kygrTxsk2aDAwRvv1TRHlzox+6PWGeXTfS
-         b4KKDK1VqWlCPjFe/Yylmgb8NnzTGpjMR1NNpU0BrHsc4zyWpKsMJ/j1fi/PJPrGWQf7
-         4DJNpP8QH29j/87O7bhlPkbJjK5N2G+y8E8cKL5WCJDQ2wURu5dbjv7qUoYUsGtZ2A5Q
-         JROA==
-X-Gm-Message-State: APuU4Z9sIGuJr13LKXPj2huqmPIdEBZVMn2siaioRX9pAUim4S7SsAr/
-	1g9AsT/xGBGFUnnEKnvrvrcMG1XAVcjtEjkDVh34FeITvnxX/tkscvnQd9++4YmWyhU=
-X-Gm-Gg: AYBFou0AQCIzGDibonLxnaSSyeFl4PMAeqnWjFPZGY1C47DQMwe1y++IAb8435bot3a
-	1ZqDC+P61PXLQwPrvH4MperLx3FGf29EvPw7eTnZ3rAIJuhyYbIKU4H0GjtMtTzcw9es4e2epGJ
-	4gHFbpZf7iZlGH2Xbrh9QDlWYXlmYmAbI9DRZNzZaoCWE/QegQlHTm77b8rLIgXy3ztIr5Zvw6Z
-	8nHKvs64e8LGVcGAGCIs0mUwgOCd4Mj9mZ13c0ffyTiz/7btVt6iB/gJWzvcvDawWczOS/Jdz32
-	U7k2hF2e4jZJTrve2Zz77UUooYWJoK5HYif6HljvOrOJpmEkG94lcWYE3D90mt5EcHMrgbOq9hY
-	fFNWFQbC5HpxsLH9VntADupgJ51PV7xlOuiz9A4LgaKPq5EDPe6Dl0jOJOX7MAAASDZRMzJ5VoB
-	Yqft1cLcRVQtKK3QbZrTy+Td8elKEvaL4BufKwssc9TTB+FlXWODnWlICW3k8zb3MabUQNhBobI
-	DwC7OA98zWISVkFAt5HRw8HPnZPnawMY2nxNE/lt78WxPEMCRmFrD/2t6oqscYoVOr57WaEmjZ6
-	3hv5KWLmhj3jVmOeGuqTpPhTfNbHkopGERQxSoCC8eYvhLg4m2EGm3CC5bL7Agyt/mcmJZH/emP
-	RMfNDCtIBZXxCt5LzKZSx9zncQMd/JnQ6GuURcw==
-X-Received: by 2002:a17:90b:4b10:b0:3b0:cc6f:1046 with SMTP id 98e67ed59e1d1-3b1b0dce88cmr3645762a91.67.1794612217106;
-        Fri, 13 Nov 2026 15:23:37 -0800 (PST)
+        bh=GwKH1HHqdkQ7zt/Ah5+Ef0sT/6ecww8p/cC3kM3Mwew=;
+        b=gmNDjtxqVfYPtmCscWO12p8T+mNXqAWTTGFFlWYzzv1u5VK7B0aEm7rOP0FKioN5Qn
+         VFMf6mJ38eiJWsC0QTBdFpwBGibsX0nsj3mlEs1JHkHwwxlG/Z8mx2ex5hktGSFY4VO9
+         dsU1RdatEhf/vNy2X/J1/HefMMh3GYHMHXsvK4QJivxDtSqJrf0Jjk2LlZED3xIMfafE
+         yQ1Y7Q+4bpd58XUGh4Z/OeqGeGZK20+rc5DvLTY5sc5EcbExhWrJJbMYr8eUIFj3ZUvG
+         bdhcrT0EdPDKyeA8XunRtVeNq5hpHLR8aUY0LdSRCA6EMiKbczTkMpdsonaI5q6Ii3wv
+         cODQ==
+X-Gm-Message-State: APuU4Z9lqg1SrIIKWVZxkazNko22WfpxOkCx1FL655NG1J52R42gP8dM
+	g8JExoWHCzsR3Df9VDTrWUJbn6KFsUVYp9raL1nmxhLQxVchY8Q160kC1iM1uLsLz0s=
+X-Gm-Gg: AYBFou3x6gJVcX/Nhl7ePgiP1GeEpfcGubXZEo1urzp/J2QL6RrbjtmXba87De+2RXs
+	62ce2TxIcBJNx5nSAkJ5k/WSu5Y6aHgynpI/5WgBYF8duUVgfi7aYlMsqfdF9pl39D09tdlL/bO
+	j01RL80iIF59C4vKx5aLRabhEwb/zO1RpFobZX2eiZ8r5QGepX344R+iJw4Vvl6TfhW5MrtgWR3
+	+5oYjkp7wWYUsk9MjuowoSvcAcS4HnNqRsz06OrPVNThx1ZUwZ43n+iBYWbfPC9bQROWg8Az99p
+	+vc2IjO7ayNckMVlz3it+VK/yeUj/VulV/opLd6d8KTe5l4Jh7UyuTfnljFVJ0gsVTxfYjR5bHp
+	jl3B3jn7R8wyPAqqRyNNkc1y5jZdKZzYveFjrvxJbKl00V77M+lguR22DbTKExMRecOwf0UyAUl
+	qlPA4tE6XRKPg0bYjHFJaPAGmUEvKFAcekXtYUBPv9aCkAkfQfXoary9kgqSIN6f7uKamHY9MLF
+	1pVs/zLNmNZS1+2c8akxwCkhcMBQDUrj3zGqqpqBTBKQbTba1U/oe/Wq2h+D2Gu0Ti78DcKbwGG
+	8ZCgsYD+YZbw61W9DuEtyI0d9CgPf/lPOEPXjojRfYPFyMCiM5+gGDocTTf/CgHvtSl1CW+RoMQ
+	F2AWVpxJe3WF1Uevhdy7VWqqYhPqcQavmS3pvfg==
+X-Received: by 2002:a17:90b:17d1:b0:3ac:9a5e:9ce9 with SMTP id 98e67ed59e1d1-3b1b0a3b41cmr4034654a91.29.1794613188872;
+        Fri, 13 Nov 2026 15:39:48 -0800 (PST)
 Received: from yhlee-960QFG.Davolink ([2406:5900:1044:110c:f861:b117:6318:c068])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b197ce55c1sm11566515a91.3.2026.11.13.15.23.34
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b1aeb3d2d4sm6442462a91.7.2026.11.13.15.39.46
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 13 Nov 2026 15:23:36 -0800 (PST)
+        Fri, 13 Nov 2026 15:39:48 -0800 (PST)
 From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
 To: michael.christie@oracle.com,
 	martin.petersen@oracle.com,
@@ -84,9 +84,9 @@ To: michael.christie@oracle.com,
 	James.Bottomley@HansenPartnership.com
 Cc: linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: libiscsi: do not complete a task sent with a reserved ITT
-Date: Sat, 14 Nov 2026 08:23:21 +0900
-Message-ID: <20261113232322.395246-1-yhlee@isslab.korea.ac.kr>
+Subject: [PATCH v2 0/2] scsi: libiscsi: tighten management task completion
+Date: Sat, 14 Nov 2026 08:39:36 +0900
+Message-ID: <20261113233938.397415-1-yhlee@isslab.korea.ac.kr>
 X-Mailer: git-send-email 2.43.0
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -99,142 +99,36 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-A NOP-Out sent in answer to a target NOP-In carries RESERVED_ITT.
-iscsi_send_nopout() puts RESERVED_ITT in the header and
-iscsi_alloc_mgmt_task() keeps it there, because the build_itt() assignment
-is skipped for a reserved ITT, so nothing that identifies the task ever
-reaches the wire.  No response is expected for such a PDU, so the one
-reference the task holds belongs to the transport, which drops it once the
-PDU has been sent: libiscsi_tcp and iser do that from their transmit
-completion, bnx2i and qedi from their local NOP completion.
+1/2 stops the receive path from completing a management task that is still
+queued or still being filled in, so a slot cannot be returned to the task
+pool while the transmit path still owns it.  2/2 stops it from completing a
+NOP-Out sent with RESERVED_ITT, whose single reference belongs to the
+transport, so that reference cannot be dropped twice.
 
-task->itt is not touched by any of this.  It stays the task-pool index, so
-session->cmds[] still names the task, and iscsi_itt_to_task() looks a task
-up by that index alone.  A management response or a Reject PDU naming the
-index therefore finds a task that is ISCSI_TASK_RUNNING with no scsi_cmnd
-attached, passes both tests, and reaches iscsi_complete_task(), which drops
-the reference the transport is about to drop as well.  The window opens
-when iscsi_prep_mgmt_task() publishes ISCSI_TASK_RUNNING and closes when
-the transport has sent the PDU, and a target that stops reading holds it
-open for as long as it likes: iscsi_xmit_task() keeps the task in
-conn->task with an extra reference while the transmit keeps failing with
--EAGAIN.
+v2: no code change.  v1 of 2/2 was sent on its own but depends on 1/2, so
+it did not apply; both are now in one series.
 
-A Task Management Function Response naming the pool index was accepted in
-all 11 runs of a KASAN kernel whose window was held open for 200 ms, and
-every one of them ended in:
-
-  ------------[ cut here ]------------
-  refcount_t: underflow; use-after-free.
-  WARNING: lib/refcount.c:37 at refcount_warn_saturate+0xad/0xe0, CPU#0: kworker/u8:4/50
-  Modules linked in:
-  CPU: 0 UID: 0 PID: 50 Comm: kworker/u8:4 Not tainted 7.4.0-rc2-00472-g76215e83dc82-dirty #1 PREEMPT(lazy)
-  Hardware name: QEMU Ubuntu 24.04 PC v2 (i440FX + PIIX, arch_caps fix, 1996), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
-  Workqueue: iscsi_q_2 iscsi_xmitworker
-  RIP: 0010:refcount_warn_saturate+0xad/0xe0
-  Code: a9 9b b7 03 67 48 0f b9 3a 5b 5d c3 cc cc cc cc 48 8d 3d a6 9b b7 03 67 48 0f b9 3a 5b 5d e9 1a 11 33 02 48 8d 3d a3 9b b7 03 <67> 48 0f b9 3a 5b 5d e9 07 11 33 02 48 8d 3d a0 9b b7 03 67 48 0f
-  RSP: 0018:ffffc90000347b18 EFLAGS: 00010246
-  RAX: 0000000000000003 RBX: ffff88800a74a878 RCX: ffffffff823c2735
-  RDX: 0000000000000000 RSI: 0000000000000004 RDI: ffffffff85f3c370
-  RBP: 0000000000000003 R08: 0000000000000001 R09: ffffed10014e950f
-  R10: ffff88800a74a87b R11: ffff88800c8f26e8 R12: 0000000000000000
-  R13: 1ffff92000068f6b R14: ffff88800c75c5c8 R15: ffff88800c8f2400
-  FS:  0000000000000000(0000) GS:ffff8880e55a8000(0000) knlGS:0000000000000000
-  CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-  CR2: 00007f10f26585f0 CR3: 0000000005672002 CR4: 0000000000770ef0
-  PKRU: 55555554
-  Call Trace:
-   <TASK>
-   iscsi_xmit_task+0x1c8/0x770
-   ? iscsi_sw_tcp_pdu_init+0x268/0xb00
-   ? __pfx_iscsi_xmit_task+0x10/0x10
-   ? _raw_spin_lock_bh+0x84/0xe0
-   ? iscsi_prep_mgmt_task+0x381/0x600
-   iscsi_xmitworker+0x1c8/0x8b0
-   process_one_work+0x697/0x1060
-   ? __pfx___schedule+0x10/0x10
-   ? __pfx_process_one_work+0x10/0x10
-   ? _raw_spin_lock_irq+0x81/0xe0
-   ? __pfx_iscsi_xmitworker+0x10/0x10
-   ? assign_work+0x11d/0x370
-   worker_thread+0x45b/0xd10
-   ? __pfx_worker_thread+0x10/0x10
-   kthread+0x2c8/0x3b0
-   ? recalc_sigpending+0x15c/0x1e0
-   ? __pfx_kthread+0x10/0x10
-   ret_from_fork+0x36e/0x5a0
-   ? __pfx_ret_from_fork+0x10/0x10
-   ? __switch_to+0x572/0xdc0
-   ? __pfx_kthread+0x10/0x10
-   ret_from_fork_asm+0x1a/0x30
-   </TASK>
-  ---[ end trace 0000000000000000 ]---
-
-The slot is back in the task pool by then, so a concurrent allocation can
-hand it out while iscsi_xmit_task() is still working on it.
-
-Refuse such a task in both receive-side lookups.  A task whose
-task->hdr->itt is RESERVED_ITT is one the target was never told about, so
-no response can name it legitimately.  The test is on the task the lookup
-returned rather than on the received ITT, and iscsi_alloc_mgmt_task()
-copies the caller's header for every transport, so task->hdr->itt is
-RESERVED_ITT there and nowhere else.  It is evaluated last, after the state
-test, so it only runs on a task that has been prepared.  With it in place
-the same injection was refused in all 10 runs, and a target NOP-In, the
-NOP-Out answering it and the initiator's own pings are unaffected.
-
-Fixes: 3e5c28ad0391 ("[SCSI] libiscsi: merge iscsi_mgmt_task and iscsi_cmd_task")
-Cc: stable@vger.kernel.org
-Signed-off-by: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
----
-This applies on top of
-
+v1 of 1/2:
   https://lore.kernel.org/all/20261113145140.282504-1-yhlee@isslab.korea.ac.kr/
-  ("scsi: libiscsi: only complete a task that has been sent")
+v1 of 2/2:
+  https://lore.kernel.org/all/20261113232322.395246-1-yhlee@isslab.korea.ac.kr/
 
-which is where the ISCSI_TASK_RUNNING test being extended here comes from.
-The review that pointed this out is
+The review of 1/2 raised two issues: 2/2 fixes the second one, and the
+first - the window between the state store in iscsi_prep_mgmt_task() and
+iscsi_get_task() in iscsi_xmit_task() - is not addressed here.
 
-  https://lore.kernel.org/all/sashiko-outbox-213058@kernel.org/
+Best regards,
+Yehyeong Lee
 
-It raises a second issue as well - the window between the state store in
-iscsi_prep_mgmt_task() and iscsi_get_task() in iscsi_xmit_task() - which
-this patch does not address.  Closing that one means taking the transmit
-reference before the state is published, which is a different change.
+Yehyeong Lee (2):
+  scsi: libiscsi: only complete a task that has been sent
+  scsi: libiscsi: do not complete a task sent with a reserved ITT
 
-The 200 ms window above was held open by a test-only module parameter that
-is not part of this patch.
- drivers/scsi/libiscsi.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ drivers/scsi/libiscsi.c | 17 ++++++++++++-----
+ 1 file changed, 12 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index 83d726043d3e8d..220e89d541af68 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -1177,8 +1177,9 @@ static int iscsi_handle_reject(struct iscsi_session *session,
- 				task = iscsi_itt_to_task(session, conn,
- 							 rejected_pdu.itt);
- 			/* Pairs with the release when the task is prepared. */
-+			/* A reserved ITT means the transport owns the task. */
- 			if (!task || smp_load_acquire(&task->state) != ISCSI_TASK_RUNNING ||
--			    task->sc) {
-+			    task->sc || task->hdr->itt == RESERVED_ITT) {
- 				iscsi_conn_printk(KERN_ERR, conn,
- 						 "Invalid pdu reject. Could "
- 						 "not lookup rejected task.\n");
-@@ -1318,8 +1319,9 @@ int __iscsi_complete_pdu(struct iscsi_session *session, struct iscsi_conn *conn,
- 	case ISCSI_OP_NOOP_IN:
- 		task = iscsi_itt_to_task(session, conn, hdr->itt);
- 		/* Pairs with the release when the task is prepared. */
-+		/* A reserved ITT means the transport owns the task. */
- 		if (!task || smp_load_acquire(&task->state) != ISCSI_TASK_RUNNING ||
--		    task->sc)
-+		    task->sc || task->hdr->itt == RESERVED_ITT)
- 			return ISCSI_ERR_BAD_ITT;
- 		break;
- 	default:
 
-base-commit: 490919d772221958cfad04c458fdf2300416c33f
+base-commit: 7e1392a42ea288d70a266f6553fe06f57f8647ea
 -- 
 2.43.0
 
