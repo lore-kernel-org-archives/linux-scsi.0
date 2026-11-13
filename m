@@ -1,79 +1,94 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.47
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794581464;
-	b=k4qDa4fiV8Qd+YoEYzZF0u4gKpMR3BKGyPEYEyNXckbeUux41rz2PTupvGACEfRKXJRZ
-	 L91I2BkCir2b5nfntzrmEIZrMBa3C9DBAi5DDdr0egLlnhIO9p4oP2yZCeYh2lKMwQLzm
-	 uKx959ymV5NPCzFhd6UoTIrdrrDQG6+0PV+Wbd2PB9CA8F1HDAodSKPiOV2Nzmql7JLtf
-	 5w3i7sDUp5rAGGGNsSp6WyoBCbjV8YQ0lIEP9twg7RLQrZaOL/v8Ap0zVIzGlV1s5Amg7
-	 wLcr5FXXtZrdOsi3e3eOOyt9/kF0t7fhrFJs8LBP01tCF6OrBHrMRln3HPxxHHlLqnQ==
+	t=1794581514;
+	b=OtEHS6708CmNzQtb4INXfdVx9hy7CYQ1PxrRHe2gC5e0mVOuDZCrJKfD84AM2GEm3nzB
+	 YmGlsMbtO1JGdKqpLtcluIoXWYL71zv0OL/S1OEfweuRybhg5zjVVYftUh2RtRj6Cdx0l
+	 1+t6SKHrecg+kn5vaEqYvyKVhc9ACw7uhiJilvjr89l0wmboe1b0BkWk2yhGmb/sb5b1J
+	 w8Y32UwkJl/GYoq1U+83l/6RQZ9qilBuX/g7oDry6BluGUtI8uNxFh776lq5TonnXM6Ag
+	 1mJNpnXXGS1TKUjv+gmG1rOFNff2aSABDI8N3rnYMactRqxXpxSRwWCHAdFYtzWKekQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794581464;
-	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
-	 X-Mimecast-MFC-AGG-ID:Received:Received:From:To:Cc:Subject:Date:
-	 Message-ID:MIME-Version:Content-Transfer-Encoding:X-Scanned-By;
-	bh=IVK54GaVP6TC5oPwMQmrDyfx/5ND6iqMHDE7/VK7o1c=;
-	b=uKWty8IAv2S7tZTtGM7MYv0XGzzyW9E/tSqKvasl6Hzh/AaWf9JkmRvzuNNTYVh9hw8b
-	 CciXOqXc+4PbZAOMEi3ZSppMRIEmawzFcDDSRG7jySRNZBfM0/TdsAreZdmwpbvSj0yif
-	 oiDbQMTuc3pWrfPTOiMM992Z3AE0ALFOVAh7KMJNOmWT2p7QwcGq1eLKA4UIgTLQapoKn
-	 qC+LQQieLrlPMqfCdKoqhRgphsTRcJ5yDEK2oqL9yXG9SYiicwPB8uTYV+QPmqPb38YEw
-	 0nbxhkybiknPBmIRZdWSoU49ZoQfQ2fm0UlJaC/ZZ+PGwErQOh0Lg0EAs/hN2zbkcJA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794581514;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
+	 Date:Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding;
+	bh=d3iFWPK670oNtJk1sA+6OoIAzIIWnumVAjcWvg3CbTA=;
+	b=LpAVmWttEv7WRkS6K4ZgVTgnwlNusaVM3lhLOxmm8WabVQtQO2M2w4morNrUsHrnNryE
+	 mxYoZNvwJB6QF9dXdPiyZjNknin1mDJ2rDLUr368xfaGwzAnPtbRp0fOwLr2KjyTRYvz+
+	 w6cpZHn3fO84pS+t7W9MfNZESrDmq49IBuPquWaSC7McJU2TGpJzaeDB/ShBt0K1pRDyF
+	 XTqpiw+U9NKvlK/hjMAsOifVZtDqdxHO/Pm92xHWI+/kwSkNdI/Cg1LTXcFbWRa8U4UAS
+	 9A0xWmoogC9pNP7ohYXGU9RcBVJxTN/7BSozhxV4Qc0lzAgSUiV+kbn+XkMp8m72t7Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=redhat.com;
-	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=iDEKczXb;
-	arc=none smtp.remote-ip=170.10.133.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=fail header.from=isslab.korea.ac.kr;
+	spf=none smtp.mailfrom=isslab.korea.ac.kr;
+	dkim=pass header.d=isslab-korea-ac-kr.20260707.gappssmtp.com header.i=@isslab-korea-ac-kr.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=iGtKmGiU;
+	arc=none smtp.remote-ip=209.85.216.47
+Received: from mail-pj1-f47.google.com (mail-pj1-f47.google.com [209.85.216.47])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59362606A334
-	for <linux-scsi@vger.kernel.org>; Fri, 13 Nov 2026 14:51:03 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 59362606A334
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90CB8606A331
+	for <linux-scsi@vger.kernel.org>; Fri, 13 Nov 2026 14:51:52 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 90CB8606A331
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=iDEKczXb
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1794581462;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=IVK54GaVP6TC5oPwMQmrDyfx/5ND6iqMHDE7/VK7o1c=;
-	b=iDEKczXbZQHpfSV3IwAJ+oPVzmxdSbaDPaSroTZH42GNVJcOb0zi7WUD6Mopfm53hfKYA8
-	DmjUQrw9thpg8aGfDZCZfdDenmCnE4FS6v6qD4FxixU+BU5xg9LgvH8Teuv2sxjsFRLZ+n
-	8ooPnehQYGuTX9YUGtucFhpJPVbKbo0=
-Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-572-60sgr6khPkWVIzYMAEGyVw-1; Fri,
- 13 Nov 2026 09:50:55 -0500
-X-MC-Unique: 60sgr6khPkWVIzYMAEGyVw-1
-X-Mimecast-MFC-AGG-ID: 60sgr6khPkWVIzYMAEGyVw_1794581453
-Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 350D21955F43;
-	Fri, 13 Nov 2026 14:50:53 +0000 (UTC)
-Received: from loberman-thinkpadp16gen3.rmtusma.csb (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
-	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id D85CB1800545;
-	Fri, 13 Nov 2026 14:50:50 +0000 (UTC)
-From: Laurence Oberman <loberman@redhat.com>
-To: Sathya Prakash <sathya.prakash@broadcom.com>,
-	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
-	Ranjan Kumar <ranjan.kumar@broadcom.com>,
-	"Martin K . Petersen" <mkp@kernel.org>,
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>
-Cc: MPT-FusionLinux.pdl@broadcom.com,
-	linux-scsi@vger.kernel.org,
-	Keith Busch <kbusch@kernel.org>,
-	Mira Limbeck <m.limbeck@proxmox.com>,
-	Chandrakanth Patil <chanpati@redhat.com>,
-	stable@vger.kernel.org
-Subject: [PATCH] scsi: mpt3sas: Fix off-by-one in NVMe PRP list transfer size limit
-Date: Fri, 13 Nov 2026 09:50:46 -0500
-Message-ID: <20261113145047.623807-1-loberman@redhat.com>
+	dkim=pass (2048-bit key, unprotected) header.d=isslab-korea-ac-kr.20260707.gappssmtp.com header.i=@isslab-korea-ac-kr.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=iGtKmGiU
+Received: by mail-pj1-f47.google.com with SMTP id 98e67ed59e1d1-3b0e61a4decso1790976a91.2
+        for <linux-scsi@vger.kernel.org>; Fri, 13 Nov 2026 06:51:52 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=isslab-korea-ac-kr.20260707.gappssmtp.com; s=20260707; t=1794581512; x=1795186312; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=d3iFWPK670oNtJk1sA+6OoIAzIIWnumVAjcWvg3CbTA=;
+        b=iGtKmGiUGFoN2MxEjhDX54b7wgtz34i8aTZD6TMxdCvJBbIDQJ6zTyGj0qHLCb0qBl
+         8B+Xxoyj+uL8srmXwjX0z95+uqRAwRUCtAqpZ8T05ExDfHrRBX8xO/XL0smUPnt1UwTC
+         1CyQCwC/BAH9U52omfV8WSmdx/G3/be0z0gxKvw0N+w+u8UBw1HFETyKqxQoZ2ZYakWh
+         ZI5IffrqNTMGAayiBJDlpevduQBxvbUT9GzO7fvFPEcTUfB/vEy/nSlv901HYttS1s4E
+         ExIvDiUwxqca+GViSYJYo3D5Ya0p2ipjQ+KDU2xPm/ibTo9d8j16H1tpPO3+RKzGWimk
+         iZQg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1794581512; x=1795186312;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=d3iFWPK670oNtJk1sA+6OoIAzIIWnumVAjcWvg3CbTA=;
+        b=vFJwYV1eGnNQovANsSOTQJpfNsOw93aNQKsAK1mnOVYGoKYs5xbGOfnEIMIJHDksdb
+         qBgxqEAGIaf9AVfCZ2OMQAr2hGxAiY3dXaOBQOY4w9+t7Nj2smK91p2LesMQcDr/7sjx
+         tDGLDCi0g9s3gV7Zki/O8YG1ckUQMh+P/CT2uqCrS+wCoawUT7Ad35ClLGFBKvSWjFK/
+         uSM2S/WOcZrUch1SzGsQicYoG5qjUtg9PjAbaN3sDPHe3diw45czm+sJoQaSUJUBQhY1
+         k0Y+viEe6bsGzKXD9uj7nLu9+pqxGkIjqL4zbvxKmhzQFfththPYNPoVNlCB2Yggvinz
+         afWQ==
+X-Gm-Message-State: APuU4Z/5JhhiqzercpQiN3r2FSFQJfomYi4W1K0ttM7o0KoWY3AMX5b6
+	idHBChys3gTe4zsehynogG312OytYC1Rz2UNPicy04NjN7ojXxIT7hOBPg13czSH3ZZYAJbIskA
+	QZqgK
+X-Gm-Gg: AYBFou0SWJV7NkB4WxI33JMBtcWBpzX7ESeBA9vPl93OM7h/FzyvtHB6sNembr4us0h
+	C9UMhFIYZW2O63MUtfNN+spYv0tyJMxRAF1e3ZgObA/Nzql17xese7hLafBCvRddqPdWzLPL6d4
+	N75rEWbjT6r0hXwtpukxRCnVIcBG74CMVdhzQ4egTKWv47SkXMqMGF2at1Awus9P/i2kmA5wcdD
+	xDeA8TQlIcDMMfk8Nth6esYwvRHYuLYGGuShSS2jrOEMgkJFTsQ8vOkPrLI2ygUtH1sXSj1/KE2
+	JlvEvI5wjtJNF6HLxrbMUjFOnSpkYp73EJzaC+LFjOA0owWAWfWclDTFCLNvLN5U1sfkbe0ZhpM
+	CNICWVesrim/0r4F8hzkdFwVfoQyTVAaJ+WcYczVlQr4CgYPJCJW1H+eKSJQ3ij2VP97VZX41OF
+	O1FP2nIIHzNxuADuDmaqAkG42eitOk9A5zzOswJ9sAmPCaJD1tFiy8W1+tUxYXc32dzzudxicgY
+	2kSePOuVOtgEFY9CcBbOXCiquEaNVbHqBl/wI9CTj54uyu7NBYYP4j/7DeAxEwPg2oi7aQcXXVe
+	g8gZSLn8qiHUJ0U5LNBhVseHUu0kHmqLltP9ZBtZ34pwLqqWNliydMQouBcGe6xdYt5OW/vRdLM
+	TsY4HS4ZcBDCIyyMgOPeS9miaXeitTFVUa1XXbw==
+X-Received: by 2002:a17:90a:d88e:b0:3ae:5525:dc25 with SMTP id 98e67ed59e1d1-3b1b0d06f23mr2670806a91.51.1794581511334;
+        Fri, 13 Nov 2026 06:51:51 -0800 (PST)
+Received: from yhlee-960QFG.Davolink ([2406:5900:1044:110c:f861:b117:6318:c068])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b1aeb179fasm4839150a91.4.2026.11.13.06.51.48
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 13 Nov 2026 06:51:50 -0800 (PST)
+From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+To: michael.christie@oracle.com,
+	martin.petersen@oracle.com,
+	lduncan@suse.com,
+	cleech@redhat.com,
+	James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: libiscsi: only complete a task that has been sent
+Date: Fri, 13 Nov 2026 23:51:40 +0900
+Message-ID: <20261113145140.282504-1-yhlee@isslab.korea.ac.kr>
+X-Mailer: git-send-email 2.43.0
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -84,152 +99,289 @@ List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
 
-Commit 04631f55afc5 ("scsi: mpt3sas: Limit NVMe request size to 2 MiB")
-capped max_hw_sectors at 2 MiB on the basis that the 4 KiB PRP list
-buffer holds 512 entries. That does not account for how
-base_make_prp_nvme() fills the buffer:
+The RX path looks a management response or a Reject up by ITT and
+completes the task if it is neither free nor a SCSI command.  That also
+accepts two kinds of slot that were never sent:
 
- - PRP1 is placed in the main message frame and covers the first,
-   possibly partial, page of the transfer.
- - When the list reaches the last 8-byte slot of the page, that slot
-   is used for a chain pointer, so only 511 data PRPs fit.
+- a management task still waiting on conn->mgmtqueue in
+  ISCSI_TASK_PENDING.  Completing it returns the slot to the pool while
+  it is still linked on the queue, so the xmit worker and the next
+  allocation both use it.
+- a slot that iscsi_alloc_task() is still filling in.  It stores
+  ISCSI_TASK_PENDING before task->conn and task->sc under frwd_lock,
+  while the RX check runs under back_lock, so a fresh slot is seen with
+  a NULL task->conn.
 
-A transfer of length L starting at page offset O needs
-DIV_ROUND_UP(L - (4096 - O), 4096) list entries. A page aligned 2 MiB
-transfer needs 511 and fits. A transfer that starts at a non-zero page
-offset, which O_DIRECT permits with 512 byte logical blocks, can need
-512: the chain pointer is written to slot 511 and the next PRP to slot
-512, one entry past the end of the per-command PCIe SGL buffer. This is
-not limited to exactly 2 MiB; under the 2 MiB cap, any transfer of
-2 MiB - 3 KiB or more starting at offset 3584 overruns, and likewise
-for other offsets.
+The target chooses the ITT and the pool index is small, so either needs
+nothing but timing.
 
-This was hit with the 2 MiB cap applied, on a Grace (arm64, SMMUv3 in
-translated mode) system with a SAS3816 and an NVMe drive, running
-xfs_repair from fstests on a KASAN kernel:
+Reproduced with test-only delays that hold each window open and a
+target that sends a Reject naming the slot.  For a queued task the
+unpatched driver freed it in 8 of 8 attempts inside the window, this
+patch in 0 of 5.  KASAN reported nothing; the xmit worker hit:
 
-  sd 0:2:0:0: [sda] tag#2682 page boundary curr_buff: 0x00000000e986a684
-  BUG: KASAN: vmalloc-out-of-bounds in _base_build_sg_scmd_ieee+0x115c/0x1508 [mpt3sas]
-  Write of size 8 at addr ffff80008cc8a000 by task xfs_repair/210713
-  ...
-  The buggy address belongs to a 0-page vmalloc region starting at
-  0xffff80008cc89000 allocated at dma_common_pages_remap+0x30/0x88
-  ...
-  Unable to handle kernel paging request at virtual address ffff80008cc8a000
-  Internal error: Oops: 0000000096000047 [#1]  SMP
-  pc : _base_build_sg_scmd_ieee+0x380/0x1508 [mpt3sas]
-  Call trace:
-   _base_build_sg_scmd_ieee+0x380/0x1508 [mpt3sas] (P)
-   scsih_qcmd+0xdc8/0x15c8 [mpt3sas]
-   scsi_dispatch_cmd+0x1f8/0x578
-   scsi_queue_rq+0x528/0x12f0
-   ...
-   __blkdev_direct_IO+0x760/0xd40
-   blkdev_direct_IO+0x338/0x4a0
-   blkdev_read_iter+0x1e4/0x370
+[    7.309467] ------------[ cut here ]------------
+[    7.309469] WARNING: drivers/scsi/libiscsi.c:1552 at iscsi_xmit_task+0x36c/0x470, CPU#1: kworker/u8:2/42
+[    7.311388] Modules linked in:
+[    7.311730] CPU: 1 UID: 0 PID: 42 Comm: kworker/u8:2 Not tainted 7.4.0-rc2-00471-g9ab317b63171-dirty #3 PREEMPT(lazy)
+[    7.312825] Hardware name: QEMU Ubuntu 24.04 PC v2 (i440FX + PIIX, arch_caps fix, 1996), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
+[    7.314002] Workqueue: iscsi_q_2 iscsi_xmitworker
+[    7.314512] RIP: 0010:iscsi_xmit_task+0x36c/0x470
+[    7.315011] Code: 74 24 0c 48 8b 4c 24 10 f0 0f b1 31 0f 85 8d 00 00 00 8b 44 24 38 85 c0 78 37 89 c6 83 c6 01 78 30 85 c0 0f 85 2f fd ff ff 90 <0f> 0b 90 45 31 e4 e9 3d fe ff ff 31 f6 4c 89 f7 e8 af 2e 16 ff e9
+[    7.316897] RSP: 0018:ffffc900002c7b38 EFLAGS: 00010246
+[    7.317450] RAX: 0000000000000000 RBX: ffff88800c30a378 RCX: ffff88800c0b1878
+[    7.318192] RDX: ffffed1001816310 RSI: 0000000000000000 RDI: ffff88800c0b1878
+[    7.318928] RBP: ffff88800c0b1800 R08: 0000000000000000 R09: ffffed100181630f
+[    7.319668] R10: ffff88800c0b187b R11: 0000000000000000 R12: ffff88800c305440
+[    7.320410] R13: 1ffff92000058f6a R14: 0000000000000000 R15: ffff88800c30a400
+[    7.321146] FS:  0000000000000000(0000) GS:ffff8880e56a8000(0000) knlGS:0000000000000000
+[    7.321978] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[    7.322589] CR2: 00007f1933873000 CR3: 000000000b73b004 CR4: 0000000000770ef0
+[    7.323340] PKRU: 55555554
+[    7.323633] Call Trace:
+[    7.323902]  <TASK>
+[    7.324162]  ? iscsi_sw_tcp_pdu_init+0x81e/0xb00
+[    7.324635]  ? __pfx_iscsi_xmit_task+0x10/0x10
+[    7.325088]  ? iscsi_prep_mgmt_task+0x381/0x590
+[    7.325570]  iscsi_xmitworker+0x258/0xab0
+[    7.325997]  process_one_work+0x697/0x1060
+[    7.326441]  ? __pfx___schedule+0x10/0x10
+[    7.326872]  ? __pfx_process_one_work+0x10/0x10
+[    7.327365]  ? _raw_spin_lock_irq+0x81/0xe0
+[    7.327816]  ? __pfx_iscsi_xmitworker+0x10/0x10
+[    7.328308]  ? assign_work+0x11d/0x370
+[    7.328689]  worker_thread+0x45b/0xd10
+[    7.329075]  ? __pfx_worker_thread+0x10/0x10
+[    7.329514]  kthread+0x2c8/0x3b0
+[    7.329848]  ? recalc_sigpending+0x15c/0x1e0
+[    7.330298]  ? __pfx_kthread+0x10/0x10
+[    7.330683]  ret_from_fork+0x36e/0x5a0
+[    7.331069]  ? __pfx_ret_from_fork+0x10/0x10
+[    7.331506]  ? __switch_to+0x572/0xdc0
+[    7.331889]  ? __pfx_kthread+0x10/0x10
+[    7.332278]  ret_from_fork_asm+0x1a/0x30
+[    7.332676]  </TASK>
+[    7.332909] ---[ end trace 0000000000000000 ]---
+[    7.333687] refcount_t: underflow; use-after-free.
 
-With the IOMMU remapping the coherent pool page, the overrun faults
-on the guard page. Without that remap it silently corrupts 8 bytes of
-the adjacent physical page.
+For the allocation window, under KASAN, 7 of 7 unpatched and 0 of 5
+patched:
 
-Limit the transfer to 511 NVMe pages (2 MiB - 4 KiB), which fits the
-PRP list for any starting offset. With this limit the list never
-reaches the last slot of the page, so the "page boundary curr_buff"
-message, which is only printed on the overrun path, can no longer
-trigger.
+[    7.293597] Oops: general protection fault, probably for non-canonical address 0xdffffc000000000c: 0000 [#1] SMP KASAN NOPTI
+[    7.295946] KASAN: null-ptr-deref in range [0x0000000000000060-0x0000000000000067]
+[    7.296860] CPU: 0 UID: 0 PID: 0 Comm: swapper/0 Not tainted 7.4.0-rc2-00471-g33481dfad534-dirty #1 PREEMPT(lazy)
+[    7.298097] Hardware name: QEMU Ubuntu 24.04 PC v2 (i440FX + PIIX, arch_caps fix, 1996), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
+[    7.299457] RIP: 0010:iscsi_nop_out_rsp.constprop.0+0x4e/0x170
+[    7.300200] Code: c1 ea 03 48 83 ec 08 80 3c 02 00 0f 85 fd 00 00 00 48 b8 00 00 00 00 00 fc ff df 48 8b 6b 58 48 8d 7d 60 48 89 fa 48 c1 ea 03 <80> 3c 02 00 0f 85 c8 00 00 00 48 8b 45 60 48 39 c3 74 55 48 b8 00
+[    7.302531] RSP: 0018:ffffc90000006b58 EFLAGS: 00010206
+[    7.303213] RAX: dffffc0000000000 RBX: ffff888009e2a000 RCX: 0000000000000000
+[    7.304126] RDX: 000000000000000c RSI: ffffc90000006c10 RDI: 0000000000000060
+[    7.305037] RBP: 0000000000000000 R08: 0000000000000080 R09: 0000000000000000
+[    7.305948] R10: ffffc9000000679f R11: 000000000000004d R12: ffff88800c70c440
+[    7.306858] R13: 0000000000000000 R14: ffffc90000006c10 R15: 0000000000000000
+[    7.307766] FS:  0000000000000000(0000) GS:ffff8880e55a8000(0000) knlGS:0000000000000000
+[    7.308794] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[    7.309541] CR2: 0000559011da8ef8 CR3: 000000000be2c005 CR4: 0000000000770ef0
+[    7.310472] PKRU: 55555554
+[    7.310838] Call Trace:
+[    7.311173]  <IRQ>
+[    7.311455]  __iscsi_complete_pdu+0x1acf/0x2390
+[    7.312054]  ? iscsi_dbg_trace+0xcc/0x100
+[    7.312583]  ? iscsi_dbg_trace+0xcc/0x100
+[    7.313112]  ? __pfx___iscsi_complete_pdu+0x10/0x10
+[    7.313748]  ? __pfx__raw_spin_lock+0x10/0x10
+[    7.314327]  iscsi_complete_pdu+0x5c/0x80
+[    7.314855]  iscsi_tcp_data_recv_done+0xf4/0x250
+[    7.315459]  iscsi_tcp_recv_skb+0x31e/0xec0
+[    7.316007]  ? __tcp_transmit_skb+0x2ec9/0x4720
+[    7.316602]  ? __pfx_iscsi_tcp_recv_skb+0x10/0x10
+[    7.317217]  ? __pfx_iscsi_dbg_trace+0x10/0x10
+[    7.317800]  ? __pfx_selinux_parse_skb.constprop.0+0x10/0x10
+[    7.318539]  ? __alloc_skb+0x342/0x890
+[    7.319041]  iscsi_sw_tcp_recv+0x12f/0x390
+[    7.319576]  ? __pfx_iscsi_sw_tcp_recv+0x10/0x10
+[    7.320182]  ? __pfx_selinux_netlbl_sock_rcv_skb+0x10/0x10
+[    7.320891]  __tcp_read_sock+0x1ab/0x810
+[    7.321407]  ? __pfx_iscsi_sw_tcp_recv+0x10/0x10
+[    7.322012]  ? __pfx___tcp_read_sock+0x10/0x10
+[    7.322593]  iscsi_sw_tcp_data_ready+0x18b/0x510
+[    7.323199]  ? __pfx_iscsi_sw_tcp_data_ready+0x10/0x10
+[    7.323864]  ? tcp_try_rmem_schedule+0x17f/0x1390
+[    7.324476]  ? tcp_event_data_recv+0x36a/0x7b0
+[    7.325061]  tcp_data_queue+0x1f2d/0x4b70
+[    7.325587]  ? __pfx_tcp_data_queue+0x10/0x10
+[    7.326162]  ? tcp_try_undo_loss+0x670/0x730
+[    7.326721]  ? kvm_clock_get_cycles+0x19/0x40
+[    7.327300]  tcp_rcv_established+0x8a8/0x3990
+[    7.327876]  ? security_sock_rcv_skb+0x2b/0x40
+[    7.328460]  ? sk_filter_trim_cap+0x400/0x980
+[    7.329036]  ? __pfx_tcp_inbound_hash+0x10/0x10
+[    7.329629]  ? __pfx_tcp_rcv_established+0x10/0x10
+[    7.330255]  ? __pfx_sk_filter_trim_cap+0x10/0x10
+[    7.330869]  ? _raw_spin_lock+0x80/0xe0
+[    7.331373]  tcp_v4_do_rcv+0x45b/0x970
+[    7.331872]  ? tcp_v4_fill_cb+0x26/0x400
+[    7.332385]  tcp_v4_rcv+0x223d/0x3b90
+[    7.332874]  ? __kasan_unpoison_pages+0x2c/0x40
+[    7.333466]  ? __pfx_tcp_v4_rcv+0x10/0x10
+[    7.333996]  ? __pfx_raw_local_deliver+0x10/0x10
+[    7.334598]  ? get_stack_info_noinstr+0x16/0xe0
+[    7.335197]  ? get_stack_info+0x2a/0x90
+[    7.335703]  ip_protocol_deliver_rcu+0x61/0x2e0
+[    7.336302]  ip_local_deliver_finish+0x329/0x4b0
+[    7.336910]  ip_local_deliver+0x18f/0x2d0
+[    7.337436]  ? __pfx_ip_local_deliver+0x10/0x10
+[    7.338033]  ? ipv4_dst_check+0x10a/0x160
+[    7.338557]  ? ip_rcv_finish_core+0x1d0c/0x1dd0
+[    7.339160]  ip_sublist_rcv_finish+0x138/0x1b0
+[    7.339743]  ip_sublist_rcv+0x3ae/0x670
+[    7.340252]  ? kasan_save_stack+0x42/0x60
+[    7.340775]  ? kasan_save_track+0x14/0x30
+[    7.341301]  ? __pfx_ip_sublist_rcv+0x10/0x10
+[    7.341876]  ? __alloc_skb+0x11e/0x890
+[    7.342371]  ? net_rx_action+0x8f1/0xfb0
+[    7.342891]  ? handle_softirqs+0x1b3/0x600
+[    7.343427]  ? __irq_exit_rcu+0xfc/0x160
+[    7.343943]  ? common_interrupt+0x7f/0x90
+[    7.344467]  ? __asan_memset+0x23/0x50
+[    7.344968]  ? ip_rcv_core+0x4e9/0xce0
+[    7.345462]  ? common_startup_64+0x13e/0x158
+[    7.346028]  ip_list_rcv+0x266/0x380
+[    7.346503]  ? csum_partial+0xc/0x20
+[    7.346981]  ? __pfx_ip_list_rcv+0x10/0x10
+[    7.347517]  __netif_receive_skb_list_core+0x5c3/0x860
+[    7.348186]  ? tcp4_gro_receive+0x54a/0x15c0
+[    7.348746]  ? __pfx___netif_receive_skb_list_core+0x10/0x10
+[    7.349480]  ? inet_gro_receive+0x719/0x1190
+[    7.350049]  ? kmalloc_reserve+0x103/0x2b0
+[    7.350584]  netif_receive_skb_list_internal+0x553/0xbb0
+[    7.351271]  ? dma_map_phys+0xb0/0x290
+[    7.351768]  ? __pfx_netif_receive_skb_list_internal+0x10/0x10
+[    7.351998] TESTWIN close itt 1
+[    7.352946]  ? e1000_alloc_rx_buffers+0x32c/0xd70
+[    7.353561]  ? gro_receive_skb+0x279/0x960
+[    7.354103]  napi_complete_done+0x1ab/0x7f0
+[    7.354648]  ? __pfx_napi_complete_done+0x10/0x10
+[    7.355264]  ? __pfx_e1000_clean_rx_irq+0x10/0x10
+[    7.355880]  e1000_clean+0x816/0x25a0
+[    7.356364]  ? schedule_timeout+0x1cd/0x200
+[    7.356916]  ? tmigr_requires_handle_remote_up+0x49/0x160
+[    7.357614]  ? kvm_sched_clock_read+0x11/0x20
+[    7.358189]  ? sched_clock+0x11/0x30
+[    7.358665]  ? sched_clock_cpu+0x6c/0x4c0
+[    7.359197]  ? __walk_groups_from+0x40/0x150
+[    7.359757]  ? __pfx_e1000_clean+0x10/0x10
+[    7.360294]  ? __pfx_sched_clock_cpu+0x10/0x10
+[    7.360881]  ? sched_balance_trigger+0xc7/0xf20
+[    7.361474]  __napi_poll+0x9c/0x520
+[    7.361942]  net_rx_action+0x8f1/0xfb0
+[    7.362437]  ? kvm_clock_get_cycles+0x19/0x40
+[    7.363012]  ? ktime_get+0xe6/0x160
+[    7.363478]  ? __pfx_net_rx_action+0x10/0x10
+[    7.364043]  ? timerqueue_linked_add+0x1f4/0x3d0
+[    7.364646]  ? _raw_spin_lock+0x80/0xe0
+[    7.365156]  handle_softirqs+0x1b3/0x600
+[    7.365670]  ? __pfx_handle_softirqs+0x10/0x10
+[    7.366255]  __irq_exit_rcu+0xfc/0x160
+[    7.366748]  common_interrupt+0x7f/0x90
+[    7.367256]  </IRQ>
+[    7.367547]  <TASK>
+[    7.367840]  asm_common_interrupt+0x26/0x40
+[    7.368388] RIP: 0010:pv_native_safe_halt+0xf/0x20
+[    7.369013] Code: 04 ce 00 c3 cc cc cc cc 0f 1f 00 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 f3 0f 1e fa eb 07 0f 00 2d 93 44 18 00 fb f4 <e9> 8c 39 02 00 66 2e 0f 1f 84 00 00 00 00 00 66 90 90 90 90 90 90
+[    7.371276] RSP: 0018:ffffffff85607d10 EFLAGS: 00000216
+[    7.371952] RAX: ffff8880e55a8000 RBX: ffffffff85614700 RCX: ffffffff846d0c6b
+[    7.372863] RDX: ffffed100d8862a3 RSI: 0000000000000004 RDI: 000000000000480c
+[    7.373768] RBP: fffffbfff0ac28e0 R08: 0000000000000001 R09: ffffed100d8862a2
+[    7.374675] R10: ffff88806c431513 R11: 0000000000000002 R12: 0000000000000000
+[    7.375584] R13: 0000000000000000 R14: 1ffffffff0ac0fa6 R15: dffffc0000000000
+[    7.376474]  ? ct_kernel_exit.constprop.0+0x9b/0xc0
+[    7.377078]  default_idle+0x9/0x10
+[    7.377533]  default_idle_call+0x39/0x60
+[    7.378051]  do_idle+0x37b/0x560
+[    7.378485]  ? __pfx_do_idle+0x10/0x10
+[    7.378983]  cpu_startup_entry+0x4f/0x60
+[    7.379497]  rest_init+0x186/0x1b0
+[    7.379956]  ? __pfx_acpi_read_bit_register+0x10/0x10
+[    7.380584]  ? __pfx_rest_init+0x10/0x10
+[    7.381074]  ? __pfx_kernel_init+0x10/0x10
+[    7.381579]  ? acpi_enable_subsystem+0x24b/0x470
+[    7.382154]  start_kernel+0x354/0x3b0
+[    7.382635]  x86_64_start_reservations+0x18/0x30
+[    7.383242]  x86_64_start_kernel+0x111/0x120
+[    7.383771]  common_startup_64+0x13e/0x158
+[    7.384290]  </TASK>
+[    7.384590] Modules linked in:
+[    7.385018] ---[ end trace 0000000000000000 ]---
 
-Fixes: 04631f55afc5 ("scsi: mpt3sas: Limit NVMe request size to 2 MiB")
+Mark a task ISCSI_TASK_RUNNING with a release once it is ready to go
+out, and accept a response only for a task in that state, read with an
+acquire.  A response can only follow a transmission: attempts that
+arrived after the window closed were still accepted, 24 of 24 unpatched
+and 9 of 9 patched.
+
+Fixes: 659743b02c41 ("[SCSI] libiscsi: Reduce locking contention in fast path")
+Fixes: 5923d64b7ab6 ("scsi: libiscsi: Drop taskqueuelock")
 Cc: stable@vger.kernel.org
-Tested-by: Laurence Oberman <loberman@redhat.com>
-Signed-off-by: Laurence Oberman <loberman@redhat.com>
+Signed-off-by: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
 ---
+Follow-up to a promise made in
+https://lore.kernel.org/all/20261007031737.639431-1-yhlee@isslab.korea.ac.kr/
+- assigning the state last is not enough: a fully set-up task waiting on
+conn->mgmtqueue is PENDING too.  The mgmtqueue half was pointed out in
+https://lore.kernel.org/all/sashiko-outbox-176224@kernel.org/
 
-Notes:
-    Tested on the system that hit the original oops: Quanta S74G-2U
-    (NVIDIA Grace, arm64, SMMUv3 translated), SAS3816 FW 26.00.01.00,
-    Samsung MZTL21T9 NVMe at 0:2:0:0, 6.12-based KASAN debug kernel.
-    
-    Reproducer: read-only O_DIRECT preads of max_sectors_kb into a hugetlb
-    buffer at page offsets 512/1024/2048/3584, with max_sectors_kb set to
-    max_hw_sectors_kb.
-    
-    Without this patch (2 MiB cap, max_hw_sectors_kb = 2048):
-      2 MiB unaligned preads: system oopses in _base_build_sg_scmd_ieee
-      within the first iterations, matching the trace above.
-    
-    With this patch (max_hw_sectors_kb = 2044):
-      - blktrace confirms each read is issued as a single 4088-sector
-        request (not split)
-      - 10000 unaligned 2044 KiB preads complete
-      - 20 loops of fstests generic/001 generic/004 generic/005 (the
-        sequence that originally crashed in xfs_repair) pass
-      - no "page boundary" messages and no KASAN reports
-    
-    Also validated with a userspace harness that compiles
-    base_make_prp_nvme() verbatim from mpt3sas_base.c, places the PRP
-    buffer in front of a PROT_NONE guard page, sweeps every 512-byte length
-    from 16.5 KiB to the cap at every 512-byte offset (contiguous and split
-    into up to 128 page-aligned segments), and walks each list as the
-    device would:
-    
-      cap 2048 KiB: 292608 cases, 252 overruns, 0 malformed lists
-        first overrun: len 2094080 off 3584 nsg 1
-      cap 2044 KiB: 292032 cases, 0 overruns, 0 malformed lists
-    
-    Reproducer and harness available on request.
+ drivers/scsi/libiscsi.c | 13 +++++++++----
+ 1 file changed, 9 insertions(+), 4 deletions(-)
 
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 26 +++++++++++++++++++++-----
- 1 file changed, 21 insertions(+), 5 deletions(-)
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index 2d04448432a772..83d726043d3e8d 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -429,7 +429,8 @@ static int iscsi_prep_scsi_cmd_pdu(struct iscsi_task *task)
+ 	if (session->tt->init_task && session->tt->init_task(task))
+ 		return -EIO;
+ 
+-	task->state = ISCSI_TASK_RUNNING;
++	/* Pairs with the acquire in the RX task lookups. */
++	smp_store_release(&task->state, ISCSI_TASK_RUNNING);
+ 	session->cmdsn++;
+ 
+ 	conn->scsicmd_pdus_cnt++;
+@@ -702,7 +703,8 @@ static int iscsi_prep_mgmt_task(struct iscsi_conn *conn,
+ 	if ((hdr->opcode & ISCSI_OPCODE_MASK) == ISCSI_OP_LOGOUT)
+ 		session->state = ISCSI_STATE_LOGGING_OUT;
+ 
+-	task->state = ISCSI_TASK_RUNNING;
++	/* Pairs with the acquire in the RX task lookups. */
++	smp_store_release(&task->state, ISCSI_TASK_RUNNING);
+ 	ISCSI_DBG_SESSION(session, "mgmtpdu [op 0x%x hdr->itt 0x%x "
+ 			  "datalen %d]\n", hdr->opcode & ISCSI_OPCODE_MASK,
+ 			  hdr->itt, task->data_count);
+@@ -1174,7 +1176,8 @@ static int iscsi_handle_reject(struct iscsi_session *session,
+ 			if (!iscsi_verify_itt(conn, rejected_pdu.itt))
+ 				task = iscsi_itt_to_task(session, conn,
+ 							 rejected_pdu.itt);
+-			if (!task || task->state == ISCSI_TASK_FREE ||
++			/* Pairs with the release when the task is prepared. */
++			if (!task || smp_load_acquire(&task->state) != ISCSI_TASK_RUNNING ||
+ 			    task->sc) {
+ 				iscsi_conn_printk(KERN_ERR, conn,
+ 						 "Invalid pdu reject. Could "
+@@ -1314,7 +1317,9 @@ int __iscsi_complete_pdu(struct iscsi_session *session, struct iscsi_conn *conn,
+ 	case ISCSI_OP_SCSI_TMFUNC_RSP:
+ 	case ISCSI_OP_NOOP_IN:
+ 		task = iscsi_itt_to_task(session, conn, hdr->itt);
+-		if (!task || task->state == ISCSI_TASK_FREE || task->sc)
++		/* Pairs with the release when the task is prepared. */
++		if (!task || smp_load_acquire(&task->state) != ISCSI_TASK_RUNNING ||
++		    task->sc)
+ 			return ISCSI_ERR_BAD_ITT;
+ 		break;
+ 	default:
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 085d467..1cb15b5 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -57,6 +57,14 @@
- 
- #include "mpt3sas_base.h"
- 
-+/*
-+ * Largest NVMe transfer whose PRP list fits in one NVME_PRP_PAGE_SIZE
-+ * buffer (last entry reserved for the chain pointer) for any buffer
-+ * offset: (4096 / 8 - 1) * 4096 = 2 MiB - 4 KiB.
-+ */
-+#define MPT3SAS_NVME_MAX_XFER \
-+	((NVME_PRP_PAGE_SIZE / NVME_PRP_SIZE - 1) * NVME_PRP_PAGE_SIZE)
-+
- #define RAID_CHANNEL 1
- 
- #define PCIE_CHANNEL 2
-@@ -2741,14 +2749,22 @@ scsih_sdev_configure(struct scsi_device *sdev, struct queue_limits *lim)
- 		/*
- 		 * The HBA firmware passes the NVMe drive's MDTS
- 		 * (Maximum Data Transfer Size) up to the driver. However,
--		 * the driver hardcodes a 4K buffer size for the PRP list,
--		 * accommodating at most 512 entries. This strictly limits
--		 * the maximum supported NVMe I/O transfer to 2 MiB.
-+		 * the driver hardcodes a 4K buffer size for the PRP list.
-+		 * base_make_prp_nvme() reserves the last slot of that page
-+		 * for a chain pointer, leaving 511 data PRP entries, and
-+		 * PRP1 in the main message frame covers the first, possibly
-+		 * partial, page.
-+		 *
-+		 * A transfer that is not page aligned spans one more page
-+		 * than its length implies, so a 2 MiB I/O starting at a
-+		 * non-zero page offset needs 512 list entries and overruns
-+		 * the PRP buffer by one. Limit transfers to 511 pages, which
-+		 * fits the PRP list for any starting offset.
- 		 *
- 		 * Cap max_hw_sectors to the smaller of the drive's reported
--		 * MDTS or the 2 MiB driver limit to prevent kernel oopses.
-+		 * MDTS or the driver limit to prevent kernel oopses.
- 		 */
--		lim->max_hw_sectors = SZ_2M >> SECTOR_SHIFT;
-+		lim->max_hw_sectors = MPT3SAS_NVME_MAX_XFER >> SECTOR_SHIFT;
- 		if (pcie_device->nvme_mdts)
- 			lim->max_hw_sectors = min(lim->max_hw_sectors,
- 					pcie_device->nvme_mdts >> SECTOR_SHIFT);
+base-commit: 7e1392a42ea288d70a266f6553fe06f57f8647ea
 -- 
 2.43.0
 
