@@ -1,45 +1,45 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794565784;
-	b=vVR9OiLuqeH8JBPe4NyuIZMdHkJ5KoKsRDGCgu0QkMtyZR+V4LfEXKQABB9sg9lNFqli
-	 X/EMyIt883p/e+SD6R6v0xA2YyL5f2Uy5tLa/TjJF9OFQ4vlLclR9LA+C+lbg4ArPv+9G
-	 18TU122Z8rFeKzeD2C/z7gUEY98tiI/zL7L9Mndk9byfumJutIrCoQZ25rxuJmKvGW+wB
-	 nGMwrPshro1PwFFpPYIhcUUGDfguRQOAVjCT0FnG4G7DjxufCAvlyeRs52pXVOVwMR7II
-	 NwtE912wt2zuiVNWNhhpkh2agYYBmRWB2K7lQ5nSHoHz20KD8ukvH3Vr1HgdI6PBasQ==
+	t=1794565813;
+	b=FtcUSCa3xXR//Nemvvf1EPzxfsE0Mt9eXvrRoLIPNhYdbi13kHKee6MabdkGRrtrdIeK
+	 DB/+jZm2GX/gkxZbO7t0NzFR0ItC/k7FD9XoIOFBOUwcGPBDRMDtgYcC0RTBzabbR6gzf
+	 NibrDd1OYCIuvSwEVUSsdBIM2NftURsWjgJKjY5vuGDLKSQWk7hPjljpDeQl2vTpb8apG
+	 KxVIX5KaPvbivsEvXuHt+YVz4RP6Afch4fqqdnn1LUV4TNWgze1ErsbLb+8kxt9/h8oiu
+	 PppxC0znq1YYVXrLXBWM19BFa1HpQ/4NwzVdXXm1kcnedcpL3yp4SamEgbJjJpBM0aA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794565784;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794565813;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=WSY+ANdltmdjp4hZAqbq3uTRH7NaIarF8ThTGR2AH9A=;
-	b=FHVk9IrNbVc8UY0jrOxNxVyQVbXV4bHzCYLaOisju5mUYdqB8/pmxRxuhgxdJxzKVOgx
-	 mMb1LQVTUm970mqXh4J/FfBiXdm1AnQnogutCXR720WJec9WJAGOwRW+VEecJejrElwb1
-	 lHhPZOMrpFDVN+Tjb6EoCQTrhToIsGAEkLC4GkjpvgxYBknuEWMc7maTsxbsZGnJHGtr2
-	 dAe7biqe3DEAxw74PmMevXFq8PtZmN6G0Z56gIPtKUKC0panw/MVATgs9dloGpKzXbM0L
-	 XK5rYDi31ir6yo8vlnWVRHE2WY8wiNLiAu215L7jXlBG9UTF7gymnuEn5PMyFgjPR/Q==
+	bh=Onr+sY6kcwIMhOVzt4cQhVPIJDQGs2ul9JBzovMMmy4=;
+	b=faTBWiGm9Cmjl3xCbySBmZxUIEf30kNRHza+qsHsSu3Uv2N9QDfGYtWtp7I6l1UF/W2+
+	 oc/1GdvLwIYMMHnDkWM6oWqSDvYrwOPjamaqlOSnDnE909StoMcm/9d4Oh2/vYu/t0BMi
+	 p01keFokqAybC+PFUkB+b6mkTwwydgRCBAEP3bHw1Q2d4u3xWVNm/CgDMcEdCazp2xUTu
+	 sAUNg6B5PBWXHP2KDwDLXN/B/pfjP5MJWc17Ur1sZszDrHPv5KJJwAuD1R9Sn5HDojg/O
+	 tcXQAnQHM7Jh8esxmfxb+2KrGcVmYQvpTLorVk17raFhTHXdqkXTVSMO54vmWEYLMAw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="N3B3iDM/";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=WyW6dvkX;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37AE4606A327;
-	Fri, 13 Nov 2026 10:29:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC165606A32D;
+	Fri, 13 Nov 2026 10:30:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=N3B3iDM/
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 970AE1F000C4;
-	Fri, 13 Nov 2026 10:29:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=WyW6dvkX
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AF7ED1F000C4;
+	Fri, 13 Nov 2026 10:30:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794565784;
-	bh=WSY+ANdltmdjp4hZAqbq3uTRH7NaIarF8ThTGR2AH9A=;
+	s=k20260515; t=1794565813;
+	bh=Onr+sY6kcwIMhOVzt4cQhVPIJDQGs2ul9JBzovMMmy4=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=N3B3iDM/ljx4vAaf5Jrz/ajm1fa4aQGTl0CefZdslx+6VxkuARBxhjYSNmi4qMZFf
-	 QkKLtsxQnbE33zPcPAahlPFIGDzefeYPn/GChO8RKvxkqM1+jeJu9Et9Q9cexMlMOi
-	 Y2LAHbnJGYXj1OqCp6QwTTvPlu3p/jxUOE88QJniywunLueMhWz0TPZRG1UcPikn9q
-	 Z+xuIMcai4dnLzzigGZCK0FpWlTYQWUm+cXDkkL4DMyUKGvMoICIOjVNnNmmPQkisH
-	 6coL9DouEs1YexVKGveznBYverqxMXunO/dSm6+PLaJ9QpK4do7tS/Wufkn22KCzxo
-	 N3l1ulc/hiATg==
-Date: Fri, 13 Nov 2026 11:29:40 +0100
+	b=WyW6dvkXp3VMY6ez01G39IuLblyIP0eftCaqkFX/CgDfI+LyRX8V+6PGJO4eq8NWx
+	 BeRaEb9ub7lPdisSDGlmbTz1SHcjJNUqBvxAIqNfvULRWlm42ILlcnn2hhuRDX6dQD
+	 u5z3OOZ9vIxD0Gy6ZNXiSNa96efIzTx1w9VQOfvlGPlqidpWyPs+oxOHwXwN6KrbiU
+	 /clX6zx4cJJByxgmh3qnGIXp2vG6ndspOQZflQWsZVdfWX6ba1KTjaWURmhAjKSgQg
+	 dxAPOsw3YBGfgkBQ0r5FRdw6VML2hHYehcu86PfLiTnqLxBaf+sNALfskE1g//Fn8t
+	 gozLfOdTK2qeQ==
+Date: Fri, 13 Nov 2026 11:30:10 +0100
 From: Krzysztof Kozlowski <krzk@kernel.org>
 To: Stanislav Aleksandrov <lightofmysoul@gmail.com>
 Cc: Bjorn Andersson <andersson@kernel.org>, 
@@ -62,10 +62,11 @@ Cc: Bjorn Andersson <andersson@kernel.org>,
 	linux-kernel@vger.kernel.org, mfd@lists.linux.dev, linux-arm-kernel@lists.infradead.org, 
 	iommu@lists.linux.dev, linux-usb@vger.kernel.org, linux-phy@lists.infradead.org, 
 	linux-scsi@vger.kernel.org, linux-crypto@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: Re: [PATCH 15/17] dt-bindings: arm: qcom: Add Samsung Galaxy XR
-Message-ID: <20261113-meek-laughing-orca-ea8a86@quoll>
+Subject: Re: [PATCH 14/17] dt-bindings: interconnect: OSM L3: Add Halliday
+ EPSS L3 compatible
+Message-ID: <20261113-quizzical-ivory-gharial-1fcb14@quoll>
 References: <20261109-halliday-dts-v1-0-289114ab8197@gmail.com>
- <20261109-halliday-dts-v1-15-289114ab8197@gmail.com>
+ <20261109-halliday-dts-v1-14-289114ab8197@gmail.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -77,18 +78,17 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20261109-halliday-dts-v1-15-289114ab8197@gmail.com>
+In-Reply-To: <20261109-halliday-dts-v1-14-289114ab8197@gmail.com>
 
-On Mon, Nov 09, 2026 at 12:33:27AM +0000, Stanislav Aleksandrov wrote:
-> Document the Samsung Galaxy XR headset, which is based on the Qualcomm
-> Halliday SoC (SXR2250P).
+On Mon, Nov 09, 2026 at 12:33:26AM +0000, Stanislav Aleksandrov wrote:
+> Document the EPSS L3 interconnect on the Qualcomm Halliday SoC.
 > 
 > Signed-off-by: Stanislav Aleksandrov <lightofmysoul@gmail.com>
 > ---
->  Documentation/devicetree/bindings/arm/qcom.yaml | 5 +++++
->  1 file changed, 5 insertions(+)
+>  Documentation/devicetree/bindings/interconnect/qcom,osm-l3.yaml | 1 +
+>  1 file changed, 1 insertion(+)
 
-Acked-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
+Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
 
 Best regards,
 Krzysztof
