@@ -1,83 +1,83 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.45
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.52
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794559227;
-	b=s6QkDUhpre8Kpy7rcxyYFVCuJO8pSqmQYbvlDVnvhuweZ9qHVydqT6/hn7TYbMhA4Whh
-	 xvx/2HAsU87Cemt7TFNWaO9dV7ztVPk4WjeVeE1jw9CQ4RQ/loW3CM9QtG6FK3s59oxRp
-	 D7p8Oo7FdjNDCeGk34rmykGYQWbWo+a/KxdtBxD1IKBumj1aqg77HHuezbGc9RRXCtQOA
-	 bFr8gNzhMXhdW1Mchjtcq7mSeFe44jn93h5aVRsBh+SLaKRwwAITlM1ALBu3tWqC9IGuy
-	 1BswQyt2BRD9qQW3X1eitapD4bGXqTMSJFaWB2+fpAgHeityrkEEoVbuNr6mXYV+vLw==
+	t=1794559231;
+	b=du+HPIbivKimVnk/Md0dAThF+RDoYSNVCylgRLdveYrt+Sz0ecxt/5tWrqNBLzb2TAew
+	 dL+W1ZTWL+OImb4/a2nLr24UiFeTlPJuy7AXSH7ooTjkvZypsuAZnmmVpomj15BcFhogl
+	 CNmHEejgKo2mb/9UNhpPzNDX1FG7noEP09peDkvCmYTdm718929hQ4zwiMZO1HG0W/V0V
+	 DJxiSau1RqCLdoRVWSzlcT7mPLx6czHWZu82rs36AonJxreANMH+2Ak5pFueX/uTveFss
+	 92iZWWCT4Oi07e0naGXOhu2rQtFSe1UNC3XhfeEn6TGzUJwhB4jN3o1eBN9Qgi1V9Jw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794559227;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794559231;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
 	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
 	 MIME-Version:Content-Transfer-Encoding;
-	bh=R0nrv620IQZ/22wegrLOV31hxsjt1XF7G7GYY2hu98s=;
-	b=HJIbEsxDPmeKcek78OyBq3Ed6K/kJhk2uHqLx4aRpwQCTuxVJZRV105FDjIUPL6bDdPa
-	 pUJW98nHRa2/QrhQv7W8b8nVCKOQqeBit6fBGok0c4+VPDheE1lAqSOOhdyYjz5p2PUav
-	 UrZR87KbATeMJ4OTBQmHgO2OuG00CKIvRVX0OTS6sQI1Tf3D5Uc6riWXa/GPYPSHRM0g3
-	 TJxmrxfffdLEK6ROVhSzEONCFKpuOngskZPvtOY8g1dPBTjcA8arihGWHYQxK1+tly9z4
-	 ioh2hdHlNDyQiAVywnkXr6voRyPC5cuwXABg/vU+jpIPaT/8tBMjytRlsc9d20wI/zA==
+	bh=6HjmYTtzj67gEj1W3Fr4INGR7fSq4j0RNLKw8boe0iU=;
+	b=lCi0XyDkOWUD20X/n5stSyEC8L3dFtOxa28eZbSKlmfcD57Ul/++PVVf9UalBUJpRTRj
+	 JP4OM94im9NHgYB4HhANNzQNUna9mr1CTyWXbZastylD29QSsVUUWZs6k3eKsy/EZrOhU
+	 XjOWxb0lxWQBhxp/fD1xGr9bhXdE9sKphEWQwkplXbom1Haf4tInzITTbOKjSzCo95W/J
+	 fTJw6aScgD88yJVZKW8tN1etESsa/ltZjoBW4HrcsehiGBbusDO2jURuJizEKYBA3OVFk
+	 ieV2aC4jUkYYbnQtkjKYJC0HMN9FPQrm6H8gRCYM2QryVD3Qu9S5MW25k8BA3aP+2TQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=WMW3oCUZ;
-	arc=none smtp.remote-ip=209.85.216.45
-Received: from mail-pj1-f45.google.com (mail-pj1-f45.google.com [209.85.216.45])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=HFQ3NMFD;
+	arc=none smtp.remote-ip=209.85.216.52
+Received: from mail-pj1-f52.google.com (mail-pj1-f52.google.com [209.85.216.52])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C1BFD606A8A4
-	for <linux-scsi@vger.kernel.org>; Fri, 13 Nov 2026 08:40:26 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C1BFD606A8A4
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E277606A8A3
+	for <linux-scsi@vger.kernel.org>; Fri, 13 Nov 2026 08:40:31 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3E277606A8A3
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=WMW3oCUZ
-Received: by mail-pj1-f45.google.com with SMTP id 98e67ed59e1d1-3b08a162d4bso322550a91.3
-        for <linux-scsi@vger.kernel.org>; Fri, 13 Nov 2026 00:40:26 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=HFQ3NMFD
+Received: by mail-pj1-f52.google.com with SMTP id 98e67ed59e1d1-3b179528d56so277898a91.3
+        for <linux-scsi@vger.kernel.org>; Fri, 13 Nov 2026 00:40:31 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1794559226; x=1795164026; darn=vger.kernel.org;
+        d=gmail.com; s=20260707; t=1794559231; x=1795164031; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=R0nrv620IQZ/22wegrLOV31hxsjt1XF7G7GYY2hu98s=;
-        b=WMW3oCUZ/rAbrvlxycYpeBLVSzfh2TLgjVIcTTWk0wKtre5oqsAU4oz9pcN6quLYki
-         EU/bMMfcvEgcttMb9KZqWf3fu9f5+JyBdDUffJwHcSWVoQzx4x4aibqf2XX2cuWGlEVN
-         jHg+RH+23I1Hwne/9x6ygIJUDwWrX8IAll0CKyXc4bjsaWYGh/v4cEvlblf11+PRq4TG
-         aOQ3JKy/k+k1L3Jfm5IxA1OIUtrFHzONFmzEA8ZZs40hWUFED4kxkbdRsSNOkGpv+/aP
-         ve2h2AkSK1xNt6f7GxVjbdv/44T9tB5GaQHXLjsduAhQNcgbD9fUH+finDFVkUy23xTR
-         B7+w==
+        bh=6HjmYTtzj67gEj1W3Fr4INGR7fSq4j0RNLKw8boe0iU=;
+        b=HFQ3NMFD/HeHqYJQZncUggUrOcMsaYsc6YJAUjDIsCZEZ99XBDbk8eKvWDF+Gnnrcd
+         svJJ+NI70TLXlxc0n1QkUdGBFgOEAeAAGvKfgKVnZl+v92VHhDFwUFx4TBLOXVvLojUP
+         LEeHLydP4SIxStMQasLl51rfhBqfGqbnVX/t31+VgC2V3srZjG78WS+xEx032q57Teu6
+         Hwf4POH4kZXxDBFsy75EYAKphlXWF//aw+m68zUh5aRduOGg9nW4UfkfnUh2xIVQ42Nq
+         UwxFv/yTP1Yf95db/kKvzRb8Yjd52tHxSyekeJBtDKAzgsZJobPigb34M/u+Vl2afuEP
+         iaQw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794559226; x=1795164026;
+        d=1e100.net; s=20260707; t=1794559231; x=1795164031;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=R0nrv620IQZ/22wegrLOV31hxsjt1XF7G7GYY2hu98s=;
-        b=XRGvksDZFGueiRU3XSPTTKcJGPrlasW6rQ0MlnJ9nDUmF6YBvsJVTq6vYimFVRzUKV
-         f7YuAgMgQ8u8spVmNzMU6/nXqPcSuk+rYyZP0Z58KQBMbRInvKsVFw94/4hfAyAHXlWq
-         vaeV3Yg2M8gG1YVo/3VlqB9IZO6bNmEOmgXjnhMjWtvJZawJa4+bjhHSNVfiBV5bcHIY
-         YNRScWlPOpsx59eqdI8XauDbP2oXV4tGQuOblY7Aqo7mCWa4ADeR2qLjr8fE31KueiGv
-         jNIhtOzQ+UxeDT7MMqLRx5dBPEXzOkcL3rkyHKe42ShjLzX0k5gAlOKOSd58smT+alFl
-         yLcQ==
-X-Forwarded-Encrypted: i=1; AL+hErHtQ9Qm96lzPZmH9hWp+xe6oNI+BXuH/UjvGsstaDadok6ARHty8PU3Y32yZVBvFqpPcmKDkW22Kcwo@vger.kernel.org
-X-Gm-Message-State: APuU4Z9hKjtDLKuASx8QZIZlU1avF7fPTKIHw4XYiXUK1GZlQUQAejtb
-	miL62qmOl5qwZk4N3raP/CXH7xcH8sBBeAQuzt/MLbXsZvnXPR3NSqK3
-X-Gm-Gg: AYBFou2ViaL/Gtsfq6jRB1mxmc791d9xqJ+Sl5Fg+D3/dVs9ZvJjPYdgNZl05tLCtzQ
-	mD8xTqRjVSJYGCKKUoDngtTxee02VO+554PvbLuwqE5sw2s1cxnWNF77ubjFrYstHYahISTZN1T
-	Kocax73LATUEOdlPgFZ8K+YAln9H0xxYEUMZgV+lhQajM9UUFohngHrQ29o+/aYfKUmA9jPQNBk
-	XDSOumlX+2OFs1RLBgpGz6yuAOuM88PXC8oVTjMzjBck9fSG6mbrDPaMs2ZM97EDYeTEiXp/jLw
-	Ej7NRe2f+HOZDKizonbylikZ4PpPuJnGyyLHZ/ZI5ytcNkq4puJmTQz9X8CwiwLpXcXa7XYUqIF
-	uDne+Jvyk0+6TssqqIztJmQKCRZdcyduBkdnQuDy562E5vKQd4RXtAcWULayue+GhrCnp8wSNrP
-	W5N57shGnGM6FvZivu5nQU9nKqTpXQws3WqYqx/hPy0qZM4vDpClCn/GNY3ReYKbJx2M1dd7J8t
-	AeIPzwsYPz1M3rPCgL1nnvMqnqiUFv5zNzdr/4KA0GeQoV2EH9XYfMLwHSzQlr3RdtS9nF+lYwM
-	83C1oYp4hiDvgU66IQ4kSMZWLHlpyOqDwHjrg8YMew==
-X-Received: by 2002:a17:90b:4acb:b0:3ad:6090:a189 with SMTP id 98e67ed59e1d1-3b1b0b67b18mr1705922a91.45.1794559226059;
-        Fri, 13 Nov 2026 00:40:26 -0800 (PST)
+        bh=6HjmYTtzj67gEj1W3Fr4INGR7fSq4j0RNLKw8boe0iU=;
+        b=yKro72WlYcZrqbx1OMZxl/v+3/H95JswBtttpweoyVTHUkLmYJl/p+IXK7P7wSB0Do
+         /zGtf+AzTqHK2H2/BcsEf21WSGhd0TezlHaRjF1+/Gd9T/4EoKc7c8VZ9PHQy1s/CrIa
+         b+Kz2XCh2gJOzItJTyOuRi/9FJX4o1I/hOY3YBHp1jc6CH72jSX7lJFDehZSkWhanFB4
+         HbBO921TeBdBK0PT7S+IUFct5Y+8v3O2DRetl1jQLvuWPr3Q5vNtMCVlMVxPzUdTX4qq
+         i5chuo9S1dDOGSS2iBq92CRz13U0nZMie7pj6WoZIitZe0uxIW4LnHi4FtcF+ouTMU8Y
+         /mnQ==
+X-Forwarded-Encrypted: i=1; AL+hErEcDwo4CflYgWBc4lJWiRZ93zDeuEmuG/C4JnHbppt9qeFUljHWmsZQvbWZRUMwOZjLwtApWLsrQQG+@vger.kernel.org
+X-Gm-Message-State: APuU4Z+P7CDqx3LyUjRPNh5zjF15bZOOuyYMkSlDioaEc2aD7NNvFnka
+	Yxkrg5Jz9XWOKHabPDMEBoBX623nOgxMDeZNNSa45CwGM0yowHKvirlU
+X-Gm-Gg: AYBFou2ERBX5CRIG04MOe0E666pmMd0oKKv+FyYvlJt/pcmkNye26+oY8SBbLAdxfex
+	AnyeQa/AqG0k46JMxfQ7G4tIp2G/XcU3KVsTUt1YFGLzV1ZPss8YpLOjQreyBnXvsPxvQhwLp5Z
+	cbZfAjjv6epCTRhR1eIDRY49mOF60do017ODV+vMPnGBWrIsOBIhKKY9He+VYwpzgX3pYqFDAOI
+	ZAEYQAjgx9dzNMRFzlQ3xFkg6JzxjMbXceCSqX/sSXk9ikQMrltsTbieRwNF9yVboSvr2t6Tf3W
+	TvepzvTWnHDhaAinYTM2NiS7sStL2qddnjp6vPlrsPNCrbbYF/E5GXAFWsjCXhy6PPSTYpnR8vZ
+	RG8IsQZop5WkXHTg/juzaByz9O1UXae/P2XO5Wlcw305forAEFS4ahsIcqLQCS/vC1pbxEbUPPj
+	1lbHZTdHDVT/F8J5J+PsWzaOw57krQGPnnW8KtN6JzechixhJIyfod8COeqIj4r41x1MM7XAj1F
+	/1W0KjQbXSNXUsKbqEg1CF7mnTlPI9LkJbbuQYDiYDmzJfLBkeWgopmCmgku9OA7MXr8w3qllX6
+	qZi6mufhCW4MEYB1el13rRS883gtX8GiQ6D2sxw7zw==
+X-Received: by 2002:a17:90b:4410:b0:3ad:818f:3da2 with SMTP id 98e67ed59e1d1-3b1b0b9a342mr1279723a91.63.1794559230508;
+        Fri, 13 Nov 2026 00:40:30 -0800 (PST)
 Received: from localhost.localdomain ([183.62.176.219])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b1b25a365asm1264855a91.1.2026.11.13.00.40.22
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b1b25a365asm1264855a91.1.2026.11.13.00.40.26
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 13 Nov 2026 00:40:25 -0800 (PST)
+        Fri, 13 Nov 2026 00:40:29 -0800 (PST)
 From: Yong Liu <pkfxxxing@gmail.com>
 To: Bart Van Assche <bvanassche@acm.org>,
 	"Martin K. Petersen" <mkp@kernel.org>
@@ -88,9 +88,9 @@ Cc: Jason Gunthorpe <jgg@ziepe.ca>,
 	target-devel@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	security@kernel.org
-Subject: [PATCH v5 1/3] RDMA/srpt: Initialize commands before returning BUSY
-Date: Fri, 13 Nov 2026 16:38:40 +0800
-Message-ID: <20261113083848.1517595-2-pkfxxxing@gmail.com>
+Subject: [PATCH v5 2/3] scsi: target: Clear all control read scatterlist entries
+Date: Fri, 13 Nov 2026 16:38:41 +0800
+Message-ID: <20261113083848.1517595-3-pkfxxxing@gmail.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20261113083848.1517595-1-pkfxxxing@gmail.com>
 References: <20261110030809.913063-1-pkfxxxing@gmail.com> <20261110030809.913063-2-pkfxxxing@gmail.com> <20261110052827.963143-1-pkfxxxing@gmail.com> <20261111065342.1282709-1-pkfxxxing@gmail.com> <20261112094138.1390409-1-pkfxxxing@gmail.com> <92a82300-a454-4ee5-a191-0ce5a2ee58c7@acm.org>
@@ -106,39 +106,56 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-srpt_get_send_ioctx() clears ioctx->cmd, but descriptor parsing can fail
-before target_init_cmd() is called. The error path then calls
-target_send_busy(), which dereferences the NULL cmd->se_tfo pointer.
-A remote initiator can trigger this by submitting a command with an
-invalid descriptor table.
+__target_submit() only clears the first scatterlist entry of a control
+read buffer supplied by a fabric driver. Control CDB handlers can leave
+response bytes untouched, so later entries can retain stale kernel data
+that is returned to the initiator.
 
-Initialize the command before sending BUSY on descriptor parsing errors.
-Do not request an acknowledgment reference since the command will not
-be submitted to target core.
+Clear every supplied scatterlist entry before command execution. Use
+sg_zero_buffer() so entries spanning multiple pages are handled as well.
+Keep clearing the full entries, including any part beyond data_length,
+as the existing code does for the first entry.
 
-Fixes: 8b8807b9e982 ("scsi: RDMA/srpt: Fix handling of command / TMF submission failure")
+Fixes: 944981c7e106 ("target: Add control CDB READ payload zero work-around")
 Cc: stable@vger.kernel.org
+Suggested-by: Bart Van Assche <bvanassche@acm.org>
 Signed-off-by: Yong Liu <pkfxxxing@gmail.com>
 ---
- drivers/infiniband/ulp/srpt/ib_srpt.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+ drivers/target/target_core_transport.c | 19 ++++++-------------
+ 1 file changed, 6 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/infiniband/ulp/srpt/ib_srpt.c b/drivers/infiniband/ulp/srpt/ib_srpt.c
-index 43c3ff1ad8..127f256c6e 100644
---- a/drivers/infiniband/ulp/srpt/ib_srpt.c
-+++ b/drivers/infiniband/ulp/srpt/ib_srpt.c
-@@ -1597,6 +1597,13 @@ static void srpt_handle_cmd(struct srpt_rdma_ch *ch,
- 			pr_err("0x%llx: parsing SRP descriptor table failed.\n",
- 			       srp_cmd->tag);
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index 927861c30a..267f5e2cc8 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -1633,23 +1633,16 @@ static int __target_submit(struct se_cmd *cmd)
+ 	core_alua_check_nonop_delay(cmd);
+ 
+ 	if (cmd->t_data_nents != 0) {
+-		/*
+-		 * This is primarily a hack for udev and tcm loop which sends
+-		 * INQUIRYs with a single page and expects the data to be
+-		 * cleared.
+-		 */
++		/* Control CDB handlers may leave response bytes untouched. */
+ 		if (!(cmd->se_cmd_flags & SCF_SCSI_DATA_CDB) &&
+ 		    cmd->data_direction == DMA_FROM_DEVICE) {
+-			struct scatterlist *sgl = cmd->t_data_sg;
+-			unsigned char *buf = NULL;
++			struct scatterlist *sg;
++			unsigned int i;
+ 
+-			BUG_ON(!sgl);
++			BUG_ON(!cmd->t_data_sg);
+ 
+-			buf = kmap_local_page(sg_page(sgl));
+-			if (buf) {
+-				memset(buf + sgl->offset, 0, sgl->length);
+-				kunmap_local(buf);
+-			}
++			for_each_sg(cmd->t_data_sg, sg, cmd->t_data_nents, i)
++				sg_zero_buffer(sg, 1, sg->length, 0);
  		}
-+		/*
-+		 * Even on -ESHUTDOWN, target_init_cmd() initializes the command
-+		 * so it can be completed with BUSY without core submission.
-+		 */
-+		target_init_cmd(cmd, ch->sess, &send_ioctx->sense_data[0],
-+				scsilun_to_int(&srp_cmd->lun), 0,
-+				cmd->sam_task_attr, dir, 0);
- 		goto busy;
  	}
  
 -- 
