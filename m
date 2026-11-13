@@ -1,99 +1,72 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.182
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.210.200
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794567926;
-	b=GuTQPQtwKMftIdQY3DJWVEq8uNt15JBdD82SNEC1ZvjXFdEWjUg5RWk6LL04cEg/yhH+
-	 6sn9tvFuWqo9S7K+JQ6BQdfWEUSjrsjqcM4gQa46rdPEjojYcwKyJrp5Q2l63VOYuqpcP
-	 6GIn+AL+KwPW58zvgLU7Cj2rQ8BeuFY0KKWByjzNnMx83MdSA8n1aXUAU7smcI3xHQsjC
-	 Bkb+E3B20IovrfLFwjjtk+9h4CeX2vfAEVS/nF2bh1FcKRpvQAXXZvYQGkwlWMIBoZx5D
-	 BiLNXo7ZOgEFXUylZBdG6gyQmB5pn41ynA6aiTR9jsI9c0O/DDeSSk3ERmUGSxTNNRg==
+	t=1794568327;
+	b=YXeBFZzyUruIXsF8M0lpGikaDLtJQ/knLzn5qawiXAL3uOe89o5rs5SZuGiv/quSYPTv
+	 5sDpt6YAJkv19XMTcNJ2NHSyrmXpvsZ7wGd7pVWpswZeeCkAKOrmRcYfwsqqpfhF2h5bZ
+	 1NaEwaQ7srnP6SE06LKqVeHj3CqsjZaGOT1H3i5stWrdgwvB3yuxcx76s12ynbKrT+Zc1
+	 5igCkbuonKhjlcJXcfSmQNx43tdQD83mUQaLqd3YSH5umF7cZ7O1rYLbQHqssQSz0EeOu
+	 Tdr7xLno/oVAoC3sGAy1xl7zhRjyLZZUta72kiNe4s8tTjxbjJNGmiNu9tqCf8y/Pjg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794567926;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794568327;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
-	 MIME-Version:Content-Transfer-Encoding;
-	bh=xRGKkjeOSqGcAp5GlRiWRSP+3SQ9eykn8zcI3aD1Tfs=;
-	b=Wx33ruu5re/Bg9IMj/yc9K/iA8vQ5OZyPXgdYPcMAusbqZ/uzSQjM0kIhvZv2qSaIgLt
-	 RfQi8/2Z2WY9sShuQfPHQ25s1DEqUeWKG9uHvcXI9jV7W5CDM6j5rJcP4Ua88804+UFpU
-	 9r9ePbUHdrCpE4li+bCsvXNMpFbMPIDGwGoM17cUiLXAKSexpngT0jhRJaeTTr2CqnDAJ
-	 uF3psrnFVIWmupuHwRW8pE1/3jKb8ABqYQA3Tw//cUO2DciEauWnpOeKVL8XRB36qOiGe
-	 SD8yapltaCoOj/Bw3wsY+HML8bj+ca7H1vJes6mcmatTVRUkBZObA8d9FUD9FMagA1Q==
+	 X-Gm-Message-State:X-Received:Date:Mime-Version:X-Mailer:Message-ID:
+	 Subject:From:To:Cc:Content-Type;
+	bh=QVHTU60vGRb+Zvv52jZBctrQrlA3sz5HwG1d7pGxaWY=;
+	b=nlW326A6r6C1ocf4kreeIwq779jDXqy69vXyI1ZPtRFSmqZudlpcZkp2lsBG2N0Kx0X9
+	 IW4Imur20dY3+A6XZQDFcBl6IWku7F31mxsC9EoevhC9IOSH8d8xDCmLV4BsoQ41TW1P2
+	 9652sa2LW9rvMq3vrSFiq3yFIvmrMrQuwUkTUmyLm5traETeolQq3CYT7zkF+qEQ2BiAv
+	 aIEvW4KVJKCt+L0J8TRV3KcHYGW7eqD0JrTzkvwxHHS+5l/8Y7lvhjmP+FqV12S8g8Dde
+	 EIfqdwaoEP8WVPPVgHLgORX0+boi3/+sL6qCEd2W+XUYnBMXsovbiBQnj0gPPNvJGzA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=fail header.from=isslab.korea.ac.kr;
-	spf=none smtp.mailfrom=isslab.korea.ac.kr;
-	dkim=pass header.d=isslab-korea-ac-kr.20260707.gappssmtp.com header.i=@isslab-korea-ac-kr.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=kLPWmVAw;
-	arc=none smtp.remote-ip=74.125.82.182
-Received: from mail-dy1-f182.google.com (mail-dy1-f182.google.com [74.125.82.182])
+	dmarc=pass header.from=google.com;
+	spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com;
+	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=XFG031gm;
+	arc=none smtp.remote-ip=209.85.210.200
+Received: from mail-pf1-f200.google.com (mail-pf1-f200.google.com [209.85.210.200])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74742606A32E
-	for <linux-scsi@vger.kernel.org>; Fri, 13 Nov 2026 11:05:26 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 74742606A32E
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D868D606A31C
+	for <linux-scsi@vger.kernel.org>; Fri, 13 Nov 2026 11:12:06 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D868D606A31C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--stanleyjhu.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20260707.gappssmtp.com header.i=@isslab-korea-ac-kr.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=kLPWmVAw
-Received: by mail-dy1-f182.google.com with SMTP id 5a478bee46e88-3791619605cso1756771eec.0
-        for <linux-scsi@vger.kernel.org>; Fri, 13 Nov 2026 03:05:26 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=XFG031gm
+Received: by mail-pf1-f200.google.com with SMTP id d2e1a72fcca58-8b69b8c6dd5so1240342b3a.3
+        for <linux-scsi@vger.kernel.org>; Fri, 13 Nov 2026 03:12:06 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=isslab-korea-ac-kr.20260707.gappssmtp.com; s=20260707; t=1794567925; x=1795172725; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=xRGKkjeOSqGcAp5GlRiWRSP+3SQ9eykn8zcI3aD1Tfs=;
-        b=kLPWmVAwBLnXC4fO18rxl2C1rfM+F9LVv0lB8MIzPOD3yECFfO6qPjIJLMysl1OPKY
-         mYWEA9bBLKPPPfUkxOOJhm2+V2YofnCtu6qh1M08XN248lenH/sbNmSBG1SWGMkrd4Af
-         Q+mOQfagGr/OLQM1lJ1yGeGtGGwlc1lIZ4mWder3EYbKmwWpPK4Sv/kofKZP9llFGrLu
-         VOXf+e4UW+wcsR6lBWKkXwiPfEJcNA5maL+6wJjkhfdE5Mrz8WqkA/OTYgJ2sA/2aXza
-         lCh7lGfE98GrAV0SfMjlbL6zhAkV23iv59bkGUAFKPi2JoHGBUNL9hyXkY/e6lIghd+p
-         qrQA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794567925; x=1795172725;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+        d=google.com; s=20260707; t=1794568326; x=1795173126; darn=vger.kernel.org;
+        h=content-type:cc:to:from:subject:message-id:mime-version:date:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=xRGKkjeOSqGcAp5GlRiWRSP+3SQ9eykn8zcI3aD1Tfs=;
-        b=unswFbmYEN4YI6X+uBEnt6w2for2fs80vml2Y/xZzXA0uroG4zRzc6Se+g2VJ7MzJi
-         gKt5dSXctgd5b86MjjP5K/pXoQ1uAaf14HrLMjw7K6rBVKEKYTJJC0iBEZrWOqGDOF1K
-         1eUPBRcRdUOGtRuEvVY2DaaGQGRbEISjKhjYglREDRtdvQ48ONPs60yw89bX7Bmj3WI+
-         /L+a7Q1iNQBXe96twpqjVsH4ne6kashNWY4ksKxRTMOvLtGyXUTs1R4FZgXcAkYR3z4D
-         4BAm2lO0mr9IGhSK5NT8QzVddZMo27EPiXzLsRkw2xrggmnetGA55hYQnY1f2c15qGlI
-         gggw==
-X-Forwarded-Encrypted: i=1; AL+hErEFrSnhle/YaHHLbZtWgVVquhgKuDjaSpi9iZVGpXrCkusf2Ho6jlRzrvghpKMyk444RwMjOq2tN8NA@vger.kernel.org
-X-Gm-Message-State: APuU4Z9lbCm/07puseXR6NhAvafkPXu/GVDBMVFINgZ2YqnTPS9+Jd1x
-	nCoAiZS52RKOjAh6tVhYHbiAyarV2uEVMjZGEX7mrJ61GoUoLOsYi339I1pkv0f6Jm0=
-X-Gm-Gg: AYBFou1+jNCZQ3Bp8jp+oSXGSZD3QOzcPEguU0X0E/1zXDr5qmun/VSPuctgaJ249Xf
-	Kz8OKGdWP1jKbfTw3Lt76JHZEhW/9Nn8/83iCPitk9zg+gxqOKr9ylN5mRkmeg2Ajd/CjB1PFL0
-	VHEbWMhIFhp8U5Ong8Jb8yRE04eb7TgtRdw3R1hboL2PAjlCF2PLChRmYlxbIHojHiczyBOn/3q
-	ZRcTJKT53ysgjlYrr+7M8hXbzAzsqqL4Lpmi/c64daUU30KHXE3S3MrBKKUWhtvT9pi3UBgOMnZ
-	rMf3C2hmh9FIAjVwEOA65LOb5tBYrq6/PMKvPfTwfL9nk5QbYQIv/E/tW0jOL9CRP+9whxowDDr
-	iZ/hxO/odmst5NMgOHRhwMKjKUDMSHu3iXpqSlEsoEsuI0f7xqHZ7OT5ckrbQ6k9BXAljTKVqmt
-	v2aIKy7B5+4KH2EDXC3cqEfzVowBnX2xAd0fcS71HROBX0OtDOs72sU1zHr4uc8vZb5p0shn2Mw
-	9HgOr8HU90GBlpxuzJqCwj8gJqPM5flogYJNXEeZa1tK6T+TWZxDBnjgnsoixd5Thw1u++78G0C
-	gioOyhF34nUshIBYDUPmPZm6Ui58FBas9327V/TkjE7bpRX2M2K82Zr4aEcf4B3YIDlqjDHn2Wu
-	WCAxHY/jJxzlKQIYqc2HXY9AG5tzC4Qqmv3iDfw==
-X-Received: by 2002:a05:693c:2808:b0:36d:f004:ae6e with SMTP id 5a478bee46e88-3796721cff0mr1863856eec.34.1794567925307;
-        Fri, 13 Nov 2026 03:05:25 -0800 (PST)
-Received: from yhlee-960QFG.Davolink ([2406:5900:1044:110c:7e8c:590a:782b:a57b])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-379565d3e37sm7110033eec.24.2026.11.13.03.05.22
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 13 Nov 2026 03:05:24 -0800 (PST)
-From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
-To: jgross@suse.com
-Cc: sstabellini@kernel.org,
-	oleksandr_tyshchenko@epam.com,
-	xen-devel@lists.xenproject.org,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	martin.petersen@oracle.com,
-	stable@vger.kernel.org
-Subject: Re: [PATCH] xen/scsiback: unbind the IRQ before draining in-flight requests
-Date: Fri, 13 Nov 2026 20:05:15 +0900
-Message-ID: <20261113110515.147043-1-yhlee@isslab.korea.ac.kr>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <353a0b62-0396-48c4-9e5d-fae5351d6abd@suse.com>
-References: <20261109122654.30859-1-yhlee@isslab.korea.ac.kr> <353a0b62-0396-48c4-9e5d-fae5351d6abd@suse.com>
+        bh=QVHTU60vGRb+Zvv52jZBctrQrlA3sz5HwG1d7pGxaWY=;
+        b=XFG031gmS/DYARWYVF9N1b5qeQ3QCbIlj7fbLhel2SA7kiLMTbfx3DxyndMFiroata
+         Zim3QTF2gEnUpqge94EXyNyjUd02BCMWSgGOKaoe65EAotqpboFDgfToVqoRmc7jyutI
+         bg3RHw+R9iWe83kJc5PfZMGWB22Huc7WH6CZ7lTVpQjwszkCETZypTAyywn5MKcoUXHw
+         pQxZdRBylEd1U2EkAn7p2vCvspsdny1MSr1GLIpyiqNxQCDeXw6+UeOk9APupIOWNdJf
+         n/xrdOfLFBz0SNNtQ+JpvdS5yUX8+gX+PbquvAhB/srvgRNxYus+P0dDWthZsvmLPQUq
+         k5FA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1794568326; x=1795173126;
+        h=content-type:cc:to:from:subject:message-id:mime-version:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=QVHTU60vGRb+Zvv52jZBctrQrlA3sz5HwG1d7pGxaWY=;
+        b=xnWbRZoixdPbYp3kX2PdnDa7O2g8KncfVE/Uu6N4ymt2/zZkOg/MWngOjRWYnj5T0u
+         BLiqQZbVYCM2IymF1ZE7Ipe8w8NwZJ3h2ANVM0jkWMmif8K7ZE9rrZeSvy8gDUOtYYaO
+         +fwZ4CZRl9CSS9z22cOhZBiyMZzgFho9Xxt9t4pZIPk1pLyy6CiGw1Z1+23x7rCTxxfB
+         6ALpSEVXAwO9/6MqanQKLO+UEInCdl17xU191Rlkte9s/KmHrxdIslTDgpYb/1gH+2Kh
+         jR5kMHEBtEk8EcpoSsdlafRECZWBzDplW5cZ46isnWTBeQsBS56lsO1XhfJaBDHtACG6
+         djkw==
+X-Gm-Message-State: APuU4Z8dI9LVgZebGn2otemxOV750/MgIhaFJQs4KO8bxcTZ2a7l/yXf
+	pK87thnvsu7u0MAfXIVTL3vTYUhElw6rDJDOmlpVYg7XMMN7E9UZQuUfmUrvKZLi3VDHx6ICE2g
+	TGPPh0AHOvGpx02O+3QybzpBVRMzLmw5+kASifK8MjUxrl95IWuJp1HR7Y8SdO9y3AwdGLqBLE2
+	OFUuYjcMuh4p72Yv5tis13E16+1CSHJlE4zcZEPZDG23SiNMAjlyX77fM7weNbkUE=
+X-Received: from pfbff16.prod.google.com ([2002:a05:6a00:2f50:b0:88c:682e:9aab])
+ (user=stanleyjhu job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a05:6a00:4fc3:b0:89f:b166:bde6 with SMTP id d2e1a72fcca58-8beb8cc8ad6mr2186766b3a.54.1794568325401;
+ Fri, 13 Nov 2026 03:12:05 -0800 (PST)
+Date: Fri, 13 Nov 2026 19:12:00 +0800
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -102,17 +75,65 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.56.0.611.g1030f0b940-goog
+Message-ID: <20261113111202.3551341-1-stanleyjhu@google.com>
+Subject: [PATCH v2 0/2] scsi: ufs: core: Fix device management and PM recovery
+From: Stanley Jhu <stanleyjhu@google.com>
+To: linux-scsi@vger.kernel.org, "Martin K. Petersen" <mkp@kernel.org>
+Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+	Bart Van Assche <bvanassche@acm.org>, Alim Akhtar <alim.akhtar@samsung.com>, 
+	Bean Huo <beanhuo@micron.com>, Peter Wang <peter.wang@mediatek.com>, 
+	Brian Kao <powenkao@google.com>, Can Guo <can.guo@oss.qualcomm.com>, 
+	"Bao D. Nguyen" <quic_nguyenb@quicinc.com>, Hongjie Fang <hongjiefang@asrmicro.com>, 
+	Praveen Talari <praveen.talari@oss.qualcomm.com>, Hoyoung Seo <hy50.seo@samsung.com>, 
+	John Garry <john.garry@linux.dev>, Hyeoncheol Jeong <hyenc.jeong@samsung.com>, 
+	Jens Axboe <axboe@kernel.dk>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, 
+	Stanley Jhu <stanleyjhu@google.com>, linux-block@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-On Wed, Nov 11, 2026 at 08:58:51AM +0100, Juergen Gross wrote:
-> Reviewed-by: Juergen Gross <jgross@suse.com>
+A UFS power management callback holds hba->dev_cmd.lock and the only
+reserved tag while it sends device management commands. When one of
+these commands times out, ufshcd_eh_timed_out() calls
+ufshcd_link_recovery() inline, which needs the same lock and reserved
+tag. ufshcd_err_handler() also calls ufshcd_link_recovery()
+concurrently with an active power management callback when
+pm_op_in_progress is set.
 
-Thanks, Juergen.  v2 changes the code after the Sashiko report: it now
-disables the IRQ before the drain and unbinds it only after the drain,
-so I did not carry your Reviewed-by over:
+Patch 1 stops the host controller in ufshcd_eh_timed_out() instead of
+running link recovery inline, recovers the link in
+ufshcd_set_dev_pwr_mode() for START STOP UNIT, and forces
+ufshcd_err_handler() for timed-out reserved requests.
 
-https://lore.kernel.org/all/20261113110036.146860-1-yhlee@isslab.korea.ac.kr/
+Patch 2 removes the pm_op_in_progress shortcut from
+ufshcd_err_handler() so error handling waits for the callback, and
+recovers the link in __ufshcd_wl_resume() when START STOP UNIT fails
+while a fatal error is scheduled.
 
-Best regards,
-Yehyeong Lee
+Based on mkp/scsi 7.4/scsi-fixes.
+
+Differences from v1 [1]:
+- Replace patches 1/9 to 8/9 with patch 1/2 per Bart Van Assche [2]
+  and drop the external series dependency.
+- Rebase v1 patch 9/9 onto patch 1/2 as patch 2/2 and recover the
+  link in __ufshcd_wl_resume() on UFSHCD_STATE_EH_SCHEDULED_FATAL.
+
+[1] https://lore.kernel.org/r/20261112051542.1539779-1-stanleyjhu@google.com
+[2] https://lore.kernel.org/r/59c577b6-4749-4edc-9dd9-a83f2a124adb@acm.org
+
+Brian Kao (1):
+  scsi: ufs: core: Do not recover the link concurrently with a PM
+    callback
+
+Stanley Jhu (1):
+  scsi: ufs: core: Recover link in ufshcd_set_dev_pwr_mode() on timeout
+
+ drivers/ufs/core/ufshcd.c | 62 +++++++++++++++++++++------------------
+ 1 file changed, 33 insertions(+), 29 deletions(-)
+
+
+base-commit: e550f2b2b4aab4c5f12db89d04d8978ce4ed7b4e
+-- 
+2.56.0.611.g1030f0b940-goog
+
