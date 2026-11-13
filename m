@@ -1,57 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794531266;
-	b=tRCT8XawTNYy/nMVaRsEnO8LhhrHfOMEr/Ckzg/8+78wvi3Dzqe/3Tyku9YXyUXAE5/N
-	 5f6Ufm+2sxVP8mkOyIn62hqNFdjtvuoIOqA8/NTXnPWtsqwL4GRsVt1hD3rOzRicioIyB
-	 KX3BWosGBHeTJzmVTFVQv/4jbb8JP5ppTkVwQ1g9tRVko637CIYuMaa6IYp9ycSb4dSMK
-	 LfTQnWWczObgjOdwSUFxW4hKKiE3Xk5DcleW81ZWAh6N3HiAoYmCirJA6hYi4dKLpGv7k
-	 audtYCNwSsUS5y7/iDNdOGUT0AD7Uugju1egNpnjn75ZLFJ8VDk4eOQs3XyogE1HKVQ==
+	t=1794531733;
+	b=ivBSXJm52cbJ1EprMPeQraQg2TzmzQROZkuTaZgeuEfNZJfF3d5ZwaooK/vBpfOoNGiH
+	 R1zIwJbAfH8jriXuOPTzx42ETVVj72SiAHyCnYDZL0TqGxIGSoFLEfoyXaY04sK0qQ/aK
+	 UcyLiWp7WlzwVTdM4SPhcy4CHV049KXogTjOtRxp3l8s3IwEZe2ccwma6cTR1M9GEESJU
+	 jjxn7jUjO+XjGtqdrMcRigz5KS5+JSMkeZ4NZ0hoAC3E8BQqhVbyxrD9vy50JlYyYpVSW
+	 CYHf3NZ0ehUkh0XO3BEaKDAEgQDkGxE7xJPhqhMnbVnJRUwC8xz1QCDDveQb6j9uq/Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794531266;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794531733;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=PqhPK/Jk3/DpbkTuDGFXIWB4SGkqiiRV47uDGX0EgF0=;
-	b=dyxAb0KXlPu75ZsZfbCT2lHBn+58kCkp9JRxKAUhUz4FDJ2hA0qG09BjyAgkUTcEONIe
-	 dn3feGfdUy+WnqieX8aAtwzxdO3cGIsKgrHSUa5da/HBy7S/K1qQeUfHEePxxY6byEDPn
-	 EzgXDQbIXq7euUyqgKDn+PNHDSPfrCmXyfyBnpWMi0L+7shexOODMJnktQS+GHVt5+7fT
-	 V2vHwf2bRXBjBFr3mi7TNaZ30j5rQaqtQ+wDcwcFW0VFoC4+/WDfsXI+s9pPuZpiglvqF
-	 +k4QfWb1THvnq0mdaNhWdmNv6oqRuZGskiXnuZhv7NrwFR3khH5gH//aKRPXa56ABXQ==
+	bh=6FXsKmLiFW0Ld3CWWRI8xwHKnNy/2GUJEVqJy3XvepI=;
+	b=VSqKUitXLlKin7HLd13yNWhPJ2zY+9tICAA81IlcLy28RsWJ6olWKdffM8h5qfF4UDNp
+	 9PCwMwy2xdLS5LiNaYITCo/njAfpV7Ie5TT0C649bKXujqb4OAt9eE3OjTjaVO4AcgyhO
+	 i9gVdoeaORjlo+EKzk6c04eFWo2E2PwxQcO4soEZkQMXjg3btgBw8o0W40iaXIRW8t54i
+	 sWtIlqaoZ9CYgnZbbdh8RWknoOq3CFBaor2g2R0Mt/szA4VMgmcPkBcdUdyRh5gqjoPkg
+	 rJJ+0ahy64fHR6vFno3iDAD03Xwd0mvPI0nOgGpDk5izNVUpB+zvg3nCtKZAcCtWZSQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=koFCUEew;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=k0t7KcBZ;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A4068606A331;
-	Fri, 13 Nov 2026 00:54:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A208606A327;
+	Fri, 13 Nov 2026 01:02:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=koFCUEew
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 075501F000C7;
-	Fri, 13 Nov 2026 00:54:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=k0t7KcBZ
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0E1711F000C4;
+	Fri, 13 Nov 2026 01:02:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794531266;
-	bh=PqhPK/Jk3/DpbkTuDGFXIWB4SGkqiiRV47uDGX0EgF0=;
+	s=k20260515; t=1794531733;
+	bh=6FXsKmLiFW0Ld3CWWRI8xwHKnNy/2GUJEVqJy3XvepI=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=koFCUEew0o4VeHt00YpJ8NfN990RM0X0ACm8TBycC6KPB8yz/aQ727k7OOEOT2qzI
-	 IZfeFIlVdBN1tQkhzYTAe+KH8xq6kjkmK/cNwFlZP4ON8TmUGTR6NZCew8WlxKTCSA
-	 aPuTH88X+fxFKuhPkwJYt5Vr+wBW98sQOxUu6j/rPF3Sct5mUjY9/PL5qvIodcRQ6r
-	 NTTO02lw7+OrW9n0wh5ZP48XwbP8qYzTHauP7WKixJgFuAElAqfB/nyS4eQGXFvs/G
-	 7WIIw5wRsGRXbRawRDM2KOEVWCAryQUweXNX9mM/ygS0hVghgXYENUQ5lUHdt2cSPF
-	 LPS3kyl8t2Tzw==
-Message-ID: <sashiko-outbox-212009@kernel.org>
+	b=k0t7KcBZVYUfxJbeFtyWoRwO/CImu6TDNRjA+jpS1q35gKFBxVtXU1e4W63kisExf
+	 aR/8MzRONPFdkN3bbAJiDZR44T+YioW9rrv7OQdpYLbCK2apLckNzjqLUfRpptvN6n
+	 2+6x/cZIksx07jE6h9xt98Fa+gOms99ZslbuoHmbV5xh3K4eYbYm2/WUY8oZnNekVD
+	 UQzSqJJ/c2LhJP+D92fLOXeJw0RLhDoHKUvw21P8c7fXjXj/bM9dwrnWDH4s5vcW6c
+	 5nIR6JxFIDbs61ndXBLIKypb8FShDfGCXzQfeL+yTX9SonHZ9vYpHuuiNglxa2fdX0
+	 +Y30n8gUJGh9w==
+Message-ID: <sashiko-outbox-212028@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 2/3] usb: uas: fail command submission on fatal USB
- errors
+Subject: Re: [PATCH 1/3] usb: uas: complete inflight commands on status URB
+ error
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Sarthak Kukreti" <sarthakkukreti@google.com>
 Cc: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
-In-Reply-To: <20261113003536.3622755-3-sarthakkukreti@google.com>
+In-Reply-To: <20261113003536.3622755-2-sarthakkukreti@google.com>
 References: <20261113003536.3622755-1-sarthakkukreti@google.com>
- <20261113003536.3622755-3-sarthakkukreti@google.com>
+ <20261113003536.3622755-2-sarthakkukreti@google.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 13 Nov 2026 00:54:25 +0000
+Date: Fri, 13 Nov 2026 01:02:12 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -61,163 +61,215 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 
-Thank you for your contribution! Sashiko AI review found 3 potential
+Thank you for your contribution! Sashiko AI review found 4 potential
 issues to consider:
-- [Medium] usb: uas: command hang and cmd_urb leak in
-  uas_queuecommand_lck()
-- [Medium] usb: uas: orphaned sense URB on error in
-  uas_queuecommand_lck()
-- [Low] usb: uas: missing Fixes trailer for uas_queuecommand_lck() fix
+- [High] usb: uas: uas_stat_cmplt() orphans status URBs in
+  devinfo->sense_urbs
+- [Medium] usb: uas: uas_stat_cmplt() sets DID_NO_CONNECT on
+  non-disconnect errors
+- [Medium] usb: uas: uas_stat_cmplt() skips commands without
+  COMMAND_INFLIGHT
+- [Medium] usb: uas: uas_stat_cmplt() drops lock mid-loop and aborts new
+  commands
 It also noticed 1 related pre-existing issue this patch does not
 introduce:
-- [Critical] usb: uas: use-after-free in uas_queuecommand_lck() via
-  negative qdepth [1]
+- [Critical] usb: uas: unvalidated IU length causes false success in
+  uas_sense() [1]
 --
 
-commit d4b0bad1326a981836c51fc29f205193a0a134fb
+commit feee884d21c2440f5410ec8ac6400834915e4ef7
 Author: Sarthak Kukreti <sarthakkukreti@google.com>
 
-> usb: uas: fail command submission on fatal USB errors
->=20
-> uas_queuecommand_lck() only treats -ENODEV from uas_submit_urbs() as a
-> fatal submission error. When a link drops or an endpoint is disabled
-> while hub_wq is frozen, usb_submit_urb() can also fail with -ESHUTDOWN,
-> -ENOENT, or -EHOSTUNREACH, causing uas_queuecommand_lck() to return
-> SCSI_MLQUEUE_DEVICE_BUSY or queue retry work. In addition, if status URB
-> submission succeeds before command URB submission fails with no inflight
-> URBs, calling scsi_done() directly leaks the unsubmitted cmd_urb.
->=20
-> Fail commands with DID_NO_CONNECT on -ESHUTDOWN, -ENOENT, and
-> -EHOSTUNREACH in uas_queuecommand_lck(), and free unsubmitted URBs
-> before calling scsi_done().
->=20
-> Signed-off-by: Sarthak Kukreti <sarthakkukreti@google.com>
+usb: uas: complete inflight commands on status URB error
 
-[Severity: Low]
-Since this fixes the incomplete fatal submission error handling and URB
-leak in uas_queuecommand_lck(), should it include Fixes: tags for
-eb2a86ae8c54 ("USB: UAS: fix disconnect by unplugging a hub") and
-cd5432c71235 ("USB: UAS: return ENODEV when submit urbs fail with device
-not attached")?
+This commit completes inflight SCSI commands with DID_NO_CONNECT and unlinks
+their data URBs when a status URB fails with a non-unlink error in
+uas_stat_cmplt(), while preserving existing non-DID_OK host status bytes in
+uas_data_cmplt().
 
 > diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
-> index 3aadf4c88c5c2..843860687542d 100644
+> index 8655edbd66b16..3aadf4c88c5c2 100644
 > --- a/drivers/usb/storage/uas.c
 > +++ b/drivers/usb/storage/uas.c
-> @@ -743,11 +743,13 @@ static enum scsi_qc_status uas_queuecommand_lck(str=
-uct scsi_cmnd *cmnd)
->  	 * a command that has finished is a success for the purpose
->  	 * of queueing, no matter how fatal the error
->  	 */
-> -	if (err =3D=3D -ENODEV) {
-> +	if (err =3D=3D -ENODEV || err =3D=3D -ESHUTDOWN || err =3D=3D -ENOENT ||
-> +	    err =3D=3D -EHOSTUNREACH) {
->  		if (cmdinfo->state & (COMMAND_INFLIGHT | DATA_IN_URB_INFLIGHT |
->  				DATA_OUT_URB_INFLIGHT))
->  			goto out;
-
-[Severity: Medium]
-Can jumping to out here leak cmdinfo->cmd_urb and hang the command when
-uas_submit_urbs() fails after submitting a data URB on a streams-enabled
-device?
-
-In uas_submit_urbs(), data URBs are submitted before cmd_urb, and
-SUBMIT_CMD_URB is only cleared (and COMMAND_INFLIGHT set) once cmd_urb is
-submitted:
-
-drivers/usb/storage/uas.c:uas_submit_urbs() {
-	...
-	if (cmdinfo->state & SUBMIT_CMD_URB) {
-		usb_anchor_urb(cmdinfo->cmd_urb, &devinfo->cmd_urbs);
-		err =3D usb_submit_urb(cmdinfo->cmd_urb, GFP_ATOMIC);
-		if (err) {
-			usb_unanchor_urb(cmdinfo->cmd_urb);
-			uas_log_cmd_state(cmnd, "cmd submit err", err);
-			return err;
-		}
-		cmdinfo->cmd_urb =3D NULL;
-		cmdinfo->state &=3D ~SUBMIT_CMD_URB;
-		cmdinfo->state |=3D COMMAND_INFLIGHT;
-	}
-	return 0;
-}
-
-When cmd_urb submission fails after DATA_IN_URB_INFLIGHT or
-DATA_OUT_URB_INFLIGHT is set, jumping to out skips
-uas_free_unsubmitted_urbs(cmnd) and leaves SUBMIT_CMD_URB set and
-COMMAND_INFLIGHT clear.  When the in-flight data URB later completes while
-devinfo->resetting is 0, uas_data_cmplt() sees SUBMIT_CMD_URB set and
-returns early without calling uas_try_complete(), while uas_stat_cmplt()
-skips commands without COMMAND_INFLIGHT.  The command remains stuck in
-devinfo->cmnd[idx] until the SCSI error handler times out, and
-uas_wait_for_pending_cmnds() in uas_suspend() times out after 5 seconds
-with -ETIME.
-
+> @@ -310,9 +310,49 @@ static void uas_stat_cmplt(struct urb *urb)
+>  	bool success;
 > =20
-> +		uas_free_unsubmitted_urbs(cmnd);
->  		set_host_byte(cmnd, DID_NO_CONNECT);
->  		scsi_done(cmnd);
->  		goto zombie;
+>  	if (status) {
+> -		if (status !=3D -ENOENT && status !=3D -ECONNRESET && status !=3D -ESH=
+UTDOWN)
+> +		if (status =3D=3D -ENOENT || status =3D=3D -ECONNRESET)
+> +			goto bail;
+> +		if (status !=3D -ESHUTDOWN)
+>  			dev_err(&urb->dev->dev, "stat urb: status %d\n", status);
+> -		goto bail;
+> +
+> +		spin_lock_irqsave(&devinfo->lock, flags);
+> +		if (devinfo->resetting)
+> +			goto out;
+> +
+> +		for (idx =3D 0; idx < devinfo->qdepth; idx++) {
+> +			cmnd =3D devinfo->cmnd[idx];
+> +			if (!cmnd)
+> +				continue;
+> +			cmdinfo =3D scsi_cmd_priv(cmnd);
+> +			if (!(cmdinfo->state & COMMAND_INFLIGHT))
+> +				continue;
 
 [Severity: Medium]
-Does completing cmnd here leave an orphaned sense URB anchored on
-devinfo->sense_urbs when uas_submit_sense_urb() succeeded before a later
-URB submission failed?
+Does skipping commands without COMMAND_INFLIGHT leave partially submitted
+commands in devinfo->cmnd[] hung?
 
-uas_submit_urbs() submits the sense URB first and anchors it to
-devinfo->sense_urbs.  If cmd_urb (or the first data URB) then fails with
-no data URB in flight, uas_free_unsubmitted_urbs() frees only cmd_urb and
-the data URBs, and scsi_done() completes cmnd without unlinking the sense
-URB.  If status_pipe has not been flushed while hub_wq is frozen,
-usb_wait_anchor_empty_timeout(&devinfo->sense_urbs, 5000) in
-uas_wait_for_pending_cmnds() will time out with -ETIME during suspend or
-reset, and the tag can be reused while the old sense URB is still queued.
-
-[Severity: Critical]
-This problem wasn't introduced by this patch, but can a negative
-devinfo->qdepth [1] cause a use-after-free in uas_queuecommand_lck()?
-
-If usb_alloc_streams() fails during reset or resume,
-uas_configure_endpoints() stores the negative error code directly in
-devinfo->qdepth:
-
-drivers/usb/storage/uas.c:uas_configure_endpoints() {
-	...
-	} else {
-		devinfo->qdepth =3D usb_alloc_streams(devinfo->intf, eps + 1,
-						    3, MAX_CMNDS, GFP_NOIO);
-		if (devinfo->qdepth < 0)
-			return devinfo->qdepth;
-	...
-}
-
-When subsequent commands enter uas_queuecommand_lck(), the loop condition
-idx < devinfo->qdepth is immediately false with idx =3D=3D 0, and the
-queue-full check idx =3D=3D devinfo->qdepth is bypassed:
+In uas_submit_urbs(), uas_submit_sense_urb() submits the status URB and
+clears SUBMIT_STATUS_URB before the data and command URBs are submitted.
+If a data URB is submitted and cmd_urb submission then fails with -ENODEV,
+uas_queuecommand_lck() records cmnd in devinfo->cmnd[idx] with
+SUBMIT_CMD_URB still set and COMMAND_INFLIGHT unset:
 
 drivers/usb/storage/uas.c:uas_queuecommand_lck() {
 	...
-	for (idx =3D 0; idx < devinfo->qdepth; idx++) {
-		if (!devinfo->cmnd[idx])
-			break;
-	}
-	if (idx =3D=3D devinfo->qdepth) {
-		spin_unlock_irqrestore(&devinfo->lock, flags);
-		return SCSI_MLQUEUE_DEVICE_BUSY;
-	}
+	if (err =3D=3D -ENODEV) {
+		if (cmdinfo->state & (COMMAND_INFLIGHT | DATA_IN_URB_INFLIGHT |
+				DATA_OUT_URB_INFLIGHT))
+			goto out;
 	...
 out:
 	devinfo->cmnd[idx] =3D cmnd;
-	...
 }
 
-Every new command then overwrites devinfo->cmnd[0] and reuses tag 1,
-abandoning any in-flight command at slot 0 and causing a use-after-free
-when its URBs complete; uas_sdev_configure() also passes devinfo->qdepth - 2
-to scsi_change_queue_depth().
+When that command's status URB fails here, uas_stat_cmplt() skips it
+because COMMAND_INFLIGHT is not set, and when its data URB finishes in
+uas_data_cmplt(), the SUBMIT_CMD_URB check also skips uas_try_complete(),
+leaving the command pending until the SCSI timeout fires.  Similarly, if
+uas_submit_urbs() queued the command to devinfo->work after submitting the
+status URB, skipping it here consumes the status URB before uas_do_work()
+submits cmd_urb, and if an inflight command has IS_IN_WORK_LIST set, not
+clearing IS_IN_WORK_LIST before dropping devinfo->lock below allows
+uas_do_work() to resubmit URBs for the command being aborted.
 
-[1] https://sashiko.dev/#/bug/linux-30cdc430-800b-42d3-908f-c7a0b944e7f9
+> +
+> +			if (cmdinfo->state & DATA_IN_URB_INFLIGHT)
+> +				data_in_urb =3D usb_get_urb(cmdinfo->data_in_urb);
+> +			if (cmdinfo->state & DATA_OUT_URB_INFLIGHT)
+> +				data_out_urb =3D usb_get_urb(cmdinfo->data_out_urb);
+> +			cmdinfo->state &=3D ~COMMAND_INFLIGHT;
+> +			set_host_byte(cmnd, DID_NO_CONNECT);
+
+[Severity: Medium]
+Should non-disconnect status URB errors set DID_ERROR instead of
+DID_NO_CONNECT?
+
+This branch runs for any status URB error other than -ENOENT and
+-ECONNRESET, including endpoint stalls (-EPIPE) and transient USB transfer
+errors (-EPROTO, -EILSEQ, -ETIME) on a still-connected device.
+Because scsi_decide_disposition() treats DID_NO_CONNECT as an immediate
+non-retryable failure without invoking SCSI error recovery, all inflight
+block I/O fails immediately with -EIO, a stalled status endpoint is never
+reset, and sd_sync_cache() (which ignores DID_NO_CONNECT) silently reports
+a failed SYNCHRONIZE_CACHE as successful.
+
+> +			uas_try_complete(cmnd, __func__);
+
+[Severity: High]
+When multiple commands are in flight and one status URB fails, does
+completing every command in devinfo->cmnd[] without unlinking
+devinfo->sense_urbs orphan the remaining commands' status URBs?
+
+Each submitted command allocates its own status URB anchored in
+devinfo->sense_urbs (bound to stream_id =3D cmdinfo->uas_tag when USB 3.0
+streams are enabled).  When one status URB fails, this loop clears
+devinfo->cmnd[idx] and calls scsi_done() for all other inflight commands
+while their status URBs remain active in the HCD.
+
+Those still-anchored status URBs cause uas_wait_for_pending_cmnds() in
+uas_suspend() and uas_pre_reset() to time out waiting on
+devinfo->sense_urbs after 5 seconds.  In addition, if another SCSI command
+is queued before the orphaned status URB finishes, it reuses the freed
+tag slot in devinfo->cmnd[idx]:
+
+CPU0                                  CPU1
+uas_stat_cmplt(urb_A)
+  /* fails with -EPROTO */
+  /* completes cmnd_B at idx =3D 1 */
+  devinfo->cmnd[1] =3D NULL
+  scsi_done(cmnd_B)
+                                      uas_queuecommand_lck(cmnd_C)
+                                        /* reuses idx =3D 1, submits urb_C =
+*/
+                                        devinfo->cmnd[1] =3D cmnd_C
+uas_stat_cmplt(urb_B)
+  /* orphaned status URB for idx =3D 1 */
+  uas_try_complete(cmnd_C)            <-- completes cmnd_C prematurely
+
+> +
+> +			if (data_in_urb || data_out_urb) {
+> +				spin_unlock_irqrestore(&devinfo->lock, flags);
+> +				if (data_in_urb) {
+> +					usb_unlink_urb(data_in_urb);
+> +					usb_put_urb(data_in_urb);
+> +					data_in_urb =3D NULL;
+> +				}
+> +				if (data_out_urb) {
+> +					usb_unlink_urb(data_out_urb);
+> +					usb_put_urb(data_out_urb);
+> +					data_out_urb =3D NULL;
+> +				}
+> +				spin_lock_irqsave(&devinfo->lock, flags);
+> +				if (devinfo->resetting)
+> +					break;
+> +			}
+> +		}
+> +		goto out;
+>  	}
+> =20
+>  	idx =3D be16_to_cpup(&iu->tag) - 1;
+
+[Severity: Medium]
+Can dropping devinfo->lock inside the loop cause later iterations to abort
+newly queued commands?
+
+When a command at slot idx has a data URB in flight, uas_stat_cmplt()
+drops devinfo->lock to call usb_unlink_urb() and then continues scanning
+higher indices:
+
+CPU0                                  CPU1
+uas_stat_cmplt()
+  /* idx =3D 0 has data_in_urb */
+  spin_unlock_irqrestore(&devinfo->lock)
+  usb_unlink_urb(data_in_urb)
+                                      uas_queuecommand_lck()
+                                        /* places new cmd at idx =3D 1 */
+                                        devinfo->cmnd[1] =3D new_cmnd
+  spin_lock_irqsave(&devinfo->lock)
+  /* loop advances to idx =3D 1 */
+  set_host_byte(new_cmnd, DID_NO_CONNECT)
+  uas_try_complete(new_cmnd, ...)     <-- aborts newly queued command
+
+[Severity: Critical]
+This problem wasn't introduced by this patch, but can a truncated status
+IU in uas_stat_cmplt() cause uas_sense() to report a failed command as
+SAM_STAT_GOOD [1]?
+
+When status is 0, uas_stat_cmplt() dispatches IU_ID_STATUS to uas_sense()
+without checking urb->actual_length:
+
+drivers/usb/storage/uas.c:uas_sense() {
+	struct sense_iu *sense_iu =3D urb->transfer_buffer;
+	struct scsi_device *sdev =3D cmnd->device;
+
+	if (urb->actual_length > 16) {
+		...
+	}
+
+	cmnd->result =3D sense_iu->status;
+}
+
+Because the status URB transfer buffer is allocated with kzalloc(), a
+short packet of 4 to 6 bytes has a valid iu_id and tag while
+sense_iu->status at offset 6 remains zero (SAM_STAT_GOOD), completing the
+command as successful and silently corrupting read or write I/O.
+
+[1] https://sashiko.dev/#/bug/linux-78c5dae0-c194-40ff-a554-3a4de1859b86
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261113003536.3622=
-755-1-sarthakkukreti@google.com?part=3D2
+755-1-sarthakkukreti@google.com?part=3D1
