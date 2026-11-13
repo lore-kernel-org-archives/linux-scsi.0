@@ -1,53 +1,56 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=45.254.49.198
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794579674;
-	b=MMQS8Gbq/RISozcP+7ECnXdSnKYrjh4At6QZZIP3GZimm3fR+BNcXUmbHWAqvqhmnq0d
-	 jbwVvjNvyCSAgC0f+TVvLPycoi5bjJVdc9y0v09yQyFZKHyDqOFr0JP1s2AQRuWhgE2zL
-	 eZUcLe7j9hXOdOod005ybJb9LlLmC70wF8E/AqLrHY15/6OGSgmUCHw7zcWPfqzFf4i6P
-	 ujx0aUZ4ZslWMit/10a9I/GZPiELxFYiN729LgTmnD6jrVTOKXwRSYmT9IsX7yQqlQ0QO
-	 h0YgFWYD/iDPk3q8VZOG+IfMyTkUDEHFtlrUaiLnNFeIw1/y8gl/Wq0cDf5btj4k6Pg==
+	t=1794580560;
+	b=jpjlX65E7dVlOQowyVsBX+/I2tO4Y4NCxTsyS7retd/6yZhteIS7GZQtseTm9LVMKIUW
+	 VKv+PbbKNUmyFT5AJhMEvYbfAFNJyCBt+Q5nCXIwaBL63GQ5wGwu2c8LewXohAi4E9Fin
+	 NMpZ4pEMPZmdDRdCRmCETAsOnVYbAziKcnqx8VS+X8tHcXM0T56A9L/7P5CnZfG4AOj6K
+	 AZlgrJWkpy6wfS7sZUP6WC44fWRNPSBxtKQD0B+lH2/tdWj76kgXk78SZRSBGOBuTxc7X
+	 2D+Wy247LXVOLizrdz/0RBnLWGXvNB7VoFKQ9KfkbiQfDHA9c6OLAzQVGvGw1s8T8Lw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794579674;
-	h=DMARC-Filter:Received:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
-	 MIME-Version:Content-Type:Content-Transfer-Encoding:X-HM-Tid:
-	 X-HM-MType:X-HM-Spam-Status:DKIM-Signature;
-	bh=DxWC+pcSmHofo/IdAoJOznXzCrZSe1TqYJbrRyVivSA=;
-	b=ufK2aELETBiFiplKSw/8v7CaWwSHj1Jd75MDTJE6tvQSk6iyLcM3sN/qwbuDiqABHTf2
-	 TrtlG544NzQybKuEhJ6Xhx15U7v1ZHoeZc5V8dymlionN/H9dxB5c5Qy0Ue+Ap7mde3N6
-	 uAz6dxCCuRG9x5aj68QiR2r8uE6Qg1n3TrTbXodinDmvgRf2D88V3VaRBfNf84F4w+tuF
-	 tgaOFghY9IhKbsskbSLt5pdLQbloweGaRtX84FNKb6O8CsvU8XuncuiBKvRKJU2v113Il
-	 i4fvzX94Qu9C6ZaEkSn+LFtA1bjXIoJin1Y7/SLQLrn/qAsPLB82i2bf3t4u8S4EncQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794580560;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=6CApjWzc8o2s4OsWyzjbJDLb4t6rT+GkzIwDqfO2u3M=;
+	b=zHAwjDt1NQ/vs7P75gyIB6Fs6Q02MlklPhnvh/vprHs1RgUjE+cnFh1HjPvfJHpzYZ0g
+	 e4doL7RlElXa4YPFQiVroxTt+mOOlljC0hxBb157cntcxo7xBrEy6P4KIt2bvgJFdYyGH
+	 K78avd3k/qQLL4JiDnhAf37zeh+aAntZuXsrQimjRUoYMsDII6eD1IQPeoKWHjInBCa1o
+	 7VBy8+BGDQQvED+DnJxCQABYAiboy3/QsuqQw9rys/BA+FUi1X8jsd6cSgyn9BKoJT5FE
+	 LychvWkLFICuwEz0FF3FfcWyob8bNOykXYa9oTBMbt/hARfsUN6YJjUEudXjSunmdFw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=mail.sdu.edu.cn;
-	spf=pass smtp.mailfrom=mail.sdu.edu.cn;
-	dkim=pass header.d=mail.sdu.edu.cn header.i=@mail.sdu.edu.cn header.a=rsa-sha256 header.s=default header.b=THoYaZJ1;
-	arc=none smtp.remote-ip=45.254.49.198
-Received: from mail-m49198.qiye.163.com (mail-m49198.qiye.163.com [45.254.49.198])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Bxf25c1T;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3ED2D606A327;
-	Fri, 13 Nov 2026 14:21:11 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3ED2D606A327
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mail.sdu.edu.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mail.sdu.edu.cn
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 24CB8606A331
+	for <linux-scsi@vger.kernel.org>; Fri, 13 Nov 2026 14:36:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=mail.sdu.edu.cn header.i=@mail.sdu.edu.cn header.a=rsa-sha256 header.s=default header.b=THoYaZJ1
-Received: from lgs.. (unknown [101.76.249.61])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 549b5a8a5;
-	Fri, 13 Nov 2026 22:21:06 +0800 (GMT+08:00)
-From: Guangshuo Li <liguangshuo@mail.sdu.edu.cn>
-To: Nilesh Javali <njavali@marvell.com>,
-	Manish Rangankar <mrangankar@marvell.com>,
-	GR-ETH-Storage-Upstream@marvell.com,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <mkp@kernel.org>
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: qedi: Fix potential PF parameter leaks on allocation failure
-Date: Fri, 13 Nov 2026 22:21:05 +0800
-Message-ID: <20261113-4e14e563a1-scsi-qedi@mail.sdu.edu.cn>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Bxf25c1T
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CAA1E1F000C4;
+	Fri, 13 Nov 2026 14:35:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794580560;
+	bh=6CApjWzc8o2s4OsWyzjbJDLb4t6rT+GkzIwDqfO2u3M=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=Bxf25c1TZSS+X2WyAHlvF4K7fWlZXX5qBqCLQaXO2ArW4wGc+agZCB6pfdZcDJ7Z3
+	 LHUd3EBRDab+glI+oUp4XU1IyRfvsTn4HMTeAZrArTb9an05wY1tDA575j2/gocDgt
+	 6hJjxG99NuyoJy4wQusHBhIKotVT87/y79Q19zPPlQCUU6xuMMKYpEbMClCZlyPFHY
+	 QQmdxDI8EswIQIPuam9uODoScNg4n6bvTcTO4OgXy/ITdmpgtbSz+0OkN5bmj2Mood
+	 bKfakvodsxQF0Y3hzLdwglih6C15w16PCNs3tTPpu4N5DaEnj+Pri+vMgbQiwoGgPO
+	 vfDTckqjkcPWw==
+Message-ID: <sashiko-outbox-212996@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] scsi: mptfusion: Fix potential chain array leaks on
+ attach failure
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Guangshuo Li" <liguangshuo@mail.sdu.edu.cn>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20261113-4e14e563a1-scsi-mptfusion@mail.sdu.edu.cn>
+References: <20261113-4e14e563a1-scsi-mptfusion@mail.sdu.edu.cn>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Fri, 13 Nov 2026 14:35:59 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -56,48 +59,63 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-HM-Tid: 0aa1d54895ce03a1kunmce7f27b048ba9
-X-HM-MType: 10
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVlDHh1CVhpMTE5ISkgfGUxLT1YeHw
-	5VEwETFhoSFyQUDg9ZV1kYEgtZQVlKS0pVTE1VSU9CVU1KWVdZFhoPEhUdFFlBWU9LSFVKS0lCQ0
-	NMVUpLS1VLWQY+
-DKIM-Signature: a=rsa-sha256;
-	b=THoYaZJ1kEZoGMg/ODGTcUDmzlfiDtBYEGbhU/a/9rSb0vwbRS8KkTNhLQZ6bvy5XxDbELWmD+WH/KWyqdqytakEjyioTBrV0BFleTE3uxPUXVQ8tNg6EwcZyzxX51vzflxwMN1qaGsYODuq9kGlMKhS2D0eq2ZrtrUtddTU4FQ=; c=relaxed/relaxed; s=default; d=mail.sdu.edu.cn; v=1;
-	bh=DxWC+pcSmHofo/IdAoJOznXzCrZSe1TqYJbrRyVivSA=;
-	h=date:mime-version:subject:message-id:from;
 
-If global queue allocation fails, the caller skips PF parameter cleanup.
-The CPU queue DMA buffer and the global queue pointer array can remain
-allocated. Release them after the partial queues have been unwound.
+Thank you for your contribution! Sashiko AI review found no new issues
+in this patch, but noticed 1 related pre-existing issue it does not
+introduce:
+- [Critical] message/fusion: lockless list modification in mpt_attach()
+  [1]
+--
 
-This issue was found by our static analysis tool under development.
+commit bd21a339f04c74107336a8df0b58bbfb54c0a200
+Author: Guangshuo Li <liguangshuo@mail.sdu.edu.cn>
 
-Fixes: ace7f46ba5fd ("scsi: qedi: Add QLogic FastLinQ offload iSCSI driver framework.")
-Signed-off-by: Guangshuo Li <liguangshuo@mail.sdu.edu.cn>
----
- drivers/scsi/qedi/qedi_main.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+scsi: mptfusion: Fix potential chain array leaks on attach failure
 
-diff --git a/drivers/scsi/qedi/qedi_main.c b/drivers/scsi/qedi/qedi_main.c
-index f394fcbb97e7..c73f9769549e 100644
---- a/drivers/scsi/qedi/qedi_main.c
-+++ b/drivers/scsi/qedi/qedi_main.c
-@@ -854,6 +854,12 @@ static int qedi_set_iscsi_pf_param(struct qedi_ctx *qedi)
- 	rval = qedi_alloc_global_queues(qedi);
- 	if (rval) {
- 		QEDI_ERR(&qedi->dbg_ctx, "Global queue allocation failed.\n");
-+		dma_free_coherent(&qedi->pdev->dev,
-+				  qedi->num_queues * sizeof(struct qedi_glbl_q_params),
-+				  qedi->p_cpuq, qedi->hw_p_cpuq);
-+		qedi->p_cpuq = NULL;
-+		kfree(qedi->global_queues);
-+		qedi->global_queues = NULL;
- 		rval = -1;
- 		goto err_alloc_mem;
- 	}
+This commit frees the ChainToChain, RequestNB, and ReqToChain arrays in
+mpt_attach() when mpt_do_ioc_recovery() fails during adapter bring-up.
 
-base-commit: 6628e7d4c6b25c8d18f1345e3a20d21829aae7e4
+> diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mp=
+tbase.c
+> index 3a431ffd3e2eb..a0592404472cc 100644
+> --- a/drivers/message/fusion/mptbase.c
+> +++ b/drivers/message/fusion/mptbase.c
+> @@ -2015,6 +2015,9 @@ mpt_attach(struct pci_dev *pdev, const struct pci_d=
+evice_id *id)
+>  		destroy_workqueue(ioc->reset_work_q);
+>  		ioc->reset_work_q =3D NULL;
+> =20
+> +		kfree(ioc->ChainToChain);
+> +		kfree(ioc->RequestNB);
+> +		kfree(ioc->ReqToChain);
+>  		kfree(ioc);
+>  		return r;
+>  	}
+
+[Severity: Critical]
+This problem wasn't introduced by this patch, but can uncoordinated
+modifications to the global ioc_list [1] cause a use-after-free?
+
+mpt_attach() and mpt_adapter_dispose() add and remove ioc from ioc_list
+without holding any lock.  Meanwhile, mptctl_fasync() iterates over
+ioc_list under mpctl_mutex (which is private to mptctl.c and not held by
+writers), and mpt_verify_adapter() iterates over ioc_list without any
+lock at all.  During hotplug or sysfs bind/unbind, a reader can traverse
+a broken list pointer or access a freed ioc:
+
+CPU0                              CPU1
+mpt_attach() / mpt_adapter_dispose()
+                                  mptctl_fasync()
+                                    mutex_lock(&mpctl_mutex)
+                                    list_for_each_entry(ioc, &ioc_list, lis=
+t)
+  list_del(&ioc->list)
+  kfree(ioc)
+                                      ioc->aen_event_read_flag =3D 0;  <-- =
+use-after-free
+
+[1] https://sashiko.dev/#/bug/linux-3331f265-1868-460b-9ec0-3fe42034986b
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261113-4e14e563a1=
+-scsi-mptfusion@mail.sdu.edu.cn?part=3D1
