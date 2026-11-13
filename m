@@ -1,45 +1,45 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794565745;
-	b=uPLMH9/E9h/umB/D8ty/8GTslYkW/7sXQc/nf46Y4+yp3TcBjoc9k1IfpYYqNB/Kvnhe
-	 R1tYXPbA1CWR8Ua4F8QbHfM8EBNEdO1xl8qfxaQ4E8TzsUEjG+JjFJ8iShf7zGcBbpinX
-	 PiOly6kVEbeIc7/dYLo1qjCVKLqcUkqHkOBOZAl6fGizbLpo/8Ntz6Q8bgwietQKHbaSO
-	 t3mMIbM3Ez8t4zijVye75VVrJFIS3HUZ4+eRA3sou1rx61GCa4QgUKl6c10SQeroAXCpL
-	 aZAfeyhZPO2TW4pwcjYyflEfHOPMkJveWAIsQT9Owx1rCQq7qDh4oDpOCkvpI6Q1vBA==
+	t=1794565784;
+	b=vVR9OiLuqeH8JBPe4NyuIZMdHkJ5KoKsRDGCgu0QkMtyZR+V4LfEXKQABB9sg9lNFqli
+	 X/EMyIt883p/e+SD6R6v0xA2YyL5f2Uy5tLa/TjJF9OFQ4vlLclR9LA+C+lbg4ArPv+9G
+	 18TU122Z8rFeKzeD2C/z7gUEY98tiI/zL7L9Mndk9byfumJutIrCoQZ25rxuJmKvGW+wB
+	 nGMwrPshro1PwFFpPYIhcUUGDfguRQOAVjCT0FnG4G7DjxufCAvlyeRs52pXVOVwMR7II
+	 NwtE912wt2zuiVNWNhhpkh2agYYBmRWB2K7lQ5nSHoHz20KD8ukvH3Vr1HgdI6PBasQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794565745;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794565784;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=2VlHcIVlZZPb1dKLE+NitYN2zgg0+WkasLdpA/Aa5UY=;
-	b=VuEIx0jHphOzh1ABt3Rk9daiCXXHv+C2oyXW6CQFosL4WJPd4tqDmpuVyQEPeQ6cO980
-	 zMbSNE0eHDeVZiibVgv/wwhWY99uqt3ZS3IPkV1b060sAoGlViI1dI3/i6Q7uW4qPVP3W
-	 KSD007xfqaIx3KUo1yKNzDcfws4nFee04+K4NEDyoVFPoBAw0JQrwT1oYwC7Y/AEJ8Tad
-	 i6ffO5fKcAbyyY8j3ZrSTPCB05YKKJbsSiGpfdWmtHSXcRq5ZURbDOmAaNesDkKC+bbZY
-	 7xVE9wbSCxHiwhMDn+qyK2U0u9xEUsh3Ctr9V0Dc3PV6wvStSY0B/u5U4YEq+LVjGhg==
+	bh=WSY+ANdltmdjp4hZAqbq3uTRH7NaIarF8ThTGR2AH9A=;
+	b=FHVk9IrNbVc8UY0jrOxNxVyQVbXV4bHzCYLaOisju5mUYdqB8/pmxRxuhgxdJxzKVOgx
+	 mMb1LQVTUm970mqXh4J/FfBiXdm1AnQnogutCXR720WJec9WJAGOwRW+VEecJejrElwb1
+	 lHhPZOMrpFDVN+Tjb6EoCQTrhToIsGAEkLC4GkjpvgxYBknuEWMc7maTsxbsZGnJHGtr2
+	 dAe7biqe3DEAxw74PmMevXFq8PtZmN6G0Z56gIPtKUKC0panw/MVATgs9dloGpKzXbM0L
+	 XK5rYDi31ir6yo8vlnWVRHE2WY8wiNLiAu215L7jXlBG9UTF7gymnuEn5PMyFgjPR/Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=MZNsxKEm;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="N3B3iDM/";
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F9C3606A327;
-	Fri, 13 Nov 2026 10:29:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37AE4606A327;
+	Fri, 13 Nov 2026 10:29:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=MZNsxKEm
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 79EDD1F000C5;
-	Fri, 13 Nov 2026 10:29:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=N3B3iDM/
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 970AE1F000C4;
+	Fri, 13 Nov 2026 10:29:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794565744;
-	bh=2VlHcIVlZZPb1dKLE+NitYN2zgg0+WkasLdpA/Aa5UY=;
+	s=k20260515; t=1794565784;
+	bh=WSY+ANdltmdjp4hZAqbq3uTRH7NaIarF8ThTGR2AH9A=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=MZNsxKEmYGHH+Fxv7YUDO4n6WwledjMk8ShFPN5VTLJqx+QwIYK6OteOVT9MtMRyt
-	 HZqF72CO5iXpA9DOPsk43UWfkh2QsLDZWKf3UJGiGy763ZsYzpCiaiD99u6d2Wgbar
-	 e3Oxq8D6Ax3eKHviF4mad34+RMQ7+tlF8Jr6nxCVgg81KygZUoWBgULspW/SwrpoLT
-	 ih2Bst8gCZYky7kjv0+ZwvadHeP9B2jpwG5eYs8/pLqsSo9S64mN9qcGzNhSQ+tbP0
-	 IKnZn+o6FxsxjiQhlJYP2etWWglBjSh4aAzfLtimKwwpoiA09++0WIyPkQZNc1YxHP
-	 pSpBNcSQ18JrA==
-Date: Fri, 13 Nov 2026 11:29:00 +0100
+	b=N3B3iDM/ljx4vAaf5Jrz/ajm1fa4aQGTl0CefZdslx+6VxkuARBxhjYSNmi4qMZFf
+	 QkKLtsxQnbE33zPcPAahlPFIGDzefeYPn/GChO8RKvxkqM1+jeJu9Et9Q9cexMlMOi
+	 Y2LAHbnJGYXj1OqCp6QwTTvPlu3p/jxUOE88QJniywunLueMhWz0TPZRG1UcPikn9q
+	 Z+xuIMcai4dnLzzigGZCK0FpWlTYQWUm+cXDkkL4DMyUKGvMoICIOjVNnNmmPQkisH
+	 6coL9DouEs1YexVKGveznBYverqxMXunO/dSm6+PLaJ9QpK4do7tS/Wufkn22KCzxo
+	 N3l1ulc/hiATg==
+Date: Fri, 13 Nov 2026 11:29:40 +0100
 From: Krzysztof Kozlowski <krzk@kernel.org>
 To: Stanislav Aleksandrov <lightofmysoul@gmail.com>
 Cc: Bjorn Andersson <andersson@kernel.org>, 
@@ -62,10 +62,10 @@ Cc: Bjorn Andersson <andersson@kernel.org>,
 	linux-kernel@vger.kernel.org, mfd@lists.linux.dev, linux-arm-kernel@lists.infradead.org, 
 	iommu@lists.linux.dev, linux-usb@vger.kernel.org, linux-phy@lists.infradead.org, 
 	linux-scsi@vger.kernel.org, linux-crypto@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: Re: [PATCH 06/17] dt-bindings: arm-smmu: Add Halliday SMMU
-Message-ID: <20261113-inquisitive-spiffy-chimpanzee-d25ec3@quoll>
+Subject: Re: [PATCH 15/17] dt-bindings: arm: qcom: Add Samsung Galaxy XR
+Message-ID: <20261113-meek-laughing-orca-ea8a86@quoll>
 References: <20261109-halliday-dts-v1-0-289114ab8197@gmail.com>
- <20261109-halliday-dts-v1-6-289114ab8197@gmail.com>
+ <20261109-halliday-dts-v1-15-289114ab8197@gmail.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -77,17 +77,18 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20261109-halliday-dts-v1-6-289114ab8197@gmail.com>
+In-Reply-To: <20261109-halliday-dts-v1-15-289114ab8197@gmail.com>
 
-On Mon, Nov 09, 2026 at 12:33:18AM +0000, Stanislav Aleksandrov wrote:
-> Document the SMMU-500 on the Qualcomm Halliday SoC.
+On Mon, Nov 09, 2026 at 12:33:27AM +0000, Stanislav Aleksandrov wrote:
+> Document the Samsung Galaxy XR headset, which is based on the Qualcomm
+> Halliday SoC (SXR2250P).
 > 
 > Signed-off-by: Stanislav Aleksandrov <lightofmysoul@gmail.com>
 > ---
->  Documentation/devicetree/bindings/iommu/arm,smmu.yaml | 2 ++
->  1 file changed, 2 insertions(+)
+>  Documentation/devicetree/bindings/arm/qcom.yaml | 5 +++++
+>  1 file changed, 5 insertions(+)
 
-Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
+Acked-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
 
 Best regards,
 Krzysztof
