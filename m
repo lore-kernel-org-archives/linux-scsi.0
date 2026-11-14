@@ -1,112 +1,79 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.218.48
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794657338;
-	b=Rl1vv5wNPn7Io8Y6h0udWUgS5vZI9MUoQpXCCBSBkZvNL5eLbzKABE1WeDgHRg2cxIuy
-	 SOoQKGo6PEzf+ROWNyd5AnntPozBEo6g5AvkbsezyThWRovpTECp92aPttEAB/mPxR4yC
-	 Z1TOSQoUlKPdX5D/oO1cYSU7JsExvCiR6U8AJhDq/XMdTrOpu1tPjUvSMlzcWbqnQPazQ
-	 d3j8MURnhtqW9Lq7fC9RwD7Gow7cybFlQwHV5nixSbbgdwrE100W675e0Lz+IcxqHBiif
-	 h7xk3P22xZZNtamEC9cbOAqO5TLH7Dfg1ygA+qAF4ZLvpKUmLMzntDob4YlChCSo29Q==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794657338;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:Content-Transfer-Encoding:
-	 In-Reply-To;
-	bh=nJvs09p7QWIuuw8YOzj5TR133+2IJ5+yRajckn/hsO0=;
-	b=AHPZMdVV6BkFGTfd1JjiXISJLqg6EkPQZPPYEJi4MEN+Ofuo9MkWn0Rq171MpFluyMfQ
-	 I4lv8DoY/LIggVIUq1WMQX5kl/KwZIQ2EsITUqqb0ah8cpms0QmBvoEkXvRJBombQn3HW
-	 /Dsht4Dpyk0ziWEfHqUEKTpOgVIKNsXr7u85/58uo5LMQnBWIsdzfEfv69UOkUuyJqOey
-	 EgciEKSfd2ScN33tZvp7khR5nA32A8OEnTYxP/8kSMxsf0LTUCG83YhscAs2wIiMuoFNz
-	 /iMas8V6zY+ngzaZ30Rr8p+FKM8bxvLkMX517wimAp+W1BSWDUi0MZIXwyRCJvgI47Q==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=MrTBjpIE;
-	arc=none smtp.remote-ip=209.85.218.48
-Received: from mail-ej1-f48.google.com (mail-ej1-f48.google.com [209.85.218.48])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1794657375;
+	b=emPtVTFYLF1BxpSskFJQKWZRVVk2YOcJG3TZb2XuyojMs8N5B1W25jNGGiwn9z/D94fP
+	 O2WqDeBaUn1oEJh2Xt6DgjvzM1dkMAtQpEsDoPNniaN0mOMPdeKyJbaaUa53sA6CE0Z+y
+	 ovn/QX9SDLYuZP1jM+ij1t+WSj23vG70DaN9j7UiMI54oWjcLRVB9CDS1jHWY5XP5ARcm
+	 UATFaNU/DkOyEx1T9q+qFVhkmibxYqtdZ9B9ezVFnc9sWlIPgIe6xLbXDgfKbrxJxLjjW
+	 nYif2pbqPFHZdi9Hb1KJYycRVBSAeq9yU8Fvrp9y2cGBdWezaDZHherSxsiSBS9CE8w==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794657375;
+	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
+	 Content-Type:Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To:Content-Transfer-Encoding;
+	bh=NcP1PmV6mGhZtCh4rVFc9CwPV4PnTiLSoRbNIs253gA=;
+	b=D/NXOSqwK2/myEb9NTl6aD9OYAx7bPi5xAra+4AxL+2u5VQ5jg+RLsf9noaqG0lbdS1B
+	 PRElQQPlPNPORG2vnuZ3dEIivL4S//6JX1BOziK1u0rBFkOSB16iuJ2BlUmCl9pav2YAm
+	 jF05Y1RsF0WantZSi9/fdmoN9p8tPmNss/BvskVFOL78PEIsXby2nPsEGS7gC8hinZvf/
+	 panrR4hVF8TTIf0PHNcLfDVzwf70LcF210CebZH4ac+oT7OPj960Z5QHVYWmhww3yWr4T
+	 vSL2HVv3S6pnk44s1SwielXA3Tkhd0LgsWTMGqEDKcD8FJ/4gYM9F99lQG8Sh3s3KJQ==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=cEJrb44x;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4747C606A323;
+	Sat, 14 Nov 2026 11:56:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=cEJrb44x
+Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
+ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
+	t=1794657374;
+	b=uQI/UmOnKx9tmR5iboF5dkOqDFal3OZ/7S2ysaLE1hi7bPYO2MjxGksAa3GeVvz2ZobA
+	 NpJiQBW3H89KxQE1NifgnD1vqMqGzcjTI2uaj99JHPWj7yqA4Dw0X8Cf6vVMhvSH91H08
+	 2P4gLlhkCJ48AgXKNFIU83LUdvV3LWhUyQa2Srskiim8FovueFLzXLjlF8eGsdOdreIDS
+	 8mHsf/GC+TYWcf0HRcb8eByk5z9EYoaAwHlnicukU+l5D00Evif8wUpns8TuTu9o9bViq
+	 fw7DCUojum4Nf5rGWV5Es346jit8952N7uIvpi5/TSd+6955bjIEl1A/816tu5wB0wg==
+ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
+	c=relaxed/relaxed; t=1794657374;
+	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
+	 Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To:Content-Transfer-Encoding;
+	bh=NcP1PmV6mGhZtCh4rVFc9CwPV4PnTiLSoRbNIs253gA=;
+	b=SMJ5qZcfRGEU+uWoIzfLbhjUWB07Salo0EAsl+6dJwSBwR5frphDiU9TcBr2Kc0WQF22
+	 O8JovqVNKD0Uqul/uvKXo52lQFoQJi9exjTXj3FCS6P9yP5yGZkqZWFEHFbqmgAEYZNyf
+	 KAqUwRMWtmT7BPC2I74GkiXkDSm/bxKjrQNNbHk0j6rH/0XAqf3sFpDuxuy3Z+T+Td9ci
+	 8UZBEGDX57FZKxov5VHjoQkSTbn5qz14aVvRpSlj/ZxEQsD/G6kJhwgRy4YgLYXE5DBSp
+	 x6xFVsKH2nETZi94HoL2zx4ImCJMVgWrddEmk3vkP+uO14hRFqrmntmfuwbp0yKlA5g==
+ARC-Authentication-Results: i=1; smtp.kernel.org; 
+	arc=none smtp.remote-ip=100.80.115.77
+Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69B77606A332
-	for <linux-scsi@vger.kernel.org>; Sat, 14 Nov 2026 11:55:38 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 69B77606A332
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=MrTBjpIE
-Received: by mail-ej1-f48.google.com with SMTP id a640c23a62f3a-c4cdc606b47so373829666b.0
-        for <linux-scsi@vger.kernel.org>; Sat, 14 Nov 2026 03:55:38 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1794657337; x=1795262137; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :content-type:mime-version:references:message-id:subject:cc:to:from
-         :date:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=nJvs09p7QWIuuw8YOzj5TR133+2IJ5+yRajckn/hsO0=;
-        b=MrTBjpIEXzsSZaANjc7oExJhwGnF+j3pBQoJGLV3AozjECewWnT/dOn8PoCfUIeYGI
-         mRgldWBhVoyoY4kjpOu/TkcCPMpetn8bMN74Irqnk0JnK5MAQS777TE3iVfENO0qNvUE
-         8qb82pxhdLikkA/6tATGUpByZMee1vHTbdl6A6vtosorr3+hE9wD/mpuH76lS1WAZqyn
-         nUdTyabyG8UAyWqGnpYJGfY62DgpvBldD5kNADP5MARyaYxmHHJYDsQkr6qVKrnaldzF
-         KHIyaxdpU8Pcl80WjVwUUXXw+yU81KD0D8RdN7wE6Dhf//BzElFXAKq/AgQBu3vGzFII
-         7JmQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794657337; x=1795262137;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :content-type:mime-version:references:message-id:subject:cc:to:from
-         :date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=nJvs09p7QWIuuw8YOzj5TR133+2IJ5+yRajckn/hsO0=;
-        b=tz5wogk1NhC2OPfA6Z99iVQ+ndhc2A/PSuLpVZso6vT8T0Rkd6Pj3lSSWoONlDuM5o
-         jRBMWH83VG5WrFqWTJQhMLPYIxltS82A5oW5ctgp2Dlr+uF/cmMdIDzO5J4mj7fkmito
-         5c2GUaq+2YJ6o2vo4aRm9Yex3rRJHzp51Tebptlto4cBrAsf/1mlwB9aXzOOYuozCzS/
-         Xiyc0+KtSFE4pbt8bofq84YBG+xX2lqOex3ya0R0NSAFvnxP5yEuVWgS+3QTqVkz4YYc
-         9FepGb8l/5HTr581hTv3de2XBQBfOTeRXIiaF8YAnXjTRNLbDu6+BRBnXIPPfgbOJpAt
-         KLjw==
-X-Forwarded-Encrypted: i=1; AL+hErHfssnpM4mIbU178EEnyIFtCQAbhTjJNLSHM3Jsr5YqqdviKEzN5ky/JFre4CitFL0vTo41fXcf4qy4@vger.kernel.org
-X-Gm-Message-State: APuU4Z+MYyAlZWf7LFseqDyy6tNkYI+DaG8Kq2OP4OgPrdVAklvbZVI0
-	56Be6updxWzyD5SbtXUiU3gtQiIpHBveAwJNjYHG9bvV6SqShPTkmm7v
-X-Gm-Gg: AYBFou29oOOXA3uND3A0xGRiv0VevpdizuA9pdpdmJinRF2eGaZjc9Xhk3mvuaxQk0F
-	b8bffLQUpNYTLFcSgfSkrY5oHQUMOfrzix5HtnoB4vsPiMSpbnd0Rmy6egf2pS3Ch6oU507hJzi
-	p+kUqlvgKBI48KqZ7RGFoY/cC/767jsP+8CK76/MjD7p4Cu3HMDziSZi3YdNRnSLEmUEGQYhHwb
-	s9QK6lOXmp2GxSAEGuDt2QuGK1y1sM0DWV87bpZ6he75aCpLtQZSpz4b8/Xwosbtttz1ZimFU3p
-	Qz/2d23hDOtXS2/gajMQD/xu0D8scc3S2Xd2yuPy3UY6qlAbXMGuv57dF10k55ax3KQn7L2UH7E
-	wtN4bty2BMrJd+nm8tiaWK5KqeMWDv5iSRB1PrMjFmexb21gcPscocVLAWrYNA6yC8rfVJIbCyo
-	U97puLUmyzPKZe1Dd0VmSLZA6Ae7wtpPmlbubrNIHO/qLlVAlrR32D6rrc1Vflyf1lg90YGcvEp
-	iNMZDmwcNPx236hPRK0DFm3ueLkSz0/j0T1Hbsnr8i+lvATV0gSCcZesOUl47kfCVmxaFb8SIaf
-	tJZjLuZ5rxrHaMrnVBUdy7vkh5p0ZwGfF/p75+a1uW71lNH4JY+7uMKpnbEgO903DqHI/6Jc0/N
-	V9tyinasr7oM=
-X-Received: by 2002:a17:907:3e10:b0:c40:231:6eab with SMTP id a640c23a62f3a-c5096370c31mr441592966b.16.1794657336589;
-        Sat, 14 Nov 2026 03:55:36 -0800 (PST)
-Received: from localhost (178-84-201-199.dynamic.upc.nl. [178.84.201.199])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c5095b41f44sm206223866b.31.2026.11.14.03.55.35
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 14 Nov 2026 03:55:36 -0800 (PST)
-Date: Sat, 14 Nov 2026 12:55:35 +0100
-From: Amir Goldstein <amir73il@gmail.com>
-To: Alexander Mikhalitsyn <alex@amutable.com>
-Cc: Christoph Hellwig <hch@lst.de>, Christian Brauner <brauner@kernel.org>,
-	linux-fsdevel@vger.kernel.org, Jann Horn <jannh@google.com>,
-	Chris Mason <mason@kernel.org>, Josef Bacik <josef@toxicpanda.com>,
-	linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-nvme@lists.infradead.org,
-	Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>,
-	linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-	driver-core@lists.linux.dev, linux-mm@kvack.org,
-	bpf@vger.kernel.org, linux-security-module@vger.kernel.org,
-	selinux@vger.kernel.org, apparmor@lists.ubuntu.com,
-	linux-nfs@vger.kernel.org, netdev@vger.kernel.org,
-	fuse-devel@lists.linux.dev, linux-efi@vger.kernel.org,
-	xen-devel@lists.xenproject.org, ocfs2-devel@lists.linux.dev,
-	linux-s390@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-usb@vger.kernel.org, linux-erofs@lists.ozlabs.org,
-	linux-kselftest@vger.kernel.org
-Subject: Re: [PATCH RFC 38/41] fuse: refuse files on pseudo filesystems as
- passthrough backing files
-Message-ID: <avhMN39TECaur0sS@amir-ThinkPad-T480>
-References: <20261110-work-loop-pseudo-v1-0-4c998976c6c7@kernel.org>
- <20261110-work-loop-pseudo-v1-38-4c998976c6c7@kernel.org>
- <20261111151202.GA11391@lst.de>
- <fb1d72cf25d10a960da627f6d93a3e041820ed3a.camel@amutable.com>
+	by smtp.kernel.org (Postfix) with ESMTPS id 961E31F000C4;
+	Sat, 14 Nov 2026 11:56:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794657374;
+	bh=NcP1PmV6mGhZtCh4rVFc9CwPV4PnTiLSoRbNIs253gA=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To;
+	b=cEJrb44xhT8RjjpqTLUhTVVNhMboeIj8bsO32EwCJFvlHFGDp4wjt4wfcpOmoweVK
+	 VyZ7KO84apfOQRbl2p/TIZwsbExcKI92iP7ep0gTnFPjQdYkEjTL8xsSErXzNHlA0M
+	 jQFk56/cz95TLphy8Q6fIfj+hEfNb5/hSr7c0tCs0kv3FDpgxAHfB4wfBANDAqbHXv
+	 LJpDEv3W8NwQwdyCD2cUmW3bysiqmWxZFhOXmMZm9qPCEMBKYy7t2auI4p0UjZZAUk
+	 cbOttQ8mJKLc9TQNnPzlixSsa9tRydRdiqRAAa64vw9nLvJB6wXTsb+KxLxb6x+rjJ
+	 MWzJKQrtMFm5A==
+Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
+	by lkml.kernel.org (Postfix) with ESMTP id 0A85049D63;
+	Sat, 14 Nov 2026 11:56:13 +0000 (UTC)
+From: Larisa Grigore via B4 Relay <devnull+larisa.grigore.oss.nxp.com@kernel.org>
+Date: Sat, 14 Nov 2026 12:55:33 +0100
+Subject: [PATCH v11 01/14] ufs: core: Return a negative errno from WLUN
+ suspend/resume
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -116,34 +83,96 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <fb1d72cf25d10a960da627f6d93a3e041820ed3a.camel@amutable.com>
+Content-Type: text/plain; charset="utf-8"
+Message-Id: <20261114-b4-ufs-s32n7-v11-1-dc36e11919d5@oss.nxp.com>
+References: <20261114-b4-ufs-s32n7-v11-0-dc36e11919d5@oss.nxp.com>
+In-Reply-To: <20261114-b4-ufs-s32n7-v11-0-dc36e11919d5@oss.nxp.com>
+To: "Martin K. Petersen" <mkp@kernel.org>, 
+ Alim Akhtar <alim.akhtar@samsung.com>, Bart Van Assche <bvanassche@acm.org>, 
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+ Conor Dooley <conor+dt@kernel.org>, Rob Herring <robh@kernel.org>, 
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+Cc: devicetree@vger.kernel.org, Ajay Neeli <ajay.neeli@amd.com>, 
+ Adrian Hunter <adrian.hunter@intel.com>, linux-arm-msm@vger.kernel.org, 
+ Peter Wang <peter.wang@mediatek.com>, linux-kernel@vger.kernel.org, 
+ NXP S32 Linux Team <s32@nxp.com>, Asutosh Das <quic_asutoshd@quicinc.com>, 
+ linux-arm-kernel@lists.infradead.org, Stanley Jhu <stanleyjhu@google.com>, 
+ Frank Li <Frank.Li@nxp.com>, imx@lists.linux.dev, 
+ linux-scsi@vger.kernel.org, Bean Huo <beanhuo@micron.com>, 
+ linux-mediatek@lists.infradead.org, linux-samsung-soc@vger.kernel.org, 
+ Pedro Sousa <pedrom.sousa@synopsys.com>, 
+ Baolin Wang <baolin.wang@linux.alibaba.com>, eballetb@redhat.com, 
+ Peter Griffin <peter.griffin@linaro.org>, echanude@redhat.com, 
+ Chaotian Jing <chaotian.jing@mediatek.com>, 
+ Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>, 
+ Sai Krishna Potthuri <sai.krishna.potthuri@amd.com>, 
+ Manivannan Sadhasivam <mani@kernel.org>, linux-rockchip@lists.infradead.org, 
+ Krzysztof Kozlowski <krzk@kernel.org>, clizzi@redhat.com, 
+ AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>, 
+ Heiko Stuebner <heiko@sntech.de>, Matthias Brugger <matthias.bgg@gmail.com>, 
+ Chunyan Zhang <zhang.lyra@gmail.com>, Can Guo <can.guo@oss.qualcomm.com>, 
+ Orson Zhai <orsonzhai@gmail.com>, aruizrui@redhat.com, 
+ linux-renesas-soc@vger.kernel.org
+X-Mailer: b4 0.15.2
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1794657368; l=1602;
+ i=larisa.grigore@oss.nxp.com; s=20261114; h=from:subject:message-id;
+ bh=gmKvJS5ja+qFfQcSHziMGUUrnqG+N63YieA9XdI0orI=;
+ b=HCs4+jy1XrgoQCh8b366WKkPe8gX3AlsAHzvlETcaOCoT8Jl17FwbFk48k/kzEr87OXgv1Tgt
+ 9waeTQiK9kYDGfVKiKX7aDbfrHx3yHQrBatck2GBZU8MmBy9JHfKFbM
+X-Developer-Key: i=larisa.grigore@oss.nxp.com; a=ed25519;
+ pk=Jpt52sb6ETKTtvWjUzhz5Sv5FjB9AEg9QKCcbpWFx3w=
+X-Endpoint-Received: by B4 Relay for larisa.grigore@oss.nxp.com/20261114
+ with auth_id=1522
+X-Original-From: Larisa Grigore <larisa.grigore@oss.nxp.com>
+Reply-To: larisa.grigore@oss.nxp.com
+Content-Transfer-Encoding: 7bit
 
-On Fri, Nov 13, 2026 at 11:25:57AM +0100, Alexander Mikhalitsyn wrote:
-> Hi Christoph,
-> 
-> On Wed, 2026-11-11 at 16:12 +0100, Christoph Hellwig wrote:
-> > I've seen setups where people use fuse to mediate access to sysfs
-> > sysfs in odd ways.  No idea if that's still around, but if so, this
-> > patch will break it.
-> 
-> 
-> Oh, that's painful. Do they use backing files for that?
-> It's a relatively new feature in FUSE...
-> 
+From: Larisa Grigore <larisa.grigore@oss.nxp.com>
 
-Very unlikely that they use FUSE passthrough and if they did
-very unlikely that it would break their filesystem.
+__ufshcd_wl_suspend() and __ufshcd_wl_resume() may return a positive result
+code, e.g. from ufshcd_link_startup() when DME link startup fails while
+restoring the link.
 
-The API for fuse passthrough is that the server requests to setup a
-backing file before open via ioctl and if ioctl fails (as this patch
-does) then server falls back to non-passthrough open.
+The runtime PM core treats any non-zero value as a failure of the WLUN,
+but rpm_get_suppliers() only checks for a negative value. The LUs
+consuming the WLUN are thus reported as resumed and receive I/O while
+the WLUN is still suspended.
 
-The ioctl can already fail for many reasons such as MAX_STACK_DEPTH on
-procfs as the commit message says, so server needs to cope with the
-fall back.
+Convert positive values to -EIO, as ufshcd_init() already does.
+Do the same in __ufshcd_wl_suspend() for consistency, so that callers
+always get a negative errno.
 
-Thanks,
-Amir.
+Fixes: b294ff3e3449 ("scsi: ufs: core: Enable power management for wlun")
+Signed-off-by: Larisa Grigore <larisa.grigore@oss.nxp.com>
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+---
+ drivers/ufs/core/ufshcd.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 3c28bc67c65f..a6817e4bd1f8 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -10553,7 +10553,7 @@ static int __ufshcd_wl_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ 		ufshcd_release(hba);
+ 	}
+ 	hba->pm_op_in_progress = false;
+-	return ret;
++	return ret > 0 ? -EIO : ret;
+ }
+ 
+ #ifdef CONFIG_PM
+@@ -10654,7 +10654,7 @@ static int __ufshcd_wl_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ 	hba->clk_gating.is_suspended = false;
+ 	ufshcd_release(hba);
+ 	hba->pm_op_in_progress = false;
+-	return ret;
++	return ret > 0 ? -EIO : ret;
+ }
+ 
+ static int ufshcd_wl_runtime_suspend(struct device *dev)
+
+-- 
+2.43.0
+
+
