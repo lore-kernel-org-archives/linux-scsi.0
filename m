@@ -1,57 +1,78 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794614256;
-	b=vw1c1ul/e/MJpZfZyak+d8h5N8sOwtKUWhQVnwATtek+nYUBayzi/k93HFtKe/ofNOz3
-	 QL2ogzuYZLgVNr/Wqns4epZxZpRrJ6voZEoUoB1VAeqqhL/8VSIoUfKvfLaqXMXJLOGwt
-	 uRImHJPE237RrLlrxLpG/yuJPT7F1cJgxv+ACkINRNJG/Qrk/TEXlF5aWEawKjbAb/4jG
-	 CHn3XqIRuXth8QjbYKxY95KqeyF1aEcDKKr3CiruV3FyYIKNP1PFbd11by76mpfzIHWgD
-	 x2truoApNqnj/fbl2/YrjSdjwKZNzmppK6pDZfTIhAq7Hy1gu5dXjP9DwQ2Bm32ELzA==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794614256;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=6oOHlstDASuMb8SjlnDSCrd23sJasSQuQL6faxBaS4g=;
-	b=Hbma1jaOfET5X0jz/xVmqu1kmORySke891drUGpXDuHCCC7QXZstbTZb68bZumoW145h
-	 nXjmRGxCk/s0miOaiNi331SOoqq2I7ncwPXkq1vlenJbdOc/lhGbHX8eJENPh18bB8d/K
-	 +3T8HZYgCvE2BrhpUzTqT52ftG4r03TiqCcNNbhzOs9gj2MPsu0aS67614HDJRTS3TBn5
-	 ekptyy9QmrDneT4WON2TNCrTzV/NKnUSMNyeSAO3oJBRJy2xCYJYovN5FryJrV4+GC1PX
-	 JdkzrpobpWzNa1zL/zsd2Q0OYBQE6ZoQG0RndpZCZBYMEQ4WR3mEjZzXi8cqL8OQp/A==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BpFsfEQq;
-	arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1794616428;
+	b=wMHyCapc69sK4YeEetEvbZWnX0a8M7UdnWpVq7/Wlba+NR/qZuNnTkfrA07SF+mNOkV6
+	 GpWdU7IgG5TF9sopmbee2t20VenEHm/eSFTMgTeSm8r64TKSKPX5586JveLZYvkILQwOU
+	 yBOFbkYn8vhLzeym88IN0jXqoxdtGeSKJksRjNFtbb+5JYYA651wAz8uH364IeF4URg1d
+	 sK/mf8pxQxD+yvceU+qhga/TJomV/fxDC6YPiGcXGz+DaaUuzfj3gJAK42DGfvUmffPUU
+	 RhLO558MRiWjNS1wufCEaDqL8S+DtFl/XfG6uMWE86XKCiuq/WeVmztKfFPw0FsZKOw==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794616428;
+	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
+	 Content-Type:Message-Id:X-B4-Tracking:X-Change-ID:To:Cc:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To:Content-Transfer-Encoding;
+	bh=1bnpAKAisFN7BP2OHDTddn21Tp+toUMvXTb2Ub8ahpE=;
+	b=IX++2YTKpxsubCAtxxLhbmvbo4iKE7w0oykZxfyWhPK2p8nwRqttpSQ8bKOEMvT4Fh//
+	 rj79Hs6pDJuzMjxIXu/cdkvE8pCu8ucTv40fPzR4/z+tDOn/iVtPHftwUAHtyDTq9tI2b
+	 qhBu5MkorjY3guwWF1LDgwRXAAeOKsnjpwxrWPLTeNaDdfZuow+pZrQpTubx6lfypRHtk
+	 A24TlelZP7J9iv51MDDesiGsvdqebV+6o1veFHhQxrF4+2g+H736Pq8XDjkJksKrA+s4+
+	 lsYHP6/pbSbVx/7gYGL1BGsFmovWLFNvVc1Kkj9qEsYkuSWYJIxP0K9oXvKgH4YUSIA==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ebbmpE68;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F614606A890
-	for <linux-scsi@vger.kernel.org>; Fri, 13 Nov 2026 23:57:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6074A606A336;
+	Sat, 14 Nov 2026 00:33:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BpFsfEQq
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 835691F000C4;
-	Fri, 13 Nov 2026 23:57:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ebbmpE68
+Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
+ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
+	t=1794616428;
+	b=r/bqIq467g6n0nNvum4dFZdYHfsAdDykigCDyFo8TkkMnzrwlnWBI0EXF+osuz4FXfgM
+	 nxA6Y/2gkHrJ1ILN6GV5UVoHw5338ijot0bB6fhRTp71JFNLuZiq1jgeuRvhTAzKh82ns
+	 jdp0lK4BT6bmPtLS5TQGCtoNMDHsIzc0jZtlovOyCqG7NyuA9rZCld6EhTPCFrovM0Psx
+	 n4+82RE0AIxYqbN0U8KbfvsHmTG/z+dq0itW2QuI/1UK8m3yYfFN99xqMSRUdZ119G4sS
+	 a56TX1D+rhpJ1vMcUxejoulO4vJhr9Z1N+SgBOE7T62FtQ3+d77Qt8YHjsA4QL2PYLg==
+ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
+	c=relaxed/relaxed; t=1794616428;
+	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
+	 Message-Id:X-B4-Tracking:X-Change-ID:To:Cc:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To:Content-Transfer-Encoding;
+	bh=1bnpAKAisFN7BP2OHDTddn21Tp+toUMvXTb2Ub8ahpE=;
+	b=waMyZE9Jd+ymqSRDiOUXskbvHUNk2u2QPNT9eNiPZltGaFYK27vcdF1hpdqDcfat944j
+	 wjlixxF53VCugOtsmhQEIw+d6yd3U3SEX4BPl8HPtTSe9DfaLrPeOyDQq2ePp8YLdFoOc
+	 Y8X7hJT1++osljS7eDyGINuFsScdd3WOk8sGvqzA+YGIB6sxpuQH5WXQ7ulU3wxdD4YKJ
+	 pmujJO10v8sPvjp4xjC3opwXyno7lsHvWZnhV7aJ/Htx3qMsSe2g+JN7SkRBa2sc1fonX
+	 Ts4lL5ZCt49n1fsnLNwJgLnlhJqVeFoe+vfbMJhSqnX0pqdEBcpXmry7fLEWX8/5/cQ==
+ARC-Authentication-Results: i=1; smtp.kernel.org; 
+	arc=none smtp.remote-ip=100.80.115.77
+Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	(No client certificate requested)
+	by smtp.kernel.org (Postfix) with ESMTPS id 92BB01F000C4;
+	Sat, 14 Nov 2026 00:33:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794614255;
-	bh=6oOHlstDASuMb8SjlnDSCrd23sJasSQuQL6faxBaS4g=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=BpFsfEQqSt3Xb8KhXW5DWP//bjRX/MEmeXEJraH6ToCMFcRgn8zSEZeXRcMqH36nX
-	 5s1M7u1vOBiuk6GMRy+FiMm5HV0GuJwZy+zeyFUeJXF++toOp6+LWmF30nLCiRnnq0
-	 T3rHo+GmKy02bOzP+58fAaQ5FiRnaUZVoY+nPsGk4KgsekNBp1U9pdZi7c4ygnsQ7i
-	 4LNVLAHq2K5AvOmHYhuoXdiXt/62CKFTVwtzNAi70TihokGrszBXV4tH2zui2ivJq9
-	 bN+5qjBj+T8fNtGw2Q5go1cH6c6IdssqFmQdTQJZQKcanbtSiRdXpXkw79Nlkj3Dmb
-	 rtjdbO7XuzsdQ==
-Message-ID: <sashiko-outbox-213889@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 1/2] scsi: libiscsi: only complete a task that has
- been sent
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Yehyeong Lee" <yhlee@isslab.korea.ac.kr>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20261113233938.397415-2-yhlee@isslab.korea.ac.kr>
-References: <20261113233938.397415-1-yhlee@isslab.korea.ac.kr>
- <20261113233938.397415-2-yhlee@isslab.korea.ac.kr>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 13 Nov 2026 23:57:35 +0000
+	s=k20260515; t=1794616428;
+	bh=1bnpAKAisFN7BP2OHDTddn21Tp+toUMvXTb2Ub8ahpE=;
+	h=From:Date:Subject:To:Cc:Reply-To;
+	b=ebbmpE68EfcBAvaDDwqReBVPvQepaFQByUHB7l817wooFE6OXZb8YwNzYm2YrpcZN
+	 kNC67/AqemI70/46t7ZyoBzA4pDNrj/j4UNxU0GajtE2PTAxNIwG2xBvhflzRj5d0M
+	 m2QZkHqI1MmR/v89DkcqnnF7VBjW6qDF+qIYWPF7f9of2O7p6yiX8iRq/RABQo4WEQ
+	 ZzMNbnpidz0GsXw7CQSbkvwKsEhDGjrvb2q/maitqfbyILVkC9a8T+sEqvVwFRu8vx
+	 GAJtxTQtsSvY1Pil2lvprP1OAv+qEr+7MvKUsuFpSNlhDt7UN7oDAIwez2Ftfzf2Cv
+	 h07mWXfUY2WRA==
+Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
+	by lkml.kernel.org (Postfix) with ESMTP id 240D149BDA;
+	Sat, 14 Nov 2026 00:33:47 +0000 (UTC)
+From: Izaac Chong via B4 Relay <devnull+izaacchong934.gmail.com@kernel.org>
+Date: Sat, 14 Nov 2026 08:33:43 +0800
+Subject: [PATCH] scsi: fnic: Fix typo in kmem_cache creation error message
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -60,115 +81,65 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Message-Id: <20261114-fnic-typo-v1-1-a9f70c9c4a6b@gmail.com>
+X-B4-Tracking: v=1; b=H4sIAAAAAAAA/yXMQQqAIBCF4avErBNSpKirRIvSqaaFilYU4t2z2
+ jz44PFHCOgJA3RFBI8nBbImg5cFqHU0CzLS2SAqUXPOJZsNKbbfzrJGylYLzCtHyH/ncabra/X
+ D73BMG6r9DUBKD0aIWzVtAAAA
+X-Change-ID: 20261114-fnic-typo-7449d2e4494a
+To: Satish Kharat <satishkh@cisco.com>, 
+ Sesidhar Baddela <sebaddel@cisco.com>, 
+ Karan Tilak Kumar <kartilak@cisco.com>, 
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+ "Martin K. Petersen" <mkp@kernel.org>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ Izaac Chong <izaacchong934@gmail.com>
+X-Mailer: b4 0.16.0
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1794616426; l=1054;
+ i=izaacchong934@gmail.com; s=20261114; h=from:subject:message-id;
+ bh=aK+ZdndpFxlDmt74J7lkKpKkjfqPLloO4qhOgeRfRYc=;
+ b=LvzW5ATwEWwcdBjbRpA0qBV54BEsyR5iA+ZPus6w8l0rW8U5dO8bv+a4DfuZ2yBioLUnSfnjc
+ ulXpHC+SWVkA2z0qCt2iJbAxX2ipsmnkuEpjGnLDtKZCApPkENof9AW
+X-Developer-Key: i=izaacchong934@gmail.com; a=ed25519;
+ pk=IFfOWcK2ZRkDtCqaNggolAwpvIidYMt3Oar3NEnvqzY=
+X-Endpoint-Received: by B4 Relay for izaacchong934@gmail.com/20261114 with
+ auth_id=1518
+X-Original-From: Izaac Chong <izaacchong934@gmail.com>
+Reply-To: izaacchong934@gmail.com
+Content-Transfer-Encoding: 7bit
 
-Thank you for your contribution! Sashiko AI review found 1 potential
-issue to consider:
-- [High] scsi: libiscsi: premature ISCSI_TASK_RUNNING before xmit ref
-  acquisition
---
+From: Izaac Chong <izaacchong934@gmail.com>
 
-commit 7682c2a848ebe294348224903c5fc89275f307e1
-Author: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+The error printed when the fdls_frame_recv kmem_cache cannot be
+created says "cach" instead of "cache". Fix the spelling so the
+message matches the other cache creation errors in fnic_init_module().
 
-scsi: libiscsi: only complete a task that has been sent
+Signed-off-by: Izaac Chong <izaacchong934@gmail.com>
+---
+ drivers/scsi/fnic/fnic_main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-This commit uses smp_store_release() to mark a task ISCSI_TASK_RUNNING in
-iscsi_prep_scsi_cmd_pdu() and iscsi_prep_mgmt_task(), and checks for
-ISCSI_TASK_RUNNING with smp_load_acquire() in the RX path before
-completing a management or rejected task.
+diff --git a/drivers/scsi/fnic/fnic_main.c b/drivers/scsi/fnic/fnic_main.c
+index a19c0b0d8..10c2de746 100644
+--- a/drivers/scsi/fnic/fnic_main.c
++++ b/drivers/scsi/fnic/fnic_main.c
+@@ -1460,7 +1460,7 @@ static int __init fnic_init_module(void)
+ 						  FNIC_FRAME_HT_ROOM,
+ 						  0, SLAB_HWCACHE_ALIGN, NULL);
+ 	if (!fdls_frame_recv_cache) {
+-		pr_err("fnic fdls frame recv cach create failed\n");
++		pr_err("fnic fdls frame recv cache create failed\n");
+ 		err = -ENOMEM;
+ 		goto err_create_fdls_frame_recv_cache;
+ 	}
 
-> diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-> index 2d04448432a77..83d726043d3e8 100644
-> --- a/drivers/scsi/libiscsi.c
-> +++ b/drivers/scsi/libiscsi.c
-> @@ -429,7 +429,8 @@ static int iscsi_prep_scsi_cmd_pdu(struct iscsi_task =
-*task)
->  	if (session->tt->init_task && session->tt->init_task(task))
->  		return -EIO;
-> =20
-> -	task->state =3D ISCSI_TASK_RUNNING;
-> +	/* Pairs with the acquire in the RX task lookups. */
-> +	smp_store_release(&task->state, ISCSI_TASK_RUNNING);
->  	session->cmdsn++;
-> =20
->  	conn->scsicmd_pdus_cnt++;
-> @@ -702,7 +703,8 @@ static int iscsi_prep_mgmt_task(struct iscsi_conn *co=
-nn,
->  	if ((hdr->opcode & ISCSI_OPCODE_MASK) =3D=3D ISCSI_OP_LOGOUT)
->  		session->state =3D ISCSI_STATE_LOGGING_OUT;
-> =20
-> -	task->state =3D ISCSI_TASK_RUNNING;
-> +	/* Pairs with the acquire in the RX task lookups. */
-> +	smp_store_release(&task->state, ISCSI_TASK_RUNNING);
->  	ISCSI_DBG_SESSION(session, "mgmtpdu [op 0x%x hdr->itt 0x%x "
->  			  "datalen %d]\n", hdr->opcode & ISCSI_OPCODE_MASK,
->  			  hdr->itt, task->data_count);
+---
+base-commit: 97d73c8251226cf27cc6656b4c542869bb8c69fa
+change-id: 20261114-fnic-typo-7449d2e4494a
 
-[Severity: High]
-Can the RX path still complete and free task after
-smp_store_release(&task->state, ISCSI_TASK_RUNNING) before the transmit
-path finishes using it or acquires its reference?
+Best regards,
+--  
+Izaac Chong <izaacchong934@gmail.com>
 
-iscsi_data_xmit() runs under session->frwd_lock and calls
-iscsi_prep_mgmt_task() (or iscsi_prep_scsi_cmd_pdu()) while task->refcount
-is still 1, before iscsi_xmit_task() takes the transmit reference.  Since
-__iscsi_complete_pdu() and iscsi_handle_reject() run concurrently under
-session->back_lock, an unsolicited response or Reject naming that ITT can
-arrive in between:
 
-kworker (CPU0)                    <softirq> (CPU1)
-iscsi_data_xmit()
-  spin_lock_bh(&session->frwd_lock)
-  iscsi_prep_mgmt_task(conn, task)
-    smp_store_release(&task->state,
-                      ISCSI_TASK_RUNNING)
-                                  __iscsi_complete_pdu()
-                                    spin_lock(&session->back_lock)
-                                    smp_load_acquire(&task->state)
-                                      =3D=3D ISCSI_TASK_RUNNING
-                                    iscsi_complete_task(task, ...)
-                                      __iscsi_put_task(session, task)
-                                        iscsi_free_task(task)
-    ISCSI_DBG_SESSION(...)
-      hdr->opcode                 <-- use-after-free if cleanup_task
-                                      freed task->hdr
-  iscsi_xmit_task(..., task, false)
-    iscsi_get_task(task)          <-- fails (refcount =3D=3D 0),
-                                      triggers WARN_ON_ONCE(1)
-
-Even if iscsi_get_task() runs before the RX completion, iscsi_xmit_task()
-drops session->frwd_lock around session->tt->xmit_task(task); if RX
-completes the task during that window and xmit_task() returns an error
-such as -EAGAIN, iscsi_xmit_task() unconditionally calls
-iscsi_get_task(task) and saves the completed task in conn->task for
-retransmission:
-
-drivers/scsi/libiscsi.c:iscsi_xmit_task() {
-    ...
-	spin_unlock_bh(&session->frwd_lock);
-	rc =3D session->tt->xmit_task(task);
-	spin_lock_bh(&session->frwd_lock);
-	if (!rc) {
-		/* done with this task */
-		task->last_xfer =3D jiffies;
-	} else {
-		/*
-		 * get an extra ref that is released next time we access it
-		 * as conn->task above.
-		 */
-		iscsi_get_task(task);
-		conn->task =3D task;
-	}
-    ...
-}
-
-In addition, for transports without ihost->workq, iscsi_send_mgmt_task()
-and iscsi_queuecommand() call iscsi_prep_mgmt_task() or
-iscsi_prep_scsi_cmd_pdu() and invoke session->tt->xmit_task(task) directly
-without taking an extra task reference at all, so an RX completion after
-ISCSI_TASK_RUNNING is stored frees task while xmit_task() is running (and
-if xmit_task() fails, the caller puts task a second time).
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261113233938.3974=
-15-1-yhlee@isslab.korea.ac.kr?part=3D1
