@@ -1,79 +1,101 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1794657378;
-	b=NBr6D6FSZSe557ZxHX53wyrFDyg4Wy4TBEbqrDzTf78TOJ3PzIgafz2FKXshUd2gPGtz
-	 dIjusLoAa17+3Vu1+auWT+3UVgvmrIdrrHgXyD2sQrQ+ZP/ElKw7nzN434l4K5PtKE3L3
-	 eiVk7f5HpcRLqCoHdT9lDPq8xhhNYfbdU1NykNdqIK7tdbhmDgNOKG8YnDdguAmxsPikD
-	 joWmTKtiqrD11eoxA+tejPO9qHX25vsQx+NoUE3a/yGMNQvuoZmNQMv0SLsHfnTb0+wOV
-	 3aGx1toYOudfn0Xrlj9Fi5yc7FbpwxfJADEMSCSxd+NEmAmCzOmsL1lKCQujJFUEjbA==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794657378;
-	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
-	 Content-Type:Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
-	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
-	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=/2hjrB65D30vCvt5YWlJ2EoRPo0VzzXwxqoyF2Wo8n8=;
-	b=zUPvCsBJAOEqn8P6INUdvc+sN0+i6t1W22/yr9O4SkmO2uWevBhuVde8ZC9BWqlXNyec
-	 O9uFTVPVVrnS0boQwUncWDX3SAJW3a60zVpV+psH69IaC71G5YMiQtiumuNmea5k+tZLF
-	 2TsuOQA+8KY/GRH7gcB/r0hY10h4K0evTGlkGoj4VKqRQ4hIWJBmg65gaXD/f3dJZrKtz
-	 bXr7RKLB8bu110OSm/XWQNcD4feApxMrejVhLkObIoM+98DS9mjB/q19bpTOdDwQvJBWC
-	 Upj1TKVLU+h5u8JF0zP3SXt1nMHYfY9KzrTX6QWj2UWGuFXtS+co7O+D1el0KW3gKcg==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=XRJKy710;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F02F060A262C;
-	Sat, 14 Nov 2026 11:56:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=XRJKy710
-Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
-ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
-	t=1794657377;
-	b=X9w88yv2cVMn690pprbfKgcB9kiPM2Qca4FoSCLjUwAYACkYc9YRwIIlhwo6WTHLkA2g
-	 tXG6e2wHbVs1fQ372uo5z4rPhRLObHef5hDFWnuQTAC4CkmkyObcAtciaVes9A3uWFpVh
-	 RPRuIhAtx61qkdp92Eyecj0QlZNmqrheUBswdwpZ1h6vHF5l757FrKXJ17NF2yyZsCiJq
-	 Sv7F2NhF50UfPtT4p2NcH7S8/xO9f0BJtLq5bfDzgS93PtyMbrCK6N08PjB/WGM96LKdZ
-	 O3MswlYuHqNPdrr9MhHY8zHXV/dcmuwmdg2c3/mqHld5v7zq6C+/90EUi+o6c/5c7Ew==
-ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
-	c=relaxed/relaxed; t=1794657377;
-	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
-	 Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
-	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
-	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=/2hjrB65D30vCvt5YWlJ2EoRPo0VzzXwxqoyF2Wo8n8=;
-	b=QeIutcXurMmZcBtNSScXag3uEh5ChX0W0EeGopFM8IFWYPmjF/DCcNjTwJ/NBNkR+pnz
-	 +SLs1LsJKo9NOlT/uo+IYDFs+9cZA5Po078NvLzSrB5t1KTOsQEqtcaEVCu3yYmYyTWJ8
-	 vCATrBCK6sGc7cuP359M04tw9v68RQnGh1K1oHET3IJp0zf6ac51mE++9rVVOvqIFTe6N
-	 swBFlI40/F6BZhfxGs9NW/LOc8t3Y+PsxGdr2s7z1OE0WomO+Lh/b9OAX364LY1keNAvG
-	 tFXYgdk+PlVzP4eXkwAv0FgYBlV3qOXyIljhbXXK4fMas9VxBAycpIWizoBR3e88Ntg==
-ARC-Authentication-Results: i=1; smtp.kernel.org; 
-	arc=none smtp.remote-ip=100.80.115.77
-Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.208.42
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1794658800;
+	b=5hkDObcxIxOm3+Jrk1Q4IjV9kWoVLWP7SljFXvLj/8ToKJ0t7oawlqy7VCNoAAnui5nO
+	 UHVYSQF2pu3/pPbjGY9Uqjr8N+SrcYDIhVJZcpA61EqNc3tvH/FFYQY1qU76uWiuPu8D4
+	 vvMOf2reDRLYmT4aA1J6h9d16oqjVsA6fSW+rBOfPVTzOHavyAoyGAYlMdxIew91d4Iei
+	 w6hkM6rSxcQPv9KIpM3FgQjSz3pl9rIf7g6mQlHWW7RvOZotUsbn5ZAL19C921XjohYDF
+	 CFLhm8ZWjXKImcKkiECj2DIKBUbpbIVwKfCCM/x6o27sNjcZuQw7MBc1PTJU1sa/ZNA==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794658800;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To;
+	bh=nkM3J4QAu8kIsGHpB1EKb0NRF0JxtY2T/gqGpQ/nt0Q=;
+	b=fYoXgbx5lOp+gmfGzLeAErKk8rLll77hQ5HoSNe6s284JsFPolcG3ei0PyMvoO6YnELl
+	 wURoRDOacAiHM9tOStsmyTvgpTefGYTbTjxtU6rqHKtUSa6vEhRXZ84NTBW+Tzgeeh/KL
+	 dhSgREzJ1kStV1tcm5WwHAHtiXjGDVahREqJ9EKtwBdmFZwr+m8ykG5MKOOoBCpOAsmIK
+	 ZzqgHk7GLAsnWNh64+kg1p2BTcw3q2etGIj7JFJ3KDASl9zoHpiAgc8EpkX3vSyEL6vTl
+	 T8wqEtSvsWMOwnrNl3JtJltRRigklVFRg6WPJCaCNZC4THTD69M/u1ds1a/5qIv2Wgw==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=Zvg2B30u;
+	arc=none smtp.remote-ip=209.85.208.42
+Received: from mail-ed1-f42.google.com (mail-ed1-f42.google.com [209.85.208.42])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.kernel.org (Postfix) with ESMTPS id 91FF31F000CC;
-	Sat, 14 Nov 2026 11:56:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794657377;
-	bh=/2hjrB65D30vCvt5YWlJ2EoRPo0VzzXwxqoyF2Wo8n8=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To;
-	b=XRJKy710p3Q3Vy9N2rLX7+O0oSzynf3BvVGFFPy1/U8mHEqxZjqyaW+lXtNO9+tgG
-	 msFXEkXuPEnDE/2K9JbBeSEQhYvIzyuh4x6RtAdn8ihXZaschKQ4nMRUA1N+Fnff3Z
-	 Fc7iFRWdCLY2ZVA5uQGKhqoHhSuKwILrk/Ko3D3ZNscLe+PiiDCEZ2s49QkMMCa0Y0
-	 qwaIlswDHZLPmcmvOBnDeQ83nm+evqH/lTusGpPcGwt293V4rTHXYz/KgxSFjllvhH
-	 oabXXb2NMLhZ0tAC5eGBxFyr/MSg/2wUPqrX9/sLZbNfNqZOUDhjC++n+BXg85VrJ2
-	 bXptoHXs6WTUA==
-Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
-	by lkml.kernel.org (Postfix) with ESMTP id A895849D82;
-	Sat, 14 Nov 2026 11:56:13 +0000 (UTC)
-From: Larisa Grigore via B4 Relay <devnull+larisa.grigore.oss.nxp.com@kernel.org>
-Date: Sat, 14 Nov 2026 12:55:40 +0100
-Subject: [PATCH v11 08/14] ufs: dwc: Sort CBCRCTRL and CBREFCLKCTRL2 by
- offset
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2DF6C606A327
+	for <linux-scsi@vger.kernel.org>; Sat, 14 Nov 2026 12:19:59 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2DF6C606A327
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=Zvg2B30u
+Received: by mail-ed1-f42.google.com with SMTP id 4fb4d7f45d1cf-6b58cb69927so3350410a12.0
+        for <linux-scsi@vger.kernel.org>; Sat, 14 Nov 2026 04:19:59 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1794658797; x=1795263597; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=nkM3J4QAu8kIsGHpB1EKb0NRF0JxtY2T/gqGpQ/nt0Q=;
+        b=Zvg2B30uBzOFFo54OpfHCzqSK6TOyxTRmwNZV7t2nfrBwunaCrRH+5tI09/jIosXZS
+         GdYk6iMfyO0nJ3moVzjaSKnXCCWxcV1Ye+R/4YjiwdwGG8ofIv4PWH24MjP/VV4CkNiq
+         nSM7j6UNEdEDdNWpjUjn43q9YL/wt1IFltOrsPhL2VYrn8g/yyR7Uz6PFelA0j1tolIT
+         QTqiv37OCVMy+5oEwlNBsw2cKiejzgZGAC7AZW2QPAu9cR2dMcfIteYf8vq02JyCIN53
+         /PYiFz/vA+fp7KPo0fCiRfu55fCeLd5qLFIcUMGbAUVH1mkivaDzQTprXnn5n1PDT9pn
+         6ZTA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1794658797; x=1795263597;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=nkM3J4QAu8kIsGHpB1EKb0NRF0JxtY2T/gqGpQ/nt0Q=;
+        b=YB1SRJZybnVS+9gWhuitzRjgbYtMy93f7AZB/bHvwmvAYWeS0qs+cnPYIRwu5V6v4g
+         PlEaoNUs/L7tLmIzpnTnL/UyrXiZC5B+KzC7LVksUZJQOYGWL4eF3+e0ycNbImCjls2x
+         J4ofdrUwNmUw5vEhvJhrJhiSFA4ww/xPpuDU6TUp1IMKEs/e+R37hnPEGwaz1iPtes3g
+         OZ9TuXq21ba+V8qfC+uPSeXGIMqNH1ZUOxLeqruI2k7bOuIVcAc7zX1lNQoewerdFgcY
+         r66BF8/L2nUfbmK0WPDB1eoid1SoAKF51IDn7dwXJ/6XL+cpgObCr8UG0Mvc2MhZRBlw
+         0/bA==
+X-Forwarded-Encrypted: i=1; AL+hErH19aTOxiTZxYvOmtrE27wK62Fmu1H9Wth5PNcVzhr9cu9ZEWQQoFBM44iXKSYm/+DcGzxRIUMho3Vs@vger.kernel.org
+X-Gm-Message-State: APuU4Z8Q2nSmANNvf6togy6eDzbJRljm+lL8fv3mFPEdiBWDG2HjdBzz
+	L16QmVM6AWBdCYAwRfvYn3cwVTGHbQduszCiCGcEC/BizBK3N5aIIbKw
+X-Gm-Gg: AYBFou0evGLFQ0tzTZOYF64nX3N9UDMv0blAaLpOt9l2xtiphIA+jAmxxC458Fhq6Yq
+	kXYIqGvdThGXEE8jPMC6CY9Lfe7zNy4VFib70/T73PU3to8KXluXhluJFFYGNQG0pPqSivfE2uI
+	LNplfScGcPrTlRUSjeBEtcgDfjWfqMud1uj/yS2wsUjpNDDwOjGBMFKsDZhgPYHpgrgS7yZqQ8o
+	FWZ9xpjCG+ftY7sz2ZJD97vBEbaqZ9a0DfELkYc0DutOUZbNhIr7mH3BBiYAFaDYhFxXT9/pfAA
+	5siQr3LNPpQCfN9nSf5OLAHoTGvhCFcwyhIjjLP7xBUU4gYhaPKlQs3vP53RYkvobZiO0L9nX5R
+	uPbTyEo9u0oMKug1Bne7eu4cDZ9sCO9oSaCjPepD0OieOvCO8fFWFWZaki8/lfu6yMY+wCeNquT
+	Ty1SNwtfha/JasiRdXeYFewKPSXTecgGEM41Sd3OYSkEL3D/7h/bTwQYnRvrVdWOC5Qbj0y9XRr
+	psEZTX4gCxXUILI4011DXBKXiiqs0uzuAsELDjLUDFeJTsPgW1CIsP7pAicaMpOBtxyFpIYIDj+
+	syA64mBj2/+R5e/m6J0EaP8V3qzedGZxPFPun3+qrYjJUGB7ATi+Kytyd4AHrjfqAIcvY1NlEUb
+	2auJb6dEIJFg/
+X-Received: by 2002:a17:906:1001:10b0:c41:4512:560d with SMTP id a640c23a62f3a-c5096387b02mr309942166b.16.1794658797424;
+        Sat, 14 Nov 2026 04:19:57 -0800 (PST)
+Received: from localhost (178-84-201-199.dynamic.upc.nl. [178.84.201.199])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-c5095b5ac2asm211518966b.55.2026.11.14.04.19.56
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 14 Nov 2026 04:19:56 -0800 (PST)
+Date: Sat, 14 Nov 2026 13:19:56 +0100
+From: Amir Goldstein <amir73il@gmail.com>
+To: Christian Brauner <brauner@kernel.org>
+Cc: Jan Kara <jack@suse.cz>, Shakeel Butt <shakeel.butt@linux.dev>,
+	Alexander Viro <viro@zeniv.linux.org.uk>,
+	Jens Axboe <axboe@kernel.dk>, linux-fsdevel@vger.kernel.org,
+	linux-kernel@vger.kernel.org, io-uring@vger.kernel.org,
+	Christoph Hellwig <hch@lst.de>, linux-block@vger.kernel.org,
+	linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
+	target-devel@vger.kernel.org, linux-unionfs@vger.kernel.org,
+	bpf@vger.kernel.org, linux-nfs@vger.kernel.org,
+	stable@vger.kernel.org
+Subject: Re: [PATCH 10/12] ovl: take freeze protection when storing the uuid
+Message-ID: <avhR7DbNbVDCyPDO@amir-ThinkPad-T480>
+References: <20261114-work-fs-frozen_writes-v1-0-f5ae61c898b1@kernel.org>
+ <20261114-work-fs-frozen_writes-v1-10-f5ae61c898b1@kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -83,89 +105,53 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Message-Id: <20261114-b4-ufs-s32n7-v11-8-dc36e11919d5@oss.nxp.com>
-References: <20261114-b4-ufs-s32n7-v11-0-dc36e11919d5@oss.nxp.com>
-In-Reply-To: <20261114-b4-ufs-s32n7-v11-0-dc36e11919d5@oss.nxp.com>
-To: "Martin K. Petersen" <mkp@kernel.org>, 
- Alim Akhtar <alim.akhtar@samsung.com>, Bart Van Assche <bvanassche@acm.org>, 
- Krzysztof Kozlowski <krzk+dt@kernel.org>, 
- Conor Dooley <conor+dt@kernel.org>, Rob Herring <robh@kernel.org>, 
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Cc: devicetree@vger.kernel.org, Ajay Neeli <ajay.neeli@amd.com>, 
- Adrian Hunter <adrian.hunter@intel.com>, linux-arm-msm@vger.kernel.org, 
- Peter Wang <peter.wang@mediatek.com>, linux-kernel@vger.kernel.org, 
- NXP S32 Linux Team <s32@nxp.com>, Asutosh Das <quic_asutoshd@quicinc.com>, 
- linux-arm-kernel@lists.infradead.org, Stanley Jhu <stanleyjhu@google.com>, 
- Frank Li <Frank.Li@nxp.com>, imx@lists.linux.dev, 
- linux-scsi@vger.kernel.org, Bean Huo <beanhuo@micron.com>, 
- linux-mediatek@lists.infradead.org, linux-samsung-soc@vger.kernel.org, 
- Pedro Sousa <pedrom.sousa@synopsys.com>, 
- Baolin Wang <baolin.wang@linux.alibaba.com>, eballetb@redhat.com, 
- Peter Griffin <peter.griffin@linaro.org>, echanude@redhat.com, 
- Chaotian Jing <chaotian.jing@mediatek.com>, 
- Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>, 
- Sai Krishna Potthuri <sai.krishna.potthuri@amd.com>, 
- Manivannan Sadhasivam <mani@kernel.org>, linux-rockchip@lists.infradead.org, 
- Krzysztof Kozlowski <krzk@kernel.org>, clizzi@redhat.com, 
- AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>, 
- Heiko Stuebner <heiko@sntech.de>, Matthias Brugger <matthias.bgg@gmail.com>, 
- Chunyan Zhang <zhang.lyra@gmail.com>, Can Guo <can.guo@oss.qualcomm.com>, 
- Orson Zhai <orsonzhai@gmail.com>, aruizrui@redhat.com, 
- linux-renesas-soc@vger.kernel.org
-X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1794657370; l=1160;
- i=larisa.grigore@oss.nxp.com; s=20261114; h=from:subject:message-id;
- bh=jFPb09TEw+o0co3IKimWFQwdujSqoSGN2BKqE5DQhEI=;
- b=ixpsDc5UGD5DMWn3XWZWIo71JIdLStTqgwVuwD42MliFUu4v4d8dPwsTNw9xryPPVqxhBXeFW
- B+Cnmgy6MATB1HDgNV7Osmu4wXB0v9u16j7fle2yFFwau9gIp59++8f
-X-Developer-Key: i=larisa.grigore@oss.nxp.com; a=ed25519;
- pk=Jpt52sb6ETKTtvWjUzhz5Sv5FjB9AEg9QKCcbpWFx3w=
-X-Endpoint-Received: by B4 Relay for larisa.grigore@oss.nxp.com/20261114
- with auth_id=1522
-X-Original-From: Larisa Grigore <larisa.grigore@oss.nxp.com>
-Reply-To: larisa.grigore@oss.nxp.com
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261114-work-fs-frozen_writes-v1-10-f5ae61c898b1@kernel.org>
 
-From: Larisa Grigore <larisa.grigore@oss.nxp.com>
+On Sat, Nov 14, 2026 at 11:47:17AM +0100, Christian Brauner wrote:
+> ovl_init_uuid_xattr() stores the persistent uuid in an xattr on the
+> upper root. That happens after ovl_make_workdir() dropped its write
+> access to the upper mount and before ovl_get_indexdir() takes it
+> again. So a freeze of the upper filesystem that lands in between lets
+> the mount modify a frozen filesystem.
+> 
+> Take write access to the upper mount around the xattr update.
+> 
+> Fixes: d9544c1b0d9e ("ovl: store persistent uuid/fsid with uuid=on")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 
-The RMMI attribute defines in ufshcd-dwc.h are otherwise listed in
-ascending register-offset order, but CBREFCLKCTRL2 (0x8132) and
-CBCRCTRL (0x811F) were placed at the top out of order. Move them down
-into their sorted position next to the other CBCREG* attributes.
+Reviewed-by: Amir Goldstein <amir73il@gmail.com>
 
-Pure cleanup, no functional change.
+Thanks,
+Amir.
 
-Signed-off-by: Larisa Grigore <larisa.grigore@oss.nxp.com>
-Reviewed-by: Frank Li <Frank.Li@nxp.com>
----
- drivers/ufs/host/ufshcd-dwc.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/ufs/host/ufshcd-dwc.h b/drivers/ufs/host/ufshcd-dwc.h
-index 53b523ef59df..1abf2b1deac4 100644
---- a/drivers/ufs/host/ufshcd-dwc.h
-+++ b/drivers/ufs/host/ufshcd-dwc.h
-@@ -13,8 +13,6 @@
- #include <ufs/ufshcd.h>
- 
- /* RMMI Attributes */
--#define CBREFCLKCTRL2		0x8132
--#define CBCRCTRL		0x811F
- #define CBC10DIRECTCONF2	0x810E
- #define CBRATESEL		0x8114
- #define CBCREGADDRLSB		0x8116
-@@ -24,6 +22,8 @@
- #define CBCREGRDLSB		0x811A
- #define CBCREGRDMSB		0x811B
- #define CBCREGRDWRSEL		0x811C
-+#define CBCRCTRL		0x811F
-+#define CBREFCLKCTRL2		0x8132
- 
- #define CBREFREFCLK_GATE_OVR_EN		BIT(7)
- 
-
--- 
-2.43.0
-
+> ---
+>  fs/overlayfs/util.c | 8 ++++++--
+>  1 file changed, 6 insertions(+), 2 deletions(-)
+> 
+> diff --git a/fs/overlayfs/util.c b/fs/overlayfs/util.c
+> index 521717209b2e4..67aa7b71e9c83 100644
+> --- a/fs/overlayfs/util.c
+> +++ b/fs/overlayfs/util.c
+> @@ -829,8 +829,12 @@ bool ovl_init_uuid_xattr(struct super_block *sb, struct ovl_fs *ofs,
+>  
+>  	/* Try to store persistent uuid */
+>  	set = true;
+> -	res = ovl_setxattr(ofs, upperpath->dentry, OVL_XATTR_UUID, uuid.b,
+> -			   UUID_SIZE);
+> +	res = mnt_want_write(ovl_upper_mnt(ofs));
+> +	if (!res) {
+> +		res = ovl_setxattr(ofs, upperpath->dentry, OVL_XATTR_UUID,
+> +				   uuid.b, UUID_SIZE);
+> +		mnt_drop_write(ovl_upper_mnt(ofs));
+> +	}
+>  	if (res)
+>  		goto fail;
+>  
+> 
+> -- 
+> 2.53.0
+> 
 
