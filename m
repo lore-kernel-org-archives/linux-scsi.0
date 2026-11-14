@@ -1,48 +1,48 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794661768;
-	b=Ht2i/99yz7UqCVEuX4tz5+45ReCDSA4fevekQGEO+kH0qkf9p/7mlSYkQB+Cd5GxruQL
-	 6Y8t2HzElDcDJv/AkPB6LZwpMhPwdz2uZ5OL0L1FZuxuARVoJ6iVU52wuDcDRaIpoTaA6
-	 nn+QTrPrsDzbWtM0xSS9cFI3X8mNOpV1zrcwutSwcitIkXA7IBEz/iNb67P/u6T6bxTwl
-	 ArIJi2NTVlw7r8LUejNP7gOAAvCuF6reaL7RLC/COraubFY/xODR0lRTm6oPEBrRrrcvO
-	 FNyyVWX0kz4AN4etl2XhLN9MU/oT6k6MaTcAhjCpKJhcV2JQgIRiTS3OoZ4BKtsig+Q==
+	t=1794661755;
+	b=XorY1jhIrjJ8EdySbULL0opWE1o+1EkOa9pq2RyRAks6fcwRbI6jYzHYOYNK7vDgT3aI
+	 xxSE3+p9RJhlktgLtIkAQBlH/g1+UCauUbgt5FaVXsry321iz2Ts3hCMFkeSTcS6LVfQl
+	 TrGTuUBwg3GLet2BFxBPFejUbkZOgftpdfz9pWekM20ZaNLlM6oH+e+skzdnZ2TOZdDMX
+	 UnPIeVaSLyYfTZP5P0cdxo16kw+5ve/LUfFf7WMJMHsiegMKZ5zltUbBBP6IbsEsLho9p
+	 QOsxGa51uQsDF30qZf6D9d/PI0B1HEDNG3SN2xikQvp/AZBNl5AmnMVAEDxVZ7SUIyA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794661768;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794661755;
 	h=Received:DKIM-Signature:From:Date:Subject:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding:Message-Id:References:In-Reply-To:To:Cc:
 	 X-Mailer:X-Developer-Signature:X-Developer-Key;
-	bh=H3woHW5NuHalYxniipx06r8pldr4YceYTv1pn/rF5vE=;
-	b=HhJNNgF/8eni2mg0r4xBeasvvKBXnLFwX1IgIdvZOiJsTFbNcI99TWX3zbDZ22gNcDt2
-	 ovuiS84iqkkgjmAyIuEzsOqHulxMn9HyRazUnwY+5r/mu80hWQwl0eZGQwX3NLmJR931m
-	 4I02VA7YkVHjzgwK0d82MTezfmHFsF+gmTsPNrOmshV6E5LKMr8FLiNCpwdEydT5MclB8
-	 Wj3A73cQ4hHoD7MrKSBF4JMFV1nTvTLTlZQOoYbcwqojlSDpm67o7fqdMNyc12dbOW+zD
-	 JFByAbV72+wOrrlel2EWWHOFBqUFQcKnR4Zq7Aeri+S68EDcm2A4K4fuIzdOCeF1Xuw==
+	bh=Wp6UiJ6JxspVcAI8vmdp5Pu91b6oGaOfKwkx6Df5sII=;
+	b=DwGKhMt67f4qBKqvtIIqGbRkpReD8GXiFg+EhLTL617oLU3Hdy9Fjl6IEtd3tvkl0NnV
+	 pG2DiROoZpDSr0GP9zFmRJMJqHVvaQVQLpp2F6XRB/qVdimlGC5kNFSWXQvUq5Pc1gAET
+	 pjsn4QBASIvVNDolSMFZVeeMQFcsWGPzaaa7OZgnXoUH95L/bB30pLXiE4We9cI9uNJqw
+	 pFmaaShOe3d2E1xMr0YPlblek3UX1bJ9nynA54lQrLz0vNtH9LDn8Vas3FoCMMd0MgBY9
+	 x7oDSUiFODRsIVgIzobaM4evjqSU//nfrNpHRFPevyRzEAYCReECa0wF+6g9ZKKYICg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="UAg3s/Vf";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=S1xIy3Kr;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6EB516076649;
-	Sat, 14 Nov 2026 13:09:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63F5A6075270;
+	Sat, 14 Nov 2026 13:09:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=UAg3s/Vf
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 494421F000C4;
-	Sat, 14 Nov 2026 13:09:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=S1xIy3Kr
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A6EAE1F000C6;
+	Sat, 14 Nov 2026 13:09:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794661768;
-	bh=H3woHW5NuHalYxniipx06r8pldr4YceYTv1pn/rF5vE=;
+	s=k20260515; t=1794661755;
+	bh=Wp6UiJ6JxspVcAI8vmdp5Pu91b6oGaOfKwkx6Df5sII=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=UAg3s/VfqaxFZr4H3x+hoBgaYeR58NCwZLQGG146Mb/pBhr/WcRGZ7xb7M/thEkMD
-	 PJlUKEdmCBwLw2fGmP07bSQQ9RnzN2mppJ3S4yzMBEInXYqU5b2zYclVyeVZXRYChW
-	 20DI30qNtO7uGRC+D7ic8YqQVEfQ5u4NJcR2KWnrkO709Biw9Lp8DNuSRq0pC5chiH
-	 vwleIe6pSr3ZgR0iu7ov+4jGyoHUhvjM9/10Nw7l/T9Aa7yHdKZtvBVuPQbCedcvZR
-	 Bf1414fQ9ZOmDwhWQAS1CmBYmYejnUXu0vjs2mMLEcO6qOYxSnm1AgvHWgMj+X5l1S
-	 AOnQHCwdL9VZA==
+	b=S1xIy3KriPdoEMTc9dfCxcd8nJZzA6/xLqEC9Ek691tlamme55qJphgP6kTqiLd8a
+	 gyYuU7lALuiqsRc4AVPgbXVJK+NhDA4+7zujFjgM6QpBfN5IckM0YEqdbXktr/nw+h
+	 Lnumd0/GdHt+C2cs+wHroPF9ZZbqkOvPvOycnwePXHaTKKv61dbwr0kOr8R12Yy/jy
+	 TYX37go2jAbTDcgIHhVHfyn/x159FhwjUbvk3VQiFEIoyIL4VPg8k6GDEkPS6GbBRx
+	 Ui3KnXYZa0I+MODr9/kXlFNPNu8LZjXuuuvEb5jTNLwqAqpbCB3xy60OP18fpqthQb
+	 IPWYjaZ1+0aPw==
 From: Christian Brauner <brauner@kernel.org>
-Date: Sat, 14 Nov 2026 14:02:14 +0100
-Subject: [PATCH RFC v2 33/42] fs: add file_check_backing()
+Date: Sat, 14 Nov 2026 14:02:12 +0100
+Subject: [PATCH RFC v2 31/42] usb: gadget: f_fs: use fc_init_pseudo()
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -54,7 +54,7 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261114-work-loop-pseudo-v2-33-98639a2286fb@kernel.org>
+Message-Id: <20261114-work-loop-pseudo-v2-31-98639a2286fb@kernel.org>
 References: <20261114-work-loop-pseudo-v2-0-98639a2286fb@kernel.org>
 In-Reply-To: <20261114-work-loop-pseudo-v2-0-98639a2286fb@kernel.org>
 To: linux-fsdevel@vger.kernel.org
@@ -75,135 +75,44 @@ Cc: Jann Horn <jannh@google.com>, Chris Mason <mason@kernel.org>,
  linux-kselftest@vger.kernel.org, 
  "Christian Brauner (Amutable)" <brauner@kernel.org>
 X-Mailer: b4 0.17-dev-ce4c1
-X-Developer-Signature: v=1; a=openpgp-sha256; l=5096; i=brauner@kernel.org;
- h=from:subject:message-id; bh=udmwrAi4jqUBDqxn9CQi3IZuwOmdQkanmcVhsi9fI/0=;
- b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWT9iOmZyCSi3Nt50cbl+WtTZr6+x/W2TjHVZT3Xbdyzc
- x+n863uKGVhEONikBVTZHFoNwmXW85TsdkoUwNmDisTyBAGLk4BmEjgC0aGT2rLm55oe20wSrmQ
- M4nXdurS2cK72+fXmy0t+NOrp6q2geGvmHTig8czFrfm67GlVHNkKdSzCE+IFlWzeTFnz5QEgQw
- OAA==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=957; i=brauner@kernel.org;
+ h=from:subject:message-id; bh=FyQs9iBDL23rPU6G39Bge4Pz9tDFD7sQ36KmSfY2Fy4=;
+ b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWT9iOks7Sk79l9iocNp1bT+iXKvo16xtz4Sff5U18j3x
+ bKqSoVtHaUsDGJcDLJiiiwO7Sbhcst5KjYbZWrAzGFlAhnCwMUpABNhm8PwT/HM2d+nJ4VPen1g
+ xROh7Qu3d08LePFy7v6VZ58HB2m7M05hZPgQxrBA0Vj22KJ71q0c77YLbm9fvFXYWin18eItfPY
+ MCcwA
 X-Developer-Key: i=brauner@kernel.org; a=openpgp;
  fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 
-Loop, zloop, the nvme target, the scsi target, fuse passthrough, the usb
-mass storage gadget, erofs and acct all take a file from userspace and
-use it as storage. Currently, each of them has its own idea of what to
-check before using a file like that:
-
-- loop and the gadget check for a regular file or a block device, the
-  nvme target, the scsi target and zloop take any file type
-- loop checks the open mode, the gadget checks FMODE_CAN_READ, the nvme
-  target, the scsi target and zloop only check for ->read_iter() and
-  ->write_iter()
-- apart from acct which refuses procfs and sysfs files none of them
-  cares whether the file is a kernel interface
-
-Add a helper that does all of it in one place. It only accepts regular
-files and, if the caller passes S_IFBLK, block devices. It refuses files
-on pseudo filesystems. And it checks that the file is open for what the
-caller is going to do with it and implements ->read_iter() for reading
-and ->write_iter() for writing.
-
-O_PATH files are refused unless the caller passes FMODE_PATH. That is
-for callers that only need the path of the file. fuse passthrough is
-one of them and has accepted O_PATH file descriptors since commit
-efad7153bf93 ("fuse: allow O_PATH fd for FUSE_DEV_IOC_BACKING_OPEN").
-
-Block devices are fine even though bdevfs is a pseudo filesystem. A
-block device that userspace hands in is a device node on devtmpfs or
-some other filesystem. Files on bdevfs only come from
-bdev_file_open_by_*() and never end up here.
-
-The pseudo filesystem check looks at the inode that actually provides
-the data via d_real_inode(). overlayfs accepts sysfs, cgroup2, debugfs,
-tracefs, configfs and securityfs as lower layers and reads of such an
-overlayfs file are served by the file on the pseudo filesystem. Checking
-the overlayfs inode would miss that.
-
-Note that the file type is taken from the inode of the file and not from
-the host of ->f_mapping like loop and the gadget do it. A driver can
-point ->f_mapping somewhere else in ->open(). It makes no difference for
-block devices as both inodes are block devices.
-
-No functional changes. Nothing calls the helper yet.
+Initialize functionfs as a pseudo filesystem. This raises SB_I_PSEUDO and
+also SB_I_NOEXEC and SB_I_NODEV. functionfs never holds executables or
+device nodes.
 
 Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
- fs/read_write.c    | 48 ++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/fs.h |  2 ++
- 2 files changed, 50 insertions(+)
+ drivers/usb/gadget/function/f_fs.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/fs/read_write.c b/fs/read_write.c
-index 6767283108991..cedbe654add65 100644
---- a/fs/read_write.c
-+++ b/fs/read_write.c
-@@ -866,6 +866,54 @@ static ssize_t do_loop_readv_writev(struct file *filp, struct iov_iter *iter,
- 	return ret;
- }
+diff --git a/drivers/usb/gadget/function/f_fs.c b/drivers/usb/gadget/function/f_fs.c
+index c64a268e98a43..a6b3788399a56 100644
+--- a/drivers/usb/gadget/function/f_fs.c
++++ b/drivers/usb/gadget/function/f_fs.c
+@@ -15,6 +15,7 @@
+ /* #define VERBOSE_DEBUG */
  
-+/**
-+ * file_check_backing - check that the kernel can use a file as storage
-+ * @file: file that userspace handed in
-+ * @mode: FMODE_READ and/or FMODE_WRITE the kernel will do I/O with, or
-+ *        FMODE_PATH if only the path of @file is used
-+ * @type: S_IFBLK if a block device is fine as well, 0 otherwise
-+ *
-+ * Call this where a file from userspace is taken as a backing file. Only
-+ * regular files and, if @type is S_IFBLK, block devices are storage. Files
-+ * on pseudo filesystems are kernel interfaces and are refused. The file
-+ * must be open for @mode and implement ->read_iter() for reading and
-+ * ->write_iter() for writing. O_PATH files are only fine with FMODE_PATH.
-+ *
-+ * Return: 0 on success, -EBADF if @file isn't open for @mode, -EINVAL if it
-+ * can't be used as storage.
-+ */
-+int file_check_backing(const struct file *file, fmode_t mode, umode_t type)
-+{
-+	fmode_t io = mode & (FMODE_READ | FMODE_WRITE);
-+	/* Drivers may point ->f_mapping at something else. */
-+	umode_t fmt = file_inode(file)->i_mode & S_IFMT;
-+
-+	/* O_PATH files are only fine for callers that just use the path. */
-+	if ((file->f_mode & FMODE_PATH) && !(mode & FMODE_PATH))
-+		return -EBADF;
-+
-+	if ((file->f_mode & io) != io)
-+		return -EBADF;
-+
-+	if (fmt != S_IFREG && !(type == S_IFBLK && fmt == S_IFBLK))
-+		return -EINVAL;
-+
-+	/* Look through stacking filesystems at the inode with the data. */
-+	if (d_real_inode(file->f_path.dentry)->i_sb->s_iflags & SB_I_PSEUDO)
-+		return -EINVAL;
-+
-+	if ((mode & FMODE_READ) &&
-+	    (!(file->f_mode & FMODE_CAN_READ) || !file->f_op->read_iter))
-+		return -EINVAL;
-+
-+	if ((mode & FMODE_WRITE) &&
-+	    (!(file->f_mode & FMODE_CAN_WRITE) || !file->f_op->write_iter))
-+		return -EINVAL;
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(file_check_backing);
-+
- ssize_t vfs_iocb_iter_read(struct file *file, struct kiocb *iocb,
- 			   struct iov_iter *iter)
- {
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 99caef43ff3c4..b1c7ebafbadbe 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -2553,6 +2553,8 @@ static inline const struct inode *file_user_inode(const struct file *f)
- 	return file_inode(f);
- }
+ #include <linux/blkdev.h>
++#include <linux/pseudo_fs.h>
+ #include <linux/dma-buf.h>
+ #include <linux/dma-fence.h>
+ #include <linux/dma-resv.h>
+@@ -2166,6 +2167,7 @@ static int ffs_fs_init_fs_context(struct fs_context *fc)
+ 	ctx->no_disconnect = false;
  
-+int file_check_backing(const struct file *file, fmode_t mode, umode_t type);
-+
- static inline struct file *file_clone_open(struct file *file)
- {
- 	return dentry_open(&file->f_path, file->f_flags, file->f_cred);
+ 	fc->fs_private = ctx;
++	fc_init_pseudo(fc);
+ 	fc->ops = &ffs_fs_context_ops;
+ 	return 0;
+ }
 
 -- 
 2.53.0
