@@ -1,45 +1,45 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794664496;
-	b=yP7+dX7p3iS9wbCgHDGUVq641Nxxuk2mFjKYY5pVOZUEGPJPgHF3JhNF97/3CoYMLmkz
-	 Mkq6PTiBvZej2Q7RcD4E3BMaK0Q4dY1uE9P5s2Cp7jFS+A77MVAT8FC1J5mAt5koodxSV
-	 uvnF6lvc3i6BeIdqtBPQ7MlwpZPAnx8iU9ztXMhLIOXld3hcsq7ZXagWl+aw+0VL7pmoL
-	 69kh7tzIJsjqTukSFSS6/72hnMvigQDcQi2MB8T71IhbCQbo3x0KQHs/x1CYU2SvZNRGM
-	 x7GO+SINOfsK/gmYVQZ6j7XTw2oqpM+kJc0pW8SySimJPmOF+nD53MbtgY5XqDo1kHA==
+	t=1794664506;
+	b=dFULKUlpSf6cJv8vlLSA8J7ZIzQqdqmTQM89l2Dxy1Hdqn2C/+y0hyVCTCExk9u3ifMy
+	 SRcOGcq1Sjb24iQYd/xjD3KjPHOmmbH/SeZ5CQ4cg3KcgajoYKbFwIQjLIiprAtMsVq8P
+	 5YQB+5Lw5+zF0o+RO15yPOCdagSBHmfewN5BZ7UKQVtpkGVNknEUnufq0sT+FH2ew7yWn
+	 xUswKFVmpu0VGjR9fJR5s+KLT161L8WOy9h7xnp/go9ONgoWpYF4KoZUOO9RONxNtCj+m
+	 TFExwtRuNAcQhKPB+JgFCQnMMfhk9qz9yMpiQVKc8QZt7f6JpshEULhsu2tNE9ZZ1Ew==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794664496;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794664506;
 	h=Received:DKIM-Signature:Content-Type:MIME-Version:Message-Id:
 	 In-Reply-To:References:Subject:From:To:Cc:Date;
-	bh=I6J+1H3vQpLdJ7UVpJ/tC85ye3HYuCATNIJGMbrXQJM=;
-	b=q1CZ4i+mmH7K20AAIyHJtswA2VFZqxHuZuIbP6uRX8Q+KFJx0jzV2Yhix46Fjl2JCCl1
-	 R7pNlnSnqt9uX0l6qz1gP1UYlDEGVC4IUZugkDAH7fomc7aK7vAybU0eT9w5hpPJ/Rqwe
-	 MyyEwtr9yM2uaoEwOQvp1Qbf7d3CMvZtjij/CdVYSYlhGtNRwvEfhUTma+iVrKVQ+uwdX
-	 lZwDXr+SHhCpllkAJ8g3gelLMj84PnqRQKCRqjKhV6Swhh/A2YQe6EVIJEK4UinR10QzZ
-	 ZDmwhaiI7GaX0Ro7FirDObnlgbuEz0vwSYZYDNtTZZZIvSM/xAT12hQtnfT3s188zsA==
+	bh=gZCOg3PYW5/XzYktPPO7fZbRJ9jC/nh9/3WC5LHdP9k=;
+	b=hXY0DqmenbfI+3T5ge4+EoX9i3cpPrl44Pw2sJDk/0UpqdvK6T1+RR8S39nxUDw94uxp
+	 FH4aL0rBYG6dBDMrQwEu4o2SLO7PnNWrmbIgRHaCZ0JPM2DoeBzR1r+3dkLJg967QJMJh
+	 IIXiLxd84C+ycGsOHCX/KP/IlY8wMI+QGF2Xk3w/IEBzq2GEqFvaVxrFMPCx2KLPXKUtg
+	 2ImZkYNaybwMrMH8ujZhShTb6OQtP2mtWbqXWUzCSdKr8lJxiIgY+GacAT7gokXY+yCzL
+	 PpkvAkEWlurTRdRtHvD903r3rOq8kW+5Ha0oaySWWfG+dK08Fo98Oc+aZA4QJjuRb1Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=gm28Ha6j;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lC1rRmz7;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 604C3606A32E;
-	Sat, 14 Nov 2026 13:54:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87187606A338;
+	Sat, 14 Nov 2026 13:55:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=gm28Ha6j
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AC8EC1F000C4;
-	Sat, 14 Nov 2026 13:54:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lC1rRmz7
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E73891F000C5;
+	Sat, 14 Nov 2026 13:55:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794664496;
-	bh=I6J+1H3vQpLdJ7UVpJ/tC85ye3HYuCATNIJGMbrXQJM=;
+	s=k20260515; t=1794664506;
+	bh=gZCOg3PYW5/XzYktPPO7fZbRJ9jC/nh9/3WC5LHdP9k=;
 	h=In-Reply-To:References:Subject:From:To:Cc:Date;
-	b=gm28Ha6jFbZAVZELeCoAiv8yQmKhg2t27IzqaM5E6DHf1m/iHwaa05oOee2NvjSBl
-	 kc6ZaW7X7pNIXQAoh9xnp9MBMni3b8MRxZdEx/eTPDoUQsu/YruOICy0eelWOEyqgn
-	 3P8g8niOi/8NoL9V5UYuZAEp6DyvrAtH4YeuzU3fc3guDfP87KZmI3TI0lTfqozu4+
-	 ZpGn4biS09ByqImLH4ZYYUNpv6w1MO+E82dAPetup0Rc/sR/ssg0FbIV+aiwW6MIcv
-	 EBQr5L1AgJXIgzU68vHxaHLJx8/fkvXF+Z3xx/GTGkbG1HInFcXsLmVQOWzwu1EgJY
-	 hMWqsgyXoIXvw==
-Content-Type: multipart/mixed; boundary="===============4078380530865713043=="
+	b=lC1rRmz7ahj/srEYA2ijCYwgAqxvBpBEiZzJTz1BT/wrTEWhRCAJRjIQUg90ualPp
+	 8fNiGIog6yGBq7jcPWwPg3KTZ4hhP7wzOgQinag8fVT+8JrN/YD10tUBIHBk4t50YO
+	 lVbRqj+kObH/VFAULApyIEa7KJo13ikHhn4sjSYyAVLzN15VB21GTINJSJZ5zSjoJ2
+	 SqbEpuE67Y8c73FjyTC9QAtGI69lnMt18W/xx4/7c8YFqB+lo9IQTij1vjYC2G1yJC
+	 gbXcz8wGq7FFvOpMP/hQpyy359bbb1860T3yz8/mr3WEBUyRt+SVvwAJEu6hB8hDoE
+	 Jru9mkTF+Jtaw==
+Content-Type: multipart/mixed; boundary="===============0802335019258284520=="
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -49,64 +49,92 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Message-Id: <bf4a6d1a8af90f3fac8754638a5f9b02fb40c0a066237181d456a25ac7f2c606@mail.kernel.org>
-In-Reply-To: <20261114-work-loop-pseudo-v2-4-98639a2286fb@kernel.org>
-References: <20261114-work-loop-pseudo-v2-4-98639a2286fb@kernel.org>
-Subject: Re: [PATCH RFC v2 04/42] fs: add SB_I_PSEUDO
+Message-Id: <91e245da9f3df6d6e61808e72a4ad0213a9a6b838f594d0be74dd70ab228422f@mail.kernel.org>
+In-Reply-To: <20261114-work-loop-pseudo-v2-33-98639a2286fb@kernel.org>
+References: <20261114-work-loop-pseudo-v2-33-98639a2286fb@kernel.org>
+Subject: Re: [PATCH RFC v2 33/42] fs: add file_check_backing()
 From: bot+bpf-ci@kernel.org
 To: brauner@kernel.org,linux-fsdevel@vger.kernel.org
-Cc: jannh@google.com,mason@kernel.org,josef@toxicpanda.com,hch@lst.de,linux-block@vger.kernel.org,linux-kernel@vger.kernel.org,linux-nvme@lists.infradead.org,viro@zeniv.linux.org.uk,jack@suse.cz,linux-scsi@vger.kernel.org,target-devel@vger.kernel.org,driver-core@lists.linux.dev,linux-mm@kvack.org,bpf@vger.kernel.org,linux-security-module@vger.kernel.org,selinux@vger.kernel.org,apparmor@lists.ubuntu.com,linux-nfs@vger.kernel.org,netdev@vger.kernel.org,fuse-devel@lists.linux.dev,linux-efi@vger.kernel.org,xen-devel@lists.xenproject.org,ocfs2-devel@lists.linux.dev,linux-s390@vger.kernel.org,linuxppc-dev@lists.ozlabs.org,linux-usb@vger.kernel.org,amir73il@gmail.com,linux-erofs@lists.ozlabs.org,linux-kselftest@vger.kernel.org,brauner@kernel.org,alex@amutable.com,ast@kernel.org,andrii@kernel.org,daniel@iogearbox.net,martin.lau@kernel.org,eddyz87@gmail.com,yonghong.song@linux.dev,mason@kernel.org,ihor.solodrai@linux.dev
-Date: Sat, 14 Nov 2026 13:54:52 +0000 (UTC)
+Cc: jannh@google.com,mason@kernel.org,josef@toxicpanda.com,hch@lst.de,linux-block@vger.kernel.org,linux-kernel@vger.kernel.org,linux-nvme@lists.infradead.org,viro@zeniv.linux.org.uk,jack@suse.cz,linux-scsi@vger.kernel.org,target-devel@vger.kernel.org,driver-core@lists.linux.dev,linux-mm@kvack.org,bpf@vger.kernel.org,linux-security-module@vger.kernel.org,selinux@vger.kernel.org,apparmor@lists.ubuntu.com,linux-nfs@vger.kernel.org,netdev@vger.kernel.org,fuse-devel@lists.linux.dev,linux-efi@vger.kernel.org,xen-devel@lists.xenproject.org,ocfs2-devel@lists.linux.dev,linux-s390@vger.kernel.org,linuxppc-dev@lists.ozlabs.org,linux-usb@vger.kernel.org,amir73il@gmail.com,linux-erofs@lists.ozlabs.org,linux-kselftest@vger.kernel.org,brauner@kernel.org,ast@kernel.org,andrii@kernel.org,daniel@iogearbox.net,martin.lau@kernel.org,eddyz87@gmail.com,yonghong.song@linux.dev,mason@kernel.org,ihor.solodrai@linux.dev
+Date: Sat, 14 Nov 2026 13:55:02 +0000 (UTC)
 
---===============4078380530865713043==
+--===============0802335019258284520==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
 
-> fs: add SB_I_PSEUDO
+> fs: add file_check_backing()
 
-TL;DR: Nit only: the fc_init_pseudo() comment and commit message claim pseudo
-filesystems never hold device nodes, but devpts and binderfs do and must clear
-SB_I_NODEV; the wording could mislead.
+TL;DR: file_check_backing() may call d_real_inode() on O_PATH overlayfs files,
+which could hit WARN in ovl_d_real() (panic with panic_on_warn) and let the
+pseudo-fs check pass wrongly; reachable via fuse backing open, needs
+CAP_SYS_ADMIN.
 
-> diff --git a/include/linux/pseudo_fs.h b/include/linux/pseudo_fs.h
-> --- a/include/linux/pseudo_fs.h
-> +++ b/include/linux/pseudo_fs.h
+> diff --git a/fs/read_write.c b/fs/read_write.c
+> --- a/fs/read_write.c
+> +++ b/fs/read_write.c
 
 [ ... ]
 
-> +/*
-> + * Common initialization for all pseudo filesystems, mountable or not. Their
-> + * regular files are kernel interfaces. They don't store data and pseudo
-> + * filesystems never hold executables or device nodes.
-> + */
-> +static inline void fc_init_pseudo(struct fs_context *fc)
+> +int file_check_backing(const struct file *file, fmode_t mode, umode_t type)
 > +{
-> +	fc->s_iflags |= SB_I_PSEUDO | SB_I_NOEXEC | SB_I_NODEV;
-> +}
 
-This isn't a bug, but is it accurate that pseudo filesystems "never hold
-executables or device nodes"?  The same wording is in the commit message.
+[ ... ]
 
-devpts creates character device inodes in devpts_pty_new():
+> +	/* Look through stacking filesystems at the inode with the data. */
+> +	if (d_real_inode(file->f_path.dentry)->i_sb->s_iflags & SB_I_PSEUDO)
+> +		return -EINVAL;
 
-    init_special_inode(inode, S_IFCHR|opts->mode,
-                       MKDEV(UNIX98_PTY_SLAVE_MAJOR, index));
+With FMODE_PATH accepted, can d_real_inode() be reached for an O_PATH file
+here?  No ->open() has run on such a file.
 
-and binderfs does the same with init_special_inode(inode, S_IFCHR | 0600,
-...).  Both filesystems are converted to fc_init_pseudo() later in the
-series, and both have to undo the flag in their fill_super callbacks:
+For an overlayfs metacopy file whose data is in a data-only lower layer,
+the lowerdata redirect is only resolved lazily, by ovl_open() via
+ovl_verify_lowerdata() or by ovl_d_real().  For an O_PATH file this means
+d_real_inode() goes into ovl_d_real(), which does the lookup and verity
+check itself:
 
-    s->s_iflags &= ~SB_I_NODEV;
+    err = ovl_verify_lowerdata(dentry);
+    if (err)
+        goto bug;
+    ...
+bug:
+    WARN(1, "%s(%pd4, %d): real dentry not found\n", __func__, dentry, type);
+    return dentry;
 
-This works because sget_fc() ORs fc->s_iflags into sb->s_iflags before
-fill_super runs.  A filesystem that has device nodes and relies on this
-comment would not know it needs to clear SB_I_NODEV, and its device nodes
-would fail to open with -EACCES from may_open_dev().
+ovl_maybe_lookup_lowerdata() treats a failed lookup as a normal runtime
+event (pr_warn_ratelimited("lazy lowerdata lookup failed ...")).  It can
+also return -EINTR from ovl_inode_lock_interruptible(), and
+ovl_maybe_validate_verity() returns -EIO for a missing or wrong digest with
+verity=require.  Each of these would hit WARN(1) when reached through this
+helper, which panics with panic_on_warn.
 
-Could the comment say that SB_I_NODEV is the default and that pseudo
-filesystems with device nodes must clear it in fill_super, or could "never
-... device nodes" be dropped?
+In that case ovl_d_real() returns the overlayfs dentry, so the SB_I_PSEUDO
+test looks at the overlayfs superblock and passes.  Does the check fail
+open there?
+
+Nothing calls the helper in this commit, but later in the series
+f79b9e79484f ("fuse: refuse files on pseudo filesystems as passthrough
+backing files") adds file_check_backing(file, FMODE_PATH, 0) to
+fuse_backing_open_file().  That gets its fd via CLASS(fd_raw), which
+accepts O_PATH:
+
+FUSE_DEV_IOC_BACKING_OPEN
+  fuse_backing_new()
+    fuse_backing_open_file()
+      file_check_backing()
+        d_real_inode()
+          ovl_d_real()
+            ovl_verify_lowerdata() fails -> WARN
+
+This needs CAP_SYS_ADMIN and an overlayfs with data-only layers where the
+data file is missing, the digest check fails, or the inode lock is
+contended while a signal is pending.  No fix for this was found later in
+the series.
+
+Could the pseudo filesystem check avoid forcing the lazy lowerdata lookup
+on O_PATH files, or should ovl_d_real() stop warning on lookup failures now
+that it has callers besides trace_uprobe?
 
 
 ---
@@ -114,4 +142,4 @@ AI reviewed your patch. Please fix the bug or email reply why it's not a bug.
 See: https://github.com/kernel-patches/vmtest/blob/master/ci/claude/README.md
 
 CI run summary: https://github.com/kernel-patches/bpf/actions/runs/43599461726
---===============4078380530865713043==--
+--===============0802335019258284520==--
