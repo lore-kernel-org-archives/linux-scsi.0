@@ -1,57 +1,101 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.48
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794628410;
-	b=vn87Oift6aw8JUQ998yXo8jgy+Me126+aX1JqP3OWF2BGrLAeqPxFwgFXFWnemxd3JK7
-	 V9uQw6bHh0AgwI8CJhIlkBARULD32ouWjx777cPEpLs893AIO9+EsppxvWbw5/ae+GdFp
-	 QjQ3V+JOWyzxteGEzEOODGHhM5M185ffRmnBVIbsNq6QucsN/2KgqlQArgc8iJvvPQHgX
-	 BwFQ7GT0mHRb0tKuceoXs6tZGGz1kG53dBKSwbPUfkfM92RYbbMmTSVK46PEwwXzhl8Bv
-	 cq+eN8ElmwPZZ9rJgMQwCo+AKIxAceeaCdr+ScGjl4WLapsfL7R7JU9Eyv77vtMfvcw==
+	t=1794629849;
+	b=1eO9ndEf3YVG9aDxks8XBHEmr3qdasfjGoXKUQBqH6e9JbL7xPQ3P55lKo9mKfzUbMKn
+	 Cu9FW8sixfUy2ao/yyVfY9iLvofndmmeSJVZBWADqQU63uXhDP1snUzFbE5TVeequMGvY
+	 5SkEVsMmdufT//Sske4QIKAlvDU1NP9M+VMdeDFbwC5+COBSVY++jNT6JvT6x7IW0HWys
+	 ZjNqi7Cd7CuCDq37RU2OAWGZTyHrFtebC4ZFpqPzoSpl+468x1KAAc+zbxz9qh6yBdKS/
+	 CepJX2lz1WUVycSDNXX4gfPOnMjccUidDC2y5jaOQXzJzYD5toPa8+GCU44jOc6pEXQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794628410;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=Fs7o6/g2Q1PhZl3WxIoIu5qFnHLTxHLTgIPvqU/p6vQ=;
-	b=uwQ9CLOEfzRI6C+Y/p94cO1HY/IEemwMi0y5wJebuFFcVu310+8OxLjihb846ygKp08S
-	 +5hDiZCOY84ehPurHNnvxTIYu+BV4QcQwDmQTNnOcEcggTDza40B4ZaEgQRX+av7YnOkI
-	 TWo6hh0lWsxYb9Cft1nxzb/76cHaqFYnSHbzA03vaONIT6yAvov2qNNxCwrbT1ohuN3ip
-	 fKYkD17qGckeF5Tfkz4hUI1yGyX6qUrNjnNHFuoOYewWj+lZu1PXoEpHhpkBMvPqAMmav
-	 hOLQm3XUVPB1aYEdBYpkUDTbRm140ipJY9wxIwlPP8BJ5rlAZqJegqVxfR6acJ6zmXw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794629849;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
+	 Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
+	 Content-Type:Content-Transfer-Encoding;
+	bh=iB/K03lI4KCa3CigydQl65EWnXtxB4ckz0UoZC12GJM=;
+	b=xiHnYn0txFPRLeWCE1mBgwmQACPjZ1o/Erfs+zplUL2viyCHAM8ID4o66mvDMlqM4tGy
+	 JGEKx4dOOMaCqbNxm2+ZON7FdZhkdfpqbS+5lvqv8xEKpWa0rWDaBzy6QF36J0Q54qxIm
+	 xPNff/p+EbU3pJUntrxrFDpov4mrkIOfO3UpsnfNV3R4dLIzjlukSqf6pTNJQs+PhjVFP
+	 6m2u4aVn3js5O+XRPNQ6fh8wrclCB+5D7EQkAuBH18c+FltBEmfyNnGhvkQ9s2bbR14MD
+	 HSdjpxZfKyjzcZvZaO0GVdJ+0aKTiFkJjwEWZaVJtwEHV4GSK+qxcqKHScMnWUuIfDg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=XVgV5vKJ;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=fail header.from=isslab.korea.ac.kr;
+	spf=none smtp.mailfrom=isslab.korea.ac.kr;
+	dkim=pass header.d=isslab-korea-ac-kr.20260707.gappssmtp.com header.i=@isslab-korea-ac-kr.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=OuFlSZ8M;
+	arc=none smtp.remote-ip=74.125.82.48
+Received: from mail-dl1-f48.google.com (mail-dl1-f48.google.com [74.125.82.48])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C8F5D606A32E
-	for <linux-scsi@vger.kernel.org>; Sat, 14 Nov 2026 03:53:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 136FD606A329
+	for <linux-scsi@vger.kernel.org>; Sat, 14 Nov 2026 04:17:28 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 136FD606A329
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=XVgV5vKJ
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 298951F000C4;
-	Sat, 14 Nov 2026 03:53:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794628410;
-	bh=Fs7o6/g2Q1PhZl3WxIoIu5qFnHLTxHLTgIPvqU/p6vQ=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=XVgV5vKJ0HdYk940VJ2k9SxBzTdVpoIsPvg7Ot9EUObcdOdzvUDnpKbZnl2h40Pig
-	 so0sR+0qtfMZFfz+B96AjqnrRX9Gvy19ygIhMIJ3fPIVEQs0a40hJna24qJuHyeu1J
-	 TCB5XCiC+WntxdO9NXL9IqHS7afgPN94sEFlOgU1skQcxqbeD0gE3dHWXYLa9KZR+A
-	 rYDsjGiV59bwB/KF0pMH9P1zmhHwvlovha1xB322D0cEpWM/w4jFW7bvDrvFdxZL1v
-	 6oGsJ9UcQvP9qGsqx15C1wS6frFKk536l8avCipvj/m3/jAaBMxL5+8nYfgrh23UEu
-	 QGbFkORzd74Xw==
-Message-ID: <sashiko-outbox-214130@kernel.org>
-From: sashiko-bot@kernel.org
+	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20260707.gappssmtp.com header.i=@isslab-korea-ac-kr.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=OuFlSZ8M
+Received: by mail-dl1-f48.google.com with SMTP id a92af1059eb24-170135e43c7so2248860c88.0
+        for <linux-scsi@vger.kernel.org>; Fri, 13 Nov 2026 20:17:28 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=isslab-korea-ac-kr.20260707.gappssmtp.com; s=20260707; t=1794629848; x=1795234648; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:references
+         :in-reply-to:message-id:date:subject:cc:to:from:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=iB/K03lI4KCa3CigydQl65EWnXtxB4ckz0UoZC12GJM=;
+        b=OuFlSZ8MQIsrwDi8G4zjq3k4pLwpvbrHSKiXX6UOXn/y5OvcQVTwJ5FB83JYBW2ON1
+         HPYLr1mbypw2ko+jPnccdjGAf9K+pz+0Em9zot5d6svD+mog6lio2H3/cJe5orVXUSyB
+         wOAAyqfk/v/JdxSytCjnZSG/Dfmdw7i7anf/3UN20SwqZrlRlUy5b6c9j8WYu+i5Tyzv
+         sxSERoMfahWESVOmlN45nFSnvZERoZJOu0zlqHsO1jfKreKbjRILtHbVTQsZYZlx7CMe
+         M2IXtNcjwRP4mlcG+oT/rujgGAG7Z6CLWCwgFSDEBAfcdRGl9MP+Eu+eTgLc1dWUPmyS
+         zPbg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1794629848; x=1795234648;
+        h=content-transfer-encoding:content-type:mime-version:references
+         :in-reply-to:message-id:date:subject:cc:to:from:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=iB/K03lI4KCa3CigydQl65EWnXtxB4ckz0UoZC12GJM=;
+        b=IFHvi4U7Pi70n5rDGoSesedIPJfR/VTzs9eSo+THL92+IFCH7Qn+MGfTsmW2YJJGm8
+         3SyqrUU+HBXlr8OvYWHHhNCUG58GI9KTBwWjGaxMe3Bzaf9oMRtA/TKVV1d3/lbvL3Pz
+         IYLrZ09kpJrMRCG13WnDwHfgk5l0BBHKMmsFUys3tl2t0icwfJ+i2yaoF3mLJgFcUIjH
+         WxhuASOUeJtHgsrS/LRy+jjJcDGWe/g/iLxadUDmoUqqytsYEVntYQOVoOk4qtLJsxnb
+         0T32ruvrnk7k2sdtdoIQC3dxLxHO4sgQqDQBUCIYylUIH+x6wQUx7UV3OL+FwlCvEhSA
+         lKew==
+X-Gm-Message-State: APuU4Z+ZxH3PqBuiHYRdGchLuo350Uu7iZFJlzF+yddP+gzMePBOyJnA
+	IHxiC6ajSw9T9goozziJigFIvECaLDQZcpqS2j8qVUsA2A3evXMdqQfLTWSzBCZuLUypODP0si5
+	5eYDwBzB/Nw==
+X-Gm-Gg: AYBFou3w1b14XA/cYS1/EsBq815GZY1vtsNQUxxK4C4oNtnVm88WOeTl+cwMXAwJCaz
+	9479sOz+TYab2LE/zjH06WdEbcYIq21Y7UhT2ppYDs86a06ZGWvzjez6xbD0pdNVo2yb2KOqzt7
+	qK4gB4y3HW3YQVZTRPsrOtov3Ur7wK/HgLjzZuJHulB0QPYuSz6jwOBu+tB909naUjoR/nJEWFn
+	QZvRnzbDFVV/ANyV+uiYm86EL+ArCNmgKXlZJToD0DjuncsUZFtHIfZujk+fNEvXndIvXmaMyHj
+	Wz+R8QYPjMgnvtqrSi8VyZrtipCRTIIStJjAdk7LrvAyCipXT4ya/Nrk2tdEmvG74/CjKSZDMEe
+	hwjlQlR9ePlxAOC5Ix2oW6fqehlSR+OcD1dhP1g1gyPDSDzTYP8wokeY7B0YfdLDAyVdEQ0iIdR
+	Kd/wzcLardtpcOWpWOE7Wjsb2veQP3yq9gsTwHv/5V9Rcy1Q1GRy10rktoGwPseN5UaXC0MFpxS
+	erWKqaDtiTtvLQDY3fzlWyI096RhJL47XWmnWuc6Ia6qrKam1oreCB1ubB7PPlX27kR1axVqrWn
+	U0WYKL4BKLvjXboqyhOiphsTacF4U+8IsRs+ckP8Fbz+ghybiAl/YwxzlXrUt46R9XHnNjZXGzL
+	Ltmuwq39P3JGBZKty3U39iGnt152bESzp60rsvQ==
+X-Received: by 2002:a05:7022:2390:b0:18d:96e8:b913 with SMTP id a92af1059eb24-1b503195191mr6210044c88.47.1794629848063;
+        Fri, 13 Nov 2026 20:17:28 -0800 (PST)
+Received: from yhlee-960QFG.Davolink ([2406:5900:1044:110c:f861:b117:6318:c068])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1b50309b27dsm11046075c88.2.2026.11.13.20.17.24
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 13 Nov 2026 20:17:27 -0800 (PST)
+From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+To: mkp@kernel.org,
+	James.Bottomley@HansenPartnership.com,
+	ching2048@areca.com.tw
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org,
+	thenzl@redhat.com,
+	erich@areca.com.tw,
+	yhlee@isslab.korea.ac.kr
 Subject: Re: [PATCH v4 3/4] scsi: arcmsr: wrap the type B completion index
- before using it
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Yehyeong Lee" <yhlee@isslab.korea.ac.kr>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20261114033810.549787-4-yhlee@isslab.korea.ac.kr>
-References: <20261114033810.549787-1-yhlee@isslab.korea.ac.kr>
- <20261114033810.549787-4-yhlee@isslab.korea.ac.kr>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Sat, 14 Nov 2026 03:53:29 +0000
+Date: Sat, 14 Nov 2026 13:17:18 +0900
+Message-ID: <20261114041718.551698-1-yhlee@isslab.korea.ac.kr>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <sashiko-outbox-214130@kernel.org>
+References: <20261114033810.549787-1-yhlee@isslab.korea.ac.kr> <20261114033810.549787-4-yhlee@isslab.korea.ac.kr> <sashiko-outbox-214130@kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -60,71 +104,20 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 1 potential
-issue to consider:
-- [Low] scsi: arcmsr: Fixes trailer cites 1c57e86d75cf instead of
-  1a4f550a09f8
---
+The review above is right about the Fixes tag on this patch.
+1c57e86d75cf has no type B code at all; struct MessageUnit_B and both
+doneq_index readers arrived with 1a4f550a09f8, so the tag should be:
 
-commit bdb98590f8437552875503e5c3790a14bf604318
-Author: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+Fixes: 1a4f550a09f8 ("[SCSI] arcmsr: 1.20.00.15: add SATA RAID plus other fixes")
 
-> scsi: arcmsr: wrap the type B completion index before using it
->
-> struct MessageUnit_B lives in the dma_alloc_coherent() area shared with
-> the adapter, and holds the completion ring next to the index into it:
->
->         uint32_t        done_qbuffer[ARCMSR_MAX_HBB_POSTQUEUE];
->         uint32_t        postq_index;
->         uint32_t        doneq_index;
->
-> arcmsr_hbaB_postqueue_isr() takes doneq_index from there and subscripts
-> done_qbuffer[] with it, and only afterwards reduces it:
->
->         index =3D reg->doneq_index;
->         while ((flag_ccb =3D reg->done_qbuffer[index]) !=3D 0) {
->                 ...
->                 reg->done_qbuffer[index] =3D 0;
->                 index++;
->                 index %=3D ARCMSR_MAX_HBB_POSTQUEUE;
->                 reg->doneq_index =3D index;
->         }
->
-> So the first iteration uses the value as it was found, unmasked.  An
-> index beyond ARCMSR_MAX_HBB_POSTQUEUE (264) reads past done_qbuffer[]
-> and, should the word it finds be non-zero, stores a zero there as well.
-> arcmsr_hbaB_polling_ccbdone() has the same ordering.
->
-> Reduce the index where it is read instead, which leaves the rest of the
-> loop unchanged.
->
-> Measured with a KASAN build.  struct MessageUnit_B is 2176 bytes with
-> done_qbuffer at offset 1056, so a reported index of 600 reads 3456 bytes
-> in:
->
->   BUG: KASAN: slab-out-of-bounds in arcmsr_hbaB_postqueue_isr+0x1f5/0x270=
- [arcmsr]
->   Read of size 4 at addr ffff88800c08cd80 by task init/1
->   ...
->    which belongs to the cache kmalloc-4k of size 4096
->   The buggy address is located 1280 bytes to the right of
->
-> Fixes: 1c57e86d75cf ("[SCSI] arcmsr: initial driver, version 1.20.00.13")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+Nothing else changes.  I can send a v5 with only that line corrected
+right away, but I did not want to put another version in front of you
+just for a tag.  Martin, would you prefer a v5, or could you fix the tag
+up when applying?
 
-[Severity: Low]
-1c57e86d75cf ("[SCSI] arcmsr: initial driver, version 1.20.00.13") only
-supported Type A adapters.  Type B adapter support, struct MessageUnit_B,
-and the unmasked reg->doneq_index reads in arcmsr_hbaB_postqueue_isr() and
-arcmsr_hbaB_polling_ccbdone() (originally named arcmsr_hbb_postqueue_isr()
-and arcmsr_polling_hbb_ccbdone()) were introduced later.  Should the Fixes:
-tag be:
-
-  Fixes: 1a4f550a09f8 ("[SCSI] arcmsr: 1.20.00.15: add SATA RAID plus other=
- fixes")
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261114033810.5497=
-87-1-yhlee@isslab.korea.ac.kr?part=3D3
+Best regards,
+Yehyeong Lee
