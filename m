@@ -1,45 +1,87 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.210.173
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794664501;
-	b=cLGcvge92KiX02qJXq7uxyR91ydJhYBePS75pKy/BcgvyWG0Mvc8dn9ki/8lU6dNV/qt
-	 Fo55TModoHknaWL6aiBzxaKXfhTq0pt3GBnPWfQI9x91xFRdjGc04GqatfDKKD42DUqJw
-	 m5pkkpjj6qb+kKEtrqzP5unnEkHArMzJvH9jIymZsJHRk73uq9mlS5JrX41JCkdThkP9y
-	 C1GU/S5jMfYS0BoTp6D7A8AQFrtc+6wvALCiPc3s2tOarcy1NaMTjKqPLLigVBzG7eoC/
-	 8DYaV52B19AxPBJFNGhfcVDf4h5htYV4sf8FFaUJe67Zxp85D+RfQ8L1QvQS+nxe9jQ==
+	t=1794665480;
+	b=SbxceeFixmRK3s+zmPLVspARuE/yJcZNdnRBkqAs4Rj2copLJoiDYdY7GuOt0ugqv+8+
+	 +3uhMI28PWWJhbJtfcq3b6LWw/AaAaXFxhkYfht7h6wkK7ueF05ATEuQ1zcjNhbl+LVQ7
+	 xDYqj63SpViownzzeBCbhT4lIcHCmAmznb1kvrcjs+O/6YfR2rPR6g3Vxo5MA3WPUwWxx
+	 AsWwlYVlw5IP2fw8HZqUVViOL7j7ALRBQXQxjwLitCTC2f4QiYUtXTop24yhg5j/VSNRV
+	 JBw8iyuC6SfPxZwXIgc8AKgzYp/P305DuP2Hr3im0YlzSUkI6aGQHLyPtfjB5LyZb6A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794664501;
-	h=Received:DKIM-Signature:Content-Type:MIME-Version:Message-Id:
-	 In-Reply-To:References:Subject:From:To:Cc:Date;
-	bh=Xi+Jp34UVw8n6rWUcn3QcZPlSKYiPMqX7yCNJrzL8oU=;
-	b=V5R/exzs30werKTVaB6ZQc3TTKRigA6AvPUuUBGkEjUzmYfhFLBhm7eo+ZDi9HLGCmqj
-	 2NKSL3pWWn6Yw+wKvZEWD6ofmstErSLauaEeMF88x0YZblQnbV8zVEnH2ou6Oe25aOuuS
-	 OoewL4srl9D025D5TkE+J0RCBrRp4y7MVfhRXoerGAtL6NVj/rSIaPBI32Vbj0KB0RtpA
-	 ekG2pMVTSe4lVtDE98jviAgy9LbNQ6XA/2eE3oHNdCqXN5lIYK47C6Fc0JsWHRhNi2thF
-	 R0+ALYwgRdX8JcW23gHIYtu0K65Hrp8tfE2eHDChoyoVeP+6DjW9QsMMZfcCS6lnW8g==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794665480;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 Message-ID:Date:MIME-Version:User-Agent:Subject:Content-Language:To:
+	 Cc:References:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=X1aNKxDcC9Su/sKRcb+fwZwTfaJYdtOu8vWxOSG4H9Q=;
+	b=LFCfmNgf30SsMpwZrCfY0pAq564+3Lzm0yLC+1uT2XGssq5gxS2yk56f2RA0z2jm/sdl
+	 WdgJIKz7nQJhbVwG/seJaMnVYif3dDt15wu69VmHCS8A7fk91KtxDqAjG1O0sWFV6xvhM
+	 OHwV6N5R4r8Ay7F4IvLnaZEXqU02TWbvwfIhEnACFLtN8oMW7rdeZZQsOGV0GeFZmdmRt
+	 oWA5RQZJE0UJZhQ7DawmXJK6JRjR6AbEN4dMiv8hJtNr/7uxBZDSDHDIw0xqHK0H49wnf
+	 ZYBJ9dLs2EnAwcnYc1KdUUaYtuvSmUgAMpFZ/wHf65OqBLEOebtbPAwxZWCcnRtNAAQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=bfkXAKnv;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=VIuTSlCz;
+	arc=none smtp.remote-ip=209.85.210.173
+Received: from mail-pf1-f173.google.com (mail-pf1-f173.google.com [209.85.210.173])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 918CF606A330;
-	Sat, 14 Nov 2026 13:55:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4D1B606A335
+	for <linux-scsi@vger.kernel.org>; Sat, 14 Nov 2026 14:11:19 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D4D1B606A335
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=bfkXAKnv
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E36F01F000C6;
-	Sat, 14 Nov 2026 13:54:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794664501;
-	bh=Xi+Jp34UVw8n6rWUcn3QcZPlSKYiPMqX7yCNJrzL8oU=;
-	h=In-Reply-To:References:Subject:From:To:Cc:Date;
-	b=bfkXAKnvyN3NrzfYhrVigeGIKvr/8evEe0tQ8KwSyEafhDf3+AXVoqojleCZ7/Qdh
-	 2b013ZilynaxVntPTxgtS9Fyq3b+7yXhPeXkFfQ9ONM2J9MEOM/JQ3B/znTjkCUpqc
-	 r0tlhXctgE98kfAt1ITbmi9H0tApXPCL2XTcrVOM5qnz/NrX0rxwji+SmXMUOe8YHy
-	 kRbhgqC/kLnhpgS61Qu7Lfu7BuXDWJsHjF+zOY5u5KKN5rR5uvcX/zOV7QTiz8dq9Z
-	 GTd5PKapaf6tpFoOvo6qdgngRWS5W1FIZVvnJWAJ8F5DAYQTkJUN/Wbu5kFv6IHajV
-	 XPu1vrQEYpCgg==
-Content-Type: multipart/mixed; boundary="===============1687560790659556623=="
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=VIuTSlCz
+Received: by mail-pf1-f173.google.com with SMTP id d2e1a72fcca58-8b58d6f67a5so974019b3a.2
+        for <linux-scsi@vger.kernel.org>; Sat, 14 Nov 2026 06:11:19 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1794665479; x=1795270279; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from:references
+         :cc:to:content-language:subject:user-agent:mime-version:date
+         :message-id:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=X1aNKxDcC9Su/sKRcb+fwZwTfaJYdtOu8vWxOSG4H9Q=;
+        b=VIuTSlCzI5+jZy6lhUJ3NdFy8QfvKvOumfxqXf/KsHSm7q7qnrtm0TQKMxcAu58t9e
+         lgjYrX7X+fgOz0yW7XFscKcImqrdxA74UWS9CrBbqZFuQT5Xjd5qBFmUFrQGTROrNBmo
+         j3HbrMQ9X6q0EiaKeeaJowpKByG3xCk7OAAinrnWahFvw3jTJfK6+Arw7kgFbveE7bcn
+         cWEdrRwRmJsazex6ce+lvFzkV6lLEguXk6GoJ8/v93AWykNVZdy1xFS6PSwqBHVADnKn
+         cowtQuqrBknj2KZWxJU5/xk+xdXxpzhtDkAlhXlKc/iEhax4HpKwerl5PO0Bnrx0eFp0
+         sXeA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1794665479; x=1795270279;
+        h=content-transfer-encoding:content-type:in-reply-to:from:references
+         :cc:to:content-language:subject:user-agent:mime-version:date
+         :message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=X1aNKxDcC9Su/sKRcb+fwZwTfaJYdtOu8vWxOSG4H9Q=;
+        b=r7ZyTpMq8e002KuJyjjW9/dEpAlMniLxzjJyutQ4RLarPeMkeB9DvcaLSXBU6wbwbB
+         Xkhm6tK32/jB64sh/xVOf9o8wHimS3BS9QGlCXJX7g7tD38Kim26L4Sf+uo+X8MHf0yk
+         GmLgr5dnAU/hvdkU18zX6nsdEs5Bh7YxnBpaZH+kW2GCssRxEuUpViaszFdsUzxRWI+7
+         esfYtCKiZG6ZZ+I5Hn4qYifkH7fn4fq213Nu8SU64SmwEAfcDLqPeiaV/yogaRvkGmV/
+         xMA4v3VRclLeqJDwBE0k6rMiFtWALUX8hHq0z+iq4b0zKnW3A7QllRjTTkh2AvF3iTkn
+         aetw==
+X-Forwarded-Encrypted: i=1; AL+hErGvpGocUrwrw86h2ZlYNf93SweJTa9iY1dU+42Xhn38o77shWxJ9N2XFqs2OqBNJaX1unX4SXJMkBWd@vger.kernel.org
+X-Gm-Message-State: APuU4Z8hJ0XNcrvpENRN1x7sgEQt0TqbkozQe3WoWsdGF623JHoFLlWL
+	92IVtOTniU3HtCPvxQXBGYbXYY81nyXEbrzGAFij8X6BWS4kjVKDnVkK
+X-Gm-Gg: AYBFou2W/t9HkZR5iChNz+cHiHlEn9cPbphwdmtLbezN8p5cpoN9h8Od3ZcuPuDF5Em
+	jVySuZ2Fmtf6BBASeEJpP2mgDu1eKMBTlmsFAoGdnSSnblDW+QmbJ68j9MaS4oZ5wtTCVR1H1IK
+	VDjVi9UwwENMOhzyE2HyQ6GQMrFSwnUgI7m9MZXPIVqp6jJbeo3ewCxickUef1XrklkZfKT8Mvq
+	R4SpBM3fbFRmcPoQ1trYc8zPKHlRZXidBUU+Di9aGS+9F23pMX0vablwzGLDOWocYQjL+dl2gir
+	jrsc2UyWkqVzuC1GDQQqXMR03uNmXUwhYdp/BA98DXwHGkd41dnzudibUhtjGMGQL2+hcOFOKL0
+	YzymBrR34cCvwjyfuye8r6rGikYX6nXtRBUa4YxTlXQU/jqRvZzkxAxLuYKZtkeIp6ToM519CGD
+	ZZm5xD9zRdlzKjsnHGM2Si9MDCE5AwLkEBUSdMjlj6Gj4lOuCD5SreK2RCt1V+FARL6ohzRMDQv
+	PyXWS+gDVJ8B3+rG5mUt2hTPZYYYka+yH9YuN+f53jt+bHp5WesHINqRyBbFThcpwmnzTdkdNb9
+	CAQ2jH5kauH9sXUMOoZ6y5IREn7CIYnXQ4kDJeU9Eml2Od+PzUUw6ikQHUZx3S4m8QM=
+X-Received: by 2002:a05:6a21:118e:b0:3eb:b103:6ec0 with SMTP id adf61e73a8af0-3f7a72ba2e9mr5274932637.14.1794665479089;
+        Sat, 14 Nov 2026 06:11:19 -0800 (PST)
+Received: from [192.168.35.40] ([218.50.238.131])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-cddc18b4e68sm2442814a12.25.2026.11.14.06.11.06
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sat, 14 Nov 2026 06:11:17 -0800 (PST)
+Message-ID: <2d8dbfaf-46d3-4d05-b052-5e8a8670931e@gmail.com>
+Date: Sat, 14 Nov 2026 23:11:05 +0900
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -49,79 +91,100 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Message-Id: <df03e637354be695652a787563af21ac77b4c61f813ae4491a3397a91df7688e@mail.kernel.org>
-In-Reply-To: <20261114-work-loop-pseudo-v2-17-98639a2286fb@kernel.org>
-References: <20261114-work-loop-pseudo-v2-17-98639a2286fb@kernel.org>
-Subject: Re: [PATCH RFC v2 17/42] securityfs: use fc_init_pseudo()
-From: bot+bpf-ci@kernel.org
-To: brauner@kernel.org,linux-fsdevel@vger.kernel.org
-Cc: jannh@google.com,mason@kernel.org,josef@toxicpanda.com,hch@lst.de,linux-block@vger.kernel.org,linux-kernel@vger.kernel.org,linux-nvme@lists.infradead.org,viro@zeniv.linux.org.uk,jack@suse.cz,linux-scsi@vger.kernel.org,target-devel@vger.kernel.org,driver-core@lists.linux.dev,linux-mm@kvack.org,bpf@vger.kernel.org,linux-security-module@vger.kernel.org,selinux@vger.kernel.org,apparmor@lists.ubuntu.com,linux-nfs@vger.kernel.org,netdev@vger.kernel.org,fuse-devel@lists.linux.dev,linux-efi@vger.kernel.org,xen-devel@lists.xenproject.org,ocfs2-devel@lists.linux.dev,linux-s390@vger.kernel.org,linuxppc-dev@lists.ozlabs.org,linux-usb@vger.kernel.org,amir73il@gmail.com,linux-erofs@lists.ozlabs.org,linux-kselftest@vger.kernel.org,brauner@kernel.org,alex@amutable.com,ast@kernel.org,andrii@kernel.org,daniel@iogearbox.net,martin.lau@kernel.org,eddyz87@gmail.com,yonghong.song@linux.dev,mason@kernel.org,ihor.solodrai@linux.dev
-Date: Sat, 14 Nov 2026 13:54:57 +0000 (UTC)
-
---===============1687560790659556623==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 3/9] devfreq: Use trace_call__##name() at guarded
+ tracepoint call sites
+Content-Language: ko
+To: Steven Rostedt <rostedt@kernel.org>, linux-kernel@vger.kernel.org,
+ linux-trace-kernel@vger.kernel.org
+Cc: Masami Hiramatsu <mhiramat@kernel.org>,
+ Mark Rutland <mark.rutland@arm.com>,
+ Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
+ Andrew Morton <akpm@linux-foundation.org>,
+ Vineeth Pillai <vineeth@bitbyteword.org>,
+ Peter Zijlstra <peterz@infradead.org>, Aaron Conole <aconole@redhat.com>,
+ Alex Deucher <alexander.deucher@amd.com>, Alexei Starovoitov
+ <ast@kernel.org>, Anna-Maria Behnsen <anna-maria@linutronix.de>,
+ Borislav Petkov <bp@alien8.de>, Chanwoo Choi <cw00.choi@samsung.com>,
+ =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
+ Daniel Borkmann <daniel@iogearbox.net>, Danilo Krummrich <dakr@kernel.org>,
+ Dave Hansen <dave.hansen@linux.intel.com>, David Airlie <airlied@gmail.com>,
+ "David S. Miller" <davem@davemloft.net>, Eelco Chaudron
+ <echaudro@redhat.com>, Eric Dumazet <edumazet@kernel.org>,
+ Frederic Weisbecker <frederic@kernel.org>, Ilya Maximets
+ <i.maximets@ovn.org>, Ingo Molnar <mingo@kernel.org>,
+ Jakub Kicinski <kuba@kernel.org>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ Jesper Dangaard Brouer <hawk@kernel.org>, Jiri Pirko <jiri@resnulli.us>,
+ John Fastabend <john.fastabend@gmail.com>, Jon Maloy <jmaloy@redhat.com>,
+ Koby Elbaz <koby.elbaz@intel.com>,
+ Konstantin Sinyuk <konstantin.sinyuk@intel.com>,
+ Kyungmin Park <kyungmin.park@samsung.com>,
+ Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+ Marcelo Ricardo Leitner <marcelo.leitner@gmail.com>,
+ "Martin K. Petersen" <mkp@kernel.org>,
+ Matthew Brost <matthew.brost@intel.com>, Maxime Ripard <mripard@kernel.org>,
+ MyungJoo Ham <myungjoo.ham@samsung.com>, Oded Gabbay <ogabbay@kernel.org>,
+ Paolo Abeni <pabeni@redhat.com>, Philipp Stanner <phasta@kernel.org>,
+ Simona Vetter <simona@ffwll.ch>, Sumit Semwal <sumit.semwal@linaro.org>,
+ Thomas Gleixner <tglx@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>,
+ tipc-discussion@lists.sourceforge.net,
+ Tung Quang Nguyen <tung.quang.nguyen@est.tech>,
+ Xin Long <lucien.xin@gmail.com>, x86@kernel.org,
+ amd-gfx@lists.freedesktop.org, bpf@vger.kernel.org, dev@openvswitch.org,
+ dri-devel@lists.freedesktop.org, linux-media@vger.kernel.org,
+ linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org,
+ linux-sctp@vger.kernel.org, netdev@vger.kernel.org
+References: <20261027153658.703730257@kernel.org>
+ <20261027154413.039021489@kernel.org>
+From: Choi Chanwoo <cwchoi00@gmail.com>
+In-Reply-To: <20261027154413.039021489@kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-> securityfs: use fc_init_pseudo()
-
-TL;DR: Setting SB_I_NODEV on securityfs may make reopening AppArmor's
-inherited .null fd (e.g. open("/dev/stderr")) fail with -EACCES, which used to
-work; the commit message may also be inaccurate about device nodes.
-
-> diff --git a/security/inode.c b/security/inode.c
-> --- a/security/inode.c
-> +++ b/security/inode.c
-
-[ ... ]
-
-> @@ -64,6 +65,7 @@ static const struct fs_context_operations securityfs_context_ops = {
->
->  static int securityfs_init_fs_context(struct fs_context *fc)
->  {
-> +	fc_init_pseudo(fc);
->  	fc->ops = &securityfs_context_ops;
->  	return 0;
->  }
-
-The commit message says "AppArmor puts a .null device node into securityfs
-but only ever opens it via dentry_open() which doesn't care about
-SB_I_NODEV."  Is that the whole picture?
-
-aa_inherit_files() installs that dentry_open()ed file into the task's fd
-table:
-
-    devnull = dentry_open(&aa_null, O_RDWR, cred);
-    ...
-    replace_fd(n - 1, devnull, 0);
-
-The fd is not O_CLOEXEC, and its f_path.mnt is the internal mount from
-simple_pin_fs() in aa_mk_null_file(), which never has MNT_NODEV.
-
-Opening /proc/<pid>/fd/N, or /dev/stdout or /dev/stderr, resolves to that
-same path and goes through the normal open path:
-
-    do_open() -> may_open()
-        case S_IFCHR:
-            if (!may_open_dev(path))
-                return -EACCES;
-
-may_open_dev() checks path->mnt->mnt_sb->s_iflags & SB_I_NODEV.  That bit
-was clear on the securityfs superblock before this patch and is set now.
-
-Can this make open("/dev/stderr") fail with -EACCES for an unconfined task
-that inherited the .null fd, for example a helper exec'd through a ux/Ux
-transition from a confined task?  That open used to succeed.
-
-Should the commit message say that this reopen path is intended to fail, or
-does .null need separate handling?  The statement that "securityfs never
-holds ... device nodes" also seems to conflict with the .null node described
-in the next paragraph.
 
 
----
-AI reviewed your patch. Please fix the bug or email reply why it's not a bug.
-See: https://github.com/kernel-patches/vmtest/blob/master/ci/claude/README.md
+On 10/28/2026 12:37 AM, Steven Rostedt wrote:
+> From: Vineeth Pillai <vineeth@bitbyteword.org>
+> 
+> Replace trace_foo() with the new trace_call__foo() at sites already
+> guarded by trace_foo_enabled(), avoiding a redundant
+> static_branch_unlikely() re-evaluation inside the tracepoint.
+> trace_call__foo() calls the tracepoint callbacks directly without
+> utilizing the static branch again.
+> 
+> Original v2 series:
+> https://lore.kernel.org/linux-trace-kernel/20260323160052.17528-1-vineeth@bitbyteword.org/
+> 
+> Parts of the original v2 series have already been merged in mainline.
+> This patch is being reposted as a follow-up cleanup for the remaining
+> unmerged pieces.
+> 
+> Link: https://patch.msgid.link/20260515135920.2238808-1-vineeth@bitbyteword.org
+> Suggested-by: Steven Rostedt <rostedt@goodmis.org>
+> Suggested-by: Peter Zijlstra <peterz@infradead.org>
+> Signed-off-by: Vineeth Pillai (Google) <vineeth@bitbyteword.org>
+> Assisted-by: Claude:claude-sonnet-4-6
+> Signed-off-by: Steven Rostedt <rostedt@goodmis.org>
+> ---
+>  drivers/devfreq/devfreq.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/devfreq/devfreq.c b/drivers/devfreq/devfreq.c
+> index 82dd9a43dc62..9f71d9dc4a70 100644
+> --- a/drivers/devfreq/devfreq.c
+> +++ b/drivers/devfreq/devfreq.c
+> @@ -370,7 +370,7 @@ static int devfreq_set_target(struct devfreq *devfreq, unsigned long new_freq,
+>  	 * change order of between devfreq device and passive devfreq device.
+>  	 */
+>  	if (trace_devfreq_frequency_enabled() && new_freq != cur_freq)
+> -		trace_devfreq_frequency(devfreq, new_freq, cur_freq);
+> +		trace_call__devfreq_frequency(devfreq, new_freq, cur_freq);
+>  
+>  	freqs.new = new_freq;
+>  	devfreq_notify_transition(devfreq, &freqs, DEVFREQ_POSTCHANGE);
 
-CI run summary: https://github.com/kernel-patches/bpf/actions/runs/43599461726
---===============1687560790659556623==--
+Applied it.
+
+Thanks,
+Chanwoo Choi
