@@ -1,59 +1,56 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794655512;
-	b=NbfoQa9APQxuJYIFt2Rxg1544JXx7W1J0DAY7Tkku54G3Yczdu3QjTOeeL1vuyWDxSWZ
-	 LJLqWqdVM1HA+g/qQ1nl21qQBldp6c3JC1xJGW5duDeqEJo25sKp3QOCKjXMSCgV+tMg+
-	 pAHe2MH+xn9Ww263Apg0n6f94DgGJ8OjYP+KNJwWtaQ/iRnJkwOeA5xtZTuNVn3+bfRzv
-	 nBdcaRLaHcdI1hbBImfYfAlzhSkXXlYu75g+7Z0iXl5DC1X1E2vAPhl7oRtv6uIsaBmto
-	 MCnjkT/z5rby2oZqSPfs1rfK8EY7xU+IqOQIdV3wR4z0pQ594WyACoeNY1+HSeLwhkQ==
+	t=1794656269;
+	b=oGdlW1hmVU94OrdRY3sj6lh27XQvH/xNWTLmDCUud3ghfu45jbKM5jhN9H6meoc9Fz8i
+	 VA8qN1u/S5UgXAzMF7T6FEMBH8kG1QBabtuXoAWITRCWlKx/n4u8gp2eBEvFQNVSkexLO
+	 VgEpWvuvVqhmJL0gibx0d4/ovlzh9rn/fWHQlruhiQjJyaZVg/uYADJ5m55d8xP+Klzxn
+	 IIbdrihCBUNlzJA1Gu7ptLWUsTjuWlkqcoiVychg2q0WFIgI72vW8IikEknFxh1nQ5gmR
+	 QiUlMj3NfAl+52SZMqaUfgBTmRd3Hdny0q/bSGIxzWOLQ/wrNJ4jCq0NKju5dTxSvVw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794655512;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=QsiTmvnYi1/bC68aKEXBe6BBwV5VctGfUYNCz+WL7/I=;
-	b=pxt7zTLZgBXsi8FCUBCxdIYF1AHyq4NUfD/Y9y5TRA9pu3PBAALwaAsKWBWZvrE+UMsA
-	 OSVkA2hyyGqWeU+NXjmLLuTse70JGT+ajQ7O/y8TEDXwLg34opIXYHq1T02rozE5S6HK/
-	 A25bKvotkhfFEeLwT2YPV83d/fnC3r29AhqxNWvZCFivhM0ldVcK0oEja8W4kAAH9qKB/
-	 xL99l61T8/V5DXK93tq/wDy1Dg5j+fPqRK5GWgvKkGDFgRinXL8Un2rdoj9f8RNQYMhan
-	 aIOHan71I4QS4QaJloGyzZlezMk8MOy8XTnMcFAPt+FAQGY+fZ60Jqz93xRzyglKwgQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794656269;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=ujAYX702mc5Sy0ms/mnvtMDStt7ZaMRxVBxVaGnEd2E=;
+	b=KxJKXf6AALE6B+BJN92IU/fHz1HvjHv5IthnP7E5XRaIiD4iiHlWCvIQyqS3I3t2sRyJ
+	 Fy8/1pi51OWtU3jTtj6txNvXTjmniY1UqWCIBR9hvZA4pE58NQYWssEI1zBJr/NPE97UQ
+	 z5chsYpO+20JvGmgwR0GsXANuAvbdhCQFm+lAOq74gwBmfpnr6UcFI00v887AvfVqtpYM
+	 NrtpBrhKj5GMGxw96WvdNlOB4ygKBS+Unel0tYikL1h8AOAlTMOm+3D6kWf9yjeU1UDZP
+	 di+70r7NuZMyhMvBQ4aCoAD18RRGozpbeeYr9+3M0wTI7eibJkc1zVSzzBbcc+E4G0w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=nXTlg0XX;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=aGIR5RMy;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA255606A327;
-	Sat, 14 Nov 2026 11:25:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B6C9606A329;
+	Sat, 14 Nov 2026 11:37:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=nXTlg0XX
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1453E1F000C4;
-	Sat, 14 Nov 2026 11:25:11 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=aGIR5RMy
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2B39E1F000C5;
+	Sat, 14 Nov 2026 11:37:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794655511;
-	bh=QsiTmvnYi1/bC68aKEXBe6BBwV5VctGfUYNCz+WL7/I=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=nXTlg0XXpFR1qLAj2e9TfeRX3ojYfW9/jjS5N9GtQOGat1zYW3n2QceCk7ahKutlw
-	 sEuN/hiTMQAhCFTeIyOCQws+H0C2F3p6vhVq6iUXP7AjKgyT+mTdkHbJwzIJAxoKqF
-	 cgkRMXyF6KU4+gBQlWnIKuuv5tSxc6t1KEAKuhtDIknDp3hHqtTRNco42Xbx7WbhWm
-	 Px9ClZL9ROLtuMMCpeuSbGLlJaNqtaDnDtSYkS7DdcFUr11qDjHNxgzVkrqJFxJ32X
-	 IabH4+B6mjMIO3YSoy0Hic0xwlLuJsyAetRr2WhpoKMFt3AKxOre4A71ja2TFhHuNJ
-	 XJKVeSg48xf0g==
-Message-ID: <sashiko-outbox-214401@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 04/12] target: fileio: don't free the aio command under
- the filesystem
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Christian Brauner" <brauner@kernel.org>
-Cc: linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, bpf@vger.kernel.org, "Chuck
- Lever" <cel@kernel.org>, "Jeff Layton" <jlayton@kernel.org>, "Anna
- Schumaker" <anna@kernel.org>
-In-Reply-To: <20261114-work-fs-frozen_writes-v1-4-f5ae61c898b1@kernel.org>
+	s=k20260515; t=1794656269;
+	bh=ujAYX702mc5Sy0ms/mnvtMDStt7ZaMRxVBxVaGnEd2E=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=aGIR5RMyAniR1rioEnJ7wtm6ltifCa1wJvlOysTnWPrqtPcoxI1w6HRvLT+JMvwXm
+	 BITtkj1JGs0lpbwvw+km0zmFlMKCEXh+G6OHSm/En0yztUACFPrWB4b8iU4UeWRdBW
+	 OVAA2UutC5e92DlloctcNIHsJYwokm0tFmf4i944ahqWDBCBv60QgiI5qnUaMKEAvQ
+	 6cJPtGkNbfvToNbdhPoL2hvf3QPRtA9C/ldo0XoFINex1RyfDwvdXkYz+192DXCZIg
+	 GxIGgQ2J4AZ2QjIqRjeQu3QBnPOr4jOKzElg6D3cGlLJDA0nFkS8+ucQAdypG8WEdy
+	 52gKC4uBSK8Vw==
+Date: Sat, 14 Nov 2026 12:37:44 +0100
+From: Christian Brauner <brauner@kernel.org>
+To: sashiko-reviews@lists.linux.dev
+Cc: linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org, 
+	target-devel@vger.kernel.org, bpf@vger.kernel.org, Chuck Lever <cel@kernel.org>, 
+	Jeff Layton <jlayton@kernel.org>, Anna Schumaker <anna@kernel.org>
+Subject: Re: [PATCH 11/12] bpf: fs/xattr: take freeze protection in the xattr
+ kfuncs
+Message-ID: <20261114-raumfahrt-bioprodukte-ersatzlos-e6b9f19a6e1b@brauner>
 References: <20261114-work-fs-frozen_writes-v1-0-f5ae61c898b1@kernel.org>
- <20261114-work-fs-frozen_writes-v1-4-f5ae61c898b1@kernel.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Sat, 14 Nov 2026 11:25:10 +0000
+ <20261114-work-fs-frozen_writes-v1-11-f5ae61c898b1@kernel.org>
+ <sashiko-outbox-214394@kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -62,81 +59,53 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <sashiko-outbox-214394@kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential
-issue to consider:
-- [Medium] target: fileio: premature target_complete_cmd() in
-  cmd_rw_aio_complete()
---
+On Sat, Nov 14, 2026 at 11:11:36AM +0000, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found no new issues
+> in this patch, but noticed 1 related pre-existing issue it does not
+> introduce:
+> - [High] bpf: deadlock in bpf_set_dentry_xattr() via
+>   bpf_lsm_inode_need_killpriv() [1]
+> --
+> 
+> commit 486e046b7935f74b8ef238345d31e9322cf39132
+> Author: Christian Brauner <brauner@kernel.org>
+> 
+> bpf: fs/xattr: take freeze protection in the xattr kfuncs
+> 
+> This commit takes superblock freeze protection via
+> sb_start_write_trylock() in bpf_set_dentry_xattr() and
+> bpf_remove_dentry_xattr() so that BPF LSM programs cannot modify a frozen
+> filesystem.
+> 
+> > diff --git a/fs/bpf_fs_kfuncs.c b/fs/bpf_fs_kfuncs.c
+> > index 35ccd98a4de64..7f61e2efa08ba 100644
+> > --- a/fs/bpf_fs_kfuncs.c
+> > +++ b/fs/bpf_fs_kfuncs.c
+> > @@ -295,9 +295,13 @@ __bpf_kfunc int bpf_set_dentry_xattr(struct dentry *dentry, const char *name__st
+> >  	if (!inode)
+> >  		return -EINVAL;
+> >  
+> > +	/* The hook may hold locks or freeze protection already. */
+> > +	if (!sb_start_write_trylock(inode->i_sb))
+> > +		return -EBUSY;
+> >  	inode_lock(inode);
+> >  	ret = bpf_set_dentry_xattr_locked(dentry, name__str, value_p, flags);
+> >  	inode_unlock(inode);
+> > +	sb_end_write(inode->i_sb);
+> >  	return ret;
+> >  }
+> 
+> [Severity: High]
+> This problem wasn't introduced by this patch, but can calling
+> bpf_set_dentry_xattr() or bpf_remove_dentry_xattr() from
+> bpf_lsm_inode_need_killpriv() deadlock on inode_lock(inode) [1]?
 
-commit 6e1a6f1140a7e9133b9c8d928debaca48c4124cf
-Author: Christian Brauner <brauner@kernel.org>
-
-target: fileio: don't free the aio command under the filesystem
-
-This commit adds a reference count to struct target_core_file_cmd so that
-the command and its embedded kiocb are not freed before ->read_iter() or
-->write_iter() return.
-
-> diff --git a/drivers/target/target_core_file.c b/drivers/target/target_co=
-re_file.c
-> index ab9824a4852f1..4dace29b6d662 100644
-> --- a/drivers/target/target_core_file.c
-> +++ b/drivers/target/target_core_file.c
-[ ... ]
-> @@ -244,10 +245,17 @@ static void fd_destroy_device(struct se_device *dev)
->  struct target_core_file_cmd {
->  	unsigned long	len;
->  	struct se_cmd	*cmd;
-> +	refcount_t	ref;
->  	struct kiocb	iocb;
->  	struct bio_vec	bvecs[];
->  };
-> =20
-> +static void cmd_rw_aio_put(struct target_core_file_cmd *cmd)
-> +{
-> +	if (refcount_dec_and_test(&cmd->ref))
-> +		kfree(cmd);
-> +}
-> +
->  static void cmd_rw_aio_complete(struct kiocb *iocb, long ret)
->  {
->  	struct target_core_file_cmd *cmd;
-> @@ -259,7 +267,7 @@ static void cmd_rw_aio_complete(struct kiocb *iocb, l=
-ong ret)
->  	else
->  		target_complete_cmd(cmd->cmd, SAM_STAT_GOOD);
-> =20
-> -	kfree(cmd);
-> +	cmd_rw_aio_put(cmd);
->  }
-
-[Severity: Medium]
-Should target_complete_cmd() also wait until the final reference drops in
-cmd_rw_aio_put(), as loop, zloop, and target_core_iblock do?
-
-fd_execute_rw_aio() sets aio_cmd->iocb.ki_filp to fd_dev->fd_file without
-get_file(), relying on the in-flight se_cmd to hold se_lun->lun_ref and
-keep the backend device alive.  Calling target_complete_cmd() before
-->read_iter() or ->write_iter() returns drops lun_ref early, which allows
-concurrent LUN unlinking and device removal to close fd_dev->fd_file while
-the filesystem is still using iocb->ki_filp:
-
-CPU0                              CPU1
-fd_execute_rw_aio()
-  ext4_dio_read_iter()
-    ...
-      submit_bio()
-                                  cmd_rw_aio_complete()
-                                    target_complete_cmd()
-                                      ...
-                                        percpu_ref_put(&lun->lun_ref)
-                                  core_tpg_remove_lun()
-                                  target_free_device()
-                                    fd_destroy_device()
-                                      filp_close(fd_dev->fd_file, NULL)
-    file_accessed(iocb->ki_filp)  <-- use-after-free
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261114-work-fs-fr=
-ozen_writes-v1-0-f5ae61c898b1@kernel.org?part=3D4
+Yes, I've been pointing that out quite a few times already.
+This needs bpf infrastructure changes to be able to automatically track
+the locking context a function can be called from (or something
+similar).
