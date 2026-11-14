@@ -1,93 +1,124 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.210.178
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.133.124
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794673185;
-	b=PkLWrYF/CK78dKRM693vfLfbmyQVxiodFEal2ONMsmcIP0eFrJHTtxWrlxQV+lgubrby
-	 e59qY+sP4O3jyIruwN3zS5PTCCFKapj8zY8L2LQQsb4toF9sYOGM4C20BsuS1uU2MXmB/
-	 CqrxdmpvEFcy1icWIxl3+XPudYHukUSU2ysYslUXByqvp/kBXrryVt/INIsLeZHWvv/ic
-	 /3OzKO6D4VUhnWkhU18HJC8pEwW2fpdzhoMWbuTNCR+Ct5Av9oXzo7f1/RPuf7+jIUZ00
-	 SQc8o9K1y1qq+/k6g8To+wEdhiMewWAGYz2s6VNpz+wmzsLAZz+sNHOys59A4ZlSv4g==
+	t=1794673789;
+	b=djKxpp7TJMJixJEMAeoOhAq2choV7vyZbfuCyFQzb2iL6jceHRQoZrkRK4gWBnu6j0kP
+	 ZM6mAGOiKlpuvmz1A4MtVuXNHvKZtoUyBh2phLhTjCUsZalhD26Z+CXySbJW+ObHWirxm
+	 SKePEj5Qa1oJ04A13x2LgjKjiy3o7Q4kWYp5ldKTy2+TcWYemwruWkZT8OIkcfHSmxuJg
+	 Duv/ZtlZ2ez3p2o8XobNJJYN5kXUkJKzi0KDIl5mRfZb3gqOp0rq0eJ0Z63EBNlipFJC/
+	 6BwpfhH2x89IUPqFhrlm15dn/n1wwhZEpuubOfOcpVQNSeSIEuyBXix2KioU6hMlPxg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794673185;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=XDtYjphGVkc/uulVWko7CeJe+AuX4KnYa+TPlDxQrlo=;
-	b=Pm1EsZBxKNYez9K2GetOB3WObUAfO76qodgeS7eUbLqs9NFn8TQuPgHcCGqAddY6xn0L
-	 WfWlC2awjmSfYJwUx4uHxDa2ulOaVED7eGqE8o3xnjfV2JTSwnFlenWZmUHeMjrQd1KVn
-	 xo/dFPXfrlyNoVRGm21mCAlFCwPtAzF1yh73VwOWgPIIZcYnQIIJUn6IpKieHM8TSkZVk
-	 ZXLHiChwEod33ELnpN7OB7sK6z3GWhfVINYUnedrzM6Rpfy0Zk12CWdMMH7RrJq0ZKZqu
-	 ogfjVKBfQD8xE+TPkmQceRkLIT1WABUzLI+8Xk2EdenYrnB3Q5I01HHdluCPFdDbJAw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794673789;
+	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
+	 X-Mimecast-MFC-AGG-ID:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
+	 X-Received:Received:Message-ID:Subject:From:To:Cc:Date:In-Reply-To:
+	 References:Content-Type:Content-Transfer-Encoding:User-Agent:
+	 MIME-Version;
+	bh=n2A4Bzesj8lSex24jcQa4eIw8NYUbc0vDdMOEEExUHk=;
+	b=yPVC8JPfXji1EbNwJaVGJLcRGyYE/D9tK7ZkrcER+mUcQrZACXouqIZ3R6nd5KmOo8vT
+	 23L1ohXX9DkfoN/RO4u1DLjmWbBARw/Z1zcpqJ9EDH0VvDOm/ADbHtcam6N9IV7xPn32x
+	 RDDvrUVd6BTr+mtHTuXsEtgX85sK91eWfgA05lZ2Dvf1DxagQp0E83qPmjvQbltMAM4rr
+	 2V1tJwwlrA42UtXbuz1eY0RJ+UZLbiPA0zOL/ql2i26QVvqWDb3z6GuXjZNibxG2VmGXM
+	 Q5obVVYnA1ktzHq0/UEFMJxhT9/Lc3+kaEnpZPPh0nokIpZsQkWaW7oKhuT1jTqtSyg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=fail header.from=isslab.korea.ac.kr;
-	spf=none smtp.mailfrom=isslab.korea.ac.kr;
-	dkim=pass header.d=isslab-korea-ac-kr.20260707.gappssmtp.com header.i=@isslab-korea-ac-kr.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=AUea9Ojr;
-	arc=none smtp.remote-ip=209.85.210.178
-Received: from mail-pf1-f178.google.com (mail-pf1-f178.google.com [209.85.210.178])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=pass header.from=redhat.com;
+	spf=pass smtp.mailfrom=redhat.com;
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=FWTmrb22;
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=XLh9n5eg;
+	arc=none smtp.remote-ip=170.10.133.124
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F01D3606A327
-	for <linux-scsi@vger.kernel.org>; Sat, 14 Nov 2026 16:19:43 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org F01D3606A327
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A8B9B606A885
+	for <linux-scsi@vger.kernel.org>; Sat, 14 Nov 2026 16:29:48 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A8B9B606A885
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=isslab-korea-ac-kr.20260707.gappssmtp.com header.i=@isslab-korea-ac-kr.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=AUea9Ojr
-Received: by mail-pf1-f178.google.com with SMTP id d2e1a72fcca58-89d6bd67045so965946b3a.0
-        for <linux-scsi@vger.kernel.org>; Sat, 14 Nov 2026 08:19:43 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=FWTmrb22;
+	dkim=pass (2048-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=XLh9n5eg
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1794673787;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=n2A4Bzesj8lSex24jcQa4eIw8NYUbc0vDdMOEEExUHk=;
+	b=FWTmrb22rWwHJit/J5xIk/lI+m5d3d39zFIHqlGnmhSzkrynClUpOgJj3YbsioeJphFgzK
+	C0sURtdHo3ELmegAvMN1197XsXbqIdnwdGfqxfgTdxIabaI3djdBvJYthCKoV95coViYre
+	/OQOmVMpXCGItvV/K2r28wtwovZ49aA=
+Received: from mail-qt1-f198.google.com (mail-qt1-f198.google.com
+ [209.85.160.198]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-164-GVGFiecQM1Gx3Wvdj3C4BQ-1; Sat, 14 Nov 2026 11:29:46 -0500
+X-MC-Unique: GVGFiecQM1Gx3Wvdj3C4BQ-1
+X-Mimecast-MFC-AGG-ID: GVGFiecQM1Gx3Wvdj3C4BQ_1794673786
+Received: by mail-qt1-f198.google.com with SMTP id d75a77b69052e-54af6c38073so48900661cf.1
+        for <linux-scsi@vger.kernel.org>; Sat, 14 Nov 2026 08:29:46 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=isslab-korea-ac-kr.20260707.gappssmtp.com; s=20260707; t=1794673183; x=1795277983; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=XDtYjphGVkc/uulVWko7CeJe+AuX4KnYa+TPlDxQrlo=;
-        b=AUea9OjrvSRKc4FdV0DiS3YzPJggCkPgz1KqGJWjwcBIl6QFsVCNJ8QFOJdXaCUjqU
-         2uSLa8KkUuRE9/4o8RqDHHH999DG5LoNaszRyBPHGWLKwyYvkGv8Sz/PfzSItMVUCYwe
-         ZuKKtBnzLZV6TJwFHZNr0/eCAamTYBhbm+gpNIsZuafr1GH43BAURcCiH2UIhVwHMsKX
-         ilZfHrFvNZZs+//1rqzaSjB2O1KgWXffXUa/gOv8dslD8SokyUl9nYjVWTwJwl5EA/cf
-         HW6QuAwoUl1KUGy6fr1i9Zlff09ipnldeqrE985MclKckBdHyBdj6dGxl0mUlb9kDG7i
-         kP0w==
+        d=redhat.com; s=google; t=1794673785; x=1795278585; darn=vger.kernel.org;
+        h=mime-version:user-agent:content-transfer-encoding:content-type
+         :references:in-reply-to:date:cc:to:from:subject:message-id:from:to
+         :cc:subject:date:message-id:reply-to:content-type;
+        bh=n2A4Bzesj8lSex24jcQa4eIw8NYUbc0vDdMOEEExUHk=;
+        b=XLh9n5egP3d24HEk110Mtb2c59R6jhr+FRjowd3xXFPMBfYcrgjQY73J1dmTZ3UwRP
+         5KfzLvlEZDJYrl8jxflyy2CfUiFHxvU9/bDtSWTyetSLAUFgVvvx7ekX87Rn1rLwn4he
+         73Y6blT1SodfJ/ihPjlzR532Kbcl1z/g5FHYyoKIvP1ehYodTkxnJcyq1hVHld73Wv2+
+         51MOUw6SnA2V0Xy+cAqVD+wVnoDuJJBMtDHIomoXmvfzb/3bSlZM4j7ACZ299mS7g4Uz
+         fOGPozXs/1EYnUH6hHVmjsAhQMZMEBEOtRxs7jYX05feASaK8R4ao14ymzFPF9XIyUF+
+         GELg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794673183; x=1795277983;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=XDtYjphGVkc/uulVWko7CeJe+AuX4KnYa+TPlDxQrlo=;
-        b=zsyjTkdURtSzex9FE4k6l1qTLj2SB2u0+Ll1Sw8zzsMagS6vOV/DEBqrKPpwEC2pd5
-         9pZZphZriwh9m7HxdGMBxJU3l3ekHHYyMLpdMcGT0kboHJhG/Wtw/hyEye18TzAboVm3
-         uNUtnp+2KnS/ddjdhm+MBIMWFMAt4LNXUeu2sTmKZgguXdMo2rNoiMO6xt4XnI0SJQHs
-         0+9IN7ZgeQCpqdvcP6tf70XgeI5+ECSJLTcSnPX+so7x3T6Vg5NciF0gYc7RO+7SRzK0
-         jtidCaGZFRu1cz2qvcr4bLY7wv2ROHKPghNEkslHcu6/fK9Vq5m0JffqTeuEgB5PN9oT
-         BvLw==
-X-Forwarded-Encrypted: i=1; AL+hErGwAwGe3ohg4WXzLWikVwO36TZ9bV+LL1iEGDOVXk3OAJc0dW0nDpJgzMC3bInQi/m4PqmjVOjanVCn@vger.kernel.org
-X-Gm-Message-State: APuU4Z8YAmpi9sykSEiuGwyYbP2ioiMMhGNJPJ57NbuUjN3NuVrPmM78
-	Ja+oOSOieRIcuu+FG9SnXZGJ54RbkR0UDzDsjtMswK3cxB7TBUvoWhLoh/5nReBT7tA=
-X-Gm-Gg: AYBFou2gsC4lcKOVrDyvR1jehyO4FFEINDmEMQJoOQ7v9s3Fr0Q98iNHkkCO3gEw7OZ
-	ag7vlWqqDJzh6KbfFzNwE6o9tG0tHcKXclwx1lWHU9Dw09bkE385URzNXbSMKAPkFLWcyzQ3Brj
-	wwRM8wfc78I/l8IoTNwHv/PfrqBZELtKTuL+ITheQTpmRKRaVgBxBsNv2/jEPmUHwZlTjrwZ9zo
-	sWAcAydN962ZhHQOID8hKPW2AAilOfSzBwrpUDZi60+bCwKUukrddcL86ICS05BNQ8NvUZPy344
-	dj/XKxhyWL8mHZLI33+E65xXjeY1X4d4ZytjobOY7tUlY6RU+udhZYZ4QREwxWI0mgHftyoAUUv
-	fihYy0hDPOvHHnYkcNvwFhOj8djba0bQEDE7EIt6i1/lI/sGCWMaIyUlHeA7NMq2IeEBAykay4n
-	UFuTXIhj/I191fzP4t85BUR+KoNMUdB72RgFTsy3L/cY/vZz16KmeIS1jN7dDZu67RkFZ524d4c
-	jCVVZuX6MJDBrVtGOmQCn3WAVGHbcDPeUsr64pH3SNc6BHUo2nCR0pckUw0zQ6iFn+VW7tdk1V4
-	+ARku6WJzVGAUxN7NKO2FEvMma0LqtUIlAoOXgMm0nJOpXKZOwic89ooxBlm7lLs1GISCTzrYrJ
-	o1Baw+x/CEVXnbncU0UCVLb1N2+CAfWfqJopHeDj6OfSOB+BZPW3xaycl3IM=
-X-Received: by 2002:a05:6a00:991:b0:89e:70fb:9da with SMTP id d2e1a72fcca58-8bd58c0e209mr5993888b3a.0.1794673183031;
-        Sat, 14 Nov 2026 08:19:43 -0800 (PST)
-Received: from yhlee-960QFG.Davolink ([2406:5900:1044:110c:bfe1:56d2:91a4:93d9])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-8bed12a818asm2198159b3a.17.2026.11.14.08.19.39
+        d=1e100.net; s=20260707; t=1794673785; x=1795278585;
+        h=mime-version:user-agent:content-transfer-encoding:content-type
+         :references:in-reply-to:date:cc:to:from:subject:message-id:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=n2A4Bzesj8lSex24jcQa4eIw8NYUbc0vDdMOEEExUHk=;
+        b=wyVfh84PASLDF11MviuLa5Q/+E2v6epR0Hi7jPZGWXsGD5djnDo7yy92kHJxNc1D6s
+         nnLDNRw028cgS037yH2W8sJtrG/RH7CpAO1zvaY8KifqOodxLyzVoEuSgr/U5v2TR3Ob
+         XDJMaksaYbaROPIC9iyyxl+fQ8S0W16qw/YHaIwnLeZAkV8xaXoQL4oyFWyDiMTyOqod
+         PNU2gy/8c26IsW8R10vyAkvY9FGB/4afxT/PXeiRPvu7ho9+q6q6fhXXPWacfyxdLExH
+         h4QIuLfSwiJCWdblKP6iU09CS25Y4+RnDCmKJ9ICyvg/LrtR5uwIlK/0EIQ5yYvmSuM1
+         O9ag==
+X-Forwarded-Encrypted: i=1; AL+hErED17aPX3ZUMoAUmNSdF7UNG8tm23z8nA5pv5iXF3VQjq9uFVOcRluBL9REfypCWgCjKfdcH9jIdpOm@vger.kernel.org
+X-Gm-Message-State: APuU4Z/xo1THPShK+4lMblQIPmTln0oGR+w9ooANR8Vn8HOSvSBXNxew
+	Fx/A8xmHpXLKnUHiBoxhjEleFpUI6ROmW5EuXk6BCbJvCgrh4i05doH+3y1I3g/RULHfT+KhEjD
+	PjxOEzVF1pEAAPSMxQKoBIFAl4XMRgUZgFiF0ePtLz9qRi8hodgcRvncjWJKmieo=
+X-Gm-Gg: AYBFou3H/T8ooNQCT8ly6FRoTShnh8bqt6JL5UMxWmaUoHzRGgYOEiI4aFZHxNtYYYz
+	BEHBRceSWvTsVoI9Id7v6BfLZCd7fC3+lH8FANxKkCdHG/JmJV3UiO4lZ/1ast5SVnJHKp/KzMX
+	+5jLxGz6AWH14i0Tp8wIqR35UV8kAtMbDlgr4Wo10Vd/2+N+TTwnGfcEtb7E+b0pD+4E4jspIlP
+	Tr7Ke9DNQRkq3rnq8Xt8EcBKhBRfe29hACzU9k2LZjjfKwVW12+/kMtV02msKE0o3AiJI37eDM+
+	fznuimPM+VOC2juMYwpObKkkZcmFWX+SHj0QIbX0zq2maNUCtlLFksFM/8YxxOsfA5iypc+1ypk
+	AlUZqXrlkG7KbN0ItliuEwbo11ydjUgkTxMdU/s3fGDcCS0Epz61nOs1ERRZckl0yhomlSOQcyJ
+	watQN335cgdnwLangy48B0c2eab8V2mhPVoCQMP+UiZMX/Q2NTY5eatwsuH/QgcKt5O+LAcg==
+X-Received: by 2002:ac8:5d4b:0:b0:533:95c1:fb11 with SMTP id d75a77b69052e-55956e5d97cmr146589431cf.28.1794673785376;
+        Sat, 14 Nov 2026 08:29:45 -0800 (PST)
+X-Received: by 2002:ac8:5d4b:0:b0:533:95c1:fb11 with SMTP id d75a77b69052e-55956e5d97cmr146589201cf.28.1794673784936;
+        Sat, 14 Nov 2026 08:29:44 -0800 (PST)
+Received: from loberman-thinkpadp1gen5.rmtusma.csb ([2600:6c65:2440:d8c:929c:b769:6def:faa3])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-91f23d453casm46039086d6.10.2026.11.14.08.29.43
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 14 Nov 2026 08:19:42 -0800 (PST)
-From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
-To: mkp@kernel.org
-Cc: michael.christie@oracle.com,
-	target-devel@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: target: iscsi: do not reject the command on a Data-Out overflow
-Date: Sun, 15 Nov 2026 01:19:31 +0900
-Message-ID: <20261114161931.941441-1-yhlee@isslab.korea.ac.kr>
-X-Mailer: git-send-email 2.43.0
+        Sat, 14 Nov 2026 08:29:44 -0800 (PST)
+Message-ID: <72c69ee88f292a008173bb84a7335330d3415b71.camel@redhat.com>
+Subject: Re: [PATCH v9 00/29] Native SCSI Multipath support
+From: Laurence Oberman <loberman@redhat.com>
+To: Xose Vazquez Perez <xose.vazquez@gmail.com>, John Garry
+	 <john.garry@linux.dev>
+Cc: hare@suse.com, linux-nvme@lists.infradead.org,
+ linux-scsi@vger.kernel.org, 	snitzer@kernel.org, jmeneghi@redhat.com,
+ dm-devel@lists.linux.dev, hch@lst.de, 	michael.christie@oracle.com, "James
+ E.J. Bottomley"	 <James.Bottomley@HansenPartnership.com>, mkp@kernel.org,
+ Benjamin Marzinski	 <bmarzins@redhat.com>, Martin Wilck <mwilck@suse.com>
+Date: Sat, 14 Nov 2026 11:29:43 -0500
+In-Reply-To: <00e03246-95dc-46dd-a2f9-89ad88f177d1@gmail.com>
+References: <20261108204733.557995-1-john.garry@linux.dev>
+	 <9b90edc29d5b3be49f5bd0e0ecec5f1701e089bf.camel@redhat.com>
+	 <3332329d-b922-45a4-8333-e8353e983885@linux.dev>
+	 <00e03246-95dc-46dd-a2f9-89ad88f177d1@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: base64
+User-Agent: Evolution 3.60.2 (3.60.2-3.fc44) 
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -97,119 +128,83 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-__iscsit_check_dataout_hdr() answers a Data-Out whose offset plus length
-exceeds the command's EDTL with iscsit_reject_cmd(), which queues the
-Reject on the offending command and then drops its reference:
-
-	cmd->i_state = ISTATE_SEND_REJECT;
-	iscsit_add_cmd_to_response_queue(cmd, conn, cmd->i_state);
-	/*
-	 * Perform the kref_put now if se_cmd has already been setup by
-	 * scsit_setup_scsi_cmd()
-	 */
-	if (do_put) {
-		pr_debug("iscsi reject: calling target_put_sess_cmd >>>>>>\n");
-		target_put_sess_cmd(&cmd->se_cmd);
-	}
-
-For a command that has already completed that put is the last reference.  A
-WRITE that failed before it consumed its data - because the LUN does not
-exist, or the LBA is out of range - stays on conn->conn_cmd_list until the
-initiator's ExpStatSN acknowledges it in iscsit_ack_from_expstatsn(), which
-Data-Out PDUs never reach.  So iscsit_release_cmd() runs on a command that
-is still on that list and still queued for the tx thread, and the command's
-tag goes back to se_sess->sess_tag_pool.  The tx thread then builds the
-queued Reject from the released command and sets ISTATE_SENT_STATUS in it,
-and the next PDU from the initiator frees it a second time.
-
-Two PDUs on a session that may write are enough:
-
-	WRITE(10), EDTL 512, to a LUN that is not mapped  -> CHECK CONDITION
-	Data-Out, same ITT, Offset 512, DataSegmentLength 1, no payload
-
-Declaring a DataSegmentLength that is not sent keeps the connection in
-sync, so the session stays up and the second free arrives with the next
-command; if the connection does drop first, it comes from
-iscsit_release_commands_from_conn() instead.  On a KASAN + PROVE_LOCKING +
-DEBUG_LIST guest, 5 boots out of 5:
-
-  WARNING: drivers/target/iscsi/iscsi_target_util.c:658 at iscsit_release_cmd+0x2e0/0x390, CPU#0: iscsi_trx/140
-  CPU: 0 UID: 0 PID: 140 Comm: iscsi_trx Not tainted 7.4.0-rc2-00563-g97d73c825122 #1 PREEMPT(lazy)
-  Call Trace:
-   <TASK>
-   target_release_cmd_kref+0x3ea/0x9f0
-   target_put_sess_cmd+0x48/0x60
-   iscsit_add_reject_from_cmd+0x164/0x3c0
-   iscsit_check_dataout_hdr+0x1c1/0x360
-   iscsit_get_rx_pdu+0x5da/0x35d0
-   iscsi_target_rx_thread+0x132/0x2f0
-   kthread+0x2ce/0x3b0
-   ret_from_fork+0x52e/0x780
-   ret_from_fork_asm+0x1a/0x30
-   </TASK>
-  ---[ end trace 0000000000000000 ]---
-
-  refcount_t: underflow; use-after-free.
-  WARNING: lib/refcount.c:37 at refcount_warn_saturate+0xad/0xe0, CPU#0: iscsi_trx/140
-  CPU: 0 UID: 0 PID: 140 Comm: iscsi_trx Tainted: G        W           7.4.0-rc2-00563-g97d73c825122 #1 PREEMPT(lazy)
-  Call Trace:
-   <TASK>
-   transport_generic_free_cmd+0x296/0x2d0
-   iscsit_free_cmd+0xa0/0x180
-   iscsit_ack_from_expstatsn+0x31c/0x6c0
-   iscsit_process_scsi_cmd+0xd4/0x300
-   iscsit_get_rx_pdu+0x118c/0x35d0
-   iscsi_target_rx_thread+0x132/0x2f0
-   kthread+0x2ce/0x3b0
-   ret_from_fork+0x52e/0x780
-   ret_from_fork_asm+0x1a/0x30
-   </TASK>
-  ---[ end trace 0000000000000000 ]---
-
-KASAN stays quiet because iscsit_release_cmd() ends in target_free_tag()
-and commands are reused from the session tag pool instead of being freed to
-the slab, so the second free lands on whichever command owns that tag.
-
-Reject the PDU instead, with iscsit_add_reject(), which is what the
-DataSegmentLength check in iscsit_check_dataout_hdr() a few lines below
-already does for the same kind of protocol error: it builds the Reject from
-a command of its own and leaves the offending command, and its reference,
-where they are.
-
-The put was added to this path by commit 3e1c81a95f0d77 ("iscsi-target:
-Refactor RX PDU logic + export request PDU handling"), where it ran after
-wait_for_completion(&cmd->reject_comp), that is after the tx thread had
-sent the Reject; commit ba159914086f06 ("iscsi-target: Fix
-iscsit_add_reject* usage for iser") removed that wait, so the release can
-now also race the Reject that is still queued.
-
-Fixes: 3e1c81a95f0d77 ("iscsi-target: Refactor RX PDU logic + export request PDU handling")
-Cc: stable@vger.kernel.org
-Signed-off-by: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
----
- drivers/target/iscsi/iscsi_target.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
-index 124ff269b8e759..b101f1e7376d4e 100644
---- a/drivers/target/iscsi/iscsi_target.c
-+++ b/drivers/target/iscsi/iscsi_target.c
-@@ -1485,7 +1485,12 @@ __iscsit_check_dataout_hdr(struct iscsit_conn *conn, void *buf,
- 		pr_err("DataOut Offset: %u, Length %u greater than iSCSI Command EDTL %u, protocol error.\n",
- 		       be32_to_cpu(hdr->offset), payload_length,
- 		       cmd->se_cmd.data_length);
--		return iscsit_reject_cmd(cmd, ISCSI_REASON_BOOKMARK_INVALID, buf);
-+		/*
-+		 * Reject the PDU, not the command: iscsit_reject_cmd() would
-+		 * drop its last reference while it is on conn_cmd_list.
-+		 */
-+		return iscsit_add_reject(conn, ISCSI_REASON_BOOKMARK_INVALID,
-+					 buf);
- 	}
- 
- 	if (cmd->unsolicited_data) {
--- 
-2.43.0
+T24gU2F0LCAyMDI2LTExLTE0IGF0IDE0OjAzICswMTAwLCBYb3NlIFZhenF1ZXogUGVyZXogd3Jv
+dGU6Cj4gT24gMTEvMTAvMjYgMTA6MDUgQU0sIEpvaG4gR2Fycnkgd3JvdGU6Cj4gCj4gPiBPbiAx
+MS85LzI2IDIwOjE5LCBMYXVyZW5jZSBPYmVybWFuIHdyb3RlOgo+ID4gPiAzLiBTbWFsbGVyIHBv
+aW50cwo+ID4gPiAKPiA+ID4gLSBudW1hIHdpdGggZXF1YWwgTlVNQSBkaXN0YW5jZSB1c2VzIG9u
+ZSBwYXRoIHBlciBMVU4sIHNvIHdpdGgKPiA+ID4gdHdvIEFPCj4gPiA+IMKgwqAgcGF0aHMgdGhy
+b3VnaCB0d28gSEJBcywgaGFsZiB0aGUgb3B0aW1pemVkIGJhbmR3aWR0aCBpcyBpZGxlCj4gPiA+
+IChzZGw6Mgo+ID4gPiDCoMKgIGFib3ZlIHVuZGVyIG51bWEpLiBUaGF0IG1hdGNoZXMgTlZNZSwg
+YnV0IHVzZXJzIGNvbWluZyBmcm9tCj4gPiA+IMKgwqAgZG0tbXVsdGlwYXRoIHNlcnZpY2UtdGlt
+ZSB3aWxsIG5vdGljZS4gV291bGQgcm91bmQtcm9iaW4gb3IKPiA+ID4gwqDCoCBxdWV1ZS1kZXB0
+aCBiZSBhIGJldHRlciBkZWZhdWx0IGZvciBTQ1NJPwo+ID4gCj4gPiBNYXliZSwgYnV0IHJvdW5k
+LXJvYmluIG1heSBub3QgYmUgYWx3YXlzIGlkZWFsIGNvbnNpZGVyaW5nIG9ubHkgYQo+ID4gYmlv
+IG1vZGUgb2Ygb3BlcmF0aW9uIGlzIHN1cHBvcnRlZCBhbmQgbm8gbWVyZ2luZyBsaWtlIGRtLW1w
+YXRoIFJRCj4gPiBtb2RlLgo+IAo+IGlvcG9saWN5IGNhbiBlYXNpbHkgYmUgY3VzdG9taXplZCBw
+ZXIgYXJyYXkvZGV2aWNlIHZpYSB1ZGV2IHJ1bGVzLgo+IEp1c3QgbGlrZSBpdCdzIGRvbmUgZm9y
+IE5WTWU6Cj4gaHR0cHM6Ly9naXRodWIuY29tL2xpbnV4LW52bWUvbnZtZS1jbGkvYmxvYi9tYXN0
+ZXIvbnZtZi1hdXRvY29ubmVjdC91ZGV2LXJ1bGVzLzcxLW52bWYtaHBlLnJ1bGVzLmluCj4gCj4g
+QWRkaXRpb25hbGx5LCAic2VydmljZS10aW1lIiBhbmQgImxhdGVuY3kiIEkvTyBwb2xpY2llcyBh
+cmUgY3VycmVudGx5Cj4gdW5kZXIKPiBkZXZlbG9wbWVudDoKPiBodHRwczovL2xvcmUua2VybmVs
+Lm9yZy9saW51eC1udm1lLzIwMjYxMDI2MTExMDE5LjM3MjQ0NjUtMS1rYW5pZUBsaW51eC5hbGli
+YWJhLmNvbS9ULwo+IGh0dHBzOi8vbG9yZS5rZXJuZWwub3JnL2xpbnV4LW52bWUvMjAyNjA4MTUx
+NzM1MDIuMTE4NTkyOS0xLW5pbGF5QGxpbnV4LmlibS5jb20vVC8KPiAKPiA+ID4gLSBUaGVyZSBp
+cyBubyB1c2Vyc3BhY2UgdG9vbCB5ZXQgdG8gc2hvdyBoZWFkcywgcGF0aHMgYW5kIEFMVUEKPiA+
+ID4gc3RhdGUKPiA+ID4gwqDCoCAodGhlIGVxdWl2YWxlbnQgb2YgbXVsdGlwYXRoIC1sbCBvciBu
+dm1lIGxpc3Qtc3Vic3lzKS4gSSB1c2VkCj4gPiA+IGEKPiA+ID4gwqDCoCBzbWFsbCBzeXNmcyBz
+Y3JpcHQgZm9yIHRoaXMgdGVzdGluZy4gQmVuLCBpcyBuYXRpdmUgU0NTSQo+ID4gPiBtdWx0aXBh
+dGgKPiA+ID4gwqDCoCBzdXBwb3J0IGluIG11bHRpcGF0aC10b29scyBwbGFubmVkPwo+ID4gCj4g
+PiBXZWxsLCB0aGUgd2hvbGUgcG9pbnQgaXMgdGhhdCB3ZSBkb24ndCBuZWVkIHVzZXJzcGFjZSB0
+b29scy4KPiA+IEhvd2V2ZXIsIEkgYXBwcmVjaWF0ZSB0aGF0IHRoZXJlIGlzIG5vIGdlbmVyYWwg
+U0NTSSB0b29saW5nIHdoaWNoCj4gPiBjb3VsZCBoZWxwIGhlcmUuIEkga25vdyB0aGF0IEhpbWFu
+c2h1IE0gZGlkIHdvcmsgb24gYSBTQ1NJIHZlcnNpb24KPiA+IG9mIAo+ID4gbnZtZS1jbGkgdG9v
+bCBwcmV2aW91c2x5LiBNYXJ0aW4gbWF5IGtub3cgdGhlIHN0YXR1cyBvZiB0aGF0Lgo+IAo+IEFn
+cmVlZCB0aGF0IHVzZXJzcGFjZSB0b29scyBhcmUgbm90IHN0cmljdGx5IG5lZWRlZCBmb3IKPiBj
+b25maWd1cmF0aW9uLCBidXQKPiBvYnNlcnZhYmlsaXR5IGlzIGtleS4KPiBBIHN0YW5kYXJkIHV0
+aWxpdHkgdG8gdmlzdWFsaXplIHRoZSBkZXZpY2UgdG9wb2xvZ3ksIHBhdGggaGVhbHRoIGFuZAo+
+IEFMVUEKPiBzdGF0ZXMgYXQgYSBnbGFuY2UsIHNpbWlsYXIgdG8gd2hhdCBtdWx0aXBhdGgtdG9v
+bHMgcHJvdmlkZXMsIHdvdWxkCj4gc2F2ZSBhCj4gbG90IG9mIGZyaWN0aW9uIGZvciBzeXNhZG1p
+bnMgbWlncmF0aW5nIGF3YXkgZnJvbSBkbS1tdWx0aXBhdGguCj4gUmVseWluZyBzb2xlbHkgb24g
+YWQtaG9jIHNjcmlwdHMgb3IgbWFudWFsIHN5c2ZzIHBhcnNpbmcgY2FuIGJlY29tZQo+IHF1aXRl
+Cj4gdGVkaW91cyBpbiBwcm9kdWN0aW9uIGVudmlyb25tZW50cy4KSGVsbG8gWG9zZQoKSSBoYXZl
+IGEgd29ya2luZyBydXN0IGJhc2VkIHVzZXJzcGFjZSB0b29sIGZvciB0aGlzLiBJdCBzdGFydGVk
+IGFzIGEKcGF0aCBhbmQgSU9QUyBtb25pdG9yIGFuZCB3b3JrcyB3ZWxsLiBJIGFtIGNsZWFuaW5n
+IGl0IHVwIHRoaXMgd2Vla2VuZAphbmQgd2lsbCBzaGFyZSBhIHJlcG8gbmV4dCB3ZWVrLgoKVGhl
+IGVtYWlsIGNsaWVudCB3cmFwcyB0aGUgbGluZXMsIGxvb2tzIGJldHRlciBvbiB0aGUgd2lkZXIg
+c2NyZWVuCgoKPT09IE5WTWUgUGVyLVBhdGggTW9uaXRvciA9PT0KCm52bWUtc3Vic3lzMCAgICAg
+TlFOOiBsb2JlCiAgICAgICAgICAgICAgICAgaW9wb2xpY3k6IG51bWEKClNhbXBsZSBpbnRlcnZh
+bDogMXMgfCBsYXRlbmN5OiBhdmVyYWdlIHBlciBjb21wbGV0ZWQgSS9PIGluIHRoaXMKaW50ZXJ2
+YWwKClBBVEggICAgICAgICAgIENUUkwgICAgICAgQU5BIFNUQVRFICAgICAgVFJBTlNQT1JUICAg
+ICAgICAgICAgICAgICAgUgpJT1BTICAgVyBJT1BTICBSIEFWRyBMQVQgIFcgQVZHIExBVCAgICAg
+IFJFQUQgQlcgICAgIFdSSVRFIEJXCuKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKU
+gOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKU
+gOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKU
+gOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKU
+gOKUgOKUgAoK4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA
+4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA
+4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA
+4pSA4pSA4pSA4pSA4pSA4pSACm52bWUwYzFuMSAgICAgIG52bWUxICAgICAgb3B0aW1pemVkICAg
+ICAgcmRtYToxOTIuMTY4LjIuMjU0OjQ0MjAgICAgCjU5LjVLICAgIDU5LjZLICAgIDE3LjgybXMg
+ICAgMTUuNzZtcyAgIDIzMi4zIE1CL3MgICAyMzIuOCBNQi9zCm52bWUwYzJuMSAgICAgIG52bWUy
+ICAgICAgb3B0aW1pemVkICAgICAgcmRtYToxOTIuMTY4LjEuMjU0OjQ0MjAgICAgICAKMCAgICAg
+ICAgMCAgICAgICAgICAtICAgICAgICAgIC0gICAgICAgIDAgQi9zICAgICAgICAwIEIvcwoKQ2hh
+bmdlIHRvIHJvdW5kLXJvYmluCgo9PT0gTlZNZSBQZXItUGF0aCBNb25pdG9yID09PQoKbnZtZS1z
+dWJzeXMwICAgICBOUU46IGxvYmUKICAgICAgICAgICAgICAgICBpb3BvbGljeTogcm91bmQtcm9i
+aW4KClNhbXBsZSBpbnRlcnZhbDogMXMgfCBsYXRlbmN5OiBhdmVyYWdlIHBlciBjb21wbGV0ZWQg
+SS9PIGluIHRoaXMKaW50ZXJ2YWwKClBBVEggICAgICAgICAgIENUUkwgICAgICAgQU5BIFNUQVRF
+ICAgICAgVFJBTlNQT1JUICAgICAgICAgICAgICAgICAgUgpJT1BTICAgVyBJT1BTICBSIEFWRyBM
+QVQgIFcgQVZHIExBVCAgICAgIFJFQUQgQlcgICAgIFdSSVRFIEJXCuKUgOKUgOKUgOKUgOKUgOKU
+gOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKU
+gOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKU
+gOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKU
+gOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgAoK4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA
+4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA
+4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA
+4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSACm52bWUwYzFuMSAgICAgIG52bWUx
+ICAgICAgb3B0aW1pemVkICAgICAgcmRtYToxOTIuMTY4LjIuMjU0OjQ0MjAgICAgCjE1LjJLICAg
+IDE1LjJLICAgIDEzLjUybXMgICAgMTEuMDRtcyAgIDExOC44IE1CL3MgICAxMTguNiBNQi9zCm52
+bWUwYzJuMSAgICAgIG52bWUyICAgICAgb3B0aW1pemVkICAgICAgcmRtYToxOTIuMTY4LjEuMjU0
+OjQ0MjAgICAgCjE0LjlLICAgIDE1LjVLICAgIDU0LjIybXMgICAgNjMuMjNtcyAgIDExNi42IE1C
+L3MgICAxMjEuMSBNQi9zCgpUaGFua3MKTGF1cmVuY2UK
 
