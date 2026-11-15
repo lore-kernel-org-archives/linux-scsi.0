@@ -1,53 +1,53 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794754219;
-	b=nN76Ig+hMtJxpZcwzRZv/b6a+uYvNqtfy7gA8OgmkeUsPfXpGTMma4jI0P8RDDBRwOn4
-	 Djm6dL6hlpabdry6latLXlmMiYi6KcvryBsetdQSzBT9Yh+SJH6cbJlGil0QUM1PLMWWt
-	 XAoYY5waPGdGgaun0qxjqxpad5gJkLMulUypjpZi4tCt9OMM4neF5Iv8nIRucb33jaKuW
-	 ayvbpvFSjxivW6EHndJ5fNlGv1KmIUkXprH+jzQvGsjYiqcYZJguhwy8hQ7ujXtnK8GuL
-	 4g0gVmFH/GnB4XOMpq5XpgGBABc7x8kq/Vw5YZGXMv+pOkV4lQFW/zGGV9ycZpO7HKw==
+	t=1794754225;
+	b=kKT2ltZsQ0XBwIUwjHeFZXcgeX3ZS2lhxGqvfYlH+o/4Jt1TjzI+36zvXvJPeGO2Mq3i
+	 UBG0PcKmCJRmfMvLjbzZqqMj6JXVZmG0fgrjNB0dgvc5vltMMpTksneqdbiqFIn+l7rsj
+	 WRYx3Mv/V8C342ztP3oN6GoKaaFPFje93y1KW8ecL+xdat/EfJSVvnuvX3wac5vnKWIMK
+	 9+WzymEXsd4H9ek/dzw+4Dzb5qu7Col8ovy5NEcoLDYoHaPzcJnB1SxFKUAMCIee4dHFk
+	 8Ot9GSUccS/b/x6sRT1q1iHVwS6zXek2sGAVjOWpZhkrSB28NF2OcFQyWqYrrJlp8Cg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794754219;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794754225;
 	h=Received:DKIM-Signature:From:To:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=Oni92pXM+I7fxOlbC1/ubF4NHvTv/X9JfcgsogGeo7k=;
-	b=evuuzqbvrhoegpAgYfcZs7RnH4IjjBi7VMncdkJuklXh0LXx/1IDP5c6UeIrhzqAZjeZ
-	 E2MRmiX5RY/SPWO08GIyIajCH88pr3MvtCMBkCDk4+hPmRBMKWJGkD1As40z1Xp9CYt1j
-	 ZQbssIvdZyoVBE7HlaymDseqWsa0rxCRmklpQiBE0Tc245GiNG7Pou8CflnpXKozQX1nT
-	 0LZxZxi8NImSwLyyexrX99LGXa3bMZHutshTRyrX8qXFyxKv4VUOkKGAbOcbRs3Bf94Ir
-	 /4/SDX3vhUUN2VA6T6ZbFTXKVpvMFNH11C09nnH6C37AwO3cxBSh8tGsWdsCGsQLJ2g==
+	bh=D/B8vk0Ll96T486S8lJdX85f9OsU4P4+TMdOMchphoQ=;
+	b=vNUyE+3W84xQ/QXKNVwzk6Y8aIhM4GRCp69OQISh3ifRIdO8IktJ2FdF/ClBRexdCZtC
+	 R2207NQTL1nagRCkzcxXIZowtJsQjrtuQ0oHlKcRH148h5YQDlEN5PAALl43tWqfENok4
+	 k0ceQvVg7fdbgeBy3K6DvSmEp1pMiHeMirj+eovYoGDLg3h67ERvDFnJR9JnZIC2xj5Tx
+	 2wQnqocE9G2YPOYpaK6FTllyyt0eBiBANyh6rs9YgOEgt0L1aPWQENuCVsSIudSOpac3s
+	 o93pahr6qXfqH+ItDy10iJUjvtpZA8/VVx7+VmetnFZmZ2Q/lyz/PmMmUggE0LE0jZg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=RzXXxCkW;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=PfIOckjg;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CDDDA606A31A;
-	Sun, 15 Nov 2026 14:50:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 997A2606A330;
+	Sun, 15 Nov 2026 14:50:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=RzXXxCkW
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DA4881F000C5;
-	Sun, 15 Nov 2026 14:50:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=PfIOckjg
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AD7CF1F000C4;
+	Sun, 15 Nov 2026 14:50:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794754219;
-	bh=Oni92pXM+I7fxOlbC1/ubF4NHvTv/X9JfcgsogGeo7k=;
+	s=k20260515; t=1794754225;
+	bh=D/B8vk0Ll96T486S8lJdX85f9OsU4P4+TMdOMchphoQ=;
 	h=From:To:Subject:Date:In-Reply-To:References;
-	b=RzXXxCkWG/5K0dtejZ3hbTgLCrTnA3BGkRQeAoUo/odHMxIRkd4Uupfl3/tIXsVcp
-	 +CDcjYCn45tA0T+CbhAWDWqwxJxmjZ1PPhUDRON2Ry7ZPDEfqEd8LeaJE0Ib9JTIqB
-	 KFOO/KeDXjnP0hT7YWUY+qPWSMQq2bpkxRvLlsEY6T5KVxK9N0xJ5lXm4eqYULEdUE
-	 mv7/RRnr4Pc/EEBIQ9zRwTAuCRQwEXTq3rN67BtlJy2GLxjie6FyQ+6OuCdiQ4ASvA
-	 s6EMt62r8HbrYnP5b64eKl2BGPHqp2H7iu9XJcz0/9KjTQem0NP3Uu1VvDqXOxqtIg
-	 v3V64CdjlCO9w==
+	b=PfIOckjglfHujCVdfVkBWzQWCL6kSvB7up84RwKBydDCCjqEXACTLQt8IqLtfJY7w
+	 etedFcub5yjJqzjzZY5KRjhmGAgb+w1O/VElaypyrticSsFQyG1YD99Z3xb5yUGMVH
+	 9PG+GCqxw1KW0bJLAtTFnzwVNEWyVO+/kvRdOR8MOmrGaq24HdYXzHk2Fmo28ukKVa
+	 NiA9wrN65shPb4qMXM63G71d/8tOlDAbiUMr/+Ue6AZlOLqU+6nMXSkMzr/bwQ20WT
+	 0j9z+8tRjHc/zITtWo+MVKsLX77IGyRflYb0vHjQB+LMInZvXa37qJzd0uLtqd0NRw
+	 taLRyPU8jRkHA==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: Jens Axboe <axboe@kernel.dk>,
 	linux-block@vger.kernel.org,
 	Christoph Hellwig <hch@lst.de>,
 	linux-scsi@vger.kernel.org,
 	"Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH v9 01/13] block: introduce disk_zone_is_offline()
-Date: Sun, 15 Nov 2026 23:50:03 +0900
-Message-ID: <20261115145015.938426-2-dlemoal@kernel.org>
+Subject: [PATCH v9 06/13] zloop: keep zone write pointer and condition consistent
+Date: Sun, 15 Nov 2026 23:50:08 +0900
+Message-ID: <20261115145015.938426-7-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.56.0
 In-Reply-To: <20261115145015.938426-1-dlemoal@kernel.org>
 References: <20261115145015.938426-1-dlemoal@kernel.org>
@@ -62,75 +62,91 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Introduce the helper function disk_zone_is_offline() for testing if a zone
-of a gendisk has the offline condition. The zone to test is identified
-using a sector number that must belong to the target zone to check.
+For oredered zone append commands, the function
+zloop_set_zone_append_sector() increments a zone write pointer without
+checking if the zone is already open (implicitly or explicitly). This
+check is done only when the command is later executed using a work item,
+and the zone is implicitly open if needed. This creates a short time
+window where a report zone can show an empty zone with a write pointer
+that is not equal to the zone start sector, which is incorrect.
 
+Fix this by calling zloop_do_open_zone() in zloop_set_zone_append_sector()
+to make sure that a zone is always first implicitly open if needed. This
+requires changing zloop_set_zone_append_sector() to return a blk_status_t
+so that potential zone resource errors can also be returned correctly.
+
+Fixes: fcc6eaa3a03a ("zloop: introduce the ordered_zone_append configuration parameter")
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Martin K. Petersen <mkp@kernel.org>
-Reviewed-by: Hannes Reinecke <hare@kernel.org>
 ---
- block/blk-zoned.c      | 18 ++++++++++++++++++
- include/linux/blkdev.h |  9 +++++++++
- 2 files changed, 27 insertions(+)
+ drivers/block/zloop.c | 21 +++++++++++++++------
+ 1 file changed, 15 insertions(+), 6 deletions(-)
 
-diff --git a/block/blk-zoned.c b/block/blk-zoned.c
-index 4c5889296191..07d504287024 100644
---- a/block/blk-zoned.c
-+++ b/block/blk-zoned.c
-@@ -292,6 +292,24 @@ static bool disk_zone_is_seq(struct gendisk *disk, sector_t sector)
- 	return !blk_zstate_is_conv(zs);
+diff --git a/drivers/block/zloop.c b/drivers/block/zloop.c
+index 96666742523b..7d98be66a3a8 100644
+--- a/drivers/block/zloop.c
++++ b/drivers/block/zloop.c
+@@ -885,20 +885,26 @@ static void zloop_complete_rq(struct request *rq)
+ 	blk_mq_end_request(rq, sts);
  }
  
-+/**
-+ * disk_zone_is_offline - check if a sector belongs to an offline zone
-+ * @disk:	gendisk to check
-+ * @sector:	sector number
-+ *
-+ * Check if @sector on @disk is contained in an offline zone.
-+ * This function can be used only when the bdev queue was entered (BIOs
-+ * submitted but not yet completed) or when holding zone_revalidate_mutex.
-+ */
-+bool disk_zone_is_offline(struct gendisk *disk, sector_t sector)
-+{
-+	if (!blk_queue_is_zoned(disk->queue))
-+		return false;
-+
-+	return disk_zone_get_cond(disk, sector) == BLK_ZONE_COND_OFFLINE;
-+}
-+EXPORT_SYMBOL_GPL(disk_zone_is_offline);
-+
- /**
-  * bdev_zone_is_seq - check if a sector belongs to a sequential write zone
-  * @bdev:       block device to check
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 215753171cef..a2c36b4e6308 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -940,6 +940,9 @@ static inline unsigned int disk_zone_capacity(struct gendisk *disk,
- 		return disk->last_zone_capacity;
- 	return disk->zone_capacity;
- }
-+
-+bool disk_zone_is_offline(struct gendisk *disk, sector_t sector);
-+
- static inline unsigned int bdev_zone_capacity(struct block_device *bdev,
- 					      sector_t pos)
+-static bool zloop_set_zone_append_sector(struct request *rq)
++static blk_status_t zloop_set_zone_append_sector(struct request *rq)
  {
-@@ -954,6 +957,12 @@ static inline unsigned int disk_nr_zones(struct gendisk *disk)
- 	return 0;
+ 	struct zloop_device *zlo = rq->q->queuedata;
+ 	unsigned int zone_no = rq_zone_no(rq);
+ 	struct zloop_zone *zone = &zlo->zones[zone_no];
+ 	sector_t zone_end = zone->start + zlo->zone_capacity;
+ 	sector_t nr_sectors = blk_rq_sectors(rq);
++	static blk_status_t ret = BLK_STS_OK;
+ 
+ 	spin_lock(&zone->wp_lock);
+ 
+ 	if (zone->cond == BLK_ZONE_COND_FULL ||
+ 	    zone->wp + nr_sectors > zone_end) {
+-		spin_unlock(&zone->wp_lock);
+-		return false;
++		ret = BLK_STS_IOERR;
++		goto unlock;
++	}
++
++	if (!zloop_do_open_zone(zlo, zone, false)) {
++		ret = BLK_STS_ZONE_OPEN_RESOURCE;
++		goto unlock;
+ 	}
+ 
+ 	rq->__sector = zone->wp;
+@@ -906,9 +912,10 @@ static bool zloop_set_zone_append_sector(struct request *rq)
+ 	if (zone->wp >= zone_end)
+ 		zloop_mark_full(zlo, zone);
+ 
++ unlock:
+ 	spin_unlock(&zone->wp_lock);
+ 
+-	return true;
++	return ret;
  }
  
-+static inline bool disk_zone_is_offline(struct gendisk *disk,
-+					sector_t sector)
-+{
-+	return false;
-+}
-+
- static inline bool bdev_zone_is_seq(struct block_device *bdev, sector_t sector)
- {
- 	return false;
+ static blk_status_t zloop_queue_rq(struct blk_mq_hw_ctx *hctx,
+@@ -917,6 +924,7 @@ static blk_status_t zloop_queue_rq(struct blk_mq_hw_ctx *hctx,
+ 	struct request *rq = bd->rq;
+ 	struct zloop_cmd *cmd = blk_mq_rq_to_pdu(rq);
+ 	struct zloop_device *zlo = rq->q->queuedata;
++	blk_status_t ret;
+ 
+ 	if (data_race(READ_ONCE(zlo->state)) == Zlo_deleting) {
+ 		rq->rq_flags |= RQF_QUIET;
+@@ -929,8 +937,9 @@ static blk_status_t zloop_queue_rq(struct blk_mq_hw_ctx *hctx,
+ 	 * command work runs.
+ 	 */
+ 	if (zlo->ordered_zone_append && req_op(rq) == REQ_OP_ZONE_APPEND) {
+-		if (!zloop_set_zone_append_sector(rq))
+-			return BLK_STS_IOERR;
++		ret = zloop_set_zone_append_sector(rq);
++		if (ret != BLK_STS_OK)
++			return ret;
+ 	}
+ 
+ 	blk_mq_start_request(rq);
 -- 
 2.56.0
 
