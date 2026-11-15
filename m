@@ -1,54 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.21
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.203
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794767854;
-	b=Ba9IsfIpJsnlvsfcN4yrjaZKD1I043+gaFi4+B4LNZNPgWFN4k45r7kM9AAENFoZbeRX
-	 86wDj3Tcry5NlnQXMSo0oem/k8ryeBQiEmW+cgC9XRGKFwJCea5FGWFQfpy/8OIoifDOj
-	 GM7Z3dt82vQagFAglC0aVxDZ469rWlUaBYNQE5rJOwCz8pvgM0VlcAbmHlzBgmf/O+tr1
-	 on7CE6d99Vvc26GipcFNgkHRKSeRsjSD7NpVFH+JXR5QMFoktjGWI/9LT2vKktNUXXw2c
-	 dGRHw8SNfECnOf5YPrFIPyJcq8/Mrcu8mzBkHANM0EYx9nFuoDU1iWkl9/8K8TC8hXA==
+	t=1794769184;
+	b=4ifxv/Lbp3vXITfvjHeIGMUsukVvH6XOcPfDViD6faedSkM4od7ywtk0PCTYUqKHLMPt
+	 UOAruJWgZKhUDyyhqm/pSbSa/tyVpWnjqHg0dE4Lw4aHGjnj005Ew+cZUntzVIk5QKR6Y
+	 Fbk7Y12TuIpBX4LjkIrgjrAC+7VD5ugwDiJx9cTvRNCC2vrK/2b507CDD+Az5KV34t/Di
+	 twPrP28xN70U7+BG+dlJ+25sxccKaCTW7Xwdn+vHwHfpuuvdNFp9ShjFn76c3wuvCvfyl
+	 A6vLbJ0hcDYXCWz6hmmpM2o5tfCGuJeF8xF1IeSknxBTan6FSc62PdsCcDf0XxAhU8A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794767854;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794769184;
 	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
 	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
 	 Subject:To:Cc:References:Content-Language:From:In-Reply-To:
 	 Content-Type:Content-Transfer-Encoding;
-	bh=9+CWduOD2mKLrUtPjD/H/4JSv1e7FTjJ8If9tjLANUo=;
-	b=QFS5knAbuw7/q3s8S/JX/XOnpRLYWCSLeinx7fvMGZ/mqyfxqq+o/5R/d8/05ZmiR0v5
-	 iG237q4UpVzm/WwTh40PnVPkCBM27ajwLsWz4tkeXyrz2O9wP5S1eAOTd817uT4Izcr+6
-	 6EoB+10JQP8yRLJooeZ/KYI+t3sksht47I8iXCrLovCvi2yLRf19OBQTXL+R+iO4Sg38w
-	 6/duvzy/5hATNihAfjP99G/FvDF7w4J+p5/cOJKfGbJekDjD/n68IPBc8r/VYPK7pXerb
-	 s45nW9GYzVu8+KALRB8r6f7qPCii/c800C+qfqvMzOmeWhpTuriBddA4D0HMTZ/UJvA==
+	bh=/ObX0z92vMMwlVFIRqUffs3xnTOINmuVmFY1k0W8fVs=;
+	b=zK/VTzibgwILW2lAMJa812O10ZwMliQSnPN+us2v/Bn7QNIpw3zf8Z4bYcJk38CACyKO
+	 q8OCw6IaYZ+90FB8FzVz3dYDw8UttUrbvJIDuwF2b/o/0dzqMIe8sW2lu3XzO7A658Usq
+	 YIaNRPVQkkxvM8BKilwQMe2HY7fsy/LAlEf0VFVA/jYH1h6sxKB76tldDBuWRc0AVVOTe
+	 Hiyfj0kcGEkEBKEHm6U7SbASy+lW2Em4aQWo5S4VF9unBDEXlPHN42vIa1pK5R0agYyav
+	 PJhg6sa17lOfyK6brxzieBQ1oAG8KZOXfMxao+ATKwkh6DUrcIWI9hGimAhc1pM2jMg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linux.dev;
 	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=MQtY6NIt;
-	arc=none smtp.remote-ip=95.215.58.21
-Received: from mta1.migadu.com (out-21.mta1.migadu.com [95.215.58.21])
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=m+b548ra;
+	arc=none smtp.remote-ip=91.218.175.203
+Received: from mta0.migadu.com (out-203.mta0.migadu.com [91.218.175.203])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15584606A31F
-	for <linux-scsi@vger.kernel.org>; Sun, 15 Nov 2026 18:37:32 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 15584606A31F
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 07B88606A323
+	for <linux-scsi@vger.kernel.org>; Sun, 15 Nov 2026 18:59:42 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 07B88606A323
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=MQtY6NIt
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=m+b548ra
 X-Envelope-To: linux-scsi@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=JOx3d+X1zVfHWepWY8CK1e2hQWjyfmWSp9MXd/S2URA=;
+DKIM-Signature: a=rsa-sha256; bh=r3KwoUnK5Cpd0P3vAYLdMdF/mK6lClj/XHu1EZl9IQk=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1794767850; v=1; x=1795372650;
- b=MQtY6NItBSPHeo5XNdLlKlS12p92qKMsy4V0enD0O77WNlcb7TDZf845urA7TjXonFBJq4Ji
- zAm7/p++WuudAXJcLRxqdhmOfwW23QU8vARBC/g4hdn26LyT1gB3sPC/nuLaFo2rYet5uS4lFpX
- dhMsZbSSGUrzPp83vGJOrFjw=
+ t=1794769181; v=1; x=1795373981;
+ b=m+b548raxrJiL5rD83zD7iSPQgSwYvP9WuI3cFiQTKBr3XJHYP/FHz5KmuWZu1gJvkA8UAT4
+ vu9H4hYculmihRzuin0ZLl5mZUFsDx75A3Kds86gWoNoOgCYctsPIDwkOf4c8gNX/k8lwDXPHbN
+ 9+yv061U0MSvBjdwchDItkzg=
 X-Envelope-To: linux-scsi@vger.kernel.org
-Received: by mta10.migadu.com with ESMTPS id 8bdf4a6ce8e839ca;
-	Sun, 15 Nov 2026 18:37:30 +0000
-X-Mizu-Trace-ID: 8bdf4a6ce8e839ca
+Received: by mta10.migadu.com with ESMTPS id 6c594d68444740c8;
+	Sun, 15 Nov 2026 18:59:41 +0000
+X-Mizu-Trace-ID: 6c594d68444740c8
 X-Migadu-Flow: FLOW_OUT
-Message-ID: <84b50119-cb4a-4bda-9ab8-7b590216858e@linux.dev>
-Date: Sun, 15 Nov 2026 18:37:28 +0000
+Message-ID: <01eac6bf-8df7-4e7a-8cc6-93e013750bce@linux.dev>
+Date: Sun, 15 Nov 2026 18:59:37 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -59,102 +59,71 @@ List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v9 01/29] scsi: core: Clear cmd->flags for terminal
- queuing error
-To: Bart Van Assche <bvanassche@acm.org>,
+Subject: Re: [PATCH v9 00/29] Native SCSI Multipath support
+To: Laurence Oberman <loberman@redhat.com>,
  james.bottomley@hansenpartnership.com, mkp@kernel.org
 Cc: hare@suse.com, linux-nvme@lists.infradead.org,
  linux-scsi@vger.kernel.org, snitzer@kernel.org, jmeneghi@redhat.com,
  bmarzins@redhat.com, dm-devel@lists.linux.dev, hch@lst.de,
  michael.christie@oracle.com
 References: <20261108204733.557995-1-john.garry@linux.dev>
- <20261108204733.557995-2-john.garry@linux.dev>
- <060d5e0d-764e-40bd-8bb7-ead8d4ada5b0@acm.org>
+ <9b90edc29d5b3be49f5bd0e0ecec5f1701e089bf.camel@redhat.com>
 Content-Language: en-US
 From: John Garry <john.garry@linux.dev>
-In-Reply-To: <060d5e0d-764e-40bd-8bb7-ead8d4ada5b0@acm.org>
+In-Reply-To: <9b90edc29d5b3be49f5bd0e0ecec5f1701e089bf.camel@redhat.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 
-On 11/9/26 20:49, Bart Van Assche wrote:
-> On 11/8/26 12:47 PM, John Garry wrote:
->  > If a request can't be queued in scsi_queue_rq(), then we error out
->  > with a blk_status_t code. Such a scenario may be the scsi_device has
->  > its transport offline. For BLK_STS_RESOURCE or BLK_STS_AGAIN, the
->  > request will be requeued in the block layer.
+On 11/9/26 20:19, Laurence Oberman wrote:
+> 2. ANO paths are ranked the same as AO paths
 > 
-> This is not correct for BLK_STS_AGAIN. Only BLK_STS_RESOURCE and
-> BLK_STS_DEV_RESOURCE cause the block layer to requeue a request. For
-> all other status codes, including BLK_STS_AGAIN,
-> blk_mq_dispatch_rq_list() and blk_mq_try_issue_directly() call
-> blk_mq_end_request().
+> With the ALUA state corrected (by writing "activate" to dh_state, or
+> with the fix above), I/O still went to active/non-optimized paths.
+> scsi_multipath_sdev_init() sets mpath_device->access_state to
+> MPATH_STATE_OPTIMIZED and nothing updates it, while
+> __mpath_find_path(), mpath_round_robin_path() and
+> mpath_queue_depth_path() rank paths by that field. Only
+> scsi_mpath_is_optimized()/is_disabled() read sdev->access_state.
+> 
+> With numa, the first path in dev_list wins for every node, and
+> dev_list order follows sd probe completion, so for about a third of
+> the LUNs the current path was an ANO path. Example, LUN sdn, reads
+> completed per path for a 2000 x 1M O_DIRECT dd (:0/:3 AO, :1/:2 ANO
+> at the time):
+> 
+>    sdn:0 0sdn:1 2000sdn:2 0sdn:3 0
+> 
+> Every read went through the non-owning controller. From the code, for
+> these LUNs the numa recheck of is_optimized() fails on every I/O and
+> __mpath_find_path() picks the same ANO path again.
+> 
+> With the change below (a template callback so the selectors use the
+> live state), plus the scsi_dh_alua fix, all 30 LUNs pick an AO
+> current path at boot, and on LUN sdl (:0/:2 AO, :1/:3 ANO):
+> 
+>    numa         2000     0     0     0
+>    round-robin  1000     0  1000     0
+>    queue-depth 18039     0 13961     0   (8 parallel dd, 64k)
+> 
+> No I/O reached the ANO paths under any policy. This is a test patch to
+> show the problem, not a polished change - feel free to fold it in or
+> do it differently.
 
-ok, right
 
-> 
->  > For other errors, the block layer ends the request and so we won't
->  > see it again (until recycled). Normally when a request completes
->  > scmd->flags is cleared in scsi_end_request(). However for the error
->  > scenario mentioned above, scsi_end_request() is not called and so
->  > scmd->flags is not cleared. As such, when the request is recycled we
->  > see the old value in scmd->flags.
-> 
-> Please describe the consequences of this bug in the patch description.
-> As far as I can tell there are at least two:
-> - SCMD_FAIL_IF_RECOVERING is part of SCMD_PRESERVED_FLAGS and
->    scsi_execute_cmd() ORs new flags into scmd->flags. If a command
->    submitted with SCMD_FAIL_IF_RECOVERING is failed with BLK_STS_OFFLINE
->    because the host is in recovery, the flag leaks into the next request
->    that is allocated with the same tag. That request will then be failed
->    instead of requeued if it is submitted while the SCSI error handler
->    is active.
-> - If SCMD_INITIALIZED leaks, scsi_init_command() skips
->    scsi_initialize_rq() for the next filesystem request. Hence,
->    jiffies_at_alloc and retries are not reinitialized and that request
->    may be failed prematurely by scsi_cmd_runtime_exceeded().
- > >  > Fix this issue by clearing scmd->flags in the error scenario 
-mentioned
->  > by calling scsi_cleanup_rq().
-> 
-> Please add Fixes: and Cc: stable tags. For the SCMD_FAIL_IF_RECOVERING
-> leak, I think this should be:
-> 
-> Fixes: 310bcaef6d7e ("scsi: core: Support failing requests while 
-> recovering")
+JFYI, the work which I did for ALUA support a while ago is here:
+#https://github.com/johnpgarry/linux/commits/scsi-multipath-v7.3-v7-alua/
 
-I am more inclined to go back to some commit pre-LTS v5.15, which is the 
-oldest LTS maintained today. Even if you check 64104f703212f, I'd say 
-that the issue existed then.
+I don't think that I shared this previously.
 
-> 
->  > @@ -1994,8 +1994,8 @@ static blk_status_t scsi_queue_rq(struct 
-> blk_mq_hw_ctx *hctx,
->  >           * we hit an error, as we will never see this command
->  >           * again.
->  >           */
->  > -        if (req->rq_flags & RQF_DONTPREP)
->  > -            scsi_mq_uninit_cmd(cmd);
->  > +        scsi_cleanup_rq(req);
->  > +        scsi_run_queue_async(sdev);
-> 
-> Since the block layer also ends requests for which scsi_queue_rq()
-> returns BLK_STS_AGAIN, the BLK_STS_AGAIN case has the same issue.
-> Please convert that case too:
-> 
->      case BLK_STS_AGAIN:
->          cmd->result = DID_BUS_BUSY << 16;
->          scsi_cleanup_rq(req);
->          break;
-> 
+I do notice that it would conflict with your work to do some 
+centralising of the ALUA RTPG support.
 
-ok, fine. BTW, does anyone ever check cmd->result in this case, or are 
-we just exercising good practice to set the result to failed?
-
-> Although no SCSI driver returns BLK_STS_AGAIN today, I think both
-> error paths should handle this in the same way.
-> 
-Hi Martin, I would really rather not post yet another version of this 
-series. How about send the extra change which Bart requested separately?
+About the NUMA iopolicy - apart from issues in this series with not 
+checking optimised/access_state properly - it does seem less than 
+optimal to we only favour one device per NUMA node (when all in same 
+optimized + enabled state). NVMe multipath support does the same. I 
+suppose that this iopolicy relies on us having one device/path per NUMA 
+node.
 
 Thanks,
 John
