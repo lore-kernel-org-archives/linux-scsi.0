@@ -1,53 +1,53 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794785616;
-	b=Jg1mnsnbR33v0GpMkZcAXgz0G84R6h0ibQS1KHIDAiggSb+ujwkeyDb4Ls4KjH4SSEJM
-	 prgy0qxNZ8SGvmCRxqW2sHn9Q8xGGGlteNbM8nJw+kxXX5Fk5eZngG58UtP6F3xvpM5PF
-	 H/3yoitZv7m0IklGDtxQjobngO64erOe73P3KtiutSiN2lLn07TLYRn+dc6gXQsseIORr
-	 jb1CndwXSeTntsLtA44uFfUbfDUk3CaOPXkn+giFUDLzFH1ilPU9nEVgG23WomG0/dM0U
-	 qq5EiMrgb6sPqt2Oi7MW6uQE16u23VpG4w51ODVyroekVH8QO5nAJ+4D8UKNc5VM6Ww==
+	t=1794785621;
+	b=WVsxJLWOuyqjumSjs1/2g9maT5UqKD+RUp1y8zXabKapsmek/XB0n8T0FNmLI1XGnX5J
+	 qzZ8TREoF6WqmwNSgfasdu+/5VG1uP5wTHn7x9kNjnUq9Y+oty0MZPhqEWI5lVkJx4WSl
+	 zr8SUdxnM9mODn+zpx7FzktagiJvH7PQ2h7glF9d1A5xlcEPwtGl85lk5qVmYT0kn7lv5
+	 QGh8letdeNcQgg65RLF9xspIeqKFZqv6vl7g/V80tC4e4M2Uwxrx/odyyW+LesfohxrUx
+	 +2AW/tpHx0CloE6TEiTUtvnqXrDY1J12E3Ahq+Ug8vSUAxUrIYaOCz4dhDJIBVpUqSg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794785616;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794785621;
 	h=Received:DKIM-Signature:From:To:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=cXhc1JETHrCa4ztbt/iIQGS3A3bf9fAOS2+YChTsM7o=;
-	b=deGbBUochrhShGZie1SjWetT9qqHtkfLHMFD5YPgsp45GvNTyKAAx0BuJrEV68lv5BnM
-	 3p4ySnh4fQ4bH41gvtvBdEnBtcrrZJfWt9FCCCNqKpSusUr7RpS3LVVNr6nRAxfP/N/ef
-	 GknRyjIQafa4Kv+pFjUWaKcytM+Im0svDAsr7irV5puwY5ok8Fvj0aemspPEL+7Iy0dAL
-	 EIQlyueCXcGLqLcodawiIQ84LMo5JTf0jPqCfm7w/iOZirceFWxQguiWU7WFXqiFT39/H
-	 xq8DwsxqIX5uVeVNhwX1Q8ZVIVMmiga7ckvylptfIWvXEjALonVW3L3AjmFkivhuECg==
+	bh=tZ9fny5ziY8iWhqiX+Jhk8PuXcFl3sAc8WiWA+u3QlE=;
+	b=Q+j/QYu09Zz5HWKOAAxc42KxDmVLVhxqdf2R2lv35v9anLY/B3K2L+QhJxiklfUNkO9q
+	 vUv/4Ke913hoHwYEkoHl3X5SoJ4GPx9UEeW+PyJEbhdEoqJtTJB4sDQB5ipf3QekJkHC4
+	 nsqKNrSEjV918KpoqaFonRZ2KPj+51naGDwi2GFCtFQ4BrexSERHNCOLN5ZHtJlWQmV+G
+	 W7qsVPhXTpZO4YnOwuNH3FzGBOLnEGo1wYiCI3YBRY0Od89omo4SeNb6E6NMMrcjBkpI6
+	 Pdu6SYSUF5B3CrRNp2rTaMDqqfaTqVWhsoiX1Ii9njS5wJ7IiTBbHIt7pZ5WfJIBAUA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=UkFD++cM;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=PrfUjHYe;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6457F606A33D;
-	Sun, 15 Nov 2026 23:33:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 962B6606A329;
+	Sun, 15 Nov 2026 23:33:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=UkFD++cM
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8638A1F000C4;
-	Sun, 15 Nov 2026 23:33:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=PrfUjHYe
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B82DD1F000C5;
+	Sun, 15 Nov 2026 23:33:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794785616;
-	bh=cXhc1JETHrCa4ztbt/iIQGS3A3bf9fAOS2+YChTsM7o=;
+	s=k20260515; t=1794785621;
+	bh=tZ9fny5ziY8iWhqiX+Jhk8PuXcFl3sAc8WiWA+u3QlE=;
 	h=From:To:Subject:Date:In-Reply-To:References;
-	b=UkFD++cMFBpOCskFqLj7p1SYAIalQAAiUPI/bubBb7NeE0Z6NbZh6NgYzj7tkb4TS
-	 kdoqx6ne5nBaH9lH12jEACo7HOU3rNqAUWqe48ujql4jSZZpsvrluI+yL4AWQUPLo9
-	 CEy3uLSZWeVfC1q4IbKICP7k7foNBx0qC3Fucm87UD601sdmkWRCUC9f99F+AHg00A
-	 OZRa/kWg0uwWWkrex7rQFz/xQu2TJ4nJcOFyROZPT3ATgOHOHCKGNL7+6R6NhXJZUy
-	 QSGNZunGzOqXKksKcCNpalxFRNqqlKyW48lz5pDrMBVQIjUSLpagv/wpDgvL3HHmGT
-	 PW45ljvstcetw==
+	b=PrfUjHYe/Pi64gIisEDda2TIIij0tyrAKB05SxjSxIuKOn6NMxz7wLlYkApZeLKcS
+	 0mxh5cYSEMHCL/l8G9B/DoJ8Oda1/Xa3Jk2yUDltITTPg63VI/X/HuVkGBPq5UU/7l
+	 WI3IyamyC/b1Cy00ML+sgnjGYKjPbL9FA8QsUbfmT85DzlgTi1P5X9MyJxXV6BYz7x
+	 Q7eWAkUAbQ1hPAzMJDXyhsYP0y7UbiA7VlpVdAnxTEpcPj+p0LcYKWsrXScbyHSpTJ
+	 Sb5Go1h45H8j+B5fFldK0L2+wRJwAKmmKKT86fEvKuI/A8ZDeeSDVKqa7cpQS1xtp1
+	 j/lZSPVEqUssw==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: Jens Axboe <axboe@kernel.dk>,
 	linux-block@vger.kernel.org,
 	Christoph Hellwig <hch@lst.de>,
 	linux-scsi@vger.kernel.org,
 	"Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH v10 06/13] zloop: fix ordered zone append handling
-Date: Mon, 16 Nov 2026 08:33:20 +0900
-Message-ID: <20261115233327.941586-7-dlemoal@kernel.org>
+Subject: [PATCH v10 11/13] scsi: sd_zbc: always revalidate zones for disks supporting head depopulation
+Date: Mon, 16 Nov 2026 08:33:25 +0900
+Message-ID: <20261115233327.941586-12-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.56.0
 In-Reply-To: <20261115233327.941586-1-dlemoal@kernel.org>
 References: <20261115233327.941586-1-dlemoal@kernel.org>
@@ -62,223 +62,154 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-For oredered zone append commands, the function
-zloop_set_zone_append_sector() increments a zone write pointer without
-checking if the zone is already open (implicitly or explicitly). This
-check is done only when the command is later executed using a work item,
-and the zone is only then implicitly open if needed. This creates a short
-time window where a report zone can show an empty zone with a write
-pointer that is not equal to the zone start sector, which is incorrect.
+sd_zbc_revalidate_zones() skips revalidating the zones of a ZBC device if
+the zone size and total number of zones of the disk has not changed. This
+is to avoid the sometimes slow report zones for the entire disk that
+blk_revalidate_disk_zones() will generate.
 
-Calling zloop_do_open_zone() in zloop_set_zone_append_sector() is required
-but introduces locking complexity as the zone mutex cannot be taken in the
-context of zloop_queue_rq(). Instead introduce the ordered workqueue
-append_workqueue to handle zone append commands when ordered zone append
-is enabled. This ensure that all zone append operations are executed in
-the order of there submission. This removes the need for setting the
-command sector in the context of zloop_queue_rq() and we can rely on the
-reguar command execution done by zloop_rw(). With this change,
-zloop_seq_write_prep() is simplified and zloop_set_zone_append_sector() is
-removed entirely.
+For ZBC devices that support the storage element depopulation feature, a
+revalidation after executing a passthrough REMOVE ELEMENT AND TRUNCATE
+command will thus correctly trigger a zone revalidation as the disk
+capacity and number of zones changed.
 
-This change does reduce the command execution concurrency and impact
-performance with ordered zone append enabled for file systems using zone
-append. This is however not a critical option and the default unordered
-zone append handling is unaffected.
+However, for devices supporting the data preserving head depopulation
+variant of the depopulation feature (REMOVE ELEMENT AND MODIFY ZONES
+command), a disk capacity and number of zones does not change after a head
+is depopulated. Only the conditions of the zones served by the head that
+was depopulated change. These zones are transitioned to either read-only
+or offline.
 
-Fixes: fcc6eaa3a03a ("zloop: introduce the ordered_zone_append configuration parameter")
+While the block layer storage element management functions always call
+blk_revalidate_disk_zones() to catch these changes, a user scan, libata
+device rescan after EH or a depopulation or restoration action executed
+through SG_IO would not. In these cases, not calling
+blk_revalidate_disk_zones() prevents the block layer from taking
+appropriate actions on the zone write plugs of the disk.
+
+Avoid any issue with the block layer view of the zone conditions by not
+skipping the call to blk_revalidate_disk_zones() for disks that support
+both the GET PHYSICAL ELEMENTS STATUS and REMOVE ELEMENT AND MODIFY ZONES
+commands. This check is done from sd_zbc_read_zones() using the helper
+function sd_zbc_check_depop_supported(). The new SCSI disk flags
+depop_report_supported and depop_modify_zones_supported are defined to
+remember the result of this check.
+
+This change will slow down a little SMR disk revalidation. However, user
+forced revalidations are normally rare, and other revalidations triggered
+by udev only happen when the disk device files is not in use anymore
+(closed). So this slow down should in practice not be an issue.
+
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+Reviewed-by: Hannes Reinecke <hare@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/block/zloop.c | 115 +++++++++++++++++-------------------------
- 1 file changed, 47 insertions(+), 68 deletions(-)
+ drivers/scsi/sd.h     |  2 ++
+ drivers/scsi/sd_zbc.c | 47 +++++++++++++++++++++++++++++++++++++++++--
+ 2 files changed, 47 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/block/zloop.c b/drivers/block/zloop.c
-index 96666742523b..0cf67acf8096 100644
---- a/drivers/block/zloop.c
-+++ b/drivers/block/zloop.c
-@@ -129,6 +129,7 @@ struct zloop_device {
- 	struct gendisk		*disk;
+diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
+index 574af8243016..84c87d0f05d8 100644
+--- a/drivers/scsi/sd.h
++++ b/drivers/scsi/sd.h
+@@ -156,6 +156,8 @@ struct scsi_disk {
+ 	unsigned	ignore_medium_access_errors : 1;
+ 	unsigned	rscs : 1; /* reduced stream control support */
+ 	unsigned	use_atomic_write_boundary : 1;
++	unsigned	depop_report_supported : 1;
++	unsigned	depop_modify_zones_supported : 1;
+ };
+ #define to_scsi_disk(obj) container_of(obj, struct scsi_disk, disk_dev)
  
- 	struct workqueue_struct *workqueue;
-+	struct workqueue_struct *append_workqueue;
- 	bool			buffered_io;
- 	bool			zone_append;
- 	bool			ordered_zone_append;
-@@ -590,32 +591,24 @@ static int zloop_seq_write_prep(struct zloop_cmd *cmd)
- 	 * when submitted.
- 	 */
- 	if (is_append) {
--		/*
--		 * If ordered zone append is in use, we already checked and set
--		 * the target sector in zloop_queue_rq().
--		 */
--		if (!zlo->ordered_zone_append) {
--			if (zone->cond == BLK_ZONE_COND_FULL ||
--			    zone->wp + nr_sectors > zone_end) {
--				ret = -EIO;
--				goto out_unlock;
--			}
--			cmd->sector = zone->wp;
--		}
--	} else {
--		if (cmd->sector != zone->wp) {
--			if (zone->wp == ULLONG_MAX)
--				pr_err("%pg: Zone %u: write to %s zone: sect %llu\n",
--				       zlo->disk->part0, zone_no,
--				       blk_zone_cond_str(zone->cond),
--				       cmd->sector);
--			else
--				pr_err("%pg: Zone %u: unaligned write: sect %llu, wp %llu\n",
--				       zlo->disk->part0, zone_no, cmd->sector,
--				       zone->wp);
-+		if (zone->cond == BLK_ZONE_COND_FULL ||
-+		    zone->wp + nr_sectors > zone_end) {
- 			ret = -EIO;
- 			goto out_unlock;
- 		}
-+		cmd->sector = zone->wp;
-+	} else if (cmd->sector != zone->wp) {
-+		if (zone->wp == ULLONG_MAX)
-+			pr_err("%pg: Zone %u: write to %s zone: sect %llu\n",
-+			       zlo->disk->part0, zone_no,
-+			       blk_zone_cond_str(zone->cond),
-+			       cmd->sector);
-+		else
-+			pr_err("%pg: Zone %u: unaligned write: sect %llu, wp %llu\n",
-+			       zlo->disk->part0, zone_no, cmd->sector,
-+			       zone->wp);
-+		ret = -EIO;
-+		goto out_unlock;
- 	}
- 
- 	/* Implicitly open the target zone. */
-@@ -625,15 +618,13 @@ static int zloop_seq_write_prep(struct zloop_cmd *cmd)
- 	}
- 
- 	/*
--	 * Advance the write pointer, unless ordered zone append is in use. If
--	 * the write fails, the write pointer position will be corrected when
--	 * the next I/O starts execution.
-+	 * Advance the write pointer. If the write fails, the write pointer
-+	 * position will be corrected when the next I/O starts execution.
- 	 */
--	if (!is_append || !zlo->ordered_zone_append) {
--		zone->wp += nr_sectors;
--		if (zone->wp == zone_end)
--			zloop_mark_full(zlo, zone);
--	}
-+	zone->wp += nr_sectors;
-+	if (zone->wp == zone_end)
-+		zloop_mark_full(zlo, zone);
-+
- out_unlock:
- 	spin_unlock(&zone->wp_lock);
- 	return ret;
-@@ -885,58 +876,27 @@ static void zloop_complete_rq(struct request *rq)
- 	blk_mq_end_request(rq, sts);
+diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
+index 8cbf171e6fab..bf2e60071d57 100644
+--- a/drivers/scsi/sd_zbc.c
++++ b/drivers/scsi/sd_zbc.c
+@@ -516,6 +516,33 @@ static int sd_zbc_check_capacity(struct scsi_disk *sdkp, unsigned char *buf,
+ 	return 0;
  }
  
--static bool zloop_set_zone_append_sector(struct request *rq)
--{
--	struct zloop_device *zlo = rq->q->queuedata;
--	unsigned int zone_no = rq_zone_no(rq);
--	struct zloop_zone *zone = &zlo->zones[zone_no];
--	sector_t zone_end = zone->start + zlo->zone_capacity;
--	sector_t nr_sectors = blk_rq_sectors(rq);
--
--	spin_lock(&zone->wp_lock);
--
--	if (zone->cond == BLK_ZONE_COND_FULL ||
--	    zone->wp + nr_sectors > zone_end) {
--		spin_unlock(&zone->wp_lock);
--		return false;
--	}
--
--	rq->__sector = zone->wp;
--	zone->wp += blk_rq_sectors(rq);
--	if (zone->wp >= zone_end)
--		zloop_mark_full(zlo, zone);
--
--	spin_unlock(&zone->wp_lock);
--
--	return true;
--}
--
- static blk_status_t zloop_queue_rq(struct blk_mq_hw_ctx *hctx,
- 				   const struct blk_mq_queue_data *bd)
- {
- 	struct request *rq = bd->rq;
- 	struct zloop_cmd *cmd = blk_mq_rq_to_pdu(rq);
- 	struct zloop_device *zlo = rq->q->queuedata;
-+	struct workqueue_struct *wq;
- 
- 	if (data_race(READ_ONCE(zlo->state)) == Zlo_deleting) {
- 		rq->rq_flags |= RQF_QUIET;
- 		return BLK_STS_IOERR;
- 	}
- 
--	/*
--	 * If we need to strongly order zone append operations, set the request
--	 * sector to the zone write pointer location now instead of when the
--	 * command work runs.
--	 */
--	if (zlo->ordered_zone_append && req_op(rq) == REQ_OP_ZONE_APPEND) {
--		if (!zloop_set_zone_append_sector(rq))
--			return BLK_STS_IOERR;
--	}
--
- 	blk_mq_start_request(rq);
- 
- 	INIT_WORK(&cmd->work, zloop_cmd_workfn);
--	queue_work(zlo->workqueue, &cmd->work);
-+	if (zlo->ordered_zone_append && req_op(rq) == REQ_OP_ZONE_APPEND)
-+		wq = zlo->append_workqueue;
-+	else
-+		wq = zlo->workqueue;
-+	queue_work(wq, &cmd->work);
- 
- 	return BLK_STS_OK;
- }
-@@ -1029,6 +989,8 @@ static void zloop_free_disk(struct gendisk *disk)
- 
- 	fput(zlo->data_dir);
- 	destroy_workqueue(zlo->workqueue);
-+	if (zlo->append_workqueue)
-+		destroy_workqueue(zlo->append_workqueue);
- 	kfree(zlo->base_dir);
- 	kvfree(zlo);
- }
-@@ -1285,6 +1247,21 @@ static int zloop_ctl_add(struct zloop_options *opts)
- 		goto out_free_idr;
- 	}
- 
-+	/*
-+	 * Use an ordered workqueue for strongly ordered zone append operations
-+	 * so that we can keep processing the operations in the same order as
-+	 * they are submitted.
-+	 */
-+	if (zlo->ordered_zone_append) {
-+		zlo->append_workqueue =
-+			alloc_ordered_workqueue("zloop%d_append", WQ_FREEZABLE,
-+						zlo->id);
-+		if (!zlo->append_workqueue) {
-+			ret = -ENOMEM;
-+			goto out_destroy_workqueue;
-+		}
++/*
++ * sd_zbc_check_depop_supported - Check if the device supports storage element
++ *				  depopulation
++ * @sdkp: Target SCSI disk
++ * @buf: command buffer
++ *
++ * Check if the device supports the REMOVE ELEMENT AND MODIFY ZONES command.
++ */
++static void sd_zbc_check_depop_supported(struct scsi_disk *sdkp,
++					 unsigned char *buf)
++{
++	/* Mandate support for reporting storage elements health. */
++	sdkp->depop_report_supported =
++		scsi_report_opcode(sdkp->device, buf, SD_BUF_SIZE,
++				   SERVICE_ACTION_IN_16,
++				   SAI_GET_PHYSICAL_ELEMENT_STATUS) == 1;
++	if (!sdkp->depop_report_supported) {
++		sdkp->depop_modify_zones_supported = false;
++		return;
 +	}
 +
- 	if (opts->base_dir)
- 		zlo->base_dir = kstrdup(opts->base_dir, GFP_KERNEL);
- 	else
-@@ -1391,6 +1368,8 @@ static int zloop_ctl_add(struct zloop_options *opts)
- 	kfree(zlo->base_dir);
- out_destroy_workqueue:
- 	destroy_workqueue(zlo->workqueue);
-+	if (zlo->append_workqueue)
-+		destroy_workqueue(zlo->append_workqueue);
- out_free_idr:
- 	mutex_lock(&zloop_ctl_mutex);
- 	idr_remove(&zloop_index_idr, zlo->id);
++	sdkp->depop_modify_zones_supported =
++		scsi_report_opcode(sdkp->device, buf, SD_BUF_SIZE,
++				   SERVICE_ACTION_IN_16,
++				   SAI_REMOVE_ELEMENT_AND_MODIFY_ZONES) == 1;
++}
++
+ static void sd_zbc_print_zones(struct scsi_disk *sdkp)
+ {
+ 	if (sdkp->device->type != TYPE_ZBC || !sdkp->capacity)
+@@ -545,6 +572,7 @@ int sd_zbc_revalidate_zones(struct scsi_disk *sdkp)
+ 	u32 zone_blocks = sdkp->early_zone_info.zone_blocks;
+ 	unsigned int nr_zones = sdkp->early_zone_info.nr_zones;
+ 	unsigned int flags;
++	bool print_zones;
+ 	int ret;
+ 
+ 	/*
+@@ -554,11 +582,22 @@ int sd_zbc_revalidate_zones(struct scsi_disk *sdkp)
+ 	if (!blk_queue_is_zoned(q))
+ 		return 0;
+ 
++	/*
++	 * If the zone size and number of zones has not changed, and the disk
++	 * does not support depopulating heads, skip the rather slow call to
++	 * blk_revalidate_disk_zones().
++	 */
+ 	if (sdkp->zone_info.zone_blocks == zone_blocks &&
+ 	    sdkp->zone_info.nr_zones == nr_zones &&
+-	    disk->nr_zones == nr_zones)
++	    disk->nr_zones == nr_zones &&
++	    !sdkp->depop_modify_zones_supported)
+ 		return 0;
+ 
++	print_zones =
++		sdkp->zone_info.zone_blocks != zone_blocks ||
++		sdkp->zone_info.nr_zones != nr_zones ||
++		disk->nr_zones != nr_zones;
++
+ 	sdkp->zone_info.zone_blocks = zone_blocks;
+ 	sdkp->zone_info.nr_zones = nr_zones;
+ 
+@@ -571,7 +610,8 @@ int sd_zbc_revalidate_zones(struct scsi_disk *sdkp)
+ 		return ret;
+ 	}
+ 
+-	sd_zbc_print_zones(sdkp);
++	if (print_zones)
++		sd_zbc_print_zones(sdkp);
+ 
+ 	return 0;
+ }
+@@ -610,6 +650,9 @@ int sd_zbc_read_zones(struct scsi_disk *sdkp, struct queue_limits *lim,
+ 	sdkp->device->use_10_for_rw = 0;
+ 	sdkp->device->use_16_for_sync = 1;
+ 
++	/* Check if storage element depopulation is supported. */
++	sd_zbc_check_depop_supported(sdkp, buf);
++
+ 	/* Check zoned block device characteristics (unconstrained reads) */
+ 	ret = sd_zbc_check_zoned_characteristics(sdkp, buf);
+ 	if (ret)
 -- 
 2.56.0
 
