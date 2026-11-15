@@ -1,100 +1,88 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.208.49
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1794698411;
-	b=iMGcN2g8WDtz+HRXTLizkP6B0yfDsRijbAUVl+nCGJaOHckjWoP4S0dB7qLL8btU7YTW
-	 fmDftbXSvNs+riTvaPj0q3M4OeVes3BH4u6K3r1ql5rYavAZqVN44SEN0a9V5s508saZ/
-	 5P02PyKGtftnX//FefIbMaLQxpkQ/HGHYJueWbj4JnlvRbtaeUByFAZVscxPG6LSwFWwN
-	 jZ4hwVlRcpSBgUz+pg3HsWxQAEtLgsVZrZ/EUOmzhk7SPumEBTngYq/anQbPP6Un85KEz
-	 VpsdSCa538VYV6/vhOU8sqE+/3ex64HhOAUST03GaJy7OzmjY3kxW6FFmGDoNwsSFxA==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794698411;
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.171
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1794702318;
+	b=lRcTn/FIhhWQcsOB/eqHBEIe4EGVyDu9a+T2EgS08/N/Qq5YNmCWmzdbAcTUqr8JWUCL
+	 zbajjbOIQKQGrCyCNk1NBLdPN4hYQM58UymRCwasdiaavWk0Apv8X510Kaodny1j9nMHc
+	 Ur0hHAjvusjzroCgrwj7EviYUye328TZFW0/3DeDni2OHsUlRs/x0pXSgT/71f7J77//g
+	 H0rr4TT1XGnt0r5+i1wwICo5Q+T0/x362qwi3PcoA3Y/aCuMKR7Ak/pSzvFgb8Tk4/au0
+	 se8LegELfT7fp+dPP3m9k6EbMlmPtITRgZk6+yq5OHNNWdmQtpaxZF2uKgSOLSiu8HA==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794702318;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
-	 Message-ID:Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
-	bh=98mXXJR5XCg4Z4S2yqrizowpYg4fQiN0pgPOU/BiUFY=;
-	b=vZWNcZoeyrLMDTwcB6ht3uqlpccUZV1RVC3gC7FGsMVNu3d3KKyJwJm/ZotfbTq5eqkO
-	 SZ9caclyUVjglKyo4PYDOZFwn9KtP0qM+4NzuvTN+GEOve6ffFpmofXfTAROQmHKeOWxp
-	 XQnNr92CUEP0DtNzE7SwEvmX+5rEU404aIANi4AbnQjJxquwgMPN+FZatv/XTSvX1LeEW
-	 ABheyF53hiMPqEaGnVaWac45ljKXA5LyQ0KoJ8fyYXWePZmX5M8wieNnSCPUlvfTHwBXg
-	 tC7cqpP3ujOR7zeSfROOQfOYJ0IlNJWiLdMQPbspyqNLfJ+S3Ftd47ccjJ/N9ucaNzw==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 Message-ID:Date:MIME-Version:User-Agent:Reply-To:Subject:
+	 Content-Language:To:Cc:References:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=QBU+JY0LIvKeNHjcy5gTbrjwDNu63TsOHh29cK8nd4o=;
+	b=WIQg4u6spFPgA83SOQ/ftNIzTyyYlybE94H9FSzEdJWJ33R3D98eoFXGJsUXp0IaKkGk
+	 JBFHsGBssddPjdkpy6bh4oyyum29ctS0BrIRxymRuh6lYAXe9lx8+Rm6caBCdZym2G3BA
+	 e0eiN0KtRgKNANNBfF/z3fkU14jMKk/W5QSG9DvyF2E+Fa/gxQRQkIXiPkcMiadP6MsSM
+	 YrfahMlJStR5ZxMddZl9Iu1PsImn/XP/F/v6t28J+TDZnIvTUfzv2Qw8Dym666JR+d7Ew
+	 xqho0GNKmsfv69YtxcYKGZA3Th9tjQQpIpt1k4vbeLPg7jtml95Vw6irenTbTRa3/NA==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=bZ4A5V+6;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.208.49
-Received: from mail-ed1-f49.google.com (mail-ed1-f49.google.com [209.85.208.49])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b="Ols/R6zM";
+	arc=none smtp.remote-ip=74.125.82.171
+Received: from mail-dy1-f171.google.com (mail-dy1-f171.google.com [74.125.82.171])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3822B606A330
-	for <linux-scsi@vger.kernel.org>; Sat, 14 Nov 2026 23:20:10 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3822B606A330
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33D41606A329
+	for <linux-scsi@vger.kernel.org>; Sun, 15 Nov 2026 00:25:18 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 33D41606A329
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=bZ4A5V+6
-Received: by mail-ed1-f49.google.com with SMTP id 4fb4d7f45d1cf-6b58cb69927so3771026a12.0
-        for <linux-scsi@vger.kernel.org>; Sat, 14 Nov 2026 15:20:10 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1794698409; cv=none;
-        d=google.com; s=arc-20260327;
-        b=d8adiufA8SEDPP7iQPe7DTLbt5uCaDenDHbkX6We8wwgh0ETiznIZ3XfTJKZWb87eQ
-         59vRgewqgdWqo4HbsZ44WvL96hLvPBWw30pAOgrZPAmdp63wycvp5LmE8BZtABBJJDrt
-         6TmBallSLpH5Gab+2QeLjV9QS7ob5sxSYImx8pcl1lH2W67OZBqbFs4ahFyEd3K1IV0n
-         Z7JDYcJ8FpKdb/qgT6InSnXBFG+WJAtZBxBfs+UfEB5APjDOE4Q4xuHX27hqQ3y2ZVCk
-         PYHSEOm68SlXuHUKjm93dmRYTMWrnDhD4U7c7WjpaSZMVKpK5mXwlD9hXdBvxAt+Ox8W
-         UDpA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=98mXXJR5XCg4Z4S2yqrizowpYg4fQiN0pgPOU/BiUFY=;
-        fh=YMbUTicjTNunWBNxffTGMUKPEaM/Sb0pMkcdIXHEMAw=;
-        b=nfhrIBq6/hKANbFD5EUBNeIKU/HFUPkQBb5YTaCEmYQmmHEogPltpLrSebpE2FdHxN
-         3Qz+hUfr+ed6xyVdrfBMCQf4KaxBL3pbFyWICL+6LjDlVISVr+S5W9MGqw8QCurzCRfx
-         uXeggGDrWLAHoPD0LK9KIikZkoZmBoAhdBgVU6xUgfUZVyLkE3CERipZHv3WvQ7t1I2n
-         yjIPsYCArlUiNO5w4VZ30/pTwdik96TWuucmeQEhojHMQnnU/makPaeQkfty9amDMmcS
-         /7GV4fil7yLX0Kf98+YU6Wiq8zOiUu9KRnCdNDBREQmtpqoMVkoE/z5Wje0rU+4uAQI3
-         Ipgw==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=Ols/R6zM
+Received: by mail-dy1-f171.google.com with SMTP id 5a478bee46e88-36a315ed211so2175718eec.0
+        for <linux-scsi@vger.kernel.org>; Sat, 14 Nov 2026 16:25:18 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1794698409; x=1795303209; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=98mXXJR5XCg4Z4S2yqrizowpYg4fQiN0pgPOU/BiUFY=;
-        b=bZ4A5V+6Vs4HKIPLNbCXlaoHg6GUiZAgPE1CoHup/u8F9XnmCFMSb6naMqQFAl++mw
-         +LZR0jt78s/FhrwMU+95xN0Ho10rZ/g9p6M/dfGpr9SfvlaOXM2WfiTCtO0CejnyefhK
-         5gg17lDjyCI6S+pTTK/DIWzHtcTY1JHkLI4t/I/Teu6/Lgz9A0oKfkx231Ay53Fdu4Kp
-         zCo0ecwmPzO3ZOIddRCFMjOjLH94BU3oXsC8cOhJgJSeLFwZkZlFyxo1cq6JVw7hHb6A
-         21NW8PziNlBat7d4DfM9UgO0YIScpglsDnmQoGQNIOQhlOx3hw76q6t8+8jTPfBn24eS
-         FVGg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794698409; x=1795303209;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+        d=gmail.com; s=20260707; t=1794702317; x=1795307117; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from:references
+         :cc:to:content-language:subject:reply-to:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=98mXXJR5XCg4Z4S2yqrizowpYg4fQiN0pgPOU/BiUFY=;
-        b=1ASlvBnEnfhdRlWCG2aBVDWnjKDvu/ojfTzBt9gCAR21iHdEpn+6w4PoNWFADye/+a
-         B684a1VqjFIOquJlRYcejCB0k2K5ScGQwTwfjz/TBtEhkHZu/01Xi4XSPb+sKRvSnPdF
-         AIWTpo8fCwsViLI4ida1qdwD94THe+yaBq0z9O8n2kv5+3tWHx4ea6My4jsr9El1seZG
-         JZtlKfPR5EuFAN7J4ex0FU9idlRzyL1C3CC7cH2sLFssOZNoJL9jQu68nEc4JBgNQYUr
-         SdW+oU01XQy3wuOb5wfQlBD7p1A80CDlhkKsM44vU/c4sr/0SHaPnoqV1G1kmG0hxibl
-         exiw==
-X-Forwarded-Encrypted: i=1; AL+hErG2UOJ/8udsZLXshbiucQxrajjuSU1m4hi4ZiYocHzFLTvSYUamLMXiKsFF+4DUXINeGBlL/M67Ln9E@vger.kernel.org
-X-Gm-Message-State: APuU4Z9Kd3hfiSIKSz29MQYsssbqJEYQWjFqp8MowWUF2QOc5vzK7DF5
-	RIIWAfL62XKYjay54du2TB1mJZagFSqyLsVwyA8SjvK59lt7TDsKqpUNfIgp51fIeWbOViV6pnn
-	22lW6uFEk36avdKZHBCGjSw4rElLS+aU=
-X-Gm-Gg: AYBFou15AFZQ6W/G7+KcXExyzHbE0jCZvrFxI2L0aF/rMXVwov0K4W1kFepoEhnH9B4
-	51bGCLVMwJXXaQDhQh9KhO/K/z4eSaoNINKn0D2OInvgJUSS6/Me5LfdNINyjQJ6QQAmWV+k6sn
-	Oh7ETN4Q+dooQl0ZoCsv6Gddju8xr/GymmV78UY92R+798sGNiIUW06Rgrfu2YHm54o2mCNgKnE
-	VIobnDY5YgkEfpdXVgoI3HlVWRuCRLfBLW2D1q1QIsPO8kUIYXIV3Un3OfsEsbeXTBEO/Wluwb1
-	mzpbLC6PuM3/px6L3PqYDqXSWZ0Kv7IrJV8l/eDKY1V5RS1qm0eoWrOWRu7LjiSY3A+D8lj9GKv
-	vFlL+3XiofFSpxPwjIHBzISzVtBZgTfCdYho0USOLnXDB/MS0tY05hO73MJpnIAIFfuEcUQ==
-X-Received: by 2002:a05:6402:e10:b0:6b7:f00e:5e56 with SMTP id
- 4fb4d7f45d1cf-6b7f00e5f37mr1542816a12.1.1794698409123; Sat, 14 Nov 2026
- 15:20:09 -0800 (PST)
+        bh=QBU+JY0LIvKeNHjcy5gTbrjwDNu63TsOHh29cK8nd4o=;
+        b=Ols/R6zMu1kix52YL4gO5G6t2l7MiCVboq6QHsHUlZh2C3x/yzt3IZrAH3frath6cD
+         IHSwWZ8L9+AL+FuxJygZaWikHgFGc2CAl8pnkoeHXpjyjqFfP19Bo7uRxdluOcabnYNR
+         zRii8/9UJcgRqZslD4goexaigmszzwT6TkqlMK75b8yS5cah+Td2FSI5WVGuH5+o8iE1
+         0ilIhNSyE5ctI9aBg86g4QPNsrczsn6Z3ByBpMl0F9bGyNZbmWIHictoqeUQ0xWr/jWx
+         6lij1GXYh6GTlCxmrMgDcbfX8DzpHAsFDNAxjNjpcpFY94Pe8U15mqheTpYJiwX6Phe4
+         jtlQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1794702317; x=1795307117;
+        h=content-transfer-encoding:content-type:in-reply-to:from:references
+         :cc:to:content-language:subject:reply-to:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=QBU+JY0LIvKeNHjcy5gTbrjwDNu63TsOHh29cK8nd4o=;
+        b=t4Dub75qPHiGOUJ/CnuGk5oReSE5prwDxK+kZSSGI/bxDFKwWxI+ptEdJXDC+Nb/iv
+         HHpaDyM0KiuLXdRbnlcvP2qYyckjX1r6ago1FK/Mwfg/XVo9Dl3153xIq1rTBxiR4llZ
+         Y5dn8ITHJ+cSvRZKzUU7o6D9WpHCvJCe3BdmEMn6S2m0U3/t+MaMVGUX9gC4EUvVGk9O
+         uOJ/FZZP6fLNOPKC43ZPxJ5B0t/ugiOzN4ESo0qk7D8mTJgQQd2MNhPUGtyY1myJQLeu
+         Q5X2fV6y4/2xjq/G4JAILlTyk790QQEIQ0799JHqcyuVPPT+uyrDtQ9tg1tdFKi8BDpx
+         Rh1w==
+X-Forwarded-Encrypted: i=1; AL+hErE3GCcJWVdY/0goXzFEPeyQsjTakO+vR5Q9XT5LgafG6WtwYbMX37I/hx+1KpRC6JQ3dSHmIvEg4L2f@vger.kernel.org
+X-Gm-Message-State: APuU4Z/Wz/jUrRH86D+Xkv25cAqFp6TEPH1Lwm22vnY6zFsv6tY9+cVQ
+	fA8eXMRXZ9bFgKOkpxnKBh2ePj1EZdtviAoSBtUWlnRUZ1Y9Gz0q/HA7
+X-Gm-Gg: AYBFou1z2y4cP7U4hwVWDJsEl6UOBckKkv4yeDCRqFf8eOU//sSD75HhhiAn6E6RiFT
+	h/G7kl32DV2Q3mpNRpi8AMy5tzllEO5uUFML/0JQb5CPUDOH6HSSxAIF190rTC9szaSgARgMhhy
+	t5wISZSBVKiOIUq9AqyizjyS7NG6ipVFT/9sBrCAy6P5Ey/rhyAAIlpI2XebFALxEf+w30tRf7T
+	54ZwKr/0BCd5k2NaJxXkaZsuCCOpobfzUrK7yvkioJoB9EI5ZmmdHM7mnMayGEwNr/ZgIuQbfex
+	EZesq9uDjYEh7caKi33ol6/zJa6hzo7353YOu8CrHlzTGc7WUAeQIb5WnVoBVNxM426pGE0CDPX
+	SRcLSna/XT3JDe7ylTrc61RtnW0cmRsNRyqb6BPJfe/meurTP6F2wRhgT/8RR7hJDJVJPNdX0Z9
+	sKYTZpiVkO4u8O1CrmcTfdjhuz79moBlYMBtNC89qR//WAjbcuDd2c0KgrMwAS+/kD+heOkbXki
+	jD6mc2ESDVA3jgYgUneq1mGhXywl7lzUYNGoFIesTMbfWlGuoLR1uxAI7FX1NITvt8Z6AKQ7dHu
+	i4Hx1lPYaQX8MXu/JLI1/7HDtD5cC8hojjCzilEltm2IXf+IGWP0jSX9jovRq7l9gZA=
+X-Received: by 2002:a05:7301:1509:b0:369:f3a3:fad6 with SMTP id 5a478bee46e88-379658c798fmr6036337eec.4.1794702317178;
+        Sat, 14 Nov 2026 16:25:17 -0800 (PST)
+Received: from [192.168.35.43] ([218.50.238.131])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-37955f01d68sm19708520eec.17.2026.11.14.16.25.14
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sat, 14 Nov 2026 16:25:16 -0800 (PST)
+Message-ID: <a813b1ea-6971-4fde-b310-659a03963fba@gmail.com>
+Date: Sun, 15 Nov 2026 09:25:12 +0900
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -104,86 +92,88 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261114-work-loop-pseudo-v2-0-98639a2286fb@kernel.org>
- <20261114-work-loop-pseudo-v2-33-98639a2286fb@kernel.org> <20261114120557.4bc1eb6e57218cdc@chrisdown.name>
-In-Reply-To: <20261114120557.4bc1eb6e57218cdc@chrisdown.name>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Sun, 15 Nov 2026 00:19:57 +0100
-X-Gm-Features: AclHuK_YVxhIpv6JLzeNAX5mX5IHGfu05WS6uQ-TCKewxE3JKeci2PyA-UDMCbo
-Message-ID: <CAOQ4uxhGxpBtMZ5kfuzR1tQAewiecoX7UjXQRo91QjJHH9T_Yw@mail.gmail.com>
-Subject: Re: [PATCH RFC v2 33/42] fs: add file_check_backing()
-To: Chris Down <chris@chrisdown.name>
-Cc: Christian Brauner <brauner@kernel.org>, linux-fsdevel@vger.kernel.org, 
-	Jann Horn <jannh@google.com>, Chris Mason <mason@kernel.org>, Josef Bacik <josef@toxicpanda.com>, 
-	Christoph Hellwig <hch@lst.de>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-nvme@lists.infradead.org, Alexander Viro <viro@zeniv.linux.org.uk>, 
-	Jan Kara <jack@suse.cz>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, 
-	driver-core@lists.linux.dev, linux-mm@kvack.org, bpf@vger.kernel.org, 
-	linux-security-module@vger.kernel.org, selinux@vger.kernel.org, 
-	apparmor@lists.ubuntu.com, linux-nfs@vger.kernel.org, netdev@vger.kernel.org, 
-	fuse-devel@lists.linux.dev, linux-efi@vger.kernel.org, 
-	xen-devel@lists.xenproject.org, ocfs2-devel@lists.linux.dev, 
-	linux-s390@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, 
-	linux-usb@vger.kernel.org, linux-erofs@lists.ozlabs.org, 
-	linux-kselftest@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Reply-To: chanwoo@kernel.org
+Subject: Re: [PATCH v2 1/4] PM / devfreq: Fall back to previous_freq when
+ get_cur_freq() fails
+Content-Language: ko
+To: Bean Huo <beanhuo@iokpp.de>, linux-pm@vger.kernel.org,
+ linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, MyungJoo Ham <myungjoo.ham@samsung.com>,
+ Kyungmin Park <kyungmin.park@samsung.com>,
+ Chanwoo Choi <cw00.choi@samsung.com>, "Martin K . Petersen"
+ <mkp@kernel.org>,
+ "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+ Avri Altman <avri.altman@sandisk.com>, Bart Van Assche <bvanassche@acm.org>,
+ Alim Akhtar <alim.akhtar@samsung.com>, Stanley Jhu <stanleyjhu@google.com>,
+ Bean Huo <beanhuo@micron.com>
+References: <20260907192140.2701755-1-beanhuo@iokpp.de>
+ <20260907192140.2701755-2-beanhuo@iokpp.de>
+From: Choi Chanwoo <cwchoi00@gmail.com>
+In-Reply-To: <20260907192140.2701755-2-beanhuo@iokpp.de>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Sat, Nov 14, 2026 at 9:06=E2=80=AFPM Chris Down <chris@chrisdown.name> w=
-rote:
->
-> Hi Christian,
->
-> Christian Brauner writes:
-> >+      /* Look through stacking filesystems at the inode with the data. =
-*/
-> >+      if (d_real_inode(file->f_path.dentry)->i_sb->s_iflags & SB_I_PSEU=
-DO)
-> >+              return -EINVAL;
->
-> This looks good in general, but what the bots said about O_PATH files
-> here is real. With FMODE_PATH this is reached for a file that was never
-> opened, so on overlayfs nothing has been through ovl_open() to look up
-> the lowerdata of a metacopy file yet. ovl_d_real() then does the lookup
-> itself, and when that fails it hits the WARN(1) at its end and returns
-> the overlayfs dentry, so the check passes as well.
->
-> Only fuse passes FMODE_PATH, so it takes CAP_SYS_ADMIN to get there, but
-> it's easy to trigger with that. From a quick test with a metacopy file
-> whose redirect into a data-only layer points at nothing, registering an
-> O_PATH fd of it with FUSE_DEV_IOC_BACKING_OPEN gives
->
->      ovl_d_real(/f, 0): real dentry not found
->      WARNING: fs/overlayfs/super.c:79 at ovl_d_real+0xc9/0x210
->      [...]
->       file_check_backing+0x308/0x5e0
->       fuse_backing_new+0x219/0x4a0
->       fuse_backing_open+0xe8/0x390
->       fuse_dev_ioctl+0x53a/0x7d0
->
-> and the ioctl still succeeds. A normal open of that file fails with
-> ENOENT, so nothing could have used it as a backing file anyway, but with
-> panic_on_warn this is now a panic.
->
-> Maybe ovl_d_real() should just stop warning when the lookup fails, now
-> that it has a caller that isn't trace_uprobe?
+On 9/8/2026 4:21 AM, Bean Huo wrote:
+> From: Bean Huo <beanhuo@micron.com>
+> 
+> devfreq_set_target() calls the optional ->get_cur_freq() callback to get
+> the frequency that is passed as freqs.old to the DEVFREQ_PRECHANGE and
+> DEVFREQ_POSTCHANGE notifiers, but it does not check the return value. If
+> the callback fails without setting @freq, cur_freq is never assigned, and
+> an uninitialized stack value is passed to the notifiers.
+> 
+> hisi_uncore_get_cur_freq() can hit this. It returns -ENODEV without
+> setting @freq when its PCC channel is missing. On the mailbox error path
+> it sets @freq to 0 instead, so that the core does not read a random
+> value.
+> 
+> The other two callers, cur_freq_show() and devfreq_monitor_resume(),
+> already check the return value and use devfreq->previous_freq when the
+> callback fails. Do the same in devfreq_set_target().
+> 
+> This does not seem to cause a visible problem today. The passive governor
+> is the only DEVFREQ_TRANSITION_NOTIFIER user in the tree, and it only
+> reads freqs.new. So this patch is not marked for stable.
+> 
+> Fixes: 0fe3a66410a3 ("PM / devfreq: Add new DEVFREQ_TRANSITION_NOTIFIER notifier")
+> Signed-off-by: Bean Huo <beanhuo@micron.com>
+> Reviewed-by: Avri Altman <avri.altman@sandisk.com>
+> ---
+>  drivers/devfreq/devfreq.c | 5 ++---
+>  1 file changed, 2 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/devfreq/devfreq.c b/drivers/devfreq/devfreq.c
+> index f08fc6966eae..f20d9a660779 100644
+> --- a/drivers/devfreq/devfreq.c
+> +++ b/drivers/devfreq/devfreq.c
+> @@ -348,9 +348,8 @@ static int devfreq_set_target(struct devfreq *devfreq, unsigned long new_freq,
+>  	unsigned long cur_freq;
+>  	int err = 0;
+>  
+> -	if (devfreq->profile->get_cur_freq)
+> -		devfreq->profile->get_cur_freq(devfreq->dev.parent, &cur_freq);
+> -	else
+> +	if (!devfreq->profile->get_cur_freq ||
+> +	    devfreq->profile->get_cur_freq(devfreq->dev.parent, &cur_freq))
+>  		cur_freq = devfreq->previous_freq;
+>  
+>  	freqs.old = cur_freq;
 
-Yeh I guess that this needs to be a Fixes for lazy data lookup.
+I agree this patch.
+But, I don't recommend to execute to function on if statement.
+In order to improve the readability, could you please update it as following:
 
-The correct fix would be to teach all the callers to deal with an error.
+        unsigned long cur_freq = devfreq->previous_freq;
+	unsigned long freq;
+	...
+	if (devfreq->profile->get_cur_freq) {
+		err = devfreq->profile->get_cur_freq(devfreq->dev.parent, &freq);
+		if (!err)
+			cur_freq = freq;
+	}
 
-> The check would still pass
-> for an O_PATH file whose lowerdata couldn't be looked up at that point,
-> though.
-
-One observation relevant to this patch set is that a datadir layer has no
-business being a pseudo fs and that can and should be blocked explicitly
-at overlayfs mount time.
-
-The other observation is that fuse_passthrough_open() should probably
-check the backing_file that was opened for io in addition to checking
-in fuse_backing_open(), which could have different FMODE and specifically
-could be FMODE_PATH.
-
-Thanks,
-Amir.
+-- 
+Best Regards,
+Chanwoo Choi
+Principal Engineer, Samsung Electronics
