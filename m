@@ -1,66 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=199.89.1.14
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794775347;
-	b=zqCr8bLk0FmLSgwpzSDUpjYg1FC+ECfw35rWO1ddAOQJ9JaLpYq9OZ05ZaKcZ9pB1zYI
-	 mc8EWuLlb97wLAfctZKww4T7KVNU8dStBCWdwD1XsKIDFKSnzCOdw7u5p7f4tMpYwLYgP
-	 dFFk18FiL13MLM0cVew6HMuLAYkCEHs1gg4/afn8lVz0a1PciVruwOnKb1U6kRxTKV2bY
-	 0eEfkJQdvgLqclhzgY9qy28jrNG+1eVc3ieHPihhoJKBBuG+W9ZfiPiKvXyzW3btjwFHX
-	 AEc4TayqZbR6Sc7IzTabVwVwqZItDP4xJX9uoHE+Y94zrXn/KwXHDXphPRMPRSEhqyA==
+	t=1794785610;
+	b=s9XGlgLzGRx7GCtLcw7eDJpnS//NOg9aut28R0lYsImYBWBN+bklA2ZLkWKhcxCFlmq/
+	 QpPHL+rc4LYV9IORN6Ed9I1zelLitNbb/Rji2qVez17YQ6IU0xQaz1NmAHVXrzHI7j6/u
+	 TLrlg6UlIvhq7GD0DBX0mTMlVvBoO1w89BUSFgeY5hgbEk3jEMi3NWSCH6yJykY6BoslP
+	 7aA6cXfhDQLVic0Bx3Vi837ga/0GRxhwLgARpGqQQB/rNusjUNa0FdIeuV9S8VwDj6dhq
+	 qajd5Wa0Xs4m5ZGtxVRcwL4+F2fg0HM3OWAAvmCn+rIAgaHkQjj6cc9wXvzGPtUEV0g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794775347;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Virus-Scanned:Received:
-	 Received:Message-ID:Date:MIME-Version:User-Agent:Subject:To:Cc:
-	 References:Content-Language:From:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=57qg6lfcglp0N4Mj4NgnwPYExZR+gKFM0e2d2Eu9fTw=;
-	b=gT8EtKdW37zIEv16HMsJcbtQKkA09/W+D+/D8cIMOJ2dbnLlurZk9OeSZ/jGHECPdlV1
-	 B1oLu6dQMzH8xNrjC45gAe8B+LptiMEowEjXgwogHLd59L0HZ7clAffG3Ad0lltocSFlO
-	 3vtM6Ytp9i3HYkmRrBOI68nsEMWSj6VUY7uw7CXyGdTzDv4OQG8RBcuqyJKlUyZFPKtlX
-	 fdbwCQ8fVl3Io2S3W1HkdsOPLTixR2yB7kKyoOfSD4tHVz+xWdeq95fwz9k5qXQ1ZgJ9y
-	 SS60hig95i/RZ1VWEZCOTu5BRkfKwW6n48jhzlShQyXRCpRMyl/NfI4S9zh4diqV+qA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794785610;
+	h=Received:DKIM-Signature:From:To:Subject:Date:Message-ID:X-Mailer:
+	 MIME-Version:Content-Transfer-Encoding;
+	bh=egxDnFMEWFfDpGaAQK4ZP9oO0nmZy+YZEMrEffQOHVg=;
+	b=N+dpy6CIPSpomBY4wmlyYODUOSJRg0WrkH7LSJAvTkRzjTtISfn0aTqdXK5ahSazfx+X
+	 8ZNDqpDHfKeY3oXZmaSCma47/K/tLzoFxbCpnAr3+oe6Z2CXPaPcrCeS4nVNiDR75cyLu
+	 RYwSgj0aZ9divag8t9f0Kwf/dTDthLaxVVR8V0kQd/VJYp1B9pOwuO39+Qiud1l1YwOUo
+	 F+dLJ8hCtmY5zxiHcNFA7xyqAFeAn5YU1J2pEtK5WljE8oSk5M/CKdkEZq2iBXO93g0cy
+	 huP1uOF+TwsPeOsU0a0+jGHRdZTvUlb0i48jpS5yfsy5t4qOi6UBnrTWMl3op61DNGQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=acm.org;
-	spf=pass smtp.mailfrom=acm.org;
-	dkim=pass header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=MtrtZZDp;
-	arc=none smtp.remote-ip=199.89.1.14
-Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=TmKSa6qh;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C182606A32F
-	for <linux-scsi@vger.kernel.org>; Sun, 15 Nov 2026 20:42:27 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7C182606A32F
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 50D39606A323;
+	Sun, 15 Nov 2026 23:33:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=MtrtZZDp
-Received: from localhost (localhost [127.0.0.1])
-	by 011.lax.mailroute.net (Postfix) with ESMTP id 4jSNGP1ZRhz1XMYJW;
-	Sun, 15 Nov 2026 20:42:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1794775338; x=1797367339; bh=57qg6lfcglp0N4Mj4NgnwPYE
-	xZR+gKFM0e2d2Eu9fTw=; b=MtrtZZDp7qD5J70HXAoNolpn2WpTDUFn9OAxViit
-	MNMoaLQwo7v93ZvYmGTUTW9Uh5m7jF2b44pKa8Yh6aEkXrqri1jswKQloo9cLMuY
-	7vm8JaIcOqIvARuhsXQ3xaDAHkatT9DZb0aCD/hijDM8A424SAguqOLyLWR9dXdF
-	Wo0HvXpTB1bi+mRGNAwkAm0lByzqJBA05dmWhWcVXvF+wTXAbd/vUltAJlItI4IG
-	ZH7aeDiWYCb3+ccfzyy/QEKtjJnCYgLoKdGU2KW2gt5IN5/i2QiTkS07sz4vcgqj
-	z2P2XAQnmxp9SzpfZfibWtcKogMmcey8hgPuwkGDgIwoaA==
-X-Virus-Scanned: by MailRoute
-Received: from 011.lax.mailroute.net ([127.0.0.1])
- by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 8BFVPczuCpW4; Sun, 15 Nov 2026 20:42:18 +0000 (UTC)
-Received: from [192.168.51.14] (c-24-6-239-25.hsd1.ca.comcast.net [24.6.239.25])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4jSNGL25W2z1XM311;
-	Sun, 15 Nov 2026 20:42:18 +0000 (UTC)
-Message-ID: <a3a40995-613f-4bbb-8de4-7d087649bad0@acm.org>
-Date: Sun, 15 Nov 2026 12:42:17 -0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=TmKSa6qh
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 49CC71F000C4;
+	Sun, 15 Nov 2026 23:33:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794785610;
+	bh=egxDnFMEWFfDpGaAQK4ZP9oO0nmZy+YZEMrEffQOHVg=;
+	h=From:To:Subject:Date;
+	b=TmKSa6qhjLOGLH13mJkKRPeBbSfn+8anmRSmxVaBrIFySlmXPcmRHcFZx7OLZ51f2
+	 AMr2vjnYE1n94Dm/DBQtardqIx8NnrKfatZa2Kzb8ofJHHhy/YJxKG3HuW84C+tlp4
+	 rRJq+F/VYbCP1Uiz1L2N6TmeaAc3sZWrPg5adTMPkFIA3skB1b+pJuJzSO1x+48kQX
+	 zCFaWuo7ZhUz/pjJyPArN49ggEvkOrP5OyLqUqanvGZey0tcMVce9BzRz9tJBjB9KB
+	 3fGrU4u3+N5jYdVk6K6uXhAgtosCe09miZTfm96+P5DhwPHV0Eapr0sVCYYkKGtr4+
+	 omEm+cZLxtbjA==
+From: Damien Le Moal <dlemoal@kernel.org>
+To: Jens Axboe <axboe@kernel.dk>,
+	linux-block@vger.kernel.org,
+	Christoph Hellwig <hch@lst.de>,
+	linux-scsi@vger.kernel.org,
+	"Martin K . Petersen" <martin.petersen@oracle.com>
+Subject: [PATCH v10 00/13] Add support for storage element depopulation
+Date: Mon, 16 Nov 2026 08:33:14 +0900
+Message-ID: <20261115233327.941586-1-dlemoal@kernel.org>
+X-Mailer: git-send-email 2.56.0
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -70,30 +58,115 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v9 01/29] scsi: core: Clear cmd->flags for terminal
- queuing error
-To: John Garry <john.garry@linux.dev>, james.bottomley@hansenpartnership.com,
- mkp@kernel.org
-Cc: hare@suse.com, linux-nvme@lists.infradead.org,
- linux-scsi@vger.kernel.org, snitzer@kernel.org, jmeneghi@redhat.com,
- bmarzins@redhat.com, dm-devel@lists.linux.dev, hch@lst.de,
- michael.christie@oracle.com
-References: <20261108204733.557995-1-john.garry@linux.dev>
- <20261108204733.557995-2-john.garry@linux.dev>
- <060d5e0d-764e-40bd-8bb7-ead8d4ada5b0@acm.org>
- <84b50119-cb4a-4bda-9ab8-7b590216858e@linux.dev>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <84b50119-cb4a-4bda-9ab8-7b590216858e@linux.dev>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 11/15/26 10:37 AM, John Garry wrote:
-> Hi Martin, I would really rather not post yet another version of this 
-> series. How about send the extra change which Bart requested separately?
-How will this approach affect bisectability of the SCSI core?
+Jens,
 
-Thanks,
+These patches define a new set of block device operations for generically
+using from the block layer the storage element depopulation feature of
+zoned block devices. Support for this feature is added to the SCSI disk
+driver and an emulation of this feature added to the zloop driver.
 
-Bart.
+The management operations can be accessed using block layer API, which is
+intended for file systems (e.g. zonefs and XFS), as well as using ioctls
+for users using zoned disks directly from user space.
+
+Changes from v9:
+ - Addressed Sashiko comments on patch 6. This change redesigns the
+   ordered zone append handling to simplify the code and avoid locking
+   difficulties.
+ - Addressed Sashiko comments on patch 8.
+
+Changes from v8:
+ - Addressed Sashiko comment on patch 7 by adding patch 6. Patch 7 is
+   unmodified.
+ - Addressed Sashiko comments on patch 8 and patch 12
+ - Added review tags to unmodified pacthes
+
+Changes from v7:
+A significant amount of changes in this version to address most of the
+Sashiko review comments and to simplify the code. In more details, the
+changes are:
+ - Added patches 3, 6, and 9.
+ - Dropped former patch 5 as the use of irq-disabling spinlocks in zloop
+   is not necessary.
+ - Reworked patch 4 by migrating the idepop operation wait loops to the
+   device drivers. This simplifies the implementation in zloop without
+   making the sd driver implementation more difficult. Also fixed problems
+   with errors during restoration and zone write plugs state.
+ - Reworked patch 7 and 11 to be consistent with the changes in patch 4.
+
+Changes from v6:
+ - Addressed the nit pointed out by Christoph in patch 4
+ - Added review tags
+
+Changes from v5:
+ - Rebased on latest block/for-next
+ - Addressed Christoph's comments on patch 3
+ - Added patch 5 to address a potential deadlock in zloop (signaled by
+   sashiko)
+ - Reworked the restoration of storage elements in patch 6 to avoid an
+   inconsistent state of storage elements in case of error. Also added
+   protection against disk removal during storage element removal and
+   restoration execution.
+ - Added review tags
+
+Changes from v4:
+ - Rebased on latest block/for-next
+ - Added review tags to patch 1 and 2
+ - Reworked patch 3, 4 and 5 to address Christoph's and sashiko comments
+
+Changes from v3:
+ - Reworked patch 1 to only provide the disk_zone_is_offline() helper
+   function. Failing of read operations to offline zones is handled
+   directly by the zloop driver and the new patch 7 is added to handle
+   failing early read operations to offline zones of ZBC SCSI disks.
+ - Added patch 2
+ - Addressed further valid comments from Sashiko
+   The biggest changes are in patch 2 to save the number of storage
+   elements of a disk in struct gendisk and to serialize the execution of
+   the storage element management operations using the zone revalidation
+   mutex.
+ - Rebased on latest block/for-next
+
+Changes from v2:
+ - Addressed further valid comments from Sashiko
+ - Rebased on latest block/for-next
+
+Changes from v1:
+ - Addressed the many valid comments that Sashiko had
+ - Rebased on latest block/for-next
+
+Damien Le Moal (13):
+  block: introduce disk_zone_is_offline()
+  block: refactor blk_revalidate_disk_zones()
+  block: allow dropping all zone write plugs on revalidation
+  block: introduce storage element management
+  block: add storage element management ioctls
+  zloop: fix ordered zone append handling
+  zloop: fix zone reporting consistency
+  zloop: add storage element emulation
+  zloop: add degrade_element control command
+  scsi: scsi_proto: refine the definition of storage element health
+  scsi: sd_zbc: always revalidate zones for disks supporting head depopulation
+  scsi: sd_zbc: define storage element management operations
+  scsi: sd: fail read commands to offline zones early
+
+ .../admin-guide/blockdev/zoned_loop.rst       |  33 +-
+ block/blk-zoned.c                             | 450 ++++++++-
+ block/blk.h                                   |  14 +
+ block/genhd.c                                 |   4 +
+ block/ioctl.c                                 |   4 +
+ drivers/block/zloop.c                         | 924 ++++++++++++++++--
+ drivers/scsi/sd.c                             |  23 +-
+ drivers/scsi/sd.h                             |   5 +
+ drivers/scsi/sd_zbc.c                         | 538 +++++++++-
+ include/linux/blkdev.h                        |  64 ++
+ include/scsi/scsi_proto.h                     |   6 +-
+ include/uapi/linux/blkzoned.h                 | 106 ++
+ include/uapi/linux/fs.h                       |   1 +
+ 13 files changed, 2052 insertions(+), 120 deletions(-)
+
+-- 
+2.56.0
+
