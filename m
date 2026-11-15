@@ -1,58 +1,98 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794735028;
-	b=b/TCEgmp3b8beD8k89ZUpwm9oWCZL1/bRAEkAGfSeWQ2HLrg/3UZPX/l6wom0B0Ynn1R
-	 0SWspLz2cpPr1bpAnNxLzwmpY61DqYOgkzT7diN82j9e+dZF/eQaP3qYA3rQFEFPF1RHq
-	 5i9zefvHp99ybr0uFpmEJ+A5JYpngfonZrZjJ6og9oRPIP5+3CxKtk+E7rQzO4BXerRT3
-	 mcbVBzEYFazT8Pdu8brQ55Ak8h4xo/KX9XhD+lNGSqfSYip7PuieEduD+U5MIbI/9IJRP
-	 qmdd3jnSy5YVd3YCjS5UWSJ47AWfr7gAmi2AOJJLE9bvhQtaOCO8g+orr7A72T0t5SQ==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794735028;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=e7MOyX724bqCWJsCrd4OjXjEcyjDNuCUpHqJ3uJvgjY=;
-	b=if4FE9mFZTimctrs8840DtaN3sZa3U65goiDLRxCaxLrrGG05+K09f75mJt1KNYo5vyI
-	 O5dCT/Hic+q+T1XD7UCX7MVyAutR5Qc92gulcGwWMERame5Lm15sdIBoPu9nWv3XgVlCs
-	 Nnm37prBB4V4Gu7dWMaksZDeerVlIzOl1cG1qE7u348alPfdcZtj2EeyB3Qesf8YS3XEC
-	 xmTmLgTQH20wjAr1UXlsImKTO9Rwf5x1WfVbs2Njxbk9fd5fx/HAqdnY+s4gmnMgofWKt
-	 gn7NxbV1ReTRxc6Qvb6mIGrj0xk3CrDM3xMqKm+EyCQgLTdSzQpsKz3ngW55UEMxubw==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=D4BDbSLF;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.216.43
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1794735478;
+	b=SPggSTd2PzgMkGXgXcqqifOZA2WxvBrsGyRD6I2ddFKF7Fzznn8hcoLbjr0hPn77dsMW
+	 QAQv1o25F36qAzIbepyFBJ/ptr7vAUvvANDWIeqEZnl84t0GXSpTMg1IZYiG7z7y5wDyw
+	 xVs3U+rqhnchPfnx5tFD2oOAy5yeFCiY5DJIPe/X0XtnO21C+yME+dQ7FBtbXMDLBEUpr
+	 on3J2UiDLGKK1zXJrRX/ioWkTN0jTGuVo6egr77HGSaBLMp2d0K6IVebWTWuIK18nk5LK
+	 drhWnhfauUjJ5L0NB6kLL8aE+6F9vTtpLjqXyYrcPROapdhi+DfLUw5osDrYnNe941g==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794735478;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:MIME-Version:From:Date:
+	 X-Gm-Features:Message-ID:Subject:To:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=LtkuQzOyrT1mRcVz8hwvU7jLW23P4CFjtItE8oCiOyE=;
+	b=T1NbNNi5Ides5EfzZ2CFqdykVjoYKbzBtT6uhYQ/DNmqghWqvFh7cqnFhdIXSkWv3N1I
+	 2MPUX1eqH+iKrRAs/LRsS0IjQ1uS4Xdpg5BdAa6QHvgvHcmnGhXRQVE0fk2KGMK15Nx/6
+	 nhavjUgBW4bVS3tSgkcCOFwFx/uS+jDZcW6JN63/mwo/nW2qeqNoJ3owlFsJfK/lzF6fh
+	 V8/nKaPsDm62RvZOFG+qGBmtm9y4Ul28swANZw+ZXSUh/OUNWvc/0l3CuSgwDR8TgGjEb
+	 fXOeB1QpJrCUr5StQ22BiUyDvvLLpt+4+fcCBhdep/boBFQ2XR8yfzdFGV3Z52O1blg==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=uiXFqYlf;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.216.43
+Received: from mail-pj1-f43.google.com (mail-pj1-f43.google.com [209.85.216.43])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6CF2A606A327;
-	Sun, 15 Nov 2026 09:30:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B8AD606A31F
+	for <linux-scsi@vger.kernel.org>; Sun, 15 Nov 2026 09:37:57 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0B8AD606A31F
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=D4BDbSLF
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 926E11F000C4;
-	Sun, 15 Nov 2026 09:30:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794735028;
-	bh=e7MOyX724bqCWJsCrd4OjXjEcyjDNuCUpHqJ3uJvgjY=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=D4BDbSLFVk4e+fV6ihG6kKryjFjt03+TIbG64DUmJoPCcOlP1b9vDrUdSBoHvEXxJ
-	 ldj3rhO3iRDntZCKRLkvsUOAmXeS1mHMkR0qC9TiqDgSaT+m9Owk/1bZbmBLJxsQh8
-	 PTW4FfSElqmIKtraDSDebgIUuu6ZZR0FCa8QmYQBAfd2LN1q3XSnlHSyVEPHKMl5eJ
-	 F533fyUtOVcdvUYNq3jrnkuV3ByRLnh+ry56M4lSxZ6/Hp1rYOL4urCykZ2AAfXMp6
-	 K11q3gPNCNfLg9bjJG+AqAl+3I8V2sWY6Pv15+bcu15Ch7utqYTM9Huq11ly4MDsvE
-	 LbISVNk4ZZhuw==
-Date: Sun, 15 Nov 2026 10:30:22 +0100
-From: Christian Brauner <brauner@kernel.org>
-To: Jan Kara <jack@suse.cz>
-Cc: Shakeel Butt <shakeel.butt@linux.dev>, 
-	Alexander Viro <viro@zeniv.linux.org.uk>, Jens Axboe <axboe@kernel.dk>, linux-fsdevel@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, io-uring@vger.kernel.org, Christoph Hellwig <hch@lst.de>, 
-	linux-block@vger.kernel.org, linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org, 
-	target-devel@vger.kernel.org, linux-unionfs@vger.kernel.org, bpf@vger.kernel.org, 
-	linux-nfs@vger.kernel.org, stable@vger.kernel.org
-Subject: Re: [PATCH 04/12] target: fileio: don't free the aio command under
- the filesystem
-Message-ID: <20261115-rasch-haltbar-gebrechen-faac5fad7805@brauner>
-References: <20261114-work-fs-frozen_writes-v1-0-f5ae61c898b1@kernel.org>
- <20261114-work-fs-frozen_writes-v1-4-f5ae61c898b1@kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=uiXFqYlf
+Received: by mail-pj1-f43.google.com with SMTP id 98e67ed59e1d1-3b0a519049aso2955957a91.1
+        for <linux-scsi@vger.kernel.org>; Sun, 15 Nov 2026 01:37:57 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1794735477; cv=none;
+        d=google.com; s=arc-20260327;
+        b=PH1zN41aGF5qQfJn/zxzRmwRcEBygl+UWneC8TPxAlX/h64p/pXGFhA2KguhV890XP
+         l558+trCkv8I91yLqtxhsG6KkAILUAbGlg6njunWRgTG0kZIzH2ub/xphfXun7yZSrNn
+         DcvA+HwE9qnfMnUVb+Qg/HUpuvY8K38MGLyJWlqHpt3ICTVXGlyKpef/Q/J9Wo3bC6/r
+         FmekzI4f77ggCehERGDgO97dZ6mnO6m0+ju2/TOWgMrUz0OBWvCKO9SJ6mkx3Eo49b1K
+         5kh1F1aF/Mg5x88cG48xQ7MWtJHVIemgyAm9OjI9XmKIGtc7pbN0xVHrJIV7Z33sFkv/
+         rmKQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:to:subject:message-id:date:from
+         :mime-version:dkim-signature;
+        bh=LtkuQzOyrT1mRcVz8hwvU7jLW23P4CFjtItE8oCiOyE=;
+        fh=7I+XJWPHCRSuhD4z/r3jXa4YmPs94wkMoTzlRZIiWSc=;
+        b=qD6yzbohsaI3Jj9XR9rLNq1FvHCJwJxxQ08Mv8YYsrdImq/Cx5ECsBlsAF93vKS9Gm
+         eOegh93G1159AtdwiWC2J6PsWodcWIVJqzv/HXZJZIEKGaOISOF0N8PU4SmZD9hC9W+f
+         yd3gZHsvrszKEoHAhgHbLJREnSookZ+N/si5zv5xxBO6RzKwNwuYryu32sMhzZwcqaWR
+         fKvxEcvyBNQgegCUa6Q9WPf7crAfWcrooBspHu0Whet8Otjv84URhTfOYAOTafSsDjgs
+         zELJ+Gg9gttuBk37k4LRmjMqN1WZJzPqrcqpmlriL7ATH7dG/4jtNsaHkoXfLOtHsaqf
+         0ubA==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1794735477; x=1795340277; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:to:subject:message-id:date
+         :from:mime-version:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=LtkuQzOyrT1mRcVz8hwvU7jLW23P4CFjtItE8oCiOyE=;
+        b=uiXFqYlfT5VSs9whyeU/yo9LIqWaYe85jm0o92S42Apqy+qklKNyHJh1GuHb7nyEfj
+         CAaQNTOzffk0/VcSFkCMza7U76QXEMM/hI0SVe7M1oUvXNCBfJf2lH+ea5r3B67WL6n6
+         TVVgK0OKjL9AFtF++1wUJIoUifUSkwM5H0ApBVfb24JZrnToJO+44xFRfCxWFYon9wBQ
+         KbV6SZyKkqTjkNp+ZadqlNzIb1sSCgx2DLfd57v8ZULkN7ia2035WcY7XUdQ5Jq6X3wJ
+         8yMTw6kwpFfhza/Cq94Kkn1yiG1ni3EC43J0Lh6Qiuh0n8+L8K5pKAK32Zbjr+9ojbgP
+         WqMw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1794735477; x=1795340277;
+        h=content-transfer-encoding:content-type:to:subject:message-id:date
+         :from:mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=LtkuQzOyrT1mRcVz8hwvU7jLW23P4CFjtItE8oCiOyE=;
+        b=aaldYLou5KhqEhqkbH5vT97CiKTQF+v/+So2VRAWc6o7Ar3LN7D85IEjH50kde+oDe
+         3+WX9LwyKYJujKIAlt177qFEyyHscxYzG/fSVTc5+eDJnBFWul8UcVOpJMt4VDJI/lTT
+         N4pl+8VHUnz1AWAvQuDUXtbTyNnOzRKWBDiu1kdGN/eiGJYDSJZMeQjH8RFlSAJ+RiOB
+         J0GjLa+L8Vn7EiyoUx//ksgxagdx25FIZW2orXwc/yWG/gCLDAHfsxMq0r5OoYKGK66U
+         HVcZeanJm9+gSfe/eZ9CconvCwzwokTRW9kYNNSyLyIa/bm0A1vgc2hJcltqcGPrTOgZ
+         YBOw==
+X-Gm-Message-State: APuU4Z8XMda/jmBEh0nM3xlazKWpy/6SN2F/sa4hg0rnc6Tc4nuDQiND
+	ObO6FIqnnQkpaJtBshmgqhP+WZKKLvhIaQA6M4oY0LpIBLbFo6uNJJK8eG9m++722CqPVtZxEYq
+	c5FiQZ4IzuAQeTEXDasp0pYg6mE5JvkVZrsfx
+X-Gm-Gg: AYBFou3jRCq8zPadDb7KWQJkGWlxnkOx+84TzGFgu2lv2aL/48YJOEqkycgXlDRPaNV
+	cQHZX0Lui1yjK7EZS6R4SiiohzrmTmsSuI3zQadGaX4vp0gZVqWUX2OC0O6R+6/YeMbBNM3qKRj
+	ET7d+RDyXvDbQjUm7iHCoqrxWSBC39bN+V6T9A65mzkIqc8ElXausWrKN90bQx8g94lDtb8ye0a
+	YEsFNAHKcmrqtslPJw8WD7wmT89tkG0bVlMklyoWyeUUe3CEHObJtpjegwd8C2PwOPSym2pu3jE
+	4UBHxplsF+bdBtXskfZ3vPox0K7Ea/PBSDvyXZ9C5/VlCQ9T0eAkp2fHcsTnhEletjoshrQsWsm
+	vDu8oFM1LpR7TNh7TUfLNahVDtLrCPByTssLhoThBJZn3I2OO7A1N7v8=
+X-Received: by 2002:a17:90b:3d44:b0:3ad:6090:a190 with SMTP id
+ 98e67ed59e1d1-3b1b0cac9bcmr7494391a91.41.1794735477265; Sun, 15 Nov 2026
+ 01:37:57 -0800 (PST)
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -62,159 +102,172 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20261114-work-fs-frozen_writes-v1-4-f5ae61c898b1@kernel.org>
+From: V S <vtsty.dev@gmail.com>
+Date: Sun, 15 Nov 2026 11:37:45 +0200
+X-Gm-Features: AclHuK-9BVAfXL_Gtksxc5pdYM9hOA8j0s5zBcEmdc00Rq8UBT5KUq5fwKVMfkI
+Message-ID: <CA+MPai_cpz7TJQyDZg4spj-M8GHU0s7ZuP425tq3LNVk_d_pRA@mail.gmail.com>
+Subject: ADATA Superior SH93 USB HDD regression since Linux 6.x
+To: linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Sat, Nov 14, 2026 at 11:47:11AM +0100, Christian Brauner wrote:
-> The read completed and freed the command before ext4_dio_read_iter() got
-> to file_accessed(iocb->ki_filp).
-> 
-> Do what loop, zloop and fs/backing-file.c do and hold a reference to the
-> command until the I/O is submitted.
+Hello SCSI maintainers
 
-As sashiko pointed out (cf. [1]) the completion callback still completes
-the command. That drops the LUN reference while ->read_iter() or
-->write_iter() may still be running. The device and its backing file
-can go away underneath the filesystem. So we must complete the command
-on the final put as well. I've folded:
+I am experiencing a regression with an old ADATA Superior SH93
+external USB HDD (500 GB, USB ID 125f:a93a).
 
-5/12 gets simpler on top of this. kiocb_end_write() just moves into
-cmd_rw_aio_complete() which is now called exactly once for every I/O.
-I've folded both.
+The drive worked correctly with Linux 5.x kernels, but starting with
+Linux 6.x it is detected as a USB mass-storage device and a SCSI disk,
+yet read operations fail. As a result, the partition cannot be
+accessed.
 
-[1]: https://lore.kernel.org/r/sashiko-outbox-214401@kernel.org
+The device information is:
 
--- >8 --
-Subject: [PATCH] target: fileio: don't free the aio command under the filesystem
+Manufacturer: A-DATA
 
-With fd_async_io=1 the fileio backend allocates a command that holds the
-kiocb for every read and write and frees it in the completion callback.
-Nothing keeps the command alive until ->read_iter() or ->write_iter()
-return. But a filesystem may use the kiocb after it queued the I/O. ext4
-does that for direct reads:
+Product: Portable HDD SH93
 
-  BUG: KASAN: slab-use-after-free in ext4_dio_read_iter+0x5e1/0x690
-  Workqueue: target_submission target_queued_submit_work
-  Call Trace:
-   <TASK>
-   dump_stack_lvl+0x5d/0x80
-   print_report+0x14b/0x4b0
-   kasan_report+0x108/0x130
-   ext4_dio_read_iter+0x5e1/0x690
-   fd_execute_rw+0xd30/0x1700
-   __target_execute_cmd+0x53/0x190
-   transport_generic_new_cmd+0x65a/0xdb0
-   __target_submit+0x12c/0x380
-   target_queued_submit_work+0x73/0x270
-   process_one_work+0x946/0x1820
-   worker_thread+0x4f1/0xd60
-   kthread+0x364/0x460
-   ret_from_fork+0x525/0x770
-   ret_from_fork_asm+0x1a/0x30
-   </TASK>
+USB ID: 125f:a93a
 
-  Allocated by task 59:
-   __kmalloc_noprof+0x223/0x830
-   fd_execute_rw+0x766/0x1700
-   __target_execute_cmd+0x53/0x190
-   transport_generic_new_cmd+0x65a/0xdb0
-   __target_submit+0x12c/0x380
-   target_queued_submit_work+0x73/0x270
+Firmware/device revision: 1.50
 
-  Freed by task 14:
-   kfree+0x267/0x6a0
-   blk_update_request+0x3f5/0x1260
-   blk_mq_end_request+0x59/0x450
-   blk_complete_reqs+0xb0/0x130
-   handle_softirqs+0x20c/0x860
-   run_ksoftirqd+0x31/0x60
+Serial number: SH0210224160
 
-The read completed and freed the command before ext4_dio_read_iter() got
-to file_accessed(iocb->ki_filp).
+Capacity: 500 GB (976773168 =C3=97 512-byte sectors)
 
-Do what loop, zloop and fs/backing-file.c do and hold a reference to the
-command until the I/O is submitted. Only complete the target command
-when the last reference is dropped as well. Otherwise the command drops
-its LUN reference while the filesystem still uses the kiocb and the
-device and with it the backing file can go away underneath it.
 
-Fixes: 769031c92c8b ("scsi: target: target/file: Add support of direct and async I/O")
-Cc: stable@vger.kernel.org
-Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
----
- drivers/target/target_core_file.c | 25 +++++++++++++++++++------
- 1 file changed, 19 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/target/target_core_file.c b/drivers/target/target_core_file.c
-index ab9824a4852f1..4b23fadd7bb88 100644
---- a/drivers/target/target_core_file.c
-+++ b/drivers/target/target_core_file.c
-@@ -15,6 +15,7 @@
- #include <linux/timer.h>
- #include <linux/blkdev.h>
- #include <linux/slab.h>
-+#include <linux/refcount.h>
- #include <linux/spinlock.h>
- #include <linux/module.h>
- #include <linux/vmalloc.h>
-@@ -243,25 +244,34 @@ static void fd_destroy_device(struct se_device *dev)
- 
- struct target_core_file_cmd {
- 	unsigned long	len;
-+	long		ret;
- 	struct se_cmd	*cmd;
-+	refcount_t	ref;
- 	struct kiocb	iocb;
- 	struct bio_vec	bvecs[];
- };
- 
--static void cmd_rw_aio_complete(struct kiocb *iocb, long ret)
-+static void cmd_rw_aio_put(struct target_core_file_cmd *cmd)
- {
--	struct target_core_file_cmd *cmd;
--
--	cmd = container_of(iocb, struct target_core_file_cmd, iocb);
-+	if (!refcount_dec_and_test(&cmd->ref))
-+		return;
- 
--	if (ret != cmd->len)
-+	if (cmd->ret != cmd->len)
- 		target_complete_cmd(cmd->cmd, SAM_STAT_CHECK_CONDITION);
- 	else
- 		target_complete_cmd(cmd->cmd, SAM_STAT_GOOD);
--
- 	kfree(cmd);
- }
- 
-+static void cmd_rw_aio_complete(struct kiocb *iocb, long ret)
-+{
-+	struct target_core_file_cmd *cmd;
-+
-+	cmd = container_of(iocb, struct target_core_file_cmd, iocb);
-+	cmd->ret = ret;
-+	cmd_rw_aio_put(cmd);
-+}
-+
- static sense_reason_t
- fd_execute_rw_aio(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
- 	      enum dma_data_direction data_direction)
-@@ -288,6 +298,8 @@ fd_execute_rw_aio(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
- 
- 	iov_iter_bvec(&iter, is_write, aio_cmd->bvecs, sgl_nents, len);
- 
-+	/* The filesystem may still use the kiocb after it queued the I/O. */
-+	refcount_set(&aio_cmd->ref, 2);
- 	aio_cmd->cmd = cmd;
- 	aio_cmd->len = len;
- 	aio_cmd->iocb.ki_pos = cmd->t_task_lba * dev->dev_attrib.block_size;
-@@ -305,6 +317,7 @@ fd_execute_rw_aio(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
- 
- 	if (ret != -EIOCBQUEUED)
- 		cmd_rw_aio_complete(&aio_cmd->iocb, ret);
-+	cmd_rw_aio_put(aio_cmd);
- 
- 	return 0;
- }
+The device is successfully detected:
 
--- 
+
+
+usb 3-1: new high-speed USB device number 2 using xhci_hcd
+
+usb 3-1: New USB device found, idVendor=3D125f, idProduct=3Da93a, bcdDevice=
+=3D 1.50
+
+usb 3-1: New USB device strings: Mfr=3D1, Product=3D3, SerialNumber=3D2
+
+usb 3-1: Product: Portable HDD SH93
+
+usb 3-1: Manufacturer: A-DATA
+
+usb 3-1: SerialNumber: SH0210224160
+
+usb-storage 3-1:1.0: USB Mass Storage device detected
+
+scsi host1: usb-storage 3-1:1.0
+
+scsi 1:0:0:0: Direct-Access A-DATA SH93 PQ: 0 ANSI: 0
+
+sd 1:0:0:0: Attached scsi generic sg1 type 0
+
+sd 1:0:0:0: [sdb] 976773168 512-byte logical blocks: (500 GB/466 GiB)
+
+sd 1:0:0:0: [sdb] Write Protect is off
+
+sd 1:0:0:0: [sdb] Mode Sense: 03 00 00 00
+
+sd 1:0:0:0: [sdb] No Caching mode page found
+
+sd 1:0:0:0: [sdb] Assuming drive cache: write through
+
+sdb: sdb1
+
+sd 1:0:0:0: [sdb] Attached SCSI disk
+
+
+
+
+However, when the kernel attempts to read the partition, the following
+errors occur:
+
+
+
+sd 1:0:0:0: [sdb] tag#0 FAILED Result: hostbyte=3DDID_OK
+driverbyte=3DDRIVER_OK cmd_age=3D11s
+
+sd 1:0:0:0: [sdb] tag#0 Sense Key : Illegal Request [current]
+
+sd 1:0:0:0: [sdb] tag#0 Add. Sense: Invalid command operation code
+
+sd 1:0:0:0: [sdb] tag#0 CDB: Read(6) 08 00 00 3f 08 00
+
+critical target error, dev sdb, sector 63 op 0x0:(READ) flags 0x80700
+phys_seg 1 prio class 2
+
+sd 1:0:0:0: [sdb] tag#0 FAILED Result: hostbyte=3DDID_OK
+driverbyte=3DDRIVER_OK cmd_age=3D0s
+
+sd 1:0:0:0: [sdb] tag#0 Sense Key : Illegal Request [current]
+
+sd 1:0:0:0: [sdb] tag#0 Add. Sense: Invalid command operation code
+
+sd 1:0:0:0: [sdb] tag#0 CDB: Read(6) 08 00 00 3f 08 00
+
+critical target error, dev sdb, sector 63 op 0x0:(READ) flags 0x0
+phys_seg 4 prio class 2
+
+Buffer I/O error on dev sdb1, logical block 0, async page read
+
+Buffer I/O error on dev sdb1, logical block 1, async page read
+
+Buffer I/O error on dev sdb1, logical block 2, async page read
+
+Buffer I/O error on dev sdb1, logical block 3, async page read
+
+
+
+
+
+The important part appears to be:
+
+
+
+Sense Key : Illegal Request
+
+Add. Sense: Invalid command operation code
+
+CDB: Read(6) 08 00 00 3f 08 00
+
+
+
+With a 5.x kernel, the same physical drive is detected normally:
+
+
+
+usb 1-2: new high-speed USB device number 5 using xhci_hcd
+
+usb 1-2: New USB device found, idVendor=3D125f, idProduct=3Da93a, bcdDevice=
+=3D 1.50
+
+usb-storage 1-2:1.0: USB Mass Storage device detected
+
+scsi host2: usb-storage 1-2:1.0
+
+scsi 2:0:0:0: Direct-Access A-DATA SH93 PQ: 0 ANSI: 0
+
+sd 2:0:0:0: Attached scsi generic sg2 type 0
+
+sd 2:0:0:0: [sdc] 976773168 512-byte logical blocks: (500 GB/466 GiB)
+
+sd 2:0:0:0: [sdc] Write Protect is off
+
+sd 2:0:0:0: [sdc] Mode Sense: 03 00 00 00
+
+sd 2:0:0:0: [sdc] No Caching mode page found
+
+sd 2:0:0:0: [sdc] Assuming drive cache: write through
+
+sdc: sdc1
+
+sd 2:0:0:0: [sdc] Attached SCSI disk
+
+
+
+Could you please advise whether this device is known to require a
+USB-storage quirk, or whether there has been a relevant change in the
+SCSI/USB-storage code that could explain this behavior?
+
+
+Best regards
