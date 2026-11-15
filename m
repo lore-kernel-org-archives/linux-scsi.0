@@ -1,53 +1,53 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794754225;
-	b=kKT2ltZsQ0XBwIUwjHeFZXcgeX3ZS2lhxGqvfYlH+o/4Jt1TjzI+36zvXvJPeGO2Mq3i
-	 UBG0PcKmCJRmfMvLjbzZqqMj6JXVZmG0fgrjNB0dgvc5vltMMpTksneqdbiqFIn+l7rsj
-	 WRYx3Mv/V8C342ztP3oN6GoKaaFPFje93y1KW8ecL+xdat/EfJSVvnuvX3wac5vnKWIMK
-	 9+WzymEXsd4H9ek/dzw+4Dzb5qu7Col8ovy5NEcoLDYoHaPzcJnB1SxFKUAMCIee4dHFk
-	 8Ot9GSUccS/b/x6sRT1q1iHVwS6zXek2sGAVjOWpZhkrSB28NF2OcFQyWqYrrJlp8Cg==
+	t=1794754221;
+	b=P958ELo8/Kn6YFEbvjGwzeYwjvej/VrLGEtwBN+kEPNv0i8OT9IlT9ikoLwQxUD6afyi
+	 IuzeYuM0J3pp/1DsQfg6XIRJ4oXprSjr1VAGbc8DFwQQChqGKlNrRCbreLfwlSiFioQzh
+	 yYOg2jS0DNRSI+/oWsnkb0D94Pj800NPXK148hcOFz8BcE3KWSDnzCqJUfuchMZzDOZL3
+	 gU6as7wbUM651wtFJdH1ikudGIbJJIlHEGVZj6zm63/6RdLHNVbxFgHEoATkinUuDhBPz
+	 C/CJhVL/U7K3CEtRmP7eo+evsX0yToSWvta0sE5LMbzx5PAsbRObL2Uu9rkH0ekTj1g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794754225;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794754221;
 	h=Received:DKIM-Signature:From:To:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=D/B8vk0Ll96T486S8lJdX85f9OsU4P4+TMdOMchphoQ=;
-	b=vNUyE+3W84xQ/QXKNVwzk6Y8aIhM4GRCp69OQISh3ifRIdO8IktJ2FdF/ClBRexdCZtC
-	 R2207NQTL1nagRCkzcxXIZowtJsQjrtuQ0oHlKcRH148h5YQDlEN5PAALl43tWqfENok4
-	 k0ceQvVg7fdbgeBy3K6DvSmEp1pMiHeMirj+eovYoGDLg3h67ERvDFnJR9JnZIC2xj5Tx
-	 2wQnqocE9G2YPOYpaK6FTllyyt0eBiBANyh6rs9YgOEgt0L1aPWQENuCVsSIudSOpac3s
-	 o93pahr6qXfqH+ItDy10iJUjvtpZA8/VVx7+VmetnFZmZ2Q/lyz/PmMmUggE0LE0jZg==
+	bh=VJTu/hDjb/OU2PGhV/qoc3J+K4uvOXUOrkl5qJ3k9F4=;
+	b=z3SR6YZxBbZ8XS9tezGIfUd2UxSYD7Bv39jQ/OuMS6nvHkD7m+pwlvIkLnJGBOMneIPt
+	 VIKdH6wqsbH8Q04XMt9VbBrQ6IUpp+9EKBvtPvDf+/aR9/1NFyMUNiEGkRKJsxC4Xt7GB
+	 Gbz+QeDRM5r4TrANEDTC2dBNx8eDzS+pu1ynu672Gon3pkjx5fPCY+Lalh1rMOcgMTHFk
+	 5oD3DFxnhyDioUt8pnVOyjK/e1ALo3ZG17UaUMD45TkMB2ytpsg2DQvUslseLw3Akp5Ep
+	 gqe0YKNgCjCKsszG+jh17bfLfHqeBWuaTnQn0tD7QuDGD3AIAQkf6EK3OpYo0ee+wgQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=PfIOckjg;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=a5Qnor9m;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 997A2606A330;
-	Sun, 15 Nov 2026 14:50:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 93190606A323;
+	Sun, 15 Nov 2026 14:50:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=PfIOckjg
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AD7CF1F000C4;
-	Sun, 15 Nov 2026 14:50:24 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=a5Qnor9m
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0F0C81F000C6;
+	Sun, 15 Nov 2026 14:50:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794754225;
-	bh=D/B8vk0Ll96T486S8lJdX85f9OsU4P4+TMdOMchphoQ=;
+	s=k20260515; t=1794754220;
+	bh=VJTu/hDjb/OU2PGhV/qoc3J+K4uvOXUOrkl5qJ3k9F4=;
 	h=From:To:Subject:Date:In-Reply-To:References;
-	b=PfIOckjglfHujCVdfVkBWzQWCL6kSvB7up84RwKBydDCCjqEXACTLQt8IqLtfJY7w
-	 etedFcub5yjJqzjzZY5KRjhmGAgb+w1O/VElaypyrticSsFQyG1YD99Z3xb5yUGMVH
-	 9PG+GCqxw1KW0bJLAtTFnzwVNEWyVO+/kvRdOR8MOmrGaq24HdYXzHk2Fmo28ukKVa
-	 NiA9wrN65shPb4qMXM63G71d/8tOlDAbiUMr/+Ue6AZlOLqU+6nMXSkMzr/bwQ20WT
-	 0j9z+8tRjHc/zITtWo+MVKsLX77IGyRflYb0vHjQB+LMInZvXa37qJzd0uLtqd0NRw
-	 taLRyPU8jRkHA==
+	b=a5Qnor9mVgBs4lDkPJY7hBwkylAbYnQuyBEAcmTFaV5Beplab9R9Esbc4Igycw22t
+	 M+gyutPA9upCpuW2UgMZYR1xzUfnjUzTFPvpliqYe4W+NyWTZ9hzK2yAbO8Gf/rUYM
+	 ob6ae7ljzmO/0WtBvWemyzeKTS+gtirMsaZFuExR8x6CP6VpkdSmAPOqPHn6Z2uYZQ
+	 3DdWQsnRSZU8u+4eRT9LYAZbJOT3OcJmauvwb87gg8gw9qnyfr271y2IP7CviuEWJ4
+	 gjEwq2A2UnLKH84gPzJXXmDRYt5NypuF+Ez7C425JAksYLL9LVEGiLYy/5bsCv4qJg
+	 vI3jJJqUB5EaA==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: Jens Axboe <axboe@kernel.dk>,
 	linux-block@vger.kernel.org,
 	Christoph Hellwig <hch@lst.de>,
 	linux-scsi@vger.kernel.org,
 	"Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH v9 06/13] zloop: keep zone write pointer and condition consistent
-Date: Sun, 15 Nov 2026 23:50:08 +0900
-Message-ID: <20261115145015.938426-7-dlemoal@kernel.org>
+Subject: [PATCH v9 02/13] block: refactor blk_revalidate_disk_zones()
+Date: Sun, 15 Nov 2026 23:50:04 +0900
+Message-ID: <20261115145015.938426-3-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.56.0
 In-Reply-To: <20261115145015.938426-1-dlemoal@kernel.org>
 References: <20261115145015.938426-1-dlemoal@kernel.org>
@@ -62,91 +62,130 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-For oredered zone append commands, the function
-zloop_set_zone_append_sector() increments a zone write pointer without
-checking if the zone is already open (implicitly or explicitly). This
-check is done only when the command is later executed using a work item,
-and the zone is implicitly open if needed. This creates a short time
-window where a report zone can show an empty zone with a write pointer
-that is not equal to the zone start sector, which is incorrect.
+Split out most of the code of blk_revalidate_disk_zones() into the
+internal function disk_revalidate_zones(). This will allow calling this
+new helper together with other code under the zone revalidation mutex.
+No functional change.
 
-Fix this by calling zloop_do_open_zone() in zloop_set_zone_append_sector()
-to make sure that a zone is always first implicitly open if needed. This
-requires changing zloop_set_zone_append_sector() to return a blk_status_t
-so that potential zone resource errors can also be returned correctly.
-
-Fixes: fcc6eaa3a03a ("zloop: introduce the ordered_zone_append configuration parameter")
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Martin K. Petersen <mkp@kernel.org>
+Reviewed-by: Hannes Reinecke <hare@kernel.org>
 ---
- drivers/block/zloop.c | 21 +++++++++++++++------
- 1 file changed, 15 insertions(+), 6 deletions(-)
+ block/blk-zoned.c | 63 +++++++++++++++++++++++++----------------------
+ 1 file changed, 34 insertions(+), 29 deletions(-)
 
-diff --git a/drivers/block/zloop.c b/drivers/block/zloop.c
-index 96666742523b..7d98be66a3a8 100644
---- a/drivers/block/zloop.c
-+++ b/drivers/block/zloop.c
-@@ -885,20 +885,26 @@ static void zloop_complete_rq(struct request *rq)
- 	blk_mq_end_request(rq, sts);
+diff --git a/block/blk-zoned.c b/block/blk-zoned.c
+index 07d504287024..600d6bd008ae 100644
+--- a/block/blk-zoned.c
++++ b/block/blk-zoned.c
+@@ -2552,20 +2552,7 @@ static int blk_revalidate_zone_cb(struct blk_zone *zone, unsigned int idx,
+ 	return ret;
  }
  
--static bool zloop_set_zone_append_sector(struct request *rq)
-+static blk_status_t zloop_set_zone_append_sector(struct request *rq)
+-/**
+- * blk_revalidate_disk_zones - (re)allocate and initialize zone write plugs
+- * @disk:	Target disk
+- *
+- * Helper function for low-level device drivers to check, (re) allocate and
+- * initialize resources used for managing zoned disks. This function should
+- * normally be called by blk-mq based drivers when a zoned gendisk is probed
+- * and when the zone configuration of the gendisk changes (e.g. after a format).
+- * Before calling this function, the device driver must already have set the
+- * device zone size (chunk_sector limit) and the max zone append limit.
+- * BIO based drivers can also use this function as long as the device queue
+- * can be safely frozen.
+- */
+-int blk_revalidate_disk_zones(struct gendisk *disk)
++static int disk_revalidate_zones(struct gendisk *disk)
  {
- 	struct zloop_device *zlo = rq->q->queuedata;
- 	unsigned int zone_no = rq_zone_no(rq);
- 	struct zloop_zone *zone = &zlo->zones[zone_no];
- 	sector_t zone_end = zone->start + zlo->zone_capacity;
- 	sector_t nr_sectors = blk_rq_sectors(rq);
-+	static blk_status_t ret = BLK_STS_OK;
+ 	struct blk_revalidate_zone_args args = { };
+ 	struct blk_report_zones_args rep_args = {
+@@ -2576,19 +2563,10 @@ int blk_revalidate_disk_zones(struct gendisk *disk)
+ 	int retries = 2;
+ 	int ret;
  
- 	spin_lock(&zone->wp_lock);
+-	if (WARN_ON_ONCE(!blk_queue_is_zoned(disk->queue)))
+-		return -EIO;
+-
+-	/*
+-	 * Serialize calls to this function so that we can safely look at and
+-	 * eventually change the disk zone information.
+-	 */
+-	mutex_lock(&disk->zone_revalidate_mutex);
+-
+ again:
+ 	ret = disk_revalidate_capacity(disk, &args);
+ 	if (ret)
+-		goto unlock;
++		return ret;
  
- 	if (zone->cond == BLK_ZONE_COND_FULL ||
- 	    zone->wp + nr_sectors > zone_end) {
--		spin_unlock(&zone->wp_lock);
--		return false;
-+		ret = BLK_STS_IOERR;
-+		goto unlock;
-+	}
-+
-+	if (!zloop_do_open_zone(zlo, zone, false)) {
-+		ret = BLK_STS_ZONE_OPEN_RESOURCE;
-+		goto unlock;
- 	}
- 
- 	rq->__sector = zone->wp;
-@@ -906,9 +912,10 @@ static bool zloop_set_zone_append_sector(struct request *rq)
- 	if (zone->wp >= zone_end)
- 		zloop_mark_full(zlo, zone);
- 
-+ unlock:
- 	spin_unlock(&zone->wp_lock);
- 
--	return true;
-+	return ret;
- }
- 
- static blk_status_t zloop_queue_rq(struct blk_mq_hw_ctx *hctx,
-@@ -917,6 +924,7 @@ static blk_status_t zloop_queue_rq(struct blk_mq_hw_ctx *hctx,
- 	struct request *rq = bd->rq;
- 	struct zloop_cmd *cmd = blk_mq_rq_to_pdu(rq);
- 	struct zloop_device *zlo = rq->q->queuedata;
-+	blk_status_t ret;
- 
- 	if (data_race(READ_ONCE(zlo->state)) == Zlo_deleting) {
- 		rq->rq_flags |= RQF_QUIET;
-@@ -929,8 +937,9 @@ static blk_status_t zloop_queue_rq(struct blk_mq_hw_ctx *hctx,
- 	 * command work runs.
- 	 */
- 	if (zlo->ordered_zone_append && req_op(rq) == REQ_OP_ZONE_APPEND) {
--		if (!zloop_set_zone_append_sector(rq))
--			return BLK_STS_IOERR;
-+		ret = zloop_set_zone_append_sector(rq);
-+		if (ret != BLK_STS_OK)
+ 	/*
+ 	 * Allocate zone resources if they are needed and we have not done
+@@ -2601,14 +2579,14 @@ int blk_revalidate_disk_zones(struct gendisk *disk)
+ 		ret = disk_alloc_zone_resources(disk, args.capacity);
+ 		if (ret) {
+ 			memalloc_noio_restore(noio_flag);
+-			goto unlock;
 +			return ret;
+ 		}
  	}
  
- 	blk_mq_start_request(rq);
+ 	ret = disk_init_revalidate_args(disk, &args);
+ 	if (ret) {
+ 		memalloc_noio_restore(noio_flag);
+-		goto unlock;
++		return ret;
+ 	}
+ 
+ 	ret = disk->fops->report_zones(disk, 0, UINT_MAX, &rep_args);
+@@ -2625,8 +2603,6 @@ int blk_revalidate_disk_zones(struct gendisk *disk)
+ 	if (ret)
+ 		goto free_args;
+ 
+-	mutex_unlock(&disk->zone_revalidate_mutex);
+-
+ 	return 0;
+ 
+ free_args:
+@@ -2642,7 +2618,36 @@ int blk_revalidate_disk_zones(struct gendisk *disk)
+ 	}
+ 
+ 	pr_warn("%s: failed to revalidate zones\n", disk->disk_name);
+-unlock:
++
++	return ret;
++}
++
++/**
++ * blk_revalidate_disk_zones - (re)allocate and initialize zone write plugs
++ * @disk:	Target disk
++ *
++ * Helper function for low-level device drivers to check, (re) allocate and
++ * initialize resources used for managing zoned disks. This function should
++ * normally be called by blk-mq based drivers when a zoned gendisk is probed
++ * and when the zone configuration of the gendisk changes (e.g. after a format).
++ * Before calling this function, the device driver must already have set the
++ * device zone size (chunk_sector limit) and the max zone append limit.
++ * BIO based drivers can also use this function as long as the device queue
++ * can be safely frozen.
++ */
++int blk_revalidate_disk_zones(struct gendisk *disk)
++{
++	int ret;
++
++	if (WARN_ON_ONCE(!blk_queue_is_zoned(disk->queue)))
++		return -EIO;
++
++	/*
++	 * Serialize calls to this function so that we can safely look at and
++	 * eventually change the disk zone information.
++	 */
++	mutex_lock(&disk->zone_revalidate_mutex);
++	ret = disk_revalidate_zones(disk);
+ 	mutex_unlock(&disk->zone_revalidate_mutex);
+ 
+ 	return ret;
 -- 
 2.56.0
 
