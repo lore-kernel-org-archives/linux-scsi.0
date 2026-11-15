@@ -1,96 +1,57 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.46
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794745483;
-	b=RZVOr9UrDtd50TtKrMJncSaXufyu8Rf/qMDnqdE/msMbORl02S0mfOJnAivuUXGKwNWw
-	 0iRCJh3ui0iCrL+KxCiPszo3aALtvS2rDEpGJ7JbJGcIN3eFZO2DehmpBJQIYbPt4VNZz
-	 efWk/ngbImPR463Vu0Vaq48t3QPvAahia0xZniOAfNW9/YbCCzXoljb7H0nKGrjpCzzdy
-	 X3aYPId+RjYh6ASfejgcBVtrXfQ/I+rtIWv1eB5nvUoGfAwIPDmPDMNXx31XN84LT6duv
-	 cKWwN1WsiW8gStQPO6O5Eo3GtWzK75awjeP1yfePZCVHBZkSSS5uuh/B20s4wfJ4H5A==
+	t=1794746009;
+	b=Kt0bKsHz/g/xZ12dTQxyg9TyG8wrul1yEkQUnRMql4e94UtGBre22SYE2J2kmP1sr4wD
+	 yiJ23hhTOcqf/yXbZy3X9sqpYDR4uH7xduFrrtPBVT3vNHPTnEbAxbYCCaiXYyo6q3MFP
+	 i907TIEo5WvS9xE83ts/B5KrbZPCQJR/+JmAA0cTVD8BK29uUOkZOnlGDPRHSTR39Lw/t
+	 g1pew/LnqDIYl1cHjQJOmLbTzsRlDKQVatIiIm8clNy1RdPEieZLhCnO+tDOCWEaZLIvA
+	 DmTnVg3rTahimpdfyvAMHksMZO7LOwNFWg5b4yxz8jQvb/vK2FmLkbn/URsG8MIkzpg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794745483;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
-	 Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
-	 Content-Type:Content-Transfer-Encoding;
-	bh=dQeEdUb5WctY7WhUyxm+UbBUn6wGpNRQb78S7LtXpL0=;
-	b=wPlnl24uBEUnCHkGfwNbGBHBRgdHjeEk3ONRyuadvNYnf5im2dL10/nvYjS77lMviYUV
-	 ngTtKVsqSxz6zJFLAog4SR64XnJf/GZeqM5KRV2B9OFfoWul9it9kvdaolvPxsT6U2ltY
-	 HqKdsrJ1dhILBJ5JWeyJLc0rCMWwNB3ROsrH4FF3EU5ZhzJr3v9Ytm763/lmIKmndzbRL
-	 Fk2Dt10stIPaILmZ/rmCGT3U1fiG9Kul5Zo9RBQB2xpJn8oFgSnDFqlxWxU9O9iykE/9W
-	 uPFS/lcbUUD+qnD/IA9cHrLiJkxfSC0jHYaJXT+YjTq7ywCwlCsMLHXdXphdWy/k6Sw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794746009;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=y64iy0pqD08/Ai/03CFQy91l7Ilihgu041YxkWheTK4=;
+	b=Chq6OXz6LPdmiB63+RBEONxNdKZ6+2jH/rHsXWizyJLmWJuEHa7Nm7kOagJHQHehSpuD
+	 UI+HP9FI19acCaZcUXtjr/1PspdI3Mr3dWNcMfzDsFcfoXU1NXN6NqM+Q8qlfgug+rLhY
+	 rJ1uk+wuKCciAawiKxrAa3BtBNYGzFkSuEwr+mqYm2u0a4cz7hi2bsRyyxQbz6tgWXnep
+	 u9gpL9ymvVWBQQiYoaAN9A6BjfKBYx9RlOtsKoi8T3/YBcK3EZSbR/apvzrsRLFVPqR1G
+	 S65EWrkLnZK6TqtMhKjE2M4WiDpNspvDfFZtCER8nHpBp0saeEYoZqbcZGPEp8dEoPQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=fail header.from=isslab.korea.ac.kr;
-	spf=none smtp.mailfrom=isslab.korea.ac.kr;
-	dkim=pass header.d=isslab-korea-ac-kr.20260707.gappssmtp.com header.i=@isslab-korea-ac-kr.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=mkbshFRq;
-	arc=none smtp.remote-ip=209.85.216.46
-Received: from mail-pj1-f46.google.com (mail-pj1-f46.google.com [209.85.216.46])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BsWFNbWi;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BC38606A31A
-	for <linux-scsi@vger.kernel.org>; Sun, 15 Nov 2026 12:24:43 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4BC38606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F24AC606A31A
+	for <linux-scsi@vger.kernel.org>; Sun, 15 Nov 2026 12:33:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20260707.gappssmtp.com header.i=@isslab-korea-ac-kr.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=mkbshFRq
-Received: by mail-pj1-f46.google.com with SMTP id 98e67ed59e1d1-3b0b3438540so2203942a91.0
-        for <linux-scsi@vger.kernel.org>; Sun, 15 Nov 2026 04:24:43 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=isslab-korea-ac-kr.20260707.gappssmtp.com; s=20260707; t=1794745483; x=1795350283; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:date:subject:cc:to:from:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=dQeEdUb5WctY7WhUyxm+UbBUn6wGpNRQb78S7LtXpL0=;
-        b=mkbshFRqlbPWSsPZT8XaHyIMifNRB6pxVZHt9QipD5qOBoIhUdWRvBJYbZKYswnB1x
-         25mmXMSYkrtegHBQzn5L/D0Gl/LpImeb3HtkKhGmXdj+E7aJ4A3sCeUnvFogscUaDpbl
-         2kZUjmNiDELSEye71UJ2t12eM/tds67LjYa2HQsyIYsZ7V4+/zds7j71fUL9Ao0fUZS2
-         TTg46ZMr4cDl8njTkBdMsrcP0qvDk5zlB3pR5CwidwDRnN3dF2sE9xJAPhIenf+CIjiN
-         SmTGqbb8Vv0L3LQXzxoTxS22Ko6g2iUxjGVcYS1UIO5syQuAxrKzhacgOnVpMFngePPm
-         O85g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794745483; x=1795350283;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:date:subject:cc:to:from:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=dQeEdUb5WctY7WhUyxm+UbBUn6wGpNRQb78S7LtXpL0=;
-        b=NS1EBfJmmkj6CdqrxNwoeAoaR9/MhrGYq5bbPXkZW0msHMb3oPyD5Sv5qlNALHnfku
-         iBO3GMeQLG8A8kJMn5AHlhTzlnRRApmgqkqsrXD3zVRF/auGlEQSgMM/VnfBgi0WOF3B
-         XPoH0j0WyOhqCYiO6iFbnSjbVNSpxC6dTbe4ysRKlpNzKqGe7wsqDFhle8ui53lkT1O4
-         AQi0Pr7JmRQuQ1dSA+4NNSQcqCY6fv5vYbqL0/0TmFHscHscQsebdGu3hlQFERV7kacP
-         zdzoadjYJq+xxe5c2CAaqdo2KidtG0RqyAmeTrYcVFMzcBRTONel1XCXHLLR8TVjt5i3
-         ZriQ==
-X-Gm-Message-State: APuU4Z9TSytaQCzry+L9FtJwCHkruHoAfqj340Hpcw6Pz/BkeRrolK0f
-	rXUbiW7msj0m7QeejiwsG0Y4teBmgO464VJkT+ZDH3VlCRCka/wGrNEYI6N3nEy5AxKRm4+96ji
-	hAStW
-X-Gm-Gg: AYBFou0nmF4nbkkd6d4FhMyzEic3j/l4mdntoF0MZev+VQ3NV86Jc39HIloH2b+I7yT
-	9oluC7GKcYHXMDQwVR4hUyl+NXQXYX3rwFqM7mD11borORL2ZZ8PwXB9DAUEm3M2vcUFbtAVg0d
-	347tvOIGX726KpAGGFljlebCnJJdSWzvnRA/CqIY3Us5PADlsV8dAeqlJTB9DgLcHT3v3R2qaQt
-	izWMYlMvBGWgxbpGUSu6Kb/uNxz/2A51pjzsEpe6HppBoARTeAdfj52zjjmsgktgdU7g480ozQc
-	nZVo61dYJUlDV9F1i83ZMkyDiFY/Qj4CoZeSn5wkttSgZkmPRwGy4q72yx/s/OK0sYRrvnsNeMn
-	dxcZzuFgJ7c86arrvMMxaSroFaSR5gtlE3CKeXIV2Gg2uaJBNzpkNj78NFKpl+Bti9d7k9NlVf8
-	DYmfzB7hcvVrC23cql5vJvFjlCNCN7Jz7h0mrbYp6r82KtTwyiA3aqOYOCKklvz6iplPHnE+EkU
-	88FeEV5dO7m4p/inR3QW61iQ1JNPWR3XX/j0JXIKE/PaCO9PU2IGzTqU7jQU+s/BSEHkO3MXmYT
-	UGxKdP5IrAvZwzuEq5Z7//nDHYt7tZS/PIAQ9nD3BSvy3ukXJ/WjzmQ8/CShcZZqvsybi77dh6U
-	tBIwkdq6Nf2G5mGuPTnH8XUznW2dJlkCmajmMlA==
-X-Received: by 2002:a17:90b:2246:b0:3ac:9d14:feb2 with SMTP id 98e67ed59e1d1-3b1b0a0e12dmr8088877a91.35.1794745482838;
-        Sun, 15 Nov 2026 04:24:42 -0800 (PST)
-Received: from yhlee-960QFG.Davolink ([2406:5900:1044:110c:35d0:694a:1071:9bae])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b1aec3af2dsm12253371a91.9.2026.11.15.04.24.40
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 15 Nov 2026 04:24:42 -0800 (PST)
-From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
-To: mkp@kernel.org,
-	James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 0/2] scsi: mvumi: do not free buffers a timed-out command left with the device
-Date: Sun, 15 Nov 2026 21:24:35 +0900
-Message-ID: <20261115122435.1446891-1-yhlee@isslab.korea.ac.kr>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20261114014430.489668-1-yhlee@isslab.korea.ac.kr>
-References: <20261114014430.489668-1-yhlee@isslab.korea.ac.kr>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BsWFNbWi
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AFD041F000C4;
+	Sun, 15 Nov 2026 12:33:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794746008;
+	bh=y64iy0pqD08/Ai/03CFQy91l7Ilihgu041YxkWheTK4=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=BsWFNbWikC6Lz9LJ9ebtFmY3YzQWCTKYEzMW1PZl+8i05KtDVEYc0BQVR+qoLvegR
+	 ArteNBP/7cF/C3fHqZ6+vIFd7ZsmEvynjyaE6Ja8SeVFFYxnh3JeLB8ayhK8EF0QqI
+	 sw1TlZ0zsoYAl4N9CVKYMA3BFbLy/E3DI4c1rycNq3f8iKS0wGZKROTLGVXaqtxgEh
+	 vyOgQ96JIfQ4tp/FsiM3XbrqnBY/R0ayGhilyR0ezhYGNUuGuzikIyDie2KtHfBLr4
+	 2AW9bNSW1AU3dECZnAYTcQqV9NZhzc1pwka/ZRUBHJNe1PpKV7f/7lzfOT+CIQcsy9
+	 wZ/XIsLvBqVFQ==
+Message-ID: <sashiko-outbox-215499@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v2 3/3] scsi: mvumi: flush the event work before the
+ host is freed
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Yehyeong Lee" <yhlee@isslab.korea.ac.kr>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20261115122153.1446810-4-yhlee@isslab.korea.ac.kr>
+References: <20261115122153.1446810-1-yhlee@isslab.korea.ac.kr>
+ <20261115122153.1446810-4-yhlee@isslab.korea.ac.kr>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Sun, 15 Nov 2026 12:33:28 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -99,16 +60,58 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
 
-This is superseded by v2, which answers the review: 2/3 also stops the
-probe loop from reusing a timed-out command's buffers and frees the
-command on the duplicate-wwid exit, and 3/3 waits for the event work
-before the host is freed.
+Thank you for your contribution! Sashiko AI review found 1 potential
+issue to consider:
+- [Medium] scsi: mvumi: mvumi_release_fw() called before
+  pci_disable_device() on error
+--
 
-https://lore.kernel.org/all/20261115122153.1446810-1-yhlee@isslab.korea.ac.kr/
+commit 4d0117b39b9433095d582919461757b3980ec9e3
+Author: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
 
-Best regards,
-Yehyeong Lee
+scsi: mvumi: flush the event work before the host is freed
+
+This commit gives mvumi a dedicated workqueue for event notifications and
+flushes or destroys it during probe failure and device removal before the
+host is freed.
+
+> diff --git a/drivers/scsi/mvumi.c b/drivers/scsi/mvumi.c
+> index 48652640afc18..f58b29e55a377 100644
+> --- a/drivers/scsi/mvumi.c
+> +++ b/drivers/scsi/mvumi.c
+
+[ ... ]
+
+> @@ -2560,9 +2567,12 @@ static int mvumi_probe_one(struct pci_dev *pdev, c=
+onst struct pci_device_id *id)
+>  fail_io_attach:
+>  	mhba->instancet->disable_intr(mhba);
+>  	free_irq(mhba->pdev->irq, mhba);
+> +	flush_workqueue(mhba->work_q);
+>  fail_init_irq:
+>  	mvumi_release_fw(mhba);
+>  fail_init_fw:
+> +	destroy_workqueue(mhba->work_q);
+> +fail_alloc_workqueue:
+>  	scsi_host_put(host);
+> =20
+>  fail_alloc_instance:
+
+[Severity: Medium]
+Does fail_io_attach free quarantined DMA buffers in mvumi_release_fw()
+while the controller still has bus-mastering enabled?
+
+Because flush_workqueue(mhba->work_q) runs after free_irq(), any queued
+mvumi_scan_events() work times out in mvumi_issue_blocked_cmd(), and
+mvumi_delete_internal_cmd() quarantines cmd->data_buf and cmd->frame onto
+mhba->res_list to be freed only after pci_disable_device().  However, unlike
+mvumi_detach_one(), this error path calls mvumi_release_fw() ->
+mvumi_release_mem_resource() before fail_set_dma_mask calls
+pci_disable_device(pdev), so dma_free_coherent() returns those buffers and
+mhba->handshake_page to the allocator while the controller can still DMA to
+them.
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261115122153.1446=
+810-1-yhlee@isslab.korea.ac.kr?part=3D3
