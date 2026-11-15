@@ -1,56 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794746560;
-	b=JdUNlMyAfV5/lpHLF+szAJCmR7Vadll4Jq/DpRN5ilrmVzBwqfoFk8RrTds4m1at9GCC
-	 9EOheAvQzzwfnubnQ7SA2IAoMPG/uxzfPDEO4kCQW0FrSUFny/IY8cWzmgLLSxYcQeJOE
-	 VRZRLSqKBnhzccO9RsO4pb2d6xjAs0XZU/pU55QFouot415l+pL9TdSJ8NiRRMtnPSATa
-	 TSo+kTm/QPazTWNwyUBVzCXsQtcU789GyPsgSrzetkRwY0cZP7VcSWsclQ/BxqipSh/I9
-	 1kQUJGeHrNY9jNiQICqLjbiSCO0auvweTAvbTJTDXEGVwYVcANRjjoMFq+YVWcye+Rg==
+	t=1794747616;
+	b=nv6DQFpCyLpv1D2SkZNnNlqdM5IQHXVMAQ/CTNN6VEQHgbLeSn0SdHa+Cu9NvAxe2iIJ
+	 AMmWHnnp4pNnaUPspIOARY0k10ql34k2/3ljriSC9K1JyvU9wBCvCB0ievwK5naw/wcj2
+	 4O7lPnhFNsDsmVrIn86D6syWcXTTzVuDQXCMln9NcL+h7G2jckwWVXQwe6KjcTZmmyn5g
+	 FiaBD3ioXeWezVKvag4vO4IyOfnwH4Tcl/DPA10Yf7K/2ewM0yuC4bo0eUTI2+x7ShD9l
+	 1KC9Qg3uU4C0+Qz21QWn/o0/YMiYQvkHapZUSiDf6ymvqznswA+nOcbkrDtr85k5muw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794746560;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794747616;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=4Z+4567/QWUOqxO9Q+A6yXUFz2TTKjM5ijC4fu+iGq0=;
-	b=Ja9BW/emhGCWsfUjggcHJqCk2RsBg0GSnlcHuLiY7dOIWj/hnbTeW1NcRXwMcLvkg1cs
-	 3fN2ZWukVr0AR7h6oPC10IT3zMYGKKvi46/jtoJROVZqKIMIQn46EAGbNRcSwItq3ceTg
-	 DiwpewN7ooucNmK5v7a9WvOcILEtjXi2dXBGvinF3AA/6ge2NBkBMILaRCG26kmNVLiHG
-	 jjQ1TMM4VSE6P61FLlyX1H4b+2rQhcfE6YJZe06D6VUVmjtBcbBJwVcGlFOxOt1IFSTIp
-	 sFErRb2FDAbdnIL5fLRtYmo+r7Z7cfdQcvzZSu9Kc0ogVO1a/O7LnaH8Y1tZoQe7FsQ==
+	bh=uqvmQ4pBZFKeyBh0vvo7uLcbqziDZvYbvc2k2mqHESE=;
+	b=UYIQJ+eFauRXhn7zNF5M/63n321L76r/rlMlIWJbgF76L7Yc/XYkkSG59+EvjTxCDSfR
+	 iEdfKhwskZtvb+FF7E+cgFLehCWDOTN14p7mGJFnuW3lDMQ0xxVPujJYqU+2FBVxjBWCF
+	 I7CU/VdHPdatU+6LLJNFMeDImPzJgHTzde0F/cBSNF1E/WKUKwGnFebkx77nluzgTeuwT
+	 q/qJOotzAMAcgI7jk4yKo9WzM+4om4u5Sl0F883dRcPqIkWPoeak53FfR4lxTe6FGBRhN
+	 0Zy6x/jGxeF32mz946oS2ddky9Ez9LlCgIOuLGg/SW8uJvnG5WsPxf99uJQfH2cB0+Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="B3cTwy/4";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=I3RsYdXD;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E9768606A32D;
-	Sun, 15 Nov 2026 12:42:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A486606A31F
+	for <linux-scsi@vger.kernel.org>; Sun, 15 Nov 2026 13:00:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=B3cTwy/4
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 56B4F1F000C4;
-	Sun, 15 Nov 2026 12:42:39 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=I3RsYdXD
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DAEAD1F000C4;
+	Sun, 15 Nov 2026 13:00:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794746559;
-	bh=4Z+4567/QWUOqxO9Q+A6yXUFz2TTKjM5ijC4fu+iGq0=;
+	s=k20260515; t=1794747616;
+	bh=uqvmQ4pBZFKeyBh0vvo7uLcbqziDZvYbvc2k2mqHESE=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=B3cTwy/4fdHnnwfsQLpWqFs7RmQbJLPon/RNZhz4rfrZZOp9Dwd5R/sJIEueANd1C
-	 SbKOEsT4T6EhWSZABpib43IO3U6C4la5/jfmwpp/FJ46isly7cI+84BkiIzSu5Asje
-	 RBPIwCYvqF9Gj0GqIq9HxcbOGtl1aUP7SLaY8AP8bFuX96B9W9ET8wFHIEZ/huU0nl
-	 sGfeHk06J/M03rJeRWQ1dmFbsi1q3/2j+KjCfFN+DPprJo+/2oKHfbJFdA4TO/aQc4
-	 HCtJ1/y3CcTwCbHdbGuqCFDIH7yhmLh8tQ3bG5SpnW0gs3pd/jZ2nbpQfimq4RA4o4
-	 t9BK4eF72l08Q==
-Message-ID: <sashiko-outbox-215504@kernel.org>
+	b=I3RsYdXDuF9nG6Y+1wYbDthc4jWhnmj4TODy5RaxHuLugiKnOI3LytqY1RNQ57KnM
+	 d6gYWxpIBB4DUVFnCID8rAA20zmc5A9bqLITissxmS6k0+WyJgaPYpi0FUGH/vZ3EA
+	 n5DNjkqH9wSwDNLvygOHYvTGAJ11RN+xqSfT3FOS/MASv15VIXvAfNnSKjdIazj2KI
+	 SIoeDAdFU9lF76mirtSqLLKwlyksylb4FPpqGKEHvGngxIE8QQgTs58ebyFOsBAfDf
+	 brkB9ThmUHfgeQwFUlITzzNgOjgNAhRk5rGdf3Ed6ATZgC73uovz3nEjXsjwiCXJEG
+	 QtDA7sCyV490w==
+Message-ID: <sashiko-outbox-215510@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] scsi: target: iscsi: run the Time2Retain handler in
- process context
+Subject: Re: [PATCH v3 3/3] scsi: libiscsi: take a transmit reference before
+ a task is published
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Yehyeong Lee" <yhlee@isslab.korea.ac.kr>
-Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
-In-Reply-To: <20261115121943.1446744-1-yhlee@isslab.korea.ac.kr>
-References: <20261115121943.1446744-1-yhlee@isslab.korea.ac.kr>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20261115122122.1446791-4-yhlee@isslab.korea.ac.kr>
+References: <20261115122122.1446791-1-yhlee@isslab.korea.ac.kr>
+ <20261115122122.1446791-4-yhlee@isslab.korea.ac.kr>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Sun, 15 Nov 2026 12:42:38 +0000
+Date: Sun, 15 Nov 2026 13:00:15 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -60,208 +61,229 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 
-Thank you for your contribution! Sashiko AI review found 4 potential
+Thank you for your contribution! Sashiko AI review found 3 potential
 issues to consider:
-- [High] scsi: target: iscsi: UAF race in
-  iscsit_stop_time2retain_timer() on restart
-- [High] scsi: target: iscsi: session leak in iscsit_close_session()
-  when !can_sleep
-- [High] scsi: target: iscsi: UAF in iscsit_close_connection() when
-  Time2Retain is 0
-- [Medium] scsi: target: iscsi: session_lock dropped in
-  iscsit_stop_time2retain_timer()
+- [High] scsi: libiscsi: UAF on out.segment when iscsi_xmit_task() drops
+  completed task
+- [High] scsi: libiscsi: incomplete state and ordering check in
+  iscsi_itt_to_ctask()
+- [High] scsi: libiscsi: completed requeued task sent in
+  iscsi_xmit_task()
 --
 
-commit cd2ff8f1169a8e47b09d7eb1b677944735610f1c
+commit 36167e4a6d8cfacb1e2c30d4153e78e02abac811
 Author: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
 
-scsi: target: iscsi: run the Time2Retain handler in process context
+scsi: libiscsi: take a transmit reference before a task is published
 
-This commit converts the session Time2Retain timer into a delayed work item=
- on
-system_dfl_wq so that iscsit_handle_time2retain_timeout() closes the session
-and acquires se_tpg->session_lock in process context rather than timer soft=
-irq
-context.
+This commit takes a transmit reference on an iSCSI task before setting its
+state to ISCSI_TASK_RUNNING, checks task->state in iscsi_itt_to_ctask(),
+and avoids resending or leaking tasks completed by the receive path during
+transmission.
 
-> diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/i=
-scsi_target.c
-> index 03d618cd76721..4c6579eb803f3 100644
-> --- a/drivers/target/iscsi/iscsi_target.c
-> +++ b/drivers/target/iscsi/iscsi_target.c
-> @@ -4485,8 +4485,8 @@ int iscsit_close_session(struct iscsit_session *ses=
-s, bool can_sleep)
-> =20
->  	/*
->  	 * If any other processes are accessing this session pointer we must
-> -	 * wait until they have completed.  If we are in an interrupt (the
-> -	 * time2retain handler) and contain and active session usage count we
-> +	 * wait until they have completed.  If we are the Time2Retain work
-> +	 * (can_sleep is false) and contain and active session usage count we
->  	 * restart the timer and exit.
->  	 */
->  	if (iscsit_check_session_usage_count(sess, can_sleep)) {
-
-[Severity: High]
-Can keeping can_sleep as false when iscsit_handle_time2retain_timeout() cal=
-ls
-iscsit_close_session() leak the session if session_usage_count is non-zero?
-
-In iscsi_target_login_sess_out(), the old_sess_out path starts the Time2Ret=
-ain
-handler and drops se_tpg->session_lock before calling
-iscsit_dec_session_usage_count().  When DefaultTime2Retain is 0,
-mod_delayed_work() queues time2retain_work with zero delay, so
-iscsit_handle_time2retain_timeout() can run on another CPU while
-session_usage_count is still elevated.
-
-iscsit_handle_time2retain_timeout() sets ISCSI_TF_EXPIRED (with
-ISCSI_TF_RUNNING still set) and calls iscsit_close_session(sess, false).
-iscsit_close_session() sets session_reinstatement to 1, fails to stop the
-timer because ISCSI_TF_EXPIRED is set, deregisters configfs, and enters the
-!can_sleep branch above because session_usage_count is non-zero.  There,
-iscsit_start_time2retain_handler() returns immediately without re-arming the
-work because ISCSI_TF_RUNNING was never cleared, leaving the half-closed
-session leaked with ISCSI_TF_EXPIRED and session_reinstatement set.
-
-Since iscsit_handle_time2retain_timeout() now runs in process context, could
-it wait on session_waiting_on_uc_comp instead of taking the non-sleeping
-restart path?
+> diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+> index 220e89d541af6..5045f6f5ca01b 100644
+> --- a/drivers/scsi/libiscsi.c
+> +++ b/drivers/scsi/libiscsi.c
 
 [ ... ]
 
-> diff --git a/drivers/target/iscsi/iscsi_target_erl0.c b/drivers/target/is=
-csi/iscsi_target_erl0.c
-> index 24db6b07493e6..9db833f3eeaec 100644
-> --- a/drivers/target/iscsi/iscsi_target_erl0.c
-> +++ b/drivers/target/iscsi/iscsi_target_erl0.c
-
-[ ... ]
-
-> @@ -791,8 +791,8 @@ void iscsit_start_time2retain_handler(struct iscsit_s=
-ession *sess)
+> @@ -1455,6 +1464,10 @@ struct iscsi_task *iscsi_itt_to_ctask(struct iscsi=
+_session *session,
+>  	if (!task || !task->sc)
+>  		return NULL;
 > =20
->  	sess->time2retain_timer_flags &=3D ~ISCSI_TF_STOP;
->  	sess->time2retain_timer_flags |=3D ISCSI_TF_RUNNING;
-> -	mod_timer(&sess->time2retain_timer,
-> -		  jiffies + sess->sess_ops->DefaultTime2Retain * HZ);
-> +	mod_delayed_work(system_dfl_wq, &sess->time2retain_work,
-> +			 sess->sess_ops->DefaultTime2Retain * HZ);
->  }
-> =20
->  int iscsit_stop_time2retain_timer(struct iscsit_session *sess)
+> +	/* Pairs with the release in the transmit path. */
+> +	if (smp_load_acquire(&task->state) =3D=3D ISCSI_TASK_PENDING)
+> +		return NULL;
+> +
+>  	if (iscsi_cmd(task->sc)->age !=3D session->age) {
+>  		iscsi_session_printk(KERN_ERR, session,
+>  				  "task's session age %d, expected %d\n",
 
 [Severity: High]
-Can this cause a use-after-free in iscsit_close_connection() when
-DefaultTime2Retain is 0?
+Can iscsi_itt_to_ctask() still return an unsent or already-completed task
+here?
 
-drivers/target/iscsi/iscsi_target.c:iscsit_close_connection() {
-    ...
-		if (!atomic_read(&sess->session_continuation))
-			iscsit_start_time2retain_handler(sess);
+First, iscsi_alloc_task() writes task->state =3D ISCSI_TASK_PENDING and
+task->sc =3D sc under frwd_lock with plain stores and no barrier between
+them, while iscsi_itt_to_ctask() reads task->sc before
+smp_load_acquire(&task->state):
 
-		if (atomic_read(&sess->session_close)) {
-			spin_unlock_bh(&sess->conn_lock);
-			complete_all(&sess->session_wait_comp);
-			iscsit_close_session(sess, true);
-		} else {
-			spin_unlock_bh(&sess->conn_lock);
-		}
-    ...
+CPU0 (frwd_lock)                  CPU1 (back_lock)
+iscsi_alloc_task()                iscsi_itt_to_ctask()
+  task->state =3D ISCSI_TASK_PENDING
+  task->sc =3D sc
+                                    if (!task || !task->sc)
+                                    smp_load_acquire(&task->state)
+                                      --> sees ISCSI_TASK_FREE
+
+Because smp_load_acquire() only orders loads after it and
+iscsi_alloc_task() has no release or write barrier before setting task->sc,
+CPU1 can observe the new task->sc while still reading the prior
+ISCSI_TASK_FREE state, bypassing the ISCSI_TASK_PENDING check and freeing
+the task while it stays on conn->cmdqueue.
+
+Second, while the transmit path holds a second reference on task (for
+example across session->tt->xmit_task() or in conn->task), completing the
+task on the receive path sets task->state to ISCSI_TASK_COMPLETED and
+decrements refcount from 2 to 1 without clearing task->sc.  Because
+iscsi_itt_to_ctask() only rejects ISCSI_TASK_PENDING, a subsequent
+ISCSI_OP_SCSI_DATA_IN PDU for that ITT still resolves the completed task:
+
+drivers/scsi/libiscsi_tcp.c:iscsi_tcp_hdr_dissect() {
+	...
+	case ISCSI_OP_SCSI_DATA_IN:
+		spin_lock(&session->back_lock);
+		task =3D iscsi_itt_to_ctask(session, conn, hdr->itt);
+		if (!task)
+			rc =3D ISCSI_ERR_BAD_ITT;
+		else
+			rc =3D iscsi_tcp_data_in(conn, task);
+		spin_unlock(&session->back_lock);
+	...
 }
 
-Previously, mod_timer() armed a softirq timer while spin_lock_bh() kept loc=
-al
-softirqs disabled across iscsit_start_time2retain_handler() and the subsequ=
-ent
-sess accesses.  With mod_delayed_work(), a zero delay bypasses the timer wh=
-eel
-and queues time2retain_work immediately on an unbound worker, and neither
-iscsit_handle_time2retain_timeout() nor iscsit_close_session() takes
-sess->conn_lock:
+iscsi_tcp_data_in() points tcp_conn->in.segment at task->sc->sdb.table.sgl
+and drops back_lock without a task reference; when the transmit path then
+puts its final reference, iscsi_free_task() calls scsi_done() and frees the
+scatterlist while iscsi_tcp_recv_skb() writes payload bytes into it
+(use-after-free).  A duplicate ISCSI_OP_SCSI_CMD_RSP in that window will
+also overwrite sc->result and sense data before scsi_done() runs.
 
-CPU0                                  CPU1 (kworker)
-iscsit_close_connection()
-  spin_lock_bh(&sess->conn_lock)
-  iscsit_start_time2retain_handler(sess)
-    mod_delayed_work(..., 0)
-                                      iscsit_handle_time2retain_timeout()
-                                        iscsit_close_session(sess, false)
-                                          kfree(sess)
-  atomic_read(&sess->session_close)
-  spin_unlock_bh(&sess->conn_lock)  <-- use-after-free
-
-> @@ -811,7 +811,7 @@ int iscsit_stop_time2retain_timer(struct iscsit_sessi=
-on *sess)
->  	sess->time2retain_timer_flags |=3D ISCSI_TF_STOP;
->  	spin_unlock(&se_tpg->session_lock);
-> =20
-> -	timer_delete_sync(&sess->time2retain_timer);
-> +	cancel_delayed_work(&sess->time2retain_work);
-> =20
->  	spin_lock(&se_tpg->session_lock);
->  	sess->time2retain_timer_flags &=3D ~ISCSI_TF_RUNNING;
+> @@ -1556,9 +1569,20 @@ static int iscsi_xmit_task(struct iscsi_session *s=
+ession, struct iscsi_conn *con
+>  			WARN_ON_ONCE(1);
+>  			return 0;
+>  		}
+> +		if (!was_requeue)
+> +			/* Pairs with the acquire in the RX task lookups. */
+> +			smp_store_release(&task->state, ISCSI_TASK_RUNNING);
+>  	} else {
+>  		/* Already have a ref from when we failed to send it last call */
+>  		conn->task =3D NULL;
+> +		/* The RX path may have completed it while the tx was stopped. */
+> +		spin_lock_bh(&session->back_lock);
+> +		if (task->state !=3D ISCSI_TASK_RUNNING) {
+> +			__iscsi_put_task(session, task);
+> +			spin_unlock_bh(&session->back_lock);
+> +			return 0;
+> +		}
+> +		spin_unlock_bh(&session->back_lock);
+>  	}
 
 [Severity: High]
-Can replacing timer_delete_sync() with cancel_delayed_work() here allow an
-already-dispatched work item to close and free the session after the timer =
-is
-stopped and restarted?
+When conn->task is NULL and was_requeue is true, can iscsi_xmit_task()
+still pass a completed task to session->tt->xmit_task()?
 
-Because cancel_delayed_work() does not wait for a running work item,
-iscsit_stop_time2retain_timer() clears ISCSI_TF_RUNNING while a worker thre=
-ad
-can still be preempted before taking se_tpg->session_lock.  If the timer is
-then restarted (for example via the old_sess_out path in
-iscsi_target_login_sess_out() when a continuation login fails),
-iscsit_start_time2retain_handler() clears ISCSI_TF_STOP and re-queues
-sess->time2retain_work:
+When iscsi_tcp_r2t_rsp() queues a task onto conn->requeue, it takes an
+extra reference on task.  If an early response completes the task before
+iscsi_data_xmit() pops it from conn->requeue, task->state becomes
+ISCSI_TASK_COMPLETED while the R2T reference keeps the task alive:
 
-CPU0 (kworker)                        CPU1
-iscsit_handle_time2retain_timeout()
-  /* preempted before session_lock */
-                                      iscsi_login_non_zero_tsih_s2()
-                                        iscsit_stop_time2retain_timer()
-                                          flags |=3D ISCSI_TF_STOP
-                                          cancel_delayed_work()
-                                          flags &=3D ~ISCSI_TF_RUNNING
-                                      ...
-                                      iscsi_target_login_sess_out()
-                                        iscsit_start_time2retain_handler()
-                                          flags &=3D ~ISCSI_TF_STOP
-                                          flags |=3D ISCSI_TF_RUNNING
-                                          mod_delayed_work()
-  spin_lock_bh(&se_tpg->session_lock)
-  /* ISCSI_TF_STOP is now clear */
-  flags |=3D ISCSI_TF_EXPIRED
-  spin_unlock_bh(&se_tpg->session_lock)
-  iscsit_close_session(sess, false)
-    iscsit_stop_time2retain_timer()   <-- returns -1 (ISCSI_TF_EXPIRED)
-    /* cancel_delayed_work_sync() skipped because !can_sleep */
-    kfree(sess)                       <-- time2retain_work still queued
+CPU0 (RX, back_lock)              CPU1 (xmit worker, frwd_lock)
+iscsi_tcp_r2t_rsp()
+  iscsi_get_task(task)
+  iscsi_requeue_task(task)
+iscsi_complete_task()
+  task->state =3D ISCSI_TASK_COMPLETED
+  __iscsi_put_task() (refcount 2->1)
+                                  iscsi_data_xmit()
+                                    iscsi_xmit_task(..., was_requeue=3Dtrue)
+                                      if (!conn->task)
+                                        iscsi_get_task(task)
+                                      if (was_requeue)
+                                        iscsi_put_task(task)
+                                      session->tt->xmit_task(task)
 
-When CPU0 acquires se_tpg->session_lock, ISCSI_TF_STOP is no longer set, so
-the stale work sets ISCSI_TF_EXPIRED and calls iscsit_close_session(sess,
-false).  Because ISCSI_TF_EXPIRED is set and can_sleep is false, neither
-iscsit_stop_time2retain_timer() nor cancel_delayed_work_sync() cancels the
-newly armed time2retain_work before kfree(sess) frees the session (or if a
-new connection is already active on the session, iscsit_close_session() hits
-BUG() on sess->nconn).
+Because the !conn->task branch does not check task->state under back_lock
+when was_requeue is true, it calls session->tt->xmit_task() on the
+completed task.  If xmit_task() then returns -EAGAIN after
+iscsi_sw_tcp_pdu_init() points tcp_sw_conn->out.segment at task->hdr and
+task->sc->sdb.table.sgl, the post-xmit check sees task->state !=3D
+ISCSI_TASK_RUNNING, skips saving conn->task, and drops the final reference,
+freeing task and task->sc while tcp_sw_conn->out.segment still references
+them.
 
-[Severity: Medium]
-Why does iscsit_stop_time2retain_timer() still drop and re-acquire
-se_tpg->session_lock around cancel_delayed_work()?
+> @@ -1584,10 +1608,12 @@ static int iscsi_xmit_task(struct iscsi_session *=
+session, struct iscsi_conn *con
+>  	spin_unlock_bh(&session->frwd_lock);
+>  	rc =3D session->tt->xmit_task(task);
+>  	spin_lock_bh(&session->frwd_lock);
+> +	/* regular RX path uses back_lock */
+> +	spin_lock_bh(&session->back_lock);
+>  	if (!rc) {
+>  		/* done with this task */
+>  		task->last_xfer =3D jiffies;
+> -	} else {
+> +	} else if (task->state =3D=3D ISCSI_TASK_RUNNING) {
+>  		/*
+>  		 * get an extra ref that is released next time we access it
+>  		 * as conn->task above.
+> @@ -1596,7 +1622,8 @@ static int iscsi_xmit_task(struct iscsi_session *se=
+ssion, struct iscsi_conn *con
+>  		conn->task =3D task;
+>  	}
+> =20
+> -	iscsi_put_task(task);
+> +	__iscsi_put_task(session, task);
+> +	spin_unlock_bh(&session->back_lock);
+>  	return rc;
+>  }
 
-The commit message notes that cancel_delayed_work() is called with
-se_tpg->session_lock held because it does not sleep, but the unlock and lock
-around it remain from timer_delete_sync().  Dropping se_tpg->session_lock
-splits the update of time2retain_timer_flags across two critical sections, =
-so
-an unlocked caller of iscsit_start_time2retain_handler() such as
-iscsit_close_connection() can observe ISCSI_TF_RUNNING still set in that
-window and return without arming the work just before ISCSI_TF_RUNNING is
-cleared.
+[Severity: High]
+On iscsi_tcp, if session->tt->xmit_task() returns -EAGAIN after partially
+sending a PDU and the receive path has completed the task in the meantime,
+does dropping task here cause a use-after-free on tcp_sw_conn->out.segment?
+
+During session->tt->xmit_task(), iscsi_sw_tcp_pdu_init() sets the
+per-connection tcp_sw_conn->out.segment and out.data_segment to point at
+task->hdr and task->sc->sdb.table.sgl.  If the socket buffer fills up
+mid-PDU (-EAGAIN) and an incoming response completes the task either before
+back_lock is taken here or while the task was parked in conn->task,
+__iscsi_put_task() drops the last reference:
+
+CPU0 (xmit worker)                CPU1 (RX, back_lock)
+iscsi_xmit_task()
+  session->tt->xmit_task(task)
+    iscsi_sw_tcp_pdu_init()
+      out.segment -> task->sc->sdb
+    iscsi_sw_tcp_pdu_xmit()
+      -> -EAGAIN (unsent bytes left)
+                                  iscsi_complete_task(task)
+                                    task->state =3D ISCSI_TASK_COMPLETED
+                                    __iscsi_put_task() (refcount 2->1)
+  spin_lock_bh(&session->back_lock)
+  /* task->state !=3D RUNNING:
+   * conn->task not set
+   */
+  __iscsi_put_task() (refcount 1->0)
+    iscsi_free_task()
+      scsi_done(sc) (frees sgl)
+...
+iscsi_data_xmit() (next requeued task)
+  iscsi_tcp_task_xmit()
+    session->tt->xmit_pdu()
+      iscsi_sw_tcp_xmit()
+        --> reads freed sgl in out.segment  <-- use-after-free
+
+iscsi_tcp_cleanup_task() only drains tcp_task->r2tqueue and does not reset
+tcp_sw_conn->out.segment:
+
+drivers/scsi/libiscsi_tcp.c:iscsi_tcp_task_xmit() {
+	...
+flush:
+	/* Flush any pending data first. */
+	rc =3D session->tt->xmit_pdu(task);
+	if (rc < 0)
+		return rc;
+	...
+}
+
+When the next task on conn->requeue runs iscsi_tcp_task_xmit(), it flushes
+the remaining bytes from tcp_sw_conn->out.segment before calling init_pdu(),
+reading from the freed scatterlist and pages.
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261115121943.1446=
-744-1-yhlee@isslab.korea.ac.kr?part=3D1
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261115122122.1446=
+791-1-yhlee@isslab.korea.ac.kr?part=3D3
