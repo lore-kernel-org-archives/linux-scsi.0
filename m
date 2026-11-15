@@ -1,54 +1,56 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794785610;
-	b=s9XGlgLzGRx7GCtLcw7eDJpnS//NOg9aut28R0lYsImYBWBN+bklA2ZLkWKhcxCFlmq/
-	 QpPHL+rc4LYV9IORN6Ed9I1zelLitNbb/Rji2qVez17YQ6IU0xQaz1NmAHVXrzHI7j6/u
-	 TLrlg6UlIvhq7GD0DBX0mTMlVvBoO1w89BUSFgeY5hgbEk3jEMi3NWSCH6yJykY6BoslP
-	 7aA6cXfhDQLVic0Bx3Vi837ga/0GRxhwLgARpGqQQB/rNusjUNa0FdIeuV9S8VwDj6dhq
-	 qajd5Wa0Xs4m5ZGtxVRcwL4+F2fg0HM3OWAAvmCn+rIAgaHkQjj6cc9wXvzGPtUEV0g==
+	t=1794785611;
+	b=i1r0uU1K/5JgBib0/CNKGuoLzLKqfHom32zzcGLBP6XCEA/2g14nhMQpna6AbMPkXocH
+	 voRy70USFSbLfzkoWtzMiHb+Im6eUugmtDCTAKl3LmE1Vd6T8CeKS9oV7whdWhPDV/AtL
+	 JVOmPa+Osc/34tXmne8CebKymwqezYAu53jZYIOrO+by8BoLtc2hSM3TafOl/EkoJ3Eax
+	 jRCU3t5aplLcT3Y+TsyzSDUexVUIMnqX1xkhn705IiSJRk7kI0iFLpvsrRJKCrowGMg2C
+	 KZXsiotRIkcvhCNbSwxXJQrwWpvWGvNE+wplvQD84I/GrE2fn+bPzFiAgRR/clUSBZw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794785610;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794785611;
 	h=Received:DKIM-Signature:From:To:Subject:Date:Message-ID:X-Mailer:
-	 MIME-Version:Content-Transfer-Encoding;
-	bh=egxDnFMEWFfDpGaAQK4ZP9oO0nmZy+YZEMrEffQOHVg=;
-	b=N+dpy6CIPSpomBY4wmlyYODUOSJRg0WrkH7LSJAvTkRzjTtISfn0aTqdXK5ahSazfx+X
-	 8ZNDqpDHfKeY3oXZmaSCma47/K/tLzoFxbCpnAr3+oe6Z2CXPaPcrCeS4nVNiDR75cyLu
-	 RYwSgj0aZ9divag8t9f0Kwf/dTDthLaxVVR8V0kQd/VJYp1B9pOwuO39+Qiud1l1YwOUo
-	 F+dLJ8hCtmY5zxiHcNFA7xyqAFeAn5YU1J2pEtK5WljE8oSk5M/CKdkEZq2iBXO93g0cy
-	 huP1uOF+TwsPeOsU0a0+jGHRdZTvUlb0i48jpS5yfsy5t4qOi6UBnrTWMl3op61DNGQ==
+	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
+	bh=Oni92pXM+I7fxOlbC1/ubF4NHvTv/X9JfcgsogGeo7k=;
+	b=tPcGE+93qViwt8JCQRA2GT/LOkuC/AMUndbQyCKwPICXapb5+zAeqZ8bJ8Q9OsM1Ftp8
+	 dSzGgE9e926psHr19Ai0lXM5WVraWPPHbl2pefxit0teSUB/ivM5Reohnh1LcoMQcxPUW
+	 lxluxME26uRIIBxhwp7qXseyaKqLQbXZqAum7KF2ABN20QKFxN5qLg0sW/ZCtbsHZ03VE
+	 NOoiGFjYyD9ngdnB14NQCvU+XtU+33aP+HzqeWh3T0HFrP6aJsk18KfyeyqhBaGO3prx2
+	 nlFQF3lLEWJ13WzqPV/rkp5CKeAZ4kIZFBaqXY5L6YCTdu4mPTubmA6YUUTlWTub4FQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=TmKSa6qh;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DwbEl9m6;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 50D39606A323;
-	Sun, 15 Nov 2026 23:33:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29536606A336;
+	Sun, 15 Nov 2026 23:33:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=TmKSa6qh
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 49CC71F000C4;
-	Sun, 15 Nov 2026 23:33:29 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DwbEl9m6
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4CDB51F000C6;
+	Sun, 15 Nov 2026 23:33:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794785610;
-	bh=egxDnFMEWFfDpGaAQK4ZP9oO0nmZy+YZEMrEffQOHVg=;
-	h=From:To:Subject:Date;
-	b=TmKSa6qhjLOGLH13mJkKRPeBbSfn+8anmRSmxVaBrIFySlmXPcmRHcFZx7OLZ51f2
-	 AMr2vjnYE1n94Dm/DBQtardqIx8NnrKfatZa2Kzb8ofJHHhy/YJxKG3HuW84C+tlp4
-	 rRJq+F/VYbCP1Uiz1L2N6TmeaAc3sZWrPg5adTMPkFIA3skB1b+pJuJzSO1x+48kQX
-	 zCFaWuo7ZhUz/pjJyPArN49ggEvkOrP5OyLqUqanvGZey0tcMVce9BzRz9tJBjB9KB
-	 3fGrU4u3+N5jYdVk6K6uXhAgtosCe09miZTfm96+P5DhwPHV0Eapr0sVCYYkKGtr4+
-	 omEm+cZLxtbjA==
+	s=k20260515; t=1794785611;
+	bh=Oni92pXM+I7fxOlbC1/ubF4NHvTv/X9JfcgsogGeo7k=;
+	h=From:To:Subject:Date:In-Reply-To:References;
+	b=DwbEl9m6yCZ8nMlawdm9oAU7zOwyNlscsIqdLlM1atuyNNDg/MaDvWlJeA17sibnk
+	 mToRKGH6twIHGKjN5wMdHJuuqghv35V7KVWoeRiPpZTBblVlhjd4Da0s1eeWxatmct
+	 rgTRhXFegsLYAFLus22B8QqPhyTbZCCPwoFSCbsONtKchPE+rlwIAn8WBW/oe0LvLt
+	 pKnmuCuWi8QALtBuqE3SkqWHe06LrM5Bk2CNU5jNNXgjps1cxCHq61IfKkQSSMxhIB
+	 vkqrVjOEHG8j4X/kFuvL2kfJ8GCEAd0DuUxMn2ZGjMEPfuruETHoyd47a86WSbO44o
+	 MF3mweKJw7p5Q==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: Jens Axboe <axboe@kernel.dk>,
 	linux-block@vger.kernel.org,
 	Christoph Hellwig <hch@lst.de>,
 	linux-scsi@vger.kernel.org,
 	"Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH v10 00/13] Add support for storage element depopulation
-Date: Mon, 16 Nov 2026 08:33:14 +0900
-Message-ID: <20261115233327.941586-1-dlemoal@kernel.org>
+Subject: [PATCH v10 01/13] block: introduce disk_zone_is_offline()
+Date: Mon, 16 Nov 2026 08:33:15 +0900
+Message-ID: <20261115233327.941586-2-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.56.0
+In-Reply-To: <20261115233327.941586-1-dlemoal@kernel.org>
+References: <20261115233327.941586-1-dlemoal@kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -60,113 +62,75 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Jens,
+Introduce the helper function disk_zone_is_offline() for testing if a zone
+of a gendisk has the offline condition. The zone to test is identified
+using a sector number that must belong to the target zone to check.
 
-These patches define a new set of block device operations for generically
-using from the block layer the storage element depopulation feature of
-zoned block devices. Support for this feature is added to the SCSI disk
-driver and an emulation of this feature added to the zloop driver.
+Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Martin K. Petersen <mkp@kernel.org>
+Reviewed-by: Hannes Reinecke <hare@kernel.org>
+---
+ block/blk-zoned.c      | 18 ++++++++++++++++++
+ include/linux/blkdev.h |  9 +++++++++
+ 2 files changed, 27 insertions(+)
 
-The management operations can be accessed using block layer API, which is
-intended for file systems (e.g. zonefs and XFS), as well as using ioctls
-for users using zoned disks directly from user space.
-
-Changes from v9:
- - Addressed Sashiko comments on patch 6. This change redesigns the
-   ordered zone append handling to simplify the code and avoid locking
-   difficulties.
- - Addressed Sashiko comments on patch 8.
-
-Changes from v8:
- - Addressed Sashiko comment on patch 7 by adding patch 6. Patch 7 is
-   unmodified.
- - Addressed Sashiko comments on patch 8 and patch 12
- - Added review tags to unmodified pacthes
-
-Changes from v7:
-A significant amount of changes in this version to address most of the
-Sashiko review comments and to simplify the code. In more details, the
-changes are:
- - Added patches 3, 6, and 9.
- - Dropped former patch 5 as the use of irq-disabling spinlocks in zloop
-   is not necessary.
- - Reworked patch 4 by migrating the idepop operation wait loops to the
-   device drivers. This simplifies the implementation in zloop without
-   making the sd driver implementation more difficult. Also fixed problems
-   with errors during restoration and zone write plugs state.
- - Reworked patch 7 and 11 to be consistent with the changes in patch 4.
-
-Changes from v6:
- - Addressed the nit pointed out by Christoph in patch 4
- - Added review tags
-
-Changes from v5:
- - Rebased on latest block/for-next
- - Addressed Christoph's comments on patch 3
- - Added patch 5 to address a potential deadlock in zloop (signaled by
-   sashiko)
- - Reworked the restoration of storage elements in patch 6 to avoid an
-   inconsistent state of storage elements in case of error. Also added
-   protection against disk removal during storage element removal and
-   restoration execution.
- - Added review tags
-
-Changes from v4:
- - Rebased on latest block/for-next
- - Added review tags to patch 1 and 2
- - Reworked patch 3, 4 and 5 to address Christoph's and sashiko comments
-
-Changes from v3:
- - Reworked patch 1 to only provide the disk_zone_is_offline() helper
-   function. Failing of read operations to offline zones is handled
-   directly by the zloop driver and the new patch 7 is added to handle
-   failing early read operations to offline zones of ZBC SCSI disks.
- - Added patch 2
- - Addressed further valid comments from Sashiko
-   The biggest changes are in patch 2 to save the number of storage
-   elements of a disk in struct gendisk and to serialize the execution of
-   the storage element management operations using the zone revalidation
-   mutex.
- - Rebased on latest block/for-next
-
-Changes from v2:
- - Addressed further valid comments from Sashiko
- - Rebased on latest block/for-next
-
-Changes from v1:
- - Addressed the many valid comments that Sashiko had
- - Rebased on latest block/for-next
-
-Damien Le Moal (13):
-  block: introduce disk_zone_is_offline()
-  block: refactor blk_revalidate_disk_zones()
-  block: allow dropping all zone write plugs on revalidation
-  block: introduce storage element management
-  block: add storage element management ioctls
-  zloop: fix ordered zone append handling
-  zloop: fix zone reporting consistency
-  zloop: add storage element emulation
-  zloop: add degrade_element control command
-  scsi: scsi_proto: refine the definition of storage element health
-  scsi: sd_zbc: always revalidate zones for disks supporting head depopulation
-  scsi: sd_zbc: define storage element management operations
-  scsi: sd: fail read commands to offline zones early
-
- .../admin-guide/blockdev/zoned_loop.rst       |  33 +-
- block/blk-zoned.c                             | 450 ++++++++-
- block/blk.h                                   |  14 +
- block/genhd.c                                 |   4 +
- block/ioctl.c                                 |   4 +
- drivers/block/zloop.c                         | 924 ++++++++++++++++--
- drivers/scsi/sd.c                             |  23 +-
- drivers/scsi/sd.h                             |   5 +
- drivers/scsi/sd_zbc.c                         | 538 +++++++++-
- include/linux/blkdev.h                        |  64 ++
- include/scsi/scsi_proto.h                     |   6 +-
- include/uapi/linux/blkzoned.h                 | 106 ++
- include/uapi/linux/fs.h                       |   1 +
- 13 files changed, 2052 insertions(+), 120 deletions(-)
-
+diff --git a/block/blk-zoned.c b/block/blk-zoned.c
+index 4c5889296191..07d504287024 100644
+--- a/block/blk-zoned.c
++++ b/block/blk-zoned.c
+@@ -292,6 +292,24 @@ static bool disk_zone_is_seq(struct gendisk *disk, sector_t sector)
+ 	return !blk_zstate_is_conv(zs);
+ }
+ 
++/**
++ * disk_zone_is_offline - check if a sector belongs to an offline zone
++ * @disk:	gendisk to check
++ * @sector:	sector number
++ *
++ * Check if @sector on @disk is contained in an offline zone.
++ * This function can be used only when the bdev queue was entered (BIOs
++ * submitted but not yet completed) or when holding zone_revalidate_mutex.
++ */
++bool disk_zone_is_offline(struct gendisk *disk, sector_t sector)
++{
++	if (!blk_queue_is_zoned(disk->queue))
++		return false;
++
++	return disk_zone_get_cond(disk, sector) == BLK_ZONE_COND_OFFLINE;
++}
++EXPORT_SYMBOL_GPL(disk_zone_is_offline);
++
+ /**
+  * bdev_zone_is_seq - check if a sector belongs to a sequential write zone
+  * @bdev:       block device to check
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 215753171cef..a2c36b4e6308 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -940,6 +940,9 @@ static inline unsigned int disk_zone_capacity(struct gendisk *disk,
+ 		return disk->last_zone_capacity;
+ 	return disk->zone_capacity;
+ }
++
++bool disk_zone_is_offline(struct gendisk *disk, sector_t sector);
++
+ static inline unsigned int bdev_zone_capacity(struct block_device *bdev,
+ 					      sector_t pos)
+ {
+@@ -954,6 +957,12 @@ static inline unsigned int disk_nr_zones(struct gendisk *disk)
+ 	return 0;
+ }
+ 
++static inline bool disk_zone_is_offline(struct gendisk *disk,
++					sector_t sector)
++{
++	return false;
++}
++
+ static inline bool bdev_zone_is_seq(struct block_device *bdev, sector_t sector)
+ {
+ 	return false;
 -- 
 2.56.0
 
