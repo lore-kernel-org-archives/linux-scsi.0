@@ -1,57 +1,58 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794734702;
-	b=ZijFjPz2DeYlsZLqu4UD9RII+/1Ygw4DjM2PWDVYVaD25oVq4MNjLTTnEfRND5FmgmI7
-	 iCpT6FJM7+KVEQjTCRtsDTaxVhAjMM0WfOydXtsWVvdiovGEKnUkHLTelMqmeI6WHy9km
-	 xxQVVYFN/6pRuAdCyAItWfYh9XTp1zRBHIFy5IFaZLl/8R6gZ00tzs+/MuurQgs1efVds
-	 lJ/BKWsC7COYjNy5Oo50Xc0oV9ZMbeLjxfr7P7BFaTexmNE2gTPu+hcK2vr9p9iLrWiLZ
-	 5ThJA0kzdrhWvx0qeFpkglzWumPELwO2LTBbr8DIyjG4UxuDzf3nkG0wB6e01RAqmmA==
+	t=1794735028;
+	b=b/TCEgmp3b8beD8k89ZUpwm9oWCZL1/bRAEkAGfSeWQ2HLrg/3UZPX/l6wom0B0Ynn1R
+	 0SWspLz2cpPr1bpAnNxLzwmpY61DqYOgkzT7diN82j9e+dZF/eQaP3qYA3rQFEFPF1RHq
+	 5i9zefvHp99ybr0uFpmEJ+A5JYpngfonZrZjJ6og9oRPIP5+3CxKtk+E7rQzO4BXerRT3
+	 mcbVBzEYFazT8Pdu8brQ55Ak8h4xo/KX9XhD+lNGSqfSYip7PuieEduD+U5MIbI/9IJRP
+	 qmdd3jnSy5YVd3YCjS5UWSJ47AWfr7gAmi2AOJJLE9bvhQtaOCO8g+orr7A72T0t5SQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794734702;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=eJEyaJ4so1FD1gojUO6ZsyW4LAejAddOKIF/BXRtMqg=;
-	b=EcNc2FAqPemTufKixtvepMLpAJBeAR8c/MIYPaMGf7UCqFPFTqSke3gKO7aEO5ca6Vz5
-	 BukF02LyAEegRz5KXMdoX5nVu6HUVrYCmbmI8IMxAMhqZ8V0cS6PmN1MAaptYhB68QFNB
-	 XZxQck2sZ6LgUkfhG2u/csI7h3CFzB7ubrCzgnBjsKQqfIU2MbXkQzpgDkXTCBduviLsq
-	 EQx1tGhFo0JgqEEEbheB3RXmr8P0sBZvcQg0wl+9y8YSA/GCM3SQPcWfr/dfaIYBur72H
-	 e6Rz+/IRyUeL5xbS+Ly3XFGnSM35rB8UbbdH4IYnjRceq8Rp6MQ67jf/tBSlpefTUew==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794735028;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=e7MOyX724bqCWJsCrd4OjXjEcyjDNuCUpHqJ3uJvgjY=;
+	b=if4FE9mFZTimctrs8840DtaN3sZa3U65goiDLRxCaxLrrGG05+K09f75mJt1KNYo5vyI
+	 O5dCT/Hic+q+T1XD7UCX7MVyAutR5Qc92gulcGwWMERame5Lm15sdIBoPu9nWv3XgVlCs
+	 Nnm37prBB4V4Gu7dWMaksZDeerVlIzOl1cG1qE7u348alPfdcZtj2EeyB3Qesf8YS3XEC
+	 xmTmLgTQH20wjAr1UXlsImKTO9Rwf5x1WfVbs2Njxbk9fd5fx/HAqdnY+s4gmnMgofWKt
+	 gn7NxbV1ReTRxc6Qvb6mIGrj0xk3CrDM3xMqKm+EyCQgLTdSzQpsKz3ngW55UEMxubw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ANtsvDae;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=D4BDbSLF;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5C04606A331;
-	Sun, 15 Nov 2026 09:25:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6CF2A606A327;
+	Sun, 15 Nov 2026 09:30:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ANtsvDae
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3E0471F000C4;
-	Sun, 15 Nov 2026 09:25:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=D4BDbSLF
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 926E11F000C4;
+	Sun, 15 Nov 2026 09:30:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794734702;
-	bh=eJEyaJ4so1FD1gojUO6ZsyW4LAejAddOKIF/BXRtMqg=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ANtsvDaeLxyx44lTY5tTbn4vuNYnEduPeRnT6aL1KuLM8pqsEjRGmeoSnKbcvUKho
-	 Tyn2XCX+M3q19+O1ti0BGtMNO33MP7sQaisyHCDzBnPyjA/mi7S/JnbdMIiBoqN+BN
-	 hJgu6ee9I81LF+1FqhCc1D6/UNn1XxJNgpnsqzxX7hysFClIIpTIoQ6eImAB9n4ila
-	 oFQbm82St7TllXMCdPdS9nL9n+cxU1DUk9HDL4PEA6+tn1uLo4kknq+Vuk1/9WA6sZ
-	 hkr6CGsPbW9/alMO+G9r86z+fKRw41la3jHrouFgm2VzkReVkpM2q5tYho2wMW3BJ1
-	 WafuBDfwNpCUQ==
-Message-ID: <sashiko-outbox-215362@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 2/3] scsi: target: iscsi: don't attach a connection to a
- closing session
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Daniel Wade" <danjwade95@gmail.com>
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-In-Reply-To: <3ae0ce68449390d9e3893e5328367c4db3818f96.1794732723.git.danjwade95@gmail.com>
-References: <cover.1794732723.git.danjwade95@gmail.com>
- <3ae0ce68449390d9e3893e5328367c4db3818f96.1794732723.git.danjwade95@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Sun, 15 Nov 2026 09:25:01 +0000
+	s=k20260515; t=1794735028;
+	bh=e7MOyX724bqCWJsCrd4OjXjEcyjDNuCUpHqJ3uJvgjY=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=D4BDbSLFVk4e+fV6ihG6kKryjFjt03+TIbG64DUmJoPCcOlP1b9vDrUdSBoHvEXxJ
+	 ldj3rhO3iRDntZCKRLkvsUOAmXeS1mHMkR0qC9TiqDgSaT+m9Owk/1bZbmBLJxsQh8
+	 PTW4FfSElqmIKtraDSDebgIUuu6ZZR0FCa8QmYQBAfd2LN1q3XSnlHSyVEPHKMl5eJ
+	 F533fyUtOVcdvUYNq3jrnkuV3ByRLnh+ry56M4lSxZ6/Hp1rYOL4urCykZ2AAfXMp6
+	 K11q3gPNCNfLg9bjJG+AqAl+3I8V2sWY6Pv15+bcu15Ch7utqYTM9Huq11ly4MDsvE
+	 LbISVNk4ZZhuw==
+Date: Sun, 15 Nov 2026 10:30:22 +0100
+From: Christian Brauner <brauner@kernel.org>
+To: Jan Kara <jack@suse.cz>
+Cc: Shakeel Butt <shakeel.butt@linux.dev>, 
+	Alexander Viro <viro@zeniv.linux.org.uk>, Jens Axboe <axboe@kernel.dk>, linux-fsdevel@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, io-uring@vger.kernel.org, Christoph Hellwig <hch@lst.de>, 
+	linux-block@vger.kernel.org, linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org, 
+	target-devel@vger.kernel.org, linux-unionfs@vger.kernel.org, bpf@vger.kernel.org, 
+	linux-nfs@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH 04/12] target: fileio: don't free the aio command under
+ the filesystem
+Message-ID: <20261115-rasch-haltbar-gebrechen-faac5fad7805@brauner>
+References: <20261114-work-fs-frozen_writes-v1-0-f5ae61c898b1@kernel.org>
+ <20261114-work-fs-frozen_writes-v1-4-f5ae61c898b1@kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -60,222 +61,160 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20261114-work-fs-frozen_writes-v1-4-f5ae61c898b1@kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential
-issues to consider:
-- [High] scsi: target: iscsi: incomplete teardown check in
-  iscsi_post_login_handler()
-- [Medium] scsi: target: iscsi: premature LOGGED_IN state in
-  iscsi_post_login_handler()
---
+On Sat, Nov 14, 2026 at 11:47:11AM +0100, Christian Brauner wrote:
+> The read completed and freed the command before ext4_dio_read_iter() got
+> to file_accessed(iocb->ki_filp).
+> 
+> Do what loop, zloop and fs/backing-file.c do and hold a reference to the
+> command until the I/O is submitted.
 
-commit fbb74f9a87b2184ab2a30c73faf991dfc1060e88
-Author: Daniel Wade <danjwade95@gmail.com>
+As sashiko pointed out (cf. [1]) the completion callback still completes
+the command. That drops the LUN reference while ->read_iter() or
+->write_iter() may still be running. The device and its backing file
+can go away underneath the filesystem. So we must complete the command
+on the final put as well. I've folded:
 
-scsi: target: iscsi: don't attach a connection to a closing session
+5/12 gets simpler on top of this. kiocb_end_write() just moves into
+cmd_rw_aio_complete() which is now called exactly once for every I/O.
+I've folded both.
 
-This commit sets sess->session_close under sess->conn_lock when the last
-connection closes in the ERL=3D0 fallback path and re-checks
-sess->session_close in iscsi_post_login_handler() before attaching a
-non-leading connection to the session.
+[1]: https://lore.kernel.org/r/sashiko-outbox-214401@kernel.org
 
-> diff --git a/drivers/target/iscsi/iscsi_target_login.c b/drivers/target/i=
-scsi/iscsi_target_login.c
-> index f4df551817116..de0cd95aff017 100644
-> --- a/drivers/target/iscsi/iscsi_target_login.c
-> +++ b/drivers/target/iscsi/iscsi_target_login.c
-> @@ -660,6 +660,33 @@ void iscsit_stop_kthreads(struct iscsit_conn *conn)
->  	spin_unlock(&iscsit_global->ts_bitmap_lock);
->  }
-> =20
-> +/*
-> + * Drop a connection whose kthreads are already running but that must no=
-t enter
-> + * full feature phase.  conn->sess must not be touched once this returns.
-> + */
-> +static void iscsi_post_login_fail_conn(struct iscsit_conn *conn)
-> +{
-> +	/*
-> +	 * iscsi_target_tx_thread() only leaves cleanup to this context while
-> +	 * conn_state is TARG_CONN_STATE_IN_LOGIN; otherwise it would reach
-> +	 * iscsit_close_connection() and walk the session being refused.
-> +	 */
-> +	conn->conn_state =3D TARG_CONN_STATE_IN_LOGIN;
-> +	iscsit_stop_kthreads(conn);
-> +	iscsit_dec_conn_usage_count(conn);
-> +
-> +	if (conn->sock) {
-> +		sock_release(conn->sock);
-> +		conn->sock =3D NULL;
-> +	}
-> +	if (conn->conn_transport->iscsit_wait_conn)
-> +		conn->conn_transport->iscsit_wait_conn(conn);
-> +	if (conn->conn_transport->iscsit_free_conn)
-> +		conn->conn_transport->iscsit_free_conn(conn);
-> +
-> +	iscsit_free_conn(conn);
-> +}
+-- >8 --
+Subject: [PATCH] target: fileio: don't free the aio command under the filesystem
 
-[Severity: Medium]
-Can setting conn->conn_state =3D TARG_CONN_STATE_LOGGED_IN at the start of
-iscsi_post_login_handler() and only resetting it back to
-TARG_CONN_STATE_IN_LOGIN here deadlock with conn->tx_thread?
+With fd_async_io=1 the fileio backend allocates a command that holds the
+kiocb for every read and write and frees it in the completion callback.
+Nothing keeps the command alive until ->read_iter() or ->write_iter()
+return. But a filesystem may use the kiocb after it queued the I/O. ext4
+does that for direct reads:
 
-iscsi_post_login_handler() increments conn->conn_usage_count and sets
-conn->conn_state =3D TARG_CONN_STATE_LOGGED_IN before taking sess->conn_lock
-to check sess->session_close:
+  BUG: KASAN: slab-use-after-free in ext4_dio_read_iter+0x5e1/0x690
+  Workqueue: target_submission target_queued_submit_work
+  Call Trace:
+   <TASK>
+   dump_stack_lvl+0x5d/0x80
+   print_report+0x14b/0x4b0
+   kasan_report+0x108/0x130
+   ext4_dio_read_iter+0x5e1/0x690
+   fd_execute_rw+0xd30/0x1700
+   __target_execute_cmd+0x53/0x190
+   transport_generic_new_cmd+0x65a/0xdb0
+   __target_submit+0x12c/0x380
+   target_queued_submit_work+0x73/0x270
+   process_one_work+0x946/0x1820
+   worker_thread+0x4f1/0xd60
+   kthread+0x364/0x460
+   ret_from_fork+0x525/0x770
+   ret_from_fork_asm+0x1a/0x30
+   </TASK>
 
-drivers/target/iscsi/iscsi_target_login.c:iscsi_post_login_handler() {
-	iscsit_inc_conn_usage_count(conn);
+  Allocated by task 59:
+   __kmalloc_noprof+0x223/0x830
+   fd_execute_rw+0x766/0x1700
+   __target_execute_cmd+0x53/0x190
+   transport_generic_new_cmd+0x65a/0xdb0
+   __target_submit+0x12c/0x380
+   target_queued_submit_work+0x73/0x270
 
-	iscsit_collect_login_stats(conn, ISCSI_STATUS_CLS_SUCCESS,
-			ISCSI_LOGIN_STATUS_ACCEPT);
+  Freed by task 14:
+   kfree+0x267/0x6a0
+   blk_update_request+0x3f5/0x1260
+   blk_mq_end_request+0x59/0x450
+   blk_complete_reqs+0xb0/0x130
+   handle_softirqs+0x20c/0x860
+   run_ksoftirqd+0x31/0x60
 
-	pr_debug("Moving to TARG_CONN_STATE_LOGGED_IN.\n");
-	conn->conn_state =3D TARG_CONN_STATE_LOGGED_IN;
+The read completed and freed the command before ext4_dio_read_iter() got
+to file_accessed(iocb->ki_filp).
 
-	iscsi_set_connection_parameters(conn->conn_ops, conn->param_list);
-	/*
-	 * SCSI Initiator -> SCSI Target Port Mapping
-	 */
-	if (!zero_tsih) {
-		iscsi_set_session_parameters(sess->sess_ops,
-				conn->param_list, 0);
-}
+Do what loop, zloop and fs/backing-file.c do and hold a reference to the
+command until the I/O is submitted. Only complete the target command
+when the last reference is dropped as well. Otherwise the command drops
+its LUN reference while the filesystem still uses the kiocb and the
+device and with it the backing file can go away underneath it.
 
-If an asynchronous transport disconnect sends SIGINT to conn->tx_thread
-during that window (for example via isert_disconnected_handler() ->
-iscsit_cause_connection_reinstatement()), tx_thread sees conn_state !=3D
-TARG_CONN_STATE_IN_LOGIN and enters iscsit_close_connection() on the
-unattached connection:
+Fixes: 769031c92c8b ("scsi: target: target/file: Add support of direct and async I/O")
+Cc: stable@vger.kernel.org
+Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
+---
+ drivers/target/target_core_file.c | 25 +++++++++++++++++++------
+ 1 file changed, 19 insertions(+), 6 deletions(-)
 
-CPU0 (login worker)               CPU1 (conn->tx_thread)
-iscsi_post_login_handler()
-  iscsit_inc_conn_usage_count()
-  conn->conn_state =3D
-    TARG_CONN_STATE_LOGGED_IN
-                                  iscsi_target_tx_thread()
-                                    if (conn_state !=3D
-                                        TARG_CONN_STATE_IN_LOGIN)
-                                      iscsit_take_action_...()
-                                        iscsit_close_connection()
-                                          iscsit_check_conn_usage_count()
-                                            wait_for_completion()
-  iscsi_post_login_fail_conn()
-    conn->conn_state =3D
-      TARG_CONN_STATE_IN_LOGIN
-    iscsit_stop_kthreads()
-      kthread_stop(tx_thread)  <-- deadlocks waiting for tx_thread
-    iscsit_dec_conn_usage_count()
+diff --git a/drivers/target/target_core_file.c b/drivers/target/target_core_file.c
+index ab9824a4852f1..4b23fadd7bb88 100644
+--- a/drivers/target/target_core_file.c
++++ b/drivers/target/target_core_file.c
+@@ -15,6 +15,7 @@
+ #include <linux/timer.h>
+ #include <linux/blkdev.h>
+ #include <linux/slab.h>
++#include <linux/refcount.h>
+ #include <linux/spinlock.h>
+ #include <linux/module.h>
+ #include <linux/vmalloc.h>
+@@ -243,25 +244,34 @@ static void fd_destroy_device(struct se_device *dev)
+ 
+ struct target_core_file_cmd {
+ 	unsigned long	len;
++	long		ret;
+ 	struct se_cmd	*cmd;
++	refcount_t	ref;
+ 	struct kiocb	iocb;
+ 	struct bio_vec	bvecs[];
+ };
+ 
+-static void cmd_rw_aio_complete(struct kiocb *iocb, long ret)
++static void cmd_rw_aio_put(struct target_core_file_cmd *cmd)
+ {
+-	struct target_core_file_cmd *cmd;
+-
+-	cmd = container_of(iocb, struct target_core_file_cmd, iocb);
++	if (!refcount_dec_and_test(&cmd->ref))
++		return;
+ 
+-	if (ret != cmd->len)
++	if (cmd->ret != cmd->len)
+ 		target_complete_cmd(cmd->cmd, SAM_STAT_CHECK_CONDITION);
+ 	else
+ 		target_complete_cmd(cmd->cmd, SAM_STAT_GOOD);
+-
+ 	kfree(cmd);
+ }
+ 
++static void cmd_rw_aio_complete(struct kiocb *iocb, long ret)
++{
++	struct target_core_file_cmd *cmd;
++
++	cmd = container_of(iocb, struct target_core_file_cmd, iocb);
++	cmd->ret = ret;
++	cmd_rw_aio_put(cmd);
++}
++
+ static sense_reason_t
+ fd_execute_rw_aio(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
+ 	      enum dma_data_direction data_direction)
+@@ -288,6 +298,8 @@ fd_execute_rw_aio(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
+ 
+ 	iov_iter_bvec(&iter, is_write, aio_cmd->bvecs, sgl_nents, len);
+ 
++	/* The filesystem may still use the kiocb after it queued the I/O. */
++	refcount_set(&aio_cmd->ref, 2);
+ 	aio_cmd->cmd = cmd;
+ 	aio_cmd->len = len;
+ 	aio_cmd->iocb.ki_pos = cmd->t_task_lba * dev->dev_attrib.block_size;
+@@ -305,6 +317,7 @@ fd_execute_rw_aio(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
+ 
+ 	if (ret != -EIOCBQUEUED)
+ 		cmd_rw_aio_complete(&aio_cmd->iocb, ret);
++	cmd_rw_aio_put(aio_cmd);
+ 
+ 	return 0;
+ }
 
-In addition, iscsi_set_session_parameters() mutates sess->sess_ops and
-iscsit_collect_login_stats() records an accepted login before the session
-is checked under sess->conn_lock.  Checking whether the session is closing
-before transitioning conn->conn_state or mutating session state would
-avoid this window.
-
->  void iscsi_post_login_handler(
->  	struct iscsi_np *np,
->  	struct iscsit_conn *conn,
-> @@ -690,6 +717,20 @@ void iscsi_post_login_handler(
->  		conn->param_list =3D NULL;
-> =20
->  		spin_lock_bh(&sess->conn_lock);
-> +		/*
-> +		 * The skip filter in iscsi_login_non_zero_tsih_s2() sampled this
-> +		 * before the negotiation.  Re-test under the lock that serialises
-> +		 * against the ->nconn test in iscsit_close_connection().
-> +		 */
-> +		if (atomic_read(&sess->session_close)) {
-> +			spin_unlock_bh(&sess->conn_lock);
-> +			pr_err("iSCSI session is closing, failing login on CID: %u\n",
-> +			       conn->cid);
-> +			iscsi_post_login_fail_conn(conn);
-> +			/* Last access to @sess: this lets close_session() free it. */
-> +			iscsit_dec_session_usage_count(sess);
-> +			return;
-> +		}
->  		atomic_set(&sess->session_continuation, 0);
->  		if (sess->session_state =3D=3D TARG_SESS_STATE_FAILED) {
->  			pr_debug("Moving to"
-
-[Severity: High]
-Does checking only sess->session_close here still allow a non-leading
-connection to attach to a session that is already tearing down?
-
-iscsi_login_non_zero_tsih_s2() skips sessions that have any of
-session_fall_back_to_erl0, session_logout, session_close or
-ISCSI_TF_EXPIRED set, but iscsi_post_login_handler() only re-checks
-session_close, and iscsit_close_connection() only sets session_close when
-sess->nconn reaches 0 in the ERL=3D0 fallback branch.
-
-For example, if a session has one active connection (conn1) when conn2
-passes iscsi_login_non_zero_tsih_s2(), sess->session_state is
-TARG_SESS_STATE_LOGGED_IN, so sess->session_continuation remains 0 while
-conn2 negotiates holding session_usage_count.  If conn1 then closes via a
-connection logout (or ERL=3D2 failure) and the Time2Retain timer expires,
-iscsit_handle_time2retain_timeout() sets ISCSI_TF_EXPIRED and calls
-iscsit_close_session(sess, false) without setting sess->session_close:
-
-CPU0 (conn1 / timer)              CPU1 (conn2 login)
-iscsit_close_connection(conn1)
-  sess->session_state =3D
-    TARG_SESS_STATE_FAILED
-  iscsit_start_time2retain_...()
-<softirq>
-  iscsit_handle_time2retain_...()
-    sess->time2retain_timer_flags |=3D
-      ISCSI_TF_EXPIRED
-    iscsit_close_session(sess, false)
-                                  iscsi_post_login_handler(conn2)
-                                    spin_lock_bh(&sess->conn_lock)
-                                    atomic_read(&sess->session_close) =3D=
-=3D 0
-                                    list_add_tail(&conn2->conn_list, ...)
-                                    atomic_inc(&sess->nconn)
-                                    spin_unlock_bh(&sess->conn_lock)
-      if (atomic_read(&sess->nconn))
-        BUG()  <-- kernel panic (or kfree(sess) if past the nconn check)
-
-Similarly, in a multi-connection session (nconn =3D=3D 2) falling back to
-ERL=3D0, when the first connection closes it sets session_fall_back_to_erl0
-and session_stop_active under sess->conn_lock without setting
-session_close, and calls iscsit_stop_session().  If conn2 attaches in
-iscsi_post_login_handler() before the second connection takes
-sess->conn_lock in iscsit_close_connection(), the second connection
-decrements nconn from 2 to 1, sees session_stop_active is already 1 and
-returns early:
-
-drivers/target/iscsi/iscsi_target.c:iscsit_close_connection() {
-	if (atomic_read(&sess->nconn)) {
-		if (!atomic_read(&sess->session_reinstatement) &&
-		    !atomic_read(&sess->session_fall_back_to_erl0)) {
-			spin_unlock_bh(&sess->conn_lock);
-			return 0;
-		}
-		if (!atomic_read(&sess->session_stop_active)) {
-			atomic_set(&sess->session_stop_active, 1);
-			spin_unlock_bh(&sess->conn_lock);
-			iscsit_stop_session(sess, 0, 0);
-			return 0;
-		}
-		spin_unlock_bh(&sess->conn_lock);
-		return 0;
-	}
-}
-
-That leaves conn2 stranded on a session with session_fall_back_to_erl0
-set, which iscsit_release_sessions_for_tpg() and lio_tpg_close_session()
-both skip during TPG teardown.  A CLOSESESSION logout also sets
-sess->session_logout under sess->conn_lock in iscsit_logout_closesession()
-before sess->session_close is set in
-iscsit_logout_post_handler_closesession().
-
-Re-checking the full teardown condition (session_close,
-session_fall_back_to_erl0, session_logout, and ISCSI_TF_EXPIRED under
-se_tpg->session_lock) in iscsi_post_login_handler() would close these
-windows as well.
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1794732723.gi=
-t.danjwade95@gmail.com?part=3D2
+-- 
