@@ -1,65 +1,53 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=45.254.49.197
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794743271;
-	b=BdK9H1y+HNRqD/jOpQfiJ8CK50RxEZMCjwgIS48DNkylfGZf+h7yYt+dLR/rohWShFPk
-	 wfY+Vi1XUiR4xQoz/9dl0reIiXKOG5wLW7gkB4jYbbvKAp0onbjRpWAq3h6DDbAxHfbTR
-	 5/PaQlaVaf7TtFwba6zsHiW9KlQbLjzo0EerdKKIi48ZFuJLc3WH+ltRAnMLBo+gAqRpL
-	 ov61lFfeKEVmTbros4bY5hLqTBfdHKhysZz363XUX2UJKA7MroJWDEdJE++rHrOfqDHYG
-	 NlZSY4qxT1OqOgEdTD541oNseZI8+FDCzpXM+gOKg5I+2qmGEiQp5Da0bFa+VHsozfA==
+	t=1794743287;
+	b=z72qG3YFYtZhfeZ2NEEFhIquZuVBvWfCmLwPKmufKC+ZvewvaUbOX8wQ7y405t7OTutu
+	 bZUQjV7yF6tRXjZBXIvIRXa56bCrnisiexaDQOURlkmogHipxFQ3I3+4r7Tori5Eyp0c1
+	 WjuHJ0gH2Ar3c+3HBo7JEaQ5sf7hj7dMunGGBK6/Gu//c2+81VrbDdJxONzP4eXIOYsp7
+	 y/OoN8pe29zNhE3IZ1hc86FXTekoVu6nwZZNoIkhui0HmnBGkm0SZrjbS4v2KAvoktndh
+	 S+/7Z10R+ZEdS0qVAVvkMmK05yrmGWerMVbMdHLnbnbu/1NzH8B6QKFiMFZr5RO7D/Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794743271;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:
-	 Content-Transfer-Encoding:In-Reply-To;
-	bh=dUUoDFkPJkBg6tiiX+gwUNqdlWB0vRGU4J1TlhHh7ZE=;
-	b=iuKSIOwNdjXAi2+nKsqu7pIfpzXuLtuj3wXCa1g9MN5BFnFnH+efqOzfUtJXvT2zUGGl
-	 V9IfHEzKQzynFa9Fuo1ssXUF+7C+Eoevg9R/uDVp3b207QzEgfuu6a4+z5JoRhmzh2QN0
-	 9vJY2NJZgqRfrAE94UuSb7lSNUhcz8q8wGqjWRw5n7k7BXCLYZBSkg22ZgvSiHJnnwpNY
-	 2bXzqhTqJYzU82V3hEswRLXZDMXOPwMPocN2bf1yYrFAEINhs1DN1LNIND4gakdX7BwOF
-	 /NBQXI11IeC+qk96wRGrOuIRB815lx2fweUabl5k2cTyNpurMwEGTlfjb0o79097iFQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794743287;
+	h=DMARC-Filter:Received:From:To:Cc:Subject:Date:Message-ID:
+	 Content-Type:Content-Transfer-Encoding:MIME-Version:X-HM-Tid:
+	 X-HM-MType:X-HM-Spam-Status:DKIM-Signature;
+	bh=sEIXH/msDV9GvyF0+qxvVFtvVjXp874INh9AATinf40=;
+	b=RlBy9Xgi5Avh3jI7PZFRzHvy1vomMHRaAVApGrV/EUKY21JWrnLKbk6calSA3UJNukFf
+	 HHPA1fpg7BtokeNm93oaYaP0zahmuHQaALGTAAJr0xIYAsNhUxOidAZ2uSa6dUQ5nva/8
+	 ltTIDC5LZICljGTVZatcAKw+pJ6yZXnC72G0UqTuImovecWDDkXEt4bbVtoY2GwX7ZtV1
+	 KSyRNUC4jLib4v/uwSp/E/T2s/5MjCZ+be2SVbj7BpQ2gBQu6CBhdLbhWd5RGpQnrk3Zb
+	 btCvLxIUigKTkYsiEkSJJQEWKhK0su8W6eabvu2WrDnfRHaxEJI5JSxESCEblUZtR+A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=O5UCROmp;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=seu.edu.cn;
+	spf=pass smtp.mailfrom=seu.edu.cn;
+	dkim=pass header.d=seu.edu.cn header.i=@seu.edu.cn header.a=rsa-sha256 header.s=default header.b=TNPpIQ2t;
+	arc=none smtp.remote-ip=45.254.49.197
+Received: from mail-m49197.qiye.163.com (mail-m49197.qiye.163.com [45.254.49.197])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E5C6D606A32E;
-	Sun, 15 Nov 2026 11:47:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 00AFC606A8A0;
+	Sun, 15 Nov 2026 11:48:05 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 00AFC606A8A0
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=seu.edu.cn
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=O5UCROmp
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0FF671F000C4;
-	Sun, 15 Nov 2026 11:47:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794743270;
-	bh=dUUoDFkPJkBg6tiiX+gwUNqdlWB0vRGU4J1TlhHh7ZE=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=O5UCROmpYOxPof//EVMXlzhE8CwpBAuLxySuhjVJTwgdWIcUjDEHfxQDjag+uTRua
-	 Z+qDIjnj4mqHBNrUw8Ko1zjkZMcqAeFq8ldvZlzCVbByFB+ptCuml13g6R68XiAcOc
-	 tTmUPUcRTu4mDvyiHtXFi/q4pZoMhhtkVDTdv1WqLRxEzoDBelkcsk5jYXJt2EAUob
-	 xjg6qsjtw4gR2WGGuYhHVN3Y9VjEoACQTHM3FtneMm5yNVilA99bE1xWageT1rHDiS
-	 UNAqlNNFNjgatsQNOofsxEUu3m18tcJw6JldfrHIojxyBAVmlXl979klg5KOmmNJfI
-	 Ivyq26TJMKVYg==
-Date: Sun, 15 Nov 2026 12:47:41 +0100
-From: Christian Brauner <brauner@kernel.org>
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Chris Down <chris@chrisdown.name>, linux-fsdevel@vger.kernel.org, 
-	Jann Horn <jannh@google.com>, Chris Mason <mason@kernel.org>, 
-	Josef Bacik <josef@toxicpanda.com>, Christoph Hellwig <hch@lst.de>, linux-block@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org, 
-	Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>, linux-scsi@vger.kernel.org, 
-	target-devel@vger.kernel.org, driver-core@lists.linux.dev, linux-mm@kvack.org, 
-	bpf@vger.kernel.org, linux-security-module@vger.kernel.org, selinux@vger.kernel.org, 
-	apparmor@lists.ubuntu.com, linux-nfs@vger.kernel.org, netdev@vger.kernel.org, 
-	fuse-devel@lists.linux.dev, linux-efi@vger.kernel.org, xen-devel@lists.xenproject.org, 
-	ocfs2-devel@lists.linux.dev, linux-s390@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, 
-	linux-usb@vger.kernel.org, linux-erofs@lists.ozlabs.org, linux-kselftest@vger.kernel.org
-Subject: Re: [PATCH RFC v2 33/42] fs: add file_check_backing()
-Message-ID: <20261115-boxen-mundschutz-jacht-0ab871beca58@brauner>
-References: <20261114-work-loop-pseudo-v2-0-98639a2286fb@kernel.org>
- <20261114-work-loop-pseudo-v2-33-98639a2286fb@kernel.org>
- <20261114120557.4bc1eb6e57218cdc@chrisdown.name>
- <CAOQ4uxhGxpBtMZ5kfuzR1tQAewiecoX7UjXQRo91QjJHH9T_Yw@mail.gmail.com>
+	dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.a=rsa-sha256 header.s=default header.b=TNPpIQ2t
+Received: from [192.168.17.1] (unknown [124.79.98.159])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 54b7e04e2;
+	Sun, 15 Nov 2026 19:47:57 +0800 (GMT+08:00)
+From: Hongyan Xu <getshell@seu.edu.cn>
+To: Paul Ely <paul.ely@broadcom.com>,
+ James E.J. Bottomley <James.Bottomley@HansenPartnership.com>,
+ Martin K. Petersen <mkp@kernel.org>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+ stable@vger.kernel.org, Nigel Kirkland <nigel.kirkland@broadcom.com>
+Subject:
+ [PATCH v2] scsi: lpfc: drain all CQ work before releasing queue dependencies
+Date: Sun, 15 Nov 2026 19:47:54 +0800
+Message-ID: <179474327480.103840.7747335244166055751@seu.edu.cn>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -69,70 +57,144 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAOQ4uxhGxpBtMZ5kfuzR1tQAewiecoX7UjXQRo91QjJHH9T_Yw@mail.gmail.com>
+X-HM-Tid: 0aa1df09173903a1kunmbac61c98bf791
+X-HM-MType: 10
+X-HM-Spam-Status: e1kfGhgUHx5ZQUtXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVkZSE5CVkNOHUhPHxoaQksaSFYeHw
+	5VEwETFhoSFyQUDg9ZV1kYEgtZQVlKSU9VTEJVQkNVSk5CWVdZFhoPEhUdFFlBWUtVS1VLVUtZBg
+	++
+DKIM-Signature: a=rsa-sha256;
+	b=TNPpIQ2tCMYBiOQcudke4EaZmDSD3MEuvEinUVh8CbYmM6FZJPlSmrci2JtT1S1nY/xaE2tW1cCA/UJ8Q/4udV3dRwtA/SgOV8Cc4hhZ7byX1l8cdLJjEwnpZazbEdgg51UdYVYsZPkx7fRNt0woirKrtNimVbdGmYU/MWAw7Aw=; c=relaxed/relaxed; s=default; d=seu.edu.cn; v=1;
+	bh=sEIXH/msDV9GvyF0+qxvVFtvVjXp874INh9AATinf40=;
+	h=date:mime-version:subject:message-id:from;
 
-On Sun, Nov 15, 2026 at 12:19:57AM +0100, Amir Goldstein wrote:
-> On Sat, Nov 14, 2026 at 9:06 PM Chris Down <chris@chrisdown.name> wrote:
-> >
-> > Hi Christian,
-> >
-> > Christian Brauner writes:
-> > >+      /* Look through stacking filesystems at the inode with the data. */
-> > >+      if (d_real_inode(file->f_path.dentry)->i_sb->s_iflags & SB_I_PSEUDO)
-> > >+              return -EINVAL;
-> >
-> > This looks good in general, but what the bots said about O_PATH files
-> > here is real. With FMODE_PATH this is reached for a file that was never
-> > opened, so on overlayfs nothing has been through ovl_open() to look up
-> > the lowerdata of a metacopy file yet. ovl_d_real() then does the lookup
-> > itself, and when that fails it hits the WARN(1) at its end and returns
-> > the overlayfs dentry, so the check passes as well.
-> >
-> > Only fuse passes FMODE_PATH, so it takes CAP_SYS_ADMIN to get there, but
-> > it's easy to trigger with that. From a quick test with a metacopy file
-> > whose redirect into a data-only layer points at nothing, registering an
-> > O_PATH fd of it with FUSE_DEV_IOC_BACKING_OPEN gives
-> >
-> >      ovl_d_real(/f, 0): real dentry not found
-> >      WARNING: fs/overlayfs/super.c:79 at ovl_d_real+0xc9/0x210
-> >      [...]
-> >       file_check_backing+0x308/0x5e0
-> >       fuse_backing_new+0x219/0x4a0
-> >       fuse_backing_open+0xe8/0x390
-> >       fuse_dev_ioctl+0x53a/0x7d0
-> >
-> > and the ioctl still succeeds. A normal open of that file fails with
-> > ENOENT, so nothing could have used it as a backing file anyway, but with
-> > panic_on_warn this is now a panic.
-> >
-> > Maybe ovl_d_real() should just stop warning when the lookup fails, now
-> > that it has a caller that isn't trace_uprobe?
-> 
-> Yeh I guess that this needs to be a Fixes for lazy data lookup.
+A delayed CQ handler can remain on a timer after an HBA workqueue flush.
+Disabling it only in the final per-queue free also misses peer resources:
+release_hdwq() frees EQs before the ELS, NVMe LS and mailbox CQs, while a
+slow CQ callback still updates its associated EQ even for an empty CQ.
 
-I have a fix for that.
+Disable both delayed works for every published CQ before releasing any
+queues. Once all CQ timers are disabled, flush the HBA workqueue so direct
+CQ handlers have completed and cannot rearm a delayed handler. Only then
+release fast queues, EQs and the remaining slow queues. Keep the existing
+poll-list cleanup ahead of the drain and retain the caller's interrupt
+and HBA shutdown requirements. In PCI error recovery, join the registered
+interrupt handlers before queue destruction rather than afterwards.
 
-> The correct fix would be to teach all the callers to deal with an error.
+Keep synchronous per-queue disabling for allocation-error cleanup and
+initialize both delayed work items before queue allocation can fail.
+The global traversal uses the same existing CQ inventory that teardown
+releases and accepts NULL entries from partial setup. No new global queue
+list or lifetime lock is introduced.
 
-I've also implemented that. It wasn't that hard and it's also a bug. Not
-a bad one but still.
+Found by the author's in-house static analysis tool.
 
-> > The check would still pass
-> > for an O_PATH file whose lowerdata couldn't be looked up at that point,
-> > though.
-> 
-> One observation relevant to this patch set is that a datadir layer has no
-> business being a pseudo fs and that can and should be blocked explicitly
-> at overlayfs mount time.
+Fixes: 32517fc0975b ("scsi: lpfc: Rework EQ/CQ processing to address interrupt coalescing")
+Cc: stable@vger.kernel.org
+Link: https://lore.kernel.org/all/20260928134154.1595-1-getshell@seu.edu.cn/
+Signed-off-by: Hongyan Xu <getshell@seu.edu.cn>
+Signed-off-by: Zehao Gao <gaozehao@iie.ac.cn>
+---
 
-I agree.
+Discovery: found by the author's in-house static analysis tool.
 
-> The other observation is that fuse_passthrough_open() should probably
-> check the backing_file that was opened for io in addition to checking
-> in fuse_backing_open(), which could have different FMODE and specifically
-> could be FMODE_PATH.
+ drivers/scsi/lpfc/lpfc_init.c | 36 +++++++++++++++++++++++++++++++++--
+ drivers/scsi/lpfc/lpfc_sli.c  |  7 +++++--
+ 2 files changed, 39 insertions(+), 4 deletions(-)
 
-Sounds good.
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 6df5f4e..0724dd8 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -10808,6 +10808,37 @@ lpfc_sli4_release_queues(struct lpfc_queue ***qs, int max)
+ 	*qs = NULL;
+ }
+ 
++static void lpfc_sli4_disable_cq_work(struct lpfc_queue *cq)
++{
++	if (!cq)
++		return;
++
++	disable_delayed_work_sync(&cq->sched_irqwork);
++	disable_delayed_work_sync(&cq->sched_spwork);
++}
++
++static void lpfc_sli4_drain_cq_work(struct lpfc_hba *phba)
++{
++	struct lpfc_sli4_hba *sli4 = &phba->sli4_hba;
++	unsigned int i;
++
++	if (sli4->hdwq)
++		for (i = 0; i < phba->cfg_hdw_queue; i++)
++			lpfc_sli4_disable_cq_work(sli4->hdwq[i].io_cq);
++
++	if (sli4->nvmet_cqset)
++		for (i = 0; i < phba->cfg_nvmet_mrq; i++)
++			lpfc_sli4_disable_cq_work(sli4->nvmet_cqset[i]);
++
++	lpfc_sli4_disable_cq_work(sli4->els_cq);
++	lpfc_sli4_disable_cq_work(sli4->nvmels_cq);
++	lpfc_sli4_disable_cq_work(sli4->mbx_cq);
++
++	/* Direct CQ work cannot rearm the disabled delayed work. */
++	if (phba->wq)
++		flush_workqueue(phba->wq);
++}
++
+ static inline void
+ lpfc_sli4_release_hdwq(struct lpfc_hba *phba)
+ {
+@@ -10868,6 +10899,7 @@ lpfc_sli4_queue_destroy(struct lpfc_hba *phba)
+ 	spin_unlock_irq(&phba->hbalock);
+ 
+ 	lpfc_sli4_cleanup_poll_list(phba);
++	lpfc_sli4_drain_cq_work(phba);
+ 
+ 	/* Release HBA eqs */
+ 	if (phba->sli4_hba.hdwq)
+@@ -15130,9 +15162,9 @@ lpfc_sli4_prep_dev_for_reset(struct lpfc_hba *phba)
+ 	/* stop all timers */
+ 	lpfc_stop_hba_timers(phba);
+ 
+-	lpfc_sli4_queue_destroy(phba);
+-	/* Disable interrupt and pci device */
++	/* Join interrupt handlers before releasing their queues. */
+ 	lpfc_sli4_disable_intr(phba);
++	lpfc_sli4_queue_destroy(phba);
+ 	pci_disable_device(phba->pcidev);
+ }
+ 
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 9173263..1f56978 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -15815,6 +15815,9 @@ lpfc_sli4_queue_free(struct lpfc_queue *queue)
+ 	if (!queue)
+ 		return;
+ 
++	disable_delayed_work_sync(&queue->sched_irqwork);
++	disable_delayed_work_sync(&queue->sched_spwork);
++
+ 	if (!list_empty(&queue->wq_list))
+ 		list_del(&queue->wq_list);
+ 
+@@ -15879,6 +15882,8 @@ lpfc_sli4_queue_alloc(struct lpfc_hba *phba, uint32_t page_size,
+ 	INIT_LIST_HEAD(&queue->page_list);
+ 	INIT_LIST_HEAD(&queue->child_list);
+ 	INIT_LIST_HEAD(&queue->cpu_list);
++	INIT_DELAYED_WORK(&queue->sched_irqwork, lpfc_sli4_dly_hba_process_cq);
++	INIT_DELAYED_WORK(&queue->sched_spwork, lpfc_sli4_dly_sp_process_cq);
+ 
+ 	/* Set queue parameters now.  If the system cannot provide memory
+ 	 * resources, the free routine needs to know what was allocated.
+@@ -15909,8 +15914,6 @@ lpfc_sli4_queue_alloc(struct lpfc_hba *phba, uint32_t page_size,
+ 	}
+ 	INIT_WORK(&queue->irqwork, lpfc_sli4_hba_process_cq);
+ 	INIT_WORK(&queue->spwork, lpfc_sli4_sp_process_cq);
+-	INIT_DELAYED_WORK(&queue->sched_irqwork, lpfc_sli4_dly_hba_process_cq);
+-	INIT_DELAYED_WORK(&queue->sched_spwork, lpfc_sli4_dly_sp_process_cq);
+ 
+ 	/* notify_interval will be set during q creation */
+ 
+-- 
+2.50.1.windows.1
