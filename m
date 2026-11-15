@@ -1,53 +1,53 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794785619;
-	b=jBbozLSWpH7JBcMadmfc8rBbi52+mYGQVkVFD1OGCTjklxN0mS1WN+n+Vo41sy+zX7Lg
-	 BG+RVpwtSSnnqCoSRfZV8lLtaZlCK1jSh0PBqj1Zc2wvkIYWGSfvUm6ervJZhlaOeENBo
-	 /gd7LpDzPpfS3cbdHl1al3wAYTKDEtMAsLH66u3wEOmO+5+K7fgpOHMJLXBDygXa+svAu
-	 794Z85IGLNduVRi1pU2YkaMr26IDWymAIfzokNHXGf3lQ/qdEolxzhdx59g7oBFNYwo23
-	 bjGviY57sa6R9SwxEeyQvDLunddH83aVGF9Xh8dOsOixbL4fy62Bn5l9ld9ttPDFOog==
+	t=1794785616;
+	b=Jg1mnsnbR33v0GpMkZcAXgz0G84R6h0ibQS1KHIDAiggSb+ujwkeyDb4Ls4KjH4SSEJM
+	 prgy0qxNZ8SGvmCRxqW2sHn9Q8xGGGlteNbM8nJw+kxXX5Fk5eZngG58UtP6F3xvpM5PF
+	 H/3yoitZv7m0IklGDtxQjobngO64erOe73P3KtiutSiN2lLn07TLYRn+dc6gXQsseIORr
+	 jb1CndwXSeTntsLtA44uFfUbfDUk3CaOPXkn+giFUDLzFH1ilPU9nEVgG23WomG0/dM0U
+	 qq5EiMrgb6sPqt2Oi7MW6uQE16u23VpG4w51ODVyroekVH8QO5nAJ+4D8UKNc5VM6Ww==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794785619;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794785616;
 	h=Received:DKIM-Signature:From:To:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=Mg3gsmkPFRptpu5zgJ/Q/+WSFPkUQxi1Q1ImTyGQwfw=;
-	b=M7bk/NNwzvcQyKxwQCOJYgoF9lAgCUktF0xTXpS83hWIpcfeX28MUQqUiIawAD59evyX
-	 JuPnbyVQOp/nWJVQQ/vSIACQ4goPYny/6LFAjIj5LhJUhIBN1ImCTNG1QIj0NnqBQ/Msa
-	 1KyDeGpdpJ8NLEtkO0157AmYLhAGeADHr0PWuEwE/Utmf4Q4im4FCdVWXDbJMsdDYR9Ld
-	 8oeJFGPfmC/Fgs5UzCJB1UVM66YWyeYizONeoM1nu8yliGONT6bB+aSs9QpACMFHHja91
-	 GxeVh0voVjlrCHK9ROVfZC7JAwbO8lbmD5ABKJjij96sThDDwZwSR0MAVa96lGW/APg==
+	bh=cXhc1JETHrCa4ztbt/iIQGS3A3bf9fAOS2+YChTsM7o=;
+	b=deGbBUochrhShGZie1SjWetT9qqHtkfLHMFD5YPgsp45GvNTyKAAx0BuJrEV68lv5BnM
+	 3p4ySnh4fQ4bH41gvtvBdEnBtcrrZJfWt9FCCCNqKpSusUr7RpS3LVVNr6nRAxfP/N/ef
+	 GknRyjIQafa4Kv+pFjUWaKcytM+Im0svDAsr7irV5puwY5ok8Fvj0aemspPEL+7Iy0dAL
+	 EIQlyueCXcGLqLcodawiIQ84LMo5JTf0jPqCfm7w/iOZirceFWxQguiWU7WFXqiFT39/H
+	 xq8DwsxqIX5uVeVNhwX1Q8ZVIVMmiga7ckvylptfIWvXEjALonVW3L3AjmFkivhuECg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=G2f+rT+u;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=UkFD++cM;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 855C9606A329;
-	Sun, 15 Nov 2026 23:33:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6457F606A33D;
+	Sun, 15 Nov 2026 23:33:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=G2f+rT+u
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AAC801F000C4;
-	Sun, 15 Nov 2026 23:33:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=UkFD++cM
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8638A1F000C4;
+	Sun, 15 Nov 2026 23:33:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794785619;
-	bh=Mg3gsmkPFRptpu5zgJ/Q/+WSFPkUQxi1Q1ImTyGQwfw=;
+	s=k20260515; t=1794785616;
+	bh=cXhc1JETHrCa4ztbt/iIQGS3A3bf9fAOS2+YChTsM7o=;
 	h=From:To:Subject:Date:In-Reply-To:References;
-	b=G2f+rT+uwFHoGf2DCs7h9lYknwFmLwTP2wGgVzlKxFrdoJph4k2BhrWZ4QTs8gzdS
-	 xweasfYl459iCT1gV362cIBj0h+IQnzGw9KU8L9mEd8BP1Wd9l9O+VoUJLOBFjWjcm
-	 IY2qEdWvx2ONuFaSjoWdOnMg6lu2HP3TSwnYrd8iUnPEEHojcFpkv9Jn5bc9ZiZq3p
-	 7DRxZmHatNGZtZ+PbcMKDx0oEHlX80pUH/had5vDMVmjD+8M5/OrCWLXcVoHB9QOQB
-	 DsEhiyCdbcTsCYz2qvAtBQL7iMwUd7N20pd0X6qo3yrYKoT/o3JH6FgfeWLJFwPW2Y
-	 1PCLJ9pzcpbJQ==
+	b=UkFD++cMFBpOCskFqLj7p1SYAIalQAAiUPI/bubBb7NeE0Z6NbZh6NgYzj7tkb4TS
+	 kdoqx6ne5nBaH9lH12jEACo7HOU3rNqAUWqe48ujql4jSZZpsvrluI+yL4AWQUPLo9
+	 CEy3uLSZWeVfC1q4IbKICP7k7foNBx0qC3Fucm87UD601sdmkWRCUC9f99F+AHg00A
+	 OZRa/kWg0uwWWkrex7rQFz/xQu2TJ4nJcOFyROZPT3ATgOHOHCKGNL7+6R6NhXJZUy
+	 QSGNZunGzOqXKksKcCNpalxFRNqqlKyW48lz5pDrMBVQIjUSLpagv/wpDgvL3HHmGT
+	 PW45ljvstcetw==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: Jens Axboe <axboe@kernel.dk>,
 	linux-block@vger.kernel.org,
 	Christoph Hellwig <hch@lst.de>,
 	linux-scsi@vger.kernel.org,
 	"Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH v10 09/13] zloop: add degrade_element control command
-Date: Mon, 16 Nov 2026 08:33:23 +0900
-Message-ID: <20261115233327.941586-10-dlemoal@kernel.org>
+Subject: [PATCH v10 06/13] zloop: fix ordered zone append handling
+Date: Mon, 16 Nov 2026 08:33:20 +0900
+Message-ID: <20261115233327.941586-7-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.56.0
 In-Reply-To: <20261115233327.941586-1-dlemoal@kernel.org>
 References: <20261115233327.941586-1-dlemoal@kernel.org>
@@ -62,271 +62,223 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Allow users to mark storage elements of a zloop device as degraded using
-the new "degrade_element" control command. The element to degrade is
-indicated using the element_id option. Example:
+For oredered zone append commands, the function
+zloop_set_zone_append_sector() increments a zone write pointer without
+checking if the zone is already open (implicitly or explicitly). This
+check is done only when the command is later executed using a work item,
+and the zone is only then implicitly open if needed. This creates a short
+time window where a report zone can show an empty zone with a write
+pointer that is not equal to the zone start sector, which is incorrect.
 
-echo "degrade_element id=0,element_id=2" > /dev/zloop-control
+Calling zloop_do_open_zone() in zloop_set_zone_append_sector() is required
+but introduces locking complexity as the zone mutex cannot be taken in the
+context of zloop_queue_rq(). Instead introduce the ordered workqueue
+append_workqueue to handle zone append commands when ordered zone append
+is enabled. This ensure that all zone append operations are executed in
+the order of there submission. This removes the need for setting the
+command sector in the context of zloop_queue_rq() and we can rely on the
+reguar command execution done by zloop_rw(). With this change,
+zloop_seq_write_prep() is simplified and zloop_set_zone_append_sector() is
+removed entirely.
 
-If the element ID identifies an all access storage element, both read and
-write operations targeting a zone served by the degraded element are
-failed. In the case of a partial access storage element, any write access
-to a zone whose write element is degraded will fail, and read accesses
-to a zone whose read element is degraded will result in an error.
+This change does reduce the command execution concurrency and impact
+performance with ordered zone append enabled for file systems using zone
+append. This is however not a critical option and the default unordered
+zone append handling is unaffected.
 
-The zoned_loop.rst documentation file is also updated to explain this new
-feature.
-
+Fixes: fcc6eaa3a03a ("zloop: introduce the ordered_zone_append configuration parameter")
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Martin K. Petersen <mkp@kernel.org>
-Reviewed-by: Hannes Reinecke <hare@kernel.org>
 ---
- .../admin-guide/blockdev/zoned_loop.rst       |  22 +++-
- drivers/block/zloop.c                         | 100 +++++++++++++++++-
- 2 files changed, 119 insertions(+), 3 deletions(-)
+ drivers/block/zloop.c | 115 +++++++++++++++++-------------------------
+ 1 file changed, 47 insertions(+), 68 deletions(-)
 
-diff --git a/Documentation/admin-guide/blockdev/zoned_loop.rst b/Documentation/admin-guide/blockdev/zoned_loop.rst
-index 80a564836c1b..d378fbdc1983 100644
---- a/Documentation/admin-guide/blockdev/zoned_loop.rst
-+++ b/Documentation/admin-guide/blockdev/zoned_loop.rst
-@@ -63,6 +63,7 @@ The options available for the add command can be listed by reading the
- 	$ cat /dev/zloop-control
-         add id=%d,capacity_mb=%u,zone_size_mb=%u,zone_capacity_mb=%u,conv_zones=%u,max_open_zones=%u,base_dir=%s,nr_queues=%u,queue_depth=%u,buffered_io,zone_append=%u,ordered_zone_append,discard_write_cache,stor_elements=%u
-         remove id=%d
-+        degrade_element id=%d,element_id=%u
- 
- In more details, the options that can be used with the "add" command are as
- follows.
-@@ -144,7 +145,26 @@ the zoned device will not be created.
- To fully delete a zoned device, after executing the remove operation, the device
- base directory containing the backing files of the device zones must be deleted.
- 
--4) Example
-+4) Degrading a storage element
-+------------------------------
-+
-+When storage element emulation is enabled, storage elements can be set in a
-+degraded state to emulate defective storage elements (e.g. defective heads of a
-+hard disk). This is done by issuing the "degrade_element" command to
-+/dev/zloop-control, specifying the ID of the target device and the ID of the
-+storage element to degrade::
-+
-+        $ echo "degrade_element id=X,element_id=Y" > /dev/zloop-control
-+
-+Depending on the type of the storage element specified, a read or write access
-+to sectors of a zone served by a degraded storage element will result in a
-+failure. For partial access storage elements, write accesses are always failed
-+if the write element serving the zone is degraded. Likewise, read accesses are
-+failed if the read element serving the zone is degraded. When storage elements
-+are emulated as all access physical elements, both read and write operations are
-+failed when the storage element serving the zones being accessed is degraded.
-+
-+5) Example
- ----------
- 
- The following sequence of commands creates a 2GB zoned device with zones of 64
 diff --git a/drivers/block/zloop.c b/drivers/block/zloop.c
-index 9a646420a887..7d698b0ce11f 100644
+index 96666742523b..0cf67acf8096 100644
 --- a/drivers/block/zloop.c
 +++ b/drivers/block/zloop.c
-@@ -39,6 +39,7 @@ enum {
- 	ZLOOP_OPT_DISCARD_WRITE_CACHE	= (1 << 11),
- 	ZLOOP_OPT_MAX_OPEN_ZONES	= (1 << 12),
- 	ZLOOP_OPT_STOR_ELEMENTS		= (1 << 13),
-+	ZLOOP_OPT_ELEMENT_ID		= (1 << 14),
- };
+@@ -129,6 +129,7 @@ struct zloop_device {
+ 	struct gendisk		*disk;
  
- static const match_table_t zloop_opt_tokens = {
-@@ -56,6 +57,7 @@ static const match_table_t zloop_opt_tokens = {
- 	{ ZLOOP_OPT_DISCARD_WRITE_CACHE, "discard_write_cache"	},
- 	{ ZLOOP_OPT_MAX_OPEN_ZONES,	"max_open_zones=%u"	},
- 	{ ZLOOP_OPT_STOR_ELEMENTS,	"stor_elements=%u"	},
-+	{ ZLOOP_OPT_ELEMENT_ID,		"element_id=%u"		},
- 	{ ZLOOP_OPT_ERR,		NULL			}
- };
- 
-@@ -82,6 +84,7 @@ enum zloop_stor_elements {
- #define ZLOOP_DEF_ZONE_APPEND		true
- #define ZLOOP_DEF_ORDERED_ZONE_APPEND	false
- #define ZLOOP_DEF_STOR_ELEMENTS		ZLOOP_STOR_ELEMENTS_NONE
-+#define ZLOOP_DEF_ELEMENT_ID		0
- 
- /* Arbitrary limit on the zone size (16GB). */
- #define ZLOOP_MAX_ZONE_SIZE_MB		16384
-@@ -102,6 +105,7 @@ struct zloop_options {
+ 	struct workqueue_struct *workqueue;
++	struct workqueue_struct *append_workqueue;
+ 	bool			buffered_io;
+ 	bool			zone_append;
  	bool			ordered_zone_append;
- 	bool			discard_write_cache;
- 	enum zloop_stor_elements stor_elements;
-+	unsigned int		element_id;
- };
+@@ -590,32 +591,24 @@ static int zloop_seq_write_prep(struct zloop_cmd *cmd)
+ 	 * when submitted.
+ 	 */
+ 	if (is_append) {
+-		/*
+-		 * If ordered zone append is in use, we already checked and set
+-		 * the target sector in zloop_queue_rq().
+-		 */
+-		if (!zlo->ordered_zone_append) {
+-			if (zone->cond == BLK_ZONE_COND_FULL ||
+-			    zone->wp + nr_sectors > zone_end) {
+-				ret = -EIO;
+-				goto out_unlock;
+-			}
+-			cmd->sector = zone->wp;
+-		}
+-	} else {
+-		if (cmd->sector != zone->wp) {
+-			if (zone->wp == ULLONG_MAX)
+-				pr_err("%pg: Zone %u: write to %s zone: sect %llu\n",
+-				       zlo->disk->part0, zone_no,
+-				       blk_zone_cond_str(zone->cond),
+-				       cmd->sector);
+-			else
+-				pr_err("%pg: Zone %u: unaligned write: sect %llu, wp %llu\n",
+-				       zlo->disk->part0, zone_no, cmd->sector,
+-				       zone->wp);
++		if (zone->cond == BLK_ZONE_COND_FULL ||
++		    zone->wp + nr_sectors > zone_end) {
+ 			ret = -EIO;
+ 			goto out_unlock;
+ 		}
++		cmd->sector = zone->wp;
++	} else if (cmd->sector != zone->wp) {
++		if (zone->wp == ULLONG_MAX)
++			pr_err("%pg: Zone %u: write to %s zone: sect %llu\n",
++			       zlo->disk->part0, zone_no,
++			       blk_zone_cond_str(zone->cond),
++			       cmd->sector);
++		else
++			pr_err("%pg: Zone %u: unaligned write: sect %llu, wp %llu\n",
++			       zlo->disk->part0, zone_no, cmd->sector,
++			       zone->wp);
++		ret = -EIO;
++		goto out_unlock;
+ 	}
  
- /*
-@@ -1186,6 +1190,31 @@ static int zloop_report_elements(struct gendisk *disk,
- 	return 0;
+ 	/* Implicitly open the target zone. */
+@@ -625,15 +618,13 @@ static int zloop_seq_write_prep(struct zloop_cmd *cmd)
+ 	}
+ 
+ 	/*
+-	 * Advance the write pointer, unless ordered zone append is in use. If
+-	 * the write fails, the write pointer position will be corrected when
+-	 * the next I/O starts execution.
++	 * Advance the write pointer. If the write fails, the write pointer
++	 * position will be corrected when the next I/O starts execution.
+ 	 */
+-	if (!is_append || !zlo->ordered_zone_append) {
+-		zone->wp += nr_sectors;
+-		if (zone->wp == zone_end)
+-			zloop_mark_full(zlo, zone);
+-	}
++	zone->wp += nr_sectors;
++	if (zone->wp == zone_end)
++		zloop_mark_full(zlo, zone);
++
+ out_unlock:
+ 	spin_unlock(&zone->wp_lock);
+ 	return ret;
+@@ -885,58 +876,27 @@ static void zloop_complete_rq(struct request *rq)
+ 	blk_mq_end_request(rq, sts);
  }
  
-+static int zloop_degrade_element(struct zloop_device *zlo,
-+				 unsigned int element_id)
-+{
-+	struct blk_se *se;
-+	int ret = 0;
-+
-+	if (zlo->stor_elements == ZLOOP_STOR_ELEMENTS_NONE)
-+		return -EOPNOTSUPP;
-+
-+	if (!element_id || element_id > zlo->nr_elements)
-+		return -EINVAL;
-+
-+	mutex_lock(&zlo->stor_elements_lock);
-+
-+	se = &zlo->elements[element_id - 1];
-+	if (READ_ONCE(se->status) <= BLK_SE_STS_DEGRADED)
-+		WRITE_ONCE(se->status, BLK_SE_STS_DEGRADED);
+-static bool zloop_set_zone_append_sector(struct request *rq)
+-{
+-	struct zloop_device *zlo = rq->q->queuedata;
+-	unsigned int zone_no = rq_zone_no(rq);
+-	struct zloop_zone *zone = &zlo->zones[zone_no];
+-	sector_t zone_end = zone->start + zlo->zone_capacity;
+-	sector_t nr_sectors = blk_rq_sectors(rq);
+-
+-	spin_lock(&zone->wp_lock);
+-
+-	if (zone->cond == BLK_ZONE_COND_FULL ||
+-	    zone->wp + nr_sectors > zone_end) {
+-		spin_unlock(&zone->wp_lock);
+-		return false;
+-	}
+-
+-	rq->__sector = zone->wp;
+-	zone->wp += blk_rq_sectors(rq);
+-	if (zone->wp >= zone_end)
+-		zloop_mark_full(zlo, zone);
+-
+-	spin_unlock(&zone->wp_lock);
+-
+-	return true;
+-}
+-
+ static blk_status_t zloop_queue_rq(struct blk_mq_hw_ctx *hctx,
+ 				   const struct blk_mq_queue_data *bd)
+ {
+ 	struct request *rq = bd->rq;
+ 	struct zloop_cmd *cmd = blk_mq_rq_to_pdu(rq);
+ 	struct zloop_device *zlo = rq->q->queuedata;
++	struct workqueue_struct *wq;
+ 
+ 	if (data_race(READ_ONCE(zlo->state)) == Zlo_deleting) {
+ 		rq->rq_flags |= RQF_QUIET;
+ 		return BLK_STS_IOERR;
+ 	}
+ 
+-	/*
+-	 * If we need to strongly order zone append operations, set the request
+-	 * sector to the zone write pointer location now instead of when the
+-	 * command work runs.
+-	 */
+-	if (zlo->ordered_zone_append && req_op(rq) == REQ_OP_ZONE_APPEND) {
+-		if (!zloop_set_zone_append_sector(rq))
+-			return BLK_STS_IOERR;
+-	}
+-
+ 	blk_mq_start_request(rq);
+ 
+ 	INIT_WORK(&cmd->work, zloop_cmd_workfn);
+-	queue_work(zlo->workqueue, &cmd->work);
++	if (zlo->ordered_zone_append && req_op(rq) == REQ_OP_ZONE_APPEND)
++		wq = zlo->append_workqueue;
 +	else
-+		ret = -EINVAL;
-+
-+	mutex_unlock(&zlo->stor_elements_lock);
-+
-+	return ret;
-+}
-+
- static int zloop_execute_remove_element(struct zloop_device *zlo)
- {
- 	struct gendisk *disk = zlo->disk;
-@@ -1830,6 +1859,11 @@ static int zloop_ctl_add(struct zloop_options *opts)
- 	int ret = -EINVAL;
- 	bool restore;
++		wq = zlo->workqueue;
++	queue_work(wq, &cmd->work);
  
-+	if (opts->mask & ZLOOP_OPT_ELEMENT_ID) {
-+		pr_err("Invalid option specified for add\n");
-+		return -EINVAL;
-+	}
-+
- 	__module_get(THIS_MODULE);
- 
- 	nr_zones = opts->capacity >> ilog2(opts->zone_size);
-@@ -2130,6 +2164,49 @@ static int zloop_ctl_remove(struct zloop_options *opts)
- 	return 0;
+ 	return BLK_STS_OK;
  }
+@@ -1029,6 +989,8 @@ static void zloop_free_disk(struct gendisk *disk)
  
-+static int zloop_ctl_degrade_element(struct zloop_options *opts)
-+{
-+	struct zloop_device *zlo;
-+	int ret = 0;
-+
-+	if (!(opts->mask & ZLOOP_OPT_ID)) {
-+		pr_err("No ID specified for degrade_element\n");
-+		return -EINVAL;
-+	}
-+
-+	if (!(opts->mask & ZLOOP_OPT_ELEMENT_ID)) {
-+		pr_err("No element ID specified for degrade_element\n");
-+		return -EINVAL;
-+	}
-+
-+	if (opts->mask & ~(ZLOOP_OPT_ID | ZLOOP_OPT_ELEMENT_ID)) {
-+		pr_err("Invalid option specified for degrade_element\n");
-+		return -EINVAL;
-+	}
-+
-+	ret = mutex_lock_killable(&zloop_ctl_mutex);
-+	if (ret)
-+		return ret;
-+
-+	zlo = idr_find(&zloop_index_idr, opts->id);
-+	if (!zlo || zlo->state == Zlo_creating)
-+		ret = -ENODEV;
-+	else if (zlo->state == Zlo_deleting)
-+		ret = -EINVAL;
-+	if (ret)
-+		goto unlock;
-+
-+	ret = zloop_degrade_element(zlo, opts->element_id);
-+	if (!ret)
-+		pr_info("%pg: degraded element %u\n",
-+			zlo->disk->part0, opts->element_id);
-+
-+unlock:
-+	mutex_unlock(&zloop_ctl_mutex);
-+
-+	return ret;
-+}
-+
- static int zloop_parse_options(struct zloop_options *opts, const char *buf)
- {
- 	substring_t args[MAX_OPT_ARGS];
-@@ -2150,6 +2227,7 @@ static int zloop_parse_options(struct zloop_options *opts, const char *buf)
- 	opts->zone_append = ZLOOP_DEF_ZONE_APPEND;
- 	opts->ordered_zone_append = ZLOOP_DEF_ORDERED_ZONE_APPEND;
- 	opts->stor_elements = ZLOOP_DEF_STOR_ELEMENTS;
-+	opts->element_id = ZLOOP_DEF_ELEMENT_ID;
- 
- 	if (!buf)
- 		return 0;
-@@ -2301,6 +2379,13 @@ static int zloop_parse_options(struct zloop_options *opts, const char *buf)
- 			}
- 			opts->stor_elements = token;
- 			break;
-+		case ZLOOP_OPT_ELEMENT_ID:
-+			if (match_uint(args, &token)) {
-+				ret = -EINVAL;
-+				goto out;
-+			}
-+			opts->element_id = token;
-+			break;
- 		case ZLOOP_OPT_ERR:
- 		default:
- 			pr_warn("unknown parameter or missing value '%s'\n", p);
-@@ -2329,14 +2414,16 @@ static int zloop_parse_options(struct zloop_options *opts, const char *buf)
- enum {
- 	ZLOOP_CTL_ADD,
- 	ZLOOP_CTL_REMOVE,
-+	ZLOOP_CTL_DEGRADE_ELEMENT,
- };
- 
- static struct zloop_ctl_op {
- 	int		code;
- 	const char	*name;
- } zloop_ctl_ops[] = {
--	{ ZLOOP_CTL_ADD,	"add" },
--	{ ZLOOP_CTL_REMOVE,	"remove" },
-+	{ ZLOOP_CTL_ADD,		"add" },
-+	{ ZLOOP_CTL_REMOVE,		"remove" },
-+	{ ZLOOP_CTL_DEGRADE_ELEMENT,	"degrade_element" },
- 	{ -1,	NULL },
- };
- 
-@@ -2384,6 +2471,9 @@ static ssize_t zloop_ctl_write(struct file *file, const char __user *ubuf,
- 	case ZLOOP_CTL_REMOVE:
- 		ret = zloop_ctl_remove(&opts);
- 		break;
-+	case ZLOOP_CTL_DEGRADE_ELEMENT:
-+		ret = zloop_ctl_degrade_element(&opts);
-+		break;
- 	default:
- 		pr_err("Invalid operation\n");
- 		ret = -EINVAL;
-@@ -2407,6 +2497,8 @@ static int zloop_ctl_show(struct seq_file *seq_file, void *private)
- 		tok = &zloop_opt_tokens[i];
- 		if (!tok->pattern)
- 			break;
-+		if (tok->token == ZLOOP_OPT_ELEMENT_ID)
-+			continue;
- 		if (i)
- 			seq_putc(seq_file, ',');
- 		seq_puts(seq_file, tok->pattern);
-@@ -2417,6 +2509,10 @@ static int zloop_ctl_show(struct seq_file *seq_file, void *private)
- 	seq_puts(seq_file, zloop_ctl_ops[1].name);
- 	seq_puts(seq_file, " id=%d\n");
- 
-+	/* Degrade element operation */
-+	seq_puts(seq_file, zloop_ctl_ops[2].name);
-+	seq_puts(seq_file, " id=%d,element_id=%u\n");
-+
- 	return 0;
+ 	fput(zlo->data_dir);
+ 	destroy_workqueue(zlo->workqueue);
++	if (zlo->append_workqueue)
++		destroy_workqueue(zlo->append_workqueue);
+ 	kfree(zlo->base_dir);
+ 	kvfree(zlo);
  }
+@@ -1285,6 +1247,21 @@ static int zloop_ctl_add(struct zloop_options *opts)
+ 		goto out_free_idr;
+ 	}
  
++	/*
++	 * Use an ordered workqueue for strongly ordered zone append operations
++	 * so that we can keep processing the operations in the same order as
++	 * they are submitted.
++	 */
++	if (zlo->ordered_zone_append) {
++		zlo->append_workqueue =
++			alloc_ordered_workqueue("zloop%d_append", WQ_FREEZABLE,
++						zlo->id);
++		if (!zlo->append_workqueue) {
++			ret = -ENOMEM;
++			goto out_destroy_workqueue;
++		}
++	}
++
+ 	if (opts->base_dir)
+ 		zlo->base_dir = kstrdup(opts->base_dir, GFP_KERNEL);
+ 	else
+@@ -1391,6 +1368,8 @@ static int zloop_ctl_add(struct zloop_options *opts)
+ 	kfree(zlo->base_dir);
+ out_destroy_workqueue:
+ 	destroy_workqueue(zlo->workqueue);
++	if (zlo->append_workqueue)
++		destroy_workqueue(zlo->append_workqueue);
+ out_free_idr:
+ 	mutex_lock(&zloop_ctl_mutex);
+ 	idr_remove(&zloop_index_idr, zlo->id);
 -- 
 2.56.0
 
