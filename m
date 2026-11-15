@@ -1,92 +1,91 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.215.171
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.210.176
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794745333;
-	b=nLgsmZlx3wbw5Ph806PSgXzQJ7YbDICUB8ITa6oVe3KpYjtBCnSrCs0egkI7848/Sol7
-	 UCPnUCZyigGpZzBoi8yty9RiQ59GAGMGFrYjXA1x3jCjc+XN0yd2HVvv5yhufy8bgA+dn
-	 KSdQ2m6EAX4539RLdZuwG7BUXcKWT617z4NEDgT3N1dRW4j1qwqgYnDRfm193t76R1Zvh
-	 JirHUm0Di5wsVJJDy7ZO2rn1c+17GGloXwbVashEnNjktVAPjigSuRabzTUbqp6eQulNk
-	 fhggDUytd+ienwFHx+z1RFU+pwGEIf3GpL7zOmAilGXQVONs3/2NwXMwqsIpHYRK1Qw==
+	t=1794745335;
+	b=hTlMadbDI+1FsP+7OpNzSVAoZCby6u9+5eEPQtf3Pv4t6DNsJAn2Ho611cHC1VEi2vjH
+	 M29097nSOZDzLCEMw4PYkOIWoz4F0uElZJ0Paevy/9trzDr1ELZyfYi5TE5Ay4wxeHA7J
+	 LSrk4k1vycFDvEPKrDputQzgFFLwWn0kPLiSd7kyo219tFDAzvdPUOXpqPU8gfTnvuqic
+	 NOew/JmLFrYH38xX2jFFd4m1xlel5OnLJC1nTtXq0bpSN77N1RPgayK/LJvul7p2qphVW
+	 /VFffm0wyuKn9wrvC7Rry/vrrNTn6kyQ68K82cdUzaOozERi02vlsvM/YOkxIGbvZ+A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794745333;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794745335;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
 	 Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=HnFrEsl8I7npZVMdzE8Y8MJP9QyyadjfnIuRiUPsFnw=;
-	b=zvXp6It4yTrgmB7+veFTMIQ2SNz0NFDlUTtE+Jag3om1SpHGLURogMAaNOZqNllEdLi4
-	 GRhCAcTtzx1S9uHA2NgRfCBDgFam9B3fi9zMJBfmHiZoQtu7MhpxqaCWOWUDbIGnl1a4N
-	 LhpV515YJJRZl7LfMBX/C/xVy9qM4qzWzghE8rjl5HuNl7x5ojrYdNPW5I1KJ32v3ioot
-	 dwnJn7rN7h6vNcJGPI9dskQckdA2zD3nSKZOV3JZunFSBRE4NXPwyrGST1WkxFF6gzuJO
-	 K4s4oL1StR/K4ooC9FrMR7omuePMnWieP8vlLJ26mlxjXL42CkpgUoSHEM3bQKTeQrg==
+	bh=pec0ou9WUTALkQPa/wVdhz9fArgdzCN6xOPK5j8ug1o=;
+	b=wwFYVO+7z61RZrQsQHh93euHLzFnAsfBP19iY3G21X54eHN3w81qjG+dQnyDiXTr5/Rn
+	 TBq+pTDG2RehWuAK3q21AuDp8S1vuBfKecNjcYljcbJJCVZxHrljksT87pySx2sdR9PBB
+	 jQMQAyB59E0jxOeEuO6+sIrwPY9q8qpcGq0K1p0U6+KXS/hE/AtXibKxcEUeoVm2u0Gcu
+	 ZO5jIA5rYpFXgtuyYfNGOKA4e8+nCR9HyHSXxtRWhaSUA3TUBkxzKlMZQCzc96K7FnDgj
+	 xNybmh+xlmm+4pssoE8/EGcdBKwcUA47IOaSmnopET+Ai7LTL3BhGZGK8PsJmZBzQrw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=fail header.from=isslab.korea.ac.kr;
 	spf=none smtp.mailfrom=isslab.korea.ac.kr;
-	dkim=pass header.d=isslab-korea-ac-kr.20260707.gappssmtp.com header.i=@isslab-korea-ac-kr.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=iW22mhOB;
-	arc=none smtp.remote-ip=209.85.215.171
-Received: from mail-pg1-f171.google.com (mail-pg1-f171.google.com [209.85.215.171])
+	dkim=pass header.d=isslab-korea-ac-kr.20260707.gappssmtp.com header.i=@isslab-korea-ac-kr.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b="N/YWvHmG";
+	arc=none smtp.remote-ip=209.85.210.176
+Received: from mail-pf1-f176.google.com (mail-pf1-f176.google.com [209.85.210.176])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C6019606A32F
-	for <linux-scsi@vger.kernel.org>; Sun, 15 Nov 2026 12:22:12 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C6019606A32F
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 38604606A32F
+	for <linux-scsi@vger.kernel.org>; Sun, 15 Nov 2026 12:22:15 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 38604606A32F
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20260707.gappssmtp.com header.i=@isslab-korea-ac-kr.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=iW22mhOB
-Received: by mail-pg1-f171.google.com with SMTP id 41be03b00d2f7-cddc597d062so1788558a12.3
-        for <linux-scsi@vger.kernel.org>; Sun, 15 Nov 2026 04:22:12 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20260707.gappssmtp.com header.i=@isslab-korea-ac-kr.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=N/YWvHmG
+Received: by mail-pf1-f176.google.com with SMTP id d2e1a72fcca58-8b29b83fdf1so1280552b3a.2
+        for <linux-scsi@vger.kernel.org>; Sun, 15 Nov 2026 04:22:15 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=isslab-korea-ac-kr.20260707.gappssmtp.com; s=20260707; t=1794745332; x=1795350132; darn=vger.kernel.org;
+        d=isslab-korea-ac-kr.20260707.gappssmtp.com; s=20260707; t=1794745335; x=1795350135; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=HnFrEsl8I7npZVMdzE8Y8MJP9QyyadjfnIuRiUPsFnw=;
-        b=iW22mhOB1htbmDe7VHCu11P3SYPwXMUt7FjcF48Sx1v9lHT7g5ZcuRFd9hUQukg8d1
-         Iab5zTb0ifBwJIFJfYK9GDsNZtiCuFi+netAH7vRESQUSksfUJph0v/oxNzC5sg4seRE
-         MTBESnXp+3ofRCJ1kTK0kqhgP9NgE8B2WvlIGnKrCMQ+57ei1bDY0dHqpOpESvdi3YgB
-         iKPfzLafoWo7EsVpwc1VFzqDDycusImnbWrHq522qeOo79Vnvcor88brUi1DZ4BHABFa
-         aAoKCaRw+u/j235bElEOMQZu3ZwM+JNv/UoXqyu+F9lrO8KsyGlOv7E4akpU5q0bM3eR
-         mmJg==
+        bh=pec0ou9WUTALkQPa/wVdhz9fArgdzCN6xOPK5j8ug1o=;
+        b=N/YWvHmGTVax1qK93mhPlsPTMqx4Oxxvq/HBUrXpl8m2xH+QpRPCX8QIY/xwYAQcJR
+         lGpI8NrAGB9fb9KwjmEL8gXCLLA/U5pXocurTeAU1nwfKq0/na2kULscRtCiveJr+mK0
+         XoOVq+OBTLj9z5ZFlROJoVcmdBYRBWYZqQ5BHosg7bVcFwm/fZtUAvr92RrwZMjVMcoz
+         K+Kq3PHlAOGh6ybb4uCk7wnSZUx4YgJ6CzydKV/HyMk+9QNrBrLsLjIXaSrFqYyZhYAb
+         FlmzMSdH2hSLP/DlxUucJfw6oSRG3Aj/twqjo8zFPTIBpD6FMXeiYjIUrVAVprYnMpd+
+         7xlw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794745332; x=1795350132;
+        d=1e100.net; s=20260707; t=1794745335; x=1795350135;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=HnFrEsl8I7npZVMdzE8Y8MJP9QyyadjfnIuRiUPsFnw=;
-        b=VKlje0748Q/0oOWczgw/SlZ6WFUbTGwmxNC/s0qdKeCuiy7hkZ/CTD95fd7TN7k0ZN
-         rSYWk2FHp4Vpzo5gzkdX+Z19gUdxpkUBvnYyGEbA79hDXqpj09h8Bht4Jd3FFgbb2NFK
-         9kcwLU+TK10fVnKJdbVtqsk75Zh7UusAyBUxXB43lBdH36S2GFejGspPvufffdw/VSwM
-         cqdDTojIJ5550Ueejjc/brCuCawdFp2y7rYmh5+PPdsLQ6IDhpn8ZRokNHGlAQmTCq98
-         LLrftN8Jnb+Ph63Hdxs0R27ifmsO7l11HKryg1rvPPEQpDNyWpx4It+1/f6aiVfqJwQy
-         rMHA==
-X-Gm-Message-State: APuU4Z/dKKU+rpmzPw1q+fF9l4XQd/yIvsE/yxuRsPU7ZVOyilcAF/EV
-	/mj2mrfymORo3sLswNNlOP7eaxZA/IA4T6YkFhEcl747YApltIeNvBMUD34+KdrF33otXJz1nXU
-	SubW3F7U=
-X-Gm-Gg: AYBFou3zVSb8RnO7QoC1RTh0L4yB8MxtCjwtQbv1V2BtpnKaQA8DHM0tuSgkRea1e5i
-	RJ2NLt2TYSNtlEHP794DQL67Q7CEC8Mx2CUz20kkUONkQ33dEk85xVZva1U3aib2TVlzs4CmfM+
-	gg/POzME2FEqf4mhaJGJIQHo8yJ/IRQi0p+2IIWiHPmzvQfLUbbn8SMzSYSifJUtglDoZccNZ9E
-	MLcpDS3wmvCqfvTiWh8CX/JHBmrp38l92GWodXMH5fppMQWMHHD3bVt50NgpFMBCBj+FCl/A4v0
-	mbdO0HKOupHniiukHwywDwljV3/tbti1I0vr3QkRkZbBZqYKOa9qvnq/EmQ+rNBZfT943/oxPJc
-	tveBOSUCpD4LNDm2TmRvHZYNOEe8YMLjfk7EREhTSK38ospTkm8uX6eBF2Cq1G7klCUKxV9MS4k
-	rKY5SJ2HRNiOfNgN6Hyc+gYjm1LpYUhaW/xn3f0MqM1tUsZ6TPRFq8HwtbpvY4eKDT3WbO7fyml
-	NIxV0F1UAgZFCV/t8tyFF6szybN46RqAsKG0uaiCa04DuboDKtYYPLpJ8gJH5OfH+qtNENk6HWc
-	OcBDy1HtrBmXGujEj2PLUa8TWxs6gUKiqWUGUqzLmQ6QS+sS6MLBoRr5fpeeUyR8e3TrmvF5WOK
-	emQCYfGn40DGjlv1JDgMlMjbh890lCnlt0CmsEg==
-X-Received: by 2002:a05:6a21:3d8c:b0:3e2:1160:6d20 with SMTP id adf61e73a8af0-3f7a4fc682amr5931006637.3.1794745332023;
-        Sun, 15 Nov 2026 04:22:12 -0800 (PST)
+        bh=pec0ou9WUTALkQPa/wVdhz9fArgdzCN6xOPK5j8ug1o=;
+        b=sAFBVbC1eC7IwoMnRPaZ68bZGk0rFJO/191LlOSKwzl4spyh2wWImnTWq5+2NgxtE5
+         R9I+g1urjL2gGDZILh/G8Jc1l3WMS/1kGmJfrO6jwr0B5Rn13hBkQl31/iMz9l/047xO
+         c+q7bptkvseeKOUFir0dDptr3USuQjtSWjkxOir1WmrW7nKtQGQKRBMIn/uWN8HMWHwQ
+         dBbGkbyzMbI1L8bbjiVrQYhszMqYezYEtQrVOUiHDwgvWrs8jvHDWSXCxmWCuKngt/cj
+         JcbmRPU6KiSUrj10LXIJwCsncqBCfFUS/GxV1Vw9/zT0Itk6IwMPuAhmFdPcyrBdQEQD
+         AkPw==
+X-Gm-Message-State: APuU4Z9F0AYMNah+hMjBgcMGHG2HdfBEjpDcASXzoliMhlG41CT8Vzf+
+	1+zLgpx2S0MCS+T5XyObTKmCw5t0yG5EkKwnDlp05/tc6vsaTtyHSe816JIAf6W7/Vw=
+X-Gm-Gg: AYBFou0PozU2gjf6X41AZzLuBK2WRtbJWNudv7aZrFPRm/aNGjs0e112P36aJi/4duD
+	hjIo8qJOTB0bVsvWEYl315V73l4Nlmzn2BD6HNiVbs8yRmQoXztlK5oZBirtWLRq9tZr95aEVFi
+	akVHXwiJP9CeCllLexN75UjTDyRE1wsK/NmzPEIThzvrCWug7EdQRX7k8GJskP+BisSAQH/TNq6
+	7BaKM+Upl0/B0IznYtsiMF7Kg3ZsB5VppgIEZqgi+sih65551vulVKLIp629ltXr3bwwCiJf7Iq
+	SmJE2syUx0kG/NArWDrF2IpUXvFFfyv1Ky3BnbwDL0xk21rgTtZr7x45PXEST6PdeQR33Z7mCqq
+	qepZKJO78qqkasvzo9jmrgzyl1BmeWpmfAY6FuDvvzZvcId7lX6tNbcPoVznbnw0HUJ0k2F8ket
+	rzfd+VLUUJqnq4Aucj1hwBUXHz56vt0twsBQzJEBQ8uawgDFoyNoQMS0FpJx39jy4bhOcQFEs30
+	Lt7VGF9ycTPdaao6YxlhBE1MLJG/Qj0s58JnhErvEr/RSLAER5d2I+pBYqnjQzZ7NQCEb8LrNqV
+	mh+46Oq+UY2Hhdni8Oigp8RaV+zfQu2JR3M0sQ9FW335CXoYUeeLM+RUmuXQ+OU0v5+ezunFbNn
+	T19S1I47i/M0i1uhNSJ59KogLXp+7xh60DQZApoQfLOvV+ZXmtBFo5/UwEeQ=
+X-Received: by 2002:a05:6a20:d48e:b0:3e1:88d6:60e6 with SMTP id adf61e73a8af0-3f7a4cbff14mr6428821637.10.1794745334622;
+        Sun, 15 Nov 2026 04:22:14 -0800 (PST)
 Received: from yhlee-960QFG.Davolink ([2406:5900:1044:110c:35d0:694a:1071:9bae])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-cdded58a9b9sm1220520a12.12.2026.11.15.04.22.09
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-cdded58a9b9sm1220520a12.12.2026.11.15.04.22.12
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 15 Nov 2026 04:22:11 -0800 (PST)
+        Sun, 15 Nov 2026 04:22:14 -0800 (PST)
 From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
 To: mkp@kernel.org,
 	James.Bottomley@HansenPartnership.com
 Cc: linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH v2 2/3] scsi: mvumi: quarantine a timed-out internal command's buffers
-Date: Sun, 15 Nov 2026 21:21:52 +0900
-Message-ID: <20261115122153.1446810-3-yhlee@isslab.korea.ac.kr>
+Subject: [PATCH v2 3/3] scsi: mvumi: flush the event work before the host is freed
+Date: Sun, 15 Nov 2026 21:21:53 +0900
+Message-ID: <20261115122153.1446810-4-yhlee@isslab.korea.ac.kr>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20261115122153.1446810-1-yhlee@isslab.korea.ac.kr>
 References: <20261115122153.1446810-1-yhlee@isslab.korea.ac.kr>
@@ -101,184 +100,168 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-mvumi_issue_blocked_cmd() waits 45 seconds for an internal command and,
-if it has not completed, tidies up its own bookkeeping and returns 0, the
-same value as success.  It writes nothing to the controller, so there is
-no abort; the SCSI error handler is not involved either, because an
-internal command has scmd == NULL.
+mvumi_launch_events() runs from the interrupt handler and hands a
+DRBL_EVENT_NOTIFY off to mvumi_scan_events() on the system workqueue.
+That work calls mvumi_get_event(), which dereferences the mvumi_hba it
+was given, allocates an internal command from mhba->pdev and then waits
+up to 45 seconds for the controller to answer it.
 
-The callers - mvumi_flush_cache(), mvumi_inquiry() and mvumi_get_event()
-- cannot tell, and each goes on to mvumi_delete_internal_cmd(), which
-frees the command frame and the data buffer.  The controller still has
-both addresses: the frame as the source of a dynamic list entry on an
-adapter with HS_CAPABILITY_SUPPORT_DYN_SRC, and the data buffer as the
-target of the data-in transfer the frame's SGL describes.  One that
-answers late writes into memory handed back to the page allocator.
+mvumi_detach_one() never waits for it.  It frees the interrupt, releases
+the firmware resources and calls scsi_host_put(), which frees the
+Scsi_Host the mvumi_hba lives in, while the work is still queued or
+still parked in that 45 second wait.
 
-Put both buffers on mhba->res_list instead.  The address and length are
-taken where mvumi_delete_internal_cmd() takes them today, so nothing new
-is trusted; mvumi_release_mem_resource() frees the list at unload, which
-the preceding patch makes run after pci_disable_device().  The mark
-cannot come from cmd_status, which is assigned from ob_frame->req_status
-and can be left at REQ_STATUS_PENDING (0x80) by the controller.  The cost
-is the frame and data buffer of each timed-out command, held until unload.
+Give the driver its own queue and destroy it in mvumi_detach_one() once
+the interrupt is gone, so nothing can be queued after that point and
+nothing is still running when the host is freed.  A work that was
+already queued runs with the interrupt freed and its internal command
+times out, which the preceding patch makes safe.  mvumi_probe_one()'s
+error path needs the same order, because mvumi_io_attach() can fail with
+the interrupt already enabled: flush the queue there once the interrupt
+is freed, before mvumi_release_fw() takes away what the work uses.
 
-Not handing the buffers back means not reusing them either.
-mvumi_probe_devices() creates one internal command and lends it to
-mvumi_inquiry() for every target id, and mvumi_inquiry() only frees a
-command it allocated itself, so after a timeout the next id is asked with
-that same frame and data buffer, zeroed and filled in again while the
-controller may still be writing to them.  Stop the loop there.  Its only
-caller, mvumi_rescan_bus(), already treats -1 as "not this round" and
-comes back on the next event, and once the controller has gone quiet for
-45 seconds the remaining ids would cost 45 seconds each.  That also
-leaves no caller that submits a second command on a struct mvumi_cmd
-which has already timed out: mvumi_flush_cache() and mvumi_get_event()
-create and delete one per use.
+In a KUnit model where the event command is left unanswered and the host
+is put while the work sits in the wait, the work then reads the freed
+host in 5 of 5 runs and in none of 5 with this patch:
 
-The found == -1 exit, where a wwid turns up on a second id, returned
-without the mvumi_delete_internal_cmd() the normal exit does, so it also
-leaked the command it was holding.  Give the function one exit.
-
-Checked with a KUnit model, a fake controller that answers inline or
-stays quiet, and no mvumi hardware.  Writing to the buffers after a
-timeout, standing in for the controller, gets a KASAN use-after-free in
-5 of 5 runs without this patch and none in 5 with it.  With one target id
-left unanswered, the probe loop submitted 2 further commands on that
-command's buffers in 5 of 5 runs and none in 5.  On the duplicate-wwid
-exit the command was still allocated in 5 of 5 runs and in none of 5.
+[  111.616956] BUG: KASAN: slab-use-after-free in mvumi_scan_events+0xc83/0xd10
+[  111.617010] Read of size 8 at addr ffff888009ff8908 by task kworker/1:1/30
+[  111.617043]
+[  111.617073] CPU: 1 UID: 0 PID: 30 Comm: kworker/1:1 Tainted: G    B            N  7.4.0-rc2-00716-g23c62304dde2-dirty #2 PREEMPT(lazy)
+[  111.617126] Tainted: [B]=BAD_PAGE, [N]=TEST
+[  111.617144] Hardware name: QEMU Ubuntu 24.04 PC v2 (i440FX + PIIX, arch_caps fix, 1996), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
+[  111.617173] Workqueue: events mvumi_scan_events
+[  111.617258] Call Trace:
+[  111.617304]  <TASK>
+[  111.617354]  dump_stack_lvl+0x53/0x70
+[  111.617438]  print_report+0xd0/0x630
+[  111.617549]  ? __pfx__raw_spin_lock_irqsave+0x10/0x10
+[  111.617622]  ? mvumi_issue_blocked_cmd.isra.0+0x62b/0x940
+[  111.617707]  ? mvumi_scan_events+0xc83/0xd10
+[  111.617785]  kasan_report+0xe5/0x120
+[  111.617871]  ? mvumi_scan_events+0xc83/0xd10
+[  111.617950]  mvumi_scan_events+0xc83/0xd10
+[  111.618052]  process_one_work+0x697/0x1060
+[  111.618146]  ? __pfx___schedule+0x10/0x10
+[  111.618207]  ? __pfx_process_one_work+0x10/0x10
+[  111.618288]  ? _raw_spin_lock_irq+0x81/0xe0
+[  111.618370]  ? __pfx_mvumi_scan_events+0x10/0x10
+[  111.618466]  ? assign_work+0x11d/0x370
+[  111.618578]  worker_thread+0x45b/0xd10
+[  111.618688]  ? __pfx_worker_thread+0x10/0x10
+[  111.618752]  ? __pfx_worker_thread+0x10/0x10
+[  111.618840]  kthread+0x2c8/0x3b0
+[  111.618910]  ? recalc_sigpending+0x15c/0x1e0
+[  111.618968]  ? __pfx_kthread+0x10/0x10
+[  111.619040]  ret_from_fork+0x36e/0x5a0
+[  111.619127]  ? __pfx_ret_from_fork+0x10/0x10
+[  111.619213]  ? __switch_to+0xac3/0xdc0
+[  111.619254]  ? __switch_to_asm+0x33/0x70
+[  111.619312]  ? __pfx_kthread+0x10/0x10
+[  111.619399]  ret_from_fork_asm+0x1a/0x30
+[  111.619484]  </TASK>
+[  111.619542]
+[  111.619596] Allocated by task 84:
+[  111.619643]  kasan_save_stack+0x33/0x60
+[  111.619703]  kasan_save_track+0x14/0x30
+[  111.619754]  __kasan_kmalloc+0x8f/0xa0
+[  111.619808]  __kmalloc_noprof+0x193/0x450
+[  111.619860]  scsi_host_alloc+0x29/0x1290
+[  111.619934]  mvt_setup+0x14e/0xa50
+[  111.619997]  mvt_event_work_after_put+0x93/0x3f0
+[  111.620063]  kunit_try_run_case+0x1ad/0x490
+[  111.620096]  kunit_generic_run_threadfn_adapter+0x7b/0xe0
+[  111.620153]  kthread+0x2c8/0x3b0
+[  111.620212]  ret_from_fork+0x36e/0x5a0
+[  111.620291]  ret_from_fork_asm+0x1a/0x30
+[  111.620369]
+[  111.620415] Freed by task 84:
+[  111.620462]  kasan_save_stack+0x33/0x60
+[  111.620509]  kasan_save_track+0x14/0x30
+[  111.620542]  kasan_save_free_info+0x3b/0x60
+[  111.620598]  __kasan_slab_free+0x43/0x70
+[  111.620659]  kfree+0x121/0x390
+[  111.620719]  device_release+0xc8/0x240
+[  111.620790]  kobject_put+0x14d/0x280
+[  111.620856]  mvt_event_work_after_put+0x22f/0x3f0
+[  111.620907]  kunit_try_run_case+0x1ad/0x490
+[  111.620961]  kunit_generic_run_threadfn_adapter+0x7b/0xe0
+[  111.621035]  kthread+0x2c8/0x3b0
+[  111.621083]  ret_from_fork+0x36e/0x5a0
+[  111.621154]  ret_from_fork_asm+0x1a/0x30
+[  111.621230]
+[  111.621281] The buggy address belongs to the object at ffff888009ff8000
+[  111.621281]  which belongs to the cache kmalloc-4k of size 4096
+[  111.621321] The buggy address is located 2312 bytes inside of
 
 Fixes: f0c568a478f0 ("[SCSI] mvumi: Add Marvell UMI driver")
 Signed-off-by: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
 ---
- drivers/scsi/mvumi.c | 58 ++++++++++++++++++++++++++++++++++++++------
- drivers/scsi/mvumi.h |  1 +
- 2 files changed, 51 insertions(+), 8 deletions(-)
+ drivers/scsi/mvumi.c | 13 ++++++++++++-
+ drivers/scsi/mvumi.h |  2 ++
+ 2 files changed, 14 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/mvumi.c b/drivers/scsi/mvumi.c
-index 8d22d370d8608f..48652640afc188 100644
+index 48652640afc188..f58b29e55a3778 100644
 --- a/drivers/scsi/mvumi.c
 +++ b/drivers/scsi/mvumi.c
-@@ -177,6 +177,29 @@ static void mvumi_release_mem_resource(struct mvumi_hba *mhba)
- 	mhba->fw_flag &= ~MVUMI_FW_ALLOC;
+@@ -1797,7 +1797,7 @@ static void mvumi_launch_events(struct mvumi_hba *mhba, u32 isr_status)
+ 			mu_ev->event = APICDB1_EVENT_GETEVENT;
+ 			isr_status &= ~(DRBL_EVENT_NOTIFY);
+ 			mu_ev->param = NULL;
+-			schedule_work(&mu_ev->work_q);
++			queue_work(mhba->work_q, &mu_ev->work_q);
+ 		}
+ 	}
  }
+@@ -2534,6 +2534,13 @@ static int mvumi_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	mhba->shost = host;
+ 	mhba->unique_id = pci_dev_id(pdev);
  
-+/* The controller may still DMA here; free it once the device is disabled. */
-+static void mvumi_quarantine_buf(struct mvumi_hba *mhba, void *virt_addr,
-+				 dma_addr_t bus_addr, unsigned int size)
-+{
-+	struct mvumi_res *res = kzalloc_obj(*res);
-+	unsigned long flags;
-+
-+	if (!res) {
-+		dev_err(&mhba->pdev->dev,
-+			"leaking %u bytes the controller may still write to\n",
-+			size);
-+		return;
++	mhba->work_q = alloc_workqueue("mvumi_wq_%d", WQ_PERCPU, 0,
++				       host->host_no);
++	if (!mhba->work_q) {
++		ret = -ENOMEM;
++		goto fail_alloc_workqueue;
 +	}
-+	res->type = RESOURCE_UNCACHED_MEMORY;
-+	res->virt_addr = virt_addr;
-+	res->bus_addr = bus_addr;
-+	res->size = size;
-+	INIT_LIST_HEAD(&res->entry);
-+	spin_lock_irqsave(&mhba->shost->host_lock, flags);
-+	list_add_tail(&res->entry, &mhba->res_list);
-+	spin_unlock_irqrestore(&mhba->shost->host_lock, flags);
-+}
 +
- /**
-  * mvumi_make_sgl -	Prepares  SGL
-  * @mhba:		Adapter soft state
-@@ -298,11 +321,19 @@ static void mvumi_delete_internal_cmd(struct mvumi_hba *mhba,
- 			phy_addr = (dma_addr_t) m_sg->baseaddr_l |
- 				(dma_addr_t) ((m_sg->baseaddr_h << 16) << 16);
+ 	ret = mvumi_init_fw(mhba);
+ 	if (ret)
+ 		goto fail_init_fw;
+@@ -2560,9 +2567,12 @@ static int mvumi_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ fail_io_attach:
+ 	mhba->instancet->disable_intr(mhba);
+ 	free_irq(mhba->pdev->irq, mhba);
++	flush_workqueue(mhba->work_q);
+ fail_init_irq:
+ 	mvumi_release_fw(mhba);
+ fail_init_fw:
++	destroy_workqueue(mhba->work_q);
++fail_alloc_workqueue:
+ 	scsi_host_put(host);
  
--			dma_free_coherent(&mhba->pdev->dev, size, cmd->data_buf,
--								phy_addr);
-+			if (cmd->timed_out)
-+				mvumi_quarantine_buf(mhba, cmd->data_buf,
-+						     phy_addr, size);
-+			else
-+				dma_free_coherent(&mhba->pdev->dev, size,
-+						  cmd->data_buf, phy_addr);
- 		}
--		dma_free_coherent(&mhba->pdev->dev, mhba->ib_max_size,
--				cmd->frame, cmd->frame_phys);
-+		if (cmd->timed_out)
-+			mvumi_quarantine_buf(mhba, cmd->frame, cmd->frame_phys,
-+					     mhba->ib_max_size);
-+		else
-+			dma_free_coherent(&mhba->pdev->dev, mhba->ib_max_size,
-+					  cmd->frame, cmd->frame_phys);
- 		kfree(cmd);
- 	}
- }
-@@ -734,6 +765,7 @@ static int mvumi_issue_blocked_cmd(struct mvumi_hba *mhba,
- 	if (atomic_read(&cmd->sync_cmd)) {
- 		spin_lock_irqsave(&mhba->shost->host_lock, flags);
- 		atomic_dec(&cmd->sync_cmd);
-+		cmd->timed_out = 1;
- 		if (mhba->tag_cmd[cmd->frame->tag]) {
- 			mhba->tag_cmd[cmd->frame->tag] = NULL;
- 			dev_warn(&mhba->pdev->dev, "TIMEOUT:release tag [%d]\n",
-@@ -1552,6 +1584,7 @@ static int mvumi_probe_devices(struct mvumi_hba *mhba)
- 	struct mvumi_device *mv_dev = NULL;
- 	struct mvumi_cmd *cmd = NULL;
- 	int found = 0;
-+	int ret;
+ fail_alloc_instance:
+@@ -2590,6 +2600,7 @@ static void mvumi_detach_one(struct pci_dev *pdev)
  
- 	cmd = mvumi_create_internal_cmd(mhba, 64);
- 	if (!cmd)
-@@ -1564,6 +1597,11 @@ static int mvumi_probe_devices(struct mvumi_hba *mhba)
- 
- 	for (id = 0; id < maxid; id++) {
- 		wwid = mvumi_inquiry(mhba, id, cmd);
-+		/* the controller still owns this command's buffers */
-+		if (cmd->timed_out) {
-+			ret = -1;
-+			goto out;
-+		}
- 		if (!wwid) {
- 			/* device no response, remove it */
- 			mvumi_remove_devices(mhba, id);
-@@ -1588,17 +1626,21 @@ static int mvumi_probe_devices(struct mvumi_hba *mhba)
- 				dev_dbg(&mhba->pdev->dev,
- 					"probe a new device(0:%d:0)"
- 					" wwid(%llx)\n", id, mv_dev->wwid);
--			} else if (found == -1)
--				return -1;
--			else
-+			} else if (found == -1) {
-+				ret = -1;
-+				goto out;
-+			} else {
- 				continue;
-+			}
- 		}
- 	}
-+	ret = 0;
- 
-+out:
- 	if (cmd)
- 		mvumi_delete_internal_cmd(mhba, cmd);
- 
--	return 0;
-+	return ret;
- }
- 
- static int mvumi_rescan_bus(void *data)
+ 	mhba->instancet->disable_intr(mhba);
+ 	free_irq(mhba->pdev->irq, mhba);
++	destroy_workqueue(mhba->work_q);
+ 	pci_disable_device(pdev);
+ 	mvumi_release_fw(mhba);
+ 	scsi_host_put(host);
 diff --git a/drivers/scsi/mvumi.h b/drivers/scsi/mvumi.h
-index 1306a4abf19ad2..e248dfc1dd1bb7 100644
+index e248dfc1dd1bb7..04cd844851423e 100644
 --- a/drivers/scsi/mvumi.h
 +++ b/drivers/scsi/mvumi.h
-@@ -252,6 +252,7 @@ struct mvumi_cmd {
- 	void *data_buf;
- 	unsigned short request_id;
- 	unsigned char cmd_status;
-+	unsigned char timed_out;
- };
+@@ -493,6 +493,8 @@ struct mvumi_hba {
+ 	atomic_t fw_outstanding;
+ 	struct mvumi_instance_template *instancet;
  
- struct mvumi_cmd_priv {
++	struct workqueue_struct *work_q;
++
+ 	void *ib_list;
+ 	dma_addr_t ib_list_phys;
+ 
 -- 
 2.43.0
 
