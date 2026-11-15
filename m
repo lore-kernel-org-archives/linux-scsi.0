@@ -1,57 +1,68 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=193.222.135.140
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794746384;
-	b=GazXwEeflbgpwuXuI6ovTQwwsn9rwTFdcHd+Yq2UeA/UdkjOej+YyPW7853nvyekCI7m
-	 POFaRGLud/rVrzAcnJfz0EtqB5XQLtkty9yrXTwt6Ei5xmAmnoxG/+4lGXwN5LXJY1VRJ
-	 Vqx0b7gHYMNqCana5XhB4arZCKrupNmLpAAZm4NpxB4iDj0edGVnuQ1z+TOF8iwoyOuBx
-	 SpOkltBR0hRZaqZh49vkdi7Gjfc7WnYLHrxCBixfLIC3wjXZdfo7AOoCrifwcQw+TxlK3
-	 Fio2kSehBMMZgI96HZ+RzZLgjG+rOwEUFYRGPuOekv20KJYWLhJ0SzDdrGJp+mssmfQ==
+	t=1794746519;
+	b=KqNiNazUk15BQPBVFLXlSLhYeujEpbMy4TnS90cB65qP4Lta2xUaXzHFRk+8AR9ZBcXk
+	 k88xt7HtaFIdVYKeDSVkJJ4n3yidj1vCwyQbk5CQLkZ5dF8VuNfdZP8tFtBGk017P9IKi
+	 fkKhEvNC2CESLX/zPr/wotgogXt9BOp2e1p0IwYT0YOYxo+kkQg92GpDkrwJo5j22giPK
+	 k9y6nOywVasW6RjcOkw/oyYWAOME8aX2rPDyD+4CTklMlQbVAxKEtz6b/GIgM/6zCL7br
+	 E4I/vSJLRZKtKufqKBxTjqV7Xk8hd5M91+pXtp3FsBNm7Ak7X9jzcfW6SJ2Uwux/0Qg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794746384;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=CRItSjwHOnyId7JXolyz4ODCP/NlRPi7Yg5NVk9Wa/U=;
-	b=zE9K21lepYLf6890eEAQUbHDNb9w04fm9tySIKu5NPJ69A3hKX+44Ax7fvDRIln2kqA6
-	 +Uv3sg0ZkQ9rpgVS4Mij51Tv4jowCJ/cltD7qRi0v38XPb4Ovx0vpx2YafxXbbEmTqWQg
-	 mYDsWWumMMwYlhbpc0a9GIdbh0RW7FIhOd64ECU/mxU/4FktVIPitMncn/ZVOlMdoZMV2
-	 K8qMoZrcpocGTCt7Y3ngjNIs/8MeRxmzcK+AebuyUGhPnJREMA4kTjOoxGwoEuBu5mPcT
-	 TjcMeuxwfCUixdKj0wLLtzyYhSsK1IDI5BTVIlLT/edtFRtPEqJQk0noBIPU7YDmC1w==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794746519;
+	h=DMARC-Filter:Received:DKIM-Signature:Received:From:To:Cc:Subject:
+	 Date:Message-ID:X-Mailer:MIME-Version:Content-Type:
+	 Content-Transfer-Encoding:X-WP-DKIM-Status:X-WP-MailID:X-WP-AV:
+	 X-WP-SPAM;
+	bh=ryjnoPK0FiOS220BbRQkctm1gx2KPPViciuqsXa4DYs=;
+	b=0d6G+b6gnq+lCifulJEbzBulU1ShS4W1qDqkXSQQcDQDuRP3GSf/t4mNLkunMbh8GOyC
+	 kV6E5UJQ7AvB8luhRBLh5atk2EMuwSpLYTsZFU/0ymRq2A1aT+mTRPedN0m/TMkgzKMHz
+	 IsvvdgOqvJne3SdI8kuA0zfrllTIKEjVb2/b1UxngCIapozdcYQ7LKDstkTy/AmEbTmKm
+	 S5PfINjNrHpZaK9tFKRC7A9xBNCIxaxj6Xgqe3hOyUuukn9dFiYf2pZEPIul4InhRTHQF
+	 NrcPdpYqy/ENdqVfNsapCs3pTqx9qET1RGJByPPvLnJ3d+Npn+ISGl1dL0ZiISGYOkQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=FM8BlruS;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=o2.pl;
+	spf=pass smtp.mailfrom=o2.pl;
+	dkim=pass header.d=o2.pl header.i=@o2.pl header.a=rsa-sha256 header.s=s20261001 header.b=DXCbEcAc;
+	arc=none smtp.remote-ip=193.222.135.140
+Received: from mx-out.tlen.pl (mx-out.tlen.pl [193.222.135.140])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 630A7606A31A
-	for <linux-scsi@vger.kernel.org>; Sun, 15 Nov 2026 12:39:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F379A606A31A
+	for <linux-scsi@vger.kernel.org>; Sun, 15 Nov 2026 12:41:57 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org F379A606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=o2.pl
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=o2.pl
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=FM8BlruS
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 189EE1F000C4;
-	Sun, 15 Nov 2026 12:39:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794746384;
-	bh=CRItSjwHOnyId7JXolyz4ODCP/NlRPi7Yg5NVk9Wa/U=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=FM8BlruScR8gs6gay2HEjg8UEwRdpZL5gOjI6W0FkgHpY5J7JYye4buieMrw8vwKF
-	 dmOo/Jh8Ufev8I/ZcAwCbl86no9csiV8lnkvF7Vm17i5P2PaqukLTLqUGk7EdOqnx5
-	 R0Zc3GxHbAAR/pGtlNOOhRnbeRdccBeUP0g4Bu+lfQktHXyUzygaIlDryW+ijxDEtN
-	 MenB+r6zvSepnCo8/T/RAVr61DvK+LD7Pno6yUI1AsiA05NbMyO6Meni8IM1Kq5e28
-	 7NqAcw7WOe93m0n7f56ACKP0lSbNYI8bgA2Xr9V8/fPyoOIm3iXRjGw8vPhD3EgKc4
-	 +Q4u4nu5J2OMQ==
-Message-ID: <sashiko-outbox-215502@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 2/3] scsi: mvumi: quarantine a timed-out internal
- command's buffers
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Yehyeong Lee" <yhlee@isslab.korea.ac.kr>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20261115122153.1446810-3-yhlee@isslab.korea.ac.kr>
-References: <20261115122153.1446810-1-yhlee@isslab.korea.ac.kr>
- <20261115122153.1446810-3-yhlee@isslab.korea.ac.kr>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Sun, 15 Nov 2026 12:39:43 +0000
+	dkim=pass (2048-bit key) header.d=o2.pl header.i=@o2.pl header.a=rsa-sha256 header.s=s20261001 header.b=DXCbEcAc
+Received: (wp-smtpd smtp.tlen.pl 40961 invoked from network); 15 Nov 2026 13:41:49 +0100
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=o2.pl; s=s20261001;
+          t=1794746509; bh=ryjnoPK0FiOS220BbRQkctm1gx2KPPViciuqsXa4DYs=;
+          h=From:To:Cc:Subject;
+          b=DXCbEcAcKjYpfldum/vHLnZMnUWwUh2XG1Ksj+bOlfecKtK3GVOd25MagdcoRZiNt
+           FxuAWtoxG3ksNhL2W3k2U2S3hT7xzY+F7NaVsJ1iBXoR4muwvsSuFHARUxGLj5Lw+G
+           d6g/WwFK5cEVyIao+na9R0FHFghTlqcVjzM/chbog8esmLNeJLhn6UEG/aJBOS4JYv
+           FXxDrRbLx72937KDuu0CY5QdBGVzStIRKxhewP7u5KK/rFa9H+EmJCR5sYf1xliZtF
+           XDIvrpvxYXSnZbmV01ZMnzzpKz53280P7cfqvPlq9EamkfZ5ZOqgaXLoMSB9v6dzzm
+           b9kcL/gwLFQEg==
+Received: from localhost.localdomain (apn-78-30-67-84.dynamic.gprs.plus.pl [78.30.67.84])
+          (envelope-sender <mat.jonczyk@o2.pl>)
+          by smtp.tlen.pl (WP-SMTPD) with SMTP
+          for <oneukum@suse.com>; 15 Nov 2026 13:41:49 +0100
+From: =?UTF-8?q?Mateusz=20Jo=C5=84czyk?= <mat.jonczyk@o2.pl>
+To: Oliver Neukum <oneukum@suse.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-usb@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	usb-storage@lists.one-eyed-alien.net,
+	linux-kernel@vger.kernel.org,
+	smartmontools-support@listi.jpberlin.de,
+	Christian Franke <Christian.Franke@t-online.de>,
+	=?UTF-8?q?Mateusz=20Jo=C5=84czyk?= <mat.jonczyk@o2.pl>
+Subject: [PATCH] usb: uas: expose US_FL_NO_ATA_1X in sysfs as deny_ata_passthrough
+Date: Sun, 15 Nov 2026 13:40:46 +0100
+Message-ID: <20261115124046.5286-1-mat.jonczyk@o2.pl>
+X-Mailer: git-send-email 2.47.3
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -60,70 +71,70 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-WP-DKIM-Status: good (id: o2.pl)                                                      
+X-WP-MailID: beedee10f93d25369d9fae5912078f3e
+X-WP-AV: skaner antywirusowy Poczty o2
+X-WP-SPAM: NO 000000B [kfNU]                               
 
-Thank you for your contribution! Sashiko AI review found 1 potential
-issue to consider:
-- [Medium] scsi: mvumi: stranded mhba_dev_list entries when
-  mvumi_probe_devices() aborts
---
+The uas driver blocks access to ATA passthrough commands for some
+devices it considers buggy (via the US_FL_NO_ATA_1X flag in
+unusual_uas.h and uas_detect.h). However, it does not expose any
+meaningful information whether the command was blocked by the driver or
+is genuinly not supported by the hardware. This creates a problem for
+the smartmontools program and makes it difficult for it to provide a
+useful error message (with instructions to disable UAS on the drive to
+get SMART readings).
 
-commit b1478e67683e6d020afcb1ac3f2ae79623c98cd3
-Author: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+So, expose the information in sysfs as deny_ata_passthrough. Other
+quirks may be added in the future if there is any demand.
 
-scsi: mvumi: quarantine a timed-out internal command's buffers
+Link: https://www.smartmontools.org/wiki/SAT-with-UAS-Linux
+Signed-off-by: Mateusz Jończyk <mat.jonczyk@o2.pl>
+---
+ drivers/usb/storage/uas.c | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
 
-This commit moves the DMA buffers of timed-out internal commands onto
-mhba->res_list instead of freeing them immediately, and stops the target
-scan loop in mvumi_probe_devices() when an inquiry command times out.
+diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
+index 8655edbd66b1..aaea74297026 100644
+--- a/drivers/usb/storage/uas.c
++++ b/drivers/usb/storage/uas.c
+@@ -910,6 +910,25 @@ static int uas_sdev_configure(struct scsi_device *sdev,
+ 	return 0;
+ }
+ 
++/* Sysfs interface */
++static ssize_t deny_ata_passthrough_show(struct device *dev, struct device_attribute *attr,
++					 char *buf)
++{
++	struct scsi_device *sdev = to_scsi_device(dev);
++	struct uas_dev_info *devinfo = sdev->hostdata;
++
++	return sprintf(buf, "%d\n", !!(devinfo->flags & US_FL_NO_ATA_1X));
++}
++
++static DEVICE_ATTR_RO(deny_ata_passthrough);
++
++static struct attribute *uas_sdev_attrs[] = {
++	&dev_attr_deny_ata_passthrough.attr,
++	NULL,
++};
++
++ATTRIBUTE_GROUPS(uas_sdev);
++
+ static const struct scsi_host_template uas_host_template = {
+ 	.module = THIS_MODULE,
+ 	.name = "uas",
+@@ -929,6 +948,7 @@ static const struct scsi_host_template uas_host_template = {
+ 	.dma_alignment = 511,
+ 	.dma_boundary = PAGE_SIZE - 1,
+ 	.cmd_size = sizeof(struct uas_cmd_info),
++	.sdev_groups = uas_sdev_groups,
+ };
+ 
+ #define UNUSUAL_DEV(id_vendor, id_product, bcdDeviceMin, bcdDeviceMax, \
+-- 
+2.47.3
 
-> diff --git a/drivers/scsi/mvumi.c b/drivers/scsi/mvumi.c
-> index 8d22d370d8608..48652640afc18 100644
-> --- a/drivers/scsi/mvumi.c
-> +++ b/drivers/scsi/mvumi.c
-[ ... ]
-> @@ -1552,6 +1584,7 @@ static int mvumi_probe_devices(struct mvumi_hba *mh=
-ba)
->  	struct mvumi_device *mv_dev =3D NULL;
->  	struct mvumi_cmd *cmd =3D NULL;
->  	int found =3D 0;
-> +	int ret;
-> =20
->  	cmd =3D mvumi_create_internal_cmd(mhba, 64);
->  	if (!cmd)
-> @@ -1564,6 +1597,11 @@ static int mvumi_probe_devices(struct mvumi_hba *m=
-hba)
-> =20
->  	for (id =3D 0; id < maxid; id++) {
->  		wwid =3D mvumi_inquiry(mhba, id, cmd);
-> +		/* the controller still owns this command's buffers */
-> +		if (cmd->timed_out) {
-> +			ret =3D -1;
-> +			goto out;
-> +		}
-
-[Severity: Medium]
-Does aborting the loop here strand struct mvumi_device entries allocated
-for earlier target IDs on mhba->mhba_dev_list?
-
-When an earlier iteration finds a new target, mvumi_probe_devices()
-removes any prior entry from mhba->shost_dev_list and appends a new
-struct mvumi_device to mhba->mhba_dev_list.  If a later target ID times
-out and returns -1, mvumi_rescan_bus() skips draining mhba->mhba_dev_list:
-
-drivers/scsi/mvumi.c:mvumi_rescan_bus() {
-	...
-		ret =3D mvumi_probe_devices(mhba);
-		if (!ret) {
-			list_for_each_entry_safe(mv_dev, dev_next,
-						 &mhba->mhba_dev_list, list) {
-	...
-}
-
-Because mvumi_match_devices() and mvumi_remove_devices() only inspect
-mhba->shost_dev_list, a later rescan will allocate duplicate entries on
-mhba->mhba_dev_list for those earlier targets or bring stale entries
-online if a target disappeared in the meantime.
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261115122153.1446=
-810-1-yhlee@isslab.korea.ac.kr?part=3D2
