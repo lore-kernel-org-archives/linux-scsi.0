@@ -1,100 +1,57 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.214.169
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794739240;
-	b=E68tk5iL2Xmv6HbBNt+EyVuKYUxcyVjcZC5BDe3xE8ZbQzhlQKr088G4Hu0zxsKs9uXw
-	 dndBw0eXd43xNlSLm9LnuoHubxPDkn247jYzRH/2YBTHIk77LZRU9c4wH+CbuExTmJ/tr
-	 jUpNXUwDe5LkKPwoYFdinSw1mVAyqvb4qotVXoDV9fzT+L+dTtLRYX2BDxhSV4JGI/see
-	 61555uCHeY17XGS3Cm5NGJXKolsPRHCRmM1+7kvYHE9dUuzg9j1gmOcKyxrfQvRvJAEaV
-	 GCNYif94x2ksSpOywm/lcTjTpKk7NqxWJG9u+a+Yw7O78eB7ORS37NyVvumpnu9lMDg==
+	t=1794740365;
+	b=iHeuxtRI/VMaHK2JinsJ7z6ei1/5lc8Ytzzts8J2dJbRHBaRJCFsCv4EyJEgiIrLFj8i
+	 oVpWYlCgKGmN8IeYUTEY9eONa4nVG1YhaUJjDUgJnY8zfopZOLOeRVvkWJJFtAduylUAJ
+	 CP5UXldjQe+Yv+BdqmGF6D0AlIa9lp4HvrarozNHZ60FAcJpKlZQmmqZ46zMQw2UlVRc7
+	 e+7V19/srKY2R1GRkCd7O0qU35iTEYwZYR6FoICDaDUF0f4CgfegpkBze7J/j40jw7ysK
+	 HLsGAp3k+Vmnifb+cSThGANZ4r2WJ+6kuxJc29sHW40wPbe/TmAe+/0UGpCa7OmX4KQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794739240;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-Id:X-Mailer:In-Reply-To:References:
-	 MIME-Version:Content-Transfer-Encoding;
-	bh=TENXDxvv5jFBPerWep/Z3nZ9UwBvzf2srmB2t0s0Ufk=;
-	b=q+YMylmqkDjxLgHlHFoIC706jbCGikG2V+J3c1y9fVwY/KCZAWZzwShWZCX9FtGunRwg
-	 S9UTWfBEcUaPuPgf1N5qxPyRdajmGFuEBjhqHjFvzmn/nDuHzFhxSuUm2aEjMtpUxwiRf
-	 u5fEx9/UPSR8mAoru7basjJXIW3aFjgoG+pazK7C9he7QbHrNUQLdB28WvuGRpiGXgQdX
-	 3kT4OuVrwA+emUyO42exx8KdIQYW93mH3bQ+rEfHf3vDayrdCr31R4dKrqGeiwDV7wSE3
-	 /3Xyd8g9spReyutEhsMZaDcHB0Rl71LNisPUQ7kQUGVNToRD0JbUqrF+OENE7rq2z4Q==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794740365;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=vnMs5C/7Cd7Ng4umrmXPnRjthSwxlCZILIhiKLaE73I=;
+	b=GggAKshvUtnSBqhUw3T6sTg841yzNBDEx7BgDAZ63MRINBPlxVosaBNTBN8mCB8BZJZW
+	 N/1VqJvVvLsS8PgVhSbGddy82yqi8ec0GoiDOSjI/bPeIVywxOUdJq/6nPE6tnqHC3jvx
+	 IM3dCyIx66f331TM5jdXCSPzIYaCp/cycLwMPswiRZ3BB5g+u+hPIBNaAsSZmddjZfBQ3
+	 IcBZjkQxoQHw6xqfyd+J+qJlIKk3z9xwbg4/DeKO+XSOtgBlX7ME+cxIV02KBTVRjabLR
+	 h97B82yC+hH3lAGishza9ftD/7nwTYbh2Q6kVD5mXNMrwN/psF6+B6Y3ONWpFK3YAUg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=gEiVyM34;
-	arc=none smtp.remote-ip=209.85.214.169
-Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=OqksMTn0;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 96D65606A89B
-	for <linux-scsi@vger.kernel.org>; Sun, 15 Nov 2026 10:40:40 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 96D65606A89B
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 909AA606A31A;
+	Sun, 15 Nov 2026 10:59:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=gEiVyM34
-Received: by mail-pl1-f169.google.com with SMTP id d9443c01a7336-2e9995ce866so27052225ad.0
-        for <linux-scsi@vger.kernel.org>; Sun, 15 Nov 2026 02:40:40 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1794739240; x=1795344040; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=TENXDxvv5jFBPerWep/Z3nZ9UwBvzf2srmB2t0s0Ufk=;
-        b=gEiVyM34NDSCp2pkPQHpI928xWtg0jAwkU/EloJQ/g0yaZba/6kxQadtViGi3+wEah
-         XOrg+w2+flKHeBdmIll0ru5ewMNgL4UoLb0RnByBBV7Y446WgYVAdR3Pij0H0+1Xcm6X
-         IC+nF9rftvRryg2AavPmqTPIbi8FlSXGWXsGTnC20i//w23MXZI6AevHv4382SPCJsty
-         8iww6oTppF0lhO9rBUdEwsxbwRyTR7dUPk21OQLfsTfER8oT5xaSmHn1hdxTqsIVx6NF
-         yEBraZpvbudueMgbvLmMMBYU7VhjebE58m50l/7Y/BybISts+0BzEQF6TqXd1SRmwh7U
-         5Qmg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794739240; x=1795344040;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=TENXDxvv5jFBPerWep/Z3nZ9UwBvzf2srmB2t0s0Ufk=;
-        b=rRgcqW1xsRUgJ9K1VKSuc9FiIvcUGTS2j+YCldDo1HkdFsSVhogPpgJa8FgAcbyyhZ
-         +Ot+ozD23pMpe8Kce4dpx7OqdoEpf5FB40Wjd9Kp2qTiZjXgSVSoZw3ENknHutJeMibA
-         Tfk2yfyoyqFq77iPQN/1vMo0HoRt21VXRWTqzPH/BE23cOzZVDhZ83fquXrxe+cDo/I4
-         4b/CsXqe4jiYBE7qFlFFj6UH4UCkjsSAS3gPU86V/cfquyKuMOh08SpnVsKz9JTxzlPE
-         BeYdHqcRx+EZVgG1ZBAlqdw6G+GrpqKcFqbCcekLezYXz/9ozFY5Za2roDREM6PiRSs6
-         oIKA==
-X-Forwarded-Encrypted: i=1; AL+hErGKeMDZQde9f1KY5mZopEr2MxINoaUoHG07B915hXiHiMhGTShNEMuqndnQuEB/mwmVjpZpb28RBq/W@vger.kernel.org
-X-Gm-Message-State: APuU4Z/Lvs1pjU5VeplpAI4jCnay4xhXsi013k+gCo2e9dARmBDVPdAY
-	tNHwySkIR6NrTGD/JyVPX2jWS91hyMpkfrMGgCWeESaMUILQ++2duwYT
-X-Gm-Gg: AYBFou1Yi4YoHjOcoy9dw91s7qBjxmJRmct1O0bLS18TrODWR+mhiKe5rO/a/KKgpJA
-	ZJ8s4BAjWsWWmT6MYxZ3KP2SbJPArB9S8BnbST/R5+JqSvx4/Ccj5W4DOcYnnZj5+UKZvJHeYEK
-	3jYVRsdJHJ51NMCxDVBw59f6gPCs9WeUoxI8q7CJagZBu+5PA4nAk0+/EdCimgCDauaJrhaGIaP
-	ZruhHt9qE0R35xwyaMV9oAMFaz9+FEPWshY991U01Fq/p0zEyZRjRjgmgSzqqGfoaWqJ3eTM7KX
-	OgmfPMTflEyrgE9ycd4T8fMwbomHoQ5zCkbRRX4RNDeFjQv6LJyBPs0SXCd4sUvDVDNk1P5ngrf
-	DDrmpOdXyWidWzdoXTPxP4oSnlTYVELW5LFjNnqTLyey7tZ1Wp2Iv+Scy43trdznoyw8+1KCdTK
-	NBqacnTKXblZe7mdLRaceFQ5Lr7zQABKcDUWdCGf4+bSICBZHL33pfjo0qW2EBuc4memhK+Y0uq
-	/4MooNbEznM2DgY0Wh4Ul/vW2Ch5qAW4Cfb1OOiqj6GtceaOddgEPAy7wDx+TpKV5YKYiGX0xqd
-	wOmfqU1gmOvQ5Mhg/mGm8mwApS5GRD8gtuwanprQkLm47QWg7hQQiy9ijMbmqhkVen5j0XqzlIo
-	CR3SQ3dGBNcPIoyvP3wgeDDfDuF9Vz5D/IRLv0TrwSjW6yY7fdrYx7gtps8AVzoXSgJ2bCKY9ac
-	7a0Q/rvZ8tpxeSYIhrAiiIigTE1btrQEMtyPXL14sCK/t/FN/K+HaEiADTlRpLCcbJINSoU6EoI
-	X5WK7G6liTXZQtNHHVN5v8Es+mCUTeODIp8t9dn8hurh3nDfKgD0W+fPqw1/Hus
-X-Received: by 2002:a17:902:e88d:b0:2ed:acb:aa96 with SMTP id d9443c01a7336-2ee0dad0247mr91339425ad.24.1794739239813;
-        Sun, 15 Nov 2026 02:40:39 -0800 (PST)
-Received: from localhost.localdomain (123-243-92-89.static.tpgi.com.au. [123.243.92.89])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2ee0f8d4612sm26739145ad.57.2026.11.15.02.40.36
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 15 Nov 2026 02:40:39 -0800 (PST)
-From: Daniel Wade <danjwade95@gmail.com>
-To: "Martin K. Petersen" <mkp@kernel.org>
-Cc: Maurizio Lombardi <mlombard@redhat.com>,
-	Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>,
-	Sujal Tuladhar <sujaltuladhar1231@gmail.com>,
-	linux-scsi@vger.kernel.org,
-	target-devel@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v2 3/3] scsi: target: iscsi: don't re-arm Time2Retain on a closing session
-Date: Sun, 15 Nov 2026 21:10:07 +1030
-Message-Id: <6396b9a2d459b956e4081fa080e194d2df0b2a6a.1794739041.git.danjwade95@gmail.com>
-X-Mailer: git-send-email 2.39.0.windows.2
-In-Reply-To: <cover.1794739041.git.danjwade95@gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=OqksMTn0
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EEABC1F000C5;
+	Sun, 15 Nov 2026 10:59:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794740365;
+	bh=vnMs5C/7Cd7Ng4umrmXPnRjthSwxlCZILIhiKLaE73I=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=OqksMTn0u0lys2OYtDM8IBowEJOH9uiS2JwsgplA+jN5namzKQkHliuEF06lM/Dw5
+	 H6Nj8TN8Eqfk/zbIKbWZZGvU5yBJXNkipYiXRzwyeM7uOAHWu2XCu/iL4u0CKOu1Mb
+	 t51e2BdXw+RNbZeZNh8QPCwv7uR3DiS4/TbNMcWgDOcaiaErwjVAW4ygvgI8dcJ7Gf
+	 nt93npIfGwEiLHiTxuOA0mg6IjNFZ0v8RA060huYgdAnlfbl2NKKQA2ouHnjK/hZ9Y
+	 bvT2iKTPXeca+WNrR7CK7s1bH5vvQPhQEYfG0eOcxxe3PUxeHlmdLnlk+SYlecNmyP
+	 4K04jK3cmEcDA==
+Message-ID: <sashiko-outbox-215433@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v2 2/3] scsi: target: iscsi: don't attach a connection
+ to a closing session
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Daniel Wade" <danjwade95@gmail.com>
+Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+In-Reply-To: <35c3a401f78f153f5f36cec7072c83da11902664.1794739041.git.danjwade95@gmail.com>
 References: <cover.1794739041.git.danjwade95@gmail.com>
+ <35c3a401f78f153f5f36cec7072c83da11902664.1794739041.git.danjwade95@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Sun, 15 Nov 2026 10:59:24 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -103,52 +60,85 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-iscsi_target_login_sess_out() re-arms the Time2Retain timer of the
-session whose login just failed.  In the window closed by the previous
-patch that session may already be on its way out: iscsit_close_session()
-stops that timer, then sleeps in iscsit_check_session_usage_count() on
-the reference this path is about to drop, and frees the session as soon
-as it is dropped.  A re-arm therefore lands between the stop and the
-free, and leaves an armed timer on freed memory.
+Thank you for your contribution! Sashiko AI review found 1 potential
+issue to consider:
+- [Medium] scsi: target: iscsi: session leak when login fails on
+  ISCSI_TF_EXPIRED
+--
 
-->session_close is set before the free is committed to, so test it here
-too and skip the re-arm.
+commit 2ec69a848adc6f1dace5f53e352fe2730d42d6f2
+Author: Daniel Wade <danjwade95@gmail.com>
 
-Unlike the previous patch this does not need the other teardown flags.
-Every iscsit_close_session() that reaches the free is the can_sleep=true
-call from iscsit_close_connection() and has ->session_close set, while
-iscsit_handle_time2retain_timeout() passes false and re-arms the timer
-instead of freeing when a usage count is held.
+scsi: target: iscsi: don't attach a connection to a closing session
 
-Fixes: e48354ce078c ("iscsi-target: Add iSCSI fabric support for target v4.1")
-Cc: stable@vger.kernel.org
-Signed-off-by: Daniel Wade <danjwade95@gmail.com>
----
- drivers/target/iscsi/iscsi_target_login.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+This commit prevents a non-leading iSCSI login from attaching a connection
+to a session that began closing while the login was negotiating.
 
-diff --git a/drivers/target/iscsi/iscsi_target_login.c b/drivers/target/iscsi/iscsi_target_login.c
-index 556ae5d2d50..124c9903fac 100644
---- a/drivers/target/iscsi/iscsi_target_login.c
-+++ b/drivers/target/iscsi/iscsi_target_login.c
-@@ -1177,7 +1177,13 @@ void iscsi_target_login_sess_out(struct iscsit_conn *conn,
- 	 */
- 	if (!zero_tsih && conn->sess) {
- 		spin_lock_bh(&conn->sess->conn_lock);
--		if (conn->sess->session_state == TARG_SESS_STATE_FAILED) {
-+		/*
-+		 * iscsit_close_session() stopped this timer before sleeping on
-+		 * the usage count this path drops, so re-arming it would leave
-+		 * the timer armed on freed memory.
-+		 */
-+		if (conn->sess->session_state == TARG_SESS_STATE_FAILED &&
-+		    !atomic_read(&conn->sess->session_close)) {
- 			struct se_portal_group *se_tpg =
- 					&conn->tpg->tpg_se_tpg;
- 
--- 
-2.39.0.windows.2
+> diff --git a/drivers/target/iscsi/iscsi_target_login.c b/drivers/target/i=
+scsi/iscsi_target_login.c
+> index f4df551817116..556ae5d2d501b 100644
+> --- a/drivers/target/iscsi/iscsi_target_login.c
+> +++ b/drivers/target/iscsi/iscsi_target_login.c
 
+[ ... ]
+
+> @@ -689,7 +713,28 @@ void iscsi_post_login_handler(
+>  		iscsi_release_param_list(conn->param_list);
+>  		conn->param_list =3D NULL;
+> =20
+> +		spin_lock_bh(&se_tpg->session_lock);
+>  		spin_lock_bh(&sess->conn_lock);
+> +		/*
+> +		 * iscsi_login_non_zero_tsih_s2() sampled these before the
+> +		 * negotiation and never looked again.  Re-test all of them under
+> +		 * the lock that serialises against the ->nconn test in
+> +		 * iscsit_close_connection(), and before this connection reaches
+> +		 * sess_conn_list or TARG_CONN_STATE_LOGGED_IN.
+> +		 */
+> +		if (atomic_read(&sess->session_close) ||
+> +		    atomic_read(&sess->session_fall_back_to_erl0) ||
+> +		    atomic_read(&sess->session_logout) ||
+> +		    (sess->time2retain_timer_flags & ISCSI_TF_EXPIRED)) {
+> +			spin_unlock_bh(&sess->conn_lock);
+> +			spin_unlock_bh(&se_tpg->session_lock);
+> +			pr_err("iSCSI session is closing, failing login on CID: %u\n",
+> +			       conn->cid);
+> +			iscsi_post_login_fail_conn(conn);
+> +			/* Last access to @sess: this lets close_session() free it. */
+> +			iscsit_dec_session_usage_count(sess);
+> +			return;
+> +		}
+
+[Severity: Medium]
+Does this leak sess when the login is refused because ISCSI_TF_EXPIRED is
+set?
+
+When the Time2Retain timer expires while the negotiating login holds
+sess->session_usage_count, iscsit_handle_time2retain_timeout() sets
+ISCSI_TF_EXPIRED without clearing ISCSI_TF_RUNNING and calls
+iscsit_close_session(sess, false) in timer context.  Because can_sleep is
+false, iscsit_check_session_usage_count() does not wait for the login to
+drop its reference:
+
+drivers/target/iscsi/iscsi_target.c:iscsit_close_session() {
+    ...
+	if (iscsit_check_session_usage_count(sess, can_sleep)) {
+		atomic_set(&sess->session_logout, 0);
+		iscsit_start_time2retain_handler(sess);
+		return 0;
+	}
+    ...
+}
+
+iscsit_start_time2retain_handler() then returns early without re-arming
+the timer because ISCSI_TF_RUNNING is still set
+(iscsit_stop_time2retain_timer() bails out when ISCSI_TF_EXPIRED is set),
+and sess->session_reinstatement also remains set.  When
+iscsi_post_login_handler() later sees ISCSI_TF_EXPIRED and drops
+sess->session_usage_count, iscsit_close_session() has already returned and
+nothing ever closes or frees sess.
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1794739041.gi=
+t.danjwade95@gmail.com?part=3D2
