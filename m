@@ -1,54 +1,55 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.180
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=193.222.135.158
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794765903;
-	b=WZyXFJwxm6G6lQDFFGWUPfTiZC8l+ELu8RToMR+CM2YfwX2o3MMOVGdByU/0yOrD6USO
-	 LP1UP98SrX9OqFqs20bmj1rqbhYa3XkiL11tKmD1IRQTGU+c3PGdMMY0vVjdqpwaoldI0
-	 tC1d9AQFkAZY5ZPkioRTm3f3LpPUBGn+7hvpoxeM6dp0+09bTBrdz5IGevA3XpKyEInAy
-	 wC091ci405EsCyp+0WpCeM+aIy6n/R0hJ+ReUV/PKgOXgzjESlGj7Qs9U6lgKqfScl82y
-	 Jb96knbF3DQYpnsXmLTImrXGmmxdkgptTPhx7D9z5QhtW4R7Ha9+LF64PDlTySDcLKg==
+	t=1794767206;
+	b=W3SaODQ8CO94smdjUF2/62yFu8smhJSrJAqgEM95wrnCZC7hk4Ekw4JmrN6fu0xJMfy8
+	 r1pj6tPuP4FZsSihXOe4rexMThusxJI92TgaYSb+CjzR5/muTPsNSW+EvQ0eLSvD1FuCr
+	 0cQTkIaSGpeTkMdvfa/BZGwXGxvRJ7MJOOshWAgYAxecShVfi05K9/CCA7yy6ZjASOm9Q
+	 dwXSkDgY/bVEmMLIo3VTBRO350K6rXJXjPRVsHnYB+owJvUR43VsEKUDl0Wyz+GQaryvM
+	 hOZwnRYD++L5lJ3K7TPwUUovTD9DjkOA9/pYVfcVkGlPjT9Z/LPfDaUge677DZJqzLg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794765903;
-	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
-	 Subject:To:Cc:References:Content-Language:From:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding;
-	bh=FJvm5/zzuNKuQVsdQQwncA9TdHL9pGAG2/TLNuHbhRk=;
-	b=I9VDGrxMerYyXqJVDxOhAAk95DD6Xg/WxzgU+O52Gc0hjTC8My5aDa/iCJY1z+hvoK6a
-	 +1L2/C9af8ZGaPbRG4ZUdC5sSxPY8yuIZJdTD3glPJP1txnFu9PVSzmQcfcQtwObcqrN4
-	 pn5x69rhZtTofaEqWE5/2qbeutbmkgI4KI2JRVvPVaVJB63zQZaLlqG+o7ITd5YGhBf7l
-	 5L4z+9cx5Kx30x+Qq0xmzzHJ2eSblpil0EGpcEPEN0sjR0nzKx2c5sQVWCoSUp0ARE9be
-	 OXpAvdvZOqkFD4b5sNsoG26sjXk0XKsB3I9NwFCWB6pAVYCsWJxleN5rONktaMpfm8w==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794767206;
+	h=DMARC-Filter:Received:DKIM-Signature:Received:Message-ID:Date:
+	 MIME-Version:User-Agent:Subject:To:Cc:References:Content-Language:
+	 From:Autocrypt:In-Reply-To:Content-Type:Content-Transfer-Encoding:
+	 X-WP-MailID:X-WP-AV:X-WP-SPAM;
+	bh=d6Mw+ubXF8sNdhhSz6FQxX5iaQzd+/Pf5yiAG6Xqtuo=;
+	b=DEyHh5Nm5cO4mAmM5ogaE0N4JXgIk/PNraaEMHvcv/cnlSKB4Ca/nhji9c+2o/SfgLtG
+	 qmprXC2+he3PQJUn/2AEi0+B8aiHwMV6LSAIcsq+6bR3KUZtfQnOamwpBux5ZF/nQRqoD
+	 chsG/1waW3TsslWUwvqz/VMLdjKw4Ph8Cv2nR6kyPs1Z7sAGOPYIv87odVDYIA3g2SttS
+	 jyHADo17zIJMQhmz51nduaTiunq/iH2nCTWhM99R5rsfdkEsOlGmmQNeXV9qSvSTlqBU5
+	 IQ5S+trxfsckX0oeCG/uCyTCyT5Bu43gPioskKJW/mCnkTNShVUuFAQ2uouaXkVH4kA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.dev;
-	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=JgkiFtmg;
-	arc=none smtp.remote-ip=91.218.175.180
-Received: from mta0.migadu.com (out-180.mta0.migadu.com [91.218.175.180])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=pass header.from=o2.pl;
+	spf=pass smtp.mailfrom=o2.pl;
+	dkim=pass header.d=o2.pl header.i=@o2.pl header.a=rsa-sha256 header.s=s20261001 header.b=AWKwe+4m;
+	arc=none smtp.remote-ip=193.222.135.158
+Received: from mx-out.tlen.pl (mx-out.tlen.pl [193.222.135.158])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 691F0606A31D
-	for <linux-scsi@vger.kernel.org>; Sun, 15 Nov 2026 18:05:02 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 691F0606A31D
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A79FC606A329
+	for <linux-scsi@vger.kernel.org>; Sun, 15 Nov 2026 18:26:44 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A79FC606A329
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=o2.pl
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=o2.pl
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=JgkiFtmg
-X-Envelope-To: linux-scsi@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=2IH1/X6CTvt0313Vz/VAWwJDEFN/f/O4dyfh9jni4TM=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1794765900; v=1; x=1795370700;
- b=JgkiFtmgYEe7oNWrKZ9TGdmjzzT9V0itTqKf4Ur9WzTSV5cHjOexXjN7SlbyRUqE9wFPn9oj
- ExFMY8ZBmi5AnK7XWRSgM8rx3zxEEM+JcU+d3a3H5EocJAa8BTt5vETxFS7cC4Be6SS5/iPe2SP
- KRsteUsVlo3PIqziI0FEhB+k=
-X-Envelope-To: linux-scsi@vger.kernel.org
-Received: by mta10.migadu.com with ESMTPS id d1d3b2979402012a;
-	Sun, 15 Nov 2026 18:05:00 +0000
-X-Mizu-Trace-ID: d1d3b2979402012a
-X-Migadu-Flow: FLOW_OUT
-Message-ID: <37cb0b01-0c6a-4b3d-b3d8-c4e5a45977a8@linux.dev>
-Date: Sun, 15 Nov 2026 18:04:54 +0000
+	dkim=pass (2048-bit key) header.d=o2.pl header.i=@o2.pl header.a=rsa-sha256 header.s=s20261001 header.b=AWKwe+4m
+Received: (wp-smtpd smtp.tlen.pl 41060 invoked from network); 15 Nov 2026 19:26:31 +0100
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=o2.pl; s=s20261001;
+          t=1794767191; bh=d6Mw+ubXF8sNdhhSz6FQxX5iaQzd+/Pf5yiAG6Xqtuo=;
+          h=Subject:To:Cc:From;
+          b=AWKwe+4mwqxLmslMtGtvuifajW+ZAgiOmWlm0GNIpHdB2oDLh0rix+p9oogXI+aOn
+           73Lzanp04BhOvi2KiDdzwKNYuYAzNjlV231AZpa3zzLt9qCOuAorIWDltCqJxNTTHT
+           Y+9BgzHWtnVNV/EjZYl7Xf5CgO00zJKv6V+uei/RltlcmtcD/mVMgJ9w2Ut9n2CxSw
+           Wyx6s+jnXqGX6qrxzkGnYHi+/WvsXLH3CgmE/tGPEL+UFqmgFvl04ch9fNlHWh+TSj
+           tweyyBA02IESsN2qHPcbL/mwVjBedvrPm+sls9evWxX3hFtcQkNgL0l8pGehQa7Rgb
+           4DWImfTUlrxfA==
+Received: from [192.168.1.22] (apn-78-30-67-84.dynamic.gprs.plus.pl [78.30.67.84])
+          (envelope-sender <mat.jonczyk@o2.pl>)
+          by smtp.tlen.pl (WP-SMTPD) with TLS_AES_256_GCM_SHA384 encrypted SMTP
+          for <stern@rowland.harvard.edu>; 15 Nov 2026 19:26:31 +0100
+Message-ID: <ae7ce6c0-d1ad-459d-a526-1d52fbb445b6@o2.pl>
+Date: Sun, 15 Nov 2026 19:26:29 +0100
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -59,124 +60,112 @@ List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: scsi_dh_alua: set handler_data before
- alua_initialize()
-To: Laurence Oberman <loberman@redhat.com>,
- "Martin K . Petersen" <mkp@kernel.org>, linux-scsi@vger.kernel.org
-Cc: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
- Bart Van Assche <bvanassche@acm.org>, Martin Wilck <mwilck@suse.com>,
- Hannes Reinecke <hare@kernel.org>, linux-kernel@vger.kernel.org,
- stable@vger.kernel.org
-References: <20261109201120.1067815-1-loberman@redhat.com>
-Content-Language: en-US
-From: John Garry <john.garry@linux.dev>
-In-Reply-To: <20261109201120.1067815-1-loberman@redhat.com>
+Subject: Re: [PATCH] usb: uas: expose US_FL_NO_ATA_1X in sysfs as
+ deny_ata_passthrough
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Oliver Neukum <oneukum@suse.com>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-usb@vger.kernel.org,
+ linux-scsi@vger.kernel.org, usb-storage@lists.one-eyed-alien.net,
+ linux-kernel@vger.kernel.org, smartmontools-support@listi.jpberlin.de,
+ Christian Franke <Christian.Franke@t-online.de>
+References: <20261115124046.5286-1-mat.jonczyk@o2.pl>
+ <1e731b43-93ad-4230-833a-df6949c7d4c6@rowland.harvard.edu>
+Content-Language: en-GB, pl
+From: =?UTF-8?Q?Mateusz_Jo=C5=84czyk?= <mat.jonczyk@o2.pl>
+Autocrypt: addr=mat.jonczyk@o2.pl; keydata=
+ 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
+ TANkZ3QqXNX2
+In-Reply-To: <1e731b43-93ad-4230-833a-df6949c7d4c6@rowland.harvard.edu>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-WP-MailID: a7c25a38ebf7bf4f20a8e77008d68389
+X-WP-AV: skaner antywirusowy Poczty o2
+X-WP-SPAM: NO 000000A [8eOU]                               
 
-On 11/9/26 20:11, Laurence Oberman wrote:
-> Since commit 50759b881e1d ("scsi: device_handler: alua: Call
-> scsi_device_put() from non-atomic context"), alua_rtpg_queue() only
-> queues an RTPG when sdev->handler_data points at an alua_dh_data whose
-> port group matches:
-> 
-> 	struct alua_dh_data *h = sdev->handler_data;
-> 	...
-> 	if (h && rcu_dereference(h->pg) == pg) {
+W dniu 15.11.2026 o 16:52, Alan Stern pisze:
+> On Sun, Nov 15, 2026 at 01:40:46PM +0100, Mateusz Jończyk wrote:
+>> The uas driver blocks access to ATA passthrough commands for some
+>> devices it considers buggy (via the US_FL_NO_ATA_1X flag in
+>> unusual_uas.h and uas_detect.h). However, it does not expose any
+>> meaningful information whether the command was blocked by the driver or
+>> is genuinly not supported by the hardware. This creates a problem for
+>> the smartmontools program and makes it difficult for it to provide a
+>> useful error message (with instructions to disable UAS on the drive to
+>> get SMART readings).
+>>
+>> So, expose the information in sysfs as deny_ata_passthrough. Other
+>> quirks may be added in the future if there is any demand.
+>>
+>> Link: https://www.smartmontools.org/wiki/SAT-with-UAS-Linux
+>> Signed-off-by: Mateusz Jończyk <mat.jonczyk@o2.pl>
+> Why was this change made to uas but not to usb-storage?  Was it because
+> some devices can handle ATA passthrough commands over the Bulk-Only
+> transport but not over the UAS transport?  Note that the
+> US_FL_NO_ATA_1X flag applies to both transports.
+>
+> Alan Stern
 
-Do we still require this check (for h being non-NULL) after the change 
-in this patch? I assume that we flush any calls to this function prior 
-to unsetting sdev->handler_data.
+There are only very few devices that cannot handle ATA passthrough commands
+over the Bulk-Only transfer (and with them it's impossible to get ATA
+passthrough by disabling UAS). But that's a fair point, will fix it in v2.
 
-> 
-> However alua_bus_attach() only assigns sdev->handler_data after
-> alua_initialize() returns, and alua_initialize() -> alua_check_vpd()
-> is where the initial RTPG is queued. At that point handler_data is
-> still NULL, so the initial RTPG is silently dropped: no RTPG is sent,
-> nothing is logged, and sdev->access_state keeps its zeroed default of
-> active/optimized for every path.
-> 
-> With dm-multipath this goes unnoticed, as pg_init calls
-> scsi_dh_activate() once the map is loaded, which queues an RTPG after
-> handler_data is set, and multipathd's alua prioritizer issues its own
-> RTPG from userspace. Anything relying on sdev->access_state without a
-> subsequent activate (sysfs access_state/preferred_path, native SCSI
-> multipath path selection) sees every path as active/optimized until a
-> Unit Attention or rescan triggers an RTPG.
-> 
-> Seen on an HP P2000 G3 FC array (implicit ALUA, two port groups, four
-> paths per LUN) with dm-multipath not in use: sg_rtpg reports port group
-> 0 active/non-optimized and port group 1 active/optimized, but
-> /sys/class/scsi_device/H:C:T:L/device/access_state reads
-> active/optimized on all four paths after boot, and no
-> "alua: port group XX state ..." message is logged. Writing "activate"
-> to dh_state sends the RTPG and corrects access_state.
-> 
-> Kernels without commit 50759b881e1d queue the attach-time RTPG
-> unconditionally and are not affected.
-> 
-> Fix by assigning sdev->handler_data before calling alua_initialize(),
-> and clearing it again on failure. sdev->handler is only set once
-> scsi_dh_handler_attach() sees ->attach() succeed, so no handler
-> callback can observe the partially initialised alua_dh_data. On the
-> failure paths of alua_initialize(), h has not been added to a port
-> group and no RTPG has been queued, so freeing it is unchanged.
-> 
-> Fixes: 50759b881e1d ("scsi: device_handler: alua: Call scsi_device_put() from non-atomic context")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Laurence Oberman <loberman@redhat.com>
-> ---
-> 
-> Notes:
->      Tested on an HP P2000 G3 FC array (30 LUNs, 4 paths each): with this
->      patch the "alua: port group 00 state N ..." messages are logged during
->      boot and access_state shows two active/optimized and two
->      active/non-optimized paths per LUN without any manual activate.
->      Without it, all paths read active/optimized until an RTPG is triggered.
->      
->      I found this while testing John Garry's native SCSI multipath series
->      (v9) on an HP P2000 G3 FC array (30 LUNs, 4 paths each, dm-multipath
->      not in use). Native multipath uses sdev->access_state for path
->      selection, and every path showed active/optimized, although sg_rtpg
->      and dm-multipath (alua prio 50/10) both report port group 0 as
->      active/non-optimized. No "alua: port group XX state ..." message was
->      logged at boot. Writing "activate" to dh_state corrected access_state,
->      which pointed at the attach-time RTPG never being queued.
->      
->      With this patch, the port group state messages are logged during boot
->      and access_state shows two active/optimized and two
->      active/non-optimized paths per LUN without any manual activate.
->      
->      This fix is independent of the native multipath series. It affects any
->      user of access_state/preferred_path, and ALUA prep_fn fast-fail, on
->      kernels with 50759b881e1d where nothing calls scsi_dh_activate()
->      after attach.
->      
->      v9 series: https://lore.kernel.org/linux-scsi/20261108204733.557995-1-
->      john.garry@linux.dev/
-> 
->   drivers/scsi/device_handler/scsi_dh_alua.c | 9 ++++++++-
->   1 file changed, 8 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-> index 87ac0a6d63e5..84ff3aed2c46 100644
-> --- a/drivers/scsi/device_handler/scsi_dh_alua.c
-> +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-> @@ -1233,13 +1233,20 @@ static int alua_bus_attach(struct scsi_device *sdev)
->   	INIT_LIST_HEAD(&h->node);
->   
->   	mutex_init(&h->init_mutex);
-> +	/*
-> +	 * alua_rtpg_queue() only queues an RTPG when sdev->handler_data
-> +	 * points at this alua_dh_data, so set it before alua_initialize()
-> +	 * otherwise the initial RTPG issued from alua_check_vpd() is
-> +	 * silently dropped and sdev->access_state is never populated.
-> +	 */
-> +	sdev->handler_data = h;
+Considering the US_FL_NO_ATA_1X flag:
 
-Note: I was checking which members of alua_dh_data are not initialized 
-prior to publishing sdev->handler_data, and alua_dh_data.group_id is 
-never accessed at all AFAICS.
+- I suspect that many more devices would accept the ATA passthrough 
+commands in
+   UAS mode if these would be issued in isolation (if uas_queuecommand_lck()
+   would stop all other transfers while doing them). After all, Windows
+   apparently does not carry such quirks for modern devices. I do not 
+have the
+   hardware to test, though.
 
-Thanks,
-John
+- Since 2017, it is set unequivocally for all Seagate drives, even 
+though most
+   likely modern drives / firmware versions do not need it. I do not see 
+a way
+   out, though.
+
+Greetings,
+
+Mateusz
+
