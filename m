@@ -1,55 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=193.222.135.158
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.21
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794767206;
-	b=W3SaODQ8CO94smdjUF2/62yFu8smhJSrJAqgEM95wrnCZC7hk4Ekw4JmrN6fu0xJMfy8
-	 r1pj6tPuP4FZsSihXOe4rexMThusxJI92TgaYSb+CjzR5/muTPsNSW+EvQ0eLSvD1FuCr
-	 0cQTkIaSGpeTkMdvfa/BZGwXGxvRJ7MJOOshWAgYAxecShVfi05K9/CCA7yy6ZjASOm9Q
-	 dwXSkDgY/bVEmMLIo3VTBRO350K6rXJXjPRVsHnYB+owJvUR43VsEKUDl0Wyz+GQaryvM
-	 hOZwnRYD++L5lJ3K7TPwUUovTD9DjkOA9/pYVfcVkGlPjT9Z/LPfDaUge677DZJqzLg==
+	t=1794767854;
+	b=Ba9IsfIpJsnlvsfcN4yrjaZKD1I043+gaFi4+B4LNZNPgWFN4k45r7kM9AAENFoZbeRX
+	 86wDj3Tcry5NlnQXMSo0oem/k8ryeBQiEmW+cgC9XRGKFwJCea5FGWFQfpy/8OIoifDOj
+	 GM7Z3dt82vQagFAglC0aVxDZ469rWlUaBYNQE5rJOwCz8pvgM0VlcAbmHlzBgmf/O+tr1
+	 on7CE6d99Vvc26GipcFNgkHRKSeRsjSD7NpVFH+JXR5QMFoktjGWI/9LT2vKktNUXXw2c
+	 dGRHw8SNfECnOf5YPrFIPyJcq8/Mrcu8mzBkHANM0EYx9nFuoDU1iWkl9/8K8TC8hXA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794767206;
-	h=DMARC-Filter:Received:DKIM-Signature:Received:Message-ID:Date:
-	 MIME-Version:User-Agent:Subject:To:Cc:References:Content-Language:
-	 From:Autocrypt:In-Reply-To:Content-Type:Content-Transfer-Encoding:
-	 X-WP-MailID:X-WP-AV:X-WP-SPAM;
-	bh=d6Mw+ubXF8sNdhhSz6FQxX5iaQzd+/Pf5yiAG6Xqtuo=;
-	b=DEyHh5Nm5cO4mAmM5ogaE0N4JXgIk/PNraaEMHvcv/cnlSKB4Ca/nhji9c+2o/SfgLtG
-	 qmprXC2+he3PQJUn/2AEi0+B8aiHwMV6LSAIcsq+6bR3KUZtfQnOamwpBux5ZF/nQRqoD
-	 chsG/1waW3TsslWUwvqz/VMLdjKw4Ph8Cv2nR6kyPs1Z7sAGOPYIv87odVDYIA3g2SttS
-	 jyHADo17zIJMQhmz51nduaTiunq/iH2nCTWhM99R5rsfdkEsOlGmmQNeXV9qSvSTlqBU5
-	 IQ5S+trxfsckX0oeCG/uCyTCyT5Bu43gPioskKJW/mCnkTNShVUuFAQ2uouaXkVH4kA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794767854;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
+	 Subject:To:Cc:References:Content-Language:From:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding;
+	bh=9+CWduOD2mKLrUtPjD/H/4JSv1e7FTjJ8If9tjLANUo=;
+	b=QFS5knAbuw7/q3s8S/JX/XOnpRLYWCSLeinx7fvMGZ/mqyfxqq+o/5R/d8/05ZmiR0v5
+	 iG237q4UpVzm/WwTh40PnVPkCBM27ajwLsWz4tkeXyrz2O9wP5S1eAOTd817uT4Izcr+6
+	 6EoB+10JQP8yRLJooeZ/KYI+t3sksht47I8iXCrLovCvi2yLRf19OBQTXL+R+iO4Sg38w
+	 6/duvzy/5hATNihAfjP99G/FvDF7w4J+p5/cOJKfGbJekDjD/n68IPBc8r/VYPK7pXerb
+	 s45nW9GYzVu8+KALRB8r6f7qPCii/c800C+qfqvMzOmeWhpTuriBddA4D0HMTZ/UJvA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=o2.pl;
-	spf=pass smtp.mailfrom=o2.pl;
-	dkim=pass header.d=o2.pl header.i=@o2.pl header.a=rsa-sha256 header.s=s20261001 header.b=AWKwe+4m;
-	arc=none smtp.remote-ip=193.222.135.158
-Received: from mx-out.tlen.pl (mx-out.tlen.pl [193.222.135.158])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=linux.dev;
+	spf=pass smtp.mailfrom=linux.dev;
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=MQtY6NIt;
+	arc=none smtp.remote-ip=95.215.58.21
+Received: from mta1.migadu.com (out-21.mta1.migadu.com [95.215.58.21])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A79FC606A329
-	for <linux-scsi@vger.kernel.org>; Sun, 15 Nov 2026 18:26:44 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A79FC606A329
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=o2.pl
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=o2.pl
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15584606A31F
+	for <linux-scsi@vger.kernel.org>; Sun, 15 Nov 2026 18:37:32 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 15584606A31F
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=o2.pl header.i=@o2.pl header.a=rsa-sha256 header.s=s20261001 header.b=AWKwe+4m
-Received: (wp-smtpd smtp.tlen.pl 41060 invoked from network); 15 Nov 2026 19:26:31 +0100
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=o2.pl; s=s20261001;
-          t=1794767191; bh=d6Mw+ubXF8sNdhhSz6FQxX5iaQzd+/Pf5yiAG6Xqtuo=;
-          h=Subject:To:Cc:From;
-          b=AWKwe+4mwqxLmslMtGtvuifajW+ZAgiOmWlm0GNIpHdB2oDLh0rix+p9oogXI+aOn
-           73Lzanp04BhOvi2KiDdzwKNYuYAzNjlV231AZpa3zzLt9qCOuAorIWDltCqJxNTTHT
-           Y+9BgzHWtnVNV/EjZYl7Xf5CgO00zJKv6V+uei/RltlcmtcD/mVMgJ9w2Ut9n2CxSw
-           Wyx6s+jnXqGX6qrxzkGnYHi+/WvsXLH3CgmE/tGPEL+UFqmgFvl04ch9fNlHWh+TSj
-           tweyyBA02IESsN2qHPcbL/mwVjBedvrPm+sls9evWxX3hFtcQkNgL0l8pGehQa7Rgb
-           4DWImfTUlrxfA==
-Received: from [192.168.1.22] (apn-78-30-67-84.dynamic.gprs.plus.pl [78.30.67.84])
-          (envelope-sender <mat.jonczyk@o2.pl>)
-          by smtp.tlen.pl (WP-SMTPD) with TLS_AES_256_GCM_SHA384 encrypted SMTP
-          for <stern@rowland.harvard.edu>; 15 Nov 2026 19:26:31 +0100
-Message-ID: <ae7ce6c0-d1ad-459d-a526-1d52fbb445b6@o2.pl>
-Date: Sun, 15 Nov 2026 19:26:29 +0100
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=MQtY6NIt
+X-Envelope-To: linux-scsi@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=JOx3d+X1zVfHWepWY8CK1e2hQWjyfmWSp9MXd/S2URA=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1794767850; v=1; x=1795372650;
+ b=MQtY6NItBSPHeo5XNdLlKlS12p92qKMsy4V0enD0O77WNlcb7TDZf845urA7TjXonFBJq4Ji
+ zAm7/p++WuudAXJcLRxqdhmOfwW23QU8vARBC/g4hdn26LyT1gB3sPC/nuLaFo2rYet5uS4lFpX
+ dhMsZbSSGUrzPp83vGJOrFjw=
+X-Envelope-To: linux-scsi@vger.kernel.org
+Received: by mta10.migadu.com with ESMTPS id 8bdf4a6ce8e839ca;
+	Sun, 15 Nov 2026 18:37:30 +0000
+X-Mizu-Trace-ID: 8bdf4a6ce8e839ca
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <84b50119-cb4a-4bda-9ab8-7b590216858e@linux.dev>
+Date: Sun, 15 Nov 2026 18:37:28 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -60,112 +59,102 @@ List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] usb: uas: expose US_FL_NO_ATA_1X in sysfs as
- deny_ata_passthrough
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Oliver Neukum <oneukum@suse.com>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-usb@vger.kernel.org,
- linux-scsi@vger.kernel.org, usb-storage@lists.one-eyed-alien.net,
- linux-kernel@vger.kernel.org, smartmontools-support@listi.jpberlin.de,
- Christian Franke <Christian.Franke@t-online.de>
-References: <20261115124046.5286-1-mat.jonczyk@o2.pl>
- <1e731b43-93ad-4230-833a-df6949c7d4c6@rowland.harvard.edu>
-Content-Language: en-GB, pl
-From: =?UTF-8?Q?Mateusz_Jo=C5=84czyk?= <mat.jonczyk@o2.pl>
-Autocrypt: addr=mat.jonczyk@o2.pl; keydata=
- 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
- TANkZ3QqXNX2
-In-Reply-To: <1e731b43-93ad-4230-833a-df6949c7d4c6@rowland.harvard.edu>
+Subject: Re: [PATCH v9 01/29] scsi: core: Clear cmd->flags for terminal
+ queuing error
+To: Bart Van Assche <bvanassche@acm.org>,
+ james.bottomley@hansenpartnership.com, mkp@kernel.org
+Cc: hare@suse.com, linux-nvme@lists.infradead.org,
+ linux-scsi@vger.kernel.org, snitzer@kernel.org, jmeneghi@redhat.com,
+ bmarzins@redhat.com, dm-devel@lists.linux.dev, hch@lst.de,
+ michael.christie@oracle.com
+References: <20261108204733.557995-1-john.garry@linux.dev>
+ <20261108204733.557995-2-john.garry@linux.dev>
+ <060d5e0d-764e-40bd-8bb7-ead8d4ada5b0@acm.org>
+Content-Language: en-US
+From: John Garry <john.garry@linux.dev>
+In-Reply-To: <060d5e0d-764e-40bd-8bb7-ead8d4ada5b0@acm.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-WP-MailID: a7c25a38ebf7bf4f20a8e77008d68389
-X-WP-AV: skaner antywirusowy Poczty o2
-X-WP-SPAM: NO 000000A [8eOU]                               
 
-W dniu 15.11.2026 o 16:52, Alan Stern pisze:
-> On Sun, Nov 15, 2026 at 01:40:46PM +0100, Mateusz Jończyk wrote:
->> The uas driver blocks access to ATA passthrough commands for some
->> devices it considers buggy (via the US_FL_NO_ATA_1X flag in
->> unusual_uas.h and uas_detect.h). However, it does not expose any
->> meaningful information whether the command was blocked by the driver or
->> is genuinly not supported by the hardware. This creates a problem for
->> the smartmontools program and makes it difficult for it to provide a
->> useful error message (with instructions to disable UAS on the drive to
->> get SMART readings).
->>
->> So, expose the information in sysfs as deny_ata_passthrough. Other
->> quirks may be added in the future if there is any demand.
->>
->> Link: https://www.smartmontools.org/wiki/SAT-with-UAS-Linux
->> Signed-off-by: Mateusz Jończyk <mat.jonczyk@o2.pl>
-> Why was this change made to uas but not to usb-storage?  Was it because
-> some devices can handle ATA passthrough commands over the Bulk-Only
-> transport but not over the UAS transport?  Note that the
-> US_FL_NO_ATA_1X flag applies to both transports.
->
-> Alan Stern
+On 11/9/26 20:49, Bart Van Assche wrote:
+> On 11/8/26 12:47 PM, John Garry wrote:
+>  > If a request can't be queued in scsi_queue_rq(), then we error out
+>  > with a blk_status_t code. Such a scenario may be the scsi_device has
+>  > its transport offline. For BLK_STS_RESOURCE or BLK_STS_AGAIN, the
+>  > request will be requeued in the block layer.
+> 
+> This is not correct for BLK_STS_AGAIN. Only BLK_STS_RESOURCE and
+> BLK_STS_DEV_RESOURCE cause the block layer to requeue a request. For
+> all other status codes, including BLK_STS_AGAIN,
+> blk_mq_dispatch_rq_list() and blk_mq_try_issue_directly() call
+> blk_mq_end_request().
 
-There are only very few devices that cannot handle ATA passthrough commands
-over the Bulk-Only transfer (and with them it's impossible to get ATA
-passthrough by disabling UAS). But that's a fair point, will fix it in v2.
+ok, right
 
-Considering the US_FL_NO_ATA_1X flag:
+> 
+>  > For other errors, the block layer ends the request and so we won't
+>  > see it again (until recycled). Normally when a request completes
+>  > scmd->flags is cleared in scsi_end_request(). However for the error
+>  > scenario mentioned above, scsi_end_request() is not called and so
+>  > scmd->flags is not cleared. As such, when the request is recycled we
+>  > see the old value in scmd->flags.
+> 
+> Please describe the consequences of this bug in the patch description.
+> As far as I can tell there are at least two:
+> - SCMD_FAIL_IF_RECOVERING is part of SCMD_PRESERVED_FLAGS and
+>    scsi_execute_cmd() ORs new flags into scmd->flags. If a command
+>    submitted with SCMD_FAIL_IF_RECOVERING is failed with BLK_STS_OFFLINE
+>    because the host is in recovery, the flag leaks into the next request
+>    that is allocated with the same tag. That request will then be failed
+>    instead of requeued if it is submitted while the SCSI error handler
+>    is active.
+> - If SCMD_INITIALIZED leaks, scsi_init_command() skips
+>    scsi_initialize_rq() for the next filesystem request. Hence,
+>    jiffies_at_alloc and retries are not reinitialized and that request
+>    may be failed prematurely by scsi_cmd_runtime_exceeded().
+ > >  > Fix this issue by clearing scmd->flags in the error scenario 
+mentioned
+>  > by calling scsi_cleanup_rq().
+> 
+> Please add Fixes: and Cc: stable tags. For the SCMD_FAIL_IF_RECOVERING
+> leak, I think this should be:
+> 
+> Fixes: 310bcaef6d7e ("scsi: core: Support failing requests while 
+> recovering")
 
-- I suspect that many more devices would accept the ATA passthrough 
-commands in
-   UAS mode if these would be issued in isolation (if uas_queuecommand_lck()
-   would stop all other transfers while doing them). After all, Windows
-   apparently does not carry such quirks for modern devices. I do not 
-have the
-   hardware to test, though.
+I am more inclined to go back to some commit pre-LTS v5.15, which is the 
+oldest LTS maintained today. Even if you check 64104f703212f, I'd say 
+that the issue existed then.
 
-- Since 2017, it is set unequivocally for all Seagate drives, even 
-though most
-   likely modern drives / firmware versions do not need it. I do not see 
-a way
-   out, though.
+> 
+>  > @@ -1994,8 +1994,8 @@ static blk_status_t scsi_queue_rq(struct 
+> blk_mq_hw_ctx *hctx,
+>  >           * we hit an error, as we will never see this command
+>  >           * again.
+>  >           */
+>  > -        if (req->rq_flags & RQF_DONTPREP)
+>  > -            scsi_mq_uninit_cmd(cmd);
+>  > +        scsi_cleanup_rq(req);
+>  > +        scsi_run_queue_async(sdev);
+> 
+> Since the block layer also ends requests for which scsi_queue_rq()
+> returns BLK_STS_AGAIN, the BLK_STS_AGAIN case has the same issue.
+> Please convert that case too:
+> 
+>      case BLK_STS_AGAIN:
+>          cmd->result = DID_BUS_BUSY << 16;
+>          scsi_cleanup_rq(req);
+>          break;
+> 
 
-Greetings,
+ok, fine. BTW, does anyone ever check cmd->result in this case, or are 
+we just exercising good practice to set the result to failed?
 
-Mateusz
+> Although no SCSI driver returns BLK_STS_AGAIN today, I think both
+> error paths should handle this in the same way.
+> 
+Hi Martin, I would really rather not post yet another version of this 
+series. How about send the extra change which Bart requested separately?
 
+Thanks,
+John
