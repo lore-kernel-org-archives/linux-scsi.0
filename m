@@ -1,54 +1,122 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.203
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.129.124
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794769184;
-	b=4ifxv/Lbp3vXITfvjHeIGMUsukVvH6XOcPfDViD6faedSkM4od7ywtk0PCTYUqKHLMPt
-	 UOAruJWgZKhUDyyhqm/pSbSa/tyVpWnjqHg0dE4Lw4aHGjnj005Ew+cZUntzVIk5QKR6Y
-	 Fbk7Y12TuIpBX4LjkIrgjrAC+7VD5ugwDiJx9cTvRNCC2vrK/2b507CDD+Az5KV34t/Di
-	 twPrP28xN70U7+BG+dlJ+25sxccKaCTW7Xwdn+vHwHfpuuvdNFp9ShjFn76c3wuvCvfyl
-	 A6vLbJ0hcDYXCWz6hmmpM2o5tfCGuJeF8xF1IeSknxBTan6FSc62PdsCcDf0XxAhU8A==
+	t=1794771481;
+	b=YCUE1eCiqMeVxkA72wT/vw/bA3tsh08+Mp0UqwbVrLvhBFJJ1FlShTnghzhC2jbwnCWl
+	 2A+2tw6I05zOPJEOIFmXXto2WkqhexS2osHYSK2HZXxruqvwgHw0ZkE32iUDb/iifnkmY
+	 aqKRUruFj87cUFKuNA78k9RcZP9GHtXNF5/l92Lko8UipQqS38HhDInfCXK1hJlEYlces
+	 SkdgsL6GaBS5tX1HRQwDZoHfWx3j66J9z9bideuA7AeEAx/SX1LxWCyFRTR+CL77mvoeZ
+	 C/V20FyDv8pnPqZ9D0IgtkPdcIaeUE4AEayfp1CVvTkh7nFWvnyzuCd84EtQekZfj8A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794769184;
-	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
-	 Subject:To:Cc:References:Content-Language:From:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding;
-	bh=/ObX0z92vMMwlVFIRqUffs3xnTOINmuVmFY1k0W8fVs=;
-	b=zK/VTzibgwILW2lAMJa812O10ZwMliQSnPN+us2v/Bn7QNIpw3zf8Z4bYcJk38CACyKO
-	 q8OCw6IaYZ+90FB8FzVz3dYDw8UttUrbvJIDuwF2b/o/0dzqMIe8sW2lu3XzO7A658Usq
-	 YIaNRPVQkkxvM8BKilwQMe2HY7fsy/LAlEf0VFVA/jYH1h6sxKB76tldDBuWRc0AVVOTe
-	 Hiyfj0kcGEkEBKEHm6U7SbASy+lW2Em4aQWo5S4VF9unBDEXlPHN42vIa1pK5R0agYyav
-	 PJhg6sa17lOfyK6brxzieBQ1oAG8KZOXfMxao+ATKwkh6DUrcIWI9hGimAhc1pM2jMg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794771481;
+	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
+	 X-Mimecast-MFC-AGG-ID:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
+	 X-Received:Received:Message-ID:Subject:From:To:Cc:Date:In-Reply-To:
+	 References:Content-Type:Content-Transfer-Encoding:User-Agent:
+	 MIME-Version;
+	bh=/luIyR3tpbggHS7Zq42qTKVus5XgrWc/w93JTjjMLdc=;
+	b=GYMRIMX4INfyRS1mu2PgJDfOoc7JN9mgRctnH/KOrEKmX1IYoxr61Gz5Nct1pR8zM9Iy
+	 CYBZDhSw5IpIXLLAyLnDWU9wvvuRPiGZnnZSN6SMhvuqn03Ah0gdOjzlSwJCQ+c3nZ1vv
+	 K4X5glIjYTcCkiELdG0KxytN1Y4JHtfZ1dIknCEOqatXiQq9ljViIIX0BmSue/axdB41e
+	 Qb4kqt5uo/k23vbmkXc4Gxq/r5Ga2OUxGxu+E1gt0f7Ulfs4apKJ2wvEVfgE4yJJq0+16
+	 IyJ/JQIWpTOIha21ROARErGvi2g7AYP1FSGm9it61HmsbMrPO9084O5jFjKujfHnebA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.dev;
-	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=m+b548ra;
-	arc=none smtp.remote-ip=91.218.175.203
-Received: from mta0.migadu.com (out-203.mta0.migadu.com [91.218.175.203])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=pass header.from=redhat.com;
+	spf=pass smtp.mailfrom=redhat.com;
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=JQ4XA2I8;
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=mTTPyAzg;
+	arc=none smtp.remote-ip=170.10.129.124
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 07B88606A323
-	for <linux-scsi@vger.kernel.org>; Sun, 15 Nov 2026 18:59:42 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 07B88606A323
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CDE55606A880
+	for <linux-scsi@vger.kernel.org>; Sun, 15 Nov 2026 19:37:59 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CDE55606A880
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=m+b548ra
-X-Envelope-To: linux-scsi@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=r3KwoUnK5Cpd0P3vAYLdMdF/mK6lClj/XHu1EZl9IQk=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1794769181; v=1; x=1795373981;
- b=m+b548raxrJiL5rD83zD7iSPQgSwYvP9WuI3cFiQTKBr3XJHYP/FHz5KmuWZu1gJvkA8UAT4
- vu9H4hYculmihRzuin0ZLl5mZUFsDx75A3Kds86gWoNoOgCYctsPIDwkOf4c8gNX/k8lwDXPHbN
- 9+yv061U0MSvBjdwchDItkzg=
-X-Envelope-To: linux-scsi@vger.kernel.org
-Received: by mta10.migadu.com with ESMTPS id 6c594d68444740c8;
-	Sun, 15 Nov 2026 18:59:41 +0000
-X-Mizu-Trace-ID: 6c594d68444740c8
-X-Migadu-Flow: FLOW_OUT
-Message-ID: <01eac6bf-8df7-4e7a-8cc6-93e013750bce@linux.dev>
-Date: Sun, 15 Nov 2026 18:59:37 +0000
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=JQ4XA2I8;
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=mTTPyAzg
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1794771478;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=/luIyR3tpbggHS7Zq42qTKVus5XgrWc/w93JTjjMLdc=;
+	b=JQ4XA2I8MMg/zHdIy9On86Dj3ayLQ9nhG9XMpWmCPG82v/q2OOkQgl6ORUqaOx8aDp3m2k
+	7+0GaKYJSSLx28btMAhkXL21EJQqf9GNMDQhpd+Q2xMnbjQATobpjc5HBxxsWR0ZXQ6EEB
+	ss+EgxZsFHijBzs2gCeWF2z1NWUpP+Y=
+Received: from mail-qk1-f199.google.com (mail-qk1-f199.google.com
+ [209.85.222.199]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-621-9zKWTUO7P4eN67c1PEKIdQ-1; Sun, 15 Nov 2026 14:37:57 -0500
+X-MC-Unique: 9zKWTUO7P4eN67c1PEKIdQ-1
+X-Mimecast-MFC-AGG-ID: 9zKWTUO7P4eN67c1PEKIdQ_1794771477
+Received: by mail-qk1-f199.google.com with SMTP id af79cd13be357-93e92aad34aso576468285a.0
+        for <linux-scsi@vger.kernel.org>; Sun, 15 Nov 2026 11:37:57 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1794771477; x=1795376277; darn=vger.kernel.org;
+        h=mime-version:user-agent:content-transfer-encoding:content-type
+         :references:in-reply-to:date:cc:to:from:subject:message-id:from:to
+         :cc:subject:date:message-id:reply-to:content-type;
+        bh=/luIyR3tpbggHS7Zq42qTKVus5XgrWc/w93JTjjMLdc=;
+        b=mTTPyAzgF9sjMe71JogOjmGF8zrklZDwCMM4i0vH/yjIu4dCaaZ6dBhiOjMN4LFuCv
+         +YmOoWUAtygIV7YKTwATp4I5K675bS+y5Unx6q8mTGKRb066fFj+JKEm2/UYseq7HJcp
+         8HN3sGcL77Lkn39y4h/iDqnp9rKDuQJhK8z4FJIILyoqdziNrBqyIwl9v+bT6JAGXy13
+         2WP8bZQqUTiUPA0XsFeTEyc+8eVk4RtascL6yctBJ4qjJnecxH1LeUv8A/QlhKVP0wNE
+         uu+aVS8iN9GfkjstXn/c7c63CMkYkRG6QV7/oAKfWAv0PaKltVPNFXdwsgTDnZmVfE66
+         qiDw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1794771477; x=1795376277;
+        h=mime-version:user-agent:content-transfer-encoding:content-type
+         :references:in-reply-to:date:cc:to:from:subject:message-id:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=/luIyR3tpbggHS7Zq42qTKVus5XgrWc/w93JTjjMLdc=;
+        b=R2y5x12QVzY7bpy0zjQ//aDY6lgy0eYu5Yqzre5bkGGQXC0gu+CBJOa56a4E5VzUT0
+         RIT9UnGpUkZviQHXwb4rXt2B8Jk2f33JlBMoTFr0naVqfmrP74MXr35AYuHnwCKtU8Nd
+         SKcpoz1tOQBFvBri3qAgZi+qijHxips06+9Btk7TzEWfgcvfxytK+4Ica9sywDIgGimb
+         QJSPSXaqGkr9gLbpFgrH0heypFU+kGvW9Gg47FXFOgQ4axJpuRgYbCzmnPGvTATJGn1M
+         XKbLgTQa4XWb4EKj9BhXNkpRoTpvf7IRoDxjt6NaKiRU/rvg030aTeaAUqijACkfGS/G
+         cP7Q==
+X-Forwarded-Encrypted: i=1; AL+hErGiAwi9AzhQ51tfX/dtca+rMwHG3t2nsyL9oJasYxAsx6SJOh+SSz36+icN1+ahe7u08vC7epU0jySs@vger.kernel.org
+X-Gm-Message-State: APuU4Z9AeCfVzvjQwQ8sibDzM2PjtYy+BFcfiYrfW1jTkzdcKUuhUMKz
+	6avRguvDr8STbpww/DcHJsg7g2RdGeh5GeKDZI+DMhN75WiK8IgqUNfKLD/yQjwQew5mTjKm1/x
+	2X+LSzsHJ3i9AT9d+nHtcegxrrW9mdW+O/0CaBHDdcLOlaHnvv6OAodTnZknc90M=
+X-Gm-Gg: AYBFou2TmqEpqzKxrESKySg4sqpXgpSTi1RzvS9VbGMT5P8qwtOb36KZ0FVCDXIV+R1
+	32mb0QJPgGTogo2hpzCGR0W62zkR/trQwrZLKqnJy+cPB21Fh8vy7OrCzZQM17tua+qg1k80yjg
+	SYf8SuMB1UY889Y+rN8n6loUiAv7TIMatemkcJXfM+FiZpgUhUUkC6xSvYXZX6YGOt3bw7hk8Pt
+	DYfOBE5LGsRCpZybRDrwQE5g7KUiu8nZvDoJDCCXTnY4PSpak62eeKXIzowoZqV6Jxbw8c9mm13
+	NYmWBy8wNYptHrNmYDWos4n3gr9BLhw55z8HbYNLmzCo/8hrJ3Jvnw6cecanQXpgVVSeQvQ5/RU
+	D+0ORGiWLuICk2X8M9iXCbsmAkGtoxt9blJcGBxkA+K5wLSt7Qn0KaBSOc+vhi91pGvmyrN+ALc
+	k0vMOQ5Uuv4CwC5E6MqVRFRNUhUO5O2E8C4gG5xXnBDOt9sM29pkUVJw5qEWZeOkOufhv9hw==
+X-Received: by 2002:a05:620a:4111:b0:93f:1ff5:8908 with SMTP id af79cd13be357-9494bbde323mr1511407285a.41.1794771476931;
+        Sun, 15 Nov 2026 11:37:56 -0800 (PST)
+X-Received: by 2002:a05:620a:4111:b0:93f:1ff5:8908 with SMTP id af79cd13be357-9494bbde323mr1511404285a.41.1794771476356;
+        Sun, 15 Nov 2026 11:37:56 -0800 (PST)
+Received: from loberman-thinkpadp1gen5.rmtusma.csb ([2600:6c65:2440:d8c:929c:b769:6def:faa3])
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-949800ff73fsm43730185a.19.2026.11.15.11.37.54
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 15 Nov 2026 11:37:55 -0800 (PST)
+Message-ID: <57f9665fb8c3571cff55b2fafceec7437634fd5d.camel@redhat.com>
+Subject: Re: [PATCH] scsi: scsi_dh_alua: set handler_data before
+ alua_initialize()
+From: Laurence Oberman <loberman@redhat.com>
+To: John Garry <john.garry@linux.dev>, "Martin K . Petersen"
+ <mkp@kernel.org>, 	linux-scsi@vger.kernel.org
+Cc: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,  Bart
+ Van Assche <bvanassche@acm.org>, Martin Wilck <mwilck@suse.com>, Hannes
+ Reinecke <hare@kernel.org>, 	linux-kernel@vger.kernel.org,
+ stable@vger.kernel.org
+Date: Sun, 15 Nov 2026 14:37:54 -0500
+In-Reply-To: <37cb0b01-0c6a-4b3d-b3d8-c4e5a45977a8@linux.dev>
+References: <20261109201120.1067815-1-loberman@redhat.com>
+	 <37cb0b01-0c6a-4b3d-b3d8-c4e5a45977a8@linux.dev>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.60.2 (3.60.2-3.fc44) 
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -58,72 +126,214 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v9 00/29] Native SCSI Multipath support
-To: Laurence Oberman <loberman@redhat.com>,
- james.bottomley@hansenpartnership.com, mkp@kernel.org
-Cc: hare@suse.com, linux-nvme@lists.infradead.org,
- linux-scsi@vger.kernel.org, snitzer@kernel.org, jmeneghi@redhat.com,
- bmarzins@redhat.com, dm-devel@lists.linux.dev, hch@lst.de,
- michael.christie@oracle.com
-References: <20261108204733.557995-1-john.garry@linux.dev>
- <9b90edc29d5b3be49f5bd0e0ecec5f1701e089bf.camel@redhat.com>
-Content-Language: en-US
-From: John Garry <john.garry@linux.dev>
-In-Reply-To: <9b90edc29d5b3be49f5bd0e0ecec5f1701e089bf.camel@redhat.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
 
-On 11/9/26 20:19, Laurence Oberman wrote:
-> 2. ANO paths are ranked the same as AO paths
-> 
-> With the ALUA state corrected (by writing "activate" to dh_state, or
-> with the fix above), I/O still went to active/non-optimized paths.
-> scsi_multipath_sdev_init() sets mpath_device->access_state to
-> MPATH_STATE_OPTIMIZED and nothing updates it, while
-> __mpath_find_path(), mpath_round_robin_path() and
-> mpath_queue_depth_path() rank paths by that field. Only
-> scsi_mpath_is_optimized()/is_disabled() read sdev->access_state.
-> 
-> With numa, the first path in dev_list wins for every node, and
-> dev_list order follows sd probe completion, so for about a third of
-> the LUNs the current path was an ANO path. Example, LUN sdn, reads
-> completed per path for a 2000 x 1M O_DIRECT dd (:0/:3 AO, :1/:2 ANO
-> at the time):
-> 
->    sdn:0 0sdn:1 2000sdn:2 0sdn:3 0
-> 
-> Every read went through the non-owning controller. From the code, for
-> these LUNs the numa recheck of is_optimized() fails on every I/O and
-> __mpath_find_path() picks the same ANO path again.
-> 
-> With the change below (a template callback so the selectors use the
-> live state), plus the scsi_dh_alua fix, all 30 LUNs pick an AO
-> current path at boot, and on LUN sdl (:0/:2 AO, :1/:3 ANO):
-> 
->    numa         2000     0     0     0
->    round-robin  1000     0  1000     0
->    queue-depth 18039     0 13961     0   (8 parallel dd, 64k)
-> 
-> No I/O reached the ANO paths under any policy. This is a test patch to
-> show the problem, not a polished change - feel free to fold it in or
-> do it differently.
+On Sun, 2026-11-15 at 18:04 +0000, John Garry wrote:
+> On 11/9/26 20:11, Laurence Oberman wrote:
+> > Since commit 50759b881e1d ("scsi: device_handler: alua: Call
+> > scsi_device_put() from non-atomic context"), alua_rtpg_queue() only
+> > queues an RTPG when sdev->handler_data points at an alua_dh_data
+> > whose
+> > port group matches:
+> >=20
+> > 	struct alua_dh_data *h =3D sdev->handler_data;
+> > 	...
+> > 	if (h && rcu_dereference(h->pg) =3D=3D pg) {
+>=20
+> Do we still require this check (for h being non-NULL) after the
+> change=20
+> in this patch? I assume that we flush any calls to this function
+> prior=20
+> to unsetting sdev->handler_data.
+>=20
+> >=20
+> > However alua_bus_attach() only assigns sdev->handler_data after
+> > alua_initialize() returns, and alua_initialize() ->
+> > alua_check_vpd()
+> > is where the initial RTPG is queued. At that point handler_data is
+> > still NULL, so the initial RTPG is silently dropped: no RTPG is
+> > sent,
+> > nothing is logged, and sdev->access_state keeps its zeroed default
+> > of
+> > active/optimized for every path.
+> >=20
+> > With dm-multipath this goes unnoticed, as pg_init calls
+> > scsi_dh_activate() once the map is loaded, which queues an RTPG
+> > after
+> > handler_data is set, and multipathd's alua prioritizer issues its
+> > own
+> > RTPG from userspace. Anything relying on sdev->access_state without
+> > a
+> > subsequent activate (sysfs access_state/preferred_path, native SCSI
+> > multipath path selection) sees every path as active/optimized until
+> > a
+> > Unit Attention or rescan triggers an RTPG.
+> >=20
+> > Seen on an HP P2000 G3 FC array (implicit ALUA, two port groups,
+> > four
+> > paths per LUN) with dm-multipath not in use: sg_rtpg reports port
+> > group
+> > 0 active/non-optimized and port group 1 active/optimized, but
+> > /sys/class/scsi_device/H:C:T:L/device/access_state reads
+> > active/optimized on all four paths after boot, and no
+> > "alua: port group XX state ..." message is logged. Writing
+> > "activate"
+> > to dh_state sends the RTPG and corrects access_state.
+> >=20
+> > Kernels without commit 50759b881e1d queue the attach-time RTPG
+> > unconditionally and are not affected.
+> >=20
+> > Fix by assigning sdev->handler_data before calling
+> > alua_initialize(),
+> > and clearing it again on failure. sdev->handler is only set once
+> > scsi_dh_handler_attach() sees ->attach() succeed, so no handler
+> > callback can observe the partially initialised alua_dh_data. On the
+> > failure paths of alua_initialize(), h has not been added to a port
+> > group and no RTPG has been queued, so freeing it is unchanged.
+> >=20
+> > Fixes: 50759b881e1d ("scsi: device_handler: alua: Call
+> > scsi_device_put() from non-atomic context")
+> > Cc: stable@vger.kernel.org
+> > Signed-off-by: Laurence Oberman <loberman@redhat.com>
+> > ---
+> >=20
+> > Notes:
+> > =C2=A0=C2=A0=C2=A0=C2=A0 Tested on an HP P2000 G3 FC array (30 LUNs, 4 =
+paths each):
+> > with this
+> > =C2=A0=C2=A0=C2=A0=C2=A0 patch the "alua: port group 00 state N ..." me=
+ssages are
+> > logged during
+> > =C2=A0=C2=A0=C2=A0=C2=A0 boot and access_state shows two active/optimiz=
+ed and two
+> > =C2=A0=C2=A0=C2=A0=C2=A0 active/non-optimized paths per LUN without any=
+ manual
+> > activate.
+> > =C2=A0=C2=A0=C2=A0=C2=A0 Without it, all paths read active/optimized un=
+til an RTPG is
+> > triggered.
+> > =C2=A0=C2=A0=C2=A0=C2=A0=20
+> > =C2=A0=C2=A0=C2=A0=C2=A0 I found this while testing John Garry's native=
+ SCSI multipath
+> > series
+> > =C2=A0=C2=A0=C2=A0=C2=A0 (v9) on an HP P2000 G3 FC array (30 LUNs, 4 pa=
+ths each, dm-
+> > multipath
+> > =C2=A0=C2=A0=C2=A0=C2=A0 not in use). Native multipath uses sdev->acces=
+s_state for path
+> > =C2=A0=C2=A0=C2=A0=C2=A0 selection, and every path showed active/optimi=
+zed, although
+> > sg_rtpg
+> > =C2=A0=C2=A0=C2=A0=C2=A0 and dm-multipath (alua prio 50/10) both report=
+ port group 0 as
+> > =C2=A0=C2=A0=C2=A0=C2=A0 active/non-optimized. No "alua: port group XX =
+state ..."
+> > message was
+> > =C2=A0=C2=A0=C2=A0=C2=A0 logged at boot. Writing "activate" to dh_state=
+ corrected
+> > access_state,
+> > =C2=A0=C2=A0=C2=A0=C2=A0 which pointed at the attach-time RTPG never be=
+ing queued.
+> > =C2=A0=C2=A0=C2=A0=C2=A0=20
+> > =C2=A0=C2=A0=C2=A0=C2=A0 With this patch, the port group state messages=
+ are logged
+> > during boot
+> > =C2=A0=C2=A0=C2=A0=C2=A0 and access_state shows two active/optimized an=
+d two
+> > =C2=A0=C2=A0=C2=A0=C2=A0 active/non-optimized paths per LUN without any=
+ manual
+> > activate.
+> > =C2=A0=C2=A0=C2=A0=C2=A0=20
+> > =C2=A0=C2=A0=C2=A0=C2=A0 This fix is independent of the native multipat=
+h series. It
+> > affects any
+> > =C2=A0=C2=A0=C2=A0=C2=A0 user of access_state/preferred_path, and ALUA =
+prep_fn fast-
+> > fail, on
+> > =C2=A0=C2=A0=C2=A0=C2=A0 kernels with 50759b881e1d where nothing calls
+> > scsi_dh_activate()
+> > =C2=A0=C2=A0=C2=A0=C2=A0 after attach.
+> > =C2=A0=C2=A0=C2=A0=C2=A0=20
+> > =C2=A0=C2=A0=C2=A0=C2=A0 v9 series:
+> > https://lore.kernel.org/linux-scsi/20261108204733.557995-1-
+> > =C2=A0=C2=A0=C2=A0=C2=A0 john.garry@linux.dev/
+> >=20
+> > =C2=A0 drivers/scsi/device_handler/scsi_dh_alua.c | 9 ++++++++-
+> > =C2=A0 1 file changed, 8 insertions(+), 1 deletion(-)
+> >=20
+> > diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c
+> > b/drivers/scsi/device_handler/scsi_dh_alua.c
+> > index 87ac0a6d63e5..84ff3aed2c46 100644
+> > --- a/drivers/scsi/device_handler/scsi_dh_alua.c
+> > +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+> > @@ -1233,13 +1233,20 @@ static int alua_bus_attach(struct
+> > scsi_device *sdev)
+> > =C2=A0=C2=A0	INIT_LIST_HEAD(&h->node);
+> > =C2=A0=20
+> > =C2=A0=C2=A0	mutex_init(&h->init_mutex);
+> > +	/*
+> > +	 * alua_rtpg_queue() only queues an RTPG when sdev-
+> > >handler_data
+> > +	 * points at this alua_dh_data, so set it before
+> > alua_initialize()
+> > +	 * otherwise the initial RTPG issued from alua_check_vpd()
+> > is
+> > +	 * silently dropped and sdev->access_state is never
+> > populated.
+> > +	 */
+> > +	sdev->handler_data =3D h;
+>=20
+> Note: I was checking which members of alua_dh_data are not
+> initialized=20
+> prior to publishing sdev->handler_data, and alua_dh_data.group_id is=20
+> never accessed at all AFAICS.
+>=20
+> Thanks,
+> John
+On 11/15/26, John Garry wrote:
+> Do we still require this check (for h being non-NULL) after the
+change
+> in this patch? I assume that we flush any calls to this function
+prior
+> to unsetting sdev->handler_data.
 
+Hi John,
 
-JFYI, the work which I did for ALUA support a while ago is here:
-#https://github.com/johnpgarry/linux/commits/scsi-multipath-v7.3-v7-alua/
+Thanks for looking at this.
 
-I don't think that I shared this previously.
+You're right, with this patch the NULL check is redundant. All three
+callers already have a valid h:
 
-I do notice that it would conflict with your work to do some 
-centralising of the ALUA RTPG support.
+- alua_check_vpd() is called from attach/rescan with h passed in, and
+  sdev->handler_data now points at it before the initial RTPG is
+  queued
+- alua_activate() and alua_check() both dereference
+  sdev->handler_data (h->init_mutex, h->pg) before calling
+  alua_rtpg_queue()
 
-About the NUMA iopolicy - apart from issues in this series with not 
-checking optimised/access_state properly - it does seem less than 
-optimal to we only favour one device per NUMA node (when all in same 
-optimized + enabled state). NVMe multipath support does the same. I 
-suppose that this iopolicy relies on us having one device/path per NUMA 
-node.
+There is no explicit flush, but there doesn't need to be:
+handler_data is only cleared in alua_bus_detach(), which runs from
+scsi_dh_release_device() in scsi_device_dev_release(), i.e. after the
+last sdev reference is dropped. Every caller holds a reference,
+alua_rtpg_queue() takes its own scsi_device_get() before reading
+handler_data, and queued RTPG work holds one through pg->rtpg_sdev.
+
+The rcu_dereference(h->pg) =3D=3D pg part is still needed, as a rescan can
+move h to a different port group.
+
+> Note: I was checking which members of alua_dh_data are not
+initialized
+> prior to publishing sdev->handler_data, and alua_dh_data.group_id is
+> never accessed at all AFAICS.
+
+Agreed, group_id is never read or written. All other members are
+initialized before handler_data is set (h is kzalloc'd, and disabled
+is set under init_mutex in alua_initialize()).
+
+I would prefer to keep this patch minimal since it is tagged for
+stable, and send a follow-up cleanup that drops the now-redundant
+h check in alua_rtpg_queue() and removes the unused group_id member.
+Does that work for you, or would you rather I fold both into a v2?
 
 Thanks,
-John
+Laurence
+
