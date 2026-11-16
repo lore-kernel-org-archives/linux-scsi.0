@@ -1,56 +1,56 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.57
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.62
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794788400;
-	b=FlwG1vrUitnH3q3jIhJdoC2RnxM0kJOztnMfutTFS1UGK4WEO8IEY9ld6cMz96tfbVyJ
-	 ba2ltx0INzppDClpHucaZAnZslBmqUBrJT8fv2PjiWI26hs3vfvJIWgyj7Hg8oLU6VDjj
-	 gLsE80zKg1LflNIsgZPsW67c7FsyqjwrIyv3gZRqCAK6XxgF5mn4+sqcfGu1MrR+HkrOS
-	 OEZB1Gbu84DkaguauJvvV+fN97M6XgDaST4DcJf9M8mxq9i7xyVdcFaRSevmubl31CV2/
-	 52v1dmUrXsqgCcvJwuRy7WMAkD6j1vBXHEarHuT+crNJzl77jR44AazjLxoGtTBIxxg==
+	t=1794788408;
+	b=uXuAf1igP9E97BKiy3RigZXo7RWPZCt8jSiJDiE+V+HIVFjnKVLY1ZF6wrIrk7+Ysyh0
+	 igMgo9GGc6yfyOh9OMmhsIlffyAKQGhK1J01DpEdA1hTvhrxs1j/UKsWMAfV+txse2vdQ
+	 /TGHAcLjMihRiEG6BFehTMIN1SiQyat+439RInr070/IdqEjoIJII5HRqtZpUxCUxwTj4
+	 5LhIFg3OzL2E9e7QKWgBa9IwZ3N/+xSWSsYKXjC/RNjAKpqE8eYLg/9dv5kbKV5I22j/R
+	 WewRvq48XNhrYeOselA78iIVKqDhIzkkcIlS3XbK4JLlapBUHKTJCvdlGdoaKfL+2mw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794788400;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794788408;
 	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
 	 X-Mizu-Trace-ID:X-Migadu-Flow:From:Date:Subject:MIME-Version:
 	 Content-Type:Content-Transfer-Encoding:Message-Id:References:
 	 In-Reply-To:To:Cc:X-Mailer;
-	bh=Fey+fb0AyjftoFZmQ0EK4zMD6FbYtb7HncNqSOZbYz8=;
-	b=sLdP5A3ttRBh2oLoe4DcyVz0+tPSjz8uzEtuqSQjdvOVsLtIC7QsZR3kvIxF9mJ+JZo/
-	 NXbbaASjVoAnsIBKcVMfhl0+FRi3oTRWFg8o2YAmdnIlksslEq2bcsT6SN4o4bs+JdN25
-	 BNYFHoLecDdTnw4eBHth5yZPr49H8FVZJ2+MMLfuBwwXW61CZdjYtApUnppLoNqV5TKOH
-	 t51XilX/EmA7ztGPUp8asFi6M2DkdJ3dd5x648dXwUfumqO3cbl44oFaZBSEPWGoj8U+1
-	 sFvtC+X7ivgZ5umGnq09p4WfTK/f1zh7Cy10Wzl8s++XfH0vg4ly+j6N4gco7qqpUaw==
+	bh=OQJ79KPFQohOoVnOikdrmDCVb0EBCzZiMlHgXuyszI4=;
+	b=m51RW3Rwdgzinf2/IY93S0vW28fEjzaF6k23/tgxNm3jnyd7hcG5aQ7NGVlp6phWxdtQ
+	 cOYQkHM5hMpjcQ/VJ/jP5PcGo8ybynKYYnrLjFIyp3nevZpESfbrDR2LQ8dJn894ETh6W
+	 pfWI0kjgzEsweMWbPgMYXk0Bwm9TA+nCVnXkNrr0PJCopK/fA9MJlgkCu+vi228BsjNOQ
+	 6Cg4qSLl8uhhVM7n6gz57FcrV0GV8XUgkSih801e1d8QX/aqyFrVO9hCsMkTsJbaGf1qE
+	 2QROG1EeqvjOQgQCogOlhi8vTc4808dp1OTonyCiVuN4lLghcvi/VxEW589+koN4JQw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linux.dev;
 	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=TPalJ9d4;
-	arc=none smtp.remote-ip=91.218.175.57
-Received: from mta0.migadu.com (out-57.mta0.migadu.com [91.218.175.57])
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=cK2pR7CP;
+	arc=none smtp.remote-ip=91.218.175.62
+Received: from mta0.migadu.com (out-62.mta0.migadu.com [91.218.175.62])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43274606A31F
-	for <linux-scsi@vger.kernel.org>; Mon, 16 Nov 2026 00:19:59 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 43274606A31F
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB81C606A32C
+	for <linux-scsi@vger.kernel.org>; Mon, 16 Nov 2026 00:20:06 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org EB81C606A32C
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=TPalJ9d4
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=cK2pR7CP
 X-Envelope-To: linux-scsi@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=FXepQQOyT3/mJZXQ4rFqUNCryuyhgeXz7UIdUhuHmkM=;
+DKIM-Signature: a=rsa-sha256; bh=8EvCg7CNUuCXDH95sZ6Tyepl2hXygT4WNRWVlkQy0NI=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1794788397; v=1; x=1795393197;
- b=TPalJ9d4rVw9E1YTfh6nzNNk7R5A99c/V8ITqknyvhiT5kfGhwXoAlAxHRofSnsuN8vwlDJP
- p0ZnQE2vKiIMMhk7FxhjdW5RSB3ByefMjoRzOuQquRuSRBy6pWSOaNMQXTJ2bS2mAwGY00QEyL6
- knyXCUgHLGWp7fOQHLlZlOJE=
+ t=1794788405; v=1; x=1795393205;
+ b=cK2pR7CPprC4SGg7azzilKvwDF1xIAbcgBtqZDFWgouVEPr7wGMyc8ce3BjCz3C+Znz850BV
+ 8idRSUjtjnhyw63X5l4YXiFaXQE+i+ggRsVfMOaxNSAthCQ5T5AcIcx+sYIgpJUdhRGExH9HXLV
+ W18sey4ZqDSyx8waExhQ5hHQ=
 X-Envelope-To: linux-scsi@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 1e3934d81e5fd725;
-	Mon, 16 Nov 2026 00:19:57 +0000
-X-Mizu-Trace-ID: 1e3934d81e5fd725
+Received: by smtp.migadu.com with ESMTPS id 86c97f2af74bb162;
+	Mon, 16 Nov 2026 00:20:04 +0000
+X-Mizu-Trace-ID: 86c97f2af74bb162
 X-Migadu-Flow: FLOW_OUT
 From: Qiliang Yuan <qiliang.yuan@linux.dev>
-Date: Sun, 15 Nov 2026 19:18:08 -0500
-Subject: [PATCH RFC 15/18] scsi: target: uring: Register command data as
- io_uring fixed buffers
+Date: Sun, 15 Nov 2026 19:18:09 -0500
+Subject: [PATCH RFC 16/18] selftests: target_core_uring: Add a minimal
+ server
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -62,7 +62,7 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261115-feat-target-core-uring-v1-15-28cdc137eac6@linux.dev>
+Message-Id: <20261115-feat-target-core-uring-v1-16-28cdc137eac6@linux.dev>
 References: <20261115-feat-target-core-uring-v1-0-28cdc137eac6@linux.dev>
 In-Reply-To: <20261115-feat-target-core-uring-v1-0-28cdc137eac6@linux.dev>
 To: "Martin K. Petersen" <mkp@kernel.org>, Shuah Khan <shuah@kernel.org>, 
@@ -76,159 +76,372 @@ Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
  Qiliang Yuan <qiliang.yuan@linux.dev>
 X-Mailer: b4 0.13.0
 
-The server of a target_core_uring device copies the data of each command
-with pread() or pwrite().
+target_core_uring needs a userspace server to do anything.
 
-For large commands that copy dominates, although the server often only
-passes the data on to a file, a block device or a socket.
+There is none to test the backstore with, and no example of how to use
+its interface.
 
-Add TCMUR_IO_REGISTER_BUF, which registers the pages of a command as a
-fixed buffer of the server's io_uring, and TCMUR_IO_UNREGISTER_BUF. The
-server then uses the buffer in fixed read and write requests on its
-backing store. Let the buffer hold a reference on the command, so that
-the command completes only after the buffer is released.
-
-Exporting a 2 GiB device through tcm_loop to fio (io_uring, direct I/O,
-iodepth 32 for 4k and 8 for 1M, 6 seconds per job) on a 32 CPU VM, with
-32 queues and a server that keeps the data in a tmpfs file, copying
-through a bounce buffer or using fixed buffers. Small commands are
-slower with fixed buffers, as each one takes two more io_uring requests;
-the server can choose per command. Three alternating runs (median,
-min-max in parentheses):
-
-  workload               copy (MB/s)         fixed buffer (MB/s)   change
-  4k randread, 16 jobs    5808 (5463-5944)    5217 (5090-5463)       -10%
-  4k randwrite, 16 jobs   2023 (1831-2101)    1845 (1571-1850)        -9%
-  1M read, 4 jobs        21516 (10137-22138) 44973 (31086-45013)    +109%
-  1M write, 4 jobs        5997 (5669-7364)    7430 (5970-8002)       +24%
+Add tcmur_server, which serves a device from a backing file, from
+memory or as a null device. It runs one thread and one io_uring per
+queue. With -z it registers the data pages of reads and writes as fixed
+buffers and does the I/O on the backing file without copying.
 
 Signed-off-by: Qiliang Yuan <qiliang.yuan@linux.dev>
 ---
- drivers/target/target_core_uring.c     | 60 ++++++++++++++++++++++++++++++++--
- include/uapi/linux/target_core_uring.h | 13 ++++++--
- 2 files changed, 69 insertions(+), 4 deletions(-)
+ MAINTAINERS                                        |   1 +
+ .../testing/selftests/target_core_uring/.gitignore |   1 +
+ tools/testing/selftests/target_core_uring/Makefile |   7 +
+ .../selftests/target_core_uring/tcmur_server.c     | 310 +++++++++++++++++++++
+ 4 files changed, 319 insertions(+)
 
-diff --git a/drivers/target/target_core_uring.c b/drivers/target/target_core_uring.c
-index 42283a1ae1512..4f5cf18b1ec07 100644
---- a/drivers/target/target_core_uring.c
-+++ b/drivers/target/target_core_uring.c
-@@ -48,8 +48,8 @@ struct tcmur_dev;
-  * @sgl:	Data pages of the command
-  * @sgl_nents:	Number of entries in @sgl
-  * @desc:	What the server is asked to do
-- * @ref:	Held by the tag or the pending list and by data copies in
-- *		progress
-+ * @ref:	Held by the tag or the pending list, by data copies in
-+ *		progress and by registered buffers
-  * @deadline:	When to give up waiting for the server
-  * @done:	Complete this instead of @se_cmd when the last reference goes
-  * @status:	SAM status to complete @se_cmd with
-@@ -489,6 +489,56 @@ static int tcmur_commit(struct tcmur_queue *q, struct tcmur_io *io, int result)
- 	return 0;
- }
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 07148430d9ea6..b3ac53cd7bf97 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -25331,6 +25331,7 @@ F:	Documentation/target/
+ F:	drivers/target/
+ F:	include/target/
+ F:	include/uapi/linux/target_core_uring.h
++F:	tools/testing/selftests/target_core_uring/
  
-+static void tcmur_buf_release(void *priv)
-+{
-+	tcmur_cmd_put(priv);
-+}
+ SCTP PROTOCOL
+ M:	Marcelo Ricardo Leitner <marcelo.leitner@gmail.com>
+diff --git a/tools/testing/selftests/target_core_uring/.gitignore b/tools/testing/selftests/target_core_uring/.gitignore
+new file mode 100644
+index 0000000000000..6e2f9115e1392
+--- /dev/null
++++ b/tools/testing/selftests/target_core_uring/.gitignore
+@@ -0,0 +1 @@
++tcmur_server
+diff --git a/tools/testing/selftests/target_core_uring/Makefile b/tools/testing/selftests/target_core_uring/Makefile
+new file mode 100644
+index 0000000000000..438628fd1606b
+--- /dev/null
++++ b/tools/testing/selftests/target_core_uring/Makefile
+@@ -0,0 +1,7 @@
++# SPDX-License-Identifier: GPL-2.0
++CFLAGS += -O2 -Wall -D_GNU_SOURCE $(KHDR_INCLUDES)
++LDLIBS += -luring -lpthread
 +
-+static int tcmur_register_buf(struct tcmur_dev *udev, u16 q_id, u16 tag,
-+			      struct io_uring_cmd *ucmd, unsigned int index,
-+			      unsigned int issue_flags)
-+{
-+	struct tcmur_cmd *tcmd = tcmur_get_cmd(udev, q_id, tag);
-+	unsigned int len, n = 0;
-+	struct scatterlist *sg;
-+	struct bio_vec *bvs;
-+	int ret = -EINVAL;
-+	u32 left;
-+	int i;
++TEST_GEN_PROGS_EXTENDED := tcmur_server
 +
-+	if (!tcmd)
-+		return -EINVAL;
-+	if (!tcmd->desc.data_len)
-+		goto put_cmd;
-+
-+	bvs = kmalloc_array(tcmd->sgl_nents, sizeof(*bvs), GFP_KERNEL);
-+	if (!bvs) {
-+		ret = -ENOMEM;
-+		goto put_cmd;
-+	}
-+
-+	left = tcmd->desc.data_len;
-+	for_each_sg(tcmd->sgl, sg, tcmd->sgl_nents, i) {
-+		len = min(sg->length, left);
-+		bvec_set_page(&bvs[n++], sg_page(sg), len, sg->offset);
-+		left -= len;
-+		if (!left)
-+			break;
-+	}
-+
-+	/* Keep the command reference until the buffer is released */
-+	ret = io_buffer_register_bvec(ucmd, bvs, n, tcmur_buf_release, tcmd,
-+				      tcmd->desc.op == TCMUR_OP_READ ?
-+				      IO_BUF_DEST : IO_BUF_SOURCE,
-+				      index, issue_flags);
-+	kfree(bvs);
-+	if (!ret)
-+		return 0;
-+put_cmd:
-+	tcmur_cmd_put(tcmd);
-+	return ret;
-+}
-+
- static int tcmur_ch_uring_cmd_local(struct io_uring_cmd *ucmd,
- 				    unsigned int issue_flags)
- {
-@@ -515,6 +565,12 @@ static int tcmur_ch_uring_cmd_local(struct io_uring_cmd *ucmd,
- 		if (ret)
- 			return ret;
- 		return tcmur_fetch(q, io, ucmd, issue_flags);
-+	case TCMUR_IO_REGISTER_BUF:
-+		return tcmur_register_buf(udev, q_id, tag, ucmd,
-+					  READ_ONCE(ioc->addr), issue_flags);
-+	case TCMUR_IO_UNREGISTER_BUF:
-+		return io_buffer_unregister(ucmd, READ_ONCE(ioc->addr),
-+					    issue_flags);
- 	default:
- 		return -EOPNOTSUPP;
- 	}
-diff --git a/include/uapi/linux/target_core_uring.h b/include/uapi/linux/target_core_uring.h
-index 469340b152f15..92d3d2fc9c25e 100644
---- a/include/uapi/linux/target_core_uring.h
-+++ b/include/uapi/linux/target_core_uring.h
-@@ -45,13 +45,14 @@ struct tcmur_dev_info {
-  * @tag:	Tag the command is for
-  * @result:	TCMUR_IO_COMMIT_AND_FETCH: 0, or a negative errno if the
-  *		command failed
-- * @reserved1:	Zero
-+ * @addr:	TCMUR_IO_REGISTER_BUF and TCMUR_IO_UNREGISTER_BUF: index in the
-+ *		buffer table of the ring
-  */
- struct tcmur_io_cmd {
- 	__u16	q_id;
- 	__u16	tag;
- 	__s32	result;
--	__u64	reserved1;
-+	__u64	addr;
- };
- 
- /*
-@@ -64,6 +65,14 @@ struct tcmur_io_cmd {
- #define TCMUR_IO_FETCH			_IOWR(0xBB, 0x08, struct tcmur_io_cmd)
- #define TCMUR_IO_COMMIT_AND_FETCH	_IOWR(0xBB, 0x09, struct tcmur_io_cmd)
- 
++include ../lib.mk
+diff --git a/tools/testing/selftests/target_core_uring/tcmur_server.c b/tools/testing/selftests/target_core_uring/tcmur_server.c
+new file mode 100644
+index 0000000000000..128a0021e7796
+--- /dev/null
++++ b/tools/testing/selftests/target_core_uring/tcmur_server.c
+@@ -0,0 +1,310 @@
++// SPDX-License-Identifier: GPL-2.0
 +/*
-+ * TCMUR_IO_REGISTER_BUF: register the data pages of the command of
-+ * (q_id, tag) as fixed buffer @addr of the ring, so that the server can
-+ * do I/O on them without copying. TCMUR_IO_UNREGISTER_BUF removes it.
++ * Minimal server for target_core_uring devices.
++ *
++ * usage: tcmur_server [-z] <tcmur device> null|ram|<backing file>
++ *
++ * Run one thread per queue. With -z, register the data pages of each read
++ * and write as a fixed buffer and do the I/O on the backing file without
++ * copying.
 + */
-+#define TCMUR_IO_REGISTER_BUF		_IOWR(0xBB, 0x0a, struct tcmur_io_cmd)
-+#define TCMUR_IO_UNREGISTER_BUF		_IOWR(0xBB, 0x0b, struct tcmur_io_cmd)
++#define _GNU_SOURCE
++#include <errno.h>
++#include <fcntl.h>
++#include <liburing.h>
++#include <pthread.h>
++#include <stdbool.h>
++#include <stdint.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++#include <unistd.h>
++#include <linux/falloc.h>
++#include <sys/ioctl.h>
++#include <sys/mman.h>
++#include <linux/target_core_uring.h>
 +
- enum tcmur_io_op {
- 	TCMUR_OP_READ,
- 	TCMUR_OP_WRITE,
++enum { BACKEND_NULL, BACKEND_RAM, BACKEND_FILE };
++enum { UD_FETCH, UD_REG, UD_RW, UD_UNREG };
++
++static struct tcmur_dev_info info;
++static int dev_fd, backing_fd = -1, backend;
++static bool zero_copy;
++static char *ram;
++
++struct queue {
++	pthread_t thread;
++	struct io_uring ring;
++	struct tcmur_io_desc *descs;
++	char *buf;
++	int q_id;
++};
++
++static struct io_uring_sqe *get_sqe(struct queue *q)
++{
++	struct io_uring_sqe *sqe = io_uring_get_sqe(&q->ring);
++
++	if (!sqe) {
++		io_uring_submit(&q->ring);
++		sqe = io_uring_get_sqe(&q->ring);
++	}
++	return sqe;
++}
++
++static struct io_uring_sqe *prep_cmd(struct queue *q, unsigned int op, int tag,
++				     int result, int kind)
++{
++	struct tcmur_io_cmd cmd = {
++		.q_id	= q->q_id,
++		.tag	= tag,
++		.result	= result,
++		.addr	= tag,
++	};
++	struct io_uring_sqe *sqe = get_sqe(q);
++
++	io_uring_prep_rw(IORING_OP_URING_CMD, sqe, dev_fd, NULL, 0, 0);
++	sqe->cmd_op = op;
++	memcpy(sqe->cmd, &cmd, sizeof(cmd));
++	sqe->user_data = (uint64_t)kind << 16 | tag;
++	return sqe;
++}
++
++static int copy_data(struct queue *q, int tag, void *buf, uint32_t len,
++		     bool to_cmd)
++{
++	uint64_t pos = tcmur_buf_pos(q->q_id, tag, 0);
++	ssize_t ret;
++
++	if (to_cmd)
++		ret = pwrite(dev_fd, buf, len, pos);
++	else
++		ret = pread(dev_fd, buf, len, pos);
++	return ret == len ? 0 : -EIO;
++}
++
++static int write_same(struct queue *q, int tag, struct tcmur_io_desc *d)
++{
++	uint64_t off;
++	int ret;
++
++	ret = copy_data(q, tag, q->buf, d->data_len, false);
++	if (ret)
++		return ret;
++
++	for (off = d->offset; off < d->offset + d->len; off += d->data_len) {
++		if (backend == BACKEND_RAM)
++			memcpy(ram + off, q->buf, d->data_len);
++		else if (pwrite(backing_fd, q->buf, d->data_len, off) !=
++			 d->data_len)
++			return -EIO;
++	}
++	return 0;
++}
++
++/* Start the I/O on the data pages of the command, without copying them */
++static void start_zero_copy(struct queue *q, int tag, struct tcmur_io_desc *d)
++{
++	struct io_uring_sqe *sqe;
++
++	sqe = prep_cmd(q, TCMUR_IO_REGISTER_BUF, tag, 0, UD_REG);
++	sqe->flags |= IOSQE_IO_LINK | IOSQE_CQE_SKIP_SUCCESS;
++
++	sqe = get_sqe(q);
++	if (d->op == TCMUR_OP_READ)
++		io_uring_prep_read_fixed(sqe, backing_fd, NULL, d->data_len,
++					 d->offset, tag);
++	else
++		io_uring_prep_write_fixed(sqe, backing_fd, NULL, d->data_len,
++					  d->offset, tag);
++	sqe->flags |= IOSQE_IO_HARDLINK;
++	sqe->user_data = (uint64_t)UD_RW << 16 | tag;
++
++	sqe = prep_cmd(q, TCMUR_IO_UNREGISTER_BUF, tag, 0, UD_UNREG);
++	sqe->flags |= IOSQE_CQE_SKIP_SUCCESS;
++}
++
++/* Return true if the command completes later */
++static bool handle(struct queue *q, int tag, int *result)
++{
++	struct tcmur_io_desc *d = &q->descs[tag];
++	bool rd = d->op == TCMUR_OP_READ;
++	int ret = 0;
++
++	switch (d->op) {
++	case TCMUR_OP_READ:
++	case TCMUR_OP_WRITE:
++		if (d->offset + d->len > info.dev_size) {
++			ret = -EINVAL;
++		} else if (backend == BACKEND_RAM) {
++			ret = copy_data(q, tag, ram + d->offset, d->data_len,
++					rd);
++		} else if (backend == BACKEND_FILE && zero_copy) {
++			start_zero_copy(q, tag, d);
++			return true;
++		} else if (backend == BACKEND_FILE && rd) {
++			if (pread(backing_fd, q->buf, d->data_len, d->offset) !=
++			    d->data_len)
++				ret = -EIO;
++			else
++				ret = copy_data(q, tag, q->buf, d->data_len,
++						true);
++		} else if (backend == BACKEND_FILE) {
++			ret = copy_data(q, tag, q->buf, d->data_len, false);
++			if (!ret && pwrite(backing_fd, q->buf, d->data_len,
++					   d->offset) != d->data_len)
++				ret = -EIO;
++		}
++		if (!ret && backend == BACKEND_FILE &&
++		    (d->flags & TCMUR_IO_F_FUA) && fdatasync(backing_fd))
++			ret = -errno;
++		break;
++	case TCMUR_OP_FLUSH:
++		if (backend == BACKEND_FILE && fdatasync(backing_fd))
++			ret = -errno;
++		break;
++	case TCMUR_OP_UNMAP:
++		if (backend == BACKEND_RAM)
++			memset(ram + d->offset, 0, d->len);
++		else if (backend == BACKEND_FILE &&
++			 fallocate(backing_fd, FALLOC_FL_PUNCH_HOLE |
++				   FALLOC_FL_KEEP_SIZE, d->offset, d->len))
++			ret = -errno;
++		break;
++	case TCMUR_OP_WRITE_SAME:
++		if (backend != BACKEND_NULL)
++			ret = write_same(q, tag, d);
++		break;
++	default:
++		ret = -EOPNOTSUPP;
++	}
++
++	*result = ret;
++	return false;
++}
++
++static void *queue_fn(void *arg)
++{
++	struct io_uring_params p = {
++		.flags = IORING_SETUP_SINGLE_ISSUER | IORING_SETUP_DEFER_TASKRUN,
++	};
++	struct queue *q = arg;
++	struct io_uring_cqe *cqe;
++	unsigned int head, n;
++	int tag, kind, result;
++
++	/* Create the ring here, as only its creator may submit to it */
++	if (io_uring_queue_init_params(info.queue_depth * 4, &q->ring, &p) ||
++	    (zero_copy &&
++	     io_uring_register_buffers_sparse(&q->ring, info.queue_depth))) {
++		perror("io_uring setup");
++		exit(1);
++	}
++
++	for (tag = 0; tag < info.queue_depth; tag++)
++		prep_cmd(q, TCMUR_IO_FETCH, tag, 0, UD_FETCH);
++
++	for (;;) {
++		if (io_uring_submit_and_wait(&q->ring, 1) < 0) {
++			perror("io_uring_submit_and_wait");
++			exit(1);
++		}
++
++		n = 0;
++		io_uring_for_each_cqe(&q->ring, head, cqe) {
++			n++;
++			tag = cqe->user_data & 0xffff;
++			kind = cqe->user_data >> 16;
++
++			switch (kind) {
++			case UD_FETCH:
++				if (cqe->res < 0)
++					goto out;
++				if (handle(q, tag, &result))
++					continue;
++				break;
++			case UD_RW:
++				result = cqe->res == q->descs[tag].data_len ?
++					 0 : -EIO;
++				break;
++			default:
++				/* Report failures through the I/O that follows */
++				continue;
++			}
++			prep_cmd(q, TCMUR_IO_COMMIT_AND_FETCH, tag, result,
++				 UD_FETCH);
++		}
++		io_uring_cq_advance(&q->ring, n);
++	}
++out:
++	return NULL;
++}
++
++int main(int argc, char **argv)
++{
++	struct queue *queues;
++	size_t desc_size;
++	int i, opt;
++
++	while ((opt = getopt(argc, argv, "z")) != -1) {
++		if (opt == 'z')
++			zero_copy = true;
++		else
++			return 1;
++	}
++	if (argc - optind != 2) {
++		fprintf(stderr, "usage: %s [-z] <tcmur device> null|ram|<backing file>\n",
++			argv[0]);
++		return 1;
++	}
++
++	dev_fd = open(argv[optind], O_RDWR);
++	if (dev_fd < 0 || ioctl(dev_fd, TCMUR_GET_DEV_INFO, &info)) {
++		perror(argv[optind]);
++		return 1;
++	}
++
++	if (!strcmp(argv[optind + 1], "null")) {
++		backend = BACKEND_NULL;
++	} else if (!strcmp(argv[optind + 1], "ram")) {
++		backend = BACKEND_RAM;
++		ram = mmap(NULL, info.dev_size, PROT_READ | PROT_WRITE,
++			   MAP_PRIVATE | MAP_ANONYMOUS | MAP_POPULATE, -1, 0);
++		if (ram == MAP_FAILED) {
++			perror("mmap");
++			return 1;
++		}
++	} else {
++		backend = BACKEND_FILE;
++		backing_fd = open(argv[optind + 1], O_RDWR);
++		if (backing_fd < 0) {
++			perror(argv[optind + 1]);
++			return 1;
++		}
++	}
++	if (zero_copy && backend != BACKEND_FILE) {
++		fprintf(stderr, "-z needs a backing file\n");
++		return 1;
++	}
++
++	desc_size = info.queue_depth * sizeof(struct tcmur_io_desc);
++	desc_size = (desc_size + getpagesize() - 1) & ~(getpagesize() - 1);
++	queues = calloc(info.nr_queues, sizeof(*queues));
++	for (i = 0; i < info.nr_queues; i++) {
++		struct queue *q = &queues[i];
++
++		q->q_id = i;
++		q->buf = malloc(info.max_io_size);
++		q->descs = mmap(NULL, desc_size, PROT_READ, MAP_SHARED, dev_fd,
++				(off_t)i * TCMUR_DESC_AREA_SIZE);
++		if (!q->buf || q->descs == MAP_FAILED) {
++			perror("queue setup");
++			return 1;
++		}
++	}
++
++	for (i = 0; i < info.nr_queues; i++)
++		pthread_create(&queues[i].thread, NULL, queue_fn, &queues[i]);
++	for (i = 0; i < info.nr_queues; i++)
++		pthread_join(queues[i].thread, NULL);
++	return 0;
++}
 
 -- 
 2.43.0
