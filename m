@@ -1,57 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794789965;
-	b=ThUqzjpuSnYxtskac8LaaP/F1aOocqwNxl2mGDJatbyIH+iljSLLSLCeQLqT4jUXH4WO
-	 4jqNXAQRxzYjPB1n0Ih0sw2ukYwtUEEubbOe+RW01fBy8EtvbmGukq8H1qMWat3IZrK+a
-	 Dyy61Pr05GuTID3WFa1yj2uEWd9tRKNML2yjEz371CYAFu/VhsSphyelOxzeog55601rm
-	 uWlPnUVAUMfLF3a3znw87IFEXooW88xeF57eBwx5C5YqChRrUk7GNYgEvfDNrmFSOfq89
-	 AgPlJtD8jtwjYvCK2wsGdzjg/xAnZZ3GlCaE+izqGDnviJwJXKly4BLdys+2fEUN4GA==
+	t=1794790142;
+	b=tPbxDlpx9MI0z/TMVzOs3xSmgSz1llXkojNMnQManByZwGoDTkwpsUPVtO6bsOxBdTOw
+	 BcUmspgNmL4LdAbE7v8NF7fgIUvXVTH5pehbeaR4QbxaXVDfrk/d++PYSc/mlovRbgSsl
+	 9vmCopEZwqMTx80GzwkakXFbpMR7Kf3E7M8FYeS54eP+U+UJTvIuFo2zAS5rqgi5a1B7B
+	 vZhRCK9RRawZeKgM4gLFf4KdE1z+5dUhu+MfNptwSae7zCy76Hepb1v6SFQLm/yjj6lnR
+	 SD6Vf5p5cG9YxU6rOPhOGkTuElbwBmJ8nQnOWUKsBPbFKOVPPaIdHMKixR1FJYK67GQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794789965;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794790142;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=P9KmciO24V6/vG9pfsrfol4qJ9DQhIAPOfVYuyQYLNM=;
-	b=4dSJhw5gFF4KR3Lt+LLmkSsieZAp8rQENiRyQ6C7c8Dr/AsCfyTPB2ZOrN/gZWzyw10n
-	 CfHssRV096QnM7qZ2u72cyvgwq4EEV8D6AEB9MjOQ1vyOE5MmcusLoHDupA0OdsaEUhig
-	 uYT959Ueh+AGuBwzinrJWdD0DaNgcgF9XhgOwq9xBhPHFuEVUXucUo3C4406v4ERz9YB0
-	 BVANWs4+bR/MbBZ/qMxwb5Kw+LkGYHTI9X9dYR3LX+N41TBvikPfB9IdAsu4qinNT6fB2
-	 XI2IcJH7BzXr4vaggT8IwAKqM6J8+Tt6O8dgQR5JM0CzX2QwYE76T0hgo7JQG+U6b1w==
+	bh=YnLCqcFhmbMlYSdAi8bGMjTODnmFcZXJBeAyDuNeppk=;
+	b=SR2IO1+8BvhAYK/jpyy+aIOBW7TTdjcK8YGXuIZvtCY2K8ZkB6Cg32eEuCOxU3BJZfEp
+	 vX3rSnkWAuDxmSZnllGsxg78quRrEUlXQY0uBCAXpumQPdGkg4HYs5XuoHbQyAHslMuHc
+	 0ewcUl1dCzSxIUdl1pMb6IU0oblR6HCTVok7gRarkRkigBDlFXrO3qAPwEpNiC7+QsrW5
+	 GVczF5B8oCO7VhCIYCJet0dBy1dlqdFRRZ24B1LhDZKaTD0VzkahXrKbcTkGFI8GWp6Xu
+	 uAgd3NA5BcC3ynpBkPcWMvPU57AWiyOr6lzn8GJnoNyGbfsvGQezBmmCintrXTNRA5A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ddJ2TwTm;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=iO+cukz8;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60F73606A335;
-	Mon, 16 Nov 2026 00:46:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 213A3606A32C;
+	Mon, 16 Nov 2026 00:49:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ddJ2TwTm
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D35F01F000C5;
-	Mon, 16 Nov 2026 00:46:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=iO+cukz8
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8CDF81F000C4;
+	Mon, 16 Nov 2026 00:49:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794789965;
-	bh=P9KmciO24V6/vG9pfsrfol4qJ9DQhIAPOfVYuyQYLNM=;
+	s=k20260515; t=1794790141;
+	bh=YnLCqcFhmbMlYSdAi8bGMjTODnmFcZXJBeAyDuNeppk=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ddJ2TwTmcPW0Z2R9soLQu+i+NcrpWemRqJQ8Y3ZDLVTCohYHT3UPwjitdFcHw+lY/
-	 s8K5w+ycCoZx5aOy2cP8qguCArrS03BT62q+fvXS7xVxKUma5jDU+MzJNorkd7Fotr
-	 vAhb2tic9md6IP1i9BpkQqZ5/q1hgYDQLOSghy4NhlxSgZCQyLkCSTudbW/yuqSxOO
-	 zUZFhYHlQNKProGIGzzJx4aMHNiY3zpFfsbU+cxH5NTyIj3Dng006bEkpieGUZ96iH
-	 JRgovFdKuF33yPnkECxkONpBsYd1dvHs+oINVI3YjB/+6CHyYgxfDBUua/NC0JoKUD
-	 fm0L9qeP1IvvQ==
-Message-ID: <sashiko-outbox-215970@kernel.org>
+	b=iO+cukz8stSFacPVXWenOIamofRfaJNchDAtODHncdWIRYekjE1wrGIWUa9bslDT2
+	 4aKX4fTGamh/xjTL+syg5c6g9vLmeZMv7ZIk+nlEhBMEfNhwtUN4Ojk3ZXuyPge0+L
+	 SvGPGYiky9xpBcEEDXNV8s6PxqZJmUcqutBDCpuWurgl3r3BPIV2Qgssnzv5/b0OAp
+	 M4TvS6qMLs4uNJHl+n3xs8G0hEW/k1AwYQf/pV5LRX3ic3gdTNRLRSj6+y0L1Oiwxy
+	 rFsMJU3HON5VDIhrgA2Cwyjp7f7lcAZc+MjRc2aGXEwAWiUmd7idiyq5KYV9Sbkpn2
+	 PM+lB0S//GqXA==
+Message-ID: <sashiko-outbox-215971@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH RFC 05/18] scsi: target: uring: Queue commands until a
- server fetches them
+Subject: Re: [PATCH RFC 17/18] selftests: target_core_uring: Test a device
+ exported through tcm_loop
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Qiliang Yuan" <qiliang.yuan@linux.dev>
 Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-In-Reply-To: <20261115-feat-target-core-uring-v1-5-28cdc137eac6@linux.dev>
+In-Reply-To: <20261115-feat-target-core-uring-v1-17-28cdc137eac6@linux.dev>
 References: <20261115-feat-target-core-uring-v1-0-28cdc137eac6@linux.dev>
- <20261115-feat-target-core-uring-v1-5-28cdc137eac6@linux.dev>
+ <20261115-feat-target-core-uring-v1-17-28cdc137eac6@linux.dev>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 16 Nov 2026 00:46:04 +0000
+Date: Mon, 16 Nov 2026 00:49:01 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -61,104 +61,125 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 
-Thank you for your contribution! Sashiko AI review found 1 potential
-issue to consider:
-- [High] scsi: target: uring: missing TCMUR_MAX_IO_SIZE check in
-  tcmur_execute_rw()
+Thank you for your contribution! Sashiko AI review found 3 potential
+issues to consider:
+- [Medium] selftests: target_core_uring: missing CONFIG_SCSI, sd_mod
+  load, and dev check
+- [Low] selftests: target_core_uring: mktemp leak on skip and missing
+  EXIT trap
+- [Low] selftests: target_core_uring: hand-rolled TAP output in
+  tcmur_test.sh
 --
 
-commit aaa41f59a5c1c48ba973ecbd7b4b910b4c814276
+commit 6f0f6d18ce018c3449526ab2ffc205257d98be91
 Author: Qiliang Yuan <qiliang.yuan@linux.dev>
 
-scsi: target: uring: Queue commands until a server fetches them
+selftests: target_core_uring: Test a device exported through tcm_loop
 
-This commit allocates a struct tcmur_cmd for each read and write command,
-populates its I/O descriptor, and queues it on the pending list of the
-submitting CPU's queue.
+This commit adds a kselftest script and kernel config fragment that export a
+target_core_uring device via tcm_loop, serve it with tcmur_server, and veri=
+fy
+I/O, server restart, and command timeouts against the backing file.
 
-> diff --git a/drivers/target/target_core_uring.c b/drivers/target/target_c=
-ore_uring.c
-> index 904ce2a613618..90e443ecb944c 100644
-> --- a/drivers/target/target_core_uring.c
-> +++ b/drivers/target/target_core_uring.c
+> diff --git a/tools/testing/selftests/target_core_uring/tcmur_test.sh b/to=
+ols/testing/selftests/target_core_uring/tcmur_test.sh
+> new file mode 100755
+> index 0000000000000..99f68e74c7cd0
+> --- /dev/null
+> +++ b/tools/testing/selftests/target_core_uring/tcmur_test.sh
+> @@ -0,0 +1,137 @@
+> +#!/bin/bash
+> +# SPDX-License-Identifier: GPL-2.0
+> +#
+> +# Export a target_core_uring device through tcm_loop, serve it with
+> +# tcmur_server and check the resulting SCSI disk against the backing fil=
+e.
+> +
+> +DIR=3D$(dirname "$(readlink -f "$0")")
+> +KSFT_SKIP=3D4
+> +T=3D/sys/kernel/config/target
+> +C=3D$T/core/uring_70/tcmur_test
+> +WWN=3Dnaa.5001405074636d75
+> +L=3D$T/loopback/$WWN/tpgt_1
+> +SIZE=3D$((256 << 20))
+> +IMG=3D$(mktemp /tmp/tcmur_test.XXXXXX)
+> +PAT=3D$(mktemp /tmp/tcmur_test.XXXXXX)
+> +server=3D
+> +dev=3D
+> +fail=3D0
+> +
+> +[ "$(id -u)" =3D 0 ] || { echo "SKIP: need root"; exit $KSFT_SKIP; }
+> +modprobe -q target_core_uring && modprobe -q tcm_loop ||
+> +	{ echo "SKIP: need target_core_uring and tcm_loop"; exit $KSFT_SKIP; }
+
+[Severity: Low]
+Does exiting on the root or module skip checks leak the IMG and PAT files in
+/tmp?  IMG and PAT are created with mktemp before the prerequisite checks, =
+and
+rm -f "$IMG" "$PAT" only runs at the end of the script.  Without an EXIT tr=
+ap,
+an interrupted or timed-out test run also leaves IMG, PAT, the background
+tcmur_server process, and the configfs entries behind.
+
+> +
+> +check() {	# <name> <command...>
+> +	local name=3D$1; shift
+> +
+> +	if "$@"; then
+> +		echo "ok $name"
+> +	else
+> +		echo "not ok $name"
+> +		fail=3D1
+> +	fi
+> +}
+
+[Severity: Low]
+This isn't a bug, but could tcmur_test.sh source
+tools/testing/selftests/kselftest/ktap_helpers.sh instead of hand-rolling
+KSFT_SKIP, check(), and the skip messages?  Using ktap_print_header(),
+ktap_set_plan(), ktap_skip_all(), ktap_test_result(), ktap_test_skip(), and
+ktap_finished() would emit standard KTAP headers, test numbers, and summary
+totals.
 
 [ ... ]
 
-> @@ -66,12 +88,56 @@ static struct tcmur_dev *TCMUR_DEV(struct se_device *=
-dev)
->  	return container_of(dev, struct tcmur_dev, se_dev);
->  }
-> =20
-> +static struct tcmur_queue *tcmur_cmd_queue(struct tcmur_dev *udev,
-> +					   struct se_cmd *se_cmd)
-> +{
-> +	return &udev->queues[(unsigned int)se_cmd->cpuid % udev->nr_queues];
+> +	before=3D$(lsblk -dno NAME | sort)
+> +	mkdir -p $L
+> +	echo naa.5001405074636d76 > $L/nexus
+> +	mkdir $L/lun/lun_0
+> +	ln -s $C $L/lun/lun_0/tcmur_test
+> +	for _ in $(seq 40); do
+> +		dev=3D$(comm -13 <(echo "$before") <(lsblk -dno NAME | sort) | head -1)
+> +		[ -n "$dev" ] && break
+> +		sleep 0.5
+> +	done
+> +	udevadm settle
+> +	dev=3D/dev/$dev
 > +}
-> +
-> +static void tcmur_queue_cmd(struct tcmur_dev *udev, struct tcmur_cmd *tc=
-md)
-> +{
-> +	struct tcmur_queue *q =3D tcmur_cmd_queue(udev, tcmd->se_cmd);
-> +
-> +	spin_lock(&q->lock);
-> +	list_add_tail(&tcmd->node, &q->pending);
-> +	spin_unlock(&q->lock);
-> +}
-> +
-> +static sense_reason_t tcmur_submit(struct se_cmd *se_cmd, u32 op, u64 of=
-fset,
-> +				   u64 len, struct scatterlist *sgl,
-> +				   u32 sgl_nents)
-> +{
-> +	struct tcmur_dev *udev =3D TCMUR_DEV(se_cmd->se_dev);
-> +	struct tcmur_cmd *tcmd;
-> +
-> +	tcmd =3D kmem_cache_zalloc(tcmur_cmd_cache, GFP_NOIO);
-> +	if (!tcmd)
-> +		return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
-> +
-> +	tcmd->se_cmd =3D se_cmd;
-> +	tcmd->sgl =3D sgl;
-> +	tcmd->sgl_nents =3D sgl_nents;
-> +	tcmd->desc.op =3D op;
-> +	tcmd->desc.offset =3D offset;
-> +	tcmd->desc.len =3D len;
-> +	tcmd->desc.data_len =3D se_cmd->data_length;
-> +	if (op =3D=3D TCMUR_OP_WRITE && (se_cmd->se_cmd_flags & SCF_FUA))
-> +		tcmd->desc.flags |=3D TCMUR_IO_F_FUA;
-> +
-> +	tcmur_queue_cmd(udev, tcmd);
-> +	return 0;
-> +}
-> +
->  static sense_reason_t tcmur_execute_rw(struct se_cmd *se_cmd,
->  				       struct scatterlist *sgl, u32 sgl_nents,
->  				       enum dma_data_direction dir)
->  {
-> -	/* Fail the commands until a server can pick them up */
-> -	return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
-> +	u32 block_size =3D se_cmd->se_dev->dev_attrib.block_size;
-> +
-> +	return tcmur_submit(se_cmd, dir =3D=3D DMA_FROM_DEVICE ? TCMUR_OP_READ :
-> +							     TCMUR_OP_WRITE,
-> +			    se_cmd->t_task_lba * block_size,
-> +			    se_cmd->data_length, sgl, sgl_nents);
->  }
 
-[Severity: High]
-Can tcmur_execute_rw() queue a command with tcmd->desc.data_len larger than
-the TCMUR_MAX_IO_SIZE limit advertised by TCMUR_GET_DEV_INFO in
-info.max_io_size?
+[Severity: Medium]
+What happens in setup() if the SCSI disk never appears in lsblk?
 
-Although tcmur_configure_device() sets dev->dev_attrib.hw_max_sectors to
-TCMUR_MAX_IO_SIZE / udev->block_size, the target core only uses
-hw_max_sectors to report the advisory maximum transfer length in Block
-Limits VPD page 0xb0 and does not reject READ or WRITE commands that exceed
-it (unlike fd_execute_rw(), which checks cmd->data_length > FD_MAX_BYTES).
-An initiator can send a READ or WRITE command larger than 4 MiB and cause a
-userspace server that sizes its I/O buffer to info.max_io_size (such as
-tcmur_server.c in this series) to overflow its buffer.
+After polling for 20 seconds, dev remains empty and dev=3D/dev/$dev sets de=
+v to
+/dev/, causing each of the four setup() calls to stall for 20 seconds (exce=
+eding
+the default 45-second kselftest timeout) before running dd and blkdiscard
+against /dev/.
+
+This is easy to hit in minimal test environments for two reasons:
+tools/testing/selftests/target_core_uring/config sets CONFIG_LOOPBACK_TARGE=
+T=3Dm
+and CONFIG_BLK_DEV_SD=3Dm without enabling CONFIG_SCSI, which both symbols =
+depend
+on (CONFIG_TARGET_CORE only selects CONFIG_SCSI_COMMON), so Kconfig drops t=
+hem
+when merging onto a base config without CONFIG_SCSI.  In addition, the
+prerequisite check at the top of the script loads target_core_uring and
+tcm_loop, but does not load sd_mod (for CONFIG_BLK_DEV_SD=3Dm) or verify th=
+at
+configfs is mounted at /sys/kernel/config/target.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261115-feat-targe=
-t-core-uring-v1-0-28cdc137eac6@linux.dev?part=3D5
+t-core-uring-v1-0-28cdc137eac6@linux.dev?part=3D17
