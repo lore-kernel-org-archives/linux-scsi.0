@@ -1,56 +1,56 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794789850;
-	b=p4jAeK56wXuJeD+t2Flz8mwUz7DFjScupE94SohJt2gnY9Xx1dNUvcf6YTcFNAYvL4SY
-	 40wvFMQO+cRwOOvZdNNYRz33PSfN2wRhN+OQObSRnEMZmsZLljkk3d31d5WWlc74NwQX0
-	 kk4NN+xyC/Kxjne5+oMm7/vwUHDEeZbjwY0uykl+3oHU1N1OC51+AWWOwIChADGqtJx4x
-	 zXhaqeSZi+LbelUmNV3QpW69uja7N6Kh62DB1peLeClX/f3HTYZYxq8PdSgUBAn32DhJw
-	 g7K4D7JBs+R01b/ZmRwpHYPwjKYzcsIknAmzKHnSPx79us0624eB3T1z46U4AX6E6sA==
+	t=1794789906;
+	b=2mrvIzYvcPIFdxaFMOQiS6kbaXoPU47WcgkKCzsfBmZPnGT6zHyE31dYMxujTLa/YzwY
+	 MszJpaT5JaEZhLBBKyt6yjkRFhQc80j62XlOkzU+Ji/0olo6H4uQQWZ4Yl6Kc7WOvF+w+
+	 DsoyvWvu7nZszAaVr4/Ibsw0nNR8270S/6o8NJjmcuryRai4kdtw/s5J9syWQYSXjC+uo
+	 3zVoNlJ309wgxPTl4cM8c9DVkG6AftUk+iIakGr3ffg8S+yexmhG65GbXNSL7z1XC7aH1
+	 UrEaoHQBnL94UCEBJTgVyNkFwq3hPP2YhRkBc8+xJ2DWM+uH+Xm8xbX3LwnSKQaGq7A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794789850;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794789906;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=EOQf/4BLz0OqcTzzrUz2ZMCSsYIeIRLwEfryDUaVkd4=;
-	b=w1yVEnWqGv8uZi6NoG/mbkgbbHJEyyetAW8aUR1sjGomYTiGBDYL7Ok/B6RAmCxM1SKY
-	 RcIipr+6Ju7tgCzQdbRB02UuwHJSNFMsBz5mazs0EJXdjbf+Nuptx+oG7LeY1KzaCK3lZ
-	 CNAkzkvyXqqkRn1zkjfxNIYpYQFz9AqJoxeV1k+3YPVTuEQSxNDPUhVviJyjeacnmz1Nm
-	 +jBO55RpqJWrJMrwa4wYc/gKucfaEmPnPBBd3E3nRvvyQWo6ZkVW7m4cpv5K0cjvS6OxE
-	 D5EL0Ukf2UBYz+mTmIM+PGKUnlVvPH3WRoHiGo8AOsTXmaphzcZ0W+LzK4SCopoU2ag==
+	bh=J9mTwLbDzSmc946KbmaTG1WaVGbczmdyHljlmL/y8rE=;
+	b=BQcI3tQK5GAc+2H4OCv6eUaJyYkItFkGnSbikEG9GwNoyA/nLt6RFJQHvzH2D35zDrF8
+	 TyHdEuL2NYge/kw1W5pVjNjF315pCAyX2ZZlEG51nT12T5BnB4mMs/t919SYXT98dQvbk
+	 FtaCeBDu+fRtyb59OC6mnlCU9p5r4wJa9IBxaSWsdVZlA+y11c8KyOIgouIbO7dV/zEfv
+	 be2XSC2GJguBypckEp8rcB2BvaAYeAagQ72H+XW7e7ri/TSZO3Kg5laeV/mfb/RwjJCAL
+	 lsZulhhOcxWkuWZmzUzWBP9n0rA78KS7p40GQ8RXtCvLTTb6ruVR1tcCUNo0X1PYwRw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=cR8bWZpy;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lzQph2XE;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8EBF606A31F;
-	Mon, 16 Nov 2026 00:44:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E5882606A323;
+	Mon, 16 Nov 2026 00:45:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=cR8bWZpy
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 53A081F000C4;
-	Mon, 16 Nov 2026 00:44:09 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lzQph2XE
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 544C51F000C6;
+	Mon, 16 Nov 2026 00:45:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794789849;
-	bh=EOQf/4BLz0OqcTzzrUz2ZMCSsYIeIRLwEfryDUaVkd4=;
+	s=k20260515; t=1794789905;
+	bh=J9mTwLbDzSmc946KbmaTG1WaVGbczmdyHljlmL/y8rE=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=cR8bWZpyUtdlx0wU9JniFGb8WDI93He9rvxvzragzjQBeRDU4ukd4oh4V8YuHM05X
-	 3TNOG0elT40BLZb5/g4gEmKGWIHjG8oT2zS+I1OlGD/wrYnj0D10MOolhRZiWnJ8LL
-	 pKOHUCEvTJEnwmtaISwOZDMdpoXqltTQWE5c6FHNPJyhgwwAJpr6fIH/n4HzQRGH0Q
-	 YTts6BBspv50tH9veCiIEHSvpA8WPOffFuE28Wcw+QORRuouS06J7qcBAAUxw+gmgI
-	 QPmC1ugqCLtjf4VjeGop4mu+mvacefGoNRoMDjnq0+OHDJmXk4SRlYrBNiHGD5Sk1k
-	 o8OxnrVDz8TAQ==
-Message-ID: <sashiko-outbox-215967@kernel.org>
+	b=lzQph2XE1nLJ8FFwuFe0JIeYO7UXPqZ/u1zZ59EKPEI1IUYWvyKOPC2S/xGjuYkbg
+	 ajT4aYS4sSscBEyp+LwAzuAc5ux+5zVg+Jo0qKkJ+7+4Qf3I8eOVC0BFWw/moMn89F
+	 XPbrHr2eaGVG1Bl07dQTtpeJF64vxvaeJk85sEI1mE/68O6haD+easp543BYuN9Wy4
+	 W0QFkiy2vFakUSvgwvj7NJEgrfrSMZHn4EwhWtMBFRXePUjbNgZYMWsK3s0W94b1qw
+	 ah+YuWJf2zTu8BHcsObdLlRykYFG7DjsEinYfTHkh4ysQeCL90Dm8Afc/grAZ9+WwQ
+	 lVifbylevbKOg==
+Message-ID: <sashiko-outbox-215968@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH RFC 14/18] scsi: target: uring: Handle WRITE SAME
+Subject: Re: [PATCH RFC 13/18] scsi: target: uring: Implement UNMAP
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Qiliang Yuan" <qiliang.yuan@linux.dev>
 Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-In-Reply-To: <20261115-feat-target-core-uring-v1-14-28cdc137eac6@linux.dev>
+In-Reply-To: <20261115-feat-target-core-uring-v1-13-28cdc137eac6@linux.dev>
 References: <20261115-feat-target-core-uring-v1-0-28cdc137eac6@linux.dev>
- <20261115-feat-target-core-uring-v1-14-28cdc137eac6@linux.dev>
+ <20261115-feat-target-core-uring-v1-13-28cdc137eac6@linux.dev>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 16 Nov 2026 00:44:08 +0000
+Date: Mon, 16 Nov 2026 00:45:04 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -62,57 +62,86 @@ Precedence: list
 
 Thank you for your contribution! Sashiko AI review found 1 potential
 issue to consider:
-- [High] scsi: target: uring: missing payload checks in
-  tcmur_execute_write_same()
+- [High] scsi: target: uring: submission workqueue stall and TMR hang in
+  tcmur_execute_unmap()
 --
 
-commit 194f0b295175d883a8fb6c1f553cf215c122630e
+commit a69183b9652241c1e0d7dcfe7c2618562f084113
 Author: Qiliang Yuan <qiliang.yuan@linux.dev>
 
-scsi: target: uring: Handle WRITE SAME
+scsi: target: uring: Implement UNMAP
 
-This commit adds WRITE SAME support to the target_core_uring backend via a
-new TCMUR_OP_WRITE_SAME operation.
+This commit adds UNMAP support to target_core_uring by introducing
+TCMUR_OP_UNMAP and synchronously waiting for each unmap range to complete
+in tcmur_execute_unmap().
 
 > diff --git a/drivers/target/target_core_uring.c b/drivers/target/target_c=
 ore_uring.c
-> index 366c5e9820956..42283a1ae1512 100644
+> index f39bf7bf36d0f..366c5e9820956 100644
 > --- a/drivers/target/target_core_uring.c
 > +++ b/drivers/target/target_core_uring.c
+
 [ ... ]
-> @@ -295,6 +297,16 @@ static sense_reason_t tcmur_execute_unmap(struct se_=
-cmd *se_cmd, sector_t lba,
->  	return tcmd.status ? TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE : 0;
+
+> @@ -268,6 +275,36 @@ static sense_reason_t tcmur_execute_sync_cache(struc=
+t se_cmd *se_cmd)
+>  			    se_cmd->data_length, NULL, 0);
 >  }
 > =20
-> +static sense_reason_t tcmur_execute_write_same(struct se_cmd *se_cmd)
+> +static sense_reason_t tcmur_execute_unmap(struct se_cmd *se_cmd, sector_=
+t lba,
+> +					  sector_t nolb)
 > +{
 > +	u32 block_size =3D se_cmd->se_dev->dev_attrib.block_size;
+> +	DECLARE_COMPLETION_ONSTACK(done);
+> +	struct tcmur_cmd tcmd =3D {
+> +		.se_cmd		=3D se_cmd,
+> +		.done		=3D &done,
+> +		.desc.op	=3D TCMUR_OP_UNMAP,
+> +		.desc.offset	=3D lba * block_size,
+> +		.desc.len	=3D nolb * block_size,
+> +	};
 > +
-> +	return tcmur_submit(se_cmd, TCMUR_OP_WRITE_SAME,
-> +			    se_cmd->t_task_lba * block_size,
-> +			    (u64)sbc_get_write_same_sectors(se_cmd) * block_size,
-> +			    se_cmd->t_data_sg, se_cmd->t_data_nents);
-> +}
+> +	/* Wait here, as the core completes the command after all ranges */
+> +	tcmur_queue_cmd(TCMUR_DEV(se_cmd->se_dev), &tcmd);
+> +	wait_for_completion(&done);
 
 [Severity: High]
-Can tcmur_execute_write_same() submit a TCMUR_OP_WRITE_SAME descriptor
-whose data_len is 0 or larger than block_size?
+Can waiting on done here stall the submission workqueue and hang task
+management?
 
-Because sbc_parse_cdb() does not set SCF_SCSI_DATA_CDB for WRITE SAME,
-target_cmd_size_check() does not reject commands when an initiator sends no
-data buffer (leaving t_data_sg NULL and t_data_nents 0) or a transfer
-length larger than one block, nor when protection information sets
-se_cmd->prot_op.  tcmur_submit() then sets desc.data_len to 0 or
-se_cmd->data_length, breaking the UAPI guarantee that data_len is one block
-and causing a userspace server to spin forever on a zero step or overflow a
-single-block buffer.
+On fabrics using TARGET_QUEUE_SUBMIT (such as vhost-scsi or tcm_loop),
+target_execute_cmd() runs inside target_queued_submit_work() on
+dev->queues[i].sq.work.  Sleeping in wait_for_completion(&done) blocks
+further commands on that queue until the server completes the unmap.
 
-Should tcmur_execute_write_same() validate se_cmd->prot_op,
-se_cmd->t_data_nents =3D=3D 1, and se_cmd->t_data_sg[0].length =3D=3D block=
-_size
-the same way fd_execute_write_same() and iblock_execute_write_same() do?
+If no idle tag is available, tcmur_queue_cmd() places tcmd on q->pending.
+When an ABORT_TASK or LUN_RESET arrives, core_tmr_abort_task() and
+core_tmr_drain_state_list() flush sq.work before calling
+dev->transport->tmr_notify() (tcmur_tmr_notify()):
+
+sq.work                           tmr_wq
+target_queued_submit_work()
+  ...
+    tcmur_execute_unmap()
+      tcmur_queue_cmd()
+      wait_for_completion(&done)
+                                  core_tmr_abort_task()
+                                    flush_work(&dev->queues[i].sq.work)
+                                      <-- waits for sq.work
+                                    ...
+                                    dev->transport->tmr_notify()
+
+Because flush_work() waits for tcmur_execute_unmap() to return,
+tcmur_tmr_notify() never runs to remove tcmd from q->pending and complete
+done, stalling task management until cmd_timeout expires (or forever when
+cmd_time_out is 0).
+
+Even when target_execute_cmd() runs outside sq.work, if a TMR aborts
+se_cmd before tcmur_queue_cmd() queues tcmd on q->pending,
+tcmur_tmr_notify() has already run and removed se_cmd from state_list, so
+tcmd is never aborted and target_put_cmd_and_wait() hangs.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261115-feat-targe=
-t-core-uring-v1-0-28cdc137eac6@linux.dev?part=3D14
+t-core-uring-v1-0-28cdc137eac6@linux.dev?part=3D13
