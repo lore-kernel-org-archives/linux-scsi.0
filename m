@@ -1,57 +1,56 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794789692;
-	b=E41mKBD11b+jDqqHe+lni38vpb/mToBhDORkHjiNQ73RcZd56aYN9EvO4amzIGlTNHCh
-	 FikdRNdHUZl1yzTOSoJxiFavrr0POMVXyYtTqZxsflUQHNgRYj3+ORqQh+eBxKVuLnf/7
-	 vWhs5Il3g+2iCPWIfegtdn4FSaYDN2CiTXEFH6wHgmycw1zTmtDEB6KKA4mlvAsORXWz5
-	 cGoP7fmB7YzqDv9OeVgPyL/7hu2NGfKpCuRksFr5ScV6aB+G7QX0VRj37bM6QlQkstoKZ
-	 g2o+LOcS3PVWK23opfFNEj36wW45lYjbeqMFroiqhu+bqJvh3zkEYaem3ABYlpOSjxA==
+	t=1794789850;
+	b=p4jAeK56wXuJeD+t2Flz8mwUz7DFjScupE94SohJt2gnY9Xx1dNUvcf6YTcFNAYvL4SY
+	 40wvFMQO+cRwOOvZdNNYRz33PSfN2wRhN+OQObSRnEMZmsZLljkk3d31d5WWlc74NwQX0
+	 kk4NN+xyC/Kxjne5+oMm7/vwUHDEeZbjwY0uykl+3oHU1N1OC51+AWWOwIChADGqtJx4x
+	 zXhaqeSZi+LbelUmNV3QpW69uja7N6Kh62DB1peLeClX/f3HTYZYxq8PdSgUBAn32DhJw
+	 g7K4D7JBs+R01b/ZmRwpHYPwjKYzcsIknAmzKHnSPx79us0624eB3T1z46U4AX6E6sA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794789692;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794789850;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=pvlRcMLoQYHhz4XMzUXfZDpX2OjVZIoGxVhY7JcCHKE=;
-	b=aCz12yC7rO41BPuLxylMMlPyzjXR8+74TfmuQk3diTul77Imk7Co/4WiD4nZUsrcyx8v
-	 5sc4hFcpSnt/AYEppPOfovW7OhBedRHtq9Q8JXcHELTIkU1cVw3AWTT+RTsNgCXiPVZo4
-	 79V4c6ilTebS8RvTfcVSM/2ZOXaEqoAmgTjbPqb43Vs0XyQXVdlUGJGlDR1d/EhNMWhem
-	 6FzTE7eOVPKEDi4vlyCYNNunQKtAw+aHMdqLX+PrxqYkeWH23F2Y4EKKzzT4tRgNYzPVq
-	 5RoGDJg37xyyZwvxsKstQGuZ3trY4H7pSnSvj7w1tSTYKRKcjl+wWMyGjNdifIKks7A==
+	bh=EOQf/4BLz0OqcTzzrUz2ZMCSsYIeIRLwEfryDUaVkd4=;
+	b=w1yVEnWqGv8uZi6NoG/mbkgbbHJEyyetAW8aUR1sjGomYTiGBDYL7Ok/B6RAmCxM1SKY
+	 RcIipr+6Ju7tgCzQdbRB02UuwHJSNFMsBz5mazs0EJXdjbf+Nuptx+oG7LeY1KzaCK3lZ
+	 CNAkzkvyXqqkRn1zkjfxNIYpYQFz9AqJoxeV1k+3YPVTuEQSxNDPUhVviJyjeacnmz1Nm
+	 +jBO55RpqJWrJMrwa4wYc/gKucfaEmPnPBBd3E3nRvvyQWo6ZkVW7m4cpv5K0cjvS6OxE
+	 D5EL0Ukf2UBYz+mTmIM+PGKUnlVvPH3WRoHiGo8AOsTXmaphzcZ0W+LzK4SCopoU2ag==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=mgSTmJ3X;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=cR8bWZpy;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4FAC4606A881;
-	Mon, 16 Nov 2026 00:41:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8EBF606A31F;
+	Mon, 16 Nov 2026 00:44:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=mgSTmJ3X
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B63F31F000C4;
-	Mon, 16 Nov 2026 00:41:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=cR8bWZpy
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 53A081F000C4;
+	Mon, 16 Nov 2026 00:44:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794789692;
-	bh=pvlRcMLoQYHhz4XMzUXfZDpX2OjVZIoGxVhY7JcCHKE=;
+	s=k20260515; t=1794789849;
+	bh=EOQf/4BLz0OqcTzzrUz2ZMCSsYIeIRLwEfryDUaVkd4=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=mgSTmJ3Xo4uOQIssth0IJAtDkjLmUSYKUSYYHdDAbqiSzmuYQtU2dI8kB7J9k25Kv
-	 XJlZaC/04UZ8lNbApL90t09Cy4PnkPEQcSihGrYgKJxTh37LfycLE14qqpJCI2xeOD
-	 2pFhbEm7yHB8WAtpiu2cS+vEPvo5NhfXuFdTjNwlrJf27nIqT7+bwC3CTI2CF+2PfM
-	 9xM/jym7saQgvifgoPFVqEDDiwXkE1f18fOhWU2OfohTpr4UO0RKM3coBGMK/lDp4m
-	 /Z8OOubvW51VW+2N07pmur7M/4gMe5aDt6JqUKLNbpVvdF7vcpgi/L3DEMUfhSYl53
-	 8H49sAxYlKz5g==
-Message-ID: <sashiko-outbox-215964@kernel.org>
+	b=cR8bWZpyUtdlx0wU9JniFGb8WDI93He9rvxvzragzjQBeRDU4ukd4oh4V8YuHM05X
+	 3TNOG0elT40BLZb5/g4gEmKGWIHjG8oT2zS+I1OlGD/wrYnj0D10MOolhRZiWnJ8LL
+	 pKOHUCEvTJEnwmtaISwOZDMdpoXqltTQWE5c6FHNPJyhgwwAJpr6fIH/n4HzQRGH0Q
+	 YTts6BBspv50tH9veCiIEHSvpA8WPOffFuE28Wcw+QORRuouS06J7qcBAAUxw+gmgI
+	 QPmC1ugqCLtjf4VjeGop4mu+mvacefGoNRoMDjnq0+OHDJmXk4SRlYrBNiHGD5Sk1k
+	 o8OxnrVDz8TAQ==
+Message-ID: <sashiko-outbox-215967@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH RFC 10/18] scsi: target: uring: Time out commands the
- server does not complete
+Subject: Re: [PATCH RFC 14/18] scsi: target: uring: Handle WRITE SAME
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Qiliang Yuan" <qiliang.yuan@linux.dev>
 Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-In-Reply-To: <20261115-feat-target-core-uring-v1-10-28cdc137eac6@linux.dev>
+In-Reply-To: <20261115-feat-target-core-uring-v1-14-28cdc137eac6@linux.dev>
 References: <20261115-feat-target-core-uring-v1-0-28cdc137eac6@linux.dev>
- <20261115-feat-target-core-uring-v1-10-28cdc137eac6@linux.dev>
+ <20261115-feat-target-core-uring-v1-14-28cdc137eac6@linux.dev>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 16 Nov 2026 00:41:31 +0000
+Date: Mon, 16 Nov 2026 00:44:08 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -61,187 +60,59 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 
-Thank you for your contribution! Sashiko AI review found 4 potential
-issues to consider:
-- [Medium] scsi: target: uring: schedule_delayed_work() race in
-  tcmur_timeout_work()
-- [Medium] scsi: target: uring: UAF race scheduling timeout_work in
-  tcmur_queue_cmd()
-- [Low] scsi: target: uring: 32-bit overflow in cmd_timeout * HZ in
-  tcmur_queue_cmd()
-- [Low] scsi: target: uring: unlocked deadline calculation in
-  tcmur_queue_cmd()
+Thank you for your contribution! Sashiko AI review found 1 potential
+issue to consider:
+- [High] scsi: target: uring: missing payload checks in
+  tcmur_execute_write_same()
 --
 
-commit 2624a7f3c24be9a1330c0e703d8b3102658c07d2
+commit 194f0b295175d883a8fb6c1f553cf215c122630e
 Author: Qiliang Yuan <qiliang.yuan@linux.dev>
 
-scsi: target: uring: Time out commands the server does not complete
+scsi: target: uring: Handle WRITE SAME
 
-This commit adds a configurable command timeout (cmd_time_out, 30 seconds
-by default) and a delayed work item to fail pending or in-flight commands
-that the userspace server does not complete in time.
+This commit adds WRITE SAME support to the target_core_uring backend via a
+new TCMUR_OP_WRITE_SAME operation.
 
 > diff --git a/drivers/target/target_core_uring.c b/drivers/target/target_c=
 ore_uring.c
-> index 2978dd08c99cf..0f83bdc55e06a 100644
+> index 366c5e9820956..42283a1ae1512 100644
 > --- a/drivers/target/target_core_uring.c
 > +++ b/drivers/target/target_core_uring.c
 [ ... ]
-> @@ -190,6 +196,8 @@ static void tcmur_queue_cmd(struct tcmur_dev *udev, s=
-truct tcmur_cmd *tcmd)
->  	struct tcmur_io *io;
-> =20
->  	refcount_set(&tcmd->ref, 1);
-> +	if (udev->cmd_timeout)
-> +		tcmd->deadline =3D jiffies + udev->cmd_timeout * HZ;
-
-[Severity: Low]
-Can udev->cmd_timeout * HZ overflow 32 bits here and in the
-schedule_delayed_work() call below?
-
-tcmur_set_configfs_dev_params() accepts any non-negative int for
-cmd_time_out without an upper bound, and both udev->cmd_timeout and HZ are
-32-bit integers.  A value above UINT_MAX / HZ wraps in 32-bit unsigned
-arithmetic before being widened to unsigned long (and on 32-bit
-architectures a value above LONG_MAX / HZ wraps time_after()), causing
-commands to time out prematurely or immediately.
-
-> =20
->  	spin_lock(&q->lock);
->  	io =3D list_first_entry_or_null(&q->idle, struct tcmur_io, node);
-> @@ -205,6 +213,9 @@ static void tcmur_queue_cmd(struct tcmur_dev *udev, s=
-truct tcmur_cmd *tcmd)
-> =20
->  	if (ucmd)
->  		io_uring_cmd_complete_in_task(ucmd, tcmur_fetch_tw_cb);
-> +	if (udev->cmd_timeout)
-> +		schedule_delayed_work(&udev->timeout_work,
-> +				      udev->cmd_timeout * HZ);
->  }
-
-[Severity: Medium]
-Can scheduling udev->timeout_work after dropping q->lock race with
-command completion and device teardown, causing a use-after-free on udev?
-
-Once q->lock is released, the server can complete tcmd immediately on
-another CPU, dropping the last LUN and device references while this thread
-is preempted:
-
-CPU0                              CPU1
-tcmur_queue_cmd()
-  spin_lock(&q->lock)
-  tcmur_io_start(q, io, tcmd)
-  spin_unlock(&q->lock)
-                                  tcmur_commit()
-                                    tcmur_cmd_end(tcmd, ...)
-                                      ...
-                                        target_complete_cmd()
-                                  tcmur_destroy_device()
-                                    cancel_delayed_work_sync(
-                                      &udev->timeout_work)
-                                  tcmur_free_device()
-                                    ...
-                                      kfree(udev)
-  if (udev->cmd_timeout)
-    schedule_delayed_work(
-      &udev->timeout_work, ...)  <-- use-after-free / re-armed after cancel
-
-Scheduling udev->timeout_work while holding q->lock avoids this race.
-
-[ ... ]
-
-> @@ -244,6 +255,58 @@ static sense_reason_t tcmur_execute_rw(struct se_cmd=
- *se_cmd,
->  			    se_cmd->data_length, sgl, sgl_nents);
+> @@ -295,6 +297,16 @@ static sense_reason_t tcmur_execute_unmap(struct se_=
+cmd *se_cmd, sector_t lba,
+>  	return tcmd.status ? TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE : 0;
 >  }
 > =20
-> +static void tcmur_timeout_work(struct work_struct *work)
+> +static sense_reason_t tcmur_execute_write_same(struct se_cmd *se_cmd)
 > +{
-> +	struct tcmur_dev *udev =3D container_of(work, struct tcmur_dev,
-> +					      timeout_work.work);
-> +	unsigned long now =3D jiffies, next =3D 0;
-> +	struct tcmur_cmd *tcmd, *tmp;
-> +	struct tcmur_queue *q;
-> +	struct tcmur_io *io;
-> +	bool rearm =3D false;
-> +	LIST_HEAD(expired);
-> +	unsigned int i, j;
+> +	u32 block_size =3D se_cmd->se_dev->dev_attrib.block_size;
 > +
-> +	for (i =3D 0; i < udev->nr_queues; i++) {
-> +		q =3D &udev->queues[i];
-> +
-> +		spin_lock(&q->lock);
-> +		list_for_each_entry_safe(tcmd, tmp, &q->pending, node) {
-> +			if (time_after(tcmd->deadline, now)) {
-> +				if (!rearm || time_before(tcmd->deadline, next))
-> +					next =3D tcmd->deadline;
-> +				rearm =3D true;
-> +				break;
-> +			}
-> +			list_move_tail(&tcmd->node, &expired);
-> +		}
-
-[Severity: Low]
-Does breaking on the first non-expired command in q->pending skip expired
-commands queued behind it?
-
-In tcmur_queue_cmd(), tcmd->deadline is computed before acquiring q->lock.
-If one CPU computes an earlier deadline and is delayed before taking
-q->lock while another CPU computes a later deadline and appends to
-q->pending first, q->pending is no longer ordered by deadline and
-tcmur_timeout_work() stops at the later deadline until it expires.
-
-> +		for (j =3D 0; j < udev->queue_depth; j++) {
-> +			io =3D &q->ios[j];
-> +			tcmd =3D io->cmd;
-> +			if (!tcmd)
-> +				continue;
-> +			if (time_after(tcmd->deadline, now)) {
-> +				if (!rearm || time_before(tcmd->deadline, next))
-> +					next =3D tcmd->deadline;
-> +				rearm =3D true;
-> +				continue;
-> +			}
-> +			/* Leave the tag to the server until it commits it */
-> +			io->cmd =3D NULL;
-> +			list_add_tail(&tcmd->node, &expired);
-> +		}
-> +		spin_unlock(&q->lock);
-> +	}
-> +
-> +	if (!list_empty(&expired))
-> +		pr_warn_ratelimited("tcmur%d: command timed out\n",
-> +				    udev->dev_id);
-> +	tcmur_end_cmds(&expired, SAM_STAT_CHECK_CONDITION);
-> +
-> +	if (rearm)
-> +		schedule_delayed_work(&udev->timeout_work, next - now);
+> +	return tcmur_submit(se_cmd, TCMUR_OP_WRITE_SAME,
+> +			    se_cmd->t_task_lba * block_size,
+> +			    (u64)sbc_get_write_same_sectors(se_cmd) * block_size,
+> +			    se_cmd->t_data_sg, se_cmd->t_data_nents);
 > +}
 
-[Severity: Medium]
-Can a concurrent tcmur_queue_cmd() cause this schedule_delayed_work() call
-to be ignored, delaying expiration of the oldest command by an extra
-cmd_timeout period?
+[Severity: High]
+Can tcmur_execute_write_same() submit a TCMUR_OP_WRITE_SAME descriptor
+whose data_len is 0 or larger than block_size?
 
-CPU0 (kworker)                    CPU1
-tcmur_timeout_work()
-  /* sees command due at next */
-  rearm =3D true
-                                  tcmur_queue_cmd()
-                                    schedule_delayed_work(
-                                      &udev->timeout_work,
-                                      udev->cmd_timeout * HZ)
-  schedule_delayed_work(
-    &udev->timeout_work,
-    next - now)  <-- ignored (already pending for cmd_timeout * HZ)
+Because sbc_parse_cdb() does not set SCF_SCSI_DATA_CDB for WRITE SAME,
+target_cmd_size_check() does not reject commands when an initiator sends no
+data buffer (leaving t_data_sg NULL and t_data_nents 0) or a transfer
+length larger than one block, nor when protection information sets
+se_cmd->prot_op.  tcmur_submit() then sets desc.data_len to 0 or
+se_cmd->data_length, breaking the UAPI guarantee that data_len is one block
+and causing a userspace server to spin forever on a zero step or overflow a
+single-block buffer.
 
-Because WORK_STRUCT_PENDING_BIT is cleared when tcmur_timeout_work()
-starts, CPU1's schedule_delayed_work() arms the timer for the full
-cmd_timeout * HZ, and CPU0's schedule_delayed_work() returns false without
-shortening the timer to next - now.  Using mod_delayed_work() when
-rearming would update the timer to the earlier deadline.
+Should tcmur_execute_write_same() validate se_cmd->prot_op,
+se_cmd->t_data_nents =3D=3D 1, and se_cmd->t_data_sg[0].length =3D=3D block=
+_size
+the same way fd_execute_write_same() and iblock_execute_write_same() do?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261115-feat-targe=
-t-core-uring-v1-0-28cdc137eac6@linux.dev?part=3D10
+t-core-uring-v1-0-28cdc137eac6@linux.dev?part=3D14
