@@ -1,72 +1,101 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.197
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.161.54
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794794776;
-	b=tEkNySAWN/UfUYbX79NjkyJrAXWf1XGMGOh2U9rFN7W2dCJLeLRpFCtEJLr6kGU3phQo
-	 W9L5kJ8XsMDE23qOtXGxdqXJdC3vqauqK4Pv5IrjriYfSFf+euudXHSr3fuUfC6wJ4qc8
-	 DIP42llTqXRMaHTpyDmRnWNIMd2vwGoxlHaCqFM5aJhunhljocbRyG2Tp8YLX7Hn7mwoc
-	 Gt0gjbcLxQ8VjP5vZKFlvKRh4hSfpM02npAc8IMEHYcWCN0DsxeKPEyrP6RPnW1U/9Jdj
-	 2NkfKQiEcESdu9F7tT+NRUctAqbsHn8rgfkehLCsVvmBlA2jJ7OCMCfOgL21XMf6AxQ==
+	t=1794796333;
+	b=D0Hg8FvwXMUn10M5OVN1HNFox0pwZxbSQLz6ckikZZOANbAC004LfDLsjp+A1ln+qA9H
+	 zJ0XggHBq3nBUDoe5tUzKQCpmEUS99VWnb8mPspry6yip5woQKinfyqmFJRBgHg4IneTe
+	 k4/NUJEJteVaZ2Pbxp0kjm6iAp19xd06g5yd1FuyHR11K+oj5bME9vPd7b+qoNWX4Nb13
+	 H4SzY0P2uWraJ86KlxisaRqVjqOaAHChCTfhW/3TrB9/f/4OyAE/q1nFQHfThS99q21kB
+	 1LuTAJHFb1rKhf/VgHBpxH0yYI03QTh/Ohxt2oXUzR6wehkOgEUODqajUInwohRHn6w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794794776;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794796333;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:Mime-Version:
-	 X-Mailer:Message-ID:Subject:From:To:Cc:Content-Type;
-	bh=cJJzd3L/eTg07J3EuxCVtYSR2lZ8hLnhdrN82dNaJoM=;
-	b=Fk5HR4uiXuqHG4KyY2FYAye/uFpz1uEfAnOnSR7/Y5rS4pXaMOC6Lx+n4dUYQIronVy+
-	 q687ZsQ9ugAQ1ZWs1tDim4dhXZ6WG3k5wuGJHjfKgn3xGY2NoyCoR4FhYN1r1nSVfupCm
-	 dCdyS4+rOnGeHq5TbLrVgMHacrpLVZx+PzG3iTNZO3BrwuXSN9Ucb70NKzny0BHU+K6YH
-	 MOTeNg+rAqD9LY77pO73BKlNAozs+u2rAwAcEIq9hEbuwlokShEU+8O+5sk6+lX/5EsW8
-	 J4TdksPu47nmtqF8Rj3EKhCxMlR+Zs8IXlh7p5ldpQoD9ClqY7TZrEjPSMdL7LhfyhA==
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To;
+	bh=qP0oQ8pgHCHQzk/+nldvTTjF2Xe/AkvM0ngljoymRm4=;
+	b=JUhQLgrzJmm5tlEwmT2dJEinZJaanLPbmwPIBF3NUFQPWVY8JvDSLl5pqBnh4r44mgdn
+	 DOKtraLWojxLRRp3Y5oZscm4wdtQmK3EN+V9MTMsT/CjFguctFAAh2S7mcu+WenVc/msf
+	 E5bxILfulMXxYI5SRxWHQKtEJ8oVX6y+mybyFtczh+xMbHJ3BpB70np1nNIJVdCVwkhPI
+	 +LHsidUSFDFdJ6dBS7dFFfFIkpD0P2wTWF1Uy09rLDPRltscMlKyqSHOyLghiWIjPVBgp
+	 YDpnnmPh/G3GrYlQf+u8s55Bwt8wnD0KGcy9SbTw7dLWdEcAzrrB4Y1Vqy2ksfdyv/Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=google.com;
-	spf=pass smtp.mailfrom=flex--chullee.bounces.google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=VTjSrDE7;
-	arc=none smtp.remote-ip=74.125.82.197
-Received: from mail-dy1-f197.google.com (mail-dy1-f197.google.com [74.125.82.197])
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=n097wLUh;
+	arc=none smtp.remote-ip=209.85.161.54
+Received: from mail-oo1-f54.google.com (mail-oo1-f54.google.com [209.85.161.54])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 182BA606A31F
-	for <linux-scsi@vger.kernel.org>; Mon, 16 Nov 2026 02:06:15 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 182BA606A31F
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--chullee.bounces.google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 12FDC606A323
+	for <linux-scsi@vger.kernel.org>; Mon, 16 Nov 2026 02:32:12 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 12FDC606A323
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=VTjSrDE7
-Received: by mail-dy1-f197.google.com with SMTP id 5a478bee46e88-36fa5673fccso7984100eec.1
-        for <linux-scsi@vger.kernel.org>; Sun, 15 Nov 2026 18:06:15 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=n097wLUh
+Received: by mail-oo1-f54.google.com with SMTP id 006d021491bc7-6b19e291cc6so3795609eaf.2
+        for <linux-scsi@vger.kernel.org>; Sun, 15 Nov 2026 18:32:12 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20260707; t=1794794775; x=1795399575; darn=vger.kernel.org;
-        h=content-type:cc:to:from:subject:message-id:mime-version:date:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=cJJzd3L/eTg07J3EuxCVtYSR2lZ8hLnhdrN82dNaJoM=;
-        b=VTjSrDE7MawxOcxEuD4oIQtp/U7YoR3PVV/is3qCifcKgRSm8SKRabj+lDDmbKruHk
-         azRftHH07xd/ixfAmrkzyE1BrxOdSWZDa+PJMyQExEm9RVE6o0crb3bRt0cxn4/qX10V
-         tZMfADhho68tKPIk7IhEq//lmHH2qkJK0rKpm9ZDRMQN/VPlailg6nwhpLoGBdh/r0Rs
-         4/Sgp2E0TtU8aMGDRyPZ2iVIpd0ScUMYgPHxD7/fhtfw5DC6C/T6wM4LnDxS89GTCsWl
-         cxdVcwSLYC5ceOmx3Sfi7knHlJJHiATsMBy2k/DxRzx926b8xM8gkSv670YqX2yfoS2M
-         xTKA==
+        d=gmail.com; s=20260707; t=1794796332; x=1795401132; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=qP0oQ8pgHCHQzk/+nldvTTjF2Xe/AkvM0ngljoymRm4=;
+        b=n097wLUhxoclfA5QObXODd/JJRRKdOMko7wT9CCDpExxu+EqWIRhSBNsYYJW1UNrAo
+         oNR2SX6deWfZeNa0DslMa0sMX7UtmAo4zgIRgiABWk5pgtfUOw13ijcp3BLV3Cx6zeNf
+         1bUrTC2qZRH5pmqtCBMte/Th5bR9t19SgALJVXzq6Vf7+4xIxuM67fweKuwVegbjyKw8
+         emkTrBKSFEk8UIjCPafZo09qflxilxW1zvRkRkKTsOe9nWg8K/mFtD/SOTvEtC638G2M
+         jBcu5xCP71GlWOtRLnusPyokNC5B0dn9ZA4K8Cg9ZrEg3zxWJMvW1nrpzEpjZ7RWAlVe
+         n4Dg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794794775; x=1795399575;
-        h=content-type:cc:to:from:subject:message-id:mime-version:date
+        d=1e100.net; s=20260707; t=1794796332; x=1795401132;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=cJJzd3L/eTg07J3EuxCVtYSR2lZ8hLnhdrN82dNaJoM=;
-        b=tj5VFvxD+Ef3q2k7AmQRPY0I/o8iyEvW0KuvWWbNkmgVGuPLffizX9HOL2b5bv0hub
-         xkKEwgX19KHznP6cD22H2TnxqTX0iwfsqywusWxaI3Mkfa8c+LUfBQ3e7aE6qJgV2D47
-         xGeMIj29cCN2wIgCrYkc2MjQaUyf9bqJkNGotip2RPrL4f4ZGwI9zKq86YGxjHww3KZE
-         UhyGD+ij/vqHyJbb37MXnjw9cRxCOP9uu9sYOCyLwSWwpFyjB1KWkiAFsVzksnOXuYg3
-         2k+KrXQxzunhsvaTd9PeH1XSc6CLl9zt34VtIDlNyp/4qxxdQmgm2+OzJ6ZgiNs6NfyH
-         njvA==
-X-Forwarded-Encrypted: i=1; AL+hErGT0/jrQptp4V+rDmLmszgV7titSE2EZS52x94x5f2e4yxq0BFKM6eDqxstfwKg4DSzxtrvxNe7ZhK1@vger.kernel.org
-X-Gm-Message-State: APuU4Z892A4kOgUNkihJIwNRXRsUgG7vHLeGOtmUmmKdc0KZ6KCVT0Rz
-	6jM2Rz6ZbzLOOFaliJyhHa1CG1fc0OoQVCExv95BYAM0P0TespcHZpM+fWbwdQVMVse5sPbuZAJ
-	R5T4MUoOLRg==
-X-Received: from dyah18-n1.prod.google.com ([2002:a05:693c:83d2:10b0:37a:8a0f:3aba])
- (user=chullee job=prod-delivery.src-stubby-dispatcher) by 2002:a05:693c:2587:b0:36c:a104:90db
- with SMTP id 5a478bee46e88-3796889be5fmr8618935eec.41.1794794774206; Sun, 15
- Nov 2026 18:06:14 -0800 (PST)
-Date: Sun, 15 Nov 2026 19:05:04 -0700
+        bh=qP0oQ8pgHCHQzk/+nldvTTjF2Xe/AkvM0ngljoymRm4=;
+        b=eeVHJgwzmRKQWKrMWPfsh5Tjti315jQBcuTBKZp3+1p1MDJqZmdgVOqT6LXqWDYZsE
+         f11di0TMCWEzvcYawLNytomjjyyIEx7FzoOEhOid/kTnUdmI8rJhWeU6SyQJvWFQAJsG
+         hgVv2xf9xCDDku0vd+dgcbWWKIVipZsJxpFCa5fIukTSF20s+ZhxpqPe8ykNTbi76oG/
+         yQs3IuTnc0tX98br+R9PLgbqPVXlmDYWIJodA6yJhjb5DpFMWDRmahIt8SxUhCOt0KXg
+         rFUfUIqLqRLtDXyA0jq2ziakxf/VhTSVHonh66jiq/eiVlbLc8aoDiAmum4fQBojtYwt
+         MWog==
+X-Forwarded-Encrypted: i=1; AL+hErG4mu6fFKECunnfsBGodjF+aYVdpvgWKX3ItNGJiS7uOKfQy8eXUKiy0/RdWGF5uV3HWFKU3onxIyEG@vger.kernel.org
+X-Gm-Message-State: APuU4Z/fsqrTy1GBxlO8XZ7PCtI8znE7rMMU3tJXh6N8bW+Gl28Sc4gV
+	ibJVAEGs00U0tJWRnwCQmOd5VKUDDM5xeUspurpAoZeMZd9j247eTxJy
+X-Gm-Gg: AYBFou1+EL3ZRxMp3NpshHTwpAtjLbNJgGbycNS4sM6eVo0Ee1MMg4tj0R3TE7yRk60
+	+ERMYQ/F28qerFoE1GPe4FtZO7I6b6EwTV8sVaQLE44vSpbH/p9ikTpUUZc/ZOWB2cyoHn+2+wn
+	pfUqDB7d13lyZ0kE+ZdR8neHwRnEdnqZcg5u2N19qpzFpwxMsxqLHXmqyJxo3LEgcGByMQWO5iw
+	nHr7XDEaKO3F1DW/uc5Yii7xLuhEW5CchFMBVxykKl6eE9K0OkiLq1kiAhl0uOVoHFArTFXZmKV
+	EL0AqbQ3uGRhKLJyGSTJk+LqggViT3F6pscRRMayeO5er48hlDQTPBnW30T8t50jo1Pg2MmUzoD
+	DZxRs81OKtZtWM3UqdQZ3rOEaom/AVpJtk3V44mTcpK3Nz5wIV0AmoHTjso9ZCTBluX9/etMhPj
+	asH82Zp+XxOhPYyt+LVb5e0OB8d9hZqfSCXwHRDlmTpH9otRH5g7QLIqTxfYAXdVs1DFhsgihJN
+	/OsBE3VQV66OolsK/6J9EJlw5guMlY4ktzJ9baAu++VnATBrz8gecsDA+N7E0mcNNPzE3jL93QG
+	24dF1vjDQFyPDWXXNu3NRCHXVuN9nsK+ZhYvhrQwhKgafuA8d+rywcerq6BfXW1syJ+2qwRXOl0
+	svf7SQ6yx7jXNLImJuPWj1lqFr348ODFfFg==
+X-Received: by 2002:a05:6820:1c83:b0:71a:ea6a:4f65 with SMTP id 006d021491bc7-71aea6a57c6mr2168123eaf.23.1794796331802;
+        Sun, 15 Nov 2026 18:32:11 -0800 (PST)
+Received: from fedora-laptop ([172.245.82.59])
+        by smtp.gmail.com with ESMTPSA id 46e09a7af769-862c67db8basm1743225a34.13.2026.11.15.18.32.05
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 15 Nov 2026 18:32:10 -0800 (PST)
+Date: Sun, 15 Nov 2026 20:32:02 -0600
+From: Ming Lei <tom.leiming@gmail.com>
+To: Qiliang Yuan <qiliang.yuan@linux.dev>
+Cc: "Martin K. Petersen" <mkp@kernel.org>, Shuah Khan <shuah@kernel.org>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Randy Dunlap <rdunlap@infradead.org>, linux-kernel@vger.kernel.org,
+	linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+	linux-kselftest@vger.kernel.org, linux-doc@vger.kernel.org,
+	Jens Axboe <axboe@kernel.dk>, io-uring@vger.kernel.org,
+	Mike Christie <michael.christie@oracle.com>,
+	Bodo Stroesser <bostroesser@gmail.com>
+Subject: Re: [PATCH RFC 00/18] scsi: target: Add target_core_uring, an
+ io_uring based user backstore
+Message-ID: <avprIhtn1TuYLX1b@fedora-laptop>
+References: <20261115-feat-target-core-uring-v1-0-28cdc137eac6@linux.dev>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -75,571 +104,83 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0
-X-Mailer: git-send-email 2.56.0.611.g1030f0b940-goog
-Message-ID: <20261116020504.4051796-1-chullee@google.com>
-Subject: [PATCH v3 RESEND] ufs: sysfs: Add WB partial flush mode support
-From: Daniel Lee <chullee@google.com>
-To: James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com
-Cc: alim.akhtar@samsung.com, avri.altman@sandisk.com, bvanassche@acm.org, 
-	tanghuan@vivo.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	chullee@google.com
-Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261115-feat-target-core-uring-v1-0-28cdc137eac6@linux.dev>
 
-Expose the following JEDEC UFS 4.1 Extended WriteBooster attributes and
-flags to sysfs to support FIFO and Pinned partial flush modes:
+On Sun, Nov 15, 2026 at 07:17:53PM -0500, Qiliang Yuan wrote:
+> TCM/USER is how a userspace process serves a LIO device, for instance
+> to export distributed storage over iSCSI or vhost-scsi. All commands of
+> a device go through one command ring under one mutex, the data of each
+> command is copied into and out of a shared data area, and the server
+> has to parse every SCSI CDB itself.
+> 
+> This series adds target_core_uring, a second user backstore next to
+> TCM/USER, built the way ublk is:
+> 
+> - The kernel emulates the SCSI commands. The server only sees reads,
+>   writes, flushes, UNMAP and WRITE SAME as an operation, an offset and a
+>   length.
+> - A device has several queues. Each queue is served through io_uring
+>   commands on its own ring, with no lock shared between queues.
+> - Data is copied once, with pread()/pwrite() on the character device, or
+>   not at all when the server registers the pages of a command as an
+>   io_uring fixed buffer.
 
-  - wb_partial_flush_mode
-  - wb_max_fifo_size
-  - wb_cur_fifo_size
-  - wb_pinned_cur_size
-  - wb_pinned_avail_pct
-  - wb_pinned_cumulative_write_size
-  - wb_pinned_size
-  - wb_non_pinned_min_size
-  - wb_unpin_enable
+This is ublk's uapi re-implemented inside LIO: FETCH/COMMIT_AND_FETCH
+per tag, pread()/pwrite() with (qid, tag) in the offset, and buffer
+registration via io_buffer_register_bvec(). It starts without what
+ublk added afterwards (queue affinity, recovery, auto buffer
+registration, batching), and the sashiko reviews already found the
+same abort and lifetime races ublk fixed years ago.
 
-Introduce UFS_ATTRIBUTE_RW and UFS_FLAG_RW to support writable attributes
-and flags.
-Document the new entries under Documentation/ABI/testing/sysfs-driver-ufs.
+Follows two alternatives, especially with zero kernel change:
 
-Assisted-by: Gemini:gemini-3.1
-Signed-off-by: Daniel Lee <chullee@google.com>
----
-v3:
-- Fold ufs_wb_pfm_to_string() into wb_partial_flush_mode_show().
-- Propagate actual error codes for non-OCS error (ret < 0), while keeping -EINVAL for OCS errors (ret > 0).
-- Clean up blank lines.
-v2:
-- Change wb_partial_flush_mode attribute to accept and report strings instead of numbers for better usability.
-- Order local variable declarations from longest to shortest in new functions.
- Documentation/ABI/testing/sysfs-driver-ufs |  85 ++++++
- drivers/ufs/core/ufs-sysfs.c               | 311 ++++++++++++++++-----
- include/ufs/ufs.h                          |  17 ++
- 3 files changed, 350 insertions(+), 63 deletions(-)
+1) If LIO is required (vhost-scsi, FC, SRP, iSER), serve the device
+with ublk and export it via target_core_iblock. Same per-queue
+io_uring, same user copy and zero copy path, no new uapi. Please
+benchmark that configuration, with UBLK_F_USER_COPY and with
+UBLK_F_AUTO_BUF_REG, same 32 queues and threads.
 
-diff --git a/Documentation/ABI/testing/sysfs-driver-ufs b/Documentation/ABI/testing/sysfs-driver-ufs
-index 3c422aac7..32dd38eba 100644
---- a/Documentation/ABI/testing/sysfs-driver-ufs
-+++ b/Documentation/ABI/testing/sysfs-driver-ufs
-@@ -1791,3 +1791,88 @@ Description:
- 		will be rejected.
- 
- 		The attribute is read/write.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/attributes/wb_partial_flush_mode
-+What:		/sys/bus/platform/devices/*.ufs/attributes/wb_partial_flush_mode
-+Date:		June 2026
-+Contact:	Daniel Lee <chullee@google.com>
-+Description:	This entry controls Extended WriteBooster partial flush modes.
-+
-+		======== ==============================
-+		"none"   No partial flush
-+		"fifo"   FIFO mode
-+		"pinned" Pinned mode
-+		======== ==============================
-+
-+		The attribute is read-write.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/attributes/wb_max_fifo_size
-+What:		/sys/bus/platform/devices/*.ufs/attributes/wb_max_fifo_size
-+Date:		June 2026
-+Contact:	Daniel Lee <chullee@google.com>
-+Description:	This entry configures the maximum size in Allocation Units reserved for the
-+		WriteBooster FIFO Buffer size.
-+		The attribute is read-write.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/attributes/wb_cur_fifo_size
-+What:		/sys/bus/platform/devices/*.ufs/attributes/wb_cur_fifo_size
-+Date:		June 2026
-+Contact:	Daniel Lee <chullee@google.com>
-+Description:	This entry shows the current size in Allocation Units of the WriteBooster FIFO
-+		Buffer size.
-+		The attribute is read only.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/attributes/wb_pinned_size
-+What:		/sys/bus/platform/devices/*.ufs/attributes/wb_pinned_size
-+Date:		June 2026
-+Contact:	Daniel Lee <chullee@google.com>
-+Description:	This entry configures the allocated size in Allocation Units for the UFS
-+		Pinned WriteBooster buffer.
-+		The attribute is read-write.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/attributes/wb_pinned_cur_size
-+What:		/sys/bus/platform/devices/*.ufs/attributes/wb_pinned_cur_size
-+Date:		June 2026
-+Contact:	Daniel Lee <chullee@google.com>
-+Description:	This entry shows the current allocated size in Allocation Units for the UFS
-+		Pinned WriteBooster buffer.
-+		The attribute is read-only.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/attributes/wb_pinned_avail_pct
-+What:		/sys/bus/platform/devices/*.ufs/attributes/wb_pinned_avail_pct
-+Date:		June 2026
-+Contact:	Daniel Lee <chullee@google.com>
-+Description:	This entry shows the percentage of available space remaining in the
-+		Pinned WriteBooster buffer.
-+		The attribute is read-only.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/attributes/wb_pinned_cumulative_write_size
-+What:		/sys/bus/platform/devices/*.ufs/attributes/wb_pinned_cumulative_write_size
-+Date:		June 2026
-+Contact:	Daniel Lee <chullee@google.com>
-+Description:	This entry shows the total cumulative size of data written to the
-+		Pinned WriteBooster buffer.
-+		The attribute is read-only.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/attributes/wb_non_pinned_min_size
-+What:		/sys/bus/platform/devices/*.ufs/attributes/wb_non_pinned_min_size
-+Date:		June 2026
-+Contact:	Daniel Lee <chullee@google.com>
-+Description:	This entry configures the minimum size in Allocation Units for the
-+		Non-Pinned WriteBooster Buffer area when Pinned partial flush mode is active.
-+		The attribute is read-write.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/flags/wb_unpin_enable
-+What:		/sys/bus/platform/devices/*.ufs/flags/wb_unpin_enable
-+Date:		June 2026
-+Contact:	Daniel Lee <chullee@google.com>
-+Description:	This entry controls the Pinned WriteBooster unpin enable flag (fUnpinEn).
-+
-+		======   ==============================================================
-+		0        Unpin Disable: pinned data is not flushed by WriteBooster
-+		         Buffer flush operation.
-+		1        Unpin Enable: pinned data is flushed by WriteBooster
-+		         Buffer flush operation.
-+		======   ==============================================================
-+
-+		The attribute is read-write.
-diff --git a/drivers/ufs/core/ufs-sysfs.c b/drivers/ufs/core/ufs-sysfs.c
-index cf49ad025..97301f95e 100644
---- a/drivers/ufs/core/ufs-sysfs.c
-+++ b/drivers/ufs/core/ufs-sysfs.c
-@@ -89,6 +89,12 @@ static const char *ufs_wb_resize_status_to_string(enum wb_resize_status status)
- 	}
- }
- 
-+static const char * const wb_partial_flush_modes[] = {
-+	[WB_PARTIAL_FLUSH_NONE]		= "none",
-+	[WB_PARTIAL_FLUSH_FIFO]		= "fifo",
-+	[WB_PARTIAL_FLUSH_PINNED]	= "pinned",
-+};
-+
- static const char * const ufs_hid_states[] = {
- 	[HID_IDLE]		= "idle",
- 	[ANALYSIS_IN_PROGRESS]	= "analysis_in_progress",
-@@ -1528,41 +1534,94 @@ static const struct attribute_group ufs_sysfs_string_descriptors_group = {
- 
- static inline bool ufshcd_is_wb_flags(enum flag_idn idn)
- {
--	return idn >= QUERY_FLAG_IDN_WB_EN &&
--		idn <= QUERY_FLAG_IDN_WB_BUFF_FLUSH_DURING_HIBERN8;
-+	return (idn >= QUERY_FLAG_IDN_WB_EN &&
-+		idn <= QUERY_FLAG_IDN_WB_BUFF_FLUSH_DURING_HIBERN8) ||
-+	       idn == QUERY_FLAG_IDN_WB_UNPIN_EN;
-+}
-+
-+static ssize_t ufs_sysfs_flag_show(struct device *dev,
-+	struct device_attribute *attr, char *buf, enum flag_idn idn)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+	u8 index = 0;
-+	bool flag;
-+	int ret;
-+
-+	down(&hba->host_sem);
-+	if (!ufshcd_is_user_access_allowed(hba)) {
-+		up(&hba->host_sem);
-+		return -EBUSY;
-+	}
-+	if (ufshcd_is_wb_flags(idn))
-+		index = ufshcd_wb_get_query_index(hba);
-+	ufshcd_rpm_get_sync(hba);
-+	ret = ufshcd_query_flag(hba, UPIU_QUERY_OPCODE_READ_FLAG,
-+		idn, index, &flag);
-+	ufshcd_rpm_put_sync(hba);
-+	if (ret > 0)
-+		ret = -EINVAL;
-+	if (ret)
-+		goto out;
-+	ret = sysfs_emit(buf, "%s\n", str_true_false(flag));
-+out:
-+	up(&hba->host_sem);
-+	return ret;
-+}
-+
-+static ssize_t ufs_sysfs_flag_store(struct device *dev,
-+	struct device_attribute *attr, const char *buf, size_t count,
-+	enum flag_idn idn)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+	u8 index = 0;
-+	bool value;
-+	int ret;
-+
-+	if (kstrtobool(buf, &value))
-+		return -EINVAL;
-+
-+	down(&hba->host_sem);
-+	if (!ufshcd_is_user_access_allowed(hba)) {
-+		up(&hba->host_sem);
-+		return -EBUSY;
-+	}
-+	if (ufshcd_is_wb_flags(idn))
-+		index = ufshcd_wb_get_query_index(hba);
-+	ufshcd_rpm_get_sync(hba);
-+	ret = ufshcd_query_flag(hba,
-+		value ? UPIU_QUERY_OPCODE_SET_FLAG : UPIU_QUERY_OPCODE_CLEAR_FLAG,
-+		idn, index, NULL);
-+	ufshcd_rpm_put_sync(hba);
-+	if (ret > 0)
-+		ret = -EINVAL;
-+	up(&hba->host_sem);
-+	return ret ? ret : count;
- }
- 
- #define UFS_FLAG(_name, _uname)						\
- static ssize_t _name##_show(struct device *dev,				\
- 	struct device_attribute *attr, char *buf)			\
- {									\
--	bool flag;							\
--	u8 index = 0;							\
--	int ret;							\
--	struct ufs_hba *hba = dev_get_drvdata(dev);			\
--									\
--	down(&hba->host_sem);						\
--	if (!ufshcd_is_user_access_allowed(hba)) {			\
--		up(&hba->host_sem);					\
--		return -EBUSY;						\
--	}								\
--	if (ufshcd_is_wb_flags(QUERY_FLAG_IDN##_uname))			\
--		index = ufshcd_wb_get_query_index(hba);			\
--	ufshcd_rpm_get_sync(hba);					\
--	ret = ufshcd_query_flag(hba, UPIU_QUERY_OPCODE_READ_FLAG,	\
--		QUERY_FLAG_IDN##_uname, index, &flag);			\
--	ufshcd_rpm_put_sync(hba);					\
--	if (ret) {							\
--		ret = -EINVAL;						\
--		goto out;						\
--	}								\
--	ret = sysfs_emit(buf, "%s\n", str_true_false(flag));		\
--out:									\
--	up(&hba->host_sem);						\
--	return ret;							\
-+	return ufs_sysfs_flag_show(dev, attr, buf,			\
-+				   QUERY_FLAG_IDN##_uname);		\
- }									\
- static DEVICE_ATTR_RO(_name)
- 
-+#define UFS_FLAG_RW(_name, _uname)					\
-+static ssize_t _name##_show(struct device *dev,				\
-+	struct device_attribute *attr, char *buf)			\
-+{									\
-+	return ufs_sysfs_flag_show(dev, attr, buf,			\
-+				   QUERY_FLAG_IDN##_uname);		\
-+}									\
-+static ssize_t _name##_store(struct device *dev,			\
-+	struct device_attribute *attr, const char *buf, size_t count)	\
-+{									\
-+	return ufs_sysfs_flag_store(dev, attr, buf, count,		\
-+				    QUERY_FLAG_IDN##_uname);		\
-+}									\
-+static DEVICE_ATTR_RW(_name)
-+
- UFS_FLAG(device_init, _FDEVICEINIT);
- UFS_FLAG(permanent_wpe, _PERMANENT_WPE);
- UFS_FLAG(power_on_wpe, _PWR_ON_WPE);
-@@ -1574,6 +1633,7 @@ UFS_FLAG(disable_fw_update, _PERMANENTLY_DISABLE_FW_UPDATE);
- UFS_FLAG(wb_enable, _WB_EN);
- UFS_FLAG(wb_flush_en, _WB_BUFF_FLUSH_EN);
- UFS_FLAG(wb_flush_during_h8, _WB_BUFF_FLUSH_DURING_HIBERN8);
-+UFS_FLAG_RW(wb_unpin_enable, _WB_UNPIN_EN);
- 
- static struct attribute *ufs_sysfs_device_flags[] = {
- 	&dev_attr_device_init.attr,
-@@ -1587,6 +1647,7 @@ static struct attribute *ufs_sysfs_device_flags[] = {
- 	&dev_attr_wb_enable.attr,
- 	&dev_attr_wb_flush_en.attr,
- 	&dev_attr_wb_flush_during_h8.attr,
-+	&dev_attr_wb_unpin_enable.attr,
- 	NULL,
- };
- 
-@@ -1672,8 +1733,10 @@ static DEVICE_ATTR_RW(max_number_of_rtt);
- 
- static inline bool ufshcd_is_wb_attrs(enum attr_idn idn)
- {
--	return idn >= QUERY_ATTR_IDN_WB_FLUSH_STATUS &&
--		idn <= QUERY_ATTR_IDN_CURR_WB_BUFF_SIZE;
-+	return (idn >= QUERY_ATTR_IDN_WB_FLUSH_STATUS &&
-+		idn <= QUERY_ATTR_IDN_CURR_WB_BUFF_SIZE) ||
-+	       (idn >= QUERY_ATTR_IDN_WB_PFM &&
-+		idn <= QUERY_ATTR_IDN_NON_PINNED_WB_MIN_SIZE);
- }
- 
- static inline bool ufshcd_is_qword_attr(enum attr_idn idn)
-@@ -1743,48 +1806,97 @@ static ssize_t wb_resize_status_show(struct device *dev,
- 
- static DEVICE_ATTR_RO(wb_resize_status);
- 
-+static ssize_t ufs_sysfs_attr_show(struct device *dev,
-+	struct device_attribute *attr, char *buf, enum attr_idn idn)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+	u64 qword_value;
-+	u8 index = 0;
-+	u32 value;
-+	int ret;
-+
-+	down(&hba->host_sem);
-+	if (!ufshcd_is_user_access_allowed(hba)) {
-+		up(&hba->host_sem);
-+		return -EBUSY;
-+	}
-+	if (ufshcd_is_wb_attrs(idn))
-+		index = ufshcd_wb_get_query_index(hba);
-+	ufshcd_rpm_get_sync(hba);
-+	if (ufshcd_is_qword_attr(idn))
-+		ret = ufshcd_query_attr_qword(hba, UPIU_QUERY_OPCODE_READ_ATTR,
-+			idn, index, 0, &qword_value);
-+	else
-+		ret = ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_READ_ATTR,
-+			idn, index, 0, &value);
-+	ufshcd_rpm_put_sync(hba);
-+	if (ret > 0)
-+		ret = -EINVAL;
-+	if (ret)
-+		goto out;
-+	if (ufshcd_is_qword_attr(idn))
-+		ret = sysfs_emit(buf, "0x%016llX\n", qword_value);
-+	else
-+		ret = sysfs_emit(buf, "0x%08X\n", value);
-+out:
-+	up(&hba->host_sem);
-+	return ret;
-+}
-+
-+static ssize_t ufs_sysfs_attr_store(struct device *dev,
-+	struct device_attribute *attr, const char *buf, size_t count,
-+	enum attr_idn idn)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+	u8 index = 0;
-+	u32 value;
-+	int ret;
-+
-+	if (kstrtou32(buf, 0, &value))
-+		return -EINVAL;
-+
-+	down(&hba->host_sem);
-+	if (!ufshcd_is_user_access_allowed(hba)) {
-+		up(&hba->host_sem);
-+		return -EBUSY;
-+	}
-+	if (ufshcd_is_wb_attrs(idn))
-+		index = ufshcd_wb_get_query_index(hba);
-+	ufshcd_rpm_get_sync(hba);
-+	ret = ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
-+		idn, index, 0, &value);
-+	ufshcd_rpm_put_sync(hba);
-+	if (ret > 0)
-+		ret = -EINVAL;
-+	up(&hba->host_sem);
-+	return ret ? ret : count;
-+}
-+
- #define UFS_ATTRIBUTE(_name, _uname)					\
- static ssize_t _name##_show(struct device *dev,				\
- 	struct device_attribute *attr, char *buf)			\
- {									\
--	struct ufs_hba *hba = dev_get_drvdata(dev);			\
--	u64 qword_value;						\
--	u32 value;							\
--	int ret;							\
--	u8 index = 0;							\
--									\
--	down(&hba->host_sem);						\
--	if (!ufshcd_is_user_access_allowed(hba)) {			\
--		up(&hba->host_sem);					\
--		return -EBUSY;						\
--	}								\
--	if (ufshcd_is_wb_attrs(QUERY_ATTR_IDN##_uname))			\
--		index = ufshcd_wb_get_query_index(hba);			\
--	ufshcd_rpm_get_sync(hba);					\
--	if (ufshcd_is_qword_attr(QUERY_ATTR_IDN##_uname))		\
--		ret = ufshcd_query_attr_qword(hba,			\
--			UPIU_QUERY_OPCODE_READ_ATTR,			\
--			QUERY_ATTR_IDN##_uname,				\
--			index, 0, &qword_value);			\
--	else								\
--		ret = ufshcd_query_attr(hba,				\
--			UPIU_QUERY_OPCODE_READ_ATTR,			\
--			QUERY_ATTR_IDN##_uname, index, 0, &value);	\
--	ufshcd_rpm_put_sync(hba);					\
--	if (ret) {							\
--		ret = -EINVAL;						\
--		goto out;						\
--	}								\
--	if (ufshcd_is_qword_attr(QUERY_ATTR_IDN##_uname))		\
--		ret = sysfs_emit(buf, "0x%016llX\n", qword_value);	\
--	else								\
--		ret = sysfs_emit(buf, "0x%08X\n", value);		\
--out:									\
--	up(&hba->host_sem);						\
--	return ret;							\
-+	return ufs_sysfs_attr_show(dev, attr, buf,			\
-+				   QUERY_ATTR_IDN##_uname);		\
- }									\
- static DEVICE_ATTR_RO(_name)
- 
-+#define UFS_ATTRIBUTE_RW(_name, _uname)					\
-+static ssize_t _name##_show(struct device *dev,				\
-+			    struct device_attribute *attr, char *buf)	\
-+{									\
-+	return ufs_sysfs_attr_show(dev, attr, buf,			\
-+				   QUERY_ATTR_IDN##_uname);		\
-+}									\
-+static ssize_t _name##_store(struct device *dev,			\
-+			     struct device_attribute *attr,		\
-+			     const char *buf, size_t count)		\
-+{									\
-+	return ufs_sysfs_attr_store(dev, attr, buf, count,		\
-+				    QUERY_ATTR_IDN##_uname);		\
-+}									\
-+static DEVICE_ATTR_RW(_name)
-+
- UFS_ATTRIBUTE(boot_lun_enabled, _BOOT_LU_EN);
- UFS_ATTRIBUTE(current_power_mode, _POWER_MODE);
- UFS_ATTRIBUTE(active_icc_level, _ACTIVE_ICC_LVL);
-@@ -1805,6 +1917,71 @@ UFS_ATTRIBUTE(wb_avail_buf, _AVAIL_WB_BUFF_SIZE);
- UFS_ATTRIBUTE(wb_life_time_est, _WB_BUFF_LIFE_TIME_EST);
- UFS_ATTRIBUTE(wb_cur_buf, _CURR_WB_BUFF_SIZE);
- 
-+static ssize_t wb_partial_flush_mode_show(struct device *dev,
-+				 struct device_attribute *attr, char *buf)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+	u32 value;
-+	int ret;
-+
-+	down(&hba->host_sem);
-+	if (!ufshcd_is_user_access_allowed(hba)) {
-+		up(&hba->host_sem);
-+		return -EBUSY;
-+	}
-+	ufshcd_rpm_get_sync(hba);
-+	ret = ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_READ_ATTR,
-+		QUERY_ATTR_IDN_WB_PFM, ufshcd_wb_get_query_index(hba), 0, &value);
-+	ufshcd_rpm_put_sync(hba);
-+	up(&hba->host_sem);
-+	if (ret > 0)
-+		ret = -EINVAL;
-+	if (ret)
-+		return ret;
-+
-+	return sysfs_emit(buf, "%s\n", value < NUM_WB_PARTIAL_FLUSH_MODES ?
-+			  wb_partial_flush_modes[value] : "unknown");
-+}
-+
-+static ssize_t wb_partial_flush_mode_store(struct device *dev,
-+				  struct device_attribute *attr,
-+				  const char *buf, size_t count)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+	u32 value;
-+	int mode;
-+	int ret;
-+
-+	mode = sysfs_match_string(wb_partial_flush_modes, buf);
-+	if (mode < 0)
-+		return -EINVAL;
-+
-+	value = mode;
-+
-+	down(&hba->host_sem);
-+	if (!ufshcd_is_user_access_allowed(hba)) {
-+		up(&hba->host_sem);
-+		return -EBUSY;
-+	}
-+	ufshcd_rpm_get_sync(hba);
-+	ret = ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
-+		QUERY_ATTR_IDN_WB_PFM, ufshcd_wb_get_query_index(hba), 0, &value);
-+	ufshcd_rpm_put_sync(hba);
-+	up(&hba->host_sem);
-+
-+	if (ret > 0)
-+		ret = -EINVAL;
-+	return ret ? ret : count;
-+}
-+
-+static DEVICE_ATTR_RW(wb_partial_flush_mode);
-+UFS_ATTRIBUTE_RW(wb_max_fifo_size, _MAX_FIFO_SIZE_WB_PFM);
-+UFS_ATTRIBUTE(wb_cur_fifo_size, _CURRENT_FIFO_SIZE_WB_PFM);
-+UFS_ATTRIBUTE(wb_pinned_cur_size, _PINNED_WB_CURRENT_SIZE);
-+UFS_ATTRIBUTE(wb_pinned_avail_pct, _PINNED_WB_AVAIL_PERC);
-+UFS_ATTRIBUTE(wb_pinned_cumulative_write_size, _PINNED_WB_CUMMULATIVE_WS);
-+UFS_ATTRIBUTE_RW(wb_pinned_size, _PINNED_WB_SIZE);
-+UFS_ATTRIBUTE_RW(wb_non_pinned_min_size, _NON_PINNED_WB_MIN_SIZE);
- 
- static struct attribute *ufs_sysfs_attributes[] = {
- 	&dev_attr_boot_lun_enabled.attr,
-@@ -1829,6 +2006,14 @@ static struct attribute *ufs_sysfs_attributes[] = {
- 	&dev_attr_wb_cur_buf.attr,
- 	&dev_attr_wb_resize_hint.attr,
- 	&dev_attr_wb_resize_status.attr,
-+	&dev_attr_wb_partial_flush_mode.attr,
-+	&dev_attr_wb_max_fifo_size.attr,
-+	&dev_attr_wb_cur_fifo_size.attr,
-+	&dev_attr_wb_pinned_cur_size.attr,
-+	&dev_attr_wb_pinned_avail_pct.attr,
-+	&dev_attr_wb_pinned_cumulative_write_size.attr,
-+	&dev_attr_wb_pinned_size.attr,
-+	&dev_attr_wb_non_pinned_min_size.attr,
- 	NULL,
- };
- 
-diff --git a/include/ufs/ufs.h b/include/ufs/ufs.h
-index b0207e694..f6011ef1a 100644
---- a/include/ufs/ufs.h
-+++ b/include/ufs/ufs.h
-@@ -151,6 +151,7 @@ enum flag_idn {
- 	QUERY_FLAG_IDN_WB_BUFF_FLUSH_DURING_HIBERN8     = 0x10,
- 	QUERY_FLAG_IDN_HPB_RESET                        = 0x11,
- 	QUERY_FLAG_IDN_HPB_EN				= 0x12,
-+	QUERY_FLAG_IDN_WB_UNPIN_EN			= 0x13,
- };
- 
- /* Attribute idn for Query requests */
-@@ -196,6 +197,14 @@ enum attr_idn {
- 	QUERY_ATTR_IDN_WB_BUF_RESIZE_HINT	= 0x3C,
- 	QUERY_ATTR_IDN_WB_BUF_RESIZE_EN		= 0x3D,
- 	QUERY_ATTR_IDN_WB_BUF_RESIZE_STATUS	= 0x3E,
-+	QUERY_ATTR_IDN_WB_PFM			= 0x3F,
-+	QUERY_ATTR_IDN_MAX_FIFO_SIZE_WB_PFM	= 0x40,
-+	QUERY_ATTR_IDN_CURRENT_FIFO_SIZE_WB_PFM	= 0x41,
-+	QUERY_ATTR_IDN_PINNED_WB_CURRENT_SIZE	= 0x42,
-+	QUERY_ATTR_IDN_PINNED_WB_AVAIL_PERC	= 0x43,
-+	QUERY_ATTR_IDN_PINNED_WB_CUMMULATIVE_WS	= 0x44,
-+	QUERY_ATTR_IDN_PINNED_WB_SIZE		= 0x45,
-+	QUERY_ATTR_IDN_NON_PINNED_WB_MIN_SIZE	= 0x46,
- 	QUERY_ATTR_IDN_TX_EQ_GN_SETTINGS        = 0x47,
- 	QUERY_ATTR_IDN_TX_EQ_GN_SETTINGS_EXT    = 0x48,
- };
-@@ -406,6 +415,14 @@ enum {
- 	UFS_DEV_WB_BUF_RESIZE	= BIT(0),
- };
- 
-+/* Possible values for bWriteBoosterBufferPartialFlushMode */
-+enum wb_partial_flush_mode {
-+	WB_PARTIAL_FLUSH_NONE		= 0,
-+	WB_PARTIAL_FLUSH_FIFO		= 1,
-+	WB_PARTIAL_FLUSH_PINNED		= 2,
-+	NUM_WB_PARTIAL_FLUSH_MODES	= 3,
-+};
-+
- /* Possible values for dExtendedUFSFeaturesSupport */
- enum {
- 	UFS_DEV_HIGH_TEMP_NOTIF		= BIT(4),
--- 
-2.56.0.611.g1030f0b940-goog
+2) If the goal is iSCSI for userspace storage, keep the kernel out of
+the data path entirely. A write here still goes NIC -> iscsit -> LIO
+-> uring_cmd -> pread() -> storage client, and a distributed storage
+client needs the data in its own memory anyway, so the zero copy path
+only helps file and block backends, which iblock and fileio already
+cover.
 
+A userspace iSCSI target on io_uring receives straight into the server's
+buffer, with one copy fewer and no new kernel ABI. ioutgt
+
+		https://github.com/io-target/ioutgt
+
+is that design: one ring per queue thread for socket and backend I/O, lock-free
+data path, NVMe/TCP and NVMe/RDMA today, iSCSI on the roadmap. It already beats
+the kernel target by a wide margin: about 2x nvmet on 4k NVMe/TCP random read
+and write, and 2x on 64k over both TCP and RDMA, on 100GbE. Adding iSCSI
+there is a bounded userspace project.
+  
+> Patches 1-4 create the device, its queues and the character device.
+> Patches 5-8 pass reads and writes to the server. Patches 9-11 handle a
+> server that exits or hangs, and aborts. Patches 12-14 add flush, UNMAP
+> and WRITE SAME, patch 15 adds fixed buffers. Patches 16-18 add a small
+> server, a selftest and the documentation.
+> 
+> Not covered yet: protection information, and a way for existing
+> tcmu-runner handlers to move over without changes, as they implement
+> SCSI rather than block commands.
+> 
+> Exporting a 2 GiB device through tcm_loop to fio (io_uring, direct I/O,
+> iodepth 32 for 4k and 8 for 1M, 6 seconds per job) on a 32 CPU VM, with
+> TCM/USER and a single-threaded handler, then with this series, 32 queues
+> and one server thread per queue. Both servers keep the data in memory.
+
+32 threads against one, over tcm_loop with data in memory, measures
+only the hand-off. Please run a real fabric and explain the -13%
+single job result.
+
+
+
+Thanks,
+Ming
