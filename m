@@ -1,54 +1,56 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794865025;
-	b=lEcaVhbrDPgzcXHEDJlrhNwckMnnrEWZf0C7e3EUB+m32dWxCPmt0GH8b1xZNUtKQy4W
-	 UDG5zVOCGA2F+prNnXUNUjF6BCb1GsGduXvlJgio3u+n/zh5CsS+8B/RtFLrlX5cVbvQX
-	 0xapCXbhY6kN3qq4hfie2nDQM+5BVaKL7Gl9P4nRHTe+rptQfI+ntOZ9jNorObzhdWBpv
-	 3ue7mfT0R/kB8YPQ6r1dspbd4O8PkSKYxY7LGhMlTeepcGPQR/AfTV3YMFde4osb0ujK3
-	 oLglSSWpBBP9+zmr2IjvlrwKqhWAdEOmIEIW3KePjnb5+EK3Y2YCXy4K+xiGvh2E6SQ==
+	t=1794865030;
+	b=EvN+2kXdXpE3eJ88Xs4q9KuS6qMCv0XYMZXO3CWZGbJDYytX8Hvtj0jvKZlt5hxyygQl
+	 QHQrnoLTeJ3+imJjgIogyVwfvpYdb027mnKc2z/cB89MIJU9a/esJDqDKI54jSDv57swI
+	 beeTfzUsdS0kzDW3PecMK6B0Qa88xjoB6nmFPXusWYej9Rvzht7bNWdw/KjZkHFlBJntw
+	 THFFbC5x0ANOxHxv0xPh8kaYK6xSx93UtbpO3Kmo3HT/3CSfGtGIJ60orm0MfbFXrQQR5
+	 54hpaFETqVYb52sNtWMeob2UNApAFATUrMFC285ceQjcVgiwftXtOuQzGyti8wk9N5w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794865025;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794865030;
 	h=Received:DKIM-Signature:From:To:Subject:Date:Message-ID:X-Mailer:
-	 MIME-Version:Content-Transfer-Encoding;
-	bh=2mgFCVDy66Wm/1z3BD1B3z4E8vLmizdbiZSMxStpVtQ=;
-	b=1pQXHTMqHBVDqXW1z9SJEVtfeMoGc0VuNEDZIDiTix9jl2NI/mhdvc3DtAkzI4JEf2Wg
-	 U/Q423NvuS2BQ6uzMZOO1gB6h3/qL4nt4x0RS82g6GoGKEDmu9TDMhtcXjj3hMtjgQsX1
-	 8IHhuINVqU/d2+Y5d90HZvJUeQ/lkm6bRoF31kDHi7efj/D1JUqzStx8UDvMwXYuqcz4a
-	 eldLYOqatoKTodwfuQiEjh2I9oTGzH6xNzxu/4MOKXRPp/Vi0A2WqMlbCNY9f371SB3eG
-	 t1JY9QCRgEThDk//5skd9QraM+c2NjSCkzGlsbiHnb2t+Dyn4nGxwmIwmvwKP61WtYw==
+	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
+	bh=Vv3e9LloZ7aUq0oY9V4vgbyccb+39Ld92jLK4duPNjE=;
+	b=3nVU0de87uUlF7EMHOPzolFC6jJWWHdYCzsa8dSzRWpMuVLJYk7bn5u2ZyrJef6TiKVm
+	 CnO/pwMk2QJl/EEIooKjJjIl1vmgtCDziAoyEvJe5iw3e51/kdreONe1ghLvT/nrVjYDB
+	 S+PtGeOEx92ciPH4X4YjwQjkq7G+1Tnd5Ufy2FDLsDveLpXhHrdPD0Vd0obTBdJFOnlQL
+	 Ajpt8D8vG0qo3K635KBhaITqEyzWe1fkbfceKOAawezaztB8nG0ZoT35a4mfwmyVLoKN9
+	 0Rw6aIkuFP4fObzPiw6ZVVwNXW2qd5K4lDWS64C/yBVt3e4HbUIkKeNEnzo0TwXuJoQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BT2wmtps;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=NiFu71WN;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2AB8E606A322;
-	Mon, 16 Nov 2026 21:37:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B4D4606A332;
+	Mon, 16 Nov 2026 21:37:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BT2wmtps
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0031F1F000C4;
-	Mon, 16 Nov 2026 21:37:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=NiFu71WN
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3B6B81F000C4;
+	Mon, 16 Nov 2026 21:37:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794865024;
-	bh=2mgFCVDy66Wm/1z3BD1B3z4E8vLmizdbiZSMxStpVtQ=;
-	h=From:To:Subject:Date;
-	b=BT2wmtpsHXKCjbG6jyR9WCNkETTMf9Kyg9kXQvobfIExPugW1UszT5IGQxPPa++bI
-	 pxkCd0HUjtpBC6HnmJuSkIcbY2DaEF7jXQkw4HzjOuN0lKGuCXmaXrwkpgkr9mOhHd
-	 HFWJZ131LguDLvsSpkWMoOYOTEBS8fyZx8f2meYMvsZJiiiAbhdnpHW6pMytQ2w7dW
-	 w9iZCL8p4odvlHsAeTagyE6alNCFjjRTjH/lPYIwAMt+7cOYQkdenfqscvEtsYm+p1
-	 4wSKj89f5Lqvoq+3UR4lfKRKGwhxugsQ95le6CBV87igrjSrMxdB//3+EPVlKeU/Ml
-	 qekHglEG9G/og==
+	s=k20260515; t=1794865030;
+	bh=Vv3e9LloZ7aUq0oY9V4vgbyccb+39Ld92jLK4duPNjE=;
+	h=From:To:Subject:Date:In-Reply-To:References;
+	b=NiFu71WNpS/JOKJfGil1FUp88QR0q2Dvqs0AcYlGVLFJct/5qxwAoZ1/Wi6fIi34J
+	 /ISuAS3rpPIKaDTpEYDV1jqqJoSlPxq5Iohvbyre61qNxZCXZrVM7qoZ0ZaUVicTuC
+	 2APcL8gY6FYym8Wfl8Z4w6qmXP1+Yz1P4JU+tVoEIAMMy3W26pUAE8cDG/1tImLr92
+	 qDH6VZeRpjQmSUX322JIfGA0T6nOt2KuJSUZ11iMV1Oy5PKdNKfK/Z6ybrYV8tYwsn
+	 CVvLl+JHkGLjViXeVtTtBDgk/es+PFZwtdZLXskP2ZwdPpSAviG2WPey23+S2yexm5
+	 DuQeqMqIyrI0A==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: Jens Axboe <axboe@kernel.dk>,
 	linux-block@vger.kernel.org,
 	Christoph Hellwig <hch@lst.de>,
 	linux-scsi@vger.kernel.org,
 	"Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH v11 00/13] Add support for storage element depopulation
-Date: Tue, 17 Nov 2026 06:36:49 +0900
-Message-ID: <20261116213702.225970-1-dlemoal@kernel.org>
+Subject: [PATCH v11 05/13] block: add storage element management ioctls
+Date: Tue, 17 Nov 2026 06:36:54 +0900
+Message-ID: <20261116213702.225970-6-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.56.1
+In-Reply-To: <20261116213702.225970-1-dlemoal@kernel.org>
+References: <20261116213702.225970-1-dlemoal@kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -60,117 +62,339 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Jens,
+Define the new ioctl commands BLKREPORTSTORELEMS, BLKREMOVESTORELEM, and
+BLKRESTORESTORELEMS to provide users accessing zoned block devices
+directly with an interface to the storage elements management operations
+of the block layer.
 
-These patches define a new set of block device operations for generically
-using from the block layer the storage element depopulation feature of
-zoned block devices. Support for this feature is added to the SCSI disk
-driver and an emulation of this feature added to the zloop driver.
+The ioctl BLKREPORTSTORELEMS allows to get the total number of storage
+elements of a zoned block device and to get an array of storage element
+descriptors (struct blk_se) describing the current state of the device
+storage elements.
 
-The management operations can be accessed using block layer API, which is
-intended for file systems (e.g. zonefs and XFS), as well as using ioctls
-for users using zoned disks directly from user space.
+The ioctl BLKREMOVESTORELEM can be used to remove (depopulate) a storage
+element, in particular storage elements that have a degraded status
+(i.e. BLK_SE_STS_DEGRADED). But healthy elements (BLK_SE_STS_OK) can also
+be removed, and later restored.
 
-Changes from v10:
- - Addressed sashiko comment on patch 8 and 12.
- - Added review tags
+Finally, the BLKRESTORESTORELEMS ioctl interfaces with
+bdev_restore_storage_elements() to restore the depopulated storage
+elements of a zoned device.
 
-Changes from v9:
- - Addressed Sashiko comments on patch 6. This change redesigns the
-   ordered zone append handling to simplify the code and avoid locking
-   difficulties.
- - Addressed Sashiko comments on patch 8.
+Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+Reviewed-by: Hannes Reinecke <hare@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ block/blk-zoned.c             | 163 ++++++++++++++++++++++++++++++++++
+ block/blk.h                   |   9 ++
+ block/ioctl.c                 |   4 +
+ include/uapi/linux/blkzoned.h |  41 +++++++++
+ include/uapi/linux/fs.h       |   1 +
+ 5 files changed, 218 insertions(+)
 
-Changes from v8:
- - Addressed Sashiko comment on patch 7 by adding patch 6. Patch 7 is
-   unmodified.
- - Addressed Sashiko comments on patch 8 and patch 12
- - Added review tags to unmodified pacthes
-
-Changes from v7:
-A significant amount of changes in this version to address most of the
-Sashiko review comments and to simplify the code. In more details, the
-changes are:
- - Added patches 3, 6, and 9.
- - Dropped former patch 5 as the use of irq-disabling spinlocks in zloop
-   is not necessary.
- - Reworked patch 4 by migrating the idepop operation wait loops to the
-   device drivers. This simplifies the implementation in zloop without
-   making the sd driver implementation more difficult. Also fixed problems
-   with errors during restoration and zone write plugs state.
- - Reworked patch 7 and 11 to be consistent with the changes in patch 4.
-
-Changes from v6:
- - Addressed the nit pointed out by Christoph in patch 4
- - Added review tags
-
-Changes from v5:
- - Rebased on latest block/for-next
- - Addressed Christoph's comments on patch 3
- - Added patch 5 to address a potential deadlock in zloop (signaled by
-   sashiko)
- - Reworked the restoration of storage elements in patch 6 to avoid an
-   inconsistent state of storage elements in case of error. Also added
-   protection against disk removal during storage element removal and
-   restoration execution.
- - Added review tags
-
-Changes from v4:
- - Rebased on latest block/for-next
- - Added review tags to patch 1 and 2
- - Reworked patch 3, 4 and 5 to address Christoph's and sashiko comments
-
-Changes from v3:
- - Reworked patch 1 to only provide the disk_zone_is_offline() helper
-   function. Failing of read operations to offline zones is handled
-   directly by the zloop driver and the new patch 7 is added to handle
-   failing early read operations to offline zones of ZBC SCSI disks.
- - Added patch 2
- - Addressed further valid comments from Sashiko
-   The biggest changes are in patch 2 to save the number of storage
-   elements of a disk in struct gendisk and to serialize the execution of
-   the storage element management operations using the zone revalidation
-   mutex.
- - Rebased on latest block/for-next
-
-Changes from v2:
- - Addressed further valid comments from Sashiko
- - Rebased on latest block/for-next
-
-Changes from v1:
- - Addressed the many valid comments that Sashiko had
- - Rebased on latest block/for-next
-
-Damien Le Moal (13):
-  block: introduce disk_zone_is_offline()
-  block: refactor blk_revalidate_disk_zones()
-  block: allow dropping all zone write plugs on revalidation
-  block: introduce storage element management
-  block: add storage element management ioctls
-  zloop: fix ordered zone append handling
-  zloop: fix zone reporting consistency
-  zloop: add storage element emulation
-  zloop: add degrade_element control command
-  scsi: scsi_proto: refine the definition of storage element health
-  scsi: sd_zbc: always revalidate zones for disks supporting head depopulation
-  scsi: sd_zbc: define storage element management operations
-  scsi: sd: fail read commands to offline zones early
-
- .../admin-guide/blockdev/zoned_loop.rst       |  33 +-
- block/blk-zoned.c                             | 450 ++++++++-
- block/blk.h                                   |  14 +
- block/genhd.c                                 |   4 +
- block/ioctl.c                                 |   4 +
- drivers/block/zloop.c                         | 917 ++++++++++++++++--
- drivers/scsi/sd.c                             |  23 +-
- drivers/scsi/sd.h                             |   5 +
- drivers/scsi/sd_zbc.c                         | 534 +++++++++-
- include/linux/blkdev.h                        |  64 ++
- include/scsi/scsi_proto.h                     |   6 +-
- include/uapi/linux/blkzoned.h                 | 106 ++
- include/uapi/linux/fs.h                       |   1 +
- 13 files changed, 2033 insertions(+), 128 deletions(-)
-
+diff --git a/block/blk-zoned.c b/block/blk-zoned.c
+index 5b27a639cd2c..e5147a4d2101 100644
+--- a/block/blk-zoned.c
++++ b/block/blk-zoned.c
+@@ -18,6 +18,7 @@
+ #include <linux/mempool.h>
+ #include <linux/kthread.h>
+ #include <linux/freezer.h>
++#include <linux/uaccess.h>
+ 
+ #include <trace/events/block.h>
+ 
+@@ -2781,6 +2782,53 @@ int bdev_report_storage_elements(struct block_device *bdev,
+ }
+ EXPORT_SYMBOL_GPL(bdev_report_storage_elements);
+ 
++static int blkdev_ioctl_report_storage_elements(struct block_device *bdev,
++						void __user *argp)
++{
++	struct gendisk *disk = bdev->bd_disk;
++	struct blk_se_report *rep;
++	int ret = 0;
++
++	/*
++	 * Allocate the report header with an array of elements, assuming that
++	 * we need the maximum number of storage elements. In practice, we may
++	 * need less than that, but this potentially unnecessary preallocation
++	 * simplifies the code.
++	 */
++	rep = kzalloc_flex(*rep, elements, disk->nr_storage_elements);
++	if (!rep)
++		return -ENOMEM;
++
++	if (copy_from_user(rep, argp, sizeof(struct blk_se_report))) {
++		ret = -EFAULT;
++		goto free_rep;
++	}
++
++	if (rep->reserved) {
++		ret = -EINVAL;
++		goto free_rep;
++	}
++
++	rep->nr_reported_elements =
++		min(rep->nr_elements, disk->nr_storage_elements);
++	rep->nr_elements = disk->nr_storage_elements;
++
++	if (rep->nr_reported_elements) {
++		ret = bdev_report_storage_elements(bdev, rep->elements,
++						   &rep->nr_reported_elements);
++		if (ret)
++			goto free_rep;
++	}
++
++	if (copy_to_user(argp, rep,
++			struct_size(rep, elements, rep->nr_reported_elements)))
++		ret = -EFAULT;
++
++free_rep:
++	kfree(rep);
++	return ret;
++}
++
+ /**
+  * bdev_remove_storage_element - Remove (depopulate) a storage element of a
+  *				 zoned block device
+@@ -2844,6 +2892,62 @@ int bdev_remove_storage_element(struct block_device *bdev,
+ }
+ EXPORT_SYMBOL_GPL(bdev_remove_storage_element);
+ 
++static int blkdev_ioctl_remove_storage_element(struct block_device *bdev,
++					       blk_mode_t mode,
++					       unsigned int __user *argp)
++{
++	unsigned int element_id;
++	int ret;
++
++	/*
++	 * Note: we require an O_EXCL open here so that a user cannot trigger
++	 * a storage element removal from user space under a mounted file system.
++	 * An FS that wants to manage storage element can do so using the
++	 * function bdev_remove_storage_element() from kernel context.
++	 */
++	if (!(mode & BLK_OPEN_EXCL))
++		return -EBADF;
++	if (!(mode & BLK_OPEN_WRITE))
++		return -EBADF;
++	if (bdev_read_only(bdev))
++		return -EPERM;
++
++	if (get_user(element_id, argp))
++		return -EFAULT;
++
++	/*
++	 * Sync the device dirty data, flush the volatile write cache, and
++	 * invalidate all cached data so that reads do not return old data for
++	 * zones that went offline.
++	 * Since a user can only successfully write to sequential zones of a
++	 * zoned devices using direct IOs, the sync should only handle dirty
++	 * data from buffered writes to conventional zones, for devices that
++	 * have such zones.
++	 */
++	ret = sync_blockdev(bdev);
++	if (ret)
++		return ret;
++
++	inode_lock(bdev->bd_mapping->host);
++	filemap_invalidate_lock(bdev->bd_mapping);
++
++	ret = blkdev_issue_flush(bdev->bd_disk->part0);
++	if (ret)
++		goto unlock;
++
++	ret = truncate_bdev_range(bdev, mode, 0, bdev_nr_bytes(bdev) - 1);
++	if (ret)
++		goto unlock;
++
++	ret = bdev_remove_storage_element(bdev, element_id);
++
++unlock:
++	filemap_invalidate_unlock(bdev->bd_mapping);
++	inode_unlock(bdev->bd_mapping->host);
++
++	return ret;
++}
++
+ /**
+  * bdev_restore_storage_elements - Restore all depopulated storage elements of
+  *				   a zoned block device
+@@ -2909,6 +3013,42 @@ int bdev_restore_storage_elements(struct block_device *bdev)
+ }
+ EXPORT_SYMBOL_GPL(bdev_restore_storage_elements);
+ 
++static int blkdev_ioctl_restore_storage_elements(struct block_device *bdev,
++						 blk_mode_t mode)
++{
++	int ret;
++
++	/*
++	 * Note: because restoring storage elements is a destructive operation
++	 * equivalent to reformatting the device, we require an O_EXCL open here
++	 * so that a user cannot trigger with another active user (e.g. a
++	 * mounted file system).
++	 */
++	if (!(mode & BLK_OPEN_EXCL))
++		return -EBADF;
++	if (!(mode & BLK_OPEN_WRITE))
++		return -EBADF;
++	if (bdev_read_only(bdev))
++		return -EPERM;
++
++	inode_lock(bdev->bd_mapping->host);
++	filemap_invalidate_lock(bdev->bd_mapping);
++
++	/*
++	 * Storage element restoration is a destructive operation that will
++	 * reset all zones. So invalidate all cached data that we may have so
++	 * that old data cannot be read once the operation completes.
++	 */
++	ret = truncate_bdev_range(bdev, mode, 0, bdev_nr_bytes(bdev) - 1);
++	if (!ret)
++		ret = bdev_restore_storage_elements(bdev);
++
++	filemap_invalidate_unlock(bdev->bd_mapping);
++	inode_unlock(bdev->bd_mapping->host);
++
++	return ret;
++}
++
+ int disk_init_storage_element_mgmt(struct gendisk *disk)
+ {
+ 	int ret;
+@@ -2941,3 +3081,26 @@ int disk_init_storage_element_mgmt(struct gendisk *disk)
+ 
+ 	return 0;
+ }
++
++int blk_ioctl_zone_storage_elements(struct block_device *bdev,
++				    blk_mode_t mode, unsigned int cmd,
++				    void __user *argp)
++{
++	struct gendisk *disk = bdev->bd_disk;
++
++	if (!disk->nr_storage_elements)
++		return -ENOTTY;
++
++	switch (cmd) {
++	case BLKREPORTSTORELEMS:
++		return blkdev_ioctl_report_storage_elements(bdev, argp);
++	case BLKREMOVESTORELEM:
++		return blkdev_ioctl_remove_storage_element(bdev, mode, argp);
++	case BLKRESTORESTORELEMS:
++		return blkdev_ioctl_restore_storage_elements(bdev, mode);
++	default:
++		break;
++	}
++
++	return -ENOTTY;
++}
+diff --git a/block/blk.h b/block/blk.h
+index 05e2692b80d5..44876b148237 100644
+--- a/block/blk.h
++++ b/block/blk.h
+@@ -595,6 +595,9 @@ int blkdev_report_zones_ioctl(struct block_device *bdev, unsigned int cmd,
+ int blkdev_zone_mgmt_ioctl(struct block_device *bdev, blk_mode_t mode,
+ 		unsigned int cmd, unsigned long arg);
+ bool bdev_zone_mgmt_allowed(struct block_device *bdev, sector_t sector);
++int blk_ioctl_zone_storage_elements(struct block_device *bdev,
++				    blk_mode_t mode, unsigned int cmd,
++				    void __user *argp);
+ #else /* CONFIG_BLK_DEV_ZONED */
+ static inline int disk_init_storage_element_mgmt(struct gendisk *disk)
+ {
+@@ -646,6 +649,12 @@ static inline bool bdev_zone_mgmt_allowed(struct block_device *bdev,
+ {
+ 	return false;
+ }
++static inline int blk_ioctl_zone_storage_elements(struct block_device *bdev,
++					blk_mode_t mode, unsigned int cmd,
++					void __user *argp)
++{
++	return -ENOTTY;
++}
+ #endif /* CONFIG_BLK_DEV_ZONED */
+ 
+ struct block_device *bdev_alloc(struct gendisk *disk, u8 partno);
+diff --git a/block/ioctl.c b/block/ioctl.c
+index fb2f4b4d2505..0f043363048c 100644
+--- a/block/ioctl.c
++++ b/block/ioctl.c
+@@ -679,6 +679,10 @@ static int blkdev_common_ioctl(struct block_device *bdev, blk_mode_t mode,
+ 		return put_uint(argp, bdev_zone_sectors(bdev));
+ 	case BLKGETNRZONES:
+ 		return put_uint(argp, bdev_nr_zones(bdev));
++	case BLKREPORTSTORELEMS:
++	case BLKREMOVESTORELEM:
++	case BLKRESTORESTORELEMS:
++		return blk_ioctl_zone_storage_elements(bdev, mode, cmd, argp);
+ 	case BLKROGET:
+ 		return put_int(argp, bdev_read_only(bdev) != 0);
+ 	case BLKSSZGET: /* get block device logical block size */
+diff --git a/include/uapi/linux/blkzoned.h b/include/uapi/linux/blkzoned.h
+index 9d7f59da3efc..6463cdec8e86 100644
+--- a/include/uapi/linux/blkzoned.h
++++ b/include/uapi/linux/blkzoned.h
+@@ -273,4 +273,45 @@ struct blk_se {
+ 	__u8	reserved[13];
+ };
+ 
++/**
++ * struct blk_se_report - Zoned device storage element descriptor report for the
++ *			  BLKREPORTSTORELEMS ioctl.
++ *
++ * @nr_elements: on input, this indicates the size of the @elements array. On
++ *		 output, this indicates the maximum number of storage elements
++ *		 of the device. If this field specifies 0 on input, the array
++ *		 @elements is not filled and the maximum number of storage
++ *		 elements of the device returned.
++ * @nr_reported_elements: output only to indicate the number of storage element
++ *			  descriptors filled in the array @elements.
++ * @reserved: reserved space for future use and structure field alignment.
++ * @elements: array of storage element descriptors with a maximum number of
++ *	      entries specified by @nr_elements on input and by
++ *	      @nr_reported_elements on output.
++ */
++struct blk_se_report {
++	__u32		nr_elements;
++	__u32		nr_reported_elements;
++	__u64		reserved;
++	struct blk_se	elements[];
++};
++
++/**
++ * Zoned block device storage element management ioctl's:
++ *
++ * @BLKREPORTSTORELEMS: Get the number of storage elements of a device and
++ *			the device storage element descriptors.
++ * @BLKREMOVESTORELEM: Remove (depopulate) one storage element of a device. This
++ *		       operation will flush the target device write cache and
++ *		       invalidate all cached data. So the caller must ensure
++ *		       that all dirty data written with buffered IOs are written
++ *		       back first to avoid any data loss.
++ * @BLKRESTORESTORELEMS: Restore (repopulate if possible) all storage elements
++ *			 that have been removed. This is a destructive operation
++ *			 equivalent to reformatting the target device.
++ */
++#define BLKREPORTSTORELEMS  _IOWR(0x12, 143, struct blk_se_report)
++#define BLKREMOVESTORELEM   _IOW(0x12, 144, __u32)
++#define BLKRESTORESTORELEMS _IO(0x12, 145)
++
+ #endif /* _UAPI_BLKZONED_H */
+diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
+index a46c33692aa2..5b6f8248a479 100644
+--- a/include/uapi/linux/fs.h
++++ b/include/uapi/linux/fs.h
+@@ -309,6 +309,7 @@ struct file_attr {
+ /* 130-136 and 142 are used by zoned block device ioctls (uapi/linux/blkzoned.h) */
+ /* 137-141 are used by blk-crypto ioctls (uapi/linux/blk-crypto.h) */
+ #define BLKTRACESETUP2 _IOWR(0x12, 142, struct blk_user_trace_setup2)
++/* 143-145 are used by storage element management for zoned block devices. */
+ 
+ #define BMAP_IOCTL 1		/* obsolete - kept for compatibility */
+ #define FIBMAP	   _IO(0x00,1)	/* bmap access */
 -- 
 2.56.1
 
