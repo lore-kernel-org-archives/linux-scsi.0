@@ -1,99 +1,98 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.214.170
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.170
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794823880;
-	b=qQlthPU2FKk+xNjiiu9kib/J7QLSjyMvQkBmJjwuJRu8pna3Xn49ecXkQK7GZ45g9xDY
-	 WEUOWuXCDH4ZRg2MvaMm0PlqVXUTrWgliG/M7PlmFubd/yclew5rUOL6AJRMoQQib8vG6
-	 0PRTfpH+xw8aavyyNxlSFb80KcGaj5tGyLvxES4OIk4INc61GVgQV1UCsAAAWMl0XUZEP
-	 9k67SzNM3E/jPY/IKnACni51K00Mnrgr/SxrPp/icVYh4+aOmjvyhUCHJYndJ+jDC3wG9
-	 HyO7k2UZAZf+WAsaZrFB+g+YAS8rDvzksgEfmT0CBMLaU4CWLXuGVforxu0AESS/ttA==
+	t=1794824051;
+	b=QjeXtbjt6Ul71LbBxEvFLynJn6A/dunjWbWY7+9Xc+n8K+6tI8gSVa1iSCISCnLoi4lN
+	 fw+S0/tK3fwhlg4xei9q8PUfCs1aPSh1S2sEKLqI10wwWIi3zi5aot9P98Q4fpCae+Kjw
+	 o3KYXgr1p5sa3MnP7DZaxVnqoeUnxTkXbz8zgsIcwA0umQSQGTDcXwqQvIHcl/px2/Iy6
+	 ets6kVDzJdvdRwmDFchuJLkQmM9zoIVPcFNYB0nn41w0o06QLk5DVYBNedl2xQm+w2wmi
+	 rXXLkGUwhIVAcWYsdu415gq44GRxKNyZE08oimoV7hBlR//cAGi1cJn5M3t+Jw3aTEw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794823880;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794824051;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
 	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
-	 MIME-Version:Content-Transfer-Encoding;
-	bh=gIfgCrbgWP+O7J1dWGPslYkeZ9aFum9ZTgaeYRl4oTQ=;
-	b=X+Bx2CkLBz5uvM9WCmkMnkkMeZJJ3xEcIPNjmdQa4aI4VMNzNgewSA6pCLHZDYEBxqa7
-	 ZZu9s7NnKbqt0x9+k4Irs/3x4PSAHUBTfpZ+rYlzy27VRVKquEsQbuyx1AGd8SEvbxE5W
-	 ptMG/xOAQUlWCErOxjp9JKvb/nRk9makOCACGc9Tp8ZgCVe3tnCkU5ww3c+QjLIt8MgEi
-	 F7QNvPEdC6yhtKkA1olD0QduIGkhay4AhZ4+jlF6uM+XW2fG7UIvn+bjEWLpcFAaZvJ7o
-	 V8z7Av3b51x3t2lEwVK/vHKkTLR7FTfqfYUcx0dK49AJBvU20J2qaaMd3MH7OM5xkew==
+	 MIME-Version:Content-Type:Content-Transfer-Encoding;
+	bh=x2RdWa2epHt4WctzJo9zXIVV3S8rmZhGbykyRTHy254=;
+	b=m3hLba/xWJof8ygqxRWkXdgGvMhwNrVUUB3RXf4Z/ZkF5ilRK66NgT8k0IMfkZaCUB8o
+	 o5DNSuNqhBNi8zGu0IEo7jpZ17jrc6okuYHJI5nFiRCqjHHoUr5JgBsVRPskcCOTFicj2
+	 np/5a9NIu7+kWWPg/8O+uAjlq9HOTE3twhTGHpu+jn0jgePbq1eWeZ5DkIjaHhCmNG7sN
+	 J56pDqtlW9OlGKG6D++5iK/FEZmPdJarOzLF57/0CcWOJ2DeTQsItntweJq/oPMd9/wbi
+	 kClWOL5UPX7Zd5Af8bb9wpS1kN1bZoeD1iGriIOMqHT83ZMTq+TugESXwjCNKXJvBTg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=fail header.from=isslab.korea.ac.kr;
 	spf=none smtp.mailfrom=isslab.korea.ac.kr;
-	dkim=pass header.d=isslab-korea-ac-kr.20260707.gappssmtp.com header.i=@isslab-korea-ac-kr.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=OCB6XAfd;
-	arc=none smtp.remote-ip=209.85.214.170
-Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
+	dkim=pass header.d=isslab-korea-ac-kr.20260707.gappssmtp.com header.i=@isslab-korea-ac-kr.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=LJdVJliv;
+	arc=none smtp.remote-ip=74.125.82.170
+Received: from mail-dy1-f170.google.com (mail-dy1-f170.google.com [74.125.82.170])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54B31606A339
-	for <linux-scsi@vger.kernel.org>; Mon, 16 Nov 2026 10:11:20 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 54B31606A339
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D8E5606A329
+	for <linux-scsi@vger.kernel.org>; Mon, 16 Nov 2026 10:14:10 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2D8E5606A329
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20260707.gappssmtp.com header.i=@isslab-korea-ac-kr.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=OCB6XAfd
-Received: by mail-pl1-f170.google.com with SMTP id d9443c01a7336-2eddafe648aso21268325ad.3
-        for <linux-scsi@vger.kernel.org>; Mon, 16 Nov 2026 02:11:20 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20260707.gappssmtp.com header.i=@isslab-korea-ac-kr.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=LJdVJliv
+Received: by mail-dy1-f170.google.com with SMTP id 5a478bee46e88-37600b0db49so3792518eec.1
+        for <linux-scsi@vger.kernel.org>; Mon, 16 Nov 2026 02:14:10 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=isslab-korea-ac-kr.20260707.gappssmtp.com; s=20260707; t=1794823880; x=1795428680; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=gIfgCrbgWP+O7J1dWGPslYkeZ9aFum9ZTgaeYRl4oTQ=;
-        b=OCB6XAfdUc5s0FIoYt6+yjDyITD7EIoOFHulkz03GRmgPZdWkYgAmmFPBLmBgISuvG
-         dlm0YB3Ij428Uz5sPUHFyOUKLsyIo7SHUka78fzxljkttoUrDaVHoZDRdk5fY8JtJWno
-         T3JKboSNGx542jV1xu1WEQiTlVNN3hH7WH2TyY9TyLGsCyCvnLyHlMTE99OoDi8bvLDQ
-         Ann8xa9PcUJqFYKCASqGQuj8HXd0SDUAgdTNpUmxkkJ7MLVxvwK411y2HvGro+Vqhurc
-         IVkkFiCDoK1hu3kvAIx30RQR5MRUm6h7Y+Ja7TphHPuXQ/8vP4JeKsBp+99Eckmu9xpI
-         1LDg==
+        d=isslab-korea-ac-kr.20260707.gappssmtp.com; s=20260707; t=1794824050; x=1795428850; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:references
+         :in-reply-to:message-id:date:subject:cc:to:from:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=x2RdWa2epHt4WctzJo9zXIVV3S8rmZhGbykyRTHy254=;
+        b=LJdVJlivULwySoKe7RmHEPKDa8I//vM/iWsIU1h+DLgudWNXKVV6sia44lgJLI5Xi0
+         wr1smIU1P9IioTjZ/neNVSRzaOfBGTfbum+dpcki4uxCmk/vSaGzR34Aq182E36yqBWJ
+         nKBRncsEQKyLiXrZ6+h82rzFtqlISgOBZrHfRdNYFY/c+LamP7WiibdKv9KQYNYYl0dk
+         I+bD+lNU9tHNm02lHpyK6x2f+unB8B2Vi9dcMTpKgSpz64iMNtFGOIJraXiF1/nXCHI/
+         eRBD4f7OHF9uaMa7wkOWWmvvk+v+EVuYFtKMQd+y+yPnkTHgCvhQjKmj1gLoOvEP9XzC
+         Cp6g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794823880; x=1795428680;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=gIfgCrbgWP+O7J1dWGPslYkeZ9aFum9ZTgaeYRl4oTQ=;
-        b=F53a8MVh/6DlBrxtUiZj2T0UgjBrQW2su9lurpFeOEbuFXqx+YFVSeoh19JCsVJlDf
-         /a1jcaULo7ynI4m7leDZxToIcaGdSXmxbwwUJe49mURrCR2vXpLVE3Pka8ELTrVZtAoN
-         ihGr7XlAbgsax5fMIackLjoCzowg1Ujt+A2MS6RCK0B5FlQRaohaG1dpZ01u080vxugl
-         havQjtFIeJlfO9c0Fzo6Lpusl5WACNRBTF2JuiIuUj0+QpjJwm8P4O9w47SM9f3RhyfD
-         cGFISCzS7RVVSp4jFwzqxuAOShZ6poG43LkUJB8SVhP/RksddXuFpLR/b1IPmSmDwTZW
-         Z2Pg==
-X-Forwarded-Encrypted: i=1; AL+hErFhHwnlYeVwKhiBeR8TtpWc/WN1JA95OEMGZ3p83S7h4ZJ+/bbs2LbxxJKiDgkPuNLGaBl6YWWH373t@vger.kernel.org
-X-Gm-Message-State: APuU4Z9dnJEMs7Qcy+ewZRU6xN8i2/iTUnAL/3oaLU2/8LbIRQvXbh1Y
-	YQlbn/WAVpBq1l9TpQ1z8MTFMRF9GiSmROc6pd76PFEKDtJHAhlRfWkO37xUuy+z7vGYkuI96U6
-	yxgGxnJc=
-X-Gm-Gg: AZFdTZdkpktlukaz2vIDGGhq7ivjog0Y7tmC1nNZx96QMssC4+jz79asTVQzGnTOwND
-	cOOiJHrp2QZcf/UpuG1RfE94ypSaEdUEIPhj+C6GiKIoQI6MIvJAeROo+uvh+5bC44cTIulJuEx
-	lj2PRPUKbxoFarUNPAnXcrqyTLr4mDlbqt4PtPRHAs+4J80SY4sRkv+K8BL2U3O+c2R3+JAgF7F
-	4pV9/3lCDryMVlUrAtyg7Mo3Rffo4EtOZPqySjkc4aCh15O+63gvtVKj/RUzvS2RG/bgld3hQA8
-	y3Zl12NLUAg64xuDOLnD3X0DH9UwSyHY0U6ocBLNi/WtpKyirLuDhXL9Vwydti4OavBBXDTwUSt
-	Gpu/Pcv6Ypv3RqkJ0L3z2OkV3j+m5Nfrk3NnGxj7/VLuYJERU7jkIayOWjihfHGRP++RhYF/v+R
-	wXKalzpSH5FPMc6zIyntSAH/QlIqs+GScOTjUwxQtx/X4jEeY2EhHEC2ix67+mdUoLf2mFkvAK/
-	V23fhKow5EeGbpkzIZTKrN57UoUpdkEFPIcGDnrQnuZLjcDSFtrRHJ5P4XxBitUNcCOWccsLk2H
-	PUPlOmgmRoVrTwX6MI/46ZNTVsf533H7tl1xFztwhYI4K/TC+CihTsezdO21jBQTSRh/nO3MNK/
-	4B/s6Y5bwXcnIJH7glMgAAlkISA1uAxc0CoBVvg==
-X-Received: by 2002:a17:903:1446:b0:2ed:56ee:af8f with SMTP id d9443c01a7336-2ee0d65fb69mr101733635ad.2.1794823879687;
-        Mon, 16 Nov 2026 02:11:19 -0800 (PST)
+        d=1e100.net; s=20260707; t=1794824050; x=1795428850;
+        h=content-transfer-encoding:content-type:mime-version:references
+         :in-reply-to:message-id:date:subject:cc:to:from:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=x2RdWa2epHt4WctzJo9zXIVV3S8rmZhGbykyRTHy254=;
+        b=WjYDUFOxXL5knnw0SNYAVJ3UrcM4a4d/jUE28owx9QVxhsHF7HMNOmAVC2wUZVcbIv
+         goJ82rEyMuXLI8tEkCS9yZj61zPcXbc+FDKS/lHX2kLELRaUD3mWWhNbRNUrCB6bmy5y
+         Svm0HvqTnPGndt/lTdCLTE+/tKYXumz6WukNK5D7aNkJXLNJSE78/3cW6jGEtfpoNXH4
+         cscrhKUjmqCJ5UDIp/LO3NArUusEn4CgGP/+eE+ZddnkVhg52jskSE4v8c852Yyab9/u
+         VN/UbuVNJD+YVqfyznri9UVnr5pTiD3lAUAvO4RWTz6GsYkIW97k6I3JuAqCDg8RbZNj
+         l+5w==
+X-Forwarded-Encrypted: i=1; AL+hErGz9D/2txWTGTKjZXdIpD7ROlnfZ6OKFiblb5MHIxtwJ6LCxTTvPeKHOivWySpHbof+N9++3nUfZJGV@vger.kernel.org
+X-Gm-Message-State: APuU4Z+4Klu+UTgxxv4KGXVGry8PSvFgdc/DfB0fG6DXaTb3ClrYdLSG
+	OtK1kKuQiO1ileRWiebeIW9XivtTCrLb/pGxxV2guNd8Evob3D/y5fhvE5HKkQtMmk0=
+X-Gm-Gg: AZFdTZcOkKaeGaQlKwTFx9pYNZ4x3Je0siPBMWcRZAZPSvWEjdKLBIDpj+7wqT099cz
+	/VKVRbEl5fjJdqykUWVdJ87QwDjk1vsas9MgjZ9U3I8u7jqL18rSr5hPbHVl4mLSxF6U9pMorHU
+	5NSwFEks/Ywi/PoL0653jMfrlsqYytthkUSvR691rWOjOlR4cQeyoPN/mshfvryfAaYZO2R+QkW
+	JXnyonKQqjzUsLgTlLYMLOveODeBwRQpj3h/LvLhPz++RlByLO5yx8WpCvN4x1+ByqUlCZTMd5j
+	0BpsXakqD14AVE68FiUq0z2L2VyjHzbjGNGJW90XV6lETUmNzPf3vWCbwSIO2GHAj8nFFnRjrYf
+	UbxNiiErbJ5rFomVA1Bn+FrCUcy6G4TMOvhHR+QOK9ljqM2HOKiEKNr2JqI/JQyljcvNYX9+TKA
+	Yx5OfC49p0kYm2oWf3YX22Lkhm9Xit3xN8HtD16HZfwzNHfWDbJXU6MNWgrbI/sKLulp/IrE3Qz
+	CGXTVYrRrshTFNhMCjL/sPtkEYkAYRo72/3nyI030E4qJcFtpvLMjhvYCvsjdhht6AmbYQLcb42
+	oBGPg87UzPDUL/Skc0SpLR8c3diy4VBw2U2N61AVeedSHCxbfSzhncEzA9df2q3FvRqtZ57FWl2
+	nORrdcgm1oSxurxjPBZoIgkXN6e6yllwd+08aGQ==
+X-Received: by 2002:a05:7301:f03:b0:373:64ef:5dfe with SMTP id 5a478bee46e88-37966096b9cmr10223982eec.8.1794824050090;
+        Mon, 16 Nov 2026 02:14:10 -0800 (PST)
 Received: from yhlee-960QFG.Davolink ([2406:5900:1044:110c:35d0:694a:1071:9bae])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2ee0f7e5055sm35533795ad.39.2026.11.16.02.11.17
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-37956bb0c40sm35126665eec.28.2026.11.16.02.14.06
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 16 Nov 2026 02:11:19 -0800 (PST)
+        Mon, 16 Nov 2026 02:14:08 -0800 (PST)
 From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
-To: sagi@grimberg.me,
-	jgg@ziepe.ca,
-	leon@kernel.org
-Cc: linux-rdma@vger.kernel.org,
+To: sashiko-bot@kernel.org
+Cc: mkp@kernel.org,
+	michael.christie@oracle.com,
 	target-devel@vger.kernel.org,
 	linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH 2/2] IB/isert: do not leak the receive descriptor of a dropped Data-Out
-Date: Mon, 16 Nov 2026 19:11:08 +0900
-Message-ID: <20261116101108.1650132-2-yhlee@isslab.korea.ac.kr>
+Subject: Re: [PATCH] scsi: target: iscsi: do not reject the command on a Data-Out overflow
+Date: Mon, 16 Nov 2026 19:13:48 +0900
+Message-ID: <20261116101348.1650677-1-yhlee@isslab.korea.ac.kr>
 X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20261116101108.1650132-1-yhlee@isslab.korea.ac.kr>
-References: <20261116101108.1650132-1-yhlee@isslab.korea.ac.kr>
+In-Reply-To: <sashiko-outbox-214783@kernel.org>
+References: <20261114161931.941441-1-yhlee@isslab.korea.ac.kr> <sashiko-outbox-214783@kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -103,95 +102,28 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-isert_handle_iscsi_dataout() works on the command it finds by ITT, which
-holds the descriptor of the SCSI Command PDU and not of this Data-Out,
-which is why the function posts its own descriptor explicitly when it
-succeeds.  None of its other returns do, and isert_recv_done() ignores
-what the handler returned, so each such Data-Out costs one of the
-ISERT_QP_MAX_RECV_DTOS buffers.  That includes the returns where
-iscsit_check_dataout_hdr() answers 0 without a command at all: 200
-Data-Outs carrying an ITT that matches no command stop the connection
-after exactly 128 of them, in all 3 runs, with no response to a NOP-Out
-sent afterwards and nothing logged beyond the per-PDU "Unable to locate
-ITT" message; with this patch all 200 are taken and the NOP-Out is
-answered.
+Thanks - the NULL dereference is real, but it is older than this patch and
+does not depend on it.
 
-So give isert_handle_iscsi_dataout()'s other returns the same post its
-success path already does.
+iscsit_check_dataout_hdr() already answers a Data-Out whose
+DataSegmentLength exceeds conn_ops->MaxXmitDataSegmentLength with
+iscsit_add_reject() (iscsi_target.c:1573-1578), before it looks the ITT up at
+:1580.  isert_handle_iscsi_dataout() calls that function, so one Data-Out PDU
+after login reaches isert_put_reject() with a command the core allocated, and
+isert_post_recv() faults on the NULL rx_desc at ib_isert.c:761.  I reproduced
+it on unpatched mainline, 5 boots out of 5, with no SCSI command involved and
+this patch not applied.
 
-That one function only.  Everywhere else a handler returns non-zero, the
-command isert allocated still holds that descriptor and the response
-posts it from isert_post_response(), so re-posting from
-isert_recv_done() would post the same descriptor twice; the second post
-is skipped only while the descriptor has not been refilled, which is not
-something the receive path can promise.  iscsit_handle_logout_cmd() even
-returns 1 for an ordinary logout.
+It dates from 4366b19ca5eb ("iser-target: Change the recv buffers posting
+logic", v4.3), which gave isert_post_recv() a descriptor argument and made
+isert_post_response() pass isert_cmd->rx_desc.
 
-Fixes: 4366b19ca5eb ("iser-target: Change the recv buffers posting logic")
-Cc: stable@vger.kernel.org
-Signed-off-by: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
----
- drivers/infiniband/ulp/isert/ib_isert.c | 19 ++++++++++++-------
- 1 file changed, 12 insertions(+), 7 deletions(-)
+So I have left this patch as it is and fixed isert separately:
 
-diff --git a/drivers/infiniband/ulp/isert/ib_isert.c b/drivers/infiniband/ulp/isert/ib_isert.c
-index 81164881dcc241..8a57c880335cc3 100644
---- a/drivers/infiniband/ulp/isert/ib_isert.c
-+++ b/drivers/infiniband/ulp/isert/ib_isert.c
-@@ -1130,17 +1130,16 @@ isert_handle_iscsi_dataout(struct isert_conn *isert_conn,
- 	int rc, sg_nents, sg_off, page_off;
- 
- 	rc = iscsit_check_dataout_hdr(conn, buf, &cmd);
--	if (rc < 0)
--		return rc;
--	else if (!cmd)
--		return 0;
-+	if (rc < 0 || !cmd)
-+		goto repost;
- 	/*
- 	 * FIXME: Unexpected unsolicited_data out
- 	 */
- 	if (!cmd->unsolicited_data) {
- 		isert_err("Received unexpected solicited data payload\n");
- 		dump_stack();
--		return -1;
-+		rc = -1;
-+		goto repost;
- 	}
- 
- 	isert_dbg("Unsolicited DataOut unsol_data_len: %u, "
-@@ -1158,7 +1157,8 @@ isert_handle_iscsi_dataout(struct isert_conn *isert_conn,
- 	if (page_off) {
- 		isert_err("unexpected non-page aligned data payload\n");
- 		dump_stack();
--		return -1;
-+		rc = -1;
-+		goto repost;
- 	}
- 	isert_dbg("Copying DataOut: sg_start: %p, sg_off: %u "
- 		  "sg_nents: %u from %p %u\n", sg_start, sg_off,
-@@ -1169,13 +1169,18 @@ isert_handle_iscsi_dataout(struct isert_conn *isert_conn,
- 
- 	rc = iscsit_check_dataout_payload(cmd, hdr, false);
- 	if (rc < 0)
--		return rc;
-+		goto repost;
- 
- 	/*
- 	 * multiple data-outs on the same command can arrive -
- 	 * so post the buffer before hand
- 	 */
- 	return isert_post_recv(isert_conn, rx_desc);
-+
-+repost:
-+	/* Nothing else owns this Data-Out's receive descriptor. */
-+	isert_post_recv(isert_conn, rx_desc);
-+	return rc;
- }
- 
- static int
--- 
-2.43.0
+  https://lore.kernel.org/all/20261116101108.1650132-1-yhlee@isslab.korea.ac.kr/
 
+Best regards,
+Yehyeong Lee
