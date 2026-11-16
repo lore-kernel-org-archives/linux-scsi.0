@@ -1,57 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794789232;
-	b=g6jNzuzuMa04ClwCvKCTwD6z47ADR5zKhYV1TaSfJX5k3CLYl2c1hD+Z8IURG8oUo1qw
-	 YmvagJCnScmlNym4JSpH59bMJ0AfxNffRPxxTDv9cHN1I6qYD2Cd2KPDTcYFC4m9FSIjm
-	 p2xRjCJiwmQoOWYRlTIq9zE/sXpg/jbeCrZZPQMc+B76LL9i9KFYi6juwNnEjwWTiAApE
-	 jNETxGZzUk/BFHwgaBJNUDT701QhmbCwO0Dn3+0HLyzwr9JZwXcvG+S0VRb3VZwj/WTFK
-	 P0MPTc6huP9/q1Q3bgP9omrGONxQQoZNsGdcTFk6iuvlB24kGa35IW690OqPpkgnMhA==
+	t=1794789432;
+	b=SrCoZzIR6/F+2iOscVQQPJrYKEyC24j0+BzJu05LaugZ/NxZHlN37q3edV6ohsieMIAK
+	 0PVGluv8qRUoa1baGVTLz1L1QzMtumsf2nu57GuTqUPmCQXzhRQ12Zo/1NLWs5ROlCKCk
+	 D4CaDk15o1+dwZU6eRV92g3CwystPBjQ1yH7Sht7mymAD+VH4ex/fEKntzmyOGbdakBJq
+	 1jlwIVreLg2Ex4Muaf3IIg2hEmqGEvVNISyXcoyPmgobJeWWaqXZR5XpgVdbdYHWmBoea
+	 Rax/nI6f9JjhXOBj2llPj/vj4EMzy35VCV2aetUBvs0HhYFAZ3P4gSgjE8yrKAC3OnA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794789232;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794789432;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=zf79cEy+8Un/AITLO+js00cZEaEIwKKBPpRXKe8mF1s=;
-	b=V3U3WCUJ/Fn+7HNydXDH+vMyUpaRSkk6ssOIQvhROL72uSvfebSKOJwgYyfob4caC49g
-	 1d/CNYWWCK6hU7YGZZqwoMADfselYmBwbVMC7FmcROwe3v1hMC7ZMKtLxRVoWgVYYaRnc
-	 aEv8xvCaZL6RLv2W7eey6hD6zCFMUWh0iNKRSYIdJysiyFWBMoJ8lLEujfwObBGQ/3FAm
-	 h8tJL2in+bJxHbBpaJhBg0iqPfQWKpQdl/Te+s9jUteHNbKLTh65X/0Go3vI8eSPHmdwV
-	 h5C4/AyvshZwZD771I2mlpO9GnfG6iz1DsCQZ6du35BakHmbue9SsVhx+EsoR+s4trA==
+	bh=WzftDjFEbXzGjqMcJzOA+hPwGmCJY9a5reN+8RoKs5w=;
+	b=VHM1doU6wTR7kQCoQIQLeogeAUneBK/o0vwFsMBBiybbJwQ9rO4w+PVt0Fo98XlweRJ5
+	 G9pp4ijbxQDaeNkaHMWdYqyDALwo2xUTPjMGUOVTWNk62eBDJv8DkgWADf9WE18rlN/R5
+	 +vo+thY/Iqr5Dv2DBCacApExgYOO0v+5qGnyHVewCkvjW2WBa8uu3tBSUbSywFcA30rnZ
+	 cezfvCBl5NtDA1Xd4ptUi5UtsfiX0uT79UVCSxz+fkpt+XuQUTmnNFj22fStXsJHn5Hpd
+	 JpO9ioEmwyyqtT1gf4HiN9r4NMRZ3dKuGfWmAqmLPjcD3rkzB3m+lNozepqTs6eJw8Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kAaAGU+k;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=omwrXO8+;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41369606A31F;
-	Mon, 16 Nov 2026 00:33:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2825606A31F;
+	Mon, 16 Nov 2026 00:37:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kAaAGU+k
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A07671F000C4;
-	Mon, 16 Nov 2026 00:33:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=omwrXO8+
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9DA9D1F000C4;
+	Mon, 16 Nov 2026 00:37:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794789231;
-	bh=zf79cEy+8Un/AITLO+js00cZEaEIwKKBPpRXKe8mF1s=;
+	s=k20260515; t=1794789431;
+	bh=WzftDjFEbXzGjqMcJzOA+hPwGmCJY9a5reN+8RoKs5w=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=kAaAGU+kud1XmI36gk2M5/Bx5ba14vZdpuAcwKxpbhlSCj96caols/iY6jZ1clFAC
-	 vLSbPBcKzw/HKK6pQ5C3njEHY9wBGrME9n2n8bCohasPb/P6LaxOWpxhxzisnWVfyf
-	 m/cClB7S5oJwr2sOfe4PM4D2+3Y8zYjDPMGe+rtQE1UDFYgoACgoTqMUp21LyU7HWZ
-	 1BqpiO3Q7KA/uOVbsQl14kP23C8vGMHWKR+WMHKo0M+Kd1NHmkSW1sTQGsC61wdOrj
-	 9g6mPcLCTKquzwdzELzkleuZn1jPeR+RhEvn1k3bVuxJ2OJWmfsvk0GjM3i/mQh6td
-	 vx1emLl7B/Fug==
-Message-ID: <sashiko-outbox-215953@kernel.org>
+	b=omwrXO8+Lc8WzjU6EOgBZu0g2NckWhKssQlENBBB17uWGGqhQnRU3BZRLo4Vv+0uJ
+	 dTMPsiXJ60H5/jJ2a3Mnj2pN2OFvB+4ITqdNkvOhFnKYkIH7S/2auTP82h5+TSSEs6
+	 XfUY6LyIhLgwa/U7zA/VBXQLiBshtJ+aRUafO6YYUd8jEjxg2NF96ICHNjGd3y4HZ+
+	 IEFmjBaQjgaJroTUAsJgiYy4w7pl49a9LPcqj6Ju4rkO0e3hqQWFBMrVYwCwvTQiOX
+	 o1Dwc4T7uoRSXVtFMsBKBYNx9KUxJSJPkehA092e/e+yQi24sl5p+t1mqnzYqoE9DL
+	 GeZFq/bsFlcHg==
+Message-ID: <sashiko-outbox-215958@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH RFC 03/18] scsi: target: uring: Create a character
- device per backstore device
+Subject: Re: [PATCH RFC 11/18] scsi: target: uring: Drop aborted commands
+ that are still queued
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Qiliang Yuan" <qiliang.yuan@linux.dev>
 Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-In-Reply-To: <20261115-feat-target-core-uring-v1-3-28cdc137eac6@linux.dev>
+In-Reply-To: <20261115-feat-target-core-uring-v1-11-28cdc137eac6@linux.dev>
 References: <20261115-feat-target-core-uring-v1-0-28cdc137eac6@linux.dev>
- <20261115-feat-target-core-uring-v1-3-28cdc137eac6@linux.dev>
+ <20261115-feat-target-core-uring-v1-11-28cdc137eac6@linux.dev>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 16 Nov 2026 00:33:51 +0000
+Date: Mon, 16 Nov 2026 00:37:11 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -61,119 +61,109 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 
-Thank you for your contribution! Sashiko AI review found 2 potential
-issues to consider:
-- [Medium] scsi: target: uring: incomplete rollback in
-  tcmur_destroy_device()
-- [Medium] scsi: target: uring: unsafe error unwind in
-  tcmur_configure_device()
+Thank you for your contribution! Sashiko AI review found 1 potential
+issue to consider:
+- [High] scsi: target: uring: missing CMD_T_ABORTED check in
+  tcmur_queue_cmd()
 --
 
-commit d9ed44c0dc0f5b30e64edec0424a89f4739a2cf8
+commit 84783430b27d7a40ed74a32ae69a8126b2da14ae
 Author: Qiliang Yuan <qiliang.yuan@linux.dev>
 
-scsi: target: uring: Create a character device per backstore device
+scsi: target: uring: Drop aborted commands that are still queued
 
-This commit creates a /dev/tcmurN character device when a target_core_uring
-device is configured, ties the device and queue lifetimes to the embedded
-struct device, and adds the TCMUR_GET_DEV_INFO ioctl.
+This commit implements tmr_notify() for target_core_uring so that aborted
+commands still waiting on a queue's pending list are removed and completed
+immediately with SAM_STAT_TASK_ABORTED instead of waiting to time out.
 
 > diff --git a/drivers/target/target_core_uring.c b/drivers/target/target_c=
 ore_uring.c
-> index 135435748d367..d1ca4f16e7d0b 100644
+> index 0f83bdc55e06a..629419a4c8f46 100644
 > --- a/drivers/target/target_core_uring.c
 > +++ b/drivers/target/target_core_uring.c
-
 [ ... ]
-
-> @@ -143,24 +226,47 @@ static int tcmur_configure_device(struct se_device =
-*dev)
->  	if (ret)
->  		return ret;
-> =20
-> +	ret =3D ida_alloc_max(&tcmur_ida, TCMUR_MINORS - 1, GFP_KERNEL);
-> +	if (ret < 0)
-> +		goto free_queues;
-> +	udev->dev_id =3D ret;
-> +
->  	dev->dev_attrib.hw_block_size =3D udev->block_size;
->  	dev->dev_attrib.hw_max_sectors =3D TCMUR_MAX_IO_SIZE / udev->block_size;
->  	dev->dev_attrib.hw_queue_depth =3D udev->nr_queues * udev->queue_depth;
->  	dev->dev_attrib.is_nonrot =3D 1;
-> =20
-> +	udev->cdev_dev.devt =3D MKDEV(MAJOR(tcmur_devt), udev->dev_id);
-> +	ret =3D dev_set_name(&udev->cdev_dev, "tcmur%d", udev->dev_id);
-> +	if (ret)
-> +		goto free_id;
-> +
-> +	cdev_init(&udev->cdev, &tcmur_ch_fops);
-> +	udev->cdev.owner =3D THIS_MODULE;
-> +	ret =3D cdev_device_add(&udev->cdev, &udev->cdev_dev);
-> +	if (ret)
-> +		goto free_id;
-> +
->  	return 0;
-> +
-> +free_id:
-> +	ida_free(&tcmur_ida, udev->dev_id);
-> +	udev->dev_id =3D -1;
-> +free_queues:
-> +	tcmur_free_queues(udev);
-> +	return ret;
+> @@ -207,6 +208,7 @@ static void tcmur_queue_cmd(struct tcmur_dev *udev, s=
+truct tcmur_cmd *tcmd)
+>  		io->ucmd =3D NULL;
+>  		tcmur_io_start(q, io, tcmd);
+>  	} else {
+> +		tcmd->se_cmd->priv =3D tcmd;
+>  		list_add_tail(&tcmd->node, &q->pending);
+>  	}
+>  	spin_unlock(&q->lock);
+> @@ -255,6 +257,31 @@ static sense_reason_t tcmur_execute_rw(struct se_cmd=
+ *se_cmd,
+>  			    se_cmd->data_length, sgl, sgl_nents);
 >  }
-
-[Severity: Medium]
-Can the free_id error path free udev->queues and udev->dev_id while a file
-is still open, or re-register udev->cdev_dev if enabling the device is
-retried?
-
-cdev_device_add() publishes udev->cdev via cdev_add() before calling
-device_add().  If device_add() fails, a process may already have opened the
-character device before cdev_del() runs, so freeing udev->dev_id and
-udev->queues here releases resources while that opener still holds a file
-referencing udev.  In addition, because DF_CONFIGURED is not set on failure,
-a later write to the configfs enable attribute calls
-tcmur_configure_device() again on the same udev, running cdev_init() and
-device_add() a second time on the embedded udev->cdev and udev->cdev_dev.
-
 > =20
->  static void tcmur_destroy_device(struct se_device *dev)
->  {
->  	struct tcmur_dev *udev =3D TCMUR_DEV(dev);
-> =20
-> -	tcmur_free_queues(udev);
-> +	cdev_device_del(&udev->cdev, &udev->cdev_dev);
->  }
+> +static void tcmur_tmr_notify(struct se_device *dev, enum tcm_tmreq_table=
+ tmf,
+> +			     struct list_head *aborted_cmds)
+> +{
+> +	struct tcmur_dev *udev =3D TCMUR_DEV(dev);
+> +	struct tcmur_cmd *tcmd;
+> +	struct tcmur_queue *q;
+> +	struct se_cmd *se_cmd;
+> +
+> +	/* Drop the aborted commands that no server has picked up yet */
+> +	list_for_each_entry(se_cmd, aborted_cmds, state_list) {
+> +		q =3D tcmur_cmd_queue(udev, se_cmd);
+> +
+> +		spin_lock(&q->lock);
+> +		tcmd =3D se_cmd->priv;
+> +		if (tcmd) {
+> +			se_cmd->priv =3D NULL;
+> +			list_del(&tcmd->node);
+> +		}
+> +		spin_unlock(&q->lock);
+> +
+> +		if (tcmd)
+> +			tcmur_cmd_end(tcmd, SAM_STAT_TASK_ABORTED);
+> +	}
+> +}
 
-[Severity: Medium]
-What cleans up udev->queues and udev->dev_id if target_configure_device()
-fails after tcmur_configure_device() succeeds?
+[Severity: High]
+Can tcmur_queue_cmd() queue a command onto q->pending after
+tcmur_tmr_notify() has already run for it?
 
-drivers/target/target_core_device.c:target_configure_device() {
+transport_generic_new_cmd() places se_cmd on state_list before the command
+reaches tcmur_queue_cmd():
+
+CPU0                                    CPU1
+transport_generic_new_cmd()
+  target_add_to_state_list(se_cmd)
+  target_execute_cmd(se_cmd)
     ...
-	ret =3D core_setup_alua(dev);
-	if (ret)
-		goto out_destroy_device;
-    ...
-out_destroy_device:
-	dev->transport->destroy_device(dev);
-    ...
-}
+                                        core_tmr_abort_task()
+                                          __target_check_io_state()
+                                            se_cmd->transport_state |=3D
+                                              CMD_T_ABORTED
+                                            list_move_tail(..., &aborted)
+                                          tcmur_tmr_notify()
+                                            spin_lock(&q->lock)
+                                            tcmd =3D se_cmd->priv  <-- NULL
+                                            spin_unlock(&q->lock)
+      tcmur_queue_cmd()
+        spin_lock(&q->lock)
+        tcmd->se_cmd->priv =3D tcmd
+        list_add_tail(&tcmd->node,
+                      &q->pending)      <-- queued after tmr_notify()
+        spin_unlock(&q->lock)
+                                          target_put_cmd_and_wait()
 
-When core_setup_alua() fails, target_configure_device() calls
-tcmur_destroy_device() without setting DF_CONFIGURED or calling
-tcmur_free_device(), so udev->cdev_dev keeps its initial reference and
-tcmur_cdev_release() does not run.  The unconfigured se_device stays alive
-in configfs with udev->queues still allocated, udev->dev_id still set, and
-udev->cdev_dev already passed through device_add() and device_del().
+The same ordering also happens without a narrow race when a command on
+dev->delayed_cmd_list is aborted while se_cmd->priv is still NULL and is
+later dispatched by target_do_delayed_work() -> __target_execute_cmd().
 
-If the user then increases nr_queues via tcmur_set_configfs_dev_params()
-before removing the device, tcmur_free_queues() reads past the end of the
-old udev->queues array and passes out-of-bounds pointers to vfree().  If the
-user instead retries enabling the device, tcmur_configure_device() leaks the
-previous udev->queues and udev->dev_id and calls cdev_init() and
-device_add() a second time on the embedded udev->cdev and udev->cdev_dev.
+Once tcmd is placed on q->pending after tcmur_tmr_notify() finishes,
+se_cmd is no longer on state_list, so nothing removes tcmd if no server
+fetches it.  target_put_cmd_and_wait() then blocks for up to cmd_timeout
+seconds, or hangs indefinitely when cmd_time_out is 0.
+
+Should tcmur_queue_cmd() check se_cmd->transport_state & CMD_T_ABORTED
+under q->lock before starting or queueing tcmd, similar to
+tcmu_queue_cmd() in target_core_user.c?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261115-feat-targe=
-t-core-uring-v1-0-28cdc137eac6@linux.dev?part=3D3
+t-core-uring-v1-0-28cdc137eac6@linux.dev?part=3D11
