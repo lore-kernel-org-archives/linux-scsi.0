@@ -1,64 +1,56 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794835257;
-	b=RNQMIb3w01lzLp2WACTSX6SQnebuI+4B7HYClxgieVBBTsg8S/kQiU+T29iB7HeA9GRw
-	 kpuN6spCF3aWtIKEnUKBSbOFB9m2+v0CfrWH3UNysJYuDtyENI+Yl0uK16Zvayek2iXgG
-	 Ws9PiS9jarGGGhgEikywgIa2749AO0YCWd0YCBkLTxMvnHZOxmUwjz1pGoDUO/Pz7gQk7
-	 HH+Mx365UryoKQMSurrw/Tw7gHo/G4fGTDzMQkWvoSnRrib79nXApKR7SFMsn/tu/gdEt
-	 UfoyIlJexR1GxRTZpmWKfSbiwk0JEl07Nt+VZaw6v2gO9zyBYYs1Jv8WjyyWQOtZgvA==
+	t=1794835399;
+	b=2HS/VtyNcFXYdwJDFfRpYolNVmfgA88Yp3p4M5VI7e5xdh2jITkAncQEePKw5HAWrsb7
+	 yeXM7kWlH6BIHqKDcDAcx0Hdg61fUFBtoFDYFYc142Kl2oxcV9FnVhM6Yf60SClvAnrnY
+	 a3BPo8bk0bUuVbgHKE3e4OKLeUvk3RFIrLVkeUBSeivCAXubafXtZT/a+6MaN9jNKAomW
+	 LX3jYNJtkMAM8psHBn02QHRgrebCVfDcEusjiKiKnS+9yLIg1UkwiJlVUBsibk28rxPqI
+	 sKd/uSF3cKVFw6t5IWGQYU+p9VWppqs2yg/pb27rfVkGWmt42Oa0/sgxrosxrXc6dNQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794835257;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794835399;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=Zwp/b2OseRP/BP0MRnYEMv10Xx5652k/ysAi77DyTUk=;
-	b=NFCUE3XMe0UyCZhEGLrokSfcFWi5Iat1D+Qz+s3xnLC9zxlmzbF+1aEtCS2AUbAHMA3o
-	 FPJVfzREblqlqgzoKdLbYaFdHt4sy5r0fwk93YdutF6npCpYKm0xcSxRrO1fU5ownOqZh
-	 OZXf7aT5ouNYQWBaxprZALPMFrfBXHxnShhqF2SiCRqG6a7yccJTCFm4ZbjxteF69k7cz
-	 +39vhbv6gPJ+oBR9hBDfUxNM1f6J4znWx9UhxnCtWlD4i9dtpNhjm7Swbo9OThejo+MnH
-	 T44FTqk1YOmzJYMe7P1poalloVrewnUIB2mPjPL3JMq8OBl965HXPwL+1fDkooNXsnA==
+	bh=ugeAAa5F7S8jo7o22VRNVHZRCEghXnRG4QSs0z+gWeQ=;
+	b=JUD/V9Sg/tO5OYWxUCRtZDdAdNnTsonbh4mlQVLnR51U2vc807qECO+ZSen5OZid6VrV
+	 E6JbEERKrHM0J2bt6sb6zd0Yc+DKkWIOIL8QGRwFWrLjKmc5vJ3qOY8iT2kQdo621yqfS
+	 ZSaymC2MAT/KZnVKRd2b/HHMg8j9Dpv8fjz/c4Xqe9U3i4gzfsTPRdqPIwMapVo+IqxES
+	 Z2p0fUAseFZ2z6zerUMhhlmvAoJDuWE2NwgCJwUKWTGXuQ7/s8E0KRxPrLDTAHcb4tqMj
+	 AP2JOuQ8NG7nAy3+h8LPPP2g1WF1UcDpQJkUcRAKXrHgJpehnm9SyTombCSmD68Ergg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=MhEMPzkS;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=YVdhpRk4;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FA5B606A331;
-	Mon, 16 Nov 2026 13:20:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 187D1606A31C;
+	Mon, 16 Nov 2026 13:23:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=MhEMPzkS
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 287C11F000C4;
-	Mon, 16 Nov 2026 13:20:47 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=YVdhpRk4
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6CD1F1F000C4;
+	Mon, 16 Nov 2026 13:23:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794835256;
-	bh=Zwp/b2OseRP/BP0MRnYEMv10Xx5652k/ysAi77DyTUk=;
+	s=k20260515; t=1794835398;
+	bh=ugeAAa5F7S8jo7o22VRNVHZRCEghXnRG4QSs0z+gWeQ=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=MhEMPzkS8ELyUuZJvWfSoeeWuf7By4IL/aj2kb/a2OV4l4EgVqKXjiioyUz2RieNk
-	 XgpnwYQk+l7IQUQIb2TJG9rqwlNZZd2t4tSSz2FIOFgSK4qv3MUw+KnfbEysg8x4iS
-	 RMX98jFDrMhGiTX7izqJwsUslncHgd0fLN7Yyo0X4gX89YKFy614i608nuofc5428F
-	 SfK4Vb1AO45G7cvMjjgv1ixrvwKqD7DXpAnyYbrMZDnbnAmpR0a9mRVyF+s9eImB9m
-	 jgQn4Dmx1KWjFDTc0G8bS5OCGFot8PkE1fqYZHJngkkRDFtxZNJw9/svWtFGNRWRiW
-	 sc42i9H1mtjtg==
-Date: Mon, 16 Nov 2026 14:20:45 +0100
+	b=YVdhpRk49/rwmMkR2Jud38KOYWBE8eCd8fYpApx6gg7JhlrTG+NmRdk+94MetwqgH
+	 NZGwa2e8anIBp0KxnE0LOtT8/RmP6GjIZSLksjgDdD/Wwj2BtfDbH+Vz0MgPndNK7Q
+	 x9jdZYmPYLBNvm5CgAdHMugjPsk+7Pv12AtWVwAZi+19j04TzVA3F1oE6N1kNd/7tO
+	 tOhQLWtGwQ6BS8LceKUuBTeirwIN85EAfRv/JLP+ilx8md+ACPvUE0/WwefbgPgkoQ
+	 1BQQ/U8W8pdcpoRKzwoWXaA0FKUm5hVBA5xnNnD7EK7K7McdqkITK4A6oHdbmISsNt
+	 B2L5Ae5AFK0tA==
+Date: Mon, 16 Nov 2026 14:23:14 +0100
 From: Christian Brauner <brauner@kernel.org>
-To: bot+bpf-ci@kernel.org, linux-fsdevel@vger.kernel.org
-Cc: jannh@google.com, mason@kernel.org, josef@toxicpanda.com, hch@lst.de, 
-	linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org, 
-	viro@zeniv.linux.org.uk, jack@suse.cz, linux-scsi@vger.kernel.org, 
-	target-devel@vger.kernel.org, driver-core@lists.linux.dev, linux-mm@kvack.org, 
-	bpf@vger.kernel.org, linux-security-module@vger.kernel.org, selinux@vger.kernel.org, 
-	apparmor@lists.ubuntu.com, linux-nfs@vger.kernel.org, netdev@vger.kernel.org, 
-	fuse-devel@lists.linux.dev, linux-efi@vger.kernel.org, xen-devel@lists.xenproject.org, 
-	ocfs2-devel@lists.linux.dev, linux-s390@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, 
-	linux-usb@vger.kernel.org, amir73il@gmail.com, linux-erofs@lists.ozlabs.org, 
-	linux-kselftest@vger.kernel.org, chris@chrisdown.name, ast@kernel.org, andrii@kernel.org, 
-	daniel@iogearbox.net, martin.lau@kernel.org, eddyz87@gmail.com, 
-	yonghong.song@linux.dev, ihor.solodrai@linux.dev
-Subject: Re: [PATCH RFC v3 38/44] nvmet: refuse files on pseudo filesystems
- as namespace backing files
-Message-ID: <20261116-geplagt-gemein-zufrieden-72c3817de2c6@brauner>
-References: <20261116-work-loop-pseudo-v3-38-8cbbea1cf34f@kernel.org>
- <cb28f09c85a473a23f14c9bd6ef135950197c9fbf966c1f7055d791977d29286@mail.kernel.org>
+To: sashiko-reviews@lists.linux.dev, Christoph Hellwig <hch@lst.de>
+Cc: linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org, 
+	target-devel@vger.kernel.org, bpf@vger.kernel.org, Chuck Lever <cel@kernel.org>, 
+	Jeff Layton <jlayton@kernel.org>, Anna Schumaker <anna@kernel.org>
+Subject: Re: [PATCH v2 02/17] fs: add kiocb_write_iter() and
+ kiocb_end_write_iter()
+Message-ID: <20261116-windungen-freuden-zander-0e6ef798e54c@brauner>
+References: <20261116-work-fs-frozen_writes-v2-0-ecc4a2aac40e@kernel.org>
+ <20261116-work-fs-frozen_writes-v2-2-ecc4a2aac40e@kernel.org>
+ <sashiko-outbox-216937@kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -70,11 +62,28 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <cb28f09c85a473a23f14c9bd6ef135950197c9fbf966c1f7055d791977d29286@mail.kernel.org>
+In-Reply-To: <sashiko-outbox-216937@kernel.org>
 
-On Mon, Nov 16, 2026 at 12:00:14PM +0000, bot+bpf-ci@kernel.org wrote:
-> Is a prerequisite patch adding d_real_data_inode() missing from the series?
+On Mon, Nov 16, 2026 at 11:30:59AM +0000, sashiko-bot@kernel.org wrote:
+> Should kiocb_write_iter() check S_ISREG(file_inode(iocb->ki_filp)->i_mode)
+> before taking freeze protection and setting IOCB_WRITE, the way
+> file_start_write(), aio_write() and io_kiocb_start_write() do?
 
-No. d_real_data_inode() comes from "fs: let d_real() fail" which is in
-the base-commit of this series (vfs-7.5.lookup). This was applied to
-bpf-next instead.
+Eeew, no. That check alone would bring the bug back for these drivers.
+
+blkdev_write_iter() calls file_update_time() which dirties the device
+node's inode on the filesystem the node lives on. And write(2) on such a
+node modifies a frozen filesystem today for the same reason.
+
+For FIFOs we skip the time update on a frozen filesystem instead of
+blocking (cf. 7e775f46a125f ("fs/pipe.c: skip file_update_time on frozen
+fs")). If we change file_update_time() to do that for all special files
+then kiocb_write_iter() can take the S_ISREG() check.
+
+> Without an S_ISREG() check, writes to a block device node whose hosting
+> filesystem is frozen will block in sb_start_write() (or fail with -EAGAIN for
+> IOCB_NOWAIT), and will deadlock if that filesystem is mounted on or
+> flushing through the virtual block device during freeze_super().
+
+That can't happen. The node is opened when the device is set up so its
+filesystem can't be mounted on that device.
