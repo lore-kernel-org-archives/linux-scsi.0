@@ -1,59 +1,96 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.214.180
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794822116;
-	b=5Ev03nY4/0uSQ6H/ARijX1NCxcvNyjCBEAnIlYe1PYK4LbbHEblB5ZzpG22ojKEK3IQS
-	 V3zAQ4Rr7cCC/zP88Xq7vGHC3a6YIrwZf59xAKxHRQp/8I+av11yF1wYE94WqrFR85KRO
-	 N/PVKnyd033NIi1RPqWJ84o8yzhdYCHSOfuWr2DFcV2IcVFF1zwiVCjxDwzGCOnD3Gz2T
-	 D1HaNhbMo9EUxjGcJhd4MQRPUVEz6gMKTwxqzCxRGmW+2VcPyM7C4UZipBiJPWoIXkqwf
-	 Sz+nNJs0aXbRILgoMkfnDcA8QNw32M1B0a9CyCtrTXmtWClANat8e/TiKGXIktH5VNQ==
+	t=1794823879;
+	b=Rk2AJkn4RdrARMH4+QsXM46OGxIAP7dS/ChSOOWQ2ni/asGH6O6vn9oHs/f8gW5jLkLK
+	 QeeA++7z1AeFlAR8MWvNBh9SbXOwdNAVRMBNDcE77efuEs9AuAo9uASw/0mg1yE00hoS9
+	 nY4H33nOvPB57iX/Oe0lvv7V/aKeeeObPF83Q+TuOcjwG9YSTlKHsg/7zo4jRvEDL1Rke
+	 xRVJlb4TrlkNMVi0G1+Uzo5ZlJn12GCbkVxbUATK1bwV49AsCJ31hKpTvEhucZ3TSLQDX
+	 HRQ0t3VpzZ+dbEQQ5ifRlZ3erPmwv0cIkNawtY5vYRRWC9nwNEfj7yjv2UNKOY3HbVQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794822116;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=hXng9hYJH3diUcfIm+3EkeLNi/DrI5XwE9hJbmJZ9MI=;
-	b=oUierVuHroArdb2avcHbgg00z1/++vjuSRFkaEhrt2R8Gh9cFowsD7nKYUNx1l6aBsv1
-	 Ls/1ZJvVOdTnAQkm/k0LFdKjYZHovybI9Nt/4oWC52TDAxQcjK5zWTAnrVf/ZHilN3XVh
-	 vHCstgcUlugf6yZKaY8FNZJw4aFamHtG7IZKUQ+DHfu/tqtNE5sWggMfS0zCPnCcA7629
-	 iNbdpaozy/aQytQG0ArBTa6zUGSV7iUGa2cmBnTyJ0afkDWT39CO6dA7fsZw4fAh6WsAh
-	 po6H9u4aoBp4rfILauspuhaC3beTYR0U4664m9br/ypLwVeu2yG7+ufwjAnIBED14+w==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794823879;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=QE03JjsA5wc1tp/JULiyA+UuuhZYB+y5OpcGtEQNS4k=;
+	b=QHWYJKH9MZS0JLr4AZ8U1ByCe2CrEocktmM2Q0Sw3C8PP6Jxx/bdeHzddg6iyUqg4DhC
+	 DE+7GrjH6OPJf5hsyUmfSStYzT+wXhFUacgNkRKyYOlNh547oYRj2C2oLmqjmv7yo2jJ7
+	 5MEZfhAxxU7Hz/mlYLRee5yM91o0wd0Wu+UmyeNyl22potetOXSYPdSRpOChPGRSWAgpS
+	 0iP0GdomcCil8zUjrZHtfDJ54twAjioxTB/VS7dOuFakh3f22GnSvDcqKOvBEvOGvIsY2
+	 VU6nM3hUksl9l7pcqCOG49CC7Hgc/jfxHcW9Px7OCd17ceGWdeE1iqzOufK7i6SRVZg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kzkbn6tP;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=fail header.from=isslab.korea.ac.kr;
+	spf=none smtp.mailfrom=isslab.korea.ac.kr;
+	dkim=pass header.d=isslab-korea-ac-kr.20260707.gappssmtp.com header.i=@isslab-korea-ac-kr.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=ewrIJd5I;
+	arc=none smtp.remote-ip=209.85.214.180
+Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3138C606A329;
-	Mon, 16 Nov 2026 09:41:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40105606A32F
+	for <linux-scsi@vger.kernel.org>; Mon, 16 Nov 2026 10:11:17 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 40105606A32F
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kzkbn6tP
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E5A231F000C5;
-	Mon, 16 Nov 2026 09:41:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794822116;
-	bh=hXng9hYJH3diUcfIm+3EkeLNi/DrI5XwE9hJbmJZ9MI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=kzkbn6tPB2bS/Zn/Pn5gXJRXwYUjckO+3EyZRv12Tme1m2pQkOlyS27Q2NJx0bLjq
-	 iAF35/8jh5WK0aPjealgqEWqPtYQ2eIjwus2l7uEA6Rw6F/DzFARz9BZlmZeeRX4IA
-	 a8T9Xm8NCDxJP3dX2atLlDz9ZBm8mqYBsqZVK7vDVaxJ/ohv+LFKZYXH6eS5lGqyub
-	 cuo0dCjJOQ9Cm7L88ZJ23RQ4pRGG9KOeHzD56rkH8lmKmPt3M3ylorww7aaA+S2CPt
-	 kiO/myHptFlIERKjXIXwXpMeNSX+FLQjdkTiW70P+l/3Lf4R8ggQC98SE8Kxc70N4V
-	 A+Zhh9qKrjqLA==
-Date: Mon, 16 Nov 2026 10:41:49 +0100
-From: Christian Brauner <brauner@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jan Kara <jack@suse.cz>, Shakeel Butt <shakeel.butt@linux.dev>, 
-	Alexander Viro <viro@zeniv.linux.org.uk>, Jens Axboe <axboe@kernel.dk>, linux-fsdevel@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, io-uring@vger.kernel.org, linux-block@vger.kernel.org, 
-	linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, 
-	linux-unionfs@vger.kernel.org, bpf@vger.kernel.org, linux-nfs@vger.kernel.org, 
-	stable@vger.kernel.org
-Subject: Re: [PATCH 07/12] zloop: take freeze protection when recording write
- pointers
-Message-ID: <20261116-biegen-flaute-flanke-cebddae97444@brauner>
-References: <20261114-work-fs-frozen_writes-v1-0-f5ae61c898b1@kernel.org>
- <20261114-work-fs-frozen_writes-v1-7-f5ae61c898b1@kernel.org>
- <20261116064820.GB2964@lst.de>
+	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20260707.gappssmtp.com header.i=@isslab-korea-ac-kr.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=ewrIJd5I
+Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-2ee2072d1e7so8095775ad.2
+        for <linux-scsi@vger.kernel.org>; Mon, 16 Nov 2026 02:11:17 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=isslab-korea-ac-kr.20260707.gappssmtp.com; s=20260707; t=1794823877; x=1795428677; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=QE03JjsA5wc1tp/JULiyA+UuuhZYB+y5OpcGtEQNS4k=;
+        b=ewrIJd5IOV5QAQjwRH6IEXZnmh7bPfUHn9DUcx2zsC6hdbrlWH9yEYyPEohe8mFv9/
+         U/2kPd4Z2bA8U/czFRK4f+sZXTwhKmdIdnpunjcGZA1X2fohpnIdXYkY9hudUeBHFqQY
+         6wQebEg6oAtUFeOIKXmzo6c5Chqt/ZK8ptolYOVVIitHpt1BozjzMtdNjCZ3HO2kaGPL
+         rZy/pADqnrF7sv/VuhpiLXeO+dB21LxNcIr6fzeXVbUT0uqNUXPkQFOQk+Bd9+Bxpu1H
+         hswdaGudvlrj8/5fvFBgfXgyDBqtnsv1WBh6HaFaYnzk4R2P1olTTU5rDe7WHILUai8Z
+         aygg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1794823877; x=1795428677;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=QE03JjsA5wc1tp/JULiyA+UuuhZYB+y5OpcGtEQNS4k=;
+        b=R0J4OXVZrWVjbRxNiBtPukAOaIK0Cp+FDKPjqpD0z0OPC5yF/8w2Wo+rTkrenuTUlE
+         4klJwJ2Hiv5j96SImIf0dCGFGwVY6rrop4tINh7LZW50ET6i2AHZqM/q23zf4DyzKM7u
+         lddVdt1XT9sY8FLhhYg0yFhvmeWYjIGHVdUADU5oqHhzUFwO0SlolQPYikw4oF35onk1
+         vDJWbexmPgMioJYnw5lEueHW90rVm1LWkFChzpK2JWE+6nUaPkDOdKAJyHXICGyOel1W
+         d90lL6OPLt5AhYHQ0hM6QGFUblU17dzMQCnnjRW8/xX1uD8m6bOKpczML7NWW0cnztUM
+         H+pw==
+X-Forwarded-Encrypted: i=1; AL+hErEI4XowM3FWD6xBTMPeVN1TRZ8WyvnJ6VeEylqhktaTYkUQjFlOQgA/zkgSRjltjR9YYmBGjFG7h03K@vger.kernel.org
+X-Gm-Message-State: APuU4Z+CDYIuOOoLT1AFqS+NZBMcKEodYpmEEI0C9NRlGFXqn1GNCcIm
+	nVkqgqYO5RXAkzg2EaW2mU/ueBDjcZZI9oRDrMfM1pczM2jTbcdBTXlleCu3tSh9a0dU8W/Xox+
+	r7dTiCvs=
+X-Gm-Gg: AZFdTZe8VHGo80U1BrzBDKA/1mxvVAybBqyeuR4nMmcDZ0eTnIasRTNFg9Ip4KCqQln
+	/9U+72hCqTdpWQ8hz86S0rDL2Pai6ba9P2gGehJ+pCk50kbAwWMWw4W/mKTKqRe4w909ADVSDow
+	6ORYCMkMnc3ROPeasYUzCnlozwIpDLOL1DT5iT6WT8EloKXM5X4dTdDFZkNlU03qjF9/WHFP0FZ
+	vGfbfRurYsZ9sGH8WeSsFt4nE/FW4xQmfk1VJAeBUEssmLseQ1X0qOlRPYPUjVkJQ5xaKkDlWaq
+	pdyRloaPDxIbMJmYgiVrtbLx3daOdp97926Pul12sHJ580IP6Ccf7BVGd4fDIom5M9FokyilmPU
+	yh8BVa5Hk1lH7FWRJoewdj9NiiJB3HL2ZcSyHKRQH17LRQ0Aj/CORX+ih3sn7+7btBmNTvIpYiF
+	2zy8vOoWtPuDgduZbDKepNqP5wmKsJqhknp0cnfoEJmdJb/PiEIimt6ShYTsYNVHjJcfVLDAnVl
+	XE/WHyPbiUoMuLykr5z6GsmD3aDLX6L6JnjXLo+EMEh78o/XpM4NRo9slsaTQeujC1MWatrnes9
+	IhUTI3FMlfN6jFuyK5F/KvQphmoS9ik2l3vCXILx/JByYRNp9nLqtksku2IoIxvMw3F29v3R2bm
+	AcPJ04b4I3vEjafTsA1GllcFW5oaDt9lpR2ttAQ==
+X-Received: by 2002:a17:903:3c6d:b0:2eb:3522:99f9 with SMTP id d9443c01a7336-2ee0da7bf19mr92720105ad.17.1794823877256;
+        Mon, 16 Nov 2026 02:11:17 -0800 (PST)
+Received: from yhlee-960QFG.Davolink ([2406:5900:1044:110c:35d0:694a:1071:9bae])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2ee0f7e5055sm35533795ad.39.2026.11.16.02.11.14
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 16 Nov 2026 02:11:16 -0800 (PST)
+From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+To: sagi@grimberg.me,
+	jgg@ziepe.ca,
+	leon@kernel.org
+Cc: linux-rdma@vger.kernel.org,
+	target-devel@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 1/2] IB/isert: finish a Reject the target core allocated itself
+Date: Mon, 16 Nov 2026 19:11:07 +0900
+Message-ID: <20261116101108.1650132-1-yhlee@isslab.korea.ac.kr>
+X-Mailer: git-send-email 2.43.0
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -63,129 +100,114 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20261116064820.GB2964@lst.de>
+Content-Transfer-Encoding: 8bit
 
-On Mon, Nov 16, 2026 at 07:48:20AM +0100, Christoph Hellwig wrote:
-> Looks good:
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> 
-> Can we get some kind of debug check into vfs_setxattr to enforce
-> callers have taken the write protection?
+iscsit_add_reject() builds the Reject from a command of its own, with
+iscsit_allocate_cmd(), and iscsit_allocate_cmd() zeroes sizeof(struct
+iscsit_cmd) plus the transport's priv_size.  For iSER that zeroes struct
+isert_cmd too, so conn, iscsit_cmd and rx_desc are all NULL where
+isert_allocate_cmd() would have filled them in.  The target's tx thread
+then takes that command through isert_response_queue() ->
+isert_put_reject() -> isert_post_response(), which hands the NULL
+descriptor to isert_post_recv() and dereferences it.
 
-I considered that and decided against it becuase it will mean everyone
-starts splatting which means everyone needs to get their act together by
-7.5.
+One PDU after login is enough.  iscsit_check_dataout_hdr() answers a
+Data-Out whose DataSegmentLength exceeds
+conn_ops->MaxXmitDataSegmentLength with iscsit_add_reject(), and it does
+so before it looks the ITT up, so there is no SCSI command involved.
+Against a LIO target with an iSER portal over soft-RoCE, with
+TargetRecvDataSegmentLength negotiated down to 512 and one Data-Out
+declaring and carrying 1024 bytes, 5 boots out of 5:
 
-You might not have seen it but I sent out a bunch of bug reports for
-subsystems that suffer from the same bug class but that need way more
-invasive fixes than anything I'm doing here.
+  [    3.750347] Oops: general protection fault, probably for non-canonical address 0xdffffc0000000484: 0000 [#1] SMP KASAN NOPTI
+  [    3.752656] KASAN: probably user-memory-access in range [0x0000000000002420-0x0000000000002427]
+  [    3.753703] CPU: 0 UID: 0 PID: 168 Comm: iscsi_ttx Not tainted 7.4.0-rc2-RJ6A-00716-g23c62304dde2 #1 PREEMPT(lazy)
+  [    3.755172] Hardware name: QEMU Ubuntu 24.04 PC v2 (i440FX + PIIX, arch_caps fix, 1996), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
+  [    3.756829] RIP: 0010:isert_post_recv+0x98/0x210
+  [    3.757519] Code: 89 f8 48 c7 44 24 48 00 00 00 00 48 c7 44 24 50 00 00 00 00 48 c1 e8 03 48 c7 44 24 58 00 00 00 00 48 c7 44 24 60 00 00 00 00 <0f> b6 04 10 84 c0 74 06 0f 8e 2c 01 00 00 31 ed 80 be 20 24 00 00
+  [    3.759855] RSP: 0018:ffff888104ecfc10 EFLAGS: 00010206
+  [    3.760580] RAX: 0000000000000484 RBX: 1ffff110209d9f83 RCX: 0000000000000001
+  [    3.761476] RDX: dffffc0000000000 RSI: 0000000000000000 RDI: 0000000000002420
+  [    3.762376] RBP: ffff888109625380 R08: 000000000000029d R09: 0000000000000001
+  [    3.763288] R10: ffff888104d95447 R11: 00000000eb6dcbe3 R12: ffff888104af8000
+  [    3.764184] R13: ffff888104af8000 R14: ffff888104b4f000 R15: ffff888109624f00
+  [    3.765076] FS:  0000000000000000(0000) GS:ffff88816b45d000(0000) knlGS:0000000000000000
+  [    3.766100] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+  [    3.766830] CR2: 00007f5dc1281000 CR3: 0000000104baf004 CR4: 0000000000770ef0
+  [    3.767739] PKRU: 55555554
+  [    3.768091] Call Trace:
+  [    3.768407]  <TASK>
+  [    3.768679]  ? __pfx_isert_post_recv+0x10/0x10
+  [    3.769233]  isert_post_response+0x85/0x1b0
+  [    3.769745]  ? __pfx_isert_post_response+0x10/0x10
+  [    3.770338]  ? isert_response_queue+0x91d/0x19a0
+  [    3.770898]  iscsi_target_tx_thread+0x3de/0x6f0
+  [    3.771460]  ? __pfx_iscsi_target_tx_thread+0x10/0x10
+  [    3.772062]  ? _raw_spin_lock_irq+0x10/0xe0
+  [    3.772546]  ? __pfx_autoremove_wake_function+0x10/0x10
+  [    3.773148]  ? __pfx_kthread_affine_node+0x10/0x10
+  [    3.773714]  ? __kthread_parkme+0x88/0x170
+  [    3.774196]  ? __pfx_iscsi_target_tx_thread+0x10/0x10
+  [    3.774775]  ? __pfx_iscsi_target_tx_thread+0x10/0x10
+  [    3.775352]  kthread+0x2c8/0x3b0
+  [    3.775733]  ? recalc_sigpending+0x15c/0x1e0
+  [    3.776236]  ? __pfx_kthread+0x10/0x10
+  [    3.776671]  ret_from_fork+0x36e/0x5a0
+  [    3.777109]  ? __pfx_ret_from_fork+0x10/0x10
+  [    3.777604]  ? __switch_to+0x572/0xdc0
+  [    3.778041]  ? __pfx_kthread+0x10/0x10
+  [    3.778482]  ret_from_fork_asm+0x1a/0x30
+  [    3.778937]  </TASK>
+  [    3.779201] Modules linked in:
+  [    3.779592] ---[ end trace 0000000000000000 ]---
 
-But I guess we can do it if we use the VFS_* macros which are compiled
-out unless CONFIG_DEBUG_FS is set. This will still mean that syzbot will
-start splatting at these subsystems. If we're fine with that I'm good to
-go with this.
+The tx thread dies there, and the teardown that follows walks into the
+connection it was using: a KASAN slab-use-after-free in do_send_sig_info()
+from iscsit_cause_connection_reinstatement(), a refcount warning in
+iscsit_close_connection() and a second Oops in kthread_stop().
 
-Fwiw, the check can't go into __vfs_setxattr(), __vfs_setxattr_noperm()
-or __vfs_removexattr(). cap_inode_killpriv(), IMA and EVM call those
-from ->write_iter() via file_remove_privs() and kiocb_start_write()
-hides the freeze protection from lockdep for aio and io_uring. I have
-not bothered to figure out why. Maybe you already know? In any case,
-until that's fixed we can't place it there which means this doesn't
-catch IMA/EVM at which point this patch becomes pointless.
+So let isert_post_recv() accept a command that has no descriptor, beside
+the already-reposted case it tolerates today, and fill in the two
+back-pointers the completion path needs, which isert_put_cmd() is
+already written for - its ISCSI_OP_REJECT arm releases a command whose
+se_cmd was never set up.
 
-So that kiocb_start_write() stuff needs to be sorted first by someone.
-I'm about 300+ patches or more deep into various tree-wide cleanups. I'm
-going to defer this as this seems minor to all the other sh*it that's
-waiting to be cleaned up.
+The unsolicited NOP-In is the same shape and is already kept away from
+iSER: iscsit_add_nopin() allocates its command the same way, and
+iscsi_post_login_start_timers() does not arm that timer for
+ISCSI_INFINIBAND.
 
--- >8 --
-Subject: [PATCH] fs: assert freeze protection for xattr and acl writes
-
-Writing an xattr or a POSIX ACL modifies the filesystem but
-vfs_setxattr() and friends leave freeze protection to the caller. Most
-callers get it from mnt_want_write(). Some in-kernel callers forgot
-about it. zloop and overlayfs are fixed earlier in this series and
-ecryptfs and ksmbd have been reported. Christoph asked for a debug check
-to catch the next one (cf. [1]).
-
-So warn in __vfs_setxattr_locked(), __vfs_removexattr_locked(),
-vfs_set_acl(), vfs_remove_acl() and set_posix_acl() if SB_FREEZE_WRITE
-isn't held. This only does something with CONFIG_DEBUG_VFS and lockdep.
-Without lockdep sb_write_started() can't tell and claims it's held.
-Until ecryptfs and ksmbd are fixed this will warn for them.
-
-Note that __vfs_setxattr(), __vfs_setxattr_noperm() and
-__vfs_removexattr() don't get the check. They're also called from
-->write_iter() via file_remove_privs() -> notify_change() for
-security.capability and by IMA and EVM. aio, io_uring and the in-kernel
-async writers call kiocb_start_write() which hides the freeze protection
-from lockdep before ->write_iter() is called. So the check would fire
-for writes that are perfectly fine.
-
-[1]: https://lore.kernel.org/r/20261116064820.GB2964@lst.de
-
-Suggested-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
+Fixes: 4366b19ca5eb ("iser-target: Change the recv buffers posting logic")
+Cc: stable@vger.kernel.org
+Signed-off-by: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
 ---
- fs/posix_acl.c | 6 ++++++
- fs/xattr.c     | 4 ++++
- 2 files changed, 10 insertions(+)
+ drivers/infiniband/ulp/isert/ib_isert.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/fs/posix_acl.c b/fs/posix_acl.c
-index fe77934ea8f20..61de6f105ff4f 100644
---- a/fs/posix_acl.c
-+++ b/fs/posix_acl.c
-@@ -942,6 +942,8 @@ set_posix_acl(const struct mnt_idmap *idmap, struct dentry *dentry,
- {
- 	struct inode *inode = d_inode(dentry);
+diff --git a/drivers/infiniband/ulp/isert/ib_isert.c b/drivers/infiniband/ulp/isert/ib_isert.c
+index efa8d7b7844c97..81164881dcc241 100644
+--- a/drivers/infiniband/ulp/isert/ib_isert.c
++++ b/drivers/infiniband/ulp/isert/ib_isert.c
+@@ -758,7 +758,8 @@ isert_post_recv(struct isert_conn *isert_conn, struct iser_rx_desc *rx_desc)
+ 	struct ib_recv_wr rx_wr;
+ 	int ret;
  
-+	VFS_WARN_ON_ONCE(!sb_write_started(inode->i_sb));
-+
- 	if (!IS_POSIXACL(inode))
- 		return -EOPNOTSUPP;
- 	if (!inode->i_op->set_acl)
-@@ -1099,6 +1101,8 @@ int vfs_set_acl(const struct mnt_idmap *idmap, struct dentry *dentry,
- 	struct inode *inode = d_inode(dentry);
- 	struct delegated_inode delegated_inode = { };
+-	if (!rx_desc->in_use) {
++	/* A command iscsit_add_reject() allocated has no descriptor. */
++	if (!rx_desc || !rx_desc->in_use) {
+ 		/*
+ 		 * if the descriptor is not in-use we already reposted it
+ 		 * for recv, so just silently return
+@@ -1958,6 +1959,9 @@ isert_put_reject(struct iscsit_cmd *cmd, struct iscsit_conn *conn)
+ 	struct iscsi_reject *hdr =
+ 		(struct iscsi_reject *)&isert_cmd->tx_desc.iscsi_header;
  
-+	VFS_WARN_ON_ONCE(!sb_write_started(inode->i_sb));
++	isert_cmd->conn = isert_conn;
++	isert_cmd->iscsit_cmd = cmd;
 +
- 	acl_type = posix_acl_type(acl_name);
- 	if (acl_type < 0)
- 		return -EINVAL;
-@@ -1220,6 +1224,8 @@ int vfs_remove_acl(const struct mnt_idmap *idmap, struct dentry *dentry,
- 	struct inode *inode = d_inode(dentry);
- 	struct delegated_inode delegated_inode = { };
- 
-+	VFS_WARN_ON_ONCE(!sb_write_started(inode->i_sb));
-+
- 	acl_type = posix_acl_type(acl_name);
- 	if (acl_type < 0)
- 		return -EINVAL;
-diff --git a/fs/xattr.c b/fs/xattr.c
-index 0705801a62cc5..715d04111c274 100644
---- a/fs/xattr.c
-+++ b/fs/xattr.c
-@@ -302,6 +302,8 @@ __vfs_setxattr_locked(const struct mnt_idmap *idmap, struct dentry *dentry,
- 	struct inode *inode = dentry->d_inode;
- 	int error;
- 
-+	VFS_WARN_ON_ONCE(!sb_write_started(inode->i_sb));
-+
- 	error = xattr_permission(idmap, inode, name, MAY_WRITE);
- 	if (error)
- 		return error;
-@@ -564,6 +566,8 @@ __vfs_removexattr_locked(const struct mnt_idmap *idmap,
- 	struct inode *inode = dentry->d_inode;
- 	int error;
- 
-+	VFS_WARN_ON_ONCE(!sb_write_started(inode->i_sb));
-+
- 	error = xattr_permission(idmap, inode, name, MAY_WRITE);
- 	if (error)
- 		return error;
-
+ 	isert_create_send_desc(isert_conn, isert_cmd, &isert_cmd->tx_desc);
+ 	iscsit_build_reject(cmd, conn, hdr);
+ 	isert_init_tx_hdrs(isert_conn, &isert_cmd->tx_desc);
 -- 
+2.43.0
+
