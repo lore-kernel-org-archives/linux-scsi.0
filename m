@@ -1,112 +1,101 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.160.181
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794858736;
-	b=Ldn4fCD9ag06UCvZl/SmnjZVkzQQpXhcGUwkfkM6UGqkzBhNiAeU2tMczT/dg8xznsaF
-	 w6d+nvknaBvyFfnKm24o0f7gRJE9CIagPGA7L+H8alNuFkzEWQ+Bc3xOkGC0qJ5M4gopP
-	 dixpYtR3DrMCwyyhoYLYNr4vRkFg+9Yg1ZbsaL9G0q/dZbH6MQCzNAKT9mgJIbljeYcPh
-	 GBhF9nPCl/qHVVYhE31qBwas+t2HrwYEUVARV+MsuNTFj7UpqRufqdAJt/88tvgra09aj
-	 lHj79K0Ti7YsFbyqVX8HeAmBSyzRehWZB34AtG2Z8LBa05Wnluo9f6kT13iH1omITng==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794858736;
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.221.41
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1794859451;
+	b=H20/84vtPKPQAervUc5lsT5U1vORC9s3GpQduMoLYDvKem/AERS3tIApMHlRngZODBQE
+	 52TzEtwumNVa+U4ErkHnueTnbOytu5DmboU83NOBajg7EV9MDLmfgBR4N7RWUS684LS4j
+	 xIn7bFxg/sqbHsPgVo/8zZrQRGU/mff1V9v14jq44nyv8W68oQNmITqOQj4Sk2fD26cg7
+	 iTIvbz3nbHZVW8rar/yqDmfr50DDV6lPJSwGfW+wUgVrLYvtGk4ytT+LzLh7snIOrcDfp
+	 oIXUkNw2kaILOaSRmELPum4MdRFYqKtNWrxtXQu10LXmulHnpixRv0lNW1XtWixuung==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794859451;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Received:Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To;
-	bh=jqnrRoTh5TcWr/Py+gEgzzX7wdMhzTlFxFkfLcpGuJM=;
-	b=b5+Uczqul2WkuP6dPgl2B0GliZ9k8U+s+WHmFEd17sg2uL+DSn3Q+kg1wmKFKYTllNl3
-	 GRwB/JNKxfmoiAOvtTR4w1O1A+hM/j77rXxvWyCbu8qCaYgUF/ruNZ9Tq87eMQ43uHjkr
-	 vxjoijF2Bx9kZdmrPb1/Iqi1R4gSgs2Ltxv8V9cJezJJzpknpPdEegkLKNF2vh3RJBafO
-	 ZB0NJFZslJDNkfbL2niWidjpX//YjtjEaNG5XLD3AxbSA0/TNVzZ6odvaeX5/elbi4R3m
-	 25Imd5sDgEH/Wlk6TPO7CjL8VfCOE3vqsQTA9XPRa1DdmKNVyHdT6i/leGZiMHtNzCg==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=ziepe.ca;
-	spf=pass smtp.mailfrom=ziepe.ca;
-	dkim=pass header.d=ziepe.ca header.i=@ziepe.ca header.a=rsa-sha256 header.s=google header.b=YcqWJI31;
-	arc=none smtp.remote-ip=209.85.160.181
-Received: from mail-qt1-f181.google.com (mail-qt1-f181.google.com [209.85.160.181])
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
+	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
+	 Message-ID:Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
+	bh=FEtpE65JhLGyAYaL/FOW2ebUIws2WwBZ/4Zy8VNXUuw=;
+	b=1nD6oE7h4wkwHB7PYDkQu1ZFL0cqZLctqk8vbAw1EeSPXEmd6ASqxRwGmPZOeikaiDRd
+	 sgJJxsSuqnK5EOlQvZou7NHD/YROBanw7cactglp0Vz9jAdyIecyATtOScdAo2cFkFeDX
+	 En2xVkbf3vpweVHbSdGp+sLmDfy+qbecAfkd5WLkaRoDDECM5wSRt4ZgJM+2r8IzISSz1
+	 GcN+p4EwggQHM0MPTxIFtaKbdLxsrrSvupNrayXXdn5iR6gfGEybpYGHfHTU0twKj/Nwv
+	 BqfXm7hPoTZFERsrQqsHEBVm2XMC964rJsK49vY2A3U8/HVXDEYZj8G7425v58HNZzw==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=hnqDx80H;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.221.41
+Received: from mail-wr1-f41.google.com (mail-wr1-f41.google.com [209.85.221.41])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09B0D606A322
-	for <linux-scsi@vger.kernel.org>; Mon, 16 Nov 2026 19:52:15 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 09B0D606A322
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32E9B606A331
+	for <linux-scsi@vger.kernel.org>; Mon, 16 Nov 2026 20:04:10 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 32E9B606A331
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.a=rsa-sha256 header.s=google header.b=YcqWJI31
-Received: by mail-qt1-f181.google.com with SMTP id d75a77b69052e-55c38cdd5b7so33737811cf.2
-        for <linux-scsi@vger.kernel.org>; Mon, 16 Nov 2026 11:52:15 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=hnqDx80H
+Received: by mail-wr1-f41.google.com with SMTP id ffacd0b85a97d-498f5fa5103so1736444f8f.2
+        for <linux-scsi@vger.kernel.org>; Mon, 16 Nov 2026 12:04:09 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1794859448; cv=none;
+        d=google.com; s=arc-20260327;
+        b=K7jtkGW3ZtwRnM6upe7zeFmD3h4T/5yWlGgisutVc8aR9vkAn/kIilgqWgszkT1qJD
+         8oO8KuU3co8PIUCeLiaMXYvjIB9iR1TIvT0Llg6Wp8+MdxLWJR7lBwU79iiVIgB3RmHY
+         QIQ9TkgZpGzpC58JBiRlqsVUM1XT6TvE2POPN8QHAI+dylPHxSSp0ayQH0DmNF4Yt1dI
+         fkXEYDR2NBiOrUD3y+0096QxYyXC3okhEfk6NlJlpvFr9GHwg+EOrMO1LVC70yZKNJvX
+         MmI3OGCsVTNq8CYqGc5+G7K2bvqRnSQnR8hRjlKowEdozj76IlFvJEyv0yDz9ZP2cl4N
+         ++og==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=FEtpE65JhLGyAYaL/FOW2ebUIws2WwBZ/4Zy8VNXUuw=;
+        fh=eWdCubqi67Gt8p70IlRhqaWFGwiK9Ekab29MUwCJHGc=;
+        b=KpfpGW1bZo4dE6RAs5fR0QhOJqoN0MMR97SD7PwRJa+QTgCrfaqF6rT8kegs06zypP
+         nHY2wD8lHS/YxKJi2VkeilSczgYIhmXe9/JVSjXmFpa6hXDqaGDPLM1TgXnMaUMP19Am
+         fIl1/wl9uL1+uoua6qQ0Dcwj0r4XIgtPjs3aqkrwzk0t+e6PpInanuxkWcfDKrKDpRoH
+         HDlc/Hk8yhVgSfR0RPP8lvSruCKnEQbCzn9NH/Rd7802CiplVPFOJ0m+iz63yUWkv0l+
+         ZrDRpAH7Y0yMkCiR5MGPnQtpgYddelaRCCfOqttAxatYdoYPmOlxcPuH5IWokpnaOyX9
+         CEJw==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google; t=1794858735; x=1795463535; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+        d=gmail.com; s=20260707; t=1794859448; x=1795464248; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=jqnrRoTh5TcWr/Py+gEgzzX7wdMhzTlFxFkfLcpGuJM=;
-        b=YcqWJI31Q3We3zqNvL52aNkFr++cowdUSJ0aOSCLtCZgOyPTfxfZMV4aawKPfLKj7g
-         4m2sGeUiA0CXGadMrFuMRIl89TE0lacup406nbrhvwqwPIX8FxoVlYidwE8/s7P7Wszm
-         OrbfdLGk33YGmzpkBYmsq4F3Mxnt+4Lu+TymHPjdbgW2SfeAeQs52uRWqh/1XVhhLOxn
-         GvpMlDfLIXvCkNJG/BKPMpLBeKmXfFzSUPrKKeUURMUv+fsornqCLKr9GiRTo2LK7Tab
-         rlciZWXd7u0mEyCoyMVRbS74CtgQ2ZcTLr22IpH7H7u3DgVnSQkVWAwVkGPORAQHY8UQ
-         R7qQ==
+        bh=FEtpE65JhLGyAYaL/FOW2ebUIws2WwBZ/4Zy8VNXUuw=;
+        b=hnqDx80H1BHGMZ+jCw863LQE2wm4hG6wTw//ziQNWkZpZIjdyNNCtFJNcbykSvuJWZ
+         RrqgQGru9l+9Rlw9NCoAO7RXSeH6CHzRwb+h6TsbT77V+vTLtC7o5AslWzWJ8+7yhciq
+         sbJxN7Yoz6y6VYO91QUyEDVlXVHt5e/uzOZriYhKEljZIduQH6pNfhdOY5sHlJFueOxf
+         bN/uTLfuNBjnHaTZ+WukZQS/Wa30tWyiKsfqEPmOKtkcPCgN1gGIeLsa9pfco/3ZvP3P
+         koo3Bb9/+esUnHdHS2hTd5qtXE/k/xctadMJUuU/zchcL0VDKvTRNofZgdIQ6mLOou9W
+         X5rA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794858735; x=1795463535;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
+        d=1e100.net; s=20260707; t=1794859448; x=1795464248;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=jqnrRoTh5TcWr/Py+gEgzzX7wdMhzTlFxFkfLcpGuJM=;
-        b=Y+nruu464OYpYFKoOEpiadi0vLF0BiSe3UJ8Ku0lYQCXCkLV1z3lEY6EDRssuzDU2O
-         34GIcw8l76qiNyxVHQj3UBBA6ceGhQBE5HElVe2lulUrtMW5ZPsFpXiM2ZqmK5WvOD4j
-         9Yvu56L0NryV2lOqBsQdWl0zZURs68BgVyyF/z7GqPE3oDP5HUVfHKfpLjcyOb5AzKzt
-         exgD7YyE16iVEKw+SlVn82hGvId1kIBpWB92JajlV+m9qXPJ/IY0O27CAoDuEf5RtBl9
-         Luv8V9NMEH0Ap6MeYXPQKTsmzpzy45SZxX7pEiTdOaUgcoHlnfdTabVwCTMsNw/KlY41
-         e9jQ==
-X-Forwarded-Encrypted: i=1; AL+hErF9RPm7GZXm5TlNkYeQ1PKCs0iRXP06kKSkFNjrM40JXW9NvtUDkyRU7GYD4/FSvZ0ATr6/kriWdfWx@vger.kernel.org
-X-Gm-Message-State: APuU4Z+Rnftm/IauoE5JBtFK4Q+SlHAmEUb+Dh9pxqyIMSfG5X5vOl+n
-	E27pwIIjy6F6QSWI5TVhSkTHOGMcXfpvrCcCKu6M47MEIz57o5DLkgEzq8soiAUZ5B4=
-X-Gm-Gg: AYBFou1W26xfrqoC1TdL7y7UE/ckh3siUfdsg8B5aEhpMXqR5kx393CLgW39boqT6Ky
-	OpxVmePZ+w/m1GzImYIpIwr5XsuIbnNG4JphBJPllk7STPtNO2LkY+DO7bGBQXIMqXcbO0jIHeU
-	u8//nE4vQhS0ozopB/XjWgIMhQlHUO3zHnWVvKEl/t7bw/dW4BQ22paVRFePDiEVe9uMjM7JM7Q
-	hRFX3xICOgKoRYOFecqxTGvHP1+YtvE2eK4OspVdDxuYcROpguZ30zzmIhROW9afp+YEiPkwhO4
-	qSL6/OEDgKboelrKtiAdMIM6Xt1r/VGq6kcw8amWxWkpQXpE3ibgBvt2Ik+YJUbxzlpmS466yrQ
-	kqlEfkBIq6up3FUEPvNkIacmLi6Q19rp56cqRLOeyTf7hpL1mL29Le/CR9bYyrLQQ0Qa1f/jWp+
-	Q+x6w4ODOAYt3dh8s/vnRxYnGirqNoVf/lU6CD47wLRbzjG0v3ByqU/3AYW+n7/eVbBmqpMKO6K
-	kHVTLweusNFQHiAqa5osoS4wpzF/AQllplKRSfWO8+R1X0THlC/9JhqM5HE2XjAXia91cD+3e3i
-	S9eY7w==
-X-Received: by 2002:a05:622a:13c6:b0:55c:c7ab:4445 with SMTP id d75a77b69052e-55cc7ab469bmr121785021cf.29.1794858734926;
-        Mon, 16 Nov 2026 11:52:14 -0800 (PST)
-Received: from ziepe.ca ([142.166.156.71])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-91f8319d44bsm48973876d6.4.2026.11.16.11.52.13
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 16 Nov 2026 11:52:14 -0800 (PST)
-Received: from jgg by wakko with local (Exim 4.97)
-	(envelope-from <jgg@ziepe.ca>)
-	id 1xT2kP-0000000ALbT-12cG;
-	Mon, 16 Nov 2026 15:52:13 -0400
-Date: Mon, 16 Nov 2026 15:52:13 -0400
-From: Jason Gunthorpe <jgg@ziepe.ca>
-To: Tao Cui <cui.tao@linux.dev>
-Cc: akpm@linux-foundation.org, dgilbert@interlog.com, mkp@kernel.org,
-	loberman@redhat.com, jmeneghi@redhat.com, kraxel@redhat.com,
-	vivek.kasireddy@intel.com, mst@redhat.com, jasowangio@gmail.com,
-	eperezma@redhat.com, stefanha@redhat.com, sgarzare@redhat.com,
-	rostedt@goodmis.org, vdonnefort@google.com, mhiramat@kernel.org,
-	kevin.tian@intel.com, axboe@kernel.dk, linux-mm@kvack.org,
-	James.Bottomley@hansenpartnership.com, sumit.semwal@linaro.org,
-	christian.koenig@amd.com, phasta@kernel.org, joro@8bytes.org,
-	will@kernel.org, linux-scsi@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, linux-media@vger.kernel.org,
-	linaro-mm-sig@lists.linaro.org, kvm@vger.kernel.org,
-	virtualization@lists.linux.dev, linux-trace-kernel@vger.kernel.org,
-	iommu@lists.linux.dev, io-uring@vger.kernel.org,
-	linux-kernel@vger.kernel.org, bobbyeshleman@meta.com,
-	mathieu.desnoyers@efficios.com, robin.murphy@arm.com,
-	mason@kernel.org, aesteve@redhat.com, tjmercier@google.com,
-	harry@kernel.org, vbabka@suse.cz, cuitao@kylinos.cn
-Subject: Re: [PATCH 5/7] iommufd: account the hw_queue page array to memcg
-Message-ID: <20261116195213.GF2452510@ziepe.ca>
-References: <20261106131829.3228926-1-cui.tao@linux.dev>
- <20261106131829.3228926-6-cui.tao@linux.dev>
+        bh=FEtpE65JhLGyAYaL/FOW2ebUIws2WwBZ/4Zy8VNXUuw=;
+        b=vjNo4D0lCSXJyLJTx0BzcYoUesolaqhjumhDJqUgARvp5NnKzgNe9nOHz9YEQ1xWRn
+         YkebrCfDDxh2RW80JMaZDMrUXNzUmtsjyIhPQ9NX+MutIYpVb2wyQ8Wj8PXKyJ8vVdFG
+         ho98S4m0ed9+kUoeKRgDHp+knjzuiK0NrXyWZKZfFL77CIY0AlllIQ8zvCiwEzRNpLaB
+         qPaB/z6gyhMy7vD+sx6+K5h4zc4Q2hKDZMtqHxzUAqJK1FjCC5YeXGvIN87J2EEnYbm3
+         WKFAvMcaKCA4hfTsuXB0A4Ep0jImTgSYQ3OZ4F6JXPTEDzFPEk84TRxHHgij29eNY6Km
+         OQBw==
+X-Forwarded-Encrypted: i=1; AL+hErFnpbWGfAAo4ad326A8JVVETSx56ec6+VmMl13BnFRF+UoIndqN/ezjnhXn4SpyExY/FBGNpttTXTgg@vger.kernel.org
+X-Gm-Message-State: APuU4Z+RvfHe9sP4+3PaSvF4kz/tZ5ggRuJBHUDRbVS8JDVrw+M1h4EJ
+	BAcdMzlxtHlStldW090AsmiQ/Ss7/RMTnbFRB1VOSs2rDY9YgNAWcHeRAWTmeEw0C7j4Wuzxbgu
+	GsF9Hvwk2WGls2LiUyI1vOWnbWiaBr0A=
+X-Gm-Gg: AZFdTZc+d6MHou1lZH9SoTV27z6zMo+r+jXJ74xQG5gkwyhi5j2DJPwM/LHeVxdJLo6
+	cjwjwPFRvZTAgRsjdUyarmIPYI7bkbtyZ7kt8vRIH4XfBGcVn2vSY1NSr4tf92znc2dJ4p1Frjv
+	Ms/IFtfTZHqAb9mOiZMMhmHxGneOb4m+s6qAN+mDusWoXVdoCFrIR4cCL366LcT15Ku0T3m6qs4
+	suq3k99SgebV/IfzFFOkCfQ91oYaqw67IO7O6GzSBB2VwGekBE8AJqINzQ6oX2St9yyErzGzInt
+	Ye30O3we5D91mGhj6MrvN8zQ77wIbotvfCWs00a7lPvYmXP9RE/OJ9lD7HQW7tJaqRLztWTf5P3
+	DOBqFouPULPUARrnw2WgdzJzAW+rIyeiwS4/k16j6BoopjW6+ITi7y5a0UQvL5yNPoAVHAv5KKD
+	RMwQppuEEpzGYkDUM+YtQ=
+X-Received: by 2002:a05:6000:4692:b0:491:3fdd:af34 with SMTP id
+ ffacd0b85a97d-49d61c80db3mr13343868f8f.36.1794859448335; Mon, 16 Nov 2026
+ 12:04:08 -0800 (PST)
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -116,30 +105,81 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261106131829.3228926-6-cui.tao@linux.dev>
+References: <20261116-work-loop-pseudo-v3-0-8cbbea1cf34f@kernel.org> <20261116-work-loop-pseudo-v3-9-8cbbea1cf34f@kernel.org>
+In-Reply-To: <20261116-work-loop-pseudo-v3-9-8cbbea1cf34f@kernel.org>
+From: Andrii Nakryiko <andrii.nakryiko@gmail.com>
+Date: Mon, 16 Nov 2026 12:03:57 -0800
+X-Gm-Features: Aa3M54q6P4M0RFDCKQ8HHGNCWJafItTSPdWR1qNwVGtToDAv2VOv8vDfWHzYR6A
+Message-ID: <CAEf4BzbLFVawibuX0wk=8uzy0WZSYHbkgK55d7rqLab2qAM1Fg@mail.gmail.com>
+Subject: Re: [PATCH RFC v3 09/44] bpf: use fc_init_pseudo() for bpffs
+To: Christian Brauner <brauner@kernel.org>
+Cc: linux-fsdevel@vger.kernel.org, Jann Horn <jannh@google.com>, 
+	Chris Mason <mason@kernel.org>, Josef Bacik <josef@toxicpanda.com>, Christoph Hellwig <hch@lst.de>, 
+	linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-nvme@lists.infradead.org, Alexander Viro <viro@zeniv.linux.org.uk>, 
+	Jan Kara <jack@suse.cz>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, 
+	driver-core@lists.linux.dev, linux-mm@kvack.org, bpf@vger.kernel.org, 
+	linux-security-module@vger.kernel.org, selinux@vger.kernel.org, 
+	apparmor@lists.ubuntu.com, linux-nfs@vger.kernel.org, netdev@vger.kernel.org, 
+	fuse-devel@lists.linux.dev, linux-efi@vger.kernel.org, 
+	xen-devel@lists.xenproject.org, ocfs2-devel@lists.linux.dev, 
+	linux-s390@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, 
+	linux-usb@vger.kernel.org, Amir Goldstein <amir73il@gmail.com>, 
+	linux-erofs@lists.ozlabs.org, linux-kselftest@vger.kernel.org, 
+	Alexander Mikhalitsyn <alex@amutable.com>, Chris Down <chris@chrisdown.name>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Fri, Nov 06, 2026 at 09:18:27PM +0800, Tao Cui wrote:
-> From: Tao Cui <cuitao@kylinos.cn>
-> 
-> IOMMUFD_CMD_HW_QUEUE_ALLOC pins up to max_npages pages just to check
-> that a user supplied queue region is physically contiguous, and the
-> page array for that check is plain GFP_KERNEL.  The size comes from
-> cmd->length, a u64 that is only overflow checked, and the array is
-> freed again as soon as the contiguity check fails, so the allocation
-> can be repeated concurrently: a 1GB region costs about 2MB of
-> uncharged memory per attempt.
-> 
-> Every other iommufd allocation that scales with user input is already
-> charged, and the pinned pages charge the mapper at map time.  Charge
-> this array like the rest.
-> 
-> Signed-off-by: Tao Cui <cuitao@kylinos.cn>
+On Mon, Nov 16, 2026 at 3:21=E2=80=AFAM Christian Brauner <brauner@kernel.o=
+rg> wrote:
+>
+> Initialize bpffs as a pseudo filesystem instead of raising
+> SB_I_NOEXEC and SB_I_NODEV by hand. This adds SB_I_PSEUDO.
+>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Alexander Mikhalitsyn <alex@amutable.com>
+> Reviewed-by: Chris Down <chris@chrisdown.name>
+> Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 > ---
->  drivers/iommu/iommufd/viommu.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
+>  kernel/bpf/inode.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+>
 
-Reviewed-by: Jason Gunthorpe <jgg@nvidia.com>
+Acked-by: Andrii Nakryiko <andrii@kernel.org>
 
-Jason
+> diff --git a/kernel/bpf/inode.c b/kernel/bpf/inode.c
+> index c6f328e4752e1..57cf3775c0766 100644
+> --- a/kernel/bpf/inode.c
+> +++ b/kernel/bpf/inode.c
+> @@ -15,6 +15,7 @@
+>  #include <linux/namei.h>
+>  #include <linux/fs.h>
+>  #include <linux/fs_context.h>
+> +#include <linux/pseudo_fs.h>
+>  #include <linux/fs_parser.h>
+>  #include <linux/kdev_t.h>
+>  #include <linux/filter.h>
+> @@ -1197,8 +1198,6 @@ static int bpf_fill_super(struct super_block *sb, s=
+truct fs_context *fc)
+>         sb->s_magic =3D BPF_FS_MAGIC;
+>         sb->s_op =3D &bpf_super_ops;
+>         sb->s_xattr =3D bpf_fs_xattr_handlers;
+> -       sb->s_iflags |=3D SB_I_NOEXEC;
+> -       sb->s_iflags |=3D SB_I_NODEV;
+>         sb->s_time_gran =3D 1;
+>
+>         inode =3D bpf_get_inode(sb, NULL, S_IFDIR | 0777);
+> @@ -1261,6 +1260,7 @@ static int bpf_init_fs_context(struct fs_context *f=
+c)
+>         opts->delegate_attachs =3D 0;
+>
+>         fc->s_fs_info =3D opts;
+> +       fc_init_pseudo(fc);
+>         fc->ops =3D &bpf_context_ops;
+>         return 0;
+>  }
+>
+> --
+> 2.53.0
+>
+>
