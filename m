@@ -1,56 +1,50 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794825060;
-	b=y9WDPYMVtEHkxtKmvj7khizjKU2C8HChKDkG+o3GL/5+LkviENP0pIXuVW5tsN2bjIQL
-	 StqTrFMAP7TiCtGYMXQbQ93aC+reQ0UelZzXuO5Z0t3SzvpOAEqzpHYloRRWkpeihBsF7
-	 2SRA75z07r0LtkCeQISYkymf0028tffdDxBcNDv/Qg2XQzHyokTCMcCMG1587DA99W5QI
-	 xyR3QaYS5u1M+H4Upq5wEuDco21DhZbU9/6onUl+DILslNDlWH2+/VdaVQreVuthxuRgx
-	 1R4QYyt3Q8fiTNemNfWT3HEYtufiXkWebK5Jjd1xgFJp8zxPvzkqpP2rAanDEy7zcFw==
+	t=1794827065;
+	b=Mp2w7l8puSqP3/mF7EOi+lC0EvA2gs2oy/OCov4A4yEuYtHGHgdcOggC0KZvLGtvLDFx
+	 0XCvFqOW1MT5GKYnKhJ9LXdGi1Ahod1onLqDJoBM/I8RMM7grpdXtmvimAU7xFMa8jWWa
+	 01ndclItPf2lv0VY0WmWVAbSkjzr3nr9UTjEFcrySVlXxfofvUq6CiMBGptfwfC9Zulw5
+	 OeuOIglFzgaM91DzhdgchTsEobJFFM5Xzr9my9PIh9Y67NnDgBiBzaGp+9NogYn/mDtKz
+	 Dya/fJjjNd05LyAvhBE9UAQFRcpjBTY9HW44lF7BShYnYJ1kDk3oHXcdGeawFqtdhGg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794825060;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=hFxx3gDaH6OWqSq1KtCp0wy+9fGsSzjcn1OQvJWi0zQ=;
-	b=3Xr1/w154oHeRtZhXxCC/d0cqDvz/FvnrI9lRXS+f6cIvSdKp6g/6Fd9GxoRoZjCC6bx
-	 BUK6C5S95X1cml1B0uBTf9W6ekdONT81r7XXTDZPqD/g0dks1l24D1P+s2A360V2xHVDU
-	 SRS62LPD6aUs2DQXbiqPawa86FBJe0T/ikkzSVIaxWTAcQ+ZEmFELSOGFebPRb7aqdXMa
-	 HA7AVuAb5v/yvWXZ2mevVk+vRlntAUfUJm5DwrSHTTxJCpQSPzrQ/1VcWda9cEGevvuJA
-	 LBDFiu5uJmjGSugcH0K/RB/Bjehec3YoZkz3Si4Gzo1PnJb5DCK/0Lgi9hPsp3GoRdg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794827065;
+	h=Received:DKIM-Signature:From:Subject:Date:Message-Id:MIME-Version:
+	 Content-Type:Content-Transfer-Encoding:X-B4-Tracking:X-Change-ID:To:
+	 Cc:X-Mailer:X-Developer-Signature:X-Developer-Key;
+	bh=K6hcsOKot76i6ofOuhnqMqhE4PYGjzAJldUZv2AbfjY=;
+	b=TZYjSp03rT+BhHwAj4k+bVnSSruv9QB2cqbeYrkt/vay3puYzYIsXEWTANx4zREiIf0c
+	 TDLOQSXShhPwQ/qU6NfrdnahhpaES3HY4LJsSLnd4iRT7Zxqt9MU5dJ6lIMU4+j3Yi00w
+	 yiWx3YqE9OZ9bmYljqx44ihORSPhK1DyM2wuUlZgG+jIpdSPYsSnT5XEPUAISs6MnCX2D
+	 ADmy6O8HgfjKfIeGIAx2Wn82pRJChEBFHtC6iKMXq6D9QRQ2AmKUqcelP8BfOIg2dIyP5
+	 EXHr1zObHA4sRK9oN5BULjo1puzSzVAdYDo6vNVulLxwgChhAy+S+9vdV8OsMiMzKdg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=U9ODOZNn;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Yv+83Ada;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2446606A323;
-	Mon, 16 Nov 2026 10:30:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1331E606A323;
+	Mon, 16 Nov 2026 11:04:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=U9ODOZNn
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6E8ED1F000C5;
-	Mon, 16 Nov 2026 10:30:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Yv+83Ada
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 086591F000D1;
+	Mon, 16 Nov 2026 11:04:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794825059;
-	bh=hFxx3gDaH6OWqSq1KtCp0wy+9fGsSzjcn1OQvJWi0zQ=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=U9ODOZNnAaedDCu6vACne+lwsl51B65JxE8KTUPgK1ou80J00Ru8I0uIPZOne0sfo
-	 LwatkvxbEv2ZOxn22qkO/tUbZxpftH8o+O7MdcBQSyrY4dY21AXGQExHWyFTWLIuxC
-	 d2AXzs8IIP6DMW+pBzVZikgeYzmLiLZ72yO8gj8NwkjQMSvQrxZw3l/K/kGvNzaumr
-	 0eyQnMituHl3mIDECYkeK9HlhcEIHDYK1X8Cqt2N3xD/F9lUzo2Og2i8T/PNKrjd72
-	 MFDqtT5X4jLC6V6rw8tqUpslYK6Vg4y/1ZnsVucvDJthZtTiz7HgqWeYQ26E8MzvvZ
-	 b0xCcZtlZ25WA==
-Message-ID: <sashiko-outbox-216740@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 1/2] IB/isert: finish a Reject the target core allocated
- itself
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Yehyeong Lee" <yhlee@isslab.korea.ac.kr>
-Cc: linux-rdma@vger.kernel.org, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
-In-Reply-To: <20261116101108.1650132-1-yhlee@isslab.korea.ac.kr>
-References: <20261116101108.1650132-1-yhlee@isslab.korea.ac.kr>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 16 Nov 2026 10:30:59 +0000
+	s=k20260515; t=1794827064;
+	bh=K6hcsOKot76i6ofOuhnqMqhE4PYGjzAJldUZv2AbfjY=;
+	h=From:Subject:Date:To:Cc;
+	b=Yv+83AdaI+rMIF6ZcVumQESxSFqk/+q4KEQ/dNYe1vqGAjhO4UZuY0f32upeyeIcL
+	 U7luNKMRuAsOI84eZrIlAJi/zJYCE8A/tcPIQNVv+qkGeMR+iT2Qd/a23r3cWeRQU+
+	 uTSVeXg9wu6s2JknLRPylmOgOMgs4JvwAc752i150GOLDrUHLrkFmN2Gzfynarvx/9
+	 MQjhumagM8tTagR1n3h7iQmHaV8zyZ3rBpUM5zVesg7Yce9jIpL6WN2evAWJQVcUQz
+	 5lL6SvuerYCNW4EDL0oKuEOdAKrLTwc4zYsCSCXp8DAReNjFGyaadFvjQMB+WH5CwD
+	 iQFheHbOkWpOg==
+From: Christian Brauner <brauner@kernel.org>
+Subject: [PATCH v2 00/17] fs: take freeze protection for writes to backing
+ files
+Date: Mon, 16 Nov 2026 12:03:40 +0100
+Message-Id: <20261116-work-fs-frozen_writes-v2-0-ecc4a2aac40e@kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -59,95 +53,111 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAAAAAAAC/3WOQQ6CMBBFr0K6toRWRHTlPQwxbZ1CxbRmBkEl3
+ F2KceHC5Zv8eXkjI0AHxPbJyBB6Ry74GeQqYaZRvgbuzjMzmclCCLHmQ8CWW+IWwwv8aUDXAfE
+ sl0ZtC6mtLtn8e0Ow7rF4j9WH6a4vYLooiwutCLhG5U0TT1GbWkp/tGkcxXHjqAv4XCp7EaXfo
+ PxPUC94xu1GQSFMuSu1OLSAHq5pwJpV0zS9AYIJ+TH6AAAA
+X-Change-ID: 20261113-work-fs-frozen_writes-042ca762bfb8
+To: Jan Kara <jack@suse.cz>
+Cc: Shakeel Butt <shakeel.butt@linux.dev>, 
+ Alexander Viro <viro@zeniv.linux.org.uk>, Jens Axboe <axboe@kernel.dk>, 
+ linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ io-uring@vger.kernel.org, Christoph Hellwig <hch@lst.de>, 
+ linux-block@vger.kernel.org, linux-nvme@lists.infradead.org, 
+ linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, 
+ linux-unionfs@vger.kernel.org, bpf@vger.kernel.org, 
+ linux-nfs@vger.kernel.org, 
+ "Christian Brauner (Amutable)" <brauner@kernel.org>, stable@vger.kernel.org, 
+ Amir Goldstein <amir73il@gmail.com>
+X-Mailer: b4 0.17-dev-ce4c1
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3938; i=brauner@kernel.org;
+ h=from:subject:message-id; bh=aJ8lkhUZfSAZD0d0zDSWnIQ89Aj8tUdfJ3u4ID7PtUE=;
+ b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWT9eixbv91/Cx9PdNTthXsErvIYvLi4cEr/18tX/HtEJ
+ pfvP/W+sKOUhUGMi0FWTJHFod0kXG45T8Vmo0wNmDmsTCBDGLg4BWAie24w/A+ctEfepmXaNH6+
+ fUv+voy9HejBG/Od15BdYyPzrWxh5+WMDKe+GJ5fa2TqoDH18nZZNmF57r7kO2y31r/wVrK0UDL
+ h4QAA
+X-Developer-Key: i=brauner@kernel.org; a=openpgp;
+ fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 
-Thank you for your contribution! Sashiko AI review found 1 potential
-issue to consider:
-- [High] IB/isert: late or missing isert_cmd init for target-allocated
-  commands
---
+While testing the pseudo filesystem series I noticed that zloop, the
+nvme target's file backend and the fileio backend of the scsi target
+with fd_async_io=1 call ->write_iter() of their backing files without
+taking freeze protection. So their writes go straight through to a
+frozen filesystem. ext4 complains loudly:
 
-commit 7a5bd9118f37880c28b788536bd93564bfb3692e
-Author: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+    WARNING: fs/ext4/ext4_jbd2.c:90 at ext4_journal_check_start+0x1f6/0x2d0
 
-IB/isert: finish a Reject the target core allocated itself
+Loop doesn't get it right for discard and write zeroes. Those end up
+calling ->fallocate() of the backing file directly. The fileio backend
+does the same for UNMAP. And zloop records its write pointers on flush
+with vfs_setxattr() which leaves freeze protection to the caller. So all
+of them modify a frozen filesystem just the same. Fix them too.
 
-This commit updates isert_post_recv() to ignore commands without a receive
-descriptor and initializes isert_cmd->conn and isert_cmd->iscsit_cmd in
-isert_put_reject() for reject commands allocated by iscsit_add_reject().
+Looking for more of the same turned up a few simple ones. coredump
+truncates the core file, overlayfs stores its uuid xattr on mount, nfsd
+truncates on OPEN and the BPF xattr kfuncs modify xattrs, all without
+freeze protection. Fix those as well. The ones that need more work in
+their subsystems I have reported separately.
 
-> diff --git a/drivers/infiniband/ulp/isert/ib_isert.c b/drivers/infiniband=
-/ulp/isert/ib_isert.c
-> index efa8d7b7844c9..81164881dcc24 100644
-> --- a/drivers/infiniband/ulp/isert/ib_isert.c
-> +++ b/drivers/infiniband/ulp/isert/ib_isert.c
-> @@ -758,7 +758,8 @@ isert_post_recv(struct isert_conn *isert_conn, struct=
- iser_rx_desc *rx_desc)
->  	struct ib_recv_wr rx_wr;
->  	int ret;
-> =20
-> -	if (!rx_desc->in_use) {
-> +	/* A command iscsit_add_reject() allocated has no descriptor. */
-> +	if (!rx_desc || !rx_desc->in_use) {
->  		/*
->  		 * if the descriptor is not in-use we already reposted it
->  		 * for recv, so just silently return
-> @@ -1958,6 +1959,9 @@ isert_put_reject(struct iscsit_cmd *cmd, struct isc=
-sit_conn *conn)
->  	struct iscsi_reject *hdr =3D
->  		(struct iscsi_reject *)&isert_cmd->tx_desc.iscsi_header;
-> =20
-> +	isert_cmd->conn =3D isert_conn;
-> +	isert_cmd->iscsit_cmd =3D cmd;
-> +
->  	isert_create_send_desc(isert_conn, isert_cmd, &isert_cmd->tx_desc);
->  	iscsit_build_reject(cmd, conn, hdr);
->  	isert_init_tx_hdrs(isert_conn, &isert_cmd->tx_desc);
+The fileio backend also frees its aio command in the completion handler
+while the filesystem may still be using the kiocb. KASAN catches ext4
+doing that for direct reads on v7.4-rc1. ext4 gets its own fix (cf. [1])
+but fileio should hold a reference across the submission like loop,
+zloop and fs/backing-file.c do.
 
-[Severity: High]
-Can a target-allocated command still reach isert_put_cmd() or
-isert_send_done() with NULL isert_cmd->conn and isert_cmd->iscsit_cmd?
+[1]: https://lore.kernel.org/r/20261113-work-ext4-dio_read_kiocb-v1-1-172a88be803c@kernel.org
+[2]: https://lore.kernel.org/r/20261116064654.GA2964@lst.de
 
-iscsit_add_reject() links the zeroed command (with targ_xfer_tag =3D=3D 0) =
-onto
-conn->conn_cmd_list before queuing it to the response queue.  If the
-initiator sends an immediate NOP-Out with itt =3D=3D 0xffffffff and ttt =3D=
-=3D 0,
-iscsit_process_nop_out() matches the reject command on conn->conn_cmd_list
-and queues it with ISTATE_REMOVE on the immediate queue:
+Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
+---
+Changes in v2:
+- Add kiocb_write_iter() and kiocb_end_write_iter() and use them for
+  zloop, the nvme target and fileio as per Christoph's suggestion.
+- Add a file_write guard and use it for loop discard and write zeroes
+  and fileio unmap.
+- Convert loop, vfs_iocb_iter_write() and fs/backing-file.c to the new
+  helpers.
+- Only complete the fileio target command when the last reference to
+  the aio command is dropped.
+- Link to v1: https://patch.msgid.link/20261114-work-fs-frozen_writes-v1-0-f5ae61c898b1@kernel.org
 
-drivers/target/iscsi/iscsi_target.c:iscsit_process_nop_out() {
-	...
-	if (hdr->ttt !=3D cpu_to_be32(0xFFFFFFFF)) {
-		cmd_p =3D iscsit_find_cmd_from_ttt(conn, be32_to_cpu(hdr->ttt));
-		if (!cmd_p)
-			return -EINVAL;
+---
+Christian Brauner (17):
+      fs: add kiocb_start_write_trylock()
+      fs: add kiocb_write_iter() and kiocb_end_write_iter()
+      fs: add file_write guard
+      zloop: take freeze protection for writes
+      nvmet: take freeze protection for writes to files
+      target: fileio: don't free the aio command under the filesystem
+      target: fileio: take freeze protection for aio writes
+      loop: take freeze protection for discard and write zeroes
+      zloop: take freeze protection when recording write pointers
+      target: fileio: take freeze protection for unmap
+      coredump: take freeze protection for the truncate
+      ovl: take freeze protection when storing the uuid
+      bpf: fs/xattr: take freeze protection in the xattr kfuncs
+      nfsd: take freeze protection for the truncate on open
+      loop: use kiocb_write_iter()
+      fs: use kiocb_write_iter() in vfs_iocb_iter_write()
+      backing-file: use kiocb_end_write_iter()
 
-		iscsit_stop_nopin_response_timer(conn);
+ drivers/block/loop.c              | 13 ++++---
+ drivers/block/zloop.c             | 12 +++++--
+ drivers/nvme/target/io-cmd-file.c | 20 +++++++----
+ drivers/target/target_core_file.c | 31 +++++++++++-----
+ fs/backing-file.c                 |  8 ++---
+ fs/bpf_fs_kfuncs.c                |  8 +++++
+ fs/coredump.c                     |  6 ++--
+ fs/nfsd/nfs4state.c               | 10 +++++-
+ fs/overlayfs/util.c               |  8 +++--
+ fs/read_write.c                   |  7 ++--
+ include/linux/fs.h                | 75 +++++++++++++++++++++++++++++++++++++++
+ io_uring/rw.c                     |  9 +----
+ 12 files changed, 158 insertions(+), 49 deletions(-)
+---
+base-commit: 6628e7d4c6b25c8d18f1345e3a20d21829aae7e4
+change-id: 20261113-work-fs-frozen_writes-042ca762bfb8
 
-		cmd_p->i_state =3D ISTATE_REMOVE;
-		iscsit_add_cmd_to_immediate_queue(cmd_p, conn, cmd_p->i_state);
-
-		iscsit_start_nopin_timer(conn);
-		return 0;
-	}
-	...
-}
-
-Because iscsi_target_tx_thread() drains the immediate queue before the
-response queue, isert_immediate_queue() calls isert_put_cmd() before
-isert_put_reject() has populated isert_cmd->conn and isert_cmd->iscsit_cmd,
-causing a NULL pointer dereference (or freeing the command while it remains
-queued on conn->response_queue_list).
-
-In addition, both iscsit_process_nop_out() above and
-iscsit_na_nopin_timeout() start nopin_timer without checking for
-ISCSI_INFINIBAND.  When that timer fires, iscsit_add_nopin() allocates an
-unsolicited NOP-In via iscsit_allocate_cmd() and queues it to
-isert_immediate_queue() -> isert_put_nopin().  Now that isert_post_recv()
-accepts a NULL rx_desc, isert_put_nopin() posts the send work request
-without setting isert_cmd->conn or isert_cmd->iscsit_cmd, and
-isert_send_done() dereferences a NULL isert_cmd->iscsit_cmd on completion.
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261116101108.1650=
-132-1-yhlee@isslab.korea.ac.kr?part=3D1
