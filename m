@@ -1,53 +1,53 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794865036;
-	b=wMF0jjJ3k6PcakA9HnVqfU9FL6JZdOB2HaZNHBEQwnbfX1pX4ZeQ90d1WMuCowjqJwfF
-	 LWwVJTeaTytG+TqoJeiJiGXjLEoCPADPQw97VOCSOBay+ODJ0zpkNmiy6L8v48GhWTngP
-	 zl3KeW0nOHe+ueSSOjTbPiyIuMI6cw97kIes7GOtlsBbw7OSuMNhxo2+f3f5FS7ghNwEr
-	 D3UkbraziRx9qoM/sMbZ7biN00fqZn98z0g9VcsM2F8iq75tjZDqSIb1DUn1DhcvnmBZm
-	 8KRDg8GEJlbzGVInMS2Dpu+YgG5oDQGH8xX8xiIp3wzlQwQ4xlL3zJA61UnG7tWkMWg==
+	t=1794865027;
+	b=eR1fDnBDBUECQY+hraPdwZV0HFA+gWuSJ9BuHaN/lYRhZ0odOao37H0N5l92922ecBAD
+	 Y5LT5wxPbkwfDO0DwsadyV26q6pq7T9FFakC6yjiKPXBtEET165r6mrfOEUjxsybgeBG1
+	 bNJgg3VdBr8sCau008IthvOfCD1dVTy3D1gv1qQUyNKvq0IxtU6DckE84lhh505CJ0SDi
+	 EwNDg0dUmdD0AaUQjiMRj+wjup6SGgzIVyR254x6MP9RLy7ra5IPa8gULyYsR+8WHDK92
+	 i9gHFfjxx4nWOJEsa3Me9+PHgE0Yzx8iEcHlXMUAVxrvK1GsnFGIfrMZ8iGK6gSjX4Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794865036;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794865027;
 	h=Received:DKIM-Signature:From:To:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=3Vo9II34r+vXp8sn8wqU4dnBZeV9Jv3jA463zN7CRak=;
-	b=sCbDBJLlSwbQAl+Ooul8z4eZ4MfGSGYXggTov/ZOpK8JZ8ZY2EKtP4d44bD8kiD/5Bav
-	 au4h0Bi7D4U4hfQWW20m1mMnee+QYTo98Z2LkRiA9SYo686IBIFITms6IpdpJS1Y8Gi3v
-	 KmE5iVuHt4pH4+XgfsIbMegEeSRvGYd8PGQk6ucYwZkRpHsv4QUmwDMRLvEqoeoaMoFRO
-	 R8k38+oEGG1eUeL1tI7c7wE7miEpaWplv9gZ+pFiVw0kgSo/E8PaBNMgT22I+vSZBSmiw
-	 YWAVGkKW2F3IeMBMGWKRCZcYyOmjoaslQ0E3EGvoOJXNhkiVgVP74tMj09ijGDE2Luw==
+	bh=LAFzGRj5h02qybvze9qAIfbGkTR2VUVUCRu5nTmxe8M=;
+	b=rMyBt+Hpb6A2mD78XOb9daMg4RYqnqsglKVfVIm775eBr+zflG3x/VgJJCu6spWUckW/
+	 l3t1YvlGqm2+LbTvDOxv9idBxCVl7hVAx7/1xf9a/lW1zQ09Mso1nR2VOrxZwXhXJMpiS
+	 3/NcRmxW6OciSFuXhAknOnO86ZNfQ/u1QWi/eWijVA9s7tlpZgEPkg+OC5PY/N7HdfrYf
+	 JmyWoUIJbJqPehnblszzyNxMp++ccLfMd5PKTUajFBAAJai+nYpVeGa247jUGfgviVnkC
+	 T5YxNc3HVIRsTYymChBSg57pxqHJRssLRpc1m8QS2kR2+ugddVNtDGlTZKRBQqBSxSQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=dcu8LmmA;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=O7rSwmzM;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87E8F606A323;
-	Mon, 16 Nov 2026 21:37:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7F99606A33D;
+	Mon, 16 Nov 2026 21:37:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=dcu8LmmA
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AC5451F000C6;
-	Mon, 16 Nov 2026 21:37:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=O7rSwmzM
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 15FEE1F000C7;
+	Mon, 16 Nov 2026 21:37:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794865036;
-	bh=3Vo9II34r+vXp8sn8wqU4dnBZeV9Jv3jA463zN7CRak=;
+	s=k20260515; t=1794865026;
+	bh=LAFzGRj5h02qybvze9qAIfbGkTR2VUVUCRu5nTmxe8M=;
 	h=From:To:Subject:Date:In-Reply-To:References;
-	b=dcu8LmmA+MTG7S3Aso5sd3vOmzeOhkdREf+vECmkHbvY958BA5szdBFCCPs2Im4fl
-	 GAq9jlVKPKMjv2gAz1kBrRpAdoAUwebtaIRD0OpxXrRnR34HSoxdQg9Er0L3TNS5XC
-	 56BKPzMdUr3CdUfxyv0z06MD0W8beND6F9wLldY3gq3JbMMO8+OYMDSEwkXVFHK5rG
-	 50RwiQ33A37CTNjIq/D2zlJmVNKrjV90p7F9H7o68Irtpx7NIxgV4wwgrf1N8SeH6R
-	 Q4ZGhYUXSpXjJ8OdAxp63O28LMr+uNDEPPlQvlIZimuvA4Std4iH83lgzTHnWXw0UB
-	 z8e8ZCUuyLLrA==
+	b=O7rSwmzMxkMDkT4mG5kdf0xzQMkfk5+BpkHfmyod5MrR9ds1jnJ1XF2YF3nARewM4
+	 zBXkeDZYhFLlhEnwJK5MGQOj5Ew+su5KOtpLGkYz4xLI77L7srstSLGKPgr8DrKObN
+	 N8Ccg139u+i8I86uOf+al0J98sI+VBSEC/EZVtWYvvSPdRZAGE4ypE9kt9NdqYbxym
+	 I9h1PJQKasXHyx2BoRxU2FaaCq5uI6adZIvfk2rBbBjrVbgL8Fd1dUDmBR+oozknqT
+	 ZNe2tynKk3OOftjProewqAij2O4Qi/RLWBclDXbHbZwn1pNZcaHxsBYKjkxWSXjEQO
+	 OswTMbyQ8C6Vw==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: Jens Axboe <axboe@kernel.dk>,
 	linux-block@vger.kernel.org,
 	Christoph Hellwig <hch@lst.de>,
 	linux-scsi@vger.kernel.org,
 	"Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH v11 11/13] scsi: sd_zbc: always revalidate zones for disks supporting head depopulation
-Date: Tue, 17 Nov 2026 06:37:00 +0900
-Message-ID: <20261116213702.225970-12-dlemoal@kernel.org>
+Subject: [PATCH v11 02/13] block: refactor blk_revalidate_disk_zones()
+Date: Tue, 17 Nov 2026 06:36:51 +0900
+Message-ID: <20261116213702.225970-3-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.56.1
 In-Reply-To: <20261116213702.225970-1-dlemoal@kernel.org>
 References: <20261116213702.225970-1-dlemoal@kernel.org>
@@ -62,154 +62,130 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-sd_zbc_revalidate_zones() skips revalidating the zones of a ZBC device if
-the zone size and total number of zones of the disk has not changed. This
-is to avoid the sometimes slow report zones for the entire disk that
-blk_revalidate_disk_zones() will generate.
-
-For ZBC devices that support the storage element depopulation feature, a
-revalidation after executing a passthrough REMOVE ELEMENT AND TRUNCATE
-command will thus correctly trigger a zone revalidation as the disk
-capacity and number of zones changed.
-
-However, for devices supporting the data preserving head depopulation
-variant of the depopulation feature (REMOVE ELEMENT AND MODIFY ZONES
-command), a disk capacity and number of zones does not change after a head
-is depopulated. Only the conditions of the zones served by the head that
-was depopulated change. These zones are transitioned to either read-only
-or offline.
-
-While the block layer storage element management functions always call
-blk_revalidate_disk_zones() to catch these changes, a user scan, libata
-device rescan after EH or a depopulation or restoration action executed
-through SG_IO would not. In these cases, not calling
-blk_revalidate_disk_zones() prevents the block layer from taking
-appropriate actions on the zone write plugs of the disk.
-
-Avoid any issue with the block layer view of the zone conditions by not
-skipping the call to blk_revalidate_disk_zones() for disks that support
-both the GET PHYSICAL ELEMENTS STATUS and REMOVE ELEMENT AND MODIFY ZONES
-commands. This check is done from sd_zbc_read_zones() using the helper
-function sd_zbc_check_depop_supported(). The new SCSI disk flags
-depop_report_supported and depop_modify_zones_supported are defined to
-remember the result of this check.
-
-This change will slow down a little SMR disk revalidation. However, user
-forced revalidations are normally rare, and other revalidations triggered
-by udev only happen when the disk device files is not in use anymore
-(closed). So this slow down should in practice not be an issue.
+Split out most of the code of blk_revalidate_disk_zones() into the
+internal function disk_revalidate_zones(). This will allow calling this
+new helper together with other code under the zone revalidation mutex.
+No functional change.
 
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-Reviewed-by: Hannes Reinecke <hare@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Martin K. Petersen <mkp@kernel.org>
+Reviewed-by: Hannes Reinecke <hare@kernel.org>
 ---
- drivers/scsi/sd.h     |  2 ++
- drivers/scsi/sd_zbc.c | 47 +++++++++++++++++++++++++++++++++++++++++--
- 2 files changed, 47 insertions(+), 2 deletions(-)
+ block/blk-zoned.c | 63 +++++++++++++++++++++++++----------------------
+ 1 file changed, 34 insertions(+), 29 deletions(-)
 
-diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
-index 574af8243016..84c87d0f05d8 100644
---- a/drivers/scsi/sd.h
-+++ b/drivers/scsi/sd.h
-@@ -156,6 +156,8 @@ struct scsi_disk {
- 	unsigned	ignore_medium_access_errors : 1;
- 	unsigned	rscs : 1; /* reduced stream control support */
- 	unsigned	use_atomic_write_boundary : 1;
-+	unsigned	depop_report_supported : 1;
-+	unsigned	depop_modify_zones_supported : 1;
- };
- #define to_scsi_disk(obj) container_of(obj, struct scsi_disk, disk_dev)
- 
-diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
-index 8cbf171e6fab..bf2e60071d57 100644
---- a/drivers/scsi/sd_zbc.c
-+++ b/drivers/scsi/sd_zbc.c
-@@ -516,6 +516,33 @@ static int sd_zbc_check_capacity(struct scsi_disk *sdkp, unsigned char *buf,
- 	return 0;
+diff --git a/block/blk-zoned.c b/block/blk-zoned.c
+index 07d504287024..600d6bd008ae 100644
+--- a/block/blk-zoned.c
++++ b/block/blk-zoned.c
+@@ -2552,20 +2552,7 @@ static int blk_revalidate_zone_cb(struct blk_zone *zone, unsigned int idx,
+ 	return ret;
  }
  
-+/*
-+ * sd_zbc_check_depop_supported - Check if the device supports storage element
-+ *				  depopulation
-+ * @sdkp: Target SCSI disk
-+ * @buf: command buffer
-+ *
-+ * Check if the device supports the REMOVE ELEMENT AND MODIFY ZONES command.
-+ */
-+static void sd_zbc_check_depop_supported(struct scsi_disk *sdkp,
-+					 unsigned char *buf)
-+{
-+	/* Mandate support for reporting storage elements health. */
-+	sdkp->depop_report_supported =
-+		scsi_report_opcode(sdkp->device, buf, SD_BUF_SIZE,
-+				   SERVICE_ACTION_IN_16,
-+				   SAI_GET_PHYSICAL_ELEMENT_STATUS) == 1;
-+	if (!sdkp->depop_report_supported) {
-+		sdkp->depop_modify_zones_supported = false;
-+		return;
-+	}
-+
-+	sdkp->depop_modify_zones_supported =
-+		scsi_report_opcode(sdkp->device, buf, SD_BUF_SIZE,
-+				   SERVICE_ACTION_IN_16,
-+				   SAI_REMOVE_ELEMENT_AND_MODIFY_ZONES) == 1;
-+}
-+
- static void sd_zbc_print_zones(struct scsi_disk *sdkp)
+-/**
+- * blk_revalidate_disk_zones - (re)allocate and initialize zone write plugs
+- * @disk:	Target disk
+- *
+- * Helper function for low-level device drivers to check, (re) allocate and
+- * initialize resources used for managing zoned disks. This function should
+- * normally be called by blk-mq based drivers when a zoned gendisk is probed
+- * and when the zone configuration of the gendisk changes (e.g. after a format).
+- * Before calling this function, the device driver must already have set the
+- * device zone size (chunk_sector limit) and the max zone append limit.
+- * BIO based drivers can also use this function as long as the device queue
+- * can be safely frozen.
+- */
+-int blk_revalidate_disk_zones(struct gendisk *disk)
++static int disk_revalidate_zones(struct gendisk *disk)
  {
- 	if (sdkp->device->type != TYPE_ZBC || !sdkp->capacity)
-@@ -545,6 +572,7 @@ int sd_zbc_revalidate_zones(struct scsi_disk *sdkp)
- 	u32 zone_blocks = sdkp->early_zone_info.zone_blocks;
- 	unsigned int nr_zones = sdkp->early_zone_info.nr_zones;
- 	unsigned int flags;
-+	bool print_zones;
+ 	struct blk_revalidate_zone_args args = { };
+ 	struct blk_report_zones_args rep_args = {
+@@ -2576,19 +2563,10 @@ int blk_revalidate_disk_zones(struct gendisk *disk)
+ 	int retries = 2;
  	int ret;
  
+-	if (WARN_ON_ONCE(!blk_queue_is_zoned(disk->queue)))
+-		return -EIO;
+-
+-	/*
+-	 * Serialize calls to this function so that we can safely look at and
+-	 * eventually change the disk zone information.
+-	 */
+-	mutex_lock(&disk->zone_revalidate_mutex);
+-
+ again:
+ 	ret = disk_revalidate_capacity(disk, &args);
+ 	if (ret)
+-		goto unlock;
++		return ret;
+ 
  	/*
-@@ -554,11 +582,22 @@ int sd_zbc_revalidate_zones(struct scsi_disk *sdkp)
- 	if (!blk_queue_is_zoned(q))
- 		return 0;
- 
-+	/*
-+	 * If the zone size and number of zones has not changed, and the disk
-+	 * does not support depopulating heads, skip the rather slow call to
-+	 * blk_revalidate_disk_zones().
-+	 */
- 	if (sdkp->zone_info.zone_blocks == zone_blocks &&
- 	    sdkp->zone_info.nr_zones == nr_zones &&
--	    disk->nr_zones == nr_zones)
-+	    disk->nr_zones == nr_zones &&
-+	    !sdkp->depop_modify_zones_supported)
- 		return 0;
- 
-+	print_zones =
-+		sdkp->zone_info.zone_blocks != zone_blocks ||
-+		sdkp->zone_info.nr_zones != nr_zones ||
-+		disk->nr_zones != nr_zones;
-+
- 	sdkp->zone_info.zone_blocks = zone_blocks;
- 	sdkp->zone_info.nr_zones = nr_zones;
- 
-@@ -571,7 +610,8 @@ int sd_zbc_revalidate_zones(struct scsi_disk *sdkp)
- 		return ret;
+ 	 * Allocate zone resources if they are needed and we have not done
+@@ -2601,14 +2579,14 @@ int blk_revalidate_disk_zones(struct gendisk *disk)
+ 		ret = disk_alloc_zone_resources(disk, args.capacity);
+ 		if (ret) {
+ 			memalloc_noio_restore(noio_flag);
+-			goto unlock;
++			return ret;
+ 		}
  	}
  
--	sd_zbc_print_zones(sdkp);
-+	if (print_zones)
-+		sd_zbc_print_zones(sdkp);
+ 	ret = disk_init_revalidate_args(disk, &args);
+ 	if (ret) {
+ 		memalloc_noio_restore(noio_flag);
+-		goto unlock;
++		return ret;
+ 	}
  
- 	return 0;
- }
-@@ -610,6 +650,9 @@ int sd_zbc_read_zones(struct scsi_disk *sdkp, struct queue_limits *lim,
- 	sdkp->device->use_10_for_rw = 0;
- 	sdkp->device->use_16_for_sync = 1;
- 
-+	/* Check if storage element depopulation is supported. */
-+	sd_zbc_check_depop_supported(sdkp, buf);
-+
- 	/* Check zoned block device characteristics (unconstrained reads) */
- 	ret = sd_zbc_check_zoned_characteristics(sdkp, buf);
+ 	ret = disk->fops->report_zones(disk, 0, UINT_MAX, &rep_args);
+@@ -2625,8 +2603,6 @@ int blk_revalidate_disk_zones(struct gendisk *disk)
  	if (ret)
+ 		goto free_args;
+ 
+-	mutex_unlock(&disk->zone_revalidate_mutex);
+-
+ 	return 0;
+ 
+ free_args:
+@@ -2642,7 +2618,36 @@ int blk_revalidate_disk_zones(struct gendisk *disk)
+ 	}
+ 
+ 	pr_warn("%s: failed to revalidate zones\n", disk->disk_name);
+-unlock:
++
++	return ret;
++}
++
++/**
++ * blk_revalidate_disk_zones - (re)allocate and initialize zone write plugs
++ * @disk:	Target disk
++ *
++ * Helper function for low-level device drivers to check, (re) allocate and
++ * initialize resources used for managing zoned disks. This function should
++ * normally be called by blk-mq based drivers when a zoned gendisk is probed
++ * and when the zone configuration of the gendisk changes (e.g. after a format).
++ * Before calling this function, the device driver must already have set the
++ * device zone size (chunk_sector limit) and the max zone append limit.
++ * BIO based drivers can also use this function as long as the device queue
++ * can be safely frozen.
++ */
++int blk_revalidate_disk_zones(struct gendisk *disk)
++{
++	int ret;
++
++	if (WARN_ON_ONCE(!blk_queue_is_zoned(disk->queue)))
++		return -EIO;
++
++	/*
++	 * Serialize calls to this function so that we can safely look at and
++	 * eventually change the disk zone information.
++	 */
++	mutex_lock(&disk->zone_revalidate_mutex);
++	ret = disk_revalidate_zones(disk);
+ 	mutex_unlock(&disk->zone_revalidate_mutex);
+ 
+ 	return ret;
 -- 
 2.56.1
 
