@@ -1,56 +1,54 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794865029;
-	b=JtricXRPXL9/+h83maXBeuKGFhim4g8RGt7Q3m1U/V4O2HSq7dFdZLUJWn+zPegQ45vU
-	 44FhrbyPVUyV6uUY3Yb9y2iCfyMdc8Tfz6ByU64r4c8pRxmpCF3p5F3LMTxf3X4euV6Fr
-	 NKF89YHhUYBpr7/aGWQqRMieoasAARW5mxjVnovjson3F5ryL1wUnhjtEiaaIgQuF6TJa
-	 iJbEho8DbWTq76psECzPmx5vlC65xg6VcEB3o4ywCBD+75jtzioYTLAHNd6lKkbII0Rjd
-	 oPObZHWPLz5BLuRj3UfIJ0YVrh3tecPwJ4IVF4h3og3lFK1mRHywsGD2+gKhGtbaobw==
+	t=1794865025;
+	b=lEcaVhbrDPgzcXHEDJlrhNwckMnnrEWZf0C7e3EUB+m32dWxCPmt0GH8b1xZNUtKQy4W
+	 UDG5zVOCGA2F+prNnXUNUjF6BCb1GsGduXvlJgio3u+n/zh5CsS+8B/RtFLrlX5cVbvQX
+	 0xapCXbhY6kN3qq4hfie2nDQM+5BVaKL7Gl9P4nRHTe+rptQfI+ntOZ9jNorObzhdWBpv
+	 3ue7mfT0R/kB8YPQ6r1dspbd4O8PkSKYxY7LGhMlTeepcGPQR/AfTV3YMFde4osb0ujK3
+	 oLglSSWpBBP9+zmr2IjvlrwKqhWAdEOmIEIW3KePjnb5+EK3Y2YCXy4K+xiGvh2E6SQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794865029;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794865025;
 	h=Received:DKIM-Signature:From:To:Subject:Date:Message-ID:X-Mailer:
-	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=xWWTTTwDHuLMV5lgkTzECHboBgPJgT+cGcU+Bu48HQs=;
-	b=zg1xTLqu51N04PUNpxCVgQy4aeFuu9Ba8tcw7q7UtIixF1xQY01NqLCYyvPiugzwySvl
-	 48Jc9e6R0Zy0wN1glCiNONFhRwwtkIGMQDrhNKWs1REF/yXny22KVOaYIoexXR1zMzY9b
-	 4FgBDJix3gXwtWbMmQHyBiECnJbBMiDRwBhI8Tptl+3KEME9F+mPnoUBzhRbhWzEBygL8
-	 9hlUSkLSpnIwvMCwP6j6YnBOw5eoRtrfDHiSZEwHOZZmQCmVKI5e+hwLsYBsYmQXGChya
-	 IzH9SUf7/SeFyBDFcQhzKifPYhPv5CpiDAhYI5TmIeAocqZJbJANoV9CD8LQQCvT3xQ==
+	 MIME-Version:Content-Transfer-Encoding;
+	bh=2mgFCVDy66Wm/1z3BD1B3z4E8vLmizdbiZSMxStpVtQ=;
+	b=1pQXHTMqHBVDqXW1z9SJEVtfeMoGc0VuNEDZIDiTix9jl2NI/mhdvc3DtAkzI4JEf2Wg
+	 U/Q423NvuS2BQ6uzMZOO1gB6h3/qL4nt4x0RS82g6GoGKEDmu9TDMhtcXjj3hMtjgQsX1
+	 8IHhuINVqU/d2+Y5d90HZvJUeQ/lkm6bRoF31kDHi7efj/D1JUqzStx8UDvMwXYuqcz4a
+	 eldLYOqatoKTodwfuQiEjh2I9oTGzH6xNzxu/4MOKXRPp/Vi0A2WqMlbCNY9f371SB3eG
+	 t1JY9QCRgEThDk//5skd9QraM+c2NjSCkzGlsbiHnb2t+Dyn4nGxwmIwmvwKP61WtYw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fWMlhrNc;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BT2wmtps;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 201D1606A880;
-	Mon, 16 Nov 2026 21:37:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2AB8E606A322;
+	Mon, 16 Nov 2026 21:37:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fWMlhrNc
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2E64E1F000C5;
-	Mon, 16 Nov 2026 21:37:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BT2wmtps
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0031F1F000C4;
+	Mon, 16 Nov 2026 21:37:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794865028;
-	bh=xWWTTTwDHuLMV5lgkTzECHboBgPJgT+cGcU+Bu48HQs=;
-	h=From:To:Subject:Date:In-Reply-To:References;
-	b=fWMlhrNc8v1ja9kiNHYpDKCKJjmYGq7CdZAgLghFvjnBqTatOdPlwFzDwgaejxo6C
-	 gnLja1VVqcQKw3WlZ5Q0zPEgzFQAMwjQvNLLvaYarO0bTBQUl+bhTOqiDbqt6lvQgk
-	 ogfP2f9000KlhhdrzCG6j5AUtGNknZxeVbfx1HipQIYm+Z5Iiv9bqm5qX3URNZCo6K
-	 YCIhJjyTmDVrCFVuw/L5AjFMHuMzpReAiVhy6KeuKUdoLGf3FrGrpvmmVZUG4/HNiK
-	 Gfj0dnJqAEpZe1a+qoRWUSCxK/L8kMeYZ0Luc92dNG4BG+mqut8EWlYFA0aJ5cXCQ3
-	 Tl5nGELOB63tg==
+	s=k20260515; t=1794865024;
+	bh=2mgFCVDy66Wm/1z3BD1B3z4E8vLmizdbiZSMxStpVtQ=;
+	h=From:To:Subject:Date;
+	b=BT2wmtpsHXKCjbG6jyR9WCNkETTMf9Kyg9kXQvobfIExPugW1UszT5IGQxPPa++bI
+	 pxkCd0HUjtpBC6HnmJuSkIcbY2DaEF7jXQkw4HzjOuN0lKGuCXmaXrwkpgkr9mOhHd
+	 HFWJZ131LguDLvsSpkWMoOYOTEBS8fyZx8f2meYMvsZJiiiAbhdnpHW6pMytQ2w7dW
+	 w9iZCL8p4odvlHsAeTagyE6alNCFjjRTjH/lPYIwAMt+7cOYQkdenfqscvEtsYm+p1
+	 4wSKj89f5Lqvoq+3UR4lfKRKGwhxugsQ95le6CBV87igrjSrMxdB//3+EPVlKeU/Ml
+	 qekHglEG9G/og==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: Jens Axboe <axboe@kernel.dk>,
 	linux-block@vger.kernel.org,
 	Christoph Hellwig <hch@lst.de>,
 	linux-scsi@vger.kernel.org,
 	"Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH v11 04/13] block: introduce storage element management
-Date: Tue, 17 Nov 2026 06:36:53 +0900
-Message-ID: <20261116213702.225970-5-dlemoal@kernel.org>
+Subject: [PATCH v11 00/13] Add support for storage element depopulation
+Date: Tue, 17 Nov 2026 06:36:49 +0900
+Message-ID: <20261116213702.225970-1-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.56.1
-In-Reply-To: <20261116213702.225970-1-dlemoal@kernel.org>
-References: <20261116213702.225970-1-dlemoal@kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -62,486 +60,117 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Recent SCSI (SBC) and ATA (ACS) standards define the storage element
-depopulation feature. This feature is intended for managing hard-disks
-heads, either combined read-write heads or pairs of read and write heads,
-allowing to keep disks with defective heads longer in production by
-allowing "depopulating" (removing) defective heads.
+Jens,
 
-This feature comes in two different flavors:
- - A destructive version which removes a head and reformats the disk at a
-   lower capacity point, restoring a fully functional contiguous LBA
-   address space.
- - A data preserving version restricted to host-managed zoned disks, which
-   marks the zones served by a removed head as offline or read-only.
+These patches define a new set of block device operations for generically
+using from the block layer the storage element depopulation feature of
+zoned block devices. Support for this feature is added to the SCSI disk
+driver and an emulation of this feature added to the zloop driver.
 
-In preparation for using the data-preserving flavor of the depopulation
-feature in file systems natively supporting zoned block devices, introduce
-a set of storage element management operations and functions to define
-generic calls into block device drivers for managing storage elements.
+The management operations can be accessed using block layer API, which is
+intended for file systems (e.g. zonefs and XFS), as well as using ioctls
+for users using zoned disks directly from user space.
 
-The set of operations is defined with struct blk_se_ops and includes three
-operations:
- - report_elements: get information on a device storage elements state
-   reported with the new struct blk_se.
- - remove_element: depopulate a defective storage element, blocking until
-   the operation completes.
- - restore_elements: restore depopulated storage elements, blocking until
-   the operation completes.
+Changes from v10:
+ - Addressed sashiko comment on patch 8 and 12.
+ - Added review tags
 
-Each operation is called from the functions
-bdev_report_storage_elements(), bdev_remove_storage_element() and
-bdev_restore_storage_elements() respectively.
+Changes from v9:
+ - Addressed Sashiko comments on patch 6. This change redesigns the
+   ordered zone append handling to simplify the code and avoid locking
+   difficulties.
+ - Addressed Sashiko comments on patch 8.
 
-Removing a healthy storage element from a device is possible and useful
-for testing. The storage element restoration operation restore_elements
-allows repopulating such healthy element. Repopulating defective storage
-elements is generally not allowed by devices.
+Changes from v8:
+ - Addressed Sashiko comment on patch 7 by adding patch 6. Patch 7 is
+   unmodified.
+ - Addressed Sashiko comments on patch 8 and patch 12
+ - Added review tags to unmodified pacthes
 
-The remove_element and restore_elements operations are executed under the
-zone revalidation lock so that they are serialized against each other and
-also serialized against user initiated device revalidation, thus allowing
-to always have a consistent view of the device zone conditions after
-executing these operations. In case of failure, zone revalidation is still
-executed, which may give an unstable view of the zone states. In such
-case, stable zone states will be recovered with zone access error handling
-or later zone revalidation.
+Changes from v7:
+A significant amount of changes in this version to address most of the
+Sashiko review comments and to simplify the code. In more details, the
+changes are:
+ - Added patches 3, 6, and 9.
+ - Dropped former patch 5 as the use of irq-disabling spinlocks in zloop
+   is not necessary.
+ - Reworked patch 4 by migrating the idepop operation wait loops to the
+   device drivers. This simplifies the implementation in zloop without
+   making the sd driver implementation more difficult. Also fixed problems
+   with errors during restoration and zone write plugs state.
+ - Reworked patch 7 and 11 to be consistent with the changes in patch 4.
 
-The device drivers of zoned block devices can indicate support for the
-storage element depopulation feature by specifying the storage element
-management operations with the se_ops field of struct
-block_device_operations.
+Changes from v6:
+ - Addressed the nit pointed out by Christoph in patch 4
+ - Added review tags
 
-Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-Reviewed-by: Hannes Reinecke <hare@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- block/blk-zoned.c             | 205 ++++++++++++++++++++++++++++++++++
- block/blk.h                   |   5 +
- block/genhd.c                 |   4 +
- include/linux/blkdev.h        |  55 +++++++++
- include/uapi/linux/blkzoned.h |  65 +++++++++++
- 5 files changed, 334 insertions(+)
+Changes from v5:
+ - Rebased on latest block/for-next
+ - Addressed Christoph's comments on patch 3
+ - Added patch 5 to address a potential deadlock in zloop (signaled by
+   sashiko)
+ - Reworked the restoration of storage elements in patch 6 to avoid an
+   inconsistent state of storage elements in case of error. Also added
+   protection against disk removal during storage element removal and
+   restoration execution.
+ - Added review tags
 
-diff --git a/block/blk-zoned.c b/block/blk-zoned.c
-index 3761e634650e..5b27a639cd2c 100644
---- a/block/blk-zoned.c
-+++ b/block/blk-zoned.c
-@@ -2736,3 +2736,208 @@ int queue_zone_wplugs_show(void *data, struct seq_file *m)
- }
- 
- #endif
-+
-+/**
-+ * bdev_report_storage_elements - report the storage elements of a zoned
-+ *				  block device
-+ * @bdev:	the zoned block device to check
-+ * @elements:	array of storage element descriptors to fill
-+ * @nr_elements: maximum size of @elements
-+ *
-+ * Fill at most @nr_elements storage element descriptors in the array
-+ * @elements. The number of storage elements filled in the array is returned
-+ * using @nr_elements. If @elements is NULL, only @nr_elements is returned to
-+ * indicate the maximum number of storage elements of @bdev. This function may
-+ * sleep.
-+ *
-+ * Returns 0 on success and a negative error code on failure.
-+ */
-+int bdev_report_storage_elements(struct block_device *bdev,
-+				 struct blk_se *elements,
-+				 unsigned int *nr_elements)
-+{
-+	struct gendisk *disk = bdev->bd_disk;
-+
-+	if (test_bit(GD_DEAD, &disk->state))
-+		return -ENODEV;
-+
-+	if (!blk_queue_is_zoned(disk->queue) || !disk->nr_storage_elements)
-+		return -EOPNOTSUPP;
-+
-+	if (!nr_elements)
-+		return -EINVAL;
-+
-+	if (!elements) {
-+		*nr_elements = disk->nr_storage_elements;
-+		return 0;
-+	}
-+
-+	*nr_elements = min(*nr_elements, disk->nr_storage_elements);
-+	if (!*nr_elements)
-+		return -EINVAL;
-+
-+	return disk->fops->se_ops->report_elements(disk, elements,
-+						   nr_elements);
-+}
-+EXPORT_SYMBOL_GPL(bdev_report_storage_elements);
-+
-+/**
-+ * bdev_remove_storage_element - Remove (depopulate) a storage element of a
-+ *				 zoned block device
-+ * @bdev:	block device to operate on
-+ * @element_id:	ID of the storage element to remove
-+ *
-+ * Remove (depopulate) the storage element identified by @element_id from the
-+ * block device @bdev. The caller is responsible for taking care of any
-+ * necessary dirty page and device write cache flush and invalidation of cached
-+ * data. This function will block until the storage element is removed or an
-+ * error occurs.
-+ *
-+ * Returns 0 on success and a negative error code on failure.
-+ */
-+int bdev_remove_storage_element(struct block_device *bdev,
-+				unsigned int element_id)
-+{
-+	struct gendisk *disk = bdev->bd_disk;
-+	unsigned int memflags;
-+	int ret, err;
-+
-+	if (test_bit(GD_DEAD, &disk->state))
-+		return -ENODEV;
-+
-+	if (!blk_queue_is_zoned(disk->queue) || !disk->nr_storage_elements)
-+		return -EOPNOTSUPP;
-+
-+	/* Zero is not a valid storage element ID. */
-+	if (!element_id)
-+		return -EINVAL;
-+
-+	/*
-+	 * Serialize against concurrent revalidation and concurrent storage
-+	 * element management operations so that we can see consistent zone
-+	 * condition changes.
-+	 */
-+	mutex_lock(&disk->zone_revalidate_mutex);
-+
-+	/*
-+	 * Freeze and unfreeze the queue to flush any outstanding command.
-+	 * The caller is responsible for not queuing up more I/Os by higher
-+	 * level means.
-+	 */
-+	memflags = blk_mq_freeze_queue(disk->queue);
-+	blk_mq_unfreeze_queue(disk->queue, memflags);
-+
-+	/* Initiate the storage element removal and wait for its completion. */
-+	ret = disk->fops->se_ops->remove_element(disk, element_id);
-+
-+	/*
-+	 * Always revalidate zones, even in the case of an error as we do not
-+	 * know what condition the zones of the block device are in.
-+	 */
-+	err = disk_revalidate_zones(disk, false);
-+	if (err && !ret)
-+		ret = err;
-+
-+	mutex_unlock(&disk->zone_revalidate_mutex);
-+
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(bdev_remove_storage_element);
-+
-+/**
-+ * bdev_restore_storage_elements - Restore all depopulated storage elements of
-+ *				   a zoned block device
-+ * @bdev:	block device to operate on
-+ *
-+ * Restore all storage elements of @bdev that have been depopulated. Not all
-+ * elements may be restored by this operation. This operation is destructive and
-+ * will result in all sequential zones to be transitioned to the empty condition.
-+ * The caller is responsible for taking care of any necessary invalidation of
-+ * cached data. This function will block until the storage elements are restored
-+ * or an error occurs.
-+ *
-+ * Returns 0 on success and a negative error code on failure.
-+ */
-+int bdev_restore_storage_elements(struct block_device *bdev)
-+{
-+	struct gendisk *disk = bdev->bd_disk;
-+	unsigned int memflags;
-+	int ret, err;
-+
-+	if (test_bit(GD_DEAD, &disk->state))
-+		return -ENODEV;
-+
-+	if (!blk_queue_is_zoned(disk->queue) || !disk->nr_storage_elements)
-+		return -EOPNOTSUPP;
-+
-+	/*
-+	 * Serialize against concurrent revalidation and concurrent storage
-+	 * element management operations so that we can see consistent zone
-+	 * condition changes.
-+	 */
-+	mutex_lock(&disk->zone_revalidate_mutex);
-+
-+	/*
-+	 * Freeze and unfreeze the queue to flush any outstanding commands.
-+	 * The caller is responsible for not queuing up more I/O by higher
-+	 * level means.
-+	 */
-+	memflags = blk_mq_freeze_queue(disk->queue);
-+	blk_mq_unfreeze_queue(disk->queue, memflags);
-+
-+	/*
-+	 * Initiate the storage elements restoration and wait for its
-+	 * completion.
-+	 */
-+	ret = disk->fops->se_ops->restore_elements(disk);
-+
-+	/*
-+	 * Always revalidate zones, even in the case of an error as we do not
-+	 * know what condition the zones of the block device are in. Note that
-+	 * since all sequential zones should have been transitioned to the
-+	 * empty condition, we can drop all zone write plugs. If an error
-+	 * occurred and not all sequential zones are empty, the revalidation
-+	 * will reinstate the write plugs for these zones.
-+	 */
-+	err = disk_revalidate_zones(disk, true);
-+	if (err && !ret)
-+		ret = err;
-+
-+	mutex_unlock(&disk->zone_revalidate_mutex);
-+
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(bdev_restore_storage_elements);
-+
-+int disk_init_storage_element_mgmt(struct gendisk *disk)
-+{
-+	int ret;
-+
-+	/*
-+	 * Storage element operations are for zoned disks only and are
-+	 * optional...
-+	 */
-+	if (!blk_queue_is_zoned(disk->queue) || !disk->fops->se_ops)
-+		return 0;
-+
-+	/* ...but if defined, all operation callbacks must be defined. */
-+	if (!disk->fops->se_ops->report_elements ||
-+	    !disk->fops->se_ops->remove_element ||
-+	    !disk->fops->se_ops->restore_elements) {
-+		pr_err("%s: invalid storage element operations\n",
-+		       disk->disk_name);
-+		return -EINVAL;
-+	}
-+
-+	/*
-+	 * Get the number of storage elements of the disk. If this fails,
-+	 * do not report an error as the failure may be because the zoned disk
-+	 * does not support storage element management.
-+	 */
-+	ret = disk->fops->se_ops->report_elements(disk, NULL,
-+						  &disk->nr_storage_elements);
-+	if (ret)
-+		disk->nr_storage_elements = 0;
-+
-+	return 0;
-+}
-diff --git a/block/blk.h b/block/blk.h
-index 0e38e4b88cf5..05e2692b80d5 100644
---- a/block/blk.h
-+++ b/block/blk.h
-@@ -543,6 +543,7 @@ static inline void ioc_clear_queue(struct request_queue *q)
- #endif /* CONFIG_BLK_ICQ */
- 
- #ifdef CONFIG_BLK_DEV_ZONED
-+int disk_init_storage_element_mgmt(struct gendisk *disk);
- void disk_init_zone_resources(struct gendisk *disk);
- void disk_release_zone_resources(struct gendisk *disk);
- static inline bool bio_zone_write_plugging(struct bio *bio)
-@@ -595,6 +596,10 @@ int blkdev_zone_mgmt_ioctl(struct block_device *bdev, blk_mode_t mode,
- 		unsigned int cmd, unsigned long arg);
- bool bdev_zone_mgmt_allowed(struct block_device *bdev, sector_t sector);
- #else /* CONFIG_BLK_DEV_ZONED */
-+static inline int disk_init_storage_element_mgmt(struct gendisk *disk)
-+{
-+	return 0;
-+}
- static inline void disk_init_zone_resources(struct gendisk *disk)
- {
- }
-diff --git a/block/genhd.c b/block/genhd.c
-index 69204d44adae..251a5b07baff 100644
---- a/block/genhd.c
-+++ b/block/genhd.c
-@@ -435,6 +435,10 @@ static int __add_disk(struct device *parent, struct gendisk *disk,
- 	if (WARN_ON_ONCE(bdev_nr_sectors(disk->part0) > BLK_DEV_MAX_SECTORS))
- 		return -EINVAL;
- 
-+	ret = disk_init_storage_element_mgmt(disk);
-+	if (ret)
-+		return ret;
-+
- 	if (queue_is_mq(disk->queue)) {
- 		/*
- 		 * ->submit_bio and ->poll_bio are bypassed for blk-mq drivers.
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index a2c36b4e6308..63c6e43ecdda 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -189,6 +189,11 @@ struct gendisk {
- 	struct disk_events *ev;
- 
- #ifdef CONFIG_BLK_DEV_ZONED
-+	/*
-+	 * Total number of storage elements of the disk. This is always 0 for
-+	 * disks that do not support storage element management.
-+	 */
-+	unsigned int		nr_storage_elements;
- 	/*
- 	 * Zoned block device information. Reads of this information must be
- 	 * protected with blk_queue_enter() / blk_queue_exit() or by holding a
-@@ -951,6 +956,13 @@ static inline unsigned int bdev_zone_capacity(struct block_device *bdev,
- 
- bool bdev_zone_is_seq(struct block_device *bdev, sector_t sector);
- 
-+int bdev_report_storage_elements(struct block_device *bdev,
-+				 struct blk_se *elements,
-+				 unsigned int *nr_elements);
-+int bdev_remove_storage_element(struct block_device *bdev,
-+				unsigned int element_id);
-+int bdev_restore_storage_elements(struct block_device *bdev);
-+
- #else /* CONFIG_BLK_DEV_ZONED */
- static inline unsigned int disk_nr_zones(struct gendisk *disk)
- {
-@@ -977,6 +989,25 @@ static inline bool blk_zone_plug_bio(struct bio *bio, unsigned int nr_segs)
- {
- 	return false;
- }
-+
-+static inline int bdev_report_storage_elements(struct block_device *bdev,
-+					       struct blk_se *elements,
-+					       unsigned int *nr_elements)
-+{
-+	return -EOPNOTSUPP;
-+}
-+
-+static inline int bdev_remove_storage_element(struct block_device *bdev,
-+					      unsigned int element_id)
-+{
-+	return -EOPNOTSUPP;
-+}
-+
-+static inline int bdev_restore_storage_elements(struct block_device *bdev)
-+{
-+	return -EOPNOTSUPP;
-+}
-+
- #endif /* CONFIG_BLK_DEV_ZONED */
- 
- static inline unsigned int bdev_nr_zones(struct block_device *bdev)
-@@ -1581,6 +1612,29 @@ enum blk_unique_id {
- 	BLK_UID_NAA	= 3,
- };
- 
-+/**
-+ * struct blk_se_ops - Storage element management operations.
-+ * @report_elements: Report at most nr_elements storage elements of the
-+ *		     specified disk. If the elements argument is NULL, only
-+ *		     report the number of storage elements of the target disk.
-+ * @remove_element: Remove (depopulate) the specified storage element from the
-+ *		    target disk. This is a blocking operation called with
-+ *		    zone_revalidate_mutex held. This callback must return only
-+ *		    after the remove operation completes or an error occurs.
-+ * @restore_elements: Restore (re-populate), if possible, all removed storage
-+ *		      elements of the target disk. This operation is called with
-+ *		      zone_revalidate_mutex held. This callback must return only
-+ *		      after the restoration operation completes or an error
-+ *		      occurs.
-+ */
-+struct blk_se_ops {
-+	int (*report_elements)(struct gendisk *disk,
-+			       struct blk_se *elements,
-+			       unsigned int *nr_elements);
-+	int (*remove_element)(struct gendisk *disk, unsigned int element_id);
-+	int (*restore_elements)(struct gendisk *disk);
-+};
-+
- struct block_device_operations {
- 	void (*submit_bio)(struct bio *bio);
- 	int (*poll_bio)(struct bio *bio, struct io_comp_batch *iob,
-@@ -1610,6 +1664,7 @@ struct block_device_operations {
- 				   struct dma_buf_io_ctx *);
- 	struct module *owner;
- 	const struct pr_ops *pr_ops;
-+	const struct blk_se_ops	*se_ops;
- 
- 	/*
- 	 * Special callback for probing GPT entry at a given sector.
-diff --git a/include/uapi/linux/blkzoned.h b/include/uapi/linux/blkzoned.h
-index 663836120966..9d7f59da3efc 100644
---- a/include/uapi/linux/blkzoned.h
-+++ b/include/uapi/linux/blkzoned.h
-@@ -208,4 +208,69 @@ struct blk_zone_range {
- #define BLKFINISHZONE	_IOW(0x12, 136, struct blk_zone_range)
- #define BLKREPORTZONEV2	_IOWR(0x12, 142, struct blk_zone_report)
- 
-+/**
-+ * enum blk_se_type - Type of a zoned device storage element.
-+ *
-+ * @BLK_SE_TYPE_RDWR: The storage element handles both reads and writes.
-+ * @BLK_SE_TYPE_READ: The storage element handles reads only.
-+ * @BLK_SE_TYPE_WRITE: The storage element handles writes only.
-+ * @BLK_SE_TYPE_UNKNOWN: The storage element type is not known.
-+ */
-+enum blk_se_type {
-+	BLK_SE_TYPE_RDWR		= 0x01,
-+	BLK_SE_TYPE_READ		= 0x02,
-+	BLK_SE_TYPE_WRITE		= 0x03,
-+	BLK_SE_TYPE_UNKNOWN		= 0xFF,
-+};
-+
-+/**
-+ * enum blk_se_status - Status of a zoned device storage element.
-+ *
-+ * @BLK_SE_STS_OK: The storage element is operating normally.
-+ * @BLK_SE_STS_OK_LIMIT: The storage element is operating at the manufacturer
-+ *			 specifications limit.
-+ * @BLK_SE_STS_DEGRADED: The storage element has degraded and is not operating
-+ *			 normally.
-+ * @BLK_SE_STS_REMOVE_IN_PROGRESS: The storage element is being removed.
-+ * @BLK_SE_STS_REMOVE_ERROR: The storage element removal failed.
-+ * @BLK_SE_STS_RESTORE_IN_PROGRESS: The storage element is being restored.
-+ * @BLK_SE_STS_RESTORE_ERROR: The storage element restoration failed.
-+ * @BLK_SE_STS_REMOVED: The storage element was removed.
-+ * @BLK_SE_STS_UNKNOWN: The storage element status is unknown.
-+ */
-+enum blk_se_status {
-+	BLK_SE_STS_OK			= 0x01,
-+	BLK_SE_STS_OK_LIMIT		= 0x02,
-+	BLK_SE_STS_DEGRADED		= 0x03,
-+	BLK_SE_STS_REMOVE_IN_PROGRESS	= 0x04,
-+	BLK_SE_STS_REMOVE_ERROR		= 0x05,
-+	BLK_SE_STS_RESTORE_IN_PROGRESS	= 0x06,
-+	BLK_SE_STS_RESTORE_ERROR	= 0x07,
-+	BLK_SE_STS_REMOVED		= 0x08,
-+	BLK_SE_STS_UNKNOWN		= 0xFF,
-+};
-+
-+/**
-+ * struct blk_se - Zoned device storage element descriptor.
-+ *
-+ * @id: The ID of the element (cannot be 0).
-+ * @paired_id: The ID of the paired element for an element that is not
-+ *	       of type BLK_SE_TYPE_RDWR.
-+ * @nr_zones: The number of zones that the storage element handles.
-+ * @type: The type of the storage element (enum blk_se_type).
-+ * @status: The health status of the storage element
-+ *	    (enum blk_se_status).
-+ * @restore_allowed: Indicate if the storage element can be restored.
-+ * @reserved: unused field to align this structure size to 32B
-+ */
-+struct blk_se {
-+	__u32	id;
-+	__u32	paired_id;
-+	__u64	nr_zones;
-+	__u8	type;
-+	__u8	status;
-+	__u8	restore_allowed;
-+	__u8	reserved[13];
-+};
-+
- #endif /* _UAPI_BLKZONED_H */
+Changes from v4:
+ - Rebased on latest block/for-next
+ - Added review tags to patch 1 and 2
+ - Reworked patch 3, 4 and 5 to address Christoph's and sashiko comments
+
+Changes from v3:
+ - Reworked patch 1 to only provide the disk_zone_is_offline() helper
+   function. Failing of read operations to offline zones is handled
+   directly by the zloop driver and the new patch 7 is added to handle
+   failing early read operations to offline zones of ZBC SCSI disks.
+ - Added patch 2
+ - Addressed further valid comments from Sashiko
+   The biggest changes are in patch 2 to save the number of storage
+   elements of a disk in struct gendisk and to serialize the execution of
+   the storage element management operations using the zone revalidation
+   mutex.
+ - Rebased on latest block/for-next
+
+Changes from v2:
+ - Addressed further valid comments from Sashiko
+ - Rebased on latest block/for-next
+
+Changes from v1:
+ - Addressed the many valid comments that Sashiko had
+ - Rebased on latest block/for-next
+
+Damien Le Moal (13):
+  block: introduce disk_zone_is_offline()
+  block: refactor blk_revalidate_disk_zones()
+  block: allow dropping all zone write plugs on revalidation
+  block: introduce storage element management
+  block: add storage element management ioctls
+  zloop: fix ordered zone append handling
+  zloop: fix zone reporting consistency
+  zloop: add storage element emulation
+  zloop: add degrade_element control command
+  scsi: scsi_proto: refine the definition of storage element health
+  scsi: sd_zbc: always revalidate zones for disks supporting head depopulation
+  scsi: sd_zbc: define storage element management operations
+  scsi: sd: fail read commands to offline zones early
+
+ .../admin-guide/blockdev/zoned_loop.rst       |  33 +-
+ block/blk-zoned.c                             | 450 ++++++++-
+ block/blk.h                                   |  14 +
+ block/genhd.c                                 |   4 +
+ block/ioctl.c                                 |   4 +
+ drivers/block/zloop.c                         | 917 ++++++++++++++++--
+ drivers/scsi/sd.c                             |  23 +-
+ drivers/scsi/sd.h                             |   5 +
+ drivers/scsi/sd_zbc.c                         | 534 +++++++++-
+ include/linux/blkdev.h                        |  64 ++
+ include/scsi/scsi_proto.h                     |   6 +-
+ include/uapi/linux/blkzoned.h                 | 106 ++
+ include/uapi/linux/fs.h                       |   1 +
+ 13 files changed, 2033 insertions(+), 128 deletions(-)
+
 -- 
 2.56.1
 
