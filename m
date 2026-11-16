@@ -1,57 +1,56 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.222
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.137
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794788289;
-	b=AWDLx6cyfcRTerY30Z+achg6AGHzN8fc9BGC926uEDhVtDBi5fOa6j0bD2ttlCEsZu6i
-	 khw739UmFSL0e3r4IvFqyaeMy3sre/Uuv4FI1LYrq+6h4nZxApIEiIjsK0dWNQj45nngE
-	 A0WbVY0LamyW/+IKEgY5ZOHzaRZ/CdObg361wxa71HmNNN3kHrfUFCGXWJuXLPH9M6qnl
-	 yLbLaqfQI/nuHNQ6IitpIYn6GcGokG4pgejf9nHQdFLrfileLE7tynPcPg4YQt+jeBn+4
-	 gYSX3yiNi0yVDZ0OMvX6bYyGLqH+y+kDNYM3sOGLXc6Eq3ZfHjPd0s1q4TO+Q7gHB/Q==
+	t=1794788303;
+	b=yHDGjGIt2KD8oULy62r/VAs9QQSuMwgOhqrHO6zaL8VwW/T/3etYl575rkhcShgr2ABW
+	 lG6UZJBzB4RM5muC1fuGcSOY4QJ1gyLmqvGH1ZkREzU6f4QnEpLnwuD3eMMV4+C/G1xwx
+	 cIDSw1bGuy49OTjIjdfZuw3HpUiZyetpITPzUw/eWTDiuJRSV5KZcuDf6wY9L41cI1/az
+	 JaDJP2AjumnNp4Lej8zAHEM/2byqTxWADSux8ajEZDg40JjYOfSQ5GxEX5j1FknyZTy1m
+	 RZafbNJEKnyoaoPULSuqWP4nJiD0NqTdfneoMYppNQi6S6iHlqI8gLA4iEPGKFQJTpQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794788289;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794788303;
 	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:From:Subject:Date:Message-Id:
-	 MIME-Version:Content-Type:Content-Transfer-Encoding:X-B4-Tracking:To:
-	 Cc:X-Mailer;
-	bh=bEVsen0Z4XKtG98sBbUiY6hiqLLLzzqtV9NIpCrXVCY=;
-	b=UUfMNItrWTA3gwim4VvRfhoSnB6P30rUt00o2OQcOuDiZSJ9et/l9jS4NQS/uWT1TS/S
-	 S2929JXWdZkevKs0qg0s54cgGeL73VPDgqINhbeX0QV8WN8Cd5Lbefbig7fsOBA5vJAj/
-	 wCTIlL84KBjKCta7UEBVVP7gNEWb/K+Z3TJ1Fprzk8zA+Hr+ymToGH45zPRHx7cnSI5KX
-	 Q3QfUwxfwHXhoBy6qFjdcXQ4APskIQRIxypmuWRNL+vuGmqkAL7vC6A964qkyTZwHm4IJ
-	 7ECfO0AxnrXZZIrdPDgCMgoMEa5rUJBPhlTD+8ovui1Pkm7AVCTgRXumplVsJ+4e1JA==
+	 X-Mizu-Trace-ID:X-Migadu-Flow:From:Date:Subject:MIME-Version:
+	 Content-Type:Content-Transfer-Encoding:Message-Id:References:
+	 In-Reply-To:To:Cc:X-Mailer;
+	bh=vY6z2cIllQDioTtc7UC0YCLjJ2aTdxeOyhkDPIyOAUM=;
+	b=DwXvYmuhyu44cmA4nCCwZgy9bqeSHV4JrilqGc7unYn5JLQES9OvOjfyHZS1PAy/uaoS
+	 yfhfMHu8Fspvuq8Jcowb8AMw80zwe+Ofx+kcLPklsbgxvCYsONI7/Es+dWB2VxlcAahdW
+	 ejT/c0/TE83bb/e114mhjrZvJOgZpKVZ/2NhKPBA7lHMccVWv6wrljAdOJm321EzYnBcj
+	 NRXuSTn3TwUxSCf298BXW2xjaADteSMurUOFhX2wQTMzZN0SzsirCE35o5Urbdb6XDSzO
+	 oM1krbURGIh8GmH0RJ0Aqj52R7zzpAathsRjn2eH4n+Away4FnEe4BcRWGZiL3jzYWA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linux.dev;
 	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=Outz9IDc;
-	arc=none smtp.remote-ip=91.218.175.222
-Received: from mta0.migadu.com (out-222.mta0.migadu.com [91.218.175.222])
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=P7NjNivw;
+	arc=none smtp.remote-ip=95.215.58.137
+Received: from mta1.migadu.com (out-137.mta1.migadu.com [95.215.58.137])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE1B0606A330
-	for <linux-scsi@vger.kernel.org>; Mon, 16 Nov 2026 00:18:06 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org AE1B0606A330
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9BB88606A329
+	for <linux-scsi@vger.kernel.org>; Mon, 16 Nov 2026 00:18:22 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9BB88606A329
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=Outz9IDc
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=P7NjNivw
 X-Envelope-To: linux-scsi@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=LUmjHTjauelHCTImcnlLJ9hln9wqDY9gHPAu5bGOtwM=;
+DKIM-Signature: a=rsa-sha256; bh=6Nv8UWpmLw9m3I+ksZHVThGmPv5YDowjl6D1MWKnEk0=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1794788284; v=1; x=1795393084;
- b=Outz9IDcDuGE5hqx4zXYEqSTTzJQ34NOd8UC6hLRnWRc5baxtWGGR45Z6gFfympS42DOTh4M
- 7vbj8p7UQyoA9K+6YMmegC0RcR/ZHyJtI+nP5bwJ6aRxi3nhouMEI9Z1314JnAugnxTSJ1ALhB+
- VKoKTrgm93zxma0UbxchG/+E=
+ t=1794788300; v=1; x=1795393100;
+ b=P7NjNivwYseS5dgipzjnuNA+dbzsd39J+c/OqTXhW14tgXQLpwWcyfsFjy5ye3KY6x6VTigs
+ VCsJuEWFD+NLHAX87wrqyxUW96DUGcRVfVQRhSTA0EgyMMwQkleWTI09WkKbbOpMi5Wejo453za
+ nCVfHCoRQW+D44S9tps1Mb58=
 X-Envelope-To: linux-scsi@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 413efdc466c6c190;
-	Mon, 16 Nov 2026 00:18:04 +0000
-X-Mizu-Trace-ID: 413efdc466c6c190
+Received: by smtp.migadu.com with ESMTPS id f214be4e90a1219b;
+	Mon, 16 Nov 2026 00:18:20 +0000
+X-Mizu-Trace-ID: f214be4e90a1219b
 X-Migadu-Flow: FLOW_OUT
 From: Qiliang Yuan <qiliang.yuan@linux.dev>
-Subject: [PATCH RFC 00/18] scsi: target: Add target_core_uring, an io_uring
- based user backstore
-Date: Sun, 15 Nov 2026 19:17:53 -0500
-Message-Id: <20261115-feat-target-core-uring-v1-0-28cdc137eac6@linux.dev>
+Date: Sun, 15 Nov 2026 19:17:54 -0500
+Subject: [PATCH RFC 01/18] scsi: target: uring: Introduce an io_uring based
+ user backstore
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -63,9 +62,9 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIALJL+moC/x3MsQqDMBCH8VeRmz3wLHHoKvQBukqHYP5Jb4nlk
- oogvntDx9/wfScVmKLQvTvJsGvRLTdI39H69jmBNTTTOIyTiDiO8JWrt4TK62bgr2lOHOTmJES
- 4CKEWfwxRj/94oedjptd1/QCN/mLTbQAAAA==
+Message-Id: <20261115-feat-target-core-uring-v1-1-28cdc137eac6@linux.dev>
+References: <20261115-feat-target-core-uring-v1-0-28cdc137eac6@linux.dev>
+In-Reply-To: <20261115-feat-target-core-uring-v1-0-28cdc137eac6@linux.dev>
 To: "Martin K. Petersen" <mkp@kernel.org>, Shuah Khan <shuah@kernel.org>, 
  Jonathan Corbet <corbet@lwn.net>, Shuah Khan <skhan@linuxfoundation.org>, 
  Randy Dunlap <rdunlap@infradead.org>
@@ -77,90 +76,281 @@ Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
  Qiliang Yuan <qiliang.yuan@linux.dev>
 X-Mailer: b4 0.13.0
 
-TCM/USER is how a userspace process serves a LIO device, for instance
-to export distributed storage over iSCSI or vhost-scsi. All commands of
-a device go through one command ring under one mutex, the data of each
-command is copied into and out of a shared data area, and the server
-has to parse every SCSI CDB itself.
+TCM/USER lets a userspace process serve the commands of a LIO device,
+which is how distributed storage is exported over iSCSI or vhost-scsi.
 
-This series adds target_core_uring, a second user backstore next to
-TCM/USER, built the way ublk is:
+All commands of a TCM/USER device go through one command ring under one
+mutex, so throughput does not scale with the number of submitters. The
+data of each command is copied into and out of a shared data area, and
+the server has to parse every SCSI CDB itself.
 
-- The kernel emulates the SCSI commands. The server only sees reads,
-  writes, flushes, UNMAP and WRITE SAME as an operation, an offset and a
-  length.
-- A device has several queues. Each queue is served through io_uring
-  commands on its own ring, with no lock shared between queues.
-- Data is copied once, with pread()/pwrite() on the character device, or
-  not at all when the server registers the pages of a command as an
-  io_uring fixed buffer.
-
-Patches 1-4 create the device, its queues and the character device.
-Patches 5-8 pass reads and writes to the server. Patches 9-11 handle a
-server that exits or hangs, and aborts. Patches 12-14 add flush, UNMAP
-and WRITE SAME, patch 15 adds fixed buffers. Patches 16-18 add a small
-server, a selftest and the documentation.
-
-Not covered yet: protection information, and a way for existing
-tcmu-runner handlers to move over without changes, as they implement
-SCSI rather than block commands.
-
-Exporting a 2 GiB device through tcm_loop to fio (io_uring, direct I/O,
-iodepth 32 for 4k and 8 for 1M, 6 seconds per job) on a 32 CPU VM, with
-TCM/USER and a single-threaded handler, then with this series, 32 queues
-and one server thread per queue. Both servers keep the data in memory.
-A single job is slower; the gain comes with concurrency and with large
-I/O. Three alternating runs (median, min-max in parentheses):
-
-  workload               TCM/USER (MB/s)   uring (MB/s)          change
-  4k randread, 1 job      426 (409-463)      369 (366-384)         -13%
-  4k randread, 4 jobs    1165 (1072-1253)   1524 (1413-1541)       +31%
-  4k randread, 16 jobs    920 (916-1162)    6193 (5845-6222)      +574%
-  4k randwrite, 16 jobs   793 (711-886)     5701 (5257-5706)      +619%
-  1M read, 4 jobs        6019 (5857-6047)  49460 (46706-57997)    +722%
-  1M write, 4 jobs       2791 (2649-2907)  26692 (25958-27560)    +856%
+Start a new backstore, target_core_uring, that will hand block commands
+to the server through io_uring commands on several queues. Register the
+backstore and let configfs create devices with a size and a block size.
+Let the core emulate the SCSI commands through sbc_parse_cdb(), and fail
+reads and writes until a server can pick them up.
 
 Signed-off-by: Qiliang Yuan <qiliang.yuan@linux.dev>
 ---
-Qiliang Yuan (18):
-      scsi: target: uring: Introduce an io_uring based user backstore
-      scsi: target: uring: Allocate per-queue command descriptors
-      scsi: target: uring: Create a character device per backstore device
-      scsi: target: uring: Map the command descriptors into the server
-      scsi: target: uring: Queue commands until a server fetches them
-      scsi: target: uring: Hand commands out through TCMUR_IO_FETCH
-      scsi: target: uring: Complete commands with TCMUR_IO_COMMIT_AND_FETCH
-      scsi: target: uring: Copy command data with pread() and pwrite()
-      scsi: target: uring: Fail in-flight commands when the server exits
-      scsi: target: uring: Time out commands the server does not complete
-      scsi: target: uring: Drop aborted commands that are still queued
-      scsi: target: uring: Support SYNCHRONIZE CACHE
-      scsi: target: uring: Implement UNMAP
-      scsi: target: uring: Handle WRITE SAME
-      scsi: target: uring: Register command data as io_uring fixed buffers
-      selftests: target_core_uring: Add a minimal server
-      selftests: target_core_uring: Test a device exported through tcm_loop
-      Documentation: target: Describe the uring backstore
+ drivers/target/Kconfig             |  10 ++
+ drivers/target/Makefile            |   1 +
+ drivers/target/target_core_uring.c | 214 +++++++++++++++++++++++++++++++++++++
+ 3 files changed, 225 insertions(+)
 
- Documentation/target/index.rst                     |    1 +
- Documentation/target/tcm-uring.rst                 |   84 ++
- MAINTAINERS                                        |    2 +
- drivers/target/Kconfig                             |   10 +
- drivers/target/Makefile                            |    1 +
- drivers/target/target_core_uring.c                 | 1126 ++++++++++++++++++++
- include/uapi/linux/target_core_uring.h             |  126 +++
- tools/testing/selftests/Makefile                   |    1 +
- .../testing/selftests/target_core_uring/.gitignore |    1 +
- tools/testing/selftests/target_core_uring/Makefile |    8 +
- tools/testing/selftests/target_core_uring/config   |    5 +
- .../selftests/target_core_uring/tcmur_server.c     |  310 ++++++
- .../selftests/target_core_uring/tcmur_test.sh      |  137 +++
- 13 files changed, 1812 insertions(+)
----
-base-commit: 23c62304dde29abe92013d85910d03a77dada35d
-change-id: 20261115-feat-target-core-uring-d1351dfe5fe1
+diff --git a/drivers/target/Kconfig b/drivers/target/Kconfig
+index 92641d39126a3..545a1d4cf37e5 100644
+--- a/drivers/target/Kconfig
++++ b/drivers/target/Kconfig
+@@ -43,6 +43,16 @@ config TCM_USER2
+ 	process to handle requests. This is version 2 of the ABI; version 1
+ 	is obsolete.
+ 
++config TCM_URING
++	tristate "TCM/URING Subsystem Plugin for Linux"
++	depends on IO_URING
++	help
++	  Say Y here to enable the TCM/URING subsystem plugin, which lets a
++	  userspace server handle the block commands of a device through
++	  io_uring commands. Unlike TCM/USER, the kernel emulates the SCSI
++	  commands and the server only reads, writes, flushes and unmaps
++	  blocks, on several queues and without copying data twice.
++
+ source "drivers/target/loopback/Kconfig"
+ source "drivers/target/tcm_fc/Kconfig"
+ source "drivers/target/iscsi/Kconfig"
+diff --git a/drivers/target/Makefile b/drivers/target/Makefile
+index 431b84abfb94e..f9d81430f4b5b 100644
+--- a/drivers/target/Makefile
++++ b/drivers/target/Makefile
+@@ -24,6 +24,7 @@ obj-$(CONFIG_TCM_IBLOCK)	+= target_core_iblock.o
+ obj-$(CONFIG_TCM_FILEIO)	+= target_core_file.o
+ obj-$(CONFIG_TCM_PSCSI)		+= target_core_pscsi.o
+ obj-$(CONFIG_TCM_USER2)		+= target_core_user.o
++obj-$(CONFIG_TCM_URING)		+= target_core_uring.o
+ 
+ # Fabric modules
+ obj-$(CONFIG_LOOPBACK_TARGET)	+= loopback/
+diff --git a/drivers/target/target_core_uring.c b/drivers/target/target_core_uring.c
+new file mode 100644
+index 0000000000000..13981e608a85c
+--- /dev/null
++++ b/drivers/target/target_core_uring.c
+@@ -0,0 +1,214 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * LIO backstore that hands block commands to a userspace server through
++ * io_uring commands.
++ */
++
++#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
++
++#include <linux/module.h>
++#include <linux/parser.h>
++#include <linux/slab.h>
++#include <target/target_core_base.h>
++#include <target/target_core_backend.h>
++
++#define TCMUR_VERSION		"1.0"
++#define TCMUR_MAX_IO_SIZE	(4U << 20)
++#define TCMUR_DEF_BLOCK_SIZE	512
++
++struct tcmur_dev {
++	struct se_device	se_dev;
++
++	u64			dev_size;
++	u32			block_size;
++};
++
++static struct tcmur_dev *TCMUR_DEV(struct se_device *dev)
++{
++	return container_of(dev, struct tcmur_dev, se_dev);
++}
++
++static sense_reason_t tcmur_execute_rw(struct se_cmd *se_cmd,
++				       struct scatterlist *sgl, u32 sgl_nents,
++				       enum dma_data_direction dir)
++{
++	/* Fail the commands until a server can pick them up */
++	return TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
++}
++
++static void tcmur_dev_call_rcu(struct rcu_head *p)
++{
++	struct se_device *dev = container_of(p, struct se_device, rcu_head);
++
++	kfree(TCMUR_DEV(dev));
++}
++
++static int tcmur_attach_hba(struct se_hba *hba, u32 host_id)
++{
++	return 0;
++}
++
++static void tcmur_detach_hba(struct se_hba *hba)
++{
++}
++
++static struct se_device *tcmur_alloc_device(struct se_hba *hba,
++					    const char *name)
++{
++	struct tcmur_dev *udev;
++
++	udev = kzalloc_obj(*udev);
++	if (!udev)
++		return NULL;
++
++	udev->block_size = TCMUR_DEF_BLOCK_SIZE;
++
++	return &udev->se_dev;
++}
++
++static int tcmur_configure_device(struct se_device *dev)
++{
++	struct tcmur_dev *udev = TCMUR_DEV(dev);
++
++	if (!udev->dev_size || (udev->dev_size & (udev->block_size - 1))) {
++		pr_err("dev_size must be a multiple of the block size\n");
++		return -EINVAL;
++	}
++
++	dev->dev_attrib.hw_block_size = udev->block_size;
++	dev->dev_attrib.hw_max_sectors = TCMUR_MAX_IO_SIZE / udev->block_size;
++	dev->dev_attrib.is_nonrot = 1;
++
++	return 0;
++}
++
++static void tcmur_destroy_device(struct se_device *dev)
++{
++}
++
++static void tcmur_free_device(struct se_device *dev)
++{
++	call_rcu(&dev->rcu_head, tcmur_dev_call_rcu);
++}
++
++enum {
++	Opt_dev_size, Opt_block_size, Opt_err,
++};
++
++static const match_table_t tcmur_tokens = {
++	{ Opt_dev_size,		"dev_size=%s" },
++	{ Opt_block_size,	"block_size=%u" },
++	{ Opt_err,		NULL }
++};
++
++static ssize_t tcmur_set_configfs_dev_params(struct se_device *dev,
++					     const char *page, ssize_t count)
++{
++	struct tcmur_dev *udev = TCMUR_DEV(dev);
++	substring_t args[MAX_OPT_ARGS];
++	char *orig, *ptr, *opts;
++	int ret = 0, token, val;
++	u64 size;
++
++	if (target_dev_configured(dev))
++		return -EBUSY;
++
++	opts = kstrdup(page, GFP_KERNEL);
++	if (!opts)
++		return -ENOMEM;
++	orig = opts;
++
++	while (!ret && (ptr = strsep(&opts, ",\n")) != NULL) {
++		if (!*ptr)
++			continue;
++
++		token = match_token(ptr, tcmur_tokens, args);
++		if (token == Opt_dev_size) {
++			ret = match_u64(&args[0], &size);
++			if (!ret)
++				udev->dev_size = size;
++			continue;
++		}
++		if (token == Opt_err || match_int(&args[0], &val) || val < 0) {
++			ret = -EINVAL;
++			break;
++		}
++
++		switch (token) {
++		case Opt_block_size:
++			if (val < 512 || val > PAGE_SIZE || !is_power_of_2(val))
++				ret = -EINVAL;
++			else
++				udev->block_size = val;
++			break;
++		}
++	}
++
++	kfree(orig);
++	return ret ? ret : count;
++}
++
++static ssize_t tcmur_show_configfs_dev_params(struct se_device *dev, char *b)
++{
++	struct tcmur_dev *udev = TCMUR_DEV(dev);
++	ssize_t bl = 0;
++
++	bl += sprintf(b + bl, "Size: %llu Block size: %u", udev->dev_size,
++		      udev->block_size);
++	bl += sprintf(b + bl, "\n");
++	return bl;
++}
++
++static sector_t tcmur_get_blocks(struct se_device *dev)
++{
++	struct tcmur_dev *udev = TCMUR_DEV(dev);
++
++	return div_u64(udev->dev_size, dev->dev_attrib.block_size) - 1;
++}
++
++static struct exec_cmd_ops tcmur_exec_cmd_ops = {
++	.execute_rw		= tcmur_execute_rw,
++};
++
++static sense_reason_t tcmur_parse_cdb(struct se_cmd *se_cmd)
++{
++	return sbc_parse_cdb(se_cmd, &tcmur_exec_cmd_ops);
++}
++
++static const struct target_backend_ops tcmur_ops = {
++	.name			= "uring",
++	.inquiry_prod		= "URING",
++	.inquiry_rev		= TCMUR_VERSION,
++	.owner			= THIS_MODULE,
++	.attach_hba		= tcmur_attach_hba,
++	.detach_hba		= tcmur_detach_hba,
++	.alloc_device		= tcmur_alloc_device,
++	.configure_device	= tcmur_configure_device,
++	.destroy_device		= tcmur_destroy_device,
++	.free_device		= tcmur_free_device,
++	.parse_cdb		= tcmur_parse_cdb,
++	.set_configfs_dev_params = tcmur_set_configfs_dev_params,
++	.show_configfs_dev_params = tcmur_show_configfs_dev_params,
++	.get_device_type	= sbc_get_device_type,
++	.get_blocks		= tcmur_get_blocks,
++	.tb_dev_attrib_attrs	= sbc_attrib_attrs,
++};
++
++static int __init tcmur_module_init(void)
++{
++	return transport_backend_register(&tcmur_ops);
++}
++
++static void __exit tcmur_module_exit(void)
++{
++	target_backend_unregister(&tcmur_ops);
++	/* Wait for the devices that tcmur_free_device() frees with RCU */
++	rcu_barrier();
++}
++
++module_init(tcmur_module_init);
++module_exit(tcmur_module_exit);
++
++MODULE_DESCRIPTION("TCM io_uring subsystem plugin");
++MODULE_AUTHOR("Qiliang Yuan <qiliang.yuan@linux.dev>");
++MODULE_LICENSE("GPL");
 
-Best regards,
 -- 
-Qiliang Yuan <qiliang.yuan@linux.dev>
+2.43.0
 
