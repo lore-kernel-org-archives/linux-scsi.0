@@ -1,55 +1,56 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794787131;
-	b=0262kFXWjp/48RROzLfKoqA7Z6Lr+ocMKxPpMNr9DyEtTBRZFUaQpy7+MZ3d8CxHSLFZ
-	 CfdDgK5W3EpsVLwP2DLKEtpXokyX3PtJ/296yWnpGiV0HN6ofrlcvsJDFtVapjzp6ghgg
-	 4prd1DuoEPCUFx+aBcFif5gHyG/BsgB42wOKchzNC+cxV5GhhGO0niD8HpqWN+YW8t+JY
-	 W7wsM+kLt/U7ntbb6UsgJvXYuVqdActGud9w35xyoqwGiirGz0TQ/hUTaEMnl5Kn/EGSB
-	 sy6CsECOdZPAdyo2u4aoEkUrZzyDEt/bL0RisBzR81kL2bXKwzhLFRUnyvQJQ7FZYJw==
+	t=1794787455;
+	b=qgSMIQHdueFSc6J/UsfD0XelzV5EipKM2xNjNmljFcn7cSlCTQR6AjJmCB/7RVZlyhjt
+	 /oR8s+v/si/tF9JCbUVD6jx489PyZzomr+sjW7g1FyGU0RuqPu3uR7M2Dkobkllx7uPKO
+	 3qGQilEB6PW9DzWAEZAqx/lm2WMbVgGIjthBi854AapAmxIQ0Ch7XeCueVGCCGi1yJ4eY
+	 5qM0MntkU9Yz+IHZaEMNiyZ3ZFNnR1oemfDHdHnY4PJyZhVzCctZUWNNDXo8kCm/2yO1u
+	 RTfK6zk5en1DaCcrhmeCB5kPGKDptXU/LysR9r00hmJDfDkgSu9BRIjuqnIsiIF1FSw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794787131;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794787455;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=wRRqm8Z93PGVZ5FlwCW3D6lXIvFQd15je90FR/NhyjE=;
-	b=yk9VHKn15tXzIK1UmJVfL56Ynb65gTBj6aXS/lzv5/yoYbzI48xPw/68t5NEw37jPMMt
-	 7SJeIMooWKze8hX4TcDHTOzIK0th2wFZxb02p2cGH5gpwzTMQcZo8bAC1xLCvf54GMNF/
-	 p6Th5L1eBJTiPzaYibkTH8awW7sEdbbcZQ4RL48Tznsxe5Lio5J9tp0LBWkftSr3frGF8
-	 CXNPAbNejbkKzCSsnZHLRBOPOK6QnOSqpmrOg/K/Bg2/q/40M3BslKEFk+rM3vCM27kfw
-	 YKsKgHUVC0w2pekeB+bm+ZIRnNwJCsMh59AhWzhKzK7XIdIl1LqT7s3lVXXxBykpQRw==
+	bh=qC5/IFvay/3tPPAO8/DdmXwEJm9t4ZhL0/j2eI/FxUE=;
+	b=Ha0+qYqVS22B/fwalZoKRncOUwiBgYVBUimKbvNAOmL/HQZwwc/yIFNBk71F8U+UEAwD
+	 gxTs8nQpeW21jVW8ko5KQlJUc8ylG/p0NjN3DBptn+lgoIh3qVJwfXXzOXjoAOvXt+DEF
+	 yHktg+GSv7ZKmieULBzY2cxBP8yG+n8r7ZsMxBqJID+gqVlu35KOZCpXKg75cCAYZWqWR
+	 avisYsOuATot7bbGkROCT1nTbt9gamqKkMSNMw1Vb0gy5/Jt89i20luywnB6fk7t+L64n
+	 zSsNsTLXybREIKBmCCdmGsINWeEYqdX2Bm98X1NiGdJu/ammXyN/cL50AFMQ5iBj9Jw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=dwj+3CGv;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="I/YSprNz";
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0215606A32C
-	for <linux-scsi@vger.kernel.org>; Sun, 15 Nov 2026 23:58:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AFAF5606A31F
+	for <linux-scsi@vger.kernel.org>; Mon, 16 Nov 2026 00:04:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=dwj+3CGv
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 675D51F000C5;
-	Sun, 15 Nov 2026 23:58:50 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=I/YSprNz
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 278941F000C6;
+	Mon, 16 Nov 2026 00:04:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794787130;
-	bh=wRRqm8Z93PGVZ5FlwCW3D6lXIvFQd15je90FR/NhyjE=;
+	s=k20260515; t=1794787455;
+	bh=qC5/IFvay/3tPPAO8/DdmXwEJm9t4ZhL0/j2eI/FxUE=;
 	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
-	b=dwj+3CGv75KJVx5Gg8MU/2TCbT+pcnBfFuRPyEpbkKfhOA6aYET/V5WNNcp6wnf5C
-	 NAA4ghV9mLKZlRseLl1yFTBT68DeF5GYHBkoN8AaY4OnVE8+qdArCvAHIvZYwx9epQ
-	 deDIshu5k6rp35DS9ViA6KTD94dsD5xzhDg0HZUVyochq8LPYgzBtYpGlhlPoyIqRA
-	 3HRYWSaQuh7X6ho/6W1tCiN4qkLX2aRxb26tuvO9JiH31LeNiLcwPYZt5s6hD/q1do
-	 pcREcpVXtXauUBDdFttqSjVjtT+8xcNfLa2Gk5oKvV0drMOFKHNGMk2g3FL006d4Om
-	 saPhAO/2Ekslg==
-Message-ID: <sashiko-outbox-215934@kernel.org>
+	b=I/YSprNzt38Dy1kOomji3SjzuXxJ3LRYDvReYkTZhCPy9CtAiSfeDddj9+twtCPcp
+	 Mxt4qWC461G2fOegDe5D/6cOC7+BNoYLl0OoTchTBnDvERSiRNz8oZQhZDEtS/wSey
+	 tptgTUpiPxnRTxAEZmV6fRdt8+68jCyGseFy8LXnzTKPyfwbLTVVFVDQFl2IPEBXjW
+	 wZ3x4+R544KBPwS9h8SSBXKin2SyVwOZ5ubj7JEGWEhDQMoKb6ZRli/zd+G1hzsHeY
+	 0CKW61QLDzeqxk19wTH13VY/VPhzFse6AIEAKFfBtwLXkxSTm2YgG4CDZp4kdi1pWU
+	 mXcMuU7MZ3Fag==
+Message-ID: <sashiko-outbox-215939@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v10 08/13] zloop: add storage element emulation
+Subject: Re: [PATCH v10 12/13] scsi: sd_zbc: define storage element
+ management operations
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Damien Le Moal" <dlemoal@kernel.org>, linux-scsi@vger.kernel.org
-In-Reply-To: <20261115233327.941586-9-dlemoal@kernel.org>
+In-Reply-To: <20261115233327.941586-13-dlemoal@kernel.org>
 References: <20261115233327.941586-1-dlemoal@kernel.org>
- <20261115233327.941586-9-dlemoal@kernel.org>
+ <20261115233327.941586-13-dlemoal@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Sun, 15 Nov 2026 23:58:49 +0000
+Date: Mon, 16 Nov 2026 00:04:14 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -59,235 +60,125 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 
-Thank you for your contribution! Sashiko AI review found 3 potential
+Thank you for your contribution! Sashiko AI review found 2 potential
 issues to consider:
-- [Medium] zloop: stale zone state on partial failure in
-  zloop_execute_restore_elements()
-- [Medium] zloop: zloop_rdwr_is_ok() blocks ZLOOP_ZONE_SEQ_ERROR
-  recovery on full zones
-- [Medium] zloop: race between storage element ops and
-  zloop_ctl_remove()
+- [Medium] scsi: sd_zbc: missed restore error in
+  sd_zbc_restore_storage_elements()
+- [Low] scsi: sd_zbc: missing ULLONG_MAX check in
+  sd_zbc_parse_storage_element()
 --
 
-commit 8e8c9e4aeea297b926b2b865b9d40a12a001bcbe
+commit 41edcf895fef1b022cae55f553c74d5d5da41fa8
 Author: Damien Le Moal <dlemoal@kernel.org>
 
-zloop: add storage element emulation
+scsi: sd_zbc: define storage element management operations
 
-This commit adds storage element depopulation emulation to the zloop
-driver, controlled via the new stor_elements option and implemented
-through zloop_se_ops.
+This commit defines struct blk_se_ops callbacks in sd_zbc to report,
+remove, and restore storage elements on SMR SCSI disks that support
+depopulation.
 
-> diff --git a/drivers/block/zloop.c b/drivers/block/zloop.c
-> index eb51c8e1cc189..26018e9e567c6 100644
-> --- a/drivers/block/zloop.c
-> +++ b/drivers/block/zloop.c
+> diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
+> index bf2e60071d577..6322256028aa4 100644
+> --- a/drivers/scsi/sd_zbc.c
+> +++ b/drivers/scsi/sd_zbc.c
 
 [ ... ]
 
-> @@ -876,6 +988,43 @@ static void zloop_complete_rq(struct request *rq)
->  	blk_mq_end_request(rq, sts);
+> @@ -560,6 +573,484 @@ static void sd_zbc_print_zones(struct scsi_disk *sd=
+kp)
+>  			  sdkp->zone_info.zone_blocks);
 >  }
 > =20
-> +static bool zloop_rdwr_is_ok(struct zloop_device *zlo, struct request *r=
-q)
+> +static void sd_zbc_parse_storage_element(struct scsi_disk *sdkp, u8 *des=
+c,
+> +					 struct blk_se *element)
 > +{
-> +	struct zloop_zone *zone =3D &zlo->zones[rq_zone_no(rq)];
-> +	bool is_write =3D op_is_write(req_op(rq));
-> +	enum blk_se_status sts =3D zloop_zone_element_status(zlo, zone, is_writ=
-e);
-> +	bool ret;
+> +	struct scsi_device *sdp =3D sdkp->device;
+> +	sector_t zone_sectors =3D sd_zbc_zone_sectors(sdkp);
+> +	u64 capacity;
 > +
-> +	/*
-> +	 * Fail read and write operations if the storage element serving the
-> +	 * target zone is not healthy.
-> +	 */
-> +	if (sts >=3D BLK_SE_STS_DEGRADED)
-> +		return false;
+> +	memset(element, 0, sizeof(*element));
 > +
-> +	/*
-> +	 * Check the zone condition: do not allow any read and write operations
-> +	 * to offline zones, and allow only read operations to full and
-> +	 * read-only zones.
-> +	 */
-> +	spin_lock(&zone->wp_lock);
-> +	switch (zone->cond) {
-> +	case BLK_ZONE_COND_OFFLINE:
-> +		ret =3D false;
+> +	element->id =3D get_unaligned_be32(&desc[4]);
+> +	element->restore_allowed =3D desc[13] & 0x01;
+> +
+> +	switch (desc[14]) {
+> +	case SCSI_PHYS_ELEM_TYPE_ALL_ACCESS_STORAGE:
+> +		element->type =3D BLK_SE_TYPE_RDWR;
+> +		capacity =3D get_unaligned_be64(&desc[16]);
+> +		if (!zone_sectors || capacity =3D=3D ULLONG_MAX)
+> +			element->nr_zones =3D 0;
+> +		else
+> +			element->nr_zones =3D
+> +				logical_to_sectors(sdp, capacity) >>
+> +					ilog2(zone_sectors);
 > +		break;
-> +	case BLK_ZONE_COND_FULL:
-> +	case BLK_ZONE_COND_READONLY:
-> +		ret =3D !is_write;
+> +	case SCSI_PHYS_ELEM_TYPE_FRAC_ACCESS_STORAGE:
+> +		element->paired_id =3D get_unaligned_be32(&desc[16]);
+> +		if (desc[20] & 0x01)
+> +			element->type =3D BLK_SE_TYPE_READ;
+> +		else
+> +			element->type =3D BLK_SE_TYPE_WRITE;
+> +		element->nr_zones =3D get_unaligned_be64(&desc[24]);
 > +		break;
-> +	default:
-> +		ret =3D true;
-> +		break;
-> +	}
-> +	spin_unlock(&zone->wp_lock);
-> +
-> +	return ret;
-> +}
-> +
->  static blk_status_t zloop_queue_rq(struct blk_mq_hw_ctx *hctx,
->  				   const struct blk_mq_queue_data *bd)
->  {
-> @@ -889,6 +1038,30 @@ static blk_status_t zloop_queue_rq(struct blk_mq_hw=
-_ctx *hctx,
->  		return BLK_STS_IOERR;
->  	}
-> =20
-> +	if (zlo->nr_elements) {
-> +		/*
-> +		 * Do not allow commands while the restoration of storage
-> +		 * elements is in progress.
-> +		 */
-> +		if (READ_ONCE(zlo->restore_in_progress))
-> +			return BLK_STS_IOERR;
-> +
-> +		/*
-> +		 * Check if we can accept data access commands based on the
-> +		 * health state of the storage element serving the target zone.
-> +		 */
-> +		switch (req_op(rq)) {
-> +		case REQ_OP_READ:
-> +		case REQ_OP_WRITE:
-> +		case REQ_OP_ZONE_APPEND:
-> +			if (!zloop_rdwr_is_ok(zlo, rq))
-> +				return BLK_STS_IOERR;
-> +			break;
-> +		default:
-> +			break;
-> +		}
-> +	}
 
-[Severity: Medium]
-Does rejecting writes to BLK_ZONE_COND_FULL zones in zloop_rdwr_is_ok()
-prevent ZLOOP_ZONE_SEQ_ERROR recovery?
-
-zloop_seq_write_prep() advances zone->wp and calls zloop_set_zone_full()
-when zone->wp reaches zone_end before zloop_do_rw() writes to the backing
-file.  If that write fails, zloop_complete_rq() sets ZLOOP_ZONE_SEQ_ERROR
-so the next I/O will resynchronize zone->wp and zone->cond from the file
-size in zloop_rw() -> zloop_update_seq_zone().  When zlo->nr_elements is
-non-zero, however, zloop_queue_rq() calls zloop_rdwr_is_ok() before
-queueing cmd->work, so subsequent writes or zone appends to that zone fail
-immediately with BLK_STS_IOERR and never reach zloop_rw().
+[Severity: Low]
+Should SCSI_PHYS_ELEM_TYPE_FRAC_ACCESS_STORAGE also normalize a reported
+count of ULLONG_MAX to element->nr_zones =3D 0, matching the handling for
+SCSI_PHYS_ELEM_TYPE_ALL_ACCESS_STORAGE above?  When a device sets the
+number of associated zones field to 0xffffffffffffffff to indicate that
+the count is not reported, callers of bdev_report_storage_elements() and
+BLKREPORTSTORELEMS will otherwise receive ULLONG_MAX instead of 0.
 
 [ ... ]
 
-> +static int zloop_execute_restore_elements(struct zloop_device *zlo)
+> +static int sd_zbc_wait_for_se_restore(struct scsi_disk *sdkp,
+> +				      struct sd_zbc_se_report *rep,
+> +				      unsigned int in_error_orig)
 > +{
-> +	struct gendisk *disk =3D zlo->disk;
-> +	struct zloop_zone *zone;
-> +	struct blk_se *se;
-> +	enum blk_se_status sts;
-> +	unsigned int memflags, i;
-> +	int ret =3D 0;
-> +
-> +	/* Wait for all IOs to complete. */
-> +	memflags =3D blk_mq_freeze_queue(disk->queue);
-> +	blk_mq_unfreeze_queue(disk->queue, memflags);
-> +
-> +	/* First, truncate all files for sequential zones. */
-> +	for (i =3D 0, zone =3D zlo->zones; i < zlo->nr_zones; i++, zone++) {
-> +		ret =3D zloop_restore_zone_file(zlo, zone);
-> +		if (ret) {
-> +			pr_err("zloop%d: restore zone %u file failed %d\n",
-> +			       zlo->id, i, ret);
-> +			break;
-> +		}
-> +	}
-> +
-> +	/*
-> +	 * Now, resetore the condition of all zones, unless we failed to
-> +	 * truncate all files, in which case we report a restoration error
-> +	 * without changing the zone conditions.
-> +	 */
-> +	if (!ret) {
-> +		for (i =3D 0, zone =3D zlo->zones; i < zlo->nr_zones; i++, zone++)
-> +			zloop_restore_zone_cond(zlo, zone);
-> +		sts =3D BLK_SE_STS_OK;
-> +	} else {
-> +		sts =3D BLK_SE_STS_RESTORE_ERROR;
-> +	}
-
-[Severity: Medium]
-If zloop_restore_zone_file() fails on zone i, do sequential zones before i
-keep stale in-memory zone conditions and write pointers?
-
-Those earlier sequential zones have already had their backing files
-truncated to 0 bytes by vfs_truncate(), but zloop_restore_zone_cond() is
-skipped when ret is non-zero and ZLOOP_ZONE_SEQ_ERROR is only set on the
-zone that failed.  Earlier non-empty zones are left with 0-byte backing
-files while retaining their old zone->cond, non-zero zone->wp, and
-open_zones_lru_list accounting, which zloop_report_zones() will then
-report as-is.
-
-> +
-> +	/*
-> +	 * Update the status of all elements being restored based on the zone
-> +	 * restoration result.
-> +	 */
-> +	for (i =3D 0, se =3D zlo->elements; i < zlo->nr_elements; i++, se++) {
-> +		if (READ_ONCE(se->status) =3D=3D BLK_SE_STS_RESTORE_IN_PROGRESS)
-> +			WRITE_ONCE(se->status, sts);
-> +	}
-> +
-> +	return ret;
-> +}
-> +
-> +static int zloop_restore_elements(struct gendisk *disk)
-> +{
+> +	unsigned int i, in_error, in_progress;
+> +	int ret;
 
 [ ... ]
 
-> +	msleep(5000);
+> +		if (!in_progress) {
+> +			if (in_error > in_error_orig)
+> +				return -EIO;
+> +			return 0;
+> +		}
+> +	} while (!fatal_signal_pending(current));
 > +
-> +	mutex_lock(&zlo->stor_elements_lock);
+> +	return -EINTR;
+> +}
 > +
-> +	/*
-> +	 * Re-check the device as its removal may have been initiated
-> +	 * while we were sleeping.
-> +	 */
-> +	if (test_bit(GD_DEAD, &disk->state) ||
-> +	    data_race(READ_ONCE(zlo->state)) =3D=3D Zlo_deleting) {
-> +		ret =3D -ENODEV;
-> +		goto clear_restore;
+> +static int sd_zbc_restore_storage_elements(struct gendisk *disk)
+> +{
+> +	struct scsi_disk *sdkp =3D scsi_disk(disk);
+> +	unsigned int i, in_error_orig =3D 0;
+> +	struct sd_zbc_se_report rep;
+> +	int ret;
+
+[ ... ]
+
+> +	for (i =3D 0; i < rep.nr_reported_elements; i++) {
+> +		if (rep.elements[i].status =3D=3D BLK_SE_STS_RESTORE_ERROR)
+> +			in_error_orig++;
 > +	}
-> +
-> +	/* Restore the elements. */
-> +	ret =3D zloop_execute_restore_elements(zlo);
 
 [Severity: Medium]
-Can zloop_restore_elements() and zloop_remove_element() race with
-zloop_ctl_remove() right after the post-sleep check?
+Can sd_zbc_restore_storage_elements() return 0 when a retried element
+fails restoration again?
 
-zloop_ctl_remove() sets zlo->state to Zlo_deleting under zloop_ctl_mutex
-without synchronizing with zlo->stor_elements_lock:
+When an element is in BLK_SE_STS_RESTORE_ERROR with restore_allowed set,
+RESTORE ELEMENTS AND REBUILD attempts to restore it again.  Because that
+element is counted in in_error_orig before the command is issued, if its
+restoration fails again (or if it succeeds while another element fails),
+in_error will not exceed in_error_orig in sd_zbc_wait_for_se_restore() and
+the function will return 0 instead of -EIO.
 
-CPU0                                  CPU1
-zloop_restore_elements()
-  mutex_lock(&zlo->stor_elements_lock)
-  /* checks GD_DEAD and zlo->state */
-                                      zloop_ctl_remove()
-                                        mutex_lock_killable(&zloop_ctl_mute=
-x)
-                                        WRITE_ONCE(zlo->state, Zlo_deleting)
-                                        mutex_unlock(&zloop_ctl_mutex)
-                                        del_gendisk(zlo->disk)
-  zloop_execute_restore_elements()
-    zloop_restore_zone_file()
-      vfs_truncate(..., 0)
-                                        zloop_forget_cache()
-                                          /* sees active zone->cond / wp */
-                                          vfs_truncate(..., old_wp - start)
-    zloop_restore_zone_cond()
-
-Because zloop_execute_restore_elements() truncates all sequential zone
-files to 0 in a first pass before resetting zone->cond and zone->wp in a
-second pass, a concurrent zloop_forget_cache() still sees active zone
-conditions and extends the truncated zone files back to old_wp.
+Only elements in BLK_SE_STS_RESTORE_ERROR with !restore_allowed are
+ignored by the restore command and should be counted in in_error_orig.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261115233327.9415=
-86-1-dlemoal@kernel.org?part=3D8
+86-1-dlemoal@kernel.org?part=3D12
