@@ -1,56 +1,56 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.62
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.225
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794788408;
-	b=uXuAf1igP9E97BKiy3RigZXo7RWPZCt8jSiJDiE+V+HIVFjnKVLY1ZF6wrIrk7+Ysyh0
-	 igMgo9GGc6yfyOh9OMmhsIlffyAKQGhK1J01DpEdA1hTvhrxs1j/UKsWMAfV+txse2vdQ
-	 /TGHAcLjMihRiEG6BFehTMIN1SiQyat+439RInr070/IdqEjoIJII5HRqtZpUxCUxwTj4
-	 5LhIFg3OzL2E9e7QKWgBa9IwZ3N/+xSWSsYKXjC/RNjAKpqE8eYLg/9dv5kbKV5I22j/R
-	 WewRvq48XNhrYeOselA78iIVKqDhIzkkcIlS3XbK4JLlapBUHKTJCvdlGdoaKfL+2mw==
+	t=1794788419;
+	b=gaguXHwpimtszu6iQ19flrgPRV72E+mYmSB8mEe7M/JppTXKheTJMEWCXjV6eu17/9uo
+	 VeAagDM27ibkB0Bn5Ekzr5nsH0zkrkGUdFlyF+fLiJ4FXNJIJ1ldFmtUghROKlqp6zf11
+	 iCbUwYE7dKYZYDYsOeKOHKxyyMSeDbFf0w1Rmv7DhqMopjb3P55WO75PN7trHDLtS/rzs
+	 myHxjtHpCYoL0guDLRPnporDxsqIOXbXniw1zWtDy30r5mXQ9QC0R0w7G9EXaDXzRwi9N
+	 c4wI+uohm0hyAz2M1nfH1XVufh/ciKE9Cya3B6JX0PYAmL1OcUSYiFUEvbAvzXThazQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794788408;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794788419;
 	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
 	 X-Mizu-Trace-ID:X-Migadu-Flow:From:Date:Subject:MIME-Version:
 	 Content-Type:Content-Transfer-Encoding:Message-Id:References:
 	 In-Reply-To:To:Cc:X-Mailer;
-	bh=OQJ79KPFQohOoVnOikdrmDCVb0EBCzZiMlHgXuyszI4=;
-	b=m51RW3Rwdgzinf2/IY93S0vW28fEjzaF6k23/tgxNm3jnyd7hcG5aQ7NGVlp6phWxdtQ
-	 cOYQkHM5hMpjcQ/VJ/jP5PcGo8ybynKYYnrLjFIyp3nevZpESfbrDR2LQ8dJn894ETh6W
-	 pfWI0kjgzEsweMWbPgMYXk0Bwm9TA+nCVnXkNrr0PJCopK/fA9MJlgkCu+vi228BsjNOQ
-	 6Cg4qSLl8uhhVM7n6gz57FcrV0GV8XUgkSih801e1d8QX/aqyFrVO9hCsMkTsJbaGf1qE
-	 2QROG1EeqvjOQgQCogOlhi8vTc4808dp1OTonyCiVuN4lLghcvi/VxEW589+koN4JQw==
+	bh=6s8/C1tvxzvgHmqGK3oZ/Y/d+6ogDdMftAFdojh64u0=;
+	b=2vlWFtgs0tNpFy4clysDHPJiSe62W1l/jTCj/7n4HsPaKIRerehVkxdFQC63uyROXtrL
+	 YrG/0InEnAKQPUcNxd5Ydpalxi6aadNIdfa7bUBOkVMJYGx2GRhXyVeoXqQjXIjdxjH2T
+	 QxBQKeQ0VKDUtqyE2IwatAZlkNGvWjUvksP9V713mHkxp4Pw7e4ol5ndyjoUMWbWPjKW7
+	 ZCUE+PRZkB0Uy4KS63qiEwQgpKHeTsWRlOobjbkPV6m3pJGe/hvx+w/rrsY3wdOQuD2A8
+	 qnkz2SyoK8aE0NTL2bahIzSrdIE6bblVFXO47Haiv4n4ZZHfl8SZvG88ZryqnYuZXmg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linux.dev;
 	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=cK2pR7CP;
-	arc=none smtp.remote-ip=91.218.175.62
-Received: from mta0.migadu.com (out-62.mta0.migadu.com [91.218.175.62])
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=CWZnjj+M;
+	arc=none smtp.remote-ip=95.215.58.225
+Received: from mta1.migadu.com (out-225.mta1.migadu.com [95.215.58.225])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB81C606A32C
-	for <linux-scsi@vger.kernel.org>; Mon, 16 Nov 2026 00:20:06 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org EB81C606A32C
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D9E2606A323
+	for <linux-scsi@vger.kernel.org>; Mon, 16 Nov 2026 00:20:18 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8D9E2606A323
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=cK2pR7CP
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=CWZnjj+M
 X-Envelope-To: linux-scsi@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=8EvCg7CNUuCXDH95sZ6Tyepl2hXygT4WNRWVlkQy0NI=;
+DKIM-Signature: a=rsa-sha256; bh=JfUFJVlcWizmfQyeDPMJDRGV730ECZKJhBkx7XmCOFc=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1794788405; v=1; x=1795393205;
- b=cK2pR7CPprC4SGg7azzilKvwDF1xIAbcgBtqZDFWgouVEPr7wGMyc8ce3BjCz3C+Znz850BV
- 8idRSUjtjnhyw63X5l4YXiFaXQE+i+ggRsVfMOaxNSAthCQ5T5AcIcx+sYIgpJUdhRGExH9HXLV
- W18sey4ZqDSyx8waExhQ5hHQ=
+ t=1794788416; v=1; x=1795393216;
+ b=CWZnjj+MwGdHba+/UZGW8PxjWjN6r5OvCmD0IvMvBplNWr0koSFOrGKy+2HZ96V4ZPcxdgKj
+ B14vRpWoRiKZzY22xDCek7zhVmwf174Q9dcexAnj8b5e8/69R0pdb8yO9i3oqrvzk8qffl5YyTn
+ KMVuNUjzlxqQR46TVXYSFn20=
 X-Envelope-To: linux-scsi@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 86c97f2af74bb162;
-	Mon, 16 Nov 2026 00:20:04 +0000
-X-Mizu-Trace-ID: 86c97f2af74bb162
+Received: by smtp.migadu.com with ESMTPS id 6bc4cf57d400e45e;
+	Mon, 16 Nov 2026 00:20:15 +0000
+X-Mizu-Trace-ID: 6bc4cf57d400e45e
 X-Migadu-Flow: FLOW_OUT
 From: Qiliang Yuan <qiliang.yuan@linux.dev>
-Date: Sun, 15 Nov 2026 19:18:09 -0500
-Subject: [PATCH RFC 16/18] selftests: target_core_uring: Add a minimal
- server
+Date: Sun, 15 Nov 2026 19:18:10 -0500
+Subject: [PATCH RFC 17/18] selftests: target_core_uring: Test a device
+ exported through tcm_loop
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -62,7 +62,7 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261115-feat-target-core-uring-v1-16-28cdc137eac6@linux.dev>
+Message-Id: <20261115-feat-target-core-uring-v1-17-28cdc137eac6@linux.dev>
 References: <20261115-feat-target-core-uring-v1-0-28cdc137eac6@linux.dev>
 In-Reply-To: <20261115-feat-target-core-uring-v1-0-28cdc137eac6@linux.dev>
 To: "Martin K. Petersen" <mkp@kernel.org>, Shuah Khan <shuah@kernel.org>, 
@@ -76,372 +76,202 @@ Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
  Qiliang Yuan <qiliang.yuan@linux.dev>
 X-Mailer: b4 0.13.0
 
-target_core_uring needs a userspace server to do anything.
+tcmur_server can serve a target_core_uring device from a backing file.
 
-There is none to test the backstore with, and no example of how to use
-its interface.
+Nothing checks that the backstore and the server work together.
 
-Add tcmur_server, which serves a device from a backing file, from
-memory or as a null device. It runs one thread and one io_uring per
-queue. With -z it registers the data pages of reads and writes as fixed
-buffers and does the I/O on the backing file without copying.
+Add a test that exports a device through tcm_loop and compares the SCSI
+disk with the backing file after writes, reads, flushes, UNMAP and
+WRITE SAME, with and without zero copy. Also check that a new server
+takes over after the first one is killed, and that commands time out
+without a server.
 
 Signed-off-by: Qiliang Yuan <qiliang.yuan@linux.dev>
 ---
- MAINTAINERS                                        |   1 +
- .../testing/selftests/target_core_uring/.gitignore |   1 +
- tools/testing/selftests/target_core_uring/Makefile |   7 +
- .../selftests/target_core_uring/tcmur_server.c     | 310 +++++++++++++++++++++
- 4 files changed, 319 insertions(+)
+ tools/testing/selftests/Makefile                   |   1 +
+ tools/testing/selftests/target_core_uring/Makefile |   1 +
+ tools/testing/selftests/target_core_uring/config   |   5 +
+ .../selftests/target_core_uring/tcmur_test.sh      | 137 +++++++++++++++++++++
+ 4 files changed, 144 insertions(+)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 07148430d9ea6..b3ac53cd7bf97 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -25331,6 +25331,7 @@ F:	Documentation/target/
- F:	drivers/target/
- F:	include/target/
- F:	include/uapi/linux/target_core_uring.h
-+F:	tools/testing/selftests/target_core_uring/
- 
- SCTP PROTOCOL
- M:	Marcelo Ricardo Leitner <marcelo.leitner@gmail.com>
-diff --git a/tools/testing/selftests/target_core_uring/.gitignore b/tools/testing/selftests/target_core_uring/.gitignore
-new file mode 100644
-index 0000000000000..6e2f9115e1392
---- /dev/null
-+++ b/tools/testing/selftests/target_core_uring/.gitignore
-@@ -0,0 +1 @@
-+tcmur_server
+diff --git a/tools/testing/selftests/Makefile b/tools/testing/selftests/Makefile
+index 07c3719f8b04b..8e97d4b374a09 100644
+--- a/tools/testing/selftests/Makefile
++++ b/tools/testing/selftests/Makefile
+@@ -131,6 +131,7 @@ TARGETS += static_keys
+ TARGETS += sync
+ TARGETS += syscall_user_dispatch
+ TARGETS += sysctl
++TARGETS += target_core_uring
+ TARGETS += tc-testing
+ TARGETS += tdx
+ TARGETS += thermal/intel/power_floor
 diff --git a/tools/testing/selftests/target_core_uring/Makefile b/tools/testing/selftests/target_core_uring/Makefile
-new file mode 100644
-index 0000000000000..438628fd1606b
---- /dev/null
+index 438628fd1606b..202f174a17e08 100644
+--- a/tools/testing/selftests/target_core_uring/Makefile
 +++ b/tools/testing/selftests/target_core_uring/Makefile
-@@ -0,0 +1,7 @@
-+# SPDX-License-Identifier: GPL-2.0
-+CFLAGS += -O2 -Wall -D_GNU_SOURCE $(KHDR_INCLUDES)
-+LDLIBS += -luring -lpthread
-+
-+TEST_GEN_PROGS_EXTENDED := tcmur_server
-+
-+include ../lib.mk
-diff --git a/tools/testing/selftests/target_core_uring/tcmur_server.c b/tools/testing/selftests/target_core_uring/tcmur_server.c
+@@ -2,6 +2,7 @@
+ CFLAGS += -O2 -Wall -D_GNU_SOURCE $(KHDR_INCLUDES)
+ LDLIBS += -luring -lpthread
+ 
++TEST_PROGS := tcmur_test.sh
+ TEST_GEN_PROGS_EXTENDED := tcmur_server
+ 
+ include ../lib.mk
+diff --git a/tools/testing/selftests/target_core_uring/config b/tools/testing/selftests/target_core_uring/config
 new file mode 100644
-index 0000000000000..128a0021e7796
+index 0000000000000..9115bf367c169
 --- /dev/null
-+++ b/tools/testing/selftests/target_core_uring/tcmur_server.c
-@@ -0,0 +1,310 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * Minimal server for target_core_uring devices.
-+ *
-+ * usage: tcmur_server [-z] <tcmur device> null|ram|<backing file>
-+ *
-+ * Run one thread per queue. With -z, register the data pages of each read
-+ * and write as a fixed buffer and do the I/O on the backing file without
-+ * copying.
-+ */
-+#define _GNU_SOURCE
-+#include <errno.h>
-+#include <fcntl.h>
-+#include <liburing.h>
-+#include <pthread.h>
-+#include <stdbool.h>
-+#include <stdint.h>
-+#include <stdio.h>
-+#include <stdlib.h>
-+#include <string.h>
-+#include <unistd.h>
-+#include <linux/falloc.h>
-+#include <sys/ioctl.h>
-+#include <sys/mman.h>
-+#include <linux/target_core_uring.h>
++++ b/tools/testing/selftests/target_core_uring/config
+@@ -0,0 +1,5 @@
++CONFIG_IO_URING=y
++CONFIG_TARGET_CORE=m
++CONFIG_TCM_URING=m
++CONFIG_LOOPBACK_TARGET=m
++CONFIG_BLK_DEV_SD=m
+diff --git a/tools/testing/selftests/target_core_uring/tcmur_test.sh b/tools/testing/selftests/target_core_uring/tcmur_test.sh
+new file mode 100755
+index 0000000000000..99f68e74c7cd0
+--- /dev/null
++++ b/tools/testing/selftests/target_core_uring/tcmur_test.sh
+@@ -0,0 +1,137 @@
++#!/bin/bash
++# SPDX-License-Identifier: GPL-2.0
++#
++# Export a target_core_uring device through tcm_loop, serve it with
++# tcmur_server and check the resulting SCSI disk against the backing file.
 +
-+enum { BACKEND_NULL, BACKEND_RAM, BACKEND_FILE };
-+enum { UD_FETCH, UD_REG, UD_RW, UD_UNREG };
++DIR=$(dirname "$(readlink -f "$0")")
++KSFT_SKIP=4
++T=/sys/kernel/config/target
++C=$T/core/uring_70/tcmur_test
++WWN=naa.5001405074636d75
++L=$T/loopback/$WWN/tpgt_1
++SIZE=$((256 << 20))
++IMG=$(mktemp /tmp/tcmur_test.XXXXXX)
++PAT=$(mktemp /tmp/tcmur_test.XXXXXX)
++server=
++dev=
++fail=0
 +
-+static struct tcmur_dev_info info;
-+static int dev_fd, backing_fd = -1, backend;
-+static bool zero_copy;
-+static char *ram;
++[ "$(id -u)" = 0 ] || { echo "SKIP: need root"; exit $KSFT_SKIP; }
++modprobe -q target_core_uring && modprobe -q tcm_loop ||
++	{ echo "SKIP: need target_core_uring and tcm_loop"; exit $KSFT_SKIP; }
 +
-+struct queue {
-+	pthread_t thread;
-+	struct io_uring ring;
-+	struct tcmur_io_desc *descs;
-+	char *buf;
-+	int q_id;
-+};
++check() {	# <name> <command...>
++	local name=$1; shift
 +
-+static struct io_uring_sqe *get_sqe(struct queue *q)
-+{
-+	struct io_uring_sqe *sqe = io_uring_get_sqe(&q->ring);
-+
-+	if (!sqe) {
-+		io_uring_submit(&q->ring);
-+		sqe = io_uring_get_sqe(&q->ring);
-+	}
-+	return sqe;
-+}
-+
-+static struct io_uring_sqe *prep_cmd(struct queue *q, unsigned int op, int tag,
-+				     int result, int kind)
-+{
-+	struct tcmur_io_cmd cmd = {
-+		.q_id	= q->q_id,
-+		.tag	= tag,
-+		.result	= result,
-+		.addr	= tag,
-+	};
-+	struct io_uring_sqe *sqe = get_sqe(q);
-+
-+	io_uring_prep_rw(IORING_OP_URING_CMD, sqe, dev_fd, NULL, 0, 0);
-+	sqe->cmd_op = op;
-+	memcpy(sqe->cmd, &cmd, sizeof(cmd));
-+	sqe->user_data = (uint64_t)kind << 16 | tag;
-+	return sqe;
-+}
-+
-+static int copy_data(struct queue *q, int tag, void *buf, uint32_t len,
-+		     bool to_cmd)
-+{
-+	uint64_t pos = tcmur_buf_pos(q->q_id, tag, 0);
-+	ssize_t ret;
-+
-+	if (to_cmd)
-+		ret = pwrite(dev_fd, buf, len, pos);
++	if "$@"; then
++		echo "ok $name"
 +	else
-+		ret = pread(dev_fd, buf, len, pos);
-+	return ret == len ? 0 : -EIO;
++		echo "not ok $name"
++		fail=1
++	fi
 +}
 +
-+static int write_same(struct queue *q, int tag, struct tcmur_io_desc *d)
-+{
-+	uint64_t off;
-+	int ret;
++# setup <control parameters> <serve|idle> [server arguments...]
++setup() {
++	local params=$1 serve=$2 before cdev; shift 2
 +
-+	ret = copy_data(q, tag, q->buf, d->data_len, false);
-+	if (ret)
-+		return ret;
++	truncate -s 0 "$IMG"; truncate -s $SIZE "$IMG"
++	mkdir -p $C
++	echo "dev_size=$SIZE,nr_queues=2,queue_depth=32$params" > $C/control
++	echo 1 > $C/enable
++	echo 1 > $C/attrib/emulate_tpu
++	echo 1 > $C/attrib/emulate_tpws
++	echo 1 > $C/attrib/emulate_write_cache
++	cdev=$(grep -o '/dev/tcmur[0-9]*' $C/info)
++	udevadm settle
 +
-+	for (off = d->offset; off < d->offset + d->len; off += d->data_len) {
-+		if (backend == BACKEND_RAM)
-+			memcpy(ram + off, q->buf, d->data_len);
-+		else if (pwrite(backing_fd, q->buf, d->data_len, off) !=
-+			 d->data_len)
-+			return -EIO;
-+	}
-+	return 0;
++	if [ "$serve" = serve ]; then
++		"$DIR"/tcmur_server "$@" "$cdev" "$IMG" &
++		server=$!
++		sleep 1
++	fi
++
++	before=$(lsblk -dno NAME | sort)
++	mkdir -p $L
++	echo naa.5001405074636d76 > $L/nexus
++	mkdir $L/lun/lun_0
++	ln -s $C $L/lun/lun_0/tcmur_test
++	for _ in $(seq 40); do
++		dev=$(comm -13 <(echo "$before") <(lsblk -dno NAME | sort) | head -1)
++		[ -n "$dev" ] && break
++		sleep 0.5
++	done
++	udevadm settle
++	dev=/dev/$dev
 +}
 +
-+/* Start the I/O on the data pages of the command, without copying them */
-+static void start_zero_copy(struct queue *q, int tag, struct tcmur_io_desc *d)
-+{
-+	struct io_uring_sqe *sqe;
++teardown() {
++	rm $L/lun/lun_0/tcmur_test
++	rmdir $L/lun/lun_0 $L $T/loopback/$WWN
++	rmdir $C "$(dirname $C)"
++	# Wait for the server, which exits when the device goes
++	if [ -n "$server" ]; then
++		wait $server 2>/dev/null
++		server=
++	fi
++}
 +
-+	sqe = prep_cmd(q, TCMUR_IO_REGISTER_BUF, tag, 0, UD_REG);
-+	sqe->flags |= IOSQE_IO_LINK | IOSQE_CQE_SKIP_SUCCESS;
++same_as_image() {	# <offset MiB> <count MiB> <file>
++	cmp -s <(dd if="$IMG" bs=1M skip="$1" count="$2" status=none) "$3"
++}
 +
-+	sqe = get_sqe(q);
-+	if (d->op == TCMUR_OP_READ)
-+		io_uring_prep_read_fixed(sqe, backing_fd, NULL, d->data_len,
-+					 d->offset, tag);
++test_io() {	# <name> [server arguments...]
++	local name=$1 blocks; shift
++
++	setup "" serve "$@"
++	dd if=/dev/urandom of="$PAT" bs=1M count=8 status=none
++
++	dd if="$PAT" of=$dev bs=1M seek=16 oflag=direct status=none
++	check "$name write" same_as_image 16 8 "$PAT"
++	check "$name read" cmp -s \
++		<(dd if=$dev bs=1M skip=16 count=8 iflag=direct status=none) "$PAT"
++	check "$name flush" dd if="$PAT" of=$dev bs=1M seek=32 conv=fsync \
++		status=none
++
++	blocks=$(stat -c %b "$IMG")
++	blkdiscard -o $((16 << 20)) -l $((8 << 20)) $dev
++	check "$name unmap" [ "$(stat -c %b "$IMG")" -lt "$blocks" ]
++
++	if command -v sg_write_same > /dev/null; then
++		dd if=/dev/zero of="$PAT" bs=1M count=1 status=none
++		sg_write_same --in=/dev/zero --lba=$((32 << 11)) --num=2048 \
++			--xferlen=512 $dev > /dev/null 2>&1
++		check "$name write same" same_as_image 32 1 "$PAT"
 +	else
-+		io_uring_prep_write_fixed(sqe, backing_fd, NULL, d->data_len,
-+					  d->offset, tag);
-+	sqe->flags |= IOSQE_IO_HARDLINK;
-+	sqe->user_data = (uint64_t)UD_RW << 16 | tag;
-+
-+	sqe = prep_cmd(q, TCMUR_IO_UNREGISTER_BUF, tag, 0, UD_UNREG);
-+	sqe->flags |= IOSQE_CQE_SKIP_SUCCESS;
++		echo "ok $name write same # SKIP no sg_write_same"
++	fi
++	teardown
 +}
 +
-+/* Return true if the command completes later */
-+static bool handle(struct queue *q, int tag, int *result)
-+{
-+	struct tcmur_io_desc *d = &q->descs[tag];
-+	bool rd = d->op == TCMUR_OP_READ;
-+	int ret = 0;
++test_io copy
++test_io "zero copy" -z
 +
-+	switch (d->op) {
-+	case TCMUR_OP_READ:
-+	case TCMUR_OP_WRITE:
-+		if (d->offset + d->len > info.dev_size) {
-+			ret = -EINVAL;
-+		} else if (backend == BACKEND_RAM) {
-+			ret = copy_data(q, tag, ram + d->offset, d->data_len,
-+					rd);
-+		} else if (backend == BACKEND_FILE && zero_copy) {
-+			start_zero_copy(q, tag, d);
-+			return true;
-+		} else if (backend == BACKEND_FILE && rd) {
-+			if (pread(backing_fd, q->buf, d->data_len, d->offset) !=
-+			    d->data_len)
-+				ret = -EIO;
-+			else
-+				ret = copy_data(q, tag, q->buf, d->data_len,
-+						true);
-+		} else if (backend == BACKEND_FILE) {
-+			ret = copy_data(q, tag, q->buf, d->data_len, false);
-+			if (!ret && pwrite(backing_fd, q->buf, d->data_len,
-+					   d->offset) != d->data_len)
-+				ret = -EIO;
-+		}
-+		if (!ret && backend == BACKEND_FILE &&
-+		    (d->flags & TCMUR_IO_F_FUA) && fdatasync(backing_fd))
-+			ret = -errno;
-+		break;
-+	case TCMUR_OP_FLUSH:
-+		if (backend == BACKEND_FILE && fdatasync(backing_fd))
-+			ret = -errno;
-+		break;
-+	case TCMUR_OP_UNMAP:
-+		if (backend == BACKEND_RAM)
-+			memset(ram + d->offset, 0, d->len);
-+		else if (backend == BACKEND_FILE &&
-+			 fallocate(backing_fd, FALLOC_FL_PUNCH_HOLE |
-+				   FALLOC_FL_KEEP_SIZE, d->offset, d->len))
-+			ret = -errno;
-+		break;
-+	case TCMUR_OP_WRITE_SAME:
-+		if (backend != BACKEND_NULL)
-+			ret = write_same(q, tag, d);
-+		break;
-+	default:
-+		ret = -EOPNOTSUPP;
-+	}
++# Check that a new server takes over after the first one is killed
++setup "" serve
++kill -9 $server; wait $server 2>/dev/null
++for _ in $(seq 20); do
++	"$DIR"/tcmur_server "$(grep -o '/dev/tcmur[0-9]*' $C/info)" "$IMG" \
++		2>/dev/null &
++	server=$!
++	sleep 0.5
++	kill -0 $server 2>/dev/null && break
++done
++check "server restart" dd if=$dev of=/dev/null bs=1M count=8 iflag=direct \
++	status=none
++teardown
 +
-+	*result = ret;
-+	return false;
-+}
++# Check that commands fail after cmd_time_out seconds without a server
++setup ",cmd_time_out=1" idle
++start=$(date +%s)
++dd if=$dev of=/dev/null bs=4k count=1 iflag=direct status=none 2>/dev/null
++check "command timeout" [ $? -ne 0 -a $(($(date +%s) - start)) -lt 30 ]
++teardown
 +
-+static void *queue_fn(void *arg)
-+{
-+	struct io_uring_params p = {
-+		.flags = IORING_SETUP_SINGLE_ISSUER | IORING_SETUP_DEFER_TASKRUN,
-+	};
-+	struct queue *q = arg;
-+	struct io_uring_cqe *cqe;
-+	unsigned int head, n;
-+	int tag, kind, result;
-+
-+	/* Create the ring here, as only its creator may submit to it */
-+	if (io_uring_queue_init_params(info.queue_depth * 4, &q->ring, &p) ||
-+	    (zero_copy &&
-+	     io_uring_register_buffers_sparse(&q->ring, info.queue_depth))) {
-+		perror("io_uring setup");
-+		exit(1);
-+	}
-+
-+	for (tag = 0; tag < info.queue_depth; tag++)
-+		prep_cmd(q, TCMUR_IO_FETCH, tag, 0, UD_FETCH);
-+
-+	for (;;) {
-+		if (io_uring_submit_and_wait(&q->ring, 1) < 0) {
-+			perror("io_uring_submit_and_wait");
-+			exit(1);
-+		}
-+
-+		n = 0;
-+		io_uring_for_each_cqe(&q->ring, head, cqe) {
-+			n++;
-+			tag = cqe->user_data & 0xffff;
-+			kind = cqe->user_data >> 16;
-+
-+			switch (kind) {
-+			case UD_FETCH:
-+				if (cqe->res < 0)
-+					goto out;
-+				if (handle(q, tag, &result))
-+					continue;
-+				break;
-+			case UD_RW:
-+				result = cqe->res == q->descs[tag].data_len ?
-+					 0 : -EIO;
-+				break;
-+			default:
-+				/* Report failures through the I/O that follows */
-+				continue;
-+			}
-+			prep_cmd(q, TCMUR_IO_COMMIT_AND_FETCH, tag, result,
-+				 UD_FETCH);
-+		}
-+		io_uring_cq_advance(&q->ring, n);
-+	}
-+out:
-+	return NULL;
-+}
-+
-+int main(int argc, char **argv)
-+{
-+	struct queue *queues;
-+	size_t desc_size;
-+	int i, opt;
-+
-+	while ((opt = getopt(argc, argv, "z")) != -1) {
-+		if (opt == 'z')
-+			zero_copy = true;
-+		else
-+			return 1;
-+	}
-+	if (argc - optind != 2) {
-+		fprintf(stderr, "usage: %s [-z] <tcmur device> null|ram|<backing file>\n",
-+			argv[0]);
-+		return 1;
-+	}
-+
-+	dev_fd = open(argv[optind], O_RDWR);
-+	if (dev_fd < 0 || ioctl(dev_fd, TCMUR_GET_DEV_INFO, &info)) {
-+		perror(argv[optind]);
-+		return 1;
-+	}
-+
-+	if (!strcmp(argv[optind + 1], "null")) {
-+		backend = BACKEND_NULL;
-+	} else if (!strcmp(argv[optind + 1], "ram")) {
-+		backend = BACKEND_RAM;
-+		ram = mmap(NULL, info.dev_size, PROT_READ | PROT_WRITE,
-+			   MAP_PRIVATE | MAP_ANONYMOUS | MAP_POPULATE, -1, 0);
-+		if (ram == MAP_FAILED) {
-+			perror("mmap");
-+			return 1;
-+		}
-+	} else {
-+		backend = BACKEND_FILE;
-+		backing_fd = open(argv[optind + 1], O_RDWR);
-+		if (backing_fd < 0) {
-+			perror(argv[optind + 1]);
-+			return 1;
-+		}
-+	}
-+	if (zero_copy && backend != BACKEND_FILE) {
-+		fprintf(stderr, "-z needs a backing file\n");
-+		return 1;
-+	}
-+
-+	desc_size = info.queue_depth * sizeof(struct tcmur_io_desc);
-+	desc_size = (desc_size + getpagesize() - 1) & ~(getpagesize() - 1);
-+	queues = calloc(info.nr_queues, sizeof(*queues));
-+	for (i = 0; i < info.nr_queues; i++) {
-+		struct queue *q = &queues[i];
-+
-+		q->q_id = i;
-+		q->buf = malloc(info.max_io_size);
-+		q->descs = mmap(NULL, desc_size, PROT_READ, MAP_SHARED, dev_fd,
-+				(off_t)i * TCMUR_DESC_AREA_SIZE);
-+		if (!q->buf || q->descs == MAP_FAILED) {
-+			perror("queue setup");
-+			return 1;
-+		}
-+	}
-+
-+	for (i = 0; i < info.nr_queues; i++)
-+		pthread_create(&queues[i].thread, NULL, queue_fn, &queues[i]);
-+	for (i = 0; i < info.nr_queues; i++)
-+		pthread_join(queues[i].thread, NULL);
-+	return 0;
-+}
++rm -f "$IMG" "$PAT"
++exit $fail
 
 -- 
 2.43.0
