@@ -1,56 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.137.202.133
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794789906;
-	b=2mrvIzYvcPIFdxaFMOQiS6kbaXoPU47WcgkKCzsfBmZPnGT6zHyE31dYMxujTLa/YzwY
-	 MszJpaT5JaEZhLBBKyt6yjkRFhQc80j62XlOkzU+Ji/0olo6H4uQQWZ4Yl6Kc7WOvF+w+
-	 DsoyvWvu7nZszAaVr4/Ibsw0nNR8270S/6o8NJjmcuryRai4kdtw/s5J9syWQYSXjC+uo
-	 3zVoNlJ309wgxPTl4cM8c9DVkG6AftUk+iIakGr3ffg8S+yexmhG65GbXNSL7z1XC7aH1
-	 UrEaoHQBnL94UCEBJTgVyNkFwq3hPP2YhRkBc8+xJ2DWM+uH+Xm8xbX3LwnSKQaGq7A==
+	t=1794789923;
+	b=qLqWPv57iyDayy7LXtSsRn+XmtOBrnpDwjV42ld8lBV02gRBbksqAGqSjVND5Vx2xa7V
+	 NFMciI/hKh0eqD95V/2VEv5E8+yvyn347EWhO/Aip7kBk/heJ3TZSjRQlrcObo1GrsJPx
+	 +BeVud5sYggfDiTi+bvYUYSLUjhBtlxD1/ofgppL32Yv7rQh8Hhe+jJoJTrswuobvxdjq
+	 7IyJ60vpC0Kzl0wCGmNSpte1WqVzHkgRil+5usMKNJULFreSXyWh7gGNpnGgpFnN/84GL
+	 3IfzocYyAhDWwOFFjBP5wpN5KDoW+MX7e1dqVYivxn3eCcXqz+ojhvRvy29zy2b06nA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794789906;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=J9mTwLbDzSmc946KbmaTG1WaVGbczmdyHljlmL/y8rE=;
-	b=BQcI3tQK5GAc+2H4OCv6eUaJyYkItFkGnSbikEG9GwNoyA/nLt6RFJQHvzH2D35zDrF8
-	 TyHdEuL2NYge/kw1W5pVjNjF315pCAyX2ZZlEG51nT12T5BnB4mMs/t919SYXT98dQvbk
-	 FtaCeBDu+fRtyb59OC6mnlCU9p5r4wJa9IBxaSWsdVZlA+y11c8KyOIgouIbO7dV/zEfv
-	 be2XSC2GJguBypckEp8rcB2BvaAYeAagQ72H+XW7e7ri/TSZO3Kg5laeV/mfb/RwjJCAL
-	 lsZulhhOcxWkuWZmzUzWBP9n0rA78KS7p40GQ8RXtCvLTTb6ruVR1tcCUNo0X1PYwRw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794789923;
+	h=DMARC-Filter:DKIM-Signature:Received:Message-ID:Date:MIME-Version:
+	 User-Agent:Subject:To:Cc:References:Content-Language:From:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding;
+	bh=nEPXf1cG5J+Lghgn3UQeDfptX1Hk+zVJPSj0Zk2IzFQ=;
+	b=XA8jO1bImAyQq652g+O9ysgTK9J0LNpAnQUCF6P0+KREaZyDH97zgP0cbZgKW4QBrVzh
+	 0Szb5+liCTrpnniEQpam4TQzQiTdyPwgIetNUM9e4tp1kPMxcqWFH0c28PXNjacbrUwsE
+	 NrEoBQbjRGB0e4L4wkn8WlGuSvRzbsDtErzZd7ZxcYyMgDPnpeiDYfljqMxAet5pOtv96
+	 cLqrf0F+eYXXk0fH05px2IeetyTx8Dj1dyuHWoOJ4XWJ01Q66b8KC9SyJu8ixbF7dWKfl
+	 T6WkWVOEKaypXGwxu+wOStxtQF8PEqc9/NrnbSp9BZUU3iC23HAQuZnqTYjLOkOYrFw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lzQph2XE;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=infradead.org;
+	spf=pass smtp.mailfrom=infradead.org;
+	dkim=pass header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=bombadil.20210309 header.b=Ov44YrtP;
+	arc=none smtp.remote-ip=198.137.202.133
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E5882606A323;
-	Mon, 16 Nov 2026 00:45:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91A57606A31F;
+	Mon, 16 Nov 2026 00:45:22 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 91A57606A31F
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=lzQph2XE
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 544C51F000C6;
-	Mon, 16 Nov 2026 00:45:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794789905;
-	bh=J9mTwLbDzSmc946KbmaTG1WaVGbczmdyHljlmL/y8rE=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=lzQph2XE1nLJ8FFwuFe0JIeYO7UXPqZ/u1zZ59EKPEI1IUYWvyKOPC2S/xGjuYkbg
-	 ajT4aYS4sSscBEyp+LwAzuAc5ux+5zVg+Jo0qKkJ+7+4Qf3I8eOVC0BFWw/moMn89F
-	 XPbrHr2eaGVG1Bl07dQTtpeJF64vxvaeJk85sEI1mE/68O6haD+easp543BYuN9Wy4
-	 W0QFkiy2vFakUSvgwvj7NJEgrfrSMZHn4EwhWtMBFRXePUjbNgZYMWsK3s0W94b1qw
-	 ah+YuWJf2zTu8BHcsObdLlRykYFG7DjsEinYfTHkh4ysQeCL90Dm8Afc/grAZ9+WwQ
-	 lVifbylevbKOg==
-Message-ID: <sashiko-outbox-215968@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH RFC 13/18] scsi: target: uring: Implement UNMAP
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Qiliang Yuan" <qiliang.yuan@linux.dev>
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-In-Reply-To: <20261115-feat-target-core-uring-v1-13-28cdc137eac6@linux.dev>
-References: <20261115-feat-target-core-uring-v1-0-28cdc137eac6@linux.dev>
- <20261115-feat-target-core-uring-v1-13-28cdc137eac6@linux.dev>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 16 Nov 2026 00:45:04 +0000
+	dkim=pass (2048-bit key, unprotected) header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=bombadil.20210309 header.b=Ov44YrtP
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	Content-Type:In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:
+	Message-ID:Sender:Reply-To:Content-ID:Content-Description;
+	bh=nEPXf1cG5J+Lghgn3UQeDfptX1Hk+zVJPSj0Zk2IzFQ=; b=Ov44YrtPxUC++hYRNDHSdmdpGW
+	JaxLbFR1NnGayLi7FHLtyTi+He4ZYSfoC7yWmGobJ7E/AIaLAiwDiqmK+og7vdQvnP4EzvIpr462x
+	EDmrhZM3u/N2SWbcqZV+o7jR7R+AN7ZLDYmWxP5FpNx3G+I1qCrQflyake80HiJ9rMKVM/x4eT782
+	9JEn4jhTrQPKUH9n7ugwPApkYe7cQrElzRWPUKP8gRVT9cQSw9rpPJq9AX3iS6GqmzfQn0wqcsM7f
+	leTLxbzdojuK+f/LSdN/KzQKSZ97Y6xYotP0eKRTTUizqT5t8J7W/n/cd6b1FIlVQIvCGZw4VHm9P
+	KD0dlVWg==;
+Received: from [50.53.43.113] (helo=[192.168.254.34])
+	by bombadil.infradead.org with esmtpsa (Exim 4.100.1 #2 (Red Hat Linux))
+	id 1xSkqM-00000000pP7-2dPd;
+	Mon, 16 Nov 2026 00:45:10 +0000
+Message-ID: <bbdb3140-dc5f-4ae1-a5a9-c2e25387409a@infradead.org>
+Date: Sun, 15 Nov 2026 16:45:07 -0800
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -59,89 +57,88 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 01/12] docs: ioctl-number: update MM entries
+To: "David Hildenbrand (Arm)" <david@kernel.org>, linux-kernel@vger.kernel.org
+Cc: Jonathan Corbet <corbet@lwn.net>, Shuah Khan <skhan@linuxfoundation.org>,
+ linux-doc@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>,
+ Jason Gunthorpe <jgg@nvidia.com>, Leon Romanovsky <leonro@nvidia.com>,
+ linux-mm@kvack.org, Jaroslav Kysela <perex@perex.cz>,
+ Takashi Iwai <tiwai@suse.com>, linux-sound@vger.kernel.org,
+ Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
+ Marcel Holtmann <marcel@holtmann.org>,
+ Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
+ linux-bluetooth@vger.kernel.org,
+ Willem de Bruijn <willemdebruijn.kernel@gmail.com>,
+ Jason Wang <jasowangio@gmail.com>, David Heidelberg <david@ixit.cz>,
+ oe-linux-nfc@lists.linux.dev, Chas Williams <3chas3@gmail.com>,
+ linux-atm-general@lists.sourceforge.net,
+ "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@kernel.org>,
+ Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+ netdev@vger.kernel.org, Helge Deller <deller@gmx.de>,
+ linux-fbdev@vger.kernel.org, dri-devel@lists.freedesktop.org,
+ MPT-FusionLinux.pdl@broadcom.com,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <mkp@kernel.org>, linux-scsi@vger.kernel.org,
+ Miquel Raynal <miquel.raynal@bootlin.com>,
+ Richard Weinberger <richard@nod.at>, Vignesh Raghavendra <vigneshr@ti.com>,
+ Zhihao Cheng <chengzhihao1@huawei.com>, linux-mtd@lists.infradead.org,
+ Neill Kapron <nkapron@google.com>, Andrey Konovalov <andreyknvl@gmail.com>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-usb@vger.kernel.org,
+ Juergen Gross <jgross@suse.com>, Stefano Stabellini
+ <sstabellini@kernel.org>, xen-devel@lists.xenproject.org,
+ Hans de Goede <hansg@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
+ "Michael S. Tsirkin" <mst@redhat.com>, =?UTF-8?Q?Eugenio_P=C3=A9rez?=
+ <eperezma@redhat.com>, Sean Christopherson <seanjc@google.com>,
+ Paolo Bonzini <pbonzini@redhat.com>, kvm@vger.kernel.org,
+ virtualization@lists.linux.dev, Jan Kara <jack@suse.cz>,
+ linux-fsdevel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>,
+ linux-ext4@vger.kernel.org, Mike Marshall <hubcap@omnibond.com>,
+ devel@lists.orangefs.org, Paulo Alcantara <pc@manguebit.org>,
+ Namjae Jeon <linkinjeon@kernel.org>, linux-cifs@vger.kernel.org,
+ Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>,
+ linux-f2fs-devel@lists.sourceforge.net,
+ Florian Fainelli <florian.fainelli@broadcom.com>,
+ Broadcom internal kernel review list
+ <bcm-kernel-feedback-list@broadcom.com>,
+ linux-rpi-kernel@lists.infradead.org, linux-arm-kernel@lists.infradead.org,
+ Tzung-Bi Shih <tzungbi@kernel.org>, Benson Leung <bleung@chromium.org>,
+ David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>,
+ Alex Deucher <alexander.deucher@amd.com>,
+ =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
+ amd-gfx@lists.freedesktop.org, Jani Nikula <jani.nikula@linux.intel.com>,
+ Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
+ Rodrigo Vivi <rodrigo.vivi@intel.com>, Tvrtko Ursulin
+ <tursulin@ursulin.net>, intel-gfx@lists.freedesktop.org,
+ Matthew Brost <matthew.brost@intel.com>,
+ =?UTF-8?Q?Thomas_Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>,
+ intel-xe@lists.freedesktop.org
+References: <20261114202653.3113381-1-rdunlap@infradead.org>
+ <20261114202653.3113381-2-rdunlap@infradead.org>
+ <f37ccd71-8e1d-4dd4-b11a-e22b9e617dea@kernel.org>
+Content-Language: en-US
+From: Randy Dunlap <rdunlap@infradead.org>
+In-Reply-To: <f37ccd71-8e1d-4dd4-b11a-e22b9e617dea@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Thank you for your contribution! Sashiko AI review found 1 potential
-issue to consider:
-- [High] scsi: target: uring: submission workqueue stall and TMR hang in
-  tcmur_execute_unmap()
---
 
-commit a69183b9652241c1e0d7dcfe7c2618562f084113
-Author: Qiliang Yuan <qiliang.yuan@linux.dev>
 
-scsi: target: uring: Implement UNMAP
+On 11/15/26 8:58 AM, David Hildenbrand (Arm) wrote:
+> On 11/14/26 21:26, Randy Dunlap wrote:
+>> Add ioctl number entries for test_hmm_uapi and gup_test.
+> 
+> Just curious, why do we care about uapi for test interfaces that never see the
+> light of day in production kernels and their sole purpose is to go a long a
+> dedicated selftest?
 
-This commit adds UNMAP support to target_core_uring by introducing
-TCMUR_OP_UNMAP and synchronously waiting for each unmap range to complete
-in tcmur_execute_unmap().
+a. We don't control who builds/runs these tests.
+b. There might be some USB gadget or HID driver running at the same time
+   as these tests.
+c. It's preferable not to have conflicts, so any additions to this file
+   should try to avoid these documented ioctls.
 
-> diff --git a/drivers/target/target_core_uring.c b/drivers/target/target_c=
-ore_uring.c
-> index f39bf7bf36d0f..366c5e9820956 100644
-> --- a/drivers/target/target_core_uring.c
-> +++ b/drivers/target/target_core_uring.c
+-- 
+~Randy
 
-[ ... ]
-
-> @@ -268,6 +275,36 @@ static sense_reason_t tcmur_execute_sync_cache(struc=
-t se_cmd *se_cmd)
->  			    se_cmd->data_length, NULL, 0);
->  }
-> =20
-> +static sense_reason_t tcmur_execute_unmap(struct se_cmd *se_cmd, sector_=
-t lba,
-> +					  sector_t nolb)
-> +{
-> +	u32 block_size =3D se_cmd->se_dev->dev_attrib.block_size;
-> +	DECLARE_COMPLETION_ONSTACK(done);
-> +	struct tcmur_cmd tcmd =3D {
-> +		.se_cmd		=3D se_cmd,
-> +		.done		=3D &done,
-> +		.desc.op	=3D TCMUR_OP_UNMAP,
-> +		.desc.offset	=3D lba * block_size,
-> +		.desc.len	=3D nolb * block_size,
-> +	};
-> +
-> +	/* Wait here, as the core completes the command after all ranges */
-> +	tcmur_queue_cmd(TCMUR_DEV(se_cmd->se_dev), &tcmd);
-> +	wait_for_completion(&done);
-
-[Severity: High]
-Can waiting on done here stall the submission workqueue and hang task
-management?
-
-On fabrics using TARGET_QUEUE_SUBMIT (such as vhost-scsi or tcm_loop),
-target_execute_cmd() runs inside target_queued_submit_work() on
-dev->queues[i].sq.work.  Sleeping in wait_for_completion(&done) blocks
-further commands on that queue until the server completes the unmap.
-
-If no idle tag is available, tcmur_queue_cmd() places tcmd on q->pending.
-When an ABORT_TASK or LUN_RESET arrives, core_tmr_abort_task() and
-core_tmr_drain_state_list() flush sq.work before calling
-dev->transport->tmr_notify() (tcmur_tmr_notify()):
-
-sq.work                           tmr_wq
-target_queued_submit_work()
-  ...
-    tcmur_execute_unmap()
-      tcmur_queue_cmd()
-      wait_for_completion(&done)
-                                  core_tmr_abort_task()
-                                    flush_work(&dev->queues[i].sq.work)
-                                      <-- waits for sq.work
-                                    ...
-                                    dev->transport->tmr_notify()
-
-Because flush_work() waits for tcmur_execute_unmap() to return,
-tcmur_tmr_notify() never runs to remove tcmd from q->pending and complete
-done, stalling task management until cmd_timeout expires (or forever when
-cmd_time_out is 0).
-
-Even when target_execute_cmd() runs outside sq.work, if a TMR aborts
-se_cmd before tcmur_queue_cmd() queues tcmd on q->pending,
-tcmur_tmr_notify() has already run and removed se_cmd from state_list, so
-tcmd is never aborted and target_put_cmd_and_wait() hangs.
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261115-feat-targe=
-t-core-uring-v1-0-28cdc137eac6@linux.dev?part=3D13
