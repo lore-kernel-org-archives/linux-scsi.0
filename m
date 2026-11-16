@@ -1,48 +1,48 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794827308;
-	b=yibnFwtkRoUmg3lmYZGlDCvKkbC6oodfFwGPC4LpgjYrWNA0chQTqEc/xmDwW/XB6Yi8
-	 H9gOKN8hiyyWnjMirb2LgW5gURQmAN0izWdXW2wH2BN+DLjJwvyQyKE2rkD8oImelSA09
-	 ivnTYlZLCZk/SX7l/7aiLXLiX5tJ46sTXrpeiirQv4jCThUsy3CKwPyjo/maYNwmw4KxO
-	 rTtnfnSt6GSc4S2Qxt8QYkh6WGoMA8WsZEtziO3JSJBHXjquTW3Z92crbZ7qvX+dp950a
-	 qbmg1Tohvzln7ZtgECv0qeRxDbTzAW0gElyU5FsVA52YlNPCYtv2j4pdNiPWFNmL72w==
+	t=1794827323;
+	b=fi3EjVYOhj1/+ircHliZ+u9cK5ZIr8JXeVbB6unqDn/4p8DWxfhSfZGu3zwLHlaaSBDV
+	 uKMSxUzbLL2OBOQHwn0P+I4N3YodJuxbKDGj2E/on6L6H+Z9IN5z99aW9vvttoRbB0WEm
+	 /mCw0/5QmQUXntKpohWsSSdNIx9ygr90/S2Il56YkLqBiOTNI+EZWgK3yBiDaDpMcr13k
+	 82Pp/+2DFet4Kdo702HzhUpBF3/j/s+fpvZ4ZiW1YReKfqjLeAHxLkXCGhsCPZo59n8mb
+	 KXqJ7FfKbH+hzZe7QBOiuniwkkf9gLnwXPTdSRz9zZ4xRPJbbQZkhNV9OpydlPCSF4g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794827308;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794827323;
 	h=Received:DKIM-Signature:From:Date:Subject:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding:Message-Id:References:In-Reply-To:To:Cc:
 	 X-Mailer:X-Developer-Signature:X-Developer-Key;
-	bh=2Wy+scJ41Y8KmYhleRQezskd7+v4uNRBlIFkKwTMVMA=;
-	b=H+ErvyZdrphRVVVdAb20zOtbstInnNGCPKMizSjA8pRyoyvyp7sltQzabt4pUUDWzkZh
-	 o16gxPJWZnbXtD1rX8WKeXaL9TAJQ4CDGiXhusX6jPbhmGq232Zy2O6xFrSk7ooeLCRy7
-	 8SxeNpZEWlUfGAjbxJ7iseB5/q+xWlR7xtlPfEOhux7ugoX9bg9W68PXVipzlMtX9OZN1
-	 11yUvoi8899iPYqU34aDcYdAVuZkvxWdSQ3eTrcH1G2LnPYmYV2kAa48l6mHKcHHjjozQ
-	 oDwbwPAT/0JWWADg+scB1rjfebboRtmep5GjS68Y1ccfL+vj0uEz8GqgttEb+CifZXg==
+	bh=K02XzgiVey8Gk03FTq4yCzsjgwwRpaqpi89MgT4x0oA=;
+	b=LDFOFa2hea1TcyJOt7lZeMZfZWSfDwqfedFTr9w9uJOqhFvFzL//qfomVCERXPFFc0nt
+	 yLf6lzcqtI8tszyuTt90Ts6J+QzTTHuTIz9zn96MidLdv+3ZCfffpkbSWlI9WWIBbq/Tf
+	 Bif2w6kfc/PDOC1D7BfpGjGcq8MLFaDX2jAhqbMpYqGA8MiIKeR8QLNSoNoA+1ZSsIxqk
+	 v0MdHmW5BrLYZVu4w3QVa3eXK9xMhY3nl5HNDqpGU2ogtpyLJmILTNMAGGqrcVho6yOlv
+	 RDWAVfb9zU9/J+CIu6j5Ftl6CA3UJX8LH2C406tlq4M5XWZL2CJK5ZSk8Et6sQ0zXhg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="MAOQF/Rj";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=CBYYTwmq;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66CBF606AB7E;
-	Mon, 16 Nov 2026 11:08:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5709B606C105;
+	Mon, 16 Nov 2026 11:08:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=MAOQF/Rj
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CCA281F000C9;
-	Mon, 16 Nov 2026 11:08:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=CBYYTwmq
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D65B61F000C4;
+	Mon, 16 Nov 2026 11:08:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794827308;
-	bh=2Wy+scJ41Y8KmYhleRQezskd7+v4uNRBlIFkKwTMVMA=;
+	s=k20260515; t=1794827323;
+	bh=K02XzgiVey8Gk03FTq4yCzsjgwwRpaqpi89MgT4x0oA=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=MAOQF/Rj2EJww59dNiCxumtdpBg6TrUeioHJXL/bnUNEdpUa+TL9z32jyWcX7tf9f
-	 YJlPw0lXLJuN+5nu7TRB/0yUYsrayfVUWBWRn7Xag0vLZsz5NbrTs5CwrGSRxbSogs
-	 P/9NyJE2TSHUN6IYMouHl5EjNy6A8TIlTWZwYwJV2xPuUnoIigJD+H7vGh9TSZyMxj
-	 4DkMGGlnmERtn/y0Q7vC3yziK9l/XelDpyyOK6XcWMfJfoaMe2RgysYQszYJSpfAbK
-	 at3Nt4liC7nM7DMOWTOI39ukPd66Pb8dTLPpdP5tvFSKmeh82o41oMaYOJ0Z8Ld/8g
-	 6mMsCjtcCJIUw==
+	b=CBYYTwmqvG/X7Q1l09jl1lt6vhCiE5IixemW81zB87kv5VWwVCu+tjT7HIpe5m/Ic
+	 rxTmpOcLM7fWrYpsIwJ8v9k3Sf119xYtmjZcCDB7XbSsd4ABWeI+YsnncIXfWZ+/TI
+	 xyQQQn1PI1wVSECNnc86kj2hevZ5aF/XcQ3GcJYqC9a2J3KgM2w1fVfu9HwheK/PA8
+	 hisUgw9t5Yl5+t7FmbOe624VXKlLm9W5/RFSY8WmooHM6Yob3+/hUP5CSs0+2NwMPt
+	 KJfFm8q2GyauIZaZ2VNRQuWbKCc6Y0kY+1prHY800HPVjDEQbg/XtxqDqCAofCoKqG
+	 B6ZtxIV9ZkJ9g==
 From: Christian Brauner <brauner@kernel.org>
-Date: Mon, 16 Nov 2026 12:04:52 +0100
-Subject: [PATCH RFC v3 19/44] smack: use fc_init_pseudo() for smackfs
+Date: Mon, 16 Nov 2026 12:04:54 +0100
+Subject: [PATCH RFC v3 21/44] nfsd: use fc_init_pseudo()
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -54,7 +54,7 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261116-work-loop-pseudo-v3-19-8cbbea1cf34f@kernel.org>
+Message-Id: <20261116-work-loop-pseudo-v3-21-8cbbea1cf34f@kernel.org>
 References: <20261116-work-loop-pseudo-v3-0-8cbbea1cf34f@kernel.org>
 In-Reply-To: <20261116-work-loop-pseudo-v3-0-8cbbea1cf34f@kernel.org>
 To: linux-fsdevel@vger.kernel.org
@@ -74,49 +74,46 @@ Cc: Jann Horn <jannh@google.com>, Chris Mason <mason@kernel.org>,
  Amir Goldstein <amir73il@gmail.com>, linux-erofs@lists.ozlabs.org, 
  linux-kselftest@vger.kernel.org, 
  "Christian Brauner (Amutable)" <brauner@kernel.org>, 
- Casey Schaufler <casey@schaufler-ca.com>, 
- Alexander Mikhalitsyn <alex@amutable.com>, 
- Chris Down <chris@chrisdown.name>
+ Chuck Lever <cel@kernel.org>, Chris Down <chris@chrisdown.name>
 X-Mailer: b4 0.17-dev-ce4c1
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1063; i=brauner@kernel.org;
- h=from:subject:message-id; bh=mH75LpQDT6Rg7eXmytbmjrMu8Ad5NprhLDuRN3w7u4E=;
- b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWT9elyyYcaRBJX9njuq/Xs+e0qULvo+Ofy7yZPN3Mk2k
- V/3Pt74sqOUhUGMi0FWTJHFod0kXG45T8Vmo0wNmDmsTCBDGLg4BWAix84x/C+c8DbZ9snBwuZV
- Ot+mNXG6qCX6nmf9lubn7/zkwaWjM1gYGfavmm/06upB/mOHiw4kL0t/3hrNdDv19L7DDxzblqU
- v384EAA==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=986; i=brauner@kernel.org;
+ h=from:subject:message-id; bh=d+yGSgu2S03C9xQeqDtaPfOPhebk0oACv2/eOKg0Vkc=;
+ b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWT9elyumnaqyWZxzLXpTtpXJb5GHHixO+VpRKQ1z1run
+ Tz5M3cVdJSyMIhxMciKKbI4tJuEyy3nqdhslKkBM4eVCWQIAxenAEzkzktGhrd93+pWM9fyhmS/
+ MygPf3Z2QtHdrz7etVe7fpe0f5yn2MzI8OdsYFzH1ZNi1otv3d/007j7z8WC0v3yYseyfBnuV32
+ aygQA
 X-Developer-Key: i=brauner@kernel.org; a=openpgp;
  fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 
-Initialize smackfs as a pseudo filesystem. This raises SB_I_PSEUDO and
-also SB_I_NOEXEC and SB_I_NODEV. smackfs never holds executables or
-device nodes.
+Initialize the nfsd filesystem as a pseudo filesystem. This raises
+SB_I_PSEUDO and also SB_I_NOEXEC and SB_I_NODEV. It never holds
+executables or device nodes.
 
-Acked-by: Casey Schaufler <casey@schaufler-ca.com>
-Reviewed-by: Alexander Mikhalitsyn <alex@amutable.com>
+Acked-by: Chuck Lever <cel@kernel.org>
 Reviewed-by: Chris Down <chris@chrisdown.name>
 Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
 ---
- security/smack/smackfs.c | 2 ++
+ fs/nfsd/nfsctl.c | 2 ++
  1 file changed, 2 insertions(+)
 
-diff --git a/security/smack/smackfs.c b/security/smack/smackfs.c
-index a72bc7fabea99..4a56bbeaeca37 100644
---- a/security/smack/smackfs.c
-+++ b/security/smack/smackfs.c
-@@ -25,6 +25,7 @@
- #include <linux/magic.h>
- #include <linux/mount.h>
+diff --git a/fs/nfsd/nfsctl.c b/fs/nfsd/nfsctl.c
+index f32311f2d7cf9..ce2666deddbd9 100644
+--- a/fs/nfsd/nfsctl.c
++++ b/fs/nfsd/nfsctl.c
+@@ -9,6 +9,7 @@
+ #include <linux/namei.h>
+ #include <linux/ctype.h>
  #include <linux/fs_context.h>
 +#include <linux/pseudo_fs.h>
- #include "smack.h"
  
- #define BEBITS	(sizeof(__be32) * 8)
-@@ -2880,6 +2881,7 @@ static const struct fs_context_operations smk_context_ops = {
-  */
- static int smk_init_fs_context(struct fs_context *fc)
+ #include <linux/sunrpc/cache.h>
+ #include <linux/sunrpc/svcsock.h>
+@@ -1375,6 +1376,7 @@ static int nfsd_init_fs_context(struct fs_context *fc)
  {
+ 	put_user_ns(fc->user_ns);
+ 	fc->user_ns = get_user_ns(fc->net_ns->user_ns);
 +	fc_init_pseudo(fc);
- 	fc->ops = &smk_context_ops;
+ 	fc->ops = &nfsd_fs_context_ops;
  	return 0;
  }
 
