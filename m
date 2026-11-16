@@ -1,75 +1,57 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.221.72
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794830458;
-	b=wl5La7M7n8ELCuR+j4qcx58y60hgKKSIe/GkAUVMVeB2H7n+/B7wbAxVJ1TEXTs4WTxD
-	 2+SSLid0vsx7pQaL9qAnOiYE/BR3n/2yQ/xJJl2DDFSg/cL2PcxsM2KbXIpLL5W2ojk5v
-	 zuiL3cvwKsTDQxH4CODN32040a5RSAWU118YXcFiKCMYUDYjvleG7ZCIspH5zMsPhxvCp
-	 oVZGwirrcJUYJL9c2eFPzVKTKr2MS6R3bm3yL7vUk2Iazi/7rKav2NX6rkThBjHa3tgYY
-	 4Fp3JQPjiaf15vOxCWLJ42V0wxyPgRLID7hq8Yjw1qh0lXboNi23EIwDDM0YK7ICOaw==
+	t=1794832362;
+	b=eRuFCtWCPdQ/9QpWYQ7MpxxhgEe5D7H0xO3Vbi6iVTQTLENZI8cN2WyG7H0GMtuqOpdH
+	 V7GqoxaRtEqzpVkMUbfC7cnXgI4Ili0QY6PeSWV1aXOmYyEK3m9BAK0z+mJLfGgtEG0bw
+	 au93EuN18xHfPWqI/21QydLQw4Nu4mJozzZ9dFa+jkVQ1BQnHqDjdk/RFusA6dp+DpQMo
+	 VFzkJKV1gPirM1cu3BlOHXSSzG2SGS1mEXE0YBsV/VvMeCGuCIXetJbUUe5gIHmAkOlya
+	 fAlnK89BXBCIZzLe3xN9+LR7W1xE/3K3lw5UmhwsF1WKHycWRUWJGhzMIUf7jBl6O5Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794830458;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:In-Reply-To:
-	 Mime-Version:References:X-Mailer:Message-ID:Subject:From:To:Cc:
-	 Content-Type;
-	bh=kLAz6sn1EqmF7aJ7KDEBtraVgj4ybxLcfJJY1MY6K34=;
-	b=A/t4TyEFKSND/T1RozA6WmXlWWR9up+xQySehhPxW77/UYk+uKAYp98mOrgluDd4Aqqd
-	 BlxenymdfXOB+LIDU3xGBaAOp0V8TVdopPdGVYEoV8BoAdeTlyvXR5dxvHbJsHA98DIeF
-	 SH9vUbWoFlXUCNaC1gx7J8qma5/4obSQVjw03hNIwiTXnNz6wPys8dsr4eDrRNSoDNhdB
-	 xVkx5GD+DDHvEiINVSZlWNVaPioxMt2bE+GZT//GrsbBHHc3YSRvzhDgDaG77xO8r54Wb
-	 epemC2ikyecpG/2MWuNmFn3kuy4R+irHpVfmQXvQ2VKoj80JwNEUZbo7dH3CborKjNg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794832362;
+	h=Received:DKIM-Signature:From:To:Cc:In-Reply-To:References:Subject:
+	 Message-Id:Date:MIME-Version:Content-Type:Content-Transfer-Encoding:
+	 X-Mailer;
+	bh=Wu/xs78+R9EraA3QMxPnHPyldZGerV7oz+0ABoAixkI=;
+	b=qBC1GEDwwky2pdg4zxCYxYH1lyNKQvgIkBYsYJEBIkpyUDeqzJprb8Yg89gpEW5hsSDd
+	 m/O1wGv+GrQxmXV61JmNOOmJDmLMOUskc229pI2Ie7bBt0qBiflVo+K4I+mTw4Vd4XQhm
+	 JBtO7wWAdQ5q7fa4iHuLsvbRGk5Yy0hsfVv3Zrll8RuwYiGCyRKHN+nLQs0yFaDpxo8no
+	 s062Nmm66SED7bFBvXTVQkeB6Cut599pDHm0U/8AGDGcKqqxFo66Pp84rSK8W5OesKGHq
+	 odReM3VIFHkgluixlFRMa0nuV/9kOj6rujetSmlnTlegiK3rfOBGA+qHy+ATSXmWWFg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=google.com;
-	spf=pass smtp.mailfrom=flex--aliceryhl.bounces.google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=O4rHL3AM;
-	arc=none smtp.remote-ip=209.85.221.72
-Received: from mail-wr1-f72.google.com (mail-wr1-f72.google.com [209.85.221.72])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=OMiQvMwb;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D366606A339
-	for <linux-scsi@vger.kernel.org>; Mon, 16 Nov 2026 12:00:57 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2D366606A339
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--aliceryhl.bounces.google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B3CA606A32A;
+	Mon, 16 Nov 2026 12:32:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=O4rHL3AM
-Received: by mail-wr1-f72.google.com with SMTP id ffacd0b85a97d-49d70f45b22so1149900f8f.2
-        for <linux-scsi@vger.kernel.org>; Mon, 16 Nov 2026 04:00:56 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20260707; t=1794830455; x=1795435255; darn=vger.kernel.org;
-        h=content-type:cc:to:from:subject:message-id:references:mime-version
-         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=kLAz6sn1EqmF7aJ7KDEBtraVgj4ybxLcfJJY1MY6K34=;
-        b=O4rHL3AM8g7HMj7xZzkNnKWsQ68P7OhGhMaTci2p92KRiCQKBRod6d2IiBWvipb+DC
-         vxIULYuCXp15OPRCoakat7UXJvZIlTm3l608ZOpeQ2tSQXP8F1JduWNlJvmJluBhwx82
-         /zjz5RQKsdngqWq2MmIuxSHyh06B4MAfnWmvKvQxetAbGOpMt4tj9yv1/rUEGuXhF3Op
-         l1j81S/wHFyKHwmHIqKvzrYEnY13ONP2ciqmD/iT3Hmn84+4ykJqyBiqChsToNXVzSp+
-         o+ANBoTZBCPfy4AMYnFAKcCDqm4IN6I9woJSAZjp0OJbMp9884FpNNs3o+ebUrN8UDGH
-         OZVQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794830455; x=1795435255;
-        h=content-type:cc:to:from:subject:message-id:references:mime-version
-         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=kLAz6sn1EqmF7aJ7KDEBtraVgj4ybxLcfJJY1MY6K34=;
-        b=KSJ/wItPez804poVmLBIrhf97LMKUyjYKc26uP4g0kVGzaqVbPlNx1Bot0rgGGVXP2
-         0KIFFrslAeu2MLQhDOi4Wn4VlvED3FttDesTOGvm5DAAHlDO8L9gjAnNMJQCUX5Lg3hY
-         FhDLJNCkrvKlNhrW29ZOy5hYrio3NeH1fM4OJ7vpq/6b92OABGj4i4lRqwFxZaE2oE1P
-         YMnfqq8iEP5fX86BugjtPcBRSaqrG+TaQuAbjQh+ESZBql2e3jj9/M25iAgYXeb9z/Tg
-         pDI5qjI3A3lR6E/chVjwahge5RIlQORqUyg6lv3coZnY7Yy+ZL8N4qAWRwYWYdaSS4/j
-         ribA==
-X-Forwarded-Encrypted: i=1; AL+hErE6B0FSGunF2JC9YyV9CK5HWEfIc4KB0aWhg4NHZzE4Ww2j3w4Gmk2+s20Nxh5OYsMrpEBbccFett3F@vger.kernel.org
-X-Gm-Message-State: APuU4Z+BjWSWUWwM0lXbuAHdMq+Nb/3lJ55RkZcvkZiaEVdQGf9dmIWY
-	bsRt+kgLT/8BgncsCks6NmUkBxMML4LbeI4xwUDspLZ+/HJeQ3UE2zQWBRncZAUiWMvho3UVtCJ
-	pxl2gGg9wYHy65gzAMQ==
-X-Received: from wrso13.prod.google.com ([2002:a5d:474d:0:b0:493:3d97:6e88])
- (user=aliceryhl job=prod-delivery.src-stubby-dispatcher) by
- 2002:adf:e007:0:20b0:48e:3697:708d with SMTP id ffacd0b85a97d-49c70ed8e41mr16698595f8f.12.1794830455230;
- Mon, 16 Nov 2026 04:00:55 -0800 (PST)
-Date: Mon, 16 Nov 2026 12:00:53 +0000
-In-Reply-To: <20261116-work-loop-pseudo-v3-12-8cbbea1cf34f@kernel.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=OMiQvMwb
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3E96D1F000C4;
+	Mon, 16 Nov 2026 12:32:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794832361;
+	bh=Wu/xs78+R9EraA3QMxPnHPyldZGerV7oz+0ABoAixkI=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Date;
+	b=OMiQvMwb1ijrWwKM0Yd3tH9V+K9XzlPKixQYRFrqxU4MTVmP9aERcqm51o2XyQRuK
+	 xzzvrtzDv5Rld9rBLvb3SiDX3JcxB2AnoekZ/j5fNVQDY5YIB4HfIw5cNNWRDb7V6M
+	 wbecA2nbywBhlSCPYoLWNLZOqLirT4TJ1iS7ncNejoEioZ9WGKU6WL8e48TeG0L4nh
+	 pu0ZQk1plVZQ5oV7cLz8rzp2wkti6a4onqf7u5b0xqHEr/jUwJ4UKf3DztLGO8Zslq
+	 CqgZIIYfm6DdxhhHqfP3wgZCrVNr1h4ivuriMU6T7rTO/sgM5Dg2khmjrti5CnHSbB
+	 QW+xx4Qp7zD9g==
+From: Leon Romanovsky <leon@kernel.org>
+To: Bart Van Assche <bvanassche@acm.org>, 
+ "Martin K. Petersen" <mkp@kernel.org>, Yong Liu <pkfxxxing@gmail.com>
+Cc: Jason Gunthorpe <jgg@ziepe.ca>, linux-rdma@vger.kernel.org, 
+ linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, security@kernel.org
+In-Reply-To: <20261113083848.1517595-1-pkfxxxing@gmail.com>
+References: <20261113083848.1517595-1-pkfxxxing@gmail.com>
+Subject: Re: [PATCH v5 0/3] RDMA/srpt: Fix command initialization and read
+ buffer disclosure
+Message-Id: <179483235872.1361005.12065062548973022416.b4-ty@kernel.org>
+Date: Mon, 16 Nov 2026 07:32:38 -0500
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -78,33 +60,39 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0
-References: <20261116-work-loop-pseudo-v3-0-8cbbea1cf34f@kernel.org> <20261116-work-loop-pseudo-v3-12-8cbbea1cf34f@kernel.org>
-X-Mailer: git-send-email 2.56.0.611.g1030f0b940-goog
-Message-ID: <20261116120053.371591-1-aliceryhl@google.com>
-Subject: Re: [PATCH RFC v3 12/44] rust_binderfs: use fc_init_pseudo()
-From: Alice Ryhl <aliceryhl@google.com>
-To: Christian Brauner <brauner@kernel.org>
-Cc: Alice Ryhl <aliceryhl@google.com>, linux-fsdevel@vger.kernel.org, 
-	Jann Horn <jannh@google.com>, Chris Mason <mason@kernel.org>, Josef Bacik <josef@toxicpanda.com>, 
-	Christoph Hellwig <hch@lst.de>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-nvme@lists.infradead.org, Alexander Viro <viro@zeniv.linux.org.uk>, 
-	Jan Kara <jack@suse.cz>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, 
-	driver-core@lists.linux.dev, linux-mm@kvack.org, bpf@vger.kernel.org, 
-	linux-security-module@vger.kernel.org, selinux@vger.kernel.org, 
-	apparmor@lists.ubuntu.com, linux-nfs@vger.kernel.org, netdev@vger.kernel.org, 
-	fuse-devel@lists.linux.dev, linux-efi@vger.kernel.org, 
-	xen-devel@lists.xenproject.org, ocfs2-devel@lists.linux.dev, 
-	linux-s390@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, 
-	linux-usb@vger.kernel.org, Amir Goldstein <amir73il@gmail.com>, 
-	linux-erofs@lists.ozlabs.org, linux-kselftest@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.15-dev-18f8f
 
-On Mon, Nov 16, 2026 at 12:04:45PM +0100, Christian Brauner wrote:
-> Initialize binderfs as a pseudo filesystem instead of raising SB_I_NOEXEC
-> by hand. This adds SB_I_PSEUDO. binderfs_fill_super() keeps clearing
-> SB_I_NODEV for the binder device nodes.
+
+On Fri, 13 Nov 2026 16:38:39 +0800, Yong Liu wrote:
+> Thanks for the review and suggestions. This revision separates the BUSY
+> initialization fix and the target core control-read buffer fix from the
+> SRPT descriptor validation and read-tail clearing fix. Together they
+> address the NULL pointer dereference on descriptor parsing errors and
+> uninitialized target kernel memory disclosure to an initiator.
 > 
-> Signed-off-by: Christian Brauner (Amutable) <brauner@kernel.org>
+> Changes in v5:
+> - Move BUSY command initialization into patch 1 and explain why the
+>   target_init_cmd() return value is ignored.
+> - Clear all control-read SG entries in target core in patch 2.
+> - In patch 3, log inconsistent descriptor lengths and zero the read tail
+>   with one sg_zero_buffer() call through the command's chained SG list.
+>   Remove the SRPT-specific DMA synchronization.
+> 
+> [...]
 
-Reviewed-by: Alice Ryhl <aliceryhl@google.com>
+Applied, thanks!
+
+[1/3] RDMA/srpt: Initialize commands before returning BUSY
+      https://git.kernel.org/rdma/rdma/c/fcce7700cc48e7
+[2/3] scsi: target: Clear all control read scatterlist entries
+      https://git.kernel.org/rdma/rdma/c/1ecb732b4524d3
+[3/3] RDMA/srpt: Prevent uninitialized read buffer disclosure
+      https://git.kernel.org/rdma/rdma/c/317128ea4f21c9
+
+Best regards,
+-- 
+Leon Romanovsky <leon@kernel.org>
+
