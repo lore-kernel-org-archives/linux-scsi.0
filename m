@@ -1,97 +1,55 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.222.181
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794796784;
-	b=3cWlTruTJktfuCdHmlTVLpOl1qXvhusSFZ34Gs86gaKyNBDHkhrEaLHBemr7U/IUfMBM
-	 bqJPXEmM/7yvG02VKJDcKP7oUGtdiTFPdA2UA9fqeRRyAEkTSHklZoTfxMjtZdpvqa44g
-	 wBGnyoOwjMUnv2y18BXVU/ViXlyGtI/f+jKwD5KJveALGeVTO8ZtheprBBIp6GqYPC8Iu
-	 /0weBB2y2NSQPskV3M2D/DgXchhA6xy7PBU9rWHIqrrWovsgEFDSy1xbadB96zg4alck6
-	 CGtLX7XR3ZfX6NzTENm6M2ZS6p1uPRrBoRyjyD6bW+ofADKBEi1kOK6ZKSt7Vb9xzwA==
+	t=1794798063;
+	b=ZKf0UhM7qJ1n1eRl0xmpnzCYqHNTgb+d+9WXdshff0OsgLMgXQFu96YxItIab3V0PsPJ
+	 QIKJquv1711+vAKzZ+/PoJipApWoVCFBYcWA9hOTbOkPFWW2XHTZqBBhb36Q4ZykvnSUV
+	 quYEPLdjJK+gPv8JoHvVxXZxIFYFdRcQ6FPgswKqpDdTMw3H+b2p2GIpotfVT5awImt5A
+	 9+/hSgDYq0eMyt71LurBJc6DSfJN1csg1a036w0A2TzhvK2Vj+IFeGZbWXpQDi/sVyPzZ
+	 TGdEhVZXgzDRu1Q+JFLzFOM4WMtvX+lLF9pVHEcZ2I5T+gBJzJWIYy9UYFgbBqarTXQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794796784;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=W1VDz9lyYjusMl+WyanPC/YCYkBINyyegwMMtwqSAfo=;
-	b=kDinSnYqJPwj/IflRFGFJn/t1MZqudYQubJQ77f2fTSEI8DJHX7VXSQwboj/eGQGSsAV
-	 Xri1ness8VUZGglKKVuTSCe3mxgF0rT3cV8X/4OsO9hAsNPPOq1vILI31QTvgaKuDMvT4
-	 eMI6hTvrtq3GNq1fw5TLSaGIw5+unIO7HDCp9aG+tPisbUCIH5iSfedMElCxmKw8ZVLEy
-	 s+Lz4yIiJRcK0UJ6o9l5P87Bj6C7Dr/h02KeVSdTDjt4drQBe0vzDsAwEt7aUOQLxbJ4Z
-	 3qjPr3wahQQT1tgg8/Lovbo0MF43hwF3wEfyrlgPMpDFXKe4Ua915wgZD69K9dAYvcg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794798063;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=LT9+4IVJzI9aYc2CCdo5yiCxwJH+nqys1isCTGx8c5Q=;
+	b=bFSES8j/HmMZzMzXlS9zWmiWRjVWE7iutHQzHCr2R7vOBrYZ3h2J0fQS7uzj/YBkNhS9
+	 5cqP3Zg9hdFZJ/0JotmeFWbtmmWjOLFlXsfMDV5cN9Wr0OTH723/5BpbpsGbazm9X+2HF
+	 Ueaf2DWW8btvonR2gBcZAX2/zdpw4c7HWx17sBMANs/OSBRi/Q28/pU3ZnkSB/AOvTFGq
+	 w+rqZ/wzZGW7g0BsLOPiwfoeLosTHufBwm4yLhiwOln1jxAaLHOUJ49KUb+tQkFQywmcC
+	 AbkeZfVGTaTlZJ/Dj95Qevg/V+I0As8sWnDY4Pr/3ta4M131Y3Jrkore2fminZ4x3Jg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=Z7gDma7P;
-	arc=none smtp.remote-ip=209.85.222.181
-Received: from mail-qk1-f181.google.com (mail-qk1-f181.google.com [209.85.222.181])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fwrysz7V;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE108606A323
-	for <linux-scsi@vger.kernel.org>; Mon, 16 Nov 2026 02:39:43 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CE108606A323
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A72F606A323
+	for <linux-scsi@vger.kernel.org>; Mon, 16 Nov 2026 03:01:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=Z7gDma7P
-Received: by mail-qk1-f181.google.com with SMTP id af79cd13be357-93f30660e69so285997385a.0
-        for <linux-scsi@vger.kernel.org>; Sun, 15 Nov 2026 18:39:43 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1794796783; x=1795401583; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=W1VDz9lyYjusMl+WyanPC/YCYkBINyyegwMMtwqSAfo=;
-        b=Z7gDma7P5PpaLN0hhr8r/VvOPWXLIsWiR+vO2v7kNV+r4QzPBoZ34CmGj6A0RHlvUn
-         cSKLubOdcQTssAoeTypaPDrHRM4j4gtOf+aULHrdtVkeAsbanmNNGZoQg93pP6DDy17R
-         O+WLuL9ZTU78x3c0vSQ42M8Fm+0Nyc+Cisn76WGVD/5Pp95BQCF1CNpJTh4PdUvgw2Ij
-         ZSLUPYbafUQMksZgVm5IpoKUzX00QZKaYhOxxTpCx85wXtWWmhx+PN06nxssfqnBCH/8
-         9qFaqMjaw2AsFMQwak8RxhW/S/pZ6UrrvO6CouaB7C1dkF31fgn4EM0tsO2VLN2olW9o
-         08QA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794796783; x=1795401583;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=W1VDz9lyYjusMl+WyanPC/YCYkBINyyegwMMtwqSAfo=;
-        b=I639h2Sa6dwgJp37tfhoYRdPEkxOySmLoxw+RT8GhLXtvdm3uELvBRSGZ0OEK8WVcH
-         0Z5zTajjawe5S3usjsSQs7x/ufctlOlSBzongDbTIBe+GcLPCU+VoY6/4NOb7JmBRZJX
-         iwsxf9mmQ+6kRHZllH7k8lsiY7xO96+4gFmk+C63mq0yhrlaKFlXqIs4tYZSv2v00BaF
-         RXV0iV1HFmOH+XNO8dPosb9v08vtKZcsEOczlB1oipBIk56yWHB3yzPqQrjHsePGw7gn
-         rVveVZCqDHWXk6iZzGTStywRtWKjG2gmFPxDpKsWfhsuFyb/2A0Uj0ulBa+ObBIMUtDv
-         bbUQ==
-X-Forwarded-Encrypted: i=1; AL+hErFjAvP5dL5kbA1hxXquvbqA25mKCWZfdkRlv5SSGdHbFdUWmlE/8XHLrjeBOAuXyj6X9gxZw43E/QzS@vger.kernel.org
-X-Gm-Message-State: APuU4Z9d2FV0JjinOhaMIlL2BvyX0T1Dk48MFUkGFhO+V6FYs+EDXXUG
-	n+zHNh1sEW3fv3IVJjDbcKASU00Ig8wpjFvbLJIGILd1ZFdVmRlWligX
-X-Gm-Gg: AYBFou2mA8M3BDZtTRbv/a8jMarDlZSyAYuXE9ubA+iaeHO4NsQ1LwgtMfKe/ary+T+
-	g67IE7BRjedHF3dwXlSTUj1pD2yuR/VZ6zgASmQGicuEvDtV7yglxiS+AAJ8uPm1T2rYTigFuOv
-	dVQhJ4JtboRt4qcqSPtotLrVY1Dw1L2sClfH96f5VhGZyS11OrcR4ibkUXl2/uWT6v/HjZG+GNs
-	FTRhGfvOuuVV+xmF9PFf3itq/67R/0KxC1WaR/W9py7EzPy28nunyQU7USxW5kdwHm65DIjIQQa
-	WIW7K9ymSdZz5ryHjSgOf3ubdhO10k6W884rzUL/bFgllrEF/q+OP5/sOp8oCVBkb7T8CoQ80YC
-	mjbbSKS33R5eEIqQUd6s2g7ynBIV5ofGvzBnkd4eUONk8vRO4n1tekeMPSY80C2dIlSSolCmWnq
-	9JQILTZk72+3iXa8pgkpYk7HcD9857H8lkGolq65XQmA438z75yBhwptRIxGWiNlkXbeMfiBlN1
-	HCTfp2wnj9Y1pEpd27Guq1nsCU7rVmPUHB/HlJSTPBfg12UR6WZksgPOrnpcY4YJ/iahHy3A/P6
-	p0M0omLmvbxbOSRK7MYkKTjf017MTDBlcW6F/sW5ZEVCgIqFrLjbYqjxE6aNxoOgSDNwW+ByAjT
-	fHNqTZhUgVTNDvBaJUmZ5fw==
-X-Received: by 2002:a05:620a:2903:b0:947:7f9b:f839 with SMTP id af79cd13be357-9494bb706d4mr1584260985a.47.1794796782744;
-        Sun, 15 Nov 2026 18:39:42 -0800 (PST)
-Received: from linux.. ([8.34.174.240])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-9494c8f92bbsm747000285a.40.2026.11.15.18.39.41
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 15 Nov 2026 18:39:42 -0800 (PST)
-From: Changyul Lee <lcy8047@gmail.com>
-To: Justin Tee <justin.tee@broadcom.com>,
-	Paul Ely <paul.ely@broadcom.com>
-Cc: "Martin K . Petersen" <mkp@kernel.org>,
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	Hannes Reinecke <hare@suse.de>,
-	Nigel Kirkland <nkirkland2304@gmail.com>,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Changyul Lee <lcy8047@gmail.com>
-Subject: [PATCH] scsi: lpfc: Look up the VMID entry under vmid_lock
-Date: Sun, 15 Nov 2026 21:39:39 -0500
-Message-ID: <20261116023939.588838-1-lcy8047@gmail.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fwrysz7V
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EB1AC1F000C4;
+	Mon, 16 Nov 2026 03:01:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794798063;
+	bh=LT9+4IVJzI9aYc2CCdo5yiCxwJH+nqys1isCTGx8c5Q=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=fwrysz7V92WNw6as0wqfP/9lkzSwpq6XvaXlFQ726aPrwOEMA3VEd0PqKjY970FEY
+	 8/VaP/IeKqcnmMSOv+CMy2ibtDu5FSs/306/3xjbMND7tiwd5NR8y1ud0IeY5vB70j
+	 8L3FsJVfnQkn7vIS46t8Od821LFfhFDfMM6ueSE2hRPySchfUSFexI9z/xuf7/BakV
+	 HW0dvEgGGMoRXTWRP1Hkhazn48aa/PIQaYGEvG44TEtmxkm+RlvkT5yLpKXRN5THsW
+	 OtyRd4bbg8UkyNDL4Vq4PuoZO6qBFN4+5jGLHFWEcK8Pcwwd0AwiQTPSdRe7uL9xU2
+	 Ki1T1EwtKKXQg==
+Message-ID: <sashiko-outbox-216096@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] scsi: lpfc: Look up the VMID entry under vmid_lock
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Changyul Lee" <lcy8047@gmail.com>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20261116023939.588838-1-lcy8047@gmail.com>
+References: <20261116023939.588838-1-lcy8047@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 16 Nov 2026 03:01:02 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -100,59 +58,107 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-lpfc_cmpl_ct_cmd_vmid() looks up the VMID entry for an RAPP_IDENT
-response without vport->vmid_lock and takes the lock only after the
-lookup. lpfc_vmid_get_appid() can meanwhile hash_del() another entry
-from the same bucket under the lock. hash_del() clears the next pointer
-of the removed node, so the walk stops early and misses the entry that
-waits for the response. That entry keeps LPFC_VMID_REQ_REGISTER, and
-the I/O of that VM is sent without a VMID tag from then on.
+Thank you for your contribution! Sashiko AI review found 1 potential
+issue to consider:
+- [Low] scsi: lpfc: inaccurate Fixes trailer for lpfc_cmpl_ct_cmd_vmid()
+  lock fix
+It also noticed 1 related pre-existing issue this patch does not
+introduce:
+- [High] scsi: lpfc: data race and list corruption in
+  lpfc_cmpl_ct_cmd_vmid() [1]
+--
 
-Take vmid_lock before the lookup, as lpfc_vmid_get_appid() does.
+commit ace8e21fd4e560f69d845916087ba204329824c3
+Author: Changyul Lee <lcy8047@gmail.com>
 
-Fixes: 33c79741deaf ("scsi: lpfc: vmid: Introduce VMID in I/O path")
-Signed-off-by: Changyul Lee <lcy8047@gmail.com>
----
-Found with a static analysis tool we are developing.
+> scsi: lpfc: Look up the VMID entry under vmid_lock
+>
+> lpfc_cmpl_ct_cmd_vmid() looks up the VMID entry for an RAPP_IDENT
+> response without vport->vmid_lock and takes the lock only after the
+> lookup. lpfc_vmid_get_appid() can meanwhile hash_del() another entry
+> from the same bucket under the lock. hash_del() clears the next pointer
+> of the removed node, so the walk stops early and misses the entry that
+> waits for the response. That entry keeps LPFC_VMID_REQ_REGISTER, and
+> the I/O of that VM is sent without a VMID tag from then on.
+>
+> Take vmid_lock before the lookup, as lpfc_vmid_get_appid() does.
+>
+> Fixes: 33c79741deaf ("scsi: lpfc: vmid: Introduce VMID in I/O path")
+> Signed-off-by: Changyul Lee <lcy8047@gmail.com>
 
-Compile-tested only, with x86_64_defconfig plus SCSI_LPFC and W=1.
+[Severity: Low]
+33c79741deaf ("scsi: lpfc: vmid: Introduce VMID in I/O path") only touched
+drivers/scsi/lpfc/lpfc_scsi.c.  The unlocked lpfc_get_vmid_from_hashtable()
+call in lpfc_cmpl_ct_cmd_vmid() was added by 742b0cf87a8f ("scsi: lpfc:
+vmid: Implement CT commands for appid"), so should the Fixes tag be:
 
- drivers/scsi/lpfc/lpfc_ct.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+  Fixes: 742b0cf87a8f ("scsi: lpfc: vmid: Implement CT commands for appid")
 
-diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
-index f709e5087577..af720ccdf1b6 100644
---- a/drivers/scsi/lpfc/lpfc_ct.c
-+++ b/drivers/scsi/lpfc/lpfc_ct.c
-@@ -3613,14 +3613,13 @@ lpfc_cmpl_ct_cmd_vmid(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 
- 		hash = lpfc_vmid_hash_fn(app->obj.entity_id,
- 					 app->obj.entity_id_len);
-+		write_lock(&vport->vmid_lock);
- 		vmp = lpfc_get_vmid_from_hashtable(vport, hash,
- 						  app->obj.entity_id);
- 		if (vmp) {
--			write_lock(&vport->vmid_lock);
- 			vmp->un.app_id = be32_to_cpu(app->app_id);
- 			vmp->flag |= LPFC_VMID_REGISTERED;
- 			vmp->flag &= ~LPFC_VMID_REQ_REGISTER;
--			write_unlock(&vport->vmid_lock);
- 			/* Set IN USE flag */
- 			vport->vmid_flag |= LPFC_VMID_IN_USE;
- 		} else {
-@@ -3628,6 +3627,7 @@ lpfc_cmpl_ct_cmd_vmid(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 					 "6901 No entry found %s hash %d\n",
- 					 app->obj.entity_id, hash);
- 		}
-+		write_unlock(&vport->vmid_lock);
- 		break;
- 	case SLI_CTAS_DAPP_IDENT:
- 		app = (struct app_id_object *)(DAPP_IDENT_OFFSET + data);
+> diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
+> index f709e50875770..af720ccdf1b6f 100644
+> --- a/drivers/scsi/lpfc/lpfc_ct.c
+> +++ b/drivers/scsi/lpfc/lpfc_ct.c
+> @@ -3613,14 +3613,13 @@ lpfc_cmpl_ct_cmd_vmid(struct lpfc_hba *phba, stru=
+ct lpfc_iocbq *cmdiocb,
+> =20
+>  		hash =3D lpfc_vmid_hash_fn(app->obj.entity_id,
+>  					 app->obj.entity_id_len);
+> +		write_lock(&vport->vmid_lock);
+>  		vmp =3D lpfc_get_vmid_from_hashtable(vport, hash,
+>  						  app->obj.entity_id);
+>  		if (vmp) {
+> -			write_lock(&vport->vmid_lock);
+>  			vmp->un.app_id =3D be32_to_cpu(app->app_id);
+>  			vmp->flag |=3D LPFC_VMID_REGISTERED;
+>  			vmp->flag &=3D ~LPFC_VMID_REQ_REGISTER;
+> -			write_unlock(&vport->vmid_lock);
+>  			/* Set IN USE flag */
+>  			vport->vmid_flag |=3D LPFC_VMID_IN_USE;
+>  		} else {
+> @@ -3628,6 +3627,7 @@ lpfc_cmpl_ct_cmd_vmid(struct lpfc_hba *phba, struct=
+ lpfc_iocbq *cmdiocb,
+>  					 "6901 No entry found %s hash %d\n",
+>  					 app->obj.entity_id, hash);
+>  		}
+> +		write_unlock(&vport->vmid_lock);
+>  		break;
+>  	case SLI_CTAS_DAPP_IDENT:
+>  		app =3D (struct app_id_object *)(DAPP_IDENT_OFFSET + data);
 
-base-commit: 7475ea8b58616b33c04afb976cf0fbaad9dd63fb
--- 
-2.43.0
+[Severity: High]
+This problem wasn't introduced by this patch, but the SLI_CTAS_DALLAPP_ID
+branch right below in lpfc_cmpl_ct_cmd_vmid() causes a NULL pointer
+dereference, list corruption, and a memory leak [1]:
 
+drivers/scsi/lpfc/lpfc_ct.c:lpfc_cmpl_ct_cmd_vmid() {
+	...
+	case SLI_CTAS_DALLAPP_ID:
+		...
+		read_lock(&vport->vmid_lock);
+		for (i =3D 0; i < phba->cfg_max_vmid; i++) {
+			vmp =3D &vport->vmid[i];
+			if (vmp->flag !=3D LPFC_VMID_SLOT_FREE)
+				memset(vmp, 0, sizeof(struct lpfc_vmid));
+		}
+		read_unlock(&vport->vmid_lock);
+		/* for all elements in the hash table */
+		if (!hash_empty(vport->hash_table))
+			hash_for_each(vport->hash_table, bucket, cur, hnode)
+				hash_del(&cur->hnode);
+	...
+}
+
+Can this crash when deregistering all app IDs?  Zeroing vmp with memset()
+while its hnode is still linked in vport->hash_table clears hnode.next and
+hnode.pprev, so the subsequent hash_del(&cur->hnode) dereferences a NULL
+pprev pointer.  In addition, the loop mutates vport->vmid under read_lock()
+instead of write_lock(), overwrites vmp->last_io_time without calling
+free_percpu(), and walks vport->hash_table without holding vport->vmid_lock
+or using hash_for_each_safe().
+
+[1] https://sashiko.dev/#/bug/linux-b856b4ae-5c8f-4fb3-812c-1d152bd8d42f
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261116023939.5888=
+38-1-lcy8047@gmail.com?part=3D1
