@@ -1,56 +1,91 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.210.180
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794918604;
-	b=fDjQYm/a/Cml0Hst+SLMOvmBHqVgrxSwC8yMP6yAgMUPwgDLO89UxcBDlVEpw15Wu4gI
-	 OtrVTxFv9YaseXKkjSfb+DMt9ibuc5bYDuD7f9O2PkAeIFXtV0ZOmXaN9fqhme6Ie3Jsi
-	 O2OpgdrdxzyEyhVR+qGMn4l4x8jzou/Eaiea95eqjBSL74CXCb3TAJmICmk0lzVKFt9tD
-	 R2ts14w3vas+b6QXGattxEFcNW+TNgAgr0g8mORxxAWiNk8smkUoeX1AzP6mQHEj+fywI
-	 wsi1pg5UlLA4XNAlv08ygKuV5SdjgedMUxAgjCNZZLEcw5JMDMYZB1ekZ4buPtz18CQ==
+	t=1794922971;
+	b=CP0Z1KcyoULfxQXhB01VjPNlwNlvCxQGMit+/2bHmhTkRx5Gv4v9+wp0Sf2PYPS7D8ro
+	 GWsvCEg92jW0n1ilqXv+iqfLwSQY22nDPSiX18AJ77SoMi6Fj8ct4i3PJWQVC287FHGNJ
+	 QcYo46ozqjI+WTCoM30SnxawN8LKalHXhKZ1aCI2k94Kex1Z4K9ySixcl0JIHcvd7/Keg
+	 JanSvG1sZJ5Fmh1dJQOrRiNX8vMwe5XJfF7XDGFIc694/xWxcU1A1UCg7fw4Vx7DLdLgd
+	 woZFzeLR4JEBRp7aP7c1WoPBrN2q6nfOB5mV+dEk1l5VaC8vPFRGeaavc/zCkMXhgjA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794918604;
-	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
-	 MIME-Version:X-Developer-Signature:X-Developer-Key:
-	 Content-Transfer-Encoding;
-	bh=H7dl4Z0zXU3PtsfJzlRQag9x+xyF/BDC8NJp2gQXUeY=;
-	b=ea9FlsGQa6XpWWBzex6x2g9/v4W/h8ty2EI2SMKT8TgnCq4CmoUZGcDnAgc128bJgVnI
-	 NF9qQUsp34rZ0mQVKMTYICs5ANfiBBPPz0GjxkOUnB8WoZpXGfrnFDLaCS4VoD6NRvtK/
-	 eVyfn+G8B+HLpvj8CQqzfuhFzfzmws7bZmqQ2WILg7JezvX7FwmNijyoODmu1vEltr6ok
-	 GwYOJ+l5qvGT4UwEbzBfD1Wspc3v1/wCGRVzI7kw89vSI98n4jwixtBH7T/YS8gi4Wa4q
-	 cvHXABxT6YwLIflH37KnEHao0Gu5BZC9u4rsWnMgj4qvIhDTd9LlOHNfp64zhvfeeZw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794922971;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
+	 Date:Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding;
+	bh=lYvyOgeDLhWRH71wL6BvrJmUkU6oMEvaRE2drZaf37U=;
+	b=MHxsguGAk0c/vH37OrxOmHlhU4c8Q13JqW2z2nNXoSOk3nuZKe2QueUNma/H2mDB+cKW
+	 Za7mASN+69SEFL3mEPdg3pH38luhdtiLWFh1WdW+U9LdSSWT4GCGf7/3lS916ffZU+IzQ
+	 rxh4fo+t8WInOu1T0aLVbpzlE7YdAEI8CEkymjW69jGGaXETmOFUzpPuzbw88WGXk7rKc
+	 AonguSNa6qqF5ClhqK/C7igIjlm62ukCE/HORRd61bcFe32fnG8CReSfnsLeZJ5KSTqnv
+	 npZT2EwBfXBl+iOKroBmAOkGSf49WKubNwMcOgLtoBEbt2jN3Pl+oKzdXmeIq+NN/tw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=hZt4MFAs;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=fail header.from=isslab.korea.ac.kr;
+	spf=none smtp.mailfrom=isslab.korea.ac.kr;
+	dkim=pass header.d=isslab-korea-ac-kr.20260707.gappssmtp.com header.i=@isslab-korea-ac-kr.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b="FJ/gNqVY";
+	arc=none smtp.remote-ip=209.85.210.180
+Received: from mail-pf1-f180.google.com (mail-pf1-f180.google.com [209.85.210.180])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20E5B606A333;
-	Tue, 17 Nov 2026 12:30:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B609E606A31C
+	for <linux-scsi@vger.kernel.org>; Tue, 17 Nov 2026 13:42:49 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B609E606A31C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=hZt4MFAs
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1625A1F000CA;
-	Tue, 17 Nov 2026 12:30:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794918604;
-	bh=H7dl4Z0zXU3PtsfJzlRQag9x+xyF/BDC8NJp2gQXUeY=;
-	h=From:To:Cc:Subject:Date;
-	b=hZt4MFAs0ipx329lBHP5U6+IZ9WhIl8v7qWh6XxjqqwLDhwStOClkZ5eOZ1aZn64z
-	 mGshbWOpAZEWNV2IwpdWF2wBY3KMt4bHhCUUNUQl7R1E97aTIuchTI95Kz8r6LVw14
-	 Mx1w9YSHqviUU0DgKbSPCOZ8UshK0s4vAzBZPi3S8wk8yIQKJ/epu0pRDrYrIWQxli
-	 xQgrVxF5SsekTnmpzPnG1dCBIAwJaasaf1xIryqBNYvWJbRTSS7NCcsP/wSS6ZLvHB
-	 9q1hWVQYgh4OlZyHdweHi2YcfoGWomWjprnhPa2FsgJtHF8py0lwWMo/Tp5S0nnCST
-	 FhgMjCbE4B+iQ==
-From: Niklas Cassel <cassel@kernel.org>
-To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <mkp@kernel.org>
-Cc: Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>,
-	stable@vger.kernel.org,
-	linux-scsi@vger.kernel.org
-Subject: [PATCH v2] scsi: scsi_ioctl: require write access for the depopulation commands
-Date: Tue, 17 Nov 2026 13:29:53 +0100
-Message-ID: <20261117122952.3451870-2-cassel@kernel.org>
-X-Mailer: git-send-email 2.56.1
+	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20260707.gappssmtp.com header.i=@isslab-korea-ac-kr.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=FJ/gNqVY
+Received: by mail-pf1-f180.google.com with SMTP id d2e1a72fcca58-8b6b22be970so1752395b3a.1
+        for <linux-scsi@vger.kernel.org>; Tue, 17 Nov 2026 05:42:49 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=isslab-korea-ac-kr.20260707.gappssmtp.com; s=20260707; t=1794922969; x=1795527769; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=lYvyOgeDLhWRH71wL6BvrJmUkU6oMEvaRE2drZaf37U=;
+        b=FJ/gNqVYyrVQqVNQp24+Mvcm2/Fswm3iWpTCbYFvz0mLTfjWb2EkFBahcNFhIytZpX
+         oJ2NTGEZiLB9dJJLFGHQAIN3o2Z1XJ4tUDbFUrgXSGkcolgSv6x8WtsMygqbFfBJqvRs
+         hDjYyoV6SbCHBB2yHjUlRcOb6V2xDsi0HFIiWtE/vDP9RxC0QJTcZGIMHDVTWhDe7xoY
+         1h6b0OhZ1/kMSrYQshblurkr2FYZSUKSSvpwlUtovdiH9yjS9bG8/FRqqdHNf2SreFgh
+         Bxkd4jnPyupdvIw/hJ+oCaodZMmEILOkHTYkhySeDPbbPCBE9cFDIUiqgjLGrW5lZLPm
+         AmXQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1794922969; x=1795527769;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=lYvyOgeDLhWRH71wL6BvrJmUkU6oMEvaRE2drZaf37U=;
+        b=Il50VNqG/p3QCFQfHNQu2Ovhe3tXT+Mzl5s289JOO3FfInG1EqggIv4UKbBlVWXPwl
+         AjH2VfmOiUTJSoDKin8AVaAZzp9kewjbWkdv2IIBp5qyLai6CuWfIf6mp9juO0m0OoyL
+         Rd63kRMCIUOCAMt07RTc4IboQ8NaqB8ILPkaEYCY4tAL+dknN1ztN6XlxvCYv/ctnV9U
+         hqR1g/DHRzPIQBVm5iigSiIxHsqJ8Ni0Z+sHWfgFrMrcIjvp1nWBewFMbNbq2aTdGJOx
+         JMrLmBR/vXb7UospniEml4AbMIAcE4UISzqfdb7NrbkIcIMVOOPuakablJdbBx3XJpix
+         TcjQ==
+X-Gm-Message-State: APuU4Z8Evym8vS3POyPFuZNF0SmZSPCNoLN+q9GPhAzSZqatoqlHb0mC
+	z6fRgfqxzQkEVoI3hf89vvAI3uNSByxOCs5qVOB0o53rbAi93MNdkVTcLUKgTOhp3uw=
+X-Gm-Gg: AYBFou3X2TgY+a4oI4O25S9BjyFF3SqcK5llBKCjHsQxhDwlilVjlClJv9klKfpXh7W
+	8Hro1QXIOdepAQmucLwUNmRyH3CVPSdpjoZ+mCXo7io3ytqxOa3NdwlJD6344kKHeKwwZ7m5XA7
+	QA3Wp1SyAxTsKYOUv1rV2T665OwA/SX1N4EvbjMwoqZTtmx7p+oR5t51t2IJryEHM2IV2vdMkxC
+	IWV2nHEq0Atwd+t7wGvaUWqUQ0wBAs5vlvabSXjOIQj30LqeB8aAHtz/AnFJ215HZDM1oiMc9MS
+	tyQhupfLyytJBgrIHCoUSAaO+pUz+FIsjmgPv3fSHB6QEdMZoIADK+xoJGaLfPPp2T4hujXTcHk
+	kmp3M8MGGjV5+zUgyionFqh/HQSGzcUcm1cOdCIJolwf21yhb25XzFIIiM9hTCFtRiuJTtpyS0E
+	FCz+AP73Ptz6jDi22uZpXlYWZd9e7TC03pKJrDI5/NRnaVC+Ee9RivhEx4e8S7X9XyL9V1voWCR
+	JUt5zBUhSiG0OCKdG1txSgOwIzZbtMLNoOe6Siy8pd4yi6Imy6md8lS9M0rqBAKr3joDjbpouvn
+	A0BZ5I7HmH0K4hTrl5GWy/x6s7Xz+8grv0CguEvtwS5gL13AMOGdes7ZdSXENCaRVvLKtP26wMm
+	OGHs15PpDoceI9jT9P5HPof+upOJRugq7lsU3Mw==
+X-Received: by 2002:a05:6a00:340f:b0:857:7317:cff5 with SMTP id d2e1a72fcca58-8beb6197550mr11801170b3a.22.1794922968711;
+        Tue, 17 Nov 2026 05:42:48 -0800 (PST)
+Received: from yhlee-960QFG.Davolink ([2406:5900:1044:110c:73df:c7da:8e76:82c5])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-8bed12a8024sm5040714b3a.11.2026.11.17.05.42.46
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 17 Nov 2026 05:42:47 -0800 (PST)
+From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+To: mkp@kernel.org,
+	James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	zilin@seu.edu.cn
+Subject: [PATCH v3 0/3] scsi: mvumi: do not free or reuse buffers a timed-out command left with the device
+Date: Tue, 17 Nov 2026 22:42:24 +0900
+Message-ID: <20261117134227.2077013-1-yhlee@isslab.korea.ac.kr>
+X-Mailer: git-send-email 2.43.0
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -60,75 +95,48 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2730; i=cassel@kernel.org; h=from:subject; bh=1/rFBrF7yWrytAReQJlyYYBeH784+pHZ5FXnEcAK9KA=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGLL+eBx0vRS4bKe6RansWe3eN3aBywVd76r82hX7aHa/4 9Iws7VuHaUsDGJcDLJiiiy+P1z2F3e7TzmueMcGZg4rE8gQBi5OAZgIdyIjw42tAg1dfkseOStx nl34+YX/bKvDsvNvpWp8PSRqfDrvmBgjw801n2vKf3S3rJnI1s62q10p/6zOf/33UZPu+GZHfJt UwgUA
-X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
 Content-Transfer-Encoding: 8bit
 
-scsi_cmd_allowed() lets anybody who can open a SCSI device, even
-read-only, send any SERVICE ACTION IN(16) command. Besides READ
-CAPACITY(16) and the other read-only service actions, that opcode also
-carries the storage element depopulation commands of SBC-4: REMOVE
-ELEMENT AND TRUNCATE, RESTORE ELEMENTS AND REBUILD and REMOVE ELEMENT
-AND MODIFY ZONES. These change the capacity of the device, and after
-REMOVE ELEMENT AND TRUNCATE the data on the device is most likely gone.
+1/3 stops bus-mastering before mvumi_detach_one() frees the buffers the
+controller was given.  2/3 keeps a timed-out internal command's buffers
+until then and stops the probe loop from reusing them.  3/3 waits for
+the event work before the host is freed.
 
-SCSI devices that support depopulation execute these commands directly,
-and libata translates them to the equivalent ATA commands, so a user
-with read-only access to the device node can truncate the device through
-SG_IO, SCSI_IOCTL_SEND_COMMAND or bsg.
+v2 -> v3, from the Sashiko review of v2:
+- 2/3: free the mhba_dev_list entries an aborted probe leaves behind.
+- 3/3: clear bus-mastering before mvumi_release_fw() on the probe error
+  path.
 
-Treat these service actions like FORMAT UNIT and ERASE, which also
-destroy data, and only allow them if the device is opened for writing.
-The other SERVICE ACTION IN(16) service actions remain allowed for
-everybody who can open the device.
+Left for separate patches: the DMA address rebuilt in
+mvumi_delete_internal_cmd(), which 7/9 of the series below removes; the
+unlocked sync_cmd test in mvumi_issue_blocked_cmd(); and the same
+bus-mastering order in mvumi_init_fw()'s error path.
+  https://lore.kernel.org/all/20261015045213.3975845-1-yhlee@isslab.korea.ac.kr/
 
-Cc: <stable@vger.kernel.org> # 2a0adbb80a2f: scsi: define depopulation capabilities related service actions
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-Signed-off-by: Niklas Cassel <cassel@kernel.org>
----
-Changes in v2:
-- Say that the data is most likely gone after REMOVE ELEMENT AND
-  TRUNCATE (Damien).
-- Mark 2a0adbb80a2f, which added the SAI_* definitions, as a
-  prerequisite for the stable backport (Damien).
+This conflicts with that 7/9 only in 2/3; I will rebase whichever goes
+in second.  I have no mvumi hardware; this was checked with a KUnit
+model.
 
- drivers/scsi/scsi_ioctl.c | 16 +++++++++++++++-
- 1 file changed, 15 insertions(+), 1 deletion(-)
+v1:
+  https://lore.kernel.org/all/20261114014430.489668-1-yhlee@isslab.korea.ac.kr/
+v2:
+  https://lore.kernel.org/all/20261115122153.1446810-1-yhlee@isslab.korea.ac.kr/
 
-diff --git a/drivers/scsi/scsi_ioctl.c b/drivers/scsi/scsi_ioctl.c
-index bf049d9cb719..91525103d074 100644
---- a/drivers/scsi/scsi_ioctl.c
-+++ b/drivers/scsi/scsi_ioctl.c
-@@ -300,7 +300,6 @@ bool scsi_cmd_allowed(unsigned char *cmd, bool open_for_write)
- 	case GPCMD_VERIFY_10:
- 	case VERIFY_16:
- 	case REPORT_LUNS:
--	case SERVICE_ACTION_IN_16:
- 	case RECEIVE_DIAGNOSTIC:
- 	case MAINTENANCE_IN: /* also GPCMD_SEND_KEY, which is a write command */
- 	case GPCMD_READ_BUFFER_CAPACITY:
-@@ -330,6 +329,21 @@ bool scsi_cmd_allowed(unsigned char *cmd, bool open_for_write)
- 	/* ZBC */
- 	case ZBC_IN:
- 		return true;
-+	/*
-+	 * The storage element depopulation commands share the opcode of the
-+	 * read-only SERVICE ACTION IN(16) commands, but change the capacity
-+	 * of the device and may destroy its data, so treat them as writing
-+	 * commands.
-+	 */
-+	case SERVICE_ACTION_IN_16:
-+		switch (cmd[1] & 0x1f) {
-+		case SAI_REMOVE_ELEMENT_AND_TRUNCATE:
-+		case SAI_RESTORE_ELEMENTS_AND_REBUILD:
-+		case SAI_REMOVE_ELEMENT_AND_MODIFY_ZONES:
-+			return open_for_write;
-+		default:
-+			return true;
-+		}
- 	/* Basic writing commands */
- 	case WRITE_6:
- 	case WRITE_10:
+Best regards,
+Yehyeong Lee
+
+Yehyeong Lee (3):
+  scsi: mvumi: stop the controller bus-mastering before freeing its
+    buffers
+  scsi: mvumi: quarantine a timed-out internal command's buffers
+  scsi: mvumi: flush the event work before the host is freed
+
+ drivers/scsi/mvumi.c | 97 ++++++++++++++++++++++++++++++++++++--------
+ drivers/scsi/mvumi.h |  3 ++
+ 2 files changed, 84 insertions(+), 16 deletions(-)
+
+
+base-commit: 23c62304dde29abe92013d85910d03a77dada35d
 -- 
-2.56.1
+2.43.0
 
