@@ -1,50 +1,56 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=101.71.155.101
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794927090;
-	b=vWA/DzZcaLibFUAVBpPrWKxBBH4Pxu/5htsi514Zr5BBDTAVo8CcUnjQsuiWRI6x/Y2I
-	 iMV57dEJhwHW7gubtXgZV0UkgokHDa+tD5DLayYw9wlsNE7nCuYnam/v95iX9HcJEMJzn
-	 D51pCon0aEHOhc/rYvIw4BZ1lOTFx5Xe6cabWCQN24lBnz2jKAOIUFm1/a1VQ2mInl89z
-	 DPSng3aM46lQZE0NmbSkoAAl4Y3W1l8wDn9jEBpo6Bn6kiqxFXdA96kXGWW3142nQ7q5V
-	 yC/S/qTvJVahcpp0XjKyAyYld+Y+XegJ2S5TWBdsEirHsuN4lVaN9I28GaxZcdO9SqA==
+	t=1794928670;
+	b=OPP24kLM5dZWRF8O3Rd8eAtMYyq48/PEo4Knlt2HOyvR2IO2xMDeqFeACratydVuUslq
+	 0XVIiOLzvhcZl0EkijYrgTnpXEnMHmhSDjv0ueuwDYzhOzhqCLTgPBr4NEKmYNt9JSW4O
+	 PI/6a7cLIyDIhex/sLVw9Lpf27wgKtBMeHvE9kAQVzAyEBbaD9H3uvVPI/I1Z9Yz2P2Nu
+	 5Kjw/L8qOVSqZEC6ipuOQi6FbH/6ofQg0deOlOjyLXOHuMVNC755TEUiwZsCB9EMogYn+
+	 XLEY6zqRfpEyaay5f/wnfUYvu7is0E7AeTLFmkHmRP0IMSf1uLR7IpMUXSZ5bFgDAUw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794927090;
-	h=DMARC-Filter:Received:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
-	 MIME-Version:Content-Type:Content-Transfer-Encoding:X-HM-Tid:
-	 X-HM-MType:X-HM-Spam-Status:DKIM-Signature;
-	bh=GJZQLR6mwp7b314RltwFULXw871Y8jBCZY1gD9pQC+c=;
-	b=F0dwznk5GPHenxN9f9JqBfUcuvAuL5wExNTafGnpzer9SgocvfZsSOnojH0bv6/eUu/K
-	 mANWaEE3IWF/8oypnvpfato9bIOlYuvlwFz0DAs+NhunSzp1yMygJs1iq3+UU0PCKBMus
-	 FXSizfKB45lLhOETYDpZNZ1Zb8zbWBlXQCYavA1lJJCUBM7D1Mz7BR06nFYotZHgojAlQ
-	 5ahVvX0vme4Cob7d5ZaFfreOpgCMBwN9espkzzHwVGJ2/0bsTx8vOPLQyskYbWriLKtAT
-	 vlQGZDyZKaOakVNKhy/XjKlSVqeZ8ZpAHc2y25274uOjU7VgdezwzCeh0qc6cLOehHw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794928670;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=9Qm/xbm+1KJSdmqL3Jy2uV6gQrtlDBa5IzgqtJP2udo=;
+	b=Ma5Pwqss40GQZgcE/BmMD6ySr4o0d7tcDKrVHItV1j3hH9towZPrBGNaohB/T6tu6Cki
+	 WgY3ixXjcsCwOFF0qbIUYs9JyqoBgFFaQx+twVYpebuahfNv4g8MFb+JrDP7TxM9yjV+h
+	 jT4+Bzq1TDpyrepXNmK45ZShs8XseyDL1vzYPOkDd3PixOCTbNBRAvKImi1rNCd3J3zxQ
+	 FHiNqK4luWsy0k4utaX/lqZbTQq98UxXYhcLOshRZ5eJGm2VkncO1FrxiTJieLzPJ2U4T
+	 KGEAWn+vZg/5XE+NQBd+zD0Awu0biDHctOE8K9DK+i/Q9QbpFro5pf05UXrfe+vzyxw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=mail.sdu.edu.cn;
-	spf=pass smtp.mailfrom=mail.sdu.edu.cn;
-	dkim=pass header.d=mail.sdu.edu.cn header.i=@mail.sdu.edu.cn header.a=rsa-sha256 header.s=default header.b=KlDHYMBD;
-	arc=none smtp.remote-ip=101.71.155.101
-Received: from mail-m155101.qiye.163.com (mail-m155101.qiye.163.com [101.71.155.101])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=abvGwFS5;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D19B9606A31C;
-	Tue, 17 Nov 2026 14:51:28 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D19B9606A31C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mail.sdu.edu.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mail.sdu.edu.cn
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4984F606A32A
+	for <linux-scsi@vger.kernel.org>; Tue, 17 Nov 2026 15:17:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mail.sdu.edu.cn header.i=@mail.sdu.edu.cn header.a=rsa-sha256 header.s=default header.b=KlDHYMBD
-Received: from lgs.. (unknown [101.76.249.61])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 55020e829;
-	Tue, 17 Nov 2026 22:51:24 +0800 (GMT+08:00)
-From: Guangshuo Li <liguangshuo@mail.sdu.edu.cn>
-To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <mkp@kernel.org>
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: arcmsr: Fix potential DMA leaks on XOR allocation failure
-Date: Tue, 17 Nov 2026 22:51:23 +0800
-Message-ID: <20261117-571e631490-scsi-arcmsr-0@mail.sdu.edu.cn>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=abvGwFS5
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F10841F000C6;
+	Tue, 17 Nov 2026 15:17:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794928670;
+	bh=9Qm/xbm+1KJSdmqL3Jy2uV6gQrtlDBa5IzgqtJP2udo=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=abvGwFS5kgFAktunBL4po8J8udSxBB59+tK4HDt8SYSz7//icnPf+2jyd/peIZfzi
+	 by7HnhwkO0Uyiv5j0GNLq06HGdtWdmR2S6KGF043gsfU1fJZKpYOOHkiyM61SYcfjA
+	 JmAgNApQBDaJBCqmygP5FU7v4Wh0L0jJtYUgpxeEKBnybLLow1FrprfrNb/+iGtkTz
+	 /9f8ZrUuKfggfToHycprPh9ZVZpyVOBS67saR2OHmHbd0y/nATwlmXkofuwCxWbDkW
+	 jWjLigcEBDotdwn1PFm0oLHHIlAfeG7McZhvBuAmdAKxNiiUT4+s7MBq4E3LrWNX+q
+	 eOatNizJwTCSQ==
+Message-ID: <sashiko-outbox-219043@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] scsi: arcmsr: Fix potential DMA leaks on XOR allocation
+ failure
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Guangshuo Li" <liguangshuo@mail.sdu.edu.cn>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20261117-571e631490-scsi-arcmsr-0@mail.sdu.edu.cn>
+References: <20261117-571e631490-scsi-arcmsr-0@mail.sdu.edu.cn>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 17 Nov 2026 15:17:49 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -53,58 +59,90 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-HM-Tid: 0aa1e9fdc39e03a1kunm516bdf19156608
-X-HM-MType: 10
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVkZGkIZVk0ZHUpLSUpCGEtLHVYeHw
-	5VEwETFhoSFyQUDg9ZV1kYEgtZQVlKS0pVTE1VSU9CVU1KWVdZFhoPEhUdFFlBWU9LSFVKS0lCQ0
-	NMVUpLS1VLWQY+
-DKIM-Signature: a=rsa-sha256;
-	b=KlDHYMBDb3atWX1pLZbfRxVeWoOHhF8+j1I0Z6pBnNaUxDpDUzmUz2ynyc3giNeSPew+lTkhakzqNIKc0Z/+gljc7A5sPGi087qtpcMD2MSxq9t9gYBYSO9TOh8cuBcjI//XM92dWJilWiZVT5l4vA7Vycw+5Fwrlev9YYiegnU=; c=relaxed/relaxed; s=default; d=mail.sdu.edu.cn; v=1;
-	bh=GJZQLR6mwp7b314RltwFULXw871Y8jBCZY1gD9pQC+c=;
-	h=date:mime-version:subject:message-id:from;
 
-XOR allocation failure is returned after the CCB pool has been allocated,
-but probe skips pool cleanup on this error. Free the pool before returning
-and handle a failed XOR header allocation without dereferencing it.
+Thank you for your contribution! Sashiko AI review found no new issues
+in this patch, but noticed 1 related pre-existing issue it does not
+introduce:
+- [Critical] scsi: arcmsr: hardware-controlled pointer dereference in
+  arcmsr_ccb_complete() [1]
+--
 
-This issue was found by our static analysis tool under development.
+commit 5ed92826e96263be26f2281fb2284bdbe1e52cb8
+Author: Guangshuo Li <liguangshuo@mail.sdu.edu.cn>
 
-Fixes: 14ef4b001ae7 ("scsi: arcmsr: Support new RAID controller ARC-1688")
-Signed-off-by: Guangshuo Li <liguangshuo@mail.sdu.edu.cn>
----
- drivers/scsi/arcmsr/arcmsr_hba.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+scsi: arcmsr: Fix potential DMA leaks on XOR allocation failure
 
-diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
-index 8aa948f06cac..52caa800397e 100644
---- a/drivers/scsi/arcmsr/arcmsr_hba.c
-+++ b/drivers/scsi/arcmsr/arcmsr_hba.c
-@@ -771,6 +771,10 @@ static int arcmsr_alloc_xor_buffer(struct AdapterControlBlock *acb)
- 		(sizeof(struct XorHandle) * acb->xor_mega);
- 	dma_coherent = dma_alloc_coherent(&pdev->dev, acb->init2cfg_size,
- 		&dma_coherent_handle, GFP_KERNEL);
-+	if (!dma_coherent) {
-+		acb->xor_mega = 0;
-+		return -ENOMEM;
-+	}
- 	acb->xorVirt = dma_coherent;
- 	acb->xorPhys = dma_coherent_handle;
- 	pXorPhys = (struct Xor_sg *)((unsigned long)dma_coherent +
-@@ -895,8 +899,10 @@ static int arcmsr_alloc_ccb_pool(struct AdapterControlBlock *acb)
- 		break;
- 	}
- 	if ((acb->firm_PicStatus >> 24) & 0x0f) {
--		if (arcmsr_alloc_xor_buffer(acb))
-+		if (arcmsr_alloc_xor_buffer(acb)) {
-+			arcmsr_free_ccb_pool(acb);
- 			return -ENOMEM;
-+		}
- 	}
- 	return 0;
- }
+This commit checks for DMA allocation failure in arcmsr_alloc_xor_buffer()
+and frees the CCB pool in arcmsr_alloc_ccb_pool() if XOR buffer allocation
+fails.
 
-base-commit: 6628e7d4c6b25c8d18f1345e3a20d21829aae7e4
+> diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcms=
+r_hba.c
+> index 8aa948f06cacf..52caa800397e3 100644
+> --- a/drivers/scsi/arcmsr/arcmsr_hba.c
+> +++ b/drivers/scsi/arcmsr/arcmsr_hba.c
+[ ... ]
+> @@ -895,8 +899,10 @@ static int arcmsr_alloc_ccb_pool(struct AdapterContr=
+olBlock *acb)
+>  		break;
+>  	}
+>  	if ((acb->firm_PicStatus >> 24) & 0x0f) {
+> -		if (arcmsr_alloc_xor_buffer(acb))
+> +		if (arcmsr_alloc_xor_buffer(acb)) {
+> +			arcmsr_free_ccb_pool(acb);
+>  			return -ENOMEM;
+> +		}
+>  	}
+>  	return 0;
+>  }
+
+[Severity: Critical]
+This problem wasn't introduced by this patch, but can a compromised or
+malicious PCI device overwrite the kernel pointers embedded in struct
+CommandControlBlock [1]?
+
+arcmsr_alloc_ccb_pool() allocates the CommandControlBlock array in
+DMA-coherent memory via dma_alloc_coherent(), and those structures hold
+host pointers including ccb->acb, ccb->pcmd, and ccb->list:
+
+drivers/scsi/arcmsr/arcmsr_hba.c:arcmsr_alloc_ccb_pool() {
+	...
+	dma_coherent =3D dma_alloc_coherent(&pdev->dev, acb->uncache_size, &dma_co=
+herent_handle, GFP_KERNEL);
+	...
+	ccb_tmp =3D dma_coherent;
+	...
+	for(i =3D 0; i < acb->maxFreeCCB; i++){
+		...
+		ccb_tmp->acb =3D acb;
+		...
+		INIT_LIST_HEAD(&ccb_tmp->list);
+	...
+}
+
+On I/O completion, arcmsr_ccb_complete() trusts those device-accessible
+fields and passes them to atomic_dec(), scsi_dma_unmap(),
+spin_lock_irqsave(), list_add_tail(), and scsi_done():
+
+drivers/scsi/arcmsr/arcmsr_hba.c:arcmsr_ccb_complete() {
+	struct AdapterControlBlock *acb =3D ccb->acb;
+	struct scsi_cmnd *pcmd =3D ccb->pcmd;
+	unsigned long flags;
+	atomic_dec(&acb->ccboutstandingcount);
+	scsi_dma_unmap(ccb->pcmd);
+	ccb->startdone =3D ARCMSR_CCB_DONE;
+	spin_lock_irqsave(&acb->ccblist_lock, flags);
+	list_add_tail(&ccb->list, &acb->ccb_free_list);
+	spin_unlock_irqrestore(&acb->ccblist_lock, flags);
+	scsi_done(pcmd);
+}
+
+Overwriting these pointers via DMA allows arbitrary kernel memory writes
+and control-flow hijacking.  Host-only metadata should be kept in regular
+kernel memory rather than inside the DMA-coherent CCB buffer.
+
+[1] https://sashiko.dev/#/bug/linux-a10df3d7-0d0e-4b31-a2dd-416f0ee6e806
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261117-571e631490=
+-scsi-arcmsr-0@mail.sdu.edu.cn?part=3D1
