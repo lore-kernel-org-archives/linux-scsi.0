@@ -1,91 +1,95 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.210.180
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.210.172
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794922971;
-	b=CP0Z1KcyoULfxQXhB01VjPNlwNlvCxQGMit+/2bHmhTkRx5Gv4v9+wp0Sf2PYPS7D8ro
-	 GWsvCEg92jW0n1ilqXv+iqfLwSQY22nDPSiX18AJ77SoMi6Fj8ct4i3PJWQVC287FHGNJ
-	 QcYo46ozqjI+WTCoM30SnxawN8LKalHXhKZ1aCI2k94Kex1Z4K9ySixcl0JIHcvd7/Keg
-	 JanSvG1sZJ5Fmh1dJQOrRiNX8vMwe5XJfF7XDGFIc694/xWxcU1A1UCg7fw4Vx7DLdLgd
-	 woZFzeLR4JEBRp7aP7c1WoPBrN2q6nfOB5mV+dEk1l5VaC8vPFRGeaavc/zCkMXhgjA==
+	t=1794922972;
+	b=PqtJWOADoqYemzJMI8qlW0DGrLrxxNvy2eIc3ZmTW8EcSMZboSTpLAxnkadXiYnLV7+C
+	 dJwgziL6ouinGAgLVbEuqkZvmBu/qJweO4Vrb7T6L7C+Y6gWQTGjjvYXhLYCNw+AJHX9M
+	 0OmOESdPU26MZbaZA3D3kAoRifbe90zeq0nBOu7e8BzOkn+WjYGJmgiu3uKWxotipRzyC
+	 wv8iT4q4adR7Z1xWvIG6uTHp5ymKqD9SeN6PHl/JnHFE3/D+L4OPbFRgr1Hv+ZFkPfL1J
+	 IrtlkqEuZaHFYg6uqHNilNNtnIFiBETMGFcxu2U3yok8Vt7ZvSdYgQxJy7vzaE/lCJA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794922971;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794922972;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
-	 Date:Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding;
-	bh=lYvyOgeDLhWRH71wL6BvrJmUkU6oMEvaRE2drZaf37U=;
-	b=MHxsguGAk0c/vH37OrxOmHlhU4c8Q13JqW2z2nNXoSOk3nuZKe2QueUNma/H2mDB+cKW
-	 Za7mASN+69SEFL3mEPdg3pH38luhdtiLWFh1WdW+U9LdSSWT4GCGf7/3lS916ffZU+IzQ
-	 rxh4fo+t8WInOu1T0aLVbpzlE7YdAEI8CEkymjW69jGGaXETmOFUzpPuzbw88WGXk7rKc
-	 AonguSNa6qqF5ClhqK/C7igIjlm62ukCE/HORRd61bcFe32fnG8CReSfnsLeZJ5KSTqnv
-	 npZT2EwBfXBl+iOKroBmAOkGSf49WKubNwMcOgLtoBEbt2jN3Pl+oKzdXmeIq+NN/tw==
+	 Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=R2y/sy9kcOzgZ09YoYPacmoSf451Z2c95GvvGBXLGJM=;
+	b=UZyupvd9k2cgBYqcJXgO2sUU0FKHnytfUGieqqO6eZ2DrTXcqfk066ccBZtdlx/fjCe5
+	 OcHPgojPlNkDiwoPdb3t0iO7z80bBCc4KGmTmhz3IHB8ScmL/0hJxbW4PnqLyVu8QWxlI
+	 tdFHmfqb7ozVlYMdVZEOqrJX0yHexLVim0jcryC9cZzeSrg15d1z+iGP5d3DSAiXnG4l+
+	 nwpsF2frh0YVT3pi2Qb/DPPJs9ciNXMx0lP1IuDCl6muqS96hHvdWGFln2AsWh59+zIU6
+	 vtmpugOB8vcnlf2zEWfrXxEYHhUJEi5ugxjFQyWV/P4pkQIzn4OExsB4amDDKeYqcgA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=fail header.from=isslab.korea.ac.kr;
 	spf=none smtp.mailfrom=isslab.korea.ac.kr;
-	dkim=pass header.d=isslab-korea-ac-kr.20260707.gappssmtp.com header.i=@isslab-korea-ac-kr.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b="FJ/gNqVY";
-	arc=none smtp.remote-ip=209.85.210.180
-Received: from mail-pf1-f180.google.com (mail-pf1-f180.google.com [209.85.210.180])
+	dkim=pass header.d=isslab-korea-ac-kr.20260707.gappssmtp.com header.i=@isslab-korea-ac-kr.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=NuVQqrro;
+	arc=none smtp.remote-ip=209.85.210.172
+Received: from mail-pf1-f172.google.com (mail-pf1-f172.google.com [209.85.210.172])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B609E606A31C
-	for <linux-scsi@vger.kernel.org>; Tue, 17 Nov 2026 13:42:49 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B609E606A31C
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 838EF606A33D
+	for <linux-scsi@vger.kernel.org>; Tue, 17 Nov 2026 13:42:52 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 838EF606A33D
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20260707.gappssmtp.com header.i=@isslab-korea-ac-kr.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=FJ/gNqVY
-Received: by mail-pf1-f180.google.com with SMTP id d2e1a72fcca58-8b6b22be970so1752395b3a.1
-        for <linux-scsi@vger.kernel.org>; Tue, 17 Nov 2026 05:42:49 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20260707.gappssmtp.com header.i=@isslab-korea-ac-kr.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=NuVQqrro
+Received: by mail-pf1-f172.google.com with SMTP id d2e1a72fcca58-8b3577deeb0so2346041b3a.3
+        for <linux-scsi@vger.kernel.org>; Tue, 17 Nov 2026 05:42:52 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=isslab-korea-ac-kr.20260707.gappssmtp.com; s=20260707; t=1794922969; x=1795527769; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=lYvyOgeDLhWRH71wL6BvrJmUkU6oMEvaRE2drZaf37U=;
-        b=FJ/gNqVYyrVQqVNQp24+Mvcm2/Fswm3iWpTCbYFvz0mLTfjWb2EkFBahcNFhIytZpX
-         oJ2NTGEZiLB9dJJLFGHQAIN3o2Z1XJ4tUDbFUrgXSGkcolgSv6x8WtsMygqbFfBJqvRs
-         hDjYyoV6SbCHBB2yHjUlRcOb6V2xDsi0HFIiWtE/vDP9RxC0QJTcZGIMHDVTWhDe7xoY
-         1h6b0OhZ1/kMSrYQshblurkr2FYZSUKSSvpwlUtovdiH9yjS9bG8/FRqqdHNf2SreFgh
-         Bxkd4jnPyupdvIw/hJ+oCaodZMmEILOkHTYkhySeDPbbPCBE9cFDIUiqgjLGrW5lZLPm
-         AmXQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794922969; x=1795527769;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=isslab-korea-ac-kr.20260707.gappssmtp.com; s=20260707; t=1794922972; x=1795527772; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=lYvyOgeDLhWRH71wL6BvrJmUkU6oMEvaRE2drZaf37U=;
-        b=Il50VNqG/p3QCFQfHNQu2Ovhe3tXT+Mzl5s289JOO3FfInG1EqggIv4UKbBlVWXPwl
-         AjH2VfmOiUTJSoDKin8AVaAZzp9kewjbWkdv2IIBp5qyLai6CuWfIf6mp9juO0m0OoyL
-         Rd63kRMCIUOCAMt07RTc4IboQ8NaqB8ILPkaEYCY4tAL+dknN1ztN6XlxvCYv/ctnV9U
-         hqR1g/DHRzPIQBVm5iigSiIxHsqJ8Ni0Z+sHWfgFrMrcIjvp1nWBewFMbNbq2aTdGJOx
-         JMrLmBR/vXb7UospniEml4AbMIAcE4UISzqfdb7NrbkIcIMVOOPuakablJdbBx3XJpix
-         TcjQ==
-X-Gm-Message-State: APuU4Z8Evym8vS3POyPFuZNF0SmZSPCNoLN+q9GPhAzSZqatoqlHb0mC
-	z6fRgfqxzQkEVoI3hf89vvAI3uNSByxOCs5qVOB0o53rbAi93MNdkVTcLUKgTOhp3uw=
-X-Gm-Gg: AYBFou3X2TgY+a4oI4O25S9BjyFF3SqcK5llBKCjHsQxhDwlilVjlClJv9klKfpXh7W
-	8Hro1QXIOdepAQmucLwUNmRyH3CVPSdpjoZ+mCXo7io3ytqxOa3NdwlJD6344kKHeKwwZ7m5XA7
-	QA3Wp1SyAxTsKYOUv1rV2T665OwA/SX1N4EvbjMwoqZTtmx7p+oR5t51t2IJryEHM2IV2vdMkxC
-	IWV2nHEq0Atwd+t7wGvaUWqUQ0wBAs5vlvabSXjOIQj30LqeB8aAHtz/AnFJ215HZDM1oiMc9MS
-	tyQhupfLyytJBgrIHCoUSAaO+pUz+FIsjmgPv3fSHB6QEdMZoIADK+xoJGaLfPPp2T4hujXTcHk
-	kmp3M8MGGjV5+zUgyionFqh/HQSGzcUcm1cOdCIJolwf21yhb25XzFIIiM9hTCFtRiuJTtpyS0E
-	FCz+AP73Ptz6jDi22uZpXlYWZd9e7TC03pKJrDI5/NRnaVC+Ee9RivhEx4e8S7X9XyL9V1voWCR
-	JUt5zBUhSiG0OCKdG1txSgOwIzZbtMLNoOe6Siy8pd4yi6Imy6md8lS9M0rqBAKr3joDjbpouvn
-	A0BZ5I7HmH0K4hTrl5GWy/x6s7Xz+8grv0CguEvtwS5gL13AMOGdes7ZdSXENCaRVvLKtP26wMm
-	OGHs15PpDoceI9jT9P5HPof+upOJRugq7lsU3Mw==
-X-Received: by 2002:a05:6a00:340f:b0:857:7317:cff5 with SMTP id d2e1a72fcca58-8beb6197550mr11801170b3a.22.1794922968711;
-        Tue, 17 Nov 2026 05:42:48 -0800 (PST)
+        bh=R2y/sy9kcOzgZ09YoYPacmoSf451Z2c95GvvGBXLGJM=;
+        b=NuVQqrroMsezBs++beOdzdAskzrrPfRzJMfEGpTCLLyxjiYz4rjqdpQYhApn2BYMyD
+         vNvAEHa4rs2Rqu1Xs3c//h5HYsK8wFDRbXRbPSKb1qCgjhtomlHTsvQUsKGnU6qiDh4f
+         EOL64IRcH1Cs9HTIFETzO/ClZTWapWHIKH4HAvSs183dRKm80VmHNrXdjMUKOmavJshA
+         86bP4l9bksPw2vaHd4eXabVVaQqJpBegP8pF2MSAfPCo+s3eLAnSwYOLsuN5kXnPv8vl
+         nemcEXl2zRKIdfwhCSlQK4p+NVQ+NVhWEEaEd/UP+5aCO8Iopm1eaI7GcYp6eyvOCJ9I
+         2yew==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1794922972; x=1795527772;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=R2y/sy9kcOzgZ09YoYPacmoSf451Z2c95GvvGBXLGJM=;
+        b=IM9bK4Oh+Y/4BlP6SblvRjfYrSoCrBXSNyYf2iwpTnvcWfk2S4fXL67YTXZfTD0Nkq
+         lfc5d7sDr7aC3bKivb5ymfMvXBj4IL9pmBvAb0TvHhYzadXXRcGId/9aqCd2GdRZojlB
+         olmcElSQ81MkXWMErBjvFFiA1ybmJ73Whng+SAiHB4kM5NNJEzocz0X5tAbSFcG5qCpm
+         3HTn/z/2D9sEuMkYdPYtxs7DYtNff9wK2H1SnuwQgTWooscM2fX2R8K0xhyLLEy12syv
+         ROZG/aGc6m7IEKNqpbNbuVp1vpxN1kGt3fePHPL6Xx29osTFYCwFm7fCnlqVEUUMUQYU
+         lAFw==
+X-Gm-Message-State: APuU4Z8xvION5tJSN3syw05SOiSUzgGTS2Yzg1bm1Y3ToBORwzjjLQzZ
+	UV+hkAoSL7fcr4NPOIgDUMqBJpcaV59qcXeRQspQzRMLXbxywfWX8PIIMwz9Ul0M6P8=
+X-Gm-Gg: AYBFou1M2m4dIHITXnGquHiVJyePx6Zncvw3SW2s767kka/po4bNPj//t74bQJgePiu
+	5fOoNsZw/wj2auVYIT3mw7P8Zf+X3Mjd5eGGoCZUlVV+GYk4fSRcMfALYM2C3lm7LjW4aOzIvjo
+	3Wa5U6ZzRv24MJuT+kxltbM39XsPY3+ZX6AxquLIOmdpPtu7B89sXk2Xr76kJYFZWCQcXmoeA4W
+	YqMZLCDGmoPcmEVoOGL859vRvtsnXKs3xK+JQ3ia0xO5Coko0rYY+m2EbDL4k9N+ZTN4iiCRzOb
+	397Y7FrxJUeLUK6mP78gtlqhGTZ7zcFZahbPjQsi6a+tBRIF2qNXVm3HeinCnIqDlcZQ0DIp2w+
+	694KW78ZeyYpN7UcrSx0rL6HqEfIeQ+jPFWV0lEQJak9hDG2PtQBML1QYeHDeyYjIP4Vfo2ChOJ
+	04iWoSzglF8UZOMBFwY65MfwaszQAPSy2lBXsz1U6XVIqiksOCrI1IO7+2ZrTdJKMe8+qGdkNax
+	oopkffx9K9NU3ugY4SGmeLyWsIxU2zTMZen4oQyPLNwaJQLMRM92Wuo1zlrxxLZ8KRhZ2Yb3Fj+
+	gjn+PpF4jWyCf8bNn5Y1nYD7+2wWeCSnkf0FFJ1F90leAfSeRCPGrGPVW5uQB53s7M/cBm2Z4Uu
+	HsQvOR9QvVwYWnoNRNeE2yfjk5j0G0TDaLhotbA==
+X-Received: by 2002:a05:6a20:6320:b0:3f9:9897:4ac with SMTP id adf61e73a8af0-3f99897220amr5666028637.60.1794922971751;
+        Tue, 17 Nov 2026 05:42:51 -0800 (PST)
 Received: from yhlee-960QFG.Davolink ([2406:5900:1044:110c:73df:c7da:8e76:82c5])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-8bed12a8024sm5040714b3a.11.2026.11.17.05.42.46
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-8bed12a8024sm5040714b3a.11.2026.11.17.05.42.49
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 17 Nov 2026 05:42:47 -0800 (PST)
+        Tue, 17 Nov 2026 05:42:50 -0800 (PST)
 From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
 To: mkp@kernel.org,
 	James.Bottomley@HansenPartnership.com
 Cc: linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	zilin@seu.edu.cn
-Subject: [PATCH v3 0/3] scsi: mvumi: do not free or reuse buffers a timed-out command left with the device
-Date: Tue, 17 Nov 2026 22:42:24 +0900
-Message-ID: <20261117134227.2077013-1-yhlee@isslab.korea.ac.kr>
+Subject: [PATCH v3 1/3] scsi: mvumi: stop the controller bus-mastering before freeing its buffers
+Date: Tue, 17 Nov 2026 22:42:25 +0900
+Message-ID: <20261117134227.2077013-2-yhlee@isslab.korea.ac.kr>
 X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20261117134227.2077013-1-yhlee@isslab.korea.ac.kr>
+References: <20261117134227.2077013-1-yhlee@isslab.korea.ac.kr>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -97,46 +101,43 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-1/3 stops bus-mastering before mvumi_detach_one() frees the buffers the
-controller was given.  2/3 keeps a timed-out internal command's buffers
-until then and stops the probe loop from reusing them.  3/3 waits for
-the event work before the host is freed.
+mvumi_detach_one() frees the controller's buffers before stopping its DMA:
 
-v2 -> v3, from the Sashiko review of v2:
-- 2/3: free the mhba_dev_list entries an aborted probe leaves behind.
-- 3/3: clear bus-mastering before mvumi_release_fw() on the probe error
-  path.
+	mvumi_release_fw(mhba);		/* frees them */
+	scsi_host_put(host);
+	pci_disable_device(pdev);	/* stops the DMA */
 
-Left for separate patches: the DMA address rebuilt in
-mvumi_delete_internal_cmd(), which 7/9 of the series below removes; the
-unlocked sync_cmd test in mvumi_issue_blocked_cmd(); and the same
-bus-mastering order in mvumi_init_fw()'s error path.
-  https://lore.kernel.org/all/20261015045213.3975845-1-yhlee@isslab.korea.ac.kr/
+mvumi_release_fw() frees everything on mhba->res_list and the handshake
+page.  The controller is given those addresses during the handshake and
+may read or write them for as long as it is bus-mastering, and only
+pci_disable_device() stops that.
 
-This conflicts with that 7/9 only in 2/3; I will rebase whichever goes
-in second.  I have no mvumi hardware; this was checked with a KUnit
-model.
+Disable the device first.  Nothing in mvumi_release_fw() needs it
+enabled: it contains no ioread32() or iowrite32() at all.
 
-v1:
-  https://lore.kernel.org/all/20261114014430.489668-1-yhlee@isslab.korea.ac.kr/
-v2:
-  https://lore.kernel.org/all/20261115122153.1446810-1-yhlee@isslab.korea.ac.kr/
+I have no mvumi hardware.
 
-Best regards,
-Yehyeong Lee
+Fixes: f0c568a478f0 ("[SCSI] mvumi: Add Marvell UMI driver")
+Signed-off-by: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+---
+ drivers/scsi/mvumi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Yehyeong Lee (3):
-  scsi: mvumi: stop the controller bus-mastering before freeing its
-    buffers
-  scsi: mvumi: quarantine a timed-out internal command's buffers
-  scsi: mvumi: flush the event work before the host is freed
-
- drivers/scsi/mvumi.c | 97 ++++++++++++++++++++++++++++++++++++--------
- drivers/scsi/mvumi.h |  3 ++
- 2 files changed, 84 insertions(+), 16 deletions(-)
-
-
-base-commit: 23c62304dde29abe92013d85910d03a77dada35d
+diff --git a/drivers/scsi/mvumi.c b/drivers/scsi/mvumi.c
+index 91c2db697c6913..8d22d370d8608f 100644
+--- a/drivers/scsi/mvumi.c
++++ b/drivers/scsi/mvumi.c
+@@ -2548,9 +2548,9 @@ static void mvumi_detach_one(struct pci_dev *pdev)
+ 
+ 	mhba->instancet->disable_intr(mhba);
+ 	free_irq(mhba->pdev->irq, mhba);
++	pci_disable_device(pdev);
+ 	mvumi_release_fw(mhba);
+ 	scsi_host_put(host);
+-	pci_disable_device(pdev);
+ 	dev_dbg(&pdev->dev, "driver is removed!\n");
+ }
+ 
 -- 
 2.43.0
 
