@@ -1,98 +1,100 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.215.177
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.214.174
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794916254;
-	b=1bvVYYKU9N5x/i6tx1WD422pTL5mJRRD0248CYJu+H96299AE3SBVGq49v6neADaxr3l
-	 g5/bBwoqIR78Yczob5MGxKnK+bLBPoiGNNiJXEYkmuKoGzHhbWWpYauUZvRZIKDqu0cHN
-	 e1C0DRxfXWaMHVYhgwrMLoriCKytILq6L/wX8mEWkpawYmIy+ryaJ4qzgxIst8tK9wrlJ
-	 V+cmVONpdxhFO4MLCvv3z8cDThfflS/VwIjAuSMGp1jcen/fCHie7mDxHSZZ12WO1PY0y
-	 6rHMcrVM3ECfNXaEfU72pp5+3UzxppO2JXAtUNQB8SLuXj/3OdemS/IGbh4QnQEwPAA==
+	t=1794916266;
+	b=g1Rcs80rW43Sj8U44h2FLSFwxSFOW+405K3Xhik8kXaCF0ZWYdaAq9ymeYGsR989HBiT
+	 HONvaZa8hL62MC3ho1JqRsXGvirFXRxLFzDNIZJcgWAJzygrOrMBLbFzQzZ4taubCJrM3
+	 w8svVTtft3RQKq6hVbLi1l9IaxSj+DytiPKjNSHAjNyg/3dgM54Y9t6sGcXOBsvOIEJQJ
+	 C9kZSxrvrEYgk5al5GmNLZ9yI/mVmhks2L+WQUGeKHwu3xXKqsD/mY2wbYicTfLs9q/97
+	 4gQ+BEn2GiMbRfsdsucd0y3NKzmvvxiPb9rkifmPUrDtqo1hubytDSxdrK2psv/PH5w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794916254;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794916266;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
 	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
 	 MIME-Version:Content-Type:Content-Transfer-Encoding;
-	bh=vox9UTwbHA3vT707I3aI3S7jFRVVZiEckXrdeJNrXd0=;
-	b=LNaQPC7b8zqET2xJmhVZc0xph6GQFP0zf+oPs3LnOHwTgJ/1b92b+Tco5UxuBpinJx5j
-	 1/FsecgJraWHPA85by3ZgkKw23I7UCK2PDgaAwaRJ91mMB9hPbnY3YjHUVIIMNemNKtE4
-	 BLo/KFsL2lxi3dDPf7zMkfr5ml9mor/LX2RRjZ58c11M2faU1gNIjh1Z1xqNfuY7iLfEu
-	 CCejFRJjbN1EnCCk2NK7CGPYkC3gj4rk+i+cddmP6RYm5rBiqB7r/2//AZiOov4l4VsxQ
-	 KRkBP2M83YPItGU7DOnZCZWSidRh+ZbNbTZ4b1KoBlS2uGqfOEzPknU+YLZrHc61MQA==
+	bh=sndVk1kvVcJgUJP97zm2MOkioC3KVSvDmF0LGbe4m7k=;
+	b=yL8xUMmjxWkK/d0HOF1egDXUh7ysDsq6gMhTkuEM7yHMcvHN1J4RlVds/d7NIvKDJ4Sn
+	 WxuB1pQQ1z8RrDxyp9vCRhJ3EDemc2V5n/Zv6TC2bs4k/NzJYX47L5aLQZhVG0LRZP+BE
+	 qPtzTmAJns+RuQOaqwKq5jBMn9lBt0P0FFis/hzPKdEvSq763SG2D4qr8QlEax/CEbQ7K
+	 bFz9xdyltO7vwSM3DDMedWKbLxRVNJWSRhbkPJCDd93mc5YIAe9SGiEmJ7RnsRnO2Rbjs
+	 eLBqIAKBKvXEOSFyenjn5WjWqZsplscWsqRCAKPHJoJVBT9bKA1yGig75e06jnZ4+rQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=fail header.from=isslab.korea.ac.kr;
 	spf=none smtp.mailfrom=isslab.korea.ac.kr;
-	dkim=pass header.d=isslab-korea-ac-kr.20260707.gappssmtp.com header.i=@isslab-korea-ac-kr.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=T8sAbKSm;
-	arc=none smtp.remote-ip=209.85.215.177
-Received: from mail-pg1-f177.google.com (mail-pg1-f177.google.com [209.85.215.177])
+	dkim=pass header.d=isslab-korea-ac-kr.20260707.gappssmtp.com header.i=@isslab-korea-ac-kr.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=PHE+DrLL;
+	arc=none smtp.remote-ip=209.85.214.174
+Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 276B4606A323
-	for <linux-scsi@vger.kernel.org>; Tue, 17 Nov 2026 11:50:53 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 276B4606A323
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F29AB606A32F
+	for <linux-scsi@vger.kernel.org>; Tue, 17 Nov 2026 11:51:05 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org F29AB606A32F
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20260707.gappssmtp.com header.i=@isslab-korea-ac-kr.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=T8sAbKSm
-Received: by mail-pg1-f177.google.com with SMTP id 41be03b00d2f7-cd60c5da24cso3350510a12.0
-        for <linux-scsi@vger.kernel.org>; Tue, 17 Nov 2026 03:50:53 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20260707.gappssmtp.com header.i=@isslab-korea-ac-kr.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=PHE+DrLL
+Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-2e987a2ba0cso27343425ad.3
+        for <linux-scsi@vger.kernel.org>; Tue, 17 Nov 2026 03:51:05 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=isslab-korea-ac-kr.20260707.gappssmtp.com; s=20260707; t=1794916253; x=1795521053; darn=vger.kernel.org;
+        d=isslab-korea-ac-kr.20260707.gappssmtp.com; s=20260707; t=1794916265; x=1795521065; darn=vger.kernel.org;
         h=content-transfer-encoding:content-type:mime-version:references
          :in-reply-to:message-id:date:subject:cc:to:from:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=vox9UTwbHA3vT707I3aI3S7jFRVVZiEckXrdeJNrXd0=;
-        b=T8sAbKSmnqw0foDwoe4J88XYmKh/nE0/+nZQKU39t/Rq3a9Kzm5WmmULo+Wtw5SnwO
-         rNAiT05lr8OFMBtVKlkDoozNpq5TVnWVk42lx8hlW9j62ntNvPmwVMDuqwxYMb0FU43h
-         GhEqQ9G0dkZvRn4aZTtFaVkSqav5z67WRcKkKQJYQSj8t4WpMGNlRAOuLg9e3oOs7hKM
-         NSVtAE9dhQ6mDwQ6lY/kaZfUlLPGHWeiJb3cy+45BUjs+/KfOw+Aw6DD13bLPpyMnTuj
-         QGJyBUd+QzoUD1phhN68QsZNRSwusVTL9n0up9cP5fLwZd7RAUeAmrTs1y6TbNjK7Htw
-         O63Q==
+        bh=sndVk1kvVcJgUJP97zm2MOkioC3KVSvDmF0LGbe4m7k=;
+        b=PHE+DrLLbq+bKoyCTmhWmTE+8SzJaoyIAVtlERyzMDnRmvXx5DvcH/afLo8IzOK3Ic
+         mMjakZdf/kBTWEogCavfsZfNF8Fun8K3lgdiiHrqoNSseTg6nsOJyJzeLgOKkRVYpjSn
+         XCsQEdBhs7xneBlzmGbuOb5GOXBbC34P5WEwruQQbtXOwYwg7rDVfp0M8YPmYtaOwDOD
+         E7N/Clxw6UgZFTpURIJdgA1jS48/1i8n1KfXeHbGRiIx7l0WrPsMC28KKZ/KbmqbNBve
+         bPv/p0lGGWwRMWdV8FRYb78iaPSvJ6P9i25WW7xkZfuQ/4s5z4sXdXQhePzO9viQx4IH
+         ojGg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794916253; x=1795521053;
+        d=1e100.net; s=20260707; t=1794916265; x=1795521065;
         h=content-transfer-encoding:content-type:mime-version:references
          :in-reply-to:message-id:date:subject:cc:to:from:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=vox9UTwbHA3vT707I3aI3S7jFRVVZiEckXrdeJNrXd0=;
-        b=Gi7M5zBZ/1dtqEqv3IiWpUga7HiGaISH/mi1gbPq25YJ2FP4J1/yHU9uqAlwNbracd
-         Q1BPz1HetBJkJmWGocQcTqRofCR+WIto5YdMLt5NIitUJhS5U/3Sl/T0/6manFWjC9Au
-         kQs1XxRgnEryc3/QyqDgW2ah0NU6HeoGi42TgR/8EtxffMTLHOJZju1AUk0sX8NDv+K/
-         FaYkV3IBrDMoETvkYLSSaYlWMfFBcP/jixIHyB6Qgw9DkldmmcTurLhR8ao2hp9hVOhI
-         LDEjj2Un84cb+Uug3qPqtk87BN/8YIxfNFxrYa0Z5JORO9kGze+Ia+DxWO8EIIOk52S7
-         UgUQ==
-X-Forwarded-Encrypted: i=1; AL+hErHWKUCcPm3WL7qD+mjhsckVmy1Q+6ZbvaSQtX79HcgXOwld9zdtS1V/FFV7s6oKxBy3ExGHSAoCL/Bo@vger.kernel.org
-X-Gm-Message-State: APuU4Z/yA6z6GNhC7xxHUDvbacV0JsPYySJogfaFRNGA4gAaLPX1q2B+
-	u54g7TODWU5NWakdCrOoOeM1xWOZn8f500Bid4WNQ8vmMo3L4eZ4v+7lOarLFacJHok=
-X-Gm-Gg: AZFdTZeRoAs6oHK4Lt0YIIYY0i8si3EAwzM7U7AdByZaboGAiw09tOKzq7/FrzFRWwJ
-	G4/OeAo1N3YTMWLua6j0EXB5FFPDSss0WzkzJQaXeuznkmr+0DZE+DpQQKnLsGJuvY5x9pTLyqe
-	b7WqlVyRU6qiecNTKXIpVvaYWNH2HAOL2vDwD3uLmpSrmE63r+S/QQM407hFoReynq0MdIuw6KB
-	sxc/Np6WZeS936AXBX8A2TfLupF1t44H50e/hctvFa4gCkiLJHatcftKqn+R4Vp2dDO3WahhjhB
-	8SqWvOP/76eLgQye/CqJ3X+yCuv9/JSZ8mB1UnquuxhTi0zBFTvbgoLDEML9DZKOjprTYa3Edia
-	pGBGXbr//GRL0RtKgCTbt0U8kz7sFn+WllFpU2plKE3B1jd+o6dP0TenLCH0VvRgoRDKwdeW5f3
-	UowpWdFoUOm8NCJp0B1QstK5jAviGhpfvzUHFq8nZADI7zflUqXo5FD0lTRfIVfj0+1uaQbsqQ5
-	hXHqYS3rQSbHDGyEWSepMJAy7mNSxUqjUazUlfvH6Jy7cW840rowjAhCOhBsJ2tN/gWVEIb6f4I
-	eTWClEw4hugdCgyPSFJRIxx1v/DfLKvHabPBtKLyiidd5Y85cwZgHxWUJJy1Fh2aLlaJMaND9iJ
-	PVFXqCIeIGVhP77xalWGKfZJBVzigCKULx4azag==
-X-Received: by 2002:a17:90a:c88b:b0:3ac:9c37:9430 with SMTP id 98e67ed59e1d1-3b1b09e6a07mr13635182a91.21.1794916253425;
-        Tue, 17 Nov 2026 03:50:53 -0800 (PST)
+        bh=sndVk1kvVcJgUJP97zm2MOkioC3KVSvDmF0LGbe4m7k=;
+        b=lKGbj8keYweYuD3uTPwcnh1CmDRvREWSjjEPrLoFooKhI8T2+CL+lHnpe7aQ2venL2
+         KxGn4j1RwhXHQ4Q0XyYFJXMMAiymKX+bXX+8DTiGh3SbXS/CUbkJO/sHIAj8mCxJyKmr
+         +OxaF365WXszHLGffZnqFXfdYc0gaM17eDnqRWoPMH9wQS20JBW0gVW8gkBcqclHYacn
+         O3uLG9iHK0rcRDInMasux3qNvFLXxtAhJZYUNO+QebkniBTzpvr8+P2gPAY5aKtYuXry
+         bX3bnXQDIvUGccZT3aQuOfPnuthqVW1Y/j1ux3c+ntTX1kwlVue4clf3xzwijao3X6AS
+         w8kg==
+X-Forwarded-Encrypted: i=1; AL+hErFj39EJLo7IVQ7M+lSLy+zK/EsxfcBIPOveLeyroUqKL4I1NtM8/m0ndulSM9ON5MHYMIbArsMpkE2A@vger.kernel.org
+X-Gm-Message-State: APuU4Z+EoNaA500xXnZ+WGqFEH/51TX+04WBg8+jMutYflQiofIA/jQZ
+	DyqnOgBJ+nzkHXFVVOJ0fUpHRhPq5Gxm3I41t27ylKCjdDYLINf8DXOyOM2ya1W/+8Y=
+X-Gm-Gg: AZFdTZf4q5PH/up6aTszQRwVB2TBtMYEYI8HxwM1Knb+0LUJUkPQ/6DXi2XDmzE7xdI
+	CCbX34Dvt2RN04cLSQKNLh96aPw1TunQgzNClSfSnxlg59PQnCDAME48oEp+kSS5ZoUYOXRN6Zl
+	tNbM2ZJuCVo+MOl3CVq1iMIY1JFL/7UUoMGvfQQWUQYeZi1yA5WWTBQnu6W7So8FHZExOn+mVmu
+	nJzb0LRX/NPIrA1b/B5UrcksJVZ/D7wrQOmPNDUOECQ1Wqz8F24iJfcsEWYwjSJVUNKYMpgBLOR
+	uos08PKuOJb0JOtQcuHzIXICSKtCDEMKivsVR3xOj9ZSUdnQ3ZdeNBHm5/Z1z+vF2PqisGnO5VG
+	QY8BVU33xmMPLb2Eu4zk4N3gA5uAR9VEFJZjBo+8fdlwpHBaimrzvtcVnhTRusyQlhoETuHIhsU
+	++G7DVcoGUGaiSYFvW5B7YBe9rL+WrVV907a09uk0Gbrk6h9LlLlEvgUO2sReCxKq/5GHI+wgkp
+	jSj8vLAeLK09T731L6wZfxInNe96Zdr5SeHrLPTLE/4+D/7R8ZzAt9EpdstJaSCG7lTMnG2eK49
+	ZcRowFeWeuNJgYEuAghkEdKRV1OnLTxy3Dsvnh7b2AtIUvHjzDOzkmvUeQw7wXYf4dR6KdfEdd8
+	eCSS6/LSrpeY5PnXcIDXNlyjeX3aA5YSf9m10my4Iazwy2b7HSWYRyF9Pz1L3
+X-Received: by 2002:a17:902:dace:b0:2ef:e547:e0cd with SMTP id d9443c01a7336-2efe547e397mr10611265ad.31.1794916265316;
+        Tue, 17 Nov 2026 03:51:05 -0800 (PST)
 Received: from yhlee-960QFG.Davolink ([2406:5900:1044:110c:73df:c7da:8e76:82c5])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b3abe8b263sm4173884a91.13.2026.11.17.03.50.51
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2efd7a88a55sm14107085ad.65.2026.11.17.03.51.02
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 17 Nov 2026 03:50:53 -0800 (PST)
+        Tue, 17 Nov 2026 03:51:04 -0800 (PST)
 From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
-To: mkp@kernel.org
-Cc: michael.christie@oracle.com,
-	bvanassche@acm.org,
-	target-devel@vger.kernel.org,
+To: sashiko-bot@kernel.org
+Cc: lduncan@suse.com,
+	cleech@redhat.com,
+	michael.christie@oracle.com,
+	mkp@kernel.org,
+	James.Bottomley@HansenPartnership.com,
 	linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] scsi: target: iscsi: run the Time2Retain handler in process context
-Date: Tue, 17 Nov 2026 20:50:46 +0900
-Message-ID: <20261117115046.1955877-1-yhlee@isslab.korea.ac.kr>
+Subject: Re: [PATCH v4 4/4] scsi: libiscsi_tcp: do not accept a Data-In for a finished command
+Date: Tue, 17 Nov 2026 20:50:58 +0900
+Message-ID: <20261117115058.1955891-1-yhlee@isslab.korea.ac.kr>
 X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20261115121943.1446744-1-yhlee@isslab.korea.ac.kr>
-References: <20261115121943.1446744-1-yhlee@isslab.korea.ac.kr>
+In-Reply-To: <sashiko-outbox-218654@kernel.org>
+References: <20261117101500.1894608-5-yhlee@isslab.korea.ac.kr> <sashiko-outbox-218654@kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -105,8 +107,19 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-This is superseded by v2:
-  https://lore.kernel.org/all/20261117114920.1955697-1-yhlee@isslab.korea.ac.kr/
+Both cases need a target that reports a task management function as
+complete (ABORT TASK, or a LUN or target reset) and then still sends a
+Data-In or a SCSI Response for a command that function covered.  The
+receive path handles PDUs in order, so a target that follows the protocol
+cannot produce either.
+
+Neither is new with this patch.  Without it the late PDU is accepted the
+same way, and iscsi_eh_abort() says in its TMF_SUCCESS case that it does
+not stop the receive side for exactly this reason.  The patch narrows the
+window rather than widening it: a Data-In whose header arrives after the
+task has left ISCSI_TASK_RUNNING is now refused, while one whose copy has
+already started when the task is failed behaves as before.  That case
+belongs in a separate patch.
 
 Best regards,
 Yehyeong Lee
