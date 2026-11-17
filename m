@@ -1,98 +1,57 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.214.172
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794910649;
-	b=PkDpHJw6mEIwBwOCBowoCFEhEPTf/tnEI0JAhvf9m7Y3Ng1sMWPg7l8AkNclobImru58
-	 69QMTDGKfEMeTaEczLYYh5HFopCS31fAbuhSXsE2rb7XKn22FR9kqtkKd4W5I234j1m7N
-	 F6feIgyRT5/p6EBKZzvf8pDLNpRv7pEtCS7geUoKSUY4dFT+alm3TOtoETIBXP+s0mJIQ
-	 tn2aNF0WsH9BxBF6xBy6AWE8g8OOYLrEx8g/kj27rCKizvWJj1KC8im9md3/EMGyWfqTw
-	 IUxJ/NSmBF1f9d/LnJcqHuk2tFroImk3dr2lTIw82ljTF3iZjBDZpuFA+NB1R/f9CzA==
+	t=1794912044;
+	b=Sijtw694ZSJ0rkt2kK3iM+ZxOV5FM21Ypsu7DHC0mAIh3MnXkgJ00p6PBJgTZ5iq6u7X
+	 mtxJmPXK/jc9s3Sm9pHb0F1yWo7t0asvOi5qiNYqmHsIn5K9VMLOatBIhkjtPdLA0UzXO
+	 1iL7svW+aeqmCBrc6xpD7SaljqH2H4a6fZpBWzswDDyl605JA43LnaRjFcJGKkDKKpgZ+
+	 FjsY9HUpaZbs94OFcEuOgmz+u2n6qDDIXROBCZXolN5JVepssCixkepexRMH9M+8To/Z2
+	 s26amxSQWunyT35AVBWFmTs0YzTVik5HC3cRgSEuxPiNJdbwk4XNr9Gz/N24nI2gWvw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794910649;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
-	 Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
-	 Content-Type:Content-Transfer-Encoding;
-	bh=Mi1vb9N8Y+TjLnAkkCLxRTFnlP/8A+F5gvm34F3Sg+w=;
-	b=gLCigcDpBT7YHcPoM3FbPZvN03YEACoCSL146c6d041yB/vmV15M3TUlbEme7S0pqFJm
-	 ri8TSKVn926nOUl8qbMBrwThCljuZhdKIYvrziFvxy3s7MUqShdoGXtYay960GsgyBwCV
-	 sBic8fPr14TppbM2/zlJ5gA3wQYMN+d1pTgfEt925Yq/OS9ulQzrIj+Fc91qStFEMrSqB
-	 SKnS32CQf1Pc0CFMa3W+k57cbSAPqCS0I1O6qIrbDH2U6F7+iH1bDIjLtMFfT0HwwFdAH
-	 hWA25hW4ZZVxuuf20ESS4KlC2k5gYWBQusBwtpG+EOej53KsQY3t/c5vRS1ivH1igWw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794912044;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=EeNCpptjr1gpGOMu3Dx6bpyw8hDkftyRMTrwJjygCQg=;
+	b=ZJOaBBMEtxs98zXmXvealT6f0+NPgiAimX7MnahkLgqCl5/pEgZgTjxSBekLLl3Zsqnh
+	 7szGPb0+psaKI5knnj5amoKudEB8QfHsB+wlsszJiZe7H2AV4mtZ23XQRqq7Glx+8xDWY
+	 xV5pgelPrmgdShqmUuthv/pwSGB9mzRQVajjyFdp8YsH8d1Txifcp04K7J6PQNow2EFD4
+	 E9FOBZB8VFkXzyDWzNVYIkwTQTONQON+CwyrjTM+UI0bFKlFZsegmv/RHdU/3+YhKGdUG
+	 bIm1bWWTNVNkjhdDildulPXc//H7L57Mq8MARU5kikYsSSUHVTzgG+XzHtN8XOnzs/g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=fail header.from=isslab.korea.ac.kr;
-	spf=none smtp.mailfrom=isslab.korea.ac.kr;
-	dkim=pass header.d=isslab-korea-ac-kr.20260707.gappssmtp.com header.i=@isslab-korea-ac-kr.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=Blfe0VBV;
-	arc=none smtp.remote-ip=209.85.214.172
-Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ZmBEeUsd;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84BAB606A32F
-	for <linux-scsi@vger.kernel.org>; Tue, 17 Nov 2026 10:17:29 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 84BAB606A32F
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE4A9606A31C
+	for <linux-scsi@vger.kernel.org>; Tue, 17 Nov 2026 10:40:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20260707.gappssmtp.com header.i=@isslab-korea-ac-kr.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=Blfe0VBV
-Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-2efe0e3bdceso1840845ad.2
-        for <linux-scsi@vger.kernel.org>; Tue, 17 Nov 2026 02:17:29 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=isslab-korea-ac-kr.20260707.gappssmtp.com; s=20260707; t=1794910649; x=1795515449; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:date:subject:cc:to:from:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=Mi1vb9N8Y+TjLnAkkCLxRTFnlP/8A+F5gvm34F3Sg+w=;
-        b=Blfe0VBVk6XBuD1CjCd8cykxB7IYlSXGN/tmUAJYufKAqDnzUrNoywd1F+2riuNmZQ
-         Os2377INfGlHk+allTN0lieFZZo6MMAFklF7TVMPjIITHv185YAskZqwwp5a9RXLZdfY
-         s+GSZuJP7R5/FopLc8ZZECScPrXjRkjOuSWuJawtGdkDqyFPO09aSfSFC3H3Dppu0Xag
-         oh+sLaxyHd5VTNokBniyAly41+RccoY/f9WiWrR23dpPNu6NypWf1kl60AOG10beQhUG
-         EXfq8bcb0sm6FHCwIxyG+vt5JveZhk3P8VytrFZcXz9Jm8/AuwNTdK/K6mxuncN6Eb1j
-         csaQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794910649; x=1795515449;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:date:subject:cc:to:from:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=Mi1vb9N8Y+TjLnAkkCLxRTFnlP/8A+F5gvm34F3Sg+w=;
-        b=miQbHEbLdgQf6LM0yEminu5ORM4ZwTRkbsbv7THr9fPkRzP7T6zL4/4QzE8ko34cy8
-         Llvox7JEdHhOWnrplz0C7HSzoSk5/qhJ9RK5P6LrqEZhe1Q4sq/bGeMFg+4f/AnAYNqp
-         D5X07hijRjFEwHO/LflyEC6/PdHfhlWSczsxPw5fCjYmHhE/3wyUdqWkeLz0YNoFukfu
-         o3PWptMOReF5zQRn6tvLKJ2zTSgJpZvtmGUo59LE5tDd2F/QV2iTryYgH7MbUF5UfhGZ
-         4rJBm8DD3LxESatgZ6rdnQ96xf86pVYPtabPv2CB6DMzjACCDdfzumNHUk+S0sWymGxr
-         lYQQ==
-X-Gm-Message-State: APuU4Z9XC9J4xqXgF4q9SqD8U8nbGumv5i9eBBi6bkACKCiR270RLIBD
-	RI5UnYlE9Cf1eEzPmjp9ACyBAYi5WTSlPpb5Nx8jHe57N4qr949eCeABYveG4+6c7nY=
-X-Gm-Gg: AZFdTZcvfK8ZvbxdSRzFA4w8MVf4KNvl17OHfYGedEz9SOqADY+IScs3nrE7AjCHMtV
-	EKovpq5yl7+4WguAK2BBkJDB7Si2UEkTMEdc76XkzxXP/agaUTq2H4aR+gqtHKfVzHFx5dyjf/a
-	Ke8uceu0cvm04WoyOtxE34mKzn//SYMpStlq1fjHRaN2iG+14kLwBmH4lgeyA9CFLkfm9jNdXbM
-	ntSKjSnvwds9wSBptz86K2IJKfVNDVqCJRAG/KQxfR4+yN/aNU7et1VL8+OBk8TCx9HoYpv8S6p
-	vgbEvFu8nPhwn5O2NheomMF3aUlJ1pjYgFRTXthacr6fD5L2cK/xPVfeywEC2qDhkdCFpW75mUS
-	oICZ+3mxFVauOK6ex3S931vdIxJDtTRdDBXtcmASh9SrXPsS+Zd4J9grBW+S0pM6J5nvX5ApzCT
-	XGr2wyAQgm7HONv+ZVB2r8mVKL43GQsVBXT2ze2oVW5EfSxyZoi04OGEaKeSTrNXOIP5pc/4Hf2
-	UW55ijjD2b5ajzuwsyqjGClrXvBjxj2E1n0qEDiiI4Wu+mKX/aK8CxR/Jyn9BXOgzvnFxj8kwC4
-	O9yF9N5GHCbRV82GTNd+4Fa8kq/hjWaXff2LrJMITyyUO+l+F/CT8GNEPdLWCkvXrUqF04SXcxA
-	cppumJgsheU3WVZffSczpbjwU7TJxlWJamEKZNA==
-X-Received: by 2002:a17:903:1b0b:b0:2e9:9f14:c44 with SMTP id d9443c01a7336-2ee0e0bc9b2mr139528585ad.49.1794910648848;
-        Tue, 17 Nov 2026 02:17:28 -0800 (PST)
-Received: from yhlee-960QFG.Davolink ([2406:5900:1044:110c:cd44:de10:449c:756c])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2efd76d8668sm12633385ad.6.2026.11.17.02.17.26
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 17 Nov 2026 02:17:28 -0800 (PST)
-From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
-To: lduncan@suse.com,
-	cleech@redhat.com,
-	michael.christie@oracle.com,
-	mkp@kernel.org,
-	James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 0/3] scsi: libiscsi: tighten task completion
-Date: Tue, 17 Nov 2026 19:17:20 +0900
-Message-ID: <20261117101720.1894905-1-yhlee@isslab.korea.ac.kr>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20261115122122.1446791-1-yhlee@isslab.korea.ac.kr>
-References: <20261115122122.1446791-1-yhlee@isslab.korea.ac.kr>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ZmBEeUsd
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8A9B91F000C4;
+	Tue, 17 Nov 2026 10:40:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794912044;
+	bh=EeNCpptjr1gpGOMu3Dx6bpyw8hDkftyRMTrwJjygCQg=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=ZmBEeUsdATtQLDTlTInWXL8KoV7GbakJfTKNSvAh9LO780BzvzyryIOK5yE1CeSpp
+	 qZLnKcqZEPBeY913K454QfHI5OpvLcWwRezsSSn06yEsohXGIYt7vXoSOFGAzpMtlS
+	 pcwXRXv1IXeIxwCgd/FI/sT/odH0vvOTphIFQNaSKw0SXH/vaiD9pjaRzGmB6ng7of
+	 pzIaYH5c/u6wZyQ0EWpurfzbO8ST8kJda39ScrlWkA0jR6yUowqMQ5yARfZbW+z7do
+	 r2iUpR939zj5j2qcnsJMCCaLH9RxR8iYhOEZvrXIq4f/AVFQ7xP7QUP1+3DHMzOKcp
+	 julSX+sOaIH/A==
+Message-ID: <sashiko-outbox-218654@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v4 4/4] scsi: libiscsi_tcp: do not accept a Data-In for
+ a finished command
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Yehyeong Lee" <yhlee@isslab.korea.ac.kr>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20261117101500.1894608-5-yhlee@isslab.korea.ac.kr>
+References: <20261117101500.1894608-1-yhlee@isslab.korea.ac.kr>
+ <20261117101500.1894608-5-yhlee@isslab.korea.ac.kr>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 17 Nov 2026 10:40:44 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -101,12 +60,114 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
 
-This is superseded by v4:
-  https://lore.kernel.org/all/20261117101500.1894608-1-yhlee@isslab.korea.ac.kr/
+Thank you for your contribution! Sashiko AI review found 2 potential
+issues to consider:
+- [High] scsi: libiscsi_tcp: UAF in iscsi_tcp_segment_done() after TMF
+  response
+- [Medium] scsi: libiscsi: incomplete task state check in
+  __iscsi_complete_pdu()
+--
 
-Best regards,
-Yehyeong Lee
+commit 9af7de9bba715ed5449c628822a2ee292f1c78ed
+Author: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+
+scsi: libiscsi_tcp: do not accept a Data-In for a finished command
+
+This commit rejects incoming Data-In PDUs in iscsi_tcp_hdr_dissect() when
+the command task is not running and rejects completed tasks in
+__iscsi_complete_pdu().
+
+> diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+> index af454454c0869..f8b3b597d0154 100644
+> --- a/drivers/scsi/libiscsi.c
+> +++ b/drivers/scsi/libiscsi.c
+> @@ -1312,7 +1312,7 @@ int __iscsi_complete_pdu(struct iscsi_session *sess=
+ion, struct iscsi_conn *conn,
+>  	case ISCSI_OP_SCSI_CMD_RSP:
+>  	case ISCSI_OP_SCSI_DATA_IN:
+>  		task =3D iscsi_itt_to_ctask(session, conn, hdr->itt);
+> -		if (!task)
+> +		if (!task || task->state =3D=3D ISCSI_TASK_COMPLETED)
+>  			return ISCSI_ERR_BAD_ITT;
+>  		task->last_xfer =3D jiffies;
+>  		break;
+
+[Severity: Medium]
+Should this test task->state !=3D ISCSI_TASK_RUNNING rather than only
+ISCSI_TASK_COMPLETED?
+
+iscsi_complete_task() also treats ISCSI_TASK_ABRT_TMF,
+ISCSI_TASK_ABRT_SESS_RECOV, and ISCSI_TASK_REQUEUE_SCSIQ as terminal
+states:
+
+drivers/scsi/libiscsi.c:iscsi_complete_task() {
+	if (task->state =3D=3D ISCSI_TASK_COMPLETED ||
+	    task->state =3D=3D ISCSI_TASK_ABRT_TMF ||
+	    task->state =3D=3D ISCSI_TASK_ABRT_SESS_RECOV ||
+	    task->state =3D=3D ISCSI_TASK_REQUEUE_SCSIQ)
+		return;
+
+When iscsi_eh_abort() calls fail_scsi_task(session, task, DID_ABORT),
+__fail_scsi_task() sets sc->result =3D DID_ABORT << 16 and transitions
+task->state to ISCSI_TASK_ABRT_TMF, while the extra task reference held by
+iscsi_eh_abort() keeps task->sc live across spin_unlock_bh(&session->frwd_l=
+ock).
+A late ISCSI_OP_SCSI_CMD_RSP arriving in that window passes this check and
+runs iscsi_scsi_cmd_rsp(), overwriting sc->result with
+(DID_OK << 16) | rhdr->cmd_status, writing sc->sense_buffer, and updating
+the residual count before iscsi_complete_task() ignores the duplicate and
+iscsi_put_task() hands the command back via scsi_done().
+
+> diff --git a/drivers/scsi/libiscsi_tcp.c b/drivers/scsi/libiscsi_tcp.c
+> index 20ec3ba45067f..eeb853c6b66d4 100644
+> --- a/drivers/scsi/libiscsi_tcp.c
+> +++ b/drivers/scsi/libiscsi_tcp.c
+> @@ -713,7 +713,8 @@ iscsi_tcp_hdr_dissect(struct iscsi_conn *conn, struct=
+ iscsi_hdr *hdr)
+>  	case ISCSI_OP_SCSI_DATA_IN:
+>  		spin_lock(&session->back_lock);
+>  		task =3D iscsi_itt_to_ctask(session, conn, hdr->itt);
+> -		if (!task)
+> +		/* The copy below outlives back_lock, so the command must be live. */
+> +		if (!task || task->state !=3D ISCSI_TASK_RUNNING)
+>  			rc =3D ISCSI_ERR_BAD_ITT;
+>  		else
+>  			rc =3D iscsi_tcp_data_in(conn, task);
+
+[Severity: High]
+Can tcp_conn->in.segment still dereference a freed scatterlist if a split
+Data-In arrives right after a TMF response?
+
+Unlike a SCSI Command Response, receiving ISCSI_OP_SCSI_TMFUNC_RSP in
+iscsi_tmf_rsp() only sets session->tmf_state =3D TMF_SUCCESS and wakes
+session->ehwait; it does not change the affected task's state under
+session->back_lock.  The task remains in ISCSI_TASK_RUNNING until the EH
+thread wakes up and runs fail_scsi_task() or fail_scsi_tasks(), which does
+not suspend RX or reset tcp_conn->in.segment:
+
+<softirq> (RX)                    SCSI EH thread
+__iscsi_complete_pdu()
+  iscsi_tmf_rsp()
+    session->tmf_state =3D TMF_SUCCESS
+    wake_up(&session->ehwait)
+iscsi_tcp_hdr_dissect() (skb 1)
+  task->state =3D=3D ISCSI_TASK_RUNNING
+  iscsi_segment_seek_sg(...,
+    sdb->table.sgl, ...)
+  spin_unlock(&session->back_lock)
+                                  iscsi_eh_abort()
+                                    fail_scsi_task(..., DID_ABORT)
+                                    iscsi_put_task(task)
+                                      iscsi_free_task()
+                                        scsi_done(sc) -> frees sgl
+iscsi_tcp_recv_skb() (skb 2)
+  iscsi_tcp_segment_done()
+    accesses tcp_conn->in.segment.sg  <-- use-after-free
+
+When the second skb of the Data-In arrives, iscsi_tcp_segment_done() reads
+the freed scatterlist and copies payload data into freed pages.
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261117101500.1894=
+608-1-yhlee@isslab.korea.ac.kr?part=3D4
