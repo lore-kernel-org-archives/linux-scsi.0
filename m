@@ -1,69 +1,112 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=205.220.168.131
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794885440;
-	b=pBnbpmsu/ibOVpynmyX7iP956MrMmSIUon1RUlXN/wLYUKjiTl77btGS5tTtWcpfBNIs
-	 ywqTzUswJNSsXttFlXENbVTYwtvWwM4n2+uVYXCQjIIoAaI0CtheigajrLnhDYdnKTqvm
-	 teMA1YfbaL52CwOR49V9OZMm/PQKkkIrZp3cCLm8U3HzHOAJeVFHLt0jwJuXb9Bf05Hct
-	 PU+2oaEE0KCa9fubu3kCRdtEU1v3jME3sFm20VSSnApw/3w98AJUFpcvFO+7PdAy5NgZ6
-	 vLS31tirZ19sQH8r0cm+8bRpOSoAAGhr64NqQCwDr6tNCCJjamqqJ+HppEjPSqr1gjQ==
+	t=1794896726;
+	b=v2+cwxlJy7l33yVEJSk373fDrzHQdARZYx/QA65W2aof9sJFNCCZ0bTbD3vPOkzoMgrx
+	 y/4aFmsh3MvaMRPFzGnXWtlBqlN/e+y0s7W2gkn7UO47lZMDWhS1IyciBKh/V4A7u2Ve1
+	 HchgUwi9RPbq1CzjEYTUiODJltfiLodRSqtdlJZPd4vahp5I/bs6APR03L9MJmsgAl+H5
+	 8cAvJNS3IT03gQ93HEUxt+eceJxOjZ8O62CpGJcXtODnNj1L7MW+z3aXZfl3k7xPgghG3
+	 Mh9qTXkE/dVCMRDKcEKXoPF4SCj6sMs5M7b+YDUNHHsMLZwH0YzcoNtaPLjb35qKCvw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794885440;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=u7WxQThHDrtVVlvttx5gutd4hdHvIUx8LTX+PTgMIwA=;
-	b=FB/G0gi5RHn0WTkZa5LbnYr6uUceLZ4GKY8jGHdIH6AgUBQpe3gHWf0SEohZs9BmWevQ
-	 qkFNb8RZ6T9LE8fnxejXCm1l6XgOLm26y4hPkT9gaaCP8e/Qp8nEM8Mos9NPia/Q/hh/J
-	 SiNALGuvgEFytJyLk3PRkE4f3XKg8VId9j7OR1i9R7kPIH1a2SoDg7yCysaf05jy5bbX8
-	 /K6zCnNB+SLGiqojKawBeNHll4GV8JkEtyQPPWL3H9LwJdL/oQDt4GY1dSXQaa8cabLWH
-	 oGlNxVpRGu1516G3KS1LhI7pQAzvYtyRJTk9DqOE6tFGUeuJl7d5Ksy5Mw0beJlZNFA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794896726;
+	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
+	 DKIM-Signature:X-Google-DKIM-Signature:X-Forwarded-Encrypted:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:X-Received:Received:Message-ID:
+	 Date:MIME-Version:User-Agent:Subject:To:Cc:References:
+	 Content-Language:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding:X-Proofpoint-Spam-Info:
+	 X-Proofpoint-Spam-Details-Enc:X-Proofpoint-GUID:
+	 X-Proofpoint-ORIG-GUID:X-Authority-Analysis:
+	 X-Proofpoint-Virus-Version:X-Proofpoint-Spam-Details;
+	bh=5yD+WOgs/w0UEROtpGaM1H5zLUeHVWQoG0KCTRfw/gg=;
+	b=ADvKZSE+8W6TKjLkBopuc6osxnoBBwMLrGctVzNNKE+caLBay5t0rCUoILkc13BOf1OV
+	 3vZFed14/6q8ZH4UtOEm1NSigFikA/9f6O5VyJyrLvsgPi9plzJjtxc9N9zSNQA3fH+OS
+	 Po+xm7rGKwXfrR3uvoldbnfFb6XZJDNO/q3Lt6BuCFIT0gQdnFIJffCBxpkVgj0/DkpVU
+	 j+5UYhP1fNtSjLlViCuXBWtQuIyZtdXl0IzAdRJxecjlbXpvziC2eMiVrg65ou4U0hTCm
+	 DzeP1Gc6y+tYeApQTOST/GHkVqc1RdKlOzkNO0vtYNMlhQ4LHbXgys6acgrVPWIldcA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fG6ix43A;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=oss.qualcomm.com;
+	spf=pass smtp.mailfrom=oss.qualcomm.com;
+	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=gbyetD6M;
+	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b="PlRPIE/B";
+	arc=none smtp.remote-ip=205.220.168.131
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 52D81606A31C;
-	Tue, 17 Nov 2026 03:17:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A51E4606A31C
+	for <linux-scsi@vger.kernel.org>; Tue, 17 Nov 2026 06:25:25 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A51E4606A31C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fG6ix43A
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4DEDC1F000C5;
-	Tue, 17 Nov 2026 03:17:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794885439;
-	bh=u7WxQThHDrtVVlvttx5gutd4hdHvIUx8LTX+PTgMIwA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=fG6ix43Aj+ltOOd7+9gPvpl7gEibFLnYb3d7SYQlKvsNJTJnu8rSifRdfs3120SdL
-	 lJGbozuhewlEmMezq/443vqffmaZ2KZnnumT59+wtqAp++6+3X8ynV3OvK5LBqVbwJ
-	 ouRBE3i6q6XQ6vAK9j9wAZsX8AHAdA+VZTJ4FUg2/j6wRXayqF8jCpVMiS8dMGnRE1
-	 idRsekwB1FegJr0KYkF8Hvnss2h8avXeEkxpTU9gU1mbJBsS2OwWiRAR0qfR1kPrPc
-	 lkoO5GPqmjbzDhNJ3VkkWmQvZQY4BeSx/V+gvWuQvkaRsxu8kiWAx9r1v98vNCcHs1
-	 KJaSiVlzLvcaQ==
-Date: Tue, 17 Nov 2026 03:17:17 +0000
-From: Yixun Lan <dlan@kernel.org>
-To: E Shattow <e@freeshell.de>
-Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <mkp@kernel.org>,
-	Alim Akhtar <alim.akhtar@samsung.com>,
-	Avri Altman <avri.altman@sandisk.com>,
-	Bart Van Assche <bvanassche@acm.org>, Bean Huo <beanhuo@micron.com>,
-	Stanley Jhu <stanleyjhu@google.com>, Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Philipp Zabel <p.zabel@pengutronix.de>,
-	Paul Walmsley <pjw@kernel.org>, Palmer Dabbelt <palmer@dabbelt.com>,
-	Albert Ou <aou@eecs.berkeley.edu>, Alexandre Ghiti <alex@ghiti.fr>,
-	Anirudh Srinivasan <asrinivasan@oss.tenstorrent.com>,
-	Aurelien Jarno <aurelien@aurel32.net>,
-	Jennifer Berringer <jberring@redhat.com>,
-	Trevor Gamblin <tgamblin@baylibre.com>, linux-scsi@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-riscv@lists.infradead.org,
-	spacemit@lists.linux.dev, linux-kernel@vger.kernel.org,
-	Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
-Subject: Re: [PATCH v8 0/2] Add UFS Host driver support for SpacemiT K3 SoC
-Message-ID: <20261117031717-GKG100523@kernel.org>
-References: <20261116-08-k3-ufs-support-v8-0-e3b256972dd4@kernel.org>
- <8462a0d9-e9b7-467d-b2e1-7870c78e2691@freeshell.de>
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=gbyetD6M;
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=PlRPIE/B
+Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6AH2a6v82934224
+	for <linux-scsi@vger.kernel.org>; Tue, 17 Nov 2026 06:25:25 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	5yD+WOgs/w0UEROtpGaM1H5zLUeHVWQoG0KCTRfw/gg=; b=gbyetD6M55TyiFm3
+	+stp9xNsuzewD6E8kFAsyawp5FF072tq6NjzsIltJ7irOevxHhCSj+ZmW9ZZzb1l
+	zrPvgKQ5RXuPXSd/JDUiT0ys6YqqDTbR61RHq2zPEi9tiOu+i3OQqyi1JDbVLg9d
+	5HrxoW+p+U/eH3fdc0kHyW6cwWTJ6mqhlmpqLhxFWchN3xebtE4XHvRzZ7+AY4s2
+	W3S/ajc0vQbZMgK+IXbts6rotjdK482j8fv55Tj0lnwTwoFsrJbpCKnKODVcP6kD
+	u2HkI0ZdLdSuCYrqs0+ePH3GlwZRx11H7b9glala1Np7gOkLzJn9UMqkv8FFmM/9
+	Z/AixA==
+Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com [209.85.216.69])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4j09m09np1-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Tue, 17 Nov 2026 06:25:24 +0000 (GMT)
+Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-3b07b06027eso5458086a91.0
+        for <linux-scsi@vger.kernel.org>; Mon, 16 Nov 2026 22:25:24 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1794896724; x=1795501524; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=5yD+WOgs/w0UEROtpGaM1H5zLUeHVWQoG0KCTRfw/gg=;
+        b=PlRPIE/BlbSEjGRRF3p/sf5Gr75YyDeMBhFr7+iOMzhXqi8cpoVD8XJ3vFo2PInZLv
+         rPyFt+mru5NGo4boxHxjr/oHKFXKr4YSROjz79eGjJAXc9AkTg456CHzAzROygmUT2mq
+         JE9VCulQSn6afpm8P3BTUF3kMJZbyEWdNKVSK3l/c36uAj7ORHiS6UQODEwyhnlxzALR
+         QdEbR0woB0ZMn79hgBRsUmjzDIX4h2tVlxx7XG7o227I6aaSfMajtOJaQ02KYWrsnLyb
+         4eao2jFOzq4nH+q+jrTjtpPOAYuxdFFBz/9rp1d4sXW6muiF6eqiFcn0rRGcGmnxCXLJ
+         ReKQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1794896724; x=1795501524;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=5yD+WOgs/w0UEROtpGaM1H5zLUeHVWQoG0KCTRfw/gg=;
+        b=n8HSybAxLPcA5pMPal49AwiN+7dedqxkAO9H78r89BPobz5C1vXwdEJV1PUdWJsBS7
+         AI0NHHQi/PY8yCUk5YN+CEZYRopo/disjMsdw0ns6YJ0JVKrs6wEcEroIrR0yzozgXsa
+         WFsJIie5TabzL/VuNMTGDYxsrcXntjNg6p6ZgJjggCz7Qb3wYzDRR09kEwnzXMUgTljA
+         3WaAtVu1pKubnhKYNthRKKoXUYvx6VFIyB48myB5eMq0IQvYvDzkzmkDFIq4AgGYRzRF
+         Zlxd0ljDad1SYQtEUxYCCPDgOCJ1ORCqMBM4Al4Pd8RZdNK4kL2aVYo6/dkh1r9iuMtm
+         ayNg==
+X-Forwarded-Encrypted: i=1; AL+hErEBKFBfGtdZzlrSqgrJf8EAq0X2qmRBSSt4/2QdE9apIqWvdcw3kwI1F6A2LtkuHuyQMIgMyvc86S40@vger.kernel.org
+X-Gm-Message-State: APuU4Z/PdqNQLFVF1lNRvJrwHyrzC1CbD03/x2TkqkLie0QjpOUA0cSW
+	yoBUr1RelTxXXkDQe+GrktxEen+bP05UFcdu0u/tO6OoavtngksohU/e03GMsE0ELuOdtWckJ7x
+	Z0S1p6dxjiqTpXnAaJZo/w2raH2FMe+jAjbBB4XgihCVSFWQVxuaqgHh9+6IJ2XBs
+X-Gm-Gg: AZFdTZcmw8+Bd3WdPhP1UOBQZzZgp9Xg5kIRA0X5LIFyV5z1UReLdZ7TP8ne3jVbWzj
+	2FlAkHx6/qwD2BPMbN1d4l9aV89968y9JSVhN9yv3eAfqkjK1rRiK7dcjSiC0hYcdJmvd03gF62
+	4LPRqEqvdCPs/juuCaVdMC+cGNgM02xm49DaWSvTYrM8mP3VnkF75yNMbDs8FeEbBRqUK5DExI1
+	b3QvQEIoFcJYVYloEqQS94MqHj6/qARl6anPf9gBP4mFSHcSJmcZkQAhatU4kH/Wsm+Yqdp6iHz
+	Jz8znWk08/kKrkfXiSRR1X5+pF/Vf2/Y7Pv05RpBMrobL4XdUQxhteFN43+tsO5ObjXKjW4igM4
+	p1HkgY6oHIXOZK3tq206IJC2t4ZPjvljR7IIZ4GxArvweguphuT2/rgpYPn68V1nVzXu9DSls56
+	nRfGE=
+X-Received: by 2002:a17:90b:3f8e:b0:3ac:945c:7f69 with SMTP id 98e67ed59e1d1-3b1b0b5f193mr11585556a91.66.1794896723993;
+        Mon, 16 Nov 2026 22:25:23 -0800 (PST)
+X-Received: by 2002:a17:90b:3f8e:b0:3ac:945c:7f69 with SMTP id 98e67ed59e1d1-3b1b0b5f193mr11585546a91.66.1794896723403;
+        Mon, 16 Nov 2026 22:25:23 -0800 (PST)
+Received: from [10.218.31.125] ([202.46.22.19])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b3abebf1aesm2512101a91.16.2026.11.16.22.25.19
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 16 Nov 2026 22:25:22 -0800 (PST)
+Message-ID: <2a4f99e9-4b51-42c5-9852-8747bf8f1a14@oss.qualcomm.com>
+Date: Tue, 17 Nov 2026 11:55:17 +0530
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -73,181 +116,131 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <8462a0d9-e9b7-467d-b2e1-7870c78e2691@freeshell.de>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 2/2] ufs: ufs-qcom: Enable ICE before enabling crypto
+ support
+To: Eric Biggers <ebiggers@kernel.org>
+Cc: Adrian Hunter <adrian.hunter@intel.com>, Ulf Hansson <ulfh@kernel.org>,
+        Abel Vesa <abelvesa@kernel.org>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+        "Martin K. Petersen" <mkp@kernel.org>, linux-mmc@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, stable@vger.kernel.org
+References: <20261112-qcom_ice_pm_enable-v2-0-177e454d6f22@oss.qualcomm.com>
+ <20261112-qcom_ice_pm_enable-v2-2-177e454d6f22@oss.qualcomm.com>
+ <20261113040820.GE1742@sol>
+Content-Language: en-US
+From: Kuldeep Singh <kuldeep.singh@oss.qualcomm.com>
+In-Reply-To: <20261113040820.GE1742@sol>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Spam-Info: AW1haW4tMjYxMTE3MDAyNSBTYWx0ZWRfXwKdc0NjTs31D
+ UAOWc14m9u67Az+iq4zcBHEYxDiegpSklJmxZ0dgjMEbyh6iuRiXhKmQMy7puUM6Gwkse3LsGPb
+ Yvk3bRmPig+52VeHiGM/MGbEz5vsjwE=
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMTE3MDAyNSBTYWx0ZWRfX9v/qndh/JEaD
+ rilhTEjJnqEpKGhbeSNiO68YtCkXTXu5WL+7jg45eEZflfAJ5TaWvOjqyP750G8TEOLEHM2VW7M
+ T6BH8Qgic6Iax3W6oVfzrXEUz4E+A/lNI9JZ0HhO/TaVW5Z10Vy9FPHXIvUNGekRy9zIJBcOj4r
+ uNk+EMqduDCwBCnJk04tPR2OyJycgBDR1zP98oYuxP2eKXLhWTc6dkgidGpyN4JmRXi+MYnTSLG
+ CO9IJvCes1Bn+qDsHQ9sHv4/Ufm/qSXu4XdFtK+Zn5QSjp+jdn2Q1wc0F+Jd4vkCVjhbE4/nAhS
+ PQSl+CVG8c09l+8Ijvm5TctY0FLqd81EFepK2Y+dURCmNODCxse90OkQQiW71FxhnZcHwWCHd08
+ 4hhmZnYt7InjilILBxrMBGj1x6B5rpWGgYk/U4sCJetF7pVHIbsz6fBxC54qCXjJIV/cqUNQcZ2
+ OvxW5+u2JJvQBCeZvMg==
+X-Proofpoint-GUID: mb8NmS8-C1NGtx_9QWR9og2erWbIFrvt
+X-Proofpoint-ORIG-GUID: mb8NmS8-C1NGtx_9QWR9og2erWbIFrvt
+X-Authority-Analysis: v=2.4 cv=F7rC5ahN c=1 sm=1 tr=0 ts=6afbf354 cx=c_pps
+ a=vVfyC5vLCtgYJKYeQD43oA==:117 a=fChuTYTh2wq5r3m49p7fHw==:17
+ a=IkcTkHD0fZMA:10 a=zJRp6_cAMcgA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=_K5XuSEh1TEqbUxoQ0s3:22
+ a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8 a=x_L3ctan3gn5YDiFMPYA:9 a=QEXdDO2ut3YA:10
+ a=rl5im9kqc5Lf4LNbBjHf:22
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
+ definitions=2026-11-17_01,2026-11-16_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ lowpriorityscore=0 adultscore=0 priorityscore=1501 clxscore=1015
+ suspectscore=0 bulkscore=0 malwarescore=0 spamscore=0 phishscore=0
+ impostorscore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2611040001
+ definitions=main-2611170025
 
-Hi E Shattow,
-Thanks for testing
+On 13-11-2026 09:38, Eric Biggers wrote:
+> On Thu, Nov 12, 2026 at 06:48:18PM +0530, Kuldeep Singh wrote:
+>> ufs-qcom currently exposes UFS crypto profile and sets UFSHCD_CAP_CRYPTO
+>> before enabling ICE. This leaves a window where blk-crypto can issue
+>> keyslot programming calls before ufs-qcom has explicitly enabled ICE.
+> 
+> Please be more specific about what actually goes wrong, and why.  During
+> probe, the crypto profile hasn't actually been registered with the block
+> layer yet.  So the above seems inaccurate.  Likewise in the MMC patch.
 
-On 17:15 Mon 16 Nov     , E Shattow wrote:
-> Hi Yixun,
-> 
-> On 11/15/26 19:46, Yixun Lan wrote:
-> > This series try to add UFS support for SpacemiT K3 SoC, the controller
-> > components consists of System Bus Interface Unit, UFS Host Controller
-> > Interface, UFS Transport Protocol Layer, UFS Host Registers, Device
-> > Management Entity (DME), Transport Layer, Network Layer, Data Link
-> > Layer, PHY Adapter Layer, and M-PHY Interface. A more detail functional
-> > block diagram can be found in SpacemiT website, chapter 9.7.3 [1]
-> > 
-> > The DTS patch has been dropped in this series [2], and will send
-> > in separate series once this patch accepted. For people who want to
-> > test UFS driver, please grab the DT patch from version v5 [3].
-> > 
-> > Enable UFSHCD_CAP_KEEP_AUTO_BKOPS_ENABLED_EXCEPT_SUSPEND,
-> > This allows the device auto-bkops to be always enabled except
-> > during suspend (both runtime and suspend), with this feature,
-> > the BKOPS interrupt (log below) isn't reported anymore.
-> > 
-> > [  806.710763] ufshcd-spacemit c0e00000.ufshc: ufshcd_bkops_exception_event_handler: device raised urgent BKOPS exception for bkops status 1
-> > 
-> > Link: https://spacemit.com/community/document/info?nodepath=hardware/key_stone/k3/k3_docs/k3_usermanual/09_memory_storage.md&lang=en [1]
-> > Link: https://lore.kernel.org/all/20260918-belligerent-succinct-kraken-7fa592@quoll/ [2]
-> > Link: https://lore.kernel.org/all/20260916-08-k3-ufs-support-v5-3-1f5d71f1027d@kernel.org/ [3]
-> > Signed-off-by: Yixun Lan <dlan@kernel.org>
-> > ---
-> > Changes in v8:
-> > - enable UFSHCD_CAP_KEEP_AUTO_BKOPS_ENABLED_EXCEPT_SUSPEND
-> > - rename to "ref_clk", see explanation in patch
-> > - add delay between enable clk & deassert reset
-> > - respect bRefClkGatingWaitTime, add wait delay
-> > - drop comment of ufs_hba_spacemit_vops, which got CI complaint
-> > - rebase to v7.4-rc1
-> > - Link to v7: https://patch.msgid.link/20261002-08-k3-ufs-support-v7-0-bb39007ff9ae@kernel.org
-> > 
-> > Changes in v7:
-> > - check err return value of ufs_spacemit_quirk_host_pa_saveconfigtime()
-> > - Link to v6: https://patch.msgid.link/20260921-08-k3-ufs-support-v6-0-3479768a2299@kernel.org
-> > 
-> > Changes in v6:
-> > - drop unused macro and dev_req_params
-> > - use global PX_xx macros
-> > - fix axi clock name
-> > - drop dts patch
-> > - collect tags
-> > - Link to v5: https://patch.msgid.link/20260916-08-k3-ufs-support-v5-0-1f5d71f1027d@kernel.org
-> > 
-> > Changes in v5:
-> > - adjust clock names
-> > - add runtime power support
-> > - collect tags
-> > - Link to v4: https://patch.msgid.link/20260908-08-k3-ufs-support-v4-0-22aa2bd97d3b@kernel.org
-> > 
-> > Changes in v4:
-> > - fix clock and reset settings
-> > - drop function which retrieve value of tx_lanes
-> > - propagate return error of ufs_spacemit_dme_set()
-> > - check return value ufs_spacemit_check_hibern8()
-> > - drop call to ufshcd_vops_phy_initialization()
-> > - handle compiling warning if CONFIG_OF not enabled
-> >  add __maybe_unused to ufs_spacemit_of_match
-> > - Link to v3: https://patch.msgid.link/20260806-08-k3-ufs-support-v3-0-037fb322acdb@kernel.org
-> > 
-> > Changes in v3:
-> > - collect tags
-> > - fix dt-binding warning reported-by sashiko
-> > - fix low freq in opp-2 table
-> > - fix err checking in check_hibern8()
-> > - propagate err code in link_startup_notify()
-> > - update documents for event_notify()
-> > - ufs clock driver is merged into v7.3-rc1, update cover letter
-> > - Link to v2: https://patch.msgid.link/20260725-08-k3-ufs-support-v2-0-45036a2a2418@kernel.org
-> > 
-> > Changes in v2:
-> > - fix missing interrupts property
-> > - move ufs node to k3-com260.dtsi
-> > - convert freq-table-hz to operating-points-v2
-> > - rework reset_control, fix header and drop global variable
-> > - drop dump_host_regs() debug interface
-> > - converge and refactor dme_set() operations
-> > - massive reduce of busy delay() loops
-> > - drop vendor specific hce_enable_notify(), fallback to default
-> > - drop unused member from struct ufs_spacemit_host
-> > - add COMPILE_TEST support to Kconfig
-> > - comment style fix
-> > - Link to v1: https://patch.msgid.link/20260702-08-k3-ufs-support-v1-0-1a64a3ab128f@kernel.org
-> > 
-> > ---
-> > Yixun Lan (2):
-> >       scsi: ufs: spacemit: dt-bindings: Add UFS controller for K3 SoC
-> >       scsi: ufs: spacemit: k3: Add UFS Host Controller driver
-> > 
-> >  .../devicetree/bindings/ufs/spacemit,k3-ufshc.yaml |  56 ++
-> >  drivers/ufs/host/Kconfig                           |  12 +
-> >  drivers/ufs/host/Makefile                          |   1 +
-> >  drivers/ufs/host/ufs-spacemit.c                    | 655 +++++++++++++++++++++
-> >  drivers/ufs/host/ufs-spacemit.h                    |  77 +++
-> >  5 files changed, 801 insertions(+)
-> > ---
-> > base-commit: 6628e7d4c6b25c8d18f1345e3a20d21829aae7e4
-> > change-id: 20260605-08-k3-ufs-support-c8b308e415e2
-> > 
-> > Best regards,
-> > --  
-> > Yixun Lan <dlan@kernel.org>
-> > 
-> > 
-> > _______________________________________________
-> > linux-riscv mailing list
-> > linux-riscv@lists.infradead.org
-> > http://lists.infradead.org/mailman/listinfo/linux-riscv
-> 
-> Tested v7 and v8 successfully on Sipeed K3 Pico-ITX (32GiB DRAM / 128GiB
-> UFS model). Build and test methodology:
-> 
-> ### build chimera debian-installer with patched mainline kernel
-> ### assume fresh Debian testing "forky" build environment
-> 
-> apt update
-> apt install -y b4 bc bison ca-certificates cpio \
->  crossbuild-essential-riscv64 curl debhelper fakeroot flex kmod \
->  libdw-dev libssl-dev libssl-dev:riscv64 linux-config-7.2:riscv64 \
->  python3 rsync
-> 
-> curl -L \
->  https://git.kernel.org/torvalds/t/linux-7.4-rc3.tar.gz \
->  | tar xz
-> 
-> pushd linux-7.4-rc3
-> b4 am -v1 -o- \
->  https://lore.kernel.org/all/20261115195112.32120-1-e@freeshell.de/ \
->  | patch -p1
-> b4 am -v5 -P3 -o- \
->  https://lore.kernel.org/all/20260916-08-k3-ufs-support-v5-0-1f5d71f1027d@kernel.org/ \
->  | patch -p1
-Did you rename clock name from "ref" to "ref_clk"? see my comment in patch 1
+Seems i explained problem in cover letter and didn't mention here.
+Please refer here:
+https://lore.kernel.org/linux-arm-msm/20261022-qcom_ice_pm_enable-v1-0-f7a84086c651@oss.qualcomm.com/
 
-> b4 am -v8 -P1,2 -o- \
->  https://lore.kernel.org/linux-riscv/20261116-08-k3-ufs-support-v8-0-e3b256972dd4@kernel.org/ \
->  | patch -p1
-[...]
-> 
-> Workload for testing is to repeat the above build steps on-device from
-> UFS-backed root filesystem. In v7 there would be the occasional BKOPS
-> warnings, and v8 here now no such BKOPS warnings.
-> 
-> I do notice some UFS-related warnings and errors in dmesg:
-> 
-> journalctl --dmesg | grep ufshcd
-> ufshcd-spacemit c0e00000.ufshc: freq-table-hz property not specified
-> ufshcd-spacemit c0e00000.ufshc: ufshcd_populate_vreg: Unable to find
-> vdd-hba-supply regulator, assuming enabled
-> ufshcd-spacemit c0e00000.ufshc: ufshcd_populate_vreg: Unable to find
-> vcc-supply regulator, assuming enabled
-> ufshcd-spacemit c0e00000.ufshc: ufshcd_populate_vreg: Unable to find
-> vccq-supply regulator, assuming enabled
-> ufshcd-spacemit c0e00000.ufshc: ufshcd_populate_vreg: Unable to find
-> vccq2-supply regulator, assuming enabled
-> scsi host0: ufshcd
-> ufshcd-spacemit c0e00000.ufshc: ufshcd_scsi_add_wlus: BOOT WLUN not found
+Actual bug got reported in storage drivers after introducing runtime PM
+in ice.
 
-Let's ignore the warning message for now, those shouldn't cause problem
+In UFS probe, setting UFSHCD_CAP_CRYPTO enables the crypto profile and
+let blk-crypto layer send key programming calls(i.e
+qcom_ice_program_key() in ice.c) even before UFS get ice handle (i.e
+qcom_ice_enable).
 
-> ufshcd-spacemit c0e00000.ufshc: DL error event, INT errors:0x4,
-> DL_ERR:0x80000020
+OTOH, with no runtime PM in ice, clocks are remain voted after probe
+too. When key program call comes from blk-crypto(qcom_ice_program_key),
+it calls qcom_ice_writel(ice, 0x0, QCOM_ICE_REG_CRYPTOCFG(slot)); and
+works fine as it's clocked register access.
+
+With runtime PM in ice, clocks are voted off after probe and now same
+sequence(ufs-probe -> key program call -> qcom_ice_enable) introduces
+kernel panic as it's *unclocked* register access in ICE. That's why it's
+important to enable ice instance in UFS before blk-crypto trigger any
+key program call and hence moved qcom_ice_enable in probe.
+
+Same sequence applies to MMC.
+
+Though the issue reported once runtime PM in ICE got enabled, it's
+actually persistent always and ideally UFS should not assume ice clock
+cycle and get the instance early.
+
 > 
-Seems relate to Data link error, I will see if I can replicate this .. 
+>>  static int ufs_qcom_ice_init(struct ufs_qcom_host *host)
+>>  {
+>> @@ -188,6 +190,12 @@ static int ufs_qcom_ice_init(struct ufs_qcom_host *host)
+>>  
+>>  	host->ice = ice;
+>>  
+>> +	err = qcom_ice_enable(host->ice);
+> 
+> Use the 'ice' local variable.
+
+Ack.
+
+> 
+>> @@ -636,12 +645,15 @@ static int ufs_qcom_hce_enable_notify(struct ufs_hba *hba,
+>>  		 * is initialized.
+>>  		 */
+>>  		err = ufs_qcom_enable_lane_clks(host);
+>> +		if (err)
+>> +			return err;
+>> +
+>> +		err = ufs_qcom_ice_enable(host);
+>>  		break;
+>>  	case POST_CHANGE:
+>>  		/* check if UFS PHY moved from DISABLED to HIBERN8 */
+>>  		err = ufs_qcom_check_hibern8(hba);
+>>  		ufs_qcom_enable_hw_clk_gating(hba);
+>> -		ufs_qcom_ice_enable(host);
+>>  		ufs_qcom_config_ice_allocator(host);
+>>  		break;
+> 
+> Needs an explanation for why ufs_qcom_config_ice_allocator() and
+> ufs_qcom_ice_enable() need to be called at different times.
+I didn't get any issue if we enable ice in POST_CHANGE, I added as good
+to have change so as to make ice available at earliest.
+As no issue observed, I am planning to drop the change.
 
 -- 
-Yixun Lan (dlan)
+Regards
+Kuldeep
+
