@@ -1,75 +1,69 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.165
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794883611;
-	b=APlm+tyA9iklVHgA2subqMiu7sul0tKfpcGeluazLItzmYvh2d+LVEkClkT8sNhsaAXd
-	 mETsHZRnOioFrQiHmHNEQ2TZTgT0jEm6ZL2OpK88at2UVvbxcDDr3VU5dvQDr++ErKYc9
-	 Kp4FzDf5y26eFg6xbvJuQRQKuMXD0ZVHGQNQiJsJtTR/EPn+IiaCpKHUYWfi/SNVs2HaJ
-	 jrTiye9SxuQ8Gn2mdf28mMf3n12lpEJDVb+SYRk1adMycqRmdpS1zHLSDMOAWTgrkZphf
-	 1+dYubxZoB9w/JNCW3zqxSKhxwOm0Ewl6xn7hh6diTmrE7DTlwoOFmkqnEWF/6iZnfw==
+	t=1794885440;
+	b=pBnbpmsu/ibOVpynmyX7iP956MrMmSIUon1RUlXN/wLYUKjiTl77btGS5tTtWcpfBNIs
+	 ywqTzUswJNSsXttFlXENbVTYwtvWwM4n2+uVYXCQjIIoAaI0CtheigajrLnhDYdnKTqvm
+	 teMA1YfbaL52CwOR49V9OZMm/PQKkkIrZp3cCLm8U3HzHOAJeVFHLt0jwJuXb9Bf05Hct
+	 PU+2oaEE0KCa9fubu3kCRdtEU1v3jME3sFm20VSSnApw/3w98AJUFpcvFO+7PdAy5NgZ6
+	 vLS31tirZ19sQH8r0cm+8bRpOSoAAGhr64NqQCwDr6tNCCJjamqqJ+HppEjPSqr1gjQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794883611;
-	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:From:To:Cc:Subject:Date:Message-ID:
-	 X-Mailer:In-Reply-To:References:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=7czWWVAT5JV9Hgu1J/we5C/Mmw86nPPn7DAH8Olg8dI=;
-	b=LeX/csF42djoZXx7PDChXpWvPdtBQXQXZGXqlm/by5KMXhjdRfhp/U642oMC17aw6P2E
-	 iNI7sGVw+xchYI2tzsZMG++y1S7j35PYpFkyV/GzcCG3UM+Mr02/al5Ns9x6UDcrSXBIk
-	 QejvQPOgLxzsLsmVgOdXomZJWX2Ie4IlrTXDJnLJ/hGc93mWFd03Abuo28L3GSYGpfU1A
-	 IGY3oddXyNbfr6X3VM5dAz/39w4yw5Q4j0eBhb9aEnReCdM1bdIqvEIv+gkrRRV+Zqbiq
-	 OC+24388gD2R1cejPh1EAaD3hMthx8iDt0gJRuEJMY/7xeza5BIUB9/d3D1SmDwXS6Q==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794885440;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=u7WxQThHDrtVVlvttx5gutd4hdHvIUx8LTX+PTgMIwA=;
+	b=FB/G0gi5RHn0WTkZa5LbnYr6uUceLZ4GKY8jGHdIH6AgUBQpe3gHWf0SEohZs9BmWevQ
+	 qkFNb8RZ6T9LE8fnxejXCm1l6XgOLm26y4hPkT9gaaCP8e/Qp8nEM8Mos9NPia/Q/hh/J
+	 SiNALGuvgEFytJyLk3PRkE4f3XKg8VId9j7OR1i9R7kPIH1a2SoDg7yCysaf05jy5bbX8
+	 /K6zCnNB+SLGiqojKawBeNHll4GV8JkEtyQPPWL3H9LwJdL/oQDt4GY1dSXQaa8cabLWH
+	 oGlNxVpRGu1516G3KS1LhI7pQAzvYtyRJTk9DqOE6tFGUeuJl7d5Ksy5Mw0beJlZNFA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.dev;
-	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=Eoe2YQDc;
-	arc=none smtp.remote-ip=91.218.175.165
-Received: from mta0.migadu.com (out-165.mta0.migadu.com [91.218.175.165])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fG6ix43A;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2DB69606A338
-	for <linux-scsi@vger.kernel.org>; Tue, 17 Nov 2026 02:46:50 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2DB69606A338
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 52D81606A31C;
+	Tue, 17 Nov 2026 03:17:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=Eoe2YQDc
-X-Envelope-To: linux-scsi@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=+lyCNsOGqBEwZGBZXNbbfgivTSkomZxjKHS28V8jHeM=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1794883609; v=1; x=1795488409;
- b=Eoe2YQDcrs37v0hCU297WOF3bnEyAH/TMkkjhWVpjtIfopIe2Rr5hf/Ol10oyukvWybRQB5q
- IAM4nErB/BWWJQM1DcJuIkn1eSFLL3Hug3L3ilQ6DC3bcNxW0O14Tf1pTtCeKzzpyEyE+FrtcC1
- Q66sxA48nc9HdXHl8OsKufw0=
-X-Envelope-To: linux-scsi@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id de5ce04a605127d5;
-	Tue, 17 Nov 2026 02:46:48 +0000
-X-Mizu-Trace-ID: de5ce04a605127d5
-X-Migadu-Flow: FLOW_OUT
-From: Qiliang Yuan <qiliang.yuan@linux.dev>
-To: Ming Lei <tom.leiming@gmail.com>
-Cc: Qiliang Yuan <qiliang.yuan@linux.dev>,
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fG6ix43A
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4DEDC1F000C5;
+	Tue, 17 Nov 2026 03:17:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794885439;
+	bh=u7WxQThHDrtVVlvttx5gutd4hdHvIUx8LTX+PTgMIwA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=fG6ix43Aj+ltOOd7+9gPvpl7gEibFLnYb3d7SYQlKvsNJTJnu8rSifRdfs3120SdL
+	 lJGbozuhewlEmMezq/443vqffmaZ2KZnnumT59+wtqAp++6+3X8ynV3OvK5LBqVbwJ
+	 ouRBE3i6q6XQ6vAK9j9wAZsX8AHAdA+VZTJ4FUg2/j6wRXayqF8jCpVMiS8dMGnRE1
+	 idRsekwB1FegJr0KYkF8Hvnss2h8avXeEkxpTU9gU1mbJBsS2OwWiRAR0qfR1kPrPc
+	 lkoO5GPqmjbzDhNJ3VkkWmQvZQY4BeSx/V+gvWuQvkaRsxu8kiWAx9r1v98vNCcHs1
+	 KJaSiVlzLvcaQ==
+Date: Tue, 17 Nov 2026 03:17:17 +0000
+From: Yixun Lan <dlan@kernel.org>
+To: E Shattow <e@freeshell.de>
+Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
 	"Martin K. Petersen" <mkp@kernel.org>,
-	Shuah Khan <shuah@kernel.org>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	linux-kernel@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	target-devel@vger.kernel.org,
-	linux-kselftest@vger.kernel.org,
-	linux-doc@vger.kernel.org,
-	Jens Axboe <axboe@kernel.dk>,
-	io-uring@vger.kernel.org,
-	Mike Christie <michael.christie@oracle.com>,
-	Bodo Stroesser <bostroesser@gmail.com>
-Subject: Re: [PATCH RFC 00/18] scsi: target: Add target_core_uring, an io_uring based user backstore
-Date: Mon, 16 Nov 2026 21:46:40 -0500
-Message-ID: <20261117024640.3184554-1-qiliang.yuan@linux.dev>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <avprIhtn1TuYLX1b@fedora-laptop>
-References: <20261115-feat-target-core-uring-v1-0-28cdc137eac6@linux.dev> <avprIhtn1TuYLX1b@fedora-laptop>
+	Alim Akhtar <alim.akhtar@samsung.com>,
+	Avri Altman <avri.altman@sandisk.com>,
+	Bart Van Assche <bvanassche@acm.org>, Bean Huo <beanhuo@micron.com>,
+	Stanley Jhu <stanleyjhu@google.com>, Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Philipp Zabel <p.zabel@pengutronix.de>,
+	Paul Walmsley <pjw@kernel.org>, Palmer Dabbelt <palmer@dabbelt.com>,
+	Albert Ou <aou@eecs.berkeley.edu>, Alexandre Ghiti <alex@ghiti.fr>,
+	Anirudh Srinivasan <asrinivasan@oss.tenstorrent.com>,
+	Aurelien Jarno <aurelien@aurel32.net>,
+	Jennifer Berringer <jberring@redhat.com>,
+	Trevor Gamblin <tgamblin@baylibre.com>, linux-scsi@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-riscv@lists.infradead.org,
+	spacemit@lists.linux.dev, linux-kernel@vger.kernel.org,
+	Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
+Subject: Re: [PATCH v8 0/2] Add UFS Host driver support for SpacemiT K3 SoC
+Message-ID: <20261117031717-GKG100523@kernel.org>
+References: <20261116-08-k3-ufs-support-v8-0-e3b256972dd4@kernel.org>
+ <8462a0d9-e9b7-467d-b2e1-7870c78e2691@freeshell.de>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -79,139 +73,181 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <8462a0d9-e9b7-467d-b2e1-7870c78e2691@freeshell.de>
 
-On Sun, Nov 15, 2026 at 08:32:02PM -0600, Ming Lei wrote:
-> This is ublk's uapi re-implemented inside LIO: FETCH/COMMIT_AND_FETCH
-> per tag, pread()/pwrite() with (qid, tag) in the offset, and buffer
-> registration via io_buffer_register_bvec().
+Hi E Shattow,
+Thanks for testing
 
-Yes, the interface is modelled on ublk on purpose.
+On 17:15 Mon 16 Nov     , E Shattow wrote:
+> Hi Yixun,
+> 
+> On 11/15/26 19:46, Yixun Lan wrote:
+> > This series try to add UFS support for SpacemiT K3 SoC, the controller
+> > components consists of System Bus Interface Unit, UFS Host Controller
+> > Interface, UFS Transport Protocol Layer, UFS Host Registers, Device
+> > Management Entity (DME), Transport Layer, Network Layer, Data Link
+> > Layer, PHY Adapter Layer, and M-PHY Interface. A more detail functional
+> > block diagram can be found in SpacemiT website, chapter 9.7.3 [1]
+> > 
+> > The DTS patch has been dropped in this series [2], and will send
+> > in separate series once this patch accepted. For people who want to
+> > test UFS driver, please grab the DT patch from version v5 [3].
+> > 
+> > Enable UFSHCD_CAP_KEEP_AUTO_BKOPS_ENABLED_EXCEPT_SUSPEND,
+> > This allows the device auto-bkops to be always enabled except
+> > during suspend (both runtime and suspend), with this feature,
+> > the BKOPS interrupt (log below) isn't reported anymore.
+> > 
+> > [  806.710763] ufshcd-spacemit c0e00000.ufshc: ufshcd_bkops_exception_event_handler: device raised urgent BKOPS exception for bkops status 1
+> > 
+> > Link: https://spacemit.com/community/document/info?nodepath=hardware/key_stone/k3/k3_docs/k3_usermanual/09_memory_storage.md&lang=en [1]
+> > Link: https://lore.kernel.org/all/20260918-belligerent-succinct-kraken-7fa592@quoll/ [2]
+> > Link: https://lore.kernel.org/all/20260916-08-k3-ufs-support-v5-3-1f5d71f1027d@kernel.org/ [3]
+> > Signed-off-by: Yixun Lan <dlan@kernel.org>
+> > ---
+> > Changes in v8:
+> > - enable UFSHCD_CAP_KEEP_AUTO_BKOPS_ENABLED_EXCEPT_SUSPEND
+> > - rename to "ref_clk", see explanation in patch
+> > - add delay between enable clk & deassert reset
+> > - respect bRefClkGatingWaitTime, add wait delay
+> > - drop comment of ufs_hba_spacemit_vops, which got CI complaint
+> > - rebase to v7.4-rc1
+> > - Link to v7: https://patch.msgid.link/20261002-08-k3-ufs-support-v7-0-bb39007ff9ae@kernel.org
+> > 
+> > Changes in v7:
+> > - check err return value of ufs_spacemit_quirk_host_pa_saveconfigtime()
+> > - Link to v6: https://patch.msgid.link/20260921-08-k3-ufs-support-v6-0-3479768a2299@kernel.org
+> > 
+> > Changes in v6:
+> > - drop unused macro and dev_req_params
+> > - use global PX_xx macros
+> > - fix axi clock name
+> > - drop dts patch
+> > - collect tags
+> > - Link to v5: https://patch.msgid.link/20260916-08-k3-ufs-support-v5-0-1f5d71f1027d@kernel.org
+> > 
+> > Changes in v5:
+> > - adjust clock names
+> > - add runtime power support
+> > - collect tags
+> > - Link to v4: https://patch.msgid.link/20260908-08-k3-ufs-support-v4-0-22aa2bd97d3b@kernel.org
+> > 
+> > Changes in v4:
+> > - fix clock and reset settings
+> > - drop function which retrieve value of tx_lanes
+> > - propagate return error of ufs_spacemit_dme_set()
+> > - check return value ufs_spacemit_check_hibern8()
+> > - drop call to ufshcd_vops_phy_initialization()
+> > - handle compiling warning if CONFIG_OF not enabled
+> >  add __maybe_unused to ufs_spacemit_of_match
+> > - Link to v3: https://patch.msgid.link/20260806-08-k3-ufs-support-v3-0-037fb322acdb@kernel.org
+> > 
+> > Changes in v3:
+> > - collect tags
+> > - fix dt-binding warning reported-by sashiko
+> > - fix low freq in opp-2 table
+> > - fix err checking in check_hibern8()
+> > - propagate err code in link_startup_notify()
+> > - update documents for event_notify()
+> > - ufs clock driver is merged into v7.3-rc1, update cover letter
+> > - Link to v2: https://patch.msgid.link/20260725-08-k3-ufs-support-v2-0-45036a2a2418@kernel.org
+> > 
+> > Changes in v2:
+> > - fix missing interrupts property
+> > - move ufs node to k3-com260.dtsi
+> > - convert freq-table-hz to operating-points-v2
+> > - rework reset_control, fix header and drop global variable
+> > - drop dump_host_regs() debug interface
+> > - converge and refactor dme_set() operations
+> > - massive reduce of busy delay() loops
+> > - drop vendor specific hce_enable_notify(), fallback to default
+> > - drop unused member from struct ufs_spacemit_host
+> > - add COMPILE_TEST support to Kconfig
+> > - comment style fix
+> > - Link to v1: https://patch.msgid.link/20260702-08-k3-ufs-support-v1-0-1a64a3ab128f@kernel.org
+> > 
+> > ---
+> > Yixun Lan (2):
+> >       scsi: ufs: spacemit: dt-bindings: Add UFS controller for K3 SoC
+> >       scsi: ufs: spacemit: k3: Add UFS Host Controller driver
+> > 
+> >  .../devicetree/bindings/ufs/spacemit,k3-ufshc.yaml |  56 ++
+> >  drivers/ufs/host/Kconfig                           |  12 +
+> >  drivers/ufs/host/Makefile                          |   1 +
+> >  drivers/ufs/host/ufs-spacemit.c                    | 655 +++++++++++++++++++++
+> >  drivers/ufs/host/ufs-spacemit.h                    |  77 +++
+> >  5 files changed, 801 insertions(+)
+> > ---
+> > base-commit: 6628e7d4c6b25c8d18f1345e3a20d21829aae7e4
+> > change-id: 20260605-08-k3-ufs-support-c8b308e415e2
+> > 
+> > Best regards,
+> > --  
+> > Yixun Lan <dlan@kernel.org>
+> > 
+> > 
+> > _______________________________________________
+> > linux-riscv mailing list
+> > linux-riscv@lists.infradead.org
+> > http://lists.infradead.org/mailman/listinfo/linux-riscv
+> 
+> Tested v7 and v8 successfully on Sipeed K3 Pico-ITX (32GiB DRAM / 128GiB
+> UFS model). Build and test methodology:
+> 
+> ### build chimera debian-installer with patched mainline kernel
+> ### assume fresh Debian testing "forky" build environment
+> 
+> apt update
+> apt install -y b4 bc bison ca-certificates cpio \
+>  crossbuild-essential-riscv64 curl debhelper fakeroot flex kmod \
+>  libdw-dev libssl-dev libssl-dev:riscv64 linux-config-7.2:riscv64 \
+>  python3 rsync
+> 
+> curl -L \
+>  https://git.kernel.org/torvalds/t/linux-7.4-rc3.tar.gz \
+>  | tar xz
+> 
+> pushd linux-7.4-rc3
+> b4 am -v1 -o- \
+>  https://lore.kernel.org/all/20261115195112.32120-1-e@freeshell.de/ \
+>  | patch -p1
+> b4 am -v5 -P3 -o- \
+>  https://lore.kernel.org/all/20260916-08-k3-ufs-support-v5-0-1f5d71f1027d@kernel.org/ \
+>  | patch -p1
+Did you rename clock name from "ref" to "ref_clk"? see my comment in patch 1
 
-> 1) If LIO is required (vhost-scsi, FC, SRP, iSER), serve the device
-> with ublk and export it via target_core_iblock. Same per-queue
-> io_uring, same user copy and zero copy path, no new uapi. Please
-> benchmark that configuration, with UBLK_F_USER_COPY and with
-> UBLK_F_AUTO_BUF_REG, same 32 queues and threads.
+> b4 am -v8 -P1,2 -o- \
+>  https://lore.kernel.org/linux-riscv/20261116-08-k3-ufs-support-v8-0-e3b256972dd4@kernel.org/ \
+>  | patch -p1
+[...]
+> 
+> Workload for testing is to repeat the above build steps on-device from
+> UFS-backed root filesystem. In v7 there would be the occasional BKOPS
+> warnings, and v8 here now no such BKOPS warnings.
+> 
+> I do notice some UFS-related warnings and errors in dmesg:
+> 
+> journalctl --dmesg | grep ufshcd
+> ufshcd-spacemit c0e00000.ufshc: freq-table-hz property not specified
+> ufshcd-spacemit c0e00000.ufshc: ufshcd_populate_vreg: Unable to find
+> vdd-hba-supply regulator, assuming enabled
+> ufshcd-spacemit c0e00000.ufshc: ufshcd_populate_vreg: Unable to find
+> vcc-supply regulator, assuming enabled
+> ufshcd-spacemit c0e00000.ufshc: ufshcd_populate_vreg: Unable to find
+> vccq-supply regulator, assuming enabled
+> ufshcd-spacemit c0e00000.ufshc: ufshcd_populate_vreg: Unable to find
+> vccq2-supply regulator, assuming enabled
+> scsi host0: ufshcd
+> ufshcd-spacemit c0e00000.ufshc: ufshcd_scsi_add_wlus: BOOT WLUN not found
 
-Done, with kublk from selftests/ublk (loop target, -q 32 -d 128, "-u"
-and "--auto_zc") behind target_core_iblock, against this series with 32
-queues. Both serve the same 2 GiB file on tmpfs. Same VM (32 CPUs) and
-fio jobs as in the cover letter, three alternating runs, median.
+Let's ignore the warning message for now, those shouldn't cause problem
 
-Over tcm_loop:
+> ufshcd-spacemit c0e00000.ufshc: DL error event, INT errors:0x4,
+> DL_ERR:0x80000020
+> 
+Seems relate to Data link error, I will see if I can replicate this .. 
 
-  User copy (UBLK_F_USER_COPY against pread()/pwrite()):
-  workload               ublk + iblock (MB/s) this series (MB/s)  change
-  4k randread, 1 job                      201                358    +78%
-  4k randread, 4 jobs                     614               1440   +135%
-  4k randread, 16 jobs                   4456               5899    +32%
-  4k randwrite, 16 jobs                  1206               2077    +72%
-  1M read, 4 jobs                        6444              15465   +140%
-  1M write, 4 jobs                       5638               6941    +23%
-
-  Zero copy (UBLK_F_AUTO_BUF_REG against fixed buffers):
-  workload               ublk + iblock (MB/s) this series (MB/s)  change
-  4k randread, 1 job                      195                330    +69%
-  4k randread, 4 jobs                     621               1674   +170%
-  4k randread, 16 jobs                   4051               5773    +43%
-  4k randwrite, 16 jobs                  1140               1952    +71%
-  1M read, 4 jobs                       27568              49666    +80%
-  1M write, 4 jobs                       5326               7262    +36%
-
-Over iSCSI on 127.0.0.1 (iscsi_target_mod and iscsi_tcp in the same
-VM, 16 sessions, one fio job per session):
-
-  User copy (UBLK_F_USER_COPY against pread()/pwrite()):
-  workload               ublk + iblock (MB/s) this series (MB/s)  change
-  4k randread, 1 job                      136                154    +13%
-  4k randread, 4 jobs                     578                698    +21%
-  4k randread, 16 jobs                   2516               2412     -4%
-  4k randwrite, 16 jobs                  1512               1739    +15%
-  1M read, 4 jobs                         613                716    +17%
-  1M write, 4 jobs                       3747               5218    +39%
-
-  Zero copy (UBLK_F_AUTO_BUF_REG against fixed buffers):
-  workload               ublk + iblock (MB/s) this series (MB/s)  change
-  4k randread, 1 job                      145                153     +6%
-  4k randread, 4 jobs                     576                679    +18%
-  4k randread, 16 jobs                   2740               2222    -19%
-  4k randwrite, 16 jobs                  1716               1508    -12%
-  1M read, 4 jobs                         778                805     +3%
-  1M write, 4 jobs                       5235               5262     +1%
-
-Through vhost-scsi to a nested KVM guest (16 vCPUs, 16 virtqueues,
-worker_per_virtqueue=on), fio running in the guest:
-
-  User copy (UBLK_F_USER_COPY against pread()/pwrite()):
-  workload               ublk + iblock (MB/s) this series (MB/s)  change
-  4k randread, 1 job                      335                213    -36%
-  4k randread, 4 jobs                    1436                844    -41%
-  4k randread, 16 jobs                   2341               2651    +13%
-  4k randwrite, 16 jobs                  1467               1640    +12%
-  1M read, 4 jobs                        8077              21991   +172%
-  1M write, 4 jobs                       5006               6943    +39%
-
-  Zero copy (UBLK_F_AUTO_BUF_REG against fixed buffers):
-  workload               ublk + iblock (MB/s) this series (MB/s)  change
-  4k randread, 1 job                      339                306    -10%
-  4k randread, 4 jobs                    1521               1030    -32%
-  4k randread, 16 jobs                   2589               1987    -23%
-  4k randwrite, 16 jobs                  1518               1669    +10%
-  1M read, 4 jobs                       37494              39978     +7%
-  1M write, 4 jobs                       4519               8240    +82%
-
-So this series is ahead over tcm_loop, about even over iSCSI, and
-behind ublk + iblock for 4k with few jobs through vhost-scsi. I have
-not found out yet where the time goes in the vhost-scsi case. With zero
-copy and 16 jobs ublk is ahead on both fabrics, which I attribute to
-auto buffer registration saving the two extra commands per I/O that
-this series needs.
-
-> 32 threads against one, over tcm_loop with data in memory, measures
-> only the hand-off. Please run a real fabric and explain the -13%
-> single job result.
-
-Same fabrics, data in memory, TCM/USER against this series with one
-queue (one server thread) and with 32. Over iSCSI:
-
-  workload               TCM/USER  1 queue          32 queues
-                           (MB/s)   (MB/s)  change     (MB/s)  change
-  4k randread, 1 job          138      157    +14%        155    +12%
-  4k randread, 4 jobs         538      679    +26%        685    +27%
-  4k randread, 16 jobs        720     1101    +53%       2631   +265%
-  4k randwrite, 16 jobs       859     1228    +43%       2161   +152%
-  1M read, 4 jobs             756      799     +6%        765     +1%
-  1M write, 4 jobs           2263     6075   +168%       5379   +138%
-
-1M reads over iSCSI are limited by the loopback TCP connection for
-every backend here (retransmits and zero window stalls), so that row
-says nothing about the backstores.
-
-And through vhost-scsi:
-
-  workload               TCM/USER  1 queue          32 queues
-                           (MB/s)   (MB/s)  change     (MB/s)  change
-  4k randread, 1 job          201      237    +18%        238    +18%
-  4k randread, 4 jobs        1095      902    -18%        843    -23%
-  4k randread, 16 jobs        957     1119    +17%       2865   +199%
-  4k randwrite, 16 jobs       749     1098    +47%       2599   +247%
-  1M read, 4 jobs            5373    15317   +185%      56532   +952%
-  1M write, 4 jobs           2064    10948   +430%      27074  +1212%
-
-On the single job over tcm_loop: one fio job submits from one CPU, so
-only one queue and one server thread are in use and it is one thread
-against one. The TCM/USER handler finds the data area in its mmap and
-takes a whole batch per wakeup, while the server here issues one
-pwrite() per read on top of the io_uring_enter(). Counted over the
-whole system during that job, that is 1.1 system calls and 0.27 context
-switches per I/O for TCM/USER against 2.2 and 0.39 for this series.
-
-> 2) If the goal is iSCSI for userspace storage, keep the kernel out of
-> the data path entirely.
-
-The goal is the fabrics LIO already has, vhost-scsi and tcm_loop as
-much as iSCSI, for setups that run TCM/USER today.
-
-Thanks,
-Qiliang
+-- 
+Yixun Lan (dlan)
