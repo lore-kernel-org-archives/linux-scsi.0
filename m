@@ -1,56 +1,55 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794931077;
-	b=OGMH9tnJ7PC6FRWyHcrRdvMexpA8NNh08c0lyHHSRrLxvfE2+9RfazDvtxYbFWBUB9S7
-	 1nNIBdXgl84Zv14W0VeJnSk01sgfpzDMh0eZUL0zmle3aZ9dDwSSORnqroqMfOlEzQpFe
-	 u4yrUuCIHaamXZ01IYvPAxZgB8noVxaFjqB+zVKtTA1Dd4/9Jn9kUuJqJGofDpkyxB4Ao
-	 WzMRfQ4oEQhkt3qSGC6JNHBw2brG8aP96M48xG1ofxtH6AtAGsDrByPG82ftorlDdccRw
-	 eqNDYnHFulwVXFdT8pW4ls4fXl7SIeWocwBmdcn16LAFwYZdai/rYqYj2LELGrr42Pg==
+	t=1794932446;
+	b=ylSvHpqSZiQO7kla5ia4VwTRBdO37k6xX+ucRIGva7OxjKAIz4zPdPhHGteZ5c/AVbvn
+	 Ip6emIMy3iN+kTHFq5wF1xN4WlGwa5ahM5D6M3c2xBYVBk1MmnxtCtHQE5GffO3sJnTfH
+	 UToS9Sznk1lSxX7ECWh39yfPvguN4NQndjXsKVgcYD1h6ioVUoj6KbvN0IEVVzEdJKgb/
+	 zPRgswYKZQdoJplPOncLvyHK1YrzQeC7quv3kzhS9qVP5kFLm4vkv/+DXQVHXn+5cSBup
+	 FEaxQDJkQr8b/nDmuZMQUUEy3LyG63BoTL7W9+ViMHrFeQlpscuG4uhWONJfG8yqZag==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794931077;
-	h=Received:DKIM-Signature:From:To:Subject:Date:Message-ID:X-Mailer:
-	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=zHMnUL1+/CyX4MoE10A6pC0xIc4IIoSrgMcTbaBIueg=;
-	b=RRV3oBT6BQ2yMZipLqY7mmDzP3dxrd6TDsHoCgpL5MTtzvoUtJR28GMi5ATvbmbzvOyu
-	 PQjcGjUFDuV3F7WgJSi2oCV3dUKBLjPXWKQHstWoS9dd099bz2Th4QmO3jjKAoQ+LSae0
-	 yUOoIV+GJB0/msSrXewBs/wcmiiPVnuTim/6knNjGnRmyEm+OIEPKc75p0zYNqcASUyIG
-	 KU0eeQVwkUR1QVp+jMiVGC22A83KJOii2qax0kBWzg+KSXTaaIg5Lq1GzZVsVs+Cjfsjb
-	 oge3DkMSqQ8DwwjrZKGt8Ox50bSYjnXCSl/85EGIzibtt3IYaKm/GziQbXJm4CtWQuA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794932446;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=OFUeUW/IJn00Ly8M9lqyTGyBs7kJjV1mZKpzhgZy8Xs=;
+	b=qSRXs6gEL/8+YzmQhw9+/9Y60x/lsnHFAFvC6zLMkv+p7ZZqlOAULVO/Igc+vNVRSmKp
+	 +22m84cEN8IX6b1VHSKp4IegP6FKoZEgTShj3QhVLUKfvEIqqbS0yYcT7j6mExg2re51W
+	 PcvRYXpu6bCH96p0SH/RiS22HvIG02h+e0s1YOad4hWwX9RT6WVI3jOWYnpP/tZYJvpOL
+	 N0C54Cu5lFuiB+VUyk/3dzz36YnANTDg2OHBFBDyWCU5lSD2Pd+8MzRHks3/6h5hizPoX
+	 MMcwqjRMr4QYredu4o3SVa4KfwhbxB6KzmKvOFLFmCdBDAX+HsmvngaDhhd1I+ZQXRg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GeDNZ5ed;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=O2aR0Gnh;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23603606A33F;
-	Tue, 17 Nov 2026 15:57:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA193606A32A
+	for <linux-scsi@vger.kernel.org>; Tue, 17 Nov 2026 16:20:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GeDNZ5ed
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2DAB61F000C6;
-	Tue, 17 Nov 2026 15:57:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=O2aR0Gnh
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7050F1F000C4;
+	Tue, 17 Nov 2026 16:20:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794931077;
-	bh=zHMnUL1+/CyX4MoE10A6pC0xIc4IIoSrgMcTbaBIueg=;
-	h=From:To:Subject:Date:In-Reply-To:References;
-	b=GeDNZ5edgzlMYFbFcpdvjYqzvR3sIgUvzFHFAfrJWXmKU0MLXd9v20RRr6/Zy2Hm9
-	 nPwCRU+L16/Nu7ZqTP2xsW1KSO3OGcEdOMC4BsrO6f8dDOkfNlUIt+zEE9Dqj7IEeN
-	 Uc4pN8RlV/6+w6tFWNugupG4Xwrf9rEMMFnLDr7+HIAIgwsoSj6P5AbEqkdjB12tMF
-	 wPbDfKogew9TsXZg3COObD7guU8B7Q1r3RCbdyrE0axb6rkEeJY2AQjwbXY7TRNyk5
-	 +a6soe+EOWzOqd0KeYZwyMOIBLgbLxqsZiKBlNy1AK1NMEuoXjc4cUcCScP7yftUu4
-	 m+XAvLWp8fxpQ==
-From: Damien Le Moal <dlemoal@kernel.org>
-To: Jens Axboe <axboe@kernel.dk>,
-	linux-block@vger.kernel.org,
-	Christoph Hellwig <hch@lst.de>,
-	linux-scsi@vger.kernel.org,
-	"Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH v12 13/13] scsi: sd: fail read commands to offline zones early
-Date: Wed, 18 Nov 2026 00:57:39 +0900
-Message-ID: <20261117155739.304506-14-dlemoal@kernel.org>
-X-Mailer: git-send-email 2.56.1
-In-Reply-To: <20261117155739.304506-1-dlemoal@kernel.org>
+	s=k20260515; t=1794932446;
+	bh=OFUeUW/IJn00Ly8M9lqyTGyBs7kJjV1mZKpzhgZy8Xs=;
+	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
+	b=O2aR0Gnh81URH7WYxeNP+hiS/dR5AgS+Aro2zaDPVu8kdBkKPd/wnvAHH/WBwGMXZ
+	 dVV8bHLsUhWnocnvabhKly19pMo/64Z3ldeWacFbpSxsopY1C+09/VTqFx8+FVXy5D
+	 o8Oi9/YaXKYMlpGwP2dchq2MpHU9ZVO3Ia/FZm1eYpiARsnKP2lsvrUiNOUPcMVd98
+	 +jrrTYlUB0M3BqLsEuQ5nRsezdLYJOyTgM5YcnbKjinSDvps0pjZwfh2fO5E7TpqwE
+	 D/4jnyYtQVTLHBvfIq60JHzlyzgOruOEro5n8P8iZVQdjZmZyhUly8cp+RlDdjaWoL
+	 jqQibglOqAZ6w==
+Message-ID: <sashiko-outbox-219155@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v12 08/13] zloop: add storage element emulation
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Damien Le Moal" <dlemoal@kernel.org>, linux-scsi@vger.kernel.org
+In-Reply-To: <20261117155739.304506-9-dlemoal@kernel.org>
 References: <20261117155739.304506-1-dlemoal@kernel.org>
+ <20261117155739.304506-9-dlemoal@kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 17 Nov 2026 16:20:45 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -59,70 +58,99 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-Issuing read commands to offline zones of a ZBC disk will result in
-failures. So do not issue such command and fail them early in
-sd_setup_read_write_cmnd(). This change also checks write commands, which
-is fine but should actually never happen as the block layer zone write
-plugging code already fails write BIOs to offline zones early in the
-submission path.
+Thank you for your contribution! Sashiko AI review found 1 potential
+issue to consider:
+- [Medium] zloop: serialize zloop_ctl_remove() with storage element ops
+--
 
-As the code comment explains, since disk_zone_is_offline() uses the block
-layer cached zone condition, this is inherently racy with zone
-revalidation updating the zone condition. However, this will never prevent
-valid read operations as the only case where we could proceed is if the
-read is received after a restoration of the disk storage element completes
-but before the zones are revalidated. And in that case, all zones are
-empty and thus have no data to read.
+commit b2e9213b7a22038d3fa09a4110dd9d6ac106045b
+Author: Damien Le Moal <dlemoal@kernel.org>
 
-Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Martin K. Petersen <mkp@kernel.org>
-Reviewed-by: Hannes Reinecke <hare@kernel.org>
----
- drivers/scsi/sd.c | 20 +++++++++++++++++++-
- 1 file changed, 19 insertions(+), 1 deletion(-)
+zloop: add storage element emulation
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 34b44d72b2b7..8b1c05de541d 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1424,7 +1424,8 @@ static blk_status_t sd_setup_read_write_cmnd(struct scsi_cmnd *cmd)
- {
- 	struct request *rq = scsi_cmd_to_rq(cmd);
- 	struct scsi_device *sdp = cmd->device;
--	struct scsi_disk *sdkp = scsi_disk(rq->q->disk);
-+	struct gendisk *disk = rq->q->disk;
-+	struct scsi_disk *sdkp = scsi_disk(disk);
- 	sector_t lba = sectors_to_logical(sdp, blk_rq_pos(rq));
- 	sector_t threshold;
- 	unsigned int nr_blocks = sectors_to_logical(sdp, blk_rq_sectors(rq));
-@@ -1456,6 +1457,23 @@ static blk_status_t sd_setup_read_write_cmnd(struct scsi_cmnd *cmd)
- 		goto fail;
- 	}
- 
-+	/*
-+	 * The block layer already prevents writes to offline zones of zoned
-+	 * block devices. But there are no checks for reads, so check this here.
-+	 * Since disk_zone_is_offline() uses the block layer cached zone
-+	 * condition, this is inherently racy with zone revalidation updating
-+	 * the zone condition. However, this will never prevent valid read
-+	 * operations as the only case where we could proceed is if the read is
-+	 * received after a restoration of the disk storage element completes
-+	 * but before the zones are revalidated. And in that case, all zones are
-+	 * empty and thus have no data to read.
-+	 * Note that we are quiet about the error (no message) to avoid flooding
-+	 * the kernel log.
-+	 */
-+	if (sdkp->device->type == TYPE_ZBC &&
-+	    disk_zone_is_offline(disk, blk_rq_pos(rq)))
-+		goto fail;
-+
- 	/*
- 	 * Some SD card readers can't handle accesses which touch the
- 	 * last one or two logical blocks. Split accesses as needed.
--- 
-2.56.1
+This commit adds storage element depopulation and restoration emulation to =
+the
+zloop driver, controlled via a new stor_elements option and exposed through
+zloop_se_ops.
 
+> diff --git a/drivers/block/zloop.c b/drivers/block/zloop.c
+> index 6bb68022ab30e..a4536e6240c0b 100644
+> --- a/drivers/block/zloop.c
+> +++ b/drivers/block/zloop.c
+
+[ ... ]
+
+> @@ -1388,6 +2022,12 @@ static void zloop_forget_cache(struct zloop_device=
+ *zlo)
+> =20
+>  	pr_info("%pg: discarding volatile write cache\n", zlo->disk->part0);
+> =20
+> +	/*
+> +	 * Serialize with storage element removal or restoration that may be
+> +	 * finishing running during device removal.
+> +	 */
+> +	mutex_lock(&zlo->stor_elements_lock);
+> +
+>  	for (i =3D 0; i < zlo->nr_zones; i++) {
+>  		struct zloop_zone *zone =3D &zlo->zones[i];
+>  		struct file *file =3D zone->file;
+> @@ -1418,6 +2058,8 @@ static void zloop_forget_cache(struct zloop_device =
+*zlo)
+>  		vfs_truncate(&file->f_path,
+>  			(old_wp - zone->start) << SECTOR_SHIFT);
+>  	}
+> +
+> +	mutex_unlock(&zlo->stor_elements_lock);
+>  }
+
+[Severity: Medium]
+Can zloop_ctl_remove() finish and return to userspace while
+zloop_execute_restore_elements() is still truncating zone backing files when
+discard_write_cache is disabled?
+
+zloop_forget_cache() is only called from zloop_ctl_remove() when
+zlo->discard_write_cache is set:
+
+drivers/block/zloop.c:zloop_ctl_remove() {
+    ...
+	del_gendisk(zlo->disk);
+
+	if (zlo->discard_write_cache)
+		zloop_forget_cache(zlo);
+
+	put_disk(zlo->disk);
+    ...
+}
+
+When discard_write_cache is false (the default), nothing in zloop_ctl_remov=
+e()
+acquires zlo->stor_elements_lock to wait for an in-flight storage element
+operation that passed the Zlo_deleting check just before removal started:
+
+CPU0                                    CPU1
+zloop_restore_elements()
+  msleep(5000)
+  mutex_lock(&zlo->stor_elements_lock)
+  /* zlo->state !=3D Zlo_deleting */
+                                        zloop_ctl_remove()
+                                          idr_remove(&zloop_index_idr, ...)
+                                          WRITE_ONCE(zlo->state, Zlo_deleti=
+ng)
+                                          del_gendisk(zlo->disk)
+                                          put_disk(zlo->disk)
+                                          return 0;
+  zloop_execute_restore_elements()
+    zloop_restore_zone()
+      vfs_truncate(...)  <-- runs after device removal completed
+
+If userspace re-adds the device with the same ID or accesses base_dir after
+remove returns, the ongoing truncations from the old instance race with the
+new accesses and corrupt the zone files.  Acquiring zlo->stor_elements_lock=
+ in
+zloop_ctl_remove() after del_gendisk() would serialize removal regardless of
+discard_write_cache.
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261117155739.3045=
+06-1-dlemoal@kernel.org?part=3D8
