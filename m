@@ -1,95 +1,98 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.50
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.215.174
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794923958;
-	b=SM8YOeVzjbioHAma1Bp+NWDHol0TGJ0KV7kIm+dS3lUlS2aWlDQsOtJFQHJ+9pdBn/D0
-	 dXGbwaB/fEsWT5L4tNKmnXLMh+9DabTkzKYZcinAd4KFto0gTJGHD+PwOYC1rR54/vPU3
-	 be1Awz1svLGHAtwIf4Zd/VW06HKj/4uNYzeIoJD7KPZ/Tlh4ul//YiO4wtYC1hAH3AY1A
-	 icqcPUn3vP5gxfghp4cjtkW91hu4rtCYyvCJ0WQWWNPt95hrugctkz5732U1cpUuecs8J
-	 UNOyDyEZ384xT8p1UXPHet24nDYZtdL0MD+b1mXJybIW9iCqdoQct5nzmIsVKvDG2qQ==
+	t=1794924323;
+	b=1FRBK29a/psMhoTjbwRMp+WLoEKq3DIGN3LkJaJCFpbViY5PM3r3oXCUoXRrcn2eN2oH
+	 tSdUAMOE66aTSxib/RcjkoIgr3y5zeS4u/gO7yc14ywCuiyoxVG+Q6sLJzv41WDa14a2q
+	 PPP+eyK4/Zx/eBvS7xn0Se7zNlSArEle7x3awV681il06Mck7VI1KNSkvK4ljxTWQoAs7
+	 j022YuvK8z4+VF/JqHlGxQHmwmsIy+h9N1CK8QxxvaRznHMsmj180g8p0KolOLjmn7Aww
+	 5RpNufbIvJ1wcGFzJLx1OBUXZlSExHkvrVmJVYVZbVAvsly6XAF6b5Cqp4KIz7+HoUA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794923958;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794924323;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
-	 Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
-	 Content-Type:Content-Transfer-Encoding;
-	bh=XtryOjbj112s/FbZiYb4p7ikDeRzOqgkM1BkJxQSuEc=;
-	b=FabrrkK5AR09Aybi3bqjXxI85/VaUoeRjSGSERdHWo/517Xuuf4FLq1/BiS9kb+gF0Y5
-	 BzwwN/NxwHy3zxf5FAhhbbTR7X5IylbTHX6Ao24m8RDeUV8lcJD7eHsgjAxW0fnUhylCF
-	 tmOcMr0bS3IzhUtfuArBm5rE0sK9aSH07PvHttjspygHkNENpWO+Lju4CTTcHJHM848fi
-	 jCNENHpJOtZ9jM+xR8cVL50O6rvCRoQtUP+/tu8sTS2+oTM1QF3slb5Dpt16UfFUwwzn6
-	 FHCgZ+Ocqp0suv0FG239jBEshRrfwGs5/FPadpN54NJ2UVjFjI6+sleo1iE/2Tt4L7Q==
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
+	 MIME-Version:Content-Type:Content-Transfer-Encoding;
+	bh=IzbGVjgREwr9IrIK+xSlw1aYmIcPEF/XveJxpgUjaVI=;
+	b=yMVTJ1WlNEpvlwuyqpOQuvOpe6tux2509GlINoyAIwGtGlBPMiT3EMeAH94BuT/YbXY4
+	 rRID+diJ+NMOsxzsnk+93A14jeaY3J4NLqPOxk2xQURtnUMARe9uROCvW0qBSwlGow8su
+	 rJeSl6b4nr25Nf/jwFVRdCKLjEcTurjJOd7Z8iQo06xu40V4ebluPRoIJNmsnkfOsg0ss
+	 DZOsHUOOc+m1CXierPHBdd4ypHfsDbMpuf+mzYR6SnoPXrLrHYBtCLXdmJMg2ixjhFW7V
+	 G5qeZtRwXVrG92GpL0drImsMmuTrSyNOjPnbB3l4LCW3vRPYVsYuil5uYk18uZb7uKw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=fail header.from=isslab.korea.ac.kr;
 	spf=none smtp.mailfrom=isslab.korea.ac.kr;
-	dkim=pass header.d=isslab-korea-ac-kr.20260707.gappssmtp.com header.i=@isslab-korea-ac-kr.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=M9KIg742;
-	arc=none smtp.remote-ip=209.85.216.50
-Received: from mail-pj1-f50.google.com (mail-pj1-f50.google.com [209.85.216.50])
+	dkim=pass header.d=isslab-korea-ac-kr.20260707.gappssmtp.com header.i=@isslab-korea-ac-kr.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=BBlemqxn;
+	arc=none smtp.remote-ip=209.85.215.174
+Received: from mail-pg1-f174.google.com (mail-pg1-f174.google.com [209.85.215.174])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D85D606A329
-	for <linux-scsi@vger.kernel.org>; Tue, 17 Nov 2026 13:59:17 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1D85D606A329
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 286B1606A32C
+	for <linux-scsi@vger.kernel.org>; Tue, 17 Nov 2026 14:05:22 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 286B1606A32C
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20260707.gappssmtp.com header.i=@isslab-korea-ac-kr.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=M9KIg742
-Received: by mail-pj1-f50.google.com with SMTP id 98e67ed59e1d1-3b08a162d4bso2657167a91.3
-        for <linux-scsi@vger.kernel.org>; Tue, 17 Nov 2026 05:59:17 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20260707.gappssmtp.com header.i=@isslab-korea-ac-kr.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=BBlemqxn
+Received: by mail-pg1-f174.google.com with SMTP id 41be03b00d2f7-cde0daf3a2aso742578a12.3
+        for <linux-scsi@vger.kernel.org>; Tue, 17 Nov 2026 06:05:22 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=isslab-korea-ac-kr.20260707.gappssmtp.com; s=20260707; t=1794923957; x=1795528757; darn=vger.kernel.org;
+        d=isslab-korea-ac-kr.20260707.gappssmtp.com; s=20260707; t=1794924322; x=1795529122; darn=vger.kernel.org;
         h=content-transfer-encoding:content-type:mime-version:references
          :in-reply-to:message-id:date:subject:cc:to:from:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=XtryOjbj112s/FbZiYb4p7ikDeRzOqgkM1BkJxQSuEc=;
-        b=M9KIg742SBgIQeYompj7Fh94nLJshcaEeA2qLr+rgumLSfglJpZspU5ZdIa3jTpsUl
-         YRv8u8G/OvsBIeyqLRVTU1OgarHC+6pJkt2bNnZSgZH1p3yZ52hsF4uQ2TUAAhXGXwlw
-         KcDu5RLOp7sSzjStjr3AUKxUow74rdR7oZiMdgW6mMEdbF5bgrNMiYSKtmdIXyo2EXn0
-         WM14Sy6gBUc/8IRPe8A5rC1Lb8rIVEom49QziWaeoTBDQGNDp975CIqZrlZTw6cPQVcB
-         TiojMRBKOkr4lZmo3Dh6zqnIVA2z00wtVmeaOYo/Dteoejub2xT88W2Sj1h3aXuj79qq
-         r+tQ==
+        bh=IzbGVjgREwr9IrIK+xSlw1aYmIcPEF/XveJxpgUjaVI=;
+        b=BBlemqxndtn1LGN4lASfmZWK53JwgEvRUfKb0TF8DXG+BE9AgftjnNwXyXDetVobUA
+         btHwhojvdic0e+IEoGQvrSYgHcC857Al0GuA4DYTnUilPkWyDm6IsD96VjqgWW+4J71a
+         rKnc1ouqTmSMqFsUOeyxJ33ziK8iDRaLNSy6F6xnj/OrG6RI0cHD8c6s0cR82b0QCLQC
+         XPhVH0TfQYHt9xIwfEe7UM/8xUI/LUIxNpplpDn5o7MSSKpIBkdx0bs9kxHAaRAsC9NU
+         0vWweGxk5GyF79U9zM3LAKoy2ma1vvZvOA85n0fcq6hdnm8pgMBzb3Sgnq+wYpm3d6jX
+         mmTw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794923957; x=1795528757;
+        d=1e100.net; s=20260707; t=1794924322; x=1795529122;
         h=content-transfer-encoding:content-type:mime-version:references
          :in-reply-to:message-id:date:subject:cc:to:from:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=XtryOjbj112s/FbZiYb4p7ikDeRzOqgkM1BkJxQSuEc=;
-        b=uN4IUf5RoSJuHEoxpBL9q6VSu4KwMH88m31PoW4GSIX7O7FHEmm7Otdl2MIX5njt+i
-         51+ouvhkSmnhJj0MuIzjJzGy5u1duj7I812N8dVHQAdQf8KvkcUKjpzklSZP4Cp3EUVN
-         7ysFe6wxXtKVwY4A1W6kbW6KRRJDcy1vK9+Paa9chbPvpiYLr1gy2KSTuKOKMpfqDRyA
-         i1R/z12WJc2leVz/sHJnI81wjfDAwaGRXZnoDFCggnwyZu2zv5bSBK5gY4saz2orXg7p
-         YgwEN4D1Z+p08Hmz/paaDz3f/nc5jWZgqgjLi54KTCFzfkslzIweN4CRAZHS/jcPA1LO
-         iukQ==
-X-Gm-Message-State: APuU4Z/3O1ZrGI04VNWssA7WSSiBYcmmESVUujMrH1IYAC/1y33VWLSz
-	ruxEFLwC/kVCglauG0UDHNAbUL0pTv1P/xNXxRMIR0vX0bkoJ5m2JgiLY0jTTc4UpgA=
-X-Gm-Gg: AZFdTZeCfhQUY+c+AG9Uk+FeKLwZCrdq9/40XzwNFGWxuEA151i+ShI1zYKJg+ZDat4
-	mmeN5clc748HS0lplASO4jC+1N71e+AZhTZArnXB/cnxSjNV54zI0i52hdAf19VYtwsYE0dYv39
-	QImUg+uO02BnuRp25BaSzUZ0LIOAg+g6BR/H2n19MF0q7WuWNz/YanMu+AYZHTzhvr7AvPWwyTP
-	rqBiJEXOQtwFqNxqxEl45k1TspGzaR620RRfZGUNJe8K3FPk+pBFYNpWSXTlt8IkbVd7v0/0ULi
-	v+NlHvynkTZKoKW50ayQl0lHVLJVl/UgjueVrqcc4/yLJwuRGXC4YOROfJcm4X2JUz/aieEdMfc
-	OktqymZU93sVg1G7esMq/ajBTT0C1GIWvBTwm4R3BkxBzawjlI1xaSJL/fbeO0B3MfzKDNRAMwf
-	cVPnbF6tQCR/C4jWEZYpDB/Tzf6+q6M+ZZFVFv5w4KCTg50cvo8uu+j7+LDcJGB+2r+VP/Nkn6F
-	Hawe1QHk0P0Vr5Nflnuao2jhnoE8v4PGfACoCeX4+AsvF0FZDTaYfe5Sllgatb9xE1oS7yIYkd+
-	KiAuMPu/TxsqBiYOMrXP2zQE2oIkGRYY1g2STugjpvNLEC/tSvwNhh+k1L5jD3nbG9eLa8m3R1u
-	fjDDl8utTw6/835pmqSV7CWYsPLcuZMY6xHhXuA==
-X-Received: by 2002:a17:90a:e710:b0:3a8:92a3:8baa with SMTP id 98e67ed59e1d1-3b1b0a428b8mr11934736a91.27.1794923957381;
-        Tue, 17 Nov 2026 05:59:17 -0800 (PST)
+        bh=IzbGVjgREwr9IrIK+xSlw1aYmIcPEF/XveJxpgUjaVI=;
+        b=c/3sVdicSm90K01du/OXTT/sa0bEKEVdp1Z/ZGa7X0T0yMBCwLMDp6gIBiPI0xhc8L
+         1yzKSnzjiguFQV4G+i0+KRiUkep/Y90/NKj1OFF0uZrxjHBCQpReCiPzxIyva/BRohPY
+         4oTeRhJkG6afETnmtx1JaEL1EpnV50Smo8LdiupuFL0siOCzmC+tqVqO96dmx1uoUtoH
+         dC8L77psnAhM9yhu25BvK73zhWMZG+KpQoonRyOeFs4jGK6+vvD2jIbJCP7VfEtl4uo8
+         aJWXTvbrhl6A2Xcas6mQxniGp4q+wV6YsgXVo0SsCycgC98E/r6kixY8neQQcGpfY0JC
+         IFnw==
+X-Forwarded-Encrypted: i=1; AL+hErG3vO/iXjMSW0damCgQVIsHODxnL/htAH1CRDKwEjke7uxM6/ucqKpJ27yT+208UgToMCvzewNls30g@vger.kernel.org
+X-Gm-Message-State: APuU4Z8OTRI75t+UStykRstv/GK88smEL3BnwztejbkI2kzP5NHKkuJH
+	YPcm0Gxqw2EOPMnbr91o9P459/ff1acvlASPHOh2mEFDzmDiSQV69h/+xHyajyh6hJo=
+X-Gm-Gg: AZFdTZd0z6ashApz0vb51iS88n9KIi8qGdBKLSuIseUxtawdyvZ9eCEVZ8rVWtDqrlh
+	NNfIUFcaidruLvtjDCreO0oT3HCDQCNvDv4amA7SkNOI2xczOXGrWF5JqVjWGHkplhWUXrAGv8y
+	MrXDWHYtSJy7IoNNlfAJX15gk9U4MJDr9YmeSTHOYKp/5983zvlAOz/dU5hC266vjIhnZGysRZP
+	x2fWHNxhV/fu32UbKQqn1z6Gr+OtsKjyfLaCE3Gd0VBQj/Cle73AHuwdomllYNaZ/vMnAccoanL
+	yrkmDR7zDVIi1In41maqnNtKLqX9kS/U8eF3YtundfxHptTY7ooH/NHIflwyeWl7pd5jblYTLlU
+	i41GXBHAzuby+GFE/mHp5asKFt4PEGZlY8Yg30sRocL03IoGHzTg+E91aHbo8mx8fWYCcy81CTX
+	lJSaGVtyi2fG7i86uAEAdQBdnFh55OlTZc7EbCTXLSHDQDUOv5/v4v571PDuhUXkfG0EH9fNmWN
+	PwjoFLv7h+Djyya05z2QSl9ipMYmzNGjAtqUqts9Tq1XFWFeitcLRN7wr27JRQHB+rk5AeBIO/0
+	b9RALEZwvmBIiGP/ITd//aQG4wsEPHlPHoRaYj68YU1jDYp1CAj7YM5drf2xa/rIPXe/dpQodNf
+	U2d4G7fyeHCtfXdA8WM2Fi6QIb5EvMGhrbSFjDBFxrY9wNh/LV1hvEjrX4Ws=
+X-Received: by 2002:a17:90b:4d8f:b0:3aa:fc22:8ab4 with SMTP id 98e67ed59e1d1-3b1b0a1ef17mr12600696a91.29.1794924322403;
+        Tue, 17 Nov 2026 06:05:22 -0800 (PST)
 Received: from yhlee-960QFG.Davolink ([2406:5900:1044:110c:73df:c7da:8e76:82c5])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b1b3a21769sm11768056a91.4.2026.11.17.05.59.15
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b3abeaf532sm4292931a91.14.2026.11.17.06.05.19
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 17 Nov 2026 05:59:16 -0800 (PST)
+        Tue, 17 Nov 2026 06:05:21 -0800 (PST)
 From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
-To: mkp@kernel.org,
-	James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 0/3] scsi: mvumi: do not free or reuse buffers a timed-out command left with the device
-Date: Tue, 17 Nov 2026 22:59:09 +0900
-Message-ID: <20261117135909.2090997-1-yhlee@isslab.korea.ac.kr>
+To: sashiko-bot@kernel.org
+Cc: mkp@kernel.org,
+	James.Bottomley@HansenPartnership.com,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	zilin@seu.edu.cn
+Subject: Re: [PATCH v3 3/3] scsi: mvumi: flush the event work before the host is freed
+Date: Tue, 17 Nov 2026 23:05:07 +0900
+Message-ID: <20261117140507.2098571-1-yhlee@isslab.korea.ac.kr>
 X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20261115122153.1446810-1-yhlee@isslab.korea.ac.kr>
-References: <20261115122153.1446810-1-yhlee@isslab.korea.ac.kr>
+In-Reply-To: <sashiko-outbox-218911@kernel.org>
+References: <20261117134227.2077013-4-yhlee@isslab.korea.ac.kr> <sashiko-outbox-218911@kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -102,8 +105,21 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-This is superseded by v3:
-  https://lore.kernel.org/all/20261117134227.2077013-1-yhlee@isslab.korea.ac.kr/
+The wait is real.  An event work that is still queued or running once
+the interrupt is gone can only finish by timing out, so
+mvumi_detach_one() and the mvumi_io_attach() failure path can take up
+to 45 seconds when an event is outstanding.  The work items run
+concurrently on the per-CPU queue, so that is one timeout, not one per
+event.  Without this patch the same work runs on the freed host instead.
+
+The APICDB0_EVENT after CDB_CORE_SHUTDOWN is not new: without this patch
+the event work can submit it at any point during or after
+mvumi_detach_one().
+
+Both go away if removal first stops the work from issuing commands and
+drains it before disable_intr(), so that a command in flight still gets
+its interrupt.  I will send that as a separate patch on top of this
+series rather than respin it.
 
 Best regards,
 Yehyeong Lee
