@@ -1,55 +1,56 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794918372;
-	b=eVPboY87WER3fAs43QnxxMfX805b3rM/D+H2fsyyZsMZ7NALs3kBLRXcBY0+FX5Nf5zs
-	 /Qc92yGYicAvvD4XdfwAimI3Qy0SgiRl2b+5HO0zVhp3yZEblmLCdCEFWu4jVyq8JO4oQ
-	 cYeXmb5NenSNZxKWa9mk4J8dXslU9tR6eyazrirU78TmELe9A63AIMUbi7ydDyB1/kDwd
-	 +mUogZarr1HTEkIS6BM959pDgy7TffEHEYWGZ4/F02XuK+K/8Mmkrepi1A+n0GGNyHmKB
-	 RUIkHJHDFnB/Vbl160U1gGsWzRWDrUU0FU6Q8iiRS85b4K9nhVBhOOaqcSjddUrSoCA==
+	t=1794918604;
+	b=fDjQYm/a/Cml0Hst+SLMOvmBHqVgrxSwC8yMP6yAgMUPwgDLO89UxcBDlVEpw15Wu4gI
+	 OtrVTxFv9YaseXKkjSfb+DMt9ibuc5bYDuD7f9O2PkAeIFXtV0ZOmXaN9fqhme6Ie3Jsi
+	 O2OpgdrdxzyEyhVR+qGMn4l4x8jzou/Eaiea95eqjBSL74CXCb3TAJmICmk0lzVKFt9tD
+	 R2ts14w3vas+b6QXGattxEFcNW+TNgAgr0g8mORxxAWiNk8smkUoeX1AzP6mQHEj+fywI
+	 wsi1pg5UlLA4XNAlv08ygKuV5SdjgedMUxAgjCNZZLEcw5JMDMYZB1ekZ4buPtz18CQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794918372;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=IxmyzYA+9luc/wDXbCQmmtp6FwQZD6abU4fHt1J+Ma0=;
-	b=EonoKmVBiXVTOwlMV7eY+8OuI/UJ08IdAo5K81rdIdcmwgSXxOrIP5rfYcoynqJziqAY
-	 +XCFnxBKFe0y039jNs7/eRpUWrBzKa3vHnKiSccvxInsUMiSFr87jeg4HRG/1XJRQdulv
-	 aPJP4bnVRnqTVtQsfd1iPuvsWCdoMAdp8BybrFP4dL7CDY8ULYBlkqAi7cZHOQGE8CiHY
-	 7zvp8fCHqJX1f4+fgSsyvsijPc/nMQpyyuxd7V+Nc6kjNfnNraN26hr7tSfm8lDPQoZMY
-	 JluPTD9RQLRJ7chBrV5KtBKFNJh0pRMErDFbQMsbfhihG6yQV6NEYmnyg2Jd+PKHeUw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794918604;
+	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
+	 MIME-Version:X-Developer-Signature:X-Developer-Key:
+	 Content-Transfer-Encoding;
+	bh=H7dl4Z0zXU3PtsfJzlRQag9x+xyF/BDC8NJp2gQXUeY=;
+	b=ea9FlsGQa6XpWWBzex6x2g9/v4W/h8ty2EI2SMKT8TgnCq4CmoUZGcDnAgc128bJgVnI
+	 NF9qQUsp34rZ0mQVKMTYICs5ANfiBBPPz0GjxkOUnB8WoZpXGfrnFDLaCS4VoD6NRvtK/
+	 eVyfn+G8B+HLpvj8CQqzfuhFzfzmws7bZmqQ2WILg7JezvX7FwmNijyoODmu1vEltr6ok
+	 GwYOJ+l5qvGT4UwEbzBfD1Wspc3v1/wCGRVzI7kw89vSI98n4jwixtBH7T/YS8gi4Wa4q
+	 cvHXABxT6YwLIflH37KnEHao0Gu5BZC9u4rsWnMgj4qvIhDTd9LlOHNfp64zhvfeeZw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=UxlWymt8;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=hZt4MFAs;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3BFBB606A337;
-	Tue, 17 Nov 2026 12:26:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20E5B606A333;
+	Tue, 17 Nov 2026 12:30:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=UxlWymt8
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2D9071F000C4;
-	Tue, 17 Nov 2026 12:26:09 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=hZt4MFAs
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1625A1F000CA;
+	Tue, 17 Nov 2026 12:30:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794918371;
-	bh=IxmyzYA+9luc/wDXbCQmmtp6FwQZD6abU4fHt1J+Ma0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=UxlWymt8Cci2GQ+NGdG2E5BFy6GiLd/JCkjS40M/LAPfRnbfAzVdkpweI1ZVXHyyN
-	 GgsyNqdq67Bj0RdIqNobJ4vZOAuaDMxmnnySaO2409W9dlHWMXkPOFK2TMJ3V2B4nJ
-	 63I7gI4Ditlr9cz/pqrVyXHcKSqDPGYayHWqBcUGPJItMkuJt+sNLPLPM3J8mC6kIN
-	 BstaiBzR/w2qEqaAuYqFvYC9YBBDFo0eRgaUKuwg1S7WqmhDhMPYCFu1vUTIhqojwB
-	 myHKpPvLgggvL7qVAHzIkxe9hb5Z+G0zspQk8yzv1Swjsfafa/2QKk4FsbikiVpd/N
-	 qat+5az0KWEnA==
-Date: Tue, 17 Nov 2026 13:26:07 +0100
+	s=k20260515; t=1794918604;
+	bh=H7dl4Z0zXU3PtsfJzlRQag9x+xyF/BDC8NJp2gQXUeY=;
+	h=From:To:Cc:Subject:Date;
+	b=hZt4MFAs0ipx329lBHP5U6+IZ9WhIl8v7qWh6XxjqqwLDhwStOClkZ5eOZ1aZn64z
+	 mGshbWOpAZEWNV2IwpdWF2wBY3KMt4bHhCUUNUQl7R1E97aTIuchTI95Kz8r6LVw14
+	 Mx1w9YSHqviUU0DgKbSPCOZ8UshK0s4vAzBZPi3S8wk8yIQKJ/epu0pRDrYrIWQxli
+	 xQgrVxF5SsekTnmpzPnG1dCBIAwJaasaf1xIryqBNYvWJbRTSS7NCcsP/wSS6ZLvHB
+	 9q1hWVQYgh4OlZyHdweHi2YcfoGWomWjprnhPa2FsgJtHF8py0lwWMo/Tp5S0nnCST
+	 FhgMjCbE4B+iQ==
 From: Niklas Cassel <cassel@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K. Petersen" <mkp@kernel.org>, stable@vger.kernel.org,
+To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <mkp@kernel.org>
+Cc: Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>,
+	stable@vger.kernel.org,
 	linux-scsi@vger.kernel.org
-Subject: Re: [PATCH] scsi: scsi_ioctl: require write access for the
- depopulation commands
-Message-ID: <avxH3yik-Dmu5TmP@ryzen>
-References: <20261116183139.2878673-2-cassel@kernel.org>
- <037b2eab-65a0-439a-814b-cc653e8cc629@kernel.org>
+Subject: [PATCH v2] scsi: scsi_ioctl: require write access for the depopulation commands
+Date: Tue, 17 Nov 2026 13:29:53 +0100
+Message-ID: <20261117122952.3451870-2-cassel@kernel.org>
+X-Mailer: git-send-email 2.56.1
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -59,61 +60,75 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <037b2eab-65a0-439a-814b-cc653e8cc629@kernel.org>
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2730; i=cassel@kernel.org; h=from:subject; bh=1/rFBrF7yWrytAReQJlyYYBeH784+pHZ5FXnEcAK9KA=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGLL+eBx0vRS4bKe6RansWe3eN3aBywVd76r82hX7aHa/4 9Iws7VuHaUsDGJcDLJiiiy+P1z2F3e7TzmueMcGZg4rE8gQBi5OAZgIdyIjw42tAg1dfkseOStx nl34+YX/bKvDsvNvpWp8PSRqfDrvmBgjw801n2vKf3S3rJnI1s62q10p/6zOf/33UZPu+GZHfJt UwgUA
+X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
+Content-Transfer-Encoding: 8bit
 
-On Mon, Nov 16, 2026 at 12:40:36PM -0800, Damien Le Moal wrote:
-> On 11/16/26 10:31, Niklas Cassel wrote:
-> > scsi_cmd_allowed() lets anybody who can open a SCSI device, even
-> > read-only, send any SERVICE ACTION IN(16) command. Besides READ
-> > CAPACITY(16) and the other read-only service actions, that opcode also
-> > carries the storage element depopulation commands of SBC-4: REMOVE
-> > ELEMENT AND TRUNCATE, RESTORE ELEMENTS AND REBUILD and REMOVE ELEMENT
-> > AND MODIFY ZONES. These change the capacity of the device, and after
-> > REMOVE ELEMENT AND TRUNCATE the contents of the user data area may have
-> > no relation to what they were before.
-> 
-> Since that is basically reformatting the drive, I thing we can say that the
-> content is likely gone...
-> 
-> > SCSI devices that support depopulation execute these commands directly,
-> > and libata translates them to the equivalent ATA commands, so a user
-> > with read-only access to the device node can truncate the device through
-> > SG_IO, SCSI_IOCTL_SEND_COMMAND or bsg.
-> > 
-> > Treat these service actions like FORMAT UNIT and ERASE, which also
-> > destroy data, and only allow them if the device is opened for writing.
-> > The other SERVICE ACTION IN(16) service actions remain allowed for
-> > everybody who can open the device.
-> > 
-> > Cc: stable@vger.kernel.org
-> 
-> Hmmm... SAI_REMOVE_ELEMENT_AND_TRUNCATE and friends was defined with
-> 2a0adbb80a2f ("scsi: define depopulation capabilities related service actions"),
-> which is in 7.3 only.
-> 
-> So maybe make that
-> 
-> Cc: stable@vger.kernel.org #7.3
-> 
-> ?
+scsi_cmd_allowed() lets anybody who can open a SCSI device, even
+read-only, send any SERVICE ACTION IN(16) command. Besides READ
+CAPACITY(16) and the other read-only service actions, that opcode also
+carries the storage element depopulation commands of SBC-4: REMOVE
+ELEMENT AND TRUNCATE, RESTORE ELEMENTS AND REBUILD and REMOVE ELEMENT
+AND MODIFY ZONES. These change the capacity of the device, and after
+REMOVE ELEMENT AND TRUNCATE the data on the device is most likely gone.
 
-I will add:
+SCSI devices that support depopulation execute these commands directly,
+and libata translates them to the equivalent ATA commands, so a user
+with read-only access to the device node can truncate the device through
+SG_IO, SCSI_IOCTL_SEND_COMMAND or bsg.
+
+Treat these service actions like FORMAT UNIT and ERASE, which also
+destroy data, and only allow them if the device is opened for writing.
+The other SERVICE ACTION IN(16) service actions remain allowed for
+everybody who can open the device.
 
 Cc: <stable@vger.kernel.org> # 2a0adbb80a2f: scsi: define depopulation capabilities related service actions
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+Signed-off-by: Niklas Cassel <cassel@kernel.org>
+---
+Changes in v2:
+- Say that the data is most likely gone after REMOVE ELEMENT AND
+  TRUNCATE (Damien).
+- Mark 2a0adbb80a2f, which added the SAI_* definitions, as a
+  prerequisite for the stable backport (Damien).
 
-to show the dependency as per Documentation/process/stable-kernel-rules.rst
+ drivers/scsi/scsi_ioctl.c | 16 +++++++++++++++-
+ 1 file changed, 15 insertions(+), 1 deletion(-)
 
-because, while for SATA devices, this problem only exists since v7.3,
-for SAS, this problem is much older.
+diff --git a/drivers/scsi/scsi_ioctl.c b/drivers/scsi/scsi_ioctl.c
+index bf049d9cb719..91525103d074 100644
+--- a/drivers/scsi/scsi_ioctl.c
++++ b/drivers/scsi/scsi_ioctl.c
+@@ -300,7 +300,6 @@ bool scsi_cmd_allowed(unsigned char *cmd, bool open_for_write)
+ 	case GPCMD_VERIFY_10:
+ 	case VERIFY_16:
+ 	case REPORT_LUNS:
+-	case SERVICE_ACTION_IN_16:
+ 	case RECEIVE_DIAGNOSTIC:
+ 	case MAINTENANCE_IN: /* also GPCMD_SEND_KEY, which is a write command */
+ 	case GPCMD_READ_BUFFER_CAPACITY:
+@@ -330,6 +329,21 @@ bool scsi_cmd_allowed(unsigned char *cmd, bool open_for_write)
+ 	/* ZBC */
+ 	case ZBC_IN:
+ 		return true;
++	/*
++	 * The storage element depopulation commands share the opcode of the
++	 * read-only SERVICE ACTION IN(16) commands, but change the capacity
++	 * of the device and may destroy its data, so treat them as writing
++	 * commands.
++	 */
++	case SERVICE_ACTION_IN_16:
++		switch (cmd[1] & 0x1f) {
++		case SAI_REMOVE_ELEMENT_AND_TRUNCATE:
++		case SAI_RESTORE_ELEMENTS_AND_REBUILD:
++		case SAI_REMOVE_ELEMENT_AND_MODIFY_ZONES:
++			return open_for_write;
++		default:
++			return true;
++		}
+ 	/* Basic writing commands */
+ 	case WRITE_6:
+ 	case WRITE_10:
+-- 
+2.56.1
 
-REMOVE ELEMENT AND TRUNCATE was introduced in SBC-4 (r10) - released on
-January 21, 2016.
-
-REMOVE ELEMENT AND MODIFY ZONES command was introduced in ZBC-2 (r07),
-around 2020.
-
-
-Kind regards,
-Niklas
