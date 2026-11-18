@@ -1,56 +1,56 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
 	t=1794997351;
-	b=ot1Eh5odLJjw4Apoug/1NoacLPpYddrs6Dzb3htDbB5xMgWWCz6AD1+VFNtmk7eU7In0
-	 iKFoNGYJSN9w4g5f8oyWoACVb5TpnuHvJ8YcU3YrjgLKPoe/jRmTFXJw9ad8fTMs8msPU
-	 1GUviSxuEDKHn3QE6JXbLHzGGi2N4R7UbOuodUhrqAryezWfSWfdfU9D/qZD6lU0SNiip
-	 tMFtYuTHVwSvUmmqma9UG9dSgXuAjBP1tJyW6TvvW3Y2zoUiMmMG0Hyagd2deI0CddWkH
-	 twaPQvraxX0eeB2SYazt+kybfe6AyjenZIMRteIJXSWhk/fjkNS2gdJptSoHsmohXdg==
+	b=IQDdoQpfEI/Wj18LjU6ouUxDFbvW4t7VKQFmkxxkxV1QYRLYzJUHVGprjepgBrNgkVuT
+	 h2sibgRVksH3mlqAQh8GmHLXWUdj6TsaEJIAhgeNTryUBNAlMiMxorlWg4Jar729iCVzs
+	 rumo36grQft4DtzIXC5FHzd47dYqDSk1H7kQgQPTLM4VKAkKRqURym3SL8KyAPNBXb5ih
+	 5yv46ajJzRUWk5PYPpxBri9hiVwhvMqggVeX32sNJUq87t+xISARVkO24vz9RtzUNIv0n
+	 96nURrT3K/NzeI+ToytDWfannzs34N9cLNdYNaHqlVqoUKszthTMAIc4Xse6SZmm/0A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
 	a=rsa-sha256; c=relaxed/relaxed; t=1794997351;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=bUHVFNefYZS8D1nULQUQw0o1Z2rNQDopbIK8wdY8HCk=;
-	b=kZVFqGrXbE9hrnXyBE/axrYO040vL7IcuegKMJv2jX+qWURN9iIXfK0wTWQy79IQM6S6
-	 O6IVzZaTt195y/rnUvS/IHuJiuplul/rHK8Mn+DzerYvaOv9ABTyqRgBsYoP8Vf4hCb63
-	 rydDeYt9dxKxYfCSucJ85Mgpfc7n+Lh34H4qtVcrzVB/sEpI8ajYCEkZPSiVpFlASVQdH
-	 kLMrWwLNb6KJQ81w5Ju+zmm6qF+hwgYNRet339fJoDZfd8Wxa0ejYo6TbczBvtHViKTwf
-	 eERTpATf/BWZMJAIJX0Uq3MkYCLuLtbWiyLdXtuAXGNClc/bsqBO7UtGtqp+yfDZjpg==
+	bh=v3mOq1jMU3S32zQLHnCGgVxipZihZw+4skQcojdvw9E=;
+	b=TfJ36DgS7Rd7qxL0qQV+kWLL4sVUUwFWJd5PwMB1jC/qIS8dq0KTBYSL3RWT4EngfEXF
+	 BD+xwczj/SKWyGx5RaJD8rzTpDX9yNnoZMDsvPwV4kgzG98Z5l3kctZSGer24QfCcaVuP
+	 dGbnf6qaWjtkEaeLFDz5L1fhlFu7Fh6RH88D30M/e4DFJf/ZMALsIUFHQjMN0kd9Evf7i
+	 poUI9obwCT2SbXMkx6WUElHw19JKdaDTU/TXj2bKbe9kTpzav+AIm0EHyLB8lo/SU9xZD
+	 7IZQTUQrqs9iFfjIWSALqcI9NgRcCYOd/4N9VWy6EPo1G6o2pvMb2DicmJgKSRgPq4A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="X/AcXFKc";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=AACkj9IN;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74251606A31C
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C8DA6606A32A
 	for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2026 10:22:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=X/AcXFKc
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E54B11F000C4;
-	Wed, 18 Nov 2026 10:22:30 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=AACkj9IN
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 878321F000C7;
+	Wed, 18 Nov 2026 10:22:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
 	s=k20260515; t=1794997351;
-	bh=bUHVFNefYZS8D1nULQUQw0o1Z2rNQDopbIK8wdY8HCk=;
+	bh=v3mOq1jMU3S32zQLHnCGgVxipZihZw+4skQcojdvw9E=;
 	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
-	b=X/AcXFKcKgt89TcyTNI9/7zwiRn3HhVOnXFBQjtpIjKgwQJSVi7J2G0JnegaUt7SC
-	 Pmbb2HVMaST9M2znki7ZwCqIi9dUxV6wD6d2iYvv9yMruQEGCCGQeOtds3BepaCUeO
-	 v7w7uj+2N6pl2uERWB1hy331I5mBI7Hvhr9nFg4Ckx7ejaO90kzZyWOdiPI915juLS
-	 h2PSZErQoLCgidWqKp6IQoE/qg8IGHGf5i+XixKyusAFf+eTZqvMuZG58Gy/AERtGK
-	 VTEyi49kuefhM+q/qYuS3XKBmLKva06jzjV0tyK6VkqP/GYMCYdb+ywRKYWbNoKAxq
-	 Tk/EuF1JUCfLQ==
-Message-ID: <sashiko-outbox-220682@kernel.org>
+	b=AACkj9INgPzlwQ4jAjaEk96JawpJOaf9GsbuQwOLumvMCCWA2tpRg3R1N5Pn18iG0
+	 6CVbNHU3oRrCnhkNY5M6AcpfdysiIg4e3K/D0ihLBM8mLcaoDZK5e08064LnlhDFn7
+	 T1J3qTt7NDYmVfJFFycZQ+VkfQ5oalSZg42zAUFAk4Z2MwflTHNXB1JWxN1E/6p6sD
+	 w5y749F0C8j10tgZBbB9r6Jb6rxiNPWaH/eeQj1HgJIdFn9IiAFe3Bhf2XWYLuNRdV
+	 qvjfHVfTDfwsckqw0BcMG77YuF0A9LFuev92WVq33x9emVCNFA92SGeUXq22R7V4qH
+	 xjM085wlSycXA==
+Message-ID: <sashiko-outbox-220683@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 11/37] scsi: mpt3sas: Fix port_table memory leak in
- _scsih_sas_port_refresh
+Subject: Re: [PATCH v2 02/37] scsi: mpt3sas: Validate RAID configuration
+ page length
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Shivasharan S" <shivasharan.srikanteshwara@broadcom.com>, linux-scsi@vger.kernel.org
-In-Reply-To: <1794995806-5835-12-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+In-Reply-To: <1794995806-5835-3-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 References: <1794995806-5835-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
- <1794995806-5835-12-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+ <1794995806-5835-3-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 18 Nov 2026 10:22:30 +0000
+Date: Wed, 18 Nov 2026 10:22:31 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -62,28 +62,27 @@ Precedence: list
 
 Thank you for your contribution! Sashiko AI review found 1 potential
 issue to consider:
-- [Low] scsi: mpt3sas: missing Fixes trailer for
-  _scsih_sas_port_refresh() leak fix
+- [Low] scsi: mpt3sas: missing Fixes trailer in
+  mpt3sas_config_get_volume_handle()
 --
 
-commit 4df946a26df1e07b82fd4552694bd9266dd6fd85
+commit 1a9b4a845a58146159a3e5de43ee7711eceec2d6
 Author: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 
-> scsi: mpt3sas: Fix port_table memory leak in _scsih_sas_port_refresh
+> scsi: mpt3sas: Validate RAID configuration page length
 >
-> Free port_table on every exit path, including the early return when
-> no ports are found.
+> Check the RAID config page length and NumElements against the
+> allocated buffer before use, to avoid an out-of-bounds read.
 >
 > Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 > Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
 
 [Severity: Low]
-This fixes a memory leak in _scsih_sas_port_refresh().  Should this
-include:
+Since this fixes an out-of-bounds read in
+mpt3sas_config_get_volume_handle(), should this include a Fixes tag?
 
-  Fixes: a5e99fda0172 ("scsi: mpt3sas: Update hba_port objects after host r=
-eset")
+  Fixes: f92363d12359 ("[SCSI] mpt3sas: add new driver supporting 12GB SAS")
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/1794995806-5835-1-g=
-it-send-email-shivasharan.srikanteshwara@broadcom.com?part=3D11
+it-send-email-shivasharan.srikanteshwara@broadcom.com?part=3D2
