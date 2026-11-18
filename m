@@ -1,50 +1,49 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
 	t=1795043411;
-	b=RDxAsFLpsIUCPLHQon6SzCUBFjw7dF9nBZt2r/i2/ugNfzx6N6yHsMSJc99PML8Y0IDc
-	 LfrHUaLTPArRRtpCOlw4sd3KPbgWgzMxYB0ZTOJvHwubBwuCDm9JRLx3He0Fs5V3CHcpr
-	 PT3Nvmy0acs7lzzk2oX3iMUDN1fvNXpxJMy4Gryu8hI1Vfj/eKq2+lHEJUlB1eqqBwa8X
-	 u2KA0AWZKxtYisLDNGyjUDWyQwEYueMgpoTHsuT/67fCZ76c+D9lvzu9c4sX3B6oXxoBj
-	 nu95/k6sFErW6qbLFaAh7/qcvO6SVxhPQamgpOxuBo+EXmC2QoMW08FjqHhKv3UoKfA==
+	b=y6SdJMn1nt0UePZEVbM3ZSI22bLo1r77qH1BUffjLmLxAOmpYS3CYei9GsiXULrg4jlq
+	 NSvZ3xlEXrtB9gK84HM2dRXc5isDpnhl+FzOb6oQ05rjO/pxXttQZVj0MwB4OTZpkTB+2
+	 h86TWy3qkMzkM1xxo43uUBVCpFzsPIQAnHjrMdCL+IQXxjDY4ZiQdMRZdV6PKtvkP8g0Q
+	 HC+K56H300kUMLeHTavBKGUsoYiVpCi9yyPDQrk/2VjQZANwc/iXKoHJtOIyP1m6Ppox1
+	 MCBaXYkJml9lB0hHnnl+4hKJ5J7zSvfWfc+X4JdAbY0B5Rmo6WaG3IZpUar7gGh6vUg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
 	a=rsa-sha256; c=relaxed/relaxed; t=1795043411;
-	h=Received:DKIM-Signature:From:Subject:Date:Message-Id:MIME-Version:
-	 Content-Type:Content-Transfer-Encoding:X-B4-Tracking:X-Change-ID:To:
-	 Cc:X-Mailer:X-Developer-Signature:X-Developer-Key;
-	bh=lV/VzxV/O5uCisVr5/DBuvmgXtlXoGoJtLjIIr/Q174=;
-	b=xrgYWg6CFcUen2yGMCrtw00AqRsEXJ048Sir07QAZZKY8KxJK7YF5MrujJZJw8rCpxFP
-	 kdv4U+W7eVaNCwR0lATUxSBoqKvnFQnYvwoeY3qewFU36cMglLgSGpH+bBR736Bb0f0JN
-	 NAmwI71h24bK3tLVMy3Hc/RzSqx+Ew2JvkDbS4aNadCZ55+qiTA8aH1Im4MzhYED1X3Np
-	 C2n1X5z8+VrNFvU1J5tpZA9kVrpok+8FZoaX9hOZqdMDep4Kwo4WIaPCAXRqeUaGI83dM
-	 Od3lj9LRP8N8UscNn1r8KOWtx8hcWKjXfZNZ9nvr9P0v6f5VI0RHYJeYU02QeOk3Gyw==
+	h=Received:DKIM-Signature:From:Date:Subject:MIME-Version:Content-Type:
+	 Content-Transfer-Encoding:Message-Id:References:In-Reply-To:To:Cc:
+	 X-Mailer:X-Developer-Signature:X-Developer-Key;
+	bh=E5/pucnNMI/c2ojblg/G0Oa6lamaWazaHZpn915p/WM=;
+	b=a+mqq0US80k02U0451eNKTl+9MVkxfoSbc1XKq2CjZ48ek/cGgPpeA3v/xHRCC6KiiSS
+	 ddb5ykreFRyHYkj22KmYfdzvPnEHWqngkTYhj1oeyvxKH+NJX7fq64yoU+4VWu0IBNkfO
+	 2d7kk0JxVlAX3NOX6EKVqXh4vQYTcZmjiv6aPiua8dRxKId70Eknw2REcPTIee9/fX87F
+	 PdM2qfGdJocVatISUhf0PkYFoE66kvOY5MvUroHPkix/1fbTxWbGhllS4VEM878ECDc/Q
+	 vseHfEaTcN6XqaE5UQDW1AgW5+X97XqyEGycyTh5Ev6AJVyjP8ENNRQ9XM7RD3xUQhA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ayy8YFcI;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BZvxGWAY;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 613D8606A320;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB669606A331;
 	Wed, 18 Nov 2026 23:10:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ayy8YFcI
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 904E71F000C4;
-	Wed, 18 Nov 2026 23:10:10 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BZvxGWAY
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 256831F000C6;
+	Wed, 18 Nov 2026 23:10:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
 	s=k20260515; t=1795043411;
-	bh=lV/VzxV/O5uCisVr5/DBuvmgXtlXoGoJtLjIIr/Q174=;
-	h=From:Subject:Date:To:Cc;
-	b=ayy8YFcIpHFtRQNBMg7Rn/a9FcC6e3L+o9U0LqOtiH+E0rOLi9i/g/G7A68mGXect
-	 e+Xhuh0RlmQwxY+XmUVobpTPOm60/Z4XtSrIq11r+2CDcrslWIvX5IFgNXj4xn6fXj
-	 1p24yTKh6qUWENJoPMJb5cUVVnmG25sU/q8QTB7Qf1+eb7Q2ewXHnkLfAtx0CYBYcs
-	 sIukfNBnyAQYaotNe9EAIjBvTGdEMqlEMw/raERefSgvwvDSEntL44nbwP42FuamlT
-	 tv1MnJnGWRm0bCeM7kxpqoxSZ/b9ZoNWcaFRRgnwPSlrQIGkQw6YDOdMdg/7RnYi+B
-	 ymLFsdrCFjo8w==
+	bh=E5/pucnNMI/c2ojblg/G0Oa6lamaWazaHZpn915p/WM=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc;
+	b=BZvxGWAYDoXj3WfvktNcbkQwI9/VCpuuIkzJzDTyo9RucZy+eGfc4E41LxP0sCsOp
+	 apNhVJzmC7qrPIoPleCoRZ5/jsPwwr1iGh8tstb25YhVMbEr+kslLJfdhPOyOfIACn
+	 0bgpt5JV0/nQ5wecCekvgU+oyC7q/RFTWH8mnJsKlI4B9Gm+l7jwXRG2bMGzMd+En1
+	 ftLLt0Trwa6iAsGTiOANhAEHDEzGnrYzUX9ZfIC97gcGSUBtIUCM8guqHk4L3k+LsR
+	 hgmVjNcR49N7wQLWzvgDF7Pqz6epnuW3bqM9Bw/laI6543HlaI8ymg7tu5+NYoqEiA
+	 kxU7pOoLXovRg==
 From: Jeff Layton <jlayton@kernel.org>
-Subject: [PATCH v3 00/11] scsi: mpt3sas: Fix delayed not-responding block
- deadlock and related bugs
-Date: Wed, 18 Nov 2026 15:09:57 -0800
-Message-Id: <20261118-sas-abba-v3-0-5562d690cf61@kernel.org>
+Date: Wed, 18 Nov 2026 15:09:58 -0800
+Subject: [PATCH v3 01/11] scsi: mpt3sas: Don't leave requeued firmware
+ events pending at teardown
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -56,11 +55,9 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIAAAAAAAC/22MywrCMBBFf6XM2pE8+tKV/yEuJum0DUojiQSl9
- N9Nu1HB5bncc2aIHBxHOBYzBE4uOj9l0LsC7EjTwOi6zKCEqqXQAiNFJGMImWxvbVn1rGvI93v
- g3j231PmSeXTx4cNrKye5rn8iSaJE09qua2RJurGnK4eJb3sfBlgrSX1MKdSXqVCg0eZgqG1KU
- 9GPuSzLG0xwCMrbAAAA
-X-Change-ID: 20261030-sas-abba-eacfcc45fe36
+Message-Id: <20261118-sas-abba-v3-1-5562d690cf61@kernel.org>
+References: <20261118-sas-abba-v3-0-5562d690cf61@kernel.org>
+In-Reply-To: <20261118-sas-abba-v3-0-5562d690cf61@kernel.org>
 To: Sathya Prakash <sathya.prakash@broadcom.com>, 
  Sreekanth Reddy <sreekanth.reddy@broadcom.com>, 
  Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, 
@@ -74,110 +71,166 @@ Cc: Keith Busch <kbusch@kernel.org>,
  linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
  Jeff Layton <jlayton@kernel.org>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=openpgp-sha256; l=4069; i=jlayton@kernel.org;
- h=from:subject:message-id; bh=7Wt6lpvC0hBqjt0y/k312yL4X9WbV5yC3jZogA6cu+o=;
- b=owEBbQKS/ZANAwAKAQAOaEEZVoIVAcsmYgBq/jBL94WEQPprHVcuZOHLIzPhCHfk9j+PwlNmB
- I079CynVZaJAjMEAAEKAB0WIQRLwNeyRHGyoYTq9dMADmhBGVaCFQUCav4wSwAKCRAADmhBGVaC
- FUqQD/0UAa+pykYJOExXnP63XRXAHuJsVzW4OAqfqxMMmZ0UUgrVhVaudSFCTuXssmK8uIL9S2X
- NvVSNyDAcG6UjQvxCsrSJ2chKPMJGx+1xs5vyfK56g2jkSQrFubj1bIaO+0zQd7ykp8Kp7yPdj+
- Be+UN/CSDuxpUDoKFNBJTnwnnyz42juzzIC2gFeGT1TjV8K+c3qXvLv++AJRsrJVtZ4rgSm/v3y
- QyXLwvJ5ccrqLqN/CU37J6aJAilC8QBcLa/WH1ans6AFavf5Rewb7TR7jTOkX8TjDndqtgjVam4
- zWnqs00xAyZSWFsW0AeVhMACRSwO+J5BVHY3SELlFhtyqLG4vl25QEJA7F3oN+1JrJkeB7RGTCK
- wiil2o53ys574iVaV5KGLVEak0y9fWZnbF+EG5ssF6MNfZJosTvZMyr6qgDUJCTAJqh3TMLoxh9
- pgRaC3OVuX9YW9eGWep8wNVlo1ZeI2T9pwAqQQwAiAngcXxbUgdks4gpWJx0fyEBS4zcuFBmArw
- LgFyTBQZBjqWXfydSbApJBasquLjalvP6+ka5nDS7nSBHdp/zKeTEDuML5owPib4RmKaGqrmqgu
- OP1s+pi+xu7TRjWti0URn6HLhOrNDXF8KxnHn4HF1VA/mxZbj7wW2o1fwBxfmaRJSF+cz2+lOpy
- Kh6DsrbxvkYe9rw==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=5227; i=jlayton@kernel.org;
+ h=from:subject:message-id; bh=13z5+kTDnv8IEmsjpCIo3UEfpOKkYSck2pI/NA8WCjI=;
+ b=owEBbQKS/ZANAwAKAQAOaEEZVoIVAcsmYgBq/jBQPCcoIcOb4S7VvS+BMTQUzlKJV+GtaZ6L6
+ 27OJTfpd2+JAjMEAAEKAB0WIQRLwNeyRHGyoYTq9dMADmhBGVaCFQUCav4wUAAKCRAADmhBGVaC
+ FYbCEACx79sN5qaZwim867A3PgMGW2wM1PErEAXOGWTF5uCguXKLBSBhxUN/DKZ96ThQYV3o9Tl
+ 0tgGvnZBh7erahHifsNwKJLqOC5UIdS3V3AxtqVcjEPfIj9ey6EA30wuMse7C8Vg/Za8Rj2MAqx
+ Ws+4Q6/1vun7/g1sQTui+E2MiVYLFhZUwhAfrcHbaNjT+vPrlRC9cQD2f8Iy93/WSou+kNiyfTG
+ 33f80dvJINrUrImhcdQ3caQ2mCFJMFxk+tD5BcEo/EIuuEu5PDCKT1h2aR9QTu+th+BzfO42c5J
+ NcK4F0Xod0pTO8IzcEGuLewSK9OoLHfmFJ7dXT/clpAwYzReQ2idKIjRa+w9mnjIk5xKSKgYXOU
+ xbBJO06zJkNS10+9hk+U5H89VaRvq+dfcjH+he/ok9j15zdFDQRGanvyuMicVbDWuqG9CCWTx/l
+ 3L9E/mU63sfqfE6KkxoE/+3sYpjP6cGi4cIkFd0SP+LoMikcUMyjFmFsphJtt57rfFZPO6wQeis
+ IfOEKic9loml/5gaztRFlxG+JMXk7eWCUuoUk8ADdKgCl9givJ7z+ykvXfLal93UeZUrXTsEKtv
+ vFv4WVl0cTAjNnhsW/SrrNa7xenlvHekFj4ORZZDNBtK4B6gSccCxHzeF+tgypx5uoBPwN6MVp3
+ 4kcu3zlHc10r3DA==
 X-Developer-Key: i=jlayton@kernel.org; a=openpgp;
  fpr=4BC0D7B24471B2A184EAF5D3000E684119568215
 
-I posted v2 some time ago. Since then, I did a lot of adversarial review
-with AI agents. The review found a large number of bugs. Many of these
-bugs were preexisting.
+When a topology change event finds a busy device,
+_scsih_fw_event_requeue() retries the event. It queues the event's
+delayed_work on firmware_event_thread, with a one-second delay.
+_scsih_fw_event_cleanup_queue() cancels only the event's work, not its
+delayed_work. Thus the timer stays armed. Then scsih_remove() destroys
+the workqueue. After the workqueue is freed, the timer queues
+_firmware_event_work_delayed() on it:
 
-This series fixes a deadlock that occurs regularly in Meta's fleet. The
-fix unblocks sdevs after a timeout, and this breaks the deadlock.
+  BUG: KASAN: slab-use-after-free in __queue_work+0xa12/0xb50
+  Read of size 4 at addr ffff88814fefd1c0 by task swapper/10/0
+   __queue_work
+   call_timer_fn
+   __run_timer_base
+   ...
+  Allocated by task 11:
+   __alloc_workqueue
+   alloc_workqueue_noprof
+   _scsih_probe [mpt3sas]
+  Freed by task 0:
+   kfree
+   rcu_core
+  ...
+  workqueue: cannot queue _firmware_event_work_delayed [mpt3sas] on wq fw_event_mpt3sas0
 
-I don't do much SCSI driver work, but this problem came to me. I
-relied heavily on AI agents for this series.
+The cleanup does not wait for a running topology change event. If such
+an event finds a busy device, it requeues itself. This can occur after
+the cleanup passes the event.
 
-If this series is acceptable, I would like to see it in linux-next
-soon.
+Fix this:
 
-Thanks,
-Jeff
+ - In the cleanup, cancel the delayed_work of a requeued event.
 
+ - Do not requeue an event while the cleanup runs or while the driver
+   removes the host. Do this check under fw_event_lock, which the
+   cleanup also takes.
+
+ - Instead of a requeue, drop the reference that the work held.
+   Previously, this reference leaked when firmware_event_thread was
+   NULL.
+
+ - Also drop the reference if the delayed_work cannot be queued.
+   Cleanups can overlap. Thus one cleanup can clear fw_events_cleanup
+   while another cleanup cancels the delayed_work. The cancel disables
+   the delayed_work.
+
+ - Initialize the delayed_work when the driver allocates the event, not
+   at the first requeue. Thus a cleanup never cancels the delayed_work
+   before it is initialized.
+
+Fixes: ad5957193107 ("scsi: mpt3sas: Add firmware event requeue support for busy devices")
 Signed-off-by: Jeff Layton <jlayton@kernel.org>
 ---
-Changes in v3:
-- New patches 1-8 and 10 fix pre-existing bugs in the code that this
-  series changes:
-  - 1-2: fix UAFs and refcounting in the cleanup of the fw event queue.
-    Do not leave requeued events pending at teardown.
-  - 3: requeue topology events only for busy devices. Do not requeue
-    them for devices that the driver cannot add.
-  - 4-7: fix these TUR polling bugs:
-    - a pcie_device leak
-    - a lost unblock retry
-    - polling that continues after the scan is cancelled
-    - a retry count that is not per device
-  - 8: cache the missing delays that the IOC actually uses
-  - 10: do not use freed hostdata while the driver polls devices
-- Patch 9: also publish sdev->hostdata under ioc->block_lock in
-  scsih_sdev_init()
-- Patch 11:
-  - Use the PCIe missing delay (from PCIe IO Unit Page 1) for NVMe
-    devices.
-  - Arm dnr_unblock_work for the earliest deadline.
-  - Skip the timed unblock during host reset, but not during SCSI EH.
-  - Clear the deadline of an sdev under ioc->block_lock before the fw
-    event worker polls the sdev.
-  - Do not put a timed block on offline sdevs.
-  - When a hard reset cancels polling, give new deadlines to the sdevs
-    that stay blocked.
-  - Give deadlines to the sdevs that a broadcast primitive pass blocks.
-    Prevent dnr_unblock_work from unblocking them while the pass runs.
-  - A repeat DNR restarts the deadline, at most
-    MPT3SAS_DNR_BLOCK_MAX_EXTENDS times.
-  - At the next worker unblock, do a TUR check on expired sdevs.
-  - Keep the blocks that the driver makes during polling.
-  - Use system_dfl_wq instead of system_wq.
-- Link to v2: https://lore.kernel.org/r/20261102-sas-abba-v2-0-b3b9ba874b5a@kernel.org
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 49 ++++++++++++++++++++++++++++--------
+ 1 file changed, 38 insertions(+), 11 deletions(-)
 
-Changes in v2:
-- New patch 1: use a new ioc->block_lock to serialize the
-  interrupt-time sdev block with the hostdata teardown in
-  scsih_sdev_destroy(). This fixes a pre-existing UAF.
-- Do the timed unblock under ioc->block_lock. This prevents a race with
-  an interrupt-time block.
-- Clear block_deadline before the fw event worker polls a returning
-  device with TURs. Then dnr_unblock_work cannot unblock the device
-  during the poll.
-- Link to v1: https://lore.kernel.org/r/20261030-sas-abba-v1-1-b8cdd714a37c@kernel.org
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index 04255286a2a6..545913123d01 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -320,6 +320,11 @@ static struct fw_event_work *alloc_fw_event_work(int len)
+ 		return NULL;
+ 
+ 	kref_init(&fw_event->refcount);
++	/*
++	 * Initialize the delayed_work up front: a cleanup may cancel it
++	 * while the event is being requeued.
++	 */
++	INIT_DELAYED_WORK(&fw_event->delayed_work, _firmware_event_work_delayed);
+ 	return fw_event;
+ }
+ 
+@@ -3696,6 +3701,9 @@ _scsih_fw_event_del_from_list(struct MPT3SAS_ADAPTER *ioc, struct fw_event_work
+  *
+  * Context: This function will acquire ioc->fw_event_lock.
+  *
++ * The reference held by the work that ran @fw_event passes to the delayed
++ * work.  If the event can't be requeued, that reference is dropped.
++ *
+  * Return nothing.
+  */
+ static void
+@@ -3704,20 +3712,31 @@ _scsih_fw_event_requeue(struct MPT3SAS_ADAPTER *ioc, struct fw_event_work
+ {
+ 	unsigned long flags;
+ 
+-	if (ioc->firmware_event_thread == NULL)
+-		return;
+-
+ 	spin_lock_irqsave(&ioc->fw_event_lock, flags);
++	/*
++	 * Don't rearm the event while the queue is being flushed or the
++	 * host is going away.  _scsih_fw_event_cleanup_queue() may already
++	 * be past it, and the timer could then fire after the workqueue
++	 * has been destroyed.
++	 */
++	if (!ioc->firmware_event_thread || ioc->remove_host ||
++	    ioc->fw_events_cleanup)
++		goto drop;
++	fw_event->delayed_work_active = 1;
++	/*
++	 * Cleanups can overlap, and one can clear fw_events_cleanup while
++	 * another is cancelling, and so disabling, the delayed work.
++	 */
++	if (!queue_delayed_work(ioc->firmware_event_thread,
++	    &fw_event->delayed_work, msecs_to_jiffies(delay)))
++		goto drop;
+ 	fw_event_work_get(fw_event);
+ 	list_add_tail(&fw_event->list, &ioc->fw_event_list);
+-	if (!fw_event->delayed_work_active) {
+-		fw_event->delayed_work_active = 1;
+-		INIT_DELAYED_WORK(&fw_event->delayed_work,
+-		    _firmware_event_work_delayed);
+-	}
+-	queue_delayed_work(ioc->firmware_event_thread, &fw_event->delayed_work,
+-	    msecs_to_jiffies(delay));
+ 	spin_unlock_irqrestore(&ioc->fw_event_lock, flags);
++	return;
++drop:
++	spin_unlock_irqrestore(&ioc->fw_event_lock, flags);
++	fw_event_work_put(fw_event);
+ }
+ 
+  /**
+@@ -3869,9 +3888,17 @@ _scsih_fw_event_cleanup_queue(struct MPT3SAS_ADAPTER *ioc)
+ 		 *
+ 		 * If it did execute, we wait for it to finish, and the put will
+ 		 * happen from _firmware_event_work()
++		 *
++		 * An event requeued by _scsih_fw_event_requeue() is pending
++		 * on its delayed_work instead, and its timer must not fire
++		 * after the workqueue is destroyed.
+ 		 */
+-		if (cancel_work_sync(&fw_event->work))
++		if (fw_event->delayed_work_active) {
++			if (cancel_delayed_work_sync(&fw_event->delayed_work))
++				fw_event_work_put(fw_event);
++		} else if (cancel_work_sync(&fw_event->work)) {
+ 			fw_event_work_put(fw_event);
++		}
+ 
+ 	}
+ 	ioc->fw_events_cleanup = 0;
 
----
-Jeff Layton (11):
-      scsi: mpt3sas: Don't leave requeued firmware events pending at teardown
-      scsi: mpt3sas: Hold event references while cleaning up the event queue
-      scsi: mpt3sas: Requeue topology events only for busy devices
-      scsi: mpt3sas: Fix pcie_device leak in _scsih_ublock_io_device_wait()
-      scsi: mpt3sas: Restore unblock retry in _scsih_ublock_io_device_wait()
-      scsi: mpt3sas: Stop polling devices when the unresponding scan is cancelled
-      scsi: mpt3sas: Reset the TUR retry count for each device
-      scsi: mpt3sas: Cache the missing delays the IOC actually uses
-      scsi: mpt3sas: Serialize interrupt-time sdev block with hostdata teardown
-      scsi: mpt3sas: Don't use freed hostdata while polling devices
-      scsi: mpt3sas: Time out delayed not-responding device blocks
-
- drivers/scsi/mpt3sas/mpt3sas_base.c  |  62 ++-
- drivers/scsi/mpt3sas/mpt3sas_base.h  |  25 +
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 869 +++++++++++++++++++++++++++++------
- 3 files changed, 810 insertions(+), 146 deletions(-)
----
-base-commit: e8017d29067fd1310a65c3494ce1a1b492adbac6
-change-id: 20261030-sas-abba-eacfcc45fe36
-
-Best regards,
 -- 
-Jeff Layton <jlayton@kernel.org>
+2.56.1
 
