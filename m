@@ -1,80 +1,82 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.214.171
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.214.178
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794975238;
-	b=yEOIb//PN0+CAvD6QE8mCSwSHSUlgFfbzB1gDK2jMz6U8R0VLrqa8Jpw9xKlkTOSAg/T
-	 aXjTxBmW3AdbfsmTy1S02Byj2X6c++bXZ7aVJ9htfrvmzSVjd56SmN6NBe2CEpSJi4Nzv
-	 kGsXvqNKfsBVH4Ww8xr+oiCCj+WhSZDWYROh0dRlLXU2UE4O8THkSFfX6tJe5svdffedJ
-	 xA73pGj6EaWz56j6Ww6QkjnTbiE0WoR/iIxdE/H2OtqpPDg1Dl1qi4KKRZMaFZhcc+rM9
-	 TIThBjiTH0dRfzSThATmS+4Kydz/wOGae2GOe6oikO/ZpQZgT1XsbWFKg83K4Ab3IqQ==
+	t=1794975242;
+	b=odhbkfu6oHbFFzb05X9jXrpU50oC6TZHvP3S2B7DQQsf3rG61Pe/5TKXHfanX1IT3aBo
+	 InUUBDa2+0OV4riFNQZxtkGKCt7TZhvyhXzk29XQICE9VEB8NDnpPs3dp85u/503kBHIt
+	 gx7x69dTNYYI3eKq8vp7mP4hMG6ixMFkLC96Bq69jgElG1QIAQGEhpPzwjSFsloi/oK14
+	 NjXc4F7I0Y4SnCOg8jKIZTH1YNWSDYzD+UxQht9J5H/HzUn3BOIgWq34bgn1+9UgtODzi
+	 evcy6lQX0+7gwUTjmEgZI4/1dcZnRjRZu7EhnssOVn2qnqWWSo4LZ6xLCzGmoMVDRxw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794975238;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794975242;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
-	 Date:Message-Id:X-Mailer:MIME-Version:Content-Transfer-Encoding;
-	bh=Fu1m7ZEN5/rsF3HjhNuEgJi893J5oEhA5qYrglHCai8=;
-	b=rWPaVW47qixcWw83FPrK0vZ1tjjRzC++QaEW0jJ0AxoWEa/0dRzcknsv0cmVxiHBJcQN
-	 laW7wYGHXRiRu91EOybMNV+KIj1OVGjvlWfJWkfD+9Q5TxncLvE7Znbs9DFbwfNpofNu2
-	 I4KHAH022nWfOF/J3qNVVBk5H+VS2mYr0h1eK/QwR+n4BEVC4K7qle1AWU9ZRKLus8rxt
-	 Qaqg0isuM8L3P+CcPPzoRWL8OXBs4/J7MPmRbhxX0FQfzV0SE7d6f5CnTP1kxhxK6txy0
-	 AsrPOwLGCZ+oQu5yZVTKyaI/Pufk5sYse0oAb3fuvws57oZ/4LQtHBBUKL6vEg0yG1w==
+	 Date:Message-Id:X-Mailer:In-Reply-To:References:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=1tGDjTxgOOQgjqUI4QLTxVZiaieo9oTy+UBHWYy4gNM=;
+	b=K2X2x++cIPLshxRCFqMlbg6cJxTcWjnUyYj6B6T4vgkWKyz80Xpz6JVKEznVtHu534Um
+	 8GnfeuSlLNu/TbAPXlK37WbwNQ1svOjgTilgaL3CuT6IG9GNsG3EQROEDURsQ/Ho8C63T
+	 +N5wXL6xfI3tHYm1pTCMCcHgHXZXhJYwXVzvwI0V/l22ZozfBXv9L4y0jZtMdW1ph3XII
+	 sSReL36wSE03WnE7xXH1q6UVwLR4EubCgBIGdv1/zZv1lhS1g7/rNMPO0qR/aga12Rc7e
+	 2PIxJLXeD2SYrDzdZ0LFYZ8WzfNKuYp7tPAwJiAcPTiO/BR8Y0M66WLGrvanw/AtUow==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=hHzlUa3L;
-	arc=none smtp.remote-ip=209.85.214.171
-Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=dwZrFfes;
+	arc=none smtp.remote-ip=209.85.214.178
+Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2FC64606A331
-	for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2026 04:13:58 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2FC64606A331
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64D7D606A331
+	for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2026 04:14:02 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 64D7D606A331
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=hHzlUa3L
-Received: by mail-pl1-f171.google.com with SMTP id d9443c01a7336-2e9ae391a05so2856885ad.1
-        for <linux-scsi@vger.kernel.org>; Tue, 17 Nov 2026 20:13:58 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=dwZrFfes
+Received: by mail-pl1-f178.google.com with SMTP id d9443c01a7336-2e977109392so3125435ad.0
+        for <linux-scsi@vger.kernel.org>; Tue, 17 Nov 2026 20:14:02 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1794975237; x=1795580037; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=Fu1m7ZEN5/rsF3HjhNuEgJi893J5oEhA5qYrglHCai8=;
-        b=hHzlUa3L8oeFVoRTNRPd3jqxrDytrnAMuKpitUROtse1WA+Pl3Ra/c03SJlC9mrxnb
-         ZeGrJTHM4ct9uXLmcR6NuNrizvLVQEAbItCIDoXtVdBdohe7e3WGUBqY20K1ecbPjl+2
-         HQeE1p1JNs9jVkZVr4UGGWb+nAeaAC7/WQU4yLNDfmcxjN97IkGBDGOmjuzAV/ZKtQ+n
-         w9TnNVX4n2e48KuWahKY2hpM3EcOm+x/hU8Lu+PeZL45joaBfItFaQduz8vJ3/3At8cA
-         mUP64ua8GzRtyapA/8C0ET8wWM80K98chEabonISWm6rh2KkjlgadCFdcqOrQ6UxWJS8
-         nWNQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794975237; x=1795580037;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=gmail.com; s=20260707; t=1794975242; x=1795580042; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=Fu1m7ZEN5/rsF3HjhNuEgJi893J5oEhA5qYrglHCai8=;
-        b=DvFjRUM9F094ayqxDIblNnsTJ7JAli7OQqQymlHuLJaV7WRv2/lV+OpMKcIgBDmsxX
-         5O0ii/bjMYi4vydiYVVNvxgQ7jAlkiYi7QYd5B39FCTrZCKMOhIozH8tXPreWLzurGNV
-         aXlBW7YkYGZtymFx9sWjwN4Rw6UgV1zhGERlmewebK5CrdngKh/QGwLgRD8GTTXo/kRu
-         dDWsbA2ClsRrIXPWV35UzYcAfPXHwBLhC9ugYJowv3O0A9oFv2ET+Odswb1A1Gx1xEQF
-         o0SiTwSPlYjuunw5gERglRFHVzq22noXosR32lCH4jbLkVRhlpiI50QtQRL8UKpf+vby
-         W44w==
-X-Gm-Message-State: APuU4Z/vgXLEOcoDaFj3gXSKXLYiBjpaspwGi1OdaJZXbL8m8LATcicg
-	0X6Gb69rCTQYSDFW8DVwm+izmIkDss15U6veDm/CQuqXeis9/vYoWupo
-X-Gm-Gg: AZFdTZccvNX8iBK5xfFGbKlmI3gu5Gf2Dl3y0WNGqJzHkX1UYdPBcL3GhxiVK9Y/i8z
-	Gi2bZEs/4y1yJa/dbSIDsKcPFKvMJ6MfTAdm/jLtBONntvtTWJ0IcxG3sJIJCLggfQ5oLjR6spZ
-	L+C1C16dNDlRYXQdl5FZ5COvvWzkGHUQMcSZps9gdYlBi87izb1abIKlPTT7l/WA9Z8BpUL06s+
-	hdJiJJuPKVqLdB5ON/C6X4giShe545JS2RgvO51x/lTg4yPBKSglYXjFlmYaVOQzH9JUAjczQ0H
-	LYN2gwtmvy07u1G2WLXH+ckuefWYb2kISi9lcemw2/i5/YsI13AdcMv8J1FKgZhP4ER42qswSam
-	dRRdR4/aath/02m5OMc2Yv77mqItiLbh9RoWNIrMOmhf6E15WTGhtZ/Knp/XiYnYkxpdhCtt1Yx
-	rUaE+j/mcSRPKjbbbd34NkjGAuMP1jAkNgYApxWwlKA9WnQlrQCtIOP+HPgG76lAwI+f6hEd3R/
-	F3V1ctKxq1twSu33QaxOqupm6+YTXPxJNwzoybhKkUSAOw3PZj8+bVy6G5oQJZDYfktDIzM1C/M
-	34/aqPZ0S5vQv3gwJ8muBA==
-X-Received: by 2002:a17:902:f683:b0:2e9:528c:b9ea with SMTP id d9443c01a7336-2eff72fa3c1mr9708575ad.11.1794975237447;
-        Tue, 17 Nov 2026 20:13:57 -0800 (PST)
+        bh=1tGDjTxgOOQgjqUI4QLTxVZiaieo9oTy+UBHWYy4gNM=;
+        b=dwZrFfescLuDyXqWVdT3f0QbKnWaUoxNOVfV4Tr58kL4+/kqtxPGF/NQ9gzn+bbQEO
+         Qk7U+LEv4EiTBX/zvyZXtd3GU87PKyYURw8Q6+xehN0MYV58sDbxhGMbXw8rdOVJLgb+
+         1iVpx+EmINmScwm0/mY/NAAbVQnoUHUjyIiAyYSKO8AGoCLwwuui1gh8dKL1WFdl/sUd
+         vNCSn3PGagivZwYIcEJxx1JxTFvgjiygIxm0owT6kUUHR0vNdXfjLfKs6FqkZ4R+Va/Y
+         63Aj0P0WygXlrHiA0p9bZRB62eIQXbIv+mkx7BcdaC6f/l66o450TSP3R8CI84z5XWIk
+         HLGg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1794975242; x=1795580042;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=1tGDjTxgOOQgjqUI4QLTxVZiaieo9oTy+UBHWYy4gNM=;
+        b=I4fNS6e1tNAqD5hMctOpPz6/y3IWTQ6cqdsnfrsu3VxLenWu8JCqDwEuqTGhLp/9ga
+         2n8rZXp5PeXfwldC+IPDJgg69vnxQguqXt4h+fB/vNqH5IIlqnPrd0NqsOjokRII994v
+         F3y+P2qO1rCO7WE6eYpXtQ+kFicinZ/r8P5pA9l28Okh8DHtQSYrQ+LRvN8VI/Zn3Fz7
+         oiCx/vnz9ySHbjClD5sfLHr0EIgt3MQZEI5Cb3zP9gI7l6IrXj8JdOsn53YgeIshM8p8
+         5/s2Oqj7qDXZZhzxf8V9MHDKhndgDgtD6fJF5N/+iM9EWK+sUWV868wKGtG+zui+ivEz
+         VFkw==
+X-Gm-Message-State: APuU4Z+qVzdhmpCrnV4i53jrlSySOu/Y2BCDSKWVPFmcLaAmdDKQFXgW
+	JXmuPDHT0EZCP5JGjleQNhnlpFP6Wvr8pLDRuKwx1beUfs218VkC0mej
+X-Gm-Gg: AZFdTZfK7NvZHF8xyLcpxVQimL7tCxlrKIyJjsO8+PrN5HHA58OEdmhYpDoDpNR8GW8
+	1dC47nC9AGxrzi+K5R06a8rkDCagJhSSpWc382VMSfQ8Kz8WA9GqUuP0Kc7u0C904+nHd/IInWn
+	bAUHwJi3kglYl0wgMtzg5kdOpgheMqELjGGDX+amCC5YYti0bKxPfZKtT5iDi0BJoWURqM0RSww
+	gGJCHfFRCOydrdi39nlc3GvET+jSto1WQlmGci1MDQ+X7Gb6oFMezTWJbRq98uxbQhwabJ/+dDo
+	TNOYPTdKhckyiXROrTSSB96ClP8wBo9QAf+b4OEMTQA5DLo5zxw9vucEOQ2vmFgJSjK1Bp+CEkd
+	URub2E6l4tVby5Bzz0wvhg969BTxF9Wg1TYISZxGfOolv/pfQz+G9s/uZt/EAzM3Zrixv404thb
+	se5Mf6idgyvRvqTtQ1vdgMUAYEVEDDVSnKEsRJRvRy49Q/dh70+/Pxh6zTg5kMQcSoAnYkHBShW
+	7Orr/oVRwY6oTWY5mdwXn73Shxcik766M5/iJo8s90wJx1jjxrYhb+xIUhYYNf6hCOxZFXgLAzG
+	IFbr+PKpvQPGqOFnjhcQ3ls=
+X-Received: by 2002:a17:903:2345:b0:2e9:5714:6079 with SMTP id d9443c01a7336-2eff754e83bmr14304455ad.31.1794975241606;
+        Tue, 17 Nov 2026 20:14:01 -0800 (PST)
 Received: from gmail.com ([2407:cdc0:d002:0:188:253:12:32])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2eff6214f4dsm5728685ad.43.2026.11.17.20.13.54
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2eff6214f4dsm5728685ad.43.2026.11.17.20.13.57
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 17 Nov 2026 20:13:57 -0800 (PST)
+        Tue, 17 Nov 2026 20:14:01 -0800 (PST)
 From: Jia Jia <physicalmtea@gmail.com>
 To: "Martin K . Petersen" <mkp@kernel.org>,
 	Jan Engelhardt <jengelh@inai.de>,
@@ -85,10 +87,12 @@ Cc: linux-scsi@vger.kernel.org,
 	target-devel@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Jia Jia <physicalmtea@gmail.com>
-Subject: [PATCH v2 0/8] scsi: target: keep command bytes inside the sg
-Date: Wed, 18 Nov 2026 12:13:03 +0800
-Message-Id: <20261118041311.19011-1-physicalmtea@gmail.com>
+Subject: [PATCH v2 1/8] scsi: target: take COMPARE AND WRITE data from the write half
+Date: Wed, 18 Nov 2026 12:13:04 +0800
+Message-Id: <20261118041311.19011-2-physicalmtea@gmail.com>
 X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20261118041311.19011-1-physicalmtea@gmail.com>
+References: <20261118041311.19011-1-physicalmtea@gmail.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -100,60 +104,205 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-This series fixes eight target-core accesses past command-buffer or sg
-boundaries. vhost-scsi can supply guest buffers whose sg boundaries do
-not coincide with command fields, logical blocks or protection tuples.
+For block sizes smaller than a page, compare_and_write_callback() adds
+block_size to the first data sg's offset to locate the write half.
+This assumes that both halves fit in that sg. If the compare buffer
+ends at a page boundary, the write entry points past the page even
+though the write data is available in the following sg.
 
-Patch 1 builds the COMPARE AND WRITE write sg table from the entries
-that contain the write half.
+vhost-scsi splits guest buffers into sg entries that each stay within
+one page, so the backend can read beyond the supplied data.
 
-Patch 2 limits each REPORT REFERRALS LBA store to the bytes remaining
-in the response buffer.
+Skip the compare bytes across the data sgs and build a table covering
+the write half. Pass its actual entry count to the backend and release
+it with sg_free_table(), including any chained allocations.
 
-Patch 3 rejects SET TARGET PORT GROUPS parameter lists that end in a
-partial four-byte descriptor.
+KASAN reports:
 
-Patch 4 lets sbc_dif_generate() write an eight-byte protection tuple
-split across protection sg entries.
+  BUG: KASAN: slab-use-after-free in copy_folio_from_iter_atomic
+  Read of size 512
 
-Patch 5 lets sbc_dif_verify() read a tuple split across protection sg
-entries and rejects a partial tuple at the end of the list.
+  compare_and_write_callback
+  __target_execute_cmd
+  sbc_execute_rw
+  fd_execute_rw
+  fd_do_rw
+  vfs_iter_write
+  copy_folio_from_iter_atomic
 
-Patch 6 limits each CRC update to the bytes available in the current
-data sg in both DIF generation and verification.
+Fixes: d94e5a61357a ("target: fix COMPARE_AND_WRITE non zero SGL offset data corruption")
+Signed-off-by: Jia Jia <physicalmtea@gmail.com>
+---
+ drivers/target/target_core_sbc.c       | 100 +++++++++++++++++--------
+ drivers/target/target_core_transport.c |  11 ++-
+ 2 files changed, 80 insertions(+), 31 deletions(-)
 
-Patch 7 checks buffer lengths and uses sg copies for the pscsi MODE
-SENSE write-protect byte and tape MODE SELECT block descriptor.
-
-Patch 8 makes sbc_dif_verify() advance past an escaped block spanning
-multiple data sg entries.
-
-Patches 1, 2, 3 and 7 are independent. The DIF patches 4, 5, 6 and 8 fix
-separate bugs and are posted in that order: patch 4 can stand alone,
-patch 5 uses its tuple-copy helper, and patch 6 builds on both. Patch 8
-covers escaped blocks, which bypass the CRC walk.
-
-Changes in v2:
-- Keep data sg advancement before the escape check in patch 5.
-- Retain the existing atomic page mappings in the DIF paths.
-- Fix escape advancement with the existing cursor loop in patch 8.
-- Use the existing sg copy helpers for pscsi mode data in patch 7.
-- Correct the Fixes tags in patches 1, 3 and 5.
-- Explain why PI generation reads an existing tuple before updating it.
-- Shorten the commit descriptions and retain the relevant trace frames.
-
-Jia Jia (8):
-  scsi: target: take COMPARE AND WRITE data from the write half
-  scsi: target: keep REPORT REFERRALS stores inside the buffer
-  scsi: target: reject a short SET TARGET PORT GROUPS list
-  scsi: target: copy a DIF insert tuple across prot sgs
-  scsi: target: copy a DIF verify tuple across prot sgs
-  scsi: target: limit DIF block CRC to each data sg
-  scsi: target: keep pscsi mode bytes inside the data sgs
-  scsi: target: advance past escaped DIF blocks across data sgs
-
- drivers/target/target_core_alua.c      |  29 ++-
- drivers/target/target_core_pscsi.c     |  37 ++-
- drivers/target/target_core_sbc.c       | 422 ++++++++++++++++++++++-----------
- drivers/target/target_core_transport.c |  11 +-
- 4 files changed, 338 insertions(+), 161 deletions(-)
+diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
+index 21f5cb86d70c0..adef903652ac2 100644
+--- a/drivers/target/target_core_sbc.c
++++ b/drivers/target/target_core_sbc.c
+@@ -433,19 +433,74 @@ out:
+ 	return ret;
+ }
+ 
++/*
++ * Data-out is compare bytes followed by write bytes.  Take the write
++ * half from whatever sg entries hold it.  Do not add block_size onto
++ * the first sg offset: that page may end before the write half.
++ */
++static int sbc_caw_build_write_sg(struct sg_table *tbl,
++				  struct scatterlist *data_sg,
++				  unsigned int data_nents, unsigned int skip,
++				  unsigned int len)
++{
++	struct scatterlist *sg, *out;
++	unsigned int nents = 0, left = len, left_skip = skip;
++	unsigned int avail, chunk;
++	int i;
++
++	for_each_sg(data_sg, sg, data_nents, i) {
++		if (!sg->length)
++			continue;
++		if (!left)
++			break;
++		if (left_skip >= sg->length) {
++			left_skip -= sg->length;
++			continue;
++		}
++		avail = sg->length - left_skip;
++		chunk = min(left, avail);
++		nents++;
++		left -= chunk;
++		left_skip = 0;
++	}
++	if (!nents || left)
++		return -EINVAL;
++
++	if (sg_alloc_table(tbl, nents, GFP_KERNEL))
++		return -ENOMEM;
++
++	left = len;
++	left_skip = skip;
++	out = tbl->sgl;
++	for_each_sg(data_sg, sg, data_nents, i) {
++		if (!sg->length)
++			continue;
++		if (!left)
++			break;
++		if (left_skip >= sg->length) {
++			left_skip -= sg->length;
++			continue;
++		}
++		avail = sg->length - left_skip;
++		chunk = min(left, avail);
++		sg_set_page(out, sg_page(sg), chunk, sg->offset + left_skip);
++		left -= chunk;
++		left_skip = 0;
++		out = sg_next(out);
++	}
++	return 0;
++}
++
+ static sense_reason_t compare_and_write_callback(struct se_cmd *cmd, bool success,
+ 						 int *post_ret)
+ {
+ 	struct se_device *dev = cmd->se_dev;
+ 	struct sg_table write_tbl = { };
+ 	struct scatterlist *write_sg;
+-	struct sg_mapping_iter m;
+-	unsigned int len;
+-	unsigned int block_size = dev->dev_attrib.block_size;
+-	unsigned int compare_len = (cmd->t_task_nolb * block_size);
++	unsigned int compare_len = (cmd->t_task_nolb * dev->dev_attrib.block_size);
+ 	unsigned int miscmp_off = 0;
+ 	sense_reason_t ret = TCM_NO_SENSE;
+-	int i;
++	int rc;
+ 
+ 	if (!success) {
+ 		/*
+@@ -499,34 +554,19 @@ static sense_reason_t compare_and_write_callback(struct se_cmd *cmd, bool succes
+ 	} else if (ret)
+ 		goto out;
+ 
+-	if (sg_alloc_table(&write_tbl, cmd->t_data_nents, GFP_KERNEL) < 0) {
+-		pr_err("Unable to allocate compare_and_write sg\n");
+-		ret = TCM_OUT_OF_RESOURCES;
++	rc = sbc_caw_build_write_sg(&write_tbl, cmd->t_data_sg,
++				    cmd->t_data_nents, compare_len,
++				    compare_len);
++	if (rc) {
++		pr_err("Unable to build compare_and_write sg\n");
++		if (rc == -ENOMEM)
++			ret = TCM_OUT_OF_RESOURCES;
++		else
++			ret = TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+ 		goto out;
+ 	}
+ 	write_sg = write_tbl.sgl;
+ 
+-	i = 0;
+-	len = compare_len;
+-	sg_miter_start(&m, cmd->t_data_sg, cmd->t_data_nents, SG_MITER_TO_SG);
+-	/*
+-	 * Currently assumes NoLB=1 and SGLs are PAGE_SIZE..
+-	 */
+-	while (len) {
+-		sg_miter_next(&m);
+-
+-		if (block_size < PAGE_SIZE) {
+-			sg_set_page(&write_sg[i], m.page, block_size,
+-				    m.piter.sg->offset + block_size);
+-		} else {
+-			sg_miter_next(&m);
+-			sg_set_page(&write_sg[i], m.page, block_size,
+-				    m.piter.sg->offset);
+-		}
+-		len -= block_size;
+-		i++;
+-	}
+-	sg_miter_stop(&m);
+ 	/*
+ 	 * Save the original SGL + nents values before updating to new
+ 	 * assignments, to be released in transport_free_pages() ->
+@@ -535,7 +575,7 @@ static sense_reason_t compare_and_write_callback(struct se_cmd *cmd, bool succes
+ 	cmd->t_data_sg_orig = cmd->t_data_sg;
+ 	cmd->t_data_sg = write_sg;
+ 	cmd->t_data_nents_orig = cmd->t_data_nents;
+-	cmd->t_data_nents = 1;
++	cmd->t_data_nents = write_tbl.nents;
+ 
+ 	cmd->sam_task_attr = TCM_HEAD_TAG;
+ 	cmd->transport_complete_callback = compare_and_write_post;
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index dcfe945949167..3cae5ed67d417 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -22,6 +22,7 @@
+ #include <linux/module.h>
+ #include <linux/ratelimit.h>
+ #include <linux/vmalloc.h>
++#include <linux/scatterlist.h>
+ #include <linux/unaligned.h>
+ #include <net/sock.h>
+ #include <net/tcp.h>
+@@ -2724,10 +2725,18 @@ static inline void transport_reset_sgl_orig(struct se_cmd *cmd)
+ 	 * Check for saved t_data_sg that may be used for COMPARE_AND_WRITE
+ 	 * emulation, and free + reset pointers if necessary..
+ 	 */
++	struct sg_table table = { };
++
+ 	if (!cmd->t_data_sg_orig)
+ 		return;
+ 
+-	kfree(cmd->t_data_sg);
++	/*
++	 * compare_and_write_callback() built this with sg_alloc_table().
++	 * Above SG_MAX_SINGLE_ALLOC the tail is a separate allocation.
++	 */
++	table.sgl = cmd->t_data_sg;
++	table.orig_nents = cmd->t_data_nents;
++	sg_free_table(&table);
+ 	cmd->t_data_sg = cmd->t_data_sg_orig;
+ 	cmd->t_data_sg_orig = NULL;
+ 	cmd->t_data_nents = cmd->t_data_nents_orig;
