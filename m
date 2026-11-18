@@ -1,57 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795044809;
-	b=1lLew+aOqK2EhZEn9mjwS64TWPEoHOy3jEmX3X8aFXDPNQYYrEcqk2wix4FgbWoGyTuZ
-	 Qjm4prQHMFAwMUKhJSjfMPii9va6fgZsLqJHUABiB3F7UUzO+Xg1fBnhhGY09I0nPF388
-	 RLhkyzo2nH1ZGAWHQKGtl18iQyJapa9lUT2pgS2ddR69iPcJ41+wD8gDdqKbH+kRh/0Sq
-	 ipaiXKBCORgPKOfqfBc4zUona++9THKMSeXe4ErrHeXSigWfbwJTqoAFr/6nAHaBowpjZ
-	 DWGnvM7iDiVfqXuP9dXkIIHHu3i3fXKDPnDfNSEStvZo1xMzs4llPvDsAdUk5VxciSw==
+	t=1795044810;
+	b=yHGOuHo9xiOP0dpOymcsSsLa44DLP65YE0mBAnM0EAFzKBc2aJUpDgaaMuywUO4dO62p
+	 ZUD10eVdTE9I1Yoxvb5fFyirrlFQ+4cdwHrii7M7pRbRi77r4VnlZ4P/3/m4VlUH+0srK
+	 9riOtRc6v8h1VysOt39/1+jgeduY5HiH2o70+mycfvoeTVXps0to9yqcG1ccn6SlujoVK
+	 IA8ctH3ApgTzPBHQAuezdhcCMlzCCfmT/bIIOyD1pa5U2SQyKrv4l8OXv85u6BeiEOc5Y
+	 q6CXc2YJ63hQgCCx6R/ACxMLf9Tg1mnieffFRfZv5iQ3GRmcbbK7Qvk224xcWFGIerg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795044809;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795044810;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=HdO/btX1/Fvwe93IMJTemCMkMbwYfFx2AxyeoZY4knU=;
-	b=fpB4AyFmE9g+Kqj6gy2DR1t3ryzGw0FXS6NL4qcacGIN5edkc56C9rosR8aPU5X3iIMZ
-	 +63L5q26rRHUqhmBG4cp7bGMn31a/JQIsU2Ztuz+fuPXz6XjDnWYIckbq7Q6vndABm/0a
-	 jgihlVA/+sVNvbYFm7fCHHsxMhEw/k0/NoY9umUlF9dHs50qR+Y0amSTvGj5DdMUsqp7N
-	 jKVWFjEhCfm6po3R8W/xIa77LRWfhCeqVy7T2h2GogrUyEYWQFiFYcgwu1nohIdLr6p42
-	 vooFxsJkM8xtieHeDawBqiquEGI1QN+ChDN6jbSzrRcfuYPBCOHOTjtbUZxvEWgErjg==
+	bh=OBAYbr3OIV9trRJuu6dInuIxhKlqc9idSYeHlkZLew4=;
+	b=5CsPp7Rhz8tBEz/S7e78B+MWAJc9v/00ySjsJlxBD1AA/kvKR8ZXWX/0saFYf5FW8rDy
+	 L+xuvJoG7pZhq7u7MU2k4otXcVP68MVVKwGJ3a/ENyGn/mYOqeVy7JLaCStkCGo5mm6dQ
+	 nOCbp/34DTAO898skB5fU6hEqGhfmM2IXm7jNI9hdvqZUnhE1i2yCRLWpZjoFjA6XjZgE
+	 2tLIQL77tv+BjTK9GRc+tDc57VVohiQFlx/BtttAmtmVuKd7NjXVwXQCAApF7ctrowiRe
+	 mks5o/174KjTd2Uk5fDSh6CYeR0l73/LNJyXDOcn15i7mzrVKBYibzQKV47xKGjcFYw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=YgJpZN3d;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=n1yWC88b;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B7D760A2601
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EFB4D60A2630
 	for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2026 23:33:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=YgJpZN3d
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 067C81F000C7;
-	Wed, 18 Nov 2026 23:33:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=n1yWC88b
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A660F1F000C6;
+	Wed, 18 Nov 2026 23:33:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
 	s=k20260515; t=1795044809;
-	bh=HdO/btX1/Fvwe93IMJTemCMkMbwYfFx2AxyeoZY4knU=;
+	bh=OBAYbr3OIV9trRJuu6dInuIxhKlqc9idSYeHlkZLew4=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=YgJpZN3duzMfwrhgKolrOojDpLwQJrwyjky+gl5QyVJUdLEdp48N+zTN5JLdI4MaY
-	 uMNeyHTQOHdc76JFBZruHd6T4wNrGpm5vaPIufKqD/8BT4e4xV5ctWAIqvZKV80sPZ
-	 hceDB7qva/wzS06iG47rdnB/xpgh1m4nuq0aDiHRbblXe6ADujtt3IUrpkggXcIPzq
-	 gIVjyzzSosjHelbG9rjTQNCOQ98Z9SXPvUtXVv75kHRgwLHTgx8w3NKFWNzSjbUTad
-	 Dcc3bmtjJ8KAp8Wd5TYEdWrqsYHR8c1nj4Cocn+kaT6RVfpIIGhm6jPxU1Gnj3i3ig
-	 jwV5VmJ424eLg==
-Message-ID: <sashiko-outbox-222184@kernel.org>
+	b=n1yWC88bjyCtmkhSD29R5QViSsKe1n4sgT9Je8Nw7X6YT4FCGmmTdvrqHnopqk70P
+	 EtLFQDIQ4huxZfB9xqWr3/PwZwQN5Rp6nnbHj4Sw7WpVW5Cf9aT6W/L3daVXm0HUT1
+	 AUAuu9vfajmCLvSKsXRyHE1f9pPNmHoTenGnfk7dXg7yks63COa5NyDDZfjzFan5NV
+	 wVE5M5+nY7jNOHdXUOMEvFkOwZqz7tKKhnzZoc9LBOu8nAHmWd9USEmVPTRbQLDqMt
+	 ywp0QasbPyp3DghT7iNZ2n0vdqKwpvA/ZiFpPnuteWq1heJyOPKjO7K/osrtD2okhk
+	 RYDdFy6bjospg==
+Message-ID: <sashiko-outbox-222185@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 11/11] scsi: mpt3sas: Time out delayed not-responding
- device blocks
+Subject: Re: [PATCH v3 01/11] scsi: mpt3sas: Don't leave requeued firmware
+ events pending at teardown
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Jeff Layton" <jlayton@kernel.org>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20261118-sas-abba-v3-11-5562d690cf61@kernel.org>
+In-Reply-To: <20261118-sas-abba-v3-1-5562d690cf61@kernel.org>
 References: <20261118-sas-abba-v3-0-5562d690cf61@kernel.org>
- <20261118-sas-abba-v3-11-5562d690cf61@kernel.org>
+ <20261118-sas-abba-v3-1-5562d690cf61@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 18 Nov 2026 23:33:28 +0000
+Date: Wed, 18 Nov 2026 23:33:29 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -61,155 +61,128 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 
-Thank you for your contribution! Sashiko AI review found 2 potential
-issues to consider:
-- [Medium] scsi: mpt3sas: new DNR events ignored while polling in
-  _scsih_block_io_device()
-- [Medium] scsi: mpt3sas: sticky deleted flag on sdev prevents future
-  device blocking
+Thank you for your contribution! Sashiko AI review found 1 potential
+issue to consider:
+- [High] scsi: mpt3sas: races in _scsih_fw_event_requeue() and cleanup
+  queue
 --
 
-commit bc92a124ea93f9bf48382ebe6742a2dde2541670
+commit 462c12ccec856fed92f29e6abf5abd84f2b713ca
 Author: Jeff Layton <jlayton@kernel.org>
 
-scsi: mpt3sas: Time out delayed not-responding device blocks
+scsi: mpt3sas: Don't leave requeued firmware events pending at teardown
 
-This commit adds a delayed work item to time out and release delayed
-not-responding SDEV_BLOCK states after the firmware device missing delay
-plus a 30-second margin, and coordinates that timeout with device readiness
-polling and broadcast primitive handling.
+This commit initializes fw_event->delayed_work at allocation, skips
+requeuing events when the queue is being cleaned up or the host is being
+removed, and cancels pending delayed_work items during queue cleanup.
 
 > diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/=
 mpt3sas_scsih.c
-> index 814c18289cf1c..6eb92bd4f1225 100644
+> index 04255286a2a69..545913123d01f 100644
 > --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
 > +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
 [ ... ]
-> @@ -4125,23 +4128,106 @@ _scsih_get_target_ids(struct MPT3SAS_ADAPTER *io=
-c, struct scsi_device *sdev,
-[ ... ]
-> +static bool
-> +_scsih_claim_block(struct MPT3SAS_ADAPTER *ioc, struct scsi_device *sdev,
-> +		   struct MPT3SAS_DEVICE *sas_device_priv_data,
-> +		   unsigned int *block_seq)
-> +{
-> +	unsigned long flags;
-> +	bool claimed =3D false;
-> +
-> +	spin_lock_irqsave(&ioc->block_lock, flags);
-> +	if (sdev->hostdata =3D=3D sas_device_priv_data &&
-> +	    (sas_device_priv_data->block || sas_device_priv_data->dnr_expired))=
- {
-> +		sas_device_priv_data->block_deadline =3D 0;
-> +		sas_device_priv_data->dnr_expired =3D 0;
-> +		*block_seq =3D sas_device_priv_data->block_seq;
-> +		claimed =3D true;
-> +	}
-> +	spin_unlock_irqrestore(&ioc->block_lock, flags);
-> +	return claimed;
-> +}
-[ ... ]
-> @@ -4149,8 +4235,15 @@ _scsih_end_poll(struct MPT3SAS_ADAPTER *ioc, struc=
-t scsi_device *sdev,
->  	spin_lock_irqsave(&ioc->block_lock, flags);
->  	if (!__scsih_get_target_ids(sdev, sas_device_priv_data, ids))
->  		goto out;
-> +	if (sas_device_priv_data->block_seq !=3D block_seq) {
-> +		sdev_printk(KERN_INFO, sdev,
-> +		    "blocked again while polled, handle(0x%04x)\n",
-> +		    ids->handle);
-> +		goto out;
-> +	}
->  	if (!ready)
->  		sas_device_priv_data->deleted =3D 1;
-> +	/* not blocked if dnr_unblock_work released it before polling */
->  	if (sas_device_priv_data->block)
->  		_scsih_internal_device_unblock(sdev, sas_device_priv_data);
->  	ret =3D true;
-[ ... ]
-> @@ -4536,10 +4818,30 @@ _scsih_block_io_device(struct MPT3SAS_ADAPTER *io=
-c, u16 handle)
->  			goto next;
->  		if (sas_device_priv_data->sas_target->handle !=3D handle)
->  			goto next;
-> -		if (sas_device_priv_data->block)
-> +		deadline =3D (jiffies + _scsih_dnr_block_timeout(ioc,
-> +		    sas_device_priv_data->sas_target)) ?: 1;
-> +		if (sas_device_priv_data->block) {
-> +			/* a repeat DNR restarts the firmware's missing delay */
-> +			if (sas_device_priv_data->block_deadline &&
-> +			    sas_device_priv_data->block_extends <
-> +			    MPT3SAS_DNR_BLOCK_MAX_EXTENDS) {
-> +				sas_device_priv_data->block_extends++;
-> +				sas_device_priv_data->block_deadline =3D deadline;
-> +				__scsih_dnr_unblock_work_by(ioc, deadline);
-> +			}
->  			goto next;
+> @@ -3704,20 +3712,31 @@ _scsih_fw_event_requeue(struct MPT3SAS_ADAPTER *i=
+oc, struct fw_event_work
+>  {
+>  	unsigned long flags;
+> =20
+> -	if (ioc->firmware_event_thread =3D=3D NULL)
+> -		return;
+> -
+>  	spin_lock_irqsave(&ioc->fw_event_lock, flags);
+> +	/*
+> +	 * Don't rearm the event while the queue is being flushed or the
+> +	 * host is going away.  _scsih_fw_event_cleanup_queue() may already
+> +	 * be past it, and the timer could then fire after the workqueue
+> +	 * has been destroyed.
+> +	 */
+> +	if (!ioc->firmware_event_thread || ioc->remove_host ||
+> +	    ioc->fw_events_cleanup)
+> +		goto drop;
+> +	fw_event->delayed_work_active =3D 1;
+> +	/*
+> +	 * Cleanups can overlap, and one can clear fw_events_cleanup while
+> +	 * another is cancelling, and so disabling, the delayed work.
+> +	 */
+> +	if (!queue_delayed_work(ioc->firmware_event_thread,
+> +	    &fw_event->delayed_work, msecs_to_jiffies(delay)))
+> +		goto drop;
+>  	fw_event_work_get(fw_event);
+>  	list_add_tail(&fw_event->list, &ioc->fw_event_list);
+> -	if (!fw_event->delayed_work_active) {
+> -		fw_event->delayed_work_active =3D 1;
+> -		INIT_DELAYED_WORK(&fw_event->delayed_work,
+> -		    _firmware_event_work_delayed);
+> -	}
+> -	queue_delayed_work(ioc->firmware_event_thread, &fw_event->delayed_work,
+> -	    msecs_to_jiffies(delay));
+>  	spin_unlock_irqrestore(&ioc->fw_event_lock, flags);
+> +	return;
+> +drop:
+> +	spin_unlock_irqrestore(&ioc->fw_event_lock, flags);
+> +	fw_event_work_put(fw_event);
+>  }
+> =20
+>   /**
+> @@ -3869,9 +3888,17 @@ _scsih_fw_event_cleanup_queue(struct MPT3SAS_ADAPT=
+ER *ioc)
+>  		 *
+>  		 * If it did execute, we wait for it to finish, and the put will
+>  		 * happen from _firmware_event_work()
+> +		 *
+> +		 * An event requeued by _scsih_fw_event_requeue() is pending
+> +		 * on its delayed_work instead, and its timer must not fire
+> +		 * after the workqueue is destroyed.
+>  		 */
+> -		if (cancel_work_sync(&fw_event->work))
+> +		if (fw_event->delayed_work_active) {
+> +			if (cancel_delayed_work_sync(&fw_event->delayed_work))
+> +				fw_event_work_put(fw_event);
+> +		} else if (cancel_work_sync(&fw_event->work)) {
+>  			fw_event_work_put(fw_event);
 > +		}
+> =20
+>  	}
+>  	ioc->fw_events_cleanup =3D 0;
 
-[Severity: Medium]
-Does _scsih_block_io_device() drop a new DELAY_NOT_RESPONDING event that
-arrives while the firmware event worker is polling a still-blocked sdev?
+[Severity: High]
+Can a delayed_work timer still fire after ioc->firmware_event_thread is
+destroyed when two cleanups overlap, or can a stale topology change event
+still requeue itself after a host reset cleanup?
 
-Before polling, _scsih_ublock_io_all_device(),
-_scsih_ublock_io_device_wait() and _scsih_claim_block() clear
-sas_device_priv_data->block_deadline to 0 while leaving
-sas_device_priv_data->block set to 1:
+_scsih_fw_event_cleanup_queue() does not serialize concurrent callers and
+does not wait for a running topology change event (it skips waiting when
+ioc->current_event->event !=3D MPT3SAS_REMOVE_UNRESPONDING_DEVICES and
+clears ioc->fw_events_cleanup =3D 0 as soon as the loop finishes).  If a
+reset cleanup overlaps with teardown in scsih_remove() or scsih_shutdown():
 
-kworker                           <hardirq>
-_scsih_ublock_io_device_wait()
-  block_deadline =3D 0
-  _scsih_claim_block()
-    *block_seq =3D priv->block_seq
-                                  _scsih_block_io_device()
-                                    if (priv->block)
-                                      if (priv->block_deadline && ...)
-                                      goto next;
-  _scsih_end_poll()
-    if (priv->block_seq !=3D block_seq)
-    _scsih_internal_device_unblock()  <-- unblocks or offlines during DNR
+CPU0 (reset cleanup)              CPU1 (scsih_shutdown / scsih_remove)
+_scsih_fw_event_cleanup_queue()
+  fw_event =3D dequeue_next_fw_event()
+                                  _scsih_fw_event_cleanup_queue()
+                                    /* list_empty && !current_event */
+                                    return;
+                                  wq =3D ioc->firmware_event_thread;
+                                  ioc->firmware_event_thread =3D NULL;
+                                  destroy_workqueue(wq);
+                                  /* delayed_work timer fires on wq */
+                                    __queue_work()  <-- use-after-free
+  cancel_delayed_work_sync()
 
-Because sas_device_priv_data->block is still 1 and block_deadline is 0,
-_scsih_block_io_device() neither increments block_seq nor sets a new
-block_deadline.  _scsih_end_poll() then sees an unchanged block_seq and
-either unblocks the non-responding device to SDEV_RUNNING or marks it
-deleted and offlines it during the active device missing delay.
-
-Also, in the second loop of _scsih_ublock_io_all_device() and
-_scsih_ublock_io_device_wait(), _scsih_claim_block() is called lazily per
-sdev.  If an sdev whose previous block already expired (block =3D=3D 0,
-dnr_expired =3D=3D 1) receives a new DELAY_NOT_RESPONDING block while an
-earlier sdev is being polled, _scsih_claim_block() will claim that new
-block, clear its block_deadline and poll it immediately.
-
->  		if (sas_device && sas_device->pend_sas_rphy_add)
->  			goto next;
-> +		/*
-> +		 * Expiry would bring it back running without a TUR check.
-> +		 * _scsih_ublock_io_device_wait() polls offline devices anyway.
-> +		 * A device that failed its TUR check is marked deleted under
-> +		 * block_lock, before it is set offline.
-> +		 */
-> +		if (sdev->sdev_state =3D=3D SDEV_OFFLINE ||
-> +		    sas_device_priv_data->deleted)
-> +			goto next;
-
-[Severity: Medium]
-Can sas_device_priv_data->deleted remain set to 1 after an offlined sdev is
-returned to SDEV_RUNNING?
-
-When a readiness check fails, _scsih_end_poll() sets
-sas_device_priv_data->deleted =3D 1 under ioc->block_lock before the caller
-sets sdev->sdev_state to SDEV_OFFLINE.  The only place that clears
-sas_device_priv_data->deleted back to 0 is the first loop of
-_scsih_ublock_io_device_wait(), and only when sdev->sdev_state is still
-SDEV_OFFLINE.
-
-If an administrator brings the offlined device back to SDEV_RUNNING via
-sysfs, sas_device_priv_data->deleted stays 1, so _scsih_block_io_device()
-and _scsih_block_io_all_device() will skip blocking that sdev on all future
-DELAY_NOT_RESPONDING and broadcast primitive events.
+In addition, when a host reset cleanup runs while a topology change event
+is executing, _scsih_fw_event_cleanup_queue() sets
+ioc->current_event->ignore =3D 1, clears ioc->current_event =3D NULL, and
+resets ioc->fw_events_cleanup =3D 0 without cancelling or disabling
+fw_event->delayed_work.  If _scsih_add_device() or _scsih_pcie_add_device()
+fails on the final entry of the event (or an earlier entry already set
+requeue_event =3D 1), _scsih_sas_topology_change_event() exits its loop and
+returns requeue_event =3D 1 without re-checking fw_event->ignore.  When
+_mpt3sas_fw_work() then calls _scsih_fw_event_requeue(),
+ioc->fw_events_cleanup is already 0 and ioc->remove_host is 0, and
+_scsih_fw_event_requeue() checks neither fw_event->ignore nor
+ioc->shost_recovery, so the stale pre-reset event still requeues itself.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261118-sas-abba-v=
-3-0-5562d690cf61@kernel.org?part=3D11
+3-0-5562d690cf61@kernel.org?part=3D1
