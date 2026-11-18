@@ -1,79 +1,153 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795010262;
-	b=qE49Ds2AWFQnPLZ/7lesAss0wxgOgB2OB82tfzPyQj/c443Oz1tusBVG5Uryw10PZbJr
-	 oe1PpZ1DIZgFtEC+6oq+5MuHly7Dhzqu/Df++jVx70fzf2lTtYDVJHYcmYmoBPcGMQt2E
-	 E58Yg5opB8cD6onXRJiMSt0R8tlSxXq6kkecpyvgivCrbvTYJn2/C2TkV+ZGZ2VaMT8+m
-	 NllB01KNmImBPr4Bv5pzXyGUkVHWJ+MbDNs6OEdmC6EAz6w0WFCZtvIiIilOTW5ZzbjyU
-	 E5UqVAfYnC6hH7/L56pl08W2+JZoeq8n5FOYRS5CYpCta4S/zk+kGoJ5nFH5nS5DliA==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795010262;
-	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
-	 Content-Type:Content-Transfer-Encoding:Message-Id:X-B4-Tracking:
-	 X-Change-ID:To:Cc:X-Mailer:X-Developer-Signature:X-Developer-Key:
-	 X-Endpoint-Received:X-Original-From:Reply-To;
-	bh=9k6xkSgoU4/ycdA73IPAUpz2zxduvWOoGVm9HO78QCk=;
-	b=KZbl4M3PGzRtlI3BRluU3TXaJWCizp5pXuC7jHXN98fhfHtuqE+cWbjR12mHXEy3F+Jz
-	 rpJXsxYzuSThYU/we77GvJq+hulsQggfSL4LuNHGBLwtpa9aD0MUFocS9G+hdDNR6UngF
-	 ALIB5IpY1rYFJ917kptAt7b08TgFWzBRHsBVCDZsG+fSS6g0m5xFwqanVUTTVbwMVzdq0
-	 uIfUBnmel1+AB46T7juqt4SrVzoABe6T+7l83WrJLG/WrkGSDhDU03UQymn2VwKD8UzS4
-	 fpascg7Q1G1vy3GxyrxGXabtFwULT7vTWIUsXbON4BKgvST3dlBLC140qZW9qAQKpkA==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=FpKN4xwd;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A4819606A32A;
-	Wed, 18 Nov 2026 13:57:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=FpKN4xwd
-Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
-ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
-	t=1795010262;
-	b=wC3Eumy5vUzYEP/VaAEcCYXT3+aXje/fyymTBdOWstG3ZU8qqZODVcmYwQ7mr+5Rtd//
-	 Yhqmx6qe0tt3n+4UyS0ugI3z8vlOmZC0xjLmmUxhBjkiPo5DVrazBejVhyfk25pP6PvPh
-	 m0qJTUVId0QbnlMTi/bKGN9KaZjJWfnKRGgWfPcUZFhCvaBgqd5db6VNP1vRehPINVKmj
-	 n/LOAuJ6TxqCSAGUoElsVGyiQxOlYA+rBVFgh2agAwD5iXpTEHxGPmzSM53QP5oIsNF2o
-	 91actz0Rd8OEYvr8TPjlrXgciq4G72LAS163PszzW+SwuTjtdtMEb7wCuZIFIGWapTA==
-ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
-	c=relaxed/relaxed; t=1795010262;
-	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
-	 Content-Transfer-Encoding:Message-Id:X-B4-Tracking:X-Change-ID:To:Cc:
-	 X-Mailer:X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
-	 X-Original-From:Reply-To;
-	bh=9k6xkSgoU4/ycdA73IPAUpz2zxduvWOoGVm9HO78QCk=;
-	b=NfAUb8JHhzha+q4ZbEzKmEFIKEcIwC62iPAS/ca6o1cxQwf9TXulJmNbHDQ/9YgFCekm
-	 BvwjykVJmS64rl6qBFV6LjIz2kcsDyzmNGGU/626J+OtfUNSiPl6pQbza+VurK1KtJj4v
-	 ekbecQU0i8VSX4kb3SDRCKnKxYpoWpbvxzAqSjsPuY3CiKahDwjs2Gq9RFMqbToRnPxeu
-	 S6fG3hkqssLEx0kWOgRUK+LerHeTTHF3a6Qi5YuKYClXBb8+TU1QOBjib+gpsfJTG28r8
-	 NKBMJWotSqTDUXrt53DbYvE0QZLy3cvTF08M/w9hBx8AGYyjQOqpNVgNh4QSTvZsaCQ==
-ARC-Authentication-Results: i=1; smtp.kernel.org; 
-	arc=none smtp.remote-ip=100.80.115.77
-Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=90.155.92.199
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1795010717;
+	b=ZZE2dZnFqBBKXE3nmqAN7i41jopByNWuWPBZuY+MysN+zEuAmuL4rKNXbNCrNjv+MLKP
+	 deuevMLQK2aTQ+HtMVSWWMdS/WuHBFmNJP967YBTobLQ7lccTb9ebA3sYH2t56jIMvjwT
+	 RTFflDRUv3AaUm94yofdzOUXRBtEHd/Bjxa7tzQYz2sN8gW+O2OpVceW4HhK7z01VVhpY
+	 ppopPZm4BbnLXEcPmEfxN8coKi9JY/W9i/oHoBKOytgM447rAZbx01DRarntWHR8d/Qwd
+	 DTkTk7sEOHVujFjPIZUjfaZOoRHpOoOaThBPkfG070S3Ba7PetC6Z7zsgOx/6QT8ahw==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795010717;
+	h=DMARC-Filter:DKIM-Signature:Received:Received:Date:From:To:Cc:
+	 Subject:Message-ID:References:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To;
+	bh=foydl+Nk9ZmJviej/30gV1cygoCTSVCceGPI7w/fow0=;
+	b=QHs332L/Lr/gu6dQT6PYAhWtr9koXWUTXm9HUZ3CIdzTbdjlgmdVKYIdNOpjUxioWNJS
+	 prSOWcxyr9Gf1hUYQoTZ88l/pehKB91vYx7n05m0LRvK5Qx4IFLfE67SdQYFQG/8W5S1f
+	 V4JdipqJPT5QcU9uYZv+KH7DBh+C4IzOXNW1aLz4Fp0AcMc1mgeo9xMy0fkfXJ+K5OYBe
+	 WVkQ1CMN45rgRl4y9q4i3XJ4v8bhmsK7jsMAHWzfNZ0Y9rxKFLZMJ++9axQLlXLHUwD3i
+	 aXP+J/9ARPMhP54W6OEWWikYXpBogwbEfnfL48xD2lfDZN0CebiHih2wRifXAwBYpcQ==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=infradead.org;
+	spf=pass smtp.mailfrom=infradead.org;
+	dkim=pass header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=desiato.20200630 header.b=WOhR5yIs;
+	arc=none smtp.remote-ip=90.155.92.199
+Received: from desiato.infradead.org (desiato.infradead.org [90.155.92.199])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.kernel.org (Postfix) with ESMTPS id ED4121F000C5;
-	Wed, 18 Nov 2026 13:57:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795010262;
-	bh=9k6xkSgoU4/ycdA73IPAUpz2zxduvWOoGVm9HO78QCk=;
-	h=From:Date:Subject:To:Cc:Reply-To;
-	b=FpKN4xwdcjqxMJpZCwWr5aPFqtlgYWe8ZwIpl8mL7/d6S1cJWgxdzw0jTsiNEvYnc
-	 Ix5HJV7le25bBF1NAoP7yOqaJdQ/R9psBslIyZ0HUQDJbREnQ8fL/vpdkPmhqcoJKH
-	 Hnmnpt3D1nyRet7AdjbRZrEfxHaO+daYTDEcq91nOKCAhOX91FOLcsJZGk+EHaZY0d
-	 lFUMNPowM/XeaxW6lELexH0ek3RRuQXHI/asThfxrweuodNGzWKUe3XKirO2Z05pIo
-	 84dQa1VkDdGT658EqVWUq3gs/Ot9CeaAgiCCkcPUFw2Iyoyd7XjW+8CMyhqgHQ/txt
-	 lBbW08DGUikww==
-Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
-	by lkml.kernel.org (Postfix) with ESMTP id 4B4D44ADC0;
-	Wed, 18 Nov 2026 13:57:41 +0000 (UTC)
-From: Suyuan Wang via B4 Relay <devnull+shyckless.gmail.com@kernel.org>
-Date: Wed, 18 Nov 2026 13:57:41 +0000
-Subject: [PATCH] scsi: ibmvfc: Unmap scatterlists before completing BSG
- jobs
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14112606A31C;
+	Wed, 18 Nov 2026 14:05:16 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 14112606A31C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=desiato.20200630 header.b=WOhR5yIs
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=desiato.20200630; h=In-Reply-To:Content-Type:MIME-Version:
+	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=foydl+Nk9ZmJviej/30gV1cygoCTSVCceGPI7w/fow0=; b=WOhR5yIsaTPEeHWfDnVfXLmpTK
+	p2fdJUW95t55sxIMgLSjl77d2uFvCfu73mU98Ke2aNCntsKl6aVpkbYBm1Cx/VDmluo1BPNv7+OAu
+	tMoiX8BqQCyAo2LwGhBzWEtPnp6VCu494v+ZfDj7WbrayOV27fzo8fNM8HJjP8LHTkd9iaNFApzsE
+	lk4vuXuzbMGP9cd4HMq3g6UiNuqhVUDjcimTbrMVwrnHALwefYKVv8Cm8jLfaq4XNJkH9YBTHZln7
+	mXEN4VZW1Q1cyhZ4ngMZSOGFp8d6zXJFUUQZrn2EA8U/U3Fygy9Q03FgvLOc+ZshQqvdAFwW3JiIj
+	8W5+1yxw==;
+Received: from 77-249-17-252.cable.dynamic.v4.ziggo.nl ([77.249.17.252] helo=noisy.programming.kicks-ass.net)
+	by desiato.infradead.org with esmtpsa (Exim 4.100.1 #2 (Red Hat Linux))
+	id 1xTgHj-0000000G6tZ-0guj;
+	Wed, 18 Nov 2026 14:05:15 +0000
+Received: by noisy.programming.kicks-ass.net (Postfix, from userid 1000)
+	id E2EC13005AF; Wed, 18 Nov 2026 15:05:13 +0100 (CET)
+Date: Wed, 18 Nov 2026 15:05:13 +0100
+From: Peter Zijlstra <peterz@infradead.org>
+To: Bence Csokas <bence.csokas@arm.com>
+Cc: Kees Cook <kees@kernel.org>,
+	"Gustavo A. R. Silva" <gustavoars@kernel.org>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
+	Sumit Semwal <sumit.semwal@linaro.org>,
+	Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
+	Philipp Stanner <phasta@kernel.org>,
+	Sudeep Holla <sudeep.holla@kernel.org>,
+	Cristian Marussi <cristian.marussi@arm.com>,
+	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+	Maxime Ripard <mripard@kernel.org>,
+	Thomas Zimmermann <tzimmermann@suse.de>,
+	David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>,
+	Jani Nikula <jani.nikula@linux.intel.com>,
+	Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
+	Rodrigo Vivi <rodrigo.vivi@intel.com>,
+	Tvrtko Ursulin <tursulin@ursulin.net>,
+	Lyude Paul <lyude@redhat.com>, Danilo Krummrich <dakr@kernel.org>,
+	Zack Rusin <zack.rusin@broadcom.com>,
+	Broadcom internal kernel review list <bcm-kernel-feedback-list@broadcom.com>,
+	Selvin Xavier <selvin.xavier@broadcom.com>,
+	Kalesh AP <kalesh-anakkur.purayil@broadcom.com>,
+	Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>,
+	Chengchang Tang <tangchengchang@huawei.com>,
+	Junxian Huang <huangjunxian6@hisilicon.com>,
+	Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
+	Hans de Goede <hansg@kernel.org>,
+	Mauro Carvalho Chehab <mchehab@kernel.org>,
+	Haiyang Zhang <haiyangz@microsoft.com>,
+	Wei Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>,
+	Andrew Lunn <andrew+netdev@lunn.ch>,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@kernel.org>,
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+	Miri Korenblit <miriam.rachel.korenblit@intel.com>,
+	Jes Sorensen <Jes.Sorensen@gmail.com>,
+	Ping-Ke Shih <pkshih@realtek.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Benson Leung <bleung@chromium.org>,
+	Tzung-Bi Shih <tzungbi@kernel.org>,
+	Guenter Roeck <groeck@chromium.org>,
+	Nilesh Javali <njavali@marvell.com>,
+	GR-QLogic-Storage-Upstream@marvell.com,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <mkp@kernel.org>,
+	Julia Lawall <Julia.Lawall@inria.fr>,
+	Nicolas Palix <nicolas.palix@imag.fr>,
+	Alexander Viro <viro@zeniv.linux.org.uk>,
+	Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>,
+	Paulo Alcantara <pc@manguebit.org>,
+	Namjae Jeon <linkinjeon@kernel.org>,
+	Ronnie Sahlberg <ronniesahlberg@gmail.com>,
+	Shyam Prasad N <sprasad@microsoft.com>, Tom Talpey <tom@talpey.com>,
+	Bharath SM <bharathsm@microsoft.com>,
+	Carlos Maiolino <cem@kernel.org>, Thomas Gleixner <tglx@kernel.org>,
+	Ingo Molnar <mingo@redhat.com>, Darren Hart <dvhart@infradead.org>,
+	Davidlohr Bueso <dave@stgolabs.net>,
+	=?iso-8859-1?Q?Andr=E9?= Almeida <andrealmeid@igalia.com>,
+	Alexei Starovoitov <ast@kernel.org>,
+	Daniel Borkmann <daniel@iogearbox.net>,
+	Andrii Nakryiko <andrii@kernel.org>,
+	Eduard Zingerman <eddyz87@gmail.com>,
+	Kumar Kartikeya Dwivedi <memxor@gmail.com>,
+	Martin KaFai Lau <martin.lau@linux.dev>, Song Liu <song@kernel.org>,
+	Yonghong Song <yonghong.song@linux.dev>,
+	Jiri Olsa <jolsa@kernel.org>,
+	Emil Tsalapatis <emil@etsalapatis.com>,
+	Ihor Solodrai <ihor.solodrai@linux.dev>,
+	Simon Horman <horms@kernel.org>, David Ahern <dsahern@kernel.org>,
+	Ido Schimmel <idosch@nvidia.com>,
+	Willem de Bruijn <willemdebruijn.kernel@gmail.com>,
+	Steffen Klassert <steffen.klassert@secunet.com>,
+	Herbert Xu <herbert@gondor.apana.org.au>,
+	=?iso-8859-1?Q?Micka=EBl_Sala=FCn?= <mic@digikod.net>,
+	=?iso-8859-1?Q?G=FCnther?= Noack <gnoack@google.com>,
+	Paul Moore <paul@paul-moore.com>, James Morris <jmorris@namei.org>,
+	"Serge E. Hallyn" <serge@hallyn.com>,
+	"Geoffrey D. Bennett" <g@b4.vu>, Jaroslav Kysela <perex@perex.cz>,
+	Takashi Iwai <tiwai@suse.com>, linux-hardening@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
+	linaro-mm-sig@lists.linaro.org, arm-scmi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	intel-gfx@lists.freedesktop.org, nouveau@lists.freedesktop.org,
+	linux-rdma@vger.kernel.org, linux-hyperv@vger.kernel.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	chrome-platform@lists.linux.dev, linux-scsi@vger.kernel.org,
+	cocci@inria.fr, linux-fsdevel@vger.kernel.org,
+	linux-cifs@vger.kernel.org, samba-technical@lists.samba.org,
+	linux-xfs@vger.kernel.org, bpf@vger.kernel.org,
+	ipsec@lists.linux.dev, linux-security-module@vger.kernel.org,
+	linux-sound@vger.kernel.org
+Subject: Re: [PATCH v4 2/2] treewide: Use struct_offset()
+Message-ID: <20261118140513.GO1813469@noisy.programming.kicks-ass.net>
+References: <20261118-offsetof-v4-0-95b385c10b22@arm.com>
+ <20261118-offsetof-v4-2-95b385c10b22@arm.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -83,81 +157,14 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20261118-ibmvfc-v1-1-3115f5901130@gmail.com>
-X-B4-Tracking: v=1; b=H4sIANSu/WoC/6tWKk4tykwtVrJSqFYqSi3LLM7MzwNyDHUUlJIzE
- vPSU3UzU4B8JSMDIzNDQ0ML3cyk3LK0ZF1TU9OkRItk4+Sk5DQloOKCotS0zAqwQdGxEH5xaVJ
- WanIJSLdSbS0Ax0wl/2oAAAA=
-X-Change-ID: 20261118-ibmvfc-555ba8c3cbcf
-To: tyreld@linux.ibm.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, 
- linuxppc-dev@lists.ozlabs.org
-X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1795010260; l=2020;
- i=shyckless@gmail.com; s=default; h=from:subject:message-id;
- bh=N0Tx4tKvk+IGw2iXqqTkUq8ZEOCSQRNuciGKIswz/Gg=;
- b=gfulJ5sTCNkCHuEG89KYs141VHVOJihg1jGg25SYidOMf4HKeizUjAnBk4ijAwqXuQBi+EnWy
- EG8irAzLWPhAgwj5bHaoFp5FuwKcgOpmAAtUB5Qtne6wavXO8KaJRNI
-X-Developer-Key: i=shyckless@gmail.com; a=ed25519;
- pk=pMtccVGiWES3bV+7YBFuBclkvq2n2HBHQ5azaBrK2lY=
-X-Endpoint-Received: by B4 Relay for shyckless@gmail.com/default with
- auth_id=1498
-X-Original-From: Suyuan Wang <shyckless@gmail.com>
-Reply-To: shyckless@gmail.com
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261118-offsetof-v4-2-95b385c10b22@arm.com>
 
-From: Suyuan Wang <stevewong@hust.edu.cn>
+On Wed, Nov 18, 2026 at 12:50:09PM +0100, Bence Csokas wrote:
+> Generated with a simple Coccinelle patch found in
+> scripts/coccinelle/api/struct_offsetof.cocci
 
-ibmvfc_bsg_request() calls bsg_job_done() before unmapping the request
-and reply scatterlists.
-
-bsg_job_done() starts block request completion, which can run
-bsg_teardown_job() and free both scatterlists before the following
-dma_unmap_sg() calls. The unmaps can then read freed memory.
-
-Complete the job after the common DMA cleanup instead. The completion
-path has already saved the operation result in bsg_reply and set rc to
-zero; paths that return an error keep their existing cleanup and leave
-completion to the FC transport. passthru_mutex stays held until after
-the completion call.
-
-Found with a static analysis tool and checked by hand.
-
-Fixes: d31429e1517c ("[SCSI] ibmvfc: Add FC Passthru support")
-Cc: stable@vger.kernel.org
-Co-developed-by: Kaixuan Li <kaixuan.li@ntu.edu.sg>
-Signed-off-by: Kaixuan Li <kaixuan.li@ntu.edu.sg>
-Signed-off-by: Suyuan Wang <stevewong@hust.edu.cn>
----
-Compile tested on powerpc with clang (W=1, no new warnings). I don't
-have IBM Power virtual FC hardware.
----
- drivers/scsi/ibmvscsi/ibmvfc-core.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/ibmvfc-core.c
-index aa7ae81df41b..6dce72cb80b5 100644
---- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
-+++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
-@@ -2392,14 +2392,15 @@ static int ibmvfc_bsg_request(struct bsg_job *job)
- 	ibmvfc_free_event(evt);
- 	spin_unlock_irqrestore(&vhost->host->host_lock, flags);
- 	bsg_reply->result = rc;
--	bsg_job_done(job, bsg_reply->result,
--		       bsg_reply->reply_payload_rcv_len);
- 	rc = 0;
- out:
- 	dma_unmap_sg(vhost->dev, job->request_payload.sg_list,
- 		     job->request_payload.sg_cnt, DMA_TO_DEVICE);
- 	dma_unmap_sg(vhost->dev, job->reply_payload.sg_list,
- 		     job->reply_payload.sg_cnt, DMA_FROM_DEVICE);
-+	if (!rc)
-+		bsg_job_done(job, bsg_reply->result,
-+			     bsg_reply->reply_payload_rcv_len);
- 	mutex_unlock(&vhost->passthru_mutex);
- 	LEAVE;
- 	return rc;
-
-
-
-
+I think this is a good example of why we don't need this. It adds yet
+another macro to remember, and doesn't actually save many characters at
+all.
