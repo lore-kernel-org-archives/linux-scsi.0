@@ -1,59 +1,64 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794977372;
-	b=QrrshHanjX7AulfjX2epV2rWDap/QNpf1Mn5n2G7/cr4Hz4liCLvonBYnshanOheRBW3
-	 KIGoW0dI5VMqHRN9iMZUUl5OxMWvQwwZx/BU0PhBWKOnKUg98pazthzrvbe/0EmYwUxTd
-	 kvkrOGglmwz+3RemEpXAnu778V4hlDKCy8LSyC1qvBbvOk7pXfedH47dtu2HwrmWjcbIL
-	 fp1p/1u0h0F6sSepnG1PZidpsepGWQXlynyT149ACtxLeSPW4Ew3dkV4Qhanhjr3AQZQr
-	 cgJlZNo6Mp101am8T/+T6qVg97KYpNYQtLkcDoMd8GAUf/LYCXp/p+z3dxnJQipF4dw==
+	t=1794977378;
+	b=f553uQFTFTm+UjZs8hu/UJq9pHWQtFsSr6khJVfiMnhLEtjlDQdwskdY5MjeXHg0r7vz
+	 l+131fEKa5RV1CXDMrdPZV9pAxK+ABRPS2fMM1mYaeJ+CcIg5D9B4OOzaU82jtbkum9qy
+	 qdQLQux0iLhRqdwiSJHcGx/p8BY56oQ5R/r7b9xqCVT0DoRFebe7XLo6cASybxoSl999Y
+	 u5L/cPBCPOYHIT4FPfYftye8/FZUDn+OTZAZtZWQ3Ro/s2OkJEBi0QdySF/kBgvow81EA
+	 bVhh/QIwB0PANNDOH3154PsFICQaT47+10jVgmgcNKxFnug16i+sW1weR7Rm0GkusAg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794977372;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794977378;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding;
-	bh=UWEK1AajbpT0vN3lvqJ1sxOkKqm6WxnTFq6rpzs239s=;
-	b=lHU1QSJ0zGYQotcxtMkjFz7xRWabG2r7pkO8QraIK3W/1J+tZRSbfNaPm9VUHfYQl19h
-	 qaujP9esNaRGa2ooL70wldj04TPmFuf8/CHIAQxTY2U4DNqV9/Yo0JEJwraFhoE2Vp0h6
-	 WL/q6tVKu65ZOUXhxtcpmasewZOSwdPji/q0AhhWoVStKzt3nnqn317MDZQKd4Lq0bs0d
-	 nrCjaTRjP3UsLNStHVGeCaUsaxrVd+5TaW7C8m8tmW91DJiflzv1pOQD5ATdfZ+j/+gS5
-	 sb9t5fvUJ5KWb0JF5bRmGKMkOztQmjfG4gVOvEL2BYEn4TPby7/y2H59UutMWhrEbPQ==
+	bh=fgpWZZwE7NSYEWRtNq7ZlfOjQQLjUSuAxIrdzbkZGnM=;
+	b=3mzl70CYKwuIqotfV9S8wCgdYIZX2vnvRMhNyU4kqPsE0dYclFcdN7pqE3WcHBHjpqeI
+	 QwFyBLG1GaCeaBlCtz5dB3Uhxy91d/U6q3zcI4KLWEOW7UtzxCnMhyX5FHDS44dxuK+nU
+	 8Dr887gUUFT9SvnQw199UpZw9QPCZjxZ3caH6feDewf4B9FvxnB6IfQ9wqPifBrD8s1s6
+	 34kNAqQ93xnr41xvU8JlKx0xcwhxfOUsYIvzwTqOEj83eSzVz9oXvxAK7DhvdnzuAiFoN
+	 co32JJdfBAql96Qf6+6kY/d6ebK4fiEpXMbffjcl8XEc7Tos/HU964seTv6P5GebMBw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Vtjg2Blc;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="M/Z28yIl";
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCC21606A333;
-	Wed, 18 Nov 2026 04:49:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F57A606A33F;
+	Wed, 18 Nov 2026 04:49:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Vtjg2Blc
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CBA021F000C5;
-	Wed, 18 Nov 2026 04:49:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=M/Z28yIl
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 296341F000CA;
+	Wed, 18 Nov 2026 04:49:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794977372;
-	bh=UWEK1AajbpT0vN3lvqJ1sxOkKqm6WxnTFq6rpzs239s=;
+	s=k20260515; t=1794977378;
+	bh=fgpWZZwE7NSYEWRtNq7ZlfOjQQLjUSuAxIrdzbkZGnM=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=Vtjg2Blc+O8tdHVa9mYgbwKh7tt9i6STnerw7oANZvms5rVmzlnraIaD2IITH0JPR
-	 HQAG38kB1rx4OekeiQZfT9Gz68HOtnUJOiIBQ+BpibLw/JLEKAsiTOBpwlG/y20Slg
-	 ssv1EAHqt/eOBWBBNCNXG59RjZbzizybcy0g4NdQCf2jLWlmMnMFNJYS+flr1bWkQJ
-	 iJsJLwUhDJ8NOjtdd5ANrmZwoYRMfoi9BKW2KayPBH8Yp5GrXrpn0jisqaCOT8Acs+
-	 DmF2KouQJqRg4OcLOZrWgyiaN+wUlmGfzB5OS5Ub8QuBvUGn6SN8cdoAo9EKN5qrhM
-	 /damYE0WtSUAA==
+	b=M/Z28yIlfN/dW/5PR331Wua2qc0cdeLPcRWT0tXAUOvYBYQ8TpNLvxL+c0cpqRWSH
+	 eHcG3AYvBCosqnjT5iimqL5FGdOtGM831xCM1QUfyl7jLvNarT4e9j3biL9E5ySZPS
+	 DGvRDjG4tfRaGE/Bsg9m41DxTGwCESe5hGGmZXcgiJPTSQ1cndFofXtpUHJq9a3PtC
+	 YDeBPmcW+L4jikcpS7Zs+W0m87xJ3/Q5RU+KRTecgyDPsYD6V9uUdwOuyCRnHMFiEF
+	 vKyOIurIZco6ae4ixatC3cSDYBHTv/+P10mBmsfbDWyeROV9wTP0oWz6HylVOwx4KQ
+	 0AAid/iSAxT4A==
 From: "Martin K. Petersen (Oracle)" <mkp@kernel.org>
-To: linux-kernel@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	Paul Ely <paul.ely@broadcom.com>,
-	Kyle Mahlkuch <kmahlkuc@linux.ibm.com>
+To: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+	Stanley Jhu <stanleyjhu@google.com>
 Cc: "Martin K . Petersen" <mkp@kernel.org>,
-	msmurthy@linux.ibm.com,
-	Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v4] scsi: lpfc: Fix race conditions in ELS retry handling
-Date: Tue, 17 Nov 2026 23:49:21 -0500
-Message-ID: <179497726105.2093762.8367939589349968463.b4-ty@b4>
+	Adrian Hunter <adrian.hunter@intel.com>,
+	Alim Akhtar <alim.akhtar@samsung.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	Bean Huo <beanhuo@micron.com>,
+	sangram kumar yerra <sangram.k.y@intel.com>,
+	Rajeshkumar Sambandham <Rajeshkumar.Sambandham@amd.com>,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org
+Subject: Re: [PATCH] scsi: ufs: ufs-pci: Check hba->vops in system PM callbacks
+Date: Tue, 17 Nov 2026 23:49:25 -0500
+Message-ID: <179497726103.2093762.2048107205167410263.b4-ty@b4>
 X-Mailer: git-send-email 2.56.1
-In-Reply-To: <dcea48dd-f76c-4bb0-9275-c12ef9bd78a2@linux.ibm.com>
-References: <dcea48dd-f76c-4bb0-9275-c12ef9bd78a2@linux.ibm.com>
+In-Reply-To: <20261111084853.3530107-1-stanleyjhu@google.com>
+References: <20261111084853.3530107-1-stanleyjhu@google.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -66,22 +71,26 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 
-On Wed, 11 Nov 2026 11:47:41 -0600, Kyle Mahlkuch wrote:
+On Wed, 11 Nov 2026 16:48:53 +0800, Stanley Jhu wrote:
 
-> This patch addresses a race condition in the lpfc driver's ELS retry
-> event handling that can lead to a use-after-free in the
-> lpfc_cancel_retry_delay_tmo(), where the NLP_DELAY_TMO flag is cleared
-> before acquiring the lock to check if the retry event is queued. This
-> creates a window where the timer can be rescheduled and fire, causing
-> both the cancel path and the worker thread to release the same reference,
-> resulting in a double-put and use-after-free.
+> ufshcd_pci_tbl[] defines the Samsung 0xC00C and AMD 0x1B29 PCI IDs
+> with .driver_data set to 0, so ufshcd_pci_probe() leaves hba->vops
+> NULL. Both ufshcd_pci_suspend_prepare() and
+> ufshcd_pci_resume_complete() dereference hba->vops->name without
+> checking hba->vops:
+> 
+> 1. System suspend on an AMD 0x1B29 or Samsung 0xC00C host enters the
+>    PM prepare phase and calls ufshcd_pci_suspend_prepare().
+> 2. ufshcd_pci_suspend_prepare() evaluates
+>    strcmp(hba->vops->name, "intel-pci"), dereferences NULL, and
+>    triggers a kernel oops in the suspending task.
 > 
 > [...]
 
 Applied to 7.4/scsi-fixes, thanks!
 
-[1/1] scsi: lpfc: Fix race conditions in ELS retry handling
-      https://git.kernel.org/mkp/scsi/c/7470a1f2a84d
+[1/1] scsi: ufs: ufs-pci: Check hba->vops in system PM callbacks
+      https://git.kernel.org/mkp/scsi/c/947d8e9a4d1e
 
 -- 
 Martin K. Petersen
