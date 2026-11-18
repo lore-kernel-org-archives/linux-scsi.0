@@ -1,92 +1,92 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.215.225
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.222.225
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794996740;
-	b=Utzi2iaDQGc++yF/GVH0vD8DOcZLIvE0lIij4jTac2UGBY2qkLKCHR6ias0kvxRd3qQ1
-	 BiX2nyx+CJEXP4GrYjPObCtKxSmILit0ZJmuKNfb1FUYNYNZTYs2yfGGw3bE/IoRWS1DX
-	 /mOaThGDnAtGg1Xi2GxKDmn4QnJqx7VkT4GYjqHLy5nuZQSb3RESL1dNPUukpTsFRXdPO
-	 hR3zDcL8m2OwweKSpVl6oJoccomvO5/6MBHXD+QseAJvyptZbQabLKvk23M2Kv6WbhXFs
-	 IyRVHFpJu9UgkkOytj5JIBk8p++Hrl8LjjX2x6ks/4V7Hx9cYghhOum4t09RoHZpaJA==
+	t=1794996744;
+	b=zxWkawnhk72dW1Ta4mm5LsGbgztoqPmzmLFI+eGsr59BcxpxPWHMiebYqqAiKsov2I6q
+	 b1OH7G4X4BWQJfP9dpK41aV5ihp7/XblLg8XzBzj2/jNnZwNXo0SBL90+sElN4SQHEVN7
+	 rl//UmnUx06ju3SCEI1KcphH65xpp7Kxp+gzHj2c22xQRx4z0eD7U8tl0ZEtXfyTSSFfq
+	 CIyf5pAHeO4g5zU2sGr4KUxuNm3AvsEKIuP/0roitTGAv3Y0qYWagNjKpIFJjn10cn1UN
+	 B0PprHmbjR+HMG/bOZzB9rtNTyMAL7FI8128jUn3V9qLma2aosXLNOXJkDNcVSL9/kA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794996740;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794996744;
 	h=DMARC-Filter:Received:X-Google-DKIM-Signature:X-Gm-Message-State:
 	 X-Gm-Gg:X-Received:Received:X-Relaying-Domain:X-CFilter-Loop:Received:
 	 DKIM-Signature:X-Received:X-Received:Received:From:To:Cc:Subject:Date:
 	 Message-Id:X-Mailer:In-Reply-To:References:X-DetectorID-Processed;
-	bh=3XZ75csC6Eenl/OFpVvyiIQ6tmTJ2//2Pf9Iqu1dnRQ=;
-	b=jJjxXP1IzffhCHHF7v/gpLZ0XwrrKtYdvTMjTBxqQytlezLZa4fREqrup/CPzjmFjINE
-	 vBrY2UUAoG5nHnZciTOjvGwxnYbtxlUFZ+/v2fwthWER9ePPttRACTXGteOzEgxzRklGb
-	 GgswE74PT4nzvHpZA2WRzM/UYRS1GVM1NBT8QSTFzH7Xu+TK4mFawsoiy3B+3wXHYfDar
-	 diaKFPxE6msSc+vAJ4WuUpRWEq5xV1v2uk6LmgrinP+QIRAy663nlumfQFd+Ue2p+/i8+
-	 BnZeqGOi7+mersuf0aX1sgLl/QCo0mYmraC8tEF3pL5c0/SvhIwq2j04szj8kg1mQ4A==
+	bh=R3w5BnXRfp1BkKT2SC4/1on8kgV+rGChlpaT00YnZ4o=;
+	b=rQPd0ppY99EGSjXvWTezoeS4fYtcQTjZx29ot5RR6OqeQKr0z963/+Jhfu0JpLecJi51
+	 58x5n9lEsEMH50g95FQo0AhaQrkuMfgpX6FjnD68EDYYTs6NM1MxUTs7ardZvcot39MUr
+	 q5d9zrC2R0vavGk8hkCVirlTEXBvPGFr1WaGdkd9Te9f20bRaJD1LqJPf+/RZkma2rjgl
+	 mOvljoumFK71+zWQ6WboHz3S7yv2t+wQ7VjBO+p+bwVQekjjUz5HfoE29dm95ClX/d+P8
+	 Qkahvzm9HMH+KO/LV9g6bBsiGqRzroGDTdkkjTv7XEUbq0kAsxjVhwl3FU7fgmTHDaA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=broadcom.com;
 	spf=fail smtp.mailfrom=broadcom.com;
-	dkim=pass header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=YLtqjFFr;
-	arc=none smtp.remote-ip=209.85.215.225
-Received: from mail-pg1-f225.google.com (mail-pg1-f225.google.com [209.85.215.225])
+	dkim=pass header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=ZySsIttP;
+	arc=none smtp.remote-ip=209.85.222.225
+Received: from mail-qk1-f225.google.com (mail-qk1-f225.google.com [209.85.222.225])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2697A606A332
-	for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2026 10:12:19 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2697A606A332
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2673606A325
+	for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2026 10:12:23 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org F2673606A325
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=YLtqjFFr
-Received: by mail-pg1-f225.google.com with SMTP id 41be03b00d2f7-cd60c5da24cso606647a12.0
-        for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2026 02:12:19 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=ZySsIttP
+Received: by mail-qk1-f225.google.com with SMTP id af79cd13be357-94961ed97bcso100868785a.1
+        for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2026 02:12:23 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794996739; x=1795601539;
+        d=1e100.net; s=20260707; t=1794996743; x=1795601543;
         h=references:in-reply-to:message-id:date:subject:cc:to:from
          :dkim-signature:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=3XZ75csC6Eenl/OFpVvyiIQ6tmTJ2//2Pf9Iqu1dnRQ=;
-        b=CP7IlKRqUNAklE3fdWhkEXeLaOK9UBAwCxHskQY0PQPCBBKCoUMdRwrJiKOT1M3pkS
-         fHmjN+U/WIM6vNkU4IQrleiuQ5gr+ety8w5mJSllbCe+qACUpLQQHWxaIuA9q3d63wRc
-         H/oVUHo6kc+baO7IcWPlNMGHFH4AlVjJXTtDpgv34OqbNttNRet7plw19Dx0q5zM0dQ3
-         Zz3cPtG9HGTED+Ld5dBB8pIaFieXt92Ztkph0Zwq72Wl3dtrdemr8KQ/UBvZCv99AyN1
-         ktFQSwxy2egK8IHvPIXFPISz6zvqRmx07wkfdrZwRfEISmRDLR8t9OLThgNQMYcrv6JW
-         1SXA==
-X-Gm-Message-State: APuU4Z/JBoYGUxt8d4khPekmxrm84jll/TwdZ4UQQut6DRhVPoSNy+fl
-	7TMVRtrzyZnvhWrm0L+ytmL3qO8XIoLAuovtou2WDvXRR2euScfJZemhvIUyWhlHes5IxfgiEY1
-	RV/LVG+8lIRtZBrt/lNJvs6XCPRCV8yzJTF0iYMOltXhPhy5YdMasD+q6vzvdC8NN8Of6gLuT8I
-	+TXg27/0nymxP1mfqX3wRxPcB28spSHdlgTe9JLUXkqRHtVXTW/D1Rx5w7Y7epd8V/6lE3DDu4L
-	41+rxELFklrcW14sDDX/haL1tiYzRT7Jv4=
-X-Gm-Gg: AZFdTZcUGnLEjewV9KQE35w3XjhYJqOrTwHNDS7xMYQ/4Dn9cfWNO2Ujo0vF1N33BUF
-	pG7FSNKOTeo7Z1wAiqRXaxi/5PEIlH8/3Un+bcdNKZbb0VWiEL9T/4HWPVPF7xRR1CX62/od5rB
-	FafRnyP9iKd2MC5HZDsViI9MyaWawqGchGpE7ZeeLHTQOobUtMjWHuJEqjxM2j/yIm5zeKMLLH3
-	2MUvHEn1FaAkEQdHx4kBM+N4rqksI4O2VMFPgV86qdOLGxkW7HMhqER5XEsFcmVe5/me/XmprUK
-	g3HWOjCQV6HVw9UR9xjTKMn8KCgmuFwn6NoUjqK9LHraQ7lU9N506ZEU+vs4ywQSAqQNwyMzf3d
-	q/I13wFQVi0CSxAUXTu5Y25YbItQl8hIXjvZpn6L7wi79xiyc7abRUY+8cUem5vQLW2WM8feN3F
-	tp+1p/6ZG9XVvheimo3AM3/QNfwiLuFFsel1ZYVZX+ciqr2XJVyTQrsPMs
-X-Received: by 2002:a17:90b:1b07:b0:39e:6c6a:6580 with SMTP id 98e67ed59e1d1-3b3d07d92a8mr2118492a91.67.1794996739429;
-        Wed, 18 Nov 2026 02:12:19 -0800 (PST)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-123.dlp.protect.broadcom.com. [144.49.247.123])
-        by smtp-relay.gmail.com with ESMTPS id 98e67ed59e1d1-3b3d14c0525sm1611986a91.8.2026.11.18.02.12.19
+        bh=R3w5BnXRfp1BkKT2SC4/1on8kgV+rGChlpaT00YnZ4o=;
+        b=jOa5wobvJRXs0bNigcUMScgXz/LxPtpQrPseQ1nib0ySuz18z3Obu2xFRBLqdpKVJV
+         mz3vYO+m6yolhJ8AXVoA0qt2b9e2BzRpXm/slW2lLf2cffuQaRJipTDsvWBxuCMDuMwj
+         OTqR1ft8dClcAVwTuaNOkE2YyVHDMqbbI+Y+OnX4jP2bpc+L7l+MfR70tUVXGAD18/88
+         vbkmYSjaO+MHMc24NrTA71F+Ruo4T87FMyvM/gIVI7mcoH8Ut6a8frnpnhILL4MXSj1S
+         247NTGxlybBii1PpctmUrzQLDYI5eHK3sQsXlKrrqzyegA4JyLdXPaqtC6B1yyuozAmj
+         temQ==
+X-Gm-Message-State: APuU4Z/EElNn/FcZubU7ZLHFKOeQHY8x/Q/seG/2EmJK3B2Wk+uBeIbz
+	1+bcR/4QH5nRct+ovMJ92wzsaJ/Aq7fn0yKRJfVudjKHJHzd6vHBHuOw0kvyRXZDzoye9XfnAE7
+	dpJy+x/mlN1ooKgTBwtI/KV3fA9hUdLoWvrZZ6VW/aZUxy27AIam/+XnhbgE+mOmEkipjouJKYU
+	VRBx8mED+tILAjvJFAQlfjUqeiHlGxWEyUIokncSNsVQSDP6qXMNyWB6lBcBHj5qnx24BDR6nmu
+	oYxPDkfG/vTaS8E/UvVjaCOT6DVfqMlyQM=
+X-Gm-Gg: AYBFou3rw0iRb2aBlRgy5KqarqvndlErtAziJm2wcbBNyc3HCdF01xesksInwRmM5FI
+	3B2dY9nBtw07893eYlQrHk9L8vW8nQAtvTjKv0kBuI/FS/nAGdfgZflckenEm8XbPpUjKrBCCp0
+	yM7ggFqamMx6vmVDDJJuFQEDatvwpKeRgMzpu0+XkpFhqNkSf5o7ytIbt55yTtZD7oVt4HhaFud
+	58T5VTAWQHz4DmbqvXPKHQPwGWq0P+MZWErYZ5QRXnNqenPhwc36bsiZ3St1sd1J/xDIjbttDRS
+	hzmrtAXuMMoM+6t3BPB7JuRDPF4sNwz0jQfm3ZkjFK/TidecKGa+QsnmKbzfOJSDDKgUkQTKLpS
+	oGDe0Z+a5mJZrqeQKE+z1+21AubzzYr8/uQToo0031SUxY02tUAhGbBzu/p+DTgUqu2qzWdHrE4
+	zgGt7XPs3m2LIREX+3xPasMNbBft9AZ9I1qDJH8E4rr6Tj9Td0u8orgQ==
+X-Received: by 2002:a05:620a:6c8a:b0:93e:c6ff:b787 with SMTP id af79cd13be357-94999721fdfmr358007885a.13.1794996742860;
+        Wed, 18 Nov 2026 02:12:22 -0800 (PST)
+Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-26.dlp.protect.broadcom.com. [144.49.247.26])
+        by smtp-relay.gmail.com with ESMTPS id af79cd13be357-9499b52cbf0sm12686185a.17.2026.11.18.02.12.22
         for <linux-scsi@vger.kernel.org>
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 18 Nov 2026 02:12:19 -0800 (PST)
+        Wed, 18 Nov 2026 02:12:22 -0800 (PST)
 X-Relaying-Domain: broadcom.com
 X-CFilter-Loop: Reflected
-Received: by mail-pg1-f200.google.com with SMTP id 41be03b00d2f7-cdd9fa2a558so887609a12.0
-        for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2026 02:12:18 -0800 (PST)
+Received: by mail-pj1-f70.google.com with SMTP id 98e67ed59e1d1-3b3b0ebd98cso831886a91.2
+        for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2026 02:12:22 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1794996738; x=1795601538; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1794996741; x=1795601541; darn=vger.kernel.org;
         h=references:in-reply-to:message-id:date:subject:cc:to:from:from:to
          :cc:subject:date:message-id:reply-to:content-type;
-        bh=3XZ75csC6Eenl/OFpVvyiIQ6tmTJ2//2Pf9Iqu1dnRQ=;
-        b=YLtqjFFrrca2K7EEVdZnUnDKGMPbQ9xEvF5oKxjrrO2w12wkz0tquRYb2dm5hUGjcp
-         tskaEtevIuDjlkoF9Ih2OiEl3EgJ/uVW50mxIrE2UcNT0TvcExSkASVjvOk6YFIK6ICN
-         1W2FC444T5+mU+qNs0mR3m7vbdw1DM99I/LDA=
-X-Received: by 2002:a17:90b:2642:b0:3a4:f75d:d194 with SMTP id 98e67ed59e1d1-3b3d0765fffmr2179808a91.36.1794996737770;
-        Wed, 18 Nov 2026 02:12:17 -0800 (PST)
-X-Received: by 2002:a17:90b:2642:b0:3a4:f75d:d194 with SMTP id 98e67ed59e1d1-3b3d0765fffmr2179778a91.36.1794996737252;
-        Wed, 18 Nov 2026 02:12:17 -0800 (PST)
+        bh=R3w5BnXRfp1BkKT2SC4/1on8kgV+rGChlpaT00YnZ4o=;
+        b=ZySsIttP9E5gZD/0G2hxR8Oe2aEaO6xsbfkLbQl2uIzZ0FYiz+D3ZD9z6lDLkGcZgf
+         3Ztb0X7IO2D/3ZwYDd4rZqkbIJ4rUhJFQ3clPI03nAJhUg7Ft2yXqiy3wlQ2khiYE/nr
+         8NlxseYdUriG6RA5dWUKJAr9y+GV8M+d6AKio=
+X-Received: by 2002:a17:90b:4fc6:b0:3ac:7e3a:1033 with SMTP id 98e67ed59e1d1-3b3d07d9ff7mr2399156a91.59.1794996741638;
+        Wed, 18 Nov 2026 02:12:21 -0800 (PST)
+X-Received: by 2002:a17:90b:4fc6:b0:3ac:7e3a:1033 with SMTP id 98e67ed59e1d1-3b3d07d9ff7mr2399120a91.59.1794996741121;
+        Wed, 18 Nov 2026 02:12:21 -0800 (PST)
 Received: from dhcp-135-24-192-142.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b3ac6016c3sm8740707a91.15.2026.11.18.02.12.13
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b3ac6016c3sm8740707a91.15.2026.11.18.02.12.17
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 18 Nov 2026 02:12:16 -0800 (PST)
+        Wed, 18 Nov 2026 02:12:20 -0800 (PST)
 From: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 To: linux-scsi@vger.kernel.org,
 	martin.petersen@oracle.com
@@ -98,9 +98,9 @@ Cc: sathya.prakash@broadcom.com,
 	mgandhi@redhat.com,
 	loberman@redhat.com,
 	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-Subject: [PATCH v2 06/37] scsi: mpt3sas: Fix invalid kfree() of fw_event_work event_data
-Date: Wed, 18 Nov 2026 01:56:15 -0800
-Message-Id: <1794995806-5835-7-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+Subject: [PATCH v2 07/37] scsi: mpt3sas: Validate SMP request/response length in bsg handler
+Date: Wed, 18 Nov 2026 01:56:16 -0800
+Message-Id: <1794995806-5835-8-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 X-Mailer: git-send-email 2.4.3
 In-Reply-To: <1794995806-5835-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 References: <1794995806-5835-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
@@ -114,27 +114,34 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 
-Drop an errant kfree() of fw_event->event_data, a flexible array
-member of fw_event_work rather than its own allocation.
+Reject SMP requests whose mapped request or response buffer is
+smaller than 4 bytes, avoiding a length underflow when building the
+SGE.
 
 Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/scsi/mpt3sas/mpt3sas_transport.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index f78fc0faad61..4bc2f7ce4aa2 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -12270,7 +12270,6 @@ mpt3sas_scsih_event_callback(struct MPT3SAS_ADAPTER *ioc, u8 msix_index,
- 		if (!fw_event->retries) {
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_transport.c b/drivers/scsi/mpt3sas/mpt3sas_transport.c
+index e74a526efa8d..b03422fe86fb 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_transport.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_transport.c
+@@ -2095,6 +2095,13 @@ _transport_smp_handler(struct bsg_job *job, struct Scsi_Host *shost,
+ 	if (rc)
+ 		goto unmap_out;
  
- 			ioc_err(ioc, "failure at %s:%d/%s()!\n",  __FILE__, __LINE__, __func__);
--			kfree(fw_event->event_data);
- 			fw_event_work_put(fw_event);
- 			return 1;
- 		}
++	if (dma_len_out <= 4 || dma_len_in <= 4) {
++		ioc_err(ioc, "%s: SMP request or response too small\n",
++			__func__);
++		rc = -EINVAL;
++		goto unmap_in;
++	}
++
+ 	rc = mpt3sas_wait_for_ioc(ioc, IOC_OPERATIONAL_WAIT_COUNT);
+ 	if (rc)
+ 		goto unmap_in;
 -- 
 2.53.0
 
