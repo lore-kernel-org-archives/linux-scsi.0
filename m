@@ -1,92 +1,92 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.100
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.215.225
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794996787;
-	b=LvqNQvcsNbhHCoMzqV3emaAZj6OtCHRXsGyGuA8q8TKZ+v+Tjyg4zE9UKlAJ0T9k0PVi
-	 vTI9l2CrywMI8vJaFqhQ4DMKtqCnP1oz8alVcy+raJpcIVKACA/t+TDmFgQwRHxbtOqZ0
-	 quJ01KliVXt4uEGrYtwh7PeiX0iSRpRtSTVM8L0vXO7GDZjDUq864eooIbCUcticyagG1
-	 x2fBGT149byo6FO9R99/aj0cb6NewiN3aONv2nlE+3FyqvVOQShUp+r087QmsUX/cPIEd
-	 rLfS7qsizKKsRIxWzOt8+ABrFzU11N169xU6iLaL9ICPGGNa/vFay/6Lfy4KQeI5YZQ==
+	t=1794996791;
+	b=BmXKXaLRdM/EeLSg8otfe0tlN024deT+fhrgoLGnSo2hEKy1OR9rMKrnOTA+DdrJfoVp
+	 dXt8Da6vFHcanUvfyxlUdRVUJSAwaufloNJkc8Q2oEPVgGcNuOPplfNL7wNysg3y6VV6z
+	 C0vXRbML6eSwgcGrQ2WwvkQ/ZpENFmQyw+I8L+nvYM4PCr0GzRFxWuhPWeeT5MO6TAx6r
+	 j2EHhVNLg2I+0TBfSaOCA8Y779bPrHoLjwxcThOl9lDGA03r7TriVloXZ7xrrnXWkj0Rm
+	 ZmzsBx2ULCZJAaD6ZbhhvVvZLwX/8wMNqKFcv1lcpfGevS2wyy+1wsh57cbmMeq/n+A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794996787;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794996791;
 	h=DMARC-Filter:Received:X-Google-DKIM-Signature:X-Gm-Message-State:
 	 X-Gm-Gg:X-Received:Received:X-Relaying-Domain:X-CFilter-Loop:Received:
 	 DKIM-Signature:X-Received:X-Received:Received:From:To:Cc:Subject:Date:
 	 Message-Id:X-Mailer:In-Reply-To:References:X-DetectorID-Processed;
-	bh=/XoNfe30G6z4mLXoi2VJBYhXSNP0t4XcHKlKoMeUePI=;
-	b=2bDOjRISc1jr0mTpGsNRBpAPUwN9pGFZs1U6lMxbnrXFZZoWPumdDRmNQvB1RqIiwhHq
-	 8K+6CKF/pknG92faLalmuFPuV9vJ1+bU31ZrP+HuJ6oRAG6/y70Pa1xkjeas0x+SLAw1M
-	 QswXboL2QHyRuzCqL136AcJ9WzHKEvhCWne/+kIsF+SrcNQU5MiuMYrBUxVwKlIcMPwma
-	 8CPJ6rbrTtcpRlsecYbalV5CA/EhDc1wUlDoX+hwSvoUsLvi2S0mWppWfzDxzKWqXAM3P
-	 7+AMdp0DzoDDKBp+MbXrHOnkNd93RHQ6zeG29AgDTGOVXcr5C7IsaWht28saRPMj4dg==
+	bh=ZepaF5ZjILEGF2RJZ8YfzJS1zsqRfD3aJ64PJj+03uA=;
+	b=H/T/j4qFvk0xaCKl/mpc0CtODVJiu0OwWQHz2Ak4cEFqFoBWYo5bVpb3eCXTdAjP+21w
+	 qJTitfgcs96icYK/1S+bWkjKZBCI9shWih8NGwz0qYuuaqH6jL9ZUR+H7WHzUPtJSvkq6
+	 OKO1HTF/+XiOd2k64dyzs/ACx84DwHJXqhGlz34WjGy4AWzAaDSCGJCuNTJ8THCZuafpe
+	 H0Ejq0yLpn/9kJ/+/qf40J0XEWdTqVeuusZ1kRxvNe2Pzn1sVofn2+dXm9YCM52tsgFr5
+	 h/9sfyMl8N/KYINGgUpdIU99A6tK9dUKwgEKbwy74/Ckcyo1jzKLUXkpveP9QGMOqvA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=broadcom.com;
 	spf=fail smtp.mailfrom=broadcom.com;
-	dkim=pass header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b="gXVqw/Lg";
-	arc=none smtp.remote-ip=209.85.216.100
-Received: from mail-pj1-f100.google.com (mail-pj1-f100.google.com [209.85.216.100])
+	dkim=pass header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=Q+k3O0Gb;
+	arc=none smtp.remote-ip=209.85.215.225
+Received: from mail-pg1-f225.google.com (mail-pg1-f225.google.com [209.85.215.225])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80055606A31C
-	for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2026 10:13:06 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 80055606A31C
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64B12606A31C
+	for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2026 10:13:10 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 64B12606A31C
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=gXVqw/Lg
-Received: by mail-pj1-f100.google.com with SMTP id 98e67ed59e1d1-3ada4c06b7bso415905a91.2
-        for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2026 02:13:06 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=Q+k3O0Gb
+Received: by mail-pg1-f225.google.com with SMTP id 41be03b00d2f7-cdb75699c7cso405735a12.2
+        for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2026 02:13:10 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794996786; x=1795601586;
+        d=1e100.net; s=20260707; t=1794996790; x=1795601590;
         h=references:in-reply-to:message-id:date:subject:cc:to:from
          :dkim-signature:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=/XoNfe30G6z4mLXoi2VJBYhXSNP0t4XcHKlKoMeUePI=;
-        b=lYeVPSiwqfZOHXeDRJ10ditpSJmVx0BWu8CiIMjJNUtavkRDrU3yVvhnDLtFD/DtbC
-         Bz8Xu6PVmPoyIB03Mn7k/OdmApF5u9K0HWkK/Wa83mfizLCxa+TR1PoDv0DpY7jqjKZs
-         u1vcg2Q5PeXQV8PjaJZ62LMbzLaWl1d4beCbrVo80DtpU9fhHWOjoxV6olEavAXxcvMB
-         I+aiWP3PPCiCDmrn7pzKowr56TZEqWukGHHTHTUn2Nk2IlmJmKdFCD9F6i7MZb2usHe7
-         P6beLRStUbjkX4zSTP7KR+u4xm2JmbSXc/L7S+VLO2M/XWDzBoxSCMjvzNXFa4fJBu9F
-         wgNA==
-X-Gm-Message-State: APuU4Z8/s7sf3cd8R67cle95LKr6IrmRcnzP1ZEm3uK94OxKRSTR0Qt2
-	nZklzSUhQmaptbQo44/eh1MQ3Ko8Bx7i4Cl98VuTbUjuRbLONiU8/C+WOnDfPPFtCCO9NeruJsL
-	G6eKhAzcxF+qzJXuVaFjLVNCwsPFViy8KCupcDIsuv/j00hE9jh/NTio2rIQMLtoPQ/NXT3Ie/u
-	z2UbcI5e1AZ/8DAfKokqfP6ZBY2IR3xe7h4DPRnA2K82Kt558vXqCtf5bj9OcitW4KSoTv1TKhq
-	ILuWgbHXcaHT0vmSjOeklNhGZqOFlOfGs4=
-X-Gm-Gg: AZFdTZet/ynh+L1yVPda55XNcpuKi2kjXr5ScVMxbCsT6KB7/KJPglcsRJdWOD9Gyah
-	vDrg8aTp2ruI55HHq70cvVGDfZ3+fFQkVl8d6xqA/I9uOP5loaZaspcCSkPcIoGNvpbXu/Q9yFM
-	qUkbSMgnfjQnTpEU0VHoF3WgtJVRNH+xp69gGQ/Fz3yQXE7M/mIphGll4vHrnH5vNH/OzAyH4RS
-	CcVM/hhEBNcnnfCJLvIDglyVUxyFTfUDvmzMAfVu4mdud0eJfRr41Pu0jJUD/igyWGp25uJH7rN
-	vWMGF/huY7thblylW/bBedi8IZuVYYK0goYTbabsjdIJV9125Z4s7mPZckGd9IfTmG6M/fEQRK+
-	gYP0i/MUcWYYaohBqORANO0/plfT+kbkRGasxpTWuBQTAR0MRA07d7vt2Q32v2LNek6xyjs8SuB
-	A67HN6PhNXf3mlRPDBNstrMvHrqSypSCi2E+3XIlouOhdZsPggoQpG6g==
-X-Received: by 2002:a17:90b:4c4b:b0:3b3:b858:cc96 with SMTP id 98e67ed59e1d1-3b3d07c9ea7mr2458256a91.46.1794996785822;
-        Wed, 18 Nov 2026 02:13:05 -0800 (PST)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-28.dlp.protect.broadcom.com. [144.49.247.28])
-        by smtp-relay.gmail.com with ESMTPS id 98e67ed59e1d1-3b3abb84fe8sm3893056a91.2.2026.11.18.02.13.05
+        bh=ZepaF5ZjILEGF2RJZ8YfzJS1zsqRfD3aJ64PJj+03uA=;
+        b=YGYUsVhA2bxcMDL7pAPhc7p0umtt6cXmK1KNJiTUuUSZRiqD2620NnPM8+rZ2kFhRO
+         pFAwZTJsuezUNkF6FuaZaGVTrpDZiA2QN2h1/S0/zZUHYqNS6eV1z0LcVjta67AuMIJV
+         RFriDv4MWHzy0lUqmxXzM3nFTzDadGqoEbGI8up+fc0y+6ppopfTcjj10hRl1z/IQuM+
+         YwVK2jKXZx4JCFtf5PqdArg/Yf4Uv4IG4nDmWOqQPcmRVNKIPqVKQpktLjsU3AMA+5YY
+         LWutTE/f1MCdZmulONmKZFjDSCHh6xNbQkZ0CkCv0Y8mkwnBrUHLzefD1YNpXRJwiUAF
+         1rNQ==
+X-Gm-Message-State: APuU4Z/FOIlCHZ5lvRkC3pRjx+xGRVTMYz7kLmziOVOGaSKrbfPA3ZmT
+	TCUZcnin26kfz4Vc41PGwyCdNIa/pqtcB8osoz4Bwx3NRwqHdUg1h0SGeLxXNmPxpyF/mNosbOT
+	LO5HF5cKUv7uJCxwCaWP59nrlLsmTyr2j6tJHKtage1pzS6MDiurE8KwmQIk1WalxVQ9+AuJaz3
+	Lf+qGanDh6qBWRmWGawyja7MwWQcjK/MkJxou6ybASk7q6eyqO5uIarVlnYvA0eD39LSVd+5sWD
+	nlBXz43ycAac3nuNbz0yzd2w3ggJmA1GPU=
+X-Gm-Gg: AZFdTZdZ6VHPcA6Vqlo20RjxTlIRBKpdDpKc/P7QY07y9hKK84J5KwX0Ioi3tb7EocO
+	/LzdJMPXLLcOR8KTl4y0rd1jw5M1lglzP6A4R3Ul2I/HwSe/pw7JSnl7L5fLEgap63Cjh4AcbDE
+	wz5NxBJAJk8rvifqvNEOz1Q1MOeRe+AM4JkjyDXUyc2ZOsSAJ/97smL+pqT6kCHXrgh/4ZE8hB2
+	qkTQmUlmNCGckR76zpCxvhtFivOuRQtoia+bXB/OenGWt39n1xg59nGJLz8ZYCkr981hDUMCdrw
+	Sbx6XqDRJDwfEHOFcBRvZQsTWC3YHXgK+hA9OYlpK5Yi6tW8QbjDITwCRaUdvcNoYq5x+3All4g
+	LjxYPBVTeUShdWZ+BPUI/7p5poDOfmJdhw1qs20RdbAxU96IfQCoqOuJMzJhwRZK691CfQDU3le
+	GY6AAm7u/vLQI3HJagCQvAJ1+dP1F1uOwLPQzr9uiyq5O+IL2LnCiq7zQO
+X-Received: by 2002:a17:90b:3b8a:b0:3a7:b260:9ced with SMTP id 98e67ed59e1d1-3b3d07cafb6mr2318231a91.58.1794996790142;
+        Wed, 18 Nov 2026 02:13:10 -0800 (PST)
+Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-123.dlp.protect.broadcom.com. [144.49.247.123])
+        by smtp-relay.gmail.com with ESMTPS id 98e67ed59e1d1-3b3d8b8ce6esm379457a91.4.2026.11.18.02.13.09
         for <linux-scsi@vger.kernel.org>
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 18 Nov 2026 02:13:05 -0800 (PST)
+        Wed, 18 Nov 2026 02:13:10 -0800 (PST)
 X-Relaying-Domain: broadcom.com
 X-CFilter-Loop: Reflected
-Received: by mail-pj1-f71.google.com with SMTP id 98e67ed59e1d1-3ac8f449d1bso627940a91.3
-        for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2026 02:13:05 -0800 (PST)
+Received: by mail-pl1-f197.google.com with SMTP id d9443c01a7336-2ed02a00b24so8111525ad.2
+        for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2026 02:13:08 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1794996784; x=1795601584; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1794996788; x=1795601588; darn=vger.kernel.org;
         h=references:in-reply-to:message-id:date:subject:cc:to:from:from:to
          :cc:subject:date:message-id:reply-to:content-type;
-        bh=/XoNfe30G6z4mLXoi2VJBYhXSNP0t4XcHKlKoMeUePI=;
-        b=gXVqw/LgS7Jl1IHVTz2cYaGs7HVLW9QOTBlX7YFyfY6CPx2ji40IOTDnJfrL3RzeGh
-         6q5PQMikQJXH5JwGlb6BXN3NWR94tR8BAwG0MTdtE4AoiB5ub1+JCcF37c/PBlLP6gre
-         tCsw/bINsXA5w2ENp16CLX3yXxUNS9VeuXcx8=
-X-Received: by 2002:a17:90b:4a12:b0:3a0:7261:d58e with SMTP id 98e67ed59e1d1-3b3d0764a4cmr2326374a91.22.1794996784112;
-        Wed, 18 Nov 2026 02:13:04 -0800 (PST)
-X-Received: by 2002:a17:90b:4a12:b0:3a0:7261:d58e with SMTP id 98e67ed59e1d1-3b3d0764a4cmr2326345a91.22.1794996783507;
-        Wed, 18 Nov 2026 02:13:03 -0800 (PST)
+        bh=ZepaF5ZjILEGF2RJZ8YfzJS1zsqRfD3aJ64PJj+03uA=;
+        b=Q+k3O0Gbzqj8byirXqGi5i1lpCtjNysdzcY2n7HxADEUsa4Y8muqhsJfPf+Mvu/tqV
+         lrp1kEntzBy1CVtDC0Z6Rlfu38ioXyZKYyruJNOq5tg4TXgYg/XhWFmyZqNxTMzFq938
+         FzANFTINmOlvHa/is9Sj9Z00FaVO9knOteZWw=
+X-Received: by 2002:a17:90b:448f:b0:3ac:9c37:942e with SMTP id 98e67ed59e1d1-3b3d07aba04mr2289190a91.49.1794996788041;
+        Wed, 18 Nov 2026 02:13:08 -0800 (PST)
+X-Received: by 2002:a17:90b:448f:b0:3ac:9c37:942e with SMTP id 98e67ed59e1d1-3b3d07aba04mr2289154a91.49.1794996787380;
+        Wed, 18 Nov 2026 02:13:07 -0800 (PST)
 Received: from dhcp-135-24-192-142.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b3ac6016c3sm8740707a91.15.2026.11.18.02.13.00
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b3ac6016c3sm8740707a91.15.2026.11.18.02.13.03
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 18 Nov 2026 02:13:03 -0800 (PST)
+        Wed, 18 Nov 2026 02:13:06 -0800 (PST)
 From: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 To: linux-scsi@vger.kernel.org,
 	martin.petersen@oracle.com
@@ -98,9 +98,9 @@ Cc: sathya.prakash@broadcom.com,
 	mgandhi@redhat.com,
 	loberman@redhat.com,
 	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-Subject: [PATCH v2 18/37] scsi: mpt3sas: Clamp firmware reply copies to the allocated reply buffer
-Date: Wed, 18 Nov 2026 01:56:27 -0800
-Message-Id: <1794995806-5835-19-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+Subject: [PATCH v2 19/37] scsi: mpt3sas: Reject implausibly small MaxReplyDescriptorPostQueueDepth
+Date: Wed, 18 Nov 2026 01:56:28 -0800
+Message-Id: <1794995806-5835-20-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 X-Mailer: git-send-email 2.4.3
 In-Reply-To: <1794995806-5835-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 References: <1794995806-5835-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
@@ -114,106 +114,72 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 
-Clamp MsgLength-based memcpy()s of firmware replies to ioc->reply_sz
-across the driver's completion handlers.
+Avoid an unsigned underflow in the hba_queue_depth calculation when
+firmware reports a too-small queue depth.
 
 Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.c      | 6 ++++--
- drivers/scsi/mpt3sas/mpt3sas_config.c    | 2 +-
- drivers/scsi/mpt3sas/mpt3sas_ctl.c       | 3 ++-
- drivers/scsi/mpt3sas/mpt3sas_scsih.c     | 5 +++--
- drivers/scsi/mpt3sas/mpt3sas_transport.c | 2 +-
- 5 files changed, 11 insertions(+), 7 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 18 ++++++++++++++++++
+ drivers/scsi/mpt3sas/mpt3sas_base.h |  9 +++++++++
+ 2 files changed, 27 insertions(+)
 
 diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 995228da8f77..dca07b97dfb4 100644
+index dca07b97dfb4..07af8542fbc7 100644
 --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
 +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -1459,7 +1459,8 @@ mpt3sas_base_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index,
- 	ioc->base_cmds.status |= MPT3_CMD_COMPLETE;
- 	if (mpi_reply) {
- 		ioc->base_cmds.status |= MPT3_CMD_REPLY_VALID;
--		memcpy(ioc->base_cmds.reply, mpi_reply, mpi_reply->MsgLength*4);
-+		memcpy(ioc->base_cmds.reply, mpi_reply,
-+		       min_t(u32, mpi_reply->MsgLength * 4, ioc->reply_sz));
+@@ -6453,6 +6453,13 @@ _base_allocate_memory_pools(struct MPT3SAS_ADAPTER *ioc)
+ 				(ioc->reply_post_queue_depth % 16);
  	}
- 	ioc->base_cmds.status &= ~MPT3_CMD_PENDING;
  
-@@ -7689,7 +7690,8 @@ mpt3sas_port_enable_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index,
- 	ioc->port_enable_cmds.status &= ~MPT3_CMD_PENDING;
- 	ioc->port_enable_cmds.status |= MPT3_CMD_COMPLETE;
- 	ioc->port_enable_cmds.status |= MPT3_CMD_REPLY_VALID;
--	memcpy(ioc->port_enable_cmds.reply, mpi_reply, mpi_reply->MsgLength*4);
-+	memcpy(ioc->port_enable_cmds.reply, mpi_reply,
-+	       min_t(u32, mpi_reply->MsgLength * 4, ioc->reply_sz));
- 	ioc_status = le16_to_cpu(mpi_reply->IOCStatus) & MPI2_IOCSTATUS_MASK;
- 	if (ioc_status != MPI2_IOCSTATUS_SUCCESS)
- 		ioc->port_enable_failed = 1;
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_config.c b/drivers/scsi/mpt3sas/mpt3sas_config.c
-index ff58a5329074..88dba4598d70 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_config.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_config.c
-@@ -263,7 +263,7 @@ mpt3sas_config_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index,
- 	if (mpi_reply) {
- 		ioc->config_cmds.status |= MPT3_CMD_REPLY_VALID;
- 		memcpy(ioc->config_cmds.reply, mpi_reply,
--		    mpi_reply->MsgLength*4);
-+		       min_t(u32, mpi_reply->MsgLength * 4, ioc->reply_sz));
++	if (facts->MaxReplyDescriptorPostQueueDepth <
++	    MPT3SAS_MIN_REPLY_POST_QUEUE_DEPTH) {
++		ioc_err(ioc, "MaxReplyDescriptorPostQueueDepth is too small (%u)\n",
++			facts->MaxReplyDescriptorPostQueueDepth);
++		return -EINVAL;
++	}
++
+ 	if (ioc->reply_post_queue_depth >
+ 	    facts->MaxReplyDescriptorPostQueueDepth) {
+ 		ioc->reply_post_queue_depth =
+@@ -6463,6 +6470,17 @@ _base_allocate_memory_pools(struct MPT3SAS_ADAPTER *ioc)
+ 		ioc->reply_free_queue_depth = ioc->hba_queue_depth + 64;
  	}
- 	ioc->config_cmds.status &= ~MPT3_CMD_PENDING;
- 	if (ioc->logging_level & MPT_DEBUG_CONFIG)
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-index 5db233d21f01..7c5db14645ca 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-@@ -274,7 +274,8 @@ mpt3sas_ctl_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index,
- 	ioc->ctl_cmds.status |= MPT3_CMD_COMPLETE;
- 	mpi_reply = mpt3sas_base_get_reply_virt_addr(ioc, reply);
- 	if (mpi_reply) {
--		memcpy(ioc->ctl_cmds.reply, mpi_reply, mpi_reply->MsgLength*4);
-+		memcpy(ioc->ctl_cmds.reply, mpi_reply,
-+		       min_t(u32, mpi_reply->MsgLength * 4, ioc->reply_sz));
- 		ioc->ctl_cmds.status |= MPT3_CMD_REPLY_VALID;
- 		/* get sense data */
- 		if (mpi_reply->Function == MPI2_FUNCTION_SCSI_IO_REQUEST ||
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 2355080f5f97..a25e2aed266b 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -2941,7 +2941,8 @@ _scsih_tm_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
- 	ioc->tm_cmds.status |= MPT3_CMD_COMPLETE;
- 	mpi_reply =  mpt3sas_base_get_reply_virt_addr(ioc, reply);
- 	if (mpi_reply) {
--		memcpy(ioc->tm_cmds.reply, mpi_reply, mpi_reply->MsgLength*4);
-+		memcpy(ioc->tm_cmds.reply, mpi_reply,
-+		       min_t(u32, mpi_reply->MsgLength * 4, ioc->reply_sz));
- 		ioc->tm_cmds.status |= MPT3_CMD_REPLY_VALID;
- 	}
- 	ioc->tm_cmds.status &= ~MPT3_CMD_PENDING;
-@@ -7433,7 +7434,7 @@ _scsih_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
- 	ioc->scsih_cmds.status |= MPT3_CMD_COMPLETE;
- 	if (mpi_reply) {
- 		memcpy(ioc->scsih_cmds.reply, mpi_reply,
--		    mpi_reply->MsgLength*4);
-+		       min_t(u32, mpi_reply->MsgLength * 4, ioc->reply_sz));
- 		ioc->scsih_cmds.status |= MPT3_CMD_REPLY_VALID;
- 	}
- 	ioc->scsih_cmds.status &= ~MPT3_CMD_PENDING;
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_transport.c b/drivers/scsi/mpt3sas/mpt3sas_transport.c
-index b03422fe86fb..e88205b69067 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_transport.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_transport.c
-@@ -305,7 +305,7 @@ mpt3sas_transport_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index,
- 	ioc->transport_cmds.status |= MPT3_CMD_COMPLETE;
- 	if (mpi_reply) {
- 		memcpy(ioc->transport_cmds.reply, mpi_reply,
--		    mpi_reply->MsgLength*4);
-+		       min_t(u32, mpi_reply->MsgLength * 4, ioc->reply_sz));
- 		ioc->transport_cmds.status |= MPT3_CMD_REPLY_VALID;
- 	}
- 	ioc->transport_cmds.status &= ~MPT3_CMD_PENDING;
+ 
++	/*
++	 * Ensure that scsiio_depth and can_queue cannot underflow
++	 * after the clamp above.
++	 */
++	if (ioc->hba_queue_depth <= ioc->hi_priority_depth +
++	    ioc->internal_depth + INTERNAL_SCSIIO_CMDS_COUNT) {
++		ioc_err(ioc, "hba_queue_depth(%u) is too small for the reserved command depths\n",
++			ioc->hba_queue_depth);
++		return -EINVAL;
++	}
++
+ 	ioc_info(ioc,
+ 	    "scatter gather: sge_in_main_msg(%d), sge_per_chain(%d), "
+ 	    "sge_per_io(%d), chains_per_io(%d)\n",
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
+index 3c5d6803e56e..43586baf049c 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.h
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
+@@ -145,6 +145,15 @@
+ #define MPT_MAX_HBA_NUM_PHYS		32
+ 
+ #define INTERNAL_CMDS_COUNT		10	/* reserved cmds */
++
++/*
++ * Minimum reply post queue depth for hba_queue_depth to stay non-negative.
++ * Values 66-79 floor to 64 after 16-alignment, making ((64-64)/2)-1 = -1
++ * which wraps to 65535 as u16. The smallest value whose aligned floor exceeds
++ * 64 is 80 (80 % 16 == 0, giving ((80-64)/2)-1 == 7).
++ */
++#define MPT3SAS_MIN_REPLY_POST_QUEUE_DEPTH	80
++
+ /* reserved for issuing internally framed scsi io cmds */
+ #define INTERNAL_SCSIIO_CMDS_COUNT	3
+ #define INTERNAL_SCSIIO_FOR_DISCOVERY	2
 -- 
 2.53.0
 
