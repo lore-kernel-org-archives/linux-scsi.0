@@ -1,71 +1,59 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794977381;
-	b=Lk4BWFN5XfWajuxAe0z5BdsQpRJOhi+qvlw+idIaedZ5o3XFiDHGAUppiI3AHx1mUnCf
-	 /zYZ724kuzUe1ag7XnjYJOsGWJY1RgiEIFliwPzbbXo2uiZAwhBC6lhSSERjfMUM603ro
-	 Iebqp/kyNXRLnd6UxNcogKVyBi6N3HdooGrr6zAVmzfMHEs+MNM2yXVFn56RjW2jc1YvN
-	 2ecohVXIVAquMOvNQbIYnvEwyWSlKSMrimXe+h53WSTOQSL5KrjLSRP95b4PtHKY5f9vM
-	 7nFuP+9UldvYF/Fsl75wlkpnJKMeb1FgkfAEe/cT9ChyxKwvnUJ7KNBscNmfjizgrgw==
+	t=1794977382;
+	b=NkBxggXBbm+kdsq3V8q00Ccg2ivzD1H36m2+e02xO+MMTAy+lmPIHVnnD8oxl1NehoLV
+	 UMAo9kq2k7SiqGcWBnivWykiTMxAUpSOJ8l+HAjQAhJzggM0UTkevsRbZ4aWlLKVHPWFq
+	 5BFNv8hfPmvDPWYsOsqnKkqUSKu8x+yGhTeY559JNKOvz40u6BJDSR1cLYPtogsGHAyC1
+	 Nc6iSVmRDYhIX1wkyWfghVE+X4SySrO0/EpfiWBgAJObu+1L1vXIRccYJjdzyejfagzfU
+	 10EvCzktaRIZBrI0Od9GmMXRNT2RxZh/1uyKwhin3pvYx6sDdDAlHz+KukpkWhiLWoQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794977381;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794977382;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding;
-	bh=RufmPLEdOt93I5T5TQq0x49BntHV1EhlC0gK8d0OVmc=;
-	b=aqowsXNKN7PxktArqCjctSNmtXsm3njduuX1j2wHRaqnqna1s7a9AH7NzI86aSvxQ4Uv
-	 oDNKoIlTQnDzk+EyEIDr7bitz5O7NKRJ6Ik/2Fx8Ji5f6DLQCTWBUM3AE3eo6xJiJqCP3
-	 NgWhTR0Jk+3T7/wIlOULyEIDHLCtgW4bROz92nWjSazYWkbe1yGOe1RtyhvqKnfUMgE5+
-	 Mqf2zeyPjs8ZtbTmdeimh9RWMWyiw9+bMM4kb9LvS+IpELFXtnqbZi1jYwiDF+Ec3ABXe
-	 3e3G+/2a9rC9TECdB+CCuMqgGVDvWjgSt6h1TxdKnEdXzbk9FB338FqVPpnONN8mIcw==
+	bh=9Ne7L63wjGTXxfO7wcLNtUjDPl7tUU9eVJYUKDOx/Uk=;
+	b=P7TubhnQp4mBbDglsilVkQZY0k6JMZNodQSoya1QtfMX2h+tMK0u1nnbb30S205aRiKM
+	 2RIVgOzm2T6Xl6zslhhqTn9GNgvpzjC5QZz581K1z111f+P+iSR/h4g12lWNzAIcPxgtT
+	 FtLmUiIqx90SGHzZEHewEOWCihdbEplJ6qexRIEcdwMe6mRwWqmt6xIcSoVTM3xRddSbf
+	 SZqo80d1AH5Tq9PD8VJUnYy6UktTzU3dG53t+eT1vf4+7ZvbjSvAGjh/d9uIvl4SflJYj
+	 jpN+aQYI1v3qhW7GraEtXEOr8sJ1J2YTaU1gtyzPE62OKT46YLrp22dB7sRd49YOlsw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=n017AukS;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=TLgNdL2u;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DD61606A880;
-	Wed, 18 Nov 2026 04:49:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17D16606A336;
+	Wed, 18 Nov 2026 04:49:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=n017AukS
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C27361F000C7;
-	Wed, 18 Nov 2026 04:49:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=TLgNdL2u
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 161C71F000C4;
+	Wed, 18 Nov 2026 04:49:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794977380;
-	bh=RufmPLEdOt93I5T5TQq0x49BntHV1EhlC0gK8d0OVmc=;
+	s=k20260515; t=1794977381;
+	bh=9Ne7L63wjGTXxfO7wcLNtUjDPl7tUU9eVJYUKDOx/Uk=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=n017AukS5pWtxW3mEbmTAkdEnkqiRwcaGLLEUhmXkBAlCxyWMg7LhDgphG/aSSdh3
-	 C6A8uBkNgrmVwggWDJuTobWuxGpnFeJFoPt6vLNCFC4JNXR9a2yJrbwbmi7Cso2raI
-	 r2U/fHAIvIKEc/u8aPGPVk5/ZdaRaiENyJhwuGi1mr31T6m265i1jjUnevy1bvycxS
-	 gZxH0pKMRCKLXhoAugvLFUCafP+44kIzu8/WtLsb8/cHZloY60PNOk9eP+INMa/4EQ
-	 GCFLUS+x7esq5iAl6jYht0eGV1Dq8hfiyw9q4xf6lGwfcN0hE237cgDfai5NFBMdPt
-	 0UTJlkvT1orsw==
+	b=TLgNdL2uLOthJUpBylNqGP0411IqJIPVhoUkhSXhWaOzYREg4ISBj0sjgrLBFZDiA
+	 n3SeHNRGC7kFwmvzQfbgOA0C08w0Mavgc2lGmk0v8qDVlAOCfglXxbD/MCQiFi9E4f
+	 A/lXh9ZBDrNkN55iQBAONbK3GDxy6k5nYT/1ASIcw0cXPpriFtfz4gH/l5PN2mucys
+	 s2LthPzoWWCHrK09uGTYISR7Ri/fp37BKAP/KfLzWPFOm/Y5pl0ZFEtL/goZilPJQS
+	 oMoiI4Hh115YI7+QTEdvT7y79MPCheGqq835pNQVZWL6QWKcVMb53lH9SNAx6mQ1GO
+	 fBDxBoe+/GdLQ==
 From: "Martin K. Petersen (Oracle)" <mkp@kernel.org>
-To: Jens Wiklander <jenswi@kernel.org>,
-	linux-scsi@vger.kernel.org,
-	Stanley Jhu <stanleyjhu@google.com>
+To: Hannes Reinecke <hare@suse.de>,
+	Weidong Wang <weidongw@illinois.edu>
 Cc: "Martin K . Petersen" <mkp@kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Bart Van Assche <bvanassche@acm.org>,
-	Avri Altman <avri.altman@sandisk.com>,
-	Alim Akhtar <alim.akhtar@samsung.com>,
-	Bean Huo <beanhuo@iokpp.de>,
-	Bean Huo <beanhuo@micron.com>,
-	Alexey Charkov <alchark@flipper.net>,
-	Can Guo <can.guo@oss.qualcomm.com>,
-	Ulf Hansson <ulfh@kernel.org>,
-	Linus Walleij <linusw@kernel.org>,
-	Shyam Saini <shyamsaini@linux.microsoft.com>,
-	=?UTF-8?q?Alex=20Benn=C3=A9e?= <alex.bennee@linaro.org>,
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v6 0/3] rpmb: Fix request serialisation and teardown races
-Date: Tue, 17 Nov 2026 23:49:26 -0500
-Message-ID: <179497726098.2093762.2793506457468994473.b4-ty@b4>
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org
+Subject: Re: [PATCH] scsi: libfc: Fix rport kref leak in fc_rport_enter_ready()
+Date: Tue, 17 Nov 2026 23:49:27 -0500
+Message-ID: <179497726101.2093762.2693118779770513336.b4-ty@b4>
 X-Mailer: git-send-email 2.56.1
-In-Reply-To: <20261112004112.3059801-1-stanleyjhu@google.com>
-References: <20261112004112.3059801-1-stanleyjhu@google.com>
+In-Reply-To: <20261108-h123-send-v1-1-b7672ff849f0@illinois.edu>
+References: <20261108-h123-send-v1-1-b7672ff849f0@illinois.edu>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -78,26 +66,25 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 
-On Thu, 12 Nov 2026 08:41:09 +0800, Stanley Jhu wrote:
+On Sun, 08 Nov 2026 03:01:08 -0600, Weidong Wang wrote:
 
-> Jens, Martin,
+> fc_rport_enter_ready() takes a reference on the rport unconditionally,
+> but only queues event_work, whose handler drops that reference, when no
+> event is pending. If rdata->event is already set, the && short-circuits
+> past both queue_work() and the compensating kref_put(), so the reference
+> is leaked and the fc_rport_priv is never freed.
 > 
-> Patch 1/3 serializes requests and provider unregistration in
-> drivers/misc/rpmb-core.c. Patches 2/3 and 3/3 fix UFS RPMB device
-> lifetime and drop the unregistered bus in drivers/ufs/core/ufs-rpmb.c so
-> regions register again after commit 36f35b8df697 ("driver core: reject
-> devices with unregistered buses").
+> This is reachable from the wire: a PLOGI from a well-known address goes
+> straight to fc_rport_enter_ready(), and a second PLOGI for the same
+> S_ID while RPORT_EV_READY is still pending enters it again. After the
+> rport is logged out, kmemleak reports:
 > 
 > [...]
 
 Applied to 7.4/scsi-fixes, thanks!
 
-[1/3] rpmb: core: Guard frame requests and teardown with mutex
-      https://git.kernel.org/mkp/scsi/c/e0696bf65006
-[2/3] scsi: ufs: rpmb: Decouple device lifecycle from devres to avoid UAF
-      https://git.kernel.org/mkp/scsi/c/7bc9b854cd68
-[3/3] scsi: ufs: rpmb: Drop the unregistered ufs_rpmb bus
-      https://git.kernel.org/mkp/scsi/c/b1de2bd5a4d6
+[1/1] scsi: libfc: Fix rport kref leak in fc_rport_enter_ready()
+      https://git.kernel.org/mkp/scsi/c/cbd9818ebed3
 
 -- 
 Martin K. Petersen
