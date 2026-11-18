@@ -1,87 +1,94 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=202.12.124.155
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.214.171
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794975077;
-	b=qheQyv/bGz/FEytlblDVndkXqeWqStutAezNW7D94/A/7E45AucUTLj32VZyAIDOGd+6
-	 sYBi1gKiqtfLZdo3hxq55gu4FDuLIpVof3M5wBRj4UoO2OJfapoF9Lc5FfmECzCcueIop
-	 1Sd39cnKQ4w22mFrl25M8jT0FO7JzohHKk7YnEx4tPHRAEiH8WXf94zUI7v2SFXUL33vT
-	 aY27sawt6UYNbczGq8ZZ2SQ3bCMtWvYWiCdzbu6YolWVSsjFEGxV+tMnostP6UNobb7ZK
-	 S6u5OIjQyoDAjPnNzLAEY02/NK+e5VU2fATbVi1OcqFLmGH75HXAguqzQN6H+Dys9Og==
+	t=1794975238;
+	b=yEOIb//PN0+CAvD6QE8mCSwSHSUlgFfbzB1gDK2jMz6U8R0VLrqa8Jpw9xKlkTOSAg/T
+	 aXjTxBmW3AdbfsmTy1S02Byj2X6c++bXZ7aVJ9htfrvmzSVjd56SmN6NBe2CEpSJi4Nzv
+	 kGsXvqNKfsBVH4Ww8xr+oiCCj+WhSZDWYROh0dRlLXU2UE4O8THkSFfX6tJe5svdffedJ
+	 xA73pGj6EaWz56j6Ww6QkjnTbiE0WoR/iIxdE/H2OtqpPDg1Dl1qi4KKRZMaFZhcc+rM9
+	 TIThBjiTH0dRfzSThATmS+4Kydz/wOGae2GOe6oikO/ZpQZgT1XsbWFKg83K4Ab3IqQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794975077;
-	h=DMARC-Filter:Received:Received:DKIM-Signature:X-ME-Sender:
-	 X-ME-Received:X-ME-Proxy-Cause:X-ME-Proxy:Feedback-ID:Received:Date:
-	 From:To:cc:Subject:In-Reply-To:Message-ID:References:MIME-Version:
-	 Content-Type;
-	bh=IL1uP3TWx2sdq9EHxnID+hoVQzxeT6JCCziC5GCVic0=;
-	b=ZahqPHTVVHnaeYQtvBJIhK/X2qcdRMU/HhsAZwitvf7TnLth8/6ozpoGoiRCxzuMkXZZ
-	 16R+j8DKmHYjjzQ4ZAAnGogAY9YOoqmF1BNWTbKp8X0wGJMFEa8nxij6axsl0/L4NMRHK
-	 6oa0Wp/PEJNnrTTsRVwh+uUbvGQEB+HunpOIkOYoH+E5QDo7j9Ga6o5X/7h9m9aa43jwV
-	 pyvDdu30VbrRMGY8CkJOErOh58FQWmMScgpri8aSuE/WqStww/+gGGXDzU9neCrVaCg9r
-	 deBm6/T2oqJKkyL1fgSlCDvvsBcOgJpsVvOkEnIFX+lrPosKu8t7rkj9KeOJiAViZUg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794975238;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
+	 Date:Message-Id:X-Mailer:MIME-Version:Content-Transfer-Encoding;
+	bh=Fu1m7ZEN5/rsF3HjhNuEgJi893J5oEhA5qYrglHCai8=;
+	b=rWPaVW47qixcWw83FPrK0vZ1tjjRzC++QaEW0jJ0AxoWEa/0dRzcknsv0cmVxiHBJcQN
+	 laW7wYGHXRiRu91EOybMNV+KIj1OVGjvlWfJWkfD+9Q5TxncLvE7Znbs9DFbwfNpofNu2
+	 I4KHAH022nWfOF/J3qNVVBk5H+VS2mYr0h1eK/QwR+n4BEVC4K7qle1AWU9ZRKLus8rxt
+	 Qaqg0isuM8L3P+CcPPzoRWL8OXBs4/J7MPmRbhxX0FQfzV0SE7d6f5CnTP1kxhxK6txy0
+	 AsrPOwLGCZ+oQu5yZVTKyaI/Pufk5sYse0oAb3fuvws57oZ/4LQtHBBUKL6vEg0yG1w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=fail header.from=linux-m68k.org;
-	spf=none smtp.mailfrom=linux-m68k.org;
-	dkim=pass header.d=messagingengine.com header.i=@messagingengine.com header.a=rsa-sha256 header.s=fm3 header.b=OknC5iF5;
-	arc=none smtp.remote-ip=202.12.124.155
-Received: from fhigh-b4-smtp.messagingengine.com (fhigh-b4-smtp.messagingengine.com [202.12.124.155])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=hHzlUa3L;
+	arc=none smtp.remote-ip=209.85.214.171
+Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD7E3606A31C;
-	Wed, 18 Nov 2026 04:11:16 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BD7E3606A31C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=linux-m68k.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux-m68k.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2FC64606A331
+	for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2026 04:13:58 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2FC64606A331
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=messagingengine.com header.i=@messagingengine.com header.a=rsa-sha256 header.s=fm3 header.b=OknC5iF5
-Received: from phl-compute-05.internal (phl-compute-05.internal [10.202.2.45])
-	by mailfhigh.stl.internal (Postfix) with ESMTP id DCD667A027A;
-	Tue, 17 Nov 2026 23:11:15 -0500 (EST)
-Received: from phl-frontend-04 ([10.202.2.163])
-  by phl-compute-05.internal (MEProxy); Tue, 17 Nov 2026 23:11:16 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-type:content-type:date:date
-	:feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
-	:message-id:mime-version:references:reply-to:subject:subject:to
-	:to:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=
-	1794975075; x=1795061475; bh=IL1uP3TWx2sdq9EHxnID+hoVQzxeT6JCCzi
-	C5GCVic0=; b=OknC5iF5hdwju2lQaAxYxWDg8yVMDio4GBfslj75QJ/kf3KS0nM
-	s48oD1wRgTkrqCJc4GJxkZDHnLmMZp/fp++iZbNgJ1enpu1D+aaufTAug4/ezU9d
-	8F/UV1Rd54YslhT+rUVee8xYGDF0r64sxWHmqVP9DjviSxXNSS7pYxud28VKwwXO
-	IzEQpDIRYhgBmO6G/Paf6i8+fmOL9NUXK4n8Wq7wWL6vb2viN4xnTV7cqZBaqbGM
-	3PstnTO3eKyoESefbjCIZC/Yl7GArg8jq5zgG8nOQaNMAIx5LUAXYBXOs3Tw0aMl
-	96bGkp8uAWK/k8+LSw0aM1N6tLfvF1TIY+g==
-X-ME-Sender: <xms:YyX9ap2X74tGVv50NiwIHVLa25dGLTXLiO9mqVPGp8b0CdcaUfuFpA>
-    <xme:YyX9ahnGl0d-AldqoQWHFZy1eWZ-h7S5dvNpWQd-UZex-RoLLZoH7gnd_UxQKXZhY
-    rsS5rU4HnStN_iwBqGM3mH_fyX6S8OMxt3LAflMx4yICSEbgymgM4I>
-X-ME-Received: <xmr:YyX9ap-Lu1nxGbdPYNF2mf85rPESC55l7qkl_-fFYor5aa9j_oCCElWuDi7o>
-X-ME-Proxy-Cause: dmFkZTEGcbklFMPuvNp3yEESMShtPrCjiVijO2JNLjxVkU8dk4WjSZ3g1bmbNcSS8Pj/b/
-    xbHvEEF5M2CEgOPtWJGGQnAnH347CYaUPwoZ9d6KJKZy5mUp22qRUooj6bRMZ+i0IUJjsZ
-    /hm2rR098w0LUvDZxuKVbe9gZnRiT/rQas+yYZxxpNbaxPSkKxtISXAuwYQ51EbhmIR8fp
-    GZDO3eVQbMPZ5G6jit9/5rEnMLp+MCafBpdtjTlPQWedwgPMexxL6PBTHnr8HfcBBveQgS
-    /UO5R6x1pmG4azbIse/1f2pC+5tf+PjNgGCzL/Uhd609b0kMF45n5N2MCCyYUqOoejURZd
-    SS/IRz52WKS6ON+UK2V/GTlVWrOyV1xP51siT+QaKbR+jJxJBqCiwtOSwoyFCiFdT0SXwp
-    4ALYHq4Uc0P4UvETjpv0sCgUUk2d9h3Xvycw4eHad+VfsCTsKQ7pXG/aCCDe9W5huIKzzT
-    Sg2zL6Fm8koZMnp6UFxeNSel6908P5XkGEhrUx7gvh9IcoqhJWlFAkmxgcX6f6HONJl3Ls
-    7QHRW7qxJUZjGoMhrrXWM8d+ihG/DRb9Q5pbaGy309N572mhpYozWGi1ItmcSxCqpqIUqz
-    GDyPWwuQn9yd/fy+gNXddxHZty5j5mEv2D0tlOrCiFecFruXp5ejyGcQHpBg
-X-ME-Proxy: <xmx:YyX9amqm21B5VnP0z8gPHINIDrMFtTUYgFdODwy-Myz7fY4wev6Pcg>
-    <xmx:YyX9ailf-nA-x7rgHFFMts4MKNljHrFi-MQ1lDkqHXRAIOTEWdUTnQ>
-    <xmx:YyX9atibVkusm0x4Pr0JafFNHQea8ejnV1fDRm38tk1YozWLrfqfjQ>
-    <xmx:YyX9aqfFxye6vduuLtnNyCZ7orVo83oCoMiLKFTur2EOnQTNNcNJlg>
-    <xmx:YyX9ahDsRaMuNTEEHoxdDiVY6mvIt9OjKq_Ft_lbg5vezsXKmzL-t-_a>
-Feedback-ID: i58a146ae:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
- 17 Nov 2026 23:11:12 -0500 (EST)
-Date: Wed, 18 Nov 2026 15:11:02 +1100 (AEDT)
-From: Finn Thain <fthain@linux-m68k.org>
-To: Tim Douglas <me@timdoug.com>
-cc: mkp@kernel.org, James.Bottomley@HansenPartnership.com, 
-    linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] scsi: esp_scsi: report the residual byte count
-In-Reply-To: <20261118003746.61659-1-me@timdoug.com>
-Message-ID: <ee193416-6116-7656-e984-5a556490997e@linux-m68k.org>
-References: <20261118003746.61659-1-me@timdoug.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=hHzlUa3L
+Received: by mail-pl1-f171.google.com with SMTP id d9443c01a7336-2e9ae391a05so2856885ad.1
+        for <linux-scsi@vger.kernel.org>; Tue, 17 Nov 2026 20:13:58 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1794975237; x=1795580037; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=Fu1m7ZEN5/rsF3HjhNuEgJi893J5oEhA5qYrglHCai8=;
+        b=hHzlUa3L8oeFVoRTNRPd3jqxrDytrnAMuKpitUROtse1WA+Pl3Ra/c03SJlC9mrxnb
+         ZeGrJTHM4ct9uXLmcR6NuNrizvLVQEAbItCIDoXtVdBdohe7e3WGUBqY20K1ecbPjl+2
+         HQeE1p1JNs9jVkZVr4UGGWb+nAeaAC7/WQU4yLNDfmcxjN97IkGBDGOmjuzAV/ZKtQ+n
+         w9TnNVX4n2e48KuWahKY2hpM3EcOm+x/hU8Lu+PeZL45joaBfItFaQduz8vJ3/3At8cA
+         mUP64ua8GzRtyapA/8C0ET8wWM80K98chEabonISWm6rh2KkjlgadCFdcqOrQ6UxWJS8
+         nWNQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1794975237; x=1795580037;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=Fu1m7ZEN5/rsF3HjhNuEgJi893J5oEhA5qYrglHCai8=;
+        b=DvFjRUM9F094ayqxDIblNnsTJ7JAli7OQqQymlHuLJaV7WRv2/lV+OpMKcIgBDmsxX
+         5O0ii/bjMYi4vydiYVVNvxgQ7jAlkiYi7QYd5B39FCTrZCKMOhIozH8tXPreWLzurGNV
+         aXlBW7YkYGZtymFx9sWjwN4Rw6UgV1zhGERlmewebK5CrdngKh/QGwLgRD8GTTXo/kRu
+         dDWsbA2ClsRrIXPWV35UzYcAfPXHwBLhC9ugYJowv3O0A9oFv2ET+Odswb1A1Gx1xEQF
+         o0SiTwSPlYjuunw5gERglRFHVzq22noXosR32lCH4jbLkVRhlpiI50QtQRL8UKpf+vby
+         W44w==
+X-Gm-Message-State: APuU4Z/vgXLEOcoDaFj3gXSKXLYiBjpaspwGi1OdaJZXbL8m8LATcicg
+	0X6Gb69rCTQYSDFW8DVwm+izmIkDss15U6veDm/CQuqXeis9/vYoWupo
+X-Gm-Gg: AZFdTZccvNX8iBK5xfFGbKlmI3gu5Gf2Dl3y0WNGqJzHkX1UYdPBcL3GhxiVK9Y/i8z
+	Gi2bZEs/4y1yJa/dbSIDsKcPFKvMJ6MfTAdm/jLtBONntvtTWJ0IcxG3sJIJCLggfQ5oLjR6spZ
+	L+C1C16dNDlRYXQdl5FZ5COvvWzkGHUQMcSZps9gdYlBi87izb1abIKlPTT7l/WA9Z8BpUL06s+
+	hdJiJJuPKVqLdB5ON/C6X4giShe545JS2RgvO51x/lTg4yPBKSglYXjFlmYaVOQzH9JUAjczQ0H
+	LYN2gwtmvy07u1G2WLXH+ckuefWYb2kISi9lcemw2/i5/YsI13AdcMv8J1FKgZhP4ER42qswSam
+	dRRdR4/aath/02m5OMc2Yv77mqItiLbh9RoWNIrMOmhf6E15WTGhtZ/Knp/XiYnYkxpdhCtt1Yx
+	rUaE+j/mcSRPKjbbbd34NkjGAuMP1jAkNgYApxWwlKA9WnQlrQCtIOP+HPgG76lAwI+f6hEd3R/
+	F3V1ctKxq1twSu33QaxOqupm6+YTXPxJNwzoybhKkUSAOw3PZj8+bVy6G5oQJZDYfktDIzM1C/M
+	34/aqPZ0S5vQv3gwJ8muBA==
+X-Received: by 2002:a17:902:f683:b0:2e9:528c:b9ea with SMTP id d9443c01a7336-2eff72fa3c1mr9708575ad.11.1794975237447;
+        Tue, 17 Nov 2026 20:13:57 -0800 (PST)
+Received: from gmail.com ([2407:cdc0:d002:0:188:253:12:32])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2eff6214f4dsm5728685ad.43.2026.11.17.20.13.54
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 17 Nov 2026 20:13:57 -0800 (PST)
+From: Jia Jia <physicalmtea@gmail.com>
+To: "Martin K . Petersen" <mkp@kernel.org>,
+	Jan Engelhardt <jengelh@inai.de>,
+	Hannes Reinecke <hare@suse.de>,
+	James Bottomley <James.Bottomley@suse.de>,
+	Akinobu Mita <akinobu.mita@gmail.com>
+Cc: linux-scsi@vger.kernel.org,
+	target-devel@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Jia Jia <physicalmtea@gmail.com>
+Subject: [PATCH v2 0/8] scsi: target: keep command bytes inside the sg
+Date: Wed, 18 Nov 2026 12:13:03 +0800
+Message-Id: <20261118041311.19011-1-physicalmtea@gmail.com>
+X-Mailer: git-send-email 2.34.1
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -91,64 +98,62 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8bit
 
+This series fixes eight target-core accesses past command-buffer or sg
+boundaries. vhost-scsi can supply guest buffers whose sg boundaries do
+not coincide with command fields, logical blocks or protection tuples.
 
-On Tue, 17 Nov 2026, Tim Douglas wrote:
+Patch 1 builds the COMPARE AND WRITE write sg table from the entries
+that contain the write half.
 
-> The ESP core tracks the number of bytes left to transfer in tot_residue
-> but does not report that count to the SCSI midlayer. As a result, SG_IO
-> returns a residual of zero even when a target transfers fewer bytes than
-> requested, as can happen with INQUIRY and MODE SENSE.
-> 
-> Report tot_residue with scsi_set_resid() when a command with a data
-> buffer completes with DID_OK. Initialize the scatterlist DMA length
-> on the identity-mapped PIO/pseudo-DMA path so the residual starts
-> from the buffer length on architectures with a separate DMA length.
-> 
-> On a Performa 6200CD with an out-of-tree ESP front end, an SG_IO
-> INQUIRY with an allocation length of 255 returns 36 bytes from the
-> internal CD-ROM drive. The residual is 219 with the fix and 0 before it.
-> 
-> AI assistance was used to investigate ESP transfer accounting and draft
-> the fix.
-> 
-> Signed-off-by: Tim Douglas <me@timdoug.com>
+Patch 2 limits each REPORT REFERRALS LBA store to the bytes remaining
+in the response buffer.
 
-Tested-by: Finn Thain <fthain@linux-m68k.org>
+Patch 3 rejects SET TARGET PORT GROUPS parameter lists that end in a
+partial four-byte descriptor.
 
-Regarding that front-end for the esp_scsi driver, do you think it can 
-replace the mac53c94 driver? Has your driver been published yet?
+Patch 4 lets sbc_dif_generate() write an eight-byte protection tuple
+split across protection sg entries.
 
-> ---
->  drivers/scsi/esp_scsi.c | 6 +++++-
->  1 file changed, 5 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/esp_scsi.c b/drivers/scsi/esp_scsi.c
-> index 9993b0ae9..162f8fe14 100644
-> --- a/drivers/scsi/esp_scsi.c
-> +++ b/drivers/scsi/esp_scsi.c
-> @@ -388,6 +388,7 @@ static void esp_map_dma(struct esp *esp, struct scsi_cmnd *cmd)
->  
->  		scsi_for_each_sg(cmd, s, spriv->num_sg, i) {
->  			s->dma_address = (uintptr_t)sg_virt(s);
-> +			sg_dma_len(s) = s->length;
->  			total += sg_dma_len(s);
->  		}
->  	} else {
-> @@ -907,8 +908,11 @@ static void esp_cmd_is_done(struct esp *esp, struct esp_cmd_entry *ent,
->  	esp_free_lun_tag(ent, dev->hostdata);
->  	cmd->result = 0;
->  	set_host_byte(cmd, host_byte);
-> -	if (host_byte == DID_OK)
-> +	if (host_byte == DID_OK) {
->  		set_status_byte(cmd, ent->status);
-> +		if (cmd->sc_data_direction != DMA_NONE)
-> +			scsi_set_resid(cmd, ESP_CMD_PRIV(cmd)->tot_residue);
-> +	}
->  
->  	if (ent->eh_done) {
->  		complete(ent->eh_done);
-> 
-> base-commit: aebb7274476403040d582c61478df8f4a7bf9cd3
-> 
+Patch 5 lets sbc_dif_verify() read a tuple split across protection sg
+entries and rejects a partial tuple at the end of the list.
+
+Patch 6 limits each CRC update to the bytes available in the current
+data sg in both DIF generation and verification.
+
+Patch 7 checks buffer lengths and uses sg copies for the pscsi MODE
+SENSE write-protect byte and tape MODE SELECT block descriptor.
+
+Patch 8 makes sbc_dif_verify() advance past an escaped block spanning
+multiple data sg entries.
+
+Patches 1, 2, 3 and 7 are independent. The DIF patches 4, 5, 6 and 8 fix
+separate bugs and are posted in that order: patch 4 can stand alone,
+patch 5 uses its tuple-copy helper, and patch 6 builds on both. Patch 8
+covers escaped blocks, which bypass the CRC walk.
+
+Changes in v2:
+- Keep data sg advancement before the escape check in patch 5.
+- Retain the existing atomic page mappings in the DIF paths.
+- Fix escape advancement with the existing cursor loop in patch 8.
+- Use the existing sg copy helpers for pscsi mode data in patch 7.
+- Correct the Fixes tags in patches 1, 3 and 5.
+- Explain why PI generation reads an existing tuple before updating it.
+- Shorten the commit descriptions and retain the relevant trace frames.
+
+Jia Jia (8):
+  scsi: target: take COMPARE AND WRITE data from the write half
+  scsi: target: keep REPORT REFERRALS stores inside the buffer
+  scsi: target: reject a short SET TARGET PORT GROUPS list
+  scsi: target: copy a DIF insert tuple across prot sgs
+  scsi: target: copy a DIF verify tuple across prot sgs
+  scsi: target: limit DIF block CRC to each data sg
+  scsi: target: keep pscsi mode bytes inside the data sgs
+  scsi: target: advance past escaped DIF blocks across data sgs
+
+ drivers/target/target_core_alua.c      |  29 ++-
+ drivers/target/target_core_pscsi.c     |  37 ++-
+ drivers/target/target_core_sbc.c       | 422 ++++++++++++++++++++++-----------
+ drivers/target/target_core_transport.c |  11 +-
+ 4 files changed, 338 insertions(+), 161 deletions(-)
