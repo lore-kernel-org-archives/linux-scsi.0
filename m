@@ -1,118 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=103.168.172.158
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.137.202.133
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794962272;
-	b=qO66wypjCc7oGow2zcH9VYRPTTw3VNuQlpWsJ15rNeHdaJNbiYA8GHlLlBGMYcHgshc2
-	 fL/FyW+E7/u4ngZWghcy6I7iMeudL3/hvULbQrvl/5fv97LewupUcF/tWrxoj4D/lSz0Q
-	 wcdV9xlbhIuZ4x3lvZ7+xoYttdwYWOIjntYLi1uXKEUDDO0G8xWNu74PoSPOTGPUWK6kh
-	 wZBINjLP0RdNPdjbJi2RuucBx87EXLDyZ/fivfdmnoZy81+Hqb6O/YX8oiT2mW7jUlnNP
-	 b67cxH2K6eAevFYsn6yb/uy8SdK9HX1X7W48+DyrDu2oM/khwM5byvOdKI99BJugJyw==
+	t=1794962569;
+	b=Vici5HCueQrr4F+QgVBdHNY4b9jLwZ8ixJ4xtzZqKXOi92zpiG6wHD5Mhp3w/wVsMva2
+	 1XBmlDkImmtUUSxtKGcFiyliKYICj7GG6kMLL3zusnd6cI8t/WeFViFck3RNMN1wDQQ6P
+	 Ii6G/l3ZGsLXhKmEVivkzlAp8Vjxfvccf2wUkrtVP40ZVwRwEpihEPrSXltv77gPJ+Qcj
+	 CcjB9TkXNNcPAUagdad8dKUd7NfHwYO+mvwfwK0IKPspzkzZcs+/uv6MgxZgFGAaVHbpT
+	 CNCS9uA3o0sTUFIQNvrSFLOvbZCOal9FbmcNeGAhpnnx0+vNbJO4zmWldzt32J36PRA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794962272;
-	h=DMARC-Filter:Received:Received:DKIM-Signature:DKIM-Signature:
-	 X-DKIM2-Info:DKIM2-Signature:X-DKIM2-Info:Message-Instance:
-	 X-ME-Sender:X-ME-Received:X-ME-Proxy-Cause:X-ME-Proxy:Feedback-ID:
-	 Received:From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=Gl+aaTATQ2KRJxVF4z9SwTCbT82XPOKKnt7ahoOCu/o=;
-	b=ewPbAFXRb9fIGvZqONZVzwC9bIzbBbD4DR6K4xlexQooZVLv6LdGlaENLKjojw42IONT
-	 6b123NFFpapYM2L5C5RML/RTmi3YTxwRM9cy9sB/2JaORmcaW4aDFxCtbkztT4ZvjtppH
-	 vd+IK71g7G4l8IYD2DStFulmU5M1OVSp98QJwl1s0TxixleDVJDoPQcFDLGSBgiiv1XbI
-	 Pqm1IHv/bUmNHQB1E0MOYN4nGU+5AgqjV76D0DOHQUMascn1qKCPhECahE5w2TQ1Etzf6
-	 otcT1quPJsirCyzYilhbFX87D6UhKGkK8Qu2MxD4WA0+dyxOtKPsArLpb2+s50PPQww==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794962569;
+	h=DMARC-Filter:DKIM-Signature:Received:Message-ID:Date:MIME-Version:
+	 User-Agent:Subject:To:Cc:References:Content-Language:From:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding;
+	bh=ZkGYeIrryqDq+inQbLWkmmEr1dkiBjnSvcr/8PVZk+Y=;
+	b=1xD+ps1fSSUrDG5Ig4VNJNg5lWyFXTOLrgvNpWT4HyMOYsP20ISIOZ6a6oDFhAz3MG+A
+	 dFzUaSihNpA3YvObE7cPCbs6fG+OLKz1z3L7Oh8lf/CiVu+EAuqOw3g8o4l04var3L6nT
+	 h1qFdtc8ssfXhoIJBsQUJKDeSyPKD/NuJ3NQNwE+5CXbEoSzi/pbXEie1HLNsJ4djfxmC
+	 ntyhv2CcjmPidJlelXpXS1lD8xhTTFYSv7l3DpAtl8wbFYBPtcHWPS+5deUbfc2rnMDxF
+	 1EZCelK1ccdD+bHde0Q0nTUn25D/c7yNj2eE/p7EAk+MSn4VEyxuR7pjMKFQ0qTxMyw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=timdoug.com;
-	spf=pass smtp.mailfrom=timdoug.com;
-	dkim=pass header.d=timdoug.com header.i=@timdoug.com header.a=rsa-sha256 header.s=fm3 header.b=UjYD0ywm;
-	dkim=pass header.d=messagingengine.com header.i=@messagingengine.com header.a=rsa-sha256 header.s=fm3 header.b=FzxN+z1g;
-	arc=none smtp.remote-ip=103.168.172.158
-Received: from fhigh-a7-smtp.messagingengine.com (fhigh-a7-smtp.messagingengine.com [103.168.172.158])
+	dmarc=pass header.from=infradead.org;
+	spf=pass smtp.mailfrom=infradead.org;
+	dkim=pass header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=bombadil.20210309 header.b=igCqbrdM;
+	arc=none smtp.remote-ip=198.137.202.133
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D121606A88A
-	for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2026 00:37:49 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2D121606A88A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=timdoug.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=timdoug.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2AF04606A890;
+	Wed, 18 Nov 2026 00:42:46 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2AF04606A890
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=timdoug.com header.i=@timdoug.com header.a=rsa-sha256 header.s=fm3 header.b=UjYD0ywm;
-	dkim=pass (2048-bit key, unprotected) header.d=messagingengine.com header.i=@messagingengine.com header.a=rsa-sha256 header.s=fm3 header.b=FzxN+z1g
-Received: from phl-compute-01.internal (phl-compute-01.internal [10.202.2.41])
-	by mailfhigh.phl.internal (Postfix) with ESMTP id 579A41400192
-	for <linux-scsi@vger.kernel.org>; Tue, 17 Nov 2026 19:37:49 -0500 (EST)
-Received: from phl-frontend-03 ([10.202.2.162])
-  by phl-compute-01.internal (MEProxy); Tue, 17 Nov 2026 19:37:49 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=timdoug.com; h=
-	cc:cc:content-transfer-encoding:content-type:date:date:from:from
-	:in-reply-to:message-id:mime-version:reply-to:subject:subject:to
-	:to; s=fm3; t=1794962269; x=1795048669; bh=Gl+aaTATQ2KRJxVF4z9Sw
-	TCbT82XPOKKnt7ahoOCu/o=; b=UjYD0ywmnt9dd7aWc02eM821Y3eRBUtC/PfBb
-	q9jQYBVStjTb3HgeUypBlLB62o3BMwL/Ys60zEuUZGLcg+pdNtuchPd4APBat8Bl
-	L7IE6OkuexU8DT0/IbuAB5M8a/NGhxBOOYHiAsyR4wwuEEI8qw3Mu7hWhD7KGYH8
-	8TnsYZwgcAJGP0IuiSaRK6WBDWJ4oGeHGi6gj3k6BokiT1j84m1g9Ib0rBYacuj5
-	SjofI66buNS9uSPB4MgCurIHwmOUXk/ZPqi1v98kB/myG2yWk+VuNyMnOcVkJjIo
-	ABKuwm+ayfPzW4mj1ZPPgYXSQTrcIgdKjEVlrmJPUu5Ta+ZWg==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:date:date:feedback-id:feedback-id:from:from
-	:in-reply-to:message-id:mime-version:reply-to:subject:subject:to
-	:to:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=
-	1794962269; x=1795048669; bh=Gl+aaTATQ2KRJxVF4z9SwTCbT82XPOKKnt7
-	ahoOCu/o=; b=FzxN+z1gIroM3Pw/3+SJnlKfohLhPvicSQWOjlp2PMUpXf1xR8d
-	cK00Lm088UCeZJPEDdsuB55EmFjFuATd43DHrne2YBKINs0PT2KTK9RZBmPuapzF
-	ItLfc1OegcVfcnexhEQuRkgpXNb+WzTPwS0akuey9+rkPbxm1pAFftbm3n8jrrod
-	2qDgzZy6npdgiFv1flO+biJ/jbZVYzMfR7FXU6T1Dq3kk0H6tR2KBr6zW5JE4sTB
-	BaF/4hO+D1LViJYWSsdnrHC3dVFBOacMzxX2CljY59CkqUrC+oUPA76AnJQdJr9V
-	hOiOUbvRCHZIqp2hZBDJQqSFCSP9EvBsh4A==
-X-DKIM2-Info: draft=ietf-dkim-dkim2-spec-09;
-	repo=github.com/dkim2wg/interop; date=2026-11-03; sw=lmtpprox;
-	action=sign d=timdoug.com a=rsa-sha256;
-DKIM2-Signature: i=1; m=1; t=1794962269; d=timdoug.com;
-	mf=PG1lQHRpbWRvdWcuY29tPg==;
-	rt=PGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnPg==;
-	s=fm3:rsa-sha256:NFSyukpCXLwlHXJptWDUcuPAFoankLqA2lSB5kGj9ym920v
-	fm7UCArKKKGuCShjNsQx8DwujVUwpoeiqNwqKeiSUfodo9h5L/dvdTWuh6gTvjWi
-	9487WI8ypPscMNsN+we89q7hN+gfDU9MY8qM1qV2Ei90qiB77yGJO4ItevweiIvd
-	GnEOMi7kBiZkczLbjD2qMA9UWh7kXUbOYGc+lyOm/2fANo5YgA13fIPu8UAdMNdH
-	5QEXcUOjduUpTUxzXuJb9fBWRh2PFDduRnY93NUvntgzh5HE3M6tHb7Pnb0odmud
-	X/2Sn0/wDXFbQ0CH39i0AqbJY7AU0UiCjlgP91A==;
-X-DKIM2-Info: draft=ietf-dkim-dkim2-spec-09;
-	repo=github.com/dkim2wg/interop; date=2026-11-03; sw=lmtpprox;
-	action=mi-m=1; hc=9;
-	hn=cc,content-transfer-encoding,date,feedback-id,from,
-	message-id,mime-version,subject,to;
-Message-Instance: m=1; h=sha256:/i9ZMQhVfq2717dxIHz5tE//9o2ryLOZSjy0XCiQha0=:075IwewuD6A84YFV7v16hi4kQAzEPa+mYI1MYxvovpM=;
-X-ME-Sender: <xms:XfP8agwhn-uOVcXxi7-AWZRgzV4BhGP2GnoETnPuvdXouRGHcSLNKA>
-    <xme:XfP8aiHooQKzCqnQIJZ7XbNZtCcQ82a5eYO5ObeQOBwZ6zOvzglGQnU5YFfRlgzKj
-    CIn3exK0SgC9bVyPRWfSHl1O2wbINi--IqmapUxfDz2PKoNckw_csM>
-X-ME-Received: <xmr:XfP8asyxKt-kfnJUXj7M4m2pq-n-jCKfAJMDt47XxTuWx-QDlJr2WDhuuGHJ>
-X-ME-Proxy-Cause: dmFkZTF3DbEPOX5/LLA/DdAu1FRq0OlLGtI6fp+qMpuG60xJRrurkOKPkKfNqeqiSJYJDh
-    Mn0QpNQFDRQ9xQ/TuSuG/8ch4A2YkBEjAQxEGfsBdcZWhl2pZhNEvdaCGPeD6nXbzwrWcW
-    JIZnZt1zwWlwRakF9AijsGm2O6cVjbOqJOhenYcLcUAs3FYFjMMUJlsMwa9T05/Z/aG03Q
-    5Tpf/chNyEWGfSQcuseUNXznAtoe1wrXYS7LByaRGticp7P16jjStdkAiUzVKoeAJwIPme
-    3gFNJNQloYwludwUnN9W2AqGKmKX0tFRd0RxLyGAjjsfF/EfvbxvuYhowE5cSsPyGxY5Xz
-    AP89B5PS4/tNG89gaA3O0x0SRgTbxrCkasYMXmBR3i/yE9Gz/1BPNa34XSt3foODeeQSIp
-    0gSDm7Dk51U0T+2mcGzOXXtalWqKNx/8j5DUOIrIW900fhNSLM3ACOhg7EQ7EmZVpQuaVX
-    SQfuAvsKSLN4uGAbBC3MMp/oDCQg3bWJ6W0reZVo7odmLQ7Pk1KZ06No/VgRrg/lxH0ETE
-    Aaj2Wf/VeuYxp6E7f0JSNIQxCcLugd+05En0hg+8ZKS3tSeCe1PmX86um8lftLPnQ2zAhk
-    IH/6SH1vAuqPDDyRZ/QraDDdwkJVjtzFkmNmZPQywrlaWWIy5TK1ziPrpx0A
-X-ME-Proxy: <xmx:XfP8artJkX_lCf2PSfEAhET6aTSDb2lCkBSRjP4On96u7hAMpn7gmA>
-    <xmx:XfP8ah16aYPrGp7mtjz7FklnXHhGPYcc9PoEMSOwKLX0KCGbcRkFdQ>
-    <xmx:XfP8au_yh4s2xXCzEZMfu1zye7_c-zJqePZS9xbV5F7womB9J8MQWA>
-    <xmx:XfP8aqO8i2ZO4rSwD6COsWB-IUSoOKDU7D5losTWK4kjbWBl1_S8Rg>
-    <xmx:XfP8apxjeM2NCqshG4qy1XbQbkXwwxRP7LjZ3oxmAFidj1V6UL4sHp5e>
-Feedback-ID: i12bc4175:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
- 17 Nov 2026 19:37:48 -0500 (EST)
-From: Tim Douglas <me@timdoug.com>
-To: mkp@kernel.org,
-	James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: esp_scsi: report the residual byte count
-Date: Tue, 17 Nov 2026 19:37:46 -0500
-Message-ID: <20261118003746.61659-1-me@timdoug.com>
-X-Mailer: git-send-email 2.54.0
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=bombadil.20210309 header.b=igCqbrdM
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	Content-Type:In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:
+	Message-ID:Sender:Reply-To:Content-ID:Content-Description;
+	bh=ZkGYeIrryqDq+inQbLWkmmEr1dkiBjnSvcr/8PVZk+Y=; b=igCqbrdMvYdH2Ll7yuVQgiWBLt
+	/GjOlBhkNv3Atf058oFTC35r7J1y0Dn+izVMR4B7NTJEgzYPHyNBT/yjDLM3vKgbn4EFnLL1HvfM2
+	G8HTUE2iRUo+Ako4z/l/tGbDtgdpSVnn3+sjWev4F279cv0k0FF8It0l+2omvAOvX90nrKkVMHldR
+	y4SubNJLjheuSGQXijcB5uH5+COAZ+CInyJl5sc9OV63iS8Y4FJBagg/Ml+jigC5FfWN8akPbdtOp
+	IW55/TtVzpAhYfHqN4Q+3n+P1FyoIpvl7F9FFouhH/iKFh+WdtjvK3wQHam39CoLFXiHmYbfepuXX
+	RGWrdOyg==;
+Received: from [50.53.43.113] (helo=[192.168.254.34])
+	by bombadil.infradead.org with esmtpsa (Exim 4.100.1 #2 (Red Hat Linux))
+	id 1xTTks-00000007Onb-3pzj;
+	Wed, 18 Nov 2026 00:42:30 +0000
+Message-ID: <8d287ebe-56cd-4429-89c7-d89c295efeca@infradead.org>
+Date: Tue, 17 Nov 2026 16:42:28 -0800
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -122,57 +58,112 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 04/12] docs: ioctl-number: update networking entries
+To: sashiko-reviews@lists.linux.dev
+Cc: Jonathan Corbet <corbet@lwn.net>, Shuah Khan <skhan@linuxfoundation.org>,
+ David Hildenbrand <david@kernel.org>,
+ Andrew Morton <akpm@linux-foundation.org>, Jason Gunthorpe <jgg@nvidia.com>,
+ Leon Romanovsky <leonro@nvidia.com>, linux-mm@kvack.org,
+ Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>,
+ linux-sound@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
+ Marcel Holtmann <marcel@holtmann.org>,
+ Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
+ Willem de Bruijn <willemdebruijn.kernel@gmail.com>,
+ Jason Wang <jasowangio@gmail.com>, David Heidelberg <david@ixit.cz>,
+ Chas Williams <3chas3@gmail.com>, "David S. Miller" <davem@davemloft.net>,
+ Eric Dumazet <edumazet@kernel.org>, Jakub Kicinski <kuba@kernel.org>,
+ Paolo Abeni <pabeni@redhat.com>, Helge Deller <deller@gmx.de>,
+ dri-devel@lists.freedesktop.org, MPT-FusionLinux.pdl@broadcom.com,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <mkp@kernel.org>, linux-scsi@vger.kernel.org,
+ Miquel Raynal <miquel.raynal@bootlin.com>,
+ Richard Weinberger <richard@nod.at>, Vignesh Raghavendra <vigneshr@ti.com>,
+ Zhihao Cheng <chengzhihao1@huawei.com>, linux-mtd@lists.infradead.org,
+ Neill Kapron <nkapron@google.com>, Andrey Konovalov <andreyknvl@gmail.com>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-usb@vger.kernel.org,
+ Juergen Gross <jgross@suse.com>, Stefano Stabellini
+ <sstabellini@kernel.org>, Hans de Goede <hansg@kernel.org>,
+ Arnd Bergmann <arnd@arndb.de>, "Michael S. Tsirkin" <mst@redhat.com>,
+ =?UTF-8?Q?Eugenio_P=C3=A9rez?= <eperezma@redhat.com>,
+ Sean Christopherson <seanjc@google.com>, Paolo Bonzini
+ <pbonzini@redhat.com>, kvm@vger.kernel.org, virtualization@lists.linux.dev,
+ Jan Kara <jack@suse.cz>, Theodore Ts'o <tytso@mit.edu>,
+ linux-ext4@vger.kernel.org, Mike Marshall <hubcap@omnibond.com>,
+ devel@lists.orangefs.org, Paulo Alcantara <pc@manguebit.org>,
+ Namjae Jeon <linkinjeon@kernel.org>, Jaegeuk Kim <jaegeuk@kernel.org>,
+ Chao Yu <chao@kernel.org>, Florian Fainelli <florian.fainelli@broadcom.com>,
+ Broadcom internal kernel review list
+ <bcm-kernel-feedback-list@broadcom.com>, Tzung-Bi Shih <tzungbi@kernel.org>,
+ Benson Leung <bleung@chromium.org>, David Airlie <airlied@gmail.com>,
+ Simona Vetter <simona@ffwll.ch>, Alex Deucher <alexander.deucher@amd.com>,
+ =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
+ amd-gfx@lists.freedesktop.org, Jani Nikula <jani.nikula@linux.intel.com>,
+ Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
+ Rodrigo Vivi <rodrigo.vivi@intel.com>, Tvrtko Ursulin
+ <tursulin@ursulin.net>, intel-gfx@lists.freedesktop.org,
+ Matthew Brost <matthew.brost@intel.com>,
+ =?UTF-8?Q?Thomas_Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>,
+ intel-xe@lists.freedesktop.org
+References: <20261114202653.3113381-1-rdunlap@infradead.org>
+ <20261114202653.3113381-5-rdunlap@infradead.org>
+ <sashiko-outbox-215804@kernel.org>
+Content-Language: en-US
+From: Randy Dunlap <rdunlap@infradead.org>
+In-Reply-To: <sashiko-outbox-215804@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-The ESP core tracks the number of bytes left to transfer in tot_residue
-but does not report that count to the SCSI midlayer. As a result, SG_IO
-returns a residual of zero even when a target transfers fewer bytes than
-requested, as can happen with INQUIRY and MODE SENSE.
 
-Report tot_residue with scsi_set_resid() when a command with a data
-buffer completes with DID_OK. Initialize the scatterlist DMA length
-on the identity-mapped PIO/pseudo-DMA path so the residual starts
-from the buffer length on architectures with a separate DMA length.
 
-On a Performa 6200CD with an out-of-tree ESP front end, an SG_IO
-INQUIRY with an allocation length of 255 returns 36 bytes from the
-internal CD-ROM drive. The residual is 219 with the fix and 0 before it.
+On 11/15/26 12:27 PM, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 1 potential
+> issue to consider:
+> - [Low] docs: ioctl-number: duplicate bnep.h entry and missing conflict
+>   marker
+> --
+> 
+> commit acf95c4d46bf87ab8fab382911993f6e83864afc
+> Author: Randy Dunlap <rdunlap@infradead.org>
+> 
+> docs: ioctl-number: update networking entries
+> 
+> This commit updates the networking ioctl file paths and function number
+> ranges in Documentation/userspace-api/ioctl/ioctl-number.rst.
+> 
+>> diff --git a/Documentation/userspace-api/ioctl/ioctl-number.rst b/Documentation/userspace-api/ioctl/ioctl-number.rst
+>> index 2b2d3fd317158..cd4f0bf6db66a 100644
+>> --- a/Documentation/userspace-api/ioctl/ioctl-number.rst
+>> +++ b/Documentation/userspace-api/ioctl/ioctl-number.rst
+>> @@ -132,6 +132,7 @@ Code  Seq#    Include File                                             Comments
+>>  'B'   00-0F  include/linux/pmu.h                                       conflict!
+>>  'B'   C0-FF  advanced bbus                                             <mailto:maassen@uni-freiburg.de>
+>>  'B'   00-0F  xen/xenbus_dev.h                                          conflict!
+>> +'B'   C8-D4  net/bluetooth/bnep/bnep.h                                 <mailto:linux-bluetooth@vger.kernel.org>
+>>  'C'   all    linux/soundcard.h                                         conflict!
+>>  'C'   00-68  sound/compress_offload.h                                  conflict!
+>>  'C'   01-2F  linux/capi.h                                              conflict!
+>> @@ -173,7 +174,7 @@ Code  Seq#    Include File                                             Comments
+>>  'H'   FC     sound/pci/asihpi/hpios.h                                  conflict!
+>>  'H'   00-0F  uapi/misc/habanalabs.h                                    conflict!
+>>  'H'   A0     uapi/linux/usb/cdc-wdm.h
+>> -'H'   C0-F0  net/bluetooth/hci.h                                       conflict!
+>> +'H'   C0-F0  net/bluetooth/hci_sock.h                                  conflict!
+>>  'H'   C0-DF  net/bluetooth/hidp/hidp.h                                 conflict!
+>>  'H'   C0-DF  net/bluetooth/cmtp/cmtp.h                                 conflict!
+>>  'H'   C0-DF  net/bluetooth/bnep/bnep.h                                 conflict!
+> 
+> [Severity: Low]
+> Should the 'H' C0-DF entry for net/bluetooth/bnep/bnep.h be removed now
+> that 'B' C8-D4 is added, and should the 'B' C0-FF and 'B' C8-D4 entries
+> be marked with conflict!?
+> 
+> net/bluetooth/bnep/bnep.h only defines 'B' ioctls (BNEPCONNADD through
+> BNEPGETSUPPFEAT, 200-212) and none with code 'H', while 'B' C8-D4
+> overlaps with the 'B' C0-FF range for advanced bbus.
 
-AI assistance was used to investigate ESP transfer accounting and draft
-the fix.
+All done (whatever advanced bbus is).
 
-Signed-off-by: Tim Douglas <me@timdoug.com>
----
- drivers/scsi/esp_scsi.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/esp_scsi.c b/drivers/scsi/esp_scsi.c
-index 9993b0ae9..162f8fe14 100644
---- a/drivers/scsi/esp_scsi.c
-+++ b/drivers/scsi/esp_scsi.c
-@@ -388,6 +388,7 @@ static void esp_map_dma(struct esp *esp, struct scsi_cmnd *cmd)
- 
- 		scsi_for_each_sg(cmd, s, spriv->num_sg, i) {
- 			s->dma_address = (uintptr_t)sg_virt(s);
-+			sg_dma_len(s) = s->length;
- 			total += sg_dma_len(s);
- 		}
- 	} else {
-@@ -907,8 +908,11 @@ static void esp_cmd_is_done(struct esp *esp, struct esp_cmd_entry *ent,
- 	esp_free_lun_tag(ent, dev->hostdata);
- 	cmd->result = 0;
- 	set_host_byte(cmd, host_byte);
--	if (host_byte == DID_OK)
-+	if (host_byte == DID_OK) {
- 		set_status_byte(cmd, ent->status);
-+		if (cmd->sc_data_direction != DMA_NONE)
-+			scsi_set_resid(cmd, ESP_CMD_PRIV(cmd)->tot_residue);
-+	}
- 
- 	if (ent->eh_done) {
- 		complete(ent->eh_done);
-
-base-commit: aebb7274476403040d582c61478df8f4a7bf9cd3
 -- 
-2.39.5
+~Randy
 
