@@ -1,59 +1,62 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794977382;
-	b=NkBxggXBbm+kdsq3V8q00Ccg2ivzD1H36m2+e02xO+MMTAy+lmPIHVnnD8oxl1NehoLV
-	 UMAo9kq2k7SiqGcWBnivWykiTMxAUpSOJ8l+HAjQAhJzggM0UTkevsRbZ4aWlLKVHPWFq
-	 5BFNv8hfPmvDPWYsOsqnKkqUSKu8x+yGhTeY559JNKOvz40u6BJDSR1cLYPtogsGHAyC1
-	 Nc6iSVmRDYhIX1wkyWfghVE+X4SySrO0/EpfiWBgAJObu+1L1vXIRccYJjdzyejfagzfU
-	 10EvCzktaRIZBrI0Od9GmMXRNT2RxZh/1uyKwhin3pvYx6sDdDAlHz+KukpkWhiLWoQ==
+	t=1794977377;
+	b=MHmsm4mHaQ4EsNzKz0729iwWAryytkYwJzcZYlEiyldYyzKNSuiL0HM1RczM4EcoE0nd
+	 ho2+rTNXEYT5w36LfZkZc/t7BUpiAIwJ4j3VVMuiaTGMdUY3CgiHl4EP3c+9YaI27VcFH
+	 yxiMSje6HySmk/sIp/8iwGzzyqE8i8GBoeGpLehGGYWdcqIBjcEyNKqN/jOjy4WzLCppE
+	 wYStLdQx/feRdPlwmpp4/qeLRmKxdjbb0CL0BThXoaAb6ZtW/TqRzMmdwqe37uBPp1vej
+	 +7Xk+Z6PApUKOeAx1DRACFhCCGwUQrormVesFN1daMisGwy+6NYpMAiL+9e2Z4Z0o2Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794977382;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794977377;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding;
-	bh=9Ne7L63wjGTXxfO7wcLNtUjDPl7tUU9eVJYUKDOx/Uk=;
-	b=P7TubhnQp4mBbDglsilVkQZY0k6JMZNodQSoya1QtfMX2h+tMK0u1nnbb30S205aRiKM
-	 2RIVgOzm2T6Xl6zslhhqTn9GNgvpzjC5QZz581K1z111f+P+iSR/h4g12lWNzAIcPxgtT
-	 FtLmUiIqx90SGHzZEHewEOWCihdbEplJ6qexRIEcdwMe6mRwWqmt6xIcSoVTM3xRddSbf
-	 SZqo80d1AH5Tq9PD8VJUnYy6UktTzU3dG53t+eT1vf4+7ZvbjSvAGjh/d9uIvl4SflJYj
-	 jpN+aQYI1v3qhW7GraEtXEOr8sJ1J2YTaU1gtyzPE62OKT46YLrp22dB7sRd49YOlsw==
+	bh=8+QgvUb85vZLIdW2rrmmErSWuYeeqZH0EoUoa+InvZE=;
+	b=bBX8QpIRjwcxwlbqoL6OZMOH1P2VLAJKlU5fJDvGUXiks8D0JW4DwOzJEKaT+OEUja+l
+	 LtRJBRdQ9QBwCmtfgfiiFG0EGZFNmK6XcDXhhE0vLkPb0BOh6U6Uzpq/OWlxkStHWlZRS
+	 UrCJ4ECT+7pQoLBo1fyETrE5l068TW61Sjw+OH6YuAwaUEg8Ovk2iJVJKiwvuAxy85Yrs
+	 zcgCfmRYnP+gizHer9NCNsx79Cr4nUua91fc0G/P0V+H9RMoyh7V4gO9xJwxdGVbOwVJW
+	 TCt9p8/m1zOSdSNODHzAp5a86Or6S8cfzmt2W8X/3nrNjiAVwZs5fSDFY/nTVHlFQSw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=TLgNdL2u;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=mdV4cSDG;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17D16606A336;
-	Wed, 18 Nov 2026 04:49:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AAE78606A31C;
+	Wed, 18 Nov 2026 04:49:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=TLgNdL2u
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 161C71F000C4;
-	Wed, 18 Nov 2026 04:49:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=mdV4cSDG
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B3A891F000CE;
+	Wed, 18 Nov 2026 04:49:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794977381;
-	bh=9Ne7L63wjGTXxfO7wcLNtUjDPl7tUU9eVJYUKDOx/Uk=;
+	s=k20260515; t=1794977376;
+	bh=8+QgvUb85vZLIdW2rrmmErSWuYeeqZH0EoUoa+InvZE=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=TLgNdL2uLOthJUpBylNqGP0411IqJIPVhoUkhSXhWaOzYREg4ISBj0sjgrLBFZDiA
-	 n3SeHNRGC7kFwmvzQfbgOA0C08w0Mavgc2lGmk0v8qDVlAOCfglXxbD/MCQiFi9E4f
-	 A/lXh9ZBDrNkN55iQBAONbK3GDxy6k5nYT/1ASIcw0cXPpriFtfz4gH/l5PN2mucys
-	 s2LthPzoWWCHrK09uGTYISR7Ri/fp37BKAP/KfLzWPFOm/Y5pl0ZFEtL/goZilPJQS
-	 oMoiI4Hh115YI7+QTEdvT7y79MPCheGqq835pNQVZWL6QWKcVMb53lH9SNAx6mQ1GO
-	 fBDxBoe+/GdLQ==
+	b=mdV4cSDGL73FXhsmlh/i96DcuPK5QvvKD0AukH9N4ag4L2w7KRaMpQ4RE6VcyYrxV
+	 XGQYJcvRJxtVt06BgWoVyLbPsM5JdSL15ZazzZTPzjyJML2++VdHvikut0+JWaYj68
+	 fFb/W6v9kmyOYhk+pyotR+VRDuvvPWLtQzaPTeWL742o9x2yDf2lkMjxuStVCfeGq/
+	 62/GchbjlZPwWQDXYYKQTpgEql8qLDmkVpZrgJ9uL3u2C/luTxznTnojYo25+dLyPR
+	 m+7kSMHkmj6b9fSldxvMylksFKCcMhmEb9U9eaOuRhU1RneRnFabM/HlZaaYiCiGN9
+	 +ONOBx+ZUagtw==
 From: "Martin K. Petersen (Oracle)" <mkp@kernel.org>
-To: Hannes Reinecke <hare@suse.de>,
-	Weidong Wang <weidongw@illinois.edu>
+To: linux-scsi@vger.kernel.org,
+	Laurence Oberman <loberman@redhat.com>
 Cc: "Martin K . Petersen" <mkp@kernel.org>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	linux-scsi@vger.kernel.org,
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	Martin Wilck <mwilck@suse.com>,
+	Hannes Reinecke <hare@kernel.org>,
 	linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org
-Subject: Re: [PATCH] scsi: libfc: Fix rport kref leak in fc_rport_enter_ready()
-Date: Tue, 17 Nov 2026 23:49:27 -0500
-Message-ID: <179497726101.2093762.2693118779770513336.b4-ty@b4>
+	stable@vger.kernel.org,
+	John Garry <john.garry@linux.dev>
+Subject: Re: [PATCH] scsi: scsi_dh_alua: set handler_data before alua_initialize()
+Date: Tue, 17 Nov 2026 23:49:24 -0500
+Message-ID: <179497726107.2093762.12353078197804900109.b4-ty@b4>
 X-Mailer: git-send-email 2.56.1
-In-Reply-To: <20261108-h123-send-v1-1-b7672ff849f0@illinois.edu>
-References: <20261108-h123-send-v1-1-b7672ff849f0@illinois.edu>
+In-Reply-To: <20261109201120.1067815-1-loberman@redhat.com>
+References: <20261109201120.1067815-1-loberman@redhat.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -66,25 +69,23 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 
-On Sun, 08 Nov 2026 03:01:08 -0600, Weidong Wang wrote:
+On Mon, 09 Nov 2026 15:11:20 -0500, Laurence Oberman wrote:
 
-> fc_rport_enter_ready() takes a reference on the rport unconditionally,
-> but only queues event_work, whose handler drops that reference, when no
-> event is pending. If rdata->event is already set, the && short-circuits
-> past both queue_work() and the compensating kref_put(), so the reference
-> is leaked and the fc_rport_priv is never freed.
+> Since commit 50759b881e1d ("scsi: device_handler: alua: Call
+> scsi_device_put() from non-atomic context"), alua_rtpg_queue() only
+> queues an RTPG when sdev->handler_data points at an alua_dh_data whose
+> port group matches:
 > 
-> This is reachable from the wire: a PLOGI from a well-known address goes
-> straight to fc_rport_enter_ready(), and a second PLOGI for the same
-> S_ID while RPORT_EV_READY is still pending enters it again. After the
-> rport is logged out, kmemleak reports:
+> 	struct alua_dh_data *h = sdev->handler_data;
+> 	...
+> 	if (h && rcu_dereference(h->pg) == pg) {
 > 
 > [...]
 
 Applied to 7.4/scsi-fixes, thanks!
 
-[1/1] scsi: libfc: Fix rport kref leak in fc_rport_enter_ready()
-      https://git.kernel.org/mkp/scsi/c/cbd9818ebed3
+[1/1] scsi: scsi_dh_alua: set handler_data before alua_initialize()
+      https://git.kernel.org/mkp/scsi/c/a410375a249c
 
 -- 
 Martin K. Petersen
