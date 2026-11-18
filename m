@@ -1,82 +1,82 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.214.178
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.214.170
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794975242;
-	b=odhbkfu6oHbFFzb05X9jXrpU50oC6TZHvP3S2B7DQQsf3rG61Pe/5TKXHfanX1IT3aBo
-	 InUUBDa2+0OV4riFNQZxtkGKCt7TZhvyhXzk29XQICE9VEB8NDnpPs3dp85u/503kBHIt
-	 gx7x69dTNYYI3eKq8vp7mP4hMG6ixMFkLC96Bq69jgElG1QIAQGEhpPzwjSFsloi/oK14
-	 NjXc4F7I0Y4SnCOg8jKIZTH1YNWSDYzD+UxQht9J5H/HzUn3BOIgWq34bgn1+9UgtODzi
-	 evcy6lQX0+7gwUTjmEgZI4/1dcZnRjRZu7EhnssOVn2qnqWWSo4LZ6xLCzGmoMVDRxw==
+	t=1794975246;
+	b=LSp4F6GOpyjjW55JVIDovIoVt6fyh3yikc/rqDyvplYLb4f9Fke2JBY+I/YyUWwGZJDV
+	 PnMOnXRuMXvUdW4MuibgKMMA7w4cwYpHdNAfUDrRdVIiFFvFJo3nUqFI6fxNovVBPiCYe
+	 Z3saANyS+EzYlORQ7hMtXEW5xo+qx1P6uy2NTrKsYlC0FIUIAMCQU3G21RIb0+vvKI58r
+	 j+8bJZhbsm4I+KC+spToCpYJro1KLo/M9Kx/aPiY2zdqAgqrG4P3hfokrqRqNFaQU23S5
+	 SKiW8mHjHRj2hUHqdyfAugid0GSG8K55Qudf6irCWuIvzG1lo37xUJFChvouizyge5w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794975242;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794975246;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
 	 Date:Message-Id:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=1tGDjTxgOOQgjqUI4QLTxVZiaieo9oTy+UBHWYy4gNM=;
-	b=K2X2x++cIPLshxRCFqMlbg6cJxTcWjnUyYj6B6T4vgkWKyz80Xpz6JVKEznVtHu534Um
-	 8GnfeuSlLNu/TbAPXlK37WbwNQ1svOjgTilgaL3CuT6IG9GNsG3EQROEDURsQ/Ho8C63T
-	 +N5wXL6xfI3tHYm1pTCMCcHgHXZXhJYwXVzvwI0V/l22ZozfBXv9L4y0jZtMdW1ph3XII
-	 sSReL36wSE03WnE7xXH1q6UVwLR4EubCgBIGdv1/zZv1lhS1g7/rNMPO0qR/aga12Rc7e
-	 2PIxJLXeD2SYrDzdZ0LFYZ8WzfNKuYp7tPAwJiAcPTiO/BR8Y0M66WLGrvanw/AtUow==
+	bh=GPG8lOcLulms/jJaS3g/L2BNHyItP4cf5yOKPILINFI=;
+	b=Z0e6I2rxxr4o/tzNrnXIwhrzoBqfWSeN1RqdQGLSVUNv91W+HoiQFf8t7gxcqkPdlvDh
+	 fYLgc5F3c/4YWJFT42+wVj5IJfYWljSH/p5ME9RTJz3RSlHZLITUQG1kZnRL39APa4hvc
+	 x/+BZkHa6CUZoSWCx+XjPPKvrCEq3fZUw1XYlTkmW1ffU94vAaolSjgwnTpjO7pE+0EA2
+	 V9vdz1gkDBrv/y+BPBdQLSXNRvlu/KaMOvCr0bi5X3nJ0txu+RDwR3MU1LZojG4tWcpx7
+	 WWvVnESdMfw/XRbbtXXDX29rr2qhnfH9avKeQHSfAPYmk1nl0iLBgzkwij3cBTWyshQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=dwZrFfes;
-	arc=none smtp.remote-ip=209.85.214.178
-Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=cvqhJdEY;
+	arc=none smtp.remote-ip=209.85.214.170
+Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64D7D606A331
-	for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2026 04:14:02 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 64D7D606A331
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ECA36606A325
+	for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2026 04:14:05 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org ECA36606A325
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=dwZrFfes
-Received: by mail-pl1-f178.google.com with SMTP id d9443c01a7336-2e977109392so3125435ad.0
-        for <linux-scsi@vger.kernel.org>; Tue, 17 Nov 2026 20:14:02 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=cvqhJdEY
+Received: by mail-pl1-f170.google.com with SMTP id d9443c01a7336-2ed2bfe3252so2134255ad.3
+        for <linux-scsi@vger.kernel.org>; Tue, 17 Nov 2026 20:14:05 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1794975242; x=1795580042; darn=vger.kernel.org;
+        d=gmail.com; s=20260707; t=1794975245; x=1795580045; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=1tGDjTxgOOQgjqUI4QLTxVZiaieo9oTy+UBHWYy4gNM=;
-        b=dwZrFfescLuDyXqWVdT3f0QbKnWaUoxNOVfV4Tr58kL4+/kqtxPGF/NQ9gzn+bbQEO
-         Qk7U+LEv4EiTBX/zvyZXtd3GU87PKyYURw8Q6+xehN0MYV58sDbxhGMbXw8rdOVJLgb+
-         1iVpx+EmINmScwm0/mY/NAAbVQnoUHUjyIiAyYSKO8AGoCLwwuui1gh8dKL1WFdl/sUd
-         vNCSn3PGagivZwYIcEJxx1JxTFvgjiygIxm0owT6kUUHR0vNdXfjLfKs6FqkZ4R+Va/Y
-         63Aj0P0WygXlrHiA0p9bZRB62eIQXbIv+mkx7BcdaC6f/l66o450TSP3R8CI84z5XWIk
-         HLGg==
+        bh=GPG8lOcLulms/jJaS3g/L2BNHyItP4cf5yOKPILINFI=;
+        b=cvqhJdEYHrsoqlj7D/dBktgjPA41xa98nkLWQlnCpYhimNzYZmBJFMqmQKSEphE5Ge
+         OajrsBz2EHcvI0aTqJYEeugWVzfsHPKjzP6ERS2dpiO6MI4L1kmkUe5iL0iPFCzkAtkm
+         yEcHdHG9OSja21Jd4DCZmWBOdCjXoQ7QtZBpKIKa4yZcG7K81RSmiBU81V4nWDvWW/bK
+         U29KZGDF2Tr0j/F6/kGiNs5MFpHSRd3ESFeqi+noKlJK+UzYt4T7DTo8Eg1jiVVhDIKw
+         GkGnnpTMtEa95ey7mU9fq6kqBtVgD/IuA8MdGvbRJyGktekFLaWBRUxotFB/1xcYZzjt
+         PTlg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794975242; x=1795580042;
+        d=1e100.net; s=20260707; t=1794975245; x=1795580045;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=1tGDjTxgOOQgjqUI4QLTxVZiaieo9oTy+UBHWYy4gNM=;
-        b=I4fNS6e1tNAqD5hMctOpPz6/y3IWTQ6cqdsnfrsu3VxLenWu8JCqDwEuqTGhLp/9ga
-         2n8rZXp5PeXfwldC+IPDJgg69vnxQguqXt4h+fB/vNqH5IIlqnPrd0NqsOjokRII994v
-         F3y+P2qO1rCO7WE6eYpXtQ+kFicinZ/r8P5pA9l28Okh8DHtQSYrQ+LRvN8VI/Zn3Fz7
-         oiCx/vnz9ySHbjClD5sfLHr0EIgt3MQZEI5Cb3zP9gI7l6IrXj8JdOsn53YgeIshM8p8
-         5/s2Oqj7qDXZZhzxf8V9MHDKhndgDgtD6fJF5N/+iM9EWK+sUWV868wKGtG+zui+ivEz
-         VFkw==
-X-Gm-Message-State: APuU4Z+qVzdhmpCrnV4i53jrlSySOu/Y2BCDSKWVPFmcLaAmdDKQFXgW
-	JXmuPDHT0EZCP5JGjleQNhnlpFP6Wvr8pLDRuKwx1beUfs218VkC0mej
-X-Gm-Gg: AZFdTZfK7NvZHF8xyLcpxVQimL7tCxlrKIyJjsO8+PrN5HHA58OEdmhYpDoDpNR8GW8
-	1dC47nC9AGxrzi+K5R06a8rkDCagJhSSpWc382VMSfQ8Kz8WA9GqUuP0Kc7u0C904+nHd/IInWn
-	bAUHwJi3kglYl0wgMtzg5kdOpgheMqELjGGDX+amCC5YYti0bKxPfZKtT5iDi0BJoWURqM0RSww
-	gGJCHfFRCOydrdi39nlc3GvET+jSto1WQlmGci1MDQ+X7Gb6oFMezTWJbRq98uxbQhwabJ/+dDo
-	TNOYPTdKhckyiXROrTSSB96ClP8wBo9QAf+b4OEMTQA5DLo5zxw9vucEOQ2vmFgJSjK1Bp+CEkd
-	URub2E6l4tVby5Bzz0wvhg969BTxF9Wg1TYISZxGfOolv/pfQz+G9s/uZt/EAzM3Zrixv404thb
-	se5Mf6idgyvRvqTtQ1vdgMUAYEVEDDVSnKEsRJRvRy49Q/dh70+/Pxh6zTg5kMQcSoAnYkHBShW
-	7Orr/oVRwY6oTWY5mdwXn73Shxcik766M5/iJo8s90wJx1jjxrYhb+xIUhYYNf6hCOxZFXgLAzG
-	IFbr+PKpvQPGqOFnjhcQ3ls=
-X-Received: by 2002:a17:903:2345:b0:2e9:5714:6079 with SMTP id d9443c01a7336-2eff754e83bmr14304455ad.31.1794975241606;
-        Tue, 17 Nov 2026 20:14:01 -0800 (PST)
+        bh=GPG8lOcLulms/jJaS3g/L2BNHyItP4cf5yOKPILINFI=;
+        b=vv6X6MHH89elsOZqrhHWrWoF/lzpmgFRXpfx6C2BzO5ZjWZxnB2YMVMgVGUyaL74xG
+         9YMwpqkemujBukPv9C39yTVADCSAHJvger+QD6gmte+Erhgzxog3wEb/OIXuDjjcITXB
+         lW/saht9d1OeobUPFqgyS5QVZxDoCLPPzBW5+Zj1g9yu80/kbnYigJw1DrY3zCBrabL/
+         XdNsoEWMfmQ5fv/wuU7DH2tq2QhFnF9tbZJ4kO6VwYozgWQp8tJGEq0N2C7ZyWakoGP5
+         vKasGRiGdAdZO+ZBe0BNWZa47Pp3kqNYmchDw2EC0EG6k7aDkvFiigiiGVJFbCOBcP1p
+         jmwQ==
+X-Gm-Message-State: APuU4Z8+tz9BZCEL/jw03OzCWJO54RGzoNq9Fso1BQkH4bBCLgdpQe4V
+	UDPFfCLNyV8jG4UNV8ADOoIOgbV+tlx19l7oxeWp2sICteN5HNioBh4c
+X-Gm-Gg: AZFdTZethOFa4yht2CfUa2gTVyObJVk45i+1aAc7Kt1jOc4Mfj91c1SW/MaVrVxsW0q
+	Vc6sb8KZ+xUtVyGYvjC5TMT62jWZ2yuIxj6pwwUL7nNNnpAq+UG8YHRZiJcjwtTCe4iIwLnvAws
+	VhJvbUmhDhQRfvsu4yl8l2kku6NQQCnVsErNFsybw62AFHnp7c5SKusNqxjH9Op9S0Il0ylCniu
+	g1zejJWoKRA+Y2fxWjTuXJ4E7SvvXSEugmp18Xw0dPCkCfYKxQ6QeNGh2AO9AeNaRbQSK01/sBl
+	9guSwR7cH/kxhSh6kv65oqS054VqowCox++XSPYXs2ykpBnFXF3jmFumO7yy9YKjKKQDPJAL81M
+	nrO0xt2nKtF+azB3zadalyww7SIWqaePSiW/XVgeBrruVdtunC7fYNJysw/d0D+eMp77lSxKpuP
+	1+Ih2R6rKnMN48oOvUB2IRqtAhS3ed0uk3lNUafvWnJBOH21Tox04N4TKjbP09m8oNQYEITNjSl
+	73v2FIsuGKCB/gTcOIgv1EZu2FqocOzfzpBEyNl8/NncgtwTPk87r+i0qIgSoc69ZMrIRnUFSxT
+	D+MpjA5e9YSAv2Tz4YWqG4tsIoUhYiGn/SZqtpuMqeo=
+X-Received: by 2002:a17:902:f70c:b0:2ef:e130:1505 with SMTP id d9443c01a7336-2eff72ea971mr12502285ad.10.1794975245258;
+        Tue, 17 Nov 2026 20:14:05 -0800 (PST)
 Received: from gmail.com ([2407:cdc0:d002:0:188:253:12:32])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2eff6214f4dsm5728685ad.43.2026.11.17.20.13.57
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2eff6214f4dsm5728685ad.43.2026.11.17.20.14.02
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 17 Nov 2026 20:14:01 -0800 (PST)
+        Tue, 17 Nov 2026 20:14:05 -0800 (PST)
 From: Jia Jia <physicalmtea@gmail.com>
 To: "Martin K . Petersen" <mkp@kernel.org>,
 	Jan Engelhardt <jengelh@inai.de>,
@@ -87,9 +87,9 @@ Cc: linux-scsi@vger.kernel.org,
 	target-devel@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Jia Jia <physicalmtea@gmail.com>
-Subject: [PATCH v2 1/8] scsi: target: take COMPARE AND WRITE data from the write half
-Date: Wed, 18 Nov 2026 12:13:04 +0800
-Message-Id: <20261118041311.19011-2-physicalmtea@gmail.com>
+Subject: [PATCH v2 2/8] scsi: target: keep REPORT REFERRALS stores inside the buffer
+Date: Wed, 18 Nov 2026 12:13:05 +0800
+Message-Id: <20261118041311.19011-3-physicalmtea@gmail.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20261118041311.19011-1-physicalmtea@gmail.com>
 References: <20261118041311.19011-1-physicalmtea@gmail.com>
@@ -104,205 +104,70 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-For block sizes smaller than a page, compare_and_write_callback() adds
-block_size to the first data sg's offset to locate the write half.
-This assumes that both halves fit in that sg. If the compare buffer
-ends at a page boundary, the write entry points past the page even
-though the write data is available in the following sg.
+target_emulate_report_referrals() checks only that the start of an LBA
+field is inside cmd->data_length before storing all eight bytes. A
+short response buffer can therefore make the store run past its end.
+For example, a nine-byte allocation reaches the LBA at buf[8].
 
-vhost-scsi splits guest buffers into sg entries that each stay within
-one page, so the backend can read beyond the supplied data.
-
-Skip the compare bytes across the data sgs and build a table covering
-the write half. Pass its actual entry count to the backend and release
-it with sg_free_table(), including any chained allocations.
+The response builder must still visit the remaining LBA maps to compute
+the reported length. Encode each LBA in a local array and copy only
+the part that fits in the command buffer.
 
 KASAN reports:
 
-  BUG: KASAN: slab-use-after-free in copy_folio_from_iter_atomic
-  Read of size 512
+  BUG: KASAN: use-after-free in target_emulate_report_referrals+0x100/0x380 [target_core_mod]
+  Write of size 8
 
-  compare_and_write_callback
+  target_emulate_report_referrals
   __target_execute_cmd
-  sbc_execute_rw
-  fd_execute_rw
-  fd_do_rw
-  vfs_iter_write
-  copy_folio_from_iter_atomic
+  target_execute_cmd
+  transport_generic_new_cmd
 
-Fixes: d94e5a61357a ("target: fix COMPARE_AND_WRITE non zero SGL offset data corruption")
+Fixes: 38edd7245771 ("target_core_alua: check for buffer overflow")
 Signed-off-by: Jia Jia <physicalmtea@gmail.com>
 ---
- drivers/target/target_core_sbc.c       | 100 +++++++++++++++++--------
- drivers/target/target_core_transport.c |  11 ++-
- 2 files changed, 80 insertions(+), 31 deletions(-)
+ drivers/target/target_core_alua.c | 23 +++++++++++++++++++----
+ 1 file changed, 19 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/target/target_core_sbc.c b/drivers/target/target_core_sbc.c
-index 21f5cb86d70c0..adef903652ac2 100644
---- a/drivers/target/target_core_sbc.c
-+++ b/drivers/target/target_core_sbc.c
-@@ -433,19 +433,74 @@ out:
- 	return ret;
- }
+diff --git a/drivers/target/target_core_alua.c b/drivers/target/target_core_alua.c
+index 140154d93c430..c110914b7b78b 100644
+--- a/drivers/target/target_core_alua.c
++++ b/drivers/target/target_core_alua.c
+@@ -49,6 +49,19 @@ static LIST_HEAD(lu_gps_list);
  
-+/*
-+ * Data-out is compare bytes followed by write bytes.  Take the write
-+ * half from whatever sg entries hold it.  Do not add block_size onto
-+ * the first sg offset: that page may end before the write half.
-+ */
-+static int sbc_caw_build_write_sg(struct sg_table *tbl,
-+				  struct scatterlist *data_sg,
-+				  unsigned int data_nents, unsigned int skip,
-+				  unsigned int len)
+ struct t10_alua_lu_gp *default_lu_gp;
+ 
++static void
++target_emulate_report_referrals_copy_lba(unsigned char *buf, u32 off,
++					 u32 data_length, u64 lba)
 +{
-+	struct scatterlist *sg, *out;
-+	unsigned int nents = 0, left = len, left_skip = skip;
-+	unsigned int avail, chunk;
-+	int i;
++	unsigned char lba_buf[sizeof(lba)];
 +
-+	for_each_sg(data_sg, sg, data_nents, i) {
-+		if (!sg->length)
-+			continue;
-+		if (!left)
-+			break;
-+		if (left_skip >= sg->length) {
-+			left_skip -= sg->length;
-+			continue;
-+		}
-+		avail = sg->length - left_skip;
-+		chunk = min(left, avail);
-+		nents++;
-+		left -= chunk;
-+		left_skip = 0;
-+	}
-+	if (!nents || left)
-+		return -EINVAL;
-+
-+	if (sg_alloc_table(tbl, nents, GFP_KERNEL))
-+		return -ENOMEM;
-+
-+	left = len;
-+	left_skip = skip;
-+	out = tbl->sgl;
-+	for_each_sg(data_sg, sg, data_nents, i) {
-+		if (!sg->length)
-+			continue;
-+		if (!left)
-+			break;
-+		if (left_skip >= sg->length) {
-+			left_skip -= sg->length;
-+			continue;
-+		}
-+		avail = sg->length - left_skip;
-+		chunk = min(left, avail);
-+		sg_set_page(out, sg_page(sg), chunk, sg->offset + left_skip);
-+		left -= chunk;
-+		left_skip = 0;
-+		out = sg_next(out);
-+	}
-+	return 0;
++	if (off >= data_length)
++		return;
++	put_unaligned_be64(lba, lba_buf);
++	memcpy(&buf[off], lba_buf,
++	       min_t(u32, sizeof(lba_buf), data_length - off));
 +}
 +
- static sense_reason_t compare_and_write_callback(struct se_cmd *cmd, bool success,
- 						 int *post_ret)
- {
- 	struct se_device *dev = cmd->se_dev;
- 	struct sg_table write_tbl = { };
- 	struct scatterlist *write_sg;
--	struct sg_mapping_iter m;
--	unsigned int len;
--	unsigned int block_size = dev->dev_attrib.block_size;
--	unsigned int compare_len = (cmd->t_task_nolb * block_size);
-+	unsigned int compare_len = (cmd->t_task_nolb * dev->dev_attrib.block_size);
- 	unsigned int miscmp_off = 0;
- 	sense_reason_t ret = TCM_NO_SENSE;
--	int i;
-+	int rc;
+ /*
+  * REPORT REFERRALS
+  *
+@@ -88,11 +101,13 @@ target_emulate_report_referrals(struct se_cmd *cmd)
+ 		int pg_num;
  
- 	if (!success) {
- 		/*
-@@ -499,34 +554,19 @@ static sense_reason_t compare_and_write_callback(struct se_cmd *cmd, bool succes
- 	} else if (ret)
- 		goto out;
- 
--	if (sg_alloc_table(&write_tbl, cmd->t_data_nents, GFP_KERNEL) < 0) {
--		pr_err("Unable to allocate compare_and_write sg\n");
--		ret = TCM_OUT_OF_RESOURCES;
-+	rc = sbc_caw_build_write_sg(&write_tbl, cmd->t_data_sg,
-+				    cmd->t_data_nents, compare_len,
-+				    compare_len);
-+	if (rc) {
-+		pr_err("Unable to build compare_and_write sg\n");
-+		if (rc == -ENOMEM)
-+			ret = TCM_OUT_OF_RESOURCES;
-+		else
-+			ret = TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
- 		goto out;
- 	}
- 	write_sg = write_tbl.sgl;
- 
--	i = 0;
--	len = compare_len;
--	sg_miter_start(&m, cmd->t_data_sg, cmd->t_data_nents, SG_MITER_TO_SG);
--	/*
--	 * Currently assumes NoLB=1 and SGLs are PAGE_SIZE..
--	 */
--	while (len) {
--		sg_miter_next(&m);
--
--		if (block_size < PAGE_SIZE) {
--			sg_set_page(&write_sg[i], m.page, block_size,
--				    m.piter.sg->offset + block_size);
--		} else {
--			sg_miter_next(&m);
--			sg_set_page(&write_sg[i], m.page, block_size,
--				    m.piter.sg->offset);
--		}
--		len -= block_size;
--		i++;
--	}
--	sg_miter_stop(&m);
- 	/*
- 	 * Save the original SGL + nents values before updating to new
- 	 * assignments, to be released in transport_free_pages() ->
-@@ -535,7 +575,7 @@ static sense_reason_t compare_and_write_callback(struct se_cmd *cmd, bool succes
- 	cmd->t_data_sg_orig = cmd->t_data_sg;
- 	cmd->t_data_sg = write_sg;
- 	cmd->t_data_nents_orig = cmd->t_data_nents;
--	cmd->t_data_nents = 1;
-+	cmd->t_data_nents = write_tbl.nents;
- 
- 	cmd->sam_task_attr = TCM_HEAD_TAG;
- 	cmd->transport_complete_callback = compare_and_write_post;
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index dcfe945949167..3cae5ed67d417 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -22,6 +22,7 @@
- #include <linux/module.h>
- #include <linux/ratelimit.h>
- #include <linux/vmalloc.h>
-+#include <linux/scatterlist.h>
- #include <linux/unaligned.h>
- #include <net/sock.h>
- #include <net/tcp.h>
-@@ -2724,10 +2725,18 @@ static inline void transport_reset_sgl_orig(struct se_cmd *cmd)
- 	 * Check for saved t_data_sg that may be used for COMPARE_AND_WRITE
- 	 * emulation, and free + reset pointers if necessary..
- 	 */
-+	struct sg_table table = { };
-+
- 	if (!cmd->t_data_sg_orig)
- 		return;
- 
--	kfree(cmd->t_data_sg);
-+	/*
-+	 * compare_and_write_callback() built this with sg_alloc_table().
-+	 * Above SG_MAX_SINGLE_ALLOC the tail is a separate allocation.
-+	 */
-+	table.sgl = cmd->t_data_sg;
-+	table.orig_nents = cmd->t_data_nents;
-+	sg_free_table(&table);
- 	cmd->t_data_sg = cmd->t_data_sg_orig;
- 	cmd->t_data_sg_orig = NULL;
- 	cmd->t_data_nents = cmd->t_data_nents_orig;
+ 		off += 4;
+-		if (cmd->data_length > off)
+-			put_unaligned_be64(map->lba_map_first_lba, &buf[off]);
++		target_emulate_report_referrals_copy_lba(buf, off,
++							 cmd->data_length,
++							 map->lba_map_first_lba);
+ 		off += 8;
+-		if (cmd->data_length > off)
+-			put_unaligned_be64(map->lba_map_last_lba, &buf[off]);
++		target_emulate_report_referrals_copy_lba(buf, off,
++							 cmd->data_length,
++							 map->lba_map_last_lba);
+ 		off += 8;
+ 		rd_len += 20;
+ 		pg_num = 0;
