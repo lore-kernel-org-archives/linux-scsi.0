@@ -1,163 +1,108 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.103.12.5
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1794990793;
-	b=WEbOkjrsjS+BjsanjovfvB6SOR6qY4bIrrmeehUgutNC+t7Tb6nIzuvtNh44eijwtcZ7
-	 ARgZrE5w7oSsFhUrJOQ7WVt7HxcuWfsmyhPUGKFpZQdIemEzHgqUujL+51hrZF7l5c29A
-	 twSlzIKJC8AyR2QiB3gl1aFDihMh9zX0Tw1DFMw54r+WQD5XcoADwIGQ1yCQlLl+H3Bmr
-	 yFIki9X66sW1oKfW58YdldNjEyDi7h1cXeWWwzgJPjnSlJZqBwKUv87aZv7Qyer8yf+Lb
-	 lI1s2Af6cDuOFvedp4WcZLNCHDS8SjkRsA8CbRkYWHmxIZ7Jhg8lMfdk5uMzb7Yz7YQ==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794990793;
-	h=DMARC-Filter:DKIM-Signature:Received:Received:From:To:CC:Subject:
-	 Thread-Topic:Thread-Index:Date:Message-ID:References:In-Reply-To:
-	 Accept-Language:Content-Language:X-MS-Has-Attach:X-MS-TNEF-Correlator:
-	 x-ms-publictraffictype:x-ms-traffictypediagnostic:
-	 x-ms-office365-filtering-correlation-id:x-microsoft-antispam:
-	 x-microsoft-antispam-message-info:
-	 x-ms-exchange-antispam-messagedata-chunkcount:
-	 x-ms-exchange-antispam-messagedata-0:Content-Type:
-	 Content-Transfer-Encoding:MIME-Version:X-OriginatorOrg:
-	 X-MS-Exchange-CrossTenant-AuthAs:X-MS-Exchange-CrossTenant-AuthSource:
-	 X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg:
-	 X-MS-Exchange-CrossTenant-Network-Message-Id:
-	 X-MS-Exchange-CrossTenant-originalarrivaltime:
-	 X-MS-Exchange-CrossTenant-fromentityheader:
-	 X-MS-Exchange-CrossTenant-id:
-	 X-MS-Exchange-CrossTenant-rms-persistedconsumerorg:
-	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=KPUHtdYQMbFgzpItn4i2pnnQ+aZIVOWjRB9ku2hYfEY=;
-	b=JKAYGkvkKs+8WiBKdJkrnu/WS3TdE0vDVbVjzh6E1zxcymQTNvBO4ftmLWhZRkrJ3r5y
-	 u+7chkN29EvYSCJV+w3mix9CLTzBV+Ug8R+5ElgHes4rMwPZdJdmPUoK1nLRbvV9ST3ex
-	 MULMUel9Dv7a2ANEp73NOHFLdCPXcJeW91AeLHbS2mHsuT+oliUvWyfRwrYnBurcayZue
-	 axyC+GmB82OalcPB3+ddVNTvHO6OE9+ADJk5Dm23P+1K+9C+4OMBniahD7U6Zjt4rE4Tt
-	 uHtyJRlVNTkI8S6vTHlD0V5mOoCkzNEKxO7B5zoCzBgogOAbF0HGCZdB15wHghS4EfQ==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=outlook.com;
-	spf=pass smtp.mailfrom=outlook.com;
-	dkim=pass header.d=outlook.com header.i=@outlook.com header.a=rsa-sha256 header.s=selector1 header.b=Yui0i8E6;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=52.103.12.5
-Received: from BN1PR04CU002.outbound.protection.outlook.com (mail-eastus2azolkn19010005.outbound.protection.outlook.com [52.103.12.5])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1))
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.210.228
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1794996718;
+	b=oooYuhDDZw7sPMR1cbRl++XpOaH9xVTWcFXd5i+CK2rGPY6lqF6M66MGnstHLLzc6hmg
+	 7wwZ77WMXF8d3kZEJuZf/NKYOug4yWr9WDpIZODQ/RZ+J9R/kZeQMrNHPhtuRdS6bj6Wt
+	 xgwdj6hXU3xMj+RaeBcKMpqKnMkJiRAROPTknZhoNU+zszCk3maLEbz1aBaPllvtBdMxm
+	 I31ljxoe3XPJQmWeBbeeymXte/iJQrNwOZRwH9zDGl1SWFrTnr6sXipV89KK1+vljEj4k
+	 /sZNgmPn6+i/fXlB2wvvIn5qV43yJxlOYy7HOoMnUAkB+p2JLgcmY0FXBcVG2Icyrgw==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794996718;
+	h=DMARC-Filter:Received:X-Google-DKIM-Signature:X-Gm-Message-State:
+	 X-Gm-Gg:X-Received:Received:X-Relaying-Domain:X-CFilter-Loop:Received:
+	 DKIM-Signature:X-Received:X-Received:Received:From:To:Cc:Subject:Date:
+	 Message-Id:X-Mailer:X-DetectorID-Processed;
+	bh=XO7v7OVdCSqVz5PA7ENCh4Zfu0jsmXhkcKdQH//0PA4=;
+	b=v1iC8f6qcETBD6OjRLFcLdvBOxoobRcIcHznUT5qnl4QMzcatETTI+n+Kj+Ld/9u7Vzs
+	 3ALhxxhrjG8hwaen6CJMyW1q2ECni3EsI2HiOkXnja4eTk8BMbahxjEicAie3+NVjCszp
+	 Eb/t2NCtTdSdyqepenH+x+FQldexDCcWAb0MpsGzV+NcGKolOchC4tQ0cyBf3MwEj8/Ji
+	 F30K96gKO1vj6WN6dIqDBHiVIGsBBVLTnF08dyjS5qHyxy5quqMmC79ppf2WEMj4xZ7jn
+	 VHl/dL6PDJSKtwyiLSYXKiIP+mWsubo7Hei6h1GPjSOxbQXfwS+T0CTdntMfoutpJoQ==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=broadcom.com;
+	spf=fail smtp.mailfrom=broadcom.com;
+	dkim=pass header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=EC6nl6OU;
+	arc=none smtp.remote-ip=209.85.210.228
+Received: from mail-pf1-f228.google.com (mail-pf1-f228.google.com [209.85.210.228])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB10760A2603;
-	Wed, 18 Nov 2026 08:33:12 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BB10760A2603
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=outlook.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70DDB606A31C
+	for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2026 10:11:57 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 70DDB606A31C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=outlook.com header.i=@outlook.com header.a=rsa-sha256 header.s=selector1 header.b=Yui0i8E6
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=WkpdElOD5gh4zYYLJD4729HcDhk0qzPh/kEaH/jmn97bD00ocsIBiVMVcHOoWBw1iPXa3O5rR8oIspxHxsNGIdY8XstSjnQMQ+pMeFqz+t04eFo29nJhJpbL+kC13cGLQyLYEGUUWre4vZ4DtpaRv4BZHEyvc1xbn9vPqh2Zj3NmFeWh9AuOmyAOn99QTYHjKwu838q1mM4Awd6yxtzZLZ0jU7gWvoYBc+vBr5LYFLzAgqL22MndBBwPJA720Bx0R5agbdAsJPtGYljWiM0f+4dE5b8LSg3IyhrnOqi8AxubW7Iv1eD+/65P8QCrwDc4cXBVhEjdXroVBJTSJ7xp6Q==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001; h=From:Date:Subject:Message-ID:MIME-Version;
- bh=KPUHtdYQMbFgzpItn4i2pnnQ+aZIVOWjRB9ku2hYfEY=;
- b=X+KS616UpDEa5gOBmmimtv80+hiPyS28pcHEGk9Ju+JjKxQ8rZZImbVT/P004fmSYTMYaFESRRrG4KibWiQBYgNgabCPljT5PpzIxEWf/lqy3pylnufVe8sFLsS0N5yovxseE7pGbKoSDi/h0ofAPP4BVdxoOuaDPvsdDWfCuTlhKfn/246nZF3CUDB1WOKSoebod6risFENRoZLmy1dSpA+HNbAKO6/tNYT63HcLro9SdR3S6drHkIluWYdD3SlWMtTR6W4E5kh7/wpBH66V7jdP4wdEyOYPdu+3Yic0Un6EpnHBQcKZOMw8rqn8v5EMD1EhZBzd/reuDRzXThtyQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
- dkim=none; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=outlook.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=KPUHtdYQMbFgzpItn4i2pnnQ+aZIVOWjRB9ku2hYfEY=;
- b=Yui0i8E6wv3UPEJdRCiusOcgxkd+PrhTzv3NDtldWmS5mczpuzQ3NjBdDcGiOpbLQ/6wPufHL/478FCNh8keoVUYg123ibrvNnncgoE7t7wlm7QQwCtUSVfXJr4lsARArKePFzQLmB+zBJkRFvaN3kAhwC3Y993nADBvP4Ek9f1XoAyZdQq4cxat8mdbp0/wnvSSnYGLZYotqdjoB6jR9Ocw7LcHcYDBTNsE6Vpa8wLWSeQgkvTZR359ZU2lLx1qdOUEdqVQm+OWWqOr88oDxYQSauvBJcBBtuA9Vs+MvMg1Ba0Y54M5LshSsve7gGny6d9z6XIUCeZkF/TxQF+h9w==
-Received: from SA3PR05MB10385.namprd05.prod.outlook.com
- (2603:10b6:806:39d::17) by PH0PR05MB999481.namprd05.prod.outlook.com
- (2603:10b6:510:116::21) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.615.14; Wed, 18 Nov
- 2026 08:33:10 +0000
-Received: from SA3PR05MB10385.namprd05.prod.outlook.com
- ([fe80::e22f:a0f5:fcb0:9b0d]) by SA3PR05MB10385.namprd05.prod.outlook.com
- ([fe80::e22f:a0f5:fcb0:9b0d%6]) with mapi id 15.21.0615.013; Wed, 18 Nov 2026
- 08:33:10 +0000
-From: Yingjie Wang <x-professor@outlook.com>
-To: "Martin K. Petersen" <mkp@kernel.org>, "James E.J. Bottomley"
-	<James.Bottomley@HansenPartnership.com>
-CC: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Bart Van Assche
-	<bvanassche@acm.org>, Yang Xiuwei <yangxiuwei@kylinos.cn>, James Houghton
-	<jthoughton@google.com>, "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>
-Subject: [PATCH v4 3/4] scsi: sr: release CDDA request before user copyback
-Thread-Topic: [PATCH v4 3/4] scsi: sr: release CDDA request before user
- copyback
-Thread-Index: AQHddzdxExsm/Hte6kGPRTFFGaDCXg==
-Date: Wed, 18 Nov 2026 08:33:10 +0000
-Message-ID:
- <e9916537db797cda88f00744bbec10e87cdcf190.1794990780.git.x-professor@outlook.com>
-References: <cover.1794990780.git.x-professor@outlook.com>
-In-Reply-To: <cover.1794990780.git.x-professor@outlook.com>
-Accept-Language: en-US, zh-CN
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: SA3PR05MB10385:EE_|PH0PR05MB999481:EE_
-x-ms-office365-filtering-correlation-id: 26234402-2e59-452d-9281-08df454e9430
-x-microsoft-antispam:
- BCL:0;ARA:14566002|24021099003|25010399006|4140399003|41001999006|38102599003|24121999003|22091999003|8060799015|8062599012|31061999003|19110799012|15080799012|3412199025|4302099013|440099028|102099032|10035399007|12091999003|1602099012|53005399003|40105399003|26121999007;
-x-microsoft-antispam-message-info:
- =?utf-8?B?L0VMQ0RXY2Y2VFkwSmJ1eEdrSTNabVFwWVpzb3laL1ZWNlMvVTl5UXRHVUc2?=
- =?utf-8?B?dVpaUGVpbWUzOGtjemY2VHovU2QxMm9mOXVMM2pLdHdkNldjVzVXUXdqUURJ?=
- =?utf-8?B?Rk9obVp1Y3h2UjFmNU05RzZidWU1N1hBMnZZWUhyMW9Udk85K2Q5RzA4TkFz?=
- =?utf-8?B?eWxDeTdiOHkxTzFIcUhTem1IRjhLRjFBTzVQY0l4N3M1Z1lZdEdKT0psOHlx?=
- =?utf-8?B?L2VkVWlIWVNzRU4xdzJrOFpZenYxZGU4aGZTVkl4OE9CNWFKOUp0L0thT3J3?=
- =?utf-8?B?NmhybzdDVFdhUmdIVTJCM1V3QVgybXQyMitIa1VuN0M1eDZ2Z0g1NXFUam1o?=
- =?utf-8?B?N1IrbktQUDhGK1E0T0dRUG5EM21yeFJibUtXaHVWQy9Hd1pQYm92dEY5dHBm?=
- =?utf-8?B?SFltL29sRXMwZjlmbHNEeFlrQU5jUFhwdnA0c3F0cEZlT2EydEQzTlViYW03?=
- =?utf-8?B?cm5NaGFxa2dXdDdnSlhkTmw4a3ZqbTZsQTB3Tmp5UEUrdGpEQlRYQXpBR2lj?=
- =?utf-8?B?UmVCMlRwTUJ5RUk1eWplQ2szZGlmK3cyM2YxVkRFYXFSMVRDY0EzcTR2c2Nz?=
- =?utf-8?B?N0tkdldaOS9tWU0wSzM1M0gvR3o3QjRjS1VYN3ZzeTFjT1EzTzJ0UlV4NmtK?=
- =?utf-8?B?Q1BzRU9vaDlVVWIwUTlIMXM4dnd3KytDQkdIYVlFY0oxakVPK01uTVJxY3Bh?=
- =?utf-8?B?UmR6ZDF3NENBd0tqRWNTVFVHQUtvZ2Nwc0J5VU1uWVBwb0lJZVJOT0pRQlVp?=
- =?utf-8?B?bkpNVGVMTlBCZlBPdDJBWDRONkxldVBQVjQ3ZjFFdklKK0VkNG1IdUFEeXdu?=
- =?utf-8?B?bEpSNHIwbkZyaTFmb3BwOCtpdVVQN2FaOFUvSUJKZVNnQ1MzdjRQZTNURFBH?=
- =?utf-8?B?ZUlNUm5Tc2tXejJ6cE1VYlFxZUJqM0NSZ2NwZ0FpVWJONDYrMlMwS1pzSDFj?=
- =?utf-8?B?Ty9JV0dHWUtUZzdTK2FkQi9oZkNXdzZrdVBXZUJRR0lGK3RSM3FFZk5MY2da?=
- =?utf-8?B?N0tjano2d2ZuMWc3bTE3RnVNeGpuWnNwUXNUc09uTnoxeDBtdmNYdnE5RlpN?=
- =?utf-8?B?UU85OVB0U3I2eXo3SWl0QVhGbFFQeTZoRHNrTmpqV2NKaFo5T2NmbU11eU5s?=
- =?utf-8?B?eFR4L2IvVWhzcFN1R0lscFlTNWtPaGNXNno2Z1FZNi8yOTFDczVHZkl3d3JI?=
- =?utf-8?B?OEc3MTQvbTByYk83RWF3MGF3VTJoWVpKVzNBTk1ralBMY0VHZ1lvTndINEY2?=
- =?utf-8?B?NDdubjc4cngxQ0NCVk5XL2N0aWxyT0JRcEFncXFSMGZVYzM3c3ZlU0VtdWFp?=
- =?utf-8?B?Q2kvejk2OE1hVVhZQTFETnpiZGpvYlBDK3dRSDR1M3ZjbmkvRkJNOXAvTzEz?=
- =?utf-8?B?T25jMTlWZ1FaN2U1Vi9HNFZFd2xFZHpyOXVQWmY2MUEwdXVMeXhoWWw4R3Nw?=
- =?utf-8?B?SlBIZ1RXYUFaN0FFU3ErMWJrQTlrVm9VQ0RJNEhwdU5rMVB2cElVanFqVTBS?=
- =?utf-8?B?bTJjakc4THl4bUpJYlFLN1VZeXozeUNBOTdjb3EzaXNuVlVkeVIzRVMwQmF5?=
- =?utf-8?Q?+IoE0/hW5xZ766JDCuGQouG0M=3D?=
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?utf-8?B?T1hoQ0NkL1Z6SWFVdThpUWplSUozRXB1QnRsbVFNR2FSTDE1djMxdmt0NVNU?=
- =?utf-8?B?Q3RnOUVPUWwzRnRuemlvbENYWU9xQmNXWDJ5OXFMNHBUZGpBS2xNbzRJZlRX?=
- =?utf-8?B?R3VqdEhXenV3eDdiZzdOZnZwR244QTBsanZuRklnNVZacFJ4aVdtcjZJSHhz?=
- =?utf-8?B?VWFKQ081V2pSejVVZ01xUHFyd01qdy9WL2k1SDBFNHZNRFIvMEw2Tk5VcXhF?=
- =?utf-8?B?Sk02SUJKaXBHMUhFOGVtQ2IyL2tZdWc3clpqSVpyem5iVkNxOGs2UGx2TzhF?=
- =?utf-8?B?SmkxU2lJM2V2TkpoZkZpYjhpTVd0WnpxU3BqS0xoZWFWejhVZSt0T0ZRWWxO?=
- =?utf-8?B?ZnUzdEJPcHg3NS9SSzA3MzdCOWFhTVB1Z01OUmNDNE1XUWNsRTBmQzZ4YmVy?=
- =?utf-8?B?U1BWNnJxWmVxZXI3OVBxNEt0eURnb0cvelh6VVNJUXRXOTZDNGR5RnBJUU5B?=
- =?utf-8?B?SVVXRFZWbWFFYjA1eHRvaWJwanZOeWlMRms0cUx2Rm1oMnZ6Yk1lbXNmbEY0?=
- =?utf-8?B?Q2V1TlVtTCtjL3VWRE5ucHRvV2NqQUxDRzVaU2Ntanl0SzdPQzVNZHBnOUo2?=
- =?utf-8?B?eVVoNVZ5TGdDQlgzYnFWaFpwQjRDcWNsK3NuU0J3N1JQTUNRTGY1bjhNb1Zi?=
- =?utf-8?B?dWtpa2hheDFjSGR4emt1UHNmSlVPcE1CaG1NYWY2djUzUU9Nbnp5Uk1BMi9x?=
- =?utf-8?B?bFJVaEYvYi9NcUtab2FDSmNTVkl0VUFnMHl6bE9CaVl2THY1K24rdEZyTUhp?=
- =?utf-8?B?QUZqc2VrVGNOWllsMnZSUUhTMzQyRWl5QS9BUDRPQ1pzRGZmbThTN0E4N1lB?=
- =?utf-8?B?VXVxa3h0Y09Yc3hndGoxbWVPNmtod2psVHdCNEFveXAxd0NrT2tQbzlOdFdC?=
- =?utf-8?B?OXMvQkxuUlNyWkJuN1Y4RHBvSEtaK0o3bVZzbE5zTi93TDFBY2NvVmVUVWNK?=
- =?utf-8?B?eGdJU0VJWlc5a0pOVzBxZ2NIRkZLSzVhOXd6WUhOVnUwR1VQMnoxbldXZVZj?=
- =?utf-8?B?clN6WXNaQ3kyQ3g3V25WNHZYSUFTRHlYSm5IZFdvc3ZIQ3VnYlQ4VGNHMnhx?=
- =?utf-8?B?aDVaTk1tVzhrTjFqRU5LUnNmMlh2VjdVZ2hPd0djME5SZTdseWl1RkY5cXVM?=
- =?utf-8?B?VnBLRUNJLzB5Um5KTTVMTk5UVU9IOFpweTJSN2Z4cWsyQyt2UmtjdkVpRUM0?=
- =?utf-8?B?MjNob2hrN3grT0NwbTNKZHVtREtkM0hWaElwNmJNa0VFYlg0ZDVueEZMaGc5?=
- =?utf-8?B?ZGtFVEgxWjU2QVd5a29YeGRwMjNJNjU2dG1LVmNQWXlINTEzUDkrQm9zR0tZ?=
- =?utf-8?B?TitiZ1hqVmVrd3pIUW1aYjN6UzFpeEJick5JOXY0elNrai9nbDNJQmt5dGhI?=
- =?utf-8?B?TjFJQ2IwVmRDUVVwYUtncU9kM1BkamtnTFUzbE45L1RQTGpqZkwvTGJUdWIz?=
- =?utf-8?B?V1JqVWtSWE5LSHc1SXBCS1NBKzBmRFZKeXV0eDdCWUdONno2Um1kWUhqdS9o?=
- =?utf-8?B?c2FzQjJSTHBJaFdKMDdoWnIrRlRnRmxyOE9UeVlFeWtDdHpZeENCbVNoUGtk?=
- =?utf-8?B?aGhid0VqNllZM0JYWGdBM2ZCTU1HNy9DTzZFRWJWWklycmY1SjRDbkhRSXJI?=
- =?utf-8?B?V0g5N250b1pUUE4xMnUvWlM4eFNVZ3MvbklNTkJoZTA5UTZwbitBVG9yY3JM?=
- =?utf-8?B?bnd5MXg1dUwvZTh3MzVjZVdlQlUyb0JMZUVnVzBLVGo4bEhrU0tKYzMyU0lh?=
- =?utf-8?B?ZzdiYWV5L1pCQUJKQWJIMFNVdndUVjQ2SUdZMCs2TEp1anUrMlBudWE4a0pV?=
- =?utf-8?B?K1EzdERKUVBoaVd5ZXBPejlVaERQUjRXdENKczd5RTQ3NVhwditwSE4xQUVV?=
- =?utf-8?Q?Xwk4kmZaGTjJz?=
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+	dkim=pass (1024-bit key, unprotected) header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=EC6nl6OU
+Received: by mail-pf1-f228.google.com with SMTP id d2e1a72fcca58-8a070755c8cso463848b3a.0
+        for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2026 02:11:57 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1794996717; x=1795601517;
+        h=message-id:date:subject:cc:to:from:dkim-signature:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=XO7v7OVdCSqVz5PA7ENCh4Zfu0jsmXhkcKdQH//0PA4=;
+        b=dDP+FruRnWcnueuJ/HZhe/m15xRVqw/kCW0jhdkw8TttaPDCtyJGT0/SMBr7xzGvQj
+         cfpDO+6KO65ClHKS9ntojvdDx3wuh0JAv5n475CTlP4yMnQg+tIdH+A8eEM4CFObLg9x
+         dzVWZs34sMe5d/nSXl/U8VnCVsk/nEzHoRQ4GRWRsLIr4nIumIHOehGtKtF+wBKTAmNQ
+         RT4WWH5lZaHGr2lntzBd1SqZfNwTLYaUL/s9TTNJ9fwn4963pygpyF62tjT4VghTpnLq
+         /iBuO8zanU9HAEFP8CQ8ooOzh6SEZThVY3VS/lUR6HElAU4b5sp9hTYvKUdZCVFVCT9M
+         Soyg==
+X-Gm-Message-State: APuU4Z/9CxlbFV+sdHTk7gcyzlFVFyhfMgHZ85clA7RANnvPUHmcJncW
+	8aV+eQapa7UhdJwrYL4hgGxyLITCTip1jP3Suo1SyMWRlnsLd70NhZNtYjm3QBfyUtu4vfz31rX
+	ckFaK0F7grGqsXy5tWwk95SMatkbGocGxzqa2J8D8X4Dto95GCzoOC9jGmMuOLAA1i/ULdLk37r
+	PdecyIWvZ+cydPxIkFVUvrBRS9PMn9uIa3qpsVYcWyDdKFJqhlS4Jp2Icj7zC34ZOAItKdjL8d1
+	acrHCcSp4LCEtm8aiv3uDb/vrOxZQ7qzCY=
+X-Gm-Gg: AZFdTZfXb2JjttBlyVxt23wXf4X0qc9EE1N38d+GuRU3SvqIgdNDLB4OszJCy1o0l7/
+	UI/R3SyfsC80houydipnGrScW5r/8bCr+krT31i2b7wPZXiSw/FhjXF15FOD1ff3opnDJi1ItMz
+	m1No2TzLiqQuCzISErvFhQ9qe5VT7TEUKkctiaxi7Rh2gHGBU+GmI5f5nObxNkgIvHLOnPBIVE6
+	9j7Y3JNuUJ3xB9ZPcFlc9Uct2jhX5RujV4rBADbs+lOWzpTShpg0HDncaLoQJNGOXbE7VcdoOai
+	/9Fjun9L+eh/ubYbS+JiKz9hAF+atQRou23+v7JE0QGrqycOe/lCnroex6CZ/rizLcac/T2vwcs
+	RwuPPu6Ub7fdN1CNClfLrhbU173pDUjcX9MQh6/SUe5MJa78aEMXYkidP5UXV8dm1W69k424En0
+	qdXvMHm21tqWPK7hYvhq6JSjKKoY1M1W5nvxXVO1NcWcpaI54bWNtu3R2p
+X-Received: by 2002:a17:90b:448e:b0:3ac:a1c7:20fd with SMTP id 98e67ed59e1d1-3b3d06a142amr2114123a91.4.1794996716741;
+        Wed, 18 Nov 2026 02:11:56 -0800 (PST)
+Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-123.dlp.protect.broadcom.com. [144.49.247.123])
+        by smtp-relay.gmail.com with ESMTPS id 98e67ed59e1d1-3b3abece214sm3961703a91.3.2026.11.18.02.11.56
+        for <linux-scsi@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 18 Nov 2026 02:11:56 -0800 (PST)
+X-Relaying-Domain: broadcom.com
+X-CFilter-Loop: Reflected
+Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-3b17b31c3beso853947a91.2
+        for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2026 02:11:55 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google; t=1794996715; x=1795601515; darn=vger.kernel.org;
+        h=message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=XO7v7OVdCSqVz5PA7ENCh4Zfu0jsmXhkcKdQH//0PA4=;
+        b=EC6nl6OUor1H4QaDZN5beGcP8uGOnv4wW24SHISWKJpJflZaMszSDV/pxQj60x8QqI
+         Y0UqfxebLfW0n04dUrSAx0lM90t7tErERP3jJMdaj8l4SKAaA3tTPw4AI8pjVeitt1AP
+         Zgcve3iDMLWGxxGmTnfJyYqgl+Bs7TdL6NTsE=
+X-Received: by 2002:a17:90a:d2d0:b0:3ab:31e6:12fc with SMTP id 98e67ed59e1d1-3b3d051ac2cmr2109716a91.0.1794996714766;
+        Wed, 18 Nov 2026 02:11:54 -0800 (PST)
+X-Received: by 2002:a17:90a:d2d0:b0:3ab:31e6:12fc with SMTP id 98e67ed59e1d1-3b3d051ac2cmr2109682a91.0.1794996714162;
+        Wed, 18 Nov 2026 02:11:54 -0800 (PST)
+Received: from dhcp-135-24-192-142.dhcp.broadcom.net ([192.19.234.250])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b3ac6016c3sm8740707a91.15.2026.11.18.02.11.50
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 18 Nov 2026 02:11:53 -0800 (PST)
+From: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
+To: linux-scsi@vger.kernel.org,
+	martin.petersen@oracle.com
+Cc: sathya.prakash@broadcom.com,
+	ranjan.kumar@broadcom.com,
+	chandrakanth.patil@broadcom.com,
+	sweeti.vandure@broadcom.com,
+	thenzl@redhat.com,
+	mgandhi@redhat.com,
+	loberman@redhat.com,
+	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
+Subject: [PATCH v2 00/37] scsi: mpt3sas: Validate firmware/user input and fix error-path bugs
+Date: Wed, 18 Nov 2026 01:56:09 -0800
+Message-Id: <1794995806-5835-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+X-Mailer: git-send-email 2.4.3
+X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -166,42 +111,131 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-X-OriginatorOrg: outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SA3PR05MB10385.namprd05.prod.outlook.com
-X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg: 00000000-0000-0000-0000-000000000000
-X-MS-Exchange-CrossTenant-Network-Message-Id: 26234402-2e59-452d-9281-08df454e9430
-X-MS-Exchange-CrossTenant-originalarrivaltime: 18 Nov 2026 08:33:10.4324
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
-X-MS-Exchange-CrossTenant-rms-persistedconsumerorg: 00000000-0000-0000-0000-000000000000
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR05MB999481
 
-RnJvbTogWWluZ2ppZSBXYW5nIDx4LXByb2Zlc3NvckBvdXRsb29rLmNvbT4KCnNyX3JlYWRfY2Rk
-YV9icGMoKSByZXRhaW5zIGl0cyBjb21wbGV0ZWQgcmVxdWVzdCB3aGlsZSB1bm1hcHBpbmcgdGhl
-IHVzZXIKYnVmZmVyLiBGb3IgYSBib3VuY2VkIGRhdGEtaW4gbWFwcGluZywgdW5tYXBwaW5nIGNh
-biBjb3B5IHRvIHVzZXJzcGFjZQphbmQgZmF1bHQuIEEgZmF1bHQgdGhhdCBuZWVkcyBJL08gZnJv
-bSB0aGUgc2FtZSBxdWV1ZSBjYW5ub3QgcHJvZ3Jlc3MgaWYKdGhlIGNvbXBsZXRlZCByZXF1ZXN0
-IHJldGFpbnMgdGhlIGF2YWlsYWJsZSB0YWcuCgpSZWxlYXNlIHRoZSByZXF1ZXN0IGFmdGVyIGNv
-bnN1bWluZyBpdHMgY29tbWFuZCByZXN1bHQgYW5kIHNlbnNlIGRhdGEsCmJlZm9yZSB1bm1hcHBp
-bmcgdGhlIG9yaWdpbmFsIEJJTyBjaGFpbiBzYXZlZCBhdCBzdWJtaXNzaW9uLiBObyByZXF1ZXN0
-Cm9yIFNDU0kgY29tbWFuZCBmaWVsZCBpcyBhY2Nlc3NlZCBhZnRlciB0aGUgcmVsZWFzZS4gVGhl
-IG1hcHBpbmcncyBCSU8KcmVmZXJlbmNlcyByZW1haW4gb3duZWQgYnkgYmxrX3JxX3VubWFwX3Vz
-ZXIoKS4KClRoZSBzY3NpLW1xIHJlcXVlc3QgcG9vbCBpbnRyb2R1Y2VkIHRoaXMgdGFnIGRlcGVu
-ZGVuY3kuIFRoZSBsYXRlciBtb3ZlCm9mIHRoZSBDRERBIGltcGxlbWVudGF0aW9uIGZyb20gZHJp
-dmVycy9jZHJvbSBpbnRvIHNyIHdhcyBhIHJlbG9jYXRpb24uCgpGaXhlczogZDI4NTIwM2NmNjQ3
-ICgic2NzaTogYWRkIHN1cHBvcnQgZm9yIGEgYmxrLW1xIGJhc2VkIEkvTyBwYXRoLiIpCkxpbms6
-IGh0dHBzOi8vbG9yZS5rZXJuZWwub3JnL3IvMjAyNjEwMjIuc2NzaS1jZGRhLWxpZmV0aW1lLjhm
-MzFhMmM5N2I0MkBvdXRsb29rLmNvbQpDYzogc3RhYmxlQHZnZXIua2VybmVsLm9yZwpTaWduZWQt
-b2ZmLWJ5OiBZaW5namllIFdhbmcgPHgtcHJvZmVzc29yQG91dGxvb2suY29tPgotLS0KIGRyaXZl
-cnMvc2NzaS9zci5jIHwgMyArKysKIDEgZmlsZSBjaGFuZ2VkLCAzIGluc2VydGlvbnMoKykKCmRp
-ZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvc3IuYyBiL2RyaXZlcnMvc2NzaS9zci5jCmluZGV4IDRm
-MmU4ZDFiZTZkYS4uYzY0YzI1ZTlmNDA0IDEwMDY0NAotLS0gYS9kcml2ZXJzL3Njc2kvc3IuYwor
-KysgYi9kcml2ZXJzL3Njc2kvc3IuYwpAQCAtOTY5LDggKzk2OSwxMSBAQCBzdGF0aWMgaW50IHNy
-X3JlYWRfY2RkYV9icGMoc3RydWN0IGNkcm9tX2RldmljZV9pbmZvICpjZGksIHZvaWQgX191c2Vy
-ICp1YnVmLAogCQlyZXQgPSAtRUlPOwogCX0KIAorCWJsa19tcV9mcmVlX3JlcXVlc3QocnEpOwog
-CWlmIChibGtfcnFfdW5tYXBfdXNlcihiaW8pKQogCQlyZXQgPSAtRUZBVUxUOworCXJldHVybiBy
-ZXQ7CisKIG91dF9wdXRfcmVxdWVzdDoKIAlibGtfbXFfZnJlZV9yZXF1ZXN0KHJxKTsKIAlyZXR1
-cm4gcmV0OwotLSAKMi40My4wCgo=
+This series hardens the mpt3sas driver against malformed firmware
+data and invalid ioctl/passthrough input, and fixes a number of
+locking, reference-count, memory-leak and use-after-free bugs in
+the driver.
+
+Changes in v2:
+--------------
+- Addressed the issues reported by the Sashiko review and the kernel
+  test robot's build warning.
+
+Patch 1:
+- Handle U16 wrap and request_sz smaller than request frame plus two
+  SGEs.
+Patch 2:
+- Reject pages larger than U16_MAX; zero the buffer with kzalloc().
+Patch 3:
+- Add ioc->shost check and also set ioc->shost before the ioc is added
+  to mpt3sas_ioc_list.
+Patch 4 (host_trace_buffer):
+- Dropped the ctl_cmds.mutex locking from
+  mpt3sas_process_trigger_data() to avoid the possible deadlock with
+  the controller reset path; locking there will be handled in a
+  separate patch.
+- Reset ring_buffer_sz/offset when the trace buffer is (re)posted.
+- Take ctl_cmds.mutex in host_trace_buffer_enable_show().
+Patch 7 (SMP length):
+- Reject request/response lengths <= 4 (previously < 4), which would
+  have produced a zero-length SGE.
+Patch 8 (device handles):
+- Return 0 instead of -1 from _scsih_add_device() for an out-of-range
+  handle.
+Patch 9 (topology/IR events):
+- Clamp EventDataLength to the max reply frame size;
+- Reject events shorter than their header; the per-event entry counts
+  are clamped to the remaining data.
+Patch 14:
+  - Fix -Wformat-truncation warning reported by the kernel test robot.
+Patch 16:
+- Added ioc->chip checks to _config_request(), make_ioc_ready,
+  hard_reset_handler and the IR/NVMe shutdown helpers.
+Patch 17:
+- Fix signed count check for ValidEntries.
+Patch 19:
+- Reject hba_queue_depth values that would underflow scsiio_depth.
+Patch 20:
+- Fix signed overflow and bound page size to 2^12..2^16.
+Patch 23:
+- Validate against sas_node->num_phys rather than nr_phys_allocated.
+Patch 26:
+- Increase min reply_sz to sizeof(Mpi2SCSIIOReply_t) and reject
+  chain segments with more than U8_MAX SGEs.
+Patch 28:
+- Check return value of _config_request() and return without issuing
+  WRITE_NVRAM request.
+Patch 36:
+- Do the sg_tablesize * page_size multiplication in 64 bits.
+v1: https://lore.kernel.org/linux-scsi/1793925772-1303-1-git-send-email-shivasharan.srikanteshwara@broadcom.com/
+
+Shivasharan S (37):
+  scsi: mpt3sas: Validate firmware-reported IOCRequestFrameSize
+  scsi: mpt3sas: Validate RAID configuration page length
+  scsi: mpt3sas: Pin Scsi_Host while an ioctl is using its ioc
+  scsi: mpt3sas: Fix locking and bounds checks on host_trace_buffer
+    sysfs files
+  scsi: mpt3sas: Fix unlocked use of raid_device in
+    enable_sdev_max_qd_store
+  scsi: mpt3sas: Fix invalid kfree() of fw_event_work event_data
+  scsi: mpt3sas: Validate SMP request/response length in bsg handler
+  scsi: mpt3sas: Validate firmware/user supplied device handles against
+    MaxDevHandle
+  scsi: mpt3sas: Clamp topology/IR event entry counts to EventDataLength
+  scsi: mpt3sas: NULL ioc->reply_post after freeing it
+  scsi: mpt3sas: Fix port_table memory leak in _scsih_sas_port_refresh
+  scsi: mpt3sas: Fix leak and dangling pointer for io_uring_poll_queues
+  scsi: mpt3sas: Validate max_data_size in MPT3EVENTREPORT ioctl
+  scsi: mpt3sas: Fix buffer overflow in _scsih_scsi_ioc_info
+  scsi: mpt3sas: Fix Scsi_Host leak on invalid/tampered device probe
+  scsi: mpt3sas: Fix page fault from stale ioc->chip after PCI error
+    recovery
+  scsi: mpt3sas: Clamp ValidEntries in driver trigger page update
+    helpers
+  scsi: mpt3sas: Clamp firmware reply copies to the allocated reply
+    buffer
+  scsi: mpt3sas: Reject implausibly small
+    MaxReplyDescriptorPostQueueDepth
+  scsi: mpt3sas: Validate CurrentHostPageSize before using it as a shift
+    amount
+  scsi: mpt3sas: Clamp sense_length before copying into
+    transfer_packet->sense
+  scsi: mpt3sas: Clamp num_luns in
+    _scsih_wait_for_target_to_become_ready
+  scsi: mpt3sas: Validate phy_number in mpt3sas_transport_update_links
+  scsi: mpt3sas: Require CAP_SYS_RAWIO for mpt2ctl/mpt3ctl ioctls
+  scsi: mpt3sas: Fix SGE offset boundary check in _ctl_do_mpt_command
+  scsi: mpt3sas: Enforce minimum reply frame size and validate chain
+    segment size
+  scsi: mpt3sas: Replace panic() with error return in hard_reset_handler
+  scsi: mpt3sas: Replace panic() calls with error returns in
+    _config_request
+  scsi: mpt3sas: Bound event-log copy size against reply frame size
+  scsi: mpt3sas: Add _ctl_diag_buffer_reset() helper to clear diag
+    buffer state
+  scsi: mpt3sas: Restrict ioc_dump debugfs and replace raw ioc dump with
+    text
+  scsi: mpt3sas: Fix out-of-bounds bit operation in
+    _scsih_check_topo_delete_events
+  scsi: mpt3sas: Bound SMP passthrough buffer reads to actual buffer
+    size
+  scsi: mpt3sas: Release sas_device reference on error in
+    mpt3sas_transport_port_add
+  scsi: mpt3sas: NULL the event_log pointer after freeing it
+  scsi: mpt3sas: Bound NVMe passthrough transfer size against PRP buffer
+    capacity
+  scsi: mpt3sas: Update driver version to 59.100.00.00
+
+ drivers/scsi/mpt3sas/mpt3sas_base.c      | 142 +++++++++++++---
+ drivers/scsi/mpt3sas/mpt3sas_base.h      |  16 +-
+ drivers/scsi/mpt3sas/mpt3sas_config.c    |  95 ++++++++---
+ drivers/scsi/mpt3sas/mpt3sas_ctl.c       | 201 ++++++++++++++++++----
+ drivers/scsi/mpt3sas/mpt3sas_debugfs.c   |  49 +++++-
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c     | 203 +++++++++++++++++++----
+ drivers/scsi/mpt3sas/mpt3sas_transport.c |  16 +-
+ 7 files changed, 608 insertions(+), 114 deletions(-)
+
+-- 
+2.53.0
+
