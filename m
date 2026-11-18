@@ -1,92 +1,92 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.100
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.215.225
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794996737;
-	b=0A8K1kkj9OqxxoU6ZpOg4u4rGkVNLJHI1NF81mI+rV/CRgKDH+85V0DWdlN6SBpPjOSH
-	 ygEB6RvsdIREYLi0Sq/NlK/4OY0FDKO3drV1Trrlu0P+e8mfxDKdugfBnF+Lk4nllaZhA
-	 f11EsRCLo1V1c3kJINc3yBPPQGuIgbpCwsdZ1VjDfUi2RiHtjWAEcazRcn9nXN/Qgt34P
-	 X3e+0hc3dTDjzV0kRIwXqL/P+ehC1oG+CU4482j5HFb/AVTWV2ldRsUZq6OZujiE7MfOt
-	 dBBKK32nC/iz+hKnbdOrqlnetMaD/zVH+vGfk2a9lY68hW5JHj5IQMLaNHT5wM3Whkg==
+	t=1794996740;
+	b=Utzi2iaDQGc++yF/GVH0vD8DOcZLIvE0lIij4jTac2UGBY2qkLKCHR6ias0kvxRd3qQ1
+	 BiX2nyx+CJEXP4GrYjPObCtKxSmILit0ZJmuKNfb1FUYNYNZTYs2yfGGw3bE/IoRWS1DX
+	 /mOaThGDnAtGg1Xi2GxKDmn4QnJqx7VkT4GYjqHLy5nuZQSb3RESL1dNPUukpTsFRXdPO
+	 hR3zDcL8m2OwweKSpVl6oJoccomvO5/6MBHXD+QseAJvyptZbQabLKvk23M2Kv6WbhXFs
+	 IyRVHFpJu9UgkkOytj5JIBk8p++Hrl8LjjX2x6ks/4V7Hx9cYghhOum4t09RoHZpaJA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794996737;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794996740;
 	h=DMARC-Filter:Received:X-Google-DKIM-Signature:X-Gm-Message-State:
 	 X-Gm-Gg:X-Received:Received:X-Relaying-Domain:X-CFilter-Loop:Received:
 	 DKIM-Signature:X-Received:X-Received:Received:From:To:Cc:Subject:Date:
 	 Message-Id:X-Mailer:In-Reply-To:References:X-DetectorID-Processed;
-	bh=sHBYgL6hZwGDpI863RtsriK53stw9Pe7vR+7C6m4b/g=;
-	b=jEWEB7/NRvCAjkRAKP/4j5oEBpL8ZJgMrd5esBtCpOdELPZFxQBqalzXDCNWa8wDiiQz
-	 xaT6KeH/khiaa1fBNmfH+Sr+u0JC5hfXcAFQrCHgE5MRpkMaXTZV9VtdOhDyu5QTn/9Zu
-	 tQ4PiuX6pLp+PSlO2zAm1PXKsWRK7TCQrKD9JkzVL62QC44G9xiVGreel5mesci1FKbIN
-	 /gXfBkaaws5KOic7Fjcq4fK8Kainyy7VrHt1xiY3ZmTm8Kb3nDXAxTaWLwCJg8KXRtrNv
-	 kX9xctxMssDMAn5u0uh7QoR0Ba1jUUGKhSa4GDnS7m+s1Io81DLh1kcDocz37+xJS8A==
+	bh=3XZ75csC6Eenl/OFpVvyiIQ6tmTJ2//2Pf9Iqu1dnRQ=;
+	b=jJjxXP1IzffhCHHF7v/gpLZ0XwrrKtYdvTMjTBxqQytlezLZa4fREqrup/CPzjmFjINE
+	 vBrY2UUAoG5nHnZciTOjvGwxnYbtxlUFZ+/v2fwthWER9ePPttRACTXGteOzEgxzRklGb
+	 GgswE74PT4nzvHpZA2WRzM/UYRS1GVM1NBT8QSTFzH7Xu+TK4mFawsoiy3B+3wXHYfDar
+	 diaKFPxE6msSc+vAJ4WuUpRWEq5xV1v2uk6LmgrinP+QIRAy663nlumfQFd+Ue2p+/i8+
+	 BnZeqGOi7+mersuf0aX1sgLl/QCo0mYmraC8tEF3pL5c0/SvhIwq2j04szj8kg1mQ4A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=broadcom.com;
 	spf=fail smtp.mailfrom=broadcom.com;
-	dkim=pass header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=HKoG+VFU;
-	arc=none smtp.remote-ip=209.85.216.100
-Received: from mail-pj1-f100.google.com (mail-pj1-f100.google.com [209.85.216.100])
+	dkim=pass header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=YLtqjFFr;
+	arc=none smtp.remote-ip=209.85.215.225
+Received: from mail-pg1-f225.google.com (mail-pg1-f225.google.com [209.85.215.225])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B80E606A33B
-	for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2026 10:12:17 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8B80E606A33B
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2697A606A332
+	for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2026 10:12:19 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2697A606A332
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=HKoG+VFU
-Received: by mail-pj1-f100.google.com with SMTP id 98e67ed59e1d1-3b3bf3bef9aso737886a91.1
-        for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2026 02:12:17 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=YLtqjFFr
+Received: by mail-pg1-f225.google.com with SMTP id 41be03b00d2f7-cd60c5da24cso606647a12.0
+        for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2026 02:12:19 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794996737; x=1795601537;
+        d=1e100.net; s=20260707; t=1794996739; x=1795601539;
         h=references:in-reply-to:message-id:date:subject:cc:to:from
          :dkim-signature:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=sHBYgL6hZwGDpI863RtsriK53stw9Pe7vR+7C6m4b/g=;
-        b=C0sHdOUNklrBM/MoBFSl7mDGNZ3GoiIEblu1VLf7NuarUF7/9+HS6zDXCCBi+3DbO4
-         xdaMJQZl2n7QcfS/+KFbIygIXVPW9CfXoso2+hVQmcURAD5/r4/27HZmvo057vxvr1Bt
-         WRMf47gen73Qrqpd2Lv74mHgtiBsgkZqQjCE7HiwRSO9eYz5XJ6S+HLQVs/VN+9HgXfr
-         7RyzU6pyZtxwzbUngUEGqt7q2fjSon7eTXp7Gn+bdXnPVqwaIzBn/bq3SgM1VJft20qX
-         zn7XIQxP6mjycAzX2ukIB+3dysI5eETSb4usfXEwqu+5NNlkhWc1V7K1m/roF0VOd7hT
-         i6LA==
-X-Gm-Message-State: APuU4Z+9S58JrEiQ8aGoRl2P2qKR60lrRFBGAeEzN3uDRZ6xlfd+HLms
-	rlVZHCwq44g767VztUV7/fN9PCtM0hwbpaTuJbOhTF3jP1/pqOi43TEjOFl+GrioaAiJ1Azik4v
-	gog/lPTawT1SqqTT1EQ/ojQr4q+D/0E3qnizB3+RdL+qhE8j8IzOvuHkfXmqsaiYSJePC5C9Sw9
-	o4jQKfsBFR9cfe/Gc3DpXBKQPgGRcjrarg6umA6kLK3Hp0KzhqotFFiSMy7eoXI/dndAfa4XYvQ
-	wgBE/BYUlaOwFA5OEzwM2DVzNrJg1fqVkQ=
-X-Gm-Gg: AZFdTZdtZ+KlRlR0H0YdCzEJKbu2S8seb7h+04XJQI8WHP/4geYIO4L1Erokdf1l+t/
-	poqwZ9jdJRRg16x1CfUv3wNpnAoc7cJjvah0tPqglgi2EJjY28ZMGYVbZtJr7POxV1cNzaKyFj3
-	npCgRreIrflj4TEY0eF81v3hFQJr6QPSEUIMEbmzGW2dQwgN92v/TXLSu+/WfWt8LdFFnteJTh5
-	qwhLc3aXAGlus45gTcKKx52MpWybtLlAvVzmiQTX1ZmuO3aOpf4UfvE1lM0f9YMQQWO8VOmaV9o
-	H4EndQfByQDvVVL1D1fu0s7fsIbE0IvKLVK5M80n6knWwJKnCrtDFmWot64MzpDK9elSkGvLKZC
-	5e0xbC0NgNEfkQoL0SCoUPXGud6yrclwHkqxrqAqJw5Z1QmpFWtqo/h5W4FO7rZe5uifvva3nEp
-	30dX2VjX7x6ZKR084pxnF2CwN3Az65sToopAvXFOVn1kuyDBqs/GiZyg==
-X-Received: by 2002:a17:90b:39a3:b0:3b0:d0c5:c10e with SMTP id 98e67ed59e1d1-3b3d07a2448mr2172204a91.17.1794996736723;
-        Wed, 18 Nov 2026 02:12:16 -0800 (PST)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-26.dlp.protect.broadcom.com. [144.49.247.26])
-        by smtp-relay.gmail.com with ESMTPS id 98e67ed59e1d1-3b3abece214sm3962294a91.3.2026.11.18.02.12.15
+        bh=3XZ75csC6Eenl/OFpVvyiIQ6tmTJ2//2Pf9Iqu1dnRQ=;
+        b=CP7IlKRqUNAklE3fdWhkEXeLaOK9UBAwCxHskQY0PQPCBBKCoUMdRwrJiKOT1M3pkS
+         fHmjN+U/WIM6vNkU4IQrleiuQ5gr+ety8w5mJSllbCe+qACUpLQQHWxaIuA9q3d63wRc
+         H/oVUHo6kc+baO7IcWPlNMGHFH4AlVjJXTtDpgv34OqbNttNRet7plw19Dx0q5zM0dQ3
+         Zz3cPtG9HGTED+Ld5dBB8pIaFieXt92Ztkph0Zwq72Wl3dtrdemr8KQ/UBvZCv99AyN1
+         ktFQSwxy2egK8IHvPIXFPISz6zvqRmx07wkfdrZwRfEISmRDLR8t9OLThgNQMYcrv6JW
+         1SXA==
+X-Gm-Message-State: APuU4Z/JBoYGUxt8d4khPekmxrm84jll/TwdZ4UQQut6DRhVPoSNy+fl
+	7TMVRtrzyZnvhWrm0L+ytmL3qO8XIoLAuovtou2WDvXRR2euScfJZemhvIUyWhlHes5IxfgiEY1
+	RV/LVG+8lIRtZBrt/lNJvs6XCPRCV8yzJTF0iYMOltXhPhy5YdMasD+q6vzvdC8NN8Of6gLuT8I
+	+TXg27/0nymxP1mfqX3wRxPcB28spSHdlgTe9JLUXkqRHtVXTW/D1Rx5w7Y7epd8V/6lE3DDu4L
+	41+rxELFklrcW14sDDX/haL1tiYzRT7Jv4=
+X-Gm-Gg: AZFdTZcUGnLEjewV9KQE35w3XjhYJqOrTwHNDS7xMYQ/4Dn9cfWNO2Ujo0vF1N33BUF
+	pG7FSNKOTeo7Z1wAiqRXaxi/5PEIlH8/3Un+bcdNKZbb0VWiEL9T/4HWPVPF7xRR1CX62/od5rB
+	FafRnyP9iKd2MC5HZDsViI9MyaWawqGchGpE7ZeeLHTQOobUtMjWHuJEqjxM2j/yIm5zeKMLLH3
+	2MUvHEn1FaAkEQdHx4kBM+N4rqksI4O2VMFPgV86qdOLGxkW7HMhqER5XEsFcmVe5/me/XmprUK
+	g3HWOjCQV6HVw9UR9xjTKMn8KCgmuFwn6NoUjqK9LHraQ7lU9N506ZEU+vs4ywQSAqQNwyMzf3d
+	q/I13wFQVi0CSxAUXTu5Y25YbItQl8hIXjvZpn6L7wi79xiyc7abRUY+8cUem5vQLW2WM8feN3F
+	tp+1p/6ZG9XVvheimo3AM3/QNfwiLuFFsel1ZYVZX+ciqr2XJVyTQrsPMs
+X-Received: by 2002:a17:90b:1b07:b0:39e:6c6a:6580 with SMTP id 98e67ed59e1d1-3b3d07d92a8mr2118492a91.67.1794996739429;
+        Wed, 18 Nov 2026 02:12:19 -0800 (PST)
+Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-123.dlp.protect.broadcom.com. [144.49.247.123])
+        by smtp-relay.gmail.com with ESMTPS id 98e67ed59e1d1-3b3d14c0525sm1611986a91.8.2026.11.18.02.12.19
         for <linux-scsi@vger.kernel.org>
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 18 Nov 2026 02:12:16 -0800 (PST)
+        Wed, 18 Nov 2026 02:12:19 -0800 (PST)
 X-Relaying-Domain: broadcom.com
 X-CFilter-Loop: Reflected
-Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-3ae72da2f57so1051341a91.1
-        for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2026 02:12:14 -0800 (PST)
+Received: by mail-pg1-f200.google.com with SMTP id 41be03b00d2f7-cdd9fa2a558so887609a12.0
+        for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2026 02:12:18 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1794996734; x=1795601534; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1794996738; x=1795601538; darn=vger.kernel.org;
         h=references:in-reply-to:message-id:date:subject:cc:to:from:from:to
          :cc:subject:date:message-id:reply-to:content-type;
-        bh=sHBYgL6hZwGDpI863RtsriK53stw9Pe7vR+7C6m4b/g=;
-        b=HKoG+VFUESjJ3UguULQoOG5VvYgDjV1R8sOnVFZf+yxyfOkNYRCkeycFq2x9h1nECZ
-         uvC5nfUtdyRZHwzDiBloez/gIlq93Ctt8ZrsMBQT2JJz6G3RlB3I707SGSJsOgjPfYbt
-         iP0Wt4dWP0Ie9eN7OQDKebAbfCS1ajlEK4ogo=
-X-Received: by 2002:a17:90b:1b0f:b0:3ad:a462:f07f with SMTP id 98e67ed59e1d1-3b3d07d463dmr2303756a91.45.1794996734019;
-        Wed, 18 Nov 2026 02:12:14 -0800 (PST)
-X-Received: by 2002:a17:90b:1b0f:b0:3ad:a462:f07f with SMTP id 98e67ed59e1d1-3b3d07d463dmr2303722a91.45.1794996733470;
-        Wed, 18 Nov 2026 02:12:13 -0800 (PST)
+        bh=3XZ75csC6Eenl/OFpVvyiIQ6tmTJ2//2Pf9Iqu1dnRQ=;
+        b=YLtqjFFrrca2K7EEVdZnUnDKGMPbQ9xEvF5oKxjrrO2w12wkz0tquRYb2dm5hUGjcp
+         tskaEtevIuDjlkoF9Ih2OiEl3EgJ/uVW50mxIrE2UcNT0TvcExSkASVjvOk6YFIK6ICN
+         1W2FC444T5+mU+qNs0mR3m7vbdw1DM99I/LDA=
+X-Received: by 2002:a17:90b:2642:b0:3a4:f75d:d194 with SMTP id 98e67ed59e1d1-3b3d0765fffmr2179808a91.36.1794996737770;
+        Wed, 18 Nov 2026 02:12:17 -0800 (PST)
+X-Received: by 2002:a17:90b:2642:b0:3a4:f75d:d194 with SMTP id 98e67ed59e1d1-3b3d0765fffmr2179778a91.36.1794996737252;
+        Wed, 18 Nov 2026 02:12:17 -0800 (PST)
 Received: from dhcp-135-24-192-142.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b3ac6016c3sm8740707a91.15.2026.11.18.02.12.09
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b3ac6016c3sm8740707a91.15.2026.11.18.02.12.13
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 18 Nov 2026 02:12:12 -0800 (PST)
+        Wed, 18 Nov 2026 02:12:16 -0800 (PST)
 From: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 To: linux-scsi@vger.kernel.org,
 	martin.petersen@oracle.com
@@ -98,9 +98,9 @@ Cc: sathya.prakash@broadcom.com,
 	mgandhi@redhat.com,
 	loberman@redhat.com,
 	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-Subject: [PATCH v2 05/37] scsi: mpt3sas: Fix unlocked use of raid_device in enable_sdev_max_qd_store
-Date: Wed, 18 Nov 2026 01:56:14 -0800
-Message-Id: <1794995806-5835-6-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+Subject: [PATCH v2 06/37] scsi: mpt3sas: Fix invalid kfree() of fw_event_work event_data
+Date: Wed, 18 Nov 2026 01:56:15 -0800
+Message-Id: <1794995806-5835-7-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 X-Mailer: git-send-email 2.4.3
 In-Reply-To: <1794995806-5835-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 References: <1794995806-5835-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
@@ -114,50 +114,27 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 
-Take ioc->raid_device_lock around the raid_device lookup and check
-for NULL before dereferencing it.
+Drop an errant kfree() of fw_event->event_data, a flexible array
+member of fw_event_work rather than its own allocation.
 
 Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_ctl.c | 19 +++++++++++++++++--
- 1 file changed, 17 insertions(+), 2 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-index ef28da96dc26..d8b1e60af940 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-@@ -4263,13 +4263,28 @@ enable_sdev_max_qd_store(struct device *cdev,
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index f78fc0faad61..4bc2f7ce4aa2 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -12270,7 +12270,6 @@ mpt3sas_scsih_event_callback(struct MPT3SAS_ADAPTER *ioc, u8 msix_index,
+ 		if (!fw_event->retries) {
  
- 			if (sas_target_priv_data->flags &
- 			    MPT_TARGET_FLAGS_VOLUME) {
-+				unsigned long flags;
-+				u8 volume_type;
-+				u32 device_info;
-+
-+				spin_lock_irqsave(&ioc->raid_device_lock,
-+						  flags);
- 				raid_device =
- 				    mpt3sas_raid_device_find_by_handle(ioc,
- 				    sas_target_priv_data->handle);
-+				if (!raid_device) {
-+					spin_unlock_irqrestore(
-+					    &ioc->raid_device_lock, flags);
-+					continue;
-+				}
-+				volume_type = raid_device->volume_type;
-+				device_info = raid_device->device_info;
-+				spin_unlock_irqrestore(&ioc->raid_device_lock,
-+						       flags);
- 
--				switch (raid_device->volume_type) {
-+				switch (volume_type) {
- 				case MPI2_RAID_VOL_TYPE_RAID0:
--					if (raid_device->device_info &
-+					if (device_info &
- 					    MPI2_SAS_DEVICE_INFO_SSP_TARGET)
- 						qdepth =
- 						    MPT3SAS_SAS_QUEUE_DEPTH;
+ 			ioc_err(ioc, "failure at %s:%d/%s()!\n",  __FILE__, __LINE__, __func__);
+-			kfree(fw_event->event_data);
+ 			fw_event_work_put(fw_event);
+ 			return 1;
+ 		}
 -- 
 2.53.0
 
