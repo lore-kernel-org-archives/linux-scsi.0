@@ -1,58 +1,71 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794977374;
-	b=SltpTwC57s7TrX3nAUgNGXUs+kCD55Kr6wvbxY8UniqAh1E87tdtLXOowEUfsEVoO3S8
-	 T9vqWBIbrOi0NjTn6PLSQlQ6lZLm4Alm1pUPhCtXOo8bkIbjzngmRnavxkc17+xgEcLf6
-	 M7egMRiA0SSwEZhkY/7oq0DOEpSYZMhuz0dgYQLGRAzE0cqhF/hiBTti8DGk3psIBGSwW
-	 PBuZfKfHlhQtLkqJQGjY/hJ5ER0MBSdNOQH45nJXYCbEtLzNAemFdp/xTamAOs0G+2a7W
-	 NwqVnKQEnQBMkiJS4BWED64n0a38J9aW3ilPApVylQaEtKrI9wSygVYg9SZdepCx3aQ==
+	t=1794977381;
+	b=Lk4BWFN5XfWajuxAe0z5BdsQpRJOhi+qvlw+idIaedZ5o3XFiDHGAUppiI3AHx1mUnCf
+	 /zYZ724kuzUe1ag7XnjYJOsGWJY1RgiEIFliwPzbbXo2uiZAwhBC6lhSSERjfMUM603ro
+	 Iebqp/kyNXRLnd6UxNcogKVyBi6N3HdooGrr6zAVmzfMHEs+MNM2yXVFn56RjW2jc1YvN
+	 2ecohVXIVAquMOvNQbIYnvEwyWSlKSMrimXe+h53WSTOQSL5KrjLSRP95b4PtHKY5f9vM
+	 7nFuP+9UldvYF/Fsl75wlkpnJKMeb1FgkfAEe/cT9ChyxKwvnUJ7KNBscNmfjizgrgw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794977374;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794977381;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding;
-	bh=CvCHzuVLqXCPEwLIoRCqyouZE4b9IQxzVknyWeegm/A=;
-	b=i8Hg7/JqugvVe/BRap0efSMOj72Cu/iLL1q4X+DnukBlLL+0aYTcGPC4QYqcecgVlT95
-	 +Xzfqr8e5LiCGMwAVQYoIP/BQLUg4vVofNWLpcSGdzYJ4q3Bg4cDIqtYv6zzuQA0T3d1C
-	 BNDhGtTbIM5AqcBhw75T0pTNzortMhqG9hXtxXw4qp9nzXPid37feXqCHTye6zTZfEfZ0
-	 xr/bVcyQLlPMGm+HB+2Wd2jvpo39CtqvHmNLWXvN6Nwvbm7/YMjYwwqOOgO/rAYMmtayQ
-	 7f7lJZ0QnBi+9c9NxBQT+fxmWgyqiwfCvXkCtC7rjFjH5HXYQGyGYZGJtlySbMmKyAQ==
+	bh=RufmPLEdOt93I5T5TQq0x49BntHV1EhlC0gK8d0OVmc=;
+	b=aqowsXNKN7PxktArqCjctSNmtXsm3njduuX1j2wHRaqnqna1s7a9AH7NzI86aSvxQ4Uv
+	 oDNKoIlTQnDzk+EyEIDr7bitz5O7NKRJ6Ik/2Fx8Ji5f6DLQCTWBUM3AE3eo6xJiJqCP3
+	 NgWhTR0Jk+3T7/wIlOULyEIDHLCtgW4bROz92nWjSazYWkbe1yGOe1RtyhvqKnfUMgE5+
+	 Mqf2zeyPjs8ZtbTmdeimh9RWMWyiw9+bMM4kb9LvS+IpELFXtnqbZi1jYwiDF+Ec3ABXe
+	 3e3G+/2a9rC9TECdB+CCuMqgGVDvWjgSt6h1TxdKnEdXzbk9FB338FqVPpnONN8mIcw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=eMCXwDkq;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=n017AukS;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E18D9606A33E;
-	Wed, 18 Nov 2026 04:49:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DD61606A880;
+	Wed, 18 Nov 2026 04:49:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=eMCXwDkq
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ED30B1F000C5;
-	Wed, 18 Nov 2026 04:49:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=n017AukS
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C27361F000C7;
+	Wed, 18 Nov 2026 04:49:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794977373;
-	bh=CvCHzuVLqXCPEwLIoRCqyouZE4b9IQxzVknyWeegm/A=;
+	s=k20260515; t=1794977380;
+	bh=RufmPLEdOt93I5T5TQq0x49BntHV1EhlC0gK8d0OVmc=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=eMCXwDkqf3jCnnmUK89QyGHVVgRD6I40x7gm84YKIUtuFLRMYBNYniUPNWPeSlQeR
-	 d/ZZRNGNtOjXr2fWoWcN30roGS7batnB9ws81mRVomSFQSBbjPyx1RQ7wX2XfpI2UY
-	 wxcJzEVeS6DLKszwcNK1+ZbgPlCAY7eedpHPwY1qXgx5TwaKI5zoqnMi/K6LOVjyCt
-	 /Ar3neRDht0AUmRI9Vf3yx3vDhS2yZ5qKNI1i9CMEOToPvjcFDdhEaOUxIRWWB8ZZA
-	 BZatzT0xz/Zx10FzxbnlT4FJcE5u8vUnHLbIxZuPeOBGP4x+pmijwMvhJsZIRiofyF
-	 zYhO81Wvm9Nqg==
+	b=n017AukS5pWtxW3mEbmTAkdEnkqiRwcaGLLEUhmXkBAlCxyWMg7LhDgphG/aSSdh3
+	 C6A8uBkNgrmVwggWDJuTobWuxGpnFeJFoPt6vLNCFC4JNXR9a2yJrbwbmi7Cso2raI
+	 r2U/fHAIvIKEc/u8aPGPVk5/ZdaRaiENyJhwuGi1mr31T6m265i1jjUnevy1bvycxS
+	 gZxH0pKMRCKLXhoAugvLFUCafP+44kIzu8/WtLsb8/cHZloY60PNOk9eP+INMa/4EQ
+	 GCFLUS+x7esq5iAl6jYht0eGV1Dq8hfiyw9q4xf6lGwfcN0hE237cgDfai5NFBMdPt
+	 0UTJlkvT1orsw==
 From: "Martin K. Petersen (Oracle)" <mkp@kernel.org>
-To: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	Changyul Lee <lcy8047@gmail.com>
-Cc: "Martin K . Petersen" <mkp@kernel.org>,
-	FUJITA Tomonori <fujita.tomonori@gmail.com>,
+To: Jens Wiklander <jenswi@kernel.org>,
 	linux-scsi@vger.kernel.org,
+	Stanley Jhu <stanleyjhu@google.com>
+Cc: "Martin K . Petersen" <mkp@kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Bart Van Assche <bvanassche@acm.org>,
+	Avri Altman <avri.altman@sandisk.com>,
+	Alim Akhtar <alim.akhtar@samsung.com>,
+	Bean Huo <beanhuo@iokpp.de>,
+	Bean Huo <beanhuo@micron.com>,
+	Alexey Charkov <alchark@flipper.net>,
+	Can Guo <can.guo@oss.qualcomm.com>,
+	Ulf Hansson <ulfh@kernel.org>,
+	Linus Walleij <linusw@kernel.org>,
+	Shyam Saini <shyamsaini@linux.microsoft.com>,
+	=?UTF-8?q?Alex=20Benn=C3=A9e?= <alex.bennee@linaro.org>,
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
 	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] scsi: ch: Remove the minor from ch_index_idr after device_destroy()
-Date: Tue, 17 Nov 2026 23:49:22 -0500
-Message-ID: <179497726112.2093762.6233686313671984860.b4-ty@b4>
+Subject: Re: [PATCH v6 0/3] rpmb: Fix request serialisation and teardown races
+Date: Tue, 17 Nov 2026 23:49:26 -0500
+Message-ID: <179497726098.2093762.2793506457468994473.b4-ty@b4>
 X-Mailer: git-send-email 2.56.1
-In-Reply-To: <20261109160651.986356-1-lcy8047@gmail.com>
-References: <20261109160651.986356-1-lcy8047@gmail.com>
+In-Reply-To: <20261112004112.3059801-1-stanleyjhu@google.com>
+References: <20261112004112.3059801-1-stanleyjhu@google.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -65,22 +78,26 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 
-On Mon, 09 Nov 2026 11:06:51 -0500, Changyul Lee wrote:
+On Thu, 12 Nov 2026 08:41:09 +0800, Stanley Jhu wrote:
 
-> ch_remove() removes the minor from ch_index_idr before device_destroy()
-> removes the "sch<N>" device. A changer probed in between can get the
-> same minor, and its device_create() fails:
+> Jens, Martin,
 > 
->   sysfs: cannot create duplicate filename '/class/scsi_changer/sch0'
->   ...
->   ch 1:0:0:0: ch0: device_create failed
+> Patch 1/3 serializes requests and provider unregistration in
+> drivers/misc/rpmb-core.c. Patches 2/3 and 3/3 fix UFS RPMB device
+> lifetime and drop the unregistered bus in drivers/ufs/core/ufs-rpmb.c so
+> regions register again after commit 36f35b8df697 ("driver core: reject
+> devices with unregistered buses").
 > 
 > [...]
 
 Applied to 7.4/scsi-fixes, thanks!
 
-[1/1] scsi: ch: Remove the minor from ch_index_idr after device_destroy()
-      https://git.kernel.org/mkp/scsi/c/9f9e0b1e5399
+[1/3] rpmb: core: Guard frame requests and teardown with mutex
+      https://git.kernel.org/mkp/scsi/c/e0696bf65006
+[2/3] scsi: ufs: rpmb: Decouple device lifecycle from devres to avoid UAF
+      https://git.kernel.org/mkp/scsi/c/7bc9b854cd68
+[3/3] scsi: ufs: rpmb: Drop the unregistered ufs_rpmb bus
+      https://git.kernel.org/mkp/scsi/c/b1de2bd5a4d6
 
 -- 
 Martin K. Petersen
