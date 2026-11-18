@@ -1,56 +1,96 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.215.169
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795033398;
-	b=ZH+It+VOvKOp6btF4ZQev3YEsuw3SphTcqkiAZvgVHSCQGsmiKFPSWPK2UjAcquKMrsQ
-	 63wpQ7GUe7LKSL4ncyrD0BC+KxANnK1Hc8ox7a/R9urMjm0HmKfazIo1vEB6j2YyRn+pb
-	 2g9ybdMjxbvy5g+2lRkbhZ2gZAsHuSRDC6zir4in9buV6YgAlZVKM3RfkE8SGtNjJ7fWe
-	 MbFseOt0yciKUt3Wmp5fcsHEJcXwBRCh9pZHyeSDkoL4JvNbS6WX0VRAA2fD0TPp6eJA6
-	 j0A+3T9ntImUMWefNlptQ9dhdEJzuiFAwjeNFYDc2WVstOewUjI5unBPcciC1NaEIrA==
+	t=1795036514;
+	b=Pm+Cnnq6KcKTzguAOpzHdtQSAowzV7SbUK/uph9J45hDZ+c51iE/f4hXgvRwWcz+3iqh
+	 Lx7bxFzNF9QP6e1TLusMPnCd7YPR1vTUvGmlt3WZzWEl8XH3bMyZCip2mNDSpQNmLZhz7
+	 Irts+P1VpO2Ka03WM5ma81QlhRqxvVUbk2dRQ+BUmJY1jZ3I8mft2yOt5fBx8utRXnVlF
+	 8A66U/C1H/DOgY/jcgqJ+aGKUMZqYYT3VbaHEnenDQwFDaXYWZ3znRFNXvqJvB/nEA9le
+	 aHZpJStFDmqw49MH0egb9R3zrfbx78bBoeEpgQcLijjW4n3n7qYtnCmuTeMZnki5Jxw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795033398;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=gzaW36GUGoZA0ogcJPtc4nDtXtsC9MsC3FeqHBWyE7o=;
-	b=qIjGwdwt20UzcUsmyHiA+8Yx9KWwrPiUE/oY/6Ib4Dhegw8bldbj2S6gMW7+Rh8YRhsD
-	 onFFHZoELuvBvPYl3LbjDi+EpNqalIlpiLTCNqnqtbIsh0t1k/DL64xdDGG5Uf3DmH/XT
-	 r65K03s0s28Z2J48Mw+shsnFV3Oii63VlArXkzWnd5u475ouLZgYkgSJ1pSz7d6CUVh5J
-	 6v1zHmI6TxR5X3csQ+1wc77CKrFWs2qTRPPLlJIviMtbxemznsowATaQ/blSXPZ4jw8tU
-	 8tZNRTmv4mhoILyn/7I8X7fSltyHIFRGdxf5pVTJUONw1kzMHGJYDQLbEqXFMM3djug==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795036514;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=dQMT0iyssFp+SUjt/H/xp3SSQ9EubviEVTCBFM7XGyI=;
+	b=KNMju9ZSvCJsV06IG1fwHRbE0JotD8rfHG0lWOH4WtaSFn4MiTdTGOr7ILQhwpImetWo
+	 LtUaPgB+LJwT4uTNxcA8ei7dcAT2SP2Nj7cCtBrieejf6A3FE4TYNr7mNF4iUgn9t7xU/
+	 NphOlcO2wHsnyw0SG+VCdZWB82n7eGtge+fKk1Uv3Ge25q5L1/H2oWaiyHKDYW6QB/xLC
+	 eru5banVnHu/Dulh17+J7ayp4s0bN3rSp3YacDGmVMa4PnD4v5qdLLVZR2f1b1yZ8G49T
+	 QLbtJc+jnhdZnjulUn8196O3XXzcXdoVfErrhjuyUB0ne3ShhP+mf4/6p6yBi65ejXw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fiqw33DS;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=fail header.from=isslab.korea.ac.kr;
+	spf=none smtp.mailfrom=isslab.korea.ac.kr;
+	dkim=pass header.d=isslab-korea-ac-kr.20260707.gappssmtp.com header.i=@isslab-korea-ac-kr.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=l6T+ewem;
+	arc=none smtp.remote-ip=209.85.215.169
+Received: from mail-pg1-f169.google.com (mail-pg1-f169.google.com [209.85.215.169])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC137606A32A
-	for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2026 20:23:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22B4D606A32F
+	for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2026 21:15:12 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 22B4D606A32F
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fiqw33DS
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 788C41F000C5;
-	Wed, 18 Nov 2026 20:23:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795033398;
-	bh=gzaW36GUGoZA0ogcJPtc4nDtXtsC9MsC3FeqHBWyE7o=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=fiqw33DSisYZlEU5KHAQ9ckyV8gD2XRyMERb7KL5Vwnkhw/nxmpTgcm+p2BAL3/gG
-	 PCTL/H/LjCvKpHJcxXSk9yE1rAqRA7CF87hkJTCPxJb6n1Nue/Ab/gwK0BRSe9Qe0l
-	 OaY/VjFsWa/lFoQyZ3WG7AIODgtItQjW92GcwSTtHo+RIpGKTtStX1I5A7AoX1bBai
-	 4AdMOtDtxJnsaf5NsQt2uNOp9QWTBI0zc4gjdnNWN+gdP9fy85Q7lBlkvwcJcyZeSQ
-	 /p/3SfGM3959uY3eRSPWhRHHC0HVLCtQQlr1/HM7vO/WSlLwICIEH+qFmbCjyRdPSg
-	 +OaKy8tHa4VHA==
-Message-ID: <sashiko-outbox-221931@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] scsi: mpt3sas: Fix out-of-bounds cpu_msix_table read on
- CPU hotplug
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Louis Sautier" <sautier.louis@gmail.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20261118201316.326943-1-sautier.louis@gmail.com>
-References: <20261118201316.326943-1-sautier.louis@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 18 Nov 2026 20:23:18 +0000
+	dkim=pass (2048-bit key, unprotected) header.d=isslab-korea-ac-kr.20260707.gappssmtp.com header.i=@isslab-korea-ac-kr.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=l6T+ewem
+Received: by mail-pg1-f169.google.com with SMTP id 41be03b00d2f7-cdb684859cbso1025295a12.1
+        for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2026 13:15:12 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=isslab-korea-ac-kr.20260707.gappssmtp.com; s=20260707; t=1795036512; x=1795641312; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=dQMT0iyssFp+SUjt/H/xp3SSQ9EubviEVTCBFM7XGyI=;
+        b=l6T+ewemSmDIS+zZRpl4QLm5f5I/r/IbXU1O4DXr7tZh37GKF3Zb2MidXPEXo3uVFg
+         khkrntIWjj2H2V0/siMSFJNCw6o5Tb8i8bR0mT7rt/vTosaPAArJkQ2CYur0ZITzgV9Y
+         a8hauKyywE+NAYkCRm3mbHjTIk178Srd/1L0RUP0jmgrju9VaZhWPW3a6w50TJhe3yzR
+         BWTsPvIwYBcgDOdRiqC0fCbY9ON3zIszvZFRT8cggNIZIBPuutR4JCkpucZdfrpzTR9e
+         jR9owf5tXFbwOnKQnqREWXqIEkxGt8SleZt9AaoiqRdjTD1Lh1fKPr15AREYf3UEGNEx
+         VPmg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1795036512; x=1795641312;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=dQMT0iyssFp+SUjt/H/xp3SSQ9EubviEVTCBFM7XGyI=;
+        b=F9kX6yjIyT1HTK784hv+67bYaxb8sAw8jJuAZ+cfNkRWsszAuK/o3vq/2nZdynb9w1
+         gRYdlkwJ92SgAlZrRL7p0dxc3spvF65HtTryuOhyQ3QXXvtdP5vWe8l4i/JQxqhQQy/v
+         v+7btDm1WQlDOjlODmtl3i9SET/V433vlccCiLAyMb6pTUMnxwaX3b5da2kh4Z8VAUv7
+         4y9fy4DXinVRG6mjMSre85ENMV4dfX1PgqqE3dXK8IgAduyYek/c/SgT/n3z3Xy06nQI
+         nQSO0UT18Zjrcit6Dy/fNWX0mtQvLcseocpDkyyvCu6BZ4Tl8mm3N+gYtW7W6PHBJbkQ
+         f4Kg==
+X-Forwarded-Encrypted: i=1; AL+hErG317NouYE1g8ETIRkHorxWv/QSMkyJGdiHegTlpN/XVHCVqIiRbA8kYhuAhmrcyIFc1wgUQ5UOvaFA@vger.kernel.org
+X-Gm-Message-State: APuU4Z+ehtohhduxX5XBe73lXB0r9rBFeRJZkbf/jFgfYw6nN2tiiSZl
+	QTYtG7jjGe0Lh9PerHKzL9jsKRSQSDt2AnZHyWT2C+buvbYyAPHojhC3ql6NZsQcQS8=
+X-Gm-Gg: AZFdTZf/IB7F0Q72lmdiqzMCW40DB09rW0YHNb8H212+F8oZeGYn+KNLRGY4hW1hK/7
+	VugAMQ3ljH1vaGVMKGpCSuyWBp9hloi/XMpO7h7BXgKVcpl4sxTJ3RmeHms5H+JIcdN5m1YfkaZ
+	M2BkBLI+IopW8WZe+fKVIl0tl6ev+5g76ZVXVsQWS98PmCX43tkHONNrJ9SYLiAdz/IQruFRrhb
+	l6ethHhHfHF6IuVzrL8dsgNotxa57q4dUTH5Fcaj1+8Lq9o6zI0IgA8Dh/jdE5ObUDGvcAEo4xB
+	DUb0lqcXi6eMT2fOuP2gyaaMsFGGgNj/p6+izZc/z0Vgjww7ht0A/aVe3hyoHujrIYhyjKfc/F2
+	dBHJ4csuXSyG6OsuD99whvgE4sfEEeGtccOvgqNToxjVqd5pwt67fusn6PATeWpHLx00KGIWy39
+	hDfvVNQ5D3aCFdyXVWN1SuzJKVZHSunEpjxoJ9PYkem/7XrRUR/tPD8ryLf+w5gJYy+lgHyeF8s
+	FZJdQMu98SoOBByugLwONvSkoJ5JUnSI3TJq482DLodpRC3ufvy5mp6A8uE/mlRh3xLBAAhVbU7
+	Zly/P8vK4V4caFnN8vtlGaFBsfp/eqcNKOS6eyAqxDnHAEKW67lhDuJN4Oj0ck6CCsf+NFW9iN3
+	D7yUJEBIvEg2QzOrFkeplcDLkgkLRMSUKF6Vvhw==
+X-Received: by 2002:a17:90b:5348:b0:39e:6a80:b799 with SMTP id 98e67ed59e1d1-3b3d07aa794mr4044192a91.41.1795036511842;
+        Wed, 18 Nov 2026 13:15:11 -0800 (PST)
+Received: from yhlee-960QFG.Davolink ([2406:5900:1044:110c:e78e:f7f0:2120:34e7])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b3d5689adasm2611719a91.1.2026.11.18.13.15.09
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 18 Nov 2026 13:15:11 -0800 (PST)
+From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+To: sagi@grimberg.me,
+	jgg@ziepe.ca,
+	leon@kernel.org,
+	mkp@kernel.org
+Cc: linux-rdma@vger.kernel.org,
+	target-devel@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v3 0/4] isert: the commands the target core allocates itself
+Date: Thu, 19 Nov 2026 06:14:59 +0900
+Message-ID: <20261118211503.2526705-1-yhlee@isslab.korea.ac.kr>
+X-Mailer: git-send-email 2.43.0
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -59,82 +99,82 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found no new issues
-in this patch, but noticed 1 related pre-existing issue it does not
-introduce:
-- [High] scsi: mpt3sas: ignored non-EAGAIN error in
-  mpt3sas_base_attach() [1]
---
+Link: https://lore.kernel.org/all/20261118113905.2361969-1-yhlee@isslab.korea.ac.kr/ (v2)
+Link: https://lore.kernel.org/all/20261116101108.1650132-1-yhlee@isslab.korea.ac.kr/ (v1)
 
-commit 68d13dcfec52a6dc8ae0711092e3869b07e277ea
-Author: Louis Sautier <sautier.louis@gmail.com>
+Changes since v2: 1/4 is replaced.  Comparing the opcode inside
+iscsit_find_cmd_from_ttt() stopped a Reject being taken for a NOP-In, but
+not two NOP-Outs being given the same real NOP-In, which queues it for
+removal twice.  1/4 now gives the NOP-Out path its own lookup that takes
+the command under conn->cmd_lock and clears its tag, so only the first
+answer gets it, and it leaves iscsit_find_cmd_from_ttt() and its Data ACK
+SNACK caller alone.  2/4 to 4/4 are unchanged.
 
-scsi: mpt3sas: Fix out-of-bounds cpu_msix_table read on CPU hotplug
+Answering the review of v1 1/2 needs two patches in the target core, so v3
+has four.  1/4 and 2/4 are drivers/target/iscsi and 3/4 and 4/4 are
+drivers/infiniband/ulp/isert, but 3/4 depends on 1/4: it lets a Reject the
+core allocated reach the wire, and without 1/4 first that turns a NULL
+dereference in the base tree into a double free.
 
-This commit allocates cpu_msix_table with nr_cpu_ids entries instead of
-sizing it from the highest online CPU at probe time, and maps all CPUs in
-each reply queue's affinity mask so CPUs onlined after probe do not cause
-out-of-bounds reads in _base_get_msix_index().
+1/4 is not about iSER.  iscsit_find_cmd_from_ttt() matches a command by
+targ_xfer_tag alone and leaves it on conn_cmd_list, so a NOP-Out with a
+reserved ITT and TTT 0 is given the Reject the core allocated, which
+carries TTT 0 and is still waiting to be sent, and a second NOP-Out with
+the same TTT is given it again - either shape ends in a double release.
+Both are reachable on plain iscsi_tcp one PDU after login.
 
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/m=
-pt3sas_base.c
-> index 5c957044eded1..b33a3e49608dd 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+2/4 keeps the unsolicited NOP-In off iSER.  The transport check in
+iscsi_post_login_start_timers() runs once, at login, and
+iscsit_process_nop_out() and iscsit_na_nopin_timeout() arm the nopin timer
+again on a connection that is already logged in, so it moves into
+__iscsit_start_nopin_timer(), which all three go through.  Gating it is the
+fix rather than only the dereference because isert releases a command on
+its Send completion, so the answer to a NOP-In cannot be matched to it.
 
-[ ... ]
+3/4 is v1's 1/2 with the fix generalised.  struct isert_cmd is all zero for
+a command the core allocated, so the back pointers are filled in where the
+core hands one over, in isert_immediate_queue() and isert_response_queue(),
+which also covers the ISTATE_REMOVE the review pointed at.
 
-> @@ -8409,15 +8406,18 @@ int
->  mpt3sas_base_attach(struct MPT3SAS_ADAPTER *ioc)
->  {
->  	int r, i, rc;
-> -	int cpu_id, last_cpu_id =3D 0;
-> =20
->  	dinitprintk(ioc, ioc_info(ioc, "%s\n", __func__));
-> =20
->  	/* setup cpu_msix_table */
->  	ioc->cpu_count =3D num_online_cpus();
-> -	for_each_online_cpu(cpu_id)
-> -		last_cpu_id =3D cpu_id;
-> -	ioc->cpu_msix_table_sz =3D last_cpu_id + 1;
-> +	/*
-> +	 * Allocate an entry for every possible CPU, because
-> +	 * _base_get_msix_index() indexes the table with
-> +	 * raw_smp_processor_id(), which can be a CPU brought online after
-> +	 * the adapter was attached.
-> +	 */
-> +	ioc->cpu_msix_table_sz =3D nr_cpu_ids;
->  	ioc->cpu_msix_table =3D kzalloc(ioc->cpu_msix_table_sz, GFP_KERNEL);
->  	ioc->reply_queue_count =3D 1;
->  	if (!ioc->cpu_msix_table) {
+4/4 is v1's 2/2, unchanged.
 
-[Severity: High]
-This problem wasn't introduced by this patch, but later in
-mpt3sas_base_attach() [1], does a failure from the first
-_base_make_ioc_operational() call get ignored when it returns an error
-other than -EAGAIN?
+Measured with KASAN, one fresh boot per cell, arms alternating.  On an
+iSER portal over soft-RoCE, 3 boots per cell on the finished series and 2
+on the intermediate stages:
 
-drivers/scsi/mpt3sas/mpt3sas_base.c:mpt3sas_base_attach() {
-    ...
-	r =3D _base_make_ioc_operational(ioc);
-	if (r =3D=3D -EAGAIN) {
-		r =3D _base_make_ioc_operational(ioc);
-		if (r)
-			goto out_free_resources;
-	}
-    ...
-	return 0;
-}
+                                 base    1/4     1-2/4   1-4/4
+  Reject + NOP-Out, TTT 0        Oops    Oops    Oops    clean
+  the same two PDUs paced        Oops    Oops    Oops    clean
+  nopin_timeout 0 then 3         Oops     -       -      clean
+  200 Data-Outs, nonexistent ITT 128      -       -      200
+  one Data-Out over TRDSL        Oops     -       -      clean
+  login/WRITE/READ/logout         -       -       -      10/10
 
-If _base_make_ioc_operational() fails in _base_static_config_pages() or
-_base_event_notification() with an error such as -EFAULT,
-mpt3sas_base_attach() falls through and returns 0 instead of jumping to
-out_free_resources, leaving _scsih_probe() with a partially initialized
-adapter.
+No cell at any stage produced a double free, and the finished series is
+KASAN-clean.  Where a cell oopsed, the use-after-free reports that follow
+come from the teardown of the killed thread and are the same set at base.
 
-[1] https://sashiko.dev/#/bug/linux-864ab92c-c52e-45ab-b16b-b4499e83a698
+On plain iscsi_tcp: two NOP-Outs answering one real NOP-In are both taken
+on base and the second is refused with 1/4, 5 cells each; 20 Data-Out and
+NOP-Out(TTT 0) pairs in one write give 19 or 20 KASAN reports per cell on
+base and 0 with 1/4, and one legitimate answer still works on both; 3
+cells each.
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261118201316.3269=
-43-1-sautier.louis@gmail.com?part=3D1
+Yehyeong Lee (4):
+  scsi: target: iscsi: retire an unsolicited NOP-In only once
+  scsi: target: iscsi: do not arm the nopin timer on an iSER connection
+  IB/isert: finish a Reject the target core allocated itself
+  IB/isert: do not leak the receive descriptor of a dropped Data-Out
+
+ drivers/infiniband/ulp/isert/ib_isert.c   | 41 +++++++++++++++++------
+ drivers/target/iscsi/iscsi_target.c       | 34 +++++++++++++++++--
+ drivers/target/iscsi/iscsi_target_login.c |  5 ---
+ drivers/target/iscsi/iscsi_target_util.c  | 10 ++++++
+ 4 files changed, 72 insertions(+), 18 deletions(-)
+
+-- 
+2.43.0
+
