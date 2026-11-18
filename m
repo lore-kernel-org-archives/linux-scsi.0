@@ -1,92 +1,92 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.215.227
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.215.226
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794996826;
-	b=gureGng9oLCyTqu2IfE+RD1GJp61HcDjTi8Ph7hjCq4ruIH6wGuSbszOclLOMnr9+/NN
-	 /OzIfGuR8P5F7yJAXrSfbe4CkGUsgcl/Bbf0o+yOAbMqa9vky+9M6uhAepPIWA+YFOwtt
-	 OXWECLlcYLzg/zOqIxXhqi+9DfkdwsHr7P5kD0cOW9TE7dbs3cHC9YrMW2oy0sQzpuHIx
-	 ey99ELOtOxtneClFGxPl3IOVmgDhBzc27hCH5WUZbXhAx2bcPelxr+BOv/Un7F56FzJeh
-	 2dpq9a0t+YFGq69CK8p6Wx/3wTdVdDumEK32giC5KM3mzSUt1kMU+uGryO8Qu4Wwmlg==
+	t=1794996829;
+	b=2jT9HbvPUW6VYDuXdymieIBp1atICNV7HG8oCBqt30U/jtlgdruJZJE1Sx5WVVptd1Ns
+	 3YKr51ZIw3IrV9XUW5FWqmHHmon9Gm0g11sPFniUrFotuchpdr9Cbt2HBa3Re4aDHdfHS
+	 c6yfn87vny/H2UcydRttIthjNDKKLScRofktZZuHnxDQPhu40noSze2Yuf9Beem2vpkKS
+	 9OQM3vxxUCYZUtWYiu8GZVziMC5+aVu8G7tgm6Ir5Yz6wuEpg/bnKYAbs53QxuCkAIEMf
+	 GBMAtiin/Mrx7d/p09M4uKfcdaFp09c+RUf9QM8hB3nLw7VgBWTSKz8BLrzWdbo09vQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794996826;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794996829;
 	h=DMARC-Filter:Received:X-Google-DKIM-Signature:X-Gm-Message-State:
 	 X-Gm-Gg:X-Received:Received:X-Relaying-Domain:X-CFilter-Loop:Received:
 	 DKIM-Signature:X-Received:X-Received:Received:From:To:Cc:Subject:Date:
 	 Message-Id:X-Mailer:In-Reply-To:References:X-DetectorID-Processed;
-	bh=sGAH/ttgS+na1MmXrLsn3ei1RVfx4SlfRWitP/dfnhk=;
-	b=oLPY6Wz3o0vM/wKs2tzCh5z3sNrN2axwVjQl7YdUrzuBNdadMKhtv+dRATxpH/fUhQjz
-	 xqezT3TPUc5OsdRJFxq+yxMlQEzP8n/KKCv1ucMFtMr8TJPWs0n1VOP9a41veCKbtd1OM
-	 KVUrYQKZJeYvynAttAQD2f1sixTh5Ko9QizDQAj6+63L+97Uqen2Y8yp98S025Z95R9WO
-	 7CRAZT3TIJQfw+3SphAs0imBzb5D4KtMCBKddHyQNbQ6icLKT7apq9WptRPwF2cg+C8dZ
-	 4Ym9GX/mtIY/32svOmCVTAde1JPFzfHDBxhNS3fOehhR/odz94cEF/RFUUuoN59OMvw==
+	bh=TF1S2wGlPXawZyhWsy+9usc2zc1Xr/XHFwmGKDzVDU8=;
+	b=2xR5TQNyBZ58SodSBL1ctUtT98UAOJ/ndi3MQ0vyIREiQrlNVQiXOJ30q9DGAoumTqwD
+	 1yOWLxMlqe4ByHYFm3gbyCDqbdCZqt35rYEqZgXiZNVOi7zeo/xwij7LdmVUQRrueZiDK
+	 yUTzei6eV4PvToVGrrAaGlZ40ovRwE3hrejjBLjJa6LupLw58KlPxONsqu9wX0kftVYs4
+	 CEML7YHwd8rjGKu+hVf8QExPcO+CgtE0jREdXPi6PwlL0QM/p1tpOQzu9ZK90xGKvDbSO
+	 HVPzwj129ONE8yRlKYCXlOUgeZhjh61pifIIel1URuYw+R2AFAtq+FS31WP59PiFJXQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=broadcom.com;
 	spf=fail smtp.mailfrom=broadcom.com;
-	dkim=pass header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=X7eY1RL8;
-	arc=none smtp.remote-ip=209.85.215.227
-Received: from mail-pg1-f227.google.com (mail-pg1-f227.google.com [209.85.215.227])
+	dkim=pass header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=T5TnAoNw;
+	arc=none smtp.remote-ip=209.85.215.226
+Received: from mail-pg1-f226.google.com (mail-pg1-f226.google.com [209.85.215.226])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B0A0B606A31C
-	for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2026 10:13:45 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B0A0B606A31C
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA843606A31C
+	for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2026 10:13:48 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org DA843606A31C
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=X7eY1RL8
-Received: by mail-pg1-f227.google.com with SMTP id 41be03b00d2f7-cd6028ff33fso547957a12.0
-        for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2026 02:13:45 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=T5TnAoNw
+Received: by mail-pg1-f226.google.com with SMTP id 41be03b00d2f7-cde1479f76fso649588a12.0
+        for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2026 02:13:48 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794996825; x=1795601625;
+        d=1e100.net; s=20260707; t=1794996828; x=1795601628;
         h=references:in-reply-to:message-id:date:subject:cc:to:from
          :dkim-signature:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=sGAH/ttgS+na1MmXrLsn3ei1RVfx4SlfRWitP/dfnhk=;
-        b=zoO2R9n+n7B89OpAfNP6VTYRsNIhZTYjs6WpCIWAGksdho3LXzCm6nVAKgxs+Togh9
-         CJ/0HgALrDxCMou6aLjkK6AHDFVYcPsR8kvLTXRNkEEtfahhuWY2XLCQMGsEIJRv94K4
-         RS6R2nbeGkKHn4GrhBCp8fT6FfTRJH9kV38zc1Qo0a255apYjrWbrnFWjIb6JuNL7Qgh
-         nWH1xzioORONxzL+NIHgNeQa7lZfqrX1h/OjdmvoVUHskUnQoI3ZM2vtH1VoE1v4a6ke
-         hnbrLGP992tdiqvhQb54CS+U3195l2QdqsuWUikao6LImG10V5V6zKZU5WZoPa/t/a+b
-         I9Ow==
-X-Gm-Message-State: APuU4Z87varhYS9+1czqHsIjeKrbOwKXCLgVGCviDExey6DDR9EeMDxI
-	3yjfbrr+VkhQfnqrwXU5zitVi+2I06ykb19N+WmmHE0tZMUXqk07Jj+u6hwC0BLo736eObLnRWE
-	y+bC2kmvJTxnzq2OYNWZ92BauhFbdQQyy9Vs4xwqCK1lWQs157pw03YGSANqXpdO6IqlKxejO9N
-	K4sNDlX+MziZ3d8OU0vkKKo35COfFKMNh98dlCL8qloYHwkIfcwGVdGdfW0+xrW6QBYofDyr1Fx
-	ewI8fomJpQ/rRKiVv760XTxeKC8n5gUviw=
-X-Gm-Gg: AZFdTZfSYT0FlxR2GafHPMzIdlLdEtPk921ICGPxSNptG1S9vPshxP/w0xwYe+OV5lp
-	mdr3NJ9oosH8eT2giFc5HyEERqZPPisKdutFDy0+aQxw+X51sr3/X9zWOyJTi6qvT1CqxzgzcWn
-	quaFSQdlDYtPHZ5qbDQcE6Kptagh1stF8YlgOI2jT6oJyEx+HRl/oKhiGpMOqn+61m1GwpVvEUF
-	OCz+G1CeUviwQk+A/IoIR/pqigoNXr0RBOVJf6GAIArh2lHJ4GDt6PAQzxNOuoMu1xFx54PbjEl
-	Vrfm04Wwg7rsAnIOVUWChlkNFFLwHyuJst7llp+5a93jJSrHBfqhyflJtUNLGEE3rXcAF6yBD1K
-	zwYpZv2ujEmnm0rwMwM1uBpeC4D6KpWGmZiheyPWDsEQcWnTq9BBeVRJ48b5yCj1KHcj8zKvfk8
-	WFDQWyhZZJJXgeeLhW6t5d5k0n9r6FrvkGnJ4pWXcIXhbHWLgs2fhh9tgV
-X-Received: by 2002:a17:90b:5390:b0:3ad:b8c8:4a84 with SMTP id 98e67ed59e1d1-3b3d07b9133mr2299827a91.26.1794996824903;
-        Wed, 18 Nov 2026 02:13:44 -0800 (PST)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-123.dlp.protect.broadcom.com. [144.49.247.123])
-        by smtp-relay.gmail.com with ESMTPS id 98e67ed59e1d1-3b3d1423c73sm1651782a91.3.2026.11.18.02.13.44
+        bh=TF1S2wGlPXawZyhWsy+9usc2zc1Xr/XHFwmGKDzVDU8=;
+        b=0xid6zAUGPIlGfNj5FkH8rbceqkkbRD0jFzNYJB64mNxwOuoBblOTxqncL4VwPSlfb
+         Ls/8YEcYnYoAXlz1q1NpliJuL4ahpEpeyRFqE980PfNiPB6qbFj68TP1rfPrPC/EOR6P
+         f5cu1t1N8uRyp7foyx0cVDi+rD0/yoioLWq+Un73QHzbrEYrjmoDizzaUYhqx3QU6eSf
+         dG0kSMmvhgNOKxNAQ6KajgYsRyj2j/tzKyXI5PMQkS//wcOm23lS367kKWATutRpX5ir
+         9eSTemBtZL7vhr41fam+r9keZ8dHJ3qEWKfXxcG9bKXH7FM0mf/9yN3LXURSvzA0WxTA
+         XJGA==
+X-Gm-Message-State: APuU4Z9CLnkKgbh8DlHjjbNAssLYfGem/1iuOMiABFQlblC1JXqc5qV0
+	cZvaqj98kymBcyjW9XAQFp3TVtbhhHGPS1nlGDoiJ98B/dubQVCKjWCcoqnZoN15cQB0iBLLaxp
+	xd/nHF5erBRRgAqpQ9HF5rt8xM8InmEFXqNnk+rvbcoGbLjSGNnqw4I/mzCIm8D4xXoPxIJ09BV
+	YuiJdZ4rNbXeE/8jYcvZ2fKapgWm1q2sp6GtFBNRaUtdcgBAvxiL+FnZFrSH3uubK81xA5qUcKs
+	iCObHlCfhT8zedmpJQ2xWnCCArqqhGNLDE=
+X-Gm-Gg: AZFdTZcr43aaG2qoyC1ahv1buw2yTqEkYxmfqlKOrX0HtRIfHcHVvqRPrqyVpZifYGB
+	Bb3HMrNDEE9TaPQkDPqXmUpkXcQ7AZVvPrqvzcqZiSYJJcoK8935fl8LVW7LS0bqtMi13xax7GN
+	EQtT6MDrNsWjdGXN+T7lI4Z5y94IvdOQMZZ28BLxYdpR0GmFlI8ff/B/wM7wsYG4fCEWG4kbEgz
+	OtuYvyDeRl+Ses2SLMwvsiSNdAVmGG+DD9qhw0PEaiXxn2BfUMBii1/cCkCzPjLZMGSEPFU/atZ
+	Vuew5z7hvD/kcH1otaZjOXqbKTANj1N64pcLuDiEiFK9tVx6Q/RB6fH6m2KSkApcELAV0qqDX6V
+	heae07/HvFkF1ZlFIAUtq6m3N1zU6U3RXoCLAQKf2SVccmGcOwU5tu22yaEOKtGh3VwNbLp0Hfb
+	08u4eNIl/DieO3KY/3ekS3pzWK7iEvi5ZnPF6KvNk1KzgQa/XE1mCDAQ==
+X-Received: by 2002:a17:90b:3851:b0:3ab:1e1c:837f with SMTP id 98e67ed59e1d1-3b3d07a88b3mr2032320a91.47.1794996828325;
+        Wed, 18 Nov 2026 02:13:48 -0800 (PST)
+Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-26.dlp.protect.broadcom.com. [144.49.247.26])
+        by smtp-relay.gmail.com with ESMTPS id 98e67ed59e1d1-3b3d8b8ce6esm380032a91.4.2026.11.18.02.13.47
         for <linux-scsi@vger.kernel.org>
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 18 Nov 2026 02:13:44 -0800 (PST)
+        Wed, 18 Nov 2026 02:13:48 -0800 (PST)
 X-Relaying-Domain: broadcom.com
 X-CFilter-Loop: Reflected
-Received: by mail-pg1-f198.google.com with SMTP id 41be03b00d2f7-cc7361c62b9so643779a12.3
-        for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2026 02:13:43 -0800 (PST)
+Received: by mail-pj1-f70.google.com with SMTP id 98e67ed59e1d1-3b175a69ab8so887165a91.1
+        for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2026 02:13:47 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1794996823; x=1795601623; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1794996826; x=1795601626; darn=vger.kernel.org;
         h=references:in-reply-to:message-id:date:subject:cc:to:from:from:to
          :cc:subject:date:message-id:reply-to:content-type;
-        bh=sGAH/ttgS+na1MmXrLsn3ei1RVfx4SlfRWitP/dfnhk=;
-        b=X7eY1RL8uH6nhm3Jce9WNViR4/rSRmrjK7HN9+dfXER4wCqT+fW1xIBmSvz1Sv51cs
-         3HXdta87jCG8QCmdYYwU18MNsbg6Y5J/Pv6V3JBMVOCdyOM1shgWJMvoEqVMi9aaJIyS
-         ESCPgllEj6Z1YqSpyVfTayrA99UT5ts699Khw=
-X-Received: by 2002:a17:90b:4fc1:b0:3b3:ba43:54bf with SMTP id 98e67ed59e1d1-3b3d07b9008mr2010443a91.27.1794996822870;
-        Wed, 18 Nov 2026 02:13:42 -0800 (PST)
-X-Received: by 2002:a17:90b:4fc1:b0:3b3:ba43:54bf with SMTP id 98e67ed59e1d1-3b3d07b9008mr2010423a91.27.1794996822248;
-        Wed, 18 Nov 2026 02:13:42 -0800 (PST)
+        bh=TF1S2wGlPXawZyhWsy+9usc2zc1Xr/XHFwmGKDzVDU8=;
+        b=T5TnAoNwG2dKlPvTSidCR9QFTQ0YeOlvczc/LChGhTPfnrx/GzTQEq90UYmnrlIa3L
+         qqVkIVaiti+Rczf8QFk1JIZsoNUb8WLa0SoG3gv7JZCokmce4BEZyktf0bDuH7DUxhzJ
+         NgVplAeFNGGmDCKmSg/e3rmk6WD9VYopE8twk=
+X-Received: by 2002:a17:90b:2243:b0:3b3:c44b:b774 with SMTP id 98e67ed59e1d1-3b3d07a7a7fmr2137179a91.45.1794996826573;
+        Wed, 18 Nov 2026 02:13:46 -0800 (PST)
+X-Received: by 2002:a17:90b:2243:b0:3b3:c44b:b774 with SMTP id 98e67ed59e1d1-3b3d07a7a7fmr2137155a91.45.1794996825986;
+        Wed, 18 Nov 2026 02:13:45 -0800 (PST)
 Received: from dhcp-135-24-192-142.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b3ac6016c3sm8740707a91.15.2026.11.18.02.13.38
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b3ac6016c3sm8740707a91.15.2026.11.18.02.13.42
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 18 Nov 2026 02:13:41 -0800 (PST)
+        Wed, 18 Nov 2026 02:13:45 -0800 (PST)
 From: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 To: linux-scsi@vger.kernel.org,
 	martin.petersen@oracle.com
@@ -98,9 +98,9 @@ Cc: sathya.prakash@broadcom.com,
 	mgandhi@redhat.com,
 	loberman@redhat.com,
 	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-Subject: [PATCH v2 28/37] scsi: mpt3sas: Replace panic() calls with error returns in _config_request
-Date: Wed, 18 Nov 2026 01:56:37 -0800
-Message-Id: <1794995806-5835-29-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+Subject: [PATCH v2 29/37] scsi: mpt3sas: Bound event-log copy size against reply frame size
+Date: Wed, 18 Nov 2026 01:56:38 -0800
+Message-Id: <1794995806-5835-30-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 X-Mailer: git-send-email 2.4.3
 In-Reply-To: <1794995806-5835-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 References: <1794995806-5835-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
@@ -114,166 +114,42 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 
-Replace the four panic() calls triggered by firmware page-type mismatches
-with ioc_err() messages and -EIO returns via goto free_mem.
+Cap the event data copy in mpt3sas_ctl_add_to_event_log() against the
+space available in the reply frame, not just MPT3_EVENT_DATA_SIZE. Treat
+frames too small to hold the Mpi2EventNotificationReply_t header as having
+nothing to copy to avoid underflow in the size calculation.
 
 Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_config.c | 66 ++++++++++++++++++---------
- 1 file changed, 45 insertions(+), 21 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_ctl.c | 13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_config.c b/drivers/scsi/mpt3sas/mpt3sas_config.c
-index 88dba4598d70..83757358015d 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_config.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_config.c
-@@ -420,10 +420,13 @@ _config_request(struct MPT3SAS_ADAPTER *ioc, Mpi2ConfigRequest_t
- 				    smid, "config_request", NULL);
- 			_debug_dump_mf(mpi_request, ioc->request_sz/4);
- 			_debug_dump_reply(mpi_reply, ioc->reply_sz/4);
--			panic("%s: %s: Firmware BUG: mpi_reply mismatch: Requested PageType(0x%02x) Reply PageType(0x%02x)\n",
--			      ioc->name, __func__,
--			      mpi_request->Header.PageType & 0xF,
--			      mpi_reply->Header.PageType & 0xF);
-+			ioc_err(ioc,
-+				"%s: Firmware BUG: mpi_reply mismatch: Requested PageType(0x%02x) Reply PageType(0x%02x)\n",
-+				__func__,
-+				mpi_request->Header.PageType & 0xF,
-+				mpi_reply->Header.PageType & 0xF);
-+			r = -EIO;
-+			goto free_mem;
- 		}
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+index d3166e048991..d15ef29ed077 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+@@ -366,8 +366,19 @@ mpt3sas_ctl_add_to_event_log(struct MPT3SAS_ADAPTER *ioc,
+ 		event_log[i].event = event;
+ 		event_log[i].context = ioc->event_context++;
  
- 		if (((mpi_request->Header.PageType & 0xF) ==
-@@ -434,10 +437,13 @@ _config_request(struct MPT3SAS_ADAPTER *ioc, Mpi2ConfigRequest_t
- 				    smid, "config_request", NULL);
- 			_debug_dump_mf(mpi_request, ioc->request_sz/4);
- 			_debug_dump_reply(mpi_reply, ioc->reply_sz/4);
--			panic("%s: %s: Firmware BUG: mpi_reply mismatch: Requested ExtPageType(0x%02x) Reply ExtPageType(0x%02x)\n",
--			      ioc->name, __func__,
--			      mpi_request->ExtPageType,
--			      mpi_reply->ExtPageType);
-+			ioc_err(ioc,
-+				"%s: Firmware BUG: mpi_reply mismatch: Requested ExtPageType(0x%02x) Reply ExtPageType(0x%02x)\n",
-+				__func__,
-+				mpi_request->ExtPageType,
-+				mpi_reply->ExtPageType);
-+			r = -EIO;
-+			goto free_mem;
- 		}
- 		ioc_status = le16_to_cpu(mpi_reply->IOCStatus)
- 		    & MPI2_IOCSTATUS_MASK;
-@@ -463,10 +469,13 @@ _config_request(struct MPT3SAS_ADAPTER *ioc, Mpi2ConfigRequest_t
- 				_debug_dump_reply(mpi_reply, ioc->reply_sz/4);
- 				_debug_dump_config(p, min_t(u16, mem.sz,
- 				    config_page_sz)/4);
--				panic("%s: %s: Firmware BUG: config page mismatch: Requested PageType(0x%02x) Reply PageType(0x%02x)\n",
--				      ioc->name, __func__,
--				      mpi_request->Header.PageType & 0xF,
--				      p[3] & 0xF);
-+				ioc_err(ioc,
-+					"%s: Firmware BUG: config page mismatch: Requested PageType(0x%02x) Reply PageType(0x%02x)\n",
-+					__func__,
-+					mpi_request->Header.PageType & 0xF,
-+					p[3] & 0xF);
-+				r = -EIO;
-+				goto free_mem;
- 			}
- 
- 			if (((mpi_request->Header.PageType & 0xF) ==
-@@ -479,9 +488,12 @@ _config_request(struct MPT3SAS_ADAPTER *ioc, Mpi2ConfigRequest_t
- 				_debug_dump_reply(mpi_reply, ioc->reply_sz/4);
- 				_debug_dump_config(p, min_t(u16, mem.sz,
- 				    config_page_sz)/4);
--				panic("%s: %s: Firmware BUG: config page mismatch: Requested ExtPageType(0x%02x) Reply ExtPageType(0x%02x)\n",
--				      ioc->name, __func__,
--				      mpi_request->ExtPageType, p[6]);
-+				ioc_err(ioc,
-+					"%s: Firmware BUG: config page mismatch: Requested ExtPageType(0x%02x) Reply ExtPageType(0x%02x)\n",
-+					__func__,
-+					mpi_request->ExtPageType, p[6]);
-+				r = -EIO;
-+				goto free_mem;
- 			}
- 		}
- 		memcpy(config_page, mem.page, min_t(u16, mem.sz,
-@@ -1496,8 +1508,10 @@ mpt3sas_config_set_sas_iounit_pg1(struct MPT3SAS_ADAPTER *ioc,
- 		goto out;
- 
- 	mpi_request.Action = MPI2_CONFIG_ACTION_PAGE_WRITE_CURRENT;
--	_config_request(ioc, &mpi_request, mpi_reply,
-+	r = _config_request(ioc, &mpi_request, mpi_reply,
- 	    MPT3_CONFIG_PAGE_DEFAULT_TIMEOUT, config_page, sz);
-+	if (r)
-+		goto out;
- 	mpi_request.Action = MPI2_CONFIG_ACTION_PAGE_WRITE_NVRAM;
- 	r = _config_request(ioc, &mpi_request, mpi_reply,
- 	    MPT3_CONFIG_PAGE_DEFAULT_TIMEOUT, config_page, sz);
-@@ -1946,9 +1960,11 @@ _config_set_driver_trigger_pg0(struct MPT3SAS_ADAPTER *ioc,
- 		goto out;
- 
- 	mpi_request.Action = MPI2_CONFIG_ACTION_PAGE_WRITE_CURRENT;
--	_config_request(ioc, &mpi_request, mpi_reply,
-+	r = _config_request(ioc, &mpi_request, mpi_reply,
- 	    MPT3_CONFIG_PAGE_DEFAULT_TIMEOUT, config_page,
- 	    sizeof(*config_page));
-+	if (r)
-+		goto out;
- 	mpi_request.Action = MPI2_CONFIG_ACTION_PAGE_WRITE_NVRAM;
- 	r = _config_request(ioc, &mpi_request, mpi_reply,
- 	    MPT3_CONFIG_PAGE_DEFAULT_TIMEOUT, config_page,
-@@ -2080,9 +2096,11 @@ _config_set_driver_trigger_pg1(struct MPT3SAS_ADAPTER *ioc,
- 		goto out;
- 
- 	mpi_request.Action = MPI2_CONFIG_ACTION_PAGE_WRITE_CURRENT;
--	_config_request(ioc, &mpi_request, mpi_reply,
-+	r = _config_request(ioc, &mpi_request, mpi_reply,
- 	    MPT3_CONFIG_PAGE_DEFAULT_TIMEOUT, config_page,
- 	    sizeof(*config_page));
-+	if (r)
-+		goto out;
- 	mpi_request.Action = MPI2_CONFIG_ACTION_PAGE_WRITE_NVRAM;
- 	r = _config_request(ioc, &mpi_request, mpi_reply,
- 	    MPT3_CONFIG_PAGE_DEFAULT_TIMEOUT, config_page,
-@@ -2231,9 +2249,11 @@ _config_set_driver_trigger_pg2(struct MPT3SAS_ADAPTER *ioc,
- 		goto out;
- 
- 	mpi_request.Action = MPI2_CONFIG_ACTION_PAGE_WRITE_CURRENT;
--	_config_request(ioc, &mpi_request, mpi_reply,
-+	r = _config_request(ioc, &mpi_request, mpi_reply,
- 	    MPT3_CONFIG_PAGE_DEFAULT_TIMEOUT, config_page,
- 	    sizeof(*config_page));
-+	if (r)
-+		goto out;
- 	mpi_request.Action = MPI2_CONFIG_ACTION_PAGE_WRITE_NVRAM;
- 	r = _config_request(ioc, &mpi_request, mpi_reply,
- 	    MPT3_CONFIG_PAGE_DEFAULT_TIMEOUT, config_page,
-@@ -2391,9 +2411,11 @@ _config_set_driver_trigger_pg3(struct MPT3SAS_ADAPTER *ioc,
- 		goto out;
- 
- 	mpi_request.Action = MPI2_CONFIG_ACTION_PAGE_WRITE_CURRENT;
--	_config_request(ioc, &mpi_request, mpi_reply,
-+	r = _config_request(ioc, &mpi_request, mpi_reply,
- 	    MPT3_CONFIG_PAGE_DEFAULT_TIMEOUT, config_page,
- 	    sizeof(*config_page));
-+	if (r)
-+		goto out;
- 	mpi_request.Action = MPI2_CONFIG_ACTION_PAGE_WRITE_NVRAM;
- 	r = _config_request(ioc, &mpi_request, mpi_reply,
- 	    MPT3_CONFIG_PAGE_DEFAULT_TIMEOUT, config_page,
-@@ -2548,9 +2570,11 @@ _config_set_driver_trigger_pg4(struct MPT3SAS_ADAPTER *ioc,
- 		goto out;
- 
- 	mpi_request.Action = MPI2_CONFIG_ACTION_PAGE_WRITE_CURRENT;
--	_config_request(ioc, &mpi_request, mpi_reply,
-+	r = _config_request(ioc, &mpi_request, mpi_reply,
- 	    MPT3_CONFIG_PAGE_DEFAULT_TIMEOUT, config_page,
- 	    sizeof(*config_page));
-+	if (r)
-+		goto out;
- 	mpi_request.Action = MPI2_CONFIG_ACTION_PAGE_WRITE_NVRAM;
- 	r = _config_request(ioc, &mpi_request, mpi_reply,
- 	    MPT3_CONFIG_PAGE_DEFAULT_TIMEOUT, config_page,
++		/*
++		 * Bound the copy by the reply frame ctl owns, not just the
++		 * log entry size, in case the scsih-side clamp was skipped.
++		 * Skip the copy when the frame is too small to hold the
++		 * header, since computing a size from it would wrap.
++		 */
+ 		event_data_sz = le16_to_cpu(mpi_reply->EventDataLength)*4;
+-		sz = min_t(u32, event_data_sz, MPT3_EVENT_DATA_SIZE);
++		if (ioc->reply_sz > offsetof(Mpi2EventNotificationReply_t, EventData))
++			sz = min_t(u32, event_data_sz,
++				   min_t(u32, (u32)MPT3_EVENT_DATA_SIZE,
++				   ioc->reply_sz - offsetof(Mpi2EventNotificationReply_t, EventData)));
++		else
++			sz = 0;
+ 		memset(event_log[i].data, 0, MPT3_EVENT_DATA_SIZE);
+ 		memcpy(event_log[i].data, mpi_reply->EventData, sz);
+ 		send_aen = 1;
 -- 
 2.53.0
 
