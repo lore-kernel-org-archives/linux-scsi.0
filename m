@@ -1,71 +1,73 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=111.22.67.135
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=111.22.67.137
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794972027;
-	b=nly5snbPWSnh3+vRss88aLXWD0sVz91LNmOC61yly4ggv0fooeOuEW9riZTDq5FTiMyg
-	 UT6oS7eyPCcLlJOlf3F2QVFhdVPwAQY/NlNiSrR0S60QOkAsIp8px+JNBt6dH68lULRuL
-	 EK6v2xKpiK4z4Z4a3MEHCZfup2g7IcKQsB2pyBJ0YJbDwgH3HValh37ixwVfHMtQdHuU6
-	 oj+7oFhVysSeYlIyZEyPlDDFou9i8bS/87UUIMW07OTZYfBzQcZRkb6WV370RRODOv/jW
-	 5zQzWmCBTZiGgY6peS890OAptvRP69YOI5oFx9e0susUDpaBZFfLBQ7twT+GZXloIAg==
+	t=1794972043;
+	b=pVcrcpwJQxdK0v+I1rG32AWxDfyMVkT4rF0b00lN+MbY65lCffUvUqahQVMNFIFXa4Bf
+	 eN9ANnMPSOYv4uqPzd9uIEGZfkrUnHZ3ojc5us8BsAtdnsNQFHC/ClEmC3capr78UjtDo
+	 deww8gCe0a6YjpCMp4XhMX/dNc/gug+eYT9mk4DseBPh7JpXFexbBiGy77Se1VZ9EJLrM
+	 Xc5spNeR7LQBrBzp1S/5Oyd2m2+V4/O2upfEbAXK63oGjWbCQZqci5/MtX1BwFJIVyiIY
+	 jqN/eAbo+lXhU+SWRtMR+UgbFqmNCo7k3hgOm78L9cC58M6oYrvwca9wuiWiIY35EvA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794972027;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794972043;
 	h=DMARC-Filter:DKIM-Signature:X-RM-TagInfo:X-RM-SPAM-FLAG:Received:
 	 X-RM-TRANSID:X-RM-TagInfo:X-RM-SPAM-FLAG:Received:X-RM-TRANSID:From:
-	 To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=HZRrtyWyhDHM4W5ZPdUJtdgJ8QIlZ3J97mOSJfRbiTk=;
-	b=MOMab4+JY1ZhhWmhn65BV9bEoH8JWXHG89iNtAzR87+TYYFFQ/enUW5O5erIq2YsPmrp
-	 qyhdLCTmLTE4DyIhZ8RgE6Un/qauVU8Ghv8ZmEE9dJRTOJ6RQy/31iaBomE0zVCcoLBDT
-	 liVE5ECFNgMxc+QlLzMa7HyEqEL5jSJ9lq1wZb9MpeDVkTarIZgZKW6jFEFK1u6hr9kri
-	 +0Cq7/uhobbTs3rU2r5rGXsdoTqn5xiRoEhbhbpYt9k3dJ1wBjzlLyVk4yg4qf5SafE+j
-	 Xacx8ZNQUkGRV6YR6gMsk5l4eHMbd1lRe/GUCkc6e8EpKkql7x8Of781peKfbIPaUHg==
+	 To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
+	 MIME-Version:Content-Transfer-Encoding;
+	bh=tfYyvg/YEjVnt/i5+VxsYpj+ND/9pcDCTdnckyR2aBA=;
+	b=Fmizs1XGcyX6XwYrW5a2Zp5ujHOGuUFiAOWWvGz3qxWOHXoCXpCLeTTaQGZuCZlGnmKA
+	 AtCJAcRE/w1dPtMJKEC2gqSSoe7t+CEjKPf6Us+7PWRmgwRQDg7E5Wn1XB6BiIH2DNsxp
+	 L72PutjsvrJ8NWO6b6XPV9H0RXcGr2kSVG8J86eDjaD/ipZ4BpuAoQL/aYej/JTGK3BDN
+	 o2Cso89OsITuhL6533ft9nhFu26ssc71BiClqdI849hZGayue4OIoREIh1ChE9FnfqtNk
+	 RoFjSYofxUESeb1huyZ9diDGdO8EVzfdtudUeURpr6JIe7v2ObeMEHN6dEw5kvNPK5g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=cmss.chinamobile.com;
 	spf=pass smtp.mailfrom=cmss.chinamobile.com;
-	dkim=pass header.d=cmss.chinamobile.com header.i=@cmss.chinamobile.com header.a=rsa-sha256 header.s=default header.b=rA63Gwu2;
-	arc=none smtp.remote-ip=111.22.67.135
-Received: from cmccmta2.chinamobile.com (cmccmta2.chinamobile.com [111.22.67.135])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 806E6606A333;
-	Wed, 18 Nov 2026 03:20:25 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 806E6606A333
+	dkim=pass header.d=cmss.chinamobile.com header.i=@cmss.chinamobile.com header.a=rsa-sha256 header.s=default header.b=DIo4LprT;
+	arc=none smtp.remote-ip=111.22.67.137
+Received: from cmccmta4.chinamobile.com (cmccmta4.chinamobile.com [111.22.67.137])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id C4AE5606A32A;
+	Wed, 18 Nov 2026 03:20:41 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C4AE5606A32A
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmss.chinamobile.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cmss.chinamobile.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=cmss.chinamobile.com header.i=@cmss.chinamobile.com header.a=rsa-sha256 header.s=default header.b=rA63Gwu2
+	dkim=pass (1024-bit key) header.d=cmss.chinamobile.com header.i=@cmss.chinamobile.com header.a=rsa-sha256 header.s=default header.b=DIo4LprT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
 	d=cmss.chinamobile.com; s=default; l=0;
 	h=from:subject:message-id:to:cc:mime-version;
 	bh=47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=;
-	b=rA63Gwu25zVlwyYdfnXl+dOH/KoqIaxHbydEmcGlAkHCUdvy4jwGSJUdHbeNwv01TbaaYbWW9xcpb
-	 5cVXbrjR9qH4VQ2vpdQrpFyoKQHYIKbMqPwNCdzXDQbyH62TbAxT/1qKs+4tQ+gLecZpxgstc0nFGo
-	 RU2UixKRpq9eEqOs=
+	b=DIo4LprTiGWtO/Cc3WGI6bjrXD0YZrUqSIlDbNbKdC9o3g5Zj00dBkuXdRnhzxjHdmJ+VLF0d2auR
+	 rTLrCwj1g0fu+NSSpD5yP9AKqHhveAQmze7fW6Fs7XmXhfwsnZVn6FFxj1sj6lIvQMygwhWIIHwfn0
+	 1qRnVGMf6ZFTsgg8=
 X-RM-TagInfo: emlType=0                                       
 X-RM-SPAM-FLAG:00000000
 Received:from spf.mail.chinamobile.com (unknown[10.188.0.87])
-	by rmmx-syy-dmz-app03-12003 (RichMail) with SMTP id 2ee36afd1971394-db1e9;
-	Wed, 18 Nov 2026 11:20:17 +0800 (CST)
-X-RM-TRANSID:2ee36afd1971394-db1e9
+	by rmmx-syy-dmz-app08-12008 (RichMail) with SMTP id 2ee86afd1983cbe-af2c0;
+	Wed, 18 Nov 2026 11:20:40 +0800 (CST)
+X-RM-TRANSID:2ee86afd1983cbe-af2c0
 X-RM-TagInfo: emlType=0                                       
 X-RM-SPAM-FLAG:00000000
 Received:from DESKTOP-3K8GUTQ (unknown[223.108.79.97])
-	by rmsmtp-syy-appsvr05-12005 (RichMail) with SMTP id 2ee56afd1970808-c73c4;
-	Wed, 18 Nov 2026 11:20:17 +0800 (CST)
-X-RM-TRANSID:2ee56afd1970808-c73c4
+	by rmsmtp-syy-appsvr09-12009 (RichMail) with SMTP id 2ee96afd19869ab-c74a8;
+	Wed, 18 Nov 2026 11:20:39 +0800 (CST)
+X-RM-TRANSID:2ee96afd19869ab-c74a8
 From: Xiangwu Lai <laixiangwu@cmss.chinamobile.com>
-To: peter.wang@mediatek.com,
-	chaotian.jing@mediatek.com
-Cc: chu.stanley@gmail.com,
+To: sashiko-bot@kernel.org
+Cc: Xiangwu Lai <laixiangwu@cmss.chinamobile.com>,
+	peter.wang@mediatek.com,
+	chaotian.jing@mediatek.com,
+	chu.stanley@gmail.com,
 	alim.akhtar@samsung.com,
 	bvanassche@acm.org,
 	stanley.chu@mediatek.com,
-	sashiko-bot@kernel.org,
 	linux-scsi@vger.kernel.org,
 	linux-mediatek@lists.infradead.org,
-	linux-kernel@vger.kernel.org,
-	Xiangwu Lai <laixiangwu@cmss.chinamobile.com>
-Subject: [PATCH v2 0/2] scsi: ufs-mediatek: fix va09 regulator lifecycle
-Date: Wed, 18 Nov 2026 11:20:13 +0800
-Message-ID: <20261118032015.974-1-laixiangwu@cmss.chinamobile.com>
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] scsi: ufs-mediatek: use devm_regulator_get() for the va09 regulator
+Date: Wed, 18 Nov 2026 11:20:38 +0800
+Message-ID: <20261118032038.492-1-laixiangwu@cmss.chinamobile.com>
 X-Mailer: git-send-email 2.50.1.windows.1
+In-Reply-To: <sashiko-outbox-219916@kernel.org>
+References: <sashiko-outbox-219916@kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -77,43 +79,42 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-This is v2 of the va09 regulator reference fix.  Two issues surfaced
-while reviewing the devm conversion (many thanks to the Sashiko AI
-review of v1):
+Thank you for the review of:
 
-- the devm release alone would trip
-  WARN_ON(regulator->enable_count) in _regulator_put() on unbind,
-  because ufs_mtk_init() powers the M-PHY (and thus va09) on and
-  nothing powers it off again on the way out;
+  [PATCH] scsi: ufs-mediatek: use devm_regulator_get() for the va09
+  regulator
+  https://lore.kernel.org/r/20261118014234.424-1-laixiangwu@cmss.chinamobile.com
 
-- the M-PHY power-off path can leave host->mphy_powered_on set when
-  regulator_disable() fails, so the next power-on bails out early
-  and never restores the PHY (pre-existing).
+Both findings are confirmed after checking against the source:
 
-Patch 1 keeps the devm conversion and adds an .exit callback which
-balances the enable count before the devm release, in the same spirit
-as the .exit callbacks of ufs-exynos and ufs-qcom.  Patch 2 fixes
-the pre-existing state desync.
+- [Medium] unbalanced va09 enable count on devm regulator release:
+  correct, and it is a regression of v1 -- my mistake.  ufs_mtk_init()
+  powers the M-PHY on (which enables va09), the variant operations
+  have no .exit callback, and ufshcd_pltfrm_remove() only resumes the
+  device, so the regulator is still enabled when devm releases it and
+  _regulator_put() hits WARN_ON(regulator->enable_count).
 
-Changes in v2:
-- 1/2: additionally add an .exit callback powering the M-PHY off so
-  the va09 enable count is balanced before devm releases the
-  regulator.  Without it, _regulator_put() would warn on every
-  driver unbind (Sashiko AI review, [Medium]).
-- 2/2: new patch fixing the mphy state desync when va09 disable
-  fails (Sashiko AI review, [High], pre-existing).
+- [High] state mismatch on regulator failure in
+  ufs_mtk_mphy_power_on(): also correct, and as you noted this one is
+  pre-existing (cf137b3ea49a).  When regulator_disable() fails in the
+  power-off path, phy_power_off() has already run, but
+  host->mphy_powered_on stays set, so the next power-on bails out
+  through the !(on ^ host->mphy_powered_on) check without powering
+  the M-PHY back on.
 
-Link: https://lore.kernel.org/r/20261118014234.424-1-laixiangwu@cmss.chinamobile.com
+Fixes for both have been sent as a new thread:
 
-Xiangwu Lai (2):
-  scsi: ufs-mediatek: use devm_regulator_get() for the va09 regulator
-  scsi: ufs-mediatek: keep mphy state in sync when va09 disable fails
+  [PATCH v2 0/2] scsi: ufs-mediatek: fix va09 regulator lifecycle
 
- drivers/ufs/host/ufs-mediatek.c | 19 ++++++++++++++++++-
- 1 file changed, 18 insertions(+), 1 deletion(-)
+  1/2 keeps devm_regulator_get() and adds an .exit callback which
+  powers the M-PHY off (same pattern as ufs-exynos and ufs-qcom), so
+  the enable count is balanced before the devm release;
 
--- 
-2.50.1.windows.1
+  2/2 updates host->mphy_powered_on in the power-off path regardless
+  of the va09 disable result, so the next power-on retries the whole
+  sequence instead of returning early.
 
+Best regards,
+Xiangwu Lai
 
 
