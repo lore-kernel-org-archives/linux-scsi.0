@@ -1,70 +1,56 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=111.22.67.139
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794966158;
-	b=GI7TBkf1kp2KS8IBFjBIbG47hAgUS4XYXXp8+jQBeH6zOdg0tzm4iCWoOKnttBkoCTnH
-	 WQrB6AJe8Duv8Whw3dpVBzVK9MUsapOAg6SGtijxxvzM8d/wCzrHDNxk1Nw3bYpuvEnvK
-	 4YBBB7NGC0CF/pyLMU08M2E38Qgfaff4T5huOQxJF87TDaxshx/hv/5nrzCn6nOj+zSC5
-	 pvU5PLZY+ocld+ukXjJH0JoENv1MEX7gTztKsmoE7jC7po4nD6yXLy8P5kfrKj0R1cTmv
-	 lvx7LxKOZ9pp0bam9WCTloV1os+pmyQqjwNX+xYQbvUuwzOt2FutWO6woPAG0aw4frw==
+	t=1794966878;
+	b=bKik0nhd4KgA/VMQeLJtvwtX26pZjwFt97SKsNToVswfLXgx1LQ7nwSUkR3DdQ6vrgBA
+	 sNG3/0Zt5YSJJkt1yAq8PjzV1mXutVtYr83bwOXbVOERtL5ykzPWgXuy31FhEo6hJB2cM
+	 n/aThyq1tSOuhHmagyiNdPk3XzG89YUuS60q+sTa7s/Gx7aaMwQ5UpjTmDcb8fgxFTgLg
+	 1lcRMhRsLawfbQ9MDxqz9caxxgAa93NVe2C3xnqNDFBE0QW9m4UfzJGgb0DHQHuokaKhj
+	 De9W9Lwfl09/eKPML51zzeNKJu9k2Rs+ErpFSLqe1qTgVeBjN1YYWB17fCD/82FjeXw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794966158;
-	h=DMARC-Filter:DKIM-Signature:X-RM-TagInfo:X-RM-SPAM-FLAG:Received:
-	 X-RM-TRANSID:X-RM-TagInfo:X-RM-SPAM-FLAG:Received:X-RM-TRANSID:From:
-	 To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=ZjfWekzq4/sRPKRMmFj7v/AEpXemuhGVbDD4ndLcqmY=;
-	b=xNt4yvd4oQgdiz4HBFt+56IhsPLVkxyBoEd9dR93dVALKAUAgIuF6MMZD0mjy5rHHlN1
-	 tpGffnjcn6LweYrjg+dd8EAqI+p+OHhPPLRx2/+04h1v1tzOpPXKpR7F9y8cRuiQa/p5o
-	 wp2Ni8yFN717h2ojLWzREYibQm6kbBAUaG8S3hc0qAKWny+DPsdN2Fua+KDKJWOTtDUBR
-	 I5jyQXpJyxTpzLXmvYmUOz0R/2yGXUfm7cI9PQQzZEfBiTIuoXO9cZhbkn33WLMwrx/vl
-	 TP1E0LlACYQHbweoCAw/izJOZCyfEwLeToize6Vq7n0CyOzPuOtJ3rtifavTzWtRjtQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794966878;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=3h+Z4OwPzk1KOPk/q/zM50h5QD7WUQnH6dCC+ZXStuU=;
+	b=oW/7Ai6SeFAR1pCY6FCem9Mg74sTehA+iyQNYsMKjtKrvksrimA8A11P4IAwXzBOB58P
+	 oIhB0l/VS89YiCVphcY+0hLCxnq7xIIRD0Kvqb3+VX4DveNNGgf9Cgn9b2xy44V0V7ZqU
+	 ROpOObzsFKy0j2v+wnTP8EADKq9zy2x8WV8REswjlLMzLCeasHDccduh2/t+/oxMljK5T
+	 QWWYUlDDfQh3Qq2jB8A3ki/2ySsKa0fWg0ZHXmKtjysbSdvrUOy2fWRH8RH1LNGABIoSJ
+	 5x5KbZO74zrjM4x0EHKn6o7gjHFYIu0Z5BsecS2PiHsffVjlnG4xk6np0Tzt2jGn8hw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=cmss.chinamobile.com;
-	spf=pass smtp.mailfrom=cmss.chinamobile.com;
-	dkim=pass header.d=cmss.chinamobile.com header.i=@cmss.chinamobile.com header.a=rsa-sha256 header.s=default header.b=OdRnApPq;
-	arc=none smtp.remote-ip=111.22.67.139
-Received: from cmccmta6.chinamobile.com (cmccmta6.chinamobile.com [111.22.67.139])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 353CF606A31C;
-	Wed, 18 Nov 2026 01:42:36 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 353CF606A31C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmss.chinamobile.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cmss.chinamobile.com
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=PPVqn3IQ;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A1C8606A31C
+	for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2026 01:54:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=cmss.chinamobile.com header.i=@cmss.chinamobile.com header.a=rsa-sha256 header.s=default header.b=OdRnApPq
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=cmss.chinamobile.com; s=default; l=0;
-	h=from:subject:message-id:to:cc:mime-version;
-	bh=47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=;
-	b=OdRnApPqBadmTms5nquAyOq4wuofPZjv8yZ/S7EbX6R9til8+1zgGQqHjJU2OdoTtXUt6+NDW4eWZ
-	 cS8AqriS0U0HoPbWB1423N0gAQZGT4jGJ781Ywnchmy3ZjbSgVMTs9Hg3TeXQKznMBZNSpSKbCIGNV
-	 LUiZnSmf9uoC7kos=
-X-RM-TagInfo: emlType=0                                       
-X-RM-SPAM-FLAG:00000000
-Received:from spf.mail.chinamobile.com (unknown[10.188.0.87])
-	by rmmx-syy-dmz-app01-12001 (RichMail) with SMTP id 2ee16afd028b05c-e9a37;
-	Wed, 18 Nov 2026 09:42:36 +0800 (CST)
-X-RM-TRANSID:2ee16afd028b05c-e9a37
-X-RM-TagInfo: emlType=0                                       
-X-RM-SPAM-FLAG:00000000
-Received:from DESKTOP-3K8GUTQ (unknown[223.108.79.97])
-	by rmsmtp-syy-appsvr06-12006 (RichMail) with SMTP id 2ee66afd028ac77-c42b3;
-	Wed, 18 Nov 2026 09:42:35 +0800 (CST)
-X-RM-TRANSID:2ee66afd028ac77-c42b3
-From: Xiangwu Lai <laixiangwu@cmss.chinamobile.com>
-To: peter.wang@mediatek.com,
-	chaotian.jing@mediatek.com
-Cc: chu.stanley@gmail.com,
-	alim.akhtar@samsung.com,
-	bvanassche@acm.org,
-	stanley.chu@mediatek.com,
-	linux-scsi@vger.kernel.org,
-	linux-mediatek@lists.infradead.org,
-	linux-kernel@vger.kernel.org,
-	Xiangwu Lai <laixiangwu@cmss.chinamobile.com>
-Subject: [PATCH] scsi: ufs-mediatek: use devm_regulator_get() for the va09 regulator
-Date: Wed, 18 Nov 2026 09:42:34 +0800
-Message-ID: <20261118014234.424-1-laixiangwu@cmss.chinamobile.com>
-X-Mailer: git-send-email 2.50.1.windows.1
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=PPVqn3IQ
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 819AB1F000C4;
+	Wed, 18 Nov 2026 01:54:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794966877;
+	bh=3h+Z4OwPzk1KOPk/q/zM50h5QD7WUQnH6dCC+ZXStuU=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=PPVqn3IQZfmV1eCO57I6qHa/e1PcBuw3V5fqJ22IAhl2sFsR7K62p0DZvCSuVOS3/
+	 QNfXAkRj7yXDRgw8unr2Ff6DpxcCNZNV8eFqQ4aAejUfDL4Y45Q/YBdo4X1cyvRI8z
+	 gdfLu/ykyV1ikxiR5oJ7N8NHL1v48O5571r2AhdJqOqKwi0jAHTErnJ67xgZo7yqlu
+	 GnRzE8YklHTscyL+739bbpwn5xSDMLIvZs7bm9smYuli+5ERJppW/KEed/2z3iET25
+	 g7hjkUZukfnnuhO52sTrziVwBoXiNHwxuYAeEaG+amuvTzX2ljFaFi1Jb3IN3tp6x+
+	 ep3XPWgPANbQA==
+Message-ID: <sashiko-outbox-219916@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] scsi: ufs-mediatek: use devm_regulator_get() for the
+ va09 regulator
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Xiangwu Lai" <laixiangwu@cmss.chinamobile.com>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20261118014234.424-1-laixiangwu@cmss.chinamobile.com>
+References: <20261118014234.424-1-laixiangwu@cmss.chinamobile.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 18 Nov 2026 01:54:37 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -73,39 +59,87 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-ufs_mtk_init_va09_pwr_ctrl() obtains the va09 regulator with
-regulator_get() but the reference is never released with
-regulator_put(), neither on driver unbind nor on probe failure. The
-other regulators handled by this driver (dvfsrc-vcore) are already
-obtained with devm_regulator_get_optional().
+Thank you for your contribution! Sashiko AI review found 1 potential
+issue to consider:
+- [Medium] scsi: ufs-mediatek: unbalanced va09 enable count on devm
+  regulator release
+It also noticed 1 related pre-existing issue this patch does not
+introduce:
+- [High] scsi: ufs: mediatek: state mismatch on regulator failure in
+  ufs_mtk_mphy_power_on() [1]
+--
 
-Use devm_regulator_get() so that the reference is released
-automatically when the UFS device is detached.
+commit d21747583e36bae96677aff04541a8dd783fc43c
+Author: Xiangwu Lai <laixiangwu@cmss.chinamobile.com>
 
-Fixes: cf137b3ea49a ("scsi: ufs-mediatek: Support VA09 regulator operations")
-Signed-off-by: Xiangwu Lai <laixiangwu@cmss.chinamobile.com>
----
- drivers/ufs/host/ufs-mediatek.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+scsi: ufs-mediatek: use devm_regulator_get() for the va09 regulator
 
-diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
-index 5b6bff2cf..426af10b3 100644
---- a/drivers/ufs/host/ufs-mediatek.c
-+++ b/drivers/ufs/host/ufs-mediatek.c
-@@ -692,7 +692,7 @@ static void ufs_mtk_init_va09_pwr_ctrl(struct ufs_hba *hba)
- {
- 	struct ufs_mtk_host *host = ufshcd_get_variant(hba);
- 
--	host->reg_va09 = regulator_get(hba->dev, "va09");
-+	host->reg_va09 = devm_regulator_get(hba->dev, "va09");
- 	if (IS_ERR(host->reg_va09))
- 		dev_info(hba->dev, "failed to get va09");
- 	else
--- 
-2.50.1.windows.1
+This commit switches ufs_mtk_init_va09_pwr_ctrl() from regulator_get() to
+devm_regulator_get() so the va09 regulator reference is released on device
+detach.
 
+> diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-media=
+tek.c
+> index c6329d88d1c65..e52a0e2f55c2b 100644
+> --- a/drivers/ufs/host/ufs-mediatek.c
+> +++ b/drivers/ufs/host/ufs-mediatek.c
+> @@ -692,7 +692,7 @@ static void ufs_mtk_init_va09_pwr_ctrl(struct ufs_hba=
+ *hba)
+>  {
+>  	struct ufs_mtk_host *host =3D ufshcd_get_variant(hba);
+> =20
+> -	host->reg_va09 =3D regulator_get(hba->dev, "va09");
+> +	host->reg_va09 =3D devm_regulator_get(hba->dev, "va09");
 
+[Severity: Medium]
+Does devm_regulator_release() call regulator_put() on host->reg_va09 while
+it is still enabled?
 
+ufs_mtk_init() calls ufs_mtk_mphy_power_on(hba, true), which enables
+host->reg_va09 via regulator_enable().  ufs_hba_mtk_vops does not implement
+an .exit callback, and ufs_mtk_remove() -> ufshcd_pltfrm_remove() resumes
+the device with pm_runtime_get_sync() without calling
+ufs_mtk_mphy_power_on(hba, false).  When devres releases host->reg_va09 on
+driver unbind or post-ufshcd_hba_init() probe failure, _regulator_put()
+hits WARN_ON(regulator->enable_count) and leaks the regulator enable
+reference.
+
+[Severity: High]
+This problem wasn't introduced by this patch, but in ufs_mtk_mphy_power_on()
+[1], can a failed regulator_disable(host->reg_va09) leave
+host->mphy_powered_on out of sync with the hardware?
+
+drivers/ufs/host/ufs-mediatek.c:ufs_mtk_mphy_power_on() {
+	if (!mphy || !(on ^ host->mphy_powered_on))
+		return 0;
+
+	if (on) {
+		...
+	} else {
+		phy_power_off(mphy);
+		if (ufs_mtk_is_va09_supported(hba)) {
+			ufs_mtk_va09_pwr_ctrl(res, 0);
+			ret =3D regulator_disable(host->reg_va09);
+		}
+	}
+out:
+	if (ret) {
+		...
+	} else {
+		host->mphy_powered_on =3D on;
+	}
+}
+
+When called with on =3D false, phy_power_off() powers down the M-PHY before
+regulator_disable(host->reg_va09) runs.  If regulator_disable() returns an
+error, host->mphy_powered_on remains true while the PHY is powered off, so
+the next resume call with on =3D true hits !(on ^ host->mphy_powered_on) and
+returns early without powering the PHY back on, causing subsequent I/O
+timeouts and controller lockups.
+
+[1] https://sashiko.dev/#/bug/linux-51b0f8e0-4730-46d4-afe5-42a3d31189f3
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261118014234.424-=
+1-laixiangwu@cmss.chinamobile.com?part=3D1
