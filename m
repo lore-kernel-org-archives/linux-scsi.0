@@ -1,92 +1,92 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.215.225
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794996748;
-	b=C8VlFgdniSwmYNQKWY9eA7PAO5rXrf8zoPgFz7E5xsG1hEDK+CBvuRyAouTsXSuPFZuX
-	 qfQwIE2mBY/Ubucx9E0IlGO35WWCQW2qKP8XVyFgqjikeY5gUkMKggqBY8G55dgO6csSJ
-	 KmoECLVPn3fuMB42IrjWoSGQdH7W0U2LVvsgIel7mQHP1vWTkfQfiOAsgwZsS92vYTpCn
-	 tVpmdhd/jgHmZUAO2eL1gjnMBgEJZx6FX7nb+2kP1XP8fJFP75a5/WsL4cwHXRikW86ub
-	 kTcTVuINrrsRAcXzUqvKgkP/BW+MdThgMh4WQo8wRJ33WfBT3W9BOgqWbljv69a4hVQ==
+	t=1794996752;
+	b=u5W2OqXJFlTr6QQ1cOsvwTLOm5VfpF/wco3MixYFgFlL9pK3sFzwOO9e/Xe9s0VctxmR
+	 9AIRTuG05D+ryi2+bwgjYo8vZONZ3eTUpBKyyS+JIXAsbvLx7URFIfNyppc+1TT+mOQGD
+	 XQRLLZmm790jQPJQnRCt32Ia+yIiHgQUvbgvzjOf3VPyVL6N4b/QF1I1ooWKcrxD9Z5CL
+	 Axq6jUC38DhlXEFUT7UqM/TG7CF/4jd/RW0xpMYn/vAEaA4jr6Wvkso0ABs3klM3CcjpC
+	 5rcB2bmfeGFfEyDWmKbiQ4Qb+tEcBaikfS0nxu0hwH64guJM4CwTSkg1FeM6l38itvw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794996748;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794996752;
 	h=DMARC-Filter:Received:X-Google-DKIM-Signature:X-Gm-Message-State:
 	 X-Gm-Gg:X-Received:Received:X-Relaying-Domain:X-CFilter-Loop:Received:
 	 DKIM-Signature:X-Received:X-Received:Received:From:To:Cc:Subject:Date:
 	 Message-Id:X-Mailer:In-Reply-To:References:X-DetectorID-Processed;
-	bh=KJ9nAu5G2j39HhA15ZpjOPHsUaQMW4Mkf+OJpcaT6ic=;
-	b=4BQq45kj1y5D6UQko56gGobjlLexRl0hSanayOKrIXLbQnyWVP/eZeYjjs1BJe1IvIi6
-	 +YsQUvQTypxc1YAVm+qjqk+ruukPKL60iJkLiNPhY/VEnXoBEqp2GspUu7NWdRhgHuUWM
-	 Q8EyRAednAVb4Hi6X7Ggh6d8+yIkKGIDWJ3ku7vywifRtde7xB6SmwZ4YAqf49zp7mT4X
-	 MbBIk+5V6lH7XzpEo/bRfWq7/lFbxYi1LBFgEB1Ehc8ALooBryAvY/fjfS69pFsJO/7DJ
-	 hq/59S23TQRC5ztS8NJQSeBy+YyEvk5tfAJUUXDz7SuVrjnVUqDv/KiMM9eEFdH6cnw==
+	bh=9CCL8q3hLyFQuWX2ke9Lfm5bz+ZlQQjSvw9G3QVTWE8=;
+	b=zxatrPHhOCQ1SN20mrxDiCi23SD4ZhePVZ6yWgH3RjjmQAAtxYEdwtN730Cj/ulU2Pxy
+	 nH6xC3YWpYoDkG86ieb+GMISLBwXImsPABLRRTKk7qAhjouZFZY2bth+Rre6n1XtX9hoK
+	 MAC/S+nRUKsyIMj+luQa/iD2+Uh662S6lRSsOnT1HCCBGlCilw63FGin0l2OACBxyT3zN
+	 ti+SB6YAkFvd5ow+scoHRjtOmocvH1za39J/If7/KhqFcgEnE7Z0c+awPqgAfPuchV4pF
+	 /84/op+/zgufAQCK6YX7crK/zTM2btyzHV3Yjz7gtEEaHb9SlEQjjJoKz/iT2LymXxA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=broadcom.com;
 	spf=fail smtp.mailfrom=broadcom.com;
-	dkim=pass header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=gFpkKlzT;
+	dkim=pass header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=PYvvW5O7;
 	arc=none smtp.remote-ip=209.85.215.225
 Received: from mail-pg1-f225.google.com (mail-pg1-f225.google.com [209.85.215.225])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41492606A31C
-	for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2026 10:12:28 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 41492606A31C
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EEE6D606A320
+	for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2026 10:12:31 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org EEE6D606A320
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=gFpkKlzT
-Received: by mail-pg1-f225.google.com with SMTP id 41be03b00d2f7-cdb45e96d2bso553076a12.0
-        for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2026 02:12:28 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=PYvvW5O7
+Received: by mail-pg1-f225.google.com with SMTP id 41be03b00d2f7-cdb2dfcca94so330461a12.1
+        for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2026 02:12:31 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794996748; x=1795601548;
+        d=1e100.net; s=20260707; t=1794996751; x=1795601551;
         h=references:in-reply-to:message-id:date:subject:cc:to:from
          :dkim-signature:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=KJ9nAu5G2j39HhA15ZpjOPHsUaQMW4Mkf+OJpcaT6ic=;
-        b=KEjTj9KFtdOvwWb+XAD+O2Ln2n8Lv9pZiTu39qzSYMRXgrA2bFZWmvw+srWcmkPlXW
-         7cpFlz8pd7vmAKJN9OUytxtUGE3fsYDKdWYlFOVJr2T9zlux0JtqGjyoH1AcpLgntkRp
-         T0QzAEeQvn6JJA/GE0S253PjQ/pqGGURVsj+tx5dVqqA8/rfOGKDtK1pAzCw/paNvoOA
-         Og//yd1hFwOiKYWl64pvV9Wg0BBgcU5/dHi8OTnSVWBoKro5+caiVMZkkkATX7YPDs4N
-         KRk0xMSJPvzqTbSWTTuliGcJLooADkRkUzv4zQuDA77nO2h4dBzOAlBJkmVEmXkR1N7S
-         Kj+w==
-X-Gm-Message-State: APuU4Z9fyJURJgumZG4gu+K6mOPrYbGIp4FGmFoP9eO/hWqwOOn7ig4t
-	JBGs/ToIGHEooN5GKSyCTClyqY9MNrU6k0CMPcQAcDPmje0qnvDFY5VjZMMpQLqqmD6ciPDYQDk
-	r9Y9gCBnnzzTTj7FC0A0+oR+AqxL3F2fmSi7gLm5WGITIFvBgk3kIWqQiAhPptEIfVIps5jOETV
-	to3q7ucb3D7xoU+yL7upa1xlkNTQCfg5b9dDWaVMXMC8Zs9QRstOb8wMRXZoKtYUOPUzVzOqyky
-	c5w6Z4lirUJmBUhSQFF3zhWhj0MjnQ4dYA=
-X-Gm-Gg: AZFdTZcRdCht/lxLbWo2aq6K3k3hfSsphca4wVmeRBtFBZbNnvt3xFW5QIEoTSsAPfz
-	ZLB0xj1i6HolnODY4Eo0YgPgNNe/cI7Kmb9gssbVedlLhT5TFooet4a3sokUxZnK1dyl+irtztg
-	20HW7BZX9riVnYftLpFjtI6xzKZvidoxCrB6zGVNp/lfGDUm3F3BA4yPXeNGEjHgntNI+lwR8qs
-	FRyt6tG8sA1DTi6SVYR5bKkV1rdnYCzMLfWXyubF6WlHcLxff9I9xu3v+8PHlydfoG9jigiy8+B
-	shOd2dS9uMHn68aiRwX47pQhBvkbaTMN+rVJ73H4BFY8AgDHEJXnDiNP58dyjDMBdBSXINApBuV
-	yHgZL1+rvYVn+29n7+bgWxXVNAhkzi6n6aap3F61pikFtHEpiIrBH4JqzzpKYDZce7dDK9i5wK6
-	9TnEuFuQw2aO3RE0yVUkknGNL2/YYkHf9lK7TMw16WRZfHrCGVihsEH7Mi
-X-Received: by 2002:a17:90b:4b88:b0:3b1:ba59:56a1 with SMTP id 98e67ed59e1d1-3b3d07ca529mr2182002a91.39.1794996747398;
-        Wed, 18 Nov 2026 02:12:27 -0800 (PST)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-123.dlp.protect.broadcom.com. [144.49.247.123])
-        by smtp-relay.gmail.com with ESMTPS id 98e67ed59e1d1-3b3d0eaa8eesm1582275a91.2.2026.11.18.02.12.26
+        bh=9CCL8q3hLyFQuWX2ke9Lfm5bz+ZlQQjSvw9G3QVTWE8=;
+        b=ce9xrlG1Kc73VHFWSafEBqkv1mIzNM+01rZCh6oYtMvjbSB242nmt25F3NsH21M7XN
+         znM3gE4jTZGYMutHSAU8G7ZLpjsKSHX7DJieH8Qvt85SU9X9DcqEsFaYwD2LY0wCzFjs
+         NeQvujNBZPqoMQp+696OUswhhIA3aEDC8AG5YOJLLL+/qydK0U1g1SOLb6wrcLE2RTa9
+         MJvdmPFoL109Pdwiw1FxoEQjBxDLG8dsu9euHoEvDbzUhYbDhsSADorPXROW/x7vVSYd
+         ociPSpgI+Zqnten9e9bmRj4jUJKlS1DTGkWXzBhIRGIkRV13O+yNg+v4GJjI3zrtuAF1
+         MSGQ==
+X-Gm-Message-State: APuU4Z/FqzctK0r3ZuIH38aJxVS0H25VGAmjOOV7/E0LQxd876jMNj40
+	Wn8ZxRTAps/aGA6mdH8uCU01fp8ffwmhjhUkIKo/Nqj2jFkTUbKZsLv1S3cxf5Zv2fncDiC4IX/
+	0rm1guBhCVuvuNO5JmJT4mmz88Y6CA7PgJfFXOLcACF70bBZPxMsu6Sm2aIL9Jrcn7Zamd1Y6xM
+	xAWEf/Pj1uvAMfzdvacjNMRpoaM8l139NIyYR/abQGcttQJytwx9Y4HqsRpM0o6sHQdlQ/iIXLm
+	tNc5yHigRb1QyGPfuN3illKVU6xxBGnG7o=
+X-Gm-Gg: AZFdTZcrHLTOfo9Js+lR41ShqlRdX4iHm/DBO0i/08GQ+LtYY4IWkmjH+jw/uJ8UkOn
+	95je76BYR41E7y9W3gFUSzR3HpnZdir7eOnfQhTo4r3x/Nz0TAMDoxUhX34nU0DTjMpUVLxi4aQ
+	xum97YwHRycRNKm+3UhE/2M/JnPXxDMOTke0wNh6fAhg0+DD+x+vBNvamzGhneS/wTJSVRDy2H4
+	3CuIBlKtj3GOVKB1xe5B0m9uXR8LG62OR5VCGuzPXZYPdamIPb1X0rbwt0v3OxjCHFGFlEiNnpZ
+	wwiAQdQlNMeLzU+WpC2GeZmVozWpwwyFGGdFwrLRLwcHB/lXnCR9JqFyTJKcEbT7Ri7Pp+NJ8pu
+	cTyDyToRsYKbCHToXbQ4BsJ02JEt35ERemEfluDdxB2pcdeMcV4A4lh9/NrPxmx61wXnop9xRg4
+	2uAFTIqOhUi/twjOf44awV772q46+yJ4gTq/XlXpCvM4te/s2lfDuc4A==
+X-Received: by 2002:a17:90b:3c81:b0:3ab:36c4:b4ff with SMTP id 98e67ed59e1d1-3b3d07b80c7mr2184321a91.24.1794996751161;
+        Wed, 18 Nov 2026 02:12:31 -0800 (PST)
+Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-28.dlp.protect.broadcom.com. [144.49.247.28])
+        by smtp-relay.gmail.com with ESMTPS id 98e67ed59e1d1-3b3abf029a5sm3964259a91.5.2026.11.18.02.12.30
         for <linux-scsi@vger.kernel.org>
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 18 Nov 2026 02:12:27 -0800 (PST)
+        Wed, 18 Nov 2026 02:12:31 -0800 (PST)
 X-Relaying-Domain: broadcom.com
 X-CFilter-Loop: Reflected
-Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-3ac8f449d1bso627379a91.3
-        for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2026 02:12:26 -0800 (PST)
+Received: by mail-pj1-f70.google.com with SMTP id 98e67ed59e1d1-3b167bc8e16so741175a91.1
+        for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2026 02:12:30 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1794996746; x=1795601546; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1794996749; x=1795601549; darn=vger.kernel.org;
         h=references:in-reply-to:message-id:date:subject:cc:to:from:from:to
          :cc:subject:date:message-id:reply-to:content-type;
-        bh=KJ9nAu5G2j39HhA15ZpjOPHsUaQMW4Mkf+OJpcaT6ic=;
-        b=gFpkKlzTuFBcMYAWUkr2FAJRdxpLddLgIXptToMOr573/Ot7MaAz0btux87d9TNTPg
-         +1NyABoxuf63tSK+DaztY5yH+k6BBCaiaC/rdYpvN+8tnwtZdLbSXL6NJ/muB/53JRbc
-         ZZRPelN2Aapd+6HpUapwHHZ5deqYmyPcLQt/0=
-X-Received: by 2002:a17:90a:d886:b0:3b0:9bfa:72b1 with SMTP id 98e67ed59e1d1-3b3d07caebemr2485360a91.49.1794996745540;
-        Wed, 18 Nov 2026 02:12:25 -0800 (PST)
-X-Received: by 2002:a17:90a:d886:b0:3b0:9bfa:72b1 with SMTP id 98e67ed59e1d1-3b3d07caebemr2485328a91.49.1794996744984;
-        Wed, 18 Nov 2026 02:12:24 -0800 (PST)
+        bh=9CCL8q3hLyFQuWX2ke9Lfm5bz+ZlQQjSvw9G3QVTWE8=;
+        b=PYvvW5O7QnQ3X8xu+fbYMGUSfeOk4Xzq4HZC/B9OFxQynWXLZQLci5SaOtL7T3a/bo
+         kc7VsBuyZSw0441gFw0RGyOAxjeGVf/sHagbHfDz5j5GZ8yMnidM+7ypeJ3OByyMOyyu
+         fg/hzvBKpfonl0XrNX0MWGL88o14OvRAX13NQ=
+X-Received: by 2002:a17:90b:3b48:b0:3b3:b71e:b2f3 with SMTP id 98e67ed59e1d1-3b3d07d45e5mr2221377a91.45.1794996749376;
+        Wed, 18 Nov 2026 02:12:29 -0800 (PST)
+X-Received: by 2002:a17:90b:3b48:b0:3b3:b71e:b2f3 with SMTP id 98e67ed59e1d1-3b3d07d45e5mr2221349a91.45.1794996748866;
+        Wed, 18 Nov 2026 02:12:28 -0800 (PST)
 Received: from dhcp-135-24-192-142.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b3ac6016c3sm8740707a91.15.2026.11.18.02.12.21
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b3ac6016c3sm8740707a91.15.2026.11.18.02.12.25
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 18 Nov 2026 02:12:24 -0800 (PST)
+        Wed, 18 Nov 2026 02:12:28 -0800 (PST)
 From: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 To: linux-scsi@vger.kernel.org,
 	martin.petersen@oracle.com
@@ -98,9 +98,9 @@ Cc: sathya.prakash@broadcom.com,
 	mgandhi@redhat.com,
 	loberman@redhat.com,
 	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-Subject: [PATCH v2 08/37] scsi: mpt3sas: Validate firmware/user supplied device handles against MaxDevHandle
-Date: Wed, 18 Nov 2026 01:56:17 -0800
-Message-Id: <1794995806-5835-9-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+Subject: [PATCH v2 09/37] scsi: mpt3sas: Clamp topology/IR event entry counts to EventDataLength
+Date: Wed, 18 Nov 2026 01:56:18 -0800
+Message-Id: <1794995806-5835-10-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 X-Mailer: git-send-email 2.4.3
 In-Reply-To: <1794995806-5835-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 References: <1794995806-5835-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
@@ -114,206 +114,128 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 
-Firmware-supplied (and ioctl-supplied) device handles are used to index
-driver bitmaps and look up devices without being checked against
-ioc->facts.MaxDevHandle. Add the check in the event, discovery, post-reset
-scan (including the physical disk handle) and TM/control completion paths.
-
-MaxDevHandle is an exclusive upper bound, so also change the passthrough
-handle check in _ctl_do_mpt_command() from > to >= so handles at the
-boundary are rejected.
+Clamp NumEntries/NumElements in SAS/PCIe topology and IR config
+change events to what EventDataLength actually covers.
 
 Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_ctl.c   |  2 +-
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 75 ++++++++++++++++++++++++++--
- 2 files changed, 73 insertions(+), 4 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 72 +++++++++++++++++++++++++---
+ 1 file changed, 65 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-index d8b1e60af940..a0d915678c02 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-@@ -787,7 +787,7 @@ _ctl_do_mpt_command(struct MPT3SAS_ADAPTER *ioc, struct mpt3_ioctl_command karg,
- 	    mpi_request->Function == MPI2_FUNCTION_NVME_ENCAPSULATED) {
- 
- 		device_handle = le16_to_cpu(mpi_request->FunctionDependent1);
--		if (!device_handle || (device_handle >
-+		if (!device_handle || (device_handle >=
- 		    ioc->facts.MaxDevHandle)) {
- 			ret = -EINVAL;
- 			mpt3sas_base_free_smid(ioc, smid);
 diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 4bc2f7ce4aa2..184ed88fab55 100644
+index 184ed88fab55..b6ab2c755e56 100644
 --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
 +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -4399,6 +4399,12 @@ _scsih_tm_tr_send(struct MPT3SAS_ADAPTER *ioc, u16 handle)
- 	u8 tr_method = 0;
- 	struct hba_port *port = NULL;
+@@ -12170,7 +12170,7 @@ mpt3sas_scsih_event_callback(struct MPT3SAS_ADAPTER *ioc, u8 msix_index,
+ 	struct fw_event_work *fw_event;
+ 	Mpi2EventNotificationReply_t *mpi_reply;
+ 	u16 event;
+-	u16 sz;
++	u32 sz, max_dwords;
+ 	Mpi26EventDataActiveCableExcept_t *ActiveCableEventData;
  
-+	if (handle >= ioc->facts.MaxDevHandle) {
-+		ioc_err(ioc, "handle(0x%04x) out of bounds in %s\n",
-+			handle, __func__);
-+		return;
-+	}
+ 	/* events turned off due to host reset */
+@@ -12190,6 +12190,28 @@ mpt3sas_scsih_event_callback(struct MPT3SAS_ADAPTER *ioc, u8 msix_index,
+ 	if (event != MPI2_EVENT_LOG_ENTRY_ADDED)
+ 		mpt3sas_trigger_event(ioc, event, 0);
+ 
++	/*
++	 * Ensure EventDataLength does not exceed the maximum allocated reply size
++	 */
++	max_dwords = 0;
++	if (ioc->reply_sz > offsetof(Mpi2EventNotificationReply_t, EventData))
++		max_dwords = (ioc->reply_sz -
++		    offsetof(Mpi2EventNotificationReply_t, EventData)) / 4;
++	if (le16_to_cpu(mpi_reply->EventDataLength) > max_dwords)
++		mpi_reply->EventDataLength = cpu_to_le16(max_dwords);
++	sz = le16_to_cpu(mpi_reply->EventDataLength) * 4;
 +
- 	if (ioc->pci_error_recovery) {
- 		dewtprintk(ioc,
- 			   ioc_info(ioc, "%s: host in pci error recovery: handle(0x%04x)\n",
-@@ -4659,17 +4665,25 @@ _scsih_sas_control_complete(struct MPT3SAS_ADAPTER *ioc, u16 smid,
- {
- 	Mpi2SasIoUnitControlReply_t *mpi_reply =
- 	    mpt3sas_base_get_reply_virt_addr(ioc, reply);
-+	u16 dev_handle;
- 
- 	if (likely(mpi_reply)) {
-+		dev_handle = le16_to_cpu(mpi_reply->DevHandle);
- 		dewtprintk(ioc,
- 			   ioc_info(ioc, "sc_complete:handle(0x%04x), (open) smid(%d), ioc_status(0x%04x), loginfo(0x%08x)\n",
--				    le16_to_cpu(mpi_reply->DevHandle), smid,
-+				    dev_handle, smid,
- 				    le16_to_cpu(mpi_reply->IOCStatus),
- 				    le32_to_cpu(mpi_reply->IOCLogInfo)));
- 		if (le16_to_cpu(mpi_reply->IOCStatus) ==
- 		     MPI2_IOCSTATUS_SUCCESS) {
--			clear_bit(le16_to_cpu(mpi_reply->DevHandle),
--			    ioc->device_remove_in_progress);
-+			if (dev_handle >= ioc->facts.MaxDevHandle) {
-+				ioc_err(ioc,
-+					"handle(0x%04x) out of bounds in %s\n",
-+					dev_handle, __func__);
-+			} else {
-+				clear_bit(dev_handle,
-+					  ioc->device_remove_in_progress);
-+			}
- 		}
- 	} else {
- 		ioc_err(ioc, "mpi_reply not valid at %s:%d/%s()!\n",
-@@ -5220,6 +5234,11 @@ _scsih_check_ir_config_unhide_events(struct MPT3SAS_ADAPTER *ioc,
- 		if (element->ReasonCode != MPI2_EVENT_IR_CHANGE_RC_UNHIDE)
- 			continue;
- 		handle = le16_to_cpu(element->PhysDiskDevHandle);
-+		if (handle >= ioc->facts.MaxDevHandle) {
-+			ioc_err(ioc, "handle(0x%04x) out of bounds in %s\n",
-+				handle, __func__);
-+			continue;
-+		}
- 		volume_handle = le16_to_cpu(element->VolDevHandle);
- 		clear_bit(handle, ioc->pd_handles);
- 		if (!volume_handle)
-@@ -8397,6 +8416,13 @@ _scsih_add_device(struct MPT3SAS_ADAPTER *ioc, u16 handle, u8 retry_count,
- 	u8 connector_name[5];
- 	u8 port_id;
- 
-+	if (handle >= ioc->facts.MaxDevHandle) {
-+		/* not retryable: drop the device instead of looping forever */
-+		ioc_err(ioc, "handle(0x%04x) out of bounds in %s\n",
-+			handle, __func__);
-+		return 0;
-+	}
++	/*
++	 * reject events too short to contain the header.
++	 */
++	if ((event == MPI2_EVENT_SAS_TOPOLOGY_CHANGE_LIST &&
++	     sz < offsetof(Mpi2EventDataSasTopologyChangeList_t, PHY)) ||
++	    (event == MPI2_EVENT_PCIE_TOPOLOGY_CHANGE_LIST &&
++	     sz < offsetof(Mpi26EventDataPCIeTopologyChangeList_t, PortEntry)) ||
++	    (event == MPI2_EVENT_IR_CONFIGURATION_CHANGE_LIST &&
++	     sz < offsetof(Mpi2EventDataIrConfigChangeList_t, ConfigElement)))
++		return 1;
 +
- 	if ((mpt3sas_config_get_sas_device_pg0(ioc, &mpi_reply, &sas_device_pg0,
- 	    MPI2_SAS_DEVICE_PGAD_FORM_HANDLE, handle))) {
- 		ioc_err(ioc, "failure at %s:%d/%s()!\n",
-@@ -9184,6 +9210,12 @@ _scsih_pcie_check_device(struct MPT3SAS_ADAPTER *ioc, u16 handle)
- 	struct MPT3SAS_TARGET *sas_target_priv_data;
- 	u32 device_info;
- 
-+	if (handle >= ioc->facts.MaxDevHandle) {
-+		ioc_err(ioc, "handle(0x%04x) out of bounds in %s\n",
-+			handle, __func__);
-+		return;
-+	}
-+
- 	if ((mpt3sas_config_get_pcie_device_pg0(ioc, &mpi_reply,
- 		&pcie_device_pg0, MPI26_PCIE_DEVICE_PGAD_FORM_HANDLE, handle)))
- 		return;
-@@ -10450,6 +10482,12 @@ _scsih_sas_pd_add(struct MPT3SAS_ADAPTER *ioc,
- 	u64 sas_address;
- 	u16 parent_handle;
- 
-+	if (handle >= ioc->facts.MaxDevHandle) {
-+		ioc_err(ioc, "handle(0x%04x) out of bounds in %s\n",
-+			handle, __func__);
-+		return;
-+	}
-+
- 	set_bit(handle, ioc->pd_handles);
- 
- 	sas_device = mpt3sas_get_sdev_by_handle(ioc, handle);
-@@ -10741,6 +10779,11 @@ _scsih_sas_ir_physical_disk_event(struct MPT3SAS_ADAPTER *ioc,
- 		return;
- 
- 	handle = le16_to_cpu(event_data->PhysDiskDevHandle);
-+	if (handle >= ioc->facts.MaxDevHandle) {
-+		ioc_err(ioc, "handle(0x%04x) out of bounds in %s\n",
-+			handle, __func__);
-+		return;
-+	}
- 	state = le32_to_cpu(event_data->NewValue);
- 
- 	if (!ioc->hide_ir_msg)
-@@ -11104,6 +11147,11 @@ _scsih_search_responding_sas_devices(struct MPT3SAS_ADAPTER *ioc)
- 		if (ioc_status != MPI2_IOCSTATUS_SUCCESS)
- 			break;
- 		handle = le16_to_cpu(sas_device_pg0.DevHandle);
-+		if (handle >= ioc->facts.MaxDevHandle) {
-+			ioc_err(ioc, "handle(0x%04x) out of bounds in %s\n",
-+				handle, __func__);
-+			continue;
-+		}
- 		device_info = le32_to_cpu(sas_device_pg0.DeviceInfo);
- 		if (!(_scsih_is_end_device(device_info)))
- 			continue;
-@@ -11224,6 +11272,11 @@ _scsih_search_responding_pcie_devices(struct MPT3SAS_ADAPTER *ioc)
- 			break;
- 		}
- 		handle = le16_to_cpu(pcie_device_pg0.DevHandle);
-+		if (handle >= ioc->facts.MaxDevHandle) {
-+			ioc_err(ioc, "handle(0x%04x) out of bounds in %s\n",
-+				handle, __func__);
-+			continue;
-+		}
- 		device_info = le32_to_cpu(pcie_device_pg0.DeviceInfo);
- 		if (!(_scsih_is_nvme_pciescsi_device(device_info)))
- 			continue;
-@@ -11324,6 +11377,11 @@ _scsih_search_responding_raid_devices(struct MPT3SAS_ADAPTER *ioc)
- 		if (ioc_status != MPI2_IOCSTATUS_SUCCESS)
- 			break;
- 		handle = le16_to_cpu(volume_pg1.DevHandle);
-+		if (handle >= ioc->facts.MaxDevHandle) {
-+			ioc_err(ioc, "handle(0x%04x) out of bounds in %s\n",
-+				handle, __func__);
-+			continue;
-+		}
- 
- 		if (mpt3sas_config_get_raid_volume_pg0(ioc, &mpi_reply,
- 		    &volume_pg0, MPI2_RAID_VOLUME_PGAD_FORM_HANDLE, handle,
-@@ -11350,6 +11408,11 @@ _scsih_search_responding_raid_devices(struct MPT3SAS_ADAPTER *ioc)
- 				break;
- 			phys_disk_num = pd_pg0.PhysDiskNum;
- 			handle = le16_to_cpu(pd_pg0.DevHandle);
-+			if (handle >= ioc->facts.MaxDevHandle) {
-+				ioc_err(ioc, "handle(0x%04x) out of bounds in %s\n",
-+					handle, __func__);
-+				continue;
-+			}
- 			set_bit(handle, ioc->pd_handles);
- 		}
+ 	switch (event) {
+ 	/* handle these */
+ 	case MPI2_EVENT_SAS_BROADCAST_PRIMITIVE:
+@@ -12211,9 +12233,20 @@ mpt3sas_scsih_event_callback(struct MPT3SAS_ADAPTER *ioc, u8 msix_index,
  	}
-@@ -11685,6 +11748,12 @@ _scsih_scan_for_devices_after_reset(struct MPT3SAS_ADAPTER *ioc)
- 		}
- 		phys_disk_num = pd_pg0.PhysDiskNum;
- 		handle = le16_to_cpu(pd_pg0.DevHandle);
-+		if (handle >= ioc->facts.MaxDevHandle) {
-+			ioc_err(ioc,
-+				"handle(0x%04x) out of bounds at %s:%d/%s()!\n",
-+				handle, __FILE__, __LINE__, __func__);
-+			continue;
-+		}
- 		sas_device = mpt3sas_get_sdev_by_handle(ioc, handle);
- 		if (sas_device) {
- 			sas_device_put(sas_device);
+ 
+ 	case MPI2_EVENT_SAS_TOPOLOGY_CHANGE_LIST:
+-		_scsih_check_topo_delete_events(ioc,
++	{
++		Mpi2EventDataSasTopologyChangeList_t *topo_data =
+ 		    (Mpi2EventDataSasTopologyChangeList_t *)
+-		    mpi_reply->EventData);
++		    mpi_reply->EventData;
++		u32 data_len = sz;
++		size_t hdr_size =
++		    offsetof(Mpi2EventDataSasTopologyChangeList_t, PHY);
++		u16 max_entries;
++
++		max_entries = (data_len - hdr_size) /
++		    sizeof(Mpi2EventSasTopoPhyEntry_t);
++		if (topo_data->NumEntries > max_entries)
++			topo_data->NumEntries = max_entries;
++		_scsih_check_topo_delete_events(ioc, topo_data);
+ 		/*
+ 		 * No need to add the topology change list
+ 		 * event to fw event work queue when
+@@ -12225,18 +12258,43 @@ mpt3sas_scsih_event_callback(struct MPT3SAS_ADAPTER *ioc, u8 msix_index,
+ 		if (ioc->shost_recovery)
+ 			return 1;
+ 		break;
++	}
+ 	case MPI2_EVENT_PCIE_TOPOLOGY_CHANGE_LIST:
+-	_scsih_check_pcie_topo_remove_events(ioc,
++	{
++		Mpi26EventDataPCIeTopologyChangeList_t *pcie_topo_data =
+ 		    (Mpi26EventDataPCIeTopologyChangeList_t *)
+-		    mpi_reply->EventData);
++		    mpi_reply->EventData;
++		u32 data_len = sz;
++		size_t hdr_size =
++		    offsetof(Mpi26EventDataPCIeTopologyChangeList_t, PortEntry);
++		u16 max_entries;
++
++		max_entries = (data_len - hdr_size) /
++		    sizeof(MPI26_EVENT_PCIE_TOPO_PORT_ENTRY);
++		if (pcie_topo_data->NumEntries > max_entries)
++			pcie_topo_data->NumEntries = max_entries;
++		_scsih_check_pcie_topo_remove_events(ioc, pcie_topo_data);
+ 		if (ioc->shost_recovery)
+ 			return 1;
+ 		break;
++	}
+ 	case MPI2_EVENT_IR_CONFIGURATION_CHANGE_LIST:
+-		_scsih_check_ir_config_unhide_events(ioc,
++	{
++		Mpi2EventDataIrConfigChangeList_t *ir_config_data =
+ 		    (Mpi2EventDataIrConfigChangeList_t *)
+-		    mpi_reply->EventData);
++		    mpi_reply->EventData;
++		u32 data_len = sz;
++		size_t hdr_size =
++		    offsetof(Mpi2EventDataIrConfigChangeList_t, ConfigElement);
++		u16 max_elements;
++
++		max_elements = (data_len - hdr_size) /
++		    sizeof(MPI2_EVENT_IR_CONFIG_ELEMENT);
++		if (ir_config_data->NumElements > max_elements)
++			ir_config_data->NumElements = max_elements;
++		_scsih_check_ir_config_unhide_events(ioc, ir_config_data);
+ 		break;
++	}
+ 	case MPI2_EVENT_IR_VOLUME:
+ 		_scsih_check_volume_delete_events(ioc,
+ 		    (Mpi2EventDataIrVolume_t *)
 -- 
 2.53.0
 
