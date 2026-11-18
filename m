@@ -1,92 +1,92 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.215.225
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794996768;
-	b=QwojRRVmiuohnRbZ5Gmzr/bFKNdaDaFP5FwT7rFAFMz5mkXfA2Dhr3Zx1PezprHDyqth
-	 67Ge0bO2PQlejk+AE9G+WQPLSX0TraD4NCfPGqrB5yyjJXyNgbKPKnLxUzG8gGiwsamL1
-	 lJmvMRV84Dful5r8CmOzIKL7asG3jWpsp1gktwFZholVknbguvIh51bdlMsWj1aRjzLKM
-	 PyDeM9xqYQRUh66dZT/dTALjZ5SvDbtSebI1f3sfRvUrgIeUOxwj6YbcRuDD2+VNY1MLb
-	 rspYKPqU7FbjJxY4WYECm/Y69qelnAaobTXMcP51ZiY2kGCSikIp6G6vSScLN6Si21A==
+	t=1794996771;
+	b=iyPj8In6jIEYd+w2x7ixrLfDYm2edsCEXCsQflqYGsFwbfsVrk64QqdHZQHH8LRZCEw6
+	 Nbc3vFljFBUukR+0zJr8+tpgX7cQV7vBbktDhk2xNwvBmYcGbacItU4S/vGNntohCUOLX
+	 vDQhun1iO7SlWl+q7qeIH52wzfdl28gQh8XNLV5y2aRoWJAq3dV50B95EirSwAFV4a5rE
+	 rZaY1gpsJkfJT9RzmHedygg+StpoKsrd6Hl1WJp+erIfUzQr2BDy+g4OTWvpMpOTUpRxd
+	 o8p5ecPkckRCFXpkTN+PabS4LjZQEC6Hr2HJ4FH0jEIu06wFDwvxgk/5BSj33sF7DEA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794996768;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794996771;
 	h=DMARC-Filter:Received:X-Google-DKIM-Signature:X-Gm-Message-State:
 	 X-Gm-Gg:X-Received:Received:X-Relaying-Domain:X-CFilter-Loop:Received:
 	 DKIM-Signature:X-Received:X-Received:Received:From:To:Cc:Subject:Date:
 	 Message-Id:X-Mailer:In-Reply-To:References:X-DetectorID-Processed;
-	bh=7Iv+IDUEhLfMJ9yGaiV9XYqTTWC+SorCCPn8g7VvN/M=;
-	b=ZH6mSQSqS1VH5PRTsQDQ/Pu6agGBJR4wlJBZqHdGZ7eHdck1pBddwVnhIaFbN0RIVvuw
-	 aVc3zeal3bHjQyb2/+qJeWug4ldmBdKiaDvau57XP4if8VgTMJbO7GGru6FCAi+Od7xuS
-	 tO9YWO3BFQRO7yabkHWy07eH8wPNvyPhsewk9VOTZYjs6/osgPy7jmLZ2XtW4y5CcuZlW
-	 F1rhPTgV8SYKKFwHngB5Kz2ir9AHFjLRuRVT4OaLIQuxnusifpb5EKNdfiIpG40ttJ94L
-	 URqGiTxqwtUk42idPMFLw/a4Lgatp7khdDKKqgnwoTwSatDAGXb5rtYUaJVh2T2Prvg==
+	bh=MfP/F3jWcx6SsmN84VHbjq9nQMObnGbq61HUtF/GjOg=;
+	b=jUewhj+3D67H/u/4YRg4E1lw5qfjLbPh75GCaaoUXIeYLw0fUh4SkgTG0dPe82a6Yiz4
+	 qbZkJlGndBDG7IpyJ4zX3NJuu9E0yM4CBqttjykAjXIuxfZc+EuCeh8yf4n55C8VbcHOY
+	 5Jsn3baJzkTFBbvfahfqkXLApzOXs8YtvEE0ZVvikFFgwc2Y9z0mAXdWG3m87GHcFf9v/
+	 0eR9BAQQVkwGKOAIzEBHdYjeIt/YG3/NW4HWBReujNgqYdapFhneV8EjR1OpExdpLEiWK
+	 IJp6wy7eXMgHkTjJPNPcbUIrSlk2KGAV2a+8EqVU6wESFvevud2Vf8OAE4bJY93aZ7g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=broadcom.com;
 	spf=fail smtp.mailfrom=broadcom.com;
-	dkim=pass header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=MmZvvdKy;
+	dkim=pass header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=KqfRM7aB;
 	arc=none smtp.remote-ip=209.85.215.225
 Received: from mail-pg1-f225.google.com (mail-pg1-f225.google.com [209.85.215.225])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD4F7606A31C
-	for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2026 10:12:47 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BD4F7606A31C
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 574CB606A31C
+	for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2026 10:12:51 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 574CB606A31C
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=MmZvvdKy
-Received: by mail-pg1-f225.google.com with SMTP id 41be03b00d2f7-cd69954c755so677003a12.3
-        for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2026 02:12:47 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=KqfRM7aB
+Received: by mail-pg1-f225.google.com with SMTP id 41be03b00d2f7-cdb2e0062bbso467335a12.1
+        for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2026 02:12:51 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794996767; x=1795601567;
+        d=1e100.net; s=20260707; t=1794996771; x=1795601571;
         h=references:in-reply-to:message-id:date:subject:cc:to:from
          :dkim-signature:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=7Iv+IDUEhLfMJ9yGaiV9XYqTTWC+SorCCPn8g7VvN/M=;
-        b=woPKY4kYVRs4vdXoc38hsan7DSxVt4qBqIGqrRnhA3TdrwHDef4KQ8Vbd5+GFHzL34
-         WYBiNKd5QycpsyaNuL9UC8erg+G4Tw7RtUxIEci2aNiFDPy/8ebz7olHslWqeZ2Iqe9D
-         EqvuKwsxgc60lZf7kespzgh6Syuuof9EPJ0wjai05DIYrrKruYkeOlhQxwhC6rWXTSaE
-         sVozPGb+X3ddYb9XfevAxxQhrVszQ1RXq0PXrsLve8axHgXTQp4siGIKOaSxXsAD/5xi
-         fIHTuqo6jjo0pfOSjyEmxk3ZBSArD02qjHcOONTpOtgXiNgH/Ql/bkMz8s0QCfi5HrLa
-         Bv2Q==
-X-Gm-Message-State: APuU4Z9n4QJehxnkI+Zw8kYLZ92veZpsgTNE1E6jLq3dJFqdnQDL6jdP
-	/WtfPA5m53/maJlT4rwVPlmZq5A0eN3NlpgHxyeWTQhjd6vYlE0yMh/4eZYB5ubpSXn2pQTInaK
-	9l4sTyuZXejHtotLbcNJ+s436jCOIUrkdlDC697lmFJ5MDzmwo2yReoof+LTSkiepsWrvqw9Nny
-	ghJf47+q6HWWz5rQggo6C7pk/4T6ty1L2fcS4n1fgsbcZR0z9K94Tln5wE6Gz8HopaKbHRtRiOk
-	tHlZ0BCOKfShfgpj2LKC3rLMu3YsA8AO4A=
-X-Gm-Gg: AZFdTZdJ9acg0UJEKr4h4gjco68EYvUCLkrv0NTZHl0xvE+hVVIN7Loz3qLLkT14ifG
-	w3Px0qOEpPvsc1gYbVqR8EQdcLGTbWFFahOhX5+GCI2FR/3VJt24529prhz8G65EQdZ0dSn4rKY
-	7dFuJ+mHi83l3HK77qi4ryZp7C9tK0vjVaciFEmSpYDzlNOm5hL564Aq/mmmlUkNhJHY1M/wtFl
-	Mf9aZoS2ewmlHTRGf2DIqvJp2/drA7RAFmEq3QvpqfjbvqcxZg6UU2Rs6hcDHj4UsTugIEd+zMF
-	0OlEqGlZbNufjOM8E5egJAPF5tremRb3S3AkOJnKh+XofTNMpCf6Eh/baqBPcbwvwWgkNf3xxAu
-	fTcMFuURAlVI/ezK5eZrgmfOFPvWgy0XCk6HBsM8A6CyJ0N/L3Mge40NDk1/sImzvTbVO+Pc3O6
-	uahokGzxRecxoPM259NX+1YBls5p8OmV0uadC+8k5j7K8hoQsukHKTz30m
-X-Received: by 2002:a17:90b:4b0d:b0:3b0:c7ab:4644 with SMTP id 98e67ed59e1d1-3b3d0759d9amr2129907a91.14.1794996766996;
-        Wed, 18 Nov 2026 02:12:46 -0800 (PST)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-123.dlp.protect.broadcom.com. [144.49.247.123])
-        by smtp-relay.gmail.com with ESMTPS id 98e67ed59e1d1-3b3d1cb9989sm562123a91.1.2026.11.18.02.12.46
+        bh=MfP/F3jWcx6SsmN84VHbjq9nQMObnGbq61HUtF/GjOg=;
+        b=fGAxPagyLC0zSGB/gqrT7lDkOOaK62fa9hfAYQcWrsOtAZzYQaMml1ShcYmfhgvCg5
+         YCRLQ8lUTksyFORXKk6rVsNqQv3hgX5szC6ANjY2GT+HqKXgQsr0mnZWGUw6c3BypWgK
+         jiF1MxtHw634jh1tnFuXAWQURsYx4WrgPxtrrou1sMlrbHwan0EoXX7ABzgaMvs1DIg2
+         iTRUrThyXFlSEFti6PxGB7KVBHMw2PigErmRU0UyIYpz3fF+lcVgm8G3itzMoFNsUvIE
+         O2A7czs2ySNRjZQvbocgiCE6PqYnwrqmcm7s8M+q/10j/deGm389YsOr+Zes51jza0VT
+         EVCA==
+X-Gm-Message-State: APuU4Z8V2hD6n6GnMJZA8CS0fz+OOWr27x+qFZMCIBgP5X7pWXMvuZcf
+	WPufSWHJjd9t+a6k9FCCfKDj7S5ugrPmpyFuvaFuayHiXp2PtCPt357G/VVRQSAGexWYHGoD9wx
+	+iH5PRox1qv0oqhradlMkWF0cWZUgPEiCs3bMHqfVIfA1MsYiOKfIB8lqoo82n4Pd8jPTwLjDWq
+	v3RFmSITQJVUgxwmSRY9zJaDy0Dxuxcw2kayi6Y/mA4WRCC5gEKgv3dBpL9HSjVKKZSlgvK+fuf
+	kxiUoL1kM3CUPIV5orwMSLMjhTfO3kPHNs=
+X-Gm-Gg: AZFdTZdHdK6Sj3iU+OkAUY2Ajgzsf6SJGxz4eSu5SfR5xSV4C7Oo4Pj+dTqZvkoPyAv
+	8mK6r59aBO449W/8LAMKhJ1FuTSVZQVKYBURdXEXSD3YLIRC/Ryf9Ri0xzTDJtwMH1Ne+XnOqMf
+	wbdzButgI7W/vAjnEHulBYR0XgX0k9Xq/Vg68PkzsN9YF5hDWqd1+GticHbrbSFjwweGgK8bVz1
+	/Qh/YwZRnq+tb0hSs6+ABm6sDlCZ1O/qWadafGmx/FEyHCEMK3rHnhX6xZ7SuoH9QGAjS19DOmi
+	OGCwr6GjorQuOdPVB8XI0p8zp7Hd5ZDlCZ03YuexXQ4zk/hKt50qDHB4I6Zy4XEsjr5hjCTfgOJ
+	ANhNdIepkQhuEQkhdjkSNd6AmsxABI7HOOZlv29IAKmAg3F8tak+d2g0WD0Wi8qfhLg5A6fcq+S
+	9GW0GpMZjE9F4oG1x1YdUxZEMevvXPtFc/lq2tCRobuMdOIfiTTW4FNw==
+X-Received: by 2002:a17:90a:d44b:b0:3ab:f38:2b43 with SMTP id 98e67ed59e1d1-3b3d07c6166mr1776071a91.34.1794996770719;
+        Wed, 18 Nov 2026 02:12:50 -0800 (PST)
+Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-28.dlp.protect.broadcom.com. [144.49.247.28])
+        by smtp-relay.gmail.com with ESMTPS id 98e67ed59e1d1-3b3d1423d6asm1650124a91.4.2026.11.18.02.12.50
         for <linux-scsi@vger.kernel.org>
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 18 Nov 2026 02:12:46 -0800 (PST)
+        Wed, 18 Nov 2026 02:12:50 -0800 (PST)
 X-Relaying-Domain: broadcom.com
 X-CFilter-Loop: Reflected
-Received: by mail-pg1-f200.google.com with SMTP id 41be03b00d2f7-cdd9fa2a558so888117a12.0
-        for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2026 02:12:45 -0800 (PST)
+Received: by mail-pj1-f70.google.com with SMTP id 98e67ed59e1d1-3ada6ccd402so534892a91.2
+        for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2026 02:12:49 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1794996765; x=1795601565; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1794996769; x=1795601569; darn=vger.kernel.org;
         h=references:in-reply-to:message-id:date:subject:cc:to:from:from:to
          :cc:subject:date:message-id:reply-to:content-type;
-        bh=7Iv+IDUEhLfMJ9yGaiV9XYqTTWC+SorCCPn8g7VvN/M=;
-        b=MmZvvdKyv+NAwkKEhG7kdgzusikSGLYpKesLCWfwud2sIwWeWsdq+J6bs73UwyPRid
-         zAzl+TY4er9H6smNdPDB3/AWjXwzH30qBcU4eW8cclw2lMh9l5EFR8Or1CqJ+gZ85Xwg
-         n0/6bTa3jGSOxiBIV2MzzkNMPGV/Gnzv1wwis=
-X-Received: by 2002:a17:90b:4fc1:b0:3b0:9a0d:b825 with SMTP id 98e67ed59e1d1-3b3d07ab104mr2153409a91.45.1794996764850;
-        Wed, 18 Nov 2026 02:12:44 -0800 (PST)
-X-Received: by 2002:a17:90b:4fc1:b0:3b0:9a0d:b825 with SMTP id 98e67ed59e1d1-3b3d07ab104mr2153386a91.45.1794996764341;
-        Wed, 18 Nov 2026 02:12:44 -0800 (PST)
+        bh=MfP/F3jWcx6SsmN84VHbjq9nQMObnGbq61HUtF/GjOg=;
+        b=KqfRM7aBqJQAHFWndql9NDKbKDXWt48I/c+qDXCIbK1Z63ZyGr+i7USR1V9FCuNAKV
+         ruF+WGjZxNUBzj8yOL6ZnMh7+D+Gn8WcWOl3VL2uxnmV9vR5Jawu47jKk8iG1EwZG0Dr
+         RujJXaI8iveXPFCen3fehZztVQPgFW+yFfGrA=
+X-Received: by 2002:a17:90b:52c8:b0:3a8:13d6:f740 with SMTP id 98e67ed59e1d1-3b3d07a79fbmr2539795a91.22.1794996768713;
+        Wed, 18 Nov 2026 02:12:48 -0800 (PST)
+X-Received: by 2002:a17:90b:52c8:b0:3a8:13d6:f740 with SMTP id 98e67ed59e1d1-3b3d07a79fbmr2539765a91.22.1794996768162;
+        Wed, 18 Nov 2026 02:12:48 -0800 (PST)
 Received: from dhcp-135-24-192-142.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b3ac6016c3sm8740707a91.15.2026.11.18.02.12.40
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b3ac6016c3sm8740707a91.15.2026.11.18.02.12.44
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 18 Nov 2026 02:12:43 -0800 (PST)
+        Wed, 18 Nov 2026 02:12:47 -0800 (PST)
 From: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 To: linux-scsi@vger.kernel.org,
 	martin.petersen@oracle.com
@@ -98,9 +98,9 @@ Cc: sathya.prakash@broadcom.com,
 	mgandhi@redhat.com,
 	loberman@redhat.com,
 	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-Subject: [PATCH v2 13/37] scsi: mpt3sas: Validate max_data_size in MPT3EVENTREPORT ioctl
-Date: Wed, 18 Nov 2026 01:56:22 -0800
-Message-Id: <1794995806-5835-14-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+Subject: [PATCH v2 14/37] scsi: mpt3sas: Fix buffer overflow in _scsih_scsi_ioc_info
+Date: Wed, 18 Nov 2026 01:56:23 -0800
+Message-Id: <1794995806-5835-15-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 X-Mailer: git-send-email 2.4.3
 In-Reply-To: <1794995806-5835-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 References: <1794995806-5835-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
@@ -114,29 +114,65 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 
-Reject a max_data_size smaller than the ioctl header size before
-using it in size arithmetic.
+Build the SCSIState description string with a bounds-checked
+snprintf() instead of a chain of unbounded strcat()s.
 
 Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_ctl.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/scsi/mpt3sas/mpt3sas_base.h  |  2 +-
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 23 ++++++++++++-----------
+ 2 files changed, 13 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-index a0d915678c02..5db233d21f01 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-@@ -1367,6 +1367,9 @@ _ctl_eventreport(struct MPT3SAS_ADAPTER *ioc, void __user *arg)
- 	dctlprintk(ioc, ioc_info(ioc, "%s: enter\n",
- 				 __func__));
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
+index 47255bf9cdda..3c5d6803e56e 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.h
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
+@@ -136,7 +136,7 @@
+ #define MPT3SAS_HOST_PAGE_SIZE_4K	12
+ #define MPT3SAS_NVME_QUEUE_DEPTH	128
+ #define MPT_NAME_LENGTH			32	/* generic length of strings */
+-#define MPT_STRING_LENGTH		64
++#define MPT_STRING_LENGTH		80
+ #define MPI_FRAME_START_OFFSET		256
+ #define REPLY_FREE_POOL_SIZE		512 /*(32 maxcredix *4)*(4 times)*/
  
-+	if (karg.hdr.max_data_size < sizeof(struct mpt3_ioctl_header))
-+		return -EINVAL;
-+
- 	number_bytes = karg.hdr.max_data_size -
- 	    sizeof(struct mpt3_ioctl_header);
- 	max_events = number_bytes/sizeof(struct MPT3_IOCTL_EVENTS);
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index 746b3f2f241c..656241678899 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -5777,19 +5777,20 @@ _scsih_scsi_ioc_info(struct MPT3SAS_ADAPTER *ioc, struct scsi_cmnd *scmd,
+ 		break;
+ 	}
+ 
+-	desc_scsi_state[0] = '\0';
+ 	if (!scsi_state)
+ 		desc_scsi_state = " ";
+-	if (scsi_state & MPI2_SCSI_STATE_RESPONSE_INFO_VALID)
+-		strcat(desc_scsi_state, "response info ");
+-	if (scsi_state & MPI2_SCSI_STATE_TERMINATED)
+-		strcat(desc_scsi_state, "state terminated ");
+-	if (scsi_state & MPI2_SCSI_STATE_NO_SCSI_STATUS)
+-		strcat(desc_scsi_state, "no status ");
+-	if (scsi_state & MPI2_SCSI_STATE_AUTOSENSE_FAILED)
+-		strcat(desc_scsi_state, "autosense failed ");
+-	if (scsi_state & MPI2_SCSI_STATE_AUTOSENSE_VALID)
+-		strcat(desc_scsi_state, "autosense valid ");
++	else
++		snprintf(desc_scsi_state, MPT_STRING_LENGTH, "%s%s%s%s%s",
++			 (scsi_state & MPI2_SCSI_STATE_RESPONSE_INFO_VALID) ?
++			 "response info " : "",
++			 (scsi_state & MPI2_SCSI_STATE_TERMINATED) ?
++			 "state terminated " : "",
++			 (scsi_state & MPI2_SCSI_STATE_NO_SCSI_STATUS) ?
++			 "no status " : "",
++			 (scsi_state & MPI2_SCSI_STATE_AUTOSENSE_FAILED) ?
++			 "autosense failed " : "",
++			 (scsi_state & MPI2_SCSI_STATE_AUTOSENSE_VALID) ?
++			 "autosense valid " : "");
+ 
+ 	scsi_print_command(scmd);
+ 
 -- 
 2.53.0
 
