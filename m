@@ -1,58 +1,64 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794973452;
-	b=0msA+DyreMNnk6UdWn3NLbR+90ckDUITPN6czUxXy6+//DpImsRryOUxYrn68AO/sRoC
-	 Q2d6MOrGyLEVgWniT9mCq+g3h5f3x5/6bWC7vanKUIZhZaz37u6GE50yAQVlAr26pJ7Sb
-	 Kulg7hdX7y3qFRpXHNUAy/RZgcZzF9xS7o4Mg070yE/oeBcGnW0qm9dCedA6B6D5kXaf3
-	 NsyvEB6vs4+cTkbccE+cEzVwB9uVgjOxTcZqHa7byIqLVzVt6UO5bRbLZotNwSAoNQ6ep
-	 O8kzFJVwoAlliSasZAja5mc6CsCxJVTrG57L0PSN9uhe/qKOc3KZFAiVrRxPM1flm/Q==
+	t=1794975017;
+	b=mMDKHNEMQN3Mw/ORBzLMbliwrO8i/GR4n1HqbirAHlJQXUesgHwqwKQ81bTnwAm1Q0S4
+	 KYTeMnDVaaMOA/wloaXfrPiTdm6rn+yPoJngeHIMhwLR1UNCXreh+q1Wqhwh+UzBP1xCB
+	 USSyoVUCj0ir6ROKNY7TaTIuS/1FfIpMYJJKOxDinZNBwHBCV2CC2tOi62ovMguqXeoDp
+	 jyCjWYO/F2OMxp5ofRmrWNUcCHnrkW/mn1YaHhgv4u7tUqSOYpB9TD2Tr8RQceGMwjUxV
+	 L90LhTqygvPACMsBQ2ekoAO2QAV9J02F23dx+y6DkLMmpS9b0J/VfELRtqn4LdneVOw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794973452;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794975017;
 	h=Received:DKIM-Signature:To:Cc:Subject:From:In-Reply-To:Message-ID:
 	 References:Date:MIME-Version:Content-Type;
-	bh=oeN4UYKbcgSbiY4OCoag9qZm+b1F9hp1E8jsUt1GOFE=;
-	b=rSQuKyyOgCVKnc05CeV0SnWeoWQusSc1c2VNLCbXVQsVbWDXwa93fGsERDmnOLH64WXr
-	 9qG3AWrv8DnUncmI6PQ4FSnnWMGRPsmoDmlZF4gQFDt8qmzHJQxQdb8PknHA3xIU7cBCm
-	 bYdZxZinm09HFJ4/8HVxat5mihA611HlHHH3gWzN9/t0wiodTWi7DPX4JVPMs5OL1JF+z
-	 I7r0VAGeS1XV5eE2fuNnRDTxjq5PL9J89nLqCBEDp0InVLe/QUtDw5FqUP9C1CLFV2J+F
-	 etj57tQa3FT/2ZDB3mgbdWIrnkD41ZT8xmzAwN1AnPMe822ZIeP1b4WiXKxX7NArBBw==
+	bh=IuVBrJy3IT9uGscS88OHXyn0c9PxaMdAypLaDZCyPiQ=;
+	b=3AG2O1LPA0ShFoDANPX1s84RUdZHl/NNir5zHSsPAK57+S1W08FlQVoZbxlTbF63DnHy
+	 +xVSLz5FWB25St2IL1KevBQHlCOcf+jnCVZhSF142soE7KG+GVMQ2iLy+QmshlvX0x70f
+	 1P+QXSoeVYiUFs17LBuTbYU6hJRHhtqSoweGYtE6f2i7Hs0GKKHzsrVDO2X54ULxZvSAf
+	 ynPVueZLTOD0j0imM1DMdjkrMZrzysEIw42vVC5ogfb9MOZsblNHItwYmO5hTUOlWk44f
+	 gLIShyKtZOjiDtlpOuhOhC1+XePslOjahz4XgXRW1a4t1GfN6LDnbUe6U/1CMf8aEvA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=nXy+iuCQ;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=OkjmENBC;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48294606A31C;
-	Wed, 18 Nov 2026 03:44:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2572F606A31C;
+	Wed, 18 Nov 2026 04:10:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=nXy+iuCQ
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 74ABE1F000C4;
-	Wed, 18 Nov 2026 03:44:11 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=OkjmENBC
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7A0501F000C4;
+	Wed, 18 Nov 2026 04:10:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794973451;
-	bh=oeN4UYKbcgSbiY4OCoag9qZm+b1F9hp1E8jsUt1GOFE=;
+	s=k20260515; t=1794975016;
+	bh=IuVBrJy3IT9uGscS88OHXyn0c9PxaMdAypLaDZCyPiQ=;
 	h=To:Cc:Subject:From:In-Reply-To:References:Date;
-	b=nXy+iuCQ7ptXv1Y+PJ4LrEDWKnA1lLI5kPQirXSRT9Y6GXELoiPbEiPXaAwPfmC9v
-	 TZxVgE0sdOJmEDAKy2hKRIh9pjid/Nh7NtNZ7jePwlJFH9icN320U+YOmTILUn2JEC
-	 tqOLos4bhzc5HmBMKY0Njl3j9p5eHsZ6Nn+HUIM1kr7Uim++aDCcK3+dvIzI84kdRQ
-	 RbuHprEf9+Ph0R73wTOpVO7WkirG9mWsDVwF9MbwJ5y6kj3UR01YVws8FTqokM9u+E
-	 vz+pQW7LjNWbrhDmCpgsJwzHEUeylnduXu5MFBW+jliYnstSZnN0bVj38ABSb4SCut
-	 0JlpDk9GMpEIg==
-To: HOYOUNG SEO <hy50.seo@samsung.com>
-Cc: linux-scsi@vger.kernel.org,  linux-kernel@vger.kernel.org,
-  bvanassche@acm.org,  mkp@kernel.org,  martin.petersen@oracle.com,
-  stanleyjhu@google.com,  peter.wang@mediatek.com,
-  alim.akhtar@samsung.com,  kwangwon.min@samsung.com,
-  kwmad.kim@samsung.com,  cpgsproxy1@samsung.com,  h10.kim@samsung.com
-Subject: Re: [PATCH v10 0/4] scsi: ufs: core: Avoid redundant link recovery
- from the error handler during PM
+	b=OkjmENBCcxWY/6zKwEp/3tzin90bgfBVNIpxl8afMQCUR3QQe+4/o2ZmzYHisP+F7
+	 zX9P5pnbXIDXiygqECj93faHPyjsdYRfg2G7Nx6pqaDkkbkmFoFhBKFLjhSrE8c8Ud
+	 xPEs/1Trjs/YQKpmZasnRI6/8a7gTPBGpqKVOFud2Cs7BbG0zTOnBV8NwVD+beXwkq
+	 xhpsaXcnsXpYLHP44FeR6M0INDIxvfW+C1C/nR2748JdATxm0mG2Vus0Cj4L6P4iIg
+	 HJTS7UrgwADDUZD9HmpDJYcQtl2mza8elB66qgdqfkZ4hhb9F5BOxb6zzx+A4yZbrp
+	 GtL/V+0wcoarg==
+To: mail@andrewgigena.dev
+Cc: Abel Vesa <abelvesa@kernel.org>,  Herbert Xu
+ <herbert@gondor.apana.org.au>,  "David S. Miller" <davem@davemloft.net>,
+  Rob Herring <robh@kernel.org>,  Krzysztof Kozlowski <krzk+dt@kernel.org>,
+  Conor Dooley <conor+dt@kernel.org>,  Manivannan Sadhasivam
+ <mani@kernel.org>,  Alim Akhtar <alim.akhtar@samsung.com>,  Bart Van
+ Assche <bvanassche@acm.org>,  Bean Huo <beanhuo@micron.com>,  Stanley Jhu
+ <stanleyjhu@google.com>,  Bjorn Andersson <andersson@kernel.org>,  Andy
+ Gross <agross@kernel.org>,  Konrad Dybcio <konradybcio@kernel.org>,
+  linux-arm-msm@vger.kernel.org,  linux-crypto@vger.kernel.org,
+  devicetree@vger.kernel.org,  linux-kernel@vger.kernel.org,
+  linux-scsi@vger.kernel.org
+Subject: Re: [PATCH v4 2/3] dt-bindings: ufs: qcom: classify sm8150-ufshc as
+ standalone ICE
 From: "Martin K. Petersen" <mkp@kernel.org>
-In-Reply-To: <2052256418.81794387787276.JavaMail.epsvc@epcpadp2new>
-Message-ID: <yq1mrr6st1j.fsf@mail.kernel.org>
-References: <CGME20261111082303epcas2p180a7cf157dedd181634550630fe78df5@epcas2p1.samsung.com>
-	<2052256418.81794387787276.JavaMail.epsvc@epcpadp2new>
-Date: Tue, 17 Nov 2026 22:44:10 -0500
+In-Reply-To: <20261111-sm8150-ice-rfc-v4-2-0311eac35609@andrewgigena.dev>
+Message-ID: <yq1h5hesru0.fsf@mail.kernel.org>
+References: <20261111-sm8150-ice-rfc-v4-0-0311eac35609@andrewgigena.dev>
+	<20261111-sm8150-ice-rfc-v4-2-0311eac35609@andrewgigena.dev>
+Date: Tue, 17 Nov 2026 23:10:15 -0500
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -65,24 +71,16 @@ MIME-Version: 1.0
 Content-Type: text/plain
 
 
-Hoyoung,
+Andrew,
 
-> If a LINERESET is reported and the hibern8 exit fails during system
-> resume, both ufshcd_err_handler() and __ufshcd_wl_resume() call
-> ufshcd_link_recovery(), and the two recoveries are not serialized.
+> SM8150 UFS uses a standalone ICE node, so its compatible belongs to
+> the standalone-ICE binding rather than the embedded-ICE one.
 >
-> Patch 1 makes ufshcd_link_recovery() clear the saved errors like
-> ufshcd_reset_and_restore() does, so the error handler does not act on
-> errors that have already been recovered.
->
-> Patches 2 and 3 make ufshcd_wl_poweroff() behave like
-> ufshcd_wl_suspend() by sharing its implementation. In particular it now
-> holds host_sem, so that the error handler waits for it, and the release
-> of host_sem is balanced if hibernation is aborted.
->
-> Patch 4 restricts the early link recovery in ufshcd_err_handler(), which
-> does not hold host_sem, to runtime PM. For system PM and poweroff the
-> error handler now waits for host_sem, and for shutdown it stops.
+> This tightens the schema for qcom,sm8150-ufshc: the standalone-ICE
+> binding allows one reg entry and eight clocks, while existing DTs
+> still use the embedded-ICE layout. This causes a transient,
+> validation-only dtbs_check warning until those DTs are converted
+> (sm8150.dtsi follows in the next patch); existing DTBs still boot.
 
 Applied to 7.5/scsi-staging, thanks!
 
