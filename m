@@ -1,56 +1,97 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.52
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794999708;
-	b=DTUaO7BXISqUw1j08Dv8dg9OXn/roNsWG0AObOz8vihJ20s97Jw+M2z3BVzDQbPmNFBE
-	 ez7d7yr/mgxnOafsobAZyfD5ehpRGPxlRsMDW3T3djKXhdl76AKrJhfv/nkgVeiBhCfR2
-	 CSiyVk5/nXUvFweIvte5XxgR3cQP2PM0elxbxpzPswBPGjSxwBywMuItE7/cN0B3raxXn
-	 OhSaNz+NknSa5VXqqpHXwT5bBniT8OgTxWX0cjLkohWCI9539C4SXy0PMmVJb7k5WYOSC
-	 ttsK6e5NM13cwUkfAS6IKyVIChXr/6p4/U+UEqGj9DmAxi5jO6mRwzgbge3CcnHKOEQ==
+	t=1795001955;
+	b=Y6/d4V2ExHwRSWsOq94LOGXjossQNwou4csRIFl0eWu6fPLPSnqtvszPIs6tV6Zszxu8
+	 pckKUgD2irinCSxY2U6vaKy5a+zWsF3j01ieuIQW6f3EMEuo6jqU+n766Bu9MdGTZf+6W
+	 cQs4imiSDJ0KCGuPUK/4QKZLeIEb1NFbzSLrSD+HALC7g/UgFqbTbxb22FRELce4hYxOr
+	 m9NBH20ASkbBa31a8PHsPhyEtTsBGEVG54enzLDPi6vGhClT28Wz1TFrt+pss+2zhxOnE
+	 ZX9ypEFqdjY4A6qlh45vVf4LAYMDp2s0IrgBXuMYF/D8NFjDhcfybrvD78Zv38ImlmA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794999708;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=vPBFD+iDfgkNc4Oy2mZiaU6ZQAYJvU14cNP/aa9IyVw=;
-	b=RU2NqYXFQhX5xwUDSUaJFYVLi+X+pjf4Pz8r6vDFRh/FcTu7X6JpidpGUVuDM4/mXtqB
-	 E0HAML1MVmsEYX75iXVs8QfMbeRzsSIWlbSwYctl+pz/g35s0qNZn1I1puv4OY6UoOYLg
-	 sJ/OVF6WFmy0KjP6sHy1VMVhD7l771S5aVZJjrnD+9K9x2YpOc37BmkrGdmUUoSyRkiXS
-	 vm4nC7w+hJwcHb4IyI+HA/NHykK9NBQqDFXA2MJV01GiEEQrKFUWzApL/yw0E6qcjlOht
-	 /MtYM+xacDrlHcKMfs0hqRvqZOsukAclN2euRzy+eAjDm+KMJjCV8mhBo5hdSmyU8wQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795001955;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=OxBkyF7pGKdIKZlrOpVOC8DvLEp6sr2IjmnXmomfKgw=;
+	b=aiLf2z6q0DPp/fd8aPFfCXrWLTUVGkIpI1BP7yySRPw7HqGciElC6ZiJaTdn5STbMTUL
+	 emdBpH48+B7/WxC5cvtzFWivb4r6n3LWjnNg55DeaV4EXjx9Nyl/BdU42k+4Ds7udvYcn
+	 u0dvv0s8Rr95awL7kGtNxMlu5ALI1IKGFjD/gtyTvnNNU/IFN00m+qPLz3KhvrlUQDDFD
+	 5Ipi3Jz0YiJNAE3IytBrJPbiVXjiSarp1tKrxb0vbHECb9NOj/uCAUMuXkprGnEGKTbg3
+	 C5dLLa/btyw7B/QaPUlluFFftPrupaHlclPHNQjv0XO4R6TzUkKQF6iWGIqEeYbfjgg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Qv+7Tfqw;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=fail header.from=isslab.korea.ac.kr;
+	spf=none smtp.mailfrom=isslab.korea.ac.kr;
+	dkim=pass header.d=isslab-korea-ac-kr.20260707.gappssmtp.com header.i=@isslab-korea-ac-kr.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=cALrBnc9;
+	arc=none smtp.remote-ip=74.125.82.52
+Received: from mail-dl1-f52.google.com (mail-dl1-f52.google.com [74.125.82.52])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 645F5606A320
-	for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2026 11:01:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3145606A325
+	for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2026 11:39:14 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org F3145606A325
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Qv+7Tfqw
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D91361F000C4;
-	Wed, 18 Nov 2026 11:01:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794999708;
-	bh=vPBFD+iDfgkNc4Oy2mZiaU6ZQAYJvU14cNP/aa9IyVw=;
-	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
-	b=Qv+7TfqwgNZ/TuELCeq7ncJM85P17H7uQMhsBoXkHUVN5MPgChJiagcc9oN/f1kos
-	 as4xtDoGLyTVxPWqU5z714U0PVBMv/jbrWHHaVINO7VQeR+BG2XlNe8rQJWFsMnBiQ
-	 xdHb/Jm6ZPNT1iQ92RUW2ehR1KLdkB/zW35oxA37lwSOhWjPRaOFzYECOO8tQSSu0Q
-	 O9L+WENlrvirpcoFNHUv6pHGdx8fGDbvtEBt5bEl4tLKPqPI9ItZy6hShB/Fn/qUOT
-	 145RFmOYcykyITFEUjLWDxHXejrNCjxeZGoVzgfVmmrVd+8189L7x7Bo2Q8G/AnCuO
-	 4QCWhgG2O59bg==
-Message-ID: <sashiko-outbox-220782@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 16/37] scsi: mpt3sas: Fix page fault from stale
- ioc->chip after PCI error recovery
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Shivasharan S" <shivasharan.srikanteshwara@broadcom.com>, linux-scsi@vger.kernel.org
-In-Reply-To: <1794995806-5835-17-git-send-email-shivasharan.srikanteshwara@broadcom.com>
-References: <1794995806-5835-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
- <1794995806-5835-17-git-send-email-shivasharan.srikanteshwara@broadcom.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 18 Nov 2026 11:01:47 +0000
+	dkim=pass (2048-bit key, unprotected) header.d=isslab-korea-ac-kr.20260707.gappssmtp.com header.i=@isslab-korea-ac-kr.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=cALrBnc9
+Received: by mail-dl1-f52.google.com with SMTP id a92af1059eb24-1a2af4c8d00so1758353c88.0
+        for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2026 03:39:14 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=isslab-korea-ac-kr.20260707.gappssmtp.com; s=20260707; t=1795001954; x=1795606754; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=OxBkyF7pGKdIKZlrOpVOC8DvLEp6sr2IjmnXmomfKgw=;
+        b=cALrBnc9oRbjaYNx6fvha7dZCbpNiP7EOzDqyWIp9VYzaQWZ9Gt/30ndIbBG8wDp3S
+         bRu1KW7NSjgDHAgt/q1SnISlYxjlqgab4KYYDIlQyLPFru+10N/RY5vATQeqhf7UHzgX
+         y0AkNEtMkOcnhGuns2ng+/AlTmPD3SJFWHO3H5QA4NtTk2TYUhExTV25NWF2QqfJCKZ/
+         G0kqQoCZ+zB70/HAWaE61oEJ2tErjVdP0D69cpRFssQrLlqq8oKto+y7mvc8cP3uGvni
+         yVaFpUV9500H7RxoxI+dbXEBqMQaBscryy2iCBNfMfE2Tepu/ad8sAv/84cFk+OWZMdu
+         sH0Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1795001954; x=1795606754;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=OxBkyF7pGKdIKZlrOpVOC8DvLEp6sr2IjmnXmomfKgw=;
+        b=frij/U1Z0x1yubvw07ctExaYPr1TtIBZBC++9Uv8P4DHLryag5tWcmP904987Tt/8B
+         QAueUSX/AMTfX+JQXms0JLJsgNPOH34aeR6JQeaLSMFyIojaJBSwEHOqXUYS2dq1NSHU
+         ZYQ1EZi1O8lz7rq1E+sdP08M5icN+DunwzZtxxBqDh3JMw+uMi/HjIj2jzM6iE58tYsx
+         DQXQfCmny6CJHezkt8umKA0GO84Up+KWDTojpRO3kyl5R/VBf33/a/UzYd0RiqrLgu2d
+         LF5q7UNudzXcz65JJqIeVDI1xx6/9oCPiX2LslT5gRtM+37gZnucIpBR0KZcRenx/sgl
+         rvdA==
+X-Forwarded-Encrypted: i=1; AL+hErEWrxXgiGexa7fBVV21MAzhZ+q/CLoiApflhfd68c+jO8IxYsaukZNM46sxsbyi8ir6AmwI6JyAZ/eQ@vger.kernel.org
+X-Gm-Message-State: APuU4Z8t+ml8CgyWy8NiH/7cr96AL2j4WgpbLlssqZmxUgZ5lCKyp0ZB
+	9gSnKjALsb/3xf1eDqTKXef60veji0RA2zjqYIlf1iZoXVABgVHaeY87cianAGjoOyHZXkWsUsS
+	L0/n9cWQ=
+X-Gm-Gg: AYBFou0A/ybVRalTStTH4bzvYqCxHZr8SAgdvwRhcSWDzVQKK51Dxt76lfFdBf+7KVN
+	HOyMPwvDk9tg3x/TAhFSUAm3ecjlUaHqOGaXSre6CccKDPxs4Q3yPMKtCwpoavjEPTRNVPrWDLC
+	GBGIoTfeLdC2PvI0t/BAD6NrnblT3/zuih++sAV/e3OKdh7/wQPXhclT46nJtuXFp2uvDtgsbjt
+	maXlsBde7aQJ5CUzRNGbjJ3bfEx4GuajuIAmcqYeoCq4HEGhK8W0NE/PTvduWVo/Mm0505vjuMA
+	M8/kEI7DjZVouqxGzpDVGsGC6fbNBj82OCl8GMWm04NwPM2WEXf3Es+0XSJ+4wBpJj9QYn7gRhH
+	9PH4eM+/onSo2+0HPewevOy9Ljt/U9camgyth8YPpIA5IKXuxYVImp1Ph4PgIgn3XstJ3CGkK4R
+	UeH0tdx7Mf5BARPiUTyDbhdlRu47YHa8IGN8DjP+0XQCM1IvdQKEt+s9y/eht8mzb4Z/19Zyxur
+	kC4lgbBR7VL2SDG0AYSzk1U1K04al21i9aZsRsBVWnp9J+FHGTNsU0Sq+XQjhYxB2W7VMunxHvO
+	3sRzBiXMcwyMhv+r5ByIglOzpeGFJ5GAQf/Vz6PqZr+mK3vKXtVe2r9d78SqRB0fuxNQIy6hf6e
+	xZXDzurnVTX7KwXc8fmrtOpBKJDTLVJmWGv/kzw==
+X-Received: by 2002:a05:7022:f101:b0:17b:fed6:7449 with SMTP id a92af1059eb24-1b543d416ffmr1832099c88.47.1795001953609;
+        Wed, 18 Nov 2026 03:39:13 -0800 (PST)
+Received: from localhost.localdomain ([2406:5900:1044:110c:e78e:f7f0:2120:34e7])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1b5446f954dsm6044662c88.2.2026.11.18.03.39.11
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 18 Nov 2026 03:39:13 -0800 (PST)
+From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+To: sagi@grimberg.me,
+	jgg@ziepe.ca,
+	leon@kernel.org,
+	mkp@kernel.org
+Cc: linux-rdma@vger.kernel.org,
+	target-devel@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v2 0/4] isert: the commands the target core allocates itself
+Date: Wed, 18 Nov 2026 20:39:01 +0900
+Message-ID: <20261118113905.2361969-1-yhlee@isslab.korea.ac.kr>
+X-Mailer: git-send-email 2.43.0
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -59,191 +100,84 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 3 potential
-issues to consider:
-- [High] scsi: mpt3sas: NULL ioc->chip dereference in
-  mpt3sas_scsih_issue_tm()
-- [Medium] scsi: mpt3sas: NULL ioc->chip dereference in
-  _ctl_ioctl_main() paths
-- [Medium] scsi: mpt3sas: race on ioc->chip unmap in hard reset and
-  config paths
---
+v1 was two isert patches with no cover letter:
+https://lore.kernel.org/all/20261116101108.1650132-1-yhlee@isslab.korea.ac.kr/
 
-commit a0d3f2d15f67ea6a7bb531279de17b869e022f10
-Author: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
+Answering the review of v1 1/2 needs two patches in the target core, so v2
+has four.  1/4 and 2/4 are drivers/target/iscsi and 3/4 and 4/4 are
+drivers/infiniband/ulp/isert, but 3/4 depends on 1/4: it lets a Reject the
+core allocated reach the wire, and without 1/4 first that turns a NULL
+dereference into a double free.  No intermediate commit has a double free
+or a use-after-free; the NULL dereference is in the base tree, and 3/4
+removes it.
 
-scsi: mpt3sas: Fix page fault from stale ioc->chip after PCI error recovery
+1/4 is not about iSER.  iscsit_find_cmd_from_ttt() matches a command by
+targ_xfer_tag alone, so a NOP-Out with a reserved ITT and TTT 0 is given
+the Reject the core allocated, which carries TTT 0 and is still waiting to
+be sent, and two such NOP-Outs free it twice.  That is reachable on plain
+iscsi_tcp one PDU after login.  It also gives the lookup's other caller,
+iscsit_handle_data_ack(), the kind of command it actually wants.
 
-This commit clears ioc->chip when unmapping controller resources and adds
-NULL checks on ioc->chip across interrupt masking, IOC state queries, reset
-handling, config requests, and shutdown paths.
+2/4 keeps the unsolicited NOP-In off iSER.  The transport check in
+iscsi_post_login_start_timers() runs once, at login, and
+iscsit_process_nop_out() and iscsit_na_nopin_timeout() arm the nopin timer
+again on a connection that is already logged in, so it moves into
+__iscsit_start_nopin_timer(), which all three go through.  Gating it is the
+fix rather than only the dereference because isert releases a command on
+its Send completion, so the answer to a NOP-In cannot be matched to it.
 
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/m=
-pt3sas_base.c
-> index 24b74760d6816..cf7861a4068fc 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-[ ... ]
-> @@ -3579,6 +3583,7 @@ mpt3sas_base_unmap_resources(struct MPT3SAS_ADAPTER=
- *ioc)
-> =20
->  	if (ioc->chip_phys) {
->  		iounmap(ioc->chip);
-> +		ioc->chip =3D NULL;
->  		ioc->chip_phys =3D 0;
->  	}
-> =20
+3/4 is v1's 1/2 with the fix generalised.  struct isert_cmd is all zero for
+a command the core allocated, so the back pointers are filled in where the
+core hands one over, in isert_immediate_queue() and isert_response_queue(),
+which also covers the ISTATE_REMOVE the review pointed at.
 
-[Severity: Medium]
-Can _ctl_ioctl_main() still reach ioc->put_smid_default() and dereference a
-NULL ioc->chip when controller registers are unmapped?
+4/4 is v1's 2/2, unchanged.
 
-In scsih_pci_slot_reset(), ioc->pci_error_recovery is cleared to 0 before
-calling mpt3sas_base_map_resources(ioc); if mapping fails (or if the
-adapter is suspended via scsih_suspend()), ioc->chip remains NULL while
-ioc->pci_error_recovery, ioc->shost_recovery, ioc->is_driver_loading, and
-ioc->remove_host are all 0.  _ctl_ioctl_main() only checks those four flags,
-so ioctls such as MPT3EVENTENABLE (_ctl_eventenable() ->
-mpt3sas_base_validate_event_type() -> _base_event_notification()) and
-MPT3DIAGREADBUFFER with MPT3_FLAGS_REREGISTER (_ctl_diag_read_buffer())
-proceed without checking ioc->chip or IOC state and call
-ioc->put_smid_default(), which writes to ioc->chip registers.
+Measured on a LIO target with KASAN, one fresh boot per cell, arms
+alternating; 2 boots per intermediate stage and 5 for the finished series,
+on an iSER portal over soft-RoCE:
 
-[ ... ]
-> @@ -6739,6 +6746,15 @@ mpt3sas_base_get_iocstate(struct MPT3SAS_ADAPTER *=
-ioc, int cooked)
->  {
->  	u32 s, sc;
-> =20
-> +	/*
-> +	 * Registers are unmapped (e.g. after PCI error recovery/suspend).
-> +	 * Return a state value that matches no real IOC state, so callers
-> +	 * neither treat the IOC as FAULT (and try a register-based diag
-> +	 * reset) nor as READY/OPERATIONAL.
-> +	 */
-> +	if (!ioc->chip)
-> +		return MPI2_IOC_STATE_MASK;
-> +
->  	s =3D ioc->base_readl_ext_retry(&ioc->chip->Doorbell);
->  	sc =3D s & MPI2_IOC_STATE_MASK;
->  	return cooked ? sc : s;
+                                 base    1/4     1-2/4   1-3/4   1-4/4
+  Reject + NOP-Out with a
+   reserved ITT and TTT 0        Oops    Oops    Oops    clean   clean
+  the same two PDUs paced        Oops    Oops    Oops    clean   clean
+  nopin_timeout 0 then 3 on a
+   logged-in iSER session        Oops    Oops    clean   clean   clean
+  200 Data-Outs with a
+   nonexistent ITT               128     128     128     128     200
+  one Data-Out over Target-
+   RecvDataSegmentLength          -       -       -       -      clean
+  login, WRITE, READ verify,
+   unsolicited Data-Out, logout   -       -       -       -      10/10
 
-[Severity: High]
-Does returning MPI2_IOC_STATE_MASK here cause mpt3sas_scsih_issue_tm() to
-fall through and dereference a NULL ioc->chip during SCSI error recovery?
+Every cell of the finished series is KASAN-clean: 0 reports in 30 cells.
+On plain iscsi_tcp, 20 Data-Out/NOP-Out(TTT 0) pairs in one write give 19
+or 20 KASAN reports per cell on base, 5 cells out of 5, and 0 with 1/4.
 
-When in-flight SCSI commands time out after scsih_pci_slot_reset() clears
-ioc->pci_error_recovery =3D 0 and fails in mpt3sas_base_map_resources(ioc),
-the SCSI error handler runs eh_abort_handler, eh_device_reset_handler, and
-eh_target_reset_handler before escalating to eh_host_reset_handler.  Those
-callbacks invoke mpt3sas_scsih_issue_tm(), which only checks for
-MPI2_DOORBELL_USED, MPI2_IOC_STATE_FAULT, and MPI2_IOC_STATE_COREDUMP:
+Regression on iscsi_tcp, base against the finished series: the nopin timer
+still fires and its answer is still matched, 5 cells each, and login, READ,
+WRITE, readback, logout and a CHAP login all pass with no splat.
 
-drivers/scsi/mpt3sas/mpt3sas_scsih.c:mpt3sas_scsih_issue_tm() {
-    ...
-	ioc_state =3D mpt3sas_base_get_iocstate(ioc, 0);
-	if (ioc_state & MPI2_DOORBELL_USED) {
-		...
-	}
+Still open: iscsit_handle_data_ack() is the one caller whose wanted kind I
+could not exercise, so that hunk of 1/4 rests on the code alone.
 
-	if ((ioc_state & MPI2_IOC_STATE_MASK) =3D=3D MPI2_IOC_STATE_FAULT) {
-		...
-	} else if ((ioc_state & MPI2_IOC_STATE_MASK) =3D=3D
-	    MPI2_IOC_STATE_COREDUMP) {
-		...
-	}
+Yehyeong Lee (4):
+  scsi: target: iscsi: match a NOP-In by opcode as well as by tag
+  scsi: target: iscsi: do not arm the nopin timer on an iSER connection
+  IB/isert: finish a Reject the target core allocated itself
+  IB/isert: do not leak the receive descriptor of a dropped Data-Out
 
-	smid =3D mpt3sas_base_get_smid_hpr(ioc, ioc->tm_cb_idx);
-	...
-	ioc->put_smid_hi_priority(ioc, smid, msix_task);
-    ...
-}
+ drivers/infiniband/ulp/isert/ib_isert.c   | 41 +++++++++++++++++------
+ drivers/target/iscsi/iscsi_target.c       |  3 +-
+ drivers/target/iscsi/iscsi_target_erl1.c  |  2 +-
+ drivers/target/iscsi/iscsi_target_login.c |  5 ---
+ drivers/target/iscsi/iscsi_target_util.c  | 16 +++++++--
+ drivers/target/iscsi/iscsi_target_util.h  |  4 ++-
+ 6 files changed, 51 insertions(+), 20 deletions(-)
 
-Because MPI2_IOC_STATE_MASK matches none of those conditions,
-mpt3sas_scsih_issue_tm() falls through and calls
-ioc->put_smid_hi_priority(), dereferencing NULL ioc->chip (and scsih_abort()
-also calls mpt3sas_halt_firmware(ioc) before checking ioc->chip).
+-- 
+2.43.0
 
-> @@ -8136,7 +8152,7 @@ mpt3sas_base_make_ioc_ready(struct MPT3SAS_ADAPTER =
-*ioc, enum reset_type type)
-> =20
->  	dinitprintk(ioc, ioc_info(ioc, "%s\n", __func__));
-> =20
-> -	if (ioc->pci_error_recovery)
-> +	if (ioc->pci_error_recovery || !ioc->chip)
->  		return 0;
-> =20
->  	ioc_state =3D mpt3sas_base_get_iocstate(ioc, 0);
-> @@ -8969,6 +8985,13 @@ mpt3sas_base_hard_reset_handler(struct MPT3SAS_ADA=
-PTER *ioc,
->  		goto out_unlocked;
->  	}
-> =20
-> +	if (!ioc->chip) {
-> +		ioc_err(ioc, "%s: controller registers are not mapped\n",
-> +			__func__);
-> +		r =3D -ENODEV;
-> +		goto out_unlocked;
-> +	}
-> +
->  	if (mpt3sas_fwfault_debug)
->  		mpt3sas_halt_firmware(ioc);
-> =20
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_config.c b/drivers/scsi/mpt3sas=
-/mpt3sas_config.c
-> index eb51ce3610c8a..2609b298af0b2 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_config.c
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_config.c
-> @@ -304,6 +304,10 @@ _config_request(struct MPT3SAS_ADAPTER *ioc, Mpi2Con=
-figRequest_t
->  	struct config_request mem;
->  	u32 ioc_status =3D UINT_MAX;
-> =20
-> +	/* registers are unmapped (e.g. after PCI error recovery/suspend) */
-> +	if (!ioc->chip)
-> +		return -ENODEV;
-> +
->  	mutex_lock(&ioc->config_cmds.mutex);
->  	if (ioc->config_cmds.status !=3D MPT3_CMD_NOT_USED) {
->  		ioc_err(ioc, "%s: config_cmd in use\n", __func__);
-
-[Severity: Medium]
-Can mpt3sas_base_free_resources() unmap and clear ioc->chip after the
-!ioc->chip checks in mpt3sas_base_hard_reset_handler() and
-_config_request()?
-
-CPU0                                  CPU1
-mpt3sas_base_hard_reset_handler()
-  if (!ioc->chip)
-  mutex_lock(&ioc->reset_in_progress_mutex)
-  ...
-  mpt3sas_wait_for_commands_to_complete()
-                                      scsih_pci_error_detected()
-                                        mpt3sas_base_free_resources()
-                                          mutex_lock(&ioc->pci_access_mutex)
-                                          mpt3sas_base_unmap_resources()
-                                            iounmap(ioc->chip)
-                                            ioc->chip =3D NULL
-                                          mutex_unlock(&ioc->pci_access_mut=
-ex)
-  mpt3sas_base_make_ioc_ready()
-    if (... || !ioc->chip)
-      return 0;
-  _base_get_ioc_facts()
-    _base_handshake_req_reply_wait()
-      ioc->base_readl(&ioc->chip->Doorbell)
-        <-- NULL pointer dereference
-
-mpt3sas_base_free_resources() serializes only with ioc->pci_access_mutex,
-which neither mpt3sas_base_hard_reset_handler() nor _config_request() holds.
-When mpt3sas_base_make_ioc_ready() returns 0 for !ioc->chip,
-mpt3sas_base_hard_reset_handler() treats the controller as ready and
-proceeds into _base_get_ioc_facts(), dereferencing NULL ioc->chip.
-Similarly, _config_request() checks !ioc->chip before acquiring
-ioc->config_cmds.mutex and can race with mpt3sas_base_free_resources()
-before calling ioc->put_smid_default().
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/1794995806-5835-1-g=
-it-send-email-shivasharan.srikanteshwara@broadcom.com?part=3D16
