@@ -1,57 +1,50 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795037356;
-	b=hC32is/NKyTrJQo1vIvqRsMv3zEhTdQZHKZgNaOZ6brNto0OLfPNJCO28LeZbcta17Id
-	 vJGGAqN7EN4Bod0sWpHusc2RNuE3Bfl7l3oEBsgzol5TZD8LnzgIy2iU+UitTgWkVIBGE
-	 dHndaykhjbzCSJ6L5uyeBlDS8Ix1P+kcTJTKSBOappTVJUJM5T65tSZFGM0u28atLN7Pz
-	 7fdh9nxKWbUUhOa2Pgyr8DRuaEFA4Bf+AHDYxmzKOkNw3TkqNnlwym3TGixDb1S5uWQDj
-	 77iH54wihetRq+t9VcCDN7oMzQcAu4nl05USuhzHh4fNwjugpubz0j7/KAglfdvV+pA==
+	t=1795043411;
+	b=RDxAsFLpsIUCPLHQon6SzCUBFjw7dF9nBZt2r/i2/ugNfzx6N6yHsMSJc99PML8Y0IDc
+	 LfrHUaLTPArRRtpCOlw4sd3KPbgWgzMxYB0ZTOJvHwubBwuCDm9JRLx3He0Fs5V3CHcpr
+	 PT3Nvmy0acs7lzzk2oX3iMUDN1fvNXpxJMy4Gryu8hI1Vfj/eKq2+lHEJUlB1eqqBwa8X
+	 u2KA0AWZKxtYisLDNGyjUDWyQwEYueMgpoTHsuT/67fCZ76c+D9lvzu9c4sX3B6oXxoBj
+	 nu95/k6sFErW6qbLFaAh7/qcvO6SVxhPQamgpOxuBo+EXmC2QoMW08FjqHhKv3UoKfA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795037356;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=C3QlfZ+wK6lyf08+qEikLrmLhlgppq+P5MHxH0U5RZk=;
-	b=n8vIUdWPprXsx/87Twn/DKbFaDKdfQAf0YMOLM+gXBB/kvcUVaHITSRcflwmEVgOxeVB
-	 GewoyNPh+SwogwUUtYwHxS1+G8Kt4UAbRUmbH6GMnIYm62KOFS42x/7Cyb6gXx2MaPqMJ
-	 o7agA7ByGGSu54/tCeiRAJXg5u3sPVlEtFKSj8DcDGBXrF1q6e6HVNTsAMOAjpsES/VLQ
-	 ZLLAGbRbltbdb2GHWlfG+tj0nMUj/tWU1Y5NQe1mDd5cGoRLtBUzzRtaklutbCDO8NtPg
-	 b/OkTbL52flpUW/P4QOCt7JET9GJ368o+aPYWGLSeCY/FF3jvwEcXmtO2MLTtTLfYFw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795043411;
+	h=Received:DKIM-Signature:From:Subject:Date:Message-Id:MIME-Version:
+	 Content-Type:Content-Transfer-Encoding:X-B4-Tracking:X-Change-ID:To:
+	 Cc:X-Mailer:X-Developer-Signature:X-Developer-Key;
+	bh=lV/VzxV/O5uCisVr5/DBuvmgXtlXoGoJtLjIIr/Q174=;
+	b=xrgYWg6CFcUen2yGMCrtw00AqRsEXJ048Sir07QAZZKY8KxJK7YF5MrujJZJw8rCpxFP
+	 kdv4U+W7eVaNCwR0lATUxSBoqKvnFQnYvwoeY3qewFU36cMglLgSGpH+bBR736Bb0f0JN
+	 NAmwI71h24bK3tLVMy3Hc/RzSqx+Ew2JvkDbS4aNadCZ55+qiTA8aH1Im4MzhYED1X3Np
+	 C2n1X5z8+VrNFvU1J5tpZA9kVrpok+8FZoaX9hOZqdMDep4Kwo4WIaPCAXRqeUaGI83dM
+	 Od3lj9LRP8N8UscNn1r8KOWtx8hcWKjXfZNZ9nvr9P0v6f5VI0RHYJeYU02QeOk3Gyw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=F7O+ZVcp;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ayy8YFcI;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 964B3606A32C;
-	Wed, 18 Nov 2026 21:29:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 613D8606A320;
+	Wed, 18 Nov 2026 23:10:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=F7O+ZVcp
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2E7E51F000C5;
-	Wed, 18 Nov 2026 21:29:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ayy8YFcI
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 904E71F000C4;
+	Wed, 18 Nov 2026 23:10:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795037356;
-	bh=C3QlfZ+wK6lyf08+qEikLrmLhlgppq+P5MHxH0U5RZk=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=F7O+ZVcpmI9iu4q6m73SUnLlUP3NfDFnG6TJII5WnCwlbsdHYGLDY35+Fgt3viUHs
-	 n9uyQiCK0Aj4nfetbTf6c+JI3/5RW/ll0GdBZwM0FVApu5qPJCbHdIPxxReEwY1MdE
-	 rrz+ZKxlFjI+0jE33OYIddRQ5a0Oj8Ox+qVYGvjN5QlOwyzIh8WL7iuRen1WUGyO47
-	 b4ZgHLAu7B09GL5gcGQSXmb0Hb9yjGxT2spX624lydhm89v8lnUMS8HpF+vZzFmx3H
-	 QyUp/unRT2S2aEm8y/J6T2ifwWJ3qmnC59xdnwtXQilaNtMi9Ps9dKm4ORuy4iHsxC
-	 yZsTBGo+8b3hQ==
-Message-ID: <sashiko-outbox-221994@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 1/4] scsi: target: iscsi: retire an unsolicited
- NOP-In only once
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Yehyeong Lee" <yhlee@isslab.korea.ac.kr>
-Cc: linux-rdma@vger.kernel.org, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
-In-Reply-To: <20261118211503.2526705-2-yhlee@isslab.korea.ac.kr>
-References: <20261118211503.2526705-1-yhlee@isslab.korea.ac.kr>
- <20261118211503.2526705-2-yhlee@isslab.korea.ac.kr>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 18 Nov 2026 21:29:15 +0000
+	s=k20260515; t=1795043411;
+	bh=lV/VzxV/O5uCisVr5/DBuvmgXtlXoGoJtLjIIr/Q174=;
+	h=From:Subject:Date:To:Cc;
+	b=ayy8YFcIpHFtRQNBMg7Rn/a9FcC6e3L+o9U0LqOtiH+E0rOLi9i/g/G7A68mGXect
+	 e+Xhuh0RlmQwxY+XmUVobpTPOm60/Z4XtSrIq11r+2CDcrslWIvX5IFgNXj4xn6fXj
+	 1p24yTKh6qUWENJoPMJb5cUVVnmG25sU/q8QTB7Qf1+eb7Q2ewXHnkLfAtx0CYBYcs
+	 sIukfNBnyAQYaotNe9EAIjBvTGdEMqlEMw/raERefSgvwvDSEntL44nbwP42FuamlT
+	 tv1MnJnGWRm0bCeM7kxpqoxSZ/b9ZoNWcaFRRgnwPSlrQIGkQw6YDOdMdg/7RnYi+B
+	 ymLFsdrCFjo8w==
+From: Jeff Layton <jlayton@kernel.org>
+Subject: [PATCH v3 00/11] scsi: mpt3sas: Fix delayed not-responding block
+ deadlock and related bugs
+Date: Wed, 18 Nov 2026 15:09:57 -0800
+Message-Id: <20261118-sas-abba-v3-0-5562d690cf61@kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -60,103 +53,131 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAAAAAAAC/22MywrCMBBFf6XM2pE8+tKV/yEuJum0DUojiQSl9
+ N9Nu1HB5bncc2aIHBxHOBYzBE4uOj9l0LsC7EjTwOi6zKCEqqXQAiNFJGMImWxvbVn1rGvI93v
+ g3j231PmSeXTx4cNrKye5rn8iSaJE09qua2RJurGnK4eJb3sfBlgrSX1MKdSXqVCg0eZgqG1KU
+ 9GPuSzLG0xwCMrbAAAA
+X-Change-ID: 20261030-sas-abba-eacfcc45fe36
+To: Sathya Prakash <sathya.prakash@broadcom.com>, 
+ Sreekanth Reddy <sreekanth.reddy@broadcom.com>, 
+ Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, 
+ Ranjan Kumar <ranjan.kumar@broadcom.com>, 
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+ "Martin K. Petersen" <mkp@kernel.org>, 
+ Nagalakshmi Nandigama <Nagalakshmi.Nandigama@lsi.com>, 
+ James Bottomley <JBottomley@Parallels.com>
+Cc: Keith Busch <kbusch@kernel.org>, 
+ Sreekanth Reddy <Sreekanth.Reddy@lsi.com>, MPT-FusionLinux.pdl@broadcom.com, 
+ linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ Jeff Layton <jlayton@kernel.org>
+X-Mailer: b4 0.14.3
+X-Developer-Signature: v=1; a=openpgp-sha256; l=4069; i=jlayton@kernel.org;
+ h=from:subject:message-id; bh=7Wt6lpvC0hBqjt0y/k312yL4X9WbV5yC3jZogA6cu+o=;
+ b=owEBbQKS/ZANAwAKAQAOaEEZVoIVAcsmYgBq/jBL94WEQPprHVcuZOHLIzPhCHfk9j+PwlNmB
+ I079CynVZaJAjMEAAEKAB0WIQRLwNeyRHGyoYTq9dMADmhBGVaCFQUCav4wSwAKCRAADmhBGVaC
+ FUqQD/0UAa+pykYJOExXnP63XRXAHuJsVzW4OAqfqxMMmZ0UUgrVhVaudSFCTuXssmK8uIL9S2X
+ NvVSNyDAcG6UjQvxCsrSJ2chKPMJGx+1xs5vyfK56g2jkSQrFubj1bIaO+0zQd7ykp8Kp7yPdj+
+ Be+UN/CSDuxpUDoKFNBJTnwnnyz42juzzIC2gFeGT1TjV8K+c3qXvLv++AJRsrJVtZ4rgSm/v3y
+ QyXLwvJ5ccrqLqN/CU37J6aJAilC8QBcLa/WH1ans6AFavf5Rewb7TR7jTOkX8TjDndqtgjVam4
+ zWnqs00xAyZSWFsW0AeVhMACRSwO+J5BVHY3SELlFhtyqLG4vl25QEJA7F3oN+1JrJkeB7RGTCK
+ wiil2o53ys574iVaV5KGLVEak0y9fWZnbF+EG5ssF6MNfZJosTvZMyr6qgDUJCTAJqh3TMLoxh9
+ pgRaC3OVuX9YW9eGWep8wNVlo1ZeI2T9pwAqQQwAiAngcXxbUgdks4gpWJx0fyEBS4zcuFBmArw
+ LgFyTBQZBjqWXfydSbApJBasquLjalvP6+ka5nDS7nSBHdp/zKeTEDuML5owPib4RmKaGqrmqgu
+ OP1s+pi+xu7TRjWti0URn6HLhOrNDXF8KxnHn4HF1VA/mxZbj7wW2o1fwBxfmaRJSF+cz2+lOpy
+ Kh6DsrbxvkYe9rw==
+X-Developer-Key: i=jlayton@kernel.org; a=openpgp;
+ fpr=4BC0D7B24471B2A184EAF5D3000E684119568215
 
-Thank you for your contribution! Sashiko AI review found 1 potential
-issue to consider:
-- [High] scsi: target: iscsi: race on unsent NOP-In in
-  iscsit_take_nopin_from_ttt()
---
+I posted v2 some time ago. Since then, I did a lot of adversarial review
+with AI agents. The review found a large number of bugs. Many of these
+bugs were preexisting.
 
-commit 079f94c5aa78a5118ce1f2b2658476b66fcf7998
-Author: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+This series fixes a deadlock that occurs regularly in Meta's fleet. The
+fix unblocks sdevs after a timeout, and this breaks the deadlock.
 
-scsi: target: iscsi: retire an unsolicited NOP-In only once
+I don't do much SCSI driver work, but this problem came to me. I
+relied heavily on AI agents for this series.
 
-This commit introduces iscsit_take_nopin_from_ttt() to match unsolicited
-NOP-In commands by opcode and TTT under conn->cmd_lock and clear their tag
-so a NOP-In cannot be queued for removal more than once.
+If this series is acceptable, I would like to see it in linux-next
+soon.
 
-Link: https://lore.kernel.org/all/1437516477-30554-4-git-send-email-sbaugh@=
-catern.com/
+Thanks,
+Jeff
 
-> diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/i=
-scsi_target.c
-> index 124ff269b8e75..b0dd3e84e68e0 100644
-> --- a/drivers/target/iscsi/iscsi_target.c
-> +++ b/drivers/target/iscsi/iscsi_target.c
-> @@ -1783,6 +1783,33 @@ int iscsit_setup_nop_out(struct iscsit_conn *conn,=
- struct iscsit_cmd *cmd,
->  }
->  EXPORT_SYMBOL(iscsit_setup_nop_out);
-> =20
-> +/*
-> + * Take the NOP-In under cmd_lock, which the tx thread holds when it unl=
-inks
-> + * and frees the command, and clear its tag so only the first answer get=
-s it.
-> + */
-> +static struct iscsit_cmd *iscsit_take_nopin_from_ttt(struct iscsit_conn =
-*conn,
-> +						     u32 targ_xfer_tag)
-> +{
-> +	struct iscsit_cmd *cmd;
-> +
-> +	spin_lock_bh(&conn->cmd_lock);
-> +	list_for_each_entry(cmd, &conn->conn_cmd_list, i_conn_node) {
-> +		if (cmd->iscsi_opcode !=3D ISCSI_OP_NOOP_IN ||
-> +		    cmd->targ_xfer_tag !=3D targ_xfer_tag)
-> +			continue;
-> +
-> +		cmd->targ_xfer_tag =3D 0xFFFFFFFF;
-> +		cmd->i_state =3D ISTATE_REMOVE;
-> +		spin_unlock_bh(&conn->cmd_lock);
-> +		return cmd;
-> +	}
+Signed-off-by: Jeff Layton <jlayton@kernel.org>
+---
+Changes in v3:
+- New patches 1-8 and 10 fix pre-existing bugs in the code that this
+  series changes:
+  - 1-2: fix UAFs and refcounting in the cleanup of the fw event queue.
+    Do not leave requeued events pending at teardown.
+  - 3: requeue topology events only for busy devices. Do not requeue
+    them for devices that the driver cannot add.
+  - 4-7: fix these TUR polling bugs:
+    - a pcie_device leak
+    - a lost unblock retry
+    - polling that continues after the scan is cancelled
+    - a retry count that is not per device
+  - 8: cache the missing delays that the IOC actually uses
+  - 10: do not use freed hostdata while the driver polls devices
+- Patch 9: also publish sdev->hostdata under ioc->block_lock in
+  scsih_sdev_init()
+- Patch 11:
+  - Use the PCIe missing delay (from PCIe IO Unit Page 1) for NVMe
+    devices.
+  - Arm dnr_unblock_work for the earliest deadline.
+  - Skip the timed unblock during host reset, but not during SCSI EH.
+  - Clear the deadline of an sdev under ioc->block_lock before the fw
+    event worker polls the sdev.
+  - Do not put a timed block on offline sdevs.
+  - When a hard reset cancels polling, give new deadlines to the sdevs
+    that stay blocked.
+  - Give deadlines to the sdevs that a broadcast primitive pass blocks.
+    Prevent dnr_unblock_work from unblocking them while the pass runs.
+  - A repeat DNR restarts the deadline, at most
+    MPT3SAS_DNR_BLOCK_MAX_EXTENDS times.
+  - At the next worker unblock, do a TUR check on expired sdevs.
+  - Keep the blocks that the driver makes during polling.
+  - Use system_dfl_wq instead of system_wq.
+- Link to v2: https://lore.kernel.org/r/20261102-sas-abba-v2-0-b3b9ba874b5a@kernel.org
 
-[Severity: High]
-Can iscsit_take_nopin_from_ttt() claim an unsolicited NOP-In before
-iscsit_add_nopin() has queued it or before the TX thread has built and
-sent it?
+Changes in v2:
+- New patch 1: use a new ioc->block_lock to serialize the
+  interrupt-time sdev block with the hostdata teardown in
+  scsih_sdev_destroy(). This fixes a pre-existing UAF.
+- Do the timed unblock under ioc->block_lock. This prevents a race with
+  an interrupt-time block.
+- Clear block_deadline before the fw event worker polls a returning
+  device with TURs. Then dnr_unblock_work cannot unblock the device
+  during the poll.
+- Link to v1: https://lore.kernel.org/r/20261030-sas-abba-v1-1-b8cdd714a37c@kernel.org
 
-session_get_next_ttt() assigns sequential TTTs, and iscsit_add_nopin()
-drops conn->cmd_lock after adding cmd to conn->conn_cmd_list, before
-starting nopin_response_timer and queuing ISTATE_SEND_NOPIN_WANT_RESPONSE:
+---
+Jeff Layton (11):
+      scsi: mpt3sas: Don't leave requeued firmware events pending at teardown
+      scsi: mpt3sas: Hold event references while cleaning up the event queue
+      scsi: mpt3sas: Requeue topology events only for busy devices
+      scsi: mpt3sas: Fix pcie_device leak in _scsih_ublock_io_device_wait()
+      scsi: mpt3sas: Restore unblock retry in _scsih_ublock_io_device_wait()
+      scsi: mpt3sas: Stop polling devices when the unresponding scan is cancelled
+      scsi: mpt3sas: Reset the TUR retry count for each device
+      scsi: mpt3sas: Cache the missing delays the IOC actually uses
+      scsi: mpt3sas: Serialize interrupt-time sdev block with hostdata teardown
+      scsi: mpt3sas: Don't use freed hostdata while polling devices
+      scsi: mpt3sas: Time out delayed not-responding device blocks
 
-<softirq>                              rx_thread / tx_thread
-iscsit_handle_nopin_timeout()
-  iscsit_add_nopin()
-    spin_lock_bh(&conn->cmd_lock)
-    list_add_tail(..., &conn->conn_cmd_list)
-    spin_unlock_bh(&conn->cmd_lock)
-                                       iscsit_process_nop_out()
-                                         iscsit_take_nopin_from_ttt()
-                                           cmd->targ_xfer_tag =3D 0xFFFFFFFF
-                                         iscsit_stop_nopin_response_timer()
-                                         iscsit_add_cmd_to_immediate_queue(
-                                           ..., ISTATE_REMOVE)
-    iscsit_start_nopin_response_timer()
-    iscsit_add_cmd_to_immediate_queue(
-      ..., ISTATE_SEND_NOPIN_WANT_RESPONSE)
-                                       iscsit_immediate_queue()
-                                         case ISTATE_REMOVE:
-                                           iscsit_free_cmd(cmd, false)
-                                         case ISTATE_SEND_NOPIN_WANT_RESPON=
-SE:
-                                           iscsit_send_unsolicited_nopin(cm=
-d)
-                                             <-- use-after-free
+ drivers/scsi/mpt3sas/mpt3sas_base.c  |  62 ++-
+ drivers/scsi/mpt3sas/mpt3sas_base.h  |  25 +
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 869 +++++++++++++++++++++++++++++------
+ 3 files changed, 810 insertions(+), 146 deletions(-)
+---
+base-commit: e8017d29067fd1310a65c3494ce1a1b492adbac6
+change-id: 20261030-sas-abba-eacfcc45fe36
 
-Because iscsit_free_cmd(cmd, false) does not purge remaining immediate
-queue entries for cmd, the subsequent ISTATE_SEND_NOPIN_WANT_RESPONSE
-entry runs on a freed (and potentially reallocated) command slot while
-leaving nopin_response_timer running.
+Best regards,
+-- 
+Jeff Layton <jlayton@kernel.org>
 
-Even when ISTATE_SEND_NOPIN_WANT_RESPONSE is queued before the NOP-Out is
-processed, if iscsit_take_nopin_from_ttt() runs before the TX thread
-executes iscsit_build_nopin_rsp(), overwriting cmd->targ_xfer_tag with
-0xFFFFFFFF causes the outgoing unsolicited NOP-In PDU to be transmitted
-with hdr->ttt set to 0xFFFFFFFF.
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261118211503.2526=
-705-1-yhlee@isslab.korea.ac.kr?part=3D1
