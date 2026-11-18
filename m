@@ -1,73 +1,57 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=111.22.67.137
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794972043;
-	b=pVcrcpwJQxdK0v+I1rG32AWxDfyMVkT4rF0b00lN+MbY65lCffUvUqahQVMNFIFXa4Bf
-	 eN9ANnMPSOYv4uqPzd9uIEGZfkrUnHZ3ojc5us8BsAtdnsNQFHC/ClEmC3capr78UjtDo
-	 deww8gCe0a6YjpCMp4XhMX/dNc/gug+eYT9mk4DseBPh7JpXFexbBiGy77Se1VZ9EJLrM
-	 Xc5spNeR7LQBrBzp1S/5Oyd2m2+V4/O2upfEbAXK63oGjWbCQZqci5/MtX1BwFJIVyiIY
-	 jqN/eAbo+lXhU+SWRtMR+UgbFqmNCo7k3hgOm78L9cC58M6oYrvwca9wuiWiIY35EvA==
+	t=1794973070;
+	b=XUOmV6Kg97+2Oj4Z/cIHsTS83M9XpZvSylqjE2Co8y6DxyDNFOVuyK4NgM4X77pn4Dk8
+	 Z/phF3BdcJ4EFGulX3ehJTtWIBE/8HiFoZmIZ+phCKUfexU5dl/8BGweQKQrYucdxW3sk
+	 cBKLv+mOzWF45i/YSeKSNSIrfjOJMNWyXiw1NKfiUIxOPkek1eduEtr5S5c17oTAAJ9Rt
+	 BfCR2RPxfj5y2Us8P9p4V8BiHvdsAoPJmou0sEQcRrd6XvjGxV8Xu0q/TMJUVsX0yUvt1
+	 RHH7TZ5H1SQcIu4W+cdmfAAXIwbbAusNtxPR37q2Yee5XXjCGYPrTOXOLn6hVgnnfWw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794972043;
-	h=DMARC-Filter:DKIM-Signature:X-RM-TagInfo:X-RM-SPAM-FLAG:Received:
-	 X-RM-TRANSID:X-RM-TagInfo:X-RM-SPAM-FLAG:Received:X-RM-TRANSID:From:
-	 To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
-	 MIME-Version:Content-Transfer-Encoding;
-	bh=tfYyvg/YEjVnt/i5+VxsYpj+ND/9pcDCTdnckyR2aBA=;
-	b=Fmizs1XGcyX6XwYrW5a2Zp5ujHOGuUFiAOWWvGz3qxWOHXoCXpCLeTTaQGZuCZlGnmKA
-	 AtCJAcRE/w1dPtMJKEC2gqSSoe7t+CEjKPf6Us+7PWRmgwRQDg7E5Wn1XB6BiIH2DNsxp
-	 L72PutjsvrJ8NWO6b6XPV9H0RXcGr2kSVG8J86eDjaD/ipZ4BpuAoQL/aYej/JTGK3BDN
-	 o2Cso89OsITuhL6533ft9nhFu26ssc71BiClqdI849hZGayue4OIoREIh1ChE9FnfqtNk
-	 RoFjSYofxUESeb1huyZ9diDGdO8EVzfdtudUeURpr6JIe7v2ObeMEHN6dEw5kvNPK5g==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794973070;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=q77G2/VBj8G7DQAjnZaHOQkJmDBChOlZQ7Pd8r3+vCc=;
+	b=3aGtRjYZCTFkX5Ypt6VqSdbz5DhSPvXDrWxzlisZESiEnp3IC5/VVA1RV6aE6vw5i9BT
+	 jWSzzFABvgkFAh6lBcN1c4LpU7r6977kNTpGNeWFBHO/RucI+To+EOsn/HmXwSxNe8mRv
+	 NfTMocgp6S8qrU3iuSPCzuQvmn3BDqokIQDe9A+8FEzr1/QSGx2J6kitwr0SxijoSdF2o
+	 pScFBeHYFgwVp39GlcLGRKkvMth63KeVOmxvwpf0yUargnJOa5osqZOQ/anQqPyly8Erp
+	 ExYAGjht60TSNoygh/glSCyMbI/grk4oHO8N0MMZ/VgUYRRVM1RkZrMC38wUk73ctew==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=cmss.chinamobile.com;
-	spf=pass smtp.mailfrom=cmss.chinamobile.com;
-	dkim=pass header.d=cmss.chinamobile.com header.i=@cmss.chinamobile.com header.a=rsa-sha256 header.s=default header.b=DIo4LprT;
-	arc=none smtp.remote-ip=111.22.67.137
-Received: from cmccmta4.chinamobile.com (cmccmta4.chinamobile.com [111.22.67.137])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id C4AE5606A32A;
-	Wed, 18 Nov 2026 03:20:41 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C4AE5606A32A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmss.chinamobile.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cmss.chinamobile.com
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GJFPG8B3;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC65A606A31C
+	for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2026 03:37:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=cmss.chinamobile.com header.i=@cmss.chinamobile.com header.a=rsa-sha256 header.s=default header.b=DIo4LprT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=cmss.chinamobile.com; s=default; l=0;
-	h=from:subject:message-id:to:cc:mime-version;
-	bh=47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=;
-	b=DIo4LprTiGWtO/Cc3WGI6bjrXD0YZrUqSIlDbNbKdC9o3g5Zj00dBkuXdRnhzxjHdmJ+VLF0d2auR
-	 rTLrCwj1g0fu+NSSpD5yP9AKqHhveAQmze7fW6Fs7XmXhfwsnZVn6FFxj1sj6lIvQMygwhWIIHwfn0
-	 1qRnVGMf6ZFTsgg8=
-X-RM-TagInfo: emlType=0                                       
-X-RM-SPAM-FLAG:00000000
-Received:from spf.mail.chinamobile.com (unknown[10.188.0.87])
-	by rmmx-syy-dmz-app08-12008 (RichMail) with SMTP id 2ee86afd1983cbe-af2c0;
-	Wed, 18 Nov 2026 11:20:40 +0800 (CST)
-X-RM-TRANSID:2ee86afd1983cbe-af2c0
-X-RM-TagInfo: emlType=0                                       
-X-RM-SPAM-FLAG:00000000
-Received:from DESKTOP-3K8GUTQ (unknown[223.108.79.97])
-	by rmsmtp-syy-appsvr09-12009 (RichMail) with SMTP id 2ee96afd19869ab-c74a8;
-	Wed, 18 Nov 2026 11:20:39 +0800 (CST)
-X-RM-TRANSID:2ee96afd19869ab-c74a8
-From: Xiangwu Lai <laixiangwu@cmss.chinamobile.com>
-To: sashiko-bot@kernel.org
-Cc: Xiangwu Lai <laixiangwu@cmss.chinamobile.com>,
-	peter.wang@mediatek.com,
-	chaotian.jing@mediatek.com,
-	chu.stanley@gmail.com,
-	alim.akhtar@samsung.com,
-	bvanassche@acm.org,
-	stanley.chu@mediatek.com,
-	linux-scsi@vger.kernel.org,
-	linux-mediatek@lists.infradead.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] scsi: ufs-mediatek: use devm_regulator_get() for the va09 regulator
-Date: Wed, 18 Nov 2026 11:20:38 +0800
-Message-ID: <20261118032038.492-1-laixiangwu@cmss.chinamobile.com>
-X-Mailer: git-send-email 2.50.1.windows.1
-In-Reply-To: <sashiko-outbox-219916@kernel.org>
-References: <sashiko-outbox-219916@kernel.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GJFPG8B3
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 81EDC1F000C4;
+	Wed, 18 Nov 2026 03:37:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794973070;
+	bh=q77G2/VBj8G7DQAjnZaHOQkJmDBChOlZQ7Pd8r3+vCc=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=GJFPG8B3wcZY3KwGWKFaxjYLZ4qz3ob/R/KNyJ9gkoCIcj9SsKbUxsBaGQ4O0aWe5
+	 j0HzGLgnCyJCIvV+N2uiF98XVwJVQwxyoh5JKyoYlOLH6UApSIxzgURW8hACayeMn3
+	 XqJ7rE7gmPHV4C5BsZlpE2tuUiD7F/868xZJNVnygV1EXlDq24/9MfWc0HuryLHe8i
+	 q+ASIIcD4TIzARrdkMTHgGEpAEzagf99vlJ6grK8Sd+6DrwAwc+zjzAMIt+6JiYtYK
+	 yz42UVYvAhUpFx7jWr1e4FSYP0i/TLyOUnk6jnbEyUc37uYxTLnt4NEjdUJJKynBOf
+	 ISNj84FoWzKmg==
+Message-ID: <sashiko-outbox-220026@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v2 2/2] scsi: ufs-mediatek: keep mphy state in sync when
+ va09 disable fails
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Xiangwu Lai" <laixiangwu@cmss.chinamobile.com>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20261118032015.974-3-laixiangwu@cmss.chinamobile.com>
+References: <20261118032015.974-1-laixiangwu@cmss.chinamobile.com>
+ <20261118032015.974-3-laixiangwu@cmss.chinamobile.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 18 Nov 2026 03:37:50 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -76,45 +60,89 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-Thank you for the review of:
+Thank you for your contribution! Sashiko AI review found 2 potential
+issues to consider:
+- [Medium] scsi: ufs-mediatek: reg_va09 enable_count leak in
+  ufs_mtk_mphy_power_on()
+- [Medium] scsi: ufs-mediatek: M-PHY left off during ufs_mtk_suspend()
+  error recovery
+--
 
-  [PATCH] scsi: ufs-mediatek: use devm_regulator_get() for the va09
-  regulator
-  https://lore.kernel.org/r/20261118014234.424-1-laixiangwu@cmss.chinamobile.com
+commit 228f00d5e6d65bb4a18b8cbe9dee1c4060e6f74c
+Author: Xiangwu Lai <laixiangwu@cmss.chinamobile.com>
 
-Both findings are confirmed after checking against the source:
+scsi: ufs-mediatek: keep mphy state in sync when va09 disable fails
 
-- [Medium] unbalanced va09 enable count on devm regulator release:
-  correct, and it is a regression of v1 -- my mistake.  ufs_mtk_init()
-  powers the M-PHY on (which enables va09), the variant operations
-  have no .exit callback, and ufshcd_pltfrm_remove() only resumes the
-  device, so the regulator is still enabled when devm releases it and
-  _regulator_put() hits WARN_ON(regulator->enable_count).
+This commit sets host->mphy_powered_on to false unconditionally in the
+power-off branch of ufs_mtk_mphy_power_on() so that a subsequent power-on
+attempt does not bail out early if disabling the va09 regulator failed.
 
-- [High] state mismatch on regulator failure in
-  ufs_mtk_mphy_power_on(): also correct, and as you noted this one is
-  pre-existing (cf137b3ea49a).  When regulator_disable() fails in the
-  power-off path, phy_power_off() has already run, but
-  host->mphy_powered_on stays set, so the next power-on bails out
-  through the !(on ^ host->mphy_powered_on) check without powering
-  the M-PHY back on.
+Link: https://lore.kernel.org/r/sashiko-outbox-219916@kernel.org
 
-Fixes for both have been sent as a new thread:
+> diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-media=
+tek.c
+> index 4895fe3b2a99e..b1ad983f80ae9 100644
+> --- a/drivers/ufs/host/ufs-mediatek.c
+> +++ b/drivers/ufs/host/ufs-mediatek.c
+> @@ -543,6 +543,14 @@ static int ufs_mtk_mphy_power_on(struct ufs_hba *hba=
+, bool on)
+>  			ufs_mtk_va09_pwr_ctrl(res, 0);
+>  			ret =3D regulator_disable(host->reg_va09);
+>  		}
+> +		/*
+> +		 * The M-PHY is off regardless of the va09 result, so keep
+> +		 * the state in sync with the hardware.  Otherwise the next
+> +		 * power-on bails out through the
+> +		 * !(on ^ host->mphy_powered_on) check without powering the
+> +		 * M-PHY back on.
+> +		 */
+> +		host->mphy_powered_on =3D false;
 
-  [PATCH v2 0/2] scsi: ufs-mediatek: fix va09 regulator lifecycle
+[Severity: Medium]
+Does setting host->mphy_powered_on =3D false when regulator_disable() fails
+leak an enable_count reference on host->reg_va09?
 
-  1/2 keeps devm_regulator_get() and adds an .exit callback which
-  powers the M-PHY off (same pattern as ufs-exynos and ufs-qcom), so
-  the enable count is balanced before the devm release;
+When _regulator_disable() fails in _regulator_do_disable(), it returns the
+error before calling _regulator_handle_consumer_disable(), so
+host->reg_va09->enable_count remains 1.  With host->mphy_powered_on cleared,
+the next ufs_mtk_mphy_power_on(hba, true) call invokes
+regulator_enable(host->reg_va09) again and increments enable_count to 2.
+Subsequent power-off calls only decrement enable_count once from 2 to 1,
+preventing VA09 from ever being physically disabled and triggering
+WARN_ON(regulator->enable_count) in _regulator_put() on driver unbind.
 
-  2/2 updates host->mphy_powered_on in the power-off path regardless
-  of the va09 disable result, so the next power-on retries the whole
-  sequence instead of returning early.
+[Severity: Medium]
+Does returning the regulator_disable() error with the M-PHY powered off
+break error recovery in ufs_mtk_suspend()?
 
-Best regards,
-Xiangwu Lai
+When ufs_mtk_mphy_power_on(hba, false) returns an error to
+ufs_mtk_suspend(), ufs_mtk_suspend() jumps to fail, calls
+ufshcd_set_link_off(hba), and returns -EAGAIN to __ufshcd_wl_suspend():
 
+drivers/ufs/core/ufshcd.c:__ufshcd_wl_suspend() {
+	...
+	ret =3D ufshcd_vops_suspend(hba, pm_op, POST_CHANGE);
+	if (ret)
+		goto set_link_active;
 
+	goto out;
+
+set_link_active:
+	...
+	if (ufshcd_is_link_hibern8(hba) && !ufshcd_uic_hibern8_exit(hba))
+		ufshcd_set_link_active(hba);
+	else if (ufshcd_is_link_off(hba))
+		ufshcd_host_reset_and_restore(hba);
+	...
+}
+
+__ufshcd_wl_suspend() aborts the suspend and immediately runs
+ufshcd_host_reset_and_restore(hba) without calling ufs_mtk_resume().
+Because neither ufshcd_host_reset_and_restore() nor its vops callbacks call
+ufs_mtk_mphy_power_on(hba, true), host reset and link startup run while the
+M-PHY and VA09 power control are still off.
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261118032015.974-=
+1-laixiangwu@cmss.chinamobile.com?part=3D2
