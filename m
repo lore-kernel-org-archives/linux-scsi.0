@@ -1,95 +1,95 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.215.228
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.210.226
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795072805;
-	b=T0e7be2ZEA242NdL3nIeUw4tOKSyK8URb9TExCZeOzrKosPS+P9c8iVL6dGNTTJEmhZg
-	 bcHNsu19E2zBIfHggQRY/i7nUKfonp5ljPadcWzzJ7kBdJtHuRLkjNW3+MEQ68IF1xIzz
-	 mVK3LMTk4HDIfNh8b6Xg2N7h59IYTfwyTM2edyeKYk4pKBWXNF4FTVTJZVNmWMnXEOS1J
-	 57HA76GeDGP4aVroT/huN50pUBUxMB67EdrvZHBdI6EzV4ORQKRAN9Dbfw85TS2hPHJ4m
-	 lM0KSYPR8TN0rjZ31L7FHHrGyFi2sWlWZ5PhGY3sYNRZZ099sbxueCRq1lVqhGLgHNQ==
+	t=1795072809;
+	b=jirec1+52rX6hb4cpXKXTChjqU/t0U2mrYkCjI8IKQAyGc21YqwlvrZLwSnLm+matn2p
+	 xLg5H23AjsDMdMAVoTovoMsVgyC1BxX8KkciBli4p+sCa0cybZUgc404V6yMVTEDORlU3
+	 2YO2pW/ebb53R9u9jdrJxOsmfRvmnPQ6vdwRR+UzNGic56NglFotClo/XX0nC0QGJjbOh
+	 yB3nKnAzVsnKTxCMhm836V3wAslxjrBbxsR+kuHrc50QN7tQwCRnLDREuowtHT4e+sWXv
+	 LY4pla4QRvOZVLSU18SlIl6q6KgjEb5suuZa0OKx5yRrKn3Lz/4Ld8UsGFzj4OTL3Dg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795072805;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795072809;
 	h=DMARC-Filter:Received:X-Google-DKIM-Signature:X-Gm-Message-State:
 	 X-Gm-Gg:X-Received:Received:X-Relaying-Domain:X-CFilter-Loop:Received:
 	 DKIM-Signature:X-Received:X-Received:Received:From:To:Cc:Subject:Date:
 	 Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding:X-DetectorID-Processed;
-	bh=tkK8B5Ae5N8rGpWQn0hg6lArz1DEMVv76JZmuGYWiN4=;
-	b=ymBuNkteyP/DFf+J/Y4sWmEoa+7xnf2zO92aTMFT9obYl8npC4uNwgB2sNf4rh3NWRXE
-	 sn7TuOtSP+cjGlrTlNlv8cutQZZMW3z+T7gLQXfIpsZ+K9GtNdjKhdoB+VjVR0WLLWc48
-	 Cyz+3TYYa9z+KccV9M1db4ozLLmTwD/1JGVsuA/dgDOe0sEFhhvUpNQ7UoHfNQA3GCAHf
-	 br9bHTo2zNdh+cNhUBXQnmxffKjCRp5ZPNbfXRk1HisqGJXbbrE5V+/ZNGU4ZAtF7Md+q
-	 5DWZ4qgUzn+WRvMZena551ziGPRg/4dHXc4Y7mt9WY/cTj6yMYlGjhJi5agYZy9pJxA==
+	bh=YlnPJLfVNY64wBezogRYVTf8psdI0g7qGeW62d8i48E=;
+	b=rnlNOy54xSjoN9Whe2/BDsxEiGMR4fpbeqRl+g5LUVB0hq5bSM3+JJXj7oSc3MvgTaRn
+	 6aap3lsPIUThBoJDPSmfQL+buysCBtHUUOajvaO1w91agXZTdalEavcoF4qp/ITrRGYuX
+	 AlXhPyGXPBRkS4YZ8EMa67QSLAI/G8YCMeSJ9Gr1iU3QqWN2YZxU/qr0LgcLNOm/EX/NF
+	 65TOGWpBIMXaRuouLjBmVXH1OOkIYyl5U6yNc/PBzJWUZ4GUySWcvoRRmyAvWwbUZ4Wc+
+	 A8uiIsoW6PADGm50pE7rGl4uMpG8yTEj1DmNrpSTnOZT9D15OSL6hSohPTgfY4ri5nw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=broadcom.com;
 	spf=fail smtp.mailfrom=broadcom.com;
-	dkim=pass header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=HTzxLhch;
-	arc=none smtp.remote-ip=209.85.215.228
-Received: from mail-pg1-f228.google.com (mail-pg1-f228.google.com [209.85.215.228])
+	dkim=pass header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=Qd9ZXdwS;
+	arc=none smtp.remote-ip=209.85.210.226
+Received: from mail-pf1-f226.google.com (mail-pf1-f226.google.com [209.85.210.226])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB990606A324
-	for <linux-scsi@vger.kernel.org>; Thu, 19 Nov 2026 07:20:04 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org DB990606A324
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B6BC606A320
+	for <linux-scsi@vger.kernel.org>; Thu, 19 Nov 2026 07:20:08 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8B6BC606A320
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=HTzxLhch
-Received: by mail-pg1-f228.google.com with SMTP id 41be03b00d2f7-cdb2893531bso1312541a12.1
-        for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2026 23:20:04 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.a=rsa-sha256 header.s=google header.b=Qd9ZXdwS
+Received: by mail-pf1-f226.google.com with SMTP id d2e1a72fcca58-8b5a6f2f27fso940023b3a.3
+        for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2026 23:20:08 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795072804; x=1795677604;
+        d=1e100.net; s=20260707; t=1795072808; x=1795677608;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:dkim-signature:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=tkK8B5Ae5N8rGpWQn0hg6lArz1DEMVv76JZmuGYWiN4=;
-        b=L9foFykJGgjxSaLnxeM6iodbKCfe21SCQkRzYWyun/imi4yUiJJfXGrJCj991stVU4
-         sE+KWLY+hH9wx5vHgWRWFJKDKKLVW3VisCtkeSGjd9F94+ANv65gXBuAvOiXNxPkgkUO
-         xQrEDGVfXESORKXOtXKiK5H5q/mBt5kfVN6/1Zvsel5ZCUCw4gIbIhHMz79XaVN4+7iZ
-         XUGNTOIe7MzQDXBjUAsq6ukoriys11vavPHael3NNa1FJUxkgCVWdXfYq6KPUsZPrhVB
-         GYKoGSHhqhAuksLVBRWomWxriQ2nXAkJjdka8lWAZcYPvroRXsE2vKfjP5hL2q0OWLpX
-         m3CQ==
-X-Gm-Message-State: APuU4Z/3Y1wMbWZmAnoqTXZ8+LnGhe8HmNALmKRdMfj5y30NCPQ3l+/P
-	2ec52LZB3y7xcYD4hoDdQs3L8bUfDkdmRDHVbBW6y4sJzeBheLziRF27C/cZI9dYPrLonVX5UOz
-	Tf980AMJlXsjHkZHeSGzs1qXx0+EYynypE7htcWMZ8RH4yIhhKJLLMHkqhtd7zq74eYM8Cx0qwU
-	wL1W/UeJzvXKb7/0stiiq4Ys2oKTMbwkQ5ocV75ZJXT7cg9AjPnmiFlpQGdp6ptbwwYTlb/Sb/e
-	Pg8/sfVBdQtqtq/
-X-Gm-Gg: AZFdTZcs1c2camPmefOkowQ1LufDQ2rMXa1fslX9F83JbJN4uLRkCthY24/31fJk+Wx
-	tCBu6o92nVoL8o+phh95oud2OF58UbAGtLgAAlfB3dbpOZMSG1anmYYHaB1Sd2NYtDwSq4KnGP0
-	4Z8oRe412PuTQlWankPBMgZ4lr18vgHyIuTT0gcsecGmJDo8OAtST2vSQMvDSt3CERvdaKDYHlN
-	mpTQWznU35IsK4NoP0raTIY+LG3IuzKZt9j6P3yHtHHw+v4mA3z3e0yL4ECUFbUqtLndQKJkqdv
-	9FncwTQjyym5xMRivXfzgrS4tmSjXN9fWn9SSImvMHB8M55i29QYqrsrxgBD7b+zx/l2c3+7Wke
-	5XzJ4LgxwzdcHjTNWfNLTFwV4e2102z+MIu7Mk/EDIdcgUeL0gCxVsUqWawjFkklEG1ZrpHnELI
-	ccFtBf1vh9a61VwrltqFFOd65iKDxppCV+eFY=
-X-Received: by 2002:a17:90b:3f0b:b0:3ad:aa1a:312e with SMTP id 98e67ed59e1d1-3b3d0641fd8mr5548111a91.3.1795072804074;
-        Wed, 18 Nov 2026 23:20:04 -0800 (PST)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-26.dlp.protect.broadcom.com. [144.49.247.26])
-        by smtp-relay.gmail.com with ESMTPS id 98e67ed59e1d1-3b405cece29sm514934a91.6.2026.11.18.23.20.03
+        bh=YlnPJLfVNY64wBezogRYVTf8psdI0g7qGeW62d8i48E=;
+        b=E9UclYLg93GfQ8V7mDirskLAz8RcYRNLduCtabSBFQ4gz0JwjkcbcKdFJJ9oawD1BI
+         gKFIr06WWjhK6WxKPSwBBfHeBaty6M9vDIVlxlzGE+PNHB3xhZpl6m1iaJj0jUC7A+yU
+         LVyeW+EpY8EQKIaYzl5F9H3bU06Be9XuAVUSXnvX2/gmQL9LkU2wcnLxPZZIbGjZkSq5
+         2qQ4N4cUxk/B6dWlTjnv0sA2OSg+kbJIiXZLxtn7ikmUkb9YXBDz6rW+CjuoNDFbuUkM
+         aXKSPQIDl2IM6FVkO4X55wx8j1UYwfhFpPuidZbE2OXCQ52sZ0jKSKng3WMPu4W4DMTG
+         cJzg==
+X-Gm-Message-State: APuU4Z/O31xtoE05VOfugpMxGdz98qQ6HkcoG3rdhIf1T4Z7zmLdVJaN
+	v00YNJKhPJswJ09eymbKY+9/Mia8+wiCUekDm7AoFYnpYsRqC8eoT0F7AVTO4AQaKsLzAU49afw
+	tYDyTfVRZbxm2awaCpXH8PF4bpXQb7GIXrzNaKPH0GCGe5KOBZovn0HrDmB0aBBlWpOHNRc7URm
+	D2mWJs5+0ujeXLF+5uup42UfblVIKKcuGL3CkhVc5E670WUdTsUTmN4XRvPtFxXjTYCad5b5IQ1
+	p7SCG+l6dI6Pk95
+X-Gm-Gg: AYBFou1xWkf++LrWm5MqV42+YJlctr32JVsUv+9p3hSVkZq1NgPe9AhM9YyEWcP7JR3
+	8PypYKDKujhJMv06uW/DJfGxBds0FPYJ0t+QF0hct+ecoYo4ZycmeGvHrC2uC9F+MQQTz4I4xZ+
+	7PjyeCHreU6nK9z8Rpev+hw7VvGZHQ79B+wXPykKKe0Sr4ZagXPR3tZOqt2yaBFVqSI598RcUcw
+	M+dFnbtY+6PooEQ59an1k3ddslcuMoCoc140mTS4d4AsvbgYLfGwR/YFt5SITewKNajhGTPNlo2
+	rx+DOxn2GUzVdcqOhfc1N9GisUFWukR2anDPwu5ELsorWgmIbg7JsvwRBuwVRdAc4qS8xxiG+vi
+	8/aiBq2+WcPa3y81hGZ7hVHaTNYFaMXJ0H18zy6VLJ2nwvcsg7mjxAIrVVKeP/TxpnQnB45PP/c
+	pihH/qzGaDI88p/21HPTjNOZBVYYaI6G+4e/o=
+X-Received: by 2002:a05:6a20:1a28:b0:400:78ff:badc with SMTP id adf61e73a8af0-40078ffbb4cmr573312637.47.1795072807916;
+        Wed, 18 Nov 2026 23:20:07 -0800 (PST)
+Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-28.dlp.protect.broadcom.com. [144.49.247.28])
+        by smtp-relay.gmail.com with ESMTPS id 41be03b00d2f7-cde534abbd4sm28371a12.21.2026.11.18.23.20.07
         for <linux-scsi@vger.kernel.org>
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 18 Nov 2026 23:20:04 -0800 (PST)
+        Wed, 18 Nov 2026 23:20:07 -0800 (PST)
 X-Relaying-Domain: broadcom.com
 X-CFilter-Loop: Reflected
-Received: by mail-pg1-f200.google.com with SMTP id 41be03b00d2f7-cc4216aee8fso2319113a12.1
-        for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2026 23:20:02 -0800 (PST)
+Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-3acc98e3b3cso1480878a91.3
+        for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2026 23:20:06 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1795072802; x=1795677602; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1795072806; x=1795677606; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=tkK8B5Ae5N8rGpWQn0hg6lArz1DEMVv76JZmuGYWiN4=;
-        b=HTzxLhchvz9JaxrwPrueLUX5nJ7jCE9k7iJ3t1gc3BMrVuHEzk2+bf0/w33G/NlqIX
-         QbuKnRsuo9m49c1zhf5p9LhfdGl2TKoUdSOyzcy+cpeijH21UUZX+dz528ndovfx+4iT
-         XnZJRrI4wZR2ZYvyLc3LEUhaKdGSrao5G49o4=
-X-Received: by 2002:a17:90b:4d04:b0:3ac:9d14:fe9f with SMTP id 98e67ed59e1d1-3b3d0762449mr5178185a91.31.1795072801995;
-        Wed, 18 Nov 2026 23:20:01 -0800 (PST)
-X-Received: by 2002:a17:90b:4d04:b0:3ac:9d14:fe9f with SMTP id 98e67ed59e1d1-3b3d0762449mr5178162a91.31.1795072801491;
-        Wed, 18 Nov 2026 23:20:01 -0800 (PST)
+        bh=YlnPJLfVNY64wBezogRYVTf8psdI0g7qGeW62d8i48E=;
+        b=Qd9ZXdwSMetoFOOKnU47JhDFRPqplNVpDciLSj1U9QbsS+jgYN3SOfBb6oSVX3ZHPL
+         WUqoVLAmDPDfD90UtRsyZKc9jytdS2Lt8J87tm5LNwwmS8UbqEdpBjzVU10y6DgCPWcC
+         NmahXYezujYLJ18oHhDa5wYEYnWxQlj0ecEqQ=
+X-Received: by 2002:a17:90b:4a12:b0:3a4:b30b:b501 with SMTP id 98e67ed59e1d1-3b3d064116cmr5525158a91.9.1795072805825;
+        Wed, 18 Nov 2026 23:20:05 -0800 (PST)
+X-Received: by 2002:a17:90b:4a12:b0:3a4:b30b:b501 with SMTP id 98e67ed59e1d1-3b3d064116cmr5525116a91.9.1795072805112;
+        Wed, 18 Nov 2026 23:20:05 -0800 (PST)
 Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b402981814sm748560a91.2.2026.11.18.23.19.58
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b402981814sm748560a91.2.2026.11.18.23.20.01
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 18 Nov 2026 23:20:01 -0800 (PST)
+        Wed, 18 Nov 2026 23:20:04 -0800 (PST)
 From: Ranjan Kumar <ranjan.kumar@broadcom.com>
 To: linux-scsi@vger.kernel.org,
 	martin.petersen@oracle.com
@@ -100,9 +100,9 @@ Cc: sathya.prakash@broadcom.com,
 	ipylypiv@google.com,
 	Ranjan Kumar <ranjan.kumar@broadcom.com>,
 	Sashiko <sashiko-bot@kernel.org>
-Subject: [PATCH v2 16/20] scsi: mpi3mr: Fix sense buffer use after free on BSG command completion
-Date: Thu, 19 Nov 2026 12:41:28 +0530
-Message-ID: <20261119071133.127282-17-ranjan.kumar@broadcom.com>
+Subject: [PATCH v2 17/20] scsi: mpi3mr: Fix partly written and lost entries in the log data buffer
+Date: Thu, 19 Nov 2026 12:41:29 +0530
+Message-ID: <20261119071133.127282-18-ranjan.kumar@broadcom.com>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <20261119071133.127282-1-ranjan.kumar@broadcom.com>
 References: <20261119071133.127282-1-ranjan.kumar@broadcom.com>
@@ -118,214 +118,176 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 
-The interrupt handler writes the reply and sense data of a BSG command
-into the command tracker while the ioctl can time out, clear the sense
-buffer pointer and free the buffer at the same time.
+Log data events are saved from the event handlers while the get and enable
+ioctls read and publish the same buffer, index and entry size, all without
+a lock. A read can return an entry that is only partly written, and two
+events handled at the same time can take the same index so one is lost.
 
-Add a lock to the command tracker and take it in the handler, the reset
-flush and the ioctl. The callbacks run under it and never sleep. Also
-initialize the two PEL trackers, which never had their lock set up.
+Add a lock for the log data buffer and take it in the writer and in both
+ioctls.
 
-Fixes: f762326b2baa ("scsi: mpi3mr: Propagate sense data for admin queue SCSI I/O")
+Fixes: f5e6d5a34376 ("scsi: mpi3mr: Add support for driver commands")
 Reported-by: Sashiko <sashiko-bot@kernel.org>
-Closes: https://sashiko.dev/#/patchset/20260818231426.58105-1-chandrakanth.patil@broadcom.com?part=1
-Closes: https://sashiko.dev/#/patchset/20260825210411.301535-1-chandrakanth.patil@broadcom.com?part=1
-Closes: https://sashiko.dev/#/patchset/20260825210411.301535-1-chandrakanth.patil@broadcom.com?part=4
-Closes: https://sashiko.dev/#/patchset/20261104120103.503871-1-ranjan.kumar@broadcom.com?part=16
+Closes: https://sashiko.dev/#/patchset/20260825210411.301535-1-chandrakanth.patil@broadcom.com?part=5
 Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
 ---
  drivers/scsi/mpi3mr/mpi3mr.h     |  2 ++
- drivers/scsi/mpi3mr/mpi3mr_app.c | 35 ++++++++++++++++++++++++--------
- drivers/scsi/mpi3mr/mpi3mr_fw.c  |  8 ++++++++
- drivers/scsi/mpi3mr/mpi3mr_os.c  |  3 +++
- 4 files changed, 40 insertions(+), 8 deletions(-)
+ drivers/scsi/mpi3mr/mpi3mr_app.c | 43 +++++++++++++++++++++++---------
+ drivers/scsi/mpi3mr/mpi3mr_fw.c  |  3 +++
+ drivers/scsi/mpi3mr/mpi3mr_os.c  |  1 +
+ 4 files changed, 37 insertions(+), 12 deletions(-)
 
 diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
-index c516c00a1dd1..403ca56c26ac 100644
+index 403ca56c26ac..257649d9d95e 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr.h
 +++ b/drivers/scsi/mpi3mr/mpi3mr.h
-@@ -885,6 +885,7 @@ struct mpi3mr_sdev_priv_data {
-  * struct mpi3mr_drv_cmd - Internal command tracker
-  *
-  * @mutex: Command mutex
-+ * @state_lock: Protects the state, the sense buffer and the callback
-  * @done: Completeor for wakeup
-  * @reply: Firmware reply for internal commands
-  * @sensebuf: Sensebuf for SCSI IO commands
-@@ -901,6 +902,7 @@ struct mpi3mr_sdev_priv_data {
-  */
- struct mpi3mr_drv_cmd {
- 	struct mutex mutex;
-+	spinlock_t state_lock;
- 	struct completion done;
- 	void *reply;
- 	u8 *sensebuf;
+@@ -1169,6 +1169,7 @@ struct scmd_priv {
+  * @logdata_buf: Circular buffer to store log data entries
+  * @logdata_buf_idx: Index of entry in buffer to store
+  * @logdata_entry_sz: log data entry size
++ * @logdata_lock: Lock for the log data buffer, index and entry size
+  * @adm_req_q_bar_writeq_lock: Admin request queue lock
+  * @adm_reply_q_bar_writeq_lock: Admin reply queue lock
+  * @pend_large_data_sz: Counter to track pending large data
+@@ -1378,6 +1379,7 @@ struct mpi3mr_ioc {
+ 	u8 *logdata_buf;
+ 	u16 logdata_buf_idx;
+ 	u16 logdata_entry_sz;
++	spinlock_t logdata_lock;
+ 	spinlock_t adm_req_q_bar_writeq_lock;
+ 	spinlock_t adm_reply_q_bar_writeq_lock;
+ 
 diff --git a/drivers/scsi/mpi3mr/mpi3mr_app.c b/drivers/scsi/mpi3mr/mpi3mr_app.c
-index 30a01b02a9fc..fb54bd8093da 100644
+index fb54bd8093da..145b198b5506 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr_app.c
 +++ b/drivers/scsi/mpi3mr/mpi3mr_app.c
-@@ -2447,7 +2447,9 @@ static long mpi3mr_bsg_process_mpt_cmds(struct bsg_job *job)
- 	u8 *sgl_iter = NULL, *sgl_din_iter = NULL, *sgl_dout_iter = NULL;
- 	u16 rmc_size  = 0, desc_count = 0;
- 	size_t req_min, buf_left;
--	bool prp_owned = false, timed_out = false;
-+	bool prp_owned = false, timed_out = false, completed;
-+	unsigned long flags;
-+	u16 cmd_state;
- 
- 	bsg_req = job->request;
- 	karg = (struct mpi3mr_bsg_mptcmd *)&bsg_req->cmd.mptcmd;
-@@ -2795,11 +2797,13 @@ static long mpi3mr_bsg_process_mpt_cmds(struct bsg_job *job)
- 			block_seq = mpi3mr_tgtdev_block_io_inc(mrioc, tgtdev);
- 	}
- 
-+	spin_lock_irqsave(&mrioc->bsg_cmds.state_lock, flags);
- 	mrioc->bsg_cmds.state = MPI3MR_CMD_PENDING;
- 	mrioc->bsg_cmds.is_waiting = 1;
- 	mrioc->bsg_cmds.callback = NULL;
- 	mrioc->bsg_cmds.is_sense = 0;
- 	mrioc->bsg_cmds.sensebuf = sense_buff_k;
-+	spin_unlock_irqrestore(&mrioc->bsg_cmds.state_lock, flags);
- 	memset(mrioc->bsg_cmds.reply, 0, mrioc->reply_sz);
- 	mpi_header->host_tag = cpu_to_le16(MPI3MR_HOSTTAG_BSG_CMDS);
- 	if (mrioc->logging_level & MPI3_DEBUG_BSG_INFO) {
-@@ -2820,7 +2824,9 @@ static long mpi3mr_bsg_process_mpt_cmds(struct bsg_job *job)
- 
- 
- 	if (rval) {
-+		spin_lock_irqsave(&mrioc->bsg_cmds.state_lock, flags);
- 		mrioc->bsg_cmds.is_waiting = 0;
-+		spin_unlock_irqrestore(&mrioc->bsg_cmds.state_lock, flags);
- 		dprint_bsg_err(mrioc,
- 		    "%s: posting bsg request is failed\n", __func__);
- 		rval = -EAGAIN;
-@@ -2836,11 +2842,16 @@ static long mpi3mr_bsg_process_mpt_cmds(struct bsg_job *job)
- 		mpi3mr_tgtdev_block_io_dec(mrioc, tgtdev, block_seq);
- 		mpi3mr_tgtdev_put(tgtdev);
- 	}
--	if (!(mrioc->bsg_cmds.state & MPI3MR_CMD_COMPLETE)) {
--		timed_out = true;
-+	spin_lock_irqsave(&mrioc->bsg_cmds.state_lock, flags);
-+	cmd_state = mrioc->bsg_cmds.state;
-+	completed = cmd_state & MPI3MR_CMD_COMPLETE;
-+	if (!completed)
- 		mrioc->bsg_cmds.is_waiting = 0;
-+	spin_unlock_irqrestore(&mrioc->bsg_cmds.state_lock, flags);
-+	if (!completed) {
-+		timed_out = true;
- 		rval = -EAGAIN;
--		if (mrioc->bsg_cmds.state & MPI3MR_CMD_RESET)
-+		if (cmd_state & MPI3MR_CMD_RESET)
- 			goto out_unlock;
- 		if (((mpi_header->function != MPI3_FUNCTION_SCSI_IO) &&
- 		    (mpi_header->function != MPI3_FUNCTION_NVME_ENCAPSULATED))
-@@ -2870,8 +2881,11 @@ static long mpi3mr_bsg_process_mpt_cmds(struct bsg_job *job)
- 			    MPI3MR_HOSTTAG_BLK_TMS, MPI3MR_RESETTM_TIMEOUT,
- 			    &mrioc->host_tm_cmds, &resp_code, NULL);
- 		}
--		if (!(mrioc->bsg_cmds.state & MPI3MR_CMD_COMPLETE) &&
--		    !(mrioc->bsg_cmds.state & MPI3MR_CMD_RESET))
-+		spin_lock_irqsave(&mrioc->bsg_cmds.state_lock, flags);
-+		cmd_state = mrioc->bsg_cmds.state;
-+		spin_unlock_irqrestore(&mrioc->bsg_cmds.state_lock, flags);
-+		if (!(cmd_state & MPI3MR_CMD_COMPLETE) &&
-+		    !(cmd_state & MPI3MR_CMD_RESET))
- 			mpi3mr_soft_reset_handler(mrioc,
- 			    MPI3MR_RESET_FROM_APP_TIMEOUT, 1);
- 		goto out_unlock;
-@@ -2947,14 +2961,17 @@ static long mpi3mr_bsg_process_mpt_cmds(struct bsg_job *job)
- 
- out_unlock:
- 	if (prp_owned) {
-+		spin_lock_irqsave(&mrioc->bsg_cmds.state_lock, flags);
-+		cmd_state = mrioc->bsg_cmds.state;
-+		spin_unlock_irqrestore(&mrioc->bsg_cmds.state_lock, flags);
- 		/*
- 		 * Do not free the PRP list if a timed out command may still be
- 		 * using it. Leaking it is safer than letting the controller read
- 		 * freed memory.
- 		 */
- 		if (!timed_out ||
--		    (mrioc->bsg_cmds.state & MPI3MR_CMD_COMPLETE) ||
--		    ((mrioc->bsg_cmds.state & MPI3MR_CMD_RESET) &&
-+		    (cmd_state & MPI3MR_CMD_COMPLETE) ||
-+		    ((cmd_state & MPI3MR_CMD_RESET) &&
- 		    !mrioc->unrecoverable))
- 			dma_free_coherent(&mrioc->pdev->dev, mrioc->prp_sz,
- 			    mrioc->prp_list_virt, mrioc->prp_list_dma);
-@@ -2966,9 +2983,11 @@ static long mpi3mr_bsg_process_mpt_cmds(struct bsg_job *job)
- 					    job->reply_payload.sg_cnt,
- 					    din_buf, job->reply_payload.payload_len);
- 	}
-+	spin_lock_irqsave(&mrioc->bsg_cmds.state_lock, flags);
- 	mrioc->bsg_cmds.is_sense = 0;
- 	mrioc->bsg_cmds.sensebuf = NULL;
- 	mrioc->bsg_cmds.state = MPI3MR_CMD_NOTUSED;
-+	spin_unlock_irqrestore(&mrioc->bsg_cmds.state_lock, flags);
- 	mutex_unlock(&mrioc->bsg_cmds.mutex);
- out:
- 	kfree(sense_buff_k);
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-index eb3f41f50649..6d43112aebb7 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-@@ -442,6 +442,9 @@ static void mpi3mr_process_admin_reply_desc(struct mpi3mr_ioc *mrioc,
- 
- 	cmdptr = mpi3mr_get_drv_cmd(mrioc, host_tag, def_reply);
- 	if (cmdptr) {
-+		unsigned long flags;
-+
-+		spin_lock_irqsave(&cmdptr->state_lock, flags);
- 		if (cmdptr->state & MPI3MR_CMD_PENDING) {
- 			cmdptr->state |= MPI3MR_CMD_COMPLETE;
- 			cmdptr->ioc_loginfo = ioc_loginfo;
-@@ -466,6 +469,7 @@ static void mpi3mr_process_admin_reply_desc(struct mpi3mr_ioc *mrioc,
- 			} else if (cmdptr->callback)
- 				cmdptr->callback(mrioc, cmdptr);
- 		}
-+		spin_unlock_irqrestore(&cmdptr->state_lock, flags);
- 	}
- out:
- 	if (sense_buf)
-@@ -5333,6 +5337,9 @@ void mpi3mr_cleanup_ioc(struct mpi3mr_ioc *mrioc)
- static inline void mpi3mr_drv_cmd_comp_reset(struct mpi3mr_ioc *mrioc,
- 	struct mpi3mr_drv_cmd *cmdptr)
+@@ -1309,17 +1309,24 @@ static long mpi3mr_enable_logdata(struct mpi3mr_ioc *mrioc,
+ 	struct bsg_job *job)
  {
+ 	struct mpi3mr_logdata_enable logdata_enable;
 +	unsigned long flags;
++	u16 entry_sz;
++	u8 *buf;
+ 
+ 	if (!mrioc->logdata_buf) {
+-		mrioc->logdata_entry_sz =
++		entry_sz =
+ 		    (mrioc->reply_sz - (sizeof(struct mpi3_event_notification_reply) - 4))
+ 		    + MPI3MR_BSG_LOGDATA_ENTRY_HEADER_SZ;
+-		mrioc->logdata_buf_idx = 0;
+-		mrioc->logdata_buf = kcalloc(MPI3MR_BSG_LOGDATA_MAX_ENTRIES,
+-		    mrioc->logdata_entry_sz, GFP_KERNEL);
+-
+-		if (!mrioc->logdata_buf)
++		buf = kcalloc(MPI3MR_BSG_LOGDATA_MAX_ENTRIES, entry_sz,
++			      GFP_KERNEL);
++		if (!buf)
+ 			return -ENOMEM;
 +
-+	spin_lock_irqsave(&cmdptr->state_lock, flags);
- 	if (cmdptr->state & MPI3MR_CMD_PENDING) {
- 		cmdptr->state |= MPI3MR_CMD_RESET;
- 		cmdptr->state &= ~MPI3MR_CMD_PENDING;
-@@ -5342,6 +5349,7 @@ static inline void mpi3mr_drv_cmd_comp_reset(struct mpi3mr_ioc *mrioc,
- 		} else if (cmdptr->callback)
- 			cmdptr->callback(mrioc, cmdptr);
++		spin_lock_irqsave(&mrioc->logdata_lock, flags);
++		mrioc->logdata_entry_sz = entry_sz;
++		mrioc->logdata_buf_idx = 0;
++		mrioc->logdata_buf = buf;
++		spin_unlock_irqrestore(&mrioc->logdata_lock, flags);
  	}
-+	spin_unlock_irqrestore(&cmdptr->state_lock, flags);
+ 
+ 	memset(&logdata_enable, 0, sizeof(logdata_enable));
+@@ -1346,11 +1353,15 @@ static long mpi3mr_enable_logdata(struct mpi3mr_ioc *mrioc,
+ static long mpi3mr_get_logdata(struct mpi3mr_ioc *mrioc,
+ 	struct bsg_job *job)
+ {
+-	u16 entry_sz = mrioc->logdata_entry_sz;
++	unsigned long flags;
++	u16 entry_sz;
+ 	u32 num_entries, sz;
++	long rval = -EINVAL;
+ 
++	spin_lock_irqsave(&mrioc->logdata_lock, flags);
++	entry_sz = mrioc->logdata_entry_sz;
+ 	if ((!mrioc->logdata_buf) || (job->request_payload.payload_len < entry_sz))
+-		return -EINVAL;
++		goto out;
+ 
+ 	num_entries = job->request_payload.payload_len / entry_sz;
+ 	if (num_entries > MPI3MR_BSG_LOGDATA_MAX_ENTRIES)
+@@ -1361,9 +1372,11 @@ static long mpi3mr_get_logdata(struct mpi3mr_ioc *mrioc,
+ 		sg_copy_from_buffer(job->request_payload.sg_list,
+ 				    job->request_payload.sg_cnt,
+ 				    mrioc->logdata_buf, sz);
+-		return 0;
++		rval = 0;
+ 	}
+-	return -EINVAL;
++out:
++	spin_unlock_irqrestore(&mrioc->logdata_lock, flags);
++	return rval;
  }
  
  /**
+@@ -3020,13 +3033,18 @@ static long mpi3mr_bsg_process_mpt_cmds(struct bsg_job *job)
+ void mpi3mr_app_save_logdata_th(struct mpi3mr_ioc *mrioc, char *event_data,
+ 	u16 event_data_size)
+ {
+-	u32 index = mrioc->logdata_buf_idx;
++	u32 index;
+ 	size_t entry_payload_len, sz;
+ 	struct mpi3mr_logdata_entry *entry;
++	unsigned long flags;
+ 
+-	if (!(mrioc->logdata_buf))
++	spin_lock_irqsave(&mrioc->logdata_lock, flags);
++	if (!(mrioc->logdata_buf)) {
++		spin_unlock_irqrestore(&mrioc->logdata_lock, flags);
+ 		return;
++	}
+ 
++	index = mrioc->logdata_buf_idx;
+ 	entry = (struct mpi3mr_logdata_entry *)
+ 		(mrioc->logdata_buf + (index * mrioc->logdata_entry_sz));
+ 	entry->valid_entry = 1;
+@@ -3039,6 +3057,7 @@ void mpi3mr_app_save_logdata_th(struct mpi3mr_ioc *mrioc, char *event_data,
+ 	memcpy(entry->data, event_data, sz);
+ 	mrioc->logdata_buf_idx =
+ 		((++index) % MPI3MR_BSG_LOGDATA_MAX_ENTRIES);
++	spin_unlock_irqrestore(&mrioc->logdata_lock, flags);
+ 	atomic64_inc(&event_counter);
+ }
+ 
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+index 6d43112aebb7..637cf575e6bb 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+@@ -5029,6 +5029,7 @@ void mpi3mr_memset_buffers(struct mpi3mr_ioc *mrioc)
+ void mpi3mr_free_mem(struct mpi3mr_ioc *mrioc)
+ {
+ 	u16 i, j;
++	unsigned long flags;
+ 	struct mpi3mr_intr_info *intr_info;
+ 	struct diag_buffer_desc *diag_buffer;
+ 
+@@ -5197,8 +5198,10 @@ void mpi3mr_free_mem(struct mpi3mr_ioc *mrioc)
+ 	kfree(mrioc->throttle_groups);
+ 	mrioc->throttle_groups = NULL;
+ 
++	spin_lock_irqsave(&mrioc->logdata_lock, flags);
+ 	kfree(mrioc->logdata_buf);
+ 	mrioc->logdata_buf = NULL;
++	spin_unlock_irqrestore(&mrioc->logdata_lock, flags);
+ 
+ }
+ 
 diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-index 7a8bd20844e6..3fb9d4de2d65 100644
+index 3fb9d4de2d65..10789163b710 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
 +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-@@ -5585,6 +5585,7 @@ static inline void mpi3mr_init_drv_cmd(struct mpi3mr_drv_cmd *cmdptr,
- 	u16 host_tag)
- {
- 	mutex_init(&cmdptr->mutex);
-+	spin_lock_init(&cmdptr->state_lock);
- 	cmdptr->reply = NULL;
- 	cmdptr->state = MPI3MR_CMD_NOTUSED;
- 	cmdptr->dev_handle = MPI3MR_INVALID_DEV_HANDLE;
-@@ -5735,6 +5736,8 @@ mpi3mr_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	mpi3mr_init_drv_cmd(&mrioc->cfg_cmds, MPI3MR_HOSTTAG_CFG_CMDS);
- 	mpi3mr_init_drv_cmd(&mrioc->transport_cmds,
- 	    MPI3MR_HOSTTAG_TRANSPORT_CMDS);
-+	mpi3mr_init_drv_cmd(&mrioc->pel_cmds, MPI3MR_HOSTTAG_PEL_WAIT);
-+	mpi3mr_init_drv_cmd(&mrioc->pel_abort_cmd, MPI3MR_HOSTTAG_PEL_ABORT);
+@@ -5720,6 +5720,7 @@ mpi3mr_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	spin_lock_init(&mrioc->adm_reply_q_bar_writeq_lock);
+ 	spin_lock_init(&mrioc->sas_node_lock);
+ 	spin_lock_init(&mrioc->trigger_lock);
++	spin_lock_init(&mrioc->logdata_lock);
  
- 	for (i = 0; i < MPI3MR_NUM_DEVRMCMD; i++)
- 		mpi3mr_init_drv_cmd(&mrioc->dev_rmhs_cmds[i],
+ 	INIT_LIST_HEAD(&mrioc->fwevt_list);
+ 	INIT_LIST_HEAD(&mrioc->tgtdev_list);
 -- 
 2.47.3
 
