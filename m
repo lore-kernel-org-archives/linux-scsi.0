@@ -1,57 +1,64 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795102003;
-	b=hkl7wa1sr35jxtFERO1ms2cRB+pTNSifaKtO8maiA7Vbg1+EY2vrlNIr3Ng/2LDNzeo/
-	 BhewT4tFtV0YPozvTvWqwrUX3x/SWGkJMG0VXgfLs6jutt/IGhFukFJwWZU3W/mzxXEwt
-	 uyRDAez0xa60+x7UqTFRA7ysZYdAD3DGxYQ/FSdb8u4zDtROKWQY9tAXjmsr+PLGbPARr
-	 /jJUTz/gXcZcsbkraNnGMoy6YNzw351fRAhJ2Jvx8a3o6jHQhFfPpgj5FnRwowJbx7x8j
-	 4BRDjWOnUtThxjW/FQ+qJPoeAGIFYOdT4RF0cKFm8X4qGdeC8nU4HmwyNJKZ80539Xw==
+	t=1795104808;
+	b=fMTI+edMAx914xTGTFLPpP/wsgayOdSIoKdF9E+BKWiSeH8eEzbAeBVT35YwDK+/iBUs
+	 ILeosV+fAuRtS5IvpwRu/By57hr9GK5DJ9UXVsy7kxND89FvSBufYAdUUiGQbfpuK3Tcf
+	 5r8PvU4MV1Gj2knjIEre+WKSgNMEZOYF3/lUbmFeDqJ0clBti8EJZdYZtZtxdjOE9mhqx
+	 JKn+vpOEPMeJJmXHSuxwE8vjL5Ye06gffP90JmYmB6cOhRZGLgpw++dnF26hDFZpU8fuC
+	 yBS6V0lethRs05Kc5yC9xlwNpDliaVo8cSG+TmQ20bkWn7phPHSJtJ8xo3++n6ZTAWw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795102003;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=w5xpY7nzvsPGQqyIoOdUke8GvoCz7BF4Gu6054u1XQc=;
-	b=YFe5NkKC4QGEvbKI2xcWrUVy9vLXDHEs/9jTLMjCJXeRNxVtm74XRItPtsJkp2lgxDce
-	 7bb/TDZQb90u3Isock8BujzRIbVD+fvTcqJYPbdx2f2zAoJJV9MQPPLH3nYrNYUynEVhA
-	 /VGd4cU59UXEpK6CwRyiNyU6yX8VVG9BW8ruc2JtUkTyoHmiwH1jf63WjuTd6vEfRm5/a
-	 PQ5Dfisx106TLN4HVy3ojR4DWfLlMV4zUPBI/yN6MerHg3VYeIWUOeQYI0HhszIwlsrOQ
-	 w2NccQuiiXx4m/VVuVXRpRvw9vWOe0VjPfSLvpYJj6pHwTKvmv7uCm1uqjdGEj3oTlw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795104808;
+	h=Received:DKIM-Signature:Received:Subject:From:In-Reply-To:References:
+	 X-PR-Tracked-List-Id:X-PR-Tracked-Message-Id:X-PR-Tracked-Remote:
+	 X-PR-Tracked-Commit-Id:X-PR-Merge-Tree:X-PR-Merge-Refname:
+	 X-PR-Merge-Commit-Id:Message-Id:Date:To:Cc;
+	bh=wPfw2ysx7MVLBt0SdMQBGMy/H+g7CmnbPxUvxe6bXUM=;
+	b=vf/7/fSv3Eer6utGH+gV96nDRLO8/BuJvpUdY0oMbbwhWKVzByOmuLFG3s6k3qBVaVd8
+	 Cp69LqlkQuqy+f7MGT2puAIzs52XJHytRZGQoXbblNUPmPi0yz7k/6LAJu7IG27TLMvtB
+	 bCJq5YE2x9ZYfEMCapB6yPpqC7IIleA6oSJhcrZnjvvR2BNOiY+gKxO6dPauaBfMG+gyZ
+	 z28pAU0hcXldV/ZSRTdRIla+tuj9KaGmDJwJOAUCfJbK9Uxts0qkZ0QGyfyoN/5d0LCjl
+	 AT0SmPjPx4LGXLV2PqTf6zQTnO8mf/jFewFfG76mG2zLxzSwGVMMIemp8dbxu60xReg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=YCAELgZL;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=KRfeY0DX;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20794606A320;
-	Thu, 19 Nov 2026 15:26:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D2FC606A330;
+	Thu, 19 Nov 2026 16:13:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=YCAELgZL
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 301C91F000C4;
-	Thu, 19 Nov 2026 15:26:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=KRfeY0DX
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 09C631F000C7;
+	Thu, 19 Nov 2026 16:13:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795102002;
-	bh=w5xpY7nzvsPGQqyIoOdUke8GvoCz7BF4Gu6054u1XQc=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=YCAELgZLnyccb+gqD/QJgU2oBXlle/EsPEtwMYZxow1Mkv+RQ/0penhOKQCnQcJOZ
-	 RvjRW8uBgm3mO8mHp0buX9RKvHPAbtncJYRcZxHFYDBHjnjvoGjFzSYRvxyczLPCJJ
-	 yMW79LUytWT/LzP05FRDSmJew0bOpqm9y4lDeZf75qg92eX5GGGe5lNNJ3DNosV72m
-	 Qnbrq8fV1s3ca1pDcu3D2I5OXd/JWxvNuYWPdVNiAv1UB47A6Y2P9QHGw3XrNsyVtT
-	 J1+DHlsef9P9qcIY2UNBCpnD7Z3i2q2xI1uEp9CJ/DXeArw5Ywwo9/i3eWL3rmqhoA
-	 HwopVspC2Fe3Q==
-Message-ID: <sashiko-outbox-223382@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v15 14/23] scsi: ufs: mediatek: Use the common PHY
- framework
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Louis-Alexis Eyraud" <louisalexis.eyraud@collabora.com>
-Cc: linux-phy@lists.infradead.org, devicetree@vger.kernel.org, linux-scsi@vger.kernel.org, robh@kernel.org, conor+dt@kernel.org, vkoul@kernel.org, neil.armstrong@linaro.org, olteanv@gmail.com
-In-Reply-To: <20261119-mt8196-ufs-v15-14-aae1eb0382e8@collabora.com>
-References: <20261119-mt8196-ufs-v15-0-aae1eb0382e8@collabora.com>
- <20261119-mt8196-ufs-v15-14-aae1eb0382e8@collabora.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 19 Nov 2026 15:26:41 +0000
+	s=k20260515; t=1795104808;
+	bh=wPfw2ysx7MVLBt0SdMQBGMy/H+g7CmnbPxUvxe6bXUM=;
+	h=Subject:From:In-Reply-To:References:Date:To:Cc;
+	b=KRfeY0DXKz8z1m/WOF/p5E+0axc55SfNPfKa1TnBWNRGeymknH0lsjIqi4usxoO+W
+	 hvFp/xDsEzz1Equ0BzpL5VDFQCvSim+88v9GoaP7PhAYSivOApQ47QcYi0/3y6Oy5E
+	 PmYJPjKPB25CtxsOpjpiWaEegilnnhrtoXab7HCqZesaxf2dz0d6yAFmk1E0iUyANJ
+	 UafCiGlD7GKMbeWwJ7j+bj8lb1xoq77taNOJrKcT6etrMm8aJeD5gt3cDAFkow4JK5
+	 aSN61b0V4FC37/sM3IWVvxw3HjAKVVk3Ge6dh0Tu+OP1uy2ccnqRu7z77FS9a9nZtg
+	 pBBP8E6XzjstQ==
+Received: from [10.30.226.235] (localhost [IPv6:::1])
+	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id F21803808210;
+	Thu, 19 Nov 2026 16:13:27 +0000 (UTC)
+Subject: Re: [GIT PULL] SCSI fixes for 7.4-rc3+
+From: pr-tracker-bot@kernel.org
+In-Reply-To: <6a9f642705eb17beabdeb7388136e28729da6bfb.camel@HansenPartnership.com>
+References: <6a9f642705eb17beabdeb7388136e28729da6bfb.camel@HansenPartnership.com>
+X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
+X-PR-Tracked-Message-Id: <6a9f642705eb17beabdeb7388136e28729da6bfb.camel@HansenPartnership.com>
+X-PR-Tracked-Remote: https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git/ tags/scsi-fixes
+X-PR-Tracked-Commit-Id: e550f2b2b4aab4c5f12db89d04d8978ce4ed7b4e
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 27e694b84eca6c7fa0878662764567a3cc396fc2
+Message-Id: <179510480642.3187685.13130830298859918762.pr-tracker-bot@kernel.org>
+Date: Thu, 19 Nov 2026 16:13:26 +0000
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -61,190 +68,15 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 
-Thank you for your contribution! Sashiko AI review found 3 potential
-issues to consider:
-- [High] scsi: ufs: mediatek: premature phy_exit() and power leak in
-  ufs_mtk_exit()
-- [High] scsi: ufs: mediatek: missing error rollback in
-  ufs_mtk_runtime_suspend()
-- [Medium] scsi: ufs: mediatek: PHY power leak and error in
-  ufs_mtk_runtime_resume()
---
+The pull request you sent on Wed, 18 Nov 2026 12:03:37 -0500:
 
-commit dd9f3229e4978dc4fda07cd42dec5399df0226ee
-Author: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
+> https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git/ tags/scsi-fixes
 
-scsi: ufs: mediatek: Use the common PHY framework
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/27e694b84eca6c7fa0878662764567a3cc396fc2
 
-This commit switches the MediaTek UFS driver from manual OF PHY device
-handling in probe and runtime PM to acquiring and managing the PHY via
-the common PHY framework in the ufshcd variant callbacks.
+Thank you!
 
-> diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-media=
-tek.c
-> index fec0fb24e7a2c..a78e015e329a5 100644
-> --- a/drivers/ufs/host/ufs-mediatek.c
-> +++ b/drivers/ufs/host/ufs-mediatek.c
-
-[ ... ]
-
-> @@ -1321,11 +1291,22 @@ static int ufs_mtk_init(struct ufs_hba *hba)
-> =20
->  	return 0;
-> =20
-> +out_phy_exit:
-> +	phy_exit(host->mphy);
->  out_variant_clear:
->  	ufshcd_set_variant(hba, NULL);
->  	return err;
->  }
-> =20
-> +static void ufs_mtk_exit(struct ufs_hba *hba)
-> +{
-> +	struct ufs_mtk_host *host =3D ufshcd_get_variant(hba);
-> +
-> +	ufs_mtk_mphy_power_on(hba, false);
-> +
-> +	phy_exit(host->mphy);
-> +}
-
-[Severity: High]
-Does ufs_mtk_exit() call phy_exit(host->mphy) while a second
-phy_power_on() reference is still held?
-
-ufs_mtk_init() acquires two phy_power_on() references on host->mphy: one
-in ufs_mtk_mphy_power_on(hba, true) and another in
-ufs_mtk_setup_clocks(hba, true, POST_CHANGE) via
-ufs_mtk_pwr_ctrl(hba, true).  During teardown, ufshcd_hba_exit() invokes
-ufshcd_vops_exit(hba) before ufshcd_setup_clocks(hba, false):
-
-drivers/ufs/core/ufshcd.c:ufshcd_hba_exit() {
-	...
-		ufshcd_exit_clk_gating(hba);
-		if (hba->eh_wq)
-			destroy_workqueue(hba->eh_wq);
-		ufs_debugfs_hba_exit(hba);
-		ufshcd_vops_exit(hba);
-		ufshcd_setup_vreg(hba, false);
-		ufshcd_setup_clocks(hba, false);
-	...
-}
-
-In ufs_mtk_exit(), ufs_mtk_mphy_power_on(hba, false) drops only one
-phy_power_on() reference (leaving mphy->power_count at 1) and turns off
-the 0.9V supply before phy_exit(host->mphy) runs.
-
-On driver removal, ufshcd_remove() leaves hba->uic_link_state as
-UIC_LINK_ACTIVE_STATE, so the subsequent ufshcd_setup_clocks(hba, false)
-skips ufs_mtk_pwr_ctrl(hba, false) and permanently leaks the remaining
-phy_power_on() reference, PHY clocks, and runtime PM reference.  On an
-early ufshcd_init() failure while the link is still off,
-ufshcd_setup_clocks(hba, false) instead calls phy_power_off(host->mphy)
-and accesses M-PHY registers after phy_exit() has run and the 0.9V supply
-has been disabled.
-
-[ ... ]
-
-> @@ -2522,9 +2467,8 @@ static int ufs_mtk_system_resume(struct device *dev)
->  static int ufs_mtk_runtime_suspend(struct device *dev)
->  {
->  	struct ufs_hba *hba =3D dev_get_drvdata(dev);
-> -	struct ufs_mtk_host *host =3D ufshcd_get_variant(hba);
->  	struct arm_smccc_res res;
-> -	int ret =3D 0;
-> +	int ret;
-> =20
->  	ret =3D ufshcd_runtime_suspend(dev);
->  	if (ret)
-> @@ -2535,8 +2479,13 @@ static int ufs_mtk_runtime_suspend(struct device *=
-dev)
->  	if (ufs_mtk_is_rtff_mtcmos(hba))
->  		ufs_mtk_mtcmos_ctrl(false, res);
-> =20
-> -	if (host->phy_dev)
-> -		pm_runtime_put_sync(host->phy_dev);
-> +	if (!ufshcd_is_link_active(hba)) {
-> +		ret =3D ufs_mtk_mphy_power_on(hba, false);
-> +		if (ret) {
-> +			dev_err(dev, "Failed to power off PHY: %pe\n", ERR_PTR(ret));
-> +			return ret;
-> +		}
-> +	}
-> =20
->  	return 0;
->  }
-
-[Severity: High]
-If ufs_mtk_mphy_power_on(hba, false) fails here, does returning an error
-without rolling back leave the controller powered down while runtime PM
-considers dev active?
-
-At this point ufshcd_runtime_suspend(dev), ufs_mtk_dev_vreg_set_lpm(hba,
-true), and ufs_mtk_mtcmos_ctrl(false, res) have already gated clocks,
-disabled interrupts, placed device regulators into LPM, and turned off
-MTCMOS.  When a runtime_suspend callback returns an error, rpm_suspend()
-aborts the suspend and leaves the device in RPM_ACTIVE, so subsequent I/O
-or register accesses will touch unpowered hardware without running
-ufs_mtk_runtime_resume().  Also, powering off the PHY after
-ufs_mtk_mtcmos_ctrl(false, res) runs in the same order as
-ufs_mtk_runtime_resume() rather than the reverse order.
-
-> @@ -2544,14 +2493,17 @@ static int ufs_mtk_runtime_suspend(struct device =
-*dev)
->  static int ufs_mtk_runtime_resume(struct device *dev)
->  {
->  	struct ufs_hba *hba =3D dev_get_drvdata(dev);
-> -	struct ufs_mtk_host *host =3D ufshcd_get_variant(hba);
->  	struct arm_smccc_res res;
-> +	int ret;
-> =20
->  	if (ufs_mtk_is_rtff_mtcmos(hba))
->  		ufs_mtk_mtcmos_ctrl(true, res);
-> =20
-> -	if (host->phy_dev)
-> -		pm_runtime_get_sync(host->phy_dev);
-> +	ret =3D ufs_mtk_mphy_power_on(hba, true);
-> +	if (ret) {
-> +		dev_err(dev, "Failed to power on PHY: %pe\n", ERR_PTR(ret));
-> +		return ret;
-> +	}
-> =20
->  	ufs_mtk_dev_vreg_set_lpm(hba, false);
-> =20
-
-[Severity: Medium]
-Can powering on the M-PHY in ufs_mtk_runtime_resume() leave the PHY and
-0.9V supply enabled across system suspend?
-
-If hba->dev runtime-resumes while the ufs_device_wlun child remains
-runtime-suspended, ufs_mtk_runtime_resume() sets host->mphy_powered_on
-and enables the PHY.  If system suspend then runs before hba->dev
-autosuspends (when ufshcd_rpm_ok_for_spm() is true), ufshcd_wl_suspend()
-skips ufs_mtk_suspend(), and ufs_mtk_system_suspend() does not call
-ufs_mtk_mphy_power_on(hba, false):
-
-drivers/ufs/host/ufs-mediatek.c:ufs_mtk_system_suspend() {
-	...
-	ret =3D ufshcd_system_suspend(dev);
-	if (ret)
-		goto out;
-
-	if (pm_runtime_suspended(hba->dev))
-		goto out;
-
-	ufs_mtk_dev_vreg_set_lpm(hba, true);
-
-	if (ufs_mtk_is_rtff_mtcmos(hba))
-		ufs_mtk_mtcmos_ctrl(false, res);
-	...
-}
-
-This leaves the M-PHY and 0.9V regulator powered on during system sleep
-while MTCMOS and clocks are off.  In addition, if
-ufs_mtk_mphy_power_on(hba, true) or ufshcd_runtime_resume(dev) fails in
-ufs_mtk_runtime_resume(), the preceding MTCMOS, PHY, and regulator state
-changes are not unwound while dev remains RPM_SUSPENDED.
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261119-mt8196-ufs=
--v15-0-aae1eb0382e8@collabora.com?part=3D14
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
