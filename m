@@ -1,85 +1,143 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=210.61.82.184
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.137.202.133
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795066391;
-	b=IR4D7jqzYDv+4Qz8JgpA22nzBrHlLJ5hhhzXAlV0GC+zGjU3qjj4GBz2qMPhRRpM+06l
-	 e8C8YT2/rk8HdRFNvdyChogc+SX8+uRAgeHny99I4jq5m9D97cFP3QXYJ1Sx6cyELHTJn
-	 qkS4iucYeOA5oH+j3qKbKpgpYfXCD80GXEpYqVLBx2tP2F+nX4vStffi7EVbDxnggzgX2
-	 4ZqrC3p+ppHBne+G/UPjYJkBfKnsRK73LRokLr5Jm+EzA3zzjztYHizxOSjW49fh7uKdx
-	 g6QkRM3yPlmPuA2/gTvAjMUCCYlK5h/RY+RnzmH/ROzc/7vy0sbNfn3h/FrvKHD6/Qg==
+	t=1795066526;
+	b=fpd0jR0fNHXbndXQcehmfTuC6vrDhl0QXC/Q+Z9ORl8y9ESucWmBfvm+MTt/PK+L/bfS
+	 9K46Z9wRrsoKGzyHDHhi/9Jg3W4pxsfqzVbRehgATFb8yhNa3cSzKl3ykFCpVZTWkHLpr
+	 QJjZQNkSPzV2uq9Un0x/zH5q7+8PzG15zOixraGJ13OvhPiwAZB14BWUhoBW/SF+qOnic
+	 VNthX6f9T/zwZGx72j7b4Uw29xw79uG4YhXxKAMPpcabfLFVhihoMeh9YP9zH9QmKuXtD
+	 AbXVdIhvpfue5ecdi3Y7gPBZp2snnwZnNM086B3d5Waim48zfyWAH4Lr4jvGLbO9qjA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795066391;
-	h=DMARC-Filter:X-UUID:DKIM-Signature:X-CID-P-RULE:X-CID-O-INFO:
-	 X-CID-META:X-CID-BVR:X-CID-BAS:X-CID-FACTOR:X-CID-RHF:X-UUID:Received:
-	 Received:Received:Message-ID:Subject:From:To:CC:Date:In-Reply-To:
-	 References:Content-Type:Content-Transfer-Encoding:User-Agent:
-	 MIME-Version:X-MTK;
-	bh=6ed+ZpdLcvuNKLZa8bSVVf14gfJRXs7qehwJIFJLgxs=;
-	b=q8U7SuHzfTMSKY8qcBd6H+O8xQwWZSqypn/kHpKGNU8iroTlf5j/yt70ZlgG+Qhc97dO
-	 2pbWVEYNFimIFzNI1ZXiQiGau4fUzvfPDxIWKFmHoGVR+UAw9dk2R500TtJf6QLi03L+M
-	 R+0RH9VLTJTtNPpjl6sAuuV5A+NfUhkh83f4vWfQYsJWR0d1d7/ogC/hGoqQpGTHrPX9E
-	 na8kxSPhSLEOMRZ+n3AHAuwwRk7VOyzqpwoi/FwETRrJ3ZbDBpz2RFVL93Ja1hfhQuoqy
-	 LsMiTlSAwilCQpSDxIXRhU4RkzNLMUWx7pJhB1H7tEvHGBeQzTOem2jEWHy7s6gu17A==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795066526;
+	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
+	 Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=z46ZwabXBcpTEJRysA4syBAZyQggGPY6SIVcMl/gSzA=;
+	b=AtnL78Xjrzq+kkrR7Es7A31LHLmD7mt5Wn08yant/TuBz8x9j3H2UkFvvnQbujrQlW2Y
+	 4XWYg+zMempKB4x7ol2N37Go6+ZLpvFu5E0rvZ7Me5Q+LOQtUKvvJtI1HPiyMuwe7lJEN
+	 JxxrKqFqN/AROQYKrLVwgTJfGTsXKhcGGiPziDOYtGvC9yX6pPKfH8ZZvXOVB6YMCnSrj
+	 y5EgCq04i/ZNLu9PMCnhtaFJ1diUkVb1tvuzDNbAaR1ubWv/S8geEqIBi/nZU7oPEgo2a
+	 gI+T66/kE9V9fxmeoEeZ0MsR/bZHTFbG7fIzLN14Il9xPq1VQCdFLCDdNM+ZMwT0yJw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=mediatek.com;
-	spf=pass smtp.mailfrom=mediatek.com;
-	dkim=pass header.d=mediatek.com header.i=@mediatek.com header.a=rsa-sha256 header.s=dk header.b=K29dw5rh;
-	arc=none smtp.remote-ip=210.61.82.184
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+	dmarc=pass header.from=infradead.org;
+	spf=pass smtp.mailfrom=infradead.org;
+	dkim=pass header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=bombadil.20210309 header.b=tZNGbQMb;
+	arc=none smtp.remote-ip=198.137.202.133
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30439606A320;
-	Thu, 19 Nov 2026 05:33:09 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 30439606A320
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98812606A330;
+	Thu, 19 Nov 2026 05:35:25 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 98812606A330
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.a=rsa-sha256 header.s=dk header.b=K29dw5rh
-X-UUID: b0372b68e3da11f18dc8c9802ae25ab1-20261119
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=MIME-Version:Content-Transfer-Encoding:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=6ed+ZpdLcvuNKLZa8bSVVf14gfJRXs7qehwJIFJLgxs=;
-	b=K29dw5rh08Vo+dp1Px+CLcCaw5V9ZUap2Fl3SDWFy699Ym+9dd4veXcLXvhT8zzo+op30ekvZ/ygVKRTbdaR880ZM4s/mKrXrJn5k1FOnGrLc3QP22huRLvrlrkCoNE/QQk4syQs2tTSHrXqBU9uQZ7uzb5xCxubor47X5On29Y=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.21,REQID:08bcc992-8523-4fb4-bf5a-4f3e483b80dc,IP:0,U
-	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-	release,TS:0
-X-CID-META: VersionHash:b0318ac,CLOUDID:2efb7f66-4b51-4c95-bb1b-80ac6aad9c96,B
-	ulkID:nil,BulkQuantity:0,SF:80|81|82|83|102|836|865|888|898,TC:-5,Content:
-	0|15|50|99,EDM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:nil,COL:0
-	,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: b0372b68e3da11f18dc8c9802ae25ab1-20261119
-Received: from mtkmbs13n2.mediatek.inc [(172.21.101.108)] by mailgw02.mediatek.com
-	(envelope-from <peter.wang@mediatek.com>)
-	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 386407575; Thu, 19 Nov 2026 13:33:02 +0800
-Received: from mtkmbs13n2.mediatek.inc (172.21.101.108) by
- MTKMBS09N2.mediatek.inc (172.21.101.94) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.29; Thu, 19 Nov 2026 13:33:01 +0800
-Received: from [10.233.130.16] (10.233.130.16) by mtkmbs13n2.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.2.2562.29 via Frontend
- Transport; Thu, 19 Nov 2026 13:33:01 +0800
-Message-ID: <359c3c1f4b30aa837011788a847d5c2c1cb3880e.camel@mediatek.com>
-Subject: Re: [PATCH v2 2/2] scsi: ufs-mediatek: keep mphy state in sync when
- va09 disable fails
-From: Peter Wang <peter.wang@mediatek.com>
-To: Xiangwu Lai <laixiangwu@cmss.chinamobile.com>,
-	<chaotian.jing@mediatek.com>
-CC: <chu.stanley@gmail.com>, <alim.akhtar@samsung.com>, <bvanassche@acm.org>,
-	<stanley.chu@mediatek.com>, <sashiko-bot@kernel.org>,
-	<linux-scsi@vger.kernel.org>, <linux-mediatek@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>
-Date: Thu, 19 Nov 2026 13:33:01 +0800
-In-Reply-To: <20261118032015.974-3-laixiangwu@cmss.chinamobile.com>
-References: <20261118032015.974-1-laixiangwu@cmss.chinamobile.com>
-	 <20261118032015.974-3-laixiangwu@cmss.chinamobile.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: base64
-User-Agent: Evolution 3.52.3-0ubuntu1.1 
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=bombadil.20210309 header.b=tZNGbQMb
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
+	:Reply-To:Content-Type:Content-ID:Content-Description;
+	bh=z46ZwabXBcpTEJRysA4syBAZyQggGPY6SIVcMl/gSzA=; b=tZNGbQMbkEBB3qnsfmrI0ak97e
+	GXxh5zYLcHrA7zzJrOQPdhV8uybDVtFAWYTrP+dt/z9kZiD41YJ2wTmXVlB8OYrmzf5wEwT37Km6a
+	bsmU2r2a+szwKja0pzLZGHDqbW+LwePYyxWY28VlKJW4IkKj5u6oq7VCuB7i2yoEQ6coDe9GcyFby
+	gmUkrTGRPw16swI5ikzHGUIbD/DQdgrEEfISwS/y2TJ9bAeOWAGvRZM46laKYkr4+h5q8QUSFOd1e
+	FNUYp/NsoT++jUBOGEPDm/c59sWmUx3tgkmaRELHsSyXx62CAagtXJ2Elyvg7quNk77tut/ToOd3p
+	hQQjF0qQ==;
+Received: from [50.53.43.113] (helo=bombadil.infradead.org)
+	by bombadil.infradead.org with esmtpsa (Exim 4.100.1 #2 (Red Hat Linux))
+	id 1xTunq-0000000Aufu-1tOB;
+	Thu, 19 Nov 2026 05:35:22 +0000
+From: Randy Dunlap <rdunlap@infradead.org>
+To: linux-kernel@vger.kernel.org
+Cc: Randy Dunlap <rdunlap@infradead.org>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	linux-doc@vger.kernel.org,
+	David Hildenbrand <david@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Jason Gunthorpe <jgg@nvidia.com>,
+	Leon Romanovsky <leonro@nvidia.com>,
+	linux-mm@kvack.org,
+	Jaroslav Kysela <perex@perex.cz>,
+	Takashi Iwai <tiwai@suse.com>,
+	linux-sound@vger.kernel.org,
+	Jens Axboe <axboe@kernel.dk>,
+	linux-block@vger.kernel.org,
+	Marcel Holtmann <marcel@holtmann.org>,
+	Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
+	linux-bluetooth@vger.kernel.org,
+	Willem de Bruijn <willemdebruijn.kernel@gmail.com>,
+	Jason Wang <jasowangio@gmail.com>,
+	David Heidelberg <david@ixit.cz>,
+	oe-linux-nfc@lists.linux.dev,
+	Chas Williams <3chas3@gmail.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@kernel.org>,
+	Jakub Kicinski <kuba@kernel.org>,
+	Paolo Abeni <pabeni@redhat.com>,
+	netdev@vger.kernel.org,
+	Helge Deller <deller@gmx.de>,
+	linux-fbdev@vger.kernel.org,
+	dri-devel@lists.freedesktop.org,
+	MPT-FusionLinux.pdl@broadcom.com,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <mkp@kernel.org>,
+	linux-scsi@vger.kernel.org,
+	Miquel Raynal <miquel.raynal@bootlin.com>,
+	Richard Weinberger <richard@nod.at>,
+	Vignesh Raghavendra <vigneshr@ti.com>,
+	Zhihao Cheng <chengzhihao1@huawei.com>,
+	linux-mtd@lists.infradead.org,
+	Neill Kapron <nkapron@google.com>,
+	Andrey Konovalov <andreyknvl@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-usb@vger.kernel.org,
+	Juergen Gross <jgross@suse.com>,
+	Stefano Stabellini <sstabellini@kernel.org>,
+	xen-devel@lists.xenproject.org,
+	Hans de Goede <hansg@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	=?UTF-8?q?Eugenio=20P=C3=A9rez?= <eperezma@redhat.com>,
+	Sean Christopherson <seanjc@google.com>,
+	Paolo Bonzini <pbonzini@redhat.com>,
+	kvm@vger.kernel.org,
+	virtualization@lists.linux.dev,
+	Jan Kara <jack@suse.cz>,
+	linux-fsdevel@vger.kernel.org,
+	"Theodore Ts'o" <tytso@mit.edu>,
+	linux-ext4@vger.kernel.org,
+	Mike Marshall <hubcap@omnibond.com>,
+	devel@lists.orangefs.org,
+	Paulo Alcantara <pc@manguebit.org>,
+	Namjae Jeon <linkinjeon@kernel.org>,
+	linux-cifs@vger.kernel.org,
+	Jaegeuk Kim <jaegeuk@kernel.org>,
+	Chao Yu <chao@kernel.org>,
+	linux-f2fs-devel@lists.sourceforge.net,
+	Florian Fainelli <florian.fainelli@broadcom.com>,
+	Broadcom internal kernel review list <bcm-kernel-feedback-list@broadcom.com>,
+	Tzung-Bi Shih <tzungbi@kernel.org>,
+	Benson Leung <bleung@chromium.org>,
+	David Airlie <airlied@gmail.com>,
+	Simona Vetter <simona@ffwll.ch>,
+	Alex Deucher <alexander.deucher@amd.com>,
+	=?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
+	amd-gfx@lists.freedesktop.org,
+	Jani Nikula <jani.nikula@linux.intel.com>,
+	Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
+	Rodrigo Vivi <rodrigo.vivi@intel.com>,
+	Tvrtko Ursulin <tursulin@ursulin.net>,
+	intel-gfx@lists.freedesktop.org,
+	Matthew Brost <matthew.brost@intel.com>,
+	=?UTF-8?q?Thomas=20Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>,
+	intel-xe@lists.freedesktop.org
+Subject: [PATCH v2 01/12] docs: ioctl-number: update MM entries
+Date: Wed, 18 Nov 2026 21:35:02 -0800
+Message-ID: <20261119053514.255348-2-rdunlap@infradead.org>
+X-Mailer: git-send-email 2.56.1
+In-Reply-To: <20261119053514.255348-1-rdunlap@infradead.org>
+References: <20261119053514.255348-1-rdunlap@infradead.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -89,24 +147,47 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-X-MTK: N
+Content-Transfer-Encoding: 8bit
 
-T24gV2VkLCAyMDI2LTExLTE4IGF0IDExOjIwICswODAwLCBYaWFuZ3d1IExhaSB3cm90ZToKPiAK
-PiBAQCAtNTQyLDYgKzU0MiwxNCBAQCBzdGF0aWMgaW50IHVmc19tdGtfbXBoeV9wb3dlcl9vbihz
-dHJ1Y3QgdWZzX2hiYQo+ICpoYmEsIGJvb2wgb24pCj4gwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoCB1ZnNfbXRrX3ZhMDlfcHdyX2N0cmwocmVzLCAwKTsKPiDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgIHJldCA9IHJlZ3Vs
-YXRvcl9kaXNhYmxlKGhvc3QtPnJlZ192YTA5KTsKPiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqAgfQo+ICvCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgIC8qCj4gK8KgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoCAqIFRoZSBNLVBIWSBpcyBvZmYgcmVnYXJkbGVzcyBvZiB0aGUg
-dmEwOSByZXN1bHQsIHNvCj4ga2VlcAo+ICvCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAg
-KiB0aGUgc3RhdGUgaW4gc3luYyB3aXRoIHRoZSBoYXJkd2FyZS7CoCBPdGhlcndpc2UKPiB0aGUg
-bmV4dAo+ICvCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgKiBwb3dlci1vbiBiYWlscyBv
-dXQgdGhyb3VnaCB0aGUKPiArwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgICogIShvbiBe
-IGhvc3QtPm1waHlfcG93ZXJlZF9vbikgY2hlY2sgd2l0aG91dAo+IHBvd2VyaW5nIHRoZQo+ICvC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgKiBNLVBIWSBiYWNrIG9uLgo+ICvCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgKi8KPiArwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oCBob3N0LT5tcGh5X3Bvd2VyZWRfb24gPSBmYWxzZTsKCgpIaSBYaWFuZ3d1LAoKSWYgdGhlIFZB
-MDkgcmVndWxhdG9yX2Rpc2FibGUgZmFpbHMsIGNvdWxkIHdlIGp1c3QgcmVzdG9yZQp0aGUgUEhZ
-IHBvd2VyIHN0YXRlPwoKVGhhbmtzClBldGVyCgo=
+Add ioctl number entries for test_hmm_uapi and gup_test.
 
+Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+---
+v2: no change
+
+[Since having multiple maintainers trying to merge these would
+cause some conflicts, it would be more manageable for Jon to
+take all of these through the docs-next tree.]
+
+Cc: Jonathan Corbet <corbet@lwn.net>
+Cc: Shuah Khan <skhan@linuxfoundation.org>
+Cc: linux-doc@vger.kernel.org
+Cc: David Hildenbrand <david@kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Jason Gunthorpe <jgg@nvidia.com>
+Cc: Leon Romanovsky <leonro@nvidia.com>
+Cc: linux-mm@kvack.org
+
+ Documentation/userspace-api/ioctl/ioctl-number.rst |    4 ++++
+ 1 file changed, 4 insertions(+)
+
+--- linux-next-20261111.orig/Documentation/userspace-api/ioctl/ioctl-number.rst
++++ linux-next-20261111/Documentation/userspace-api/ioctl/ioctl-number.rst
+@@ -147,6 +147,8 @@ Code  Seq#    Include File
+ 'G'   00-0F  xen/gntalloc.h, xen/gntdev.h                              conflict!
+ 'H'   00-7F  linux/hiddev.h                                            conflict!
+ 'H'   00-0F  linux/hidraw.h                                            conflict!
++'H'   00-0F  lib/test_hmm_uapi.h                                       conflict!
++                                                                       <mailto:linux-mm@kvack.org>
+ 'H'   01     linux/mei.h                                               conflict!
+ 'H'   02     linux/mei.h                                               conflict!
+ 'H'   03     linux/mei.h                                               conflict!
+@@ -252,6 +254,8 @@ Code  Seq#    Include File
+ 'f'   81-8F  linux/fsverity.h
+ 'g'   00-0F  linux/usb/gadgetfs.h
+ 'g'   20-2F  linux/usb/g_printer.h
++'g'   01-0F  mm/gup_test.h                                             conflict!
++                                                                       <mailto:linux-mm@kvack.org>
+ 'h'   00-7F                                                            conflict! Charon filesystem
+                                                                        <mailto:zapman@interlan.net>
+ 'h'   00-1F  linux/hpet.h                                              conflict!
