@@ -1,99 +1,71 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=195.154.119.183
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.69
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795107369;
-	b=M78QEjCv3vTOahnu7Zl+LnngA6nI74sgOm5O4g4j2RwaILU9D/HMdwuTxU5UWNgQ67z2
-	 Kh3e9jhGtD7M2JS05Jeqjvi0ZB4fp74jh3ayQy71miBTKP3Sjle0r4XmHaRI3PLQvr/Wf
-	 BUoJkXFpcC1u+hQIyTPatF9T47rSAgbZUnuk9uqilqreAaw63/p52rcUXUK9rjoR3DQkF
-	 vPdUiuWRKyItdHNbnsl/4f9lCT6TKmQw2a8Pmg3PPD+IB0NPogr9RViOijb5+4SUvrKdA
-	 S4myJ4AaeFAg2GJpcnWRiq6jnTjefrKs750PmQwmOEpJ+xm/iOWS62goggovOj5S0IQ==
+	t=1795107904;
+	b=H2G0NJr6BSXxCPaIUkSSRi9yFipmy4I9u6rqK9yUNV4A7DR9Z+9Sog2UPUnziGxJJ8DL
+	 tvjm/Rr1TS2SzIn+iBAYIyAPa1f4+tZT88U/JeWQx9zK44BTSGDmD0RtLARVIiMuswfeh
+	 n42hjlUOqzWwFW+GcVzinRJ5EufzmEcUrSzY0DPA8fbF938d+STwSS4/6dzriASu44Pqo
+	 H5TpbfCkv8u42yLIL//pOFWKaZB4BgPEKAaXXnJkv2JWW9skIGy/R48EtvFJAKF8ivcuH
+	 UJ5xFEwCgAyMMfiMrM/3LmQeI1eVe6VMK01Ke2AIxOJnbj+9mPupMeDSqWBwwQK7JIg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795107369;
-	h=DMARC-Filter:DKIM-Signature:Received:Date:From:To:Cc:Subject:
-	 Message-ID:Mail-Followup-To:References:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To:User-Agent;
-	bh=kwyugsNu4/tep0lvJ/4udRwqoAJgnB/y7VsHTKO8ZMQ=;
-	b=D80XN1z0+EX8NsV6ddwgrETWuXaH4BozvZJmgJ3an7lCQtjQZki7QM4DyhTMrDbr/+0u
-	 c34lXXKsjTiGcxvJeKzs0yKbwx0OSkOormtm+K3q3BQmIZjUjKLZxvJrDgRDfMGfmSzhq
-	 D4S7YyTBhRWl5G3XqCjruJB7Cczu8YNWl0q1Nq3qTipiTZHq4zEkJC5Op/PxtGbX3No1Y
-	 KLdL3EI0exYZ0AIMjWn7LNf0vADwSt93nqX9QOo7KOPBu92QaYL08xFV2QSlXlgvj+sNQ
-	 A8kELEU/QBabzN7lZV32QDqmcCLXourPY1qUgB4VrU2Rl4YND1ad/qwjTq3JFViPSlQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795107904;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Gm-Message-State:X-Received:Date:Mime-Version:X-Mailer:Message-ID:
+	 Subject:From:To:Cc:Content-Type;
+	bh=tEWTKd67+sE6hXsJjat4+R5/kfA+hMcRoqTzGHNveW8=;
+	b=Xyac2DGSbVJpkjdksr4CgN0O8UqRCHK9gVZNK/IS1Wb0fK8iHkB8cbJ1d1g13nLwd7Vc
+	 J2sNW1EUtawPXlzZKuJnPFCN6liF09ZRQQGg9cPVpMVaI795IcIY/12YA5y4N605kOUUU
+	 iMEsLmkK/uuds1Gr8Aye9+eaEVSJndF9bDvaE0YbQiVb1UaQJJqAp437a1bi8Id85YrKe
+	 jhkel72oxDapxfohd5/cqIbk6fwxVvyOTT3nU0I+YCp7z/4IRqFSxrIAIXm0zvrd/vFvt
+	 Tg4XjWhX7qGiOnsEaomeAdmohp1e/e+JpStGoPx40E31LSB0UPDCzJwM+uNPtoCfksw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=aurel32.net;
-	spf=pass smtp.mailfrom=aurel32.net;
-	dkim=pass header.d=aurel32.net header.i=@aurel32.net header.a=rsa-sha256 header.s=202004.hall header.b=EqPrM0py;
-	arc=none smtp.remote-ip=195.154.119.183
-Received: from hall.aurel32.net (hall.aurel32.net [195.154.119.183])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
+	dmarc=pass header.from=google.com;
+	spf=pass smtp.mailfrom=flex--irogers.bounces.google.com;
+	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=YLWZOcx6;
+	arc=none smtp.remote-ip=74.125.82.69
+Received: from mail-dl1-f69.google.com (mail-dl1-f69.google.com [74.125.82.69])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D033B606A330;
-	Thu, 19 Nov 2026 16:56:08 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D033B606A330
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=aurel32.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=aurel32.net
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46755606A337
+	for <linux-scsi@vger.kernel.org>; Thu, 19 Nov 2026 17:05:04 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 46755606A337
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--irogers.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=aurel32.net header.i=@aurel32.net header.a=rsa-sha256 header.s=202004.hall header.b=EqPrM0py
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=aurel32.net
-	; s=202004.hall; h=In-Reply-To:Content-Type:MIME-Version:References:
-	Message-ID:Subject:Cc:To:From:Date:Content-Transfer-Encoding:From:Reply-To:
-	Subject:Content-ID:Content-Description:X-Debbugs-Cc;
-	bh=kwyugsNu4/tep0lvJ/4udRwqoAJgnB/y7VsHTKO8ZMQ=; b=EqPrM0pyAxa8ZlSkLqTAdR2BGd
-	eFrq7mXsxrYa77d5+uWkY17tLHY4zE5FTGbMZuMLA2FqC4R72SLau9EsUMvLasDsrMOSNRd1QNJkH
-	2OMzKnKOjsknyzp597Wu31Qz1kL4dilvFuWHYTiEy6bgBhNMVVnPFqI1qDjXCAm7Tas+lW7DR9sZV
-	d+gmO8vyTEXUV6UBx9Knaq2NXLUCGwf7hrVqfcxWJ4Zvs+IxIUnWLr6eCp7rmACI6tLrVbopgvxCf
-	HVDEVWByeAJ9RaJVicLr2vYAgH7lZvpqYBvo9mcCgZLVCKx7dgAFZnVmWMVzzmt2p58K1RnpoR6hc
-	DW78MCZA==;
-Received: from authenticated user
-	by hall.aurel32.net with esmtpsa  (TLS1.3)  tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-	(Exim 4.98.2)
-	(envelope-from <aurelien@aurel32.net>)
-	id 1xU5QI-00000001j9b-0hMX;
-	Thu, 19 Nov 2026 17:55:46 +0100
-Date: Thu, 19 Nov 2026 17:55:45 +0100
-From: Aurelien Jarno <aurelien@aurel32.net>
-To: E Shattow <e@freeshell.de>
-Cc: Yixun Lan <dlan@kernel.org>,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K. Petersen" <mkp@kernel.org>,
-	Alim Akhtar <alim.akhtar@samsung.com>,
-	Avri Altman <avri.altman@sandisk.com>,
-	Bart Van Assche <bvanassche@acm.org>, Bean Huo <beanhuo@micron.com>,
-	Stanley Jhu <stanleyjhu@google.com>, Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Philipp Zabel <p.zabel@pengutronix.de>,
-	Paul Walmsley <pjw@kernel.org>, Palmer Dabbelt <palmer@dabbelt.com>,
-	Albert Ou <aou@eecs.berkeley.edu>, Alexandre Ghiti <alex@ghiti.fr>,
-	Anirudh Srinivasan <asrinivasan@oss.tenstorrent.com>,
-	Jennifer Berringer <jberring@redhat.com>,
-	Trevor Gamblin <tgamblin@baylibre.com>, linux-scsi@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-riscv@lists.infradead.org,
-	spacemit@lists.linux.dev, linux-kernel@vger.kernel.org,
-	Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
-Subject: Re: [PATCH v8 0/2] Add UFS Host driver support for SpacemiT K3 SoC
-Message-ID: <av8qEXk68wsy7pNe@aurel32.net>
-Mail-Followup-To: E Shattow <e@freeshell.de>, Yixun Lan <dlan@kernel.org>,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K. Petersen" <mkp@kernel.org>,
-	Alim Akhtar <alim.akhtar@samsung.com>,
-	Avri Altman <avri.altman@sandisk.com>,
-	Bart Van Assche <bvanassche@acm.org>, Bean Huo <beanhuo@micron.com>,
-	Stanley Jhu <stanleyjhu@google.com>, Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Philipp Zabel <p.zabel@pengutronix.de>,
-	Paul Walmsley <pjw@kernel.org>, Palmer Dabbelt <palmer@dabbelt.com>,
-	Albert Ou <aou@eecs.berkeley.edu>, Alexandre Ghiti <alex@ghiti.fr>,
-	Anirudh Srinivasan <asrinivasan@oss.tenstorrent.com>,
-	Jennifer Berringer <jberring@redhat.com>,
-	Trevor Gamblin <tgamblin@baylibre.com>, linux-scsi@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-riscv@lists.infradead.org,
-	spacemit@lists.linux.dev, linux-kernel@vger.kernel.org,
-	Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
-References: <20261116-08-k3-ufs-support-v8-0-e3b256972dd4@kernel.org>
- <8462a0d9-e9b7-467d-b2e1-7870c78e2691@freeshell.de>
- <avyusx36U534Bpu9@aurel32.net>
- <053b55fe-47d0-4cc7-ba53-c560fc9c1d1b@freeshell.de>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=YLWZOcx6
+Received: by mail-dl1-f69.google.com with SMTP id a92af1059eb24-1b3b45597c7so4715120c88.1
+        for <linux-scsi@vger.kernel.org>; Thu, 19 Nov 2026 09:05:04 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20260707; t=1795107903; x=1795712703; darn=vger.kernel.org;
+        h=content-type:cc:to:from:subject:message-id:mime-version:date:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=tEWTKd67+sE6hXsJjat4+R5/kfA+hMcRoqTzGHNveW8=;
+        b=YLWZOcx6/QoLsL/1TXsxTFGuZq33rQl5jXZYghA+UiYhS9k65Nw7Kr83z1yQ6oFixG
+         x385VKJocvNTv6lvfu2rze7It6RimPkSvBmF6WyNsQCYWBmLkA2HVuZ21VfvAn5KM21/
+         nM9Qy4lWYIJO2QRegdM+H1S90Sysd1A2trPm3bAQWhG0IEgIvsgNfg7I/xEz3v/wmFAB
+         lQhSeKaYlxpVyNDu3wrhv2uyAnibocdC/BwWMB/shvpUNQ59JtrmbzBpvQoH5vEgi4zK
+         JrXFreBo60+bLoSMLYQsHXFXQNcBgzmO/TjOLsAgGQYLGnX9SA2ZQ2QSIhTOzHk0IFIC
+         6gBg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1795107903; x=1795712703;
+        h=content-type:cc:to:from:subject:message-id:mime-version:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=tEWTKd67+sE6hXsJjat4+R5/kfA+hMcRoqTzGHNveW8=;
+        b=vcxHIU0h7ijbxYYaprrkM3rHpn0E9LwHwOlKgBcGvUiwr9WuQH8I7N1XIuxWKehPKG
+         7tZteTPvo9ke80pfwi1LZMXB7A8U4LBc/9MrCh77Bv5h07xLdZ0NiLf5j/IYjY6854y8
+         Y5pHYrMsHz1UDJYB1iwJ5wZipGf7jQ6khOWyLyAEpMuyRDgiFBuSAfiilGQBIRR/0/ep
+         WmVq//xYdel2wKpfreVD8oD4Q785Egj9uiemFtPg+QFw7aZTbkxr2J9UZxFVhCOb2kud
+         L0WhPF1fDqxY6ee0HC8bnu32ExlntVVb67HWPLTEyOLPdlRvgEScJg5cNgZg1eCwGFei
+         xpYQ==
+X-Gm-Message-State: APuU4Z/wZSOWoHSOIe5n/Uf8nnToKdJQhHfcQ9jAL8LHd13nS88TcsAI
+	KrDlplrlC5r2GY/7NeBrZ1bnku8AdKlb/cCKa6V8+esNrvgWrq1c11VYZyImpc/MbHIGyJa6ohT
+	TMsC0vpRf+w==
+X-Received: from dlbsw11.prod.google.com ([2002:a05:7022:3a8b:b0:19a:1425:bb9c])
+ (user=irogers job=prod-delivery.src-stubby-dispatcher) by 2002:a05:701b:4204:10b0:1b5:4cbd:ac02
+ with SMTP id a92af1059eb24-1b556895b10mr269905c88.15.1795107903109; Thu, 19
+ Nov 2026 09:05:03 -0800 (PST)
+Date: Thu, 19 Nov 2026 09:05:00 -0800
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -102,98 +74,79 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <053b55fe-47d0-4cc7-ba53-c560fc9c1d1b@freeshell.de>
-User-Agent: Mutt/2.4.1 (2026-07-04)
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.56.1.708.g77570a6a1d-goog
+Message-ID: <20261119170500.1514537-1-irogers@google.com>
+Subject: [PATCH] scsi: lpfc: Fix format string and OOB copy in lpfc_read_object()
+From: Ian Rogers <irogers@google.com>
+To: Justin Tee <justin.tee@broadcom.com>, Paul Ely <paul.ely@broadcom.com>, 
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+	"Martin K. Petersen" <mkp@kernel.org>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	llvm@lists.linux.dev, Elkin Cruz <elkin@google.com>, Ian Rogers <irogers@google.com>
+Content-Type: text/plain; charset="UTF-8"
 
-Hi,
+In lpfc_read_object(), rd_object_name is a 26-element u32 array (104
+bytes, LPFC_OBJ_NAME_SZ) populated from rdobject via scnprintf() without a
+"%s" format string, and then copied to the SLI-4 mailbox request with:
 
-On 2026-11-18 23:38, E Shattow wrote:
-> I was missing this detail previously. For testing again of v8 I have now
-> inserted a sed pipe to change this as suggested for the dts application
-> step of the build procedure:
-> 
-> b4 am -v5 -P3 -o- \
->  https://lore.kernel.org/all/20260916-08-k3-ufs-support-v5-0-1f5d71f1027d@kernel.org/ \
->  | sed -z 's%\(clock-names = "axi", "\)ref\(";\)%\1ref_clk\2%' \
->  | patch -p1
-> 
-> Additionally to the build procedure, since Debian testing now features
-> linux-config-7.3 and no longer linux-config-7.2, I now substitute
-> accordingly from linux-config-7.2 to linux-config-7.3
+	for (j = 0; j < strlen(rdobject); j++)
+		read_object->u.request.rd_object_name[j] =
+			cpu_to_le32(rd_object_name[j]);
 
-[...]
+Because the loop bound uses strlen(rdobject) (byte count, unbounded) to
+index 32-bit dword arrays of length 26, any object path of 27 bytes or
+longer reads past the end of rd_object_name on the stack and overwrites
+rd_object_cnt, rd_object_hbuf[], and adjacent mailbox memory. Passing
+rdobject directly as the format string also evaluates any '%' characters
+as printf specifiers.
 
-> $ journalctl --dmesg | grep ufshcd
-> ufshcd-spacemit c0e00000.ufshc: freq-table-hz property not specified
-> ufshcd-spacemit c0e00000.ufshc: ufshcd_populate_vreg: Unable to find
-> vdd-hba-supply regulator, assuming enabled
-> ufshcd-spacemit c0e00000.ufshc: ufshcd_populate_vreg: Unable to find
-> vcc-supply regulator, assuming enabled
-> ufshcd-spacemit c0e00000.ufshc: ufshcd_populate_vreg: Unable to find
-> vccq-supply regulator, assuming enabled
-> ufshcd-spacemit c0e00000.ufshc: ufshcd_populate_vreg: Unable to find
-> vccq2-supply regulator, assuming enabled
-> scsi host0: ufshcd
-> ufshcd-spacemit c0e00000.ufshc: ufshcd_scsi_add_wlus: BOOT WLUN not found
+Format rdobject with "%s", capture the bounded byte length returned by
+scnprintf(), and iterate over DIV_ROUND_UP(len, sizeof(u32)) dwords.
 
-All those are expected, so it's great that the issue you reported is 
-fixed.
+Found via an x86_64 LLVM=1 (Clang 21.1.8) allyesconfig audit with
+-Wformat-security enabled; fix and changelog drafted with an AI coding
+assistant. Verified with an ASan/UBSan C reproducer for short, '%'-bearing,
+and >104-byte object names, and build-tested with LLVM=1 W=1 and
+-Wformat-security; not tested on Emulex Fibre Channel hardware.
 
-> I did not again see the DL error event. However, the first attempt to
-> build Linux does fail:
-> 
-> make[7]: *** [scripts/Makefile.build:572: drivers/gpu/drm] Error 2
-> make[6]: *** [scripts/Makefile.build:572: drivers/gpu] Error 2
-> ...
-> make[5]: *** [scripts/Makefile.build:572: drivers] Error 2
-> make[4]: *** [Makefile:2244: .] Error 2
-> make[3]: *** [debian/rules:80: build-arch] Error 2
-> dpkg-buildpackage: error: make -f debian/rules binary subprocess failed
-> with exit status 2
-> make[2]: *** [scripts/Makefile.package:126: bindeb-pkg] Error 2
-> make[1]: *** [/home/es/linux-7.4-rc3/Makefile:1852: bindeb-pkg] Error 2
-> make: *** [Makefile:248: __sub-make] Error 2
-> 
-> real    188m48.844s
-> user    1415m17.363s
-> sys     66m11.932s
+Fixes: 72df8a452883 ("scsi: lpfc: Add support for cm enablement buffer")
+Fixes: 59936430e6a6 ("scsi: lpfc: Fix CPU to/from endian warnings introduced by ELS processing")
+Signed-off-by: Ian Rogers <irogers@google.com>
+---
+ drivers/scsi/lpfc/lpfc_sli.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-I guess the error is some GCC ICE.
-
-> Linux is running on the K3 SoC here without clocks preparation from the
-> bootloader; it is quite slow by comparison to a Linux kernel that
-> follows clock preparations by the vendor BSP bootloader. Simply
-> re-running the same "make ..." build command is successful in the same
-> system without any changes:
-> 
->   DEPMOD  debian/linux-image-7.4.0-rc3-k3ufs/lib/modules/7.4.0-rc3-k3ufs
-> ...
-> dpkg-deb: building package 'linux-image-7.4.0-rc3-k3ufs' in
-> '../linux-image-7.4.0-rc3-k3ufs_7.4.0~rc3-2_riscv64.deb'.
-> ...
-> real    34m56.794s
-> user    241m15.511s
-> sys     18m4.532s
-> 
-> Similar build failures occasionally happen when the root filesystem is
-> on USB microSD adapter-connected microSD storage. I assume the build
-> failures with default clocks configuration are not constrained to just
-> the UFS support series here.
-
-Yes, this is a known issue, unfortunately the K3 does not run stable 
-under load. See this thread (although it seems at the end the K1 and K3 
-issues are different ones):
-https://lore.kernel.org/linux-riscv/apSYF5x1Tu7PlyL1@aurel32.net/
-
-Also see this Fedora issue:
-https://forge.fedoraproject.org/riscv/planning/issues/36
-
-Regards
-Aurelien
-
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 9173263c87f9..26c9f5721340 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -22259,11 +22259,12 @@ lpfc_read_object(struct lpfc_hba *phba, char *rdobject, uint32_t *datap,
+ {
+ 	struct lpfc_mbx_read_object *read_object;
+ 	LPFC_MBOXQ_t *mbox;
+-	int rc, length, eof, j, byte_cnt = 0;
++	int rc, length, eof, byte_cnt = 0;
+ 	uint32_t shdr_status, shdr_add_status;
+ 	union lpfc_sli4_cfg_shdr *shdr;
+ 	struct lpfc_dmabuf *pcmd;
+ 	u32 rd_object_name[LPFC_MBX_OBJECT_NAME_LEN_DW] = {0};
++	size_t len, j;
+ 
+ 	mbox = mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
+ 	if (!mbox)
+@@ -22283,8 +22284,9 @@ lpfc_read_object(struct lpfc_hba *phba, char *rdobject, uint32_t *datap,
+ 
+ 	memset((void *)read_object->u.request.rd_object_name, 0,
+ 	       LPFC_OBJ_NAME_SZ);
+-	scnprintf((char *)rd_object_name, sizeof(rd_object_name), rdobject);
+-	for (j = 0; j < strlen(rdobject); j++)
++	len = scnprintf((char *)rd_object_name, sizeof(rd_object_name), "%s",
++			rdobject);
++	for (j = 0; j < DIV_ROUND_UP(len, sizeof(u32)); j++)
+ 		read_object->u.request.rd_object_name[j] =
+ 			cpu_to_le32(rd_object_name[j]);
+ 
 -- 
-Aurelien Jarno                          GPG: 4096R/1DDD8C9B
-aurelien@aurel32.net                     http://aurel32.net
+2.56.1.708.g77570a6a1d-goog
+
