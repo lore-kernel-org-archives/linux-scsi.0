@@ -1,84 +1,115 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=210.61.82.184
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=185.171.202.116
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795077400;
-	b=Z8iKU4qQvt+RBrrgMYW/cxXPuBQ40QYE0m/kvJNc1kuVmaqCZXAyARWzJBrN+asXl+nd
-	 O6NI/Y8NWM6BbRWK8fjGbDuQH4SO9pCQ2CoIwukbb0DMI8HqXnji14vmg64QajWr0AAg/
-	 hkpWLeW7vO7BYCPr8GL/3udGaDOozsNB5uRoBsu/c1Cg484owirQqqGFtytFJSCE0Xu/A
-	 XXt06s4hBZlAK6h7Gx4aMN70jdyFVtCyr/rVpm7mHyemxHN1Mi8nXJ84b+2Sn+3wUpqN1
-	 J4xPpnLAXrNttwfVQfVXeWk/nJI82VrRdU69zUwQcpArsytdvptoDK8oov8VCzA2jsA==
+	t=1795080911;
+	b=kH7YPJTyOLfE8ihkzaDy2EdzJgTi+huE5ZD46z6TrsM2fnj2MfAEPLxV6raSyJ9SeBdD
+	 pytGUuGlw55tx8Uk69w808LkJe0G11luTkqPeS0aB6KLaomMLRmbc6Z2rTBhTk+7uO2fY
+	 WxphTMiPsmRZPqykDf/O19FkBJ2KqDiTrrbYMYVwdohxMayI0FSOJEtfLg0D8yEspbTdV
+	 wjeEOMewKvtPkII5dgJvVDNDXWM1kO70xdi2Ee1r70HaxPWdLRhS0XWsYjVZqmbE8dCzl
+	 16T1bo0hxDs10QIKETnEEbzxFQarITQ5ApJbnuRPtXqEfrWCCuGJthgn5JDeiRR4FaQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795077400;
-	h=DMARC-Filter:X-UUID:DKIM-Signature:X-CID-P-RULE:X-CID-O-INFO:
-	 X-CID-META:X-CID-BVR:X-CID-BAS:X-CID-FACTOR:X-CID-RHF:X-UUID:Received:
-	 Received:Received:Message-ID:Subject:From:To:CC:Date:In-Reply-To:
-	 References:Content-Type:Content-Transfer-Encoding:User-Agent:
-	 MIME-Version:X-MTK;
-	bh=AqkzVLGrEHHH2cGeDiEnwkkdjUHz1gM1+JaYx+muEzU=;
-	b=TstvG20sxPuz2228mZgI02WdUUcYmAG1sqcvQBRRVpG9Ved87WBuCqX7aX21oD3uZtOd
-	 Os8KeDXRDiuVC9w4bzTECmhAn35ex+rkvgYvKbK3pPeFEB2/deWlPoR8ibE41RlcBc72B
-	 zQilJZML0cxJoiXHVYUCIZhzzNkZ0mRALejpPhifVxGrTbjGmzMFA/WZaXouAcYhJUnf6
-	 qhIfwj9iGCIPIZqJaS1aflB5xWc5nREOpezKi4Vb8OFOiMjSSocHP8A4SjMZJKrNUkgdL
-	 WF4QE2Fg/z6YFywl8v3pHAAi2HHf5k3IsERhLbpO6oXOODcxplzrTp9hH8Mm2BKZy8w==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795080911;
+	h=DMARC-Filter:Received:Received:Received:DKIM-Signature:From:To:Cc:
+	 Subject:In-Reply-To:References:User-Agent:Date:Message-ID:
+	 MIME-Version:Content-Type:Content-Transfer-Encoding:
+	 X-Last-TLS-Session-Version;
+	bh=CQyK9hhzQUtdCIaKwh8qFL6kiw3hBK7e02jXrxk3Q5M=;
+	b=EnQzhY4O/ZhrGSqMVaG5uNW5EszJXmpUWBioK8czzLqwzVXrROT+KnSSbdgnbQgVG/+R
+	 o8jDVZJp5nGGUn6pPPlfExvPjTRV/FTXcUkYehJ+YpizniIp4hb5JpbmTkuh1pSWJkHwu
+	 BUkBQXavbwOIWCL57UL9l/X/zx8R1VKpfZyTUXPOjvW4FsfsVSNjZ+Ewsz9AxcFMGq0+A
+	 AP4uS5vNbF63qX2c4Iocf+NlFNlJKIbwP59TXp/eK+0d9wdmbkuvaG30FHorsHi2BSrtd
+	 TmbldGiHm9O00WiNCI1dFrdIJiLZ/HGGIoZiv+hLAvg+k3OjpT5xCBQcQ2rxGhYWObA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=mediatek.com;
-	spf=pass smtp.mailfrom=mediatek.com;
-	dkim=pass header.d=mediatek.com header.i=@mediatek.com header.a=rsa-sha256 header.s=dk header.b=fH1ocq9V;
-	arc=none smtp.remote-ip=210.61.82.184
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+	dmarc=pass header.from=bootlin.com;
+	spf=pass smtp.mailfrom=bootlin.com;
+	dkim=pass header.d=bootlin.com header.i=@bootlin.com header.a=rsa-sha256 header.s=dkim header.b=trPf9+9S;
+	arc=none smtp.remote-ip=185.171.202.116
+Received: from smtpout-04.galae.net (smtpout-04.galae.net [185.171.202.116])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1B9A606A324;
-	Thu, 19 Nov 2026 08:36:38 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D1B9A606A324
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 719F9606A33E;
+	Thu, 19 Nov 2026 09:35:10 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 719F9606A33E
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.a=rsa-sha256 header.s=dk header.b=fH1ocq9V
-X-UUID: 50923b20e3f411f18dc8c9802ae25ab1-20261119
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=MIME-Version:Content-Transfer-Encoding:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=AqkzVLGrEHHH2cGeDiEnwkkdjUHz1gM1+JaYx+muEzU=;
-	b=fH1ocq9V370zm2BPfFIJE9Y0IgYyVcW3q/J8HQ8tOV3YBFwbyF0U4jMdrkbJnz2J8jkvJmUFTfJHs4qYRDMpISj247y88/a9DCwLf8KFPe3o8SjLTlG9rmSGgPTUVZdrONHPhEag+l8NLl9kI924W760ANBW4vIItKPJULSPiM8=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.21,REQID:aad14aaa-b65b-4dc2-9277-f848279ddbc7,IP:0,U
-	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-	release,TS:0
-X-CID-META: VersionHash:b0318ac,CLOUDID:370c8266-4b51-4c95-bb1b-80ac6aad9c96,B
-	ulkID:nil,BulkQuantity:0,SF:80|81|82|83|102|836|865|888|898,TC:-5,Content:
-	0|15|50|99,EDM:-3,IP:nil,URL:99|1,File:130,RT:0,Bulk:nil,QS:nil,BEC:nil,CO
-	L:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_ULS
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 50923b20e3f411f18dc8c9802ae25ab1-20261119
-Received: from mtkmbs11n2.mediatek.inc [(172.21.101.187)] by mailgw02.mediatek.com
-	(envelope-from <peter.wang@mediatek.com>)
-	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 1826370538; Thu, 19 Nov 2026 16:36:28 +0800
-Received: from mtkmbs13n2.mediatek.inc (172.21.101.108) by
- mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.29; Thu, 19 Nov 2026 16:36:27 +0800
-Received: from [10.233.130.16] (10.233.130.16) by mtkmbs13n2.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.2.2562.29 via Frontend
- Transport; Thu, 19 Nov 2026 16:36:27 +0800
-Message-ID: <2a83ef7d6fd36085ff4140a894f51e0a9c50caac.camel@mediatek.com>
-Subject: Re: [PATCH v3 2/2] scsi: ufs-mediatek: restore the M-PHY power
- state when va09 disable fails
-From: Peter Wang <peter.wang@mediatek.com>
-To: Xiangwu Lai <laixiangwu@cmss.chinamobile.com>,
-	<chaotian.jing@mediatek.com>
-CC: <chu.stanley@gmail.com>, <alim.akhtar@samsung.com>, <bvanassche@acm.org>,
-	<sashiko-bot@kernel.org>, <linux-scsi@vger.kernel.org>,
-	<linux-mediatek@lists.infradead.org>, <linux-kernel@vger.kernel.org>
-Date: Thu, 19 Nov 2026 16:36:27 +0800
-In-Reply-To: <20261119071611.117-3-laixiangwu@cmss.chinamobile.com>
-References: <20261119071611.117-1-laixiangwu@cmss.chinamobile.com>
-	 <20261119071611.117-3-laixiangwu@cmss.chinamobile.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.52.3-0ubuntu1.1 
+	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.a=rsa-sha256 header.s=dkim header.b=trPf9+9S
+Received: from smtpout-01.galae.net (smtpout-01.galae.net [212.83.139.233])
+	by smtpout-04.galae.net (Postfix) with ESMTPS id 9242AC4CBEF;
+	Thu, 19 Nov 2026 09:35:13 +0000 (UTC)
+Received: from mail.galae.net (mail.galae.net [212.83.136.155])
+	by smtpout-01.galae.net (Postfix) with ESMTPS id 3D3E660237;
+	Thu, 19 Nov 2026 09:35:08 +0000 (UTC)
+Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id 145C311BC315F;
+	Thu, 19 Nov 2026 10:34:37 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=dkim;
+	t=1795080902; h=from:subject:date:message-id:to:cc:mime-version:content-type:
+	 content-transfer-encoding:in-reply-to:references;
+	bh=CQyK9hhzQUtdCIaKwh8qFL6kiw3hBK7e02jXrxk3Q5M=;
+	b=trPf9+9SmvXq7f3i06Ocu8PXp2wkKO6ORNKTA4/AjOKcQKVFePqcO/1BhMn+K4JKXgVetW
+	9Yr+85a0u4rw/+pGQPZDRSMsRMDGawEXfnQ9jCtNv2zr3C8ZQd4iUe048cU50ECPRyFurf
+	rsmMLyDo3rueQxG7RuwY+EBebjyTZuhqh1PyoyvCDfGRSYoPSTyfx/hwy85QgTWFsAil0Q
+	X6TU5TJA2EpRSA3/3QyU7eQBfCRlHqNmOlSA+ByZVazhopQuZSLgxPNhpRVe5QgDh43L/T
+	HBMPjxwGs9avJmS68J25IgXRGZqvRkZ+RC3EyDq//xlN7GCwXICCDykv7Bhitw==
+From: Miquel Raynal <miquel.raynal@bootlin.com>
+To: Randy Dunlap <rdunlap@infradead.org>
+Cc: linux-kernel@vger.kernel.org,  Jonathan Corbet <corbet@lwn.net>,  Shuah
+ Khan <skhan@linuxfoundation.org>,  linux-doc@vger.kernel.org,  David
+ Hildenbrand <david@kernel.org>,  Andrew Morton
+ <akpm@linux-foundation.org>,  Jason Gunthorpe <jgg@nvidia.com>,  Leon
+ Romanovsky <leonro@nvidia.com>,  linux-mm@kvack.org,  Jaroslav Kysela
+ <perex@perex.cz>,  Takashi Iwai <tiwai@suse.com>,
+  linux-sound@vger.kernel.org,  Jens Axboe <axboe@kernel.dk>,
+  linux-block@vger.kernel.org,  Marcel Holtmann <marcel@holtmann.org>,
+  Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
+  linux-bluetooth@vger.kernel.org,  Willem de Bruijn
+ <willemdebruijn.kernel@gmail.com>,  Jason Wang <jasowangio@gmail.com>,
+  David Heidelberg <david@ixit.cz>,  oe-linux-nfc@lists.linux.dev,  Chas
+ Williams <3chas3@gmail.com>,  "David S. Miller" <davem@davemloft.net>,
+  Eric Dumazet <edumazet@kernel.org>,  Jakub Kicinski <kuba@kernel.org>,
+  Paolo Abeni <pabeni@redhat.com>,  netdev@vger.kernel.org,  Helge Deller
+ <deller@gmx.de>,  linux-fbdev@vger.kernel.org,
+  dri-devel@lists.freedesktop.org,  MPT-FusionLinux.pdl@broadcom.com,
+  "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,  "Martin
+ K. Petersen" <mkp@kernel.org>,  linux-scsi@vger.kernel.org,  Richard
+ Weinberger <richard@nod.at>,  Vignesh Raghavendra <vigneshr@ti.com>,
+  Zhihao Cheng <chengzhihao1@huawei.com>,  linux-mtd@lists.infradead.org,
+  Neill Kapron <nkapron@google.com>,  Andrey Konovalov
+ <andreyknvl@gmail.com>,  Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+  linux-usb@vger.kernel.org,  Juergen Gross <jgross@suse.com>,  Stefano
+ Stabellini <sstabellini@kernel.org>,  xen-devel@lists.xenproject.org,
+  Hans de Goede <hansg@kernel.org>,  Arnd Bergmann <arnd@arndb.de>,
+  "Michael S. Tsirkin" <mst@redhat.com>,  Eugenio =?utf-8?Q?P=C3=A9rez?=
+ <eperezma@redhat.com>,  Sean Christopherson <seanjc@google.com>,  Paolo
+ Bonzini <pbonzini@redhat.com>,  kvm@vger.kernel.org,
+  virtualization@lists.linux.dev,  Jan Kara <jack@suse.cz>,
+  linux-fsdevel@vger.kernel.org,  "Theodore Ts'o" <tytso@mit.edu>,
+  linux-ext4@vger.kernel.org,  Mike Marshall <hubcap@omnibond.com>,
+  devel@lists.orangefs.org,  Paulo Alcantara <pc@manguebit.org>,  Namjae
+ Jeon <linkinjeon@kernel.org>,  linux-cifs@vger.kernel.org,  Jaegeuk Kim
+ <jaegeuk@kernel.org>,  Chao Yu <chao@kernel.org>,
+  linux-f2fs-devel@lists.sourceforge.net,  Florian Fainelli
+ <florian.fainelli@broadcom.com>,  Broadcom internal kernel review list
+ <bcm-kernel-feedback-list@broadcom.com>,  Tzung-Bi Shih
+ <tzungbi@kernel.org>,  Benson Leung <bleung@chromium.org>,  David Airlie
+ <airlied@gmail.com>,  Simona Vetter <simona@ffwll.ch>,  Alex Deucher
+ <alexander.deucher@amd.com>,  Christian =?utf-8?Q?K=C3=B6nig?=
+ <christian.koenig@amd.com>,
+  amd-gfx@lists.freedesktop.org,  Jani Nikula
+ <jani.nikula@linux.intel.com>,  Joonas Lahtinen
+ <joonas.lahtinen@linux.intel.com>,  Rodrigo Vivi <rodrigo.vivi@intel.com>,
+  Tvrtko Ursulin <tursulin@ursulin.net>,  intel-gfx@lists.freedesktop.org,
+  Matthew Brost <matthew.brost@intel.com>,  Thomas =?utf-8?Q?Hellstr=C3=B6?=
+ =?utf-8?Q?m?=
+ <thomas.hellstrom@linux.intel.com>,  intel-xe@lists.freedesktop.org
+Subject: Re: [PATCH v2 07/12] docs: ioctl-number: update MTD entries
+In-Reply-To: <20261119053514.255348-8-rdunlap@infradead.org> (Randy Dunlap's
+	message of "Wed, 18 Nov 2026 21:35:08 -0800")
+References: <20261119053514.255348-1-rdunlap@infradead.org>
+	<20261119053514.255348-8-rdunlap@infradead.org>
+User-Agent: mu4e 1.12.12; emacs 30.2
+Date: Thu, 19 Nov 2026 10:34:37 +0100
+Message-ID: <87bj7lf9le.fsf@bootlin.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -88,48 +119,26 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-X-MTK: N
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+X-Last-TLS-Session-Version: TLSv1.3
 
-On Thu, 2026-11-19 at 15:16 +0800, Xiangwu Lai wrote:
-> In ufs_mtk_mphy_power_on(), the power-off path tears the M-PHY down
-> in
-> two steps before regulator_disable() is called: phy_power_off() puts
-> the PHY PLL and its clocks down, and ufs_mtk_va09_pwr_ctrl() asks the
-> firmware to drop the VA09 supply.=C2=A0 If regulator_disable() then fails=
-,
-> the M-PHY stays physically off while host->mphy_powered_on is left
-> set, so the next power-on attempt bails out through the
-> !(on ^ host->mphy_powered_on) check and never powers the M-PHY back
-> up, leaving the UFS host with an unpowered PHY (I/O timeouts,
-> controller lockups).
->=20
-> Simply forcing mphy_powered_on to false would trade this for two more
-> problems.=C2=A0 First, the regulator core drops the consumer enable count
-> only after a successful disable, so the count stays at 1, the next
-> power-on raises it to 2 and it never returns to zero: va09 is then
-> never physically disabled and the devm-acquired regulator would hit
-> WARN_ON(enable_count) again on release.=C2=A0 Second, when the power-off
-> fails during ufs_mtk_suspend(), the error recovery in
-> __ufshcd_wl_suspend() runs ufshcd_host_reset_and_restore() without
-> powering the M-PHY back on, which would run against an unpowered PHY.
-> (Both points were raised by the Sashiko AI review of v2.)
->=20
-> Since the va09 regulator stays enabled when its disable fails,
-> restore
-> the M-PHY power state instead: power the PHY back on through
-> ufs_mtk_va09_pwr_ctrl() and phy_power_on() and leave mphy_powered_on
-> set.=C2=A0 The next power-off attempt then retries the full sequence and
-> the enable count stays balanced.
->=20
-> Found by code inspection while reviewing the va09 error paths of the
-> driver; the failure has not been observed on real hardware.
->=20
-> Suggested-by: Peter Wang <peter.wang@mediatek.com>
-> Link: https://lore.kernel.org/r/sashiko-outbox-220026@kernel.org
-> Fixes: cf137b3ea49a ("scsi: ufs-mediatek: Support VA09 regulator
-> operations")
-> Signed-off-by: Xiangwu Lai <laixiangwu@cmss.chinamobile.com>
-> ---
+Hi Randy,
 
-Reviewed-by: Peter Wang <peter.wang@mediatek.com>
+On 18/11/2026 at 21:35:08 -08, Randy Dunlap <rdunlap@infradead.org> wrote:
 
+> Update the list of files where MTD ioctls are defined and update
+> the ranges of function numbers that are used.
+>
+> Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+
+Acked-by: Miquel Raynal <miquel.raynal@bootlin.com>
+
+> [Since having multiple maintainers trying to merge these would
+> cause some conflicts, it would be more manageable for Jon to
+> take all of these through the docs-next tree.]
+
+Agreed.
+
+Thanks,
+Miqu=C3=A8l
