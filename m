@@ -1,71 +1,56 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.200
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795108151;
-	b=Vs5qn8sm/UXQe2GNa7wLwaWG7ScXV2hBvbTcsCPZOkGHdKuyLWSlBay7Lq9sv9TzDGEn
-	 aft9XJ/fogCmJP9Qgqds/s9btdpRS77B2XYNSfpykTHVbrdQQSLTwBNjQY4KE3vLlCnhB
-	 bvKmjxM9JjlIWD0RUpoYzMkZv5EpCmt5aIGkJLj6I1KqNaj9MXgO3AYB30R6F0yIb3cZr
-	 0884oIktmquZD6tVhcQq/foCduxcVUI4zcBAfqzGlQ2x0FVIQl4vic/qe/e8wYHf2PvkF
-	 HH+lg7TbN7I7sPlTIvhtxvVc0H2o3OWufR67ch1x6uHr3d28v52uFTVWLrk+CmjzC/g==
+	t=1795108335;
+	b=TNhtEUqDGI+4QDh8TKuVxarU4cVBr9K9CsckISKW2Qs8JEG3wYZy/jfkVqA4K23xxNZD
+	 8a+PjZTCrzJZcnAuBVC/20r3IyacuIrs2WbXnLmvKMubAwMv2PoSnK5rPb7aMfaU5/URQ
+	 kneyN443EAZAzKCl3ILxz7HsqTmyve0tjv6RLtdD5aviUVZT2v1gc2RxUNqydrUDh/13R
+	 4HJtvwFsAl7lWZQeaiUuufuq5E5kG89nPU+ds7eJi0mGYOR3HRntMH28mTBA2k0aqci5s
+	 oXt/hXtxrdmF59F0wJOFVpDqHEXUrvAptmHhCslKEF2nBDhv3bbZG91V0aJoqqhNb7Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795108151;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Received:Date:Mime-Version:X-Mailer:Message-ID:
-	 Subject:From:To:Cc:Content-Type;
-	bh=+J9B5x5CJ2GgYpJNi/eyfCmiUuk3TgTy4lgVddwqdZA=;
-	b=1YnAsZyb+U0/GCLVMlOR9qQ26rvlTsT//xYPU7xNrXBTr25gfmDpits44wVxrPSpEIqA
-	 9lHEHUzRWvyBruNDCbA4cjo39ZZcvnjnLx0JVOqANf8fsLu6JsaF3T5XLu4j9uDhSdyCF
-	 K1g2O8b/QGTEMjgB2LDEA0Se8GlfH3oaB2eAKGgfx+Am0YSHAqVt8kX1L9jwG2VEVXYrr
-	 sj2/FuGudfJ7QWEEklDKvw+PoNAVdh7AEsgT5j15Smzx253SBs2toqiAB9nkpfRGMm6/J
-	 hvHCS2zXPPcF+vEc51oKZwIrEeoTG+TlPls1y6axkjZfgAFipVl/8iqNLegHgEsFdaw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795108335;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=E3wYUAG6DfKshzxzCtpl2+Up/xVj/FKCUpfb+8HOCx0=;
+	b=qC2FRdxxlLP0PGZ1tExi6Pcklry9ELplyFPLu/zjCgAQlLJ8eQmFTJEGNmfySsHZvWAM
+	 WY0BPCDQL1a5fJl9NbDk3OTEo1N1MoIJbftktLirz+7lyl9Se44axWdNatVscYmK9JDbq
+	 OpASZS06svoRjVJICUR5agiNb9BUMt4R2UcJDYQ+78mi27BwBb3QQeANy6zDMgX70bFlZ
+	 lKCIu3XqfoSolFZx/pb8HY1YGhLYU4Hdgw5uK+JCDzT4vUrqTXSVaysvsFUb6EQ3D/FUK
+	 T+xykbCDjlHw7YtHyTv/ph8eDJQIx4ABjMNAJVbBITMG6M8GVhCTlRp0vQi2ml5+BTQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=google.com;
-	spf=pass smtp.mailfrom=flex--irogers.bounces.google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=B5MJ02Oz;
-	arc=none smtp.remote-ip=74.125.82.200
-Received: from mail-dy1-f200.google.com (mail-dy1-f200.google.com [74.125.82.200])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Q7tRqYS8;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6DDC760A382B
-	for <linux-scsi@vger.kernel.org>; Thu, 19 Nov 2026 17:09:10 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6DDC760A382B
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--irogers.bounces.google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1785E606A32F
+	for <linux-scsi@vger.kernel.org>; Thu, 19 Nov 2026 17:12:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=B5MJ02Oz
-Received: by mail-dy1-f200.google.com with SMTP id 5a478bee46e88-384c78aa0dbso773222eec.0
-        for <linux-scsi@vger.kernel.org>; Thu, 19 Nov 2026 09:09:10 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20260707; t=1795108149; x=1795712949; darn=vger.kernel.org;
-        h=content-type:cc:to:from:subject:message-id:mime-version:date:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=+J9B5x5CJ2GgYpJNi/eyfCmiUuk3TgTy4lgVddwqdZA=;
-        b=B5MJ02OzukHzdq9o2dte5/8i2PYsjDvoc/mabadbviIFFCnrltp5/vcU3ERjNfxt/d
-         cceuRxgWADTmbiiDighentaJTXg/h2S36R9yM1IYQtTXDZu81aLAdQTrE6MllP2CfLDG
-         YsKZDKlROjz2fmitZrC23DKMOD7mJZN7qXXNSRzceBWwcOxSx4pVWo/MibVFG9xBuJX8
-         W0RgcVi32FN/5zIpO+De/P+GURS/r+9WOAVPNxQrXYtyxjfwrZQl1KEuEBmPA1qshBTC
-         7pVwnoSSRT3BDnkAFMY/4ZrXHkeomc1re3MdhmWAQ99XuG+vOBRAx1SedU+mvyS8eNo/
-         NQxg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795108149; x=1795712949;
-        h=content-type:cc:to:from:subject:message-id:mime-version:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=+J9B5x5CJ2GgYpJNi/eyfCmiUuk3TgTy4lgVddwqdZA=;
-        b=NQ1cAiUICLVIbFwgdj/sY3vmb91LMPBUwiww07GbnzytkdoatXMzrm6qQgF5rLbuFz
-         Lp24lFFYWqw/QG35Q0q1ZUJgXxBpMMvlj2WoVX3HCZvB6mRJEWQxrcGPtmHdoRNSSJei
-         o/e+2xfszRwBmxRe3bKGp2sNWaYFi/XJY1i7gcAggneSjsMYGkDDMmnuYHz9qu+j1Bp5
-         97Sv5bOzoBrXlDKugsWw49FFGTKG2O+t2tALmFwh08GXrRrqVmXmQj1wEbQl0vSv6Osb
-         Awk9+9T0j1N1xwK4whT99mdroVpEdjdLzGOqwb23bygGMHY6PSoLAbH579XLvV3YLm9b
-         BzoQ==
-X-Gm-Message-State: APuU4Z8dW/GFnFe2z0Mna4bEUQvVvA38WL7GzVMlVjCU0yALVn3h6ggB
-	pnMvJyLnGhMy6Jrx2z4rzO4M6AhrsXGGnTs+nht6eneNccBC4oLd8CEkQ/vsuJoY2tkoQkAH+0D
-	P26b/wxNsWQ==
-X-Received: from dyji33.prod.google.com ([2002:a05:7300:7a21:b0:36c:9a6e:5413])
- (user=irogers job=prod-delivery.src-stubby-dispatcher) by 2002:a05:7301:9e08:b0:379:7bb6:9c4b
- with SMTP id 5a478bee46e88-38281bfc037mr5432157eec.39.1795108149205; Thu, 19
- Nov 2026 09:09:09 -0800 (PST)
-Date: Thu, 19 Nov 2026 09:09:05 -0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Q7tRqYS8
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 71B5F1F000C4;
+	Thu, 19 Nov 2026 17:12:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1795108334;
+	bh=E3wYUAG6DfKshzxzCtpl2+Up/xVj/FKCUpfb+8HOCx0=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=Q7tRqYS8tS3yuGag6WiFA7nQwcBPmqBdFzB2vxrAEKRcyBvajGK2rskVUmHGvPn5O
+	 Skcn8gPmADWoAriI0XMFvZ5z0FiOjaoSiZtL+e7ZBCfwS+qJHTNwLcyRe/dHH6wjMf
+	 4g5SUVOSRg5hCFq3oGkWZ7udEoTq45EBio5AeMh/UdaW3EhjUVMcDX6PAOoALSpZ/W
+	 eIELdClc5YKFf06lRKMe3jGtTMQRxj9qRVdVy6A3SILcqkfYB+GtF+JAPjncGcWoar
+	 dGDlprNiqqVB4lqAWGdnPwrDaulh//Z9sJ6NIFnb807WS7K39I9rc5bL5kIKCBhgF+
+	 KZ/9zVKr9JaoQ==
+Message-ID: <sashiko-outbox-223648@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] scsi: qla2xxx: Format SFP EEPROM vendor strings with
+ %.*s
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Ian Rogers" <irogers@google.com>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20261119170511.1515433-1-irogers@google.com>
+References: <20261119170511.1515433-1-irogers@google.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 19 Nov 2026 17:12:14 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -74,60 +59,96 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0
-X-Mailer: git-send-email 2.56.1.708.g77570a6a1d-goog
-Message-ID: <20261119170905.1530613-1-irogers@google.com>
-Subject: [PATCH] scsi: pm8001: Fix abort completion status in pm8001_mpi_task_abort_resp()
-From: Ian Rogers <irogers@google.com>
-To: Jack Wang <jinpu.wang@cloud.ionos.com>, 
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
-	"Martin K. Petersen" <mkp@kernel.org>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	llvm@lists.linux.dev, Elkin Cruz <elkin@google.com>, Ian Rogers <irogers@google.com>
-Content-Type: text/plain; charset="UTF-8"
 
-In pm8001_mpi_task_abort_resp(), the IO_NOT_VALID branch assigns
-TMF_RESP_FUNC_FAILED (enum tmf_resp, 5) to ts->resp (enum
-service_response) instead of ts->stat, leaving ts->stat at 0. In
-addition, switch (status) has no default case, so any other non-zero
-firmware abort failure status leaves both ts->resp and ts->stat at
-their zero-initialized values (SAS_TASK_COMPLETE and
-SAS_SAM_STAT_GOOD), causing sas_execute_internal_abort() to falsely
-treat a failed abort as TMF_RESP_FUNC_COMPLETE.
+Thank you for your contribution! Sashiko AI review found no new issues
+in this patch, but noticed 1 related pre-existing issue it does not
+introduce:
+- [Critical] scsi: qla2xxx: stack buffer overflow in
+  qla2xxx_print_sfp_info() [1]
+--
 
-Set ts->resp = SAS_TASK_COMPLETE and ts->stat = TMF_RESP_FUNC_FAILED
-for both IO_NOT_VALID and default failure statuses, matching libsas
-and hisi_sas expectations.
+commit fc46a24e989dac1a4fa69f172af87de567da0070
+Author: Ian Rogers <irogers@google.com>
 
-Found via Clang -Wassign-enum on an x86_64 allyesconfig build.
-Verified by building drivers/scsi/pm8001/pm8001_hwi.o with LLVM=1 W=1
-(-Werror) and -Wassign-enum, and with a standalone C reproducer under
-ASan/UBSan; not runtime-tested on physical PM8001/PM80xx hardware.
+scsi: qla2xxx: Format SFP EEPROM vendor strings with %.*s
 
-Fixes: dbf9bfe61571 ("[SCSI] pm8001: add SAS/SATA HBA driver")
-Signed-off-by: Ian Rogers <irogers@google.com>
----
- drivers/scsi/pm8001/pm8001_hwi.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+This commit replaces snprintf() calls that passed SFP EEPROM vendor name and
+part number fields directly as format strings in qla2xxx_print_sfp_info()
+with "%.*s" formatting in ql_dbg().
 
-diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
-index 55a01e533fd1..b8c59c152d89 100644
---- a/drivers/scsi/pm8001/pm8001_hwi.c
-+++ b/drivers/scsi/pm8001/pm8001_hwi.c
-@@ -3478,7 +3478,12 @@ int pm8001_mpi_task_abort_resp(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 		break;
- 	case IO_NOT_VALID:
- 		pm8001_dbg(pm8001_ha, FAIL, "IO_NOT_VALID for tag %#x\n", tag);
--		ts->resp = TMF_RESP_FUNC_FAILED;
-+		ts->resp = SAS_TASK_COMPLETE;
-+		ts->stat = TMF_RESP_FUNC_FAILED;
-+		break;
-+	default:
-+		ts->resp = SAS_TASK_COMPLETE;
-+		ts->stat = TMF_RESP_FUNC_FAILED;
- 		break;
- 	}
- 	spin_lock_irqsave(&t->task_state_lock, flags);
--- 
-2.56.1.708.g77570a6a1d-goog
+> diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_i=
+nit.c
+> index ccb039d97353b..77504cfc07411 100644
+> --- a/drivers/scsi/qla2xxx/qla_init.c
+> +++ b/drivers/scsi/qla2xxx/qla_init.c
+> @@ -4126,15 +4126,13 @@ static void qla2xxx_print_sfp_info(struct scsi_ql=
+a_host *vha)
+>  	if (!(ql2xextended_error_logging & ql_dbg_verbose))
+>  		return;
+> =20
+> -	memset(str, 0, STR_LEN);
+> -	snprintf(str, SFF_VEN_NAME_LEN+1, a0->vendor_name);
+>  	ql_dbg(ql_dbg_init, vha, 0x015a,
+> -	    "SFP MFG Name: %s\n", str);
+> +	    "SFP MFG Name: %.*s\n",
+> +	    (int)sizeof(a0->vendor_name), a0->vendor_name);
+> =20
+> -	memset(str, 0, STR_LEN);
+> -	snprintf(str, SFF_PART_NAME_LEN+1, a0->vendor_pn);
+>  	ql_dbg(ql_dbg_init, vha, 0x015c,
+> -	    "SFP Part Name: %s\n", str);
+> +	    "SFP Part Name: %.*s\n",
+> +	    (int)sizeof(a0->vendor_pn), a0->vendor_pn);
+> =20
+>  	/* media */
+>  	memset(str, 0, STR_LEN);
 
+[Severity: Critical]
+This problem wasn't introduced by this patch, but can the media block
+immediately below overflow str[] [1]?
+
+drivers/scsi/qla2xxx/qla_init.c:
+#define PRINT_FIELD(_field, _flag, _str) {		\
+	if (a0->_field & _flag) {\
+		if (p) {\
+			strcat(ptr, "|");\
+			ptr++;\
+			leftover--;\
+		} \
+		len =3D snprintf(ptr, leftover, "%s", _str);	\
+		p =3D 1;\
+		leftover -=3D len;\
+		ptr +=3D len; \
+	} \
+}
+
+drivers/scsi/qla2xxx/qla_init.c:qla2xxx_print_sfp_info() {
+    ...
+	/* media */
+	memset(str, 0, STR_LEN);
+	ptr =3D str;
+	leftover =3D STR_LEN;
+	p =3D len =3D 0;
+	PRINT_FIELD(fc_med_cc9, FC_MED_TW, "Twin AX");
+	PRINT_FIELD(fc_med_cc9, FC_MED_TP, "Twisted Pair");
+	PRINT_FIELD(fc_med_cc9, FC_MED_MI, "Min Coax");
+	PRINT_FIELD(fc_med_cc9, FC_MED_TV, "Video Coax");
+	PRINT_FIELD(fc_med_cc9, FC_MED_M6, "MultiMode 62.5um");
+	PRINT_FIELD(fc_med_cc9, FC_MED_M5, "MultiMode 50um");
+	PRINT_FIELD(fc_med_cc9, FC_MED_SM, "SingleMode");
+    ...
+}
+
+str[] is 64 bytes (STR_LEN), while the seven media strings and their "|"
+separators total 83 characters plus the NUL terminator.  Because snprintf()
+returns the length that would have been written rather than the truncated
+length, when all seven FC_MED_* bits are set in a0->fc_med_cc9, the sixth
+PRINT_FIELD() drives leftover negative and advances ptr past the end of
+str[], and the seventh writes out-of-bounds on the stack via strcat() and
+triggers WARN_ON_ONCE() in vsnprintf().
+
+[1] https://sashiko.dev/#/bug/linux-684c2982-ba32-44da-bc9c-910dc2c357ef
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261119170511.1515=
+433-1-irogers@google.com?part=3D1
