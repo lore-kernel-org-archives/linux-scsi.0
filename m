@@ -1,51 +1,84 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=162.243.164.118
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=210.61.82.184
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795076113;
-	b=QDZHbz/i2R3WprjF6ythV1pwf5/Dn+Uj5WRKnHGj5zR6jO+Ow2v+MffnhdRmssKhjyuL
-	 3g5og1PJBEoPPfpl3t0uIU7w/shpua08v55QAKf09D+MRPSvy3cHgbNMXkMgggJVDh7Jq
-	 hZhFY5nMQ5bav4bWzUEs06OIZgyhryS8iFodtJe6oa49S7nVlmQrOjilbdG/R7gga7PuL
-	 /nqxkjWYwoOHxab4px6BCVass5CXui48YsMK/iPBQ4ov5sbFJ3tO0dhihnmISp7wfV2BG
-	 CYrREkX/V434aOv3wY+aOYHDrzQnCN2510SWgfSM4DgPoFsO2pkGRPl3NAV47RtOKhQ==
+	t=1795077400;
+	b=Z8iKU4qQvt+RBrrgMYW/cxXPuBQ40QYE0m/kvJNc1kuVmaqCZXAyARWzJBrN+asXl+nd
+	 O6NI/Y8NWM6BbRWK8fjGbDuQH4SO9pCQ2CoIwukbb0DMI8HqXnji14vmg64QajWr0AAg/
+	 hkpWLeW7vO7BYCPr8GL/3udGaDOozsNB5uRoBsu/c1Cg484owirQqqGFtytFJSCE0Xu/A
+	 XXt06s4hBZlAK6h7Gx4aMN70jdyFVtCyr/rVpm7mHyemxHN1Mi8nXJ84b+2Sn+3wUpqN1
+	 J4xPpnLAXrNttwfVQfVXeWk/nJI82VrRdU69zUwQcpArsytdvptoDK8oov8VCzA2jsA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795076113;
-	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
-	 Message-ID:MIME-Version:Content-Type:Content-Transfer-Encoding:
-	 X-CM-TRANSID:X-Coremail-Antispam:X-CM-SenderInfo;
-	bh=1irIRjHKghdqAx6LNzlKrGBMmDetxdA7XJtHT0RzPew=;
-	b=JrQCnnIawQ5IUGneqM6t6upK/oWBY5/T6CHy+i2dZLOQpFZXn8QBCypd5k6GN2Wjmksh
-	 8/jjYXtPXlGQTN6RhsZoj8ShIZdAsz/lAmIsh+BJoAxPRuLWN3f5cr2K2QL6KbOzdjmtm
-	 Xt4nvVc986tadZ1tBd6oXwo+xRpcTf88C+OYLewP7b1+LDPVvWc6/VzpI1woPYQogi67+
-	 M8EILDGmDeDU/B9+NhjDEDEwln+7PIJOnVC8B3CFtpPjwVspNsGujzOBRfx31UmkgJVPW
-	 ZiEAHLKCEqZVt1DLgkau16KiMnv03u7PCJRpCdHi+vGThjnOt56yYKpfwNWLnHevaYQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795077400;
+	h=DMARC-Filter:X-UUID:DKIM-Signature:X-CID-P-RULE:X-CID-O-INFO:
+	 X-CID-META:X-CID-BVR:X-CID-BAS:X-CID-FACTOR:X-CID-RHF:X-UUID:Received:
+	 Received:Received:Message-ID:Subject:From:To:CC:Date:In-Reply-To:
+	 References:Content-Type:Content-Transfer-Encoding:User-Agent:
+	 MIME-Version:X-MTK;
+	bh=AqkzVLGrEHHH2cGeDiEnwkkdjUHz1gM1+JaYx+muEzU=;
+	b=TstvG20sxPuz2228mZgI02WdUUcYmAG1sqcvQBRRVpG9Ved87WBuCqX7aX21oD3uZtOd
+	 Os8KeDXRDiuVC9w4bzTECmhAn35ex+rkvgYvKbK3pPeFEB2/deWlPoR8ibE41RlcBc72B
+	 zQilJZML0cxJoiXHVYUCIZhzzNkZ0mRALejpPhifVxGrTbjGmzMFA/WZaXouAcYhJUnf6
+	 qhIfwj9iGCIPIZqJaS1aflB5xWc5nREOpezKi4Vb8OFOiMjSSocHP8A4SjMZJKrNUkgdL
+	 WF4QE2Fg/z6YFywl8v3pHAAi2HHf5k3IsERhLbpO6oXOODcxplzrTp9hH8Mm2BKZy8w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=mail.zgclab.edu.cn;
-	spf=pass smtp.mailfrom=mail.zgclab.edu.cn;
-	dkim=pass header.d=mail.zgclab.edu.cn header.i=@mail.zgclab.edu.cn header.a=rsa-sha256 header.s=dkim header.b=A5qcdM2K;
-	arc=none smtp.remote-ip=162.243.164.118
-Received: from zg8tmtyylji0my4xnjqumte4.icoremail.net (zg8tmtyylji0my4xnjqumte4.icoremail.net [162.243.164.118])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 2F38B60A5BCA;
-	Thu, 19 Nov 2026 08:15:12 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2F38B60A5BCA
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mail.zgclab.edu.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mail.zgclab.edu.cn
+	dmarc=pass header.from=mediatek.com;
+	spf=pass smtp.mailfrom=mediatek.com;
+	dkim=pass header.d=mediatek.com header.i=@mediatek.com header.a=rsa-sha256 header.s=dk header.b=fH1ocq9V;
+	arc=none smtp.remote-ip=210.61.82.184
+Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1B9A606A324;
+	Thu, 19 Nov 2026 08:36:38 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D1B9A606A324
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mail.zgclab.edu.cn header.i=@mail.zgclab.edu.cn header.a=rsa-sha256 header.s=dkim header.b=A5qcdM2K
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=mail.zgclab.edu.cn; s=dkim; h=Received:From:To:Cc:Subject:Date:
-	Message-ID:MIME-Version:Content-Type:Content-Transfer-Encoding;
-	bh=1irIRjHKghdqAx6LNzlKrGBMmDetxdA7XJtHT0RzPew=; b=A5qcdM2KE+9pQ
-	4aptEoW/+91qAcIQalcj4o/NGuLsBFeEBzIYptc24cHqRxEVnET/S+Xr4cRQo/R/
-	8u/l+L2UBPpjBhmNW2agkLoZ8RJ3HIToje28GKOJ2cgfzb05KP1wwtU549Cliy3m
-	0JAesnDrBQuQ7sNiKViM1ybUUrzrFI=
-Received: from 13.eml (unknown [58.206.202.11])
-	by web2 (Coremail) with SMTP id yQQGZQBHcmYLsP5qiyJLAQ--.56742S2;
-	Thu, 19 Nov 2026 16:15:07 +0800 (CST)
-From: Wang Haoran <wanghr2026@mail.zgclab.edu.cn>
-To: James.Bottomley@HansenPartnership.com, mkp@kernel.org, orsonzhai@gmail.com, baolin.wang@linux.alibaba.com
-Cc: zhang.lyra@gmail.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, wanghr2026@mail.zgclab.edu.cn
-Subject: [PATCH] scsi: ufs: sprd: disable vdd-mphy on exit
-Date: Thu, 19 Nov 2026 16:15:08 +0800
-Message-ID: <1795076108324-13-67797508@mail.zgclab.edu.cn>
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.a=rsa-sha256 header.s=dk header.b=fH1ocq9V
+X-UUID: 50923b20e3f411f18dc8c9802ae25ab1-20261119
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+	h=MIME-Version:Content-Transfer-Encoding:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=AqkzVLGrEHHH2cGeDiEnwkkdjUHz1gM1+JaYx+muEzU=;
+	b=fH1ocq9V370zm2BPfFIJE9Y0IgYyVcW3q/J8HQ8tOV3YBFwbyF0U4jMdrkbJnz2J8jkvJmUFTfJHs4qYRDMpISj247y88/a9DCwLf8KFPe3o8SjLTlG9rmSGgPTUVZdrONHPhEag+l8NLl9kI924W760ANBW4vIItKPJULSPiM8=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.21,REQID:aad14aaa-b65b-4dc2-9277-f848279ddbc7,IP:0,U
+	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+	release,TS:0
+X-CID-META: VersionHash:b0318ac,CLOUDID:370c8266-4b51-4c95-bb1b-80ac6aad9c96,B
+	ulkID:nil,BulkQuantity:0,SF:80|81|82|83|102|836|865|888|898,TC:-5,Content:
+	0|15|50|99,EDM:-3,IP:nil,URL:99|1,File:130,RT:0,Bulk:nil,QS:nil,BEC:nil,CO
+	L:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_ULS
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: 50923b20e3f411f18dc8c9802ae25ab1-20261119
+Received: from mtkmbs11n2.mediatek.inc [(172.21.101.187)] by mailgw02.mediatek.com
+	(envelope-from <peter.wang@mediatek.com>)
+	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+	with ESMTP id 1826370538; Thu, 19 Nov 2026 16:36:28 +0800
+Received: from mtkmbs13n2.mediatek.inc (172.21.101.108) by
+ mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.29; Thu, 19 Nov 2026 16:36:27 +0800
+Received: from [10.233.130.16] (10.233.130.16) by mtkmbs13n2.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.2.2562.29 via Frontend
+ Transport; Thu, 19 Nov 2026 16:36:27 +0800
+Message-ID: <2a83ef7d6fd36085ff4140a894f51e0a9c50caac.camel@mediatek.com>
+Subject: Re: [PATCH v3 2/2] scsi: ufs-mediatek: restore the M-PHY power
+ state when va09 disable fails
+From: Peter Wang <peter.wang@mediatek.com>
+To: Xiangwu Lai <laixiangwu@cmss.chinamobile.com>,
+	<chaotian.jing@mediatek.com>
+CC: <chu.stanley@gmail.com>, <alim.akhtar@samsung.com>, <bvanassche@acm.org>,
+	<sashiko-bot@kernel.org>, <linux-scsi@vger.kernel.org>,
+	<linux-mediatek@lists.infradead.org>, <linux-kernel@vger.kernel.org>
+Date: Thu, 19 Nov 2026 16:36:27 +0800
+In-Reply-To: <20261119071611.117-3-laixiangwu@cmss.chinamobile.com>
+References: <20261119071611.117-1-laixiangwu@cmss.chinamobile.com>
+	 <20261119071611.117-3-laixiangwu@cmss.chinamobile.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.52.3-0ubuntu1.1 
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -55,69 +88,48 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:yQQGZQBHcmYLsP5qiyJLAQ--.56742S2
-X-Coremail-Antispam: 1UD129KBjvJXoW7tw43JFW3WrW7Jw1fGF1fCrg_yoW8WrWkpF
-	W5u397Cw1DGFWIkFZrZr1aya4rZws5G347GrW29w45Ja9Fyr1xXr97Kr1S93WqqrZ5XF1Y
-	qayrJ34fGanrXFUanT9S1TB71UUUUjUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUmj14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26r4j6ryUM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVCY1x0267AKxV
-	W8Jr0_Cr1UM2kKe7AKxVWUXVWUAwAac4AC62xK8xCEY4vEwIxC4wAS0I0E0xvYzxvE52x0
-	82IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUtVWrXw
-	Av7VC2z280aVAFwI0_Cr0_Gr1UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvEwIxGrwAC
-	jI8F5VA0II8E6IAqYI8I648v4I1lc7CjxVAaw2AFwI0_Jw0_GFylc2xSY4AK67AK6r43Mx
-	AIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMxCIbckI1I0E14v26r1Y6r17
-	MI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67
-	AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r4j6ryUMIIF0xvE2Ix0
-	cI8IcVCY1x0267AKxVWxJVW8Jr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4
-	A2jsIE14v26F4j6r4UJwCI42IY6I8E87Iv6xkF7I0E14v26r4UJVWxJrUvcSsGvfC2Kfnx
-	nUUI43ZEXa7VUjtEf5UUUUU==
-X-CM-SenderInfo: pzdqwxbusqjlo62juzldeovvfxof0/1tbiAgUQD2r+rloDeAAAsD
+X-MTK: N
 
-ufs_sprd_n6_init() enables the vdd-mphy regulator but there is no matching
-exit callback, so the rail stays on for the whole lifetime of the host and
-every unbind, error recovery or host re-probe that runs init again
-increments the enable count without ever decrementing it. This is not a
-failure-path imbalance but a normal-operation one: the mphy rail is powered
-from probe until shutdown and _regulator_put() warns on each release.
+On Thu, 2026-11-19 at 15:16 +0800, Xiangwu Lai wrote:
+> In ufs_mtk_mphy_power_on(), the power-off path tears the M-PHY down
+> in
+> two steps before regulator_disable() is called: phy_power_off() puts
+> the PHY PLL and its clocks down, and ufs_mtk_va09_pwr_ctrl() asks the
+> firmware to drop the VA09 supply.=C2=A0 If regulator_disable() then fails=
+,
+> the M-PHY stays physically off while host->mphy_powered_on is left
+> set, so the next power-on attempt bails out through the
+> !(on ^ host->mphy_powered_on) check and never powers the M-PHY back
+> up, leaving the UFS host with an unpowered PHY (I/O timeouts,
+> controller lockups).
+>=20
+> Simply forcing mphy_powered_on to false would trade this for two more
+> problems.=C2=A0 First, the regulator core drops the consumer enable count
+> only after a successful disable, so the count stays at 1, the next
+> power-on raises it to 2 and it never returns to zero: va09 is then
+> never physically disabled and the devm-acquired regulator would hit
+> WARN_ON(enable_count) again on release.=C2=A0 Second, when the power-off
+> fails during ufs_mtk_suspend(), the error recovery in
+> __ufshcd_wl_suspend() runs ufshcd_host_reset_and_restore() without
+> powering the M-PHY back on, which would run against an unpowered PHY.
+> (Both points were raised by the Sashiko AI review of v2.)
+>=20
+> Since the va09 regulator stays enabled when its disable fails,
+> restore
+> the M-PHY power state instead: power the PHY back on through
+> ufs_mtk_va09_pwr_ctrl() and phy_power_on() and leave mphy_powered_on
+> set.=C2=A0 The next power-off attempt then retries the full sequence and
+> the enable count stays balanced.
+>=20
+> Found by code inspection while reviewing the va09 error paths of the
+> driver; the failure has not been observed on real hardware.
+>=20
+> Suggested-by: Peter Wang <peter.wang@mediatek.com>
+> Link: https://lore.kernel.org/r/sashiko-outbox-220026@kernel.org
+> Fixes: cf137b3ea49a ("scsi: ufs-mediatek: Support VA09 regulator
+> operations")
+> Signed-off-by: Xiangwu Lai <laixiangwu@cmss.chinamobile.com>
+> ---
 
-Add an exit callback for the n6 host variant that disables the regulator.
-
-Signed-off-by: Wang Haoran <wanghr2026@mail.zgclab.edu.cn>
-Fixes: df7320bac37e ("scsi: ufs: ufs-unisoc: Add support for Unisoc UFS host controller")
----
-
-diff --git a/drivers/ufs/host/ufs-sprd.c b/drivers/ufs/host/ufs-sprd.c
-index 8c0a13e95556..c812eb3e6b11 100644
---- a/drivers/ufs/host/ufs-sprd.c
-+++ b/drivers/ufs/host/ufs-sprd.c
-@@ -266,6 +266,13 @@ static int ufs_sprd_n6_init(struct ufs_hba *hba)
- 	return 0;
- }
- 
-+static void ufs_sprd_n6_exit(struct ufs_hba *hba)
-+{
-+	struct ufs_sprd_priv *priv = ufs_sprd_get_priv_data(hba);
-+
-+	regulator_disable(priv->vregi[SPRD_UFS_VDD_MPHY].vreg);
-+}
-+
- static int ufs_sprd_n6_phy_init(struct ufs_hba *hba)
- {
- 	int ret = 0;
-@@ -394,6 +401,7 @@ static struct ufs_sprd_priv n6_ufs = {
- 	.ufs_hba_sprd_vops = {
- 		.name = "sprd,ums9620-ufs",
- 		.init = ufs_sprd_n6_init,
-+		.exit = ufs_sprd_n6_exit,
- 		.hce_enable_notify = sprd_ufs_n6_hce_enable_notify,
- 		.pwr_change_notify = sprd_ufs_pwr_change_notify,
- 		.hibern8_notify = sprd_ufs_n6_h8_notify,
-
----
-
-The vulnerability was found by static analysis.
+Reviewed-by: Peter Wang <peter.wang@mediatek.com>
 
