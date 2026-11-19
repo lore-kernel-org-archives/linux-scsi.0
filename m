@@ -1,57 +1,75 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.210
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795044810;
-	b=yHGOuHo9xiOP0dpOymcsSsLa44DLP65YE0mBAnM0EAFzKBc2aJUpDgaaMuywUO4dO62p
-	 ZUD10eVdTE9I1Yoxvb5fFyirrlFQ+4cdwHrii7M7pRbRi77r4VnlZ4P/3/m4VlUH+0srK
-	 9riOtRc6v8h1VysOt39/1+jgeduY5HiH2o70+mycfvoeTVXps0to9yqcG1ccn6SlujoVK
-	 IA8ctH3ApgTzPBHQAuezdhcCMlzCCfmT/bIIOyD1pa5U2SQyKrv4l8OXv85u6BeiEOc5Y
-	 q6CXc2YJ63hQgCCx6R/ACxMLf9Tg1mnieffFRfZv5iQ3GRmcbbK7Qvk224xcWFGIerg==
+	t=1795050165;
+	b=jANymiRTh0V+sBMEfSlF2A04eXzCbmwwEmFNE/jiaSPywa6Z0PpD2qe4t5riuU1Tdf9S
+	 o78T6hYZWj+Kog43uX2PgICCJ1XyxlipmNz7sG9ObN9Uwdepr9l49PCyU+VxqxRcIErWI
+	 wQlRaXrCjdsSbTdy4nc7B97Aa+HJgh8j1L6jTzN34hjmDgWHUzJy/rwsM2+IJr9DKqbPn
+	 rFltmbcohwUxdhQ2NKMTWwJwCL1eayt9/w7Z/tnQGhpBixZ5eodwwaQ/evgM+5uVfGAky
+	 RojuG7LOSCPaw3+bUlxJyZLBC90tIlx/KgACefyHNE6zxqmeTVCLipcbuCfAsaleVbA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795044810;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=OBAYbr3OIV9trRJuu6dInuIxhKlqc9idSYeHlkZLew4=;
-	b=5CsPp7Rhz8tBEz/S7e78B+MWAJc9v/00ySjsJlxBD1AA/kvKR8ZXWX/0saFYf5FW8rDy
-	 L+xuvJoG7pZhq7u7MU2k4otXcVP68MVVKwGJ3a/ENyGn/mYOqeVy7JLaCStkCGo5mm6dQ
-	 nOCbp/34DTAO898skB5fU6hEqGhfmM2IXm7jNI9hdvqZUnhE1i2yCRLWpZjoFjA6XjZgE
-	 2tLIQL77tv+BjTK9GRc+tDc57VVohiQFlx/BtttAmtmVuKd7NjXVwXQCAApF7ctrowiRe
-	 mks5o/174KjTd2Uk5fDSh6CYeR0l73/LNJyXDOcn15i7mzrVKBYibzQKV47xKGjcFYw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795050165;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:From:To:Cc:Subject:Date:Message-ID:
+	 X-Mailer:In-Reply-To:References:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=BlL4W75h1MApHqdiv3CTVmX4B2zbrj1hbYs9giA+q5g=;
+	b=wOYsQAHYkTxj83gUpTfBF9ihMIZei2yrEpCHmudFdJCdCE83ucNt3lJ2Bp1dqUlgS5wl
+	 Bx/gUeNQXIlB9Y8Ruq0140hW8QkrAGven09erJW3ZqATVZf6jAgxru+KWqmRgRG+SpxrK
+	 R1Y1GCAS08RcNs+sBgQUIn8HNEM2qbGkkkY6Vp9O3upoQXtrx38BkNJ4Dx1+6kICDDR8J
+	 A10XoH9T6ItuLVd+JOMFsc1zaabpkZa0rD+Ban/1dhvcO+Wh0tql2YzBNri8KWv9xjBZB
+	 wzKYULMmOn58Y3m6ipNUyG4omN9NPVi+El/diM4lx7YWF+rRyT0VLkFD3BUl+CKwYeA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=n1yWC88b;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=linux.dev;
+	spf=pass smtp.mailfrom=linux.dev;
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=fpFl4L4R;
+	arc=none smtp.remote-ip=95.215.58.210
+Received: from mta1.migadu.com (out-210.mta1.migadu.com [95.215.58.210])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EFB4D60A2630
-	for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2026 23:33:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1A77606A332
+	for <linux-scsi@vger.kernel.org>; Thu, 19 Nov 2026 01:02:44 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D1A77606A332
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=n1yWC88b
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A660F1F000C6;
-	Wed, 18 Nov 2026 23:33:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795044809;
-	bh=OBAYbr3OIV9trRJuu6dInuIxhKlqc9idSYeHlkZLew4=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=n1yWC88bjyCtmkhSD29R5QViSsKe1n4sgT9Je8Nw7X6YT4FCGmmTdvrqHnopqk70P
-	 EtLFQDIQ4huxZfB9xqWr3/PwZwQN5Rp6nnbHj4Sw7WpVW5Cf9aT6W/L3daVXm0HUT1
-	 AUAuu9vfajmCLvSKsXRyHE1f9pPNmHoTenGnfk7dXg7yks63COa5NyDDZfjzFan5NV
-	 wVE5M5+nY7jNOHdXUOMEvFkOwZqz7tKKhnzZoc9LBOu8nAHmWd9USEmVPTRbQLDqMt
-	 ywp0QasbPyp3DghT7iNZ2n0vdqKwpvA/ZiFpPnuteWq1heJyOPKjO7K/osrtD2okhk
-	 RYDdFy6bjospg==
-Message-ID: <sashiko-outbox-222185@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 01/11] scsi: mpt3sas: Don't leave requeued firmware
- events pending at teardown
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Jeff Layton" <jlayton@kernel.org>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20261118-sas-abba-v3-1-5562d690cf61@kernel.org>
-References: <20261118-sas-abba-v3-0-5562d690cf61@kernel.org>
- <20261118-sas-abba-v3-1-5562d690cf61@kernel.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 18 Nov 2026 23:33:29 +0000
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=fpFl4L4R
+X-Envelope-To: linux-scsi@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=ux0kfY5j7nM7oh8a7BfUtbSzQISJcSgoiHsY5y3C7fo=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1795050162; v=1; x=1795654962;
+ b=fpFl4L4RdOYRvsiHM+GOdTXfY0EaUgQcWvxjZu5E3Iv9+BQZa/n8b9XA4f9Z5qDlBLG+tUXI
+ lzbf8E45R6pbwSlF/bLPvWn8nZdmKdusdtPneU0j6QT68TFJKw7pUq/iGap/n11nC8WuHFZhFq1
+ iOkoa/h2KlJBvxgUm+WIY/0U=
+X-Envelope-To: linux-scsi@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 5966f3fd4a58c3d7;
+	Thu, 19 Nov 2026 01:02:42 +0000
+X-Mizu-Trace-ID: 5966f3fd4a58c3d7
+X-Migadu-Flow: FLOW_OUT
+From: Qiliang Yuan <qiliang.yuan@linux.dev>
+To: Ming Lei <tom.leiming@gmail.com>
+Cc: Qiliang Yuan <qiliang.yuan@linux.dev>,
+	"Martin K. Petersen" <mkp@kernel.org>,
+	Shuah Khan <shuah@kernel.org>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	linux-kernel@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	target-devel@vger.kernel.org,
+	linux-kselftest@vger.kernel.org,
+	linux-doc@vger.kernel.org,
+	Jens Axboe <axboe@kernel.dk>,
+	io-uring@vger.kernel.org,
+	Mike Christie <michael.christie@oracle.com>,
+	Bodo Stroesser <bostroesser@gmail.com>
+Subject: Re: [PATCH RFC 00/18] scsi: target: Add target_core_uring, an io_uring based user backstore
+Date: Wed, 18 Nov 2026 20:02:33 -0500
+Message-ID: <20261119010233.2917434-1-qiliang.yuan@linux.dev>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <av0CAptnbIZP-53U@fedora-laptop>
+References: <20261115-feat-target-core-uring-v1-0-28cdc137eac6@linux.dev> <avprIhtn1TuYLX1b@fedora-laptop> <20261117024640.3184554-1-qiliang.yuan@linux.dev> <av0CAptnbIZP-53U@fedora-laptop>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -60,129 +78,101 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 1 potential
-issue to consider:
-- [High] scsi: mpt3sas: races in _scsih_fw_event_requeue() and cleanup
-  queue
---
+On Tue, Nov 17, 2026 at 07:40:18PM -0600, Ming Lei wrote:
+> Can you share your setup? It is supposed that you run fio from VM,
+> otherwise you can just compare ublk with scsi backed with tcmu.
+>
+> But if you run fio from VM, I believe you can setup virtio-scsi backed by
+> ublk block device directly, which should cover your requirement, or maybe
+> I miss something?
 
-commit 462c12ccec856fed92f29e6abf5abd84f2b713ca
-Author: Jeff Layton <jlayton@kernel.org>
+Everything runs in one 32 CPU guest. For tcm_loop and iSCSI (16
+sessions over 127.0.0.1), fio runs in that guest on the initiator
+disks. For vhost-scsi, fio runs in a nested 16 vCPU KVM guest on the
+vhost-scsi disk, with the target and the backstore server in the outer
+guest. In the ublk runs, kublk serves the file as /dev/ublkbN and
+target_core_iblock exports that through the same fabric.
 
-scsi: mpt3sas: Don't leave requeued firmware events pending at teardown
+You are not missing anything. This backstore has block semantics: the
+kernel emulates the SCSI commands, PR and ALUA included, exactly as for
+iblock, so ublk behind target_core_iblock offers the same function on
+every fabric, and for a VM a virtio-scsi or vhost-scsi disk on top of
+the ublk device covers it as well. What the series adds over that is
+only performance, and outside tcm_loop the numbers I sent do not show a
+consistent gain.
 
-This commit initializes fw_event->delayed_work at allocation, skips
-requeuing events when the queue is being cleaned up or the host is being
-removed, and cancels pending delayed_work items during queue cleanup.
+[...]
 
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/=
-mpt3sas_scsih.c
-> index 04255286a2a69..545913123d01f 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-[ ... ]
-> @@ -3704,20 +3712,31 @@ _scsih_fw_event_requeue(struct MPT3SAS_ADAPTER *i=
-oc, struct fw_event_work
->  {
->  	unsigned long flags;
-> =20
-> -	if (ioc->firmware_event_thread =3D=3D NULL)
-> -		return;
-> -
->  	spin_lock_irqsave(&ioc->fw_event_lock, flags);
-> +	/*
-> +	 * Don't rearm the event while the queue is being flushed or the
-> +	 * host is going away.  _scsih_fw_event_cleanup_queue() may already
-> +	 * be past it, and the timer could then fire after the workqueue
-> +	 * has been destroyed.
-> +	 */
-> +	if (!ioc->firmware_event_thread || ioc->remove_host ||
-> +	    ioc->fw_events_cleanup)
-> +		goto drop;
-> +	fw_event->delayed_work_active =3D 1;
-> +	/*
-> +	 * Cleanups can overlap, and one can clear fw_events_cleanup while
-> +	 * another is cancelling, and so disabling, the delayed work.
-> +	 */
-> +	if (!queue_delayed_work(ioc->firmware_event_thread,
-> +	    &fw_event->delayed_work, msecs_to_jiffies(delay)))
-> +		goto drop;
->  	fw_event_work_get(fw_event);
->  	list_add_tail(&fw_event->list, &ioc->fw_event_list);
-> -	if (!fw_event->delayed_work_active) {
-> -		fw_event->delayed_work_active =3D 1;
-> -		INIT_DELAYED_WORK(&fw_event->delayed_work,
-> -		    _firmware_event_work_delayed);
-> -	}
-> -	queue_delayed_work(ioc->firmware_event_thread, &fw_event->delayed_work,
-> -	    msecs_to_jiffies(delay));
->  	spin_unlock_irqrestore(&ioc->fw_event_lock, flags);
-> +	return;
-> +drop:
-> +	spin_unlock_irqrestore(&ioc->fw_event_lock, flags);
-> +	fw_event_work_put(fw_event);
->  }
-> =20
->   /**
-> @@ -3869,9 +3888,17 @@ _scsih_fw_event_cleanup_queue(struct MPT3SAS_ADAPT=
-ER *ioc)
->  		 *
->  		 * If it did execute, we wait for it to finish, and the put will
->  		 * happen from _firmware_event_work()
-> +		 *
-> +		 * An event requeued by _scsih_fw_event_requeue() is pending
-> +		 * on its delayed_work instead, and its timer must not fire
-> +		 * after the workqueue is destroyed.
->  		 */
-> -		if (cancel_work_sync(&fw_event->work))
-> +		if (fw_event->delayed_work_active) {
-> +			if (cancel_delayed_work_sync(&fw_event->delayed_work))
-> +				fw_event_work_put(fw_event);
-> +		} else if (cancel_work_sync(&fw_event->work)) {
->  			fw_event_work_put(fw_event);
-> +		}
-> =20
->  	}
->  	ioc->fw_events_cleanup =3D 0;
+> My question is actually why there is regression wrt. 4k randread:
+>
+>  workload               TCM/USER (MB/s)   uring (MB/s)          change
+>   4k randread, 1 job      426 (409-463)      369 (366-384)         -13%
+>
+> Maybe you can focus on single job perf only, which is easy to compare and
+> investigate.
 
-[Severity: High]
-Can a delayed_work timer still fire after ioc->firmware_event_thread is
-destroyed when two cleanups overlap, or can a stale topology change event
-still requeue itself after a host reset cleanup?
+It comes from the scheduler moving fio between CPUs. The pwrite() I
+pointed to in my last mail is not it: doing that copy inside
+io_uring_enter() instead makes no difference.
 
-_scsih_fw_event_cleanup_queue() does not serialize concurrent callers and
-does not wait for a running topology change event (it skips waiting when
-ioc->current_event->event !=3D MPT3SAS_REMOVE_UNRESPONDING_DEVICES and
-clears ioc->fw_events_cleanup =3D 0 as soon as the loop finishes).  If a
-reset cleanup overlaps with teardown in scsih_remove() or scsih_shutdown():
+tcm_loop queues the LIO submission and completion work on the CPU that
+submitted the command, so with one job, fio's CPU always has bound
+kworkers and ksoftirqd runnable next to fio. The load balancer cannot
+move those and moves fio instead. This backstore gives it more chances:
+the completion work on fio's CPU handles 14 commands per run here
+against 24 with TCM/USER, so per 1000 I/Os the completion kworker and
+ksoftirqd run about 57 times against 35, fio is preempted as often, and
+it is moved two to three times as often. With balancing on, fio's own
+CPU time per I/O doubles here, from 3.1 to 6.3 us, against 3.4 to 4.9 us
+with TCM/USER, spread over the whole submission path rather than in one
+function.
 
-CPU0 (reset cleanup)              CPU1 (scsih_shutdown / scsih_remove)
-_scsih_fw_event_cleanup_queue()
-  fw_event =3D dequeue_next_fw_event()
-                                  _scsih_fw_event_cleanup_queue()
-                                    /* list_empty && !current_event */
-                                    return;
-                                  wq =3D ioc->firmware_event_thread;
-                                  ioc->firmware_event_thread =3D NULL;
-                                  destroy_workqueue(wq);
-                                  /* delayed_work timer fires on wq */
-                                    __queue_work()  <-- use-after-free
-  cancel_delayed_work_sync()
+Turning load balancing off for fio's CPUs and nothing else reverses the
+result. Single job, 4k randread at iodepth 32 over tcm_loop, 6 s per run,
+five alternating runs, median (min-max). fio runs in a cpuset of CPUs
+4-31 and the server threads are pinned to CPUs 0-3; the cpuset is either
+a normal member (balanced) or an isolated partition (not balanced):
 
-In addition, when a host reset cleanup runs while a topology change event
-is executing, _scsih_fw_event_cleanup_queue() sets
-ioc->current_event->ignore =3D 1, clears ioc->current_event =3D NULL, and
-resets ioc->fw_events_cleanup =3D 0 without cancelling or disabling
-fw_event->delayed_work.  If _scsih_add_device() or _scsih_pcie_add_device()
-fails on the final entry of the event (or an earlier entry already set
-requeue_event =3D 1), _scsih_sas_topology_change_event() exits its loop and
-returns requeue_event =3D 1 without re-checking fw_event->ignore.  When
-_mpt3sas_fw_work() then calls _scsih_fw_event_requeue(),
-ioc->fw_events_cleanup is already 0 and ioc->remove_host is 0, and
-_scsih_fw_event_requeue() checks neither fw_event->ignore nor
-ioc->shost_recovery, so the stale pre-reset event still requeues itself.
+  fio CPUs 4-31, backstore      bandwidth (MB/s)   change
+  balanced, TCM/USER               439 (398-462)
+  balanced, uring                  379 (371-388)   -13.7%
+  not balanced, TCM/USER           662 (544-710)
+  not balanced, uring              760 (575-798)   +14.8%
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261118-sas-abba-v=
-3-0-5562d690cf61@kernel.org?part=3D1
+Booting the guest with idle=poll removes the gap as well: with fio free
+to move, five runs give a median of 612 MB/s with TCM/USER and 627 MB/s
+here.
+
+That points at what each switch costs in a guest. An idle vCPU executes
+HLT, which exits to the host and puts the vCPU thread to sleep; waking
+it for a kworker, ksoftirqd or a migrated fio takes an IPI, a host
+wakeup and a VM entry, and the host may run the thread on another
+physical CPU, so the guest code then runs with cold caches. With
+idle=poll the vCPUs spin instead, stay on their physical CPUs and take
+the IPI without an exit. This backstore makes more of those switches
+per I/O, so it pays more of that cost, and fio's slowdown spread over
+the whole submission path looks like cold caches.
+
+What is measured is that idle=poll removes the gap and that the gap
+follows the switches and migrations. Which part of the cost is the exit
+and wakeup latency and which part is the vCPU thread landing on another
+physical CPU is inferred: I cannot trace the host side here. Waking an
+idle CPU is much cheaper on bare metal, so I expect the gap to be
+smaller there, but I have not measured it. idle=poll is only a
+diagnostic, it burns a host CPU per idle vCPU.
+
+[...]
+
+> When userspace target becomes more efficient, I'd suggest you to think
+> about why these applications can't be improved or refactored for the
+> potential (bigger)perf requirement.
+
+Agreed. Since this backstore only takes block commands, an application
+that can move to it can just as well move to ublk, and one that needs
+SCSI semantics in userspace is not served by it either.
+
+Thanks,
+Qiliang
