@@ -1,47 +1,47 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=220.197.31.4
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=117.135.210.5
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795058359;
-	b=k11yMZ7MJgsiY0GNTK9+Vo9fGaT2ebhHEGY2uE7uSfusjEslzV9ehRuDNcGf+tOajw3l
-	 3rbJ7E4H9MCjux+PdOjUDU+cpZq5rI1gULolHCMeBeO03IDHFsJHBQG8QJr/wZOttoN04
-	 p/yBBZXWloZXhmUU7wN6NqXs6iKVuqeVSweaYGlYP1WIHS8KQvymWx4Foimd1rRVSVoaq
-	 57Rb3/MPEq3x2XoCgRu3hjJq9v5Aa/aEIHpH5Mm7GPGYeKQAeOJEG9hYLAGHDgbv8AwsF
-	 /aWNsCVHZH99xjcMwAtvzKMBfWAsuUNnadqGc4pABPaZ9ly5b2abrEia4IiPC/lM4zA==
+	t=1795058391;
+	b=yAGNVvnyLRe6mlvlCT6PPE3lIVXpvx8V8q5BP6pb8I9M4C8yrIQooaqZZnW0wkLLGVm7
+	 f8bemt9RBtbYjviauFwJm2Fxp3ADW1rs3FkPaeTBGqNpxlOXhdqAc4hj84b+iG7pq1Rfe
+	 PYFLqxM7nJRgVMXG2UpUutohPemcSooXPZNBKmKsYfQOndUBie5/09TSzJG7znTNyx+rf
+	 IeJNG7FQlyq2mAjSakgXuor5irjUt2oA7viNEwZoUtOoORmBTEpp2/C6zaku5EO/SPdYR
+	 /ofDf7mo330+ILJ0Cv09MoJ7zPESwn1dUzW0LY1IGd+BmfrXfRXAClHh3Mf2PvzCvuQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795058359;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795058391;
 	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
 	 Message-Id:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding:X-CM-TRANSID:X-Coremail-Antispam:Sender:
 	 X-CM-SenderInfo;
-	bh=m1YDbvR0NdM/Ep3+a9LrNovs2dBnSUqDo0ZUIBxkOFc=;
-	b=TnKlwiD9do9mkzSEklacFCTnSroGspqqRaw6iEmAhnFq5w5cKSHUY01oKBjeeXIo4VQi
-	 C3fNj7EneTBWPRy/QTQXjhDk5OnyqNvNvW4Reb3WoW2XSrJVpZr2XNLipXT2isNB9GujQ
-	 r3WeohOpLVXYz4Mkbpq5mI8DIive87jGTV4YQ6QnDv15vz5GcCTGaJDcMABkHfuqjLlxG
-	 ePJOZa/61h5HWx9QzjmyXEyk2PDa0jL/kr3osXTvHOfigKDBTLNdkNW3b7ZnPjGUjcxte
-	 1XGWNCVNhbUMoQefG0kshbIUKsxDzSRCSpfrnW7nyuvW9GaRjFQ5cgugXT3eyKIwtAQ==
+	bh=sAIFrGGLjzvX0kwB7gi05tmzvGtRzGHopqc/qhGuWNY=;
+	b=Iq4m4IQQmOtpdhP/SARtNXDOUZNTHPKZtr7OngqrtTt4Ia3sNEWAU4amHsH6hviHVYko
+	 rmbApjFT1SCgSsYb2Ma5r8CsK6FC1eH0PmpYyT+uNomHwqfUfKQ0r4tuGNkSsNqRwUWDM
+	 FN1YC8UaACdQIjMRhK/wPfJtWqPSIqsGcq8nnXiUobJDMT0934Iri2TWLtuiFupBGHsqm
+	 +x5H0xMWzm2F8fxMi4mEGu422j8fNN/YxJ7uWHqFVON2Dt7ki9a+JbIBxFdaSafnP1Dm/
+	 q9W6NqLuxi88+kC5Ssnlpb45S4MtLFMrR2JxGFN0zJEtfrF9E2GJ3t548fY7dQKvhzg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=none header.from=kylinos.cn;
 	spf=pass smtp.mailfrom=163.com;
-	dkim=pass header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=jA2vHwNn;
-	arc=none smtp.remote-ip=220.197.31.4
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.4])
+	dkim=pass header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b="aZt9V1J/";
+	arc=none smtp.remote-ip=117.135.210.5
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.5])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 876C4606A320;
-	Thu, 19 Nov 2026 03:19:17 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 876C4606A320
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 821E6606A320;
+	Thu, 19 Nov 2026 03:19:48 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 821E6606A320
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=jA2vHwNn
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=aZt9V1J/
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=m1
-	YDbvR0NdM/Ep3+a9LrNovs2dBnSUqDo0ZUIBxkOFc=; b=jA2vHwNn6d39q7FgOj
-	NnV9rdqmOLIWW1Yn4iguGF3uw/pS203pxC7a8287CAgVmReaeiHy/c9yzTHCFIQ+
-	ImQxX3Nig79JutbWbYXCn+RDk/mxC2HmGrmLqcvu/ChVGtArs3MwI2THMYQx/3iu
-	gW/3xvVJtWfbatUxJso4KTOtY=
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=sA
+	IFrGGLjzvX0kwB7gi05tmzvGtRzGHopqc/qhGuWNY=; b=aZt9V1J/yjSXsvD2eX
+	3Vkkdc5cB1HqtKExIdQzOVipzSw5M9VmYvITMW4eE0jIXmGmqszdEPBYCiCpthgC
+	VYV0+BaIft2ehMhSafjo+fOouqfdduVBkBMmp+hVGN8hH63bkQxIdNWrUllzTfbU
+	funGN6FPGDNcjFF7IneVRTRis=
 Received: from localhost.localdomain (unknown [])
-	by gzga-smtp-mtada-g0-4 (Coremail) with SMTP id _____wDH7+Jfav5qLqoeJQ--.1940S4;
+	by gzga-smtp-mtada-g0-4 (Coremail) with SMTP id _____wDH7+Jfav5qLqoeJQ--.1940S3;
 	Thu, 19 Nov 2026 11:17:53 +0800 (CST)
 From: Yang Xiuwei <yangxiuwei@kylinos.cn>
 To: Yingjie Wang <x-professor@outlook.com>
@@ -54,9 +54,9 @@ Cc: "Martin K . Petersen" <mkp@kernel.org>,
 	linux-scsi@vger.kernel.org,
 	linux-block@vger.kernel.org,
 	Yang Xiuwei <yangxiuwei@kylinos.cn>
-Subject: [PATCH 2/2] scsi: bsg: release io_uring requests from end-I/O
-Date: Thu, 19 Nov 2026 11:17:51 +0800
-Message-Id: <20261119031751.3471968-3-yangxiuwei@kylinos.cn>
+Subject: [PATCH 1/2] block: bsg: add a per-device pool of uring_cmd completion buffers
+Date: Thu, 19 Nov 2026 11:17:50 +0800
+Message-Id: <20261119031751.3471968-2-yangxiuwei@kylinos.cn>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20261119031751.3471968-1-yangxiuwei@kylinos.cn>
 References: <cover.1795016239.git.x-professor@outlook.com>
@@ -71,231 +71,215 @@ List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wDH7+Jfav5qLqoeJQ--.1940S4
-X-Coremail-Antispam: 1Uf129KBjvJXoW3GF47JrWxur4DAF18uF1rWFg_yoW3WF13pF
-	W5Kw43XrZ8Ww4IkrZxtrs8ZryYvan5Ca47KFWUWay7Ar1UAr9I93W0kw10qF13urWkt343
-	Xr4kKa1DCF1jqwUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07j47KxUUUUU=
+X-CM-TRANSID:_____wDH7+Jfav5qLqoeJQ--.1940S3
+X-Coremail-Antispam: 1Uf129KBjvJXoWxtFy8Zw15uw1kKF18tF4fXwb_yoWxtF4UpF
+	1Yga43JrZ0gr1xKFsxJFs8Xr9Y9w4vywnrGrWIgryjkF1IyrnIga15tryrJFWUZrZ2kFya
+	qFs8KFW3Cr1UAw7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jcsqJUUUUU=
 Sender: yangxiuwei2025@163.com
-X-CM-SenderInfo: p1dqw55lxzvxisqskqqrwthudrp/xtbC6gENnWr+amHhsAAA31
+X-CM-SenderInfo: p1dqw55lxzvxisqskqqrwthudrp/xtbC6gENnWr+amHhmAAA3d
 
-Holding the completed request until task work keeps its tag busy
-and can deadlock deferred taskrun when the submitter faults on the
-same queue. Snapshot result and sense in end-I/O, return
-RQ_END_IO_FREE, and let task work unmap and copy without touching
-the request. Sense snapshots use the per-device completion pool;
-check out before mapping user data, return -EAGAIN when empty, and
-put immediately in end-I/O when no sense needs delivering.
+scsi_bsg will need temporary storage for sense data when completed
+requests are freed in end-I/O instead of task work.  Add a per-device
+buffer pool for that, allocated only when uring_cmd_fn is set.
 
-Fixes: 7b6d3255e7f8 ("scsi: bsg: add io_uring passthrough handler")
+Drivers take a buffer with bsg_uring_cmd_get_completion_buf() and
+return it with bsg_uring_cmd_put_completion_buf().  Exhaustion returns
+NULL (-EAGAIN from the caller).  Depth is BSG_DEFAULT_CMDS, buffer
+size is SCSI_SENSE_BUFFERSIZE.
+
 Signed-off-by: Yang Xiuwei <yangxiuwei@kylinos.cn>
 ---
- drivers/scsi/scsi_bsg.c | 128 +++++++++++++++++++++++++++++++---------
- 1 file changed, 101 insertions(+), 27 deletions(-)
+ block/bsg.c         | 127 ++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/bsg.h |   3 ++
+ 2 files changed, 130 insertions(+)
 
-diff --git a/drivers/scsi/scsi_bsg.c b/drivers/scsi/scsi_bsg.c
-index e4a65d7a2374..739778244f42 100644
---- a/drivers/scsi/scsi_bsg.c
-+++ b/drivers/scsi/scsi_bsg.c
-@@ -16,9 +16,13 @@
-  */
- struct scsi_bsg_uring_cmd_pdu {
- 	struct bio *bio;		/* mapped user buffer, unmap in task work */
--	struct request *req;		/* block request, freed in task work */
-+	u8 *sense_buffer;		/* sense snapshot from the per-device pool */
- 	u64 response_addr;		/* user space response buffer address */
--	u32 max_response_len;		/* user response buffer size */
-+	/* max_response_len is replaced by res2 after the end-I/O snapshot. */
-+	union {
-+		u32 max_response_len;	/* maximum sense snapshot size */
-+		u64 res2;		/* saved completion result */
-+	};
+diff --git a/block/bsg.c b/block/bsg.c
+index b296fa373292..96f46715ade9 100644
+--- a/block/bsg.c
++++ b/block/bsg.c
+@@ -12,10 +12,12 @@
+ #include <linux/idr.h>
+ #include <linux/bsg.h>
+ #include <linux/slab.h>
++#include <linux/bitmap.h>
+ #include <linux/io_uring/cmd.h>
+ 
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_ioctl.h>
++#include <scsi/scsi_device.h>
+ #include <scsi/sg.h>
+ 
+ #define BSG_DESCRIPTION	"Block layer SCSI generic (bsg) driver"
+@@ -30,6 +32,7 @@ struct bsg_device {
+ 	unsigned int reserved_size;
+ 	bsg_sg_io_fn *sg_io_fn;
+ 	bsg_uring_cmd_fn *uring_cmd_fn;
++	struct bsg_completion_pool *completion_pool;
  };
- static_assert(sizeof(struct scsi_bsg_uring_cmd_pdu) <= sizeof_field(struct io_uring_cmd, pdu));
  
-@@ -28,39 +32,48 @@ static inline struct scsi_bsg_uring_cmd_pdu *scsi_bsg_uring_cmd_pdu(
- 	return io_uring_cmd_to_pdu(ioucmd, struct scsi_bsg_uring_cmd_pdu);
- }
+ static inline struct bsg_device *to_bsg_device(struct inode *inode)
+@@ -40,6 +43,116 @@ static inline struct bsg_device *to_bsg_device(struct inode *inode)
+ #define BSG_DEFAULT_CMDS	64
+ #define BSG_MAX_DEVS		(1 << MINORBITS)
  
--/* Task work: build res2 (layout in uapi/linux/bsg.h) and copy sense to user. */
-+static u64 scsi_bsg_res2_clear_sense_len(u64 res2)
++/*
++ * Per-device pool of fixed-size completion buffers for uring_cmd drivers that
++ * need data to outlive the block request until task work.  Allocated when the
++ * queue is registered with a uring_cmd handler; freed when the bsg device is
++ * released.  Callers check a buffer out at issue time and return it from task
++ * work.  When the pool is exhausted the caller can reject the command with
++ * -EAGAIN instead of allocating or sleeping in the I/O path.
++ *
++ * The pool has BSG_DEFAULT_CMDS buffers of SCSI_SENSE_BUFFERSIZE (the only
++ * in-tree uring_cmd user is scsi_bsg).
++ */
++struct bsg_completion_pool {
++	spinlock_t lock;		/* protects checked_out */
++	size_t buf_size;		/* size of each buffer */
++	u8 *bufs;			/* BSG_DEFAULT_CMDS buffers */
++	unsigned long *checked_out;	/* bitmap: 1 while borrowed, 0 free */
++};
++
++static struct bsg_completion_pool *bsg_completion_pool_alloc(void)
 +{
-+	return bsg_scsi_res2_build(bsg_scsi_res2_device_status(res2),
-+				   bsg_scsi_res2_driver_status(res2),
-+				   bsg_scsi_res2_host_status(res2), 0,
-+				   bsg_scsi_res2_resid_len(res2));
++	struct bsg_completion_pool *pool;
++
++	pool = kzalloc(sizeof(*pool), GFP_KERNEL);
++	if (!pool)
++		return NULL;
++	pool->bufs = kcalloc(BSG_DEFAULT_CMDS, SCSI_SENSE_BUFFERSIZE,
++			     GFP_KERNEL);
++	pool->checked_out = bitmap_zalloc(BSG_DEFAULT_CMDS, GFP_KERNEL);
++	if (!pool->bufs || !pool->checked_out) {
++		bitmap_free(pool->checked_out);
++		kfree(pool->bufs);
++		kfree(pool);
++		return NULL;
++	}
++	pool->buf_size = SCSI_SENSE_BUFFERSIZE;
++	spin_lock_init(&pool->lock);
++	return pool;
 +}
 +
-+/* Task work: unmap the saved BIO and copy sense to user space. */
- static void scsi_bsg_uring_task_cb(struct io_tw_req tw_req, io_tw_token_t tw)
++static void bsg_completion_pool_free(struct bsg_completion_pool *pool)
++{
++	if (!pool)
++		return;
++	WARN_ON(!bitmap_empty(pool->checked_out, BSG_DEFAULT_CMDS));
++	bitmap_free(pool->checked_out);
++	kfree(pool->bufs);
++	kfree(pool);
++}
++
++/**
++ * bsg_uring_cmd_get_completion_buf - check out a per-device completion buffer
++ * @ioucmd: the uring command being issued
++ * @len: required buffer size
++ *
++ * Check a buffer out of the pool of the bsg device.  The caller must return
++ * the buffer with bsg_uring_cmd_put_completion_buf() before it completes or
++ * fails the command.
++ *
++ * Return: the buffer, or NULL if the device has no pool, @len exceeds the
++ * buffer size, or the pool is exhausted.
++ */
++void *bsg_uring_cmd_get_completion_buf(struct io_uring_cmd *ioucmd, size_t len)
++{
++	struct bsg_device *bd = to_bsg_device(file_inode(ioucmd->file));
++	struct bsg_completion_pool *pool = bd->completion_pool;
++	unsigned int index;
++	void *buf;
++
++	if (!pool || WARN_ON_ONCE(len > pool->buf_size))
++		return NULL;
++
++	spin_lock(&pool->lock);
++	index = find_first_zero_bit(pool->checked_out, BSG_DEFAULT_CMDS);
++	if (index >= BSG_DEFAULT_CMDS) {
++		spin_unlock(&pool->lock);
++		return NULL;
++	}
++	__set_bit(index, pool->checked_out);
++	buf = pool->bufs + (size_t)index * pool->buf_size;
++	spin_unlock(&pool->lock);
++	return buf;
++}
++EXPORT_SYMBOL_GPL(bsg_uring_cmd_get_completion_buf);
++
++/**
++ * bsg_uring_cmd_put_completion_buf - return a per-device completion buffer
++ * @ioucmd: the uring command being completed
++ * @buf: buffer previously returned by bsg_uring_cmd_get_completion_buf()
++ *
++ * Return the buffer to the pool of the bsg device.  Each buffer must be
++ * returned exactly once.  The pool warns if a buffer is returned while it
++ * is already free.
++ */
++void bsg_uring_cmd_put_completion_buf(struct io_uring_cmd *ioucmd, void *buf)
++{
++	struct bsg_device *bd = to_bsg_device(file_inode(ioucmd->file));
++	struct bsg_completion_pool *pool = bd->completion_pool;
++	unsigned int index;
++
++	if (WARN_ON_ONCE(!buf))
++		return;
++	index = ((u8 *)buf - pool->bufs) / pool->buf_size;
++	if (WARN_ON_ONCE(index >= BSG_DEFAULT_CMDS))
++		return;
++	spin_lock(&pool->lock);
++	WARN_ON_ONCE(!__test_and_clear_bit(index, pool->checked_out));
++	spin_unlock(&pool->lock);
++}
++EXPORT_SYMBOL_GPL(bsg_uring_cmd_put_completion_buf);
++
+ static DEFINE_IDA(bsg_minor_ida);
+ static const struct class bsg_class;
+ static int bsg_major;
+@@ -203,6 +316,7 @@ static void bsg_device_release(struct device *dev)
  {
- 	struct io_uring_cmd *ioucmd = io_uring_cmd_from_tw(tw_req);
- 	struct scsi_bsg_uring_cmd_pdu *pdu = scsi_bsg_uring_cmd_pdu(ioucmd);
--	struct request *rq = pdu->req;
--	struct scsi_cmnd *scmd = blk_mq_rq_to_pdu(rq);
--	u64 res2;
-+	u64 res2 = pdu->res2;
-+	u8 sense_len = bsg_scsi_res2_sense_len(res2);
- 	int ret = 0;
--	u8 driver_status = 0;
--	u8 sense_len_wr = 0;
+ 	struct bsg_device *bd = container_of(dev, struct bsg_device, device);
  
- 	if (pdu->bio)
- 		ret = blk_rq_unmap_user(pdu->bio);
- 
--	if (scsi_status_is_check_condition(scmd->result)) {
--		driver_status = DRIVER_SENSE;
--		if (pdu->response_addr)
--			sense_len_wr = min_t(unsigned int, pdu->max_response_len,
--					     scmd->sense_len);
--	}
--
--	if (sense_len_wr) {
--		if (copy_to_user(uptr64(pdu->response_addr), scmd->sense_buffer,
--				 sense_len_wr))
-+	/*
-+	 * If the ring is being torn down or the submitting task
-+	 * has exited, this may run from a kworker or in a different task, so
-+	 * don't copy the sense data to the submitter's address.
-+	 */
-+	if (unlikely(tw.cancel)) {
-+		ret = -ECANCELED;
-+		sense_len = 0;
-+	} else if (sense_len) {
-+		if (copy_to_user(uptr64(pdu->response_addr), pdu->sense_buffer,
-+				 sense_len)) {
- 			ret = -EFAULT;
-+			sense_len = 0;
-+		}
- 	}
- 
--	res2 = bsg_scsi_res2_build(status_byte(scmd->result), driver_status,
--				  host_byte(scmd->result), sense_len_wr,
--				  scmd->resid_len);
-+	if (!sense_len)
-+		res2 = scsi_bsg_res2_clear_sense_len(res2);
-+
-+	if (pdu->sense_buffer)
-+		bsg_uring_cmd_put_completion_buf(ioucmd, pdu->sense_buffer);
- 
--	blk_mq_free_request(rq);
- 	io_uring_cmd_done32(ioucmd, ret, res2,
- 			    IO_URING_CMD_TASK_WORK_ISSUE_FLAGS);
++	bsg_completion_pool_free(bd->completion_pool);
+ 	ida_free(&bsg_minor_ida, MINOR(bd->device.devt));
+ 	kfree(bd);
  }
-@@ -70,9 +83,38 @@ static enum rq_end_io_ret scsi_bsg_uring_cmd_done(struct request *req,
- 						  const struct io_comp_batch *iocb)
- {
- 	struct io_uring_cmd *ioucmd = req->end_io_data;
-+	struct scsi_bsg_uring_cmd_pdu *pdu = scsi_bsg_uring_cmd_pdu(ioucmd);
-+	struct scsi_cmnd *scmd = blk_mq_rq_to_pdu(req);
-+	u8 driver_status = 0;
-+	u8 sense_len = 0;
-+
-+	if (scsi_status_is_check_condition(scmd->result)) {
-+		driver_status = DRIVER_SENSE;
-+		if (pdu->response_addr) {
-+			sense_len = min_t(unsigned int, pdu->max_response_len,
-+					  scmd->sense_len);
-+			if (sense_len)
-+				memcpy(pdu->sense_buffer, scmd->sense_buffer,
-+				       sense_len);
+@@ -234,10 +348,23 @@ struct bsg_device *bsg_register_queue(struct request_queue *q,
+ 	bd->sg_io_fn = sg_io_fn;
+ 	bd->uring_cmd_fn = uring_cmd_fn;
+ 
++	/*
++	 * Only queues with a uring_cmd handler need completion buffers.
++	 * Transport bsg devices pass a NULL handler and allocate no pool.
++	 */
++	if (uring_cmd_fn) {
++		bd->completion_pool = bsg_completion_pool_alloc();
++		if (!bd->completion_pool) {
++			kfree(bd);
++			return ERR_PTR(-ENOMEM);
 +		}
 +	}
 +
-+	pdu->res2 = bsg_scsi_res2_build(status_byte(scmd->result),
-+					driver_status, host_byte(scmd->result),
-+					sense_len, scmd->resid_len);
-+
-+	/*
-+	 * No sense to deliver: return the pool buffer now so other commands
-+	 * can use it while this one waits for task work.  Task work only puts
-+	 * when sense_buffer is still set.
-+	 */
-+	if (!sense_len && pdu->sense_buffer) {
-+		bsg_uring_cmd_put_completion_buf(ioucmd, pdu->sense_buffer);
-+		pdu->sense_buffer = NULL;
-+	}
- 
- 	io_uring_cmd_do_in_task_lazy(ioucmd, scsi_bsg_uring_task_cb);
--	return RQ_END_IO_NONE;
-+	return RQ_END_IO_FREE;
- }
- 
- static int scsi_bsg_map_user_buffer(struct request *req,
-@@ -115,8 +157,14 @@ static int scsi_bsg_uring_cmd(struct request_queue *q, struct io_uring_cmd *iouc
- 	u32 dout_xfer_len = READ_ONCE(cmd->dout_xfer_len);
- 	u64 din_xferp = READ_ONCE(cmd->din_xferp);
- 	u32 din_xfer_len = READ_ONCE(cmd->din_xfer_len);
-+	u64 response_addr = READ_ONCE(cmd->response);
-+	u32 max_response_len = min_t(u32, READ_ONCE(cmd->max_response_len),
-+				     SCSI_SENSE_BUFFERSIZE);
- 	int ret;
- 
-+	if (ioucmd->flags & IORING_URING_CMD_MULTISHOT)
-+		return -EOPNOTSUPP;
-+
- 	if (cmd->protocol != BSG_PROTOCOL_SCSI ||
- 	    cmd->subprotocol != BSG_SUB_PROTOCOL_SCSI_CMD)
- 		return -EINVAL;
-@@ -160,8 +208,32 @@ static int scsi_bsg_uring_cmd(struct request_queue *q, struct io_uring_cmd *iouc
- 		goto out_free_req;
+ 	ret = ida_alloc_max(&bsg_minor_ida, BSG_MAX_DEVS - 1, GFP_KERNEL);
+ 	if (ret < 0) {
+ 		if (ret == -ENOSPC)
+ 			dev_err(parent, "bsg: too many bsg devices\n");
++		bsg_completion_pool_free(bd->completion_pool);
+ 		kfree(bd);
+ 		return ERR_PTR(ret);
  	}
+diff --git a/include/linux/bsg.h b/include/linux/bsg.h
+index 162730bfc2d8..f5560be80c20 100644
+--- a/include/linux/bsg.h
++++ b/include/linux/bsg.h
+@@ -20,4 +20,7 @@ struct bsg_device *bsg_register_queue(struct request_queue *q,
+ 		bsg_sg_io_fn *sg_io_fn, bsg_uring_cmd_fn *uring_cmd_fn);
+ void bsg_unregister_queue(struct bsg_device *bcd);
  
--	pdu->response_addr = cmd->response;
--	pdu->max_response_len = cmd->max_response_len;
-+	pdu->response_addr = response_addr;
-+	pdu->max_response_len = max_response_len;
++void *bsg_uring_cmd_get_completion_buf(struct io_uring_cmd *ioucmd, size_t len);
++void bsg_uring_cmd_put_completion_buf(struct io_uring_cmd *ioucmd, void *buf);
 +
-+	/*
-+	 * Sense bytes can only be delivered when the caller passed a
-+	 * response buffer and a nonzero response length; a command without
-+	 * both never snapshots sense, so it needs no pool buffer and cannot
-+	 * be rejected for pool exhaustion.
-+	 *
-+	 * Take the buffer before mapping the user data buffer.
-+	 * blk_rq_unmap_user() is not pure cleanup: for a bounce-mapped READ
-+	 * it copies the zero-filled bounce pages back into the caller's
-+	 * buffer, so a command rejected for pool exhaustion after mapping
-+	 * would zero the caller's data before returning -EAGAIN.
-+	 */
-+	if (response_addr && max_response_len) {
-+		pdu->sense_buffer =
-+			bsg_uring_cmd_get_completion_buf(ioucmd,
-+							 SCSI_SENSE_BUFFERSIZE);
-+		if (!pdu->sense_buffer) {
-+			ret = -EAGAIN;
-+			goto out_free_req;
-+		}
-+	} else {
-+		pdu->sense_buffer = NULL;
-+	}
- 
- 	if (dout_xfer_len || din_xfer_len) {
- 		bool is_write = dout_xfer_len > 0;
-@@ -172,7 +244,7 @@ static int scsi_bsg_uring_cmd(struct request_queue *q, struct io_uring_cmd *iouc
- 					       gfp_mask, is_write, buf_addr,
- 					       buf_len);
- 		if (ret)
--			goto out_free_req;
-+			goto out_put_buf;
- 		pdu->bio = req->bio;
- 	} else {
- 		pdu->bio = NULL;
-@@ -183,11 +255,13 @@ static int scsi_bsg_uring_cmd(struct request_queue *q, struct io_uring_cmd *iouc
- 
- 	req->end_io = scsi_bsg_uring_cmd_done;
- 	req->end_io_data = ioucmd;
--	pdu->req = req;
- 
- 	blk_execute_rq_nowait(req, false);
- 	return -EIOCBQUEUED;
- 
-+out_put_buf:
-+	if (pdu->sense_buffer)
-+		bsg_uring_cmd_put_completion_buf(ioucmd, pdu->sense_buffer);
- out_free_req:
- 	blk_mq_free_request(req);
- 	return ret;
+ #endif /* _LINUX_BSG_H */
 -- 
 2.25.1
 
