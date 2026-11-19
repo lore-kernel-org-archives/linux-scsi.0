@@ -1,65 +1,65 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=203.254.224.24
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795088960;
-	b=wVC+25JEWObMxE8YTzdykl/uLXvqCjnOTKHXJ7Laff/tOB5/+Z3/q5YKiOQBOe13hFJw
-	 ZiWv1I1Y/QHw66rNgFVHxtLw5tXr0opuI1SdF7OuA/zwNLnNRZaP0rqWxCkJ316C4hsXa
-	 U60JJ7eceIiZyWr2nvGrUVG0kG8rvY+4p2km5zWjd1bvcQkmJMvHVicqCDS22Harrkxh5
-	 PbmrL0Fv87gWbSYrat2ZkOeOpNi8GFY2b9d4K/RHQ3rJ/ThzbcOUKwIlWt2ZiniAlRVi4
-	 ukNrb3uZVmLq1a1QjWc8PvUjA1PCl53MiHIQqhX0cgbzWsSeZbzqgwh9IIWvNGNxY4g==
+	t=1795088962;
+	b=c81y9aW8vBan/nbz1G3f1hVByy7tZGQOBJ8q9elD8+7W9IlDur+rGa3j72wtKGK1Pejy
+	 LBUuSToNnuhYNZ7uI2u6KlamwRMPEqVpLueWDzt7p8vKuL4A3Vue3fRF7p58rd3+2x6Ue
+	 rashAjqPh5WphzTkt0fnng1kY4iNV0LJ07ietVUhn6XrZtg4mSHYm1+2bUmPIHrBgoAvI
+	 /yC2H264TSKGLbCw0jLe6WS9ODK0+3ddzGoiHLcEEdMC2En8COCN8VuPR90SDY3gPo6DS
+	 c6eRvprALir86mkZZz1sEzdyRD89rITXFl78zYGTYCi1La80VPSV+MNJ31MCHUBptwQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795088960;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795088962;
 	h=DMARC-Filter:Received:DKIM-Filter:DKIM-Signature:Received:Received:
 	 Received:Received:From:To:Cc:Subject:Date:Message-Id:X-Mailer:
 	 In-Reply-To:MIME-Version:Content-Transfer-Encoding:X-CMS-MailID:
 	 X-Msg-Generator:Content-Type:X-Sendblock-Type:CMS-TYPE:cpgsPolicy:
 	 X-CFilter-Loop:X-CMS-RootMailID:References;
-	bh=2KASlNDOD297J1FGaZ1820/PbchwyRaN1Gk68UxQpzw=;
-	b=nJJiNuKxI+cKDPkP4W7N9rvSuHhYKhi2NkY4tWlN2+sXGTou3PV5mLq+t+Tkkn6rDZZc
-	 38vrjvfvw62N0x0Z2QqT6HFOTAggtb+Y/IQzs75DU3rLLTGI5NfxyODG2Abo4A7Uhr/vr
-	 lvKDdbiG8nzfriKZeFUzF25TnJtTAVYIAEe6kMWU+cECGMiwTb2xKWUOuUCK0ErE3oxRL
-	 EARxY8dV/UkyYVP6+UJejYP+jX4GO262LydBu4cLPwaB3MhIBtrFjReU8XdFiCh+BS3lB
-	 51XmTSNB+Pnv8Y0JFp+ZIN8oWInLLPti4pvlrnrLf08HqG7t6cCFoJF70Odn7bjuxyw==
+	bh=s3gTUBSKHbEfKVIWdTL7aoQee4hjar3Z0u47LY7+snY=;
+	b=Rg+Nsc++x2KeRtXFwWLItNz/yXAFXNnavfefSixdKs8WSc26QrOiMty3KGam6TRMhF9S
+	 E/NuCPItjt9NhT++rsf5ABvnR4JgQ09ZZJ9WPbNw++/byUtMDLoBVPmuatS/m4NCyBgjG
+	 GFKoWHGY/u3PShZJ9rx/TpJBUXYnCJU4PTjny2VSlt8U3uhLncje4DBMw4EYl+P8bC7/1
+	 cSFloCO/sRFPI9DoFomUFUpakxvLrLMy9TmOzXfDMSOGvKQAhFZ+2ON+KLL/kxX2JiILN
+	 t95slRf0DRBN2HUYa6eh7XoHx3nhNKxHrsZpIVTpEtfBiY9U7uCRzY7ZWZ9KTbxINuw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=samsung.com;
 	spf=pass smtp.mailfrom=samsung.com;
-	dkim=pass header.d=samsung.com header.i=@samsung.com header.a=rsa-sha256 header.s=mail20170921 header.b=lDhRrRXr;
+	dkim=pass header.d=samsung.com header.i=@samsung.com header.a=rsa-sha256 header.s=mail20170921 header.b=dqQxzuxe;
 	arc=none smtp.remote-ip=203.254.224.24
 Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
 	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2939360A2602
-	for <linux-scsi@vger.kernel.org>; Thu, 19 Nov 2026 11:49:20 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2939360A2602
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 71AE660A2608
+	for <linux-scsi@vger.kernel.org>; Thu, 19 Nov 2026 11:49:21 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 71AE660A2608
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.a=rsa-sha256 header.s=mail20170921 header.b=lDhRrRXr
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.a=rsa-sha256 header.s=mail20170921 header.b=dqQxzuxe
 Received: from epcas5p1.samsung.com (unknown [182.195.41.39])
-	by mailout1.samsung.com (KnoxPortal) with ESMTP id 20261119114913epoutp0189942292b9a7428ec37d861ba6df3aad~pb_RxJd4X2677826778epoutp01N
-	for <linux-scsi@vger.kernel.org>; Thu, 19 Nov 2026 11:49:13 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20261119114913epoutp0189942292b9a7428ec37d861ba6df3aad~pb_RxJd4X2677826778epoutp01N
+	by mailout1.samsung.com (KnoxPortal) with ESMTP id 20261119114919epoutp01093f9ca1956bc56c76aeea07f1cab3a7~pb_X2Ws6i2617826178epoutp01Z
+	for <linux-scsi@vger.kernel.org>; Thu, 19 Nov 2026 11:49:19 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20261119114919epoutp01093f9ca1956bc56c76aeea07f1cab3a7~pb_X2Ws6i2617826178epoutp01Z
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1795088953;
-	bh=2KASlNDOD297J1FGaZ1820/PbchwyRaN1Gk68UxQpzw=;
+	s=mail20170921; t=1795088959;
+	bh=s3gTUBSKHbEfKVIWdTL7aoQee4hjar3Z0u47LY7+snY=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=lDhRrRXrtdDOgXZZnxUErYxoIB2RnlWRkSyJWECmJeXdcZmd48wAnOoIXp5g2b9sC
-	 ogh1PDLClv6cHjOfAaQlFUdprOZ6VlAvNAzoQIY0oOdhT4Hy97fmm9peBTn1Y+Upz9
-	 PJ7NY0dfndu1FQdxHJTxqqEHNqOHU7XryrKDZWrE=
-Received: from epsnrtp01.localdomain (unknown [182.195.42.153]) by
-	epcas5p4.samsung.com (KnoxPortal) with ESMTPS id
-	20261119114912epcas5p432ca14a229003ea3a2fd803259cc5623~pb_RJyumm1084610846epcas5p4H;
-	Thu, 19 Nov 2026 11:49:12 +0000 (GMT)
-Received: from epcas5p3.samsung.com (unknown [182.195.38.93]) by
-	epsnrtp01.localdomain (Postfix) with ESMTP id 4jVcFN0Rffz6B9m5; Thu, 19 Nov
-	2026 11:49:12 +0000 (GMT)
+	b=dqQxzuxeRRmh1EFAmYTtlnDzHNy7szmV2NX64ahPOy54B26M25Xz30VI04bYOSF9u
+	 Rc5GSlJ1M6YFK2iHf6Sp9rnXXbgVSPbljvzbwmT2AqKQChT6mEQdWCkZnWLwf42PXm
+	 48NpZ632c3Yi5bLhjokddHWbtTriJA9f1DimvsLI=
+Received: from epsnrtp02.localdomain (unknown [182.195.42.154]) by
+	epcas5p3.samsung.com (KnoxPortal) with ESMTPS id
+	20261119114919epcas5p35d531a748785348673944fddcd54006d~pb_XN5G2m1102911029epcas5p3C;
+	Thu, 19 Nov 2026 11:49:19 +0000 (GMT)
+Received: from epcas5p4.samsung.com (unknown [182.195.38.91]) by
+	epsnrtp02.localdomain (Postfix) with ESMTP id 4jVcFV1xFDz2SSKb; Thu, 19 Nov
+	2026 11:49:18 +0000 (GMT)
 Received: from epsmtip1.samsung.com (unknown [182.195.34.30]) by
 	epcas5p3.samsung.com (KnoxPortal) with ESMTPA id
-	20261119095720epcas5p3c2696a232ea5843fb933c312f748cf56~pacl5LEs30437304373epcas5p3t;
-	Thu, 19 Nov 2026 09:57:20 +0000 (GMT)
+	20261119095725epcas5p3a8e14a90891afe16faded4fb78484b49~pacqyFUJp0437304373epcas5p33;
+	Thu, 19 Nov 2026 09:57:25 +0000 (GMT)
 Received: from localhost.localdomain (unknown [107.99.41.245]) by
 	epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
-	20261119095718epsmtip1b03572a25f7ff21ac1e2d9c13a47f387~pacjyZ9yn2197221972epsmtip1I;
-	Thu, 19 Nov 2026 09:57:18 +0000 (GMT)
+	20261119095723epsmtip17c51681d284e723f2550c9ff004cea68~pacotAQBp2192721927epsmtip1a;
+	Thu, 19 Nov 2026 09:57:23 +0000 (GMT)
 From: Anuj Gupta <anuj20.g@samsung.com>
 To: axboe@kernel.dk, asml.silence@gmail.com, kbusch@kernel.org, hch@lst.de,
 	sagi@grimberg.me, James.Bottomley@HansenPartnership.com, mkp@kernel.org,
@@ -67,10 +67,10 @@ To: axboe@kernel.dk, asml.silence@gmail.com, kbusch@kernel.org, hch@lst.de,
 Cc: io-uring@vger.kernel.org, linux-nvme@lists.infradead.org,
 	linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
 	fuse-devel@lists.linux.dev, joshi.k@samsung.com, anuj20.g@samsung.com
-Subject: [PATCH v4 2/5] io_uring/uring_cmd: add import flags to
- io_uring_cmd_import_fixed()
-Date: Thu, 19 Nov 2026 15:26:12 +0530
-Message-Id: <20261119095615.1840522-3-anuj20.g@samsung.com>
+Subject: [PATCH v4 4/5] block: map dma-buf iterators in
+ blk_rq_map_user_iov()
+Date: Thu, 19 Nov 2026 15:26:14 +0530
+Message-Id: <20261119095615.1840522-5-anuj20.g@samsung.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20261119095615.1840522-1-anuj20.g@samsung.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -83,117 +83,61 @@ List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CMS-MailID: 20261119095720epcas5p3c2696a232ea5843fb933c312f748cf56
+X-CMS-MailID: 20261119095725epcas5p3a8e14a90891afe16faded4fb78484b49
 X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
 X-Sendblock-Type: REQ_APPROVE
 CMS-TYPE: 105P
 cpgsPolicy: CPGSC10-542,Y
 X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20261119095720epcas5p3c2696a232ea5843fb933c312f748cf56
+X-CMS-RootMailID: 20261119095725epcas5p3a8e14a90891afe16faded4fb78484b49
 References: <20261119095615.1840522-1-anuj20.g@samsung.com>
-	<CGME20261119095720epcas5p3c2696a232ea5843fb933c312f748cf56@epcas5p3.samsung.com>
+	<CGME20261119095725epcas5p3a8e14a90891afe16faded4fb78484b49@epcas5p3.samsung.com>
 
-Add an import flags argument to io_uring_cmd_import_fixed(), so callers
-can opt in to buffer types they support. No flags are defined yet, and
-all callers pass 0.
+A dma-buf iterator can't fall back to a bounce copy, so map it directly
+with blk_rq_map_user_bvec(), which already handles it through
+bio_iov_iter_set(). Fail with -EINVAL where a copy would otherwise be
+needed, and update the blk_rq_map_user_bvec() comment to match.
 
-No functional change.
-
-Suggested-by: Pavel Begunkov <asml.silence@gmail.com>
 Signed-off-by: Anuj Gupta <anuj20.g@samsung.com>
-Reviewed-by: Pavel Begunkov <asml.silence@gmail.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/nvme/host/ioctl.c    | 2 +-
- drivers/scsi/scsi_bsg.c      | 2 +-
- fs/fuse/dev_uring.c          | 2 +-
- include/linux/io_uring/cmd.h | 5 +++--
- io_uring/uring_cmd.c         | 5 ++++-
- 5 files changed, 10 insertions(+), 6 deletions(-)
+ block/blk-map.c | 15 ++++++++++++++-
+ 1 file changed, 14 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/nvme/host/ioctl.c b/drivers/nvme/host/ioctl.c
-index a87c9ca9d06c..d342ccad067a 100644
---- a/drivers/nvme/host/ioctl.c
-+++ b/drivers/nvme/host/ioctl.c
-@@ -533,7 +533,7 @@ static int nvme_uring_cmd_io(struct nvme_ctrl *ctrl, struct nvme_ns *ns,
- 					ddir, &iter, issue_flags);
- 		else
- 			ret = io_uring_cmd_import_fixed(d.addr, d.data_len,
--					ddir, &iter, ioucmd, issue_flags);
-+					ddir, &iter, ioucmd, issue_flags, 0);
- 		if (ret < 0)
- 			return ret;
- 
-diff --git a/drivers/scsi/scsi_bsg.c b/drivers/scsi/scsi_bsg.c
-index e4a65d7a2374..a93d6f5ac937 100644
---- a/drivers/scsi/scsi_bsg.c
-+++ b/drivers/scsi/scsi_bsg.c
-@@ -87,7 +87,7 @@ static int scsi_bsg_map_user_buffer(struct request *req,
- 	if (ioucmd->flags & IORING_URING_CMD_FIXED) {
- 		ret = io_uring_cmd_import_fixed(buf_addr, buf_len,
- 						is_write ? WRITE : READ,
--						&iter, ioucmd, issue_flags);
-+						&iter, ioucmd, issue_flags, 0);
- 		if (ret < 0)
- 			return ret;
- 		ret = blk_rq_map_user_iov(req->q, req, NULL, &iter, gfp_mask);
-diff --git a/fs/fuse/dev_uring.c b/fs/fuse/dev_uring.c
-index 460776cd69cd..a989b33ef229 100644
---- a/fs/fuse/dev_uring.c
-+++ b/fs/fuse/dev_uring.c
-@@ -727,7 +727,7 @@ static int fuse_uring_import_payload(struct fuse_ring_ent *ent, int dir,
- 
- 	if (bufpool_registered(ent->queue))
- 		err = io_uring_cmd_import_fixed((u64)(uintptr_t)base, len, dir,
--						iter, ent->cmd, issue_flags);
-+						iter, ent->cmd, issue_flags, 0);
- 	else
- 		err = import_ubuf(dir, base, len, iter);
- 
-diff --git a/include/linux/io_uring/cmd.h b/include/linux/io_uring/cmd.h
-index e18d4af62e1a..23fb66a1e2c1 100644
---- a/include/linux/io_uring/cmd.h
-+++ b/include/linux/io_uring/cmd.h
-@@ -64,7 +64,8 @@ static inline void io_uring_cmd_set_res32(struct io_uring_cmd *cmd, s32 ret, u64
- int io_uring_cmd_import_fixed(u64 ubuf, unsigned long len, int rw,
- 			      struct iov_iter *iter,
- 			      struct io_uring_cmd *ioucmd,
--			      unsigned int issue_flags);
-+			      unsigned int issue_flags,
-+			      unsigned int import_flags);
- int io_uring_cmd_import_fixed_vec(struct io_uring_cmd *ioucmd,
- 				  const struct iovec __user *uvec,
- 				  size_t uvec_segs,
-@@ -124,7 +125,7 @@ int io_buffer_unregister(struct io_uring_cmd *cmd, unsigned int index,
- static inline int
- io_uring_cmd_import_fixed(u64 ubuf, unsigned long len, int rw,
- 			  struct iov_iter *iter, struct io_uring_cmd *ioucmd,
--			  unsigned int issue_flags)
-+			  unsigned int issue_flags, unsigned int import_flags)
- {
- 	return -EOPNOTSUPP;
+diff --git a/block/blk-map.c b/block/blk-map.c
+index 7369aba74771..a65b255b229c 100644
+--- a/block/blk-map.c
++++ b/block/blk-map.c
+@@ -459,7 +459,7 @@ int blk_rq_append_bio(struct request *rq, struct bio *bio)
  }
-diff --git a/io_uring/uring_cmd.c b/io_uring/uring_cmd.c
-index cdf499f2c343..7198647f542d 100644
---- a/io_uring/uring_cmd.c
-+++ b/io_uring/uring_cmd.c
-@@ -270,12 +270,15 @@ int io_uring_cmd(struct io_kiocb *req, unsigned int issue_flags)
- int io_uring_cmd_import_fixed(u64 ubuf, unsigned long len, int rw,
- 			      struct iov_iter *iter,
- 			      struct io_uring_cmd *ioucmd,
--			      unsigned int issue_flags)
-+			      unsigned int issue_flags,
-+			      unsigned int import_flags)
+ EXPORT_SYMBOL(blk_rq_append_bio);
+ 
+-/* Prepare bio for passthrough IO given ITER_BVEC iter */
++/* Prepare a bio for passthrough I/O from a directly mapped iterator. */
+ static int blk_rq_map_user_bvec(struct request *rq, const struct iov_iter *iter)
  {
- 	struct io_kiocb *req = cmd_to_io_kiocb(ioucmd);
+ 	unsigned int max_bytes = rq->q->limits.max_hw_sectors << SECTOR_SHIFT;
+@@ -506,6 +506,19 @@ int blk_rq_map_user_iov(struct request_queue *q, struct request *rq,
+ 	struct iov_iter i;
+ 	int ret = -EINVAL;
  
- 	if (WARN_ON_ONCE(!(ioucmd->flags & IORING_URING_CMD_FIXED)))
- 		return -EINVAL;
-+	if (WARN_ON_ONCE(import_flags))
-+		return -EINVAL;
- 
- 	return io_import_reg_buf(req, iter, ubuf, len, rw, issue_flags, 0);
- }
++	if (iov_iter_is_dmabuf_map(iter)) {
++		if (map_data || (iov_iter_alignment(iter) & align))
++			return -EINVAL;
++		ret = blk_rq_map_user_bvec(rq, iter);
++		/*
++		 * -EREMOTEIO asks the caller to fall back to a bounce copy,
++		 * which a dma-buf can't do.
++		 */
++		if (ret == -EREMOTEIO)
++			ret = -EINVAL;
++		return ret;
++	}
++
+ 	if (map_data)
+ 		copy = true;
+ 	else if (iov_iter_alignment(iter) & align)
 -- 
 2.25.1
 
