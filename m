@@ -1,59 +1,128 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=148.251.105.195
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.133.124
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795100802;
-	b=5F9DXbKToNSStvmiN1xhXBXZqcgMImmg2SyRNqZH1vnXmW70D8C9CBFIPBTKvPaAG3Hn
-	 XVQd4ViAcGYA/sXF/dk1NCYW7b/yFLU1v7qHlFib9GC3Q/s16iBAoBBMdCZ9K5KRwK7s/
-	 cc9f4KJd6IkFVZwG1oVSQytBLV4zSl9oXWy1K0fZrtWdcjXSyY8fwZiYpmPYMdRXA038n
-	 lIl1Upi2VOBqb31zHfj7zeR9XSKnVt65VamWN/iTH2hYHOX7zKgy9o5KLFJ9bvvWF5vZd
-	 ZRhVlwpFvWzBlQ+24NhRu8SRaQqXe68L1vGaoQUbTX8YU+pXV/jCva6cx1nvcjR0V3Q==
+	t=1795101192;
+	b=z+mcotPnLfrfik8V5Ytq5KP5kWMNfW76gifI4oU85rHMTwWOiMoMUxgcuhggKGD9QnOS
+	 bdkwzjq2joVSe4EhwtFRPP+kVfcpBZLnjBEltkBqMeRg7MeWpX2BqHkkWe8zVOi55RUdI
+	 odgtvTTnj34yxsimo7urVhEsAfENjj2bsE4sX7OVrRqHSjvv7O4cjJEetCvfO2c1IAU1K
+	 kUDbDtmvmwk2MQd0jTVBROBOR2eOlhj7dK3BMYhfnCAXOcmiVb22016KntQV63/FQhlv6
+	 SuGNLhVnu5CAIGJN07kOJPXsn3wEfh0RCI7WVX150TvjX522jWHkpMuL6zAyzQQ2LGA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795100802;
-	h=DMARC-Filter:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
-	 Content-Type:Content-Transfer-Encoding:Message-Id:References:
-	 In-Reply-To:To:Cc:X-Mailer:X-Developer-Signature:X-Developer-Key;
-	bh=nXiSdjZU8L5zDZ6t6JMLiXRlMWvOY3yTDFC/9zm0NiQ=;
-	b=QwuHZ6NvOLMfL+fm50jdSLTg3y74GuLxjgDVcXWMJNh3RvbA121wVUQZsV29gwhP1Cq3
-	 /220LLB+8oDYJ2xrjtRBeNQK+vXKSQdVCH2L9e5ZsXBzclTBryCabK49XuLdtSA3XcbOT
-	 RDrMqIVKZ3FM+pFn+gDVg5pvFAapjkCrILCx+Soe65oOTdIdj3uGJ+pbOKPcd0reijYav
-	 O7bTROiPFGIO9uMaFQd7akK3ygFmmu0xs9lUQDBER5UCuI0Hnz+RBReA2+uQaXWaVgAHq
-	 flY7OMvdc1iY7sRQjJKtGUidS+xPVxPhXNJfmQqnifEtLrPsOz77AYqX3fNhNvmkvYw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795101192;
+	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
+	 X-Mimecast-MFC-AGG-ID:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
+	 X-Received:Received:Date:From:To:Cc:Subject:Message-ID:References:
+	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=aUaUnGVOD0AnB0qQi2tHlDtmvMhT+a6tdGKKo0EDxDI=;
+	b=aG/tu62EvWRkc6mOK0/xkUbNK4rf6998lzPWuhzAMU1BZiULwEw8HaEdk4ocVPP0bEZV
+	 +8nv/QlkaFNzahAgBcpJDSRL4XjsdQUiNDJI2txstVDkTeh9f/68YFqVCgrqWNJmYj9jc
+	 BSPi1elclQk2h/JqF41vt/ik/ZvPeBKWMifVq08unoMFm6M6Hpqp4ub2aeUT8tu3j/Jhi
+	 9WUwrhrVpQiZxTS82bnZNxKqeWaAp/ElOeFSl7Sv6ggpdK3ffziVLzrCKpcrzno+UB0d9
+	 qr5FOl76PFylzO6IqQcHuGsS8HnLFsspoAED9m/rIpDAqvYkpgZ3ZBfxQsC+c0rt4tg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=collabora.com;
-	spf=pass smtp.mailfrom=collabora.com;
-	dkim=pass header.d=collabora.com header.i=@collabora.com header.a=rsa-sha256 header.s=mail header.b=joBzCsGQ;
-	arc=none smtp.remote-ip=148.251.105.195
-Received: from bali.collaboradmins.com (bali.collaboradmins.com [148.251.105.195])
+	dmarc=pass header.from=redhat.com;
+	spf=pass smtp.mailfrom=redhat.com;
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=cBBWWVap;
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=uIMFT2Q8;
+	arc=none smtp.remote-ip=170.10.133.124
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E684606B3E8;
-	Thu, 19 Nov 2026 15:06:42 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1E684606B3E8
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9DC8160A2600
+	for <linux-scsi@vger.kernel.org>; Thu, 19 Nov 2026 15:13:11 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9DC8160A2600
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.a=rsa-sha256 header.s=mail header.b=joBzCsGQ
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
-	s=mail; t=1795100800;
-	bh=TG8NHqroE470IhtPWPineNbuAKCud3LW4LfdKrS3x3o=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=joBzCsGQ3Npz/cVmNMzW964+IzEpR5LtVsdrQ+NoGbAVnLRNXgJzOr+l9oxUJdtb/
-	 DiiBORkE8qQ2tZLOkkcJ6NaXDGeAYfo1bj0XDSJiAd06mOYvLzasnoIklWqEs59Cp6
-	 atXdgkU444nefP3P6VYoY2fSCNRt2rlESoGu4qQYYDrWkDn4ohH7ugqXGFK3tv+3xt
-	 VuZA50S+EcUhDqEfhUFat7fwb3nwhBzPrvpGdm1xHe10TktawdHR1xdgUAJ4boLSzT
-	 tHl7Um6uKy7Q+/IRTS5bCMcY4K3680xZF80I74vGzIK1EpcPKyWWc6kXoFQ14PNQWd
-	 cFh1uUrqw5C5Q==
-Received: from yukiji.home (unknown [100.64.0.131])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: laeyraud)
-	by bali.collaboradmins.com (Postfix) with ESMTPSA id A0EC817E091F;
-	Thu, 19 Nov 2026 16:06:39 +0100 (CET)
-From: Louis-Alexis Eyraud <louisalexis.eyraud@collabora.com>
-Date: Thu, 19 Nov 2026 16:06:08 +0100
-Subject: [PATCH v15 20/23] scsi: ufs: mediatek: Rework hardware version
- reading
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=cBBWWVap;
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=uIMFT2Q8
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1795101190;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=aUaUnGVOD0AnB0qQi2tHlDtmvMhT+a6tdGKKo0EDxDI=;
+	b=cBBWWVapW56sdmwQY5UMddI0JZ00u44zAESJw/cYaa/YKag+oEGwM+Y94SS/4m80b36Kgu
+	jVzZlwz4hIox9aSwqY0g3Dz72dcTMHA/XmrVtIsinizMVXyKEOJldOUFWaorW+m2SJcBu1
+	L8cH9GoeyXINmgQjiv3wDumYUXgu0FI=
+Received: from mail-wm1-f70.google.com (mail-wm1-f70.google.com
+ [209.85.128.70]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-168-AAkxnjnFMPWKCXnpIynKgA-1; Thu, 19 Nov 2026 10:13:07 -0500
+X-MC-Unique: AAkxnjnFMPWKCXnpIynKgA-1
+X-Mimecast-MFC-AGG-ID: AAkxnjnFMPWKCXnpIynKgA_1795101186
+Received: by mail-wm1-f70.google.com with SMTP id 5b1f17b1804b1-4a35db2d6b3so17129595e9.3
+        for <linux-scsi@vger.kernel.org>; Thu, 19 Nov 2026 07:13:07 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1795101186; x=1795705986; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=aUaUnGVOD0AnB0qQi2tHlDtmvMhT+a6tdGKKo0EDxDI=;
+        b=uIMFT2Q8PmwavS9NEqE0h+UAUF0TVPPrepbqUcVYtImSmrBGEpC/IpWDBJ7mtY6zmZ
+         sbQ1uIr2CnqNvfjn1DlAq6AtwD9dPCNLnMyGzQZgSFvqMbuC2DAP99pBymaYMf/xx20o
+         MWpEpEK77N6KDJ7HYgKlPRvaT5Vh+DrnsqbQGV/jf8N3qI+dtm52bKMcItGA8tnsm9bi
+         8hCR9ok+WZR2vRkBQvA7jIbMBoCw/f51ruQWTRjG2j+wEHH2yKf7N+i3kTeh7lEevBdM
+         TS5ZR73v3NH8ivc0PEGN3k8BOrxCae2Jol/+r4LzeRpe0hV8im4QOJb7GaN20LQHP8Wc
+         eBgA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1795101186; x=1795705986;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=aUaUnGVOD0AnB0qQi2tHlDtmvMhT+a6tdGKKo0EDxDI=;
+        b=C/qXS7qrWmJgKPnZPHq1z5sBdeqrghvxxHiMXdnpAbIS5JW8UqskPT++nOoRGTKXqI
+         AhEUDGpxykjhZdIyrO9wspkFR6gddfjTDLy5xPjUs6ATOBGWGzuSizvie6ZY0DXU+mNU
+         uX+xVoXeQwdaInZgugF6I2OOhif8b16tJtE3MUMuiSVBq3/VYtEE8DobYvIUaxe4XfRt
+         OXY4bNsvhb6rvcgfmZm4pwZfuoKlRN/MYeh0NkmxtCl1ZXz7v7ibD7T5dSW6WH03zOrQ
+         mu6zOHnj/zwKjiQVxSl+jB51tqfE6eyNZJPiecYm/GvbZs1IcUn9GdhhXTOWJBg37PAU
+         DEOA==
+X-Forwarded-Encrypted: i=1; AL+hErFukZlcHd6k3o+/NAYVFrmI3q1O5UwI/ImBgQRFRDtE7dQk8CHuiGJD/N8XC8u06Vdz+uip1LwVXH4g@vger.kernel.org
+X-Gm-Message-State: APuU4Z8EoLxDPLP0ApCkfk10Oj8d/dQLlmwc9R80e+z8CvSFjD7RzOtP
+	Mmj/V6po2h5XSlUDLxs4sZGFtfMXznG1Xs2cd+TZGS/r3hAqjPwb7UtFFMK3Rn1htm5FXZsx/d5
+	OGA+W5bhh1orxeZ+1gLHSh/itUUhAnH0GkEYrrCVMRcnlcVVpkArMd7582Td+zZg=
+X-Gm-Gg: AYBFou3MZfK1mgZWD4eU59FzfS9EnvnoSxU6TR7EkNUg1I02Bajq2OiR+8ntkqkgn59
+	a+NNi7pUDXzdnA2MhvvHXBix+reYbYCkVDhpAAcmnfAQFwpVkWQk2sS+XR0aa4+2okXjoepsyOu
+	0fXVzyht+7RoZzbU6/6KqbwIr5id9Fth3EqY3IaTo32o+GP10KY3hAlprQCVKZ4v4VEU9JJO97c
+	B3sm4Pd8wseMeynq8cHCqmVwKIO8xzDSC7MYhyfmW42LtuPBb/70D2A2gGTkT4uQhsdlQw+LHQ7
+	myDAT5xzmU3w1n5FXitABfYPC0bxDj9CGArfl6GYAMAq6cIkPp+HZG43okT65dmKY4/+GED+G5E
+	r7xj+6n/Zp2h5LIPiCmDJ3IKQ2LddVYmfHpOyAVtD4g==
+X-Received: by 2002:a05:600c:3107:b0:4ba:eb:eb9b with SMTP id 5b1f17b1804b1-4bb7da1272cmr124142295e9.8.1795101185845;
+        Thu, 19 Nov 2026 07:13:05 -0800 (PST)
+X-Received: by 2002:a05:600c:3107:b0:4ba:eb:eb9b with SMTP id 5b1f17b1804b1-4bb7da1272cmr124141275e9.8.1795101185168;
+        Thu, 19 Nov 2026 07:13:05 -0800 (PST)
+Received: from redhat.com ([2a0d:6fc0:1522:6500:ac93:c62:f076:48c6])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4bb884a3a3dsm3221365e9.10.2026.11.19.07.13.00
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 19 Nov 2026 07:13:04 -0800 (PST)
+Date: Thu, 19 Nov 2026 10:12:58 -0500
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: Tao Cui <cui.tao@linux.dev>
+Cc: akpm@linux-foundation.org, dgilbert@interlog.com, mkp@kernel.org,
+	loberman@redhat.com, jmeneghi@redhat.com, kraxel@redhat.com,
+	vivek.kasireddy@intel.com, jasowangio@gmail.com,
+	eperezma@redhat.com, stefanha@redhat.com, sgarzare@redhat.com,
+	rostedt@goodmis.org, vdonnefort@google.com, mhiramat@kernel.org,
+	jgg@ziepe.ca, kevin.tian@intel.com, axboe@kernel.dk,
+	linux-mm@kvack.org, James.Bottomley@hansenpartnership.com,
+	sumit.semwal@linaro.org, christian.koenig@amd.com,
+	phasta@kernel.org, joro@8bytes.org, will@kernel.org,
+	linux-scsi@vger.kernel.org, dri-devel@lists.freedesktop.org,
+	linux-media@vger.kernel.org, linaro-mm-sig@lists.linaro.org,
+	kvm@vger.kernel.org, virtualization@lists.linux.dev,
+	linux-trace-kernel@vger.kernel.org, iommu@lists.linux.dev,
+	io-uring@vger.kernel.org, linux-kernel@vger.kernel.org,
+	bobbyeshleman@meta.com, mathieu.desnoyers@efficios.com,
+	robin.murphy@arm.com, mason@kernel.org, aesteve@redhat.com,
+	tjmercier@google.com, harry@kernel.org, vbabka@suse.cz,
+	cuitao@kylinos.cn
+Subject: Re: [PATCH 3/7] vhost: account the per-device kernel allocations to
+ memcg
+Message-ID: <20261119101239-mutt-send-email-mst@kernel.org>
+References: <20261106131829.3228926-1-cui.tao@linux.dev>
+ <20261106131829.3228926-4-cui.tao@linux.dev>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -63,154 +132,154 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20261119-mt8196-ufs-v15-20-aae1eb0382e8@collabora.com>
-References: <20261119-mt8196-ufs-v15-0-aae1eb0382e8@collabora.com>
-In-Reply-To: <20261119-mt8196-ufs-v15-0-aae1eb0382e8@collabora.com>
-To: Chunfeng Yun <chunfeng.yun@mediatek.com>, Vinod Koul <vkoul@kernel.org>, 
- Neil Armstrong <neil.armstrong@linaro.org>, 
- Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
- Krzysztof Kozlowski <krzk+dt@kernel.org>, 
- Conor Dooley <conor+dt@kernel.org>, 
- Matthias Brugger <matthias.bgg@gmail.com>, 
- AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>, 
- Peter Wang <peter.wang@mediatek.com>, 
- Chaotian Jing <chaotian.jing@mediatek.com>, 
- Alim Akhtar <alim.akhtar@samsung.com>, Bart Van Assche <bvanassche@acm.org>, 
- Bean Huo <beanhuo@micron.com>, Stanley Jhu <stanleyjhu@google.com>, 
- Stanley Jhu <chu.stanley@gmail.com>, 
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
- "Martin K. Petersen" <mkp@kernel.org>, 
- Philipp Zabel <p.zabel@pengutronix.de>, Liam Girdwood <lgirdwood@gmail.com>, 
- Mark Brown <broonie@kernel.org>
-Cc: kernel@collabora.com, linux-arm-kernel@lists.infradead.org, 
- linux-mediatek@lists.infradead.org, linux-phy@lists.infradead.org, 
- devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
- linux-scsi@vger.kernel.org, 
- Nicolas Frattaroli <nicolas.frattaroli@collabora.com>, 
- Louis-Alexis Eyraud <louisalexis.eyraud@collabora.com>
-X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1795100772; l=4038;
- i=louisalexis.eyraud@collabora.com; s=20250113; h=from:subject:message-id;
- bh=YnQ655Ukh2nZOkR+JY7qt0+WM0oB7MulZeY9i8qeDqA=;
- b=YWOkMfyA3bBhi12LjDNFFTRd5/TpAw0oEaRrvE1sbl39J1eb2lTK58r/t0xDs0+eF65bCqJgC
- Q3ygrl0nRWDDtFHv8Hlw+malHfOu8WeMUcx008CknE2StD2oha1VkIQ
-X-Developer-Key: i=louisalexis.eyraud@collabora.com; a=ed25519;
- pk=CHFBDB2Kqh4EHc6JIqFn69GhxJJAzc0Zr4e8QxtumuM=
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261106131829.3228926-4-cui.tao@linux.dev>
 
-From: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
+On Fri, Nov 06, 2026 at 09:18:25PM +0800, Tao Cui wrote:
+> From: Tao Cui <cuitao@kylinos.cn>
+> 
+> Everything except the worker struct is allocated with plain GFP_KERNEL:
+> the per-vq iovec and log arrays at VHOST_SET_OWNER, the memory table at
+> VHOST_SET_MEM_TABLE whose size follows the user supplied region count,
+> the pending message nodes, and the vhost_net/vhost_vsock device structs
+> with their fallback to vmalloc.  The worker has been accounted since the
+> vhost_task conversion.
+> 
+> A container that can open /dev/vhost-net or /dev/vhost-vsock, which
+> device plugins hand out with passthrough, holds roughly 150KB of
+> resident kernel memory per device after SET_OWNER.  Charge the rest the
+> same way the worker already is.
+> 
+> Signed-off-by: Tao Cui <cuitao@kylinos.cn>
 
-Split assignment to the host struct out from the read function, and
-utilise bitfield helpers to simplify the code. Also move the debug print
-out of the legacy version helper, which means it no longer has to take a
-struct ufs_hba as an input, and can be rewritten as a pure function.
 
-Reviewed-by: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
-Reviewed-by: Peter Wang <peter.wang@mediatek.com>
-Signed-off-by: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
-Signed-off-by: Louis-Alexis Eyraud <louisalexis.eyraud@collabora.com>
----
- drivers/ufs/host/ufs-mediatek.c | 65 +++++++++++++++++++++--------------------
- 1 file changed, 33 insertions(+), 32 deletions(-)
+Acked-by: Michael S. Tsirkin <mst@redhat.com>
 
-diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
-index fbdf69895db0..b1167f7831a7 100644
---- a/drivers/ufs/host/ufs-mediatek.c
-+++ b/drivers/ufs/host/ufs-mediatek.c
-@@ -849,50 +849,47 @@ static void ufs_mtk_mcq_set_irq_affinity(struct ufs_hba *hba, unsigned int cpu)
- 	dev_dbg(hba->dev, "set irq %d affinity to CPU %d\n", irq, _cpu);
- }
- 
--static bool ufs_mtk_is_legacy_chipset(struct ufs_hba *hba, u32 hw_ip_ver)
-+static bool __pure ufs_mtk_is_legacy_chipset(u32 hw_ip_ver)
- {
--	bool is_legacy = false;
--
- 	switch (hw_ip_ver) {
- 	case IP_LEGACY_VER_MT6893:
- 	case IP_LEGACY_VER_MT6781:
- 		/* can add other legacy chipset ID here accordingly */
--		is_legacy = true;
--		break;
--	default:
--		break;
-+		return true;
- 	}
--	dev_dbg(hba->dev, "IP version 0x%x, legacy = %s", hw_ip_ver,
--		str_true_false(is_legacy));
- 
--	return is_legacy;
-+	return false;
- }
- 
--/*
-- * HW version format has been changed from 01MMmmmm to 1MMMmmmm, since
-- * project MT6878. In order to perform correct version comparison,
-- * version number is changed by SW for the following projects.
-- * IP_VER_MT6983	0x00360000 to 0x10360000
-- * IP_VER_MT6897	0x01440000 to 0x10440000
-- * IP_VER_MT6989	0x01450000 to 0x10450000
-- * IP_VER_MT6991	0x01460000 to 0x10460000
-+#define MTK_UFS_VER_PREFIX_M GENMASK(31, 24)
-+
-+/**
-+ * ufs_mtk_get_hw_ip_version - read and return adjusted hardware version
-+ * @hba: pointer to this device's &struct ufs_hba
-+ *
-+ * Reads, transforms and returns the hardware version.
-+ *
-+ * Since MT6878, the versioning scheme was changed from 01MMmmmm to 1MMMmmmm.
-+ * In order to support version comparisons across these different versioning
-+ * schemes, this function transforms the older style to the newer one.
-+ *
-+ * For example:
-+ *  MT6983 is transformed from 0x00360000 to 0x10360000
-+ *  MT6897 is transformed from 0x01440000 to 0x10440000
-+ *  MT6989 is transformed from 0x01450000 to 0x10450000
-+ *  MT6991 is transformed from 0x01460000 to 0x10460000
-+ *
-+ * Returns a u32 representing the hardware version.
-  */
--static void ufs_mtk_get_hw_ip_version(struct ufs_hba *hba)
-+static u32 ufs_mtk_get_hw_ip_version(struct ufs_hba *hba)
- {
--	struct ufs_mtk_host *host = ufshcd_get_variant(hba);
--	u32 hw_ip_ver;
-+	u32 version = ufshcd_readl(hba, REG_UFS_MTK_IP_VER);
-+	u32 prefix = FIELD_GET(MTK_UFS_VER_PREFIX_M, version);
- 
--	hw_ip_ver = ufshcd_readl(hba, REG_UFS_MTK_IP_VER);
-+	if (prefix <= 1)
-+		FIELD_MODIFY(MTK_UFS_VER_PREFIX_M, &version, 0x10);
- 
--	if (((hw_ip_ver & (0xFF << 24)) == (0x1 << 24)) ||
--	    ((hw_ip_ver & (0xFF << 24)) == 0)) {
--		hw_ip_ver &= ~(0xFF << 24);
--		hw_ip_ver |= (0x1 << 28);
--	}
--
--	host->ip_ver = hw_ip_ver;
--
--	host->legacy_ip_ver = ufs_mtk_is_legacy_chipset(hba, hw_ip_ver);
-+	return version;
- }
- 
- static void ufs_mtk_get_controller_version(struct ufs_hba *hba)
-@@ -1259,7 +1256,11 @@ static int ufs_mtk_init(struct ufs_hba *hba)
- 
- 	ufs_mtk_setup_clocks(hba, true, POST_CHANGE);
- 
--	ufs_mtk_get_hw_ip_version(hba);
-+	host->ip_ver = ufs_mtk_get_hw_ip_version(hba);
-+	host->legacy_ip_ver = ufs_mtk_is_legacy_chipset(host->ip_ver);
-+
-+	dev_dbg(hba->dev, "IP version 0x%x, legacy = %s", host->ip_ver,
-+		str_true_false(host->legacy_ip_ver));
- 
- 	return 0;
- 
+should each patch be merged individually?
 
--- 
-2.56.1
+
+> ---
+>  drivers/vhost/net.c   | 14 ++++++++------
+>  drivers/vhost/vhost.c | 16 ++++++++++------
+>  drivers/vhost/vsock.c |  5 +++--
+>  3 files changed, 21 insertions(+), 14 deletions(-)
+> 
+> diff --git a/drivers/vhost/net.c b/drivers/vhost/net.c
+> index 4570a4ffbab2..bab6597c696d 100644
+> --- a/drivers/vhost/net.c
+> +++ b/drivers/vhost/net.c
+> @@ -249,7 +249,7 @@ vhost_net_ubuf_alloc(struct vhost_virtqueue *vq, bool zcopy)
+>  	/* No zero copy backend? Nothing to count. */
+>  	if (!zcopy)
+>  		return NULL;
+> -	ubufs = kmalloc_obj(*ubufs);
+> +	ubufs = kmalloc_obj(*ubufs, GFP_KERNEL_ACCOUNT);
+>  	if (!ubufs)
+>  		return ERR_PTR(-ENOMEM);
+>  	atomic_set(&ubufs->refcount, 1);
+> @@ -302,7 +302,8 @@ static int vhost_net_set_ubuf_info(struct vhost_net *n)
+>  		if (!zcopy)
+>  			continue;
+>  		n->vqs[i].ubuf_info =
+> -			kmalloc_objs(*n->vqs[i].ubuf_info, UIO_MAXIOV);
+> +			kmalloc_objs(*n->vqs[i].ubuf_info, UIO_MAXIOV,
+> +				     GFP_KERNEL_ACCOUNT);
+>  		if  (!n->vqs[i].ubuf_info)
+>  			goto err;
+>  	}
+> @@ -1344,17 +1345,18 @@ static int vhost_net_open(struct inode *inode, struct file *f)
+>  	struct xdp_buff *xdp;
+>  	int i;
+>  
+> -	n = kvmalloc_obj(*n, GFP_KERNEL | __GFP_RETRY_MAYFAIL);
+> +	n = kvmalloc_obj(*n, GFP_KERNEL | __GFP_RETRY_MAYFAIL |
+> +			 __GFP_ACCOUNT);
+>  	if (!n)
+>  		return -ENOMEM;
+> -	vqs = kmalloc_objs(*vqs, VHOST_NET_VQ_MAX);
+> +	vqs = kmalloc_objs(*vqs, VHOST_NET_VQ_MAX, GFP_KERNEL_ACCOUNT);
+>  	if (!vqs) {
+>  		kvfree(n);
+>  		return -ENOMEM;
+>  	}
+>  
+>  	queue = kmalloc_array(VHOST_NET_BATCH, sizeof(void *),
+> -			      GFP_KERNEL);
+> +			      GFP_KERNEL_ACCOUNT);
+>  	if (!queue) {
+>  		kfree(vqs);
+>  		kvfree(n);
+> @@ -1362,7 +1364,7 @@ static int vhost_net_open(struct inode *inode, struct file *f)
+>  	}
+>  	n->vqs[VHOST_NET_VQ_RX].rxq.queue = queue;
+>  
+> -	xdp = kmalloc_objs(*xdp, VHOST_NET_BATCH);
+> +	xdp = kmalloc_objs(*xdp, VHOST_NET_BATCH, GFP_KERNEL_ACCOUNT);
+>  	if (!xdp) {
+>  		kfree(vqs);
+>  		kvfree(n);
+> diff --git a/drivers/vhost/vhost.c b/drivers/vhost/vhost.c
+> index ea127af58ada..d1274106ad5d 100644
+> --- a/drivers/vhost/vhost.c
+> +++ b/drivers/vhost/vhost.c
+> @@ -526,11 +526,14 @@ static long vhost_dev_alloc_iovecs(struct vhost_dev *dev)
+>  
+>  	for (i = 0; i < dev->nvqs; ++i) {
+>  		vq = dev->vqs[i];
+> -		vq->indirect = kmalloc_objs(*vq->indirect, UIO_MAXIOV);
+> -		vq->log = kmalloc_objs(*vq->log, dev->iov_limit);
+> -		vq->heads = kmalloc_objs(*vq->heads, dev->iov_limit);
+> +		vq->indirect = kmalloc_objs(*vq->indirect, UIO_MAXIOV,
+> +					    GFP_KERNEL_ACCOUNT);
+> +		vq->log = kmalloc_objs(*vq->log, dev->iov_limit,
+> +				       GFP_KERNEL_ACCOUNT);
+> +		vq->heads = kmalloc_objs(*vq->heads, dev->iov_limit,
+> +					 GFP_KERNEL_ACCOUNT);
+>  		vq->nheads = kmalloc_array(dev->iov_limit, sizeof(*vq->nheads),
+> -					   GFP_KERNEL);
+> +					   GFP_KERNEL_ACCOUNT);
+>  		if (!vq->indirect || !vq->log || !vq->heads || !vq->nheads)
+>  			goto err_nomem;
+>  	}
+> @@ -2053,7 +2056,8 @@ static long vhost_set_memory(struct vhost_dev *d, struct vhost_memory __user *m)
+>  		return -E2BIG;
+>  	if (max_iotlb_entries <= 0)
+>  		return -EINVAL;
+> -	newmem = kvzalloc_flex(*newmem, regions, mem.nregions);
+> +	newmem = kvzalloc_flex(*newmem, regions, mem.nregions,
+> +			       GFP_KERNEL_ACCOUNT);
+>  	if (!newmem)
+>  		return -ENOMEM;
+>  
+> @@ -3405,7 +3409,7 @@ EXPORT_SYMBOL_GPL(vhost_disable_notify);
+>  struct vhost_msg_node *vhost_new_msg(struct vhost_virtqueue *vq, int type)
+>  {
+>  	/* Make sure all padding within the structure is initialized. */
+> -	struct vhost_msg_node *node = kzalloc_obj(*node);
+> +	struct vhost_msg_node *node = kzalloc_obj(*node, GFP_KERNEL_ACCOUNT);
+>  	if (!node)
+>  		return NULL;
+>  
+> diff --git a/drivers/vhost/vsock.c b/drivers/vhost/vsock.c
+> index 0cb87971d749..600daeb05e7b 100644
+> --- a/drivers/vhost/vsock.c
+> +++ b/drivers/vhost/vsock.c
+> @@ -721,11 +721,12 @@ static int vhost_vsock_dev_open(struct inode *inode, struct file *file)
+>  	/* This struct is large and allocation could fail, fall back to vmalloc
+>  	 * if there is no other way.
+>  	 */
+> -	vsock = kvmalloc_obj(*vsock, GFP_KERNEL | __GFP_RETRY_MAYFAIL);
+> +	vsock = kvmalloc_obj(*vsock, GFP_KERNEL | __GFP_RETRY_MAYFAIL |
+> +			     __GFP_ACCOUNT);
+>  	if (!vsock)
+>  		return -ENOMEM;
+>  
+> -	vqs = kmalloc_objs(*vqs, ARRAY_SIZE(vsock->vqs));
+> +	vqs = kmalloc_objs(*vqs, ARRAY_SIZE(vsock->vqs), GFP_KERNEL_ACCOUNT);
+>  	if (!vqs) {
+>  		ret = -ENOMEM;
+>  		goto out;
+> -- 
+> 2.43.0
 
