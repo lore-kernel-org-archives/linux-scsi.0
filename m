@@ -1,115 +1,82 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=185.171.202.116
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=60.244.123.138
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795080911;
-	b=kH7YPJTyOLfE8ihkzaDy2EdzJgTi+huE5ZD46z6TrsM2fnj2MfAEPLxV6raSyJ9SeBdD
-	 pytGUuGlw55tx8Uk69w808LkJe0G11luTkqPeS0aB6KLaomMLRmbc6Z2rTBhTk+7uO2fY
-	 WxphTMiPsmRZPqykDf/O19FkBJ2KqDiTrrbYMYVwdohxMayI0FSOJEtfLg0D8yEspbTdV
-	 wjeEOMewKvtPkII5dgJvVDNDXWM1kO70xdi2Ee1r70HaxPWdLRhS0XWsYjVZqmbE8dCzl
-	 16T1bo0hxDs10QIKETnEEbzxFQarITQ5ApJbnuRPtXqEfrWCCuGJthgn5JDeiRR4FaQ==
+	t=1795082343;
+	b=T0S3bPdzjD5UgdpXlQPHk5HJOr4q8HoIuX+cC6MVA/+tB+Czf//2cA2l9WmiaSoDGjyq
+	 sVoHFYEir/BtZW/u5KVUbaFPlUNEZEHZoT66++x50wKlatHAUnsISw50ExRoImBig0vI9
+	 /fm97iHi8ZBMjgx89P2B8mEBuSkQt3SbJfyl6POEEoQnk8UGHz1/rczOliJ+S+Mw6SPCP
+	 2AogIJlNYuZuaLyZXsnDrKPwjiFbNiO/+uziatiRwsRTZbZV1iGnUqdBGcOba+1PkC3WW
+	 kdqbSfq42DTHqBGlZvfJFnZBBraZ7QSwdacdHZutvDqjf8CfLUtDvQKr7GHgPyaf7Rg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795080911;
-	h=DMARC-Filter:Received:Received:Received:DKIM-Signature:From:To:Cc:
-	 Subject:In-Reply-To:References:User-Agent:Date:Message-ID:
-	 MIME-Version:Content-Type:Content-Transfer-Encoding:
-	 X-Last-TLS-Session-Version;
-	bh=CQyK9hhzQUtdCIaKwh8qFL6kiw3hBK7e02jXrxk3Q5M=;
-	b=EnQzhY4O/ZhrGSqMVaG5uNW5EszJXmpUWBioK8czzLqwzVXrROT+KnSSbdgnbQgVG/+R
-	 o8jDVZJp5nGGUn6pPPlfExvPjTRV/FTXcUkYehJ+YpizniIp4hb5JpbmTkuh1pSWJkHwu
-	 BUkBQXavbwOIWCL57UL9l/X/zx8R1VKpfZyTUXPOjvW4FsfsVSNjZ+Ewsz9AxcFMGq0+A
-	 AP4uS5vNbF63qX2c4Iocf+NlFNlJKIbwP59TXp/eK+0d9wdmbkuvaG30FHorsHi2BSrtd
-	 TmbldGiHm9O00WiNCI1dFrdIJiLZ/HGGIoZiv+hLAvg+k3OjpT5xCBQcQ2rxGhYWObA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795082343;
+	h=DMARC-Filter:X-UUID:DKIM-Signature:X-CID-P-RULE:X-CID-O-INFO:
+	 X-CID-META:X-CID-BVR:X-CID-BAS:X-CID-FACTOR:X-CID-RHF:X-UUID:Received:
+	 Received:Received:Message-ID:Subject:From:To:CC:Date:In-Reply-To:
+	 References:Content-Type:Content-Transfer-Encoding:User-Agent:
+	 MIME-Version:X-MTK;
+	bh=OnDjExHKJyWA4shf602vUFyfE0rCxzetKfswkqG7g9g=;
+	b=V3Yrnze4Fx9oVj+L0mcipYPqmWXXtjqMLXQ9qDEV4zqGvJ4HEwRqTxulsj8reWrbR9lL
+	 KYvQpSohCD5E2/o+QOcwchrQ/oNBvsI6QjODfjHufA09jNzfL9GbROe0q+Xhzfu6oeaDM
+	 HqQLeZwSBi5veT41Ov5AdK/kAOMc+sHSeGddVSrr9EFhhVJzy+vMwAn2+1TnGWNDMmOAL
+	 iM6Lw8V6M81tqm7WUFuWRqXiInXp0Lo6zoxCDFIe/44o2Tw7eDLls/v9fAOfNttHE/CYw
+	 9KRDK9WrCCg9e4w7UlzzQgVrf8/HAN2CT3IX4XsjlXASRwzzOyFRIvpdHk5THKFWQtw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=bootlin.com;
-	spf=pass smtp.mailfrom=bootlin.com;
-	dkim=pass header.d=bootlin.com header.i=@bootlin.com header.a=rsa-sha256 header.s=dkim header.b=trPf9+9S;
-	arc=none smtp.remote-ip=185.171.202.116
-Received: from smtpout-04.galae.net (smtpout-04.galae.net [185.171.202.116])
+	dmarc=pass header.from=mediatek.com;
+	spf=pass smtp.mailfrom=mediatek.com;
+	dkim=pass header.d=mediatek.com header.i=@mediatek.com header.a=rsa-sha256 header.s=dk header.b=EldUsbKz;
+	arc=none smtp.remote-ip=60.244.123.138
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 719F9606A33E;
-	Thu, 19 Nov 2026 09:35:10 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 719F9606A33E
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C911606A32F;
+	Thu, 19 Nov 2026 09:59:01 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1C911606A32F
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.a=rsa-sha256 header.s=dkim header.b=trPf9+9S
-Received: from smtpout-01.galae.net (smtpout-01.galae.net [212.83.139.233])
-	by smtpout-04.galae.net (Postfix) with ESMTPS id 9242AC4CBEF;
-	Thu, 19 Nov 2026 09:35:13 +0000 (UTC)
-Received: from mail.galae.net (mail.galae.net [212.83.136.155])
-	by smtpout-01.galae.net (Postfix) with ESMTPS id 3D3E660237;
-	Thu, 19 Nov 2026 09:35:08 +0000 (UTC)
-Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id 145C311BC315F;
-	Thu, 19 Nov 2026 10:34:37 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=dkim;
-	t=1795080902; h=from:subject:date:message-id:to:cc:mime-version:content-type:
-	 content-transfer-encoding:in-reply-to:references;
-	bh=CQyK9hhzQUtdCIaKwh8qFL6kiw3hBK7e02jXrxk3Q5M=;
-	b=trPf9+9SmvXq7f3i06Ocu8PXp2wkKO6ORNKTA4/AjOKcQKVFePqcO/1BhMn+K4JKXgVetW
-	9Yr+85a0u4rw/+pGQPZDRSMsRMDGawEXfnQ9jCtNv2zr3C8ZQd4iUe048cU50ECPRyFurf
-	rsmMLyDo3rueQxG7RuwY+EBebjyTZuhqh1PyoyvCDfGRSYoPSTyfx/hwy85QgTWFsAil0Q
-	X6TU5TJA2EpRSA3/3QyU7eQBfCRlHqNmOlSA+ByZVazhopQuZSLgxPNhpRVe5QgDh43L/T
-	HBMPjxwGs9avJmS68J25IgXRGZqvRkZ+RC3EyDq//xlN7GCwXICCDykv7Bhitw==
-From: Miquel Raynal <miquel.raynal@bootlin.com>
-To: Randy Dunlap <rdunlap@infradead.org>
-Cc: linux-kernel@vger.kernel.org,  Jonathan Corbet <corbet@lwn.net>,  Shuah
- Khan <skhan@linuxfoundation.org>,  linux-doc@vger.kernel.org,  David
- Hildenbrand <david@kernel.org>,  Andrew Morton
- <akpm@linux-foundation.org>,  Jason Gunthorpe <jgg@nvidia.com>,  Leon
- Romanovsky <leonro@nvidia.com>,  linux-mm@kvack.org,  Jaroslav Kysela
- <perex@perex.cz>,  Takashi Iwai <tiwai@suse.com>,
-  linux-sound@vger.kernel.org,  Jens Axboe <axboe@kernel.dk>,
-  linux-block@vger.kernel.org,  Marcel Holtmann <marcel@holtmann.org>,
-  Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
-  linux-bluetooth@vger.kernel.org,  Willem de Bruijn
- <willemdebruijn.kernel@gmail.com>,  Jason Wang <jasowangio@gmail.com>,
-  David Heidelberg <david@ixit.cz>,  oe-linux-nfc@lists.linux.dev,  Chas
- Williams <3chas3@gmail.com>,  "David S. Miller" <davem@davemloft.net>,
-  Eric Dumazet <edumazet@kernel.org>,  Jakub Kicinski <kuba@kernel.org>,
-  Paolo Abeni <pabeni@redhat.com>,  netdev@vger.kernel.org,  Helge Deller
- <deller@gmx.de>,  linux-fbdev@vger.kernel.org,
-  dri-devel@lists.freedesktop.org,  MPT-FusionLinux.pdl@broadcom.com,
-  "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,  "Martin
- K. Petersen" <mkp@kernel.org>,  linux-scsi@vger.kernel.org,  Richard
- Weinberger <richard@nod.at>,  Vignesh Raghavendra <vigneshr@ti.com>,
-  Zhihao Cheng <chengzhihao1@huawei.com>,  linux-mtd@lists.infradead.org,
-  Neill Kapron <nkapron@google.com>,  Andrey Konovalov
- <andreyknvl@gmail.com>,  Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-  linux-usb@vger.kernel.org,  Juergen Gross <jgross@suse.com>,  Stefano
- Stabellini <sstabellini@kernel.org>,  xen-devel@lists.xenproject.org,
-  Hans de Goede <hansg@kernel.org>,  Arnd Bergmann <arnd@arndb.de>,
-  "Michael S. Tsirkin" <mst@redhat.com>,  Eugenio =?utf-8?Q?P=C3=A9rez?=
- <eperezma@redhat.com>,  Sean Christopherson <seanjc@google.com>,  Paolo
- Bonzini <pbonzini@redhat.com>,  kvm@vger.kernel.org,
-  virtualization@lists.linux.dev,  Jan Kara <jack@suse.cz>,
-  linux-fsdevel@vger.kernel.org,  "Theodore Ts'o" <tytso@mit.edu>,
-  linux-ext4@vger.kernel.org,  Mike Marshall <hubcap@omnibond.com>,
-  devel@lists.orangefs.org,  Paulo Alcantara <pc@manguebit.org>,  Namjae
- Jeon <linkinjeon@kernel.org>,  linux-cifs@vger.kernel.org,  Jaegeuk Kim
- <jaegeuk@kernel.org>,  Chao Yu <chao@kernel.org>,
-  linux-f2fs-devel@lists.sourceforge.net,  Florian Fainelli
- <florian.fainelli@broadcom.com>,  Broadcom internal kernel review list
- <bcm-kernel-feedback-list@broadcom.com>,  Tzung-Bi Shih
- <tzungbi@kernel.org>,  Benson Leung <bleung@chromium.org>,  David Airlie
- <airlied@gmail.com>,  Simona Vetter <simona@ffwll.ch>,  Alex Deucher
- <alexander.deucher@amd.com>,  Christian =?utf-8?Q?K=C3=B6nig?=
- <christian.koenig@amd.com>,
-  amd-gfx@lists.freedesktop.org,  Jani Nikula
- <jani.nikula@linux.intel.com>,  Joonas Lahtinen
- <joonas.lahtinen@linux.intel.com>,  Rodrigo Vivi <rodrigo.vivi@intel.com>,
-  Tvrtko Ursulin <tursulin@ursulin.net>,  intel-gfx@lists.freedesktop.org,
-  Matthew Brost <matthew.brost@intel.com>,  Thomas =?utf-8?Q?Hellstr=C3=B6?=
- =?utf-8?Q?m?=
- <thomas.hellstrom@linux.intel.com>,  intel-xe@lists.freedesktop.org
-Subject: Re: [PATCH v2 07/12] docs: ioctl-number: update MTD entries
-In-Reply-To: <20261119053514.255348-8-rdunlap@infradead.org> (Randy Dunlap's
-	message of "Wed, 18 Nov 2026 21:35:08 -0800")
-References: <20261119053514.255348-1-rdunlap@infradead.org>
-	<20261119053514.255348-8-rdunlap@infradead.org>
-User-Agent: mu4e 1.12.12; emacs 30.2
-Date: Thu, 19 Nov 2026 10:34:37 +0100
-Message-ID: <87bj7lf9le.fsf@bootlin.com>
+	dkim=pass (1024-bit key, unprotected) header.d=mediatek.com header.i=@mediatek.com header.a=rsa-sha256 header.s=dk header.b=EldUsbKz
+X-UUID: d55c5cf4e3ff11f1b1788b6acf885367-20261119
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+	h=MIME-Version:Content-Transfer-Encoding:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=OnDjExHKJyWA4shf602vUFyfE0rCxzetKfswkqG7g9g=;
+	b=EldUsbKzfb7PMSo8RxhtgaHYJFV2BkWhsj8PcSzCZKb1kLYGZUdqQWsIEwP+lsnWyJv3xYPBWXCPrhAqgJqITCKZMG84PvmsuO2xrahxc9dgzIueRbpjjQL+ipI8g4/Zh74G3A5Hv3e3RhNyr221H+fZu8Iwbj03x9vq/EJy4VE=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.21,REQID:6b091028-238a-4e3e-853a-028ac1d9ebac,IP:0,U
+	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+	release,TS:0
+X-CID-META: VersionHash:b0318ac,CLOUDID:e10d1231-f289-4656-bb36-27baf4489f11,B
+	ulkID:nil,BulkQuantity:0,SF:80|81|82|83|102|136|836|865|888|898,TC:-5,Cont
+	ent:0|15|50|99,EDM:-3|-100,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:
+	nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: d55c5cf4e3ff11f1b1788b6acf885367-20261119
+Received: from mtkmbs11n1.mediatek.inc [(172.21.101.185)] by mailgw01.mediatek.com
+	(envelope-from <peter.wang@mediatek.com>)
+	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+	with ESMTP id 1001395158; Thu, 19 Nov 2026 17:58:56 +0800
+Received: from mtkmbs13n2.mediatek.inc (172.21.101.108) by
+ MTKMBS09N1.mediatek.inc (172.21.101.35) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.29; Thu, 19 Nov 2026 17:58:55 +0800
+Received: from [10.233.130.16] (10.233.130.16) by mtkmbs13n2.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.2.2562.29 via Frontend
+ Transport; Thu, 19 Nov 2026 17:58:55 +0800
+Message-ID: <f63d7506b930b710d9a31f082b97a0e43e75dd50.camel@mediatek.com>
+Subject: Re: [PATCH v4] ufs: sysfs: Add WB partial flush mode support
+From: Peter Wang <peter.wang@mediatek.com>
+To: Daniel Lee <chullee@google.com>, <James.Bottomley@hansenpartnership.com>,
+	<martin.petersen@oracle.com>
+CC: <alim.akhtar@samsung.com>, <avri.altman@sandisk.com>,
+	<bvanassche@acm.org>, <tanghuan@vivo.com>, <linux-scsi@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+Date: Thu, 19 Nov 2026 17:58:55 +0800
+In-Reply-To: <20261117004729.635562-1-chullee@google.com>
+References: <20261117004729.635562-1-chullee@google.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.52.3-0ubuntu1.1 
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -119,26 +86,34 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-X-Last-TLS-Session-Version: TLSv1.3
+X-MTK: N
 
-Hi Randy,
+On Mon, 2026-11-16 at 17:47 -0700, Daniel Lee wrote:
+> @@ -1672,8 +1753,29 @@ static DEVICE_ATTR_RW(max_number_of_rtt);
+> =C2=A0
+> =C2=A0static inline bool ufshcd_is_wb_attrs(enum attr_idn idn)
+> =C2=A0{
+> -	return idn >=3D QUERY_ATTR_IDN_WB_FLUSH_STATUS &&
+> -		idn <=3D QUERY_ATTR_IDN_CURR_WB_BUFF_SIZE;
+> +	return (idn >=3D QUERY_ATTR_IDN_WB_FLUSH_STATUS &&
+> +		idn <=3D QUERY_ATTR_IDN_CURR_WB_BUFF_SIZE) ||
+> +	=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 idn =3D=3D QUERY_ATTR_IDN_MAX_FIFO=
+_SIZE_WB_PFM ||
+> +	=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 idn =3D=3D QUERY_ATTR_IDN_CURRENT_=
+FIFO_SIZE_WB_PFM ||
+> +	=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 idn =3D=3D QUERY_ATTR_IDN_PINNED_W=
+B_SIZE ||
+> +	=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 idn =3D=3D QUERY_ATTR_IDN_NON_PINN=
+ED_WB_MIN_SIZE;
+> +}
 
-On 18/11/2026 at 21:35:08 -08, Randy Dunlap <rdunlap@infradead.org> wrote:
+Hi Daniel,
 
-> Update the list of files where MTD ioctls are defined and update
-> the ranges of function numbers that are used.
->
-> Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+May I know why the ones below are not included?
+QUERY_ATTR_IDN_PINNED_WB_CURRENT_SIZE =3D 0x42
+QUERY_ATTR_IDN_PINNED_WB_AVAIL_PERC =3D 0x43
+QUERY_ATTR_IDN_PINNED_WB_CUMULATIVE_WS =3D 0x44
 
-Acked-by: Miquel Raynal <miquel.raynal@bootlin.com>
+Thanks
+Peter
 
-> [Since having multiple maintainers trying to merge these would
-> cause some conflicts, it would be more manageable for Jon to
-> take all of these through the docs-next tree.]
-
-Agreed.
-
-Thanks,
-Miqu=C3=A8l
