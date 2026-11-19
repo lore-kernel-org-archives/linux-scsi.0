@@ -1,66 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=199.89.1.16
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.92
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795124248;
-	b=Y+/Lk6VuMPenianOOZ7xKIXXsz/eWGPYkikDJbC7Gf3CCJom0GKCVmYCKu2Yr6bzDSTL
-	 nU0M1IoKLi1FaCOrLbcpCNUYUs66hBGt7oRAZPubCuKvHyy+TTP3qrx7DjuRTlONOpcDJ
-	 utG7bCiDpR2koJJAniY/tnwDE9zVGtsfoIA0JUQjA3orcbN6WM1h+SMgQ/Mm3dZTbFjRV
-	 t3CDH8jcjyC21nTedBnfqV7gepbbjiaSYpPq19mVOo6gERj2NCE2W1J5tQHTQcwdJlFKa
-	 gEXkvNRlJY3Bo7Ab38adn6FlFi8uQr+d3eIyygMBHIS9HeAMbbThwIHRy026iskObIg==
+	t=1795132111;
+	b=czl13vlWJiHy4+hnbVK5ETZDbyWM2z+XG8MhQyb3UDZL6QCwn31R/3eY5Nqlk0RAo6yU
+	 YllciAk8+Lu0DimUcDcNxygRZl2kg1L6CAkVmoVc0SF3Ww0uclA3OlMTwgPDGmChtuVPm
+	 YM9vJ1uvQcSzUY79Y6IGHK0z9vxlDfD/+mzpHPfnQvXbpVqLGiab0wrNfn2xZ4NddAWxz
+	 V08xsBHA0hjLaBJHAzACyMpVdS11M9WiMvKM+0Neo7SR+hqPakdSuoWMjVLiGa/1b22Nh
+	 DyrjMG2ZXgrjfEUMkUv+sPf9XypmRzzx2hzUO7vQOnkPb4ug2xiiimlx3y2nFnB+RqQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795124248;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Virus-Scanned:Received:
-	 Received:Message-ID:Date:MIME-Version:User-Agent:Subject:To:Cc:
-	 References:Content-Language:From:In-Reply-To:Content-Type:
+	a=rsa-sha256; c=relaxed/relaxed; t=1795132111;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
+	 Cc:Subject:To:References:From:In-Reply-To:Content-Type:
 	 Content-Transfer-Encoding;
-	bh=tXtna4IGsjm3D1D2wMNKYJANe/7SMkoxNQjGqyn9qZ4=;
-	b=36Pu0brwr3wedgRIZSkRc5eBqItY+XNC5F9VGYmU1N6kVjp0Tg9f2KuzoR0i1pf3D8VI
-	 Qlg5LbbZL28OHfkHBXrcJZhk+YBdjrs7pKfqbYbtKbYk4HNX/FRBBCRZBm4myiSpLvIQb
-	 QfDh2Ms4nee8W7E/1PYy+FNEaeNd/M8H7yqGA613PSVH/PN0XXfQpKEci678FDW+Kk3kV
-	 +TF5pr6b0Hk7FTXyatA5k8+idwaQxdRb66B3pke1s1TaHJ8QImfk0GfBQyVqXPGgE5kyj
-	 YgcCWeHJALzUkXymMVIIySij41XyIrOKckBWqmzXaGuq7DMaN8bDR5aCxq8DLZUdjJw==
+	bh=vcj5h00JjVNcq5RcRanYbKv1qUq4spqkJwru3XjEgEA=;
+	b=43iU1cGZrPtl3MHlT9cwb1YKN3f8apdcPt1LKKDjPENfhyrwh4SJQymiNRX9+piJ+heg
+	 zFyG3J5gLbkeyPuhrJqLN+xHj71J9J6hlRyTTaMzQn+nWQmIvRdjqlXLqLgJJw6znLYeB
+	 iu/IjsrwtA3rFatd6+jdpomDOW18OyUeLb0F3xM/xABqUmwSBYOR2WTVIhNWunVqnOP8I
+	 30GGL9JpBmcqasKkg/gzdKYxYYNeKKzBmJwDw8xPRVJQXgnRjv7SI6j8/6DZQ0oLgjD9t
+	 MfMzu+0vI5KFjVK9raWGAmO7PxIZRbvX1Vur2s8CUu3nvcevOpws29FPduujQb9zGmQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=acm.org;
-	spf=pass smtp.mailfrom=acm.org;
-	dkim=pass header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=IDJg87v5;
-	arc=none smtp.remote-ip=199.89.1.16
-Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=linux.dev;
+	spf=pass smtp.mailfrom=linux.dev;
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=BoTWH5Fi;
+	arc=none smtp.remote-ip=95.215.58.92
+Received: from mta1.migadu.com (out-92.mta1.migadu.com [95.215.58.92])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91437606A32C;
-	Thu, 19 Nov 2026 21:37:28 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 91437606A32C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A8FB606A320
+	for <linux-scsi@vger.kernel.org>; Thu, 19 Nov 2026 23:48:28 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6A8FB606A320
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=IDJg87v5
-Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4jVsJ80hr1zlpJ4T;
-	Thu, 19 Nov 2026 21:37:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1795124246; x=1797716247; bh=tXtna4IGsjm3D1D2wMNKYJAN
-	e/7SMkoxNQjGqyn9qZ4=; b=IDJg87v5SmX3DBhPaVA6NWHnFokqpM1Dmo5Ys4py
-	rVzoahCw4DA1oFW78S5wKULkFuf8+0/wdJpG9INYKHV1p2VcYgm3ywxpH65xBtsZ
-	5hcl021qMX9FHTbKJs+us2WlIOhmlh3DMZDyJszVHj2I/eDOQtBW0EbrqAnTBnGf
-	XxrFEXSaggqLyY+2/X0Ds7nkP+BXbYnxq12IHiKWYoVyRuTf6QyhhvuPiUNVjQ5j
-	kqw/FKGIOgH5yiS0kx8d038aWs6tagiGeeCH2JwTHENSePQIj68k5F2box5QwzEV
-	UVyL5fjVsIb+yc8Ke9Mzc/rwTCNzDcWmAKVmH6Ws2dBwmg==
-X-Virus-Scanned: by MailRoute
-Received: from 013.lax.mailroute.net ([127.0.0.1])
- by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id SGVxBrKR7-IR; Thu, 19 Nov 2026 21:37:26 +0000 (UTC)
-Received: from [IPV6:2a00:79e0:2ed2:d:3bd4:4c06:4b28:5d89] (unknown [104.135.182.41])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4jVsJ56vxLzllB70;
-	Thu, 19 Nov 2026 21:37:25 +0000 (UTC)
-Message-ID: <b6d6087a-a89a-4d5e-80e2-6b7f07facbf5@acm.org>
-Date: Thu, 19 Nov 2026 13:37:25 -0800
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=BoTWH5Fi
+X-Envelope-To: linux-scsi@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=6LWaP9a799dRmXjPzl0gkWLih06hsrqQYvPtGBFxEsY=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1795132107; v=1; x=1795736907;
+ b=BoTWH5Fi1IZExkaX1UVG0UE/sKHeD7yr0JBoEA7pSxpIS9I/AG/d2puwMNbDLQzs2vT11U1s
+ vASgSWckzezIb9s1Sd0vB6uxw4uXPLLwr5GKRk1rBj9hLubjulj4/oLYePkSmiMd7yc+crCqZM/
+ 4ZhHgjLXJXGKVDcDNMWg5GdI=
+X-Envelope-To: linux-scsi@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id a9882a66356e0e59;
+	Thu, 19 Nov 2026 23:48:27 +0000
+X-Mizu-Trace-ID: a9882a66356e0e59
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <583bde38-c84d-41a3-a65c-d1365ea04f07@linux.dev>
+Date: Fri, 20 Nov 2026 07:47:56 +0800
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -71,41 +59,115 @@ List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 2/4] scsi: core: release legacy ioctl request before
- user copyback
-To: Yingjie Wang <x-professor@outlook.com>,
- "Martin K. Petersen" <mkp@kernel.org>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
- Yang Xiuwei <yangxiuwei@kylinos.cn>, James Houghton <jthoughton@google.com>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <cover.1794990780.git.x-professor@outlook.com>
- <26e7d8d4f0648e572e6042c0ae14c1c36a83e850.1794990780.git.x-professor@outlook.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <26e7d8d4f0648e572e6042c0ae14c1c36a83e850.1794990780.git.x-professor@outlook.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Cc: cui.tao@linux.dev, akpm@linux-foundation.org, dgilbert@interlog.com,
+ mkp@kernel.org, loberman@redhat.com, jmeneghi@redhat.com, kraxel@redhat.com,
+ vivek.kasireddy@intel.com, mst@redhat.com, jasowangio@gmail.com,
+ eperezma@redhat.com, stefanha@redhat.com, sgarzare@redhat.com,
+ mhiramat@kernel.org, jgg@ziepe.ca, kevin.tian@intel.com, axboe@kernel.dk,
+ linux-mm@kvack.org, James.Bottomley@hansenpartnership.com,
+ sumit.semwal@linaro.org, christian.koenig@amd.com, phasta@kernel.org,
+ joro@8bytes.org, will@kernel.org, linux-scsi@vger.kernel.org,
+ dri-devel@lists.freedesktop.org, linux-media@vger.kernel.org,
+ linaro-mm-sig@lists.linaro.org, kvm@vger.kernel.org,
+ virtualization@lists.linux.dev, linux-trace-kernel@vger.kernel.org,
+ iommu@lists.linux.dev, io-uring@vger.kernel.org,
+ linux-kernel@vger.kernel.org, bobbyeshleman@meta.com,
+ mathieu.desnoyers@efficios.com, robin.murphy@arm.com, mason@kernel.org,
+ aesteve@redhat.com, tjmercier@google.com, harry@kernel.org, vbabka@suse.cz,
+ cuitao@kylinos.cn
+Subject: Re: [PATCH 4/7] tracing: account ring buffer pages and trace_array
+ metadata to memcg
+To: Steven Rostedt <rostedt@goodmis.org>,
+ Vincent Donnefort <vdonnefort@google.com>
+References: <20261106131829.3228926-1-cui.tao@linux.dev>
+ <20261106131829.3228926-5-cui.tao@linux.dev> <avScKhR22kFOQ1z4@google.com>
+ <20261111181447.3c483a50@fedora>
+From: Tao Cui <cui.tao@linux.dev>
+In-Reply-To: <20261111181447.3c483a50@fedora>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-On 11/18/26 12:33 AM, Yingjie Wang wrote:
- >   	} else {
- >   		if (copy_to_user(sic->data, buffer, out_len))
- >   			err = -EFAULT;
- >   	}
- > +	goto error_free_buffer;
- >
- >   error:
- >   	blk_mq_free_request(rq);
+Hello, Steven, Vincent,
 
-A goto statement that only skips the label and the statement that
-follows it makes this function harder to read. Has it been considered to
-restructure this code such that this goto statement is not necessary,
-e.g. by setting 'rq' to NULL after it has been freed and by changing
-the code below the 'error' label into the following?
+在 2026/11/12 07:14, Steven Rostedt 写道:
+> On Wed, 11 Nov 2026 16:47:38 +0000
+> Vincent Donnefort <vdonnefort@google.com> wrote:
+> 
+>> On Fri, Nov 06, 2026 at 09:18:26PM +0800, Tao Cui wrote:
+>>> From: Tao Cui <cuitao@kylinos.cn>
+>>>
+>>> Creating an instance immediately allocates two full sets of per-cpu
+>>> ring buffers, array buffer plus snapshot, about 1.375MB per cpu per set
+>>> on the default config, plus the trace_array and its name.  None of it
+>>> is charged: neither trace.c nor ring_buffer.c passes __GFP_ACCOUNT,
+>>> while user_events in the same directory accounts everything it
+>>> allocates.
+> 
+> As the name suggests, "user_events" are for users and are special.
+> 
+>>>
+>>> Instance creation is currently gated by tracefs file permissions
+>>> alone, so a
+>>> rootful container with the host tracefs bound in can create instances
+>>> until the host runs out of memory.
+> 
+> You mean, "works as expected"?
+> 
+>>  Charge the ring buffer pages and
+>>> the trace_array metadata to the creating cgroup.
+>>>
+>>> Signed-off-by: Tao Cui <cuitao@kylinos.cn>
+>>> ---
+>>>  kernel/trace/ring_buffer.c | 8 +++++++-
+>>>  kernel/trace/trace.c       | 6 +++---
+>>>  2 files changed, 10 insertions(+), 4 deletions(-)
+>>>
+>>> diff --git a/kernel/trace/ring_buffer.c b/kernel/trace/ring_buffer.c
+>>> index 1fd28a72e6ee..676c059c112c 100644
+>>> --- a/kernel/trace/ring_buffer.c
+>>> +++ b/kernel/trace/ring_buffer.c
+>>> @@ -441,7 +441,13 @@ static struct buffer_data_page *alloc_cpu_data(int cpu, int order)
+>>>  	 * gracefully without invoking oom-killer and the system is not
+>>>  	 * destabilized.
+>>>  	 */
+>>> -	mflags = GFP_KERNEL | __GFP_RETRY_MAYFAIL | __GFP_COMP | __GFP_ZERO;
+>>> +	/*
+>>> +	 * The subbuffers are charged to the memcg of whoever caused the
+>>> +	 * allocation: the creator of a trace instance, or root at boot for
+>>> +	 * the global trace.
+>>> +	 */
+>>> +	mflags = GFP_KERNEL | __GFP_RETRY_MAYFAIL | __GFP_COMP | __GFP_ZERO |
+>>> +		  __GFP_ACCOUNT;
+>>>  
+>>>  	page = alloc_pages_node(cpu_to_node(cpu), mflags, order);
+>>>  	if (!page)  
+>>
+>> Hum, by default tracefs is root only. 
+>>
+>> And even if made accessible to other users: 
+>>
+>>   1. The life span of a trace instance is not tied to the caller.
+>>   2. The ring buffer is shared by multiple users.
+> 
+> Right. Is there a use case out there that allows non-admin to create an
+> instance? Tracing ring buffers can expose a lot and should not be given
+> to unprivileged users.
+> 
+Not that I can point to.  Instances are admin-only by default, and the permission layer is the right place for that.
 
-	if (rq)
-		blk_mq_free_request(rq);
-
+> What exactly is this trying to achieve?
+>
+The series closes uncharged kernel allocations that scale with user input.  For tracing I misread the tracefs permission check as a gap rather than the intended boundary.  Combined with Vincent's points on lifetime and sharing, I'll drop patch.
+ 
 Thanks,
+Tao
+> -- Steve
+> 
+> 
+>>
+>> Overall I am not convinced charging the creator makes much sense.
+>>
+>> Eventually a few allocations for iterators could be GFP_ACCOUNT.
+>>
+> 
 
-Bart.
