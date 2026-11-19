@@ -1,73 +1,102 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=111.22.67.135
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=195.135.223.131
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795073054;
-	b=vW0u7d/psx4MBK1OFqnxUzI/98Dn8CkIiHVHxG+vUgHgOmu/QfDUcWUght26Yiup3M8k
-	 VBaMSuDR3VtB1QzY5o6Xdtaq1+127PGxUEogyt+6sAPJMp+r376hF6lJIULUMXbeAviSv
-	 ARnf/wV3c/34HRvAaz4z31BjOoqb097N+zAEI5Xor5uicwKkguFBJmFnPus7X5VGha1Mu
-	 +DCInFzdoOBOZLOCMvNRyxRHM9/ti4sowvFKMXhUdNHZx9jSk4vT5w3dJMZBBIzyLFnvN
-	 DYFVh6lK1/fK1pAmO0MCb80IggQeoO0lpY/797WZ9s+BYZO2gWxIXE/mh50kt63Op/Q==
+	t=1795073090;
+	b=ufU7tU/xJNQrWLujrCvEN9rmyvhxy745EmT42iBHfzLfgn9nfd7NVsrzgxf4/IepNtZD
+	 dNgg9AaLvQh6WKFJvsF1w1j9Gd60kFS01KiaN1YpHPvxaj56dpPuZRxR6ceOuI+t24H8l
+	 u+uVtct+kEult44EY3m2LuvGCU9ycKb1JpWIns1wlk4HqY6yNyJxT0ArZwALLN7bQ36WS
+	 ceh6j9ub2KQWPzvgh1Adt1HD3MlsMV1cB+j/UOaztg6lddN1nXt5bi2g3P1YOwRQhqGk8
+	 oIbD5mw8NGKIN6fajb9fNrwO1C712UXhRjQDmo/sDYiCGXnydh6DXozrbpL+T8yDiPA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795073054;
-	h=DMARC-Filter:DKIM-Signature:X-RM-TagInfo:X-RM-SPAM-FLAG:Received:
-	 X-RM-TRANSID:X-RM-TagInfo:X-RM-SPAM-FLAG:Received:X-RM-TRANSID:From:
-	 To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
-	 MIME-Version:Content-Transfer-Encoding;
-	bh=UEWw9Ig9iKja9WE8XqeuTcxNBCAVmVPXINNvj1arHKY=;
-	b=UqB9WSAPydT4j+5VqomLFuf+Iy9zvQ/nH2eFqS8VONYaNEogGsYPVd5tXA+HP9FldjNT
-	 OyfEtofY5rKB7CMy3WSmeFEOMRDfs8hYTBJtwo/1Yo+keKCI3jCbl+MXR9JSb+Tgy7Qm9
-	 Z8Cn8vQOmWdfUIFuUrEKxugsyQWb1H7MC6ag4QYQseKGXn4qwrB31nl08viwC9MiKWtJy
-	 /r4EVV8ob/vKG3eVpWaeB3vT9V6e4KCNj56ZnF6pR/FkoyF8TQRAnpNQwUX3cei+YMg+X
-	 OMNO4PLimGuYdwB4oSAZNliz3UkBBl5Dp9IAv2NiGELgi8LbzaSIvESz3qB+IVoD+cQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795073090;
+	h=DMARC-Filter:Received:DKIM-Signature:DKIM-Signature:DKIM-Signature:
+	 DKIM-Signature:Received:Received:Message-ID:Date:MIME-Version:
+	 User-Agent:Subject:To:References:Content-Language:From:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:X-Spamd-Result:X-Spam-Score:
+	 X-Spam-Level:X-Spam-Flag;
+	bh=Z2CU09g/rx7JNyFGOoWlNZJxHrWJRck4HYEfS/GMMig=;
+	b=PiOSTwmGzKDqewAz9732MEM99fy8lgxjZwjfdvkSFizrRxGo5QZgxSafLI9TEy+aegyP
+	 Ocinsmr3FbBp2rWadPep7d9JgYZQSj1qOVGwYf0WAwTEAUbb912xt+8j8T5JsIc6HZWxY
+	 NYXwZX2FED9yozZve1lYUuhSIFYmEdrFWCXfNRCXkoSQn5pE8AZY7udOVQ4S/QECiuA+d
+	 2fVJ900WCuUtjcwoY+TshhG9F1mWDK4YkqinTIaopPSA8HwuVTLWa/aK9ZLqD3kmofi1h
+	 s5wO2mFWQvcvF8T4yvCsX4mn4Tfmk7yFAkDrXzHD1Al0Ec0kqV7rYiuCyrDbgY6B2aA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=cmss.chinamobile.com;
-	spf=pass smtp.mailfrom=cmss.chinamobile.com;
-	dkim=pass header.d=cmss.chinamobile.com header.i=@cmss.chinamobile.com header.a=rsa-sha256 header.s=default header.b=vYUacr79;
-	arc=none smtp.remote-ip=111.22.67.135
-Received: from cmccmta2.chinamobile.com (cmccmta2.chinamobile.com [111.22.67.135])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 41C7F60A2633;
-	Thu, 19 Nov 2026 07:24:12 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 41C7F60A2633
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmss.chinamobile.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cmss.chinamobile.com
+	dmarc=pass header.from=suse.de;
+	spf=pass smtp.mailfrom=suse.de;
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=1FQYXKbK;
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=sLiT6gSz;
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b="vZt8/KwU";
+	dkim=neutral header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=46LvWbMC;
+	arc=none smtp.remote-ip=195.135.223.131
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84A81606A325;
+	Thu, 19 Nov 2026 07:24:49 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 84A81606A325
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=cmss.chinamobile.com header.i=@cmss.chinamobile.com header.a=rsa-sha256 header.s=default header.b=vYUacr79
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=cmss.chinamobile.com; s=default; l=0;
-	h=from:subject:message-id:to:cc:mime-version;
-	bh=47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=;
-	b=vYUacr79KMejsDRT7Jb+P2Ue+cjwAi7BFFey73gG6Hj5N2VfSV3qcX5lU7jBbkIKKo7Xgoph9PhCB
-	 2kThkW5LRhnwv6KS1koHBr0IWzYkw9CNdCv0GiducappH0CBMZ1jV+OQkgnEJxLl+Nlv0dA+AdCpbT
-	 zPI6ADT238cAy+bU=
-X-RM-TagInfo: emlType=0                                       
-X-RM-SPAM-FLAG:00000000
-Received:from spf.mail.chinamobile.com (unknown[10.188.0.87])
-	by rmmx-syy-dmz-app03-12003 (RichMail) with SMTP id 2ee36afea411397-e72d8;
-	Thu, 19 Nov 2026 15:24:05 +0800 (CST)
-X-RM-TRANSID:2ee36afea411397-e72d8
-X-RM-TagInfo: emlType=0                                       
-X-RM-SPAM-FLAG:00000000
-Received:from DESKTOP-3K8GUTQ (unknown[223.108.79.97])
-	by rmsmtp-syy-appsvr03-12003 (RichMail) with SMTP id 2ee36afea413214-0d3d4;
-	Thu, 19 Nov 2026 15:24:05 +0800 (CST)
-X-RM-TRANSID:2ee36afea413214-0d3d4
-From: Xiangwu Lai <laixiangwu@cmss.chinamobile.com>
-To: Peter Wang <peter.wang@mediatek.com>
-Cc: Xiangwu Lai <laixiangwu@cmss.chinamobile.com>,
-	chaotian.jing@mediatek.com,
-	chu.stanley@gmail.com,
-	alim.akhtar@samsung.com,
-	bvanassche@acm.org,
-	stanley.chu@mediatek.com,
-	sashiko-bot@kernel.org,
-	linux-scsi@vger.kernel.org,
-	linux-mediatek@lists.infradead.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 2/2] scsi: ufs-mediatek: keep mphy state in sync when va09 disable fails
-Date: Thu, 19 Nov 2026 15:24:03 +0800
-Message-ID: <20261119072404.101-1-laixiangwu@cmss.chinamobile.com>
-X-Mailer: git-send-email 2.50.1.windows.1
-In-Reply-To: <359c3c1f4b30aa837011788a847d5c2c1cb3880e.camel@mediatek.com>
-References: <359c3c1f4b30aa837011788a847d5c2c1cb3880e.camel@mediatek.com>
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=1FQYXKbK;
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=sLiT6gSz;
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=vZt8/KwU;
+	dkim=neutral header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=46LvWbMC
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 8F6421F7A2;
+	Thu, 19 Nov 2026 07:24:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1795073087; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Z2CU09g/rx7JNyFGOoWlNZJxHrWJRck4HYEfS/GMMig=;
+	b=1FQYXKbK1mOAiZa/4uzTYibJ3qvHKx+l8lkql937bUyH/BXIRU0ISOGLfYOiQFrXi2xUW1
+	vxajaLHYMY0AnluS6hoWIosOo8E6e3L4+RTR65mcgJN4n0wswFijPYFteWCYWcBGja6QdX
+	VU+lwgeKsXh7JLHbWh7sOwlPOpGawNA=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1795073087;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Z2CU09g/rx7JNyFGOoWlNZJxHrWJRck4HYEfS/GMMig=;
+	b=sLiT6gSz34auHDKYDQCimHov0/j3YlxZNBf63byR5TnP+UOAe2/m5On74e8Vd5M9BT8a+A
+	zWkxUIFrOjghf6CA==
+Authentication-Results: smtp-out2.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1795073086; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Z2CU09g/rx7JNyFGOoWlNZJxHrWJRck4HYEfS/GMMig=;
+	b=vZt8/KwU10e9lCqfMT4vlrt/0cv5WMi+2sIM223b99B6nlT1hOV89RKrU9x8+p8beV2MGk
+	KUwwLc8XN6ljjxmq8VlNOXYy3j4TN/MTWIYJK0YPb3jB7l8nCLkCuwe7jfN1rQL8jk4xz5
+	Vm+Fyvvs+A6+Gqfh6lYxWCfr1ehDdiE=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1795073086;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Z2CU09g/rx7JNyFGOoWlNZJxHrWJRck4HYEfS/GMMig=;
+	b=46LvWbMC5GlHQZPsaY0nM6j/51uVY2+KG3ajEMSDynNcEk/G6nr4YTRXgNS6bota2FRWK2
+	QzB+CneRbUI+zJCA==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 485641334C;
+	Thu, 19 Nov 2026 07:24:46 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id glo7CD6k/mpoUgAAD6G6ig
+	(envelope-from <hare@suse.de>); Thu, 19 Nov 2026 07:24:46 +0000
+Message-ID: <06b06739-33d9-4314-8080-ccf28fa77b94@suse.de>
+Date: Thu, 19 Nov 2026 08:24:45 +0100
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -77,68 +106,71 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v11 12/13] scsi: sd_zbc: define storage element management
+ operations
+To: Damien Le Moal <dlemoal@kernel.org>, Jens Axboe <axboe@kernel.dk>,
+ linux-block@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
+ linux-scsi@vger.kernel.org, "Martin K . Petersen"
+ <martin.petersen@oracle.com>
+References: <20261116213702.225970-1-dlemoal@kernel.org>
+ <20261116213702.225970-13-dlemoal@kernel.org>
+Content-Language: en-US
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20261116213702.225970-13-dlemoal@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-Spamd-Result: default: False [-13.29 / 50.00];
+	SUSE_INTERNAL_BYPASS(-9.00)[];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-0.997];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	XM_UA_NO_VERSION(0.01)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	TO_DN_SOME(0.00)[];
+	ARC_NA(0.00)[];
+	MID_RHS_MATCH_FROM(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FROM_HAS_DN(0.00)[];
+	RCPT_COUNT_FIVE(0.00)[6];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,suse.de:email]
+X-Spam-Score: -13.29
+X-Spam-Level: 
+X-Spam-Flag: NO
 
-Hi Peter,
+On 11/16/26 10:37 PM, Damien Le Moal wrote:
+> Define the storage element management operations using struct blk_se_ops.
+> These operations are valid only on SMR disks supporting the storage
+> element depopulation featu, with support for the GET PHYSICAL ELEMENTS
+> STATUS command being mandatory. The support for the modify_zones operation
+> is already indicated by the depop_modify_zones_supported SCSI disk flag.
+> sd_zbc_check_depop_supported() is modified to add detection for the
+> command RESTORE ELEMENTS AND REBUILD, which is indicated with the new
+> SCSI disk flag depop_restore_supported.
+> 
+> Both the remove_element and restore_elements operations will block
+> until the operation completes or an error is detected.
+> 
+> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+> ---
+>   drivers/scsi/sd.c     |   3 +
+>   drivers/scsi/sd.h     |   3 +
+>   drivers/scsi/sd_zbc.c | 489 +++++++++++++++++++++++++++++++++++++++++-
+>   3 files changed, 494 insertions(+), 1 deletion(-)
+> 
+Reviewed-by: Hannes Reinecke <hare@kernel.org>
 
-thanks for looking at both patches, and for the Reviewed-by on 1/2.
+Cheers,
 
-For the record, this replies to "[PATCH v2 2/2] scsi: ufs-mediatek:
-keep mphy state in sync when va09 disable fails":
-
-https://lore.kernel.org/all/20261118032015.974-3-laixiangwu@cmss.chinamobile.com/
-
-On Thu, 19 Nov 2026 13:33:01 +0800, Peter Wang wrote:
-> If the VA09 regulator_disable fails, could we just restore
-> the PHY power state?
-
-Yes, agreed, that is the better fix.  Forcing the state to false
-(v2's approach) keeps the enable count of the va09 regulator stuck at
-1 - the regulator core drops the consumer count only after a
-successful disable - so the next power-on would raise it to 2 and it
-never returns to zero: va09 would then never be physically disabled
-and the devm-acquired regulator of patch 1/2 would hit
-WARN_ON(enable_count) again on release.
-
-Restoring the M-PHY also keeps the suspend error path safe: when the
-power-off fails inside ufs_mtk_suspend(), the link is set off and
--EAGAIN is returned, and __ufshcd_wl_suspend() then runs
-ufshcd_host_reset_and_restore() without powering the M-PHY back on -
-with the state forced to false, that host reset would run against an
-unpowered M-PHY.  (The Sashiko AI review of v2 raised both points:
-https://lore.kernel.org/all/sashiko-outbox-220026@kernel.org/.)
-
-So v3 drops the forced state clear and restores the power state
-instead:
-
- 	} else {
- 		phy_power_off(mphy);
- 		if (ufs_mtk_is_va09_supported(hba)) {
- 			ufs_mtk_va09_pwr_ctrl(res, 0);
- 			ret = regulator_disable(host->reg_va09);
- 			if (ret) {
- 				/*
- 				 * The va09 regulator stays enabled, so
- 				 * bring the M-PHY back up to keep the
- 				 * software state in sync with the
- 				 * hardware.
- 				 */
- 				ufs_mtk_va09_pwr_ctrl(res, 1);
- 				phy_power_on(mphy);
- 			}
- 		}
- 	}
-
-mphy_powered_on is then left set, and the next power-off attempt
-retries the full sequence, so the enable count stays balanced in the
-end.
-
-v3 is out as a new thread, with this change in 2/2 and your
-Reviewed-by kept on the unchanged 1/2:
-
-https://lore.kernel.org/all/20261119071611.117-1-laixiangwu@cmss.chinamobile.com/
-
-Best regards,
-Xiangwu Lai
-
-
+Hannes
+-- 
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
