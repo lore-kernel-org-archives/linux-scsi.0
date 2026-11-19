@@ -1,57 +1,85 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=210.61.82.184
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795059897;
-	b=i4jFfLpks0LB2dGlh/Hu5Fjd4xnpnZii2v6xZO6JVniG2FCaFoNB96dvIRNqBszFx7M2
-	 t3C+KKfM5LNwS1guRY7DK7ZKDxXzdlSPzfRERdj8/TeV+l/a2cIEgnXFa4HPzqsKY6thc
-	 MUNRDhYvC9ZNHfa+oZ/kqgmB3wue29u0QCAnE1vi/a6W/fpkfsHkINC9c4VCrNfRb/h1P
-	 rROR+BMPhaqBV85hEzDv+ctOAoKClRWFxSxins6OdQ4ollJ8fLczIWjbJhklC4JOShOKu
-	 0wrCrZEGB8mIF9lD44oB4gT6TJdSP0gdIyPsl5zJKHvAonu5rlzoZQxpdEPAIYNya0A==
+	t=1795060476;
+	b=2QUd4Z2vKnr66J9MGwhKXnjQAeP3g4EDoe8Ypa+lkkvI3X34n1ng9yRqyxVXIsW9Qn3Z
+	 /w1uWamtm/QwX7V6fNg1v/aKb3d3O65IvQCxqVDWkh9jOjoQ5BELoQK3/kODlDYJ1n3vC
+	 ifKPVjD0tWRkRAW8oCgAxMUW9fIP+msZ8/3AMtj8xhJ1Ecq9zQamQW39eN7F/XAt1ZwuK
+	 svJ8K+s5zAbWykU5xtCQPXvPKzkWGxPxUUOrqQfkrw4DxBi8V4mTQD9H3wxnmdOwzA/eJ
+	 bVtgawy8URylWXiVX8zpNXAGCwSzE5KPYD1xPbspNaxdk/SvBbYQ/qJXhsdVgAyMHtg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795059897;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=ddAKCepQXFSfsZLvHAwye/s9Mxp0dcp1KCVhQjbYQck=;
-	b=vfOShIO9FpB9Yw1zX0xx/8HaQM9VmvR3IrZzoPjKGbe9WXj73YGmf/ozHEYYfpAYgVZr
-	 12chHQ3cqaQ0T9OnThEbTnEh7rbhZStv65WPGNiR1w4nmotKXN6CSNbNRd4HgjkjKBwlc
-	 oc+cbYK87tcyCQfvj4i6DmO/fJ2l1bSBEGFON9rFodx6/HQFEiRy0WNfUzwssT/SHyB2Y
-	 JpKctwkZgdYUk/l9/UcD5dwBXbapEEGBmrM95yiCHsMupHk2z2L1rxJQV4G16pX+n7s0F
-	 HKyQW7rltf+KEG3xlPHZauyifwD2g7szxAq8GthR4SXcTnlrzr2lp9IeemHA5ymNv2g==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795060476;
+	h=DMARC-Filter:X-UUID:DKIM-Signature:X-CID-P-RULE:X-CID-O-INFO:
+	 X-CID-META:X-CID-BVR:X-CID-BAS:X-CID-FACTOR:X-CID-RHF:X-UUID:Received:
+	 Received:Received:Message-ID:Subject:From:To:CC:Date:In-Reply-To:
+	 References:Content-Type:Content-Transfer-Encoding:User-Agent:
+	 MIME-Version:X-MTK;
+	bh=mOW7wpw7pclv2woSYadjIG+K3Lf/RuEbJvV+kxBzPXI=;
+	b=bYwFVjPSbTKMfSAo30NDcHTnst9Dd5Jnatm/N01grvbC+z0vvOHlcULaROJv+5x7cdpe
+	 vGyAC8S4226Q2+Suq7Yd/1UqxIngBm/mndAve4nQFrYynPqhAUXNc1zPDIJMjWQvwbvUg
+	 7xa6tcXzSdmlQjpJ+9gYVd0SqOt/nfmVZuuGcgXZ3jvMjPqbRrq4rNJoVJ70TsprRdLfr
+	 nJ7v1hbFbnIKopQOjDdoee0fjXRlidreaMlK9z+BawfsfNITkxhPDMZ1L7O1SNhDSV2bN
+	 mcnqe00DWk/wgpYTfvZTppx6JkMerZ63pVtWAJG1u7jn9132jMXUOcMR8EeDlQnksYg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ZVGRsAmR;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=mediatek.com;
+	spf=pass smtp.mailfrom=mediatek.com;
+	dkim=pass header.d=mediatek.com header.i=@mediatek.com header.a=rsa-sha256 header.s=dk header.b=pDabrebX;
+	arc=none smtp.remote-ip=210.61.82.184
+Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC41E606A325
-	for <linux-scsi@vger.kernel.org>; Thu, 19 Nov 2026 03:44:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B261B606A330;
+	Thu, 19 Nov 2026 03:54:35 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B261B606A330
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ZVGRsAmR
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6181F1F000C5;
-	Thu, 19 Nov 2026 03:44:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795059897;
-	bh=ddAKCepQXFSfsZLvHAwye/s9Mxp0dcp1KCVhQjbYQck=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ZVGRsAmRGSdf93rM+14DYHbcDoUf78uKqoiymgu/c5ZA+RAIUxPhLJvTHCZBRMMza
-	 d7zCSFXy7Yq73By+gnQ+OB3waMy1jWNH0dhXRoBRnf8C+IXUhFGg5EJnQn/bQ66ZJz
-	 A58y64PJuh4w2Vu7V8TmIespY4Bt4cQUEcqwCop39cVh7EOqav1rU1c7UqBKLiTwyU
-	 Q/t5RmKDhbEh2FMW6rZZldQlGv/lli7lOEsXHx4I30Auy74Mk2PDL/iI76A5k8eaU4
-	 /pox49Y8etNJqU3xMFQl07pE4I5lEfZvede7MuujNQK0F1EwmY/KLHQq7UYE7uFvoY
-	 3by7g2/StmlIw==
-Message-ID: <sashiko-outbox-222409@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 2/2] scsi: bsg: release io_uring requests from end-I/O
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Yang Xiuwei" <yangxiuwei@kylinos.cn>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20261119031751.3471968-3-yangxiuwei@kylinos.cn>
-References: <cover.1795016239.git.x-professor@outlook.com>
- <20261119031751.3471968-1-yangxiuwei@kylinos.cn>
- <20261119031751.3471968-3-yangxiuwei@kylinos.cn>
-Content-Type: text/plain; charset=utf-8
+	dkim=pass (1024-bit key, unprotected) header.d=mediatek.com header.i=@mediatek.com header.a=rsa-sha256 header.s=dk header.b=pDabrebX
+X-UUID: ec518188e3cc11f18dc8c9802ae25ab1-20261119
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+	h=MIME-Version:Content-Transfer-Encoding:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=mOW7wpw7pclv2woSYadjIG+K3Lf/RuEbJvV+kxBzPXI=;
+	b=pDabrebXJUxCMWehX64IETRX14jtV66wlrIxOlPbhrEt48/31phBfP5K+xXuwk1BRmvZL5I1eMr+Z7NrX/Eck5qlDfLYA5m3KG/CjzdBJhrfqq844TVlg0dmZWw61HlP55ott1gW/nicPlkyMcXY6wpSguzLvqmJQn2UHPWGfZw=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.21,REQID:1fca2fb0-5a42-4770-94c5-2313d5ec51ce,IP:0,U
+	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+	release,TS:0
+X-CID-META: VersionHash:b0318ac,CLOUDID:55ea0d31-f289-4656-bb36-27baf4489f11,B
+	ulkID:nil,BulkQuantity:0,SF:80|81|82|83|102|836|865|888|898,TC:-5,Content:
+	0|15|50|99,EDM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:nil,COL:0
+	,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: ec518188e3cc11f18dc8c9802ae25ab1-20261119
+Received: from mtkmbs10n1.mediatek.inc [(172.21.101.34)] by mailgw02.mediatek.com
+	(envelope-from <peter.wang@mediatek.com>)
+	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+	with ESMTP id 2002578042; Thu, 19 Nov 2026 11:54:30 +0800
+Received: from mtkmbs13n2.mediatek.inc (172.21.101.108) by
+ mtkmbs13n2.mediatek.inc (172.21.101.108) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.29; Thu, 19 Nov 2026 11:54:29 +0800
+Received: from [10.233.130.16] (10.233.130.16) by mtkmbs13n2.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.2.2562.29 via Frontend
+ Transport; Thu, 19 Nov 2026 11:54:29 +0800
+Message-ID: <403821fa1be0c7ec5c0b2c0235957bfa9818fd7e.camel@mediatek.com>
+Subject: Re: [PATCH v2 1/2] scsi: ufs-mediatek: use devm_regulator_get() for
+ the va09 regulator
+From: Peter Wang <peter.wang@mediatek.com>
+To: Xiangwu Lai <laixiangwu@cmss.chinamobile.com>,
+	<chaotian.jing@mediatek.com>
+CC: <chu.stanley@gmail.com>, <alim.akhtar@samsung.com>, <bvanassche@acm.org>,
+	<stanley.chu@mediatek.com>, <sashiko-bot@kernel.org>,
+	<linux-scsi@vger.kernel.org>, <linux-mediatek@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>
+Date: Thu, 19 Nov 2026 11:54:29 +0800
+In-Reply-To: <20261118032015.974-2-laixiangwu@cmss.chinamobile.com>
+References: <20261118032015.974-1-laixiangwu@cmss.chinamobile.com>
+	 <20261118032015.974-2-laixiangwu@cmss.chinamobile.com>
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 19 Nov 2026 03:44:57 +0000
+User-Agent: Evolution 3.52.3-0ubuntu1.1 
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -60,86 +88,43 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+X-MTK: N
 
-Thank you for your contribution! Sashiko AI review found 1 potential
-issue to consider:
-- [High] scsi: bsg: IRQ-unsafe pool->lock in scsi_bsg_uring_cmd_done()
---
+On Wed, 2026-11-18 at 11:20 +0800, Xiangwu Lai wrote:
+> ufs_mtk_init_va09_pwr_ctrl() obtains the va09 regulator with
+> regulator_get() but the reference is never released with
+> regulator_put(), neither on driver unbind nor on probe failure. The
+> other regulators handled by this driver (dvfsrc-vcore) are already
+> obtained with devm_regulator_get_optional().
+>=20
+> Use devm_regulator_get() so that the reference is released
+> automatically when the UFS device is detached.
+>=20
+> This alone is not enough, though: ufs_mtk_init() powers the M-PHY on,
+> which enables the va09 regulator, and nothing powers it off again on
+> the way out -- the variant operations have no .exit callback and
+> ufshcd_pltfrm_remove() only resumes the device.=C2=A0 The devm release
+> would then hit WARN_ON(regulator->enable_count) in _regulator_put()
+> and leak the enable reference.
+>=20
+> Balance the use count by adding an .exit callback which powers the
+> M-PHY off, in the same spirit as the .exit callbacks of ufs-exynos
+> and ufs-qcom.=C2=A0 ufshcd_hba_exit() invokes it both on driver unbind an=
+d
+> on ufshcd_init() failure after the variant init, so the enable count
+> is always balanced by the time devm releases the regulator.=C2=A0 It
+> relies on the state tracking in ufs_mtk_mphy_power_on() and is a
+> no-op if the M-PHY was never powered on.
+>=20
+> Fixes: cf137b3ea49a ("scsi: ufs-mediatek: Support VA09 regulator
+> operations")
+> Signed-off-by: Xiangwu Lai <laixiangwu@cmss.chinamobile.com>
+> ---
 
-commit 90faa38e4aa3fb704f223fae5379944821b9aa28
-Author: Yang Xiuwei <yangxiuwei@kylinos.cn>
+Hi Xiangwu,
 
-scsi: bsg: release io_uring requests from end-I/O
+Thanks for fix this bug.
+Reviewed-by: Peter Wang <peter.wang@mediatek.com>
 
-This commit snapshots the SCSI completion status and sense data in the
-request end-I/O callback using the per-device BSG completion buffer pool
-and returns RQ_END_IO_FREE so the request tag is released before task work
-runs.
 
-> diff --git a/drivers/scsi/scsi_bsg.c b/drivers/scsi/scsi_bsg.c
-> index e4a65d7a23742..739778244f420 100644
-> --- a/drivers/scsi/scsi_bsg.c
-> +++ b/drivers/scsi/scsi_bsg.c
-[ ... ]
-> @@ -70,9 +83,38 @@ static enum rq_end_io_ret scsi_bsg_uring_cmd_done(stru=
-ct request *req,
->  						  const struct io_comp_batch *iocb)
->  {
->  	struct io_uring_cmd *ioucmd =3D req->end_io_data;
-> +	struct scsi_bsg_uring_cmd_pdu *pdu =3D scsi_bsg_uring_cmd_pdu(ioucmd);
-> +	struct scsi_cmnd *scmd =3D blk_mq_rq_to_pdu(req);
-> +	u8 driver_status =3D 0;
-> +	u8 sense_len =3D 0;
-> +
-> +	if (scsi_status_is_check_condition(scmd->result)) {
-> +		driver_status =3D DRIVER_SENSE;
-> +		if (pdu->response_addr) {
-> +			sense_len =3D min_t(unsigned int, pdu->max_response_len,
-> +					  scmd->sense_len);
-> +			if (sense_len)
-> +				memcpy(pdu->sense_buffer, scmd->sense_buffer,
-> +				       sense_len);
-> +		}
-> +	}
-> +
-> +	pdu->res2 =3D bsg_scsi_res2_build(status_byte(scmd->result),
-> +					driver_status, host_byte(scmd->result),
-> +					sense_len, scmd->resid_len);
-> +
-> +	/*
-> +	 * No sense to deliver: return the pool buffer now so other commands
-> +	 * can use it while this one waits for task work.  Task work only puts
-> +	 * when sense_buffer is still set.
-> +	 */
-> +	if (!sense_len && pdu->sense_buffer) {
-> +		bsg_uring_cmd_put_completion_buf(ioucmd, pdu->sense_buffer);
-> +		pdu->sense_buffer =3D NULL;
-> +	}
-
-[Severity: High]
-Can calling bsg_uring_cmd_put_completion_buf() from
-scsi_bsg_uring_cmd_done() self-deadlock on pool->lock?
-
-Both bsg_uring_cmd_get_completion_buf() and
-bsg_uring_cmd_put_completion_buf() acquire pool->lock with plain
-spin_lock().  scsi_bsg_uring_cmd() and scsi_bsg_uring_task_cb() call
-them from process context with interrupts and softirqs enabled, while
-scsi_bsg_uring_cmd_done() is the req->end_io callback and runs in
-hardirq or BLOCK_SOFTIRQ context:
-
-scsi_bsg_uring_cmd()
-  bsg_uring_cmd_get_completion_buf()
-    spin_lock(&pool->lock)
-    <softirq / hardirq>
-      ...
-        scsi_bsg_uring_cmd_done()
-          bsg_uring_cmd_put_completion_buf()
-            spin_lock(&pool->lock)  <-- spins forever
-
-If a command that provided a response buffer completes without check
-condition on the same CPU while process context holds pool->lock, the
-CPU deadlocks.
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261119031751.3471=
-968-2-yangxiuwei@kylinos.cn?part=3D2
