@@ -1,72 +1,75 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.72
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.197
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
 	t=1795201256;
-	b=Sswqt3b1x0ajfIjcomtpy2pnllgWBDnQJ2evFbJFbeO4pW2hbxs1PY5Z3T1q6mnYW9C7
-	 O1nAPZrFn5xS0sjKIfhk12HeCZXDgFfSn0l2Zi7Rw6WbdPq1uRCGt04ckDLGaXr5ykqfZ
-	 Wz1nfrOGQ7GKINI064Rz6VHNcgQ/IawIdyH9RrMz9zouvGIEw5Ek1PQ6kpd/gYFta8o4Y
-	 7v47cn3hn7bPqQ+hQa2pYUksTxUxZIvfAGJbKUwxxElGB2yfhl9d7P1C8YcRV406zkHu1
-	 OnHArhn4sMigCdDyvJWHWnsu9ZVTu8ztAhlzvxywZwOe5VBE6Gb6P0FxBO4CyFDSI2A==
+	b=zZsfM67TuyY3cZRgHhV1ikfuPDVgVt7lK8QWt1LnfzVug0a6u/WMNwHGMAhG/3ikNDuN
+	 WPGQ317uYaWXyc3pRnebiOumtEh51Tz10Sfh3X9trg6mTqpDXMQ6oQe7nsqdPx4FA510D
+	 8VDom7SqgEGNpwIlkikgiaLOnkeneciKh083yJAK3DcXb1rVOW7d3VST7jFyYOEmzE4PI
+	 tqdRyvkoY6nmmdTH6Uq9XkKuzS+LvBPoyyc2D7vZIqCUqOQSO5mgIiCq6npGmww8rBxPZ
+	 5+IWLtnJOL/hOW4eBf8lkfXAxhgnhNNScePAPsPGYJa3IhQgvhoSCNpY86zPZzK+1jA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
 	a=rsa-sha256; c=relaxed/relaxed; t=1795201256;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:Mime-Version:
-	 X-Mailer:Message-ID:Subject:From:To:Cc:Content-Type;
-	bh=UNLjbm4DATGnAXYQNaz3Ekm01BREm2qtWAOyb3LUDX8=;
-	b=xwEsEXj4gEhYe3u5abl3Mn13y8RM0YGBgRJKbPKWcogAjh+J7vUKHV1vSL/uXMd/CmgB
-	 Z+Z0CuD+sKb1yldJ2+ng3E+7G90jjTvlqrBBpFTp/N1+Inci6jl00KFeydtyP54sAcTgH
-	 0mLErVyp3rg86qruLgZ2ksZN+cNLF9xrQrG+0Ggqa73SkzP9JsE29ZDB6ZUAE7kgtXhYh
-	 8tAfSk8LPVMynckqjO+a2Bx5b5gU+p8iYPnOlOjV3ZiY+YAxWIaMBJLXuwthiPTqNlKvT
-	 lpQsBIMLXCm4voHa9mQ++0RPl5hFUIuoJiwZnbUojBXp+D2ijDfiCCWSXHX1jiQRdVg==
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:In-Reply-To:
+	 Mime-Version:References:X-Mailer:Message-ID:Subject:From:To:Cc:
+	 Content-Type;
+	bh=mviMX423LKxXWIxiYJZwCl9XcD+q+XXpipqa/Ow8DSE=;
+	b=iRD+BKP8Z9j2qLsO7wNBT3qTlqpCFQBKYhWyZlV55V32hq9ZZ5RoSRICLmVw/46EUeT8
+	 YfyLJJmsnI8uiPdihMOsusBkNWbaMHJzwVZnI6yTJ5DNgzVmJ4TLqB2N4N43qDsMM+ONG
+	 +m+QlfA+Iwj/19qOeKFF4ts2VfP+bwQjF0yAMZedXSmvZP04osgwnsWXimTRUPK5e94os
+	 9v5fDl1Ehrv84KLVhmltSLOYc3sPfizqLFbFUi+lhdWe+cNuw8mcBWsZpUFC+CYhjEgWn
+	 669qvwVf1pV96KSIBw+2AtNker2ta0Q6xV9P2QhntPFwyqsoB9k/bflpG5JtblIGPrw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=google.com;
 	spf=pass smtp.mailfrom=flex--irogers.bounces.google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=JAhqkxbm;
-	arc=none smtp.remote-ip=74.125.82.72
-Received: from mail-dl1-f72.google.com (mail-dl1-f72.google.com [74.125.82.72])
+	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=pHyTfUEV;
+	arc=none smtp.remote-ip=74.125.82.197
+Received: from mail-dy1-f197.google.com (mail-dy1-f197.google.com [74.125.82.197])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91D5F60A263B
-	for <linux-scsi@vger.kernel.org>; Fri, 20 Nov 2026 19:00:40 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 91D5F60A263B
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E84B60A382D
+	for <linux-scsi@vger.kernel.org>; Fri, 20 Nov 2026 19:00:54 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3E84B60A382D
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--irogers.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=JAhqkxbm
-Received: by mail-dl1-f72.google.com with SMTP id a92af1059eb24-1a5005fd0f8so2229420c88.0
-        for <linux-scsi@vger.kernel.org>; Fri, 20 Nov 2026 11:00:40 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=pHyTfUEV
+Received: by mail-dy1-f197.google.com with SMTP id 5a478bee46e88-384c78aa0dbso1574806eec.0
+        for <linux-scsi@vger.kernel.org>; Fri, 20 Nov 2026 11:00:54 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20260707; t=1795201240; x=1795806040; darn=vger.kernel.org;
-        h=content-type:cc:to:from:subject:message-id:mime-version:date:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=UNLjbm4DATGnAXYQNaz3Ekm01BREm2qtWAOyb3LUDX8=;
-        b=JAhqkxbmIkOhtP5FM2VZ7m5v1kCutgrj5sLE0vGz+5DDXqt7FuvbPCT+mjrVhDGfPM
-         e/7ZNz7pai8TXmXAtJ8363EO+GBUrsXoja4cZg3NCHuamS0rZVqKoSIhcx8w54ri9jz4
-         AsimjJy1kYwuRzadrI+QnAzhcDljKdSRqTyMjNxFtUQZ09RZ3cwH5f9BHnO2y3tMoVce
-         zKppTqrx8viT6HVXhtGpM37P/FfRT5sr4+eqJvt3rOz+M5G6B5LApCFiBHAZs3Y5wCBH
-         lwGN/EZgjrMW+zSUhx/D5BXRedhNKumTkWPKWekFO1WMaEEV2D8LHnmeJPOqT50h4ZZT
-         bA7Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795201240; x=1795806040;
-        h=content-type:cc:to:from:subject:message-id:mime-version:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+        d=google.com; s=20260707; t=1795201253; x=1795806053; darn=vger.kernel.org;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=UNLjbm4DATGnAXYQNaz3Ekm01BREm2qtWAOyb3LUDX8=;
-        b=VP7XF2h68jrFWPYigv35z1CMhnjXQmpuphSpGntASNHtTK5+0+wL6/ONvyMY8XuJdK
-         yiMXY7S429UeK9sPv06H0azdgI7xbYE2FHWNN4xqcaFQtw2mb6JZcJWvwLTckJW4C6Y7
-         k4pgOtafVEeswdeHzj++cD2vbQvzXvNptH/khhBheQF26ppD3/hNlV+2hunrOa3KS71u
-         dAggd5IulneGwQY8qRcURH+O4FCH/FNWXnZ/Ab13GN7fHSr+RXZxF5UxpvrnZtEH8wHa
-         PA2Kqm3mo/i7c4Zg/FQ/BycglLnAZhOIKeU0NCCdKiIiPT0heWFmpjz7F2lQlCRUSXxc
-         6bsg==
-X-Forwarded-Encrypted: i=1; AL+hErHY5jn7O+L4rjSdwmDesp9G7rMNdeQxStHC8YZCb9VavDgxWegDTYAxfizyNbT2BegkBXvrbt7RZxYk@vger.kernel.org
-X-Gm-Message-State: APuU4Z+z+eOe0+0S4jFm9yeQ9qwlAvhe5oQD+pWLMm+oCh06+WcMZeBn
-	XegwLE7B/svnVPsSc4oYMMVk0JvT/I/hu7t4vyLfDon+VaWNN6lSyNFa7uTADxi8QLzxU1OGBW1
-	hv2TE+v5ncQ==
-X-Received: from dlbuu1.prod.google.com ([2002:a05:7022:7e81:b0:1b3:ba1e:2c7])
- (user=irogers job=prod-delivery.src-stubby-dispatcher) by 2002:a05:701b:4584:b0:1ac:9da7:e86e
- with SMTP id a92af1059eb24-1b556908c17mr3830341c88.30.1795201239052; Fri, 20
- Nov 2026 11:00:39 -0800 (PST)
-Date: Fri, 20 Nov 2026 11:00:28 -0800
+        bh=mviMX423LKxXWIxiYJZwCl9XcD+q+XXpipqa/Ow8DSE=;
+        b=pHyTfUEVfORxIw3AaIEr3qtXYXd7UBO4Rd9gAvcyKry0tZV1eZlJNE4Yi/ve+TTbFH
+         80iAQSovUW5fcyO/DXTVpLbW3RDQZ8cxSoW4NJdiOEslOjDfqsu2taaf7uxcfJ5afly4
+         DtBrPIN7WqRa1E7cbK1rTG7ZCM6ErTnCHsjU2I/fVYcV11JYbBQ7Vjrij7nl6D/n1iz0
+         4Zt/m2UO58MNHYYrnpH+DIADjkVJ2lxZQQ1atSq87pWSJwTEu9INdrXVGVNCIHhehDIr
+         zlKRMMLdWvpvWwsc0x0wSfrJArMUKveQHDwKsEDiEGx3I3PJhQurqe2RXPaTXWAUV/s+
+         DpFA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1795201253; x=1795806053;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=mviMX423LKxXWIxiYJZwCl9XcD+q+XXpipqa/Ow8DSE=;
+        b=Ci3oou9oyEV9kWg8h77UZh72L2LHuNmhXodM+BFVmH3/l0g4fVKqv+hQ571I5YNpaD
+         al5J4Mpo4Nh+262z8XPtsklumeTJFRv//OAX6Kl0DN8hAueKVBNU5wr+9MVBrS7Y7XyE
+         Hz8rekja8Wutyg/Q9nTtYL7N8YSjNYneaVIBMS60JCFMjCOleXzTNSImIpK1QiHz5cKg
+         yTtIcKvM6mrlPmjQYekBzAb+83vPjToPihXfoflDFe1bRWidWkMRPyhJzX2Zh48Vqt+i
+         pNJXdgWoOCaz+U24iIFhGsOhlxnGMKqLIkUXz3ZIszP3ECuy6OB3V5VtpaGbqU9LERZK
+         +Cvg==
+X-Forwarded-Encrypted: i=1; AL+hErFnsc8STwe1HMNBA0VTZqdcY3SDDmJONaAa7yAoXBRk7mQxrK4P7zJHBwMMzJeC7bql0tiR8gpacJF+@vger.kernel.org
+X-Gm-Message-State: APuU4Z88eBNTzEE0+DO3H6AfvXFi7fmMsFrVfJ11ElVDZyzeLEvVEJ6n
+	ZvEv89eLczcU66sf/94tQ5gY9Oe4ee8um0SYUr0LfFQz82pnegJF6qSrcvhzzfnBAykAcYtVXu3
+	TnKyGIcFtGA==
+X-Received: from dybmx4.prod.google.com ([2002:a05:7300:d404:b0:368:2c6d:de10])
+ (user=irogers job=prod-delivery.src-stubby-dispatcher) by 2002:a05:7301:6408:b0:383:1bfc:f1c0
+ with SMTP id 5a478bee46e88-38570f27a56mr3664460eec.32.1795201252952; Fri, 20
+ Nov 2026 11:00:52 -0800 (PST)
+Date: Fri, 20 Nov 2026 11:00:30 -0800
+In-Reply-To: <20261120190031.1587531-1-irogers@google.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -76,10 +79,10 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 Mime-Version: 1.0
+References: <20261120190031.1587531-1-irogers@google.com>
 X-Mailer: git-send-email 2.56.1.750.gf70dc682cf-goog
-Message-ID: <20261120190031.1587531-1-irogers@google.com>
-Subject: [PATCH v2 0/3] scsi: mpi3mr: Fix error return, start_time, and
- timeout check in mpi3mr_bring_ioc_ready()
+Message-ID: <20261120190031.1587531-3-irogers@google.com>
+Subject: [PATCH v2 2/3] scsi: mpi3mr: Initialize start_time on all paths in mpi3mr_bring_ioc_ready()
 From: Ian Rogers <irogers@google.com>
 To: Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>, Kashyap Desai <kashyap.desai@broadcom.com>, 
 	Sumit Saxena <sumit.saxena@broadcom.com>, Sreekanth Reddy <sreekanth.reddy@broadcom.com>, 
@@ -87,47 +90,68 @@ To: Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>, Kashyap Desai <kas
 	"Martin K. Petersen" <mkp@kernel.org>
 Cc: Laurence Oberman <loberman@redhat.com>, mpi3mr-linuxdrv.pdl@broadcom.com, 
 	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	llvm@lists.linux.dev, Elkin Cruz <elkin@google.com>, Ian Rogers <irogers@google.com>
+	llvm@lists.linux.dev, Elkin Cruz <elkin@google.com>, Ian Rogers <irogers@google.com>, 
+	stable@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 
-Split the mpi3mr_bring_ioc_ready() error-handling and retry fixes into
-three independent patches with individual Fixes: tags as requested by
-Laurence Oberman:
+In mpi3mr_bring_ioc_ready(), start_time is only assigned after writing
+MPI3_SYSIF_IOC_CONFIG_ENABLE_IOC when retry == 0, which sits after three
+earlier 'goto out_failed' error paths (soft reset failure, failure to
+reach MRIOC_STATE_RESET, and admin queue setup failure).
 
-1. Return -1 instead of 0 on failure exits in mpi3mr_bring_ioc_ready()
-   when retval is 0 (such as unrecoverable controller faults, hot-unplug
-   during reset/diag-save waits, or ready-state faults and timeouts
-   after mpi3mr_setup_admin_qpair() sets retval = 0).
-2. Initialize start_time = jiffies on entry and guard the post-enable
-   timestamp reset with a boolean flag so pre-enable failures and
-   subsequent retries never read an uninitialized start_time.
-3. Rewrite 'elapsed_time_sec < (mrioc->ready_timeout - 60)' as
-   'elapsed_time_sec + 60 < mrioc->ready_timeout' to avoid 32-bit
-   unsigned underflow if a controller reports ready_timeout < 60.
+If any of those pre-enable steps fails on the first attempt, out_failed
+computes elapsed_time_sec from an uninitialized start_time. Furthermore,
+if out_failed decides to retry (retry == 1) and the second attempt
+reaches the ready-polling loop, 'if (retry == 0)' skips assigning
+start_time, leaving the ready-polling loop comparing against
+uninitialized stack memory as well.
 
-v2:
-  - Split v1 into three patches, each with its own Fixes: tag (Laurence
-    Oberman).
-  - Move 'if (!retval) retval = -1;' to 'out_device_not_present:' in
-    patch 1 so a single hunk covers both out_failed fallthroughs and
-    early out_device_not_present jumps cleanly for stable backports.
-  - Add Laurence's Reviewed-by tag on patches 1 and 2, and note the
-    510s (570s - 60s) firmware timeout math from commit 9634bb07083c in
-    patch 3.
+Initialize start_time = jiffies at function entry to cover pre-enable
+failure exits, and replace 'if (retry == 0)' with a boolean
+enable_started check so start_time is reset the first time IOC enable is
+written without pre-enable waits draining ready_timeout.
 
-v1: https://lore.kernel.org/r/20261119170900.1530138-1-irogers@google.com
+Found via Clang -Wconditional-uninitialized on an x86_64 allyesconfig
+build with AI coding assistant help. Verified with a standalone C
+reproducer under ASan/UBSan and by building
+drivers/scsi/mpi3mr/mpi3mr_fw.o with LLVM=1 W=1 (-Werror) and
+-Wconditional-uninitialized; not runtime-tested on MPI3 hardware.
 
-Ian Rogers (3):
-  scsi: mpi3mr: Return error on all failure exits in
-    mpi3mr_bring_ioc_ready()
-  scsi: mpi3mr: Initialize start_time on all paths in
-    mpi3mr_bring_ioc_ready()
-  scsi: mpi3mr: Avoid ready_timeout underflow in
-    mpi3mr_bring_ioc_ready()
+Fixes: 9634bb07083c ("scsi: mpi3mr: Enhance the Enable Controller retry logic")
+Cc: stable@vger.kernel.org
+Reviewed-by: Laurence Oberman <loberman@redhat.com>
+Signed-off-by: Ian Rogers <irogers@google.com>
+---
+ drivers/scsi/mpi3mr/mpi3mr_fw.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
- drivers/scsi/mpi3mr/mpi3mr_fw.c | 11 ++++++++---
- 1 file changed, 8 insertions(+), 3 deletions(-)
-
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+index 416f27c37535..1aeae8a55b1b 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+@@ -1582,8 +1582,9 @@ static int mpi3mr_bring_ioc_ready(struct mpi3mr_ioc *mrioc)
+ 	int retval = 0;
+ 	enum mpi3mr_iocstate ioc_state;
+ 	u64 base_info;
++	bool enable_started = false;
+ 	u8 retry = 0;
+-	u64 start_time, elapsed_time_sec;
++	u64 start_time = jiffies, elapsed_time_sec;
+ 
+ retry_bring_ioc_ready:
+ 
+@@ -1690,8 +1691,10 @@ retry_bring_ioc_ready:
+ 	ioc_config |= MPI3_SYSIF_IOC_CONFIG_ENABLE_IOC;
+ 	writel(ioc_config, &mrioc->sysif_regs->ioc_configuration);
+ 
+-	if (retry == 0)
++	if (!enable_started) {
+ 		start_time = jiffies;
++		enable_started = true;
++	}
+ 
+ 	timeout = mrioc->ready_timeout * 10;
+ 	do {
 -- 
 2.56.1.750.gf70dc682cf-goog
 
