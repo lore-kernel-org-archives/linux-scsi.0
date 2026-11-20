@@ -1,76 +1,99 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=180.181.231.80
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.54
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795168419;
-	b=YJz1aZbO4lJHA4giU8AGj55pb2dUUxL4oX4dVEHhBckiXQatZzBkwvoMqcvRZBPhTj1N
-	 CvKVHQ1XYh6peKI3ORWHhHvRfYRlKGVQclR8MuFY2ZwzCUZ2zm+7rqF5utZCTKXwsOgH8
-	 TCE+eY1dMDvtJ+hAuVwqvDRevcRUvxBzWhCimqAyxboEs3FtSWhLMZ3h6a85Jzzit1KJR
-	 foaNVGP/nFeORWd6Joqucq4dQGdZVDcq1JEMpSZosvmFN7ItjuOgvqIR92AKLjakobWKb
-	 E0+JsNOIlQenE7TnOMEBWE7jzN6ZYR8vqZVUL9tDn+WfM3K5P9D6qM0/I6GUYpE4LxA==
+	t=1795174929;
+	b=JOOEm/LlAKqXzWDvhsNQU240ph+/Do5R/qCq5qcfrZjsVt9sIslGfl0bsJ+uW46P0E7o
+	 6/4h6YdP8j5uo9ji6wyq4/eSOSPetxgpFm2px1RYEDd3tEvTXajXgwCogue7R8OZNz5Jp
+	 8GLHv0jiMs/fhamQAPAVV7mT2DgmzErp2zKXmOgZOxwudM7x0V2eoZg75dWmPVdXJjB2+
+	 vgj8JQUHYQDoVsH+Ld4dxiwiEEJs+uA+7X/Xihx46LrPZvvSHSHW4yaVqD33DBJ90IhEJ
+	 HSM4dH1h0s1zGpF+L3GZ87pkCphIrSqjHzhuL62+6IfLT6jrBss+SB5Rf0xBMXQSMrA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795168419;
-	h=DMARC-Filter:DKIM-Signature:Received:Received:Date:From:To:Cc:
-	 Subject:Message-ID:References:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To;
-	bh=2byWnC76isCs4cT22MWKTLO0lb0D1/ZneG1MUnYIDh4=;
-	b=sSgALl5TvM7BqR5ej55ggnHCbymVqN/l9XiVF7CxRfTXX5fhK+PiFUDGaocuVmJ3Uv1i
-	 TJEwFyP7e6bdupQvlc4a6xYdyKGdlXUfAru0Bc30QshxVufPF6+gKq32RVO77um1eI2Et
-	 nDWhgpvOgL8SZXzelpJqIeuhMchDvtHkDH993Ufl4fgbi6h2gp0+mNHVogiA9UbSAEQXK
-	 R1kAcVabbmcoSgfw4U+5a9GjUVCIYdSk7rPmombiX1SB7UXMyCnIkUwok9oBGV5vBATzK
-	 igeXmR8dIKfLvYLKdfuLVCpyR3ublTxQjWBACaCgW/cnr8NKrYq0MdiITBKwyupmdOg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795174929;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
+	 MIME-Version:Content-Type:Content-Transfer-Encoding;
+	bh=tM9naJv7UO6Voq+aBXlPWHG73U+ad6C+ZL6d3U3QEdw=;
+	b=rLIZLSN+5T800JT04DBauX4ZRMpasANsu83pynZgZoJKi+pr9tVMkQRs1fmMyKuLgjDj
+	 WX2UKORlVCqVg+ADybfr90FoYntYtqDrhgRTNw1DOJ5EgSwNNkQ3yjwesNVwGNisQO+8a
+	 /D3x2yek26+JevVBMYbZNe2DRAoW7U9UrShc6LmX9nMlXpXMJ7QPIgFHZRdScZMWaTpVk
+	 s9paQwv0VnnrMyj4W25gwq+wn32VTHbIWsqiIdZ5pFhHfkXbggeqfbm/YW/WMaexgAtdy
+	 wquPqDiHDmLWdFXJWsJEwGYfyc2ISY/tMrGjR35VHftfYMvUZCZfBy78CX2PT2AVVvw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gondor.apana.org.au;
-	spf=pass smtp.mailfrom=gondor.apana.org.au;
-	dkim=pass header.d=gondor.apana.org.au header.i=@gondor.apana.org.au header.a=rsa-sha256 header.s=h01 header.b=E+OjnCrP;
-	arc=none smtp.remote-ip=180.181.231.80
-Received: from abb.hmeau.com (abb.hmeau.com [180.181.231.80])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
+	dmarc=fail header.from=isslab.korea.ac.kr;
+	spf=none smtp.mailfrom=isslab.korea.ac.kr;
+	dkim=pass header.d=isslab-korea-ac-kr.20260707.gappssmtp.com header.i=@isslab-korea-ac-kr.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=WFYq8toA;
+	arc=none smtp.remote-ip=209.85.216.54
+Received: from mail-pj1-f54.google.com (mail-pj1-f54.google.com [209.85.216.54])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A64260A2600;
-	Fri, 20 Nov 2026 09:53:39 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8A64260A2600
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=gondor.apana.org.au
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gondor.apana.org.au
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3934C606A325
+	for <linux-scsi@vger.kernel.org>; Fri, 20 Nov 2026 11:42:09 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3934C606A325
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gondor.apana.org.au header.i=@gondor.apana.org.au header.a=rsa-sha256 header.s=h01 header.b=E+OjnCrP
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=gondor.apana.org.au; s=h01; h=In-Reply-To:Content-Type:MIME-Version:
-	References:Message-ID:Subject:Cc:To:From:Date:cc:to:subject:message-id:date:
-	from:content-type:reply-to; bh=2byWnC76isCs4cT22MWKTLO0lb0D1/ZneG1MUnYIDh4=; 
-	b=E+OjnCrPuiP7LU7YdQ9NxWOY8UKFqA6JOACVMMopCa+2wpFYvzGp8sT9K3wby5u+fPSOCQjvE8J
-	Yy4KVME5SM06915STXG0ty/BYC7wSToTNZ1eHHYKCGoiNxb/tOIASeVNCI2ytTaF8YS87iWJVXZ2/
-	yaR0B8S8Rljhr7CggKy7jidW2otfKjgBc+aD+oYJv5pO6tPm9MbMknjazvjulwq+IwzqiicP8lSqW
-	82XWePLdTuYRApr5H6gWWq7fjOvPjxZlD+QC8yxUhHhEHT4a6RiLiE3jSYnSRysBo9nj/Byz7fa9w
-	1XUUpLjCtUJ2JqEvg9OccUJyCSqCOS50ekOQ==;
-Received: from loth.rohan.me.apana.org.au ([192.168.167.2])
-	by formenos.hmeau.com with smtp (Exim 4.98.2 #2 (Debian))
-	id 1xULJA-0000000HYfs-3Cwt;
-	Fri, 20 Nov 2026 17:53:29 +0800
-Received: by loth.rohan.me.apana.org.au (sSMTP sendmail emulation); Fri, 20 Nov 2026 17:53:28 +0800
-Date: Fri, 20 Nov 2026 17:53:28 +0800
-From: Herbert Xu <herbert@gondor.apana.org.au>
-To: mail@andrewgigena.dev
-Cc: Abel Vesa <abelvesa@kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Alim Akhtar <alim.akhtar@samsung.com>,
-	Bart Van Assche <bvanassche@acm.org>, Bean Huo <beanhuo@micron.com>,
-	Stanley Jhu <stanleyjhu@google.com>,
-	Bjorn Andersson <andersson@kernel.org>,
-	Andy Gross <agross@kernel.org>,
-	Konrad Dybcio <konradybcio@kernel.org>,
-	linux-arm-msm@vger.kernel.org, linux-crypto@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20260707.gappssmtp.com header.i=@isslab-korea-ac-kr.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=WFYq8toA
+Received: by mail-pj1-f54.google.com with SMTP id 98e67ed59e1d1-3b0ae87069dso380518a91.2
+        for <linux-scsi@vger.kernel.org>; Fri, 20 Nov 2026 03:42:09 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=isslab-korea-ac-kr.20260707.gappssmtp.com; s=20260707; t=1795174928; x=1795779728; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:references
+         :in-reply-to:message-id:date:subject:cc:to:from:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=tM9naJv7UO6Voq+aBXlPWHG73U+ad6C+ZL6d3U3QEdw=;
+        b=WFYq8toAzjU9exok8ixcfSZNb3P0glxTUSaEy8hOf+NhxldDGjaaUQwOSER1rPEBd8
+         QVxRWO9De4zA8neTAaFV8QZiT6CAnxQnVr6liQRdNok4TCWdeBlKaEkLG3ptWSAugg4u
+         J6AuIB/qiVgrTGjpZEW8i3D7di3Js9zoDxfdz2nwrbVhfh4PNrHGnQkB7Eeamo3vhoa7
+         80LyErUdXC4vRCHTF/UoGbkFOo8+XCm2uq1wVbErarOv34E2c78I13V3iVYCGaqzN+m+
+         37GLjgXK2Ak9gI89G6EZrdJ1guooUm2uK9BnOyaVlV5xYA1EvIRAu6ZoJsdwpCgoEvyt
+         UTcQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1795174928; x=1795779728;
+        h=content-transfer-encoding:content-type:mime-version:references
+         :in-reply-to:message-id:date:subject:cc:to:from:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=tM9naJv7UO6Voq+aBXlPWHG73U+ad6C+ZL6d3U3QEdw=;
+        b=gY5WNyulvuRhDljJyDyGfYPLIu9+eoEiPtIWCqjMxt6nkyoZh8kAn/Bx3vfGVq8tVD
+         Xk4FZtS8ZnR5r6Lb9c95UKGg106jFDXENqTAYxiVzIEyXffBU3s7N6n2nrnpiYAww7TS
+         ZCtXSKwBPIGSYFsDs3DiK2+atMks9KZV3J8EKkLa9GV5TaxyXcoBg5wNk859d609TAo7
+         uydGcJmlzHf+2Ei6mtHfvRAlC5DlJ3cRO5r4xLd4neUqbeZXufkJyXQH93sxTas5v9Vq
+         aKzdRgh+Y/0HBE4YC2LDefloAgO3i386WTqYh5/GZbC4uw4x8lfQ5cgFKQo3L9l+k4B6
+         I3aw==
+X-Forwarded-Encrypted: i=1; AL+hErHmiexboqPAQJbcsUSBjmjTUgfk+aTk0vzMB9n0raSB66lmMfbRtvzx3ZbDZyuubFbaNZZl5l9huKz1@vger.kernel.org
+X-Gm-Message-State: APuU4Z9MYzNkYsbWqnwTDG3mhZIK3vAYAs7L6DX78d54KTdAlgTNChA7
+	6ACR591ZObJl4vKex+lW9dXgs2+kKaWv+Qrygrc2YVNlQf5edRfZ0vyjqUSpz5bDndw=
+X-Gm-Gg: AZFdTZfcBfY+HPFkEoZnmmwmXF/ov+x6hvFse+7iEVebkEdvN4IaAeJTwJJCefhmOmL
+	g5itCOsHGvwwSZpY+iV/fe1vpwVcQ4zb1cDOuIsKXnF2SUufX2xAHu/nGy8Gp4rr3q7bJCduQmr
+	djXnLyEZ+tRQPSrcP1RAOrwuIjW2Ht1vk7v/9aOsqOgyokK/ANnlowaPEKF9W61J9WuKD8b91Bv
+	/FiTRCyO+GG5t2GR9RPG5m8HmBQ5bbkK0cGWe172ugjO3/Nessirit9ZakSfreP6r6Pp4a6nFpv
+	jhPOeutgQCx4HKYCo0EUU0RKZYvEmtJeRMxD9HfIwRZJ8TFs6CGKJdN/xZr71uTyESWX9dino66
+	73Hvr2g+bWN87O+5mkoUjWxhKKHMUMzi/u7iZLsm74P39FLHa7/GoBkDHcvxx/2wJw6jJe6xBBf
+	Zx2W2sZwrTIHot21vwEI3p4X0Z8CoScaOlRQ+qIL/7bBhMcIdztOcVp26LRHO3Uzl1kCVImUtmf
+	5o6Osx47DAwVzsIhseWyKbI7Y6Q6FVI/G3/cjIKYppVzrqLgybuGdk9n2FXeAgNcEDIffww2+/z
+	TrrOqDIzbKdHvZ93wkFYb/Mo7vrSh8oJyYjEdREL5JG+5Py8XDn2MnLhQaoPOQQM7nXIxbULmnJ
+	PDsTvTQJaUv0hnOo/7/kBVYnRUxRx+XDv+cit
+X-Received: by 2002:a17:90b:17cd:b0:3ad:25f6:1dd0 with SMTP id 98e67ed59e1d1-3b41c8fe29cmr2476643a91.11.1795174928635;
+        Fri, 20 Nov 2026 03:42:08 -0800 (PST)
+Received: from yhlee-960QFG.Davolink ([2406:5900:1044:110c:8b25:951:ad8d:5cc1])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b42ab9c2dasm849879a91.1.2026.11.20.03.42.06
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 20 Nov 2026 03:42:08 -0800 (PST)
+From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+To: martin.petersen@oracle.com
+Cc: michael.christie@oracle.com,
+	himanshu.madhani@oracle.com,
+	ddiss@suse.de,
 	linux-scsi@vger.kernel.org,
-	Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
-Subject: Re: [PATCH v4 1/3] dt-bindings: crypto: ice: document sm8150
- compatible
-Message-ID: <awAYmFxtWpAaFhhC@gondor.apana.org.au>
-References: <20261111-sm8150-ice-rfc-v4-0-0311eac35609@andrewgigena.dev>
- <20261111-sm8150-ice-rfc-v4-1-0311eac35609@andrewgigena.dev>
+	target-devel@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] scsi: target: Fix NULL se_tpg dereference in target_complete()
+Date: Fri, 20 Nov 2026 20:42:03 +0900
+Message-ID: <20261120114203.3072082-1-yhlee@isslab.korea.ac.kr>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20260725084939.694403-1-yhlee@isslab.korea.ac.kr>
+References: <20260725084939.694403-1-yhlee@isslab.korea.ac.kr>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -80,23 +103,11 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261111-sm8150-ice-rfc-v4-1-0311eac35609@andrewgigena.dev>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-On Wed, Nov 11, 2026 at 05:53:21PM +0000, Andrew Gigena via B4 Relay wrote:
-> From: Andrew Gigena <mail@andrewgigena.dev>
-> 
-> SM8150 uses a standalone ICE node, so its compatible must be listed.
-> 
-> Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
-> Signed-off-by: Andrew Gigena <mail@andrewgigena.dev>
-> ---
->  Documentation/devicetree/bindings/crypto/qcom,inline-crypto-engine.yaml | 1 +
->  1 file changed, 1 insertion(+)
+This is superseded by v2:
+  https://lore.kernel.org/all/20260725165818.769963-1-yhlee@isslab.korea.ac.kr/
 
-Patch applied.  Thanks.
--- 
-Email: Herbert Xu <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+Best regards,
+Yehyeong Lee
