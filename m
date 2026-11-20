@@ -1,58 +1,62 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795142842;
-	b=1L2IOvl+hw6C9+b1jim1xw5/PsEgLEzxma7jU54m4YO9Ll4DYJsgk2hIjoMu8nfVlk74
-	 x2j0yTRhwtjctXyABiISUeA+I1DvdnFmG/kKexet260/IKyxWIq4uOuyWcQdt1nxq6rXQ
-	 PTLEm1RO1bMb84HAVVtuB3L9Nfg/5DvaMu/A4oN5cHYbXUWbDGbJoJOxccxLy8kqKyH5O
-	 y5tVVJ+rc+ktsv3PG/APqrEnEVRVGSxcJkawsTj3o8T9S0BciMliq0aryGXHrtDheXBFX
-	 0RGbBI7snw74FSp31nH1Gu/qQvnWsdmWv3QpbjvFCuoKBnCd2jL5EiXOJsBNuYhOlzg==
+	t=1795143938;
+	b=UOjzfgunonSgLpeiQoNca3hiYQnhwzl0kzNl6FQkXLOOv+aWdBs1v5M6eN6MT8zFJOyi
+	 4/ryNNVmFfjo1JuvmCnm2P8UdY1OxR8MYL6a5zl8uRiNZW0TJZS3lck5omXm4OH6N3XuI
+	 2RxTOEcYNpkvgWIu6CX5tc3Hrqv12GiqJ4daIcjNXUUKS36aQqFiafkFqMdqYRLmfpcrm
+	 lm5uvR9wsJnoE+ViM5TGJ1grLJ4yi89V5nzLSzQnyotmqSNVR6QYdwbLKEaRnZ25KfOxJ
+	 5qtW0grr9AS4TGHdZ5+N8QyoD3KYi7lv5j9UN/kdQdjUvDkM1TvTMhTM8uR5rgp+oKA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795142842;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795143938;
 	h=Received:DKIM-Signature:To:Cc:Subject:From:In-Reply-To:Message-ID:
 	 References:Date:MIME-Version:Content-Type;
-	bh=x5gEXo3frQiA5JlBAE+K635fwDbjDjwDOWUnBPVJr9U=;
-	b=I0SKr6AZXWyUYGk+kiC6TjaAP8HXHTc3oiAcJmogf/n2c6sMDPwyILhesV37a39OSQQU
-	 qGRybTwlbQqg3ZGR52PsE7Of6mARya8g/WDxRhWOfsARGCPynKXJGbgAvoEo/vT/ol00T
-	 Ga9YifABORZCsepBDZk7j9DwNr5/hjaj6K6/YeDCqq3Awfri98/K9yvBtDQCqrTgl7ZRx
-	 HZ6iE8sdfNt09Lqcz8RA//ApbABbRcrXxxj7PK09BCvJT3RSni1uanri4pDGslwm41P1E
-	 bveEmLoPiReSBuoLszIv6eo9YOCgXSJ6dkGhOTBmFgtFMTYr6bcFzBhLGLhAO3I1HTg==
+	bh=c3kFlEfqICMl98Y4ENwHSDXDjmBA7a5dn2l5FKiRry0=;
+	b=PZK11wsL7KxVKm10BzDDJ34Xc+eXRcmpCN8LHdlyrS1l/eVuhrwNkhvKYcGFSTTdvV5q
+	 /38MlNyq90SupMv45eLp3A9rs7ob4oS1H0PVhBdkpk2nC5tZVKrwKyg31FBOjD4Hwo0/g
+	 lu7uXSYq7rRt7wk7jne7dj83vjG5x4Fcp6jgEBsqbJhrp5FZ3QWrGLSjZOVLBaaR0CNU2
+	 TV3aZxUx62R6MhlzaR4rzwR1VoUZs/5q5VSqN1G3PFvNdaA9EyNbx4ieLbzmJ1T9AU5tm
+	 llRfIGlWkMwrzsHn6uAT1gGZEKW0xV/DoA5ccEYvll5Cmjnx+AvbrOo3Xq7tPsMnB/w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=RQkAlkre;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fco7HaVm;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BF06606A320
-	for <linux-scsi@vger.kernel.org>; Fri, 20 Nov 2026 02:47:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 52494606A320;
+	Fri, 20 Nov 2026 03:05:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=RQkAlkre
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A54001F000CA;
-	Fri, 20 Nov 2026 02:47:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fco7HaVm
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B14A71F000C4;
+	Fri, 20 Nov 2026 03:05:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795142842;
-	bh=x5gEXo3frQiA5JlBAE+K635fwDbjDjwDOWUnBPVJr9U=;
+	s=k20260515; t=1795143938;
+	bh=c3kFlEfqICMl98Y4ENwHSDXDjmBA7a5dn2l5FKiRry0=;
 	h=To:Cc:Subject:From:In-Reply-To:References:Date;
-	b=RQkAlkreQg4rMoUVA6B1f8qAWUcmwZkQg8WUJtvibSMP0pH4oSc92MIjDtDOf8sJl
-	 FKqwC3TPl1ucCbXeDNKH8AKRIeGzi9OYGEpvqARScRMnOfpVfIuDjRhqdIg7++vkxN
-	 ZDo5hQ2eLfegwl5r1qDWlchS6Tp1IIRmHIP0tTEKlrdmAk6kj9mQyR8LsI6TMQckQ8
-	 w6WgQr5k/rl+xtvLsAjs59MDupjuXk0O2N1VFpsgheRM3rWeN3yikaE8bgtjVhfbSa
-	 y9Dt0qWHKPPmN5doahgLn5VZmHh6wmm3dREP35FFSxYCJ/Bty9P07fDMW5CKBFBnDc
-	 2fZ/QI8qRsXjw==
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-  linux-scsi@vger.kernel.org,  kernel test robot <lkp@intel.com>,  Peter
- Wang <peter.wang@mediatek.com>,  Chaotian Jing
- <chaotian.jing@mediatek.com>,  "James E.J. Bottomley"
- <James.Bottomley@HansenPartnership.com>,  "Martin K. Petersen"
- <mkp@kernel.org>,  Matthias Brugger <matthias.bgg@gmail.com>,
-  AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
-Subject: Re: [PATCH] ufs: mediatek: Use ARRAY_SIZE() instead of open-coding it
+	b=fco7HaVmtYU8CrRbWtLLmsnUBlbqKsJ4xADEKuxT/I76TbUxvMOO78SMlaW9g6DsA
+	 xYAl7wMsL7BgrR0maWab+PJ/RyLNpB76GHFXCJlSlzivmjWvEiEInSuc7DHaX13+9r
+	 0z2M2vos5DXxbl8O9HB5jMxqocjB/khHuMLBXAlQIgSfWuvbX4qifA1ozqu61Q1h+9
+	 yPKWwh7/HCWpeGcHIdiH7DJ73/9QxC8ntDOgjBaDcyIyOJCEKXT+6eJLQLrsjVBHax
+	 16AOxLF2oYJFWqkPtyDGGfK78PwjA34M5LDinkplI/Jp3kGaUYXu4+3g+F/mOtsEo5
+	 +L7go9I1F4lWQ==
+To: Minda Chen <minda.chen@starfivetech.com>
+Cc: Alim Akhtar <alim.akhtar@samsung.com>,  Sai Krishna Potthuri
+ <sai.krishna.potthuri@amd.com>,  Ajay Neeli <ajay.neeli@amd.com>,  "James
+ E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,  "Martin K .
+ Petersen" <martin.petersen@oracle.com>,  Pedro Sousa
+ <pedrom.sousa@synopsys.com>,  Arnd Bergmann <arnd@arndb.de>,
+  AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+  Bart Van Assche <bvanassche@acm.org>,  Bean Huo <beanhuo@micron.com>,
+  Stanley Jhu <stanleyjhu@google.com>,  Conor Dooley <conor@kernel.org>,
+  Rob Herring <robh+dt@kernel.org>,  Krzysztof Kozlowski
+ <krzk+dt@kernel.org>,  linux-scsi@vger.kernel.org,
+  linux-kernel@vger.kernel.org,  devicetree@vger.kernel.org
+Subject: Re: [PATCH v4 0/4] Add StarFive JHB100 soc UFS platform driver
 From: "Martin K. Petersen" <mkp@kernel.org>
-In-Reply-To: <547675c30e66d7664c0adec81f025986ab6ddfce.1795135740.git.bvanassche@acm.org>
-Message-ID: <yq1wlq8p6c0.fsf@mail.kernel.org>
-References: <547675c30e66d7664c0adec81f025986ab6ddfce.1795135740.git.bvanassche@acm.org>
-Date: Thu, 19 Nov 2026 21:47:20 -0500
+In-Reply-To: <20261112075616.118436-1-minda.chen@starfivetech.com>
+Message-ID: <yq1qzggp5ho.fsf@mail.kernel.org>
+References: <20261112075616.118436-1-minda.chen@starfivetech.com>
+Date: Thu, 19 Nov 2026 22:05:36 -0500
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -65,11 +69,10 @@ MIME-Version: 1.0
 Content-Type: text/plain
 
 
-Bart,
+Minda,
 
-> The kernel test robot reported the following Coccinelle warning:
->
-> drivers/ufs/host/ufs-mediatek.c:1351:32-33: WARNING: Use ARRAY_SIZE
+> JHB100 is a Starfive new RISC-V SoC for datacenter BMC (BaseBoard
+> Managent Controller). Similar with Aspeed 27x0.
 
 Applied to 7.5/scsi-staging, thanks!
 
