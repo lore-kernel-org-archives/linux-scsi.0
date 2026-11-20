@@ -1,53 +1,53 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795208815;
-	b=xs96WdAukJnJ9HvO7nsPxfLvaBp1N8if7MjizKXoDwFg25Ov+r7fbF2q88N7R0S0Xsk2
-	 RBNc4jBZ1cI3Ke26een1pALWp001WnhEBjYzfybBSHAFzpWl7S79sBSP7HV/4eJuzAsei
-	 JoDtV+1tmeRk8jdd5GSZD80oOHYXWhPOL3QhHTo/uHBNkt6sz2oX2NUGzFXb1xJzxbrYV
-	 ouUn6lnAKiEOd6FFOWazSUyxxPZd+vU6cSsI5pHSmxEamhXUdggfVd/QLvPYoD4e/t9AY
-	 XdMcQhWy+wjM014676AE1Py0GHQBHwwQKaQa6QzG9amINEx7QM7YUem3V5cAmkJbTLw==
+	t=1795208816;
+	b=iO5SuehD6xKd4TllRNf1Kwk6z2prp+nY+ALd1cLpE29BcOjC4NIZYFvGGfkSnmfl9bss
+	 CL5eTgvIFvvaF9qdfIwPwzMOmeH4T1ODMUpjn44SnR6UXa9b9PFhpA/fxhYRQMGUOH+Oy
+	 XJDfVrVIIlN/tbCgpJOdPVOWw06weEdjjFmLDfYPzQ3jAiGuctrAP0Sy1yeex6/sNG9/z
+	 5aDYFQ+ateUcQerssYbcaisQGMrgkbvDmg8D2noEK6iabBroPkHw3pLDD8r/d86dxPgcJ
+	 u8d0hiDJCyVMn74R+QE3wicqa0U7lMoERsj6UdXEn8QkY6IzWX4l8WBcHq+5A4DNMjQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795208815;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795208816;
 	h=Received:DKIM-Signature:From:To:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=V08ilXCGlK/y2RxNOthJkoE4M0p+yOq5hKxM4QIMpio=;
-	b=uvJVkVpB2yCRp171gVIoHUqbu0dRXVCvUacf8ZslX7N7Fab+EqNsahlmCRTiPxEifFBY
-	 tFp5K3FN6lcvB6bI+hkDPGaxhYjjgMfXVIg5F5a5UuRGp1rEv++iEzvIkyv9wXN/i00vr
-	 /1U8Ami1wE1UgKaCxA0wp1Xjjx9jwImP2xTLfPT29Tn8F3ujmmMEJIL5UiCAr6bRjKH8K
-	 jE1/d8OwmQDNlO18RvK5L2Ca56jj3tLit7pOagibrSoB+RYBzOwywO3XQ2sxtgXk6dWST
-	 Cme15PVe4/JpVZK7cP23y/LpI5yeD2REnzkrLEcItVNrtpif3NxfJbps3Y/7WBGs7aw==
+	bh=LAFzGRj5h02qybvze9qAIfbGkTR2VUVUCRu5nTmxe8M=;
+	b=VXK732jYbyaAV8ZcRqVzTxinYAD7olXQHoa7ZNbJZ6eLoi1PQDrD/JdfcHVScA09hlFw
+	 ejwe/KyxjzE36T2o/uHnB8plJ8cnFAUr6oW9SZM+zf9/WPgUvL59e8FsoJTQTT7W6KBva
+	 N8ltt8AG7ar8xVfpJrgt8KhQCkSepiDusv9OgL/r1j7aUyJkbYVlnxW3NrLxtDS9NBrw9
+	 lRg1s4A/XcCsE8ybaXOdfp1Td8xmpKbExYakwv9djDQWF29vIEUy9RCGumvC9V9z+8tE4
+	 4ts9hi9Szdd6XYgDpTpzA0FyGpypd9FTxbriRLqAKjOPMBg3hwtx5DwDvmICLpvWu3g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="E/eaBYG8";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ibpem0zN;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A709606A6B8;
-	Fri, 20 Nov 2026 21:06:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92904606A69E;
+	Fri, 20 Nov 2026 21:06:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=E/eaBYG8
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 506111F000C6;
-	Fri, 20 Nov 2026 21:06:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ibpem0zN
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 91EA51F000C0;
+	Fri, 20 Nov 2026 21:06:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795208815;
-	bh=V08ilXCGlK/y2RxNOthJkoE4M0p+yOq5hKxM4QIMpio=;
+	s=k20260515; t=1795208816;
+	bh=LAFzGRj5h02qybvze9qAIfbGkTR2VUVUCRu5nTmxe8M=;
 	h=From:To:Subject:Date:In-Reply-To:References;
-	b=E/eaBYG83Qakd2hrH9x/34IDhUW08S6KIwz5pzyYRkJvSKxG9DGeAQphG7X4I/DzJ
-	 ix70arVNsszw1IDH3TP2ET2SqEs8LGWa75xLvJuU1LWGPBaAtybIiUbNsSQqCWH2J4
-	 zddtcEfPQXrKAK01HXwwrPLYTiaUBTtZ1zKQFMzML+lcpwW0CTjCkdhLK6L6lyyHSl
-	 nhY30gahoywCT/M09sjxFG1/z3bdI00Wmm5v/DkszxUhpLXwyw1XKTwuUu/Qz+92mW
-	 K+wR+YKs9Ro1QAaBMYlsbLlqVnu638ByHp9Y0+KkLuX6tDUKum3NhErmSuAH0gXFPz
-	 /TThUUUsZy5mw==
+	b=ibpem0zNHMrb7/Y5h/Gf+ln6bj8JQXLb9WpI7cplCg0JoMAyl4qapPMkydUk0J8hd
+	 18yWqXnPlZiLVMWPr9LF2KDn450B527G8jecQ+pt92F/Mo9Wj8xk0iE/JIgS9NrMih
+	 Vb1IKJPR3w18wO+Rb71XQM8jy/gh7Jme253dPfX7zpS3oiS4uOb1ceO+tL6kGYbSTn
+	 2dxnewQ0jP3N1fsWmRs8bmxkvxIjqMQDqaM7VvVijO6yVClKOEwm12MQE3u4ScUzZu
+	 srZXDfyWGDoIyoMJ8wt5mda5TYYa9tJwP2lnthWBSxvYzEVJRX33H0kcaf7ifZfNOb
+	 XbvnYfBqEyLKQ==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: Jens Axboe <axboe@kernel.dk>,
 	linux-block@vger.kernel.org,
 	Christoph Hellwig <hch@lst.de>,
 	linux-scsi@vger.kernel.org,
 	"Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH v13 01/13] block: introduce disk_zone_is_offline()
-Date: Sat, 21 Nov 2026 06:06:39 +0900
-Message-ID: <20261120210651.580511-2-dlemoal@kernel.org>
+Subject: [PATCH v13 02/13] block: refactor blk_revalidate_disk_zones()
+Date: Sat, 21 Nov 2026 06:06:40 +0900
+Message-ID: <20261120210651.580511-3-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.56.1
 In-Reply-To: <20261120210651.580511-1-dlemoal@kernel.org>
 References: <20261120210651.580511-1-dlemoal@kernel.org>
@@ -62,75 +62,130 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Introduce the helper function disk_zone_is_offline() for testing if a zone
-of a gendisk has the offline condition. The zone to test is identified
-using a sector number that must belong to the target zone to check.
+Split out most of the code of blk_revalidate_disk_zones() into the
+internal function disk_revalidate_zones(). This will allow calling this
+new helper together with other code under the zone revalidation mutex.
+No functional change.
 
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Martin K. Petersen <mkp@kernel.org>
 Reviewed-by: Hannes Reinecke <hare@kernel.org>
 ---
- block/blk-zoned.c      | 18 ++++++++++++++++++
- include/linux/blkdev.h |  9 +++++++++
- 2 files changed, 27 insertions(+)
+ block/blk-zoned.c | 63 +++++++++++++++++++++++++----------------------
+ 1 file changed, 34 insertions(+), 29 deletions(-)
 
 diff --git a/block/blk-zoned.c b/block/blk-zoned.c
-index 4c5889296191..07d504287024 100644
+index 07d504287024..600d6bd008ae 100644
 --- a/block/blk-zoned.c
 +++ b/block/blk-zoned.c
-@@ -292,6 +292,24 @@ static bool disk_zone_is_seq(struct gendisk *disk, sector_t sector)
- 	return !blk_zstate_is_conv(zs);
+@@ -2552,20 +2552,7 @@ static int blk_revalidate_zone_cb(struct blk_zone *zone, unsigned int idx,
+ 	return ret;
  }
  
-+/**
-+ * disk_zone_is_offline - check if a sector belongs to an offline zone
-+ * @disk:	gendisk to check
-+ * @sector:	sector number
-+ *
-+ * Check if @sector on @disk is contained in an offline zone.
-+ * This function can be used only when the bdev queue was entered (BIOs
-+ * submitted but not yet completed) or when holding zone_revalidate_mutex.
-+ */
-+bool disk_zone_is_offline(struct gendisk *disk, sector_t sector)
-+{
-+	if (!blk_queue_is_zoned(disk->queue))
-+		return false;
-+
-+	return disk_zone_get_cond(disk, sector) == BLK_ZONE_COND_OFFLINE;
-+}
-+EXPORT_SYMBOL_GPL(disk_zone_is_offline);
-+
- /**
-  * bdev_zone_is_seq - check if a sector belongs to a sequential write zone
-  * @bdev:       block device to check
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 215753171cef..a2c36b4e6308 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -940,6 +940,9 @@ static inline unsigned int disk_zone_capacity(struct gendisk *disk,
- 		return disk->last_zone_capacity;
- 	return disk->zone_capacity;
- }
-+
-+bool disk_zone_is_offline(struct gendisk *disk, sector_t sector);
-+
- static inline unsigned int bdev_zone_capacity(struct block_device *bdev,
- 					      sector_t pos)
+-/**
+- * blk_revalidate_disk_zones - (re)allocate and initialize zone write plugs
+- * @disk:	Target disk
+- *
+- * Helper function for low-level device drivers to check, (re) allocate and
+- * initialize resources used for managing zoned disks. This function should
+- * normally be called by blk-mq based drivers when a zoned gendisk is probed
+- * and when the zone configuration of the gendisk changes (e.g. after a format).
+- * Before calling this function, the device driver must already have set the
+- * device zone size (chunk_sector limit) and the max zone append limit.
+- * BIO based drivers can also use this function as long as the device queue
+- * can be safely frozen.
+- */
+-int blk_revalidate_disk_zones(struct gendisk *disk)
++static int disk_revalidate_zones(struct gendisk *disk)
  {
-@@ -954,6 +957,12 @@ static inline unsigned int disk_nr_zones(struct gendisk *disk)
+ 	struct blk_revalidate_zone_args args = { };
+ 	struct blk_report_zones_args rep_args = {
+@@ -2576,19 +2563,10 @@ int blk_revalidate_disk_zones(struct gendisk *disk)
+ 	int retries = 2;
+ 	int ret;
+ 
+-	if (WARN_ON_ONCE(!blk_queue_is_zoned(disk->queue)))
+-		return -EIO;
+-
+-	/*
+-	 * Serialize calls to this function so that we can safely look at and
+-	 * eventually change the disk zone information.
+-	 */
+-	mutex_lock(&disk->zone_revalidate_mutex);
+-
+ again:
+ 	ret = disk_revalidate_capacity(disk, &args);
+ 	if (ret)
+-		goto unlock;
++		return ret;
+ 
+ 	/*
+ 	 * Allocate zone resources if they are needed and we have not done
+@@ -2601,14 +2579,14 @@ int blk_revalidate_disk_zones(struct gendisk *disk)
+ 		ret = disk_alloc_zone_resources(disk, args.capacity);
+ 		if (ret) {
+ 			memalloc_noio_restore(noio_flag);
+-			goto unlock;
++			return ret;
+ 		}
+ 	}
+ 
+ 	ret = disk_init_revalidate_args(disk, &args);
+ 	if (ret) {
+ 		memalloc_noio_restore(noio_flag);
+-		goto unlock;
++		return ret;
+ 	}
+ 
+ 	ret = disk->fops->report_zones(disk, 0, UINT_MAX, &rep_args);
+@@ -2625,8 +2603,6 @@ int blk_revalidate_disk_zones(struct gendisk *disk)
+ 	if (ret)
+ 		goto free_args;
+ 
+-	mutex_unlock(&disk->zone_revalidate_mutex);
+-
  	return 0;
- }
  
-+static inline bool disk_zone_is_offline(struct gendisk *disk,
-+					sector_t sector)
-+{
-+	return false;
+ free_args:
+@@ -2642,7 +2618,36 @@ int blk_revalidate_disk_zones(struct gendisk *disk)
+ 	}
+ 
+ 	pr_warn("%s: failed to revalidate zones\n", disk->disk_name);
+-unlock:
++
++	return ret;
 +}
 +
- static inline bool bdev_zone_is_seq(struct block_device *bdev, sector_t sector)
- {
- 	return false;
++/**
++ * blk_revalidate_disk_zones - (re)allocate and initialize zone write plugs
++ * @disk:	Target disk
++ *
++ * Helper function for low-level device drivers to check, (re) allocate and
++ * initialize resources used for managing zoned disks. This function should
++ * normally be called by blk-mq based drivers when a zoned gendisk is probed
++ * and when the zone configuration of the gendisk changes (e.g. after a format).
++ * Before calling this function, the device driver must already have set the
++ * device zone size (chunk_sector limit) and the max zone append limit.
++ * BIO based drivers can also use this function as long as the device queue
++ * can be safely frozen.
++ */
++int blk_revalidate_disk_zones(struct gendisk *disk)
++{
++	int ret;
++
++	if (WARN_ON_ONCE(!blk_queue_is_zoned(disk->queue)))
++		return -EIO;
++
++	/*
++	 * Serialize calls to this function so that we can safely look at and
++	 * eventually change the disk zone information.
++	 */
++	mutex_lock(&disk->zone_revalidate_mutex);
++	ret = disk_revalidate_zones(disk);
+ 	mutex_unlock(&disk->zone_revalidate_mutex);
+ 
+ 	return ret;
 -- 
 2.56.1
 
