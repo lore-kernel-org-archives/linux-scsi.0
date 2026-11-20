@@ -1,101 +1,56 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.214.181
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795187093;
-	b=tnZa8c1GKlz9sMeXKsA9V08fCjdRUwvvtc6hU12anHkEXGr/tKhKtNZqEXZFoaYEFyW5
-	 G6One6Nfw6uxt6h+FXXQXi0p0oOer2j+rOxL4mOdxp6b+T75TfdOHPs8Zwo9kqNJyBsaJ
-	 Ubtp+CZ5dyYMHaw88dPKLoOcpYRC5y/l3jGrPAwp0YEgya03dlnkVHIUuU2QDG0aOoIDN
-	 /H7KaFyxCylWMioOTaxKQS/71LYSZDB9t8ahdS7aaEulDL/rLlS7mMX6C75il0EEg2hVd
-	 z2s+ICCdCf+rV/aLnsBpYof9dwO6K9uwEuWE78t84Qk2DE4ZvOmAOvkhSmT1TK4BtSQ==
+	t=1795187756;
+	b=eG+YRBYDNdnmVoDtFTkXHJ5itB4fDvqyHR9mzKhRr5nRxVYFKvwHGygjl8O2WCsYGeTC
+	 Kn9bvsjS/saGzViMpt3wyeTscM5zdNwthisXux1j3jdx3aWHaJguxTVyXNbvYej0fi81t
+	 FhHHOVaTQC8gSgL+zgSkQO7o0rK34scCGDimaXGoyhd2o7CFryj+OEt7paNGrqFx6MNwL
+	 zeNoySauVHKWJs9kdBw7jpo/NvSsnB6afoop8llNM5XwvTKewnbnr1VAZ3Rb8KWogPVUs
+	 RnRQsgrch+DyxPsL8bQE+5XcTAMAbzAlPwVfU3FxKGBVgCIRV2StfKqKqttEzYG7X8w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795187093;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
-	 MIME-Version:Content-Type:Content-Transfer-Encoding;
-	bh=TrNB3pyvZ+lZ0OPeCFGzkUm2O6G++eG2RC/suTM6IO8=;
-	b=c7gDCjU45tN2Cd2/j3HJAF7/yVG4tfJ2udcletTEb/7C8gb+e8JTky0OUgwfxxpLJWGw
-	 2YaHekQVwRbaRQvicVJXLKabb9JsLZP16xYdq1mEDnKWzcGzoU+RAlX/nc+HRR6jjlqlr
-	 QK2+/LOqqDSw6eEgLyeXf0IHtd5VXlbYiy49a/5Sxbi1/5VFBU73IJEv/KScc+iWoyxJO
-	 f6eV8lAnfiqN4SKPGyxpo6JODxeF5v8N9sHhZWqYHRx/andJ01fAu9k8tk0R2EdLq9IAk
-	 ZEqJ0N8/sOF+cKAyFRP8BGRQxOz1yc4YwY9tOogTf2hYX0bzLdaYLgJREA7et+3u8kA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795187756;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=8IVbOtQKINxok/AHXyWw8Kn4mtW+qPe/6N5Mky8Oq30=;
+	b=5P+zaZ8IfLE5atJW/bWPACpPvYjiiDnG6SVoxAkETc6uIql+09bbLmUWkRQkks1bxHKc
+	 8gCNs6jOpqwxeFVPhuZ0VY9EH5j/dOoWFCrypb4fM0ao+QAoodcIsgXY4+c12vKCPP19e
+	 /6kmC9EraL6+MLEY5NV+Zsx5ZAxC2/8nRU4wlMHz/ga9t5x+/teS1pbW0LBNxtn2NZqL8
+	 88fwxQEYNBONsVZg0lT6zOjB7lK6VTOA5YzpqzoVAz+uU8SHfkK4dNn22Xs7hu9ALnCIY
+	 kYffuLBdmbn41gz6vhPjoyckutfDi1+VyiFbEGn1WkaWiTuamG8g5CdnLd8WnvRTbqQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=fail header.from=isslab.korea.ac.kr;
-	spf=none smtp.mailfrom=isslab.korea.ac.kr;
-	dkim=pass header.d=isslab-korea-ac-kr.20260707.gappssmtp.com header.i=@isslab-korea-ac-kr.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=CV5LTRZM;
-	arc=none smtp.remote-ip=209.85.214.181
-Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=UCj1yT+e;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 16199606A320
-	for <linux-scsi@vger.kernel.org>; Fri, 20 Nov 2026 15:04:52 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 16199606A320
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 115AE606A333
+	for <linux-scsi@vger.kernel.org>; Fri, 20 Nov 2026 15:15:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=isslab-korea-ac-kr.20260707.gappssmtp.com header.i=@isslab-korea-ac-kr.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=CV5LTRZM
-Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-2f0481b35c9so4090205ad.0
-        for <linux-scsi@vger.kernel.org>; Fri, 20 Nov 2026 07:04:52 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=isslab-korea-ac-kr.20260707.gappssmtp.com; s=20260707; t=1795187092; x=1795791892; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:date:subject:cc:to:from:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=TrNB3pyvZ+lZ0OPeCFGzkUm2O6G++eG2RC/suTM6IO8=;
-        b=CV5LTRZMrC/kY/NaGg+Qd92MwUWGEAIsaz6o2xwnUutYQfrVl0CuL6jFJanqSUuXTE
-         CoKkCFDs+LlwUxO6yZGY5rRc95T1OUG8knMXbBpBaU8TWBDvTDj9htuzx4m9rhv31b5V
-         AWhWLBBBFdmQHm8hAlGnfzXgORTuXTTcoU96O85LXaEBfpq7gDVC9J2wGRIsBlqTWmkH
-         I+sXlX93M99mo7Eh9LpBKDA+8bF8B9o7vkNezwgF9S6krzjO++66avlHo0mDZbuOxzr4
-         3fy46K0CGmTwAkGzJ/mmPCy+KGIjl/axECXnOhxWIoctdNf1biQR55wZ/1gNshU2rf13
-         vTuQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795187092; x=1795791892;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:date:subject:cc:to:from:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=TrNB3pyvZ+lZ0OPeCFGzkUm2O6G++eG2RC/suTM6IO8=;
-        b=NpkjepRPqcL/I8SouXFYjiI84SjuE97uLuPNN7B6BeHCIuoMyzMjx9JFGYf88GpFBt
-         JNTTD2V+x8VZrMQTMR93UcQpZd5feel11jNKRHQTBBwpArO3vG0WZgCMGCFU01yvVaMB
-         pODP/3BcBvQPGeGj1Mr3mVd5WT9QVNl7WxTRKJ7+5fEqGAAZrsqUm7laCzxQk625Sd6i
-         B8svMXLKjcc5iJiENSxHOOVmdQlN7SOhE/LXw7FNoBqsxYqiXuPES7v4MbKOzvQmP2Rw
-         Z1jXPQII0YpY6nbxmDYjIR3qp45McB/uTCqiT2D58OgQfoYaE3Hzj0n0sXok94fFD7eg
-         Cynw==
-X-Forwarded-Encrypted: i=1; AL+hErEBXbbo0ajlkEvDyIYitsWpUpqXE4u12i1Yd6d2rRybh+HDHN2r8k77E1pky2bc2xoXtumOe2Q2NPmT@vger.kernel.org
-X-Gm-Message-State: APuU4Z+NuUIB+Rd71RoWqeTXpq8QGGutaVr7tQqECZqVOWF//s8nPtke
-	BTyccpIigFNy+6YeyaeDMGUUEzyRg+x/2FmwXoCKmyy6CWBLWqMsDa1zqerLdP9F1tLwrRgVwjH
-	HiFQiaRU=
-X-Gm-Gg: AZFdTZferIZUfKPn1/lLeKOM15OoIXLElx38hWt9gsPv9j1pG6dvwxMxHIb8gHdGZPN
-	Kx1yQUX6DwD6DnKOQWLavCsTHsoRa25Q2OMO3Er2qmupxXnQNnbBfx/+lH7bu5GZoVqtFKHZ0RV
-	cp+nakk6AZYnRYKOzjBwiwEN0BJ6hNFB0pM0eqOCPesDj1dVots+tf7CNv+d0qqsnVZyGNlRYxF
-	PFn6nw9E2KU4rVFE5RfFKS5ihtdBZyVn//Pss5yPnuCKwrPqxyWMYfJ1FNA/vnpYyLzRHlDokzK
-	o4slFFI8xwG9YY/qFvKDzAvzmAFXwmNDUMYS/SF9kSH8uesKRZcBWsLblV9K66pOHBblzsMBtNz
-	LzcN/1Gcw0QlwcULuYPoo8fLwv98BQgN71BBrtelT4n+/vCayE6WNelQexWPj6iTScTBu2TWtgF
-	b+Ml98PAocDumuSfD2zoJiDy4wHBIGA7b+obVNFChN4KQMjik/MzRzWtp9jF4LjdXiFoRWmJznz
-	151HLN91YdxglomrLaOs2J/gNsJW/nGCoC3Z/okUd88tidXPAv+70QnaUWB/EEscKwAWMAMWpCh
-	UXm1tqlyugIiCjAn8Zbztbe+LxQt4pmvY2tY9fkHzL0cHSxF/kBOmLU5B6Qs/YCmMpdcdEsGa8n
-	KCiGpCtz8pkVSHi9aiVaIlxSEiE6Gk/xLk28mamDHQtkLogNXgoA78s6tGg==
-X-Received: by 2002:a17:903:22c1:b0:2f0:53cd:8789 with SMTP id d9443c01a7336-2f053cd96e0mr6696815ad.21.1795187092427;
-        Fri, 20 Nov 2026 07:04:52 -0800 (PST)
-Received: from yhlee-960QFG.Davolink ([2406:5900:1044:110c:8b25:951:ad8d:5cc1])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2f03f1058fesm16035565ad.48.2026.11.20.07.04.49
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 20 Nov 2026 07:04:52 -0800 (PST)
-From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
-To: sashiko-bot@kernel.org
-Cc: Lee Duncan <lduncan@suse.com>,
-	Chris Leech <cleech@redhat.com>,
-	Mike Christie <michael.christie@oracle.com>,
-	"Martin K . Petersen" <mkp@kernel.org>,
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v4 4/4] scsi: libiscsi_tcp: do not accept a Data-In for a finished command
-Date: Sat, 21 Nov 2026 00:04:47 +0900
-Message-ID: <20261120150447.3128910-1-yhlee@isslab.korea.ac.kr>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20261117115058.1955891-1-yhlee@isslab.korea.ac.kr>
-References: <20261117101500.1894608-1-yhlee@isslab.korea.ac.kr> <20261117101500.1894608-5-yhlee@isslab.korea.ac.kr> <sashiko-outbox-218654@kernel.org> <20261117115058.1955891-1-yhlee@isslab.korea.ac.kr>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=UCj1yT+e
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BA31D1F000E6;
+	Fri, 20 Nov 2026 15:15:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1795187755;
+	bh=8IVbOtQKINxok/AHXyWw8Kn4mtW+qPe/6N5Mky8Oq30=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=UCj1yT+eCr/ti9AU8UubzkgrCUaB+JJru6HTTUw07kNhnOSFso5H1+U2iFTiadZ+P
+	 Z1+JaAHPGFKNt3IQFJI4cDkMYBGYi59p2E78u9d2Ol+fZ3X3jVPidVm4inMpe6N3xS
+	 qxp3sL5Vi1pvp7qFSf7Kh1kTpILdme51sQHTumT4oNfNyp6oCBg61CnQGAjQHpw6cD
+	 C+kDGNehBTfbIedWa+r7mFFg3FkoAD99QnLzOqNbt1KGvT2Rbh3ZxnGFya0CMmTMDn
+	 ymiAkSyJRnbwP3L9khM6wy0nB3I1VzM+zcwFFR8OLB4PEqGyoGJE0P6LfLlmOVylc1
+	 htp+aZ66z0GOg==
+Message-ID: <sashiko-outbox-225445@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] scsi: libiscsi_tcp: hold back_lock across the copy of a
+ Data-In
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Yehyeong Lee" <yhlee@isslab.korea.ac.kr>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20261120145243.3124991-1-yhlee@isslab.korea.ac.kr>
+References: <20261120145243.3124991-1-yhlee@isslab.korea.ac.kr>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Fri, 20 Nov 2026 15:15:55 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -104,22 +59,195 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
 
-On Tue, Nov 17, 2026 at 08:50:58PM +0900, Yehyeong Lee wrote:
-> The patch narrows the
-> window rather than widening it: a Data-In whose header arrives after the
-> task has left ISCSI_TASK_RUNNING is now refused, while one whose copy has
-> already started when the task is failed behaves as before.  That case
-> belongs in a separate patch.
+Thank you for your contribution! Sashiko AI review found 4 potential
+issues to consider:
+- [High] scsi: libiscsi_tcp: race on ITT slot reuse in
+  iscsi_tcp_process_data_in()
+- [High] scsi: libiscsi_tcp: kmap_atomic() held across back_lock unlock
+  at skb_done
+- [High] scsi: libiscsi_tcp: missing ISCSI_TASK_RUNNING check in
+  iscsi_tcp_hdr_dissect()
+- [Low] scsi: libiscsi_tcp: Clang context-analysis warning in
+  iscsi_tcp_recv_skb()
+--
 
-That patch is here:
-  https://lore.kernel.org/all/20261120145243.3124991-1-yhlee@isslab.korea.ac.kr/
+commit 137946721880763b95233f1c2f065be24dc7e099
+Author: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
 
-It also corrects the changelog of this patch: while a copy is pending
-the error handler can finish the task too, not only the receive path.
+scsi: libiscsi_tcp: hold back_lock across the copy of a Data-In
 
-Best regards,
-Yehyeong Lee
+This commit tracks the active Data-In task in tcp_conn->in.datain_task and
+holds session->back_lock across the Data-In scatterlist copy in
+iscsi_tcp_recv_skb() so that error handlers cannot free the command's
+scatterlist while the copy is in progress.
+
+> diff --git a/drivers/scsi/libiscsi_tcp.c b/drivers/scsi/libiscsi_tcp.c
+> index 20ec3ba45067f..50c58e938321e 100644
+> --- a/drivers/scsi/libiscsi_tcp.c
+> +++ b/drivers/scsi/libiscsi_tcp.c
+[ ... ]
+> @@ -744,6 +752,7 @@ iscsi_tcp_hdr_dissect(struct iscsi_conn *conn, struct=
+ iscsi_hdr *hdr)
+>  				      tcp_task->data_offset,
+>  				      tcp_conn->in.datalen);
+>  			task->last_xfer =3D jiffies;
+> +			tcp_conn->in.datain_task =3D task;
+>  			rc =3D iscsi_segment_seek_sg(&tcp_conn->in.segment,
+>  						   sdb->table.sgl,
+>  						   sdb->table.nents,
+
+[Severity: High]
+Should iscsi_tcp_hdr_dissect() verify that task->state =3D=3D
+ISCSI_TASK_RUNNING before accepting a Data-In header and setting
+tcp_conn->in.datain_task?
+
+iscsi_itt_to_ctask() only checks task->sc and session->age, so it also
+returns newly queued commands in ISCSI_TASK_PENDING on conn->cmdqueue.  If
+a stray Data-In header arrives for a slot occupied by a pending command and
+iscsi_prep_scsi_cmd_pdu() transitions that command to ISCSI_TASK_RUNNING
+before the payload skb arrives, iscsi_tcp_recv_skb() sees the matching
+datain_task in ISCSI_TASK_RUNNING and copies the stale Data-In payload into
+the new command's scatterlist.  In addition, a zero-length Data-In with
+ISCSI_FLAG_DATA_STATUS calls __iscsi_complete_pdu() right below without
+ever reaching iscsi_tcp_recv_skb(), freeing an ISCSI_TASK_PENDING task
+while it is still linked on conn->cmdqueue and causing a NULL task->sc
+dereference in iscsi_prep_scsi_cmd_pdu().
+
+> @@ -907,8 +916,10 @@ int iscsi_tcp_recv_skb(struct iscsi_conn *conn, stru=
+ct sk_buff *skb,
+>  {
+>  	struct iscsi_tcp_conn *tcp_conn =3D conn->dd_data;
+>  	struct iscsi_segment *segment =3D &tcp_conn->in.segment;
+> +	struct iscsi_session *session =3D conn->session;
+>  	struct skb_seq_state seq;
+>  	unsigned int consumed =3D 0;
+> +	bool copy_locked =3D false;
+>  	int rc =3D 0;
+> =20
+>  	ISCSI_DBG_TCP(conn, "in %d bytes\n", skb->len - offset);
+> @@ -925,6 +936,26 @@ int iscsi_tcp_recv_skb(struct iscsi_conn *conn, stru=
+ct sk_buff *skb,
+>  		return 0;
+>  	}
+> =20
+> +	/*
+> +	 * Hold back_lock across a Data-In copy so the command cannot be
+> +	 * given back while it runs.  _bh: this also runs from a work item.
+> +	 */
+> +	if (segment->sg) {
+> +		struct iscsi_task *task;
+> +
+> +		spin_lock_bh(&session->back_lock);
+> +		task =3D tcp_conn->in.datain_task;
+> +		if (!task || task->state !=3D ISCSI_TASK_RUNNING) {
+> +			spin_unlock_bh(&session->back_lock);
+> +			iscsi_conn_printk(KERN_ERR, conn,
+> +					  "Data-In for a command that is gone\n");
+> +			*status =3D ISCSI_TCP_CONN_ERR;
+> +			iscsi_conn_failure(conn, ISCSI_ERR_BAD_ITT);
+> +			return 0;
+> +		}
+> +		copy_locked =3D true;
+> +	}
+> +
+>  	if (offloaded) {
+>  		segment->total_copied =3D segment->total_size;
+>  		goto segment_done;
+> @@ -957,6 +988,10 @@ int iscsi_tcp_recv_skb(struct iscsi_conn *conn, stru=
+ct sk_buff *skb,
+>  	}
+> =20
+>  segment_done:
+> +	if (copy_locked) {
+> +		spin_unlock_bh(&session->back_lock);
+> +		copy_locked =3D false;
+> +	}
+>  	*status =3D ISCSI_TCP_SEGMENT_DONE;
+>  	ISCSI_DBG_TCP(conn, "segment done\n");
+>  	rc =3D segment->done(tcp_conn, segment);
+
+[Severity: High]
+Can dropping session->back_lock before segment->done() let
+iscsi_tcp_process_data_in() complete a newly queued command that reuses
+the freed ITT slot?
+
+CPU0 (softirq)                    CPU1 (EH / queuecommand)
+iscsi_tcp_recv_skb()
+  spin_lock_bh(&back_lock)
+  iscsi_tcp_segment_recv()
+  spin_unlock_bh(&back_lock)
+                                  iscsi_eh_device_reset()
+                                    fail_scsi_tasks()
+                                      spin_lock_bh(&back_lock)
+                                      iscsi_free_task()
+                                        datain_task =3D NULL
+                                      spin_unlock_bh(&back_lock)
+                                  iscsi_queuecommand()
+                                    /* reuses the same ITT slot */
+  segment->done()
+    iscsi_tcp_process_data_in()
+      iscsi_complete_pdu()
+        spin_lock(&back_lock)
+        iscsi_itt_to_ctask()
+        iscsi_complete_task()     <-- completes the new command
+
+When ISCSI_FLAG_DATA_STATUS is set on the Data-In header,
+iscsi_tcp_process_data_in() calls iscsi_complete_pdu() without checking
+tcp_conn->in.datain_task, so __iscsi_complete_pdu() looks up hdr->itt
+afresh via iscsi_itt_to_ctask().  If the new command is still in
+ISCSI_TASK_PENDING on conn->cmdqueue, completing it frees the task and sets
+task->sc =3D NULL while it stays linked on conn->cmdqueue, causing a NULL
+pointer dereference in iscsi_prep_scsi_cmd_pdu().  Also, when software data
+digests are enabled, iscsi_tcp_segment_splice_digest() sets
+segment->sg =3D NULL before receiving the 4-byte digest, so a subsequent skb
+carrying the digest skips the if (segment->sg) check and reaches
+segment->done() after the task was already freed.
+
+> @@ -969,6 +1004,8 @@ int iscsi_tcp_recv_skb(struct iscsi_conn *conn, stru=
+ct sk_buff *skb,
+>  	/* The done() functions sets up the next segment. */
+> =20
+>  skb_done:
+> +	if (copy_locked)
+> +		spin_unlock_bh(&session->back_lock);
+>  	conn->rxdata_octets +=3D consumed;
+>  	return consumed;
+>  }
+
+[Severity: High]
+Does unlocking session->back_lock at skb_done leave segment->sg_mapped
+mapped with kmap_atomic()?
+
+When an skb ends before the Data-In payload is finished,
+iscsi_tcp_segment_done() calls iscsi_tcp_segment_map(), which calls
+kmap_atomic(sg_page(sg)), and the unmap does not happen until
+iscsi_sw_tcp_recv_data() finishes tcp_read_sock():
+
+drivers/scsi/libiscsi_tcp.c:iscsi_tcp_segment_done() {
+	...
+	segment->copied +=3D copied;
+	if (segment->copied < segment->size) {
+		iscsi_tcp_segment_map(segment, recv);
+		return 0;
+	}
+	...
+}
+
+On a multi-skb Data-In, skb_done releases session->back_lock while
+kmap_atomic() is still active, allowing an error handler on another CPU to
+free the command and its scatterlist pages while segment->sg_mapped remains
+mapped, and the next skb in tcp_read_sock() then calls
+spin_lock_bh(&session->back_lock) while inside kmap_atomic() /
+pagefault_disable() (which violates sleeping spinlock rules on
+CONFIG_PREEMPT_RT).
+
+[Severity: Low]
+Does the conditional locking across copy_locked trigger a Clang
+-Wthread-safety-analysis warning when CONFIG_WARN_CONTEXT_ANALYSIS=3Dy?
+drivers/scsi/Makefile enables CONTEXT_ANALYSIS :=3D y, and Clang's thread
+safety analyzer does not track boolean lock flags across basic blocks.
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261120145243.3124=
+991-1-yhlee@isslab.korea.ac.kr?part=3D1
