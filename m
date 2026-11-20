@@ -1,163 +1,94 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.126.71
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795177916;
-	b=VdP5wJB21vCFGrxUd05p2153gbRFVm1EAYWzpoGJRgtqSU5PL+VYyGejExURIAONP4MX
-	 tGungFF2Z2Yb+6/fgxElsS+6iVKRPB/0Mof44nK0ZgbKvKAkzxUGYsuSxg3Ts4bODRAXH
-	 ZCay3m0nE4YIPydvECnL6RuYrZmAKbv5zVAnY10jt5IRktAdbMyihnbSR7Y1++M+dlfh2
-	 Y4vHJmswXaH23E8mvBVdWNzCFKKC6rxNVtS33pTa8YoWV+tSNARDP15PmtbFQJUKvXkSd
-	 qDLHkTItHdwfeJ8wMdFsebOlHdapP2Em885jO3bWr2fg2Frxqo7z+5EuMhZItcFK0ng==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795177916;
-	h=DMARC-Filter:DKIM-Signature:Received:Received:From:To:CC:Subject:
-	 Thread-Topic:Thread-Index:Date:Message-ID:References:In-Reply-To:
-	 Accept-Language:Content-Language:X-MS-Has-Attach:X-MS-TNEF-Correlator:
-	 x-ms-publictraffictype:x-ms-traffictypediagnostic:
-	 x-ms-office365-filtering-correlation-id:x-ms-exchange-senderadcheck:
-	 x-ms-exchange-antispam-relay:x-microsoft-antispam:
-	 x-microsoft-antispam-message-info:x-forefront-antispam-report:
-	 x-ms-exchange-antispam-messagedata-chunkcount:
-	 x-ms-exchange-antispam-messagedata-0:Content-Type:
-	 Content-Transfer-Encoding:MIME-Version:X-OriginatorOrg:
-	 X-MS-Exchange-CrossTenant-AuthAs:X-MS-Exchange-CrossTenant-AuthSource:
-	 X-MS-Exchange-CrossTenant-Network-Message-Id:
-	 X-MS-Exchange-CrossTenant-originalarrivaltime:
-	 X-MS-Exchange-CrossTenant-fromentityheader:
-	 X-MS-Exchange-CrossTenant-id:X-MS-Exchange-CrossTenant-mailboxtype:
-	 X-MS-Exchange-CrossTenant-userprincipalname:
-	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=u7oLfGjJfnwud12oVP+VtMA5guCWf/uQbjlyHcikGx4=;
-	b=bkoYelyezyIyNxvDcePM6yAqzsGYkM1ahvrC0cB9icH0TzY6HWC1cppk2ntU3S/6MY+i
-	 tBrFrNe6nMZeliTtcBihERycEJu8e6HsFWeyE4cJU2JsTEmzuM7Hw+wCZN5ip/l7reaM8
-	 J22ZTgK7MjGNP972zM3aARpzHMuWRXp1ItMCnFKVImPCZ1sCBDsHapV0T85jSi/0jUVW/
-	 FkQqR3TJBrzeGeIMhcSOlUcf4P1ekaRf2tLijOI2J8YfS6zr1zchjeBZ+o8JN3Y1yKVoT
-	 8PY7sfaTNsC/+V2kajR47sojRsqhj3WKRCwLf/xqwzs1ApZ2btqBctuw6X1CaUXjaWQ==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=vivo.com;
-	spf=pass smtp.mailfrom=vivo.com;
-	dkim=pass header.d=vivo.com header.i=@vivo.com header.a=rsa-sha256 header.s=selector2 header.b=Q5XkURap;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.126.71
-Received: from TYPPR03CU001.outbound.protection.outlook.com (mail-japaneastazon11012071.outbound.protection.outlook.com [52.101.126.71])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.48
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1795186375;
+	b=FB3vitWxgHfRsYC1aTD2qhuJtgfEjg9a5P3flYV95LUCC0eUqaNsk2Es/gRBY/kdZl54
+	 BhvTyNbdnbBUrw0qSgvGQJK3YUHeYNZGqz+eMEREEOgSM7ZBD1SKMOV234IF6DC9hS+mZ
+	 iQs9xX5AcobtczOKF6LQifHVky5rlA7o16GgwXGroncRgMe/JebFnVPfFoZhGFKVMqn7S
+	 iMdVCtkykRmC0DACPsPGXo0uF0/qDIB3/OwHRLZCFd6BfJ0m6Jof+bzMaQWQlaQkynmzg
+	 0eLmE9b3ABd107cImaYbsyFScjaya2Gcegyf5GtTn/WwhcNg0fVWavyK2Hcr1wXmHhQ==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795186375;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
+	 Date:Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding;
+	bh=w+FVy673x+oTragde9PzcsSOA9zSMUs8PCGZhkAnfZM=;
+	b=lQcE+yo7J+Ubi888cHGUtjXAAie0Z0lFwHfEkCp8+Pxtw7cfBD9dgZMYg0cbqg3gbMBk
+	 3evVwbAfbrDtHTkRDYgFOEIsBLUjtWlcS/QvSWKeQWOlDUsH0+ubxE1wDSXTNQYvejph3
+	 sL65aSYX6SSmFmyMAKb9FIfRvTSlL1Vk/kRdSI/E4IVAv5HsDAJKxyrtt1Rpy5AsAm+pn
+	 0m6rRAKHQAN3cSffxg4shZvGvbRz1Ds37m1GU+0vRS4eVTf5xhHE66Fli8mV25O5mokhD
+	 xie6kXZJSlwBOaCwDTlEMTZh7RNEFHQzNmfhKRFlIoCQCiwBKx+kRVaSuHExKVhufug==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=fail header.from=isslab.korea.ac.kr;
+	spf=none smtp.mailfrom=isslab.korea.ac.kr;
+	dkim=pass header.d=isslab-korea-ac-kr.20260707.gappssmtp.com header.i=@isslab-korea-ac-kr.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=Ic4MztMH;
+	arc=none smtp.remote-ip=209.85.216.48
+Received: from mail-pj1-f48.google.com (mail-pj1-f48.google.com [209.85.216.48])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4923A606A325;
-	Fri, 20 Nov 2026 12:31:55 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4923A606A325
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=vivo.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=vivo.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4AEF9606A325
+	for <linux-scsi@vger.kernel.org>; Fri, 20 Nov 2026 14:52:53 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4AEF9606A325
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=isslab.korea.ac.kr
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=isslab.korea.ac.kr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=vivo.com header.i=@vivo.com header.a=rsa-sha256 header.s=selector2 header.b=Q5XkURap
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=ITCtcGLvyr5upiPsWIuHSxH2ymJFfaq7jNa26KSv/G+kZhLDcZiJtahpEddytiD/12sb1FtFtXnXzwfowFb1lILC0M9HXN+cjegLpNqUFKrPKwLcsNib2nP++4+XXD72gSjuqE3w8tPG/THIwQS/PI48QOeRqOZpiCppeBvl10OnnnU+yeJ9ztJyOCilenuOv/3s5wIt/+GOJvK1mRfCs+AfBKQ4ddQu5vAQZadAPNkjwRB2/P0J3ePOqm/W5E9fQlRfORkURcLyqrsAHY2GUglUIyLPC6kib7662R83r3+TmCmL446KeZ1X0UTgqkaNAHfPuLyTnorOphKk6Hyagg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=u7oLfGjJfnwud12oVP+VtMA5guCWf/uQbjlyHcikGx4=;
- b=JECwXDy3QxwBp1RTk+UEE0Gp8t35S2sWPq0cmBXaE1h+hj5WW0LEHUP0HS4JagitZD01Mrg36E6TOwH22Q77rd7HzHpuD2kR2xALHwH1fYIYEGVgokOdeNeuTPx8RBf1bBU4MbpxrzlvTMkHDoqLLxhuVH09GOjTyACMGC+zkDL+4rRXDGbV8KfF797EuZ+iX/0OjAVRmj8dEdheRx02NaACiOuNt/4z/BxAsL5zokOua3ET8nWaJvOl8zqSu6hwRJ2QKI+8+yJZJo1I2SI+D6pZ0/giNTHgvdNX3M4l/3t5z8BVi0T/rX2oKpbTseordA8uUkkdXuNtooNSEwABGw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=vivo.com; dmarc=pass action=none header.from=vivo.com;
- dkim=pass header.d=vivo.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=vivo.com; s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=u7oLfGjJfnwud12oVP+VtMA5guCWf/uQbjlyHcikGx4=;
- b=Q5XkURap3ll5asww7mdzAUMPFhkn6g72WH6qAs3JiDakfFeZc7nSTmIv8uZnjM/SfgAL2mdAX1E4Yu76PNECdQU2yF3DArsQi4eEyWkag87JwN3MmC21346eBz7EQd3pMJObdRCbQs6buwXJ4gMeNLOWHs+6eB7aVB0JfzoB2F+jYv/fOuVnNCIRxMdS0jhywDY3vjR9nOObarZTt8C4q+x7Yvbqhf4PYA0HCGPjMB7bYAIOVpEfmgX52Wp9/Lsu+NXb8y3Hvd1vuK7D0XSpSplz0YH2iwgWVhlvh+zEPxAG8GqZOiVOTgYG1PqdSJIkdZDR+Nc0W0tB5PbZp9T/ug==
-Received: from TYUPR06MB6217.apcprd06.prod.outlook.com (2603:1096:400:358::7)
- by KUYPR06MB8938.apcprd06.prod.outlook.com (2603:1096:d10:9a::17) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.662.3; Fri, 20 Nov
- 2026 12:31:50 +0000
-Received: from TYUPR06MB6217.apcprd06.prod.outlook.com
- ([fe80::8d51:58c7:42f3:ecc]) by TYUPR06MB6217.apcprd06.prod.outlook.com
- ([fe80::8d51:58c7:42f3:ecc%4]) with mapi id 15.21.0662.001; Fri, 20 Nov 2026
- 12:31:50 +0000
-From: =?utf-8?B?6IOh6L+e5Yuk?= <hulianqin@vivo.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-CC: "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, "Martin K.
- Petersen" <mkp@kernel.org>, Bart Van Assche <bvanassche@acm.org>, Alan Stern
-	<stern@rowland.harvard.edu>, Christoph Hellwig <hch@lst.de>, Jens Axboe
-	<axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>, Mike Christie
-	<michael.christie@oracle.com>, Damien Le Moal <dlemoal@kernel.org>, John
- Garry <john.g.garry@oracle.com>, Shin'ichiro Kawasaki
-	<shinichiro.kawasaki@wdc.com>, "linux-scsi@vger.kernel.org"
-	<linux-scsi@vger.kernel.org>, "linux-usb@vger.kernel.org"
-	<linux-usb@vger.kernel.org>, "linux-block@vger.kernel.org"
-	<linux-block@vger.kernel.org>, "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>, "usb-storage@lists.one-eyed-alien.net"
-	<usb-storage@lists.one-eyed-alien.net>, "stable@vger.kernel.org"
-	<stable@vger.kernel.org>
-Subject:
- =?utf-8?B?562U5aSNOiBbUEFUQ0ggdjUgMi8yXSB1c2I6IHN0b3JhZ2U6IHNldCBzdXJw?=
- =?utf-8?Q?rise=5Fremoval_flag_on_physical_removal?=
-Thread-Topic: [PATCH v5 2/2] usb: storage: set surprise_removal flag on
- physical removal
-Thread-Index: Ad1X4bFxAfyJakusTtGaliW161FLLQhA3IWAAAFBdtA=
-Date: Fri, 20 Nov 2026 12:31:49 +0000
-Message-ID:
- <TYUPR06MB621740804B51F4C0D9F63778D2782@TYUPR06MB6217.apcprd06.prod.outlook.com>
-References:
- <TYUPR06MB621711053AB2B701FECC73FED2922@TYUPR06MB6217.apcprd06.prod.outlook.com>
- <2026112048-preamble-fifteen-46a3@gregkh>
-In-Reply-To: <2026112048-preamble-fifteen-46a3@gregkh>
-Accept-Language: zh-CN, en-US
-Content-Language: zh-CN
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-authentication-results: mx.microsoft.com 1; dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=vivo.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: TYUPR06MB6217:EE_|KUYPR06MB8938:EE_
-x-ms-office365-filtering-correlation-id: 22c8efa7-057b-482e-7a03-08df47024004
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam:
- BCL:0;ARA:13230040|1800799024|376014|7416014|42112799006|23010399003|366016|22082099003|18002099003|261009223027099003|4143699003|260925022911599003|260925021311599003|260925021911599003|11063799006|56012099006|261026121527099003|261028144727099003|261022075727099003|261022105027099003|261026140227099003|38070700021|10067099003;
-x-microsoft-antispam-message-info:
- iPLzNeZv9VCNRkJ4szq0x5JlY2AR2O/FcnFW86sHjNawMyO030KerlF8HL3ajOpwV3gjgJGZKGmrLn8hjeP8fB81/sthXqIFJaHX0geCX9JW313Is1jrngRupwCebxPsQIlvZ44VPnH8bTCnh5mulJhIfEavVhoy4JgUWad6+G6jwMFP3rYe5Y8Xa6j3y2/lX0qWMjfjxFx5ymkS3BWHVq/6rCyb6AUDBtRzAqWeZuGodg1FHICfVvLDX2Uk8Vi36F23gn/rZTSFgGIWkcNfeo4ybrW1owViP0rRQpndYsFjeHdDEamNGYcbmK2wkeQgWnGOCQ02Yj01/EZNuFbyJbo6CyB7j9YHjS3JOrSOb4su+9ucbX815K1ySqe7ZD7rOIEdVNM8elHYgy5aYkSvckv1yvvKg9oiPwO9TM1ptf9m3fqjRsdnW5TST4bBq7ZMqLue50GVyWL9i9K70UZvxZKvXpAMETeHwmKaaRjRDv9HlksMuVzQbnQ43PvCMrbX1pX7O3NK80u2VC2oFHinKIGIXvxpeLiywiSvNzibAqS+1XXjvmEPbIWJnGmFlY3Oz13JIRq5UClPIxFpbK1HmrPcuZcK9cmoSIa01ALWWyzuobu8NCyNJmJ63JGZOCqj4ftP9NVM9qjagqMv77LiABMT+EKUaCMVKAJJXvBtnSY=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:zh-cn;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TYUPR06MB6217.apcprd06.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(7416014)(42112799006)(23010399003)(366016)(22082099003)(18002099003)(261009223027099003)(4143699003)(260925022911599003)(260925021311599003)(260925021911599003)(11063799006)(56012099006)(261026121527099003)(261028144727099003)(261022075727099003)(261022105027099003)(261026140227099003)(38070700021)(10067099003);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?utf-8?B?NjJ1SnZHcFptditJTnZDcm00NUYxL0RGZEZiVXRoZVpzY1JWNDM3UnJ2OEhD?=
- =?utf-8?B?ZTRmZmNCc3M5bTJxQ3dYU2JtQ1FCUTczUVhQVmFYM2xSVEVqeVBuOWpRYWxx?=
- =?utf-8?B?WHYya3hMMkl0Z1A1aGxhNHlmUmFnMkZUTFdpYUNDZHpkM1J1OENwaTJPbm9p?=
- =?utf-8?B?TjBJMUdBYUgzU2gwQk1zNHA3SXE0a1ZGZ0ZOYVlUai9YeE1vMUF0ZjBvYjB4?=
- =?utf-8?B?YngwV2RaSTRaNHp3ZWNBWUVHTEQ5KytjMmh2eWxJR25RTnowbUpaWnNZbGF6?=
- =?utf-8?B?YkdWeHhZeFh3MTZkeE9VNi9aL1QzeERvYnpJTDZjNm0wcnZQeTBGbWl6VEpU?=
- =?utf-8?B?U3ZBU2h1eUFndkVndmVXTkdtemJGejVSeFdVVktIWmNRMDQvSDQ0UnU2Nnc2?=
- =?utf-8?B?eXRITlYwUUllSTJRM0ZKTXZjMkczQWFKYkErY242WDBRN1hIUTRHR2Q3Z3oz?=
- =?utf-8?B?VTlEdkEySE9lVkJpaHBhWklhS0NuQ1RBQVIzbXdLSVBFTDZzckVHa0R2Um1P?=
- =?utf-8?B?UmRzMzRRaUlRNUwzOGdEb2N3Z1liNndQY0U0aUhaV2l0ZXkxY1pJS2pCQjZG?=
- =?utf-8?B?bXhoUlBzQ1l1QmFkZ0RYZ1BEREt1NGJnMFFVUjZZV2x5NUhReWQwdGJndDlm?=
- =?utf-8?B?YzRkdnVFUy9SZE1BWEVoeW1ubW4zdzZ2bEtpRHJPa1Q5K2ZUOW9hVENxMjJw?=
- =?utf-8?B?ZUc4dWxqQUNOaE1KZWkrbUpxWnc3ODY2Qy9FT0dUWk1HZlJEZFpTZjlwZUFt?=
- =?utf-8?B?YXU3SkVaWmlGWldoYTF2alF2WTEvdEZXYWd5Z0hYaFpuT2M3eG1FT0YzZFNI?=
- =?utf-8?B?UHk5MmJ2eVFiLy9jYW9zV1Y0RXc4V0gvalIrcSt4cUo2bmw4SmRUc3JPTlpq?=
- =?utf-8?B?U2llRXR3K1BWYmtIeGRFQUxlS3pmekd5QTVGMHRiNnFUR2V4RkZLWm1Ma2FK?=
- =?utf-8?B?ZFI4NW5SRktVbDNja2czcE9SSXVlZndrcWpjV054MlhqMFRFOU9WL29lcG5W?=
- =?utf-8?B?dzlMUUFaT1dHbW1PS25XQ0dieFEvTVBsQ25URk80S0ExVUN4ZkUxVEg4TGl6?=
- =?utf-8?B?RlZYK0RSb1hvelBqNmViaGcxcGloeCs5ZnZIWDBnblBYQ1dTZjhQZFc5Kzho?=
- =?utf-8?B?REJKYzVqZGwxaHloUTJtbS9JVFRJdTdhMnUwdCtEbFFmbDB3RmFuUVFmdWNm?=
- =?utf-8?B?YmpJQVhnTEFvUHNZZXpockdhVHVCVmYzbDNiSE9lK0ZSNnY0S0MySkZOVk5E?=
- =?utf-8?B?QlI3NG1aUThGcXpxZXFVS2NIQ0pTL3JQRmp4aW9wd3Zac2VEZU5NaTRWVFVM?=
- =?utf-8?B?SFdZZWN5emtjMWFlMDdDWTFRdktqeUlwbitkTmRKRFBjbzZlcGJXNXAxc3cz?=
- =?utf-8?B?TlhDdGRXZ1VpUlZMOXlpdFh1dTl1M0RwTlJSeWovbTN3T21xVmdWaUNrdE9S?=
- =?utf-8?B?d0J1eEpGbVNHMlA2V2FEK1hzNnI1eUYrRWwvdTJHVU10L3FKNVJ6TnFzcFZn?=
- =?utf-8?B?T2xOQVdzZm9yeWhKRHU4eDBjak5haUo4VDdGQnpBekRMcnR6akcrL1Bwenhw?=
- =?utf-8?B?Mk5HMUd0bk1SZjNPaTRPWW1odkZFZWp1K2FsdDRpTjM5RFhidzdNRHB1eXpz?=
- =?utf-8?B?S3JrNHVwTVY3WWYwZ2ZOanB1WVlWWjBsQVM1ZDhNdDNrbkNEZjlwcG5jZmtM?=
- =?utf-8?B?Y1d0NzB3eFJsVUVHeHhRMk55WERpWWl3VU1XSkwyY3ErMk1zaFVHcHUrbHJV?=
- =?utf-8?B?b25MRnRFa2tNMWUxSThSVnEyMjYwV0MvcGVYTVRURTRGUUdCa1RUYk1acHo4?=
- =?utf-8?B?cGhpK1FlcS9IM0FHRFhuNy9WVFhGZmFWTjd0RnVpWDJRbnJWekVjamd6dHhR?=
- =?utf-8?B?VFRVUkRZQlNvZVdNU0J6cnloNmF2eFdHL1RhemFUMnpHRmQ5WnhCallWeEE2?=
- =?utf-8?B?MG9wVWVOODhLMVJaZVNmVnREVStFR0JtaWw3UXFzUmVkaVY5VUxzUzRsMndO?=
- =?utf-8?B?QjBXcC9Wamh4YVFOcXZOY2p2ckxFcVBMZVFueFhCekJmVW45em01anB0R1U5?=
- =?utf-8?B?WEp4U0lPZWpFVWREK09VaFpOdjRVRkRJT3l6N25PMEIvd1lmNDAwU3VBS0pn?=
- =?utf-8?B?eFl3Qmd1RHZ0VHY0RldEbTRhbkNEc291SDNWam8yTHF2ZHR6UDdSNVVsOERi?=
- =?utf-8?B?bDdpejdIdytGOFhXWDdWbEVNbTdib0NpR3FWajZZVjRhM2VFOEFHakZESkZD?=
- =?utf-8?B?dzVEalBxUGlkOVpBQUs3ZE04SmZmNThPaExlM25hY0ZTWERxNnd4TGpoZysx?=
- =?utf-8?Q?U3HvFKld3e3YeTjUhE?=
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+	dkim=pass (2048-bit key, unprotected) header.d=isslab-korea-ac-kr.20260707.gappssmtp.com header.i=@isslab-korea-ac-kr.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=Ic4MztMH
+Received: by mail-pj1-f48.google.com with SMTP id 98e67ed59e1d1-3b09a83d12aso781372a91.2
+        for <linux-scsi@vger.kernel.org>; Fri, 20 Nov 2026 06:52:53 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=isslab-korea-ac-kr.20260707.gappssmtp.com; s=20260707; t=1795186373; x=1795791173; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=w+FVy673x+oTragde9PzcsSOA9zSMUs8PCGZhkAnfZM=;
+        b=Ic4MztMHptOIsDCMQqbVa+Xu76N+Elf2OZmcRurVlAPxUDwfYj/N+ha8MvK25nLC1j
+         ylEq+T2shrUyjStG04zn22aweKuNb9XM3eJMckP2s0Z80ndtWLSTl1/zHP/ySKHIUxsc
+         xEB5C9AxOF182LNDeo8etbHAdsGtMW1ElZ8QQXXo7Ey5tpavWIw4TgyM0tZYcezqzQuD
+         KttwsP7Ld/fBvDGqZRk+G88IbfcE4Yz7zIqOVeFBVhxtDjOnRDJl2tiddgy8JbyE0Ml3
+         5VkMBYJvPGQ1/kZ5pjiWgDBOdGqXE6XWI8ycTnbTVu/zzn9GDoH4hu4j3thMrI7O5jWq
+         tbfQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1795186373; x=1795791173;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=w+FVy673x+oTragde9PzcsSOA9zSMUs8PCGZhkAnfZM=;
+        b=1zbrwrcWWmZczFTuYzmt/EG2bNeAlWOLiDzuFnRKzPovr7vPrpaqX7mCjCpZpjtzBl
+         qBAyj8P/HJS77Swzwflcf3ksHqUP8J1mbnIQ6Ao27TWQpVlUwjwApD8ZYyLD8w7AbWFu
+         hfllOKxz4AEAoEcoVWK6D6gh1VJ+Gadw6y3HNs/skJZYBSZZ778abRsDLUGBkafHwIa6
+         bBL8Meumeybg+yEqEyCgybSVfTXc7lwNC3VXknewO1x756KiF5CyGZIZPMQCs9C2ZSmk
+         e9Yzj1zIKp6iIe4D/C+o4ZOi+lI2Fhi3+pVAHUTKgsRUBPZHTdDyq+Vdu0F6AtkS34dD
+         1rIA==
+X-Gm-Message-State: APuU4Z9Pp8lGrx5cbECCzLZx+ZERnYVdFJPr9iP3td+DU7GiCyfZCZ1H
+	cc/14FERY5DocXtyZy9/dp16/Ay5uySH4ZDo+dCALBQJ0mP/kb8VvRdQ5qGIOfaZq3jVPH36eE2
+	ahM8zxq4=
+X-Gm-Gg: AZFdTZfjjidjXRq6Mhvq26lmZJrZT/rqQ/3ZdfRHctqaKsgwdYvYKAxKQ/q3GbOBHMA
+	ZPebN+BWM940/eMBx6acVtrMM3KbrzK6tZUDMYYb2/7QO/B1lwfB1770kZxyu1aT29ZYsfg0aq2
+	fhh+YTeS2jO3kJ+qVAyS3N/jK1hr6I6DrJJ8iNaKQpg3nvDC0bzK1S23gcsKRggsI1HC16oSxN8
+	WR4aF+d+4NVgrmgn9u6EVjLPed5qPvI3UZ8xTw2TxFn/rozMDU6y0guzchHqcOGcHJjQVljMszg
+	VBAZRjo7lhLfZiGwLjFMdGg1ihxU0Ol5PDlEMXK6ii+4RuI/9uhR0T534YxhSHWofyc2zAKiRB5
+	vB+z9zHvUJpe5MKGG5D6jRn3IWELGHtUX0nU3lv+6Dx8UANGCBzznTo4t9xxd1ddd0uadInIGjQ
+	w2GNbbVmYnkY3hCo3TWRPrCrYDPUQT466RBKr1R2YZvFhoGWob9Btt/Unn6gf/E6q9JVEUYPV6c
+	KzWoibN2EOTZ2nLIciCe31fkU0g/7Biq7+LBmOpzT9fms/QJOelTcNd9FjJOWhinYSuOiQvNUle
+	8h26p/7o3sl1Pa0F7pEjyc8YV7uW8EU8R54elJHIGz30QhAjhqOQIedBH7g3sAF3ZBoP/B20JUx
+	ZRqmHdZFDt3h9PHVClqu/scoGVa4qRuQaC2lZ
+X-Received: by 2002:a17:90b:1802:b0:3b3:cae0:2b6c with SMTP id 98e67ed59e1d1-3b41c92c569mr3478020a91.34.1795186373173;
+        Fri, 20 Nov 2026 06:52:53 -0800 (PST)
+Received: from yhlee-960QFG.Davolink ([2406:5900:1044:110c:8b25:951:ad8d:5cc1])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b41aab4729sm4643064a91.0.2026.11.20.06.52.50
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 20 Nov 2026 06:52:52 -0800 (PST)
+From: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+To: Lee Duncan <lduncan@suse.com>,
+	Chris Leech <cleech@redhat.com>,
+	Mike Christie <michael.christie@oracle.com>,
+	"Martin K . Petersen" <mkp@kernel.org>,
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: libiscsi_tcp: hold back_lock across the copy of a Data-In
+Date: Fri, 20 Nov 2026 23:52:43 +0900
+Message-ID: <20261120145243.3124991-1-yhlee@isslab.korea.ac.kr>
+X-Mailer: git-send-email 2.43.0
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -167,46 +98,307 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-X-OriginatorOrg: vivo.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: TYUPR06MB6217.apcprd06.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 22c8efa7-057b-482e-7a03-08df47024004
-X-MS-Exchange-CrossTenant-originalarrivaltime: 20 Nov 2026 12:31:49.9160
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 923e42dc-48d5-4cbe-b582-1a797a6412ed
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 4OXcb8VJWDC2G+jeCndlhC6sXuxP44DGDk2ajAmXNBed+gUyieePykJK8DIaqH+6+nALSZqTRaCcKwRnPPc5OA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: KUYPR06MB8938
+Content-Transfer-Encoding: 8bit
 
-SGkgR3JlZywNCg0KPiA+IFNldCB0aGUgc3VycHJpc2VfcmVtb3ZhbCBmbGFnIGluIHN0cnVjdCBT
-Y3NpX0hvc3Qgd2hlbiB0aGUgVVNCIGRldmljZQ0KPiA+IHN0YXRlIGlzIFVTQl9TVEFURV9OT1RB
-VFRBQ0hFRCwgaW5kaWNhdGluZyB0aGUgZGV2aWNlIGhhcyBiZWVuDQo+ID4gcGh5c2ljYWxseSBy
-ZW1vdmVkIGFuZCBjYW5ub3QgaGFuZGxlIEkvTy4NCj4gPg0KPiA+IFRoaXMgZmxhZyBpcyBjaGVj
-a2VkIGJ5IHNkX3JlbW92ZSgpIChhZGRlZCBpbiB0aGUgcHJldmlvdXMgcGF0Y2gpIHRvDQo+ID4g
-c2tpcCBzeW5jX2ZpbGVzeXN0ZW0oKSBkdXJpbmcgc3VycHJpc2UgcmVtb3ZhbCwgYXZvaWRpbmcg
-YSBoYW5nIHdhaXRpbmcNCj4gPiBmb3IgSS9PIHRoYXQgY2FuIG5ldmVyIGNvbXBsZXRlLg0KPiAN
-Cj4gVGhlcmUgaXMgbm8gcHJldmlvdXMgcGF0Y2guDQo+IA0KPiA+IEZvciBvcmRlcmx5IHJlbW92
-YWwgKGUuZy4gcm1tb2QsIHN5c2ZzIHVuYmluZCkgdGhlIFVTQiBkZXZpY2Ugc3RhdGUgaXMNCj4g
-PiBub3QgTk9UQVRUQUNIRUQsIHNvIHRoZSBmbGFnIGlzIG5vdCBzZXQgYW5kIHN5bmMgcHJvY2Vl
-ZHMgbm9ybWFsbHksDQo+ID4gcHJlc2VydmluZyBkaXJ0eSBkYXRhIHdyaXRlYmFjay4NCj4gPg0K
-PiA+IFNpZ25lZC1vZmYtYnk6IExpYW5xaW4gSHUgPGh1bGlhbnFpbkB2aXZvLmNvbT4NCj4gDQo+
-IERvZXMgbm90IG1hdGNoIHRoZSBGcm9tOiBsaW5lIDooDQoNClRoYW5rcyBmb3IgdGhlIHJldmll
-dy4gQXBvbG9naWVzIGZvciB0aGUgaXNzdWVzOg0KDQoxLiBNaXNzaW5nIHByZXZpb3VzIHBhdGNo
-DQpQYXRjaCB2NSAxLzIgd2FzIHNlbnQgc2VwYXJhdGVseSB0byB0aGUgU0NTSSBsaXN0Og0KaHR0
-cHM6Ly9sb3JlLmtlcm5lbC5vcmcvYWxsL1RZVVBSMDZNQjYyMTdERDMxQjFCM0NEMDlFNDMxQ0Mx
-MkQyOTIyQFRZVVBSMDZNQjYyMTcuYXBjcHJkMDYucHJvZC5vdXRsb29rLmNvbS8NCg0KSSBzaG91
-bGQgaGF2ZSBzZW50IGJvdGggcGF0Y2hlcyB0b2dldGhlciBhcyBhIHNlcmllcyB3aXRoIGEgY292
-ZXINCmxldHRlci4gTXkgbWlzdGFrZS4NCg0KMi4gRnJvbTogLyBTaWduZWQtb2ZmLWJ5IG1pc21h
-dGNoDQpUaGUgRnJvbTogaGVhZGVyIHNob3dzIG15IENoaW5lc2UgbmFtZSB3aGlsZSBTaWduZWQt
-b2ZmLWJ5OiB1c2VzIHRoZQ0KRW5nbGlzaCB0cmFuc2xpdGVyYXRpb24uIEknbGwgZW5zdXJlIHRo
-ZXkgbWF0Y2ggaW4gZnV0dXJlIHN1Ym1pc3Npb25zLg0KDQozLiBUaGlzIHBhdGNoIGlzIHN1cGVy
-c2VkZWQNClRoZSBpc3N1ZSBoYXMgYWxyZWFkeSBiZWVuIGZpeGVkIGJ5IEJhcnQgVmFuIEFzc2No
-ZSdzIHBhdGNoLCB3aGljaCB3YXMNCm1lcmdlZCB1cHN0cmVhbToNCg0Kc2NzaTogc2Q6IE1hcmsg
-dGhlIGRpc2sgZGVhZCBpZiBydW50aW1lIHJlc3VtZSBmYWlscyBpbiBzZF9yZW1vdmUoKQ0KaHR0
-cHM6Ly9sb3JlLmtlcm5lbC5vcmcvYWxsLzJjMGM3NmQ3MGYwZmUxOTc5MzI4MzZiOWJjZjg0OTYw
-OTUxMzVkMWIuMTc5MjQ0NjkyMS5naXQuYnZhbmFzc2NoZUBhY20ub3JnLw0KDQpCYXJ0J3Mgc29s
-dXRpb24gaXMgY2xlYW5lciDigJQgaXQgY2FsbHMgYmxrX21hcmtfZGlza19kZWFkKCkgZGlyZWN0
-bHkgaW4NCnNkX3JlbW92ZSgpIHdoZW4gc2NzaV9hdXRvcG1fZ2V0X2RldmljZSgpIGZhaWxzLCB3
-aXRob3V0IG5lZWRpbmcgYSBuZXcNCnN1cnByaXNlX3JlbW92YWwgZmxhZy4NCg0KVGhhbmtzLA0K
-TGlhbnFpbg0K
+iscsi_tcp_hdr_dissect() aims the receive segment at a command's
+scatterlist and drops back_lock, and the copy itself then runs once per
+skb in iscsi_tcp_recv_skb() with nothing held:
+
+	rc = iscsi_segment_seek_sg(&tcp_conn->in.segment, sdb->table.sgl,
+				   sdb->table.nents, ...);
+	spin_unlock(&session->back_lock);
+
+The SCSI error handler finishes a task while such a copy is pending, and
+it leaves the receive side running on purpose while it does.
+iscsi_eh_abort() says so itself:
+
+	/*
+	 * we do not stop the recv side because targets have been
+	 * good and have never sent us a successful tmf response
+	 * then sent more data for the cmd.
+	 */
+
+iscsi_eh_device_reset() and iscsi_eh_target_reset() do the same, calling
+iscsi_suspend_tx() and not iscsi_suspend_rx() before they fail the tasks.
+fail_scsi_task() and fail_scsi_tasks() complete the task the receive path
+is copying into, iscsi_free_task() hands the command back with
+scsi_done(), and its scatterlist returns to the sg mempool while
+tcp_conn->in.segment still points into it.
+
+Looking the command up again before each round of copying would not help.
+The error handler can fail the task between the lookup and the copy, and
+a lookup cannot tell the command apart from its successor either:
+task->itt is the index of a preallocated slot and is fixed for the life
+of the session, so the next command to take that slot carries the same
+ITT and the same session age, and iscsi_itt_to_ctask() returns it as
+running while segment->sg still points into the freed scatterlist.
+
+So let the lock that releases a command also guard the copy into it.
+iscsi_tcp_cleanup_task() already runs from iscsi_free_task() with
+back_lock held, immediately before the command is handed back, so
+remember which command a Data-In is being copied into and drop that
+pointer there.  iscsi_tcp_recv_skb() then holds back_lock for the whole
+of the copy and refuses the rest of the PDU with ISCSI_ERR_BAD_ITT if the
+pointer is gone, as it does one step earlier.  Cleanup and copy now
+exclude each other, and a slot cannot be reused before the cleanup that
+invalidated the pointer has run.  Only a Data-In pays for this: it is the
+only receive segment aimed at a scatterlist, every other one is a linear
+buffer that belongs to the connection.
+
+The lock is dropped again before segment->done(), which for a Data-In is
+iscsi_tcp_process_data_in() and takes back_lock itself.  Holding it over
+the copy is bounded by one skb and adds no sleeping call; the copy maps
+its pages with kmap_atomic().  It is taken with _bh because the receive
+path is not only a softirq: iscsi_sw_tcp_recv_data_work() runs it from a
+work item with softirqs enabled when iscsi_recv_from_iscsi_q is set, and
+every process context that takes back_lock in libiscsi takes it that way.
+
+A target that holds part of a Data-In until the command's LUN has been
+reset, and then sends the rest, gets the copy to run through the freed
+scatterlist and KASAN to report it:
+
+  BUG: KASAN: slab-use-after-free in iscsi_tcp_segment_done+0xe4b/0x1490
+  Read of size 4 at addr ffff88800d44cc8c by task swapper/0/0
+
+  CPU: 0 UID: 0 PID: 0 Comm: swapper/0 Tainted: G    B               7.4.0-rc2-00478-ga189f19ef663 #10 PREEMPT(lazy)
+  Tainted: [B]=BAD_PAGE
+  Hardware name: QEMU Ubuntu 24.04 PC v2 (i440FX + PIIX, arch_caps fix, 1996), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
+  Call Trace:
+   <IRQ>
+   dump_stack_lvl+0x53/0x70
+   print_report+0xd0/0x630
+   kasan_report+0xce/0x100
+   iscsi_tcp_segment_done+0xe4b/0x1490
+   iscsi_tcp_recv_skb+0x924/0x15f0
+   iscsi_sw_tcp_recv+0x12f/0x390
+   __tcp_read_sock+0x1ab/0x810
+   iscsi_sw_tcp_data_ready+0x18b/0x510
+   tcp_data_queue+0x1f2d/0x4b70
+   tcp_rcv_established+0x8a8/0x3990
+   tcp_v4_do_rcv+0x45b/0x970
+   tcp_v4_rcv+0x223d/0x3b90
+   ip_protocol_deliver_rcu+0x61/0x2e0
+   ip_local_deliver_finish+0x329/0x4b0
+   ip_local_deliver+0x18f/0x2d0
+   ip_sublist_rcv_finish+0x138/0x1b0
+   ip_sublist_rcv+0x3ae/0x670
+   ip_list_rcv+0x266/0x380
+   __netif_receive_skb_list_core+0x5c3/0x860
+   netif_receive_skb_list_internal+0x553/0xbb0
+   gro_complete.constprop.0+0x3ed/0x5c0
+   dev_gro_receive+0xa31/0x23c0
+   gro_receive_skb+0x279/0x960
+   e1000_clean_rx_irq+0x602/0x1160
+   e1000_clean+0x7eb/0x25a0
+   __napi_poll+0x9c/0x520
+   net_rx_action+0x8f1/0xfb0
+   handle_softirqs+0x1b3/0x600
+   __irq_exit_rcu+0xfc/0x160
+   common_interrupt+0x7f/0x90
+   </IRQ>
+
+  Allocated by task 75:
+   kasan_save_stack+0x33/0x60
+   kasan_save_track+0x14/0x30
+   __kasan_slab_alloc+0x6e/0x70
+   kmem_cache_alloc_noprof+0x10e/0x340
+   mempool_alloc_noprof+0xcd/0x180
+   __sg_alloc_table+0x23e/0x410
+   sg_alloc_table_chained+0x47/0x180
+   scsi_alloc_sgtables+0x17f/0xc50
+   sd_init_command+0x20e/0x2e70
+   scsi_queue_rq+0x1070/0x2f60
+   blk_mq_dispatch_rq_list+0x390/0x2100
+   __blk_mq_sched_dispatch_requests+0xa7a/0x1550
+   blk_mq_sched_dispatch_requests+0xa7/0x140
+   blk_mq_run_work_fn+0x105/0x150
+   process_one_work+0x697/0x1060
+   worker_thread+0x45b/0xd10
+   kthread+0x2c8/0x3b0
+   ret_from_fork+0x36e/0x5a0
+   ret_from_fork_asm+0x1a/0x30
+
+  Freed by task 130:
+   kasan_save_stack+0x33/0x60
+   kasan_save_track+0x14/0x30
+   kasan_save_free_info+0x3b/0x60
+   __kasan_slab_free+0x43/0x70
+   kmem_cache_free+0xba/0x3a0
+   mempool_free+0xbd/0x110
+   __sg_free_table+0xa8/0x170
+   scsi_end_request+0x329/0x5d0
+   scsi_io_completion+0x4b0/0xda0
+   blk_complete_reqs+0xa4/0xe0
+   handle_softirqs+0x1b3/0x600
+   do_softirq+0x3d/0x60
+   __local_bh_enable_ip+0x6a/0x70
+   iscsi_eh_device_reset+0x7f1/0xa10
+   scsi_ioctl_reset+0x3a8/0x5b0
+   scsi_ioctl+0x7ac/0x1360
+   blkdev_ioctl+0x385/0x520
+   __x64_sys_ioctl+0x134/0x1c0
+   do_syscall_64+0xdf/0x4c0
+   entry_SYSCALL_64_after_hwframe+0x77/0x7f
+
+  The buggy address belongs to the object at ffff88800d44cc80
+   which belongs to the cache sgpool-16 of size 512
+  The buggy address is located 12 bytes inside of
+   freed 512-byte region [ffff88800d44cc80, ffff88800d44ce80)
+
+Fixes: da32dd681f7a ("[SCSI] iscsi_tcp: rewrite recv path")
+Cc: stable@vger.kernel.org
+Signed-off-by: Yehyeong Lee <yhlee@isslab.korea.ac.kr>
+---
+
+Reproduced against a userspace target reached through a proxy that holds
+a 64 KiB read's whole Data-In, lets a LUN reset through, and then sends
+the header with the first 2048 bytes and the remaining 63488 bytes after
+a gap.  A test-only delay parks the receive path for 20 ms once it has
+reached the copy, and the reset path waits for that park before it fails
+the tasks, so that the command is given back inside the window.  The
+receive softirq is kept on one cpu and the reader and the reset on
+others.  Every boot is a fresh one, under KASAN.
+
+Measured on top of the series named below.  Without this patch all 3
+boots report, 51 reports each, of which 4 name the freed scatterlist and
+the rest are the copy writing through it and into the freed data pages.
+With it none of 5 do: the reset waits on back_lock until the copy has
+finished, the 63488 bytes land in the command's own buffer, and the reset
+then fails the command as it asked to.  A 64 KiB read through the same
+proxy with the injection turned off is unaffected in both arms.  Ten
+32 MiB direct reads, on kernels built without the test delays and without
+KASAN, take 1.23 to 1.39 s without the patch and 1.23 to 1.34 s with it,
+three boots of three measurements each per arm.
+
+The report above is the first one that names the scatterlist.  The boot's
+first report is the same copy writing into a freed data page, which is
+also what set the taint.
+
+This is a follow-up to "scsi: libiscsi_tcp: do not accept a Data-In for a
+finished command", which refused a Data-In whose command had already gone
+but argued that while a copy is pending only the receive path can finish
+the task.  The error handler does too, which is what this patch answers.
+
+  https://lore.kernel.org/r/20261117101500.1894608-5-yhlee@isslab.korea.ac.kr
+
+Sashiko raised the same case on that patch:
+
+  https://lore.kernel.org/all/sashiko-outbox-218654@kernel.org/
+
+Applies on its own, and on top of that series, to mkp-scsi/for-next
+(08fec21faae4), origin/master (65e4fd942f72) and next/master
+(adcad7f4e6332c).
+
+ drivers/scsi/libiscsi_tcp.c | 37 +++++++++++++++++++++++++++++++++++++
+ include/scsi/libiscsi_tcp.h |  7 +++++++
+ 2 files changed, 44 insertions(+)
+
+diff --git a/drivers/scsi/libiscsi_tcp.c b/drivers/scsi/libiscsi_tcp.c
+index eeb853c6b66d49..79489793b076d7 100644
+--- a/drivers/scsi/libiscsi_tcp.c
++++ b/drivers/scsi/libiscsi_tcp.c
+@@ -442,9 +442,17 @@ iscsi_tcp_data_recv_prep(struct iscsi_tcp_conn *tcp_conn)
+  */
+ void iscsi_tcp_cleanup_task(struct iscsi_task *task)
+ {
++	struct iscsi_tcp_conn *tcp_conn = task->conn->dd_data;
+ 	struct iscsi_tcp_task *tcp_task = task->dd_data;
+ 	struct iscsi_r2t_info *r2t;
+ 
++	/*
++	 * Runs under back_lock just before the command is given back, and
++	 * the receive path copies into its scatterlist under the same lock.
++	 */
++	if (tcp_conn->in.datain_task == task)
++		tcp_conn->in.datain_task = NULL;
++
+ 	/* nothing to do for mgmt */
+ 	if (!task->sc)
+ 		return;
+@@ -745,6 +753,7 @@ iscsi_tcp_hdr_dissect(struct iscsi_conn *conn, struct iscsi_hdr *hdr)
+ 				      tcp_task->data_offset,
+ 				      tcp_conn->in.datalen);
+ 			task->last_xfer = jiffies;
++			tcp_conn->in.datain_task = task;
+ 			rc = iscsi_segment_seek_sg(&tcp_conn->in.segment,
+ 						   sdb->table.sgl,
+ 						   sdb->table.nents,
+@@ -908,8 +917,10 @@ int iscsi_tcp_recv_skb(struct iscsi_conn *conn, struct sk_buff *skb,
+ {
+ 	struct iscsi_tcp_conn *tcp_conn = conn->dd_data;
+ 	struct iscsi_segment *segment = &tcp_conn->in.segment;
++	struct iscsi_session *session = conn->session;
+ 	struct skb_seq_state seq;
+ 	unsigned int consumed = 0;
++	bool copy_locked = false;
+ 	int rc = 0;
+ 
+ 	ISCSI_DBG_TCP(conn, "in %d bytes\n", skb->len - offset);
+@@ -926,6 +937,26 @@ int iscsi_tcp_recv_skb(struct iscsi_conn *conn, struct sk_buff *skb,
+ 		return 0;
+ 	}
+ 
++	/*
++	 * Hold back_lock across a Data-In copy so the command cannot be
++	 * given back while it runs.  _bh: this also runs from a work item.
++	 */
++	if (segment->sg) {
++		struct iscsi_task *task;
++
++		spin_lock_bh(&session->back_lock);
++		task = tcp_conn->in.datain_task;
++		if (!task || task->state != ISCSI_TASK_RUNNING) {
++			spin_unlock_bh(&session->back_lock);
++			iscsi_conn_printk(KERN_ERR, conn,
++					  "Data-In for a command that is gone\n");
++			*status = ISCSI_TCP_CONN_ERR;
++			iscsi_conn_failure(conn, ISCSI_ERR_BAD_ITT);
++			return 0;
++		}
++		copy_locked = true;
++	}
++
+ 	if (offloaded) {
+ 		segment->total_copied = segment->total_size;
+ 		goto segment_done;
+@@ -958,6 +989,10 @@ int iscsi_tcp_recv_skb(struct iscsi_conn *conn, struct sk_buff *skb,
+ 	}
+ 
+ segment_done:
++	if (copy_locked) {
++		spin_unlock_bh(&session->back_lock);
++		copy_locked = false;
++	}
+ 	*status = ISCSI_TCP_SEGMENT_DONE;
+ 	ISCSI_DBG_TCP(conn, "segment done\n");
+ 	rc = segment->done(tcp_conn, segment);
+@@ -970,6 +1005,8 @@ int iscsi_tcp_recv_skb(struct iscsi_conn *conn, struct sk_buff *skb,
+ 	/* The done() functions sets up the next segment. */
+ 
+ skb_done:
++	if (copy_locked)
++		spin_unlock_bh(&session->back_lock);
+ 	conn->rxdata_octets += consumed;
+ 	return consumed;
+ }
+diff --git a/include/scsi/libiscsi_tcp.h b/include/scsi/libiscsi_tcp.h
+index ef53d4bea28a07..70967bd936e0bd 100644
+--- a/include/scsi/libiscsi_tcp.h
++++ b/include/scsi/libiscsi_tcp.h
+@@ -45,6 +45,13 @@ struct iscsi_tcp_recv {
+ 	struct iscsi_hdr	*hdr;
+ 	struct iscsi_segment	segment;
+ 
++	/*
++	 * The command a Data-In is being copied into.  Set when the segment
++	 * is aimed at its scatterlist and cleared when it is given back, both
++	 * with the session back_lock held.
++	 */
++	struct iscsi_task	*datain_task;
++
+ 	/* Allocate buffer for BHS + AHS */
+ 	uint32_t		hdr_buf[64];
+ 
+-- 
+2.43.0
+
