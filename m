@@ -1,64 +1,102 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=220.197.31.3
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795141015;
-	b=w5B2GGZqKgrTkfUT2Td6RzucVrmFMsFlnFSDX6UTDCvIVOFJuN0h3EvWaIKZ9TJte2qC
-	 Z08uuRK09n56NPYzmb58gArBCojMgPNE12zXVI4NPMw+0sKemc84sErL3Nk6s/VaUQ6XN
-	 mq9NcVjiVIbj4X6dPVWPd9bZRAzhIRfS7A4jSGW4hsZwh12rczsCk32bXdfrPPUTjhwIf
-	 HbqvCW+rHjXcpKGoQGCfHYdDMmOU8ilSMlCxsdYRmnwlwxkeHrpHfsL+p7JAtAdvUb0dz
-	 A3pR7nfJwklztIbj87x6FNemp6+aL3uDE49o80aQkyaFRl2Thzlk+BAev2El5xm0rgg==
+	t=1795142080;
+	b=PQzLLDlxAhZqV+HhRI1hYRCsc9U/iw+sVrZBZ0k3srL/M4JY7zg7+TMx199ZItz4vSYU
+	 HCqFrSFXLfxnX4t7A9dS/UpW5KsLNMJ76JrLqreoCTkwvcegZ4lCwFNcv9YiwbrzfSsyg
+	 kwpspLH4gX36hLMyxz2un8/RuCS43WOQI9xCFeUTd53TRYUTRvq5bjoTqu7tWmMXDtBeH
+	 bCVvCMTJhfs9XkhpRhe5pknnBJ7tcjwpkHFF529g52+Ubo9091MQ42zfT3fqlczwM0AqL
+	 ibGckpfF57AFJE07HN2yHhgICUqQQUov+z4XIn4FdqezGgUv/7M647n1QceMiG/ddVQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795141015;
-	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
-	 Message-Id:X-Mailer:In-Reply-To:References:MIME-Version:
-	 Content-Transfer-Encoding:X-CM-TRANSID:X-Coremail-Antispam:Sender:
-	 X-CM-SenderInfo;
-	bh=rNSiCXdLtCLt0fmr896KLqf4BIh/6zakbDyHzT79/yw=;
-	b=z9hZm5RUhikfxHxX9aCriA5zyr4SJpt2B0lhG3NeL7r6hhprPSf7/oWG2KurzTlKb4sH
-	 nKtNEQmC0s9OKmHQHaeU+03jqj4GW9QL5ZUd47CY+7hiYFNja+ibofBODx2mwyAiSpLO6
-	 tSDVq7gMmaWRKU3FPMfTSNJbpqE6jTEfTjCUHPhdeMuzL13wG6QyHioww/xyl2sbhQBTQ
-	 u1J2QACIengT5oNpf2vr3EElTezQICf4hFV3tmyaYulRbOmxEXM4Mw7bmq0MceFjaC/qK
-	 QuD58NHh+euNZuRQffkNWWBwIGdZZhcvCsB7HQWLqVdzf8UkqI6UP7jnO32RqxLpf8A==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795142080;
+	h=Received:DKIM-Signature:To:Cc:Subject:From:In-Reply-To:Message-ID:
+	 References:Date:MIME-Version:Content-Type;
+	bh=yLxaIFgMgiNdJ6EvHj90KmNsd7UyUa4rOHQt8MkQ4o8=;
+	b=Y2eziJjix+rCJmotITUC1fd/QYZTQ0IPR3HxWU/SkBAx69PjfNqbggHSkujxK75DYJqk
+	 XIAeWuf8iFDDejIceS8bsk2lRgP87R0p/VgDA0PbvMoR+tOxUCI2MHJUe7nuSfMcFwXql
+	 gp72gmKfdHupZ8Vy9tnigaMrCHreEAfPGLAAocP/jUSpXc77A/FN3gUTwvOKWTgABDGhS
+	 c+TQEgsP/AMSI7pX/mquwQ9BC9JuvtkeNzeJpMTVOKAgtEw01lFo6+oY6ZYMtzptKoqUW
+	 HlplGEim1q2R29baUQrH4xrDNRYu2sevvJuzPve0aV6uJKntg/UIwuW8IQN6eb/0J9g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=kylinos.cn;
-	spf=pass smtp.mailfrom=163.com;
-	dkim=pass header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=CQyMd9Ez;
-	arc=none smtp.remote-ip=220.197.31.3
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.3])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=dq2Owl4T;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB780606A320;
-	Fri, 20 Nov 2026 02:16:51 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org DB780606A320
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04E23606A320;
+	Fri, 20 Nov 2026 02:34:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=CQyMd9Ez
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=rN
-	SiCXdLtCLt0fmr896KLqf4BIh/6zakbDyHzT79/yw=; b=CQyMd9Ez361sOAs0rz
-	SR9d8D8eNA6IjXS5M/MvkYIfoI7Kep6GXicz8dcZ/pxIuvXR473PCQ9M5LkjOIxv
-	N93W5aQj8kBrI48MyHaR9bh0JhlzB9DkuPwAKEc3gZtQWozhbPkWzoLTmIlOFdDK
-	hvoZ9Gl1ZKm7NErVygPXkRjNY=
-Received: from localhost.localdomain (unknown [])
-	by gzga-smtp-mtada-g1-0 (Coremail) with SMTP id _____wBXXpdkrf9q7GjRIA--.51558S2;
-	Fri, 20 Nov 2026 10:16:05 +0800 (CST)
-From: Yang Xiuwei <yangxiuwei@kylinos.cn>
-To: Yingjie Wang <x-professor@outlook.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-	James.Bottomley@HansenPartnership.com,
-	FUJITA Tomonori <fujita.tomonori@gmail.com>,
-	Jens Axboe <axboe@kernel.dk>,
-	Bart Van Assche <bvanassche@acm.org>,
-	jthoughton@google.com,
-	linux-scsi@vger.kernel.org,
-	linux-block@vger.kernel.org
-Subject: Re: [PATCH v4 0/2] scsi: bsg: release io_uring requests from end-I/O
-Date: Fri, 20 Nov 2026 10:16:04 +0800
-Message-Id: <20261120021604.2648220-1-yangxiuwei@kylinos.cn>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20261119152529.2431724-1-x-professor@outlook.com>
-References: <cover.1795016239.git.x-professor@outlook.com> <20261119031751.3471968-1-yangxiuwei@kylinos.cn> <20261119152529.2431724-1-x-professor@outlook.com>
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=dq2Owl4T
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4A6D31F000C6;
+	Fri, 20 Nov 2026 02:34:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1795142079;
+	bh=yLxaIFgMgiNdJ6EvHj90KmNsd7UyUa4rOHQt8MkQ4o8=;
+	h=To:Cc:Subject:From:In-Reply-To:References:Date;
+	b=dq2Owl4TQH5i1O8lPJeqrs/bhVJe74UawaV8WZGOjcpXryG9VX5bBPEuofmjMl6C8
+	 KEMZUEWUmofCrIT9kL1mF9sqs29c0Cyil2oxP83BwPsBQxJM3XbOQHwaj2x7OkBm3R
+	 Ubt4udGPNHycSNftWKTVPyy9zKiSLnNOhFSlFIOPsiCL9/KFgmw/r+jfOmYYUs/VC/
+	 SAI+QguGa/5ffH3iaZeehgrULZs3TCS3y0wcIRBQ7+1cYjuY8NOZbiPkIC9OoceHPS
+	 +R5fZniZZazVx2uAAw4qgmr08ft+ySZxWB+NNVSP3BxvosYlgijyZSgy8PCf4WR5j7
+	 gqEvBh4+Qs7GQ==
+To: Randy Dunlap <rdunlap@infradead.org>
+Cc: linux-kernel@vger.kernel.org,  Jonathan Corbet <corbet@lwn.net>,  Shuah
+ Khan <skhan@linuxfoundation.org>,  linux-doc@vger.kernel.org,  David
+ Hildenbrand <david@kernel.org>,  Andrew Morton
+ <akpm@linux-foundation.org>,  Jason Gunthorpe <jgg@nvidia.com>,  Leon
+ Romanovsky <leonro@nvidia.com>,  linux-mm@kvack.org,  Jaroslav Kysela
+ <perex@perex.cz>,  Takashi Iwai <tiwai@suse.com>,
+  linux-sound@vger.kernel.org,  Jens Axboe <axboe@kernel.dk>,
+  linux-block@vger.kernel.org,  Marcel Holtmann <marcel@holtmann.org>,
+  Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
+  linux-bluetooth@vger.kernel.org,  Willem de Bruijn
+ <willemdebruijn.kernel@gmail.com>,  Jason Wang <jasowangio@gmail.com>,
+  David Heidelberg <david@ixit.cz>,  oe-linux-nfc@lists.linux.dev,  Chas
+ Williams <3chas3@gmail.com>,  "David S. Miller" <davem@davemloft.net>,
+  Eric Dumazet <edumazet@kernel.org>,  Jakub Kicinski <kuba@kernel.org>,
+  Paolo Abeni <pabeni@redhat.com>,  netdev@vger.kernel.org,  Helge Deller
+ <deller@gmx.de>,  linux-fbdev@vger.kernel.org,
+  dri-devel@lists.freedesktop.org,  MPT-FusionLinux.pdl@broadcom.com,
+  "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,  "Martin
+ K. Petersen" <mkp@kernel.org>,  linux-scsi@vger.kernel.org,  Miquel Raynal
+ <miquel.raynal@bootlin.com>,  Richard Weinberger <richard@nod.at>,
+  Vignesh Raghavendra <vigneshr@ti.com>,  Zhihao Cheng
+ <chengzhihao1@huawei.com>,  linux-mtd@lists.infradead.org,  Neill Kapron
+ <nkapron@google.com>,  Andrey Konovalov <andreyknvl@gmail.com>,  Greg
+ Kroah-Hartman <gregkh@linuxfoundation.org>,  linux-usb@vger.kernel.org,
+  Juergen Gross <jgross@suse.com>,  Stefano Stabellini
+ <sstabellini@kernel.org>,  xen-devel@lists.xenproject.org,  Hans de Goede
+ <hansg@kernel.org>,  Arnd Bergmann <arnd@arndb.de>,  "Michael S. Tsirkin"
+ <mst@redhat.com>,  Eugenio =?utf-8?Q?P=C3=A9rez?= <eperezma@redhat.com>,
+  Sean
+ Christopherson <seanjc@google.com>,  Paolo Bonzini <pbonzini@redhat.com>,
+  kvm@vger.kernel.org,  virtualization@lists.linux.dev,  Jan Kara
+ <jack@suse.cz>,  linux-fsdevel@vger.kernel.org,  "Theodore Ts'o"
+ <tytso@mit.edu>,  linux-ext4@vger.kernel.org,  Mike Marshall
+ <hubcap@omnibond.com>,  devel@lists.orangefs.org,  Paulo Alcantara
+ <pc@manguebit.org>,  Namjae Jeon <linkinjeon@kernel.org>,
+  linux-cifs@vger.kernel.org,  Jaegeuk Kim <jaegeuk@kernel.org>,  Chao Yu
+ <chao@kernel.org>,  linux-f2fs-devel@lists.sourceforge.net,  Florian
+ Fainelli <florian.fainelli@broadcom.com>,  Broadcom internal kernel review
+ list <bcm-kernel-feedback-list@broadcom.com>,  Tzung-Bi Shih
+ <tzungbi@kernel.org>,  Benson Leung <bleung@chromium.org>,  David Airlie
+ <airlied@gmail.com>,  Simona Vetter <simona@ffwll.ch>,  Alex Deucher
+ <alexander.deucher@amd.com>,  Christian =?utf-8?Q?K=C3=B6nig?=
+ <christian.koenig@amd.com>,
+  amd-gfx@lists.freedesktop.org,  Jani Nikula
+ <jani.nikula@linux.intel.com>,  Joonas Lahtinen
+ <joonas.lahtinen@linux.intel.com>,  Rodrigo Vivi <rodrigo.vivi@intel.com>,
+  Tvrtko Ursulin <tursulin@ursulin.net>,  intel-gfx@lists.freedesktop.org,
+  Matthew Brost <matthew.brost@intel.com>,  Thomas =?utf-8?Q?Hellstr=C3=B6?=
+ =?utf-8?Q?m?=
+ <thomas.hellstrom@linux.intel.com>,  intel-xe@lists.freedesktop.org
+Subject: Re: [PATCH v2 06/12] docs: ioctl-number: update SCSI entries
+From: "Martin K. Petersen" <mkp@kernel.org>
+In-Reply-To: <20261119053514.255348-7-rdunlap@infradead.org>
+Message-ID: <yq1eccgqlhr.fsf@mail.kernel.org>
+References: <20261119053514.255348-1-rdunlap@infradead.org>
+	<20261119053514.255348-7-rdunlap@infradead.org>
+Date: Thu, 19 Nov 2026 21:34:38 -0500
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -68,41 +106,15 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wBXXpdkrf9q7GjRIA--.51558S2
-X-Coremail-Antispam: 1Uf129KBjvdXoW7JFW5GrWkXFyUAryUAw15CFg_yoWfZrg_uw
-	1ktrZrA3Z8Ja4Syw4IgFy3Wan2gw48C34q9ryFqrZxArn3A3y8C34vyryavryrGa92k3Zx
-	X3sxAFW2krn7ZjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUvcSsGvfC2KfnxnUUI43ZEXa7IUUZa9DUUUUU==
-Sender: yangxiuwei2025@163.com
-X-CM-SenderInfo: p1dqw55lxzvxisqskqqrwthudrp/xtbC6gUfr2r-rWWIEgAA3Y
+Content-Type: text/plain
 
-Hi Yingjie,
 
-On Thu, Nov 19, 2026, Yingjie Wang wrote:
-> I'll fold all three into v5 and rerun the tests, with lockdep enabled
-> for the end-I/O put. Since patch 1 will mostly be your code, I'll add
-> Co-developed-by and keep your Signed-off-by from your posting.
+Randy,
 
-Sounds good, thanks. A couple more small things for the pool while you
-are at it, if you like:
+> Update the list of files where SCSI ioctls are defined and update the
+> ranges of function numbers that are used.
 
-1) DECLARE_BITMAP(checked_out, BSG_DEFAULT_CMDS) is enough - no need
-   for a separate bitmap allocation.
+Reviewed-by: Martin K. Petersen (Oracle) <mkp@kernel.org>
 
-2) Depth and slot size are fixed, so you can drop buf_size and just put
-   u8 bufs[] at the end of the struct, with one kzalloc via
-   struct_size().
-
-3) The WARN_ON_ONCE on get(len) and put(!buf / bad index) feel a bit
-   heavy for ordinary failure paths; a quiet NULL / return is fine.
-   Keeping the double-put WARN and the !bitmap_empty() check on free
-   looks right to me.
-
-4) A few of the comments look a bit long and could be trimmed.
-
-Looking forward to v5.
-
-Thanks,
-Yang Xiuwei
-
+-- 
+Martin K. Petersen
