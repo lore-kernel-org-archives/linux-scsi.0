@@ -1,89 +1,57 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.48
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795279146;
-	b=sfQ6MOSgEzwwIMe6APShgDhkF58PwbQ6DH71UNa7U4jyT1f8yMsfVRksPtfXvM12HvmK
-	 Dp9dH6/vbFGcd9FuB/q+3jQofK9UUImGUZ0Nhq8bszC6THfIISLADAhxvakPIodQ5DnZr
-	 GKwoxJmUgeOhbfy1LddXZjiiB5mxwEnxulbby5pUGa0S1ItLso1rAEM6iac2yg5wIBRF4
-	 PnipEx4WTFpGhnpnDW0t7oFqzymqoQfwdQ+WuckKQ+5dFAS8ywUr7BT0uZaLh2ImfC9V6
-	 /R50IW8pqSGayWVlnls1xh+x0P6rZMN2Hz8XAr+UKPDuNJj9QWCA3OY5jxC1PRuliyA==
+	t=1795279807;
+	b=WvpUqEDhu5eU1QyWt6H7jWsM2/g6Kp14yyTIppNQZh30tpLH2Ed5URdYyimz84M3Yv/q
+	 pUHDrMx2mALelMq3DMrpd0omW2oBMPEcICQDOE9skCwC+8gQYqdH1IFLrACIUz+6mMfrr
+	 0Fa/h2JdsQ+kPVcMxfWEatey9wYSrwpr6p7z/daCsz6nv3hgziGCdJ6W0ud0VA3afBZqy
+	 xRvrnqazJiDQw/8lu+hOTVIGtE99+U1SRZfL7AzJpAViCVgoYuxh4QfyTkSOotkwG8FLw
+	 PGXTnwNNI4FJ82j46z4RqyFPW+wlvbABjoO+6uwibu6FLcogi5vPMrTiqRnLYJFx4pg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795279146;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:Subject:From:To:Cc:
-	 Date:Message-ID:Content-Type:Content-Transfer-Encoding:MIME-Version;
-	bh=UvpOy7GOb9rkObKegTI8SaLmn0rbNgwEAUXCgiEk9Sg=;
-	b=J7Cn90Z2CyR1CRP61+btXYP7Lxu3z4cbV23gsoo6gXCmVUyDLxBZefFbkjSBPk5mJ7uf
-	 wBHbFDGzQQr5/XXxEEKvlCmaGOnmXkdJJ/ShCzik+NuYqHDj58YLi8n0D8GxdR4jslb6F
-	 wDDgXkfs7j/6CY4ydKMCTjF4cUKxbE/UgEQQXnvpl272wwyYrRrCsnvL0sa9TuFgVjMpK
-	 DN/6JXDfXvfpk9rWuQDfLPRTVwoJFPUhJP+TBgRdF1Jpfmmt6WQcjewXXmoIScwHVMLNG
-	 RpGoY9f9x9mvet7fXNaSxKR39gPIT5ZqExi0CAeRgULcE8jvGIMk3DK2PMQt7HIPn1A==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795279807;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=PPN6/wcfgdFlmbqddf2Y0+Se7zg2yRpwLtO4N7Y7rCs=;
+	b=mWcAPhVBWFdtbEolzNXpQLW2Kw8EBKPP35IlYUKdXH5MD7mpz1zGHYIyYNkm83dsi7Do
+	 5tfmDq/i0hhUEo0zct1Mpyyd2uSiMclXxeR0V6WOI3EpuJdOkJlW3qE2wZjwblAQ3vS7E
+	 PXDdS0alqarVqMF1/g9WLkM5jfjR+qEBL6xM/Kherb8vji8Lj+ho+1/ltIn8mJd+Xi88N
+	 DmpzOxW7Xq6baCS3iYPjGnc4U3WyRj3vS1FsHOT4/vumGeJHdxyhmn/0Tf5kvoRqigE2k
+	 /ZAptNqu0JFzMD8vWV7bX6sQYdTFBKCsfKxI0TQ576V2oxJmQmpTeTEImFjYGcSVZpA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=f+MzvHFf;
-	arc=none smtp.remote-ip=209.85.128.48
-Received: from mail-wm1-f48.google.com (mail-wm1-f48.google.com [209.85.128.48])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=g5oTRnHp;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EEAA6606A32A
-	for <linux-scsi@vger.kernel.org>; Sat, 21 Nov 2026 16:39:04 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org EEAA6606A32A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5DFC0606A336;
+	Sat, 21 Nov 2026 16:50:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=f+MzvHFf
-Received: by mail-wm1-f48.google.com with SMTP id 5b1f17b1804b1-4a1fbd52ab6so13230345e9.0
-        for <linux-scsi@vger.kernel.org>; Sat, 21 Nov 2026 08:39:04 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1795279143; x=1795883943; darn=vger.kernel.org;
-        h=mime-version:content-transfer-encoding:content-type:message-id:date
-         :cc:to:from:subject:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=UvpOy7GOb9rkObKegTI8SaLmn0rbNgwEAUXCgiEk9Sg=;
-        b=f+MzvHFfqQ9WcbUSNKxJj1Ic+3RE+07hDar/TjwNI5eDF9Qio/PkinckXvA/B9AC4q
-         SQZJsP69aC01AzYvoojV9pj8fpG7bmLXfjM83jVrB2QwD/3JahcKWGlzGFztuyk0SE4l
-         C9Wbx73I5pQxtxIQRauurGKZZZyWH5csSjD/6BUu7b12cLSa3ufRkyAOlSZ1VFUUp8yh
-         kOCQ65OkPWm/SEe+z7C3wxy37KuDBaElNZeOtipOTXYGi8uAczrYwqeotlRWPxz+64i1
-         Y4I2dkkPzLS8XuAQt+7hkD3x8jdYamrzMoUaPT6rjiwk4aNIvDAIqodTht+Mnk96mZA4
-         IbjQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795279143; x=1795883943;
-        h=mime-version:content-transfer-encoding:content-type:message-id:date
-         :cc:to:from:subject:x-gm-gg:x-gm-message-state:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=UvpOy7GOb9rkObKegTI8SaLmn0rbNgwEAUXCgiEk9Sg=;
-        b=qdAP8OSulpSt+oXR3A0UZPL295HSbc9UmV1O3SuJiAWSrRFeZ20mN/V6oqYlqvFk8r
-         FbjqfGPTWWf87hDT19POMkczszKyTt9xM/RFIKvhE7axYe2hs5Zflr10hQANj4tVpMyN
-         2zxaOcEgz1fcUDtEHAInjlWTHKJFOxcQt3Escihfq/ym35tg+xWVLxordKbK6OOIxUqa
-         GKom1a88ZJ8jrD/fvDDvzQQxMItA3Er3Sa3azY27PhA8WGKT4ukTDEcTk/UMvgxe+dsG
-         Ddwq0FRBAWNzG9nvFdDg65uLi9DodlpqYghJ0/IIOHhVzGqpqUHvyPzCuryaQ5o1Hvyb
-         EunA==
-X-Gm-Message-State: APuU4Z/TprijvTHv5t4JLhL5S07sCVnIAiHQ76OXMR65W3Rr1VVUR67m
-	jjECOi+3Yqk03AC6Ww0JOxLV8xDEyB3BWn//22IwrAbOw7L1f7Zp8uky05g0CXik5SCHm5mj
-X-Gm-Gg: AZFdTZfdB/zejrD1okDfSoAeHmi8fejuYKgFTg1Iat4JA+N0HlWb1DG2o08qzWKiSPU
-	3D8v2WMjg3P0wy4c5j/Af8VGzm/Lz+P1NYJL5x9wBxIFIPW5rZrxbeAZIpzqE4ZUHKVQyqY2emO
-	eVzNA58oTidAk/fwFU/YcJ279d6MX5INwZXZ7Cd+xEkISxOpswBAtBvTd8OdexLgKQ5UKMUVQo+
-	3qt575gbDHYiFMmg67mrucNf+Ev+l/B/5/LzAJhO4DnuDl4rDotawB7f/bzOLlfwszc+wvQvlFx
-	XKBYQrfp6fG6eYm2qMsx+Yu5KqHASYzVfYbXo5J+FNQr/8/Ia2LqrJ7+/WTPrgTto2W8pViIJa+
-	vSmp0et/MvhDBit7WshjWzPcPaugXcYrmVORDHsylTp6VTK2AVHj7RARiKl3NWYYpgKB99atqVj
-	jk/p6j37+T1mpkHlVYx8aHwXAyXCD58hIU8+cY9z2DEV48K00xDwtDGOzy73r+N5rkonRHO74RO
-	Wo8DAxXCmrEuQWP8pefKq8WQY2DaGUmLbukgMCKzq3UWO9Tepta+7MbG7gZmExFIIlFk+YVH+24
-	BJHkxHNHiHaih+nNIXMuGjKrMrDY3PnvvWmekmSniHz0
-X-Received: by 2002:a05:600c:5246:b0:4bb:60ba:49e0 with SMTP id 5b1f17b1804b1-4bb88930707mr157734315e9.26.1795279143087;
-        Sat, 21 Nov 2026 08:39:03 -0800 (PST)
-Received: from [10.77.1.44] ([94.188.8.172])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4ab69bf61b8sm11212895f8f.19.2026.11.21.08.39.02
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 21 Nov 2026 08:39:02 -0800 (PST)
-Subject: [PATCH 0/1] scsi: target: iscsi: fix use-after-free in iscsit_stop_session()
-From: Vitalii Dodonov <dreamer.two@gmail.com>
-To: linux-scsi@vger.kernel.org
-Cc: stable@vger.kernel.org,target-devel@vger.kernel.org
-Date: Sat, 21 Nov 2026 19:38:57 +0300
-Message-ID: <179527913740.32224.2426414360492240680@gmail.com>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=g5oTRnHp
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 69C101F000D2;
+	Sat, 21 Nov 2026 16:50:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1795279806;
+	bh=PPN6/wcfgdFlmbqddf2Y0+Se7zg2yRpwLtO4N7Y7rCs=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=g5oTRnHpZylaEePI6tVooRD6TqKp7enJJE7isfRv8ksVob5PjNP6V3DqrqtgsGHyF
+	 ISlAnuElDECkAUGLXNYI3ViAf+Ben8lEMGsgGywWteLYfbo6si8nvZznMTmNLrf5rx
+	 iYQjLMFkolkeI92/I8HCLD0i3IH4/wAlvoZIgw4YIWrCkPOeL0FaQxrgwbH6pxhxXJ
+	 EgywlyA3r77SSIrDOS5hyp1ZGlbccBkBv+byuQ6DX4YudEJV8Yhn+X55Jlkv24/4/n
+	 v/WtAAWYDGHX8HXk/rDIxZnXJTML0HUMAJUinnNEy61HmKdkAiREUmVRhmZsRADNdj
+	 ounvMsNnhdx6Q==
+Message-ID: <sashiko-outbox-227178@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH 1/1] scsi: target: iscsi: fix use-after-free in
+ iscsit_stop_session()
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Vitalii Dodonov" <dreamer.two@gmail.com>, linux-scsi@vger.kernel.org
+Cc: target-devel@vger.kernel.org
+In-Reply-To: <179527913740.32224.16728687439026782592@gmail.com>
+References: <179527913740.32224.2426414360492240680@gmail.com>
+ <179527913740.32224.16728687439026782592@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Sat, 21 Nov 2026 16:50:05 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -92,100 +60,101 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
 
-The iSCSI target panics with a general protection fault inside
-iscsit_stop_session() when a session that has more than one connection is
-torn down while another thread closes one of those connections.
+Thank you for your contribution! Sashiko AI review found no new issues
+in this patch, but noticed 1 related pre-existing issue it does not
+introduce:
+- [High] scsi: target: iscsi: session leak when closing failed session
+  with nconn =3D=3D 0 [1]
+--
 
-iscsit_stop_session() walks sess->sess_conn_list with
-list_for_each_entry_safe() and drops sess->conn_lock inside the loop.  A
-connection that is being shut down concurrently runs iscsit_close_connection(),
-which removes itself from the list with list_del() under the same lock and
-leaves LIST_POISON1 in conn->conn_list.next.  Pinning the next connection with
-iscsit_inc_conn_usage_count() keeps the object alive, but not the list links,
-so the following iteration computes conn_tmp = list_next_entry() from the
-poisoned pointer and passes it to iscsit_inc_conn_usage_count(), which takes a
-spinlock at *(conn_tmp + offsetof(conn_usage_lock)) and faults on
-0xdead000000000004.
+commit 29536f098b4fb525d53737f9024a60f1ba499f18
+Author: Vitalii Dodonov <dreamer.two@gmail.com>
 
-Crash, 7.3.0-11-generic, LIO target with MaxConnections=8, Microsoft iSCSI
-initiator holding 8 MC/S connections, graceful reboot of the initiator while
-I/O is in flight:
+scsi: target: iscsi: fix use-after-free in iscsit_stop_session()
 
-  Oops: general protection fault, probably for non-canonical address 0xdead000000000004: 0000 [#1] SMP PTI
-  CPU: 0 UID: 0 PID: 9028 Comm: kworker/0:2 Not tainted 7.3.0-11-generic #12-Ubuntu PREEMPT(lazy)
-  Workqueue: events iscsi_target_do_login_rx [iscsi_target_mod]
-  RIP: 0010:_raw_spin_lock_bh+0x18/0x50
-  RDI: dead000000000004   RBX: deacfffffffffcb0   R15: deacfffffffffcb0
-  Call Trace:
-   ? iscsit_inc_conn_usage_count+0x1b/0x40 [iscsi_target_mod]
-   iscsit_stop_session+0x7d/0x1b0 [iscsi_target_mod]
-   iscsi_check_for_session_reinstatement+0x1e1/0x290 [iscsi_target_mod]
-   iscsi_target_handle_csg_one+0x135/0x160 [iscsi_target_mod]
-   iscsi_target_do_login+0x32/0xe0 [iscsi_target_mod]
-   iscsi_target_do_login_rx+0x2d2/0x420 [iscsi_target_mod]
-   process_one_work+0x1dc/0x3f0
-   ...
-  Kernel panic - not syncing: Fatal exception in interrupt
+This commit fixes a use-after-free in iscsit_stop_session() by taking a
+reference-counted snapshot of sess->sess_conn_list under sess->conn_lock
+before dropping the lock to reinstate connections.
 
-The same fault is reachable from the logout path:
-iscsit_stop_session <- iscsit_logout_post_handler <- iscsit_response_queue <-
-iscsi_target_tx_thread, with the identical 0xdead000000000004.
+> diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/i=
+scsi_target.c
+> index 03d618cd76721..bd56dc76fbca8 100644
+> --- a/drivers/target/iscsi/iscsi_target.c
+> +++ b/drivers/target/iscsi/iscsi_target.c
+> @@ -4669,36 +4669,62 @@ void iscsit_stop_session(
+>  	int session_sleep,
+>  	int connection_sleep)
+>  {
+> -	u16 conn_count =3D atomic_read(&sess->nconn);
+> -	struct iscsit_conn *conn, *conn_tmp =3D NULL;
+> -	int is_last;
+> +	struct iscsit_conn *conn, **conns =3D NULL;
+> +	unsigned int i, n, conn_count =3D 0;
+> +
+> +	/*
+> +	 * sess_conn_list may only be walked while holding sess->conn_lock: a
+> +	 * connection that is being shut down concurrently runs
+> +	 * iscsit_close_connection(), which removes itself from that list with
+> +	 * list_del() under the same lock and leaves LIST_POISON1 in
+> +	 * conn->conn_list.next.  Pinning the connection itself is not enough,
+> +	 * because the list links are poisoned as well, so take a snapshot of
+> +	 * the connections (with a reference on each) and work on that snapshot
+> +	 * only.
+> +	 *
+> +	 * The sleeping variant is called from process context only --
+> +	 * iscsi_target_tx_thread(), the login workqueue (session
+> +	 * reinstatement), configfs, iscsit_release_sessions_for_tpg() -- with
+> +	 * no locks held, and this function already blocks below in
+> +	 * iscsit_cause_connection_reinstatement(conn, 1) and in
+> +	 * wait_for_completion(&sess->session_wait_comp), so the GFP_KERNEL
+> +	 * allocation does not add a new constraint.
+> +	 */
+> +	if (connection_sleep) {
+> +		conn_count =3D atomic_read(&sess->nconn);
 
-Where it was first seen (field report).  A Proxmox VE host (7.0.14-9-pve,
-later 7.0.14-28-pve) exported zvols through LIO to Windows 11 clients using
-the Microsoft iSCSI initiator with MC/S.  The host had been stable for 95 days
-with MaxConnections=1; after raising it to 2 there were four panics in one
-night, all with the same general protection fault at 0xdead000000000004 and
-the logout stack above, and the journal of one of them contains "Received
-logout request on connection that is not in logged in state".  The panic also
-reproduced on 7.0.14-28-pve, so it is not tied to a single build.  The module
-carrying this fix has been running on that host for 9 days with
-MaxConnections=4 and 72 active iSCSI connections, without a single panic.
+[Severity: High]
+This problem wasn't introduced by this patch, but can closing or
+reinstating a session in TARG_SESS_STATE_FAILED when sess->nconn is
+already 0 leak the session [1]?
 
-Reproducer (any MC/S-capable initiator; open-iscsi does not implement MC/S, so
-a Microsoft iSCSI initiator was used):
+When the last connection closes without falling back to ERL=3D0 (for
+example on ISCSI_LOGOUT_REASON_CLOSE_CONNECTION),
+iscsit_close_connection() moves the session to TARG_SESS_STATE_FAILED
+with sess->nconn =3D=3D 0 and starts the Time2Retain timer.  Commit
+57c46e9f33da ("scsi: target: fix hang when multiple threads try to
+destroy the same iscsi session") removed the direct
+iscsit_close_session() calls from iscsi_check_for_session_reinstatement(),
+lio_tpg_close_session(), and iscsit_release_sessions_for_tpg(), relying
+on iscsit_stop_session() to tear down the remaining connections so the
+last connection calls iscsit_close_session().
 
- 1. LIO target with MaxConnections=8, no CHAP, generate_node_acls=1.  The
-    value lives in configfs and is not exported by targetcli:
+If one of those paths runs while sess->nconn is already 0, it stops the
+Time2Retain timer and either returns early on TARG_SESS_STATE_FAILED:
 
-      echo 8 > /sys/kernel/config/target/iscsi/<iqn>/tpgt_1/param/MaxConnections
+drivers/target/iscsi/iscsi_target_login.c:iscsi_check_for_session_reinstate=
+ment() {
+    ...
+	spin_lock_bh(&sess->conn_lock);
+	if (sess->session_state =3D=3D TARG_SESS_STATE_FAILED) {
+		spin_unlock_bh(&sess->conn_lock);
+		iscsit_dec_session_usage_count(sess);
+		return 0;
+	}
+	spin_unlock_bh(&sess->conn_lock);
 
-    With MaxConnections=1 the extra connection is refused with
-    ISDSC_TOO_MANY_CONNECTIONS and nothing happens, so the target has to be
-    configured first.
+	iscsit_stop_session(sess, 1, 1);
+    ...
+}
 
- 2. Initiator: log in, for example on Windows
+or calls iscsit_stop_session() with an empty sess->sess_conn_list.  With
+no connection left to run iscsit_close_connection(),
+iscsit_close_session() never runs, leaking struct iscsit_session and
+struct se_session and leaving core_tpg_del_initiator_node_acl() hung in
+wait_for_completion(&acl->acl_free_comp).
 
-      Connect-IscsiTarget -NodeAddress <iqn> -TargetPortalAddress <ip>
+[1] https://sashiko.dev/#/bug/linux-305f6726-98b0-4cd9-9238-5325539f4459
 
-    and then add the remaining connections to the *same* session, one call
-    per connection:
-
-      iscsicli SessionList                 # take the "Session Id"
-      iscsicli ListInitiators              # -> ROOT\ISCSIPRT\0000_0
-      iscsicli QAddConnection <SessionId> ROOT\ISCSIPRT\0000_0 <portal-ip>
-
-    Repeat until the session holds MaxConnections connections.
-    AddIScsiConnectionW() does the same thing programmatically, and the
-    "MCS..." button in the iSCSI Initiator GUI (target -> Properties ->
-    Sessions) as well.
-
- 3. Bring the LUN online, mount a filesystem on it and start writing to it.
-
- 4. Reboot the initiator gracefully while the I/O is still in flight; repeat.
-    The stock module crashed on the 2nd-4th cycle (2 panics in ~20 minutes).
-
-Results: stock module 2 crashes in 8 cycles, patched module 0 in 118 cycles
-(the target stayed up for the whole run).
-
-Patch 1/1 takes a snapshot of the connections, with a reference on each, while
-conn_lock is held, and then works only on that snapshot; the order in which the
-connections are reinstated is unchanged.
-
-Vitalii Dodonov (1):
-  scsi: target: iscsi: fix use-after-free in iscsit_stop_session()
-
- drivers/target/iscsi/iscsi_target.c | 68 ++++++++++++++++++++---------
- 1 file changed, 47 insertions(+), 21 deletions(-)
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/179527913740.32224.=
+2426414360492240680@gmail.com?part=3D1
