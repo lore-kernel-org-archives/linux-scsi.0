@@ -1,56 +1,60 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795229832;
-	b=V+UZpdFyQRgsUmY9+3C1htqi1YmDhdnAkS/h9fCJqDEoUw6/860LR5zFuvPG1mJaJ6+D
-	 aepQJT6HzCM7zQpgR/VTVWuFjEMvIlzK0Z/lqTYiExYG7qZpgTdvE+QwZgiquQMmw5vKU
-	 wAkKec4b8n4N43gGeNZEZ4ikuDfBiHoyhTn3q8S+F7y8W1AiMxaImTRRqRZhbXHIg7i4s
-	 aAk7wYtWOE59YBlwuCPY567eS9eUA90YyMDNwgcOGKjV547cil0LSMO41A5kYHGFZYFB/
-	 oDBrc+9dIwM6IrL4+coTdii/ERIwg7tPt8skwzbKZP84aVgg3Djg5XEIlUhnF7ie8rA==
+	t=1795231444;
+	b=zD6eGj+94qiCybX1ng3r1o8C2yli6Da/84mAXg93pMXYsIlDeDrVLhsHKOO0XwjyABf8
+	 4zf7jHwVmgvxIhCj3isnlyz1LZhLQP3bbSLDzLlHcZVEb1lRIOKHEAh+B5WVmJPs862Vm
+	 ecvY92v2juzkD7lyljMP/ZTQ6SFGFRk2S7DEdEdP+v0kqp9YtaDniOFPA7ZOpkILXSuhK
+	 PyzA3C3waoQnW3ruynOJ1QkZJ0sirHQtsbS1U2xvZkk/J63HuVczthOiU/kMrn1TisNGi
+	 pla+qAAqTEQkYyXcpRzZMWxm6FQm8VTpf4g4byRpKHzQVb79305iDhHd9Elc0nqhQjQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795229832;
-	h=Received:DKIM-Signature:To:Cc:Subject:From:In-Reply-To:Message-ID:
-	 References:Date:MIME-Version:Content-Type;
-	bh=IOVeMD6HfGZ7JHM2W+bcqXoEk7mbXK7Fu9/QARslgbA=;
-	b=TRtlUAfJMxZr+qH9CnEt1JfU44jBCOLnsh0XzxULaZrn2YoNhnsSGFKLfAkYVaTSAY/9
-	 q+LWa/okeoQA29T6Zz3FTD9KPcZ+pMOrYHZ7AjNQ57clvepAJBhEGwgsteTh3FoiLORNw
-	 onz4t1yLDYM7CRug9v/C/0pQyrUVUNEs6CmSmFZ9F5VinxT2fPiavJYLJdUQ72whPVY9M
-	 NLiVTsL3EpFxeWMqVpXGuyrUWC6qOlu9Mk0jb2bHqhJJDxF+PKFSTnitamTeboYVOOn16
-	 NJlHn+aKMWk0EA2cKDk1tdJ7R/SIlmx0+43yHZJNnmKDV5QuZmdPa1zBmRhS9W2duyA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795231444;
+	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
+	 In-Reply-To:References:MIME-Version:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=8ZqqGS1stonUlE94QAUs93A9RzAR5iVuZQDEzLlcpIc=;
+	b=2SIOo9aNltBbxBBix1pWZ92kAZ9lOD3L6IRK2CVjHV75FbxO4UZYYUEQ+PlhHFVOKX3h
+	 Ue+mFw1iIFzfysZye0IZcGJ0vkqOUzhwj+moRkZv9CTen0HZDzDUJWtLu4e7qSOcP5tAn
+	 j+yqzZcyvY0drC43AnHwnZOv9a+tAVEgK8qy+mMf1+XTfwXyqJQw6eHPQDSurkgPWJ+/F
+	 0lGuXfMjMXQtL+4YLJueMJLSGrnIQyMPDYkj9CAhmNmVjZZYloVeIQ3Nr8oRUPiQFc8LT
+	 y/fJ5fH79yXzoMt025C3PsncVVdMWbkgayaxOq5VTZtPFrE+EIux/y/0oc30Cg68wFQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=I5Ha6tjo;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=MR2fQyQB;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D8A7606A6AE;
-	Sat, 21 Nov 2026 02:57:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C757D606A6A8;
+	Sat, 21 Nov 2026 03:24:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=I5Ha6tjo
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BEDBE1F000C0;
-	Sat, 21 Nov 2026 02:57:11 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=MR2fQyQB
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A84F81F000C4;
+	Sat, 21 Nov 2026 03:24:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795229832;
-	bh=IOVeMD6HfGZ7JHM2W+bcqXoEk7mbXK7Fu9/QARslgbA=;
-	h=To:Cc:Subject:From:In-Reply-To:References:Date;
-	b=I5Ha6tjoLUkjtWeT73APcmFxrU5eTuS16yP0wFEcOFm90wLtBmHppnGh/sttCb6PI
-	 eeAeHnTv+rv+uSn0nevhqR/lDexQ6jm9nDJMkaUGjjYC4Ce6Yy20Dx5O6ihLm4pPsD
-	 nsyiXJS++cOoWIiZowQ7323h6pKF7ZtYV9YZ3wVEl8GTseIBGfE0TLm7Shhnnre3US
-	 phijU3m1naeFDXpxJNRC6cgnzlwrCjT1xNIL4O/QggyYTmnMMg9AtfBstwNTcz4VG6
-	 /OdKFZPw3Ar0qVc1Cw9aHeKVvMvuSdzHMMqoLE8Ip+fjU2QV4Scv7pMvlmKAqhZU9h
-	 h5M3Zjpz7d9RA==
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: Jens Axboe <axboe@kernel.dk>,  linux-block@vger.kernel.org,  Christoph
- Hellwig <hch@lst.de>,  linux-scsi@vger.kernel.org,  "Martin K . Petersen"
- <martin.petersen@oracle.com>
-Subject: Re: [PATCH v13 13/13] scsi: sd: fail read commands to offline zones
- early
-From: "Martin K. Petersen" <mkp@kernel.org>
-In-Reply-To: <20261120210651.580511-14-dlemoal@kernel.org>
-Message-ID: <yq1eccenb7s.fsf@mail.kernel.org>
-References: <20261120210651.580511-1-dlemoal@kernel.org>
-	<20261120210651.580511-14-dlemoal@kernel.org>
-Date: Fri, 20 Nov 2026 21:57:10 -0500
+	s=k20260515; t=1795231444;
+	bh=8ZqqGS1stonUlE94QAUs93A9RzAR5iVuZQDEzLlcpIc=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=MR2fQyQBacsmCArTCltXa+t+cXA3v3FiAKBq7PYtL3SStV1af1or7hrG6UbNU1t6q
+	 Z83k8K8B/1P9MrBk91ogJBQwLfcMMEDqWRxczMkNq6Bz/PLp5ZlH01WfvNak8rZTG2
+	 6coqgHc6/SscJKh5aqJyNGt2TaJTDUYnOvnGe4o19FlY5L346rApfWFP7x4VPSHHC2
+	 U9X7DQQ0zSvPWyHoVi6HdnsTmUnnMjNxBtjqYpPte8hT+qe8gi3AReY8R7bV7GkObF
+	 aCCej697z12Wq7hozHCyWefjXYUPTa3aGV8ahpVdOtfabhyFN3tPLL4bLqEjbL5Dnw
+	 BevjGWHy8MwFg==
+From: "Martin K. Petersen (Oracle)" <mkp@kernel.org>
+To: Satish Kharat <satishkh@cisco.com>,
+	Sesidhar Baddela <sebaddel@cisco.com>,
+	Karan Tilak Kumar <kartilak@cisco.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	Izaac Chong <izaacchong934@gmail.com>
+Cc: "Martin K . Petersen" <mkp@kernel.org>,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] scsi: fnic: Fix typo in kmem_cache creation error message
+Date: Fri, 20 Nov 2026 22:23:57 -0500
+Message-ID: <179523138185.420037.14693835253304960773.b4-ty@b4>
+X-Mailer: git-send-email 2.56.1
+In-Reply-To: <20261114-fnic-typo-v1-1-a9f70c9c4a6b@gmail.com>
+References: <20261114-fnic-typo-v1-1-a9f70c9c4a6b@gmail.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -60,19 +64,19 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 
+On Sat, 14 Nov 2026 08:33:43 +0800, Izaac Chong wrote:
 
-Damien,
+> The error printed when the fdls_frame_recv kmem_cache cannot be
+> created says "cach" instead of "cache". Fix the spelling so the
+> message matches the other cache creation errors in fnic_init_module().
 
-> Issuing read commands to offline zones of a ZBC disk will result in
-> failures. So do not issue such command and fail them early in
-> sd_setup_read_write_cmnd(). This change also checks write commands,
-> which is fine but should actually never happen as the block layer zone
-> write plugging code already fails write BIOs to offline zones early in
-> the submission path.
+Applied to 7.5/scsi-queue, thanks!
 
-Reviewed-by: Martin K. Petersen <mkp@kernel.org>
+[1/1] scsi: fnic: Fix typo in kmem_cache creation error message
+      https://git.kernel.org/mkp/scsi/c/bd91f6b3b684
 
 -- 
 Martin K. Petersen
