@@ -1,64 +1,64 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795231504;
-	b=CHx5dIgZfoGsln+hmSFTi5Q5/TYKkly1eMNP8tr1wSJi03SdkBGZsU7+xu6O4Z7QE1TI
-	 lYQ/Xy4lsIdlVyMarAOvaZRnYDnElgo72PvuB4/alVbwRh634p0TszONB9UM3qMXVL77I
-	 HlH/pzj08yyjo3BI4oDd82zA4E9OZoZZsSxMYNpucuXNEu/qrY0SonfHxSWaDgdfWUc2e
-	 ZQOCgHsMKz8U/++mLG+nx3maT/HVsYokMx511a08WeefIDOqC5gAP7VxRUf3DMFFFlQFe
-	 246SG9HXvzpbpDX7xH9ANtRdQeV8A8RhbtGTvKliNjKlCH+qTaSFAlkbMZFsB4804MA==
+	t=1795231506;
+	b=KTi2MINWFO5whvWm+sNpR9nGqLWKxm1JQ9X19SV/RQri1fubZhgNQtw+dms8x0xTRysU
+	 RS9FDY6EUek6Ki0VDjDkgl5k3Aw+fJ8V+HY2hBkdTaewGrnc6N0XgCLuLApOAnAuVQkty
+	 M5mxpw0SrAlVHGnfy4GWesXUlDFTepS3+dQwsv5/QOl9EZj/CrKoUfCNkKSExvHOiePim
+	 X0Is2xmy0R+aY84hEIdTO40twQIFWv9qXK4mlxKWunW/mcCPCdiXkRFkOnJi5+teJ0S8P
+	 bFQqCL01xD1YvrlA3LSUD6gWPMnAeAs7XCSdsBeCVRwiOZA7F06yvbZnitSrJFiq5lw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795231504;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795231506;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding;
-	bh=dFoQ7O2IGK1nSFEodFxJ6wg6pducvyR4YJQYYfyNJSQ=;
-	b=2ngx07B10u/GXOipTU9YDOCUbJLHDFPQaqJQ4+LhWJ5aGWy/E6LOKetA7DLynVZsFfIy
-	 glqti9631WFxmrOk1Tnjamu4cBVeuT91bErPR52hu071qZzP1uJqRUU3JeAvXwYXTSMMS
-	 KwGFWI/LGATZu//3ZqoxYRcB4t6lXqM+OlfnLQkc26gmpNMmta++2R6duPFrPAjwU7B6e
-	 zSuZZt+EVWvRwZEnvFJoP8L1kFxcsKAlYbNu01rPouu5U/XE+5OTS9NvxVu732wTuxi6L
-	 0VgarYKtYzg1Z/mtM4/eMUZzhAdyKBfJ41VeAcfDECsxEyaat5yZs/8fD0ngmTdIs9A==
+	bh=IEi+AatW8creQi+GveL59vc5E0ntLQggVbochSSnoRc=;
+	b=3KMpwK1E3YPhzOSUYa25UnM35mbFNJd9FFF7Q26BBqamCS+bNE+gU4M/X0bHk1t+WoxK
+	 FKmLP6tnNBsG21yTy06Lrz5fYVRQ/G6jbjf0Dfh2s9kn22IjAqq5Eqd0n27smOyhZcvet
+	 R61GZvJ4Nw+316uQ/NwwmLwz23MZ7R7q+EWcddwmHFdiTPPcrKi+D3hYZxuz+Z+jYT/v0
+	 nyIUsEOz8ZVH19r/+uxgjvvS3Pmxj52gvmkS2qmgge0spQD9GeF0XPcVNkmvVb8mDYkG7
+	 Qu+kpv5GcZ9Jv0aAU1nhq9hxd6fOqvDqdkv0JzUlpPcDWolNTHDOlb73REr+mjAVD9w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jHvicj5p;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Fw3J7XYG;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F044606A6B4;
-	Sat, 21 Nov 2026 03:25:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED33460A2612;
+	Sat, 21 Nov 2026 03:25:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jHvicj5p
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 903611F000CA;
-	Sat, 21 Nov 2026 03:25:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Fw3J7XYG
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 308161F000C6;
+	Sat, 21 Nov 2026 03:25:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795231503;
-	bh=dFoQ7O2IGK1nSFEodFxJ6wg6pducvyR4YJQYYfyNJSQ=;
+	s=k20260515; t=1795231505;
+	bh=IEi+AatW8creQi+GveL59vc5E0ntLQggVbochSSnoRc=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=jHvicj5pwn9sYzEq1EiiCrmFI0Hs6b30eRNfU74OyjDjM5Crvj03ZpxKJRnP8nJFK
-	 1j7SCBSWNseSzmrN6O5KJ78OL0kVXhs2IhiZj2Yr5fma9zoR36msDxSBFmj+RnsbGF
-	 w6RUmVRU6Tq+rl24BS9RmbaJ2zu1hdmYyRRAz32CPsgBaoL3bv0fvW5ZGdrHeexNL/
-	 EflvAcfZ6dva0yvTtXNIhYmnMJCQL3iZl5RZK51OmzOIXMkirufoDlcfNN5L/0bo4H
-	 L0p0lKRJjTqFduq/9eDcsG7caqmt4lgEpwhiaABYJDdyWOIBFZ9lCyjGII9v6ntLQ0
-	 hL/0u58IAORPg==
+	b=Fw3J7XYG/YcmjDlBYwy8FNi7OJwZY6j34Hf4b2LXcTwa0eGPKipryluuHjFxqEO3j
+	 joR2cEJ5eeKlvc/jWSFDFeZloQgv/LNRjBewmSVbop5uBUNGr1bA3BfFu311YOxkjr
+	 9p5bio7qcJdWD80XErD0FpXccPaKIHVVLc7T02PYTajZon1JK8C6vbefyr5A0CuuRz
+	 WTJHXLDOD0xI+z1q76qa/yC/PgOkN/xYLrKiAgH1UWdZTcgnpX5hMi7MFQwLxkQLc0
+	 EmEcMpTLcSH9WZdj0s0jIWZEVv988t6lxGaOm3RY1h89E0nMjmg6dmquqSpe+EY3U7
+	 pok5P4rrOWp+Q==
 From: "Martin K. Petersen (Oracle)" <mkp@kernel.org>
-To: peter.wang@mediatek.com,
-	chaotian.jing@mediatek.com,
-	Xiangwu Lai <laixiangwu@cmss.chinamobile.com>
+To: linux-scsi@vger.kernel.org,
+	suganath-prabu.subramani@broadcom.com,
+	sreekanth.reddy@broadcom.com,
+	ranjan.kumar@broadcom.com,
+	sathya.prakash@broadcom.com,
+	Weibin Liu <liuwb@xiaopeng.com>
 Cc: "Martin K . Petersen" <mkp@kernel.org>,
-	chu.stanley@gmail.com,
-	alim.akhtar@samsung.com,
-	bvanassche@acm.org,
-	stanley.chu@mediatek.com,
-	sashiko-bot@kernel.org,
-	linux-scsi@vger.kernel.org,
-	linux-mediatek@lists.infradead.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 0/2] scsi: ufs-mediatek: fix va09 regulator lifecycle
-Date: Fri, 20 Nov 2026 22:24:50 -0500
-Message-ID: <179523145639.420187.12014570853735820164.b4-ty@b4>
+	linux-kernel@vger.kernel.org,
+	James.Bottomley@HansenPartnership.com,
+	MPT-FusionLinux.pdl@broadcom.com,
+	stable@vger.kernel.org,
+	zhugl3@xiaopeng.com
+Subject: Re: [PATCH v2] scsi: mpt3sas: validate data_out size before SMP link-reset check
+Date: Fri, 20 Nov 2026 22:24:51 -0500
+Message-ID: <179523145641.420187.8741773838840772742.b4-ty@b4>
 X-Mailer: git-send-email 2.56.1
-In-Reply-To: <20261119071611.117-1-laixiangwu@cmss.chinamobile.com>
-References: <20261119071611.117-1-laixiangwu@cmss.chinamobile.com>
+In-Reply-To: <20261029073316.4188569-1-liuwb@xiaopeng.com>
+References: <20261029073316.4188569-1-liuwb@xiaopeng.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -71,23 +71,21 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 
-On Thu, 19 Nov 2026 15:16:08 +0800, Xiangwu Lai wrote:
+On Thu, 29 Oct 2026 15:33:16 +0800, Weibin Liu wrote:
 
-> Two fixes for the va09 regulator handling of the Mediatek UFS variant
-> driver.
-> 
-> Patch 1 converts the va09 acquisition to devm_regulator_get() and adds
-> an .exit callback that powers the M-PHY off, so the enable count is
-> balanced when devm releases the regulator.
+> _ctl_do_mpt_command() handles MPI2_FUNCTION_SMP_PASSTHROUGH by reading
+> data[1] and data[10] of the data_out buffer to detect SMP link-reset
+> requests. The non-IMMEDIATE path sets data = data_out after checking only
+> for a NULL pointer, so a payload shorter than 11 bytes can read past the
+> end of the buffer, and out-of-bounds bytes can unexpectedly set
+> ioc_link_reset_in_progress and ignore_loginfos.
 > 
 > [...]
 
 Applied to 7.4/scsi-fixes, thanks!
 
-[1/2] scsi: ufs-mediatek: use devm_regulator_get() for the va09 regulator
-      https://git.kernel.org/mkp/scsi/c/def1745a6a8b
-[2/2] scsi: ufs-mediatek: restore the M-PHY power state when va09 disable fails
-      https://git.kernel.org/mkp/scsi/c/71b5da0b45fb
+[1/1] scsi: mpt3sas: validate data_out size before SMP link-reset check
+      https://git.kernel.org/mkp/scsi/c/efd68f17acca
 
 -- 
 Martin K. Petersen
