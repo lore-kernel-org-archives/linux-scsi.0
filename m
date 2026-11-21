@@ -1,56 +1,56 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795229700;
-	b=jhXbdv4Eqm6tQSrLRGiskI7Mvz9K83QnuYMiAziQSapxOSDdUaccljl0bPT19mz7YsEE
-	 hYF5orRjVg5coDDpkJYkSS7Z0ZJcJRDKiomujfwArfYgB7U7bFYLIdzwrLus6rGzXCZnA
-	 GtzFtVUvvqpniMbNl4ktlqNH7URvQcgUuybkzF9g7IF+yU584NQxw94CtTFkH2cKXTOKY
-	 +vkRYAHudcjtj3KGjCPmtZy7AGS945Kiw+WYn6Y05A14XAWGcklmbDdmCqiwWrXOVh4aL
-	 zOYpNNhLdQTf4SB14rhjfrFpCBsJiX7uPmi6cNd5GUS7cDuUgdyhUJQLRrXELjBzUvQ==
+	t=1795229767;
+	b=s25X1xFvj2D6HusJtpz6JNDNZ6amn4dufUQzzUlCuR4t2kFsMHjKsOJgU5804oeMqF2N
+	 2rX6R7tr/e+t7+I41tYDQ/ylrJ8cmZ9QYhZDn829gYm2rq7bbkfEzrT/C2SjXtgAMRrgS
+	 9atLIRiTKVvn81l0QvHkzHj6noOWxBReW3Qg8/YXYYCxh1el7rayPXMnn8JdR9RC3Xvom
+	 jB1IWAOXsuJaKAuVfS1ayQRSd4VmnHtLVX94fbemJvyoNSQ8j5DFdFUipfm4dpOPGpKey
+	 9H1R9rXZKLlQ1BVssi5XH5f/Lo0X4W51RXOoFuXV9VhRqo8ZgUzyPF9sVjLx0km+3WA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795229700;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795229767;
 	h=Received:DKIM-Signature:To:Cc:Subject:From:In-Reply-To:Message-ID:
 	 References:Date:MIME-Version:Content-Type;
-	bh=tkbpDAsujcNK1egTtNJMaOtNekKRVZ1368G84H0QJJM=;
-	b=wTMm3ubDn40u2to+XtGZ27Zj/Hxg0x/xSARVtwGar5a4ijDQIPfhT4iGuY2L4eyh8Sqa
-	 +2pGDGbzpr4wdZovz6P3VL2LvmqF+r3v21absM3othTRJxxKO7i0FAXt8IEEZjvwazTtE
-	 I8CtAShqDVu9W+NcxjfsdRQSnx1ol/FcLJjxzI4IjrP6XAvwB4mYvKJ98lifAMs+X4+UM
-	 qbWQlir0BHwqsboNreir4UYMU+sBfwIZ6/yoOEQh4PjAzp004SFBVlOAaGalVvpfuU6tC
-	 ZwANPDo3I6FM6Zu0nxOEKCbuG66s7saOV2C5pYwkBQ5soSc4lw27adgpEd1ZODBbymg==
+	bh=sJoVwgXsrrvrc+yBOoDx/gllMAlzga1+5crKtB43PgY=;
+	b=SFAbugOzXnSYyMJkwEvE7TEl5OLCn91xk+WKlRULQjB/Kza7Ycy7i4G9F3XIPHngbGV+
+	 fDTmfac0jGj1HMjw7nCQ2DD+fQznjiZMY0RB5KfPEMVZ4RtLfIsLcGLhEmOiDa2aGNsX+
+	 FxKsD6FRssICcpRXwM8ZBgiURP9xuPD77VILRuDB3d507149ACColx92R0gHTGYaTJweJ
+	 vYr+bgZHULPVlI6FRWHrw4ZSGaeUM8dK4SATaLFD4gDzVP2/xoY1NpN/DI+S5OvlabCL3
+	 R3oBQuxEd3QdSw4P/M233H5bW5E3rm7iBZCJ/jA3mv3r4Wbg+gWFvEWg4N07vJZEVag==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Qg50+h1k;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=KtwPvGF5;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 383EA606A68D;
-	Sat, 21 Nov 2026 02:55:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB47B606A699;
+	Sat, 21 Nov 2026 02:56:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Qg50+h1k
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B72661F000C6;
-	Sat, 21 Nov 2026 02:54:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=KtwPvGF5
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 439AD1F000C0;
+	Sat, 21 Nov 2026 02:56:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795229700;
-	bh=tkbpDAsujcNK1egTtNJMaOtNekKRVZ1368G84H0QJJM=;
+	s=k20260515; t=1795229767;
+	bh=sJoVwgXsrrvrc+yBOoDx/gllMAlzga1+5crKtB43PgY=;
 	h=To:Cc:Subject:From:In-Reply-To:References:Date;
-	b=Qg50+h1kAsSA/r+dXi5ZAQ9ATL+wklyMu4xDxi4bFVx5aulRZgv+qywC9Eou5GCsA
-	 feWhmCC8/LJI6pXvostTJomGAY7zF9dkQdOdEnBZuYS4f44tmCX89u58YJZGXh6jH2
-	 RQ6MP6mNgZUpO0rMCiAcIsMbB0DARd5rR9f9wrKIim9i4NLNpIzHluyE2sKqDhRMkz
-	 YHEdNjZYn6ixdatM1ZMhi1SvXOjs9vqQsPzZfuq9Pqpd7jOpmkG5oGLc0oaLduyKio
-	 EjgMe3vla2cFTTAholGAlVmyAPrRDyl26TB0jzPVt6YOJcr3TkMu5iMMOhOYVf3rFy
-	 OWtpnozw74URA==
+	b=KtwPvGF5JpDX4biBU3cN2pjK5RnB4j8gB9IJsAxUgn4lfhMFs6DHxnoG9GAseeekJ
+	 0mshuxZj5Yf/oxIakE39ovHWXBSFiwVrRSDX6/UuBazcC5PHeb7dPfM9rjJnVBf7uz
+	 Oi9KwnYHPbXnOuBtoOZYi9Xjt6+TUlApiokKTTUCncrTCIMSv2VTdzl+2+ZZqd60T/
+	 JnNz5rU4z1NVYEuKz5NQH9eMWt94PBo5rRPa/EzCn0pbfzrVcubmtn9TwERPrf27Lu
+	 108ycBUvfvrd+h5bQlv9DM9ggn1HKiJGcFCc3gchofhbwuSHwo/guOzyFicbjVbV2k
+	 OCMPAnFXnqyYQ==
 To: Damien Le Moal <dlemoal@kernel.org>
 Cc: Jens Axboe <axboe@kernel.dk>,  linux-block@vger.kernel.org,  Christoph
  Hellwig <hch@lst.de>,  linux-scsi@vger.kernel.org,  "Martin K . Petersen"
  <martin.petersen@oracle.com>
-Subject: Re: [PATCH v13 11/13] scsi: sd_zbc: always revalidate zones for
- disks supporting head depopulation
+Subject: Re: [PATCH v13 12/13] scsi: sd_zbc: define storage element
+ management operations
 From: "Martin K. Petersen" <mkp@kernel.org>
-In-Reply-To: <20261120210651.580511-12-dlemoal@kernel.org>
-Message-ID: <yq1pkvynbbe.fsf@mail.kernel.org>
+In-Reply-To: <20261120210651.580511-13-dlemoal@kernel.org>
+Message-ID: <yq1jym6nb9k.fsf@mail.kernel.org>
 References: <20261120210651.580511-1-dlemoal@kernel.org>
-	<20261120210651.580511-12-dlemoal@kernel.org>
-Date: Fri, 20 Nov 2026 21:54:58 -0500
+	<20261120210651.580511-13-dlemoal@kernel.org>
+Date: Fri, 20 Nov 2026 21:56:06 -0500
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -65,10 +65,15 @@ Content-Type: text/plain
 
 Damien,
 
-> sd_zbc_revalidate_zones() skips revalidating the zones of a ZBC device
-> if the zone size and total number of zones of the disk has not
-> changed. This is to avoid the sometimes slow report zones for the
-> entire disk that blk_revalidate_disk_zones() will generate.
+> Define the storage element management operations using struct
+> blk_se_ops. These operations are valid only on SMR disks supporting
+> the storage element depopulation featu, with support for the GET
+> PHYSICAL ELEMENTS STATUS command being mandatory. The support for the
+> modify_zones operation is already indicated by the
+> depop_modify_zones_supported SCSI disk flag.
+> sd_zbc_check_depop_supported() is modified to add detection for the
+> command RESTORE ELEMENTS AND REBUILD, which is indicated with the new
+> SCSI disk flag depop_restore_supported.
 
 Reviewed-by: Martin K. Petersen <mkp@kernel.org>
 
