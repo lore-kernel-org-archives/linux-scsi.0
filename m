@@ -1,64 +1,58 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795231506;
-	b=KTi2MINWFO5whvWm+sNpR9nGqLWKxm1JQ9X19SV/RQri1fubZhgNQtw+dms8x0xTRysU
-	 RS9FDY6EUek6Ki0VDjDkgl5k3Aw+fJ8V+HY2hBkdTaewGrnc6N0XgCLuLApOAnAuVQkty
-	 M5mxpw0SrAlVHGnfy4GWesXUlDFTepS3+dQwsv5/QOl9EZj/CrKoUfCNkKSExvHOiePim
-	 X0Is2xmy0R+aY84hEIdTO40twQIFWv9qXK4mlxKWunW/mcCPCdiXkRFkOnJi5+teJ0S8P
-	 bFQqCL01xD1YvrlA3LSUD6gWPMnAeAs7XCSdsBeCVRwiOZA7F06yvbZnitSrJFiq5lw==
+	t=1795231502;
+	b=vtxe+9d8sN3GYujw2f4igrrXgZ6+4cY8kHE/9AM8HvQoHCj0gla1YctnvJ6f3lFC0bFx
+	 99zo9jIzIwVXTpg6MbL9rVazZ7osGTQc5eyB5jVfOZr10W9xhZUdr9ZLzqrfWXVXai/XK
+	 vX8Z2EgjZqMhwPbmyZJyzVbiZUgaofPefe9lQNEQ2V6GFpYynqWwbPR0yU44HA53CWPf4
+	 lql2G5Nb7DXP/QF9iHck2HByllhfJAZwLQI9uipmyxVXQtZVd9EVNCPQVs1R99QVvSQj4
+	 uze0rOUTzg+Lj+ZDLUijewre0DzfBGC/qVoD4FuLoYwyZeDC6UxtqmXvFmNWsV9GHhQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795231506;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795231502;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding;
-	bh=IEi+AatW8creQi+GveL59vc5E0ntLQggVbochSSnoRc=;
-	b=3KMpwK1E3YPhzOSUYa25UnM35mbFNJd9FFF7Q26BBqamCS+bNE+gU4M/X0bHk1t+WoxK
-	 FKmLP6tnNBsG21yTy06Lrz5fYVRQ/G6jbjf0Dfh2s9kn22IjAqq5Eqd0n27smOyhZcvet
-	 R61GZvJ4Nw+316uQ/NwwmLwz23MZ7R7q+EWcddwmHFdiTPPcrKi+D3hYZxuz+Z+jYT/v0
-	 nyIUsEOz8ZVH19r/+uxgjvvS3Pmxj52gvmkS2qmgge0spQD9GeF0XPcVNkmvVb8mDYkG7
-	 Qu+kpv5GcZ9Jv0aAU1nhq9hxd6fOqvDqdkv0JzUlpPcDWolNTHDOlb73REr+mjAVD9w==
+	bh=lvSyLytB5SwO0LPvkN3MPCaXDUFv1bn9tN9WJbt8r6Q=;
+	b=uGmHf7HZ6N2qOdIhiUK0hZDlnUSrZEyAzCMrSX062KHN1VpCbldoLPCZzCOdL8GfBjgJ
+	 bOW0enWslM0fpelBfkM7d7TrWc9/z0V7/w0mwYVTW6hxCgk2Qfzj9JQEJqLWh6SiGgR3Z
+	 JFkghamkPVZoMBM9Cs5yKd97b0JAtmA/ay3CHbUFJyKUR01AZhFdj8WBEKHjzDT/FnK7s
+	 d6IHVxY/XTXNnblBnDuwJSAlRw8yEXzq65zMqJXow8wXYNud29EoXnyoo5dojkmovMyOj
+	 KXqWoeOTIszlpqlAIPJNGre3WImNl0gGsDkM+JPl7B/EROpqUuvdU9neslITT1K+hZA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Fw3J7XYG;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Hsisy7x6;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED33460A2612;
-	Sat, 21 Nov 2026 03:25:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A84C4606A338;
+	Sat, 21 Nov 2026 03:25:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Fw3J7XYG
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 308161F000C6;
-	Sat, 21 Nov 2026 03:25:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Hsisy7x6
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 81B841F000C4;
+	Sat, 21 Nov 2026 03:25:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795231505;
-	bh=IEi+AatW8creQi+GveL59vc5E0ntLQggVbochSSnoRc=;
+	s=k20260515; t=1795231502;
+	bh=lvSyLytB5SwO0LPvkN3MPCaXDUFv1bn9tN9WJbt8r6Q=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=Fw3J7XYG/YcmjDlBYwy8FNi7OJwZY6j34Hf4b2LXcTwa0eGPKipryluuHjFxqEO3j
-	 joR2cEJ5eeKlvc/jWSFDFeZloQgv/LNRjBewmSVbop5uBUNGr1bA3BfFu311YOxkjr
-	 9p5bio7qcJdWD80XErD0FpXccPaKIHVVLc7T02PYTajZon1JK8C6vbefyr5A0CuuRz
-	 WTJHXLDOD0xI+z1q76qa/yC/PgOkN/xYLrKiAgH1UWdZTcgnpX5hMi7MFQwLxkQLc0
-	 EmEcMpTLcSH9WZdj0s0jIWZEVv988t6lxGaOm3RY1h89E0nMjmg6dmquqSpe+EY3U7
-	 pok5P4rrOWp+Q==
+	b=Hsisy7x69QPQ4mQwO4vYWpJz+wIDoJQ4ef4aQSyHktC3aEINhK04Te27z1g0G7Kp7
+	 8XMVIWb+aMqntPnuq6w+93RPo0FaYsEFZcrZLhkKWCgcR618edK4Df/UQBzjeJhuEg
+	 wgzEkk3n/AnrJUzegdazauo1dkdkUhQsiHLPue2CcgzsdjH3r9yEw3uUtOF8jrEXpU
+	 +o2WWIKctUmF5fRDw1utuoYTb9q3X9R4+wNn0bV914HIcryTVHL4gyfP6i8N6qck8y
+	 aOxTo8+oob+szDQC6kWDHcyGTZitotQftopsxrJMesS+YjUATveKtb7ZmSe42gbb/A
+	 IaNTT3YU2qrRA==
 From: "Martin K. Petersen (Oracle)" <mkp@kernel.org>
-To: linux-scsi@vger.kernel.org,
-	suganath-prabu.subramani@broadcom.com,
-	sreekanth.reddy@broadcom.com,
-	ranjan.kumar@broadcom.com,
-	sathya.prakash@broadcom.com,
-	Weibin Liu <liuwb@xiaopeng.com>
+To: Ciro Iriarte <ciro.iriarte+software@gmail.com>
 Cc: "Martin K . Petersen" <mkp@kernel.org>,
+	target-devel@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	James.Bottomley@HansenPartnership.com,
-	MPT-FusionLinux.pdl@broadcom.com,
-	stable@vger.kernel.org,
-	zhugl3@xiaopeng.com
-Subject: Re: [PATCH v2] scsi: mpt3sas: validate data_out size before SMP link-reset check
-Date: Fri, 20 Nov 2026 22:24:51 -0500
-Message-ID: <179523145641.420187.8741773838840772742.b4-ty@b4>
+	stable@vger.kernel.org
+Subject: Re: [PATCH v2] scsi: target: compare all six ISID bytes when identifying a nexus
+Date: Fri, 20 Nov 2026 22:24:49 -0500
+Message-ID: <179523145636.420187.17732155640521575769.b4-ty@b4>
 X-Mailer: git-send-email 2.56.1
-In-Reply-To: <20261029073316.4188569-1-liuwb@xiaopeng.com>
-References: <20261029073316.4188569-1-liuwb@xiaopeng.com>
+In-Reply-To: <8b1ac7d9-b0e4-42ac-b8a2-c4c70cccdddc@gmail.com>
+References: <8b1ac7d9-b0e4-42ac-b8a2-c4c70cccdddc@gmail.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -71,21 +65,21 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 
-On Thu, 29 Oct 2026 15:33:16 +0800, Weibin Liu wrote:
+On Mon, 09 Nov 2026 11:31:01 -0300, Ciro Iriarte wrote:
 
-> _ctl_do_mpt_command() handles MPI2_FUNCTION_SMP_PASSTHROUGH by reading
-> data[1] and data[10] of the data_out buffer to detect SMP link-reset
-> requests. The non-IMMEDIATE path sets data = data_out after checking only
-> for a NULL pointer, so a payload shorter than 11 bytes can read past the
-> end of the buffer, and out-of-bounds bytes can unexpectedly set
-> ioc_link_reset_in_progress and ignore_loginfos.
+> lio_sess_get_initiator_sid() reports the ISID as twelve hex digits, and
+> iSCSI TransportIDs carry the same digits. __transport_register_session(),
+> __core_scsi3_do_alloc_registration() and
+> core_scsi3_alloc_aptpl_registration() turn that text into
+> sess_bin_isid and pr_reg_bin_isid with get_unaligned_be64(), which takes
+> the first eight characters, i.e. the first four ISID bytes.
 > 
 > [...]
 
 Applied to 7.4/scsi-fixes, thanks!
 
-[1/1] scsi: mpt3sas: validate data_out size before SMP link-reset check
-      https://git.kernel.org/mkp/scsi/c/efd68f17acca
+[1/1] scsi: target: compare all six ISID bytes when identifying a nexus
+      https://git.kernel.org/mkp/scsi/c/fb8fd1da808f
 
 -- 
 Martin K. Petersen
