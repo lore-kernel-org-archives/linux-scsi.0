@@ -1,87 +1,87 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.221.41
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.221.43
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795285028;
-	b=QIfkSsYePy8rjq1hWs2GEo3H9+Jx3plaJR3uslZku55DwTREu4bMdWM6Pw8mgMY7Kl5A
-	 ibnv6lxwkS6HI+mBXi0KxrfYjC3UjHgT0RJ1JN1t+CATDiTFAK3di09gWbPfgCeDtKujd
-	 ytGcjYFOlkGZ722XX1VMn0GpovzU3zvnPrW6lC7WFB4antpHbebrDgPvgaH+oxT6ocBJV
-	 yZfQKXoZUgKfpkoL0dh6cZxerSMIHyU5n73vT5dx4mEQaQzrryKskRv1YsofLeNJLBVw1
-	 vrQIAlIub8toyEKYrqYinvyncOWbqunv6dz20EauWF3GC1twbaz+UhjSPrh8huJp4cA==
+	t=1795285045;
+	b=jrUsqjjvtkWz23K//kqG9dbfmzP80omlCenxJzYtH/rV2fNiUUQFUZfUYdEhqEiPqtwT
+	 mAP80L2l9dEbBwej1Wrf2VKVR0G27q85IgVdPN8deBzRXl3w/jn6LhDK6G6daZ7U7lNdE
+	 XIAY1iX/pr+FoEj7JsR9RLaH5Ey2wgGQCOQJyLbCB7ho7lfVq0P1MikdORgBdGpRUbO4H
+	 DiR4niuwAK62tkyMv3apTfDdFc+0vlLnb6mBsb92h8Om4d2mq/PteLeTD+sWVpjEDbg+g
+	 Qa3hwg5/48qfInD3DNXnesjSLQuX2YRz3KFB/NYnPQ65F6wug6/fhIVqr4BWwxObAlw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795285028;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795285045;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:Content-Type:
 	 Message-ID:Date:MIME-Version:User-Agent:To:Cc:Subject:
 	 Content-Language:From;
-	bh=U2/R4oItURgXa9Ds0caodz4mith/I0WZ5qOV8YuiO08=;
-	b=wlIQ+gsgqDy0CKeLDVjhY1VTJOM7ZHhQwp9W9mrFicfcrU/5bf3y8UmgNn6VxjZPzHzG
-	 T1uqSlIO8adpil/pOQtMeobH7OvfSyjXJ9SwuvQTAq0mSeuqdY4bp2sSLBzVd/ZeyyDAr
-	 oz66cQub8L7LW37oL6r0GuLLm0oujevEGn7Pv1v4wMzwS5Lwg2kCkhtSQQ9OLLCfyrtzc
-	 IvDl2X0MXTXWE5p+fPTdez8v0IBlTjL1BJn/nCSAPlUVgkKsqyF/LzmE085Jqw5q/6W2I
-	 ZnsgykmOYxGDyw5BypgcitivLFRozKAwKkLQWk0AcypfCnUKZnA2KGIdtjbBlhcR0bQ==
+	bh=qwXkqyiU+yoQgtmmrkAQzKkW/uJElaU62Az8qMeAHag=;
+	b=c3JgidjZ0hwQ+TwbYOrpjDOrBsi9+9TXfDooKuo1CkOqgZ9GTiSp0WhIsE4yWUobFfPh
+	 O+DtD53YCHGPdZcnwPrAyex6aPzRZuht14mMGw4k2tzjW8z3Fpv/QyCamM6yqBeXV0IGE
+	 /NdSTyh80QzMPFB/YYxLFwIO4axbgFUxXIp1pUyncHef26SZtnmytrRqsOO0VdC4CDhER
+	 gahU29Y2j7g/4MoJIlggA4AyaSMc3IX4xuW8cN8tZOEyAOaaQUm8qPdzRor17+7E51YFz
+	 kyG7NsPcwUyURAVHbO11dX8ssMwqp2/xUEu25tUPi/t7sPrWXZQ0/2wSWThprOlsrDg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=z0LzVgDA;
-	arc=none smtp.remote-ip=209.85.221.41
-Received: from mail-wr1-f41.google.com (mail-wr1-f41.google.com [209.85.221.41])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=JDPpGBen;
+	arc=none smtp.remote-ip=209.85.221.43
+Received: from mail-wr1-f43.google.com (mail-wr1-f43.google.com [209.85.221.43])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A5D8D606A320
-	for <linux-scsi@vger.kernel.org>; Sat, 21 Nov 2026 18:17:07 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A5D8D606A320
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1B0F606A320
+	for <linux-scsi@vger.kernel.org>; Sat, 21 Nov 2026 18:17:24 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A1B0F606A320
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=z0LzVgDA
-Received: by mail-wr1-f41.google.com with SMTP id ffacd0b85a97d-48e47347279so1098170f8f.1
-        for <linux-scsi@vger.kernel.org>; Sat, 21 Nov 2026 10:17:07 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=JDPpGBen
+Received: by mail-wr1-f43.google.com with SMTP id ffacd0b85a97d-498f5fa5103so1130405f8f.2
+        for <linux-scsi@vger.kernel.org>; Sat, 21 Nov 2026 10:17:24 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1795285026; x=1795889826; darn=vger.kernel.org;
+        d=gmail.com; s=20260707; t=1795285043; x=1795889843; darn=vger.kernel.org;
         h=from:content-language:subject:cc:to:user-agent:mime-version:date
          :message-id:content-type:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=U2/R4oItURgXa9Ds0caodz4mith/I0WZ5qOV8YuiO08=;
-        b=z0LzVgDA5XewSljhdhsrpgZ4zsUnFbC4oSEYjTQLNUMx0NqMgvIWBxQ8XbuLHbgMiY
-         rZf8ySHsZTorPGCYrm1fRZ//PNlvqSVsmUnx9stlnfBP6rvp2VVqSSc+tuxw3I0oShdV
-         8q5NpIMjM1Y4bUu/sVI4/XHJEDqqtql08Oik4ZCSiflMua2M7SBzDngyOviwo5DS8H+Z
-         vBEZD4VHn7OwztgQ22AYdAvCekdz4RjAqqYywtd/AUzs//1ZdW8ekPwrpsHlMPDUIXLV
-         nFf+UTlZhUB9yO8C3JFQNoGljs0Oa+7MZtF8Ei07Q/dq+fJxhmsTvu4Poti7O54HhoqH
-         VEUA==
+        bh=qwXkqyiU+yoQgtmmrkAQzKkW/uJElaU62Az8qMeAHag=;
+        b=JDPpGBenukAAf9qdt9Pvei5+TIDb/s3lklE+s9z43lloGQs2/X4f7eAswU2z52Z24E
+         MLyg3bVB8Yrt6gBYeqDxzH26PTCp4fDOWX7cvUxmkvdTyvUzMg17cQvXYso2jh4oIzLf
+         vJTekIYL0RPrBxhYcwLc9SKgSp+UrfoC8lC22p8jpA3eBhx5QEi4anokSMMIasNDjuEU
+         MwlGppCPGiWLvZyx2hKMRDvyzZ3m8jCl5CS3bztAI8QSRVpdN3GIrwEdORj++9OWTDxR
+         h6Um9ZhE7j3wpfaCvg/C0rl+lRzKb7zAdzhNWQlQffR7LuvpAs047R88EmqW/2Qugy2m
+         qsug==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795285026; x=1795889826;
+        d=1e100.net; s=20260707; t=1795285043; x=1795889843;
         h=from:content-language:subject:cc:to:user-agent:mime-version:date
          :message-id:content-type:x-gm-gg:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to:content-type;
-        bh=U2/R4oItURgXa9Ds0caodz4mith/I0WZ5qOV8YuiO08=;
-        b=gamMyj6uBXeQLmNS34BHlB5LbiaD+kloQ+gGSGU7q0lE5eQw9SqxwBOLMohVuQP7JD
-         s0Wi8elBR1ZKncZtuxdTTAIT0ymbLusSecYKLe2uQmA7LnmFVOBs1MH9OofknBJxJ7Bk
-         LdV2UnueuZF5algIcMbeqQUlzohINX5uyVZRMygJNgWv4E1JiPDkttR3xmUjeeyIF3RI
-         FPukWP8QBOOwIz5sNtw0GkU/9j03+xKCLWXF6lolkHDL2XsxvZ1VHqPMI1xXdxTR/G1v
-         RqRPblW4Wjqvspt/AIqQhk4YJc27ejeFzY/0MNMCIvdno+44Jqc1ewRI1nnRpkxUvT9v
-         Qplg==
-X-Gm-Message-State: APuU4Z+59tmBhfmxdbeMU1M0E9Awoob8/4N9rZjogqBZEHOJpmr7UHOc
-	gTeTPdq4icF08NcZnzTPMPzVaelSt5a1wwGd8RrRfECN/8aviFLrVN+mj9U/+TGVZZg=
-X-Gm-Gg: AZFdTZcwI9wCq2x1zJWhYsm3/IMk8BBBZAZzJAdaqhtLPdcOnt8i34vtQaETQEZmWTV
-	FbHrFJUIpQYfxUT7bqJRWI2AUd+TkcfNvuTigSfX8nGzZtYlApq6lVaAApH6B76divh+TtMiq2F
-	FN0i+wi4WjIZGAwU6h9vNPcPITEtQqEsRZUo7LskagTR8WSN6WeB21bVeCcyn+VZzyEB6EmE9Hh
-	+aT/i/lJ5BLLLkxBgYH+E600SmZMF+1YcHJoJqAfbMGHWuKJDzsn9jqn0q25U36G9Mjvgpg3INx
-	kfKSmHot4CTKBGu9zzuzATeg+KpDMuChmDMfOXm+MXqDR98fAbQ7El2e9r1fqc49aFblJk/KE+r
-	BX9t2pReDmuuZzB3EblohJjJb12Ua0932fkC4dO5uzWNJy8vK6eVmT7F8wqK42dWiFj10fyeaa9
-	yaeJQzMzoT7jwMNs8oV7yd1ylNUZAp2liBd3uOnn5HCas6Slxvgaljl5xxwyCXyR2Mk0oZuMvn3
-	h5Lmuzz9thxc+4bkcdv7AiwyIcTl6zqdFbumKdi1ZMbMq98Ruf3vr+8qSjFjVRxKXgvTEDcFNkm
-	pND1jWuGt4hUiOM2cpd9/jN3udxTsYOmS1dLMyyAXTwzW7sU/9qmoqlemPUNgDtzwWgE6o1RYhn
-	tE6bdRh5wg+wDJygtTJqgd00ssjtRvaHqqJLytEhqR8g3DMVGLiM0FQWWLxq/bNOCcicndlKUIi
-	SAd2JpQSzMeRvg3jsCoCqyRSMccfxaarUF4poWTSFCQJ2Pes8FtiujY2xFcA==
-X-Received: by 2002:a05:600c:4e0d:b0:4ab:e27d:e241 with SMTP id 5b1f17b1804b1-4bb88922c6amr140401635e9.15.1795285025907;
-        Sat, 21 Nov 2026 10:17:05 -0800 (PST)
+        bh=qwXkqyiU+yoQgtmmrkAQzKkW/uJElaU62Az8qMeAHag=;
+        b=WQJMNwlFqehsVX7GskZMoFpa/vYdnwk4jHozAWIeTFjd7ViIDucqKgeCaNTYoXTIIe
+         JgcHjom03fCcFSuZQ1+jl1WR4h33hIF4QzpSGr8MgLIJKHrSv3fMoGoU1XpB8ZRRo5FS
+         WkDj6HgxkCErxp1YofEzWW7NrHaALamSUN0N3pMoCwRUihVzVA1ectVQbnRKFxq6ye0Y
+         W5B+6hZdZ+0bFVKSkDmJaAaiB9XLvRjLkKc/tdkCO1tFB0PYVE4d+bQJ4mjxllR2H5ar
+         DznPVLvo7kA0nC9sR5JtvgY81oIzu6whMpezZprWlE49kcB1E5iUPmi6JqKWSMlEIYUH
+         UK2Q==
+X-Gm-Message-State: APuU4Z+WdgQJiS0+L6+K7ezwYgeeg8YbIBa4EPfRnw4L65DRerB3TJWn
+	1Kl6kX3Ybf8FhSDiZWpMXW/N+02EnidycBULeOvGfvQ0kMzPXJAZsmFKO39K9m7ATNk=
+X-Gm-Gg: AZFdTZdTidTvDnKdqJFNsPtqxHp86voijguKDj+mDrNUWsQh1ClZ3P6RRb22M8ouwB6
+	sMB66yAu7hcrYINypHjeopmRq1Op8r5mcOissX/fMoaGfHnbj0Wrjsn2i71u7OicQ38WLWbWhNL
+	/kBEvA9qPffQytDmwrq63vrMLz95iDz4OnmsCkPegE50yBHWGZY9T5pUZQ14RLi8co+9QSUlPBT
+	3VdkBSvBLryW9mB1C5KGpJXOwlYO3xVwHdLK5sA1+h1ibE6wOisfzcO+ri4whA3kupse86eRESZ
+	r6vVykZLe4NfS2dQY1tvPxX1JgrLaHnx6Xr/qV9lafU8WDsZsGCsal0qwJr8VJodeGHs3yNs6vf
+	7XiOFKFUBfynvlESBAyeCm1U9s4e0pIuiAe4VXHkAWWEXWZmjyGZabC4bMvpS6HEs1g1yg4PlB1
+	9YrrDS6sj1oqet+5M9nUNWNMsY/xZAXUGx06ZKrgjVKCFi3jptVDYWV3ReMV52v74mvqBnBBZBW
+	xxAxdUrN7TRLeLU1G7GuicxLRRjwSY6vTAnSakG015Szjmk6SVZQ3aXQhrcR1bVg3IsyjnAjlou
+	caBbMKbHSo/zeK+G3Xo75BqA+cHkulVYJOQao+/9HUiOIiywessmDVysERo1WWfi6lEs+uNslB1
+	bW0yVpmphfz3OnI+gwBl3VFU6u6fuuOefHTzrZmL+GJYrJmktswD9zaRqxE3C/ZQJl6+adQDjkF
+	sgFoI9ThTHySR9ni1aLtRwWJIckmN0U/E7w0jm
+X-Received: by 2002:a05:600c:b90:b0:4a7:76fa:87e9 with SMTP id 5b1f17b1804b1-4bb8892cb02mr146679365e9.21.1795285043033;
+        Sat, 21 Nov 2026 10:17:23 -0800 (PST)
 Received: from ?IPV6:2a02:1812:1423:2e00:b41c:537d:f8c3:65e5? (2a02-1812-1423-2e00-b41c-537d-f8c3-65e5.ip6.access.telenet.be. [2a02:1812:1423:2e00:b41c:537d:f8c3:65e5])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4bb906640a2sm60891905e9.0.2026.11.21.10.17.05
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4ab6c61f558sm12725409f8f.58.2026.11.21.10.17.21
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 21 Nov 2026 10:17:05 -0800 (PST)
-Content-Type: multipart/mixed; boundary="------------Eh2WAXNAWG7zOqoxfuI0cZjQ"
-Message-ID: <6785b8f2-e089-4e02-848d-6c3327f67750@gmail.com>
-Date: Sat, 21 Nov 2026 19:17:05 +0100
+        Sat, 21 Nov 2026 10:17:21 -0800 (PST)
+Content-Type: multipart/mixed; boundary="------------PKOWGpRVIkmyxRiLisElPzAI"
+Message-ID: <5a5d82f4-32c9-43f5-8ef0-c82fe29cb7ef@gmail.com>
+Date: Sat, 21 Nov 2026 19:17:22 +0100
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -94,60 +94,73 @@ MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
 To: mkp@kernel.org, James.Bottomley@HansenPartnership.com
 Cc: linux-scsi@vger.kernel.org
-Subject: scsi: scsi_report_lun_scan() retry length wraps to 0..7 for a list
- length near 2^32
+Subject: scsi: scsi_vpd_lun_id() reads designators past the end of VPD page
+ 0x83
 Content-Language: en-US
 From: Aymen T <atijari00@gmail.com>
 
 This is a multi-part message in MIME format.
---------------Eh2WAXNAWG7zOqoxfuI0cZjQ
+--------------PKOWGpRVIkmyxRiLisElPzAI
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 Hi Martin, James,
 
-When the REPORT LUNS reply says the list is longer than the buffer,
-scsi_report_lun_scan() retries with a bigger one:
+scsi_vpd_lun_id() walks the designators in VPD page 0x83 checking only
+that each one starts inside the page:
 
-    if (get_unaligned_be32(lun_data->scsi_lun) +
-        sizeof(struct scsi_lun) > length) {
-            length = get_unaligned_be32(lun_data->scsi_lun) +
-                     sizeof(struct scsi_lun);
-            kfree(lun_data);
-            goto retry;
-    }
+    for (d = vpd_pg83->data + 4;
+         d < vpd_pg83->data + vpd_pg83->len;
+         d += d[3] + 4) {
 
-The comparison is done in 64 bits but length is an unsigned int, so a
-list length of 0xfffffff8 gives length = 0. kmalloc(0) returns
-ZERO_SIZE_PTR, the command is sent with no buffer, and the next
-get_unaligned_be32(lun_data->scsi_lun) reads address 0x10. List
-lengths 0xfffffff9..0xffffffff give length 1..7; in my runs the scan
-retried about 34 times and then gave up.
+and then uses d[3] as the designator length. For type 8 (SCSI name
+string) it copies that many bytes:
+
+    cur_id_prio = prio;
+    cur_id_size = id_size = d[3];
+    cur_id_str = d + 4;
+    if (cur_id_size >= id_len)
+            cur_id_size = id_len - 1;
+    memcpy(id, cur_id_str, cur_id_size);
+
+id_len is PAGE_SIZE for the wwid attribute, so the clamp doesn't apply.
+A device whose page 0x83 is 8 bytes long and holds one type-8
+designator with length 255 makes the kernel copy 251 bytes from past
+the end of the kmalloc'ed struct scsi_vpd into the wwid buffer, and
+sdev_show_wwid() returns them to whoever reads
+/sys/class/scsi_device/*/device/wwid (mode 0444). The type 1/2/3 cases
+and sd_get_unique_id() walk the page the same way and use d[3] without
+checking it against the page length either.
 
 On mainline (65e4fd942f72, 7.4.0-rc3) with KASAN, in QEMU, with a
-dummy_hcd/raw_gadget UAS device whose first REPORT LUNS reply starts
-with ff ff ff f8:
+dummy_hcd/raw_gadget USB mass-storage device that returns that page,
+reading /sys/class/scsi_device/0:0:0:0/device/wwid gives:
 
-  Oops: general protection fault, probably for non-canonical address
-        0xdffffc0000000002: 0000 [#1] SMP KASAN
-  KASAN: null-ptr-deref in range [0x0000000000000010-0x0000000000000017]
-  Workqueue: async async_run_entry_fn
-  RIP: 0010:__scsi_scan_target+0x322/0x720
-   scsi_scan_host_selected+0x2c0/0x530
-   do_scan_async+0x1db/0x5d0
-   async_run_entry_fn+0x74/0x330
+  BUG: KASAN: slab-out-of-bounds in scsi_vpd_lun_id+0x385/0x6f0
+  Read of size 255 at addr ff110000034df91c by task cat/94
+   __asan_memcpy+0x25/0x60
+   scsi_vpd_lun_id+0x385/0x6f0
+   sdev_show_wwid+0x1a/0x60
+   dev_attr_show+0x4b/0x90
+   sysfs_kf_seq_show+0x2ac/0x3d0
 
-Fix: compute the new length in a u64 and refuse it if it is above a
-sane cap (or doesn't fit in unsigned int), and check that the buffer
-holds at least the 8-byte header before reading it.
+and cat returned 256 bytes (255 + newline). With designator length 0
+the read fails with -EINVAL and KASAN is quiet.
+
+Fix: stop the walk when a designator doesn't fit, e.g.
+
+    if (d + 4 + d[3] > vpd_pg83->data + vpd_pg83->len)
+            break;
+
+at the top of the loop body (same in sd_get_unique_id()).
 
 Attached: rg.c, the raw_gadget device (gcc -O1 -static -pthread -o rg
-rg.c; ./rg uas-rl-f8.cfg with dummy_hcd and raw_gadget loaded), and the
-scenario file.
+rg.c; ./rg vpd83-tail255.cfg with dummy_hcd and raw_gadget loaded), and
+the scenario files; vpd83-tail0.cfg is the length 0 case.
 
 Thanks,
 Aymen
---------------Eh2WAXNAWG7zOqoxfuI0cZjQ
+--------------PKOWGpRVIkmyxRiLisElPzAI
 Content-Type: text/plain; charset=UTF-8; name="rg.c"
 Content-Disposition: attachment; filename="rg.c"
 Content-Transfer-Encoding: base64
@@ -612,19 +625,26 @@ cHJpbnRmKHN0ZGVyciwgInJnOiBDT05ORUNUXG4iKTsgY29udGludWU7IH0KCQlpZiAoZXYu
 ZS50eXBlID09IFVTQl9SQVdfRVZFTlRfQ09OVFJPTCkgaGFuZGxlX2NvbnRyb2woKHN0cnVj
 dCB1c2JfY3RybHJlcXVlc3QgKilldi5kKTsKCQllbHNlIGZwcmludGYoc3RkZXJyLCAicmc6
 IGV2ZW50IHR5cGUgJWRcbiIsIGV2LmUudHlwZSk7Cgl9Cn0K
---------------Eh2WAXNAWG7zOqoxfuI0cZjQ
-Content-Type: text/plain; charset=UTF-8; name="uas-rl-f8.cfg"
-Content-Disposition: attachment; filename="uas-rl-f8.cfg"
+--------------PKOWGpRVIkmyxRiLisElPzAI
+Content-Type: text/plain; charset=UTF-8; name="vpd83-tail0.cfg"
+Content-Disposition: attachment; filename="vpd83-tail0.cfg"
 Content-Transfer-Encoding: base64
 
-IyBLLTE6IGhpZ2gtc3BlZWQgVUFTOyBmaXJzdCBSRVBPUlQgTFVOUyB3cmFwcyBhbGxvY2F0
-aW9uIHRvIHplcm8uCnVhcz0xCnZpZD0weDEyMzQKcGlkPTB4YTBmOApiY2Q9MHgwMTAwCm1m
-Zz1LU0xJQ0UtbWZnCnByb2Q9VUFTIFJFUE9SVCBMVU5TIEY4CnNlcj1VQVNSTEY4CiMgU1BD
-LTQgZGlyZWN0LWFjY2VzcywgcmVtb3ZhYmxlLCAzNi1ieXRlIHN0YW5kYXJkIElOUVVJUlku
-CmlucT0wMCA4MCAwNiAwMiAxZiAwMCAwMCAwMCA0YiA1MyA0YyA0OSA0MyA0NSAyMCAyMCA1
-NSA0MSA1MyAyMCA1MiA0YyAyMCA0NiAzOCAyMCAyMCAyMCAyMCAyMCAyMCAyMCAzMSAyZSAz
-MCAzMAojIEZpcnN0IHJlcGx5IGNhdXNlcyAoTCArIDgpIG1vZHVsbyAyXjMyID09IDA7IHNl
-Y29uZCBHT09EIHJlcGx5IGhhcyBubyBkYXRhLgpybDA9ZmYgZmYgZmYgZjggMDAgMDAgMDAg
-MDAKcmwxPQo=
+IyBFNCBjb250cm9sOiBzYW1lIGNvbXBsZXRlIGVpZ2h0LWJ5dGUgcGFnZSwgZGVzaWduYXRv
+ciBib2R5IGxlbmd0aCB6ZXJvLgp2aWQ9MHgxMjM0CnBpZD0weDgzMDAKYmNkPTB4MDEwMAp2
+ZW5kb3I9U2FuRGlzawptb2RlbD1DcnV6ZXIgQmxhZGUKdnBkMDA9MDAgMDAgMDAgMDEgODMK
+dnBkODM9MDAgODMgMDAgMDQgMDMgMDggMDAgMDAK
+--------------PKOWGpRVIkmyxRiLisElPzAI
+Content-Type: text/plain; charset=UTF-8; name="vpd83-tail255.cfg"
+Content-Disposition: attachment; filename="vpd83-tail255.cfg"
+Content-Transfer-Encoding: base64
 
---------------Eh2WAXNAWG7zOqoxfuI0cZjQ--
+IyBLLTI6IGF0dGFjaCBWUEQgcGFnZSAweDgzIHRocm91Z2ggdGhlIFNhbkRpc2svQ3J1emVy
+IEJsYWRlIFRSWV9WUEQgcXVpcmsuCnZpZD0weDEyMzQKcGlkPTB4ODMwMQpiY2Q9MHgwMTAw
+CnZlbmRvcj1TYW5EaXNrCm1vZGVsPUNydXplciBCbGFkZQojIFN1cHBvcnRlZC1wYWdlcyBW
+UEQgcGFnZTogb25lIHN1cHBvcnRlZCBwYWdlLCAweDgzLgp2cGQwMD0wMCAwMCAwMCAwMSA4
+MwojIERldmljZS1pZGVudGlmaWNhdGlvbiBwYWdlOiBjb21wbGV0ZSBTQ1NJLW5hbWUgZGVz
+aWduYXRvciBoZWFkZXIsIGNsYWltZWQgYm9keSAyNTUsIG5vIGJvZHkuCnZwZDgzPTAwIDgz
+IDAwIDA0IDAzIDA4IDAwIGZmCg==
+
+--------------PKOWGpRVIkmyxRiLisElPzAI--
