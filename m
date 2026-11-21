@@ -1,16 +1,16 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.103.20.92
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.103.12.27
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795249905;
-	b=rT2hPuzep8A5Owm7pu06E03/E8UaWZSlcxXvqAWtrKw9BnNwb/NgGRh4kb6HL7csEUiF
-	 5ajrSxebKP/LvlAFbPQ4GWuNXzfCpt1wpfMfMq00vcz/BlX8m7sfOMJbgHDQP+H2p0Lqd
-	 S0Szo47QYh4M+sWeUfH+kDbFybT1UyOYPNjajny2c1pAAIDW2fkK3hdwketAEQ4fVs6aq
-	 jbANYpBTdP1Viz3l11vr0a4z3LblZUQCl6wXx+psgMkmKIa0AAknjsQwTNwfaoZwLw1AI
-	 uu0BTDlaCJ2/MIfSsV7y8xsyOY0ZbXLA7+dy5xwBvfyQnsBXT/bc85i12kn3AGh+8Cw==
+	t=1795249911;
+	b=IZYm2YFn/sroOJd3JnqaRa1nArJ5eHwEZryZJ2jFMVW684aULJ0VI1p7b2tGgAlWupts
+	 SRiQy72nhyCaxoyjD97pe++lwn+9DUnUl4OkE4srGialJUgOEvJBvnQPH+TJlaUlNXyr+
+	 GWiw8SPkn9CpHj3jILubYTOzeRF83QryEwc20JNf3vr4Pg/exic8zTmNi+11UZ/M4TA3U
+	 XYD0psHa42WHuEbVLzCMiCVyMkcj5WDqVJMVTATNc3m52YbHTvc83xXgE+mfUId4XHxR2
+	 ixJ7GpaJz/KQyqVHC/0f2vDl+gZFnr4t7vh+kK2PRzKtJ+VM8spwg+P2Lmm0zRd9jPQ==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795249905;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795249911;
 	h=DMARC-Filter:DKIM-Signature:Received:Received:From:To:CC:Subject:
-	 Thread-Topic:Thread-Index:Date:Message-ID:Accept-Language:
-	 Content-Language:X-MS-Has-Attach:X-MS-TNEF-Correlator:
+	 Thread-Topic:Thread-Index:Date:Message-ID:References:In-Reply-To:
+	 Accept-Language:Content-Language:X-MS-Has-Attach:X-MS-TNEF-Correlator:
 	 x-ms-publictraffictype:x-ms-traffictypediagnostic:
 	 x-ms-office365-filtering-correlation-id:
 	 x-ms-exchange-slblob-mailprops:x-microsoft-antispam:
@@ -26,50 +26,50 @@ ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
 	 X-MS-Exchange-CrossTenant-id:
 	 X-MS-Exchange-CrossTenant-rms-persistedconsumerorg:
 	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=9hhaK+m4+JhqG3LefLs2B1Fo9ZX6tXtrncg6SPaUQ08=;
-	b=mbS8PUF8btohEOGyXdcNpFOlTZjqDjIaWNoOg4W2cmR3w3ZprTtrD7jzek6OogY7Mxw8
-	 XuvvB0eYgb8qeyKl6OgthpvMoPtGaoArxSinzspeU6/RV6k5XjE5UbcPlFci5f4Zm4K8O
-	 CDiJPxloiexXQDUUXruMpVChWHqbiOrBD1DGTsZ4nLdIPTuicAAFRkTbzz6/jwwFawIrf
-	 tkSGH7iWTnd0uMxSlIjdVc5cbwZ9+nOBWxGy409B40rcmmP80zasJ/hF47Fj7iQkrdh6Z
-	 tKs3h/59WQp6eJr1yIeHSJqMy6zvHREDBoS3sIB46iNL0290AUy2MNS52FUSbrhPDCg==
+	bh=p34vhcfddy4HPEPlI2+XOfg0t3kmffiAXjj3H3IcPBM=;
+	b=1njCqY7JIL6cP2bzrfx8qo0xO1VcVdbbK7I7bTtQZ5AiroSqdv3pRRvd/2QuzRSfRmot
+	 9qvRtUBEuX+C+LVi8psbsrOYF+hBjHg+Chi+XRbEiAwB/Z4yXxMCGDFL2PFfArvLCg/EV
+	 ChUDoqVknUIPSd4BWDz4ybqvTViwDNoZk8XCQrS3FsaXfWA0vxlF1dnJZgjgdIWiM7N2r
+	 yFEmfLcXmxHEb9aaP/MQcDJ9w7KkYAT0f6XsjxBROIF3NxSIfgbz4IoXx3AmWgKmk7O8q
+	 crSXIYr11q0bggebWPDIax35S6J0euxJsU9yGFgniLR4e8t/c5zs1R2UBU+4HvzCeyg==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=outlook.com;
 	spf=pass smtp.mailfrom=outlook.com;
-	dkim=pass header.d=outlook.com header.i=@outlook.com header.a=rsa-sha256 header.s=selector1 header.b=Pe3Is7q8;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=52.103.20.92
-Received: from CH4PR04CU002.outbound.protection.outlook.com (mail-northcentralusazolkn19013092.outbound.protection.outlook.com [52.103.20.92])
+	dkim=pass header.d=outlook.com header.i=@outlook.com header.a=rsa-sha256 header.s=selector1 header.b=bTB6aYgV;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=52.103.12.27
+Received: from BN8PR05CU002.outbound.protection.outlook.com (mail-eastus2azolkn19011027.outbound.protection.outlook.com [52.103.12.27])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADA3F606A320;
-	Sat, 21 Nov 2026 08:31:44 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org ADA3F606A320
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A224606A688;
+	Sat, 21 Nov 2026 08:31:51 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3A224606A688
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=outlook.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=outlook.com header.i=@outlook.com header.a=rsa-sha256 header.s=selector1 header.b=Pe3Is7q8
+	dkim=pass (2048-bit key, unprotected) header.d=outlook.com header.i=@outlook.com header.a=rsa-sha256 header.s=selector1 header.b=bTB6aYgV
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=JbJVfYE0bWpg6uK/RQNiZ6vD1x+d+kg4jbeVTUw8iUkM5aZt99HchuGHBsexMcvzSoQzewIMQyKaS5RA7cjmvl9KOR/HLGapMWV+xKnvAJBPdBph+o9hBhUJvuJQDP7AQe9vME9qdU2zaYYtt0obBgvVCRAOzNWvJEJlRdCH1JXsUM2R+AgJyJKAU/Pd80XLI8q4poQ3hgOo7pbkgCbKzyi8x1KLkBsPu8fFjmvfbfQUIYS/RhgcCOyFLZdwkCActMJR6qldDsrHJxQNMvXr9dA3dy/Uzb97O5Hqkhwkzysqhc6WRBHgBAvJT9n+cfHuQEG3wbYhBZGG62HEtbK/LA==
+ b=zEOcevB7CWo/IwgrY25aULxWmfQjKoNM5eC2GCIAZ/S60obz3MTifOOnKUpws650mltLLLw5DmroR21bda/GcJJT2Mj/ECIio1Smaarlz2si9j6j5sEz4DQUzBvyyOH24mHrGzQHnPRvcu5BLV1cbaZmqD8QDM1GkWoMK2FZBsLxC8ZJ3Uqf9za+z9pluBOGSoaKwGCxM+H54Tqw+wi54unD63zAd2qHCbv3jrhmnc70vH70U15hTem+fHrXBw8kPuYo0O2fLygKolzrQJ/klJDNmW96C8nlzoTxElRSIgeTSLQgpo4Xcu38ZwqaGbnhqvTy+tI+HLCKi66O3v3kZA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001; h=From:Date:Subject:Message-ID:MIME-Version;
- bh=9hhaK+m4+JhqG3LefLs2B1Fo9ZX6tXtrncg6SPaUQ08=;
- b=ld1scWnQYGbT31UVAdiap7QLj0+4WEpADIwj6f9Ag4syMriiBMFlbHtKXbTmNAGSjfqCxBEw7H1yKoeoMLSIdJaw6HUnqFllNAwiHa1Eq83Z7NPg3xwPhUPsfNOcNMYzMM5JKq/IwL3ZzDutO/8JbcdZ8ry9izp3GUmTyKPgTBgZZe3Mk6qNs7fIDFlZvwvWB5fVOwxxJqXDHVpdDIDuIjJv7X6b3fcs6FEeVZGuzgPNGEql2MkSVSezFbo41UzyZmDzbZdAdAp9xJZAlgIEoMq3oPp2jT/VayKm3Ftai4LtdDY6FvcKI52WPxu2Wzh2Va6uTW7gSHyymokLa09WHg==
+ bh=p34vhcfddy4HPEPlI2+XOfg0t3kmffiAXjj3H3IcPBM=;
+ b=CN26JUFeZaNWsWADNTQntqjjpi7A8CGwBLxfD5C1lXwQhOYcDviC55K8gCRWK7+SyI6+dSRIZ5VMaGpoQgFkbAxtf1Jao8U7F0L1OF1x3yibFlwfH1WqprL8qbGXG6cLa7cSEVQBy6vhWi8WvEnq0Q63tQ1dgzebFSsnSx3VvLzfZrGLtSl9y+PQpMgWkbBpFWC9NtoMiXr0pcqMpXgVyY15IoxaIMsd9g8L3z05CUsvsNP9d9FlEmIFsobSUAj1QtlBSvg33dZGfSGgQBRjLupKAr1TrkVtuBAAyyC/Z9ZP+0Na8ZStS8FRxMez/DwOpDsNM3PUGxHeKu2Umsiylg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
  dkim=none; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=outlook.com;
  s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=9hhaK+m4+JhqG3LefLs2B1Fo9ZX6tXtrncg6SPaUQ08=;
- b=Pe3Is7q8ShgtpeTLkOseoYRfRbMGWJK8/2fMyUmSZ2vRJK6G2asUkAnRHRswsz+Zau7uOaDCoSL3H9BiFVW8/Yt983qGi0odOXoMzADIT2egfnd24bc4Y0qfheU3MLVMiAdwZQi1K7o9sBz9CtIZia1/V+Tno1lt0BF7a2D8nUARDD17Bx0+aJIi3GOSAEc3cGNVpEwJxXNGWL6kPRYwMo03BQImTKUsbcbshCuwYK/BcrNJObQ2mNOKoFLf+FWF9E8s8PBaQXpfnFYWeJ74LwWcgqw+y7nQnXFbvk/s6/e7yHRqRsmT/SFQqfaJbZUu5QOEerS22yRmcNHxWfqpKQ==
+ bh=p34vhcfddy4HPEPlI2+XOfg0t3kmffiAXjj3H3IcPBM=;
+ b=bTB6aYgV/aIoDd3oW+050pk2rFajeGD4qFTLJfXbbljdE6rRqGfXWzQb8ZIkecJ2VfatXMCXHadXfd+XmiDxG4Qof9jv/MFbij/w2qP5T7rt3qtKZnH2vOBdj3BUz/6R7Yy5DpFFM10bEhqn7DhglqmkiyA5DzlVW+jcxIDxyBhiMpgNTwFDAKsrSuaZpypfGd5ya2mCeLrDfYq7o6kHwGENJHFec4LQCdApUo4BZHATzrCXBR9StJoW6RkOBxEuKYquJc+/gJA38bmz3lXZeHiNJYUP13uBAhDi+ynRqpPRSXkaLAo1q78xwf4xe/QI6+2PD+Ry2gbqVq3LkavWgg==
 Received: from BN6PR05MB3281.namprd05.prod.outlook.com (2603:10b6:405:40::35)
  by SJ0PR05MB7838.namprd05.prod.outlook.com (2603:10b6:a03:2aa::10) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.639.12; Sat, 21 Nov
- 2026 08:31:41 +0000
+ 2026 08:31:47 +0000
 Received: from BN6PR05MB3281.namprd05.prod.outlook.com
  ([fe80::5b9b:67c7:5397:c42]) by BN6PR05MB3281.namprd05.prod.outlook.com
  ([fe80::5b9b:67c7:5397:c42%5]) with mapi id 15.21.0639.011; Sat, 21 Nov 2026
- 08:31:41 +0000
+ 08:31:47 +0000
 From: Yingjie Wang <x-professor@outlook.com>
 To: "Martin K. Petersen" <mkp@kernel.org>, Jens Axboe <axboe@kernel.dk>
 CC: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
@@ -79,73 +79,73 @@ CC: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
 	<linux-kernel@vger.kernel.org>, FUJITA Tomonori
 	<fujita.tomonori@lab.ntt.co.jp>, FUJITA Tomonori <fujita.tomonori@gmail.com>,
 	"linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
-Subject: [PATCH v5 0/2] scsi: bsg: Release io_uring requests from end-I/O
-Thread-Topic: [PATCH v5 0/2] scsi: bsg: Release io_uring requests from end-I/O
-Thread-Index: AQHdeZK7udGfR+FNIUyr+P+yp9nEKQ==
-Date: Sat, 21 Nov 2026 08:31:41 +0000
-Message-ID: <scsi-pool-v5.1795249365940711260.0.x-professor@outlook.com>
+Subject: [PATCH v5 2/2] scsi: bsg: Release io_uring requests from end-I/O
+Thread-Topic: [PATCH v5 2/2] scsi: bsg: Release io_uring requests from end-I/O
+Thread-Index: AQHdeZK/aVRUIRXL3Eyja3cmKC99Eg==
+Date: Sat, 21 Nov 2026 08:31:47 +0000
+Message-ID: <scsi-pool-v5.1795249365940711260.2.x-professor@outlook.com>
+References: <scsi-pool-v5.1795249365940711260.0.x-professor@outlook.com>
+In-Reply-To: <scsi-pool-v5.1795249365940711260.0.x-professor@outlook.com>
 Accept-Language: en-US, zh-CN
 Content-Language: en-US
 X-MS-Has-Attach:
 X-MS-TNEF-Correlator:
 x-ms-publictraffictype: Email
 x-ms-traffictypediagnostic: BN6PR05MB3281:EE_|SJ0PR05MB7838:EE_
-x-ms-office365-filtering-correlation-id: 96771470-d745-4048-858f-08df47a9de6e
+x-ms-office365-filtering-correlation-id: 1989a156-13a8-41fb-e5fa-08df47a9e1c4
 x-ms-exchange-slblob-mailprops:
- iS5pQZgsAQDZd5pLvsexcGXRgbvG27NWE/23ZhfMaHmrqer6NrAclKSSbOIDFX3GPdzCwViZb4skAE8M0mjLFxwlZC9e7Jb4jMQ7cXkKySlUQjWdvuNrahPf1nHshgzagDRx+71cSyS0M6Fm3IPOx0GSPG/pWyrLAOLiCQmGz0NSSzwQfq8azTZxLnk5oo5sInFv4LYF/SnyBAt4vaZ1nntYTinakewRffGZIbln6x6ok4y4MbcMp3Z4nsrOVXUsGYmfAlyqjBdxDO0GrXqr81Ze3KfSXiaGxMTfQS1tJD3+bL2e8qGrXx9Nsa1dYWrJwm1vwhp3RtGf5r1TQUuV4tEMkxoqfvgNmo4yHuEQ62d4CJDwpeJUn7A7PhXQ17q9shygBRf23iDYAgm3hb51io1bnATgXcGNK8FrQwYR4HrJN+fxS9Vb9EGOYZF/S1MUeMcjsAGPiIVAKNJnlNUZa1anjp3CpPLjMn6pr/tFprGO03/R/0VpNCtME78ehUI+5KHblbrQNBGjgT84L5oeRl+c3dFZQPGDUjasZlVUJ/rUj/2r8UHUqZFDXzglzZnGiF8i0Bf64LXDI/KPt1EK/4pUAvsKChjA003nvxBJhBZ5zQtAxuVMsBmOIxGl8w95Se9OSViLJ7zYOcaTYYL9HcBfPriYFVhssYD0wPdSsxSCaMadZpIpdDR5F8idMqBbZ/Pqr4+lOCdxOhkLYFsW1QPWdohkuZVvUUU9wvG2pXkXzHfgadXIA8Vf+FOSGI5JMSv2klhg65rjX0WAgccF82O6779P+6XUnt5OCnMIK79brLcqCm26cQ2K5NdCPhOA
+ Cq7lScuPrnrlC5lHdFGci+YUsdS3F/CIfto/bQICpMENGU2O+JVvkEXC7yxCyzyuJB7dkhoj20O6+REc3wKp6Az7NNYHeSfCqB6bEBqtJjcDSX/O+IQ2qvBIdCXXYEZQ78YIbpscvtw6Ie8M8LSNaihXOTQER5g+QSiQjnn2mMDzZMLMPR8srtIVgxF05rmPFvZ/ITw+o9OIXMimDiXLK2c5Ct2yCMSQUgl2M7oovwK8iUhDRg4Nb1ugm/w02aUrzEy/qpNWIGyzP7jUIbNEeQPSUe7lTW6PVOZtTN8ZVjLh1ffwD9GrGDaStRfY7E/vxngR6o7J/aygxusTFUYfi2bCiz4aQj69EhIYV30TvlTPEuYbkN+8JxvnGv4jlVAz3+rCReF8LZcBjnrXFV4UMq17MvSJFkL3SNHhnPHCcI8aLb2E1dwvR/6TKB67YDPSgIR1bQfk+We4PDPM81c3JPbQzPZr8/BY7JKRePlDyrDYgYjuIhvOwYjvP8nV1UHIB8J6aeyBqZSb5WzHmRnQSAOnkhuZSIDkfha6tQZdhEMyqa2+zSjwC1Xsc5uTJST7XDEi9BvNA1UpxZAmLbKzt+BEzH0lxdGzjZqsIQKIOnl6jU/h3pn2USWkSM+wgSMCMTdzH41uOC7WAx869fOHLvAyHW3WxJEL9obS6BuhWXoW0CMgLF06PSqsEFAi0K2QOaoO7YEqRrR6cwQR8kECLrMwEYQdVYgxB4ItoOyoq1qdNqXeRT3oSTtfQbtOoyccUZOcAbyZkQA=
 x-microsoft-antispam:
- BCL:0;ARA:14566002|24121999003|38102599003|41001999006|22091999003|15080799012|5062599005|19110799012|4140399003|25010399006|12121999013|16041099003|8062599012|8060799015|24021099003|31061999003|440099028|3412199025|4302099013|102099032|1602099012|12091999003|10035399007|40105399003|53005399003|26121999007;
+ BCL:0;ARA:14566002|24121999003|38102599003|41001999006|22091999003|15080799012|19110799012|4140399003|25010399006|12121999013|8062599012|8060799015|16051099003|24021099003|31061999003|440099028|3412199025|102099032|12091999003|40105399003|53005399003|26121999007;
 x-microsoft-antispam-message-info:
- =?iso-8859-1?Q?8FX6EVYLDYyKFPkvlQGetKdjwss4gmQ0qF42YT7fwtPKYE1gYqneO7kCcE?=
- =?iso-8859-1?Q?H4XL35HYr4TDo+56z0BqGYv1S0B27VRfe051nc/iFaZ2fU5MVQvHqRTsPY?=
- =?iso-8859-1?Q?RfLNgqARZiUrB8Y+K95IWSItxkIMeDFm1ghU/y1ZGaiyEgYqhAqg78F4Ey?=
- =?iso-8859-1?Q?AOzZl2R/cPsf80wgW2b97R2jfm4x4g+dDnU+kYndve2h+rn2ZkTnQDMixo?=
- =?iso-8859-1?Q?0pYo/zS1ccsd9UXOX0xgtBfAokhmJAp88s4Aub69SmsFEGSj3ImbF+CqbH?=
- =?iso-8859-1?Q?c5IeJB1XICQuxnFpc3l1amKXE+GKXy75tbk/+vzaRk65sQrXL82sReXjlW?=
- =?iso-8859-1?Q?HRTRGjrm0LYxiJGj+J7Tadu5YR9JNaw+SsfdzKZO/ZXXHxJnZwlKxfVknS?=
- =?iso-8859-1?Q?gQXMTqIKAVPmIKuMKiAIIpkEJ27RI6hvX2RIvDuaga0WPvPh69IKfsxbg5?=
- =?iso-8859-1?Q?c937+pZHniu1H4AAOxE2w/W2BbBN52Ri6uuNSnYe7taruOXYhhMfNBjcJS?=
- =?iso-8859-1?Q?tLlYymcqzm6uSK8K1a42ftE8b1ijGPoOnEhncOt8MfpherwfHYnbDYSvOx?=
- =?iso-8859-1?Q?hmMIryi/dLg7bgDE7sVIiZm5f7aTzERa8Go2TAIMpNEsVXlHXSHh8fLr9/?=
- =?iso-8859-1?Q?4BhMTGX7n1qGzEdrsNxrDsDEEV+DAzTC1St3pSNSto10MlYMG0JbEZLrse?=
- =?iso-8859-1?Q?K/CehhYKuYWIVhlsr3m0e/8dY7kufpsneCB/JjbcL7Z/xp0KXXq7rsuBEv?=
- =?iso-8859-1?Q?ZQysz/MvVSXEYC8rRk2cMp4Rv+4OL9tkgingU9FmsDGOEIjD+oqAxbwhbL?=
- =?iso-8859-1?Q?AUyzD8NwOePa+bQYQJmldvZQiqKw9Cdkv9PmoYzbo7r8FrqUl0eIu1oTQ8?=
- =?iso-8859-1?Q?ws7Nu1jNxY0IIfXy7sxZWNA/vz8dLvJS/knb5hIcPK9aKJntwU1T7qmKcZ?=
- =?iso-8859-1?Q?+PBAdQrTcvGhazlffhGpfpXVe34XzXpDhd4s5hKLxfvDUGcw5SKc0Qgvsa?=
- =?iso-8859-1?Q?XAFoayc8EoH1ZRxcjhbXarpcsAIUSE/K/7tyTtPz6+2Zz+Txg2M3WEIkRq?=
- =?iso-8859-1?Q?//2/AmlINaDa/+nvnPRBe/XuHWHxr9/aygQPq0J4ypZiQTbCaorUfVqJ58?=
- =?iso-8859-1?Q?rfl6b6U5PwddUYAMVg5MQ5EcPjADOjlZcPnJ26bDM4s82yU+sqTNxRPYJt?=
- =?iso-8859-1?Q?0ICJDSkjgh87SKVLSUEihvelEswtjyk9VB1abKr34m6ILyLjKOyaiZjrkU?=
- =?iso-8859-1?Q?8UEXTtVJmTmDQvvW5Wa/ZK0aI1S+SvgITJndqpFE2iRRE1XLo1sTchJ5n7?=
- =?iso-8859-1?Q?0lhs?=
+ =?iso-8859-1?Q?VQ0Pbs2Uub4qU1yZCqHakyhjd92CU2v6YTimbjMssemu3o66GxsUVm6u3v?=
+ =?iso-8859-1?Q?hqY6bXmW8EVDGVDsy2O0dv5XH9ogyokxPH8WXr+PhY0hkBuymBNUDK7Th1?=
+ =?iso-8859-1?Q?OPVbyTjXnDZtibhaR0cgwwTjoELBlnBEuoJdzhXMrzVY0WNtXjF0bsPUWe?=
+ =?iso-8859-1?Q?Z1gH1egTHdbt1nKraavp7KFpQt++piXkRuYyJu+27erM4roiJgwFtc6aGR?=
+ =?iso-8859-1?Q?/oNNp1XXsEUJl4TNGgmc1fWmfrLl8FMRI4Z4RsBiY+HeaTIgrbtBDLIEGA?=
+ =?iso-8859-1?Q?fuew5w5yf/PEQ5nO9gulwneEiVAcoZC3W0JuWszrKyam3o4vF9oJNDPXrk?=
+ =?iso-8859-1?Q?Gtv6hZlVUt92mOUXlBwXHSVM7pghmiDcWv0We9qZiHwX9e18AeLi3rZhSA?=
+ =?iso-8859-1?Q?yh71OdXX3JagiSqxHXO/AMkpmAKkwF7Xb8lvvGIYjhvauDrAKV/Tpxm3v6?=
+ =?iso-8859-1?Q?MVV+j8TV5Ho2O0l9WLgysoRDs0uwgn2kam5VCkuX11eG43LL9uJhOzlYX2?=
+ =?iso-8859-1?Q?TwLzSFCgQIaAhYoihBeLkqqvocj5K3FkbZne+m/k1AT8MyfqBSWgSUMJOX?=
+ =?iso-8859-1?Q?B9fPdhNaIM6+7J5If3bB3r1ZAf56aCcdCAVFPQhysC82k50ueLFaWIcsZZ?=
+ =?iso-8859-1?Q?FS++0Ba0pPI1cPl2XVOVqkydZEA6z1DlijKGjteJ2OqBVnAtcydcMBW5sg?=
+ =?iso-8859-1?Q?lJ30MO74dhw4DpPnMbzHMaNVKRFUxnXoSLRaCa8xGVrLAIpzHjYVmPPdMs?=
+ =?iso-8859-1?Q?hoCu4I1isqz2V/1CBEQn0frFc4bjRr/k9tGOZM5wMh9bDmqKYFfiUi+ucJ?=
+ =?iso-8859-1?Q?PD/4PFt8ia+T+NK1bcYqESq3Ilu4fSzbYRyjdDsZ0p6Rev4d08mVTeWoMx?=
+ =?iso-8859-1?Q?ZqVOZYIB5voJD1wiUN7oWw05W0VTlvJC7xwYN/dZJP09jMG1JG+/ETVThN?=
+ =?iso-8859-1?Q?HaNfp3i4VtpAYY1pJA3R6OPEfpIc8l8vMWvrhNg6Vu+2BEX9hHcSwTvZI6?=
+ =?iso-8859-1?Q?oyHC1BpMWSqPK+CTSIhpyd8sR3r8D2AE/NSB5K8QYuD6uZ8V7e41rvG6x2?=
+ =?iso-8859-1?Q?BqXqzD4wL1TBVnyDXwBVViiiHmonYliqQaDE6TmttXtIPfClNIbYHW6jlu?=
+ =?iso-8859-1?Q?MyWqARlKpQ3SGqQixR7yizNQ6N3Alqa3AkPs3u2e0BI+HTLffxdJemB37z?=
+ =?iso-8859-1?Q?nuhmX4P9hDc9k8UWjs9MSU0Etlo4y/I89+QXVDNs4Ld9OLDZDbeekjbW?=
 x-ms-exchange-antispam-messagedata-chunkcount: 1
 x-ms-exchange-antispam-messagedata-0:
- =?iso-8859-1?Q?v0bidxpiJoJ9H9ktcmfrzofMelaVH3JMMkvPNDiN6KwzPwFuiBFWqJ1wJE?=
- =?iso-8859-1?Q?69bp0yUHneNmjtRkeYvCJj4oZiRU0do8K0nQl/WHU2VHh70C1V9SeN1CBw?=
- =?iso-8859-1?Q?Xj2CZXxbhecMQ+ePLZPFzlHDjag3OUWdoor+yhn4sYYVKKRWwtYZj856Cv?=
- =?iso-8859-1?Q?pGy67ccs874k19EilGol5ZcGdPiI5yJCKUMsr3As0YmEeVda2wWfIlKxWx?=
- =?iso-8859-1?Q?YSyQOWoSt8G+9/ogA+Eew38iRTaZyM1kxumRgTw/MkTbqsmx6bQgJwsVS6?=
- =?iso-8859-1?Q?t08oBHAnad6PFuDSmthI7wTSOvRwTV1nLFNVTNYXj7xkSOxjWhCdN9THXc?=
- =?iso-8859-1?Q?okHN1BdS9vG7NImN6rVQSvOGB7Z6ZHzUxPsr/K4R5a/gaZTAVJRL6l9Oo8?=
- =?iso-8859-1?Q?hhjcJ7T8Q5le/fFQaYhqPxCl3RODMqKVIe0c8Uti4K49onu0M9P53Ccixb?=
- =?iso-8859-1?Q?IRgyPD00Ww8spOR035/GZ6V00rsnl9qLcAcSIC0rT97ElkPGYSpwYpwSIf?=
- =?iso-8859-1?Q?LAeZtHDBWQKHNJQ8kkExqHrVCGgWP+P5ZmblvhYKYAsQZ67xg3FgXBUxoV?=
- =?iso-8859-1?Q?GIgBGWIJ6Bl+PBz7EBFZ77aOwN5b5eesfyQW2XiZh+npD4nQLwYE72zdx/?=
- =?iso-8859-1?Q?dDUBKBOEfwznA5yCRYBcBmoopuVJ8/K++76zKgKu+AuZCpAmqBL+ZStSR4?=
- =?iso-8859-1?Q?i8DWPPYrXkd8Y6kIUTnFPZbYnh5SMVeP7WIRw16SydRrB2rh66alM1PpDV?=
- =?iso-8859-1?Q?xL0U6F6JXUfiMFD5Q7Z7R1eez82K4Ia7sM5cHimQV5SL5DX5sYYvHLJIak?=
- =?iso-8859-1?Q?O8L9rmqunYTK+hWxknHN0GXguKFoxZJs55wdjzkiwaGDoUeXfrBGS1SSmN?=
- =?iso-8859-1?Q?KybhWNd4Qvte3cIByV66HIfq/j4RBCm7QADcp7WXpRcmZO4jgZlm+m9jO5?=
- =?iso-8859-1?Q?IjXhqnkRSPW6puVsPKzkOVgzsZTXT7nZFNPPovP5g9kHs+YdEomafQ7Vdf?=
- =?iso-8859-1?Q?iMBoqfqtu1GVn4BGi1y2U6v7EHDkfJTYP+flnobIo2rHaD4wUz4Wojdorx?=
- =?iso-8859-1?Q?UnYph8bZwUFeGhqzI0qoGNzpnJRnPNOh7m4CAAQ5mmbAUF45uQK8bEdxMn?=
- =?iso-8859-1?Q?Nze2Z5xfxtZv6Wr9wLTPtR9O+M3ltM5lhRB6EfXwMUjuByXGGXCuie5Reu?=
- =?iso-8859-1?Q?+HOD3w1OpgzNqCXF9AbVZrwgJ234VFvRzAVYldkZmhUb6u1yDJI5QZCl8u?=
- =?iso-8859-1?Q?dqUUelvczXsd4kXcE7Hicfl5uxkfm6G6unFqPDPReKB6AWJygi8S7EZCxT?=
- =?iso-8859-1?Q?cStwk/r1ARBwuhPz2WVFJePTRWT4uetVZnHC4C40L40Z6ki95ShlMkrQ5Z?=
- =?iso-8859-1?Q?KCkt3h4rsYJYYuzLwu1/DxtacYv1V+XM31SUzwUHExTYSD6zT065Ym3Xf7?=
- =?iso-8859-1?Q?5w0Br7Eh6yDX7Q4P?=
+ =?iso-8859-1?Q?bfcmJ9Wflm8McdX7QpQ5I+mfA4zw4Z6YGVCoct37gzVgkFwJEDO3J1F/cD?=
+ =?iso-8859-1?Q?xt9K7lQlY0ojAKjcttWGxzn+itW295chVEmUCwLEbZSNUM73WGgNgIBD8Q?=
+ =?iso-8859-1?Q?uD99554tLz7mneG/nvbCO7sNrmCD6G111OgLA11ISHUHAwU9JS9qT2dksk?=
+ =?iso-8859-1?Q?hZ2D9qQuyHp9FASbRCrfxAnhgjytMoPVv2ZLvpN+Fo4zG5z8y/n/zV0bJs?=
+ =?iso-8859-1?Q?sggSlLoJuN0bTcexuA170lYaeq+4Y9y67oySzUWFXQI4HrxgkVgQfErphx?=
+ =?iso-8859-1?Q?OVcfWm8SNUJJblfYawXyL3MpyEWw8V2seJWybW7RaLeSS7RTNRRalRqKUw?=
+ =?iso-8859-1?Q?soT7mt/X19U49GlsMWJaRBuLdasrgjS/UFkKXCPpBkmwrY1vXKjMXKDKDe?=
+ =?iso-8859-1?Q?J90XLj0sqd5XR85Tc1i31aZ3yCgOnlYr4uS342IBpEj5qGIfhsQvgEOQom?=
+ =?iso-8859-1?Q?zpVeHgIhcmwCJ6/tkiMJjVWA41xVHRTYX/iQ6R5yND6aw1ec4POVOuRADW?=
+ =?iso-8859-1?Q?H6Kt91px3dVhdYXr1LW9KqQiIU13LIQ9Xj8GQhL499/8Nw5E/14fuVBw3A?=
+ =?iso-8859-1?Q?5oeUzn3xOIJHXWYedtdg0DIpzgkWdBjY7L7/o6/RJrfIwMaDsxWDBLMgGD?=
+ =?iso-8859-1?Q?KTChPbKEFZz7OX27y/YYuh5rfcrdTak2cyXxfexlksSti3EIIGwJ82zEcR?=
+ =?iso-8859-1?Q?ypDfsXrL3l9zdoIlXyuw3MrIqth9v21F7k9JrJv+RZMdkNfGjm4opnDEv2?=
+ =?iso-8859-1?Q?kiXyRNPyevG/N273f5xUa4FTdTVCMY6Io9n8RCHBDtsYAAb4Do3NP/kU+S?=
+ =?iso-8859-1?Q?I18G/27MFt17sTb3ysPf7r9RdNiFEsxUi9yZEBnUNObOvxXlN4vjWlXnRt?=
+ =?iso-8859-1?Q?rHq6LqqbvMvFOXHA6Lu9V8ApyOscJFF9CQsnYW51hKrMpR80TV9yp+ldNw?=
+ =?iso-8859-1?Q?jKKTLF7yNoCoFGdw/yO1IZEUSlxWnWEvnZPQPon/MlKwH5cvnOTSjIQO2F?=
+ =?iso-8859-1?Q?6eN8bSc42bNWMnu0N9otgNx/2sI6a/fHuNlvwCugOFi2r2nl8g+YtL0ZGO?=
+ =?iso-8859-1?Q?KQ4e4lEglZdDSsoND697PEUmzvfsEx9P+StyFGwdv3kWqhNk4ylVCeDn7Z?=
+ =?iso-8859-1?Q?Ef0CMahJuTu6/MCEPR4O1RTSFxfB8Nx2lL/JhRUiBatBKPdZpwRzOfbT4E?=
+ =?iso-8859-1?Q?MSkk1lsnoYmUVSn3KVm3tVOw2jXUy0eMixOWkZTw44UqmZge05POExnPOX?=
+ =?iso-8859-1?Q?3S4nekIalE/P4hjA3JPzDZX+QHM9JnIX6H3RVd4nAYTWJLZQAxUqealiLs?=
+ =?iso-8859-1?Q?Kgl+KazPujfKtjt4zWgMSY1LVa91nOysNZ7BBhcNpkDxBk/NE9L+JdanyR?=
+ =?iso-8859-1?Q?0DULi7NFpagXAQ6R20ixu/Ty2CTzFaowfTHAgtGaZBRmiH0UQCPVfnovS6?=
+ =?iso-8859-1?Q?bwcnHe1pSgje/X/l?=
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -161,132 +161,252 @@ X-OriginatorOrg: outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
 X-MS-Exchange-CrossTenant-AuthSource: BN6PR05MB3281.namprd05.prod.outlook.com
 X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg: 00000000-0000-0000-0000-000000000000
-X-MS-Exchange-CrossTenant-Network-Message-Id: 96771470-d745-4048-858f-08df47a9de6e
-X-MS-Exchange-CrossTenant-originalarrivaltime: 21 Nov 2026 08:31:41.6497
+X-MS-Exchange-CrossTenant-Network-Message-Id: 1989a156-13a8-41fb-e5fa-08df47a9e1c4
+X-MS-Exchange-CrossTenant-originalarrivaltime: 21 Nov 2026 08:31:47.2159
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
 X-MS-Exchange-CrossTenant-rms-persistedconsumerorg: 00000000-0000-0000-0000-000000000000
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR05MB7838
 
-The BSG io_uring path retains completed requests until task work copies=0A=
-sense data and unmaps the data buffer. With DEFER_TASKRUN, the submitter=0A=
-may fault on memory backed by the same queue before running that work.=0A=
-If completed requests hold all the tags, neither the fault's I/O nor=0A=
-the task work can progress.=0A=
+The bsg io_uring path keeps its completed request until task work copies=0A=
+sense data and unmaps the data buffer. A DEFER_TASKRUN ring can leave=0A=
+that work pending while its task faults on memory backed by the same=0A=
+queue. If completed requests hold all available tags, the fault's I/O=0A=
+cannot proceed and the task cannot run the work which releases them.=0A=
 =0A=
-These two patches save completion state in end-I/O and release the=0A=
-request there. Task work uses the saved state, unmaps the independent=0A=
-BIO chain and completes the command. They apply on top of the four=0A=
-synchronous request-lifetime patches posted as v5:=0A=
+Save the result and bounded sense data in end-I/O, return RQ_END_IO_FREE,=
 =0A=
-https://lore.kernel.org/r/scsi-sync-v5.1795249365940711260.0.x-professor@ou=
-tlook.com=0A=
+and let task work use the saved state. The saved BIO chain holds its own=0A=
+references, which blk_rq_unmap_user() releases. Canceled task work still=0A=
+unmaps it, suppresses sense copyback, and completes with -ECANCELED.=0A=
 =0A=
-Patch 1 provides a BSG-owned pool of 64 sense buffers per device,=0A=
-allocated when its queue is registered and freed with the BSG device.=0A=
-The bitmap and 96-byte buffers use one allocation. Opening the device=0A=
-allocates no pool; transport BSG and CONFIG_IO_URING=3Dn allocate none.=0A=
-Patch 2 takes a slot before mapping user data and returns it in end-I/O=0A=
-when there is no sense data to deliver, or from task work otherwise.=0A=
+Use the bsg completion pool for sense snapshots. Only commands supplying=0A=
+a response buffer with a nonzero length take a slot. Take it before=0A=
+mapping data, because unmapping a bounced READ copies data back even=0A=
+when the command was never submitted. If no slot is available, return=0A=
+-EAGAIN; io_uring may retry a nonblocking attempt in io-wq. An io-wq=0A=
+attempt that finds the pool empty completes with -EAGAIN, requiring=0A=
+userspace to resubmit.=0A=
 =0A=
-When the pool is empty, the command fails with -EAGAIN instead of waiting.=
+Return the slot in end-I/O when no sense data needs copying, allowing=0A=
+successful commands to release it without waiting for task work. Task=0A=
+work returns any remaining slot before posting the CQE. Clear the saved=0A=
+sense length on cancellation or copy failure so the CQE does not report=0A=
+sense bytes that were not delivered.=0A=
 =0A=
-io_uring may retry a nonblocking attempt in io-wq. An io-wq attempt=0A=
-that finds the pool empty completes with -EAGAIN, requiring userspace=0A=
-to resubmit. Slots are shared across openers: one opener can retain=0A=
-all 64 with unreaped CHECK CONDITION completions, causing other openers=0A=
-to receive -EAGAIN. BSG nodes are normally accessible only to privileged=0A=
-users, and the series accepts this shared limit to avoid allocating a=0A=
-pool on every open. SG_SET_COMMAND_Q does not resize the pool.=0A=
-=0A=
-Changes in v5, following Yang Xiuwei's review and example patches:=0A=
-- Replace the per-file pool with a per-device pool and a bitmap.=0A=
-- Return buffers with no sense data in end-I/O; use irqsave locking.=0A=
-- Embed the bitmap and buffers in one allocation, remove the redundant=0A=
-  buffer-size field, and trim comments.=0A=
-- Return quietly on invalid get/put arguments while retaining range=0A=
-  checks, double-put and outstanding-buffer diagnostics.=0A=
-- Credit Yang's pool implementation with Co-developed-by and retain his=0A=
-  Signed-off-by from the posted patch.=0A=
+Fixes: 7b6d3255e7f8 ("scsi: bsg: add io_uring passthrough handler")=0A=
+Suggested-by: Yang Xiuwei <yangxiuwei@kylinos.cn>=0A=
+Cc: stable@vger.kernel.org=0A=
+Signed-off-by: Yingjie Wang <x-professor@outlook.com>=0A=
+---=0A=
+Changes in v5:=0A=
+- Use the shared per-device pool from patch 1.=0A=
+- Return the sense buffer in end-I/O when no sense data needs copying (Yang=
+).=0A=
 - Drop the unrelated multishot rejection and timeout snapshot.=0A=
-- Rebase onto synchronous v5.=0A=
+- Rebase on synchronous v5.=0A=
 =0A=
-Tested in QEMU on 9f9e0b1e5399 plus synchronous v5, with KASAN and=0A=
-lockdep. The 960 regression checks and release-order tracing passed:=0A=
-completed io_uring requests no longer remained allocated before deferred=0A=
-task work ran. Cancellation, linked commands, 256-command pool exhaustion,=
-=0A=
-64-slot recovery and concurrent use through two opens passed. A rejected=0A=
-bounced READ through a second opener left its user buffer unchanged.=0A=
-128 successful commands returned all slots before running task work.=0A=
-No KASAN or lockdep reports were observed. These tests check ordering=0A=
-and behavior; they do not reproduce a same-device page-fault deadlock.=0A=
-=0A=
-Dropping the multishot rejection restores the base kernel's flag=0A=
-handling; the tested multishot-flagged commands completed once on both=0A=
-kernels with normal, DEFER_TASKRUN and IOSQE_ASYNC submissions.=0A=
-=0A=
-Each patch passed affected-object W=3D1 builds. Final configuration checks=
-=0A=
-also covered i386, CONFIG_IO_URING=3Dn and PREEMPT_RT with SCSI=3Dm. Kernel=
-=0A=
-selftests were not run.=0A=
-=0A=
-Successful INQUIRY batches were measured on non-debug kernels, with=0A=
-three interleaved boots per variant and five rounds per boot. Both v4=0A=
-and v5 used the same synchronous-v5 base. The table shows batch time=0A=
-divided by command count, in microseconds, with a 96-byte response=0A=
-buffer supplied. Retry time is included; base has no io_uring fix.=0A=
-These timings were measured before the multishot rejection and timeout=0A=
-snapshot were dropped, and were not rerun; pool allocation, locking and=0A=
-early return are unchanged.=0A=
-=0A=
-  mode    depth   base     v4     v5=0A=
-  normal     16  1.587  1.593  1.646=0A=
-  normal     64  1.158  1.165  1.195=0A=
-  normal     96  1.066  1.231  1.165=0A=
-  defer      16  1.582  1.589  1.643=0A=
-  defer      64  1.155  1.166  1.198=0A=
-  defer      96  1.065  1.228  1.161=0A=
-=0A=
-Compared with v4, v5 increased time per command by 2.6-3.4% at depths=0A=
-16 and 64, mainly due to irqsave locking in the control measurements.=0A=
-At depth 96, early buffer return reduced -EAGAIN completions from 32 per=0A=
-batch to about 9 and reduced time per command by 5.4-5.5%. These QEMU=0A=
-measurements do not establish performance on physical SCSI hardware.=0A=
-=0A=
-Both patches retain Cc: stable. Patch 1 is a prerequisite for patch 2,=0A=
-which fixes 7b6d3255e7f8 ("scsi: bsg: add io_uring passthrough handler").=
-=0A=
-A backport needs both patches, in order, on top of synchronous patch 4/4=0A=
-("scsi: bsg: Release synchronous request before user copyback"), which=0A=
-changes the same file. Both pool patches exceed the stable rules'=0A=
-100-line limit, including context; if that rules them out, I am fine=0A=
-with dropping the tags.=0A=
-=0A=
-v4: https://lore.kernel.org/r/cover.1795016239.git.x-professor@outlook.com=
-=0A=
-Yang's pool patch:=0A=
-https://lore.kernel.org/r/20261119031751.3471968-2-yangxiuwei@kylinos.cn=0A=
-Yang's follow-up:=0A=
-https://lore.kernel.org/r/20261120021604.2648220-1-yangxiuwei@kylinos.cn=0A=
-=0A=
-Yingjie Wang (2):=0A=
-  block: bsg: add a per-device pool of uring_cmd completion buffers=0A=
-  scsi: bsg: Release io_uring requests from end-I/O=0A=
-=0A=
- block/bsg.c             | 109 ++++++++++++++++++++++++++++++++++++++++=0A=
  drivers/scsi/scsi_bsg.c | 109 +++++++++++++++++++++++++++++-----------=0A=
- include/linux/bsg.h     |   3 ++=0A=
- 3 files changed, 192 insertions(+), 29 deletions(-)=0A=
+ 1 file changed, 80 insertions(+), 29 deletions(-)=0A=
 =0A=
+diff --git a/drivers/scsi/scsi_bsg.c b/drivers/scsi/scsi_bsg.c=0A=
+index c17cad798326..d1ad956df9d6 100644=0A=
+--- a/drivers/scsi/scsi_bsg.c=0A=
++++ b/drivers/scsi/scsi_bsg.c=0A=
+@@ -16,9 +16,13 @@=0A=
+  */=0A=
+ struct scsi_bsg_uring_cmd_pdu {=0A=
+ 	struct bio *bio;		/* mapped user buffer, unmap in task work */=0A=
+-	struct request *req;		/* block request, freed in task work */=0A=
++	u8 *sense_buffer;		/* sense snapshot from the per-device pool */=0A=
+ 	u64 response_addr;		/* user space response buffer address */=0A=
+-	u32 max_response_len;		/* user response buffer size */=0A=
++	/* max_response_len is replaced by res2 after the end-I/O snapshot. */=0A=
++	union {=0A=
++		u32 max_response_len;	/* maximum sense snapshot size */=0A=
++		u64 res2;		/* saved completion result */=0A=
++	};=0A=
+ };=0A=
+ static_assert(sizeof(struct scsi_bsg_uring_cmd_pdu) <=3D sizeof_field(stru=
+ct io_uring_cmd, pdu));=0A=
+ =0A=
+@@ -28,17 +32,22 @@ static inline struct scsi_bsg_uring_cmd_pdu *scsi_bsg_u=
+ring_cmd_pdu(=0A=
+ 	return io_uring_cmd_to_pdu(ioucmd, struct scsi_bsg_uring_cmd_pdu);=0A=
+ }=0A=
+ =0A=
+-/* Task work: build res2 (layout in uapi/linux/bsg.h) and copy sense to us=
+er. */=0A=
++static u64 scsi_bsg_res2_clear_sense_len(u64 res2)=0A=
++{=0A=
++	return bsg_scsi_res2_build(bsg_scsi_res2_device_status(res2),=0A=
++				   bsg_scsi_res2_driver_status(res2),=0A=
++				   bsg_scsi_res2_host_status(res2), 0,=0A=
++				   bsg_scsi_res2_resid_len(res2));=0A=
++}=0A=
++=0A=
++/* Task work: unmap the saved BIO and copy sense to user space. */=0A=
+ static void scsi_bsg_uring_task_cb(struct io_tw_req tw_req, io_tw_token_t =
+tw)=0A=
+ {=0A=
+ 	struct io_uring_cmd *ioucmd =3D io_uring_cmd_from_tw(tw_req);=0A=
+ 	struct scsi_bsg_uring_cmd_pdu *pdu =3D scsi_bsg_uring_cmd_pdu(ioucmd);=0A=
+-	struct request *rq =3D pdu->req;=0A=
+-	struct scsi_cmnd *scmd =3D blk_mq_rq_to_pdu(rq);=0A=
+-	u64 res2;=0A=
++	u64 res2 =3D pdu->res2;=0A=
++	u8 sense_len =3D bsg_scsi_res2_sense_len(res2);=0A=
+ 	int ret =3D 0;=0A=
+-	u8 driver_status =3D 0;=0A=
+-	u8 sense_len_wr =3D 0;=0A=
+ =0A=
+ 	if (pdu->bio)=0A=
+ 		ret =3D blk_rq_unmap_user(pdu->bio);=0A=
+@@ -48,27 +57,22 @@ static void scsi_bsg_uring_task_cb(struct io_tw_req tw_=
+req, io_tw_token_t tw)=0A=
+ 	 * has exited, this may run from a kworker or in a different task, so=0A=
+ 	 * don't copy the sense data to the submitter's address.=0A=
+ 	 */=0A=
+-	if (unlikely(tw.cancel))=0A=
++	if (unlikely(tw.cancel)) {=0A=
+ 		ret =3D -ECANCELED;=0A=
+-=0A=
+-	if (scsi_status_is_check_condition(scmd->result)) {=0A=
+-		driver_status =3D DRIVER_SENSE;=0A=
+-		if (pdu->response_addr && !tw.cancel)=0A=
+-			sense_len_wr =3D min_t(unsigned int, pdu->max_response_len,=0A=
+-					     scmd->sense_len);=0A=
+-	}=0A=
+-=0A=
+-	if (sense_len_wr) {=0A=
+-		if (copy_to_user(uptr64(pdu->response_addr), scmd->sense_buffer,=0A=
+-				 sense_len_wr))=0A=
++		sense_len =3D 0;=0A=
++	} else if (sense_len) {=0A=
++		if (copy_to_user(uptr64(pdu->response_addr), pdu->sense_buffer,=0A=
++				 sense_len)) {=0A=
+ 			ret =3D -EFAULT;=0A=
++			sense_len =3D 0;=0A=
++		}=0A=
+ 	}=0A=
+ =0A=
+-	res2 =3D bsg_scsi_res2_build(status_byte(scmd->result), driver_status,=0A=
+-				  host_byte(scmd->result), sense_len_wr,=0A=
+-				  scmd->resid_len);=0A=
++	if (!sense_len)=0A=
++		res2 =3D scsi_bsg_res2_clear_sense_len(res2);=0A=
+ =0A=
+-	blk_mq_free_request(rq);=0A=
++	if (pdu->sense_buffer)=0A=
++		bsg_uring_cmd_put_completion_buf(ioucmd, pdu->sense_buffer);=0A=
+ 	io_uring_cmd_done32(ioucmd, ret, res2,=0A=
+ 			    IO_URING_CMD_TASK_WORK_ISSUE_FLAGS);=0A=
+ }=0A=
+@@ -78,9 +82,34 @@ static enum rq_end_io_ret scsi_bsg_uring_cmd_done(struct=
+ request *req,=0A=
+ 						  const struct io_comp_batch *iocb)=0A=
+ {=0A=
+ 	struct io_uring_cmd *ioucmd =3D req->end_io_data;=0A=
++	struct scsi_bsg_uring_cmd_pdu *pdu =3D scsi_bsg_uring_cmd_pdu(ioucmd);=0A=
++	struct scsi_cmnd *scmd =3D blk_mq_rq_to_pdu(req);=0A=
++	u8 driver_status =3D 0;=0A=
++	u8 sense_len =3D 0;=0A=
++=0A=
++	if (scsi_status_is_check_condition(scmd->result)) {=0A=
++		driver_status =3D DRIVER_SENSE;=0A=
++		if (pdu->sense_buffer) {=0A=
++			sense_len =3D min_t(unsigned int, pdu->max_response_len,=0A=
++					  scmd->sense_len);=0A=
++			if (sense_len)=0A=
++				memcpy(pdu->sense_buffer, scmd->sense_buffer,=0A=
++				       sense_len);=0A=
++		}=0A=
++	}=0A=
++=0A=
++	pdu->res2 =3D bsg_scsi_res2_build(status_byte(scmd->result),=0A=
++					driver_status, host_byte(scmd->result),=0A=
++					sense_len, scmd->resid_len);=0A=
++=0A=
++	/* Return the buffer now if there is no sense data to copy. */=0A=
++	if (!sense_len && pdu->sense_buffer) {=0A=
++		bsg_uring_cmd_put_completion_buf(ioucmd, pdu->sense_buffer);=0A=
++		pdu->sense_buffer =3D NULL;=0A=
++	}=0A=
+ =0A=
+ 	io_uring_cmd_do_in_task_lazy(ioucmd, scsi_bsg_uring_task_cb);=0A=
+-	return RQ_END_IO_NONE;=0A=
++	return RQ_END_IO_FREE;=0A=
+ }=0A=
+ =0A=
+ static int scsi_bsg_map_user_buffer(struct request *req,=0A=
+@@ -123,6 +152,9 @@ static int scsi_bsg_uring_cmd(struct request_queue *q, =
+struct io_uring_cmd *iouc=0A=
+ 	u32 dout_xfer_len =3D READ_ONCE(cmd->dout_xfer_len);=0A=
+ 	u64 din_xferp =3D READ_ONCE(cmd->din_xferp);=0A=
+ 	u32 din_xfer_len =3D READ_ONCE(cmd->din_xfer_len);=0A=
++	u64 response_addr =3D READ_ONCE(cmd->response);=0A=
++	u32 max_response_len =3D min_t(u32, READ_ONCE(cmd->max_response_len),=0A=
++				     SCSI_SENSE_BUFFERSIZE);=0A=
+ 	int ret;=0A=
+ =0A=
+ 	if (cmd->protocol !=3D BSG_PROTOCOL_SCSI ||=0A=
+@@ -168,8 +200,25 @@ static int scsi_bsg_uring_cmd(struct request_queue *q,=
+ struct io_uring_cmd *iouc=0A=
+ 		goto out_free_req;=0A=
+ 	}=0A=
+ =0A=
+-	pdu->response_addr =3D cmd->response;=0A=
+-	pdu->max_response_len =3D cmd->max_response_len;=0A=
++	pdu->response_addr =3D response_addr;=0A=
++	pdu->max_response_len =3D max_response_len;=0A=
++=0A=
++	/*=0A=
++	 * Take a sense buffer before mapping data: unmapping a bounced READ=0A=
++	 * copies back even if no I/O ran, so rejecting it afterwards would=0A=
++	 * overwrite the caller's data. No response buffer means no sense copy.=
 =0A=
-base-commit: 9f9e0b1e5399045982788a954d3461de894e40c7=0A=
-prerequisite-patch-id: ef4b390580d84500ee98fcddff0a34e5cd95e40c=0A=
-prerequisite-patch-id: 1b98fea4540409102179bfccd2905a686c7f1b5a=0A=
-prerequisite-patch-id: ce66c68fb99ef813e5506ba7f3de512c1fd0c832=0A=
-prerequisite-patch-id: 73942e82ea57898fb0af8ee1db909b0dfa8b2b77=0A=
++	 */=0A=
++	if (response_addr && max_response_len) {=0A=
++		pdu->sense_buffer =3D=0A=
++			bsg_uring_cmd_get_completion_buf(ioucmd,=0A=
++							 SCSI_SENSE_BUFFERSIZE);=0A=
++		if (!pdu->sense_buffer) {=0A=
++			ret =3D -EAGAIN;=0A=
++			goto out_free_req;=0A=
++		}=0A=
++	} else {=0A=
++		pdu->sense_buffer =3D NULL;=0A=
++	}=0A=
+ =0A=
+ 	if (dout_xfer_len || din_xfer_len) {=0A=
+ 		bool is_write =3D dout_xfer_len > 0;=0A=
+@@ -180,7 +229,7 @@ static int scsi_bsg_uring_cmd(struct request_queue *q, =
+struct io_uring_cmd *iouc=0A=
+ 					       gfp_mask, is_write, buf_addr,=0A=
+ 					       buf_len);=0A=
+ 		if (ret)=0A=
+-			goto out_free_req;=0A=
++			goto out_put_buf;=0A=
+ 		pdu->bio =3D req->bio;=0A=
+ 	} else {=0A=
+ 		pdu->bio =3D NULL;=0A=
+@@ -191,11 +240,13 @@ static int scsi_bsg_uring_cmd(struct request_queue *q=
+, struct io_uring_cmd *iouc=0A=
+ =0A=
+ 	req->end_io =3D scsi_bsg_uring_cmd_done;=0A=
+ 	req->end_io_data =3D ioucmd;=0A=
+-	pdu->req =3D req;=0A=
+ =0A=
+ 	blk_execute_rq_nowait(req, false);=0A=
+ 	return -EIOCBQUEUED;=0A=
+ =0A=
++out_put_buf:=0A=
++	if (pdu->sense_buffer)=0A=
++		bsg_uring_cmd_put_completion_buf(ioucmd, pdu->sense_buffer);=0A=
+ out_free_req:=0A=
+ 	blk_mq_free_request(req);=0A=
+ 	return ret;=0A=
 -- =0A=
 2.43.0=0A=
 =0A=
