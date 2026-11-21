@@ -1,13 +1,13 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.103.7.81
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.103.1.8
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795249644;
-	b=luU1ZmVoIbyeoDIjNJJZBe1zqnjINQs+HtFRm7Wgl535wqNCQ/rZGuWsW7lMVqQOb4DV
-	 kdx9eWKf4dqbrOALPO2oj2Q6RKPBNTzxamq3mPO7foflkwE6iFqUBoBX9vPCoz2NQOZWg
-	 dkC485QevG0ZAcJwXAerlqJZ03WVU/btJ3St4v3VYQi0iqv8KPKkORhwZfNWgncYuv8EK
-	 CjI9i2ih+GQF1mFZ/Q5y3CKMPIb5lEk6K3YuGYeu7jdSSaRjOo6ucpXlJr/BJ/xpy4gMR
-	 0iKvGRtXrFrlsDCEWDqHzb09IEnT4Q0SVh5E+G/omgKxaCCyFJcR9Ma3RTsVnXLG/8w==
+	t=1795249646;
+	b=nNdhRPlE7eG5rjQag+c9EVgjwSf4PUdqp9KwWeX3rOTxRDJl2ujxcTP+a7F301h8JVp8
+	 Jv/gu9KNrSwH9QCB9vu8+4GJdmaCmvZmQMLH18tfZpZ9HtpHME/8vxYNPECH4havJGS5b
+	 8Rpo9ycQor4lOg+h1v1fjn4qb8zUy3tnGt4yjvKBjYpfSF/XA7xARRYcbrNf44j6VsCpq
+	 nI9rWc8sxE0X5lRwauiWpSD+J6tbnQvwUMMZQQWHotruZxsEtdyU5lb7FU6QhNp1ZdQ8W
+	 AFEdi+b8U93fQ0ZqEMr0vBOSn6gfSjCMuS5qQguf2jFf27YWqn8LLGl1TCEhelSI8pQ==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795249644;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795249646;
 	h=DMARC-Filter:DKIM-Signature:Received:Received:From:To:CC:Subject:
 	 Thread-Topic:Thread-Index:Date:Message-ID:References:In-Reply-To:
 	 Accept-Language:Content-Language:X-MS-Has-Attach:X-MS-TNEF-Correlator:
@@ -26,50 +26,50 @@ ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
 	 X-MS-Exchange-CrossTenant-id:
 	 X-MS-Exchange-CrossTenant-rms-persistedconsumerorg:
 	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=qV3WVoS4dzzrMOS55utp9Ebby9MXsjhiy5SfKTuAN1c=;
-	b=qFD6FO+tHk3YDIP6KATvcvoXt3OOu1SZyFtTO58vC7vbN+g/Qmb1L+Rm63trNl98ai+Z
-	 GMipUx0qJiKuudzk7YROngPGogZtidhnrrEzB8u7hP2PHBJRK9rvuLzy/xxaDU1+zlE01
-	 Wgip1e2YcWUZA0JMiqTo58Zz17hF0okeEzq1uX2kT2HnWIxKHNWaa75n1/KEuP6hZ9f0T
-	 qWwn8cRynrv4Xe1jRbFr7hC3oRQ7Xj1+ncKE8BN47OVQSk0UmyqWWZufvb80flGj/UvZe
-	 l7iDSWsaFpzMqZZPXPDvg6p2AONfmk4KPuddCRY0Oas7dPMR/LF6D/vR80cJ3pM/oGQ==
+	bh=/t1EHJdgJObZ1uJWl2NyG1P65mK4WklQcAA6vyXd1Y0=;
+	b=Gemqyj+rdOAscJkYvS1IV9RkZaASnWY1i9mAT3UZU2pJdywiApgOkZ+xg9DKFz5mXFFG
+	 JF++ymVDY7GZgVQQU9r8ffEbuN3GE/Af4NRHDkR2o3OrhYkxbyzdXWp3K5FXTgevAYhW4
+	 fvcJxalVeSAA5Zcz1pAeVvJsFZZcViwN4dIX+oZpWD+tvZ52V4j0UZ5kLHxkbPXBFUPC2
+	 QWwbSxrE5zvZmiWxDtXZAwUqLdVNy/lSCyArxhNQvi+frsQ1JJ8vacsjnR7mlVarK1qfB
+	 hvAggcOQH9ekNirZOs+M4iQPNeB3BCvikjNJj4B+z1HkrImEHIwnC2SbIQdRCSd+oJQ==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=outlook.com;
 	spf=pass smtp.mailfrom=outlook.com;
-	dkim=pass header.d=outlook.com header.i=@outlook.com header.a=rsa-sha256 header.s=selector1 header.b=metFdvCI;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=52.103.7.81
-Received: from CY3PR05CU001.outbound.protection.outlook.com (mail-westcentralusazolkn19013081.outbound.protection.outlook.com [52.103.7.81])
+	dkim=pass header.d=outlook.com header.i=@outlook.com header.a=rsa-sha256 header.s=selector1 header.b=ZYLR+zg3;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=52.103.1.8
+Received: from BL2PR02CU003.outbound.protection.outlook.com (mail-eastusazolkn19011008.outbound.protection.outlook.com [52.103.1.8])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17AF6606A330;
-	Sat, 21 Nov 2026 08:27:23 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 17AF6606A330
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61C99606A333;
+	Sat, 21 Nov 2026 08:27:26 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 61C99606A333
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=outlook.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=outlook.com header.i=@outlook.com header.a=rsa-sha256 header.s=selector1 header.b=metFdvCI
+	dkim=pass (2048-bit key, unprotected) header.d=outlook.com header.i=@outlook.com header.a=rsa-sha256 header.s=selector1 header.b=ZYLR+zg3
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=ZODFMPLEd3ij5kQDk9+hP3I0kr3wGX7uX2UwzWlNX78NOJChLffhRo27mmJyJEXkuhCLBq9sIhu8YNUC0Qjt74/6U7TZ9IXV0PYjJPxpdTt282F2TCa/gQEXtpmcpSJtp/G0VmG5ttXTZZMdfcjCBn/ffr9pFS0QWM9EZbCGWp0mq9vMu9s99s857ltSvhuRvZfNk+n7f2mY00To7Gyr44nyEoaZjQZ6xoFFGficRkKXBULA0VLC5D4wCRXw9HdzeuKQ/q1msNt+6gNk3aRAEJAnZ5jW1iiDm2J8R9L1eCRX9NqN4PoSGWDMk/PVXcHd1qARF//0Rx6F8D/6GcYeUA==
+ b=ovOl60OJ6NhlkzhUwb5LZwsSojJv0qbYB866eyan6fNejB/5W5UVJN48m5v+DNDJb6H6YRGQu0R+d3LEOCGuzs1T85d9zHgOyR2N5i1YdaIRgjlr7OKp9+RUJIKriX3JdOP5x1aN65O3NwAHHljSraLFqJ6w59VjNoVH9lC2hKzgk6oFHwEOm5jc6NqLJ4u501dJvcQGhNfV9WddiKMY/tqVhFBl92L++DNv/ATPP1R3X6qHQv5QAcKwIbRY1p6UK0gax5+zSgrkT7LFhbJgKu+NA0ao+Cn0/nYVcq0I5N3GzwyS+LQB77g9W/FYObddn3P20yZ8R8mGdIqaAIdvLg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001; h=From:Date:Subject:Message-ID:MIME-Version;
- bh=qV3WVoS4dzzrMOS55utp9Ebby9MXsjhiy5SfKTuAN1c=;
- b=CtwBXR8xGYA/GnVg9N0DBMpj6zXJlnD25OvMTSxb+mVehEaacvWHvggSxxw3MztTcbJOdi3v1sK7bOy0imNEttI8gjtzv9pNh1O0GTbs15NBI24pjzra6VjbcAkuUFBK/OZF3YkS77e93Cys5dRv5w9+s8osG+dekx03m9ntlA0qJ1pmSbhMcTekLujAP+yMWnKYxb3ogD1PdO6EyfC6xjA9vOOKEkoy3AsdNSrOBSfbIoCRd8tXX4sa1/7F1bN20dgYjaN1c0/A0RMeVw/JxB9GrG2KrG39+nTqeh++5f8CT21n1lfJia/eb2h+pvu+Lz/Etf3DfTMF5PWqHMwusw==
+ bh=/t1EHJdgJObZ1uJWl2NyG1P65mK4WklQcAA6vyXd1Y0=;
+ b=HjBmnYeRHBflkAtIkrXUoAEPgdlU3tckyw7NFnAllZep2czG9/u4cuQbIyoswMRRmq8lDQsnoJB7+rDD5z/ANVpKmgdCihQYQBnRhWYgeIvxLOCfzCN6S7H4ZH3hkF5Cgh7mKl9+9Nq1d8ZMkrau2E6L+outlAlNklLc3BvzEGX8zgiZW5EhZdIXEVjgP7u3o+9djyhtRAdbyD2JOO23LDDP9Ocp1CTCfT29x62rF5BiQ0QqhKRNDX4x3ESqR/yimi9IYKYUpvMk/naMfojTsccNMbaZ2+wPciY0o8OBvzeQ7kDM/yeh/1suhdiBXb3v5y9r/82+QFlSWVh60vE43Q==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
  dkim=none; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=outlook.com;
  s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=qV3WVoS4dzzrMOS55utp9Ebby9MXsjhiy5SfKTuAN1c=;
- b=metFdvCIHKeLKtEC3P6Mz6jVidkQID3fitjDUd4TjsBPCvMUvnuvOjHSmK6KbDduXN/I6qg9PGFDYUBBoFs+RSieiqt38L0niHDREpocD+Fa2SVjbdu24y6M+SWR6XkGIpiqYm7756yQo42wYCe51FLt0a5hIqTkbNXrzjb9rZIwQn/Z5WAjLS2KhG5HANF2QdsQnmF6fQQsi7+2vOHULuVh/Fu1JEUOwBv1vQfiMS1KWT8SMtrOaLjJV8H10imcjcfcZdsHq0PPquNpZdbBNd7upNa5aTR4BTCmZ0fiTaWyoApuLHQm050ctlxXM7ctW7OzjmVvX8mQzz1ZAqGN6Q==
+ bh=/t1EHJdgJObZ1uJWl2NyG1P65mK4WklQcAA6vyXd1Y0=;
+ b=ZYLR+zg36oEMQlOL00ZgDzenU6O2LQYa7CwJsoKqTa7ciwHBn9BMnslFIX135gBxK4JrOFeKH+pt347/0RgNy1BHxrDGKw69IKrFKRVamQtWooRAddg7MHhS0D1kKM23vITzh20iCfQfwJfQ1U+Ds0A3h7C7m0P+uGu588pkIhghMPNNl8Jw0m4xdL3qDK17BQJaGCAhvOumM8BE68dU8XFcanajpdlJNl6F9TL9Cor6kuo+Zuf8nbHVPR2UzM32+G3FV9xAQNzUHsntCcKA66TFGn70YUBadofZiNr+xXMjLQT9hvQFWC5hZHkpjON8DpZY4n9k/u9g9k/4IVVOyw==
 Received: from BN6PR05MB3281.namprd05.prod.outlook.com (2603:10b6:405:40::35)
  by SJ0PR05MB7838.namprd05.prod.outlook.com (2603:10b6:a03:2aa::10) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.639.12; Sat, 21 Nov
- 2026 08:27:21 +0000
+ 2026 08:27:23 +0000
 Received: from BN6PR05MB3281.namprd05.prod.outlook.com
  ([fe80::5b9b:67c7:5397:c42]) by BN6PR05MB3281.namprd05.prod.outlook.com
  ([fe80::5b9b:67c7:5397:c42%5]) with mapi id 15.21.0639.011; Sat, 21 Nov 2026
- 08:27:21 +0000
+ 08:27:23 +0000
 From: Yingjie Wang <x-professor@outlook.com>
 To: "Martin K. Petersen" <mkp@kernel.org>
 CC: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
@@ -77,12 +77,13 @@ CC: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
 	<bvanassche@acm.org>, Yang Xiuwei <yangxiuwei@kylinos.cn>, James Houghton
 	<jthoughton@google.com>, "linux-kernel@vger.kernel.org"
 	<linux-kernel@vger.kernel.org>
-Subject: [PATCH v5 3/4] scsi: sr: Release CDDA request before user copyback
-Thread-Topic: [PATCH v5 3/4] scsi: sr: Release CDDA request before user
+Subject: [PATCH v5 4/4] scsi: bsg: Release synchronous request before user
  copyback
-Thread-Index: AQHdeZIgcu/jIp5+J0GSSrDxiP6gDg==
-Date: Sat, 21 Nov 2026 08:27:21 +0000
-Message-ID: <scsi-sync-v5.1795249365940711260.3.x-professor@outlook.com>
+Thread-Topic: [PATCH v5 4/4] scsi: bsg: Release synchronous request before
+ user copyback
+Thread-Index: AQHdeZIipZD/R0faFUm/SAFXW9EXeQ==
+Date: Sat, 21 Nov 2026 08:27:23 +0000
+Message-ID: <scsi-sync-v5.1795249365940711260.4.x-professor@outlook.com>
 References: <scsi-sync-v5.1795249365940711260.0.x-professor@outlook.com>
 In-Reply-To: <scsi-sync-v5.1795249365940711260.0.x-professor@outlook.com>
 Accept-Language: en-US, zh-CN
@@ -91,60 +92,60 @@ X-MS-Has-Attach:
 X-MS-TNEF-Correlator:
 x-ms-publictraffictype: Email
 x-ms-traffictypediagnostic: BN6PR05MB3281:EE_|SJ0PR05MB7838:EE_
-x-ms-office365-filtering-correlation-id: 860df887-40a2-451f-f2ed-08df47a94375
+x-ms-office365-filtering-correlation-id: e01db54b-07d7-4349-6fde-08df47a944c1
 x-ms-exchange-slblob-mailprops:
- ZILSnhm0P3mCYd7/icPJlj+s+m08RC6kiGL7oxeGQg3nCdIaccq9JDAHBuroA9EHPB4SVkXiOWsdZUiEqtPRz/CX7ec+DbcLfdJ+GNsUG0t2LUXGNBvHCiEsUXprj++Rdsu30eGKqGQTzQQbBhSzMHUBKZLwty3kNWm2iIhsPwirKzU6FEhHK/M7w3x8w8AxLlduAwWYV6MUFq9z8snANiooMOOQjvijuTg57Rk0Qdtq3R+alkB/gbiBTQiVYGFchxk40hlOSY6e5AnE9je5g35MXAMFX+/JyICgcB6cmdy/SgxEiGoVozoxC4wH0prb3xFEokf44M9pceEjdaAGoD+4XCaPoYOVPvNvFi4vYFSgwj2PUVMTPVaa4PtbUOMHfuYZ/OpN1jyOKiEFEUNL5NxZ/eVWZVr3wQaRC3nLgTL/rfM3BupOzssdO3dA1zaNLJBL29RHmVNlMFEZBovJNVaF2EvHYcV+YlQAH5jsSg85TihV9ol2TWqUnGDlsDSuT0rn2O9VJV+jqCffAlxlbvoBAHFiFohINQvrUHCGN0ZvsEju4p4InlLlPxxH3oktvjeRhgQHOpxcjT708POPQuHaATI41acZws+bu4KtQ37sV5uzQphsGIfeFxOW8ae/GioHLI/XhnMam8pnrCZrpqqNtPDYpxhVgXGQSO0VeGcUi8uAaXprKIE/EB25DAswgZLA5+Apl2DY54EQGZXmN2EA6LBET/FCmSOlhlu2vvGd3Ue6qqp1V2E+hl9Ds66WiPs31t62aAjGWTULYp3BTsX1WBrfXLOE
+ ZILSnhm0P3mCYd7/icPJlj+s+m08RC6krvOKtGwitgl6tTfBxXMO6992twiB4HxDAcUpgReX1k6FbDP/VixyBRyjc0ODCeS/RJ+HV1UpoCG6h2ZKyYc4mxz41qFKCnhCHoXD+zXQFKQ6jRsXXnoW0JXnyB6hgtv2VEV0mPrTWQ9svEY/GLVuU9Kd6kvXoPLNQoFj9UDrdb30n6DoUxPl3/xW1PK+dP17PsSOvnLdcw1eCBlcSDonjOfpWQyUYQzcOd/qnRV7rww5x+IE8dw86WTZGSRLrW5SCxn6pKICOu7lSdFqN8qvLoSEBESxrdLU0T0P3DJS7o2Q8XR36MIXmjE2zIp1Yr4i/8ToHqoYTvswEpn0vPJrFH3Ibh9TM2d1hn7PClDwZwe0yHoofQzgd3g38mn2Thd+XXYl29PN7SZ7TFITf5fcQCQs8yCAgOSmHtBQGUkLP71jgK178pFzYCZ8qmDHZAHwCou3wU6mOmmM33NSNaVBzBooD/ryd8ckqGrEOiSlR64a5I4nbanFgGlkg8pMKC5m7kGXnug6d9T9nD1IUiUIPYTX4AE+M/DRP9jAPLj/+rWYS5LbUeJacRCuQMszbo7y//gFk2mnwjlzXE5k9B1HSDi3EHuPSC04rqFi70QYQ/GpRhnIA0fej1BszH2XlVM2Ni3UJjL7aEW0RrKmgOJFkBgEIvkOOurt6hPjpT6iwJCf7h2pQESg3MoW7DJfY6mv/zy4gypbxrWkVRsP99m/xxv4BZ3hpKcbb0vthPQj6Cqxmlpgbcn6IeVfsuLUI65S
 x-microsoft-antispam:
  BCL:0;ARA:14566002|24121999003|38102599003|41001999006|22091999003|15080799012|19110799012|4140399003|25010399006|8062599012|8060799015|24021099003|31061999003|440099028|3412199025|4302099013|102099032|1602099012|12091999003|10035399007|40105399003|53005399003|26121999007;
 x-microsoft-antispam-message-info:
- =?iso-8859-1?Q?MATdQYm+T8YA8bTnpn/U84vHIt3Ivi9LbI41wvWeVTvqSKA3FKlQUIPx+J?=
- =?iso-8859-1?Q?2MvAYeBvdNC7vBWfV2ECALdexh3vgG73V1S+S0Nu+ESGf6EABKnQshwLzr?=
- =?iso-8859-1?Q?AatFpPiwQNR3/+bo/VALiyjDF6UALRgQiNvAcGNtM7nVDQolBtxBHgXeRP?=
- =?iso-8859-1?Q?BsWObAML5ra+d3wFnEwb3UU/lX8KcoZtkfmKq3UpfkGr5gz0ilVWmcbD28?=
- =?iso-8859-1?Q?Rewp5KFEADg54o01ikycuslIExB2AWImuJJM5JCeBEe4ssSCFe/66/eFjh?=
- =?iso-8859-1?Q?2PSCOSKHV2vH9i4jU/A1lq/zn34dQJirFfjcpCoqL7xg0wI+Jnloh4a01u?=
- =?iso-8859-1?Q?O4PI4BB2zINFpXyoAi/vj9uxgA5aIBdxlcLKcrJZUd71OVh/cDfKAg4B48?=
- =?iso-8859-1?Q?mZOAPfnSZOaxeg/KaTcnysSuNY0HlPPimnRy2DZpWghOaSkbXJrnhY+8Jx?=
- =?iso-8859-1?Q?9gdpfL/K8TaNrC6QOktOXxwVvgHxULeHA9x1N2FsyLblp0D9NlroM28AL6?=
- =?iso-8859-1?Q?ZkGDJW7YfhYKgdUMvJRzBrL0ov2mdUFkxxWNki+9qvEirVTppvfM/Al4Vp?=
- =?iso-8859-1?Q?09E4tI2Np+aC5jbVaZ+4G4kbKezOcD4bsAQf/6ZaQoC69rGViNsx5pcjjG?=
- =?iso-8859-1?Q?z9ttZRC/VbuE0D5Sp0pySHOHktf3hK25hW+1Q9iF3J6VkWZhzW7VlUj/bc?=
- =?iso-8859-1?Q?JCUIVAXRCBctiNTzc5v/cbAiZnP4OvviSWWYrkweiEyl3OXp9VDL95aKNX?=
- =?iso-8859-1?Q?hv3HBspqmjyLXom5C3zVpkYRQErBP9iHLWrnpOq21buCFehKb+jxSEOhsA?=
- =?iso-8859-1?Q?CvqjLykEjPktVwbWhVjUnjjjME9F7c8BPNEgWWtDaAgB7KXDajZL3pG80D?=
- =?iso-8859-1?Q?1ZkiFmo52yEHdcvHP9YXVSj357VahEmnD9aWCkLJunt6abgutB4SQ10Wkc?=
- =?iso-8859-1?Q?nNF+GUpOxjLCJIbZ7xrF3MaZ51o6TcB/PWLNIBbvobSoU1mOaCc5US4/aZ?=
- =?iso-8859-1?Q?zcmu2oMpVqV2UUs6hG6lMnM49LtKEp+GW+4iksmnC1BFz3TXPLImdwMMuv?=
- =?iso-8859-1?Q?0ZMEVEO+YwPZJbeBtTUzhaztxWn5FkljET3uwYAZpRrewGsXFyhLimH/Be?=
- =?iso-8859-1?Q?j9WHdaxLTNjigiYG1r9WbM7AIP3Soc4YwV3uROpMUBjNej1udaPQd6Dilo?=
- =?iso-8859-1?Q?qc8QDMY1B7BSKwA6/GgiRlwH2L/8ptqQh9Y=3D?=
+ =?iso-8859-1?Q?4RzNLD/sse6Ju7KmzqsCucMM4tFQqS6xyd6cEnt1EbfBTyP6Jg6lr79lEd?=
+ =?iso-8859-1?Q?HpCdAJdVINyiraJqV3ZR3JliGh+oL1UGlSsny82nEdPO2cZC2LMMb3JIXa?=
+ =?iso-8859-1?Q?bWM//bg5NUJoK2Sqoa8KFrlXQvRguhzLRNeF0KFUqB8JPVtgiKvkByAcpR?=
+ =?iso-8859-1?Q?CceOZ0JrdfdiVsTJu7E6O7pxwjAYLWM1tmH2ct6IB6R4RmPFFM6nkZRy4Y?=
+ =?iso-8859-1?Q?Id8kHzrLapJnELwTUqDKPsKjWLdybzR8wUiWGazHeVmW1OcDeGCwicrZOx?=
+ =?iso-8859-1?Q?qrR4HmnPYHrgQKbfl5nZ7nCgI1fKtf7J7zRU1jMusWyuB4nwAUQ9Mjo9yp?=
+ =?iso-8859-1?Q?DB/yCJHhoT5P89U13mhEoNL8CUTwK2XeE4RhWlfgGzpST/IFbntpAO9SAH?=
+ =?iso-8859-1?Q?F3Uf2/JInXMtBrymD5FogSntxsrlCPMxtxX7XoNks/aCe6WNb2fhS584Vi?=
+ =?iso-8859-1?Q?oIopTip28rXUro8/kjVAKxaUv8mGKvUdpw7SgzSZocaIAVnE5IIalLvAU/?=
+ =?iso-8859-1?Q?vXFEwj8oJWZ+8BLQYqOSkzkslQylnsz5xE/Pg0K2rfHxzmKQaxWJgDpWEg?=
+ =?iso-8859-1?Q?vZ5GRd2oHNOS8iE4pR4JnOny+ahO+TDxYPuX6WwKLe8GY/rCF8wfU7n23k?=
+ =?iso-8859-1?Q?od6K2b+7EPU7ghsZakOHvgtGf5MXYlf79Gb5ncOOtbEhKB46ROHgciscrw?=
+ =?iso-8859-1?Q?t5pj+KLfCusH7AlYWAgl+/mW6kYiTf9wFaNQmOK3O+dj6XQiuP/vj/f1u7?=
+ =?iso-8859-1?Q?hGddmFdGnRLiNi1ZGmMcRbbbFSgteMF4ZUC2Oh837ZPfcsEJmWKhUEh0Rn?=
+ =?iso-8859-1?Q?AMMowrGaIfBRqCkfM/mcVLolM4EVYp4iKepb2WVQAP7lG8M1gt0Lj7xbuG?=
+ =?iso-8859-1?Q?Fyaic/YN8iBcwJ92HyHBWsfJ2PaCkzFqEJmH7LqznazafBD3lkBZNuNHJq?=
+ =?iso-8859-1?Q?2l5eb1cqHBRABjjkV8nBdgrawXMoJpNJchRQvkuAKXDa39fHeQRezTGgeb?=
+ =?iso-8859-1?Q?rkGS0bOOXppIkI7mhiWs3GcHJwF9bqVLvKcvKqi8r3eIKQldO8qfFCKzaB?=
+ =?iso-8859-1?Q?bnR7mLyn5XP24TnWfPyAiKuhORW8ZjV8wNoxeirF0XHAJYk6zyojMe9/A0?=
+ =?iso-8859-1?Q?HnOqEw3K8FkiBRvLYhD8l5XlnUS/1eBnyIpgWp4zZe3GqYK7xENFuEFmIQ?=
+ =?iso-8859-1?Q?XlqSV07MZpFvKSATjkO/1BgAc1/mwl2qgnE=3D?=
 x-ms-exchange-antispam-messagedata-chunkcount: 1
 x-ms-exchange-antispam-messagedata-0:
- =?iso-8859-1?Q?cKSMbGqldw8T1MONHcNVAq/JUqqj/UYNRJ1+/ggKHa0YUd+o+5byokz6c5?=
- =?iso-8859-1?Q?qc6Rndj97anM2Vf+2gk3+ksuHUSryQt7pWinzYkZrYk8KM5LidwG0+JP9x?=
- =?iso-8859-1?Q?u1vmhJsa1Pme0NLYY8TGrsKHdYCz5s1EhSRMJt5EWpdCQG0lNSJQx7b4JX?=
- =?iso-8859-1?Q?h9JiKs6gvbq2VEICTzT99VUYnebXul7n3ndDJ2toWRIh65nfya4pUHvn5i?=
- =?iso-8859-1?Q?iry/lUxB3wpm4XXJz4Wz+5zuN1+XOlBdNa0pJ6OfuTaYW6Q8JK4RHT/WXw?=
- =?iso-8859-1?Q?Gjfjn/csZTfwn3lcRTa60Alr+34MWmJrhuOU/EaYRR+3TpZXLeD1zZ5JoY?=
- =?iso-8859-1?Q?I39Zi/ge2n6JrGxuEau+4uEfgL/ciiFUo3HH7VFT24yZOilp1oyQEkt4eW?=
- =?iso-8859-1?Q?HvsS5KfIi+B6gqb/X9EyAoFs+lj5ovdDVoovur2NWJbWsX6XvnDf5oz8Lr?=
- =?iso-8859-1?Q?hZ/c25w7lvLslOmLfd6wkzEZG5jno4NOi4VdfGQJwNtkMB8qPpiC6qtzCg?=
- =?iso-8859-1?Q?emDjavrMJmNW/usDI10mrYZG0ZlAXt6t7fWtgjciKHrnhJyiHxws3t5hf+?=
- =?iso-8859-1?Q?T+8011WppIX3DN6WVXdPhXyG7eH2cISsqexWqFL0HkJbsbZqDM92BJBGAa?=
- =?iso-8859-1?Q?UI9/TZ84DN4iXyLBHtX4igagVURlwf3ykeOjHthn7kiSgri8a1cV6jsnSL?=
- =?iso-8859-1?Q?3AVFvmqAKZLIOBFxQnBZpqbW25c2uECefi2dmCkxWAGlsBJUtcVkTGY+wL?=
- =?iso-8859-1?Q?VsBxkeqvP6OJpOqFx2PnqG2out0fUKm0zEAjgvWsbBmiDacGJ29HEHEVVD?=
- =?iso-8859-1?Q?DBCJ6ZqA1zwcm+Y+SqZS2XZDgbgwvyFXCO/rsNYv6qkqJf3BWiuK+kaphE?=
- =?iso-8859-1?Q?ySZkiEs34S3TWKsYsY+H5fcD/96Q+ctt7fciICR1D8Q7Pb99IG9fNNbo6z?=
- =?iso-8859-1?Q?sJKUiZa3FzHUE57vhDC3/vecyB1XVZha2uJueDo1M0VbP3UpurN6T00U//?=
- =?iso-8859-1?Q?JoOxpSPAAMxxeaHUeN7d6EYfoXKl2DIITg53QiL7k7et38EVpEPezr8GSi?=
- =?iso-8859-1?Q?qHG8htLqjFqQk6+M8cpoKWpTKolL85eLadxRu55us4QYXrFOEzimQtpmes?=
- =?iso-8859-1?Q?JJw6m8UYbBqRhmsYIdA036EXtxYLize3FXjV9yNC9x15wiRGl3+XMCiWEW?=
- =?iso-8859-1?Q?eKWmvpE9F2r4rTW14q1sfHx4CEeVZ+SMiBvdKJBGzbtv8zp4/bQvf8vIpi?=
- =?iso-8859-1?Q?bJWWYkB8id5mmoXwk3i/pvWznfZ07m8ytQX+IKui33+lHtLaL/rua9O28x?=
- =?iso-8859-1?Q?0HUSUqAr7BOXkmmW04h2ELmTLlT08cw7lYLOPLeBGGXwV5CD7VW6iQsjAd?=
- =?iso-8859-1?Q?JAkvJY+OALRFzFHTqRqgCf4WSd4h1UrFkBRcdCPUBvjsBC/sdBQ9G11Lbh?=
- =?iso-8859-1?Q?PGP91hxhTPy1yfwb?=
+ =?iso-8859-1?Q?+07pQ7uBjSMcc8zkVmJ+rH1Iyb/NwzFLzGR6qxHTAU0igtp0miZUGQvus+?=
+ =?iso-8859-1?Q?3m57WDZkScHKe8l/k5q17ryOilq27gy7Op3Mz3b0QT3Ogv7Wu95s3hGpQL?=
+ =?iso-8859-1?Q?HNMQMaKt0d9AqKKY792uKkRHS2DK39LcAX88fux0GNmJck11tFkcLiTCS8?=
+ =?iso-8859-1?Q?fw+Zmi0NlbyfrEJodEyi5yUrE71e3GzY060kc4ZVVFK5a7QJPaIKODfwMC?=
+ =?iso-8859-1?Q?P+apAc+uwnQztTc/8nbB1C2K0ALAauMXzwbodfn0696DBFXR8oVyv6SPGv?=
+ =?iso-8859-1?Q?XLXcsYuHYzAcqFaJqYFGateVmQ3HJPad/Ipz6RyTrTKuFFbI1//+UQaHtj?=
+ =?iso-8859-1?Q?8e/fGAGIBqGstwjORB6G2pcLpuGcMrmrs1iV0eHFI4ZP+U6f728a8f2VTu?=
+ =?iso-8859-1?Q?ECxLrRDBmFcqoDLa8iZ5B7cbMTgUy69y1HmcQozDmX7GqIJEM0xWZInSCf?=
+ =?iso-8859-1?Q?Rxnx7GrrweiKkfOI8iVe00fNKicH/UcBUN0riluBej0758Nn1Avm6j3SBY?=
+ =?iso-8859-1?Q?gK5v6aaMv135lsixxEumxrqIicT6Tf3qyx/Q6XwZsWqR1Ux+nA2nxj7Bux?=
+ =?iso-8859-1?Q?dEkX8QZIGwX49YhhTi/b0xXKby22LF1OJJCux+7SWsxkhzjdPZCoAmGAjq?=
+ =?iso-8859-1?Q?eCTf2lTSS1qn9EC21U8kyA9hSIXFHqYQVSRrZ3J6YrG8buGyHDlkpcDZCV?=
+ =?iso-8859-1?Q?ZtwW0q6DVZiF35G1bVN2NFhRF0vcT2mfdxTl2tLDa80INM4B8Z1j1r8Mxe?=
+ =?iso-8859-1?Q?B6gJ+bFnNI1iyI7FEYbKveJghJ7TsQIfefyIoHLHIE5sLqxAKy1ep7Gis2?=
+ =?iso-8859-1?Q?tONDGQoavSxv2HtaMr+5J2Mt3lEc+izl79Q4aNKTA1hf858uuyXLAPeDTJ?=
+ =?iso-8859-1?Q?I9+wbfH6jCo86ISXJckNRkPDzxapYkpfApEQCqEY7LWhxmY+PQgFJz26vZ?=
+ =?iso-8859-1?Q?6VZgr4SmE3WjCCv7uGY5pj1XoIOE1cStbV/Zj5Lrh7I2tSBZ0TnE0cDeVX?=
+ =?iso-8859-1?Q?Ia6zdvmqZMK0c0sI+n9M06afiRH+nCaYFiOjoWoSsqQUtffGP1O4FF8PEl?=
+ =?iso-8859-1?Q?zIhbMCYt51MOQPEK9d+Hbr4LvV1AiiWVdtbZ1rvHOceS1UwL/2j5J9oyHZ?=
+ =?iso-8859-1?Q?HH0hffgMVR7z4BKiuUJ39VJM/Tg/1Frc8xuIEhihSiJj4JnwAbQQj1A0uy?=
+ =?iso-8859-1?Q?F7mcEMPCaHd/fwUo5FbuhZ/0MIy4gdZLccr1PF8tPHN6742CR639Nk/6HM?=
+ =?iso-8859-1?Q?Hixs5tzWfPli/x8ZqiBDSIuhU7wbYUYfuxC5Sdfno+F/GYd+SDnQ0HJ+8s?=
+ =?iso-8859-1?Q?AWKWxRxaLSmyG8DALMCEpC6mUv/PktjseujDP5i29NzdPLV47pYxeY42Hu?=
+ =?iso-8859-1?Q?SpPzFUERYnauG4lrfGqQxdSeEXzNn2Q6o9dneh+V2mYXIt4S+zz+e21Rla?=
+ =?iso-8859-1?Q?IKee2UqxIuU7iLhr?=
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -160,57 +161,96 @@ X-OriginatorOrg: outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
 X-MS-Exchange-CrossTenant-AuthSource: BN6PR05MB3281.namprd05.prod.outlook.com
 X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg: 00000000-0000-0000-0000-000000000000
-X-MS-Exchange-CrossTenant-Network-Message-Id: 860df887-40a2-451f-f2ed-08df47a94375
-X-MS-Exchange-CrossTenant-originalarrivaltime: 21 Nov 2026 08:27:21.6140
+X-MS-Exchange-CrossTenant-Network-Message-Id: e01db54b-07d7-4349-6fde-08df47a944c1
+X-MS-Exchange-CrossTenant-originalarrivaltime: 21 Nov 2026 08:27:23.8017
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
 X-MS-Exchange-CrossTenant-rms-persistedconsumerorg: 00000000-0000-0000-0000-000000000000
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR05MB7838
 
-sr_read_cdda_bpc() retains its completed request while unmapping the user=
+The synchronous SCSI BSG ioctl copies sense data and unmaps its user=0A=
+data buffer while retaining the completed request. Copyback can fault=0A=
+and need I/O from the same queue, which cannot progress when completed=0A=
+requests retain the available tags.=0A=
 =0A=
-buffer. For a bounced data-in mapping, unmapping can copy to userspace=0A=
-and fault. A fault that needs I/O from the same queue cannot progress if=0A=
-the completed request retains the available tag.=0A=
+Fill the kernel-resident output fields and save the bounded sense data=0A=
+before releasing the request. Perform both user copies afterward, using=0A=
+the original BIO chain saved at mapping time. Preserve the copyback=0A=
+error precedence established by commit a52f2ad45726 ("scsi: bsg: Report=0A=
+synchronous data copyback failures").=0A=
 =0A=
-Release the request after consuming its command result and sense data,=0A=
-before unmapping the original BIO chain saved at submission. No request=0A=
-or SCSI command field is accessed after the release. The saved BIO chain=0A=
-holds its own references, which blk_rq_unmap_user() releases.=0A=
+The SG_IO v4 implementation predates scsi-mq. The finite number of request=
 =0A=
-The finite number of request tags introduced by scsi-mq creates this=0A=
-dependency. The later move of the CDDA implementation from drivers/cdrom=0A=
-into sr was a relocation.=0A=
+tags introduced by scsi-mq creates this dependency; moving the callback=0A=
+into scsi_bsg.c did not change its ownership ordering.=0A=
 =0A=
 Fixes: d285203cf647 ("scsi: add support for a blk-mq based I/O path.")=0A=
-Link: https://lore.kernel.org/r/20261022.scsi-cdda-lifetime.8f31a2c97b42@ou=
-tlook.com=0A=
+Link: https://lore.kernel.org/r/20261022.scsi-copyback-review.31b8d6a70f4c@=
+outlook.com=0A=
 Cc: stable@vger.kernel.org=0A=
 Signed-off-by: Yingjie Wang <x-professor@outlook.com>=0A=
 ---=0A=
-No code changes from v4. Clarify BIO ownership and the tag dependency.=0A=
+No functional changes from v4. Clarify the tag dependency and name the=0A=
+existing copyback-error fix.=0A=
 =0A=
- drivers/scsi/sr.c | 3 +++=0A=
- 1 file changed, 3 insertions(+)=0A=
+ drivers/scsi/scsi_bsg.c | 23 +++++++++++++++--------=0A=
+ 1 file changed, 15 insertions(+), 8 deletions(-)=0A=
 =0A=
-diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c=0A=
-index 4f2e8d1be6da..c64c25e9f404 100644=0A=
---- a/drivers/scsi/sr.c=0A=
-+++ b/drivers/scsi/sr.c=0A=
-@@ -969,8 +969,11 @@ static int sr_read_cdda_bpc(struct cdrom_device_info *=
-cdi, void __user *ubuf,=0A=
- 		ret =3D -EIO;=0A=
+diff --git a/drivers/scsi/scsi_bsg.c b/drivers/scsi/scsi_bsg.c=0A=
+index 3cf1caad02f7..c17cad798326 100644=0A=
+--- a/drivers/scsi/scsi_bsg.c=0A=
++++ b/drivers/scsi/scsi_bsg.c=0A=
+@@ -207,6 +207,8 @@ static int scsi_bsg_sg_io_fn(struct request_queue *q, s=
+truct sg_io_v4 *hdr,=0A=
+ 	struct scsi_cmnd *scmd;=0A=
+ 	struct request *rq;=0A=
+ 	struct bio *bio;=0A=
++	u8 sense_buffer[SCSI_SENSE_BUFFERSIZE];=0A=
++	unsigned int sense_len =3D 0;=0A=
+ 	int ret, unmap_ret;=0A=
+ =0A=
+ 	if (hdr->protocol !=3D BSG_PROTOCOL_SCSI  ||=0A=
+@@ -266,14 +268,9 @@ static int scsi_bsg_sg_io_fn(struct request_queue *q, =
+struct sg_io_v4 *hdr,=0A=
+ 	hdr->response_len =3D 0;=0A=
+ =0A=
+ 	if (scmd->sense_len && hdr->response) {=0A=
+-		int len =3D min_t(unsigned int, hdr->max_response_len,=0A=
+-				scmd->sense_len);=0A=
+-=0A=
+-		if (copy_to_user(uptr64(hdr->response), scmd->sense_buffer,=0A=
+-				 len))=0A=
+-			ret =3D -EFAULT;=0A=
+-		else=0A=
+-			hdr->response_len =3D len;=0A=
++		sense_len =3D min3(hdr->max_response_len, scmd->sense_len,=0A=
++				 sizeof(sense_buffer));=0A=
++		memcpy(sense_buffer, scmd->sense_buffer, sense_len);=0A=
  	}=0A=
  =0A=
+ 	if (rq_data_dir(rq) =3D=3D READ)=0A=
+@@ -281,9 +278,19 @@ static int scsi_bsg_sg_io_fn(struct request_queue *q, =
+struct sg_io_v4 *hdr,=0A=
+ 	else=0A=
+ 		hdr->dout_resid =3D scmd->resid_len;=0A=
+ =0A=
 +	blk_mq_free_request(rq);=0A=
- 	if (blk_rq_unmap_user(bio))=0A=
- 		ret =3D -EFAULT;=0A=
-+	return ret;=0A=
 +=0A=
++	if (sense_len) {=0A=
++		if (copy_to_user(uptr64(hdr->response), sense_buffer, sense_len))=0A=
++			ret =3D -EFAULT;=0A=
++		else=0A=
++			hdr->response_len =3D sense_len;=0A=
++	}=0A=
++=0A=
+ 	unmap_ret =3D blk_rq_unmap_user(bio);=0A=
+ 	if (!ret)=0A=
+ 		ret =3D unmap_ret;=0A=
++	return ret;=0A=
+ =0A=
  out_put_request:=0A=
  	blk_mq_free_request(rq);=0A=
- 	return ret;=0A=
 -- =0A=
 2.43.0=0A=
 =0A=
