@@ -1,56 +1,56 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795229767;
-	b=s25X1xFvj2D6HusJtpz6JNDNZ6amn4dufUQzzUlCuR4t2kFsMHjKsOJgU5804oeMqF2N
-	 2rX6R7tr/e+t7+I41tYDQ/ylrJ8cmZ9QYhZDn829gYm2rq7bbkfEzrT/C2SjXtgAMRrgS
-	 9atLIRiTKVvn81l0QvHkzHj6noOWxBReW3Qg8/YXYYCxh1el7rayPXMnn8JdR9RC3Xvom
-	 jB1IWAOXsuJaKAuVfS1ayQRSd4VmnHtLVX94fbemJvyoNSQ8j5DFdFUipfm4dpOPGpKey
-	 9H1R9rXZKLlQ1BVssi5XH5f/Lo0X4W51RXOoFuXV9VhRqo8ZgUzyPF9sVjLx0km+3WA==
+	t=1795229832;
+	b=V+UZpdFyQRgsUmY9+3C1htqi1YmDhdnAkS/h9fCJqDEoUw6/860LR5zFuvPG1mJaJ6+D
+	 aepQJT6HzCM7zQpgR/VTVWuFjEMvIlzK0Z/lqTYiExYG7qZpgTdvE+QwZgiquQMmw5vKU
+	 wAkKec4b8n4N43gGeNZEZ4ikuDfBiHoyhTn3q8S+F7y8W1AiMxaImTRRqRZhbXHIg7i4s
+	 aAk7wYtWOE59YBlwuCPY567eS9eUA90YyMDNwgcOGKjV547cil0LSMO41A5kYHGFZYFB/
+	 oDBrc+9dIwM6IrL4+coTdii/ERIwg7tPt8skwzbKZP84aVgg3Djg5XEIlUhnF7ie8rA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795229767;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795229832;
 	h=Received:DKIM-Signature:To:Cc:Subject:From:In-Reply-To:Message-ID:
 	 References:Date:MIME-Version:Content-Type;
-	bh=sJoVwgXsrrvrc+yBOoDx/gllMAlzga1+5crKtB43PgY=;
-	b=SFAbugOzXnSYyMJkwEvE7TEl5OLCn91xk+WKlRULQjB/Kza7Ycy7i4G9F3XIPHngbGV+
-	 fDTmfac0jGj1HMjw7nCQ2DD+fQznjiZMY0RB5KfPEMVZ4RtLfIsLcGLhEmOiDa2aGNsX+
-	 FxKsD6FRssICcpRXwM8ZBgiURP9xuPD77VILRuDB3d507149ACColx92R0gHTGYaTJweJ
-	 vYr+bgZHULPVlI6FRWHrw4ZSGaeUM8dK4SATaLFD4gDzVP2/xoY1NpN/DI+S5OvlabCL3
-	 R3oBQuxEd3QdSw4P/M233H5bW5E3rm7iBZCJ/jA3mv3r4Wbg+gWFvEWg4N07vJZEVag==
+	bh=IOVeMD6HfGZ7JHM2W+bcqXoEk7mbXK7Fu9/QARslgbA=;
+	b=TRtlUAfJMxZr+qH9CnEt1JfU44jBCOLnsh0XzxULaZrn2YoNhnsSGFKLfAkYVaTSAY/9
+	 q+LWa/okeoQA29T6Zz3FTD9KPcZ+pMOrYHZ7AjNQ57clvepAJBhEGwgsteTh3FoiLORNw
+	 onz4t1yLDYM7CRug9v/C/0pQyrUVUNEs6CmSmFZ9F5VinxT2fPiavJYLJdUQ72whPVY9M
+	 NLiVTsL3EpFxeWMqVpXGuyrUWC6qOlu9Mk0jb2bHqhJJDxF+PKFSTnitamTeboYVOOn16
+	 NJlHn+aKMWk0EA2cKDk1tdJ7R/SIlmx0+43yHZJNnmKDV5QuZmdPa1zBmRhS9W2duyA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=KtwPvGF5;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=I5Ha6tjo;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB47B606A699;
-	Sat, 21 Nov 2026 02:56:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D8A7606A6AE;
+	Sat, 21 Nov 2026 02:57:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=KtwPvGF5
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 439AD1F000C0;
-	Sat, 21 Nov 2026 02:56:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=I5Ha6tjo
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BEDBE1F000C0;
+	Sat, 21 Nov 2026 02:57:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795229767;
-	bh=sJoVwgXsrrvrc+yBOoDx/gllMAlzga1+5crKtB43PgY=;
+	s=k20260515; t=1795229832;
+	bh=IOVeMD6HfGZ7JHM2W+bcqXoEk7mbXK7Fu9/QARslgbA=;
 	h=To:Cc:Subject:From:In-Reply-To:References:Date;
-	b=KtwPvGF5JpDX4biBU3cN2pjK5RnB4j8gB9IJsAxUgn4lfhMFs6DHxnoG9GAseeekJ
-	 0mshuxZj5Yf/oxIakE39ovHWXBSFiwVrRSDX6/UuBazcC5PHeb7dPfM9rjJnVBf7uz
-	 Oi9KwnYHPbXnOuBtoOZYi9Xjt6+TUlApiokKTTUCncrTCIMSv2VTdzl+2+ZZqd60T/
-	 JnNz5rU4z1NVYEuKz5NQH9eMWt94PBo5rRPa/EzCn0pbfzrVcubmtn9TwERPrf27Lu
-	 108ycBUvfvrd+h5bQlv9DM9ggn1HKiJGcFCc3gchofhbwuSHwo/guOzyFicbjVbV2k
-	 OCMPAnFXnqyYQ==
+	b=I5Ha6tjoLUkjtWeT73APcmFxrU5eTuS16yP0wFEcOFm90wLtBmHppnGh/sttCb6PI
+	 eeAeHnTv+rv+uSn0nevhqR/lDexQ6jm9nDJMkaUGjjYC4Ce6Yy20Dx5O6ihLm4pPsD
+	 nsyiXJS++cOoWIiZowQ7323h6pKF7ZtYV9YZ3wVEl8GTseIBGfE0TLm7Shhnnre3US
+	 phijU3m1naeFDXpxJNRC6cgnzlwrCjT1xNIL4O/QggyYTmnMMg9AtfBstwNTcz4VG6
+	 /OdKFZPw3Ar0qVc1Cw9aHeKVvMvuSdzHMMqoLE8Ip+fjU2QV4Scv7pMvlmKAqhZU9h
+	 h5M3Zjpz7d9RA==
 To: Damien Le Moal <dlemoal@kernel.org>
 Cc: Jens Axboe <axboe@kernel.dk>,  linux-block@vger.kernel.org,  Christoph
  Hellwig <hch@lst.de>,  linux-scsi@vger.kernel.org,  "Martin K . Petersen"
  <martin.petersen@oracle.com>
-Subject: Re: [PATCH v13 12/13] scsi: sd_zbc: define storage element
- management operations
+Subject: Re: [PATCH v13 13/13] scsi: sd: fail read commands to offline zones
+ early
 From: "Martin K. Petersen" <mkp@kernel.org>
-In-Reply-To: <20261120210651.580511-13-dlemoal@kernel.org>
-Message-ID: <yq1jym6nb9k.fsf@mail.kernel.org>
+In-Reply-To: <20261120210651.580511-14-dlemoal@kernel.org>
+Message-ID: <yq1eccenb7s.fsf@mail.kernel.org>
 References: <20261120210651.580511-1-dlemoal@kernel.org>
-	<20261120210651.580511-13-dlemoal@kernel.org>
-Date: Fri, 20 Nov 2026 21:56:06 -0500
+	<20261120210651.580511-14-dlemoal@kernel.org>
+Date: Fri, 20 Nov 2026 21:57:10 -0500
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -65,15 +65,12 @@ Content-Type: text/plain
 
 Damien,
 
-> Define the storage element management operations using struct
-> blk_se_ops. These operations are valid only on SMR disks supporting
-> the storage element depopulation featu, with support for the GET
-> PHYSICAL ELEMENTS STATUS command being mandatory. The support for the
-> modify_zones operation is already indicated by the
-> depop_modify_zones_supported SCSI disk flag.
-> sd_zbc_check_depop_supported() is modified to add detection for the
-> command RESTORE ELEMENTS AND REBUILD, which is indicated with the new
-> SCSI disk flag depop_restore_supported.
+> Issuing read commands to offline zones of a ZBC disk will result in
+> failures. So do not issue such command and fail them early in
+> sd_setup_read_write_cmnd(). This change also checks write commands,
+> which is fine but should actually never happen as the block layer zone
+> write plugging code already fails write BIOs to offline zones early in
+> the submission path.
 
 Reviewed-by: Martin K. Petersen <mkp@kernel.org>
 
