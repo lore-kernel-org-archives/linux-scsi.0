@@ -1,58 +1,56 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=220.197.31.5
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795363520;
-	b=KwXZ1qptwnb8tkI0yqJpEgiCL0mqOpVRhDBCotjwTEtytxFOCx/ga9YUzbHbWng/E3gy
-	 8LQbJXXPDkEPMci3XDeZ9GJyWPWYodBDZ3hrfpL6Ot15XOPtF7SICPYDv1nQtHUPfw6fw
-	 DvyIO/3SjDTJBRQCbOv3a+c3LYsUpIGU1jHH/XHcFmgi3rWHdGWu8oWcbDeL56OIybTom
-	 6qgYHXfbqZJFXhe8wPv294xkKdUaEdH9C8qozB+UPdA7ZsIfEIlSRCidzZu21gW8mhNk7
-	 nTNN7EAJFMwJVI19xirQP58uxDazfDP8gDP3SfaMWUL7jWSU5bgEArOJniJVQ21YEWQ==
+	t=1795364080;
+	b=smYt0LoPb3uhdWKDnKDK9YI4kgB5xEfS+Z1CCz7IFiVg6RO0k4zwkmH2VTeZ+p3s+QXZ
+	 kp6pOcrtGrR+JHKwpA6u26fc5ws2Fx9Eq1F2U4KX9xgX8jnOHOeBzGOIjq5/cs+eo38px
+	 z5+KSMj1I/yRc0Zw6qcBbubcNwEBvsoxGZC0d4SGhfLXavp5OtTnYp1qOHoK7O2ht8BuG
+	 ZdPzPwoyN8/Ieydgz5iWqXRUuIyXfJ8b/VD6co6jDDpVJAsdyuc8/Uy3ntAVTBfzV1l9P
+	 ECWeGWdTnSDqs4A5EbIcgXeL7y32uzvWwedaMFE5NiUv5dEVAWIG8eY6vTxcsSenzuA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795363520;
-	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
-	 Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding:
-	 X-CM-TRANSID:X-Coremail-Antispam:X-CM-SenderInfo;
-	bh=Fjpy/v9DDwCofr6eeX3DIOZaJKkQojAfzwVNo0pgkt4=;
-	b=LlJw8XvpPXJNPrKPaVsauf3ZaZZLjwhIxZJJW6vX4bxNFkLxYMrJ86RcO6Dpj3m5jqBK
-	 xe7SdmEUnkA1rUMTDjvmCHpy7pXg9UtTVZ+kTvbvc3KOVjoiULkBmWldDBe3kV2FlQPqU
-	 wRHZA/HFXkutbBCCD3SKcikixtCkAx4YfsZwKPB85nlzRK7Ym2Rpop4zptUgXHUa3S4ja
-	 tMuFrIwyd/5l4sXDOnWvz6k/NAA7Ju0QXOZz1LoVmqyBen9TTaO3ZdWZgSKm7+RdYeQrs
-	 tX3bdGDAxxpNPSDQUhoky+LbwdX1NoQU/RGn8lopihZbYKY5GGzYd+8qyU+HcP76wqQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795364080;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=u6sDWGOByAoO4+PqC8vlMBbAF4hZGbW9o447yt4qgjM=;
+	b=O3UJCQ/plUo2UK6FV+iVs6/kj229+b7vmkeOc4ovcvqgyEEmdVlLw7HrO2eh5bokICsx
+	 8RvJkKKFzoLORK6tbHK6apR5tPe4KAhCxZKWskZ/m+zFnLtIRNtqNy7G4B664jVqVhge3
+	 pSdCOKbTk3+Wdi/yQt3hRYcTsyZ3x/2qaa/1EvS+1m0KPP6defkHIfFGo0HKxJIhaI0/L
+	 ZILI2tEm9Dc1LgOPHy2EXdGv3Nb4AgshtSyuYdf9USlTQUAtjr7ghsOeXRTVJAfF1P+pJ
+	 SedtZreDAPeM9jOwodNnCduMwhLSWJpSAgzc2tcivF1vFXQVHnAhKmHsbyhts9sAy7g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=163.com;
-	spf=pass smtp.mailfrom=163.com;
-	dkim=pass header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=dOCFbLhR;
-	arc=none smtp.remote-ip=220.197.31.5
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.5])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=cvp7FcrF;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5C3A606A33C;
-	Sun, 22 Nov 2026 16:05:18 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C5C3A606A33C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B8CE606A320
+	for <linux-scsi@vger.kernel.org>; Sun, 22 Nov 2026 16:14:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=dOCFbLhR
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-ID:MIME-Version; bh=Fj
-	py/v9DDwCofr6eeX3DIOZaJKkQojAfzwVNo0pgkt4=; b=dOCFbLhRWEmA3KAW9O
-	/XYPsPoPoN1RWf6pNbmc4+Cko5iyvg4zhUPVTSwnQX7pDW0XFBEzDMM2CI+HiFok
-	1EQ9OSX3ESn9rv23hsqdntMgB0IcG3VaJw7m1LyT23DWtku/lABacZogOXqhyUBR
-	OPUmOXyv8qs7EZJ+HXP9R5/eY=
-Received: from user-VMware-Virtual-Platform.localdomain (unknown [])
-	by gzsmtp3 (Coremail) with SMTP id PigvCgCnPyafEgNrVQpUHg--.41122S2;
-	Mon, 23 Nov 2026 00:04:48 +0800 (CST)
-From: Ziheng Wei <zihengw03@163.com>
-To: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K . Petersen" <mkp@kernel.org>
-Cc: linux-scsi@vger.kernel.org,
-	linux-m68k@lists.linux-m68k.org,
-	linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org
-Subject: [PATCH] scsi: 53c700: fix invalid frees in m68k driver remove paths
-Date: Mon, 23 Nov 2026 00:04:47 +0800
-Message-ID: <20261122160447.519889-1-zihengw03@163.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=cvp7FcrF
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F13411F000CA;
+	Sun, 22 Nov 2026 16:14:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1795364080;
+	bh=u6sDWGOByAoO4+PqC8vlMBbAF4hZGbW9o447yt4qgjM=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=cvp7FcrFVjPbT+0xt/4o/dS6cOUdZd081JJiJa59pBr4amTX35OpregND2xJ29H+Y
+	 6B3z81uKcqhMYcUzFyOWVDvMoWswCZ68ywJTmarL+FQjIZfPCCHMQsLWcvJ7xYwa+i
+	 RlDhnuy1BFfonKRFSVFlQ+n20zv/3gapTX1dkqg2fWZZ3zsREJnRsN+VQBh4B6lrsz
+	 cV5y7BbGr2QAbFk8meLsb7xWPAjnWaGUtazf3KAQhOstvuAIyfknLlUU9zg0l7U1Wm
+	 VhX7OcUaKHJU4WQX8Uok2z582aamByzD4SQxZofBO9y16kaSA2AsCEyNIg+HB43cup
+	 Y04upM5T8F0jw==
+Message-ID: <sashiko-outbox-228089@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] scsi: 53c700: fix invalid frees in m68k driver remove
+ paths
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Ziheng Wei" <zihengw03@163.com>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20261122160447.519889-1-zihengw03@163.com>
+References: <20261122160447.519889-1-zihengw03@163.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Sun, 22 Nov 2026 16:14:39 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -61,96 +59,73 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:PigvCgCnPyafEgNrVQpUHg--.41122S2
-X-Coremail-Antispam: 1Uf129KBjvJXoWxCFWkurWfXry5XFyxJr13Jwb_yoW5tw15pF
-	Wv93y5Cr4DKF1jgw1xGrWUAFySk3Wxt34jgay8u34S9FWUtryUXF9FgFW5CF95tFWkGanI
-	qF4Dtry29FsrXFUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jEpBfUUUUU=
-X-CM-SenderInfo: p2lkv0ljzqjqqrwthudrp/xtbC7QBImGsDEqCedwAA3O
 
-NCR_700_detect() stores the allocated host parameters in
-host->hostdata[0]. The m68k remove paths instead use shost_priv(host),
-which returns the address of the pointer slot and causes an interior free.
+Thank you for your contribution! Sashiko AI review found no new issues
+in this patch, but noticed 1 related pre-existing issue it does not
+introduce:
+- [Critical] scsi: bvme6000: sysfs use-after-free and DMA leak in
+  bvme6000_probe() [1]
+--
 
-Free the pointer stored in host->hostdata[0], as the other 53c700 drivers
-do.
+commit 2fe2668801f69445d6459a951360087fb2a1f6f8
+Author: Ziheng Wei <zihengw03@163.com>
 
-Found by LLM-assisted static analysis. Cross-compiled for m68k; no
-runtime test on the affected hardware.
+scsi: 53c700: fix invalid frees in m68k driver remove paths
 
-Fixes: a16efc1cbf0a ("[SCSI] 53c700: Amiga 4000T NCR53c710 SCSI")
-Fixes: 8276b58af4dd ("[SCSI] 53c700: m68k BVME6000 NCR53C710 SCSI")
-Fixes: 506c7bbcd9bc ("[SCSI] 53c700: m68k MVME16x NCR53C710 SCSI")
-Fixes: 45804fbb00ee ("[SCSI] 53c700: Amiga Zorro NCR53c710 SCSI")
-Cc: stable@vger.kernel.org
-Signed-off-by: Ziheng Wei <zihengw03@163.com>
----
- drivers/scsi/a4000t.c        | 3 ++-
- drivers/scsi/bvme6000_scsi.c | 3 ++-
- drivers/scsi/mvme16x_scsi.c  | 3 ++-
- drivers/scsi/zorro7xx.c      | 3 ++-
- 4 files changed, 8 insertions(+), 4 deletions(-)
+This commit retrieves hostdata from host->hostdata[0] instead of
+shost_priv(host) in the m68k 53c700 driver remove callbacks so kfree()
+frees the NCR_700_Host_Parameters allocation rather than an interior
+pointer.
 
-diff --git a/drivers/scsi/a4000t.c b/drivers/scsi/a4000t.c
-index a02638b47..e35df140a 100644
---- a/drivers/scsi/a4000t.c
-+++ b/drivers/scsi/a4000t.c
-@@ -97,7 +97,8 @@ static int __init amiga_a4000t_scsi_probe(struct platform_device *pdev)
- static void __exit amiga_a4000t_scsi_remove(struct platform_device *pdev)
- {
- 	struct Scsi_Host *host = platform_get_drvdata(pdev);
--	struct NCR_700_Host_Parameters *hostdata = shost_priv(host);
-+	struct NCR_700_Host_Parameters *hostdata =
-+		(struct NCR_700_Host_Parameters *)host->hostdata[0];
- 	struct resource *res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
- 
- 	scsi_remove_host(host);
-diff --git a/drivers/scsi/bvme6000_scsi.c b/drivers/scsi/bvme6000_scsi.c
-index 23301edf1..4054f788d 100644
---- a/drivers/scsi/bvme6000_scsi.c
-+++ b/drivers/scsi/bvme6000_scsi.c
-@@ -93,7 +93,8 @@ static void
- bvme6000_device_remove(struct platform_device *dev)
- {
- 	struct Scsi_Host *host = platform_get_drvdata(dev);
--	struct NCR_700_Host_Parameters *hostdata = shost_priv(host);
-+	struct NCR_700_Host_Parameters *hostdata =
-+		(struct NCR_700_Host_Parameters *)host->hostdata[0];
- 
- 	scsi_remove_host(host);
- 	NCR_700_release(host);
-diff --git a/drivers/scsi/mvme16x_scsi.c b/drivers/scsi/mvme16x_scsi.c
-index f4db93c13..ba458c1a5 100644
---- a/drivers/scsi/mvme16x_scsi.c
-+++ b/drivers/scsi/mvme16x_scsi.c
-@@ -106,7 +106,8 @@ static int mvme16x_probe(struct platform_device *dev)
- static void mvme16x_device_remove(struct platform_device *dev)
- {
- 	struct Scsi_Host *host = platform_get_drvdata(dev);
--	struct NCR_700_Host_Parameters *hostdata = shost_priv(host);
-+	struct NCR_700_Host_Parameters *hostdata =
-+		(struct NCR_700_Host_Parameters *)host->hostdata[0];
- 
- 	/* Disable scsi chip ints */
- 	{
-diff --git a/drivers/scsi/zorro7xx.c b/drivers/scsi/zorro7xx.c
-index 894756326..6ec60deb7 100644
---- a/drivers/scsi/zorro7xx.c
-+++ b/drivers/scsi/zorro7xx.c
-@@ -161,7 +161,8 @@ static int zorro7xx_init_one(struct zorro_dev *z,
- static void zorro7xx_remove_one(struct zorro_dev *z)
- {
- 	struct Scsi_Host *host = zorro_get_drvdata(z);
--	struct NCR_700_Host_Parameters *hostdata = shost_priv(host);
-+	struct NCR_700_Host_Parameters *hostdata =
-+		(struct NCR_700_Host_Parameters *)host->hostdata[0];
- 
- 	scsi_remove_host(host);
- 
+[ ... ]
 
-base-commit: 97d73c8251226cf27cc6656b4c542869bb8c69fa
--- 
-2.43.0
+> diff --git a/drivers/scsi/bvme6000_scsi.c b/drivers/scsi/bvme6000_scsi.c
+> index 23301edf100d9..4054f788d1617 100644
+> --- a/drivers/scsi/bvme6000_scsi.c
+> +++ b/drivers/scsi/bvme6000_scsi.c
+> @@ -93,7 +93,8 @@ static void
+>  bvme6000_device_remove(struct platform_device *dev)
+>  {
+>  	struct Scsi_Host *host =3D platform_get_drvdata(dev);
+> -	struct NCR_700_Host_Parameters *hostdata =3D shost_priv(host);
+> +	struct NCR_700_Host_Parameters *hostdata =3D
+> +		(struct NCR_700_Host_Parameters *)host->hostdata[0];
+> =20
+>  	scsi_remove_host(host);
+>  	NCR_700_release(host);
 
+[Severity: Critical]
+This problem wasn't introduced by this patch, but in bvme6000_probe()
+[1], does the request_irq() failure path leave host registered in
+sysfs and leak the script DMA memory?
+
+drivers/scsi/bvme6000_scsi.c:bvme6000_probe() {
+    ...
+	host =3D NCR_700_detect(&bvme6000_scsi_driver_template, hostdata,
+			      &dev->dev);
+    ...
+	if (request_irq(BVME_IRQ_SCSI, NCR_700_intr, 0, "bvme6000-scsi",
+			host)) {
+		printk(KERN_ERR "bvme6000-scsi: request_irq failed\n");
+		goto out_put_host;
+	}
+    ...
+ out_put_host:
+	scsi_host_put(host);
+ out_free:
+	kfree(hostdata);
+ out:
+	return -ENODEV;
+}
+
+NCR_700_detect() allocates DMA memory for hostdata->script and registers
+host via scsi_add_host().  Jumping to out_put_host without calling
+scsi_remove_host(host) and NCR_700_release(host) leaks the DMA buffer and
+leaves orphaned sysfs entries that can trigger a use-after-free after
+hostdata is freed.
+
+[1] https://sashiko.dev/#/bug/linux-a5cb5983-a660-49d3-a7cf-4b23466e8a59
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261122160447.5198=
+89-1-zihengw03@163.com?part=3D1
