@@ -1,71 +1,58 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.200
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=220.197.31.5
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795323195;
-	b=yxuegIDpYJBZnhwgzAX5K0VPKjYo/C8GQ0EEUJD38mBarZ5VU8V0kdgHlvhqVZPgb/Mx
-	 9KwDMXMpT5k4J2DXd/bLGs/k79RvCPHKGlHGmPJy7YHVbO/TnQSbnE+5CRdbGMJFvfLBU
-	 0vOQmJWYUPY/5cn7hL0dWNTbZjbVl15L557meLlMXs0D9qwyBdM589ft578oSOvRnDtk8
-	 IkC9Z2TFv0sSRAWL7Gm4ZpOppfHquMkG9qfoCpz+QXb+ymRtFqmYL0jTYG5WC5+JRedNS
-	 OHGc2A0eymvt5rxIsxeYPcJWX/JQlf77NDOWuBctySXfuZjUlc3q4s7hO6izK4A+KUg==
+	t=1795363520;
+	b=KwXZ1qptwnb8tkI0yqJpEgiCL0mqOpVRhDBCotjwTEtytxFOCx/ga9YUzbHbWng/E3gy
+	 8LQbJXXPDkEPMci3XDeZ9GJyWPWYodBDZ3hrfpL6Ot15XOPtF7SICPYDv1nQtHUPfw6fw
+	 DvyIO/3SjDTJBRQCbOv3a+c3LYsUpIGU1jHH/XHcFmgi3rWHdGWu8oWcbDeL56OIybTom
+	 6qgYHXfbqZJFXhe8wPv294xkKdUaEdH9C8qozB+UPdA7ZsIfEIlSRCidzZu21gW8mhNk7
+	 nTNN7EAJFMwJVI19xirQP58uxDazfDP8gDP3SfaMWUL7jWSU5bgEArOJniJVQ21YEWQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795323195;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Received:Date:Mime-Version:X-Mailer:Message-ID:
-	 Subject:From:To:Cc:Content-Type;
-	bh=KAzUKzhhhScUAMTrwfyxBtcZxPud2TmkB4S9e7vTEGg=;
-	b=MLEnB0Qr7McA1ifFbVVfG0lcIm+G1aF3aqSpcZt8hX4C0H3XsVHQwIkJdaZeXDCfVrab
-	 ZFBP3dPPnAtRc0vxK+OLfCl978RKHL2qgIGfXCqkFcgZ29IexwRjFnekF90SlX6f02aqF
-	 43+/YQXTRQzAkdiwtFBrQf1K8tDUXZSaE8FSou/NWtx26S0LK7hRrcmWmkC619q22/qHK
-	 RZVG+dU0QWJwE1i5q/NrdSznNN3bSf6BsfBCvgMVVh0PdI+WHL5eUFaFxxA9ZkDwTVjq2
-	 ozK8WfkV15irh4L0RSmiEV0pw8jhIevrvtOsrx++WlLLvA8zmw+tx7ecB3KRMIPKpzw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795363520;
+	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
+	 Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding:
+	 X-CM-TRANSID:X-Coremail-Antispam:X-CM-SenderInfo;
+	bh=Fjpy/v9DDwCofr6eeX3DIOZaJKkQojAfzwVNo0pgkt4=;
+	b=LlJw8XvpPXJNPrKPaVsauf3ZaZZLjwhIxZJJW6vX4bxNFkLxYMrJ86RcO6Dpj3m5jqBK
+	 xe7SdmEUnkA1rUMTDjvmCHpy7pXg9UtTVZ+kTvbvc3KOVjoiULkBmWldDBe3kV2FlQPqU
+	 wRHZA/HFXkutbBCCD3SKcikixtCkAx4YfsZwKPB85nlzRK7Ym2Rpop4zptUgXHUa3S4ja
+	 tMuFrIwyd/5l4sXDOnWvz6k/NAA7Ju0QXOZz1LoVmqyBen9TTaO3ZdWZgSKm7+RdYeQrs
+	 tX3bdGDAxxpNPSDQUhoky+LbwdX1NoQU/RGn8lopihZbYKY5GGzYd+8qyU+HcP76wqQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=google.com;
-	spf=pass smtp.mailfrom=flex--irogers.bounces.google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=T9Dx2IzC;
-	arc=none smtp.remote-ip=74.125.82.200
-Received: from mail-dy1-f200.google.com (mail-dy1-f200.google.com [74.125.82.200])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=pass header.from=163.com;
+	spf=pass smtp.mailfrom=163.com;
+	dkim=pass header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=dOCFbLhR;
+	arc=none smtp.remote-ip=220.197.31.5
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.5])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D3B5D606A320
-	for <linux-scsi@vger.kernel.org>; Sun, 22 Nov 2026 04:53:14 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D3B5D606A320
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--irogers.bounces.google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5C3A606A33C;
+	Sun, 22 Nov 2026 16:05:18 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C5C3A606A33C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=T9Dx2IzC
-Received: by mail-dy1-f200.google.com with SMTP id 5a478bee46e88-386a7af8b94so261817eec.0
-        for <linux-scsi@vger.kernel.org>; Sat, 21 Nov 2026 20:53:14 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20260707; t=1795323194; x=1795927994; darn=vger.kernel.org;
-        h=content-type:cc:to:from:subject:message-id:mime-version:date:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=KAzUKzhhhScUAMTrwfyxBtcZxPud2TmkB4S9e7vTEGg=;
-        b=T9Dx2IzCg47LpQsrxsYA+MyD/81CEBq4KpcGiiqTNbZBP6lFw/EEyzNcteG3bgE0Ru
-         +eqNeU/qun6by1zItyn7vPz/AAncmqxiorYUOvoqxE3XZUrQ+2NZPEsqFm5FNR9TdqmM
-         Dk1CPwcUOSRxEAJ5jITm8fk6Axtt5lxPIJCF1Ay4HTLsPmvfDIZKZJQSHqOXVQpsMaS+
-         4ncoSOFZ+AqD0jh8pCAM/yHAPCBc3Wlkgqmo76++zzytXOlCiQHe/M7a2A9CKjHPsN6X
-         W+DMxkRdDpa9EY6rvgMzT62shmJFWai8cODkxFTgELtK+BpFUuNrs2O6+hQ67NYsXy0x
-         eZHQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795323194; x=1795927994;
-        h=content-type:cc:to:from:subject:message-id:mime-version:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=KAzUKzhhhScUAMTrwfyxBtcZxPud2TmkB4S9e7vTEGg=;
-        b=b2pkNJ+LsSDl9/dERaxnQOJUTPWrKV1k0nXy4Nxc+gYgnIjxisyQloOb74fFSNPZvj
-         JQwR/JICjdny19P20Rurs25HDt1HPCPLiexbvY7W6ztm8yadpehOIpZRbE8DhEtEBV3s
-         SOTG/xG+9RJYgOP9++h0pIXwxhKyWXFT5QjrTLYgI97r371TMWdKUSukDMf1CMfMsPDZ
-         wGfnqlM7dyTCJE1wPwuuNKX9GO64uCF3UTvc+CY4Cmu0vZgDLUIK4LcvhunOgPa9joMz
-         s1FdMsXQXfYJKEgiBE/1XSyhVABT7wwsVMIN77Otak+K4Va/t2HMOjxD8nwBQECJXj70
-         PT9w==
-X-Gm-Message-State: APuU4Z+cC+Ot5UD6qlMutznCztTvOf30ELYC1s1OC191dLVaOB+GmzKU
-	iQlMmkAgUySM9Z51JtSZ+sKWwOBO7jdU3FSfWRB+74sNv2yfp8AHpWRq9u3x5ak2L7+T9b7edUu
-	Hn4PrazISmA==
-X-Received: from dybzy10.prod.google.com ([2002:a05:7301:e10a:b0:381:6d21:2e90])
- (user=irogers job=prod-delivery.src-stubby-dispatcher) by 2002:a05:693c:20c6:10b0:36a:15ee:c20e
- with SMTP id 5a478bee46e88-3869a150409mr4897178eec.33.1795323193190; Sat, 21
- Nov 2026 20:53:13 -0800 (PST)
-Date: Sat, 21 Nov 2026 20:53:10 -0800
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=dOCFbLhR
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:To:Subject:Date:Message-ID:MIME-Version; bh=Fj
+	py/v9DDwCofr6eeX3DIOZaJKkQojAfzwVNo0pgkt4=; b=dOCFbLhRWEmA3KAW9O
+	/XYPsPoPoN1RWf6pNbmc4+Cko5iyvg4zhUPVTSwnQX7pDW0XFBEzDMM2CI+HiFok
+	1EQ9OSX3ESn9rv23hsqdntMgB0IcG3VaJw7m1LyT23DWtku/lABacZogOXqhyUBR
+	OPUmOXyv8qs7EZJ+HXP9R5/eY=
+Received: from user-VMware-Virtual-Platform.localdomain (unknown [])
+	by gzsmtp3 (Coremail) with SMTP id PigvCgCnPyafEgNrVQpUHg--.41122S2;
+	Mon, 23 Nov 2026 00:04:48 +0800 (CST)
+From: Ziheng Wei <zihengw03@163.com>
+To: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K . Petersen" <mkp@kernel.org>
+Cc: linux-scsi@vger.kernel.org,
+	linux-m68k@lists.linux-m68k.org,
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org
+Subject: [PATCH] scsi: 53c700: fix invalid frees in m68k driver remove paths
+Date: Mon, 23 Nov 2026 00:04:47 +0800
+Message-ID: <20261122160447.519889-1-zihengw03@163.com>
+X-Mailer: git-send-email 2.43.0
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -74,106 +61,96 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0
-X-Mailer: git-send-email 2.56.1.750.gf70dc682cf-goog
-Message-ID: <20261122045310.17980-1-irogers@google.com>
-Subject: [PATCH v2] scsi: aic7xxx: Check ahc->flags instead of ahc->features
- for AHC_SCB_BTT
-From: Ian Rogers <irogers@google.com>
-To: Hannes Reinecke <hare@suse.com>, 
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
-	"Martin K. Petersen" <mkp@kernel.org>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	llvm@lists.linux.dev, Elkin Cruz <elkin@google.com>, Ian Rogers <irogers@google.com>
-Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:PigvCgCnPyafEgNrVQpUHg--.41122S2
+X-Coremail-Antispam: 1Uf129KBjvJXoWxCFWkurWfXry5XFyxJr13Jwb_yoW5tw15pF
+	Wv93y5Cr4DKF1jgw1xGrWUAFySk3Wxt34jgay8u34S9FWUtryUXF9FgFW5CF95tFWkGanI
+	qF4Dtry29FsrXFUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jEpBfUUUUU=
+X-CM-SenderInfo: p2lkv0ljzqjqqrwthudrp/xtbC7QBImGsDEqCedwAA3O
 
-In ahc_linux_run_command(), the untagged queue throttling check tests
-'(ahc->features & AHC_SCB_BTT) == 0'. However, AHC_SCB_BTT (0x40000) is
-an ahc_flag bit stored in ahc->flags (and tested via ahc->flags at all
-17 other sites across aic7xxx), whereas ahc->features has type
-ahc_feature where bit 0x40000 is AHC_MULTIROLE, which is never set on
-any controller.
+NCR_700_detect() stores the allocated host parameters in
+host->hostdata[0]. The m68k remove paths instead use shost_priv(host),
+which returns the address of the pointer slot and causes an interior free.
 
-Until now, '(ahc->features & AHC_SCB_BTT) == 0' was always true, which
-serialized untagged commands across the whole target via
-ahc->untagged_queues and masked a second omission from commit
-e4e360c325c9 ("[SCSI] remove aic7xxx busyq"): ahc_platform_set_tags()
-sets queue_depth to 2 for untagged devices ("even though we can only
-execute them serially on the controller/device"), while SCB_64_BTT only
-stores one SCB tag per (target, LUN) slot. In addition, sdev->simple_tags
-remains set on SCSI-2+ devices even when aic7xxx disables tagging on dev
-(clearing AHC_DEV_Q_BASIC | AHC_DEV_Q_TAGGED).
+Free the pointer stored in host->hostdata[0], as the other 53c700 drivers
+do.
 
-Check both !(cmd->flags & SCMD_TAGGED) and
-(dev->flags & (AHC_DEV_Q_BASIC | AHC_DEV_Q_TAGGED)) == 0, return
-SCSI_MLQUEUE_DEVICE_BUSY when dev->active != 0 so untagged commands are
-serialized per LUN, and test ahc->flags instead of ahc->features for
-AHC_SCB_BTT so controllers with SCB-space busy-target tables can still
-issue untagged commands to different LUNs of a target concurrently.
+Found by LLM-assisted static analysis. Cross-compiled for m68k; no
+runtime test on the affected hardware.
 
-Found via an x86_64 LLVM=1 (Clang 21.1.8) allyesconfig audit with
--Wenum-enum-conversion enabled; fix and changelog drafted with an AI
-coding assistant. Build-tested under LLVM=1 W=1 (-Werror) and
--Wenum-enum-conversion; not tested on Adaptec Parallel SCSI hardware.
-
-Fixes: e4e360c325c9 ("[SCSI] remove aic7xxx busyq")
-Signed-off-by: Ian Rogers <irogers@google.com>
+Fixes: a16efc1cbf0a ("[SCSI] 53c700: Amiga 4000T NCR53c710 SCSI")
+Fixes: 8276b58af4dd ("[SCSI] 53c700: m68k BVME6000 NCR53C710 SCSI")
+Fixes: 506c7bbcd9bc ("[SCSI] 53c700: m68k MVME16x NCR53C710 SCSI")
+Fixes: 45804fbb00ee ("[SCSI] 53c700: Amiga Zorro NCR53c710 SCSI")
+Cc: stable@vger.kernel.org
+Signed-off-by: Ziheng Wei <zihengw03@163.com>
 ---
+ drivers/scsi/a4000t.c        | 3 ++-
+ drivers/scsi/bvme6000_scsi.c | 3 ++-
+ drivers/scsi/mvme16x_scsi.c  | 3 ++-
+ drivers/scsi/zorro7xx.c      | 3 ++-
+ 4 files changed, 8 insertions(+), 4 deletions(-)
 
-Notes:
-    v2:
-      - Serialize untagged commands per LUN via 'dev->active != 0' (and cover
-        devices where AHC_DEV_Q_BASIC | AHC_DEV_Q_TAGGED is clear despite
-        SCMD_TAGGED) so queue_depth == 2 cannot dispatch two concurrent
-        untagged SCBs to the same (target, LUN) slot when AHC_SCB_BTT is set
-        (caught by Sashiko review on v1).
-    
-    v1: https://lore.kernel.org/r/20261119170605.1518761-1-irogers@google.com
-
- drivers/scsi/aic7xxx/aic7xxx_osm.c | 28 ++++++++++++++++++----------
- 1 file changed, 18 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm.c b/drivers/scsi/aic7xxx/aic7xxx_osm.c
-index d93b522695eb..af5782a63155 100644
---- a/drivers/scsi/aic7xxx/aic7xxx_osm.c
-+++ b/drivers/scsi/aic7xxx/aic7xxx_osm.c
-@@ -1429,18 +1429,26 @@ ahc_linux_run_command(struct ahc_softc *ahc, struct ahc_linux_device *dev,
- 	 * We only allow one untagged transaction
- 	 * per target in the initiator role unless
- 	 * we are storing a full busy target *lun*
--	 * table in SCB space.
-+	 * table in SCB space, in which case we
-+	 * allow one untagged transaction per lun.
- 	 */
--	if (!(cmd->flags & SCMD_TAGGED)
--	    && (ahc->features & AHC_SCB_BTT) == 0) {
--		int target_offset;
--
--		target_offset = cmd->device->id + cmd->device->channel * 8;
--		untagged_q = &(ahc->untagged_queues[target_offset]);
--		if (!TAILQ_EMPTY(untagged_q))
--			/* if we're already executing an untagged command
--			 * we're busy to another */
-+	if (!(cmd->flags & SCMD_TAGGED) ||
-+	    (dev->flags & (AHC_DEV_Q_BASIC | AHC_DEV_Q_TAGGED)) == 0) {
-+		if (dev->active != 0)
- 			return SCSI_MLQUEUE_DEVICE_BUSY;
-+		if ((ahc->flags & AHC_SCB_BTT) == 0) {
-+			int target_offset;
-+
-+			target_offset = cmd->device->id + cmd->device->channel * 8;
-+			untagged_q = &(ahc->untagged_queues[target_offset]);
-+			if (!TAILQ_EMPTY(untagged_q)) {
-+				/*
-+				 * If we're already executing an untagged
-+				 * command we're busy to another.
-+				 */
-+				return SCSI_MLQUEUE_DEVICE_BUSY;
-+			}
-+		}
- 	}
+diff --git a/drivers/scsi/a4000t.c b/drivers/scsi/a4000t.c
+index a02638b47..e35df140a 100644
+--- a/drivers/scsi/a4000t.c
++++ b/drivers/scsi/a4000t.c
+@@ -97,7 +97,8 @@ static int __init amiga_a4000t_scsi_probe(struct platform_device *pdev)
+ static void __exit amiga_a4000t_scsi_remove(struct platform_device *pdev)
+ {
+ 	struct Scsi_Host *host = platform_get_drvdata(pdev);
+-	struct NCR_700_Host_Parameters *hostdata = shost_priv(host);
++	struct NCR_700_Host_Parameters *hostdata =
++		(struct NCR_700_Host_Parameters *)host->hostdata[0];
+ 	struct resource *res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
  
- 	nseg = scsi_dma_map(cmd);
+ 	scsi_remove_host(host);
+diff --git a/drivers/scsi/bvme6000_scsi.c b/drivers/scsi/bvme6000_scsi.c
+index 23301edf1..4054f788d 100644
+--- a/drivers/scsi/bvme6000_scsi.c
++++ b/drivers/scsi/bvme6000_scsi.c
+@@ -93,7 +93,8 @@ static void
+ bvme6000_device_remove(struct platform_device *dev)
+ {
+ 	struct Scsi_Host *host = platform_get_drvdata(dev);
+-	struct NCR_700_Host_Parameters *hostdata = shost_priv(host);
++	struct NCR_700_Host_Parameters *hostdata =
++		(struct NCR_700_Host_Parameters *)host->hostdata[0];
+ 
+ 	scsi_remove_host(host);
+ 	NCR_700_release(host);
+diff --git a/drivers/scsi/mvme16x_scsi.c b/drivers/scsi/mvme16x_scsi.c
+index f4db93c13..ba458c1a5 100644
+--- a/drivers/scsi/mvme16x_scsi.c
++++ b/drivers/scsi/mvme16x_scsi.c
+@@ -106,7 +106,8 @@ static int mvme16x_probe(struct platform_device *dev)
+ static void mvme16x_device_remove(struct platform_device *dev)
+ {
+ 	struct Scsi_Host *host = platform_get_drvdata(dev);
+-	struct NCR_700_Host_Parameters *hostdata = shost_priv(host);
++	struct NCR_700_Host_Parameters *hostdata =
++		(struct NCR_700_Host_Parameters *)host->hostdata[0];
+ 
+ 	/* Disable scsi chip ints */
+ 	{
+diff --git a/drivers/scsi/zorro7xx.c b/drivers/scsi/zorro7xx.c
+index 894756326..6ec60deb7 100644
+--- a/drivers/scsi/zorro7xx.c
++++ b/drivers/scsi/zorro7xx.c
+@@ -161,7 +161,8 @@ static int zorro7xx_init_one(struct zorro_dev *z,
+ static void zorro7xx_remove_one(struct zorro_dev *z)
+ {
+ 	struct Scsi_Host *host = zorro_get_drvdata(z);
+-	struct NCR_700_Host_Parameters *hostdata = shost_priv(host);
++	struct NCR_700_Host_Parameters *hostdata =
++		(struct NCR_700_Host_Parameters *)host->hostdata[0];
+ 
+ 	scsi_remove_host(host);
+ 
+
+base-commit: 97d73c8251226cf27cc6656b4c542869bb8c69fa
 -- 
-2.56.1.750.gf70dc682cf-goog
+2.43.0
 
