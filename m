@@ -1,56 +1,86 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=60.244.123.138
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795424263;
-	b=utcqFrnflDo2tG94ql1VpQrzjqe3AStSD7qMiMIrrQnaYoe+cpk3zwAqaH/euL75suRT
-	 fhopSIKnnvQ0TkPKG9DnYacPXo2wHziappfTAVjxxiz4JkHrP1M6L8ZeRrJToBuub+/EX
-	 wvLaSH5LHkmTrehHdnnxonU7GaF5IfjMN53FgrxJ3ue06FARTMOgtOEDBwzi4R3qoYlDU
-	 KocVjBzfv/KOk1hWDvTA8uYzgSlv7Tr6hchX+cRSQIXfE6mqrA2qy4uB/cGCrEt64t75o
-	 1JI8TJtviQV/LRG8R+c3S9tqYgnerlXB5/8TL9T7LzOnOsRMG97dr0B/e1v6lbQjc8Q==
+	t=1795425388;
+	b=H7rmOCymA1c0if58ynm+HUiA3pk+8T81PsDQwq5zrtW/X94W8WOeIxGR/UNwsAXjiYVI
+	 p8Uu1dV8c/NmDb8acExJKr2mZ5rryW2ecbSOPNwkfaerq0qqJFAq7hyh/hP1AdX/ZA6AQ
+	 OtS3o7kY0n5Q8z8QjpyJTI+vgm7oGwQqJeIXbeyCenKl+m18Qit6AVo1KSDf8av+3sub0
+	 AWRsI1j7S0WwIsN0ISY9VqKFyPm5jsgZlRHd4uMPZNmL8lgbBmb1TMtPTcdlRsI5SAJTw
+	 +8QAHT5YQyS9vixhArxzjq35sGq5jaOMUh7G0FWcpF/6SC87HLEzOYC1CmHq5Qi7y4g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795424263;
-	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
-	 MIME-Version:Content-Transfer-Encoding;
-	bh=Hs0P4ybaLBjv7aLmDLNOEUoJ+Z5BkgmRwLyXitJPJLs=;
-	b=FMv5ANg8vfKyn3yULLkCPAXRjU/z6SQL91tunxr/KQcX7jIf4qbEQjmAsd0YBpINnN5P
-	 8OUFz93ynKYivVpMYn0cfr63AHD4eKDgxKb9MWsIO2tqCRyisqqIj04sKUZit9UVMF6Un
-	 2rGecyn3DUKtHuMgQBG+1jj+aWQ/XXzB/sEQDaB73hpwkDY6WXQ/2uvAEiDzjwxa/nLhY
-	 aUZWE0vjEPM+4UEtB0CwGPfn26llglpGTD5ecM8RIQH6DtojPwNhOSGzqdUXjTA0B+Xq0
-	 ZObcrEC/akEEvGmEvIhqQoy8P/Q/1bXCRCPeFOsukr1e6FXJvzQo8B3QP5vRxcv3p4Q==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795425388;
+	h=DMARC-Filter:X-UUID:DKIM-Signature:X-CID-P-RULE:X-CID-O-INFO:
+	 X-CID-META:X-CID-BVR:X-CID-BAS:X-CID-FACTOR:X-CID-RHF:X-UUID:Received:
+	 Received:Received:Message-ID:Subject:From:To:CC:Date:In-Reply-To:
+	 References:Content-Type:Content-Transfer-Encoding:User-Agent:
+	 MIME-Version:X-MTK;
+	bh=L8vupdzGKc/JWjB/Cv3SKPopaesoBrBY+lWXbZ8JGJM=;
+	b=4/CQ+roFdkPYMFcJyrW/6rwZmHyo0UFT6qmRSNBzqgkMoJ1XGJhZDuFfu/rLga3eKqHe
+	 Ffmtg6AXfvOc980sEyLKnSPFPuFTplcqAszU5N6bBJu4ffb36N4B/K5io42cL3VdAu5lB
+	 bbMOyb6N3yo7KyqlMKQNJORf2DZ0EJwY1kY94u41uGl4DW7cgjL9doev+Uy0YZGBOUi8s
+	 MhtUZJlYSH7EeZoD3AEpXNMs/sv/UQ+jrtvkFYX4kh3BxzXMVvrhP8eFGW8KFTTNvAz24
+	 7idWe/xw/nEm+XAj9thV07t/ttptxfEvo7kJDy3lMSc6BzN9Nso/uwmpCVqphsTvxlA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kopbvCpH;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=mediatek.com;
+	spf=pass smtp.mailfrom=mediatek.com;
+	dkim=pass header.d=mediatek.com header.i=@mediatek.com header.a=rsa-sha256 header.s=dk header.b=RA8BmyPS;
+	arc=none smtp.remote-ip=60.244.123.138
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0253D606A32E;
-	Mon, 23 Nov 2026 08:57:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8CB6B606A31A;
+	Mon, 23 Nov 2026 09:16:26 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8CB6B606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kopbvCpH
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0C8FD1F00A01;
-	Mon, 23 Nov 2026 08:57:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795424262;
-	bh=Hs0P4ybaLBjv7aLmDLNOEUoJ+Z5BkgmRwLyXitJPJLs=;
-	h=From:To:Cc:Subject:Date;
-	b=kopbvCpHzVHjDaqJHHuJfOP2Z850FnfKz7NaCpm6MTn4jj17F6Jk6f+XFTZg5Up29
-	 1z3NN9+cQOmAoDWwQG8jLuz/w6icYovPzseRlSQpV4yznuS51o1rhc7kQQajafxjEM
-	 Bq3FPlgHMm8rM0e/kCbvlr4Fmkkk+LKaOCNIAJVw1maTWYbK2HpvPzj3WPW5eVRCDb
-	 Y8ICQlOLrlR7AyOVDi2VAaJasMQQzcuaiBZcCEsDPfcyxrIw2RtuSKQEXCrnjPo9Hw
-	 PCoQeOl434gEzXQWedj7w2Tvc6/eJFFfAP+J6IIC9pmVHbo+5WYFikcsO3Oi5gFHnN
-	 sFhw0og5izGNA==
-From: Geert Uytterhoeven <geert@kernel.org>
-To: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K . Petersen" <mkp@kernel.org>,
-	Kars de Jong <jongk@linux-m68k.org>
-Cc: linux-scsi@vger.kernel.org,
-	linux-parisc@vger.kernel.org,
-	linux-alpha@vger.kernel.org,
-	Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: [PATCH] scsi: 53c700: Fix hostdata[] size on 64-bit
-Date: Mon, 23 Nov 2026 09:57:35 +0100
-Message-ID: <0df0fae8a75e46f2f1613d398c1e137211d924a0.1795423196.git.geert@linux-m68k.org>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (1024-bit key, unprotected) header.d=mediatek.com header.i=@mediatek.com header.a=rsa-sha256 header.s=dk header.b=RA8BmyPS
+X-UUID: 8c5457d8e71e11f1b1788b6acf885367-20261123
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+	h=MIME-Version:Content-Transfer-Encoding:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=L8vupdzGKc/JWjB/Cv3SKPopaesoBrBY+lWXbZ8JGJM=;
+	b=RA8BmyPSJBYICBg7pvp/9klq+z+b6kQOQLgFXRjt+HC7CM4EPaczqxtVUbNCur4e7+gLzbb7lr5fr9r9SEs53U7Ra7qKcQLQYOZxAMAK5IybxLDOsfx6VFdMRHUw19No4tgXHGKMMfdUEMyecf2T59SJpg9T+PwHRRIdTV1F4qI=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.21,REQID:04f2c856-eb10-4ccf-a561-00ad6cd9957c,IP:0,U
+	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+	release,TS:0
+X-CID-META: VersionHash:b0318ac,CLOUDID:ce9ff219-ae4c-4a2b-b1c4-72e411efd0c9,B
+	ulkID:nil,BulkQuantity:0,SF:80|81|82|83|102|136|836|865|888|898,TC:-5,Cont
+	ent:0|15|50|99,EDM:-3|-100,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:
+	nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: 8c5457d8e71e11f1b1788b6acf885367-20261123
+Received: from mtkmbs10n2.mediatek.inc [(172.21.101.183)] by mailgw01.mediatek.com
+	(envelope-from <peter.wang@mediatek.com>)
+	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+	with ESMTP id 472569656; Mon, 23 Nov 2026 17:16:21 +0800
+Received: from mtkmbs13n2.mediatek.inc (172.21.101.108) by
+ mtkmbs11n1.mediatek.inc (172.21.101.185) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.53; Mon, 23 Nov 2026 17:16:20 +0800
+Received: from [10.233.130.16] (10.233.130.16) by mtkmbs13n2.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.2.2562.53 via Frontend
+ Transport; Mon, 23 Nov 2026 17:16:20 +0800
+Message-ID: <ae435d4948680bd8e1465a4888b4edb3a8a2c116.camel@mediatek.com>
+Subject: Re: [PATCH] scsi: ufs: core: Add debugfs for PA TFS/FEC error
+ counters
+From: Peter Wang <peter.wang@mediatek.com>
+To: Po-Wen Kao <powenkao@google.com>, <linux-scsi@vger.kernel.org>
+CC: Konstantin Vyshetsky <vkon@google.com>, Alim Akhtar
+	<alim.akhtar@samsung.com>, Bart Van Assche <bvanassche@acm.org>, Bean Huo
+	<beanhuo@micron.com>, Stanley Jhu <stanleyjhu@google.com>, "James E.J.
+ Bottomley" <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen"
+	<mkp@kernel.org>, Can Guo <can.guo@oss.qualcomm.com>, John Garry
+	<john.garry@linux.dev>, Li Qiang <liqiang01@kylinos.cn>, open list
+	<linux-kernel@vger.kernel.org>
+Date: Mon, 23 Nov 2026 17:16:20 +0800
+In-Reply-To: <20261123025745.1743640-1-powenkao@google.com>
+References: <20261123025745.1743640-1-powenkao@google.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.52.3-0ubuntu1.1 
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -60,39 +90,20 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-MTK: N
 
-From: Geert Uytterhoeven <geert@linux-m68k.org>
+On Mon, 2026-11-23 at 10:57 +0800, Po-Wen Kao wrote:
+> Because ufs_debugfs_hba_init() runs before hba->ufs_version and the
+> device descriptor are probed, support is checked at access time
+> (attached device W-LUN, UFSHCI >=3D 5.0, UFS device >=3D 5.0 for peer
+> entries, and UFSHCD_STATE_OPERATIONAL under host_sem). Positive
+> UniPro
 
-NCR_700_detect() allocates four bytes for a single-entry hostdata array,
-to store the NCR_700_Host_Parameters pointer.  However, hostdata is an
-array of unsigned longs, thus storing a pointer or unsigned long causes
-a buffer overflow on 64-bit platforms.
+Hi Brian,
 
-Fixes: 1da177e4c3f41524 ("Linux-2.6.12-rc2")
-Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
----
-Compile-tested only.
+Have you considered moving ufs_debugfs_hba_init() to after
+device init (i.e. once hba->ufs_version and the device=20
+descriptor are available)?
 
-CONFIG_SCSI_LASI700 is used on PA-RISC 64-bit,
-CONFIG_SCSI_SIM710 might be used on Alpha with EISA.
----
- drivers/scsi/53c700.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/53c700.c b/drivers/scsi/53c700.c
-index eb3a69dff1e72642..7236f9bfa0fe302f 100644
---- a/drivers/scsi/53c700.c
-+++ b/drivers/scsi/53c700.c
-@@ -341,7 +341,7 @@ NCR_700_detect(struct scsi_host_template *tpnt,
- 	if(tpnt->proc_name == NULL)
- 		tpnt->proc_name = "53c700";
- 
--	host = scsi_host_alloc(tpnt, 4);
-+	host = scsi_host_alloc(tpnt, sizeof(unsigned long));
- 	if (!host)
- 		return NULL;
- 	memset(hostdata->slots, 0, sizeof(struct NCR_700_command_slot)
--- 
-2.43.0
-
+Thanks
+Peter
