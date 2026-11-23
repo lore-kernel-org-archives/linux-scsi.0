@@ -1,45 +1,45 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795435173;
-	b=QqrisjWTNEt0gT56PhoISAoxFkHXN9RkzgdP2Ck7e7zKjm4/QbDW4S4p5obRGCu7ssaF
-	 Q5dgiDpP//SwnxKHLaffPr9mtH1guOr7oOVVqhwBPUchwPhIHNFhRtexLPnY+DXeOGeZ2
-	 8DOrlSmOz8YovtmuYhsOiLyD6yfKlEU5vZ2cgR1UsBCu/AKLFZDSVDDZ7lYFmI41gYB4K
-	 3Rb06JrjSazp3vhvGBs1tR08QF6XDSnyK+RkexxtawuLQyA5xyhcYmpyLcY9HtaMjNX7K
-	 GH+MRrnB0JemBaqFvKpDRoWOITKXPd8lhNaCFfUYs4Gvsn+NtVwZk/uv8/MRBFp1rRg==
+	t=1795435594;
+	b=fSiML7YRvZP4YeQnA/cAHk7sm4i5HUmnAsf5SJNG2h6fqH8m3gC9+EATtfKzpCy0LB5e
+	 HSg4FUdau0eJ5t39ToEJtwRCBpLEPWNonBWT758wMIbu0sZaa2KCyZdgPLHBxjjHuKjDz
+	 XtlTJ4hXpcy2ZpNuRpm/zy3tATehD204Jt9Pu84o9onDYvRmgQjwE8C0Eyiko06EPT4fu
+	 KvCeAkLQm2iY4cUCcmRvIYPsRp0yVbY9VnaRu7NxU8KNXcqUMmElcrlpTu+SPEvxKowx0
+	 mb0SE6MdVgJao1S+QivxeRw4byLqSXERKxdwXQzp0VDNZ6Tk2Oh1nUJNFDcT6+yX+Lw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795435173;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795435594;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=WMhEUhdeAFlSicfRRTfApEYeOqXkH8+a1r/iO3xzqW8=;
-	b=uzu1YWQxOoaee+ImEKMVxcz120ThxTGjgiWxH7erjaHkzn3qs4zPj54+xI0/+4L8/GVD
-	 yp5XPb0zdLGKp9REuxHH/bfCu93RgmhqkF91TWvmerPxp9k1/Fhm5+zc8WM1uFpgg8rn1
-	 OpZ5z/fOb4REEabRE3dsm+FJkCl+QYW91MRGWsfMizdffg+t+ospR+mrTrp5+jzHByUHh
-	 Ut1z+PPSMP+aF2D7jzah9rOwHv/1l0wFoV47T5S2OZh4sb8SFVJJOWJljQcFvQTaZg+uU
-	 19ZkmPC2elcxAmdKJ+b5KFT76r679EVSDb6vtHg5letPLqcf/c11NHfJtwCqKyKBFEA==
+	bh=fU0qgGX6rvDQa6Hs2GlCa9ePVhgC0MKqV7droMC1ftE=;
+	b=hZKfc/32o3hm7cNfit/jGXVSAPW701h4rQuHA9iHBlEoedZqlIb6jgvk7HCYA8aWnGJM
+	 bygmsOK1XBf3/eawAUvMqrWOgyu3GFZAQN9fkPr/sfGm0SeNxUhzMSXDKklgauWHNEjDT
+	 qx4hqAaq0WgqQT96Tx0KEaMRncibuteS64wEUxHGB5aMd2dlS3P4qt/KJ358VO2CKhvbr
+	 fHWHwPHugsodc6fBR0ac6+pUcWwREHI9q9k/XYpMi3Kzw+C3LvskWAXIdiowRiKSGduID
+	 mFUvyXII0BZuLujKvUcSjRcLv9HWz0amXQtrgDMIOkPSSgYFAtOaO8SSdn3eQ03231w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DS83tKDB;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jvkOvvVL;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65D3C606A331;
-	Mon, 23 Nov 2026 11:59:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 568CE606A31A;
+	Mon, 23 Nov 2026 12:06:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DS83tKDB
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 079911F0093C;
-	Mon, 23 Nov 2026 11:59:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jvkOvvVL
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D45951F000C0;
+	Mon, 23 Nov 2026 12:06:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795435172;
-	bh=WMhEUhdeAFlSicfRRTfApEYeOqXkH8+a1r/iO3xzqW8=;
+	s=k20260515; t=1795435594;
+	bh=fU0qgGX6rvDQa6Hs2GlCa9ePVhgC0MKqV7droMC1ftE=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=DS83tKDBJxjSPlL2eC8e6Zvjmxbn/amPwEVsuRuoWVGcAj/+EuTDbKwA3bOW2fK70
-	 qBqGCvahuU92TARH+7Yl74So5W6LpyDqWxpOwWFjNdWqbZ0RZ6J8Xqhn+6fVP/fDdg
-	 HscngvhevobAt7D0L9U7FFGLfA7n2PvtC6zVqFGCYIZH5WLtvF9Uva9U/GqwZaqfcS
-	 FohksPgsAGr9DldrpFnzXVYBEpDHRxYQW6OZGv6tRoxN7iCOcJClOu9MzOjqDEiEPh
-	 XfFBcD1/Xa9k5mj8H/iGCbri3PqqTuWE1vCNN4+Yo540uCtM67NeFpj2/NDUr0nFCE
-	 GT33q2RHgqNTA==
-Date: Mon, 23 Nov 2026 12:59:30 +0100
+	b=jvkOvvVLjNnnARXxCGjXocJep2IHYAS5xr97CekeRfZqkxcyNIittO7p7o5Z2Po2U
+	 j+W0OBWU7/+D1HwZtwzqRhsIc/N0TpXgsv2yRQuf+hid+1mROTjg9REZV7h7UOsCIK
+	 kmTlgo1HhVKzON+bjQ3wy6EuB4QXwfvW5fYM7ZDIDOHXknOGQjn7dF09n8n+3wLUYj
+	 sICuXcCKEaXfQDx9zAg5yrYMDkRg/O/6K9TP26Ac384R5KJ+oTWJuBZ3mtBrDIxU5D
+	 COJ6Jbn5nvsnLGN1eMWRar3a/+FPn2E7T2qBtgLdVWZ8TlKdm7L0/Ltpa+TlaThTy/
+	 8HSdscy6zICEw==
+Date: Mon, 23 Nov 2026 13:06:30 +0100
 From: Krzysztof Kozlowski <krzk@kernel.org>
 To: Stanislav Aleksandrov <lightofmysoul@gmail.com>
 Cc: Bjorn Andersson <andersson@kernel.org>, 
@@ -63,10 +63,10 @@ Cc: Bjorn Andersson <andersson@kernel.org>,
 	linux-arm-kernel@lists.infradead.org, iommu@lists.linux.dev, linux-usb@vger.kernel.org, 
 	linux-phy@lists.infradead.org, linux-scsi@vger.kernel.org, linux-crypto@vger.kernel.org, 
 	linux-pm@vger.kernel.org
-Subject: Re: [PATCH v2 03/16] dt-bindings: mfd: qcom,tcsr: Add Halliday TCSR
-Message-ID: <20261123-bald-sparkling-vicugna-cde8af@quoll>
+Subject: Re: [PATCH v2 05/16] dt-bindings: usb: qcom,snps-dwc3: Add Halliday
+Message-ID: <20261123-uptight-zealous-tench-ccfb03@quoll>
 References: <20261116-halliday-dts-v2-0-2c92438c6c46@gmail.com>
- <20261116-halliday-dts-v2-3-2c92438c6c46@gmail.com>
+ <20261116-halliday-dts-v2-5-2c92438c6c46@gmail.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -78,15 +78,15 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20261116-halliday-dts-v2-3-2c92438c6c46@gmail.com>
+In-Reply-To: <20261116-halliday-dts-v2-5-2c92438c6c46@gmail.com>
 
-On Mon, Nov 16, 2026 at 09:26:19PM +0000, Stanislav Aleksandrov wrote:
-> Document the TCSR block on the Qualcomm Halliday SoC.
+On Mon, Nov 16, 2026 at 09:26:21PM +0000, Stanislav Aleksandrov wrote:
+> Document the DWC3 USB controller on the Qualcomm Halliday SoC.
 > 
 > Signed-off-by: Stanislav Aleksandrov <lightofmysoul@gmail.com>
 > ---
->  Documentation/devicetree/bindings/mfd/qcom,tcsr.yaml | 1 +
->  1 file changed, 1 insertion(+)
+>  Documentation/devicetree/bindings/usb/qcom,snps-dwc3.yaml | 3 +++
+>  1 file changed, 3 insertions(+)
 
 Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
 
