@@ -1,102 +1,138 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.221.48
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795451907;
-	b=qTmPU1aOYGUNj9x99ILMKuikYWWFhb7FwMaGAyUJzkO9hd1Hu0SbBb5E839sHzGwknF/
-	 wVwj90ocv+Py7nsjWhaSZHIkR1o6eCCmes8Aat62eGxeVOslvkGGd8iqng0D7QPHskzOG
-	 HKNkaYP8+Dcv0vPGsrjASnoNycrnE1hOKEBDKiGpJ2O7IopYmFiY3JTl8a4fu7UyVkLZb
-	 086AMl3icEwyjofVbkRZrKJlrGJXk6dgie5dWa8MXir02X6ChGbEDaGnPOgLR2Nnm9PUX
-	 iM0SLe3kbnluE8EiscAxrdahOnQQN0xfjY8JgaoVnN8Wb1PdkU5XAHLSpWPkeqn6UHQ==
+	t=1795468663;
+	b=1dgR2exYlSI1hePL9s+/7CxVDkdgq9EgbFkpqoS98l/yA6rg/WezEDeHtEAx2Uz2+W+K
+	 NfLjSP43aJ5JCJ2Xjz3ggJZKAIXPve0rL/hJ2hJ9aCYYw8a+8cJGqvM9QvPYKkaXZOpgv
+	 wzmTQghuniFqAf8SQyR9NeG/r4LVHxW5zkxAi5MXUGHlww5NeBe4y8f3Cvo441uRnTPmM
+	 4FVnBwThLG2oMRchKSHQw6QbfFUJG9+StlAMIO9AwxFm9b7IVJcKul4uh5TfrXKZaDkS6
+	 xrzRdPa9B0dnSEVLWFj54LVySYpAmk+0Gi48+CHNs5ghUB4DkqyYyJ41xx/T5TzlNwA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795451907;
-	h=DMARC-Filter:Received:DKIM-Signature:DKIM-Signature:DKIM-Signature:
-	 DKIM-Signature:Received:Received:Message-ID:Date:MIME-Version:
-	 User-Agent:Subject:To:References:Content-Language:From:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:X-Spamd-Result:X-Spam-Score:
-	 X-Spam-Level:X-Spam-Flag;
-	bh=aYPAr8C4xnLTxtYkhQI3Bwh0Sx/atle2gFHpTJk8O/8=;
-	b=3xcm64JeTb1Bzy8xJ5G2UHx86XXyCPm7h+ZIu54K7aXE/BBWbRI/uI7x9vhKiALxXZLb
-	 c/2P3jssgwBggKRdHIy3UkFbK6J1mcV4xiFfsp2aSgZKOQA2UA+RuNbnfWYBNlxQekqxF
-	 u3mPg119+x4fbpsuJoCorKK98wkEg9911cCTIghowf9Devo8J+uMeKN2zxT7+RfcTDUqf
-	 7UTGJwatSjc1g54ackcRtzg6Da0sPnr53FfC5EUdFYUe1mAvRGvEImVSjRe3AgVpADIn8
-	 lF4v8eKGER+ZcmjXDpneQEUABK7T/2N4rl8p0bLtWhXJcAmc7O8Pc2pnSVMcubc27HA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795468663;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
+	 MIME-Version:Content-Transfer-Encoding;
+	bh=mEI2MWJHKjiB6vj3bpQygFD6VsBJJyxeJ4zAlBvCIuE=;
+	b=yoyAQ/vto8zyGEJWnTEbSX3f8Zl1Vo2fTBroDuybX4cTAl8yNoU51p+3FLJRDG9XcYz+
+	 vSBKhOSSdDXNB4Ql4UUilQIoUiPlYIIBnJl8gqG1qX8nYPBFdlM1nvKQLXtxS2QOjKVfK
+	 iwh8Pdugc+TdGcyUj/IE0qhI6Iow8YbzFAi2tj/027K4VRsHglXDTJru/svPrTsqrd959
+	 Hv2K1qYKh/J7bGiim9YUVfYiXQm6pVJemL4C7K/FBlfc2xw36zsYTUs5renlpnMjGeTzn
+	 /PpjHAMkdiij4ZaFz/+b2RVhgHlPNCd/Cp39xpvxPJlTxblUyo8ncOCon4ZomfEoubg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=suse.de;
-	spf=pass smtp.mailfrom=suse.de;
-	dkim=pass header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=a4OfJP3c;
-	dkim=pass header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=5ec6cRNi;
-	dkim=pass header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=a4OfJP3c;
-	dkim=neutral header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=5ec6cRNi;
-	arc=none smtp.remote-ip=195.135.223.130
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=0fedjRZx;
+	arc=none smtp.remote-ip=209.85.221.48
+Received: from mail-wr1-f48.google.com (mail-wr1-f48.google.com [209.85.221.48])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21ED9606A31A;
-	Mon, 23 Nov 2026 16:38:26 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 21ED9606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46238606A33C
+	for <linux-scsi@vger.kernel.org>; Mon, 23 Nov 2026 21:17:43 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 46238606A33C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=a4OfJP3c;
-	dkim=pass header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=5ec6cRNi;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=a4OfJP3c;
-	dkim=neutral header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=5ec6cRNi
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 1CC7A220FD;
-	Mon, 23 Nov 2026 16:38:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1795451905; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=aYPAr8C4xnLTxtYkhQI3Bwh0Sx/atle2gFHpTJk8O/8=;
-	b=a4OfJP3cfakyj+bd+uVP560Ufc3LlS09Y/mhODPvL8jTTfqiztnWBLk75Qlo8cXuN1PgPi
-	sDHZ7dnOUI73IAPozTtX1W2LSzackzpAp3jkIzKxBDZmG4qpWGHUVFMfWyvXCoL89GkShi
-	BT7/BbReD11FIBOIdVNNtTp88fVwcPg=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1795451905;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=aYPAr8C4xnLTxtYkhQI3Bwh0Sx/atle2gFHpTJk8O/8=;
-	b=5ec6cRNiAa8Nm3VjOcKS83+6HcylU8plSE5zL1AQCDxrrYo85XjzJ6HUqJJu1BtNHChsUH
-	eAep4v2coaDPL5Cg==
-Authentication-Results: smtp-out1.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1795451905; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=aYPAr8C4xnLTxtYkhQI3Bwh0Sx/atle2gFHpTJk8O/8=;
-	b=a4OfJP3cfakyj+bd+uVP560Ufc3LlS09Y/mhODPvL8jTTfqiztnWBLk75Qlo8cXuN1PgPi
-	sDHZ7dnOUI73IAPozTtX1W2LSzackzpAp3jkIzKxBDZmG4qpWGHUVFMfWyvXCoL89GkShi
-	BT7/BbReD11FIBOIdVNNtTp88fVwcPg=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1795451905;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=aYPAr8C4xnLTxtYkhQI3Bwh0Sx/atle2gFHpTJk8O/8=;
-	b=5ec6cRNiAa8Nm3VjOcKS83+6HcylU8plSE5zL1AQCDxrrYo85XjzJ6HUqJJu1BtNHChsUH
-	eAep4v2coaDPL5Cg==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id C0D4A13505;
-	Mon, 23 Nov 2026 16:38:24 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id atHMHwBsBGtnYQAAD6G6ig
-	(envelope-from <hare@suse.de>); Mon, 23 Nov 2026 16:38:24 +0000
-Message-ID: <a0740379-6e93-43eb-a81b-02302423a6f9@suse.de>
-Date: Mon, 23 Nov 2026 17:38:24 +0100
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=0fedjRZx
+Received: by mail-wr1-f48.google.com with SMTP id ffacd0b85a97d-4a9be758734so2317484f8f.1
+        for <linux-scsi@vger.kernel.org>; Mon, 23 Nov 2026 13:17:43 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1795468662; x=1796073462; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=mEI2MWJHKjiB6vj3bpQygFD6VsBJJyxeJ4zAlBvCIuE=;
+        b=0fedjRZx2RaPeNewDfT6kMMnjXVPl/B3fA1gPsEqLujR7kcW0NYtdJYVaByQandrUq
+         QJzBJ4uC9eS8a+ayksMogNxSExWs0eNFKItvTDKAx6NHc5x9hqv9RQlhAAzaAg7s5gs1
+         9sbtbyps4kPCKude8iZa2iiFH+utWXTUN8TCJqFX8mRmvPPMu6I8nAQcyMZ4i4mpzyX5
+         Cp154EF42lPno5OVkcDwnkP37Yni0BUszr0xLEoRsNB5R9GRF4fxmXOCy5ua5f8Nqhrg
+         4AybiECJ+X7fZBXujwbzZQ4s2TiblfJ29wOS+plEAwzRWxdPuG712xtYts3o3CIOU5fN
+         1RVQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1795468662; x=1796073462;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=mEI2MWJHKjiB6vj3bpQygFD6VsBJJyxeJ4zAlBvCIuE=;
+        b=foKCZj59ZnuGjyeVhAhHrss1VZsZ5UM+xrX41Vi5tlG++5OaD43GsVML32uFmp8YjO
+         XODiVUZZYpJsHN5y+fl9O1y698j6nsCoqAb2vLlaTBzCxwFQAgjd3Ju+Rw6yA43njiQM
+         BbOc8wUJ33CzHuPXLEUYD7o83xBlAEYEovGMGKXD+PZ4RwWbVYdJ2VkJoNl+U9/3XhE8
+         DvMDgb/bmWJ1q9X2Ip6SukyFeOseUCo4P7Ce/MKI3MhySMIqaXFNisBEH0wFTvyYavyE
+         ptItndeVDsm9I00nVvWR8HS9JAXd7ET6gF4IWaxVUHL3UedW85kW0dqYG3KkvBU7gwja
+         zOMA==
+X-Forwarded-Encrypted: i=1; AL+hErG4g3T1Y1ewl9MMxWFQ0xO1efNI+fJf4gyfO3CqQfR7nC8F8o3mTP5e7qWy7FKok97LYRCnzwLLhmcc@vger.kernel.org
+X-Gm-Message-State: APuU4Z//8ImxrvsQPzfNdMAcoSrFr/7qrPU/FgSuy99UyOkPHJuBmggL
+	BlYDwMeFd1FcqRpDe3V2Y+sIbCAtY6TId0ry/X2d5bwVyc0r5mbEXoNJ
+X-Gm-Gg: AZFdTZcMGdeV/twic5z4ZiuAHynz+bUVjqYrKcig7b2Ydbvy458YXeXVwf66HDO6NyB
+	HEbEqCCgwa0ZLqtXwGYJ/VO5X5zaVBZRL9gxsTcLexiUQVEZYFp0FX9M9NPWnXzffKwCrb81wQP
+	+UTYH5fRTRXjQOjxyXXAjGWAyEvIDADUu/RrgVyO9kckTifRUW+HAaHdMp3Em1RDskKtAMb6Kgt
+	hZzeEu8UYFsDS9wnadLwg3bLJDz0ypLNtuiSd3D4pvszS/Yndc4JebWrxHlnUpU31KCYDe/UQVe
+	znyShb6D3/Z83JtmypvxgsKWs7o6/5LmkIqCWiWowf6T6O/D7Ac4x4tvUTCcbgCLCiWTYgiWwn6
+	/G5h5Os/MQIawFVNF0HfO8qPsV8il4R/rJixKAoZ4GNqBp7XPAAI2SFFtYXHlZlodp8Xe6m826Z
+	pdc7u+kYczoBk9dKLzQPPoJ2VCP7bZuswOGR29GG5YaCU9PpdA9yNRm4MyM5JN5N0gkUNsL7Uad
+	KYjjkl7AHTvdBrqPFKfXTdWHBqsYcxa+/Oz+7TDSEn8uFk2wbgjToh4WoMjfYSP3Akefe9N5tOI
+	JcY3vJBLFouGZc3ZQFnEVt7pXG/q83QQisvlENyl3L4KVyHv
+X-Received: by 2002:a5d:4605:0:b0:4a4:14db:2348 with SMTP id ffacd0b85a97d-4abb29105d1mr18698069f8f.35.1795468661504;
+        Mon, 23 Nov 2026 13:17:41 -0800 (PST)
+Received: from flare5 ([212.58.121.92])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4ab658e2e6dsm24513121f8f.6.2026.11.23.13.17.35
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 23 Nov 2026 13:17:40 -0800 (PST)
+From: Stanislav Aleksandrov <lightofmysoul@gmail.com>
+To: Krzysztof Kozlowski <krzk@kernel.org>
+Cc: Bjorn Andersson <andersson@kernel.org>,
+	Konrad Dybcio <konradybcio@kernel.org>,
+	Abel Vesa <abelvesa@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Robert Marko <robimarko@gmail.com>,
+	Guru Das Srinagesh <linux@gurudas.dev>,
+	Thomas Gleixner <tglx@kernel.org>,
+	Radu Rendec <radu@rendec.net>,
+	Lee Jones <lee@kernel.org>,
+	Will Deacon <will@kernel.org>,
+	Robin Murphy <robin.murphy@arm.com>,
+	"Joerg Roedel (AMD)" <joro@8bytes.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Wesley Cheng <wesley.cheng@oss.qualcomm.com>,
+	Vinod Koul <vkoul@kernel.org>,
+	Neil Armstrong <neil.armstrong@linaro.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Alim Akhtar <alim.akhtar@samsung.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	Bean Huo <beanhuo@micron.com>,
+	Stanley Jhu <stanleyjhu@google.com>,
+	Herbert Xu <herbert@gondor.apana.org.au>,
+	"David S. Miller" <davem@davemloft.net>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Viresh Kumar <viresh.kumar@linaro.org>,
+	Amit Kucheria <amitk@kernel.org>,
+	Thara Gopinath <thara.gopinath@gmail.com>,
+	Daniel Lezcano <daniel.lezcano@kernel.org>,
+	Zhang Rui <rui.zhang@intel.com>,
+	Lukasz Luba <lukasz.luba@arm.com>,
+	Georgi Djakov <djakov@kernel.org>,
+	Sibi Sankar <sibi.sankar@oss.qualcomm.com>,
+	Ulf Hansson <ulfh@kernel.org>,
+	linux-arm-msm@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	mfd@lists.linux.dev,
+	linux-arm-kernel@lists.infradead.org,
+	iommu@lists.linux.dev,
+	linux-usb@vger.kernel.org,
+	linux-phy@lists.infradead.org,
+	linux-scsi@vger.kernel.org,
+	linux-crypto@vger.kernel.org,
+	linux-pm@vger.kernel.org,
+	Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+Subject: Re: [PATCH v2 13/16] dt-bindings: arm: qcom,ids: Add SoC ID for SXR2250P
+Date: Mon, 23 Nov 2026 21:17:23 +0000
+Message-ID: <20261123211723.1065310-1-lightofmysoul@gmail.com>
+X-Mailer: git-send-email 2.55.0
+In-Reply-To: <20261123-pastel-barracuda-of-rain-bce8ac@quoll>
+References: <20261116-halliday-dts-v2-0-2c92438c6c46@gmail.com> <20261116-halliday-dts-v2-13-2c92438c6c46@gmail.com> <20261123-pastel-barracuda-of-rain-bce8ac@quoll>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -106,132 +142,18 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v11 08/13] zloop: add storage element emulation
-To: Damien Le Moal <dlemoal@kernel.org>, Jens Axboe <axboe@kernel.dk>,
- linux-block@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
- linux-scsi@vger.kernel.org, "Martin K . Petersen"
- <martin.petersen@oracle.com>
-References: <20261116213702.225970-1-dlemoal@kernel.org>
- <20261116213702.225970-9-dlemoal@kernel.org>
- <a102ffd1-7eb3-420d-84eb-eb4705a43b4c@suse.de>
- <bebc3f8c-822e-40b8-b7fb-c2fd8277b10f@kernel.org>
-Content-Language: en-US
-From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <bebc3f8c-822e-40b8-b7fb-c2fd8277b10f@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Spamd-Result: default: False [-13.29 / 50.00];
-	SUSE_INTERNAL_BYPASS(-9.00)[];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-0.998];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	XM_UA_NO_VERSION(0.01)[];
-	FROM_HAS_DN(0.00)[];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	ARC_NA(0.00)[];
-	TO_DN_SOME(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	URIBL_BLOCKED(0.00)[suse.de:email];
-	RCVD_TLS_ALL(0.00)[];
-	RCPT_COUNT_FIVE(0.00)[6];
-	FROM_EQ_ENVFROM(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	MID_RHS_MATCH_FROM(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:email,imap1.dmz-prg2.suse.org:helo]
-X-Spam-Score: -13.29
-X-Spam-Level: 
-X-Spam-Flag: NO
 
-On 11/19/26 1:57 PM, Damien Le Moal wrote:
-> On 11/18/26 23:24, Hannes Reinecke wrote:
->> On 11/16/26 10:36 PM, Damien Le Moal wrote:
->>> Emulate the storage element depopulation feature of SMR disks in the
->>> zloop driver. This emulation is controlled using the new stor_elements
->>> option. This option can take several values:
->>>    - ZLOOP_STOR_ELEMENTS_NONE (0): no emulation (default)
->>>    - ZLOOP_STOR_ELEMENTS_RDWR (1): emulate all access storage elements
->>>      (e.g.  read+write heads)
->>>    - ZLOOP_STOR_ELEMENTS_PAIRS (2): emulate fractional access storage
->>>      elements (e.g. pairs of read and write heads)
->>>
->>> If enabled with the value 1 or 2, the number of storage elements, or of
->>> pairs of fractional access storage elements, is automatically calculated
->>> based on the number of zones of the device so that we have at least 2 and
->>> at most 32 storage elements or pairs of fractional access storage
->>> elements.
->>>
->>> The mapping of zones to storage elements is defined simply as the modulo
->>> of a zone number with the number of storage elements for the all access
->>> storage elements emulation and with the number of storage element pairs
->>> for the fractional access storage element emulation case. E.g, removing
->>> a storage element from a set of 4 all access storage elements will
->>> offline 1 zone every 4 zones.
->>>
->>> The storage element management operations are specified with the
->>> structure zloop_se_ops (struct blk_se_ops).
->>>
->>> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
->>> ---
->>>    .../admin-guide/blockdev/zoned_loop.rst       |  11 +-
->>>    drivers/block/zloop.c                         | 710 +++++++++++++++++-
->>>    2 files changed, 694 insertions(+), 27 deletions(-)
->>>
->> [ .. ]
->>> diff --git a/drivers/block/zloop.c b/drivers/block/zloop.c
->>> index 6bb68022ab30..1731e4ad5c98 100644
->>> --- a/drivers/block/zloop.c
->>> +++ b/drivers/block/zloop.c
->>> @@ -18,6 +18,7 @@
->>>    #include <linux/parser.h>
->>>    #include <linux/seq_file.h>
->>>    #include <linux/xattr.h>
->>> +#include <linux/delay.h>
->>>    
->>>    /*
->>>     * Options for adding (and removing) a device.
->>
->> [ ..  ]
->>
->>> @@ -1149,6 +1699,74 @@ static int zloop_init_zone(struct zloop_device *zlo, struct zloop_options *opts,
->>>    	return ret;
->>>    }
->>>    
->>> +#define ZLOOP_MIN_STOR_ELEMENTS			2
->>> +#define ZLOOP_MAX_STOR_ELEMENTS			32
-> 
-> This one is indeed a limit, so that we do not go crazy on the number of storage
-> elements, resulting in an emulation that is representative of a real disk. Note
-> that for a real disk, this would mean that we have 16-disks (1 head per surface,
-> 2 heads per disk) and no disk today on the market have that many. So this is
-> already "large".
-> 
-Well, typically an emulation (on this level) also serves to evaluate
-scaling limitations, where HW limitations are less interesting.
+On Mon, Nov 23, 2026 at 01:09:26PM +0100, Krzysztof Kozlowski wrote:
+> This should be rebased on my patch removing the IDs.
 
->>> +#define ZLOOP_MIN_ZONES_PER_STOR_ELEMENTS	32
-> 
-> This one is not a limit, but rather what we aim for when the number of zones is
-> low so that we have a reasonable number of zones per element. Basically, to
-> avoid the rather silly case on one zone per element for small devices.
-> 
-Oh, yeah, I get why you set these limits.
-My intention was more to use zloop to precisely evaluate these daft 
-corner cases.
+Thanks for review. I will rebase it, but I am not sure about
+the order, could you please clarify?
 
-But okay, if it's just to emulate 'real' HW than I'm fine.
+1. Should I wait for sending v3 until your patch is applied?
+or
+2. Should I apply your patch locally and then send v3 based on it?
+(but if something changes in your patch a v4 might be needed)
 
-So:
-Reviewed-by: Hannes Reinecke <hare@kernel.org>
-
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke                  Kernel Storage Architect
-hare@suse.de                                +49 911 74053 688
-SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
-HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
+Best regards,
+Stanislav
