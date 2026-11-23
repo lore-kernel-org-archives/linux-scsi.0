@@ -1,73 +1,56 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=51.81.86.232
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795435770;
-	b=XXhLloZaaJBAt9wcFOaSnDiNidoz9X2K1volD3gl8nzH9fgJ3ud3k9Kc9b9sRUCF5DrK
-	 SRNqBoIHASJvLd592zw2yokq7b91toG5rbcgpc7XmhTpOdP2pplsrNjUgm4rtTwgqkfGx
-	 TnfrGfS7ZZVQ87v9YukJcNTpYxzDNVH0Spp7qx9yXoKSbtCgQ6/Ol/4bqmJ8ysg6kWlwh
-	 oc1LFUgoHNEbqyy9i4kUrCdKkqaHIwqgCyRdGXbpEl569oLbPp1t79+X4lM/aSoJmzBq3
-	 naGIRQG8/0KrpPLrXDgbEhIgIhTTTSKPqeKN4SJDHybZ1S3LYlScdxmJISZCAAJ/VJg==
+	t=1795442770;
+	b=vigzqJvkELXKDU/c/cueGPHXJa5Ok9M+iHNSAaH3gHeG2+Q3ahV4u3RZ0wxTydwgP+AC
+	 OIegGeqlVfftC+M6hxFcmO1KF8QYd1eDM39a736YOQ3ShxDr4dS1RVjbiP/v6LAYxfOSz
+	 E6SlQQYqX91hdeMY5BVeIVRaKuc4bwt7O8QDZW+Or6d7To2iDZz3NsDqAHc/sSWRNiuE5
+	 f6Kw6CZstocgLSa36M0t70CXTzEg36oBhkAlxwiSKEVrXD4pbkQSd/3xXkfokj4abhnzs
+	 2dwqRh5KDWjXQaKHb9xvecAA7MhcbsIw3Grp0GrriTaJs+iRjAOjaMKBoEYgGN9TJFg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795435770;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=EBAlgyArUaIDoaFWbczuSy+qeFGqGHKDwrHB/xbYHXM=;
-	b=To38sXSAfvBcWj2zMr3YjT3s862vzv3l7NyaoaoyFcdux6p76hlN3Agjnx1IyA/sPS+4
-	 gr8nEWpA8KGqbNR0YghKeSig+dIt6a8rvny/hE6KS+WuZFvSU5/BYU2Wh51RVfsu7zdcL
-	 k1EwcKHBnx6esgLWnxG76073u7af6FYEzbC/nXdt6IivQWEqG/pHlJB0P+CpQWOvsUogf
-	 GizDIQ4GqbREOYBNmtdatxH68MhT9WPE7KzOFcdmYKhP40gcp4nErylx/o6nfHJwpr7AU
-	 mAB2OdeleyXEAjy9/aH+moQzLX6+TZAKUQG9klSaC4h6aiqoMT6bWUaVZtxcVcRxj6Q==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795442770;
+	h=DMARC-Filter:Received:Received:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:
+	 Content-Transfer-Encoding:In-Reply-To;
+	bh=EpX2g2geXyBWspkSTZO7Ivn2ya4oP/tf6r3a8tkLRdU=;
+	b=E4QE9tfwCZuKayhpV/sts7LT6z5pKquLT5m8bJznDLaTbKob3EVm6CXat61spIZTji5H
+	 sUatq01Kuom2XqqSEQPVQmx35/SokEhM6K7KIvp0qd94VtOBHqsTgzLcaI0ukzkgMmFkK
+	 r7LR1F5R/wnpYuUxuv/ytqyVqUvwGdGGZbvpTSyMFAAncov330EHdwHoFe9ItfBMOr2gB
+	 Hg/rsErPdFye9caVw7AwZ94IgzksOzqFKclClGr2G1AOiXqwxzU/t/T+B1rY5aEBSzwHA
+	 YHGvwL8NkvaNo3P2V5m2pW39J3+s01p2h0cJG/0UvOGgOtSqxBICzfrInadTkkhwxNw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="E+6H/6oP";
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=none header.from=nathanst.com;
+	spf=pass smtp.mailfrom=nathanst.com;
+	arc=none smtp.remote-ip=51.81.86.232
+Received: from mx1.nathanst.com (pub1.nathanst.com [51.81.86.232])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C75B7606A31A;
-	Mon, 23 Nov 2026 12:09:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=E+6H/6oP
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 296FD1F000D3;
-	Mon, 23 Nov 2026 12:09:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795435770;
-	bh=EBAlgyArUaIDoaFWbczuSy+qeFGqGHKDwrHB/xbYHXM=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=E+6H/6oP8nLnOr4iihKZsT5mFLOzHyhwUMzMxmC6pmAe+pt5ais3/kGYPwi8oF5zr
-	 GjAUPCdau77AfYr2a7Mpi/s9QIus/zoxYa14PAqfbidqxzxwPdaC4msn8xdwhGgYbY
-	 nrWqf+M6Mn+OtAJyvAriYXzms38kkQbkOj2aCC5vFExcHvLJrAW61nRLiv+esgmheb
-	 hmdZLQDBBvmHVNc3/BLfmVLqfolD+YZt5NvD63SBFtb0XhEPrhJcH4DKSycDVALgmF
-	 Vepzp38JoPHLXSbuUbw56Yo0Q2S6VCXBAySB6aIOmtu9udEKeBIynyCXinbFCiTHjE
-	 1yVG1ElUOlkmw==
-Date: Mon, 23 Nov 2026 13:09:26 +0100
-From: Krzysztof Kozlowski <krzk@kernel.org>
-To: Stanislav Aleksandrov <lightofmysoul@gmail.com>
-Cc: Bjorn Andersson <andersson@kernel.org>, 
-	Konrad Dybcio <konradybcio@kernel.org>, Abel Vesa <abelvesa@kernel.org>, Rob Herring <robh@kernel.org>, 
-	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Robert Marko <robimarko@gmail.com>, Guru Das Srinagesh <linux@gurudas.dev>, 
-	Thomas Gleixner <tglx@kernel.org>, Radu Rendec <radu@rendec.net>, Lee Jones <lee@kernel.org>, 
-	Will Deacon <will@kernel.org>, Robin Murphy <robin.murphy@arm.com>, 
-	"Joerg Roedel (AMD)" <joro@8bytes.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
-	Wesley Cheng <wesley.cheng@oss.qualcomm.com>, Vinod Koul <vkoul@kernel.org>, 
-	Neil Armstrong <neil.armstrong@linaro.org>, Manivannan Sadhasivam <mani@kernel.org>, 
-	Alim Akhtar <alim.akhtar@samsung.com>, Bart Van Assche <bvanassche@acm.org>, 
-	Bean Huo <beanhuo@micron.com>, Stanley Jhu <stanleyjhu@google.com>, 
-	Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, 
-	"Rafael J. Wysocki" <rafael@kernel.org>, Viresh Kumar <viresh.kumar@linaro.org>, 
-	Amit Kucheria <amitk@kernel.org>, Thara Gopinath <thara.gopinath@gmail.com>, 
-	Daniel Lezcano <daniel.lezcano@kernel.org>, Zhang Rui <rui.zhang@intel.com>, 
-	Lukasz Luba <lukasz.luba@arm.com>, Georgi Djakov <djakov@kernel.org>, 
-	Sibi Sankar <sibi.sankar@oss.qualcomm.com>, Ulf Hansson <ulfh@kernel.org>, linux-arm-msm@vger.kernel.org, 
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, mfd@lists.linux.dev, 
-	linux-arm-kernel@lists.infradead.org, iommu@lists.linux.dev, linux-usb@vger.kernel.org, 
-	linux-phy@lists.infradead.org, linux-scsi@vger.kernel.org, linux-crypto@vger.kernel.org, 
-	linux-pm@vger.kernel.org, Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
-Subject: Re: [PATCH v2 13/16] dt-bindings: arm: qcom,ids: Add SoC ID for
- SXR2250P
-Message-ID: <20261123-pastel-barracuda-of-rain-bce8ac@quoll>
-References: <20261116-halliday-dts-v2-0-2c92438c6c46@gmail.com>
- <20261116-halliday-dts-v2-13-2c92438c6c46@gmail.com>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD73C606A31E;
+	Mon, 23 Nov 2026 14:06:09 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org DD73C606A31E
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=nathanst.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nathanst.com
+Received: from mycroft.stratway.net (unknown [192.168.88.1])
+	by mx1.nathanst.com (Postfix) with ESMTPS id 10340101468;
+	Mon, 23 Nov 2026 09:06:03 -0500 (EST)
+Received: from diagon-alley.stratway.net (diagon-alley.stratway.net [192.168.88.14])
+	(authenticated bits=0)
+	by mycroft.stratway.net (8.14.3/8.14.3/Debian-9.1ubuntu1) with ESMTP id 6ANE5wZo006586
+	(version=TLSv1/SSLv3 cipher=AES256-SHA bits=256 verify=NOT);
+	Mon, 23 Nov 2026 09:06:01 -0500
+Date: Mon, 23 Nov 2026 09:05:58 -0500
+From: Nathan Stratton Treadway <vgerlists2026@nathanst.com>
+To: Mateusz =?utf-8?Q?Jo=C5=84czyk?= <mat.jonczyk@o2.pl>
+Cc: Oliver Neukum <oneukum@suse.com>, Alan Stern <stern@rowland.harvard.edu>,
+        "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+        "Martin K. Petersen" <mkp@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org,
+        usb-storage@lists.one-eyed-alien.net, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/2] usb: uas: expose US_FL_NO_ATA_1X in sysfs as
+ ata_passthrough_disabled
+Message-ID: <awRIRpJIxWPJcn5i@diagon-alley.stratway.net>
+References: <20261121155253.4980-1-mat.jonczyk@o2.pl>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -79,18 +62,38 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20261116-halliday-dts-v2-13-2c92438c6c46@gmail.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20261121155253.4980-1-mat.jonczyk@o2.pl>
 
-On Mon, Nov 16, 2026 at 09:26:29PM +0000, Stanislav Aleksandrov wrote:
-> Add the ID for the Qualcomm SXR2250P (Snapdragon XR2+ Gen 2) SoC.
-> 
-> Reviewed-by: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
-> Signed-off-by: Stanislav Aleksandrov <lightofmysoul@gmail.com>
-> ---
->  include/dt-bindings/arm/qcom,ids.h | 1 +
+On Sat, Nov 21, 2026 at 04:52:52PM +0100, Mateusz Jończyk wrote:
+> The uas driver blocks access to ATA passthrough commands for some
+> devices it considers buggy. However, it does not expose any meaningful
+> information whether the command was disabled by the driver or is
+> genuinly not supported by the hardware. This creates a problem for the
+> smartmontools program and makes it difficult for it to provide a useful
+> error message.
+>
+> Link: https://www.smartmontools.org/wiki/SAT-with-UAS-Linux
+> Signed-off-by: Mateusz Jończyk <mat.jonczyk@o2.pl>
+[...]
+> diff --git a/Documentation/ABI/testing/sysfs-class-scsi_device b/Documentation/ABI/testing/sysfs-class-scsi_device
+> new file mode 100644
+> index 000000000000..4dc8645bf59b
+> --- /dev/null
+> +++ b/Documentation/ABI/testing/sysfs-class-scsi_device
+> @@ -0,0 +1,10 @@
+> +What:		/sys/class/scsi_device/*/device/ata_passthrough_disabled
+> +Date:		Nov, 2026
+> +KernelVersion:	v7.5
+> +Contact:	usb-storage@lists.one-eyed-alien.net
+> +Description:	(RO) Indicates whether the driver blocks access from userspace
+> +		to ATA passthrough commands. Contains a value of '1' when such
+> +		commands are denied as the hardware is considered buggy and they
+> +		might interfere with a correct operation of the drive. Note that
+> +		a value of '0' does not necessarily mean that ATA passthrough is
+> +		available as it may not be supported by the hardware at all.
 
-This should be rebased on my patch removing the IDs.
+Would it make sense to explicitly mention something about "USB quirk flag
+US_FL_NO_ATA_1X" in this documentation entry?
 
-Best regards,
-Krzysztof
-
+                                                        Nathan
