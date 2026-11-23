@@ -1,76 +1,59 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.217.44
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=220.197.31.2
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795427296;
-	b=Hi8EQoicFXoAhugaPoPeVZYCwiNMWpyXyOQXYKJ3GJ7hjbubCR5KNjsFpHvpmv9k+/1C
-	 ARCwke281PC++e1R4XEoKWcA7i64G8NgYHoREkD1xvUgN+PVPpHJ1P6BlnmQgyVI+BsrM
-	 tRXWZP1dGxiid6mMuVdBSPWCPrUzAW+U8Uqp5lTP82f0tF+iILKyTDlF5gtr4DYGHE6Lj
-	 tiJ3zoPVuU5p8nN2Tvn6xW7q6ZT+1iQguBNgzB9ZgKQO6dMirpU8pOzLC1z7Ehk9h8xzq
-	 vPu4gqSkgfg1Zzlj9ddRHps3lN2S6NdhQIhU+pVRpf/BzSOW+2zXicYmg9hy/TuVv+w==
+	t=1795429441;
+	b=qftCEdXFmFoxMzh9OQ2pEK2wmlR6EnanpVab6GhJqAiZ+XG4yhpnXc7nZ6MvdmUKC91V
+	 G6rodwGohpPW7w+qLMJXuRJiWfj7vHY9+SwGix7vsJn2XS14nVAC+epaeZl/F9TkjD4/W
+	 FAd0Ps0TBlbOUQZDdZ1eZNtpTZU7XdE0oU8Zd8xEJYyl/oF/rHE63MblgsUFRyaYXts/D
+	 +fsFIW5IcW28PoaVvlzFUJoKSGQlxmRCBoisjIN8Hwh92I4pcM1KZggOwBySr8L0Kjwog
+	 Y/JThQM9ija72q2X2S+on3Ih1j/6x8vDx0tfGLQEFyLQhYCaoP7BKURIJdk2UO6MlBA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795427296;
-	h=DMARC-Filter:Received:X-Google-DKIM-Signature:X-Forwarded-Encrypted:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:Received:
-	 X-Forwarded-Encrypted:X-Received:MIME-Version:References:In-Reply-To:
-	 From:Date:X-Gmail-Original-Message-ID:X-Gm-Features:Message-ID:
-	 Subject:To:Cc:Content-Type;
-	bh=cWZpBhDqNHZ7OOEEIRJTwjTd8bE65OY0/Xt9j7AHp2c=;
-	b=RhoXk963T44+VpPtGe+4y3NbQNIGsAuG2h9MQ+CiB0nsXSxwGvUEf2iI2RYM1TSMuhP2
-	 glPs0TtLSEjHdmwsGAPY16iQUCOgqqmLSxUGb8zRpC7YZbzOHJWwEVlDP/8IqNqieJtx1
-	 lefHu3pKIDfeopdDXohheMu6rsV2GDdAyeYkpgo1e9E/CDCPPgh0p+0wVdLwY5nMsW+74
-	 RraEAeaUxmTigRx6UgMZfoUHr0pML9oM0nyHrFfYrg1vEENB6AGml22aROj6C3PZ39Xbm
-	 eK1MOzLDOgGd5gJlfLWgZ2MhGYBpAvBM9AwNEvA+j6bxHHyikQ30HXSQefhjNrP7txA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795429441;
+	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
+	 Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding:
+	 X-CM-TRANSID:X-Coremail-Antispam:X-CM-SenderInfo;
+	bh=xgdl5iT4rjRql/T0yly1xc7NN6NRkZoCr5drGDPOf9I=;
+	b=ocNBWZJ2kKJEEMYUGIjgH8Tc6+veiGpfrw3txLtTrKKQMWkl8Ov/YtnpHLwlhgSPMKaO
+	 G00CYgrv1uqmUJ0LUd+PbeBKW322HD0Gg1PhO9M58Z7VoLsOcZe93KWrm8SisOE8dIMvw
+	 MLrd4+RQutRntJsHhcL3/SOIUOEtZV6wocgBH9q7/R3NWzCXiqBGoTSbYDOD0uJiK8cI4
+	 r8FBDpdNiGRMhUvT884OjbujNM4JGBZZCmnR7fQKxSEc3zSikDZqbLUJiql7QyeBF4Nqs
+	 lYrnx21cBiFHuL/nbM7muE+t7x8wHuaWvO5Ae6IH0Pthpkd+kVjaq/65qpmthAe0PLw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=fail header.from=linux-m68k.org;
-	spf=pass smtp.mailfrom=gmail.com;
-	arc=none smtp.remote-ip=209.85.217.44
-Received: from mail-vs1-f44.google.com (mail-vs1-f44.google.com [209.85.217.44])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=pass header.from=163.com;
+	spf=pass smtp.mailfrom=163.com;
+	dkim=pass header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=No13YbAe;
+	arc=none smtp.remote-ip=220.197.31.2
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.2])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A5C8606A31A
-	for <linux-scsi@vger.kernel.org>; Mon, 23 Nov 2026 09:48:15 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9A5C8606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=linux-m68k.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-vs1-f44.google.com with SMTP id ada2fe7eead31-7cc2bb73cd9so1090022137.3
-        for <linux-scsi@vger.kernel.org>; Mon, 23 Nov 2026 01:48:15 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795427294; x=1796032094;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=cWZpBhDqNHZ7OOEEIRJTwjTd8bE65OY0/Xt9j7AHp2c=;
-        b=0wO0d2z7zQNXsEX0+wJ3vKz5n7YOH3Cd6VCO+FIkTa2FKF5qUrmJPk2GsaD4RqneCV
-         mQlcshPEMc8nrL81oFrUFzAGXQpyK/pP/DViQ+O+94ad0dZYnI+VgExXXay3eCtyVLIV
-         7acw0mgyT+2xbDAXkXTDmfgyvXkZbQ+OLLJpUGVNZVTc9748HCWsAhpg9IGjU7x2E1CK
-         nmeNOjFdGNZ7nd0deI6AVTAlOpsw6KNP68FoSwBnM7VSmRPtyHu4Hwum1ee2ksldQHar
-         RX2jM7N0eI6C36ktuxZBlqJOaujXUtD8wAJMwQ3llKzgtqS2qF7AQ/oqMSaW3F+6CNqM
-         Szfw==
-X-Forwarded-Encrypted: i=1; AL+hErGwLcIqoSXInKeOzlcu0QAs0ENPOH9ipQKl9KNazmu+K6bbREruvrrvyXJ14GqsZMdRU9ZDy2UZqgh5@vger.kernel.org
-X-Gm-Message-State: APuU4Z+GvgLy6xDEun8IQi8GRji5EtoIrpdDWTsLjyjKR69gBBinyX8j
-	6zSe1t8ktaDdIrnTNiEJUiohmpGCDR7ja5k0E9yZKoH7Q9I/bCMsv2F5EXEhW7SL
-X-Gm-Gg: AZFdTZd9ji4kxR5bXdeqYcLwMlZ/6UXr+TYr1rW1DsOYVdJiOh9PcAgInU2gXCY2i4m
-	3yeLCMeiqHdyl8dfR9Wq0igzLGFKhsrTMXy7MmHhWqk6A8M6lu6TATiT0+WrxjQ7Csv/Z7eeH1V
-	fMZhDKoQuZibQUmgZFJxcspr/XQ3Prp+QUwk7cD7LHQ6lqBNuEJLaT/ySgqgDj8GI/CelR5RiMF
-	yox4VxTWP7ujey18fHCESESA0kzrdHGBfjjrvQDU8QYJsR3WycZLDfZ+MS4H3mEg/9/n6/FPuEs
-	aOVqo3G2MiMOE05VbPvolza7b4han8RBP8RRFqPGXg3eM+8k6i9lpTsGr8jdPKqBnzr0bpCImXu
-	Z+EqQb22iT0az+df5BrN40T9vvG7GN6UdTaqTvHWhnttg4rkJlekB9cQJNvIpZ5yMNjEKi9S0Ka
-	Sq8W+DWC3rRIMWpo5EnPm3ekebj00q2ZFwF1CejhOhDXUhT6X4o46+La4xZGl8+0p/WtqAQFviq
-	xEKe8PNJLcjuc7ogGafiEIV/SqNoc4vVKEE0kUV4gf8+8uzSxUu6QTnkcUYLIPhex5mNvw36Tvc
-	2xRj/+oP/CqL8CHlGZPTrjXCtPizWRuRGddg2vVF4kCEprHn52NYhdnZGaXa6X93U2A=
-X-Received: by 2002:a05:6102:4490:b0:7d2:7be1:272b with SMTP id ada2fe7eead31-7d739625bb4mr3909918137.28.1795427294446;
-        Mon, 23 Nov 2026 01:48:14 -0800 (PST)
-Received: from mail-ua1-f43.google.com (mail-ua1-f43.google.com. [209.85.222.43])
-        by smtp.gmail.com with ESMTPSA id ada2fe7eead31-7d6e8219b2esm11161613137.9.2026.11.23.01.48.13
-        for <linux-scsi@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 23 Nov 2026 01:48:13 -0800 (PST)
-Received: by mail-ua1-f43.google.com with SMTP id a1e0cc1a2514c-9907a58f14dso698172241.2
-        for <linux-scsi@vger.kernel.org>; Mon, 23 Nov 2026 01:48:13 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AL+hErGl7Xe9LnaqYiuVVlXfXWqkuG5NCwVPnXtL9Id/itZRFqXSFz07TWa9T1bj9FriYLj2gHOBmNDRHJko@vger.kernel.org
-X-Received: by 2002:a05:6102:5813:b0:7b2:508e:3d57 with SMTP id
- ada2fe7eead31-7d72b3688c2mr4372703137.4.1795427293752; Mon, 23 Nov 2026
- 01:48:13 -0800 (PST)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 757F8606A330;
+	Mon, 23 Nov 2026 10:23:59 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 757F8606A330
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.a=rsa-sha256 header.s=s110527 header.b=No13YbAe
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:To:Subject:Date:Message-ID:MIME-Version; bh=xg
+	dl5iT4rjRql/T0yly1xc7NN6NRkZoCr5drGDPOf9I=; b=No13YbAePkykBIeV4j
+	oNIJ5IQ4IAcsZHsYRCSBs3YI6c5s7UOQFuC4288LGEBzQCdVQw29lsYZCUE3pH6v
+	gay6TCiP9znrdIArwYwUYOqspXvwElRIU1lhCAlFh+NtH1WY7EpsP0Go34ExNc2I
+	G3Pin2zGSNoRT/NFwl5LU8Uok=
+Received: from user-VMware-Virtual-Platform.localdomain (unknown [])
+	by gzga-smtp-mtada-g1-3 (Coremail) with SMTP id _____wD3n7cYFARrJ4RhJQ--.49247S2;
+	Mon, 23 Nov 2026 18:23:21 +0800 (CST)
+From: Ziheng Wei <zihengw03@163.com>
+To: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K . Petersen" <mkp@kernel.org>
+Cc: linux-scsi@vger.kernel.org,
+	linux-m68k@lists.linux-m68k.org,
+	linux-kernel@vger.kernel.org,
+	Sashiko <sashiko-bot@kernel.org>,
+	stable@vger.kernel.org
+Subject: [PATCH] scsi: bvme6000: fix request_irq failure cleanup
+Date: Mon, 23 Nov 2026 18:23:20 +0800
+Message-ID: <20261123102320.8590-1-zihengw03@163.com>
+X-Mailer: git-send-email 2.43.0
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -80,47 +63,44 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261121034304.2dPxVKzk-lkp@intel.com> <0b947a72-7a68-9bde-8b0b-adb539f09a8c@linux-m68k.org>
-In-Reply-To: <0b947a72-7a68-9bde-8b0b-adb539f09a8c@linux-m68k.org>
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Mon, 23 Nov 2026 10:48:01 +0100
-X-Gmail-Original-Message-ID: <CAMuHMdUxYwD2t8zrqs4QBCtATOtf9xE83Djo0g7qbNFGSCWAQA@mail.gmail.com>
-X-Gm-Features: Aa3M54rqU2bNqHYEoVpo9DgHQN7kUDp7nLSe10xRxRC_Yz7fZEF6xyok7yTvw-g
-Message-ID: <CAMuHMdUxYwD2t8zrqs4QBCtATOtf9xE83Djo0g7qbNFGSCWAQA@mail.gmail.com>
-Subject: Re: include/linux/compiler_types.h:631:45: error: call to
- '__compiletime_assert_433' declared with attribute error: BUILD_BUG_ON
- failed: offsetof(struct qla_tgt_sess_op, atio) + sizeof(u->atio) != sizeof(*u)
-To: Finn Thain <fthain@linux-m68k.org>
-Cc: kernel test robot <lkp@intel.com>, oe-kbuild-all@lists.linux.dev, 
-	linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, 
-	Linux Memory Management List <linux-mm@kvack.org>, Arnd Bergmann <arnd@arndb.de>, 
-	James Bottomley <James.Bottomley@hansenpartnership.com>, 
-	"Martin K. Petersen" <mkp@kernel.org>, scsi <linux-scsi@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:_____wD3n7cYFARrJ4RhJQ--.49247S2
+X-Coremail-Antispam: 1Uf129KBjvdXoW7XFW5ArWxKryrAw1fKFy3urg_yoWkXrbE9a
+	n0gw1xXrWkGrn3tr18JrnxZrs0yF45Xr95Zw4YqFZ3Cr13Zwnak3Wkurs5A3yUXw4kJa45
+	Aw1DZan5uw17WjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUvcSsGvfC2KfnxnUUI43ZEXa7IUn6wZ3UUUUU==
+X-CM-SenderInfo: p2lkv0ljzqjqqrwthudrp/xtbC7hnmN2sEFBn9vQAA3E
 
-Hi Finn,
+NCR_700_detect() registers the SCSI host and allocates the script DMA
+memory. If request_irq() fails, bvme6000_probe() only drops the host
+reference, leaving the host registered and the DMA memory allocated.
 
-CC scsi
+Unregister the host and release the NCR_700 resources before dropping the
+reference.
 
-On Sat, 21 Nov 2026 at 05:10, Finn Thain <fthain@linux-m68k.org> wrote:
-> On Sat, 21 Nov 2026, kernel test robot wrote:
-> > FYI, the error/warning still remains.
->
-> That's because the qla2xxx maintainers at Marvell did not respond to any
-> of the three fixes I sent. I'm not a paying customer so all bets are off.
+Reported-by: Sashiko <sashiko-bot@kernel.org>
+Link: https://lore.kernel.org/linux-scsi/sashiko-outbox-228089@kernel.org/
+Fixes: 8276b58af4dd ("[SCSI] 53c700: m68k BVME6000 NCR53C710 SCSI")
+Cc: stable@vger.kernel.org
+Signed-off-by: Ziheng Wei <zihengw03@163.com>
+---
+ drivers/scsi/bvme6000_scsi.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-That's "[PATCH] scsi: qla2xxx: Rework BUILD_BUG_ON() assertion",
-first submittted in March, right?
-https://lore.kernel.org/all/4808a5dc1a71528ffa3360868561009744277450.1791502886.git.fthain@linux-m68k.org
+diff --git a/drivers/scsi/bvme6000_scsi.c b/drivers/scsi/bvme6000_scsi.c
+--- a/drivers/scsi/bvme6000_scsi.c
++++ b/drivers/scsi/bvme6000_scsi.c
+@@ -86,6 +86,8 @@ bvme6000_probe(struct platform_device *dev)
+ 	return 0;
+ 
+  out_put_host:
++	scsi_remove_host(host);
++	NCR_700_release(host);
+ 	scsi_host_put(host);
+  out_free:
+ 	kfree(hostdata);
 
-Gr{oetje,eeting}s,
+base-commit: 97d73c8251226cf27cc6656b4c542869bb8c69fa
+-- 
+2.43.0
 
-                        Geert
-
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
