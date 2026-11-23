@@ -1,45 +1,45 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795435603;
-	b=J5fGYflUNZOYgjZt5X7UuofJnThMX8TEUky6Bgm53lTkvy+ip7xr9iaAao9nn7G4XPm8
-	 JzkC25Yon6DXzyiTJ+11HtusG52UFZB4e0ncxGn0EyW/XMn/brJdml1JESU0R4QvNI3K3
-	 WMyFWDinhSyBi7GhE1dPFBjAh8ztqqy660OhwBL4JZvFGuNt4wUelFTCcvMrWBDOz3tDY
-	 khTJ7e2dKsKpy0a3rxqMg+SAJM7AFyh9CTJ3Mc/tOwpJ/cCdqnnBhG9Pd1eLmGVoINCqY
-	 +Gktchi2M6G3Be1FqEhwwfbLfdlSLGIbcbFaKOos4bl0AikEeHtmnGrPDtqlit2BdCw==
+	t=1795435639;
+	b=KVdCnOHM6OYw2bvNwxHkLT0ud0BVz+XhV1LILafiPVGy/UA+mhJXcEVzdKus64jPeN8t
+	 4I/7g4bJwBm7M1j841dUJTKozoA4bTRidIUzN5UD1Eb6I4mm7F2Eo4XN9+YR+6aXbvDR6
+	 imnSCxrF2FJ0auYRLMBMGrXTa+9HM1mJgrhJE4hlsitdsBesSBhBm965uxJi8XAibLJeW
+	 9bWaGKrFLpiFG0aPSn5FWyH1aeXf7O3wFwt6azQwSQUL7D2zuGKfJGmLxuZT9A1Tepwlf
+	 maFwS9hFWjxR8gZZwZf8g+S/WFG/gb7Ueja2Xk6/ByV7cFEw2xV4omzXBmNaHAXMJEg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795435603;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795435639;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=YcMb+PLs/AWZj6CMeHYvkaPehmudD/DmEHA3ZbplGK4=;
-	b=TyUMIrcVF98PErYP0gtg35n+uR1oS8juxX4xi6YmmiJ+G78tboUQrP9g2Dz2cytb0T7C
-	 yriW5eHjLN27aI1V+/2/8ITCvG4wReFgmynXSEkzPSIQZ4pal0fuE72Ngb0wYAbLisz7i
-	 i/Wv/2uqYiGLGPdTzEAmLyDX6+BJVETTvCUHQBfj8GIwOfXhLMVo28yfG4HalgdxJ7Xci
-	 xWwbHcje13XXfeoPIqQZqyQV8gR6OaQRgl+fHmvbbs6FoskPudeuwuupcZcBirOYOy6lK
-	 uR7bR4tvEZkULYhnlvR2Mcv7QMA4SFOvvoqlwoP65jw7dy5f+dSEESYqnN88qAX4SgQ==
+	bh=9J9fJaDjY0Dts4Gsqz0quMcF3tDemSYv7SGUwNXF9Fc=;
+	b=KDcpJyjhJ7wjZZWLHuvIP7j//Uj3cuL8e4BN4EHBg2kDFWcoywAqOYeMrqVyLBPXbGMt
+	 QNdIBRs3NqfrcxmL7bKnoJKD6l5ig/l2L7SC1395l2b3fwLjO15OLZQcxPKeHb7DNcWME
+	 9sS3IBA1qwUnljLlcdtGzKrv4g6Qr87zfHNNDcWOfoZQMfXI164Nr9fcudLqtnuV4/UMH
+	 UB84YuXTnBvd28bDO855GWqpLXNvhv7SflN8xnwqvPZblKK93UQyOOelf2+OTc3Wvdgt1
+	 kYVNakfpVIV1t0FVqnVSHEuKI4ktLVOE4PzP+5yJJ1AZB2F9DVJmoOCxb6QrS+CKzoQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ScqeuJIC;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=a76zrBzx;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3651606A327;
-	Mon, 23 Nov 2026 12:06:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34E48606A31A;
+	Mon, 23 Nov 2026 12:07:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ScqeuJIC
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5EE861F000D0;
-	Mon, 23 Nov 2026 12:06:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=a76zrBzx
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 74EF81F000C4;
+	Mon, 23 Nov 2026 12:07:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795435603;
-	bh=YcMb+PLs/AWZj6CMeHYvkaPehmudD/DmEHA3ZbplGK4=;
+	s=k20260515; t=1795435638;
+	bh=9J9fJaDjY0Dts4Gsqz0quMcF3tDemSYv7SGUwNXF9Fc=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=ScqeuJICiSa3yA0PGnXYuPrVQpQGvFiqYra0ZrcRbjqbchIMnB2YmFxs4mOzXVt7L
-	 yY4P7wQAFA23kn7IQc5LBKacbRLjf/QsGRqCOdSTtaYlPhzAQZaxZ/MoqXGBRTqE63
-	 zQzwaIYPHLy7kt1cxhJuZvBfEK1WvWs/i2O5kZj7i347L4qlH6rZqXudyRE4N1jHUe
-	 yjudaXrmmJ1jAI52px/2ikKpC+qc/AUTaJN7t0Ag7TXUrHdFSJzTh8y74J+B+ebX0P
-	 G+eMQk0g44ctWuJOKzNAtU68QrzbujZN5/KyWR0h10mxKH8fC3xgoB5mt5nzHtcJIQ
-	 B75cTRP3G+ZWw==
-Date: Mon, 23 Nov 2026 13:06:40 +0100
+	b=a76zrBzxzVcVrcVb6wqriWop3Tks1ZkXJEWtW97ujks72eIwypE0kA8khu3rIUQUm
+	 SBXpVyG3dQKRUXSpOVjQ0W5LzdM/kXVLAeqHg8yOvX7Z6M3JbUTRPdypva+/0Iwwwn
+	 ek3ZfLn4Oj3of+oTswT0+9gnynzmjzMeZvNy7E7PAv+iv3mJdZGsZna1YULbhhKA40
+	 54LlYlecfXdOkq0U9pBXD+litSzI9wpA6eoHF3Mkqii7I3/KjbCz/l0AxN+CYAT3wH
+	 1Ja9p4SrK5Utb9EgOW8JfOyCC7XpyGDjizRpeXMHN08Rr5LXARmAN9yi8g9L5LEqbY
+	 jBc0ohLZIF6YA==
+Date: Mon, 23 Nov 2026 13:07:15 +0100
 From: Krzysztof Kozlowski <krzk@kernel.org>
 To: Stanislav Aleksandrov <lightofmysoul@gmail.com>
 Cc: Bjorn Andersson <andersson@kernel.org>, 
@@ -63,11 +63,11 @@ Cc: Bjorn Andersson <andersson@kernel.org>,
 	linux-arm-kernel@lists.infradead.org, iommu@lists.linux.dev, linux-usb@vger.kernel.org, 
 	linux-phy@lists.infradead.org, linux-scsi@vger.kernel.org, linux-crypto@vger.kernel.org, 
 	linux-pm@vger.kernel.org
-Subject: Re: [PATCH v2 06/16] dt-bindings: phy: qcom,usb-snps-femto-v2: Add
- Halliday HS PHY
-Message-ID: <20261123-azure-wolf-of-whirlwind-43caef@quoll>
+Subject: Re: [PATCH v2 07/16] dt-bindings: phy: qcom,sc8280xp-qmp-ufs-phy:
+ Add Halliday
+Message-ID: <20261123-thistle-gaur-of-sufficiency-7ced66@quoll>
 References: <20261116-halliday-dts-v2-0-2c92438c6c46@gmail.com>
- <20261116-halliday-dts-v2-6-2c92438c6c46@gmail.com>
+ <20261116-halliday-dts-v2-7-2c92438c6c46@gmail.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -79,18 +79,18 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20261116-halliday-dts-v2-6-2c92438c6c46@gmail.com>
+In-Reply-To: <20261116-halliday-dts-v2-7-2c92438c6c46@gmail.com>
 
-On Mon, Nov 16, 2026 at 09:26:22PM +0000, Stanislav Aleksandrov wrote:
-> Document the Synopsys femto USB high-speed PHY on the Qualcomm Halliday
-> SoC.
+On Mon, Nov 16, 2026 at 09:26:23PM +0000, Stanislav Aleksandrov wrote:
+> Document the QMP UFS PHY on the Qualcomm Halliday SoC, which is
+> compatible with the SM8450 one.
 > 
 > Signed-off-by: Stanislav Aleksandrov <lightofmysoul@gmail.com>
 > ---
->  Documentation/devicetree/bindings/phy/qcom,usb-snps-femto-v2.yaml | 1 +
->  1 file changed, 1 insertion(+)
+>  Documentation/devicetree/bindings/phy/qcom,sc8280xp-qmp-ufs-phy.yaml | 4 ++++
+>  1 file changed, 4 insertions(+)
 
-Acked-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
+Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
 
 Best regards,
 Krzysztof
