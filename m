@@ -1,119 +1,89 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.221.49
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795517697;
-	b=cJ2ymKhgqiSdXkiDC1GKo7OZfp/8FuYAcsUTi5yMuqXcfjStVGSH5Ef+030R6DX19wfi
-	 G7+YV/5EgtVrWkOZVYUpsXbgzKG5rFcKsINJ8aVNzrxzBGq/ipS1wj9RwtVey4FKcUYhj
-	 musqahfncKfywguxquIAisH8dCGnfSWinsDmqBOniP9fe1gnmbOgvk/qih+LXMMtV3dj7
-	 lJLaLa3cm5afz8FynvkTwD+JtcejnPkInE4Nmblqqi6OSGa1uoOHT2d1bl/ZCyouj/Acm
-	 Ea+vO3D5cQEyMKEU31o34DtO3ErSBVn06kgr5Ezzg75VEO1q6hDKvDwxLftxy4y965Q==
+	t=1795518302;
+	b=C2MwRYA8EKGRhfhClZaX0f3D/ywKEWzYddoVro+eG30crsufIZ47nJsKunETyRld2P7l
+	 PTcKbHBhjAC2KybjoZoHK6eaBqMLwzDlV+ZqdlJ08k53DWxNfVspQUqmpLoQI8J6mlUYC
+	 BQLSYXtbl6BVdFb1KWtHVj4Vl1H9UvsKWIGrL4PbxCzKuirbWnG9036u2Dxhw0oNnklvc
+	 Plr+umczNyMVA7P/+zuKTwmBw+Fsj+fmystrQN/fYAWvIFDdNNhnX6NV3VsOEW/wrfxn1
+	 TrYqeAMMvlr4CT0QwCRXamK3VCNTq4rirZESZaebV1CVyGkPa0HgHC+5ajiwJlIphLg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795517697;
-	h=DMARC-Filter:Received:DKIM-Signature:Received:Received:
-	 DKIM-Signature:X-Google-DKIM-Signature:X-Forwarded-Encrypted:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:X-Received:Received:From:To:Cc:
-	 Subject:Date:Message-ID:X-Mailer:MIME-Version:
-	 Content-Transfer-Encoding:X-Proofpoint-Spam-Info:X-Authority-Analysis:
-	 X-Proofpoint-GUID:X-Proofpoint-Spam-Details-Enc:
-	 X-Proofpoint-ORIG-GUID:X-Proofpoint-Virus-Version:
-	 X-Proofpoint-Spam-Details;
-	bh=+dTwZnOHLDKXEvNUsrVBpyCfVL4kbo9yWlVZaxntVfE=;
-	b=KoO9sO4guCg+DMtO2PCLVkD9cobsPq7UYH7U4mtpdtfMPc8lJWp3DyZ3IMr52+/QxxZl
-	 3OLw58GJd+Hn5dxfBcExLFpLWwoUQJc2QC+hR4mjHkL/L/DlnCpWXVp8SWWmhn0bBWU9R
-	 0jcGBXv833JJkp6dkdtjVLIhxakQke9R2GVKWeFlwMjQy1RfAdioHpAbpdrJrcosTxzZc
-	 EUaAF0xaS73wnvcXLhti0dpVxKR2s7LyCC7vU14J2XxBzDHzNYRuG8ugfguFZTSP9qIJl
-	 ujM3dbDBcJuyNnqdemjXZC9+EBlYTF9vLCphb7aujX0DbMyKxbUeZZTh/phUTAS9KLg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795518302;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
+	 Date:Message-Id:X-Mailer:MIME-Version:Content-Transfer-Encoding;
+	bh=IErW237nxPTFPaxaUwE6T2gUhM4FsxHtoM7AbkyU5fk=;
+	b=nOQlvyMByL0ZR+z1ma1EjtnxrujrwJj+B7kebZLBiPSIsbjXmCrB+1QJ5UZRGpb5yOMl
+	 AL2JymHKLP2nE1NN/o/D7YGgqzEay8rqm8Urw8GLlkT8hffBzKU60vnauVLndjwXaJEfc
+	 M0uJu+lte8CCKG8MxJ1ud1ZW6RVLLaUkjieAzNEaKtVs8oL8KiyQ/4SRybEIXhVpaZrX+
+	 nitjF+bt1OCPeFYhqfGb9Jt/qYj/CUpTpW75xcXIeM8nQdDZFgg2dw3lDFichCJX8HFtk
+	 nktPEGq6sCRrtERjJ4+eiobP3CnGjIvqpP0kB77Wh1Vw9agj65v6+lxrVOzsARIsuLA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=oss.qualcomm.com;
-	spf=pass smtp.mailfrom=oss.qualcomm.com;
-	dkim=pass header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=P9SciSyn;
-	dkim=pass header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=cWfHq3zo;
-	arc=none smtp.remote-ip=205.220.168.131
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=htfm9XbS;
+	arc=none smtp.remote-ip=209.85.221.49
+Received: from mail-wr1-f49.google.com (mail-wr1-f49.google.com [209.85.221.49])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A74F606A31E
-	for <linux-scsi@vger.kernel.org>; Tue, 24 Nov 2026 10:54:57 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7A74F606A31E
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5910F606A31E
+	for <linux-scsi@vger.kernel.org>; Tue, 24 Nov 2026 11:05:02 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5910F606A31E
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.a=rsa-sha256 header.s=qcppdkim1 header.b=P9SciSyn;
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.a=rsa-sha256 header.s=google header.b=cWfHq3zo
-Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6AO8JrAU3225364
-	for <linux-scsi@vger.kernel.org>; Tue, 24 Nov 2026 10:54:56 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:date:from:message-id:mime-version
-	:subject:to; s=qcppdkim1; bh=+dTwZnOHLDKXEvNUsrVBpyCfVL4kbo9yWlV
-	ZaxntVfE=; b=P9SciSynycsGEIVFMS3diJ9WO4pa8LRkuGMtgFBJHgPzynH3I5+
-	qTCFBRCgYV3QL7JQaH2EXGhMH/EAbq4P8KRKxDv4MLxn2UvhKg2DFA0/zM5T684v
-	ECK+g0s56o2viDWtgTa1zWGb54DXhX6pXDTZc4e6YFbqufxRRpQnxhDSGFuT62pi
-	ThfuiXvDL33vawwxEBjSJa9v2p9qhXyyBXVzqFYQKravYzERPlaR0dw3y4pWAxXU
-	fy7t9zh1oqJX0Q7AtU1CY7CYrHS6gSl1iBOBul4YMZnj5j+jxoQn5zi61cvEzFDQ
-	/KdqMAdBKDor5FG64VvFiZV+IG0RhQt5f4g==
-Received: from mail-pf1-f199.google.com (mail-pf1-f199.google.com [209.85.210.199])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4j4x8f2nck-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Tue, 24 Nov 2026 10:54:56 +0000 (GMT)
-Received: by mail-pf1-f199.google.com with SMTP id d2e1a72fcca58-8b852fdd55aso4896789b3a.0
-        for <linux-scsi@vger.kernel.org>; Tue, 24 Nov 2026 02:54:56 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=htfm9XbS
+Received: by mail-wr1-f49.google.com with SMTP id ffacd0b85a97d-4a358881793so2218575f8f.0
+        for <linux-scsi@vger.kernel.org>; Tue, 24 Nov 2026 03:05:02 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1795517696; x=1796122496; darn=vger.kernel.org;
+        d=gmail.com; s=20260707; t=1795518301; x=1796123101; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=+dTwZnOHLDKXEvNUsrVBpyCfVL4kbo9yWlVZaxntVfE=;
-        b=cWfHq3zotj/yajFTZFbtj/bus3z/W+mWjslhRqvkiKmv/HhErr3wA2C9zTQovDJfYJ
-         nPXe9gYVnvKx0H4fo+ZK7prDOlN3kU+nnTS2Sgublu2WnZ39iSJpjZ6oU47LEKJ1p70R
-         ltQa/sfcgh7OSkWlCUUZmdLTPSiKxnvS2J9XVOaJ4vsuqllmWcHOLGIKepnaqhqjn5as
-         2l37Du/Nv9LoYJEmFxpVMxPqvOYkb2Y9ndSbKtoETmJ5qFrqD49BCWuLkZ1mTZ8Uloob
-         9fhddYhOCx5iQYTMu3x4HfSrJ0r28SxfJRn7whGe2/n4vkkCX+D10klvxDQRiF/+ynO8
-         MUYA==
+        bh=IErW237nxPTFPaxaUwE6T2gUhM4FsxHtoM7AbkyU5fk=;
+        b=htfm9XbSkowDG1HsPGkmA1Sa/7zaV+wWGP1J9/RfRjdXzcadB/IX5iZ7CKKbCE/wON
+         2Y/Uy4xb/r8c65S58x7GY/IOwTubgUbX7C+SUEAtnnKclmBC6QqWDxFESTWoYvnbgXpU
+         ginGIHc/XomswKuW2VqhWlftpVZWSbVHFaUVvAaAB437Fa3I+upAehzT4i0WE+EjN1sM
+         NcAXVyLu2F/v9RVPg1XaTZck5e5XzlPf3I2u1oce4Nnnz1khu6ZB3AO/p3RaMkmtRdyk
+         oo7tUxr27J1hXPNlV+igwQpWhBDiMvtD/Ipbb1RrJH0YkRyeK/XCFRHH/iPlI76tZvdp
+         DmqQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795517696; x=1796122496;
+        d=1e100.net; s=20260707; t=1795518301; x=1796123101;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=+dTwZnOHLDKXEvNUsrVBpyCfVL4kbo9yWlVZaxntVfE=;
-        b=weMobVUsHThfrZEf6fMRQERJuovhCSOfT4Ib41xHeFWw8QEDAuY953UVfQspWtZw4b
-         SUcw3zELlajbO6/SAfV4a3KjvT71PL2320v8GlfdEYB4BsEdHDmyFM9ApZmFvWWBmeyH
-         7lAIMEkF0lRegZox8r4hBaTe5rWCg6stqyfpMU7PxZE5bGgdvD5rSSRkycP6O/ebdUy4
-         Zd2r2tybQhfT2Qw0QYykYJyxdlhgjgtsK90nolnelf31g4KA8BLZtkr3ZPoPIsCKBNw7
-         PTkdP+yr6KBflF9Rms6lOOpzGyUsXPgbgSZ6lIBSoi4P+XSLM11izhpb9jtCOZ7hCMrz
-         7xDQ==
-X-Forwarded-Encrypted: i=1; AL+hErHeyhc1Ir0Be1KSUwyDFetrJWyoyQQfpHZdd4M2o0iItfpUVw4IaMEhUD2Tyos34JJ4qbtkLfdJ7V0I@vger.kernel.org
-X-Gm-Message-State: APuU4Z8a01aIkG+5ZaHsCxLkdVyKle2oZOEq8EZK4juPaZh2mutPVEx7
-	jn5HBm4I7Ma5MeBH3dU3q4dIixbEUqXuD/K6CuAdICKAZPq9/GQJlm8eLUDqlsT7kcha54z//HU
-	BvWkpyOGFb+DMxVxepcjOpWmQWBXvAR1v70RXUH9PrsCJBKDT8T7wzvjhzGx4krja
-X-Gm-Gg: AZFdTZdhoAf5cPANa1hZfarAVIRMZEVyWPoRwPhdKAA7BWFv5r4M8f9gFYlLAr/zsVD
-	g//fL8y9aoqe0NsLKJj9sxv4ocXDy25FJr77hj0E74tLMY9WXlD1W/ukM2yWDhvVrvWNYzNXdXQ
-	Ld4fw7qB3toV0a2DkeuMV2QyaHLVpbgWsnCjPpU9KWZ8l8DkBP7TXLM9VfE+fkVoGff1rjhnnIS
-	WYow+q+hA+oqY7+avj4VIjvcJ8aPGL0f3lB3vhWOLNWeC2raDCVCJqoCPs6kYv30iZkAnOng3TE
-	Vcs/Hx+b3TZKbKrM4igfPXAWrUrwfRIGHJ63ZpbBrY/5K/UKX8grubcyZEfrxRRLBO1ObVyEP5p
-	ANjuZouhSrTbZHEhbHXFkpBfLG62Dz02/a4PKX4DIvCJkg3TNDaQig1kKlZTr9+8p2rP5hBHfQm
-	oHyYAeFiUv3GvWigGb9jQwziwbhvdjs1yxvwW1EUbaArWdPeUM4YHx5JQ=
-X-Received: by 2002:a05:6a00:2ea9:b0:887:17f3:94f7 with SMTP id d2e1a72fcca58-8c8792b60b6mr13838798b3a.1.1795517696023;
-        Tue, 24 Nov 2026 02:54:56 -0800 (PST)
-X-Received: by 2002:a05:6a00:2ea9:b0:887:17f3:94f7 with SMTP id d2e1a72fcca58-8c8792b60b6mr13838777b3a.1.1795517695517;
-        Tue, 24 Nov 2026 02:54:55 -0800 (PST)
-Received: from hu-ymg-blr.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com. [103.229.18.19])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-8c87343f726sm7323476b3a.36.2026.11.24.02.54.51
+        bh=IErW237nxPTFPaxaUwE6T2gUhM4FsxHtoM7AbkyU5fk=;
+        b=16k190m0kTK8jKNiMx9Cvpt66dI/WMj/XGGN3R25n/YqaPftlh02OT3yJXX/5sVzQI
+         /gHq2woLNpGhw4gGyTNx5rFzHrggMRmhJLIK7K2TGjak/1soOvFvuGd6fMToT7pdXMbW
+         USX1pdR3niRwOVlEF+SfU7A1Xg0+9KfNmSH4qsfaD7gZ5bDaZiG7F82Zss+mStTGfC2B
+         W7aEnQf5Cma1ZItiT8sk1SX4LAylQEAigdSP+EjH5aKqW6dqgkOJQ5hdB6d7RuT2cAXk
+         VGqddgw9q0JS9K6Vsv4btUifYJ0sHKUBIRQmgle8eWnHxB/EOBekPHfjipCZDmYAdSJS
+         lizA==
+X-Gm-Message-State: APuU4Z8jAA6HmL/J35Hz7nQBXea+/Q/QBjdGXGI+fvPc5LjpybuueRQz
+	iax+agPrkebnm++e8Z6m7OdoSiLnVA/yg4ML2eElfLrbSzOZ4ISPMiQt8kh7Mgmn
+X-Gm-Gg: AZFdTZfOj01zLkGBKUnA8Kx9Ww6k6FGU93uWK8Kj6TNUx3dqUxg5qwFJNHkb9qaerk0
+	Gf00hOEncIRy7BfDzzaicNw1mq3YGmG3iqggdPSKeSC6vWQ3qOzgS8xxn4w/KvQEyiLujBu31QB
+	wfDNXvo/Mq1G5cE5wOlqQWZyRcM61tZtNzrDKr9qKhJyIxGxsfAz6b+g7pyyhvIRs+X0t3ZtgZ/
+	AtiKZB34ahgMWj/c1glGxuCToemRH8dbwKNx8auT/nPCvZWXQnwCKqJUqYuZKazKYj+DJFRDfa7
+	8+NkYCuFzf6EYWQ7ePAI8MONdY8kPOzqATyVqtD2DeQCLHr96jyd8gsCEJWkW2n6WTWzAMOk38z
+	bZu3WvC7L/1Q5KKwcbiNn1i3TQFF2vqUIV/dsHxT+SbpahVMYVvvxQ+CON9Px5LkkVPizPGA3y4
+	KpMYLc/5oEXg7h3xIG8mEM6CLMPAPszXrfSU6azcs8na9/T/eeldxD3/876AOwPoDeXNVD9x8jp
+	Q9sV/Mh5gNM/HiItSlt9O38RmT3pSylcXx1hWtAR2qNyvyoVP3nfMVM5kwqV3wHUODx8AvHLMfp
+	Od5eJsooEULkoePQ2ahmahCJqBxrzG6sJltMMb8s
+X-Received: by 2002:a05:6000:470c:b0:4a6:ad0e:6cd4 with SMTP id ffacd0b85a97d-4abb759dd4dmr26347062f8f.48.1795518300394;
+        Tue, 24 Nov 2026 03:05:00 -0800 (PST)
+Received: from localhost.localdomain ([91.223.207.32])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4ab6bb989eesm27402010f8f.50.2026.11.24.03.04.59
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 24 Nov 2026 02:54:55 -0800 (PST)
-From: Yadu M G <yadu.mg@oss.qualcomm.com>
-To: Manivannan Sadhasivam <mani@kernel.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Bart Van Assche <bvanassche@acm.org>, Bean Huo <beanhuo@micron.com>,
-        Stanley Jhu <stanleyjhu@google.com>, Rob Herring <robh@kernel.org>,
-        Krzysztof Kozlowski <krzk+dt@kernel.org>,
-        Conor Dooley <conor+dt@kernel.org>,
-        Kumar Dwivedi <ram.dwivedi@oss.qualcomm.com>
-Cc: linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
-        devicetree@vger.kernel.org
-Subject: [PATCH] scsi: ufs: dt-bindings: Add compatible for Seca UFS Host Controller
-Date: Tue, 24 Nov 2026 16:24:47 +0530
-Message-ID: <61136dcb5cde2c0cfe1b8f3a488e9edcf36043cf.1795517687.git.yadu.mg@oss.qualcomm.com>
-X-Mailer: git-send-email 2.43.0
+        Tue, 24 Nov 2026 03:04:59 -0800 (PST)
+From: Benjamin Saiz <benj.saiz@gmail.com>
+To: linux-scsi@vger.kernel.org
+Cc: mkp@kernel.org,
+	James.Bottomley@HansenPartnership.com,
+	aacraid@microsemi.com
+Subject: [PATCH RFC] scsi: aacraid: free aborted management FIBs on late completion
+Date: Tue, 24 Nov 2026 11:04:44 +0000
+Message-Id: <20261124110444.3485-1-benj.saiz@gmail.com>
+X-Mailer: git-send-email 2.39.5
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -124,70 +94,116 @@ List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-Spam-Info: AW1haW4tMjYxMTI0MDA0MiBTYWx0ZWRfX+EQcHhbolVr8
- mr18/SnQzd7n4uHahnNWakZslnvr6DDJdXA/19uz6cxsGDOGevvQYC4LcSNp3yzYWDVENqwOgPA
- LD3VD4q980D13yAP6RxKMBpbP8koHSQ=
-X-Authority-Analysis: v=2.4 cv=JbgpPkKV c=1 sm=1 tr=0 ts=6b056d00 cx=c_pps
- a=WW5sKcV1LcKqjgzy2JUPuA==:117 a=Ou0eQOY4+eZoSc0qltEV5Q==:17
- a=zJRp6_cAMcgA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=u7WPNUs3qKkmUXheDGA7:22 a=YMgV9FUhrdKAYTUUvYB2:22 a=EUspDBNiAAAA:8
- a=lHObh2IfMKzVuqTG74EA:9 a=OpyuDcXvxspvyRM73sMx:22
-X-Proofpoint-GUID: kG9XCXQU1vWQWzzZPUFrFhZn51EAttMu
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYxMTI0MDA0MiBTYWx0ZWRfX2HLcxm8LttQl
- pVCHiTtXlLZSnHTStSLZdQDwoHndl+78mcp8N57QjrJvRUmR/OL2/bGMv2YQIJBDztI5yPI3YjM
- D7J7Mm/HsOTLsgcjpRufR4bqNVScWTztVSdONL8stICps/hAr5lIiwU1IiL6FTX4ANP6C5xmuRP
- kz+2eqYfqhhO9wE4vaP/l1RAHEfYUy4B0dATa7zRbz0B9v17yJaf/dIQ9JpQCz2HjFaK2bATDzh
- 6GZwtJagBYMZqObuYWEowoAsOR2RIZi4YKgk8hHiBgedodDq1wLcpY9BrjpmcTxL8/C6AI0FDH4
- cS4z4QVKB3c+S8Ur7x45TACS1Wxab6IzDRe8/BErkJtp4udx43VOlzj84g+vrv8j0cRryK3gE7r
- NHn2IQmfKwgrv5QKfoiFLSveL5TgXhQbG1G3ivyCQ8p111+OimPrH+6Kf8nC+aKzalCn2ZesOxG
- a1dvf4GwQhorPbIxkQw==
-X-Proofpoint-ORIG-GUID: kG9XCXQU1vWQWzzZPUFrFhZn51EAttMu
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1176,Hydra:6.1.138,FMLib:17.12.100.49
- definitions=2026-11-24_01,2026-11-23_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- adultscore=0 bulkscore=0 lowpriorityscore=0 malwarescore=0 spamscore=0
- impostorscore=0 suspectscore=0 clxscore=1011 priorityscore=1501 phishscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2611040001 definitions=main-2611240042
 
-Seca's platform firmware implements an SCMI server that manages UFS
-resources such as the PHY, clocks, regulators and resets via the SCMI
-power protocol, like SA8255P. As a result, the OS-visible DT only
-describes the controller's MMIO, interrupt, IOMMU and power-domain
-interfaces, making SA8255P the appropriate fallback compatible.
+When a signal interrupts a process waiting in aac_fib_send() for a
+management command (for example FSACTL_SEND_FIB from arcconf, maxView
+or smartctl), aac_fib_send() marks the FIB as abandoned (done = 2) and
+returns -ERESTARTSYS. The ioctl handlers then deliberately keep the
+FIB, because the controller still owns it: ioctl_send_fib() only calls
+aac_fib_free() when retval != -ERESTARTSYS, and aac_send_raw_srb()
+does the same. The interrupt handler is expected to release the FIB
+when the late response arrives.
 
-Signed-off-by: Yadu M G <yadu.mg@oss.qualcomm.com>
+aac_intr_normal() handles that late response but only calls
+aac_fib_complete(); it never calls aac_fib_free(). The FIB is
+therefore never returned to the free list. Since commit 6bf3b630d0a7
+("aacraid: SCSI blk tag support"), the free list only holds the
+AAC_NUM_MGT_FIB (8) management FIBs, so eight interrupted management
+commands exhaust it: aac_fib_alloc() returns NULL and every later
+management ioctl fails with -ENOMEM until the adapter is reset or the
+host is rebooted. management_fib_count is decremented normally, so the
+"No management Fibs Available" check never fires and nothing is
+logged.
+
+The exhausted pool also prevents aac_send_shutdown() from allocating a
+FIB, so VM_CloseAll is silently not sent at shutdown.
+
+Observed on an Adaptec 6805 (Linux 5.10) with kprobes on aac_fib_send(),
+aac_fib_complete() and aac_fib_free(). Before the test, 1000 management
+commands all used the same FIB. arcconf was then killed (SIGKILL) while
+waiting for a ContainerCommand:
+
+  54803.925692 arcconf-1091331, CPU 11: aac_fib_send() returns -512
+  54803.927570 <idle>-0, CPU 12, hardirq:
+               aac_fib_complete(fib=0xffff96570a8e7b00)
+
+The late response arrived 1.9 ms later in hard interrupt context and
+completed the FIB, but aac_fib_free() was never called for it. The next
+812 management commands all used another FIB; 0xffff96570a8e7b00 was
+never allocated again.
+
+Commit cacb6dc3d7fe ("[SCSI] aacraid: fix File System going into
+read-only mode") introduced the done = 2 handshake and freed the FIB
+in both aac_response_normal() and aac_intr_normal(). Commit
+6bf3b630d0a7 removed the aac_fib_free() calls from aac_intr_normal(),
+as I/O FIBs became indexed by block layer tags and must not be put on
+the management free list. The abandoned-FIB path, however, only ever
+sees management FIBs: every synchronous sender (wait != 0, no
+callback) gets its FIB from aac_fib_alloc(). Commit 423400e64d37
+("scsi: aacraid: Include HBA direct interface") restored
+aac_fib_free() for the callback-less async case but not for this one.
+aac_response_normal() still frees the FIB.
+
+Free the FIB after completing it in both the native HBA and the
+regular branch. done is set to 1 before the call, so the early return
+in aac_fib_free() for done == 2 does not apply.
+
+The issue was found, and this patch and its changelog were drafted,
+with the help of an AI coding assistant (Claude). I reviewed the
+analysis and the change and take responsibility for them.
+
+Fixes: 6bf3b630d0a7 ("aacraid: SCSI blk tag support")
+Cc: stable@vger.kernel.org
+Signed-off-by: Benjamin Saiz <benj.saiz@gmail.com>
 ---
-The Seca SoC device tree using this compatible will be posted as a
-separate series.
+RFC because the fix itself is only build-tested (x86_64, v7.0 headers,
+W=1, no new warnings). The leak was reproduced on the affected host as
+described above, but that host is a production NAS (Adaptec 6805,
+Debian 11, Linux 5.10) and the patched module was not loaded there.
 
-This series was prepared with help from an AI coding assistant
-(Claude). It assisted with review on the device tree, bindings and
-driver (formatting and alignment fixes), rewording commit messages,
-and running the validation steps (checkpatch, dt_binding_check,
-dtbs_check and W=1 builds). All changes were reviewed and tested on the
-Seca Ride board.
----
- Documentation/devicetree/bindings/ufs/qcom,sa8255p-ufshc.yaml | 3 +++
- 1 file changed, 3 insertions(+)
+Every synchronous sender (wait != 0, no callback) in aachba.c,
+commctrl.c, commsup.c and comminit.c gets its FIB from aac_fib_alloc(),
+so the done == 2 path cannot return a block layer tagged FIB to the
+management free list.
 
-diff --git a/Documentation/devicetree/bindings/ufs/qcom,sa8255p-ufshc.yaml b/Documentation/devicetree/bindings/ufs/qcom,sa8255p-ufshc.yaml
-index 66d73e9025d6..4a5dbc780b0d 100644
---- a/Documentation/devicetree/bindings/ufs/qcom,sa8255p-ufshc.yaml
-+++ b/Documentation/devicetree/bindings/ufs/qcom,sa8255p-ufshc.yaml
-@@ -16,6 +16,9 @@ properties:
-       - items:
-           - const: qcom,sa8797p-ufshc
-           - const: qcom,sa8255p-ufshc
-+      - items:
-+          - const: qcom,secaau-ufshc
-+          - const: qcom,sa8255p-ufshc
+For reference, Microchip's out-of-tree driver 1.2.1-60001 frees the FIB
+at the same place (both done == 2 branches of aac_intr_normal()); its
+aac_fib_free() only returns pool FIBs to the free list.
+
+Not addressed here: on -ERESTARTSYS, aac_send_raw_srb() also strands its
+SG buffers and DMA mappings (bugzilla 220504).
+
+ drivers/scsi/aacraid/dpcsup.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/aacraid/dpcsup.c b/drivers/scsi/aacraid/dpcsup.c
+index 169c41d..a965f18 100644
+--- a/drivers/scsi/aacraid/dpcsup.c
++++ b/drivers/scsi/aacraid/dpcsup.c
+@@ -379,8 +379,10 @@ unsigned int aac_intr_normal(struct aac_dev *dev, u32 index, int isAif,
+ 					mflags);
  
-   reg:
-     minItems: 1
-
-base-commit: 3191063649dbf7c0d0b768e1f3655e4c5fc6edb5
+ 				FIB_COUNTER_INCREMENT(aac_config.NativeRecved);
+-				if (completed)
++				if (completed) {
+ 					aac_fib_complete(fib);
++					aac_fib_free(fib);
++				}
+ 			}
+ 		} else {
+ 			struct hw_fib *hwfib = fib->hw_fib_va;
+@@ -432,8 +434,10 @@ unsigned int aac_intr_normal(struct aac_dev *dev, u32 index, int isAif,
+ 					mflags);
+ 
+ 				FIB_COUNTER_INCREMENT(aac_config.NormalRecved);
+-				if (completed)
++				if (completed) {
+ 					aac_fib_complete(fib);
++					aac_fib_free(fib);
++				}
+ 			}
+ 		}
+ 
 -- 
 2.43.0
 
