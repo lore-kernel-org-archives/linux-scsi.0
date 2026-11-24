@@ -1,77 +1,55 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795532478;
-	b=1f+7t2UBlEDUOdHvb+L40nWkWBqURrYnxTn4VmhtqSEKuhdlMrvSf9bX+pfJftpwNDFY
-	 I7J1GD2qPfvqZ9ZjQZdp6NxApqZyM+hws6C/ySNtnvlbeFfYeKx7mDFatlLyVo80AdfFw
-	 RCLJyq3QAAzHeCXHporFNzjvSeds4s0/C6uy9YVekzgYsjM8clm3MebhppsQZqA1i9qR2
-	 V0X9VLsA7LFJ5aY/uQrnsvQSrL317AmdZpSvo4UVBXvzaRRsEALDWWcJu03aW7ksbaA+B
-	 IGPmTghxuWdzCKYQtPnOM+SzTgrBBwURM62bGQ9KaykzJvDyVMSX97eOIjqKHe8blbA==
+	t=1795533015;
+	b=KetSNwfu3TjYviRZi3H9UjLBTKd2Boa9kVRBRxHA2Cim/ZDEasBjl40MpAUXNm0GOuge
+	 y6w/ZbSYny7p88GPiROzAW6esIW46kJkpxwNV5zwpW8pQwrwfp32MTivcnCvmSl7Z35xv
+	 Ve7kL5yUh95hLm43Qr2KUzyS6z8YkfR8loA8Z46iPSpt4npsAeP7M9jScDqgAzP+2zM1t
+	 xNTJf2FDUlaRY971jQm9kt58C7ZrQH3tJVSRayayqaJKeAPyybg3Oqq+BScLXrclp10jO
+	 ciFUnIMpPj0or9nwPb22ADF2whI/WE+UQnd1cGG1BfCCrpKL+3FQEAOaPryjuBE5hyA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795532478;
-	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
-	 X-Mimecast-MFC-AGG-ID:Received:Received:From:To:Cc:Subject:Date:
-	 Message-ID:MIME-Version:Content-Transfer-Encoding:X-Scanned-By;
-	bh=OCP8g2l59WgeSn2ZtdFHcJloG9W93voXqi/JA7Q4iag=;
-	b=0XVYpBSaJZuxIQ5j7/khNzC3HwWzMyJamko/KjRbxFufHZuPZAMfu/olWgRJpINumEaH
-	 9SYx1XuiMIUKdgTTzYwS92jVxlJPRWRCCFEskSOgo2Y4+oU5vn6+IlbCpY5L/lJ/HNZZE
-	 vHhRMlopbwrZchdKuCrwYtlMJCwJlOBxvo73yx8vqpBSY2JfL6Ig34S2X5PoZwOykFBdB
-	 8aiGB4opBfROkwtAs54KlUA8AUrgIOXNKTRqwLG15TNoFArCUHbizs57/uNrKN9IpumkV
-	 1wSa5zDltkW2ihNzXPqEBNvI8+8vexd6tCajIApsV/vZTyFhuUnxj9mrgowrqxK+Vow==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795533015;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=gVNJ0uqLyARnDvL36IG6Zi8OmK9cdSH1QOk2+cR4NeE=;
+	b=BKI4T5/RADXF6CWqIFYc5v6ePd+als44SoeUy7XRSciVwyDx5N1Wg+et93QPva9loju3
+	 xpgkeEVgM1K5eLB7jr6q4qvwAf1/yJfocYXW6Mb7OTDAU3j6XamPcOi095Hhh87Fxx1QW
+	 uVzsfS1z78YP42/Q2Kp3XWR6j4X4F7oLwOSB+XOFPePXbAQDKliklfCG+QRedLgjoesjQ
+	 dtGuXQyxVqBc25p6L8dRk42N2zaMeklOQJ0z2qRpacoLHLPo7hST9GzwN3TbEXl+RTMuI
+	 wf5X3lhuSnuhLO806i3NpD5acg3JjymzBc+2ea+QcU+k+7MlvRVMspUwDIPbY4fRJng==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=redhat.com;
-	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=e1oRXILP;
-	arc=none smtp.remote-ip=170.10.133.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=EbYqG5iG;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9FBA9606A321
-	for <linux-scsi@vger.kernel.org>; Tue, 24 Nov 2026 15:01:17 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9FBA9606A321
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5DB6606A321
+	for <linux-scsi@vger.kernel.org>; Tue, 24 Nov 2026 15:10:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=e1oRXILP
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1795532476;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=OCP8g2l59WgeSn2ZtdFHcJloG9W93voXqi/JA7Q4iag=;
-	b=e1oRXILP8r34QsExNhoa/VQP8wYHqt4w5amvGKfsoTpVduMEe/CcAXbYB2qasozzWBBROW
-	0+2X9O/nw2+xI+gCQ/nJ5wlPgOhTGhj5O4GqYQyxCz80xXCJJiHiw8q6dlBJvuROJwqXWj
-	qZQL9lq0jk9skur9tMebIUKtvHOEP0g=
-Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-636-C8DzT9FgNlu_lLaNle3r6Q-1; Tue,
- 24 Nov 2026 15:01:09 +0000
-X-MC-Unique: C8DzT9FgNlu_lLaNle3r6Q-1
-X-Mimecast-MFC-AGG-ID: C8DzT9FgNlu_lLaNle3r6Q_1795532468
-Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id E10B218028B7;
-	Tue, 24 Nov 2026 15:01:07 +0000 (UTC)
-Received: from jtaubepe-thinkpadx1carbongen12.ibmlowe.csb (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
-	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id CD8A1195B3C2;
-	Tue, 24 Nov 2026 15:01:05 +0000 (UTC)
-From: Jesse Taube <jtaubepe@redhat.com>
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	Nimal Prabudoss I <nprabudo@redhat.com>,
-	jmeneghi@redhat.com,
-	Nilesh Javali <njavali@marvell.com>,
-	Manish Rangankar <mrangankar@marvell.com>,
-	GR-ETH-Storage-Upstream@marvell.com,
-	Jesse Taube <jtaubepe@redhat.com>
-Subject: [PATCH] qedf: Fix use-after-free in qedf_xmit error path
-Date: Tue, 24 Nov 2026 10:01:03 -0500
-Message-ID: <20261124150103.166306-1-jtaubepe@redhat.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=EbYqG5iG
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 317B11F000C0;
+	Tue, 24 Nov 2026 15:10:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1795533015;
+	bh=gVNJ0uqLyARnDvL36IG6Zi8OmK9cdSH1QOk2+cR4NeE=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=EbYqG5iGHG9LN5cpVhFcRWYD3lp30JVX/R6TlP2tFLGwF5NgAmS9mI3rzNZC/LOax
+	 mWPiKRCPsnAsOaN2MHkJnNUREp9bzqKBAie/RxrCaCGHeArDyA6XmGerDjIp5XgaG8
+	 pLSjgTiwJmn3TyQruis3Nox1hJXJVJu3ja3TfzE/ViOueLl1JNAAdEgsBi3cymIs5D
+	 NxfQfEK8Bam9S8UOI3nuYKx05V8yD4Q3LwYPDGsWcVq1lfzNazkFQ7qwdN2CrLKdr9
+	 VKHY9uD1JiRiUsAc5pQEepPhpb1BbPnC1uwtlM1QrJfDEaNsc8H1G9nuZGax1H7tYs
+	 7ib1hKUR077og==
+Message-ID: <sashiko-outbox-231392@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] qedf: Fix use-after-free in qedf_xmit error path
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Jesse Taube" <jtaubepe@redhat.com>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20261124150103.166306-1-jtaubepe@redhat.com>
+References: <20261124150103.166306-1-jtaubepe@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 24 Nov 2026 15:10:14 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -80,39 +58,32 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-In one of the error paths in qedf_xmit, we were freeing the skb and then
-accessing the Fibre Channel frame header destination ID field stored
-in the skb. Save d_id from the skb before freeing it to avoid a
-use-after-free.
+Thank you for your contribution! Sashiko AI review found 1 potential
+issue to consider:
+- [Low] scsi: qedf: missing Fixes: trailer for qedf_xmit()
+  use-after-free fix
+--
 
-Signed-off-by: Jesse Taube <jtaubepe@redhat.com>
----
- drivers/scsi/qedf/qedf_main.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+commit 836b89bd048da8c05c1796d7b58ad9a04dabef00
+Author: Jesse Taube <jtaubepe@redhat.com>
 
-diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
-index da429b3a4283..ff7d93fbc079 100644
---- a/drivers/scsi/qedf/qedf_main.c
-+++ b/drivers/scsi/qedf/qedf_main.c
-@@ -1113,11 +1113,12 @@ static int qedf_xmit(struct fc_lport *lport, struct fc_frame *fp)
- 	}
- 	if (vn_port && ntoh24(fh->fh_d_id) != FC_FID_FLOGI) {
- 		struct fc_rport_priv *rdata = NULL;
-+		u32 d_id = ntoh24(fh->fh_d_id);
- 
- 		QEDF_INFO(&(qedf->dbg_ctx), QEDF_LOG_LL2,
--		    "Dropping FCoE frame to %06x.\n", ntoh24(fh->fh_d_id));
-+			  "Dropping FCoE frame to %06x.\n", d_id);
- 		kfree_skb(skb);
--		rdata = fc_rport_lookup(lport, ntoh24(fh->fh_d_id));
-+		rdata = fc_rport_lookup(lport, d_id);
- 		if (rdata) {
- 			rdata->retries = lport->max_rport_retry_count;
- 			kref_put(&rdata->kref, fc_rport_destroy);
--- 
-2.56.0
+> qedf: Fix use-after-free in qedf_xmit error path
+>
+> In one of the error paths in qedf_xmit, we were freeing the skb and then
+> accessing the Fibre Channel frame header destination ID field stored
+> in the skb. Save d_id from the skb before freeing it to avoid a
+> use-after-free.
+>
+> Signed-off-by: Jesse Taube <jtaubepe@redhat.com>
 
+[Severity: Low]
+This fixes a use-after-free that has been present since the driver was
+introduced.  Should this include:
+
+  Fixes: 61d8658b4a43 ("scsi: qedf: Add QLogic FastLinQ offload FCoE driver=
+ framework.")
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261124150103.1663=
+06-1-jtaubepe@redhat.com?part=3D1
