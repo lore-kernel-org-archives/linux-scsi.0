@@ -1,96 +1,56 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.210.45
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795543360;
-	b=SYUg0DRyLHRe4dVmCmAPAcBQqjY7BNY/m4BqATEmuHyq5H8cPGuigh+hgDtMtOqiIE2W
-	 3Fgu4k4DrDJhfC4rojE9MAgVVXeYT1sPd0f49pHBqEsrVwnId0BR+9cPs9pssexJVV6y/
-	 KV1svxlarANpOWS/26bFENqa1EECGoY87XTnYzp1V1vdVrc0CXFPL9/ZnNMWYotwzWIbH
-	 F/TtMfXaiJv3BtAaW5jPdHQIN5mxu3tUA7exHDnnWYm6aATnNz0x63/3mh2SjQ3mfk1r3
-	 k12Q59yotxSAGMejyAS5xGeoY4Q+SX8YCDJwQ5cUcJa2YmzHi0C9nzpzZZ1MUkvdpgQ==
+	t=1795543910;
+	b=uCHpm4LAukPEGbWaMpp5NBhlFA677xb6pWsZunSRT3jyNKH7Yh7G0pKS8wjbMbQD6A4V
+	 0ow8/xs6O0W4nOuHKwRU8RWNifTQ95AEZ0ma4X1nmxDlezCDlcWn0cqVBju0+mm3nJzsD
+	 tO9/Y/izfNs62p3rcs6HSzVoPXcpHljAKG79yfOaKHcyReE0MKFdwPjJxkbKQ1Gg/GfeI
+	 H/m13X5H9+4yzQWq3/hqCcGbML0YFLItbDKZ1qEXuI8ZZT9bO0Lypsa4LswIYdbNL9Uij
+	 UwDRHe/P4s27jrKuw0oVVZfqZOE3uvvShuh2CWw1bnjKowifokiQXTDKvYruMl+Rb/g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795543360;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=zQkgUQWvgHuDLhp8zgHPxhn7fVYRY6fg/KKwqiExn3U=;
-	b=wvkNttoMPlT+6UMEPdR6VuQLXuzQ0iXCnwVg6MKJHf+v9UrWUPN2+Hm5O5m7g6cjs/qR
-	 VW6lZdag69Mm6htcByg3du4UJ8uIfrlbKymaGBdR7r4gO1Z8R0LHMiJ5r8+aD0g4JcbfF
-	 nBWS20v377UldXuaQcURKyRW0/u/KF9ud4o64KvEmOI+/r9VuX/UZRjLgXoephxzwSLfG
-	 qjnM6V9QQU3j2PDKIA6Cgt6WoKfDluNsYqMvV821hAKFjOG0XK2oCvtbVEoCW2srYQWRx
-	 pH01FWHJXQJWR2ybPBpN1iMbPrYaj647Gv5NHUqH/mU1SJ6yqfgcHCJuIjH7bDO/Xlw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795543910;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=GrbSqv2qOnqGJuOQBi37+hLXNwT57TNPO7n3moJfXOY=;
+	b=ZnXuwoE1m+PnsZneF5EtAgvEydbqlO3NSAGBRpX4+DpXzfltsUHsDQ/IDcpvrQpnbXqP
+	 4I0AKxq0MngNYc2rbuVXUdBRvfTLe9q1MQGp/LQmixUWMiC3dNrcwfXl171rr9br9HtBZ
+	 FWEM3SnoAFIoW8eHLc7+FtXsPMwbcHiz7Z3S7mIPQXS4Rtah7W/Wd0h/U09f3iuvwncDD
+	 xxuF3agh+v2twKU0i136rDpJzAxZLPI8+pArPVI4C20xT1CeQotMlNY5yoYAvvckteS9O
+	 2P4YoMwVovuf1rLWYFVGbUW5y48FOVbCIhYvfgk+xZahYwOo0zCo7ITiMTImi5UNLDw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b="kxT/wa2m";
-	arc=none smtp.remote-ip=209.85.210.45
-Received: from mail-ot1-f45.google.com (mail-ot1-f45.google.com [209.85.210.45])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="W/+gyGE5";
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C108D606A329
-	for <linux-scsi@vger.kernel.org>; Tue, 24 Nov 2026 18:02:39 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C108D606A329
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D7B9606A323
+	for <linux-scsi@vger.kernel.org>; Tue, 24 Nov 2026 18:11:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=kxT/wa2m
-Received: by mail-ot1-f45.google.com with SMTP id 46e09a7af769-847ac7ccd85so2773316a34.3
-        for <linux-scsi@vger.kernel.org>; Tue, 24 Nov 2026 10:02:39 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1795543359; x=1796148159; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=zQkgUQWvgHuDLhp8zgHPxhn7fVYRY6fg/KKwqiExn3U=;
-        b=kxT/wa2mI5ypXdXzTiyqvREnUl3j2J6bmqGMGaiBZ70znPMyiS0zD00BWruxAwBCVW
-         +2R1JiAl6gG9Y9yi2kEUZEEBIyG2s1WTzUAhQ8BllT+bLodxvbnK13O9mNVKOEuuMsLd
-         iaCZ8SoUlALn+ghlbpOBdwYJ1cbidOo+Tdrl+l6SDW2Pm0wRRF4KKb2SB5vwe5ZYoPhg
-         e2NJq6TBPgszeLWlddzfV3ZRhnPJ6wTQH9Tfj+VhrGMauSuhET6PXYPgubfprLrp/h4P
-         UZfZLahhI1SqEQB3B/fBGeSvBJ9SnOa6LahihtQ5dnD15yWkFauIxty3GZmHBx/LQDp8
-         5MFg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795543359; x=1796148159;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=zQkgUQWvgHuDLhp8zgHPxhn7fVYRY6fg/KKwqiExn3U=;
-        b=Nu7RXFAFpSl5xjx1C8PBgFH0H27ED2lowXlXo3O3JCAEjyKT+TYh8b9nviJsoHx3GV
-         3PTpzbm02fCV6wQr849JLAN0C80ZsJXnLh98NlDBhAujry3m8tCZ+EpEYy76vG1Bh7hr
-         6CJKSxkOwDyyttAkhRJNeHYJ7fyrtJA/n5Lmfc4TTGoDqJsw8zL2YalWX055BimQTRyh
-         SHS4HyiABYOQ0xcopuaydacK2ObXjxU9Qm8Mh4H6+5rYNjVMF7cBXSqR/RDg8MTdOE38
-         QjhcFOpEh41gEYql5xW03IJ+OPo3sBCfmdu6WPp0DBrxG51aq1D395t8xOzybijyHjjU
-         gEVw==
-X-Forwarded-Encrypted: i=1; AL+hErFNc3ocqA3uKJHsChgQ1sq2KBXRao4g5rBk/ltYuFi8v5BNjfkCIXlkkQiDKPlzkZsfB6/zlgG6jjgB@vger.kernel.org
-X-Gm-Message-State: APuU4Z9PsiAdVyqZPfv7bO2XhhlhRa2H052RwXY0mkwUxf63aFLCY2st
-	JCLalUtn84CVVyhHzTYQUR82bGq6O23dF/PZnZ4YNNr9K6Ef44MBGrC8xvPmug==
-X-Gm-Gg: AZFdTZccjiE5wxHlDDSCPHdBX/EVwf5MzieARmM65hULYkal8Ex1ARHmnPIAZ5yaenK
-	fn2zIGuHSlhG/n0yMxhF3B6cUYYTBEMVcFhV9nV7AxMdr2ZYenGr0ZeC8QoQzzi42xCAM3vlvEH
-	yfZ+0+4wrgm0PaZawAih2n0mrNXXRHj8tBFiH7YlTjQxSe7AYXOUK5WCihmf+OWN0OVhVHsRVkt
-	OnqQtHQcGvByYUbpsn/itnMS/V089kAyHv1B1ocQDRAd9LGYQ5kC4HY5IaALCjKcho5ebuGQGNu
-	Q+5WDl0KbgH0q+KJeVz5Kewvh1xceKnza3f8y0M/SIV/EMJZl83LLETsRFUK1HORHF3fuMSmSjQ
-	kccOv/7Cq6XTJunpl7+5DOl6yyYgKtpgf7IJlUYqiQ6dYMJNhWXyDp06SNQK5alGNJhM+2AbNVX
-	JoCRPKf6b+W+LA1KqMHMk4sYwD5sru9Y4/2Zl7dm04T4+Eg/lb6FMQr0qn81pJlunIjFwvpTaDz
-	O3mHzKT8LKVGJCCtZHn852Kn0oHU0ZWifSPhxs/wM6aBmSriIS3QDIF6JZsnvOiptEBDMRrEwZv
-	QDZKvT5WTS1LVFbR26Cv0ApK04il/BB6CEJY26fqKj4f8TdgIdd8SkX1VjNcmNJOVZ37xTYupEV
-	M4tLT7R7hfV/VEsJYDlJ0OXb6RxJfM2lMRdke3pWEIKtiRIYbF3ZDxcxeaKSkIOysQE0=
-X-Received: by 2002:a05:6830:719f:b0:862:c685:84bf with SMTP id 46e09a7af769-863152f7117mr15179705a34.4.1795543358575;
-        Tue, 24 Nov 2026 10:02:38 -0800 (PST)
-Received: from tempest-testimage-cc-centos9-stream-server-1191361818 (chi-dyn-129-114-108-164.tacc.chameleoncloud.org. [129.114.108.164])
-        by smtp.gmail.com with ESMTPSA id 46e09a7af769-8631692d9f7sm11940806a34.24.2026.11.24.10.02.37
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 24 Nov 2026 10:02:38 -0800 (PST)
-From: Yuho Choi <oss.patchbox@gmail.com>
-To: Karan Tilak Kumar <kartilak@cisco.com>,
-	Sesidhar Baddela <sebaddel@cisco.com>,
-	Narsimhulu Musini <nmusini@cisco.com>
-Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <mkp@kernel.org>,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Yuho Choi <oss.patchbox@gmail.com>
-Subject: [PATCH] scsi: snic: Disable the devcmd2 WQ before freeing its results ring
-Date: Tue, 24 Nov 2026 18:02:31 +0000
-Message-ID: <20261124180234.400564-2-oss.patchbox@gmail.com>
-X-Mailer: git-send-email 2.56.1
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=W/+gyGE5
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BE4891F000E0;
+	Tue, 24 Nov 2026 18:11:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1795543909;
+	bh=GrbSqv2qOnqGJuOQBi37+hLXNwT57TNPO7n3moJfXOY=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=W/+gyGE5+WhfFkGMnRuxcskg7LhemlIhNMAnpQq3KoXbUQN6yLVzn55l2/9k0scaq
+	 xH4ZXn3aXN76kMWs03L8SDhRtYLnyYZeg+3XlemcVklaObwf/K/1iDsu40opuQOwu/
+	 o+faEDeXTeEpV6buAiScPMHtXxWTm4jcStmL+6ik7ki632J7BKFGX0P6f/Nf84h95U
+	 8+1gMzcjLSv5xQ/LCbzZKT9lG/ytIojBu/ALcjNLDEb/C5P99CbtK+jiRrVtkXIX7D
+	 SYgHsVvb6UM6+NeCwSLb/0P2XKA17f5RAMs0IaMfqiByk+qTeLEh2QjKaW4vCF55Wk
+	 cC24J0Y05Kvcw==
+Message-ID: <sashiko-outbox-231801@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] scsi: snic: Disable the devcmd2 WQ before freeing its
+ results ring
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Yuho Choi" <oss.patchbox@gmail.com>
+Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20261124180234.400564-2-oss.patchbox@gmail.com>
+References: <20261124180234.400564-2-oss.patchbox@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 24 Nov 2026 18:11:49 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -99,45 +59,70 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-vnic_dev_deinit_devcmd2() frees the devcmd2 results ring before it
-disables the devcmd2 WQ. The adapter writes the result of each devcmd2
-command into that ring. When a command times out in _svnic_dev_cmd2(),
-its descriptor stays posted on the WQ, and snic_remove() ignores the
-error from svnic_dev_close(), so the adapter can still complete the
-command and write its result after the ring has been freed.
+Thank you for your contribution! Sashiko AI review found no new issues
+in this patch, but noticed 1 related pre-existing issue it does not
+introduce:
+- [Critical] enic: DMA use-after-free in vnic_dev_deinit_devcmd2() [1]
+--
 
-Disable the WQ first, so that the adapter has acknowledged stopping the
-queue before the results ring is freed.
+commit 69fa45723f24d1ae5b1a578c30346f49638a7cfb
+Author: Yuho Choi <oss.patchbox@gmail.com>
 
-Fixes: c8806b6c9e82 ("snic: driver for Cisco SCSI HBA")
-Signed-off-by: Yuho Choi <oss.patchbox@gmail.com>
----
-Compile-tested only (x86_64, SCSI_SNIC=m, W=1). I have no Cisco VIC
-adapter, and the late write would come from the adapter, so I could not
-reproduce it.
+scsi: snic: Disable the devcmd2 WQ before freeing its results ring
 
- drivers/scsi/snic/vnic_dev.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+This commit reorders vnic_dev_deinit_devcmd2() to disable the devcmd2 work
+queue before freeing the devcmd2 results descriptor ring.
 
-diff --git a/drivers/scsi/snic/vnic_dev.c b/drivers/scsi/snic/vnic_dev.c
-index 22303f827583..44a2cc59821c 100644
---- a/drivers/scsi/snic/vnic_dev.c
-+++ b/drivers/scsi/snic/vnic_dev.c
-@@ -421,8 +421,8 @@ static void vnic_dev_deinit_devcmd2(struct vnic_dev *vdev)
- 	vdev->devcmd2 = NULL;
- 	vdev->devcmd_rtn = NULL;
- 
--	svnic_dev_free_desc_ring(vdev, &dc2c->results_ring);
- 	svnic_wq_disable(&dc2c->wq);
-+	svnic_dev_free_desc_ring(vdev, &dc2c->results_ring);
- 	svnic_wq_free(&dc2c->wq);
- 	kfree(dc2c);
- }
+> diff --git a/drivers/scsi/snic/vnic_dev.c b/drivers/scsi/snic/vnic_dev.c
+> index 22303f8275836..44a2cc59821c8 100644
+> --- a/drivers/scsi/snic/vnic_dev.c
+> +++ b/drivers/scsi/snic/vnic_dev.c
+> @@ -421,8 +421,8 @@ static void vnic_dev_deinit_devcmd2(struct vnic_dev *=
+vdev)
+>  	vdev->devcmd2 =3D NULL;
+>  	vdev->devcmd_rtn =3D NULL;
+> =20
+> -	svnic_dev_free_desc_ring(vdev, &dc2c->results_ring);
+>  	svnic_wq_disable(&dc2c->wq);
+> +	svnic_dev_free_desc_ring(vdev, &dc2c->results_ring);
+>  	svnic_wq_free(&dc2c->wq);
+>  	kfree(dc2c);
+>  }
 
-base-commit: 8dac6df92a2e66e2098bbc69061964cfe7e8375b
--- 
-2.56.1
+[Severity: Critical]
+This problem wasn't introduced by this patch, but can the adapter still
+perform DMA to freed memory [1] when svnic_wq_disable() times out, or
+along the svnic_dev_init_devcmd2() error path and the matching devcmd2
+teardown code in enic and fnic?
 
+svnic_wq_disable() returns -ETIMEDOUT if the hardware does not acknowledge
+stopping the queue, yet vnic_dev_deinit_devcmd2() ignores its return value
+and unconditionally frees both dc2c->results_ring and dc2c->wq.ring while
+the queue remains active.
+
+In the same file, svnic_dev_init_devcmd2() also frees dc2c->results_ring
+before calling svnic_wq_disable():
+
+drivers/scsi/snic/vnic_dev.c:svnic_dev_init_devcmd2() {
+    ...
+err_free_desc_ring:
+	svnic_dev_free_desc_ring(vdev, &dc2c->results_ring);
+
+err_free_wq:
+	svnic_wq_disable(&dc2c->wq);
+	svnic_wq_free(&dc2c->wq);
+    ...
+}
+
+The identical devcmd2 init and deinit paths in
+drivers/net/ethernet/cisco/enic/vnic_dev.c and
+drivers/scsi/fnic/vnic_dev.c likewise free results_ring before calling
+vnic_wq_disable() and ignore the disable return value before freeing the WQ
+descriptor ring.
+
+[1] https://sashiko.dev/#/bug/linux-20f156a6-d2c2-49bc-b1ee-432c3af0d669
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261124180234.4005=
+64-2-oss.patchbox@gmail.com?part=3D1
