@@ -1,79 +1,79 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795537021;
-	b=WXmmRihJEdh1aNPYy3uYkZNXbzrYg51h6UbIVURP1qh6aN/m1VaGJRkgvRWChkRffUD7
-	 W8QLaEv6y8srICC5qGxLGgsyz9O/z1mRvKq5JI3GIVlhSDltSX+MhnCeDACSIRWjz7iFw
-	 oZEcOiD20udJJuiIj+QWzVWo1CeLM0IxfFQjItQ44TFmQ/TW9RcKK1Dhb7nbUWz7/6b7h
-	 /c5pW6I+o5JNR/ajo2LLhZEOf+76kdjXvksBJDNcdk+UKITY7O1Y1NW71EnQyjEM16pI/
-	 pUy4rcj/HP4njtg88WehH7KIANpDYYFUipWEQhDtxgXm7/78sZ61qSU0983hhcXKXkg==
+	t=1795537028;
+	b=d+L/I7pu/sU+rjY49dtZF1K97i5lCvmTQkcAs+iRwEYnLx0lHBtHBKLjKP0crVn7JbC1
+	 CVsC7BrQghReDbrhmsvBq/Dho+5ElDx4/e9sUzg6k/c7aMnOZAV5z/0URWBydL+fj9ei6
+	 LNdC4kqc50l2Tmfvg1YuH8Npip7OoFGSq138heTmHq1qod4IFB0rLh3yOokjU/owxz4sP
+	 7a2WFBTAKK2SNThmvKMn1mJDm3jKT6bISGkWirndd/koQxCcaJLwrvegEmRbm8yr9yuSf
+	 qCJJwm7CZHzUHDnV7ohbxHh1rXRVIbAIa4KOhQSMlJWMLrJhHkxDq/S3hsXZ7Ua9KNQ==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795537021;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795537028;
 	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
 	 Content-Type:Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
 	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=RnsKlKmYlfnyfDpfuCHZKRfjqREJi3XMRQPFe3CmpEI=;
-	b=FGp0ZaGUrWAwYwTlcfjy50sLbXxzA/QiStE+wG6dUXHgbf/Hny6Wpa2B1IVcyZqGrg+7
-	 JQilklH9IeJy1bPcmWFKt1pvLXS6cXBhqLgkcO9C1136UCVwZ7z/wESQvNOVssihLRPc8
-	 wJubp6ld/J2+bFQhIxmIRFZT61igS8456nJW3P6UY/Nj1u51RGlbkx3Vu4SBXh2KqfJmB
-	 txPQ/G4hizuDygWGoVNZ1gR1IloVf3pZywkwl9AyWYfap3XMG9e9rtT6bwU9o74M3cDky
-	 pFDrcXq7CL5UcQnN0ln4pN27rwpadDzGMVuYuU8Aqgb4Aev1r6gS1fcwwn0uizSN9Vg==
+	bh=tVNJOytWifN6I1+y0Luo515A/FqN5Ih9GKjanGVd58c=;
+	b=go/f3YDadMEbCRhi5bgbLHw24XMhGEQk+71I+3jEK5kuV9M81Gs/ZUFAzVqtkJA15+yl
+	 pdDJBTGlxwFvY/CTY7NEksQL6nb/RoyeYjJBSdFdY0kkG863QnwJFHn4VqOQrXuW9hYy6
+	 xWlRTGQWYg64F+h7ZIJYTedihGwH3yv0yRZHFFsXckyEJO8ROZ8BQ8NpPgodbmBcJqD2y
+	 uMEJrEY0hT/17nKDzkI/UEDPgaFO0yDl+vd9vRnQCY6LKsxhyeRomG5rkqoYGCWwI17Lf
+	 ALLfr7BUDfstIJXm7SWFoy/7JrP+IFfD33hiO9/gTb1qWsFArqz3t7JHRpb6J3IFZtQ==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=EnCszP4P;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=OwY0JKE0;
 	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C218F606A332;
-	Tue, 24 Nov 2026 16:17:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA13E606A332;
+	Tue, 24 Nov 2026 16:17:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=EnCszP4P
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=OwY0JKE0
 Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
 ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
-	t=1795537021;
-	b=zNcxcOhNRkklIObG9BfpryQ9Cqg1AsW8IrTiAiHCaEfwxQ2nJYkl0aAbWMa/DpnQy8Yr
-	 Gw8uc9CFAz3sGi0FhQIsKnBUHgB3cP3oGSFanlf893XRwc1zak3H1GSIaRIAOq5PJlM8/
-	 wo8rrxaf9hNmzQDwffyQFG+SH7f5Mltf9tcbz/bW5H68J7g5rFG+PPDNoLJ856RuaXuFJ
-	 fvKeuJQSSdVROlO2UZo28RAOLz+3ZgVZPat62ehYwY0+/9XhwtJ4jZg+IJvucCjgVG6qm
-	 OPkceqWlQx0udfrrKVROY4EOUIsKrO75ZTOHihok608AvVQJcfHDzH6AwBa2T7WI3CA==
+	t=1795537028;
+	b=e94Zzh+DXX9YxiYlJtQ57ljEXKjgyvDbR/i9oiHGIffulx2eB2VOpRUj2xpEvJoeno6z
+	 Y+L3fL9fltg7pExLnEnvmDp5JiYXmG9BZeJFd/P7TIKUWnjHsAPcustyjknyULoiS3JJo
+	 MXchrZ07MfC158hdbFic8nHFfGExGEzhWVC/yZZpZ+YQFtsdgh9/cU8AT/89xMCjSU1UK
+	 jOcnPj7lQgNb3HPMnoj4gZdH5vLVvPU6mdgMvGQ8/wWyfsPwxuKkBDMCRN7UvMC7fulkn
+	 NU8OwfKBbv46H8RYLU33flqJ8TvoEfoQ8psjNhUrZK0S3lK3C3zrhcmSyAKFQSez9oQ==
 ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
-	c=relaxed/relaxed; t=1795537021;
+	c=relaxed/relaxed; t=1795537028;
 	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
 	 Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
 	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=RnsKlKmYlfnyfDpfuCHZKRfjqREJi3XMRQPFe3CmpEI=;
-	b=cL37PfMXnTEcVbR5dO47vJlG1kDu0O9o6xS663zeSLB0qJVWgkUHrPxGXDucN0/7f/FL
-	 7i5GbtMbT6KY8CvGX/M1fCIRqKx6xRNBQN7GGBdeOVZmspokVkARbWUWQimlU9jyL+OR6
-	 yQL33gCUxZvxHXH+Eq7Hk6fGD5LpUc4ytRhr8XgBQBans0LEotW4mbAyFG3Am+baMHsTn
-	 vRKc5Mwb0dHFfKN6x8BzHYiA4kptCEFgDnxFOXsDRp+ucOWga+xBtkkmOuoB7EzkrQDGX
-	 R/+qghy+9dT2kX/UMtyQrippBxxJWzspLh9p+JwMhuyZsqEG84oMTYRNQG23fv5Mcsg==
+	bh=tVNJOytWifN6I1+y0Luo515A/FqN5Ih9GKjanGVd58c=;
+	b=pSl/f2Dj72JWnsuvHHm0UvX5hUV8Z1qFSxN8bbhdNscD0dhwy8j4QX1JAWgged65jvpG
+	 O+4iaZpTMue+w5R+PYFsZG5jUx/gM9hXeskleQKBGWF+qTjs79f0UTaGMQ8+sud7QLRbM
+	 SDVTki7PLdkxsg4bQ+YWqkbc+KjX6hiqYaw1gG5wXoJSRdB/a+MtArz2kEj4sf+U24qCV
+	 xrtDodvUsQkNLG3y+TXxAL9SdT1X7mYp4DrjrXbbiQG20vo72OeivD7RLGi0xkwV9G856
+	 tuaKHWwfA1X5beKBxAsNk2xU61wUut8xjH2ZxWv9oEkqwhuS8FFiyl/gZDyfmfW+UpQ==
 ARC-Authentication-Results: i=1; smtp.kernel.org; 
 	arc=none smtp.remote-ip=100.80.115.77
 Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.kernel.org (Postfix) with ESMTPS id E4E5F1F000E0;
-	Tue, 24 Nov 2026 16:16:51 +0000 (UTC)
+	by smtp.kernel.org (Postfix) with ESMTPS id 44F571F00ACF;
+	Tue, 24 Nov 2026 16:16:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795537021;
-	bh=RnsKlKmYlfnyfDpfuCHZKRfjqREJi3XMRQPFe3CmpEI=;
+	s=k20260515; t=1795537028;
+	bh=tVNJOytWifN6I1+y0Luo515A/FqN5Ih9GKjanGVd58c=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To;
-	b=EnCszP4P3cgcMNGT/rpAqG0Ur+VdQU0GQBvm0A95oJ/CEq0KnrDkN3prORLtheH9+
-	 1HO76RrJaQfI8TAUq6GV6GkWyOVTfF7StXDKLrq8I+rrsesZBiiH84SahU6kmc1MMk
-	 9MJUNb5lq/3gacNZKHyOtkO65isu6P1NO5/X+6N4wsBpaXGjSlgxzf2AAFBPVwsO36
-	 trRRq28vUwb7P1uqSdXr8wBoXXp4SBnKRKdquT/rrxI3Pj238TANZMG4waFLGQHXgp
-	 q9vV4kuWDQKSXHJYmEfj2wGE3riN5SctJt8TOTz6dDfa/4UETRi1DiLG6VVz7GOiRL
-	 ROIr4ia6eX8+w==
+	b=OwY0JKE0xEavZSXJh9jda+IPLqT1l3D5sqhfqIDoVa3ReiCCEA5BbW5pMnhh0AfA4
+	 cn19vEBk4iors70Nbq484TizNX8gFqXZfxH0Tgf/pBa3bVSBFeX4hbHnPqiy8TCMtn
+	 qF38kM0akYifpqGjLfEqxLOKYSrjwWaHuIXvvC5UjUMvbYNsSl5Hs9gHM4oEhUlqWo
+	 YQJLVHzdEp/KRm57j0CBKNIFMHYLWd6at1oIpftCHRn8E+92Kw4soDDWyQfn6TzOuk
+	 lKtO/R8H68DsZgmcAkQvJC1dasr1lsDYpxjMB8AaboeJ95U/pKcvVB88Bwsv+uyk8y
+	 /PDfXQocTXhjg==
 Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
-	by lkml.kernel.org (Postfix) with ESMTP id 04FCD4CACC;
+	by lkml.kernel.org (Postfix) with ESMTP id 55FF64CAD8;
 	Tue, 24 Nov 2026 16:16:47 +0000 (UTC)
 From: Dave Marquardt via B4 Relay <devnull+davemarq.linux.ibm.com@kernel.org>
-Date: Tue, 24 Nov 2026 10:16:46 -0600
-Subject: [PATCH v19 05/13] scsi: ibmvfc: fix resource leaks on partial
- queue allocation failure
+Date: Tue, 24 Nov 2026 10:16:49 -0600
+Subject: [PATCH v19 08/13] scsi: ibmvfc: add FPIN extended flag and async
+ sub-CRQ queue handle
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -84,7 +84,7 @@ List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Message-Id: <20261124-ibmvfc-fpin-support-v19-5-2aaffe5fe7d2@linux.ibm.com>
+Message-Id: <20261124-ibmvfc-fpin-support-v19-8-2aaffe5fe7d2@linux.ibm.com>
 References: <20261124-ibmvfc-fpin-support-v19-0-2aaffe5fe7d2@linux.ibm.com>
 In-Reply-To: <20261124-ibmvfc-fpin-support-v19-0-2aaffe5fe7d2@linux.ibm.com>
 To: Madhavan Srinivasan <maddy@linux.ibm.com>, 
@@ -96,11 +96,11 @@ To: Madhavan Srinivasan <maddy@linux.ibm.com>,
 Cc: linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, 
  linux-kernel@vger.kernel.org, Dave Marquardt <davemarq@linux.ibm.com>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1795537005; l=2781;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1795537005; l=1878;
  i=davemarq@linux.ibm.com; s=20260216; h=from:subject:message-id;
- bh=wxC/5k+1fH+x2U7saJs/+NtXgLmv0/MHv+liqk2H5Nc=;
- b=Xn25L7tzoxW0DFJ3eERDPFphWEVHFe/ITk20wzD06/5d+OKYEwsZpDZGbwaQ7ADxiG7rLpFr/
- r4kQNj5xp2hDiGr2U2oA+IOXVqPVG6wLVbxgqMjfut7iWa47qQxopFa
+ bh=ExqixlvvA86lyXEcBnXxlhcM+a5JReZNm1VDambrNMU=;
+ b=t6eN80gfJST/4gQcDH5O41OGnmJOLnUjbBwfkASWZHsjN23URVjImdHpcY43rkRNrQrXyKJXg
+ YHeebK0eW/qAKL0rbwmrZk4AFt2CviSVG4QxrBGas8tPH1CtGK+h3FP
 X-Developer-Key: i=davemarq@linux.ibm.com; a=ed25519;
  pk=vy0/nfobrje6EqZxuyw6a3ZstytG8WK2vf5Y3xtGrEg=
 X-Endpoint-Received: by B4 Relay for davemarq@linux.ibm.com/20260216 with
@@ -111,73 +111,60 @@ Content-Transfer-Encoding: 7bit
 
 From: Dave Marquardt <davemarq@linux.ibm.com>
 
-ibmvfc_alloc_queue() leaks the event pool on both failure paths
-after ibmvfc_init_event_pool() succeeds: neither the
-get_zeroed_page() failure path nor the dma_mapping_error() failure
-path calls ibmvfc_free_event_pool(). No caller compensates, since
-ibmvfc_init_crq() returns immediately on ibmvfc_alloc_queue()
-failure, ibmvfc_alloc_channels() only unwinds previously succeeded
-queues, and ibmvfc_alloc_mem() jumps to a label that does not free
-the failed queue. Add ibmvfc_free_event_pool() calls on both error
-paths in ibmvfc_alloc_queue() to close the leak.
+Add IBMVFC_ASYNC_IS_FPIN_EXT flag bit (0x02) to ibmvfc_async_sub_crq.flags
+to distinguish extended FPIN events from standard ones.
 
-ibmvfc_free_queue() also unconditionally calls dma_unmap_single()
-and free_page(), even if the message page was never allocated. In
-that case msgs.handle and msg_token are both zero/NULL, and calling
-dma_unmap_single() with address 0 is unsafe on many architectures.
-Guard dma_unmap_single() and free_page() together under a
-msgs.handle check.
+Add async_scrqs field of type ibmvfc_channels to ibmvfc_host to hold the
+channel set for the asynchronous sub-CRQ, alongside the existing scsi_scrqs
+and nvme_scrqs channels. This uses the same ibmvfc_channels infrastructure
+as the SCSI and NVMe channel queues.
 
-ibmvfc_alloc_queue() releases everything it allocated when it
-fails, so a queue it failed to allocate must not be passed to
-ibmvfc_free_queue(): ibmvfc_free_event_pool() does not reset the
-pool size or pointers, so the stale values would be used again. No
-caller does this.
+Add IBMVFC_ASYNC_SUB_CRQ_FMT to enum ibmvfc_msg_fmt and a corresponding
+async_scrq pointer to union ibmvfc_msgs to support the new async sub-CRQ
+message format.
 
 Signed-off-by: Dave Marquardt <davemarq@linux.ibm.com>
+Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
 ---
- drivers/scsi/ibmvscsi/ibmvfc-core.c | 13 +++++++++----
- 1 file changed, 9 insertions(+), 4 deletions(-)
+ drivers/scsi/ibmvscsi/ibmvfc.h | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/scsi/ibmvscsi/ibmvfc-core.c b/drivers/scsi/ibmvscsi/ibmvfc-core.c
-index 77c685f6f959..e04c80050b98 100644
---- a/drivers/scsi/ibmvscsi/ibmvfc-core.c
-+++ b/drivers/scsi/ibmvscsi/ibmvfc-core.c
-@@ -914,9 +914,11 @@ static void ibmvfc_free_queue(struct ibmvfc_host *vhost,
- {
- 	struct device *dev = vhost->dev;
+diff --git a/drivers/scsi/ibmvscsi/ibmvfc.h b/drivers/scsi/ibmvscsi/ibmvfc.h
+index 3fffd2db8ef5..2ecd60138d58 100644
+--- a/drivers/scsi/ibmvscsi/ibmvfc.h
++++ b/drivers/scsi/ibmvscsi/ibmvfc.h
+@@ -773,6 +773,7 @@ struct ibmvfc_async_sub_crq {
+ 	volatile u8 valid;
+ 	u8 flags;
+ #define IBMVFC_ASYNC_ID_IS_ASSOC_ID	0x01
++#define IBMVFC_ASYNC_IS_FPIN_EXT	0x02
+ 	u8 link_state;
+ 	u8 fpin_status;
+ 	__be16 event;
+@@ -893,6 +894,7 @@ enum ibmvfc_msg_fmt {
+ 	IBMVFC_CRQ_FMT = 0,
+ 	IBMVFC_ASYNC_FMT,
+ 	IBMVFC_SUB_CRQ_FMT,
++	IBMVFC_ASYNC_SUB_CRQ_FMT,
+ };
  
--	dma_unmap_single(dev, queue->msg_token, PAGE_SIZE, DMA_BIDIRECTIONAL);
--	free_page((unsigned long)queue->msgs.handle);
--	queue->msgs.handle = NULL;
-+	if (queue->msgs.handle) {
-+		dma_unmap_single(dev, queue->msg_token, PAGE_SIZE, DMA_BIDIRECTIONAL);
-+		free_page((unsigned long)queue->msgs.handle);
-+		queue->msgs.handle = NULL;
-+	}
+ union ibmvfc_msgs {
+@@ -900,6 +902,7 @@ union ibmvfc_msgs {
+ 	struct ibmvfc_crq *crq;
+ 	struct ibmvfc_async_crq *async;
+ 	struct ibmvfc_sub_crq *scrq;
++	struct ibmvfc_async_sub_crq *async_scrq;
+ };
  
- 	ibmvfc_free_event_pool(vhost, queue);
- }
-@@ -6303,8 +6305,10 @@ static int ibmvfc_alloc_queue(struct ibmvfc_host *vhost,
- 	}
- 
- 	queue->msgs.handle = (void *)get_zeroed_page(GFP_KERNEL);
--	if (!queue->msgs.handle)
-+	if (!queue->msgs.handle) {
-+		ibmvfc_free_event_pool(vhost, queue);
- 		return -ENOMEM;
-+	}
- 
- 	queue->msg_token = dma_map_single(dev, queue->msgs.handle, PAGE_SIZE,
- 					  DMA_BIDIRECTIONAL);
-@@ -6312,6 +6316,7 @@ static int ibmvfc_alloc_queue(struct ibmvfc_host *vhost,
- 	if (dma_mapping_error(dev, queue->msg_token)) {
- 		free_page((unsigned long)queue->msgs.handle);
- 		queue->msgs.handle = NULL;
-+		ibmvfc_free_event_pool(vhost, queue);
- 		return -ENOMEM;
- 	}
- 
+ struct ibmvfc_queue {
+@@ -992,6 +995,7 @@ struct ibmvfc_host {
+ 	struct ibmvfc_queue async_crq;
+ 	struct ibmvfc_channels scsi_scrqs;
+ 	struct ibmvfc_channels nvme_scrqs;
++	struct ibmvfc_channels async_scrqs;
+ 	struct ibmvfc_npiv_login login_info;
+ 	union ibmvfc_npiv_login_data *login_buf;
+ 	dma_addr_t login_buf_dma;
 
 -- 
 2.56.1
