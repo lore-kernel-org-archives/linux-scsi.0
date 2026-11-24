@@ -1,55 +1,84 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=210.61.82.184
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795496197;
-	b=YQHPIqWP2Lkku9jlg/whSdw6KHucJJSrMxGGWxCsWmAqaiNfZFK1nia/ihY58Dyyzrt6
-	 /AiFJUFPqLj990qzbeZDjvih3OxdgicFHsel8dea0wbiPyjBTjdyh+cL58wl+wjjUEHtF
-	 +z6NuocQ4y3/OFKSVaK1Pq9rrMwmkoz0JIPn+0MP8UTj56qlC+Atblf4zvK6OoU0kkNwz
-	 syBPyZ/iZPfqWjwSNo479mJPQNg0qlD+zuDKJCiCR8eh0bJrCzQi7pThloyVQ/jFCmfsV
-	 VSVkxRD1oT398wL7YKPzH5aoqnjX/FQ1LXrt7fzzM43JPmyRwmv5tuHlMDCudktTUxA==
+	t=1795500880;
+	b=LXj9vghIasJT4WnrPFuFadZBOtGZkZ1uwW8jEADJt6R9Ag9NynCNeWrbkh/rjornG0//
+	 zK14vgZuMmbEMJub3IRM8gdhKKSbZ1J1wkkYRrRuJb9gmV3v7EZuoVVt4T+wHX29KduqV
+	 ELHhen9wfiw6BPgWoCz3o+lH2AYOOgisfpCBt3IR8h+ZV5GHGeExPUW3Mkj1SSJ9Bbmp8
+	 Ddb/sZ8ojF+MepZKIU1mhaHrnOtrn5V74m9grfOb82vvaJrf2kYrlE30NpOW+kZ1YWLkP
+	 IZCvIiyOEdV7+AFTmitvhoyK8pFyQ7AJbvYMlPE+AT417T9X5dNp+OWlE4Q+QnpfF4w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795496197;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=iYM1Dul2p1M70JuzkmTz1683ZU5ujCLHcJTzbqwKjP0=;
-	b=13cC7vOit45Ul/US7oyiW4cPJYy58VX+L0WT9MmUEUkafiPtJDy0PJr4DBXBkZT1xSBE
-	 +hGcQ97b/IIwSEiyqe4o+o5/9cBrZKFuDIloRiyqS0geH9fgsVCP+zAr3LvuLoU1/xHxI
-	 ACM7Xaz2pJk2KJxh/2pE3CQvS3b68MZc8E7/g/t5WS3p4VQi6V/0vZYKWJ6pAnh83gky5
-	 QNYe//n6nB4w6qQ9XeMueWAAYYiZs/ysO4uyQPxhu5BOJgLryK2oLefFIHV89BS1NJSBb
-	 6/YoQLYer4sP7ee1ZWv8p36uS/hi69A9iRSCSxGoxSlzWleFb7NS3D5wvMQerFYYStg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795500880;
+	h=DMARC-Filter:X-UUID:DKIM-Signature:X-CID-P-RULE:X-CID-O-INFO:
+	 X-CID-META:X-CID-BVR:X-CID-BAS:X-CID-FACTOR:X-CID-RHF:X-UUID:Received:
+	 Received:Received:Message-ID:Subject:From:To:CC:Date:In-Reply-To:
+	 References:Content-Type:Content-Transfer-Encoding:User-Agent:
+	 MIME-Version:X-MTK;
+	bh=JKy9gF86DBJHYr3P4LCSvi1G0WTrhHdbiVY1875cvho=;
+	b=3MnDZ4SGiPe+VyR0oYNpDX9cOlObOaLYQuoIPTuTwe3Yf86kKgubwX0SX5zQ5nMGGmnF
+	 zolvbforHNilEvW3kwXkD8UcrcxFZ8F/Q8niFQc4S7rEAZlS9y3Xwk8W8dRbYzEfjhnVs
+	 M2AMk9mWhcHoYvcu0CPLUXHskSqSfX7ggE+9fWfi6Dp5SLKm6teYp0FUlrGg92mnFbIO4
+	 72CxFKg9y/G+J6YnCvJlP0/RwVTco91a7qHBb487XUdBadyp9dvb9sS57LlpKbH99j3yj
+	 PPwC/fS1qDCzmKCLPRRmA4VRJT7UZGELeEpoQaRjiyCw+jutAbt+RX4dGYAfpfikVVg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=dq6Mu6pG;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=mediatek.com;
+	spf=pass smtp.mailfrom=mediatek.com;
+	dkim=pass header.d=mediatek.com header.i=@mediatek.com header.a=rsa-sha256 header.s=dk header.b=IlwKhcco;
+	arc=none smtp.remote-ip=210.61.82.184
+Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8579D606A31E
-	for <linux-scsi@vger.kernel.org>; Tue, 24 Nov 2026 04:56:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61C5E606A31E;
+	Tue, 24 Nov 2026 06:14:39 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 61C5E606A31E
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=dq6Mu6pG
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 865641F000C0;
-	Tue, 24 Nov 2026 04:56:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795496196;
-	bh=iYM1Dul2p1M70JuzkmTz1683ZU5ujCLHcJTzbqwKjP0=;
-	h=From:Subject:Reply-To:To:In-Reply-To:References:Date;
-	b=dq6Mu6pGvuDJkbyYJ3W0wIOg6dXcMC2jDtK4kVK1x25bbPfBk90jO/7m0tmAxSc0J
-	 PYw2Edqbsn4Estp/kUwCQuq0ifD1/aCCx6eaMJt5uv2r6LAckBCWmVzSBBsWnAOqUB
-	 ApHPjBXz5UFPy6VRxRWaElFxjblIOMZYlmj7NPiPNmZes197+aQ27+EjNFmig0shEV
-	 cuJQpjaIvDM0degIi6zl+k7HcvLNU1NNRRN9ExlIpb0qnIQrz8z+/AqPAe5hsbXJ4z
-	 tEHO6wIKoRvlB9enZXiSdFpus/L1tx01xvNYwIx2eWhXo4gJY2H5oi+OlHtNKucZW1
-	 6U0x/PUne2qgQ==
-Message-ID: <sashiko-outbox-230532@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] scsi: ufs: rpmb: Return -EIO instead of SCSI result on
- failure
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Nayeon Kim" <nayeoni.kim@samsung.com>, linux-scsi@vger.kernel.org
-In-Reply-To: <20261124-b4-ufs-3-rpmb-errno-v1-1-65b54643ca21@samsung.com>
-References: <20261124-b4-ufs-3-rpmb-errno-v1-1-65b54643ca21@samsung.com>
-Content-Type: text/plain; charset=utf-8
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.a=rsa-sha256 header.s=dk header.b=IlwKhcco
+X-UUID: 4e65dde2e7ce11f18dc8c9802ae25ab1-20261124
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+	h=MIME-Version:Content-Transfer-Encoding:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=JKy9gF86DBJHYr3P4LCSvi1G0WTrhHdbiVY1875cvho=;
+	b=IlwKhcco/bEK81/nSNNZNYh0CaCuWIwz7QL8sYieleTVnIPDh1dKJsvGsdQ4uCuqmzGtWJ257nVsc1QlhG/jCJYk70u8yVddlceh0+4UqbdqH2xY7XcVO0rNQe9PIBdlVCOWi6CrGZAp0nUyGsYEjGP/YUAEoEBgvVZlRZDStUo=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.21,REQID:e281b0b3-0c5c-4952-b20c-069ccdb56385,IP:0,U
+	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+	release,TS:0
+X-CID-META: VersionHash:b0318ac,CLOUDID:07822ec4-463c-4628-987d-7a9605ae5537,B
+	ulkID:nil,BulkQuantity:0,SF:80|81|82|83|102|136|836|865|888|898,TC:-5,Cont
+	ent:0|15|50|99,EDM:-3|-100,IP:nil,URL:99|1,File:130,RT:0,Bulk:nil,QS:nil,B
+	EC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_ULS
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: 4e65dde2e7ce11f18dc8c9802ae25ab1-20261124
+Received: from mtkmbs09n2.mediatek.inc [(172.21.101.94)] by mailgw02.mediatek.com
+	(envelope-from <peter.wang@mediatek.com>)
+	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+	with ESMTP id 95448549; Tue, 24 Nov 2026 14:14:28 +0800
+Received: from mtkmbs11n2.mediatek.inc (172.21.101.187) by
+ MTKMBS14N1.mediatek.inc (172.21.101.75) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.56; Tue, 24 Nov 2026 14:14:28 +0800
+Received: from [10.233.130.16] (10.233.130.16) by mtkmbs11n2.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.2.2562.56 via Frontend
+ Transport; Tue, 24 Nov 2026 14:14:28 +0800
+Message-ID: <0849f8a091ab35cfc2220ec5fb275f0fc95461a5.camel@mediatek.com>
+Subject: Re: [PATCH v4] ufs: sysfs: Add WB partial flush mode support
+From: Peter Wang <peter.wang@mediatek.com>
+To: Daniel Lee <chullee@google.com>
+CC: <James.Bottomley@hansenpartnership.com>, <martin.petersen@oracle.com>,
+	<alim.akhtar@samsung.com>, <avri.altman@sandisk.com>, <bvanassche@acm.org>,
+	<tanghuan@vivo.com>, <linux-scsi@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+Date: Tue, 24 Nov 2026 14:14:28 +0800
+In-Reply-To: <CALBjLoAtLCcQJ2TQD4uuTJR-eiD1Dqr+Q2oV1+8K4pnOKRuOvw@mail.gmail.com>
+References: <20261117004729.635562-1-chullee@google.com>
+	 <f63d7506b930b710d9a31f082b97a0e43e75dd50.camel@mediatek.com>
+	 <CALBjLoAtLCcQJ2TQD4uuTJR-eiD1Dqr+Q2oV1+8K4pnOKRuOvw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 24 Nov 2026 04:56:36 +0000
+User-Agent: Evolution 3.52.3-0ubuntu1.1 
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -58,41 +87,37 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+X-MTK: N
 
-Thank you for your contribution! Sashiko AI review found 1 potential
-issue to consider:
-- [Low] scsi: ufs: rpmb: missing Fixes trailer for return value fix in
-  ufs_sec_submit()
---
+On Mon, 2026-11-23 at 15:32 -0800, Daniel Lee wrote:
+> Hi Peter,
+>=20
+> ufshcd_is_wb_attrs() determines whether a query request sets INDEX
+> via
+> ufshcd_wb_get_query_index(hba) or leaves it as 0.
+>=20
+> Per JESD220G Table 14.28, 0x42, 0x43, and 0x44 (along with 0x3F) are
+> Type "D" (device-level) attributes and must use INDEX =3D 0, even in
+> LU-dedicated WB mode. Only 0x1C-0x1F, 0x40-0x41, and 0x45-0x46 are
+> "A/LU/0 or D" (Note 15) and use ufshcd_wb_get_query_index(hba).
+>=20
+> This was updated in v4 per Bart's review [1].
+>=20
+> [1]
+> https://lore.kernel.org/linux-scsi/9d58cbf3-e0cc-41b8-8958-df8abd505524@a=
+cm.org/
+> =C2=A0
+>=20
+> Thanks,
+> Daniel
+>=20
 
-commit 04d79d2b7f15b664ba1b55919c7db6dc6388376b
-Author: Nayeon Kim <nayeoni.kim@samsung.com>
+Hi Daniel,
 
-> scsi: ufs: rpmb: Return -EIO instead of SCSI result on failure
->
-> rpmb_route_frames() is documented to return a negative errno on
-> failure, but ufs_sec_submit() returns the value of scsi_execute_cmd()
-> as is. When a SECURITY PROTOCOL IN/OUT command fails, that value is a
-> positive SCSI result such as SAM_STAT_CHECK_CONDITION or
-> DID_ERROR << 16. ufs_rpmb_route_frames() passes it up and logs it as
-> "ret=3D%d". Since scsi_execute_cmd() sets RQF_QUIET, the sense data is
-> not logged anywhere.
->
-> handle_rpc_func_rpmb_frames(), the only caller of rpmb_route_frames(),
-> checks for a non-zero return, so OP-TEE still sees the failure.
->
-> Log the SCSI result and sense data in ufs_sec_submit() and convert
-> positive results to -EIO, as ufshcd_set_dev_pwr_mode() does.
->
-> Signed-off-by: Nayeon Kim <nayeoni.kim@samsung.com>
+Thank you for your detailed explanation.
+I missed this part of the spec.
 
-[Severity: Low]
-This fixes the return value contract of ufs_sec_submit().  Should it
-include a Fixes tag:
+Reviewed-by: Peter Wang <peter.wang@mediatek.com>
 
-  Fixes: b06b8c421485 ("scsi: ufs: core: Add OP-TEE based RPMB driver for U=
-FS devices")
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261124-b4-ufs-3-r=
-pmb-errno-v1-1-65b54643ca21@samsung.com?part=3D1
