@@ -1,56 +1,66 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=199.89.1.14
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795543910;
-	b=uCHpm4LAukPEGbWaMpp5NBhlFA677xb6pWsZunSRT3jyNKH7Yh7G0pKS8wjbMbQD6A4V
-	 0ow8/xs6O0W4nOuHKwRU8RWNifTQ95AEZ0ma4X1nmxDlezCDlcWn0cqVBju0+mm3nJzsD
-	 tO9/Y/izfNs62p3rcs6HSzVoPXcpHljAKG79yfOaKHcyReE0MKFdwPjJxkbKQ1Gg/GfeI
-	 H/m13X5H9+4yzQWq3/hqCcGbML0YFLItbDKZ1qEXuI8ZZT9bO0Lypsa4LswIYdbNL9Uij
-	 UwDRHe/P4s27jrKuw0oVVZfqZOE3uvvShuh2CWw1bnjKowifokiQXTDKvYruMl+Rb/g==
+	t=1795545008;
+	b=tpkPIkrkLxldG91ARFXhOWQpglhC/Ox/sycqpxxdBKbRJ6ARWBm8KVhiWhwW+MwPdUrk
+	 kt9QPCBbFGEN9ikUJysXqvsMu2Ub0kY4xIQOclk55QXJvqbNUVw9vZY+ERKdpG2ep0MzE
+	 s08WKDv9ko77fDr7eo1TGs+2mbW95V7yssV5ooU6Y8lnGTf4NiGv3BNV3UJumGjS1DfHF
+	 LaRLFGxTFy58ta7xdOugUCuf6Am9N51Qxixmx0Lby73VAR3Hm+ioXaLtKODE8IKAtF070
+	 MVpIpx5Sdaiqi4y9NwXKafHahYjxR60/HcKVuJ8H9L4HSiWdq547SFYFzf3YqBCkqzA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795543910;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=GrbSqv2qOnqGJuOQBi37+hLXNwT57TNPO7n3moJfXOY=;
-	b=ZnXuwoE1m+PnsZneF5EtAgvEydbqlO3NSAGBRpX4+DpXzfltsUHsDQ/IDcpvrQpnbXqP
-	 4I0AKxq0MngNYc2rbuVXUdBRvfTLe9q1MQGp/LQmixUWMiC3dNrcwfXl171rr9br9HtBZ
-	 FWEM3SnoAFIoW8eHLc7+FtXsPMwbcHiz7Z3S7mIPQXS4Rtah7W/Wd0h/U09f3iuvwncDD
-	 xxuF3agh+v2twKU0i136rDpJzAxZLPI8+pArPVI4C20xT1CeQotMlNY5yoYAvvckteS9O
-	 2P4YoMwVovuf1rLWYFVGbUW5y48FOVbCIhYvfgk+xZahYwOo0zCo7ITiMTImi5UNLDw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795545008;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Virus-Scanned:Received:
+	 Received:Message-ID:Date:MIME-Version:User-Agent:Subject:To:Cc:
+	 References:Content-Language:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=YnWuN+9P4kv0dA1kgDgkRqXu7Fw8rxytZA5FxjoyzUI=;
+	b=bMmpPTR5EgPLa8eCoGXLYYNFIrjxMxkb7PAo7BdwynuVlCnabOF1E8cxBNEMwghH2Cln
+	 36wOjei6KMQqH8sZVf1+Tg+zOHUblljy9plGXibZ1ifaeoVxz7FIvQc4N3Cy5y/q4L9n9
+	 o8bbjx0uQSL3Ik2HHByt+DbuH2z+78qj5ExUOXR6OTBau8ipwyaHTUuwG1hjEm7G3Rdwa
+	 QTNvk3zM7ovSfYT0U7JVYzkGndU9Va/gJhCmEKXVeVxhnG4nLRgHd6374gL2xQj+sJUMh
+	 q2AQmFqK0zyg81Sc8GOyyWWGwZmdnCV8e+1o1W6ITCUPQwg1UUURRqDsi0Rtq32Yzfw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="W/+gyGE5";
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=acm.org;
+	spf=pass smtp.mailfrom=acm.org;
+	dkim=pass header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=Fy75rdwV;
+	arc=none smtp.remote-ip=199.89.1.14
+Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D7B9606A323
-	for <linux-scsi@vger.kernel.org>; Tue, 24 Nov 2026 18:11:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 643F8606A327;
+	Tue, 24 Nov 2026 18:30:08 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 643F8606A327
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=W/+gyGE5
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BE4891F000E0;
-	Tue, 24 Nov 2026 18:11:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795543909;
-	bh=GrbSqv2qOnqGJuOQBi37+hLXNwT57TNPO7n3moJfXOY=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=W/+gyGE5+WhfFkGMnRuxcskg7LhemlIhNMAnpQq3KoXbUQN6yLVzn55l2/9k0scaq
-	 xH4ZXn3aXN76kMWs03L8SDhRtYLnyYZeg+3XlemcVklaObwf/K/1iDsu40opuQOwu/
-	 o+faEDeXTeEpV6buAiScPMHtXxWTm4jcStmL+6ik7ki632J7BKFGX0P6f/Nf84h95U
-	 8+1gMzcjLSv5xQ/LCbzZKT9lG/ytIojBu/ALcjNLDEb/C5P99CbtK+jiRrVtkXIX7D
-	 SYgHsVvb6UM6+NeCwSLb/0P2XKA17f5RAMs0IaMfqiByk+qTeLEh2QjKaW4vCF55Wk
-	 cC24J0Y05Kvcw==
-Message-ID: <sashiko-outbox-231801@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] scsi: snic: Disable the devcmd2 WQ before freeing its
- results ring
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Yuho Choi" <oss.patchbox@gmail.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20261124180234.400564-2-oss.patchbox@gmail.com>
-References: <20261124180234.400564-2-oss.patchbox@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 24 Nov 2026 18:11:49 +0000
+	dkim=pass (2048-bit key, unprotected) header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=Fy75rdwV
+Received: from localhost (localhost [127.0.0.1])
+	by 011.lax.mailroute.net (Postfix) with ESMTP id 4jYrvg5NRnz1XM6JG;
+	Tue, 24 Nov 2026 18:30:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1795545003; x=1798137004; bh=YnWuN+9P4kv0dA1kgDgkRqXu
+	7Fw8rxytZA5FxjoyzUI=; b=Fy75rdwVu4czCawpvwmQ6uq/Ibz/ZAjaFYimWiKF
+	Gl1HDujaVTeSb9CjGxynvtaCnufl4YIrIrbR3lbeeRXwviLuQ5GrCWxUqaeNi7KI
+	4fc9FsfTb4Q/LtUWgUm3XVRnVyEf6C/O+nuMaWdtbKem2ukPtIMzMMt5ULP4K5Gv
+	VzSpE8sTtZTntIaSkdpMaqz4JQ9gmi2aCbx+OnPz4UJbMlrwQC12KmbdC8MXZNMV
+	iUQ6gGRhADKH2ryygiRHL2v5YAVpnkA9EpNQEU+4+EPS8h75C1e8AvbzfGW8c3bU
+	0+6FgOt9SxkhrepJHH47JdCqqRxvQxOdD5YIS8wP0LHMbQ==
+X-Virus-Scanned: by MailRoute
+Received: from 011.lax.mailroute.net ([127.0.0.1])
+ by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id puXwS_9fS0zJ; Tue, 24 Nov 2026 18:30:03 +0000 (UTC)
+Received: from [IPV6:2a00:79e0:2ed2:d:b87d:aea9:8f72:a6cd] (unknown [104.135.182.41])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4jYrvb5FMRz1XMYJH;
+	Tue, 24 Nov 2026 18:30:03 +0000 (UTC)
+Message-ID: <187cbe4e-2efb-47dd-8b0c-0c433b05b3d6@acm.org>
+Date: Tue, 24 Nov 2026 10:30:03 -0800
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -59,70 +69,86 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v4] ufs: sysfs: Add WB partial flush mode support
+To: Daniel Lee <chullee@google.com>, James.Bottomley@hansenpartnership.com,
+ martin.petersen@oracle.com
+Cc: alim.akhtar@samsung.com, avri.altman@sandisk.com, tanghuan@vivo.com,
+ linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20261117004729.635562-1-chullee@google.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20261117004729.635562-1-chullee@google.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Thank you for your contribution! Sashiko AI review found no new issues
-in this patch, but noticed 1 related pre-existing issue it does not
-introduce:
-- [Critical] enic: DMA use-after-free in vnic_dev_deinit_devcmd2() [1]
---
+On 11/16/26 4:47 PM, Daniel Lee wrote:
+ > Introduce UFS_ATTRIBUTE_RW and UFS_FLAG_RW to support writable attributes
+ > and flags.
 
-commit 69fa45723f24d1ae5b1a578c30346f49638a7cfb
-Author: Yuho Choi <oss.patchbox@gmail.com>
+Thank you for having addressed my v3 comments. Please split this patch
+into a series: (1) convert the UFS_FLAG() / UFS_ATTRIBUTE() bodies into
+helper functions without changing behavior, (2) introduce
+UFS_ATTRIBUTE_RW() and UFS_FLAG_RW() and (3) add the partial flush mode
+attributes and flag.
 
-scsi: snic: Disable the devcmd2 WQ before freeing its results ring
+That will make both reviewing and bisecting easier.
 
-This commit reorders vnic_dev_deinit_devcmd2() to disable the devcmd2 work
-queue before freeing the devcmd2 results descriptor ring.
+ > +	ufshcd_rpm_put_sync(hba);
+ > +	if (ret > 0)
+ > +		ret = -EINVAL;
+ > +	if (ret)
+ > +		goto out;
 
-> diff --git a/drivers/scsi/snic/vnic_dev.c b/drivers/scsi/snic/vnic_dev.c
-> index 22303f8275836..44a2cc59821c8 100644
-> --- a/drivers/scsi/snic/vnic_dev.c
-> +++ b/drivers/scsi/snic/vnic_dev.c
-> @@ -421,8 +421,8 @@ static void vnic_dev_deinit_devcmd2(struct vnic_dev *=
-vdev)
->  	vdev->devcmd2 =3D NULL;
->  	vdev->devcmd_rtn =3D NULL;
-> =20
-> -	svnic_dev_free_desc_ring(vdev, &dc2c->results_ring);
->  	svnic_wq_disable(&dc2c->wq);
-> +	svnic_dev_free_desc_ring(vdev, &dc2c->results_ring);
->  	svnic_wq_free(&dc2c->wq);
->  	kfree(dc2c);
->  }
+This changes the error code reported to user space for all existing
+flag and attribute sysfs entries: negative error codes are now passed
+through instead of being converted into -EINVAL. I'm fine with this
+change but please move it into a separate patch and explain it in the
+patch description.
 
-[Severity: Critical]
-This problem wasn't introduced by this patch, but can the adapter still
-perform DMA to freed memory [1] when svnic_wq_disable() times out, or
-along the svnic_dev_init_devcmd2() error path and the matching devcmd2
-teardown code in enic and fnic?
+ > +static bool ufshcd_is_wb_pinned_pfm_supported(struct ufs_hba *hba)
+ > +{
+ > +	return ufshcd_is_wb_allowed(hba) &&
+ > +	       hba->dev_info.b_presrv_uspc_en &&
+ > +	       (hba->dev_info.ext_wb_sup & UFS_DEV_WB_PINNED_PFM);
+ > +}
 
-svnic_wq_disable() returns -ETIMEDOUT if the hardware does not acknowledge
-stopping the queue, yet vnic_dev_deinit_devcmd2() ignores its return value
-and unconditionally frees both dc2c->results_ring and dc2c->wq.ring while
-the queue remains active.
+Why does pinned mode require bWriteBoosterBufferPreserveUserSpaceEn
+while FIFO mode doesn't? Please add a comment that refers to the
+relevant section of JESD220G.
 
-In the same file, svnic_dev_init_devcmd2() also frees dc2c->results_ring
-before calling svnic_wq_disable():
+ > +/* Possible values for bWriteBoosterBufferPartialFlushMode */
+ > +enum wb_partial_flush_mode {
+ > +	WB_PARTIAL_FLUSH_NONE		= 0,
+ > +	WB_PARTIAL_FLUSH_FIFO		= 1,
+ > +	WB_PARTIAL_FLUSH_PINNED		= 2,
+ > +	NUM_WB_PARTIAL_FLUSH_MODES	= 3,
+ >  };
 
-drivers/scsi/snic/vnic_dev.c:svnic_dev_init_devcmd2() {
-    ...
-err_free_desc_ring:
-	svnic_dev_free_desc_ring(vdev, &dc2c->results_ring);
+Please leave NUM_WB_PARTIAL_FLUSH_MODES out of this enum since the
+enum documents values defined by the UFS standard. Using
+ARRAY_SIZE(wb_partial_flush_modes) in ufs-sysfs.c instead should be
+sufficient.
 
-err_free_wq:
-	svnic_wq_disable(&dc2c->wq);
-	svnic_wq_free(&dc2c->wq);
-    ...
-}
+ > +	mode = sysfs_match_string(wb_partial_flush_modes, buf);
+ > +	if (mode < 0)
+ > +		return -EINVAL;
+ > +
+ > +	switch (mode) {
+[ ... ]
+ > +	default:
+ > +		return -EINVAL;
+ > +	}
 
-The identical devcmd2 init and deinit paths in
-drivers/net/ethernet/cisco/enic/vnic_dev.c and
-drivers/scsi/fnic/vnic_dev.c likewise free results_ring before calling
-vnic_wq_disable() and ignore the disable return value before freeing the WQ
-descriptor ring.
+The default case is unreachable because sysfs_match_string() only
+returns valid indexes into wb_partial_flush_modes[].
 
-[1] https://sashiko.dev/#/bug/linux-20f156a6-d2c2-49bc-b1ee-432c3af0d669
+ > +		Buffer.
+ > +		The attribute is read only.
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261124180234.4005=
-64-2-oss.patchbox@gmail.com?part=3D1
+Please use "read-only" consistently in the new ABI entries.
+
+Thanks,
+
+Bart.
