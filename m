@@ -1,57 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795537638;
-	b=TYwWE8GkW4+3THFi0KprCH4uDjZ4xPXE8nsM/N8ZjRcHKmUOwBzw7eL1AhJ2rXgnufO2
-	 J7pGMAUpQpbzJq4Nn3VXUjfiDrQXxjfhCUYlY7mrNh4jSeKOA1uLuYcwnXyUjOAQo6dJu
-	 1uLSbR/o5GO9A0f3Uj/w60dO3OUXBHHsasTzUJ7fO/CB3WS3cBkAb7ooUp2QxCuT7qRec
-	 yuUXV2bh4tTw2M0+A/p3BOVp1KlYrHkQ94rkV6LAT6S9F3jM/IWJLHtFkHR/h/ZOwEo/h
-	 Xdj2aIHODmwvETDJ1jE1I5bHdhwYsXJd1j8CFMWCY1oq72oqOtazfEd+4++BQTEzxjA==
+	t=1795537674;
+	b=Dzqg7P6LTDxurnNi0myQPU/6sSF2X7xjadzfeoYDpybaxs0352t+Xl8Ug1lNIE4tNuFV
+	 cM7x0WF0SJy3BF5FAim/H20BDuH9/sBDEjKsM9XZu7SMxzu+jhc7s8+AWruEi6te4Rwv7
+	 kIo1eaAT4svaWCAhNzM4l181ioZBRwNABUiUn7eVHlNq4+fQk4iPdkbx+PSj+GdMvLg7m
+	 0134nE1XkViuvkaFpYLp0xwECfIW5hlNRlvTQxtkQDZ0cU2vXAFen3rsXzcf6qQVGksfw
+	 O7f2m2jC7FBvOpqrFG0aF6laHiqOaMgMX2zgAphZaT3Yl+ejjpYouny+0xez3J1rdYw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795537638;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795537674;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=VQ1y7JuLbu+OOXIatZrNbIoNCRGnhif/0fhcAEtPIRI=;
-	b=eE8d3HMm3hF9nbgrXLq8BgiIv468/W679iB3fD/wwt/nkouBLVnP1ahS1FnmkGfns+ZB
-	 siviuWKDBUVBdcY8H6RKqp003wvmJV2j+4SaK2lQcaE3CZdXFqc4LnPgXqx4wjCt/hlxI
-	 HWplCk8Vm38dfxEXL0kkOcpRr/LSBDE25nIxiP7ADzTLKZpn55eqvo9qVNstvAlEKmxgj
-	 VjSoZx3WVjpz26N1Z35lvPvM8ltNu606I2UIn41SD2AhcepAbe3QiSOUYWTUJP0AC18j4
-	 bHnTDql6lS3YotWhO21YEW8ROkhLs8p2za/ixkPUFldFkxP/G3zpx6W03su4p6FMkww==
+	bh=xZiYkBSzpKRR++wI/mT9ivMLlzYNsoGPLNOZ8snLVOw=;
+	b=UDe8+vTKOZH/Fon3hQhAhz/H4DEV/lz3cyafrvTTr7uHHYB/WHSiBJc/y+GJeML7VB9Y
+	 4KTT/epZsoFZRKz5wbs1cG/5NLyOFVcY7ycFVdCdRceLA6k+CiklRu57O7wqShf3ZPvrL
+	 fzLBjnw+xkaLKRLU1igdTtza6l50OUInq5Dg/Vwj/W7fL2S5dCeX6gfwzp0yDWOkOZ/ou
+	 ML2OYj9kTt1O0Zzy0MdZ5w2SILdeMNwoNp9xMJE7P0FHcY/N9J9sgLKHv9bsDEk8xtLy6
+	 zPATzwyRZoTAlLE5vd71PxhA1PUWB797J6wShHoyCUb+VQfofMvgAbEJhpFxBgQBZ/w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DexHHXa3;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=l2kXsXYx;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C3A62606A31E
-	for <linux-scsi@vger.kernel.org>; Tue, 24 Nov 2026 16:27:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A2DD6606A31E
+	for <linux-scsi@vger.kernel.org>; Tue, 24 Nov 2026 16:27:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DexHHXa3
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DF9001F000D2;
-	Tue, 24 Nov 2026 16:27:17 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=l2kXsXYx
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F042A1F000C0;
+	Tue, 24 Nov 2026 16:27:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795537638;
-	bh=VQ1y7JuLbu+OOXIatZrNbIoNCRGnhif/0fhcAEtPIRI=;
+	s=k20260515; t=1795537674;
+	bh=xZiYkBSzpKRR++wI/mT9ivMLlzYNsoGPLNOZ8snLVOw=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=DexHHXa33PPdCBdyBDnkZ/gE3dYGDvZDDMMKqRi0dGiYcnBtP/B9byhsVso2SXW2u
-	 d1eWO6WsKHJWTqXQiA4BaTtLtxgb3Ar/4YNwBAZR1cqfFtmboIkRmUbIBSXR25a8j/
-	 JH12HMYsd9mN1RpLEggaXR6rN290X1mtjFGCj3jTfVFRyCpiG9q8D5UHfODaC7UDo9
-	 /GIQ4KtavHxj1DajM38Gr43sEyj/I500zZtAOvvgcIBCHFxIkxxhOFr9elaG3NnVYh
-	 wh1JCRDZ/cbU4YhCAO50AaQhnjLyIte1wSS51weZSKW2VLvMvaxONtAjtsvXdjF2I+
-	 oj5fZXKjL6FYw==
-Message-ID: <sashiko-outbox-231560@kernel.org>
+	b=l2kXsXYxlNUd8yLSzIA/p4nM6l2j57YItlt5T4EIk6+XsKkh2ssIi9WOuSmH1cAN5
+	 kA6yJbpPtg91Z9O5mpyXM8RRWJ+NxPTOfeYHmBxetOnYccrg56XUzZU+4q/4PBvYdQ
+	 YRUUUnN+zN3YaHMn0WFklRimIV4tLLL4z0SBCTLuTemSRr3nFkGzjQmAnFFxEHvF0B
+	 8xiKyZqvhAZ3pOe4r873FeIj35pZ5rKBELopRA6HYGO62j/vV59Iw3GLwInbKKn7vZ
+	 eRbRTTFx5KIS8Ctcu7CFOI91ICdO914zWOkQlwSdspATovLpXcOXCiGYbT4Gctk8hM
+	 q0jTF1/8ofZ4w==
+Message-ID: <sashiko-outbox-231565@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v19 02/13] scsi: ibmvfc: fix potential clobbering of rc
- after failed irq setup
+Subject: Re: [PATCH v19 05/13] scsi: ibmvfc: fix resource leaks on partial
+ queue allocation failure
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Dave Marquardt" <davemarq@linux.ibm.com>
 Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20261124-ibmvfc-fpin-support-v19-2-2aaffe5fe7d2@linux.ibm.com>
+In-Reply-To: <20261124-ibmvfc-fpin-support-v19-5-2aaffe5fe7d2@linux.ibm.com>
 References: <20261124-ibmvfc-fpin-support-v19-0-2aaffe5fe7d2@linux.ibm.com>
- <20261124-ibmvfc-fpin-support-v19-2-2aaffe5fe7d2@linux.ibm.com>
+ <20261124-ibmvfc-fpin-support-v19-5-2aaffe5fe7d2@linux.ibm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 24 Nov 2026 16:27:17 +0000
+Date: Tue, 24 Nov 2026 16:27:53 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -63,32 +63,47 @@ Precedence: list
 
 Thank you for your contribution! Sashiko AI review found 1 potential
 issue to consider:
-- [Low] scsi: ibmvfc: missing Fixes trailer for
-  ibmvfc_register_channel() rc fix
+- [Low] scsi: ibmvfc: missing Fixes trailer for ibmvfc_alloc_queue()
+  event pool leak
 --
 
-commit 4f416ecd247fc5424d48d287f580eabfe039f889
-Author: Tyrel Datwyler <tyreld@linux.ibm.com>
+commit 5a5077e1a8676fb044e914b0ec60aa4bd727eb2d
+Author: Dave Marquardt <davemarq@linux.ibm.com>
 
-> scsi: ibmvfc: fix potential clobbering of rc after failed irq setup
+> scsi: ibmvfc: fix resource leaks on partial queue allocation failure
 >
-> Fix a variable-shadowing bug in ibmvfc_register_channel() where the
-> irq_failed cleanup loop reused rc for the H_FREE_SUB_CRQ hcall result,
-> clobbering the error code returned to the caller.
+> ibmvfc_alloc_queue() leaks the event pool on both failure paths
+> after ibmvfc_init_event_pool() succeeds: neither the
+> get_zeroed_page() failure path nor the dma_mapping_error() failure
+> path calls ibmvfc_free_event_pool(). No caller compensates, since
+> ibmvfc_init_crq() returns immediately on ibmvfc_alloc_queue()
+> failure, ibmvfc_alloc_channels() only unwinds previously succeeded
+> queues, and ibmvfc_alloc_mem() jumps to a label that does not free
+> the failed queue. Add ibmvfc_free_event_pool() calls on both error
+> paths in ibmvfc_alloc_queue() to close the leak.
 >
-> Introduce hcall_rc for the cleanup loop instead.
+> ibmvfc_free_queue() also unconditionally calls dma_unmap_single()
+> and free_page(), even if the message page was never allocated. In
+> that case msgs.handle and msg_token are both zero/NULL, and calling
+> dma_unmap_single() with address 0 is unsafe on many architectures.
+> Guard dma_unmap_single() and free_page() together under a
+> msgs.handle check.
+>
+> ibmvfc_alloc_queue() releases everything it allocated when it
+> fails, so a queue it failed to allocate must not be passed to
+> ibmvfc_free_queue(): ibmvfc_free_event_pool() does not reset the
+> pool size or pointers, so the stale values would be used again. No
+> caller does this.
 >
 > Signed-off-by: Dave Marquardt <davemarq@linux.ibm.com>
-> Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
 
 [Severity: Low]
-Since this fixes the H_FREE_SUB_CRQ cleanup assignment in
-ibmvfc_register_channel() that overwrote rc on error, should the commit
-message include:
+This fixes the event pool leak introduced when ibmvfc_init_event_pool()
+was moved into ibmvfc_alloc_queue().  Should the commit message include:
 
-  Fixes: 0217a272fe13 ("scsi: ibmvfc: Store return code of H_FREE_SUB_CRQ d=
-uring cleanup")
+  Fixes: 003d91a1393d ("scsi: ibmvfc: Init/free event pool during queue all=
+ocation/free")
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261124-ibmvfc-fpi=
-n-support-v19-0-2aaffe5fe7d2@linux.ibm.com?part=3D2
+n-support-v19-0-2aaffe5fe7d2@linux.ibm.com?part=3D5
