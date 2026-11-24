@@ -1,88 +1,77 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.52
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.133.124
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795527036;
-	b=zQeon1iH/pUn1qP/RZeGOoEkdMhuOqt+73O+FZ7LsGKfOZ1yv9SeWM8ijG/RYZzbrO3b
-	 TsmmhnigDKbohF12NabWQkEN/f+eC+1B9XLVyoQm39EhjG2fxHrAuCKXKvRZfUIUxnG8Z
-	 1rSxaXTOJ3WNOWVBp393T8ZQTMW8dfwZF+BNtDQUrFqU1kNHc+PU/2katlXq2S6DkcaxJ
-	 urZ/htunSfh5Z8dQklIVO2Psip3MRj72hNTK3Lz+8UutRw0eAKxDwXns0rLbvKI7/yZ5s
-	 SzNtTXOps3/xXSnl9HIzlZRbMZMbKogK6Q4wGhVgtwWaorTs3hDJ3oxTN8+aHeF1qbw==
+	t=1795532478;
+	b=1f+7t2UBlEDUOdHvb+L40nWkWBqURrYnxTn4VmhtqSEKuhdlMrvSf9bX+pfJftpwNDFY
+	 I7J1GD2qPfvqZ9ZjQZdp6NxApqZyM+hws6C/ySNtnvlbeFfYeKx7mDFatlLyVo80AdfFw
+	 RCLJyq3QAAzHeCXHporFNzjvSeds4s0/C6uy9YVekzgYsjM8clm3MebhppsQZqA1i9qR2
+	 V0X9VLsA7LFJ5aY/uQrnsvQSrL317AmdZpSvo4UVBXvzaRRsEALDWWcJu03aW7ksbaA+B
+	 IGPmTghxuWdzCKYQtPnOM+SzTgrBBwURM62bGQ9KaykzJvDyVMSX97eOIjqKHe8blbA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795527036;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Message-ID:Date:MIME-Version:User-Agent:Subject:To:Cc:References:
-	 Content-Language:From:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=AaK72SNggPqYF/BC/D57qO7dCLlZ7Z80+TEYhpfdQSE=;
-	b=oA1yb+S/jyIEp078FIe+c5sDUEK75k78GwOPIox6EslouSq1F7oFvCk5/FAXtPhj3MRQ
-	 xyH93jiBHZQ21oqTO6+/Xh/RHo3QGoH2EtfV+sUOmzHNoMwMbdS4nuHfbYkcCW5ImvlmX
-	 469rjspp/N/GhXVigcuUrh5ns8tVpeablxyhXJ0/t8jf9bkdlNyW4jrm8kOAW0V0bRPTG
-	 YgQwJp1fRN/fHh6urZrzirgij2WLvqQhGBlG+esxb4InTLwsmnz+qI/WemMtEGuXq0Rif
-	 UmZo4XoXi0L69IQuxgFBRgZIeN35dgNim2iPuPsqASr+Vjk9iDL8T+4QUDwS4uaYsbw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795532478;
+	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
+	 X-Mimecast-MFC-AGG-ID:Received:Received:From:To:Cc:Subject:Date:
+	 Message-ID:MIME-Version:Content-Transfer-Encoding:X-Scanned-By;
+	bh=OCP8g2l59WgeSn2ZtdFHcJloG9W93voXqi/JA7Q4iag=;
+	b=0XVYpBSaJZuxIQ5j7/khNzC3HwWzMyJamko/KjRbxFufHZuPZAMfu/olWgRJpINumEaH
+	 9SYx1XuiMIUKdgTTzYwS92jVxlJPRWRCCFEskSOgo2Y4+oU5vn6+IlbCpY5L/lJ/HNZZE
+	 vHhRMlopbwrZchdKuCrwYtlMJCwJlOBxvo73yx8vqpBSY2JfL6Ig34S2X5PoZwOykFBdB
+	 8aiGB4opBfROkwtAs54KlUA8AUrgIOXNKTRqwLG15TNoFArCUHbizs57/uNrKN9IpumkV
+	 1wSa5zDltkW2ihNzXPqEBNvI8+8vexd6tCajIApsV/vZTyFhuUnxj9mrgowrqxK+Vow==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=suse.com;
-	spf=pass smtp.mailfrom=suse.com;
-	dkim=pass header.d=suse.com header.i=@suse.com header.a=rsa-sha256 header.s=google header.b=DSTSAjky;
-	arc=none smtp.remote-ip=209.85.128.52
-Received: from mail-wm1-f52.google.com (mail-wm1-f52.google.com [209.85.128.52])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=pass header.from=redhat.com;
+	spf=pass smtp.mailfrom=redhat.com;
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=e1oRXILP;
+	arc=none smtp.remote-ip=170.10.133.124
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53004606A321
-	for <linux-scsi@vger.kernel.org>; Tue, 24 Nov 2026 13:30:36 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 53004606A321
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9FBA9606A321
+	for <linux-scsi@vger.kernel.org>; Tue, 24 Nov 2026 15:01:17 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9FBA9606A321
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.a=rsa-sha256 header.s=google header.b=DSTSAjky
-Received: by mail-wm1-f52.google.com with SMTP id 5b1f17b1804b1-4bb5b8ef642so39555875e9.1
-        for <linux-scsi@vger.kernel.org>; Tue, 24 Nov 2026 05:30:36 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1795527035; x=1796131835; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=AaK72SNggPqYF/BC/D57qO7dCLlZ7Z80+TEYhpfdQSE=;
-        b=DSTSAjkyYTAlehNkylmpxXQAMsK+0vWB4w08PbpwuVv3LL4OZkqY2SfOeI5hYeQKOI
-         LpiQmLS7NRi46Ia0LqOnPVtVEisOA9Ggcu/slTOYH7Gx7jBq64Jt5vmS8zEi/bZBeusP
-         6JHuekAWvtby4QDiWD7P/4bQFw6DYY/8uqVu4vCrExT86+cgYFliyV6U2TdUDVSFzTnp
-         cqJhTHpXVcYfuOYQDqBv8FueMSsASBc/JBRq6jmHUrzmLCP2FeJlPexA1SrZLd3sjHQc
-         aul10rfW9Fn4vKd782dhM0G8YvwNLJXd6Sb4eKYU/MVfT/EHtPSdFzAf/+uikM4NSXtL
-         lEAw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795527035; x=1796131835;
-        h=content-transfer-encoding:content-type:in-reply-to:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=AaK72SNggPqYF/BC/D57qO7dCLlZ7Z80+TEYhpfdQSE=;
-        b=VjzNabatHTlkC620JrlWXFnfZvxFd6JjVgxhvbJOtp5gCuLQ1ZPuRYGZHIukFcjeWl
-         ZqHJ7e8Zu/RAC9oTpm6InNcoaPfYnyM8GUBR9YjH2+OK+gc8j7MCWZpwuMHWc1jz81N2
-         vYWxxiKVaaibXiQvlG9UiqfKtPeQ8yzhSlm3Xw+xu4phH/Sr0SKijpcxAi8XZAhQtfLP
-         mkyU7vfFxPZ2YVs+B8xD/AYJRTBLMJL1+0Mg9h/FfTH/mRvmzHnU1KiU96dTpR23sJnG
-         +6SEmboymbuVCf3X/hI2jg8PnmcU7WFEWtEaJNbzqvXv3phGhstt5AYE+8KByMvXZzQB
-         iOrQ==
-X-Forwarded-Encrypted: i=1; AL+hErFW6jCf8pFWziQoqmJ5XVQkvPB3v+CuUVIE3t6z1FHF/Ld++TlR5bMuMmU7fuu8mpyrCbSQ1t0rq1gy@vger.kernel.org
-X-Gm-Message-State: APuU4Z+57ebGe3JrCuvAOE7PEcMfFI1as3fi+WctAJOu/fJT1Uok+DJQ
-	cZxicTTjG3Z+VAR3fYrzpiJOROzmjfE+9F80/j/D9RBTkdMxcX4N+AULpt2Lc7gMROg=
-X-Gm-Gg: AZFdTZejkcogepXyqNFkOmU8jskNdZwS44zXh5Qsy2hMtty7XiRSUF77xBiv7xkGR05
-	AjtHvgzk9bae3i2sx8cKtUpH7sI7uMpZcO+17JDhpNjXJW6whdNFrJO4P8XLqrwI3BUKDI8oA/Q
-	upJpx0BjHC1RuwiafP/1Z5tbzX+6bOqb7XsrZHDfO1UsX0Ar+QgNLbU+3my8stRhQf5uSdOuh0S
-	x1FcyMaWv4Ll68uB72GG/jpnX0JHL936x8AjlKuBjKrkxZvMA6eIR8tMnl1J2jGTQZ5Yzfi5tTO
-	njnF03adNj/Ikjg1NDoQ7XQ1+ErEc5lX+PhSYLjsoAcHDh7mjZ5/PnLWu1I75ke1FLeYfDstOde
-	CWHcVJou2kSw9VGB7VA+/oUf8xcYZ536oIKXmDCSdy7szMM8hIrLT+jyKU6GzTNVYSLAPGlwSA1
-	EsGjobvkLGXQNunqCfd2ORWYxlyjdgquZ8PtXGz3J86ecH8mPHNu0Y9roWhyYAJq2dLv9peLwIJ
-	kQEHDF8EjbpXX3pCkFsCA9AwurjlPoOxFH50lmdr+rSnPWBRvD8t/53vZzg7hHNoennheg9fh8g
-	l0MTxJ48fSPMqUDIYmWdXLDuzKF8VStIDxdUZvKQe/bwzdQjs22lVR8YShszlWhrZJ1F
-X-Received: by 2002:a05:600c:500c:b0:4bb:82f7:549f with SMTP id 5b1f17b1804b1-4bb8881409bmr321872905e9.19.1795527034467;
-        Tue, 24 Nov 2026 05:30:34 -0800 (PST)
-Received: from ?IPV6:2001:a61:132b:a401:6cb8:7c28:11e1:499? ([2001:a61:132b:a401:6cb8:7c28:11e1:499])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4bb906d6a13sm227938555e9.3.2026.11.24.05.30.33
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 24 Nov 2026 05:30:34 -0800 (PST)
-Message-ID: <b2ad19d9-87a8-4106-97b3-46e6c649a9be@suse.com>
-Date: Tue, 24 Nov 2026 14:30:32 +0100
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=e1oRXILP
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1795532476;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=OCP8g2l59WgeSn2ZtdFHcJloG9W93voXqi/JA7Q4iag=;
+	b=e1oRXILP8r34QsExNhoa/VQP8wYHqt4w5amvGKfsoTpVduMEe/CcAXbYB2qasozzWBBROW
+	0+2X9O/nw2+xI+gCQ/nJ5wlPgOhTGhj5O4GqYQyxCz80xXCJJiHiw8q6dlBJvuROJwqXWj
+	qZQL9lq0jk9skur9tMebIUKtvHOEP0g=
+Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-636-C8DzT9FgNlu_lLaNle3r6Q-1; Tue,
+ 24 Nov 2026 15:01:09 +0000
+X-MC-Unique: C8DzT9FgNlu_lLaNle3r6Q-1
+X-Mimecast-MFC-AGG-ID: C8DzT9FgNlu_lLaNle3r6Q_1795532468
+Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id E10B218028B7;
+	Tue, 24 Nov 2026 15:01:07 +0000 (UTC)
+Received: from jtaubepe-thinkpadx1carbongen12.ibmlowe.csb (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
+	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id CD8A1195B3C2;
+	Tue, 24 Nov 2026 15:01:05 +0000 (UTC)
+From: Jesse Taube <jtaubepe@redhat.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	Nimal Prabudoss I <nprabudo@redhat.com>,
+	jmeneghi@redhat.com,
+	Nilesh Javali <njavali@marvell.com>,
+	Manish Rangankar <mrangankar@marvell.com>,
+	GR-ETH-Storage-Upstream@marvell.com,
+	Jesse Taube <jtaubepe@redhat.com>
+Subject: [PATCH] qedf: Fix use-after-free in qedf_xmit error path
+Date: Tue, 24 Nov 2026 10:01:03 -0500
+Message-ID: <20261124150103.166306-1-jtaubepe@redhat.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -92,33 +81,38 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [usb-storage] Re: [PATCH 1/2] usb: uas: expose US_FL_NO_ATA_1X in
- sysfs as ata_passthrough_disabled
-To: Nathan Stratton Treadway <vgerlists2026@nathanst.com>,
- =?UTF-8?Q?Mateusz_Jo=C5=84czyk?= <mat.jonczyk@o2.pl>
-Cc: Oliver Neukum <oneukum@suse.com>, Alan Stern <stern@rowland.harvard.edu>,
- "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
- "Martin K. Petersen" <mkp@kernel.org>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-usb@vger.kernel.org,
- linux-scsi@vger.kernel.org, usb-storage@lists.one-eyed-alien.net,
- linux-kernel@vger.kernel.org
-References: <20261121155253.4980-1-mat.jonczyk@o2.pl>
- <awRIRpJIxWPJcn5i@diagon-alley.stratway.net>
-Content-Language: en-US
-From: Oliver Neukum <oneukum@suse.com>
-In-Reply-To: <awRIRpJIxWPJcn5i@diagon-alley.stratway.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-On 23.11.26 15:05, Nathan Stratton Treadway wrote:
+In one of the error paths in qedf_xmit, we were freeing the skb and then
+accessing the Fibre Channel frame header destination ID field stored
+in the skb. Save d_id from the skb before freeing it to avoid a
+use-after-free.
 
-> Would it make sense to explicitly mention something about "USB quirk flag
-> US_FL_NO_ATA_1X" in this documentation entry?
-No, probably not. The exact flag the kernel uses internally
-isn't and shouldn't be exported to user space. Hence mentioning
-it in the documentation is not appropriate either.
+Signed-off-by: Jesse Taube <jtaubepe@redhat.com>
+---
+ drivers/scsi/qedf/qedf_main.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-	Regards
-		Oliver
+diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
+index da429b3a4283..ff7d93fbc079 100644
+--- a/drivers/scsi/qedf/qedf_main.c
++++ b/drivers/scsi/qedf/qedf_main.c
+@@ -1113,11 +1113,12 @@ static int qedf_xmit(struct fc_lport *lport, struct fc_frame *fp)
+ 	}
+ 	if (vn_port && ntoh24(fh->fh_d_id) != FC_FID_FLOGI) {
+ 		struct fc_rport_priv *rdata = NULL;
++		u32 d_id = ntoh24(fh->fh_d_id);
+ 
+ 		QEDF_INFO(&(qedf->dbg_ctx), QEDF_LOG_LL2,
+-		    "Dropping FCoE frame to %06x.\n", ntoh24(fh->fh_d_id));
++			  "Dropping FCoE frame to %06x.\n", d_id);
+ 		kfree_skb(skb);
+-		rdata = fc_rport_lookup(lport, ntoh24(fh->fh_d_id));
++		rdata = fc_rport_lookup(lport, d_id);
+ 		if (rdata) {
+ 			rdata->retries = lport->max_rport_retry_count;
+ 			kref_put(&rdata->kref, fc_rport_destroy);
+-- 
+2.56.0
 
