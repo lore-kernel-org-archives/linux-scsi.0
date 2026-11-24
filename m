@@ -1,66 +1,66 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=199.89.1.16
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795545930;
-	b=qn82/t3+mLbSfgtCz3rYKUVSsJVMC/HOksdV1msBhEYXU+pCgBmUSgNE1aU64b5dVIsj
-	 4jP6vvF7Iju9oQKZEDbzIBOlTQ8RPRkORqvwGPJbcnhgAzhjOIeoS0s6HJ9Nn6zp/Q3WI
-	 5q671Cj58XGdrgUgX37Rju3Frj31Z4hyI8hdA6mCbc9FRkJVKVRIDvBAVGGZQWBEYu8tI
-	 mH/MXEXkfGJBwoSpbLRSlTLeJNRyxL4wD1y8AAkm+xnquPXIqC0GZNQvOS1Irw1Iwrmyv
-	 4G5xCohnOhwCgVI/GACiyCHCF3ZUyMRf8GJGVT8STMPIcSf9nwOdQkHcNCe8uvFXoTQ==
+	t=1795546048;
+	b=k1AIlD8K8ZdcZghS8ka8m6uESqe7xXDQexM7mc+9sME++boqWdFnlr+8NooeTqYlIrth
+	 NsH6zIkvJsFeqOWX6BlAeOI+fq4gsjaDXQiaCZsN/y0iTH/7+Dp1HwwdTnCV4Ij/gxjHi
+	 2kXJetnmZOLApv2esOYO7kJilybrVJAZKnP5L4zfTY30dt0vyKWz9S/I6Qfs9Qm8a74Ve
+	 tVguhNmTvjq/pVCGo9mca0CUukE3RiN31Nle4Z/sl9HJE2yCfOQVeoAYvSG6iBF1Amolj
+	 ddfC+TOeHLAPhtUAoHoWy0QUBuivxwLFKta4i3vf4W7wUqkLdYf9eX9HHH+/qaUqabQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795545930;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795546048;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Virus-Scanned:Received:
 	 Received:Message-ID:Date:MIME-Version:User-Agent:Subject:To:Cc:
 	 References:Content-Language:From:In-Reply-To:Content-Type:
 	 Content-Transfer-Encoding;
-	bh=N1WJU3MqRSCkK6+Ty/myQNqhkUr1xHYbCTZhZVQt5d4=;
-	b=KDfAp6ci6svigzWmROtwE5iGZxLoE/8bx7a2Q6a/94+4sCCahKyYhYqMFA6q2FE2Krqs
-	 JRW/XuVr0KkXrBBywaERw+gfIpg5C1KD4JICmBPtxNxU2c5ijrWzXzTyvOqY2G2Ur8rxp
-	 61/d0yYT4x8BV5Uru8/PgCI2/ZEgsFg9GpvC3hvn1H5IkkiGtrg6p+Ken1gs1LSp/u6gq
-	 pZwwaxdbaBBiDPJP4xJTUTx7leXbbBvCxeg+WYlk8gpovEZg+479orTeq1sT9ANCDfivZ
-	 kF0JXK4+wBLJiaGx45mhwzBZxRdGZMT6L2OIY5dex+bRvo722s5MGaF1f+a9ZUAexLQ==
+	bh=pxqaOIl3y8m+NcD9JxB0/2XOKtk2qG69zXikgpiO/6s=;
+	b=AQaD+CKhZtOwtve+vOP/JQdIwxwM+D+2+Z6IKHtdk4VH2CMuNkFIzonWQwjJYjTMn1mo
+	 ulA9T7LVh+aNS5QVKRCezt6TvRDnOqB2MWZZcjY+8pmwbCGSe/VUy3S2RxKQZcS9ZKHfe
+	 7HiXYgVW05kAFeIvDS7acsVCuWEekG1FECwViDOxEP3QRgsuSqRWmM0pqVNH0w1KftUmR
+	 FF4j10ayJag6MxHKioWCKOUvKOef0RHTpR81xUAODWgfYSJIPtCY4cV2UO5PFAOp5o1Us
+	 qicwd36oVJ8Hdso8Iyod3zIGBbcX6s3LIVB17Ojfy+6iCpK+r3XJN+7sdDFFpNDzfBQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=acm.org;
 	spf=pass smtp.mailfrom=acm.org;
-	dkim=pass header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=aJy8sZ4h;
+	dkim=pass header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=3Wst0cvj;
 	arc=none smtp.remote-ip=199.89.1.16
 Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0902D606A31E;
-	Tue, 24 Nov 2026 18:45:29 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0902D606A31E
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E160C606A32A;
+	Tue, 24 Nov 2026 18:47:27 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E160C606A32A
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=aJy8sZ4h
+	dkim=pass (2048-bit key, unprotected) header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=3Wst0cvj
 Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4jYsFP2HQZzllN43;
-	Tue, 24 Nov 2026 18:45:29 +0000 (UTC)
+	by 013.lax.mailroute.net (Postfix) with ESMTP id 4jYsHg2vfBzllB6K;
+	Tue, 24 Nov 2026 18:47:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:content-language:references:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1795545924; x=1798137925; bh=N1WJU3MqRSCkK6+Ty/myQNqh
-	kUr1xHYbCTZhZVQt5d4=; b=aJy8sZ4hNkiNCZbP6LaU+gqKtJKHQZufvRazdZKS
-	AaToKh/AuDzrrEX4ASfJ8h0BNiFAt4tGKzoetmbOJdh5AX9Sa0J2yddRhdB2gEPG
-	MI2OkbnOl2B0vHiZrxRaoAmmiKIFm85w18u4OcsJc2pe0r0OaKRgnHlpZG1nUkTq
-	ej2BQUL+pyOSGxYpFMAebWBONugflA0DDK52b3yF6KOwrdYZ55oBbHlI5bejAhpZ
-	hOfC22NcwwJPRZlNEjHUnvolTDbjCGBc/m7x/GE//aJd4eajrfd/x/0jgEO5NU/j
-	Xg695H9bASuCZ2GcDa6eE2VQtViI4YKzcDUpR9MiZLe91w==
+	 s=mr01; t=1795546042; x=1798138043; bh=pxqaOIl3y8m+NcD9JxB0/2XO
+	Ktk2qG69zXikgpiO/6s=; b=3Wst0cvjNuA8A+j92CbKfbrkasPXQg+jYq4wfIvZ
+	mfcOIbXqO87ADaog31kZkYeDThwkaIH6qy5mJ+R1cIn4I+OBNujw0xdY4EkanRfd
+	V/bZvC92EdF0uXu14MZ5rJOLMSs7hoJAp7E02QbiEg4lDq6JZKhfzU3C0C7z7Phe
+	hZg6xJ8+6qEPEJb5EvOrqZft+27v7eEsrGpVy99ExRGDngLXXmx9Iyjdmhd2wNyQ
+	d7aVsb7ZdWJiunz3FM+yKda8N70R8FMT5mt5Th1wtwxwbKpYTX7ssaETkbyGQ1Rx
+	Bi5fnGbscW/mCTDn6B/dG2smbq2/foibJ4krnZUWR6MCAQ==
 X-Virus-Scanned: by MailRoute
 Received: from 013.lax.mailroute.net ([127.0.0.1])
  by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id A2RQ5nKV4aCg; Tue, 24 Nov 2026 18:45:24 +0000 (UTC)
+ id uE7rlzqzQucy; Tue, 24 Nov 2026 18:47:22 +0000 (UTC)
 Received: from [100.80.227.185] (unknown [104.135.182.41])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4jYsFJ0NQQzlfvpb;
-	Tue, 24 Nov 2026 18:45:24 +0000 (UTC)
-Message-ID: <919b8295-e5c5-40b1-93b9-21b8d7ed3b73@acm.org>
-Date: Tue, 24 Nov 2026 10:45:22 -0800
+	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4jYsHY3B22zlpHx2;
+	Tue, 24 Nov 2026 18:47:21 +0000 (UTC)
+Message-ID: <8413e7bc-f647-40ab-9633-0515863f3dd4@acm.org>
+Date: Tue, 24 Nov 2026 10:47:19 -0800
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -71,8 +71,8 @@ List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 1/2] scsi: ufs: core: Defer debugfs init until after
- device init
+Subject: Re: [PATCH v2 2/2] scsi: ufs: core: Add debugfs for PA TFS/FEC error
+ counters
 To: Po-Wen Kao <powenkao@google.com>, linux-scsi@vger.kernel.org
 Cc: Konstantin Vyshetsky <vkon@google.com>,
  Alim Akhtar <alim.akhtar@samsung.com>, Bean Huo <beanhuo@micron.com>,
@@ -80,68 +80,87 @@ Cc: Konstantin Vyshetsky <vkon@google.com>,
  "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
  "Martin K . Petersen" <mkp@kernel.org>, Peter Wang
  <peter.wang@mediatek.com>, Can Guo <can.guo@oss.qualcomm.com>,
- linux-kernel@vger.kernel.org, Li Qiang <liqiang01@kylinos.cn>,
- John Garry <john.garry@linux.dev>, HOYOUNG SEO <hy50.seo@samsung.com>,
- Hyeoncheol Jeong <hyenc.jeong@samsung.com>
+ linux-kernel@vger.kernel.org, John Garry <john.garry@linux.dev>,
+ Li Qiang <liqiang01@kylinos.cn>
 References: <20261124012951.3143833-1-powenkao@google.com>
- <20261124012951.3143833-2-powenkao@google.com>
+ <20261124012951.3143833-3-powenkao@google.com>
 Content-Language: en-US
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20261124012951.3143833-2-powenkao@google.com>
+In-Reply-To: <20261124012951.3143833-3-powenkao@google.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
 On 11/23/26 5:29 PM, Po-Wen Kao wrote:
- >  void ufs_debugfs_hba_exit(struct ufs_hba *hba)
- >  {
- >  	debugfs_remove_recursive(hba->debugfs_root);
- > -	cancel_delayed_work_sync(&hba->debugfs_ee_work);
- > +	disable_delayed_work_sync(&hba->debugfs_ee_work);
- >  }
+ > +static int ufs_pa_err_read_rec_cnt(struct ufs_hba *hba, u8 peer, u64 
+*val)
+ > +{
+ > +	u32 hi_before, lo, hi_after;
+ > +	int err, retry;
+ > +
+ > +	for (retry = 0; retry < UFS_PA_ERR_REC_READ_RETRIES; retry++) {
 
-[ ... ]
+Does the UniPro v3.0 specification define whether or not reading
+PA_TFS_RecErrorCountL latches PA_TFS_RecErrorCountH? If it does, this
+retry loop is not necessary. If it doesn't, please mention this in a
+source code comment.
 
- > @@ -11027,6 +11023,7 @@ void ufshcd_remove(struct ufs_hba *hba)
- >  	ufs_bsg_remove(hba);
- >  	ufs_rpmb_remove(hba);
- >  	ufs_sysfs_remove_nodes(hba->dev);
- > +	ufs_debugfs_hba_exit(hba);
- >  	cancel_delayed_work_sync(&hba->ufs_rtc_update_work);
- >  	blk_mq_destroy_queue(hba->tmf_queue);
- >  	blk_put_queue(hba->tmf_queue);
+ > +	/*
+ > +	 * Per MIPI UniPro v3.0 Section 5.6.7, setting PA_TFS_RecErrorCountL
+ > +	 * clears the entire 64-bit PA_TFS_RecErrorCount counter to 0.
+ > +	 */
+ > +	err = ufshcd_dme_set_attr(hba, UIC_ARG_MIB(attr->mib_attr),
+ > +				  ATTR_SET_NOR, 0, attr->peer);
 
-Moving ufs_debugfs_hba_exit() before scsi_remove_host() and switching
-from cancel_delayed_work_sync() to disable_delayed_work_sync() fixes an
-existing bug: without this change the debugfs attributes and
-debugfs_ee_work may call ufshcd_rpm_get_sync() after the WLUN has been
-removed. Please split that change into a separate patch with a Fixes:
-tag such that it can be backported independently of the new debugfs
-attributes.
+This comment only applies to one of the four attributes while the code
+below it applies to all attributes. Please make that clear in the
+comment.
 
- > @@ -11505,6 +11502,8 @@ int ufshcd_init(struct ufs_hba *hba, void 
-__iomem *mmio_base, unsigned int irq)
- >  	ufs_sysfs_add_nodes(hba->dev);
- >  	hba->dme_qos_sysfs_handle = sysfs_get_dirent(hba->dev->kobj.sd,
- >  						     "dme_qos_notification");
- > +	ufs_debugfs_hba_init(hba);
- > +	ufs_fault_inject_hba_init(hba);
- >  	async_schedule(ufshcd_async_scan, hba);
+ > +static const struct ufs_pa_err_attr ufs_host_pa_err_attrs[] = {
+ > +	{ "fec_err_cnt", PA_TFS_FECERRORCOUNT, DME_LOCAL },
+ > +	{ "crc_err_cnt", PA_TFS_CRCERRORCOUNT, DME_LOCAL },
+ > +	{ "format_err_cnt", PA_TFS_FORMATERRORCOUNT, DME_LOCAL },
+ > +	{ "recovered_fec_symbols", PA_TFS_RECERRORCOUNTL, DME_LOCAL },
+ > +	{ }
+ > +};
+ > +
+ > +static const struct ufs_pa_err_attr ufs_dev_pa_err_attrs[] = {
+ > +	{ "fec_err_cnt", PA_TFS_FECERRORCOUNT, DME_PEER },
+ > +	{ "crc_err_cnt", PA_TFS_CRCERRORCOUNT, DME_PEER },
+ > +	{ "format_err_cnt", PA_TFS_FORMATERRORCOUNT, DME_PEER },
+ > +	{ "recovered_fec_symbols", PA_TFS_RECERRORCOUNTL, DME_PEER },
+ > +	{ }
+ > +};
 
-With this change debugfs_ee_work is initialized after the UFS device
-has been initialized and after exception events have been enabled. The
-only reason why ufs_debugfs_exception_event() does not queue an
-uninitialized delayed work if an exception event is reported before
-ufs_debugfs_hba_init() has been called is that
-hba->debugfs_ee_rate_limit_ms is still zero at that time. That's
-fragile. Please move the INIT_DELAYED_WORK() call and the
-debugfs_ee_rate_limit_ms initialization into ufshcd_init() such that
-these happen before interrupts are enabled, or at least add a comment
-that explains this dependency.
+These two arrays only differ in the value of the .peer member. Has it
+been considered to use a single array?
 
-Additionally, hba->trigger_eh_attr and hba->timeout_attr are now
-initialized later than before. I think that's fine because no SCSI
-commands are queued before ufshcd_async_scan() is called, but please
-mention this in the patch description.
+ > +static void ufs_debugfs_pa_err_create_dir(struct ufs_hba *hba,
+ > +					  struct dentry *parent,
+ > +					  const char *name,
+ > +					  const struct ufs_pa_err_attr *attrs)
+ > +{
+ > +	const struct ufs_pa_err_attr *pa_attr;
+ > +	struct dentry *sub_dir;
+ > +
+ > +	sub_dir = debugfs_create_dir(name, parent);
+ > +	if (IS_ERR_OR_NULL(sub_dir))
+ > +		return;
+ > +
+ > +	d_inode(sub_dir)->i_private = hba;
+
+The comment above hba_from_file() says that @file corresponds to a
+debugfs attribute in directory hba->debugfs_root. That comment is no
+longer accurate. Please update it.
+
+ > +static void ufs_debugfs_pa_err_init(struct ufs_hba *hba)
+ > +{
+ > +	bool host_sup = hba->ufs_version >= ufshci_version(5, 0);
+ > +	bool dev_sup = hba->dev_info.wspecversion >= 0x500;
+
+The PA_TFS_* attributes are UniPro attributes. Has it been considered
+to check the UniPro version (PA_LOCALVERINFO and PA_REMOTEVERINFO)
+instead of the UFSHCI version and wSpecVersion? That would require
+adding a UFS_UNIPRO_VER_3_0 constant in include/ufs/unipro.h.
 
 Thanks,
 
