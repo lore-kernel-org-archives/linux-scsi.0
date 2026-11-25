@@ -1,66 +1,105 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=199.89.1.16
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=143.255.12.172
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795622562;
-	b=OY8gmKvuDKpkRpf4GSc/5u/FjU+2WPtsXU7Z+OYn8UusaB+gWC0HQiA6ClLxT+T/SegL
-	 yF0KxUc+tqBLbacsfWU4FosO0wwHYu0CYF3Jw3wLiJRVqLcTEye/CSBL2JhrKZZuVyPfI
-	 JkExQu0t5FdEfLMaVJlF8vaAHDdyPvUEGQR4sGFMOTMhue9usLl2VQfh+pQ9QgBNfDy11
-	 nnLREj22IR8gWcTcOuhe8VuqIAfIKgG82HHgXIK5GlcjJT3UAvH5sYMMqeLeIHP/7mLFO
-	 D/pXT6sLgDjQeALuaoQYNHdTVVd5SO8aESbDq/td/DHpj066MNv28GVlScE5ByILiHA==
+	t=1795623656;
+	b=SUGen2wZceqEKzKVmPKM5x0fCqiqJmVuicv/8A5d+mFHzhw+nkFre8sQyfWQcMYxJXam
+	 S4XGZgsyAeuy2M7zLZXTzHH6Ch2VyG6l/nvpx7keqhzpNrYCvC9unV9OEsZSI+K24xCE2
+	 A0k7Y855oMj5NQvbo4PhbyB0XqYbkx068R0hOXERWXgAg1SriqAnN5E42o3GSJm3GNPdv
+	 I9heWm0CuW4Xs5tIwjM1wCbusYxJYwcF58yndrGCO6cr0ajw961pKFr6taB2cNsgedUbA
+	 T/3xy0ctQWjisRkNw18qMm3VMMrS70c6QDANjCElDEGFoZPPBX/C8F2OZgUQjveb3pg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795622562;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Virus-Scanned:Received:
-	 Received:Message-ID:Date:MIME-Version:User-Agent:Subject:To:Cc:
-	 References:Content-Language:From:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=2pLlpYDpA//PFP4JeljNFmIdGPmvmYjcAuyjA0H+4WY=;
-	b=fduNHc00AQUMhhVathy/xJMmTsX9mV9rLqULhF2jD7jBLBOljiKHUEfZ6SXXx2ffgZFH
-	 F+VrVhZLgU+rdMo/pyqQmiWd694TAQHAgvCRXBZFPxc9LJJVmlxGAqEdwXFKwiKdH5bxb
-	 JZkFcR6S8IO/d6nYA6ZKZ7xNuAurma4Fn9uZk51L+5WahPrLyHT0DauAJhFF8P4t27ZdW
-	 KEkJqCRU77hkVB/cYhwq4I7B+6AIADV23LUmilnXV4zvcFMLF1UgwncSuz01e/LUJDjeS
-	 0ynjtI7IB4QpepPmQdG/msJMu5q+LabDw5yewjNkjO0/K2DIskUFMcZdEaj00kti2Rg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795623656;
+	h=DMARC-Filter:DKIM-Signature:Received:Message-ID:From:To:Cc:Subject:
+	 In-Reply-To:References:Date:MIME-Version:Content-Type;
+	bh=MFjp1Epxvbzt1A9g4t7Y/jDE3CxQAavGU4RMdlNgNPA=;
+	b=gJUP6Y3aI1R3Cfii1OHn1t2hp4JPCaxEM8U+ksfg8JEZsbr9VLissd/vAd/xVPd2AX0t
+	 8fB6DhXsPbXruvMkuixYnH8m0mklObMgw32BU82IWjXJHKb/2fb5fb29Lh4k1jrCj5oEi
+	 sley+i8xHKgYfT+grgHbACf0ob6NFe4mpO1y4lUa4qtGozO3bVBLxnoiwJwChvJKjqR+o
+	 VLPJHigu9nfbNqpxCUub49H4tD97Y/3UmBg5t7MGfuNFnrGjYK/QAoB1UosfmYLeCWzDe
+	 21GrSIErvkHgGWrJ/lLSckodoTWeu9eCFZ8wU2ZhgjexDg9Z5/aKX9s4udOJRQGvoMw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=acm.org;
-	spf=pass smtp.mailfrom=acm.org;
-	dkim=pass header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=LCRgAWyl;
-	arc=none smtp.remote-ip=199.89.1.16
-Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
+	dmarc=pass header.from=manguebit.org;
+	spf=pass smtp.mailfrom=manguebit.org;
+	dkim=pass header.d=manguebit.org header.i=@manguebit.org header.a=rsa-sha256 header.s=dkim header.b="Au1x/Qfi";
+	arc=none smtp.remote-ip=143.255.12.172
+Received: from mx1.manguebit.org (mx1.manguebit.org [143.255.12.172])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C683606A31E;
-	Wed, 25 Nov 2026 16:02:41 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9C683606A31E
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC034606A32A;
+	Wed, 25 Nov 2026 16:20:55 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CC034606A32A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=manguebit.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=manguebit.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=LCRgAWyl
-Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4jZPb41GG5zllCWB;
-	Wed, 25 Nov 2026 16:02:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1795622557; x=1798214558; bh=2pLlpYDpA//PFP4JeljNFmId
-	GPmvmYjcAuyjA0H+4WY=; b=LCRgAWylv12A+5FUpV9kN9fYmKO6uvo/JWxDp6uV
-	fWJna/WbtRXi7Aa1N/fciOogZpvaP/LlpNTegTb4O+FItkbRxF1oHJto+7DCTK2M
-	Xe4HBKlBL7PU0ER5tzDX3wG7vgGCTS0EofN1LnLU4twsPLTizYkI5zpZ9Lji0u8P
-	QGlsL2lQjjuCFe9abvLKZV5rmhc5PKtDQ8A6S/i4rTnlOg9YWhgs5j+eeKyPwMmB
-	SVAvu1l+dFY60aVFSmUkI886TwjuvYbwt2VAFlMr5mz2XsQJq6ZWlkO8aVh0o8y2
-	q71CWF+zz2h92rAmAoU4HXQU1E75AWLZEv7SiB5sDyjqNw==
-X-Virus-Scanned: by MailRoute
-Received: from 013.lax.mailroute.net ([127.0.0.1])
- by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id x4zFz-Pys5p6; Wed, 25 Nov 2026 16:02:37 +0000 (UTC)
-Received: from [192.168.0.215] (c-24-6-239-25.hsd1.ca.comcast.net [24.6.239.25])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4jZPb11kj9zlqg7w;
-	Wed, 25 Nov 2026 16:02:37 +0000 (UTC)
-Message-ID: <7a2f05b3-eced-4ec1-96aa-41163b3ba8ca@acm.org>
-Date: Wed, 25 Nov 2026 08:02:35 -0800
+	dkim=pass (2048-bit key) header.d=manguebit.org header.i=@manguebit.org header.a=rsa-sha256 header.s=dkim header.b=Au1x/Qfi
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=manguebit.org; s=dkim; h=Content-Type:MIME-Version:Date:References:
+	In-Reply-To:Subject:Cc:To:From:Message-ID:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=MFjp1Epxvbzt1A9g4t7Y/jDE3CxQAavGU4RMdlNgNPA=; b=Au1x/Qfixdt8Oeg5ELWQmTzZ7d
+	wr1MiZso849kQQI90RjKYgtWlHvOsL4sUODQa+yJU/QJtei3+nwrCl8XPzyxSYVWxD0jEkv9ZHfHG
+	OmNUZEcDaNBk4Nn1E9cP7BuRGcZNEM6J6xtS4Ket7/m79g97o7hU8kn2wKyFBLeu8gwPpXcQdviQ+
+	Hln2JCas14QUSmhfJsWIjqhstDco/PUWJlhmY/+248fQXkeCIGO5O9nEwcb7Q1W2v+0HrcyzdyrIT
+	XwITUgiGSX5J7ehQY0B1lclNs46kSXv1DsiPlzDA2AP0RSCXykcJrKqmOyVKoOLO8j21CyIPiZYaT
+	T4+/q8fw==;
+Received: from pc by mx1.manguebit.org with local (Exim 4.100.1)
+	id 1xWFjN-00000000vNZ-3XTu;
+	Wed, 25 Nov 2026 13:20:25 -0300
+Message-ID: <9afd33b0951849b9a48c5a0783d76fde@manguebit.org>
+From: Paulo Alcantara <pc@manguebit.org>
+To: Randy Dunlap <rdunlap@infradead.org>, linux-kernel@vger.kernel.org
+Cc: Randy Dunlap <rdunlap@infradead.org>, Jonathan Corbet <corbet@lwn.net>,
+ Shuah Khan <skhan@linuxfoundation.org>, linux-doc@vger.kernel.org, David
+ Hildenbrand <david@kernel.org>, Andrew Morton <akpm@linux-foundation.org>,
+ Jason Gunthorpe <jgg@nvidia.com>, Leon Romanovsky <leonro@nvidia.com>,
+ linux-mm@kvack.org, Jaroslav Kysela <perex@perex.cz>, Takashi Iwai
+ <tiwai@suse.com>, linux-sound@vger.kernel.org, Jens Axboe
+ <axboe@kernel.dk>, linux-block@vger.kernel.org, Marcel Holtmann
+ <marcel@holtmann.org>, Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
+ linux-bluetooth@vger.kernel.org, Willem de Bruijn
+ <willemdebruijn.kernel@gmail.com>, Jason Wang <jasowangio@gmail.com>,
+ David Heidelberg <david@ixit.cz>, oe-linux-nfc@lists.linux.dev, Chas
+ Williams <3chas3@gmail.com>, "David S. Miller" <davem@davemloft.net>, Eric
+ Dumazet <edumazet@kernel.org>, Jakub Kicinski <kuba@kernel.org>, Paolo
+ Abeni <pabeni@redhat.com>, netdev@vger.kernel.org, Helge Deller
+ <deller@gmx.de>, linux-fbdev@vger.kernel.org,
+ dri-devel@lists.freedesktop.org, MPT-FusionLinux.pdl@broadcom.com, "James
+ E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, "Martin K.
+ Petersen" <mkp@kernel.org>, linux-scsi@vger.kernel.org, Miquel Raynal
+ <miquel.raynal@bootlin.com>, Richard Weinberger <richard@nod.at>, Vignesh
+ Raghavendra <vigneshr@ti.com>, Zhihao Cheng <chengzhihao1@huawei.com>,
+ linux-mtd@lists.infradead.org, Neill Kapron <nkapron@google.com>, Andrey
+ Konovalov <andreyknvl@gmail.com>, Greg Kroah-Hartman
+ <gregkh@linuxfoundation.org>, linux-usb@vger.kernel.org, Juergen Gross
+ <jgross@suse.com>, Stefano Stabellini <sstabellini@kernel.org>,
+ xen-devel@lists.xenproject.org, Hans de Goede <hansg@kernel.org>, Arnd
+ Bergmann <arnd@arndb.de>, "Michael S. Tsirkin" <mst@redhat.com>, Eugenio
+ =?utf-8?Q?P=C3=A9rez?= <eperezma@redhat.com>, Sean Christopherson
+ <seanjc@google.com>,
+ Paolo Bonzini <pbonzini@redhat.com>, kvm@vger.kernel.org,
+ virtualization@lists.linux.dev, Jan Kara <jack@suse.cz>,
+ linux-fsdevel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>,
+ linux-ext4@vger.kernel.org, Mike Marshall <hubcap@omnibond.com>,
+ devel@lists.orangefs.org, Namjae Jeon <linkinjeon@kernel.org>,
+ linux-cifs@vger.kernel.org, Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu
+ <chao@kernel.org>, linux-f2fs-devel@lists.sourceforge.net, Florian
+ Fainelli <florian.fainelli@broadcom.com>, Broadcom internal kernel review
+ list <bcm-kernel-feedback-list@broadcom.com>, Tzung-Bi Shih
+ <tzungbi@kernel.org>, Benson Leung <bleung@chromium.org>, David Airlie
+ <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>, Alex Deucher
+ <alexander.deucher@amd.com>, Christian =?utf-8?Q?K=C3=B6nig?=
+ <christian.koenig@amd.com>,
+ amd-gfx@lists.freedesktop.org, Jani Nikula <jani.nikula@linux.intel.com>,
+ Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, Rodrigo Vivi
+ <rodrigo.vivi@intel.com>, Tvrtko Ursulin <tursulin@ursulin.net>,
+ intel-gfx@lists.freedesktop.org, Matthew Brost <matthew.brost@intel.com>,
+ Thomas =?utf-8?Q?Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>,
+ intel-xe@lists.freedesktop.org
+Subject: Re: [PATCH v2 10/12] docs: ioctl-number: update FS entries
+In-Reply-To: <20261119053514.255348-11-rdunlap@infradead.org>
+References: <20261119053514.255348-1-rdunlap@infradead.org>
+ <20261119053514.255348-11-rdunlap@infradead.org>
+Date: Wed, 25 Nov 2026 13:20:25 -0300
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -70,31 +109,16 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 0/3] scsi: ufs: core: Add debugfs for PA TFS/FEC error
- counters
-To: Po-Wen Kao <powenkao@google.com>, linux-scsi@vger.kernel.org
-Cc: Konstantin Vyshetsky <vkon@google.com>,
- Randall Huang <huangrandall@google.com>,
- Alim Akhtar <alim.akhtar@samsung.com>, Bean Huo <beanhuo@micron.com>,
- Stanley Jhu <stanleyjhu@google.com>,
- "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K . Petersen" <mkp@kernel.org>, Peter Wang
- <peter.wang@mediatek.com>, Can Guo <can.guo@oss.qualcomm.com>,
- linux-kernel@vger.kernel.org
-References: <20261125113435.1426680-1-powenkao@google.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20261125113435.1426680-1-powenkao@google.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 
-On 11/25/26 3:33 AM, Po-Wen Kao wrote:
-> This series exposes the MIPI UniPro v3.0 PA layer TFS/FEC error
-> counters (0x15C3-0x15C7) under debugfs:
-> 
->    /sys/kernel/debug/ufshcd/<dev>/pa_err_stats/{host,device}/
+Randy Dunlap <rdunlap@infradead.org> writes:
 
-For the series:
+> Update the list of files where filesystem ioctls are defined and update
+> the ranges of function numbers that are used.
+>
+> Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+> ---
+> v2: address sashiko review comment (ext4 00-2F range referred to
+>     the wrong file name)
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Reviewed-by: Paulo Alcantara <pc@manguebit.org>
