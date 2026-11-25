@@ -1,79 +1,72 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=203.254.224.24
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.215.198
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795605556;
-	b=n9reUmYaQf2jG3L+WBmcR27JEavdvMO9W0LheKPkiFnXB5+I8Xiz0gZN/a4MyLR9g7IB
-	 6SepyrcWaho5LAHfdS4MgZUS3fohfmY5MmmiDuNAHn5nDbtpTnX9GztZeLchJvElAtmKl
-	 riHPsI3waY/8jDKO+xtvh2FM/rLZMJvF9J5coXPPhcgSz0fpxEzHu2TwEsXjTLiyh7uu/
-	 2V1qPXYqUwBqhlkzvkMwVkwCElsYTvs5AG9+ous82lXXiQRlcOqQnRLbTEgzg0YIMsyOq
-	 71BQWi45ts7O3J/eBt0DjnlO6I28/5GzLyHVTkZ89rlToofrIQRiEBFsqpPEvq8HEgQ==
+	t=1795606479;
+	b=OLpAME3tBToIJ0IbTsD0NK9klu6Z9vPIgeOfvkACak9M4MDmyGucVTK2pjkYqWX3zYgC
+	 M1suZ+UxPemrLsYBy2N2JPgY29hBW92qMrE7OoMqBnlSD/wtBWFJzG7pr+pxGZteDexij
+	 TlTtQHfzX6v3yBB0URP/fr6nQr3bNSdOn6DYv+bcvdum76R3aVlURqF6KAV3wgxz40K90
+	 VJzzh8VoGAYdW+OcczKwt7dAIQNml70q0Gcl7qkqiFxlb6axim7zI8Fb02p5itZYNHX5U
+	 NFLDK3rV6lPLQoAD/MNcf7LG47mdBZZ6Il321OhiRp19YXDAkVT51dLFkMJd40TnlVw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795605556;
-	h=DMARC-Filter:Received:DKIM-Filter:DKIM-Signature:Received:Received:
-	 Received:Received:From:To:Cc:Subject:Date:Message-Id:X-Mailer:
-	 MIME-Version:Content-Transfer-Encoding:X-CMS-MailID:X-Msg-Generator:
-	 Content-Type:X-Sendblock-Type:CMS-TYPE:cpgsPolicy:X-CFilter-Loop:
-	 X-CMS-RootMailID:References;
-	bh=aol/YqFRk4VDFuOdOrJ3/H+/AAewZsmUni4kor0IGao=;
-	b=bu00V4goKkAhR3Ljw2JodYn08uqKkca0I+UAIwpMEhEySfovWu+dQOVFglZr0l5h2J+u
-	 587mICjLUG0vRJKde7WH82X6wZ3qQ9j2Yvj+ELondE67Pa9f9iF3Ab/8OrQit8P//mNL1
-	 cuVPsvfRMDkqvLx3yB86YgWduRt8Un00iWkJkSdxSibNUGHnJzxtO2X4epFaXRUDWdOrr
-	 uU0uwXjFBRYhOE0mE7gEj9DBl4xQQlYI9tQM9/Mhd8DuewwKMMAvFZcD3ZEVUooFupR1E
-	 jWiK26uAlemrR8Ugb/EKFuv9do0DMawO41sloJOWa4lV+oRcNLAqQDjl28CHYQ/e7JQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795606479;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Gm-Message-State:X-Received:Date:Mime-Version:X-Mailer:Message-ID:
+	 Subject:From:To:Cc:Content-Type;
+	bh=61AAU+vu7fdoI9/33C3yVl5TzGMNl01fQ5U7CEh62QE=;
+	b=u5Zh6qnIpcYgJiQuKZC+X8sSC5Gy0HXFZvP5taLhrgBHIszl90zHApNGQTlHutWqDXTt
+	 cUOoclNGkzZcFgrsGRJfMzOOvGirmYtIHjh6DSn2LntpkdG7IXIFBol8tlMBm6btrsFMV
+	 UZ/stBNsffLMjQITSHhypLK7P+L0Vsmwuu6I8PNAGVRtkJp0prnYuwBkPTbZFk12T2Ghv
+	 02ZN20lKttlcyeZSAKHLrbfJNodRiLZt/l/09Szglsa/DocuEX8IMQy0+X4yAiKKhVqYT
+	 WtHZf4owZyxnc0w9X9Qe6jba7TFe1MAlScSkd0xZTumNVlj+UMvg+kFHM338Wak3S1g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=samsung.com;
-	spf=pass smtp.mailfrom=samsung.com;
-	dkim=pass header.d=samsung.com header.i=@samsung.com header.a=rsa-sha256 header.s=mail20170921 header.b=mi7xmyv8;
-	arc=none smtp.remote-ip=203.254.224.24
-Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+	dmarc=pass header.from=google.com;
+	spf=pass smtp.mailfrom=flex--powenkao.bounces.google.com;
+	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b="EOyauq/5";
+	arc=none smtp.remote-ip=209.85.215.198
+Received: from mail-pg1-f198.google.com (mail-pg1-f198.google.com [209.85.215.198])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFB97606A327
-	for <linux-scsi@vger.kernel.org>; Wed, 25 Nov 2026 11:19:15 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CFB97606A327
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43EB0606A327
+	for <linux-scsi@vger.kernel.org>; Wed, 25 Nov 2026 11:34:39 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 43EB0606A327
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--powenkao.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.a=rsa-sha256 header.s=mail20170921 header.b=mi7xmyv8
-Received: from epcas5p1.samsung.com (unknown [182.195.41.39])
-	by mailout1.samsung.com (KnoxPortal) with ESMTP id 20261125111907epoutp011f60fc33dd4f1087f4b8e9e617b5443a~rRbtofG_x1182611826epoutp01Y
-	for <linux-scsi@vger.kernel.org>; Wed, 25 Nov 2026 11:19:07 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20261125111907epoutp011f60fc33dd4f1087f4b8e9e617b5443a~rRbtofG_x1182611826epoutp01Y
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1795605547;
-	bh=aol/YqFRk4VDFuOdOrJ3/H+/AAewZsmUni4kor0IGao=;
-	h=From:To:Cc:Subject:Date:References:From;
-	b=mi7xmyv8qCtkuiWVFS1WmHypp1B+5LuE/Onl2ebD59v8iDInV6Id5ZoH609GzZGWI
-	 F+lqmxW/EE3mo6VYy1LjHcms5nMt9q6M66ehdngemO/F3tsVCwt3rRkDoK1u2ePUd5
-	 Ha+SV2YHemHMj+pNDH0NMrhl3JhgMspyl0E4rtR0=
-Received: from epsnrtp04.localdomain (unknown [182.195.42.156]) by
-	epcas5p3.samsung.com (KnoxPortal) with ESMTPS id
-	20261125111906epcas5p3ad070fe44b9392c0c2bc262258b274bb~rRbsMuv6b2807028070epcas5p3Q;
-	Wed, 25 Nov 2026 11:19:06 +0000 (GMT)
-Received: from epcas5p1.samsung.com (unknown [182.195.38.95]) by
-	epsnrtp04.localdomain (Postfix) with ESMTP id 4jZHHs0qfmz6B9m7; Wed, 25 Nov
-	2026 11:19:05 +0000 (GMT)
-Received: from epsmtip1.samsung.com (unknown [182.195.34.30]) by
-	epcas5p4.samsung.com (KnoxPortal) with ESMTPA id
-	20261125105614epcas5p4386cb5bb9966904c9ac38382eb6c753c~rRHukvjxj2438724387epcas5p4f;
-	Wed, 25 Nov 2026 10:56:14 +0000 (GMT)
-Received: from localhost.localdomain (unknown [107.99.41.245]) by
-	epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
-	20261125105612epsmtip1d13c7f175a618d2175756dfce5229682~rRHsoqeWQ1560715607epsmtip1c;
-	Wed, 25 Nov 2026 10:56:12 +0000 (GMT)
-From: Anuj Gupta <anuj20.g@samsung.com>
-To: lsf-pc@lists.linux-foundation.org, linux-fsdevel@vger.kernel.org,
-	linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-nvme@lists.infradead.org, io-uring@vger.kernel.org
-Cc: Anuj Gupta <anuj20.g@samsung.com>, Jens Axboe <axboe@kernel.dk>, Kanchan
-	Joshi <joshi.k@samsung.com>, "Martin K. Petersen" <mkp@kernel.org>,
-	Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, Alexander
-	Viro <viro@zeniv.linux.org.uk>, Christoph Hellwig <hch@infradead.org>,
-	Nitesh Shetty <nj.shetty@samsung.com>, Pavel Begunkov
-	<asml.silence@gmail.com>
-Subject: [LSF/MM/BPF TOPIC] io_uring dmabuf storage I/O: next steps
-Date: Wed, 25 Nov 2026 16:25:16 +0530
-Message-Id: <20261125105516.2160670-1-anuj20.g@samsung.com>
-X-Mailer: git-send-email 2.25.1
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=EOyauq/5
+Received: by mail-pg1-f198.google.com with SMTP id 41be03b00d2f7-cdd9fa2a558so4498263a12.0
+        for <linux-scsi@vger.kernel.org>; Wed, 25 Nov 2026 03:34:39 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20260707; t=1795606478; x=1796211278; darn=vger.kernel.org;
+        h=content-type:cc:to:from:subject:message-id:mime-version:date:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=61AAU+vu7fdoI9/33C3yVl5TzGMNl01fQ5U7CEh62QE=;
+        b=EOyauq/5Z9V3fRPTUvrk4T2ff+my56KA+lTB9XWquEQZSAkhnODJZn5gf3KYkBAZjP
+         Es0qaV8tAbj1eFRn4034orG4NoMcJ1VUvxUuSU8Xi4LokF4w3zKeuq5LsFXONi6n1qCk
+         /NZlkPOANbKXr2TOFCcXmLOVCaEGqAK4ry8RKxAQ8peUJ71tFUt7uSS3Bmyo1RFif3+k
+         bcVgJxbeS114yjBsK/GmriuoK+cieDMipuqzYsJUJDSZ0LdFFimqLD8YNfak4PuS41Ye
+         7VawVXRXrESocVwPaLXJvuZVZuAZEnp9cGuHbCzj/+USWKoW41rFnPeGJOUyv3qqWPGX
+         7KWA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1795606478; x=1796211278;
+        h=content-type:cc:to:from:subject:message-id:mime-version:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=61AAU+vu7fdoI9/33C3yVl5TzGMNl01fQ5U7CEh62QE=;
+        b=tiPc9OVhwUFbuD14WWpPnS5/ElXi5axttqGHVEwW1+sYZFvP+y/9Sbstwj2rzOnseI
+         IrfcQW49uCDzclGz3EBZZZ7A0J2JRnI35hkf842jeajq7QsXhPTkAu9G4uHSnMDSaT6G
+         gv+PuSJOZ/COoKnMmS5WaRqerj0YZBO7fEriefo5cFlWYueEzB6Jg9nyW5HjimPJRrp3
+         R163UGRKl8vrFAUsmpoCywap3VpCitXFg9vsMTR+ADqLtxkwrN0mjVenQkyHITkIwfl9
+         bQyU+BMosX6001FjQn2a/ef5k9/4Ac28VLU6bSI3aaKjR2Z10erVveAWtatuvDf63Hgn
+         Zn1w==
+X-Gm-Message-State: APuU4Z/mOouexKZ9WV+O/DEZmMVgmRdHbtX871tNqLX0Lw2KP7VgO9+f
+	H6LQYDIkkkdXu4c07hxvvfV4TXfvDO4O5gniVzyIy3H2HcklrEa1lsx0F2jRAqnqNjgPH1ImrTa
+	6sNL/3fxRNvZOQ5HiRwp0rcFHsDQzCiGVy7GjEtvLaauPT5maGAjzH4qqbPcwFCQ37S0Kqwfazd
+	+3F/gOAc7XXooS7y6LZOh4OUg5DHZ7uwzp+Ir/K/B5mEmmXIMCmz/s
+X-Received: from pfbig16.prod.google.com ([2002:a05:6a00:8b90:b0:8c5:614:d2c8])
+ (user=powenkao job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a05:6a20:734f:b0:3e2:6f90:b54c with SMTP id adf61e73a8af0-4014c350660mr19069811637.47.1795606478059;
+ Wed, 25 Nov 2026 03:34:38 -0800 (PST)
+Date: Wed, 25 Nov 2026 19:33:58 +0800
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -82,41 +75,69 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CMS-MailID: 20261125105614epcas5p4386cb5bb9966904c9ac38382eb6c753c
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: REQ_APPROVE
-CMS-TYPE: 105P
-cpgsPolicy: CPGSC10-542,Y
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20261125105614epcas5p4386cb5bb9966904c9ac38382eb6c753c
-References: <CGME20261125105614epcas5p4386cb5bb9966904c9ac38382eb6c753c@epcas5p4.samsung.com>
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.56.1.839.g22a8290db9-goog
+Message-ID: <20261125113435.1426680-1-powenkao@google.com>
+Subject: [PATCH v3 0/3] scsi: ufs: core: Add debugfs for PA TFS/FEC error counters
+From: Po-Wen Kao <powenkao@google.com>
+To: linux-scsi@vger.kernel.org
+Cc: Konstantin Vyshetsky <vkon@google.com>, Randall Huang <huangrandall@google.com>, 
+	Alim Akhtar <alim.akhtar@samsung.com>, Bart Van Assche <bvanassche@acm.org>, 
+	Bean Huo <beanhuo@micron.com>, Stanley Jhu <stanleyjhu@google.com>, 
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>, 
+	"Martin K . Petersen" <mkp@kernel.org>, Peter Wang <peter.wang@mediatek.com>, 
+	Can Guo <can.guo@oss.qualcomm.com>, linux-kernel@vger.kernel.org, 
+	Brian Kao <powenkao@google.com>
+Content-Type: text/plain; charset="UTF-8"
 
-Hi all,
+From: Brian Kao <powenkao@google.com>
 
-Nitesh and I would like to propose a joint Storage and Filesystem
-session to discuss the next steps for io_uring dmabuf storage I/O.
+This series exposes the MIPI UniPro v3.0 PA layer TFS/FEC error
+counters (0x15C3-0x15C7) under debugfs:
 
-Pavel's raw block device support landed in 7.4[1]. We would like to
-use the session to discuss the following:
+  /sys/kernel/debug/ufshcd/<dev>/pa_err_stats/{host,device}/
 
-1. Filesystem I/O: RFCs have been posted for XFS[2] and ext4[3], and we
-   are working on a combined series[4]. Open topics include files
-   spanning multiple devices and support for additional filesystems.
-2. NVMe/RDMA: we posted an RFC[5] for direct I/O between accelerator
-   memory and storage over NVMe/RDMA.
-3. Vectored I/O: support readv/writev with dmabuf registered buffers.
-4. Polled I/O: enable polling for workloads that need the lowest
-   latency and overhead.
-5. NVMe multipath support.
+Patch 1 fixes an existing teardown race by removing debugfs and
+disabling debugfs_ee_work before scsi_remove_host() removes the WLUN.
+Patch 2 defers debugfs creation until after device init while keeping
+debugfs_ee_work initialization before IRQs are enabled. Patch 3 adds
+the PA_TFS_* and UniPro 2.0/3.0 definitions and creates
+pa_err_stats/{host,device}/ based on PA_LOCALVERINFO / PA_REMOTEVERINFO.
 
-[1] https://lore.kernel.org/linux-block/cover.1791975048.git.asml.silence@gmail.com/
-[2] https://lore.kernel.org/linux-block/20261016091919.971295-1-anuj1072538@gmail.com/
-[3] https://lore.kernel.org/linux-block/20261113070621.273953-1-mengmeng.zhao@linux.dev/
-[4] https://lore.kernel.org/linux-xfs/20261124084025.2101804-1-anuj20.g@samsung.com/
-[5] https://lore.kernel.org/linux-nvme/20261118103327.1788667-1-anuj20.g@samsung.com/
+Changes in v3 (suggested by Bart Van Assche):
+- Split the ufshcd_remove() teardown fix into patch 1 with Fixes and
+  stable tags.
+- Patch 2: Initialize debugfs_ee_work and debugfs_ee_rate_limit_ms
+  before IRQs are enabled via ufs_debugfs_ee_init(), and document the
+  later fault-injection attribute initialization.
+- Patch 3: Gate host/ and device/ on UniPro version (PA_LOCALVERINFO /
+  PA_REMOTEVERINFO >= UFS_UNIPRO_VER_3_0), merge the duplicated host
+  and device attribute arrays into one via debugfs_create_file_aux_num(),
+  update the hba_from_file() comment, and clarify the 64-bit read/reset
+  comments.
 
-Thanks,
-Anuj
+Changes in v2:
+- Defer ufs_debugfs_hba_init() until after device init (suggested by
+  Peter Wang).
+- Create pa_err_stats/host/ and device/ only when supported instead of
+  returning -EOPNOTSUPP on read/write.
+
+Link: https://lore.kernel.org/linux-scsi/20261124012951.3143833-1-powenkao@google.com/
+Link: https://lore.kernel.org/linux-scsi/20261123025745.1743640-1-powenkao@google.com/
+
+Brian Kao (3):
+  scsi: ufs: core: Remove debugfs before removing SCSI host
+  scsi: ufs: core: Defer debugfs init until after device init
+  scsi: ufs: core: Add debugfs for PA TFS/FEC error counters
+
+ drivers/ufs/core/ufs-debugfs.c | 244 ++++++++++++++++++++++++++++++++-
+ drivers/ufs/core/ufs-debugfs.h |   2 +
+ drivers/ufs/core/ufshcd.c      |   8 +-
+ include/ufs/unipro.h           |   9 +-
+ 4 files changed, 252 insertions(+), 11 deletions(-)
+
+
+base-commit: 08fec21faae44fe002467976befd68e6e62969b5
+-- 
+2.56.1.839.g22a8290db9-goog
+
