@@ -1,143 +1,44 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=101.71.155.67
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795587250;
-	b=081eOvlMPfLlU0d+s8sW4ZA85MI3fQ0o6OHnFTFgX3AihtaynEmHENi5xwLQHseCeaqJ
-	 YYggviO+T03kigQ2m8DNHREdHcOaIW1G5CsL20SY7sVyCXNBmfTDTCT+ygy2splU5ju1j
-	 ktGAEuCUpkVX/MVcURb5HLzUCWKZZS68eQnuv07NibfZY1ZyfCo1952mGwW3oYX3uQ3fO
-	 knNFTh9zFPmB5a8dTujxV7MojIVKyGzC+W+0yC7uwUw/A4PGvTIM6r0jvZGb5mMoPRHKj
-	 idupLMEWfbFdDLJNmY1mLiBsbNtEnskSsbGmsIdJnMx8/w7hwKp6tcKoVPvoPpiAs/g==
+	t=1795589967;
+	b=icjxcGGHumylZd0rH7UStdmwiRsMYX8F+UyGNIRf+uSg/TEkJd4fFywJprzlZ1WUcgk+
+	 MwtcqYor9pFXWR4Y6V4hCYdC2rRNBBWI8VYD+zydafcLHFxU4PDeSjoRMWN16JYVjXYDJ
+	 yvmVa6FzrB/E69+i0PZ1+InSVJauTQOi5nETqLRgl42fObkskrKDPiOQrZH8VMvoxyTeV
+	 ZAUY66y/SV7LVEHCs4kpdSsSLrCqi3p+faz6Fq9JkNnIcwB1OtydTlm6xuXjy18y2tj4r
+	 witFWtSYHPHnkUF3IiH+izZJ+sRC/tTQF5GKp8+b5taHa8U4Ge43p6mT8HIa/Hq3yFg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795587250;
-	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
-	 Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=mK0QR/k2eawBNLkbZvYP+HhTb9RDx4V5SHTUcbCD1c4=;
-	b=qObq5UXdYYxgSHwEtUSq3nBBNv4pFyOA45z/q1bQ7WsYiPQ377WLUbN4HH/8IZLM7tcA
-	 YOENaR25pYi06TiPPwzek8gGp+JkrwosCwZAt/9+fVLrUm+Lpu1BBthfqsJi481F39Kjd
-	 pEX2BsZ3t6XmpjDRDrG1dHx+2TNR2N4YiiBwQ1lFDM8sOA0uGaa5IBAf7VkAH1taAKgyr
-	 xYHPlY01gh4rqHxlJXj9porIf0cgPlELmjcN90PaqNtFdboWbVMusomGueEmQRLXz6b+1
-	 TiGNssYCsToypAfhOKbTo9ghWJGXc5SDAXW6ufgQFSkD0tPzQIRQEhG8Kf76puAEi0g==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795589967;
+	h=DMARC-Filter:Received:Message-ID:Date:MIME-Version:User-Agent:
+	 Subject:To:Cc:References:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding:X-HM-Tid:X-HM-MType:X-HM-Spam-Status:
+	 DKIM-Signature;
+	bh=zWgMaVlUK+pEGxYO/yLxMYqPp5g9P1N6B10aXl4L3pU=;
+	b=Y0UdbCWVvkYQ78reMZeK6ehRKSowDKapomhthA/UyCpILsoTaBCpsbxeBqdwWaGMSuX9
+	 sVNFd6Wt70ziN1ZlR7ad0ABtP3++Dnj18td/fzNSaf7ceV1HXC5PxtnsA6TZhlN8g5fvu
+	 Yjdr3XOaJxleqncWC5Q+BJfYYIFi7NeT/tWz4dO5DkF8AFyWEf6vzneKBNorWmG1Qpjfc
+	 2hD9cSRSpCioGfTXKnTM3nNVDvZlcgZGOkudT+YmzctznMwY8Oy+Dgvt7fXG0T65foYVl
+	 EAm1f9g9wLzV0RN7U78mSh0GhLG7fmsPAb7HPTLOteg/csU8DaTYrT//05LXlZuLP6w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=infradead.org;
-	spf=pass smtp.mailfrom=infradead.org;
-	dkim=pass header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=bombadil.20210309 header.b=SqbDuDIo;
-	arc=none smtp.remote-ip=198.137.202.133
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+	dmarc=pass header.from=leap-io-kernel.com;
+	spf=pass smtp.mailfrom=leap-io-kernel.com;
+	dkim=pass header.d=leap-io-kernel.com header.i=@leap-io-kernel.com header.a=rsa-sha256 header.s=default header.b=QO4evdgi;
+	arc=none smtp.remote-ip=101.71.155.67
+Received: from mail-m15567.qiye.163.com (mail-m15567.qiye.163.com [101.71.155.67])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E1DA60A5BD0;
-	Wed, 25 Nov 2026 06:14:09 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0E1DA60A5BD0
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=infradead.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C8CF606A31E
+	for <linux-scsi@vger.kernel.org>; Wed, 25 Nov 2026 06:59:24 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8C8CF606A31E
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=leap-io-kernel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=leap-io-kernel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=bombadil.20210309 header.b=SqbDuDIo
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=mK0QR/k2eawBNLkbZvYP+HhTb9RDx4V5SHTUcbCD1c4=; b=SqbDuDIodYP6BDMFiCPB+z0v5h
-	Wf8OZ/z8+c64yrSOhWNYDki4bIj7nXUsz0/8hjRSflwjz17ZYrEwSWjYzz/FGm8XelFoyiwOANJe8
-	k9V0ao/jXKEygg8Txc8vT8ZKnlaLLvZ8vi7Cu9bbOZADPxyYGOcB9SJPKWm3FABmaSxupujCzYpar
-	RBFc3L+WNPt1ER6m4syoikCMKUu0vn82kUcotGc2QkZv43q0PhftY1c8ITZR5APlT6gbbqTm2+OkK
-	RKn8HXpo/mWc0Fg2xo1JmtQTlTkFbNi72t51jkUayyle/iQXCpf/WxZwuJxyQ9w65npgSUR+5MDR8
-	JXWofKRw==;
-Received: from [50.53.43.113] (helo=bombadil.infradead.org)
-	by bombadil.infradead.org with esmtpsa (Exim 4.100.1 #2 (Red Hat Linux))
-	id 1xW6Gf-00000008Wvh-0IvX;
-	Wed, 25 Nov 2026 06:14:09 +0000
-From: Randy Dunlap <rdunlap@infradead.org>
-To: linux-kernel@vger.kernel.org
-Cc: Randy Dunlap <rdunlap@infradead.org>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	linux-doc@vger.kernel.org,
-	David Hildenbrand <david@kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Jason Gunthorpe <jgg@nvidia.com>,
-	Leon Romanovsky <leonro@nvidia.com>,
-	linux-mm@kvack.org,
-	Jaroslav Kysela <perex@perex.cz>,
-	Takashi Iwai <tiwai@suse.com>,
-	linux-sound@vger.kernel.org,
-	Jens Axboe <axboe@kernel.dk>,
-	linux-block@vger.kernel.org,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
-	linux-bluetooth@vger.kernel.org,
-	Willem de Bruijn <willemdebruijn.kernel@gmail.com>,
-	Jason Wang <jasowangio@gmail.com>,
-	David Heidelberg <david@ixit.cz>,
-	oe-linux-nfc@lists.linux.dev,
-	Chas Williams <3chas3@gmail.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@kernel.org>,
-	Jakub Kicinski <kuba@kernel.org>,
-	Paolo Abeni <pabeni@redhat.com>,
-	netdev@vger.kernel.org,
-	Helge Deller <deller@gmx.de>,
-	linux-fbdev@vger.kernel.org,
-	dri-devel@lists.freedesktop.org,
-	MPT-FusionLinux.pdl@broadcom.com,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <mkp@kernel.org>,
-	linux-scsi@vger.kernel.org,
-	Miquel Raynal <miquel.raynal@bootlin.com>,
-	Richard Weinberger <richard@nod.at>,
-	Vignesh Raghavendra <vigneshr@ti.com>,
-	Zhihao Cheng <chengzhihao1@huawei.com>,
-	linux-mtd@lists.infradead.org,
-	Neill Kapron <nkapron@google.com>,
-	Andrey Konovalov <andreyknvl@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-usb@vger.kernel.org,
-	Juergen Gross <jgross@suse.com>,
-	Stefano Stabellini <sstabellini@kernel.org>,
-	xen-devel@lists.xenproject.org,
-	Hans de Goede <hansg@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	=?UTF-8?q?Eugenio=20P=C3=A9rez?= <eperezma@redhat.com>,
-	Sean Christopherson <seanjc@google.com>,
-	Paolo Bonzini <pbonzini@redhat.com>,
-	kvm@vger.kernel.org,
-	virtualization@lists.linux.dev,
-	Jan Kara <jack@suse.cz>,
-	linux-fsdevel@vger.kernel.org,
-	"Theodore Ts'o" <tytso@mit.edu>,
-	linux-ext4@vger.kernel.org,
-	Mike Marshall <hubcap@omnibond.com>,
-	devel@lists.orangefs.org,
-	Paulo Alcantara <pc@manguebit.org>,
-	Namjae Jeon <linkinjeon@kernel.org>,
-	linux-cifs@vger.kernel.org,
-	Jaegeuk Kim <jaegeuk@kernel.org>,
-	Chao Yu <chao@kernel.org>,
-	linux-f2fs-devel@lists.sourceforge.net,
-	Florian Fainelli <florian.fainelli@broadcom.com>,
-	Broadcom internal kernel review list <bcm-kernel-feedback-list@broadcom.com>,
-	Tzung-Bi Shih <tzungbi@kernel.org>,
-	Benson Leung <bleung@chromium.org>,
-	David Airlie <airlied@gmail.com>,
-	Simona Vetter <simona@ffwll.ch>,
-	Alex Deucher <alexander.deucher@amd.com>,
-	=?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
-	amd-gfx@lists.freedesktop.org,
-	Jani Nikula <jani.nikula@linux.intel.com>,
-	Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
-	Rodrigo Vivi <rodrigo.vivi@intel.com>,
-	Tvrtko Ursulin <tursulin@ursulin.net>,
-	intel-gfx@lists.freedesktop.org,
-	Matthew Brost <matthew.brost@intel.com>,
-	=?UTF-8?q?Thomas=20Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>,
-	intel-xe@lists.freedesktop.org
-Subject: [PATCH v3 11/12] docs: ioctl-number: update platform entries
-Date: Tue, 24 Nov 2026 22:13:38 -0800
-Message-ID: <20261125061340.3402300-12-rdunlap@infradead.org>
-X-Mailer: git-send-email 2.56.1
-In-Reply-To: <20261125061340.3402300-1-rdunlap@infradead.org>
-References: <20261125061340.3402300-1-rdunlap@infradead.org>
+	dkim=pass (2048-bit key, unprotected) header.d=leap-io-kernel.com header.i=@leap-io-kernel.com header.a=rsa-sha256 header.s=default header.b=QO4evdgi
+Received: from [10.0.66.4] (unknown [222.130.22.242])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 55edb2e26;
+	Wed, 25 Nov 2026 14:59:14 +0800 (GMT+08:00)
+Message-ID: <0af6c5dc-56af-4882-a3d9-609586925e9d@leap-io-kernel.com>
+Date: Wed, 25 Nov 2026 14:59:13 +0800
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -147,48 +48,80 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi: leapraid: fix off-by-one in reply frame address
+ validation
+To: zhangchujun <zhangchujun@cmss.chinamobile.com>,
+ "Martin K . Petersen" <mkp@kernel.org>
+Cc: linux-scsi@vger.kernel.org, Kees Cook <kees+treewide@kernel.org>,
+ "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>
+References: <20261120083000.1961-1-zhangchujun@cmss.chinamobile.com>
+From: Dongdong Hao <doubled@leap-io-kernel.com>
+In-Reply-To: <20261120083000.1961-1-zhangchujun@cmss.chinamobile.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
+X-HM-Tid: 0aa211805d2a03aekunm0e00b83a9fab7b
+X-HM-MType: 1
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFITzdXWRgWCB1ZQUpXWS1ZQUlXWQ8JGhUIEh9ZQVkaSktNVh4dGhkdHU9CGhpPHlYVFA
+	kWGhdVEwETFhoSFyQUDg9ZV1kYEgtZQVlJSUlVSkhLVUlJVUlPSVlXWRYaDxIVHRRZQVlPS0hVQk
+	JJTkpVSktLVUpCS0JZBg++
+DKIM-Signature: a=rsa-sha256;
+	b=QO4evdgiyMLO7V2Yrm0vs2dIizh1ZwHBmtOrnGo9O+1+1JRAHwqs0/PbxYJWuZplRx53Icer9H0aflZLN/WmAQXT3SzwaxYGN3817TnFmat3jNrpne2ENGky0SvZL65wfXt2HrIK9e2yGoZqZorVvf02zFuL0Epp7j2CXSFkdomdIu3cIkjgyE6YTOI+eC4QMERp8myFVRQ2/7EkToAN3jTcd4F74lh0MfZ46wa9RGul2gXzX8pmQIo2V6mWxxe9rD8A+z9Woax3kQRFdLfIadB17rw8tp+M+CAtZgdV4Nto8gLt/tKrEp5jORgTzU8SMNCUIWMa0LSkct4cSZQZMw==; s=default; c=relaxed/relaxed; d=leap-io-kernel.com; v=1;
+	bh=zWgMaVlUK+pEGxYO/yLxMYqPp5g9P1N6B10aXl4L3pU=;
+	h=date:mime-version:subject:message-id:from;
 
-Update the list of platform/ files where ioctls are defined and update
-the ranges of function numbers that are used.
+在 2026/11/20 16:30, zhangchujun 写道:
+> The reply message buffer spans [rep_msg_dma, rep_msg_dma +
+> rep_msg_qd * LEAPRAID_REPLY_SIZE).  The sanity check on the reply
+> frame address returned by the firmware uses a strict "rep > end"
+> comparison, so a reply address equal to the end of the buffer is
+> still accepted.  leapraid_get_reply_vaddr() then computes
+> rep_msg + rep_msg_qd * LEAPRAID_REPLY_SIZE, a pointer one past the
+> end of the buffer, and the completion path dereferences it, reading
+> outside the DMA allocation.  The out-of-range address is also
+> written back to rep_msg_addr[] for firmware reuse, which would
+> make firmware DMA into memory beyond the reply buffer.
+> 
+> This check is the only guard against an out-of-range reply address
+> from a misbehaving adapter, so make the upper bound check
+> inclusive-correct by using >=.
+> 
+> Fixes: 5597088c9e79 ("scsi: leapraid: Add new SCSI driver")
+> Signed-off-by: zhangchujun <zhangchujun@cmss.chinamobile.com>
+> 
+> diff --git a/drivers/scsi/leapraid/leapraid_func.c b/drivers/scsi/leapraid/leapraid_func.c
+> index 573bccf1a4ce..c54797e22e74 100644
+> --- a/drivers/scsi/leapraid/leapraid_func.c
+> +++ b/drivers/scsi/leapraid/leapraid_func.c
+> @@ -5667,7 +5667,7 @@ static void leapraid_request_descript_handler(
+>  		break;
+>  	case LEAPRAID_RPY_DESC_FLG_ADDRESS_REPLY:
+>  		rep = le32_to_cpu(rpf->addr_rep.rep_frame_addr);
+> -		if (rep > (u32)adapter->mem_desc.rep_msg_dma +
+> +		if (rep >= (u32)adapter->mem_desc.rep_msg_dma +
+>  			   adapter->adapter_attr.rep_msg_qd *
+>  			   LEAPRAID_REPLY_SIZE ||
+>  		    rep < (u32)adapter->mem_desc.rep_msg_dma)
 
-Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
-Acked-by: Tzung-Bi Shih <tzungbi@kernel.org> # cros_ec
----
-v2: no change
-v3: rebase
+Hi Chujun,
 
-[Since having multiple maintainers trying to merge these would
-cause some conflicts, it would be more manageable for Jon to
-take all of these through the docs-next tree.]
+Thanks for spotting this issue.
 
-Cc: Jonathan Corbet <corbet@lwn.net>
-Cc: Shuah Khan <skhan@linuxfoundation.org>
-Cc: linux-doc@vger.kernel.org
-Cc: Florian Fainelli <florian.fainelli@broadcom.com>
-Cc: Broadcom internal kernel review list <bcm-kernel-feedback-list@broadcom.com>
-Cc: Tzung-Bi Shih <tzungbi@kernel.org>
-Cc: Benson Leung <bleung@chromium.org>
+Changing > to >= fixes the off-by-one error, but the address validation
+is still incomplete. The upper bound should be the starting address of
+the last reply frame, and we should also check whether the offset from
+the base address is aligned to LEAPRAID_REPLY_SIZE.
 
- Documentation/userspace-api/ioctl/ioctl-number.rst |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Moreover, the current handling of invalid reply addresses is
+insufficient. An invalid reply address from the firmware indicates a
+potentially catastrophic failure and warrants more aggressive handling.
 
---- linux-next-20261123.orig/Documentation/userspace-api/ioctl/ioctl-number.rst
-+++ linux-next-20261123/Documentation/userspace-api/ioctl/ioctl-number.rst
-@@ -434,6 +434,7 @@ Code  Seq#    Include File
- 0xBA  00-0F  uapi/linux/liveupdate.h                                   Pasha Tatashin
-                                                                        <mailto:pasha.tatashin@soleen.com>
- 0xC0  00-0F  linux/usb/iowarrior.h
-+0xC4  00-1F  platform/raspberrypi/vchiq-interface/vchiq_ioctl.h
- 0xCA  00-0F  uapi/misc/cxl.h                                           Dead since 6.15
- 0xCA  10-2F  uapi/misc/ocxl.h
- 0xCA  80-BF  uapi/scsi/cxlflash_ioctl.h                                Dead since 6.15
-@@ -446,7 +447,7 @@ Code  Seq#    Include File
- 0xDD  00-3F                                                            ZFCP device driver see drivers/s390/scsi/
-                                                                        <mailto:aherrman@de.ibm.com>
- 0xE5  00-3F  linux/fuse.h
--0xEC  00-01  linux/platform_data/cros_ec_chardev.h                     ChromeOS EC driver
-+0xEC  00-02  linux/platform_data/cros_ec_chardev.h                     ChromeOS EC driver
- 0xEE  00-09  uapi/linux/pfrut.h                                        Platform Firmware Runtime Update and Telemetry
- 0xEF  00-0F  uapi/linux/ntfs.h                                         NTFS
- 0xF3  00-3F  drivers/usb/misc/sisusbvga/sisusb.h                       sisfb
+We have reviewed the driver and identified more than ten issues,
+including this one. We plan to address them together in an upcoming
+patch series and will include the following tag in the corresponding patch:
+
+Reported-by: zhangchujun <zhangchujun@cmss.chinamobile.com>
+
+Thanks,
+Dongdong
