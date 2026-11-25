@@ -1,153 +1,100 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.210.175
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.43
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795634657;
-	b=SCx1gKM5E2deTUk9dmoJ3POT2sBahg5Oa7eKu/bC4ecLmf7J4wEE9kzt0vUgQpm19U6F
-	 rmOjVdrxrFP61kyRP8RUSMBveSJsxd0GJE6/JixknJ5Knf6PMohtG2BSezHbkpHzudRCZ
-	 eaVfbbQikD5vohZFMMvP7K2XP1ywSQUVf80uSu/oyj7yxVmRtZPQCKdcXa/iIrDm5BcSt
-	 UrH3Yw0xF1m83vgdhFYFutffQ8F5PlluldVJuEZJ49C1wbaVYU4cT7+CK7To4WsuhTUdf
-	 dUoj+nT3FIXgAnKomkzBlwue0paMc35QtycZVSEKjatZ5GG5gneL0uIc3XWWcOFgtrg==
+	t=1795635522;
+	b=R11wqCPfK0Zgjr4ylN/cVmdgoJHmXs1SrZgkFpD0QF8lG4Tr8Nmlp7RsDihc7O2lMH9v
+	 nIVKmzmfMtKy1Gr8LCplRqRrsWTATUNjegnXW/A5F9Mvg+ivCcMH+JDoNv0xUQ0DqM7yc
+	 tLs+KHHv0E6K47cHmY6Fg3LAdTzc1eeCehPQmuX6JSNmg2cF+PuvhZ/UFFR/U0XmtyUnP
+	 r5APaXvqwtTmRpoU5W46EHSYi61jPokXryOSejXy9OocWlSqvYTiQuUje4htMFj7v7zhW
+	 BRKghFUBEU+iTK8v0KSRaZVAqvTEb78fIAIMT/QWsQpJZ8JcXpbS2aySPK+wZV+f9hA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795634657;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795635522;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To;
-	bh=N55gjPKFtoyQEkpZ+mulBFdiGvAn3buEDUMJWwRWBLA=;
-	b=fcYSPoK1zlYKZnWwCH14OJ95VlItFUpqry6pKp/O+XGy3xzw0XvVr0q1Y4pdBanBc2lv
-	 8veeMF5I5ESGoXATIR8yCG8pakN7DMg9BP0B9eI31oEhHuLrFV71tycqIBJPTH2B98HQ+
-	 QkWlSSq7fgg6iA99sydhUiO+sgpCGEZcpPcFI8QD0A4U8oYYheJMGkAF7SQhPG/yVvu8a
-	 +In+o2IzwSFYVr9nATECLNlNPEdvaSWg9vYaQirzTVu+rjTEh3DmbviyhxqlibJa0xl4e
-	 ubckLMZEIrvPNtkggYTkAWt3BWt0K+lrhCpujqz8Q/zwMHiHhFUCahrGpfynSRFvFxQ==
+	 From:To:Cc:Subject:Date:Message-Id:X-Mailer:In-Reply-To:References:
+	 MIME-Version:Content-Transfer-Encoding;
+	bh=6wTnULH75vJSwiwoODIMLxKb+zlMScOTEx4i9CMk/nc=;
+	b=z3GywQUPwdcA+IvH1hSGFsEgdfEc9bU5vw4eWqPpjAoJTDzaIdGvSDC0GK7AgPlTrfnz
+	 2HejDmIiVO8M7Gld4kshHOMUtDtCf4FTp3Fyf078cRinuFO+B7Qz/tKgiMHOe4qkEbaQG
+	 4bUlo749Lpvjj4qqtTPZloD7BBkyipMaqY2T0pfjN7u+EtYxen5GBEXSMXncsusPSZ+ld
+	 J/55mn9BaVGQuJcCBUl+lTnznnLacm95zkjRWXuixktljbgsH8fnaZ3iJ6BecYpUAe+bh
+	 vHUplw2u4WwsGCGUU4uxk2wcP6WiqJQ2ErL56rc96KxIPUlu17eckStqk34EO3bAWJA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=google.com;
-	spf=pass smtp.mailfrom=google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=oCGp0YcP;
-	arc=none smtp.remote-ip=209.85.210.175
-Received: from mail-pf1-f175.google.com (mail-pf1-f175.google.com [209.85.210.175])
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=k+FCSUCv;
+	arc=none smtp.remote-ip=74.125.82.43
+Received: from mail-dl1-f43.google.com (mail-dl1-f43.google.com [74.125.82.43])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BD09606A684
-	for <linux-scsi@vger.kernel.org>; Wed, 25 Nov 2026 19:24:16 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4BD09606A684
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B5A4606A327
+	for <linux-scsi@vger.kernel.org>; Wed, 25 Nov 2026 19:38:41 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4B5A4606A327
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=oCGp0YcP
-Received: by mail-pf1-f175.google.com with SMTP id d2e1a72fcca58-8ca6a12efd9so2079935b3a.1
-        for <linux-scsi@vger.kernel.org>; Wed, 25 Nov 2026 11:24:16 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=k+FCSUCv
+Received: by mail-dl1-f43.google.com with SMTP id a92af1059eb24-1b5786e099cso4621042c88.0
+        for <linux-scsi@vger.kernel.org>; Wed, 25 Nov 2026 11:38:41 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20260707; t=1795634656; x=1796239456; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=N55gjPKFtoyQEkpZ+mulBFdiGvAn3buEDUMJWwRWBLA=;
-        b=oCGp0YcPvUHi0mkvNJzYjDzOqfg0gHs6ETaxOw6iHkwvvSF4tYjvsaGjV95aPOdQou
-         dmAQRQLqlhN3jiNznQ2pOjzWEW/G2t/wbqDp6HuYWHKE0XMdFq9FvURpTwt3LZNjNOiI
-         XwXkQTulincExFaiUQD3ExWzaLJgh5f90EbERJvf+q5dn2l8/In7F6eLtSCHApz045QY
-         AGa84JuoW96MF2RwV40xmLUxu2P+/+qEsF28w8+r12XoJqwGJeCssnVaJxVXWHGiUXGn
-         ECyAOK186fme41Oi47Fv+x2wiNPNPpqw/d4+KhlG9F3LQdPCn4i+tof3zaLzJI7SrBz8
-         moaw==
+        d=gmail.com; s=20260707; t=1795635520; x=1796240320; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=6wTnULH75vJSwiwoODIMLxKb+zlMScOTEx4i9CMk/nc=;
+        b=k+FCSUCvDpX4i/W8kPyZVk3YdLizmtnxCmt94XBilrEbAtxCeVAY0AZqZt4CSnwLLi
+         NFh9VxBs4haSQhz5kcrOua4Gbeu0Fk3cMgDmu9kMFJqpNA48JBcEFTy8O73hnL6dfM6X
+         FXct+cBNtBbtY/8mha1f9bwXKySLUk6pgCUC359CSmkyDlqo5vVrYk5aSZJw2dJLFaRx
+         /OZrrv2nu8YQZXVG8G99mW7fiyQS6Ok6WD7UhGvNilS6uH9V2AgOx71VikZtni7Ql6gD
+         IeF6TVXz42LTK9s6NEGpIytWKWuoZxFZiJz34oX1uKgyfotGNoEpmEGdegbv8n17iUrd
+         scpg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795634656; x=1796239456;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=N55gjPKFtoyQEkpZ+mulBFdiGvAn3buEDUMJWwRWBLA=;
-        b=2ZsA26ZWjC5A/yPa+/IA6YqxOuZxOc1ukC4S5OGLJvwftHYkNIWKGYwPAe4CKE3vgr
-         zd+ZI6aYSWnjKXzvrvjSDS/M4d+Gfxzkjw9QdrZ1VY+TpMApzFCQCCibLUjBzECrxpEe
-         JphoU1y40ugketMQ02cG+qpgZcIqj4b6dIPZ870QkVZ0kfCJYPbKAzJRg1x6FMxhEBac
-         PGYxrsRES7fJY1zbFQvME+yudEGZ0RCXy+LyIbxWLKO33Oft91mtLNNHlwt+rMyGVBXw
-         xrTnEdVPV6fEkArmbSuY9qFQTtCmc7cQOnnSyb98LcnN+k8trPDXS0xOvMyptyfDrwN2
-         h37w==
-X-Forwarded-Encrypted: i=1; AL+hErF/Ui3gy0ga8tqB+Y2Z0Pfn9d35vZCetlgGu/ER1maW6fjlLTUFCT35hREpw19trqEshKBcRSSlj4tB@vger.kernel.org
-X-Gm-Message-State: APuU4Z+mWebORqxotwcSkd+M5Fp1Umrlh0VcgZZh7uFycej+p78+46ax
-	Qedn6Ud0bnNegqfZGL8mSLk7njzUUS1zz8vj/9bEAzXITiSoqNRSiQlykJdIwFrrNg==
-X-Gm-Gg: AZFdTZc/K0LzCwnP7R8WCZukVvBL28r3dvHsdqbB0FWQO6ADGW7lQ56NMIqBAhMjTFD
-	5AwLQm/3myjNBAPHtDvr9h5BdXob0hY69jAOeAy33Jl0kQHicK3Q9RZUdkWzh/BHfAV/20IcHyf
-	JfAy2WDmTk85T4hqvXmatMWlfaE4lQ8LqE0HVOV2nIr6E/uoMgWT/W5mpMC7p3uD5NLvw6iAFx+
-	WcDiw4YM+R1GmiYvsfeGgiHlM4Wpbzn+ydi1iyugkDl5NWmX5EzuVH7bDPxMG7MBNLKU3DQYNNW
-	vUVZsKqSJpJ/lvMZLzuHG6NYUqDKik7JnrgUuzyaCcuM4JWztbteHk30nGc8Mq47D7Ow6Xr5TdQ
-	HrtJ2jFPuefLzuplKtzgMRCnrOExRgcE8VKOuE/TbQyl5OL5guuyrkelaSqJivXWAoYHmSHLANX
-	Gzj9fJ/AnjCEAu9Yx733ulLCC59Yb5KKLs1OqlYK4zXsR1+uXnbZYcIz5UAo77gRJ4mBE7yHybX
-	tkFXm/KgCa30HX5taGgCzbGcX63nKC0BOqoByfK0syWoXO65s/7b3SoQx2qnwZ26ZqHZpht8xcN
-	Ezo0/M2srkfSBFJ67jukPKsNrY6Ap2oxpYNexhYdl3k5Pf75LigcfpUiaoGEyuiNIx1XnZlI0cx
-	tGblXtExgao6DWNpz8+PteyE0hPMb/m24rB94rDQAOzCTPYXplKg3x35dbMx7wqXwpD9w9BNY7w
-	kD3ntA7ktWTQ==
-X-Received: by 2002:a05:6a00:a908:b0:886:773d:a6a with SMTP id d2e1a72fcca58-8c87c199463mr15925448b3a.28.1795634654761;
-        Wed, 25 Nov 2026 11:24:14 -0800 (PST)
-Received: from google.com (196.126.197.35.bc.googleusercontent.com. [35.197.126.196])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-8c87077bc47sm9717494b3a.6.2026.11.25.11.24.13
+        d=1e100.net; s=20260707; t=1795635520; x=1796240320;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=6wTnULH75vJSwiwoODIMLxKb+zlMScOTEx4i9CMk/nc=;
+        b=RP3VhAR1S7Dxhoa1KG3cp14lTnbPXO6Ps0xKxQT6zu/44ZmNTWZyaI6UesBNrMySnn
+         CI7blDobBaPyPVjXacr0qcnsXntVlZpwMzjIvw7qjFT5bogU+CNcmNaOog+HPr7Iv8ei
+         LXp7kMsz/BsyuCkzSFU68y7YQYWSs+71qM3HjEjSuqnzAuQVQXFd1uUrc3HssO0qs7+y
+         izPQHqXjSr11MaZHtFsvpYHLhVgTIhfnPUUyx8ZaY4EPdlhMYR/Z8TgwAg/E9SaASjpR
+         MhzpoJ5zlZcL0tMg+x08ObkgA7cNjUJR167fe27D35U3b8hbB46VB5gCvr+zWLpiBMGv
+         33Ng==
+X-Forwarded-Encrypted: i=1; AL+hErFZfKdIY/Wdq6l54Mnp2hxhvLCx8+UtMVT2GmDwQWRZid/m8ny++gwjKIHQrPH1GaczSCb6x6SwywF1@vger.kernel.org
+X-Gm-Message-State: APuU4Z8j/izbxbM5WAIsKLQhV4jLQCOzV2TI5hBbqWpdvnr8UAqbOXSZ
+	1LUYKm0BTL7lJhBAwzoeAfa7v8rqDXeaE9EKYNrAev99oaMNnOSlKcv9
+X-Gm-Gg: AZFdTZdEtAprTy8C3CXuGwSfOOy+owoLzOUiECW+8QShDXiVZmK3PnruYl84WOs9uFv
+	VFu6BBR3VwxHA+Lao6/W4RYgm5db+Ba4drmercZMFgIIy7+W7QKq19d9t9I67mUhEqijC4iDEi0
+	9XQ4pNA5qQAWoptCp3k3bFL6oOCddgXbsUQcmUnl0QQUEewd51E4pjIBPPH/ZEIhik9ekq875B7
+	HrwYHpxyi6Ef2jkAJvfSqTObmGpozmpNickFrJetxQt8W1QZQMTV9rghoa+2KqhL4FM+bwqWye5
+	EppJnjyb09EpOjGVuOxSYsD9hmuwN0cxBpqS8ZsaWBUl7aS/n4UC4nSBDLw2BvW+pVmv029tbOx
+	gJmtaG2qlfkHMaDVZ+4tYjqD+7muLH2L6Xuj6lkolv1wTxCtdnYK2KvvmY/aXJw3+z70r3qzyBM
+	zxw7AjmrnD2/a8wtVvtWO53e2TECQbgqworBNapLXF4sUNaBN3b+rY0oiOOL4gtaiZBTOOTdlkD
+	sFKMhGYjUBPbldQoKv8H+GH8T+2z5Bt57Nqj4id6d9DQPwNxjtFNGkvpCZnOjNQaITJ2zv570J9
+	mgDTWQHCPLceqEykjVwZNJjsVaOaUqQ7uzZZIo0fVsd61V1+BQaagkMIy5H/SIlSb+A=
+X-Received: by 2002:a05:7022:170d:b0:1b5:1c22:6fea with SMTP id a92af1059eb24-1b5566a60efmr17005635c88.0.1795635520254;
+        Wed, 25 Nov 2026 11:38:40 -0800 (PST)
+Received: from localhost.localdomain (wood.seclab.cs.ucsb.edu. [128.111.49.37])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1b562a82b3fsm50810012c88.5.2026.11.25.11.38.39
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 25 Nov 2026 11:24:13 -0800 (PST)
-Date: Wed, 25 Nov 2026 11:24:10 -0800
-From: Benson Leung <bleung@google.com>
-To: Randy Dunlap <rdunlap@infradead.org>
-Cc: linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>, linux-doc@vger.kernel.org,
-	David Hildenbrand <david@kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Jason Gunthorpe <jgg@nvidia.com>,
-	Leon Romanovsky <leonro@nvidia.com>, linux-mm@kvack.org,
-	Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>,
-	linux-sound@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-	linux-block@vger.kernel.org, Marcel Holtmann <marcel@holtmann.org>,
-	Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
-	linux-bluetooth@vger.kernel.org,
-	Willem de Bruijn <willemdebruijn.kernel@gmail.com>,
-	Jason Wang <jasowangio@gmail.com>, David Heidelberg <david@ixit.cz>,
-	oe-linux-nfc@lists.linux.dev, Chas Williams <3chas3@gmail.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@kernel.org>,
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
-	netdev@vger.kernel.org, Helge Deller <deller@gmx.de>,
-	linux-fbdev@vger.kernel.org, dri-devel@lists.freedesktop.org,
-	MPT-FusionLinux.pdl@broadcom.com,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K. Petersen" <mkp@kernel.org>, linux-scsi@vger.kernel.org,
-	Miquel Raynal <miquel.raynal@bootlin.com>,
-	Richard Weinberger <richard@nod.at>,
-	Vignesh Raghavendra <vigneshr@ti.com>,
-	Zhihao Cheng <chengzhihao1@huawei.com>,
-	linux-mtd@lists.infradead.org, Neill Kapron <nkapron@google.com>,
-	Andrey Konovalov <andreyknvl@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-usb@vger.kernel.org, Juergen Gross <jgross@suse.com>,
-	Stefano Stabellini <sstabellini@kernel.org>,
-	xen-devel@lists.xenproject.org, Hans de Goede <hansg@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	Eugenio =?iso-8859-1?Q?P=E9rez?= <eperezma@redhat.com>,
-	Sean Christopherson <seanjc@google.com>,
-	Paolo Bonzini <pbonzini@redhat.com>, kvm@vger.kernel.org,
-	virtualization@lists.linux.dev, Jan Kara <jack@suse.cz>,
-	linux-fsdevel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>,
-	linux-ext4@vger.kernel.org, Mike Marshall <hubcap@omnibond.com>,
-	devel@lists.orangefs.org, Paulo Alcantara <pc@manguebit.org>,
-	Namjae Jeon <linkinjeon@kernel.org>, linux-cifs@vger.kernel.org,
-	Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>,
-	linux-f2fs-devel@lists.sourceforge.net,
-	Florian Fainelli <florian.fainelli@broadcom.com>,
-	Broadcom internal kernel review list <bcm-kernel-feedback-list@broadcom.com>,
-	Tzung-Bi Shih <tzungbi@kernel.org>,
-	Benson Leung <bleung@chromium.org>,
-	David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>,
-	Alex Deucher <alexander.deucher@amd.com>,
-	Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
-	amd-gfx@lists.freedesktop.org,
-	Jani Nikula <jani.nikula@linux.intel.com>,
-	Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
-	Rodrigo Vivi <rodrigo.vivi@intel.com>,
-	Tvrtko Ursulin <tursulin@ursulin.net>,
-	intel-gfx@lists.freedesktop.org,
-	Matthew Brost <matthew.brost@intel.com>,
-	Thomas =?iso-8859-1?Q?Hellstr=F6m?= <thomas.hellstrom@linux.intel.com>,
-	intel-xe@lists.freedesktop.org
-Subject: Re: [PATCH v3 11/12] docs: ioctl-number: update platform entries
-Message-ID: <awc12oWB5WDJi8XZ@google.com>
-References: <20261125061340.3402300-1-rdunlap@infradead.org>
- <20261125061340.3402300-12-rdunlap@infradead.org>
+        Wed, 25 Nov 2026 11:38:39 -0800 (PST)
+From: Praneeth Balasubramanian <praneethb2002@gmail.com>
+To: Lee Duncan <lduncan@suse.com>,
+	Chris Leech <cleech@redhat.com>,
+	Mike Christie <michael.christie@oracle.com>
+Cc: "Martin K . Petersen" <mkp@kernel.org>,
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+	open-iscsi@googlegroups.com,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Praneeth Balasubramanian <praneeth@ucsb.edu>,
+	stable@vger.kernel.org
+Subject: [PATCH v2] scsi: iscsi_tcp: Take sk_callback_lock in the recv work
+Date: Wed, 25 Nov 2026 11:38:26 -0800
+Message-Id: <20261125193826.3466197-1-praneethb2002@gmail.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <4fc02402-4ab3-42d0-8dbf-d0a36a125e43@oracle.com>
+References: <4fc02402-4ab3-42d0-8dbf-d0a36a125e43@oracle.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -157,90 +104,121 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="Kk3dCghKBQNrocaf"
-Content-Disposition: inline
-In-Reply-To: <20261125061340.3402300-12-rdunlap@infradead.org>
+Content-Transfer-Encoding: 8bit
 
+From: Praneeth Balasubramanian <praneeth@ucsb.edu>
 
---Kk3dCghKBQNrocaf
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+With recv_from_iscsi_q=1, iscsi_sw_tcp_data_ready() queues
+conn->recvwork, and iscsi_sw_tcp_recv_data_work() runs the receive path
+under lock_sock() only. The data_ready path runs it under
+read_lock_bh(&sk->sk_callback_lock) and returns early when sk_user_data
+is NULL. The work does neither, and that causes two problems.
 
-On Tue, Nov 24, 2026 at 10:13:38PM -0800, Randy Dunlap wrote:
-> Update the list of platform/ files where ioctls are defined and update
-> the ranges of function numbers that are used.
->=20
-> Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
-> Acked-by: Tzung-Bi Shih <tzungbi@kernel.org> # cros_ec
+First, on teardown, iscsi_sw_tcp_release_conn() calls
+iscsi_sw_tcp_conn_restore_callbacks(), which clears sk->sk_user_data,
+and only then flushes recvwork in iscsi_suspend_rx(). Work that runs in
+between processes a socket whose callbacks were already restored. If
+the socket is in TCP_CLOSE or TCP_CLOSE_WAIT, iscsi_sw_sk_state_check()
+then dereferences NULL->session. With a delay added at the start of the
+work to widen this window, a target-side connection close gives:
 
-For cros_ec as well:
+  Oops: general protection fault, probably for non-canonical address ...
+  KASAN: null-ptr-deref in range [0x0000000000000010-0x0000000000000017]
+  Workqueue: iscsi_q_3 iscsi_sw_tcp_recv_data_work
+  RIP: 0010:iscsi_sw_tcp_recv_data+0x219/0x420
 
-Reviewed-by: Benson Leung <bleung@chromium.org>
+Second, the receive path was written to run with BHs disabled. For
+example, __iscsi_complete_pdu() takes session->frwd_lock with
+spin_lock(), and iscsi_check_transport_timeouts() takes the same lock
+from a timer. From the work, BHs are enabled. With lockdep, an
+unmodified kernel booted with recv_from_iscsi_q=1 reports as soon as
+reads run:
 
+  WARNING: inconsistent lock state
+  inconsistent {IN-SOFTIRQ-W} -> {SOFTIRQ-ON-W} usage.
+  kworker/u10:2/55 [HC0[0]:SC0[0]:HE1:SE1] takes:
+  (&session->frwd_lock){+.?.}-{3:3}, at: __iscsi_complete_pdu+0x4f7/0x2420
+  {IN-SOFTIRQ-W} state was registered at:
+    _raw_spin_lock+0x2e/0x40
+    iscsi_check_transport_timeouts+0x4c/0x5d0
+    call_timer_fn+0x19f/0x630
+  ...
+   *** DEADLOCK ***
 
-> ---
-> v2: no change
-> v3: rebase
->=20
-> [Since having multiple maintainers trying to merge these would
-> cause some conflicts, it would be more manageable for Jon to
-> take all of these through the docs-next tree.]
->=20
-> Cc: Jonathan Corbet <corbet@lwn.net>
-> Cc: Shuah Khan <skhan@linuxfoundation.org>
-> Cc: linux-doc@vger.kernel.org
-> Cc: Florian Fainelli <florian.fainelli@broadcom.com>
-> Cc: Broadcom internal kernel review list <bcm-kernel-feedback-list@broadc=
-om.com>
-> Cc: Tzung-Bi Shih <tzungbi@kernel.org>
-> Cc: Benson Leung <bleung@chromium.org>
->=20
->  Documentation/userspace-api/ioctl/ioctl-number.rst |    3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
->=20
-> --- linux-next-20261123.orig/Documentation/userspace-api/ioctl/ioctl-numb=
-er.rst
-> +++ linux-next-20261123/Documentation/userspace-api/ioctl/ioctl-number.rst
-> @@ -434,6 +434,7 @@ Code  Seq#    Include File
->  0xBA  00-0F  uapi/linux/liveupdate.h                                   P=
-asha Tatashin
->                                                                         <=
-mailto:pasha.tatashin@soleen.com>
->  0xC0  00-0F  linux/usb/iowarrior.h
-> +0xC4  00-1F  platform/raspberrypi/vchiq-interface/vchiq_ioctl.h
->  0xCA  00-0F  uapi/misc/cxl.h                                           D=
-ead since 6.15
->  0xCA  10-2F  uapi/misc/ocxl.h
->  0xCA  80-BF  uapi/scsi/cxlflash_ioctl.h                                D=
-ead since 6.15
-> @@ -446,7 +447,7 @@ Code  Seq#    Include File
->  0xDD  00-3F                                                            Z=
-FCP device driver see drivers/s390/scsi/
->                                                                         <=
-mailto:aherrman@de.ibm.com>
->  0xE5  00-3F  linux/fuse.h
-> -0xEC  00-01  linux/platform_data/cros_ec_chardev.h                     C=
-hromeOS EC driver
-> +0xEC  00-02  linux/platform_data/cros_ec_chardev.h                     C=
-hromeOS EC driver
->  0xEE  00-09  uapi/linux/pfrut.h                                        P=
-latform Firmware Runtime Update and Telemetry
->  0xEF  00-0F  uapi/linux/ntfs.h                                         N=
-TFS
->  0xF3  00-3F  drivers/usb/misc/sisusbvga/sisusb.h                       s=
-isfb
+Take sk_callback_lock with read_lock_bh() in the recv work, as
+iscsi_sw_tcp_data_ready() does. The receive path then runs with BHs
+disabled, as it does from softirq, and is skipped once sk_user_data has
+been cleared.
 
---Kk3dCghKBQNrocaf
-Content-Type: application/pgp-signature; name=signature.asc
+The unlocked sk_user_data read was found with an LLM-based tool that
+checks callers against the locking rules stated in kernel comments.
 
------BEGIN PGP SIGNATURE-----
+Fixes: f1d269765ee2 ("scsi: iscsi: Run recv path from workqueue")
+Suggested-by: Mike Christie <michael.christie@oracle.com>
+Cc: stable@vger.kernel.org
+Signed-off-by: Praneeth Balasubramanian <praneeth@ucsb.edu>
+---
 
-iHUEABYKAB0WIQQCtZK6p/AktxXfkOlzbaomhzOwwgUCawc12gAKCRBzbaomhzOw
-wuvSAP9FFr45oXAv5Psc3n5xsSYyPFouusI/XwRnWy3tYxQspAD+KIeOTWQfcOeC
-TWeqyAANog5rg68r7xNPxeH8I/R6xAQ=
-=Fk2v
------END PGP SIGNATURE-----
+Notes:
+    v2:
+    - Take sk_callback_lock in the recv work and skip the receive path once
+      sk_user_data is NULL, as Mike Christie suggested. v1 passed conn
+      into iscsi_sw_sk_state_check() instead. That avoided the NULL
+      dereference but still let the work run after the callbacks were
+      restored.
+    - I went with taking the lock rather than calling iscsi_suspend_rx()
+      before restoring the callbacks. Taking it with read_lock_bh() also
+      fixes the frwd_lock report above, which reordering the teardown alone
+      would not.
+    v1 and review: https://lore.kernel.org/all/4fc02402-4ab3-42d0-8dbf-d0a36a125e43@oracle.com/
+    
+    This was found by an LLM-based static analysis (GPT-5.6) that checks
+    kernel code against the rules stated in its comments, as part of
+    research at UCSB SecLab. The patch and changelog were drafted with
+    Claude Opus 5.5. I reviewed the patch and take responsibility for it.
+    
+    Testing: two QEMU VMs on next-20261023 with KASAN and lockdep, an LIO
+    target and an open-iscsi initiator booted with
+    iscsi_tcp.recv_from_iscsi_q=1, using CHAP and continuous reads.
+    
+    - The teardown race: both initiator kernels had a 20 ms msleep() added
+      at the start of iscsi_sw_tcp_recv_data_work(), and the TCP connection
+      was closed from the target side. The unpatched kernel oopsed as
+      above. The patched kernel ran three times with no oops and no lockdep
+      report. In one run, a test-only print showed the work reaching the
+      new check after the callbacks were restored, with the socket in
+      TCP_CLOSE, and skipping the receive path. The race needs the delay to
+      hit reliably.
+    - The frwd_lock report: it appeared in all 10 unpatched runs in this
+      mode, including runs without the delay, and in none of the patched
+      runs.
+    
+    The patch applies to mainline 9ba46df34488 and to next-20261116.
 
---Kk3dCghKBQNrocaf--
+ drivers/scsi/iscsi_tcp.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
+index 9260b1c9b0e0..6d802b84f7ad 100644
+--- a/drivers/scsi/iscsi_tcp.c
++++ b/drivers/scsi/iscsi_tcp.c
+@@ -160,7 +160,15 @@ static void iscsi_sw_tcp_recv_data_work(struct work_struct *work)
+ 	struct sock *sk = tcp_sw_conn->sock->sk;
+ 
+ 	lock_sock(sk);
+-	iscsi_sw_tcp_recv_data(conn);
++	/*
++	 * Teardown clears sk_user_data under sk_callback_lock before it
++	 * flushes this work. Take the lock like iscsi_sw_tcp_data_ready()
++	 * so the recv path never runs after the callbacks are restored.
++	 */
++	read_lock_bh(&sk->sk_callback_lock);
++	if (sk->sk_user_data)
++		iscsi_sw_tcp_recv_data(conn);
++	read_unlock_bh(&sk->sk_callback_lock);
+ 	release_sock(sk);
+ }
+ 
+-- 
+2.25.1
+
