@@ -1,102 +1,96 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.215.171
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795677827;
-	b=jnlCUCTacoBw1PtSTBPYFR+hGrMKdj7FyrGqTdc87VQL+Qqj3891RcUy8RACtwp3/3N4
-	 uSSR65rx6T765e20xDEu2H+UzrCCEqM89JYYiE+qdrJlQ+FGkQnyaDyjfq4NSq+iek5MN
-	 VIxQrdtQAsGwGsBClLhtOxBaTuIN/mGbQCYGnBLzntDfngLVuH00ZuXIo7pmzk+hOtewd
-	 ukrYGq0Nzbgx0os8ITKAeiEbKIueT7H39d1fXQs3QysdSjrPgWOYMikFLYX0r7PG3dNY6
-	 qHq5hSgoQum2SPhjMpEn11z4uAGeeDDykTnfVMfQhUdfz7HooDBRvhWQSvmSzPHq2kQ==
+	t=1795691648;
+	b=eDSiRujeJmlmbuFrpi8Cd6cwczQ/4LlP6o0gYPG9y5VJNwegmuxo5HxuV3nOtSk3Dx+k
+	 1iYz1xcoVix/JmgjgWOLwoaWDogyzVnmSqeb2uDTraj61ZQOMhtRVksTQulX1zVajLpRo
+	 fiIrbWjkTlr8aYZoXA/kYGwWDLt1N2UjU1HMNsXOGQHPIChkqkrP5qv5K2zHbsxa9Nff/
+	 BGiNSe7Y1JvX+OdGvKtvFriKR9gLOrRjtW23BvO2QywQ0jCPhQ39qZchw4oYiOiFdajvD
+	 XYF9OlI+631Beb2SLGPkjLVdba5QIIvxl1gRRVcJLqKxhBO/PvB94HhSxTCCOvIkRLg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795677827;
-	h=DMARC-Filter:Received:DKIM-Signature:DKIM-Signature:DKIM-Signature:
-	 DKIM-Signature:Received:Received:Message-ID:Date:MIME-Version:
-	 User-Agent:Subject:To:Cc:References:Content-Language:From:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:X-Spamd-Result:X-Spam-Score:
-	 X-Spam-Level:X-Spam-Flag;
-	bh=FnIv6zO8AKSebatR7MIAQFTrAPkbi7dRfDEicXhzfg8=;
-	b=iT6I3F024LsmMt2Z4LX1ZhSLSY8EpIUHjRMRQhwzmoJgf12iT4eEhB8e33THGvglF97i
-	 LZC2fLtlAEbpiMhJv1EfC2Op1ywn3Rkkm5DQH/j/CsZaAmKhQ+VhXnxRfvfq8A0aGO1gd
-	 u4aEdcw+a6TDEP75ICt0nQfeeCuEATqREzLpFJV9ft05OyCDz0WDulOda0pL0GUxMKZKW
-	 5mcrFqmIZJwp6+vHeOelUNbumsK2NucADQPrVUnfX7hAjrJDHHJPa00/lK8XRBA11il+D
-	 /vsDUOC3PPLM1SJIJjEUEgXQoAeZo7/ymLngaAFAsd71/oa5q2GTyOhikh3X5NhsVDQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795691648;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-Id:X-Mailer:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=LFWwc3+AYfzJIpjs6+s8KEhT/u7I94YZNIJa6waYCdw=;
+	b=OcAgzHxDK3Q7i1LlpLYAdcrEozdZGiJ+DMM4hIPTqp9WfUippr2NxpDr37VF4LpIjmvD
+	 6GrxlrhQnXWd9eK2BGklZzW3qdP72t55GWUQPRhRFONRybfiJxHAlRb1ZGFB6nDhxNV8j
+	 +tgINJyVIoRBVXOOh9c/g+HW/M/FY7DYz5AoELXNnPG9mmQScHtxS239OB6AAW28BZALi
+	 RH2JXEV6q/93PgUCdcNwbiCz8nGbUPr5GqzTiFLOHJGtK7vpq+xtXVitUMDSvkFxfAQuC
+	 MQi8j/W9/NVOuthxZDJ83kqFzGbnM6Jfaqx2Ff99FnrK80zUi4017j6dTLO7ogpBv+A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=suse.de;
-	spf=pass smtp.mailfrom=suse.de;
-	dkim=pass header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=XPNuPDQA;
-	dkim=pass header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=AnxRiOSn;
-	dkim=pass header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=XPNuPDQA;
-	dkim=neutral header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=AnxRiOSn;
-	arc=none smtp.remote-ip=195.135.223.130
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=cGD8njSp;
+	arc=none smtp.remote-ip=209.85.215.171
+Received: from mail-pg1-f171.google.com (mail-pg1-f171.google.com [209.85.215.171])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2ABBE606A31C;
-	Thu, 26 Nov 2026 07:23:47 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2ABBE606A31C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17C94606A31C
+	for <linux-scsi@vger.kernel.org>; Thu, 26 Nov 2026 11:14:07 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 17C94606A31C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=XPNuPDQA;
-	dkim=pass header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=AnxRiOSn;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=XPNuPDQA;
-	dkim=neutral header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=AnxRiOSn
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 548782261C;
-	Thu, 26 Nov 2026 07:23:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1795677825; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=FnIv6zO8AKSebatR7MIAQFTrAPkbi7dRfDEicXhzfg8=;
-	b=XPNuPDQAw37v0M9hCgTlyx8/MCCnoEDV9aZ9/AlZYh61JLrkhtx0LI4AwPsznUvNXkMIDC
-	7a+rJJ9l2Oxlu3L9yOFM7Va57xABu5/5RFE+MR8dRL5fTDl0P2WYs+IWgZfSvUUdfX1c/i
-	JlFV1PD6fyiQ6xvOfuglYtEkpBFsjJc=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1795677825;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=FnIv6zO8AKSebatR7MIAQFTrAPkbi7dRfDEicXhzfg8=;
-	b=AnxRiOSnvnRfk+vSbW8S8kzEDj51+b7Nfrh2Xxm1jq8xorV7xC3hb2aWldRqOnY7K9o3SS
-	jJjEYH44mcFnpGBw==
-Authentication-Results: smtp-out1.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1795677825; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=FnIv6zO8AKSebatR7MIAQFTrAPkbi7dRfDEicXhzfg8=;
-	b=XPNuPDQAw37v0M9hCgTlyx8/MCCnoEDV9aZ9/AlZYh61JLrkhtx0LI4AwPsznUvNXkMIDC
-	7a+rJJ9l2Oxlu3L9yOFM7Va57xABu5/5RFE+MR8dRL5fTDl0P2WYs+IWgZfSvUUdfX1c/i
-	JlFV1PD6fyiQ6xvOfuglYtEkpBFsjJc=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1795677825;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=FnIv6zO8AKSebatR7MIAQFTrAPkbi7dRfDEicXhzfg8=;
-	b=AnxRiOSnvnRfk+vSbW8S8kzEDj51+b7Nfrh2Xxm1jq8xorV7xC3hb2aWldRqOnY7K9o3SS
-	jJjEYH44mcFnpGBw==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id D85D6134C3;
-	Thu, 26 Nov 2026 07:23:44 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id sSpCJ4DeB2uaZAAAD6G6ig
-	(envelope-from <hare@suse.de>); Thu, 26 Nov 2026 07:23:44 +0000
-Message-ID: <9544b932-3154-4185-98b5-4aa7004c2ca2@suse.de>
-Date: Thu, 26 Nov 2026 08:23:44 +0100
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=cGD8njSp
+Received: by mail-pg1-f171.google.com with SMTP id 41be03b00d2f7-cdebab6fdb3so601679a12.2
+        for <linux-scsi@vger.kernel.org>; Thu, 26 Nov 2026 03:14:07 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1795691647; x=1796296447; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=LFWwc3+AYfzJIpjs6+s8KEhT/u7I94YZNIJa6waYCdw=;
+        b=cGD8njSpm9yBoOYgmh7titWNydgvCEZKM08UtxzF4E/k7N16JtN3wLT4D7DDsTMcZS
+         bKUcxitjH2pomIu/HeE34Gae4rAeLOmj5Dai/x3pGTczZu7OHT+Tx9R5kKA0qcEXzh++
+         LXzeQFzWcGihYf1QJaftBJX0CcPSv8yYcAJV4Jn+4d6tCJh3irGusAwH13S7uUn5IgDU
+         e81vSMbU8SDAsYZ6OcUO3TbMgExL737O8Kacb4RrkxDx6WRs7BA/vlBz0zl0+lNeWt3D
+         SBqEs0JMuUhftESmvJnKr20AMoBxaW+pBEawVv6uATX8Kg5jxli/LrESf0b0P4jBc4R2
+         iMuw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1795691647; x=1796296447;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=LFWwc3+AYfzJIpjs6+s8KEhT/u7I94YZNIJa6waYCdw=;
+        b=hUWnXWG6njO0d+qUKLBrhKMk5UONEJ1ubMX7fCu+Z3espeoQ6c84xlH2KF7yNRH0xy
+         MI1uixzhye079G9B1sp18aJzKbMxSmDPZ4Jpoi8PhA2ad8P8yXbdUmgyZiCr1KFQV2P6
+         57TV2SNNJu0IbbMIs0hAKLG/VSvHu70fABE7eKVBxFYoZMKd9mzlGv/QMr0X1h90YxdM
+         4+3n7xO7lXpxtaucvMo+zq8k5QVmZtDWF5MYIIexbm34pQ5oD/+iVAE5XsyfxS2+Slvx
+         +exDd8yH6W03d2R16afgUQOXXWJ4AYI/zSGkGmHtNVyBih9WJ5A0kIWwSvhiBmefyBBW
+         ATiw==
+X-Forwarded-Encrypted: i=1; AL+hErHG8d5QipMgexlObHO4uFXtgFxSE8h/mldt305F1sRkTPdq1tZ9nxuwhrM+Q2XAggBOATtGXUsij6mU@vger.kernel.org
+X-Gm-Message-State: APuU4Z9cRrOBNm67uoPD/F94/4Ho/g0hkbG3M8rv+WZ71LRyXaBTvJ+t
+	XvUn5/ca4gd5cXsPx9E1DUXKjz96BTDNu/uowF+eA2igCb1aYs1r2/U5
+X-Gm-Gg: AZFdTZeznhFVZCUuunfDZLD9LZXzkdm3xYe2Gb82mC5wKih5UMF+xOZeEuO2a0Ff6+K
+	Q9ksePDNeyM4QdJXXK9Gb4ctKrO2qiLc3iGk0A46yrARxgx7V5y3sAYkBQ++wI7v0y3ocNwLkVL
+	itfgN6TJs0Dsq6oUdlfgytyK8sP1rdtMMPfAukqSyVsMSGDGW0vIDVykXnjQTtItdvdQlm8i2JB
+	XhHwrpvg5m9LuxM02jw5DojUXVtvVRISVKllyHSuL7mU/sItZLYYkAIQhcd+mQiDk3eLHFRxbFv
+	QjxQYa/bjuB6I9YIBs9kq/toSc7KjbkE4VygdXhR8b53u0JWF4Sf0oljf8iH9BOIE2EE9hNgYew
+	X7QykW8SMSLzM6RsjFLNmQBDZFPbdky6lMYJWFmnVpmnqWt2MHX0mNZbi28yyzFE/k3EgtQArIh
+	9/8++whi0v81kUyzyq6U1Ys9m7FQWon3ueA68cEEyt+T3cQwW6QgksDVS7mvrq6kBmowpqJTgxV
+	4xRiWCkgW9dXsmtvk+yS9cJuebQpNsYNAydRBjQfzHQqCANCRm92kdpjSbJWJ2cETRgxfXuaLCP
+	U/RA98/t/ikm9O8Fd4UzlGrUIQcuARm+veUgPg5mpigqWMqMrTtRkH73URxJzkEKb248KQpzU2w
+	wsIpC+DghZWHO6yBt1MO4zOlfYrBU4it0u8Ag46lGYl7GLTk=
+X-Received: by 2002:a17:90b:17cd:b0:3ac:9599:a689 with SMTP id 98e67ed59e1d1-3b41c9d3111mr17009544a91.34.1795691647272;
+        Thu, 26 Nov 2026 03:14:07 -0800 (PST)
+Received: from lwq-server.tail118c18.ts.net ([74.176.208.23])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b41aab4729sm31983650a91.0.2026.11.26.03.14.03
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 26 Nov 2026 03:14:06 -0800 (PST)
+From: Yaohan Li <shunsheng1218@gmail.com>
+To: "Martin K . Petersen" <mkp@kernel.org>,
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>
+Cc: Alim Akhtar <alim.akhtar@samsung.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	Bean Huo <beanhuo@micron.com>,
+	Stanley Jhu <stanleyjhu@google.com>,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: ufs: core: disable exception work before removing hwmon
+Date: Thu, 26 Nov 2026 19:14:00 +0800
+Message-Id: <20261126111400.2828356-1-shunsheng1218@gmail.com>
+X-Mailer: git-send-email 2.34.1
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -106,92 +100,58 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: fcoe: Fix use-after-free after pskb_may_pull() in
- fcoe_rcv()
-To: Elkin Cruz <elkin@google.com>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <mkp@kernel.org>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
- llvm@lists.linux.dev, irogers@google.com, stable@vger.kernel.org
-References: <20261125221921.1425747-1-elkin@google.com>
-Content-Language: en-US
-From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20261125221921.1425747-1-elkin@google.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Spamd-Result: default: False [-13.29 / 50.00];
-	SUSE_INTERNAL_BYPASS(-9.00)[];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-0.998];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	XM_UA_NO_VERSION(0.01)[];
-	MIME_TRACE(0.00)[0:+];
-	ARC_NA(0.00)[];
-	RCPT_COUNT_SEVEN(0.00)[8];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	MID_RHS_MATCH_FROM(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FROM_HAS_DN(0.00)[];
-	TO_DN_SOME(0.00)[];
-	FROM_EQ_ENVFROM(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,suse.de:email]
-X-Spam-Score: -13.29
-X-Spam-Level: 
-X-Spam-Flag: NO
 
-On 11/25/26 11:19 PM, Elkin Cruz wrote:
-> In fcoe_rcv(), eh = eth_hdr(skb) is cached before pskb_may_pull(). If
-> pskb_may_pull() reallocates skb->head, eh is left pointing to freed
-> memory when validating eh->h_dest against the FC frame header.
-> 
-> Re-evaluate eh = eth_hdr(skb) after pskb_may_pull() succeeds.
-> 
-> Fixes: 0ee31cb5df4b ("[SCSI] fcoe: Fix broken NPIV with correction to MAC validation")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Elkin Cruz <elkin@google.com>
-> ---
-> 
-> I am trying out new Clang static analysis checks for kernel bug
-> classes, and they flagged this code as possibly buggy. The findings
-> were triaged/fixed and commit descriptions were drafted with help of AI,
-> then checked against linux-next (not runtime-tested on hardware).
-> 
-> Thanks,
-> Elkin
-> 
->   drivers/scsi/fcoe/fcoe.c | 2 ++
->   1 file changed, 2 insertions(+)
-> 
-> diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-> index a2cf65fac297..23d6b9893793 100644
-> --- a/drivers/scsi/fcoe/fcoe.c
-> +++ b/drivers/scsi/fcoe/fcoe.c
-> @@ -1365,6 +1365,8 @@ static int fcoe_rcv(struct sk_buff *skb, struct net_device *netdev,
->   		     !pskb_may_pull(skb, FCOE_HEADER_LEN)))
->   		goto err;
->   
-> +	eh = eth_hdr(skb);
-> +
->   	skb_set_transport_header(skb, sizeof(struct fcoe_hdr));
->   	fh = (struct fc_frame_header *) skb_transport_header(skb);
->   
+ufshcd_remove() unregisters the hwmon device while hba->eeh_work can
+still be running. A SCSI completion can also queue hba->eeh_work later
+during scsi_remove_host(). When the worker runs ufs_hwmon_notify_event(),
+it can access the freed hwmon device and trigger a use-after-free.
 
-Please move that two lines down, just before
-	if (ntoh24(&eh->h_dest[3]) != ntoh24(fh->fh_d_id))
+Disable and drain hba->eeh_work in ufshcd_remove() before removing
+hwmon. This ensures any running handler finishes while hwmon is still
+present and prevents later SCSI completions during removal from
+requeuing the work.
 
-that'll make the patch easier to read. And please add a comment
-that the skb->head might have been reallocated.
+Fixes: 66ec6d59407b ("[SCSI] ufs: Add support for host assisted background operations")
+Cc: stable@vger.kernel.org # v6.10+
+Signed-off-by: Yaohan Li <shunsheng1218@gmail.com>
+---
+Tested in QEMU/KVM (KASAN + PROVE_LOCKING) with an out-of-tree virtual
+UFS 3.1 platform controller driving the in-tree ufshcd-core.ko (no
+kprobes):
+- Unbinding the device during an exception-event alert flood hits a
+  KASAN slab-use-after-free in hwmon_notify_event() /
+  kobject_uevent_env() from ufshcd_exception_event_handler() (freed by
+  ufs_hwmon_remove() <- ufshcd_remove()) on the unpatched kernel, and
+  passes 10-cycle A/B and 30-cycle stress runs with no KASAN, warning,
+  or lockdep reports after the patch.
+- Exception alerts on SYNCHRONIZE_CACHE during scsi_remove_host()
+  requeue eeh_work on 10/10 cycles before the patch and 0/10 cycles
+  after.
+- Compile-tested with W=1 on x86_64 and arm64; verified clean apply on
+  mkp/scsi.git for-next.
+- Not tested on physical UFS hardware.
 
-Cheers,
+AI assistance: AI tools assisted with static code triage, writing the
+virtual UFS QEMU test module, and drafting the changelog; I reviewed and
+verified the root cause, teardown order, workqueue/lock behavior, and
+the final patch.
 
-Hannes
+ drivers/ufs/core/ufshcd.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 3c28bc67c65f..86100ac90fce 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -10988,6 +10988,7 @@ void ufshcd_remove(struct ufs_hba *hba)
+ {
+ 	if (hba->ufs_device_wlun)
+ 		ufshcd_rpm_get_sync(hba);
++	disable_work_sync(&hba->eeh_work);
+ 	ufs_hwmon_remove(hba);
+ 	ufs_bsg_remove(hba);
+ 	ufs_rpmb_remove(hba);
 -- 
-Dr. Hannes Reinecke                  Kernel Storage Architect
-hare@suse.de                                +49 911 74053 688
-SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
-HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
+2.34.1
+
