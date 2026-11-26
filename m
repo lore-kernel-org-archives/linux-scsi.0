@@ -1,61 +1,60 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795664100;
-	b=hiHW0VI+QaRLTCHLtwrrfdFiHrHWiddpxdYdOmOgZEPOfwHRaGCEUVOOrkU5QYLT45QV
-	 iaWg1BbEXQIMUqe6lOiV5KWkY+l+KZG9mm0f87FtmDc/Hc8Zc7VmVFPxhZLzWymXuRl5O
-	 lDJOa5kA5TvHi+NyRmjgjzVDa5SauA7RQYfUDqMmk8jkStrkNzuGxN3Ct30S1lL0ZTYJe
-	 xnnMx5rIEuMLT4SjkcleTXP1CAYD1GBcB6H64W8UGpg/colAX817uiDweUBbIi4xkb++z
-	 KzMyg15SEcc9n6mPMpCe0MiUBTnOYpt4SZJXj5NqEXIdcdv4MySHjtrKvDsO7RYY/Dg==
+	t=1795664103;
+	b=IhwEBg8uajbetSdtbBbexuGXfsbh7ObVnpE3MedfFQ4ZopU8wAzUStAKITLDMrSdGB5/
+	 mJHV82EVzpJ1WJlBIeDRd871AArHAbqYVqcmeR5/owcXQLuTL4N1rmfS5r9uju85PVCUn
+	 AzLWE26ypyD3oe3fya1uFr708SuCsNgJkHaE7VnjDZJv/3eFPtMW9KapE4/iexrYd1RrJ
+	 3XPLY4QBoCgPJenVnuppCpE7NeF07JKsdl8gidOxlayqf4RaEApOUYDRch+kDPPnGeNkt
+	 maCL+onrq6Cel/AyjFyrPPffeFa/6sP+aQMSvnPMkLJSxejMn/0RfTi1tvDDDLF8OuQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795664100;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795664103;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding;
-	bh=oCMBTJs6hAheq11GB+nvv82b3H3Up8qNZapd21sR0gE=;
-	b=IAYYwtSsRnd5uH8/50wn3IJ5v9uvxBYa1/3Hl8dluQivV52DP/hElpzS9tW/2MaUcWqE
-	 ET3rvpaliVJJaGxTNPPz0L2Lx/FWzU8wyLYNo2yvvMUKhl/U6t7zbt+8PwR+7D/cbOVRd
-	 +JEGasgeRDGhP0Omv3ixdNZQ8VztKCx5kVreWL6m1eBWR4zA1g90fs0F39JGwpigetgBL
-	 eC5nFn6GtFTIeWjhsWCKFwVIhtvXcEWFINHM1xmIHmcMAqH5MuKiMrBjBw3FS0++45F5d
-	 pJfQ2RmanaEo/SWunq8XGmUTaDSA3RRVJJQVwut47bNbRSNzCcWVlgw8/zUmr18alNg==
+	bh=UPukCNTK7zFhxllQcaE4LGdiIYNWyuXJusPGpDAU2OQ=;
+	b=LiegTKnCDDLGNA7LSvF2sUxRdn3F6LHqhkJ9V52MfkuqtOHkK7f0qVoG2lvHD0Z15sey
+	 U+kN7wKhdYffB2WIcDoYjpTEKlbsUDPrNtnaSo1zH9Xe/y0TNxWDvhCHx8+lKCBpf10NH
+	 lmXbDiStBUEAl+oaGaW3Fwke1GVZCQdAXbmyilMBOKPjgu6jSjHpjIuIy1HGleJCB7Tgo
+	 fNB//tOhLbXY7dtXp6G6hIGzVW25gjfsUHbnYwlJPO8gy+MwZPksGY5XYmkEoPJsaHG0J
+	 M2ewvEGwdYjS0J3xKigk1UJSrzDAbsO7lLLI7g/tAalqjiReZS7W6H51hWMwX4LAy8Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ajGDbepz;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="iSc8v/p8";
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7EE92606A31E
-	for <linux-scsi@vger.kernel.org>; Thu, 26 Nov 2026 03:35:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0BF7606A331;
+	Thu, 26 Nov 2026 03:35:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ajGDbepz
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1004E1F000CA;
-	Thu, 26 Nov 2026 03:34:58 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=iSc8v/p8
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3416D1F000C4;
+	Thu, 26 Nov 2026 03:35:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795664100;
-	bh=oCMBTJs6hAheq11GB+nvv82b3H3Up8qNZapd21sR0gE=;
+	s=k20260515; t=1795664103;
+	bh=UPukCNTK7zFhxllQcaE4LGdiIYNWyuXJusPGpDAU2OQ=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=ajGDbepzeAwBdDKa5pr/4EgQ8crYW3SAzGKtFSfIVvN9bujKKip4i2dvfP4uJYMeM
-	 qSmjs79k+bXU2xhe3SH2JR7GBUSXytzpTdiQhS8SsUHrU1fgWzD+IhuQvjmUkEpeiJ
-	 IDmDgaZiYSfVI9+yqcQfuIW9iViPAjX6ZngZ2sQ+EZ3FiH8Vem9Nxz+cXr4Q17pI5X
-	 Mie54vwJs9pkDp6o5tukQcf72dOLogPIM2/NdqyE2+31N6Fky+opQD6ynr95A2yL0Y
-	 Wr4w6Tm7k4w+bgCkTkOUqTszxnEyZCFZVEpDaEb8ONKYA1AVsscjhFqJswclvN53T5
-	 Bmv/9VuMFJ6RQ==
+	b=iSc8v/p8Iz2r7k0/xZltuC5wJC0iSSFO+OVfPXJu2koBjM7RtFT5NY2A228YjYr9B
+	 RqubGeehyoRXKlUsdLZxvYA0IwsqSyOwBw8eHKIKZLFn6PhnN8tiEs5TWxg3zgiYSy
+	 H+eNkV5+59TlZEVoZv5TpTLfhim+IKG0J3b5oNz64vdfQV/OtZxNgxaSuzkPVDPf/x
+	 WgmNMLkfOKoKwryZIvzyKjWQt/uStWZeTWg1xmOofldHoN674Ba26tsZZpwffNtoeB
+	 quejQK+5QUliCw8anAdq45/ZwPtw6ovEnBNMm8WvMijMcavnuN1GqMLi/u8W/YGSl+
+	 2/pI+Sjt1oCDw==
 From: "Martin K. Petersen (Oracle)" <mkp@kernel.org>
-To: "Martin K. Petersen" <mkp@kernel.org>,
-	Bart Van Assche <bvanassche@acm.org>
-Cc: linux-scsi@vger.kernel.org,
-	kernel test robot <lkp@intel.com>,
-	Peter Wang <peter.wang@mediatek.com>,
-	Chaotian Jing <chaotian.jing@mediatek.com>,
+To: Jack Wang <jinpu.wang@cloud.ionos.com>,
 	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
-Subject: Re: [PATCH] ufs: mediatek: Use ARRAY_SIZE() instead of open-coding it
-Date: Wed, 25 Nov 2026 22:34:46 -0500
-Message-ID: <179566062773.467514.15833634009150035105.b4-ty@b4>
+	Ian Rogers <irogers@google.com>
+Cc: "Martin K . Petersen" <mkp@kernel.org>,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	llvm@lists.linux.dev,
+	Elkin Cruz <elkin@google.com>
+Subject: Re: [PATCH] scsi: pm8001: Fix abort completion status in pm8001_mpi_task_abort_resp()
+Date: Wed, 25 Nov 2026 22:34:48 -0500
+Message-ID: <179566062794.467514.1304420493773676333.b4-ty@b4>
 X-Mailer: git-send-email 2.56.1
-In-Reply-To: <547675c30e66d7664c0adec81f025986ab6ddfce.1795135740.git.bvanassche@acm.org>
-References: <547675c30e66d7664c0adec81f025986ab6ddfce.1795135740.git.bvanassche@acm.org>
+In-Reply-To: <20261119170905.1530613-1-irogers@google.com>
+References: <20261119170905.1530613-1-irogers@google.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -68,21 +67,23 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 
-On Thu, 19 Nov 2026 16:49:11 -0800, Bart Van Assche wrote:
+On Thu, 19 Nov 2026 09:09:05 -0800, Ian Rogers wrote:
 
-> The kernel test robot reported the following Coccinelle warning:
-> 
-> drivers/ufs/host/ufs-mediatek.c:1351:32-33: WARNING: Use ARRAY_SIZE
-> 
-> Derive array bounds from the arrays themselves such that these bounds
-> remain correct if array elements are added or removed.
+> In pm8001_mpi_task_abort_resp(), the IO_NOT_VALID branch assigns
+> TMF_RESP_FUNC_FAILED (enum tmf_resp, 5) to ts->resp (enum
+> service_response) instead of ts->stat, leaving ts->stat at 0. In
+> addition, switch (status) has no default case, so any other non-zero
+> firmware abort failure status leaves both ts->resp and ts->stat at
+> their zero-initialized values (SAS_TASK_COMPLETE and
+> SAS_SAM_STAT_GOOD), causing sas_execute_internal_abort() to falsely
+> treat a failed abort as TMF_RESP_FUNC_COMPLETE.
 > 
 > [...]
 
 Applied to 7.5/scsi-queue, thanks!
 
-[1/1] ufs: mediatek: Use ARRAY_SIZE() instead of open-coding it
-      https://git.kernel.org/mkp/scsi/c/0943d0da9366
+[1/1] scsi: pm8001: Fix abort completion status in pm8001_mpi_task_abort_resp()
+      https://git.kernel.org/mkp/scsi/c/fac36816b057
 
 -- 
 Martin K. Petersen
