@@ -1,60 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795664109;
-	b=iwGCUjKSiRiBUVZa+bJOjli07++kxuJj8j+Cx0reDKhYuIH4uGyIJquklf0R+aHfcrrU
-	 ivo9cfTWIJswtg0eog/a02yJRWFEsJwRMGFu3KeZEhux2RJ7iqAc7hRe+o+aMR6rXZzXu
-	 QIzXV6EwkVPrVRn3E/lyZ7fGGwQLFfJ5PpNFGIbjDTjEyzt9OX5bDiWrOacvRHB4ie/DY
-	 NZOROLPGw7fyjyPBc8+yMkezcZIogdamWHg25zNUhlfPLdrD5EQwQz6c0O8s7/CUUoWnC
-	 p1JHEJ3JpOQO1JbFqhFKXX/mciIDP281pM1/wErobJFdn6OODaZjkuLhhlNMdV36RHg==
+	t=1795664110;
+	b=xxmI22LKa5rR1XbZCiNNaJJyJa5XlezL2UmPW3GTmSTCdpDigYVgGKNiqPVf45hSAfmf
+	 CnXeHJJltpVIKoJ9+LtjxmHHyb82wudrD4qOWFXQkIUmwdVYn+x84WRKsSkmI73gq6HOv
+	 vmRHQaP1lhNHVKruz5vPSWVLIB4ko9gYU5T9Jyp3bv7iTkpMSEoR0vz11iSEo9/dMa5ok
+	 daCMvqt+smwXwym35fIOGPMteJNqfyaXtTK5a9iEARB5Erpr4TEFHApcfR8fGXyCTkXlq
+	 Drzh9JXYbq5XC7dpwSaSgONfcWt96pSyKL5TsVJyBBnydrwm2gaSYKGybBCe87zzO2g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795664109;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795664110;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding;
-	bh=9FuC6cjcUD9SZ5hGP6b5qTpxCjh2S9d+MKe0M7AsBVE=;
-	b=dxd7K5kwg12O0nUqwKGPceZEEWPyOQU1up+GjSYZ2dXuawkY3/Wqs43Syq7YMEPx8dp3
-	 vb3xS5Rr/+KwYGvqZTzR7kOqOh/2leeRIInOu4MKr8n5bMsLujZDtsC9oYpfOqSPm/tAY
-	 NiP6jitDfj6O5skTTm4C6hv2DLKQGEWQUiPihGyVSffbxQl8GZQwUgs0ULG5J2nYi47Iq
-	 V3LX+C7mpSzVdIdWMNcSPyLVYFVXdSGj5L8PVl4RmbJJwgaV2nlImqEQr/jaCRGqCNag1
-	 cynHfdZtNYwY5S+ZJrZDtP+5+7qMWNfW6cEXjkkYqACsNupaBIADPoltxDVZPWFJSxw==
+	bh=Hu0gzJsXujTx+Rp0yJWGyVH4M6mSE/v+OQLTsPeY52o=;
+	b=NTHEGuGjKalZVLhRx5n8faG68h15kQ+V11MYcVzALGbG94LIORKnfqVpp/Uc0Pm+OiCd
+	 hS+HN9VicmV1ky+DuzY+Bv87cDBmVMr9s4E+NyfNjzsU2clKGgYKt6UD2+EbGFVJo/jkx
+	 PC3EzGR8lgoC+NlthbaUrlodsXh4r3vOztXBTYzljafVfZDXKhuAtci70/ONB+eu5QUfE
+	 xalmsS2gJJbZCT5YyE80+tY4byyGQsxyW5kHVx0sEQZwy+MoFkNb7ydDsDwKxvxjlaVn+
+	 I3slFu83VFmjs6ZldduoMl76CaJNfZ6Yqy087h7T2L8B08NQcsuIBaO4a1km2YUc6GA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=E4P6ZkgN;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=hIf2EEne;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43B68606A334
-	for <linux-scsi@vger.kernel.org>; Thu, 26 Nov 2026 03:35:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4FB7C606A686;
+	Thu, 26 Nov 2026 03:35:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=E4P6ZkgN
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A64A01F000D2;
-	Thu, 26 Nov 2026 03:35:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=hIf2EEne
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 344CD1F000C6;
+	Thu, 26 Nov 2026 03:35:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795664108;
-	bh=9FuC6cjcUD9SZ5hGP6b5qTpxCjh2S9d+MKe0M7AsBVE=;
+	s=k20260515; t=1795664109;
+	bh=Hu0gzJsXujTx+Rp0yJWGyVH4M6mSE/v+OQLTsPeY52o=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=E4P6ZkgN+GEyD6iXtJ3GREyedogzgNNjP8eKZUW+QiFL3ldO/aihvN8zG9flJOPPZ
-	 hKXeSx/ldHboPg+HtujG8oDRYIZyE4FicaE2d/0W2mEXGnv11x+Vu2i4wvQesCWPpU
-	 w6DRgtchZYgmje6ZCDKBE6pkngW40dJiSFMLKSIAkEukeWsrUMesH/pq7g2AlI5vNi
-	 pqPEaQKSTYWxFQQKKjMDRkEMm1heGZrh2el2CvhH7nTYw2fGchmmlBpsqdOeNbpuKm
-	 rwv6j0DbXEoRkJ33R2GCyCWeN5q6jeeGdkBsSDHbCy+YrOvrqmWKn/3waFSpnbaCxe
-	 /AJJjR4tD+3UA==
+	b=hIf2EEnepoWQ0pQtDst4Ubv7jl+ruGue2V0tscPFclz0TDdRtI8dBhRzqNQaRTi3q
+	 PLBbdZPwWpcDiTBohgsfJnPbSJr8TnAVjzpKlUWXw+fu4yBEnfbhJGINDTonm7Ifu9
+	 xKR3bV+lcSPEZhL3QRE66hpH1ATpX7bpER1mTr+mJPCOG/ZrxUnfHXsn4Wl8/BDArt
+	 LYSOfMw7aeP0M5qi+CZsEfyakb/VPTunec0M2+hR9XteIg4UbcNHrcJTRyo4fCljg5
+	 5fwc4OcwcKkyLSTnboKzp0CpOYIGaZ+BF8Ek5kxJkVv7xULBmEzl8YLkxqrUz8BrzS
+	 PdOMXG2AeM9nQ==
 From: "Martin K. Petersen (Oracle)" <mkp@kernel.org>
 To: linux-scsi@vger.kernel.org,
-	"Martin K. Petersen" <mkp@kernel.org>,
-	Ranjan Kumar <ranjan.kumar@broadcom.com>
-Cc: sathya.prakash@broadcom.com,
-	chandrakanth.patil@broadcom.com,
-	sweeti.vandure@broadcom.com,
-	vishakhavc@google.com,
-	ipylypiv@google.com
-Subject: Re: [PATCH v2 00/20] scsi: mpi3mr: Fix issues reported by Sashiko
-Date: Wed, 25 Nov 2026 22:34:51 -0500
-Message-ID: <179566062796.467514.18370732548470297743.b4-ty@b4>
+	shao.mingyin@zte.com.cn
+Cc: "Martin K . Petersen" <mkp@kernel.org>,
+	James.Bottomley@HansenPartnership.com,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] scsi: proc: use snprintf() for the host name
+Date: Wed, 25 Nov 2026 22:34:52 -0500
+Message-ID: <179566062797.467514.8844922842529784457.b4-ty@b4>
 X-Mailer: git-send-email 2.56.1
-In-Reply-To: <20261119071133.127282-1-ranjan.kumar@broadcom.com>
-References: <20261119071133.127282-1-ranjan.kumar@broadcom.com>
+In-Reply-To: <20261110231126279OKrUUjTUMgoJ1kpbNZrCV@zte.com.cn>
+References: <20261110231126279OKrUUjTUMgoJ1kpbNZrCV@zte.com.cn>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -67,66 +64,24 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 
-On Thu, 19 Nov 2026 12:41:12 +0530, Ranjan Kumar wrote:
+On Tue, 10 Nov 2026 23:11:26 +0800, shao.mingyin@zte.com.cn wrote:
 
-> Fixes for issues in the mpi3mr driver reported by Sashiko.
+> scsi_proc_host_add() and scsi_proc_host_rm() format shost->host_no into
+> a 10-byte buffer with sprintf().  host_no is an unsigned int and can
+> reach ten digits.  The %d output plus the terminator then overflows the
+> buffer, and a bounded format would truncate a ten-digit number to nine
+> digits, colliding with an existing procfs entry.
 > 
-> Changes since v1:
-> - Patch 14: Fixed the block_io count left raised when the last LUN is
->   removed during the command, and the use after free of the SCSI target.
->   Both were reported by Sashiko on v1.
-> - Patch 15: Reworked on top of patch 14 and documented the new member,
->   as reported by Sashiko on v1.
-> - Patch 16: Documented the new lock, as reported by Sashiko on v1.
-> - Dropped patch 17 ("scsi: mpi3mr: Reject a too small reply size when
->   enabling log data"). It is not needed because
->   commit e550f2b2b4aa ("scsi: mpi3mr: Validate reply frame size bounds")
->   already rejects a reply frame smaller than 64 bytes.
+> Widen the buffer to 11 bytes, use snprintf(), and print with %u to
+> match the type.  Ten-digit host numbers are written in full, the
+> overflow is gone, and W=1 no longer reports -Wformat-truncation.
 > 
 > [...]
 
 Applied to 7.5/scsi-queue, thanks!
 
-[01/20] scsi: mpi3mr: Fix out-of-bounds read of the BSG request
-        https://git.kernel.org/mkp/scsi/c/fb7673d1037d
-[02/20] scsi: mpi3mr: Fix integer wrap in BSG buffer entry lengths
-        https://git.kernel.org/mkp/scsi/c/3f00e31b1e94
-[03/20] scsi: mpi3mr: Remove redundant BSG buffer length checks
-        https://git.kernel.org/mkp/scsi/c/e25ad58db1e3
-[04/20] scsi: mpi3mr: Fix PRP list leak in BSG passthrough
-        https://git.kernel.org/mkp/scsi/c/213282fa70bd
-[05/20] scsi: mpi3mr: Fix reposting of invalid reply address on the admin queue
-        https://git.kernel.org/mkp/scsi/c/39bed42d2f0a
-[06/20] scsi: mpi3mr: Fix endianness of device handles in BSG requests
-        https://git.kernel.org/mkp/scsi/c/aa1db329a26a
-[07/20] scsi: mpi3mr: Fix integer overflow in the HDB upload bounds check
-        https://git.kernel.org/mkp/scsi/c/2057dfcc96c0
-[08/20] scsi: mpi3mr: Fix integer overflow in the log data size calculation
-        https://git.kernel.org/mkp/scsi/c/ac7df6cdd998
-[09/20] scsi: mpi3mr: Queue DEVICE_INFO_CHANGED events to the bottom half again
-        https://git.kernel.org/mkp/scsi/c/e9642e4dc551
-[10/20] scsi: mpi3mr: Fix target device reference leaks
-        https://git.kernel.org/mkp/scsi/c/0f94a44009c0
-[11/20] scsi: mpi3mr: Fix the 32 bit shift when building the phy mask
-        https://git.kernel.org/mkp/scsi/c/7a94105f9408
-[12/20] scsi: mpi3mr: Fix empty device list race in the all targets query
-        https://git.kernel.org/mkp/scsi/c/2d6e97aabc30
-[13/20] scsi: mpi3mr: Fix the lowest phy number for phys 32 and above
-        https://git.kernel.org/mkp/scsi/c/83d010edd8df
-[14/20] scsi: mpi3mr: Fix target private data use after free in BSG passthrough
-        https://git.kernel.org/mkp/scsi/c/85abd02a51c7
-[15/20] scsi: mpi3mr: Fix block_io accounting when a target is re-created during BSG
-        https://git.kernel.org/mkp/scsi/c/572eaf1f4249
-[16/20] scsi: mpi3mr: Fix sense buffer use after free on BSG command completion
-        https://git.kernel.org/mkp/scsi/c/dcc72f9dbaaa
-[17/20] scsi: mpi3mr: Fix partly written and lost entries in the log data buffer
-        https://git.kernel.org/mkp/scsi/c/93b373f0d4e0
-[18/20] scsi: mpi3mr: Fix byte order handling in the NVMe passthrough commands
-        https://git.kernel.org/mkp/scsi/c/b02157ba7c1f
-[19/20] scsi: mpi3mr: Fix byte order of the BSG status reply
-        https://git.kernel.org/mkp/scsi/c/3ffd4ddbc011
-[20/20] scsi: mpi3mr: Use the correct conversion for the diag buffer post request
-        https://git.kernel.org/mkp/scsi/c/4028e065184b
+[1/1] scsi: proc: use snprintf() for the host name
+      https://git.kernel.org/mkp/scsi/c/f505b951db60
 
 -- 
 Martin K. Petersen
