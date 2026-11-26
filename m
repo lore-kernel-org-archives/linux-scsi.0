@@ -1,86 +1,102 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=210.61.82.184
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=195.135.223.130
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795674429;
-	b=cZN8VakcEpndgIq9rOv52ZBXsZYbHOYG/aVRD4oUfn3417FzgZhM27EjCsUWv/SQePbp
-	 QXP98DQ460y8tVh9XWvPiDdyfYR8FpG0NlfuJfflQMAQ92sFkyYFZwxYjAXmDEF+SvdH5
-	 Gr5kcknhg1PhJA0x9AWpSQL5jq+F2jSahtycWz/TVnPRNorL5jt9wSfhvMDQ/FAhTe0nX
-	 BOcpdWp1fX9iiqW4/F95cmEbxNhqosXaVilaIqhS6prA5pwihDtoHgzTcPy0x7si985Tv
-	 b+SvD/tqOHcnMMg0NhmjcytaMFqMVFKuRwElHJOND38K3daeTbx/m6nu/1omQk3q+Gg==
+	t=1795677827;
+	b=jnlCUCTacoBw1PtSTBPYFR+hGrMKdj7FyrGqTdc87VQL+Qqj3891RcUy8RACtwp3/3N4
+	 uSSR65rx6T765e20xDEu2H+UzrCCEqM89JYYiE+qdrJlQ+FGkQnyaDyjfq4NSq+iek5MN
+	 VIxQrdtQAsGwGsBClLhtOxBaTuIN/mGbQCYGnBLzntDfngLVuH00ZuXIo7pmzk+hOtewd
+	 ukrYGq0Nzbgx0os8ITKAeiEbKIueT7H39d1fXQs3QysdSjrPgWOYMikFLYX0r7PG3dNY6
+	 qHq5hSgoQum2SPhjMpEn11z4uAGeeDDykTnfVMfQhUdfz7HooDBRvhWQSvmSzPHq2kQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795674429;
-	h=DMARC-Filter:X-UUID:DKIM-Signature:X-CID-P-RULE:X-CID-O-INFO:
-	 X-CID-META:X-CID-BVR:X-CID-BAS:X-CID-FACTOR:X-CID-RHF:X-UUID:Received:
-	 Received:Received:Message-ID:Subject:From:To:CC:Date:In-Reply-To:
-	 References:Content-Type:Content-Transfer-Encoding:User-Agent:
-	 MIME-Version:X-MTK;
-	bh=1D8mPUhCaEsrNElot8tnF/R4sri5CYIf/0Q3XZ/zvAs=;
-	b=yfyAdgYUdGFLO9N6SoHyvjS6XVpL0xqAmQ8BEPP1XUsjjF7HV41lss8q+YuKBrSmEfiI
-	 WxgP+5oQfuRHdhWYCDyXk/0uQ8SC+78spNnP3LLa+VWUMR2C/10zo9pFPeC+byCUHYwfp
-	 vTD4+DZyUkoNVp3Nwmlob1A3BJxffXYXpasHDIrE4PVOWMAAN/H8OYCnQYl6I6g4naHnN
-	 fYjk8TyeF/6CTHVQZ2ITdNDCrqrGBr4bnIJ+djP29PeT4qSbcNOAyNgOEyx4VbVP6uReY
-	 if9lmsfsCqCTyqGV//LZCQtf0E+Ef2BatrBSYN86qa/0zBHMYK8t8w66JaKMGyLA/dQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795677827;
+	h=DMARC-Filter:Received:DKIM-Signature:DKIM-Signature:DKIM-Signature:
+	 DKIM-Signature:Received:Received:Message-ID:Date:MIME-Version:
+	 User-Agent:Subject:To:Cc:References:Content-Language:From:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:X-Spamd-Result:X-Spam-Score:
+	 X-Spam-Level:X-Spam-Flag;
+	bh=FnIv6zO8AKSebatR7MIAQFTrAPkbi7dRfDEicXhzfg8=;
+	b=iT6I3F024LsmMt2Z4LX1ZhSLSY8EpIUHjRMRQhwzmoJgf12iT4eEhB8e33THGvglF97i
+	 LZC2fLtlAEbpiMhJv1EfC2Op1ywn3Rkkm5DQH/j/CsZaAmKhQ+VhXnxRfvfq8A0aGO1gd
+	 u4aEdcw+a6TDEP75ICt0nQfeeCuEATqREzLpFJV9ft05OyCDz0WDulOda0pL0GUxMKZKW
+	 5mcrFqmIZJwp6+vHeOelUNbumsK2NucADQPrVUnfX7hAjrJDHHJPa00/lK8XRBA11il+D
+	 /vsDUOC3PPLM1SJIJjEUEgXQoAeZo7/ymLngaAFAsd71/oa5q2GTyOhikh3X5NhsVDQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=mediatek.com;
-	spf=pass smtp.mailfrom=mediatek.com;
-	dkim=pass header.d=mediatek.com header.i=@mediatek.com header.a=rsa-sha256 header.s=dk header.b=BzNfJwX4;
-	arc=none smtp.remote-ip=210.61.82.184
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+	dmarc=pass header.from=suse.de;
+	spf=pass smtp.mailfrom=suse.de;
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=XPNuPDQA;
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=AnxRiOSn;
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=XPNuPDQA;
+	dkim=neutral header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=AnxRiOSn;
+	arc=none smtp.remote-ip=195.135.223.130
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 25A78606A31C;
-	Thu, 26 Nov 2026 06:27:07 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 25A78606A31C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2ABBE606A31C;
+	Thu, 26 Nov 2026 07:23:47 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2ABBE606A31C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=mediatek.com header.i=@mediatek.com header.a=rsa-sha256 header.s=dk header.b=BzNfJwX4
-X-UUID: 61979708e96211f1a7aecdb2598be72c-20261126
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=MIME-Version:Content-Transfer-Encoding:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=1D8mPUhCaEsrNElot8tnF/R4sri5CYIf/0Q3XZ/zvAs=;
-	b=BzNfJwX4NxxWehmFX2R/keIXjxZs5cEdCNWjoTeQzANUA6e24YxZU3t2fEaUBoowpjADG/A2VJXiPX4vd9idA4EX0TXlwenRW8+J/U+OX05lDQG7o3fgSIsal37CMT8rz71Vj2+QkGnJGiWitDb74Uy/2R5NkLSLiY1P3LASK9o=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.21,REQID:64a89749-c2c2-4185-a606-620f12ad19ab,IP:0,U
-	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-	release,TS:0
-X-CID-META: VersionHash:b0318ac,CLOUDID:44ba5d31-f289-4656-bb36-27baf4489f11,B
-	ulkID:nil,BulkQuantity:0,SF:80|81|82|83|102|136|836|865|888|898,TC:-5,Cont
-	ent:0|15|50|99,EDM:-3|-100,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:
-	nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 61979708e96211f1a7aecdb2598be72c-20261126
-Received: from mtkmbs13n1.mediatek.inc [(172.21.101.193)] by mailgw02.mediatek.com
-	(envelope-from <peter.wang@mediatek.com>)
-	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 1503983675; Thu, 26 Nov 2026 14:26:57 +0800
-Received: from mtkmbs11n2.mediatek.inc (172.21.101.187) by
- mtkmbs13n1.mediatek.inc (172.21.101.193) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.56; Thu, 26 Nov 2026 14:26:56 +0800
-Received: from [10.233.130.16] (10.233.130.16) by mtkmbs11n2.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.2.2562.56 via Frontend
- Transport; Thu, 26 Nov 2026 14:26:56 +0800
-Message-ID: <17e91a1ef61133b5c3e0e736577c9596091667ca.camel@mediatek.com>
-Subject: Re: [PATCH v3 0/3] scsi: ufs: core: Add debugfs for PA TFS/FEC
- error counters
-From: Peter Wang <peter.wang@mediatek.com>
-To: Po-Wen Kao <powenkao@google.com>, <linux-scsi@vger.kernel.org>
-CC: Konstantin Vyshetsky <vkon@google.com>, Randall Huang
-	<huangrandall@google.com>, Alim Akhtar <alim.akhtar@samsung.com>, "Bart Van
- Assche" <bvanassche@acm.org>, Bean Huo <beanhuo@micron.com>, Stanley Jhu
-	<stanleyjhu@google.com>, "James E . J . Bottomley"
-	<James.Bottomley@HansenPartnership.com>, "Martin K . Petersen"
-	<mkp@kernel.org>, Can Guo <can.guo@oss.qualcomm.com>,
-	<linux-kernel@vger.kernel.org>
-Date: Thu, 26 Nov 2026 14:26:56 +0800
-In-Reply-To: <20261125113435.1426680-1-powenkao@google.com>
-References: <20261125113435.1426680-1-powenkao@google.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.52.3-0ubuntu1.1 
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=XPNuPDQA;
+	dkim=pass header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=AnxRiOSn;
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.a=rsa-sha256 header.s=susede2_rsa header.b=XPNuPDQA;
+	dkim=neutral header.d=suse.de header.i=@suse.de header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=AnxRiOSn
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 548782261C;
+	Thu, 26 Nov 2026 07:23:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1795677825; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=FnIv6zO8AKSebatR7MIAQFTrAPkbi7dRfDEicXhzfg8=;
+	b=XPNuPDQAw37v0M9hCgTlyx8/MCCnoEDV9aZ9/AlZYh61JLrkhtx0LI4AwPsznUvNXkMIDC
+	7a+rJJ9l2Oxlu3L9yOFM7Va57xABu5/5RFE+MR8dRL5fTDl0P2WYs+IWgZfSvUUdfX1c/i
+	JlFV1PD6fyiQ6xvOfuglYtEkpBFsjJc=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1795677825;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=FnIv6zO8AKSebatR7MIAQFTrAPkbi7dRfDEicXhzfg8=;
+	b=AnxRiOSnvnRfk+vSbW8S8kzEDj51+b7Nfrh2Xxm1jq8xorV7xC3hb2aWldRqOnY7K9o3SS
+	jJjEYH44mcFnpGBw==
+Authentication-Results: smtp-out1.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1795677825; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=FnIv6zO8AKSebatR7MIAQFTrAPkbi7dRfDEicXhzfg8=;
+	b=XPNuPDQAw37v0M9hCgTlyx8/MCCnoEDV9aZ9/AlZYh61JLrkhtx0LI4AwPsznUvNXkMIDC
+	7a+rJJ9l2Oxlu3L9yOFM7Va57xABu5/5RFE+MR8dRL5fTDl0P2WYs+IWgZfSvUUdfX1c/i
+	JlFV1PD6fyiQ6xvOfuglYtEkpBFsjJc=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1795677825;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=FnIv6zO8AKSebatR7MIAQFTrAPkbi7dRfDEicXhzfg8=;
+	b=AnxRiOSnvnRfk+vSbW8S8kzEDj51+b7Nfrh2Xxm1jq8xorV7xC3hb2aWldRqOnY7K9o3SS
+	jJjEYH44mcFnpGBw==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id D85D6134C3;
+	Thu, 26 Nov 2026 07:23:44 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id sSpCJ4DeB2uaZAAAD6G6ig
+	(envelope-from <hare@suse.de>); Thu, 26 Nov 2026 07:23:44 +0000
+Message-ID: <9544b932-3154-4185-98b5-4aa7004c2ca2@suse.de>
+Date: Thu, 26 Nov 2026 08:23:44 +0100
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -90,27 +106,92 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-X-MTK: N
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi: fcoe: Fix use-after-free after pskb_may_pull() in
+ fcoe_rcv()
+To: Elkin Cruz <elkin@google.com>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <mkp@kernel.org>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+ llvm@lists.linux.dev, irogers@google.com, stable@vger.kernel.org
+References: <20261125221921.1425747-1-elkin@google.com>
+Content-Language: en-US
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20261125221921.1425747-1-elkin@google.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Spamd-Result: default: False [-13.29 / 50.00];
+	SUSE_INTERNAL_BYPASS(-9.00)[];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-0.998];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	XM_UA_NO_VERSION(0.01)[];
+	MIME_TRACE(0.00)[0:+];
+	ARC_NA(0.00)[];
+	RCPT_COUNT_SEVEN(0.00)[8];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	MID_RHS_MATCH_FROM(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FROM_HAS_DN(0.00)[];
+	TO_DN_SOME(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,suse.de:email]
+X-Spam-Score: -13.29
+X-Spam-Level: 
+X-Spam-Flag: NO
 
-On Wed, 2026-11-25 at 19:33 +0800, Po-Wen Kao wrote:
-> From: Brian Kao <powenkao@google.com>
->=20
-> This series exposes the MIPI UniPro v3.0 PA layer TFS/FEC error
-> counters (0x15C3-0x15C7) under debugfs:
->=20
-> =C2=A0 /sys/kernel/debug/ufshcd/<dev>/pa_err_stats/{host,device}/
->=20
-> Patch 1 fixes an existing teardown race by removing debugfs and
-> disabling debugfs_ee_work before scsi_remove_host() removes the WLUN.
-> Patch 2 defers debugfs creation until after device init while keeping
-> debugfs_ee_work initialization before IRQs are enabled. Patch 3 adds
-> the PA_TFS_* and UniPro 2.0/3.0 definitions and creates
-> pa_err_stats/{host,device}/ based on PA_LOCALVERINFO /
-> PA_REMOTEVERINFO.
->=20
+On 11/25/26 11:19 PM, Elkin Cruz wrote:
+> In fcoe_rcv(), eh = eth_hdr(skb) is cached before pskb_may_pull(). If
+> pskb_may_pull() reallocates skb->head, eh is left pointing to freed
+> memory when validating eh->h_dest against the FC frame header.
+> 
+> Re-evaluate eh = eth_hdr(skb) after pskb_may_pull() succeeds.
+> 
+> Fixes: 0ee31cb5df4b ("[SCSI] fcoe: Fix broken NPIV with correction to MAC validation")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Elkin Cruz <elkin@google.com>
+> ---
+> 
+> I am trying out new Clang static analysis checks for kernel bug
+> classes, and they flagged this code as possibly buggy. The findings
+> were triaged/fixed and commit descriptions were drafted with help of AI,
+> then checked against linux-next (not runtime-tested on hardware).
+> 
+> Thanks,
+> Elkin
+> 
+>   drivers/scsi/fcoe/fcoe.c | 2 ++
+>   1 file changed, 2 insertions(+)
+> 
+> diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+> index a2cf65fac297..23d6b9893793 100644
+> --- a/drivers/scsi/fcoe/fcoe.c
+> +++ b/drivers/scsi/fcoe/fcoe.c
+> @@ -1365,6 +1365,8 @@ static int fcoe_rcv(struct sk_buff *skb, struct net_device *netdev,
+>   		     !pskb_may_pull(skb, FCOE_HEADER_LEN)))
+>   		goto err;
+>   
+> +	eh = eth_hdr(skb);
+> +
+>   	skb_set_transport_header(skb, sizeof(struct fcoe_hdr));
+>   	fh = (struct fc_frame_header *) skb_transport_header(skb);
+>   
 
-Hi Brian,
+Please move that two lines down, just before
+	if (ntoh24(&eh->h_dest[3]) != ntoh24(fh->fh_d_id))
 
-The series looks good to me.
+that'll make the patch easier to read. And please add a comment
+that the skb->head might have been reallocated.
 
-Reviewed-by: Peter Wang <peter.wang@mediatek.com>
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
