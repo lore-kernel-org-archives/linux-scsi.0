@@ -1,71 +1,79 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.167.197
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795660546;
-	b=qnrgOIroDI10jdq6ScstNzCKgSB80NDVafIoxbJuYQXnMijW8qcr3CyJ4KKHhXxZb92H
-	 TfQ307rh9po+D4DxWmiJlSlWnWf1APA3Ig1CXl92IeKdmgY91AREXsA8Zq3qp5gB6i8OQ
-	 qjGHSAdWSDl/G/b3s8WcrcJ65rUDLYlRmcgbb/FJibc1bT82oQfphHKitvUstInI9t/MT
-	 /n51BjUXUlIMwAIBXO+v9kdWDSGla/LBMQEVLFAq2sKir9yUeFqqIzjuBjB5cJNK/oDx1
-	 8qVePt1stuKz+htpqtZa2LI0iwbUgJx+uPaN7syqjeMO3/hZ8OuXcZu4ivA2AePUK1w==
+	t=1795660722;
+	b=EBW67E2l7jlz0YyjEkxhdKTLq7XP6Ulxtg6ixI5M8R3m0dpCGfHrHQFtWmtOxX26O3Hw
+	 1u5qrsMCxEGnLo1I012VqSH+YfYykylm8p7Qcn1qpx/K5KBd2dRWZFMU4wtb/Dzxvl6Mf
+	 D89H5EXAr8VV+RNJKW/KybG3vjLD0FU5YX42CfM20DgeBCPsNcZoO+RMPbwlCe9Mxwu5k
+	 il0nFRNFyqN6Qtj+Li6VZg/caGK2W954zQDPa9tsNq1ojy1F3dBPJHeozc6YkriiDU6om
+	 p+tC0WJKElOJUIIPnmYOh8EsGn2eOWVv2n4mS6xRWJKEuhnYJFu2HnGAZoVRI8Y7LkA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795660546;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Received:Date:Mime-Version:X-Mailer:Message-ID:
-	 Subject:From:To:Cc:Content-Type;
-	bh=vnbaaCeQ4iuOjN0aXPIZIsjFxXeCrpxuuDRTSWpiltI=;
-	b=PaV/Cu2QExl0PGYQ6uH/SIGb7njYFekL6kVsfo8vsjdTrII7izw2CD7AHtv/+knzqIl4
-	 xoAAxLyfMNb5OkRGd7wmB4lmDbuE0kgUYOfzxu5kTfeQjPIBgwT2uFwCckgXfmIoGJajW
-	 oxY8RezPc/qEdiSY8WsHrqSOmWkL/4+6NSoMFXcl8jXqsd7bNBuAUc1z6+/BB+qU3t5Er
-	 JLY9wqu2TnogIu5dfjyOEfh+VLE5txTWsNxc3zqvSEOMXSaKjgZfDaXMhnSKQu6ThjpIG
-	 UsCzOztMNi+BrglKgd+2yO+6d+K14Hw56/oosJd7Ng0sQhYgMVrIRCAbD9PdCXIQyjA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795660722;
+	h=Received:DKIM-Signature:To:Cc:Subject:From:In-Reply-To:Message-ID:
+	 References:Date:MIME-Version:Content-Type;
+	bh=FrsA9VM2RRDYw3dIWHPlcPU2Tzr0ACPscINTsZ3wYKU=;
+	b=WWMIasQGqN79o41MA1tXSiyHnwKxIHRBBEJn4KeH6a/X6eZVTFauFEQKdCwFrw1+2ZDr
+	 YSEf+Tf87qJs44tTna9Fpy8dAqpYmUuEFx8bWK7+4/JroIrJ3swNkrXDN+8zffwmiewNe
+	 UIPkCtAacP2ctc15Jld8SN0DPdo2Q51RLBzJDIkniaGV+DBGokBnL662U4GSZFelRah1E
+	 s0XO1Ufq65pN4bIwgYSAUY7Ockt3WqXVo/414cLtd9mfFMflIWrxHm5EDrWh57hmOA3TE
+	 04ghyoFogXcsjJhhCwWzvAuVJvj2Cz0jQZwHout0TeNA0Z0jFjUwyVwnbHHeEECSAvg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=google.com;
-	spf=pass smtp.mailfrom=flex--zhenwenliang.bounces.google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=SO9NkoSY;
-	arc=none smtp.remote-ip=209.85.167.197
-Received: from mail-oi1-f197.google.com (mail-oi1-f197.google.com [209.85.167.197])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=bQ0PGikm;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB9FA606A33E
-	for <linux-scsi@vger.kernel.org>; Thu, 26 Nov 2026 02:35:45 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org DB9FA606A33E
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--zhenwenliang.bounces.google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E5E2606A31E;
+	Thu, 26 Nov 2026 02:38:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=SO9NkoSY
-Received: by mail-oi1-f197.google.com with SMTP id 5614622812f47-57289376805so6107674b6e.1
-        for <linux-scsi@vger.kernel.org>; Wed, 25 Nov 2026 18:35:45 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20260707; t=1795660545; x=1796265345; darn=vger.kernel.org;
-        h=content-type:cc:to:from:subject:message-id:mime-version:date:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=vnbaaCeQ4iuOjN0aXPIZIsjFxXeCrpxuuDRTSWpiltI=;
-        b=SO9NkoSY76TdZ8L3QNZVqY4TxvBBzlHkUTD++MRIuj14TuIFlBRTuodK7IlCJ1yXNj
-         SJ0WES7uC9bJ6u0/sWhk1cIcLJU0zrxB1Qyz83kNZvOquDVVv7BltOY9WxMitCFGtGNi
-         ZeQMJ6iMNBKIne1loL8ZFTkQCENtrtdpp3ax+6xfurZH8VGTuFuPR+gFWH5jHx3cc279
-         KWzYKy5fctG+/jeUlh0/c2tDP2mQzfTqwZtS+L/fe5NT9pC1XRgH2tqv8KphLjlr2YgO
-         XfTUZsx7UGdBWaFuihu1s6gIQSi4S9eBZukI0yYVa242hohC+ybkBYpVlu8BJI0isA7f
-         egcQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795660545; x=1796265345;
-        h=content-type:cc:to:from:subject:message-id:mime-version:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=vnbaaCeQ4iuOjN0aXPIZIsjFxXeCrpxuuDRTSWpiltI=;
-        b=X3hbcT99X5geB/mJGAUF5+Ee5K7pWnzqUtg3Sv3GFcN1Nsr9lT+RC95K8pxrVyyn0w
-         8GdFO8A5phmyf5ZKdlmgrMucxsHzP/gQeETyW3NRyT6S5z5JJhzCHODWPz0OY4a2GnEH
-         faILH2nN7aDRnRi2LSvkSn8wwxDUE+BsJIDGatty5aNleGYK1pqB5pM+f7x0HnQp95wX
-         ctin8Rv+cPuWaJUSFsOKbMmiO7/i9fhFM0CZII85Z7emFgoPoNae6jeg6ZuO1uwGuOAo
-         Zb0uEnC3sfrFwO2mQLmh8oDvRkwV5NDz+EpFXA0L9/3c+HSnCB5iK7C+1dy+U4lknhKq
-         /TqA==
-X-Gm-Message-State: APuU4Z+1UrVYl0en8ETdfAKt+v1/wBJpkML+egIdhv+BD5oQl1q5MCnT
-	is/R+JGNyfoH3uxMN6BsiGWV3xrJ/HBL80s0W2Vwfhk8eYub16II4AbypXwbj7B7NAbfqEOlUu0
-	oVk6cpRfpbJv1uLYENFxpw3kVwEFgXQ==
-X-Received: from ilef17-n2.prod.google.com ([2002:a05:6e02:6191:20b0:54e:a7dd:848b])
- (user=zhenwenliang job=prod-delivery.src-stubby-dispatcher) by
- 2002:a05:6808:4f29:b0:579:8a9e:1149 with SMTP id 5614622812f47-57a0ba4fbdemr23205010b6e.35.1795660544666;
- Wed, 25 Nov 2026 18:35:44 -0800 (PST)
-Date: Thu, 26 Nov 2026 02:35:43 +0000
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=bQ0PGikm
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 69E091F000C4;
+	Thu, 26 Nov 2026 02:38:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1795660721;
+	bh=FrsA9VM2RRDYw3dIWHPlcPU2Tzr0ACPscINTsZ3wYKU=;
+	h=To:Cc:Subject:From:In-Reply-To:References:Date;
+	b=bQ0PGikmMVpCXzr2+ogQGCzmWiJsDojV8YuLw94SOoEP+6af4SDkg1Hz05ayFBKaU
+	 T2Kkn6ace5P/sBOVer3k6SEGH0Ev/B4bIxNUbkMzLaVWTX2m84EjwxigZ9zr7C5ta3
+	 Io/6ySL6xk7/Wb0+RLCQabC0jimBgxFCnQtIxULviz7f7YZ0WX+nGUMUl+NqjmIh09
+	 S4gN31qaEurmnHa5pYbcSItay35YwpXukelvdSK/KB8u3jxbJ51CUjMQpidqSu7hwC
+	 vP12nZVTa+DWYWW3MwC5TGg10y40os0eK+YRpCmXvbizboj6O+CuHCfcEKzmPUCQZF
+	 gIUMuxcOfUvVg==
+To: Stanislav Aleksandrov <lightofmysoul@gmail.com>
+Cc: Bjorn Andersson <andersson@kernel.org>,  Konrad Dybcio
+ <konradybcio@kernel.org>,  Abel Vesa <abelvesa@kernel.org>,  Rob Herring
+ <robh@kernel.org>,  Krzysztof Kozlowski <krzk+dt@kernel.org>,  Conor
+ Dooley <conor+dt@kernel.org>,  Robert Marko <robimarko@gmail.com>,  Guru
+ Das Srinagesh <linux@gurudas.dev>,  Thomas Gleixner <tglx@kernel.org>,
+  Radu Rendec <radu@rendec.net>,  Will Deacon <will@kernel.org>,  Robin
+ Murphy <robin.murphy@arm.com>,  "Joerg Roedel (AMD)" <joro@8bytes.org>,
+  Greg Kroah-Hartman <gregkh@linuxfoundation.org>,  Wesley Cheng
+ <wesley.cheng@oss.qualcomm.com>,  Vinod Koul <vkoul@kernel.org>,  Neil
+ Armstrong <neil.armstrong@linaro.org>,  Manivannan Sadhasivam
+ <mani@kernel.org>,  Alim Akhtar <alim.akhtar@samsung.com>,  Bart Van
+ Assche <bvanassche@acm.org>,  Bean Huo <beanhuo@micron.com>,  Stanley Jhu
+ <stanleyjhu@google.com>,  Herbert Xu <herbert@gondor.apana.org.au>,
+  "David S. Miller" <davem@davemloft.net>,  "Rafael J. Wysocki"
+ <rafael@kernel.org>,  Viresh Kumar <viresh.kumar@linaro.org>,  Amit
+ Kucheria <amitk@kernel.org>,  Thara Gopinath <thara.gopinath@gmail.com>,
+  Daniel Lezcano <daniel.lezcano@kernel.org>,  Zhang Rui
+ <rui.zhang@intel.com>,  Lukasz Luba <lukasz.luba@arm.com>,  Georgi Djakov
+ <djakov@kernel.org>,  Sibi Sankar <sibi.sankar@oss.qualcomm.com>,  Ulf
+ Hansson <ulfh@kernel.org>,  linux-arm-msm@vger.kernel.org,
+  devicetree@vger.kernel.org,  linux-kernel@vger.kernel.org,
+  linux-arm-kernel@lists.infradead.org,  iommu@lists.linux.dev,
+  linux-usb@vger.kernel.org,  linux-phy@lists.infradead.org,
+  linux-scsi@vger.kernel.org,  linux-crypto@vger.kernel.org,
+  linux-pm@vger.kernel.org,  Krzysztof Kozlowski
+ <krzysztof.kozlowski@oss.qualcomm.com>
+Subject: Re: [PATCH v3 07/14] dt-bindings: ufs: qcom,sc7180-ufshc: Add
+ Halliday UFS
+From: "Martin K. Petersen" <mkp@kernel.org>
+In-Reply-To: <20261125-halliday-dts-v3-7-5c8311c0b70b@gmail.com>
+Message-ID: <yq1tsl4jp07.fsf@mail.kernel.org>
+References: <20261125-halliday-dts-v3-0-5c8311c0b70b@gmail.com>
+	<20261125-halliday-dts-v3-7-5c8311c0b70b@gmail.com>
+Date: Wed, 25 Nov 2026 21:38:40 -0500
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -74,61 +82,15 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0
-X-Mailer: git-send-email 2.56.1.839.g22a8290db9-goog
-Message-ID: <20261126023543.4162289-1-zhenwenliang@google.com>
-Subject: scsi: target: core_free_device_list_for_node() walks an RCU hlist it
- is freeing without rcu_read_lock()
-From: Zhenwen Liang <zhenwenliang@google.com>
-To: "Martin K. Petersen" <mkp@kernel.org>
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
+Content-Type: text/plain
 
-Hi,
 
-core_free_device_list_for_node()
-(drivers/target/target_core_device.c:233-243, mainline ebb7a8dc1e74) is:
+Stanislav,
 
-    mutex_lock(&nacl->lun_entry_mutex);
-    hlist_for_each_entry_rcu(deve, &nacl->lun_entry_hlist, link)
-            core_disable_device_list_for_node(deve->se_lun, deve,
-                                              nacl, tpg);
-    mutex_unlock(&nacl->lun_entry_mutex);
+> Document the UFS host controller on the Qualcomm Halliday SoC.
 
-The loop body unlinks the current entry with hlist_del_rcu(&orig->link)
-and queues its free with call_rcu(&orig->rcu_head,
-target_free_dev_entry) (core_disable_device_list_for_node(), :467 and
-:479). The iterator then reads deve->link.next of that entry to advance.
-lun_entry_mutex serialises the writers but does not hold off the RCU
-callback, and there is no rcu_read_lock() around the walk. On a
-preemptible-RCU kernel, if the walker is preempted after call_rcu() for
-a full grace period, target_free_dev_entry() frees the entry and the
-next iterator step reads freed memory.
+Applied to 7.5/scsi-staging, thanks!
 
-Since the walk holds the writer-side mutex, hlist_for_each_entry_safe()
-(or an rcu_read_lock() around the loop) looks like the natural fix.
-
-Reachability: core_free_device_list_for_node() runs when a node ACL is
-removed (configfs rmdir, core_tpg_del_initiator_node_acl()) and on TPG
-deregistration; with demo-mode dynamic ACLs (generate_node_acls=1, no
-ACL caching) it can also follow an initiator's session teardown. It
-needs CONFIG_PREEMPT_RCU and a preemption lasting a grace period inside
-the window, so it is narrow. Impact: a use-after-free read of
-se_dev_entry (KASAN would report it); with slab reuse, a wild pointer
-for the next iteration.
-
-Affected: the loop is unchanged in mainline ebb7a8dc1e74 and
-next-20261125. This is not the problem fixed by 6a6e7d7230cd ("Fix
-demo-mode dynamic ACL dev-entry UAF vs LUN teardown").
-
-Found by a formal analysis tool we are developing that uses AI
-assistance; I have reviewed the analysis and this report. The tool runs
-verbatim copies of the kernel functions with stubs for the rest of the
-kernel; it found the interleaving above, and the interleaving was
-replayed natively on that harness under the tool's schedule. Functions
-involved: core_free_device_list_for_node(),
-core_disable_device_list_for_node(), target_free_dev_entry(), with an
-RCU callback model. It has not been reproduced on a booted kernel.
-
-Thanks,
-Zhenwen Liang
+-- 
+Martin K. Petersen
