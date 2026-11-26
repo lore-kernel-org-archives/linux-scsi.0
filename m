@@ -1,88 +1,85 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=85.215.255.53
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=85.215.255.54
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795732365;
-	b=Kw0ODLk90M87wYvgwqvxYp3c0pQjwhOtE6qtEGe7rok4FkMaGY9wLJDe86XylF09gglK
-	 nqccjLceHqBZ1+NtFKAfLDbkXfNcVlE33vZuKozuuh/ueILHTLfrmNS9MXwjXiy9O+jfC
-	 w0cFk3Bf9U/p63wXOi3YIsQqw6ELYqyIcmUgnnUTz4r0sbSn4VHxFOwvanJ1rVPmUbO1x
-	 d7wUH/bUuR1zlvsTDfGudpnBOCrceIcSLifsd509xGcJ7ocgpC0z/nABFJg+7r/zjakaR
-	 v6v2OIvuXIzX1VBl37od3HK+pgkJV8d6I9sG5WZngteyf/NP2RpoUReYRK0ZnDu5rbg==
+	t=1795732370;
+	b=GhtVWdgLHpqz1Nldzt7DCiNSDwIaS4O6/YI/2WE8q78hn7JI8afDufI3QO2SDg5n77hN
+	 DqBiFig73wiQbAI955DuaGUSpqzxzk4ZndRAfnzQLtKuxpsbVrXmj1q3s4njr9Qx4ZO6E
+	 X5YWpv1kkUHODjNv+EpkbYkwv2WXWesOyi5VdOKTXpCZ6LMsm+5b4nJqcoJocfpLFHjho
+	 xZB7Nw+8CipvSPE55fWp7WsKfn9pdQb9yjKceP2EmvGtm6qXYq7LDCapmjbUoKYH9YBsC
+	 dJhVom9OJW4fWX/HeVpqPhRxaXy1JHPS9uN82xNx3QhbtqTus5bd/zeIXuW3PvSNzvw==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795732365;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795732370;
 	h=DMARC-Filter:X-RZG-CLASS-ID:DKIM-Signature:DKIM-Signature:X-RZG-AUTH:
-	 Received:From:To:Cc:Subject:Date:Message-Id:X-Mailer:In-Reply-To:
-	 References:MIME-Version:Content-Transfer-Encoding:Content-Type;
-	bh=YLRX0OaUNZ3WcezBtVDRtDl3s5/0FwtcLnvobcev8Cc=;
-	b=ayVsbCjpxqMmxF1/cNhpoTpBrRDiXPrLGtY6M5dEbLHK24JsUyFaF6FqnNCxQfNayZi7
-	 ZX3lB7S0StGcNCKZRNucJJPWamxdEfuGSrxkzpfuMau12MqU2JFG4bsHHGLH3KR2bGP0z
-	 66lhBo8wikm6Cvh45d7fs95mpdu+jZY3fptNkfQ0O2Ldjzr3QvUo4FKzbKODaUp2K2c9z
-	 XCLTBhSijCU6R7tpGqirSZNWRN62jztxrRk15haqUrPp3rY/q59a31EXJxHzooCMBPZ0/
-	 /hhGmyOYjZh7wIJHROLiBRYwXhwfnPb5c6tUKuuGTcDL31OXtEllc6Hoq6aFQiLrODg==
+	 Received:From:To:Cc:Subject:Date:Message-Id:X-Mailer:MIME-Version:
+	 Content-Transfer-Encoding:Content-Type;
+	bh=L8BgtXNBzYX1GjQ1VVae357SREfMavFxSODIa4qd32A=;
+	b=TrvphVX43X43pSqLbtNHp7bSLcvvrPe3ox23tn3joNnNguojyI6VkceRyFq/AdeITmWN
+	 b5NY4bdIlO7mC2vOZf9d9izunTk2xJA5r+7+tatfikjlnv+/Rv82Qx10qO63iaN5V7FPr
+	 ReNlDHhOiEXUZDAvSAP6HHPbatNup/ATweejv6FiSwoD/enhTX2pDA+k7iAef7ZYJyJEj
+	 dcweedhTbYry+NNuzJUB0+hlacW1Y+dAwCePVxvv/jjKUGQBykSZzIePW88nkrVYgKp/D
+	 UnmdPClCnsN7GNHvzqkAltUJ5Hkip8O1qVYRyOSMhk8rQqCXCwmAyzh3Gx31s99IrrQ==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=iokpp.de;
 	spf=none smtp.mailfrom=iokpp.de;
-	dkim=pass header.d=iokpp.de header.i=@iokpp.de header.a=rsa-sha256 header.s=strato-dkim-0002 header.b=LuSLgd4m;
-	dkim=pass header.d=iokpp.de header.i=@iokpp.de header.a=ed25519-sha256 header.s=strato-dkim-0003 header.b="4xfwx/gY";
-	arc=pass header.oldest-pass=0 smtp.remote-ip=85.215.255.53
-Received: from mo4-p01-ob.smtp.rzone.de (mo4-p01-ob.smtp.rzone.de [85.215.255.53])
+	dkim=pass header.d=iokpp.de header.i=@iokpp.de header.a=rsa-sha256 header.s=strato-dkim-0002 header.b="Ljc/TmRO";
+	dkim=pass header.d=iokpp.de header.i=@iokpp.de header.a=ed25519-sha256 header.s=strato-dkim-0003 header.b=VR416GXq;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=85.215.255.54
+Received: from mo4-p01-ob.smtp.rzone.de (mo4-p01-ob.smtp.rzone.de [85.215.255.54])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 13CBD606A31C;
-	Thu, 26 Nov 2026 22:32:42 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 13CBD606A31C
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 243D7606A326;
+	Thu, 26 Nov 2026 22:32:48 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 243D7606A326
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=iokpp.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.a=rsa-sha256 header.s=strato-dkim-0002 header.b=LuSLgd4m;
-	dkim=pass header.d=iokpp.de header.i=@iokpp.de header.a=ed25519-sha256 header.s=strato-dkim-0003 header.b=4xfwx/gY
+	dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.a=rsa-sha256 header.s=strato-dkim-0002 header.b=Ljc/TmRO;
+	dkim=pass header.d=iokpp.de header.i=@iokpp.de header.a=ed25519-sha256 header.s=strato-dkim-0003 header.b=VR416GXq
 ARC-Seal: i=1; a=rsa-sha256; t=1795732359; cv=none;
     d=strato.com; s=strato-dkim-0002;
-    b=f+FvmR0vJ8clx1Nl1XG30F0bgb2yWTzgpS8AW00jD5BFsklDPZPiVMWQ/dBkd+s1kt
-    cWg/HgalvcB0DzDRBePW9QSkiC8UjHldig5ptP4FP23xYn/phgP2lv7O7j8bfPEF27tj
-    xuoAI+9wb6qFLHaiLloBqXTeDkD5mZ28h2HMONUWGaTQcfYxXHVGtj5OoKwdTsfjbjye
-    +NT2H5fbOwpUDXAikxw4D+uu0hCH9HK3qg2W4sYyWjPWxQaPMvBOuoXR484+MJkOlGOm
-    kFH/twA4js7jBj9Qf22rzyCkHf1S5MVtqYHlyiGYaKOcLmsIYvYIshiJK4QHomh3KesU
-    kChQ==
+    b=gF3bMkcuhVsspSwtUBQSYQxk6l0miaY5mIAD+KkdExgRl4KexAMFfC1GCTvIckrb0t
+    OS/nNkov9NPPwVUJmEb1vXgjrIQZjQIH8axxys7mpAENTGP4XWpbJ8GLwx2EP65QeArP
+    x601Zh8kXwx+70YUzrWj7e/s9C6zDhPVjZpCQ2S3WVY1Uzz4AMomeuqqaIBexrzROMXr
+    O1CnviablrCq4DNLy2fIF02UqjHXlOF7sa1yWUgUd1ZvnPzZ3aQAjKd0LqO0C/tGUVIm
+    3ozDPwMCP4RRpbS3kgBNnij5BVPmeDwXTcCqu3EuVHMv4e01PIjOb+EFnlI4dZWebzgy
+    2BeA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1795732359;
     s=strato-dkim-0002; d=strato.com;
-    h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Cc:Date:
-    From:Subject:Sender;
-    bh=YLRX0OaUNZ3WcezBtVDRtDl3s5/0FwtcLnvobcev8Cc=;
-    b=KtJXYabVqbldq4crKNokmAUZmS4mIpuj3+TrUoSmLwBkvZVa5UYfPJDge5ScQ7+dgk
-    bdoZXT9bswmTgPmIDQuQe2Zo3A3NDYmxxhyz8OYQya8uT0CKwNa1JzwtplvmKZmMtzYJ
-    Uvq/4mmzmBd8PHRtr2+1KGXUxxm2BzQsWaG9SifqfVkfM1DVYNWeBMEVu8iFAPwNbCD8
-    eSBWJ9MXsiIMU04vtPrkbRCKARKpao/G+ERaEgGiHP1kT8Tqh0dL/SmoSgzCl0mtorA0
-    wfvypfa9dNlhYahfa/4zw+URnqY/g1Cl3VGw7eaCy7Jk3WR/tXglfb4G/rGvBsjUaLYJ
-    n9/w==
+    h=Message-Id:Date:Subject:Cc:To:From:Cc:Date:From:Subject:Sender;
+    bh=L8BgtXNBzYX1GjQ1VVae357SREfMavFxSODIa4qd32A=;
+    b=rR9+wATxxIKklUQlRvWT2Fb8KnbBn4VhZb87SKGfSAsC6JoyM2TyMoPhzJb0Fl58S7
+    bvh1cAu02d8Agy69YQ+CkHb+eP0Icf2amuREIYhuxlTtR6ynVyw+aJBXVoaESKzGeJ1J
+    KNy8pA9rl43vKZ0Z+HkuMl6yK5h7iZoy6OrZMSB7E8ePsuEjFNxH83nz6zvnyd4qqCGi
+    zl4TS3iUhyv/Er5Ex5TLWW/wV6eclGSXKI4S3ekzlwjEoBpsTDyb2QNBkfIstmeQYzRP
+    m7cHcXKBPi6sZ+H/wb5xQgfoaKmAJqd+p7dbWqb0Sw3y8o6Pra1kJ71N5XuS34rbfUBQ
+    XnCw==
 ARC-Authentication-Results: i=1; strato.com;
     arc=none;
     dkim=none
 X-RZG-CLASS-ID: mo01
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1795732359;
     s=strato-dkim-0002; d=iokpp.de;
-    h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Cc:Date:
-    From:Subject:Sender;
-    bh=YLRX0OaUNZ3WcezBtVDRtDl3s5/0FwtcLnvobcev8Cc=;
-    b=LuSLgd4mE7BGTR+TsGusU/Y+SD3vSwcXJc3397jpsp9mX/M6mlC2NGdH0z1qK+EWY5
-    ldqyLJIM3Q+wcl/p4qoxxs8Fvo3YQaqLaJ1MZfubJa+TRvDYAzdGt65ZL9pkc8N6+jxW
-    f1baJYbO7YDbwhCJ4uY8hVCCvXInU2y+cDx6bKn9gQ8tsU9wHyvSXwYxJB6or4gdI9Kw
-    U5deY9JapSGpAZoOCCzgaU2a3WVclzSXfgF9/usvkiZqgc8rqGPyKLFweEBFcBPIVcZw
-    HeRJ8QQ86QSk+jsf2gdskMcHJE7ME1cC5oXYykUgzbJFenkRYM3jvJYr2H/H2c8xiti0
-    bhyg==
+    h=Message-Id:Date:Subject:Cc:To:From:Cc:Date:From:Subject:Sender;
+    bh=L8BgtXNBzYX1GjQ1VVae357SREfMavFxSODIa4qd32A=;
+    b=Ljc/TmROpM+bJDQo+LaN/dxqoFhxVnByB8o9k/JP8Xg+W4lJSEMS5OBNGcHQCm+yIB
+    FoJSkgRU/zxV1/xptQA/7CUeESCereufeo+OGWPZuC4yD6cuYpRmWuiZh6OAEc5nGwAN
+    C1n0R31JHWhODvk3Nvl4I2rht7ao1iSvlA1FtjUtXB5BbXkmOlSshnPo1XnLhOHZ7BH9
+    HlwJJe0I1b2F6pva0nxGdm9q5jnPdw6K6iWrc5owcxcJ4/Ux8iAZAHm9nDzPn13ROKeb
+    S3Bqy1Tl5WhswrwADmIznQfDOOGjE6BbMSiLbLblF0akZmn0GRtuCaKn2NKFd/7Qj+XN
+    DetQ==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; t=1795732359;
     s=strato-dkim-0003; d=iokpp.de;
-    h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Cc:Date:
-    From:Subject:Sender;
-    bh=YLRX0OaUNZ3WcezBtVDRtDl3s5/0FwtcLnvobcev8Cc=;
-    b=4xfwx/gYLYYBmtx+BTQC8glqkZ4WzaLbxnpakgl6EZxVDZdubtYG2BSLKFDG34QuQb
-    tJInF47jR1v/n2jKxSCQ==
+    h=Message-Id:Date:Subject:Cc:To:From:Cc:Date:From:Subject:Sender;
+    bh=L8BgtXNBzYX1GjQ1VVae357SREfMavFxSODIa4qd32A=;
+    b=VR416GXqVdQv5kjCqzg2TduE6mwD1RdWtppeAYAdQNGngYsblF0BrjuUOuO0O290EE
+    59uOV09EVhJROpw8NfDw==
 X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSfNuhhDSDt3O256fJ4HnWXON1RP16IHIszTD3hB2bKri1qswmSmZySpVjD67C0o="
 Received: from Munilab01-lab.speedport.ip
     by smtp.strato.de (RZmta 55.6.3 AUTH)
-    with ESMTPSA id z831ad2AQMWdfOl
+    with ESMTPSA id z831ad2AQMWcfOj
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
 	(Client did not present a certificate);
-    Thu, 26 Nov 2026 23:32:39 +0100 (CET)
+    Thu, 26 Nov 2026 23:32:38 +0100 (CET)
 From: Bean Huo <beanhuo@iokpp.de>
 To: Chanwoo Choi <cw00.choi@samsung.com>,
 	MyungJoo Ham <myungjoo.ham@samsung.com>,
@@ -93,12 +90,10 @@ Cc: Bean Huo <beanhuo@micron.com>,
 	linux-pm@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH v3 1/2] PM / devfreq: Fall back to previous_freq when get_cur_freq() fails
-Date: Thu, 26 Nov 2026 23:32:24 +0100
-Message-Id: <20261126223225.2257410-2-beanhuo@iokpp.de>
+Subject: [PATCH v3 0/2] PM / devfreq: check the get_cur_freq() return value
+Date: Thu, 26 Nov 2026 23:32:23 +0100
+Message-Id: <20261126223225.2257410-1-beanhuo@iokpp.de>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20261126223225.2257410-1-beanhuo@iokpp.de>
-References: <20261126223225.2257410-1-beanhuo@iokpp.de>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -113,65 +108,37 @@ Content-Type: text/plain; charset="us-ascii"
 
 From: Bean Huo <beanhuo@micron.com>
 
-devfreq_set_target() calls the optional ->get_cur_freq() callback to get
-the frequency that is passed as freqs.old to the DEVFREQ_PRECHANGE and
-DEVFREQ_POSTCHANGE notifiers, but it does not check the return value. If
-the callback fails without setting @freq, cur_freq is never assigned, and
-an uninitialized stack value is passed to the notifiers.
+devfreq_set_target() does not check the return value of the optional
+->get_cur_freq() callback, so a failing callback can leave an
+uninitialized frequency in freqs.old for the transition notifiers.
+Patch 1 fixes that by falling back to previous_freq, like the other two
+callers already do. Patch 2 writes down what a driver is expected to
+return from the callback.
 
-hisi_uncore_get_cur_freq() can hit this. It returns -ENODEV without
-setting @freq when its PCC channel is missing. On the mailbox error path
-it sets @freq to 0 instead, so that the core does not read a random
-value.
+v2 had four patches. Martin applied patches 3 and 4 (the ufshcd part)
+to the SCSI tree, so this v3 only has the two devfreq patches.
 
-The other two callers, cur_freq_show() and devfreq_monitor_resume(),
-already check the return value and use devfreq->previous_freq when the
-callback fails. Do the same in devfreq_set_target(). Read the frequency
-into a local variable first, so that a value the callback writes before
-it fails is not used either.
-
-This does not seem to cause a visible problem today. The passive governor
-is the only DEVFREQ_TRANSITION_NOTIFIER user in the tree, and it only
-reads freqs.new. So this patch is not marked for stable.
-
-Fixes: 0fe3a66410a3 ("PM / devfreq: Add new DEVFREQ_TRANSITION_NOTIFIER notifier")
-Signed-off-by: Bean Huo <beanhuo@micron.com>
-Reviewed-by: Avri Altman <avri.altman@sandisk.com>
-Reviewed-by: Jie Zhan <zhanjie9@hisilicon.com>
----
 Changes since v2:
-- Do not call ->get_cur_freq() inside the if condition, as Chanwoo
-  suggested. No change in behavior.
-- Add Reviewed-by from Jie Zhan.
+- Patch 1: do not call ->get_cur_freq() inside the if condition. Read
+  the frequency into a local variable and only use it when the callback
+  returns 0, as Chanwoo suggested. Behavior is the same as in v2. I kept
+  the Reviewed-by tags from Avri and Jie, since only the form of the
+  code changed; please tell me if that is not OK.
+- Patch 1 and 2: add Reviewed-by from Jie Zhan.
+- Patch 2: add Acked-by from Chanwoo Choi. No change in the patch.
+
+v2: https://lore.kernel.org/all/20260907192140.2701755-1-beanhuo@iokpp.de/
+
+Bean Huo (2):
+  PM / devfreq: Fall back to previous_freq when get_cur_freq() fails
+  PM / devfreq: Add more details to the get_cur_freq() comment
 
  drivers/devfreq/devfreq.c | 12 +++++++-----
- 1 file changed, 7 insertions(+), 5 deletions(-)
+ include/linux/devfreq.h   |  7 +++++--
+ 2 files changed, 12 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/devfreq/devfreq.c b/drivers/devfreq/devfreq.c
-index 82dd9a43dc62..7546ed720dcb 100644
---- a/drivers/devfreq/devfreq.c
-+++ b/drivers/devfreq/devfreq.c
-@@ -345,13 +345,15 @@ static int devfreq_set_target(struct devfreq *devfreq, unsigned long new_freq,
- 			      u32 flags)
- {
- 	struct devfreq_freqs freqs;
--	unsigned long cur_freq;
-+	unsigned long cur_freq = devfreq->previous_freq;
-+	unsigned long freq;
- 	int err = 0;
- 
--	if (devfreq->profile->get_cur_freq)
--		devfreq->profile->get_cur_freq(devfreq->dev.parent, &cur_freq);
--	else
--		cur_freq = devfreq->previous_freq;
-+	if (devfreq->profile->get_cur_freq) {
-+		err = devfreq->profile->get_cur_freq(devfreq->dev.parent, &freq);
-+		if (!err)
-+			cur_freq = freq;
-+	}
- 
- 	freqs.old = cur_freq;
- 	freqs.new = new_freq;
+
+base-commit: 4ff20abe28d65a0c52f0b280008fcfb93c3ee2b2
 -- 
 2.34.1
 
