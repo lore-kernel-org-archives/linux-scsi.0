@@ -1,56 +1,87 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795647267;
-	b=Yvvr8IQT/+Wb0O2+C0f14UXyrb5DcYN3X5QTCFx7fHtb+z/J13MuNvLa+RzCuAs+6hli
-	 wkgZOTSV7ac04bqvsPKdUbtFKM2GU0auy2RlEfVswAa61m+y7ncrnMm47cZsFQ+zhfKc8
-	 3/HxWftRkopOQo36XYCAOvCMsj/JjjjsXbVBheO1eaxqoR/SVDY5D6VFEjRsvlAW8ekuV
-	 V3c66ZOH2GEsg6vanyYxqwCvgMeiSqdEpZxpPYXnIVKuKRdpwo1o8WUIT5adW0rlpHOSg
-	 iyRu7o178iQGXVp0AA2Sk9DJoZMQ+JpYHXiuzb9lxhDRRYWwJt+Z0/OZ8X3SGLLfoFA==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795647267;
-	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
-	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=mHzpgAnmTqWxuwEvrt2C9Lc60n+HJf1wOT6ymZCVPa0=;
-	b=bFZdmvT9wzTGcrkmC34UmIf+clvWlerlg4rrMPtxPJ8BO5jrdss+BPNNE81doPw47sDd
-	 Ou5kfjVz/SM+T45ed2S4g4yGGM8UeA2qcGFPZ9Z58aKVdwQZls1xIUD1aHRTQqPjjDZq3
-	 Wkc6ExyY7yinwz2ZGB/QBjUBbCIeyyFfJU0xzHs/72sPmiPe02z9vx+zUOVl+0oKZs2Fo
-	 qfmzPi3GmsYkfho2YFsy+wCtZ+6F58J8cyGsxArTMlOwJTEAMpQL1s5dMB+2nS1JoUJYD
-	 D6+sODMlc+oekKwuI3w2yUmyYrArX8bgg7rq/cYauSmlLm+QXeJ9usVqRQq4xCFmy2w==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="K7p/z8D/";
-	arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1795654425;
+	b=CKCbbe8woyCI0KQMXQIUyEV+jd9wMKn60jpuLXaGawEU6UPGBYOp6IVDRTreehIz3/b8
+	 huH/J/ob/Fn1RyY0gkhMlsZqYs69A5Mds+DmDHls7lHVhMajgKkLBaotdc/AtqnqqK74O
+	 C3NZQyCs0aXkdVXWNj+BosN1kfG7WA+YEl4x8BQsoaXIdGW8LiGp9Sg8i4RQyjuxx7ocG
+	 LWv6dicL8p28hZfvnkg2BEpAIQGqiMhnuzdR9w6DtA9hIBZL4d56abEXilJpMk9u6P6ek
+	 wlihzryOCLJLuLOKJocAWX1BBAy6hgqveIjDg1uWWWN/Dy3zsM/CpG4YUKClfzPV+kA==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795654425;
+	h=Received:DKIM-Signature:Received:From:To:Cc:Subject:Date:Message-Id:
+	 In-Reply-To:References:MIME-Version:Content-Type:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To:Content-Transfer-Encoding;
+	bh=C7fC3wgsum3SPXPZYAvK25HkQx81CPAOUehXA+0wjt0=;
+	b=jKyifCvoEYTHCbJRHY3u6fPKtWb8/FipeLd9RJpU8pHR08wqS3BcoA7kTwizDtkMSGQC
+	 T9xRG3QDRD7gLHMFhV0bK4DO2VaIGY+dZnRSl0/Z0opaP/0lGI43qibHp9/3IAWa1W41e
+	 7AwovxBlFbBxvHDgOCPKINijRPNKjP2iD8csYvzoqoB5aEUIdXJ4F1FEciW8RlIi0M6MY
+	 WBH/i1E7W8e1ng72ubA7nbGr3LNCExt30T7CbuHr/webwrFPjTKu7NVFu1vTO+WLGM0ZQ
+	 okm8uu72GxGnyMNcqcs8Lt0kduFbFYcSF+bkqV2UJh6OaAsDPFhgAcjwtYvE4QpOgKg==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=hVulpL0t;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB0DB606A680
-	for <linux-scsi@vger.kernel.org>; Wed, 25 Nov 2026 22:54:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6601C606A331;
+	Thu, 26 Nov 2026 00:53:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=K7p/z8D/
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DA57B1F000C6;
-	Wed, 25 Nov 2026 22:54:26 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=hVulpL0t
+Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
+ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
+	t=1795654425;
+	b=xqOPALzez/kgA7WE7kUsvRcziWj7i6KL/LwywPbFSugjJqKdwsIeJWDi80yTBUtvk7go
+	 2w5A2VRyFIjgLhjUM5AXbxcxbQ1xf57ned80oCp4btOQZjCoWAsu12XuIFBQ5k8MUxU0p
+	 6/kpPYqgCciyeQO25DtOduEn2f5lwqaBRnYKYvYxvz6NJq8dVN5qhMz/6b8tHHVEpeUYh
+	 9ZN/xt9gwS4WiDp/LuJqVo5ECuSE8YZhZrJvUrfy744WvMV1oHAZ0DBemvu/hYDWBU8d5
+	 JE5+/HI+VA153s5de4cZ4dlMdoL0gohi+Y3yu1wpRMhtmzFmJ1gMjV9jW18RPKmp+8w==
+ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
+	c=relaxed/relaxed; t=1795654425;
+	h=DKIM-Signature:Received:From:To:Cc:Subject:Date:Message-Id:
+	 In-Reply-To:References:MIME-Version:Content-Type:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To:Content-Transfer-Encoding;
+	bh=C7fC3wgsum3SPXPZYAvK25HkQx81CPAOUehXA+0wjt0=;
+	b=bB81w99L8xb7QQViu7tMdU8OApmep5OSpqbia/+pD9ysp3hVaU/3MGPBZ10hK9NwIpou
+	 3RGWd6nSrZV1np1sG9gBQBr9Boe12LswShFGXfPQhPpI3LHvLYEHz3Li82xZZu3PXKSKF
+	 kdtwJ/SxpHg+LmbgjmFZh+DC8NCGGZlnA52SxrnkNsEWDWl5uWFhnZ4cuYmK8lpUwrWtT
+	 bb4SCjtZZ8JWNI+NVX3SDN0T9mHk9KA4BLjGPeKYzd7smL+et7nv9VRWxCU3eCiKEMLNk
+	 7Zc8OIUhd0sCBc/qO3Og4qt6B+Q3zbXhGK8SVBjJbZUk2NIFTHPnWiriBzpEH6v2ADg==
+ARC-Authentication-Results: i=1; smtp.kernel.org; 
+	arc=none smtp.remote-ip=100.80.115.77
+Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	(No client certificate requested)
+	by smtp.kernel.org (Postfix) with ESMTPS id 651B41F000C4;
+	Thu, 26 Nov 2026 00:53:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795647267;
-	bh=mHzpgAnmTqWxuwEvrt2C9Lc60n+HJf1wOT6ymZCVPa0=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=K7p/z8D/ki/wyUhf8cJxdWEXJzbgk2uX0oEZNzkeisDNibQS/Rp1CZOlsRgNhBloT
-	 VSxRQRYo/HIdfRZCEcoAZnZFns428tMBmZg/Cd6jklOpfj+NpruFpzKph862LUkuvY
-	 QEOFSy5mcKRh69TvA4GN+PB1wvtYy/sWq4WELQmlQixOHJvV3UNQWjy5zPOwCASM4D
-	 0iq7DY0UuCMfVvm1N+5Mp7iUUqfoeWdaMwg+HFAeATngZx6Z+oDy04fhN0Zs+NunIH
-	 8+LIbA/pBt5zg2krfXzck2XXsFqDtXFX6rOFlYnHN7bx5y9NeiONnQUynAq0ZFaln9
-	 dH6+VsvvIFpkA==
-Message-ID: <sashiko-outbox-234314@kernel.org>
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] scsi: hisi_sas: Avoid synchronize_irq() under
- task_state_lock
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Elkin Cruz" <elkin@google.com>
-Cc: linux-scsi@vger.kernel.org
-In-Reply-To: <20261125222029.1429071-1-elkin@google.com>
-References: <20261125222029.1429071-1-elkin@google.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 25 Nov 2026 22:54:26 +0000
+	s=k20260515; t=1795654425;
+	bh=C7fC3wgsum3SPXPZYAvK25HkQx81CPAOUehXA+0wjt0=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:Reply-To;
+	b=hVulpL0tjmoagAex2Z8QVjTDAZTMiJ7mT2llQFP/yIQtwXPSML9z2n10Dxxs1Buj1
+	 WMkoi41xrwyjBww1KvrHPNQxPl/ZuEjsUb5As1CT3aN+eoixkgykYDWz7YXj8nqVN3
+	 3/C/nyivp4zODRyukHL+1v+qQyhx6S5iUtVeoR2YgWBQ3MQpdNuIHY7ky2JqAC9FHX
+	 qH7t5WrRnUZYlavKZTbIhjxrxTxIPw7d5UsuI/dIez1n2l9G0SMN/5j3/ejZC7NwFp
+	 h2NyFVR+gJgXt3MJ+/t34WgaAxnQbW4K0H2sCJQYPx6o0qnpwTAPVymlOHDz8Wbc0S
+	 Drie9mEAgXgTA==
+Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
+	by lkml.kernel.org (Postfix) with ESMTP id C84B04D15F;
+	Thu, 26 Nov 2026 00:53:30 +0000 (UTC)
+From: Ilia Snezhkov via B4 Relay <devnull+iasnezhkov.gmail.com@kernel.org>
+To: peter.wang@mediatek.com, stanley.chu@mediatek.com, 
+ martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com
+Cc: matthias.bgg@gmail.com, angelogioacchino.delregno@collabora.com, 
+ louisalexis.eyraud@collabora.com, linux-scsi@vger.kernel.org, 
+ linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 3/3] scsi: ufs: mediatek: round scalable clock bounds to
+ clk_round_rate()
+Date: Thu, 26 Nov 2026 00:53:32 +0000
+Message-Id: <20261126005329.72010-4-iasnezhkov@gmail.com>
+In-Reply-To: <20261126005329.72010-1-iasnezhkov@gmail.com>
+References: <20261126005329.72010-1-iasnezhkov@gmail.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -59,118 +90,101 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+X-Mailer: b4 0.16.0
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1795654409; l=2887;
+ i=iasnezhkov@gmail.com; s=mindone2026; h=from:subject:message-id;
+ bh=mD8c7Hrg16FM5GVQm6mflwliUTbJKeKdxA7+pMxBwPY=;
+ b=icOI0pOOqC02NuGMr9RZfkRCctWnCrr3ty5yflwBN3AYW/idYojMNH1DD9jivfRBx8aAHsB5b
+ H99BG076G07ClhinycvRB7CVNxN3BZd/utNVmZvoVj+X10rvIiRZB2Z
+X-Developer-Key: i=iasnezhkov@gmail.com; a=ed25519;
+ pk=hQgXfiWi4ukk2jh4BHu1vRVhg9BUivo//AFp50AKMag=
+X-Endpoint-Received: by B4 Relay for iasnezhkov@gmail.com/mindone2026 with
+ auth_id=1643
+X-Original-From: Ilia Snezhkov <iasnezhkov@gmail.com>
+Reply-To: iasnezhkov@gmail.com
+Content-Transfer-Encoding: 7bit
 
-Thank you for your contribution! Sashiko AI review found no new issues
-in this patch, but noticed 1 related pre-existing issue it does not
-introduce:
-- [Critical] scsi: hisi_sas: TOCTOU race in hisi_sas_slot_task_free()
-  [1]
---
+From: Ilia Snezhkov <iasnezhkov@gmail.com>
 
-commit f4ff37b15758e0c223690d6105b63787d918393e
-Author: Elkin Cruz <elkin@google.com>
+ufshcd_devfreq_target() determines scale_up via an exact equality check
+against clki->max_freq after rounding the target frequency. When a DT
+freq-table-hz lists a nominal value that a PLL-derived clock cannot hit
+exactly (for example, msdcpll_d2 on MT6789 delivers 191999939 Hz for a
+192000000 Hz DT maximum), clk_round_rate() produces a rate that never
+equals clki->max_freq, so devfreq scales down once and can never scale
+back up.
 
-scsi: hisi_sas: Avoid synchronize_irq() under task_state_lock
+Round clki->max_freq and clki->min_freq with clk_round_rate() in
+ufs_mtk_init_clocks() for ufs_sel (and ufs_fde when present) before
+ufshcd_devfreq_init() builds the OPP table from those bounds, keeping
+clki->curr_freq synchronized with the rounded bound and skipping the
+adjustment if rounding fails, overflows u32, or collapses min >= max.
 
-This commit releases task->task_state_lock in hisi_sas_abort_task() before
-synchronizing the completion queues when SAS_TASK_STATE_DONE is set, and
-reads task->lldd_task under task->task_state_lock on the abort path.
+Found on hardware and drafted with an AI coding assistant.
 
-> diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sa=
-s/hisi_sas_main.c
-> index 06455c7a9e2ad..2a5a34eb1b28b 100644
-> --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-> +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-> @@ -1730,7 +1730,7 @@ static int hisi_sas_abort_task(struct sas_task *tas=
-k)
->  	struct hisi_sas_internal_abort_data internal_abort_data =3D { false };
->  	struct domain_device *device =3D task->dev;
->  	struct hisi_sas_device *sas_dev =3D device->lldd_dev;
-> -	struct hisi_sas_slot *slot =3D task->lldd_task;
-> +	struct hisi_sas_slot *slot;
->  	struct hisi_hba *hisi_hba;
->  	struct device *dev;
->  	int rc =3D TMF_RESP_FUNC_FAILED;
-> @@ -1744,21 +1744,18 @@ static int hisi_sas_abort_task(struct sas_task *t=
-ask)
-> =20
->  	spin_lock_irqsave(&task->task_state_lock, flags);
->  	if (task->task_state_flags & SAS_TASK_STATE_DONE) {
-> -		struct hisi_sas_cq *cq;
-> -
-> -		if (slot) {
-> -			/*
-> -			 * sync irq or poll queue to avoid free'ing task
-> -			 * before using task in IO completion
-> -			 */
-> -			cq =3D &hisi_hba->cq[slot->dlvry_queue];
-> -			hisi_sas_sync_cq(cq);
-> -		}
->  		spin_unlock_irqrestore(&task->task_state_lock, flags);
-> +		/*
-> +		 * Sync all CQs to avoid freeing task before IO completion
-> +		 * finishes using it; slot and slot->dlvry_queue may already
-> +		 * be cleared or reallocated once SAS_TASK_STATE_DONE is set.
-> +		 */
-> +		hisi_sas_sync_cqs(hisi_hba);
->  		rc =3D TMF_RESP_FUNC_COMPLETE;
->  		goto out;
->  	}
->  	task->task_state_flags |=3D SAS_TASK_STATE_ABORTED;
-> +	slot =3D task->lldd_task;
->  	spin_unlock_irqrestore(&task->task_state_lock, flags);
-> =20
->  	if (!slot)
+Fixes: b7dbc686f60b ("scsi: ufs: ufs-mediatek: Support clk-scaling to optimize power consumption")
+Signed-off-by: Ilia Snezhkov <iasnezhkov@gmail.com>
+---
+ drivers/ufs/host/ufs-mediatek.c | 35 +++++++++++++++++++++++++++++++++
+ 1 file changed, 35 insertions(+)
 
-[Severity: Critical]
-This problem wasn't introduced by this patch, but can a concurrent
-hisi_sas_release_task() and hardware completion race in
-hisi_sas_slot_task_free() [1] and double free the slot?
+diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
+index 09b7993..b4fa2b9 100644
+--- a/drivers/ufs/host/ufs-mediatek.c
++++ b/drivers/ufs/host/ufs-mediatek.c
+@@ -967,6 +967,37 @@ static u32 ufs_mtk_get_ufs_hci_version(struct ufs_hba *hba)
+ 	return hba->ufs_version;
+ }
+ 
++static void ufs_mtk_round_clk_freq(struct ufs_hba *hba,
++				   struct ufs_clk_info *clki)
++{
++	long max_rounded, min_rounded;
++
++	if (!clki->clk || !clki->max_freq || !clki->min_freq)
++		return;
++
++	max_rounded = clk_round_rate(clki->clk, clki->max_freq);
++	min_rounded = clk_round_rate(clki->clk, clki->min_freq);
++	if (max_rounded <= 0 || min_rounded <= 0 ||
++	    min_rounded >= max_rounded || max_rounded > U32_MAX)
++		return;
++
++	if (max_rounded != clki->max_freq) {
++		dev_dbg(hba->dev, "%s: max_freq %u rounds to %ld\n",
++			clki->name, clki->max_freq, max_rounded);
++		if (clki->curr_freq == clki->max_freq)
++			clki->curr_freq = max_rounded;
++		clki->max_freq = max_rounded;
++	}
++
++	if (min_rounded != clki->min_freq) {
++		dev_dbg(hba->dev, "%s: min_freq %u rounds to %ld\n",
++			clki->name, clki->min_freq, min_rounded);
++		if (clki->curr_freq == clki->min_freq)
++			clki->curr_freq = min_rounded;
++		clki->min_freq = min_rounded;
++	}
++}
++
+ /**
+  * ufs_mtk_init_clocks - Init mtk driver private clocks
+  *
+@@ -1022,6 +1053,10 @@ static void ufs_mtk_init_clocks(struct ufs_hba *hba)
+ 		return;
+ 	}
+ 
++	ufs_mtk_round_clk_freq(hba, host->mclk.ufs_sel_clki);
++	if (host->mclk.ufs_fde_clki)
++		ufs_mtk_round_clk_freq(hba, host->mclk.ufs_fde_clki);
++
+ 	/*
+ 	 * Default get vcore if dts have these settings.
+ 	 * No matter clock scaling support or not. (may disable by customer)
+-- 
+2.54.0 (Apple Git-157)
 
-Although hisi_sas_abort_task() now reads task->lldd_task under
-task->task_state_lock, hisi_sas_slot_task_free() checks and clears
-task->lldd_task without holding any lock:
 
-drivers/scsi/hisi_sas/hisi_sas_main.c:hisi_sas_slot_task_free() {
-	...
-	if (task) {
-		...
-		if (!task->lldd_task)
-			return;
 
-		task->lldd_task =3D NULL;
-	...
-}
-
-When hisi_sas_release_task() runs under sas_dev->lock (passing
-need_lock=3Dfalse) at the same time as a completion handler (passing
-need_lock=3Dtrue), both threads can pass the !task->lldd_task check:
-
-CPU0                                CPU1
-hisi_sas_release_task()
-  spin_lock(&sas_dev->lock)
-  hisi_sas_slot_task_free(..., false)
-                                    hisi_sas_slot_task_free(..., true)
-    if (!task->lldd_task)             if (!task->lldd_task)
-    task->lldd_task =3D NULL;           task->lldd_task =3D NULL;
-    // unmap DMA                      // double unmap DMA
-    list_del_init(&slot->entry);
-                                      spin_lock(&sas_dev->lock)
-    memset(slot, 0, ...);
-    hisi_sas_slot_index_free(...);
-  spin_unlock(&sas_dev->lock)
-                                      list_del_init(&slot->entry);
-                                      spin_unlock(&sas_dev->lock)
-                                      memset(slot, 0, ...);
-                                      hisi_sas_slot_index_free(...);
-                                        <-- corrupts and double-frees slot
-
-If the slot index is reallocated while CPU1 is waiting on sas_dev->lock,
-CPU1 zeroes out the live slot with memset() and frees the slot index a
-second time.
-
-[1] https://sashiko.dev/#/bug/linux-5c918a18-1806-4334-a75b-c6fd3a29066d
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261125222029.1429=
-071-1-elkin@google.com?part=3D1
