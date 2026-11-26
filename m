@@ -1,54 +1,56 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795662693;
-	b=G2lh5MltXmxFmdHLOso6wDvyBCOglbzkTQopSOGFAGSetG96jb6Bszt6CRnqLpWHGynT
-	 dkX0NC1M2FThssZ57Jx0yRttAvaIXslzbaFhCh7tH2WWedyqBVR6CurPWvDBbK4T+EkRD
-	 vZaqkFOwWEJGHfdrW8CtSjacg7Po59NNb5rZzsZzBPtLC+ppxsFPTpv69kns8YENDrqAx
-	 hcIB6Uwd9jgNhCd22Lf+utRPfNeKFyi2uwkLm88d5wEZHpBTMBhRGoFY01pI/HOcW29Dl
-	 xGJXf/5LDa97qkHie60OCO5cd6d1RzLmDGgaoBFNNjDny7ROb/Ti7IavbKt/9Dpqp7g==
+	t=1795663571;
+	b=ibqbgXSiE6uFmvLoXTaehXNOFiKGuMwZtc5TZCMdQNBdha55Ys/BlY4llizrTSx9V9Nz
+	 UtxYSK/d26jnTyfPpf+e5Pr93NGYk0gMOw2Xk21tgxnGsZ2yl2YERI7QxtLQIsuhtRtc4
+	 zh4pZ+oelo6Vhq16mye+nm95OCIdwjRK2zMy51aS05m8RxnIYNZf9vqx8rrLlMhG+BTtI
+	 zJb956k0/NOo4RllGTGyEh24Rh/kNsyE+73DMS40CC7JCJPiTc/uGSnOOM8o0aHSOEwiE
+	 zBtnH+E9wgwAN3r2ORAi9fglks8MEzfP8Z9+C8NiiIpIPlqF4ioiAtj4QN8gx2sChNg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795662693;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795663571;
 	h=Received:DKIM-Signature:To:Cc:Subject:From:In-Reply-To:Message-ID:
 	 References:Date:MIME-Version:Content-Type;
-	bh=AkOAXELuAWwy5wdyD0ZlsQNsawkf0zRqnDPI0pSkyaQ=;
-	b=ZeXXg7AjocFwswPBFUK/twVgWEFGXLYVlQU2jqRKBEFV7YZZjMo53Rhddkr9F/RVkTGL
-	 BoKF46KJf4kTh89ovsCgPz+Hw6pCya4M7VtviMpC1FOfDk0WgOIW6qtVRZAX1XITQXJJQ
-	 OXRgKLjoFGI/RqoTPk4AMhNqSZZ8TUnndRQHtf5TcA/VkWqGfHM7ZicKllvhlg8VnL2sO
-	 hEGchR2SeVee0zFZpeWQGJCY9+XoZfR3YQXPs1V1ejRxEaiaZl6aB4N2j4ujTcmaliMLd
-	 JIoZRd6PDaMxilrWqv7khLR1DKZRSZJGpuVM0V5epRw5MOsztfTuQnKOjUjkKo8L9Lw==
+	bh=ofJy08aWX1//YrHoygi/IkjCsi3MA9HBCDQXykemzuY=;
+	b=buUu0+P1E+5hwzieL2v/wrcexImNiG5tTHK5pidjbgusZpvwy9CQUrg7p9fqlJjG4v74
+	 YzpbPkEC1zcLaZvfvJGnmM0JRi5Vekt3yA/7QWbSzUumLJpwEC3tSjlre3/q8jIi8Gq0h
+	 Q96LAOzJbP23dSbhOiUHLEmPSHRTroutS50WvgViVvMxfonOFRfPPpdXbt0rcxqz2e/D4
+	 CuVGEHInsIuaMauiZmJ0jMOMeh7f4nD8aKojmnwiOzhINRwpqb61i87OItx0VmnDxyiav
+	 YTIquhDQbpXaZquZJH164EQy21Sh/SFmmOENN7UHIqDBdSAN9zT8x1lcUSic6T9bibg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=De+ial1i;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GLrXlgFG;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3ED0606A31E
-	for <linux-scsi@vger.kernel.org>; Thu, 26 Nov 2026 03:11:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0833B606A31E;
+	Thu, 26 Nov 2026 03:26:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=De+ial1i
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EFFFD1F000E1;
-	Thu, 26 Nov 2026 03:11:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GLrXlgFG
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C245D1F000C6;
+	Thu, 26 Nov 2026 03:26:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795662693;
-	bh=AkOAXELuAWwy5wdyD0ZlsQNsawkf0zRqnDPI0pSkyaQ=;
+	s=k20260515; t=1795663570;
+	bh=ofJy08aWX1//YrHoygi/IkjCsi3MA9HBCDQXykemzuY=;
 	h=To:Cc:Subject:From:In-Reply-To:References:Date;
-	b=De+ial1i50AKFep5uf8qfU5cTE3Q+hrXhuQj1kXHIbDcU/Ry40oImUo0WvEydSAiU
-	 U2r/TaFLm+YIcNq+jY6aMqb1OyQzUs+gDbX8Cp9w4Mto1kfGmyaTOmAxybY+WNXUta
-	 hG4C6fbxqZR42KHu2/ckKvbFcfhZq8QSHKdmstRDGMcH3QOBW7295npxa2LiGDi6To
-	 JbuDAl2mDvkcwZjoDx6wg0vYSCbIUeF/hmE1yFN6ACEpPZytuoGlwL8/I5YTNIi1//
-	 uLm58oLLldd+GH4gItd0APsrvJuVkK1d62R9TPO9V47duyY9D6zsvTWktDyXaI/Aq0
-	 jFq6TQgTWFOGA==
-To: Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Cc: "Martin K . Petersen" <mkp@kernel.org>,  linux-scsi@vger.kernel.org,
-  Niklas Cassel <cassel@kernel.org>,  Hannes Reinecke <hare@suse.de>,
-  Damien Le Moal <dlemoal@kernel.org>,  Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] scsi: trace: print the CDL duration limit descriptor index
+	b=GLrXlgFGpqdk1+lX+eHjW0IqPI+8at1Y3kYciPFt7X3TYN1IQrBZmph+i0hntghM2
+	 17OUOXX6kmRgRRDZpRl1+eiBb4owmtjaT1eK4Wh+PrVleJ8L7rVoDjf0t8boKetB16
+	 7SMw38QDMKyJntDxIBBb0QmxIiSA4zt1N/eD7oPy6Auc/bWOel4MQy9Bc4cHzh31ys
+	 fXSWW5BIC7JWW9yKvmS3UenSF/LGQqU0bZtPMjGmQ9L7WSZ/7zwRlOZ+CeLrFZ6cso
+	 FULKOF45mlbt5u9lP4QN8/AUp4er9E3WlUWU+6frOUPlc9Z/swBANxVQ3ncK/UDFi4
+	 dCn7AEL/WSutw==
+To: Ziheng Wei <zihengw03@163.com>
+Cc: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+  "Martin K . Petersen" <mkp@kernel.org>,  linux-scsi@vger.kernel.org,
+  linux-m68k@lists.linux-m68k.org,  linux-kernel@vger.kernel.org,
+  stable@vger.kernel.org
+Subject: Re: [PATCH] scsi: 53c700: fix invalid frees in m68k driver remove
+ paths
 From: "Martin K. Petersen" <mkp@kernel.org>
-In-Reply-To: <20261124124137.146673-1-johannes.thumshirn@wdc.com>
-Message-ID: <yq1cxrsjnhj.fsf@mail.kernel.org>
-References: <20261124124137.146673-1-johannes.thumshirn@wdc.com>
-Date: Wed, 25 Nov 2026 22:11:31 -0500
+In-Reply-To: <20261122160447.519889-1-zihengw03@163.com>
+Message-ID: <yq17bi0jmt4.fsf@mail.kernel.org>
+References: <20261122160447.519889-1-zihengw03@163.com>
+Date: Wed, 25 Nov 2026 22:26:08 -0500
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -61,12 +63,12 @@ MIME-Version: 1.0
 Content-Type: text/plain
 
 
-Johannes,
+Ziheng,
 
-> Print the duration limit descriptor index (DLD) of READ(16),
-> WRITE(16), READ(32) and WRITE(32) commands in the SCSI command
-> tracing, so it can be seen which command duration limit a command was
-> issued with.
+> NCR_700_detect() stores the allocated host parameters in
+> host->hostdata[0]. The m68k remove paths instead use shost_priv(host),
+> which returns the address of the pointer slot and causes an interior
+> free.
 
 Applied to 7.5/scsi-staging, thanks!
 
