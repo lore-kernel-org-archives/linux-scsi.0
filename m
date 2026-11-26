@@ -1,57 +1,70 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795664104;
-	b=a6f4DD3wPQUC+Av2tCc5RSJJP8UwjHLARwTZ4ihWPo1IuHGKoScvpGH4YDiRTy3zzKhx
-	 9Nm3vXq3QWXcTiM0mmTBoCk8obz5DVbxU2GwKt0AQa1g29jEJYSuL0aVQYaK7kksrq6hN
-	 4vsw+82s2OA5++rpIedwn2KhPP+Hz87NHFwpSbpL1NHrdxvw+IOTmFDgVIrZA29BF3IKz
-	 c+zkkVYeoX3Yev9AzamcsDoznBVFfxmw6cX6CKew8NNXn+wF6anLldD78J0FiGNgw6qNL
-	 QKgZjVkPTsJNn9J8QgpGnVqYd9KTFoe5Er2Y3FiGv0kzSMSsfyEoK8UtiFLv9y9iFOA==
+	t=1795664107;
+	b=3kXzpuOxlprbmHDVU1MANjV9fq7MZlshZwTiO2l9mx2HBJijytVAchEPC0mGhLXsgaSI
+	 eCdXfN+FA8jXnKmpTSTYS7wcdapvUPjEWUD9WYDogUKrDZLc/fLcVpsGMbOh2M0ywo+v/
+	 SZY1iMr9Z0ZgO00clNCYnruhwFkYD+bgJ4obYYk5Jx2TiqftY/Us2Pgk0Shw5hJphKFy6
+	 XfDDMC+sLTZX07lhe3r3MJvfOHGLlAnVTY+EqGVNpdvjZV80hF9e+EAUL4APO0y84iK0C
+	 ZNWHsLgib6PJ86kJQPwmfn/k8TmTxv5Qc1FjHQ7V6dlfHy5yuQxr7v2jKDjNL6BUdqQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795664104;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795664107;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding;
-	bh=SNzlUXCzS73GDExImdsElyfHed5Slh8u+Lp1Xic81rY=;
-	b=jdZBC8jsftKrSRP2VJ+rXEgG7rPVt64CPRj3DytY2j/3TtkVE1ax1vH8bupWvdtHK9O5
-	 jaPAH6SkYJRuMGeFzonJ8pduEgV8fH0s7RNcCaRGb6+d3y5JkRwQPBlJwWHFyny2hEMcS
-	 JWTcIb6s9NpWJTy+Q+V7JA28D8fwUnES5kGJlpWJtRoFxVc01C3oWaryTOsdLRFpa6gsI
-	 oDEohzRBhWxvlV9jK/58PyG2ZsV1L8Py1i3WJGJSsBIadC+R5nX4CkB/Ff6moP0t814u1
-	 PFt+Jf9b13S3mPsKglDFHsAFRzstmt8kUv2nlTeAXHEKOjbM6tjTgqn51ikrXiZ9elA==
+	bh=eLTl/g4KujQMDMJRE5SGlmdd6FwGilnbsGquUL596h8=;
+	b=hrun/wRpFAEoyjLxgzl4kN2cg7aGKxpkEZgTOxX4bS/06Xiogt1C6YJB3riqYpzARNCn
+	 0Kz8mvx2ZjLblQE5TVBy915e6CkLWN+/LZqY+2R0RkR8zkUFfvafvE4goX7hdqKID2MtU
+	 IKHxVi7OMHJpackoZYpBnu8nLmnLUH19bfpHOoIvacE/sGlha2thevoASbdjiDvCAY3MB
+	 jz1KzvpUBjY1QGHjDbd0Xs2Y2uIWkwGtpldHTlETDb4kusnxmKk2HZZcPdRWObCuslvPZ
+	 S63/gh/uYCnU/lBTjuWO5ScjIdsT2JNL4NkfxyySQ2Ks+kiGp0ouGqhm6hHQjZC3fbw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=KPJ8Nrdm;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Wydd6obe;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5DD2606A33F;
-	Thu, 26 Nov 2026 03:35:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F96F606A681;
+	Thu, 26 Nov 2026 03:35:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=KPJ8Nrdm
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B94E31F000C0;
-	Thu, 26 Nov 2026 03:35:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Wydd6obe
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5BE961F000CA;
+	Thu, 26 Nov 2026 03:35:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795664104;
-	bh=SNzlUXCzS73GDExImdsElyfHed5Slh8u+Lp1Xic81rY=;
+	s=k20260515; t=1795664107;
+	bh=eLTl/g4KujQMDMJRE5SGlmdd6FwGilnbsGquUL596h8=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=KPJ8Nrdmrnkz1OgebsRqZEZwUwQxi85b9NgfNuFyukoGdkCI/VDOMs3+f2N319NgX
-	 gFYJDfE6V42UBsM3OUuN2rQaha64aXFKv8fxQypKwECfir1o3rk1s/86YkbZr5VaaD
-	 lZp08PXwajOg0U1BvIRZd8OEUhCwGUMV53UHi6X3sPgr1IWCe42yA2AwFT7SX/IPUW
-	 u7HBfe7xN/zAhU55GkyU4yfGGY/vvB+/lUcIkJkvxMPwXL6ZBmDwgPuq0pO9PSnUfc
-	 aRL+/3rCyyrRJ6bNV3T74cTzHfo17khc7Hb/DMP1pZ+z9n/x6QJFhEJv+Ai1sxC2t6
-	 JWdFr9bQj66WQ==
+	b=Wydd6obeDDnnMoBmCABx2tOj/QAl9LEtPWVxC6KCxmRoq2Zfo39bzAZFDFlpXTkBQ
+	 lE0gq+czLOXL2f9HZC9aI3ka322E+OX/LZf2qqFl4gzX9sAq/OT6oDfzBx0f/LNTji
+	 zK34mvlgh1kqHlbGFKO0lunn2Zd9kmzwKNRxQo8r/swKtUy43e4tJ9tLD8IB/lL5Ej
+	 3OssgYLpb+L/Mipg1+E0z8813fKvtzIpjHADZph4bxvBMyT1NB/wQ+c3jsrD9Od+XA
+	 3S19iSmE05BHp0KpQaIk/BQo+CfVzNlHJPSF8v/bKCY8to+BEmVsmWlZCwhtsW16To
+	 ISKSQSEbgaeuw==
 From: "Martin K. Petersen (Oracle)" <mkp@kernel.org>
-To: James.Bottomley@HansenPartnership.com,
-	Tim Douglas <me@timdoug.com>
-Cc: "Martin K . Petersen" <mkp@kernel.org>,
+To: Alim Akhtar <alim.akhtar@samsung.com>,
+	Sai Krishna Potthuri <sai.krishna.potthuri@amd.com>,
+	Ajay Neeli <ajay.neeli@amd.com>,
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+	Pedro Sousa <pedrom.sousa@synopsys.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	Bean Huo <beanhuo@micron.com>,
+	Stanley Jhu <stanleyjhu@google.com>,
+	Conor Dooley <conor@kernel.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
 	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] scsi: esp_scsi: report the residual byte count
-Date: Wed, 25 Nov 2026 22:34:49 -0500
-Message-ID: <179566062770.467514.1547216328115232639.b4-ty@b4>
+	"Martin K. Petersen" <mkp@kernel.org>,
+	Minda Chen <minda.chen@starfivetech.com>
+Cc: linux-kernel@vger.kernel.org,
+	devicetree@vger.kernel.org
+Subject: Re: [PATCH v4 0/4] Add StarFive JHB100 soc UFS platform driver
+Date: Wed, 25 Nov 2026 22:34:50 -0500
+Message-ID: <179566062780.467514.17583582227952888451.b4-ty@b4>
 X-Mailer: git-send-email 2.56.1
-In-Reply-To: <20261118003746.61659-1-me@timdoug.com>
-References: <20261118003746.61659-1-me@timdoug.com>
+In-Reply-To: <20261112075616.118436-1-minda.chen@starfivetech.com>
+References: <20261112075616.118436-1-minda.chen@starfivetech.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -64,24 +77,27 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 
-On Tue, 17 Nov 2026 19:37:46 -0500, Tim Douglas wrote:
+On Thu, 12 Nov 2026 15:56:12 +0800, Minda Chen wrote:
 
-> The ESP core tracks the number of bytes left to transfer in tot_residue
-> but does not report that count to the SCSI midlayer. As a result, SG_IO
-> returns a residual of zero even when a target transfers fewer bytes than
-> requested, as can happen with INQUIRY and MODE SENSE.
+> JHB100 is a Starfive new RISC-V SoC for datacenter BMC (BaseBoard
+> Managent Controller). Similar with Aspeed 27x0.
 > 
-> Report tot_residue with scsi_set_resid() when a command with a data
-> buffer completes with DID_OK. Initialize the scatterlist DMA length
-> on the identity-mapped PIO/pseudo-DMA path so the residual starts
-> from the buffer length on architectures with a separate DMA length.
+> JHB100 contain 1 UFS 3.1 interface and using Synopsys designware
+> UFS controller/unipro/M-PHY. The ufs-starfive.c contain JHB100
+> UFS platform driver, unipro driver and M-PHY driver.
 > 
 > [...]
 
 Applied to 7.5/scsi-queue, thanks!
 
-[1/1] scsi: esp_scsi: report the residual byte count
-      https://git.kernel.org/mkp/scsi/c/235a12231735
+[1/4] scsi: ufs: dt-bindings: starfive: Add UFS Host Controller for JHB100 SoC
+      https://git.kernel.org/mkp/scsi/c/11a756096813
+[2/4] scsi: ufs: amd-versal2: Make PHY register DME attribute tables per-call
+      https://git.kernel.org/mkp/scsi/c/454284cf3f39
+[3/4] scsi: ufs: dwc: Rename amd-versal2 read/write PHY API and move to dwc common file
+      https://git.kernel.org/mkp/scsi/c/b65d9e54e5bb
+[4/4] scsi: ufs: starfive: Add UFS support for StarFive JHB100 SoC
+      https://git.kernel.org/mkp/scsi/c/715aa02a2de9
 
 -- 
 Martin K. Petersen
