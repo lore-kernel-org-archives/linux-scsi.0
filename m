@@ -1,57 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795796077;
-	b=U1aDM20i2K/sZCPJbJBNtR7a7jzXZWnWyh02IV1I3/Ue1rwx6pzhrdSnhHj1dcSerPeS
-	 b/csyKcVCe1B++7eYTNTG0WXSFL6uQIEl329iRK3oszMC3m1o9N1jiXwrUei1gqBLmPtp
-	 h6X8DEABWFUYtWH1RujTNh5wic7tqBsBwYnuOUSN07/NzirOkulT5GwbLBOoorcMPMvK1
-	 azr/o4M/qUqU3mm0Ptqr5izkq0lKwSBUGyqZFPubiQgSdwVpnLUuE8lSJ81FbvfJmu9pN
-	 ztkUtOLh5pSycTAT/2eQsqEM9qI3TaHQYuz3nXZSf4+4RUpnMEZlvwtzzd1hLrWRptw==
+	t=1795796224;
+	b=EeAOnhg1ibIYUxshBS151YRWsr+ODn1PfAvwEoPmgWGWfHnBPoLkvKILr58CIwu+35bP
+	 mC6yXGU9RfNRzokVgOPWfS/mhK6vWF7x7cxIXKEDsBAYn+Zao8Kr23jpfi+X13n7qpme9
+	 Mv5QLatTgSB08ojnNavwlL3uTUFJUQG4wrBjJUO2L4mLOsq2nifeFs2EMwVhE3Hs7o2AZ
+	 uuNO/Kc3CUROyzHaaX8mSqliXVASAy6xYdJ7P3pOZFOymGNos1x65QsxJgAzVLGjkCtoX
+	 +5GniJtwLXHpOTH6DrK+cZJcaUOxhgSJk7FRJM68JDH+eHwbS5eWzdx+6UknKx/Qdhw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795796077;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795796224;
 	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
 	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
-	bh=jrypLR0X0eLwSt5FL6Fsdv4qNePy86+fgdrhz4CbdLU=;
-	b=OQNnzjv3B6/j0PJl1iTvREV16hSRSahkfTt14m3KIdx2VE8/oTmnJ1PtPHpS1SpGck5s
-	 N/L9iNVr3u0o9qDEZuS6xWNG2abw9w+6tG7u1Q3ALNI4xjmmptBP+v9cfT2UWlpxrPQXR
-	 WKFPBlKbbc6Mmpu7z/Caj4fK+hedI1tKoCNILeMxfiCaMqQdS2FCCH7Te0wLJxNVGc7ep
-	 qTp1AwmAR2O+0CmR+OUmafUHvhmE5RKYw5mp9tZMOuEcbu3xJSgy8uzguAIaMH6z51jEJ
-	 WZAPOdmTCXX7drV3vNq72KcZ2+30VBRAUyYNqeh99Vd9YEXqG2fz2WJHS/shfPq6wCQ==
+	bh=h9E/Yw/XiRcNTmIHpnLOrEiseMqMVpa53c4l91nHw60=;
+	b=L7eYxw1tHiH+zOJGkV/addvVnPvOjdeFSrshXPMIswqbQ8S6yJc54kfByPzgVEmZPWMP
+	 05O6RAFqFryo4qR/WJ8jraY75D2e9eF87bt5vP7zbMSq0W6FoukauG+k6hlEfRqxg0fl2
+	 nbEZjlCQKBd33Q5okV0POhGTsf+0KEtrRgPIDItJuGVlTeaiGi5vYCJXXus4CNnNKojxC
+	 l6dvWzP1oLqatHsvNxMS+hn45Gen191WG4oLPck2XfAYEK4BWktoc4tNh5yvDRJxe5GXr
+	 7y8Lfk9kPnT882sfP5cWmlhRsMPm698KRpe3G64q+5fQqbj75C0i/iCc09aGzFiYi+w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=k9GrE7MG;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=K+2VETt1;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E94A2606A31F;
-	Fri, 27 Nov 2026 16:14:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B4FF606A31C;
+	Fri, 27 Nov 2026 16:17:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=k9GrE7MG
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DB8A21F000C1;
-	Fri, 27 Nov 2026 16:14:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=K+2VETt1
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DF2EE1F000C1;
+	Fri, 27 Nov 2026 16:17:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795796076;
-	bh=jrypLR0X0eLwSt5FL6Fsdv4qNePy86+fgdrhz4CbdLU=;
+	s=k20260515; t=1795796223;
+	bh=h9E/Yw/XiRcNTmIHpnLOrEiseMqMVpa53c4l91nHw60=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=k9GrE7MGjynZTWoqPJOH1mhcg2vVTwEydcRDGpkLe/iTCppVZkoBlyCFHGClDMbSj
-	 G/YKyzWI5fZNlGHqT0tIOL2e94IlBOT8nFDHK+pLlg/Aw1G6D0+lIWofmBk3qmHwdp
-	 NsfT5zbJKZVhVVKgcQe30J9o5FNTR8HsyiqEimk0TA3UniqU96n9a2oBWxDyq3cH/I
-	 s8obDvdG+xr4RHwB3Pt530KBhUIgOsM5jUopX9IY6VZkQaJ7VnBIXOx9v63Q3GCr78
-	 ITQQsXu4G365Bv+cwoSM4ife5NHddXAHRAau0PllvuUwaVrJcE+4Tfs4fxdDUbDFFQ
-	 ByXxRl9M4ry2w==
-Message-ID: <sashiko-outbox-237853@kernel.org>
+	b=K+2VETt1gm8yx4ZCYHW1v5Rqz8yP+PAnq8Qq54b24Av0PRL4Cqt8F6sNJeEveVFOA
+	 6bjp04QE8cFSmxESOSoDMnwcGM1GjefBXdtkGsOAJNz2a/GtLv6zH5ArIELzX8/NS5
+	 N08YdAjNHWJbE2cPkEBwG99Nakm1TKgUnvYTL6i+PBAclZNXH5Thmi21Py+wDpJpCF
+	 RqSUl6uCZEvzW4D8TkMuqzIvMxZ7QcBppWPf7eCc0UMQDYw6wQq/HNPCJmMK5BqCag
+	 RpX28rHLVMBmMQACJvRrxFhG1suRMWtuBp5Huvkgisy/LVU/LVugaAzGYAI8mRiC2A
+	 kyvmYM6bOG+Lw==
+Message-ID: <sashiko-outbox-237859@kernel.org>
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v16 14/23] scsi: ufs: mediatek: Use the common PHY
- framework
+Subject: Re: [PATCH v16 02/23] dt-bindings: ufs: mediatek,ufs: Complete the
+ binding
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Louis-Alexis Eyraud" <louisalexis.eyraud@collabora.com>
 Cc: linux-phy@lists.infradead.org, devicetree@vger.kernel.org, linux-scsi@vger.kernel.org, robh@kernel.org, conor+dt@kernel.org, vkoul@kernel.org, neil.armstrong@linaro.org, olteanv@gmail.com
-In-Reply-To: <20261127-mt8196-ufs-v16-14-6f2568f7c119@collabora.com>
+In-Reply-To: <20261127-mt8196-ufs-v16-2-6f2568f7c119@collabora.com>
 References: <20261127-mt8196-ufs-v16-0-6f2568f7c119@collabora.com>
- <20261127-mt8196-ufs-v16-14-6f2568f7c119@collabora.com>
+ <20261127-mt8196-ufs-v16-2-6f2568f7c119@collabora.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 27 Nov 2026 16:14:35 +0000
+Date: Fri, 27 Nov 2026 16:17:02 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -61,80 +61,150 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 
-Thank you for your contribution! Sashiko AI review found 1 potential
-issue to consider:
-- [High] scsi: ufs: mediatek: premature phy_exit() and power leak in
-  ufs_mtk_exit()
+Thank you for your contribution! Sashiko AI review found 4 potential
+issues to consider:
+- [Medium] dt-bindings: ufs: mediatek: incompatible schema breaks
+  in-tree mt8195.dtsi
+- [Low] dt-bindings: ufs: mediatek: MT8195 example uses ungated topckgen
+  rx_symbol clocks
+- [Low] dt-bindings: ufs: mediatek: non-canonical property order in
+  example and schema
+- [Low] dt-bindings: ufs: mediatek: redundant word binding in commit
+  subject
 --
 
-commit 7f178c3fbe09182cf227562674a16dbb3d7b6d01
+commit e2ae6fefa9dc14389b243b607b0000f77a86ab97
 Author: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
 
-scsi: ufs: mediatek: Use the common PHY framework
+dt-bindings: ufs: mediatek,ufs: Complete the binding
 
-This commit replaces custom OF parsing and runtime PM management of the UFS
-PHY device with devm_phy_optional_get(), phy_init(), and phy_exit() in
-ufs_mtk_init() and ufs_mtk_exit().
+This commit expands the MediaTek UFS binding with reset properties,
+additional clocks and power supplies, operating-points-v2 support, and an
+MT8195 example while disallowing freq-table-hz and renaming clock-names.
 
-> diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-media=
-tek.c
-> index 33ed5e6dabfeb..9d7e4bc96203b 100644
-> --- a/drivers/ufs/host/ufs-mediatek.c
-> +++ b/drivers/ufs/host/ufs-mediatek.c
+> dt-bindings: ufs: mediatek,ufs: Complete the binding
+
+[Severity: Low]
+This isn't a bug, but the dt-bindings: prefix already states that the patch
+touches a binding, so repeating "binding" in the subject line is redundant.
+
+> diff --git a/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml b/Do=
+cumentation/devicetree/bindings/ufs/mediatek,ufs.yaml
+> index 15c347f5e6604..945cb986b06b7 100644
+> --- a/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml
+> +++ b/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml
+> @@ -19,11 +19,25 @@ properties:
+> =20
+>    clocks:
+>      minItems: 1
+> -    maxItems: 8
+> +    maxItems: 10
+> =20
+>    clock-names:
+>      minItems: 1
+> -    maxItems: 8
+> +    items:
+> +      - const: main
+> +      - const: aes
+> +      - const: tick
+> +      - const: unipro_sysclk
+> +      - const: unipro_tick
+> +      - const: unipro_mp_bclk
+> +      - const: tx_symbol
+> +      - const: mem_sub
+> +      - const: rx_symbol0
+> +      - const: rx_symbol1
+> +
+> +  operating-points-v2: true
+> +
+> +  freq-table-hz: false
+
+[Severity: Medium]
+Does renaming the existing clock-names, disallowing freq-table-hz, and
+raising clocks minItems to 10 for mediatek,mt8195-ufshci break DT ABI and
+dtbs_check for the in-tree MT8195 and MT8395 device trees?
+
+The commit message notes that the binding is unused in mainline outside of
+its example, but arch/arm64/boot/dts/mediatek/mt8195.dtsi already defines
+ufshci@11270000 (enabled by mt8395-genio-1200-evk-ufs.dts and
+mt8395-radxa-nio-12l.dts) with 8 clocks using the "ufs" and "ufs_*" names
+along with freq-table-hz:
+
+arch/arm64/boot/dts/mediatek/mt8195.dtsi:
+		ufshci: ufshci@11270000 {
+			compatible =3D "mediatek,mt8195-ufshci";
+			...
+			clock-names =3D "ufs", "ufs_aes", "ufs_tick",
+					"unipro_sysclk", "unipro_tick",
+					"unipro_mp_bclk", "ufs_tx_symbol",
+					"ufs_mem_sub";
+			freq-table-hz =3D <0 0>, <0 0>, <0 0>,
+					<0 0>, <0 0>, <0 0>,
+					<0 0>, <0 0>;
+
+>    phys:
+>      maxItems: 1
+> @@ -31,8 +45,36 @@ properties:
+>    reg:
+>      maxItems: 1
 
 [ ... ]
 
-> @@ -1336,8 +1308,15 @@ static void ufs_mtk_exit(struct ufs_hba *hba)
->  {
->  	struct ufs_mtk_host *host =3D ufshcd_get_variant(hba);
+> @@ -94,9 +148,32 @@ examples:
+>              phys =3D <&ufsphy>;
 > =20
-> -	if (host)
-> -		ufs_mtk_mphy_power_on(hba, false);
-> +	if (!host)
-> +		return;
-> +
-> +	ufs_mtk_mphy_power_on(hba, false);
-> +
-> +	phy_exit(host->mphy);
-> +
-> +	/* Set MPHY to null so it is not used anymore */
-> +	host->mphy =3D NULL;
->  }
+>              clocks =3D <&infracfg_ao CLK_INFRA_UFS>;
+> -            clock-names =3D "ufs";
+> -            freq-table-hz =3D <0 0>;
+> +            clock-names =3D "main";
+> =20
+>              vcc-supply =3D <&mt_pmic_vemc_ldo_reg>;
+>          };
+>      };
+> +  - |
+> +    ufshci@11270000 {
+> +        compatible =3D "mediatek,mt8195-ufshci";
+> +        reg =3D <0x11270000 0x2300>;
+> +        interrupts =3D <GIC_SPI 137 IRQ_TYPE_LEVEL_HIGH>;
+> +        phys =3D <&ufsphy>;
+> +        clocks =3D <&infracfg_ao 63>, <&infracfg_ao 64>, <&infracfg_ao 6=
+5>,
+> +                 <&infracfg_ao 54>, <&infracfg_ao 55>, <&infracfg_ao 56>,
+> +                 <&infracfg_ao 90>, <&infracfg_ao 93>, <&topckgen 212>,
+> +                 <&topckgen 215>;
+> +        clock-names =3D "main", "aes", "tick", "unipro_sysclk", "unipro_=
+tick",
+> +                      "unipro_mp_bclk", "tx_symbol", "mem_sub", "rx_symb=
+ol0",
+> +                      "rx_symbol1";
 
-[Severity: High]
-Does ufs_mtk_exit() call phy_exit(host->mphy) and clear host->mphy while a
-second phy_power_on() reference is still held?
+[Severity: Low]
+Should rx_symbol0 and rx_symbol1 in this example reference the infracfg_ao
+gate clocks <&infracfg_ao 91> (CLK_INFRA_AO_UFS_RX_SYMBOL) and
+<&infracfg_ao 92> (CLK_INFRA_AO_UFS_RX_SYMBOL1) rather than the ungated
+topckgen fixed-rate parent clocks <&topckgen 212> and <&topckgen 215>?
 
-ufs_mtk_init() calls phy_power_on(host->mphy) twice: first in
-ufs_mtk_mphy_power_on(hba, true) and then in ufs_mtk_setup_clocks(hba,
-true, POST_CHANGE) -> ufs_mtk_pwr_ctrl(hba, true), leaving
-mphy->power_count at 2.
+In drivers/clk/mediatek/clk-mt8195-infra_ao.c, those topckgen clocks feed
+the INFRA_AO4 gates alongside tx_symbol (<&infracfg_ao 90>):
 
-During teardown, ufshcd_hba_exit() ungates clocks in
-ufshcd_exit_clk_gating() and calls ufshcd_vops_exit() before
-ufshcd_setup_clocks(hba, false):
+drivers/clk/mediatek/clk-mt8195-infra_ao.c:
+	GATE_INFRA_AO4(CLK_INFRA_AO_UFS_TX_SYMBOL, "infra_ao_ufs_tx_symbol", "ufs_=
+tx_symbol", 22),
+	GATE_INFRA_AO4(CLK_INFRA_AO_UFS_RX_SYMBOL, "infra_ao_ufs_rx_symbol", "ufs_=
+rx_symbol", 23),
+	GATE_INFRA_AO4(CLK_INFRA_AO_UFS_RX_SYMBOL1, "infra_ao_ufs_rx_symbol1", "uf=
+s_rx_symbol1", 24),
 
-drivers/ufs/core/ufshcd.c:ufshcd_hba_exit() {
-    ...
-		ufshcd_exit_clk_gating(hba);
-		if (hba->eh_wq)
-			destroy_workqueue(hba->eh_wq);
-		ufshcd_vops_exit(hba);
-		ufshcd_setup_vreg(hba, false);
-		ufshcd_setup_clocks(hba, false);
-    ...
-}
+Using the topckgen parent clocks directly leaves the INFRA_AO4 clock gates
+for rx_symbol0 and rx_symbol1 unreferenced and disabled.
 
-ufs_mtk_mphy_power_on(hba, false) only drops mphy->power_count from 2 to 1
-and turns off the 0.9V supply before phy_exit() runs and host->mphy is set
-to NULL.  Because host->mphy is already NULL when ufshcd_setup_clocks(hba,
-false) runs (and uic_link_state is still UIC_LINK_ACTIVE_STATE during
-ufshcd_remove(), so ufs_mtk_setup_clocks() skips ufs_mtk_pwr_ctrl()
-anyway), the second phy_power_off() is never called.  This leaks
-mphy->power_count, the PHY runtime PM reference, and the PHY clocks, and
-causes phy_init() to warn and phy_power_on() to skip powering on the PHY
-if the driver is re-probed.
+[Severity: Low]
+This isn't a bug, but the property order here does not follow the canonical
+DT binding order (compatible, reg, clocks, clock-names, interrupts, ...):
+the example node lists interrupts and phys before clocks and clock-names,
+and the schema properties: and required: blocks list reg after clocks,
+clock-names, and phys rather than right after compatible.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261127-mt8196-ufs=
--v16-0-6f2568f7c119@collabora.com?part=3D14
+-v16-0-6f2568f7c119@collabora.com?part=3D2
