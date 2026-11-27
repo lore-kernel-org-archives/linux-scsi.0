@@ -1,100 +1,79 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.210.171
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795785953;
-	b=SSakJCoV8/VWjS81c5itUzKjf2w5crTO1vysF77A/ZFMT2i/W/N8yhJtBOyZjv/8FUuL
-	 imaCLtQiCNmtceO8Sj32je2BoXuGtK2BtNNrSWAPCkpSATkcjJDqFOIWvQNX+epV7GQR7
-	 g8J5jIUc+2ZiwVQSXHF+s6H2lev9fwQKRjnvsePhfhxGqA/ZX3ce4EZ39uPZeTIIil4P+
-	 3paLXwCMrWeFhHISJJV7OHUfoc0Vv3c001HYOlLzFfXURNfsU9vLsoPlQ7zyZgdsEjLQB
-	 7Ez3s1J9FG+RDkpmlmWqlxf8jnASFiZAZiM9O4fmLSELp1yGmlwjJ5XB4v2fS8vo9vQ==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795785953;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:In-Reply-To:References:Content-Type:Date:
-	 Message-ID;
-	bh=nO5pNbEMq4ckZkkDrDFMXKAQltbx+d+gHgPNIH42jTs=;
-	b=JS44w6dTO5Fh5bfZ8VN+JMGUj/m+8uUncCL2TiNsS6hzy8qAEjczBnufr5SLWlnxiQlJ
-	 nX2MfeQtcH4e7CtYmPf4BDOnT7Q2ZlQEykSI+8SIEImZbssdKr2wNHioaddBr1ZQltLso
-	 rWhgfNwkSfgSeuz/QbRLT6NZ5OsGtjHN5xJqMmfhV1NDHB4mzzUVa1v6nUA18E92HJ1RI
-	 68jVJO/UCUJsve1DZqMFLQsZeZPMtYfE+7g32cDaxKH2umlr94749l3k6E2KIPbnko6R9
-	 us6trBdcEATtX0r+8mBSavTzQ0x9jL98BPKFqz1LP2Sl6Shuf51og3eWrlhY+2XPgng==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b="Nq5/dzqX";
-	arc=none smtp.remote-ip=209.85.210.171
-Received: from mail-pf1-f171.google.com (mail-pf1-f171.google.com [209.85.210.171])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1795787558;
+	b=evu1CRWP3uarfJwHqW7FtVZrOitNrrqTwcKTGvEkoF9LI/Ca5JrQ2SND/7vUCeyiaP2W
+	 1xFOeh8IOOmDFSkifY8ijVBb3onYt1wZQdQ/c2We+FFEi+DTZxh9pGX4c9360hVA394y1
+	 bXAks3WvHWLsaj+LGarJeE1k69jXwXEfS4hUQSokifMICKB6Egaukk6LofZUszHpC5/0I
+	 +a2Zqshhlj066droUm/DQEpZazbpkO9VXnVsRN5pFGzuxKuuH9P4DN3uXaClSiDUO4JgL
+	 qZ0NwVfqU264mFk0NFBAxv9Z77zi2xPe4uqeATt7uqHwcRF8BseUvUEGjO3l3FaWpsg==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795787558;
+	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
+	 Content-Type:Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To:Content-Transfer-Encoding;
+	bh=eWMO6IAcv4zDaCqtq3mwQTeim/X24e/E02WnMKesUEQ=;
+	b=lA93+BX35vmPTP5K66d5SlUdpUgGlqY+/02xt7hkUvGwM3/V8vfmUMH9rUyV3IbWHjlb
+	 7/xvQ9Wt3EuPqcvbxZrhKXw4yiK5l9inbv3nsVx3Hcck6Y/K0QyBHKKc1dg3M2sV7jrNP
+	 z8upUB8y4hsMO4KXeyXvF6a+1LbmjQsaiJg5euwHm97PGILYwVIhnC/NQPlsAiVAAm2Bd
+	 dXe2HLdFVUjpaGrdKiJFM3rfshgbE69g2OlTqh6rsgrjmfcEZ0HJoVWrqZDwASnHGd7dX
+	 kfjkPQ4MSWwAKYOnUMAWaBt1NqYM3NBI42UYbwEKt03tXJjzIck9i6BrWZMzkC3M9ng==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=EDF2qpwK;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C542A606A324;
+	Fri, 27 Nov 2026 13:52:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=EDF2qpwK
+Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
+ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
+	t=1795787558;
+	b=ULdqyg5KhUVWUurF3SPt8KwyMpPAE5gF+PD06VaI1zN9B6IElcYna8pTZYEcVSS160Ze
+	 +graGyDC+VwGiOx0hnobwU3niuHhz4I5CHmeyB2YMpQ/WRgzTTvDZbzBjB6ZkFr2U9OOI
+	 yDLgg3tRXm/thZoWByqnKHuBfTrtmMRlVVSd5xCcXS9ZxSXJybSJyb2/Gtr0xbtV+4ajn
+	 ISKf7PDPbEQWNOAtABIukPgNhqSZvKJP7SMoLO7tAD6f4w7NMygUclMGIfBJaCkVJUAdn
+	 7I6i/mKv74sL0bWBPfgjvvZ5pzSaqNRN5nlIlWZRc7PaU07240KANKKTQmJQp3syYpA==
+ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
+	c=relaxed/relaxed; t=1795787558;
+	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
+	 Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To:Content-Transfer-Encoding;
+	bh=eWMO6IAcv4zDaCqtq3mwQTeim/X24e/E02WnMKesUEQ=;
+	b=ttlOdmPzWePZ0I7xY/iBx/xtVOOjgeOlUuzozwJuiJLQWlD6Sxj1q15lUhNBNWK/fMjP
+	 F8o3gBUdaeJk8U7NYchwSnxnvDsUtbtqVz3r0gMCC4EPlLhEu4egoncR4ytzJe5WH/Pri
+	 JC5AZbVeaz3cXemN2aV7A8z5pSZbprDQ2kJDlm9+y022qxdfPFVy0o8mtqbauuu89AUc3
+	 EKrX0K94eKOg4rzlueyaB9WNmgV25/vmV6vldXn6RBl6WfVD+4jJUFTbEJuje7eH07Z0Y
+	 +rjfP49YqtOLAc40ZoOnARTKOObB1h2MdyactEfW6y1MmBr1G/pamK87ZXgX8prJpYw==
+ARC-Authentication-Results: i=1; smtp.kernel.org; 
+	arc=none smtp.remote-ip=100.80.115.77
+Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A2AA606A31C
-	for <linux-scsi@vger.kernel.org>; Fri, 27 Nov 2026 13:25:52 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0A2AA606A31C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=Nq5/dzqX
-Received: by mail-pf1-f171.google.com with SMTP id d2e1a72fcca58-8b612fd74e1so2815117b3a.0
-        for <linux-scsi@vger.kernel.org>; Fri, 27 Nov 2026 05:25:52 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1795785952; x=1796390752; darn=vger.kernel.org;
-        h=message-id:date:content-type:references:in-reply-to:subject:cc:to
-         :from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=nO5pNbEMq4ckZkkDrDFMXKAQltbx+d+gHgPNIH42jTs=;
-        b=Nq5/dzqXt5JHBNsN2NP5jngxIpRTmvxiKcOD9sL7GMETuCDkUyX7is4yfcyzcO2dQB
-         6oON5V34pqU8wcEn5mnNqaHFOPA69P6Pydm3TCwknWnCo7rIu34cFmR9Vt0DoFcWzZWL
-         nby/vCyNnAovVV+6xOqcIchSP7PaKCFc1FP6SpSYRQvEzuc7szyFNWjvYZW97JGBcbeo
-         2FxTeEkwb3a6MkDOCkTvTDZO8hFkJ9kCsht/RDG24G+vgaQ9RDF60mce4CyuLx7tbP0o
-         1DkSmPUiU3DlGvouOXwKqmrAOPQKVVRnqIX8bAYxOkoy2e0emMM9bvTI8yA4ur2PMFV9
-         eL4w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795785952; x=1796390752;
-        h=message-id:date:content-type:references:in-reply-to:subject:cc:to
-         :from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=nO5pNbEMq4ckZkkDrDFMXKAQltbx+d+gHgPNIH42jTs=;
-        b=iiUAFgqkZ2lwFPL8T+5hdr6YbbttDaqRl5k2EYo9r3x6TjRJcK/zlB1q77CzkkEbg0
-         lvdvE9BL/TWRnBeePGco4RbIjsTKO5f/02SI29aqadc6eGN5Yv/jOp/WNxWnAi1ZoxUa
-         9+hOuSWmJtAvjkKXTKiSSgqwk5xnMhB5JHWBv8D2fhjzWT6OcEBMKge4tTuwK/5PMdrP
-         byzVuQAlplDy8rK/d6A0bqacP8Dhh5Uvkd/Myd/bi/WKm36MSsp316ls3OPxppFCtSSt
-         We+5baMXiqDmnUBKNdqHpIkzVxAgl4qWUXnz2vp4q2TcSDkgl+tkjLYGPgkwE/eldRj0
-         GO+A==
-X-Forwarded-Encrypted: i=1; AL+hErH/WOYeb+4Eyj6tjHHUVw1f1wADcUDPMA9Z1RAhX+rUe1vpf7in9wB3vxjZ/NTYwQmycAgD7KPkQCL0@vger.kernel.org
-X-Gm-Message-State: APuU4Z8Z1W8SKS9uOMszDRO2ZqGYa3FXLcfpggFPS2By39z+igtwkAE6
-	2CTBbC4+UWFMesay+rnB4ujIlZDDmTxycFtz/0OlVt6zYpC/tIRJHEVJ
-X-Gm-Gg: AZFdTZeizuEbJMmZ/ElDhNOU+EmdS0CQ1QzopIh7ktec0wI/xgCX9HmZlDySyEN0vDM
-	rWS+kqxuhq1qvp8e9aSrTTVyVETChiiakS5PJt49BkN7AJfcj2PN/UPO03vo6l3h8FIjtoUF3AY
-	VsmGNqpQyocUmxCMmf9IiK0KpQjDShpUtu9zVwqU5Nyaa+iouBpdQ+w+6vZPF8okrwHD6/SsPv7
-	jNrNksojq/H8+wKw3m85KAXhDCkAK5rgSH2ibMdkHTmIHb6KMi06JAk++JiLBx37xsNDlxswFpO
-	+vXa+2TBBLy7o0g8QAyE02PRx/wqnyXX3wLvvwknJf3ENCKPblNhgeA1NPsy6dlnqPiN/cluom5
-	/6qvEePDOgH/bQyO7jyVWX1uy68/6W9relrnKXYZabN1jzfsSLVwXNcWf0qVYtQy0z6ZUFajIw/
-	OsqO9AuAuW+1EQ5EijsrFX17rpVR2JzJB/kaEEW8+VvxkSTyyXyN9VD4ezoqN9HE6tH3EJaiiBd
-	PVGRI1DYRrzikoItoo1SkXsVFEgnj2bpcBNF50xpsIXLxjza5ouryJ5Y18+aXAJuygHZozM7n8O
-	+6YgB9rIYbsILijCXjqFf74RINCiDEKGnKe9Yz02DDg+rULGUaulclAs3vDN34QbiUdT5MNuJDz
-	O
-X-Received: by 2002:a05:6a00:18a0:b0:8a0:76ea:36e0 with SMTP id d2e1a72fcca58-8c87cc45db1mr21594130b3a.40.1795785952316;
-        Fri, 27 Nov 2026 05:25:52 -0800 (PST)
-Received: from mac.lan (114-45-165-38.dynamic-ip.hinet.net. [114.45.165.38])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-8c87344058bsm12383725b3a.41.2026.11.27.05.25.49
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 27 Nov 2026 05:25:51 -0800 (PST)
-From: Ilia Snezhkov <iasnezhkov@gmail.com>
-To: Peter Wang <peter.wang@mediatek.com>
-Cc: martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com,
- matthias.bgg@gmail.com, angelogioacchino.delregno@collabora.com,
- louisalexis.eyraud@collabora.com, linux-scsi@vger.kernel.org,
- linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 2/3] scsi: ufs: mediatek: allow clock scaling when
- ufs_fde is absent
-In-Reply-To: <484a58e10c4bc9cde24ef731a4bd3051b9decac6.camel@mediatek.com>
-References: <20261126031008.27506-1-iasnezhkov@gmail.com>
- <20261126031008.27506-3-iasnezhkov@gmail.com>
- <7b7d94ab4283b82aec13eae3f9c1d2e77873d88f.camel@mediatek.com>
- <179574184161.52486.4990124402659702610@gmail.com>
- <484a58e10c4bc9cde24ef731a4bd3051b9decac6.camel@mediatek.com>
-Content-Type: text/plain; charset=UTF-8
-Date: Fri, 27 Nov 2026 21:25:47 +0800
-Message-ID: <179578594781.39039.17064629203450675282@gmail.com>
+	by smtp.kernel.org (Postfix) with ESMTPS id 77B871F0089B;
+	Fri, 27 Nov 2026 13:52:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1795787558;
+	bh=eWMO6IAcv4zDaCqtq3mwQTeim/X24e/E02WnMKesUEQ=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To;
+	b=EDF2qpwKbDxSleqw+nFYqyeg9WlfO8Aew9AJr/M6YBfsAWTYQk/aI7JUTxO6YyCk/
+	 AgngpCMuN0GUiLw3ksDiuoEqGMLxXlFZgLfSg3K++ZqJWtispsXnZFG+LRl4wibqwg
+	 +zfoMAcVSiulTvMJNBEVVoKNq8vPK2ExsvmUypnB/XK56VCLI4bmQtHc+wIGgbaUa5
+	 OSKCUxhWholVjuCE3pneLN669XvGo6VSj0474XE3w791f0srJaAoiRPrFczSdLjccO
+	 kPSX3Kw1OjMgShyB5bHK1jnmW0cEPxrAsOQq/AfRVvY4WUF43tMrz9Gim7Nz3Lg0o6
+	 S9X68kMX2kwxw==
+Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
+	by lkml.kernel.org (Postfix) with ESMTP id F2ABC4B818;
+	Fri, 27 Nov 2026 13:52:25 +0000 (UTC)
+From: Rongen Wang via B4 Relay <devnull+security.nitrohex.com@kernel.org>
+Date: Fri, 27 Nov 2026 22:52:18 +0900
+Subject: [PATCH v2 1/2] scsi: target: iscsi: Refuse to add a connection to
+ a session being closed
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -103,58 +82,333 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Message-Id: <20261127-b4-lio-iscsi-session-closing-v2-1-a3ac8e88cbad@nitrohex.com>
+References: <20261127-b4-lio-iscsi-session-closing-v2-0-a3ac8e88cbad@nitrohex.com>
+In-Reply-To: <20261127-b4-lio-iscsi-session-closing-v2-0-a3ac8e88cbad@nitrohex.com>
+To: "Martin K. Petersen" <mkp@kernel.org>
+Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, 
+ stable@vger.kernel.org, Rongen Wang <security@nitrohex.com>
+X-Mailer: b4 0.15.2
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1795787544; l=12716;
+ i=security@nitrohex.com; s=nitrohex; h=from:subject:message-id;
+ bh=6eko8Rh3SWLy4tXq1Kzj6AzCiZ+7fNqYMIqbjmzcoB8=;
+ b=Z/ZC7PSe1ADZtSdIgl+dds/8+SdAIx2k0D/WG9E3zFgGSmk7JV7yUhjS/WM3aKshFn476Lydg
+ g3h8TtvPpCYAFBtlBvL3kcTkmOAaRejTLCK8cwvv6tkYGd2ZdiJN6Wv
+X-Developer-Key: i=security@nitrohex.com; a=ed25519;
+ pk=Jk5NuTVJdxr1CTP4RuYaG31zSgsNlyFzVo9sphZTqt0=
+X-Endpoint-Received: by B4 Relay for security@nitrohex.com/nitrohex with
+ auth_id=1652
+X-Original-From: Rongen Wang <security@nitrohex.com>
+Reply-To: security@nitrohex.com
+Content-Transfer-Encoding: 7bit
 
-Hi Peter,
+From: Rongen Wang <security@nitrohex.com>
 
-Thank you for clarifying — and I apologize for missing
-ufs_mtk_fix_clock_scaling() (commit 86a678a25108) in my previous reply.
+A Login Request with a non-zero TSIH adds a connection to an existing
+session. iscsi_login_non_zero_tsih_s2() looks the session up when the
+first Login PDU arrives, checks once that it is not being closed and
+takes a session usage count. The login then stays pending for as long
+as the initiator delays its next Login PDU.
 
-1. Why ufs_sel_max_src / ufs_sel_min_src were set in our MT6789 DT:
-   We initially hit this on an older Android 6.12/6.18 tree whose
-   ufs-mediatek.c predated commit 86a678a25108 ("scsi: ufs: host:
-   mediatek: Fine-tune clock scaling"). In that local DT we added
-   ufs_sel_max_src (msdcpll_d2, 192 MHz) and ufs_sel_min_src
-   (tck_26m_mx9, 26 MHz) to idle the ufs_sel mux at 26 MHz on a
-   small-battery handheld.
+If the last connection of the session fails in the meantime,
+iscsit_close_connection() sets session_fall_back_to_erl0 and calls
+iscsit_close_session(), which waits for the usage count held by the
+pending login. Nothing stops that login from completing:
+iscsi_login_post_auth_non_zero_tsih() only compares nconn + 1 with
+MaxConnections, and iscsi_post_login_handler() adds the connection to
+sess->sess_conn_list and drops the usage count. iscsit_close_session()
+then frees the session while the new connection is in full feature
+phase, and the first PDU received on it reads the freed session:
 
-   Re-checking mainline, you are completely right about MT6789:
-   ufs_mtk_fix_clock_scaling() clears UFSHCD_CAP_CLK_SCALING whenever
-   wspecversion < 0x0400 and calls _ufs_mtk_clk_scale(hba, false). So an
-   upstream MT6789 DT should not define ufs_sel_max_src / ufs_sel_min_src
-   (otherwise mainline would permanently drop ufs_sel to ufs_sel_min_src).
+  BUG: KASAN: slab-use-after-free in iscsit_get_rx_pdu+0x2338/0x3330
+  Read of size 8 at addr ffff88800b19fde0 by task iscsi_trx/156
+  Call Trace:
+   iscsit_get_rx_pdu+0x2338/0x3330
+   iscsi_target_rx_thread+0x139/0x2f0
+   kthread+0x2e8/0x3c0
+  Freed by task 154:
+   kfree+0x127/0x3b0
+   iscsit_close_session+0x3a2/0x570
+   iscsit_close_connection+0x134d/0x20f0
+   iscsit_take_action_for_connection_exit+0x1b5/0x360
+   iscsi_target_rx_thread+0x251/0x2f0
 
-2. What behavior clock scaling changed in power mode on HS-G3:
-   None — because ufs-mediatek does not implement .freq_to_gear_speed,
-   ufshcd_scale_gear() uses the legacy path and only lowers gear when
-   hba->pwr_info.gear_{tx,rx} > hba->clk_scaling.min_gear (UFS_HS_G4).
-   At HS-G3 (gear 3 < 4), new_pwr_info stays identical to hba->pwr_info
-   (and saved_pwr_info is also HS-G3 on scale-up), so
-   ufshcd_config_pwr_mode(..., UFSHCD_PMC_POLICY_DONT_FORCE) does not
-   issue any UIC power-mode change; only the ufs_sel clock mux switched
-   between 26 MHz and 192 MHz (plus ufs_mtk_scale_perf() PM QoS).
+Without KASAN the same sequence ends in a NULL pointer dereference in
+iscsit_get_rx_pdu() and, when the NOP-In timer of the new connection
+fires, in a panic in softirq context.
 
-3. For mainline Patch 2/3 itself:
-   Even without MT6789, commit 5e5976f5242d ("scsi: ufs: host: mediatek:
-   Support FDE (AES) clock scaling") left an inconsistency in mainline:
-   ufs_mtk_is_clk_scale_ready() only checks ufs_sel, ufs_sel_max_src, and
-   ufs_sel_min_src, and _ufs_mtk_clk_scale() already gates all FDE clock
-   operations behind clk_fde_scale (mclk->ufs_fde_max_clki &&
-   mclk->ufs_fde_min_clki), yet line 2065 still returns early on
-   `if (!clki || !fde_clki)`.
+If the last connection is instead logged out with reason
+CLOSE_CONNECTION, or fails at ErrorRecoveryLevel 2, the session waits
+in TARG_SESS_STATE_FAILED and iscsit_close_connection() starts the
+Time2Retain timer, which the lookup had no reason to stop. If the timer
+expires while the login is pending, iscsit_close_session() finds the
+usage count and gives up half way, and the login then adds its
+connection to a session that is no longer registered in configfs.
+Dropping the usage count completes session_waiting_on_uc_comp with
+nobody waiting, so when that connection logs out the session,
+iscsit_close_session() does not wait for the usage count held by the
+logout and frees the session under it:
 
-   As a result, on any platform whose DT provides ufs_sel{,_max_src,_min_src}
-   without ufs_fde — including a UFS 4.0 host without FDE scaling, or a
-   UFS 4.0-capable SoC attached to a UFS < 4.0 device where
-   ufs_mtk_fix_clock_scaling() or suspend/resume calls _ufs_mtk_clk_scale()
-   to switch ufs_sel and update dvfsrc-vcore — _ufs_mtk_clk_scale()
-   silently becomes a no-op.
+  BUG: KASAN: slab-use-after-free in _raw_spin_lock_irq+0x72/0xe0
+  Write of size 4 at addr ffff888009aee958 by task iscsi_ttx/160
+  Call Trace:
+   _raw_spin_lock_irq+0x72/0xe0
+   __wait_for_common+0x2b6/0x4a0
+   iscsit_logout_post_handler+0x1aa/0x660
+   iscsit_response_queue+0xa46/0x19d0
+   iscsi_target_tx_thread+0x3c7/0x650
+  Freed by task 161:
+   kfree+0x127/0x3b0
+   iscsit_close_session+0x3a2/0x570
+   iscsit_close_connection+0x134d/0x20f0
+   iscsit_take_action_for_connection_exit+0x2b7/0x360
+   iscsi_target_rx_thread+0x1aa/0x2f0
 
-Should ufs_fde remain optional as ufs_mtk_is_clk_scale_ready() and
-clk_fde_scale indicate? If so, I will update Patch 2/3's commit message
-in v3 to describe the mainline 5e5976f5242d mismatch cleanly (dropping
-the misleading MT6789 example) and carry your Reviewed-by tags on
-Patches 1/3 and 3/3. Or if ufs_fde is intended to be mandatory whenever
-clock scaling is enabled, please let me know and I can adjust accordingly.
+Before adding the connection, check again what the lookup checked:
+session_fall_back_to_erl0, session_logout, session_close and
+ISCSI_TF_EXPIRED, under se_tpg->session_lock and sess->conn_lock as
+iscsi_check_for_session_reinstatement() and lio_tpg_close_session() do.
+iscsit_close_connection() decides under sess->conn_lock whether it
+closed the last connection, and the Time2Retain handler sets
+ISCSI_TF_EXPIRED under se_tpg->session_lock, so either the new
+connection is counted first or the login sees that the session is going
+away and is refused. Stop the Time2Retain timer before session_lock is
+dropped, so that an expiry that is already pending sees ISCSI_TF_STOP
+instead of closing a session that has a connection again. Take over the
+session parameters negotiated on the new connection only after the
+check, so that a refused login leaves sess->sess_ops alone and
+iscsi_target_login_sess_out() records it with the initiator name.
 
-Best regards,
-Ilia
+Move the transition to TARG_CONN_STATE_LOGGED_IN after that check. The
+RX and TX kthreads were started before the final Login Response was
+sent and leave a connection alone while it is still in
+TARG_CONN_STATE_IN_LOGIN, so a refused connection can be stopped the
+same way the error path of iscsi_target_do_tx_login_io() stops it, and
+then released with iscsi_target_login_sess_out(). The initiator has
+already received the final Login Response and sees the connection
+dropped, as if the session had been closed a moment earlier.
+
+The problem was found and this patch was drafted with the help of AI
+assistants (Claude Mythos 5.2 and, for v2, Claude Opus 5.5, Anthropic,
+via Claude Code); the result was reviewed and tested as described in
+the cover letter.
+
+Fixes: e48354ce078c ("iscsi-target: Add iSCSI fabric support for target v4.1")
+Cc: stable@vger.kernel.org
+Signed-off-by: Rongen Wang <security@nitrohex.com>
+---
+ drivers/target/iscsi/iscsi_target_login.c | 117 ++++++++++++++++++++++++------
+ drivers/target/iscsi/iscsi_target_login.h |   4 +-
+ drivers/target/iscsi/iscsi_target_nego.c  |   5 +-
+ 3 files changed, 100 insertions(+), 26 deletions(-)
+
+diff --git a/drivers/target/iscsi/iscsi_target_login.c b/drivers/target/iscsi/iscsi_target_login.c
+index fda04eb15d..7c465a22d6 100644
+--- a/drivers/target/iscsi/iscsi_target_login.c
++++ b/drivers/target/iscsi/iscsi_target_login.c
+@@ -644,10 +644,41 @@ out_bitmap:
+ 	return ret;
+ }
+ 
+-void iscsi_post_login_handler(
+-	struct iscsi_np *np,
+-	struct iscsit_conn *conn,
+-	u8 zero_tsih)
++/*
++ * Undo iscsit_start_kthreads() for a connection that is still in
++ * TARG_CONN_STATE_IN_LOGIN.  Both kthreads leave the connection alone in
++ * that state and only wait for kthread_stop().
++ */
++void iscsit_stop_kthreads(struct iscsit_conn *conn)
++{
++	if (conn->rx_thread && conn->rx_thread_active) {
++		send_sig(SIGINT, conn->rx_thread, 1);
++		complete(&conn->rx_login_comp);
++		kthread_stop(conn->rx_thread);
++		conn->rx_thread_active = false;
++	}
++	if (conn->tx_thread && conn->tx_thread_active) {
++		send_sig(SIGINT, conn->tx_thread, 1);
++		kthread_stop(conn->tx_thread);
++		conn->tx_thread_active = false;
++	}
++	spin_lock(&iscsit_global->ts_bitmap_lock);
++	bitmap_release_region(iscsit_global->ts_bitmap, conn->bitmap_id,
++			      get_order(1));
++	spin_unlock(&iscsit_global->ts_bitmap_lock);
++}
++
++/*
++ * Returns 0 once the connection has been made part of its session.
++ *
++ * Returns -1 if a connection that is being added to an existing session
++ * (TSIH != 0) can not be attached because the session started to shut down
++ * while the login was in progress.  The connection is then still in
++ * TARG_CONN_STATE_IN_LOGIN and the caller has to stop its kthreads and
++ * release it with iscsi_target_login_sess_out().
++ */
++int iscsi_post_login_handler(struct iscsi_np *np, struct iscsit_conn *conn,
++			     u8 zero_tsih)
+ {
+ 	int stop_timer = 0;
+ 	struct iscsit_session *sess = conn->sess;
+@@ -657,23 +688,43 @@ void iscsi_post_login_handler(
+ 
+ 	iscsit_inc_conn_usage_count(conn);
+ 
+-	iscsit_collect_login_stats(conn, ISCSI_STATUS_CLS_SUCCESS,
+-			ISCSI_LOGIN_STATUS_ACCEPT);
+-
+-	pr_debug("Moving to TARG_CONN_STATE_LOGGED_IN.\n");
+-	conn->conn_state = TARG_CONN_STATE_LOGGED_IN;
+-
+ 	iscsi_set_connection_parameters(conn->conn_ops, conn->param_list);
+ 	/*
+ 	 * SCSI Initiator -> SCSI Target Port Mapping
+ 	 */
+ 	if (!zero_tsih) {
+-		iscsi_set_session_parameters(sess->sess_ops,
+-				conn->param_list, 0);
+-		iscsi_release_param_list(conn->param_list);
+-		conn->param_list = NULL;
++		/*
++		 * The session was located from ISID+TSIH when the first Login
++		 * Request arrived, and since then only the session usage count
++		 * kept it alive.  If its last connection went away in the
++		 * meantime, iscsit_close_connection() either committed to
++		 * iscsit_close_session(), or moved the session to
++		 * TARG_SESS_STATE_FAILED and started the Time2Retain timer,
++		 * which may have expired since.  Check again what
++		 * iscsi_login_non_zero_tsih_s2() checked, under the locks
++		 * iscsi_check_for_session_reinstatement() uses, and do not
++		 * attach a new connection to a session that is shutting down.
++		 */
++		spin_lock_bh(&se_tpg->session_lock);
++		spin_lock(&sess->conn_lock);
++		if (atomic_read(&sess->session_fall_back_to_erl0) ||
++		    atomic_read(&sess->session_logout) ||
++		    atomic_read(&sess->session_close) ||
++		    (sess->time2retain_timer_flags & ISCSI_TF_EXPIRED)) {
++			spin_unlock(&sess->conn_lock);
++			spin_unlock_bh(&se_tpg->session_lock);
++			pr_err("iSCSI session SID %u is shutting down, refusing to add CID %u\n",
++			       sess->sid, conn->cid);
++			iscsit_dec_conn_usage_count(conn);
++			return -1;
++		}
++
++		iscsit_collect_login_stats(conn, ISCSI_STATUS_CLS_SUCCESS,
++					   ISCSI_LOGIN_STATUS_ACCEPT);
++
++		pr_debug("Moving to TARG_CONN_STATE_LOGGED_IN.\n");
++		conn->conn_state = TARG_CONN_STATE_LOGGED_IN;
+ 
+-		spin_lock_bh(&sess->conn_lock);
+ 		atomic_set(&sess->session_continuation, 0);
+ 		if (sess->session_state == TARG_SESS_STATE_FAILED) {
+ 			pr_debug("Moving to"
+@@ -691,7 +742,21 @@ void iscsi_post_login_handler(
+ 		pr_debug("Incremented iSCSI Connection count to %d"
+ 			" from node: %s\n", atomic_read(&sess->nconn),
+ 			sess->sess_ops->InitiatorName);
+-		spin_unlock_bh(&sess->conn_lock);
++		spin_unlock(&sess->conn_lock);
++		/*
++		 * Stop the Time2Retain timer before session_lock is dropped, as
++		 * lio_tpg_close_session() does, so that an expiry that is
++		 * already pending sees ISCSI_TF_STOP instead of closing a
++		 * session that has a connection again.
++		 */
++		if (stop_timer)
++			iscsit_stop_time2retain_timer(sess);
++		spin_unlock_bh(&se_tpg->session_lock);
++
++		iscsi_set_session_parameters(sess->sess_ops, conn->param_list,
++					     0);
++		iscsi_release_param_list(conn->param_list);
++		conn->param_list = NULL;
+ 
+ 		iscsi_post_login_start_timers(conn);
+ 		/*
+@@ -707,16 +772,16 @@ void iscsi_post_login_handler(
+ 		 */
+ 		complete(&conn->rx_login_comp);
+ 		iscsit_dec_conn_usage_count(conn);
+-
+-		if (stop_timer) {
+-			spin_lock_bh(&se_tpg->session_lock);
+-			iscsit_stop_time2retain_timer(sess);
+-			spin_unlock_bh(&se_tpg->session_lock);
+-		}
+ 		iscsit_dec_session_usage_count(sess);
+-		return;
++		return 0;
+ 	}
+ 
++	iscsit_collect_login_stats(conn, ISCSI_STATUS_CLS_SUCCESS,
++				   ISCSI_LOGIN_STATUS_ACCEPT);
++
++	pr_debug("Moving to TARG_CONN_STATE_LOGGED_IN.\n");
++	conn->conn_state = TARG_CONN_STATE_LOGGED_IN;
++
+ 	iscsi_set_session_parameters(sess->sess_ops, conn->param_list, 1);
+ 	iscsi_release_param_list(conn->param_list);
+ 	conn->param_list = NULL;
+@@ -769,6 +834,7 @@ void iscsi_post_login_handler(
+ 	 */
+ 	complete(&conn->rx_login_comp);
+ 	iscsit_dec_conn_usage_count(conn);
++	return 0;
+ }
+ 
+ int iscsit_setup_np(
+@@ -1321,7 +1387,10 @@ static int __iscsi_target_login_thread(struct iscsi_np *np)
+ 	if (ret == 1) {
+ 		tpg_np = conn->tpg_np;
+ 
+-		iscsi_post_login_handler(np, conn, zero_tsih);
++		if (iscsi_post_login_handler(np, conn, zero_tsih) < 0) {
++			iscsit_stop_kthreads(conn);
++			goto new_sess_out;
++		}
+ 		iscsit_deaccess_np(np, tpg, tpg_np);
+ 	}
+ 
+diff --git a/drivers/target/iscsi/iscsi_target_login.h b/drivers/target/iscsi/iscsi_target_login.h
+index 03c7d695d5..d2c6169adb 100644
+--- a/drivers/target/iscsi/iscsi_target_login.h
++++ b/drivers/target/iscsi/iscsi_target_login.h
+@@ -20,7 +20,9 @@ extern int iscsit_get_login_rx(struct iscsit_conn *, struct iscsi_login *);
+ extern int iscsit_put_login_tx(struct iscsit_conn *, struct iscsi_login *, u32);
+ extern void iscsit_free_conn(struct iscsit_conn *);
+ extern int iscsit_start_kthreads(struct iscsit_conn *);
+-extern void iscsi_post_login_handler(struct iscsi_np *, struct iscsit_conn *, u8);
++void iscsit_stop_kthreads(struct iscsit_conn *conn);
++int iscsi_post_login_handler(struct iscsi_np *np, struct iscsit_conn *conn,
++			     u8 zero_tsih);
+ extern void iscsi_target_login_sess_out(struct iscsit_conn *, bool, bool);
+ extern int iscsi_target_login_thread(void *);
+ 
+diff --git a/drivers/target/iscsi/iscsi_target_nego.c b/drivers/target/iscsi/iscsi_target_nego.c
+index ccd468e26f..23f6dffb79 100644
+--- a/drivers/target/iscsi/iscsi_target_nego.c
++++ b/drivers/target/iscsi/iscsi_target_nego.c
+@@ -640,7 +640,10 @@ static void iscsi_target_do_login_rx(struct work_struct *work)
+ 		iscsit_stop_login_timer(conn);
+ 		cancel_delayed_work(&conn->login_work);
+ 		iscsi_target_nego_release(conn);
+-		iscsi_post_login_handler(np, conn, zero_tsih);
++		if (iscsi_post_login_handler(np, conn, zero_tsih) < 0) {
++			iscsit_stop_kthreads(conn);
++			iscsi_target_login_sess_out(conn, zero_tsih, true);
++		}
+ 		iscsit_deaccess_np(np, tpg, tpg_np);
+ 	}
+ 	return;
+
+-- 
+2.34.1
+
+
