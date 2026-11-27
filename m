@@ -1,79 +1,56 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795780857;
-	b=Bw8JpdrjyPu3Kva8Dto+Ol+IHSZaOzCp2pFH3Cn4Cle6XsfFdpf9tUJoODLXlphhy7Fa
-	 EweoeJdxnHreRCllEVL1rzArhM+mA3/XdF+r9auDymaYYvYJte/6QO5xEBu7iQXiBL95T
-	 wAI5jtydKjH/wisedNmdm1Rw32KFXSPl0C2hTst8h4Fg+jCPJmSJ+2d8A5iTNCULiN/Xd
-	 nlsBACfX1U4jluUMH7QNkXhUEMnJm7MMYDg0IhquJ3ANrYxOKyu88+IXYQmHVD1+yEuIK
-	 v8nufOyJELYEp8N+I27qt1v5GEslcwGgwGHXW2k82KyaCEXrSRBC4cQ6kUPa1Mf5zOQ==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795780857;
-	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
-	 Content-Type:Message-Id:X-B4-Tracking:X-Change-ID:To:Cc:X-Mailer:
-	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
-	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=BtyZEKPHKck8jmWjCTT+/UctwYkMM73uJLwplt36iPg=;
-	b=PzUfUqzBUMecDbhhejfDOxm+6eSl583ybV3gVBRKt33tyjabalqGog/1UCIAUknlvjpz
-	 tgL14626CbDeIeV1aZjwS2vwbkzr8PdpfMnOhzDmCYIt3x+otfB7jl7z/UEOQc+tBUZTy
-	 7vmxMnvfdK/TC5xTZQzVYFoWSnipGhl7dhwn3ByNROOIG7JFh+CM5ut8migu7zdvDmWt5
-	 XfWEZ6p9rg1OXLkc4VAuqiiG+pGW/3VyjAcJLgG4wuxPChYiLkvNYGQygLC6RzxgKCz42
-	 R46MJn81zzqLXZ/XDvSx854CC+zy/pPknhwK9G8qPSTWgpTgfy6WBos5358+ibtOxHg==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=E44XQvXh;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1795782091;
+	b=tY00WRGixeDZkHtkYzLo/FRB1d6zFLU/4mpa4zRT3lLCoQ9Belbs3d7ibRpWV6ByfIz5
+	 OAWyIjI8U6dnS1eD9W3znVPMheOGJtNmPtiNrtYa0pE+xjAF5HlNFB2bgj+uC+737PoZX
+	 U+pzYT5wRGmFP/UB+3dp5kYX+BRsRafjZqUIi9fjGt86xdRgAWUTLrtAD5vxYOjmFiy7a
+	 wMjci+ot+yN/Kwh7Azsr7HWW/KkSUByn8eGbTI5PSpijalH111Cc6Z5QZiv5kho9x+auQ
+	 YQRKuYWlc9M5ng1Cg+JsO9JjoL3HCqE4G7Nj4tJ63FIcqNa/6AhqOaLk/MBchgT4gLA==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795782091;
+	h=Received:DKIM-Signature:Message-ID:From:Subject:Reply-To:To:Cc:
+	 In-Reply-To:References:Content-Type:Content-Transfer-Encoding:Date;
+	bh=6JEr/hDsRw0PBfGsXwlFIqB3D+iO7P5XK/6DpMYHYnM=;
+	b=iUp29OBim5RMXHWa8CvcmY1HWJXBB+2PJxMiNs4+fdZCv2lD/EyIpQLWkOO8PvwlN7V2
+	 APJVPJfL7xvbivp4bMe/rNyrf7jnMnLAGtzKOraLcfZ9KjvrNdokxuriwP/MxDqWtM0q2
+	 JqnxIQnBe+ditaeLRfzsGn00voWgdp9VIHAqcMLs8tfVUC5wTG7ZFOlD9chjIhlNP+C++
+	 1r6skPryJMAWbD24b9J6QjYUeLJgZOb6jPSKpO/DbSe389pUCQ6plJtr0UKda4XgiozpJ
+	 y8z6Ccz41Y6JVEXam8RpoxmLyA7PQtGNcsEPNt397acOAZr1SxzoFpeB2136gl6TEPA==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=C+Lu7oMG;
+	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 859D0606A31E;
-	Fri, 27 Nov 2026 12:00:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C748606A337;
+	Fri, 27 Nov 2026 12:21:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=E44XQvXh
-Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
-ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
-	t=1795780857;
-	b=uyFz50ssETneewK8hyA05+/v9YB62LH/r59TiD6xrWhQHCUEeZP0FKcRSPdWCYhK+oMi
-	 2YFK5cb4mhBMPf9m7yEWIJqIFbCntPoacPr67BqClnDjp58zwvH2rHcETxVQ0O1c9JVHq
-	 V/QATBh2HBJlxXGnkHLdk/y+qkxRGWdmEBRgNt3mx2haWFScYtlIsAe9NxrUMapLufzgl
-	 G+sTc/laXqq3SO2bAAPwwwCEytDQhHTPB+y2ZntxuQC9Xc+eBs3GbeqMp0iy/JVO+89RH
-	 AUbHeShOCyJP2mxVOqCO2VL98xgeHxuPN2avnx0L0Lx6RRshLxPvNN/xmFmXr/VTK+g==
-ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
-	c=relaxed/relaxed; t=1795780857;
-	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
-	 Message-Id:X-B4-Tracking:X-Change-ID:To:Cc:X-Mailer:
-	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
-	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=BtyZEKPHKck8jmWjCTT+/UctwYkMM73uJLwplt36iPg=;
-	b=B66b3bnumNxxRTdDicY3WKKwsJ+G4Xh2Nt8KAR3BjR5Nr38bLdsfmjc+P2hztgpSaXHF
-	 4rejFdeq+h6EnSoiBtVr9l+oORJrDyAsF71dpXYLBognngdw8TvjjRhqTYG63S6Wtx+8M
-	 TRTUMQJnkBCblGVDZr2G+/jd2jbQuxEu78JeQmgRkxd3jvJuw8NVP87iWp+bIBAvU9nFH
-	 IGKQqL7/9v4EC/6Fdzzi4dfp9po0g9hcSjTyNjGLMD4rUEluemnV/Ibpkhr6jWxbpG3Tb
-	 c//phI8P8LO6F9nbVeJQ1YLi1XFxVUyVwR0OlMNoD5pB3MHsH0vhz7oQBP4IPLd4JyQ==
-ARC-Authentication-Results: i=1; smtp.kernel.org; 
-	arc=none smtp.remote-ip=100.80.115.77
-Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
-	(No client certificate requested)
-	by smtp.kernel.org (Postfix) with ESMTPS id 947051F00897;
-	Fri, 27 Nov 2026 12:00:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=C+Lu7oMG
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 70B801F0092A;
+	Fri, 27 Nov 2026 12:21:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795780857;
-	bh=BtyZEKPHKck8jmWjCTT+/UctwYkMM73uJLwplt36iPg=;
-	h=From:Date:Subject:To:Cc:Reply-To;
-	b=E44XQvXhTmFwTb1Lekd5XMpNyMC7BrPQp0sEgTcMBXCBfZbf9Ezqj9GN0+T4iZTA+
-	 Pjn0NnJ5Df2O+mU9mFZTe0qxEnoBrl+6vKUl5x/CfOswpWob0Tno0CClK+dzvzDsyI
-	 dVqd2HgmKzEfVQ6bz67XXnanmZ6jSu4nivbWz9RvfPs+AFOKCGeQP/eekfWVVW7vnH
-	 KGnLcokxlLRSpLvzkPcRp+Khhz4R3V7hTsF6Lm4Ag6ZRS6k1grhNuoL8m7mirBJL8Q
-	 9OBTvO8dmxw/wAnxGTuvf5yr7Mr337yE4tm2dKbfKCda0X37DqJbcGuAHsEhFFThoE
-	 4JES2dk7ucgMg==
-Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
-	by lkml.kernel.org (Postfix) with ESMTP id 15A724B79D;
-	Fri, 27 Nov 2026 12:00:52 +0000 (UTC)
-From: Rongen Wang via B4 Relay <devnull+security.nitrohex.com@kernel.org>
-Date: Fri, 27 Nov 2026 21:00:44 +0900
-Subject: [PATCH] scsi: target: iscsi: Refuse to add a connection to a
+	s=k20260515; t=1795782090;
+	bh=6JEr/hDsRw0PBfGsXwlFIqB3D+iO7P5XK/6DpMYHYnM=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=C+Lu7oMGXXISVXi++YSqDyH4GqcpPp9l+dAySyA/61VA5KuSypm0tUeoALvHGsB46
+	 YrYbWgQjoIfYfAPoTfmLtXFCcGAIailcDuS8Ci3fug3budJfU34rU0m7Opplx9aZoJ
+	 eNV6vpksuBN3kFKdIgi3RRnojKbj6cGBA99vqI1revnU1xcyAlkDbcQjd7rbF9vss/
+	 KWx0JGEETbjHh5l8t3Dqo6a82F6+MN+BhNi56eykErPZq3YzeYZ6BU1JKSdUA2UdDr
+	 87DCsBLxTWhyV6o3z7EM9OE+yj/Zr2ItMFII+BfkrNkVMwsjWMFCJSnNAlkKir/VJo
+	 N6kfHoATlHxLQ==
+Message-ID: <sashiko-outbox-237357@kernel.org>
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] scsi: target: iscsi: Refuse to add a connection to a
  session being closed
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Rongen Wang" <security@nitrohex.com>
+Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+In-Reply-To: <20261127-b4-lio-iscsi-session-closing-v1-1-cdf2bbbef87a@nitrohex.com>
+References: <20261127-b4-lio-iscsi-session-closing-v1-1-cdf2bbbef87a@nitrohex.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Fri, 27 Nov 2026 12:21:30 +0000
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -82,280 +59,126 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Message-Id: <20261127-b4-lio-iscsi-session-closing-v1-1-cdf2bbbef87a@nitrohex.com>
-X-B4-Tracking: v=1; b=H4sIAOxwCWsC/yXMQQrCMBBG4auUWTvQhLRBryIu7DitIyWR/FWE0
- rub6vJbvLcStJiCTs1KRd8Gy6nCHRqS+zVNynarJt/63jkfeQg8W2aDwBiKPWCZMyxN3McxdF1
- sj0GU6uJZdLTPb3++/I3X8FBZ9idt2xcy63D0gAAAAA==
-X-Change-ID: 20261127-b4-lio-iscsi-session-closing-67f4557094ce
-To: "Martin K. Petersen" <mkp@kernel.org>
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, 
- stable@vger.kernel.org, Rongen Wang <security@nitrohex.com>
-X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1795780851; l=10396;
- i=security@nitrohex.com; s=nitrohex; h=from:subject:message-id;
- bh=Y5v0HOOMEKgzfoq/9MoX/iEb5+HGxicU3xh+mZENOQ8=;
- b=BDDiYemAcGDuyuLAg16rCjpOCy7tcgZcTujnLSdYtXekAJOlFEc/kEhSNJHh0xQQYzTCMozy+
- f0xmshGvAeUAVHdGQq6QvSCOb064riLUrmxR3THC4LRNlNC8ciZ405D
-X-Developer-Key: i=security@nitrohex.com; a=ed25519;
- pk=Jk5NuTVJdxr1CTP4RuYaG31zSgsNlyFzVo9sphZTqt0=
-X-Endpoint-Received: by B4 Relay for security@nitrohex.com/nitrohex with
- auth_id=1652
-X-Original-From: Rongen Wang <security@nitrohex.com>
-Reply-To: security@nitrohex.com
-Content-Transfer-Encoding: 7bit
 
-From: Rongen Wang <security@nitrohex.com>
+Thank you for your contribution! Sashiko AI review found 2 potential
+issues to consider:
+- [High] scsi: target: iscsi: missing Time2Retain check in
+  iscsi_post_login_handler()
+- [Medium] scsi: target: iscsi: premature param cleanup in
+  iscsi_post_login_handler()
+--
 
-A Login Request with a non-zero TSIH adds a connection to an existing
-session. iscsi_login_non_zero_tsih_s2() looks the session up when the
-first Login PDU arrives, checks once that it is not being closed and
-takes a session usage count. The login then stays pending for as long
-as the initiator delays its next Login PDU.
+commit 9055d1b28301fad93aa7addf4bcf0bf18f5835d0
+Author: Rongen Wang <security@nitrohex.com>
 
-If the last connection of the session fails in the meantime,
-iscsit_close_connection() sets session_fall_back_to_erl0 and calls
-iscsit_close_session(), which waits for the usage count held by the
-pending login. Nothing stops that login from completing:
-iscsi_login_post_auth_non_zero_tsih() only compares nconn + 1 with
-MaxConnections, and iscsi_post_login_handler() adds the connection to
-sess->sess_conn_list and drops the usage count. iscsit_close_session()
-then frees the session while the new connection is in full feature
-phase, and the first PDU received on it reads the freed session:
+scsi: target: iscsi: Refuse to add a connection to a session being closed
 
-  BUG: KASAN: slab-use-after-free in iscsit_get_rx_pdu+0x2338/0x3330
-  Read of size 8 at addr ffff88800b19fde0 by task iscsi_trx/156
-  Call Trace:
-   iscsit_get_rx_pdu+0x2338/0x3330
-   iscsi_target_rx_thread+0x139/0x2f0
-   kthread+0x2e8/0x3c0
-  Freed by task 154:
-   kfree+0x127/0x3b0
-   iscsit_close_session+0x3a2/0x570
-   iscsit_close_connection+0x134d/0x20f0
-   iscsit_take_action_for_connection_exit+0x1b5/0x360
-   iscsi_target_rx_thread+0x251/0x2f0
+This commit checks under sess->conn_lock in iscsi_post_login_handler()
+whether a session is shutting down before attaching a new non-zero TSIH
+connection, and stops the connection's kthreads if the login is refused.
 
-Without KASAN the same sequence ends in a NULL pointer dereference in
-iscsit_get_rx_pdu() and, when the NOP-In timer of the new connection
-fires, in a panic in softirq context.
+> diff --git a/drivers/target/iscsi/iscsi_target_login.c b/drivers/target/i=
+scsi/iscsi_target_login.c
+> index fda04eb15d3a2..717628000472f 100644
+> --- a/drivers/target/iscsi/iscsi_target_login.c
+> +++ b/drivers/target/iscsi/iscsi_target_login.c
 
-Check the session state again in iscsi_post_login_handler(), under
-sess->conn_lock, before the connection is added.
-iscsit_close_connection() decides under the same lock whether it closed
-the last connection, so either the new connection is counted before
-that decision or the login sees the flags and is refused.
+[ ... ]
 
-Move the transition to TARG_CONN_STATE_LOGGED_IN after that check. The
-RX and TX kthreads were started before the final Login Response was
-sent and leave a connection alone while it is still in
-TARG_CONN_STATE_IN_LOGIN, so a refused connection can be stopped the
-same way the error path of iscsi_target_do_tx_login_io() stops it, and
-then released with iscsi_target_login_sess_out(). The initiator has
-already received the final Login Response and sees the connection
-dropped, as if the session had been closed a moment earlier.
+> @@ -674,6 +699,32 @@ void iscsi_post_login_handler(
+>  		conn->param_list =3D NULL;
+> =20
+>  		spin_lock_bh(&sess->conn_lock);
+> +		/*
+> +		 * The session was located from ISID+TSIH when the first Login
+> +		 * Request arrived, and since then only the session usage count
+> +		 * kept it alive.  If its last connection went away in the
+> +		 * meantime, iscsit_close_connection() has already committed to
+> +		 * iscsit_close_session(), which frees the session as soon as
+> +		 * the usage count is dropped.  Do not attach a new connection
+> +		 * to a session that is being shut down.  iscsit_close_connection()
+> +		 * makes that decision under sess->conn_lock as well.
+> +		 */
+> +		if (atomic_read(&sess->session_fall_back_to_erl0) ||
+> +		    atomic_read(&sess->session_logout) ||
+> +		    atomic_read(&sess->session_close)) {
 
-The problem was found and this patch was drafted with the help of an AI
-assistant (Claude Mythos 5.2, Anthropic, via Claude Code); the result
-was reviewed and tested as described below the cut line.
+[Severity: High]
+Can a pending non-zero TSIH login still attach to a session that is closing
+due to Time2Retain expiry?
 
-Fixes: e48354ce078c ("iscsi-target: Add iSCSI fabric support for target v4.1")
-Cc: stable@vger.kernel.org
-Signed-off-by: Rongen Wang <security@nitrohex.com>
----
-Based on mkp/scsi.git 7.4/scsi-fixes (4be084ac36f9). It also applies
-to mainline 9437ee8b6cf6 and to linux-7.3.y, 6.18.y and 6.12.y.
+When a non-zero TSIH login starts while another connection is still logged =
+in
+on the session, iscsi_login_non_zero_tsih_s2() sees sess->session_state !=3D
+TARG_SESS_STATE_FAILED and leaves sess->session_continuation at 0 while
+holding a session usage count.  If the active connection then closes via a
+CLOSE_CONNECTION logout (or fails at ErrorRecoveryLevel=3D2),
+iscsit_close_connection() does not set session_fall_back_to_erl0,
+session_logout, or session_close; instead it moves the session to
+TARG_SESS_STATE_FAILED and starts the Time2Retain timer.
 
-Tested on that tree with KASAN under QEMU, iSCSI/TCP: the reproducer's
-second login is refused ("iSCSI session SID 1 is shutting down,
-refusing to add CID 2") without a KASAN report, and adding a connection
-to a live session with MaxConnections=2, logouts, a fresh login and
-session continuation after a CLOSE_CONNECTION logout still work.
-Without the patch the same tree gives the report above. The refusal
-path in __iscsi_target_login_thread() (login completed by its first
-PDU) was not reached by these tests; iSER and cxgbit were not tested.
-No W=1 warnings in drivers/target/iscsi/.
+When that timer expires, iscsit_time2retain_work() sets ISCSI_TF_EXPIRED un=
+der
+se_tpg->session_lock (without taking sess->conn_lock) and calls
+iscsit_close_session(sess, false):
 
-The reproducer was sent to the maintainer privately and is not posted
-here.
----
- drivers/target/iscsi/iscsi_target_login.c | 85 ++++++++++++++++++++++++++-----
- drivers/target/iscsi/iscsi_target_login.h |  4 +-
- drivers/target/iscsi/iscsi_target_nego.c  |  5 +-
- 3 files changed, 80 insertions(+), 14 deletions(-)
+CPU0 (login worker)               CPU1 (iscsit_time2retain_work)
+iscsi_login_non_zero_tsih_s2()
+  iscsit_inc_session_usage_count()
+  /* session_continuation =3D=3D 0 */
+...
+/* last active conn closes, Time2Retain starts and expires */
+                                  spin_lock_bh(&se_tpg->session_lock)
+                                  sess->time2retain_timer_flags |=3D
+                                    ISCSI_TF_EXPIRED
+                                  spin_unlock_bh(&se_tpg->session_lock)
+                                  iscsit_close_session(sess, false)
+iscsi_post_login_handler()
+  spin_lock_bh(&sess->conn_lock)
+  /* fall_back_to_erl0, logout,
+   * and close are all 0 */
+  list_add_tail(&conn->conn_list,
+                &sess->sess_conn_list)
+  atomic_inc(&sess->nconn)
+  spin_unlock_bh(&sess->conn_lock)
+                                    if (atomic_read(&sess->nconn))
+                                      BUG();
 
-diff --git a/drivers/target/iscsi/iscsi_target_login.c b/drivers/target/iscsi/iscsi_target_login.c
-index fda04eb15d..7176280004 100644
---- a/drivers/target/iscsi/iscsi_target_login.c
-+++ b/drivers/target/iscsi/iscsi_target_login.c
-@@ -644,10 +644,41 @@ int iscsit_start_kthreads(struct iscsit_conn *conn)
- 	return ret;
- }
- 
--void iscsi_post_login_handler(
--	struct iscsi_np *np,
--	struct iscsit_conn *conn,
--	u8 zero_tsih)
-+/*
-+ * Undo iscsit_start_kthreads() for a connection that is still in
-+ * TARG_CONN_STATE_IN_LOGIN.  Both kthreads leave the connection alone in
-+ * that state and only wait for kthread_stop().
-+ */
-+void iscsit_stop_kthreads(struct iscsit_conn *conn)
-+{
-+	if (conn->rx_thread && conn->rx_thread_active) {
-+		send_sig(SIGINT, conn->rx_thread, 1);
-+		complete(&conn->rx_login_comp);
-+		kthread_stop(conn->rx_thread);
-+		conn->rx_thread_active = false;
-+	}
-+	if (conn->tx_thread && conn->tx_thread_active) {
-+		send_sig(SIGINT, conn->tx_thread, 1);
-+		kthread_stop(conn->tx_thread);
-+		conn->tx_thread_active = false;
-+	}
-+	spin_lock(&iscsit_global->ts_bitmap_lock);
-+	bitmap_release_region(iscsit_global->ts_bitmap, conn->bitmap_id,
-+			      get_order(1));
-+	spin_unlock(&iscsit_global->ts_bitmap_lock);
-+}
-+
-+/*
-+ * Returns 0 once the connection has been made part of its session.
-+ *
-+ * Returns -1 if a connection that is being added to an existing session
-+ * (TSIH != 0) can not be attached because the session started to shut down
-+ * while the login was in progress.  The connection is then still in
-+ * TARG_CONN_STATE_IN_LOGIN and the caller has to stop its kthreads and
-+ * release it with iscsi_target_login_sess_out().
-+ */
-+int iscsi_post_login_handler(struct iscsi_np *np, struct iscsit_conn *conn,
-+			     u8 zero_tsih)
- {
- 	int stop_timer = 0;
- 	struct iscsit_session *sess = conn->sess;
-@@ -657,12 +688,6 @@ void iscsi_post_login_handler(
- 
- 	iscsit_inc_conn_usage_count(conn);
- 
--	iscsit_collect_login_stats(conn, ISCSI_STATUS_CLS_SUCCESS,
--			ISCSI_LOGIN_STATUS_ACCEPT);
--
--	pr_debug("Moving to TARG_CONN_STATE_LOGGED_IN.\n");
--	conn->conn_state = TARG_CONN_STATE_LOGGED_IN;
--
- 	iscsi_set_connection_parameters(conn->conn_ops, conn->param_list);
- 	/*
- 	 * SCSI Initiator -> SCSI Target Port Mapping
-@@ -674,6 +699,32 @@ void iscsi_post_login_handler(
- 		conn->param_list = NULL;
- 
- 		spin_lock_bh(&sess->conn_lock);
-+		/*
-+		 * The session was located from ISID+TSIH when the first Login
-+		 * Request arrived, and since then only the session usage count
-+		 * kept it alive.  If its last connection went away in the
-+		 * meantime, iscsit_close_connection() has already committed to
-+		 * iscsit_close_session(), which frees the session as soon as
-+		 * the usage count is dropped.  Do not attach a new connection
-+		 * to a session that is being shut down.  iscsit_close_connection()
-+		 * makes that decision under sess->conn_lock as well.
-+		 */
-+		if (atomic_read(&sess->session_fall_back_to_erl0) ||
-+		    atomic_read(&sess->session_logout) ||
-+		    atomic_read(&sess->session_close)) {
-+			spin_unlock_bh(&sess->conn_lock);
-+			pr_err("iSCSI session SID %u is shutting down, refusing to add CID %u\n",
-+			       sess->sid, conn->cid);
-+			iscsit_dec_conn_usage_count(conn);
-+			return -1;
-+		}
-+
-+		iscsit_collect_login_stats(conn, ISCSI_STATUS_CLS_SUCCESS,
-+					   ISCSI_LOGIN_STATUS_ACCEPT);
-+
-+		pr_debug("Moving to TARG_CONN_STATE_LOGGED_IN.\n");
-+		conn->conn_state = TARG_CONN_STATE_LOGGED_IN;
-+
- 		atomic_set(&sess->session_continuation, 0);
- 		if (sess->session_state == TARG_SESS_STATE_FAILED) {
- 			pr_debug("Moving to"
-@@ -714,9 +765,15 @@ void iscsi_post_login_handler(
- 			spin_unlock_bh(&se_tpg->session_lock);
- 		}
- 		iscsit_dec_session_usage_count(sess);
--		return;
-+		return 0;
- 	}
- 
-+	iscsit_collect_login_stats(conn, ISCSI_STATUS_CLS_SUCCESS,
-+				   ISCSI_LOGIN_STATUS_ACCEPT);
-+
-+	pr_debug("Moving to TARG_CONN_STATE_LOGGED_IN.\n");
-+	conn->conn_state = TARG_CONN_STATE_LOGGED_IN;
-+
- 	iscsi_set_session_parameters(sess->sess_ops, conn->param_list, 1);
- 	iscsi_release_param_list(conn->param_list);
- 	conn->param_list = NULL;
-@@ -769,6 +826,7 @@ void iscsi_post_login_handler(
- 	 */
- 	complete(&conn->rx_login_comp);
- 	iscsit_dec_conn_usage_count(conn);
-+	return 0;
- }
- 
- int iscsit_setup_np(
-@@ -1321,7 +1379,10 @@ static int __iscsi_target_login_thread(struct iscsi_np *np)
- 	if (ret == 1) {
- 		tpg_np = conn->tpg_np;
- 
--		iscsi_post_login_handler(np, conn, zero_tsih);
-+		if (iscsi_post_login_handler(np, conn, zero_tsih) < 0) {
-+			iscsit_stop_kthreads(conn);
-+			goto new_sess_out;
-+		}
- 		iscsit_deaccess_np(np, tpg, tpg_np);
- 	}
- 
-diff --git a/drivers/target/iscsi/iscsi_target_login.h b/drivers/target/iscsi/iscsi_target_login.h
-index 03c7d695d5..d2c6169adb 100644
---- a/drivers/target/iscsi/iscsi_target_login.h
-+++ b/drivers/target/iscsi/iscsi_target_login.h
-@@ -20,7 +20,9 @@ extern int iscsit_get_login_rx(struct iscsit_conn *, struct iscsi_login *);
- extern int iscsit_put_login_tx(struct iscsit_conn *, struct iscsi_login *, u32);
- extern void iscsit_free_conn(struct iscsit_conn *);
- extern int iscsit_start_kthreads(struct iscsit_conn *);
--extern void iscsi_post_login_handler(struct iscsi_np *, struct iscsit_conn *, u8);
-+void iscsit_stop_kthreads(struct iscsit_conn *conn);
-+int iscsi_post_login_handler(struct iscsi_np *np, struct iscsit_conn *conn,
-+			     u8 zero_tsih);
- extern void iscsi_target_login_sess_out(struct iscsit_conn *, bool, bool);
- extern int iscsi_target_login_thread(void *);
- 
-diff --git a/drivers/target/iscsi/iscsi_target_nego.c b/drivers/target/iscsi/iscsi_target_nego.c
-index ccd468e26f..23f6dffb79 100644
---- a/drivers/target/iscsi/iscsi_target_nego.c
-+++ b/drivers/target/iscsi/iscsi_target_nego.c
-@@ -640,7 +640,10 @@ static void iscsi_target_do_login_rx(struct work_struct *work)
- 		iscsit_stop_login_timer(conn);
- 		cancel_delayed_work(&conn->login_work);
- 		iscsi_target_nego_release(conn);
--		iscsi_post_login_handler(np, conn, zero_tsih);
-+		if (iscsi_post_login_handler(np, conn, zero_tsih) < 0) {
-+			iscsit_stop_kthreads(conn);
-+			iscsi_target_login_sess_out(conn, zero_tsih, true);
-+		}
- 		iscsit_deaccess_np(np, tpg, tpg_np);
- 	}
- 	return;
+Depending on the interleaving with iscsit_close_session(sess, false),
+iscsit_close_session() either hits BUG() on atomic_read(&sess->nconn), frees
+sess after iscsi_post_login_handler() drops session_usage_count (causing the
+same use-after-free in iscsit_get_rx_pdu()), or finishes First-stage teardo=
+wn
+(transport_deregister_session_configfs() and setting session_reinstatement =
+=3D
+1), sees session_usage_count > 0 in iscsit_check_session_usage_count(sess,
+false), and resets session_logout back to 0, allowing the new connection to
+attach to a half-closed session that can never be freed.
 
----
-base-commit: 4be084ac36f95f95e21a1e39207e87326967a73d
-change-id: 20261127-b4-lio-iscsi-session-closing-67f4557094ce
+> +			spin_unlock_bh(&sess->conn_lock);
+> +			pr_err("iSCSI session SID %u is shutting down, refusing to add CID %u=
+\n",
+> +			       sess->sid, conn->cid);
+> +			iscsit_dec_conn_usage_count(conn);
+> +			return -1;
+> +		}
 
-Best regards,
---  
-Rongen Wang <security@nitrohex.com>
+[Severity: Medium]
+Does returning -1 here after iscsi_set_session_parameters() and
+iscsi_release_param_list() corrupt sess->sess_ops and the failure statistics
+in iscsi_target_login_sess_out()?
 
+At the start of the !zero_tsih branch, before taking sess->conn_lock,
+iscsi_post_login_handler() modifies sess->sess_ops and frees and clears
+conn->param_list.  When this check refuses the login, the caller invokes
+iscsi_target_login_sess_out(conn, zero_tsih, true) ->
+iscsit_collect_login_stats(), which finds conn->param_list =3D=3D NULL and
+overwrites ls->last_intr_fail_name with "Unknown".  Moving
+iscsi_set_session_parameters() and iscsi_release_param_list() after the
+shutdown check avoids mutating sess->sess_ops on a dying session and lets
+iscsi_target_login_sess_out() record the initiator name and free
+conn->param_list.
 
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20261127-b4-lio-isc=
+si-session-closing-v1-1-cdf2bbbef87a@nitrohex.com?part=3D1
