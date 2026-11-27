@@ -1,86 +1,78 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=210.61.82.184
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795761906;
-	b=OokcBeMFKZFHNZSmeaOcRDC959OS+0nmZQszEVeC2W+Km3fF00oboh3rkFhwUOP5LXcn
-	 mWYht2CIZVl/SA/X0TVFX/ucuLlzWeH7qndjHBIEACklMCYcN19ZrOCKVivbMk9oyvKFE
-	 mz3EJTHSpUwMoQcNe5yvZ/WHRbCB3o3oUJ4DXErJFS99yKebViMJD12svLBuaKUX62FuK
-	 uBwpU06Ac108NrjGAt4AEkLi0Jdy/AzIX/WZLiUguB1NxgZ3T+jyPeQNJZyfjmQ99vX2O
-	 zun5ooB5d+jzMM21YdEd+aa/q9Qlv5Sg9HXCdl7jQAURg+ZTxk70pnl5bkTyeTCJjPw==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795761906;
-	h=DMARC-Filter:X-UUID:DKIM-Signature:X-CID-P-RULE:X-CID-O-INFO:
-	 X-CID-META:X-CID-BVR:X-CID-BAS:X-CID-FACTOR:X-CID-RHF:X-UUID:Received:
-	 Received:Received:Message-ID:Subject:From:To:CC:Date:In-Reply-To:
-	 References:Content-Type:Content-Transfer-Encoding:User-Agent:
-	 MIME-Version:X-MTK;
-	bh=773F4lyJ6saT/RbUKk1mmsiaJd9WVNhH/WCIiJ+eX08=;
-	b=phcCJEauviwYzW3368zdA4+lWLhFsrg/5CZdzADTO0vcwXH04EBxhURGu6QPIU6vdAXe
-	 /iOJRIwq24dw/J1X+JvVq1bKwU0/L6F9e9EDB5yP457dzs6mDm/UQrmEPWkHHb6ghKtgA
-	 gPygvYBb3C0Xg7wUcxQSE+s3nbxPnDyfJ6No56iSiKygiMZk4+w8cvk5DJmy71CnI/uys
-	 UxYYv/VaXsWOVFV6InNgqYh7O94kJsamPtsXmx/4vJPIKIuS0JUG3NwV9So6NOuFu+Ijj
-	 O7LErMohzYZELIe6vY+rBgz98XAhz2diXis6TBa1/UWO55/apczEspevtpk7x3OSSaQ==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=mediatek.com;
-	spf=pass smtp.mailfrom=mediatek.com;
-	dkim=pass header.d=mediatek.com header.i=@mediatek.com header.a=rsa-sha256 header.s=dk header.b=o+SPqwlp;
-	arc=none smtp.remote-ip=210.61.82.184
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1795762084;
+	b=sXtdaRyZFuj4cwzrsKBJ3DVqDwPtRedVDAMvRDZ7bicD5Q2mtiuFyeAULOZ/FH6ZRtx+
+	 9PCoapWaT+Hm1OHlZAONYh4V+JqAGXr+gaB432FrfJc5Vj5Gl8do4yB1tns0QkNV7dhZH
+	 wnZCbCNB4TlmCNQpiM4lxOfzLEdakQ2gSNiQk7J0Jprg75W2ZOXeAMrIMTnKwwNtpJO78
+	 89QvERQUESfYLH/6Rr81gn0RL25rxcIAcTU4+ZYS369Djtj93dAtSld8UKKJvq6NI2uX/
+	 Ej6LDTtb5LVIg1obTMhPDTdNULnfW8gYqsIfwPQqqWNjyxeMa/DWvLqeSCxrCv0ZHsQ==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795762084;
+	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
+	 Content-Type:Content-Transfer-Encoding:Message-Id:X-B4-Tracking:
+	 X-Change-ID:To:Cc:X-Mailer:X-Developer-Signature:X-Developer-Key:
+	 X-Endpoint-Received:X-Original-From:Reply-To;
+	bh=PV6Y8JKnkqnpS1bBH7JpIi0ELz5RHOcA0o9CAVIi+MM=;
+	b=q7CB2D58sztusKf+TvMhEMxhHp3Lhq6dW50mMcZ3dQ9yeAtLDt46VXmm3pLZRum92EL/
+	 z85DPqNYDkT9BQpJocHOH2AygBB5hwnJ2SgMkGdUFOB9xFeGwM/gMQ0APofgwr4qHZac/
+	 Wv0LTo04ukH6jOWi0lXhfqRRgVC3iZe3cavYqn4tdBw1D08O3C0bekIrDvr3kOjgYZz8s
+	 zJSAVyYFctPaul2PaInLqWbiEcr7cp80qeKS/WfsU0IoNVJ48tGtAUHt83nY0hswCQ8SE
+	 ctSPzCXVAmv8YVihswI2jduv8p1+bQCoJTV5AEvraTxUVRICeRNFdftQTG4k+enHjaQ==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kbfDWcqx;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D17AB606A32A;
+	Fri, 27 Nov 2026 06:48:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kbfDWcqx
+Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
+ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
+	t=1795762084;
+	b=vGpl2ooK0TnFgxbr4XG1aBmF1ssJXMbpz5oa88RYh7cSuVD5meRTcnOS9n4YnWrp32G1
+	 JiAgxYItEv4hJY/5v8TB2QdhL8qNtE7q9U+vRZlEiSrxhUiLOr+XcreAaldXmTH9EBBYc
+	 L4hyCZkGYJQNtK0LnSGVrKbcz1T3meADzLBi1HlVu/Fm2nADgTGa7zPG/XoLAdHk+7Icg
+	 uIozKzBZO64DktM9CkAHyHRXH2ync1keNQj1+NS201Q+UgZvyhqErMURGCwqR5whc+hLe
+	 UcQ8Xx6Ue8uAYTXpSK5OXcYyHellaCyMTjBFysa1pne8dhffOiSW2bTQxgZzD1vFRUQ==
+ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
+	c=relaxed/relaxed; t=1795762084;
+	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
+	 Content-Transfer-Encoding:Message-Id:X-B4-Tracking:X-Change-ID:To:Cc:
+	 X-Mailer:X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To;
+	bh=PV6Y8JKnkqnpS1bBH7JpIi0ELz5RHOcA0o9CAVIi+MM=;
+	b=1L9I9E0w5r3APIvn7A6SUHXKh7J2DIUQ/xF53rY/4cNJXHgDWUuWyNjD7l/3nkJCrNZP
+	 zO1Q8YQo2uxymoKL2Z0JebVKynIhRAFmmEJ87vFP3lKkj9OyytOifJ+0GLPks2BHVsYag
+	 wN04YLAZ6P9jL9aVbV6L4GaFXF0TvgsO61ZEemCN+HMin0Vtx0xl79XktQbc+kR/ttbrT
+	 /GhgfOn37/aVpVpBS/wd9FqkXhUWGpm+kGPEyrcWYqHDRip0ogKPdV9CyxRxw+NaReHBz
+	 QEucMNEifWTI3xVPovztxMZBmaZIf/WapKqwR7EGBRQGGcGKaTj8R+gBmovVBpw5HJg==
+ARC-Authentication-Results: i=1; smtp.kernel.org; 
+	arc=none smtp.remote-ip=100.80.115.77
+Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 10E70606A321;
-	Fri, 27 Nov 2026 06:45:04 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 10E70606A321
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=mediatek.com header.i=@mediatek.com header.a=rsa-sha256 header.s=dk header.b=o+SPqwlp
-X-UUID: 112e51eaea2e11f1a7aecdb2598be72c-20261127
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=MIME-Version:Content-Transfer-Encoding:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=773F4lyJ6saT/RbUKk1mmsiaJd9WVNhH/WCIiJ+eX08=;
-	b=o+SPqwlpszB1NcPgKkLn4CW3CLu0BLqz2CkpgkOdTkqWeVRgTsL9HLb/MyJNO6UAnnsYxC51wefBb0cATYqEIGXJxmAIC3Rk3L+jKlyKFqRhHzMSeSiw654003/cxAdYkA1sCm73dv4L6ogl83l5TInl1Ekpkx3m1dXCpHCJL1g=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.21,REQID:1c583b22-d2ff-4680-8cb9-6840180f1726,IP:0,U
-	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-	release,TS:0
-X-CID-META: VersionHash:b0318ac,CLOUDID:177edb66-4b51-4c95-bb1b-80ac6aad9c96,B
-	ulkID:nil,BulkQuantity:0,SF:80|81|82|83|102|836|865|888|898,TC:-5,Content:
-	0|15|50|99,EDM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:nil,COL:0
-	,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 112e51eaea2e11f1a7aecdb2598be72c-20261127
-Received: from mtkmbs14n1.mediatek.inc [(172.21.101.75)] by mailgw02.mediatek.com
-	(envelope-from <peter.wang@mediatek.com>)
-	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 539966578; Fri, 27 Nov 2026 14:45:00 +0800
-Received: from mtkmbs11n2.mediatek.inc (172.21.101.187) by
- mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.56; Fri, 27 Nov 2026 14:44:59 +0800
-Received: from [10.233.130.16] (10.233.130.16) by mtkmbs11n2.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.2.2562.56 via Frontend
- Transport; Fri, 27 Nov 2026 14:44:59 +0800
-Message-ID: <484a58e10c4bc9cde24ef731a4bd3051b9decac6.camel@mediatek.com>
-Subject: Re: [PATCH v2 2/3] scsi: ufs: mediatek: allow clock scaling when
- ufs_fde is absent
-From: Peter Wang <peter.wang@mediatek.com>
-To: Ilia Snezhkov <iasnezhkov@gmail.com>
-CC: <martin.petersen@oracle.com>, <James.Bottomley@HansenPartnership.com>,
-	<matthias.bgg@gmail.com>, <angelogioacchino.delregno@collabora.com>,
-	<louisalexis.eyraud@collabora.com>, <linux-scsi@vger.kernel.org>,
-	<linux-mediatek@lists.infradead.org>, <linux-kernel@vger.kernel.org>
-Date: Fri, 27 Nov 2026 14:44:59 +0800
-In-Reply-To: <179574184161.52486.4990124402659702610@gmail.com>
-References: <20261126031008.27506-1-iasnezhkov@gmail.com>
-	 <20261126031008.27506-3-iasnezhkov@gmail.com>
-	 <7b7d94ab4283b82aec13eae3f9c1d2e77873d88f.camel@mediatek.com>
-	 <179574184161.52486.4990124402659702610@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.52.3-0ubuntu1.1 
+	by smtp.kernel.org (Postfix) with ESMTPS id 2DF431F00919;
+	Fri, 27 Nov 2026 06:47:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1795762084;
+	bh=PV6Y8JKnkqnpS1bBH7JpIi0ELz5RHOcA0o9CAVIi+MM=;
+	h=From:Date:Subject:To:Cc:Reply-To;
+	b=kbfDWcqxiZtw8NLZJEF29tYOrZEv5HHis/2QA+JtytI/WRQ8HsSpSBVZXzUz5y3Lx
+	 mecLGOaP33AymDzdiXX6dP0zy21321/tH0SkH2vifa9QlWzUzj8VHJPEDrmu9o1bUC
+	 HSMVpOsIOfYzOBxt6jxoY8ctsyxsYDbQNHopXyh/M+pvcihxDucndeysC0Ve5Iato6
+	 1bJDRXVgsx0SgHSDd5NlZZJ/+jpdDUz0++iwA3CXfBQOAM6RGTM8mCEmwiYGaLfU85
+	 g6SmIKvs5EdBS5hoZFe9bC8WOMPlmqOCDTdQ395xvx73nxlfgfpuh/GOM8J68gOVyH
+	 cM35ph7u23h/Q==
+Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
+	by lkml.kernel.org (Postfix) with ESMTP id 557B84B5F1;
+	Fri, 27 Nov 2026 06:47:48 +0000 (UTC)
+From: Dickson Wu via B4 Relay <devnull+dickson.wu.certik.com@kernel.org>
+Date: Fri, 27 Nov 2026 06:39:32 +0000
+Subject: [PATCH 5.15.y] scsi: qla2xxx: Completely fix fcport double free
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -90,50 +82,94 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-X-MTK: N
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20261127-so5-qla-515-v1-1-fc31e58ffd78@certik.com>
+X-B4-Tracking: v=1; b=H4sIAKMlCWsC/02NSw7CMAxEr1J5jUsSYZC4CmKRj0uDqgTigkBV7
+ 04CG5bzNPNmAeESWeDYLVD4GSXmVIPedOBHmy6MMdQMRpm91uaAkgnvk0XShE6TUd6rXVAD1MW
+ t8BBfX9sJqNfUv+H84/JwV/ZzU7Wms8Loik1+bEg4hTnnCRvf/l3Aun4A8fPAd6MAAAA=
+X-Change-ID: 20261127-so5-qla-515-b1520cc04d0f
+To: stable@vger.kernel.org
+Cc: Vladimir Riabchun <ferr.lambarginio@gmail.com>, 
+ "Martin K. Petersen" <martin.petersen@oracle.com>, 
+ linux-scsi@vger.kernel.org
+X-Mailer: b4 0.16.0
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1795761571; l=2352;
+ i=dickson.wu@certik.com; s=dickson-b4; h=from:subject:message-id;
+ bh=5PFq0t+9kyJ3bNqaWKXqN6KsLjWHosGjNZwrSng1BcI=;
+ b=t81OAqjPnvuQC/yzrIuJo2vhHiIKCcAVPY/P8neWlpn4bBBH/XV03XQD0SPIHjwY4h1OfO49l
+ wJGliHubiwnBDwNHJakqtP5jdaDneDOMwgaGXarIUxokRkShICiB+Ws
+X-Developer-Key: i=dickson.wu@certik.com; a=ed25519;
+ pk=fxH7FS4FdojeJSGLJzgKdfO51Rvr4EW30yinj2mc1vg=
+X-Endpoint-Received: by B4 Relay for dickson.wu@certik.com/dickson-b4 with
+ auth_id=1647
+X-Original-From: Dickson Wu <dickson.wu@certik.com>
+Reply-To: dickson.wu@certik.com
 
-On Fri, 2026-11-27 at 09:10 +0800, Ilia Snezhkov wrote:
-> Hi Peter,
->=20
-> No =E2=80=94 this patch does not change whether UFSHCD_CAP_CLK_SCALING is
-> enabled.
->=20
-> ufs_mtk_is_clk_scale_ready() only checks ufs_sel, ufs_sel_max_src,
-> and
-> ufs_sel_min_src, so on any platform (including MT6789) whose DT
-> provides those three clocks, UFSHCD_CAP_CLK_SCALING is already
-> enabled
-> today and devfreq already runs. Platforms that omit
-> ufs_sel_{min,max}_src
-> still have UFSHCD_CAP_CLK_SCALING cleared as before.
->=20
-> What was broken without this patch is that when a DT provides ufs_sel
-> and its min/max sources without ufs_fde, _ufs_mtk_clk_scale()
-> returned
-> early on `!fde_clki`, so ufs_sel never actually switched parents
-> while
-> ufshcd still treated the scaling transition as successful and updated
-> clki->curr_freq.
->=20
-> With this change, MT6789's already-enabled clock scaling actually
-> switches ufs_sel between 26 MHz (tck_26m_mx9) and 192 MHz
-> (msdcpll_d2)
-> as intended.
->=20
-> Best regards,
-> Ilia
+From: Vladimir Riabchun <ferr.lambarginio@gmail.com>
 
-Hi Ilia,
+commit c0b7da13a04bd70ef6070bfb9ea85f582294560a upstream.
 
-Sorry, my question was not clear.
-Because MediaTek sets the minimum gear to G4:
-hba->clk_scaling.min_gear =3D UFS_HS_G4;
-So if the host does not support UFS 4.0 or above, there=20
-should be no reason to enable clock scaling.
-And MT6789 is UFSHCI 2.1, as I remember, so clock scaling
-should be disabled and ufs_sel_max_src/ufs_sel_min_src=20
-should not be set. So I am curious why they have been set,=20
-and what behavior would clock scaling change in the power mode?
+In qla24xx_els_dcmd_iocb() sp->free is set to qla2x00_els_dcmd_sp_free().
+When an error happens, this function is called by qla2x00_sp_release(),
+when kref_put() releases the first and the last reference.
 
-Thanks
-Peter
+qla2x00_els_dcmd_sp_free() frees fcport by calling qla2x00_free_fcport().
+Doing it one more time after kref_put() is a bad idea.
+
+Fixes: 82f522ae0d97 ("scsi: qla2xxx: Fix double free of fcport")
+Fixes: 4895009c4bb7 ("scsi: qla2xxx: Prevent command send on chip reset")
+Signed-off-by: Vladimir Riabchun <ferr.lambarginio@gmail.com>
+Signed-off-by: Farhat Abbas <fabbas@cloudlinux.com>
+Link: https://patch.msgid.link/aYsDln9NFQQsPDgg@vova-pc
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Dickson Wu <dickson.wu@certik.com>
+---
+6.1.y and newer already have this fix.
+
+Tested on v5.15.226:
+- x86_64 allmodconfig W=1 build of the qla2xxx driver and target objects,
+  base vs patched, no new warnings
+- booted the patched kernel under QEMU/KVM. I don't have QLogic Fibre
+  Channel hardware, so the ELS error paths weren't exercised.
+
+The backport and the test runs were prepared with AI coding tools
+(OpenAI Codex agents, with review by Claude). I went over the result
+before signing off.
+
+drivers/scsi/qla2xxx/qla_iocb.c | 2 --
+ 1 file changed, 2 deletions(-)
+---
+ drivers/scsi/qla2xxx/qla_iocb.c | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
+index f080e1952927..3984b42fe0dd 100644
+--- a/drivers/scsi/qla2xxx/qla_iocb.c
++++ b/drivers/scsi/qla2xxx/qla_iocb.c
+@@ -2754,7 +2754,6 @@ qla24xx_els_dcmd_iocb(scsi_qla_host_t *vha, int els_opcode,
+ 	if (!elsio->u.els_logo.els_logo_pyld) {
+ 		/* ref: INIT */
+ 		kref_put(&sp->cmd_kref, qla2x00_sp_release);
+-		qla2x00_free_fcport(fcport);
+ 		return QLA_FUNCTION_FAILED;
+ 	}
+ 
+@@ -2779,7 +2778,6 @@ qla24xx_els_dcmd_iocb(scsi_qla_host_t *vha, int els_opcode,
+ 	if (rval != QLA_SUCCESS) {
+ 		/* ref: INIT */
+ 		kref_put(&sp->cmd_kref, qla2x00_sp_release);
+-		qla2x00_free_fcport(fcport);
+ 		return QLA_FUNCTION_FAILED;
+ 	}
+ 
+
+---
+base-commit: 4f2df9a01754521fbba3493e8ad91ef65515e68c
+change-id: 20261127-so5-qla-515-b1520cc04d0f
+
+Best regards,
+--  
+Dickson Wu <dickson.wu@certik.com>
+
+
