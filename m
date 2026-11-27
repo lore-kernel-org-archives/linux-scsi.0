@@ -1,87 +1,100 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=60.244.123.138
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.210.179
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795763484;
-	b=Dpk5RNvvzqTlpC4HFSRyyolaDRb5Axpibvvq5dlxRNfBIiYyVO19PViZW9LXaTok7Orr
-	 StFy8E/v8G3A3c3soJoYF5i8jattG/Hlbrc9nQJ1oKTCh50qYB4/itOvm61bDV9ACIkfP
-	 i5M4fpMic+0YMiPn3kXSU8DQKlE2qpJG3yH7r6HfYgYGyY0dDjYBByL69PGwQyp9RQJ0Q
-	 tEicr5mMTN0559EkgRjBUvJtxbUv9pFFXlikXllqPUbPnfDNs1TmDbPRsygXznDagXKWq
-	 V6c8Uj8Buo0/Ia/PFbyaIKll1BiHAdsbQ6rMmGqprAXbqBM2kLt0vD0YEOWe6+XPEqw==
+	t=1795764311;
+	b=keHTuSfNURV03S8+QHCzjItf0nqAYLvWM4lCZnO3DMW+ryjm9Gt04xcVlVQWt+taQtnb
+	 /o5+RVqMWiqB6yLhkvdYLCjMA3Fhq1vPs7KEEJEO+qRnH2grQgH4+Vmcr9Oms2LTzORnw
+	 WM/LNy0cOZsz0UZ8afPbsj7+UE28/DwdxOrOZ4PhoaPmF8dGE83z9g3II0Ll8wPtwZRPB
+	 EEYilFH9nHfo7n+A1nKTGe6hPxGcrpnNOkkp7aFuLiVmomMXIZUOg+XGWT9bVp3nsLHZk
+	 SKWtQu4H6C1xHFdr/sTCX0Itvr60Ht2YaKYGage3Ge9zh5GbpwPN6Nn7BKLT6HwAvrg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795763484;
-	h=DMARC-Filter:X-UUID:DKIM-Signature:X-CID-P-RULE:X-CID-O-INFO:
-	 X-CID-META:X-CID-BVR:X-CID-BAS:X-CID-FACTOR:X-CID-RHF:X-UUID:Received:
-	 Received:Received:Message-ID:Subject:From:To:CC:Date:In-Reply-To:
-	 References:Content-Type:Content-Transfer-Encoding:User-Agent:
-	 MIME-Version:X-MTK;
-	bh=3QOsyC3d/SLSTb/1ylJFJGSRibhbpTAj/BABfWdbacQ=;
-	b=a3IL3oqfwEik9TQIs1DwCyl3+cbxe8Y2U45mr0/NRbGHuk3wRgz/e6PseQzdcwHC7CVY
-	 qaQxdH3npeTzNDSRub2ofRN+Tch3gLIXHhM6eU/nYHWW4ZH26XWT57kSY7V5GB9zGZuAg
-	 V8OnBrXt/viUN9tFT7HYQpV7W5B03+xmv5Qy0nBaBjRhNuZzD+FnlXpUj7ZheLywrFzv0
-	 7i52lFYOnY8mTXcHKOzJk/w1i3gz48uv3T2tnE+f0nxpf40/Y4NVtbRjdHgYIVau/EHVk
-	 hQcRMafWvPd1BN6zZF5TG7Dx0ITS6DGCY5B2opxEqx77EKogRSWnGTBpIVimLPv/1Fw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795764311;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-Id:X-Mailer:In-Reply-To:References:
+	 MIME-Version:Content-Transfer-Encoding;
+	bh=1/UnVkS186rBjFORx1WGGhaXS7CtMdNP4mwIh27hA8Y=;
+	b=YWRLkS/1NKUBaoTB/8O5MWhlsvIdhmdXcpInwC5GeTVGdgJnFVVqISn8tzXW6BSeXQcx
+	 XnQCzhbnjy4STFs5SEEXX7BjjddSnv0hGzweEBucW8WQbcnrnyxo1UWCyJu2lApj7Zaof
+	 yK/3ZSs/uFVG4AnikTgQRRVmo3UD5FsKeavaVl8KsQqKUe2znBXJzHS4Q7KXDm0zmcUj2
+	 OLTsaXcCPlVTOnT1miz9QEw2ElANlxyZYIAA3q1PK7b3ay3eXL8/fb7GFwzQZmmXKblCb
+	 fjPZEazvKgMGx97O3hcQ3SJTbl7y2AO2MSNcV7eNK95nNtxj50B7917rsYr63Q8U0tA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=mediatek.com;
-	spf=pass smtp.mailfrom=mediatek.com;
-	dkim=pass header.d=mediatek.com header.i=@mediatek.com header.a=rsa-sha256 header.s=dk header.b=KAyNRYEc;
-	arc=none smtp.remote-ip=60.244.123.138
-Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=mu1wGTtp;
+	arc=none smtp.remote-ip=209.85.210.179
+Received: from mail-pf1-f179.google.com (mail-pf1-f179.google.com [209.85.210.179])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D68E606A31C;
-	Fri, 27 Nov 2026 07:11:22 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0D68E606A31C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C19BB606A32A
+	for <linux-scsi@vger.kernel.org>; Fri, 27 Nov 2026 07:25:10 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C19BB606A32A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=mediatek.com header.i=@mediatek.com header.a=rsa-sha256 header.s=dk header.b=KAyNRYEc
-X-UUID: bc18490aea3111f1b9cf3d4034dccee2-20261127
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=MIME-Version:Content-Transfer-Encoding:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=3QOsyC3d/SLSTb/1ylJFJGSRibhbpTAj/BABfWdbacQ=;
-	b=KAyNRYEc0yxSK1mEAif+XKz27wXZeW2TkzNp4Is/8C+yPUkd9E85iVjOKKejlArwpwyMWj889U/kPoGmRyMeJv1Dnw204fur2uQ6fxPaW3uJwYGxbfBQnuFkpy9t8Xm08VPu4NmmUon7j6q6idiLAg7bMqdwI5gLGoBXVkmthFc=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.21,REQID:991cbaab-06fd-43bf-bbc5-31bd3059cd0a,IP:0,U
-	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-	release,TS:0
-X-CID-META: VersionHash:b0318ac,CLOUDID:4de1db66-4b51-4c95-bb1b-80ac6aad9c96,B
-	ulkID:nil,BulkQuantity:0,SF:80|81|82|83|102|836|865|888|898,TC:-5,Content:
-	0|15|50|99,EDM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:nil,COL:0
-	,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: bc18490aea3111f1b9cf3d4034dccee2-20261127
-Received: from mtkmbs11n1.mediatek.inc [(172.21.101.185)] by mailgw01.mediatek.com
-	(envelope-from <peter.wang@mediatek.com>)
-	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 1755776022; Fri, 27 Nov 2026 15:11:15 +0800
-Received: from mtkmbs11n2.mediatek.inc (172.21.101.187) by
- MTKMBS14N1.mediatek.inc (172.21.101.75) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.56; Fri, 27 Nov 2026 15:11:14 +0800
-Received: from [10.233.130.16] (10.233.130.16) by mtkmbs11n2.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.2.2562.56 via Frontend
- Transport; Fri, 27 Nov 2026 15:11:14 +0800
-Message-ID: <57233f9eb3071e5393e2b4d84603303c0de39d28.camel@mediatek.com>
-Subject: Re: [PATCH v2 3/3] scsi: ufs: mediatek: round scalable clock bounds
- to clk_round_rate()
-From: Peter Wang <peter.wang@mediatek.com>
-To: Ilia Snezhkov <iasnezhkov@gmail.com>
-CC: <stanley.chu@mediatek.com>, <martin.petersen@oracle.com>,
-	<James.Bottomley@HansenPartnership.com>, <matthias.bgg@gmail.com>,
-	<angelogioacchino.delregno@collabora.com>,
-	<louisalexis.eyraud@collabora.com>, <linux-scsi@vger.kernel.org>,
-	<linux-mediatek@lists.infradead.org>, <linux-kernel@vger.kernel.org>
-Date: Fri, 27 Nov 2026 15:11:14 +0800
-In-Reply-To: <179574206826.56397.7920531590189565888@gmail.com>
-References: <20261126031008.27506-1-iasnezhkov@gmail.com>
-	 <20261126031008.27506-4-iasnezhkov@gmail.com>
-	 <00ba0aec941a72c8401eab7c3d4036caa2ae8aee.camel@mediatek.com>
-	 <179574206826.56397.7920531590189565888@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.52.3-0ubuntu1.1 
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=mu1wGTtp
+Received: by mail-pf1-f179.google.com with SMTP id d2e1a72fcca58-8b32bc605d9so3781556b3a.2
+        for <linux-scsi@vger.kernel.org>; Thu, 26 Nov 2026 23:25:10 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1795764310; x=1796369110; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=1/UnVkS186rBjFORx1WGGhaXS7CtMdNP4mwIh27hA8Y=;
+        b=mu1wGTtpH7UUTWRT7TKwKzu3xkLTvTXP0a98+GWdOLXcaFf4mij7v2At8GSQ4bbJf4
+         B15+Ip19sYUkCisl2knTnQJfFC6F9rs65Dw3jrrnc9KHFZ6PWAISYe8XGdjwRPLhWLkT
+         HyAl1pGjZzz8bT1v05xJyGnnlHwyF44zaeKptaGPYFJyWZFFlxXOfav2IWesSZ4eYdpx
+         9MTxHR6bw/a4yRdHPBYmoV7gizOSm5fF3syIC7aJtVm27V84zboleVlp1pYWilFTXI7y
+         wYHcJodei2P0VUciszrQJOMnlg2rcvTGbjAymc9VpamcDga2JBSfQqlRs4lfvyLtNsIN
+         jnAA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1795764310; x=1796369110;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=1/UnVkS186rBjFORx1WGGhaXS7CtMdNP4mwIh27hA8Y=;
+        b=cS8zj12Bhk0jIjq66f4QfzZhTzlcl3YZyriSdSa3fYfgecpvfE8juhVtwhdU+5sCzW
+         D4s43mAbHzIPro62hyM8a4dHwV71Nw7lkxjnUuyEB1P+9jnUn6bNxiizUzDFCrDhOoAh
+         Kx9fCXWjhEFfABP9D2NcynFAAualHIr2HKbM34vOHfuzChQwGysZ5y+Wl5Tz1amILYgs
+         B/xwlBlYZIgk8gzoftRbLLUzPc84cxbXm1OGp7G0NF1uDvqbZF2nepKD7ymOh7TcFmE1
+         qNCgHAtcAtCEK6ZHaFAqIJsQOqr/onk2KhMCdunuVxFmWRwsb1jw14l0SLVJ81OjBftI
+         VPJw==
+X-Forwarded-Encrypted: i=1; AL+hErGD9U2l8BnaiJR4UNX5zTqcXK7FwFtLCgh4XnUEeJWPLzQGYwcNAcgOxFzW9VPgqA8CN6jILFwdfe4l@vger.kernel.org
+X-Gm-Message-State: APuU4Z/Wkdxsw1q2ENeyctZnOr7zriDF8/uM9H3wEbnYBP7LBy/FV6Ij
+	z7kMyx10e/p4ym7jfe9XkOhYpIjmZI9NbzYsrharA7eWbxbhO2H+vgez
+X-Gm-Gg: AZFdTZeWpd+wbMxozcS7gNsgn5r2U55vMK9nlpDi/2uI4+7CTaQLG9/6aeI40bzV1Ya
+	LEmT+uBw/tSnT0ImZoI+SW1RPkP5icycoCtft7vyZIOpjVppeB33Q/88/FmDeq0H9igvTtaGe3V
+	4d99k2v5pS8Vt8Jj43UzK8V9Ge48O72+//0jXsTsVNA5iCKGoce1RxkhedLrjbhvkfmbIbd29nA
+	TIAxfad4M2qUqnKsi4/kado6ZOouGYZLuYWbxpH5/xfUUpplDrTtfpkg272FToUrAhJGZXuvCP4
+	QhFMN3B3xjROfSSPPnIi8wL8/f7+UsJ51xgoWFdqhH6cFynid9mNs6e3tNZaD2j/CDyWE0MzX01
+	/ffg13WsYE0ykv6pYn61IivEtJ4dRy5H1jnPspby1neT7FtcYqEOgboggaSFtpLHIJ76HOoR5qj
+	Q6yD4F7aEBj8AyfoJ7Jmr7wxdBDNtL/7WtsIbj2/9f/wliP50YE339yf0Feu9MinTCAlV0/C7PE
+	9u9+MD3rLUw1In7M5BF0oe/KOmnQ/nhUFFdPsoST/yXmWvaiHmhUqAkMrdgA2zGl+LpxL4PuyOZ
+	+q6Wj7BbwlU35MD2XBGbHgURlcy8NgZwcIpTIwTxV9se/z3NvtcaEjbBPnAmKBJxkhYhi1umjMJ
+	/1htrqEaxk5Wfbd+za1+tkpRr6xZhpk+Tj0rJXAYNoa8fkhQ=
+X-Received: by 2002:a05:6a00:170d:b0:885:e2eb:23b6 with SMTP id d2e1a72fcca58-8c87b9cfab5mr22744252b3a.11.1795764309893;
+        Thu, 26 Nov 2026 23:25:09 -0800 (PST)
+Received: from lwq-server.tail118c18.ts.net ([74.176.208.23])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-8c872e485f5sm12186385b3a.22.2026.11.26.23.25.06
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 26 Nov 2026 23:25:09 -0800 (PST)
+From: Yaohan Li <shunsheng1218@gmail.com>
+To: "Martin K . Petersen" <mkp@kernel.org>,
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>
+Cc: Alim Akhtar <alim.akhtar@samsung.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	Bean Huo <beanhuo@micron.com>,
+	Bean Huo <beanhuo@iokpp.de>,
+	Stanley Jhu <stanleyjhu@google.com>,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v2] scsi: ufs: core: disable exception work before removing hwmon
+Date: Fri, 27 Nov 2026 15:25:03 +0800
+Message-Id: <20261127072503.3922964-1-shunsheng1218@gmail.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20261126111400.2828356-1-shunsheng1218@gmail.com>
+References: <20261126111400.2828356-1-shunsheng1218@gmail.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -91,50 +104,62 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-X-MTK: N
+Content-Transfer-Encoding: 8bit
 
-On Fri, 2026-11-27 at 09:14 +0800, Ilia Snezhkov wrote:
-> Hi Peter,
->=20
-> It is not a missing hardware calibration =E2=80=94 it comes directly from=
- the
-> fractional-N PLL PCW quantization against the 26 MHz reference
-> crystal
-> (clk26m).
->=20
-> On MT6789, msdcpll has pcwbits =3D 22 and pcwibits =3D 8 (14 fractional
-> bits, 2^14 =3D 16384), with VCO range 1500..3800 MHz, and
-> ufs_sel_max_src
-> is msdcpll_d2 (msdcpll / 2). To target msdcpll =3D 384 MHz (msdcpll_d2
-> =3D
-> 192 MHz) at postdiv =3D 4, VCO =3D 1536 MHz, so the required multiplier
-> is:
->=20
-> =C2=A0 1536 / 26 =3D 768 / 13 =3D 59 + 1/13
->=20
-> Because 1/13 is a non-terminating binary fraction, no integer PCW
-> value
-> can represent 384 MHz exactly in 14 fractional bits:
->=20
-> =C2=A0 pcw =3D 0xec4ec (967916) -> vco =3D 1535999512 Hz -> msdcpll =3D
-> 383999878 Hz -> msdcpll_d2 =3D 191999939 Hz (-61 Hz)
-> =C2=A0 pcw =3D 0xec4ed (967917) -> vco =3D 1536001099 Hz -> msdcpll =3D
-> 384000275 Hz -> msdcpll_d2 =3D 192000137 Hz (+137 Hz)
->=20
-> (With postdiv =3D 8, VCO =3D 3072 MHz =3D 26 MHz * (118 + 2/13), the
-> closest
-> PCW values give 191999939 Hz and 192000038 Hz =E2=80=94 still never exact=
-ly
-> 192000000 Hz.)
->=20
-> So the CCF __mtk_pll_recalc_rate() / clk_round_rate() result for
-> msdcpll_d2 is deterministically 191999939 Hz, which never matches a
-> nominal 192000000 Hz entry in freq-table-hz under
-> ufshcd_devfreq_target()'s
-> exact `freq =3D=3D clki->max_freq` check.
->=20
-> Best regards,
-> Ilia
+ufshcd_remove() unregisters the hwmon device while hba->eeh_work can
+still be running. A SCSI completion can also queue hba->eeh_work later
+during scsi_remove_host(). When the worker runs ufs_hwmon_notify_event(),
+it can access the freed hwmon device and trigger a use-after-free.
 
-Thank you for your detailed explanation.
-Reviewed-by: Peter Wang <peter.wang@mediatek.com>
+Disable and drain hba->eeh_work in ufshcd_remove() before removing
+hwmon. This ensures any running handler finishes while hwmon is still
+present and prevents later SCSI completions during removal from
+requeuing the work.
+
+Fixes: e88e2d32200a ("scsi: ufs: core: Probe for temperature notification support")
+Cc: stable@vger.kernel.org # v6.10+
+Signed-off-by: Yaohan Li <shunsheng1218@gmail.com>
+---
+Changes in v2:
+- Correct the Fixes tag to e88e2d32200a, as pointed out by Bean Huo.
+- No code changes.
+
+Tested in QEMU/KVM (KASAN + PROVE_LOCKING) with an out-of-tree virtual
+UFS 3.1 platform controller driving the in-tree ufshcd-core.ko (no
+kprobes):
+- Unbinding the device during an exception-event alert flood hits a
+  KASAN slab-use-after-free in hwmon_notify_event() /
+  kobject_uevent_env() from ufshcd_exception_event_handler() (freed by
+  ufs_hwmon_remove() <- ufshcd_remove()) on the unpatched kernel, and
+  passes 10-cycle A/B and 30-cycle stress runs with no KASAN, warning,
+  or lockdep reports after the patch.
+- Exception alerts on SYNCHRONIZE_CACHE during scsi_remove_host()
+  requeue eeh_work on 10/10 cycles before the patch and 0/10 cycles
+  after.
+- Compile-tested with W=1 on x86_64 and arm64; verified clean apply on
+  mkp/scsi.git for-next.
+- Not tested on physical UFS hardware.
+
+AI assistance: AI tools assisted with static code triage, writing the
+virtual UFS QEMU test module, and drafting the changelog; I reviewed and
+verified the root cause, teardown order, workqueue/lock behavior, and
+the final patch.
+
+ drivers/ufs/core/ufshcd.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 3c28bc67c65f..86100ac90fce 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -10988,6 +10988,7 @@ void ufshcd_remove(struct ufs_hba *hba)
+ {
+ 	if (hba->ufs_device_wlun)
+ 		ufshcd_rpm_get_sync(hba);
++	disable_work_sync(&hba->eeh_work);
+ 	ufs_hwmon_remove(hba);
+ 	ufs_bsg_remove(hba);
+ 	ufs_rpmb_remove(hba);
+-- 
+2.34.1
+
