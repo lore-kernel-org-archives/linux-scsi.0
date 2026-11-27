@@ -1,99 +1,99 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=85.215.255.54
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795732370;
-	b=GhtVWdgLHpqz1Nldzt7DCiNSDwIaS4O6/YI/2WE8q78hn7JI8afDufI3QO2SDg5n77hN
-	 DqBiFig73wiQbAI955DuaGUSpqzxzk4ZndRAfnzQLtKuxpsbVrXmj1q3s4njr9Qx4ZO6E
-	 X5YWpv1kkUHODjNv+EpkbYkwv2WXWesOyi5VdOKTXpCZ6LMsm+5b4nJqcoJocfpLFHjho
-	 xZB7Nw+8CipvSPE55fWp7WsKfn9pdQb9yjKceP2EmvGtm6qXYq7LDCapmjbUoKYH9YBsC
-	 dJhVom9OJW4fWX/HeVpqPhRxaXy1JHPS9uN82xNx3QhbtqTus5bd/zeIXuW3PvSNzvw==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795732370;
-	h=DMARC-Filter:X-RZG-CLASS-ID:DKIM-Signature:DKIM-Signature:X-RZG-AUTH:
-	 Received:From:To:Cc:Subject:Date:Message-Id:X-Mailer:MIME-Version:
-	 Content-Transfer-Encoding:Content-Type;
-	bh=L8BgtXNBzYX1GjQ1VVae357SREfMavFxSODIa4qd32A=;
-	b=TrvphVX43X43pSqLbtNHp7bSLcvvrPe3ox23tn3joNnNguojyI6VkceRyFq/AdeITmWN
-	 b5NY4bdIlO7mC2vOZf9d9izunTk2xJA5r+7+tatfikjlnv+/Rv82Qx10qO63iaN5V7FPr
-	 ReNlDHhOiEXUZDAvSAP6HHPbatNup/ATweejv6FiSwoD/enhTX2pDA+k7iAef7ZYJyJEj
-	 dcweedhTbYry+NNuzJUB0+hlacW1Y+dAwCePVxvv/jjKUGQBykSZzIePW88nkrVYgKp/D
-	 UnmdPClCnsN7GNHvzqkAltUJ5Hkip8O1qVYRyOSMhk8rQqCXCwmAyzh3Gx31s99IrrQ==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=iokpp.de;
-	spf=none smtp.mailfrom=iokpp.de;
-	dkim=pass header.d=iokpp.de header.i=@iokpp.de header.a=rsa-sha256 header.s=strato-dkim-0002 header.b="Ljc/TmRO";
-	dkim=pass header.d=iokpp.de header.i=@iokpp.de header.a=ed25519-sha256 header.s=strato-dkim-0003 header.b=VR416GXq;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=85.215.255.54
-Received: from mo4-p01-ob.smtp.rzone.de (mo4-p01-ob.smtp.rzone.de [85.215.255.54])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.214.180
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1795741847;
+	b=YYESt2IFPpGZKbXkj5OiWE9mSoxLbDv2CGvcDYCDRQJZ0kQDWoOT6eGIGMw4xrGBDVgW
+	 gV9rxhxUQptadQspWsyNsDIdYSCGaFsnHaXOrnjNHA/+CEsJommuHUoDIiTTtYNhNCLsR
+	 1bnFX2t4PJW/LqXh7LzzBLwR62RJERKov2EwqjDbt86yiqI+spCaxN/cIDBY3JA9h7x/E
+	 XV+fVK5R87TvZ4Q/cJ5VjA8O4yj2MrtmMhe5ZIOyXUy2Boa4FRhC910WcyszwAJyItYL0
+	 VrWkwup8pTFaSFUQ9i0IqJz3No+gVunASByBKTFfOwv7vYc9KNYksZBtfrQ9VrgXgOg==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795741847;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:In-Reply-To:References:Content-Type:Date:
+	 Message-ID;
+	bh=HZ2sCqXwwWM570Uzj7/jKB0ciamWJ56LEpgiUf6Er7s=;
+	b=E8ym95kngwDHLNQUGQatgY9tCi+U7/H2QhnbREu6+5I5H8sgv5dRX3Frb92gOf/FU7b3
+	 7jeKxr41JSdeTXE1SajMukhHLCF9fLuJOkMRHWtaPdWW48W7E1b575arS4iMnuM/IDEUG
+	 un7w8KJBT5IYegmhNhCja743MuPRwjGEvpdHnkWbbVah0T+H0DJ2yIFo8jWnYv4Zln4C7
+	 Bc2Bu02pb4zh0fMK1/4MxXdBmxg4f/vlcDq1Bwzphuf7wM5okkloU3NiiLWM4+3/OTwBr
+	 9B+EqKxximHre2aN03od19nkHQLIkTsf+CT3cWStPqZXKPz2c3g9aedm1zPADtdGcmQ==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=K7wpUDC6;
+	arc=none smtp.remote-ip=209.85.214.180
+Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 243D7606A326;
-	Thu, 26 Nov 2026 22:32:48 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 243D7606A326
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=iokpp.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DBAD8606A31E
+	for <linux-scsi@vger.kernel.org>; Fri, 27 Nov 2026 01:10:46 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org DBAD8606A31E
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.a=rsa-sha256 header.s=strato-dkim-0002 header.b=Ljc/TmRO;
-	dkim=pass header.d=iokpp.de header.i=@iokpp.de header.a=ed25519-sha256 header.s=strato-dkim-0003 header.b=VR416GXq
-ARC-Seal: i=1; a=rsa-sha256; t=1795732359; cv=none;
-    d=strato.com; s=strato-dkim-0002;
-    b=gF3bMkcuhVsspSwtUBQSYQxk6l0miaY5mIAD+KkdExgRl4KexAMFfC1GCTvIckrb0t
-    OS/nNkov9NPPwVUJmEb1vXgjrIQZjQIH8axxys7mpAENTGP4XWpbJ8GLwx2EP65QeArP
-    x601Zh8kXwx+70YUzrWj7e/s9C6zDhPVjZpCQ2S3WVY1Uzz4AMomeuqqaIBexrzROMXr
-    O1CnviablrCq4DNLy2fIF02UqjHXlOF7sa1yWUgUd1ZvnPzZ3aQAjKd0LqO0C/tGUVIm
-    3ozDPwMCP4RRpbS3kgBNnij5BVPmeDwXTcCqu3EuVHMv4e01PIjOb+EFnlI4dZWebzgy
-    2BeA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1795732359;
-    s=strato-dkim-0002; d=strato.com;
-    h=Message-Id:Date:Subject:Cc:To:From:Cc:Date:From:Subject:Sender;
-    bh=L8BgtXNBzYX1GjQ1VVae357SREfMavFxSODIa4qd32A=;
-    b=rR9+wATxxIKklUQlRvWT2Fb8KnbBn4VhZb87SKGfSAsC6JoyM2TyMoPhzJb0Fl58S7
-    bvh1cAu02d8Agy69YQ+CkHb+eP0Icf2amuREIYhuxlTtR6ynVyw+aJBXVoaESKzGeJ1J
-    KNy8pA9rl43vKZ0Z+HkuMl6yK5h7iZoy6OrZMSB7E8ePsuEjFNxH83nz6zvnyd4qqCGi
-    zl4TS3iUhyv/Er5Ex5TLWW/wV6eclGSXKI4S3ekzlwjEoBpsTDyb2QNBkfIstmeQYzRP
-    m7cHcXKBPi6sZ+H/wb5xQgfoaKmAJqd+p7dbWqb0Sw3y8o6Pra1kJ71N5XuS34rbfUBQ
-    XnCw==
-ARC-Authentication-Results: i=1; strato.com;
-    arc=none;
-    dkim=none
-X-RZG-CLASS-ID: mo01
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1795732359;
-    s=strato-dkim-0002; d=iokpp.de;
-    h=Message-Id:Date:Subject:Cc:To:From:Cc:Date:From:Subject:Sender;
-    bh=L8BgtXNBzYX1GjQ1VVae357SREfMavFxSODIa4qd32A=;
-    b=Ljc/TmROpM+bJDQo+LaN/dxqoFhxVnByB8o9k/JP8Xg+W4lJSEMS5OBNGcHQCm+yIB
-    FoJSkgRU/zxV1/xptQA/7CUeESCereufeo+OGWPZuC4yD6cuYpRmWuiZh6OAEc5nGwAN
-    C1n0R31JHWhODvk3Nvl4I2rht7ao1iSvlA1FtjUtXB5BbXkmOlSshnPo1XnLhOHZ7BH9
-    HlwJJe0I1b2F6pva0nxGdm9q5jnPdw6K6iWrc5owcxcJ4/Ux8iAZAHm9nDzPn13ROKeb
-    S3Bqy1Tl5WhswrwADmIznQfDOOGjE6BbMSiLbLblF0akZmn0GRtuCaKn2NKFd/7Qj+XN
-    DetQ==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; t=1795732359;
-    s=strato-dkim-0003; d=iokpp.de;
-    h=Message-Id:Date:Subject:Cc:To:From:Cc:Date:From:Subject:Sender;
-    bh=L8BgtXNBzYX1GjQ1VVae357SREfMavFxSODIa4qd32A=;
-    b=VR416GXqVdQv5kjCqzg2TduE6mwD1RdWtppeAYAdQNGngYsblF0BrjuUOuO0O290EE
-    59uOV09EVhJROpw8NfDw==
-X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSfNuhhDSDt3O256fJ4HnWXON1RP16IHIszTD3hB2bKri1qswmSmZySpVjD67C0o="
-Received: from Munilab01-lab.speedport.ip
-    by smtp.strato.de (RZmta 55.6.3 AUTH)
-    with ESMTPSA id z831ad2AQMWcfOj
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
-	(Client did not present a certificate);
-    Thu, 26 Nov 2026 23:32:38 +0100 (CET)
-From: Bean Huo <beanhuo@iokpp.de>
-To: Chanwoo Choi <cw00.choi@samsung.com>,
-	MyungJoo Ham <myungjoo.ham@samsung.com>,
-	Kyungmin Park <kyungmin.park@samsung.com>
-Cc: Bean Huo <beanhuo@micron.com>,
-	Jie Zhan <zhanjie9@hisilicon.com>,
-	Avri Altman <avri.altman@sandisk.com>,
-	linux-pm@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-scsi@vger.kernel.org
-Subject: [PATCH v3 0/2] PM / devfreq: check the get_cur_freq() return value
-Date: Thu, 26 Nov 2026 23:32:23 +0100
-Message-Id: <20261126223225.2257410-1-beanhuo@iokpp.de>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=K7wpUDC6
+Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-2f0918f9e6cso21732775ad.1
+        for <linux-scsi@vger.kernel.org>; Thu, 26 Nov 2026 17:10:46 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1795741846; x=1796346646; darn=vger.kernel.org;
+        h=message-id:date:content-type:references:in-reply-to:subject:cc:to
+         :from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=HZ2sCqXwwWM570Uzj7/jKB0ciamWJ56LEpgiUf6Er7s=;
+        b=K7wpUDC6Gq3dN0zmS6NnEmNqGUhHVyKQaTAo9TXsuZhUOJtuilvLBW2keTkjDTuOxW
+         8CWJu5chybB5QWUU0d/o2obVqm3bK4T1Xxl0f+FishKYTxDzac1DLdmNW+MBmjP3Ux7F
+         mXM0DQCzLeGrhYoxSCIhmk98KwdqJJEft7Jt0KK/+1lgHDlYpqbRrxfDSiTTsGDvDTqX
+         xHcbHwTPOyArmWHfTxJX+C/VvsxNvs8D1/n0DwlzkA6v5EGT6MYmz6PnBMO+S2Hwjo8d
+         qpc/g0Ek3VnXzAayMR7TVQknTmVWSfxKeNHI69VLwv3SfKz3zMv+Cq8kCyfn/NOyhaBU
+         ALtQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1795741846; x=1796346646;
+        h=message-id:date:content-type:references:in-reply-to:subject:cc:to
+         :from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=HZ2sCqXwwWM570Uzj7/jKB0ciamWJ56LEpgiUf6Er7s=;
+        b=fKglwgRAXqImh/Derh6YiE1aaFzMzPiSBFMsYDK5RWTVxXuo/DTwwcfRO138PGqWSq
+         cAMV5TqY5icfa/l/NF9ybc4Ob/WpDpTHPO1iuo/GiXu4crIIwkbb64DweN0IM+WX0WtK
+         My4UD528iingWmKr6RIpM9tV9h3UO+SOXpr8TeIJI9XKKrmGdDaEI/cnnsUN62KK/dlL
+         mbd/lZfwr2gCDbhUvZIWIeKCittDfqgnfcYBR0DrovISaJBC5jE9w9UxwIFLJOc20peE
+         vxS8+ERZAPjcNSuGxGPBW5I/2Hezf9xvTHZfl5ci3sIKYGLAWUFWfLpgU1GKogZ3dNCc
+         NarQ==
+X-Forwarded-Encrypted: i=1; AL+hErHTbdfrXJ3LZgIfYoimULrpmnwES97abyIX8+Wwy/iplHDUieY/oNYcULi/nQn7mzpGROxHHDEd6QOb@vger.kernel.org
+X-Gm-Message-State: APuU4Z+GxKaqB3SXyP4tMAq3GAABTGhWhoCDEcyzB6fO14lQhJh0N9Sf
+	iHINotQ/k2JMfrt6GDJXgQgF5mPfEZ/ly58blKXMPQHmQDGQnM3Oycdf
+X-Gm-Gg: AZFdTZfxWfQs6xi1MYHn+XXJOC5/8Tn6Z/B7QFLG7xBhvDgzr24QYDrV5pPOqXguMZs
+	2kzpPmO99YRk5WWD/Yim0PJ2dXdu103UFSOKxX0VJ+FQ9iTSGN6r8ALi5VtQEv5x/DSR8nOJHYK
+	GOaSa2GzbaL8AbbgePg+YhA5b9CXlGG0OZckCt30JPGcyLlFI2dQxTbslRIwcwIbvChsQWBbE+t
+	mqD9SILmzbjJA0OIgjzahwf3xBLfEyvuKmu341IAi+2FX1IH6fnhbPPSFEcImlELD11o1KV6N9s
+	+GhQMspel/ZeBGkR9bysjaCbzO8D61uqGkeQ9ybENIww5LAKp9sy/AMoKAepCE+e3zlO/+xOnF7
+	3jN3vOifyFLpLWELBlUHE5ojn5uX/k6jVCCeQrr5AQUQDft+Ifp5BzVoLa/u/SNalkjTFAzU+Rr
+	CnNWVj3ECOxculJe31zn8nPk5vnDXVdvucF/urJ+2+DMXXaSH+pQh8LWQqXv2IVsk1MxamdI0Ln
+	2WlTTTNmwr1igoFOPzXMm1H2xlz+JH2/ZGNAMzTl1ZWN6Qv3o5v+zy115J13tOhPB42NpQEIZZQ
+	XJFsAjqxdXhUQ9Yb48WPLjQNgiiGYkBTq2NNVljsKRyndwtFByf6VONDphVmvzE1rFav32PB7dr
+	9
+X-Received: by 2002:a17:903:19e7:b0:2e9:9a19:c54 with SMTP id d9443c01a7336-2f03f24206fmr190172495ad.50.1795741846137;
+        Thu, 26 Nov 2026 17:10:46 -0800 (PST)
+Received: from mac.lan (114-45-165-38.dynamic-ip.hinet.net. [114.45.165.38])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2f03f1207f1sm110189725ad.64.2026.11.26.17.10.43
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 26 Nov 2026 17:10:45 -0800 (PST)
+From: Ilia Snezhkov <iasnezhkov@gmail.com>
+To: Peter Wang <peter.wang@mediatek.com>
+Cc: stanley.chu@mediatek.com, martin.petersen@oracle.com,
+ James.Bottomley@HansenPartnership.com, matthias.bgg@gmail.com,
+ angelogioacchino.delregno@collabora.com, louisalexis.eyraud@collabora.com,
+ linux-scsi@vger.kernel.org, linux-mediatek@lists.infradead.org,
+ linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 2/3] scsi: ufs: mediatek: allow clock scaling when
+ ufs_fde is absent
+In-Reply-To: <7b7d94ab4283b82aec13eae3f9c1d2e77873d88f.camel@mediatek.com>
+References: <20261126031008.27506-1-iasnezhkov@gmail.com>
+ <20261126031008.27506-3-iasnezhkov@gmail.com>
+ <7b7d94ab4283b82aec13eae3f9c1d2e77873d88f.camel@mediatek.com>
+Content-Type: text/plain; charset=UTF-8
+Date: Fri, 27 Nov 2026 09:10:41 +0800
+Message-ID: <179574184161.52486.4990124402659702610@gmail.com>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -102,43 +102,27 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain; charset="us-ascii"
 
-From: Bean Huo <beanhuo@micron.com>
+Hi Peter,
 
-devfreq_set_target() does not check the return value of the optional
-->get_cur_freq() callback, so a failing callback can leave an
-uninitialized frequency in freqs.old for the transition notifiers.
-Patch 1 fixes that by falling back to previous_freq, like the other two
-callers already do. Patch 2 writes down what a driver is expected to
-return from the callback.
+No — this patch does not change whether UFSHCD_CAP_CLK_SCALING is
+enabled.
 
-v2 had four patches. Martin applied patches 3 and 4 (the ufshcd part)
-to the SCSI tree, so this v3 only has the two devfreq patches.
+ufs_mtk_is_clk_scale_ready() only checks ufs_sel, ufs_sel_max_src, and
+ufs_sel_min_src, so on any platform (including MT6789) whose DT
+provides those three clocks, UFSHCD_CAP_CLK_SCALING is already enabled
+today and devfreq already runs. Platforms that omit ufs_sel_{min,max}_src
+still have UFSHCD_CAP_CLK_SCALING cleared as before.
 
-Changes since v2:
-- Patch 1: do not call ->get_cur_freq() inside the if condition. Read
-  the frequency into a local variable and only use it when the callback
-  returns 0, as Chanwoo suggested. Behavior is the same as in v2. I kept
-  the Reviewed-by tags from Avri and Jie, since only the form of the
-  code changed; please tell me if that is not OK.
-- Patch 1 and 2: add Reviewed-by from Jie Zhan.
-- Patch 2: add Acked-by from Chanwoo Choi. No change in the patch.
+What was broken without this patch is that when a DT provides ufs_sel
+and its min/max sources without ufs_fde, _ufs_mtk_clk_scale() returned
+early on `!fde_clki`, so ufs_sel never actually switched parents while
+ufshcd still treated the scaling transition as successful and updated
+clki->curr_freq.
 
-v2: https://lore.kernel.org/all/20260907192140.2701755-1-beanhuo@iokpp.de/
+With this change, MT6789's already-enabled clock scaling actually
+switches ufs_sel between 26 MHz (tck_26m_mx9) and 192 MHz (msdcpll_d2)
+as intended.
 
-Bean Huo (2):
-  PM / devfreq: Fall back to previous_freq when get_cur_freq() fails
-  PM / devfreq: Add more details to the get_cur_freq() comment
-
- drivers/devfreq/devfreq.c | 12 +++++++-----
- include/linux/devfreq.h   |  7 +++++--
- 2 files changed, 12 insertions(+), 7 deletions(-)
-
-
-base-commit: 4ff20abe28d65a0c52f0b280008fcfb93c3ee2b2
--- 
-2.34.1
-
+Best regards,
+Ilia
