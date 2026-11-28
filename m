@@ -1,94 +1,93 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.170
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.173
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795835786;
-	b=se+ahecno45Z8aNADEe3R6VfNltXnpVipP2AG3c5dMzwNgG49/KM7XpOaySlAqfoR6n0
-	 xkklj2PmKh9sfbVDgQ63wsM1/pCsd3zEYzDQwZ5Swl9E3CMfugWm3CKcbKioc1ycBYpzP
-	 DtwYBA4EFtjvVMhv7rdFXDBB5bv9x+1VpksOVaVZkKAn9jKbvsnUgiyIv/z2WCwXklM/c
-	 yDkEmne3rVGuPG1wDzEdM/sO94JL0+UVFuRjcg9Ugah7uN3FRfp/8b/v8vDYuKnECvlib
-	 N1o0CKk7QcO7fif5ke+Pa5wZxrxeHz3e+S2R6bYXOiBRZgsUskipM39tS/tWXhdKLyA==
+	t=1795857992;
+	b=ohLUE6rJAHfHED02C0HBQdELUJeb7qECP8hgEvlWhdhHbiPZnD3WSt51eq+aJpDikauT
+	 4QQSRPWhGaqveumf56rgUfnudPQ3hNYvE2K9XwR+CgXWUrTWZdWjis2M6l37JC21f508B
+	 HxkcK03we0Hit7+HvIvnoda6OzcSVFzhFjg4jIiZpGac5LFK1mMUZoCD6bdrCqz5q0Qbv
+	 VUmREUwvCxlaGQ4xqHYecbfl+UsaqRGvZpEgB9/QrumHlLvVKpBpdUE4eqdZdYmsRNBol
+	 YD6Cws+1EIX6aV/z1B+EpXh9IJTMrIZFZTCt459HKRCs+O8OjbO30hQiEYlmybsoEPw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795835786;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795857992;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:In-Reply-To:References:Subject:Message-Id:Date:MIME-Version:
-	 Content-Type:Content-Transfer-Encoding:X-Mailer;
-	bh=yvCt1gdskx/Y0jOYT6LmJ91002gzEPa4iXQSvGo7T/w=;
-	b=OZlFF0h3XjVlFdsGmvCev3BGpMX33Lk/h1DdFE+60ylkMClGhC4dvSmsPQ5fa2vWyzaw
-	 99sKRiT/MMxx64HYe0c3K7EUmmFtn9oyzYp2RycuXTvXZULbDZVcBgNO6OJPg/c7Pg930
-	 6OmPcwklATkiO2YGrj64QypTHug2XBEvI9nmPtvaHrq3fnUpmwpcJkw9QhYoOEhQCp6Rv
-	 ukIsQHcfs8J08d00cW9TLOAUJFGf7ncpPdBr38t5VMAJUD7irkc6/9nvfXowXQs97tYzG
-	 BM47n2z0sM0o+l0l1ooVQAu/wXHAitSpzZdYJWKirpzNAkixzMSbvshYtwQ7zGZaNzA==
+	 Date:Message-ID:From:Subject:To:Cc:MIME-Version:Content-Type:
+	 Content-Disposition:User-Agent;
+	bh=tdLkNGqwXWjcjO6fjZ/pKxrW+PPoYQ4yhJUHrTAmaIc=;
+	b=wdJI5BEQ71vC/3/pGSy6ckPwQPL98F+T9xCed6GxnToZGhpKR9NISac6D/UcS5p6zPSk
+	 6qMihWiVICpaTHzj+eM4iRSbPqbPksqQWm0vxJ3u0f1sKxrdGiE4y2CPVtMPx6/1stEg9
+	 Y15B4BkkBs6b3cwJ8LrfQfH3fSHlJxzGzbEJZ5NbLN+Q4i8zVkEyG3wJM4WRZAMQEgG4O
+	 25W01MT/WdV8w3tXEPRxaXz6HQwFwww0Hvh4SH1W4RYqbVfKWZ5XFALkhsPvWLA4A24mr
+	 mtorDJfmucOWKAIeXLq+lLd2xfURt5+HLIFOfcv5g6tjgLWXaWmilxIAHmu8iR/DjHA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=kernel.dk;
-	spf=pass smtp.mailfrom=kernel.dk;
-	dkim=pass header.d=kernel.dk header.i=@kernel.dk header.a=rsa-sha256 header.s=google header.b=nDu9lVQt;
-	arc=none smtp.remote-ip=74.125.82.170
-Received: from mail-dy1-f170.google.com (mail-dy1-f170.google.com [74.125.82.170])
+	dmarc=pass header.from=chrisdown.name;
+	spf=pass smtp.mailfrom=chrisdown.name;
+	dkim=pass header.d=chrisdown.name header.i=@chrisdown.name header.a=rsa-sha256 header.s=google header.b=XCSibyds;
+	arc=none smtp.remote-ip=209.85.128.173
+Received: from mail-yw1-f173.google.com (mail-yw1-f173.google.com [209.85.128.173])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E9ED606A31C
-	for <linux-scsi@vger.kernel.org>; Sat, 28 Nov 2026 03:16:21 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2E9ED606A31C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0EAB6606A31C
+	for <linux-scsi@vger.kernel.org>; Sat, 28 Nov 2026 09:26:31 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0EAB6606A31C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=chrisdown.name
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chrisdown.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.dk header.i=@kernel.dk header.a=rsa-sha256 header.s=google header.b=nDu9lVQt
-Received: by mail-dy1-f170.google.com with SMTP id 5a478bee46e88-38431138772so11441551eec.1
-        for <linux-scsi@vger.kernel.org>; Fri, 27 Nov 2026 19:16:21 -0800 (PST)
+	dkim=pass (1024-bit key, unprotected) header.d=chrisdown.name header.i=@chrisdown.name header.a=rsa-sha256 header.s=google header.b=XCSibyds
+Received: by mail-yw1-f173.google.com with SMTP id 00721157ae682-8b4fb5d96b3so134489417b3.1
+        for <linux-scsi@vger.kernel.org>; Sat, 28 Nov 2026 01:26:31 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel.dk; s=google; t=1795835780; x=1796440580; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:mime-version:date:message-id
-         :subject:references:in-reply-to:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=yvCt1gdskx/Y0jOYT6LmJ91002gzEPa4iXQSvGo7T/w=;
-        b=nDu9lVQtkryVMSZeb0kvkG3170q+2QAclKnT7mGciWVBndJFoBkISt5ECqvVgW73f+
-         B/vFwxyyKwhlV/gQgdeagWaouoK+N4XfZ3HG8dQKeH8wd1YMEO0Rzhse4hHitkp1akBY
-         QJhW2MEUGaOntTblnwaQfAyXjLSN+xCyLcIUCkbjCjTxnZT7kAoPlYaPNJ+zfoE5DNI3
-         xyCeQm9M8YzfUWZ2yvdZ6D0o2vD3AMrSk2xswASGN36o28s3OR9bAqFAF4UIk3diU3FB
-         xRCpKv7cmR6Xgp7A+UhcjpweZ0ycwJ2kTP9cO2OqeNaG6yxXfwsw0tl63k6cxFVyHplD
-         FWAg==
+        d=chrisdown.name; s=google; t=1795857991; x=1796462791; darn=vger.kernel.org;
+        h=user-agent:content-disposition:content-type:mime-version:cc:to
+         :subject:from:message-id:date:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=tdLkNGqwXWjcjO6fjZ/pKxrW+PPoYQ4yhJUHrTAmaIc=;
+        b=XCSibydsurMTONfd9P0H4TNm1a4sevJgxr35dF/UJ6OpmvZVzrGQDKYR9P+uW6smgB
+         tkWrFWE75OQdALnvjKTHHe4p4YeZjEpcUwhZFrSeUOZUC3Gi1m8SsBq+o6lsQqBUpsst
+         eaORUg1tiO3IhYzxVLMpbBNp/eEl3UICcmxgE=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795835780; x=1796440580;
-        h=content-transfer-encoding:content-type:mime-version:date:message-id
-         :subject:references:in-reply-to:to:from:x-gm-gg:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=yvCt1gdskx/Y0jOYT6LmJ91002gzEPa4iXQSvGo7T/w=;
-        b=mG5JKe2cwzI3raTIm7vCH2EtX4pmEBG9PUfrHwEF78Zty1tIN5aErPd6MNS5C/pwoX
-         a5exysvZ2Jsmhr3QPWCVhfgNaO31SUnMgbCjq57Nq3kX9vhFmJfG1vvkWOeZV6Bnc7w/
-         WZWznFjokqYaN4cWrHGxwfuD6TlQ44GSnkYteB3l9iM+jpfZUlGLm0E0dLP6FkJfPYHk
-         Mvbxo0PozCA5oJAgdJj0lrfJpuDrQDQOljrjP5s64o68hMaoxqbW52SJKZGMzOJ+dDJK
-         KzRcBbQ0TLQj4EhfkSnP0B+d79KibvyvM2NyJRAY8OATYhhDiKQNz630U6BLV9ZBH5DN
-         PwNw==
-X-Forwarded-Encrypted: i=1; AL+hErERI2LAqfEskm0eXy9pSu9cfqVeRMlOyuTNQWsemsa9j6c+bJ8ymPpJpKePwCkq2mVILWU+LjgwHDub@vger.kernel.org
-X-Gm-Message-State: APuU4Z9KhnV8RNpv+D37qJP/6JjET83qXBsCsJ8jqwk3+lEIV/tx3BS/
-	fQqha3LKMat7ZZ/H+SxUBl2VgK0gSp2aBjcQCVeMKpnSdrLyE7SeXcQhl7bzLYWHvwO21H8GZa3
-	5MlGLXpA=
-X-Gm-Gg: AZFdTZdeCR4XwYpgIqSLiMVlq8AhaoNPdb25UyjqRIv/TFC+0wu8VVmyJM3A0avw82o
-	fRN+NVvwKF6dnBsaVgpupQ/fh0AVH9rSEHUALqAxt6cIjhhy3lT8KH79MnbOUOoI0RA9f7XrrEi
-	iEdIZDWx29HQRmBf0Qwq9w6GzBYJjLX1dM29EJLuPJGF7spXTg1+bNZifrjs3g4deS8wo/f5YWc
-	kKoU5TeTsBhwadBZt+Nw6nsmss3iitAbHwOiLHHYJCveXdwP2C48susi5bdIL4bjO6d+/g2i3SQ
-	qtghHOQ7lR729EKfWCTwUCCKx+oIKvYLDp5ji30Tu19T/UfOqFvBKKNOwuRW4xRfx9GkW89mc1n
-	10KEh1a2xWOsLqseQB4Y8oVmIvvw0FphR9A+SQpYLXwyN/xqVkvbKMorodFzdVd7ZRyYn0ABcVO
-	ekt0GHJhrlcziYWF9iDa99ahjNdkNSME6hTLcwN3PAqLGVYwBQwZvsRUUIlNpYS1KNvp6VqNaS4
-	YEyD4udQvz/CSz/2sx2B8Jxi+hqkYWCdmFGXYaTZnMCClbZuTBo0+20a0yfVKRPxTZC1miwo0zp
-	SlAtjIbT1RGG7snj2xId7u4D9D3xy/+U3lvtWn03ZTbrQtqzOTR3CjxguqnK/x2j8JefNLKH2P1
-	tJuFZKaG9smb/JZFVGJkc4eY+yoksShnojgdydxRgmQIjiCW7rqmCMrjikKxtmUW475r/GQ==
-X-Received: by 2002:a05:7301:e103:b0:385:496e:80ac with SMTP id 5a478bee46e88-3856fe59334mr29203520eec.8.1795835780240;
-        Fri, 27 Nov 2026 19:16:20 -0800 (PST)
-Received: from [192.168.1.142] ([198.8.77.135])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-386c7c62a91sm36623124eec.17.2026.11.27.19.16.19
+        d=1e100.net; s=20260707; t=1795857991; x=1796462791;
+        h=user-agent:content-disposition:content-type:mime-version:cc:to
+         :subject:from:message-id:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=tdLkNGqwXWjcjO6fjZ/pKxrW+PPoYQ4yhJUHrTAmaIc=;
+        b=kuYAL3yw8KaK1PUtf9TenJJI7jqa6z8av3ak+hQisBgXVH2FpPoxkwgIzOVBqPq8dI
+         rpvKyswXi19JcmwdljA9n6N6Iw4VuVIfuVXe4ULXxWlJfSvxrGrPbHB+WqsnbnxNw7yN
+         5yx0DTAiBRyZzdZrci7ZDbn/ZhkKJ12HdzfGpKyrHC4nlniP+acgjYeovjZTpfIRDkkN
+         XsmJkPXSORT/pbqGV/lM+o5w1FPSK0RMr3eFWpUEDgqN5ixthW9PVmEutjm+32tHFyhB
+         URLY+U+XRVRbP5uqa4MWiuQqiFJD3xEGfObrXKWLIm4DZokVygdAYIFajQReaNgC0/vX
+         Xnmw==
+X-Forwarded-Encrypted: i=1; AL+hErFBUeAGJvXfXWKNU2/ydBtRINe4H7/r5HQwLlQqMGFpVoG3nmUpFWoMLjKW8QjzmjMHulQ3/VlP8Ts4@vger.kernel.org
+X-Gm-Message-State: APuU4Z9qYRrt0Me82ox9n8t4tUw1JNub3JADHBPTxc15oCphZ9oXSi9P
+	2+xi+ovvRbY8uFuYmfW4JIlL/6xvmY+1HCchCL8wek9cQYV0HUaX3weK1RsJYbK0tas=
+X-Gm-Gg: AZFdTZeJ0GNplpX3Mrh9QhGg1OPTY7SxRSWIXYH3oFx9eHQy13iaDO7F1gJ9sELimsQ
+	GLNyb15Y9kiiA4IzPyWIefJHlqerxxEClnEeZS2nKY0wqN4i3b7q7NyaJ8FcHzvYm4+bycVRqYc
+	Gdfayu3fh6pAgcZzMPVHJY1h7WC+KLJDys4mXPogZwVpdjs8fgCQBmIypc5dKIQNOGexALovAfB
+	Q5NPM4GC+j1CB88PoRLmXyuyv5HicVJXQ1X5kke4M/lL0pVYnRCNAbGrKna+v18lMnlbOJPw8S2
+	5iVRWgJrDwV19pb98HCezsyFSTCd9l+QHgumki7iPqkjRb6/IrtrsxAlXIq58ijy95daHzXcy4D
+	i7ePsivfl7BsNiQn2bjahbHlpArXLRkBdnmElyhdtW2Gk5xxW1y7o3LyAWUjCzXXUi1B1bkZB5r
+	2Govx0cSiIcEn7Ug5JgR2OnhVqyU0P6yt3Dg3bKrCb2v0HSRTRAWf46IsYg3q8JCTt8BqoKJ9dS
+	juYs1MacYZLerSVKVMablh1J1v8uxhOhJtzTzP8HRmPfkxUnBqxg3PwauD5/+tColJzHCbnYB7F
+	RLwnWobYZNBagnNO5IruE65JnVrSpSSg2iKbSHloHStYD8sZqcak1AUvWrtosbiTdEh3JafEl4a
+	onJNd21gT24T1OeCbdVSm0sCCkuejX4vMwkiVeVK+jX/xFw3NLEQCJI2u1xHlHmmTVG8aXQLnAj
+	I8LcFavTGYapD3c25rM0K2HoVwUv/7ktaJqtPiC70+XSH1rv0WjxGcgzJWGqHmHDHxDD4CGdpL3
+	nW3FMvtY42Uc8qCz5cyh00=
+X-Received: by 2002:a05:690c:6d83:b0:8b1:6c4d:6b83 with SMTP id 00721157ae682-8b518f1cf54mr110028987b3.24.1795857991028;
+        Sat, 28 Nov 2026 01:26:31 -0800 (PST)
+Received: from [172.20.0.3] (c-73-207-185-9.hsd1.ga.comcast.net. [73.207.185.9])
+        by smtp.gmail.com with ESMTPSA id 00721157ae682-8b5201bb6c7sm104732457b3.6.2026.11.28.01.26.29
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 27 Nov 2026 19:16:19 -0800 (PST)
-From: Jens Axboe <axboe@kernel.dk>
-To: linux-block@vger.kernel.org, Christoph Hellwig <hch@lst.de>, 
- linux-scsi@vger.kernel.org, "Martin K. Petersen" <mkp@kernel.org>, 
- Damien Le Moal <dlemoal@kernel.org>
-In-Reply-To: <20261120210651.580511-1-dlemoal@kernel.org>
-References: <20261120210651.580511-1-dlemoal@kernel.org>
-Subject: Re: [PATCH v13 00/13] Add support for storage element depopulation
-Message-Id: <179583577931.94675.15322542567681929533.b4-ty@b4>
-Date: Fri, 27 Nov 2026 20:16:19 -0700
+        Sat, 28 Nov 2026 01:26:29 -0800 (PST)
+Date: Sat, 28 Nov 2026 01:26:29 -0800
+Message-ID: <cover.1795842371.git.chris@chrisdown.name>
+From: Chris Down <chris@chrisdown.name>
+Subject: [PATCH v2 0/5] scsi: sd: Fix WRITE SAME(10) data corruption
+To: "Martin K. Petersen" <mkp@kernel.org>,
+    "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>
+Cc: Christoph Hellwig <hch@lst.de>,
+    linux-scsi@vger.kernel.org,
+    linux-kernel@vger.kernel.org,
+    kernel-team@meta.com
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -98,53 +97,49 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.15.2
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+User-Agent: Mutt/2.4.3 (cc9e3943) (2026-10-09)
+
+With scsi_debug and 512-byte logical blocks, a 1 MiB discard at 2 TiB
+succeeds, but it's the first MiB of the disk that gets discarded. This
+happens because the starting LBA wraps to zero, because it doesn't fit
+in WRITE SAME(10).
+
+Write zeroes can also run out of bits for the block count. With a
+0x20000-block WRITE SAME limit, a 64 MiB hole punch sends a count of
+zero and leaves the whole range as it was.
+
+Let's only use the WRITE SAME(10) modes when a 32-bit LBA can address
+the whole disk, and keep the queue limits and the modes in step so that
+requests fit in the count.
+
+v2:
+
+- Don't select or accept the WRITE SAME(10) modes when a 32-bit LBA
+  can't address the whole disk, instead of checking each request
+  (Christoph)
+- Clear max_hw_wzeroes_unmap_sectors when the zeroing mode doesn't
+  unmap, since the zeroing mode can now change on a resize
+- Change the modes with the queue frozen, so that queued requests are
+  not sent in a mode they were not sized for
+- Disable discard when the granularity is above the discard limit,
+  since the block layer doesn't split discards in that case
+
+v1: https://lore.kernel.org/r/cover.1794069087.git.chris@chrisdown.name
+
+Chris Down (5):
+  scsi: sd: Fix stale max_hw_wzeroes_unmap_sectors after a mode change
+  scsi: sd: Fix data corruption in WRITE SAME(10) write zeroes
+  scsi: sd: Fix data corruption in WRITE SAME(10) discards
+  scsi: sd: Fix WRITE SAME(10) count truncation when the mode changes
+  scsi: sd: Fix unsplit discards when the granularity exceeds the limit
+
+ drivers/scsi/sd.c | 75 +++++++++++++++++++++++++++++++++++++++++------
+ 1 file changed, 66 insertions(+), 9 deletions(-)
 
 
-On Sat, 21 Nov 2026 06:06:38 +0900, Damien Le Moal wrote:
-> Jens,
-> 
-> These patches define a new set of block device operations for generically
-> using from the block layer the storage element depopulation feature of
-> zoned block devices. Support for this feature is added to the SCSI disk
-> driver and an emulation of this feature added to the zloop driver.
-> 
-> [...]
-
-Applied, thanks!
-
-[01/13] block: introduce disk_zone_is_offline()
-        commit: 0f485d3ca937c4ee689cbe8ed91820baf3e2a87c
-[02/13] block: refactor blk_revalidate_disk_zones()
-        commit: 66c66cedc2cea679210879a30c4b79c760fc3884
-[03/13] block: allow dropping all zone write plugs on revalidation
-        commit: 0de926d244f23fa9fc88dc93874fc9366be291cd
-[04/13] block: introduce storage element management
-        commit: 5848abdc4e80e4690ded2dbfc0d1ec4b24513c87
-[05/13] block: add storage element management ioctls
-        commit: a2333b0f548a23bdc63b440311344da3caf4064e
-[06/13] zloop: fix ordered zone append handling
-        commit: 506dba8f5cd91b9cb8a113f0ef18cc8f27616ac2
-[07/13] zloop: fix zone reporting consistency
-        commit: c61ee1e7f15161a1a4a870c2d417685bed77db14
-[08/13] zloop: add storage element emulation
-        commit: fbff47f53afd4c9b2697f3e92f5c73cbd7538872
-[09/13] zloop: add degrade_element control command
-        commit: e0ec1629c269bad515d88398f4b2a474d4416402
-[10/13] scsi: scsi_proto: refine the definition of storage element health
-        commit: 9bb8df1a44f6c52d4360bd93f9e3076d422058cf
-[11/13] scsi: sd_zbc: always revalidate zones for disks supporting head depopulation
-        commit: 926c932a9e1483b4d5a1a058c147e4d18ff14be0
-[12/13] scsi: sd_zbc: define storage element management operations
-        commit: 4745c9c7b359dd27e5a256da81b69a4a42bd673f
-[13/13] scsi: sd: fail read commands to offline zones early
-        commit: efe346b1854e230970e2aebf734d916bdd28ea57
-
-Best regards,
+base-commit: efd68f17acca65f581b9f2fa9ba50c8643ab544d
 -- 
-Jens Axboe
-
-
+2.56.1
 
