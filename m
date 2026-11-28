@@ -1,97 +1,98 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.224.53
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.181
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795858002;
-	b=WLyQAP3lKCButIXLO/lO7K9vavrInZuEfRJnp8NzXgIpgi/+v1PTeX8D2qbxWOwq8Eqg
-	 WZES2v9OQoiL4UkivbTBRGHHMFGWxsBprWqfMXfqEErikm4CNlujJ7fOxnjgxXwiy+fIw
-	 YnrA7u5IV6LIGNCuFdVOpoJfZ0ge55VGpW2knP/cjBq+V8qQvRBBuF7lVJFJVjSKIlQpF
-	 FdhYrS69sGceOq4CNT5hYoRnNlcsr2ZCeZgPS8vpejU8nlN1PF4jCQbDE7wAY4FQROtPI
-	 HPNupAvCn1NaOcGXBT5cRM6tmZL0yZ+tA7hjfO1awuLvmMf5ym4nKbl7+3HlVbusiBQ==
+	t=1795858005;
+	b=IMm1ORJxvdr3K0Pu24dYUKfAjz3Qy2Vital0j/ttfWFFeBsYcLBU1EcXYIcT+0qZaFfr
+	 ps/LbKsLqHdFbpWp4Gn4RPtjJHjGb8Gdh8gXIwcV+jfrSv4YuraI0vJdUkj7mOqP60IJn
+	 74JRW2gM9memKP6ne86g0neb8ZuqOPYZLxnZezLnlJcAo7/WoVMlIazg/DCX99V/k8VoD
+	 PTt6jCu86oXxfwGxvFfWNb5b2fkaJz8G2DWJuko09lWr5dU+zTyDtZi/xjeygE9QT982K
+	 anBxIPGYZqzJ9O3WPHieydy5/pMcDnOL7MzbbA5o2Jg+FcAkLK74maIz9G1TW0khxlw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795858002;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795858005;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Date:Message-ID:In-Reply-To:References:From:Subject:To:Cc:
+	 Date:From:To:Cc:Subject:In-Reply-To:References:Message-ID:
 	 MIME-Version:Content-Type:Content-Disposition:User-Agent;
-	bh=1Sri8kxz2uoEL3sSeB5rKcJwSB9FUVM+rwbkcMwDLFM=;
-	b=048RzEU862DGABKnkA3XEsEcZJzW0+DdqE2wDB0/ma+sYn8bFMMLMVjWwthAITPcbUMr
-	 ydZdNGxB/a00HP7HtQE6LZHzS4U5J96meH13Ym2AHf0lWBf/DLQqRz1jUZ4y+bjZEf8en
-	 BaOG4N4iyNBRs7bnxZJ1936LX7G+SzEhefsqinwDTQnmKhovjl8pWw2LDVi0uRijEjojZ
-	 ZoeVx4bYnuDl6MFlKyMPIp/oIi+o/lTVKdLbmT4S+1Nzp/3ji2jTy0iWopwwj+fH3McNj
-	 DJAt2Ez2Y/J2Km5n8YoAFRdSt65iqrLVREWWxPdiAHCECVPCQSRUKg8/wbZA8dm18aw==
+	bh=XePVpPEMY1kO0/i3l/MzHVEvZGt+qA4HbNIOln1umLw=;
+	b=0BjkATAilkeXWruayuo2LNlWFxo1tt5yK2GrorpFO2asFDMnov6bBwwnzCi1dC8gI0Pv
+	 vhV6pgpiR2Lr7bIST7J4qdwXgZIeYS+od7JXzPvQVASJdHlg86MCQQXYsmAp8KoHje5VC
+	 tppYc+idXoRBtBMCAhdZeVtJsqbOw5WnOrea3/FVPfiTbJZEakztVfNjtqXkKnApB3inu
+	 pLMyFFXsOeWgHwi2lknozuk55wnF6X7T9g6I2JWSdI7F/clwICDCEaDsU3/sLn//vkS0B
+	 PKPl5guFL1YjQ5MEfg8urCT+IXjwxIttwXRFj2SRRsJLJ3AS0925PDpxpubDoj8y7iQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=chrisdown.name;
 	spf=pass smtp.mailfrom=chrisdown.name;
-	dkim=pass header.d=chrisdown.name header.i=@chrisdown.name header.a=rsa-sha256 header.s=google header.b=sxiVnH6D;
-	arc=none smtp.remote-ip=74.125.224.53
-Received: from mail-yx1-f53.google.com (mail-yx1-f53.google.com [74.125.224.53])
+	dkim=pass header.d=chrisdown.name header.i=@chrisdown.name header.a=rsa-sha256 header.s=google header.b=fnWZn8Jl;
+	arc=none smtp.remote-ip=209.85.128.181
+Received: from mail-yw1-f181.google.com (mail-yw1-f181.google.com [209.85.128.181])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51E1A606A33B
-	for <linux-scsi@vger.kernel.org>; Sat, 28 Nov 2026 09:26:42 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 51E1A606A33B
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7313606A33D
+	for <linux-scsi@vger.kernel.org>; Sat, 28 Nov 2026 09:26:44 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E7313606A33D
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=chrisdown.name
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chrisdown.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=chrisdown.name header.i=@chrisdown.name header.a=rsa-sha256 header.s=google header.b=sxiVnH6D
-Received: by mail-yx1-f53.google.com with SMTP id 956f58d0204a3-67dae7d3f7dso10290508d50.2
-        for <linux-scsi@vger.kernel.org>; Sat, 28 Nov 2026 01:26:42 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=chrisdown.name header.i=@chrisdown.name header.a=rsa-sha256 header.s=google header.b=fnWZn8Jl
+Received: by mail-yw1-f181.google.com with SMTP id 00721157ae682-8b595601695so12215777b3.3
+        for <linux-scsi@vger.kernel.org>; Sat, 28 Nov 2026 01:26:44 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chrisdown.name; s=google; t=1795858001; x=1796462801; darn=vger.kernel.org;
-        h=user-agent:content-disposition:content-type:mime-version:cc:to
-         :subject:from:references:in-reply-to:message-id:date:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=1Sri8kxz2uoEL3sSeB5rKcJwSB9FUVM+rwbkcMwDLFM=;
-        b=sxiVnH6DsPbF5W5f2ILVwXiPDYERvznuiRwvYAyFn1uNZHtNnzdvFjsl++AgMQHATF
-         9ZSR5LWgUMW4B0nr04nNxrGIOzFQ0yYjqImgwJi2izBZWFI+8zBvFQ3oK7V/kaVaB7xk
-         S7wXnFm6MvkgnUQEl4RJNstW8l5aIFjNiqwK8=
+        d=chrisdown.name; s=google; t=1795858004; x=1796462804; darn=vger.kernel.org;
+        h=user-agent:content-disposition:content-type:mime-version:message-id
+         :references:in-reply-to:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=XePVpPEMY1kO0/i3l/MzHVEvZGt+qA4HbNIOln1umLw=;
+        b=fnWZn8Jl4hDG3v5ER3vWgpdY7JkM78obS5xy8U2vgnCamKlefXD7OY0//4PbSnI/QN
+         GPZ5wKFFFWoq0YwitfeRxHRRAlj0DFGhhC4cmXQ3lGhQ1HnDdgKINGfigTifYQluaCxI
+         B6H9BzV9FoxfNr9MpzqkqP5qEQgH7hDQ6vkqk=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795858001; x=1796462801;
-        h=user-agent:content-disposition:content-type:mime-version:cc:to
-         :subject:from:references:in-reply-to:message-id:date:x-gm-gg
+        d=1e100.net; s=20260707; t=1795858004; x=1796462804;
+        h=user-agent:content-disposition:content-type:mime-version:message-id
+         :references:in-reply-to:subject:cc:to:from:date:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=1Sri8kxz2uoEL3sSeB5rKcJwSB9FUVM+rwbkcMwDLFM=;
-        b=NsL8oWdJj+i8ustqMee/kn+nnpEM2lnhXSW5xlryTQkDtLCwbeT8el05NJjZBHsjiB
-         StDgU48/cEQw49IJ44p3lAvlc+odknL1lZtEUls96VzkM1FD0DjYnFzllCYqNM1n2QSa
-         4MYqG9KY5iqoxx+zCf/xplUsCynzKbfh82YtOEzXors3Lqyf8fY+2RtPO22axKVFM0qR
-         PPg2MIL5wBoFsmbJz35YwNkIT9gKNYrUiGUwCI8aQlZRBChMRR/EgbwtexPzMLusk+cc
-         uU6YFQuR0AC4SXlk2mSne5Vs3iQ5Zq0bp6a3BFf2D1utdXLYcm/7NFYbzX2DDcBl0AUc
-         /8VA==
-X-Forwarded-Encrypted: i=1; AL+hErEO/HRSZvBGR5bZFwdss0OJLGIjicHw+WwVgqTX5U12fkXNYO+4rTa/Gd5t+w00yAq6frtCvnLgl5Yx@vger.kernel.org
-X-Gm-Message-State: APuU4Z9i8ltc45CpP2Sn+qZpKuROwJe1yDOnJxLbVGIER0BLFKN+1oG2
-	cc5+W1cxgP65yaljwU2DjzVHNQWjJzBXXXfy0wLbMmlDNhJVv8ste0J4JDByuHK92OE=
-X-Gm-Gg: AZFdTZfWFiQlVOkodxB/MwZ1LKT0Re4b0l35r2K68G6/cYCw0OwnAMPmwpB7P68svCo
-	P3+i82gkqZFpLTqFRfGW29PkYFNNXQ5txak367z24UI5RSnEZRPM55HJreec8qHkp3zBEzL2gG7
-	PtMhX/G3GOPY6CGO6iyGR5CstKz1ew3toHgPHTjSGWuQuPS7jPKE4YfThuUoOPg2GVjMk80/fue
-	rxOPQY93Tj+BUPXCBjgo5sbsJaZUUZWqy21PE0pzcFJlSvN5jTrSWaICk6y1fFxzHWNX7BqNiE3
-	tcU6NbgLYmPdUQlmhcencXlSsbMz195Jgz1yw5j+eOgsULKo6fJSdrgrC4w1sFFNsr8jwf94/1b
-	BIL3plcFyE9scawgKx6kpTCJREvf6NdhY+7++rHGh0laCRqFPQFgEjpB7d503sWiaZnEU9XN/g3
-	lZ/Dn3qEP+oF7gthv8n0NnQnKD/FkhChqpzhcRlgV8oX2qq4PuzAA5eb/ex7sR+iKGIDQtTR2L6
-	8F1PsgkWpJP9IHaCX15mem3Pn34OaiFh5MCNaGvb8qOYnpKR789pOGEDJaE5jUV09zrfjHMrh5+
-	rbIo2uaY9noi4Y/IhY/NbQpScki1rmVyEjVFs1fMRZLcbLGqHn5yVKSQj3u3d4VXgOtQgJtT2i7
-	TnXK7oW/nmW6W+oht7lfughmJpNCCYDptpy5AwKeNTed1f0Lva+tjXPVo5X+ezJyZHXPso5FQHL
-	oAzk0zSFnZpSxLd4HHYghHnZYCY5ptpLmP5IXhZFSpqJg/oHif66PThf0XhFvBhSYZXllQ/TkVw
-	8hdE+uHCJLDqkCyEwlQAV24
-X-Received: by 2002:a05:690e:1446:b0:67e:653b:319d with SMTP id 956f58d0204a3-67e653b3b4dmr3232301d50.133.1795858001577;
-        Sat, 28 Nov 2026 01:26:41 -0800 (PST)
+        bh=XePVpPEMY1kO0/i3l/MzHVEvZGt+qA4HbNIOln1umLw=;
+        b=CP4tqNvFjGsR5OQM2kEmHMxyK5TTxKjJvOKg8CoA5+mEV/kzmFvgP+Hm8Sg0bVHQp3
+         9AvW+JjMBbb6RCh8m48gItGIbYRnS0LQnvks6Ko2HJGTqxpXcLVZi2OUZ2zYJZQHBmcq
+         RowOkuuxLWEtI30JRuHLL8QG9AY2sq2AvKLWsSZ8SQtRAHdR7GY2MaLbxI9PZj6HOV7w
+         VrDxBRnh+3dVKxSg/73Wrxmzo2GSi3NfzhVqj2hq04JDQFaVPK5NttW6XHMEOTm3z0HV
+         acW3urarYa6Y5j90FzmXZMGnef/5MzJ374i3Z+uH1QJ/8JQgdtr4OXIc8pKDu7pkNy7K
+         gG+g==
+X-Forwarded-Encrypted: i=1; AL+hErGSR81IW8uH2tqMIv1+bioAaGSFoFT7D2SLXAyJETgQJ4tjuIB9pQ9u09V4rD+vj0s95hjOTr3xu/XF@vger.kernel.org
+X-Gm-Message-State: APuU4Z8TH0sFzNk0K7ZvB1BlURkUHwwb3tgtAoDVK0I+UNtpcx3ADhqp
+	efz5A4gEYhu+a4dJCutp9+pUihrS0sBYw0AgHKyWugaTyeloPSgR2wsPzawXxXp4mt8=
+X-Gm-Gg: AZFdTZdNl0ZoERcuCZHjBbU7Hf6LpmvFvnu0sOMHjSaVBxlG+o0nLKO+30Q35RjS2kw
+	LibodbFqrQa9N4L8Wylx4JtO+om+bDOHDZpnNZxKbAgKPuq25+JJ8+8tv+6bSNffy/hF7CkhnMW
+	n27tfV8tLYAHVfedTxmP862S0SexIxr9uXh/a/2lk8wH3d8tz+7k4KEWM3xDMzzHidp7lBtrm+j
+	/iytYsMACcHA4l/YKfboOyh4RSXo1jbz8FWlBBcD3YgTBBl2SvAoTFaaPZBIsKGlCizobMy3bc0
+	HSnrihgGTY7Il1npfXq4bCKLh0y/f/15z3fGhCYGxXLtnLMp4sY2CfOyt/2hmg/anK4tvTLLZ4T
+	BWHIYQBgUiumcYwFvBKz1EMYlc5BHPS7h9es0iDU8a6dIk9MhTQ/f0RxSpIYoCF37uUYrq87Cmr
+	sVch71yqdPuJp09hDuwK44JDxXJka7vghNiZUC9OXLxnNNwbP4KbQigOHbqaU7VizMNLvq/8VzB
+	a/v68UAdbnBsAlKhwDljHocq9dATkKoXd2OrREpfTEGHn0rr4TY6qrtVpdhNU468X6hyBSPLsJk
+	i8wxausgI1OE7K9rIN7BV/15xWhz2pOjXWk7OvOewFthGBp1r9v6dFuttmFJ+a1Nec1I5nZZyNC
+	EK0JVB6Jnd6PZsYIZNg3IWk9Uu+QNmreTxzgdFJ75o7+u5G/NIIgPow3D6bom5hTx10UfmrC+cC
+	FBvVjPkS3G6gCWfZ0JNhMvMjJG6nvHtNJTEZZYLgnW/mvaCu9lp7tYeEFnyv4HAH8KqmnDvWSrD
+	68x/keLNguWsNv6fI1TZ3I=
+X-Received: by 2002:a05:690c:6b82:b0:8b4:c1ef:ebba with SMTP id 00721157ae682-8b5204ebe21mr92952047b3.54.1795858004057;
+        Sat, 28 Nov 2026 01:26:44 -0800 (PST)
 Received: from [172.20.0.3] (c-73-207-185-9.hsd1.ga.comcast.net. [73.207.185.9])
-        by smtp.gmail.com with ESMTPSA id 956f58d0204a3-67df33105fesm12336245d50.7.2026.11.28.01.26.39
+        by smtp.gmail.com with ESMTPSA id 00721157ae682-8b56fc6131fsm42801917b3.34.2026.11.28.01.26.41
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 28 Nov 2026 01:26:40 -0800 (PST)
-Date: Sat, 28 Nov 2026 01:26:39 -0800
-Message-ID: <6e833f169d0c31a3a7da7581c68d4aee5d348ca1.1795842371.git.chris@chrisdown.name>
-In-Reply-To: <cover.1795842371.git.chris@chrisdown.name>
-References: <cover.1795842371.git.chris@chrisdown.name>
+        Sat, 28 Nov 2026 01:26:42 -0800 (PST)
+Date: Sat, 28 Nov 2026 01:26:41 -0800
 From: Chris Down <chris@chrisdown.name>
-Subject: [PATCH v2 5/5] scsi: sd: Fix unsplit discards when the granularity
- exceeds the limit
-To: "Martin K. Petersen" <mkp@kernel.org>,
-    "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>
-Cc: Christoph Hellwig <hch@lst.de>,
-    linux-scsi@vger.kernel.org,
-    linux-kernel@vger.kernel.org,
-    kernel-team@meta.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Martin K. Petersen" <mkp@kernel.org>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	kernel-team@meta.com
+Subject: Re: [PATCH 1/2] scsi: sd: Fix data corruption in WRITE SAME(10) write
+	zeroes
+In-Reply-To: <20261111164632.GB18355@lst.de>
+References: <cover.1794069087.git.chris@chrisdown.name>
+	<5cb23933fe87df3c342d9805a7fe8c2a1e08ff37.1794069087.git.chris@chrisdown.name>
+	<20261111164632.GB18355@lst.de>
+Message-ID: <awqeUXDLbKDiovWx@chrisdown.name>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -105,51 +106,22 @@ Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 User-Agent: Mutt/2.4.3 (cc9e3943) (2026-10-09)
 
-The block layer doesn't split a discard when the discard granularity is
-larger than max_discard_sectors. A disk in writesame_10 mode with an
-unmap granularity of 0x10000 blocks then gets a 0x20000-block discard
-as one request, and sends that as WRITE SAME(10) with a count of zero.
-The other modes have room for the count, but the discard is still
-larger than the limit we set.
+Hi Christoph,
 
-mmc and drbd already make sure they don't report a granularity above
-the discard limit. Let's do the same here and disable discard in that
-case, as drbd_reconsider_queue_parameters() does.
+Christoph Hellwig writes:
+>Shoudn't we simply refuse to use writesame_10_unmap for devices
+>where 10-byte commands can't fit the entire capacity instead?
 
-A zero limit isn't enough on its own, because a discard that was
-submitted before the limit changed still reaches us, and isn't split
-either. So set provisioning_mode to disabled as well, which makes
-sd_init_command() fail it.
+Yeah, that's simpler. I'll do that in v2, both when sd picks the mode
+and when it's written to zeroing_mode in sysfs.
 
-Fixes: c98a0eb0e90d ("[SCSI] sd: Logical Block Provisioning update")
-Cc: <stable@vger.kernel.org>
-Signed-off-by: Chris Down <chris@chrisdown.name>
----
- drivers/scsi/sd.c | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+That only takes care of the LBA, though. sd_config_write_same() keeps a
+write zeroes limit above 0xffff blocks if the device reports one, so
+the count can still be truncated in writesame_10_unmap mode, even on a
+small disk. I think we should still cap the limit in that mode, as
+sd_config_discard() already does for the discard limit in writesame_10
+mode. Does that sound ok?
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 792058f52f65..ef9c2d55c933 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -206,6 +206,17 @@ static void sd_config_discard(struct scsi_disk *sdkp, struct queue_limits *lim,
- 
- 	lim->max_hw_discard_sectors = max_blocks *
- 		(logical_block_size >> SECTOR_SHIFT);
-+
-+	/*
-+	 * The block layer doesn't split a discard if the limit is below the
-+	 * granularity, so we'd get discards of any size.
-+	 */
-+	if (lim->max_hw_discard_sectors &&
-+	    lim->max_hw_discard_sectors <
-+	    lim->discard_granularity >> SECTOR_SHIFT) {
-+		sdkp->provisioning_mode = SD_LBP_DISABLE;
-+		lim->max_hw_discard_sectors = 0;
-+	}
- }
- 
- static void sd_set_flush_flag(struct scsi_disk *sdkp,
--- 
-2.56.1
+Thanks!
 
+Chris
