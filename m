@@ -1,135 +1,58 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.221.48
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795821307;
-	b=pIyGwSlGnVKKafUtGOS3R9qC28xR/ilJ1yI7u5w0JuQu8+70LZiWvpeaCrWugaXBJT64
-	 7G7sy+JwMcvBRmH12nvqPc/b5rHaprFd5YX0Aqed+dSQLc0DuhL8gj4jSjntN0FQOlFKl
-	 +YzzU0OapuwzW22oiIaEdMIuHRfvSWMX77VxyI0aJhYmInCtCIVl8A//lEYEC0jrG3u3r
-	 7VRtD91K3aWDxrJolQoaoCJ3r1nCtY4ytRHu9h9MEfzPoclk6U41ptQuGYqoy9AHtHZvA
-	 xoCEcuzQgqatjpuXn1DLcdT1bkXDELwuX1lYGICMjx3z/zKhf2JKJLVMVGJX8N1bBJw==
+	t=1795826661;
+	b=jBbQOANyQagXF7Kx8bx0hH2s9WBZ2cWvXyUiFNu8OU2B02j1GGaNz972tPSmgUvzsGFZ
+	 2PGBD+Q1QFm/hRQ/oeLVF3dP52FNeA4yzXMDOAa+4F6UrPswRpKRWlxXfrFPa0qYN3QC5
+	 NXaf2pCRBF+5jkvLB+16+SEKREJIUZXqSB1HWUj4iir0K1qGKNbCkyfBX3ucp2n1oLEWH
+	 vn8I/eU1It7boHgZivOfHanC5lwQd5GSoRzqLJ5vPS2N3fKfIPbUqM9C81O9w10lG7YKN
+	 tgmSV1jfbRZwAb+3ieKRZXCndt2ylSiyyaINOvz9JGN3/0UV3VclMgey1am3FhFT4cw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795821307;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
-	 MIME-Version:Content-Transfer-Encoding;
-	bh=U1M+MDeqlkODjZ50qKjXMO75f40J30DxxF3l7NYSGEM=;
-	b=kajqvH5PaStybRiHMhEeM8hkf6u2+WBvKb40vYhFXEqYjv3MHlBIJnY7ndHMG56HlBNz
-	 LUQoxj/M5lyTE//b6ms1vFwK2Q0QORxg7aSSNLEtAPFUkUFO0+pWUkW5yIGKhJ4EvR5vn
-	 QVUGYbYPvlTeIAx9bgeF5WAT7eKeiYJ5gDwevpZrFDBZecsYo+3hobQ2PvmOVivhQDP67
-	 AUIYerFMnLbXp20eW4L93BMcopyXqNGMtV/H9BjXHjOuqtfYkGIGsXNK0dq1XlTn9tFUO
-	 4w1VDyfmzsg7dR+1Bh318ZSNcOzVmgEySEfHP0pqlDXS4iLKA8xEcnGOioWgj3gqlag==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795826661;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=617ht0+271aJEWj5NKC+RogwfXVw7QuuuxCq4hvGCmU=;
+	b=u7XF6p/DWkNiaDnEuNomU8SFbceexXY/X3ycXQJMuEOL7NohzqAKKADJLr51/RH7fKQc
+	 JFSU2EJNAZLgQR+/lfgeS+5bC/rI4v+TNQu+bh4rz1qsZ/7NYvR1pI9jnRRk8JrKo/DTm
+	 tMLXfHG5nQ5U2PjfKsrXd3dohE0HXDvGWbvdci48MNkzdoO8zEu1kOdeCXnZIFKdr2XHm
+	 yMZJrY3VkJiE20wSUNo/dnA+dApJwv7n454CTcxht2uFxfxKXxQ40A5CNa1Sul5gA9QYW
+	 kEZyxXkMkHQqnUq9DxuKPIFydzE1w/EGnibLzaXlmcsvnF5i3XWl3z0MTrfr+qp/CkA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=WDrBk4z3;
-	arc=none smtp.remote-ip=209.85.221.48
-Received: from mail-wr1-f48.google.com (mail-wr1-f48.google.com [209.85.221.48])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=CD5Od50N;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 501B0606A336
-	for <linux-scsi@vger.kernel.org>; Fri, 27 Nov 2026 23:15:07 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 501B0606A336
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 528A8606A31F;
+	Sat, 28 Nov 2026 00:44:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=WDrBk4z3
-Received: by mail-wr1-f48.google.com with SMTP id ffacd0b85a97d-48e46e449e8so5654795f8f.3
-        for <linux-scsi@vger.kernel.org>; Fri, 27 Nov 2026 15:15:07 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1795821306; x=1796426106; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=U1M+MDeqlkODjZ50qKjXMO75f40J30DxxF3l7NYSGEM=;
-        b=WDrBk4z39jTSJg7fP1LZv5pSAmcolbmVo4wwWMjjlFQboYBu3wN5rJ9GYnYJV50K3+
-         tkw+jwH1lJXR7gVV/OBT9/yk7tTAiZrdu2ajb+eYT+UVhWfUsEfp6iR0FSExSHMDzvsZ
-         3fpjMgMby8qPK4rdWEnPxtHr3jKM0uthso6MfAww0lrr5k/+C3OtKtXfdvcLi7gHPltW
-         qCeMSaWpCWUuLbQVELMCkcXgultuZ6nRhj58FRGzZaFMWHaLx3Tjc30C/hZ5vAlCSiMn
-         7dF5c687gdpqCnnInSFJs2GpiUdsUfdCYGv9dUppGS+08fFr1MS5RebwLf1K2w2KKf8y
-         FyPg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795821306; x=1796426106;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=U1M+MDeqlkODjZ50qKjXMO75f40J30DxxF3l7NYSGEM=;
-        b=lHdRXkjyDDvOI85X+QHksvdx5PkxXbCTkxwapkA9eTx/eObivUA45+VlKnFr/n6ppJ
-         3dYT9/rHopf2WYo4zSXaMVY/qoMhvcYG1kNMeI6CZdNDWSXxUAIIxyzGVxKuPTL50Jqs
-         b5yX86N02IQe/VJmr4Q0gE1rVITu8lt/lh9yfbmbutsz3tzqc1GAjL/vw2KlCDJofK9x
-         HrXsbb7ezUafQBQCze/RHND8CLBX49l07fdS8pE0PN0Fb2ci5kj96QT838CluE2sSqzM
-         eJAHFnzZVRbojdvqSXaf6UqF6tZWzw+sQyPsi/yOtyYN2Osje81TQlVeDwTstd2Nw3HN
-         iZGg==
-X-Forwarded-Encrypted: i=1; AL+hErFkDweqxJlvN5jQoDG4GhbqP0PfWNjBVTDF9a5ibsFY2YDd//CNU8S7d+c/V/+yFxib6n+393eZ8O7h@vger.kernel.org
-X-Gm-Message-State: APuU4Z88lJ1hNmfo5LpXHFPfao56JzlWZzmSO26bqqXqag+WMfgbFOck
-	rKHsTPI7glIazWATUTQ4mVIFVGlMPKABR4vSCfK3GNmI3X9SXEMd1J19
-X-Gm-Gg: AZFdTZeRUU8CzAsx4Elua9ihgRJdCesAECL+o/aNA3uO+66fwa8hKW1xacCGfNnxyCD
-	JOzAWP2kBuNfXp9JNgBkbBT/3c3VUlp4n1wOgCL4da0f2QK1lbgcdmp/bRIoRUrpjKJVG0tHZbn
-	pd3APjfoQqkGjMsGw/3BRr4Z6DCo5ULLqaAWYIjjFkFmdHD/YcxF/OSmeRZP/xHTFEKsNsbRHV2
-	wwm+FLM+2/DmSYPCh+Jt1jeMkYYJPwQktfDs/wgkczPFuVQsGQGTPsMqVtDihPR3zwOpYlln001
-	vU3O5hk06Lr5angBAd+JYRBiBl6gYA2349zsGObroO+u/6QWm/erxDVLH49RaWE4voW+AImTSHJ
-	uxkSWkOm7/j+/VnlkbAihB1ujBpUCrTC3ZEn41RGUMrGIKBOgUrWoPtT2nkCw0LX+CRsGlyoKG/
-	hFhtrn3R9h32u6ZCtb8uGt2mF70YK+lmNR9LLjk0VZk/UADcdRlP3hNbkeZHckZMhNVmWjE1i8n
-	Mhxix/H10dpbu2Jf/F5TZicfuOHnTBcy/LpagcvF5i/3aCdQHSwucEvCuE74HHTP+v8bDS4rPiL
-	GXOP6HUNnUg1uKZmcJs4+uTyNSk=
-X-Received: by 2002:a05:6000:178f:b0:4bb:c85e:d565 with SMTP id ffacd0b85a97d-4bbc86e17b5mr14733028f8f.55.1795821305534;
-        Fri, 27 Nov 2026 15:15:05 -0800 (PST)
-Received: from flare5 ([212.58.121.92])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4ab6a67fe48sm45269880f8f.23.2026.11.27.15.14.57
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 27 Nov 2026 15:15:03 -0800 (PST)
-From: Stanislav Aleksandrov <lightofmysoul@gmail.com>
-To: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>,
-	Bjorn Andersson <andersson@kernel.org>,
-	Konrad Dybcio <konradybcio@kernel.org>,
-	Abel Vesa <abelvesa@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Robert Marko <robimarko@gmail.com>,
-	Guru Das Srinagesh <linux@gurudas.dev>,
-	Thomas Gleixner <tglx@kernel.org>,
-	Radu Rendec <radu@rendec.net>,
-	Will Deacon <will@kernel.org>,
-	Robin Murphy <robin.murphy@arm.com>,
-	"Joerg Roedel (AMD)" <joro@8bytes.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Wesley Cheng <wesley.cheng@oss.qualcomm.com>,
-	Vinod Koul <vkoul@kernel.org>,
-	Neil Armstrong <neil.armstrong@linaro.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=CD5Od50N
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0D8F11F0089B;
+	Sat, 28 Nov 2026 00:44:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1795826660;
+	bh=617ht0+271aJEWj5NKC+RogwfXVw7QuuuxCq4hvGCmU=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=CD5Od50N/heCpUoiJ47KEDjOxuuRF+skA+3a7THX3KSNNY3XsSfeLZloHLOf4ivfs
+	 EPFIuPon2hqTzo8t2QXYmxlo5Vz4MSRwCS6X5rpy1xaNYBOJzM1oVjsLlOW95Nha1r
+	 0fgsDu1t+rXIRA+UsPS8UzE71DpPuw8rumNKZkxzzcJnuDbQDNJFCIEzrZ+x3bJXKn
+	 RPz36bWz7kQPCKhdCBIJIRIm05I++QeJeBX4AMdE9g3XFI377pnh6hN4oAjo/zIn++
+	 S6RyB49tXYVE4Qv6VEryeqBX0KLi51XDgh5T144q1vaIayfNk949AJJ/Wtq5nj4h7H
+	 5JvnNiDHjIaDA==
+Date: Sat, 28 Nov 2026 00:44:17 +0000
+From: Yixun Lan <dlan@kernel.org>
+To: thomas@exein.io
+Cc: linux-kernel@vger.kernel.org, "Martin K. Petersen" <mkp@kernel.org>,
+	Avri Altman <avri.altman@sandisk.com>,
+	Aurelien Jarno <aurelien@aurel32.net>,
+	linux-riscv@lists.infradead.org, spacemit@lists.linux.dev,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
 	Alim Akhtar <alim.akhtar@samsung.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	Bean Huo <beanhuo@micron.com>,
-	Stanley Jhu <stanleyjhu@google.com>,
-	Herbert Xu <herbert@gondor.apana.org.au>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Viresh Kumar <viresh.kumar@linaro.org>,
-	Amit Kucheria <amitk@kernel.org>,
-	Thara Gopinath <thara.gopinath@gmail.com>,
-	Daniel Lezcano <daniel.lezcano@kernel.org>,
-	Zhang Rui <rui.zhang@intel.com>,
-	Lukasz Luba <lukasz.luba@arm.com>,
-	Georgi Djakov <djakov@kernel.org>,
-	Sibi Sankar <sibi.sankar@oss.qualcomm.com>,
-	Ulf Hansson <ulfh@kernel.org>
-Cc: linux-arm-msm@vger.kernel.org,
-	devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	iommu@lists.linux.dev,
-	linux-usb@vger.kernel.org,
-	linux-phy@lists.infradead.org,
-	linux-scsi@vger.kernel.org,
-	linux-crypto@vger.kernel.org,
-	linux-pm@vger.kernel.org
-Subject: Re: [PATCH v3 14/14] arm64: dts: qcom: Add Samsung Galaxy XR
-Date: Fri, 27 Nov 2026 23:14:45 +0000
-Message-ID: <20261127231445.3623202-1-lightofmysoul@gmail.com>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <87280d80-9047-405b-8dcc-11276d34d2dd@oss.qualcomm.com>
-References: <20261125-halliday-dts-v3-0-5c8311c0b70b@gmail.com> <20261125-halliday-dts-v3-14-5c8311c0b70b@gmail.com> <87280d80-9047-405b-8dcc-11276d34d2dd@oss.qualcomm.com>
+	Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH] scsi: ufs: spacemit: k3: change to FASTAUTO before the
+ FAST power mode
+Message-ID: <20261128004417-GKB27669@kernel.org>
+References: <20261124-fastauto-v1-1-32ec8da5af04@exein.io>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -139,30 +62,212 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20261124-fastauto-v1-1-32ec8da5af04@exein.io>
 
-On Fri, Nov 27, 2026 at 02:58:40PM +0100, Konrad Dybcio wrote:
-> Reviewed-by: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+Hi Thomas Roos,
 
-Thanks for the review.
+Thanks for bringing up of this, and sending the patch.
 
-I've implemented support for almost all of the hardware in my
-local branch and I have found that the headset exists in multiple
-revisions.
+On 09:11 Tue 24 Nov     , Thomas Roos via B4 Relay wrote:
+> From: Thomas Roos <thomas@exein.io>
+> 
+> The SpacemiT vendor kernel and U-Boot never change the link straight to
+> FAST: they change to FASTAUTO at the target gear/rate first, wait
+> 100 ms, and only then to FAST. A direct FAST change kills the link at
+> the M-PHY PLL rate change: on the K3 CoM260 IFX (YMTC YMUS8B5TH1A1C1)
+> every mode except HS-G1 rate A fails with DL errors 0x80000002 /
+> 0x80000001 / 0x80002000 and PA_ERR 0x80000010, and the disk is lost.
+> 
+I actually do get report of this issue on YMTC UFS chip, but haven't seen
+ problem with Kingston UFS chip
 
-So, I'd like to make a split:
+> Do the FASTAUTO step in the PRE_CHANGE hook; the core then sends the
+> FAST request. With this the link runs at HS-G3 rate B on two lanes.
+> 
+> Skip the step only when the link already runs in FAST with the
+> requested parameters, judged by PA_PWRMODE and not by hba->pwr_info
+> alone. After a LINERESET, ufshcd_err_handler() restores the power mode
+> with ufshcd_config_pwr_mode(hba, &hba->pwr_info, UFSHCD_PMC_POLICY_FORCE):
+> the requested parameters equal hba->pwr_info, but the link has fallen
+> back to a slow mode, and the forced FAST request would kill it again.
+> 
+> The step also writes ANA_HSGEAR_CTRL_ATTR = 0x25 and waits for the PLL
+> lock, as ufs_spacemit_apply_dev_quirks() does at probe. Every POST_CHANGE
+> clears the attribute, so without this a LINERESET recovery would run the
+> FASTAUTO and FAST changes with a different analog setting than probe.
+> 
+Vendor provide similar patch for this, but I'm rather skeptical on it
+as a proper fix and ask them to clarify with IP/UFS chip vendor..
 
-rename: halliday-samsung-xrvst2.dts -> halliday-samsung-xrvst2.dtsi
-add: halliday-samsung-xrvst2-rev22.dts
-add: halliday-samsung-xrvst2-rev25.dts
+FYI, I'd expect to see basic UFS patch merged first, then we can address
+this issue separately. Besides, I do have several boards on hand, but none
+of them shipped with YMTC UFS, so need someone to help reviewing and
+ testing the patch.
 
-The .dts files will initially contain only compatibles.
-The real differences between the revisions are the DMIC drive
-strength, the display panels and their supply voltage, so the files
-will be 'empty' until I send my sound and display series.
+> Assisted-by: claude-opus-5-5
+> Signed-off-by: Thomas Roos <thomas@exein.io>
+> ---
+> This applies on top of v8 of "scsi: ufs: spacemit: k3: Add UFS Host
+> Controller driver":
+> https://lore.kernel.org/r/20261116-08-k3-ufs-support-v8-2-e3b256972dd4@kernel.org
+> 
+> Yixun, feel free to fold it into the next version of the series.
+> 
+I'd prefer it iterated as a separate patch on top of mine, thanks
 
-Is it OK if I send the split in a v4, or is it better
-to do it in a follow-up?
+> Tested on a K3 CoM260 IFX (YMTC YMUS8B5TH1A1C1) on 7.3.4 with the
+> equivalent v7-based driver: without the change only HS-G1 rate A works;
+Just curious, is "HS-G1 rate A" mode stable without this patch?
+or any specific change needed to change to this mode?
 
-Best regards,
-Stanislav
+> with it the link runs at HS-G3 rate B x2 and the rootfs on UFS is
+> stable. Builds without warnings at W=1 on top of v8.
+> 
+> The restore path was exercised with this patch: a test-only debugfs
+> hook drops the link to PWM-G1 SLOWAUTO behind the core (raw reads fall
+> from ~900 MB/s to 1 MB/s), then a PA generic error is injected through
+> the ufshcd debugfs saved_uic_err. In 6 of 6 runs the restore went
+> through FASTAUTO back to G3B FAST, with reads at 850-980 MB/s again and
+> a matching write/read-back. That setup keeps the PHY on rate B, so it
+> does not reproduce a LINERESET that also resets the PLL rate.
+> 
+> The FASTAUTO step open-codes the attribute writes of the core's
+> ufshcd_dme_change_power_mode(). A core helper that takes an explicit
+> PA_PWRMODE value and leaves hba->pwr_info alone would avoid that; I kept
+> it in the driver for now.
+> ---
+>  drivers/ufs/host/ufs-spacemit.c | 96 +++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 96 insertions(+)
+> 
+> diff --git a/drivers/ufs/host/ufs-spacemit.c b/drivers/ufs/host/ufs-spacemit.c
+> index eb2ad50..04380a0 100644
+> --- a/drivers/ufs/host/ufs-spacemit.c
+> +++ b/drivers/ufs/host/ufs-spacemit.c
+> @@ -343,6 +343,87 @@ static int ufs_spacemit_negotiate_pwr_mode(struct ufs_hba *hba,
+>  	return ret;
+>  }
+>  
+> +/*
+> + * As in the vendor kernel and U-Boot: change to FASTAUTO at the target
+> + * gear/rate first and only then (from the core) to FAST. A direct FAST
+> + * change kills the link after the M-PHY PLL rate change, so only HS-G1A
+> + * would work.
+> + */
+> +static int ufs_spacemit_fastauto_step(struct ufs_hba *hba,
+> +				      struct ufs_pa_layer_attr *p)
+> +{
+> +	int ret;
+> +
+> +	/*
+> +	 * Restore the value and PLL lock wait of ufs_spacemit_apply_dev_quirks()
+> +	 * at probe: every POST_CHANGE resets it, which matters for a LINERESET
+> +	 * recovery.
+> +	 */
+> +	ufshcd_dme_set(hba, UIC_ARG_MIB(ANA_HSGEAR_CTRL_ATTR), 0x25);
+> +	ret = ufs_spacemit_wait_mphy_pll_lock(hba);
+> +	if (ret)
+> +		return ret;
+> +
+> +	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_RXGEAR), p->gear_rx);
+> +	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_ACTIVERXDATALANES), p->lane_rx);
+> +	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_RXTERMINATION), 1);
+> +	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_TXGEAR), p->gear_tx);
+> +	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_ACTIVETXDATALANES), p->lane_tx);
+> +	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_TXTERMINATION), 1);
+> +	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_HSSERIES), p->hs_rate);
+> +	/* as in ufshcd_dme_change_power_mode() */
+> +	if (!(hba->quirks & UFSHCD_QUIRK_SKIP_DEF_UNIPRO_TIMEOUT_SETTING)) {
+> +		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PWRMODEUSERDATA0),
+> +			       DL_FC0ProtectionTimeOutVal_Default);
+> +		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PWRMODEUSERDATA1),
+> +			       DL_TC0ReplayTimeOutVal_Default);
+> +		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PWRMODEUSERDATA2),
+> +			       DL_AFC0ReqTimeOutVal_Default);
+> +		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PWRMODEUSERDATA3),
+> +			       DL_FC1ProtectionTimeOutVal_Default);
+> +		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PWRMODEUSERDATA4),
+> +			       DL_TC1ReplayTimeOutVal_Default);
+> +		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PWRMODEUSERDATA5),
+> +			       DL_AFC1ReqTimeOutVal_Default);
+> +		ufshcd_dme_set(hba, UIC_ARG_MIB(DME_LocalFC0ProtectionTimeOutVal),
+> +			       DL_FC0ProtectionTimeOutVal_Default);
+> +		ufshcd_dme_set(hba, UIC_ARG_MIB(DME_LocalTC0ReplayTimeOutVal),
+> +			       DL_TC0ReplayTimeOutVal_Default);
+> +		ufshcd_dme_set(hba, UIC_ARG_MIB(DME_LocalAFC0ReqTimeOutVal),
+> +			       DL_AFC0ReqTimeOutVal_Default);
+> +	}
+> +
+> +	ret = ufshcd_uic_change_pwr_mode(hba, FASTAUTO_MODE << 4 | FASTAUTO_MODE);
+> +	if (ret)
+> +		return ret;
+> +	msleep(100);
+> +
+> +	return ufs_spacemit_wait_mphy_pll_lock(hba);
+> +}
+> +
+> +/*
+> + * True if the link already runs in FAST with the gear, lanes and rate of
+> + * @p, so no FASTAUTO step is needed. Read PA_PWRMODE rather than trust
+> + * hba->pwr_info alone: after a LINERESET the error handler restores the
+> + * mode with UFSHCD_PMC_POLICY_FORCE and parameters equal to hba->pwr_info
+> + * while the link has fallen back to a slow mode, and the forced FAST
+> + * request from there kills the link.
+> + */
+> +static bool ufs_spacemit_link_in_fast(struct ufs_hba *hba,
+> +				      struct ufs_pa_layer_attr *p)
+> +{
+> +	u32 mode;
+> +
+> +	if (memcmp(p, &hba->pwr_info, sizeof(*p)))
+> +		return false;
+> +
+> +	if (ufshcd_dme_get(hba, UIC_ARG_MIB(PA_PWRMODE), &mode))
+> +		return false;
+> +
+> +	return ((mode >> PWRMODE_RX_OFFSET) & PWRMODE_MASK) == FAST_MODE &&
+> +	       (mode & PWRMODE_MASK) == FAST_MODE;
+> +}
+> +
+>  static int ufs_spacemit_pwr_change_notify(struct ufs_hba *hba,
+>  					  enum ufs_notify_change_status status,
+>  					  struct ufs_pa_layer_attr *dev_req_params)
+> @@ -356,6 +437,21 @@ static int ufs_spacemit_pwr_change_notify(struct ufs_hba *hba,
+>  
+>  	switch (status) {
+>  	case PRE_CHANGE:
+> +		/* the core sends the FAST request after this hook */
+> +		if (dev_req_params->pwr_rx == FAST_MODE &&
+> +		    dev_req_params->pwr_tx == FAST_MODE &&
+> +		    !ufs_spacemit_link_in_fast(hba, dev_req_params)) {
+> +			/*
+> +			 * The core ignores the result. If the FASTAUTO PMC
+> +			 * failed outside a PM operation, the link is marked
+> +			 * broken and the FAST request is not sent; if only the
+> +			 * PLL lock wait timed out, the link already runs at
+> +			 * the target rate.
+> +			 */
+> +			ret = ufs_spacemit_fastauto_step(hba, dev_req_params);
+> +			if (ret)
+> +				dev_warn(hba->dev, "FASTAUTO step failed: %d\n", ret);
+> +		}
+>  		break;
+>  	case POST_CHANGE:
+>  		ret = ufs_spacemit_wait_mphy_pll_lock(hba);
+> 
+> ---
+> base-commit: 6628e7d4c6b25c8d18f1345e3a20d21829aae7e4
+> change-id: 20261123-fastauto-306d20d17590
+> prerequisite-message-id: <20261116-08-k3-ufs-support-v8-0-e3b256972dd4@kernel.org>
+> prerequisite-patch-id: 70385741c42f21fbc79b3ef967e48cb8214e5cd0
+> prerequisite-patch-id: 5198841accdd660ed1597e92dcdef85a6accc8cd
+> 
+> Best regards,
+> --  
+> Thomas Roos <thomas@exein.io>
+> 
+> 
+
+-- 
+Yixun Lan (dlan)
