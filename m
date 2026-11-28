@@ -1,58 +1,49 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795826661;
-	b=jBbQOANyQagXF7Kx8bx0hH2s9WBZ2cWvXyUiFNu8OU2B02j1GGaNz972tPSmgUvzsGFZ
-	 2PGBD+Q1QFm/hRQ/oeLVF3dP52FNeA4yzXMDOAa+4F6UrPswRpKRWlxXfrFPa0qYN3QC5
-	 NXaf2pCRBF+5jkvLB+16+SEKREJIUZXqSB1HWUj4iir0K1qGKNbCkyfBX3ucp2n1oLEWH
-	 vn8I/eU1It7boHgZivOfHanC5lwQd5GSoRzqLJ5vPS2N3fKfIPbUqM9C81O9w10lG7YKN
-	 tgmSV1jfbRZwAb+3ieKRZXCndt2ylSiyyaINOvz9JGN3/0UV3VclMgey1am3FhFT4cw==
+	t=1795827008;
+	b=e3EGgYmoWrs4jiEOvZh4+wo40eqTW1HIYaJw3OZxSA9zhvZy2WIqQQG7nhslZv/0NGbF
+	 mE6uskpe5R4v+OLEE2Q1te+GXCTD0kcIqduv6hoaYD5qqBLYxNY1dJmVq1/+EtZSf5V8H
+	 tC0rB1qCiF+DDyt8C7MsYzh5oK8yZAsPTWP4ch0ldSZ8cMi3n5RQ/sWnIl9L587HiOEd0
+	 Y2s68uNEbgoazrl4ND1Y0kaZ+FyVx+exffElaCdt848DWQOpU9t0CpyACU6kwD6E2iOPx
+	 xfnHcOLMOwLoGDl+7cpuPhNH2advGg8j4QKNFqYHRZyLZdfqs0e9F7kw3upTz62d3wQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795826661;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=617ht0+271aJEWj5NKC+RogwfXVw7QuuuxCq4hvGCmU=;
-	b=u7XF6p/DWkNiaDnEuNomU8SFbceexXY/X3ycXQJMuEOL7NohzqAKKADJLr51/RH7fKQc
-	 JFSU2EJNAZLgQR+/lfgeS+5bC/rI4v+TNQu+bh4rz1qsZ/7NYvR1pI9jnRRk8JrKo/DTm
-	 tMLXfHG5nQ5U2PjfKsrXd3dohE0HXDvGWbvdci48MNkzdoO8zEu1kOdeCXnZIFKdr2XHm
-	 yMZJrY3VkJiE20wSUNo/dnA+dApJwv7n454CTcxht2uFxfxKXxQ40A5CNa1Sul5gA9QYW
-	 kEZyxXkMkHQqnUq9DxuKPIFydzE1w/EGnibLzaXlmcsvnF5i3XWl3z0MTrfr+qp/CkA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795827008;
+	h=Received:DKIM-Signature:From:Subject:Date:Message-Id:MIME-Version:
+	 Content-Type:Content-Transfer-Encoding:X-B4-Tracking:X-Change-ID:To:
+	 Cc:X-Mailer:X-Developer-Signature:X-Developer-Key;
+	bh=vjndxlGs8agolDhu4c30Y/rDIfGEQD4LOMd0Ft+WwAk=;
+	b=Qqrgl0mkVf9ZVZsi89IgWRYR9mrNcSUrhm4akY1MzBSwnHulW3zDpyMbhO8B1SuBzutX
+	 GnGTMo32TJXgv/biDPIfe/7Of9J0HL9A4bqjdu2246h+aNEWzesqwFsoZ1JPc0KS3LJbB
+	 TbB8Sj8wyWS4C7ZLjSdYQplqsuqI+OqhdNQLmYvWc1cgVTbjjYKMywiQeZE1Do/Ids8Gi
+	 nCaVj76hl0LAzLs8O2GiG4zQuIgQoP+dNMu8I9zr+uJCGKUf9JFVtp2xBZ/ucTXeGchRN
+	 RuV0FwbgKvJuB+ufjcgD3Kc4lHEN2pxE94E+sjHtVzyhB20tt3A2st4DOmvinIGPOgg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=CD5Od50N;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GR0DhEG9;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 528A8606A31F;
-	Sat, 28 Nov 2026 00:44:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE9C2606A31C;
+	Sat, 28 Nov 2026 00:50:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=CD5Od50N
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0D8F11F0089B;
-	Sat, 28 Nov 2026 00:44:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GR0DhEG9
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 539001F00897;
+	Sat, 28 Nov 2026 00:50:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795826660;
-	bh=617ht0+271aJEWj5NKC+RogwfXVw7QuuuxCq4hvGCmU=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=CD5Od50N/heCpUoiJ47KEDjOxuuRF+skA+3a7THX3KSNNY3XsSfeLZloHLOf4ivfs
-	 EPFIuPon2hqTzo8t2QXYmxlo5Vz4MSRwCS6X5rpy1xaNYBOJzM1oVjsLlOW95Nha1r
-	 0fgsDu1t+rXIRA+UsPS8UzE71DpPuw8rumNKZkxzzcJnuDbQDNJFCIEzrZ+x3bJXKn
-	 RPz36bWz7kQPCKhdCBIJIRIm05I++QeJeBX4AMdE9g3XFI377pnh6hN4oAjo/zIn++
-	 S6RyB49tXYVE4Qv6VEryeqBX0KLi51XDgh5T144q1vaIayfNk949AJJ/Wtq5nj4h7H
-	 5JvnNiDHjIaDA==
-Date: Sat, 28 Nov 2026 00:44:17 +0000
+	s=k20260515; t=1795827008;
+	bh=vjndxlGs8agolDhu4c30Y/rDIfGEQD4LOMd0Ft+WwAk=;
+	h=From:Subject:Date:To:Cc;
+	b=GR0DhEG9hg0CyA+l0PyxYEcASdvJD6sWhSFTvu1FdtaFLbw75MxSQy7ZGTXrsQ4Ze
+	 29S3kw19g9WZ26pJ7PWvzaBEjjoNRJEOm2M5G1+H+Jutw3uuw4TQ8C6XVMq0agKf4H
+	 WN27F2Rx9eA6sdXdBFIjsQwfnLTrRYrjQ51Dkvt+ucK8MsVtfLij5PUjTkKBczDxpD
+	 vzbFCa4ASPOVd4vKzLPIRMr/NKRGkGyLtwggdQIw0jJVvWwkTFPTjkQlypBCvcRZbA
+	 hkKNre0mvBY31jzaTSC5pgB053y4dogiAx8tUBqtdNqMMN6gGP4E0LW8BmamQbl56P
+	 /1XzStpJy9hsQ==
 From: Yixun Lan <dlan@kernel.org>
-To: thomas@exein.io
-Cc: linux-kernel@vger.kernel.org, "Martin K. Petersen" <mkp@kernel.org>,
-	Avri Altman <avri.altman@sandisk.com>,
-	Aurelien Jarno <aurelien@aurel32.net>,
-	linux-riscv@lists.infradead.org, spacemit@lists.linux.dev,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	Alim Akhtar <alim.akhtar@samsung.com>,
-	Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH] scsi: ufs: spacemit: k3: change to FASTAUTO before the
- FAST power mode
-Message-ID: <20261128004417-GKB27669@kernel.org>
-References: <20261124-fastauto-v1-1-32ec8da5af04@exein.io>
+Subject: [PATCH v9 0/2] Add UFS Host driver support for SpacemiT K3 SoC
+Date: Sat, 28 Nov 2026 00:49:50 +0000
+Message-Id: <20261128-08-k3-ufs-support-v9-0-d27deb096d1e@kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Post: <mailto:linux-scsi@vger.kernel.org>
@@ -62,212 +53,159 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:linux-scsi+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20261124-fastauto-v1-1-32ec8da5af04@exein.io>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAAAAAAAC/23RzW7DIAwH8FepOI/JmO+e9h7TDhCgzTolFbTRp
+ irvPtJKa6ZwtOT/z8bcSIm5j4XsdzeS49SXfhxqYV92pDu64RBpH2pNEFCBAknB0BOn11RouZ7
+ PY77QzngOJgomI5KaO+eY+u+7+f7xqMvVf8buskBLx7EvlzH/3IdObOl7+Bqw4U+MAmVOCcedZ
+ 2jS2ynmIX69jvlAlgETrghsrThVlwoJXDl0KJjZEPxJGFAtglcCuE6eI7ou+A0hnoSt+QYhKlH
+ DDn2wOvAtIVcEa24hl1skGTRLDFCHDaFWBLIWUV3KhbZaGYdo7YbQfwSD9o/oSnjPLYBOybq4I
+ cyTYO2H1APRyD1KZTWGIP4R8zz/Ah+SvN+aAgAA
+X-Change-ID: 20260605-08-k3-ufs-support-c8b308e415e2
+To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+ "Martin K. Petersen" <mkp@kernel.org>, 
+ Alim Akhtar <alim.akhtar@samsung.com>, 
+ Avri Altman <avri.altman@sandisk.com>, Bart Van Assche <bvanassche@acm.org>, 
+ Bean Huo <beanhuo@micron.com>, Stanley Jhu <stanleyjhu@google.com>, 
+ Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+ Conor Dooley <conor+dt@kernel.org>, Philipp Zabel <p.zabel@pengutronix.de>, 
+ Paul Walmsley <pjw@kernel.org>, Palmer Dabbelt <palmer@dabbelt.com>, 
+ Albert Ou <aou@eecs.berkeley.edu>, Alexandre Ghiti <alex@ghiti.fr>
+Cc: Anirudh Srinivasan <asrinivasan@oss.tenstorrent.com>, 
+ Aurelien Jarno <aurelien@aurel32.net>, 
+ Jennifer Berringer <jberring@redhat.com>, 
+ Trevor Gamblin <tgamblin@baylibre.com>, linux-scsi@vger.kernel.org, 
+ devicetree@vger.kernel.org, linux-riscv@lists.infradead.org, 
+ spacemit@lists.linux.dev, linux-kernel@vger.kernel.org, 
+ Yixun Lan <dlan@kernel.org>, 
+ Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
+X-Mailer: b4 0.16.0
+X-Developer-Signature: v=1; a=openpgp-sha256; l=4760; i=dlan@kernel.org;
+ h=from:subject:message-id; bh=ijdGu8Pq+mlJCyptmqzWKnq4/EZfSxirNaoZEs5mmoU=;
+ b=owEB6QIW/ZANAwAKATGq6kdZTbvtAcsmYgBrCiUxXB8uGzZjJ8KijOFXnf8hfPcxZ6WUlDIdb
+ EBdZru+wDuJAq8EAAEKAJkWIQS1urjJwxtxFWcCI9wxqupHWU277QUCawolMRsUgAAAAAAEAA5t
+ YW51MiwyLjUrMS4xMiwyLDJfFIAAAAAALgAoaXNzdWVyLWZwckBub3RhdGlvbnMub3BlbnBncC5
+ maWZ0aGhvcnNlbWFuLm5ldEI1QkFCOEM5QzMxQjcxMTU2NzAyMjNEQzMxQUFFQTQ3NTk0REJCRU
+ QACgkQMarqR1lNu+0roA//ap7dPnk/FX3i4aIjXjh1JFemAzo0qpJYzXhyAUC58V+ntTP+yacq8
+ dJrJxo8c2ZiLV7OEYzyrL8K3OM2W8Gz+z1n8NPRBDkRtkb9LwOarKQZtwkqChqbGLUE5SAMcUpT
+ fUiy/Ii38fr3SgSaAYxvWW1yqMpnr7Q9ePojmDAe7aQvgLub3YeXGlDIC3nWmVap9FpxRROtHcR
+ ffWqZcnUzueohPkf5R67jRNfyhTxs12IAEMu7XBjkIKYwGpmmJNZT93EfjbPSTxBV2sptv9dfUZ
+ OUF/xx7MlssxY38ePUWaz4AjQffn6dZWUxDoCJQZ464DXCF3+9iNbBV/y4Jc5XTVYQNd1Lm6oS9
+ jCZMMtDHyMdHkQlU26sRsHc7uuAL9dWDU4U4iFyjT+h4144s6JM6Wt9E7TnjnoinjZk3tF+jxpz
+ pI0QLpuI9qDiRACFCv/H2Awwd0o+zH40Vpjm2sYTipSXw4wBL/0UQ5MqwRpzxm7fZkQi8Ov/IV9
+ /XJ4TprTRAFuW6/Gsqx2nzbkZ0hIQu3Q6aRaJc/NMG9f5YBx2I7BLF5PTmKbDXO6T25HzbtOfD5
+ UK4U6+qH5Hyl2tVjCuscMcmTQOndIXRQawYeV6ImUlrwbmku5jvXXs/nSAZiAU+yV8Zxi1yrmNV
+ 0nppsrF57EB12nF8WWTZnO/9+eTjSk=
+X-Developer-Key: i=dlan@kernel.org; a=openpgp;
+ fpr=50B03A1A5CBCD33576EF8CD7920C0DBCAABEFD55
 
-Hi Thomas Roos,
+This series try to add UFS support for SpacemiT K3 SoC, the controller
+components consists of System Bus Interface Unit, UFS Host Controller
+Interface, UFS Transport Protocol Layer, UFS Host Registers, Device
+Management Entity (DME), Transport Layer, Network Layer, Data Link
+Layer, PHY Adapter Layer, and M-PHY Interface. A more detail functional
+block diagram can be found in SpacemiT website, chapter 9.7.3 [1]
 
-Thanks for bringing up of this, and sending the patch.
+The DTS patch has been dropped in this series [2], and will send
+in separate series once this patch accepted. For people who want to
+test UFS driver, please grab the DT patch from version v5 [3].
 
-On 09:11 Tue 24 Nov     , Thomas Roos via B4 Relay wrote:
-> From: Thomas Roos <thomas@exein.io>
-> 
-> The SpacemiT vendor kernel and U-Boot never change the link straight to
-> FAST: they change to FASTAUTO at the target gear/rate first, wait
-> 100 ms, and only then to FAST. A direct FAST change kills the link at
-> the M-PHY PLL rate change: on the K3 CoM260 IFX (YMTC YMUS8B5TH1A1C1)
-> every mode except HS-G1 rate A fails with DL errors 0x80000002 /
-> 0x80000001 / 0x80002000 and PA_ERR 0x80000010, and the disk is lost.
-> 
-I actually do get report of this issue on YMTC UFS chip, but haven't seen
- problem with Kingston UFS chip
+Enable UFSHCD_CAP_KEEP_AUTO_BKOPS_ENABLED_EXCEPT_SUSPEND,
+This allows the device auto-bkops to be always enabled except
+during suspend (both runtime and suspend), with this feature,
+the BKOPS interrupt (log below) isn't reported anymore.
 
-> Do the FASTAUTO step in the PRE_CHANGE hook; the core then sends the
-> FAST request. With this the link runs at HS-G3 rate B on two lanes.
-> 
-> Skip the step only when the link already runs in FAST with the
-> requested parameters, judged by PA_PWRMODE and not by hba->pwr_info
-> alone. After a LINERESET, ufshcd_err_handler() restores the power mode
-> with ufshcd_config_pwr_mode(hba, &hba->pwr_info, UFSHCD_PMC_POLICY_FORCE):
-> the requested parameters equal hba->pwr_info, but the link has fallen
-> back to a slow mode, and the forced FAST request would kill it again.
-> 
-> The step also writes ANA_HSGEAR_CTRL_ATTR = 0x25 and waits for the PLL
-> lock, as ufs_spacemit_apply_dev_quirks() does at probe. Every POST_CHANGE
-> clears the attribute, so without this a LINERESET recovery would run the
-> FASTAUTO and FAST changes with a different analog setting than probe.
-> 
-Vendor provide similar patch for this, but I'm rather skeptical on it
-as a proper fix and ask them to clarify with IP/UFS chip vendor..
+[  806.710763] ufshcd-spacemit c0e00000.ufshc: ufshcd_bkops_exception_event_handler: device raised urgent BKOPS exception for bkops status 1
 
-FYI, I'd expect to see basic UFS patch merged first, then we can address
-this issue separately. Besides, I do have several boards on hand, but none
-of them shipped with YMTC UFS, so need someone to help reviewing and
- testing the patch.
+Link: https://spacemit.com/community/document/info?nodepath=hardware/key_stone/k3/k3_docs/k3_usermanual/09_memory_storage.md&lang=en [1]
+Link: https://lore.kernel.org/all/20260918-belligerent-succinct-kraken-7fa592@quoll/ [2]
+Link: https://lore.kernel.org/all/20260916-08-k3-ufs-support-v5-3-1f5d71f1027d@kernel.org/ [3]
+Signed-off-by: Yixun Lan <dlan@kernel.org>
+---
+Changes in v9:
+- return check of ufs_spacemit_dme_set()
+- drop spacemit_ufs_set_dev_cap()
+- log ->saved_err 
+- sort macro definition
+- Link to v8: https://patch.msgid.link/20261116-08-k3-ufs-support-v8-0-e3b256972dd4@kernel.org
 
-> Assisted-by: claude-opus-5-5
-> Signed-off-by: Thomas Roos <thomas@exein.io>
-> ---
-> This applies on top of v8 of "scsi: ufs: spacemit: k3: Add UFS Host
-> Controller driver":
-> https://lore.kernel.org/r/20261116-08-k3-ufs-support-v8-2-e3b256972dd4@kernel.org
-> 
-> Yixun, feel free to fold it into the next version of the series.
-> 
-I'd prefer it iterated as a separate patch on top of mine, thanks
+Changes in v8:
+- enable UFSHCD_CAP_KEEP_AUTO_BKOPS_ENABLED_EXCEPT_SUSPEND
+- rename to "ref_clk", see explanation in patch
+- add delay between enable clk & deassert reset
+- respect bRefClkGatingWaitTime, add wait delay
+- drop comment of ufs_hba_spacemit_vops, which got CI complaint
+- rebase to v7.4-rc1
+- Link to v7: https://patch.msgid.link/20261002-08-k3-ufs-support-v7-0-bb39007ff9ae@kernel.org
 
-> Tested on a K3 CoM260 IFX (YMTC YMUS8B5TH1A1C1) on 7.3.4 with the
-> equivalent v7-based driver: without the change only HS-G1 rate A works;
-Just curious, is "HS-G1 rate A" mode stable without this patch?
-or any specific change needed to change to this mode?
+Changes in v7:
+- check err return value of ufs_spacemit_quirk_host_pa_saveconfigtime()
+- Link to v6: https://patch.msgid.link/20260921-08-k3-ufs-support-v6-0-3479768a2299@kernel.org
 
-> with it the link runs at HS-G3 rate B x2 and the rootfs on UFS is
-> stable. Builds without warnings at W=1 on top of v8.
-> 
-> The restore path was exercised with this patch: a test-only debugfs
-> hook drops the link to PWM-G1 SLOWAUTO behind the core (raw reads fall
-> from ~900 MB/s to 1 MB/s), then a PA generic error is injected through
-> the ufshcd debugfs saved_uic_err. In 6 of 6 runs the restore went
-> through FASTAUTO back to G3B FAST, with reads at 850-980 MB/s again and
-> a matching write/read-back. That setup keeps the PHY on rate B, so it
-> does not reproduce a LINERESET that also resets the PLL rate.
-> 
-> The FASTAUTO step open-codes the attribute writes of the core's
-> ufshcd_dme_change_power_mode(). A core helper that takes an explicit
-> PA_PWRMODE value and leaves hba->pwr_info alone would avoid that; I kept
-> it in the driver for now.
-> ---
->  drivers/ufs/host/ufs-spacemit.c | 96 +++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 96 insertions(+)
-> 
-> diff --git a/drivers/ufs/host/ufs-spacemit.c b/drivers/ufs/host/ufs-spacemit.c
-> index eb2ad50..04380a0 100644
-> --- a/drivers/ufs/host/ufs-spacemit.c
-> +++ b/drivers/ufs/host/ufs-spacemit.c
-> @@ -343,6 +343,87 @@ static int ufs_spacemit_negotiate_pwr_mode(struct ufs_hba *hba,
->  	return ret;
->  }
->  
-> +/*
-> + * As in the vendor kernel and U-Boot: change to FASTAUTO at the target
-> + * gear/rate first and only then (from the core) to FAST. A direct FAST
-> + * change kills the link after the M-PHY PLL rate change, so only HS-G1A
-> + * would work.
-> + */
-> +static int ufs_spacemit_fastauto_step(struct ufs_hba *hba,
-> +				      struct ufs_pa_layer_attr *p)
-> +{
-> +	int ret;
-> +
-> +	/*
-> +	 * Restore the value and PLL lock wait of ufs_spacemit_apply_dev_quirks()
-> +	 * at probe: every POST_CHANGE resets it, which matters for a LINERESET
-> +	 * recovery.
-> +	 */
-> +	ufshcd_dme_set(hba, UIC_ARG_MIB(ANA_HSGEAR_CTRL_ATTR), 0x25);
-> +	ret = ufs_spacemit_wait_mphy_pll_lock(hba);
-> +	if (ret)
-> +		return ret;
-> +
-> +	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_RXGEAR), p->gear_rx);
-> +	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_ACTIVERXDATALANES), p->lane_rx);
-> +	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_RXTERMINATION), 1);
-> +	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_TXGEAR), p->gear_tx);
-> +	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_ACTIVETXDATALANES), p->lane_tx);
-> +	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_TXTERMINATION), 1);
-> +	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_HSSERIES), p->hs_rate);
-> +	/* as in ufshcd_dme_change_power_mode() */
-> +	if (!(hba->quirks & UFSHCD_QUIRK_SKIP_DEF_UNIPRO_TIMEOUT_SETTING)) {
-> +		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PWRMODEUSERDATA0),
-> +			       DL_FC0ProtectionTimeOutVal_Default);
-> +		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PWRMODEUSERDATA1),
-> +			       DL_TC0ReplayTimeOutVal_Default);
-> +		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PWRMODEUSERDATA2),
-> +			       DL_AFC0ReqTimeOutVal_Default);
-> +		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PWRMODEUSERDATA3),
-> +			       DL_FC1ProtectionTimeOutVal_Default);
-> +		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PWRMODEUSERDATA4),
-> +			       DL_TC1ReplayTimeOutVal_Default);
-> +		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PWRMODEUSERDATA5),
-> +			       DL_AFC1ReqTimeOutVal_Default);
-> +		ufshcd_dme_set(hba, UIC_ARG_MIB(DME_LocalFC0ProtectionTimeOutVal),
-> +			       DL_FC0ProtectionTimeOutVal_Default);
-> +		ufshcd_dme_set(hba, UIC_ARG_MIB(DME_LocalTC0ReplayTimeOutVal),
-> +			       DL_TC0ReplayTimeOutVal_Default);
-> +		ufshcd_dme_set(hba, UIC_ARG_MIB(DME_LocalAFC0ReqTimeOutVal),
-> +			       DL_AFC0ReqTimeOutVal_Default);
-> +	}
-> +
-> +	ret = ufshcd_uic_change_pwr_mode(hba, FASTAUTO_MODE << 4 | FASTAUTO_MODE);
-> +	if (ret)
-> +		return ret;
-> +	msleep(100);
-> +
-> +	return ufs_spacemit_wait_mphy_pll_lock(hba);
-> +}
-> +
-> +/*
-> + * True if the link already runs in FAST with the gear, lanes and rate of
-> + * @p, so no FASTAUTO step is needed. Read PA_PWRMODE rather than trust
-> + * hba->pwr_info alone: after a LINERESET the error handler restores the
-> + * mode with UFSHCD_PMC_POLICY_FORCE and parameters equal to hba->pwr_info
-> + * while the link has fallen back to a slow mode, and the forced FAST
-> + * request from there kills the link.
-> + */
-> +static bool ufs_spacemit_link_in_fast(struct ufs_hba *hba,
-> +				      struct ufs_pa_layer_attr *p)
-> +{
-> +	u32 mode;
-> +
-> +	if (memcmp(p, &hba->pwr_info, sizeof(*p)))
-> +		return false;
-> +
-> +	if (ufshcd_dme_get(hba, UIC_ARG_MIB(PA_PWRMODE), &mode))
-> +		return false;
-> +
-> +	return ((mode >> PWRMODE_RX_OFFSET) & PWRMODE_MASK) == FAST_MODE &&
-> +	       (mode & PWRMODE_MASK) == FAST_MODE;
-> +}
-> +
->  static int ufs_spacemit_pwr_change_notify(struct ufs_hba *hba,
->  					  enum ufs_notify_change_status status,
->  					  struct ufs_pa_layer_attr *dev_req_params)
-> @@ -356,6 +437,21 @@ static int ufs_spacemit_pwr_change_notify(struct ufs_hba *hba,
->  
->  	switch (status) {
->  	case PRE_CHANGE:
-> +		/* the core sends the FAST request after this hook */
-> +		if (dev_req_params->pwr_rx == FAST_MODE &&
-> +		    dev_req_params->pwr_tx == FAST_MODE &&
-> +		    !ufs_spacemit_link_in_fast(hba, dev_req_params)) {
-> +			/*
-> +			 * The core ignores the result. If the FASTAUTO PMC
-> +			 * failed outside a PM operation, the link is marked
-> +			 * broken and the FAST request is not sent; if only the
-> +			 * PLL lock wait timed out, the link already runs at
-> +			 * the target rate.
-> +			 */
-> +			ret = ufs_spacemit_fastauto_step(hba, dev_req_params);
-> +			if (ret)
-> +				dev_warn(hba->dev, "FASTAUTO step failed: %d\n", ret);
-> +		}
->  		break;
->  	case POST_CHANGE:
->  		ret = ufs_spacemit_wait_mphy_pll_lock(hba);
-> 
-> ---
-> base-commit: 6628e7d4c6b25c8d18f1345e3a20d21829aae7e4
-> change-id: 20261123-fastauto-306d20d17590
-> prerequisite-message-id: <20261116-08-k3-ufs-support-v8-0-e3b256972dd4@kernel.org>
-> prerequisite-patch-id: 70385741c42f21fbc79b3ef967e48cb8214e5cd0
-> prerequisite-patch-id: 5198841accdd660ed1597e92dcdef85a6accc8cd
-> 
-> Best regards,
-> --  
-> Thomas Roos <thomas@exein.io>
-> 
-> 
+Changes in v6:
+- drop unused macro and dev_req_params
+- use global PX_xx macros
+- fix axi clock name
+- drop dts patch
+- collect tags
+- Link to v5: https://patch.msgid.link/20260916-08-k3-ufs-support-v5-0-1f5d71f1027d@kernel.org
 
--- 
-Yixun Lan (dlan)
+Changes in v5:
+- adjust clock names
+- add runtime power support
+- collect tags
+- Link to v4: https://patch.msgid.link/20260908-08-k3-ufs-support-v4-0-22aa2bd97d3b@kernel.org
+
+Changes in v4:
+- fix clock and reset settings
+- drop function which retrieve value of tx_lanes
+- propagate return error of ufs_spacemit_dme_set()
+- check return value ufs_spacemit_check_hibern8()
+- drop call to ufshcd_vops_phy_initialization()
+- handle compiling warning if CONFIG_OF not enabled
+ add __maybe_unused to ufs_spacemit_of_match
+- Link to v3: https://patch.msgid.link/20260806-08-k3-ufs-support-v3-0-037fb322acdb@kernel.org
+
+Changes in v3:
+- collect tags
+- fix dt-binding warning reported-by sashiko
+- fix low freq in opp-2 table
+- fix err checking in check_hibern8()
+- propagate err code in link_startup_notify()
+- update documents for event_notify()
+- ufs clock driver is merged into v7.3-rc1, update cover letter
+- Link to v2: https://patch.msgid.link/20260725-08-k3-ufs-support-v2-0-45036a2a2418@kernel.org
+
+Changes in v2:
+- fix missing interrupts property
+- move ufs node to k3-com260.dtsi
+- convert freq-table-hz to operating-points-v2
+- rework reset_control, fix header and drop global variable
+- drop dump_host_regs() debug interface
+- converge and refactor dme_set() operations
+- massive reduce of busy delay() loops
+- drop vendor specific hce_enable_notify(), fallback to default
+- drop unused member from struct ufs_spacemit_host
+- add COMPILE_TEST support to Kconfig
+- comment style fix
+- Link to v1: https://patch.msgid.link/20260702-08-k3-ufs-support-v1-0-1a64a3ab128f@kernel.org
+
+---
+Yixun Lan (2):
+      scsi: ufs: spacemit: dt-bindings: Add UFS controller for K3 SoC
+      scsi: ufs: spacemit: k3: Add UFS Host Controller driver
+
+ .../devicetree/bindings/ufs/spacemit,k3-ufshc.yaml |  56 ++
+ drivers/ufs/host/Kconfig                           |  12 +
+ drivers/ufs/host/Makefile                          |   1 +
+ drivers/ufs/host/ufs-spacemit.c                    | 619 +++++++++++++++++++++
+ drivers/ufs/host/ufs-spacemit.h                    |  81 +++
+ 5 files changed, 769 insertions(+)
+---
+base-commit: 6628e7d4c6b25c8d18f1345e3a20d21829aae7e4
+change-id: 20260605-08-k3-ufs-support-c8b308e415e2
+
+Best regards,
+--  
+Yixun Lan <dlan@kernel.org>
+
