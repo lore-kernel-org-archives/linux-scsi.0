@@ -1,91 +1,91 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.169
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.224.53
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795858000;
-	b=oU8HvdRBP7JPDnsTyjQSfdq2hdbHPwt2QHJDJiY0PubUSy+npSqI920kN8PFYhTf3/2L
-	 E/ScN7f6JWig6QfAiT5BFcGPkxHobe1VrgLZDaTHcVfCGmJxnuN8t9NFhWLFkeM/jw6kr
-	 ptxXMhO8qZpj2/WsEJ2mZHavZKlQeFI/N7dGPMG3hRCizZoY470MCDLX/vkXfsa7vXA3H
-	 iPsj3sXf8rNSyxEhUjy8dXetBHU9wRL66W9tmNQfV2QozmVFme0kx+7y+/0WCX7mNIH45
-	 w9+eAlrbDefF+Fuxq8C3P/fSoM3E0eHXccp4DnDoCJWPCq0TQ60+X3UT65BoIQHhLTw==
+	t=1795858002;
+	b=WLyQAP3lKCButIXLO/lO7K9vavrInZuEfRJnp8NzXgIpgi/+v1PTeX8D2qbxWOwq8Eqg
+	 WZES2v9OQoiL4UkivbTBRGHHMFGWxsBprWqfMXfqEErikm4CNlujJ7fOxnjgxXwiy+fIw
+	 YnrA7u5IV6LIGNCuFdVOpoJfZ0ge55VGpW2knP/cjBq+V8qQvRBBuF7lVJFJVjSKIlQpF
+	 FdhYrS69sGceOq4CNT5hYoRnNlcsr2ZCeZgPS8vpejU8nlN1PF4jCQbDE7wAY4FQROtPI
+	 HPNupAvCn1NaOcGXBT5cRM6tmZL0yZ+tA7hjfO1awuLvmMf5ym4nKbl7+3HlVbusiBQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795858000;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795858002;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
 	 Date:Message-ID:In-Reply-To:References:From:Subject:To:Cc:
 	 MIME-Version:Content-Type:Content-Disposition:User-Agent;
-	bh=6f35w9cBng27FsT7gsIXpo/AGOT3TuR6wbGxOiO8l6A=;
-	b=sOy9KPSWowz7nxz0tBaAIIvvEWNOWQDr3e7Rmcx4P24EoVuQFduGR1Bu3ZM5kw/4yRQj
-	 xleZN6U+VQCO42KY5ziBghT9zBL6I+Wm/yNtCRVoa9ER3tyOUGBe8H4/zeYAYvtWmSdJK
-	 c+2BJAfRrTXyD19Z/Zg4VID0TDlcHUCwU/QqkPpoV+SHbQ4LAuNxc7R25xlgJcQNUYHxg
-	 4YKOh8X4P7/9A+Bn7KSgMvtAlCgoWM8BNOpdzl9hx0vLWVhLjbG3Bt8noiavfTiqi6yGC
-	 9+DxRinjpRokR0mO2++4Kzs/aR6N+bQlSWCXozEO3QJEE1pkP6kvA6yCUJg2cuY1ozg==
+	bh=1Sri8kxz2uoEL3sSeB5rKcJwSB9FUVM+rwbkcMwDLFM=;
+	b=048RzEU862DGABKnkA3XEsEcZJzW0+DdqE2wDB0/ma+sYn8bFMMLMVjWwthAITPcbUMr
+	 ydZdNGxB/a00HP7HtQE6LZHzS4U5J96meH13Ym2AHf0lWBf/DLQqRz1jUZ4y+bjZEf8en
+	 BaOG4N4iyNBRs7bnxZJ1936LX7G+SzEhefsqinwDTQnmKhovjl8pWw2LDVi0uRijEjojZ
+	 ZoeVx4bYnuDl6MFlKyMPIp/oIi+o/lTVKdLbmT4S+1Nzp/3ji2jTy0iWopwwj+fH3McNj
+	 DJAt2Ez2Y/J2Km5n8YoAFRdSt65iqrLVREWWxPdiAHCECVPCQSRUKg8/wbZA8dm18aw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=chrisdown.name;
 	spf=pass smtp.mailfrom=chrisdown.name;
-	dkim=pass header.d=chrisdown.name header.i=@chrisdown.name header.a=rsa-sha256 header.s=google header.b=HM1tFYr8;
-	arc=none smtp.remote-ip=209.85.128.169
-Received: from mail-yw1-f169.google.com (mail-yw1-f169.google.com [209.85.128.169])
+	dkim=pass header.d=chrisdown.name header.i=@chrisdown.name header.a=rsa-sha256 header.s=google header.b=sxiVnH6D;
+	arc=none smtp.remote-ip=74.125.224.53
+Received: from mail-yx1-f53.google.com (mail-yx1-f53.google.com [74.125.224.53])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F512606A685
-	for <linux-scsi@vger.kernel.org>; Sat, 28 Nov 2026 09:26:39 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1F512606A685
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51E1A606A33B
+	for <linux-scsi@vger.kernel.org>; Sat, 28 Nov 2026 09:26:42 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 51E1A606A33B
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=chrisdown.name
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chrisdown.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=chrisdown.name header.i=@chrisdown.name header.a=rsa-sha256 header.s=google header.b=HM1tFYr8
-Received: by mail-yw1-f169.google.com with SMTP id 00721157ae682-8b4f4095a7aso77905987b3.0
-        for <linux-scsi@vger.kernel.org>; Sat, 28 Nov 2026 01:26:39 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=chrisdown.name header.i=@chrisdown.name header.a=rsa-sha256 header.s=google header.b=sxiVnH6D
+Received: by mail-yx1-f53.google.com with SMTP id 956f58d0204a3-67dae7d3f7dso10290508d50.2
+        for <linux-scsi@vger.kernel.org>; Sat, 28 Nov 2026 01:26:42 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chrisdown.name; s=google; t=1795857999; x=1796462799; darn=vger.kernel.org;
+        d=chrisdown.name; s=google; t=1795858001; x=1796462801; darn=vger.kernel.org;
         h=user-agent:content-disposition:content-type:mime-version:cc:to
          :subject:from:references:in-reply-to:message-id:date:from:to:cc
          :subject:date:message-id:reply-to:content-type;
-        bh=6f35w9cBng27FsT7gsIXpo/AGOT3TuR6wbGxOiO8l6A=;
-        b=HM1tFYr8MiS5BR7MQEXWztXLjOgkuWexwtUKUdJR+mqDPSC0OzfiYkd6rcXst+94+9
-         o+USAiOn5yymjkp1f6hFbnViH94PgnvBdXlD0+R8F+XVNQh6UT3jC6nKP32CKpJXrEP6
-         PLNhfpZAjTePLCeCpby4nz1PQCIp7LPs8KMJA=
+        bh=1Sri8kxz2uoEL3sSeB5rKcJwSB9FUVM+rwbkcMwDLFM=;
+        b=sxiVnH6DsPbF5W5f2ILVwXiPDYERvznuiRwvYAyFn1uNZHtNnzdvFjsl++AgMQHATF
+         9ZSR5LWgUMW4B0nr04nNxrGIOzFQ0yYjqImgwJi2izBZWFI+8zBvFQ3oK7V/kaVaB7xk
+         S7wXnFm6MvkgnUQEl4RJNstW8l5aIFjNiqwK8=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795857999; x=1796462799;
+        d=1e100.net; s=20260707; t=1795858001; x=1796462801;
         h=user-agent:content-disposition:content-type:mime-version:cc:to
          :subject:from:references:in-reply-to:message-id:date:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=6f35w9cBng27FsT7gsIXpo/AGOT3TuR6wbGxOiO8l6A=;
-        b=sa/O7pXJbEnn++8NdI6SlLYQ4MfEphGLyNTisHHXxLACNYl8UhMo8JygmiNdfzbcFO
-         SicH2DOWH/G2e9vwvCmmANkxYR+iuCaezbjmkTKAdrbZKE+ZXdFDmbXpubFoqoLA+Dp5
-         hi18odtNZIfOdgp4hICDjG8vl72D8N42QLAPvuPkFayS+mX1dpoKlEcQJUrI7EEiXi78
-         aYrtslS3naqIPId69/tHq0DOgBdjRAMgldIqfucuTCLacbyuwllOrEaQGmJBr1w85aob
-         zjW+Fufk4L5P7LSxIUtF5LM0hZ4LLPNRTJgKRTWWQJQVLjK1CmwXjeez9zoImSNfLhNG
-         TvSA==
-X-Forwarded-Encrypted: i=1; AL+hErFVx79AAw9NyGhogkNY0ZOinCKu2tR/lQyAJmUyzTzm7chDNKHOa48qc50bRypnq/4SZq9RwTGB5S6r@vger.kernel.org
-X-Gm-Message-State: APuU4Z9yb2yDMYSMCBlz5uRrUaLyodzIOvH1xfUXThP6eMVnoM2VO88J
-	hX8+vRzFYaXxVboic+o36aye/6givNJQ1i4jISX2rAAqKN4ujRYrOWa3f7AOavYX1cE=
-X-Gm-Gg: AZFdTZc5Mlfs1rU4Xa4Bf/Bg/VHDSCzn/OrYdj1R8qxz/OvjQR/Rfj6Y6gO+rrVyofw
-	+wyAVIT05w4mFSb9/9k9jp7NUHRi4mVnzVEsQLeAjT/POb/hy6Cq8ClxCLkPhabTaVAHoVKTp62
-	sWmCSpyKRIfu7UJ4EW8aYwoJb11g2U7ybOP7JNNJRGr/luPUFNyFBpgWb3UiOaMusKEkgLOVCV+
-	3X2xoNlTotAv7bfVH+VT6XvBhyCFxZJh03FoC5MI9UIgfAJ28JB0+iUgwQc5jJ1OIai1kXG4Oaw
-	ew4DKy0ZvyZu8EbG7Ju9cmfCwcsSazMHWPzp9xWhvrhZQ2L0ve10RjqHhdyDhtEg6NPZzXAF8xV
-	GG7E5JiTxEJFzHwafKIP75d+tRM0/PSALVPm3VCQz/zmvjO1Lhlv7AmgAsHK4JAm4JDDz3DYJYf
-	n9mKOtY9wCJ8NcICjTZvTFu2ZYfPhoryE1DUkALfOyrMp3AmlMqSurEhSXucavPc8LK6kZH+K9V
-	0GaTa9XoLDafQa2so4mjzJnk78mQ453WTHeUqZUctT9rlbWRECZ8rWF3UKT2w0oJp8C9ITG6/Ro
-	Mq7m26NwuCsX2+74Hhd0rKRCUMFjL6rcZ09oftEcNfqQ1iFQGya4ibD9l6HaHyE2EIwTmasAO6W
-	EtpG4G/3OajCk8UVelAS3uld7Rdhc9FhligLKGlz5otU/hNw8XQ1npgOG7O77OmgmumpAFGMk1/
-	Az13w8Jpm/IBeXivxWZGm+RUcH1dqmPepgTHqobWbiAKXIFs9Pgy715nbqqB9ynaE9L1ySIXa86
-	DvdyzOn7Zfm4natjB7wU5Y=
-X-Received: by 2002:a05:690c:445:b0:8b5:9d75:1851 with SMTP id 00721157ae682-8b59d751ce4mr9297647b3.9.1795857999148;
-        Sat, 28 Nov 2026 01:26:39 -0800 (PST)
+        bh=1Sri8kxz2uoEL3sSeB5rKcJwSB9FUVM+rwbkcMwDLFM=;
+        b=NsL8oWdJj+i8ustqMee/kn+nnpEM2lnhXSW5xlryTQkDtLCwbeT8el05NJjZBHsjiB
+         StDgU48/cEQw49IJ44p3lAvlc+odknL1lZtEUls96VzkM1FD0DjYnFzllCYqNM1n2QSa
+         4MYqG9KY5iqoxx+zCf/xplUsCynzKbfh82YtOEzXors3Lqyf8fY+2RtPO22axKVFM0qR
+         PPg2MIL5wBoFsmbJz35YwNkIT9gKNYrUiGUwCI8aQlZRBChMRR/EgbwtexPzMLusk+cc
+         uU6YFQuR0AC4SXlk2mSne5Vs3iQ5Zq0bp6a3BFf2D1utdXLYcm/7NFYbzX2DDcBl0AUc
+         /8VA==
+X-Forwarded-Encrypted: i=1; AL+hErEO/HRSZvBGR5bZFwdss0OJLGIjicHw+WwVgqTX5U12fkXNYO+4rTa/Gd5t+w00yAq6frtCvnLgl5Yx@vger.kernel.org
+X-Gm-Message-State: APuU4Z9i8ltc45CpP2Sn+qZpKuROwJe1yDOnJxLbVGIER0BLFKN+1oG2
+	cc5+W1cxgP65yaljwU2DjzVHNQWjJzBXXXfy0wLbMmlDNhJVv8ste0J4JDByuHK92OE=
+X-Gm-Gg: AZFdTZfWFiQlVOkodxB/MwZ1LKT0Re4b0l35r2K68G6/cYCw0OwnAMPmwpB7P68svCo
+	P3+i82gkqZFpLTqFRfGW29PkYFNNXQ5txak367z24UI5RSnEZRPM55HJreec8qHkp3zBEzL2gG7
+	PtMhX/G3GOPY6CGO6iyGR5CstKz1ew3toHgPHTjSGWuQuPS7jPKE4YfThuUoOPg2GVjMk80/fue
+	rxOPQY93Tj+BUPXCBjgo5sbsJaZUUZWqy21PE0pzcFJlSvN5jTrSWaICk6y1fFxzHWNX7BqNiE3
+	tcU6NbgLYmPdUQlmhcencXlSsbMz195Jgz1yw5j+eOgsULKo6fJSdrgrC4w1sFFNsr8jwf94/1b
+	BIL3plcFyE9scawgKx6kpTCJREvf6NdhY+7++rHGh0laCRqFPQFgEjpB7d503sWiaZnEU9XN/g3
+	lZ/Dn3qEP+oF7gthv8n0NnQnKD/FkhChqpzhcRlgV8oX2qq4PuzAA5eb/ex7sR+iKGIDQtTR2L6
+	8F1PsgkWpJP9IHaCX15mem3Pn34OaiFh5MCNaGvb8qOYnpKR789pOGEDJaE5jUV09zrfjHMrh5+
+	rbIo2uaY9noi4Y/IhY/NbQpScki1rmVyEjVFs1fMRZLcbLGqHn5yVKSQj3u3d4VXgOtQgJtT2i7
+	TnXK7oW/nmW6W+oht7lfughmJpNCCYDptpy5AwKeNTed1f0Lva+tjXPVo5X+ezJyZHXPso5FQHL
+	oAzk0zSFnZpSxLd4HHYghHnZYCY5ptpLmP5IXhZFSpqJg/oHif66PThf0XhFvBhSYZXllQ/TkVw
+	8hdE+uHCJLDqkCyEwlQAV24
+X-Received: by 2002:a05:690e:1446:b0:67e:653b:319d with SMTP id 956f58d0204a3-67e653b3b4dmr3232301d50.133.1795858001577;
+        Sat, 28 Nov 2026 01:26:41 -0800 (PST)
 Received: from [172.20.0.3] (c-73-207-185-9.hsd1.ga.comcast.net. [73.207.185.9])
-        by smtp.gmail.com with ESMTPSA id 00721157ae682-8b52028d160sm106019667b3.10.2026.11.28.01.26.37
+        by smtp.gmail.com with ESMTPSA id 956f58d0204a3-67df33105fesm12336245d50.7.2026.11.28.01.26.39
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 28 Nov 2026 01:26:38 -0800 (PST)
-Date: Sat, 28 Nov 2026 01:26:37 -0800
-Message-ID: <a1acc1de43d8ee89d64e345da817f7ac3585e86d.1795842371.git.chris@chrisdown.name>
+        Sat, 28 Nov 2026 01:26:40 -0800 (PST)
+Date: Sat, 28 Nov 2026 01:26:39 -0800
+Message-ID: <6e833f169d0c31a3a7da7581c68d4aee5d348ca1.1795842371.git.chris@chrisdown.name>
 In-Reply-To: <cover.1795842371.git.chris@chrisdown.name>
 References: <cover.1795842371.git.chris@chrisdown.name>
 From: Chris Down <chris@chrisdown.name>
-Subject: [PATCH v2 4/5] scsi: sd: Fix WRITE SAME(10) count truncation when the
- mode changes
+Subject: [PATCH v2 5/5] scsi: sd: Fix unsplit discards when the granularity
+ exceeds the limit
 To: "Martin K. Petersen" <mkp@kernel.org>,
     "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>
 Cc: Christoph Hellwig <hch@lst.de>,
@@ -105,117 +105,51 @@ Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 User-Agent: Mutt/2.4.3 (cc9e3943) (2026-10-09)
 
-sd sets provisioning_mode and zeroing_mode before it freezes the queue
-to commit the new limits. Until then, requests are still sized for the
-old mode, including the ones that are already queued. For example,
-take a slow disk in unmap mode with a backlog of 0x20000-block
-discards. Writing writesame_10 to provisioning_mode sends the queued
-ones as WRITE SAME(10) with a count of zero. Now that the zeroing mode
-depends on the capacity, the same happens to queued write zeroes when a
-disk shrinks and sd moves it to writesame_10_unmap.
+The block layer doesn't split a discard when the discard granularity is
+larger than max_discard_sectors. A disk in writesame_10 mode with an
+unmap granularity of 0x10000 blocks then gets a 0x20000-block discard
+as one request, and sends that as WRITE SAME(10) with a count of zero.
+The other modes have room for the count, but the discard is still
+larger than the limit we set.
 
-A request is only sized once it has entered the queue, so none that
-were sized for the old limits are left once the queue is frozen. Let's
-change the modes at that point, as nvme_update_ns_info_block() does for
-its own state.
+mmc and drbd already make sure they don't report a granularity above
+the discard limit. Let's do the same here and disable discard in that
+case, as drbd_reconsider_queue_parameters() does.
 
-sd_revalidate_disk() can't freeze the queue while it's still sending
-commands to the disk, so move sd_config_discard() down to where the
-limits are committed. That is after the new capacity is set, though.
-If the disk has just grown past 2^32 blocks, a request to the new
-blocks would then go out as WRITE SAME(10) with its LBA truncated until
-the mode changes. So, set the capacity after the modes when the disk
-has grown. When it has shrunk it still has to come first, because the
-modes for the smaller disk can't address all of the old one.
-
-You might wonder why we don't set the capacity with the queue frozen,
-as nvme does. That sends the uevent with the queue frozen, which
-lockdep complains about.
+A zero limit isn't enough on its own, because a discard that was
+submitted before the limit changed still reaches us, and isn't split
+either. So set provisioning_mode to disabled as well, which makes
+sd_init_command() fail it.
 
 Fixes: c98a0eb0e90d ("[SCSI] sd: Logical Block Provisioning update")
 Cc: <stable@vger.kernel.org>
 Signed-off-by: Chris Down <chris@chrisdown.name>
 ---
- drivers/scsi/sd.c | 36 +++++++++++++++++++++++++++++-------
- 1 file changed, 29 insertions(+), 7 deletions(-)
+ drivers/scsi/sd.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
 diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index d995650bc8a1..792058f52f65 100644
+index 792058f52f65..ef9c2d55c933 100644
 --- a/drivers/scsi/sd.c
 +++ b/drivers/scsi/sd.c
-@@ -584,6 +584,7 @@ provisioning_mode_store(struct device *dev, struct device_attribute *attr,
- 	struct scsi_disk *sdkp = to_scsi_disk(dev);
- 	struct scsi_device *sdp = sdkp->device;
- 	struct queue_limits lim;
-+	unsigned int memflags;
- 	int mode, err;
+@@ -206,6 +206,17 @@ static void sd_config_discard(struct scsi_disk *sdkp, struct queue_limits *lim,
  
- 	if (!capable(CAP_SYS_ADMIN))
-@@ -603,8 +604,12 @@ provisioning_mode_store(struct device *dev, struct device_attribute *attr,
- 		queue_limits_cancel_update(sdkp->disk->queue);
- 		return -EINVAL;
- 	}
+ 	lim->max_hw_discard_sectors = max_blocks *
+ 		(logical_block_size >> SECTOR_SHIFT);
 +
-+	/* Queued discards are sized for the old mode. */
-+	memflags = blk_mq_freeze_queue(sdkp->disk->queue);
- 	sd_config_discard(sdkp, &lim, mode);
--	err = queue_limits_commit_update_frozen(sdkp->disk->queue, &lim);
-+	err = queue_limits_commit_update(sdkp->disk->queue, &lim);
-+	blk_mq_unfreeze_queue(sdkp->disk->queue, memflags);
- 	if (err)
- 		return err;
- 	return count;
-@@ -3803,7 +3808,9 @@ static void sd_revalidate_disk(struct gendisk *disk)
- 	sector_t old_capacity = sdkp->capacity;
- 	struct queue_limits *lim = NULL;
- 	unsigned char *buffer = NULL;
--	unsigned int dev_max;
-+	unsigned int dev_max, memflags;
-+	sector_t sectors;
-+	bool grown;
- 	int err;
- 
- 	SCSI_LOG_HLQUEUE(3, sd_printk(KERN_INFO, sdkp,
-@@ -3857,8 +3864,6 @@ static void sd_revalidate_disk(struct gendisk *disk)
- 			sd_zbc_read_zones(sdkp, lim, buffer);
- 		}
- 
--		sd_config_discard(sdkp, lim, sd_discard_mode(sdkp));
--
- 		sd_print_capacity(sdkp, old_capacity);
- 
- 		sd_read_write_protect_flag(sdkp, buffer);
-@@ -3901,10 +3906,27 @@ static void sd_revalidate_disk(struct gendisk *disk)
- 
- 	sdkp->first_scan = 0;
- 
--	set_capacity_and_notify(disk, logical_to_sectors(sdp, sdkp->capacity));
--	sd_config_write_same(sdkp, lim);
 +	/*
-+	 * The WRITE SAME(10) modes can't address all of a disk with more than
-+	 * 2^32 blocks, so don't show a bigger capacity until they are gone.
++	 * The block layer doesn't split a discard if the limit is below the
++	 * granularity, so we'd get discards of any size.
 +	 */
-+	sectors = logical_to_sectors(sdp, sdkp->capacity);
-+	grown = sectors > get_capacity(disk);
-+	if (!grown)
-+		set_capacity_and_notify(disk, sectors);
++	if (lim->max_hw_discard_sectors &&
++	    lim->max_hw_discard_sectors <
++	    lim->discard_granularity >> SECTOR_SHIFT) {
++		sdkp->provisioning_mode = SD_LBP_DISABLE;
++		lim->max_hw_discard_sectors = 0;
++	}
+ }
  
--	err = queue_limits_commit_update_frozen(sdkp->disk->queue, lim);
-+	/*
-+	 * Queued requests are sized for the old modes, so only change the
-+	 * modes once the queue is frozen.
-+	 */
-+	memflags = blk_mq_freeze_queue(sdkp->disk->queue);
-+	if (sdkp->media_present)
-+		sd_config_discard(sdkp, lim, sd_discard_mode(sdkp));
-+	sd_config_write_same(sdkp, lim);
-+	err = queue_limits_commit_update(sdkp->disk->queue, lim);
-+	blk_mq_unfreeze_queue(sdkp->disk->queue, memflags);
-+	if (grown)
-+		set_capacity_and_notify(disk, sectors);
- 	if (err)
- 		goto out;
- 
+ static void sd_set_flush_flag(struct scsi_disk *sdkp,
 -- 
 2.56.1
 
